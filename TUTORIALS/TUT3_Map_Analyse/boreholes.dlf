@@ -1,0 +1,22 @@
+Label,Ired,Igreen,Iblue,Label-text
+"Z",255,255,0,"Sand",1.00
+"K",148,0,211,"Clay",0.25
+"G",218,165,32,"Gravel",2.00
+"V",244,164,96,"Peat",0.50
+"L",238,130,238,"Loam",0.75
+"ZF",255,255,0,"Fine Sand",1.25
+"ZM",243,225,11,"Coarse Sand",1.50
+"ZG",231,195,22,"Rough Sand",2.00
+"KZ",238,130,238,"Silty Sand",1.00
+"B",244,164,96,"Browncool",1.00
+"HO",244,164,96,"Wood",1.00
+"SHE",255,153,0,"Shells",1.00
+"GCZ",204,255,153,"Glauconite Sand",1.00
+"GOZ",204,255,153,"Goethyte Sand",1.00
+"GM",255,255,255,"No Sample",1.00
+"NBE",255,255,255,"No Sample",1.00
+"O",190,190,190,"O",1.00
+"ZNS",156,158,99,"Sandstone",1.00
+"STN",255,204,102,"Stones",2.00
+"KAS",200,171,55,"Limestone",1.00
+"KZS",200,171,55,"Sandstone",1.00

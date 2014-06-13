@@ -1,0 +1,14 @@
+           8
+4,2
+"Grensvlak,m-mv",-999.99
+"Lithologie",-999.99
+"Zandmediaanklasse NEN5104",-999.99
+"Bijmenging",-999.99
+-1.35,K,None,"None"
+-2.35,K,None,"None"
+-4.35,K,None,"None"
+-8.35,K,None,"None"
+-10.35,Z,ZMC,"Zwak Grindig"
+-19.35,Z,ZGC,"Zwak Grindig"
+-24.35,Z,ZGC,"Grindig"
+-28.35,-,-,-

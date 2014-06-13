@@ -1,0 +1,37 @@
+          31
+4,2
+"Grensvlak,m-mv",-999.99
+"Lithologie",-999.99
+"Zandmediaanklasse NEN5104",-999.99
+"Bijmenging",-999.99
+-6.30,V,None,"Siltig"
+-6.80,K,None,"Sterk Humeus"
+-7.30,V,None,"None"
+-8.30,K,None,"Sterk Humeus"
+-8.80,K,None,"Matig Humeus"
+-9.80,V,None,"Siltig"
+-10.80,V,None,"None"
+-11.30,V,None,"Zandig"
+-11.60,Z,ZMFO,"Zwak Siltig"
+-12.60,Z,ZMGO,"Zwak Siltig"
+-13.80,Z,ZMGO,"Zwak Siltig"
+-14.80,Z,ZMGO,"Zwak Siltig"
+-15.80,Z,ZMGO,"Zwak Siltig"
+-16.80,Z,ZMGO,"Zwak Siltig"
+-17.80,Z,ZMFO,"None"
+-18.80,Z,ZMGO,"Zwak Siltig"
+-19.80,Z,ZMGO,"Zwak Siltig"
+-20.80,Z,ZMGO,"Zwak Siltig"
+-21.80,Z,ZMFO,"Zwak Siltig"
+-22.80,Z,ZZGO,"Zwak Grindig"
+-23.80,Z,ZMGO,"Zwak Siltig"
+-24.80,Z,ZZGO,"Zwak Siltig"
+-25.80,Z,ZZGO,"Zwak Grindig"
+-26.80,Z,ZZGO,"None"
+-27.80,Z,ZZGO,"Grindig"
+-28.80,Z,ZGC,"Zwak Grindig"
+-29.80,Z,ZGC,"Zwak Grindig"
+-30.80,Z,ZZGO,"None"
+-31.60,V,None,"None"
+-32.10,G,ZUGO,"Zandig"
+-32.50,-,-,-
