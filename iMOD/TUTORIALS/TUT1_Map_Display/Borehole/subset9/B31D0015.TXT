@@ -1,0 +1,20 @@
+          14
+4,2
+"Grensvlak,m-mv",-999.99
+"Lithologie",-999.99
+"Zandmediaanklasse NEN5104",-999.99
+"Bijmenging",-999.99
+-1.45,K,None,"Zwak Siltig"
+-1.95,V,None,"Humeus"
+-3.04,K,None,"Zwak Siltig"
+-3.85,K,None,"Zwak Siltig"
+-4.47,K,None,"Zwak Siltig"
+-5.35,V,None,"None"
+-6.35,K,None,"Zwak Siltig"
+-7.55,V,None,"Zwak Zandig"
+-8.45,Z,ZZFO,"Zwak Siltig"
+-9.31,Z,ZZFO,"Siltig"
+-10.35,Z,ZZFO,"Zwak Siltig"
+-11.05,Z,ZZFO,"Siltig"
+-12.00,Z,ZZFO,"Zwak Siltig"
+-12.80,-,-,-

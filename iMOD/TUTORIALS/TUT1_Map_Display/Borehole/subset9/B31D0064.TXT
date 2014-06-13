@@ -1,0 +1,28 @@
+          22
+4,2
+"Grensvlak,m-mv",-999.99
+"Lithologie",-999.99
+"Zandmediaanklasse NEN5104",-999.99
+"Bijmenging",-999.99
+-1.68,V,None,"None"
+-1.98,K,None,"Humeus"
+-2.38,V,None,"None"
+-2.48,V,None,"None"
+-5.38,V,None,"None"
+-5.68,V,None,"None"
+-6.58,V,None,"None"
+-7.28,V,None,"None"
+-7.68,V,None,"None"
+-7.88,V,None,"None"
+-8.38,V,None,"Zandig"
+-8.58,Z,ZMF,"Matig Siltig"
+-10.28,Z,ZMF,"Zwak Siltig"
+-14.88,Z,ZMG,"None"
+-16.08,Z,ZMF,"None"
+-17.68,Z,ZMG,"None"
+-19.48,L,None,"Zandig"
+-19.51,Z,ZUG,"None"
+-20.03,L,None,"Zandig"
+-20.08,Z,ZUG,"Grindig"
+-20.48,Z,ZMG,"None"
+-20.68,-,-,-

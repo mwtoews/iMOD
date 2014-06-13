@@ -1,0 +1,25 @@
+          19
+4,2
+"Grensvlak,m-mv",-999.99
+"Lithologie",-999.99
+"Zandmediaanklasse NEN5104",-999.99
+"Bijmenging",-999.99
+4.50,Z,ZFC,"Matig Humeus"
+4.00,Z,ZFC,"None"
+2.50,Z,ZFC,"None"
+1.70,Z,ZFC,"Zwak Siltig"
+-0.50,Z,ZFC,"Zwak Siltig"
+-1.50,Z,ZGC,"Zwak Grindig"
+-3.50,Z,ZMGO,"Zwak Grindig"
+-4.50,Z,ZMGO,"Sterk Grindig"
+-4.80,Z,ZMFO,"Grindig"
+-5.00,Z,ZMFO,"Grindig"
+-5.90,Z,ZGC,"Grindig"
+-10.20,Z,ZZGO,"Sterk Grindig"
+-11.90,Z,ZMGO,"Zwak Grindig"
+-12.30,Z,ZMGO,"Grindig"
+-12.70,Z,ZMFO,"Zwak Grindig"
+-15.00,Z,ZMGO,"Zwak Grindig"
+-16.00,Z,ZMFO,"Zwak Grindig"
+-16.90,Z,ZGC,"Zwak Grindig"
+-20.00,-,-,-

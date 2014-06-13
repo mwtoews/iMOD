@@ -1,0 +1,41 @@
+          35
+4,2
+"Grensvlak,m-mv",-999.99
+"Lithologie",-999.99
+"Zandmediaanklasse NEN5104",-999.99
+"Bijmenging",-999.99
+4.00,K,None,"None"
+-2.00,Z,ZMGO,"Matig Grindig"
+-11.00,G,None,"None"
+-14.00,Z,ZMGO,"None"
+-18.00,K,None,"None"
+-24.00,Z,ZMFO,"None"
+-44.00,Z,ZMGO,"None"
+-51.00,Z,ZMFO,"Grindig"
+-57.00,Z,ZMGO,"None"
+-59.00,K,None,"None"
+-60.00,Z,ZMFO,"None"
+-62.00,Z,ZMFO,"Grindig"
+-65.00,Z,ZMGO,"None"
+-69.00,K,None,"None"
+-70.00,Z,ZMFO,"None"
+-73.00,Z,ZZFO,"None"
+-86.00,Z,ZMFO,"Matig Grindig"
+-87.00,Z,ZMFO,"None"
+-89.00,Z,ZZGO,"None"
+-90.50,Z,ZMGO,"None"
+-91.00,Z,ZMGO,"None"
+-92.00,Z,ZMGO,"None"
+-93.00,Z,ZMGO,"Siltig"
+-94.00,Z,ZMGO,"Matig Grindig"
+-95.00,Z,ZMGO,"Grindig"
+-98.00,Z,ZMGO,"Sterk Grindig"
+-101.00,Z,ZMFO,"Grindig"
+-105.00,Z,ZMFO,"None"
+-107.00,K,None,"None"
+-108.50,Z,ZMGO,"None"
+-111.00,Z,ZMFO,"None"
+-114.00,Z,ZMGO,"None"
+-117.00,Z,ZMGO,"None"
+-120.00,Z,ZMGO,"None"
+-131.00,-,-,-

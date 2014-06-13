@@ -1,0 +1,34 @@
+          28
+4,2
+"Grensvlak,m-mv",-999.99
+"Lithologie",-999.99
+"Zandmediaanklasse NEN5104",-999.99
+"Bijmenging",-999.99
+-0.30,K,None,"None"
+-0.70,K,None,"None"
+-1.10,K,None,"None"
+-2.30,K,None,"Sterk Zandig"
+-3.10,Z,ZFC,"None"
+-3.70,Z,ZMGO,"None"
+-4.30,Z,ZMGO,"None"
+-5.90,Z,None,"None"
+-7.10,Z,ZMGO,"None"
+-8.10,Z,ZMGO,"None"
+-10.00,Z,ZMGO,"None"
+-11.10,K,None,"Zandig"
+-13.70,K,None,"None"
+-17.10,Z,ZFC,"None"
+-18.80,Z,ZMO,"None"
+-19.80,Z,ZMO,"None"
+-21.10,Z,ZMGO,"None"
+-23.70,Z,ZFC,"None"
+-24.50,Z,ZMO,"None"
+-25.70,Z,ZMGO,"Zwak Grindig"
+-28.70,Z,ZZGO,"None"
+-30.10,Z,ZZGO,"Grindig"
+-32.10,Z,ZGC,"None"
+-34.30,Z,ZZGO,"None"
+-35.80,Z,ZZGO,"None"
+-36.50,Z,ZZGO,"Sterk Grindig"
+-37.10,Z,None,"None"
+-37.80,-,-,-
