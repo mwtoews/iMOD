@@ -114,8 +114,8 @@
 		<File RelativePath="d:\oss\iMOD\SRC\imod_cus\imod_cus.f90"/>
 		<File RelativePath="d:\oss\iMOD\SRC\imod_cus\imod_cus_par.f90"/></Filter>
 		<Filter Name="imod_dino">
-		<File RelativePath="d:\oss\iMOD\SRC\gef2ipf\gef2ipf.f90"/>
-		<File RelativePath="d:\oss\iMOD\SRC\gef2ipf\gef2ipf_par.f90"/>
+		<File RelativePath="d:\oss\iMOD\SRC\imod_gef2ipf\gef2ipf.f90"/>
+		<File RelativePath="d:\oss\iMOD\SRC\imod_gef2ipf\gef2ipf_par.f90"/>
 		<File RelativePath="d:\oss\iMOD\SRC\imod_dino\imod_dino_ipf.f90"/>
 		<File RelativePath="d:\oss\iMOD\SRC\imod_dino\imod_dino_par.f90"/></Filter>
 		<Filter Name="imod_draw">

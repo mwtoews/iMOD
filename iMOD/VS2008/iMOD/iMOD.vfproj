@@ -26,7 +26,7 @@
 				<Tool Name="VFManifestTool"/></Configuration>
 		<Configuration Name="Debug|x64">
 				<Tool Name="VFFortranCompilerTool" SuppressStartupBanner="true" DebugInformationFormat="debugEnabled" Optimization="optimizeDisabled" BufferedIO="true" HeapArrays="0" AdditionalIncludeDirectories="d:\oss\imod\lib\DELFTIO\OS_X64;d:\oss\imod\lib\WINTERACTER\os_x64\INCLUDE;d:\OSS\IMOD\LIB\WINTERACTER\OS_X64" Interfaces="true" WarnDeclarations="true" WarnUnusedVariables="true" WarnIgnoreLOC="true" SuppressUsageMessages="true" WarnInterfaces="true" Traceback="true" NullPointerCheck="true" BoundsCheck="true" UninitializedVariablesCheck="true" RuntimeLibrary="rtMultiThreadedDebug" UseWindowsLibs="true"/>
-				<Tool Name="VFLinkerTool" OutputFile="..\..\bin\$(ProjectName)_X64_BD.exe" LinkIncremental="linkIncrementalNo" SuppressStartupBanner="true" AdditionalLibraryDirectories="d:\oss\imod\lib\DELFTIO\OS_X64" GenerateDebugInformation="true" SubSystem="subSystemConsole" LargeAddressAware="addrAwareLarge" AdditionalDependencies="delftio.lib"/>
+				<Tool Name="VFLinkerTool" OutputFile="..\..\bin\$(ProjectName)_X64_BD.exe" LinkIncremental="linkIncrementalNo" SuppressStartupBanner="true" AdditionalLibraryDirectories="d:\oss\imod\lib\DELFTIO\OS_X64" GenerateDebugInformation="true" SubSystem="subSystemConsole" LargeAddressAware="addrAwareLarge"/>
 				<Tool Name="VFResourceCompilerTool" AdditionalIncludeDirectories="d:\oss\imod\lib\WINTERACTER\os_x64\include" ShowProgress="true" ResourceOutputFileName="d:\oss\iMOD\SRC\resource.res"/>
 				<Tool Name="VFMidlTool" SuppressStartupBanner="true" TargetEnvironment="midlTargetAMD64"/>
 				<Tool Name="VFCustomBuildTool"/>
@@ -36,7 +36,7 @@
 				<Tool Name="VFManifestTool" SuppressStartupBanner="true"/></Configuration>
 		<Configuration Name="Release|x64">
 				<Tool Name="VFFortranCompilerTool" SuppressStartupBanner="true" BufferedIO="true" HeapArrays="0" AdditionalIncludeDirectories="d:\oss\imod\lib\DELFTIO\OS_X64;d:\oss\imod\lib\WINTERACTER\os_x64\INCLUDE;d:\OSS\IMOD\LIB\WINTERACTER\OS_X64" UseWindowsLibs="true"/>
-				<Tool Name="VFLinkerTool" OutputFile="..\..\bin\$(ProjectName)_X64_BR.exe" LinkIncremental="linkIncrementalNo" SuppressStartupBanner="true" AdditionalLibraryDirectories="d:\oss\imod\lib\DELFTIO\OS_X64" IgnoreDefaultLibraryNames="msvcrt.lib" SubSystem="subSystemConsole" AdditionalDependencies="delftio.lib"/>
+				<Tool Name="VFLinkerTool" OutputFile="..\..\bin\$(ProjectName)_X64_BR.exe" LinkIncremental="linkIncrementalNo" SuppressStartupBanner="true" AdditionalLibraryDirectories="d:\oss\imod\lib\DELFTIO\OS_X64" IgnoreDefaultLibraryNames="msvcrt.lib" SubSystem="subSystemConsole"/>
 				<Tool Name="VFResourceCompilerTool" AdditionalIncludeDirectories="d:\oss\imod\lib\WINTERACTER\os_x64\include" ResourceOutputFileName="d:\oss\iMOD\SRC\resource.res"/>
 				<Tool Name="VFMidlTool" SuppressStartupBanner="true" TargetEnvironment="midlTargetAMD64"/>
 				<Tool Name="VFCustomBuildTool"/>
@@ -114,8 +114,8 @@
 		<File RelativePath="d:\oss\iMOD\SRC\imod_cus\imod_cus.f90"/>
 		<File RelativePath="d:\oss\iMOD\SRC\imod_cus\imod_cus_par.f90"/></Filter>
 		<Filter Name="imod_dino">
-		<File RelativePath="d:\oss\iMOD\SRC\gef2ipf\gef2ipf.f90"/>
-		<File RelativePath="d:\oss\iMOD\SRC\gef2ipf\gef2ipf_par.f90"/>
+		<File RelativePath="d:\oss\iMOD\SRC\imod_gef2ipf\gef2ipf.f90"/>
+		<File RelativePath="d:\oss\iMOD\SRC\imod_gef2ipf\gef2ipf_par.f90"/>
 		<File RelativePath="d:\oss\iMOD\SRC\imod_dino\imod_dino_ipf.f90"/>
 		<File RelativePath="d:\oss\iMOD\SRC\imod_dino\imod_dino_par.f90"/></Filter>
 		<Filter Name="imod_draw">
