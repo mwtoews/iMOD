@@ -1,0 +1,486 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<VisualStudioProject ProjectCreator="Intel Fortran" Keyword="Console Application" Version="11.0" ProjectIdGuid="{9DCF2814-D3E1-45BC-B145-0666F2F5A8F6}">
+	<Platforms>
+		<Platform Name="Win32"/>
+		<Platform Name="x64"/></Platforms>
+	<Configurations>
+		<Configuration Name="Debug|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalOptions="-Od -Zi -Oy" SuppressStartupBanner="true" DebugInformationFormat="debugEnabled" Optimization="optimizeDisabled" BufferedIO="true" HeapArrays="0" AdditionalIncludeDirectories="d:\oss\imod\lib\NETCDF\OS_X32\debug; d:\oss\imod\lib\DELFTIO\OS_X32;d:\oss\imod\lib\WINTERACTER\os_x32\INCLUDE;d:\OSS\IMOD\LIB\WINTERACTER\OS_X32" Interfaces="true" WarnDeclarations="true" WarnUnusedVariables="true" WarnIgnoreLOC="true" SuppressUsageMessages="true" WarnInterfaces="true" Traceback="true" NullPointerCheck="true" BoundsCheck="true" UninitializedVariablesCheck="true" DescriptorDataTypeCheck="true" DescriptorDataSizeCheck="true" RuntimeLibrary="rtMultiThreadedDebug" UseWindowsLibs="true"/>
+				<Tool Name="VFLinkerTool" OutputFile="..\..\bin\$(ProjectName)_X32_BD.exe" LinkIncremental="linkIncrementalNo" SuppressStartupBanner="true" AdditionalLibraryDirectories="d:\oss\imod\lib\DELFTIO\OS_X32; d:\oss\imod\lib\NETCDF\OS_X32\debug" IgnoreDefaultLibraryNames="msvcrt.lib" GenerateDebugInformation="true" SubSystem="subSystemConsole" AdditionalDependencies="delftio.lib netcdf.lib f90_netcdf.lib f77_netcdf.lib"/>
+				<Tool Name="VFResourceCompilerTool" AdditionalIncludeDirectories="d:\oss\imod\lib\WINTERACTER\os_x32\INCLUDE" ShowProgress="true" ResourceOutputFileName="d:\oss\iMOD\SRC\resource.res"/>
+				<Tool Name="VFMidlTool"/>
+				<Tool Name="VFCustomBuildTool"/>
+				<Tool Name="VFPreLinkEventTool"/>
+				<Tool Name="VFPreBuildEventTool"/>
+				<Tool Name="VFPostBuildEventTool"/>
+				<Tool Name="VFManifestTool" SuppressStartupBanner="true"/></Configuration>
+		<Configuration Name="Release|Win32">
+				<Tool Name="VFFortranCompilerTool" SuppressStartupBanner="true" BufferedIO="true" HeapArrays="0" AdditionalIncludeDirectories="d:\oss\imod\lib\NETCDF\OS_X32\release; d:\oss\imod\lib\DELFTIO\OS_X32;d:\oss\imod\lib\WINTERACTER\os_x32\INCLUDE;d:\OSS\IMOD\LIB\WINTERACTER\OS_X32" UseWindowsLibs="true"/>
+				<Tool Name="VFLinkerTool" OutputFile="..\..\bin\$(ProjectName)_X32_BR.exe" LinkIncremental="linkIncrementalNo" SuppressStartupBanner="true" AdditionalLibraryDirectories="d:\oss\imod\lib\DELFTIO\OS_X32; d:\oss\imod\lib\NETCDF\OS_X32\release" IgnoreDefaultLibraryNames="msvcrt.lib" SubSystem="subSystemConsole" AdditionalDependencies="delftio.lib delftio.lib netcdf.lib f90_netcdf.lib f77_netcdf.lib"/>
+				<Tool Name="VFResourceCompilerTool" AdditionalIncludeDirectories="d:\oss\imod\lib\WINTERACTER\os_x32\include" ShowProgress="true" ResourceOutputFileName="d:\oss\iMOD\SRC\resource.res"/>
+				<Tool Name="VFMidlTool" SuppressStartupBanner="true"/>
+				<Tool Name="VFCustomBuildTool"/>
+				<Tool Name="VFPreLinkEventTool"/>
+				<Tool Name="VFPreBuildEventTool"/>
+				<Tool Name="VFPostBuildEventTool"/>
+				<Tool Name="VFManifestTool"/></Configuration>
+		<Configuration Name="Debug|x64">
+				<Tool Name="VFFortranCompilerTool" SuppressStartupBanner="true" DebugInformationFormat="debugEnabled" Optimization="optimizeDisabled" BufferedIO="true" HeapArrays="0" AdditionalIncludeDirectories="d:\oss\imod\lib\DELFTIO\OS_X64;d:\oss\imod\lib\WINTERACTER\os_x64\INCLUDE;d:\OSS\IMOD\LIB\WINTERACTER\OS_X64" Interfaces="true" WarnDeclarations="true" WarnUnusedVariables="true" WarnIgnoreLOC="true" SuppressUsageMessages="true" WarnInterfaces="true" Traceback="true" NullPointerCheck="true" BoundsCheck="true" UninitializedVariablesCheck="true" RuntimeLibrary="rtMultiThreadedDebug" UseWindowsLibs="true"/>
+				<Tool Name="VFLinkerTool" OutputFile="..\..\bin\$(ProjectName)_X64_BD.exe" LinkIncremental="linkIncrementalNo" SuppressStartupBanner="true" AdditionalLibraryDirectories="d:\oss\imod\lib\DELFTIO\OS_X64" GenerateDebugInformation="true" SubSystem="subSystemConsole" LargeAddressAware="addrAwareLarge" AdditionalDependencies="delftio.lib"/>
+				<Tool Name="VFResourceCompilerTool" AdditionalIncludeDirectories="d:\oss\imod\lib\WINTERACTER\os_x64\include" ShowProgress="true" ResourceOutputFileName="d:\oss\iMOD\SRC\resource.res"/>
+				<Tool Name="VFMidlTool" SuppressStartupBanner="true" TargetEnvironment="midlTargetAMD64"/>
+				<Tool Name="VFCustomBuildTool"/>
+				<Tool Name="VFPreLinkEventTool"/>
+				<Tool Name="VFPreBuildEventTool"/>
+				<Tool Name="VFPostBuildEventTool"/>
+				<Tool Name="VFManifestTool" SuppressStartupBanner="true"/></Configuration>
+		<Configuration Name="Release|x64">
+				<Tool Name="VFFortranCompilerTool" SuppressStartupBanner="true" BufferedIO="true" HeapArrays="0" AdditionalIncludeDirectories="d:\oss\imod\lib\DELFTIO\OS_X64;d:\oss\imod\lib\WINTERACTER\os_x64\INCLUDE;d:\OSS\IMOD\LIB\WINTERACTER\OS_X64" UseWindowsLibs="true"/>
+				<Tool Name="VFLinkerTool" OutputFile="..\..\bin\$(ProjectName)_X64_BR.exe" LinkIncremental="linkIncrementalNo" SuppressStartupBanner="true" AdditionalLibraryDirectories="d:\oss\imod\lib\DELFTIO\OS_X64" IgnoreDefaultLibraryNames="msvcrt.lib" SubSystem="subSystemConsole" AdditionalDependencies="delftio.lib"/>
+				<Tool Name="VFResourceCompilerTool" AdditionalIncludeDirectories="d:\oss\imod\lib\WINTERACTER\os_x64\include" ResourceOutputFileName="d:\oss\iMOD\SRC\resource.res"/>
+				<Tool Name="VFMidlTool" SuppressStartupBanner="true" TargetEnvironment="midlTargetAMD64"/>
+				<Tool Name="VFCustomBuildTool"/>
+				<Tool Name="VFPreLinkEventTool"/>
+				<Tool Name="VFPreBuildEventTool"/>
+				<Tool Name="VFPostBuildEventTool"/>
+				<Tool Name="VFManifestTool" SuppressStartupBanner="true"/></Configuration></Configurations>
+	<Files>
+		<Filter Name="Header Files" Filter="fi;fd"/>
+		<Filter Name="Resource Files" Filter="rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe">
+		<File RelativePath="d:\oss\iMOD\SRC\resource.rc">
+			<FileConfiguration Name="Debug|Win32">
+				<Tool Name="VFCustomBuildTool" CommandLine="rc d:\oss\iMOD\SRC\resource.rc" Outputs="d:\oss\iMOD\SRC\resource.res" AdditionalDependencies=""/></FileConfiguration>
+			<FileConfiguration Name="Release|x64">
+				<Tool Name="VFCustomBuildTool" CommandLine="rc d:\oss\iMOD\SRC\resource.rc" Outputs="d:\oss\iMOD\SRC\resource.res"/></FileConfiguration>
+			<FileConfiguration Name="Debug|x64">
+				<Tool Name="VFCustomBuildTool" CommandLine="rc d:\oss\iMOD\SRC\resource.rc" Outputs="d:\oss\iMOD\SRC\resource.res" AdditionalDependencies=""/></FileConfiguration>
+			<FileConfiguration Name="Release|Win32">
+				<Tool Name="VFCustomBuildTool" CommandLine="rc d:\oss\iMOD\SRC\resource.rc" Outputs="d:\oss\iMOD\SRC\resource.res"/></FileConfiguration></File></Filter>
+		<Filter Name="Source Files" Filter="f90;for;f;fpp;ftn;def;odl;idl;rc">
+		<Filter Name="bgwtools">
+		<File RelativePath="d:\oss\UTL\utl.f90">
+			<FileConfiguration Name="Debug|Win32">
+				<Tool Name="VFFortranCompilerTool" Preprocess="preprocessYes" AdditionalIncludeDirectories="d:\oss\UTL" PreprocessorDefinitions="IFORT" Interfaces="false" WarnInterfaces="false" UTLPreprocessorDefinitions="IFORT"/></FileConfiguration>
+			<FileConfiguration Name="Release|x64">
+				<Tool Name="VFFortranCompilerTool" Preprocess="preprocessYes" AdditionalIncludeDirectories="d:\oss\UTL" PreprocessorDefinitions="IFORT"/></FileConfiguration>
+			<FileConfiguration Name="Debug|x64">
+				<Tool Name="VFFortranCompilerTool" Preprocess="preprocessYes" AdditionalIncludeDirectories="d:\oss\UTL" PreprocessorDefinitions="IFORT" Interfaces="false" WarnInterfaces="false"/></FileConfiguration>
+			<FileConfiguration Name="Release|Win32">
+				<Tool Name="VFFortranCompilerTool" Preprocess="preprocessYes" AdditionalIncludeDirectories="d:\oss\UTL" PreprocessorDefinitions="IFORT"/></FileConfiguration></File>
+		<File RelativePath="d:\oss\UTL\utl.h"/>
+		<File RelativePath="d:\oss\UTL\utl1.inc"/>
+		<File RelativePath="d:\oss\UTL\utl2.inc"/></Filter>
+		<Filter Name="imod_3d">
+		<File RelativePath="d:\oss\iMOD\SRC\imod_3d\imod_3d.f90"/>
+		<File RelativePath="d:\oss\iMOD\SRC\imod_3d\imod_3d_display.f90"/>
+		<File RelativePath="d:\oss\iMOD\SRC\imod_3d\imod_3d_engine.f90"/>
+		<File RelativePath="d:\oss\iMOD\SRC\imod_3d\imod_3d_par.f90"/>
+		<File RelativePath="d:\oss\iMOD\SRC\imod_3d\imod_3d_process.f90"/>
+		<File RelativePath="d:\oss\iMOD\SRC\imod_3d\imod_3d_select.f90"/>
+		<File RelativePath="d:\oss\iMOD\SRC\imod_3d\imod_3d_settings.f90"/>
+		<File RelativePath="d:\oss\iMOD\SRC\imod_3d\imod_3d_utl.f90"/></Filter>
+		<Filter Name="imod_ahnfilter">
+		<File RelativePath="d:\oss\iMOD\SRC\imod_ahnfilter\imod_ahnfilter.f90"/>
+		<File RelativePath="d:\oss\iMOD\SRC\imod_ahnfilter\imod_ahnfilter_par.f90"/></Filter>
+		<Filter Name="imod_asc2idf">
+		<File RelativePath="d:\oss\iMOD\SRC\imod_asc2idf\imod_asc2idf.f90"/>
+		<File RelativePath="d:\oss\iMOD\SRC\imod_asc2idf\imod_asc2idf_par.f90"/></Filter>
+		<Filter Name="imod_batch">
+		<File RelativePath="d:\oss\iMOD\SRC\imod_batch\imod_batch.f90">
+			<FileConfiguration Name="Debug|Win32">
+				<Tool Name="VFFortranCompilerTool" Preprocess="preprocessYes" PreprocessorDefinitions="WINTERACTER9"/></FileConfiguration>
+			<FileConfiguration Name="Release|x64">
+				<Tool Name="VFFortranCompilerTool" Preprocess="preprocessYes" PreprocessorDefinitions="WINTERACTER9"/></FileConfiguration>
+			<FileConfiguration Name="Debug|x64">
+				<Tool Name="VFFortranCompilerTool" Preprocess="preprocessYes" PreprocessorDefinitions="WINTERACTER9"/></FileConfiguration>
+			<FileConfiguration Name="Release|Win32">
+				<Tool Name="VFFortranCompilerTool" Preprocess="preprocessYes" PreprocessorDefinitions="WINTERACTER9"/></FileConfiguration></File>
+		<File RelativePath="d:\oss\iMOD\SRC\imod_batch\imod_batch_par.f90"/>
+		<File RelativePath="d:\oss\iMOD\SRC\imod_batch\imod_createizone.f90"/>
+		<File RelativePath="d:\oss\iMOD\SRC\imod_batch\imod_drainsurface.f90"/></Filter>
+		<Filter Name="imod_bivar">
+		<File RelativePath="d:\oss\iMOD\SRC\imod_bivar\imod_bivar.f90"/>
+		<File RelativePath="d:\oss\iMOD\SRC\imod_bivar\imod_bivar_main.f90"/>
+		<File RelativePath="d:\oss\iMOD\SRC\imod_bivar\imod_kriging.f90"/></Filter>
+		<Filter Name="imod_corrkd">
+		<File RelativePath="d:\oss\iMOD\SRC\imod_corrkd\imod_corrkd.f90"/>
+		<File RelativePath="d:\oss\iMOD\SRC\imod_corrkd\imod_corrkd_par.f90"/></Filter>
+		<Filter Name="imod_create">
+		<File RelativePath="d:\oss\iMOD\SRC\imod_create\imod_creategen.f90"/>
+		<File RelativePath="d:\oss\iMOD\SRC\imod_create\imod_createidf.f90"/>
+		<File RelativePath="d:\oss\iMOD\SRC\imod_create\imod_createipf.f90"/>
+		<File RelativePath="d:\oss\iMOD\SRC\imod_create\imod_createisg.f90"/></Filter>
+		<Filter Name="imod_cus">
+		<File RelativePath="d:\oss\iMOD\SRC\imod_cus\imod_cus.f90"/>
+		<File RelativePath="d:\oss\iMOD\SRC\imod_cus\imod_cus_par.f90"/></Filter>
+		<Filter Name="imod_dino">
+		<File RelativePath="d:\oss\iMOD\SRC\gef2ipf\gef2ipf.f90"/>
+		<File RelativePath="d:\oss\iMOD\SRC\gef2ipf\gef2ipf_par.f90"/>
+		<File RelativePath="d:\oss\iMOD\SRC\imod_dino\imod_dino_ipf.f90"/>
+		<File RelativePath="d:\oss\iMOD\SRC\imod_dino\imod_dino_par.f90"/></Filter>
+		<Filter Name="imod_draw">
+		<File RelativePath="d:\oss\iMOD\SRC\imod_draw\imod_data.f90"/>
+		<File RelativePath="d:\oss\iMOD\SRC\imod_draw\imod_genplot.f90"/>
+		<File RelativePath="d:\oss\iMOD\SRC\imod_draw\imod_genplot_par.F90"/>
+		<File RelativePath="d:\oss\iMOD\SRC\imod_draw\imod_plot.f90"/>
+		<File RelativePath="d:\oss\iMOD\SRC\imod_draw\imod_quickopen.f90"/>
+		<File RelativePath="d:\oss\iMOD\SRC\imod_draw\imod_topo.f90"/></Filter>
+		<Filter Name="imod_gen">
+		<File RelativePath="d:\oss\iMOD\SRC\imod_gen\imod_genpuzzle.f90">
+			<FileConfiguration Name="Debug|Win32">
+				<Tool Name="VFFortranCompilerTool" Interfaces="true" WarnInterfaces="false"/></FileConfiguration>
+			<FileConfiguration Name="Debug|x64">
+				<Tool Name="VFFortranCompilerTool" WarnInterfaces="false"/></FileConfiguration></File></Filter>
+		<Filter Name="imod_googleearth">
+		<File RelativePath="d:\oss\iMOD\SRC\google_earth\imod_google.f90"/></Filter>
+		<Filter Name="imod_gxg">
+		<File RelativePath="d:\oss\iMOD\SRC\imod_gxg\imod_gxg_compute.f90"/>
+		<File RelativePath="d:\oss\iMOD\SRC\imod_gxg\imod_gxg_par.f90"/></Filter>
+		<Filter Name="imod_hfb">
+		<File RelativePath="d:\oss\iMOD\SRC\imod_hfb\imod_hfb.f90"/>
+		<File RelativePath="d:\oss\iMOD\SRC\imod_hfb\imod_hfb_par.f90"/></Filter>
+		<Filter Name="imod_idfedit">
+		<File RelativePath="d:\oss\iMOD\SRC\imod_idfedit\IMOD_IDFEDIT.F90"/>
+		<File RelativePath="d:\oss\iMOD\SRC\imod_idfedit\imod_idfedit_table.f90">
+			<FileConfiguration Name="Debug|Win32">
+				<Tool Name="VFFortranCompilerTool" Preprocess="preprocessYes" PreprocessorDefinitions="WINTERACTER9"/></FileConfiguration>
+			<FileConfiguration Name="Release|x64">
+				<Tool Name="VFFortranCompilerTool" Preprocess="preprocessYes" PreprocessorDefinitions="WINTERACTER9"/></FileConfiguration>
+			<FileConfiguration Name="Debug|x64">
+				<Tool Name="VFFortranCompilerTool" Preprocess="preprocessYes" PreprocessorDefinitions="WINTERACTER9"/></FileConfiguration>
+			<FileConfiguration Name="Release|Win32">
+				<Tool Name="VFFortranCompilerTool" Preprocess="preprocessYes" PreprocessorDefinitions="WINTERACTER9"/></FileConfiguration></File>
+		<File RelativePath="d:\oss\iMOD\SRC\imod_idfedit\imod_idfedit_trace.f90"/></Filter>
+		<Filter Name="imod_idfgetvalue">
+		<File RelativePath="d:\oss\iMOD\SRC\imod_idfgetvalue\imod_idfgetvalue.f90"/></Filter>
+		<Filter Name="imod_idftimeserie">
+		<File RelativePath="d:\oss\iMOD\SRC\imod_idftimeserie\imod_idftimeserie.f90"/>
+		<File RelativePath="d:\oss\iMOD\SRC\imod_idftimeserie\imod_timeserie_utl.f90"/></Filter>
+		<Filter Name="imod_iff">
+		<File RelativePath="d:\oss\iMOD\SRC\imod_iff\Imod_iff.f90"/></Filter>
+		<Filter Name="imod_import">
+		<File RelativePath="d:\oss\iMOD\SRC\imod_import\imod_import_calc.f90"/>
+		<File RelativePath="d:\oss\iMOD\SRC\imod_import\imod_import_main.f90"/>
+		<File RelativePath="d:\oss\iMOD\SRC\imod_import\imod_import_par.f90"/>
+		<File RelativePath="d:\oss\iMOD\SRC\imod_import\IMOD_IMPORT_UTL.F90"/></Filter>
+		<Filter Name="imod_info">
+		<File RelativePath="d:\oss\iMOD\SRC\imod_info\imod_info.f90"/></Filter>
+		<Filter Name="imod_intersect">
+		<File RelativePath="d:\oss\iMOD\SRC\imod_intersect\imod_intersect.f90"/>
+		<File RelativePath="d:\oss\iMOD\SRC\imod_intersect\imod_intersect_par.f90"/></Filter>
+		<Filter Name="imod_ipf">
+		<File RelativePath="d:\oss\iMOD\SRC\imod_ipf\imod_extractipf.f90">
+			<FileConfiguration Name="Debug|Win32">
+				<Tool Name="VFFortranCompilerTool" Preprocess="preprocessYes" PreprocessorDefinitions="WINTERACTER9"/></FileConfiguration>
+			<FileConfiguration Name="Release|x64">
+				<Tool Name="VFFortranCompilerTool" Preprocess="preprocessYes" PreprocessorDefinitions="WINTERACTER9"/></FileConfiguration>
+			<FileConfiguration Name="Debug|x64">
+				<Tool Name="VFFortranCompilerTool" Preprocess="preprocessYes" PreprocessorDefinitions="WINTERACTER9"/></FileConfiguration>
+			<FileConfiguration Name="Release|Win32">
+				<Tool Name="VFFortranCompilerTool" Preprocess="preprocessYes" PreprocessorDefinitions="WINTERACTER9"/></FileConfiguration></File>
+		<File RelativePath="d:\oss\iMOD\SRC\imod_ipf\Imod_ipf.f90"/>
+		<File RelativePath="d:\oss\iMOD\SRC\imod_ipf\imod_ipf_labels.f90"/>
+		<File RelativePath="d:\oss\iMOD\SRC\imod_ipf\imod_ipf_par.f90"/>
+		<File RelativePath="d:\oss\iMOD\SRC\imod_ipf\imod_ipfanalyse.f90"/>
+		<File RelativePath="d:\oss\iMOD\SRC\imod_ipf\imod_ipfassfiles.f90"/>
+		<File RelativePath="d:\oss\iMOD\SRC\imod_ipf\imod_ipfgetvalue.f90"/>
+		<File RelativePath="d:\oss\iMOD\SRC\imod_ipf\imod_ipfgetvalue_colours.f90"/></Filter>
+		<Filter Name="imod_ir">
+		<File RelativePath="d:\oss\iMOD\SRC\imod_ir\imod_ir.f90"/>
+		<File RelativePath="d:\oss\iMOD\SRC\imod_ir\imod_ir_clc.f90"/>
+		<File RelativePath="d:\oss\iMOD\SRC\imod_ir\imod_ir_fields.f90"/>
+		<File RelativePath="d:\oss\iMOD\SRC\imod_ir\imod_ir_gen.f90"/>
+		<File RelativePath="d:\oss\iMOD\SRC\imod_ir\imod_ir_inverse.f90"/>
+		<File RelativePath="d:\oss\iMOD\SRC\imod_ir\imod_ir_linear.f90"/>
+		<File RelativePath="d:\oss\iMOD\SRC\imod_ir\imod_ir_measures.f90"/>
+		<File RelativePath="d:\oss\iMOD\SRC\imod_ir\imod_ir_par.f90"/>
+		<File RelativePath="d:\oss\iMOD\SRC\imod_ir\imod_ir_qpf.f90"/>
+		<File RelativePath="d:\oss\iMOD\SRC\imod_ir\imod_ir_quarter.f90"/>
+		<File RelativePath="d:\oss\iMOD\SRC\imod_ir\imod_ir_selectedcells.f90"/>
+		<File RelativePath="d:\oss\iMOD\SRC\imod_ir\imod_ir_targets.f90"/>
+		<File RelativePath="d:\oss\iMOD\SRC\imod_ir\imod_ir_utl.f90"/></Filter>
+		<Filter Name="imod_isg">
+		<File RelativePath="d:\oss\iMOD\SRC\imod_isg\Imod_isg.f90"/>
+		<File RelativePath="d:\oss\iMOD\SRC\imod_isg\imod_isg_addstructures.f90"/>
+		<File RelativePath="d:\oss\iMOD\SRC\imod_isg\imod_isg_gen.f90"/>
+		<File RelativePath="d:\oss\iMOD\SRC\imod_isg\imod_isg_par.f90"/>
+		<File RelativePath="d:\oss\iMOD\SRC\imod_isg\imod_isg_trapezium.f90"/>
+		<File RelativePath="d:\oss\iMOD\SRC\imod_isg\imod_isg_utl.f90"/>
+		<File RelativePath="d:\oss\iMOD\SRC\imod_isg\imod_isgadjust.f90"/>
+		<File RelativePath="d:\oss\iMOD\SRC\imod_isg\imod_isggrid.f90"/>
+		<File RelativePath="d:\oss\iMOD\SRC\imod_isg\imod_isgplot.f90"/></Filter>
+		<Filter Name="imod_legend">
+		<File RelativePath="d:\oss\iMOD\SRC\imod_legend\imod_legend.f90"/>
+		<File RelativePath="d:\oss\iMOD\SRC\imod_legend\imod_legend_utl.f90"/>
+		<File RelativePath="d:\oss\iMOD\SRC\imod_legend\imod_legplot.f90"/>
+		<File RelativePath="d:\oss\iMOD\SRC\imod_legend\imod_legplot_par.f90"/>
+		<File RelativePath="d:\oss\iMOD\SRC\imod_legend\imod_settings.f90"/></Filter>
+		<Filter Name="imod_ludcmp">
+		<File RelativePath="d:\oss\iMOD\SRC\imod_ludcmp\imod_ludcmp.f90"/></Filter>
+		<Filter Name="imod_main">
+		<File RelativePath="d:\oss\iMOD\SRC\imod_main\imod_about.f90"/>
+		<File RelativePath="d:\oss\iMOD\SRC\imod_main\imod_help.f90"/>
+		<File RelativePath="d:\oss\iMOD\SRC\imod_main\imod_main.f90"/>
+		<File RelativePath="d:\oss\iMOD\SRC\imod_main\imod_pref.f90"/>
+		<File RelativePath="d:\oss\iMOD\SRC\imod_main\imod_pref_par.f90"/>
+		<File RelativePath="d:\oss\iMOD\SRC\imodconfig_x32d.f90">
+			<FileConfiguration Name="Release|x64" ExcludedFromBuild="true"/>
+			<FileConfiguration Name="Debug|x64" ExcludedFromBuild="true"/>
+			<FileConfiguration Name="Release|Win32" ExcludedFromBuild="true"/></File>
+		<File RelativePath="d:\oss\iMOD\SRC\imodconfig_x32r.f90">
+			<FileConfiguration Name="Debug|Win32" ExcludedFromBuild="true"/>
+			<FileConfiguration Name="Release|x64" ExcludedFromBuild="true"/>
+			<FileConfiguration Name="Debug|x64" ExcludedFromBuild="true"/></File>
+		<File RelativePath="d:\oss\iMOD\SRC\imodconfig_x64d.f90">
+			<FileConfiguration Name="Debug|Win32" ExcludedFromBuild="true"/>
+			<FileConfiguration Name="Release|x64" ExcludedFromBuild="true"/>
+			<FileConfiguration Name="Release|Win32" ExcludedFromBuild="true"/></File>
+		<File RelativePath="d:\oss\iMOD\SRC\imodconfig_x64r.f90">
+			<FileConfiguration Name="Debug|Win32" ExcludedFromBuild="true"/>
+			<FileConfiguration Name="Debug|x64" ExcludedFromBuild="true"/>
+			<FileConfiguration Name="Release|Win32" ExcludedFromBuild="true"/></File></Filter>
+		<Filter Name="imod_manager">
+		<File RelativePath="d:\oss\iMOD\SRC\imod_manager\imod_manager.f90"/>
+		<File RelativePath="d:\oss\iMOD\SRC\imod_manager\imod_prjmanager.f90"/>
+		<File RelativePath="d:\oss\iMOD\SRC\imod_manager\imod_prjmanager_par.f90"/>
+		<File RelativePath="d:\oss\iMOD\SRC\imod_manager\imod_tagman.F90"/></Filter>
+		<Filter Name="imod_math">
+		<File RelativePath="d:\oss\iMOD\SRC\imod_math\imod_math.f90"/>
+		<File RelativePath="d:\oss\iMOD\SRC\imod_math\imod_math_calc.f90"/>
+		<File RelativePath="d:\oss\iMOD\SRC\imod_math\imod_math_merge.f90"/>
+		<File RelativePath="d:\oss\iMOD\SRC\imod_math\imod_math_merge_par.f90"/>
+		<File RelativePath="d:\oss\iMOD\SRC\imod_math\imod_math_par.f90"/>
+		<File RelativePath="d:\oss\iMOD\SRC\imod_math\imod_math_scale.f90"/>
+		<File RelativePath="d:\oss\iMOD\SRC\imod_math\imod_math_scale_par.f90"/></Filter>
+		<Filter Name="imod_mdf">
+		<File RelativePath="d:\oss\iMOD\SRC\imod_mdf\imod_mdf.f90"/></Filter>
+		<Filter Name="imod_mean">
+		<File RelativePath="d:\oss\iMOD\SRC\imod_mean\imod_mean_compute.f90"/>
+		<File RelativePath="d:\oss\iMOD\SRC\imod_mean\imod_mean_par.f90"/></Filter>
+		<Filter Name="imod_model">
+		<File RelativePath="d:\oss\iMOD\SRC\imod_model\IMOD_MODEL.F90"/>
+		<File RelativePath="d:\oss\iMOD\SRC\imod_model\IMOD_MODEL_PAR.F90"/></Filter>
+		<Filter Name="imod_modpath">
+		<File RelativePath="d:\oss\iMOD\SRC\imod_modpath\imod_pathlines.f90"/>
+		<File RelativePath="d:\oss\iMOD\SRC\imod_modpath\imod_pathlines_flolin.f90"/>
+		<File RelativePath="d:\oss\iMOD\SRC\imod_modpath\imod_pathlines_read.f90"/>
+		<File RelativePath="d:\oss\iMOD\SRC\imod_modpath\imod_pathlines_sp.f90"/>
+		<File RelativePath="d:\oss\iMOD\SRC\imod_modpath\imod_pathlines_trace.f90"/>
+		<File RelativePath="d:\oss\iMOD\SRC\imod_modpath\imod_plines_par.f90"/></Filter>
+		<Filter Name="imod_nc2idf">
+		<File RelativePath="d:\oss\iMOD\SRC\imod_nc2idf\imod_nc2idf.f90">
+			<FileConfiguration Name="Release|x64" ExcludedFromBuild="true"/>
+			<FileConfiguration Name="Debug|x64" ExcludedFromBuild="true"/></File>
+		<File RelativePath="d:\oss\iMOD\SRC\imod_nc2idf\imod_nc2idf_lh90.f90">
+			<FileConfiguration Name="Debug|Win32" ExcludedFromBuild="true"/>
+			<FileConfiguration Name="Release|Win32" ExcludedFromBuild="true"/></File></Filter>
+		<Filter Name="imod_osd">
+		<File RelativePath="d:\oss\iMOD\SRC\imod_osd\imod_osdIVF95.f90"/></Filter>
+		<Filter Name="imod_pcg">
+		<File RelativePath="d:\oss\iMOD\SRC\imod_pcg\imod_pcg.f90"/></Filter>
+		<Filter Name="imod_polint">
+		<File RelativePath="d:\oss\iMOD\SRC\imod_polint\imod_polint.f90"/></Filter>
+		<Filter Name="imod_polygon">
+		<File RelativePath="d:\oss\iMOD\SRC\imod_polygon\imod_polygon.f90"/>
+		<File RelativePath="d:\oss\iMOD\SRC\imod_polygon\imod_polygon_draw.f90"/>
+		<File RelativePath="d:\oss\iMOD\SRC\imod_polygon\imod_polygon_utl.f90"/>
+		<File RelativePath="d:\oss\iMOD\SRC\imod_polygon\polygon_par.f90"/></Filter>
+		<Filter Name="imod_profile">
+		<File RelativePath="d:\oss\iMOD\SRC\imod_profile\imod_profile.f90"/>
+		<File RelativePath="d:\oss\iMOD\SRC\imod_profile\imod_profile_par.f90"/>
+		<File RelativePath="d:\oss\iMOD\SRC\imod_profile\imod_profile_utl.f90"/></Filter>
+		<Filter Name="imod_ro">
+		<File RelativePath="d:\oss\iMOD\SRC\imod_ro\imod_roscen.f90"/>
+		<File RelativePath="d:\oss\iMOD\SRC\imod_ro\rovar.f90"/></Filter>
+		<Filter Name="imod_scen">
+		<File RelativePath="d:\oss\iMOD\SRC\imod_scen\imod_scen.f90"/>
+		<File RelativePath="d:\oss\iMOD\SRC\imod_scen\imod_scen_fields.f90"/>
+		<File RelativePath="d:\oss\iMOD\SRC\imod_scen\imod_scen_par.f90"/></Filter>
+		<Filter Name="imod_scentools">
+		<File RelativePath="d:\oss\iMOD\SRC\imod_scentool\imod_scentool.f90"/>
+		<File RelativePath="d:\oss\iMOD\SRC\imod_scentool\imod_scentool_obs.f90"/>
+		<File RelativePath="d:\oss\iMOD\SRC\imod_scentool\imod_scentool_par.f90"/>
+		<File RelativePath="d:\oss\iMOD\SRC\imod_scentool\imod_scentool_results.f90"/>
+		<File RelativePath="d:\oss\iMOD\SRC\imod_scentool\imod_scentool_utl.f90"/>
+		<File RelativePath="d:\oss\iMOD\SRC\imod_scentool\imod_scentool_wells.f90"/></Filter>
+		<Filter Name="imod_smplx">
+		<File RelativePath="d:\oss\iMOD\SRC\imod_smplx\imod_smplx_compute.f90"/>
+		<File RelativePath="d:\oss\iMOD\SRC\imod_smplx\imod_smplx_main.f90"/>
+		<File RelativePath="d:\oss\iMOD\SRC\imod_smplx\imod_smplx_nswc.f90"/>
+		<File RelativePath="d:\oss\iMOD\SRC\imod_smplx\imod_smplx_par.f90"/></Filter>
+		<Filter Name="imod_sobek">
+		<File RelativePath="d:\oss\iMOD\SRC\imod_sobek\imod_sobek.f90">
+			<FileConfiguration Name="Release|x64" ExcludedFromBuild="true"/>
+			<FileConfiguration Name="Debug|x64" ExcludedFromBuild="true"/></File>
+		<File RelativePath="d:\oss\iMOD\SRC\imod_sobek\imod_sobek_lh90.f90">
+			<FileConfiguration Name="Debug|Win32" ExcludedFromBuild="true"/>
+			<FileConfiguration Name="Release|Win32" ExcludedFromBuild="true"/></File>
+		<File RelativePath="d:\oss\iMOD\SRC\imod_sobek\imod_sobek_par.f90">
+			<FileConfiguration Name="Release|x64" ExcludedFromBuild="true"/>
+			<FileConfiguration Name="Debug|x64" ExcludedFromBuild="true"/></File></Filter>
+		<Filter Name="imod_sof">
+		<File RelativePath="d:\oss\iMOD\SRC\imod_sof\imod_sof.f90"/></Filter>
+		<Filter Name="imod_solid">
+		<File RelativePath="d:\oss\iMOD\SRC\imod_solid\imod_solid.f90"/>
+		<File RelativePath="d:\oss\iMOD\SRC\imod_solid\imod_solid_par.f90"/>
+		<File RelativePath="d:\oss\iMOD\SRC\imod_solid\imod_solid_pcg.f90"/>
+		<File RelativePath="d:\oss\iMOD\SRC\imod_solid\imod_solid_profile.f90"/>
+		<File RelativePath="d:\oss\iMOD\SRC\imod_solid\imod_solid_utl.f90"/></Filter>
+		<Filter Name="imod_spoints">
+		<File RelativePath="d:\oss\iMOD\SRC\imod_spoints\imod_spoints.f90"/>
+		<File RelativePath="d:\oss\iMOD\SRC\imod_spoints\imod_spoints_par.f90"/></Filter>
+		<Filter Name="imod_start">
+		<File RelativePath="d:\oss\iMOD\SRC\imod_start\imod_start.f90"/></Filter>
+		<Filter Name="imod_timeserie">
+		<File RelativePath="d:\oss\iMOD\SRC\imod_timeseries\imod_ts.f90"/>
+		<File RelativePath="d:\oss\iMOD\SRC\imod_timeseries\imod_ts_par.f90"/></Filter>
+		<Filter Name="imod_tools">
+		<File RelativePath="d:\oss\iMOD\SRC\imod_tools\imod_tools.f90"/>
+		<File RelativePath="d:\oss\iMOD\SRC\imod_tools\imod_tools_utl.f90"/></Filter>
+		<Filter Name="imod_tstat">
+		<File RelativePath="d:\oss\iMOD\SRC\imod_tstat\calcgxg.f90"/>
+		<File RelativePath="d:\oss\iMOD\SRC\imod_tstat\calperc.for"/>
+		<File RelativePath="d:\oss\iMOD\SRC\imod_tstat\createtmp.f90"/>
+		<File RelativePath="d:\oss\iMOD\SRC\imod_tstat\findoffset.f90"/>
+		<File RelativePath="d:\oss\iMOD\SRC\imod_tstat\findperiod.f90"/>
+		<File RelativePath="d:\oss\iMOD\SRC\imod_tstat\imod_tstat.f90"/>
+		<File RelativePath="d:\oss\iMOD\SRC\imod_tstat\imod_tstat_calc.f90"/>
+		<File RelativePath="d:\oss\iMOD\SRC\imod_tstat\imod_tstat_par.f90"/>
+		<File RelativePath="d:\oss\iMOD\SRC\imod_tstat\m_cross.f90"/>
+		<File RelativePath="d:\oss\iMOD\SRC\imod_tstat\rdfile4.f90"/>
+		<File RelativePath="d:\oss\iMOD\SRC\imod_tstat\rdfiles.f90"/>
+		<File RelativePath="d:\oss\iMOD\SRC\imod_tstat\tsclean.f90"/>
+		<File RelativePath="d:\oss\iMOD\SRC\imod_tstat\tscorr2.for"/>
+		<File RelativePath="d:\oss\iMOD\SRC\imod_tstat\tsstat.f90"/></Filter>
+		<Filter Name="imod_utl">
+		<File RelativePath="d:\oss\iMOD\SRC\imod_utl\imod_idf_new.f90"/>
+		<File RelativePath="d:\oss\iMOD\SRC\imod_utl\imod_idf_par.f90"/>
+		<File RelativePath="d:\oss\iMOD\SRC\imod_utl\imod_qksort.f90"/>
+		<File RelativePath="d:\oss\iMOD\SRC\imod_utl\imod_sortem.for">
+			<FileConfiguration Name="Debug|Win32">
+				<Tool Name="VFFortranCompilerTool" WarnDeclarations="true" WarnUnusedVariables="true"/></FileConfiguration>
+			<FileConfiguration Name="Debug|x64">
+				<Tool Name="VFFortranCompilerTool" WarnDeclarations="true" WarnUnusedVariables="true"/></FileConfiguration></File>
+		<File RelativePath="d:\oss\iMOD\SRC\imod_utl\imod_utl.f90">
+			<FileConfiguration Name="Debug|Win32">
+				<Tool Name="VFFortranCompilerTool" Preprocess="preprocessYes" PreprocessorDefinitions="WINTERACTER9"/></FileConfiguration>
+			<FileConfiguration Name="Release|x64">
+				<Tool Name="VFFortranCompilerTool" Preprocess="preprocessYes" PreprocessorDefinitions="WINTERACTER9"/></FileConfiguration>
+			<FileConfiguration Name="Debug|x64">
+				<Tool Name="VFFortranCompilerTool" Preprocess="preprocessYes" PreprocessorDefinitions="WINTERACTER9"/></FileConfiguration>
+			<FileConfiguration Name="Release|Win32">
+				<Tool Name="VFFortranCompilerTool" Preprocess="preprocessYes" PreprocessorDefinitions="WINTERACTER9"/></FileConfiguration></File></Filter>
+		<Filter Name="imod_utm">
+		<File RelativePath="d:\oss\iMOD\SRC\imod_utm\imod_utm.f90"/>
+		<File RelativePath="d:\oss\iMOD\SRC\imod_utm\imod_utm_par.f90"/></Filter>
+		<Filter Name="imod_wbal">
+		<File RelativePath="d:\oss\iMOD\SRC\imod_wbal\imod_wbal_compute.f90"/>
+		<File RelativePath="d:\oss\iMOD\SRC\imod_wbal\imod_wbal_par.f90"/></Filter>
+		<Filter Name="programs">
+		<File RelativePath="d:\oss\iMOD\SRC\imod_main\imod_prg.f90">
+			<FileConfiguration Name="Debug|Win32">
+				<Tool Name="VFFortranCompilerTool" Preprocess="preprocessYes" PreprocessorDefinitions="X32"/></FileConfiguration>
+			<FileConfiguration Name="Release|x64">
+				<Tool Name="VFFortranCompilerTool" Preprocess="preprocessYes" PreprocessorDefinitions="X64"/></FileConfiguration>
+			<FileConfiguration Name="Debug|x64">
+				<Tool Name="VFFortranCompilerTool" Preprocess="preprocessYes" PreprocessorDefinitions="X64"/></FileConfiguration>
+			<FileConfiguration Name="Release|Win32">
+				<Tool Name="VFFortranCompilerTool" Preprocess="preprocessYes" PreprocessorDefinitions="X32"/></FileConfiguration></File></Filter>
+		<File RelativePath="d:\oss\iMOD\SRC\bmpvar.f90"/>
+		<File RelativePath="d:\oss\iMOD\SRC\colours.f90"/>
+		<File RelativePath="d:\oss\iMOD\SRC\datevar.f90"/>
+		<File RelativePath="d:\oss\iMOD\SRC\imod_mod.f90"/>
+		<File RelativePath="d:\oss\iMOD\SRC\imodvar.f90"/>
+		<File RelativePath="d:\oss\iMOD\SRC\modplot.f90"/>
+		<File RelativePath="d:\oss\iMOD\SRC\resource.f90"/></Filter>
+		<File RelativePath="d:\OSS\IMOD\LIB\WINTERACTER\OS_X32\AdvAPI32.Lib">
+			<FileConfiguration Name="Release|x64" ExcludedFromBuild="true"/>
+			<FileConfiguration Name="Debug|x64" ExcludedFromBuild="true"/></File>
+		<File RelativePath="d:\oss\imod\lib\WINTERACTER\os_x64\AdvAPI32.Lib">
+			<FileConfiguration Name="Debug|Win32" ExcludedFromBuild="true"/>
+			<FileConfiguration Name="Release|Win32" ExcludedFromBuild="true"/></File>
+		<File RelativePath="d:\OSS\IMOD\LIB\WINTERACTER\OS_X32\ComDlg32.Lib">
+			<FileConfiguration Name="Release|x64" ExcludedFromBuild="true"/>
+			<FileConfiguration Name="Debug|x64" ExcludedFromBuild="true"/></File>
+		<File RelativePath="d:\oss\imod\lib\WINTERACTER\os_x64\ComDlg32.Lib">
+			<FileConfiguration Name="Debug|Win32" ExcludedFromBuild="true"/>
+			<FileConfiguration Name="Release|Win32" ExcludedFromBuild="true"/></File>
+		<File RelativePath="d:\OSS\IMOD\LIB\WINTERACTER\OS_X32\Gdi32.Lib">
+			<FileConfiguration Name="Release|x64" ExcludedFromBuild="true"/>
+			<FileConfiguration Name="Debug|x64" ExcludedFromBuild="true"/></File>
+		<File RelativePath="d:\oss\imod\lib\WINTERACTER\os_x64\Gdi32.Lib">
+			<FileConfiguration Name="Debug|Win32" ExcludedFromBuild="true"/>
+			<FileConfiguration Name="Release|Win32" ExcludedFromBuild="true"/></File>
+		<File RelativePath="d:\OSS\IMOD\LIB\WINTERACTER\OS_X32\GlU32.Lib">
+			<FileConfiguration Name="Release|x64" ExcludedFromBuild="true"/>
+			<FileConfiguration Name="Debug|x64" ExcludedFromBuild="true"/></File>
+		<File RelativePath="d:\oss\imod\lib\WINTERACTER\os_x64\GlU32.Lib">
+			<FileConfiguration Name="Debug|Win32" ExcludedFromBuild="true"/>
+			<FileConfiguration Name="Release|Win32" ExcludedFromBuild="true"/></File>
+		<File RelativePath="d:\OSS\IMOD\LIB\WINTERACTER\OS_X32\Htmlhelp.Lib">
+			<FileConfiguration Name="Release|x64" ExcludedFromBuild="true"/>
+			<FileConfiguration Name="Debug|x64" ExcludedFromBuild="true"/></File>
+		<File RelativePath="d:\oss\imod\lib\WINTERACTER\os_x64\Htmlhelp.Lib">
+			<FileConfiguration Name="Debug|Win32" ExcludedFromBuild="true"/>
+			<FileConfiguration Name="Release|Win32" ExcludedFromBuild="true"/></File>
+		<File RelativePath="d:\oss\imod\lib\WINTERACTER\os_x64\opengl.mod">
+			<FileConfiguration Name="Debug|Win32" ExcludedFromBuild="true"/>
+			<FileConfiguration Name="Release|Win32" ExcludedFromBuild="true"/></File>
+		<File RelativePath="d:\oss\imod\lib\WINTERACTER\os_x32\opengl.mod">
+			<FileConfiguration Name="Release|x64" ExcludedFromBuild="true"/>
+			<FileConfiguration Name="Debug|x64" ExcludedFromBuild="true"/></File>
+		<File RelativePath="d:\oss\imod\lib\WINTERACTER\os_x64\opengl2.mod">
+			<FileConfiguration Name="Debug|Win32" ExcludedFromBuild="true"/>
+			<FileConfiguration Name="Release|Win32" ExcludedFromBuild="true"/></File>
+		<File RelativePath="d:\oss\imod\lib\WINTERACTER\os_x32\opengl2.mod">
+			<FileConfiguration Name="Release|x64" ExcludedFromBuild="true"/>
+			<FileConfiguration Name="Debug|x64" ExcludedFromBuild="true"/></File>
+		<File RelativePath="d:\OSS\IMOD\LIB\WINTERACTER\OS_X32\OpenGL32.Lib">
+			<FileConfiguration Name="Release|x64" ExcludedFromBuild="true"/>
+			<FileConfiguration Name="Debug|x64" ExcludedFromBuild="true"/></File>
+		<File RelativePath="d:\oss\imod\lib\WINTERACTER\os_x64\OpenGL32.Lib">
+			<FileConfiguration Name="Debug|Win32" ExcludedFromBuild="true"/>
+			<FileConfiguration Name="Release|Win32" ExcludedFromBuild="true"/></File>
+		<File RelativePath="d:\OSS\IMOD\LIB\WINTERACTER\OS_X32\shell32.lib">
+			<FileConfiguration Name="Release|x64" ExcludedFromBuild="true"/>
+			<FileConfiguration Name="Debug|x64" ExcludedFromBuild="true"/></File>
+		<File RelativePath="d:\oss\imod\lib\WINTERACTER\os_x64\Shell32.Lib">
+			<FileConfiguration Name="Debug|Win32" ExcludedFromBuild="true"/>
+			<FileConfiguration Name="Release|Win32" ExcludedFromBuild="true"/></File>
+		<File RelativePath="d:\OSS\IMOD\LIB\WINTERACTER\OS_X32\User32.Lib">
+			<FileConfiguration Name="Release|x64" ExcludedFromBuild="true"/>
+			<FileConfiguration Name="Debug|x64" ExcludedFromBuild="true"/></File>
+		<File RelativePath="d:\oss\imod\lib\WINTERACTER\os_x64\User32.Lib">
+			<FileConfiguration Name="Debug|Win32" ExcludedFromBuild="true"/>
+			<FileConfiguration Name="Release|Win32" ExcludedFromBuild="true"/></File>
+		<File RelativePath="d:\OSS\IMOD\LIB\WINTERACTER\OS_X32\WinMM.Lib">
+			<FileConfiguration Name="Release|x64" ExcludedFromBuild="true"/>
+			<FileConfiguration Name="Debug|x64" ExcludedFromBuild="true"/></File>
+		<File RelativePath="d:\oss\imod\lib\WINTERACTER\os_x64\WinMM.Lib">
+			<FileConfiguration Name="Debug|Win32" ExcludedFromBuild="true"/>
+			<FileConfiguration Name="Release|Win32" ExcludedFromBuild="true"/></File>
+		<File RelativePath="d:\OSS\IMOD\LIB\WINTERACTER\OS_X32\WinSpool.Lib">
+			<FileConfiguration Name="Release|x64" ExcludedFromBuild="true"/>
+			<FileConfiguration Name="Debug|x64" ExcludedFromBuild="true"/></File>
+		<File RelativePath="d:\oss\imod\lib\WINTERACTER\os_x64\WinSpool.Lib">
+			<FileConfiguration Name="Debug|Win32" ExcludedFromBuild="true"/>
+			<FileConfiguration Name="Release|Win32" ExcludedFromBuild="true"/></File>
+		<File RelativePath="d:\oss\imod\lib\WINTERACTER\os_x64\winter.lib">
+			<FileConfiguration Name="Debug|Win32" ExcludedFromBuild="true"/>
+			<FileConfiguration Name="Release|Win32" ExcludedFromBuild="true"/></File>
+		<File RelativePath="d:\oss\imod\lib\WINTERACTER\os_x32\winter.lib">
+			<FileConfiguration Name="Release|x64" ExcludedFromBuild="true"/>
+			<FileConfiguration Name="Debug|x64" ExcludedFromBuild="true"/></File>
+		<File RelativePath="d:\oss\imod\lib\WINTERACTER\os_x64\winteracter.mod">
+			<FileConfiguration Name="Debug|Win32" ExcludedFromBuild="true"/>
+			<FileConfiguration Name="Release|Win32" ExcludedFromBuild="true"/></File>
+		<File RelativePath="d:\oss\imod\lib\WINTERACTER\os_x32\winteracter.mod">
+			<FileConfiguration Name="Release|x64" ExcludedFromBuild="true"/>
+			<FileConfiguration Name="Debug|x64" ExcludedFromBuild="true"/></File>
+		<File RelativePath="d:\oss\imod\lib\WINTERACTER\os_x64\winttypes.mod">
+			<FileConfiguration Name="Debug|Win32" ExcludedFromBuild="true"/>
+			<FileConfiguration Name="Release|Win32" ExcludedFromBuild="true"/></File>
+		<File RelativePath="d:\oss\imod\lib\WINTERACTER\os_x32\winttypes.mod">
+			<FileConfiguration Name="Release|x64" ExcludedFromBuild="true"/>
+			<FileConfiguration Name="Debug|x64" ExcludedFromBuild="true"/></File></Files>
+	<Globals/></VisualStudioProject>
