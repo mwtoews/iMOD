@@ -43,8 +43,6 @@ CONTAINS
  
  CUS_MAIN=.FALSE.
  
- !IF(.NOT.CUS_SMPLX_UNITTEST())RETURN
-
  CALL UTL_CREATEDIR(OUTPUTFOLDER)
  CALL UTL_CREATEDIR(TRIM(OUTPUTFOLDER)//'\pointers')
 
@@ -69,9 +67,6 @@ CONTAINS
  
  IF(.NOT.CUS_READDISTANCES())RETURN
  
-! !## apply for each percentile the minimal number of layering
-! DO I=1,SIZE(PERC); IF(.NOT.CUS_SMPLX(I))RETURN; ENDDO
-
  !## apply for given percentage
  IF(.NOT.CUS_SMPLX(0))RETURN   
  
@@ -163,11 +158,6 @@ CONTAINS
  
  DO I=1,NLAY; IF(.NOT.IDFWRITE(MDLTOP(I),MDLTOP(I)%FNAME,1))STOP 'ERROR WRITING TOP'; ENDDO
  DO I=1,NLAY; IF(.NOT.IDFWRITE(MDLBOT(I),MDLBOT(I)%FNAME,1))STOP 'ERROR WRITING BOT'; ENDDO
-! DO IIDF=1,CUS_NLAY
-!  I=INDEX(ZIDF(IIDF)%FNAME,'\',.TRUE.); J=INDEX(ZIDF(IIDF)%FNAME,'_pointers.idf',.TRUE.)
-!  ZIDF(IIDF)%FNAME=TRIM(OUTPUTFOLDER)//'\pointers_adj\'//ZIDF(IIDF)%FNAME(I+1:J-1)//'_pointers.idf'
-!  IF(.NOT.IDFWRITE(ZIDF(IIDF),ZIDF(IIDF)%FNAME,1))STOP 'ERROR WRITING BOT'
-! ENDDO
  
  !## get occupy per modellayer
  DO I=1,NLAY; MDLTOP(I)%X=MDLTOP(I)%NODATA; ENDDO
@@ -345,85 +335,6 @@ CONTAINS
  ENDDO
 
  END FUNCTION CUS_GETIVAR
-
- !###======================================================================
- LOGICAL FUNCTION CUS_SMPLX_UNITTEST()
- !###======================================================================
- IMPLICIT NONE
- INTEGER :: I
- 
- CUS_SMPLX_UNITTEST=.FALSE.
-
-!GOTO 10
-
- NVAR=4  !## number of variables to be estimated
- NCON=6  !## number of conditions
-
- ALLOCATE(IN_CON(NCON))
-
-! IN_CON(1)='0.266 <= 1.0'
-! IN_CON(2)='0.346 >= 0.5'
-! IN_CON(3)=' 1.0 <= 10.0'
-! IN_CON(4)=' 1.0 >= 0.0'
-! IN_OBJ   ='-1'
-
- IN_CON(1)=' 1.0 -1.0  0.0  0.0 <= -1.0'
- IN_CON(2)='-1.0  1.0  0.0  0.0 >=  1.0'
- IN_CON(3)=' 0.0  1.0 -1.0  0.0 <= -1.0'
- IN_CON(4)=' 0.0 -1.0  1.0  0.0 >=  1.0'
- IN_CON(5)=' 0.0  0.0 -1.0  1.0 <=  0.0'
- IN_CON(6)=' 0.0  0.0  1.0 -1.0 >=  0.0'
-  
- IN_OBJ='-1'; DO I=2,NVAR; IN_OBJ=TRIM(IN_OBJ)//' -1'; END DO
- CALL SMPLX_MAIN()
- DO I=1,NVAR; WRITE(*,'(1X,I10,F10.2)') I,XVAR(I); ENDDO
- WRITE(*,'(/A,F10.2)') 'Objective Function Value:',ZOBJ
- WRITE(*,'(/A/)') TRIM(LPSTATUS)
- pause
-
-10 CONTINUE
-
- NVAR=3  !## number of variables to be estimated
- NCON=6  !## number of conditions
-
- ALLOCATE(A(NCON,NVAR),B(NCON),C(NVAR),CONSTR_TYPE(NCON))
-
- CONSTR_TYPE=0; A=0.0;B=0.0
-
- I=1; A(I,1)= 1.0; A(I,2)=-1.0; A(I,3)= 0.0; B(I)= 0.0; CONSTR_TYPE(I)=3 !##  =
- I=2; A(I,1)= 1.0; A(I,2)= 0.0; A(I,3)=-1.0; B(I)=-1.0; CONSTR_TYPE(I)=1 !## <=
- I=3; A(I,1)=-1.0; A(I,2)= 1.0; A(I,3)= 0.0; B(I)= 0.0; CONSTR_TYPE(I)=3 !##  =
- I=4; A(I,1)= 0.0; A(I,2)= 1.0; A(I,3)=-1.0; B(I)=-1.0; CONSTR_TYPE(I)=1 !## <=
- I=5; A(I,1)=-1.0; A(I,2)= 0.0; A(I,3)= 1.0; B(I)= 1.0; CONSTR_TYPE(I)=2 !## >=
- I=6; A(I,1)= 0.0; A(I,2)=-1.0; A(I,3)= 1.0; B(I)= 1.0; CONSTR_TYPE(I)=2 !## >= 
-! I=7; A(I,1)= 1.0; A(I,2)= 0.0; A(I,3)= 0.0; B(I)= 1.0; CONSTR_TYPE(I)=2 !## >=
-! I=8; A(I,1)= 0.0; A(I,2)= 1.0; A(I,3)= 0.0; B(I)= 1.0; CONSTR_TYPE(I)=2 !## >=
-! I=9; A(I,1)= 0.0; A(I,2)= 0.0; A(I,3)= 1.0; B(I)= 1.0; CONSTR_TYPE(I)=2 !## >=
- 
- !## get number of ">=" and "<="
- NUMLE= 0; NUMGE=0; DO I=1,NCON; IF(CONSTR_TYPE(I).EQ.1)NUMLE=NUMLE+1; IF(CONSTR_TYPE(I).EQ.2)NUMGE=NUMGE+1; ENDDO  
-
- !## solve system with simplex method
- C=-1; CALL SMPLX_MAIN()
- 
- !## modellayers numbering
- DO I=1,NVAR; WRITE(*,'(1X,I10,F10.2)') I,XVAR(I); ENDDO
- WRITE(*,'(/A,F10.2)') 'Objective Function Value:',ZOBJ
- WRITE(*,'(/A/)') TRIM(LPSTATUS)
-
- !## solve system with simplex method
- C=1; CALL SMPLX_MAIN()
- 
- !## modellayers numbering
- DO I=1,NVAR; WRITE(*,'(1X,I10,F10.2)') I,XVAR(I); ENDDO
- WRITE(*,'(/A,F10.2)') 'Objective Function Value:',ZOBJ
- WRITE(*,'(/A/)') TRIM(LPSTATUS)
-
- IF(ALLOCATED(IN_CON))DEALLOCATE(IN_CON); IF(ALLOCATED(XVAR))DEALLOCATE(XVAR) 
- 
- CUS_SMPLX_UNITTEST=.TRUE. 
- 
- END FUNCTION CUS_SMPLX_UNITTEST
  
  !###======================================================================
  LOGICAL FUNCTION CUS_READDISTANCES()
@@ -496,10 +407,6 @@ CONTAINS
  WRITE(IU,'(6A6,A10,99F10.2)') '#file','izone','#','#file','izone','#','size',PERC 
  
  DO I=1,SIZE(TOPIDF)
-
-!IF(I.EQ.18)THEN
-!WRITE(*,*)
-!ENDIF
 
   WRITE(*,'(2(I3.3,A))') I,'-',SIZE(TOPIDF),' Computing distances for '//TRIM(TOPIDF(I)%FNAME)//' ...'
   CALL IDFDEALLOCATEX(TOPIDF(I)); IF(.NOT.IDFREAD(TOPIDF(I),TOPIDF(I)%FNAME,1))RETURN
@@ -629,7 +536,6 @@ CONTAINS
  LOGICAL FUNCTION CUS_TRACE(IIDF)
  !###======================================================================
  IMPLICIT NONE
-! REAL,PARAMETER :: MTHICKNESS=2.0 !## threshold can be twice the thickness
  INTEGER,INTENT(IN) :: IIDF
  INTEGER :: IROW,ICOL,IPZ,I,MAXTHREAD,NTHREAD,DTERM,IMENU,MAXN
  REAL :: THICKNESS  
@@ -675,8 +581,6 @@ CONTAINS
 
  WRITE(*,'(A,I10,A/)') ' ... found ',IPZ,' individual zones'
 
-! MDLIDF(3)%X=MDLIDF(3)%X*(1.0/CRIT_THICKNESS) !MTHICKNESS)
-! IF(.NOT.IDFWRITE(MDLIDF(3),MDLIDF(3)%FNAME,1))STOP 'ERROR WRITING THICKNESSES'
  IF(.NOT.IDFWRITE(MDLIDF(2),MDLIDF(2)%FNAME,1))STOP 'ERROR WRITING ZONES'
 
  ZINFO(IIDF)%NZ=IPZ

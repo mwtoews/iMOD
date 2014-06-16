@@ -1,0 +1,257 @@
+                                  MODFLOW-2005     
+      U.S. GEOLOGICAL SURVEY MODULAR FINITE-DIFFERENCE GROUND-WATER FLOW MODEL
+                            VERSION 1.8.00 12/18/2009
+
+ LIST FILE: imodflow.list
+                         UNIT   10
+
+ OPENING imodflow.dis                                                                                                                                                                                                                                                                                                
+ FILE TYPE:DIS   UNIT   11   STATUS:OLD    
+ FORMAT:FORMATTED              ACCESS:SEQUENTIAL          
+
+ OPENING imodflow.bas6                                                                                                                                                                                                                                                                                               
+ FILE TYPE:BAS6   UNIT   12   STATUS:OLD    
+ FORMAT:FORMATTED              ACCESS:SEQUENTIAL          
+
+ OPENING imodflow.bcf6                                                                                                                                                                                                                                                                                               
+ FILE TYPE:BCF6   UNIT   13   STATUS:OLD    
+ FORMAT:FORMATTED              ACCESS:SEQUENTIAL          
+
+ OPENING imodflow.oc                                                                                                                                                                                                                                                                                                 
+ FILE TYPE:OC   UNIT   14   STATUS:OLD    
+ FORMAT:FORMATTED              ACCESS:SEQUENTIAL          
+
+ OPENING imodflow.met                                                                                                                                                                                                                                                                                                
+ FILE TYPE:MET   UNIT   15   STATUS:OLD    
+ FORMAT:FORMATTED              ACCESS:SEQUENTIAL          
+
+ OPENING imodflow.drn                                                                                                                                                                                                                                                                                                
+ FILE TYPE:DRN   UNIT   17   STATUS:OLD    
+ FORMAT:FORMATTED              ACCESS:SEQUENTIAL          
+
+ OPENING imodflow.pcg                                                                                                                                                                                                                                                                                                
+ FILE TYPE:PCG   UNIT   22   STATUS:OLD    
+ FORMAT:FORMATTED              ACCESS:SEQUENTIAL          
+# data:                                                                                                                                                                                                                                                                                                     
+
+ BAS -- BASIC PACKAGE, VERSION 7, 5/2/2005 INPUT READ FROM UNIT   12
+
+ DISCRETIZATION INPUT DATA READ FROM UNIT   11
+ # Discretization file
+    2 LAYERS       100 ROWS       100 COLUMNS
+    1 STRESS PERIOD(S) IN SIMULATION
+ MODEL TIME UNIT IS DAYS
+ MODEL LENGTH UNIT IS METERS
+  Confining bed flag for each layer:
+   1   0
+
+                     DELR =   25.0000    
+
+                     DELC =   25.0000    
+
+ TOP ELEVATION OF LAYER 1 =   0.00000    
+
+   MODEL LAYER BOTTOM EL. =   0.00000     FOR LAYER   1
+
+ BOT. EL. OF QUASI-3D BED =   0.00000     FOR LAYER   1
+
+   MODEL LAYER BOTTOM EL. =   0.00000     FOR LAYER   2
+
+
+ STRESS PERIOD     LENGTH       TIME STEPS     MULTIPLIER FOR DELT    SS FLAG
+ ----------------------------------------------------------------------------
+        1         0.000000          1                    1.000         SS
+
+ STEADY-STATE SIMULATION
+
+
+
+ 
+ # Basic Package file                                                            
+ THE FREE FORMAT OPTION HAS BEEN SELECTED
+
+ OPENING FILE ON UNIT   99:
+ P:\1206764-IMOD\IMOD30\TESTBANK\RUNS\TEST_ALL\BOUNDARY\IMODFLOW_IBOUND1.IDF                                                                                                                             
+  FILE IDENTIFIED AS IDF
+
+           BOUNDARY ARRAY =              1 FOR LAYER   2
+
+ AQUIFER HEAD WILL BE SET TO  -999.99     AT ALL NO-FLOW NODES (IBOUND=0).
+
+ OPENING FILE ON UNIT   99:
+ P:\1206764-IMOD\IMOD30\TESTBANK\RUNS\TEST_ALL\STARTING_HEADS\IMODFLOW_SHEAD1.IDF                                                                                                                        
+  FILE IDENTIFIED AS IDF
+
+ OPENING FILE ON UNIT   99:
+ P:\1206764-IMOD\IMOD30\TESTBANK\RUNS\TEST_ALL\STARTING_HEADS\IMODFLOW_SHEAD2.IDF                                                                                                                        
+  FILE IDENTIFIED AS IDF
+
+ OUTPUT CONTROL IS SPECIFIED ONLY AT TIME STEPS FOR WHICH OUTPUT IS DESIRED
+ HEAD PRINT FORMAT CODE IS   0    DRAWDOWN PRINT FORMAT CODE IS   0
+ HEADS WILL BE SAVED ON UNIT   28    DRAWDOWNS WILL BE SAVED ON UNIT    0
+
+ BCF -- BLOCK-CENTERED FLOW PACKAGE, VERSION 7, 5/2/2005
+         INPUT READ FROM UNIT 13
+ STEADY-STATE SIMULATION
+ CELL-BY-CELL FLOWS WILL BE SAVED ON UNIT 29
+ HEAD AT CELLS THAT CONVERT TO DRY=  -9999.0    
+ WETTING CAPABILITY IS NOT ACTIVE
+      LAYER  LAYER-TYPE CODE     INTERBLOCK T
+      --------------------------------------------
+         1            0          0 -- HARMONIC    
+         2            0          0 -- HARMONIC    
+
+ COLUMN TO ROW ANISOTROPY =   1.00000    
+
+ OPENING FILE ON UNIT   99:
+ P:\1206764-IMOD\IMOD30\TESTBANK\RUNS\TEST_ALL\TRANSMISSIVITY\IMODFLOW_KD1.IDF                                                                                                                           
+  FILE IDENTIFIED AS IDF
+
+ OPENING FILE ON UNIT   99:
+ P:\1206764-IMOD\IMOD30\TESTBANK\RUNS\TEST_ALL\VERTICAL_RESISTANCE\IMODFLOW_C1.IDF                                                                                                                       
+  FILE IDENTIFIED AS IDF
+
+ OPENING FILE ON UNIT   99:
+ P:\1206764-IMOD\IMOD30\TESTBANK\RUNS\TEST_ALL\TRANSMISSIVITY\IMODFLOW_KD2.IDF                                                                                                                           
+  FILE IDENTIFIED AS IDF
+
+ DRN -- DRAIN PACKAGE, VERSION 7, 5/2/2005 INPUT READ FROM UNIT   17
+ # Drain Package file
+ No named parameters
+ MAXIMUM OF      1 ACTIVE DRAINS AT ONE TIME
+ CELL-BY-CELL FLOWS WILL BE SAVED ON UNIT   31
+ LISTS OF DRAIN CELLS WILL NOT BE PRINTED
+ AUXILIARY DRAIN VARIABLE: ISUB            
+ DSUBSYS variabel ISUB             used for sub-system indices.
+
+
+     0 Drain parameters
+
+ PCG -- CONJUGATE-GRADIENT SOLUTION PACKAGE, VERSION 7, 5/2/2005
+ # Preconditioned Conjugate-Gradient Package
+ MAXIMUM OF    150 CALLS OF SOLUTION ROUTINE
+ MAXIMUM OF     20 INTERNAL ITERATIONS PER CALL TO SOLUTION ROUTINE
+ MATRIX PRECONDITIONING TYPE :    1
+
+
+
+                                    SOLUTION BY THE CONJUGATE-GRADIENT METHOD
+                                   -------------------------------------------
+                    MAXIMUM NUMBER OF CALLS TO PCG ROUTINE =      150
+                        MAXIMUM ITERATIONS PER CALL TO PCG =       20
+                               MATRIX PRECONDITIONING TYPE =        1
+        RELAXATION FACTOR (ONLY USED WITH PRECOND. TYPE 1) =    0.98000E+00
+ PARAMETER OF POLYNOMIAL PRECOND. = 2 (2) OR IS CALCULATED :        1
+                         HEAD CHANGE CRITERION FOR CLOSURE =    0.10000E-03
+                     RESIDUAL CHANGE CRITERION FOR CLOSURE =    0.10000E+02
+            PCG HEAD AND RESIDUAL CHANGE PRINTOUT INTERVAL =        1
+     PRINTING FROM SOLVER IS LIMITED(1) OR SUPPRESSED (>1) =        0
+                            STEADY-STATE DAMPING PARAMETER =    0.10000E+01
+                               TRANSIENT DAMPING PARAMETER =    0.10000E+01
+1
+                            STRESS PERIOD NO.    1, LENGTH =   0.000000    
+                            -----------------------------------------------
+
+                              NUMBER OF TIME STEPS =     1
+
+                               MULTIPLIER FOR DELT =     1.000
+
+                            INITIAL TIME STEP SIZE =   0.000000    
+  DATA IDENTIFIED AS GCD
+
+ OPENING FILE ON UNIT   99:
+ P:\1206764-IMOD\IMOD30\TESTBANK\RUNS\TEST_ALL\DRAINAGE\IMODFLOW_DRN_COND1.IDF                                                                                                                           
+  FILE IDENTIFIED AS IDF
+
+ OPENING FILE ON UNIT   99:
+ P:\1206764-IMOD\IMOD30\TESTBANK\RUNS\TEST_ALL\DRAINAGE\IMODFLOW_DRN_ELEV1.IDF                                                                                                                           
+  FILE IDENTIFIED AS IDF
+
+   1000 DRAINS
+ 
+ SOLVING FOR HEAD 
+ 
+ SOLVING FOR HEAD 
+
+
+     2 CALLS TO PCG ROUTINE FOR TIME STEP   1 IN STRESS PERIOD    1
+    15 TOTAL ITERATIONS
+
+ MAXIMUM HEAD CHANGE FOR EACH ITERATION (1 INDICATES THE FIRST INNER ITERATION):
+
+    HEAD CHANGE    HEAD CHANGE    HEAD CHANGE    HEAD CHANGE    HEAD CHANGE 
+   LAYER,ROW,COL  LAYER,ROW,COL  LAYER,ROW,COL  LAYER,ROW,COL  LAYER,ROW,COL
+ ---------------------------------------------------------------------------
+  1  -4.553      0   4.566      0  -1.878      0 -0.6425      0 -0.2235    
+   (  2,  1,100)  (  2,  1,100)  (  2,  1, 99)  (  2,  2, 94)  (  2,  4, 89)
+  0  0.1266      0 -0.2242E-01  0 -0.1673E-01  0  0.4400E-02  0  0.3658E-02
+   (  2,  1,100)  (  2,  1, 93)  (  2,  1,100)  (  2,  3, 82)  (  2,  1,100)
+  0 -0.7655E-03  0 -0.5192E-03  0 -0.1610E-03  0 -0.7559E-04  1  0.2831E-04
+   (  2,  2, 72)  (  2,  1, 99)  (  2,  3, 61)  (  2,100,100)  (  2,  2, 31)
+
+ MAXIMUM RESIDUAL FOR EACH ITERATION (1 INDICATES THE FIRST INNER ITERATION):
+
+    RESIDUAL       RESIDUAL       RESIDUAL       RESIDUAL       RESIDUAL    
+   LAYER,ROW,COL  LAYER,ROW,COL  LAYER,ROW,COL  LAYER,ROW,COL  LAYER,ROW,COL
+ ---------------------------------------------------------------------------
+  1  -206.0      0   203.3      0  -50.38      0   32.71      0   17.97    
+   (  2,  1, 99)  (  2,  1, 99)  (  2,  2, 99)  (  2,  2, 98)  (  2,  2, 98)
+  0   3.387      0   1.538      0 -0.6463      0 -0.2119      0 -0.1206    
+   (  2, 99, 99)  (  2,  1, 99)  (  2,100,100)  (  2,  1, 99)  (  2,  3, 97)
+  0  0.5132E-01  0  0.2645E-01  0  0.1320E-01  0  0.5345E-02  1  0.3447E-02
+   (  2, 99,100)  (  2,100,100)  (  2,100,100)  (  2,100,100)  (  2,100,100)
+
+
+
+ OUTPUT CONTROL FOR STRESS PERIOD    1   TIME STEP   1
+    SAVE HEAD FOR ALL LAYERS
+    SAVE BUDGET
+    SAVE BUDGET
+ INFO. Sign of cbc-flux FLOW RIGHT FACE is swapped!
+ INFO. Sign of cbc-flux FLOW FRONT FACE is swapped!
+ INFO. Sign of cbc-flux FLOW LOWER FACE is swapped!
+
+ HEAD WILL BE SAVED ON UNIT   28 AT END OF TIME STEP   1, STRESS PERIOD    1
+1
+  VOLUMETRIC BUDGET FOR ENTIRE MODEL AT END OF TIME STEP  1 IN STRESS PERIOD   1
+  ------------------------------------------------------------------------------
+
+     CUMULATIVE VOLUMES      L**3       RATES FOR THIS TIME STEP      L**3/T
+     ------------------                 ------------------------
+
+           IN:                                      IN:
+           ---                                      ---
+             STORAGE =           0.0000               STORAGE =           0.0000
+       CONSTANT HEAD =           0.0000         CONSTANT HEAD =       28398.1602
+              DRAINS =           0.0000                DRAINS =           0.0000
+
+            TOTAL IN =           0.0000              TOTAL IN =       28398.1602
+
+          OUT:                                     OUT:
+          ----                                     ----
+             STORAGE =           0.0000               STORAGE =           0.0000
+       CONSTANT HEAD =           0.0000         CONSTANT HEAD =           0.0000
+              DRAINS =           0.0000                DRAINS =       28398.1016
+
+           TOTAL OUT =           0.0000             TOTAL OUT =       28398.1016
+
+            IN - OUT =           0.0000              IN - OUT =       5.8594E-02
+
+ PERCENT DISCREPANCY =           0.00     PERCENT DISCREPANCY =           0.00
+
+
+
+
+
+
+          TIME SUMMARY AT END OF TIME STEP   1 IN STRESS PERIOD    1
+                    SECONDS     MINUTES      HOURS       DAYS        YEARS
+                    -----------------------------------------------------------
+   TIME STEP LENGTH  0.0000      0.0000      0.0000      0.0000      0.0000    
+ STRESS PERIOD TIME  0.0000      0.0000      0.0000      0.0000      0.0000    
+         TOTAL TIME  0.0000      0.0000      0.0000      0.0000      0.0000    
+1
+
+ Run end date and time (yyyy/mm/dd hh:mm:ss): 2014/06/10 10:28:47
+ Elapsed run time:  0.978 Seconds
+

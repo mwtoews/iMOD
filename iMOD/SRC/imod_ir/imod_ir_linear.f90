@@ -23,7 +23,8 @@ MODULE MOD_IR_LINEAR
 
 USE MOD_IR_PAR
 USE MOD_IR_UTL, ONLY : IR1FIELDS_STRING,IR1GETTREEVIEWID,IR1IMPULSEFACTOR,IR1FACTORIMPULSE
-USE MOD_SMPLX, ONLY : SMPLX_MAIN,IN_CON,IN_OBJ,NCON,NOBJ,NVAR,XVAR,ZOBJ,XSLK,LPSTATUS,ISORT,ICNVG
+USE MOD_SMPLX, ONLY : SMPLX_MAIN
+USE MOD_SMPLX_PAR
 USE MOD_UTL, ONLY : ITOS,RTOS,UTL_GETUNIT,UTL_CREATEDIR,UTL_INSIDEPOLYGON
 USE MOD_IDF, ONLY : IDFGETLOC
 USE MOD_OSD, ONLY : OSD_OPEN
@@ -164,23 +165,10 @@ CONTAINS
          !## upper boundary
          IN_CON(ICON+1)=TRIM(IN_CON(ICON+1))//' '//TRIM(RTOS(COEF(I,J,K,L,M,2),'E',5))
 
-!  WRITE(*,*) 'IIR : ',IIR ,' out of ',SIZE(COEF,1)
-!  WRITE(*,*) 'TPOL: ',IPOL,' out of ',SIZE(COEF,2)  !## target
-!  WRITE(*,*) 'MPOL: ',JPOL,' out of ',SIZE(COEF,3)  !## measurement
-!  WRITE(*,*) 'JRES: ',JRES,' out of ',SIZE(COEF,4)
-!  WRITE(*,*) 'JPER: ',JPER,' out of ',SIZE(COEF,5)
-!  WRITE(*,*) 'XL  : ',XL,' 1 out of ',SIZE(COEF,6)
-!  WRITE(*,*) 'XU  : ',XU,' 2 out of ',SIZE(COEF,6)
-!  COEF(IIR,IPOL,JPOL,JRES,JPER,1)=XL
-!  COEF(IIR,IPOL,JPOL,JRES,JPER,2)=XU
-
         ENDIF
        END DO  !DO IIR=1,NIR
 
       ENDDO  !DO IPOL2=1,POLNO(2,IFIELD)
-
-!WRITE(*,*) icon,TRIM(in_con(icon))
-!WRITE(*,*) icon+1,TRIM(in_con(icon+1))
 
       !## find constrains - target definition compared to percentile
       DO I=1,TTREE(JFIELD)%POL(IPOL1)%NDEF
@@ -196,9 +184,6 @@ CONTAINS
        ENDIF
       ENDDO
 
-!WRITE(*,*) icon,TRIM(in_con(icon))
-!WRITE(*,*) icon+1,TRIM(in_con(icon+1))
-
      ENDIF
     ENDDO  !DO IPER=1,NPER
 
@@ -206,8 +191,6 @@ CONTAINS
   ENDDO  !DO IRES=1,NRES
 
  ENDDO  !DO IPOL1=1,POLNO(1,IFIELD)
-
-!WRITE(*,*) icon,SIZE(in_con),ncon,nvar
 
  IVAR=0
  DO I=1,MTREE(IFIELD)%NPOL !NVAR
@@ -224,12 +207,8 @@ CONTAINS
      ENDIF
     END DO
 
-!WRITE(*,*) icon,TRIM(in_con(icon))
-
     ICON          =ICON+1
     IN_CON(ICON)  =IN_CON(ICON-1)
-
-!WRITE(*,*) icon,TRIM(in_con(icon))
 
     !## reals (value=0) or temporary real to be evaluated yet! (value=-1)
     IF(IFIXED(IVAR).EQ.0.OR.IFIXED(IVAR).EQ.-1)THEN
@@ -238,17 +217,15 @@ CONTAINS
     ELSEIF(IFIXED(IVAR).EQ.1)THEN
      IN_CON(ICON-1)=TRIM(IN_CON(ICON-1))//' >= '//TRIM(RTOS(IR1IMPULSEFACTOR(IMP(IVAR)-0.0,IIR),'F',3))
      IN_CON(ICON)  =TRIM(IN_CON(ICON))  //' <= '//TRIM(RTOS(IR1IMPULSEFACTOR(IMP(IVAR)+0.0,IIR),'F',3))
-!     IN_CON(ICON-1)=TRIM(IN_CON(ICON-1))//' = '//TRIM(RTOS(IR1IMPULSEFACTOR(IMP(IVAR),IIR),'F',3))
-!     IN_CON(ICON)  =TRIM(IN_CON(ICON))  //' = '//TRIM(RTOS(IR1IMPULSEFACTOR(IMP(IVAR),IIR),'F',3))
     ENDIF
    ENDIF
   END DO
  ENDDO
 
  NCON=ICON
- DO ICON=1,NCON
+! DO ICON=1,NCON
 !  WRITE(*,*) ICON,TRIM(IN_CON(ICON))!,IFIXED(ICON),IMP(ICON)
- END DO
+! END DO
 
  !## minimize objective function
  IN_OBJ='-1'
@@ -256,40 +233,9 @@ CONTAINS
   IN_OBJ=TRIM(IN_OBJ)//' -1'
  END DO
 
-! WRITE(*,*) TRIM(IN_OBJ)
-
- !## compute it manually
-! IF(NVAR.EQ.1)THEN
-!  CALL WMESSAGEBOX(OKONLY,EXCLAMATIONICON,COMMONOK,'To compute manually ... still busy with!','Error')
-!  RETURN
-! ELSE
  IF(ALLOCATED(ISORT))DEALLOCATE(ISORT)
  !## perform linearisation algorithm
  CALL SMPLX_MAIN()
-! ENDIF
-
-! DO I=1,NVAR
-!  WRITE(*,*) XVAR(I)
-!  WRITE(*,*) XSLK(I)
-! ENDDO
-
-! WRITE(*,*)
-! WRITE(*,'(A5,A15)') 'I','SOLUTION'!,'SLACK'
-! DO I=1,NVAR
-!  WRITE(*,'(I5,F15.4)') I,XVAR(I)!,XSLK(I)
-! END DO
-! WRITE(*,*)
-! WRITE(*,'(A5,A15)') 'I','EVALUATION'
-! DO I=1,NCON
-!  WRITE(*,'(2I5,F15.4,I3,A2)') I,ISORT(I),XSLK(I)!,C_TYPE(I),ctype(C_TYPE(I))
-! END DO
-! WRITE(*,*)
-! WRITE(*,*) ZOBJ
-
-! !## problem not solved
-! IF(ICNVG.EQ.1)THEN
-!  WRITE(*,*) TRIM(LPSTATUS)
-! ENDIF
 
  !## copy results to application
  !## fill results in memory
@@ -328,14 +274,11 @@ CONTAINS
   DO IIR=1,NIR
    IF(IR(IIR)%ISEL.NE.0)THEN
     NVAR=NVAR+1
-!    WRITE(*,*) IPOL2,IIR,NVAR,XVAR(NVAR),IFIXED(NVAR)
     IF(IFIXED(NVAR).EQ.-1)THEN
-!     WRITE(*,*) XVAR(NVAR),1.0-XVAR(NVAR),MAXVAR
      IF(MIN(XVAR(NVAR),(1.0-XVAR(NVAR))).LT.MAXVAR)THEN
       MAXVAR=MIN(XVAR(NVAR),(1.0-XVAR(NVAR)))
       IVAR  =NVAR
      ENDIF
-!     WRITE(*,*) MAXVAR,IVAR
     ENDIF
    ENDIF
   ENDDO
@@ -343,15 +286,9 @@ CONTAINS
  IF(IVAR.NE.0)THEN
   IFIXED(IVAR)=1
   IMP(IVAR)   =REAL(INT(MAXVAR))
-!  IR(IVAR)%IFIXED=1
   !## start next iteration
   INEXT=1
-!  WRITE(*,*) IVAR,IFIXED(IVAR),IMP(IVAR)
  ENDIF
-
-! WRITE(*,*) ivar,inext,maxvar,ift,ncomp
-
-! DEALLOCATE(XVAR,XSLK,ISORT)
 
  END SUBROUTINE IR1LINEARPROGRAMMING
 
@@ -390,7 +327,6 @@ CONTAINS
  NHOLD=0
  THOLD=0
  WRITE(IU,*)
-! WRITE(IU,'(100A1)') ('-',I=1,100)
  WRITE(IU,*) '     '//'TARGETS'
  WRITE(IU,'(5X,7A1)') ('-',I=1,7)
  ICON=0
@@ -412,8 +348,6 @@ CONTAINS
    OLIMP=REAL(NINT(OLIMP*100.0))/100.0
    OUIMP=REAL(NINT(OUIMP*100.0))/100.0
 
-!WRITE(*,*) olimp,ouimp
-
    INEWP=TTREE(JFIELD)%POL(IPOL)%DEF(IDEF)%INEWP
    INEWT=TTREE(JFIELD)%POL(IPOL)%DEF(IDEF)%INEWT
    LIMP =TTREE(JFIELD)%POL(IPOL)%DEF(IDEF)%LOWER
@@ -429,23 +363,9 @@ CONTAINS
    THOLD=THOLD+1
 
 !   !## heads
-!   IF(RES(INEWT)%ITYPERES.EQ.0)THEN
-
     LINE='Average effect is '//TRIM(RTOS(OLIMP,'F',3))//' within polygon area '// &
          '(should be between '//TRIM(RTOS(LIMP,'F',3))//' and '//TRIM(RTOS(UIMP,'F',3))//')'
-!    LINE=TRIM(ITOS(TTREE(JFIELD)%POL(IPOL)%EFFECT))//'% of polygon area has effect larger than '// &
-!         TRIM(RTOS(OLIMP,'F',3))//' (should be at least '//TRIM(RTOS(LIMP,'F',3))//')'
-!    WRITE(IU,*) '     '//TRIM(LINE)
-!    LINE=TRIM(ITOS(TTREE(JFIELD)%POL(IPOL)%EFFECT))//'% of polygon area has effect smaller than '// &
-!         TRIM(RTOS(OUIMP,'F',3))//' (should be at most '//TRIM(RTOS(UIMP,'F',3))//')'
     WRITE(IU,*) '     '//TRIM(LINE)
-
-!   !## m/dag (mean)
-!   ELSEIF(RES(INEWT)%ITYPERES.EQ.1)THEN
-!    LINE='Average effect is '//TRIM(RTOS(OLIMP,'F',3))//' within polygon area '// &
-!         '(should be in between '//TRIM(RTOS(LIMP,'F',3))//' and '//TRIM(RTOS(UIMP,'F',3))//')'
-!    WRITE(IU,*) '     '//TRIM(LINE)
-!   ENDIF
 
   END DO
  ENDDO
@@ -455,7 +375,6 @@ CONTAINS
  IF(ICNVG.EQ.1)WRITE(IU,'(A)') '     '//'Status solver: '//TRIM(LPSTATUS)
  WRITE(IU,*)
 
-! WRITE(IU,'(100A1)') ('-',I=1,100)
  WRITE(IU,*) '     '//'MEASURES'
  WRITE(IU,'(5X,8A1)') ('-',I=1,8)
 
@@ -470,14 +389,11 @@ CONTAINS
    IF(IFT.EQ.1)CIMP=MTREE(IFIELD)%POL(IPOL)%MES(IMES)%IMP
    IF(IFT.EQ.2)CIMP=MTREE(IFIELD)%POL(IPOL)%MES(IMES)%FT_IMP
    IF(IFIXED(NVAR).EQ.0)THEN
-!   IF(IR(IIR)%IFIXED.EQ.0)THEN
     LIMP=IR(IIR)%LLIMP!*IR(IIR)%MAXIR
     UIMP=IR(IIR)%ULIMP!*IR(IIR)%MAXIR
     LINE=TRIM(IR(IIR)%NAMEIR)//' = '//TRIM(RTOS(CIMP,'F',2))//' ('//TRIM(RTOS(LIMP,'F',2))//' - '//TRIM(RTOS(UIMP,'F',2))//')'
    ELSEIF(IFIXED(NVAR).EQ.1)THEN
-!   ELSEIF(IR(IIR)%IFIXED.EQ.1)THEN
     LIMP=IMP(NVAR)
-    !IR(IIR)%IMP!*IR(IIR)%MAXIR
     LINE=TRIM(IR(IIR)%NAMEIR)//' = '//TRIM(RTOS(CIMP,'F',2))//' (fixed: '//TRIM(RTOS(LIMP,'F',2))//')'
    ENDIF
    IF(CIMP.GE.LIMP.AND.CIMP.LE.UIMP)THEN
@@ -489,8 +405,6 @@ CONTAINS
  ENDDO
 
  CLOSE(IU)
-
-! CALL IR1LINEAR_SHOWOUTPUT(IFIELD)!,JFIELD)
 
  END SUBROUTINE IR1LINEAR_CREATEOUTPUT
 
@@ -516,9 +430,7 @@ CONTAINS
  LOGICAL :: LEX
 
  CALL IR1FIELDS_STRING(CTREE,2,IFIELD)
- DIRNAME=TRIM(RESDIR)//'\'//TRIM(ADJUSTL(CTREE(1)))//'\'//TRIM(ADJUSTL(CTREE(2)))//'\optimize.log'!//TRIM(CNAME)!TRIM(ADJUSTL(CTREE(3)))
-! IF(.NOT.IOSDIREXISTS(TRIM(DIRNAME)))CALL UTL_CREATEDIR(DIRNAME)
-! DIRNAME=TRIM(DIRNAME)//'\optimize.log'!//TRIM(CNAME)!TRIM(ADJUSTL(CTREE(3)))
+ DIRNAME=TRIM(RESDIR)//'\'//TRIM(ADJUSTL(CTREE(1)))//'\'//TRIM(ADJUSTL(CTREE(2)))//'\optimize.log'
  INQUIRE(FILE=DIRNAME,EXIST=LEX)
  IF(.NOT.LEX)THEN
   CALL WMESSAGEBOX(OKONLY,EXCLAMATIONICON,COMMONOK,'Can not open logfile'//CHAR(13)// &
@@ -558,17 +470,9 @@ CONTAINS
 
  DO IPOL=1,TTREE(JFIELD)%NPOL
 
-!WRITE(*,*) ipol,polno(ic,ifield)
-
   NCRD=TTREE(JFIELD)%POL(IPOL)%NCRD
   ALLOCATE(XPOL(NCRD),YPOL(NCRD))
 
-!   XMIN=MINVAL(POL(IPOL,IC,IFIELD)%X(1:NCRD))
-!   XMAX=MAXVAL(POL(IPOL,IC,IFIELD)%X(1:NCRD))
-!   YMIN=MINVAL(POL(IPOL,IC,IFIELD)%Y(1:NCRD))
-!   YMAX=MAXVAL(POL(IPOL,IC,IFIELD)%Y(1:NCRD))
-
-!WRITE(*,*) EFFECT(1)%NROW,EFFECT(1)%Ncol
   NSORT=0
 
   !## evaluate whether effect are within polygon
@@ -596,39 +500,18 @@ CONTAINS
    !## heads
    IF(RES(IRES)%ITYPERES.EQ.0)THEN
 
-!    !## percentage for current target and current polygon
-!    PERC=TTREE(JFIELD)%POL(IPOL)%EFFECT
-!    !## minimal percentage = 1.0%
-!    PERC=MAX(1.0,PERC)
-!    TTREE(JFIELD)%POL(IPOL)%EFFECT=PERC
-!    !## upper
-!    XU  =UTL_GETMED(XSORT,NSORT,-999.99,PERC,ISORT)        !## -999.99=nodata
-!    !## lower
-!    XL  =UTL_GETMED(XSORT,NSORT,-999.99,100.0-PERC,ISORT)  !## -999.99=nodata
-
-!    PERC=REAL(NSORT)!REAL(EFFECT(1)%NROW*EFFECT(1)%NCOL)
     XU  =SUM(XSORT(1:NSORT))/REAL(NSORT)
     XL=XU
 
    !## m/dag (mean)
    ELSEIF(RES(IRES)%ITYPERES.EQ.1)THEN
 
-!    PERC=REAL(NSORT)!REAL(EFFECT(1)%NROW*EFFECT(1)%NCOL)
     XU  =SUM(XSORT(1:NSORT))/REAL(NSORT)
     XL=XU
 
    ENDIF
 
   ENDIF
-
-!  WRITE(*,*) 'NSORT:',NSORT
-!  WRITE(*,*) 'IIR : ',IIR ,' out of ',SIZE(COEF,1)
-!  WRITE(*,*) 'TPOL: ',IPOL,' out of ',SIZE(COEF,2)  !## target
-!  WRITE(*,*) 'MPOL: ',JPOL,' out of ',SIZE(COEF,3)  !## measurement
-!  WRITE(*,*) 'JRES: ',JRES,' out of ',SIZE(COEF,4)
-!  WRITE(*,*) 'JPER: ',JPER,' out of ',SIZE(COEF,5)
-!  WRITE(*,*) 'XL  : ',XL,' 1 out of ',SIZE(COEF,6)
-!  WRITE(*,*) 'XU  : ',XU,' 2 out of ',SIZE(COEF,6)
 
   COEF(IIR,IPOL,JPOL,JRES,JPER,1)=XL
   COEF(IIR,IPOL,JPOL,JRES,JPER,2)=XU

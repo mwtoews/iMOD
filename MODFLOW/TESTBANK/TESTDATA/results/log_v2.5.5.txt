@@ -1,0 +1,6 @@
+ ===========================
+ SUMMARY OF MODEL SIMULATION
+ ===========================
+
+ Logfile for iMODFLOW v2.5.5
+PWT PACKAGE not suitable for one/two-layered model!

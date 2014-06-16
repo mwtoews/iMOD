@@ -1,0 +1,6 @@
+# Horizontal Flow Barrier Package file
+0 0 1 noprint hfbfact
+lcd 00001
+1
+2 9.9999998E-03
+open/close 'P:\1206764-IMOD\IMOD30\TESTBANK\RUNS\TEST_ALL\HORIZONTAL_BARRIER\IMODFLOW_HFB2.GEN' 1.000000 (free) -1 scaling -1 -1
