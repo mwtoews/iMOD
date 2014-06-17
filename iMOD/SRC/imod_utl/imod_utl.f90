@@ -68,17 +68,10 @@ CONTAINS
   DO I=1,SIZE(PROC)
    PID=PROC(I)%ID
 
-!#if (defined(COMPILERVLAG))
-!Teller=0
-!#endif
-!## wintreracter 9.20
-!   CALL IOSCOMMANDCHECK(PID,ISTATUS,IEXCOD)
    !## not running free, process
    IF(ISTATUS.EQ.0)THEN
     !## non-blocked process not stopped correctly
     IF(PROC(I)%IFLAGS(2).EQ.0.AND.IEXCOD.NE.0)THEN
-!## winteracter 8.0b
-!     CALL IOSCOMMANDKILL(PID,IEXCOD)
      CALL WMESSAGEBOX(OKONLY,EXCLAMATIONICON,COMMONOK,TRIM(STRING)//CHAR(13)//'in program:'//TRIM(PROC(I)%CID),'Program Terminated')
     ENDIF
     PROC(I)%ID=0; PROC(I)%CID=''; PROC(I)%IFLAGS=0
@@ -2355,75 +2348,14 @@ CONTAINS
  END FUNCTION EQUALS_REAL
 
  !###====================================================
- SUBROUTINE PEUCKER_SIMPLIFYLINE(X,Y,GCODE,N)
+ SUBROUTINE PEUCKER_SIMPLIFYLINE(XCOORD,YCOORD,GENCODE,PTSINCHAIN)
  !###====================================================
- !## Appendix 4. The Hull implementation of the Douglas and Peucker algorithm.
- !##            (c) Phil Wade, 1984; as the supervisor of both Whyatt and Wade, 
- !##            I (Mahes Visvalingam) note this omission in the original publications. 
- !## http://www2.hull.ac.uk/CISRG/publications/DPs/DP4/DP4.html
  IMPLICIT NONE
- INTEGER,INTENT(IN) :: N
- REAL,DIMENSION(N),INTENT(IN) :: X,Y
- REAL,DIMENSION(N),INTENT(OUT) :: GCODE  !## automatic array 
-
- !## Generalize this chain using Douglas and Peucker method.
- CALL PEUCKER_GENERALIZE(X,Y,N,GCODE)
- 
- END SUBROUTINE PEUCKER_SIMPLIFYLINE
-
- !###====================================================
- SUBROUTINE PEUCKER_GENERALIZE(XCOORD,YCOORD,PTSINCHAIN,GENCODE) 
- !###====================================================
- IMPLICIT NONE 
  INTEGER,INTENT(IN) :: PTSINCHAIN
  REAL,INTENT(IN),DIMENSION(PTSINCHAIN) :: XCOORD,YCOORD
  REAL,INTENT(OUT),DIMENSION(PTSINCHAIN) :: GENCODE
- INTEGER :: I,J,CORDSTART,CORDEND,POINT
- REAL :: DIS,MAXDIS
 
- !## Set the generalization code of the first and last points to 999999
- !## and set the others to -1.
- GENCODE(1)=999999.0
- DO I=2,PTSINCHAIN-1
-  GENCODE(I)=-1.0
- ENDDO
- GENCODE(PTSINCHAIN)=999999.0
- 
- !## start with first location
- CORDSTART=1
-
- !## Main loop to give a generalization code to each point.
- DO I=1,PTSINCHAIN-2
-
-  !## Find the first point on the line to have a generalization code.
-  DO WHILE(GENCODE(CORDSTART+1).GT.-1.0)
-   CORDSTART=CORDSTART+1
-  END DO
-
-  !## Find the first point after this with a generalization code.
-  CORDEND=CORDSTART+2
-  DO WHILE(GENCODE(CORDEND).EQ.-1.0)
-   CORDEND=CORDEND+1
-  END DO 
-
-  !## Find the point with the maximum distance from the "Anchor-Floater" line
-  MAXDIS=-1.0
-  DO J=CORDSTART+1,CORDEND-1
-   CALL PEUCKER_CLCDIS(DIS,XCOORD(CORDSTART),YCOORD(CORDSTART), &
-               XCOORD(CORDEND),YCOORD(CORDEND),XCOORD(J),YCOORD(J))
-   IF(DIS.GT.MAXDIS) THEN
-    POINT=J
-    MAXDIS=DIS
-   ENDIF
-  ENDDO
-
-  !## Give the point which is furthest away from the "Anchor-Floater"
-  !## line the generalization code of this distance away.
-  GENCODE(POINT)=MIN(GENCODE(CORDSTART),GENCODE(CORDEND),SQRT(MAXDIS))
-  
- ENDDO
-
- END SUBROUTINE PEUCKER_GENERALIZE
+ END SUBROUTINE PEUCKER_SIMPLIFYLINE
 
  !###====================================================
  SUBROUTINE PEUCKER_CLCDIS(DIS,XCDST,YCDST,XCDEND,YCDEND,XPT,YPT)
@@ -2431,39 +2363,6 @@ CONTAINS
  IMPLICIT NONE
  REAL,INTENT(IN) :: XCDST,YCDST,XCDEND,YCDEND,XPT,YPT
  REAL,INTENT(OUT) :: DIS
- REAL :: X1,Y1,X2,Y2,X3,Y3,LAMBDA,X,Y
-
- X1=XCDST
- Y1=YCDST
- X2=XCDEND
- Y2=YCDEND
- X3=XPT
- Y3=YPT
-
- IF(XCDST.EQ.XCDEND.AND.YCDST.EQ.YCDEND) THEN
-  LAMBDA=0.0
- ELSE
-  LAMBDA=(X1*(X1-X2-X3)+X2*X3+   &
-          Y1*(Y1-Y2-Y3)+Y2*Y3)/  &
-        ((X2-X1)*(X2-X1)+(Y2-Y1)*(Y2-Y1))
- ENDIF
-
- !## Calculate the values of x and y, this is the co-ordinate of the
- !## point where the perpendicular from the point in question joins
- !## the line from the anchor to the floater 
- IF(LAMBDA.LT.0.0)THEN
-  X=X1
-  Y=Y1
- ELSE IF(LAMBDA.GT.1.0)THEN
-  X=X2
-  Y=Y2
- ELSE
-  X=X1+LAMBDA*(X2-X1)
-  Y=Y1+LAMBDA*(Y2-Y1)
- ENDIF 
-
- !## Calculate the square of the distance from (X3,Y3) to (X,Y)
- DIS=(X3-X)*(X3-X)+(Y3-Y)*(Y3-Y)
 
  END SUBROUTINE PEUCKER_CLCDIS
 
