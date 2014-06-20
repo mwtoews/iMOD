@@ -258,11 +258,8 @@ CONTAINS
  INTEGER,ALLOCATABLE,DIMENSION(:,:) :: SELDQ 
  REAL,ALLOCATABLE,DIMENSION(:) :: B
  REAL,ALLOCATABLE,DIMENSION(:,:) :: A
- INTEGER,ALLOCATABLE,DIMENSION(:) :: INDX
  INTEGER,DIMENSION(4) :: NQUADRANT,INQUADRANT 
  INTEGER,ALLOCATABLE,DIMENSION(:,:) :: IQUADRANT
- 
-! open(99,file='d:\test.csv',status='unknown',action='write')
  
  IF(NOSEARCH.EQ.0)THEN
  
@@ -293,7 +290,7 @@ CONTAINS
  
  !## simple kriging (ktype.gt.0) and ordinary kriging (ktype.lt.0)
  N=NP; IF(KTYPE.LT.0)N=NP+1
- ALLOCATE(A(N,N),B(N),INDX(N))
+ ALLOCATE(A(N,N),B(N))
 
  A=0.0; B=0.0
  DO I=1,NP 
@@ -321,8 +318,7 @@ CONTAINS
   DO I=1,J; A(I,J)=1.0; A(J,I)=1.0; ENDDO; A(J,J)=0.0; B(J)=1.0
  ENDIF
  
- CALL LUDCMP(A,INDX,N)
- CALL LUBKSB(A,INDX,B,N)
+ CALL LUDCMP(A,B,N) 
 
  !## ordinary kriging compute the local mean mzz instead of the global mean mz
  IF(KTYPE.LT.0)THEN
@@ -352,7 +348,7 @@ CONTAINS
  ENDDO
  IF(KTYPE.LT.0)KVAR=KVAR+B(N)
  
- DEALLOCATE(SELID,A,B,INDX)
+ DEALLOCATE(SELID,A,B)
   
  END SUBROUTINE KRIGING_FILLSYSTEM
 

@@ -25,25 +25,71 @@ MODULE MOD_LUDCMP
 CONTAINS
 
  !###====================================================================
- SUBROUTINE LUDCMP(AA,INDX,N)
+ SUBROUTINE LUDCMP(A,B,N)
  !###====================================================================
  IMPLICIT NONE
  INTEGER,INTENT(IN)   :: N
- INTEGER,DIMENSION(N),INTENT(OUT) :: INDX
- REAL,DIMENSION(N,N),INTENT(INOUT)  :: AA
+ REAL,DIMENSION(N,N),INTENT(INOUT)  :: A
+ REAL,DIMENSION(N),INTENT(INOUT)  :: B
+ REAL,DIMENSION(:,:),ALLOCATABLE :: L,U
+ INTEGER :: I,J,K
+ REAL :: X
+
+ ALLOCATE(L(N,N),U(N,N)); L=0.0; U=0.0
+
+ !## transform first column
+ DO I=1,N; L(I,1)=A(I,1); ENDDO
+ !## transform first row
+ DO I=1,N; U(1,I)=A(1,I)/A(1,1); ENDDO
+ DO I=1,N; U(I,I)=1.0; ENDDO
+ 
+ DO J=2,N-1
+
+  DO I=J,N
+   X=0.0
+   DO K=1,J-1
+    X=X+L(I,K)*U(K,J)
+   ENDDO
+   L(I,J)=A(I,J)-X
+  ENDDO
+  DO K=J+1,N
+   X=0.0
+   DO I=1,J-1
+    X=X+L(J,I)*U(I,K)
+   ENDDO
+   U(J,K)=(A(J,K)-X)/L(J,J)
+  ENDDO
+
+ ENDDO
+ 
+ X=0.0
+ DO K=1,N-1
+  X=X+L(N,K)*U(K,N)
+ ENDDO
+ L(N,N)=A(N,N)-X
+ 
+ !## forward substitution
+ B(1)=B(1)/L(1,1)
+ DO I=2,N
+  X=0.0
+  DO J=1,I-1
+   X=X+L(I,J)*B(J)
+  ENDDO
+  B(I)=(B(I)-X)/L(I,I)
+ ENDDO
+
+ !## backward substitution
+ DO I=N-1,1,-1
+  X=0.0
+  DO J=I+1,N
+   X=X+U(I,J)*B(J)
+  ENDDO
+  B(I)=B(I)-X
+ ENDDO
+
+ DEALLOCATE(L,U)
  
  END SUBROUTINE LUDCMP
-
- !###====================================================================
- SUBROUTINE LUBKSB(AA,INDX,BB,N)
- !###====================================================================
- IMPLICIT NONE
- INTEGER,INTENT(IN)   :: N
- REAL,DIMENSION(N,N),INTENT(INOUT)  :: AA
- REAL,DIMENSION(N),INTENT(INOUT) :: BB
- INTEGER,DIMENSION(N),INTENT(IN) :: INDX
-
- END SUBROUTINE LUBKSB
 
 END MODULE MOD_LUDCMP
 

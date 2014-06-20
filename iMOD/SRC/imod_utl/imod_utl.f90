@@ -355,99 +355,17 @@ CONTAINS
  END FUNCTION UTL_POLYGON1AREA
 
  !###======================================================================
- INTEGER FUNCTION UTL_INSIDEPOLYGON(PX,PY,XX,YY,XPOL,YPOL,N)
+ INTEGER FUNCTION UTL_INSIDEPOLYGON(PX,PY,XX,YY,N)
  !###======================================================================
  IMPLICIT NONE
  INTEGER,INTENT(IN) :: N
  REAL,INTENT(IN) :: PX,PY
  REAL,DIMENSION(N),INTENT(IN) :: XX,YY
- REAL,DIMENSION(N),INTENT(INOUT) :: XPOL,YPOL
  
  UTL_INSIDEPOLYGON=-1
  IF(IGRINSIDEPOLYGON(XX,YY,N,PX,PY))UTL_INSIDEPOLYGON=1
  
  END FUNCTION UTL_INSIDEPOLYGON
- 
-! !###======================================================================
-! INTEGER FUNCTION UTL_INSIDEPOLYGON2(PX,PY,XX,YY,X,Y,N)
-! !###======================================================================
-! !
-! !code extracted from the internet:
-! !http://www.ecse.rpi.edu/Homepages/wrf/Research/Short_Notes/pnpoly.html#Fortran%20Code%20for%20the%20Point%20in%20Polygon%20Test
-! !
-! !    PURPOSE TO DETERMINE WHETHER A POINT IS INSIDE A POLYGON
-! !
-! !    DESCRIPTION OF THE PARAMETERS
-! !       PX      - X-COORDINATE OF POINT IN QUESTION.
-! !       PY      - Y-COORDINATE OF POINT IN QUESTION.
-! !       XX      - N LONG VECTOR CONTAINING X-COORDINATES OF
-! !                 VERTICES OF POLYGON.
-! !       YY      - N LONG VECTOR CONTAING Y-COORDINATES OF
-! !                 VERTICES OF POLYGON.
-! !       N       - NUMBER OF VERTICES IN THE POLYGON.
-! !       UTL_INSIDEPOLYGON   - THE SIGNAL RETURNED:
-! !                 -1 IF THE POINT IS OUTSIDE OF THE POLYGON,
-! !                  0 IF THE POINT IS ON AN EDGE OR AT A VERTEX,
-! !                  1 IF THE POINT IS INSIDE OF THE POLYGON.
-!
-! !    REMARKS
-! !       THE VERTICES MAY BE LISTED CLOCKWISE OR ANTICLOCKWISE.
-! !       THE FIRST MAY OPTIONALLY BE REPEATED, IF SO N MAY
-! !       OPTIONALLY BE INCREASED BY 1.
-! !       THE INPUT POLYGON MAY BE A COMPOUND POLYGON CONSISTING
-! !       OF SEVERAL SEPARATE SUBPOLYGONS. IF SO, THE FIRST VERTEX
-! !       OF EACH SUBPOLYGON MUST BE REPEATED, AND WHEN CALCULATING
-! !       N, THESE FIRST VERTICES MUST BE COUNTED TWICE.
-! !       INOUT IS THE ONLY PARAMETER WHOSE VALUE IS CHANGED.
-! !       THE SIZE OF THE ARRAYS MUST BE INCREASED IF N > MAXDIM
-! !       WRITTEN BY RANDOLPH FRANKLIN, UNIVERSITY OF OTTAWA, 7/70.
-! !
-! !
-! !    METHOD
-! !       A VERTICAL LINE IS DRAWN THRU THE POINT IN QUESTION. IF IT
-! !       CROSSES THE POLYGON AN ODD NUMBER OF TIMES, THEN THE
-! !       POINT IS INSIDE OF THE POLYGON.
-! !
-! IMPLICIT NONE
-! INTEGER,INTENT(IN) :: N
-! REAL,INTENT(IN) :: PX,PY
-! REAL,DIMENSION(N),INTENT(IN) :: XX,YY
-! REAL,DIMENSION(N),INTENT(INOUT) :: X,Y
-! LOGICAL :: MX,MY,NX,NY
-! INTEGER :: I,J
-!
-! DO I=1,N
-!  X(I)=XX(I)-PX
-!  Y(I)=YY(I)-PY
-! ENDDO
-! UTL_INSIDEPOLYGON2=-1
-! DO I=1,N
-!  J =1+MOD(I,N)
-!  MX=X(I).GE.0.0
-!  NX=X(J).GE.0.0
-!  MY=Y(I).GE.0.0
-!  NY=Y(J).GE.0.0
-!  IF(.NOT.((MY.OR.NY).AND.(MX.OR.NX)).OR.(MX.AND.NX))THEN
-! !  GO TO 2
-!  ELSE
-!   IF(.NOT.(MY.AND.NY.AND.(MX.OR.NX).AND..NOT.(MX.AND.NX)))THEN
-! !    GO TO 3
-!    IF((Y(I)*X(J)-X(I)*Y(J))/(X(J)-X(I)).LT.0.0)THEN
-!    ! GOTO2
-!    ELSEIF((Y(I)*X(J)-X(I)*Y(J))/(X(J)-X(I)).EQ.0.0)THEN
-!     UTL_INSIDEPOLYGON2=0
-!     EXIT 
-!    ELSEIF((Y(I)*X(J)-X(I)*Y(J))/(X(J)-X(I)).GT.0.0)THEN
-!     UTL_INSIDEPOLYGON2=-UTL_INSIDEPOLYGON2
-!    ENDIF
-!   ELSE
-!    UTL_INSIDEPOLYGON2=-UTL_INSIDEPOLYGON2
-! !   GO TO 2
-!   ENDIF
-!  ENDIF
-! ENDDO
-!
-! END FUNCTION UTL_INSIDEPOLYGON2
 
  !###======================================================================
  SUBROUTINE UTL_STDEF(X,N,NODATA,VAR,XT,NPOP)
@@ -2348,23 +2266,69 @@ CONTAINS
  END FUNCTION EQUALS_REAL
 
  !###====================================================
- SUBROUTINE PEUCKER_SIMPLIFYLINE(XCOORD,YCOORD,GENCODE,PTSINCHAIN)
+ SUBROUTINE PEUCKER_SIMPLIFYLINE(XC,YC,PDCODE,N)
  !###====================================================
  IMPLICIT NONE
- INTEGER,INTENT(IN) :: PTSINCHAIN
- REAL,INTENT(IN),DIMENSION(PTSINCHAIN) :: XCOORD,YCOORD
- REAL,INTENT(OUT),DIMENSION(PTSINCHAIN) :: GENCODE
+ INTEGER,INTENT(IN) :: N
+ REAL,INTENT(IN),DIMENSION(N) :: XC,YC
+ REAL,INTENT(OUT),DIMENSION(N) :: PDCODE
+ INTEGER :: MJ,J1,J2
+ REAL :: MD
 
+ PDCODE=-999.99
+ !## set first and last point, distance is zero
+ PDCODE(1)=0.0; PDCODE(N)=0.0
+ 
+ !## process each intermediate point
+ DO 
+
+  !## get the start point (first empty spot)
+  DO J1=1,N-1; IF(PDCODE(J1).LT.0.0)EXIT; ENDDO
+  !## finished
+  IF(J1.EQ.N)EXIT
+  !## previous fixed point
+  J1=J1-1
+  
+  !## get the end point (fixed point)
+  DO J2=J1+1,N; IF(PDCODE(J2).GE.0.0)EXIT; ENDDO
+
+  !## get the maximal distance in between i1 and i2 and tag it
+  CALL PEUCKER_CALCDISTANCE(J1,J2,N,XC,YC,MJ,MD)
+
+  !## tag decrease line segment to examine
+  IF(MJ.GT.0)PDCODE(MJ)=MD
+
+ ENDDO
+ 
  END SUBROUTINE PEUCKER_SIMPLIFYLINE
 
  !###====================================================
- SUBROUTINE PEUCKER_CLCDIS(DIS,XCDST,YCDST,XCDEND,YCDEND,XPT,YPT)
+ SUBROUTINE PEUCKER_CALCDISTANCE(J1,J2,N,XC,YC,MJ,MD)
  !###====================================================
  IMPLICIT NONE
- REAL,INTENT(IN) :: XCDST,YCDST,XCDEND,YCDEND,XPT,YPT
- REAL,INTENT(OUT) :: DIS
+ INTEGER,INTENT(IN) :: N,J1,J2
+ REAL,INTENT(OUT) :: MD
+ REAL,INTENT(IN),DIMENSION(N) :: XC,YC
+ INTEGER,INTENT(OUT) :: MJ
+ INTEGER :: J
+ REAL :: B,A,D,Y
+ 
+ !## line equation
+ B=YC(J1); A=(YC(J2)-YC(J1))/(XC(J2)-XC(J1)); MD=-1.0; MJ=0
+ 
+ !## loop over all points
+ DO J=J1+1,J2-1
+  !## get point on line
+  Y=(XC(J)-XC(J1))*A+B
+  !## get difference between line and point
+  D=ABS(Y-YC(J))
+  !## keep this one is this is largers
+  IF(D.GT.MD)THEN
+   MD=D; MJ=J
+  ENDIF
+ ENDDO
 
- END SUBROUTINE PEUCKER_CLCDIS
+ END SUBROUTINE PEUCKER_CALCDISTANCE
 
  !###====================================================
  SUBROUTINE UTL_FIT_REGRESSION(X,Y,NDATA,SIG,MWT,A,B,SIGA,SIGB,CHI2,Q)

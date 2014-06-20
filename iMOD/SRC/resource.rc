@@ -14,15 +14,15 @@
 //
 // Include files
 //
-#include "d:\OSS\iMOD\LIB\WINTERACTER\OS_X32\include\winparam.h"
+#include "..\LIB\WINTERACTER\OS_X32\include\winparam.h"
 #ifdef XLIB
-#include "d:\OSS\iMOD\LIB\WINTERACTER\OS_X32\include\filesel.rc"
-#include "d:\OSS\iMOD\LIB\WINTERACTER\OS_X32\include\colour.rc"
+#include "..\LIB\WINTERACTER\OS_X32\include\filesel.rc"
+#include "..\LIB\WINTERACTER\OS_X32\include\colour.rc"
 #endif
-#include "d:\OSS\iMOD\LIB\WINTERACTER\OS_X32\include\dirsel.rc"
-#include "d:\OSS\iMOD\LIB\WINTERACTER\OS_X32\include\editor.rc"
-#include "d:\OSS\iMOD\LIB\WINTERACTER\OS_X32\include\pagesetup.rc"
-#include "d:\OSS\iMOD\LIB\WINTERACTER\OS_X32\include\hardcopy.rc"
+#include "..\LIB\WINTERACTER\OS_X32\include\dirsel.rc"
+#include "..\LIB\WINTERACTER\OS_X32\include\editor.rc"
+#include "..\LIB\WINTERACTER\OS_X32\include\pagesetup.rc"
+#include "..\LIB\WINTERACTER\OS_X32\include\hardcopy.rc"
  
 ///////////////////////////////////////////////////
 //

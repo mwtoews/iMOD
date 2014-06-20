@@ -152,7 +152,7 @@ CONTAINS
  END SUBROUTINE IR1GENREAD
 
  !###======================================================================
- SUBROUTINE IR1GENCOPY(ID)!,IBC)
+ SUBROUTINE IR1GENCOPY(ID)
  !###======================================================================
  IMPLICIT NONE
  INTEGER,INTENT(IN) :: ID!,IBC
@@ -322,44 +322,10 @@ CONTAINS
    I2=BC(IBC)%IXY(I+1)
    N =I2-I1
 
-   IF(N.GT.SIZE(XPOL))THEN
-    DEALLOCATE(XPOL,YPOL)
-    ALLOCATE(XPOL(N),YPOL(N))
-   ENDIF
-
-   IF(UTL_INSIDEPOLYGON(XC,YC,BC(IBC)%X(I1:N),BC(IBC)%Y(I1:N),XPOL,YPOL,N).EQ.1)ISELGEN(I)=INT(1,1)
+   IF(UTL_INSIDEPOLYGON(XC,YC,BC(IBC)%X(I1:N),BC(IBC)%Y(I1:N),N).EQ.1)ISELGEN(I)=INT(1,1)
 
   END IF
  END DO
-
- !## position of current polygon
-! J1=BC(IBC)%IXY(ISELGEN)
-! J2=BC(IBC)%IXY(ISELGEN+1)
-! M =J2-J1
-
- !## check for inside sub-polygons
-! DO I=1,NGEN
-
-!  IF(BC(IBC)%XMIN(I).LT.BC(IBC)%XMAX(ISELGEN).AND.BC(IBC)%XMAX(I).GT.BC(IBC)%XMIN(ISELGEN).AND. &
-!     BC(IBC)%YMIN(I).LT.BC(IBC)%YMAX(ISELGEN).AND.BC(IBC)%YMAX(I).GT.BC(IBC)%YMIN(ISELGEN))THEN
-
-   !## position of new polygon to be evaluated
-!   I1=BC(IBC)%IXY(I)
-!   I2=BC(IBC)%IXY(I+1)
-!   N =I2-I1
-
-   !## get closest point
-!   CALL IR1GENCLOSESTPOINT(J1,J2,I1,I2,IPOS)
-
-   !## inside current polygon?
-!   IF(UTL_INSIDEPOLYGON(BC(IBC)%X(IPOS),BC(IBC)%Y(IPOS),BC(IBC)%X(J1),BC(IBC)%Y(J1),XPOL,YPOL,M).EQ.1)THEN
-!    CALL IGRPOLYGONCOMPLEX(BC(IBC)%X(i1),BC(IBC)%Y(i1),n)
-!    !## expand current polygon
-!    WRITE(*,*) 'inside'
-!   ENDIF
-
-!  END IF
-! END DO
 
  !## draw new ones
  CALL IR1GENDRAWSHAPES(IBC)

@@ -248,6 +248,9 @@ CONTAINS
   CALL IMOD3D_CLOSE(); RETURN
  ENDIF
 
+ http://www.oogtech.org/content/2010/04/20/opengl-es-1-1-using-vbos-and-other-buffers/
+ call glbufferdata()
+ 
  CALL MAIN1INACTMODULE(ID_3DTOOL)
 
  ISOLID_3D=IACTSOLID
