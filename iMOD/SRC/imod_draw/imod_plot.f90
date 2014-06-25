@@ -418,7 +418,7 @@ IF(IDZ.EQ.ID_ZOOMFULLMAP)THEN
   MPW%YMAX=MPW%YMAX+1.0
   MPW%YMIN=MPW%YMIN-1.0
  ENDIF
-!#increase window to count for y-size!
+ !## increase window to count for y-size!
  Y       =(MPW%YMAX-MPW%YMIN)/2.0
  Y       = Y/2.0
  MPW%YMAX= MPW%YMAX+Y
@@ -429,16 +429,16 @@ ELSEIF(IDZ.EQ.ID_ZOOMTAG)THEN
 
  CALL TAGZOOM()
 
-!##interactive zooming
+!## interactive zooming
 ELSEIF(IDZ.EQ.ID_ZOOMINMAP.OR.IDZ.EQ.ID_ZOOMOUTMAP)THEN
  XC2=GX
  YC2=GY
  CALL IDFADJUSTMAP(IDZ,XC1,YC1,XC2,YC2,FZ)
 
-!##interactive zooming
+!## interactive zooming
 ELSEIF(IDZ.EQ.ID_ZOOMRECTANGLEMAP)THEN
 
-!##rectangle zoom
+!## rectangle zoom
  CALL IGRPLOTMODE(MODEXOR)
  CALL IGRCOLOURN(WRGB(255,255,255))
  CALL IGRFILLPATTERN(OUTLINE)
@@ -533,8 +533,6 @@ ENDIF
 
 CALL WINDOWSELECT(0)
 CALL WINDOWOUTSTATUSBAR(2,'')
-
-!CALL IDFPLOTFAST(1)
 
 RETURN
 END SUBROUTINE

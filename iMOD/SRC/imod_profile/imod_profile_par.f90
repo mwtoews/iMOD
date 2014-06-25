@@ -19,6 +19,7 @@
 !!  Stichting Deltares
 !!  P.O. Box 177
 !!  2600 MH Delft, The Netherlands.
+!!
 MODULE MOD_PROF_PAR
 
 USE MOD_IDF_PAR, ONLY : IDFOBJ
@@ -64,8 +65,7 @@ INTEGER,SAVE :: IDOWN     ! mouse pressed?
 INTEGER,SAVE :: IXY       ! move current point of profile
 LOGICAL,SAVE :: LLINE     ! line drawn
 REAL,SAVE :: XPOS         ! x position on profile
-!REAL :: YPOS         ! y position on profile
-INTEGER,SAVE :: NXY       !number of point is profile
+INTEGER,SAVE :: NXY       ! number of point is profile
 REAL,SAVE :: XMIN,XMAX,YMIN,YMAX
 
 TYPE PROFOBJ
@@ -87,6 +87,7 @@ INTEGER,DIMENSION(:),ALLOCATABLE,SAVE :: IPIPET
 TYPE BITMAPOBJ
  INTEGER :: IACT,ITYPE,NCOL,NROW,NCLR,COMPR,CDEPT,IBITMAP,IW,IH
  INTEGER :: IX1,IX2,IY1,IY2
+ REAL :: GX1,GX2,GY1,GY2
  CHARACTER(LEN=256) :: FNAME
 END TYPE BITMAPOBJ
 TYPE(BITMAPOBJ) :: PBITMAP

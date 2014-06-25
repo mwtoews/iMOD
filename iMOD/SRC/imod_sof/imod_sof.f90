@@ -19,6 +19,7 @@
 !!  Stichting Deltares
 !!  P.O. Box 177
 !!  2600 MH Delft, The Netherlands.
+!!
 MODULE MOD_SOF
 
 USE MOD_IDF_PAR, ONLY : IDFOBJ
@@ -62,7 +63,6 @@ CONTAINS
   
   IF(IROW.GE.80.AND.IROW.LE.130.AND. &
      ICOL.GE.130.AND.ICOL.LE.180)THEN
-!  IF(IROW.eq.108.AND.Icol.eq.136)THEN
 
    !## start in the middle
    CALL IDFGETLOC(IDF(1),IROW,ICOL,LX(0),LY(0))
@@ -83,9 +83,7 @@ CONTAINS
     DY=-SIN(A)*F*IDF(1)%DY
     LX(1)=LX(0)+DX
     LY(1)=LY(0)+DY   
- 
-!    write(*,*) a*(180.0/pi)
-    
+   
     !## new coordinates
     LX(0)=LX(1); LY(0)=LY(1)
     
@@ -105,63 +103,6 @@ CONTAINS
  
  END SUBROUTINE SOF_TRACE
 
-! !###======================================================================
-! SUBROUTINE SOF_TRACE_TRIM(X0,Y0,X,Y)
-! !###======================================================================
-! IMPLICIT NONE
-! REAL,INTENT(IN) :: X0,Y0
-! REAL,INTENT(INOUT) :: X,Y
-! REAL :: F
-! 
-! !## overshoot to the right/top
-! IF(X.GT.1.0)THEN
-!  F=(1.0-X0)/(X-X0)  !1.0/X
-!  X=X0+(X-X0)*F !1.0 --- to be exact
-!  Y=Y0+(Y-Y0)*F 
-! !## overshoot to the left/bottom
-! ELSEIF(X.LT.0.0)THEN
-!  F=(X0)/(X0-X)  
-!  X=X0+(X-X0)*F !0.0 --- to be exact
-!  Y=Y0+(Y-Y0)*F 
-! ENDIF
-! 
-! END SUBROUTINE SOF_TRACE_TRIM
-
-! !###======================================================================
-! SUBROUTINE SOF_TRACE_GETLXLY(LX,LY,A,IP) 
-! !###======================================================================
-! IMPLICIT NONE
-! REAL,INTENT(IN) :: A
-! INTEGER,INTENT(OUT) :: IP
-! REAL,INTENT(INOUT),DIMENSION(0:2) :: LX,LY
-! REAL,DIMENSION(2) :: L
-!    
-! !## flow to the left, or to the right
-! LX(1)=0.0; IF(ABS(A).GE.PI/2.0)LX(1)=1.0
-! LY(1)=LY(0)+(LX(1)-LX(0))*TAN(A)
-! !## flow to the bottom or to the top
-! LY(2)=0.0; IF(A.LE.0.0)LY(2)=1.0
-! LX(2)=LX(0)+(LY(2)-LY(0))/TAN(A)
-!
-! !## location of both exit points
-! L(1)=SQRT((LX(1)-LX(0))**2.0+(LY(1)-LY(0))**2.0)
-! L(2)=SQRT((LX(2)-LX(0))**2.0+(LY(2)-LY(0))**2.0)
-! !## get shortest vectorlength
-! IP=1; IF(L(2).LT.L(1))IP=2
-! 
-! !## 8 gradienten
-!
-! !## exit point may no be equal to startpoint, choose otherwise
-! IF(LX(IP).EQ.LX(0).AND.LY(IP).EQ.LY(0))THEN
-!  IF(IP.EQ.1)THEN
-!   IP=2
-!  ELSE
-!   IP=1
-!  ENDIF
-! ENDIF
-! 
-! END SUBROUTINE SOF_TRACE_GETLXLY
- 
  !###======================================================================
  REAL FUNCTION SOF_TRACE_GET_ANGLE_MEAN(IDF,IC,IR,XC,YC)
  !###======================================================================
@@ -172,11 +113,6 @@ CONTAINS
  REAL,DIMENSION(2) :: A
  INTEGER :: IQ,IROW,ICOL
  REAL :: DX,DY,X1,Y1,F,AF
- 
-! IF(X.EQ.0.5.AND.Y.EQ.0.5)THEN
-!  SOF_TRACE_GET_ANGLE_MEAN=IDF%X(IC,IR)
-!  RETURN
-! ENDIF
   
  A=0.0; AF=0.0
  DO IROW=MAX(1,IR-1),MIN(IDF%NROW,IR+1); DO ICOL=MAX(1,IC-1),MIN(IDF%NCOL,IC+1)
@@ -190,77 +126,9 @@ CONTAINS
   A(1)=A(1)+DX*F; A(2)=A(2)+DY*F; AF=AF+F
  ENDDO; ENDDO
 
-! A=A/AF
-
  SOF_TRACE_GET_ANGLE_MEAN=ATAN2(A(2),A(1)) !/4.0
  
-! SOF_TRACE_GET_ANGLE=IDF%X(IC,IR)
-
  END FUNCTION SOF_TRACE_GET_ANGLE_MEAN
- 
-! !###======================================================================
-! REAL FUNCTION SOF_TRACE_GET_ANGLE(IDF,IC,IR,X,Y)
-! !###======================================================================
-! IMPLICIT NONE
-! TYPE(IDFOBJ),INTENT(IN) :: IDF
-! INTEGER,INTENT(IN) :: IC,IR
-! REAL,INTENT(IN) :: X,Y
-! REAL,DIMENSION(2) :: A
-! INTEGER :: IQ,IROW,ICOL
-! REAL :: DX,DY
-! 
-! IF(X.EQ.0.5.AND.Y.EQ.0.5)THEN
-!  SOF_TRACE_GET_ANGLE=IDF%X(IC,IR)
-!  RETURN
-! ENDIF
-!  
-! !## in what quadrant is current location
-! !##   1  |  2
-! !##   -------
-! !##   4  |  3
-! IF(X.GT.0.5)THEN
-!  IF(Y.GT.0.5)THEN
-!   IQ=2
-!  ELSE
-!   IQ=3
-!  ENDIF
-! ELSE
-!  IF(Y.GT.0.5)THEN
-!   IQ=1
-!  ELSE
-!   IQ=4
-!  ENDIF
-! ENDIF
-!
-! A=0.0
-! SELECT CASE (IQ)
-!  CASE (1)
-!   DO IROW=MAX(1,IR-1),IR; DO ICOL=MAX(1,IC-1),IC
-!    DX=COS(IDF%X(ICOL,IROW)); DY=SIN(IDF%X(ICOL,IROW))
-!    A(1)=A(1)+DX; A(2)=A(2)+DY
-!   ENDDO; ENDDO
-!  CASE (2)
-!   DO IROW=MAX(1,IR-1),IR; DO ICOL=IC,MIN(IDF%NCOL,IC+1)
-!    DX=COS(IDF%X(ICOL,IROW)); DY=SIN(IDF%X(ICOL,IROW))
-!    A(1)=A(1)+DX; A(2)=A(2)+DY
-!   ENDDO; ENDDO
-!  CASE (3)
-!   DO IROW=IR,MIN(IDF%NROW,IR+1); DO ICOL=IC,MIN(IDF%NCOL,IC+1)
-!    DX=COS(IDF%X(ICOL,IROW)); DY=SIN(IDF%X(ICOL,IROW))
-!    A(1)=A(1)+DX; A(2)=A(2)+DY
-!   ENDDO; ENDDO
-!  CASE (4)
-!   DO IROW=IR,MIN(IDF%NROW,IR+1); DO ICOL=MAX(1,IC-1),IC
-!    DX=COS(IDF%X(ICOL,IROW)); DY=SIN(IDF%X(ICOL,IROW))
-!    A(1)=A(1)+DX; A(2)=A(2)+DY
-!   ENDDO; ENDDO
-! END SELECT
-! 
-! SOF_TRACE_GET_ANGLE=ATAN2(A(2),A(1)) !/4.0
-! 
-!! SOF_TRACE_GET_ANGLE=IDF%X(IC,IR)
-!
-! END FUNCTION SOF_TRACE_GET_ANGLE
   
  !###======================================================================
  SUBROUTINE SOF_TRACE_WRITE(IU,IDF,X,Y,ICOL,IROW)
@@ -283,14 +151,13 @@ CONTAINS
  END SUBROUTINE SOF_TRACE_WRITE
  
  !###======================================================================
- SUBROUTINE SOF_MAIN2(IDF,IFLOW,IPNTR,IWINDOW,XMIN,YMIN,XMAX,YMAX) !,DTERM)
+ SUBROUTINE SOF_MAIN(IDF,IFLOW,IPNTR,IWINDOW,XMIN,YMIN,XMAX,YMAX)
  !###======================================================================
  IMPLICIT NONE
  TYPE(IDFOBJ),INTENT(INOUT),DIMENSION(:) :: IDF
  INTEGER,INTENT(IN) :: IWINDOW
  REAL,INTENT(IN) :: XMIN,YMIN,XMAX,YMAX
  INTEGER,INTENT(IN) :: IFLOW !## iflow=nul compute depressions, iflow=one, compute flowpaths
-! INTEGER,INTENT(IN) :: DTERM !## diagonal yes (3) no (2)
  INTEGER,INTENT(IN) :: IPNTR !## ipntr=0 no pointer to stop, 1 use pointer to stop
  INTEGER :: ITIC,ITOC,I,IROW,ICOL
   
@@ -311,7 +178,6 @@ CONTAINS
   CALL UTL_IDFSNAPTOGRID(IDF(1)%XMIN,IDF(1)%XMAX,IDF(1)%YMIN,IDF(1)%YMAX,IDF(1)%DX,IDF(1)%NCOL,IDF(1)%NROW)
   !## take blockvalue since no scaling is used, only a window is specified
   IF(.NOT.IDFREADSCALE(IDF(1)%FNAME,IDF(1),10,1,0.0,0))THEN; RETURN; ENDIF
-!  IF(.NOT.IDFREADSCALE(IDF(1)%FNAME,IDF(1),2,1,0.0,0))THEN; RETURN; ENDIF
  ENDIF
 
  !## allocate grid to determine area of influence by pointer
@@ -359,7 +225,7 @@ CONTAINS
   WRITE(6,'(A,F10.3,A)') 'Process took',REAL(I)/86400.0,' days'
  ENDIF
  
- END SUBROUTINE SOF_MAIN2
+ END SUBROUTINE SOF_MAIN
 
  !###======================================================================
  SUBROUTINE SOF_COMPUTE_SLOPE_ASPECT(DEM,SLOPE,ASPECT)
@@ -441,8 +307,8 @@ CONTAINS
    NA=NA+ABS(Z(I)) !1.0   
   ENDIF
  ENDDO
- DZDX=-AX !/NA
- DZDY= AY !/NA
+ DZDX=-AX 
+ DZDY= AY 
  
  END SUBROUTINE SOF_COMPUTE_GRAD_STEEPEST
  
@@ -455,8 +321,6 @@ CONTAINS
  REAL,INTENT(OUT) :: DZDX,DZDY
  INTEGER :: IR1,IR2,IC1,IC2,I
  REAL,DIMENSION(0:4) :: Z
-! REAL :: Z1,Z2
-! LOGICAL :: LSND
  
  !## 1nd order derivative
  IC1=MAX(1,ICOL-1)
@@ -725,13 +589,12 @@ CONTAINS
  DO I=1,NBPX
   XA(I)=BPX(I)%ICOL-IC1+1
   YA(I)=BPX(I)%IROW-IR1+1
-  ZA(I)=1.0 !BPX(I)%Z
-!  pcg%x(int(xa(i)),int(ya(i)))=za(i)
+  ZA(I)=1.0 
  ENDDO
  DO I=1,NPPX
   ICOL            =PPX(I)%ICOL-IC1+1
   IROW            =PPX(I)%IROW-IR1+1
-  PCG%X(ICOL,IROW)=0.0 !PPX(I)%Z
+  PCG%X(ICOL,IROW)=0.0 
  ENDDO
  !## add last pit-location (outflow) as boundary condition as well
  I         = NPPX
@@ -743,25 +606,14 @@ CONTAINS
  CALL SOLID_PCGINT(XA,YA,ZA,NBPX+1,IERROR,PCG,0,HNOFLOW=PCG%NODATA)
  IF(IERROR.EQ.1)STOP 'ERROR IN PCG'
 
- !## remove boundary nodes, no to be used for aspect computation
+ !## remove boundary nodes, not to be used for aspect computation
  DO I=1,NBPX+1; PCG%X(INT(XA(I)),INT(YA(I)))=PCG%NODATA; ENDDO
  
- ! DO IROW=1,NROW; DO ICOL=1,NCOL
- !  IF(IDF%X(ICOL,IROW).EQ.HNOFLOW)IB(ICOL,IROW,1)=0
- ! ENDDO; ENDDO
-
  DO IROW=1,PCG%NROW; DO ICOL=1,PCG%NCOL
   IF(PCG%X(ICOL,IROW).EQ.PCG%NODATA)CYCLE
 
-!  DO IR=MAX(IROW-1,1),MIN(IROW+1,PCG%NROW)
-!   DO IC=MAX(ICOL-1,1),MIN(ICOL+1,PCG%NCOL)
-!    IF(PCG%X(IC,IR).EQ.HNOFLOW)
-!   ENDDO
-!  ENDDO
-
   CALL SOF_COMPUTE_GRAD(PCG,ICOL,IROW,DZDX,DZDY)
 
-!  CALL SOF_COMPUTE_GRAD_STEEPEST(PCG,ICOL,IROW,DZDX,DZDY)
   !## radians  
   S=ATAN(SQRT(DZDX**2.0+DZDY**2.0))
   A=ATAN2(-1.0*DZDY,DZDX)
@@ -856,418 +708,5 @@ CONTAINS
  ENDDO
  
  END SUBROUTINE SOF_FILL_BND
- 
- !###======================================================================
- SUBROUTINE SOF_FILL_PITT2(DEM,IDFP,DTERM)
- !###======================================================================
- IMPLICIT NONE
- TYPE(IDFOBJ),INTENT(INOUT) :: DEM,IDFP
- INTEGER,INTENT(IN) :: DTERM !## diagonal yes (3) no (2)
- INTEGER :: I,J,ICOL,IROW,IC,IR,MAXTHREAD,MAXN,IMENU,IPZ,JPZ,NTHREAD
- INTEGER(KIND=1),POINTER,DIMENSION(:) :: ISPEC 
- INTEGER(KIND=2),POINTER,DIMENSION(:,:) :: THREAD,YSEL 
- REAL :: ZMAX,F
- REAL,ALLOCATABLE,DIMENSION(:) :: DZ  
-
- WRITE(6,'(1X,A/)') 'Filling in pitts'
-
- !##fill in pitts by tracing up to the exit points
- MAXTHREAD=1000; MAXN=MAXTHREAD; ALLOCATE(ISPEC(MAXTHREAD),THREAD(3,MAXTHREAD),YSEL(2,MAXTHREAD))
-  
-! DTERM=2 !## 0=no diagonal (use 1 to apply diagonals,2=steepest)
-! DTERM=3 !## 0=no diagonal (use 1 to apply diagonals,2=steepest)
- IMENU=7 !## 1=equal,2=less than,3=less or equal,4=greater than,5=greater than or equal,6=ne,7=never mind
-         !## negative means according to last location during search
-
- !## search for depressions
- IPZ=0; NTHREAD=0
- 
- IF(DTERM.EQ.2)ALLOCATE(DZ(4))
- IF(DTERM.EQ.3)ALLOCATE(DZ(8))
-
- !## trace depression for exit points
- DO I=1,NP
-  ICOL=INT(PL(I,1)); IROW=INT(PL(I,2))
-
-  !## set begin values
-  NTHREAD=1; YSEL(1,NTHREAD)=INT(ICOL,2); YSEL(2,NTHREAD)=INT(IROW,2); IPZ=1
-  !## trace all higher than neighbouring cell, imenu=-4, idf(1) will be adjusted
-  CALL IDFEDITTRACE(DEM,IDFP,THREAD,YSEL,ISPEC,DTERM,IMENU,MAXTHREAD,MAXN,10.0E21,NTHREAD,IPZ,JPZ,DZ=DZ) !## entire path
-     
-  !# spill points
-  IC=INT(YSEL(1,1)); IR=INT(YSEL(2,1)); ZMAX=DEM%X(IC,IR)
-  DO J=1,NTHREAD,1
-   IC=INT(YSEL(1,J)); IR=INT(YSEL(2,J)); DEM%X(IC,IR)=ZMAX
-   IDFP%X(IC,IR)=IDFP%NODATA
-  ENDDO
- 
-  F=REAL(I)/REAL(NP)*100.0
-  WRITE(6,'(A,F10.3,A,F10.3,A)') '+Progress z:',PL(I,3),'finished ',F,' %         '
-   
- ENDDO
- 
- DEALLOCATE(DZ)
- 
- END SUBROUTINE SOF_FILL_PITT2 
-
- !###======================================================================
- SUBROUTINE SOF_MAIN(IDF,IFLOW,IPNTR,IWINDOW,XMIN,YMIN,XMAX,YMAX,MINTHREAD,DTERM)
- !###======================================================================
- IMPLICIT NONE
- TYPE(IDFOBJ),INTENT(INOUT),DIMENSION(:) :: IDF
- INTEGER,INTENT(IN) :: IWINDOW,MINTHREAD
- REAL,INTENT(IN) :: XMIN,YMIN,XMAX,YMAX
- INTEGER,INTENT(IN) :: IFLOW !## iflow=nul compute depressions, iflow=one, compute flowpaths
- INTEGER,INTENT(IN) :: DTERM !## diagonal yes (3) no (2)
- INTEGER,INTENT(IN) :: IPNTR !## ipntr=0 no pointer to stop, 1 use pointer to stop
- INTEGER :: MAXTHREAD,IMENU,NTHREAD,I,J,IROW,ICOL,IR,IC,IPZ,JPZ,MAXN,ITRACE,ITIC,ITOC, &
-     IRC,DROW,DCOL,ISAVEDTRACE,JTRACE,N
-! INTEGER(KIND=2),POINTER,DIMENSION(:,:) :: RCPOS
- INTEGER(KIND=1),POINTER,DIMENSION(:) :: ISPEC 
- INTEGER(KIND=2),POINTER,DIMENSION(:,:) :: THREAD,YSEL 
- REAL :: ZMIN,ZMAX,ZCRIT,T,F,Z,Z1,Z2
- INTEGER :: IC1,IC2,IR1,IR2,DC,DR
- TYPE YSELOBJ
-  INTEGER(KIND=2),POINTER,DIMENSION(:,:) :: YSEL
-  REAL,POINTER,DIMENSION(:) :: Z
-  INTEGER :: NTHREAD
- END TYPE YSELOBJ
- REAL,ALLOCATABLE,DIMENSION(:) :: DZ
- TYPE(YSELOBJ),POINTER,DIMENSION(:) :: YSEL_PREV,YSEL_PREV_BU
-  
- !## read levelidf
- IF(IWINDOW.EQ.0)THEN
-  IF(.NOT.IDFREAD(IDF(1),IDF(1)%FNAME,1))THEN; RETURN; ENDIF
- ELSE
-  IF(.NOT.IDFREAD(IDF(1),IDF(1)%FNAME,0))THEN; RETURN; ENDIF; CLOSE(IDF(1)%IU)
-  IDF(1)%XMIN=XMIN; IDF(1)%XMAX=XMAX; IDF(1)%YMIN=YMIN; IDF(1)%YMAX=YMAX;
-  CALL UTL_IDFSNAPTOGRID(IDF(1)%XMIN,IDF(1)%XMAX,IDF(1)%YMIN,IDF(1)%YMAX,IDF(1)%DX,IDF(1)%NCOL,IDF(1)%NROW)
-  IF(.NOT.IDFREADSCALE(IDF(1)%FNAME,IDF(1),2,1,0.0,0))THEN; RETURN; ENDIF
- ENDIF
- !## set nodata idf(1)=-9999.00
- IF(IDF(1)%NODATA.NE.-9999.0)THEN
-  DO IROW=1,IDF(1)%NROW; DO ICOL=1,IDF(1)%NCOL
-   IF(IDF(1)%X(ICOL,IROW).EQ.IDF(1)%NODATA)IDF(1)%X(ICOL,IROW)=-9999.00
-  ENDDO; ENDDO
-  IDF(1)%NODATA=-9999.00
- ENDIF
-    
- !## allocate grid to determine area of influence by pointer
- DO I=2,SIZE(IDF); CALL IDFCOPY(IDF(1),IDF(I)); IF(.NOT.IDFALLOCATEX(IDF(I)))STOP; IDF(I)%NODATA=0.0; ENDDO
- !## initialize arrays
- DO I=2,SIZE(IDF); IDF(I)%X=IDF(I)%NODATA; ENDDO
-  
- !## initialize number of tracing along path
- IF(IFLOW.EQ.1)THEN
-  IDF(4)%X=0.0; IDF(6)%X=IDF(1)%X
- ENDIF
-
- !## read pointer (scale with most frequent value, option 7)
- IF(IPNTR.EQ.1)THEN
-  CALL IDFCOPY(IDF(1),IDF(5)); IF(.NOT.IDFREADSCALE(IDF(5)%FNAME,IDF(5),7,1,0.0,0))THEN; RETURN; ENDIF
-  !## adjust idf(1) for pointer
-  DO IROW=1,IDF(1)%NROW; DO ICOL=1,IDF(1)%NCOL
-   IF(IDF(5)%X(ICOL,IROW).NE.IDF(5)%NODATA)IDF(1)%X(ICOL,IROW)=IDF(1)%NODATA
-  ENDDO; ENDDO
-  CALL IDFDEALLOCATEX(IDF(5))
- ENDIF
- 
- MAXTHREAD=1000; MAXN=MAXTHREAD; ALLOCATE(ISPEC(MAXTHREAD),THREAD(3,MAXTHREAD),YSEL(2,MAXTHREAD))
- !## allocate pointer (takes too much time to increase)
- IF(IFLOW.EQ.1)THEN; ALLOCATE(YSEL_PREV(250)); YSEL_PREV%NTHREAD=0; ENDIF
- 
- !## idf(1)=level
- !## idf(2)=ldd (pointer with flowdirection 1-8)
- !## idf(3)=visited places/
- !## idf(4)=zmax/counter
- !## idf(5)=pointer flow area
- !## if iflow=1
- !##  idf(6)=original level used to reset after tracing
- !##  idf(7)=last tracked flowpath (numbered)
- !##  idf(8)=number of saved trace
- 
-! DTERM=2 !## 0=no diagonal (use 1 to apply diagonals,2=steepest)
-! DTERM=3 !## 0=no diagonal (use 1 to apply diagonals,2=steepest)
- IMENU=7 !## 1=equal,2=less than,3=less or equal,4=greater than,5=greater than or equal,6=ne,7=never mind
-         !## negative means according to last location during search
-
- CALL OSD_TIMER(ITIC)
- WRITE(6,'(/A/)') '----'
- 
- !## search for depressions
- IPZ=0; NTHREAD=0; DROW=30; DCOL=30; ITRACE=0; JTRACE=0; ISAVEDTRACE=0
- 
- IF(DTERM.EQ.2)ALLOCATE(DZ(4))
- IF(DTERM.EQ.3)ALLOCATE(DZ(8))
-
- !## adjust surface in backwards direction
- IF(IFLOW.EQ.0)THEN
-
-  DO IROW=1,IDF(1)%NROW
-   DO ICOL=1,IDF(1)%NCOL
-    
-    IF(IDF(2)%X(ICOL,IROW).EQ.IDF(2)%NODATA.AND. &  !## not yet visited
-       IDF(1)%X(ICOL,IROW).NE.IDF(1)%NODATA)THEN    !## level.ne.nodata
-          
-     !## set begin values
-     NTHREAD=1; YSEL(1,NTHREAD)=INT(ICOL,2); YSEL(2,NTHREAD)=INT(IROW,2); IPZ=IPZ+1
-     !## trace all higher than neighbouring cell, imenu=-4, idf(1) will be adjusted
-     CALL IDFEDITTRACE(IDF(1),IDF(3),THREAD,YSEL,ISPEC,DTERM,IMENU,MAXTHREAD,MAXN,10.0E21,NTHREAD,IPZ,JPZ,DZ=DZ) !## entire path
-
-     IF(NTHREAD.GT.0)THEN
-      I=NTHREAD; IC=INT(YSEL(1,I)); IR=INT(YSEL(2,I)); ZMAX=IDF(1)%X(IC,IR)
-      DO I=NTHREAD,1,-1
-       IC=INT(YSEL(1,I)); IR=INT(YSEL(2,I)); ZMAX=MAX(ZMAX,IDF(1)%X(IC,IR)); IDF(4)%X(IC,IR)=ZMAX
-       !## put number of processes along path
-       IDF(2)%X(IC,IR)=I
-      ENDDO
-      IF(IPZ.NE.JPZ)THEN; IC=INT(YSEL(1,NTHREAD)); IR=INT(YSEL(2,NTHREAD)); IDF(3)%X(IC,IR)=JPZ; ENDIF !## reset zone to captured zone
-     ENDIF
-      
-      F=(REAL(IRC)/REAL(IDF(1)%NROW*IDF(1)%NCOL))*100.0
-      WRITE(6,'(A,F7.3,A,2I6,A,2I10)') '+Progress ',F,' % finished (',IROW,ICOL,')',NTHREAD,IRC
-   
-    ENDIF
-   ENDDO
-  ENDDO
-
- !## adjust surface in backwards direction
- ELSEIF(IFLOW.EQ.2)THEN
-
-!  IDF(2)%X=0.0; IDF(3)%X=0.0
-!  DO IROW=1,IDF(1)%NROW; DO ICOL=1,IDF(1)%NCOL-1
-!    IDF(2)%X(ICOL,IROW)=IDF(1)%X(ICOL+1,IROW)-IDF(1)%X(ICOL,IROW)
-!  ENDDO; ENDDO
-!  DO IROW=1,IDF(1)%NROW-1; DO ICOL=1,IDF(1)%NCOL
-!   IDF(3)%X(ICOL,IROW)=IDF(1)%X(ICOL,IROW+1)-IDF(1)%X(ICOL,IROW)
-!  ENDDO; ENDDO
-  
-!!open(99,file='d:\log.txt',status='unknown',action='write')
-!  DO IROW=1,IDF(1)%NROW
-!   DO ICOL=1,IDF(1)%NCOL
-!    
-!    IF(IDF(2)%X(ICOL,IROW).EQ.IDF(2)%NODATA.AND. &  !## not yet visited
-!       IDF(1)%X(ICOL,IROW).NE.IDF(1)%NODATA)THEN    !## level.ne.nodata
-!          
-!     !## set begin values
-!     NTHREAD=1; YSEL(1,NTHREAD)=INT(ICOL,2); YSEL(2,NTHREAD)=INT(IROW,2); IPZ=IPZ+1
-!     !## trace all higher than neighbouring cell, imenu=-4, idf(1) will be adjusted
-!     CALL IDFEDITTRACE(IDF(1),IDF(3),THREAD,YSEL,ISPEC,DTERM,IMENU,MAXTHREAD,MAXN,10.0E21,NTHREAD,IPZ,JPZ,DZ=DZ) !## entire path
-!     
-!     IF(NTHREAD.GT.0)THEN
-!      DO I=NTHREAD,2,-1
-!       IC1=INT(YSEL(1,I))  ; IR1=INT(YSEL(2,I));   Z1=IDF(1)%X(IC1,IR1)
-!       IC2=INT(YSEL(1,I-1)); IR2=INT(YSEL(2,I-1)); Z2=IDF(1)%X(IC2,IR2)
-!       DC=IC1-IC2; DR=IR1-IR2
-!       IF(ABS(DC).LE.1.AND.ABS(DR).LE.1)THEN
-!        IDF(2)%X(IC,IR)=UTL_GETDIR(DC,DR)
-!       ENDIF
-!      ENDDO
-!      IF(IPZ.NE.JPZ)THEN; IC=INT(YSEL(1,NTHREAD)); IR=INT(YSEL(2,NTHREAD)); IDF(3)%X(IC,IR)=JPZ; ENDIF !## reset zone to captured zone
-!     ENDIF
-! 
-!      F=REAL(IROW)/REAL(IDF(1)%NROW)*100.0
-!      WRITE(6,'(A,F7.3,A,2I6,A,I10)') '+Progress ',F,' % finished (',IROW,ICOL,')',NTHREAD
-!   
-!    ENDIF
-!   ENDDO
-!  ENDDO
-!!close(99)
-
- ELSEIF(IFLOW.EQ.1)THEN
- 
-  DO IROW=1,IDF(1)%NROW
-   DO ICOL=1,IDF(1)%NCOL
-    
-    IF(IDF(2)%X(ICOL,IROW).EQ.IDF(2)%NODATA.AND. &  !## not yet visited
-       IDF(1)%X(ICOL,IROW).NE.IDF(1)%NODATA)THEN    !## level.ne.nodata
-           
-    !## if allready traced, skip tracing it, copy saved thread instead
-    IF(IDF(7)%X(ICOL,IROW).GT.0.0)THEN
-
-     ITRACE=INT(IDF(7)%X(ICOL,IROW))
-     JTRACE=INT(IDF(8)%X(ICOL,IROW))
-     NTHREAD=0
-
-    ELSE
- 
-     !## set begin values
-     NTHREAD=1; YSEL(1,NTHREAD)=INT(ICOL,2); YSEL(2,NTHREAD)=INT(IROW,2); IPZ=1; ITRACE=0; JTRACE=0 
-     !## trace all higher than neighbouring cell, imenu=-4, idf(1) will be adjusted
-     CALL IDFEDITTRACE(IDF(1),IDF(3),THREAD,YSEL,ISPEC,DTERM,IMENU,MAXTHREAD,MAXN,10.0E21,NTHREAD,IPZ,JPZ, &
-                       PTRACE=IDF(7),ITRACE=ITRACE,STRACE=IDF(8),JTRACE=JTRACE,NTRACE=YSEL_PREV%NTHREAD ,&
-                       MINTHREAD=MINTHREAD,DZ=DZ) !## entire path
-    
-    ENDIF
-    
-    !## overrule variable itrace if trace is too small to be stored
-    IF(ITRACE.EQ.0.AND.NTHREAD.LT.MINTHREAD)ITRACE=-1
-
-! if(icol.eq.64.and.irow.eq.17)then
-! if(icol.eq.61.and.irow.eq.21)then
-!     DO I=1,NTHREAD
-!      IC=INT(YSEL(1,I)); IR=INT(YSEL(2,I))
-! if(ic.eq.122.and.ir.eq.211)then
-!    write(*,*) icol,irow,i,ic,ir,idf(4)%x(ic,ir),idf(1)%x(ic,ir)
-!     idf(2)%x(icol,irow)=1.0
-!     if(.not.idfwrite(idf(2),'d:\softrace.idf',1))then; endif
-!endif
-!    enddo
-!    pause
-!endif
- 
-    !## clean history path if itrace.eq.0; reset/update it!
-    IF(ITRACE.EQ.0)THEN
-     ISAVEDTRACE=ISAVEDTRACE+1
-     DO I=1,NTHREAD
-      IC=INT(YSEL(1,I)); IR=INT(YSEL(2,I))
-      IDF(7)%X(IC,IR)=REAL(I)                !## segment number along thread
-      IDF(8)%X(IC,IR)=REAL(ISAVEDTRACE)      !## thread number
-     ENDDO
-!     if(.not.idfwrite(idf(7),'d:\softrace.idf',1))then; endif
-!     if(.not.idfwrite(idf(8),'d:\softrace_id.idf',1))then; endif
-    ENDIF
-      
-    !## process renewed trace (part of total trace)
-    DO I=1,NTHREAD
-     IC=INT(YSEL(1,I)); IR=INT(YSEL(2,I))            !## put number of processes along path
-     IDF(4)%X(IC,IR)=IDF(4)%X(IC,IR)+1.0             !## increase number of processes along path
-    ENDDO   
-
-    !## continue trace from history trace
-    IF(ITRACE.GT.0)THEN
-     DO J=ITRACE,SIZE(YSEL_PREV(JTRACE)%YSEL,2) 
-      IC=INT(YSEL_PREV(JTRACE)%YSEL(1,J))
-      IR=INT(YSEL_PREV(JTRACE)%YSEL(2,J)) 
-      IDF(4)%X(IC,IR)=IDF(4)%X(IC,IR)+1.0            !## increase number of processes along path
-     ENDDO         
-     !## include a backtrace to increase pointer for flat areas (lakes/ponds)
-     IC=INT(YSEL_PREV(JTRACE)%YSEL(1,ITRACE))
-     IR=INT(YSEL_PREV(JTRACE)%YSEL(2,ITRACE))
-     Z=YSEL_PREV(JTRACE)%Z(ITRACE)
-     DO J=ITRACE-1,1,-1
-      IC=INT(YSEL_PREV(JTRACE)%YSEL(1,J))
-      IR=INT(YSEL_PREV(JTRACE)%YSEL(2,J))
-      IF(YSEL_PREV(JTRACE)%Z(J).NE.Z)EXIT
-      IDF(4)%X(IC,IR)=IDF(4)%X(IC,IR)+1.0            !## increase number of processes along path
-     ENDDO
-    ENDIF
-
-    !## copy last trace, if it is big enough
-    IF(ITRACE.EQ.0)THEN
-
-     IF(ISAVEDTRACE.GT.SIZE(YSEL_PREV))THEN
-      ALLOCATE(YSEL_PREV_BU(ISAVEDTRACE+50))
-      DO I=1,SIZE(YSEL_PREV)
-       N=SIZE(YSEL_PREV(I)%YSEL,2)
-       ALLOCATE(YSEL_PREV_BU(I)%YSEL(2,N),YSEL_PREV_BU(I)%Z(N))
-       DO J=1,N 
-        YSEL_PREV_BU(I)%YSEL(1,J)=YSEL_PREV(I)%YSEL(1,J)
-        YSEL_PREV_BU(I)%YSEL(2,J)=YSEL_PREV(I)%YSEL(2,J)
-        YSEL_PREV_BU(I)%Z(J)     =YSEL_PREV(I)%Z(J)
-       ENDDO
-       YSEL_PREV_BU(I)%NTHREAD=YSEL_PREV(I)%NTHREAD
-       DEALLOCATE(YSEL_PREV(I)%YSEL)
-      ENDDO
-      DEALLOCATE(YSEL_PREV)
-      YSEL_PREV=>YSEL_PREV_BU
-     ENDIF
-      
-     ALLOCATE(YSEL_PREV(ISAVEDTRACE)%YSEL(2,NTHREAD),YSEL_PREV(ISAVEDTRACE)%Z(NTHREAD))
-     YSEL_PREV(ISAVEDTRACE)%NTHREAD=NTHREAD
-     DO I=1,NTHREAD
-      IC=INT(YSEL(1,I)); IR=INT(YSEL(2,I))
-      YSEL_PREV(ISAVEDTRACE)%YSEL(1,I)=YSEL(1,I)
-      YSEL_PREV(ISAVEDTRACE)%YSEL(2,I)=YSEL(2,I)
-      YSEL_PREV(ISAVEDTRACE)%Z(I)     =IDF(1)%X(IC,IR)
-     ENDDO
- 
-    ENDIF
-
-    !## reset values for next thread
-    DO I=1,NTHREAD
-     IC=INT(YSEL(1,I)); IR=INT(YSEL(2,I))            !## put number of processes along path
-     IDF(1)%X(IC,IR)=IDF(6)%X(IC,IR)                 !## reset dem
-     IDF(3)%X(IC,IR)=IDF(3)%NODATA                   !## reset visited positions
-    ENDDO   
-
-    F=(REAL(IRC)/REAL(IDF(1)%NROW*IDF(1)%NCOL))*100.0
-    IF(JTRACE.EQ.0)THEN
-     WRITE(6,'(A,F7.3,A,2I4,A,5I6,I10)') '+Progress ',F,' % finished (',IROW,ICOL,')',NTHREAD,ITRACE,JTRACE, &
-                                             0,ISAVEDTRACE,IRC
-    ELSE
-     WRITE(6,'(A,F7.3,A,2I4,A,5I6,I10)') '+Progress ',F,' % finished (',IROW,ICOL,')',NTHREAD,ITRACE,JTRACE, &
-                   YSEL_PREV(JTRACE)%NTHREAD,ISAVEDTRACE,IRC
-    ENDIF
-    
-   ENDIF   
-
-   ENDDO
-  ENDDO
- ENDIF
- 
- DEALLOCATE(DZ)
- 
- CALL OSD_TIMER(ITOC)
-
- !## idf(3)=number of zone after trace
- IF(IFLOW.EQ.0)THEN
-  IF(.NOT.IDFWRITE(IDF(1),IDF(3)%FNAME,1))THEN; ENDIF
-  IF(.NOT.IDFWRITE(IDF(2),IDF(3)%FNAME(:INDEX(IDF(3)%FNAME,'\',.TRUE.))//'nz.idf',1))THEN; ENDIF   !## number thread()
-  IF(.NOT.IDFWRITE(IDF(3),IDF(3)%FNAME(:INDEX(IDF(3)%FNAME,'\',.TRUE.))//'ip.idf',1))THEN; ENDIF   !## number sequention
-  IF(.NOT.IDFWRITE(IDF(4),IDF(3)%FNAME(:INDEX(IDF(3)%FNAME,'\',.TRUE.))//'zmax.idf',1))THEN; ENDIF !## sof elevation
- ELSEIF(IFLOW.EQ.2)THEN
-  IDF(2)%NODATA=0.0; IF(.NOT.IDFWRITE(IDF(2),IDF(3)%FNAME(:INDEX(IDF(3)%FNAME,'\',.TRUE.))//'frf.idf',1))THEN; ENDIF
-  IDF(3)%NODATA=0.0; IF(.NOT.IDFWRITE(IDF(3),IDF(3)%FNAME(:INDEX(IDF(3)%FNAME,'\',.TRUE.))//'fff.idf',1))THEN; ENDIF
- ELSEIF(IFLOW.EQ.1)THEN
-  IDF(4)%NODATA=-999.99
-  IF(.NOT.IDFWRITE(IDF(4),IDF(3)%FNAME,1))THEN; ENDIF
- ENDIF
-  
- DEALLOCATE(THREAD,ISPEC,YSEL); IF(ASSOCIATED(YSEL_PREV))DEALLOCATE(YSEL_PREV)
- 
- I=(ITOC/100)-(ITIC/100)
- IF(I.LT.360)THEN
-  WRITE(6,'(A,F10.3,A)') 'Process took',REAL(I),' seconds'
- ELSEIF(I.LT.3600.0)THEN
-  WRITE(6,'(A,F10.3,A)') 'Process took',REAL(I)/360.0,' minutes'
- ELSEIF(I.LT.86400.0)THEN
-  WRITE(6,'(A,F10.3,A)') 'Process took',REAL(I)/3600.0,' hours'
- ELSE
-  WRITE(6,'(A,F10.3,A)') 'Process took',REAL(I)/86400.0,' days'
- ENDIF
- 
- END SUBROUTINE SOF_MAIN
-
- !###======================================================================
- INTEGER FUNCTION UTL_GETDIR(DC,DR)
- !###======================================================================
- IMPLICIT NONE
- INTEGER,INTENT(IN) :: DC,DR
- INTEGER,DIMENSION(-1:1,-1:1) :: IDIR
- DATA IDIR/1,2,3,&
-           8,0,4,&
-           7,6,5 / 
- 
- UTL_GETDIR=IDIR(DC,DR)
- 
- END FUNCTION UTL_GETDIR
-
- !###======================================================================
- LOGICAL FUNCTION SOF_TOP(IDF,ICOL,IROW)
- !###======================================================================
- IMPLICIT NONE
- TYPE(IDFOBJ),INTENT(INOUT) :: IDF 
- INTEGER,INTENT(IN) :: ICOL,IROW
- INTEGER :: I,IR,IC
- REAL,DIMENSION(4) :: DZ 
- 
- SOF_TOP=.FALSE.
-
-! IF(ICOL.EQ.300.AND.IROW.EQ.156)THEN; SOF_TOP=.TRUE.; RETURN; ENDIF  !## afvoerputje
-  
- SOF_TOP=.TRUE.
- 
- END FUNCTION SOF_TOP
 
 END MODULE MOD_SOF    

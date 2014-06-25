@@ -19,29 +19,32 @@
 !!  Stichting Deltares
 !!  P.O. Box 177
 !!  2600 MH Delft, The Netherlands.
+!!
 MODULE MOD_SOLID_PAR
 
 USE MOD_IDF_PAR, ONLY : IDFOBJ
+USE MOD_PROF_PAR, ONLY : BITMAPOBJ
 
 INTEGER :: IBATCH,IMIDELEV,IWINDOW 
 CHARACTER(LEN=256),SAVE :: SOLFILE,OUTPUTFOLDER,REGISTOP,REGISBOT,REGISKHV,REGISKVV
 
-INTEGER,PARAMETER :: MXPX=500 !## max. 500 point in graph
+INTEGER,PARAMETER :: MXPX=500    !## max. 500 point in graph
 
 TYPE SPFOBJ_PROF
  REAL,POINTER,DIMENSION(:) :: PX !## cross-section position
  REAL,POINTER,DIMENSION(:) :: PZ !## cross-section value
- INTEGER :: NPOS   !## number of points on cross-section
- INTEGER :: ICLR   !## colour of the cross-section
- INTEGER :: IWIDTH !## width of the cross-section
+ INTEGER :: NPOS                 !## number of points on cross-section
+ INTEGER :: ICLR                 !## colour of the cross-section
+ INTEGER :: IWIDTH               !## width of the cross-section
 END TYPE SPFOBJ_PROF
 
 TYPE SPFOBJ
- CHARACTER(LEN=256) :: FNAME !## name of spf
- INTEGER :: NXY    !## number of coordinates
- REAL :: TX !## length of cross-section
+ CHARACTER(LEN=256) :: FNAME       !## name of spf
+ INTEGER :: NXY                    !## number of coordinates
+ REAL :: TX                        !## length of cross-section
  REAL,POINTER,DIMENSION(:) :: X,Y  !## coordinates of cross-section
  TYPE(SPFOBJ_PROF),POINTER,DIMENSION(:) :: PROF
+ TYPE(BITMAPOBJ) :: PBITMAP
 END TYPE SPFOBJ
 TYPE(SPFOBJ),ALLOCATABLE,DIMENSION(:),SAVE :: SPF
 
