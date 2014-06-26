@@ -545,7 +545,6 @@ CONTAINS
  
  !## enable light number zero
  CALL GLENABLE(GL_LIGHT0)
-! CALL GLENABLE(GL_LIGHT1)
 
  !## enable two-sided lighting
  CALL GLLIGHTMODELI(GL_LIGHT_MODEL_TWO_SIDE,GL_TRUE)

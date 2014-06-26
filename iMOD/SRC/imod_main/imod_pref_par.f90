@@ -19,9 +19,10 @@
 !!  Stichting Deltares
 !!  P.O. Box 177
 !!  2600 MH Delft, The Netherlands.
+!!
 MODULE MOD_PREF_PAR
 
-INTEGER,PARAMETER :: MAXPREF =24     !## max. preferences
+INTEGER,PARAMETER :: MAXPREF =26     !## max. preferences
 CHARACTER(LEN=256) :: PREFDIR
 CHARACTER(LEN=256),DIMENSION(MAXPREF) :: PREFVAL
 CHARACTER(LEN=25),DIMENSION(MAXPREF) :: PREF
@@ -48,10 +49,9 @@ DATA PREF/'USER', &          ! 1
           'HLP_DRY', &       !21
           'HLP_WET', &       !22
           'URBAN_RANGE', &   !23
-          'CROP_COSTS'/      !24
-!          'GHG', &           !25
-!          'GLG'/             !26
-!          'IR_COSTS', &      !27
+          'CROP_COSTS', &    !24
+          '7ZIP', &          !25
+          'SUBSURFEXDBASE'/  !26
 
 END MODULE MOD_PREF_PAR
 

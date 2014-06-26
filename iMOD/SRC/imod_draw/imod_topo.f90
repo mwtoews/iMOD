@@ -73,7 +73,7 @@ CONTAINS
     SELECT CASE (MESSAGE%VALUE1)
      !## open
      CASE (IDF_BUTTON4)
-      CALL TOPO1OPENBMP()
+      CALL TOPO1OPENBMP(1)
      !## delete
      CASE (IDF_BUTTON5)
       CALL TOPO1DELETEBMP()
@@ -108,9 +108,6 @@ CONTAINS
  CALL WINDOWSELECT(0); CALL WMENUSETSTATE(ID_TOPOGRAPHY,2,0)
  CALL TOPOINIT()
 
-! CALL MANAGERUPDATE()
-! CALL IDFPLOTFAST(0)!(1)
-
  END SUBROUTINE TOPO1MAIN
 
 !###======================================================================
@@ -139,19 +136,23 @@ CONTAINS
  END SUBROUTINE TOPO1UPDATEMANAGER
  
  !###======================================================================
- SUBROUTINE TOPO1OPENBMP()
+ SUBROUTINE TOPO1OPENBMP(OPENDIALOG)
  !###======================================================================
  IMPLICIT NONE
+ INTEGER,INTENT(IN) :: OPENDIALOG
  INTEGER :: I,IU
  INTEGER,ALLOCATABLE,DIMENSION(:) :: INFO
  CHARACTER(LEN=4) :: EXT
  LOGICAL :: LEX
  REAL :: DX,DY,OR1,OR2
 
- BMP(NBMP+1)%BMPFNAME=TRIM(OPENDIR)
- IF(.NOT.UTL_WSELECTFILE('All Known Files|*.bmp;*.png|BitMap (*.bmp)|Portable Network Graphic image (*.png)|',&
-                  LOADDIALOG+MUSTEXIST+PROMPTON+DIRCHANGE+APPENDEXT+MULTIFILE,BMP(NBMP+1)%BMPFNAME,&
-                  'Load Background BitMap (*.bmp;*.png)'))RETURN
+ IF(OPENDIALOG .EQ. 1)THEN !## when .eq. '0', images can be loaded in the background without opening a dialog
+  BMP(NBMP+1)%BMPFNAME=TRIM(OPENDIR)
+  IF(.NOT.UTL_WSELECTFILE('All Known Files|*.bmp;*.png|BitMap (*.bmp)|Portable Network Graphic image (*.png)|',&
+                   LOADDIALOG+MUSTEXIST+PROMPTON+DIRCHANGE+APPENDEXT+MULTIFILE,BMP(NBMP+1)%BMPFNAME,&
+                   'Load Background BitMap (*.bmp;*.png)'))RETURN
+ END IF                 
+
  I=INDEXNOCASE(BMP(NBMP+1)%BMPFNAME,'\',.TRUE.)
  OPENDIR=BMP(NBMP+1)%BMPFNAME(:I-1)
 

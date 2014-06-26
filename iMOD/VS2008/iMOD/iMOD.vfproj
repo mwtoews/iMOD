@@ -376,6 +376,9 @@
 		<Filter Name="imod_wbal">
 		<File RelativePath="d:\oss\iMOD\SRC\imod_wbal\imod_wbal_compute.f90"/>
 		<File RelativePath="d:\oss\iMOD\SRC\imod_wbal\imod_wbal_par.f90"/></Filter>
+		<Filter Name="imod_subsurfex">
+		<File RelativePath="..\..\SRC\imod_subsurfex\imod_subsurfex.f90"/>
+		<File RelativePath="..\..\SRC\imod_subsurfex\imod_subsurfex_par.f90"/></Filter>
 		<Filter Name="programs">
 		<File RelativePath="d:\oss\iMOD\SRC\imod_main\imod_prg.f90">
 			<FileConfiguration Name="Debug|Win32">
