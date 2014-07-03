@@ -19,7 +19,7 @@
 !!  Stichting Deltares
 !!  P.O. Box 177
 !!  2600 MH Delft, The Netherlands.
-
+!!
 MODULE MOD_UTL
 
 USE WINTERACTER
@@ -2132,23 +2132,16 @@ CONTAINS
     ENDDO
    ENDIF
   ENDIF
-!  IF(XMED(IP).GT.1.0)THEN
   WRITE(*,*) 'PERC(IP)=',PERC(IP)
   WRITE(*,*) 'XMED(IP)=',XMED(IP)
   WRITE(*,*) 'FRAC    =',FRAC
   DO I=1,MX; WRITE(*,'(I10,F15.7)') I,X(I); ENDDO
-!  ENDIF
  ENDDO
    
  END SUBROUTINE UTL_GETMED_INVERSE
 
  !###======================================================================
  INTEGER FUNCTION CALCPERIODS(ISTARTDATE,IENDDATE)
- !WHERE START/ENDDATES ARE FOR INSTANCES
- !STARTDATE = 20000101
- !ENDDATE   = 20041231
- !Remark: For every month for every specific year (including leapyears)
- !        no of days is calculated
  !###======================================================================
  IMPLICIT NONE
  INTEGER,INTENT(IN) :: ISTARTDATE,IENDDATE
