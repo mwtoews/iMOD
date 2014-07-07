@@ -19,7 +19,7 @@
 !!  Stichting Deltares
 !!  P.O. Box 177
 !!  2600 MH Delft, The Netherlands.
-
+!!
 MODULE MOD_CREATEIZONE
 
 USE MOD_IDF, ONLY : IDFREAD,IDFWRITE,IDFNULLIFY,IDFOBJ,IDFDEALLOCATE
@@ -56,15 +56,12 @@ CONTAINS
    IF(IDFREAD(IDF(I),IDF(I)%FNAME,1,IQ=1))THEN
     JZ=0
     DO IROW=1,IDF(I)%NROW; DO ICOL=1,IDF(I)%NCOL
-!if(irow.eq.664.and.icol.eq.521)then
-! write(*,*) 'dsds'
-!endif
      !## take fraction only
      F=MOD(IDF(I)%X(ICOL,IROW),1.0)
      IF(F.GE.MINF)THEN
       JZ=JZ+1
       IF(F.GT.0.99)THEN
-       IDF(I)%X(ICOL,IROW)=REAL(NZ+1) !+IDF(I)%X(ICOL,IROW)
+       IDF(I)%X(ICOL,IROW)=REAL(NZ+1) 
       ELSE
        IDF(I)%X(ICOL,IROW)=REAL(NZ+1)+IDF(I)%X(ICOL,IROW)
       ENDIF
@@ -78,7 +75,6 @@ CONTAINS
     IF(JZ.GT.0)THEN
      NZ=NZ+1
      IDF(I)%FNAME=TRIM(OFOLDER)//'\FRACTIONS_L'//TRIM(ITOS(I))//'\'//TRIM(FIDF(J))
-!     IDF(I)%FNAME=TRIM(OFOLDER)//'\FRACTIONS_L'//TRIM(ITOS(I))//'_'//TRIM(FIDF(J))
      IF(.NOT.IDFWRITE(IDF(I),IDF(I)%FNAME,1))RETURN
 
      WRITE(LINE,'(I3,A4,2(I3,A1),5(F5.2,A1),I3)') 1,','//TRIM(TPARAMETER)//',',I,',',NZ,',',1.0,',',1.1,',',0.1,',',10.0,',',10.0,',',IG

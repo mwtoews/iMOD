@@ -94,7 +94,7 @@ CONTAINS
   ENDIF
 
   IASSF=0
-  IF(IEXT.GT.0)THEN !.AND.IASSF.EQ.1)THEN
+  IF(IEXT.GT.0)THEN 
    IASSF=1
    !## read associated file (could be spaces within) column
    CDUM='"'//TRIM(STRING(IEXT))//'"'
@@ -103,11 +103,6 @@ CONTAINS
     CALL TS_ERROR_MESSAGE('Error reading identification in IROW '//TRIM(ITOS(I))//' in file '//TRIM(IPFNAME1)//'.')
     RETURN
    ENDIF
-!  ELSE
-!   IF(IASSF.EQ.1)THEN
-!    CALL TS_ERROR_MESSAGE('There is associated file connected, iassf could not be 1')
-!    RETURN
-!   ENDIF
   ENDIF
 
   !## read the timeseries, if available
@@ -127,20 +122,12 @@ CONTAINS
   ELSEIF(LCOL.GT.0)THEN
    CTS=STRING(LCOL)  
   ENDIF
-
-!  DO
-!   K=INDEX(CTS,'\')
-!   IF(K.EQ.0)EXIT
-!   CTS=CTS(K+1:)
-!  ENDDO
     
   !## writing COMMA DELIMITED file
   LINE=TRIM(STRING(1))
   DO J=2,NCOL; LINE=TRIM(LINE)//','//TRIM(STRING(J)); ENDDO
   
- ! LINE=TRIM(RTOS(X,'F',2))//','//TRIM(RTOS(Y,'F',2))//','//TRIM(ITOS(TSILAY))// &
- !            ',"'//TRIM(CTS)//'"' !//TRIM(RTOS(1.0,'F',2))//','//TRIM(RTOS(MEAN(1),'F',2))
-  IF(LCOL.EQ.0)LINE=TRIM(LINE)//',"'//TRIM(CTS)//'"' !TRIM(RTOS(MEAN(2),'F',2))//','//TRIM(RTOS(MEAN(3),'F',2))
+  IF(LCOL.EQ.0)LINE=TRIM(LINE)//',"'//TRIM(CTS)//'"' 
   WRITE(IU(2),*,IOSTAT=IOS) TRIM(LINE)
   IF(IOS.NE.0)THEN
    CALL TS_ERROR_MESSAGE('Error occurred during writing line '//TRIM(ITOS(I))//' to file '//TRIM(IPFNAME2)//'.')
@@ -322,7 +309,7 @@ CONTAINS
  DO I=1,NPER
   IF(OBS(I)%OBS.NE.NODATA.OR.OBS(I)%CALC.NE.NODATA)THEN
    LINE=TRIM(ITOS(OBS(I)%IDATE))//','//TRIM(RTOS(OBS(I)%CALC,'F',4))
-   IF(IASSF.EQ.1)LINE=TRIM(LINE)//','//TRIM(RTOS(OBS(I)%OBS,'F',4)) !//','//TRIM(RTOS(OBS(I)%RES,'F',4))
+   IF(IASSF.EQ.1)LINE=TRIM(LINE)//','//TRIM(RTOS(OBS(I)%OBS,'F',4)) 
    WRITE(IU(3),*) TRIM(LINE)
   ENDIF
  ENDDO
@@ -333,10 +320,9 @@ CONTAINS
  END FUNCTION TS_WRITE
 
  !###====================================================================
- LOGICAL FUNCTION TS_INIT_IPF()! DC)
+ LOGICAL FUNCTION TS_INIT_IPF()
  !###====================================================================
  IMPLICIT NONE
-! INTEGER,INTENT(OUT) :: DC
  INTEGER :: IOS,I,NC,CFN_N_ELEM
  CHARACTER(LEN=MAXLEN),ALLOCATABLE,DIMENSION(:) :: ATTRIB
  CHARACTER(LEN=256) :: LINE
@@ -441,13 +427,7 @@ CONTAINS
   LINE='"'//TRIM(ATTRIB(1))//'"'
   DO I=2,NC; LINE=TRIM(LINE)//',"'//TRIM(ATTRIB(I))//'"'; ENDDO
   WRITE(IU(2),'(A)') TRIM(LINE)
-  
-!  IF(LCOL.EQ.0)THEN
-!   WRITE(IU(2),'(I5,A)',IOSTAT=IOS) NC,','//TRIM(CEXT)
-!  ELSE
-!   WRITE(IU(2),'(I5,A)',IOSTAT=IOS) LCOL,','//TRIM(CEXT)
-!  ENDIF
- 
+   
  ENDIF
  
  DEALLOCATE(ATTRIB)

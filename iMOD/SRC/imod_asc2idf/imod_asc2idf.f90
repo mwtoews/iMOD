@@ -19,7 +19,7 @@
 !!  Stichting Deltares
 !!  P.O. Box 177
 !!  2600 MH Delft, The Netherlands.
-
+!!
 MODULE MOD_ASC2IDF
 
 USE WINTERACTER
@@ -68,7 +68,7 @@ CONTAINS
    K=INDEX(IDFNAMES(I),TRIM(TOPWC(INDEX(TOPWC,'*')+1:)))
    IF(J.GT.0.AND.K.GT.J)THEN
     J=J+LEN(TOPWC(1:INDEX(TOPWC,'*')-1))
-    K=K-1 !+INDEX(TOPWC,'*')+1:)
+    K=K-1 
     READ(IDFNAMES(I)(J:K),*,IOSTAT=IOS) TOP
     IF(IOS.NE.0)EXIT
     BOT=TOP+BOTEL
@@ -230,6 +230,7 @@ CONTAINS
  REAL,INTENT(IN) :: TOP,BOT
  INTEGER :: J,NCOL,NROW,IROW,ICOL
  REAL :: XMIN,XMAX,YMIN,YMAX,CSIZE,NODATA
+ DOUBLE PRECISION :: DNODATA
  LOGICAL :: LEX,LBIG
 
  ASC2IDF_TYPE1=.FALSE.
@@ -261,7 +262,7 @@ CONTAINS
  READ(IU,*,IOSTAT=IOS(5))   TXT(5),CSIZE
 
  !## nodata is optional
- READ(IU,*,IOSTAT=IOS(6))   LINE
+ READ(IU,'(A256)',IOSTAT=IOS(6))   LINE
 
  IF(SUM(IOS).NE.0)THEN
   CALL WMESSAGEBOX(OKONLY,EXCLAMATIONICON,COMMONOK,'Error reading header of ascii file!','Error')
@@ -269,9 +270,10 @@ CONTAINS
  ENDIF
 
  !## nodata is optional
+ READ(LINE,*,IOSTAT=IOS(6))   TXT(6),DNODATA 
  READ(LINE,*,IOSTAT=IOS(6))   TXT(6),NODATA 
- IF(IOS(6).NE.0)NODATA=-99999.99
-
+ IF(IOS(6).NE.0)THEN; NODATA=-99999.99; DNODATA=NODATA; ENDIF
+ 
  IF(TRIM(TXT(3)).EQ.'XLLCENTER')XMIN=XMIN-(CSIZE/2.0)
  IF(TRIM(TXT(4)).EQ.'YLLCENTER')YMIN=YMIN-(CSIZE/2.0)
  YMAX=YMIN+NROW*CSIZE
@@ -377,20 +379,17 @@ CONTAINS
  NGRID=0
  DO
   !## read file to find out dimensions
-  READ(IU,*,IOSTAT=IOS(1)) X(0),Y(0)!,Z(0)
+  READ(IU,*,IOSTAT=IOS(1)) X(0),Y(0)
   IF(IOS(1).NE.0)EXIT
   N=N+1
   X(1)=MIN(X(0),X(1))
   X(2)=MAX(X(0),X(2))
   Y(1)=MIN(Y(0),Y(1))
   Y(2)=MAX(Y(0),Y(2))
-!  Z(1)=MIN(Z(0),Z(1))
-!  Z(2)=MAX(Z(0),Z(2))
   !## store first result
   IF(N.EQ.1)THEN
    X(3)=X(0)
    Y(3)=Y(0)
-!   Z(3)=Z(0)
   ENDIF
   IF(X(3).EQ.X(0).AND.Y(3).EQ.Y(0))NGRID=NGRID+1
  ENDDO
@@ -410,8 +409,6 @@ CONTAINS
  B=-(X(2)-X(1))-(Y(2)-Y(1))
  C=-(X(2)-X(1))*(Y(2)-Y(1))
  D= (B**2.0)-(4.0*A*C)
-
-!WRITE(*,*) A,B,C,D
 
  IF(D.GT.0.0)THEN
   D=SQRT(D)

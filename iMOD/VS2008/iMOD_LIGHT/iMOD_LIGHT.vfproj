@@ -268,8 +268,7 @@
 		<File RelativePath="d:\oss\iMOD\SRC\imod_modpath\imod_pathlines_trace.f90"/>
 		<File RelativePath="d:\oss\iMOD\SRC\imod_modpath\imod_plines_par.f90"/></Filter>
 		<Filter Name="imod_nc2idf">
-		<File RelativePath="d:\oss\iMOD\SRC\imod_nc2idf\imod_nc2idf_lh90.f90">
-			<FileConfiguration Name="Release|Win32" ExcludedFromBuild="true"/></File></Filter>
+		<File RelativePath="d:\oss\iMOD\SRC\imod_nc2idf\imod_nc2idf_lh90.f90"/></Filter>
 		<Filter Name="imod_osd">
 		<File RelativePath="d:\oss\iMOD\SRC\imod_osd\imod_osdIVF95.f90"/></Filter>
 		<Filter Name="imod_pcg">
@@ -305,8 +304,7 @@
 		<File RelativePath="d:\oss\iMOD\SRC\imod_smplx\imod_smplx_nswc.f90"/>
 		<File RelativePath="d:\oss\iMOD\SRC\imod_smplx\imod_smplx_par.f90"/></Filter>
 		<Filter Name="imod_sobek">
-		<File RelativePath="d:\oss\iMOD\SRC\imod_sobek\imod_sobek_lh90.f90">
-			<FileConfiguration Name="Release|Win32" ExcludedFromBuild="true"/></File></Filter>
+		<File RelativePath="d:\oss\iMOD\SRC\imod_sobek\imod_sobek_lh90.f90"/></Filter>
 		<Filter Name="imod_sof">
 		<File RelativePath="d:\oss\iMOD\SRC\imod_sof\imod_sof.f90"/></Filter>
 		<Filter Name="imod_solid">
@@ -365,6 +363,9 @@
 		<Filter Name="imod_wbal">
 		<File RelativePath="d:\oss\iMOD\SRC\imod_wbal\imod_wbal_compute.f90"/>
 		<File RelativePath="d:\oss\iMOD\SRC\imod_wbal\imod_wbal_par.f90"/></Filter>
+		<Filter Name="imod_subsurfex">
+		<File RelativePath="..\..\SRC\imod_subsurfex\imod_subsurfex.f90"/>
+		<File RelativePath="..\..\SRC\imod_subsurfex\imod_subsurfex_par.f90"/></Filter>
 		<Filter Name="programs">
 		<File RelativePath="d:\oss\iMOD\SRC\imod_main\imod_prg.f90">
 			<FileConfiguration Name="Debug|Win32">
