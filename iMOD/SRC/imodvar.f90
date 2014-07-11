@@ -19,13 +19,14 @@
 !!  Stichting Deltares
 !!  P.O. Box 177
 !!  2600 MH Delft, The Netherlands.
+!!
 MODULE IMODVAR
 
 INTEGER,DIMENSION(2) :: IDPROC
 
 REAL,PARAMETER :: PI=ATAN(1.0)*4.0  !##value pi
 
-CHARACTER(LEN=20),PARAMETER            :: RVERSION='3.0'
+CHARACTER(LEN=20),PARAMETER            :: RVERSION='3.0.2'
 CHARACTER(LEN=256)                     :: IMFFNAME         !##name of drawing file
 CHARACTER(LEN=256)                     :: OPENDIR   !remember saved location
 CHARACTER(LEN=256)                     :: SAVEDIR   !remember opened location

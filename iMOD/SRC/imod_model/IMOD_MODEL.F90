@@ -872,7 +872,7 @@ CONTAINS
  CHARACTER(LEN=256) :: LINE,STRING,FNAMETO,FNAME,FNAME1,FNAME2  
  CHARACTER(LEN=52) :: SUBMAP
  CHARACTER(LEN=4),DIMENSION(8) :: EXTISG
- LOGICAL :: LEX
+ LOGICAL :: LEX,LCOPY
  DATA EXTISG/'ISG','ISP','ISD1','ISD2','ISC1','ISC2','ISQ1','ISQ2'/
 
  IF(IBATCH.EQ.0)THEN
@@ -930,12 +930,15 @@ CONTAINS
  IPF(1)%Z2COL=1 !## z not used
  IPF(1)%QCOL =1 !## q not used
  
+ !## no window given
+ LCOPY=.FALSE.; IF(SIMBOX(1).EQ.SIMBOX(3).AND.SIMBOX(2).EQ.SIMBOX(4))LCOPY=.TRUE.
+
  !## get the cellsize
  READ(IU,'(A256)') LINE
- WRITE(JU,'(A)') TRIM(LINE)
+! WRITE(JU,'(A)') TRIM(LINE)
  DO
   READ(IU,'(A256)',IOSTAT=IOS) STRING
-  WRITE(JU,'(A)') TRIM(STRING)
+!  WRITE(JU,'(A)') TRIM(STRING)
   STRING=ADJUSTL(STRING)
   IF(IOS.NE.0)THEN
    IF(IBATCH.EQ.0)CALL WMESSAGEBOX(OKONLY,EXCLAMATIONICON,COMMONOK,'Can not find [ACTIVE MODULES]','Error')
@@ -945,10 +948,15 @@ CONTAINS
   IF(TRIM(UTL_CAP(STRING,'U')).EQ.'ACTIVE MODULES')THEN
    READ(LINE,*) X1,Y1,X2,Y2,DX
    IF(X1.EQ.1.0.OR.X1.EQ.0.0)READ(LINE,*) I,X1,Y1,X2,Y2,DX
+   IF(SIMBOX(1).EQ.SIMBOX(3).AND.SIMBOX(2).EQ.SIMBOX(4))THEN
+    SIMBOX(1)=X1; SIMBOX(2)=Y1; SIMBOX(3)=X2; SIMBOX(4)=Y2
+   ENDIF
    EXIT
   ENDIF
   LINE=STRING
  ENDDO
+ 
+ REWIND(IU)
  
  SUBMAP=''
  K=0
@@ -958,7 +966,9 @@ MAINLOOP: DO
   IF(IOS.NE.0)EXIT
   I=INDEX(LINE,'(')
   J=INDEX(LINE,')')
+!  SUBMAP=''
   IF(I.GT.0.AND.J.GT.0)SUBMAP=UTL_CAP(LINE(I+1:J-1),'U')
+  IF(SUBMAP.EQ.'')SUBMAP='GENERAL'
   LINE=UTL_CAP(LINE,'U')
   LINE=UTL_SUBST(LINE,TRIM(REPLACESTRING),PREFVAL(5))
   K=K+1
@@ -985,8 +995,8 @@ MAINLOOP: DO
       IF(JJ.GT.0)FNAMETO=UTL_SUBST(UTL_CAP(FNAME,'U'),TRIM(UTL_CAP(CLIPDIR,'U')),TRIM(UTL_CAP(RESDIR,'U')))
      ENDIF
      IF(JJ.EQ.0)THEN
-      IF(TRIM(SUBMAP).EQ.'')FNAMETO=TRIM(RESDIR)//'\'//TRIM(FNAME(INDEX(FNAME,'\',.TRUE.)+1:))
-      IF(TRIM(SUBMAP).NE.'')FNAMETO=TRIM(RESDIR)//'\'//TRIM(SUBMAP)//'\'//TRIM(FNAME(INDEX(FNAME,'\',.TRUE.)+1:))
+      IF(TRIM(SUBMAP).EQ.'')FNAMETO=TRIM(RESDIR)//'\GENERAL\VERSION_1\'//TRIM(FNAME(INDEX(FNAME,'\',.TRUE.)+1:))
+      IF(TRIM(SUBMAP).NE.'')FNAMETO=TRIM(RESDIR)//'\'//TRIM(SUBMAP)//'\VERSION_1\'//TRIM(FNAME(INDEX(FNAME,'\',.TRUE.)+1:))
      ENDIF
      
      !## filename allready exists
@@ -998,35 +1008,38 @@ MAINLOOP: DO
 
       !## resize IDF-file
       IF(EXT(I).EQ.'.IDF')THEN
-      
-       IF(IBATCH.EQ.0)CALL WINDOWOUTSTATUSBAR(4,'Processing '//TRIM(FNAME))
-       IF(IBATCH.EQ.1)WRITE(*,'(A)') 'Processing '//TRIM(FNAME)
-       !## include constant head around it
-       IF(TRIM(SUBMAP).EQ.'BND')THEN
-        !## scale boundary because otherwise the size of the model becomes too less
-        IDFC%XMIN=SIMBOX(1); IDFC%YMIN=SIMBOX(2)
-        IDFC%XMAX=SIMBOX(3); IDFC%YMAX=SIMBOX(4); IDFC%DX=DX ;IDFC%DY=IDFC%DX
-        IDFC%NCOL=(IDFC%XMAX-IDFC%XMIN)/IDFC%DX;  IDFC%NROW=(IDFC%YMAX-IDFC%YMIN)/IDFC%DY
-        IF(.NOT.IDFREADSCALE(FNAME,IDFC,1,1,0.0,0))RETURN
-        DO IROW=1,IDFC%NROW
-         IF(IDFC%X(1,IROW)        .GT.0)IDFC%X(1,IROW)        =-1
-         IF(IDFC%X(IDFC%NCOL,IROW).GT.0)IDFC%X(IDFC%NCOL,IROW)=-1
-        ENDDO
-        DO ICOL=1,IDFC%NCOL
-         IF(IDFC%X(ICOL,1)        .GT.0)IDFC%X(ICOL,1)        =-1
-         IF(IDFC%X(ICOL,IDFC%NROW).GT.0)IDFC%X(ICOL,IDFC%NROW)=-1
-        ENDDO
+       
+       IF(LCOPY)THEN
+        CALL UTL_CREATEDIR(FNAMETO(:INDEX(FNAMETO,'\',.TRUE.)-1))
+        CALL IOSCOPYFILE(FNAME,FNAMETO)
        ELSE
-        !## read part of idf and store in idf()%x() - create smaller resolution!
-        IF(.NOT.IDFREAD(IDFC,FNAME,0))EXIT
-        IF(.NOT.IDFREADPART(IDFC,SIMBOX(1),SIMBOX(2)+TINY,SIMBOX(3)-TINY,SIMBOX(4)))RETURN
+        IF(IBATCH.EQ.0)CALL WINDOWOUTSTATUSBAR(4,'Processing '//TRIM(FNAME))
+        IF(IBATCH.EQ.1)WRITE(*,'(A)') 'Processing '//TRIM(FNAME)
+        !## include constant head around it
+        IF(TRIM(SUBMAP).EQ.'BND')THEN
+         !## scale boundary because otherwise the size of the model becomes too less
+         IDFC%XMIN=SIMBOX(1); IDFC%YMIN=SIMBOX(2)
+         IDFC%XMAX=SIMBOX(3); IDFC%YMAX=SIMBOX(4); IDFC%DX=DX ;IDFC%DY=IDFC%DX
+         IDFC%NCOL=(IDFC%XMAX-IDFC%XMIN)/IDFC%DX;  IDFC%NROW=(IDFC%YMAX-IDFC%YMIN)/IDFC%DY
+         IF(.NOT.IDFREADSCALE(FNAME,IDFC,1,1,0.0,0))RETURN
+         DO IROW=1,IDFC%NROW
+          IF(IDFC%X(1,IROW)        .GT.0)IDFC%X(1,IROW)        =-1
+          IF(IDFC%X(IDFC%NCOL,IROW).GT.0)IDFC%X(IDFC%NCOL,IROW)=-1
+         ENDDO
+         DO ICOL=1,IDFC%NCOL
+          IF(IDFC%X(ICOL,1)        .GT.0)IDFC%X(ICOL,1)        =-1
+          IF(IDFC%X(ICOL,IDFC%NROW).GT.0)IDFC%X(ICOL,IDFC%NROW)=-1
+         ENDDO
+        ELSE
+         !## read part of idf and store in idf()%x() - create smaller resolution!
+         IF(.NOT.IDFREAD(IDFC,FNAME,0))EXIT
+         IF(.NOT.IDFREADPART(IDFC,SIMBOX(1),SIMBOX(2)+TINY,SIMBOX(3)-TINY,SIMBOX(4)))RETURN
+        ENDIF
+        IF(.NOT.IDFWRITE(IDFC,FNAMETO,1))RETURN
+        CALL IDFDEALLOCATEX(IDFC)
+        IF(IDFC%IU.GT.0)CLOSE(IDFC%IU)
        ENDIF
-       IF(.NOT.IDFWRITE(IDFC,FNAMETO,1))RETURN
-       CALL IDFDEALLOCATEX(IDFC)
-       IF(IDFC%IU.GT.0)CLOSE(IDFC%IU)
- 
        IF(IBATCH.EQ.0)CALL WINDOWOUTSTATUSBAR(4,'Copy runfile/content ...')
-!       IF(IBATCH.EQ.1)WRITE(*,'(A)') 'Copy runfile/content ...'
      
       ELSEIF(EXT(I).EQ.'.IPF')THEN
 
@@ -1045,7 +1058,7 @@ MAINLOOP: DO
         ENDIF
        ENDIF
        
-       !## check points iside area
+       !## check points inside area
        N=0
        DO II=1,IPF(1)%NROW
         IF(IPF(1)%XYZ(1,II).GE.SIMBOX(1).AND.IPF(1)%XYZ(1,II).LE.SIMBOX(3).AND. &
@@ -1061,7 +1074,7 @@ MAINLOOP: DO
            IF(IBATCH.EQ.0)CALL WINDOWOUTSTATUSBAR(4,TRIM(FNAME1)//' does not exists!')
            IF(IBATCH.EQ.1)WRITE(*,'(A)') TRIM(FNAME1)//' does not exists!'
           ELSE
-           FNAME2=TRIM(RESDIR)//'\'//TRIM(SUBMAP)  //'\'//TRIM(IPF(1)%INFO(IPF(1)%ACOL,II))//'.'//TRIM(ADJUSTL(IPF(1)%FEXT))
+           FNAME2=TRIM(RESDIR)//'\'//TRIM(SUBMAP)  //'\VERSION_1\'//TRIM(IPF(1)%INFO(IPF(1)%ACOL,II))//'.'//TRIM(ADJUSTL(IPF(1)%FEXT))
            CALL UTL_CREATEDIR(FNAME2(:INDEX(FNAME2,'\',.TRUE.)-1))
            !## copy batch
            STRING='copy '//TRIM(FNAME1)//' '//TRIM(FNAME2)

@@ -864,6 +864,7 @@ CONTAINS
   !## default timeseries
   ASSF(IASSF)%ITOPIC=1
  ENDIF
+ ASSF(IASSF)%ITOPIC=MAX(1,ASSF(IASSF)%ITOPIC)
  
 ! ASSF(IASSF)%ASSCOL1=2 !## column used with dlf
 ! ASSF(IASSF)%ASSCOL2=0 !## on default not used --- border rings
@@ -965,9 +966,9 @@ CONTAINS
 !    'file: '//TRIM(FNAME),'Error')
 !  RETURN
   ASSF(IASSF)%NRASS=I-1
- ELSE
-  IPFREADASSFILE=.TRUE.
  ENDIF
+
+ IPFREADASSFILE=.TRUE.
 
  END FUNCTION IPFREADASSFILE
 
