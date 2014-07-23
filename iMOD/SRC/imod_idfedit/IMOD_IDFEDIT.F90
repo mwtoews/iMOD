@@ -19,7 +19,7 @@
 !!  Stichting Deltares
 !!  P.O. Box 177
 !!  2600 MH Delft, The Netherlands.
-
+!!
 MODULE MOD_IDFEDIT
 
 USE WINTERACTER
@@ -1142,9 +1142,14 @@ CONTAINS
   CASE (7) !## bnd - see whether cell bounds x
    IF(IDFVAL.EQ.X)THEN
     J=0; DO I=1,SIZE(DC)
-     IROW=MIN(IDF%NROW,MAX(1,JROW+DR(I)))
-     ICOL=MIN(IDF%NCOL,MAX(1,JCOL+DC(I)))    
-     IF(IDFGETVAL(IDF,IROW,ICOL).NE.X)J=1
+     IROW=JROW+DR(I)
+     ICOL=JCOL+DC(I)
+     IF(IROW.GT.IDF%NROW.OR.IROW.LT.1.OR. &
+        ICOL.GT.IDF%NCOL.OR.ICOL.LT.1)THEN
+      J=1
+     ELSE
+      IF(IDFGETVAL(IDF,IROW,ICOL).NE.X)J=1
+     ENDIF
     ENDDO
     IF(J.EQ.1)IDFEDITGETLOGICAL=.TRUE.
    ENDIF
