@@ -631,8 +631,14 @@ c ------------------------------------------------------------------------------
        do irow=1,nrow
         do icol=1,ncol
 
-         if (anifactor(icol,irow,ilay).lt.1.) then   
-            
+         ic2=min(icol+1,ncol); ir2=min(irow+1,nrow)
+         ic1=max(icol-1,1);    ir1=max(irow-1,1)       
+         if ((anifactor(icol,irow,ilay).lt.1.).or. !P
+     1       (anifactor(icol,ir1,ilay).lt.1.).or. !N
+     2       (anifactor(icol,ir2,ilay).lt.1.).or. !S
+     3       (anifactor(ic2,irow,ilay).lt.1.).or. !E
+     4       (anifactor(ic1,irow,ilay).lt.1.)) then !W
+         
          if(ibound(icol,irow,ilay).ne.0)then
 
           ic2=icol+1; ir2=irow+1; ic1=icol-1; ir1=irow-1
@@ -846,11 +852,18 @@ c      double precision rhs(ncol,nrow,nlay)
       integer ilay,irow,icol
       real      ccrit,sumc
       parameter (ccrit=10.0e-3)
+      integer :: ic1,ic2,ir1,ir2
 
       do ilay=1,nlay
        do irow=1,nrow
         do icol=1,ncol
-         if (anifactor(icol,irow,ilay).lt.1.) then
+         ic2=min(icol+1,ncol); ir2=min(irow+1,nrow)
+         ic1=max(icol-1,1);    ir1=max(irow-1,1)       
+         if ((anifactor(icol,irow,ilay).lt.1.).or. !P
+     1       (anifactor(icol,ir1,ilay).lt.1.).or. !N
+     2       (anifactor(icol,ir2,ilay).lt.1.).or. !S
+     3       (anifactor(ic2,irow,ilay).lt.1.).or. !E
+     4       (anifactor(ic1,irow,ilay).lt.1.)) then !W
           rhs(icol,irow,ilay) =0.0
           hcof(icol,irow,ilay)=0.0
          endif
@@ -863,17 +876,23 @@ c      double precision rhs(ncol,nrow,nlay)
       do ilay=1,nlay
        do irow=1,nrow
         do icol=1,ncol
-         if (anifactor(icol,irow,ilay).lt.1.)then    
+         ic2=min(icol+1,ncol); ir2=min(irow+1,nrow)
+         ic1=max(icol-1,1);    ir1=max(irow-1,1)       
+         if ((anifactor(icol,irow,ilay).lt.1.).or. !P
+     1       (anifactor(icol,ir1,ilay).lt.1.).or. !N
+     2       (anifactor(icol,ir2,ilay).lt.1.).or. !S
+     3       (anifactor(ic2,irow,ilay).lt.1.).or. !E
+     4       (anifactor(ic1,irow,ilay).lt.1.)) then !W
           if(ibound(icol,irow,ilay).eq.0)then
            cr(icol,irow,ilay)=0.0
            cc(icol,irow,ilay)=0.0
            if(ilay.lt.nlay)cv(icol,irow,ilay)=0.0
           else
            if(icol.lt.ncol)then
-            if(ibound(icol+1,irow,ilay).eq.0)cr(icol,irow,ilay)=0.0
+            if(ibound(ic2,irow,ilay).eq.0)cr(icol,irow,ilay)=0.0
            endif
            if(irow.lt.nrow)then
-            if(ibound(icol,irow+1,ilay).eq.0)cc(icol,irow,ilay)=0.0
+            if(ibound(icol,ir2,ilay).eq.0)cc(icol,irow,ilay)=0.0
            endif
            if(ilay.lt.nlay)then
             if(ibound(icol,irow,ilay+1).eq.0)cv(icol,irow,ilay)=0.0
@@ -881,10 +900,10 @@ c      double precision rhs(ncol,nrow,nlay)
           endif
           if(ibound(icol,irow,ilay).lt.0)then
            if(icol.lt.ncol)then
-            if(ibound(icol+1,irow,ilay).lt.0)cr(icol,irow,ilay)=0.0
+            if(ibound(ic2,irow,ilay).lt.0)cr(icol,irow,ilay)=0.0
            endif
            if(irow.lt.nrow)then
-            if(ibound(icol,irow+1,ilay).lt.0)cc(icol,irow,ilay)=0.0
+            if(ibound(icol,ir2,ilay).lt.0)cc(icol,irow,ilay)=0.0
            endif
            if(ilay.lt.nlay)then
             if(ibound(icol,irow,ilay+1).lt.0)cv(icol,irow,ilay)=0.0
@@ -899,8 +918,14 @@ c      double precision rhs(ncol,nrow,nlay)
       do ilay=1,nlay
        do irow=1,nrow
         do icol=1,ncol
-         if(ibound(icol,irow,ilay).ne.0.and.
-     1      anifactor(icol,irow,ilay).lt.1.) then
+         if(ibound(icol,irow,ilay).ne.0)then
+         ic2=min(icol+1,ncol); ir2=min(irow+1,nrow)
+         ic1=max(icol-1,1);    ir1=max(irow-1,1)       
+         if ((anifactor(icol,irow,ilay).lt.1.).or. !P
+     1       (anifactor(icol,ir1,ilay).lt.1.).or. !N
+     2       (anifactor(icol,ir2,ilay).lt.1.).or. !S
+     3       (anifactor(ic2,irow,ilay).lt.1.).or. !E
+     4       (anifactor(ic1,irow,ilay).lt.1.)) then !W
 
 !#########5-point stencil
 
@@ -990,7 +1015,7 @@ c      double precision rhs(ncol,nrow,nlay)
           endif
 
          endif
-
+         endif
         end do
        end do
       end do
