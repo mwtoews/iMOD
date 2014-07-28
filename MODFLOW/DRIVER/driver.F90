@@ -84,7 +84,7 @@ implicit none
  integer tsc ! debug variable
  integer :: date, hour, minute, second
 
- logical :: lrunfile, lnamfile, llpf, lipest, lpwt, lss
+ logical :: lrunfile, lnamfile, llpf, lipest, lpwt, lss, lrf
 
  integer :: isub, nsub, nnsub
  character(len=50), dimension(nsubmax) :: submstr
@@ -216,8 +216,8 @@ call imod_utl_printtext('=======================================================
 !                   call sts2init(usestsmodflow,lunsts)
                 end if
                 ! convert iMOD run-file to MODFLOW
-                call rf2mf_prg(lrunfile,lipest,modrecord,usemetaswap,submstr,nsub,nsubmax,modwd1)
-                if (lrunfile) then
+                call rf2mf_prg(lrf,lipest,modrecord,usemetaswap,submstr,nsub,nsubmax,modwd1)
+                if (lrf) then
                    modwd1 = trim(modwd1)//'\mf2005_tmp'
                    call osd_s_filename(modwd1)
                 end if
