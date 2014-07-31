@@ -155,6 +155,7 @@
 		<File RelativePath="d:\oss\iMOD\SRC\imod_idfgetvalue\imod_idfgetvalue.f90"/></Filter>
 		<Filter Name="imod_idftimeserie">
 		<File RelativePath="d:\oss\iMOD\SRC\imod_idftimeserie\imod_idftimeserie.f90"/>
+		<File RelativePath="..\..\SRC\imod_idftimeserie\imod_idftimeserie_par.f90"/>
 		<File RelativePath="d:\oss\iMOD\SRC\imod_idftimeserie\imod_timeserie_utl.f90"/></Filter>
 		<Filter Name="imod_iff">
 		<File RelativePath="d:\oss\iMOD\SRC\imod_iff\Imod_iff.f90"/></Filter>
@@ -258,7 +259,9 @@
 		<File RelativePath="d:\oss\iMOD\SRC\imod_mean\imod_mean_compute.f90"/>
 		<File RelativePath="d:\oss\iMOD\SRC\imod_mean\imod_mean_par.f90"/></Filter>
 		<Filter Name="imod_model">
-		<File RelativePath="d:\oss\iMOD\SRC\imod_model\IMOD_MODEL.F90"/>
+		<File RelativePath="d:\oss\iMOD\SRC\imod_model\IMOD_MODEL.F90">
+			<FileConfiguration Name="Debug|Win32">
+				<Tool Name="VFFortranCompilerTool" Preprocess="preprocessYes" PreprocessorDefinitions="WINTERACTER9"/></FileConfiguration></File>
 		<File RelativePath="d:\oss\iMOD\SRC\imod_model\IMOD_MODEL_PAR.F90"/></Filter>
 		<Filter Name="imod_modpath">
 		<File RelativePath="d:\oss\iMOD\SRC\imod_modpath\imod_pathlines.f90"/>
@@ -331,6 +334,9 @@
 		<File RelativePath="d:\oss\iMOD\SRC\imod_spoints\imod_spoints_par.f90"/></Filter>
 		<Filter Name="imod_start">
 		<File RelativePath="d:\oss\iMOD\SRC\imod_start\imod_start.f90"/></Filter>
+		<Filter Name="imod_subsurfex">
+		<File RelativePath="..\..\SRC\imod_subsurfex\imod_subsurfex.f90"/>
+		<File RelativePath="..\..\SRC\imod_subsurfex\imod_subsurfex_par.f90"/></Filter>
 		<Filter Name="imod_timeserie">
 		<File RelativePath="d:\oss\iMOD\SRC\imod_timeseries\imod_ts.f90"/>
 		<File RelativePath="d:\oss\iMOD\SRC\imod_timeseries\imod_ts_par.f90"/></Filter>
@@ -376,9 +382,6 @@
 		<Filter Name="imod_wbal">
 		<File RelativePath="d:\oss\iMOD\SRC\imod_wbal\imod_wbal_compute.f90"/>
 		<File RelativePath="d:\oss\iMOD\SRC\imod_wbal\imod_wbal_par.f90"/></Filter>
-		<Filter Name="imod_subsurfex">
-		<File RelativePath="..\..\SRC\imod_subsurfex\imod_subsurfex.f90"/>
-		<File RelativePath="..\..\SRC\imod_subsurfex\imod_subsurfex_par.f90"/></Filter>
 		<Filter Name="programs">
 		<File RelativePath="d:\oss\iMOD\SRC\imod_main\imod_prg.f90">
 			<FileConfiguration Name="Debug|Win32">

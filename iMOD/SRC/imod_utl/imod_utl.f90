@@ -50,6 +50,8 @@ TYPE PROCOBJ
  CHARACTER(LEN=52) :: CID
 END TYPE PROCOBJ
 
+REAL,PARAMETER,PRIVATE :: SDAY=86400.0
+
 CONTAINS
 
  !###======================================================================
@@ -1455,6 +1457,23 @@ CONTAINS
  END FUNCTION JDATETOGDATE
 
  !###======================================================================
+ FUNCTION JDATETOFDATE(X,JOFFSET)
+ !###======================================================================
+ IMPLICIT NONE
+ CHARACTER(LEN=20)  :: JDATETOFDATE
+ INTEGER,INTENT(IN) :: JOFFSET
+ REAL,INTENT(IN) :: X
+ CHARACTER(LEN=8) :: CTIME
+ REAL :: FTIME
+ 
+ JDATETOFDATE=JDATETOGDATE(INT(X)+JOFFSET)
+ FTIME=X-FLOOR(X)
+ CALL FTIMETOCTIME(FTIME,CTIME)
+ IF(CTIME.NE.'00:00:00')JDATETOFDATE=TRIM(JDATETOFDATE)//' '//TRIM(CTIME)
+
+ END FUNCTION JDATETOFDATE
+
+ !###======================================================================
  INTEGER FUNCTION GDATETOJDATE(CDATE)
  !###======================================================================
  IMPLICIT NONE
@@ -1528,17 +1547,56 @@ CONTAINS
  END SUBROUTINE IDATETOGDATE
 
  !###====================================================================
- REAL FUNCTION ITIMETOJTIME(ITIME)
+ SUBROUTINE FTIMETOITIME(FTIME,IH,IM,IS)
  !###====================================================================
  IMPLICIT NONE
- REAL,PARAMETER :: SDAY=86400.0
+ REAL,INTENT(IN) :: FTIME
+ INTEGER,INTENT(OUT) :: IH,IM,IS
+ INTEGER :: ITIME
+  
+ ITIME=FTIME*SDAY
+ CALL ITIMETOGTIME(ITIME,IH,IM,IS)
+ 
+ END SUBROUTINE FTIMETOITIME
+ 
+ !###====================================================================
+ SUBROUTINE FTIMETOCTIME(FTIME,CTIME)
+ !###====================================================================
+ IMPLICIT NONE
+ REAL,INTENT(IN) :: FTIME
+ CHARACTER(LEN=*),INTENT(OUT) :: CTIME
+ INTEGER :: IH,IM,IS
+ INTEGER :: ITIME
+  
+ ITIME=FTIME*SDAY
+ CALL ITIMETOGTIME(ITIME,IH,IM,IS)
+ WRITE(CTIME,'(3(I2.2,A1))') IH,':',IM,':',IS
+  
+ END SUBROUTINE FTIMETOCTIME
+
+ !###====================================================================
+ REAL FUNCTION ITIMETOFTIME(ITIME)
+ !###====================================================================
+ IMPLICIT NONE
  INTEGER,INTENT(IN) :: ITIME
  INTEGER :: IH,IM,IS
 
  CALL ITIMETOGTIME(ITIME,IH,IM,IS)
- ITIMETOJTIME=(IH*3600.0+IM*60.0+IS)/SDAY
+ ITIMETOFTIME=(IH*3600.0+IM*60.0+IS)/SDAY
 
- END FUNCTION ITIMETOJTIME
+ END FUNCTION ITIMETOFTIME
+
+ !###====================================================================
+ REAL FUNCTION CTIMETOFTIME(CTIME)
+ !###====================================================================
+ IMPLICIT NONE
+ CHARACTER(LEN=*) :: CTIME
+ INTEGER :: IH,IM,IS,ITIME
+
+ READ(CTIME,'(3(I2.0,1X))') IH,IM,IS
+ CTIMETOFTIME=(IH*3600.0+IM*60.0+IS)/SDAY
+
+ END FUNCTION CTIMETOFTIME
 
  !###====================================================================
  SUBROUTINE DECDEGREES_TO_DMS(DEGREES,D,M,S)
@@ -1559,12 +1617,12 @@ CONTAINS
  SUBROUTINE ITIMETOGTIME(ITIME,IH,IM,IS)
  !###====================================================================
  IMPLICIT NONE
- INTEGER,INTENT(IN) :: ITIME !## seconds
+ INTEGER,INTENT(IN) :: ITIME !## time seconds
  INTEGER,INTENT(OUT) :: IH,IM,IS
 
- IH = ITIME / 10000
- IM = MOD( ITIME, 10000 ) / 100
- IS = MOD( ITIME, 100 ) 
+ IH = ITIME / 3600
+ IM = MOD( ITIME, 3600 ) / 60
+ IS = MOD( ITIME, 60 ) 
 
  END SUBROUTINE ITIMETOGTIME
 
