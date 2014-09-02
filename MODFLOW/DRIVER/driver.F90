@@ -108,7 +108,8 @@ call imod_utl_printtext('license agreement to use the iMOD-software executables,
 call imod_utl_printtext('a solution in compiling the open source version of the iMOD-software',0)
 call imod_utl_printtext('into an executable yourself (see oss.deltares.nl), or apply for a'   ,0)
 call imod_utl_printtext('Deltares iMOD license agreement by sending an email to'              ,0)
-call imod_utl_printtext('sales@deltares.nl.'                                                  ,0)
+call imod_utl_printtext(''                                                                    ,0)
+call imod_utl_printtext('Version 3.0, 17/06/14'                                               ,0)
 call imod_utl_printtext('====================================================================',0)
 
 ! ... init
