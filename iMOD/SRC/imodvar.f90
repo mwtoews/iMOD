@@ -26,7 +26,7 @@ INTEGER,DIMENSION(2) :: IDPROC
 
 REAL,PARAMETER :: PI=ATAN(1.0)*4.0  !##value pi
 
-CHARACTER(LEN=20),PARAMETER            :: RVERSION='3.0.3'
+CHARACTER(LEN=20),PARAMETER            :: RVERSION='3.0.4'
 CHARACTER(LEN=256)                     :: IMFFNAME         !##name of drawing file
 CHARACTER(LEN=256)                     :: OPENDIR   !remember saved location
 CHARACTER(LEN=256)                     :: SAVEDIR   !remember opened location
