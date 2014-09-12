@@ -147,7 +147,7 @@ USE MOD_POLYGON_UTL, ONLY : POLYGON1SAVELOADSHAPE
     IF(I.GT.SHPNO)DINO(JB)%OPB='OUT'
    ENDIF
    IF(TRIM(DINO(JB)%OPB).NE.'OPB')CYCLE
-    
+   
    READ(LINE,*,IOSTAT=IOS) DINO(JB)%OPB,DINO(JB)%DATE,DINO(JB)%ID,DINO(JB)%IX,DINO(JB)%IY,DINO(JB)%MV, &
                            TXT,DINO(JB)%YTOPMV,DINO(JB)%YBOTMV, &
                            DINO(JB)%YTOP,DINO(JB)%YBOT,DINO(JB)%LITH,DINO(JB)%ZM,DINO(JB)%ZMK,     &
@@ -226,6 +226,10 @@ USE MOD_POLYGON_UTL, ONLY : POLYGON1SAVELOADSHAPE
 
      DO II=I2,I1,-1
 
+!      WRITE(*,*) 1,TRIM(DINO(II)%ZM),LEN_TRIM(DINO(II)%ZM)
+!      IF(LEN_TRIM(DINO(II)%ZM).EQ.0)DINO(II)%ZM='NONE'
+!      WRITE(*,*) 2,TRIM(DINO(II)%ZM),LEN_TRIM(DINO(II)%ZM)
+      
       IGEOTOP=IMOD_DINO_LITHOCLASS(TRIM(DINO(II)%LITH),&
                                    TRIM(DINO(II)%ZM),  &
                                    TRIM(DINO(II)%ZMK), &
@@ -446,34 +450,35 @@ USE MOD_POLYGON_UTL, ONLY : POLYGON1SAVELOADSHAPE
    IF(TRIM(ZM).NE.'NONE')THEN
 !    if lith in ['Z','GCZ'] and zm not in ['None','']:
     READ(ZM,*,IOSTAT=IOS) IZM
-    IF(IOS.NE.0)STOP 'ZM=IZM'
- !       zm = int(zm)
-    IF(IZM.GE.63.AND.IZM.LT.150.AND. &
-       ((TRIM(AK).EQ.'K3'.OR.TRIM(AK).EQ.'KX').OR. &
-         TRIM(KLEIBROKJES).EQ.'1'.OR. &
-        (ILUTUM_PCT.GE.5.AND.ILUTUM_PCT.NE.9999)))THEN
+!    WRITE(*,*) zm,ios,trim(lith)
+    IF(IOS.EQ.0)THEN !STOP 'ZM=IZM'
+     IF(IZM.GE.63.AND.IZM.LT.150.AND. &
+        ((TRIM(AK).EQ.'K3'.OR.TRIM(AK).EQ.'KX').OR. &
+          TRIM(KLEIBROKJES).EQ.'1'.OR. &
+         (ILUTUM_PCT.GE.5.AND.ILUTUM_PCT.NE.9999)))THEN
 !        if (zm >= 63 and zm < 150 and
 !           (ak in ['K3','KX']
 !               or kleibrokjes in ['1']
 !               or (lutum_pct >= 5 and lutum_pct != 9999))):
 !            lithoklasse = 3 # kleiig zand en zandige klei
-     IMOD_DINO_LITHOCLASS=3     !## kleiig zand en zandige klei
-    ELSEIF(IZM.GE.63.AND.IZM.LT.150)THEN
+      IMOD_DINO_LITHOCLASS=3     !## kleiig zand en zandige klei
+     ELSEIF(IZM.GE.63.AND.IZM.LT.150)THEN
 !        elif zm >= 63 and zm < 150:
 !            lithoklasse = 5
-     IMOD_DINO_LITHOCLASS=5
-    ELSEIF(IZM.GE.150.AND.IZM.LT.300)THEN
+      IMOD_DINO_LITHOCLASS=5
+     ELSEIF(IZM.GE.150.AND.IZM.LT.300)THEN
 !        elif zm >= 150 and zm < 300:
 !            lithoklasse = 6                    
-     IMOD_DINO_LITHOCLASS=6
-    ELSEIF(IZM.GE.300.AND.IZM.LT.2000)THEN
+      IMOD_DINO_LITHOCLASS=6
+     ELSEIF(IZM.GE.300.AND.IZM.LT.2000)THEN
 !        elif zm >= 300 and zm < 2000:
 !            lithoklasse = 7             
-     IMOD_DINO_LITHOCLASS=7
-    ELSEIF(IZM.GE.2000)THEN
+      IMOD_DINO_LITHOCLASS=7
+     ELSEIF(IZM.GE.2000)THEN
 !        elif zm >= 2000:
 !            lithoklasse = 8               
-     IMOD_DINO_LITHOCLASS=8
+      IMOD_DINO_LITHOCLASS=8
+     ENDIF
     ENDIF
    ENDIF
  END SELECT

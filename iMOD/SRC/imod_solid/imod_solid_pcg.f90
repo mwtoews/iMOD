@@ -19,6 +19,7 @@
 !!  Stichting Deltares
 !!  P.O. Box 177
 !!  2600 MH Delft, The Netherlands.
+!!
 MODULE MOD_SOLID_PCG
 
 USE WINTERACTER
@@ -54,7 +55,7 @@ CONTAINS
  !###======================================================================
  IMPLICIT NONE
  INTEGER :: I,J,K,ITER1,ITER2,ILAY,IROW,ICOL,ITYPE,IL,IECHO,IVERSION,NICNVG, &
-     JKRIGING,ICOMP,NCOMP,NPR,NPC !,N
+     JKRIGING,ICOMP,NCOMP,NPR,NPC 
  INTEGER,ALLOCATABLE,DIMENSION(:) :: ICNVG
  REAL :: TOP,BOT,C,HCHG,HCHGOLD,S
  LOGICAL :: LEX
