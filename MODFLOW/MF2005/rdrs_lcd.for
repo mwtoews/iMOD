@@ -112,7 +112,7 @@ c parameters
       character(len=24) :: aname(1)
       data aname(1) /'                     LCD'/
       integer,parameter :: ineighbours=2
-
+     
 c program section
 c ------------------------------------------------------------------------------
 c init
@@ -123,7 +123,7 @@ c read number of hfb layers
 
 c allocate ipc
       allocate(tmp(ncol,nrow))
-      allocate(ipc(0:ncol+2,0:nrow+2,0:3))
+      allocate(ipc(0:ncol+2,0:nrow+2,0:2))
       allocate(writegen(max(1,ngen))); writegen = .false.
 
 c count number of hfb and fill
@@ -159,8 +159,10 @@ c count number of hfb and fill
             end if
 
             do iline = 1, nline ! iline
+               
             ipc = int(0,1)
             is = genip(iline-1)+1; ie = genip(iline)
+            jcol = genpos(is,1); jrow = genpos(is,2);
             do il = is, ie
                writegen(igen) = .true.
                icol = genpos(il,1)
@@ -169,106 +171,20 @@ c count number of hfb and fill
                if (iline.ne.jline) then
                   write(*,*) 'ERROR, something went wrong in rdlcd'
                   call ustop(' ')
-               end if
+               end if          
                ipc(icol,irow,0) = int(1,1)
+               
+               if(icol.gt.jcol)then
+                  ipc(jcol,jrow,2)=int(1,1);     jcol=jcol+1
+               elseif(icol.lt.jcol)then
+                  ipc(jcol-1,jrow,2)=int(1,1);   jcol=jcol-1   
+               elseif(irow.gt.jrow)then
+                  ipc(jcol-1,jrow+1,1)=int(1,1); jrow=jrow+1
+               elseif(irow.lt.jrow)then
+                  ipc(jcol-1,jrow,1)=int(1,1);   jrow=jrow-1
+               endif
             end do
-
-            !## count neighbours (to eliminate dangles)
-            do irow=1,nrow
-             do icol=1,ncol
-              if(ipc(icol,irow,0).eq.int(1,1))then
-               ipc(icol,irow,3)=ipc(icol,irow,3)+ipc(icol  ,irow-1,0)
-               ipc(icol,irow,3)=ipc(icol,irow,3)+ipc(icol  ,irow+1,0)
-               ipc(icol,irow,3)=ipc(icol,irow,3)+ipc(icol-1,irow  ,0)
-               ipc(icol,irow,3)=ipc(icol,irow,3)+ipc(icol+1,irow  ,0)
-              endif
-             enddo
-            enddo
-
-            !## fault in y-axes
-            do irow=1,nrow
-             do icol=1,ncol
-              if(ipc(icol,irow,0)  .eq.int(1,1).and.
-     1           ipc(icol-1,irow,0).eq.int(0,1))then
-               if(ipc(icol+1,irow,0).eq.int(1,1).and.
-     1           ipc(icol+2,irow,0).eq.int(0,1))
-     1            ipc(icol,irow,1)=int(1,1)   !## sure
-               if(ipc(icol+1,irow,0).eq.int(0,1).and.
-     1            ipc(icol,irow,3).ge.ineighbours)
-     1           ipc(icol-1,irow,1)=int(1,1)!## estimated
-              endif
-             enddo
-            enddo
-
-            !## fault in x-axes
-            do irow=1,nrow
-             do icol=1,ncol
-              if(ipc(icol,irow,0)  .eq.int(1,1).and.
-     1           ipc(icol,irow-1,0).eq.int(0,1))then
-               if(ipc(icol,irow+1,0).eq.int(1,1).and.
-     1            ipc(icol,irow+2,0).eq.int(0,1))
-     1          ipc(icol,irow,2)=int(1,1)    !## sure
-               if(ipc(icol,irow+1,0).eq.int(0,1).and.
-     1            ipc(icol,irow,3).ge.ineighbours)
-     1          ipc(icol,irow-1,2)=int(1,1) !## estimated
-              endif
-             enddo
-            enddo
-
-            !## correcting elements that have "holes" - x-axes
-            do irow=1,nrow
-             do icol=1,ncol
-              if(ipc(icol,irow  ,0).eq.int(1,1))then
-               if(ipc(icol,irow-1,2).eq.int(1,1).and.
-     1           ipc(icol+1,irow,2).eq.int(1,1))
-     1          ipc(icol,irow,1)=int(1,1) !## close "hole"
-               if(ipc(icol+1,irow-1,2).eq.int(1,1).and.
-     1           ipc(icol  ,irow,2).eq.int(1,1))
-     1          ipc(icol,irow,1)=int(1,1) !## close "hole"
-              endif
-             enddo
-            enddo
-
-            !## correcting elements that have "holes" - y-axes
-            do irow=1,nrow
-             do icol=1,ncol
-              if(ipc(icol,irow  ,0).eq.int(1,1))then
-               if(ipc(icol-1,irow,1).eq.int(1,1).and.
-     1            ipc(icol,irow+1,1).eq.int(1,1))
-     1          ipc(icol,irow,2)=int(1,1)   !## close "hole"
-               if(ipc(icol,irow    ,1).eq.int(1,1).and.
-     1            ipc(icol-1,irow+1,1).eq.int(1,1))
-     1           ipc(icol,irow,2)=int(1,1) !## close "hole"
-              endif
-             enddo
-            enddo
-
-            !## fill "dangles"
-            do irow=1,nrow
-             do icol=1,ncol
-              if(ipc(icol,irow,3).eq.int(1,1))then
-               if(ipc(icol-1,irow,1).eq.int(1,1).and.
-     1            ipc(icol-1,irow,2).eq.int(1,1))
-     1          ipc(icol,irow-1,2)=int(1,1)   !## close top
-               if(ipc(icol-1,irow,1)  .eq.int(0,1).and.
-     1            ipc(icol-1,irow-1,2).eq.int(1,1))
-     1          ipc(icol,irow-1,2)=int(1,1) !## close top
-               if(ipc(icol-1,irow,1)  .eq.int(1,1).and.
-     1            ipc(icol-1,irow-1,2).eq.int(1,1))
-     1           ipc(icol,irow,2)=int(1,1)   !## close bottom
-               if(ipc(icol-1,irow+1,1).eq.int(1,1).and.
-     1            ipc(icol  ,irow  ,2).eq.int(1,1))
-     1           ipc(icol,irow,1)=int(1,1)   !## close right
-               if(ipc(icol-1,irow+1,1).eq.int(1,1).and.
-     1            ipc(icol,irow    ,2).eq.int(0,1))
-     1           ipc(icol-1,irow,1)=int(1,1) !## close right
-               if(ipc(icol-1,irow-1,1).eq.int(1,1).and.
-     1            ipc(icol,  irow-1,2).eq.int(0,1))
-     1          ipc(icol-1,irow,1)=int(1,1) !## close right
-              endif
-             enddo
-            enddo
-
+            
             do irow = 1, nrow
                do icol = 1, ncol
                   !## place horizontal wall
@@ -300,6 +216,7 @@ c count number of hfb and fill
                      if(ipc(icol,irow,1).eq.int(1,1)) then
                         ii = ii + 1
                         if (iact.eq.2) then
+                            
                            rlisttmp(1,ii) = ilay
                            rlisttmp(2,ii) = irow
                            rlisttmp(3,ii) = icol

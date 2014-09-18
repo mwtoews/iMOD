@@ -101,7 +101,7 @@ call imod_utl_printtext('=======================================================
 call imod_utl_printtext('You may use this compiled version of the iMOD-software if you are '  ,0)
 call imod_utl_printtext('entitled to this use under a iMOD software license agreement for the',0)
 call imod_utl_printtext('iMOD software executables with Deltares or with a party entitled by' ,0)
-call imod_utl_printtext('Deltares to provide sublicenses for the iMOD-software executables.'  ,0) 
+call imod_utl_printtext('Deltares to provide sublicenses for the iMOD-software executables.'  ,0)
 call imod_utl_printtext('Otherwise use of this compiled version of the iMOD-software is'      ,0)
 call imod_utl_printtext('prohibited and illegal. If you are not allowed under a Deltares iMOD',0)
 call imod_utl_printtext('license agreement to use the iMOD-software executables, you may find',0)
@@ -109,7 +109,7 @@ call imod_utl_printtext('a solution in compiling the open source version of the 
 call imod_utl_printtext('into an executable yourself (see oss.deltares.nl), or apply for a'   ,0)
 call imod_utl_printtext('Deltares iMOD license agreement by sending an email to'              ,0)
 call imod_utl_printtext(''                                                                    ,0)
-call imod_utl_printtext('Version 3.0, 17/06/14'                                               ,0)
+call imod_utl_printtext('Version 3.00.01, 18/09/14'                                           ,0)
 call imod_utl_printtext('====================================================================',0)
 
 ! ... init
