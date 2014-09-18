@@ -182,7 +182,15 @@
 		<File RelativePath="d:\oss\iMOD\SRC\imod_ipf\Imod_ipf.f90"/>
 		<File RelativePath="d:\oss\iMOD\SRC\imod_ipf\imod_ipf_labels.f90"/>
 		<File RelativePath="d:\oss\iMOD\SRC\imod_ipf\imod_ipf_par.f90"/>
-		<File RelativePath="d:\oss\iMOD\SRC\imod_ipf\imod_ipfanalyse.f90"/>
+		<File RelativePath="d:\oss\iMOD\SRC\imod_ipf\imod_ipfanalyse.f90">
+			<FileConfiguration Name="Debug|Win32">
+				<Tool Name="VFFortranCompilerTool" Preprocess="preprocessYes" PreprocessorDefinitions="WINTERACTER9"/></FileConfiguration>
+			<FileConfiguration Name="Release|x64">
+				<Tool Name="VFFortranCompilerTool" Preprocess="preprocessYes" PreprocessorDefinitions="WINTERACTER9"/></FileConfiguration>
+			<FileConfiguration Name="Debug|x64">
+				<Tool Name="VFFortranCompilerTool" Preprocess="preprocessYes" PreprocessorDefinitions="WINTERACTER9"/></FileConfiguration>
+			<FileConfiguration Name="Release|Win32">
+				<Tool Name="VFFortranCompilerTool" Preprocess="preprocessYes" PreprocessorDefinitions="WINTERACTER9"/></FileConfiguration></File>
 		<File RelativePath="d:\oss\iMOD\SRC\imod_ipf\imod_ipfassfiles.f90"/>
 		<File RelativePath="d:\oss\iMOD\SRC\imod_ipf\imod_ipfgetvalue.f90"/>
 		<File RelativePath="d:\oss\iMOD\SRC\imod_ipf\imod_ipfgetvalue_colours.f90"/></Filter>

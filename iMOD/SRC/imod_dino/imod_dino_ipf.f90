@@ -19,7 +19,7 @@
 !!  Stichting Deltares
 !!  P.O. Box 177
 !!  2600 MH Delft, The Netherlands.
-
+!!
 MODULE MOD_DINO_IPF
 
 USE RESOURCE
@@ -148,6 +148,27 @@ USE MOD_POLYGON_UTL, ONLY : POLYGON1SAVELOADSHAPE
    ENDIF
    IF(TRIM(DINO(JB)%OPB).NE.'OPB')CYCLE
    
+   DINO(JB)%ZMK=''
+   DINO(JB)%LITH=''
+   DINO(JB)%ZM=''
+   DINO(JB)%ZMK=''
+   DINO(JB)%AK=''
+   DINO(JB)%AS=''
+   DINO(JB)%AZ=''
+   DINO(JB)%AG=''
+   DINO(JB)%AH=''
+   DINO(JB)%SH=''
+   DINO(JB)%SHFR=''
+   DINO(JB)%PLANTFR=''
+   DINO(JB)%MICAFR=''
+   DINO(JB)%GLAUCFR=''
+   DINO(JB)%ORG=''
+   DINO(JB)%CACO3=''
+   DINO(JB)%CONS=''
+   DINO(JB)%COLOR=''
+   DINO(JB)%PLANTS=''
+   DINO(JB)%SHELLS=''
+   
    READ(LINE,*,IOSTAT=IOS) DINO(JB)%OPB,DINO(JB)%DATE,DINO(JB)%ID,DINO(JB)%IX,DINO(JB)%IY,DINO(JB)%MV, &
                            TXT,DINO(JB)%YTOPMV,DINO(JB)%YBOTMV, &
                            DINO(JB)%YTOP,DINO(JB)%YBOT,DINO(JB)%LITH,DINO(JB)%ZM,DINO(JB)%ZMK,     &
@@ -225,10 +246,6 @@ USE MOD_POLYGON_UTL, ONLY : POLYGON1SAVELOADSHAPE
      WRITE(KU,'(A)') '"Omschrijving",-999.99' 
 
      DO II=I2,I1,-1
-
-!      WRITE(*,*) 1,TRIM(DINO(II)%ZM),LEN_TRIM(DINO(II)%ZM)
-!      IF(LEN_TRIM(DINO(II)%ZM).EQ.0)DINO(II)%ZM='NONE'
-!      WRITE(*,*) 2,TRIM(DINO(II)%ZM),LEN_TRIM(DINO(II)%ZM)
       
       IGEOTOP=IMOD_DINO_LITHOCLASS(TRIM(DINO(II)%LITH),&
                                    TRIM(DINO(II)%ZM),  &
@@ -246,10 +263,15 @@ USE MOD_POLYGON_UTL, ONLY : POLYGON1SAVELOADSHAPE
       CALL BIJM_TXT(BIJM,DINO(II)%AH)
       IF(BIJM.EQ.'')BIJM='None'
       BIJM=ADJUSTL(BIJM)
+
+      IF(TRIM(DINO(II)%LITH).EQ.'')DINO(II)%LITH='None'
+      IF(TRIM(DINO(II)%ZMK).EQ.'') DINO(II)%ZMK='None'
+      IF(TRIM(DINO(II)%DESC).EQ.'')DINO(II)%DESC='None'
+
       LINE=TRIM(RTOS(DINO(II)%YTOP/1000.0,'F',2))//','// &
-           TRIM(DINO(II)%LITH)//','// &
+           '"'//TRIM(DINO(II)%LITH)//'",'// &
            TRIM(ITOS(IGEOTOP))//','// &
-           TRIM(DINO(II)%ZMK)//','// &
+           '"'//TRIM(DINO(II)%ZMK)//'",'// &
            '"'//TRIM(BIJM)//'",'// &
            '"'//TRIM(DINO(II)%DESC)//'"'
       WRITE(KU,'(A)') TRIM(LINE)
