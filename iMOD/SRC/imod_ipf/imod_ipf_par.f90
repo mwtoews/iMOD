@@ -19,6 +19,7 @@
 !!  Stichting Deltares
 !!  P.O. Box 177
 !!  2600 MH Delft, The Netherlands.
+!!
 MODULE MOD_IPF_PAR
 
 USE RESOURCE, ONLY : ID_DIPFINFO_TAB1TAB1,ID_DIPFINFO_TAB1TAB2,ID_DIPFINFO_TAB1TAB3, &
@@ -72,13 +73,11 @@ TYPE TYPE_IPF
  CHARACTER(LEN=30),POINTER,DIMENSION(:) :: ATTRIB
  REAL,POINTER,DIMENSION(:) :: NODATA
 
- REAL(KIND=8),POINTER,DIMENSION(:) :: IDATE               !## time-data in timeseries
-! REAL,POINTER,DIMENSION(:) :: ITIME               !## time-data in timeseries
+ REAL(KIND=8),POINTER,DIMENSION(:) :: IDATE       !## time-data in timeseries
  REAL,POINTER,DIMENSION(:,:) :: MEASURE           !## data in timeseries/sonderingen
 
  REAL,POINTER,DIMENSION(:) :: Z                   !## z-coordinate in drills/sonderingen
- CHARACTER(LEN=256),POINTER,DIMENSION(:,:) :: L    !## data from drills
-! CHARACTER(LEN=20),POINTER,DIMENSION(:,:) :: L    !## data from drills
+ CHARACTER(LEN=256),POINTER,DIMENSION(:,:) :: L   !## data from drills
 
  INTEGER :: ASSCOL1 !## columns used to plot the associated files
  INTEGER :: ASSCOL2 !## columns used to plot the associated files
