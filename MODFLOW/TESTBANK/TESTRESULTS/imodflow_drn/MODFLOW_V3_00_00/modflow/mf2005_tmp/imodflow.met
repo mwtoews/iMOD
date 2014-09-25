@@ -1,0 +1,8 @@
+coord_xll 200000.0
+coord_yll 400000.0
+coord_xll_nb 200000.0
+coord_yll_nb 400000.0
+coord_xur_nb 202500.0
+coord_yur_nb 402500.0
+starttime year 2000 month 1 day 1
+resultdir 'p:\1206764-imod\imod30\testbank\output_V3_00_01\runs\test_ALL\imodflow_drn\MODFLOW_V3_00_00\modflow'

@@ -1,0 +1,337 @@
+                                  MODFLOW-2005     
+      U.S. GEOLOGICAL SURVEY MODULAR FINITE-DIFFERENCE GROUND-WATER FLOW MODEL
+                            VERSION 1.8.00 12/18/2009
+
+ LIST FILE: imodflow.list
+                         UNIT   10
+
+ OPENING imodflow.dis                                                                                                                                                                                                                                                                                                
+ FILE TYPE:DIS   UNIT   11   STATUS:OLD    
+ FORMAT:FORMATTED              ACCESS:SEQUENTIAL          
+
+ OPENING imodflow.bas6                                                                                                                                                                                                                                                                                               
+ FILE TYPE:BAS6   UNIT   12   STATUS:OLD    
+ FORMAT:FORMATTED              ACCESS:SEQUENTIAL          
+
+ OPENING imodflow.bcf6                                                                                                                                                                                                                                                                                               
+ FILE TYPE:BCF6   UNIT   13   STATUS:OLD    
+ FORMAT:FORMATTED              ACCESS:SEQUENTIAL          
+
+ OPENING imodflow.oc                                                                                                                                                                                                                                                                                                 
+ FILE TYPE:OC   UNIT   14   STATUS:OLD    
+ FORMAT:FORMATTED              ACCESS:SEQUENTIAL          
+
+ OPENING imodflow.met                                                                                                                                                                                                                                                                                                
+ FILE TYPE:MET   UNIT   15   STATUS:OLD    
+ FORMAT:FORMATTED              ACCESS:SEQUENTIAL          
+
+ OPENING imodflow.wel                                                                                                                                                                                                                                                                                                
+ FILE TYPE:WEL   UNIT   19   STATUS:OLD    
+ FORMAT:FORMATTED              ACCESS:SEQUENTIAL          
+
+ OPENING imodflow.hfb6                                                                                                                                                                                                                                                                                               
+ FILE TYPE:HFB6   UNIT   21   STATUS:OLD    
+ FORMAT:FORMATTED              ACCESS:SEQUENTIAL          
+
+ OPENING imodflow.pcg                                                                                                                                                                                                                                                                                                
+ FILE TYPE:PCG   UNIT   22   STATUS:OLD    
+ FORMAT:FORMATTED              ACCESS:SEQUENTIAL          
+# data:                                                                                                                                                                                                                                                                                                     
+
+ BAS -- BASIC PACKAGE, VERSION 7, 5/2/2005 INPUT READ FROM UNIT   12
+
+ DISCRETIZATION INPUT DATA READ FROM UNIT   11
+ # Discretization file
+    2 LAYERS       100 ROWS       100 COLUMNS
+    1 STRESS PERIOD(S) IN SIMULATION
+ MODEL TIME UNIT IS DAYS
+ MODEL LENGTH UNIT IS METERS
+  Confining bed flag for each layer:
+   1   0
+
+                     DELR =   25.0000    
+
+                     DELC =   25.0000    
+
+ TOP ELEVATION OF LAYER 1 =   0.00000    
+
+   MODEL LAYER BOTTOM EL. =   0.00000     FOR LAYER   1
+
+ BOT. EL. OF QUASI-3D BED =   0.00000     FOR LAYER   1
+
+   MODEL LAYER BOTTOM EL. =   0.00000     FOR LAYER   2
+
+
+ STRESS PERIOD     LENGTH       TIME STEPS     MULTIPLIER FOR DELT    SS FLAG
+ ----------------------------------------------------------------------------
+        1         0.000000          1                    1.000         SS
+
+ STEADY-STATE SIMULATION
+
+
+
+ 
+ # Basic Package file                                                            
+ THE FREE FORMAT OPTION HAS BEEN SELECTED
+
+ OPENING FILE ON UNIT   99:
+ P:\1206764-IMOD\IMOD30\TESTBANK\RUNS\TEST_ALL\BOUNDARY\IMODFLOW_IBOUND1.IDF                                                                                                                             
+  FILE IDENTIFIED AS IDF
+
+           BOUNDARY ARRAY =              1 FOR LAYER   2
+
+ AQUIFER HEAD WILL BE SET TO  -999.99     AT ALL NO-FLOW NODES (IBOUND=0).
+
+ OPENING FILE ON UNIT   99:
+ P:\1206764-IMOD\IMOD30\TESTBANK\RUNS\TEST_ALL\STARTING_HEADS\IMODFLOW_SHEAD1.IDF                                                                                                                        
+  FILE IDENTIFIED AS IDF
+
+ OPENING FILE ON UNIT   99:
+ P:\1206764-IMOD\IMOD30\TESTBANK\RUNS\TEST_ALL\STARTING_HEADS\IMODFLOW_SHEAD2.IDF                                                                                                                        
+  FILE IDENTIFIED AS IDF
+
+ OUTPUT CONTROL IS SPECIFIED ONLY AT TIME STEPS FOR WHICH OUTPUT IS DESIRED
+ HEAD PRINT FORMAT CODE IS   0    DRAWDOWN PRINT FORMAT CODE IS   0
+ HEADS WILL BE SAVED ON UNIT   28    DRAWDOWNS WILL BE SAVED ON UNIT    0
+
+ BCF -- BLOCK-CENTERED FLOW PACKAGE, VERSION 7, 5/2/2005
+         INPUT READ FROM UNIT 13
+ STEADY-STATE SIMULATION
+ CELL-BY-CELL FLOWS WILL BE SAVED ON UNIT 29
+ HEAD AT CELLS THAT CONVERT TO DRY=  -9999.0    
+ WETTING CAPABILITY IS NOT ACTIVE
+      LAYER  LAYER-TYPE CODE     INTERBLOCK T
+      --------------------------------------------
+         1            0          0 -- HARMONIC    
+         2            0          0 -- HARMONIC    
+
+ COLUMN TO ROW ANISOTROPY =   1.00000    
+
+ OPENING FILE ON UNIT   99:
+ P:\1206764-IMOD\IMOD30\TESTBANK\RUNS\TEST_ALL\TRANSMISSIVITY\IMODFLOW_KD1.IDF                                                                                                                           
+  FILE IDENTIFIED AS IDF
+
+ OPENING FILE ON UNIT   99:
+ P:\1206764-IMOD\IMOD30\TESTBANK\RUNS\TEST_ALL\VERTICAL_RESISTANCE\IMODFLOW_C1.IDF                                                                                                                       
+  FILE IDENTIFIED AS IDF
+
+ OPENING FILE ON UNIT   99:
+ P:\1206764-IMOD\IMOD30\TESTBANK\RUNS\TEST_ALL\TRANSMISSIVITY\IMODFLOW_KD2.IDF                                                                                                                           
+  FILE IDENTIFIED AS IDF
+
+ WEL -- WELL PACKAGE, VERSION 7, 5/2/2005 INPUT READ FROM UNIT   19
+ # Well Package file
+ No named parameters
+ MAXIMUM OF      1 ACTIVE WELLS AT ONE TIME
+ CELL-BY-CELL FLOWS WILL BE SAVED ON UNIT   33
+ LISTS OF WELL CELLS WILL NOT BE PRINTED
+
+
+     0 Well parameters
+
+ HFB -- HORIZONTAL-FLOW BARRIER PACKAGE, VERSION 7, 5/2/2005.
+   INPUT READ FROM UNIT   21
+ # Horizontal Flow Barrier Package file
+     0 PARAMETERS DEFINE A MAXIMUM OF      0 HORIZONTAL FLOW BARRIERS
+      1 HORIZONTAL FLOW BARRIERS NOT DEFINED BY PARAMETERS
+ LISTS OF HORIZONTAL FLOW BARRIER CELLS WILL NOT BE PRINTED
+          Applying factor instead of hydraulic characteristic
+
+
+     0 HFB parameters
+
+      1 BARRIERS NOT DEFINED BY PARAMETERS
+  DATA IDENTIFIED AS LCD
+
+ OPENING FILE ON UNIT   99:
+ P:\1206764-IMOD\IMOD30\TESTBANK\RUNS\TEST_ALL\HORIZONTAL_BARRIER\IMODFLOW_HFB2.GEN                                                                                                                      
+  FILE IDENTIFIED AS GEN
+
+ OPENING FILE ON UNIT   99:
+ P:\1206764-IMOD\IMOD30\TESTBANK\RUNS\TEST_ALL\HORIZONTAL_BARRIER\IMODFLOW_HFB2.GEN                                                                                                                      
+  FILE IDENTIFIED AS GEN
+
+    268 HFB BARRIERS
+
+ PCG -- CONJUGATE-GRADIENT SOLUTION PACKAGE, VERSION 7, 5/2/2005
+ # Preconditioned Conjugate-Gradient Package
+ MAXIMUM OF    150 CALLS OF SOLUTION ROUTINE
+ MAXIMUM OF     20 INTERNAL ITERATIONS PER CALL TO SOLUTION ROUTINE
+ MATRIX PRECONDITIONING TYPE :    1
+
+
+
+                                    SOLUTION BY THE CONJUGATE-GRADIENT METHOD
+                                   -------------------------------------------
+                    MAXIMUM NUMBER OF CALLS TO PCG ROUTINE =      150
+                        MAXIMUM ITERATIONS PER CALL TO PCG =       20
+                               MATRIX PRECONDITIONING TYPE =        1
+        RELAXATION FACTOR (ONLY USED WITH PRECOND. TYPE 1) =    0.98000E+00
+ PARAMETER OF POLYNOMIAL PRECOND. = 2 (2) OR IS CALCULATED :        1
+                         HEAD CHANGE CRITERION FOR CLOSURE =    0.10000E-03
+                     RESIDUAL CHANGE CRITERION FOR CLOSURE =    0.10000E+02
+            PCG HEAD AND RESIDUAL CHANGE PRINTOUT INTERVAL =        1
+     PRINTING FROM SOLVER IS LIMITED(1) OR SUPPRESSED (>1) =        0
+                            STEADY-STATE DAMPING PARAMETER =    0.10000E+01
+                               TRANSIENT DAMPING PARAMETER =    0.10000E+01
+1
+                            STRESS PERIOD NO.    1, LENGTH =   0.000000    
+                            -----------------------------------------------
+
+                              NUMBER OF TIME STEPS =     1
+
+                               MULTIPLIER FOR DELT =     1.000
+
+                            INITIAL TIME STEP SIZE =   0.000000    
+  DATA IDENTIFIED AS GCD
+
+ OPENING FILE ON UNIT   99:
+ P:\1206764-IMOD\IMOD30\TESTBANK\RUNS\TEST_ALL\WELLS\IMODFLOW_WELL1.IPF                                                                                                                                  
+  FILE IDENTIFIED AS IPF
+
+ OPENING FILE ON UNIT   99:
+ P:\1206764-IMOD\IMOD30\TESTBANK\RUNS\TEST_ALL\WELLS\IMODFLOW_WELL2.IPF                                                                                                                                  
+  FILE IDENTIFIED AS IPF
+
+      2 WELLS
+ 
+ SOLVING FOR HEAD 
+ 
+ SOLVING FOR HEAD 
+ 
+ SOLVING FOR HEAD 
+ 
+ SOLVING FOR HEAD 
+ 
+ SOLVING FOR HEAD 
+
+
+     5 CALLS TO PCG ROUTINE FOR TIME STEP   1 IN STRESS PERIOD    1
+    75 TOTAL ITERATIONS
+
+ MAXIMUM HEAD CHANGE FOR EACH ITERATION (1 INDICATES THE FIRST INNER ITERATION):
+
+    HEAD CHANGE    HEAD CHANGE    HEAD CHANGE    HEAD CHANGE    HEAD CHANGE 
+   LAYER,ROW,COL  LAYER,ROW,COL  LAYER,ROW,COL  LAYER,ROW,COL  LAYER,ROW,COL
+ ---------------------------------------------------------------------------
+  1  -14.14      0   7.278      0  -6.996      0  -4.276      0  -3.679    
+   (  2, 74, 24)  (  2, 51, 50)  (  2, 51, 50)  (  2, 52, 49)  (  2, 53, 48)
+  0  -2.294      0   1.488      0  -1.895      0  -1.089      0 -0.5944    
+   (  2, 73, 28)  (  2, 54, 47)  (  2, 54, 47)  (  2, 55, 46)  (  2, 74, 27)
+  0 -0.8243      0 -0.4590      0 -0.3200      0 -0.2583      0 -0.2810    
+   (  2, 55, 46)  (  2, 56, 45)  (  2, 74, 27)  (  2, 56, 45)  (  2, 57, 44)
+  0 -0.1859      0 -0.1487      0  0.1887      0  0.1843      0 -0.7456E-01
+   (  2, 56, 45)  (  2, 70, 31)  (  2, 52, 49)  (  2, 51, 50)  (  2, 74, 27)
+  1 -0.6938E-01  0 -0.5878E-01  0  0.8183E-01  0 -0.4402E-01  0  0.4775E-01
+   (  2, 72, 29)  (  2, 51, 50)  (  2, 51, 50)  (  2, 58, 43)  (  2, 58, 43)
+  0  0.8051E-01  0  0.7390E-01  0  0.3523E-01  0  0.3552E-01  0  0.3013E-01
+   (  2, 53, 48)  (  2, 51, 50)  (  2, 53, 48)  (  2, 57, 44)  (  2, 56, 45)
+  0 -0.2191E-01  0  0.2112E-01  0  0.2039E-01  0 -0.1525E-01  0 -0.1267E-01
+   (  2, 56, 45)  (  2, 56, 45)  (  2, 55, 46)  (  2, 55, 46)  (  2, 54, 47)
+  0 -0.1822E-01  0 -0.1572E-01  0  0.1450E-01  0 -0.7577E-02  0  0.4222E-02
+   (  2, 52, 49)  (  2, 51, 50)  (  2, 51, 50)  (  2, 51, 50)  (  2, 58, 43)
+  1 -0.3798E-02  0  0.3815E-02  0 -0.6117E-02  0  0.6993E-02  0  0.7870E-02
+   (  2, 58, 43)  (  2, 51, 50)  (  2, 51, 50)  (  2, 51, 50)  (  2, 52, 49)
+  0  0.6152E-02  0  0.5183E-02  0  0.4393E-02  0  0.5559E-02  0  0.4406E-02
+   (  2, 54, 47)  (  2, 55, 46)  (  2, 51, 50)  (  2, 53, 48)  (  2, 51, 50)
+  0  0.3207E-02  0  0.2332E-02  0  0.1856E-02  0  0.1346E-02  0  0.8029E-03
+   (  2, 53, 48)  (  2, 55, 46)  (  2, 56, 45)  (  2, 57, 44)  (  2, 56, 45)
+  0  0.9512E-03  0  0.5840E-03  0  0.9095E-03  0  0.7218E-03  0  0.3600E-03
+   (  2, 57, 44)  (  2, 58, 43)  (  2, 51, 50)  (  2, 52, 49)  (  2, 72, 29)
+  1 -0.4251E-03  0 -0.4421E-03  0 -0.5139E-03  0 -0.2810E-03  0 -0.3286E-03
+   (  2, 72, 29)  (  2, 52, 49)  (  2, 51, 50)  (  2, 58, 43)  (  2, 57, 44)
+  0  0.2594E-03  0 -0.2605E-03  0  0.1589E-03  0  0.2983E-03  0  0.2750E-03
+   (  2, 57, 44)  (  2, 57, 44)  (  2,  9, 36)  (  2, 53, 48)  (  2, 51, 50)
+  0  0.1920E-03  0  0.1447E-03  0  0.1359E-03  0 -0.6974E-04  1 -0.6182E-04
+   (  2, 53, 48)  (  2, 56, 45)  (  2, 55, 46)  (  2, 55, 46)  (  2, 54, 47)
+
+ MAXIMUM RESIDUAL FOR EACH ITERATION (1 INDICATES THE FIRST INNER ITERATION):
+
+    RESIDUAL       RESIDUAL       RESIDUAL       RESIDUAL       RESIDUAL    
+   LAYER,ROW,COL  LAYER,ROW,COL  LAYER,ROW,COL  LAYER,ROW,COL  LAYER,ROW,COL
+ ---------------------------------------------------------------------------
+  1  -332.2      0   405.3      0   286.0      0   313.9      0  -178.3    
+   (  2, 74, 25)  (  2, 51, 50)  (  2, 52, 49)  (  2, 53, 48)  (  2, 53, 48)
+  0   139.1      0   119.0      0   104.8      0  -52.86      0   52.33    
+   (  2, 74, 27)  (  2, 54, 47)  (  2, 73, 28)  (  2, 55, 46)  (  2, 55, 46)
+  0  -44.13      0   26.59      0   16.52      0   18.86      0  -18.84    
+   (  2, 55, 46)  (  2, 74, 27)  (  2, 56, 45)  (  2, 57, 44)  (  2, 57, 44)
+  0   12.79      0  -10.22      0   20.89      0  -6.367      0   5.785    
+   (  2, 57, 44)  (  2, 52, 49)  (  2, 52, 49)  (  2, 72, 29)  (  2, 72, 29)
+  1  -4.438      0   8.472      0  -5.252      0   4.536      0  -4.258    
+   (  2, 72, 29)  (  2, 52, 49)  (  2, 52, 49)  (  2, 57, 44)  (  2, 57, 44)
+  0   6.228      0  -3.321      0  -2.767      0  -1.764      0   1.894    
+   (  2, 53, 48)  (  2, 53, 48)  (  2, 57, 44)  (  2, 56, 45)  (  2, 56, 45)
+  0  -1.748      0  -1.437      0   1.058      0 -0.8476      0  0.8869    
+   (  2, 56, 45)  (  2, 55, 46)  (  2, 55, 46)  (  2, 55, 46)  (  2, 52, 49)
+  0  -1.409      0  0.7977      0 -0.4036      0 -0.2909      0 -0.2909    
+   (  2, 52, 49)  (  2, 54, 47)  (  2, 54, 47)  (  2, 58, 43)  (  2, 59, 42)
+  1  0.2350      0 -0.1482      0  0.2926      0 -0.5092      0  0.3801    
+   (  2, 59, 42)  (  2, 59, 42)  (  2, 54, 47)  (  2, 52, 49)  (  2, 52, 49)
+  0  0.2741      0  0.2477      0 -0.2936      0  0.3506      0 -0.2469    
+   (  2, 54, 47)  (  2, 55, 46)  (  2, 55, 46)  (  2, 53, 48)  (  2, 53, 48)
+  0  0.1900      0 -0.1333      0  0.8718E-01  0  0.6598E-01  0 -0.7332E-01
+   (  2, 56, 45)  (  2, 56, 45)  (  2, 56, 45)  (  2, 57, 44)  (  2, 57, 44)
+  0  0.6567E-01  0  0.4457E-01  0 -0.9586E-01  0 -0.3243E-01  0  0.3685E-01
+   (  2, 57, 44)  (  2, 52, 49)  (  2, 52, 49)  (  2, 58, 43)  (  2, 72, 29)
+  1 -0.2942E-01  0 -0.5162E-01  0  0.2713E-01  0  0.2441E-01  0 -0.2558E-01
+   (  2, 72, 29)  (  2, 52, 49)  (  2, 52, 49)  (  2, 57, 44)  (  2, 57, 44)
+  0  0.2163E-01  0  0.1491E-01  0 -0.1487E-01  0  0.2361E-01  0 -0.1417E-01
+   (  2, 57, 44)  (  2, 56, 45)  (  2, 56, 45)  (  2, 53, 48)  (  2, 53, 48)
+  0  0.1228E-01  0 -0.9018E-02  0  0.5938E-02  0 -0.4314E-02  1 -0.4465E-02
+   (  2, 55, 46)  (  2, 55, 46)  (  2, 55, 46)  (  2, 55, 46)  (  2, 54, 47)
+
+
+
+ OUTPUT CONTROL FOR STRESS PERIOD    1   TIME STEP   1
+    SAVE HEAD FOR ALL LAYERS
+    SAVE BUDGET
+    SAVE BUDGET
+ INFO. Sign of cbc-flux FLOW RIGHT FACE is swapped!
+ INFO. Sign of cbc-flux FLOW FRONT FACE is swapped!
+ INFO. Sign of cbc-flux FLOW LOWER FACE is swapped!
+
+ HEAD WILL BE SAVED ON UNIT   28 AT END OF TIME STEP   1, STRESS PERIOD    1
+1
+  VOLUMETRIC BUDGET FOR ENTIRE MODEL AT END OF TIME STEP  1 IN STRESS PERIOD   1
+  ------------------------------------------------------------------------------
+
+     CUMULATIVE VOLUMES      L**3       RATES FOR THIS TIME STEP      L**3/T
+     ------------------                 ------------------------
+
+           IN:                                      IN:
+           ---                                      ---
+             STORAGE =           0.0000               STORAGE =           0.0000
+       CONSTANT HEAD =           0.0000         CONSTANT HEAD =        5000.0732
+               WELLS =           0.0000                 WELLS =           0.0000
+
+            TOTAL IN =           0.0000              TOTAL IN =        5000.0732
+
+          OUT:                                     OUT:
+          ----                                     ----
+             STORAGE =           0.0000               STORAGE =           0.0000
+       CONSTANT HEAD =           0.0000         CONSTANT HEAD =           0.0000
+               WELLS =           0.0000                 WELLS =        5000.0000
+
+           TOTAL OUT =           0.0000             TOTAL OUT =        5000.0000
+
+            IN - OUT =           0.0000              IN - OUT =       7.3242E-02
+
+ PERCENT DISCREPANCY =           0.00     PERCENT DISCREPANCY =           0.00
+
+
+
+
+
+
+          TIME SUMMARY AT END OF TIME STEP   1 IN STRESS PERIOD    1
+                    SECONDS     MINUTES      HOURS       DAYS        YEARS
+                    -----------------------------------------------------------
+   TIME STEP LENGTH  0.0000      0.0000      0.0000      0.0000      0.0000    
+ STRESS PERIOD TIME  0.0000      0.0000      0.0000      0.0000      0.0000    
+         TOTAL TIME  0.0000      0.0000      0.0000      0.0000      0.0000    
+1
+
+ Run end date and time (yyyy/mm/dd hh:mm:ss): 2014/09/25 16:07:42
+ Elapsed run time:  3.852 Seconds
+

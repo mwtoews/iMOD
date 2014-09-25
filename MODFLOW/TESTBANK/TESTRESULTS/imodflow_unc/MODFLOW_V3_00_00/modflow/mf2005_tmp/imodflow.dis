@@ -1,0 +1,10 @@
+# Discretization file
+2 100 100 1 4 2 tbcheck
+1 0
+constant 25.00000
+constant 25.00000
+constant 10.00000
+constant 0.0000000E+00
+constant -5.000000
+constant -50.00000
+0.0000000E+00 1 1.000000 SS

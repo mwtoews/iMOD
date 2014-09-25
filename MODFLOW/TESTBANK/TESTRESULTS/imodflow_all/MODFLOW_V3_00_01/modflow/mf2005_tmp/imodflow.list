@@ -1,0 +1,740 @@
+                                  MODFLOW-2005     
+      U.S. GEOLOGICAL SURVEY MODULAR FINITE-DIFFERENCE GROUND-WATER FLOW MODEL
+                            VERSION 1.8.00 12/18/2009
+
+ LIST FILE: imodflow.list
+                         UNIT   10
+
+ OPENING imodflow.dis                                                                                                                                                                                                                                                                                                
+ FILE TYPE:DIS   UNIT   11   STATUS:OLD    
+ FORMAT:FORMATTED              ACCESS:SEQUENTIAL          
+
+ OPENING imodflow.bas6                                                                                                                                                                                                                                                                                               
+ FILE TYPE:BAS6   UNIT   12   STATUS:OLD    
+ FORMAT:FORMATTED              ACCESS:SEQUENTIAL          
+
+ OPENING imodflow.bcf6                                                                                                                                                                                                                                                                                               
+ FILE TYPE:BCF6   UNIT   13   STATUS:OLD    
+ FORMAT:FORMATTED              ACCESS:SEQUENTIAL          
+
+ OPENING imodflow.oc                                                                                                                                                                                                                                                                                                 
+ FILE TYPE:OC   UNIT   14   STATUS:OLD    
+ FORMAT:FORMATTED              ACCESS:SEQUENTIAL          
+
+ OPENING imodflow.met                                                                                                                                                                                                                                                                                                
+ FILE TYPE:MET   UNIT   15   STATUS:OLD    
+ FORMAT:FORMATTED              ACCESS:SEQUENTIAL          
+
+ OPENING imodflow.riv                                                                                                                                                                                                                                                                                                
+ FILE TYPE:RIV   UNIT   16   STATUS:OLD    
+ FORMAT:FORMATTED              ACCESS:SEQUENTIAL          
+
+ OPENING imodflow.drn                                                                                                                                                                                                                                                                                                
+ FILE TYPE:DRN   UNIT   17   STATUS:OLD    
+ FORMAT:FORMATTED              ACCESS:SEQUENTIAL          
+
+ OPENING imodflow.ghb                                                                                                                                                                                                                                                                                                
+ FILE TYPE:GHB   UNIT   18   STATUS:OLD    
+ FORMAT:FORMATTED              ACCESS:SEQUENTIAL          
+
+ OPENING imodflow.wel                                                                                                                                                                                                                                                                                                
+ FILE TYPE:WEL   UNIT   19   STATUS:OLD    
+ FORMAT:FORMATTED              ACCESS:SEQUENTIAL          
+
+ OPENING imodflow.ani                                                                                                                                                                                                                                                                                                
+ FILE TYPE:ANI   UNIT   20   STATUS:OLD    
+ FORMAT:FORMATTED              ACCESS:SEQUENTIAL          
+
+ OPENING imodflow.hfb6                                                                                                                                                                                                                                                                                               
+ FILE TYPE:HFB6   UNIT   21   STATUS:OLD    
+ FORMAT:FORMATTED              ACCESS:SEQUENTIAL          
+
+ OPENING imodflow.pcg                                                                                                                                                                                                                                                                                                
+ FILE TYPE:PCG   UNIT   22   STATUS:OLD    
+ FORMAT:FORMATTED              ACCESS:SEQUENTIAL          
+
+ OPENING imodflow.rch                                                                                                                                                                                                                                                                                                
+ FILE TYPE:RCH   UNIT   23   STATUS:OLD    
+ FORMAT:FORMATTED              ACCESS:SEQUENTIAL          
+
+ OPENING imodflow.chd                                                                                                                                                                                                                                                                                                
+ FILE TYPE:CHD   UNIT   24   STATUS:OLD    
+ FORMAT:FORMATTED              ACCESS:SEQUENTIAL          
+
+ OPENING imodflow.evt                                                                                                                                                                                                                                                                                                
+ FILE TYPE:EVT   UNIT   25   STATUS:OLD    
+ FORMAT:FORMATTED              ACCESS:SEQUENTIAL          
+# data:                                                                                                                                                                                                                                                                                                     
+
+ BAS -- BASIC PACKAGE, VERSION 7, 5/2/2005 INPUT READ FROM UNIT   12
+
+ DISCRETIZATION INPUT DATA READ FROM UNIT   11
+ # Discretization file
+    2 LAYERS       100 ROWS       100 COLUMNS
+    1 STRESS PERIOD(S) IN SIMULATION
+ MODEL TIME UNIT IS DAYS
+ MODEL LENGTH UNIT IS METERS
+  Confining bed flag for each layer:
+   1   0
+
+                     DELR =   25.0000    
+
+                     DELC =   25.0000    
+
+ TOP ELEVATION OF LAYER 1 =   0.00000    
+
+   MODEL LAYER BOTTOM EL. =   0.00000     FOR LAYER   1
+
+ BOT. EL. OF QUASI-3D BED =   0.00000     FOR LAYER   1
+
+   MODEL LAYER BOTTOM EL. =   0.00000     FOR LAYER   2
+
+
+ STRESS PERIOD     LENGTH       TIME STEPS     MULTIPLIER FOR DELT    SS FLAG
+ ----------------------------------------------------------------------------
+        1         0.000000          1                    1.000         SS
+
+ STEADY-STATE SIMULATION
+
+
+
+ 
+ # Basic Package file                                                            
+ THE FREE FORMAT OPTION HAS BEEN SELECTED
+
+ OPENING FILE ON UNIT   99:
+ P:\1206764-IMOD\IMOD30\TESTBANK\RUNS\TEST_ALL\BOUNDARY\IMODFLOW_IBOUND1.IDF                                                                                                                             
+  FILE IDENTIFIED AS IDF
+
+           BOUNDARY ARRAY =              1 FOR LAYER   2
+
+ AQUIFER HEAD WILL BE SET TO  -999.99     AT ALL NO-FLOW NODES (IBOUND=0).
+
+ OPENING FILE ON UNIT   99:
+ P:\1206764-IMOD\IMOD30\TESTBANK\RUNS\TEST_ALL\STARTING_HEADS\IMODFLOW_SHEAD1.IDF                                                                                                                        
+  FILE IDENTIFIED AS IDF
+
+ OPENING FILE ON UNIT   99:
+ P:\1206764-IMOD\IMOD30\TESTBANK\RUNS\TEST_ALL\STARTING_HEADS\IMODFLOW_SHEAD2.IDF                                                                                                                        
+  FILE IDENTIFIED AS IDF
+
+ OUTPUT CONTROL IS SPECIFIED ONLY AT TIME STEPS FOR WHICH OUTPUT IS DESIRED
+ HEAD PRINT FORMAT CODE IS   0    DRAWDOWN PRINT FORMAT CODE IS   0
+ HEADS WILL BE SAVED ON UNIT   28    DRAWDOWNS WILL BE SAVED ON UNIT    0
+
+ BCF -- BLOCK-CENTERED FLOW PACKAGE, VERSION 7, 5/2/2005
+         INPUT READ FROM UNIT 13
+ STEADY-STATE SIMULATION
+ CELL-BY-CELL FLOWS WILL BE SAVED ON UNIT 29
+ HEAD AT CELLS THAT CONVERT TO DRY=  -9999.0    
+ WETTING CAPABILITY IS NOT ACTIVE
+      LAYER  LAYER-TYPE CODE     INTERBLOCK T
+      --------------------------------------------
+         1            0          0 -- HARMONIC    
+         2            0          0 -- HARMONIC    
+
+ COLUMN TO ROW ANISOTROPY =   1.00000    
+
+ OPENING FILE ON UNIT   99:
+ P:\1206764-IMOD\IMOD30\TESTBANK\RUNS\TEST_ALL\TRANSMISSIVITY\IMODFLOW_KD1.IDF                                                                                                                           
+  FILE IDENTIFIED AS IDF
+
+ OPENING FILE ON UNIT   99:
+ P:\1206764-IMOD\IMOD30\TESTBANK\RUNS\TEST_ALL\VERTICAL_RESISTANCE\IMODFLOW_C1.IDF                                                                                                                       
+  FILE IDENTIFIED AS IDF
+
+ OPENING FILE ON UNIT   99:
+ P:\1206764-IMOD\IMOD30\TESTBANK\RUNS\TEST_ALL\TRANSMISSIVITY\IMODFLOW_KD2.IDF                                                                                                                           
+  FILE IDENTIFIED AS IDF
+
+ OPENING FILE ON UNIT   99:
+ P:\1206764-IMOD\IMOD30\TESTBANK\RUNS\TEST_ALL\ANISOTROPY\IMODFLOW_ANIFCT1.IDF                                                                                                                           
+  FILE IDENTIFIED AS IDF
+
+ OPENING FILE ON UNIT   99:
+ P:\1206764-IMOD\IMOD30\TESTBANK\RUNS\TEST_ALL\ANISOTROPY\IMODFLOW_ANIHK1.IDF                                                                                                                            
+  FILE IDENTIFIED AS IDF
+
+ anisotropy factor        =   1.00000     FOR LAYER   2
+
+ anisotropy angle         =   0.00000     FOR LAYER   2
+
+ WEL -- WELL PACKAGE, VERSION 7, 5/2/2005 INPUT READ FROM UNIT   19
+ # Well Package file
+ No named parameters
+ MAXIMUM OF      1 ACTIVE WELLS AT ONE TIME
+ CELL-BY-CELL FLOWS WILL BE SAVED ON UNIT   33
+ LISTS OF WELL CELLS WILL NOT BE PRINTED
+
+
+     0 Well parameters
+
+ DRN -- DRAIN PACKAGE, VERSION 7, 5/2/2005 INPUT READ FROM UNIT   17
+ # Drain Package file
+ No named parameters
+ MAXIMUM OF      1 ACTIVE DRAINS AT ONE TIME
+ CELL-BY-CELL FLOWS WILL BE SAVED ON UNIT   31
+ LISTS OF DRAIN CELLS WILL NOT BE PRINTED
+ AUXILIARY DRAIN VARIABLE: ISUB            
+ DSUBSYS variabel ISUB             used for sub-system indices.
+
+
+     0 Drain parameters
+
+ RIV -- RIVER PACKAGE, VERSION 7, 5/2/2005 INPUT READ FROM UNIT   16
+          TNO version v7r1, 28 apr 2009
+ # River Package file
+ No named parameters
+ MAXIMUM OF      1 ACTIVE RIVER REACHES AT ONE TIME
+ CELL-BY-CELL FLOWS WILL BE SAVED ON UNIT   30
+ LISTS OF RIVER CELLS WILL NOT BE PRINTED
+ AUXILIARY RIVER VARIABLE: RFCT            
+ AUXILIARY RIVER VARIABLE: ISUB            
+ RFACT variabel RFCT             used as infiltration factor.
+ RSUBSYS variabel ISUB             used for sub-system indices.
+
+
+     0 River parameters
+
+ EVT -- EVAPOTRANSPIRATION PACKAGE, VERSION 7, 5/2/2005
+         INPUT READ FROM UNIT   25
+ # Evapotranspiration Package file
+ No named parameters
+ OPTION 1 -- EVAPOTRANSPIRATION FROM TOP LAYER
+
+
+     0 Evapotranspiration parameters
+
+ GHB -- GENERAL-HEAD BOUNDARY PACKAGE, VERSION 7, 5/2/2005
+         INPUT READ FROM UNIT   18
+ # General-Head Boundary Package file
+ No named parameters
+ MAXIMUM OF      1 ACTIVE GHB CELLS AT ONE TIME
+ CELL-BY-CELL FLOWS WILL BE SAVED ON UNIT   32
+ LISTS OF GENERAL-HEAD BOUNDARY CELLS WILL NOT BE PRINTED
+
+
+     0 GHB parameters
+
+ RCH -- RECHARGE PACKAGE, VERSION 7, 5/2/2005 INPUT READ FROM UNIT   23
+ # Recharge Package file
+ No named parameters
+ OPTION 1 -- RECHARGE TO TOP LAYER
+ CELL-BY-CELL FLOWS WILL BE SAVED ON UNIT   34
+
+
+     0 Recharge parameters
+
+ CHD -- TIME-VARIANT SPECIFIED-HEAD OPTION, VERSION 7, 5/2/2005
+ INPUT READ FROM UNIT   24
+ # Time-Variant Specified Head package file
+ No named parameters
+ MAXIMUM OF      1 TIME-VARIANT SPECIFIED-HEAD CELLS AT ONE TIME
+ LISTS OF TIME-VARIANT SPECIFIED-HEAD CELLS WILL NOT BE PRINTED
+
+
+     0 TIME-VARIANT SPECIFIED-HEAD PARAMETERS
+
+ HFB -- HORIZONTAL-FLOW BARRIER PACKAGE, VERSION 7, 5/2/2005.
+   INPUT READ FROM UNIT   21
+ # Horizontal Flow Barrier Package file
+     0 PARAMETERS DEFINE A MAXIMUM OF      0 HORIZONTAL FLOW BARRIERS
+      1 HORIZONTAL FLOW BARRIERS NOT DEFINED BY PARAMETERS
+ LISTS OF HORIZONTAL FLOW BARRIER CELLS WILL NOT BE PRINTED
+          Applying factor instead of hydraulic characteristic
+
+
+     0 HFB parameters
+
+      1 BARRIERS NOT DEFINED BY PARAMETERS
+  DATA IDENTIFIED AS LCD
+
+ OPENING FILE ON UNIT   99:
+ P:\1206764-IMOD\IMOD30\TESTBANK\RUNS\TEST_ALL\HORIZONTAL_BARRIER\IMODFLOW_HFB2.GEN                                                                                                                      
+  FILE IDENTIFIED AS GEN
+
+ OPENING FILE ON UNIT   99:
+ P:\1206764-IMOD\IMOD30\TESTBANK\RUNS\TEST_ALL\HORIZONTAL_BARRIER\IMODFLOW_HFB2.GEN                                                                                                                      
+  FILE IDENTIFIED AS GEN
+
+    268 HFB BARRIERS
+
+ PCG -- CONJUGATE-GRADIENT SOLUTION PACKAGE, VERSION 7, 5/2/2005
+ # Preconditioned Conjugate-Gradient Package
+ MAXIMUM OF    150 CALLS OF SOLUTION ROUTINE
+ MAXIMUM OF     20 INTERNAL ITERATIONS PER CALL TO SOLUTION ROUTINE
+ MATRIX PRECONDITIONING TYPE :    1
+
+
+
+                                    SOLUTION BY THE CONJUGATE-GRADIENT METHOD
+                                   -------------------------------------------
+                    MAXIMUM NUMBER OF CALLS TO PCG ROUTINE =      150
+                        MAXIMUM ITERATIONS PER CALL TO PCG =       20
+                               MATRIX PRECONDITIONING TYPE =        1
+        RELAXATION FACTOR (ONLY USED WITH PRECOND. TYPE 1) =    0.98000E+00
+ PARAMETER OF POLYNOMIAL PRECOND. = 2 (2) OR IS CALCULATED :        1
+                         HEAD CHANGE CRITERION FOR CLOSURE =    0.10000E-03
+                     RESIDUAL CHANGE CRITERION FOR CLOSURE =    0.10000E+02
+            PCG HEAD AND RESIDUAL CHANGE PRINTOUT INTERVAL =        1
+     PRINTING FROM SOLVER IS LIMITED(1) OR SUPPRESSED (>1) =        0
+                            STEADY-STATE DAMPING PARAMETER =    0.10000E+01
+                               TRANSIENT DAMPING PARAMETER =    0.10000E+01
+1
+                            STRESS PERIOD NO.    1, LENGTH =   0.000000    
+                            -----------------------------------------------
+
+                              NUMBER OF TIME STEPS =     1
+
+                               MULTIPLIER FOR DELT =     1.000
+
+                            INITIAL TIME STEP SIZE =   0.000000    
+  DATA IDENTIFIED AS GCD
+
+ OPENING FILE ON UNIT   99:
+ P:\1206764-IMOD\IMOD30\TESTBANK\RUNS\TEST_ALL\WELLS\IMODFLOW_WELL1.IPF                                                                                                                                  
+  FILE IDENTIFIED AS IPF
+
+ OPENING FILE ON UNIT   99:
+ P:\1206764-IMOD\IMOD30\TESTBANK\RUNS\TEST_ALL\WELLS\IMODFLOW_WELL2.IPF                                                                                                                                  
+  FILE IDENTIFIED AS IPF
+
+      2 WELLS
+  DATA IDENTIFIED AS GCD
+
+ OPENING FILE ON UNIT   99:
+ P:\1206764-IMOD\IMOD30\TESTBANK\RUNS\TEST_ALL\RIVERS\IMODFLOW_RIV_COND1.IDF                                                                                                                             
+  FILE IDENTIFIED AS IDF
+
+ OPENING FILE ON UNIT   99:
+ P:\1206764-IMOD\IMOD30\TESTBANK\RUNS\TEST_ALL\RIVERS\IMODFLOW_RIV_STAGE1.IDF                                                                                                                            
+  FILE IDENTIFIED AS IDF
+
+ OPENING FILE ON UNIT   99:
+ P:\1206764-IMOD\IMOD30\TESTBANK\RUNS\TEST_ALL\RIVERS\IMODFLOW_RIV_RBOT1.IDF                                                                                                                             
+  FILE IDENTIFIED AS IDF
+
+ REACH NO.  LAYER   ROW   COL     STAGE      CONDUCTANCE     BOTTOM EL. 4                                                                                                                                                                                         =   1.00000     FOR LAYER   1
+
+    257 RIVER REACHES
+  DATA IDENTIFIED AS GCD
+
+ OPENING FILE ON UNIT   99:
+ P:\1206764-IMOD\IMOD30\TESTBANK\RUNS\TEST_ALL\DRAINAGE\IMODFLOW_DRN_COND1.IDF                                                                                                                           
+  FILE IDENTIFIED AS IDF
+
+ OPENING FILE ON UNIT   99:
+ P:\1206764-IMOD\IMOD30\TESTBANK\RUNS\TEST_ALL\DRAINAGE\IMODFLOW_DRN_ELEV1.IDF                                                                                                                           
+  FILE IDENTIFIED AS IDF
+
+ DRAIN NO.  LAYER   ROW   COL     DRAIN EL.  CONDUCTANCE 1                                                                                                                                                                                                        =   625.000     FOR LAYER   1
+
+ OPENING FILE ON UNIT   99:
+ P:\1206764-IMOD\IMOD30\TESTBANK\RUNS\TEST_ALL\OVERLANDFLOW\IMODFLOW_OLF1.IDF                                                                                                                            
+  FILE IDENTIFIED AS IDF
+
+  11000 DRAINS
+
+               ET SURFACE =   4.00000    
+
+  EVAPOTRANSPIRATION RATE =  9.500000E-04
+
+         EXTINCTION DEPTH =   1.00000    
+  DATA IDENTIFIED AS GCD
+
+ BOUND. NO. LAYER   ROW   COL     STAGE      CONDUCTANCE 1                                                                                                                                                                                                        =   10.0000     FOR LAYER   1
+
+ BOUND. NO. LAYER   ROW   COL     STAGE      CONDUCTANCE 2                                                                                                                                                                                                        =   1.00000     FOR LAYER   1
+
+  10000 GHB CELLS
+
+ OPENING FILE ON UNIT   99:
+ P:\1206764-IMOD\IMOD30\TESTBANK\RUNS\TEST_ALL\RECHARGE\IMODFLOW_RECHARGE1.IDF                                                                                                                           
+  FILE IDENTIFIED AS IDF
+  DATA IDENTIFIED AS GCD
+
+ OPENING FILE ON UNIT   99:
+ P:\1206764-IMOD\IMOD30\TESTBANK\RUNS\TEST_ALL\CONSTANTHEAD\IMODFLOW_CHEAD1.IDF                                                                                                                          
+  FILE IDENTIFIED AS IDF
+
+ OPENING FILE ON UNIT   99:
+ P:\1206764-IMOD\IMOD30\TESTBANK\RUNS\TEST_ALL\CONSTANTHEAD\IMODFLOW_CHEAD1.IDF                                                                                                                          
+  FILE IDENTIFIED AS IDF
+
+
+    200 TIME-VARIANT SPECIFIED-HEAD CELLS
+ 
+ SOLVING FOR HEAD 
+ 
+ SOLVING FOR HEAD 
+ 
+ SOLVING FOR HEAD 
+ 
+ SOLVING FOR HEAD 
+ 
+ SOLVING FOR HEAD 
+ 
+ SOLVING FOR HEAD 
+ 
+ SOLVING FOR HEAD 
+ 
+ SOLVING FOR HEAD 
+ 
+ SOLVING FOR HEAD 
+ 
+ SOLVING FOR HEAD 
+ 
+ SOLVING FOR HEAD 
+ 
+ SOLVING FOR HEAD 
+ 
+ SOLVING FOR HEAD 
+ 
+ SOLVING FOR HEAD 
+ 
+ SOLVING FOR HEAD 
+ 
+ SOLVING FOR HEAD 
+ 
+ SOLVING FOR HEAD 
+ 
+ SOLVING FOR HEAD 
+ 
+ SOLVING FOR HEAD 
+ 
+ SOLVING FOR HEAD 
+ 
+ SOLVING FOR HEAD 
+ 
+ SOLVING FOR HEAD 
+ 
+ SOLVING FOR HEAD 
+ 
+ SOLVING FOR HEAD 
+ 
+ SOLVING FOR HEAD 
+ 
+ SOLVING FOR HEAD 
+ 
+ SOLVING FOR HEAD 
+ 
+ SOLVING FOR HEAD 
+ 
+ SOLVING FOR HEAD 
+ 
+ SOLVING FOR HEAD 
+ 
+ SOLVING FOR HEAD 
+ 
+ SOLVING FOR HEAD 
+ 
+ SOLVING FOR HEAD 
+ 
+ SOLVING FOR HEAD 
+ 
+ SOLVING FOR HEAD 
+ 
+ SOLVING FOR HEAD 
+ 
+ SOLVING FOR HEAD 
+ 
+ SOLVING FOR HEAD 
+ 
+ SOLVING FOR HEAD 
+ 
+ SOLVING FOR HEAD 
+ 
+ SOLVING FOR HEAD 
+
+
+    41 CALLS TO PCG ROUTINE FOR TIME STEP   1 IN STRESS PERIOD    1
+   256 TOTAL ITERATIONS
+
+ MAXIMUM HEAD CHANGE FOR EACH ITERATION (1 INDICATES THE FIRST INNER ITERATION):
+
+    HEAD CHANGE    HEAD CHANGE    HEAD CHANGE    HEAD CHANGE    HEAD CHANGE 
+   LAYER,ROW,COL  LAYER,ROW,COL  LAYER,ROW,COL  LAYER,ROW,COL  LAYER,ROW,COL
+ ---------------------------------------------------------------------------
+  1  -10.75      0   4.605      0  -2.568      0   2.118      0 -0.7396    
+   (  1, 49, 49)  (  2,  1,100)  (  2, 52, 49)  (  2, 52, 49)  (  2, 57, 44)
+  0  0.4096      0 -0.1289      0 -0.8325E-01  0  0.3857E-01  0  0.1322E-01
+   (  2, 57, 44)  (  2, 52, 49)  (  2, 54, 47)  (  2, 54, 47)  (  2, 52, 49)
+  0 -0.6970E-02  0  0.3085E-02  0  0.1246E-02  0 -0.8022E-03  0  0.3541E-03
+   (  2, 58, 43)  (  2, 58, 43)  (  2, 59, 42)  (  2, 59, 42)  (  2, 59, 42)
+  0  0.1138E-03  0  0.5891E-04  1  -4.307      0  0.6329      0 -0.5257    
+   (  2, 60, 41)  (  2, 61, 40)  (  1, 49, 49)  (  2, 52, 49)  (  2, 52, 49)
+  0 -0.1821      0 -0.8448E-01  0  0.5180E-01  0  0.1221E-01  0 -0.8378E-02
+   (  2, 53, 48)  (  2, 54, 47)  (  2, 54, 47)  (  2, 52, 49)  (  2, 74, 27)
+  0  0.3588E-02  0 -0.2467E-02  0  0.1083E-02  0  0.4568E-03  0 -0.1705E-03
+   (  2, 57, 44)  (  2, 57, 44)  (  2, 57, 44)  (  2, 58, 43)  (  2, 58, 43)
+  0 -0.7678E-04  1  -2.407      0  0.3581      0 -0.2613      0 -0.7648E-01
+   (  2, 59, 42)  (  1, 49, 49)  (  2, 52, 49)  (  2, 52, 49)  (  2, 53, 48)
+  0 -0.3554E-01  0  0.2172E-01  0  0.8823E-02  0  0.3944E-02  0 -0.1351E-02
+   (  2, 54, 47)  (  2, 54, 47)  (  2, 55, 46)  (  2, 56, 45)  (  2, 56, 45)
+  0 -0.7070E-03  0  0.4331E-03  0  0.1949E-03  0 -0.8160E-04  1  -1.494    
+   (  2, 57, 44)  (  2, 57, 44)  (  2, 58, 43)  (  2, 58, 43)  (  1, 49, 49)
+  0  0.1822      0 -0.1027      0 -0.8362E-01  0 -0.2185E-01  0  0.1036E-01
+   (  2, 53, 48)  (  2, 53, 48)  (  2, 52, 49)  (  2, 54, 47)  (  2, 54, 47)
+  0  0.5505E-02  0  0.1998E-02  0 -0.6707E-03  0 -0.2564E-03  0 -0.1269E-03
+   (  2, 55, 46)  (  2, 56, 45)  (  2, 56, 45)  (  2, 59, 42)  (  2, 61, 40)
+  0 -0.6293E-04  1 -0.9822      0  0.1187      0  0.8228E-01  0 -0.5405E-01
+   (  2, 57, 44)  (  1, 49, 49)  (  2, 53, 48)  (  2, 52, 49)  (  2, 52, 49)
+  0 -0.1075E-01  0  0.5776E-02  0  0.2797E-02  0  0.1048E-02  0  0.3523E-03
+   (  2, 54, 47)  (  2, 54, 47)  (  2, 55, 46)  (  2, 56, 45)  (  2, 59, 42)
+  0 -0.1593E-03  0 -0.7206E-04  1 -0.6740      0  0.6494E-01  0  0.6576E-01
+   (  2, 59, 42)  (  2, 61, 40)  (  1, 49, 49)  (  2, 53, 48)  (  2, 52, 49)
+  0 -0.2575E-01  0 -0.7909E-02  0  0.2537E-02  0  0.1661E-02  0  0.6004E-03
+   (  2, 52, 49)  (  2, 55, 46)  (  2, 52, 49)  (  2, 54, 47)  (  2, 52, 49)
+  0 -0.2083E-03  0 -0.9159E-04  1 -0.4708      0  0.3721E-01  0  0.4265E-01
+   (  2, 56, 45)  (  2, 59, 42)  (  1, 49, 49)  (  2, 53, 48)  (  2, 52, 49)
+  0 -0.1381E-01  0 -0.5956E-02  0  0.2836E-02  0  0.8866E-03  0  0.3396E-03
+   (  2, 54, 47)  (  2, 52, 49)  (  2, 52, 49)  (  2, 55, 46)  (  2, 56, 45)
+  0 -0.1301E-03  0 -0.6801E-04  1 -0.3376      0 -0.2688E-01  0  0.2567E-01
+   (  2, 56, 45)  (  2, 59, 42)  (  1, 49, 49)  (  2, 52, 49)  (  2, 52, 49)
+  0 -0.1102E-01  0 -0.5856E-02  0  0.1591E-02  0  0.4529E-03  0 -0.1862E-03
+   (  2, 54, 47)  (  2, 52, 49)  (  2, 52, 49)  (  2, 55, 46)  (  2, 74, 27)
+  0  0.7145E-04  1 -0.2464      0 -0.2180E-01  0  0.1494E-01  0 -0.8060E-02
+   (  2, 59, 41)  (  1, 49, 49)  (  2, 52, 49)  (  2, 52, 49)  (  2, 54, 47)
+  0 -0.4282E-02  0 -0.1009E-02  0  0.3052E-03  0 -0.1579E-03  0  0.5217E-04
+   (  2, 52, 49)  (  2, 56, 45)  (  2, 74, 27)  (  2, 74, 27)  (  2, 60, 41)
+  1 -0.1822      0 -0.1744E-01  0  0.9022E-02  0 -0.5828E-02  0 -0.2712E-02
+   (  1, 49, 49)  (  2, 52, 49)  (  2, 54, 47)  (  2, 54, 47)  (  2, 52, 49)
+  0 -0.7373E-03  0  0.2259E-03  0  0.1151E-03  0  0.4687E-04  1 -0.1362    
+   (  2, 56, 45)  (  2, 56, 45)  (  2, 55, 46)  (  2, 52, 49)  (  1, 49, 49)
+  0 -0.1394E-01  0  0.6616E-02  0 -0.4219E-02  0 -0.1528E-02  0 -0.4838E-03
+   (  2, 52, 49)  (  2, 54, 47)  (  2, 54, 47)  (  2, 52, 49)  (  2, 56, 45)
+  0 -0.2128E-03  0  0.7760E-04  1 -0.1026      0 -0.1125E-01  0  0.4659E-02
+   (  2, 55, 46)  (  2, 55, 46)  (  1, 49, 49)  (  2, 52, 49)  (  2, 54, 47)
+  0  0.3053E-02  0 -0.9773E-03  0  0.3488E-03  0 -0.1696E-03  0  0.3226E-04
+   (  2, 53, 48)  (  2, 55, 46)  (  2, 55, 46)  (  2, 55, 46)  (  2, 58, 43)
+  1 -0.7784E-01  0 -0.8927E-02  0  0.3332E-02  0  0.2474E-02  0 -0.7928E-03
+   (  1, 49, 49)  (  2, 52, 49)  (  2, 54, 47)  (  2, 53, 48)  (  2, 55, 46)
+  0  0.2905E-03  0 -0.1171E-03  0  0.2148E-04  1 -0.5938E-01  0 -0.7112E-02
+   (  2, 55, 46)  (  2, 55, 46)  (  2, 58, 43)  (  1, 49, 49)  (  2, 52, 49)
+  0 -0.2571E-02  0  0.1960E-02  0 -0.6284E-03  0  0.2283E-03  0 -0.8507E-04
+   (  2, 53, 48)  (  2, 53, 48)  (  2, 55, 46)  (  2, 55, 46)  (  2, 55, 46)
+  1 -0.4550E-01  0 -0.5724E-02  0 -0.2261E-02  0  0.1531E-02  0 -0.4530E-03
+   (  1, 49, 49)  (  2, 52, 49)  (  2, 53, 48)  (  2, 53, 48)  (  2, 55, 46)
+  0 -0.1707E-03  0 -0.7906E-04  1 -0.3501E-01  0 -0.4576E-02  0 -0.1907E-02
+   (  2, 52, 49)  (  2, 55, 46)  (  1, 49, 49)  (  2, 52, 49)  (  2, 53, 48)
+  0  0.1168E-02  0 -0.3353E-03  0 -0.1200E-03  0 -0.6561E-04  1 -0.2702E-01
+   (  2, 53, 48)  (  2, 55, 46)  (  2, 52, 49)  (  2, 55, 46)  (  1, 49, 49)
+  0 -0.3657E-02  0 -0.1573E-02  0  0.8817E-03  0 -0.2521E-03  0  0.9188E-04
+   (  2, 52, 49)  (  2, 53, 48)  (  2, 53, 48)  (  2, 55, 46)  (  2, 55, 46)
+  1 -0.2092E-01  0 -0.2946E-02  0 -0.1249E-02  0  0.6757E-03  0 -0.2426E-03
+   (  1, 49, 49)  (  2, 52, 49)  (  2, 53, 48)  (  2, 53, 48)  (  2, 55, 46)
+  0  0.6701E-04  1 -0.1624E-01  0 -0.2297E-02  0 -0.9904E-03  0  0.5029E-03
+   (  2, 55, 46)  (  1, 49, 49)  (  2, 52, 49)  (  2, 53, 48)  (  2, 53, 48)
+  0 -0.1819E-03  0  0.5870E-04  1 -0.1263E-01  0 -0.1840E-02  0 -0.8005E-03
+   (  2, 55, 46)  (  2, 55, 46)  (  1, 49, 49)  (  2, 52, 49)  (  2, 53, 48)
+  0  0.3781E-03  0  0.1426E-03  0  0.4884E-04  1 -0.9854E-02  0 -0.1471E-02
+   (  2, 53, 48)  (  2, 54, 47)  (  2, 55, 46)  (  1, 49, 49)  (  2, 52, 49)
+  0 -0.6431E-03  0 -0.3017E-03  0  0.1222E-03  0  0.4150E-04  1 -0.7687E-02
+   (  2, 53, 48)  (  2, 54, 47)  (  2, 54, 47)  (  2, 55, 46)  (  1, 49, 49)
+  0 -0.1177E-02  0 -0.5164E-03  0 -0.2421E-03  0  0.1037E-03  0  0.3518E-04
+   (  2, 52, 49)  (  2, 53, 48)  (  2, 54, 47)  (  2, 54, 47)  (  2, 55, 46)
+  1 -0.6021E-02  0 -0.9432E-03  0 -0.4146E-03  0 -0.1950E-03  0  0.8744E-04
+   (  1, 49, 49)  (  2, 52, 49)  (  2, 53, 48)  (  2, 54, 47)  (  2, 54, 47)
+  1 -0.4712E-02  0 -0.7648E-03  0 -0.3338E-03  0 -0.1766E-03  0  0.7566E-04
+   (  1, 49, 49)  (  2, 52, 49)  (  2, 53, 48)  (  2, 54, 47)  (  2, 54, 47)
+  1 -0.3696E-02  0 -0.5734E-03  0 -0.2568E-03  0 -0.1365E-03  0  0.5146E-04
+   (  1, 49, 49)  (  2, 52, 49)  (  2, 53, 48)  (  2, 54, 47)  (  2, 54, 47)
+  1 -0.2902E-02  0 -0.4546E-03  0 -0.2026E-03  0 -0.1125E-03  0  0.4390E-04
+   (  1, 49, 49)  (  2, 52, 49)  (  2, 53, 48)  (  2, 54, 47)  (  2, 54, 47)
+  1 -0.2283E-02  0 -0.3816E-03  0 -0.1662E-03  0 -0.8673E-04  1 -0.1796E-02
+   (  1, 49, 49)  (  2, 52, 49)  (  2, 53, 48)  (  2, 54, 47)  (  1, 49, 49)
+  0 -0.3803E-03  0 -0.1670E-03  0 -0.6428E-04  1 -0.1413E-02  0 -0.2742E-03
+   (  2, 52, 49)  (  2, 53, 48)  (  2, 55, 46)  (  1, 49, 49)  (  2, 52, 49)
+  0 -0.1205E-03  0 -0.4869E-04  1 -0.1108E-02  0 -0.1875E-03  0 -0.9598E-04
+   (  2, 53, 48)  (  2, 54, 47)  (  1, 49, 49)  (  2, 52, 49)  (  2, 53, 48)
+  1 -0.8785E-03  0 -0.1331E-03  0 -0.9098E-04  1 -0.6879E-03  0 -0.1927E-03
+   (  1, 49, 49)  (  2, 53, 48)  (  2, 52, 49)  (  1, 49, 49)  (  2, 52, 49)
+  0 -0.4632E-04  1 -0.5450E-03  0 -0.9539E-04  1 -0.4289E-03  0 -0.1093E-03
+   (  2, 53, 48)  (  1, 49, 49)  (  2, 52, 49)  (  1, 49, 49)  (  2, 52, 49)
+  0 -0.2292E-04  1 -0.3410E-03  0 -0.9734E-04  1 -0.2644E-03  0  0.1656E-03
+   (  2, 53, 48)  (  1, 49, 49)  (  2, 53, 48)  (  1, 49, 49)  (  2, 52, 49)
+  0  0.2859E-04  1 -0.2154E-03  0 -0.3297E-04  1 -0.1635E-03  0 -0.8342E-04
+   (  2, 53, 48)  (  1, 49, 49)  (  2, 52, 49)  (  1, 49, 49)  (  2, 52, 49)
+  1 -0.1311E-03  0 -0.5058E-04  1 -0.1197E-03  0 -0.1162E-03  0  0.2431E-04
+   (  1, 49, 49)  (  2, 52, 49)  (  2, 53, 48)  (  2, 52, 49)  (  2, 52, 49)
+  1 -0.8593E-04
+   (  1, 49, 49)
+
+ MAXIMUM RESIDUAL FOR EACH ITERATION (1 INDICATES THE FIRST INNER ITERATION):
+
+    RESIDUAL       RESIDUAL       RESIDUAL       RESIDUAL       RESIDUAL    
+   LAYER,ROW,COL  LAYER,ROW,COL  LAYER,ROW,COL  LAYER,ROW,COL  LAYER,ROW,COL
+ ---------------------------------------------------------------------------
+  1   252.9      0   177.4      0   255.9      0   43.03      0  -45.60    
+   (  1, 50, 48)  (  2,  1, 99)  (  2, 53, 48)  (  2, 57, 44)  (  2, 57, 44)
+  0   13.92      0   8.561      0  -4.213      0   1.573      0  0.7242    
+   (  2, 57, 44)  (  2, 54, 47)  (  2, 54, 47)  (  2, 54, 47)  (  2, 58, 43)
+  0 -0.3796      0 -0.1322      0  0.8132E-01  0 -0.4688E-01  0 -0.1365E-01
+   (  2, 58, 43)  (  2, 59, 42)  (  2, 59, 42)  (  2, 59, 42)  (  2, 60, 41)
+  0 -0.6111E-02  0 -0.3312E-02  1   144.2      0   50.77      0   28.80    
+   (  2, 61, 40)  (  2, 53, 48)  (  1, 50, 48)  (  1, 50, 48)  (  1, 50, 48)
+  0   13.66      0  -5.974      0   2.463      0 -0.9702      0 -0.5692    
+   (  1, 50, 48)  (  2, 54, 47)  (  1, 47, 51)  (  1, 50, 48)  (  1, 50, 48)
+  0 -0.2598      0 -0.1477      0 -0.9067E-01  0 -0.3931E-01  0 -0.1203E-01
+   (  1, 50, 48)  (  1, 47, 51)  (  1, 47, 51)  (  1, 51, 47)  (  1, 51, 47)
+  0 -0.5160E-02  1   76.82      0   23.31      0   8.326      0  -5.302    
+   (  1, 46, 52)  (  1, 50, 48)  (  1, 50, 48)  (  1, 50, 48)  (  2, 53, 48)
+  0  -2.718      0   1.363      0  0.5245      0  0.1441      0 -0.7114E-01
+   (  2, 54, 47)  (  1, 51, 47)  (  1, 51, 47)  (  2, 56, 45)  (  1, 52, 47)
+  0 -0.4847E-01  0 -0.2889E-01  0 -0.1402E-01  0 -0.4704E-02  1   37.93    
+   (  1, 47, 51)  (  1, 51, 47)  (  1, 51, 47)  (  1, 46, 52)  (  1, 50, 48)
+  0   11.66      0   4.460      0   2.963      0   1.625      0  0.7191    
+   (  1, 50, 48)  (  1, 47, 51)  (  1, 47, 51)  (  1, 47, 51)  (  1, 51, 47)
+  0  0.2572      0  0.8029E-01  0  0.3797E-01  0 -0.1540E-01  0 -0.7986E-02
+   (  1, 51, 47)  (  2, 50, 47)  (  1, 46, 52)  (  1, 47, 51)  (  1, 51, 47)
+  0  0.4303E-02  1   18.50      0   8.925      0   3.249      0   1.618    
+   (  2, 58, 43)  (  1, 50, 48)  (  2, 53, 48)  (  1, 47, 51)  (  1, 47, 51)
+  0  0.8214      0  0.3442      0  0.1179      0  0.5459E-01  0  0.2257E-01
+   (  1, 51, 47)  (  1, 51, 47)  (  2, 50, 47)  (  1, 46, 52)  (  1, 46, 52)
+  0  0.9060E-02  0 -0.3448E-02  1   9.263      0   5.602      0   2.159    
+   (  1, 52, 46)  (  1, 51, 47)  (  1, 50, 48)  (  1, 50, 48)  (  1, 47, 51)
+  0  0.8576      0  0.3862      0 -0.1595      0  0.7668E-01  0  0.3508E-01
+   (  1, 51, 47)  (  1, 51, 47)  (  2, 54, 47)  (  1, 46, 52)  (  1, 46, 52)
+  0  0.1373E-01  0  0.5407E-02  1   5.526      0   4.177      0   1.415    
+   (  1, 52, 46)  (  1, 52, 46)  (  1, 47, 51)  (  1, 47, 51)  (  1, 47, 51)
+  0 -0.5436      0  0.2489      0  0.1078      0  0.5233E-01  0  0.2225E-01
+   (  2, 54, 47)  (  1, 51, 47)  (  1, 46, 52)  (  2, 50, 47)  (  2, 50, 47)
+  0  0.8048E-02  0  0.3363E-02  1   3.856      0   3.046      0   1.074    
+   (  1, 52, 46)  (  2, 51, 46)  (  1, 47, 51)  (  1, 47, 51)  (  2, 54, 47)
+  0 -0.3910      0 -0.1539      0  0.7177E-01  0  0.3503E-01  0  0.1430E-01
+   (  2, 54, 47)  (  2, 48, 50)  (  1, 46, 52)  (  2, 50, 47)  (  2, 50, 47)
+  0  0.4969E-02  1   2.668      0   2.157      0  0.9376      0  0.2632    
+   (  2, 51, 46)  (  1, 47, 51)  (  1, 47, 51)  (  2, 54, 47)  (  2, 49, 48)
+  0 -0.1079      0  0.4902E-01  0  0.2390E-01  0  0.9445E-02  0  0.3404E-02
+   (  2, 48, 50)  (  2, 50, 47)  (  2, 50, 47)  (  2, 50, 47)  (  2, 51, 46)
+  1   1.856      0   1.514      0  0.7783      0  0.2014      0 -0.7491E-01
+   (  1, 51, 47)  (  1, 51, 47)  (  2, 54, 47)  (  2, 49, 48)  (  2, 48, 50)
+  0  0.3447E-01  0  0.1739E-01  0  0.6844E-02  0  0.2436E-02  1   1.300    
+   (  2, 50, 47)  (  2, 50, 47)  (  2, 50, 47)  (  2, 51, 46)  (  1, 51, 47)
+  0   1.067      0  0.6179      0  0.1515      0 -0.5288E-01  0  0.2819E-01
+   (  1, 51, 47)  (  2, 54, 47)  (  2, 49, 48)  (  2, 48, 50)  (  2, 55, 46)
+  0  0.1300E-01  0  0.4722E-02  1  0.9125      0  0.7509      0  0.4699    
+   (  2, 50, 47)  (  2, 50, 47)  (  1, 51, 47)  (  1, 51, 47)  (  2, 54, 47)
+  0  0.1138      0  0.4004E-01  0  0.2336E-01  0  0.9434E-02  0  0.2999E-02
+   (  2, 49, 48)  (  1, 75, 25)  (  2, 55, 46)  (  2, 50, 47)  (  2, 50, 47)
+  1  0.6655      0  0.5761      0  0.3617      0  0.8562E-01  0 -0.3321E-01
+   (  2, 49, 48)  (  2, 49, 48)  (  2, 54, 47)  (  2, 49, 48)  (  2, 55, 46)
+  0  0.1821E-01  0  0.6845E-02  0  0.2267E-02  1  0.5114      0  0.4439    
+   (  1, 75, 25)  (  2, 50, 47)  (  2, 50, 47)  (  2, 49, 48)  (  2, 49, 48)
+  0  0.2743      0  0.6503E-01  0 -0.2683E-01  0  0.1430E-01  0  0.5120E-02
+   (  2, 54, 47)  (  2, 49, 48)  (  2, 55, 46)  (  1, 75, 25)  (  2, 50, 47)
+  1  0.3963      0  0.3443      0  0.2072      0  0.4941E-01  0  0.2170E-01
+   (  2, 49, 48)  (  2, 49, 48)  (  2, 54, 47)  (  2, 49, 48)  (  2, 48, 49)
+  0  0.1109E-01  0  0.4047E-02  1  0.3069      0  0.2669      0  0.1575    
+   (  1, 75, 25)  (  2, 50, 47)  (  2, 49, 48)  (  2, 49, 48)  (  2, 54, 47)
+  0  0.3817E-01  0  0.1778E-01  0  0.8519E-02  0  0.3141E-02  1  0.2381    
+   (  2, 48, 49)  (  2, 48, 49)  (  1, 75, 25)  (  2, 50, 47)  (  2, 49, 48)
+  0  0.2072      0  0.1195      0  0.3060E-01  0  0.1447E-01  0  0.6647E-02
+   (  2, 49, 48)  (  2, 54, 47)  (  2, 48, 49)  (  2, 48, 49)  (  1, 75, 25)
+  1  0.1862      0  0.1617      0  0.9368E-01  0  0.3010E-01  0  0.1266E-01
+   (  2, 49, 48)  (  2, 49, 48)  (  2, 49, 48)  (  2, 55, 46)  (  2, 48, 49)
+  0  0.4918E-02  1  0.1454      0  0.1263      0  0.7321E-01  0  0.2299E-01
+   (  1, 75, 25)  (  2, 49, 48)  (  2, 49, 48)  (  2, 49, 48)  (  2, 55, 46)
+  0  0.9909E-02  0  0.3884E-02  1  0.1134      0  0.9848E-01  0  0.5861E-01
+   (  2, 48, 49)  (  1, 75, 25)  (  2, 49, 48)  (  2, 49, 48)  (  2, 49, 48)
+  0  0.1845E-01  0  0.8000E-02  0  0.3101E-02  1  0.8857E-01  0  0.7693E-01
+   (  2, 55, 46)  (  2, 48, 49)  (  1, 75, 25)  (  2, 49, 48)  (  2, 49, 48)
+  0  0.4682E-01  0  0.1483E-01  0  0.6451E-02  0  0.2496E-02  1  0.6926E-01
+   (  2, 49, 48)  (  2, 55, 46)  (  2, 48, 49)  (  1, 75, 25)  (  2, 49, 48)
+  0  0.6015E-01  0  0.3730E-01  0  0.1183E-01  0  0.5203E-02  0  0.2013E-02
+   (  2, 49, 48)  (  2, 49, 48)  (  2, 55, 46)  (  2, 48, 49)  (  2, 48, 49)
+  1  0.5428E-01  0  0.4711E-01  0  0.2971E-01  0  0.9407E-02  0  0.4196E-02
+   (  2, 49, 48)  (  2, 49, 48)  (  2, 49, 48)  (  2, 55, 46)  (  2, 48, 49)
+  1  0.4155E-01  0  0.3607E-01  0  0.2386E-01  0  0.8755E-02  0  0.3217E-02
+   (  2, 47, 50)  (  2, 49, 48)  (  2, 49, 48)  (  2, 49, 48)  (  2, 48, 49)
+  1  0.3281E-01  0  0.2841E-01  0  0.1810E-01  0  0.6237E-02  0  0.2491E-02
+   (  2, 47, 50)  (  2, 49, 48)  (  2, 49, 48)  (  2, 49, 48)  (  2, 48, 49)
+  1  0.2590E-01  0  0.2242E-01  0  0.1541E-01  0  0.5048E-02  0  0.2021E-02
+   (  2, 47, 50)  (  2, 49, 48)  (  2, 54, 47)  (  2, 48, 49)  (  2, 48, 49)
+  1  0.2060E-01  0  0.1760E-01  0  0.1169E-01  0  0.4102E-02  1  0.2014E-01
+   (  2, 47, 50)  (  2, 49, 48)  (  2, 49, 48)  (  2, 48, 49)  (  2, 52, 49)
+  0  0.1438E-01  0  0.1012E-01  0  0.4582E-02  1  0.1406E-01  0  0.1115E-01
+   (  2, 53, 48)  (  2, 49, 48)  (  2, 49, 48)  (  2, 52, 49)  (  2, 53, 48)
+  0  0.7804E-02  0  0.4071E-02  1  0.1990E-01  0  0.9320E-02  0  0.6483E-02
+   (  2, 49, 48)  (  2, 49, 48)  (  2, 54, 47)  (  2, 53, 48)  (  2, 49, 48)
+  1 -0.1961E-01  0  0.6876E-02  0  0.5648E-02  1 -0.1565E-01  0  0.5531E-02
+   (  2, 55, 46)  (  2, 49, 48)  (  2, 49, 48)  (  2, 53, 48)  (  2, 49, 48)
+  0  0.4314E-02  1 -0.8861E-02  0  0.4069E-02  1 -0.5801E-02  0  0.3360E-02
+   (  2, 49, 48)  (  2, 55, 46)  (  2, 49, 48)  (  2, 54, 47)  (  2, 49, 48)
+  0  0.2611E-02  1  0.1513E-01  0  0.2743E-02  1 -0.1185E-01  0 -0.2282E-02
+   (  2, 49, 48)  (  2, 53, 48)  (  2, 49, 48)  (  2, 52, 49)  (  2, 53, 48)
+  0  0.1853E-02  1  0.3556E-02  0  0.1693E-02  1 -0.8700E-02  0  0.1463E-02
+   (  2, 49, 48)  (  2, 54, 47)  (  2, 47, 50)  (  2, 53, 48)  (  2, 49, 48)
+  1  0.6080E-02  0  0.2077E-02  1 -0.1446E-01  0 -0.1351E-02  0  0.7296E-03
+   (  2, 54, 47)  (  2, 53, 48)  (  2, 53, 48)  (  2, 54, 47)  (  2, 49, 48)
+  1 -0.3240E-02
+   (  2, 54, 47)
+
+
+
+ OUTPUT CONTROL FOR STRESS PERIOD    1   TIME STEP   1
+    SAVE HEAD FOR ALL LAYERS
+    SAVE BUDGET
+    SAVE BUDGET
+    SAVE BUDGET
+    SAVE BUDGET
+    SAVE BUDGET
+    SAVE BUDGET
+ INFO. Sign of cbc-flux FLOW RIGHT FACE is swapped!
+ INFO. Sign of cbc-flux FLOW FRONT FACE is swapped!
+ INFO. Sign of cbc-flux FLOW LOWER FACE is swapped!
+
+ HEAD WILL BE SAVED ON UNIT   28 AT END OF TIME STEP   1, STRESS PERIOD    1
+1
+  VOLUMETRIC BUDGET FOR ENTIRE MODEL AT END OF TIME STEP  1 IN STRESS PERIOD   1
+  ------------------------------------------------------------------------------
+
+     CUMULATIVE VOLUMES      L**3       RATES FOR THIS TIME STEP      L**3/T
+     ------------------                 ------------------------
+
+           IN:                                      IN:
+           ---                                      ---
+             STORAGE =           0.0000               STORAGE =           0.0000
+       CONSTANT HEAD =           0.0000         CONSTANT HEAD =        5366.6758
+               WELLS =           0.0000                 WELLS =           0.0000
+              DRAINS =           0.0000                DRAINS =           0.0000
+       RIVER LEAKAGE =           0.0000         RIVER LEAKAGE =        2740.5664
+                  ET =           0.0000                    ET =           0.0000
+     HEAD DEP BOUNDS =           0.0000       HEAD DEP BOUNDS =       69797.1641
+            RECHARGE =           0.0000              RECHARGE =        3067.2397
+
+            TOTAL IN =           0.0000              TOTAL IN =       80971.6484
+
+          OUT:                                     OUT:
+          ----                                     ----
+             STORAGE =           0.0000               STORAGE =           0.0000
+       CONSTANT HEAD =           0.0000         CONSTANT HEAD =           0.0000
+               WELLS =           0.0000                 WELLS =        3750.0000
+              DRAINS =           0.0000                DRAINS =       75225.7969
+       RIVER LEAKAGE =           0.0000         RIVER LEAKAGE =           0.0000
+                  ET =           0.0000                    ET =           0.0000
+     HEAD DEP BOUNDS =           0.0000       HEAD DEP BOUNDS =           0.0000
+            RECHARGE =           0.0000              RECHARGE =           0.0000
+
+           TOTAL OUT =           0.0000             TOTAL OUT =       78975.7969
+
+            IN - OUT =           0.0000              IN - OUT =        1995.8516
+
+ PERCENT DISCREPANCY =           0.00     PERCENT DISCREPANCY =           2.50
+
+
+
+
+
+
+          TIME SUMMARY AT END OF TIME STEP   1 IN STRESS PERIOD    1
+                    SECONDS     MINUTES      HOURS       DAYS        YEARS
+                    -----------------------------------------------------------
+   TIME STEP LENGTH  0.0000      0.0000      0.0000      0.0000      0.0000    
+ STRESS PERIOD TIME  0.0000      0.0000      0.0000      0.0000      0.0000    
+         TOTAL TIME  0.0000      0.0000      0.0000      0.0000      0.0000    
+1
+
+ Run end date and time (yyyy/mm/dd hh:mm:ss): 2014/09/25 16:05:14
+ Elapsed run time: 16.116 Seconds
+

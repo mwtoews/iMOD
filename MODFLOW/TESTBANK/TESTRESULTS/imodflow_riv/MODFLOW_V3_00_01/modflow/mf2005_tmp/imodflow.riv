@@ -1,0 +1,10 @@
+# River Package file
+1 30 noprint aux rfct aux isub rfact rfct rsubsys isub
+1
+gcd 00001
+1
+1 1
+open/close 'P:\1206764-IMOD\IMOD30\TESTBANK\RUNS\TEST_ALL\RIVERS\IMODFLOW_RIV_COND1.IDF' 1.000000 (free) -1 scaling 5 0
+open/close 'P:\1206764-IMOD\IMOD30\TESTBANK\RUNS\TEST_ALL\RIVERS\IMODFLOW_RIV_STAGE1.IDF' 1.000000 (free) -1 scaling 2 0
+open/close 'P:\1206764-IMOD\IMOD30\TESTBANK\RUNS\TEST_ALL\RIVERS\IMODFLOW_RIV_RBOT1.IDF' 1.000000 (free) -1 scaling 2 0
+constant 1.000000

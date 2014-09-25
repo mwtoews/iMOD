@@ -1,0 +1,187 @@
+ ===========================
+ SUMMARY OF MODEL SIMULATION
+ ===========================
+
+ Logfile for IMODFLOW v2.6.53
+
+ ACTIVE MODULES/PACKAGES
+
+ ===================================================================
+ Module   1 not present           SIMGRO
+ Module   2     present   active  IBOUND
+ Module   3     present   active  STARTING_HEAD
+ Module   4 not present           TRANSMISSIVITIES
+ Module   5 not present           VERTICAL_RESIST._VALUES
+ Module   6 not present           STORAGE_COEFFICIENTS
+ Module   7 not present           PERCHED_WATER_TABLE
+ Module   8 not present           ANISOTROPY
+ Module   9 not present           HORIZONTAL_FLOW_BARRIER
+ Module  10     present   active  TOP_OF_AQUIFER
+ Module  11     present   active  BOTTOM_OF_AQUIFER
+ Module  12 not present           CONCENTRATION
+ Module  13     present   active  HORIZONTAL_K_VALUE
+ Module  14     present   active  VERTICAL_K_VALUE
+ Module  15 not present           INTERBED_STORAGE
+ Module  16 not present           PARAMETER ESTIMATION
+ Module  17     present   active  VERTICAL ANISOTROPY
+ Module  18 not present           STREAM FLOW THICKNESS
+ Module  19 not present           COMMON POINTER MODULE
+ Module  20 not present           STORAGE COEFFICIENT MODU
+ Module  21 not present           SUBSIDENCE_CREEP_PACKAGE
+ Package  1     present   active  WELLS
+ Package  2 not present           DRAINS
+ Package  3 not present           RIVERS
+ Package  4 not present           EVAPOTRANSPIRATION
+ Package  5 not present           GENERAL_HEAD_BOUNDARY
+ Package  6     present   active  RECHARGE
+ Package  7 not present           OVERLANDFLOW
+ Package  8 not present           CONSTANT_HEAD
+ Package  9 not present           SEGMENT_RIVER
+ ===================================================================
+
+Solving system (ncol x nrow x nlay): 100 x 100 x 2
+
+Given window of interest:
+ Xmin - Xmax - Delta X (m):      200000.00       202500.00         2500.00
+ Ymin - Ymax - Delta Y (m):      400000.00       402500.00         2500.00
+Computed window of simulation:
+ Cellsize - Buffer (m)    :          25.00            0.00
+ Xmin - Xmax - Delta X (m):      200000.00       202500.00         2500.00
+ Ymin - Ymax - Delta Y (m):      400000.00       402500.00         2500.00
+ Total Area (km2)         :           6.25
+
+Processing IBOUND module
+Assigned P:\1206764-IMOD\IMOD30\TESTBANK\RUNS\TEST_ALL\BOUNDARY\IMODFLOW_IBOUND1.IDF
+	* Modellayer: 1; Mult. Factor: 1.000; Addition: 0.000
+Read Constant Value 1.000
+	* Modellayer: 2; Mult. Factor: 1.000; Addition: 0.000
+	Constant Value becomes 1.000
+
+Processing STARTING_HEAD module
+Read Constant Value 2.500
+	* Modellayer: 1; Mult. Factor: 1.000; Addition: 0.000
+	Constant Value becomes 2.500
+Read Constant Value 2.500
+	* Modellayer: 2; Mult. Factor: 1.000; Addition: 0.000
+	Constant Value becomes 2.500
+
+Processing TOP_OF_AQUIFER module
+Read Constant Value 10.00
+	* Modellayer: 1; Mult. Factor: 1.000; Addition: 0.000
+	Constant Value becomes 10.00
+Read Constant Value -5.000
+	* Modellayer: 2; Mult. Factor: 1.000; Addition: 0.000
+	Constant Value becomes -5.000
+
+Processing BOTTOM_OF_AQUIFER module
+Read Constant Value 0.000
+	* Modellayer: 1; Mult. Factor: 1.000; Addition: 0.000
+	Constant Value becomes 0.000
+Read Constant Value -50.00
+	* Modellayer: 2; Mult. Factor: 1.000; Addition: 0.000
+	Constant Value becomes -50.00
+
+Processing HORIZONTAL_K_VALUE module
+Read Constant Value 5.000
+	* Modellayer: 1; Mult. Factor: 1.000; Addition: 0.000
+	Constant Value becomes 5.000
+Read Constant Value 25.00
+	* Modellayer: 2; Mult. Factor: 1.000; Addition: 0.000
+	Constant Value becomes 25.00
+
+Processing VERTICAL ANISOTROPY module
+Read Constant Value 0.3000
+	* Modellayer: 1; Mult. Factor: 1.000; Addition: 0.000
+	Constant Value becomes 0.3000
+Read Constant Value 0.3000
+	* Modellayer: 2; Mult. Factor: 1.000; Addition: 0.000
+	Constant Value becomes 0.3000
+
+Processing VERTICAL_K_VALUE module
+Read Constant Value 0.5000E-02
+	* Modellayer: 1; Mult. Factor: 1.000; Addition: 0.000
+	Constant Value becomes 0.5000E-02
+Adjusted Conductances(no.:0,maxfct: 0.950 < 0.000 < 1.053
+
+====================================================
+Start steady-state period
+====================================================
+
+Processing WELLS package
+Assigned P:\1206764-IMOD\IMOD30\TESTBANK\RUNS\TEST_ALL\WELLS\IMODFLOW_WELL1.IPF
+	* Modellayer: 1; Mult. Factor: 0.1000; Addition: 0.000
+Assigned P:\1206764-IMOD\IMOD30\TESTBANK\RUNS\TEST_ALL\WELLS\IMODFLOW_WELL2.IPF
+	* Modellayer: 2; Mult. Factor: 0.5000; Addition: 0.000
+
+Processing RECHARGE package
+Read Constant Value 0.7500
+	* Modellayer: 1; Mult. Factor: 1.000; Addition: 0.000
+	Constant Value becomes 0.7500
+
+Checking input (and assigning modellayers) ...
+
+ WEL-elements
+ system:1,layer:1, removed 0/0 errors/outliers from 1 remaining 1
+ system:2,layer:2, removed 0/0 errors/outliers from 1 remaining 1
+
+ RCH-elements
+ system:1,layer:1, removed 0/200 errors/outliers from 10000 remaining 9800
+
+Finished Checking Input (and assigning modellayers).
+
+=========================================================================
+Solving : 1 out of 1 stress periods
+Period  : [result for] STEADY-STATE
+Duration: 0.00 days
+=========================================================================
+   Head-Closure     Cell (lrc)  Budget-Closure     Cell (lrc) NIter  Sol.
+(crit=.100E-03)                (crit=.100E+02)                       (**)
+Adjusted Conductances(no.:0,maxfct: 0.950 < 0.000 < 1.053
+     0.25638264      (1-97-69)    -48.39370346      (2-71-27)    20     0
+Adjusted Conductances(no.:10000,maxfct: 0.950 < 5.799 < 1.053
+     0.34347814      (1-99-10)     26.20421028      (2-74-24)    40     0
+Adjusted Conductances(no.:9797,maxfct: 0.950 < 1.583 < 1.053
+     0.03403825      (1-49-49)      0.72149396      (1-49-49)    60     0
+Adjusted Conductances(no.:1017,maxfct: 0.950 < 1.225 < 1.053
+     0.03349698      (1-46-52)      0.83942914      (1-51-47)    80     0
+Adjusted Conductances(no.:3017,maxfct: 0.950 < 1.183 < 1.053
+     0.00170669      (1-48-48)      0.08829486      (1-46-53)   100     0
+Adjusted Conductances(no.:259,maxfct: 0.950 < 1.069 < 1.053
+     0.00285479      (1-52-46)     -0.12272406      (1-46-52)   120     0
+Adjusted Conductances(no.:548,maxfct: 0.950 < 1.057 < 1.053
+     0.00022335      (1-47-51)      0.00767763      (1-51-48)   140     0
+Adjusted Conductances(no.:28,maxfct: 0.950 < 1.053 < 1.053
+     0.00029914       (1-3-80)     -0.00829200      (1-47-95)   160     0
+Adjusted Conductances(no.:57,maxfct: 0.950 < 1.053 < 1.053
+     0.00008321       (1-1-86)      0.00560032      (1-61-95)   171     1
+Adjusted Conductances(no.:2,maxfct: 0.950 < 1.053 < 1.053
+     0.00009610      (1-41-88)     -0.00333191      (1-39-90)   174     2
+Adjusted Conductances(no.:0,maxfct: 0.950 < 0.000 < 1.053
+     0.00003687      (1-39-90)      0.00143850      (1-40-89)   175     3
+=========================================================================
+=========================================================================
+
+Model Converged
+
+Writing Output ...
+
+========================================================================
+
+=============================================
+Resulting Waterbalance for: STEADY-STATE
+=============================================
+    Budget Type    Q-in (m3/d)   Q-out (m3/d)
+         bdgwel    0.00000E+00   -0.15000E+04
+         bdgrch    0.45938E+04    0.00000E+00
+         bdgbnd    0.00000E+00   -0.30934E+04
+---------------------------------------------
+          TOTAL    0.45938E+04   -0.45934E+04
+          ERROR    0.30664E+00m3       0.007%
+=============================================
+
+---------------------------------------------
+
+   Succesfully completed IMODFLOW v2.6.53
+   Simulation time: 3 secs./0.05 minutes
+
+---------------------------------------------
