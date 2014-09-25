@@ -1,8 +1,0 @@
-# Drain Package file
-1 0 noprint aux isub dsubsys isub
-1
-gcd 00001
-1
-1 0
-constant 625.0000
-open/close 'P:\1206764-IMOD\IMOD30\TESTBANK\RUNS\TEST_ALL\OVERLANDFLOW\IMODFLOW_OLF1.IDF' 1.000000 (free) -1 scaling 2 1
