@@ -6,7 +6,7 @@
 	<Configurations>
 		<Configuration Name="Debug|Win32">
 				<Tool Name="VFFortranCompilerTool" AdditionalOptions="-Od -Zi -Oy" SuppressStartupBanner="true" DebugInformationFormat="debugEnabled" Optimization="optimizeDisabled" BufferedIO="true" HeapArrays="0" AdditionalIncludeDirectories="d:\oss\imod\lib\NETCDF\OS_X32\debug; d:\oss\imod\lib\DELFTIO\OS_X32;d:\oss\imod\lib\WINTERACTER\os_x32\INCLUDE;d:\OSS\IMOD\LIB\WINTERACTER\OS_X32" Interfaces="true" WarnDeclarations="true" WarnUnusedVariables="true" WarnIgnoreLOC="true" SuppressUsageMessages="true" WarnInterfaces="true" Traceback="true" NullPointerCheck="true" BoundsCheck="true" UninitializedVariablesCheck="true" DescriptorDataTypeCheck="true" DescriptorDataSizeCheck="true" RuntimeLibrary="rtMultiThreadedDebug" UseWindowsLibs="true"/>
-				<Tool Name="VFLinkerTool" OutputFile="..\..\bin\$(ProjectName)_X32_BD.exe" LinkIncremental="linkIncrementalNo" SuppressStartupBanner="true" AdditionalLibraryDirectories="d:\oss\imod\lib\DELFTIO\OS_X32; d:\oss\imod\lib\NETCDF\OS_X32\debug" IgnoreDefaultLibraryNames="msvcrt.lib" GenerateDebugInformation="true" SubSystem="subSystemConsole" AdditionalDependencies="delftio.lib netcdf.lib f90_netcdf.lib f77_netcdf.lib"/>
+				<Tool Name="VFLinkerTool" OutputFile="..\..\bin\$(ProjectName)_X32_D.exe" LinkIncremental="linkIncrementalNo" SuppressStartupBanner="true" AdditionalLibraryDirectories="d:\oss\imod\lib\DELFTIO\OS_X32; d:\oss\imod\lib\NETCDF\OS_X32\debug" IgnoreDefaultLibraryNames="msvcrt.lib" GenerateDebugInformation="true" SubSystem="subSystemConsole" AdditionalDependencies="delftio.lib netcdf.lib f90_netcdf.lib f77_netcdf.lib"/>
 				<Tool Name="VFResourceCompilerTool" AdditionalIncludeDirectories="d:\oss\imod\lib\WINTERACTER\os_x32\INCLUDE" ShowProgress="true" ResourceOutputFileName="d:\oss\iMOD\SRC\resource.res"/>
 				<Tool Name="VFMidlTool"/>
 				<Tool Name="VFCustomBuildTool"/>
@@ -16,7 +16,7 @@
 				<Tool Name="VFManifestTool" SuppressStartupBanner="true"/></Configuration>
 		<Configuration Name="Release|Win32">
 				<Tool Name="VFFortranCompilerTool" SuppressStartupBanner="true" BufferedIO="true" HeapArrays="0" AdditionalIncludeDirectories="d:\oss\imod\lib\NETCDF\OS_X32\release; d:\oss\imod\lib\DELFTIO\OS_X32;d:\oss\imod\lib\WINTERACTER\os_x32\INCLUDE;d:\OSS\IMOD\LIB\WINTERACTER\OS_X32" UseWindowsLibs="true"/>
-				<Tool Name="VFLinkerTool" OutputFile="..\..\bin\$(ProjectName)_X32_BR.exe" LinkIncremental="linkIncrementalNo" SuppressStartupBanner="true" AdditionalLibraryDirectories="d:\oss\imod\lib\DELFTIO\OS_X32; d:\oss\imod\lib\NETCDF\OS_X32\release" IgnoreDefaultLibraryNames="msvcrt.lib" SubSystem="subSystemConsole" AdditionalDependencies="delftio.lib delftio.lib netcdf.lib f90_netcdf.lib f77_netcdf.lib"/>
+				<Tool Name="VFLinkerTool" OutputFile="..\..\bin\$(ProjectName)_X32_R.exe" LinkIncremental="linkIncrementalNo" SuppressStartupBanner="true" AdditionalLibraryDirectories="d:\oss\imod\lib\DELFTIO\OS_X32; d:\oss\imod\lib\NETCDF\OS_X32\release" IgnoreDefaultLibraryNames="msvcrt.lib" SubSystem="subSystemConsole" AdditionalDependencies="delftio.lib delftio.lib netcdf.lib f90_netcdf.lib f77_netcdf.lib"/>
 				<Tool Name="VFResourceCompilerTool" AdditionalIncludeDirectories="d:\oss\imod\lib\WINTERACTER\os_x32\include" ShowProgress="true" ResourceOutputFileName="d:\oss\iMOD\SRC\resource.res"/>
 				<Tool Name="VFMidlTool" SuppressStartupBanner="true"/>
 				<Tool Name="VFCustomBuildTool"/>
@@ -26,7 +26,7 @@
 				<Tool Name="VFManifestTool"/></Configuration>
 		<Configuration Name="Debug|x64">
 				<Tool Name="VFFortranCompilerTool" SuppressStartupBanner="true" DebugInformationFormat="debugEnabled" Optimization="optimizeDisabled" BufferedIO="true" HeapArrays="0" AdditionalIncludeDirectories="d:\oss\imod\lib\DELFTIO\OS_X64;d:\oss\imod\lib\WINTERACTER\os_x64\INCLUDE;d:\OSS\IMOD\LIB\WINTERACTER\OS_X64" Interfaces="true" WarnDeclarations="true" WarnUnusedVariables="true" WarnIgnoreLOC="true" SuppressUsageMessages="true" WarnInterfaces="true" Traceback="true" NullPointerCheck="true" BoundsCheck="true" UninitializedVariablesCheck="true" RuntimeLibrary="rtMultiThreadedDebug" UseWindowsLibs="true"/>
-				<Tool Name="VFLinkerTool" OutputFile="..\..\bin\$(ProjectName)_X64_BD.exe" LinkIncremental="linkIncrementalNo" SuppressStartupBanner="true" AdditionalLibraryDirectories="d:\oss\imod\lib\DELFTIO\OS_X64" GenerateDebugInformation="true" SubSystem="subSystemConsole" LargeAddressAware="addrAwareLarge"/>
+				<Tool Name="VFLinkerTool" OutputFile="..\..\bin\$(ProjectName)_X64_D.exe" LinkIncremental="linkIncrementalNo" SuppressStartupBanner="true" AdditionalLibraryDirectories="d:\oss\imod\lib\DELFTIO\OS_X64" GenerateDebugInformation="true" SubSystem="subSystemConsole" LargeAddressAware="addrAwareLarge"/>
 				<Tool Name="VFResourceCompilerTool" AdditionalIncludeDirectories="d:\oss\imod\lib\WINTERACTER\os_x64\include" ShowProgress="true" ResourceOutputFileName="d:\oss\iMOD\SRC\resource.res"/>
 				<Tool Name="VFMidlTool" SuppressStartupBanner="true" TargetEnvironment="midlTargetAMD64"/>
 				<Tool Name="VFCustomBuildTool"/>
@@ -36,7 +36,7 @@
 				<Tool Name="VFManifestTool" SuppressStartupBanner="true"/></Configuration>
 		<Configuration Name="Release|x64">
 				<Tool Name="VFFortranCompilerTool" SuppressStartupBanner="true" BufferedIO="true" HeapArrays="0" AdditionalIncludeDirectories="d:\oss\imod\lib\DELFTIO\OS_X64;d:\oss\imod\lib\WINTERACTER\os_x64\INCLUDE;d:\OSS\IMOD\LIB\WINTERACTER\OS_X64" UseWindowsLibs="true"/>
-				<Tool Name="VFLinkerTool" OutputFile="..\..\bin\$(ProjectName)_X64_BR.exe" LinkIncremental="linkIncrementalNo" SuppressStartupBanner="true" AdditionalLibraryDirectories="d:\oss\imod\lib\DELFTIO\OS_X64" IgnoreDefaultLibraryNames="msvcrt.lib" SubSystem="subSystemConsole"/>
+				<Tool Name="VFLinkerTool" OutputFile="..\..\bin\$(ProjectName)_X64_R.exe" LinkIncremental="linkIncrementalNo" SuppressStartupBanner="true" AdditionalLibraryDirectories="d:\oss\imod\lib\DELFTIO\OS_X64" IgnoreDefaultLibraryNames="msvcrt.lib" SubSystem="subSystemConsole"/>
 				<Tool Name="VFResourceCompilerTool" AdditionalIncludeDirectories="d:\oss\imod\lib\WINTERACTER\os_x64\include" ResourceOutputFileName="d:\oss\iMOD\SRC\resource.res"/>
 				<Tool Name="VFMidlTool" SuppressStartupBanner="true" TargetEnvironment="midlTargetAMD64"/>
 				<Tool Name="VFCustomBuildTool"/>

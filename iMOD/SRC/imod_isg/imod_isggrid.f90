@@ -19,6 +19,7 @@
 !!  Stichting Deltares
 !!  P.O. Box 177
 !!  2600 MH Delft, The Netherlands.
+!!
 MODULE MOD_ISG_GRID
 
 USE WINTERACTER
@@ -42,6 +43,74 @@ USE MOD_POLYGON_UTL, ONLY : POLYGON1DEALLOCATE_SELIDF
 USE MOD_POLYGON_PAR, ONLY : SELIDF
 
 CONTAINS
+
+ !##=====================================================================
+ SUBROUTINE ISG_ADDSTAGES(FNAME)
+ !##=====================================================================
+ IMPLICIT NONE
+ CHARACTER(LEN=*),INTENT(IN) :: FNAME
+ INTEGER :: IU,IOS,N,I,J,IISG,IPOS,ISEG,NSEG,ICRS,NCRS,IPNT,NPNT,IROW,ICOL,IP
+ CHARACTER(LEN=1000) :: STRING
+ REAL,DIMENSION(1000) :: X
+ REAL :: XCRD,YCRD,TDIST,DIST,W,TD,XC,YC,ZVAL
+ CHARACTER(LEN=MAXLEN) :: LABEL
+ TYPE(IDFOBJ) :: IDF
+ TYPE(IDFOBJ),ALLOCATABLE,DIMENSION(:) :: ICROSS
+ 
+ NISGFILES=1
+ IF(ALLOCATED(ISGIU))DEALLOCATE(ISGIU); ALLOCATE(ISGIU(MAXFILES,NISGFILES))
+ CALL UTL_GETUNITSISG(ISGIU,ISGFNAME,'OLD')
+ IF(MINVAL(ISGIU).LE.0)RETURN
+ !## read entire ISG file
+ CALL ISGREAD()
+     
+ DO ISELISG=1,NISG
+
+  !## number of nodes on segment
+  NPNT=ISG(ISELISG)%NSEG; IPNT=ISG(ISELISG)%ISEG
+  ICRS=ISG(ISELISG)%ICRS; NCRS=ISG(ISELISG)%NCRS
+   
+  DO J=1,NCRS
+
+   DIST=ISC(ICRS+J-1)%DIST
+   !## compute correct x/y coordinate of current cross-section
+   CALL ISGADJUSTCOMPUTEXY(IPNT,NPNT,DIST,TD)
+
+    !## add extra record to store dx,dy
+    N=N+1
+      
+!      !## increase memory location cross-section
+!      CALL ISGMEMORYISC(1,ISELISG,IPOS)
+
+    !## get location of cross-sections
+    IPOS=ISG(ISELISG)%ICRS-1+J
+    !## increase/decrease memory data cross-section
+    N=N-ABS(ISC(IPOS)%N)
+    CALL ISGMEMORYDATISC(N,IPOS,ISEG)
+    ISC(IPOS)%N=-1.0*ABS(ISC(IPOS)%N)
+      
+    N=1
+    DATISC(ISEG+N-1)%DISTANCE=ICROSS(1)%DX
+    DATISC(ISEG+N-1)%BOTTOM  =ICROSS(1)%DY
+    DATISC(ISEG+N-1)%KM      =0.0 !## empty, not to be used (yet)
+
+    DO IROW=1,ICROSS(1)%NROW; DO ICOL=1,ICROSS(1)%NCOL
+     !## location of gridcell equal to pointer value at location of cross-section
+     IF(ICROSS(1)%X(ICOL,IROW).EQ.IP)THEN
+      IF(ICROSS(2)%X(ICOL,IROW).NE.ICROSS(2)%NODATA)THEN
+       N=N+1
+       CALL IDFGETLOC(ICROSS(1),IROW,ICOL,XC,YC)
+       DATISC(ISEG+N-1)%DISTANCE=XC
+       DATISC(ISEG+N-1)%BOTTOM  =YC
+       DATISC(ISEG+N-1)%KM      =ICROSS(2)%X(ICOL,IROW)
+      ENDIF
+     ENDIF
+    ENDDO; ENDDO
+
+  ENDDO
+ ENDDO 
+ 
+ END SUBROUTINE ISG_ADDSTAGES
 
  !##=====================================================================
  SUBROUTINE ISG_ADDCROSSSECTION(FNAME,WIDTHFNAME,MAXDIST,CROSS_PNTR,CROSS_BATH,CELL_SIZE)
@@ -252,7 +321,7 @@ CONTAINS
  ENDIF 
  
  END SUBROUTINE ISG_ADDCROSSSECTION
-
+ 
  !##=====================================================================
  SUBROUTINE ISG_SIMPLIFYMAIN(ZTOLERANCE,NODATA)
  !##=====================================================================
@@ -687,7 +756,7 @@ CONTAINS
         IF(NSYM.LE.0)THEN
          IF(IBATCH.EQ.0)THEN
           CALL WMESSAGEBOX(OKONLY,EXCLAMATIONICON,COMMONOK,'Crosssection: ['//TRIM(ISC(JSEG)%CNAME)//'] within: ['// &
-                           TRIM(ISG(I)%SNAME)//'] incorrect','Error')!WRITE(*,*) ISG(I)%SNAME
+                           TRIM(ISG(I)%SNAME)//'] incorrect','Error')
          ELSE
           WRITE(*,*) 'Crosssection: ['//TRIM(ISC(JSEG)%CNAME)//'] within: ['// &
                            TRIM(ISG(I)%SNAME)//'] incorrect'
@@ -760,12 +829,12 @@ CONTAINS
             COND      =(LN(J)*WETPER)/C   !conductance(m2/dag)
             VALUE(1,1)= VALUE(1,1)+COND   !total conductance(m2/dag)
 
-            IF(c.eq.0.0)THEN !.OR.COND.GT.1000.0)then
+            IF(c.eq.0.0)THEN 
              WRITE(*,*) c,ISQ(JSEG)%CNAME,COND
              STOP
             endif
 
-            !## minimal value cond=0.001 (gerry WPM)
+            !## minimal value cond=0.001
             WRITE(ISIMGRO,'(2I10,6F10.2,A30,3F10.2)') IROW,ICOL,LN(J),BH,BW,CT,MAX(0.001,COND),MAX(0.001,COND*VALUE(1,4)), &
                                                       ISQ(JSEG)%CNAME,AORG-ATRAP,AORG,ATRAP
            ENDIF
@@ -889,17 +958,21 @@ CONTAINS
  ENDIF
  
  !## extent grids based upon their width
-! CALL ISG2GRID_EXTENT_WITH_WIDTH(SIZE(IDF),IDF,IBATCH)
+ CALL ISG2GRID_EXTENT_WITH_WIDTH(SIZE(IDF),IDF,IBATCH)
 
- DO I=1,9 !NITEMS
-  IF(ISAVE(I).EQ.0)CYCLE
-  IF(IBATCH.EQ.1)WRITE(*,*) 'Saving '//TRIM(ROOT)//'\'//TRIM(FNAME(I))//TRIM(PPOSTFIX)//'.IDF ...'
-  IF(.NOT.IDFWRITE(IDF(I),TRIM(ROOT)//'\'//TRIM(FNAME(I))//TRIM(PPOSTFIX)//'.IDF',1))THEN
-   !##error
-   IF(IBATCH.EQ.1)WRITE(*,*) '---- ERROR saving file ----'
-  ENDIF
- ENDDO
-
+ IF(IEXPORT.EQ.0)THEN
+  DO I=1,9 
+   IF(ISAVE(I).EQ.0)CYCLE
+   IF(IBATCH.EQ.1)WRITE(*,*) 'Saving '//TRIM(ROOT)//'\'//TRIM(FNAME(I))//TRIM(PPOSTFIX)//'.IDF ...'
+   IF(.NOT.IDFWRITE(IDF(I),TRIM(ROOT)//'\'//TRIM(FNAME(I))//TRIM(PPOSTFIX)//'.IDF',1))THEN
+    !##error
+    IF(IBATCH.EQ.1)WRITE(*,*) '---- ERROR saving file ----'
+   ENDIF
+  ENDDO
+ ELSEIF(IEXPORT.EQ.1)THEN
+  CALL ISG2GRID_EXPORTRIVER(IDF)
+ ENDIF
+ 
  CALL IDFDEALLOCATE(IDF,SIZE(IDF)); DEALLOCATE(IDF)
 
  LOKAY=.TRUE.
@@ -907,6 +980,33 @@ CONTAINS
  END SUBROUTINE ISG2GRID
 
  !###====================================================================
+ SUBROUTINE ISG2GRID_EXPORTRIVER(IDF)
+ !###====================================================================
+ IMPLICIT NONE
+ TYPE(IDFOBJ),DIMENSION(:),INTENT(INOUT) :: IDF
+ INTEGER :: IROW,ICOL,N,IU
+ 
+ !## idf(1)=cond
+ !## idf(2)=stage
+ !## idf(3)=bottom
+ !## idf(4)=inffct
+ N=0
+ DO IROW=1,IDF(1)%NROW; DO ICOL=1,IDF(1)%NCOL
+  IF(IDF(1)%X(ICOL,IROW).GT.0.0)N=N+1
+ ENDDO; ENDDO
+
+ CALL OSD_OPEN(IU,FILE=TRIM(ROOT)//'\modflow.riv',STATUS='UNKNOWN',ACTION='WRITE')
+ WRITE(IU,'(I10)') N
+ DO IROW=1,IDF(1)%NROW; DO ICOL=1,IDF(1)%NCOL
+  IF(IDF(1)%X(ICOL,IROW).GT.0.0)THEN
+   WRITE(IU,'(3I10,F10.2,G10.4,F10.2)') 1,IROW,ICOL,IDF(2)%X(ICOL,IROW),IDF(1)%X(ICOL,IROW),IDF(3)%X(ICOL,IROW),IDF(4)%X(ICOL,IROW)
+  ENDIF
+ ENDDO; ENDDO
+ CLOSE(IU)
+ 
+ END SUBROUTINE ISG2GRID_EXPORTRIVER
+ 
+  !###====================================================================
  SUBROUTINE ISG2GRID_BATHEMETRY(IDF,NIDF,ICROSS,WL,C,INFF) 
  !###====================================================================
  IMPLICIT NONE
@@ -978,7 +1078,6 @@ CONTAINS
  ENDDO; ENDDO
  N=(W/IDF(1)%DX)+2; ALLOCATE(MM(N,N)); NN=0
  
-! IDF(9)%X=0.0
  DO IROW=1,IDF(1)%NROW; DO ICOL=1,IDF(1)%NCOL
   !## allready visited by bathymetry routine - so skip it
   IF(IDF(9)%X(ICOL,IROW).NE.0.0)THEN
@@ -1558,7 +1657,6 @@ CONTAINS
  END DO
 
  RWIDTH=X2-X1
-! WETPER=MAX(WETPER,RWIDTH)
 
  END SUBROUTINE ISG2GRIDGETPARAM
 

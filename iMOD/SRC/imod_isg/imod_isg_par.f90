@@ -23,7 +23,7 @@ MODULE MOD_ISG_PAR
 
 USE MOD_IDF_PAR, ONLY : IDFOBJ
 
-INTEGER,PARAMETER :: MAXLEN=32
+INTEGER,PARAMETER :: MAXLEN  =32
 INTEGER,PARAMETER :: MAXFILES=10
 INTEGER,PARAMETER :: MAXITEMS=12
 INTEGER,SAVE :: ICLRSC,ICLRSD,ICLRSP,ICLRND,ICLRST,ICLRQH,ICLRSG
@@ -134,6 +134,7 @@ REAL :: MINDEPTH !## minimal waterdepth for computing conductances (m)'
 REAL :: WDEPTH !## waterdepth only used in combination with isimgro>0'
 INTEGER :: ICDIST !## (0) do not compute effect of weirs (1) do compute effect of weirs'
 INTEGER :: ISIMGRO !## ISIMGRO'
+INTEGER :: IEXPORT !## (0) idf (1) modflow river file
 CHARACTER(LEN=256) :: ROOT  !## resultmap'
 CHARACTER(LEN=52) :: POSTFIX  !## POSTFIX {POSTFIX}_stage.idf etc.'
 REAL :: NODATA  !## nodatavalue in ISG
