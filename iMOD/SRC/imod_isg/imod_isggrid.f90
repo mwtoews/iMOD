@@ -957,8 +957,8 @@ CONTAINS
                                             TRIM(ROOT)//'\'//TRIM(FNAME(12))//TRIM(PPOSTFIX)//'.IDF')    !## next_id
  ENDIF
  
- !## extent grids based upon their width
- CALL ISG2GRID_EXTENT_WITH_WIDTH(SIZE(IDF),IDF,IBATCH)
+! !## extent grids based upon their width - GAAT NOG NIET GOED ....
+! CALL ISG2GRID_EXTENT_WITH_WIDTH(SIZE(IDF),IDF,IBATCH)
 
  IF(IEXPORT.EQ.0)THEN
   DO I=1,9 
@@ -984,7 +984,17 @@ CONTAINS
  !###====================================================================
  IMPLICIT NONE
  TYPE(IDFOBJ),DIMENSION(:),INTENT(INOUT) :: IDF
- INTEGER :: IROW,ICOL,N,IU
+ INTEGER :: IROW,ICOL,N,IU,I
+ 
+ !## read in all top/bottom layers
+ DO I=1,NLAY
+  WRITE(*,'(A)') 'Reading '//TRIM(TOP(I)%FNAME)//' ...'
+  CALL IDFCOPY(IDF(1),TOP(I))
+  IF(.NOT.IDFREADSCALE(TOP(I)%FNAME,TOP(I),2,1,0.0,0))RETURN
+  WRITE(*,'(A)') 'Reading '//TRIM(BOT(I)%FNAME)//' ...'
+  CALL IDFCOPY(IDF(1),BOT(I))
+  IF(.NOT.IDFREADSCALE(BOT(I)%FNAME,BOT(I),2,1,0.0,0))RETURN
+ ENDDO
  
  !## idf(1)=cond
  !## idf(2)=stage
@@ -997,9 +1007,10 @@ CONTAINS
 
  CALL OSD_OPEN(IU,FILE=TRIM(ROOT)//'\modflow.riv',STATUS='UNKNOWN',ACTION='WRITE')
  WRITE(IU,'(I10)') N
+ WRITE(IU,'(I10)') N
  DO IROW=1,IDF(1)%NROW; DO ICOL=1,IDF(1)%NCOL
   IF(IDF(1)%X(ICOL,IROW).GT.0.0)THEN
-   WRITE(IU,'(3I10,F10.2,G10.4,F10.2)') 1,IROW,ICOL,IDF(2)%X(ICOL,IROW),IDF(1)%X(ICOL,IROW),IDF(3)%X(ICOL,IROW),IDF(4)%X(ICOL,IROW)
+   WRITE(IU,'(3I10,F10.2,G10.4,2F10.2)') 1,IROW,ICOL,IDF(2)%X(ICOL,IROW),IDF(1)%X(ICOL,IROW),IDF(3)%X(ICOL,IROW),IDF(4)%X(ICOL,IROW)
   ENDIF
  ENDDO; ENDDO
  CLOSE(IU)

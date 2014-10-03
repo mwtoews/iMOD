@@ -19,7 +19,7 @@
 !!  Stichting Deltares
 !!  P.O. Box 177
 !!  2600 MH Delft, The Netherlands.
-
+!!
 MODULE MOD_GENPLOT
 
 USE WINTERACTER
@@ -1079,7 +1079,6 @@ DOLOOP: DO
    CALL WMESSAGEBOX(YESNO,QUESTIONICON,COMMONYES,'Do you want to add additional data to the shapes?','Question')
    IF(WINFODIALOG(4).NE.1)RETURN
    NV=3; NL=SHPNO; ALLOCATE(VAR(NV,0:NL)); VAR=''
-!   K=0; DO I=1,SHPNO; IF(SHPTYPE(I).NE.ID_POINT)K=K+1; ENDDO
    !## not all equal to points
    IF(NP.NE.0)THEN
     VAR(1,0)='ShapeID'; VAR(2,0)='ShapeType'; VAR(3,0)='Variable'

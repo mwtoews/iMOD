@@ -142,5 +142,8 @@ INTEGER,DIMENSION(12) :: ISAVE
 REAL :: MAXWIDTH !#3 maximum widht for computing rivier-width (in case cross-sections are rubbish)
 INTEGER :: IAVERAGE !## (1) mean (2) median value
 
+TYPE(IDFOBJ),ALLOCATABLE,DIMENSION(:) :: TOP,BOT                 
+INTEGER :: NLAY
+
 END MODULE MOD_ISG_PAR
 
