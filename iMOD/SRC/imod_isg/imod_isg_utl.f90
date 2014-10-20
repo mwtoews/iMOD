@@ -1466,7 +1466,7 @@ CONTAINS
 
  ENDIF
 
- !#copy data to create appropriate space
+ !## copy data to create appropriate space
  ICLC=MAX(1,ISG(K)%ICLC)
  IF(DN.GT.0)THEN
   IF(ICLC+DN.LE.NISD)ISD(ICLC+DN:NISD)=ISD(ICLC:NISD-DN)
@@ -1477,7 +1477,7 @@ CONTAINS
 
  ISG(K)%NCLC=ISG(K)%NCLC+DN
 
- !##change all citations greater than isd(iseg)%iref
+ !## change all citations greater than isd(iseg)%iref
  ICLC=ISG(K)%ICLC
  DO I=1,NISG
   IF(ISG(I)%ICLC.GT.ICLC)ISG(I)%ICLC=ISG(I)%ICLC+DN
@@ -1511,7 +1511,7 @@ CONTAINS
 
   DIMISC=NISC
 
- ENDIF  !ISG(4900)
+ ENDIF  
 
  !## copy data to create appropriate space
  ICRS=MAX(1,ISG(K)%ICRS)
@@ -1529,7 +1529,7 @@ CONTAINS
  DO I=1,NISG
   IF(ISG(I)%ICRS.GT.ICRS)ISG(I)%ICRS=ISG(I)%ICRS+DN
  END DO
-!isg(4900)
+
  ISG(K)%ICRS=MAX(1,ISG(K)%ICRS)
  ICRS       =ISG(K)%ICRS
 
@@ -1560,7 +1560,7 @@ CONTAINS
 
  ENDIF
 
- !#copy data to create appropriate space
+ !## copy data to create appropriate space
  ISTW=MAX(1,ISG(K)%ISTW)
  IF(DN.GT.0)THEN
   IF(ISTW+DN.LE.NIST)IST(ISTW+DN:NIST)=IST(ISTW:NIST-DN)
@@ -1571,7 +1571,7 @@ CONTAINS
 
  ISG(K)%NSTW=ISG(K)%NSTW+DN
 
- !#change all citations greater than isd(iseg)%iref
+ !## change all citations greater than isd(iseg)%iref
  ISTW=ISG(K)%ISTW
  DO I=1,NISG
   IF(ISG(I)%ISTW.GT.ISTW)ISG(I)%ISTW=ISG(I)%ISTW+DN
@@ -1607,7 +1607,7 @@ CONTAINS
 
  ENDIF
 
- !#copy data to create appropriate space
+ !## copy data to create appropriate space
  IQHR=MAX(1,ISG(K)%IQHR)
  IF(DN.GT.0)THEN
   IF(IQHR+DN.LT.NISQ)ISQ(IQHR+DN:NISQ)=ISQ(IQHR:NISQ-DN)
@@ -1618,7 +1618,7 @@ CONTAINS
 
  ISG(K)%NQHR=ISG(K)%NQHR+DN
 
- !##change all citations greater than isd(iseg)%iref
+ !## change all citations greater than isd(iseg)%iref
  IQHR=ISG(K)%IQHR
  DO I=1,NISG
   IF(ISG(I)%IQHR.GT.IQHR)ISG(I)%IQHR=ISG(I)%IQHR+DN
@@ -1654,7 +1654,7 @@ CONTAINS
 
  ENDIF
 
- !#copy data to create appropriate space
+ !## copy data to create appropriate space
  ISEG=MAX(1,ISG(K)%ISEG)
  IF(DN.GT.0)THEN
   IF(ISEG+DN.LE.NISP)ISP(ISEG+DN:NISP)=ISP(ISEG:NISP-DN)
@@ -1665,7 +1665,7 @@ CONTAINS
 
  ISG(K)%NSEG=ISG(K)%NSEG+DN
 
- !##change all citations greater than isg(k)%iseg
+ !## change all citations greater than isg(k)%iseg
  ISEG=ISG(K)%ISEG
  DO I=1,NISG
   IF(ISG(I)%ISEG.GT.ISEG)ISG(I)%ISEG=ISG(I)%ISEG+DN
@@ -1701,7 +1701,7 @@ CONTAINS
 
  ENDIF
 
- !#copy data to create appropriate space
+ !## copy data to create appropriate space
  ICLC =ISD(K)%IREF
 
  IF(ICLC.GT.0)THEN
@@ -1715,7 +1715,7 @@ CONTAINS
 
  ISD(K)%N=ISD(K)%N+DN
 
- !##change all citations greater than isd(k)%iref
+ !## change all citations greater than isd(k)%iref
  DO I=1,NISD
   IF(ISD(I)%IREF.GT.ICLC)ISD(I)%IREF=ISD(I)%IREF+DN
  END DO
