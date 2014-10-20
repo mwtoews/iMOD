@@ -19,6 +19,7 @@
 !!  Stichting Deltares
 !!  P.O. Box 177
 !!  2600 MH Delft, The Netherlands.
+!!
 MODULE MOD_ISG_PAR
 
 USE MOD_IDF_PAR, ONLY : IDFOBJ
@@ -64,9 +65,9 @@ TYPE(DATOBJ1),ALLOCATABLE,DIMENSION(:) :: ISD,ISC,IST,ISQ,DUMISD,DUMISC,DUMIST,D
 
 TYPE ISDOBJ
  INTEGER :: IDATE
- INTEGER :: ID_STW  !influenced by structure #
+ INTEGER :: ID_STW    !## influenced by structure #
  REAL :: WLVL,BTML,RESIS,INFF
- REAL :: WL_STW       !influenced waterlevel
+ REAL :: WL_STW       !## influenced waterlevel
 END TYPE ISDOBJ
 TYPE(ISDOBJ),ALLOCATABLE,DIMENSION(:) :: DATISD,DUMDATISD,ISGEDITISD
 TYPE(ISDOBJ),ALLOCATABLE,DIMENSION(:,:) :: DATISD2
