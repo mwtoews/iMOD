@@ -62,7 +62,7 @@ CONTAINS
   CHARACTER(LEN=52),POINTER,DIMENSION(:) :: LABEL
  END TYPE FTXTOBJ
  TYPE(FTXTOBJ) :: FTXT
- 
+  
  !## allocate memory for ipf-plotting, they will be read in memory and drawn from that
  NIPF=1; CALL IPFALLOCATE()
 
@@ -129,22 +129,30 @@ CONTAINS
    !## add number of extra records to it
    N=NTXT-N
    
-   !## increase/decrease memory data calculation node
+   !## increase/decrease memory data calculation node - data will be replaced to the back
    CALL ISGMEMORYDATISD(N,IPOS,ISEG)
 !   ISD(IPOS)%N=ISD(IPOS)%N+1
 
-!   IREF=IREF-1
-   BTML=DATISD(IREF)%BTML
+   !## rewrite data
+   IREF=ISEG-1
+   DO I=1,ISD(IPOS)%N-NTXT
+    IREF=IREF+1
+    DATISD(IREF)=DATISD(IREF+NTXT)
+!    DATISD(IREF)%WLVL=DATISD(IREF+NTXT)%WLVL
+   ENDDO
+
+   !## store latest information
+   BTML =DATISD(IREF)%BTML
    RESIS=DATISD(IREF)%RESIS
-   INFF=DATISD(IREF)%INFF
+   INFF =DATISD(IREF)%INFF
 
    DO I=1,NTXT
     IREF=IREF+1    
     DATISD(IREF)%IDATE=FTXT%IDATE(I)
     DATISD(IREF)%WLVL =FTXT%STAGE(I)
-    DATISD(IREF)%BTML = BTML
-    DATISD(IREF)%RESIS= RESIS
-    DATISD(IREF)%INFF = INFF
+    DATISD(IREF)%BTML =BTML
+    DATISD(IREF)%RESIS=RESIS
+    DATISD(IREF)%INFF =INFF
    ENDDO
     
    DEALLOCATE(FTXT%LABEL,FTXT%NODATA,FTXT%STAGE,FTXT%IDATE)
