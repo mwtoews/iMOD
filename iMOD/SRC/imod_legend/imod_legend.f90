@@ -19,6 +19,7 @@
 !!  Stichting Deltares
 !!  P.O. Box 177
 !!  2600 MH Delft, The Netherlands.
+!!
 MODULE MOD_LEGEND
 
 USE WINTERACTER
@@ -379,8 +380,7 @@ CONTAINS
     SELECT CASE (MESSAGE%VALUE1)
      CASE (IDOK)
       CALL WDIALOGGETMENU(IDF_MENU1,I)
-      CALL LEGPREDEFINED_WRITELEG(I)
-      LEGPREDEFINED=.TRUE.
+      LEGPREDEFINED=LEGPREDEFINED_WRITELEG(I)
       EXIT
      CASE (IDCANCEL)
       EXIT
@@ -395,14 +395,20 @@ CONTAINS
  END FUNCTION LEGPREDEFINED
  
  !###======================================================================
- SUBROUTINE LEGPREDEFINED_WRITELEG(ILEG)
+ LOGICAL FUNCTION LEGPREDEFINED_WRITELEG(ILEG)
  !###======================================================================
  IMPLICIT NONE
  INTEGER,INTENT(IN) :: ILEG
  INTEGER :: IU,IOS
 
+ LEGPREDEFINED_WRITELEG=.FALSE.
+ 
  IU=UTL_GETUNIT(); CALL OSD_OPEN(IU,FILE=TRIM(PREFVAL(1))//'\tmp\tmp.leg',IOSTAT=IOS)
- IF(IOS.NE.0)RETURN
+ IF(IOS.NE.0)THEN
+  CALL WMESSAGEBOX(OKONLY,EXCLAMATIONICON,COMMONOK,'iMOD cannot create the file'//CHAR(13)//TRIM(PREFVAL(1))//'\tmp\tmp.leg.'//CHAR(13)// &
+    'Assign a correct directory for the keyword USER in the used preference file (*.PRF) for iMOD','Error')
+  RETURN
+ ENDIF
  
  SELECT CASE (ILEG)
   CASE (1) !## gws_nap
@@ -542,10 +548,11 @@ CONTAINS
    WRITE(IU,'(A)') '  100.0       99.0     88        76       208    "GT I"'  
  END SELECT
 
-
  CLOSE(IU)
 
- END SUBROUTINE LEGPREDEFINED_WRITELEG
+ LEGPREDEFINED_WRITELEG=.TRUE.
+
+ END FUNCTION LEGPREDEFINED_WRITELEG
 
  !###====================================================================
  SUBROUTINE LEGENDHISTOGRAM(IPLOT,IGRID)
