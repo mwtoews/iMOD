@@ -19,7 +19,7 @@
 !!  Stichting Deltares
 !!  P.O. Box 177
 !!  2600 MH Delft, The Netherlands.
-
+!!
 !###======================================================================
 PROGRAM IMODPRG
 !###======================================================================
@@ -80,6 +80,9 @@ CALL WINDOWOPEN(FLAGS=SYSMENUON+MINBUTTON+MAXBUTTON+STATUSBAR+MAXWINDOW, &
 CALL WINDOWSTATUSBARPARTS(4,(/2000,2000,750,-1/),(/1,1,1,1/))
 
 CALL IMODSTARTSCREEN()
+
+!## allocate zoom settings
+NULLIFY(ZM%ZOOMXY,ZM%ZOOMXY_BU); ALLOCATE(ZM%ZOOMXY(10,4)); ZM%NZOOM=0; ZM%IZOOM=0
 
 !## initialize preferences
 CALL PREFINIT(IERROR)
@@ -164,6 +167,13 @@ IDOWN   =0
 DOWNX   =0.0
 DOWNY   =0.0
 ISHPEDIT=1   ! ## shapes are editable
+
+!## store first zoom-extent
+ZM%NZOOM=1; ZM%IZOOM=1
+ZM%ZOOMXY(ZM%NZOOM,1)=MPW%XMIN
+ZM%ZOOMXY(ZM%NZOOM,2)=MPW%YMIN
+ZM%ZOOMXY(ZM%NZOOM,3)=MPW%XMAX
+ZM%ZOOMXY(ZM%NZOOM,4)=MPW%YMAX
 
 DO
 
