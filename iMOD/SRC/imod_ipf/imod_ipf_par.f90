@@ -34,6 +34,7 @@ TYPE IPFOBJ
  INTEGER :: NROW,NCOL  !## number of rows and columns within ipf
  INTEGER :: XCOL,YCOL,ZCOL,Z2COL,QCOL !## column number of x,y,z coordinates
  INTEGER :: ACOL       !## column number of associated files
+ INTEGER :: PCOL       !## plot column number of associated files - labeling
  INTEGER,DIMENSION(10) :: IAXES  !## which axes to be used for each column in the associated files
  INTEGER :: SYMBOL     !## plot symbol
  INTEGER :: THICKNESS  !## plot symbol grootte

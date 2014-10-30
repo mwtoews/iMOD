@@ -100,7 +100,7 @@ CONTAINS
  LOGICAL :: EX
   
  IF(LEN_TRIM(PREFVAL(26)).EQ. 0)THEN
-  CALL WMESSAGEBOX(0,1,1,'The tool cannot be used because the keyword SUBSUFEXDBASE is not found in IMOD_INIT.PRF'&
+  CALL WMESSAGEBOX(0,1,1,'The tool cannot be used because the keyword SUBSURFEXDBASE is not found in IMOD_INIT.PRF'&
                    ,'Error')
   RETURN
  ENDIF
