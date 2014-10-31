@@ -180,7 +180,7 @@ CONTAINS
      !## include horizontal flow barriers
      CALL HFB_CALC(MDLIDF,CR(:,:,1),CC(:,:,1),ILAY)
      !## check for isolated active cell that can not be solved
-     CALL SOLID_CHECKIBND(ILAY)
+!     CALL SOLID_CHECKIBND(ILAY)
 
      NICNVG=0; HNEW(:,:,1)=HOLD(:,:,ILAY)
 
@@ -777,7 +777,7 @@ CONTAINS
  !## add estimate (ghb only if ib.eq.1)
  IF(IMIDELEV.EQ.1)THEN
   DO IROW=1,NROW; DO ICOL=1,NCOL
-   IF(IB(ICOL,IROW,JLAY).EQ.1)THEN !GT.0)THEN
+   IF(IB(ICOL,IROW,JLAY).EQ.1)THEN 
     !## initiate top as basis surfacelevel
     TOP=HOLD(ICOL,IROW,1)
     !## find top aquifer (always uneven number)
@@ -791,8 +791,8 @@ CONTAINS
     D=(TOP-BOT)/NINT(REAL((IL2 -IL1)/2.0))
     D=D*        NINT(REAL((JLAY-IL1)/2.0))
     !## create ghb as estimate
-    HCOF(ICOL,IROW,1)=HCOF(ICOL,IROW,1)-(COND/1000.0)
-    RHS(ICOL,IROW,1) =RHS(ICOL,IROW,1) -(COND/1000.0)*(HOLD(ICOL,IROW,IL1)-D)
+    HCOF(ICOL,IROW,1)=HCOF(ICOL,IROW,1)-(COND/10000.0)
+    RHS(ICOL,IROW,1) =RHS(ICOL,IROW,1) -(COND/10000.0)*(HOLD(ICOL,IROW,IL1)-D)
    ENDIF
   ENDDO; ENDDO
  ENDIF
@@ -800,10 +800,10 @@ CONTAINS
  !## cross-section in between looser
  IF(ITIGHT.EQ.2)THEN
   DO IROW=1,NROW; DO ICOL=1,NCOL
-   IF(IB(ICOL,IROW,JLAY).EQ.3)THEN !GT.0)THEN
+   IF(IB(ICOL,IROW,JLAY).EQ.3)THEN 
     !## create ghb as estimate
-    HCOF(ICOL,IROW,1)=HCOF(ICOL,IROW,1)-(COND/1000.0)
-    RHS(ICOL,IROW,1) =RHS(ICOL,IROW,1) -(COND/1000.0)*HOLD(ICOL,IROW,JLAY)
+    HCOF(ICOL,IROW,1)=HCOF(ICOL,IROW,1)-(COND/10000.0)
+    RHS(ICOL,IROW,1) =RHS(ICOL,IROW,1) -(COND/10000.0)*HOLD(ICOL,IROW,JLAY)
    ENDIF
   ENDDO; ENDDO
  ENDIF
