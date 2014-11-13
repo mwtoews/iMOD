@@ -267,7 +267,7 @@ CONTAINS
   ENDDO
 
   !## number of idf in solid is number of first solid in sol file
-  NTBSOL=SLD(1)%NLAY !*2
+  NTBSOL=SLD(1)%NLAY
 
   !## number of cross-sections
   IF(UTL_READINITFILE('NCROSS',LINE,IU,1))READ(LINE,*) NSPF
@@ -352,7 +352,7 @@ CONTAINS
    WRITE(IU,*)
    LINE=TRIM(ITOS(NSPF))
    WRITE(IU,'(A)',IOSTAT=IOS) 'NCROSS='//TRIM(LINE)
-   NTBSOL=SLD(1)%NLAY !*2
+   NTBSOL=SLD(1)%NLAY 
    !## write cross-section information
    DO I=1,NSPF
     LINE='FCROSS'//TRIM(ITOS(I))//'='

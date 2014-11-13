@@ -78,7 +78,7 @@ CONTAINS
   FNAME=GETSOLNAME()
   IF(.NOT.SOLIDOPENSOL('R',FNAME))RETURN
  ELSE
-  NMASK=SLD(1)%NLAY !*2
+  NMASK=SLD(1)%NLAY 
   IF(ALLOCATED(MASK))THEN; DO I=1,SIZE(MASK); CALL IDFDEALLOCATEX(MASK(I)%IDF); ENDDO; DEALLOCATE(MASK); ENDIF
   ALLOCATE(MASK(NMASK))
   DO I=1,NMASK; MASK(I)%FNAME=TRIM(OUTPUTFOLDER)//'\MASK\MASK_L'//TRIM(ITOS(I))//'.IDF'; ENDDO
@@ -142,7 +142,7 @@ CONTAINS
   IF(.NOT.IDFALLOCATEX(SOLIDF(1)))RETURN
   DO ILAY=1,NLAY
    IF(ISEL_IDF(ILAY).EQ.1)THEN
-    SOLIDF(1)%X(:,:)=REAL(IB(:,:,ILAY))
+    SOLIDF(1)%X(:,:)=REAL(IB(:,:,ILAY))  
     IF(.NOT.IDFWRITE(SOLIDF(1),TRIM(OUTPUTFOLDER)//'\EXPORT\INT_L'//TRIM(ITOS(ILAY))//'_IB.IDF',1))THEN; ENDIF; CLOSE(SOLIDF(1)%IU)
     SOLIDF(1)%X(:,:)=HOLD(:,:,ILAY)
     IF(.NOT.IDFWRITE(SOLIDF(1),TRIM(OUTPUTFOLDER)//'\EXPORT\INT_L'//TRIM(ITOS(ILAY))//'_ZV.IDF',1))THEN; ENDIF; CLOSE(SOLIDF(1)%IU)
@@ -304,13 +304,13 @@ CONTAINS
       DO ILAY=2,NLAY-1,2
        IF(IB(ICOL,IROW,ILAY).EQ.1.OR.IB(ICOL,IROW,ILAY).EQ.-2)HOLD(ICOL,IROW,ILAY+1)=HOLD(ICOL,IROW,ILAY)
       ENDDO
-     ELSE
-     !## fill top as constant head whenever ibound=2
-      DO ILAY=2,NLAY-1,2
-       IF(IB(ICOL,IROW,ILAY).EQ.-2)THEN
-        HOLD(ICOL,IROW,ILAY)=HOLD(ICOL,IROW,ILAY-1)
-       ENDIF
-      ENDDO
+!     ELSE
+!     !## fill top as constant head whenever ibound=2
+!      DO ILAY=2,NLAY-1,2
+!       IF(IB(ICOL,IROW,ILAY).EQ.-2)THEN
+!        HOLD(ICOL,IROW,ILAY)=HOLD(ICOL,IROW,ILAY-1)
+!       ENDIF
+!      ENDDO
      ENDIF
            
      !## make sure lowest bot is lower than upper top
@@ -392,7 +392,7 @@ CONTAINS
  
  SOLID_READIDF=.FALSE.
  
- NTBSOL=SLD(1)%NLAY*2; ALLOCATE(SOLIDF(NTBSOL))
+ NTBSOL=SLD(1)%NLAY; ALLOCATE(SOLIDF(NTBSOL))
  DO I=1,NTBSOL; CALL IDFNULLIFY(SOLIDF(I)); ENDDO
 
  !## try to read all idf's
@@ -616,13 +616,6 @@ CONTAINS
    IF(IB(ICOL,IROW,1).LT.0)IB(ICOL,IROW,1)=3.0
   ENDDO; ENDDO
  ENDIF
-   
-! IDF%X(:,:)=RHS(:,:,1)
-! if(idfwrite(idf,"D:\RHS.idf",0))then; endif
-! IDF%X(:,:)=HCOF(:,:,1)
-! if(idfwrite(idf,"D:\HCOF.idf",0))then; endif
-! IDF%X(:,:)=REAL(ib(:,:,1))
-! if(idfwrite(idf,"D:\ib.idf",0))then; endif
  
  !## solve each system per modellayer
  NICNVG=0; HNEW=HOLD
@@ -688,7 +681,7 @@ CONTAINS
  SUBROUTINE SOLID_CALC_CONSTRAINS(JLAY,M2) 
  !###======================================================================
  IMPLICIT NONE
- REAL,PARAMETER :: C=0.1 !10.0 !0.01  !## day resistance
+ REAL,PARAMETER :: C=0.1   !## day resistance
  INTEGER,INTENT(IN) :: JLAY
  REAL,INTENT(IN) :: M2
  INTEGER :: IROW,ICOL,ILAY,IL1,IL2
@@ -714,13 +707,13 @@ CONTAINS
     !## find bot aquifer (always even number = top aquifer)
     DO IL2=JLAY+1,NLAY; IF(IB(ICOL,IROW,IL2).LT.0)THEN; BOT=HOLD(ICOL,IROW,IL2); EXIT; ENDIF; ENDDO; IL2=MIN(IL2,NLAY)
     !## mean thickness available
-    DSYS=(TOP-BOT)/NINT(REAL((IL2 -IL1)/2.0))
+    DSYS=(TOP-BOT)/REAL(IL2-IL1)
     !## can not be negative
     DSYS=MAX(0.0,DSYS)
    
-    !## add drain if head above level above
+    !## add drain if head above level above layer
     DO ILAY=JLAY-1,1,-1
-     DH=0.0; IF(MOD(ILAY,2).EQ.0)DH=MIN(DZ(ILAY/2),DSYS)
+     DH=MIN(DZ(ILAY),DSYS)
      !## skip inactive cells
      IF(IB(ICOL,IROW,ILAY).EQ.0)CYCLE
      IF(HNEW(ICOL,IROW,1).GE.(HOLD(ICOL,IROW,ILAY)-DH))THEN
@@ -737,7 +730,7 @@ CONTAINS
      IF(IB(ICOL,IROW,ILAY).EQ.0)CYCLE
      !## add river if head below level below and constant head value available (clay)
      IF(IB(ICOL,IROW,ILAY).LT.0)THEN 
-      DH=0.0; IF(MOD(ILAY,2).EQ.0)DH=MIN(DZ(ILAY/2),DSYS)
+      DH=MIN(DZ(ILAY),DSYS)
       IF(HNEW(ICOL,IROW,1).LE.(HOLD(ICOL,IROW,ILAY)+DH))THEN
        !## create river
        HCOF(ICOL,IROW,1)=HCOF(ICOL,IROW,1)-COND
@@ -765,11 +758,11 @@ CONTAINS
     !## find bot aquifer (always even number)
     DO IL2=JLAY+1,NLAY; IF(IB(ICOL,IROW,IL2).LT.0)THEN; BOT=HOLD(ICOL,IROW,IL2); EXIT; ENDIF; ENDDO
     IL2=MIN(IL2,NLAY)
-    D=(TOP-BOT)/NINT(REAL((IL2 -IL1)/2.0))
-    D=D*        NINT(REAL((JLAY-IL1)/2.0))
+    D=(TOP-BOT)/REAL(IL2 -IL1)
+    D=D*        REAL(JLAY-IL1)
     !## create ghb as estimate
-    HCOF(ICOL,IROW,1)=HCOF(ICOL,IROW,1)-(COND/10000.0)
-    RHS(ICOL,IROW,1) =RHS(ICOL,IROW,1) -(COND/10000.0)*(HOLD(ICOL,IROW,IL1)-D)
+    HCOF(ICOL,IROW,1)=HCOF(ICOL,IROW,1)-(COND/1000000.0)
+    RHS(ICOL,IROW,1) =RHS(ICOL,IROW,1) -(COND/1000000.0)*(HOLD(ICOL,IROW,IL1)-D)
    ENDIF
   ENDDO; ENDDO
  ENDIF
@@ -873,7 +866,8 @@ CONTAINS
  END DO
  CALL IDFDEALLOCATEX(MDLIDF)
  
- IF(IKRIGING.EQ.1)THEN
+ IF(IKRIGING.EQ.1.OR.IKRIGING.EQ.4)THEN
+
   IF(IBATCH.EQ.0)CALL WINDOWOUTSTATUSBAR(4,'Filling in Boundary Conditions ...')
   IF(IBATCH.EQ.1)WRITE(*,'(A)') 'Filling in Boundary Conditions ...'
  
@@ -908,13 +902,10 @@ CONTAINS
     ENDIF
 
     DO J=1,N
-     !## skip length too short
-     IF(LN(J).GT.MDLIDF%DX*0.5)THEN
-      !## count number of locations
-      NLOC=NLOC+1; IC(NLOC)=INT(XA(J)); IR(NLOC)=INT(YA(J))
-      IF(J.EQ.1)TL(NLOC)=TL(NLOC-1)+0.5*LN(J)
-      IF(J.GT.1)TL(NLOC)=TL(NLOC-1)+0.5*LN(J-1)+0.5*LN(J)
-     ENDIF
+     !## count number of locations
+     NLOC=NLOC+1; IC(NLOC)=INT(XA(J)); IR(NLOC)=INT(YA(J))
+     IF(J.EQ.1)TL(NLOC)=TL(NLOC-1)+0.5*LN(J)
+     IF(J.GT.1)TL(NLOC)=TL(NLOC-1)+0.5*LN(J-1)+0.5*LN(J)
     ENDDO
       
    ENDDO
@@ -993,13 +984,13 @@ CONTAINS
   ALLOCATE(V(NCOL,NROW,1)      ,STAT=IOS(2))
   ALLOCATE(SS(NCOL,NROW,1)     ,STAT=IOS(3))
   ALLOCATE(CD(NCOL,NROW,1)     ,STAT=IOS(4))
-  ALLOCATE(RHS(NCOL,NROW,NLAY) ,STAT=IOS(5))
   ALLOCATE(CC(NCOL,NROW,1)     ,STAT=IOS(7))
   ALLOCATE(CR(NCOL,NROW,1)     ,STAT=IOS(8))
   ALLOCATE(HNEW(NCOL,NROW,1)   ,STAT=IOS(9))
   ALLOCATE(HCOF(NCOL,NROW,1)   ,STAT=IOS(10))
   ALLOCATE(CV(1,1,1)           ,STAT=IOS(11))
  ENDIF
+ ALLOCATE(RHS(NCOL,NROW,NLAY)  ,STAT=IOS(5))
  ALLOCATE(IB(NCOL,NROW,NLAY)   ,STAT=IOS(6))
  ALLOCATE(HOLD(NCOL,NROW,NLAY) ,STAT=IOS(12))
 
