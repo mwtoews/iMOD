@@ -767,8 +767,6 @@ ILLOOP: DO
  CALL WDIALOGFIELDSTATE(ID_PROFILE,I)
  CALL WDIALOGFIELDSTATE(ID_3D,I)
  CALL WDIALOGFIELDSTATE(ID_CALCULATE,I)
-! CALL WDIALOGFIELDSTATE(ID_DELETE,I)
- !CALL WDIALOGFIELDSTATE(ID_INFO,I)
  CALL WDIALOGSELECT(ID_DSOLID)
  CALL WDIALOGTABSTATE(IDF_TAB1,ID_DSOLIDTAB2,I)
  CALL WDIALOGTABSTATE(IDF_TAB1,ID_DSOLIDTAB3,I)
@@ -866,7 +864,7 @@ ILLOOP: DO
 
  CALL SOLIDCLEANMANAGER()
 
- J=0; DO I=1,SIZE(SLD); J=J+(SLD(I)%NLAY*2); ENDDO
+ J=0; DO I=1,SIZE(SLD); J=J+SLD(I)%NLAY; ENDDO
  K=0; DO I=1,SIZE(MP); IF(MP(I)%IACT)K=K+1; ENDDO
  IF(J+K.GT.MXMPLOT)THEN
   CALL WMESSAGEBOX(OKONLY,EXCLAMATIONICON,COMMONOK,'iMOD wants to store '//TRIM(ITOS(J+K))//' files.'//CHAR(13)// &
@@ -877,14 +875,14 @@ ILLOOP: DO
  DO I=1,SIZE(SLD)
   DO J=1,SLD(I)%NLAY
    !## add top
-   CALL IDFINIT(SLD(I)%TBNAME(J,1),LPLOT=.FALSE.)
-   !## add kd (optional)
-   IF(SLD(I)%KDCLR(J).NE.0)CALL IDFINIT(SLD(I)%KDNAME(J),LPLOT=.FALSE.,LEGNAME=TRIM(KLEGEND))
-   !## add bot
-   CALL IDFINIT(SLD(I)%TBNAME(J,2),LPLOT=.FALSE.)
-   !## add c (optional)
-   IF(J.LT.SLD(I)%NLAY)THEN; IF(SLD(I)%CCLR(J).NE.0) &
-     CALL IDFINIT(SLD(I)%CNAME(J),LPLOT=.FALSE.,LEGNAME=TRIM(KLEGEND)); ENDIF
+   CALL IDFINIT(SLD(I)%INTNAME(J),LPLOT=.FALSE.)
+!   !## add kd (optional)
+!   IF(SLD(I)%KDCLR(J).NE.0)CALL IDFINIT(SLD(I)%KDNAME(J),LPLOT=.FALSE.,LEGNAME=TRIM(KLEGEND))
+!   !## add bot
+!   CALL IDFINIT(SLD(I)%INTNAME(J+1),LPLOT=.FALSE.)
+!   !## add c (optional)
+!   IF(J.LT.SLD(I)%NLAY)THEN; IF(SLD(I)%CCLR(J).NE.0) &
+!     CALL IDFINIT(SLD(I)%CNAME(J),LPLOT=.FALSE.,LEGNAME=TRIM(KLEGEND)); ENDIF
   END DO
  ENDDO
  !## select appropriate occurences in list and group them
@@ -892,58 +890,58 @@ ILLOOP: DO
   !## nothing selected
   MP%ISEL=.FALSE.
   DO J=1,SLD(I)%NLAY
-   DO K=1,2
-    IF(K.EQ.1.AND.SLD(I)%KDCLR(J).NE.0)THEN
-     !## search for kd
-     DO L=1,MXMPLOT
-      IF(MP(L)%IACT)THEN
-       IF(TRIM(UTL_CAP(MP(L)%IDFNAME,'U')).EQ.TRIM(UTL_CAP(SLD(I)%KDNAME(J),'U')))THEN
-        MP(L)%ISEL=.TRUE.
-        MP(L)%SCOLOR=WRGB(255,255,255)  !## color number for serie-plotting
-        II=INDEX(SLD(I)%KDNAME(J),'\',.TRUE.)-1; II=INDEX(SLD(I)%KDNAME(J)(:II),'\',.TRUE.)+1
-        MP(L)%ALIAS=TRIM(SLD(I)%KDNAME(J)(II:))
-        CALL UTL_READARRAY((/1,0,0,0,1,0,0/),7,MP(L)%PRFTYPE) !## solid --- kd plotting!
-        EXIT
-       ENDIF
+!   DO K=1,2
+!    IF(K.EQ.1.AND.SLD(I)%KDCLR(J).NE.0)THEN
+!     !## search for kd
+!     DO L=1,MXMPLOT
+!      IF(MP(L)%IACT)THEN
+!       IF(TRIM(UTL_CAP(MP(L)%IDFNAME,'U')).EQ.TRIM(UTL_CAP(SLD(I)%KDNAME(J),'U')))THEN
+!        MP(L)%ISEL=.TRUE.
+!        MP(L)%SCOLOR=WRGB(255,255,255)  !## color number for serie-plotting
+!        II=INDEX(SLD(I)%KDNAME(J),'\',.TRUE.)-1; II=INDEX(SLD(I)%KDNAME(J)(:II),'\',.TRUE.)+1
+!        MP(L)%ALIAS=TRIM(SLD(I)%KDNAME(J)(II:))
+!        CALL UTL_READARRAY((/1,0,0,0,1,0,0/),7,MP(L)%PRFTYPE) !## solid --- kd plotting!
+!        EXIT
+!       ENDIF
+!      ENDIF
+!     ENDDO
+!    ENDIF
+!    IF(J.LT.SLD(I)%NLAY)THEN
+!     IF(K.EQ.2.AND.SLD(I)%CCLR(J).NE.0)THEN
+!      !## search for c
+!      DO L=1,MXMPLOT
+!       IF(MP(L)%IACT)THEN
+!        IF(TRIM(UTL_CAP(MP(L)%IDFNAME,'U')).EQ.TRIM(UTL_CAP(SLD(I)%CNAME(J),'U')))THEN
+!         MP(L)%ISEL=.TRUE.
+!         MP(L)%SCOLOR=WRGB(255,255,255)   !## color number for serie-plotting
+!         II=INDEX(SLD(I)%CNAME(J),'\',.TRUE.)-1; II=INDEX(SLD(I)%CNAME(J)(:II),'\',.TRUE.)+1
+!         MP(L)%ALIAS=TRIM(SLD(I)%CNAME(J)(II:))
+!         CALL UTL_READARRAY((/1,0,0,0,1,1,0/),7,MP(L)%PRFTYPE) !## solid --- c plotting!
+!         EXIT
+!        ENDIF
+!       ENDIF
+!      ENDDO
+!     ENDIF
+!    ENDIF
+   DO L=1,MXMPLOT
+    IF(MP(L)%IACT)THEN
+     IF(TRIM(UTL_CAP(MP(L)%IDFNAME,'U')).EQ.TRIM(UTL_CAP(SLD(I)%INTNAME(J),'U')))THEN
+      MP(L)%ISEL=.TRUE.
+      MP(L)%SCOLOR=SLD(I)%INTCLR(J)  !## color number for serie-plotting
+      II=INDEX(SLD(I)%INTNAME(J),'\',.TRUE.)-1; LINE=SLD(I)%INTNAME(J)(:II); II=INDEX(LINE,'\',.TRUE.)+1
+      LINE=SLD(I)%INTNAME(J)(II:)
+      MP(L)%ALIAS=TRIM(LINE)
+      IF(SLD(I)%KDCLR(J).EQ.0)THEN
+       CALL UTL_READARRAY((/1,0,0,1,0,0,0/),7,MP(L)%PRFTYPE) !## solid
+      ELSE
+       CALL UTL_READARRAY((/1,0,0,0,0,0,0/),7,MP(L)%PRFTYPE) !## solid
       ENDIF
-     ENDDO
-    ENDIF
-    IF(J.LT.SLD(I)%NLAY)THEN
-     IF(K.EQ.2.AND.SLD(I)%CCLR(J).NE.0)THEN
-      !## search for c
-      DO L=1,MXMPLOT
-       IF(MP(L)%IACT)THEN
-        IF(TRIM(UTL_CAP(MP(L)%IDFNAME,'U')).EQ.TRIM(UTL_CAP(SLD(I)%CNAME(J),'U')))THEN
-         MP(L)%ISEL=.TRUE.
-         MP(L)%SCOLOR=WRGB(255,255,255)   !## color number for serie-plotting
-         II=INDEX(SLD(I)%CNAME(J),'\',.TRUE.)-1; II=INDEX(SLD(I)%CNAME(J)(:II),'\',.TRUE.)+1
-         MP(L)%ALIAS=TRIM(SLD(I)%CNAME(J)(II:))
-         CALL UTL_READARRAY((/1,0,0,0,1,1,0/),7,MP(L)%PRFTYPE) !## solid --- c plotting!
-         EXIT
-        ENDIF
-       ENDIF
-      ENDDO
+      EXIT
      ENDIF
     ENDIF
-    DO L=1,MXMPLOT
-     IF(MP(L)%IACT)THEN
-      IF(TRIM(UTL_CAP(MP(L)%IDFNAME,'U')).EQ.TRIM(UTL_CAP(SLD(I)%TBNAME(J,K),'U')))THEN
-       MP(L)%ISEL=.TRUE.
-       MP(L)%SCOLOR=SLD(I)%TBCLR(J,K)  !## color number for serie-plotting
-       II=INDEX(SLD(I)%TBNAME(J,K),'\',.TRUE.)-1; LINE=SLD(I)%TBNAME(J,K)(:II); II=INDEX(LINE,'\',.TRUE.)+1
-       LINE=SLD(I)%TBNAME(J,K)(II:)
-       MP(L)%ALIAS=TRIM(LINE)
-       IF(SLD(I)%KDCLR(J).EQ.0)THEN
-        CALL UTL_READARRAY((/1,0,0,1,0,0,0/),7,MP(L)%PRFTYPE) !## solid
-       ELSE
-        CALL UTL_READARRAY((/1,0,0,0,0,0,0/),7,MP(L)%PRFTYPE) !## solid
-       ENDIF
-       EXIT
-      ENDIF
-     ENDIF
-    ENDDO
-
    ENDDO
+
+!   ENDDO
   ENDDO
 
   !## group them into mdf-file
@@ -1255,35 +1253,30 @@ ILLOOP: DO
     JJ=0
     DO J=1,SLD(I)%NLAY
      JJ=JJ+1
-     KLOOP: DO K=1,2
-      IF(JSEL_SOLID(I).EQ.-1)CALL WINDOWOUTSTATUSBAR(4,'Clipping '//TRIM(SLD(I)%TBNAME(J,K))//'...')
-      IF(JSEL_SOLID(I).EQ. 1)CALL WINDOWOUTSTATUSBAR(4,'Checking '//TRIM(SLD(I)%TBNAME(J,K))//'...')
-      FNAME=SLD(I)%TBNAME(J,K)(INDEX(SLD(I)%TBNAME(J,K),'\',.TRUE.)+1:)
-      IF(.NOT.IDFREAD(SOLIDF(1),SLD(I)%TBNAME(J,K),0))RETURN
-      IF(.NOT.IDFREADPART(SOLIDF(1),XMIN,YMIN,XMAX,YMAX))RETURN
-      !## source model
-      IF(JSEL_SOLID(I).EQ.-1)THEN
-       IF(.NOT.IDFWRITE(SOLIDF(1),TRIM(SOLDIR)//'\'//TRIM(FNAME),1))RETURN
-       SLD(I)%TBNAME(J,K)=TRIM(SOLDIR)//'\'//TRIM(FNAME)
-       !## support model -- check for nodata, then leave it out!
-      ELSE
-       II=0
-       IRLOOP: DO IR=1,SOLIDF(1)%NROW; DO IC=1,SOLIDF(1)%NCOL
-        IF(SOLIDF(1)%X(IC,IR).NE.SOLIDF(1)%NODATA)THEN; II=1; EXIT IRLOOP; ENDIF
-       ENDDO; ENDDO IRLOOP
-       !## nodata found
-       IF(II.EQ.0)THEN
-        JJ=JJ-1
-        EXIT KLOOP
-       ENDIF
-!       IF(.NOT.IDFWRITE(SOLIDF(1),TRIM(SOLDIR)//'\'//TRIM(SLD(I)%SNAME)//'\'//TRIM(FNAME),1))RETURN
-       SLD(I)%TBNAME(JJ,K)=TRIM(SLD(I)%TBNAME(J,K)) 
+     IF(JSEL_SOLID(I).EQ.-1)CALL WINDOWOUTSTATUSBAR(4,'Clipping '//TRIM(SLD(I)%INTNAME(J))//'...')
+     IF(JSEL_SOLID(I).EQ. 1)CALL WINDOWOUTSTATUSBAR(4,'Checking '//TRIM(SLD(I)%INTNAME(J))//'...')
+     FNAME=SLD(I)%INTNAME(J)(INDEX(SLD(I)%INTNAME(J),'\',.TRUE.)+1:)
+     IF(.NOT.IDFREAD(SOLIDF(1),SLD(I)%INTNAME(J),0))RETURN
+     IF(.NOT.IDFREADPART(SOLIDF(1),XMIN,YMIN,XMAX,YMAX))RETURN
+     !## source model
+     IF(JSEL_SOLID(I).EQ.-1)THEN
+      IF(.NOT.IDFWRITE(SOLIDF(1),TRIM(SOLDIR)//'\'//TRIM(FNAME),1))RETURN
+      SLD(I)%INTNAME(J)=TRIM(SOLDIR)//'\'//TRIM(FNAME)
+      !## support model -- check for nodata, then leave it out!
+     ELSE
+      II=0
+      IRLOOP: DO IR=1,SOLIDF(1)%NROW; DO IC=1,SOLIDF(1)%NCOL
+       IF(SOLIDF(1)%X(IC,IR).NE.SOLIDF(1)%NODATA)THEN; II=1; EXIT IRLOOP; ENDIF
+      ENDDO; ENDDO IRLOOP
+      !## nodata found
+      IF(II.EQ.0)THEN
+       JJ=JJ-1; CYCLE
       ENDIF
-      CALL IDFDEALLOCATEX(SOLIDF(1))
-      SLD(I)%TBCLR(JJ,K)=SLD(I)%TBCLR(J,K)
-      SLD(I)%ICLC(JJ,K) =1
-!      SLD(I)%ACC(JJ,K)  =100.0
-     ENDDO KLOOP
+      SLD(I)%INTNAME(JJ)=TRIM(SLD(I)%INTNAME(J)) 
+     ENDIF
+     CALL IDFDEALLOCATEX(SOLIDF(1))
+     SLD(I)%INTCLR(JJ)=SLD(I)%INTCLR(J)
+     SLD(I)%ICLC(JJ) =1
      !## kd clipping
      IF(SLD(I)%KDCLR(J).NE.0)THEN
       IF(JSEL_SOLID(I).EQ.-1)CALL WINDOWOUTSTATUSBAR(4,'Clipping '//TRIM(SLD(I)%KDNAME(J))//'...')
@@ -1324,7 +1317,7 @@ ILLOOP: DO
   ELSE
    !## store solid-fnames()
    CALL SOLIDINITSLD(1)
-   SLD(1)%NLAY=SUM(ILIST)/2
+   SLD(1)%NLAY=SUM(ILIST) !/2
    CALL SOLIDINITSLDPOINTER(1,SLD(1)%NLAY)
    IF(ALLOCATED(JSEL_SOLID))DEALLOCATE(JSEL_SOLID)
    ALLOCATE(JSEL_SOLID(1))
@@ -1336,20 +1329,18 @@ ILLOOP: DO
    LEQUAL=.FALSE.
 
    J=0
-   K=0
    ICLR=0
    
    DO I=1,MXMPLOT
     IF(ILIST(I).EQ.1)THEN
-
+     J=J+1
+     
      IF(.NOT.LEQUAL)THEN
       !## make sure all idf files are equal to eachother
       IF(.NOT.IDFREAD(SOLIDF(2),MP(I)%IDFNAME,0))RETURN
       LEQUAL=.TRUE.
      ENDIF
 
-     K=K+1
-     IF(K.GT.2)K=1
      FNAME=MP(I)%IDFNAME(INDEX(MP(I)%IDFNAME,'\',.TRUE.)+1:)
      IF(ICLIP.EQ.0)THEN
       CALL WINDOWSELECT(0)
@@ -1365,19 +1356,17 @@ ILLOOP: DO
       IF(.NOT.IDFWRITE(SOLIDF(1),TRIM(SOLDIR)//'\'//TRIM(FNAME),1))RETURN
       CALL IDFDEALLOCATEX(SOLIDF(1))
      ENDIF
-     IF(K.EQ.1)J=J+1
 
      !## store filenames
-     SLD(1)%TBNAME(J,K)=TRIM(SOLDIR)//'\'//TRIM(FNAME)
+     SLD(1)%INTNAME(J)=TRIM(SOLDIR)//'\'//TRIM(FNAME)
      IF(MOD(K,2).NE.0)THEN
-      SLD(1)%TBCLR(J,K)=WRGB(255,255,128)  !## colour = yellow
+      SLD(1)%INTCLR(J)=WRGB(255,255,128)  !## colour = yellow
      ELSE
       ICLR=ICLR+1
       IF(ICLR.GT.SIZE(ICOLOR))ICLR=1
-      SLD(1)%TBCLR(J,K)=ICOLOR(ICLR)
+      SLD(1)%INTCLR(J)=ICOLOR(ICLR)
      ENDIF
-     SLD(1)%ICLC(J,K)=1
-!     SLD(1)%ACC(J,K)=100.0
+     SLD(1)%ICLC(J)=1
 
     ENDIF
    END DO
@@ -1459,7 +1448,7 @@ ILLOOP: DO
  ALLOCATE(JSEL_SOLID(1)); JSEL_SOLID(1)=-1
 
  !## number of idf top,bot and (n-intervals*2)
- NTBSOL=N !(N+1)
+ NTBSOL=N 
 
  IF(ALLOCATED(SOLIDF))THEN; CALL IDFDEALLOCATE(SOLIDF,SIZE(SOLIDF)); DEALLOCATE(SOLIDF); ENDIF
  IF(ALLOCATED(TB))THEN; CALL IDFDEALLOCATE(TB,SIZE(TB)); DEALLOCATE(TB); ENDIF
@@ -1503,27 +1492,19 @@ ILLOOP: DO
  ENDIF
 
  !## write new files ... including top/bot given!
- K=0
  DO I=1,NTBSOL
-  DO J=1,2
-   K=K+1
 
-   !## first given IDF will be used to create all the others ... for now!
-   IF(K.GT.1)CALL IDFCOPY(SOLIDF(1),SOLIDF(K))
-   SOLIDF(K)%FNAME=TRIM(SOLDIR)//'\'//TRIM(FTYPE(J))//'_L'//TRIM(ITOS(I))//'.IDF'
-   !##open new idfs
-   IF(.NOT.IDFOPEN(SOLIDF(K)%IU,SOLIDF(K)%FNAME,'WO',0,1))THEN
-   ENDIF
+  !## first given IDF will be used to create all the others ... for now!
+  IF(K.GT.1)CALL IDFCOPY(SOLIDF(1),SOLIDF(K))
+  SOLIDF(I)%FNAME=TRIM(SOLDIR)//'\'//TRIM(FTYPE(J))//'_L'//TRIM(ITOS(I))//'.IDF'
+  !##open new idfs
+  IF(.NOT.IDFOPEN(SOLIDF(I)%IU,SOLIDF(I)%FNAME,'WO',0,1))THEN
+  ENDIF
 
-   !## store filenames
-   SLD(1)%TBNAME(I,J)=SOLIDF(K)%FNAME
-   IF(MOD(J,2).NE.0)THEN
-    SLD(1)%TBCLR(I,J)=WRGB(255,255,128)  !## colour = yellow
-   ELSE
-    SLD(1)%TBCLR(I,J)=ICOLOR(I)
-   ENDIF
+  !## store filenames
+  SLD(1)%INTNAME(I)=SOLIDF(I)%FNAME
+  SLD(1)%INTCLR(I)=ICOLOR(I)
 
-  END DO
  ENDDO
 
  SOLIDF%DMIN= 10.0E10
@@ -1541,7 +1522,7 @@ ILLOOP: DO
    CALL IDFIROWICOL(TB(2),JROW,JCOL,X,Y)
    BOT=IDFGETVAL(TB(2),JROW,JCOL)
 
-   DZZ=(TOP-BOT)/REAL(N*2-1) !-1) !+1)
+   DZZ=(TOP-BOT)/REAL(N-1) !*2-1) 
    !## check consistency
    IF(DZZ.LT.0.0)THEN
     DO I=1,NTBSOL*2; CLOSE(SOLIDF(I)%IU); ENDDO
@@ -1567,7 +1548,7 @@ ILLOOP: DO
   END DO
  END DO
 
- DO I=1,NTBSOL*2
+ DO I=1,NTBSOL !*2
   IF(.NOT.IDFWRITEDIM(0,SOLIDF(I)))THEN
   ENDIF
   CLOSE(SOLIDF(I)%IU)
@@ -1743,15 +1724,15 @@ ILLOOP: DO
  SOLID_CALC_KDC=.FALSE.
 
  !## refresh memory
- IF(IBATCH.EQ.0)THEN
-  CALL SOLID_DEALLOCATE()
-  !## read all idf-files in to memory
-  IF(.NOT.SOLIDOPENSOL('R',SOLFILE))RETURN
- ENDIF
+! IF(IBATCH.EQ.0)THEN
+!  CALL SOLID_DEALLOCATE()
+!  !## read all idf-files in to memory
+!  IF(.NOT.SOLIDOPENSOL('R',SOLFILE))RETURN
+! ENDIF
  !## try to read all idf's
  NLAY=SLD(1)%NLAY; ALLOCATE(TOPIDF(NLAY),BOTIDF(NLAY)) 
  DO I=1,SLD(1)%NLAY; DO J=1,2
-  FNAME=TRIM(OUTPUTFOLDER)//'\'//TRIM(SLD(1)%TBNAME(I,J)(INDEX(SLD(1)%TBNAME(I,J),'\',.TRUE.)+1:))
+  FNAME=TRIM(OUTPUTFOLDER)//'\'//TRIM(SLD(1)%INTNAME(I)(INDEX(SLD(1)%INTNAME(I),'\',.TRUE.)+1:))
   WRITE(*,'(A)') 'Reading '//TRIM(FNAME)
   IF(J.EQ.1)THEN; IF(.NOT.IDFREAD(TOPIDF(I),FNAME,1))RETURN; ENDIF
   IF(J.EQ.2)THEN; IF(.NOT.IDFREAD(BOTIDF(I),FNAME,1))RETURN; ENDIF
