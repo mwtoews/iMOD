@@ -143,6 +143,12 @@ INTEGER,DIMENSION(12) :: ISAVE
 REAL :: MAXWIDTH !#3 maximum widht for computing rivier-width (in case cross-sections are rubbish)
 INTEGER :: IAVERAGE !## (1) mean (2) median value
 
+!## applicable for svat export to swnr_svat_drng.inp
+CHARACTER(LEN=256) :: THIESSENFNAME,AHNFNAME,SEGMENTCSVFNAME,SVAT2SWNR_DRNG
+CHARACTER(LEN=30),ALLOCATABLE,DIMENSION(:) :: CSOBEK
+INTEGER,ALLOCATABLE,DIMENSION(:) :: SWNR
+INTEGER :: NSVATS,NSWNR,SYSID
+
 TYPE(IDFOBJ),ALLOCATABLE,DIMENSION(:) :: TOP,BOT                 
 INTEGER :: NLAY
 

@@ -30,7 +30,7 @@ MODULE MOD_MATH_SCALE
  USE MOD_IDF, ONLY : IDFREAD,IDFALLOCATEX,IDFFILLCOMMENT,IDFWRITE,IDFGETVAL,IDFCOPY,IDFNULLIFY,IDFDEALLOCATE, &
  IDFGETXYVAL,IDFGETLOC,IDFREADSCALE
  USE MOD_UTL, ONLY : UTL_CHECKNAME,UTL_GETMED,NEWLINE,UTL_IDFSNAPTOGRID,UTL_MESSAGEHANDLE, &
-                     UTL_WAITMESSAGE,UTL_DIRINFO,UTL_CAP
+                     UTL_WAITMESSAGE,UTL_DIRINFO,UTL_CAP,RTOS
  USE MOD_POLINT, ONLY : POL1LOCATE,POL1INTMAIN
  USE MODPLOT, ONLY : MPW
  USE MOD_PCG, ONLY : PCG2AP
@@ -51,7 +51,7 @@ MODULE MOD_MATH_SCALE
  INTEGER,PARAMETER,PRIVATE :: MXITER1=100 !## outer (linear system)
  INTEGER,PARAMETER,PRIVATE :: MXITER2=500 !## inner (linear system)
  REAL,PARAMETER,PRIVATE :: HCLOSE=0.001   !## m
- REAL,PARAMETER,PRIVATE :: RCLOSE=0.001     !## m3/dag
+ REAL,PARAMETER,PRIVATE :: RCLOSE=0.001   !## m3/dag
  REAL,PARAMETER,PRIVATE :: HNOFLOW=-999.99
  REAL,PRIVATE :: RELAX=1.0
  INTEGER,PARAMETER,PRIVATE :: IDAMPING=1
@@ -565,8 +565,8 @@ CONTAINS
     !## darcian simulation
     CASE (11,12,13)
      A(IC,IR)=IDFVAL
-     DX(IC)  =MATH(1)%DX !SX(ICOL)-MATH(1)%SX(ICOL-1) !DELR(ICOL)-DELR(ICOL-1)
-     DY(IR)  =MATH(1)%DY !SY(IROW-1)-MATH(1)%SY(IROW) !DELC(IROW-1)-DELC(IROW)
+     DX(IC)  =MATH(1)%DX 
+     DY(IR)  =MATH(1)%DY 
      NVALUE  =NVALUE+1.0
     !## 3d simulation
     CASE (14)
@@ -644,11 +644,10 @@ CONTAINS
   CASE (14)
    IF(SUM(IB).NE.0)THEN
     !## start simulation
-    NCOL=SIZE(IB,1) !MIN(MATH(1)%NCOL,IC2)-MAX(1,IC1)+1 !## inclusive bordercell
-    NROW=SIZE(IB,2) !MIN(MATH(1)%NROW,IR2)-MAX(1,IR1)+1 !## inclusive bordercell
+    NCOL=SIZE(IB,1)  !## inclusive bordercell
+    NROW=SIZE(IB,2)  !## inclusive bordercell
     NLAY=SIZE(IB,3)
-!    WRITE(*,*) 'Simulating model with size ',NROW,NCOL,NLAY,NCOL*NROW*NLAY
-    CALL MATH1_SIM(BVALUE,TVALUE,NCOL,NROW,NLAY) !SIZE(IDFNAMES)+2)
+    CALL MATH1_SIM(BVALUE,TVALUE,NCOL,NROW,NLAY) 
    ELSE
     BVALUE(1)=MATH(1)%NODATA
     TVALUE(1)=MATH(1)%NODATA
@@ -669,7 +668,6 @@ CONTAINS
  DO I=IM-1,IM+1
   DO IROW=1,SIZE(IB,2)
    DO ICOL=1,SIZE(IB,1)
-!    C=C+1.0/CC(ICOL,IROW,I) 
     IF(IB(ICOL,IROW,I).GT.0)THEN
      C=C+CC(ICOL,IROW,I)
      N=N+1
@@ -679,7 +677,6 @@ CONTAINS
  ENDDO
  MATH1GETK_CUBE=-999.99
  IF(N.GT.0)MATH1GETK_CUBE=C/REAL(N)
-! MATH1GETK_CUBE=1.0/C 
 
  END FUNCTION MATH1GETK_CUBE
 
@@ -705,7 +702,7 @@ CONTAINS
   ENDIF
   HCOF=0.0
   CALL PCG2AP(NROW*NCOL*NLAY,NROW,NCOL,NLAY,IB,CR,CC,CV,HCOF,RHS,V,SS,P, &
-              CD,HNEW,MXITER1,MXITER2,ITER1,ITER2,ICNVG,HCLOSE,RCLOSE,0,NICNVG,RELAX,HCHG)
+              CD,HNEW,MXITER1,MXITER2,ITER1,ITER2,ICNVG,HCLOSE,RCLOSE,-2,NICNVG,RELAX,HCHG)
   !## convergence achieved
   IF(ICNVG.EQ.1)EXIT
   IF(NICNVG.GT.MICNVG)EXIT
@@ -724,7 +721,7 @@ CONTAINS
  ENDDO
  CALL MATH1_SIM_POSTPROC(NCOL,NROW,NLAY,TVALUE)
 
- !## compute
+ !## compute arithmetic values for resistance
  CT =0.0
  DO ILAY=1,NLAY-1
   CVT=0.0; NCV=0.0
@@ -739,12 +736,18 @@ CONTAINS
   ENDDO
   IF(CVT.GT.0.0)THEN
    DXY=NCV*MATH(1)%DX*MATH(1)%DY
-   CT =CT+(DXY/CVT)
+   CT =CT+(1.0/(DXY/CVT))
   ENDIF
  ENDDO
- BVALUE=TVALUE
- BVALUE(3)=CT
 
+ !## copy values from simulation, since we do not scale for transmissivites
+ BVALUE=TVALUE
+
+ !## total resistance (days)
+ BVALUE(3)=CT
+ !## transform into k=values
+ BVALUE(3)=(MATH(1)%TOP-MATH(SIZE(MATH))%BOT)/BVALUE(3)
+ 
  END SUBROUTINE MATH1_SIM
 
  !###====================================================================
@@ -756,7 +759,14 @@ CONTAINS
  INTEGER :: IROW,ICOL,ILAY,I
  DOUBLE PRECISION,DIMENSION(3) :: TQ,DH
  DOUBLE PRECISION :: D,VCZ
- REAL :: KDX,KDY,TC,NH
+ REAL :: KDX,KDY,TC,NH,DZ,SQ,DP,A
+! real :: z
+! type(idfobj) :: idf
+ 
+ !## thickness of volume
+ DZ=MATH(1)%TOP-MATH(SIZE(MATH))%BOT
+ !## area
+ A=(REAL(NCOL)*MATH(1)%DX*REAL(NROW)*MATH(1)%DY)
 
  KDX=0.0; KDY=0.0
  DO ILAY=1,NLAY-1 !## nlay-1 cause last layer is thickness zero or extraction aquifer
@@ -787,6 +797,10 @@ CONTAINS
   IF(DH(2).NE.0.0)KDY=KDY+TQ(2)/DH(2)  !## y-dir
  ENDDO
 
+ !## transform transmissivities into k-values for x- and y-direction
+ K(1)=KDX / DZ
+ K(2)=KDY / DZ
+
  !## get total q over last
  TQ(3)=0.0
  !## get mean head
@@ -804,16 +818,42 @@ CONTAINS
  ENDDO
 
  !## dz used --- m3/day -> m2/day
- IF(QRATE.EQ.0.0)VCZ=TQ(3)/DHZ
+ IF(QRATE.EQ.0.0)THEN
+  SQ=TQ(3)
+  DP=DHZ
+  !VCZ=TQ(3)/DHZ
  !## qrate used
- IF(QRATE.NE.0.0)VCZ=ABS(QRATE)/(DH(3)/NH)
+ ELSE
+  SQ=ABS(QRATE)
+  DP=DH(3)/NH
+!  VCZ=ABS(QRATE)/(DH(3)/NH)
+ ENDIF
 
- TC=(REAL(NCOL)*MATH(1)%DX*REAL(NROW)*MATH(1)%DY)/VCZ
+ K(3)=SQ/(DP*A)
+ 
+ TC=DZ/K(3) !((DP/DZ)/SQ)*A
 
- !## transform into TRANSMISSIVITIES/VERTICAL C VALUES
- K(1)=KDX !/D !SUM(DZ)
- K(2)=KDY !/D !SUM(DZ)
- K(3)=TC  !D/TC !SUM(DZ)/TC
+! !## conductance between the inlet (top) and outlet (under)
+! TC=(REAL(NCOL)*MATH(1)%DX*REAL(NROW)*MATH(1)%DY)/VCZ
+
+! !#3 transform into resistance and than into vertical k-values
+! K(3)=TC
+! K(3)=DZ/K(3)
+
+! call idfnullify(idf)
+! idf%xmin=0.0; idf%ymin=0.0; idf%xmax=100.0; idf%ymax=100.0; idf%dx=0.5; idf%dy=idf%dx
+! idf%ncol=ncol; idf%nrow=nrow; idf%itb=1; idf%ieq=0
+! if(.not.idfallocatex(idf))then; endif
+! z=0.0
+! do i=1,nlay
+!  idf%x=real(hnew(:,:,i))
+!  idf%fname='d:\hnew'//trim(rtos(z,'f',2))//'.idf'
+!  idf%top=z
+!  idf%bot=idf%top-0.05
+!  if(idfwrite(idf,idf%fname,1))then
+!  endif
+!  z=idf%bot
+! enddo
 
  END SUBROUTINE MATH1_SIM_POSTPROC
 

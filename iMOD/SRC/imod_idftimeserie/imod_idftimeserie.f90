@@ -1078,6 +1078,14 @@ CONTAINS
 
  !## read dimensions of associated file and read the associated file
  CALL IPFDIMENSIONASSFILE(1,FNAME,IPF(JIPF)%IAXES)
+ IF(ASSF(1)%ITOPIC.NE.1)THEN
+  CALL WMESSAGEBOX(OKONLY,EXCLAMATIONICON,COMMONOK,'You can not select an IPF file for the TimeSeries Tool'//CHAR(13)// &
+     'That does not contain timeseries'//CHAR(13)// &
+     'The file has been excluded for the rest of this session','Error')
+  !## turn if off for the rest to avoid repetition of this message
+  IPF(JIPF)%ACOL=0
+  RETURN
+ ENDIF
  ASSF(1)%ASSCOL1=IPF(JIPF)%ASSCOL1 !## column used with dlf
  ASSF(1)%ASSCOL2=IPF(JIPF)%ASSCOL2 !## on default not used --- border rings
 
