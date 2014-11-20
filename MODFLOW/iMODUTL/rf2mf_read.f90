@@ -238,7 +238,7 @@ CONTAINS
        rch%sp(kper)%inrech = rch%sp(kper)%inrech + 1
        if (rch%sp(kper)%inrech.gt.mxrech) call imod_utl_printtext('Error, increase mxrech',2)
        call RF2MF_READ1MAIN_system(rch%sp(kper)%rech(isub),ios,ilay,fct,imp,constante,iarr,fname,iusclarith,idsclintp)
-       rch%sp(kper)%rech(isub)%fct = 0.001
+       rch%sp(kper)%rech(isub)%fct = rch%sp(kper)%rech(isub)%fct * 0.001
       CASE (POLF)     !## (POLF) overlandflow
        drn%sp(kper)%reuse = .false.
        msys = drn%sp(kper)%gcd%nsubsys+nsys
