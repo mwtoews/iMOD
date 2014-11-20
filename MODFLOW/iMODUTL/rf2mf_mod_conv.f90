@@ -729,6 +729,8 @@
          do ilay = 1, nlay
             bcf%kva(ilay)%oper = '^'
             bcf%kva(ilay)%pow = -1.
+            bcf%kva(ilay)%keyword = 'constant'
+            bcf%kva(ilay)%cnstnt = 1.
          end do
       else
          if (associated(bcf%ltype))  deallocate(bcf%ltype)
