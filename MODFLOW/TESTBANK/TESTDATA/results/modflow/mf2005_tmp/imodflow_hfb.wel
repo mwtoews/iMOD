@@ -1,9 +1,0 @@
-# Well Package file
-1 33 noprint
-1
-gcd 00001
-2
-1 1
-open/close 'd:\codes\clean\ossimod\MODFLOW\TESTBANK\TESTDATA\wells\imodflow_well1.ipf' 1.000000 (free) -1 scaling -1 -1
-2 2
-open/close 'd:\codes\clean\ossimod\MODFLOW\TESTBANK\TESTDATA\wells\imodflow_well2.ipf' 1.000000 (free) -1 scaling -1 -1

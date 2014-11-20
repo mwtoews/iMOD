@@ -1,7 +1,0 @@
-# Basic Package file
-free
-open/close 'd:\codes\clean\ossimod\MODFLOW\TESTBANK\TESTDATA\boundary\imodflow_ibound1.idf' 1 (free) -1 scaling 1 0
-constant 1
- -999.9900
-open/close 'd:\codes\clean\ossimod\MODFLOW\TESTBANK\TESTDATA\starting_heads\imodflow_shead1.idf' 1.000000 (free) -1 scaling 2 1
-open/close 'd:\codes\clean\ossimod\MODFLOW\TESTBANK\TESTDATA\starting_heads\imodflow_shead2.idf' 1.000000 (free) -1 scaling 2 1
