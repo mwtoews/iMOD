@@ -1,0 +1,6 @@
+# Horizontal Flow Barrier Package file
+0 0 1 noprint hfbfact
+lcd 00001
+1
+2 9.9999998E-03
+open/close 'd:\codes\clean\ossimod\MODFLOW\TESTBANK\TESTDATA\horizontal_barrier\imodflow_hfb2.gen' 1.000000 (free) -1 scaling -1 -1

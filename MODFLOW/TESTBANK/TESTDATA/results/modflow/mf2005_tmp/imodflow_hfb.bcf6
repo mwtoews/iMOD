@@ -1,0 +1,6 @@
+29 -9999.000 0 0.0000000E+00 0 0
+ 0 0
+constant 1.000000
+open/close 'd:\codes\clean\ossimod\MODFLOW\TESTBANK\TESTDATA\transmissivity\imodflow_kd1.idf' 1.000000 (free) -1 scaling 3 1
+open/close 'd:\codes\clean\ossimod\MODFLOW\TESTBANK\TESTDATA\vertical_resistance\imodflow_c1.idf' 1.000000^-1.000000 (free) -1 scaling 6 1
+open/close 'd:\codes\clean\ossimod\MODFLOW\TESTBANK\TESTDATA\transmissivity\imodflow_kd2.idf' 1.000000 (free) -1 scaling 3 1
