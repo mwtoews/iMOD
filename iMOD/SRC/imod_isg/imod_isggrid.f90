@@ -1020,14 +1020,36 @@ CONTAINS
           JSEG =ISG(I)%IQHR+JQHR-1
 
           !## get number of trapezia
+          TC=0.0
           DO ITRAP=1,NTRAP
            !## compute nett waterdepth for current part of trapezium
            IF(ITRAP.LT.NTRAP)THEN; NETWD=YTRAP(3,ITRAP+1)-YTRAP(3,ITRAP)
            ELSE; NETWD=WDEPTH-YTRAP(3,ITRAP); ENDIF
            IF(NETWD.LE.0.0)EXIT
+           !## compute wetted perimeter,bottomwidth,cotanges
+           CALL ISG2GRIDPERIMETERTRAPEZIUM(XTRAP(:,ITRAP),YTRAP(:,ITRAP),WETPER,CT,BW,NETWD)
+           TC=TC+(LN(J)*WETPER)/C    !conductance(m2/dag)
           ENDDO
           NETTRAP=ITRAP-1; WRITE(IUSIMGRO,'(I10)') NETTRAP
 
+!          TC=0.0
+!          DO ITRAP=1,NTRAP
+!           !## compute nett waterdepth for current part of trapezium
+!           IF(ITRAP.LT.NTRAP)THEN
+!            NETWD=YTRAP(3,ITRAP+1)-YTRAP(3,ITRAP)
+!           ELSE
+!            NETWD=WDEPTH-YTRAP(3,ITRAP)
+!           ENDIF
+!           !## still water left ...
+!           IF(NETWD.GT.0.0)THEN
+!            !## compute wetted perimeter,bottomwidth,cotanges
+!            CALL ISG2GRIDPERIMETERTRAPEZIUM(XTRAP(:,ITRAP),YTRAP(:,ITRAP),WETPER,CT,BW,NETWD)
+!            TC=TC+(LN(J)*WETPER)/C    !conductance(m2/dag)
+!           ENDIF
+!          ENDDO
+
+          !## correction factor
+          TC=VALUE(1,1)/TC
           DO ITRAP=1,NTRAP
 
            !## compute nett waterdepth for current part of trapezium
@@ -1038,28 +1060,18 @@ CONTAINS
            ENDIF
 
            !## still water left ...
-!           VALUE(1,1)=0.0
-           TC=0.0
            IF(NETWD.GT.0.0)THEN
             !## compute wetted perimeter,bottomwidth,cotanges
             CALL ISG2GRIDPERIMETERTRAPEZIUM(XTRAP(:,ITRAP),YTRAP(:,ITRAP),WETPER,CT,BW,NETWD)
             !## get bottom height (bh)
-            BH        = VALUE(1,3)+YTRAP(3,ITRAP)
-            COND      =(LN(J)*WETPER)/C    !conductance(m2/dag)
-            TC        = TC+COND            !total conductance(m2/dag)
-!            VALUE(1,1)= VALUE(1,1)+COND   !total conductance(m2/dag)
-
-            IF(c.eq.0.0)THEN 
-             WRITE(*,*) c,ISQ(JSEG)%CNAME,COND
-             STOP
-            endif
-
+            BH  = VALUE(1,3)+YTRAP(3,ITRAP)
+            COND=(LN(J)*WETPER)/C    !conductance(m2/dag)            
+            COND= TC*COND
+            
             !## minimal value cond=0.001
             CALL IDFGETLOC(IDF(1),IROW,ICOL,XC,YC)
             WRITE(IUSIMGRO,'(2F10.2,2I10,6F10.2,A30,3F10.2)') XC,YC,IROW,ICOL,LN(J),BH,BW,CT,MAX(0.001,COND),MAX(0.001,COND*VALUE(1,4)), &
                                                          ISQ(JSEG)%CNAME,AORG-ATRAP,AORG,ATRAP
-!            WRITE(IUSIMGRO,'(2I10,6F10.2,A30,3F10.2)') IROW,ICOL,LN(J),BH,BW,CT,MAX(0.001,COND),MAX(0.001,COND*VALUE(1,4)), &
-!                                                       ISQ(JSEG)%CNAME,AORG-ATRAP,AORG,ATRAP
            ENDIF
 
           ENDDO

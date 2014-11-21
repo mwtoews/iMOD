@@ -19,7 +19,7 @@
 !!  Stichting Deltares
 !!  P.O. Box 177
 !!  2600 MH Delft, The Netherlands.
-
+!!
 MODULE MOD_IFF
 
 USE WINTERACTER
@@ -112,8 +112,7 @@ CONTAINS
  IFF(2)%IPART=0
  L           =0
  DO
-  READ(IU,*,IOSTAT=IOS) IFF(1)%IPART,IFF(1)%IL,IFF(1)%X,IFF(1)%Y,IFF(1)%Z,IFF(1)%T,IFF(1)%V ! IPART1,IL,X1,Y1,Z1,TIME1,V1
-!  WRITE(*,*) IFF(1)%IPART,IFF(1)%IL,IFF(1)%X,IFF(1)%Y,IFF(1)%Z,IFF(1)%T,IFF(1)%V
+  READ(IU,*,IOSTAT=IOS) IFF(1)%IPART,IFF(1)%IL,IFF(1)%X,IFF(1)%Y,IFF(1)%Z,IFF(1)%T,IFF(1)%V 
   IF(IOS.NE.0)EXIT
 
   MP(IPLOT)%XMIN=MIN(MP(IPLOT)%XMIN,IFF(1)%X)
@@ -124,12 +123,9 @@ CONTAINS
   !## same particle
   IF(IFF(1)%IPART.EQ.IFF(2)%IPART)THEN
 
-!   WRITE(*,*) XMIN,YMIN,XMAX,YMAX
-
-   !## current point insize viewable extent
+   !## current point inside viewable extent
    IF(IFF(1)%X.LT.XMAX.AND.IFF(1)%X.GE.XMIN.AND. &
-      IFF(1)%Y.LT.YMAX.AND.IFF(1)%Y.GE.YMIN)THEN !.AND. &
-!      IFF(1)%Z.LT.ZMAX.AND.IFF(2)%Z.GE.ZMIN)THEN
+      IFF(1)%Y.LT.YMAX.AND.IFF(1)%Y.GE.YMIN)THEN 
 
     !## use of line-colouring
     IF(MP(IPLOT)%ILEG.EQ.1)THEN!SCOLOR.GT.0)THEN
@@ -180,15 +176,11 @@ CONTAINS
     !## perform coordinate transformation for serie-plotting!
     ELSE
 
-!WRITE(*,*) IFF(1)%X,IFF(2)%X,IFF(1)%Y,IFF(2)%Y,IFF(1)%Z,IFF(2)%Z
-
      !## perform coordinate shift first ... related to first point in segment!
      XS1=IFF(1)%X-XY(1,1)  !x1
      XS2=IFF(2)%X-XY(1,1)  !x2
      YS1=IFF(1)%Y-XY(2,1)  !y1
      YS2=IFF(2)%Y-XY(2,1)  !y2
-
-!WRITE(*,*) IFF(1)%X,IFF(2)%X,IFF(1)%Y,IFF(2)%Y,IFF(1)%Z,IFF(2)%Z
 
      !## rotated coordinates become ...
      !  cos() sin()  !
@@ -197,16 +189,9 @@ CONTAINS
      X2=XS2* COS(RAD)+YS2*SIN(RAD) !x2'
      Y1=YS1*(-1.0*SIN(RAD))+YS1*COS(RAD) !y1'
      Y2=YS2*(-1.0*SIN(RAD))+YS2*COS(RAD) !y2'
-!     XYNEW(1,1)=XYZT(1,1)* COS(RAD)+XYZT(2,1)*SIN(RAD) !x1'
-!     XYNEW(1,2)=XYZT(1,2)* COS(RAD)+XYZT(2,2)*SIN(RAD) !x2'
-!     XYNEW(2,1)=XYZT(1,1)*(-1.0*SIN(RAD))+XYZT(2,1)*COS(RAD) !y1'
-!     XYNEW(2,2)=XYZT(1,2)*(-1.0*SIN(RAD))+XYZT(2,2)*COS(RAD) !y2'
-
-!WRITE(*,*) X1,X2,Y1,Y2,IFF(1)%Z,IFF(2)%Z
 
      !## plot only if ....
      IF(X1.GE.0.0.AND.X2.GE.0.0.AND. &    !x1>=0 x2>=0
-!        Y1.GE.0.0.AND.Y2.GE.0.0.AND. &    !y1>=0 y2>=0
         X1.LE.XDIS.AND.X2.LE.XDIS.AND. &  !x1<=xdis !x2<=xdis
         ABS(Y1).LE.YDIS.AND.ABS(Y2).LE.YDIS)THEN    !y1<=ydis !y2<=ydis
 
@@ -238,7 +223,7 @@ CONTAINS
  END SUBROUTINE IFFPLOT
 
  !###======================================================================
- SUBROUTINE IFFFADEOUT(ICLR,FCT) !Z1,Z2,ZT)
+ SUBROUTINE IFFFADEOUT(ICLR,FCT) 
  !###======================================================================
  IMPLICIT NONE
  INTEGER,INTENT(INOUT) :: ICLR

@@ -176,7 +176,7 @@ CONTAINS
   ZP  =ZMN
   ZLOC=0.0
  !######downwards velocity increase current layer
-  IF(V.GE.0.0)THEN! GO TO 20                                             # C01210
+  IF(V.GE.0.0)THEN ! GO TO 20                                             # C01210
   ELSE !IF(V.LT.0.0)THEN
    KP  =KP+1
    ZP  =ZCB
@@ -279,6 +279,13 @@ CONTAINS
   IF(IVZFLG.GT.1)IXYZ=IXYZ+1
 
   IF(IXYZ.EQ.3)THEN !.AND.ISS.EQ.1)THEN
+   !## write centre location of dischage point
+   IF(MODE.GT.0)THEN
+    XP= SUM(DELX(1:JP))   -0.5*DELX(JP)
+    YP= SUM(DELY(IP:NROW))-0.5*DELY(IP)
+    ZP=(ZMX+ZMN)/2.0
+    CALL WRITERESULT(I2,IPART,KP,XP,YP,ZP,TIME/365.25,0.0,IP,JP)
+   ENDIF
    IDSCH=3
    RETURN
   ENDIF
@@ -504,9 +511,12 @@ CONTAINS
  REAL,INTENT(IN) :: XP,YP,ZP,TIME,V
  CHARACTER(LEN=256) :: LINE
 
- LINE=TRIM(ITOS(IPART))//','//TRIM(ITOS(KP))//','//TRIM(RTOS(XP+IDF%XMIN,'F',3))//','// &
-      TRIM(RTOS(YP+IDF%YMIN,'F',3))//','//TRIM(RTOS(ZP,'F',3))//','//TRIM(RTOS(TIME,'E',5))//','// &
+ LINE=TRIM(ITOS(IPART))//','//TRIM(ITOS(KP))//','//TRIM(RTOS(XP+IDF%XMIN,'*',2))//','// &
+      TRIM(RTOS(YP+IDF%YMIN,'*',2))//','//TRIM(RTOS(ZP,'*',2))//','//TRIM(RTOS(TIME,'E',5))//','// &
       TRIM(RTOS(V,'E',5))//','//TRIM(ITOS(IROW))//','//TRIM(ITOS(ICOL))
+! LINE=TRIM(ITOS(IPART))//','//TRIM(ITOS(KP))//','//TRIM(RTOS(XP+IDF%XMIN,'F',3))//','// &
+!      TRIM(RTOS(YP+IDF%YMIN,'F',3))//','//TRIM(RTOS(ZP,'F',3))//','//TRIM(RTOS(TIME,'E',5))//','// &
+!      TRIM(RTOS(V,'E',5))//','//TRIM(ITOS(IROW))//','//TRIM(ITOS(ICOL))
  WRITE(IU,*) TRIM(LINE)
 
  END SUBROUTINE
