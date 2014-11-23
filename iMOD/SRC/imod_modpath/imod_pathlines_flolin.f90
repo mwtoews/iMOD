@@ -511,8 +511,8 @@ CONTAINS
  REAL,INTENT(IN) :: XP,YP,ZP,TIME,V
  CHARACTER(LEN=256) :: LINE
 
- LINE=TRIM(ITOS(IPART))//','//TRIM(ITOS(KP))//','//TRIM(RTOS(XP+IDF%XMIN,'*',2))//','// &
-      TRIM(RTOS(YP+IDF%YMIN,'*',2))//','//TRIM(RTOS(ZP,'*',2))//','//TRIM(RTOS(TIME,'E',5))//','// &
+ LINE=TRIM(ITOS(IPART))//','//TRIM(ITOS(KP))//','//TRIM(RTOS(XP+IDF%XMIN,'F',2))//','// &
+      TRIM(RTOS(YP+IDF%YMIN,'F',2))//','//TRIM(RTOS(ZP,'F',3))//','//TRIM(RTOS(TIME,'E',5))//','// &
       TRIM(RTOS(V,'E',5))//','//TRIM(ITOS(IROW))//','//TRIM(ITOS(ICOL))
 ! LINE=TRIM(ITOS(IPART))//','//TRIM(ITOS(KP))//','//TRIM(RTOS(XP+IDF%XMIN,'F',3))//','// &
 !      TRIM(RTOS(YP+IDF%YMIN,'F',3))//','//TRIM(RTOS(ZP,'F',3))//','//TRIM(RTOS(TIME,'E',5))//','// &

@@ -344,6 +344,7 @@ CONTAINS
 
  !## skip header
  DO J=1,10; READ(IU(1),*); ENDDO
+ READ(IU(1),*,IOSTAT=IOS) IFF(2)%ID,IFF(2)%IL,IFF(2)%X,IFF(2)%Y,IFF(2)%Z,IFF(2)%T,IFF(2)%V,IFF(2)%IROW,IFF(2)%ICOL
  ID=0
  DO
   READ(IU(1),*,IOSTAT=IOS) IFF(1)%ID,IFF(1)%IL,IFF(1)%X,IFF(1)%Y,IFF(1)%Z,IFF(1)%T,IFF(1)%V,IFF(1)%IROW,IFF(1)%ICOL
@@ -351,14 +352,17 @@ CONTAINS
   IF(IFF(1)%ID.EQ.IFF(2)%ID)THEN
    ID=ID+1
    WRITE(IU(2),'(I10)') ID 
-   WRITE(IU(2),'(2(F10.2,1X))') IFF(1)%X,IFF(1)%Y
    WRITE(IU(2),'(2(F10.2,1X))') IFF(2)%X,IFF(2)%Y
+   WRITE(IU(2),'(2(F10.2,1X))') IFF(1)%X,IFF(1)%Y
    WRITE(IU(2),'(A)') 'END'
-   LINE=TRIM(ITOS(ID))//','//TRIM(ITOS(IFF(2)%IL))//','//TRIM(RTOS(IFF(2)%T,'E',5))
+   LINE=TRIM(ITOS(ID))//','//TRIM(ITOS(IFF(1)%IL))//','//TRIM(RTOS(IFF(1)%T,'E',5))
    WRITE(IU(3),'(A)') TRIM(LINE)
   ENDIF
   IFF(2)=IFF(1)
  ENDDO
+ 
+ WRITE(IU(2),'(A)') 'END'
+
  DO J=1,SIZE(IU); CLOSE(IU(J)); ENDDO
  
  END SUBROUTINE TRACECONVERTTOGEN
@@ -460,7 +464,7 @@ IFFLOOP: DO I=1,SIZE(IPF)
        NP(IPF(I)%INQ,1)=NP(IPF(I)%INQ,1)+1
        DO J=1,N-1
         LINE=TRIM(ITOS(IFF(J)%ID))  //','//TRIM(ITOS(IFF(J)%IL))//','// &
-          TRIM(RTOS(IFF(J)%X,'*',2))//','//TRIM(RTOS(IFF(J)%Y,'*',2))//','//TRIM(RTOS(IFF(J)%Z,'*',2))//','// &
+          TRIM(RTOS(IFF(J)%X,'F',2))//','//TRIM(RTOS(IFF(J)%Y,'F',2))//','//TRIM(RTOS(IFF(J)%Z,'F',3))//','// &
           TRIM(RTOS(IFF(J)%T,'E',5))//','//TRIM(RTOS(IFF(J)%V,'E',5))//','// &
           TRIM(ITOS(IFF(J)%IROW))   //','//TRIM(ITOS(IFF(J)%ICOL))
         WRITE(JU(IPF(I)%INQ,1),'(A)') TRIM(LINE)
