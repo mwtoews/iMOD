@@ -745,8 +745,8 @@ CONTAINS
 
  !## total resistance (days)
  BVALUE(3)=CT
- !## transform into k=values
- BVALUE(3)=(MATH(1)%TOP-MATH(SIZE(MATH))%BOT)/BVALUE(3)
+! !## transform into k=values
+! BVALUE(3)=(MATH(1)%TOP-MATH(SIZE(MATH))%BOT)/BVALUE(3)
  
  END SUBROUTINE MATH1_SIM
 
@@ -801,22 +801,25 @@ CONTAINS
  K(1)=KDX / DZ
  K(2)=KDY / DZ
 
- !## get total q over last
- TQ(3)=0.0
- !## get mean head
- DH(3)=0.0
- NH   =0.0
- DO IROW=1,NROW
-  DO ICOL=1,NCOL
-   IF(IB(ICOL,IROW,NLAY-1).NE.0.AND.IB(ICOL,IROW,NLAY).NE.0)THEN
-    D=ABS(HNEW(ICOL,IROW,NLAY)-HNEW(ICOL,IROW,NLAY-1))
-    DH(3)=DH(3)+HNEW(ICOL,IROW,NLAY) 
-    TQ(3)=TQ(3)+(CV(ICOL,IROW,NLAY-1)*D)
-    NH   =NH+1.0
-   ENDIF
+ DO ILAY=2,NLAY
+  !## get total q over last
+  TQ(3)=0.0
+  !## get mean head
+  DH(3)=0.0
+  NH   =0.0
+  DO IROW=1,NROW
+   DO ICOL=1,NCOL
+    IF(IB(ICOL,IROW,ILAY-1).NE.0.AND.IB(ICOL,IROW,ILAY).NE.0)THEN
+     D=ABS(HNEW(ICOL,IROW,ILAY)-HNEW(ICOL,IROW,ILAY-1))
+     DH(3)=DH(3)+HNEW(ICOL,IROW,ILAY) 
+     TQ(3)=TQ(3)+(CV(ICOL,IROW,ILAY-1)*D)
+     NH   =NH+1.0
+    ENDIF
+   ENDDO
   ENDDO
+!  WRITE(*,*) ILAY,DH(3),TQ(3),NH
  ENDDO
-
+ 
  !## dz used --- m3/day -> m2/day
  IF(QRATE.EQ.0.0)THEN
   SQ=TQ(3)
@@ -829,9 +832,11 @@ CONTAINS
 !  VCZ=ABS(QRATE)/(DH(3)/NH)
  ENDIF
 
- K(3)=SQ/(DP*A)
+ K(3)=SQ/((DP/DZ)*A)
  
- TC=DZ/K(3) !((DP/DZ)/SQ)*A
+ TC=DZ/K(3) 
+ !## storage resistance
+ K(3)=TC
 
 ! !## conductance between the inlet (top) and outlet (under)
 ! TC=(REAL(NCOL)*MATH(1)%DX*REAL(NROW)*MATH(1)%DY)/VCZ
