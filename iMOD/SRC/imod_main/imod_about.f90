@@ -37,19 +37,26 @@ CONTAINS
 
  CALL WDIALOGLOAD(ID_DABOUT)
  CALL WDIALOGPUTSTRING(IDF_STRING1,'About iMOD'//NEWLINE//NEWLINE// &
- 'iMOD stands for Interactive MODeling and is a user-friendly interface (iMOD and iMODFLOW) to support the use of (large-scale) '//&
- 'groundwater flow models, based upon the concept of MODFLOW. iMOD is specially designed to handle large models that can not be '//&
- 'supported by commercial GUIs, such as GMS, Visual Modflow.'//NEWLINE// &
- 'iMODs philosophy is to construct on a large scale input files for a variety of parameters that are needed for '// &
- 'a groundwater flow model. Instead of focussing on a local area for which a local study needs to be carried out, '// &
- 'data is collected '// &
- 'for a large area. Within this large area other local models may be constructed in the near future. As a result, the '// &
- 'applicability of '// &
- 'the model increases, also because various models can be constructed with different grid sizes with local grid refinements. '// &
- 'Another '// &
- 'simplification compared to the commercial packages is that iMOD uses iMODLOW, restricting the number of different input '// &
- 'formats drastically '//&
- 'to maximal 4, with one format covering about 90% of all input- and output parameters.'//NEWLINE//NEWLINE// &
+ 'iMOD: a new framework for MODFLOW and geo-modeling'//NEWLINE//NEWLINE// &
+ 'iMOD is an easy to use Graphical User Interface + an accelerated Deltares-version of MODFLOW with fast, flexible and consistent sub-domain modeling techniques. iMOD facilitates very large, high resolution MODFLOW groundwater modeling and also geo-editing of the subsurface.'//NEWLINE//NEWLINE// &
+ 'WHY iMOD? iMOD is a fast groundwater modeling environment that allows to build large high resolution groundwater flow models based on a data set expandable to all possible future areas of interest:'//NEWLINE// &
+ ' •  flexibility to generate high or low resolution models everywhere when needed;'//NEWLINE// &
+ ' •  generate sub-domain models of any part of the area covered by your data;'//NEWLINE// &
+ ' •  maintain consistency between regional and inlying sub-domain models;'//NEWLINE// &
+ ' •  update your data set with the details added in a sub-domain model.'//NEWLINE//NEWLINE// &
+! 'iMOD stands for Interactive MODeling and is a user-friendly interface (iMOD and iMODFLOW) to support the use of (large-scale) '//&
+! 'groundwater flow models, based upon the concept of MODFLOW. iMOD is specially designed to handle large models that can not be '//&
+! 'supported by commercial GUIs, such as GMS, Visual Modflow.'//NEWLINE// &
+! 'iMODs philosophy is to construct on a large scale input files for a variety of parameters that are needed for '// &
+! 'a groundwater flow model. Instead of focussing on a local area for which a local study needs to be carried out, '// &
+! 'data is collected '// &
+! 'for a large area. Within this large area other local models may be constructed in the near future. As a result, the '// &
+! 'applicability of '// &
+! 'the model increases, also because various models can be constructed with different grid sizes with local grid refinements. '// &
+! 'Another '// &
+! 'simplification compared to the commercial packages is that iMOD uses iMODLOW, restricting the number of different input '// &
+! 'formats drastically '//&
+! 'to maximal 4, with one format covering about 90% of all input- and output parameters.'//NEWLINE//NEWLINE// &
  'iMOD Code Architect: dr.ing. Peter (PTM) Vermeulen.')
  CALL WDIALOGPUTIMAGE(IDF_PICTURE1,ID_ICONTNO,1)
  CALL WDIALOGPUTIMAGE(IDF_PICTURE2,ID_ICONIMOD,1)

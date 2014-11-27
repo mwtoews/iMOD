@@ -229,7 +229,15 @@
 		<Filter Name="imod_main">
 		<File RelativePath="d:\oss\iMOD\SRC\imod_main\imod_about.f90"/>
 		<File RelativePath="d:\oss\iMOD\SRC\imod_main\imod_help.f90"/>
-		<File RelativePath="d:\oss\iMOD\SRC\imod_main\imod_main.f90"/>
+		<File RelativePath="d:\oss\iMOD\SRC\imod_main\imod_main.f90">
+			<FileConfiguration Name="Debug|Win32">
+				<Tool Name="VFFortranCompilerTool" Preprocess="preprocessYes" PreprocessorDefinitions="WINTERACTER9"/></FileConfiguration>
+			<FileConfiguration Name="Release|x64">
+				<Tool Name="VFFortranCompilerTool" Preprocess="preprocessYes" PreprocessorDefinitions="WINTERACTER9"/></FileConfiguration>
+			<FileConfiguration Name="Debug|x64">
+				<Tool Name="VFFortranCompilerTool" Preprocess="preprocessYes" PreprocessorDefinitions="WINTERACTER9"/></FileConfiguration>
+			<FileConfiguration Name="Release|Win32">
+				<Tool Name="VFFortranCompilerTool" Preprocess="preprocessYes" PreprocessorDefinitions="WINTERACTER9"/></FileConfiguration></File>
 		<File RelativePath="d:\oss\iMOD\SRC\imod_main\imod_pref.f90"/>
 		<File RelativePath="d:\oss\iMOD\SRC\imod_main\imod_pref_par.f90"/>
 		<File RelativePath="d:\oss\iMOD\SRC\imodconfig_x32d.f90">
@@ -250,7 +258,15 @@
 			<FileConfiguration Name="Release|Win32" ExcludedFromBuild="true"/></File></Filter>
 		<Filter Name="imod_manager">
 		<File RelativePath="d:\oss\iMOD\SRC\imod_manager\imod_manager.f90"/>
-		<File RelativePath="d:\oss\iMOD\SRC\imod_manager\imod_prjmanager.f90"/>
+		<File RelativePath="d:\oss\iMOD\SRC\imod_manager\imod_prjmanager.f90">
+			<FileConfiguration Name="Debug|Win32">
+				<Tool Name="VFFortranCompilerTool" Preprocess="preprocessYes" PreprocessorDefinitions="WINTERACTER9"/></FileConfiguration>
+			<FileConfiguration Name="Release|x64">
+				<Tool Name="VFFortranCompilerTool" Preprocess="preprocessYes" PreprocessorDefinitions="WINTERACTER9"/></FileConfiguration>
+			<FileConfiguration Name="Debug|x64">
+				<Tool Name="VFFortranCompilerTool" Preprocess="preprocessYes" PreprocessorDefinitions="WINTERACTER9"/></FileConfiguration>
+			<FileConfiguration Name="Release|Win32">
+				<Tool Name="VFFortranCompilerTool" Preprocess="preprocessYes" PreprocessorDefinitions="WINTERACTER9"/></FileConfiguration></File>
 		<File RelativePath="d:\oss\iMOD\SRC\imod_manager\imod_prjmanager_par.f90"/>
 		<File RelativePath="d:\oss\iMOD\SRC\imod_manager\imod_tagman.F90"/></Filter>
 		<Filter Name="imod_math">

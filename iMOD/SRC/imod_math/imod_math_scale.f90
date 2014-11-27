@@ -719,6 +719,7 @@ CONTAINS
   ENDIF
 
  ENDDO
+ 
  CALL MATH1_SIM_POSTPROC(NCOL,NROW,NLAY,TVALUE)
 
  !## compute arithmetic values for resistance
@@ -759,12 +760,12 @@ CONTAINS
  INTEGER :: IROW,ICOL,ILAY,I
  DOUBLE PRECISION,DIMENSION(3) :: TQ,DH
  DOUBLE PRECISION :: D,VCZ
- REAL :: KDX,KDY,TC,NH,DZ,SQ,DP,A
+ REAL :: KDX,KDY,TC,NH,SQ,DP,A,KV,TZ
 ! real :: z
 ! type(idfobj) :: idf
  
- !## thickness of volume
- DZ=MATH(1)%TOP-MATH(SIZE(MATH))%BOT
+ !## total thickness of volume
+ TZ=SUM(DZ) !MATH(1)%TOP-MATH(SIZE(MATH))%BOT
  !## area
  A=(REAL(NCOL)*MATH(1)%DX*REAL(NROW)*MATH(1)%DY)
 
@@ -798,52 +799,44 @@ CONTAINS
  ENDDO
 
  !## transform transmissivities into k-values for x- and y-direction
- K(1)=KDX / DZ
- K(2)=KDY / DZ
+ K(1)=KDX/TZ !DZ
+ K(2)=KDY/TZ !DZ
 
- DO ILAY=2,NLAY
-  !## get total q over last
-  TQ(3)=0.0
-  !## get mean head
-  DH(3)=0.0
-  NH   =0.0
-  DO IROW=1,NROW
-   DO ICOL=1,NCOL
-    IF(IB(ICOL,IROW,ILAY-1).NE.0.AND.IB(ICOL,IROW,ILAY).NE.0)THEN
-     D=ABS(HNEW(ICOL,IROW,ILAY)-HNEW(ICOL,IROW,ILAY-1))
-     DH(3)=DH(3)+HNEW(ICOL,IROW,ILAY) 
-     TQ(3)=TQ(3)+(CV(ICOL,IROW,ILAY-1)*D)
-     NH   =NH+1.0
-    ENDIF
-   ENDDO
+! DO ILAY=2,NLAY
+ ILAY=NLAY
+
+ !## get total q over last
+ TQ(3)=0.0
+ !## get mean head
+ DH(3)=0.0
+ NH   =0.0
+ DO IROW=1,NROW
+  DO ICOL=1,NCOL
+   IF(IB(ICOL,IROW,ILAY-1).NE.0.AND.IB(ICOL,IROW,ILAY).NE.0)THEN
+    D=ABS(HNEW(ICOL,IROW,ILAY)-HNEW(ICOL,IROW,ILAY-1))
+    DH(3)= DH(3)+HNEW(ICOL,IROW,ILAY) 
+    TQ(3)= TQ(3)+(CV(ICOL,IROW,ILAY-1)*D)
+    NH   = NH+1.0
+   ENDIF
   ENDDO
-!  WRITE(*,*) ILAY,DH(3),TQ(3),NH
  ENDDO
+!  WRITE(*,*) ILAY,DH(3),TQ(3),NH
  
  !## dz used --- m3/day -> m2/day
  IF(QRATE.EQ.0.0)THEN
   SQ=TQ(3)
   DP=DHZ
-  !VCZ=TQ(3)/DHZ
  !## qrate used
  ELSE
   SQ=ABS(QRATE)
   DP=DH(3)/NH
-!  VCZ=ABS(QRATE)/(DH(3)/NH)
  ENDIF
 
- K(3)=SQ/((DP/DZ)*A)
+ KV=SQ/((DP/TZ)*A)
+ TC=TZ/KV
  
- TC=DZ/K(3) 
  !## storage resistance
  K(3)=TC
-
-! !## conductance between the inlet (top) and outlet (under)
-! TC=(REAL(NCOL)*MATH(1)%DX*REAL(NROW)*MATH(1)%DY)/VCZ
-
-! !#3 transform into resistance and than into vertical k-values
-! K(3)=TC
-! K(3)=DZ/K(3)
 
 ! call idfnullify(idf)
 ! idf%xmin=0.0; idf%ymin=0.0; idf%xmax=100.0; idf%ymax=100.0; idf%dx=0.5; idf%dy=idf%dx
