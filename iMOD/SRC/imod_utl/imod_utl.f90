@@ -55,6 +55,43 @@ REAL,PARAMETER,PRIVATE :: SDAY=86400.0
 CONTAINS
 
  !###======================================================================
+ LOGICAL FUNCTION UTL_LOADIMAGE(BMPFNAME,N,IBMPDATA,IBATCH)
+ !###======================================================================
+ IMPLICIT NONE
+ CHARACTER(LEN=256) :: BMPFNAME
+ INTEGER,INTENT(IN) :: N
+ INTEGER,INTENT(OUT),DIMENSION(N) :: IBMPDATA
+ INTEGER,INTENT(IN) :: IBATCH
+ CHARACTER(LEN=256) :: LINE
+ INTEGER :: I
+ LOGICAL :: LEX
+  
+ UTL_LOADIMAGE=.TRUE.
+ 
+ INQUIRE(FILE=BMPFNAME,EXIST=LEX)
+ IF(.NOT.LEX)THEN
+  IF(IBATCH.EQ.0)CALL WMESSAGEBOX(OKONLY,EXCLAMATIONICON,COMMONOK,'File: '//TRIM(BMPFNAME)//CHAR(13)//'does not exists','Error')
+  IF(IBATCH.EQ.1)WRITE(*,'(A)') 'File: '//TRIM(BMPFNAME)//' does not exists'
+  RETURN
+ ENDIF
+ 
+ !## clear existing error
+ I=WINFOERROR(1)
+ CALL IGRLOADIMAGEDATA(BMPFNAME,IBMPDATA)
+ I=WINFOERROR(1)
+ 
+ IF(I.EQ.0)RETURN
+ 
+ CALL WINFOERRORMESSAGE(I,LINE)
+ IF(IBATCH.EQ.0)CALL WMESSAGEBOX(OKONLY,EXCLAMATIONICON,COMMONOK,'Error reading file:'//CHAR(13)// &
+  TRIM(BMPFNAME)//CHAR(13)//'Error message:'//CHAR(13)//TRIM(LINE),'Error')
+ IF(IBATCH.EQ.1)WRITE(*,'(A)') 'Error reading file:'//TRIM(BMPFNAME)//' Error message:'//TRIM(LINE)
+
+ UTL_LOADIMAGE=.FALSE.
+ 
+ END FUNCTION UTL_LOADIMAGE
+ 
+ !###======================================================================
  INTEGER FUNCTION UTL_GETIDPROC(PROC,ICLEAN)
  !###======================================================================
  IMPLICIT NONE

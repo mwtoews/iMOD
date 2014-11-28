@@ -1776,7 +1776,6 @@ CONTAINS
    'iMOD will be terminated, call 030-2564766','Error')
  !## cotanges
  CT=DX/DY
-! CT=DY/DX
 
  DX=0.0
  IF(CT.NE.0.0)DX=WDEPTH*CT !/(1.0/CT)
