@@ -37,9 +37,12 @@ TYPE SERIETYPE
 END TYPE SERIETYPE
 TYPE(SERIETYPE),ALLOCATABLE,DIMENSION(:),SAVE :: SERIE
 
-INTEGER,SAVE :: ICLRRASTER  !## color of raster
-INTEGER,SAVE :: ICLRKNIKCP  !## color of knick-points
-INTEGER,SAVE :: ICLRVIEWAR  !## view of sight in iff/ipf mode
+INTEGER,SAVE :: ICLRRASTER    !## color of raster
+INTEGER,SAVE :: ICLRKNIKCP    !## color of knick-points
+INTEGER,SAVE :: ICLRVIEWAR    !## view of sight in iff/ipf mode
+INTEGER,SAVE :: LINEWIDTHPLOT !## thickness of profile-line
+INTEGER,SAVE :: LINECOLORPLOT !## color of profile-line
+
 INTEGER,SAVE :: IBLOCKLINES=0
 INTEGER,SAVE :: IBLOCKFILLS=1
 INTEGER, SAVE :: LINETHICKNESS=1
