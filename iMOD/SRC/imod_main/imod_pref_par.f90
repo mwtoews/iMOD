@@ -37,7 +37,7 @@ DATA PREF/'USER', &          ! 1
           '---empty---', &   ! 9
           'SCENTOOL',&       !10
           'NORTHARROW',&     !11
-          'SOLIDTOOL', &     !12
+          '---empty---', &   !12
           'ACROBATREADER', & !13
           'LANDUSE', &       !14
           'HLPSOIL', &       !15
