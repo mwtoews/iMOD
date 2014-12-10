@@ -8,13 +8,13 @@
 //
 // Winteracter resource script. 
 //
-// Modified : 09/Dec/2014 17:10:11
+// Modified : 10/Dec/2014 13:21:34
 //
 ///////////////////////////////////////////////////
 //
 // Include files
 //
-#include "winparam.h"
+#include "..\LIB\WINTERACTER\OS_X32\include\winparam.h"
 #ifdef XLIB
 #include "..\LIB\WINTERACTER\OS_X32\include\filesel.rc"
 #include "..\LIB\WINTERACTER\OS_X32\include\colour.rc"
@@ -991,6 +991,7 @@
 #define ID_DSERIESTAB1                    178
 #define ID_DSERIESTAB2                    179
 #define ID_FEED                          1234
+#define ID_ADDLINELABEL                 40242
 
 ///////////////////////////////////////////////////
 //
@@ -5886,7 +5887,7 @@ BEGIN
     CONTROL "&OK",IDOK,"BUTTON",WS_CHILD | WS_VISIBLE | WS_GROUP | WS_TABSTOP | BS_PUSHBUTTON | BS_TEXT | BS_FLAT,    6,  282,   40,   14
     CONTROL "&Help ...",IDHELP,"BUTTON",WS_CHILD | WS_VISIBLE | WS_GROUP | WS_TABSTOP | BS_PUSHBUTTON | BS_TEXT | BS_FLAT,  189,  282,   40,   14
     CONTROL "&Close",IDCANCEL,"BUTTON",WS_CHILD | WS_VISIBLE | WS_TABSTOP | BS_PUSHBUTTON | BS_TEXT | BS_FLAT,  231,  282,   40,   14
-    CONTROL "",IDF_PICTURE2,"STATIC",WS_CHILD | WS_VISIBLE | WS_GROUP | SS_ETCHEDHORZ | SS_NOTIFY | SS_CENTERIMAGE,   14,  178,  246,    1
+    CONTROL "",IDF_PICTURE2,"STATIC",WS_CHILD | WS_VISIBLE | WS_GROUP | SS_ETCHEDHORZ | SS_NOTIFY | SS_CENTERIMAGE,   14,  178,  245,    1
     CONTROL "X Lower Left:",IDF_LABEL5,"STATIC",WS_CHILD | WS_VISIBLE | WS_GROUP | SS_LEFT,   24,  228,   52,    9
     CONTROL "Y Lower Left:",IDF_LABEL6,"STATIC",WS_CHILD | WS_VISIBLE | WS_GROUP | SS_LEFT,   24,  243,   49,    8
     CONTROL "X Upper Right:",IDF_LABEL7,"STATIC",WS_CHILD | WS_VISIBLE | WS_GROUP | SS_LEFT,  132,  229,   49,    8
@@ -9180,7 +9181,8 @@ END
 
 ID_WTIMENU MENU
 BEGIN
-    MENUITEM "Add Node",                                 ID_WTIADD
+    MENUITEM "Change Label [name]",                      ID_ADDLINELABEL
+    MENUITEM "Add Knickpoint",                           ID_WTIADD
 END
 
 ID_WTIMENU RCDATA
@@ -9190,7 +9192,8 @@ END
 
 ID_WTIMENU ISSMENUSTRING
 BEGIN
-ID_WTIADD,"Add a node to the cross-section\0",
+ID_WTIADD,"Add a Knickpoint to the Cross-section\0",
+ID_ADDLINELABEL,"Add Label for Area below line\0",
 0
 END
 
@@ -9544,5 +9547,5 @@ END
 //*WI* FORTSAVE    1
 //*WI* FILENAME    resource.f90
 //*WI* FMODNAME    RESOURCE
-//*WI* LASTTYPE        2
-//*WI* LASTRES       165
+//*WI* LASTTYPE        1
+//*WI* LASTRES        12

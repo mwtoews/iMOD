@@ -1049,7 +1049,7 @@ CONTAINS
  IMPLICIT NONE
  CHARACTER(LEN=*),INTENT(IN) :: FNAME
  INTEGER,INTENT(IN) :: ILAY
- INTEGER :: I,IROW,ICOL,N,IPOS,J,K,NCURVE
+ INTEGER :: I,II,IROW,ICOL,N,IPOS,J,K,NCURVE
  INTEGER,DIMENSION(:),ALLOCATABLE :: IU
  REAL :: XP,YP
  CHARACTER(LEN=12) :: CDATE,CTIME
@@ -1075,16 +1075,16 @@ CONTAINS
     CALL IOSDATE(I,J,K)
     WRITE(IU(ISPF),'(2A,2(I2.2,A1),I4.4)') 'DATE      ',' : ',K,'-',J,'-',I
     CALL IOSTIME(I,J,K)
-    WRITE(IU(ISPF),'(2A,2(I2.2,A1),I4.4)') 'TIME      ',' : ',I,':',J,':',K
+    WRITE(IU(ISPF),'(2A,3(I2.2,A1))') 'TIME      ',' : ',I,':',J,':',K
     WRITE(IU(ISPF),'(3A)') 'FILENAME  ',' : ',TRIM(FNAME)//'\SOLIDTOOL_CROSSECTION'//TRIM(ITOS(ISPF))//'.GEO'
-    WRITE(IU(ISPF),'(3A)') 'CREATED BY',' : ','iMOD version '//TRIM(RVERSION)
+    WRITE(IU(ISPF),'(3A)') 'CREATED BY',' : ','iMOD version '//RVERSION(1:7)//'.00'
     WRITE(IU(ISPF),'(78A1)') ('=',J=1,78)
     WRITE(IU(ISPF),'(A)') '[TITLES]'
     WRITE(IU(ISPF),'(A/)') '[END OF TITLES]'
     WRITE(IU(ISPF),'(A)') '[EXTRA TITLES]'
     WRITE(IU(ISPF),'(A/)') '[END OF EXTRA TITLES]'
     WRITE(IU(ISPF),'(A)') '[ACCURACY]'
-    WRITE(IU(ISPF),'(F14.4)') 0.0
+    WRITE(IU(ISPF),'(F14.4)') 0.001
     WRITE(IU(ISPF),'(A/)') '[END OF ACCURACY]'
     WRITE(IU(ISPF),'(A)') '[POINTS]'
     !## get number of layers to interpolate
@@ -1159,31 +1159,60 @@ CONTAINS
    WRITE(IU(ISPF),'(A/)') '[END OF CURVES]'
    WRITE(IU(ISPF),'(A)') '[BOUNDARIES]'
    WRITE(IU(ISPF),'(I4,A)') NSPF,' - Number of boundaries -'
-   NCURVE=0
-   DO I=1,NTBSOL
-    WRITE(IU(ISPF),'(I6,A)') I-1,' - Boundary number'
+
+   II=0
+   DO I=NTBSOL,1,-1
+    II=II+1
+    WRITE(IU(ISPF),'(I6,A)') II-1,' - Boundary number'
     IF(SPF(ISPF)%PROF(I)%NPOS.LE.0)THEN
      WRITE(IU(ISPF),'(I8,A)') 0,' - Number of curves on boundary, next lines(s) are curvenumbers'
      CYCLE
     ENDIF
     WRITE(IU(ISPF),'(I8,A)') SPF(ISPF)%PROF(I)%NPOS-1,' - Number of curves on boundary, next lines(s) are curvenumbers'
+    !## get the right curve-numbers - reverse order
+    NCURVE=0
+    DO J=1,I-1
+     NCURVE=NCURVE+SPF(ISPF)%PROF(J)%NPOS-1
+    ENDDO
     WRITE(IU(ISPF),'(4X,99I6)') (J,J=NCURVE+1,NCURVE+SPF(ISPF)%PROF(I)%NPOS-1)
-    NCURVE=NCURVE+SPF(ISPF)%PROF(I)%NPOS-1
    END DO
    WRITE(IU(ISPF),'(A/)') '[END OF BOUNDARIES]'
-   WRITE(IU(ISPF),'(A)') '[STDV BOUNDARIES]'
-   WRITE(IU(ISPF),'(A/)') '[END OF STDV BOUNDARIES]'
+
+!   WRITE(IU(ISPF),'(A)') '[STDV BOUNDARIES]'
+!   WRITE(IU(ISPF),'(A/)') '[END OF STDV BOUNDARIES]'
    WRITE(IU(ISPF),'(A)') '[PIEZO LINES]'
+   WRITE(IU(ISPF),'(A)') '   0 - Number of piezometric level lines -'
    WRITE(IU(ISPF),'(A/)') '[END OF PIEZO LINES]'
    WRITE(IU(ISPF),'(A)') '[PHREATIC LINE]'
+   WRITE(IU(ISPF),'(A)') '   0 - Number of the piezometric level line acting as phreatic line -'
    WRITE(IU(ISPF),'(A/)') '[END OF PHREATIC LINE]'
    WRITE(IU(ISPF),'(A)') '[WORLD CO-ORDINATES]'
+   WRITE(IU(ISPF),'(A)') '    0.000 - X world 1 -'
+   WRITE(IU(ISPF),'(A)') '    0.000 - Y world 1 -'
+   WRITE(IU(ISPF),'(A)') '    0.000 - X world 2 -'
+   WRITE(IU(ISPF),'(A)') '    0.000 - Y world 2 -'
    WRITE(IU(ISPF),'(A/)') '[END OF WORLD CO-ORDINATES]'
    WRITE(IU(ISPF),'(A)') '[LAYERS]'
+  
+   WRITE(IU(ISPF),'(A)') '  '//TRIM(ITOS(NTBSOL-1))//' - Number of layers -'
+
+   II=0
+   DO I=NTBSOL-1,1,-1
+    II=II+1
+
+    WRITE(IU(ISPF),'(A)') '   '//TRIM(ITOS(II))//' - Layer number, next line is material of layer'
+    WRITE(IU(ISPF),'(A)') '     '//TRIM(SPF(ISPF)%PROF(I)%LNAME)
+    WRITE(IU(ISPF),'(A)') '     0 - Piezometric level line at top of layer'
+    WRITE(IU(ISPF),'(A)') '     0 - Piezometric level line at bottom of layer'
+    WRITE(IU(ISPF),'(A)') '     '//TRIM(ITOS(I))//' - Boundarynumber at top of layer'
+    WRITE(IU(ISPF),'(A)') '     '//TRIM(ITOS(I-1))//' - Boundarynumber at bottom of layer'
+
+   ENDDO
+
    WRITE(IU(ISPF),'(A/)') '[END OF LAYERS]'
-   WRITE(IU(ISPF),'(A)') '[LAYERLOADS]'
-   WRITE(IU(ISPF),'(A/)') ' - Layers which are loads'
-   WRITE(IU(ISPF),'(A/)') '[END OF LAYERLOADS]'
+!   WRITE(IU(ISPF),'(A)') '[LAYERLOADS]'
+!   WRITE(IU(ISPF),'(A/)') ' - Layers which are loads'
+!   WRITE(IU(ISPF),'(A/)') '[END OF LAYERLOADS]'
    WRITE(IU(ISPF),'(A)') 'END OF GEOMETRY FILE'
   ENDDO
  ENDIF

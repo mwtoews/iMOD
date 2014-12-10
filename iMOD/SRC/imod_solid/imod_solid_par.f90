@@ -36,6 +36,7 @@ TYPE SPFOBJ_PROF
  INTEGER :: NPOS                 !## number of points on cross-section
  INTEGER :: ICLR                 !## colour of the cross-section
  INTEGER :: IWIDTH               !## width of the cross-section
+ CHARACTER(LEN=52) :: LNAME      !## line label
 END TYPE SPFOBJ_PROF
 
 TYPE SPFOBJ
@@ -46,7 +47,7 @@ TYPE SPFOBJ
  TYPE(SPFOBJ_PROF),POINTER,DIMENSION(:) :: PROF
  TYPE(BITMAPOBJ) :: PBITMAP
 END TYPE SPFOBJ
-TYPE(SPFOBJ),ALLOCATABLE,DIMENSION(:),SAVE :: SPF
+TYPE(SPFOBJ),ALLOCATABLE,DIMENSION(:),SAVE :: SPF  
 
 !## to be used for consensus modelling, storage of (supplementary) solids
 TYPE SOLIDOBJ
