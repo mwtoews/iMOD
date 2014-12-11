@@ -1095,8 +1095,11 @@ CONTAINS
    !## check i
    IF(M.GT.N)THEN
     DO WHILE(M.GT.N); M=M/2; ENDDO
-   ELSEIF(M.LT.N)THEN
+   ELSEIF(M.LT.N.AND.M.GT.0)THEN
     DO WHILE(M.LT.N); IF(M*2.GT.N)EXIT; M=M*2; ENDDO
+   !## error occured, probably step too large
+   ELSE
+    M=MP(IPLOT)%LEG%NCLR 
    ENDIF
   ELSE
    M=1
