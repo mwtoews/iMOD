@@ -1099,7 +1099,11 @@ CONTAINS
     DO WHILE(M.LT.N); IF(M*2.GT.N)EXIT; M=M*2; ENDDO
    !## error occured, probably step too large
    ELSE
+    CALL WMESSAGEBOX(OKONLY,EXCLAMATIONICON,COMMONOK,'iMOD can not translate this legend into proper classes'//CHAR(13)// &
+      'A reason for this might be the enormeous legend range.','Error')
     M=MP(IPLOT)%LEG%NCLR 
+    V1=MP(IPLOT)%LEG%CLASS(NLEG) !## min
+    V2=MP(IPLOT)%LEG%CLASS(0)    !## max
    ENDIF
   ELSE
    M=1

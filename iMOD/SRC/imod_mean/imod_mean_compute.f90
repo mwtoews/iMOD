@@ -108,11 +108,11 @@ CONTAINS
                    TRIM(ITOS(FYR))//'-'//TRIM(ITOS(FMN))//'-'//TRIM(ITOS(FDY))//'_to_'// &
                    TRIM(ITOS(TYR))//'-'//TRIM(ITOS(TMN))//'-'//TRIM(ITOS(TDY))//'_L'//TRIM(ITOS(ILAY))//'.IDF'
    IF(TRIM(CFUNC).EQ.'MEAN')THEN
-    MEAN_FTOTAL(II)=TRIM(MEAN_RESDIR)//'\'//TRIM(IDFFILE)//'_count_'// &                                           ! FR 20131011
+    MEAN_FTOTAL(II)=TRIM(MEAN_RESDIR)//'\'//TRIM(IDFFILE)//'_count_'// &                                           
                     TRIM(ITOS(FYR))//'-'//TRIM(ITOS(FMN))//'-'//TRIM(ITOS(FDY))//'_to_'// &
                     TRIM(ITOS(TYR))//'-'//TRIM(ITOS(TMN))//'-'//TRIM(ITOS(TDY))//'_L'//TRIM(ITOS(ILAY))//'.IDF'
    ELSE
-    MEAN_FTOTAL(II)=TRIM(MEAN_RESDIR)//'\'//TRIM(IDFFILE)//'_date_'//TRIM(CFUNC)//'_'// &                          ! FR 20131011  
+    MEAN_FTOTAL(II)=TRIM(MEAN_RESDIR)//'\'//TRIM(IDFFILE)//'_date_'//TRIM(CFUNC)//'_'// &                            
                     TRIM(ITOS(FYR))//'-'//TRIM(ITOS(FMN))//'-'//TRIM(ITOS(FDY))//'_to_'// &
                     TRIM(ITOS(TYR))//'-'//TRIM(ITOS(TMN))//'-'//TRIM(ITOS(TDY))//'_L'//TRIM(ITOS(ILAY))//'.IDF'
    ENDIF

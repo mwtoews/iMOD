@@ -136,9 +136,6 @@
 		<Filter Name="imod_gxg">
 		<File RelativePath="d:\oss\iMOD\SRC\imod_gxg\imod_gxg_compute.f90"/>
 		<File RelativePath="d:\oss\iMOD\SRC\imod_gxg\imod_gxg_par.f90"/></Filter>
-		<Filter Name="imod_hfb">
-		<File RelativePath="d:\oss\iMOD\SRC\imod_hfb\imod_hfb.f90"/>
-		<File RelativePath="d:\oss\iMOD\SRC\imod_hfb\imod_hfb_par.f90"/></Filter>
 		<Filter Name="imod_idfedit">
 		<File RelativePath="d:\oss\iMOD\SRC\imod_idfedit\IMOD_IDFEDIT.F90"/>
 		<File RelativePath="d:\oss\iMOD\SRC\imod_idfedit\imod_idfedit_table.f90">
