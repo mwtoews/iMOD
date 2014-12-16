@@ -572,6 +572,7 @@ ILLOOP: DO
 
  SOLID_NEWMASKS=.FALSE.
 
+ !## solidtool
  IF(IBATCH.EQ.0)THEN
   !## refresh memory
   CALL SOLID_DEALLOCATE()
@@ -592,53 +593,63 @@ ILLOOP: DO
  DO I=1,SIZE(MASK)
   CALL IDFNULLIFY(MASK(I)%IDF)
   !## copy mdlidf setting to masks
-  CALL IDFCOPY(MDLIDF,MASK(I)%IDF)
+  IF(IBATCH.EQ.0)CALL IDFCOPY(SOLIDF(I),MASK(I)%IDF)
+  IF(IBATCH.EQ.1)CALL IDFCOPY(MDLIDF,MASK(I)%IDF)
   NMSK(I)=0
  ENDDO
 
  !## read/scale/cut idf files for mdlidf() extent
  DO I=1,SIZE(SOLIDF)
-  IF(.NOT.IDFREADSCALE(SOLIDF(I)%FNAME,MASK(I)%IDF,2,1,0.0,0))RETURN !## scale mean
+  IF(IBATCH.EQ.0)THEN
+   IF(.NOT.IDFREAD(MASK(I)%IDF,SOLIDF(I)%FNAME,1))RETURN !## scale mean
+  ENDIF
+  IF(IBATCH.EQ.1)THEN
+   IF(.NOT.IDFREADSCALE(SOLIDF(I)%FNAME,MASK(I)%IDF,2,1,0.0,0))RETURN !## scale mean
+  ENDIF
  ENDDO
  
- !## process all existing aquitards to get extinction
- IRAT=0; IRAT1=IRAT
- DO IROW=1,MDLIDF%NROW
-  DO ICOL=1,MDLIDF%NCOL
-   DO I=2,SIZE(SOLIDF)-2,2
-    !## starting heads --- top/bot sequence
-    T=MASK(I)  %IDF%X(ICOL,IROW)
-    B=MASK(I+1)%IDF%X(ICOL,IROW)
-    MASK(I  )%IDF%X(ICOL,IROW)=1
-    MASK(I+1)%IDF%X(ICOL,IROW)=1
-    IF(T.NE.MASK(I)%IDF%NODATA.AND.B.NE.MASK(I+1)%IDF%NODATA)THEN
-     IF(T-B.GT.ZOFFSET)THEN !## thickness aquitard
-      MASK(I  )%IDF%X(ICOL,IROW)=-1
-      MASK(I+1)%IDF%X(ICOL,IROW)=-1
-      NMSK(I)  =NMSK(I)+1
-      NMSK(I+1)=NMSK(I+1)+1
+ IF(IBATCH.EQ.1)THEN
+
+  !## process all existing aquitards to get extinction
+  IRAT=0; IRAT1=IRAT
+  DO IROW=1,MDLIDF%NROW
+   DO ICOL=1,MDLIDF%NCOL
+    DO I=2,SIZE(SOLIDF)-2,2
+     !## starting heads --- top/bot sequence
+     T=MASK(I)  %IDF%X(ICOL,IROW)
+     B=MASK(I+1)%IDF%X(ICOL,IROW)
+     MASK(I  )%IDF%X(ICOL,IROW)=1
+     MASK(I+1)%IDF%X(ICOL,IROW)=1
+     IF(T.NE.MASK(I)%IDF%NODATA.AND.B.NE.MASK(I+1)%IDF%NODATA)THEN
+      IF(T-B.GT.ZOFFSET)THEN !## thickness aquitard
+       MASK(I  )%IDF%X(ICOL,IROW)=-1
+       MASK(I+1)%IDF%X(ICOL,IROW)=-1
+       NMSK(I)  =NMSK(I)+1
+       NMSK(I+1)=NMSK(I+1)+1
+      ENDIF
      ENDIF
+    END DO
+   END DO
+   IF(IBATCH.EQ.0)CALL UTL_WAITMESSAGE(IRAT,IRAT1,IROW,MDLIDF%NROW,'Constructing Masks ... ')
+   IF(IBATCH.EQ.1)WRITE(*,'(A,I10,A)') 'Constructing Masks',(IROW*100)/MDLIDF%NROW,'%'
+  ENDDO
+  !## get max extinction top/bot system (use layer 1 and layer nlay to distinghuish max. size system)
+  DO IROW=1,MDLIDF%NROW
+   DO ICOL=1,MDLIDF%NCOL
+    !## starting heads --- top/bot sequence
+    T=MASK(1)     %IDF%X(ICOL,IROW)
+    B=MASK(NTBSOL)%IDF%X(ICOL,IROW)
+    MASK(1)%IDF%X(ICOL,IROW)=1.0
+    MASK(NTBSOL)%IDF%X(ICOL,IROW)=1.0
+    IF(T.NE.MASK(1)%IDF%NODATA.AND.B.NE.MASK(NTBSOL)%IDF%NODATA)THEN
+     IF(T-B.LE.0.0)THEN; DO I=1,SIZE(SOLIDF); MASK(I)%IDF%X(ICOL,IROW)=0; ENDDO; ENDIF
+    ELSE
+     DO I=1,SIZE(SOLIDF); MASK(I)%IDF%X(ICOL,IROW)=0; ENDDO
     ENDIF
    END DO
   END DO
-  IF(IBATCH.EQ.0)CALL UTL_WAITMESSAGE(IRAT,IRAT1,IROW,MDLIDF%NROW,'Constructing Masks ... ')
-  IF(IBATCH.EQ.1)WRITE(*,'(A,I10,A)') 'Constructing Masks',(IROW*100)/MDLIDF%NROW,'%'
- ENDDO
- !## get max extinction top/bot system (use layer 1 and layer nlay to distinghuish max. size system)
- DO IROW=1,MDLIDF%NROW
-  DO ICOL=1,MDLIDF%NCOL
-   !## starting heads --- top/bot sequence
-   T=MASK(1)     %IDF%X(ICOL,IROW)
-   B=MASK(NTBSOL)%IDF%X(ICOL,IROW)
-   MASK(1)%IDF%X(ICOL,IROW)=1.0
-   MASK(NTBSOL)%IDF%X(ICOL,IROW)=1.0
-   IF(T.NE.MASK(1)%IDF%NODATA.AND.B.NE.MASK(NTBSOL)%IDF%NODATA)THEN
-    IF(T-B.LE.0.0)THEN; DO I=1,SIZE(SOLIDF); MASK(I)%IDF%X(ICOL,IROW)=0; ENDDO; ENDIF
-   ELSE
-    DO I=1,SIZE(SOLIDF); MASK(I)%IDF%X(ICOL,IROW)=0; ENDDO
-   ENDIF
-  END DO
- END DO
+ ENDIF 
+
  DO I=1,SIZE(MASK)
   MASK(I)%FNAME=TRIM(OUTPUTFOLDER)//'\MASK\MASK_L'//TRIM(ITOS(I))//'.IDF'
   MASK(I)%ALIAS='MASK\MASK_L'//TRIM(ITOS(I))//'.IDF'
@@ -657,17 +668,21 @@ ILLOOP: DO
   CALL WDIALOGCLEARFIELD(IDF_MENU1)
   IF(NMASK.GT.0)CALL WDIALOGPUTMENU(IDF_MENU1,MASK%ALIAS,NMASK,1)
  ENDIF
- STRING='Summary of masks (number of cell with thickness of aquitards):'//CHAR(13)
- IF(IBATCH.EQ.1)WRITE(*,'(A)') TRIM(STRING)
- DO I=2,SIZE(NMSK)-1,2
-  IF(IBATCH.EQ.0)THEN
-   STRING=TRIM(STRING)//'mask '//TRIM(ITOS(I))//'+'//TRIM(ITOS(I+1))//': '//TRIM(ITOS(NMSK(I)))//' points'//CHAR(13)
-  ELSEIF(IBATCH.EQ.1)THEN
-   STRING='mask '//TRIM(ITOS(I))//'+'//TRIM(ITOS(I+1))//': '//TRIM(ITOS(NMSK(I)))//' points'
-   WRITE(*,'(A)') TRIM(STRING)
-  ENDIF
- ENDDO
- IF(IBATCH.EQ.0)CALL WMESSAGEBOX(OKONLY,INFORMATIONICON,COMMONOK,TRIM(STRING),'Information')
+
+ IF(IBATCH.EQ.1)THEN
+  STRING='Summary of masks (number of cell with thickness of aquitards):'//CHAR(13)
+  WRITE(*,'(A)') TRIM(STRING)
+  DO I=2,SIZE(NMSK)-1,2
+   IF(IBATCH.EQ.0)THEN
+    STRING=TRIM(STRING)//'mask '//TRIM(ITOS(I))//'+'//TRIM(ITOS(I+1))//': '//TRIM(ITOS(NMSK(I)))//' points'//CHAR(13)
+   ELSEIF(IBATCH.EQ.1)THEN
+    STRING='mask '//TRIM(ITOS(I))//'+'//TRIM(ITOS(I+1))//': '//TRIM(ITOS(NMSK(I)))//' points'
+    WRITE(*,'(A)') TRIM(STRING)
+   ENDIF
+  ENDDO
+ ELSE
+  CALL WMESSAGEBOX(OKONLY,INFORMATIONICON,COMMONOK,TRIM(STRING),'Information')
+ ENDIF
  
  SOLID_NEWMASKS=.TRUE.
 
