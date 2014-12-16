@@ -573,7 +573,7 @@ C4B-----LOCAT>0; READ FORMATTED RECORDS USING FORMAT FMTIN.
       IF(ICLOSE.NE.0) CLOSE(UNIT=LOCAT)
 C
 305   continue                                                          ! DLT
-
+      
 C5------IF CNSTNT NOT ZERO THEN MULTIPLY ARRAY VALUES BY CNSTNT.
       ZERO=0.
       IF(CNSTNT.EQ.ZERO) GO TO 120
@@ -880,6 +880,7 @@ c      CHARACTER*24 ANAME
       real, dimension(5) :: coper                                       ! DLT
       character(len=200) :: oper                                        ! DLT
       integer :: i,iupsc,idosc,jcol                                     ! DLT
+      logical :: loper                                                  ! DLT
 C     ------------------------------------------------------------------
 C
 C1------READ ARRAY CONTROL RECORD AS CHARACTER DATA.
@@ -890,6 +891,7 @@ C2------FORMAT.  SET A FLAG SPECIFYING IF FREE FORMAT OR FIXED FORMAT.
       ICLOSE=0
       IFREE=1
       ICOL=1
+      loper = .false.                                                   ! DLT
       CALL URWORD(CNTRL,ICOL,ISTART,ISTOP,1,N,R,IOUT,IN)
       IF (CNTRL(ISTART:ISTOP).EQ.'CONSTANT') THEN
          LOCAT=0
@@ -922,6 +924,7 @@ c            ! read cnstnt and iprn                                     ! DLT
             call getarithoper(oper,'r',iout,ioper,0,coper,locat)        ! DLT
             call urword(cntrl,icol,istart,istop,1,n,r,iout,in) !fmtin   ! DLT
             call urword(cntrl,icol,istart,istop,2,iprn,r,iout,in) !iprn ! DLT
+            loper = .true.                                              ! DLT
             call applyarithoper(fname,a,jj,ii,ioper,coper)              ! DLT
             iclose = 0                                                  ! DLT
             goto 305                                                    ! DLT
@@ -1009,8 +1012,17 @@ C4C-----LOCAT<0; READ UNFORMATTED ARRAY VALUES.
         READ(LOCAT) KSTP,KPER,PERTIM,TOTIM,TEXT,NCOL,NROW,ILAY
         READ(LOCAT) A
       END IF
-
+      
   305 continue                                                          ! DLT
+      
+      ZERO=0.
+      IF(CNSTNT.EQ.ZERO) GO TO 320
+      if (.not.loper)then
+        DO 310 I=1,II
+        DO 310 J=1,JJ
+        A(J,I)=A(J,I)*CNSTNT
+  310   CONTINUE
+      endif  
 C
 C5------IF CNSTNT NOT ZERO THEN MULTIPLY ARRAY VALUES BY CNSTNT.
       IF(ICLOSE.NE.0) CLOSE(UNIT=LOCAT)
