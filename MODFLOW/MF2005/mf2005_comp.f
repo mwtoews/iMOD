@@ -2749,18 +2749,18 @@ c ------------------------------------------------------------------------------
       real :: x, y
 !.......................................................................
 
+      ok = .true.
+      if (iipf.eq.0) then
+         mf2005_TimeserieInit = ok
+         return
+      end if
+       
       ! set pointers
       call sgwf2bas7pnt(igrid)
       call sgwf2met1pnt(igrid)
 
-      ok = .true.
       if (IUNIT(IUMET).le.0) then
          ok = .false.
-         mf2005_TimeserieInit = ok
-         return
-      end if
-
-      if (iipf.eq.0) then
          mf2005_TimeserieInit = ok
          return
       end if
