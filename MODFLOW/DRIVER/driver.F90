@@ -35,7 +35,7 @@ implicit none
  logical :: mf_steadystate
  integer :: mf_ngrid, mf_igrid
 
-! iPEST with MetaSWAP
+! PEST with MetaSWAP
  integer :: mf_nrow, mf_ncol, mf_nlay
 
 ! parameters
