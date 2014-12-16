@@ -1108,7 +1108,7 @@ C
 C      SPECIFICATIONS:
 C     ------------------------------------------------------------------
       USE GLOBAL,      ONLY:NCOL,NROW,NLAY,IBOUND,HNEW,BUFF,BOTM,NBOTM,
-     1                      LBOTM,CC,CV,IOUT
+     1                      LBOTM,CC,CR,CV,IOUT
       USE GWFBASMODULE,ONLY:HDRY
       USE GWFBCFMODULE,ONLY:IWDFLG,WETFCT,IHDWET,IWETIT,LAYCON,
      1                      HY,CVWD,WETDRY,LAYAVG,
