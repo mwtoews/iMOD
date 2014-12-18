@@ -131,6 +131,7 @@ CONTAINS
  ENDIF
  
  !## do not compute hypothetical borders (lowest one)
+ !## no cross-sections given
  IF(NSPF.EQ.0)THEN
   ISEL_IDF(1)=0; ISEL_IDF(NLAY)=0; DO ILAY=1,NLAY-1,2; ISEL_IDF(ILAY)=0 ; ENDDO
  ENDIF
@@ -412,6 +413,10 @@ CONTAINS
    MDLIDF%DX=MIN(MINVAL(SOLIDF%DX),MINVAL(SOLIDF%DY)); MDLIDF%DY=MDLIDF%DX
   ENDIF
   CALL UTL_IDFSNAPTOGRID(MDLIDF%XMIN,MDLIDF%XMAX,MDLIDF%YMIN,MDLIDF%YMAX,MDLIDF%DX,MDLIDF%NCOL,MDLIDF%NROW)
+  DO I=1,SLD(1)%NINT
+   CALL IDFCOPY(MDLIDF,SOLIDF(I))
+   IF(.NOT.IDFREADSCALE(SLD(1)%INTNAME(I),SOLIDF(I),2,1,0.0,0))RETURN !## scale use mean algorithm
+  ENDDO
  ELSE
   DO I=1,SLD(1)%NINT
    SOLIDF(I)%XMIN=MDLIDF%XMIN; SOLIDF(I)%XMAX=MDLIDF%XMAX
@@ -443,6 +448,7 @@ CONTAINS
 
  !## load solid-fit dialog
  CALL WDIALOGLOAD(ID_DSOLID_CALC,ID_DSOLID_CALC)
+ CALL WDIALOGTITLE('Compute Interfaces')
  CALL WDIALOGPUTIMAGE(ID_PROPERTIES_PCG,ID_ICONPROPERTIES,1)
  CALL WDIALOGPUTIMAGE(ID_PROPERTIES_KRIGING,ID_ICONPROPERTIES,1)
  CALL WDIALOGPUTREAL(IDF_REAL1,0.01,'(F10.3)')
@@ -612,6 +618,7 @@ CONTAINS
  CALL WDIALOGFIELDSTATE(IDF_BUTTON6,I)
  CALL WDIALOGFIELDSTATE(IDF_RADIO8,K)
  CALL WDIALOGFIELDSTATE(IDF_RADIO9,K)
+ CALL WDIALOGFIELDSTATE(IDF_RADIO10,K)
  IF(I.EQ.4)THEN
   CALL WDIALOGPUTSTRING(IDOK,'Export ...')
  ELSE
@@ -767,10 +774,7 @@ CONTAINS
     !## get current x/y location
     CALL IDFGETLOC(SOLIDF(JLAY),IROW,ICOL,X,Y)
 
-!    !## initiate top as basis surfacelevel
-!    CALL IDFIROWICOL(SOLIDF(1),JROW,JCOL,X,Y)
-!    TOP=PCG(1)%HOLD(JCOL,JROW)  
-    !## find top aquifer (always uneven number = bot aquitard)
+    !## find top aquifer 
     ITOP=0
     DO IL1=JLAY-1,1,-1
      CALL IDFIROWICOL(SOLIDF(IL1),JROW,JCOL,X,Y)
@@ -780,12 +784,8 @@ CONTAINS
       ENDIF
      ENDIF
     ENDDO
-!    IL1=MAX(IL1,1)
     
-!    !## initiate bot as basis
-!    CALL IDFIROWICOL(SOLIDF(NLAY),JROW,JCOL,X,Y)
-!    BOT=PCG(NLAY)%HOLD(JCOL,JROW)
-    !## find bot aquifer (always even number = top aquifer)
+    !## find bot aquifer 
     IBOT=0
     DO IL2=JLAY+1,NLAY
      CALL IDFIROWICOL(SOLIDF(IL2),JROW,JCOL,X,Y)
@@ -795,7 +795,6 @@ CONTAINS
       ENDIF
      ENDIF
     ENDDO
-!    IL2=MIN(IL2,NLAY)
     
     !## top/bottom found
     IF(ITOP.EQ.1.AND.IBOT.EQ.1)THEN
@@ -805,52 +804,34 @@ CONTAINS
      !## can not be negative
      DSYS=MAX(0.0,DSYS)
    
-     !## add drain if head above level above layer
-     IF(PCG(1)%HNEW(ICOL,IROW).GE.(TOP-DH))THEN
-      !## create drain
-      DH=MIN(DZ(IL1),DSYS)
-      PCG(1)%HCOF(ICOL,IROW)=PCG(1)%HCOF(ICOL,IROW)-COND
-      PCG(1)%RHS(ICOL,IROW) =PCG(1)%RHS(ICOL,IROW) -COND*(TOP-DH)
-     ENDIF
-
-!     !## add drain if head above level above layer
-!     DO ILAY=JLAY-1,1,-1
-!      DH=MIN(DZ(ILAY),DSYS)
-!      !## skip inactive cells
-!      CALL IDFIROWICOL(SOLIDF(ILAY),JROW,JCOL,X,Y)
-!      IF(PCG(ILAY)%IB(JCOL,JROW).EQ.0)CYCLE
-!      IF(PCG(1)%HNEW(ICOL,IROW).GE.(PCG(ILAY)%HOLD(JCOL,JROW)-DH))THEN
-!       !## create drain
-!       PCG(1)%HCOF(ICOL,IROW)=PCG(1)%HCOF(ICOL,IROW)-COND
-!       PCG(1)%RHS(ICOL,IROW) =PCG(1)%RHS(ICOL,IROW) -COND*(PCG(ILAY)%HOLD(JCOL,JROW)-DH)
-!      ENDIF
-!     ENDDO
-   
-      !## fill bottom constrains (river, all below available layers with constant heads)
-      !## excluding the base (nlay)
-     IF(PCG(1)%HNEW(ICOL,IROW).LE.(BOT+DH))THEN
-      !## create river
+     !## add drain(s) if head above level above layer
+     DO ILAY=JLAY-1,1,-1
       DH=MIN(DZ(ILAY),DSYS)
-      PCG(1)%HCOF(ICOL,IROW)=PCG(1)%HCOF(ICOL,IROW)-COND
-      PCG(1)%RHS(ICOL,IROW) =PCG(1)%RHS(ICOL,IROW) -COND*(BOT+DH)
-     ENDIF
-
-!     !## fill bottom constrains (river, all below available layers with constant heads)
-!     !## excluding the base (nlay)
-!     DO ILAY=JLAY+1,NLAY-1
-!      !## skip inactive cells
-!      CALL IDFIROWICOL(SOLIDF(ILAY),JROW,JCOL,X,Y)
-!!     IF(PCG(ILAY)%IB(JCOL,JROW).EQ.0)CYCLE
-!      !## add river if head below level below and constant head value available (clay)
-!      IF(PCG(ILAY)%IB(JCOL,JROW).LT.0)THEN 
-!       DH=MIN(DZ(ILAY),DSYS)
-!       IF(PCG(1)%HNEW(ICOL,IROW).LE.(PCG(ILAY)%HOLD(JCOL,JROW)+DH))THEN
-!        !## create river
-!        PCG(1)%HCOF(ICOL,IROW)=PCG(1)%HCOF(ICOL,IROW)-COND
-!        PCG(1)%RHS(ICOL,IROW) =PCG(1)%RHS(ICOL,IROW) -COND*(PCG(ILAY)%HOLD(JCOL,JROW)+DH)
-!       ENDIF
-!      ENDIF
-!     ENDDO
+      !## skip inactive cells
+      CALL IDFIROWICOL(SOLIDF(ILAY),JROW,JCOL,X,Y)
+      IF(PCG(ILAY)%IB(JCOL,JROW).EQ.0)CYCLE
+      IF(PCG(1)%HNEW(ICOL,IROW).GE.(PCG(ILAY)%HOLD(JCOL,JROW)-DH))THEN
+       !## create drain
+       PCG(1)%HCOF(ICOL,IROW)=PCG(1)%HCOF(ICOL,IROW)-COND
+       PCG(1)%RHS(ICOL,IROW) =PCG(1)%RHS(ICOL,IROW) -COND*(PCG(ILAY)%HOLD(JCOL,JROW)-DH)
+      ENDIF
+     ENDDO
+   
+     !## fill bottom constrains (river, all below available layers with constant heads)
+     !## excluding the base (nlay)
+     DO ILAY=JLAY+1,NLAY-1
+      !## skip inactive cells
+      CALL IDFIROWICOL(SOLIDF(ILAY),JROW,JCOL,X,Y)
+      !## add river if head below level below and constant head value available (clay)
+      IF(PCG(ILAY)%IB(JCOL,JROW).LT.0)THEN 
+       DH=MIN(DZ(ILAY),DSYS)
+       IF(PCG(1)%HNEW(ICOL,IROW).LE.(PCG(ILAY)%HOLD(JCOL,JROW)+DH))THEN
+        !## create river
+        PCG(1)%HCOF(ICOL,IROW)=PCG(1)%HCOF(ICOL,IROW)-COND
+        PCG(1)%RHS(ICOL,IROW) =PCG(1)%RHS(ICOL,IROW) -COND*(PCG(ILAY)%HOLD(JCOL,JROW)+DH)
+       ENDIF
+      ENDIF
+     ENDDO
      
      IF(IMIDELEV.EQ.1)THEN
       D=DSYS*REAL(JLAY-IL1)
@@ -865,52 +846,6 @@ CONTAINS
  
  ENDIF
  
-! !## add estimate (ghb only if ib.eq.1)
-! IF(IMIDELEV.EQ.1)THEN
-!  DO IROW=1,SOLIDF(JLAY)%NROW; DO ICOL=1,SOLIDF(JLAY)%NCOL
-!
-!   IF(PCG(JLAY)%IB(ICOL,IROW).EQ.1)THEN 
-!    
-!    !## get current x/y location
-!    CALL IDFGETLOC(SOLIDF(JLAY),IROW,ICOL,X,Y)
-!
-!    !## initiate top as basis surfacelevel
-!!    CALL IDFIROWICOL(SOLIDF(1),JROW,JCOL,X,Y)
-!!    TOP=PCG(1)%HOLD(JCOL,JROW)
-!    !## find top aquifer (always uneven number)
-!    DO IL1=JLAY-1,1,-1
-!     CALL IDFIROWICOL(SOLIDF(IL1),JROW,JCOL,X,Y)
-!     IF(JROW.NE.0.AND.JCOL.NE.0)THEN
-!      IF(PCG(IL1)%IB(JCOL,JROW).LT.0)THEN
-!       TOP=PCG(IL1)%HOLD(JCOL,JROW); EXIT
-!      ENDIF
-!     ENDIF
-!    ENDDO
-!    IL1=MAX(IL1,1)
-!   
-!    !## initiate bot as basis
-!!    CALL IDFIROWICOL(SOLIDF(NLAY),JROW,JCOL,X,Y)
-!!    BOT=PCG(NLAY)%HOLD(JCOL,JROW)
-!    !## find bot aquifer (always even number)
-!    DO IL2=JLAY+1,NLAY
-!     CALL IDFIROWICOL(SOLIDF(IL2),JROW,JCOL,X,Y)
-!     IF(PCG(IL2)%IB(JCOL,JROW).LT.0)THEN
-!      BOT=PCG(IL2)%HOLD(JCOL,JROW)
-!      EXIT
-!     ENDIF
-!    ENDDO
-!    IL2=MIN(IL2,NLAY)
-!   
-!    D=(TOP-BOT)/REAL(IL2 -IL1)
-!    D=D*        REAL(JLAY-IL1)
-!    !## create ghb as estimate
-!    PCG(1)%HCOF(ICOL,IROW)=PCG(1)%HCOF(ICOL,IROW)-(COND/1000000.0)
-!    CALL IDFIROWICOL(SOLIDF(IL1),JROW,JCOL,X,Y)
-!    PCG(1)%RHS(ICOL,IROW) =PCG(1)%RHS(ICOL,IROW) -(COND/1000000.0)*(PCG(IL1)%HOLD(JCOL,JROW)-D)
-!   ENDIF
-!  ENDDO; ENDDO
-! ENDIF
-
  !## cross-section in between looser
  IF(ITIGHT.EQ.2)THEN
   DO IROW=1,SOLIDF(JLAY)%NROW; DO ICOL=1,SOLIDF(JLAY)%NCOL
