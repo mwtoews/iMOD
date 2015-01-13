@@ -59,9 +59,9 @@ CONTAINS
  !###======================================================================
  IMPLICIT NONE
  INTEGER :: I,J,K,ITER1,ITER2,ILAY,IROW,ICOL,ITYPE,IL,IECHO,IVERSION,NICNVG, &
-     JKRIGING,ICOMP,NCOMP,NPR,NPC 
+     JKRIGING,ICOMP,NCOMP,NPR,NPC,JROW,JCOL 
  INTEGER,ALLOCATABLE,DIMENSION(:) :: ICNVG
- REAL :: TOP,BOT,C,HCHG,HCHGOLD,S
+ REAL :: TOP,BOT,C,HCHG,HCHGOLD,S,X,Y
  LOGICAL :: LEX
  CHARACTER(LEN=256) :: FNAME
  CHARACTER(LEN=10) :: TXT
@@ -120,7 +120,9 @@ CONTAINS
   ISEL_IDF(ILAY)  =SLD(1)%ICLC(ILAY)
   ICHECK_IDF(ILAY)=SLD(1)%ICHECK(ILAY)
  ENDDO
-
+ !## check always from imodbatch
+ IF(IBATCH.EQ.1)ICHECK_IDF=1
+ 
  !## process all idf's (starting heads) + crosssections (fixed heads/ghb-heads)
  IF(.NOT.SOLID_CALC_FILL())RETURN
  
@@ -219,6 +221,9 @@ CONTAINS
 
      ENDDO
     
+     !## something went wrong, no convergence
+     IF(ITER1.EQ.1.AND.ITER2.EQ.1)ICNVG(ILAY)=0
+
      !## copy solution into hold
      PCG(ILAY)%HOLD=PCG(1)%HNEW
      !## deallocate pcg memory     
@@ -287,8 +292,13 @@ CONTAINS
       '['//TRIM(FNAME)//']','Question')
    IF(WINFODIALOG(4).EQ.1)LEX=.TRUE.
   ELSEIF(IBATCH.EQ.1)THEN
-   WRITE(*,'(A)') 'Part of Solid did not converge. Do you want to save the results so far in:'
-   WRITE(*,'(A$)') '['//TRIM(FNAME)//'] (Y/N) ? '
+   WRITE(*,'(A)') 'Part of Solid did not converge.'
+   DO I=1,NLAY
+    IF(ICNVG(I).EQ.0)WRITE(*,'(A,I3,A)') 'Interface ',I,' NOT solved'
+    IF(ICNVG(I).EQ.1)WRITE(*,'(A,I3,A)') 'Interface ',I,' solved'
+   ENDDO
+   WRITE(*,'(A)') 'Do you want to save the results so far in:'
+   WRITE(*,'(A$)') '['//TRIM(OUTPUTFOLDER)//'] (Y/N) ? '
    READ(*,*) YN; LEX=UTL_CAP(YN,'U').EQ.'Y'
   ENDIF
  ENDIF
@@ -298,53 +308,48 @@ CONTAINS
  
  IF(LEX)THEN 
 
-  !## write results
-  !## make corrections top/bottom
-  DO IROW=1,NROW
-   DO ICOL=1,NCOL
-
-    !## boundary=-1 clay
-    !## make sure top/bot are equal outside boundary=1 (hypothethical) or boundary=-2 (cross-section)
-    IF(NSPF.EQ.0)THEN
-     DO ILAY=2,NLAY-1,2
-      IF(PCG(ILAY)%IB(ICOL,IROW).EQ.1.OR.PCG(ILAY)%IB(ICOL,IROW).EQ.-2)PCG(ILAY+1)%HOLD(ICOL,IROW)=PCG(ILAY)%HOLD(ICOL,IROW)
-     ENDDO
-!     ELSE
-!     !## fill top as constant head whenever ibound=2
-!      DO ILAY=2,NLAY-1,2
-!       IF(PCG(ILAY)%IB(ICOL,IROW).EQ.-2)THEN
-!        PCG(ILAY)%HOLD(ICOL,IROW)=PCG()%HOLD(ICOL,IROW,ILAY-1)
-!       ENDIF
-!      ENDDO
-    ENDIF
-           
-    !## make sure lowest bot is lower than upper top
-    IF(ICHECK_IDF(NLAY).EQ.1)THEN
-     PCG(NLAY)%HOLD(ICOL,IROW)=MIN(PCG(1)%HOLD(ICOL,IROW),PCG(NLAY)%HOLD(ICOL,IROW))
-    ENDIF
-
-    DO ILAY=2,NLAY
-
-     !## check only whenever icheck is active
-     IF(ICHECK_IDF(ILAY).EQ.0)CYCLE
-      
-     !## get upper boundary
-     TOP=PCG(ILAY-1)%HOLD(ICOL,IROW)
-     !## get lower boundary in case constant head
-     BOT=PCG(NLAY)%HOLD(ICOL,IROW)
-     !## try earlier boundary
-     DO IL=ILAY+1,NLAY
-      IF(PCG(IL)%IB(ICOL,IROW).LT.0)THEN
-       BOT=MAX(BOT,PCG(IL)%HOLD(ICOL,IROW))
-       EXIT
+  !## make sure top/bot are equal outside boundary=1 (hypothethical) or boundary=-2 (cross-section)
+  IF(NSPF.EQ.0)THEN
+   DO ILAY=3,NLAY-1,2
+    DO IROW=1,SOLIDF(ILAY)%NROW
+     DO ICOL=1,SOLIDF(ILAY)%NCOL
+      !## get current x/y location
+      CALL IDFGETLOC(SOLIDF(ILAY),IROW,ICOL,X,Y)
+      CALL IDFIROWICOL(SOLIDF(ILAY-1),JROW,JCOL,X,Y)
+      IF(JROW.NE.0.AND.JCOL.NE.0)THEN
+       IF(PCG(ILAY-1)%IB(JCOL,JROW).EQ.1.OR.PCG(ILAY-1)%IB(JCOL,JROW).EQ.-2)PCG(ILAY)%HOLD(ICOL,IROW)=PCG(ILAY-1)%HOLD(JCOL,JROW)
       ENDIF
      ENDDO
-
-     PCG(ILAY)%HOLD(ICOL,IROW)=MAX(PCG(ILAY)%HOLD(ICOL,IROW),BOT)
-     PCG(ILAY)%HOLD(ICOL,IROW)=MIN(PCG(ILAY)%HOLD(ICOL,IROW),TOP)
-
     ENDDO
-
+   ENDDO
+  ENDIF
+            
+  !## make sure lowest bot is lower than upper top
+  IF(ICHECK_IDF(NLAY).EQ.1)THEN
+   DO IROW=1,SOLIDF(NLAY)%NROW
+    DO ICOL=1,SOLIDF(NLAY)%NCOL
+     CALL IDFGETLOC(SOLIDF(NLAY),IROW,ICOL,X,Y)
+     CALL IDFIROWICOL(SOLIDF(1),JROW,JCOL,X,Y)
+     IF(JROW.NE.0.AND.JCOL.NE.0)THEN
+      PCG(NLAY)%HOLD(JCOL,IROW)=MIN(PCG(1)%HOLD(JCOL,JROW),PCG(NLAY)%HOLD(ICOL,IROW))
+     ENDIF
+    ENDDO
+   ENDDO
+  ENDIF
+  
+  !## correct if layers overlap
+  DO ILAY=2,NLAY
+   !## check only whenever icheck is active
+   IF(ICHECK_IDF(ILAY).EQ.0)CYCLE
+   DO IROW=1,SOLIDF(ILAY)%NROW
+    DO ICOL=1,SOLIDF(ILAY)%NCOL
+     CALL IDFGETLOC(SOLIDF(ILAY),IROW,ICOL,X,Y)
+     CALL IDFIROWICOL(SOLIDF(ILAY-1),JROW,JCOL,X,Y)
+     IF(JROW.NE.0.AND.JCOL.NE.0)THEN   
+      TOP=PCG(ILAY-1)%HOLD(JCOL,JROW)
+      PCG(ILAY)%HOLD(ICOL,IROW)=MIN(PCG(ILAY)%HOLD(ICOL,IROW),TOP)
+     ENDIF
+    ENDDO
    ENDDO
   ENDDO
 
@@ -788,6 +793,9 @@ CONTAINS
       ENDIF
      ENDIF
     ENDDO
+    !## use last one - surfacelevel
+    IL1=MAX(1,IL1)
+    IF(ITOP.EQ.0)THEN; TOP=PCG(IL1)%HOLD(JCOL,JROW); ITOP=1; ENDIF
     
     !## find bot aquifer 
     IBOT=0
@@ -799,12 +807,15 @@ CONTAINS
       ENDIF
      ENDIF
     ENDDO
-    
+    !## use last one - base
+    IL2=MIN(NLAY,IL2)
+    IF(IBOT.EQ.0)THEN; BOT=PCG(IL2)%HOLD(JCOL,JROW); IBOT=1; ENDIF
+        
     !## top/bottom found
     IF(ITOP.EQ.1.AND.IBOT.EQ.1)THEN
     
      !## mean thickness available
-     DSYS=(TOP-BOT)/REAL(IL2-IL1)
+     DSYS=(TOP-BOT)/REAL(IL2-IL1-1)
      !## can not be negative
      DSYS=MAX(0.0,DSYS)
    
@@ -840,8 +851,8 @@ CONTAINS
      IF(IMIDELEV.EQ.1)THEN
       D=DSYS*REAL(JLAY-IL1)
       !## create ghb as estimate
-      PCG(1)%HCOF(ICOL,IROW)=PCG(1)%HCOF(ICOL,IROW)-(COND/1000000.0)
-      PCG(1)%RHS(ICOL,IROW) =PCG(1)%RHS(ICOL,IROW) -(COND/1000000.0)*(TOP-D)
+      PCG(1)%HCOF(ICOL,IROW)=PCG(1)%HCOF(ICOL,IROW)-(COND/10000.0)
+      PCG(1)%RHS(ICOL,IROW) =PCG(1)%RHS(ICOL,IROW) -(COND/10000.0)*(TOP-D)
      ENDIF
      
     ENDIF
@@ -855,12 +866,17 @@ CONTAINS
   DO IROW=1,SOLIDF(JLAY)%NROW; DO ICOL=1,SOLIDF(JLAY)%NCOL
    IF(PCG(JLAY)%IB(ICOL,IROW).EQ.3)THEN 
     !## create ghb as estimate
-    PCG(1)%HCOF(ICOL,IROW)=PCG(1)%HCOF(ICOL,IROW)-(COND/10000.0)
-    PCG(1)%RHS(ICOL,IROW) =PCG(1)%RHS(ICOL,IROW) -(COND/10000.0)*PCG(JLAY)%HOLD(ICOL,IROW)
+    PCG(1)%HCOF(ICOL,IROW)=PCG(1)%HCOF(ICOL,IROW)-COND 
+    PCG(1)%RHS(ICOL,IROW) =PCG(1)%RHS(ICOL,IROW) -COND*PCG(JLAY)%HOLD(ICOL,IROW) 
    ENDIF
   ENDDO; ENDDO
  ENDIF
  
+ IF(MINVAL(PCG(1)%IB).EQ.0.AND.MINVAL(PCG(1)%HCOF).EQ.0.0.AND.MAXVAL(PCG(1)%HCOF).EQ.0)THEN
+  IF(IBATCH.EQ.0)CALL WMESSAGEBOX(OKONLY,EXCLAMATIONICON,COMMONOK,'Probably this interface will not compute due to missing boundary conditions','Error')
+  IF(IBATCH.EQ.1)WRITE(*,'(A)') 'Probably this interface will not compute due to missing boundary conditions'
+ ENDIF
+
  END SUBROUTINE SOLID_CALC_CONSTRAINS
 
  !###======================================================================
