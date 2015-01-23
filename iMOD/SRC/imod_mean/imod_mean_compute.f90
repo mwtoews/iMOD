@@ -205,6 +205,8 @@ CONTAINS
     JLIST(K)=I
    ELSE
     L=L+1
+    !## close idf that does not fit into selection
+    CLOSE(IDF(I)%IU)
    ENDIF
   END DO
 
@@ -298,6 +300,8 @@ CONTAINS
     DO ICOL=1,IDF(0)%NCOL
      IF(IDFCP%X(ICOL,IROW).NE.IDFCP%NODATA)THEN
 
+      IF(TRIM(CFUNC).EQ.'PERC')IDF(-1)%X(ICOL,IROW)=0.0
+
       DO I=1,NFILES
        IIDF=JLIST(I)
        !## get idfvalue
@@ -324,7 +328,7 @@ CONTAINS
        ENDIF
       END DO
       IF((TRIM(CFUNC)).EQ.'PERC')THEN
-       CALL UTL_GETMED(XPERC,INT(IDF(-1)%X(ICOL,IROW)),-9999.99,(/0.5/),1,I,XMED)
+       CALL UTL_GETMED(XPERC,INT(IDF(-1)%X(ICOL,IROW)),-999999.9,(/0.5/),1,I,XMED)
        IDF(0)%X(ICOL,IROW)=XMED(1)
       ENDIF
      ENDIF
@@ -345,6 +349,9 @@ CONTAINS
       !## get x/y coordinate
       CALL IDFGETLOC(IDF(0),IROW,ICOL,XC,YC)
 
+      !## reset counter for percentiles
+      IF(TRIM(CFUNC).EQ.'PERC')IDF(-1)%X(ICOL,IROW)=0.0
+            
       DO I=1,NFILES
        IIDF=JLIST(I)
        !## get irow/icol
@@ -376,7 +383,7 @@ CONTAINS
        ENDIF
       END DO
       IF((TRIM(CFUNC)).EQ.'PERC')THEN
-       CALL UTL_GETMED(XPERC,INT(IDF(-1)%X(ICOL,IROW)),-9999.99,(/0.5/),1,I,XMED)
+       CALL UTL_GETMED(XPERC,INT(IDF(-1)%X(ICOL,IROW)),-999999.9,(/0.5/),1,I,XMED)
        IDF(0)%X(ICOL,IROW)=XMED(1)
       ENDIF
      ENDIF
@@ -451,7 +458,7 @@ CONTAINS
                              'To Date: '//TRIM(ITOS(MEAN_TYR))//NEWLINE// &
                              'Including Years: '//TRIM(LINE)//NEWLINE//&
                              'Including Periods: '//TRIM(LINEP))
-  IF(TRIM(CFUNC).EQ.'MEAN')THEN
+  IF(TRIM(CFUNC).EQ.'MEAN'.OR.TRIM(CFUNC).EQ.'PERC')THEN
    CALL IDFFILLCOMMENT(IDF(-1),'Units: Counter'//NEWLINE// &
                                'Ilay: '//TRIM(ITOS(ILAY))//NEWLINE// &
                                'From Date: '//TRIM(ITOS(MEAN_FYR))//NEWLINE// &
@@ -467,8 +474,19 @@ CONTAINS
                                'Including Periods: '//TRIM(LINEP))
   ENDIF
   
-  IF(.NOT.IDFWRITE(IDF(0),MEAN_FMEAN(II),1).OR..NOT.IDFWRITE(IDF(-1),MEAN_FTOTAL(II),1))THEN
-   !## error occured
+  IF(.NOT.IDFWRITE(IDF(0),MEAN_FMEAN(II),1))THEN
+   IF(IBATCH.EQ.0)THEN
+    CALL WMESSAGEBOX(OKONLY,EXCLAMATIONICON,COMMONOK,'Cannot write '//TRIM(MEAN_FMEAN(II)),'Error')
+   ELSE
+    WRITE(*,'(A)') 'Cannot write '//TRIM(MEAN_FMEAN(II))
+   ENDIF
+  ENDIF
+  IF(.NOT.IDFWRITE(IDF(-1),MEAN_FTOTAL(II),1))THEN
+   IF(IBATCH.EQ.0)THEN
+    CALL WMESSAGEBOX(OKONLY,EXCLAMATIONICON,COMMONOK,'Cannot write '//TRIM(MEAN_FTOTAL(II)),'Error')
+   ELSE
+    WRITE(*,'(A)') 'Cannot write '//TRIM(MEAN_FTOTAL(II))
+   ENDIF
   ENDIF
 
   !## make cut to fit polygon only
