@@ -61,8 +61,8 @@ CONTAINS
   !## skip nodata
   IF(IDF(1)%X(ICOL,IROW).EQ.IDF(1)%NODATA)CYCLE
   
-  IF(IROW.GE.80.AND.IROW.LE.130.AND. &
-     ICOL.GE.130.AND.ICOL.LE.180)THEN
+!  IF(IROW.GE.80.AND.IROW.LE.130.AND. &
+!     ICOL.GE.130.AND.ICOL.LE.180)THEN
 
    !## start in the middle
    CALL IDFGETLOC(IDF(1),IROW,ICOL,LX(0),LY(0))
@@ -92,12 +92,15 @@ CONTAINS
 
     !## get new grid location
     CALL IDFIROWICOL(IDF(1),IR,IC,LX(0),LY(0))
+    !## outside model
+    IF(IR.EQ.0.OR.IC.EQ.0)EXIT
+
     IF(IDF(1)%X(IC,IR).EQ.IDF(1)%NODATA)EXIT
 
    ENDDO
    IF(IWRITE.EQ.1)WRITE(IU,*) 'END'
       
-  ENDIF
+!  ENDIF
  ENDDO; ENDDO
  IF(IWRITE.EQ.1)WRITE(IU,*) 'END'
  
@@ -126,7 +129,7 @@ CONTAINS
   A(1)=A(1)+DX*F; A(2)=A(2)+DY*F; AF=AF+F
  ENDDO; ENDDO
 
- SOF_TRACE_GET_ANGLE_MEAN=ATAN2(A(2),A(1)) !/4.0
+ SOF_TRACE_GET_ANGLE_MEAN=ATAN2(A(2),A(1)) 
  
  END FUNCTION SOF_TRACE_GET_ANGLE_MEAN
   
@@ -151,12 +154,12 @@ CONTAINS
  END SUBROUTINE SOF_TRACE_WRITE
  
  !###======================================================================
- SUBROUTINE SOF_MAIN(IDF,IFLOW,IPNTR,IWINDOW,XMIN,YMIN,XMAX,YMAX)
+ SUBROUTINE SOF_MAIN(IDF,IFLOW,IPNTR,IWINDOW,XMIN,YMIN,XMAX,YMAX,CELLSIZE)
  !###======================================================================
  IMPLICIT NONE
  TYPE(IDFOBJ),INTENT(INOUT),DIMENSION(:) :: IDF
  INTEGER,INTENT(IN) :: IWINDOW
- REAL,INTENT(IN) :: XMIN,YMIN,XMAX,YMAX
+ REAL,INTENT(IN) :: XMIN,YMIN,XMAX,YMAX,CELLSIZE
  INTEGER,INTENT(IN) :: IFLOW !## iflow=nul compute depressions, iflow=one, compute flowpaths
  INTEGER,INTENT(IN) :: IPNTR !## ipntr=0 no pointer to stop, 1 use pointer to stop
  INTEGER :: ITIC,ITOC,I,IROW,ICOL
@@ -174,7 +177,8 @@ CONTAINS
   IF(.NOT.IDFREAD(IDF(1),IDF(1)%FNAME,1))THEN; RETURN; ENDIF
  ELSE
   IF(.NOT.IDFREAD(IDF(1),IDF(1)%FNAME,0))THEN; RETURN; ENDIF; CLOSE(IDF(1)%IU)
-  IDF(1)%XMIN=XMIN; IDF(1)%XMAX=XMAX; IDF(1)%YMIN=YMIN; IDF(1)%YMAX=YMAX;
+  IDF(1)%XMIN=XMIN; IDF(1)%XMAX=XMAX; IDF(1)%YMIN=YMIN; IDF(1)%YMAX=YMAX
+  IDF(1)%DX=CELLSIZE; IDF(1)%DY=IDF(1)%DX
   CALL UTL_IDFSNAPTOGRID(IDF(1)%XMIN,IDF(1)%XMAX,IDF(1)%YMIN,IDF(1)%YMAX,IDF(1)%DX,IDF(1)%NCOL,IDF(1)%NROW)
   !## take blockvalue since no scaling is used, only a window is specified
   IF(.NOT.IDFREADSCALE(IDF(1)%FNAME,IDF(1),10,1,0.0,0))THEN; RETURN; ENDIF
@@ -202,16 +206,21 @@ CONTAINS
 
  !## copy dem
  IDF(5)%X=IDF(1)%X
- IF(.NOT.IDFWRITE(IDF(5),IDF(3)%FNAME(:INDEX(IDF(3)%FNAME,'.',.TRUE.)-1)//'_copydem.idf',1))THEN; ENDIF
+ IF(IWINDOW.NE.0)THEN
+  IF(.NOT.IDFWRITE(IDF(5),IDF(3)%FNAME(:INDEX(IDF(3)%FNAME,'.',.TRUE.)-1)//'_copydem.idf',1))THEN; ENDIF
+ ENDIF
  
  !## fill in pitts - fill in gradients for flat-areas using PCG interpolation from higher/lower grounds
  CALL SOF_FILL_PITT(IDF(1),IDF(2),IDF(3),IDF(4))
- IF(.NOT.IDFWRITE(IDF(1),IDF(3)%FNAME(:INDEX(IDF(3)%FNAME,'.',.TRUE.)-1)//'_zmax.idf',1))THEN; ENDIF
+ IF(.NOT.IDFWRITE(IDF(1),IDF(3)%FNAME,1))THEN; ENDIF
+! IF(.NOT.IDFWRITE(IDF(1),IDF(3)%FNAME(:INDEX(IDF(3)%FNAME,'.',.TRUE.)-1)//'_zmax.idf',1))THEN; ENDIF
 
- CALL SOF_COMPUTE_SLOPE_ASPECT(IDF(1),IDF(2),IDF(3))
- IF(.NOT.IDFWRITE(IDF(2),IDF(3)%FNAME(:INDEX(IDF(3)%FNAME,'.',.TRUE.)-1)//'_slope.idf',1))THEN; ENDIF
- IF(.NOT.IDFWRITE(IDF(3),IDF(3)%FNAME(:INDEX(IDF(3)%FNAME,'.',.TRUE.)-1)//'_aspect.idf',1))THEN; ENDIF
-
+ IF(IFLOW.EQ.1)THEN
+  CALL SOF_COMPUTE_SLOPE_ASPECT(IDF(1),IDF(2),IDF(3))
+  IF(.NOT.IDFWRITE(IDF(2),IDF(3)%FNAME(:INDEX(IDF(3)%FNAME,'.',.TRUE.)-1)//'_slope.idf',1))THEN; ENDIF
+  IF(.NOT.IDFWRITE(IDF(3),IDF(3)%FNAME(:INDEX(IDF(3)%FNAME,'.',.TRUE.)-1)//'_aspect.idf',1))THEN; ENDIF
+ ENDIF
+ 
  CALL OSD_TIMER(ITOC)
    
  I=(ITOC/100)-(ITIC/100)
@@ -243,8 +252,8 @@ CONTAINS
    !## slope map allready filled in
    IF(SLOPE%X(ICOL,IROW).NE.SLOPE%NODATA)CYCLE
    
-!    CALL SOF_COMPUTE_GRAD(DEM,ICOL,IROW,DZDX,DZDY)
-    CALL SOF_COMPUTE_GRAD_STEEPEST(DEM,ICOL,IROW,DZDX,DZDY)
+    CALL SOF_COMPUTE_GRAD(DEM,ICOL,IROW,DZDX,DZDY)
+!    CALL SOF_COMPUTE_GRAD_STEEPEST(DEM,ICOL,IROW,DZDX,DZDY)
         
     !## radians  
     S=ATAN(SQRT(DZDX**2.0+DZDY**2.0))
@@ -304,7 +313,7 @@ CONTAINS
   IF(Z(I).LT.0.0)THEN
    AX=AX+GRADX(I)*ABS(Z(I))
    AY=AY+GRADY(I)*ABS(Z(I))
-   NA=NA+ABS(Z(I)) !1.0   
+   NA=NA+ABS(Z(I))    
   ENDIF
  ENDDO
  DZDX=-AX 
@@ -320,7 +329,8 @@ CONTAINS
  INTEGER,INTENT(IN) :: ICOL,IROW
  REAL,INTENT(OUT) :: DZDX,DZDY
  INTEGER :: IR1,IR2,IC1,IC2,I
- REAL,DIMENSION(0:4) :: Z
+ REAL :: Z1,Z2
+ REAL,DIMENSION(0:6) :: Z
  
  !## 1nd order derivative
  IC1=MAX(1,ICOL-1)
@@ -328,71 +338,77 @@ CONTAINS
  IR1=MAX(1,IROW-1)
  IR2=MIN(DEM%NROW,IROW+1)
 
- Z(0)=DEM%X(ICOL,IROW) !## mid
- Z(1)=DEM%X(IC2 ,IROW) !## east
- Z(2)=DEM%X(ICOL ,IR1) !## north
- Z(3)=DEM%X(IC1 ,IROW) !## west
- Z(4)=DEM%X(ICOL ,IR2) !## south
-
- DO I=1,4; IF(Z(I).EQ.DEM%NODATA)Z(I)=DEM%X(ICOL,IROW); ENDDO
- DZDX=( Z(1)-Z(3) )/ (2.0*DEM%DX)
- DZDY=( Z(4)-Z(2) )/ (2.0*DEM%DX)
-
- RETURN
+ if(.false.)then
  
-! LSND=.FALSE.
-!  
-! !## 2nd order derivative
-! IC1=MAX(1,ICOL-1)
-! IC2=MIN(DEM%NCOL,ICOL+1)
-! IR1=MAX(1,IROW-1)
-! IR2=MIN(DEM%NROW,IROW+1)
-!                
-! Z(0)=DEM%X(ICOL,IROW)
-! Z(1)=DEM%X(IC2 ,IR2 )
-! Z(2)=DEM%X(IC2 ,IROW)
-! Z(3)=DEM%X(IC2 ,IR1 )
-! Z(4)=DEM%X(IC1 ,IR2 )
-! Z(5)=DEM%X(IC1 ,IROW)
-! Z(6)=DEM%X(IC1 ,IR1 )
-!    
-! DO I=1,6; IF(Z(I).EQ.DEM%NODATA)Z(I)=DEM%X(ICOL,IROW); ENDDO
+  Z(0)=DEM%X(ICOL,IROW) !## mid
+  Z(1)=DEM%X(IC2 ,IROW) !## east
+  Z(2)=DEM%X(ICOL ,IR1) !## north
+  Z(3)=DEM%X(IC1 ,IROW) !## west
+  Z(4)=DEM%X(ICOL ,IR2) !## south
+
+  DO I=1,4; IF(Z(I).EQ.DEM%NODATA)Z(I)=DEM%X(ICOL,IROW); ENDDO
+  DZDX=( Z(1)-Z(3) )/ (2.0*DEM%DX)
+  DZDY=( Z(4)-Z(2) )/ (2.0*DEM%DX)
+
+  !RETURN
+ 
+ else
+ 
+! tan (slope) = sqrt (b2 + c2)
+!b = (z3 + 2z6 + z9 - z1 - 2z4 - z7) / 8D 
+!c = (z1 + 2z2 + z3 - z7 - 2z8 - z9) / 8D
+!b denotes slope in the x direction 
+!c denotes slope in the y direction 
+!D is the spacing of points (30 m)
+!find the slope that fits best to the 9 elevations 
+!minimizes the total of squared differences between point elevation and the fitted slope 
+!weighting four closer neighbors higher
 !
-! IF(LSND)THEN
-!  Z1=(Z(1)+2.0*Z(2)+Z(3))
-!  Z2=(Z(4)+2.0*Z(5)+Z(6))
+                 
+ Z(0)=DEM%X(ICOL,IROW)
+ Z(1)=DEM%X(IC2 ,IR2 )
+ Z(2)=DEM%X(IC2 ,IROW)
+ Z(3)=DEM%X(IC2 ,IR1 )
+ Z(4)=DEM%X(IC1 ,IR2 )
+ Z(5)=DEM%X(IC1 ,IROW)
+ Z(6)=DEM%X(IC1 ,IR1 )
+    
+ DO I=1,6; IF(Z(I).EQ.DEM%NODATA)Z(I)=DEM%X(ICOL,IROW); ENDDO
+
+ Z1=(Z(1)+2.0*Z(2)+Z(3))
+ Z2=(Z(4)+2.0*Z(5)+Z(6))
 !  IF(Z1/4.0.GT.Z(0).AND.Z2/4.0.GT.Z(0))THEN
 !   DZDX=0.0
 !  ELSE  
-!   DZDX=( Z1 - Z2 )/ (8.0*DEM%DX)
+ DZDX=( Z1 - Z2 )/ (8.0*DEM%DX)
 !  ENDIF
 ! ELSE
 !  DZDX=( Z(2)-Z(5) )/ (2.0*DEM%DX)
 !  IF(Z(2).GT.Z(0).AND.Z(5).GT.Z(0))DZDX=0.0
 ! ENDIF
-!   
-! Z(1)=DEM%X(IC2 ,IR2)
-! Z(2)=DEM%X(ICOL,IR2)
-! Z(3)=DEM%X(IC1 ,IR2)
-! Z(4)=DEM%X(IC2 ,IR1)
-! Z(5)=DEM%X(ICOL,IR1)
-! Z(6)=DEM%X(IC1 ,IR1)
-!
-! DO I=1,6; IF(Z(I).EQ.DEM%NODATA)Z(I)=DEM%X(ICOL,IROW); ENDDO
-!    
-! IF(LSND)THEN
-!  Z1=(Z(1)+2.0*Z(2)+Z(3))
-!  Z2=(Z(4)+2.0*Z(5)+Z(6))
+   
+ Z(1)=DEM%X(IC2 ,IR2)
+ Z(2)=DEM%X(ICOL,IR2)
+ Z(3)=DEM%X(IC1 ,IR2)
+ Z(4)=DEM%X(IC2 ,IR1)
+ Z(5)=DEM%X(ICOL,IR1)
+ Z(6)=DEM%X(IC1 ,IR1)
+
+ DO I=1,6; IF(Z(I).EQ.DEM%NODATA)Z(I)=DEM%X(ICOL,IROW); ENDDO
+    
+ Z1=(Z(1)+2.0*Z(2)+Z(3))
+ Z2=(Z(4)+2.0*Z(5)+Z(6))
 !  IF(Z1/4.0.GT.Z(0).AND.Z2/4.0.GT.Z(0))THEN
 !   DZDY=0.0
 !  ELSE
-!   DZDY=( Z1 - Z2 )/ (8.0*DEM%DX)
-! ! DZDY=( (Z(1)+2.0*Z(2)+Z(3)) - (Z(4)+2.0*Z(5)+Z(6)) )/(8.0*DEM%DY)
+ DZDY=( Z1 - Z2 )/ (8.0*DEM%DX)
+ ! DZDY=( (Z(1)+2.0*Z(2)+Z(3)) - (Z(4)+2.0*Z(5)+Z(6)) )/(8.0*DEM%DY)
 !  ENDIF
 ! ELSE
 !  DZDY=( Z(2)-Z(5) )/ (2.0*DEM%DY)
 !  IF(Z(2).GT.Z(0).AND.Z(5).GT.Z(0))DZDY=0.0
-! ENDIF
+
+ ENDIF
    
  END SUBROUTINE SOF_COMPUTE_GRAD
 
@@ -513,12 +529,6 @@ CONTAINS
  !## trace depression for exit points
  DO I=1,NP
   ICOL=INT(PL(I,1)); IROW=INT(PL(I,2))
-
-!  IF(ICOL.EQ.175.AND.IROW.EQ.160)THEN
-!  WRITE(*,*)
-!  ENDIF
-!  ICOL=148; IROW=130
-!  ICOL=150; IROW=128
   
   !## add this point to the pitt list, remove from the DEM
   !## pitt list
@@ -539,25 +549,13 @@ CONTAINS
 
   !## change all pittpoints for this spill-value (zmax)
   DO J=1,NPPX; DEM%X(PPX(J)%ICOL,PPX(J)%IROW)=ZMAX; ENDDO
-  
-!  IF(PPX(J)%ICOL.EQ.148.AND.PPX(J)%IROW.EQ.130)THEN
-!  WRITE(*,*)
-!  ENDIF
-  
+    
   CALL SOF_FILL_FLATAREAS(DEM,SLOPE,ASPECT,NBPX,NPPX)
-
-!## dummy export
-!  IF(.NOT.IDFWRITE(IDFP,'d:\buffer.idf',1))THEN; ENDIF
-!  IDFP%X=DEM%NODATA
-!  DO J=1,NPPX; IDFP%X(PPX(J)%ICOL,PPX(J)%IROW)=ZMAX; ENDDO
-!  IDFP%NODATA=DEM%NODATA; IF(.NOT.IDFWRITE(IDFP,'d:\zmax.idf',1))THEN; ENDIF
-!  IDFP%NODATA=0.0; IDFP%X=IDFP%NODATA
-!## dummy export
 
   !## clean idfp%x()
   DO J=1,NTPX; IDFP%X(TPX(J)%ICOL,TPX(J)%IROW)=IDFP%NODATA; ENDDO 
 
-  F=REAL(I)/REAL(NP)*100.0; WRITE(6,'(A,F10.3,2(A,I5),A)') '+Progress finished ',F,' % (nppx= ',NPPX,' ; nbpx= ',NBPX,')'
+  F=REAL(I)/REAL(NP)*100.0; WRITE(6,'(A,F10.3,2(A,I5),A)') '+Progress finished of pitts:',F,' % (nppx= ',NPPX,' ; nbpx= ',NBPX,')'
    
  ENDDO
  
