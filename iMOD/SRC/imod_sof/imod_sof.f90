@@ -29,6 +29,8 @@ USE MOD_OSD, ONLY : OSD_TIMER,OSD_OPEN
 USE MOD_UTL, ONLY : UTL_IDFSNAPTOGRID,UTL_GETUNIT,UTL_DIST
 USE MOD_SOLID_PCG, ONLY : SOLID_PCGINT
 USE MOD_SOLID_PAR, ONLY : HCLOSE,MXITER1,MXITER2,IDAMPING,RELAX,ITIGHT
+USE MOD_IPF, ONLY : IPFALLOCATE,IPFREAD2,IPFDEALLOCATE
+USE MOD_IPF_PAR, ONLY : IPF,NIPF
 USE IMODVAR, ONLY : PI
 
 REAL,POINTER,DIMENSION(:,:),PRIVATE :: PL,PL_BU
@@ -43,46 +45,107 @@ TYPE(BPXOBJ),ALLOCATABLE,DIMENSION(:),PRIVATE :: BPX,PPX,TPX
 CONTAINS
 
  !###======================================================================
- SUBROUTINE SOF_TRACE(IDF,IWRITE)
+ SUBROUTINE SOF_TRACE(IDF,IWRITE,FRACTION)
  !###======================================================================
  IMPLICIT NONE
- REAL,PARAMETER :: F=0.25
+ REAL,INTENT(IN) :: FRACTION
  TYPE(IDFOBJ),INTENT(INOUT),DIMENSION(:) :: IDF
  INTEGER,INTENT(IN) :: IWRITE
- INTEGER :: IROW,ICOL,IR,IC,IP,IU,I,JR,JC,NF
- REAL :: A,DX,DY
+ INTEGER :: IROW,ICOL,IR,IC,IP,IU,I,NF
+ REAL :: A,DX,DY,F,SSX,SSY
  REAL,DIMENSION(0:2) :: LX,LY
+ REAL,DIMENSION(4) :: RK
+ LOGICAL :: LRUNGAKUTTA
  
- IF(IWRITE.EQ.1)THEN
-  IU=UTL_GETUNIT(); CALL OSD_OPEN(IU,FILE='D:\TEST_TRACE3.GEN',STATUS='UNKNOWN')
- ENDIF
+ LRUNGAKUTTA=.TRUE.
+ 
+ F=FRACTION
+ 
  IF(.NOT.IDFREAD(IDF(1),IDF(1)%FNAME,1))THEN; ENDIF
+ 
+ CALL IDFCOPY(IDF(1),IDF(2)) !## total passes of particles
+ CALL IDFCOPY(IDF(1),IDF(3)) !## counts individual particles
+
+ IF(IDF(4)%FNAME.NE.'')THEN
+  CALL IDFCOPY(IDF(1),IDF(4))
+  !## read entire ipf
+  NIPF=1; CALL IPFALLOCATE(); IPF(1)%XCOL=1; IPF(1)%YCOL=2; IPF(1)%ZCOL=3; IPF(1)%Z2COL=1; IPF(1)%QCOL=1 
+  IPF(1)%FNAME=IDF(4)%FNAME; IF(.NOT.IPFREAD2(1,1,0))RETURN
+  IDF(3)%FNAME=IDF(1)%FNAME(:INDEX(IDF(1)%FNAME,'.',.TRUE.)-1)//'_ZONE.IDF'
+  DO I=1,IPF(1)%NROW
+   CALL IDFIROWICOL(IDF(3),IROW,ICOL,IPF(1)%XYZ(1,I),IPF(1)%XYZ(2,I))
+   IDF(3)%X(ICOL,IROW)=IPF(1)%XYZ(I,3)
+  ENDDO
+  CALL IPFDEALLOCATE()
+ ENDIF
+
+ IF(IWRITE.EQ.1)THEN
+  IU=UTL_GETUNIT(); CALL OSD_OPEN(IU,FILE=IDF(1)%FNAME(:INDEX(IDF(1)%FNAME,'.',.TRUE.)-1)//'.GEN',STATUS='UNKNOWN')
+ ENDIF
+
+ WRITE(6,'(1X,A/)') 'Tracing ...'
+ IDF(2)%X=0.0
+ IDF(3)%X=0.0
+ 
  IP=0; DO IROW=1,IDF(1)%NROW; DO ICOL=1,IDF(1)%NCOL
   !## skip nodata
   IF(IDF(1)%X(ICOL,IROW).EQ.IDF(1)%NODATA)CYCLE
   
 !  IF(IROW.GE.80.AND.IROW.LE.130.AND. &
 !     ICOL.GE.130.AND.ICOL.LE.180)THEN
+!  IF(IROW.GE.65.AND.IROW.LE.100.AND. &
+!     ICOL.GE.95.AND.ICOL.LE.113)THEN
+!  IF(IROW.EQ.74.AND.ICOL.EQ.102)THEN
 
    !## start in the middle
    CALL IDFGETLOC(IDF(1),IROW,ICOL,LX(0),LY(0))
    IP=IP+1; WRITE(IU,*) IP; WRITE(IU,'(2(F15.3,1X))') LX(0),LY(0)
    IC=ICOL; IR=IROW
-
+   IDF(2)%X(IC,IR)=IDF(2)%X(IC,IR)+1.0
+   IDF(3)%X(IC,IR)=REAL(IP)
+   
    NF=0
    DO
     NF=NF+1
     IF(NF.GT.1000)EXIT
 
-    !## verbeteringen: gradienten op basis van afstand bepalen (gewogen naar afstand)
+    !## stepsize
+    SSX=F*IDF(1)%DX; SSY=SSX
 
     !## get gradient on entry point
-    A=SOF_TRACE_GET_ANGLE_MEAN(IDF(1),IC,IR,LX(0),LY(0))        
+    IF(LRUNGAKUTTA)THEN
 
-    DX=-COS(A)*F*IDF(1)%DX
-    DY=-SIN(A)*F*IDF(1)%DY
-    LX(1)=LX(0)+DX
-    LY(1)=LY(0)+DY   
+     !## first order
+     RK(1)=SOF_TRACE_GET_ANGLE_MEAN(IDF(1),LX(0),LY(0))
+     
+     !## second order
+     DX=-COS(RK(1))*SSX*0.5; DY=-SIN(RK(1))*SSY*0.5
+     LX(1)=LX(0)+DX; LY(1)=LY(0)+DY
+     RK(2)=SOF_TRACE_GET_ANGLE_MEAN(IDF(1),LX(1),LY(1))
+
+     !## third order
+     DX=-COS(RK(2))*SSX*0.5; DY=-SIN(RK(2))*SSY*0.5
+     LX(1)=LX(0)+DX; LY(1)=LY(0)+DY
+     RK(3)=SOF_TRACE_GET_ANGLE_MEAN(IDF(1),LX(1),LY(1))
+
+     !## fourth order
+     DX=-COS(RK(3))*SSX; DY=-SIN(RK(3))*SSY
+     LX(1)=LX(0)+DX; LY(1)=LY(0)+DY
+     RK(4)=SOF_TRACE_GET_ANGLE_MEAN(IDF(1),LX(1),LY(1))
+
+     DX=0.0; DY=0.0
+     DX=DX+COS(RK(1))*SSX;     DY=DY+SIN(RK(1))*SSY
+     DX=DX+COS(RK(2))*SSX*2.0; DY=DY+SIN(RK(2))*SSY*2.0
+     DX=DX+COS(RK(3))*SSX*2.0; DY=DY+SIN(RK(3))*SSY*2.0
+     DX=DX+COS(RK(4))*SSX;     DY=DY+SIN(RK(4))*SSY
+     A=ATAN2(DY,DX)
+     
+    ELSE
+     A=SOF_TRACE_GET_ANGLE_MEAN(IDF(1),LX(0),LY(0))
+    ENDIF
+    
+    DX=-COS(A)*SSX; DY=-SIN(A)*SSY
+    LX(1)=LX(0)+DX; LY(1)=LY(0)+DY   
    
     !## new coordinates
     LX(0)=LX(1); LY(0)=LY(1)
@@ -92,33 +155,66 @@ CONTAINS
 
     !## get new grid location
     CALL IDFIROWICOL(IDF(1),IR,IC,LX(0),LY(0))
-    !## outside model
-    IF(IR.EQ.0.OR.IC.EQ.0)EXIT
 
+    !## outside model
+    IF(IR.EQ.0.OR.IR.GT.IDF(1)%NROW.OR.IC.EQ.0.OR.IC.GT.IDF(1)%NCOL)EXIT
+    !## trapped in nodata area
     IF(IDF(1)%X(IC,IR).EQ.IDF(1)%NODATA)EXIT
+    
+    !## count particles passes
+    IF(IDF(3)%X(IC,IR).NE.REAL(IP))IDF(2)%X(IC,IR)=IDF(2)%X(IC,IR)+1.0
+    !## not to be counted again
+    IDF(3)%X(IC,IR)=REAL(IP)
+
+!## trace particle in thread and whenever trace is captured, stop processing and add selected tread (heb ik al eerder gedaan)
 
    ENDDO
    IF(IWRITE.EQ.1)WRITE(IU,*) 'END'
       
 !  ENDIF
- ENDDO; ENDDO
+ ENDDO; WRITE(6,'(A,F7.3,A)') '+Progress ',REAL(IROW*100)/REAL(IDF(1)%NROW),' % finished        '; ENDDO
+
  IF(IWRITE.EQ.1)WRITE(IU,*) 'END'
- 
+ CLOSE(IU)
+  
+ IF(.NOT.IDFWRITE(IDF(2),IDF(1)%FNAME(:INDEX(IDF(1)%FNAME,'.',.TRUE.)-1)//'_COUNT.IDF',1))THEN; ENDIF
+
  END SUBROUTINE SOF_TRACE
 
  !###======================================================================
- REAL FUNCTION SOF_TRACE_GET_ANGLE_MEAN(IDF,IC,IR,XC,YC)
+ REAL FUNCTION SOF_TRACE_GET_ANGLE_MEAN(IDF,XC,YC)
  !###======================================================================
  IMPLICIT NONE
  TYPE(IDFOBJ),INTENT(IN) :: IDF
- INTEGER,INTENT(IN) :: IC,IR
  REAL,INTENT(IN) :: XC,YC
  REAL,DIMENSION(2) :: A
- INTEGER :: IQ,IROW,ICOL
+ INTEGER :: IQ,IROW,ICOL,IC1,IC2,IR1,IR2,IC,IR
  REAL :: DX,DY,X1,Y1,F,AF
-  
+
+ !## get proper cell
+ CALL IDFIROWICOL(IDF,IR,IC,XC,YC)
+ !## get midpoint
+ CALL IDFGETLOC(IDF,IR,IC,X1,Y1)
+ !##get quadrants
+ IF(X1.GE.XC)THEN
+  IC1=IC-1; IC2=IC
+  IF(Y1.LE.YC)THEN
+   IR1=IR-1; IR2=IR  !## top right
+  ELSE
+   IR1=IR; IR2=IR+1  !## bottom right
+  ENDIF
+ ELSE
+  IC1=IC; IC2=IC+1
+  IF(Y1.LE.YC)THEN
+   IR1=IR-1; IR2=IR  !## top left
+  ELSE
+   IR1=IR; IR2=IR+1  !## bottom left
+  ENDIF
+ ENDIF
+    
+ !## handig om gemiddelde vector tenemen van 8 punten , beter denk gemiddelde van 4 dichtbijgelegen punten
  A=0.0; AF=0.0
- DO IROW=MAX(1,IR-1),MIN(IDF%NROW,IR+1); DO ICOL=MAX(1,IC-1),MIN(IDF%NCOL,IC+1)
+ DO IROW=MAX(1,IR1),MIN(IDF%NROW,IR2); DO ICOL=MAX(1,IC1),MIN(IDF%NCOL,IC2)
   CALL IDFGETLOC(IDF,IROW,ICOL,X1,Y1)
   F=UTL_DIST(XC,YC,X1,Y1)
   IF(F.EQ.0.0)THEN
@@ -132,26 +228,6 @@ CONTAINS
  SOF_TRACE_GET_ANGLE_MEAN=ATAN2(A(2),A(1)) 
  
  END FUNCTION SOF_TRACE_GET_ANGLE_MEAN
-  
- !###======================================================================
- SUBROUTINE SOF_TRACE_WRITE(IU,IDF,X,Y,ICOL,IROW)
- !###======================================================================
- TYPE(IDFOBJ),INTENT(IN) :: IDF
- REAL,INTENT(IN) :: X,Y
- INTEGER,INTENT(IN) :: ICOL,IROW,IU
- 
- CALL IDFGETLOC(IDF,IROW,ICOL,XC,YC)
- !## transform to lower-left-corner
- XC=XC-IDF%DX/2.0
- YC=YC-IDF%DY/2.0
- !## get location 
- XC=XC+X*IDF%DX
- YC=YC+Y*IDF%DY
-
- WRITE(IU,'(2(F15.3,1X))') XC,YC
- flush(iu)
-  
- END SUBROUTINE SOF_TRACE_WRITE
  
  !###======================================================================
  SUBROUTINE SOF_MAIN(IDF,IFLOW,IPNTR,IWINDOW,XMIN,YMIN,XMAX,YMAX,CELLSIZE)
@@ -215,11 +291,9 @@ CONTAINS
  IF(.NOT.IDFWRITE(IDF(1),IDF(3)%FNAME,1))THEN; ENDIF
 ! IF(.NOT.IDFWRITE(IDF(1),IDF(3)%FNAME(:INDEX(IDF(3)%FNAME,'.',.TRUE.)-1)//'_zmax.idf',1))THEN; ENDIF
 
- IF(IFLOW.EQ.1)THEN
-  CALL SOF_COMPUTE_SLOPE_ASPECT(IDF(1),IDF(2),IDF(3))
-  IF(.NOT.IDFWRITE(IDF(2),IDF(3)%FNAME(:INDEX(IDF(3)%FNAME,'.',.TRUE.)-1)//'_slope.idf',1))THEN; ENDIF
-  IF(.NOT.IDFWRITE(IDF(3),IDF(3)%FNAME(:INDEX(IDF(3)%FNAME,'.',.TRUE.)-1)//'_aspect.idf',1))THEN; ENDIF
- ENDIF
+ CALL SOF_COMPUTE_SLOPE_ASPECT(IDF(1),IDF(2),IDF(3))
+ IF(.NOT.IDFWRITE(IDF(2),IDF(3)%FNAME(:INDEX(IDF(3)%FNAME,'.',.TRUE.)-1)//'_slope.idf',1))THEN; ENDIF
+ IF(.NOT.IDFWRITE(IDF(3),IDF(3)%FNAME(:INDEX(IDF(3)%FNAME,'.',.TRUE.)-1)//'_aspect.idf',1))THEN; ENDIF
  
  CALL OSD_TIMER(ITOC)
    
@@ -251,26 +325,29 @@ CONTAINS
    IF(DEM%X(ICOL,IROW).EQ.DEM%NODATA)CYCLE
    !## slope map allready filled in
    IF(SLOPE%X(ICOL,IROW).NE.SLOPE%NODATA)CYCLE
-   
-    CALL SOF_COMPUTE_GRAD(DEM,ICOL,IROW,DZDX,DZDY)
-!    CALL SOF_COMPUTE_GRAD_STEEPEST(DEM,ICOL,IROW,DZDX,DZDY)
+
+!   if(icol.eq.102.and.irow.eq.74)then
+!   write(*,*) 'dsds'
+!   endif
+
+!   CALL SOF_COMPUTE_GRAD(DEM,ICOL,IROW,DZDX,DZDY)
+
+   !## from DEM it is much better to use this direction instead
+   CALL SOF_COMPUTE_GRAD_STEEPEST(DEM,ICOL,IROW,DZDX,DZDY)
         
-    !## radians  
-    S=ATAN(SQRT(DZDX**2.0+DZDY**2.0))
-    A=ATAN2(-1.0*DZDY,DZDX)
+   !## radians  
+   S=ATAN(SQRT(DZDX**2.0+DZDY**2.0))
+   A=ATAN2(-1.0*DZDY,DZDX)
 
     !## degrees
 !    S=S*(360.0/(2.0*3.1415)) 
 !    A=A*(360.0/(2.0*3.1415))
     
-    IF(S.NE.0.0)THEN
-     SLOPE%X(ICOL,IROW) =S
-     ASPECT%X(ICOL,IROW)=A
-    ENDIF
+   IF(S.NE.0.0)THEN
+    SLOPE%X(ICOL,IROW) =S
+    ASPECT%X(ICOL,IROW)=A
+   ENDIF
       
-!  XYPOL(1,1)=X1+COS(TNG)*XSIGHT
-!  XYPOL(1,2)=Y1+SIN(TNG)*XSIGHT
-
   ENDDO
  ENDDO
  
@@ -350,9 +427,7 @@ CONTAINS
   DZDX=( Z(1)-Z(3) )/ (2.0*DEM%DX)
   DZDY=( Z(4)-Z(2) )/ (2.0*DEM%DX)
 
-  !RETURN
- 
- else
+ ELSE
  
 ! tan (slope) = sqrt (b2 + c2)
 !b = (z3 + 2z6 + z9 - z1 - 2z4 - z7) / 8D 
@@ -363,50 +438,33 @@ CONTAINS
 !find the slope that fits best to the 9 elevations 
 !minimizes the total of squared differences between point elevation and the fitted slope 
 !weighting four closer neighbors higher
-!
                  
  Z(0)=DEM%X(ICOL,IROW)
- Z(1)=DEM%X(IC2 ,IR2 )
- Z(2)=DEM%X(IC2 ,IROW)
- Z(3)=DEM%X(IC2 ,IR1 )
- Z(4)=DEM%X(IC1 ,IR2 )
- Z(5)=DEM%X(IC1 ,IROW)
- Z(6)=DEM%X(IC1 ,IR1 )
+ Z(1)=DEM%X(IC2 ,IR2 ) !## right-down
+ Z(2)=DEM%X(IC2 ,IROW) !## right
+ Z(3)=DEM%X(IC2 ,IR1 ) !## right-up
+ Z(4)=DEM%X(IC1 ,IR2 ) !## left-down
+ Z(5)=DEM%X(IC1 ,IROW) !## left
+ Z(6)=DEM%X(IC1 ,IR1 ) !## left-up
     
  DO I=1,6; IF(Z(I).EQ.DEM%NODATA)Z(I)=DEM%X(ICOL,IROW); ENDDO
 
- Z1=(Z(1)+2.0*Z(2)+Z(3))
- Z2=(Z(4)+2.0*Z(5)+Z(6))
-!  IF(Z1/4.0.GT.Z(0).AND.Z2/4.0.GT.Z(0))THEN
-!   DZDX=0.0
-!  ELSE  
+ Z1=(Z(1)+2.8*Z(2)+Z(3)) !## right
+ Z2=(Z(4)+2.8*Z(5)+Z(6)) !## left
  DZDX=( Z1 - Z2 )/ (8.0*DEM%DX)
-!  ENDIF
-! ELSE
-!  DZDX=( Z(2)-Z(5) )/ (2.0*DEM%DX)
-!  IF(Z(2).GT.Z(0).AND.Z(5).GT.Z(0))DZDX=0.0
-! ENDIF
    
- Z(1)=DEM%X(IC2 ,IR2)
- Z(2)=DEM%X(ICOL,IR2)
- Z(3)=DEM%X(IC1 ,IR2)
- Z(4)=DEM%X(IC2 ,IR1)
- Z(5)=DEM%X(ICOL,IR1)
- Z(6)=DEM%X(IC1 ,IR1)
+ Z(1)=DEM%X(IC2 ,IR2) !## right-down
+ Z(2)=DEM%X(ICOL,IR2) !## mid-down
+ Z(3)=DEM%X(IC1 ,IR2) !## left-down
+ Z(4)=DEM%X(IC2 ,IR1) !## right-up
+ Z(5)=DEM%X(ICOL,IR1) !## mid-up
+ Z(6)=DEM%X(IC1 ,IR1) !## left-up
 
  DO I=1,6; IF(Z(I).EQ.DEM%NODATA)Z(I)=DEM%X(ICOL,IROW); ENDDO
     
- Z1=(Z(1)+2.0*Z(2)+Z(3))
- Z2=(Z(4)+2.0*Z(5)+Z(6))
-!  IF(Z1/4.0.GT.Z(0).AND.Z2/4.0.GT.Z(0))THEN
-!   DZDY=0.0
-!  ELSE
+ Z1=(Z(1)+2.8*Z(2)+Z(3))
+ Z2=(Z(4)+2.8*Z(5)+Z(6))
  DZDY=( Z1 - Z2 )/ (8.0*DEM%DX)
- ! DZDY=( (Z(1)+2.0*Z(2)+Z(3)) - (Z(4)+2.0*Z(5)+Z(6)) )/(8.0*DEM%DY)
-!  ENDIF
-! ELSE
-!  DZDY=( Z(2)-Z(5) )/ (2.0*DEM%DY)
-!  IF(Z(2).GT.Z(0).AND.Z(5).GT.Z(0))DZDY=0.0
 
  ENDIF
    
@@ -610,7 +668,7 @@ CONTAINS
  DO IROW=1,PCG%NROW; DO ICOL=1,PCG%NCOL
   IF(PCG%X(ICOL,IROW).EQ.PCG%NODATA)CYCLE
 
-  CALL SOF_COMPUTE_GRAD(PCG,ICOL,IROW,DZDX,DZDY)
+  CALL SOF_COMPUTE_GRAD_STEEPEST(PCG,ICOL,IROW,DZDX,DZDY)
 
   !## radians  
   S=ATAN(SQRT(DZDX**2.0+DZDY**2.0))

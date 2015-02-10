@@ -282,6 +282,10 @@
 		<Filter Name="imod_model">
 		<File RelativePath="d:\oss\iMOD\SRC\imod_model\IMOD_MODEL.F90">
 			<FileConfiguration Name="Debug|Win32">
+				<Tool Name="VFFortranCompilerTool" Preprocess="preprocessYes" PreprocessorDefinitions="WINTERACTER9"/></FileConfiguration>
+			<FileConfiguration Name="Release|x64">
+				<Tool Name="VFFortranCompilerTool" Preprocess="preprocessYes" PreprocessorDefinitions="WINTERACTER9"/></FileConfiguration>
+			<FileConfiguration Name="Debug|x64">
 				<Tool Name="VFFortranCompilerTool" Preprocess="preprocessYes" PreprocessorDefinitions="WINTERACTER9"/></FileConfiguration></File>
 		<File RelativePath="d:\oss\iMOD\SRC\imod_model\IMOD_MODEL_PAR.F90"/></Filter>
 		<Filter Name="imod_modpath">
