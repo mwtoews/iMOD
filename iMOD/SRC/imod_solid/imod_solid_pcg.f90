@@ -139,15 +139,7 @@ CONTAINS
  !## no cross-sections given
  IF(NSPF.EQ.0)THEN
   ISEL_IDF=1; ISEL_IDF(1)=0; ISEL_IDF(NLAY)=0
-  !## compute top only
-!  IF(ATTACH.EQ.1)THEN
   DO ILAY=1,NLAY-1,2; ISEL_IDF(ILAY)=0 ; ENDDO
-!  !## compute all
-!  ELSEIF(ATTACH.EQ.2)THEN
-!  !## compute bottom only
-!  ELSEIF(ATTACH.EQ.3)THEN
-!   DO ILAY=2,NLAY-1,2; ISEL_IDF(ILAY)=0 ; ENDDO
-!  ENDIF
  ENDIF
  
  !## overall resistance
@@ -203,7 +195,7 @@ CONTAINS
      PCG(1)%CR=(SOLIDF(ILAY)%DX*SOLIDF(ILAY)%DY)/C; PCG(1)%CC=(SOLIDF(ILAY)%DX*SOLIDF(ILAY)%DY)/C
 
      !## check for isolated active cell that can not be solved
-     IF(IBNDCHK.EQ.1)CALL SOLID_CHECKIBND(ILAY)
+     IF(IBNDCHK.EQ.1)CALL SOLID_CHECKIBND(ILAY,SOLIDF(ILAY)%NROW,SOLIDF(ILAY)%NCOL)
 
      NICNVG=0; PCG(1)%HNEW=PCG(ILAY)%HOLD
 
@@ -319,7 +311,6 @@ CONTAINS
 
   !## make sure top/bot are equal outside boundary=1 (hypothethical) or boundary=-2 (cross-section)
   IF(NSPF.EQ.0)THEN
-!   IF(ATTACH.EQ.1)THEN
    DO ILAY=3,NLAY-1,2
     DO IROW=1,SOLIDF(ILAY)%NROW; DO ICOL=1,SOLIDF(ILAY)%NCOL
      !## get current x/y location
@@ -330,34 +321,6 @@ CONTAINS
      ENDIF
     ENDDO; ENDDO
    ENDDO
-!   ELSEIF(ATTACH.EQ.2)THEN
-!    DO ILAY=3,NLAY-1,2
-!     DO IROW=1,SOLIDF(ILAY)%NROW; DO ICOL=1,SOLIDF(ILAY)%NCOL
-!      !## get current x/y location
-!      CALL IDFGETLOC(SOLIDF(ILAY),IROW,ICOL,X,Y)
-!      CALL IDFIROWICOL(SOLIDF(ILAY-1),JROW,JCOL,X,Y)
-!      IF(JROW.NE.0.AND.JCOL.NE.0)THEN
-!       IF(PCG(ILAY-1)%IB(JCOL,JROW).EQ.1.OR.PCG(ILAY-1)%IB(JCOL,JROW).EQ.-2)THEN
-!        H1=PCG(ILAY-1)%HOLD(JCOL,JROW)
-!        H2=PCG(ILAY)  %HOLD(ICOL,IROW)
-!        PCG(ILAY-1)%HOLD(JCOL,JROW)=(H1+H2)/2.0 
-!        PCG(ILAY)  %HOLD(ICOL,IROW)=(H1+H2)/2.0 
-!       ENDIF
-!      ENDIF
-!     ENDDO; ENDDO
-!    ENDDO   
-!   ELSEIF(ATTACH.EQ.3)THEN
-!    DO ILAY=2,NLAY-1,2
-!     DO IROW=1,SOLIDF(ILAY)%NROW; DO ICOL=1,SOLIDF(ILAY)%NCOL
-!      !## get current x/y location
-!      CALL IDFGETLOC(SOLIDF(ILAY),IROW,ICOL,X,Y)
-!      CALL IDFIROWICOL(SOLIDF(ILAY+1),JROW,JCOL,X,Y)
-!      IF(JROW.NE.0.AND.JCOL.NE.0)THEN
-!       IF(PCG(ILAY+1)%IB(JCOL,JROW).EQ.1.OR.PCG(ILAY+1)%IB(JCOL,JROW).EQ.-2)PCG(ILAY)%HOLD(ICOL,IROW)=PCG(ILAY+1)%HOLD(JCOL,JROW)
-!      ENDIF
-!     ENDDO; ENDDO
-!    ENDDO   
-!   ENDIF
   ENDIF
             
   !## make sure lowest bot is lower than upper top
@@ -677,6 +640,7 @@ CONTAINS
  SUBROUTINE SOLID_PCGINT(XD,YD,ZD,ND,IERROR,IDF,IECHO,IDUPLICATE,HNOFLOW)
  !###======================================================================
  IMPLICIT NONE
+! REAL,PARAMETER :: C=1.0 !## days resistance
  INTEGER,INTENT(IN) :: ND,IECHO !## 1=WINDOWS -1=DOSBOX
  INTEGER,INTENT(IN),OPTIONAL :: IDUPLICATE
  REAL,OPTIONAL,INTENT(IN) :: HNOFLOW !## make areas inactive values in idf%x() equal to hoflow
@@ -696,8 +660,11 @@ CONTAINS
  
  NROW=IDF%NROW; NCOL=IDF%NCOL; NLAY=1
  !## allocate memory
- IF(.NOT.SOLID_CALC_AL(NROW=NROW,NCOL=NCOL))RETURN
- IF(.NOT.SOLID_CALC_AL_PCG(NROW,NCOL))RETURN
+ IF(.NOT.SOLID_CALC_AL(NROW=NROW,NCOL=NCOL).OR. &
+    .NOT.SOLID_CALC_AL_PCG(NROW,NCOL))THEN
+  CALL SOLID_CALC_DAL()
+  RETURN
+ ENDIF
 
  !## adjust starting head to be mean of all fixed heads
  INIHEAD=(Z1+Z2)/2.0
@@ -734,6 +701,13 @@ CONTAINS
    IF(PCG(1)%IB(ICOL,IROW).LT.0)PCG(1)%IB(ICOL,IROW)=3.0
   ENDDO; ENDDO
  ENDIF
+ 
+! CALL SOLID_CHECKIBND(1,NROW,NCOL)
+! IF(MAXVAL(PCG(1)%IB).EQ.0)THEN
+!  WRITE(*,'(A)') 'Not possible to simulate model, no connection to boundary condition'
+!  !## no boundary criterion condition met
+!  IERROR=2; CALL SOLID_CALC_DAL(); RETURN
+! ENDIF
  
  !## solve each system per modellayer
  NICNVG=0; PCG(1)%HNEW=PCG(1)%HOLD
@@ -1454,28 +1428,28 @@ CONTAINS
  END SUBROUTINE SOLID_GETLOCATION
  
  !###====================================================================
- SUBROUTINE SOLID_CHECKIBND(ILAY)
+ SUBROUTINE SOLID_CHECKIBND(ILAY,NROW,NCOL)
  !###====================================================================
  IMPLICIT NONE
- INTEGER,INTENT(IN) :: ILAY
+ INTEGER,INTENT(IN) :: ILAY,NROW,NCOL
  INTEGER(KIND=1),POINTER,DIMENSION(:) :: ISPEC
  INTEGER(KIND=1),ALLOCATABLE,DIMENSION(:,:) :: Y
  INTEGER(KIND=2),POINTER,DIMENSION(:,:) :: THREAD,YSEL
  INTEGER :: IROW,ICOL,K,IP,IR,IC,N,I,MAXTHREAD,MAXN
  LOGICAL :: LCNST
 
- WRITE(*,*) 'Checking Boundary Conditions' 
+! WRITE(*,*) 'Checking Boundary Conditions' 
 
- DO IROW=1,SOLIDF(ILAY)%NROW; DO ICOL=1,SOLIDF(ILAY)%NCOL 
+ DO IROW=1,NROW; DO ICOL=1,NCOL 
 
   IF(PCG(ILAY)%IB(ICOL,IROW).EQ.0)PCG(ILAY)%HOLD(ICOL,IROW)=HNOFLOW
   !## adjust constant head whenever no active cell is attached to it
   IF(PCG(ILAY)%IB(ICOL,IROW).LT.0)THEN
    K=0
-   IF(ICOL.GT.1)THEN;                 IF(PCG(ILAY)%IB(ICOL-1,IROW).NE.0)K=1; ENDIF
-   IF(ICOL.LT.SOLIDF(ILAY)%NCOL)THEN; IF(PCG(ILAY)%IB(ICOL+1,IROW).NE.0)K=1; ENDIF
-   IF(IROW.GT.1)THEN;                 IF(PCG(ILAY)%IB(ICOL,IROW-1).NE.0)K=1; ENDIF
-   IF(IROW.LT.SOLIDF(ILAY)%NROW)THEN; IF(PCG(ILAY)%IB(ICOL,IROW+1).NE.0)K=1; ENDIF
+   IF(ICOL.GT.1)THEN; IF(PCG(ILAY)%IB(ICOL-1,IROW).NE.0)K=1; ENDIF
+   IF(ICOL.LT.NCOL)THEN; IF(PCG(ILAY)%IB(ICOL+1,IROW).NE.0)K=1; ENDIF
+   IF(IROW.GT.1)THEN; IF(PCG(ILAY)%IB(ICOL,IROW-1).NE.0)K=1; ENDIF
+   IF(IROW.LT.NROW)THEN; IF(PCG(ILAY)%IB(ICOL,IROW+1).NE.0)K=1; ENDIF
    IF(K.EQ.0)THEN; PCG(ILAY)%IB(ICOL,IROW)=0; PCG(ILAY)%HOLD(ICOL,IROW)=HNOFLOW; ENDIF
   ENDIF
 
@@ -1484,26 +1458,26 @@ CONTAINS
  !## find active cells not in direct (2d/3d) relation to constant head cell!
  IF(ASSOCIATED(ISPEC))DEALLOCATE(ISPEC); IF(ASSOCIATED(THREAD))DEALLOCATE(THREAD)
  IF(ALLOCATED(Y))DEALLOCATE(Y); IF(ASSOCIATED(YSEL))DEALLOCATE(YSEL)
- ALLOCATE(Y(SOLIDF(ILAY)%NCOL,SOLIDF(ILAY)%NROW))
+ ALLOCATE(Y(NCOL,NROW))
  MAXTHREAD=1000; MAXN=MAXTHREAD; ALLOCATE(ISPEC(MAXTHREAD),THREAD(2,MAXTHREAD),YSEL(2,MAXTHREAD))
 
  IP=0
  Y =0
 
- DO IROW=1,SOLIDF(ILAY)%NROW; DO ICOL=1,SOLIDF(ILAY)%NCOL
+ DO IROW=1,NROW; DO ICOL=1,NCOL
   IF(Y(ICOL,IROW).EQ.0.AND.PCG(ILAY)%IB(ICOL,IROW).GT.0)THEN
    IP=1
-   CALL SOLID_TRACE(IROW,ICOL,PCG(ILAY)%IB,PCG(1)%CC,PCG(1)%CR,Y,THREAD,ISPEC,YSEL,N,SOLIDF(ILAY)%NROW, &
-                    SOLIDF(ILAY)%NCOL,IP,LCNST,MAXTHREAD,MAXN)
+   CALL SOLID_TRACE(IROW,ICOL,PCG(ILAY)%IB,PCG(1)%CC,PCG(1)%CR,Y,THREAD,ISPEC,YSEL,N,NROW, &
+                    NCOL,IP,LCNST,MAXTHREAD,MAXN)
    !## no constant head attached, remove group of cells
    IF(.NOT.LCNST)THEN
     DO I=1,N
      IC=YSEL(1,I); IR=YSEL(2,I)
      PCG(ILAY)%IB(IC,IR)=0; PCG(ILAY)%HOLD(IC,IR)=HNOFLOW
     ENDDO
-    WRITE(*,*) 'Removed ',N,' of modelcells that are not attached to a constant head'
-   ELSE
-    WRITE(*,*) 'Nothing removed' 
+!    WRITE(*,*) 'Removed ',N,' of modelcells that are not attached to a constant head'
+!   ELSE
+!    WRITE(*,*) 'Nothing removed' 
    ENDIF
   ENDIF
  ENDDO; ENDDO
