@@ -637,7 +637,7 @@ CONTAINS
  END SUBROUTINE SOLID_CALC_FIELDS
  
  !###======================================================================
- SUBROUTINE SOLID_PCGINT(XD,YD,ZD,ND,IERROR,IDF,IECHO,IDUPLICATE,HNOFLOW,CD)
+ SUBROUTINE SOLID_PCGINT(XD,YD,ZD,ND,IERROR,IDF,IECHO,IDUPLICATE,HNOFLOW,CD,LBNDCHK)
  !###======================================================================
  IMPLICIT NONE
  INTEGER,INTENT(IN) :: ND,IECHO !## 1=WINDOWS -1=DOSBOX
@@ -646,6 +646,7 @@ CONTAINS
  REAL,DIMENSION(:),POINTER :: XD,YD,ZD
  REAL,DIMENSION(:),POINTER,OPTIONAL :: CD
  INTEGER,INTENT(OUT) :: IERROR
+ LOGICAL,INTENT(IN),OPTIONAL :: LBNDCHK
  TYPE(IDFOBJ),INTENT(INOUT) :: IDF
  LOGICAL :: LEX
  INTEGER :: I,ITER1,ITER2,ILAY,IROW,ICOL,ICNVG,NICNVG,ITYPE
@@ -679,9 +680,18 @@ CONTAINS
  !## create boundary/fixed heads
  DO I=1,ND
   ICOL=INT(XD(I)); IROW=INT(YD(I))
+  !### skip inactive
+  IF(PCG(1)%IB(ICOL,IROW).EQ.0)CYCLE
+  C=0.0; IF(ITIGHT.EQ.2.AND.PRESENT(CD))C=CD(I)
   PCG(1)%HOLD(ICOL,IROW)=PCG(1)%HOLD(ICOL,IROW)+ZD(I)
   PCG(1)%RHS(ICOL,IROW) =PCG(1)%RHS(ICOL,IROW)+1.0
-  PCG(1)%IB(ICOL,IROW)  =-1
+  !## if c.eq.0, then constant head
+  IF(C.EQ.0.0)THEN
+   PCG(1)%IB(ICOL,IROW)  =-1
+  !## if c.gt.0, then general-head
+  ELSE
+   PCG(1)%IB(ICOL,IROW)  =-3
+  ENDIF
  ENDDO
  !## compute mean/sum
  IF(PRESENT(IDUPLICATE))THEN
@@ -696,20 +706,24 @@ CONTAINS
  ENDDO; ENDDO 
  PCG(1)%RHS=0.0
  
-! CALL SOLID_CHECKIBND(1,NROW,NCOL)
-! IF(MAXVAL(PCG(1)%IB).EQ.0)THEN
-!  WRITE(*,'(A)') 'Not possible to simulate model, no connection to boundary condition'
-!  !## no boundary criterion condition met
-!  IERROR=2; CALL SOLID_CALC_DAL(); RETURN
-! ENDIF
- 
  !## change boundary condition
  IF(ITIGHT.EQ.2)THEN
   DO IROW=1,NROW; DO ICOL=1,NCOL
-   IF(PCG(1)%IB(ICOL,IROW).LT.0)PCG(1)%IB(ICOL,IROW)  = 3.0
+   IF(PCG(1)%IB(ICOL,IROW).EQ.-3)PCG(1)%IB(ICOL,IROW)=3.0
   ENDDO; ENDDO
  ENDIF
 
+ IF(PRESENT(LBNDCHK))THEN
+  IF(LBNDCHK)THEN
+   CALL SOLID_CHECKIBND(1,NROW,NCOL)
+   IF(MAXVAL(PCG(1)%IB).EQ.0)THEN
+    WRITE(*,'(A)') 'Not possible to simulate model, no connection to boundary condition'
+    !## no boundary criterion condition met
+    IERROR=2; CALL SOLID_CALC_DAL(); RETURN
+   ENDIF
+  ENDIF
+ ENDIF
+ 
  !## solve each system per modellayer
  NICNVG=0; PCG(1)%HNEW=PCG(1)%HOLD; PCG(1)%SS=0.0
  
@@ -720,6 +734,8 @@ CONTAINS
    IF(PRESENT(CD))THEN
     DO I=1,ND
      ICOL=INT(XD(I)); IROW=INT(YD(I)); C=CD(I)
+     !## skip inactive
+     IF(PCG(1)%IB(ICOL,IROW).EQ.0)CYCLE
      PCG(1)%RHS(ICOL,IROW) =-C*PCG(1)%HOLD(ICOL,IROW)
      PCG(1)%HCOF(ICOL,IROW)=-C
     ENDDO
@@ -727,6 +743,8 @@ CONTAINS
     C=0.1
     DO I=1,ND
      ICOL=INT(XD(I)); IROW=INT(YD(I))
+     !## skip inactive
+     IF(PCG(1)%IB(ICOL,IROW).EQ.0)CYCLE
      PCG(1)%RHS(ICOL,IROW) =-C*PCG(1)%HOLD(ICOL,IROW)
      PCG(1)%HCOF(ICOL,IROW)=-C
     ENDDO
@@ -756,7 +774,7 @@ CONTAINS
  LEX=.TRUE.
  IF(ICNVG.NE.1)THEN
   CALL WMESSAGEBOX(YESNO,QUESTIONICON,COMMONNO,'Interpolation did not converge.'//CHAR(13)// &
-    'Do you want to save the results so far in:'//CHAR(13)// &
+    'Hclosure ='//TRIM(RTOS(HCHG,'E',7))//CHAR(13)//'Do you want to save the results so far in:'//CHAR(13)// &
      '['//TRIM(FNAME)//']','Question')
   IF(WINFODIALOG(4).EQ.1)LEX=.TRUE.
  ENDIF

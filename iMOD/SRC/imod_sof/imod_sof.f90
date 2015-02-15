@@ -119,8 +119,8 @@ CONTAINS
 !  IF(IROW.EQ.74.AND.ICOL.EQ.102)THEN
 !  IF(IROW.EQ.44.AND.ICOL.EQ.63)THEN
 !  IF(IROW.EQ.389.AND.ICOL.EQ.234)THEN
-!  IF(IROW.EQ.318.AND.ICOL.EQ.356)THEN
-  IF(IROW.EQ.150.AND.ICOL.EQ.255)THEN
+  IF(IROW.EQ.294.AND.ICOL.EQ.631)THEN
+!  IF(IROW.EQ.150.AND.ICOL.EQ.255)THEN
 !  IF(.TRUE.)THEN
   
    !## start in the middle
@@ -476,12 +476,14 @@ endif
    !## slope map allready filled in
    IF(SLOPE%X(ICOL,IROW).NE.SLOPE%NODATA)CYCLE
 
-   if(icol.eq.255.and.irow.eq.150)then
+   if(icol.eq.248.and.irow.eq.213)then
+   write(*,*) 'dsds'
+   endif
+   if(icol.eq.219.and.irow.eq.184)then
    write(*,*) 'dsds'
    endif
 
 !   CALL SOF_COMPUTE_GRAD(DEM,ICOL,IROW,DZDX,DZDY)
-
    !## from DEM it is much better to use this direction instead
    CALL SOF_COMPUTE_GRAD_STEEPEST(DEM,ICOL,IROW,DZDX,DZDY)
         
@@ -511,18 +513,18 @@ endif
  INTEGER,INTENT(IN) :: ICOL,IROW
  REAL,INTENT(OUT) :: DZDX,DZDY
  REAL,DIMENSION(9) :: Z,GRADX,GRADY
- INTEGER :: IC1,IC2,IR1,IR2,I,J
- REAL :: AX,AY,NA,ZM
+ INTEGER :: IC1,IC2,IR1,IR2,I,J,IC,IR
+ REAL :: AX,AY,NA,ZM,L,f
  DATA GRADX/-1.0, 0.0, 1.0,-1.0,0.0,1.0,-1.0, 0.0, 1.0/
  DATA GRADY/ 1.0, 1.0, 1.0, 0.0,0.0,0.0,-1.0,-1.0,-1.0/
-   
+                   
  !## steepest all around
  IC1=MAX(1,ICOL-1)
  IC2=MIN(DEM%NCOL,ICOL+1)
  IR1=MAX(1,IROW-1)
  IR2=MIN(DEM%NROW,IROW+1)
-                
- Z(1)=DEM%X(IC1 ,IR1 )
+
+ Z(1)=DEM%X(IC1 ,IR1)
  Z(2)=DEM%X(ICOL,IR1 )
  Z(3)=DEM%X(IC2 ,IR1 )
  Z(4)=DEM%X(IC1 ,IROW)
@@ -531,26 +533,58 @@ endif
  Z(7)=DEM%X(IC1 ,IR2 )
  Z(8)=DEM%X(ICOL,IR2 )
  Z(9)=DEM%X(IC2 ,IR2 )
+
+ if(.false.)then
+  f=2.8
+  
+  ax=0.0
+  ax=ax+  (z(2)-z(1))
+  ax=ax+  (z(3)-z(2))
+  ax=ax+f*(z(5)-z(4))
+  ax=ax+f*(z(6)-z(5))
+  ax=ax+  (z(8)-z(7))
+  ax=ax+  (z(9)-z(8))
+  ax=ax
+  
+  ay=0.0
+  ay=ay+  (z(4)-z(1))
+  ay=ay+f*(z(5)-z(2))
+  ay=ay+  (z(6)-z(3))
+  ay=ay+  (z(7)-z(4))
+  ay=ay+f*(z(8)-z(5))
+  ay=ay+  (z(9)-z(6))
+  ay=ay
+
+  DZDX= AX 
+  DZDY= AY 
+
+ else
     
-! DO I=1,9; IF(Z(I).EQ.DEM%NODATA)Z(I)=DEM%X(ICOL,IROW); ENDDO
- !## nodata act as as a strong sink, water want to move there urgently, in opposite direction
- ZM=Z(5)
- J=9; DO I=1,9
-  IF(Z(I).EQ.DEM%NODATA)Z(I)=-1.0*Z(J)
-  J=J-1
- ENDDO
- AX=0.0; AY=0.0; NA=0.0
- DO I=1,9
-  Z(I)=Z(I)-ZM
-  IF(Z(I).LT.0.0)THEN
-   AX=AX+GRADX(I)*ABS(Z(I))
-   AY=AY+GRADY(I)*ABS(Z(I))
-   NA=NA+ABS(Z(I))    
+  !## nodata act as as a strong sink, water want to move there urgently, in opposite direction
+  ZM=Z(5)
+  J=9; DO I=1,9
+   IF(Z(I).EQ.DEM%NODATA)Z(I)=-1.0*Z(J)
+   J=J-1
+  ENDDO
+
+  AX=0.0; AY=0.0 !; NA=0.0
+  DO I=1,9
+   Z(I)=Z(I)-ZM
+   IF(Z(I).LT.0.0)THEN
+    AX=AX+GRADX(I)*ABS(Z(I))
+    AY=AY+GRADY(I)*ABS(Z(I))
+!    NA=NA+ABS(Z(I))    
+   ENDIF
+  ENDDO
+  DZDX=-AX 
+  DZDY= AY 
+
+  !## perfect dome in flat area - occurs, but direction is irrelevant, choose 
+  IF(DZDX.EQ.0.0.AND.DZDY.EQ.0.0)THEN
+   DZDX=1.0
   ENDIF
- ENDDO
- DZDX=-AX 
- DZDY= AY 
- 
+ endif
+  
  END SUBROUTINE SOF_COMPUTE_GRAD_STEEPEST
  
  !###======================================================================
@@ -584,42 +618,42 @@ endif
 
  ELSE
  
-! tan (slope) = sqrt (b2 + c2)
-!b = (z3 + 2z6 + z9 - z1 - 2z4 - z7) / 8D 
-!c = (z1 + 2z2 + z3 - z7 - 2z8 - z9) / 8D
-!b denotes slope in the x direction 
-!c denotes slope in the y direction 
-!D is the spacing of points (30 m)
-!find the slope that fits best to the 9 elevations 
-!minimizes the total of squared differences between point elevation and the fitted slope 
-!weighting four closer neighbors higher
+  ! tan (slope) = sqrt (b2 + c2)
+  !b = (z3 + 2z6 + z9 - z1 - 2z4 - z7) / 8D 
+  !c = (z1 + 2z2 + z3 - z7 - 2z8 - z9) / 8D
+  !b denotes slope in the x direction 
+  !c denotes slope in the y direction 
+  !D is the spacing of points (30 m)
+  !find the slope that fits best to the 9 elevations 
+  !minimizes the total of squared differences between point elevation and the fitted slope 
+  !weighting four closer neighbors higher
                  
- Z(0)=DEM%X(ICOL,IROW)
- Z(1)=DEM%X(IC2 ,IR2 ) !## right-down
- Z(2)=DEM%X(IC2 ,IROW) !## right
- Z(3)=DEM%X(IC2 ,IR1 ) !## right-up
- Z(4)=DEM%X(IC1 ,IR2 ) !## left-down
- Z(5)=DEM%X(IC1 ,IROW) !## left
- Z(6)=DEM%X(IC1 ,IR1 ) !## left-up
+  Z(0)=DEM%X(ICOL,IROW)
+  Z(1)=DEM%X(IC2 ,IR2 ) !## right-down
+  Z(2)=DEM%X(IC2 ,IROW) !## right
+  Z(3)=DEM%X(IC2 ,IR1 ) !## right-up
+  Z(4)=DEM%X(IC1 ,IR2 ) !## left-down
+  Z(5)=DEM%X(IC1 ,IROW) !## left
+  Z(6)=DEM%X(IC1 ,IR1 ) !## left-up
     
- DO I=1,6; IF(Z(I).EQ.DEM%NODATA)Z(I)=DEM%X(ICOL,IROW); ENDDO
+  DO I=1,6; IF(Z(I).EQ.DEM%NODATA)Z(I)=DEM%X(ICOL,IROW); ENDDO
 
- Z1=(Z(1)+2.8*Z(2)+Z(3)) !## right
- Z2=(Z(4)+2.8*Z(5)+Z(6)) !## left
- DZDX=( Z1 - Z2 )/ (8.0*DEM%DX)
+  Z1=(Z(1)+2.8*Z(2)+Z(3)) !## right
+  Z2=(Z(4)+2.8*Z(5)+Z(6)) !## left
+  DZDX=( Z1 - Z2 )/ (9.6*DEM%DX)
    
- Z(1)=DEM%X(IC2 ,IR2) !## right-down
- Z(2)=DEM%X(ICOL,IR2) !## mid-down
- Z(3)=DEM%X(IC1 ,IR2) !## left-down
- Z(4)=DEM%X(IC2 ,IR1) !## right-up
- Z(5)=DEM%X(ICOL,IR1) !## mid-up
- Z(6)=DEM%X(IC1 ,IR1) !## left-up
+  Z(1)=DEM%X(IC2 ,IR2) !## right-down
+  Z(2)=DEM%X(ICOL,IR2) !## mid-down
+  Z(3)=DEM%X(IC1 ,IR2) !## left-down
+  Z(4)=DEM%X(IC2 ,IR1) !## right-up
+  Z(5)=DEM%X(ICOL,IR1) !## mid-up
+  Z(6)=DEM%X(IC1 ,IR1) !## left-up
 
- DO I=1,6; IF(Z(I).EQ.DEM%NODATA)Z(I)=DEM%X(ICOL,IROW); ENDDO
+  DO I=1,6; IF(Z(I).EQ.DEM%NODATA)Z(I)=DEM%X(ICOL,IROW); ENDDO
     
- Z1=(Z(1)+2.8*Z(2)+Z(3))
- Z2=(Z(4)+2.8*Z(5)+Z(6))
- DZDY=( Z1 - Z2 )/ (8.0*DEM%DX)
+  Z1=(Z(1)+2.8*Z(2)+Z(3))
+  Z2=(Z(4)+2.8*Z(5)+Z(6))
+  DZDY=( Z1 - Z2 )/ (9.6*DEM%DX)
 
  ENDIF
    
@@ -771,7 +805,11 @@ endif
   ENDDO
 
 !  if(abs(zmax-903.8867).le.0.01)then
-  if(abs(zmax-908.6198).le.0.01)then
+  if(abs(zmax-901.7472).le.0.01)then
+write(*,*) 'area - waarom niet 1x1'
+  endif
+
+  if(abs(zmax-903.3478).le.0.01)then
 write(*,*) 'area'
   endif
   
@@ -781,6 +819,11 @@ write(*,*) 'area'
   F=REAL(I)/REAL(NP)*100.0; WRITE(6,'(A,F10.3,2(A,I5),A)') '+Processing pitt:',F,' % (nppx= ',NPPX,' ; nbpx= ',NBPX,')'
 
   CALL SOF_FILL_FLATAREAS(DEM,SLOPE,ASPECT,NBPX,NPPX)
+
+  if(abs(zmax-903.3478).le.0.01)then
+write(*,*) 'area'
+pause
+  endif
 
   !## clean idfp%x()
   DO J=1,NTPX; IDFP%X(TPX(J)%ICOL,TPX(J)%IROW)=IDFP%NODATA; ENDDO 
@@ -812,57 +855,143 @@ write(*,*) 'area'
  PCG%XMIN=DEM%XMIN+(IC1-1)*DEM%DX; PCG%XMAX=PCG%XMIN+PCG%NCOL*DEM%DX
  PCG%YMAX=DEM%YMAX-(IR1-1)*DEM%DY; PCG%YMIN=PCG%YMAX-PCG%NROW*DEM%DY
 
- IFCT=3; PCG%NCOL=PCG%NCOL*IFCT; PCG%NROW=PCG%NROW*IFCT; PCG%DX=PCG%DX/REAL(IFCT); PCG%DY=PCG%DX
+ !## try first ifct=1 than ifct=3
+ DO IFCT=1,3,2
+! IFCT=3
+ 
+  PCG%NCOL=PCG%NCOL*IFCT; PCG%NROW=PCG%NROW*IFCT; PCG%DX=PCG%DX/REAL(IFCT); PCG%DY=PCG%DX
 
- IF(.NOT.IDFALLOCATEX(PCG))RETURN; PCG%NODATA=SLOPE%NODATA; PCG%X=PCG%NODATA 
- 
- ALLOCATE(XA(NBPX+1),YA(NBPX+1),ZA(NBPX+1),CA(NBPX+1))
- !## transform to correct location
- DO I=1,NBPX
-  XA(I)=((BPX(I)%ICOL-IC1+1)*IFCT)-1
-  YA(I)=((BPX(I)%IROW-IR1+1)*IFCT)-1
-  ZA(I)=  1.0
-  CA(I)=  1.0/REAL(NBPX)
- ENDDO
- !## add last pit-location (outflow) as boundary condition as well
- I         = NPPX
- XA(NBPX+1)=((PPX(I)%ICOL-IC1+1)*IFCT)-1
- YA(NBPX+1)=((PPX(I)%IROW-IR1+1)*IFCT)-1
- ZA(NBPX+1)= -1.0
- CA(NBPX+1)=  1.0
-    
- !## activate boundary location
- DO I=1,NBPX+1
-  DO IROW=YA(I)-1,YA(I)+1
-   DO ICOL=XA(I)-1,XA(I)+1
-    PCG%X(ICOL,IROW)=0.0
-   ENDDO
+  IF(.NOT.IDFALLOCATEX(PCG))RETURN; PCG%NODATA=SLOPE%NODATA; PCG%X=PCG%NODATA 
+  IF(ASSOCIATED(XA))DEALLOCATE(XA); IF(ASSOCIATED(YA))DEALLOCATE(YA)
+  IF(ASSOCIATED(ZA))DEALLOCATE(ZA); IF(ASSOCIATED(CA))DEALLOCATE(CA)
+  ALLOCATE(XA(NBPX+1),YA(NBPX+1),ZA(NBPX+1),CA(NBPX+1))
+  
+  !## transform to correct location
+  DO I=1,NBPX
+   IF(IFCT.EQ.1)THEN
+    XA(I)=BPX(I)%ICOL-IC1+1
+    YA(I)=BPX(I)%IROW-IR1+1
+   ELSE
+    XA(I)=((BPX(I)%ICOL-IC1+1)*IFCT)-1
+    YA(I)=((BPX(I)%IROW-IR1+1)*IFCT)-1
+   ENDIF
+   ZA(I)=  1.0
+   CA(I)=  1.0/REAL(NBPX) !## general head
   ENDDO
- ENDDO
- 
- !## activate mid locations
- DO I=1,NPPX
-  IC=((PPX(I)%ICOL-IC1+1)*IFCT)-1
-  IR=((PPX(I)%IROW-IR1+1)*IFCT)-1
-  DO IROW=IR-1,IR+1 
-   DO ICOL=IC-1,IC+1 
+  !## add last pit-location (outflow) as boundary condition as well
+  I         = NPPX
+  XA(NBPX+1)=((PPX(I)%ICOL-IC1+1)*IFCT)-1
+  YA(NBPX+1)=((PPX(I)%IROW-IR1+1)*IFCT)-1
+  ZA(NBPX+1)= -1.0
+  CA(NBPX+1)=  0.0 !## constant head
+     
+  !## activate boundary location
+  DO I=1,NBPX+1
+   IF(IFCT.EQ.1)THEN
+    ICOL=XA(I); IROW=YA(I)
     PCG%X(ICOL,IROW)=0.0
-   ENDDO
+   ELSE
+    DO IROW=YA(I)-1,YA(I)+1
+     DO ICOL=XA(I)-1,XA(I)+1
+      PCG%X(ICOL,IROW)=0.0
+     ENDDO
+    ENDDO
+   ENDIF
   ENDDO
- ENDDO
  
- HCLOSE=0.0001; RELAX=1.0; IDAMPING=0; MXITER1=100; MXITER2=1000; ITIGHT=2; MICNVG=0
- CALL SOLID_PCGINT(XA,YA,ZA,NBPX+1,IERROR,PCG,0,HNOFLOW=PCG%NODATA,CD=CA)
+  !## activate mid locations
+  DO I=1,NPPX
+   IF(IFCT.EQ.1)THEN
+    IC=PPX(I)%ICOL-IC1+1
+    IR=PPX(I)%IROW-IR1+1
+    PCG%X(IC,IR)=0.0
+   ELSE
+    IC=((PPX(I)%ICOL-IC1+1)*IFCT)-1
+    IR=((PPX(I)%IROW-IR1+1)*IFCT)-1
+    DO IROW=IR-1,IR+1 
+     DO ICOL=IC-1,IC+1 
+      PCG%X(ICOL,IROW)=0.0
+     ENDDO
+    ENDDO
+   ENDIF
+  ENDDO
+ 
+  IF(IFCT.EQ.1)THEN
+   DO I=1,NBPX !+1
+    IROW=YA(I); ICOL=XA(I)
+    IF(ICOL.GT.1.AND.ICOL.LT.PCG%NCOL)THEN
+     IF(PCG%X(ICOL-1,IROW).NE.PCG%NODATA.AND. &
+        PCG%X(ICOL+1,IROW).NE.PCG%NODATA)PCG%X(ICOL,IROW)=PCG%NODATA
+    ENDIF
+    IF(IROW.GT.1.AND.IROW.LT.PCG%NROW)THEN
+     IF(PCG%X(ICOL,IROW-1).NE.PCG%NODATA.AND. &
+        PCG%X(ICOL,IROW+1).NE.PCG%NODATA)PCG%X(ICOL,IROW)=PCG%NODATA
+    ENDIF
+   ENDDO
+  ELSE
 
-! if(.not.idfwrite(pcg,'d:\pcg.idf',1))then; endif
+!   !## close connection between boundary locations
+!   DO I=1,NBPX+1
+!    IROW=YA(I); ICOL=MAX(1,INT(XA(I))-2)
+!    IF(PCG%X(ICOL,IROW).NE.PCG%NODATA)THEN
+!     ICOL=XA(I)+1
+!     DO IROW=YA(I)-1,YA(I)+1 
+!      PCG%X(ICOL,IROW)=PCG%NODATA
+!     ENDDO
+!    ENDIF  
+!    IROW=YA(I); ICOL=MIN(PCG%NCOL,INT(XA(I))+2)
+!    IF(PCG%X(ICOL,IROW).NE.PCG%NODATA)THEN
+!     ICOL=XA(I)-1
+!     DO IROW=YA(I)-1,YA(I)+1 
+!      PCG%X(ICOL,IROW)=PCG%NODATA
+!     ENDDO
+!    ENDIF  
+!    IROW=MAX(1,INT(YA(I)-2)); ICOL=XA(I)
+!    IF(PCG%X(ICOL,IROW).NE.PCG%NODATA)THEN
+!     IROW=YA(I)+1
+!     DO ICOL=XA(I)-1,XA(I)+1 
+!      PCG%X(ICOL,IROW)=PCG%NODATA
+!     ENDDO
+!    ENDIF  
+!    IROW=MIN(PCG%NROW,INT(YA(I)+2)); ICOL=XA(I)
+!    IF(PCG%X(ICOL,IROW).NE.PCG%NODATA)THEN
+!     IROW=YA(I)-1
+!     DO ICOL=XA(I)-1,XA(I)+1 
+!      PCG%X(ICOL,IROW)=PCG%NODATA
+!     ENDDO
+!    ENDIF  
+!   ENDDO
+   
+  ENDIF
+ 
+  HCLOSE=0.001; RELAX=1.0; IDAMPING=0; MXITER1=500; MXITER2=1000; ITIGHT=2; MICNVG=0
+  IF(IFCT.EQ.1)THEN
+   CALL SOLID_PCGINT(XA,YA,ZA,NBPX+1,IERROR,PCG,0,HNOFLOW=PCG%NODATA,CD=CA,LBNDCHK=.TRUE.)
+   IF(IERROR.EQ.0)EXIT
+  ELSE
+   CALL SOLID_PCGINT(XA,YA,ZA,NBPX+1,IERROR,PCG,0,HNOFLOW=PCG%NODATA,CD=CA,LBNDCHK=.FALSE.)
+  ENDIF
+
+ ENDDO
+ 
+ IFCT=MIN(IFCT,3)
+ write(*,*) ifct,'x',ifct
+ 
+ if(.not.idfwrite(pcg,'d:\pcg.idf',1))then; endif
 
  !## compute aspect for active nodes, exclusive the spill-level
  DO I=1,NPPX-1
 
-  ICOL=((PPX(I)%ICOL-IC1+1)*IFCT)-1
-  IROW=((PPX(I)%IROW-IR1+1)*IFCT)-1
-
+  IF(IFCT.EQ.1)THEN
+   ICOL=PPX(I)%ICOL-IC1+1
+   IROW=PPX(I)%IROW-IR1+1
+  ELSE
+   ICOL=((PPX(I)%ICOL-IC1+1)*IFCT)-1
+   IROW=((PPX(I)%IROW-IR1+1)*IFCT)-1
+  ENDIF
+  
   CALL SOF_COMPUTE_GRAD_STEEPEST(PCG,ICOL,IROW,DZDX,DZDY)
+!  CALL SOF_COMPUTE_GRAD(PCG,ICOL,IROW,DZDX,DZDY)
 
   !## radians  
   S=ATAN(SQRT(DZDX**2.0+DZDY**2.0))
