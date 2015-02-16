@@ -637,16 +637,17 @@ CONTAINS
  END SUBROUTINE SOLID_CALC_FIELDS
  
  !###======================================================================
- SUBROUTINE SOLID_PCGINT(XD,YD,ZD,ND,IERROR,IDF,IECHO,IDUPLICATE,HNOFLOW,CD,LBNDCHK)
+ SUBROUTINE SOLID_PCGINT(XD,YD,ZD,ND,IERROR,IDF,IECHO,IDUPLICATE,HNOFLOW,CD,LCR) !,LBNDCHK,ZEDGE,LCR)
  !###======================================================================
  IMPLICIT NONE
  INTEGER,INTENT(IN) :: ND,IECHO !## 1=WINDOWS -1=DOSBOX
  INTEGER,INTENT(IN),OPTIONAL :: IDUPLICATE
  REAL,OPTIONAL,INTENT(IN) :: HNOFLOW !## make areas inactive values in idf%x() equal to hoflow
  REAL,DIMENSION(:),POINTER :: XD,YD,ZD
- REAL,DIMENSION(:),POINTER,OPTIONAL :: CD
+ REAL,DIMENSION(:),POINTER,INTENT(IN),OPTIONAL :: CD
  INTEGER,INTENT(OUT) :: IERROR
- LOGICAL,INTENT(IN),OPTIONAL :: LBNDCHK
+ LOGICAL,INTENT(IN),OPTIONAL :: LCR
+! REAL,INTENT(IN),OPTIONAL :: ZEDGE
  TYPE(IDFOBJ),INTENT(INOUT) :: IDF
  LOGICAL :: LEX
  INTEGER :: I,ITER1,ITER2,ILAY,IROW,ICOL,ICNVG,NICNVG,ITYPE
@@ -676,21 +677,24 @@ CONTAINS
    IF(IDF%X(ICOL,IROW).EQ.HNOFLOW)PCG(1)%IB(ICOL,IROW)=0
   ENDDO; ENDDO
  ENDIF
- PCG(1)%CR=1.0; PCG(1)%CC=1.0; PCG(1)%RHS=0.0; PCG(1)%HCOF=0.0
+ 
+ PCG(1)%CR=1.0; PCG(1)%CC=1.0; PCG(1)%RHS=0.0; PCG(1)%HCOF=0.0; PCG(1)%SS=0.0
+ 
  !## create boundary/fixed heads
  DO I=1,ND
   ICOL=INT(XD(I)); IROW=INT(YD(I))
   !### skip inactive
   IF(PCG(1)%IB(ICOL,IROW).EQ.0)CYCLE
-  C=0.0; IF(ITIGHT.EQ.2.AND.PRESENT(CD))C=CD(I)
   PCG(1)%HOLD(ICOL,IROW)=PCG(1)%HOLD(ICOL,IROW)+ZD(I)
   PCG(1)%RHS(ICOL,IROW) =PCG(1)%RHS(ICOL,IROW)+1.0
-  !## if c.eq.0, then constant head
-  IF(C.EQ.0.0)THEN
-   PCG(1)%IB(ICOL,IROW)  =-1
-  !## if c.gt.0, then general-head
+  IF(PRESENT(CD))THEN
+   IF(CD(I).GT.0.0)THEN
+    PCG(1)%IB(ICOL,IROW)=-1
+   ELSE
+    PCG(1)%IB(ICOL,IROW)=-3
+   ENDIF
   ELSE
-   PCG(1)%IB(ICOL,IROW)  =-3
+   PCG(1)%IB(ICOL,IROW)= -1
   ENDIF
  ENDDO
  !## compute mean/sum
@@ -706,26 +710,45 @@ CONTAINS
  ENDDO; ENDDO 
  PCG(1)%RHS=0.0
  
- !## change boundary condition
+! IF(PRESENT(LBNDCHK))THEN
+!  IF(LBNDCHK)THEN
+!   !## change boundary condition
+!   DO IROW=1,NROW; DO ICOL=1,NCOL
+!    IF(PCG(1)%IB(ICOL,IROW).EQ.-3)PCG(1)%IB(ICOL,IROW)=0
+!   ENDDO; ENDDO
+!   CALL SOLID_CHECKIBND(1,NROW,NCOL)
+!   IF(MAXVAL(PCG(1)%IB).EQ.0)THEN
+!    WRITE(*,'(A)') 'Not possible to simulate model, no connection to boundary condition'
+!    !## no boundary criterion condition met
+!    IERROR=2; CALL SOLID_CALC_DAL(); RETURN
+!   ENDIF
+!   !## change boundary condition
+!   DO IROW=1,NROW; DO ICOL=1,NCOL
+!    IF(PCG(1)%SS(ICOL,IROW).LT.0)PCG(1)%IB(ICOL,IROW)=PCG(1)%SS(ICOL,IROW)
+!   ENDDO; ENDDO
+!  ENDIF
+! ENDIF
+ 
+ !## change boundary condition - if itight is 2
  IF(ITIGHT.EQ.2)THEN
   DO IROW=1,NROW; DO ICOL=1,NCOL
    IF(PCG(1)%IB(ICOL,IROW).EQ.-3)PCG(1)%IB(ICOL,IROW)=3.0
   ENDDO; ENDDO
- ENDIF
-
- IF(PRESENT(LBNDCHK))THEN
-  IF(LBNDCHK)THEN
-   CALL SOLID_CHECKIBND(1,NROW,NCOL)
-   IF(MAXVAL(PCG(1)%IB).EQ.0)THEN
-    WRITE(*,'(A)') 'Not possible to simulate model, no connection to boundary condition'
-    !## no boundary criterion condition met
-    IERROR=2; CALL SOLID_CALC_DAL(); RETURN
+  IF(PRESENT(LCR))THEN
+   IF(LCR)THEN
+    !## close connection in between those nodes
+    DO IROW=1,NROW; DO ICOL=1,NCOL-1
+     IF(PCG(1)%IB(ICOL,IROW).EQ.3.AND.PCG(1)%IB(ICOL+1,IROW).EQ.3)PCG(1)%CR(ICOL,IROW)=0.0
+    ENDDO; ENDDO
+    DO ICOL=1,NCOL; DO IROW=1,NROW-1 
+     IF(PCG(1)%IB(ICOL,IROW).EQ.3.AND.PCG(1)%IB(ICOL,IROW+1).EQ.3)PCG(1)%CC(ICOL,IROW)=0.0
+    ENDDO; ENDDO
    ENDIF
   ENDIF
  ENDIF
- 
+
  !## solve each system per modellayer
- NICNVG=0; PCG(1)%HNEW=PCG(1)%HOLD; PCG(1)%SS=0.0
+ NICNVG=0; PCG(1)%HNEW=PCG(1)%HOLD
  
  DO ITER1=1,MXITER1 
   CALL WMESSAGEPEEK(ITYPE,MESSAGE)
@@ -733,9 +756,7 @@ CONTAINS
   IF(ITIGHT.EQ.2)THEN
    IF(PRESENT(CD))THEN
     DO I=1,ND
-     ICOL=INT(XD(I)); IROW=INT(YD(I)); C=CD(I)
-     !## skip inactive
-     IF(PCG(1)%IB(ICOL,IROW).EQ.0)CYCLE
+     ICOL=INT(XD(I)); IROW=INT(YD(I)); C=ABS(CD(I))
      PCG(1)%RHS(ICOL,IROW) =-C*PCG(1)%HOLD(ICOL,IROW)
      PCG(1)%HCOF(ICOL,IROW)=-C
     ENDDO
@@ -743,8 +764,6 @@ CONTAINS
     C=0.1
     DO I=1,ND
      ICOL=INT(XD(I)); IROW=INT(YD(I))
-     !## skip inactive
-     IF(PCG(1)%IB(ICOL,IROW).EQ.0)CYCLE
      PCG(1)%RHS(ICOL,IROW) =-C*PCG(1)%HOLD(ICOL,IROW)
      PCG(1)%HCOF(ICOL,IROW)=-C
     ENDDO
@@ -1500,7 +1519,7 @@ CONTAINS
    IF(.NOT.LCNST)THEN
     DO I=1,N
      IC=YSEL(1,I); IR=YSEL(2,I)
-     PCG(ILAY)%IB(IC,IR)=0; PCG(ILAY)%HOLD(IC,IR)=HNOFLOW
+     PCG(ILAY)%IB(IC,IR)=0 !; PCG(ILAY)%HOLD(IC,IR)=HNOFLOW
     ENDDO
 !    WRITE(*,*) 'Removed ',N,' of modelcells that are not attached to a constant head'
 !   ELSE
