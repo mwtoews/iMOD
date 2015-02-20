@@ -52,7 +52,7 @@ CONTAINS
  INTEGER,INTENT(IN) :: IWRITE,N,NFTHREAD,MXTHREAD
  TYPE(IDFOBJ),INTENT(INOUT),DIMENSION(N) :: IDF
  INTEGER :: IROW,ICOL,IR,IC,IP,IU,I,J,NF,IT,NT,IPT,M
- REAL :: A,DX,DY,F,SSX,SSY,XWBAL
+ REAL :: A,DX,DY,F,SSX,SSY,XWBAL,DX2,DY2
  REAL,DIMENSION(0:2) :: LX,LY
  REAL,DIMENSION(4) :: RK
  LOGICAL :: LRUNGAKUTTA,LWBAL
@@ -121,7 +121,9 @@ CONTAINS
 !  IF(IROW.EQ.389.AND.ICOL.EQ.234)THEN
 !  IF(IROW.EQ.294.AND.ICOL.EQ.631)THEN
 !  IF(IROW.EQ.150.AND.ICOL.EQ.255)THEN
-  IF(IROW.EQ.524.AND.ICOL.EQ.401)THEN
+
+  IF(IROW.EQ.587.AND.ICOL.EQ.415)THEN
+!  IF(IROW.EQ.524.AND.ICOL.EQ.401)THEN
 !  IF(.TRUE.)THEN
   
    !## start in the middle
@@ -144,10 +146,14 @@ CONTAINS
    
    DO
     NF=NF+1
-    IF(NF.GT.IDF(1)%NCOL*IDF(1)%NROW)THEN
+    IF(NF.GT.IDF(1)%NCOL)THEN !*IDF(1)%NROW)THEN
      WRITE(*,'(A,3I10)') 'Particle wont stop (IR,IC,NF): ',IR,IC,NF
      STOP
     ENDIF
+    
+    if(ic.eq.768.and.ir.eq.970)then
+    write(*,*)
+    endif
     
     !## stepsize
     SSX=F*IDF(1)%DX; SSY=SSX
@@ -200,12 +206,43 @@ endif
      DX=DX+COS(RK(3))*SSX*2.0; DY=DY+SIN(RK(3))*SSY*2.0
      DX=DX+COS(RK(4))*SSX;     DY=DY+SIN(RK(4))*SSY
      A=ATAN2(DY,DX)
-     
+
+!## double stepsize
+!     dx2=dx
+!     dy2=dy
+!     !## stepsize
+!     SSX=2.0*F*IDF(1)%DX; SSY=SSX
+!     !## first order
+!     RK(1)=SOF_TRACE_GET_ANGLE_MEAN(IDF(1),LX(0),LY(0))
+!     !## second order
+!     DX=-COS(RK(1))*SSX*0.5; DY=-SIN(RK(1))*SSY*0.5
+!     LX(1)=LX(0)+DX; LY(1)=LY(0)+DY
+!     RK(2)=SOF_TRACE_GET_ANGLE_MEAN(IDF(1),LX(1),LY(1))
+!     !## third order
+!     DX=-COS(RK(2))*SSX*0.5; DY=-SIN(RK(2))*SSY*0.5
+!     LX(1)=LX(0)+DX; LY(1)=LY(0)+DY
+!     RK(3)=SOF_TRACE_GET_ANGLE_MEAN(IDF(1),LX(1),LY(1))
+!     !## fourth order
+!     DX=-COS(RK(3))*SSX; DY=-SIN(RK(3))*SSY
+!     LX(1)=LX(0)+DX; LY(1)=LY(0)+DY
+!     RK(4)=SOF_TRACE_GET_ANGLE_MEAN(IDF(1),LX(1),LY(1))
+!     DX=0.0; DY=0.0
+!     DX=DX+COS(RK(1))*SSX;     DY=DY+SIN(RK(1))*SSY
+!     DX=DX+COS(RK(2))*SSX*2.0; DY=DY+SIN(RK(2))*SSY*2.0
+!     DX=DX+COS(RK(3))*SSX*2.0; DY=DY+SIN(RK(3))*SSY*2.0
+!     DX=DX+COS(RK(4))*SSX;     DY=DY+SIN(RK(4))*SSY
+!     A=ATAN2(DY,DX)
+!     DX=DX+DX2
+!     DY=DY+DY2
+!     A=ATAN2(DY,DX)
+
     ELSE
      A=SOF_TRACE_GET_ANGLE_MEAN(IDF(1),LX(0),LY(0))
     ENDIF
     
-!    ssx=0.5*ssx; ssy=0.5*ssy
+    !## stepsize
+    SSX=F*IDF(1)%DX; SSY=SSX
+
     DX=-COS(A)*SSX; DY=-SIN(A)*SSY
     LX(1)=LX(0)+DX; LY(1)=LY(0)+DY   
    
@@ -339,10 +376,13 @@ endif
  REAL,INTENT(IN) :: XC,YC
  REAL,DIMENSION(2) :: A
  INTEGER :: IQ,IROW,ICOL,IC1,IC2,IR1,IR2,IC,IR
- REAL :: DX,DY,X1,Y1,F,AF
+ REAL :: DX,DY,X1,Y1,F,AF,TD,X2,Y2
 
  !## get proper cell
  CALL IDFIROWICOL(IDF,IR,IC,XC,YC)
+
+! SOF_TRACE_GET_ANGLE_MEAN=IDF%X(IC,IR); RETURN
+   
  !## get midpoint
  CALL IDFGETLOC(IDF,IR,IC,X1,Y1)
  !##get quadrants
@@ -362,21 +402,52 @@ endif
   ENDIF
  ENDIF
     
- !## handig om gemiddelde vector tenemen van 8 punten , beter denk gemiddelde van 4 dichtbijgelegen punten
- A=0.0; AF=0.0
- DO IROW=MAX(1,IR1),MIN(IDF%NROW,IR2); DO ICOL=MAX(1,IC1),MIN(IDF%NCOL,IC2)
-  IF(IDF%X(ICOL,IROW).EQ.IDF%NODATA)EXIT
-  CALL IDFGETLOC(IDF,IROW,ICOL,X1,Y1)
-  F=UTL_DIST(XC,YC,X1,Y1)
-  IF(F.EQ.0.0)THEN
-   SOF_TRACE_GET_ANGLE_MEAN=IDF%X(ICOL,IROW); RETURN
-  ENDIF
-  !## each weighted as much as the others, in that way it converges
-  F=1.0
-  DX=IDF%DX*COS(IDF%X(ICOL,IROW)); DY=IDF%DY*SIN(IDF%X(ICOL,IROW))
-  A(1)=A(1)+DX*F; A(2)=A(2)+DY*F; AF=AF+F
- ENDDO; ENDDO
+ if(.FALSE.)then
+  !## get mean of 4 points
+  A=0.0; AF=0.0
+  DO IROW=MAX(1,IR1),MIN(IDF%NROW,IR2); DO ICOL=MAX(1,IC1),MIN(IDF%NCOL,IC2)
+   IF(IDF%X(ICOL,IROW).EQ.IDF%NODATA)EXIT
+   CALL IDFGETLOC(IDF,IROW,ICOL,X1,Y1)
+   F=UTL_DIST(XC,YC,X1,Y1)
+   IF(F.EQ.0.0)THEN
+    SOF_TRACE_GET_ANGLE_MEAN=IDF%X(ICOL,IROW); RETURN
+   ENDIF
+   !## each weighted as much as the others, in that way it converges
+   F=1.0
+   DX=IDF%DX*COS(IDF%X(ICOL,IROW)); DY=IDF%DY*SIN(IDF%X(ICOL,IROW))
+   A(1)=A(1)+DX*F; A(2)=A(2)+DY*F; AF=AF+F
+  ENDDO; ENDDO
+ 
+ else
 
+   CALL IDFGETLOC(IDF,IR1,IC1,X1,Y1)   
+   CALL IDFGETLOC(IDF,IR1,IC2,X2,Y2)   
+   TD=X2-X1; F=(XC-X1)/TD
+   
+   DX=0.0; DY=0.0
+   DX=   (1.0-F)*COS(IDF%X(IC1,IR1)); DY=   (1.0-F)*SIN(IDF%X(IC1,IR1))
+   DX=DX+     F *COS(IDF%X(IC2,IR1)); DY=DY+     F *SIN(IDF%X(IC2,IR1))
+   A(1)=ATAN2(DY,DX)
+
+   DX=0.0; DY=0.0
+   DX=   (1.0-F)*COS(IDF%X(IC1,IR2)); DY=   (1.0-F)*SIN(IDF%X(IC1,IR2))
+   DX=DX+     F *COS(IDF%X(IC2,IR2)); DY=DY+     F *SIN(IDF%X(IC2,IR2))
+   A(2)=ATAN2(DY,DX)
+   
+   TD=IDF%DY
+   CALL IDFGETLOC(IDF,IR1,IC1,X1,Y1)   
+   CALL IDFGETLOC(IDF,IR2,IC1,X2,Y2)   
+   TD=Y1-Y2; F=(Y1-YC)/TD
+
+   DX=0.0; DY=0.0
+   DX=DX+(1.0-F)*COS(A(1)); DY=DY+(1.0-F)*SIN(A(1))
+   DX=DX+     F *COS(A(2)); DY=DY+     F *SIN(A(2))
+
+   A(1)=DX
+   A(2)=DY
+  
+ endif
+ 
  SOF_TRACE_GET_ANGLE_MEAN=ATAN2(A(2),A(1)) 
  
  END FUNCTION SOF_TRACE_GET_ANGLE_MEAN
@@ -577,13 +648,16 @@ endif
    ENDDO
   ENDIF
   
-  AX=0.0; AY=0.0 !; NA=0.0
+  AX=0.0; AY=0.0 
   DO I=1,9
    Z(I)=Z(I)-ZM
    IF(Z(I).LT.0.0)THEN
-    AX=AX+GRADX(I)*ABS(Z(I))
-    AY=AY+GRADY(I)*ABS(Z(I))
-!    NA=NA+ABS(Z(I))    
+    !## distance
+    F=SQRT(GRADX(I)**2.0+GRADY(I)**2.0)
+    !## inverse distance
+    F=1.0/F
+    AX=AX+GRADX(I)*F*ABS(Z(I))
+    AY=AY+GRADY(I)*F*ABS(Z(I))
    ENDIF
   ENDDO
   DZDX=-AX 
