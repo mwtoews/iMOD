@@ -96,7 +96,7 @@ CONTAINS
   IF(IMENU.LT.0)THEN
    IF(LEX)THEN; ZCRIT=IDF%X(JCOL,JROW); ELSE; ZCRIT=IDFGETVAL(IDF,JROW,JCOL); ENDIF
   ENDIF
-  !## use threshold for stepsize (read normaliter thickness)
+  !## use threshold for stepsize (thickness)
   IF(LTHRESHOLD)XTHRESHOLD=THRESHOLD%X(JCOL,JROW)
   
   !## get direction and do not use this direction again!

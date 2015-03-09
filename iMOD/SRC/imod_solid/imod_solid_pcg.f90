@@ -337,7 +337,7 @@ CONTAINS
   ENDIF
   
   !## correct if layers overlap
-  DO ILAY=2,NLAY
+  DO ILAY=2,NLAY-1
    !## check only whenever icheck is active
    IF(ICHECK_IDF(ILAY).EQ.0)CYCLE
    DO IROW=1,SOLIDF(ILAY)%NROW
@@ -348,6 +348,13 @@ CONTAINS
       TOP=PCG(ILAY-1)%HOLD(JCOL,JROW)
       PCG(ILAY)%HOLD(ICOL,IROW)=MIN(PCG(ILAY)%HOLD(ICOL,IROW),TOP)
      ENDIF
+     !## make sure all layers are higher than base
+     IF(ICHECK_IDF(NLAY).EQ.1)THEN
+      CALL IDFIROWICOL(SOLIDF(NLAY),JROW,JCOL,X,Y)
+      IF(JROW.NE.0.AND.JCOL.NE.0)THEN
+       PCG(ILAY)%HOLD(ICOL,IROW)=MAX(PCG(ILAY)%HOLD(ICOL,IROW),PCG(NLAY)%HOLD(JCOL,JROW))
+      ENDIF
+     ENDIF    
     ENDDO
    ENDDO
   ENDDO
