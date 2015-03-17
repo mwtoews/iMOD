@@ -8,7 +8,7 @@
 //
 // Winteracter resource script. 
 //
-// Modified : 17/Feb/2015 17:10:10
+// Modified : 17/Mar/2015 13:36:11
 //
 ///////////////////////////////////////////////////
 //
@@ -992,6 +992,7 @@
 #define ID_DSERIESTAB2                    179
 #define ID_FEED                          1234
 #define ID_ADDLINELABEL                 40242
+#define ID_DPMANAGER_SPECIALOPEN          180
 
 ///////////////////////////////////////////////////
 //
@@ -8247,6 +8248,35 @@ BEGIN
 ,0
 END
 
+ID_DPMANAGER_SPECIALOPEN DIALOG 0, 0,  321,   64
+STYLE WS_POPUP | WS_BORDER | WS_DLGFRAME | WS_SYSMENU | DS_3DLOOK | DS_MODALFRAME
+FONT    8, "Arial Narrow"
+CAPTION "Special Open"
+BEGIN
+    CONTROL "OK",IDOK,"BUTTON",WS_CHILD | WS_VISIBLE | WS_GROUP | WS_TABSTOP | BS_DEFPUSHBUTTON | BS_TEXT,   10,   44,   40,   14
+    CONTROL "Close",IDCANCEL,"BUTTON",WS_CHILD | WS_VISIBLE | WS_TABSTOP | BS_PUSHBUTTON | BS_TEXT,  272,   44,   40,   14
+    CONTROL "Help ...",IDHELP,"BUTTON",WS_CHILD | WS_VISIBLE | WS_TABSTOP | BS_PUSHBUTTON | BS_TEXT,  230,   44,   40,   14
+    CONTROL "",IDF_MENU1,"COMBOBOX",WS_CHILD | WS_VISIBLE | WS_VSCROLL | WS_GROUP | WS_TABSTOP | CBS_DROPDOWNLIST | CBS_HASSTRINGS,   18,   20,  288,   68
+    CONTROL "Open Files from Current Content Project Manager in Selected Order",IDF_GROUP1,"BUTTON",WS_CHILD | WS_VISIBLE | WS_GROUP | BS_GROUPBOX | BS_TEXT | BS_LEFT,   10,    4,  300,   36
+END
+
+ID_DPMANAGER_SPECIALOPEN RCDATA
+BEGIN
+"[Menus] \n"
+" 1192     4     1 \n"
+"1) TOP1 - BOT1 ... \n"
+"2) TOP1 - KDW1 - BOT1 - TOP2 - KDW2 - BOT2 ... \n"
+"3) TOP1 - KDW1 - BOT1 - VCW1 - TOP2 - BOT2 - VCW2 - TOP3 ... \n"
+"4) TOP1 - BOT1 - VCW1 - TOP2 - BOT2 - VCW2 - TOP3 ... \n"
+"[Fonts] \n"
+"    1    8 Arial, 400 0 \n"
+"    2    8 Arial, 400 0 \n"
+"    9    8 Arial, 400 0 \n"
+" 1192    8 Arial, 400 0 \n"
+" 1019    8 Arial, 400 0 \n"
+,0
+END
+
 ///////////////////////////////////////////////////
 //
 // Menus
@@ -9547,4 +9577,4 @@ END
 //*WI* FILENAME    resource.f90
 //*WI* FMODNAME    RESOURCE
 //*WI* LASTTYPE        2
-//*WI* LASTRES       124
+//*WI* LASTRES       237

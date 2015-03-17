@@ -3661,6 +3661,17 @@ SOLLOOP: DO I=1,NSOLLIST
          
    IICLR=SLD(1)%INTCLR(IPROF)
    
+   !## make sure xt has a small offset (except for xt=0.0)
+   TX(1)=0.0
+   DO J=2,SPF(I)%NXY
+    DXX=SPF(I)%X(J)-SPF(I)%X(J-1); DYY=SPF(I)%Y(J)-SPF(I)%Y(J-1); DXY=DXX**2.0+DYY**2.0
+    IF(DXY.GT.0.0)DXY=SQRT(DXY)
+    TX(1)=TX(1)+DXY
+   ENDDO
+   !## minimal offset = fraction of total distance
+   DXX=TX(1)/1000.0
+   !dxx=0.0
+      
    N=SPF(I)%PROF(IPROF)%NPOS+SPF(I)%PROF(IPROF+1)%NPOS+SPF(I)%NXY-2
    ALLOCATE(XT(N),ZT(N,2))
    XT=0.0
@@ -3671,11 +3682,16 @@ SOLLOOP: DO I=1,NSOLLIST
     II=II+1
     !## create table with distances and z-values for top/bot of current iprof-layer
     DO J=1,SPF(I)%PROF(K)%NPOS
-     IPOS       =IPOS+1
-     XT(IPOS)   =SPF(I)%PROF(K)%PX(J)
+     IPOS=IPOS+1
+     IF(J.EQ.1)THEN
+      XT(IPOS)=SPF(I)%PROF(K)%PX(J)
+     ELSE
+      XT(IPOS)=MAX(XT(IPOS-1)+DXX,SPF(I)%PROF(K)%PX(J))
+     ENDIF
      ZT(IPOS,II)=SPF(I)%PROF(K)%PZ(J)
     ENDDO
    END DO
+   !## include knickpoints
    TX(1)=0.0
    DO J=2,SPF(I)%NXY-1
     DXX=SPF(I)%X(J)-SPF(I)%X(J-1); DYY=SPF(I)%Y(J)-SPF(I)%Y(J-1); DXY=0.0
@@ -3687,7 +3703,7 @@ SOLLOOP: DO I=1,NSOLLIST
     ZT(IPOS,2)=NODATA_Z !## to be filled in later
    ENDDO
    N=IPOS
-
+ 
    CALL SORTEM(1,N,XT,2,ZT(:,1),ZT(:,2),XT,XT,XT,XT,XT)
 
    !## fill first and last
@@ -3761,6 +3777,7 @@ SOLLOOP: DO I=1,NSOLLIST
      GX=0.0; GY=0.0
      IF(DXY.GT.0.0)THEN; GX=DXX/DXY; GY=DYY/DXY; ENDIF
      TX(2)=TX(1)+DXY
+
      !## between interval or in last interval
      IF(XT(IPOS).GE.TX(1).AND.XT(IPOS).LT.TX(2).OR. &
         J.EQ.SPF(I)%NXY)THEN
@@ -3798,9 +3815,7 @@ SOLLOOP: DO I=1,NSOLLIST
 
        !## begin OpenGL-LINES
        CALL IMOD3D_SETCOLOR(WRGB(10,10,10))
-!       CALL IMOD3D_SETCOLOR(WRGB(255,255,255))
        CALL GLLINEWIDTH(1.0_GLFLOAT)
-!       CALL GLLINEWIDTH(2.0_GLFLOAT)
        CALL GLBEGIN(GL_LINES)
         CALL GLVERTEX3F(XCOR(2),YCOR(2),Z(2))
         CALL GLVERTEX3F(XCOR(3),YCOR(3),Z(3))
