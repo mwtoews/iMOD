@@ -517,11 +517,21 @@ CONTAINS
  !## error occured, what to do?
  ENDIF
 
- !## fill display with solids
- IF(.NOT.IMOD3D_SOL())THEN
- !## error occured, what to do?
+ IF(ISOLID_3D.NE.0)THEN
+  NSOLLIST=NSPF
+  ALLOCATE(SOLPLOT(NSOLLIST))
+  !## get display-list pointers
+  ALLOCATE(SOLLISTINDEX(NSOLLIST,2))
+  SOLPLOT%ISEL=1
+  SOLPLOT%IBLEND=0
+  SOLPLOT%IINTERFACE=0
+  SOLPLOT%IBITMAP=0
+  !## fill display with solids
+  IF(.NOT.IMOD3D_SOL())THEN
+  !## error occured, what to do?
+  ENDIF
  ENDIF
-
+ 
  !## define top%z/bot%z, nothing found from previous data, set top%z/bot%z=0.0
  IF(TOP%Z.LT.BOT%Z)THEN
   TOP%Z =1.0; BOT%Z=-1.0

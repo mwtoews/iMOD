@@ -894,11 +894,7 @@ ILLOOP: DO
       II=INDEX(SLD(I)%INTNAME(J),'\',.TRUE.)-1; LINE=SLD(I)%INTNAME(J)(:II); II=INDEX(LINE,'\',.TRUE.)+1
       LINE=SLD(I)%INTNAME(J)(II:)
       MP(L)%ALIAS=TRIM(LINE)
-!      IF(SLD(I)%KDCLR(J).EQ.0)THEN
       CALL UTL_READARRAY((/1,0,0,1,0,0,0/),7,MP(L)%PRFTYPE) !## solid
-!      ELSE
-!       CALL UTL_READARRAY((/1,0,0,0,0,0,0/),7,MP(L)%PRFTYPE) !## solid
-!      ENDIF
       EXIT
      ENDIF
     ENDIF

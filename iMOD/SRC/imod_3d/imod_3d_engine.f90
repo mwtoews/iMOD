@@ -3342,12 +3342,11 @@ SOLLOOP: DO I=1,NSOLLIST
        XVAL=(IFF(1)%V+IFF(2)%V)/2.0
      END SELECT
      ICLR=UTL_IDFGETCLASS(MP(IPLOT)%LEG,XVAL)
-     CALL IMOD3D_SETCOLOR(ICLR) !,IFFPLOT(I)%ICOLOR)
+     CALL IMOD3D_SETCOLOR(ICLR) 
     ELSE
     ENDIF
 
     !## length line is zero!
-!    IF((IFF(1)%X-IFF(2)%X).NE.0.0.OR.(IFF(1)%Y-IFF(2)%Y).NE.0.0)THEN
     IF(IFF(1)%X-IFF(2)%X.NE.0.0.OR.IFF(1)%Y-IFF(2)%Y.NE.0.0.OR. &
        IFF(1)%Z-IFF(2)%Z.NE.0.0)THEN
 
@@ -3633,11 +3632,9 @@ SOLLOOP: DO I=1,NSOLLIST
  !## solid active, although loaded im memory (could be)
  IF(ISOLID_3D.EQ.0)RETURN
 
- NSOLLIST=NSPF
  IF(NSOLLIST.EQ.0)RETURN
 
  !## get display-list pointers
- ALLOCATE(SOLLISTINDEX(NSOLLIST,2),SOLPLOT(NSOLLIST))
  SOLLISTINDEX=0
 
  DX=(TOP%X-BOT%X)/2.0_GLFLOAT/XYZAXES(1)
@@ -3657,9 +3654,7 @@ SOLLOOP: DO I=1,NSOLLIST
   DO IPROF=1,SIZE(SPF(I)%PROF)-1  
    
    IF(SPF(I)%PROF(IPROF)%NPOS  .LE.0)CYCLE
-   IF(SPF(I)%PROF(IPROF+1)%NPOS.LE.0)CYCLE
-         
-   IICLR=SLD(1)%INTCLR(IPROF)
+   IF(SPF(I)%PROF(IPROF+1)%NPOS.LE.0)CYCLE      
    
    !## make sure xt has a small offset (except for xt=0.0)
    TX(1)=0.0
@@ -3670,7 +3665,6 @@ SOLLOOP: DO I=1,NSOLLIST
    ENDDO
    !## minimal offset = fraction of total distance
    DXX=TX(1)/1000.0
-   !dxx=0.0
       
    N=SPF(I)%PROF(IPROF)%NPOS+SPF(I)%PROF(IPROF+1)%NPOS+SPF(I)%NXY-2
    ALLOCATE(XT(N),ZT(N,2))
@@ -3800,21 +3794,32 @@ SOLLOOP: DO I=1,NSOLLIST
        XCOR(3)=(X(3)-MIDPOS%X)/DX; YCOR(3)=(Y(3)-MIDPOS%Y)/DY
        XCOR(4)= XCOR(3)          ; YCOR(4)= YCOR(3)
 
-       !## get color for z-mean between two segments
-       CALL IMOD3D_SETCOLOR(IICLR) 
-       !## show shaded surface
-       CALL IMOD3D_RETURNCOLOR(IICLR,AMBIENT)
-       CALL GLMATERIALFV(GL_FRONT_AND_BACK,GL_AMBIENT_AND_DIFFUSE,AMBIENT)
+       IF(SOLPLOT(I)%IINTERFACE.EQ.0)THEN
+
+        !## get color for z-mean between two segments
+        IICLR=SLD(1)%INTCLR(IPROF)
+        CALL IMOD3D_SETCOLOR(IICLR) 
+        !## show shaded surface
+        CALL IMOD3D_RETURNCOLOR(IICLR,AMBIENT)
+
+        CALL GLMATERIALFV(GL_FRONT_AND_BACK,GL_AMBIENT_AND_DIFFUSE,AMBIENT)
               
-       !## begin OpenGL-Quads       
-       CALL GLBEGIN(GL_QUADS)
-        CALL IMOD3D_SETNORMALVECTOR((/XCOR(1),YCOR(1),Z(1)/),(/XCOR(2),YCOR(2),Z(2)/),(/XCOR(3),YCOR(3),Z(3)/))
-        DO JJ=1,4; CALL GLVERTEX3F(XCOR(JJ),YCOR(JJ),Z(JJ)); ENDDO
-        !## end OpenGL-Quads
-       CALL GLEND()
+        !## begin OpenGL-Quads       
+        CALL GLBEGIN(GL_QUADS)
+         CALL IMOD3D_SETNORMALVECTOR((/XCOR(1),YCOR(1),Z(1)/),(/XCOR(2),YCOR(2),Z(2)/),(/XCOR(3),YCOR(3),Z(3)/))
+         DO JJ=1,4; CALL GLVERTEX3F(XCOR(JJ),YCOR(JJ),Z(JJ)); ENDDO
+         !## end OpenGL-Quads
+        CALL GLEND()
+        CALL IMOD3D_SETCOLOR(WRGB(10,10,10))
+       
+       ENDIF
+       
+       IF(SOLPLOT(I)%IINTERFACE.EQ.1)THEN
+        IICLR=SPF(I)%PROF(IPROF)%ICLR
+        CALL IMOD3D_SETCOLOR(IICLR) 
+       ENDIF   
 
        !## begin OpenGL-LINES
-       CALL IMOD3D_SETCOLOR(WRGB(10,10,10))
        CALL GLLINEWIDTH(1.0_GLFLOAT)
        CALL GLBEGIN(GL_LINES)
         CALL GLVERTEX3F(XCOR(2),YCOR(2),Z(2))
@@ -3823,12 +3828,18 @@ SOLLOOP: DO I=1,NSOLLIST
 
        !## draw bottom (only for the last)
        IF(IPROF.EQ.SIZE(SPF(I)%PROF)-1)THEN
+
+        IF(SOLPLOT(I)%IINTERFACE.EQ.1)THEN
+         IICLR=SPF(I)%PROF(IPROF+1)%ICLR
+         CALL IMOD3D_SETCOLOR(IICLR)
+        ENDIF   
+
         CALL GLBEGIN(GL_LINES)
         CALL GLVERTEX3F(XCOR(1),YCOR(1),Z(1))
         CALL GLVERTEX3F(XCOR(4),YCOR(4),Z(4))
         CALL GLEND()
        ENDIF
-              
+                  
       ENDIF
       !## copy current position to previous position
       X(1)=X(4); Y(1)=Y(4); Z(1)=Z(4)
@@ -3847,9 +3858,10 @@ SOLLOOP: DO I=1,NSOLLIST
   !## OpenGL-drawing list
   CALL GLENDLIST()
 
-  SOLPLOT(NSOLLIST)%ISEL=1
-  SOLPLOT(NSOLLIST)%IBLEND=0
-  SOLPLOT(NSOLLIST)%IBITMAP=0
+!  SOLPLOT(NSOLLIST)%ISEL=1
+!  SOLPLOT(NSOLLIST)%IBLEND=0
+!  SOLPLOT(NSOLLIST)%IINTERFACE=0
+!  SOLPLOT(NSOLLIST)%IBITMAP=0
  ENDDO
 
  CALL WINDOWOUTSTATUSBAR(1,'')
