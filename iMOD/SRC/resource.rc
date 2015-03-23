@@ -8,13 +8,13 @@
 //
 // Winteracter resource script. 
 //
-// Modified : 19/Mar/2015 17:15:13
+// Modified : 22/Mar/2015 12:34:37
 //
 ///////////////////////////////////////////////////
 //
 // Include files
 //
-#include "winparam.h"
+#include "..\LIB\WINTERACTER\OS_X32\include\winparam.h"
 #ifdef XLIB
 #include "..\LIB\WINTERACTER\OS_X32\include\filesel.rc"
 #include "..\LIB\WINTERACTER\OS_X32\include\colour.rc"
@@ -8272,11 +8272,14 @@ END
 ID_DPMANAGER_SPECIALOPEN RCDATA
 BEGIN
 "[Menus] \n"
-" 1192     4     1 \n"
+" 1192     7     1 \n"
 "1) TOP1 - BOT1 - TOP2 - ... \n"
 "2) TOP1 - KDW1 - BOT1 - TOP2 - KDW2 - BOT2 ... \n"
 "3) TOP1 - KDW1 - BOT1 - VCW1 - TOP2 - BOT2 - VCW2 - TOP3 ... \n"
 "4) TOP1 - BOT1 - VCW1 - TOP2 - BOT2 - VCW2 - TOP3 ... \n"
+"5) TOP1 - SHD1 - BOT1 - TOP2 - SHD2 - BOT2 ... \n"
+"6) TOP1 - KHV1 - BOT1 - TOP2 - KHV2 - BOT2 ... \n"
+"7) TOP1 - BOT1 - KVV1 - TOP2 - BOT2 - KVV2 - TOP3 ... \n"
 "[Ranges] \n"
 "[Fonts] \n"
 "    1    8 Arial, 400 0 \n"
