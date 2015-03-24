@@ -19,12 +19,13 @@
 !!  Stichting Deltares
 !!  P.O. Box 177
 !!  2600 MH Delft, The Netherlands.
+!!
 MODULE MOD_MDL_PAR
 
 CHARACTER(LEN=256) :: RUNFILE,RESDIR,CLIPDIR
 
 INTEGER,PARAMETER :: MXMOD=14,MXPCK=9
-INTEGER,PARAMETER :: MXMDL=24 
+INTEGER,PARAMETER :: MXMDL=25 
 INTEGER,PARAMETER :: MAXCSIZES=100
 
 INTEGER :: NRUNFILES,NSCENFILES,NSDFFILES,NRESULTDIR,NSCENARIOS,&
@@ -48,7 +49,11 @@ INTEGER :: NRUNFILES,NSCENFILES,NSDFFILES,NRESULTDIR,NSCENARIOS,&
            MAXICVNG,&  !## max. inner convergences
            IBUDGET, &  !## save individual budget-terms
            IDAMPING,&  !## use if damping
-           NPCOND      !## preconditioning
+           NPCOND,  &  !## preconditioning
+           IUNCONF, &  !## unconfined
+           IFVDL,   &  !## formulea of de lange
+           IARMSWP, &  !## artificial recharge metaswap
+           IBNDCHK     !## boundary check
 REAL :: MDLBUFFER,  &  !## buffersize
         SIMCSIZE,   &  !## cellsize
         MAXSIMCSIZE,&  !## max.cellsize
@@ -81,10 +86,10 @@ DATA MDLALIAS/'SIMGRO','BOUNDARY','GROUNDWATERHEAD','FLUX FRONT/RIGHT FACE','FLU
               'TOP','BOT','CONCENTRATION','FLUX FRONT/RIGHT FACE (k)','FLUX LOWER FACE (k)', &
               'WELLS','DRAINAGE','RIVERS','EVAPOTRANSPIRATION','GENERAL HEAD BOUNDARY',&
               'RECHARGE','OVERLAND FLOW','CONSTANT HEAD','SEGMENT RIVERS','INTERBED STORAGE'/
-DATA MDLKEYWS/'CAP','BND','SHD','KDW','VCW','STO', &  ! 1-6
-              'PWT','ANI','HFB','TOP','BOT','CON', &  ! 7-12
-              'KHV','KVV','WEL','DRN','RIV','EVT', &  !13-18
-              'GHB','RCH','OLF','CHD','ISG','IBS'/    !19-24
+DATA MDLKEYWS/'CAP','BND','SHD','KDW','VCW','STO', &     !  1- 6
+              'PWT','ANI','HFB','TOP','BOT','CON', &     !  7-12
+              'KHV','KVV','KVA','WEL','DRN','RIV', &     ! 13-18
+              'EVT','GHB','RCH','OLF','CHD','ISG','IBS'/ ! 19-25
 
 END MODULE MOD_MDL_PAR
 

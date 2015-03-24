@@ -8,7 +8,7 @@
 //
 // Winteracter resource script. 
 //
-// Modified : 22/Mar/2015 12:34:37
+// Modified : 24/Mar/2015 15:26:47
 //
 ///////////////////////////////////////////////////
 //
@@ -2154,7 +2154,7 @@ BEGIN
     CONTROL "Results written in:",IDF_LABEL9,"STATIC",WS_CHILD | WS_VISIBLE | WS_GROUP | SS_LEFT,   14,  145,   80,    8
     CONTROL "u:j6b9p69109dbaseresultatenversie_6625x25",IDF_LABEL4,"STATIC",WS_CHILD | WS_VISIBLE | WS_GROUP | SS_LEFT,   14,  156,  273,    8
     CONTROL "&Start Model Simulation ...",IDOK,"BUTTON",WS_CHILD | WS_VISIBLE | WS_GROUP | WS_TABSTOP | BS_PUSHBUTTON | BS_TEXT | BS_FLAT,    6,  179,  100,   14
-    CONTROL "Block process until it is finished",IDF_CHECK1,"BUTTON",WS_CHILD | WS_VISIBLE | WS_DISABLED | WS_GROUP | WS_TABSTOP | BS_AUTOCHECKBOX | BS_TEXT | BS_FLAT,  111,  179,  129,   14
+    CONTROL "Block process until it is finished",IDF_CHECK1,"BUTTON",WS_CHILD | WS_VISIBLE | WS_GROUP | WS_TABSTOP | BS_AUTOCHECKBOX | BS_TEXT | BS_FLAT,  111,  179,  129,   14
 END
 
 ID_DMDLTAB4 RCDATA
@@ -9594,4 +9594,4 @@ END
 //*WI* FILENAME    resource.f90
 //*WI* FMODNAME    RESOURCE
 //*WI* LASTTYPE        2
-//*WI* LASTRES       237
+//*WI* LASTRES        36
