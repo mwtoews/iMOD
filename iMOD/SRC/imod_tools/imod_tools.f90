@@ -332,45 +332,11 @@ CONTAINS
   ENDIF
  END DO
 
- NB=SUM(TP%IACT)
- IF(WBAL_ISTEADY.EQ.0)THEN
-  NP=WBAL_NYEAR*365
- ELSE
-  NP=NB*2+2  !## in case steady-state, all terms together
-  !## 0.0 0.5  1.5 2.0  2.5 3.0  4.0 4.5
-  !##      |----|   |----|   |----|
- ENDIF
- CALL PROFILE_ALLGRAPH(NB,WBAL_NLAYER)
- !## initialise graph parameters
- K=0
- DO I=1,MXTP
-  IF(TP(I)%IACT.EQ.1)THEN
-   K=K+1
-   DO J=1,WBAL_NLAYER
-    ALLOCATE(GRAPH(K,J)%RX(NP))
-    ALLOCATE(GRAPH(K,J)%RY(NP))
-    GRAPH(K,J)%RX=0.0
-    GRAPH(K,J)%RY=0.0
-    GRAPH(K,J)%NP=NP
-    GRAPH(K,J)%ICLR=ICOLOR(K)
-    !## boxes
-    GRAPH(K,J)%GTYPE=3
-    GRAPH(K,J)%LEGTXT=TRIM(TP(I)%ACRNM)
-   ENDDO
-  ENDIF
- ENDDO
-
  SHPNO=0
  IF(WBALCOMPUTE())THEN
   INQUIRE(FILE=TRIM(PREFVAL(1))//'\TMP\POINTER.IDF',EXIST=LEX)
   IF(LEX)CALL IDFINIT(IDFNAMEGIVEN=TRIM(PREFVAL(1))//'\TMP\POINTER.IDF',LPLOT=.FALSE.)
-!  !## display graph
-!  IF(WBAL_ISTEADY.EQ.0)CALL PROFILE_PLOTGRAPH('Date'  ,'Waterbalance (m3/day)',.TRUE.)   !## transient
-!  IF(WBAL_ISTEADY.EQ.1)CALL PROFILE_PLOTGRAPH('Topics','Waterbalance (m3/day)',.FALSE.)  !## Steady state
  ENDIF
-
- !## release memory again
- CALL PROFILE_DEALLGRAPH()
 
  !## release waterbalance-related memory again
  CALL WBALABORT()
