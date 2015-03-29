@@ -60,20 +60,21 @@ CONTAINS
  LOGICAL FUNCTION WBAL_GRAPHCOMPUTE(CSVFNAME) 
  !###======================================================================
  IMPLICIT NONE
- INTEGER,PARAMETER :: MXFLUX=13
+ INTEGER,PARAMETER :: MXFLUX=10
  CHARACTER(LEN=*),INTENT(IN) :: CSVFNAME
  CHARACTER(LEN=MAXLEN) :: C
- INTEGER :: NG,NP,NB,IU,I,J,K,II,JJ,III,KK,IDATE,NLAY,NZONE,IX,IPOS
+ INTEGER :: NG,NP,NB,IU,I,J,K,II,JJ,III,KK,KKK,IDATE,NLAY,NZONE,IX,IPOS
  REAL :: X,TX
  INTEGER,ALLOCATABLE,DIMENSION(:,:) :: IBAR
  REAL,ALLOCATABLE,DIMENSION(:,:,:) :: XG
  CHARACTER(LEN=MAXLEN),ALLOCATABLE,DIMENSION(:) :: CLAY,CZONE
  INTEGER,DIMENSION(0:MXFLUX) :: ICOLOR
- CHARACTER(LEN=3),DIMENSION(MXFLUX) :: CFLUX
- DATA CFLUX/'BND','FLF','FFF','FRF','STO','WEL','DRN','RIV','GHB','RCH','EVT','ISG','OLF'/
+ CHARACTER(LEN=20),DIMENSION(MXFLUX) :: CFLUX
+ DATA CFLUX/'CONSTANT HEAD','FLUX LOWER FACE','FLUX UPPER FACE','FLUX FRONT FACE','FLUX RIGHT FACE','STORAGE', &
+            'EVAPOTRANSPIRATION','OVERLAND FLOW','RECHARGE','SEGMENTS'/
  
  !## positive
- ICOLOR(0) =WRGB(224,225,225)! -- unknown grey
+ ICOLOR(0) =WRGB(225,225,225)! -- unknown grey
  ICOLOR(1) =WRGB(0  ,0  ,64 ) 
  ICOLOR(2) =WRGB(0  ,0  ,255) 
  ICOLOR(3) =WRGB(128,128,255) 
@@ -84,9 +85,9 @@ CONTAINS
  ICOLOR(8) =WRGB(255,0  ,0  ) 
  ICOLOR(9) =WRGB(255,128,64 ) 
  ICOLOR(10)=WRGB(128,0  ,0  ) 
- ICOLOR(11)=WRGB(255,128,128) 
- ICOLOR(12)=WRGB(255,255,128) 
- ICOLOR(13)=WRGB(255,128,255) 
+! ICOLOR(11)=WRGB(255,128,128) 
+! ICOLOR(12)=WRGB(255,255,128) 
+! ICOLOR(13)=WRGB(255,128,255) 
 ! ICOLOR(14)=WRGB(128,0  ,255) 
 
  WBAL_GRAPHCOMPUTE=.FALSE.
@@ -105,7 +106,7 @@ CONTAINS
  
  !## number of graphs
  NG= NZONE*NLAY !## number of graphs
- NP= NL-2       !## number of points
+ NP= NL/NG      !## number of points
  NB=(NV-3)/2    !## number of bars
 
  !## select bars to be plotted
@@ -118,12 +119,12 @@ CONTAINS
   K=K+4
  ENDDO
 
- !## check whether these are all non-zero
+ !## check whether these are all non-zero per category
  DO I=1,NB/2
   DO J=1,2
    II=IBAR(I,J)
    IX=0
-   DO K=1,NP
+   DO K=1,NP*NG
     C=VAR(II,K); READ(C,*) X
     IF(X.NE.0.0)IX=IX+1
    ENDDO
@@ -144,34 +145,59 @@ CONTAINS
  !## keep record of minimal and maximal values
  ALLOCATE(XG(NP,NG,2)); XG=0.0
 
- III=0
- DO JJ=1,2
-  DO I=1,SIZE(IBAR,1)
-   II=IBAR(I,JJ)
-   IF(II.LE.0)CYCLE
-   III=III+1
-   DO J=1,NG
+ !## fill in legend
+ !## read each group
+ DO J=1,NG
+  III=0
+  !## read in/out volumes
+  DO JJ=1,2
+   !## read each active bar
+   DO I=1,SIZE(IBAR,1)
+    !## skip empty bars
+    II=IBAR(I,JJ); IF(II.LE.0)CYCLE
+    III=III+1
     GRAPH(III,J)%NP=NP
     GRAPH(III,J)%GTYPE=1
     GRAPH(III,J)%LEGTXT=UTL_CAP(VAR(II,-1),'U')
-    TX=0.0
-    DO K=1,NP
-     !## always first column
-     C=VAR(1 ,K); READ(C,*) IDATE
-     GRAPH(III,J)%RX(K)=REAL(IDATETOJDATE(IDATE))
-     C=VAR(II,K); READ(C,*) X
-     KK=1; IF(X.LT.0.0)KK=2
-     XG(K,J,KK)=XG(K,J,KK)+X
-     X=XG(K,J,KK)
-     GRAPH(III,J)%RY(K)=X
-     TX=TX+X
-    ENDDO
+
     !## get color
     DO IPOS=1,MXFLUX
-     IF(INDEX(GRAPH(III,J)%LEGTXT,CFLUX(IPOS)).GT.0)EXIT
+     IF(INDEX(GRAPH(III,J)%LEGTXT,TRIM(CFLUX(IPOS))//'_IN').GT.0)EXIT
+     IF(INDEX(GRAPH(III,J)%LEGTXT,TRIM(CFLUX(IPOS))//'_OUT').GT.0)EXIT
     ENDDO
     IF(IPOS.GT.MXFLUX)IPOS=0
     GRAPH(III,J)%ICLR=ICOLOR(IPOS)
+   ENDDO
+  ENDDO
+ ENDDO
+
+ !## read each timestep
+ KK=0
+ DO K=1,NP
+  !## read each group
+  DO J=1,NG
+   III=0
+   KK=KK+1
+   !## read in/out volumes
+   DO JJ=1,2
+    !## read each active bar
+    DO I=1,SIZE(IBAR,1)
+     !## skip empty bars
+     II=IBAR(I,JJ); IF(II.LE.0)CYCLE
+     III=III+1
+
+     !## always first column
+     C=VAR(1 ,KK); READ(C,*) IDATE
+     GRAPH(III,J)%RX(K)=REAL(IDATETOJDATE(IDATE))
+     !## get balance value
+     C=VAR(II,KK); READ(C,*) X
+     KKK=1; IF(X.LT.0.0)KKK=2
+     XG(K,J,KKK)=XG(K,J,KKK)+X
+     X=XG(K,J,KKK)
+     GRAPH(III,J)%RY(K)=X
+
+    ENDDO
+
    ENDDO
   ENDDO
  ENDDO
