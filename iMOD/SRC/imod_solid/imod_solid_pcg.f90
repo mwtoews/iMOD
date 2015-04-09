@@ -61,6 +61,7 @@ CONTAINS
  INTEGER :: I,J,K,ITER1,ITER2,ILAY,IROW,ICOL,ITYPE,IL,IECHO,IVERSION,NICNVG, &
      JKRIGING,ICOMP,NCOMP,NPR,NPC,JROW,JCOL 
  INTEGER,ALLOCATABLE,DIMENSION(:) :: ICNVG
+ REAL,ALLOCATABLE,DIMENSION(:) :: ARRAY_HCHG
  REAL :: TOP,BOT,C,HCHG,RCHG,HCHGOLD,S,X,Y,H1,H2
  LOGICAL :: LEX
  CHARACTER(LEN=256) :: FNAME,LINE
@@ -111,10 +112,11 @@ CONTAINS
  !## allocate memory
  IF(.NOT.SOLID_CALC_AL())RETURN
  
- ALLOCATE(ICNVG(NLAY),ISEL_IDF(NLAY),ICHECK_IDF(NLAY))
+ ALLOCATE(ICNVG(NLAY),ARRAY_HCHG(NLAY),ISEL_IDF(NLAY),ICHECK_IDF(NLAY))
  IF(.NOT.ALLOCATED(DZ))THEN
   ALLOCATE(DZ(SLD(1)%NINT)); DZ=0.0
  ENDIF
+ ARRAY_HCHG=0.0
  
  DO ILAY=1,NLAY
   ISEL_IDF(ILAY)  =SLD(1)%ICLC(ILAY)
@@ -211,6 +213,9 @@ CONTAINS
        CALL WINDOWOUTSTATUSBAR(4,'Solving Residual Change: '//TRIM(LINE))
       ENDIF
       
+      !## store closure error
+      ARRAY_HCHG(ILAY)=HCHG
+      
       !## convergence achieved
       IF(ICNVG(ILAY).EQ.1)EXIT
       IF(MICNVG.GT.0.AND.NICNVG.GT.MICNVG)EXIT 
@@ -230,7 +235,7 @@ CONTAINS
     
      !## something went wrong, no convergence
      IF(ITER1.EQ.1.AND.ITER2.EQ.1)ICNVG(ILAY)=0
-
+     
      !## copy solution into hold
      PCG(ILAY)%HOLD=PCG(1)%HNEW
      !## deallocate pcg memory     
@@ -294,15 +299,19 @@ CONTAINS
  ELSE
   IF(IBATCH.EQ.0)THEN
    CALL UTL_MESSAGEHANDLE(1) 
-   CALL WMESSAGEBOX(YESNO,QUESTIONICON,COMMONNO,'Part of Solid did not converge.'//CHAR(13)// &
+   LINE='Closure Errors:'
+   DO I=1,NLAY
+    IF(ICNVG(I).EQ.0)LINE=TRIM(LINE)//CHAR(13)//'Interface '//TRIM(ITOS(I))//' error '//TRIM(RTOS(ARRAY_HCHG(I),'G',7))
+   ENDDO
+   CALL WMESSAGEBOX(YESNO,QUESTIONICON,COMMONNO,'Part of Solid did not converge.'//CHAR(13)//TRIM(LINE)//CHAR(13)// &
      'Do you want to save the results so far in:'//CHAR(13)// &
       '['//TRIM(FNAME)//']','Question')
    IF(WINFODIALOG(4).EQ.1)LEX=.TRUE.
   ELSEIF(IBATCH.EQ.1)THEN
    WRITE(*,'(A)') 'Part of Solid did not converge.'
    DO I=1,NLAY
-    IF(ICNVG(I).EQ.0)WRITE(*,'(A,I3,A)') 'Interface ',I,' NOT solved'
-    IF(ICNVG(I).EQ.1)WRITE(*,'(A,I3,A)') 'Interface ',I,' solved'
+    IF(ICNVG(I).EQ.0)WRITE(*,'(A,I3,A,G15.7)') 'Interface ',I,' NOT solved closure error ',ARRAY_HCHG(I)
+    IF(ICNVG(I).EQ.1)WRITE(*,'(A,I3,A,G15.7)') 'Interface ',I,' solved closure error ',ARRAY_HCHG(I)
    ENDDO
    WRITE(*,'(A)') 'Do you want to save the results so far in:'
    WRITE(*,'(A$)') '['//TRIM(OUTPUTFOLDER)//'] (Y/N) ? '

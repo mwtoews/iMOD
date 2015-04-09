@@ -1137,7 +1137,7 @@ CONTAINS
  YNEW=Y-XY(2,1)  !y1
  DIST=0.0; IF(XNEW+YNEW.NE.0.0)DIST=SQRT(XNEW**2.0+YNEW**2.0)
  
- !## rotated coordinates become ...
+ !## rotated coordinates becomes ...
  !  cos() sin()  !
  ! -sin() cos()  !
  XROT=XNEW* COS(RAD)+YNEW*SIN(RAD)       !## x1'
@@ -1155,7 +1155,7 @@ CONTAINS
   Y=Z
   IEDGE= 0
  !## point positions before line but within sightdepth
- ELSEIF(XROT.LT.0.0)THEN !.AND.DIST.LE.YDIS)THEN !XROT.GE.-YDIS)THEN
+ ELSEIF(XROT.LT.0.0)THEN 
   DIST=0.0; IF(XROT+YROT.NE.0.0)DIST=SQRT(XROT**2.0+YROT**2.0)
   IF(DIST.LE.YDIS)THEN
    X=OFFSETX
@@ -1164,7 +1164,7 @@ CONTAINS
    YROT=DIST
   ENDIF
  !## point positions after line but within sightdepth
- ELSEIF(XROT.GT.XDIS)THEN !.AND.DIST.LE.YDIS)THEN !XROT.LE.XDIS+YDIS)THEN
+ ELSEIF(XROT.GT.XDIS)THEN 
   DIST=0.0; IF((XROT-XDIS)+YROT.NE.0.0)DIST=SQRT((XROT-XDIS)**2.0+YROT**2.0)
   IF(DIST.LE.YDIS)THEN
    X=XDIS+OFFSETX

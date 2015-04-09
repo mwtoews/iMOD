@@ -55,6 +55,48 @@ REAL,PARAMETER,PRIVATE :: SDAY=86400.0
 CONTAINS
 
  !###======================================================================
+ SUBROUTINE UTL_PROFILE_GETVIEWBOX(X1,Y1,X2,Y2,XSIGHT,XYPOL,XMN,YMN,XMX,YMX)
+ !###======================================================================
+ IMPLICIT NONE
+ REAL,INTENT(IN) :: X1,X2,Y1,Y2,XSIGHT
+ REAL,INTENT(OUT) :: XMN,YMN,XMX,YMX
+ REAL,DIMENSION(4,2),INTENT(OUT) :: XYPOL
+
+ CALL UTL_PROFILE_COMPVIEWBOX(X1,X2,Y1,Y2,XYPOL,XSIGHT)
+ XMN=MINVAL(XYPOL(:,1))
+ XMX=MAXVAL(XYPOL(:,1))
+ YMN=MINVAL(XYPOL(:,2))
+ YMX=MAXVAL(XYPOL(:,2))
+
+ END SUBROUTINE UTL_PROFILE_GETVIEWBOX
+
+ !###======================================================================
+ SUBROUTINE UTL_PROFILE_COMPVIEWBOX(X1,X2,Y1,Y2,XYPOL,XSIGHT)
+ !###======================================================================
+ IMPLICIT NONE
+ REAL,PARAMETER :: RAD=360.0/(2.0*3.1415)
+ REAL,INTENT(IN) :: X1,X2,Y1,Y2,XSIGHT
+ REAL,INTENT(OUT),DIMENSION(4,2) :: XYPOL
+ REAL :: DX,DY,TNG
+
+ DX =X2-X1
+ DY =Y2-Y1
+ IF(DY.EQ.0.0)TNG=0.0
+ IF(ABS(DY).GT.0.0)TNG=ATAN2(DY,DX)
+ TNG=TNG+90.0/RAD
+
+ XYPOL(1,1)=X1+COS(TNG)*XSIGHT
+ XYPOL(1,2)=Y1+SIN(TNG)*XSIGHT
+ XYPOL(2,1)=X2+COS(TNG)*XSIGHT
+ XYPOL(2,2)=Y2+SIN(TNG)*XSIGHT
+ XYPOL(3,1)=X2-COS(TNG)*XSIGHT
+ XYPOL(3,2)=Y2-SIN(TNG)*XSIGHT
+ XYPOL(4,1)=X1-COS(TNG)*XSIGHT
+ XYPOL(4,2)=Y1-SIN(TNG)*XSIGHT
+
+ END SUBROUTINE UTL_PROFILE_COMPVIEWBOX
+
+ !###======================================================================
  LOGICAL FUNCTION UTL_LOADIMAGE(BMPFNAME,N,IBMPDATA,IBATCH)
  !###======================================================================
  IMPLICIT NONE

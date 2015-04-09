@@ -24,7 +24,8 @@ MODULE MOD_IFF
 
 USE WINTERACTER
 USE MODPLOT
-USE MOD_UTL, ONLY : UTL_WAITMESSAGE,UTL_GETUNIT,ITOS,RTOS,UTL_CAP,UTL_MESSAGEHANDLE,UTL_IDFGETCLASS
+USE MOD_UTL, ONLY : UTL_WAITMESSAGE,UTL_GETUNIT,ITOS,RTOS,UTL_CAP,UTL_MESSAGEHANDLE,UTL_IDFGETCLASS, &
+                    UTL_PROFILE_GETVIEWBOX
 USE MOD_OSD, ONLY : OSD_OPEN,OSD_IOSTAT_MSG
 
 TYPE IFFTYPE
@@ -71,9 +72,10 @@ CONTAINS
  IMPLICIT NONE
  INTEGER,INTENT(IN) :: IU,IPLOT
  REAL,DIMENSION(2,2),INTENT(IN) :: XY
- REAL,INTENT(IN) :: XMIN,XMAX,YMIN,YMAX,ZMIN,ZMAX,OFFSETX !plot window!
+ REAL,INTENT(IN) :: XMIN,XMAX,YMIN,YMAX,ZMIN,ZMAX,OFFSETX 
  INTEGER :: IOS,ICLR,I,L
- REAL :: X1,X2,Y1,Y2,XVAL,DX,DY,XDIS,YDIS,RAD,XS1,XS2,YS1,YS2
+ REAL :: X1,X2,Y1,Y2,XVAL,DX,DY,XDIS,YDIS,TDIS,RAD,XS1,XS2,YS1,YS2,D,XMN,YMN,XMX,YMX
+ REAL,DIMENSION(4,2) :: XYPOL
 
  ALLOCATE(IFF(2))
 
@@ -90,13 +92,14 @@ CONTAINS
  CALL IGRLINEWIDTH(MP(IPLOT)%THICKNESS)
  CALL IGRCOLOURN(WRGB(0,0,0))
 
- YDIS=REAL(MP(IPLOT)%IDFI)
+ TDIS=REAL(MP(IPLOT)%IDFI)
  IF(SUM(XY).NE.0.0)THEN
   DX =XY(1,2)-XY(1,1)  !x2-x1
   DY =XY(2,2)-XY(2,1)  !y2-y1
   XDIS=SQRT(DX**2.0+DY**2.0)
   RAD=0.0
   IF(DY.NE.0.0)RAD=ATAN2(DY,DX)
+  CALL UTL_PROFILE_GETVIEWBOX(XY(1,1),XY(2,1),XY(1,2),XY(2,2),TDIS,XYPOL,XMN,YMN,XMX,YMX)
  ENDIF
 
  CALL WINDOWSELECT(0)
@@ -129,7 +132,7 @@ CONTAINS
 
     !## use of line-colouring
     IF(MP(IPLOT)%ILEG.EQ.1)THEN!SCOLOR.GT.0)THEN
-     SELECT CASE (MP(IPLOT)%IATTRIB)!SCOLOR)
+     SELECT CASE (MP(IPLOT)%IATTRIB)
       CASE (1)
        XVAL=REAL(IFF(1)%IPART)
       CASE (2)
@@ -158,49 +161,52 @@ CONTAINS
      ENDIF
     ELSE
      !## colouring is default: black!
-     ICLR=MP(IPLOT)%SCOLOR!WRGB(0,0,0)
+     ICLR=MP(IPLOT)%SCOLOR
     ENDIF
 
     !## normal 2d plot
     IF(SUM(XY).EQ.0.0)THEN
 
-     !## length line is zero!
+     !## length line is zero
      IF((IFF(1)%X-IFF(2)%X).NE.0.0.OR.(IFF(1)%Y-IFF(2)%Y).NE.0.0)THEN
       !## correct for sight-depth
  !      IF((XYZT(3,1)+XYZT(3,2))/2.0.GE.YDIS)THEN
-      IF(MP(IPLOT)%FADEOUT.EQ.1)CALL IFFFADEOUT(ICLR,0.5*(IFF(1)%Z+IFF(2)%Z)/YDIS)
+ !     IF(MP(IPLOT)%FADEOUT.EQ.1)CALL IFFFADEOUT(ICLR,0.5*(IFF(1)%Z+IFF(2)%Z)/YDIS)
       CALL IGRCOLOURN(ICLR)   
       CALL IGRJOIN(IFF(1)%X,IFF(1)%Y,IFF(2)%X,IFF(2)%Y)
      ENDIF
 
     !## perform coordinate transformation for serie-plotting!
     ELSE
+     
+     IF(IGRINSIDEPOLYGON(XYPOL(:,1),XYPOL(:,2),4,IFF(1)%X,IFF(1)%Y).OR. &
+        IGRINSIDEPOLYGON(XYPOL(:,1),XYPOL(:,2),4,IFF(2)%X,IFF(2)%Y))THEN
 
-     !## perform coordinate shift first ... related to first point in segment!
-     XS1=IFF(1)%X-XY(1,1)  !x1
-     XS2=IFF(2)%X-XY(1,1)  !x2
-     YS1=IFF(1)%Y-XY(2,1)  !y1
-     YS2=IFF(2)%Y-XY(2,1)  !y2
+      !## perform coordinate shift first ... related to first point in segment!
+      XS1=IFF(1)%X-XY(1,1)  !x1
+      XS2=IFF(2)%X-XY(1,1)  !x2
+      YS1=IFF(1)%Y-XY(2,1)  !y1
+      YS2=IFF(2)%Y-XY(2,1)  !y2
 
-     !## rotated coordinates become ...
-     !  cos() sin()  !
-     ! -sin() cos()  !
-     X1=XS1* COS(RAD)+YS1*SIN(RAD) !x1'
-     X2=XS2* COS(RAD)+YS2*SIN(RAD) !x2'
-     Y1=YS1*(-1.0*SIN(RAD))+YS1*COS(RAD) !y1'
-     Y2=YS2*(-1.0*SIN(RAD))+YS2*COS(RAD) !y2'
+      !## clock-wise rotation
+      !## rotated coordinates become ...
+      X1=XS1* COS(RAD)+YS1*SIN(RAD) !x1'
+      X2=XS2* COS(RAD)+YS2*SIN(RAD) !x2'
+      Y1=YS1*(-1.0*SIN(RAD))+YS1*COS(RAD) !y1'
+      Y2=YS2*(-1.0*SIN(RAD))+YS2*COS(RAD) !y2'
 
-     !## plot only if ....
-     IF(X1.GE.0.0.AND.X2.GE.0.0.AND. &    !x1>=0 x2>=0
-        X1.LE.XDIS.AND.X2.LE.XDIS.AND. &  !x1<=xdis !x2<=xdis
-        ABS(Y1).LE.YDIS.AND.ABS(Y2).LE.YDIS)THEN    !y1<=ydis !y2<=ydis
-
-      IF(MP(IPLOT)%FADEOUT.EQ.1)CALL IFFFADEOUT(ICLR,0.5*(Y1+Y2)/YDIS) 
+      IF(MP(IPLOT)%FADEOUT.EQ.1)THEN
+       XS1=(IFF(1)%X+IFF(2)%X)/2.0
+       YS1=(IFF(1)%Y+IFF(2)%Y)/2.0
+       YDIS=IGRDISTANCELINE(XY(1,1),XY(1,2),XY(2,1),XY(2,2),XS1,YS1,1) 
+       CALL IFFFADEOUT(ICLR,TDIS/YDIS/2.0) 
+      ENDIF
       CALL IGRCOLOURN(ICLR)
 
       !## draw line X-Z only when length line is zero!
       IF((X1+OFFSETX-X2+OFFSETX).NE.0.0.OR.(IFF(1)%Z-IFF(2)%Z).NE.0.0)THEN
-       CALL IGRJOIN(X1+OFFSETX,IFF(1)%Z,X2+OFFSETX,IFF(2)%Z)
+       CALL IGRJOIN(X2+OFFSETX,IFF(2)%Z,X1+OFFSETX,IFF(1)%Z)
+       CALL IGRARROWJOIN(X2+OFFSETX,IFF(2)%Z,X1+OFFSETX,IFF(1)%Z,1)
       ENDIF
      ENDIF
 
@@ -212,7 +218,7 @@ CONTAINS
 
  DEALLOCATE(IFF)
 
- CALL IGRCOLOURN(WRGB(255,255,255))  !wit!
+ CALL IGRCOLOURN(WRGB(255,255,255))  !wit
  CALL IGRFILLPATTERN(OUTLINE)
 
  CALL WINDOWOUTSTATUSBAR(2,'')
