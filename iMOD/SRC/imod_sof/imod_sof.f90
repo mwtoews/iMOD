@@ -61,12 +61,11 @@ CONTAINS
   INTEGER :: NT
  END TYPE TPOBJ
  TYPE(TPOBJ),DIMENSION(:),ALLOCATABLE :: TP
- logical :: ltrial
  
  ALLOCATE(TP(0:MXTHREAD))
  DO I=0,MXTHREAD; NULLIFY(TP(I)%IC); NULLIFY(TP(I)%IR); ENDDO
   
- LRUNGAKUTTA=.TRUE.
+ LRUNGAKUTTA=.FALSE.
  
  F=FRACTION
  
@@ -112,26 +111,14 @@ CONTAINS
   !## skip nodata
   IF(IDF(1)%X(ICOL,IROW).EQ.IDF(1)%NODATA)CYCLE
   
-!  IF(IROW.GE.80.AND.IROW.LE.130.AND. &
-!     ICOL.GE.130.AND.ICOL.LE.180)THEN
-!  IF(IROW.GE.65.AND.IROW.LE.100.AND. &
-!     ICOL.GE.95.AND.ICOL.LE.113)THEN
-!  IF(IROW.EQ.74.AND.ICOL.EQ.102)THEN
-!  IF(IROW.EQ.44.AND.ICOL.EQ.63)THEN
-!  IF(IROW.EQ.389.AND.ICOL.EQ.234)THEN
-!  IF(IROW.EQ.294.AND.ICOL.EQ.631)THEN
-!  IF(IROW.EQ.150.AND.ICOL.EQ.255)THEN
+   IF(.TRUE.)THEN
+!  IF(IROW.GE.300.AND.IROW.LE.400.AND. &
+!     ICOL.GE.300.AND.ICOL.LE.400)THEN
 
-  IF(IROW.EQ.587.AND.ICOL.EQ.415)THEN
-!  IF(IROW.EQ.524.AND.ICOL.EQ.401)THEN
-!  IF(.TRUE.)THEN
+!  IF(IROW.EQ.560.AND.ICOL.EQ.58)THEN
   
    !## start in the middle
    CALL IDFGETLOC(IDF(1),IROW,ICOL,LX(0),LY(0))
-
- ltrial=.false.
-! LX(0)=583828.0
-! LY(0)=5794983.0
 
    IP=IP+1
    IF(IWRITE.EQ.1)THEN; WRITE(IU,*) IP; WRITE(IU,'(2(F15.3,1X))') LX(0),LY(0); ENDIF
@@ -146,15 +133,11 @@ CONTAINS
    
    DO
     NF=NF+1
-    IF(NF.GT.IDF(1)%NCOL)THEN !*IDF(1)%NROW)THEN
+    IF(NF.GT.IDF(1)%NCOL*IDF(1)%NROW)THEN
      WRITE(*,'(A,3I10)') 'Particle wont stop (IR,IC,NF): ',IR,IC,NF
      STOP
     ENDIF
-    
-    if(ic.eq.768.and.ir.eq.970)then
-    write(*,*)
-    endif
-    
+        
     !## stepsize
     SSX=F*IDF(1)%DX; SSY=SSX
 
@@ -167,38 +150,18 @@ CONTAINS
      !## second order
      DX=-COS(RK(1))*SSX*0.5; DY=-SIN(RK(1))*SSY*0.5
      LX(1)=LX(0)+DX; LY(1)=LY(0)+DY
-     RK(2)=SOF_TRACE_GET_ANGLE_MEAN(IDF(1),LX(1),LY(1))
 
-if(ltrial)then
-     WRITE(IU,*) 1
-     WRITE(IU,'(2(F15.3,1X))') LX(0),LY(0)
-     WRITE(IU,'(2(F15.3,1X))') LX(1),LY(1)
-     WRITE(IU,'(A)') 'END'
-endif
+     RK(2)=SOF_TRACE_GET_ANGLE_MEAN(IDF(1),LX(1),LY(1))
      
      !## third order
      DX=-COS(RK(2))*SSX*0.5; DY=-SIN(RK(2))*SSY*0.5
      LX(1)=LX(0)+DX; LY(1)=LY(0)+DY
      RK(3)=SOF_TRACE_GET_ANGLE_MEAN(IDF(1),LX(1),LY(1))
 
-if(ltrial)then
-     WRITE(IU,*) 1
-     WRITE(IU,'(2(F15.3,1X))') LX(0),LY(0)
-     WRITE(IU,'(2(F15.3,1X))') LX(1),LY(1)
-     WRITE(IU,'(A)') 'END'
-endif
-
      !## fourth order
      DX=-COS(RK(3))*SSX; DY=-SIN(RK(3))*SSY
      LX(1)=LX(0)+DX; LY(1)=LY(0)+DY
      RK(4)=SOF_TRACE_GET_ANGLE_MEAN(IDF(1),LX(1),LY(1))
-
-if(ltrial)then
-     WRITE(IU,*) 1
-     WRITE(IU,'(2(F15.3,1X))') LX(0),LY(0)
-     WRITE(IU,'(2(F15.3,1X))') LX(1),LY(1)
-     WRITE(IU,'(A)') 'END'
-endif
 
      DX=0.0; DY=0.0
      DX=DX+COS(RK(1))*SSX;     DY=DY+SIN(RK(1))*SSY
@@ -206,35 +169,6 @@ endif
      DX=DX+COS(RK(3))*SSX*2.0; DY=DY+SIN(RK(3))*SSY*2.0
      DX=DX+COS(RK(4))*SSX;     DY=DY+SIN(RK(4))*SSY
      A=ATAN2(DY,DX)
-
-!## double stepsize
-!     dx2=dx
-!     dy2=dy
-!     !## stepsize
-!     SSX=2.0*F*IDF(1)%DX; SSY=SSX
-!     !## first order
-!     RK(1)=SOF_TRACE_GET_ANGLE_MEAN(IDF(1),LX(0),LY(0))
-!     !## second order
-!     DX=-COS(RK(1))*SSX*0.5; DY=-SIN(RK(1))*SSY*0.5
-!     LX(1)=LX(0)+DX; LY(1)=LY(0)+DY
-!     RK(2)=SOF_TRACE_GET_ANGLE_MEAN(IDF(1),LX(1),LY(1))
-!     !## third order
-!     DX=-COS(RK(2))*SSX*0.5; DY=-SIN(RK(2))*SSY*0.5
-!     LX(1)=LX(0)+DX; LY(1)=LY(0)+DY
-!     RK(3)=SOF_TRACE_GET_ANGLE_MEAN(IDF(1),LX(1),LY(1))
-!     !## fourth order
-!     DX=-COS(RK(3))*SSX; DY=-SIN(RK(3))*SSY
-!     LX(1)=LX(0)+DX; LY(1)=LY(0)+DY
-!     RK(4)=SOF_TRACE_GET_ANGLE_MEAN(IDF(1),LX(1),LY(1))
-!     DX=0.0; DY=0.0
-!     DX=DX+COS(RK(1))*SSX;     DY=DY+SIN(RK(1))*SSY
-!     DX=DX+COS(RK(2))*SSX*2.0; DY=DY+SIN(RK(2))*SSY*2.0
-!     DX=DX+COS(RK(3))*SSX*2.0; DY=DY+SIN(RK(3))*SSY*2.0
-!     DX=DX+COS(RK(4))*SSX;     DY=DY+SIN(RK(4))*SSY
-!     A=ATAN2(DY,DX)
-!     DX=DX+DX2
-!     DY=DY+DY2
-!     A=ATAN2(DY,DX)
 
     ELSE
      A=SOF_TRACE_GET_ANGLE_MEAN(IDF(1),LX(0),LY(0))
@@ -246,23 +180,16 @@ endif
     DX=-COS(A)*SSX; DY=-SIN(A)*SSY
     LX(1)=LX(0)+DX; LY(1)=LY(0)+DY   
    
-if(ltrial)then
-     WRITE(IU,*) 1
-     WRITE(IU,'(2(F15.3,1X))') LX(0),LY(0)
-     WRITE(IU,'(2(F15.3,1X))') LX(1),LY(1)
-     WRITE(IU,'(A)') 'END'
-     WRITE(IU,'(A)') 'END'
-STOP
-endif
-
     !## new coordinates
     LX(0)=LX(1); LY(0)=LY(1)
     
-    IF(IWRITE.EQ.1)WRITE(IU,'(2(F15.3,1X))') LX(0),LY(0)
-    IF(IWRITE.EQ.1)FLUSH(IU)
-
     !## get new grid location
     CALL IDFIROWICOL(IDF(1),IR,IC,LX(0),LY(0))
+    !## get new location in centre of grid
+    CALL IDFGETLOC(IDF(1),IR,IC,LX(0),LY(0))
+
+    IF(IWRITE.EQ.1)WRITE(IU,'(2(F15.3,1X))') LX(0),LY(0)
+    IF(IWRITE.EQ.1)FLUSH(IU)
 
     IT=0
 
@@ -375,45 +302,57 @@ endif
  TYPE(IDFOBJ),INTENT(IN) :: IDF
  REAL,INTENT(IN) :: XC,YC
  REAL,DIMENSION(2) :: A
- INTEGER :: IQ,IROW,ICOL,IC1,IC2,IR1,IR2,IC,IR
+ INTEGER :: IQ,IROW,ICOL,IC1,IC2,IR1,IR2,IC,IR,IWINDOW
  REAL :: DX,DY,X1,Y1,F,AF,TD,X2,Y2
 
  !## get proper cell
  CALL IDFIROWICOL(IDF,IR,IC,XC,YC)
 
 ! SOF_TRACE_GET_ANGLE_MEAN=IDF%X(IC,IR); RETURN
+ 
+ IWINDOW=1
    
  !## get midpoint
  CALL IDFGETLOC(IDF,IR,IC,X1,Y1)
+
  !##get quadrants
  IF(X1.GE.XC)THEN
-  IC1=IC-1; IC2=IC
+  IC1=IC-IWINDOW; IC2=IC
   IF(Y1.LE.YC)THEN
-   IR1=IR-1; IR2=IR  !## top right
+   IR1=IR-IWINDOW; IR2=IR  !## top right
   ELSE
-   IR1=IR; IR2=IR+1  !## bottom right
+   IR1=IR; IR2=IR+IWINDOW  !## bottom right
   ENDIF
  ELSE
-  IC1=IC; IC2=IC+1
+  IC1=IC; IC2=IC+IWINDOW
   IF(Y1.LE.YC)THEN
-   IR1=IR-1; IR2=IR  !## top left
+   IR1=IR-IWINDOW; IR2=IR  !## top left
   ELSE
-   IR1=IR; IR2=IR+1  !## bottom left
+   IR1=IR; IR2=IR+IWINDOW  !## bottom left
   ENDIF
  ENDIF
     
- if(.FALSE.)then
+ IC1=IC-IWINDOW
+ IC2=IC+IWINDOW
+ IR1=IR-IWINDOW
+ IR2=IR+IWINDOW
+
+ if(.TRUE.)then
   !## get mean of 4 points
   A=0.0; AF=0.0
   DO IROW=MAX(1,IR1),MIN(IDF%NROW,IR2); DO ICOL=MAX(1,IC1),MIN(IDF%NCOL,IC2)
    IF(IDF%X(ICOL,IROW).EQ.IDF%NODATA)EXIT
-   CALL IDFGETLOC(IDF,IROW,ICOL,X1,Y1)
-   F=UTL_DIST(XC,YC,X1,Y1)
-   IF(F.EQ.0.0)THEN
-    SOF_TRACE_GET_ANGLE_MEAN=IDF%X(ICOL,IROW); RETURN
-   ENDIF
+!   CALL IDFGETLOC(IDF,IROW,ICOL,X1,Y1)
+!   F=UTL_DIST(XC,YC,X1,Y1)
+!   IF(F.EQ.0.0)THEN
+!F=1.0
+!    SOF_TRACE_GET_ANGLE_MEAN=IDF%X(ICOL,IROW); RETURN
+!   ENDIF
+f=0.0
+if(irow.eq.ir.or.icol.eq.ic)f=0.0
+if(irow.eq.ir.and.icol.eq.ic)f=1.0
    !## each weighted as much as the others, in that way it converges
-   F=1.0
+!   F=1.0/F
    DX=IDF%DX*COS(IDF%X(ICOL,IROW)); DY=IDF%DY*SIN(IDF%X(ICOL,IROW))
    A(1)=A(1)+DX*F; A(2)=A(2)+DY*F; AF=AF+F
   ENDDO; ENDDO
@@ -589,9 +528,9 @@ endif
  LOGICAL,INTENT(IN) :: LNODATSINK
  REAL,DIMENSION(9) :: Z,GRADX,GRADY
  INTEGER :: IC1,IC2,IR1,IR2,I,J,IC,IR
- REAL :: AX,AY,NA,ZM,L,f
- DATA GRADX/-1.0, 0.0, 1.0,-1.0,0.0,1.0,-1.0, 0.0, 1.0/
- DATA GRADY/ 1.0, 1.0, 1.0, 0.0,0.0,0.0,-1.0,-1.0,-1.0/
+ REAL :: AX,AY,NA,ZM,L,f,TG,G,TZ
+ DATA GRADX/-1.0, 0.0, 1.0, 1.0, 1.0, 0.0,-1.0,-1.0,0.0/
+ DATA GRADY/ 1.0, 1.0, 1.0, 0.0,-1.0,-1.0,-1.0, 0.0,0.0/
                    
  !## steepest all around
  IC1=MAX(1,ICOL-1)
@@ -602,73 +541,74 @@ endif
  Z(1)=DEM%X(IC1 ,IR1)
  Z(2)=DEM%X(ICOL,IR1 )
  Z(3)=DEM%X(IC2 ,IR1 )
- Z(4)=DEM%X(IC1 ,IROW)
- Z(5)=DEM%X(ICOL,IROW)
- Z(6)=DEM%X(IC2 ,IROW)
- Z(7)=DEM%X(IC1 ,IR2 )
- Z(8)=DEM%X(ICOL,IR2 )
- Z(9)=DEM%X(IC2 ,IR2 )
-
- if(.false.)then
-  f=2.8
-  
-  ax=0.0
-  ax=ax+  (z(2)-z(1))
-  ax=ax+  (z(3)-z(2))
-  ax=ax+f*(z(5)-z(4))
-  ax=ax+f*(z(6)-z(5))
-  ax=ax+  (z(8)-z(7))
-  ax=ax+  (z(9)-z(8))
-  ax=ax
-  
-  ay=0.0
-  ay=ay+  (z(4)-z(1))
-  ay=ay+f*(z(5)-z(2))
-  ay=ay+  (z(6)-z(3))
-  ay=ay+  (z(7)-z(4))
-  ay=ay+f*(z(8)-z(5))
-  ay=ay+  (z(9)-z(6))
-  ay=ay
-
-  DZDX= AX 
-  DZDY= AY 
-
- else
+ Z(4)=DEM%X(IC2 ,IROW)
+ Z(5)=DEM%X(IC2 ,IR2)
+ Z(6)=DEM%X(ICOL,IR2)
+ Z(7)=DEM%X(IC1 ,IR2)
+ Z(8)=DEM%X(IC1 ,IROW)
+ Z(9)=DEM%X(ICOL,IROW)
     
-  !## nodata act as as a strong sink, water want to move there urgently, in opposite direction
-  ZM=Z(5)
-  IF(LNODATSINK)THEN
-   J=9; DO I=1,9
-    IF(Z(I).EQ.DEM%NODATA)Z(I)=-1.0*Z(J)
-    J=J-1
-   ENDDO
-  ELSE
-   DO I=1,9
-    IF(Z(I).EQ.DEM%NODATA)Z(I)=Z(5)
-   ENDDO
-  ENDIF
+ !## nodata act as as a strong sink, water want to move there urgently, in opposite direction
+ ZM=Z(9)
   
-  AX=0.0; AY=0.0 
-  DO I=1,9
-   Z(I)=Z(I)-ZM
-   IF(Z(I).LT.0.0)THEN
-    !## distance
-    F=SQRT(GRADX(I)**2.0+GRADY(I)**2.0)
-    !## inverse distance
-    F=1.0/F
-    AX=AX+GRADX(I)*F*ABS(Z(I))
-    AY=AY+GRADY(I)*F*ABS(Z(I))
+ !## take steepest descent direction
+ IF(LNODATSINK)THEN
+  DO I=1,8
+   IF(Z(I).EQ.DEM%NODATA)THEN
+    IF(I.LE.4)THEN
+     Z(I)=-1.0*Z(I+4)
+    ELSE
+     Z(I)=-1.0*Z(I-4)
+    ENDIF
    ENDIF
   ENDDO
-  DZDX=-AX 
-  DZDY= AY 
 
-  !## perfect dome in flat area - occurs, but direction is irrelevant, choose 
-  IF(DZDX.EQ.0.0.AND.DZDY.EQ.0.0)THEN
-   DZDX=1.0
+ !## take average downhill slope
+ ELSE
+  !## nodata acts as flat area
+  DO I=1,9
+   IF(Z(I).EQ.DEM%NODATA)Z(I)=ZM
+  ENDDO
+   
+!  AX=0.0; AY=0.0 
+!  DO I=1,9
+!   Z(I)=Z(I)-ZM
+!   IF(Z(I).LT.0.0)THEN
+!    !## distance
+!    F=SQRT(GRADX(I)**2.0+GRADY(I)**2.0)
+!    !## inverse distance
+!    F=1.0/F
+!    AX=AX+GRADX(I)*F*ABS(Z(I))
+!    AY=AY+GRADY(I)*F*ABS(Z(I))
+!   ENDIF
+!  ENDDO
+ 
+ ENDIF
+ 
+ J=0; TG=0.0; AX=0.0; AY=0.0 
+ DO I=1,9
+  Z(I)=Z(I)-ZM
+  IF(Z(I).LT.0.0)THEN
+   !## distance
+   F=SQRT(GRADX(I)**2.0+GRADY(I)**2.0)
+   G=Z(I)/F
+   IF(G.LT.TG)THEN
+    TG=G; J=I
+   ENDIF
   ENDIF
-  
- endif
+ ENDDO
+ !## perfect dome in flat area - occurs, but direction is irrelevant, choose flow right
+ IF(J.EQ.0)J=6
+ AX=GRADX(J)
+ AY=GRADY(J)
+
+ DZDX=-AX 
+ DZDY= AY 
+
+ !## perfect dome in flat area - occurs, but direction is irrelevant, choose 
+ IF(DZDX.EQ.0.0.AND.DZDY.EQ.0.0)THEN
+  DZDX=1.0
+ ENDIF
   
  END SUBROUTINE SOF_COMPUTE_GRAD_STEEPEST
  
@@ -855,7 +795,7 @@ endif
  !###======================================================================
  IMPLICIT NONE
  TYPE(IDFOBJ),INTENT(INOUT) :: DEM,IDFP,SLOPE,ASPECT
- INTEGER :: I,J,ICOL,IROW,NBPX,NPPX,NTPX
+ INTEGER :: I,J,ICOL,IROW,NBPX,NPPX,NTPX,ITYPE
  REAL :: F,ZMAX
  
  WRITE(6,'(1X,A/)') 'Filling in pitts'
@@ -866,12 +806,7 @@ endif
  !## trace depression for exit points
  DO I=1,NP
   ICOL=INT(PL(I,1)); IROW=INT(PL(I,2))
-  
-!  IF(ICOL.EQ.110.AND.IROW.EQ.89)THEN
-  IF(ICOL.EQ.228.AND.IROW.EQ.136)THEN
-  WRITE(*,*) 'DSDS'
-  ENDIF
-  
+    
   !## add this point to the pitt list, remove from the DEM
   !## pitt list
   NPPX=1; PPX(NPPX)%ICOL=ICOL; PPX(NPPX)%IROW=IROW; PPX(NPPX)%Z=DEM%X(ICOL,IROW); DEM%X(ICOL,IROW)=10.0E10
@@ -882,38 +817,28 @@ endif
   !## total boundary list (cleaning)
   NTPX=1; TPX(NPPX)%ICOL=ICOL; TPX(NPPX)%IROW=IROW
 
+  ITYPE=0
   DO     
    !## fill bnd-pixel list and pit-list with irow,icol
    CALL SOF_FILL_BND(DEM,IDFP,IROW,ICOL,NBPX,NTPX)
    !## get lowest point in boundary list, natural exit function value becomes true
-   IF(SOF_GET_EXITPOINT(DEM,IDFP,IROW,ICOL,ZMAX,NBPX,NPPX))EXIT
+   IF(SOF_GET_EXITPOINT(DEM,IDFP,IROW,ICOL,ZMAX,NBPX,NPPX,ITYPE))THEN
+    IF(ITYPE.EQ.0)THEN
+     ITYPE=1
+    ELSE
+     EXIT
+    ENDIF
+   ENDIF
   ENDDO
 
-!  if(abs(zmax-901.7472).le.0.01)then
-!write(*,*) 'area - waarom niet 1x1'
-!  endif
-!  if(abs(zmax-903.3478).le.0.01)then
-!write(*,*) 'area - enclosed area'
-!  endif
-!  if(abs(zmax-897.1889).le.0.01)then
-!write(*,*) 'area - flat area no gradient'
-!  endif
-!  if(abs(zmax-896.2789).le.0.01)then
-!write(*,*) 'area - strange boundary'
-!  endif
-!  if(abs(zmax-901.0016).le.0.01)then
-!write(*,*) 'area - isloated cone in the middle flat area'
-!  endif
-!  if(abs(zmax-937.7926).le.0.01)then
-!write(*,*) 'area - narrow valley'
-!  endif
-  if(abs(zmax-898.5927).le.0.01)then
-write(*,*) 'area - narrow valley'
+!  if(abs(zmax-914.2207).le.0.01)then
+  if(abs(zmax-914.2361).le.0.01)then
+   write(*,*) 'area1'
   endif
   
   !## change all pittpoints for this spill-value (zmax)
   DO J=1,NPPX; DEM%X(PPX(J)%ICOL,PPX(J)%IROW)=ZMAX; ENDDO
-    
+      
   F=REAL(I)/REAL(NP)*100.0; WRITE(6,'(A,F10.3,2(A,I5),A)') '+Processing pitt:',F,' % (nppx= ',NPPX,' ; nbpx= ',NBPX,')'
 
   CALL SOF_FILL_FLATAREAS(DEM,SLOPE,ASPECT,NBPX,NPPX)
@@ -933,229 +858,171 @@ write(*,*) 'area - narrow valley'
  IMPLICIT NONE
  TYPE(IDFOBJ),INTENT(INOUT) :: SLOPE,ASPECT,DEM
  INTEGER,INTENT(IN) :: NBPX,NPPX
- TYPE(IDFOBJ) :: PCG,PCG2
+ TYPE(IDFOBJ) :: PCG 
  INTEGER :: IC1,IC2,IR1,IR2,I,J,IERROR,ICOL,IROW,IFCT,IC,IR
- REAL,POINTER,DIMENSION(:) :: XA,YA,ZA,CA
+ REAL,POINTER,DIMENSION(:) :: XA,YA,ZA 
  REAL :: DZDX,DZDY,S,A
  REAL,PARAMETER :: HINI=0.0
    
  CALL IDFNULLIFY(PCG)
- 
- IC1=MIN(MINVAL(BPX(1:NBPX)%ICOL),MINVAL(PPX(1:NPPX)%ICOL))
- IC2=MAX(MAXVAL(BPX(1:NBPX)%ICOL),MAXVAL(PPX(1:NPPX)%ICOL))
- IR1=MIN(MINVAL(BPX(1:NBPX)%IROW),MINVAL(PPX(1:NPPX)%IROW))
- IR2=MAX(MAXVAL(BPX(1:NBPX)%IROW),MAXVAL(PPX(1:NPPX)%IROW))
+
+ IC1=MINVAL(PPX(1:NPPX)%ICOL)
+ IC2=MAXVAL(PPX(1:NPPX)%ICOL)
+ IR1=MINVAL(PPX(1:NPPX)%IROW)
+ IR2=MAXVAL(PPX(1:NPPX)%IROW)
+
  PCG%NCOL=IC2-IC1+1; PCG%NROW=IR2-IR1+1; PCG%DX=DEM%DX; PCG%DY=DEM%DY
  PCG%XMIN=DEM%XMIN+(IC1-1)*DEM%DX; PCG%XMAX=PCG%XMIN+PCG%NCOL*DEM%DX
  PCG%YMAX=DEM%YMAX-(IR1-1)*DEM%DY; PCG%YMIN=PCG%YMAX-PCG%NROW*DEM%DY
 
- !## try first ifct=1 than ifct=3
-! DO IFCT=1,3,2
-! IFCT=3
- IFCT=1
-  
- PCG%NCOL=PCG%NCOL*IFCT; PCG%NROW=PCG%NROW*IFCT; PCG%DX=PCG%DX/REAL(IFCT); PCG%DY=PCG%DX
+ PCG%NCOL=PCG%NCOL; PCG%NROW=PCG%NROW; PCG%DX=PCG%DX; PCG%DY=PCG%DX
 
- IF(.NOT.IDFALLOCATEX(PCG))RETURN; PCG%NODATA=SLOPE%NODATA; PCG%X=PCG%NODATA; CALL IDFCOPY(PCG,PCG2)
- IF(ASSOCIATED(XA))DEALLOCATE(XA); IF(ASSOCIATED(YA))DEALLOCATE(YA)
- IF(ASSOCIATED(ZA))DEALLOCATE(ZA)
- ALLOCATE(XA(NBPX+1),YA(NBPX+1),ZA(NBPX+1),CA(NBPX+1))
-  
- !## transform to correct location
- DO I=1,NBPX
-  IF(IFCT.EQ.1)THEN
-   XA(I)=  BPX(I)%ICOL-IC1+1
-   YA(I)=  BPX(I)%IROW-IR1+1
-  ELSE
-   XA(I)=((BPX(I)%ICOL-IC1+1)*IFCT)-1
-   YA(I)=((BPX(I)%IROW-IR1+1)*IFCT)-1
-  ENDIF
-  ZA(I)=  1.0
-  CA(I)= -1.0/REAL(NBPX)
- ENDDO
- !## add last pit-location (outflow) as boundary condition as well
- I         = NPPX
- IF(IFCT.EQ.1)THEN
-  XA(NBPX+1)=  PPX(I)%ICOL-IC1+1
-  YA(NBPX+1)=  PPX(I)%IROW-IR1+1
- ELSE
-  XA(NBPX+1)=((PPX(I)%ICOL-IC1+1)*IFCT)-1
-  YA(NBPX+1)=((PPX(I)%IROW-IR1+1)*IFCT)-1
- ENDIF
- ZA(NBPX+1)= -1.0
- CA(NBPX+1)=  1.0
-       
- !## activate boundary location
- DO I=1,NBPX+1
-  IF(IFCT.EQ.1)THEN
-   ICOL=XA(I); IROW=YA(I)
-   PCG%X(ICOL,IROW)=ZA(I)
-  ELSE
-   DO IROW=YA(I)-1,YA(I)+1
-    DO ICOL=XA(I)-1,XA(I)+1
-     PCG%X(ICOL,IROW)=ZA(I)
-    ENDDO
-   ENDDO
-  ENDIF
- ENDDO
+ IF(.NOT.IDFALLOCATEX(PCG))RETURN; PCG%NODATA=SLOPE%NODATA; PCG%X=PCG%NODATA 
  
  !## activate mid locations, exclusive spill level
  DO I=1,NPPX-1
-  IF(IFCT.EQ.1)THEN
-   IC=  PPX(I)%ICOL-IC1+1
-   IR=  PPX(I)%IROW-IR1+1
-   PCG%X(IC,IR)=HINI
-  ELSE
-   IC=((PPX(I)%ICOL-IC1+1)*IFCT)-1
-   IR=((PPX(I)%IROW-IR1+1)*IFCT)-1
-   DO IROW=IR-1,IR+1 
-    DO ICOL=IC-1,IC+1 
-     PCG%X(ICOL,IROW)=HINI
-    ENDDO
-   ENDDO
-  ENDIF
+  IC=PPX(I)%ICOL-IC1+1
+  IR=PPX(I)%IROW-IR1+1
+  PCG%X(IC,IR)=HINI
  ENDDO
+ IC=PPX(NPPX)%ICOL-IC1+1
+ IR=PPX(NPPX)%IROW-IR1+1
+ PCG%X(IC,IR)=-1.0
  
- if(.not.idfwrite(pcg,'d:\pcg_ini'//trim(itos(ifct))//'X'//trim(itos(ifct))//'.idf',1))then; endif
+ if(.not.idfwrite(pcg,'d:\pcg_ini'//trim(itos(1))//'X'//trim(itos(1))//'.idf',1))then; endif
 
- IF(IFCT.EQ.1)THEN
+ CALL SOF_SOLVE(PCG)
 
-  !## block islands of boundary conditions
-  PCG2%X=HINI
-  DO I=1,NBPX
-   IROW=YA(I); ICOL=XA(I)
-   J=0
-   DO IR=MAX(1,IROW-1),MIN(PCG%NROW,IROW+1)
-    DO IC=MAX(1,ICOL-1),MIN(PCG%NCOL,ICOL+1)
-     IF(PCG%X(IC,IR).EQ.HINI)J=J+1
-    ENDDO
-   ENDDO
-   !## isolated cell
-   IF(J.GE.5)PCG2%X(ICOL,IROW)=PCG%NODATA
-  ENDDO   
-  DO IROW=1,PCG%NROW; DO ICOL=1,PCG%NCOL
-   IF(PCG2%X(ICOL,IROW).EQ.PCG%NODATA)PCG%X(ICOL,IROW)=PCG%NODATA
-  ENDDO; ENDDO
-
- ELSE
-
-!   !## close connection between boundary locations
-!   DO I=1,NBPX+1
-!    IROW=YA(I); ICOL=MAX(1,INT(XA(I))-2)
-!    IF(PCG%X(ICOL,IROW).NE.PCG%NODATA)THEN
-!     ICOL=XA(I)+1
-!     DO IROW=YA(I)-1,YA(I)+1 
-!      PCG%X(ICOL,IROW)=PCG%NODATA
-!     ENDDO
-!    ENDIF  
-!    IROW=YA(I); ICOL=MIN(PCG%NCOL,INT(XA(I))+2)
-!    IF(PCG%X(ICOL,IROW).NE.PCG%NODATA)THEN
-!     ICOL=XA(I)-1
-!     DO IROW=YA(I)-1,YA(I)+1 
-!      PCG%X(ICOL,IROW)=PCG%NODATA
-!     ENDDO
-!    ENDIF  
-!    IROW=MAX(1,INT(YA(I)-2)); ICOL=XA(I)
-!    IF(PCG%X(ICOL,IROW).NE.PCG%NODATA)THEN
-!     IROW=YA(I)+1
-!     DO ICOL=XA(I)-1,XA(I)+1 
-!      PCG%X(ICOL,IROW)=PCG%NODATA
-!     ENDDO
-!    ENDIF  
-!    IROW=MIN(PCG%NROW,INT(YA(I)+2)); ICOL=XA(I)
-!    IF(PCG%X(ICOL,IROW).NE.PCG%NODATA)THEN
-!     IROW=YA(I)-1
-!     DO ICOL=XA(I)-1,XA(I)+1 
-!      PCG%X(ICOL,IROW)=PCG%NODATA
-!     ENDDO
-!    ENDIF  
-!   ENDDO
-   
- ENDIF
- 
- if(.not.idfwrite(pcg,'d:\pcg_ini2'//trim(itos(ifct))//'X'//trim(itos(ifct))//'.idf',1))then; endif
-
- HCLOSE=0.001; RELAX=1.0; IDAMPING=0; MXITER1=500; MXITER2=1000; ITIGHT=2; MICNVG=0
- IF(IFCT.EQ.1)THEN
-  CALL SOLID_PCGINT(XA,YA,ZA,NBPX+1,IERROR,PCG,0,HNOFLOW=PCG%NODATA,CD=CA,LCR=.TRUE.) !,LBNDCHK=.TRUE.,ZEDGE=0.0,LCR=.TRUE.)
-!  IF(IERROR.EQ.0)EXIT
-!  IF(IERROR.EQ.2)THEN
-!   if(.not.idfwrite(pcg,'d:\pcg'//trim(itos(ifct))//'X'//trim(itos(ifct))//'.idf',1))then; endif
-!  ENDIF
- ELSE
-  CALL SOLID_PCGINT(XA,YA,ZA,NBPX+1,IERROR,PCG,0,HNOFLOW=PCG%NODATA,CD=CA) !,LBNDCHK=.FALSE.,ZEDGE=0.0,LCR=.FALSE.)
- ENDIF
-
-! ENDDO
- 
-! IFCT=MIN(IFCT,3)
-! write(*,*) ifct,'x',ifct
- 
- if(.not.idfwrite(pcg,'d:\pcg'//trim(itos(ifct))//'X'//trim(itos(ifct))//'.idf',1))then; endif
-
- !## compute aspect for active nodes, exclusive the spill-level
  DO I=1,NPPX-1
-
-  IF(IFCT.EQ.1)THEN
-   ICOL=  PPX(I)%ICOL-IC1+1
-   IROW=  PPX(I)%IROW-IR1+1
-  ELSE
-   ICOL=((PPX(I)%ICOL-IC1+1)*IFCT)-1
-   IROW=((PPX(I)%IROW-IR1+1)*IFCT)-1
-  ENDIF
-  
-  !## apply steepest gradient, don't use nodata as sinks, skip them
-  CALL SOF_COMPUTE_GRAD_STEEPEST(PCG,ICOL,IROW,DZDX,DZDY,.FALSE.)
-!  CALL SOF_COMPUTE_GRAD(PCG,ICOL,IROW,DZDX,DZDY)
-
-  !## radians  
-  S=ATAN(SQRT(DZDX**2.0+DZDY**2.0))
-  A=ATAN2(-1.0*DZDY,DZDX)
-
+  ICOL=PPX(I)%ICOL-IC1+1
+  IROW=PPX(I)%IROW-IR1+1
+  A   =PCG%X(ICOL,IROW)
   ICOL=PPX(I)%ICOL
   IROW=PPX(I)%IROW
-
-  SLOPE%X(ICOL,IROW) =S
+  SLOPE%X(ICOL,IROW) =0.0
   ASPECT%X(ICOL,IROW)=A
+ ENDDO
+ 
+ if(.not.idfwrite(pcg,'d:\pcg'//trim(itos(1))//'X'//trim(itos(1))//'.idf',1))then; endif
 
- ENDDO !; ENDDO
- 
-    !## degrees
-!    S=S*(360.0/(2.0*3.1415)) 
-!    A=A*(360.0/(2.0*3.1415))
- 
  CALL IDFDEALLOCATEX(PCG)
- CALL IDFDEALLOCATEX(PCG2)
  
- DEALLOCATE(XA,YA,ZA)
-
  END SUBROUTINE SOF_FILL_FLATAREAS
  
  !###======================================================================
- LOGICAL FUNCTION SOF_GET_EXITPOINT(DEM,IDFP,IROW,ICOL,ZMAX,NBPX,NPPX)
+ SUBROUTINE SOF_SOLVE(PCG)
+ !###======================================================================
+ IMPLICIT NONE
+ TYPE(IDFOBJ) :: PCG
+ INTEGER(KIND=1),ALLOCATABLE,DIMENSION(:,:) :: ID
+ INTEGER(KIND=2),POINTER,DIMENSION(:,:,:) :: CR
+ REAL,ALLOCATABLE,DIMENSION(:,:) :: A
+ INTEGER :: IROW,ICOL,NCR,D,DR,DC,IL,I,IR,IC,ICR,JCR
+ 
+ ALLOCATE(A(PCG%NCOL,PCG%NROW),ID(PCG%NCOL,PCG%NROW),CR(PCG%NCOL*PCG%NROW,2,2))
+ A=0.0; ID=INT(3,1)
+ 
+ !## find starting location
+ROWLOOP: DO IROW=1,PCG%NROW
+  DO ICOL=1,PCG%NCOL
+   IF(PCG%X(ICOL,IROW).EQ.-1)EXIT ROWLOOP
+  ENDDO
+ ENDDO ROWLOOP
+ 
+ NCR=1; ICR=1; JCR=2
+ CR(NCR,1,ICR)=ICOL; CR(NCR,2,ICR)=IROW
+ DO
+  
+  IL=0
+  DO I=1,NCR
+   
+   ICOL=CR(I,1,ICR)
+   IROW=CR(I,2,ICR)
+   !## no to be visited again
+   PCG%X(ICOL,IROW)=2  
+
+   DO IR=MAX(1,IROW-1),MIN(PCG%NROW,IROW+1)
+    DO IC=MAX(1,ICOL-1),MIN(PCG%NCOL,ICOL+1)
+     IF(PCG%X(IC,IR).EQ.0.0)THEN
+      !## relative distance
+      DR=IR-IROW
+      DC=IC-ICOL
+      D=ABS(DR)+ABS(DC)
+      !## compare with distance to see if it is smaller
+      IF(D.LT.ID(IC,IR))THEN
+       ID(IC,IR)=D
+       A(IC,IR)=ATAN2(-1.0*REAL(DR),REAL(DC))
+       !## add to list
+       IL=IL+1
+       CR(IL,1,JCR)=IC
+       CR(IL,2,JCR)=IR
+      ENDIF
+     ENDIF
+    ENDDO
+   ENDDO
+
+  ENDDO
+
+  !## no new location found
+  IF(IL.EQ.0)EXIT
+  
+  !# interchange list
+  IF(ICR.EQ.1)THEN
+   ICR=2; JCR=1
+  ELSE
+   ICR=1; JCR=2
+  ENDIF
+  
+  NCR=IL
+
+ ENDDO
+
+ !## fill pcg%x with angles
+ PCG%X=A
+
+ DEALLOCATE(A,ID,CR)
+  
+ END SUBROUTINE SOF_SOLVE
+
+ !###======================================================================
+ LOGICAL FUNCTION SOF_GET_EXITPOINT(DEM,IDFP,IROW,ICOL,ZMAX,NBPX,NPPX,ITYPE)
  !###======================================================================
  IMPLICIT NONE
  TYPE(IDFOBJ),INTENT(INOUT) :: DEM,IDFP
+ INTEGER,INTENT(IN) :: ITYPE
  INTEGER,INTENT(INOUT) :: NBPX,NPPX
  REAL,INTENT(INOUT) :: ZMAX
  REAL :: ZMIN
  INTEGER,INTENT(OUT) :: IROW,ICOL
  INTEGER :: I,IBND
    
+ !## find lowest spill-level
  ZMIN=BPX(1)%Z; IBND=1
  DO I=2,NBPX
-  IF(BPX(I)%Z.LT.ZMIN)THEN
-   IBND=I; ZMIN=BPX(I)%Z
+  !## search for lowest
+  IF(ITYPE.EQ.0)THEN
+   IF(BPX(I)%Z.LT.ZMIN)THEN
+    IBND=I; ZMIN=BPX(I)%Z
+   ENDIF
+  !## search for equal
+  ELSEIF(ITYPE.EQ.1)THEN
+   IF(BPX(I)%Z.EQ.ZMAX)THEN
+    IBND=I
+   ENDIF
   ENDIF
  ENDDO
  !## location of the lowest point on the boundary
  ICOL=BPX(IBND)%ICOL; IROW=BPX(IBND)%IROW 
 
- !## natural exit (zmin), level on boundary less than spill level (zmax)
- IF(ZMIN.LT.ZMAX)THEN; SOF_GET_EXITPOINT=.TRUE.; RETURN; ENDIF
+ IF(ITYPE.EQ.0)THEN
+  !## natural exit (zmin), level on boundary less than spill level (zmax)
+  IF(ZMIN.LT.ZMAX)THEN; SOF_GET_EXITPOINT=.TRUE.; RETURN; ENDIF
+ ELSEIF(ITYPE.EQ.1)THEN
+  IF(IBND.EQ.1)THEN; SOF_GET_EXITPOINT=.TRUE.; RETURN; ENDIF
+ ENDIF
  
  !## set new spill level
- ZMAX=ZMIN
+ IF(ITYPE.EQ.0)ZMAX=ZMIN
  
  !## include a very high offset
  BPX(IBND)%Z=10.0E10
@@ -1164,10 +1031,20 @@ write(*,*) 'area - narrow valley'
  DO I=IBND,NBPX-1; BPX(I)=BPX(I+1); ENDDO; NBPX=NBPX-1
  
  !## add this point to the pitt list
- NPPX            =NPPX+1
- PPX(NPPX)%ICOL  =ICOL
- PPX(NPPX)%IROW  =IROW
- PPX(NPPX)%Z     =DEM%X(ICOL,IROW)
+ IF(ITYPE.EQ.0)THEN
+  NPPX            =NPPX+1
+  PPX(NPPX)%ICOL  =ICOL
+  PPX(NPPX)%IROW  =IROW
+  PPX(NPPX)%Z     =DEM%X(ICOL,IROW)
+ ELSEIF(ITYPE.EQ.1)THEN
+  NPPX            =NPPX+1
+  PPX(NPPX)%ICOL  =PPX(NPPX-1)%ICOL
+  PPX(NPPX)%IROW  =PPX(NPPX-1)%IROW
+  PPX(NPPX)%Z     =PPX(NPPX-1)%Z
+  PPX(NPPX-1)%ICOL=ICOL
+  PPX(NPPX-1)%IROW=IROW
+  PPX(NPPX-1)%Z   =ZMAX
+ ENDIF
  DEM%X(ICOL,IROW)=10.0E10 
  
  SOF_GET_EXITPOINT=.FALSE.
@@ -1196,7 +1073,7 @@ write(*,*) 'area - narrow valley'
 
    Z=DEM%X(IC,IR)
    !## nodata location - include as spill-level   
-   IF(DEM%X(IC,IR).EQ.DEM%NODATA)Z=-10.0E10 !CYCLE
+   IF(DEM%X(IC,IR).EQ.DEM%NODATA)Z=-10.0E10 
 
    NBPX=NBPX+1
    BPX(NBPX)%ICOL=IC
