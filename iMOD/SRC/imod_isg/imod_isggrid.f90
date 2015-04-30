@@ -1197,7 +1197,7 @@ CONTAINS
                                             TRIM(ROOT)//'\'//TRIM(FNAME(12))//TRIM(PPOSTFIX)//'.IDF')    !## next_id
  ENDIF
  
- !## extent grids based upon their width - GAAT NOG NIET GOED ....
+ !## extent grids based upon their width
  CALL ISG2GRID_EXTENT_WITH_WIDTH(SIZE(IDF),IDF,IBATCH)
 
  IF(IEXPORT.EQ.0)THEN

@@ -45,48 +45,44 @@ TYPE(BPXOBJ),ALLOCATABLE,DIMENSION(:),PRIVATE :: BPX,PPX,TPX
 CONTAINS
 
  !###======================================================================
- SUBROUTINE SOF_TRACE(IDF,N,IWRITE,FRACTION,NFTHREAD,MXTHREAD)
+ SUBROUTINE SOF_TRACE(IDF,N,IWRITE)
  !###======================================================================
  IMPLICIT NONE
- REAL,INTENT(IN) :: FRACTION
- INTEGER,INTENT(IN) :: IWRITE,N,NFTHREAD,MXTHREAD
+ INTEGER,INTENT(IN) :: IWRITE,N 
  TYPE(IDFOBJ),INTENT(INOUT),DIMENSION(N) :: IDF
- INTEGER :: IROW,ICOL,IR,IC,IP,IU,I,J,NF,IT,NT,IPT,M
- REAL :: A,DX,DY,F,SSX,SSY,XWBAL,DX2,DY2
+ INTEGER :: IROW,ICOL,IR,IC,IP,IU,I,NF,M,NFTHREAD
+ REAL :: A,DX,DY,F,SSX,SSY,XWBAL
  REAL,DIMENSION(0:2) :: LX,LY
- REAL,DIMENSION(4) :: RK
- LOGICAL :: LRUNGAKUTTA,LWBAL
+ LOGICAL :: LWBAL,LSTOP
  TYPE TPOBJ
   INTEGER,POINTER,DIMENSION(:) :: IC,IR,IC_BU,IR_BU
   INTEGER :: NT
  END TYPE TPOBJ
  TYPE(TPOBJ),DIMENSION(:),ALLOCATABLE :: TP
  
- ALLOCATE(TP(0:MXTHREAD))
- DO I=0,MXTHREAD; NULLIFY(TP(I)%IC); NULLIFY(TP(I)%IR); ENDDO
-  
- LRUNGAKUTTA=.FALSE.
- 
- F=FRACTION
+ NFTHREAD=500
+
+ ALLOCATE(TP(1))
+ NULLIFY(TP(1)%IC); NULLIFY(TP(1)%IR)
+
+ F=1.0
  
  IF(.NOT.IDFREAD(IDF(1),IDF(1)%FNAME,1))THEN; ENDIF
  
  CALL IDFCOPY(IDF(1),IDF(2)) !## total passes of particles
  CALL IDFCOPY(IDF(1),IDF(3)) !## counts individual particles
- CALL IDFCOPY(IDF(1),IDF(4)) !## number of particle in thread
- CALL IDFCOPY(IDF(1),IDF(5)) !## position in thread
 
  LWBAL=.FALSE.
- IF(IDF(6)%FNAME.NE.'')THEN
+ IF(IDF(4)%FNAME.NE.'')THEN
   LWBAL=.TRUE.
-  CALL IDFCOPY(IDF(1),IDF(6)); IDF(6)%X=0.0
+  CALL IDFCOPY(IDF(1),IDF(4)); IDF(4)%X=0.0
   !## read entire ipf
   NIPF=1; CALL IPFALLOCATE(); IPF(1)%XCOL=1; IPF(1)%YCOL=2; IPF(1)%ZCOL=3; IPF(1)%Z2COL=1; IPF(1)%QCOL=1 
-  IPF(1)%FNAME=IDF(6)%FNAME; IF(.NOT.IPFREAD2(1,1,0))RETURN
-  IDF(6)%FNAME=IDF(1)%FNAME(:INDEX(IDF(1)%FNAME,'.',.TRUE.)-1)//'_ZONE.IDF'
+  IPF(1)%FNAME=IDF(4)%FNAME; IF(.NOT.IPFREAD2(1,1,0))RETURN
+  IDF(4)%FNAME=IDF(1)%FNAME(:INDEX(IDF(1)%FNAME,'.',.TRUE.)-1)//'_ZONE.IDF'
   DO I=1,IPF(1)%NROW
-   CALL IDFIROWICOL(IDF(6),IROW,ICOL,IPF(1)%XYZ(1,I),IPF(1)%XYZ(2,I))
-   IDF(6)%X(ICOL,IROW)=IPF(1)%XYZ(3,I)
+   CALL IDFIROWICOL(IDF(4),IROW,ICOL,IPF(1)%XYZ(1,I),IPF(1)%XYZ(2,I))
+   IDF(4)%X(ICOL,IROW)=IPF(1)%XYZ(3,I)
   ENDDO
   CALL IPFDEALLOCATE()
  ENDIF
@@ -97,14 +93,14 @@ CONTAINS
 
  WRITE(6,'(1X,A/)') 'Tracing ...'
 
- IDF(2)%X=0.0; IDF(3)%X=0.0; IDF(4)%X=0.0; IDF(5)%X=0.0
- 
- ALLOCATE(TP(0)%IC(NFTHREAD),TP(0)%IR(NFTHREAD))
+ IDF(2)%X=0.0; IDF(3)%X=0.0
+ ALLOCATE(TP(1)%IC(NFTHREAD),TP(1)%IR(NFTHREAD))
 
- !## number of threads
- NT=0
  !## number of particles
  IP=0
+
+ !## stepsize
+ SSX=F*IDF(1)%DX; SSY=SSX
 
  !## start tracing
  DO IROW=1,IDF(1)%NROW; DO ICOL=1,IDF(1)%NCOL
@@ -112,24 +108,24 @@ CONTAINS
   IF(IDF(1)%X(ICOL,IROW).EQ.IDF(1)%NODATA)CYCLE
   
    IF(.TRUE.)THEN
-!  IF(IROW.GE.300.AND.IROW.LE.400.AND. &
-!     ICOL.GE.300.AND.ICOL.LE.400)THEN
-
-!  IF(IROW.EQ.560.AND.ICOL.EQ.58)THEN
+!  IF(IROW.EQ.174.AND.ICOL.EQ.1441)THEN
   
    !## start in the middle
    CALL IDFGETLOC(IDF(1),IROW,ICOL,LX(0),LY(0))
 
+   !## next particle
    IP=IP+1
+
    IF(IWRITE.EQ.1)THEN; WRITE(IU,*) IP; WRITE(IU,'(2(F15.3,1X))') LX(0),LY(0); ENDIF
    IC=ICOL; IR=IROW
    IDF(2)%X(IC,IR)=IDF(2)%X(IC,IR)+1.0
    IDF(3)%X(IC,IR)=REAL(IP)
 
    !## store starting location
-   TP(0)%NT=1; TP(0)%IC(TP(0)%NT)=IC; TP(0)%IR(TP(0)%NT)=IR 
+   TP(1)%NT=1; TP(1)%IC(TP(1)%NT)=IC; TP(1)%IR(TP(1)%NT)=IR 
 
    NF=0
+   LSTOP=.FALSE.
    
    DO
     NF=NF+1
@@ -138,63 +134,34 @@ CONTAINS
      STOP
     ENDIF
         
-    !## stepsize
-    SSX=F*IDF(1)%DX; SSY=SSX
-
-    !## get gradient on entry point
-    IF(LRUNGAKUTTA)THEN
-
-     !## first order
-     RK(1)=SOF_TRACE_GET_ANGLE_MEAN(IDF(1),LX(0),LY(0))
-     
-     !## second order
-     DX=-COS(RK(1))*SSX*0.5; DY=-SIN(RK(1))*SSY*0.5
-     LX(1)=LX(0)+DX; LY(1)=LY(0)+DY
-
-     RK(2)=SOF_TRACE_GET_ANGLE_MEAN(IDF(1),LX(1),LY(1))
-     
-     !## third order
-     DX=-COS(RK(2))*SSX*0.5; DY=-SIN(RK(2))*SSY*0.5
-     LX(1)=LX(0)+DX; LY(1)=LY(0)+DY
-     RK(3)=SOF_TRACE_GET_ANGLE_MEAN(IDF(1),LX(1),LY(1))
-
-     !## fourth order
-     DX=-COS(RK(3))*SSX; DY=-SIN(RK(3))*SSY
-     LX(1)=LX(0)+DX; LY(1)=LY(0)+DY
-     RK(4)=SOF_TRACE_GET_ANGLE_MEAN(IDF(1),LX(1),LY(1))
-
-     DX=0.0; DY=0.0
-     DX=DX+COS(RK(1))*SSX;     DY=DY+SIN(RK(1))*SSY
-     DX=DX+COS(RK(2))*SSX*2.0; DY=DY+SIN(RK(2))*SSY*2.0
-     DX=DX+COS(RK(3))*SSX*2.0; DY=DY+SIN(RK(3))*SSY*2.0
-     DX=DX+COS(RK(4))*SSX;     DY=DY+SIN(RK(4))*SSY
-     A=ATAN2(DY,DX)
-
-    ELSE
-     A=SOF_TRACE_GET_ANGLE_MEAN(IDF(1),LX(0),LY(0))
-    ENDIF
+    A=IDF(1)%X(IC,IR) !SOF_TRACE_GET_ANGLE_MEAN(IDF(1),LX(0),LY(0))
     
-    !## stepsize
-    SSX=F*IDF(1)%DX; SSY=SSX
-
     DX=-COS(A)*SSX; DY=-SIN(A)*SSY
     LX(1)=LX(0)+DX; LY(1)=LY(0)+DY   
-   
-    !## new coordinates
-    LX(0)=LX(1); LY(0)=LY(1)
-    
+     
     !## get new grid location
-    CALL IDFIROWICOL(IDF(1),IR,IC,LX(0),LY(0))
+    CALL IDFIROWICOL(IDF(1),IR,IC,LX(1),LY(1))
+    
+    !## outside model
+    IF(IR.EQ.0.OR.IR.GT.IDF(1)%NROW.OR.IC.EQ.0.OR.IC.GT.IDF(1)%NCOL)THEN
+     IF(LX(0).GT.IDF(1)%XMAX)IC=IDF(1)%NCOL
+     IF(LX(0).LT.IDF(1)%XMIN)IC=1
+     IF(LY(0).GT.IDF(1)%YMAX)IR=1
+     IF(LY(0).LT.IDF(1)%YMIN)IR=IDF(1)%NROW
+     LSTOP=.TRUE.
+    ENDIF
+    
     !## get new location in centre of grid
     CALL IDFGETLOC(IDF(1),IR,IC,LX(0),LY(0))
 
-    IF(IWRITE.EQ.1)WRITE(IU,'(2(F15.3,1X))') LX(0),LY(0)
-    IF(IWRITE.EQ.1)FLUSH(IU)
-
-    IT=0
+    IF(IWRITE.EQ.1)THEN
+     WRITE(IU,'(2(F15.3,1X))') LX(0),LY(0)
+     FLUSH(IU)
+    ENDIF
 
     !## outside model
-    IF(IR.EQ.0.OR.IR.GT.IDF(1)%NROW.OR.IC.EQ.0.OR.IC.GT.IDF(1)%NCOL)EXIT
+    IF(LSTOP)EXIT 
+
     !## trapped in nodata area
     IF(IDF(1)%X(IC,IR).EQ.IDF(1)%NODATA)EXIT
     
@@ -203,72 +170,34 @@ CONTAINS
      IDF(2)%X(IC,IR)=IDF(2)%X(IC,IR)+1.0
      
      !## store thread
-     TP(0)%NT=TP(0)%NT+1; M=TP(0)%NT
-     IF(M.GT.SIZE(TP(0)%IC))THEN
-      ALLOCATE(TP(0)%IC_BU(M*2),TP(0)%IR_BU(M*2))
+     TP(1)%NT=TP(1)%NT+1; M=TP(1)%NT
+     IF(M.GT.SIZE(TP(1)%IC))THEN
+      ALLOCATE(TP(1)%IC_BU(M*2),TP(1)%IR_BU(M*2))
       DO I=1,M-1
-       TP(0)%IC_BU(I)=TP(0)%IC(I)
-       TP(0)%IR_BU(I)=TP(0)%IR(I)
+       TP(1)%IC_BU(I)=TP(1)%IC(I)
+       TP(1)%IR_BU(I)=TP(1)%IR(I)
       ENDDO
-      DEALLOCATE(TP(0)%IC,TP(0)%IR)
-      TP(0)%IC=>TP(0)%IC_BU; TP(0)%IR=>TP(0)%IR_BU
+      DEALLOCATE(TP(1)%IC,TP(1)%IR)
+      TP(1)%IC=>TP(1)%IC_BU; TP(1)%IR=>TP(1)%IR_BU
      ENDIF
-     TP(0)%IC(TP(0)%NT)=IC; TP(0)%IR(TP(0)%NT)=IR 
+     TP(1)%IC(TP(1)%NT)=IC; TP(1)%IR(TP(1)%NT)=IR 
      
     ENDIF
     
     !## not to be counted again
     IDF(3)%X(IC,IR)=REAL(IP)
 
-    !## trace particle in thread and whenever trace is captured, stop processing and add selected tread
-    IF(IDF(4)%X(IC,IR).NE.0)THEN
-     !## probably traced before, fill in appropriate thread
-     IT =INT(IDF(4)%X(IC,IR)); IPT=INT(IDF(5)%X(IC,IR))
-     !# fill in rest of thread
-     DO I=IPT+1,TP(IT)%NT
-      IC=TP(IT)%IC(I); IR=TP(IT)%IR(I)
-      IDF(2)%X(IC,IR)=IDF(2)%X(IC,IR)+1.0
-     ENDDO
-     EXIT
-    ENDIF
-
    ENDDO
    
    IF(IWRITE.EQ.1)WRITE(IU,*) 'END'
       
-   !## particle long enough to form a complete new thread to be used again
-   IF(TP(0)%NT.GT.NFTHREAD)THEN
-    !## copy thread
-    NT=NT+1
-    NF=TP(0)%NT
-    !## add intersecting thread
-    IF(IT.NE.0)NF=NF+(TP(IT)%NT-IPT)
-    ALLOCATE(TP(NT)%IC(NF),TP(NT)%IR(NF))
-    DO I=1,TP(0)%NT
-     IC=TP(0)%IC(I);  IR=TP(0)%IR(I)
-     TP(NT)%IC(I)=IC; TP(NT)%IR(I)=IR
-     IDF(4)%X(IC,IR)=REAL(NT)
-     IDF(5)%X(IC,IR)=REAL(I)
-    ENDDO
-    I=I-1
-    IF(IT.NE.0)THEN
-     !## add remaining thread that has been intersected
-     DO J=TP(IT)%NT,IPT+1,-1
-      I=I+1
-      IC=TP(IT)%IC(J); IR=TP(IT)%IR(J)
-      TP(NT)%IC(I)=IC; TP(NT)%IR(I)=IR
-     ENDDO
-    ENDIF
-    TP(NT)%NT=NF
-   ENDIF
-
-   !## waterbalance - trace backwards becasue of waterbalance-stations
+   !## waterbalance - trace backwards because of waterbalance-stations
    IF(LWBAL)THEN
     XWBAL=0.0
-    DO I=TP(IT)%NT,1,-1
-     IC=TP(IT)%IC(I); IR=TP(IT)%IR(I)
-     IF(IDF(6)%X(IC,IR).NE.0)XWBAL=IDF(6)%X(IC,IR)
-     IDF(6)%X(IC,IR)=XWBAL
+    DO I=TP(1)%NT,1,-1
+     IC=TP(1)%IC(I); IR=TP(1)%IR(I)
+     IF(IDF(4)%X(IC,IR).NE.0)XWBAL=IDF(4)%X(IC,IR)
+     IDF(4)%X(IC,IR)=XWBAL
     ENDDO
    ENDIF
 
@@ -281,16 +210,12 @@ CONTAINS
  ENDIF
  
  IF(.NOT.IDFWRITE(IDF(2),IDF(1)%FNAME(:INDEX(IDF(1)%FNAME,'.',.TRUE.)-1)//'_COUNT.IDF',1))THEN; ENDIF
- IF(.NOT.IDFWRITE(IDF(4),IDF(1)%FNAME(:INDEX(IDF(1)%FNAME,'.',.TRUE.)-1)//'_THREAD.IDF',1))THEN; ENDIF
- IF(.NOT.IDFWRITE(IDF(5),IDF(1)%FNAME(:INDEX(IDF(1)%FNAME,'.',.TRUE.)-1)//'_THREADPOS.IDF',1))THEN; ENDIF
  IF(LWBAL)THEN
-  IF(.NOT.IDFWRITE(IDF(6),IDF(1)%FNAME(:INDEX(IDF(1)%FNAME,'.',.TRUE.)-1)//'_ZONE.IDF',1))THEN; ENDIF
+  IF(.NOT.IDFWRITE(IDF(4),IDF(1)%FNAME(:INDEX(IDF(1)%FNAME,'.',.TRUE.)-1)//'_ZONE.IDF',1))THEN; ENDIF
  ENDIF
  
- DO I=0,MXTHREAD
-  IF(ASSOCIATED(TP(I)%IC))DEALLOCATE(TP(I)%IC)
-  IF(ASSOCIATED(TP(I)%IR))DEALLOCATE(TP(I)%IR)
- ENDDO
+ IF(ASSOCIATED(TP(1)%IC))DEALLOCATE(TP(1)%IC)
+ IF(ASSOCIATED(TP(1)%IR))DEALLOCATE(TP(1)%IR)
  DEALLOCATE(TP)
  
  END SUBROUTINE SOF_TRACE
@@ -308,7 +233,7 @@ CONTAINS
  !## get proper cell
  CALL IDFIROWICOL(IDF,IR,IC,XC,YC)
 
-! SOF_TRACE_GET_ANGLE_MEAN=IDF%X(IC,IR); RETURN
+ SOF_TRACE_GET_ANGLE_MEAN=IDF%X(IC,IR); RETURN
  
  IWINDOW=1
    
@@ -392,13 +317,12 @@ if(irow.eq.ir.and.icol.eq.ic)f=1.0
  END FUNCTION SOF_TRACE_GET_ANGLE_MEAN
  
  !###======================================================================
- SUBROUTINE SOF_MAIN(IDF,IFLOW,IPNTR,IWINDOW,XMIN,YMIN,XMAX,YMAX,CELLSIZE)
+ SUBROUTINE SOF_MAIN(IDF,IPNTR,IWINDOW,XMIN,YMIN,XMAX,YMAX,CELLSIZE)
  !###======================================================================
  IMPLICIT NONE
  TYPE(IDFOBJ),INTENT(INOUT),DIMENSION(:) :: IDF
  INTEGER,INTENT(IN) :: IWINDOW
  REAL,INTENT(IN) :: XMIN,YMIN,XMAX,YMAX,CELLSIZE
- INTEGER,INTENT(IN) :: IFLOW !## iflow=nul compute depressions, iflow=one, compute flowpaths
  INTEGER,INTENT(IN) :: IPNTR !## ipntr=0 no pointer to stop, 1 use pointer to stop
  INTEGER :: ITIC,ITOC,I,IROW,ICOL
   
@@ -448,7 +372,7 @@ if(irow.eq.ir.and.icol.eq.ic)f=1.0
   IF(.NOT.IDFWRITE(IDF(5),IDF(3)%FNAME(:INDEX(IDF(3)%FNAME,'.',.TRUE.)-1)//'_copydem.idf',1))THEN; ENDIF
  ENDIF
  
- !## fill in pitts - fill in gradients for flat-areas using PCG interpolation from higher/lower grounds
+ !## fill in pitts - fill in gradients for flat-areas
  CALL SOF_FILL_PITT(IDF(1),IDF(2),IDF(3),IDF(4))
  IF(.NOT.IDFWRITE(IDF(1),IDF(3)%FNAME,1))THEN; ENDIF
 ! IF(.NOT.IDFWRITE(IDF(1),IDF(3)%FNAME(:INDEX(IDF(3)%FNAME,'.',.TRUE.)-1)//'_zmax.idf',1))THEN; ENDIF
@@ -478,22 +402,23 @@ if(irow.eq.ir.and.icol.eq.ic)f=1.0
  IMPLICIT NONE
  TYPE(IDFOBJ) :: DEM,SLOPE,ASPECT
  INTEGER :: ICOL,IROW
- REAL,DIMENSION(6) :: Z
  REAL :: DZDX,DZDY,S,A
  
  DO IROW=1,DEM%NROW
   DO ICOL=1,DEM%NCOL
+
+!   if(icol.eq.61.and.irow.eq.28)then
+!   write(*,*) 'dsds'
+!   endif
+
    !## nodata dem map
    IF(DEM%X(ICOL,IROW).EQ.DEM%NODATA)CYCLE
    !## slope map allready filled in
    IF(SLOPE%X(ICOL,IROW).NE.SLOPE%NODATA)CYCLE
 
-   if(icol.eq.248.and.irow.eq.213)then
-   write(*,*) 'dsds'
-   endif
-   if(icol.eq.219.and.irow.eq.184)then
-   write(*,*) 'dsds'
-   endif
+!   if(icol.eq.219.and.irow.eq.184)then
+!   write(*,*) 'dsds'
+!   endif
 
 !   CALL SOF_COMPUTE_GRAD(DEM,ICOL,IROW,DZDX,DZDY)
 
@@ -516,6 +441,16 @@ if(irow.eq.ir.and.icol.eq.ic)f=1.0
   ENDDO
  ENDDO
  
+! !## check whether 
+!     A=SOF_TRACE_GET_ANGLE_MEAN(IDF(1),LX(0),LY(0))
+!    ENDIF
+!    
+!    !## stepsize
+!    SSX=F*IDF(1)%DX; SSY=SSX
+!
+!    DX=-COS(A)*SSX; DY=-SIN(A)*SSY
+!    LX(1)=LX(0)+DX; LY(1)=LY(0)+DY   
+     
  END SUBROUTINE SOF_COMPUTE_SLOPE_ASPECT
  
  !###======================================================================
@@ -527,8 +462,8 @@ if(irow.eq.ir.and.icol.eq.ic)f=1.0
  REAL,INTENT(OUT) :: DZDX,DZDY
  LOGICAL,INTENT(IN) :: LNODATSINK
  REAL,DIMENSION(9) :: Z,GRADX,GRADY
- INTEGER :: IC1,IC2,IR1,IR2,I,J,IC,IR
- REAL :: AX,AY,NA,ZM,L,f,TG,G,TZ
+ INTEGER :: IC1,IC2,IR1,IR2,I,J
+ REAL :: AX,AY,ZM,F,TG,G
  DATA GRADX/-1.0, 0.0, 1.0, 1.0, 1.0, 0.0,-1.0,-1.0,0.0/
  DATA GRADY/ 1.0, 1.0, 1.0, 0.0,-1.0,-1.0,-1.0, 0.0,0.0/
                    
@@ -547,7 +482,37 @@ if(irow.eq.ir.and.icol.eq.ic)f=1.0
  Z(7)=DEM%X(IC1 ,IR2)
  Z(8)=DEM%X(IC1 ,IROW)
  Z(9)=DEM%X(ICOL,IROW)
-    
+
+ !## is it a pit on the edge ???
+ IF(IC1.EQ.ICOL.OR.IC2.EQ.ICOL.OR.IR1.EQ.IROW.OR.IR2.EQ.IROW)THEN
+  DO I=1,8
+   IF(Z(I).LT.Z(9))EXIT
+  ENDDO
+  !## no escape
+  IF(I.GT.8)THEN
+   IF(IC1.EQ.ICOL)THEN
+    Z(1)=DEM%NODATA
+    Z(7)=DEM%NODATA
+    Z(8)=DEM%NODATA
+   ENDIF
+   IF(IC2.EQ.ICOL)THEN
+    Z(3)=DEM%NODATA
+    Z(4)=DEM%NODATA
+    Z(5)=DEM%NODATA
+   ENDIF
+   IF(IR1.EQ.IROW)THEN
+    Z(1)=DEM%NODATA
+    Z(2)=DEM%NODATA
+    Z(3)=DEM%NODATA
+   ENDIF
+   IF(IR2.EQ.IROW)THEN
+    Z(5)=DEM%NODATA
+    Z(6)=DEM%NODATA
+    Z(7)=DEM%NODATA
+   ENDIF
+  ENDIF
+ ENDIF
+      
  !## nodata act as as a strong sink, water want to move there urgently, in opposite direction
  ZM=Z(9)
   
@@ -598,7 +563,9 @@ if(irow.eq.ir.and.icol.eq.ic)f=1.0
   ENDIF
  ENDDO
  !## perfect dome in flat area - occurs, but direction is irrelevant, choose flow right
- IF(J.EQ.0)J=6
+ IF(J.EQ.0)THEN
+  J=6
+ ENDIF
  AX=GRADX(J)
  AY=GRADY(J)
 
@@ -804,7 +771,7 @@ if(irow.eq.ir.and.icol.eq.ic)f=1.0
  IDFP%NODATA=0.0; IDFP%X=IDFP%NODATA
   
  !## trace depression for exit points
- DO I=1,NP
+ DO I=1,NP 
   ICOL=INT(PL(I,1)); IROW=INT(PL(I,2))
     
   !## add this point to the pitt list, remove from the DEM
@@ -816,6 +783,10 @@ if(irow.eq.ir.and.icol.eq.ic)f=1.0
   NBPX=0; IDFP%X(ICOL,IROW)=1.0
   !## total boundary list (cleaning)
   NTPX=1; TPX(NPPX)%ICOL=ICOL; TPX(NPPX)%IROW=IROW
+
+!  if(icol.eq.16.and.irow.eq.6)then
+!   write(*,*) 'area1'
+!  endif
 
   ITYPE=0
   DO     
@@ -830,18 +801,17 @@ if(irow.eq.ir.and.icol.eq.ic)f=1.0
     ENDIF
    ENDIF
   ENDDO
-
-!  if(abs(zmax-914.2207).le.0.01)then
-  if(abs(zmax-914.2361).le.0.01)then
-   write(*,*) 'area1'
-  endif
   
+!  if(abs(zmax-1001.962).le.0.01)then
+!   write(*,*) 'area1'
+!  endif
+
   !## change all pittpoints for this spill-value (zmax)
   DO J=1,NPPX; DEM%X(PPX(J)%ICOL,PPX(J)%IROW)=ZMAX; ENDDO
       
   F=REAL(I)/REAL(NP)*100.0; WRITE(6,'(A,F10.3,2(A,I5),A)') '+Processing pitt:',F,' % (nppx= ',NPPX,' ; nbpx= ',NBPX,')'
 
-  CALL SOF_FILL_FLATAREAS(DEM,SLOPE,ASPECT,NBPX,NPPX)
+  CALL SOF_FILL_FLATAREAS(DEM,SLOPE,ASPECT,NPPX)
 
   !## clean idfp%x()
   DO J=1,NTPX; IDFP%X(TPX(J)%ICOL,TPX(J)%IROW)=IDFP%NODATA; ENDDO 
@@ -853,15 +823,15 @@ if(irow.eq.ir.and.icol.eq.ic)f=1.0
  END SUBROUTINE SOF_FILL_PITT 
  
  !###======================================================================
- SUBROUTINE SOF_FILL_FLATAREAS(DEM,SLOPE,ASPECT,NBPX,NPPX)
+ SUBROUTINE SOF_FILL_FLATAREAS(DEM,SLOPE,ASPECT,NPPX)
  !###======================================================================
  IMPLICIT NONE
  TYPE(IDFOBJ),INTENT(INOUT) :: SLOPE,ASPECT,DEM
- INTEGER,INTENT(IN) :: NBPX,NPPX
+ INTEGER,INTENT(IN) :: NPPX
  TYPE(IDFOBJ) :: PCG 
- INTEGER :: IC1,IC2,IR1,IR2,I,J,IERROR,ICOL,IROW,IFCT,IC,IR
+ INTEGER :: IC1,IC2,IR1,IR2,I,IERROR,ICOL,IROW,IFCT,IC,IR
  REAL,POINTER,DIMENSION(:) :: XA,YA,ZA 
- REAL :: DZDX,DZDY,S,A
+ REAL :: A
  REAL,PARAMETER :: HINI=0.0
    
  CALL IDFNULLIFY(PCG)
@@ -889,7 +859,7 @@ if(irow.eq.ir.and.icol.eq.ic)f=1.0
  IR=PPX(NPPX)%IROW-IR1+1
  PCG%X(IC,IR)=-1.0
  
- if(.not.idfwrite(pcg,'d:\pcg_ini'//trim(itos(1))//'X'//trim(itos(1))//'.idf',1))then; endif
+! if(.not.idfwrite(pcg,'d:\pcg_ini'//trim(itos(1))//'X'//trim(itos(1))//'.idf',1))then; endif
 
  CALL SOF_SOLVE(PCG)
 
@@ -897,13 +867,21 @@ if(irow.eq.ir.and.icol.eq.ic)f=1.0
   ICOL=PPX(I)%ICOL-IC1+1
   IROW=PPX(I)%IROW-IR1+1
   A   =PCG%X(ICOL,IROW)
-  ICOL=PPX(I)%ICOL
-  IROW=PPX(I)%IROW
-  SLOPE%X(ICOL,IROW) =0.0
-  ASPECT%X(ICOL,IROW)=A
+  IF(A.NE.PCG%NODATA)THEN
+   ICOL=PPX(I)%ICOL
+   IROW=PPX(I)%IROW
+   SLOPE%X(ICOL,IROW) =0.0
+   ASPECT%X(ICOL,IROW)=A
+  ENDIF
  ENDDO
+ !## clear pit location
+ I=NPPX
+ ICOL=PPX(I)%ICOL
+ IROW=PPX(I)%IROW
+ SLOPE%X(ICOL,IROW) =SLOPE%NODATA
+ ASPECT%X(ICOL,IROW)=ASPECT%NODATA
  
- if(.not.idfwrite(pcg,'d:\pcg'//trim(itos(1))//'X'//trim(itos(1))//'.idf',1))then; endif
+! if(.not.idfwrite(pcg,'d:\pcg'//trim(itos(1))//'X'//trim(itos(1))//'.idf',1))then; endif
 
  CALL IDFDEALLOCATEX(PCG)
  
@@ -920,7 +898,7 @@ if(irow.eq.ir.and.icol.eq.ic)f=1.0
  INTEGER :: IROW,ICOL,NCR,D,DR,DC,IL,I,IR,IC,ICR,JCR
  
  ALLOCATE(A(PCG%NCOL,PCG%NROW),ID(PCG%NCOL,PCG%NROW),CR(PCG%NCOL*PCG%NROW,2,2))
- A=0.0; ID=INT(3,1)
+ A=PCG%NODATA; ID=INT(3,1)
  
  !## find starting location
 ROWLOOP: DO IROW=1,PCG%NROW
@@ -994,11 +972,15 @@ ROWLOOP: DO IROW=1,PCG%NROW
  REAL,INTENT(INOUT) :: ZMAX
  REAL :: ZMIN
  INTEGER,INTENT(OUT) :: IROW,ICOL
- INTEGER :: I,IBND
+ INTEGER :: I,IBND,I1
    
  !## find lowest spill-level
- ZMIN=BPX(1)%Z; IBND=1
- DO I=2,NBPX
+ IF(ITYPE.EQ.0)THEN
+  ZMIN=BPX(1)%Z; IBND=1; I1=2
+ ELSEIF(ITYPE.EQ.1)THEN
+  I1=1; IBND=0
+ ENDIF
+ DO I=I1,NBPX
   !## search for lowest
   IF(ITYPE.EQ.0)THEN
    IF(BPX(I)%Z.LT.ZMIN)THEN
@@ -1008,17 +990,20 @@ ROWLOOP: DO IROW=1,PCG%NROW
   ELSEIF(ITYPE.EQ.1)THEN
    IF(BPX(I)%Z.EQ.ZMAX)THEN
     IBND=I
-   ENDIF
+   ENDIF  
   ENDIF
  ENDDO
- !## location of the lowest point on the boundary
- ICOL=BPX(IBND)%ICOL; IROW=BPX(IBND)%IROW 
 
+ IF(IBND.NE.0)THEN
+  !## location of the lowest point on the boundary
+  ICOL=BPX(IBND)%ICOL; IROW=BPX(IBND)%IROW 
+ ENDIF
+ 
  IF(ITYPE.EQ.0)THEN
   !## natural exit (zmin), level on boundary less than spill level (zmax)
   IF(ZMIN.LT.ZMAX)THEN; SOF_GET_EXITPOINT=.TRUE.; RETURN; ENDIF
  ELSEIF(ITYPE.EQ.1)THEN
-  IF(IBND.EQ.1)THEN; SOF_GET_EXITPOINT=.TRUE.; RETURN; ENDIF
+  IF(IBND.EQ.0)THEN; SOF_GET_EXITPOINT=.TRUE.; RETURN; ENDIF
  ENDIF
  
  !## set new spill level

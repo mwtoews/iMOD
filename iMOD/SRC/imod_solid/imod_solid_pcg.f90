@@ -140,8 +140,10 @@ CONTAINS
  !## do not compute hypothetical borders (lowest one)
  !## no cross-sections given
  IF(NSPF.EQ.0)THEN
-  ISEL_IDF=1; ISEL_IDF(1)=0; ISEL_IDF(NLAY)=0
-  DO ILAY=1,NLAY-1,2; ISEL_IDF(ILAY)=0 ; ENDDO
+  IF(SUM(ISEL_IDF).EQ.0)THEN
+   ISEL_IDF=1; ISEL_IDF(1)=0; ISEL_IDF(NLAY)=0
+   DO ILAY=1,NLAY-1,2; ISEL_IDF(ILAY)=0 ; ENDDO
+  ENDIF
  ENDIF
  
  !## overall resistance
