@@ -723,7 +723,7 @@ CONTAINS
      IF(ZA(I).GT.0.0)THEN
       ZA(I)=LOG(ZA(I))
      ELSE
-      ZA(I)=LOG(TINY(1.0))
+      ZA(I)=-5.0 !LOG(0.000)
      ENDIF
     ENDDO
    ENDIF
