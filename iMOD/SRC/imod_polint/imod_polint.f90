@@ -49,7 +49,7 @@ CONTAINS
  IF(ALLOCATED(YNTMP))DEALLOCATE(YNTMP)
  ALLOCATE(C(NMAX),D(NMAX),YNTMP(NPR),YMTMP(NPC))
 
- !loop over all points!
+ !## loop over all points!
  DO IROW=1,NROW
   DO ICOL=1,NCOL
    X1=(DELR(ICOL-1)+DELR(ICOL))/2.0
@@ -191,5 +191,264 @@ CONTAINS
  J=JL
 
  END SUBROUTINE POL1LOCATE
+
+ !###==================================================================
+ SUBROUTINE SPLINE_MAIN(XB,YB,N,XI,ZI,M)
+ !###==================================================================
+ ! SPLINE INTERPOLATION
+ ! COMMENTS: VALUES OF FUNCTION F(X) ARE CALCULATED IN N BASE POINTS
+ ! THEN: SPLINE COEFFICIENTS ARE COMPUTED
+ !       SPLINE INTERPOLATION IS COMPUTED IN 2N-1 POINTS, 
+ !       A DIFFERENCE SUM|F(U)-ISPLINE(U)| 
+ !====================================================================
+ IMPLICIT NONE
+ INTEGER,INTENT(IN) :: N,M       
+ REAL,DIMENSION(N),INTENT(IN) :: XB,YB
+ REAL,DIMENSION(:),POINTER,INTENT(OUT) :: XI,ZI
+ REAL,DIMENSION(:),ALLOCATABLE :: B,C,D
+ REAL :: X
+ INTEGER :: I
+
+ ALLOCATE(B(N),C(N),D(N))
+ 
+ !## call spline to calculate spline coeficients
+ CALL SPLINE(XB,YB,B,C,D,N) 
+
+ DO I=1,M
+  X=XI(I)
+  ZI(I)=ISPLINE(X,XB,YB,B,C,D,N)
+ ENDDO
+ 
+ DEALLOCATE(B,C,D)
+ 
+ END SUBROUTINE SPLINE_MAIN
+
+ !###==================================================================
+ SUBROUTINE SPLINE(X,Y,B,C,D,N)
+ !###==================================================================
+ ! CALCULATE THE COEFFICIENTS B(I), C(I), AND D(I), I=1,2,...,N
+ ! FOR CUBIC SPLINE INTERPOLATION
+ ! S(X) = Y(I) + B(I)*(X-X(I)) + C(I)*(X-X(I))**2 + D(I)*(X-X(I))**3
+ ! FOR  X(I) <= X <= X(I+1)
+ ! ALEX G: JANUARY 2010
+ !----------------------------------------------------------------------
+ !  X = THE ARRAYS OF DATA ABSCISSAS (IN STRICTLY INCREASING ORDER)
+ !  Y = THE ARRAYS OF DATA ORDINATES
+ !  N = SIZE OF THE ARRAYS XI() AND YI() (N>=2)
+ !  OUTPUT..
+ !  B, C, D  = ARRAYS OF SPLINE COEFFICIENTS
+ !  COMMENTS ...
+ !  SPLINE.F90 PROGRAM IS BASED ON FORTRAN VERSION OF PROGRAM SPLINE.F
+ !  THE ACCOMPANYING FUNCTION FSPLINE CAN BE USED FOR INTERPOLATION
+ !======================================================================
+ IMPLICIT NONE
+ INTEGER,INTENT(IN) :: N
+ REAL,INTENT(IN),DIMENSION(N) :: X,Y
+ REAL,INTENT(OUT),DIMENSION(N) :: B,C,D
+ INTEGER :: I,J,GAP
+ REAL :: H
+
+ GAP = N-1
+! CHECK INPUT
+ IF ( N .LT. 2 ) RETURN
+ IF ( N .LT. 3 ) THEN
+  B(1) = (Y(2)-Y(1))/(X(2)-X(1))   ! LINEAR INTERPOLATION
+  C(1) = 0.
+  D(1) = 0.
+  B(2) = B(1)
+  C(2) = 0.
+  D(2) = 0.
+  RETURN
+ END IF
+!
+! STEP 1: PREPARATION
+!
+ D(1) = X(2) - X(1)
+ C(2) = (Y(2) - Y(1))/D(1)
+ DO I = 2, GAP
+  D(I) = X(I+1) - X(I)
+  B(I) = 2.0*(D(I-1) + D(I))
+  C(I+1) = (Y(I+1) - Y(I))/D(I)
+  C(I) = C(I+1) - C(I)
+ END DO
+!
+! STEP 2: END CONDITIONS 
+!
+ B(1) = -D(1)
+ B(N) = -D(N-1)
+ C(1) = 0.0
+ C(N) = 0.0
+ IF(N .NE. 3) THEN
+  C(1) = C(3)/(X(4)-X(2)) - C(2)/(X(3)-X(1))
+  C(N) = C(N-1)/(X(N)-X(N-2)) - C(N-2)/(X(N-1)-X(N-3))
+  C(1) = C(1)*D(1)**2/(X(4)-X(1))
+  C(N) = -C(N)*D(N-1)**2/(X(N)-X(N-3))
+ END IF
+!
+! STEP 3: FORWARD ELIMINATION 
+!
+ DO I = 2, N
+  H = D(I-1)/B(I-1)
+  B(I) = B(I) - H*D(I-1)
+  C(I) = C(I) - H*C(I-1)
+ END DO
+!
+! STEP 4: BACK SUBSTITUTION
+!
+ C(N) = C(N)/B(N)
+ DO J = 1, GAP
+   I = N-J
+   C(I) = (C(I) - D(I)*C(I+1))/B(I)
+ END DO
+
+ !## STEP 5: COMPUTE SPLINE COEFFICIENTS
+ B(N) = (Y(N) - Y(GAP))/D(GAP) + D(GAP)*(C(GAP) + 2.0*C(N))
+ DO I = 1, GAP
+  B(I) = (Y(I+1) - Y(I))/D(I) - D(I)*(C(I+1) + 2.0*C(I))
+  D(I) = (C(I+1) - C(I))/D(I)
+  C(I) = 3.*C(I)
+ END DO
+ C(N) = 3.0*C(N)
+ D(N) = D(N-1)
+
+ END SUBROUTINE SPLINE
+
+ !###==================================================================
+ REAL FUNCTION ISPLINE(U,X,Y,B,C,D,N)
+ !###==================================================================
+ ! FUNCTION ISPLINE EVALUATES THE CUBIC SPLINE INTERPOLATION AT POINT Z
+ ! ISPLINE = Y(I)+B(I)*(U-X(I))+C(I)*(U-X(I))**2+D(I)*(U-X(I))**3
+ ! WHERE  X(I) <= U <= X(I+1)
+ ! INPUT
+ ! U       = THE ABSCISSA AT WHICH THE SPLINE IS TO BE EVALUATED
+ ! X, Y    = THE ARRAYS OF GIVEN DATA POINTS
+ ! B, C, D = ARRAYS OF SPLINE COEFFICIENTS COMPUTED BY SPLINE
+ ! N       = THE NUMBER OF DATA POINTS
+ ! OUTPUT:
+ ! ISPLINE = INTERPOLATED VALUE AT POINT U
+ !=======================================================================
+ IMPLICIT NONE
+ REAL,INTENT(IN) :: U
+ INTEGER,INTENT(IN) :: N
+ REAL,DIMENSION(N),INTENT(IN) :: X(N),Y(N),B(N),C(N),D(N)
+ INTEGER :: I,J,K
+ REAL :: DX
+
+ !## if u is ouside the x() interval take a boundary value (left or right)
+ IF(U.LE.X(1)) THEN
+  ISPLINE=Y(1)
+  RETURN
+ END IF
+ IF(U.GE.X(N)) THEN
+  ISPLINE=Y(N)
+  RETURN
+ END IF
+
+ !## binary search for for i, such that x(i) <= u <= x(i+1)
+ I=1
+ J=N+1
+ DO WHILE (J.GT.I+1)
+  K=(I+J)/2
+  IF(U.LT.X(K))THEN
+   J=K
+  ELSE
+   I=K
+  ENDIF
+ END DO
+
+ !# evaluate spline interpolation
+ DX=U-X(I)
+ ISPLINE=Y(I)+DX*(B(I)+DX*(C(I)+DX*D(I)))
+
+ END FUNCTION ISPLINE
+
+ !###==================================================================
+ SUBROUTINE SPLINE_AKIMA_MAIN(XB,YB,N,XI,ZI,M)  
+ !###==================================================================
+ !********************************************************
+ !*          Akima spline fitting subroutine             *
+ !* ---------------------------------------------------- *
+ !* The input table is X(i), Y(i), where Y(i) is the     *
+ !* dependant variable. The interpolation point is xx,   *
+ !* which is assumed to be in the interval of the table  *
+ !* with at least one table value to the left, and three *
+ !* to the right. The interpolated returned value is yy. *
+ !* n is returned as an error check (n=0 implies error). *
+ !* It is also assumed that the X(i) are in ascending    *
+ !* order.                                               *
+ !********************************************************
+ INTEGER,INTENT(IN) :: N,M
+ REAL,DIMENSION(N),INTENT(IN) :: XB,YB
+ REAL,DIMENSION(:),POINTER,INTENT(OUT) :: XI,ZI
+ REAL,DIMENSION(:),ALLOCATABLE :: XM,Z,X,Y
+ INTEGER :: NN
+ 
+ !## add three fake points to the end
+ NN=N+4
+
+ ALLOCATE(XM(0:NN+3),Z(0:NN),X(0:NN),Y(0:NN)); X=0.0; Y=0.0
+ DO I=1,N; X(I)=XB(I); Y(I)=YB(I); ENDDO
+ DO I=N+1,NN; X(I)=X(I-1)+10.0; Y(I)=Y(I-1); ENDDO
+
+ DO I=1,M
+  XM=0.0; Z=0.0
+  CALL INTERPOL_AKIMA(NN,X,Y,XI(I),ZI(I),XM,Z)
+ ENDDO
+ 
+ DEALLOCATE(XM,Z,X,Y)
+ 
+ END SUBROUTINE SPLINE_AKIMA_MAIN
+
+ !###==================================================================
+ SUBROUTINE INTERPOL_AKIMA(IV,X,Y,XX,YY,XM,Z)
+ !###==================================================================
+ INTEGER,INTENT(IN) :: IV 
+ REAL,INTENT(IN) :: XX
+ REAL,INTENT(OUT) :: YY
+ REAL,DIMENSION(0:IV),INTENT(INOUT) :: X,Y ! X (0:SIZE), Y (0:SIZE)
+ REAL,DIMENSION(0:IV+3),INTENT(OUT) :: XM ! 
+ REAL,DIMENSION(0:IV),INTENT(OUT) :: Z 
+ INTEGER :: I,N
+
+ N=1
+ !SPECIAL CASE XX=0
+ IF (XX.EQ.0.0) THEN
+   YY=0.0; RETURN
+ END IF
+ !CHECK TO SEE IF INTERPOLATION POINT IS CORRECT
+ IF (XX.LT.X(1).OR.XX.GE.X(IV-3)) THEN
+   N=0 ; RETURN
+ END IF
+ X(0)=2.0*X(1)-X(2)
+ !CALCULATE AKIMA COEFFICIENTS, A AND B
+ DO I = 1, IV-1
+   !SHIFT I TO I+2
+   XM(I+2)=(Y(I+1)-Y(I))/(X(I+1)-X(I))
+ END DO
+ XM(IV+2)=2.0*XM(IV+1)-XM(IV)
+ XM(IV+3)=2.0*XM(IV+2)-XM(IV+1)
+ XM(2)=2.0*XM(3)-XM(4)
+ XM(1)=2.0*XM(2)-XM(3)
+ DO I = 1, IV
+  A=ABS(XM(I+3)-XM(I+2))
+  B=ABS(XM(I+1)-XM(I))
+  IF (A+B.NE.0.0) GOTO 100
+  Z(I)=(XM(I+2)+XM(I+1))/2.D0
+  GOTO 200
+100 Z(I)=(A*XM(I+1)+B*XM(I+2))/(A+B)
+200 END DO
+  !FIND RELEVANT TABLE INTERVAL
+ I=0
+300 I=I+1
+ IF (XX.GT.X(I)) GOTO 300
+ I=I-1
+ 
+ !BEGIN INTERPOLATION
+ B=X(I+1)-X(I)
+ A=XX-X(I)
+ YY=Y(I)+Z(I)*A+(3.0*XM(I+2)-2.0*Z(I)-Z(I+1))*A*A/B
+ YY=YY+(Z(I)+Z(I+1)-2.0*XM(I+2))*A*A*A/(B*B)
+ 
+ END SUBROUTINE INTERPOL_AKIMA
 
 END MODULE MOD_POLINT

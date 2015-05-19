@@ -675,6 +675,11 @@ CONTAINS
  CALL POL1LOCATE(IDFC%SY,IDFC%NROW+1,REAL(IDFM%SY(0)-TINY,8),IR1)
  CALL POL1LOCATE(IDFC%SY,IDFC%NROW+1,REAL(IDFM%SY(IDFM%NROW)+TINY,8),IR2)
 
+ IR1=MAX(1,IR1)
+ IC1=MAX(1,IC1)
+ IR2=MIN(IR2,IDFC%NROW)
+ IC2=MIN(IC2,IDFC%NCOL)
+ 
  !## number of distinguished coordinates from child idf (coarser)
  NPC=(IC2-IC1)+1; NPR=(IR2-IR1)+1
  !## add extra for boundary (north/west/east/south)

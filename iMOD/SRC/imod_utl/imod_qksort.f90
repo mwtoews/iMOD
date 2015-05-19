@@ -543,8 +543,41 @@ SUBROUTINE SHELLSORTDOUBLE2(N,A,B)
 IMPLICIT NONE
 INTEGER,INTENT(IN) :: N
 DOUBLE PRECISION,DIMENSION(N)  :: A,B
-INTEGER            :: I,J,INC
-REAL               :: V,W
+INTEGER :: I,J,INC
+REAL :: V,W
+
+INC=1
+1 INC=3*INC+1
+IF(INC.LE.N)GOTO 1
+ 2 CONTINUE
+ INC=INC/3
+ DO I=INC+1,N
+  V=A(I)
+  W=B(I)
+  J=I
+  3 IF(A(J-INC).GT.V)THEN
+   A(J)=A(J-INC)
+   B(J)=B(J-INC)
+   J=J-INC
+  IF(J.LE.INC)GOTO 4
+   GOTO 3
+  ENDIF
+  4  A(J)=V
+  B(J)=W
+END DO
+IF(INC.GT.1)GOTO 2
+
+RETURN
+END SUBROUTINE
+
+!###====================================================
+SUBROUTINE SHELLSORTPOINTER2(N,A,B)
+!###====================================================
+IMPLICIT NONE
+INTEGER,INTENT(IN) :: N
+REAL,POINTER,DIMENSION(:) :: A,B
+INTEGER :: I,J,INC
+REAL :: V,W
 
 INC=1
 1 INC=3*INC+1

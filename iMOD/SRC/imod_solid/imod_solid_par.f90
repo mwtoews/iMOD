@@ -25,9 +25,8 @@ MODULE MOD_SOLID_PAR
 USE MOD_IDF_PAR, ONLY : IDFOBJ
 USE MOD_PROF_PAR, ONLY : BITMAPOBJ
 
-INTEGER :: IBATCH,IWINDOW !,ATTACH
+INTEGER :: IBATCH,IWINDOW 
 CHARACTER(LEN=256),SAVE :: SOLFILE,OUTPUTFOLDER,REGISTOP,REGISBOT,REGISKHV,REGISKVV
-REAL :: FMIDELEV
 
 INTEGER,PARAMETER :: MXPX=500    !## max. 500 point in graph
 
@@ -94,10 +93,12 @@ INTEGER(KIND=1),ALLOCATABLE,DIMENSION(:,:) :: IBND
 
 INTEGER :: MXITER1=5000 !## outer (linear system)
 INTEGER :: MXITER2=20   !## inner (linear system)
-INTEGER :: IDAMPING=1   !## use adaptive damping
+INTEGER :: IDAMPING=0   !## use adaptive damping
 REAL :: HCLOSE=0.001    !## m
 REAL :: RCLOSE=10000.0  !## m3/dag
-REAL :: RELAX=1.0      !##
+REAL :: RELAX=0.98      !##
+REAL :: FMIDELEV=1.0    !## average in between aquifers
+REAL :: FTIGHT=100.0      !## how tight works itight=2
 INTEGER :: ITIGHT=1     !## using constant head boundary condition
 REAL,PARAMETER :: HNOFLOW=-9999.0
 INTEGER :: MICNVG=25
