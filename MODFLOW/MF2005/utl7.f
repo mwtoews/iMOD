@@ -489,6 +489,8 @@ C     ------------------------------------------------------------------
       integer :: i,iupsc,idosc,jcol                                     ! DLT
 C     ------------------------------------------------------------------
 C
+      CNSTNT = 0.0                                                      ! DLT
+C
 C1------READ ARRAY CONTROL RECORD AS CHARACTER DATA.
       READ(IN,'(A)') CNTRL
 C
@@ -573,7 +575,7 @@ C4B-----LOCAT>0; READ FORMATTED RECORDS USING FORMAT FMTIN.
       IF(ICLOSE.NE.0) CLOSE(UNIT=LOCAT)
 C
 305   continue                                                          ! DLT
-      
+
 C5------IF CNSTNT NOT ZERO THEN MULTIPLY ARRAY VALUES BY CNSTNT.
       ZERO=0.
       IF(CNSTNT.EQ.ZERO) GO TO 120
@@ -625,6 +627,8 @@ C     ------------------------------------------------------------------
       integer rdrs_main, rdrsflg                                        ! DLT
       integer iupsc,idosc                                               ! DLT
 C     ------------------------------------------------------------------
+C
+      ICONST = 0                                                        ! DLT
 C
 C1------READ ARRAY CONTROL RECORD AS CHARACTER DATA.
       READ(IN,'(A)') CNTRL
@@ -891,9 +895,9 @@ C2------FORMAT.  SET A FLAG SPECIFYING IF FREE FORMAT OR FIXED FORMAT.
       ICLOSE=0
       IFREE=1
       ICOL=1
-      loper = .false.  
+      loper = .false.
       CNSTNT=0.0                                                ! DLT
-      
+
       CALL URWORD(CNTRL,ICOL,ISTART,ISTOP,1,N,R,IOUT,IN)
       IF (CNTRL(ISTART:ISTOP).EQ.'CONSTANT') THEN
          LOCAT=0
@@ -1014,9 +1018,9 @@ C4C-----LOCAT<0; READ UNFORMATTED ARRAY VALUES.
         READ(LOCAT) KSTP,KPER,PERTIM,TOTIM,TEXT,NCOL,NROW,ILAY
         READ(LOCAT) A
       END IF
-      
+
   305 continue                                                          ! DLT
-      
+
       ZERO=0.
       IF(CNSTNT.EQ.ZERO) GO TO 320
       if (.not.loper)then
@@ -1024,7 +1028,7 @@ C4C-----LOCAT<0; READ UNFORMATTED ARRAY VALUES.
         DO 310 J=1,JJ
         A(J,I)=A(J,I)*CNSTNT
   310   CONTINUE
-      endif  
+      endif
 C
 C5------IF CNSTNT NOT ZERO THEN MULTIPLY ARRAY VALUES BY CNSTNT.
       IF(ICLOSE.NE.0) CLOSE(UNIT=LOCAT)
@@ -2018,7 +2022,7 @@ c ------------------------------------------------------------------------------
       end if
 
       end subroutine
-      
+
       subroutine usubscnt(table,ncol,nrow,icolsubs,nsubs)
 
 c description:
@@ -2069,7 +2073,7 @@ c count number of subsystems
 c end of program
       return
       end
-      
+
       subroutine usubsidx(table,ncol,nrow,icolsubs,subsidx,nsubs)
 
 c description:
@@ -2130,4 +2134,3 @@ c test
 c end of program
       return
       end
-      
