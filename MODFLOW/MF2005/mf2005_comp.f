@@ -2267,6 +2267,153 @@ c ------------------------------------------------------------------------------
       mf2005_PutRiverFlux = ok
       end function
 
+      logical function mf2005_PutRiverFluxSubsys(igrid,xchRivFlux,
+     1                   xchCells,nxch,mv,
+     1                   mflag,isubsys)
+
+      use global, only: buff, delr, delc
+      use gwfrivmodule, only: rivr, nriver, nrivvl,
+     1                        irivsubsys
+
+      implicit none
+
+!...     arguments
+      integer, intent(in)                         :: igrid
+      integer, intent(in)                         :: nxch
+      integer, dimension(3,nxch), intent(in)      :: xchCells
+      real, dimension(nxch), intent(out)          :: xchRivFlux
+      real, intent(in)                            :: mv
+      logical, intent(in)                         :: mflag
+      integer, intent(in)                         :: isubsys
+
+!...     locals
+      logical :: ok, add
+      integer :: i, j, n, irow, icol, ilay, isys
+      real :: flux, area
+!.......................................................................
+
+      ok = .true.
+      if (isubsys.le.0) then
+          ok = .false.
+          mf2005_PutRiverFluxSubsys = ok
+          return
+      end if
+      
+!...     get pointers
+      call sgwf2bas7pnt(igrid)
+      call sgwf2riv7pnt(igrid)
+
+!...     get number of rivers
+      if (associated(nriver)) then
+         n = nriver
+      else
+         n = 0
+      end if
+
+!...     use the working buffer for temporary storage and initialize
+      buff = mv
+      do i = 1, n
+         add = .false.
+         ilay = rivr(1,i)
+         irow = rivr(2,i)
+         icol = rivr(3,i)
+         flux = rivr(nrivvl,i)
+         isys = int(rivr(irivsubsys,i))
+         if (isys.eq.isubsys) add = .true.
+         if (add) then
+            if (buff(icol,irow,1).eq.mv) buff(icol,irow,1) = 0.0
+            buff(icol,irow,1) = buff(icol,irow,1) + flux
+         end if
+      end do
+
+!...     Copy to exchange array
+      do i = 1, nxch
+         ilay = xchCells(1,i)
+         irow = xchCells(2,i)
+         icol = xchCells(3,i)
+         flux = buff(icol,irow,1)
+         if (flux.ne.mv) then
+            area = delr(icol)*delc(irow)
+            if (.not.mflag) area = 1.0
+            flux = flux/area ! m3 --> m if mflag = .true.
+         end if
+         xchRivFlux(i) = flux
+      end do
+
+      mf2005_PutRiverFluxSubsys = ok
+      end function
+      
+      logical function mf2005_PutRiverStageSubsys(igrid,xchRivStage,
+     1                   xchCells,nxch,mv,isubsys)
+
+      use global, only: buff, delr, delc
+      use gwfrivmodule, only: rivr, nriver, nrivvl,
+     1                        irivsubsys
+
+      implicit none
+
+!...     arguments
+      integer, intent(in)                         :: igrid
+      integer, intent(in)                         :: nxch
+      integer, dimension(3,nxch), intent(in)      :: xchCells
+      real, dimension(nxch), intent(out)          :: xchRivStage
+      real, intent(in)                            :: mv
+      integer, intent(in)                         :: isubsys
+
+!...     locals
+      logical :: ok, add
+      integer :: i, j, n, irow, icol, ilay, isys
+      real :: stage
+!.......................................................................
+      ok = .true.
+      if (isubsys.le.0) then
+          ok = .false.
+          mf2005_PutRiverStageSubsys = ok
+          return
+      end if    
+      
+!...     get pointers
+      call sgwf2bas7pnt(igrid)
+      call sgwf2riv7pnt(igrid)
+
+!...     get number of rivers
+      if (associated(nriver)) then
+         n = nriver
+      else
+         n = 0
+      end if
+
+!...     use the working buffer for temporary storage and initialize
+      buff = mv
+      do i = 1, n
+         add = .false.
+         ilay = rivr(1,i)
+         irow = rivr(2,i)
+         icol = rivr(3,i)
+         stage = rivr(4,i)
+         isys = int(rivr(irivsubsys,i))
+         if (isys.eq.isubsys) add = .true.
+         if (add) then
+            if (buff(icol,irow,1).eq.mv) then
+               buff(icol,irow,1) = stage
+            else
+               ok = .false.
+            end if    
+         end if
+      end do
+
+!...     Copy to exchange array
+      do i = 1, nxch
+         ilay = xchCells(1,i)
+         irow = xchCells(2,i)
+         icol = xchCells(3,i)
+         stage = buff(icol,irow,1)
+         xchRivStage(i) = stage
+      end do
+
+      mf2005_PutRiverStageSubsys = ok
+      end function      
+      
       logical function mf2005_PutSaltFlux(igrid,xchRivFlux,
      1                       xchCells,nxch,mv,nwrivsys,wrivsys)
 
@@ -2412,7 +2559,7 @@ c ------------------------------------------------------------------------------
       integer :: i, n, irow, icol, ilay
       real :: flux, area
 !.......................................................................
-
+       
 !...     get pointers
       call sgwf2bas7pnt(igrid)
       call sgwf2drn7pnt(igrid)
@@ -2456,6 +2603,80 @@ c ------------------------------------------------------------------------------
       mf2005_PutDrainFlux = ok
       end function
 
+      logical function mf2005_PutDrainFluxSubsys(igrid,xchDrnFlux,
+     1                        xchCells,nxch,mv,mflag,isubsys)
+
+      use global, only: buff, delr, delc
+      use gwfdrnmodule, only: drai, ndrain, ndrnvl, idrnsubsys
+
+      implicit none
+
+!...     arguments
+      integer, intent(in)                    :: igrid
+      integer, intent(in)                    :: nxch
+      integer, dimension(3,nxch), intent(in) :: xchCells
+      real, dimension(nxch), intent(out)     :: xchDrnFlux
+      real, intent(in)                       :: mv
+      logical, intent(in)                    :: mflag
+      integer, intent(in)                    :: isubsys
+
+!...     locals
+      logical :: ok, add
+      integer :: i, n, irow, icol, ilay, isys
+      real :: flux, area
+!.......................................................................
+
+      ok = .true.
+      if (isubsys.le.0) then
+          ok = .false.
+          mf2005_PutDrainFluxSubsys = ok
+          return
+      end if         
+      
+!...     get pointers
+      call sgwf2bas7pnt(igrid)
+      call sgwf2drn7pnt(igrid)
+
+!...     get number of rivers
+      if (associated(ndrain)) then
+         n = ndrain
+      else
+         n = 0
+      end if
+
+!...     use the working buffer for temporary storage and initialize
+      buff = mv
+      do i = 1, n
+         add = .false.
+         ilay = drai(1,i)
+         irow = drai(2,i)
+         icol = drai(3,i)
+         flux = drai(ndrnvl,i)
+         isys = int(drai(idrnsubsys,i)) 
+         if (isys.eq.isubsys) add = .true.
+         if (add) then
+            if (buff(icol,irow,1).eq.mv) buff(icol,irow,1) = 0.0
+            buff(icol,irow,1) = buff(icol,irow,1) + flux
+         end if
+      end do
+
+!...     Copy to exchange array
+      do i = 1, nxch
+         ilay = xchCells(1,i)
+         irow = xchCells(2,i)
+         icol = xchCells(3,i)
+         flux = buff(icol,irow,1)
+         if (flux.ne.mv) then
+            area = delr(icol)*delc(irow)
+            if (.not.mflag) area = 1.0
+            flux = flux/area ! m3 --> m if mflag = .true.
+         end if
+         xchDrnFlux(i) = flux
+      end do
+
+      mf2005_PutDrainFluxSubsys = ok
+      end function      
+        
       !> Put the river subsystems to skip.
       logical function mf2005_PutModMozRiversToSkip(igrid,nhriv,
      1                                              hriv)
@@ -2754,7 +2975,7 @@ c ------------------------------------------------------------------------------
          mf2005_TimeserieInit = ok
          return
       end if
-       
+
       ! set pointers
       call sgwf2bas7pnt(igrid)
       call sgwf2met1pnt(igrid)

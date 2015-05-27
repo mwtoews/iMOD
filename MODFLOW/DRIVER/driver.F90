@@ -35,7 +35,7 @@ implicit none
  logical :: mf_steadystate
  integer :: mf_ngrid, mf_igrid
 
-! PEST with MetaSWAP
+! iPEST with MetaSWAP
  integer :: mf_nrow, mf_ncol, mf_nlay
 
 ! parameters
@@ -57,9 +57,10 @@ implicit none
  character (len=1024) :: root, wd, modwd1, modwd2, simwd1, simwd2, mozwd, infile, rfopt, wddum
  integer, allocatable, dimension(:) :: hrivsys, wrivsys
  integer :: nhrivsys, nwrivsys
+ integer :: privsys, srivsys, trivsys, bdrnsys, odrnsys
  integer, dimension(1) :: m
  character (len=1)    :: cdum
- character (len=1024) :: record, modrecord, sobrecord, mozrecord
+ character (len=1024) :: record, modrecord, sobrecord, mozrecord, tranrecord
  character (len=32)   :: compcls
  character (len=1024) :: compfile
  logical  :: usemodflow,usemetaswap,usetransol,usemozart,usests,usestsmodflow
@@ -230,7 +231,24 @@ call imod_utl_printtext('=======================================================
                 call cfn_vcl_fndc(jvcl,jarg,'-wd',.true.,wd,1)
                 if (jarg.gt.0) simwd1 = trim(simwd1)//wd
              case( 'TRANSOL' )
+                privsys = 0
+                srivsys = 0
+                trivsys = 0
+                bdrnsys = 0
+                odrnsys = 0
+                tranrecord=record
                 usetransol=.true.
+                call cfn_vcl_set(tranrecord,jvcl)
+                call cfn_vcl_fndi(jvcl,jarg,'-priv*sys',.true.,m,1)
+                if (m(1).gt.0) privsys = m(1)
+                call cfn_vcl_fndi(jvcl,jarg,'-sriv*sys',.true.,m,1)
+                if (m(1).gt.0) srivsys = m(1)
+                call cfn_vcl_fndi(jvcl,jarg,'-triv*sys',.true.,m,1)
+                if (m(1).gt.0) trivsys = m(1)
+                call cfn_vcl_fndi(jvcl,jarg,'-bdrn*sys',.true.,m,1)
+                if (m(1).gt.0) bdrnsys = m(1)
+                call cfn_vcl_fndi(jvcl,jarg,'-odrn*sys',.true.,m,1)
+                if (m(1).gt.0) odrnsys = m(1)
 #endif
 #ifdef INCLUDE_MOZART
              case( 'MOZART' )
@@ -606,22 +624,50 @@ call imod_utl_printtext('=======================================================
 
 !##### BEGIN EXCHANGE: AfterFinishTimeStepMODFLOW #############################
              if (rt.eq.rtmodsimtranmoz) then
-
+                !##### MODFLOW-TRANSOL interface !#####
+                
+                ! River stages P, S, T (privsys, srivsys, trivsys)
+                ok = mf2005_PutRiverStageSubsys(mf_igrid,XchModTranModRiverStage,XchModTranModCells,XchModTranModNID,mv,privsys); call DriverChk(ok,'mf2005_PutRiverStageSubsys') ! MODFLOW puts the river stage for TRANSOL [m]: P
+                ok = TRANSOL_GetSeepageRiverDrain(XchModTranModRiverStage,XchModTranModNID,XchMod2TranIdx,XchMod2TranOff,mv,'srivp'); call DriverChk(ok,'TRANSOL_GetSeepageRiverDrain') ! TRANSOL gets the river Stage: P
+                XchModTranModRiverStage = mv
+                ok = mf2005_PutRiverStageSubsys(mf_igrid,XchModTranModRiverStage,XchModTranModCells,XchModTranModNID,mv,srivsys); call DriverChk(ok,'mf2005_PutRiverStageSubsys') ! MODFLOW puts the river stage for TRANSOL [m]: S
+                ok = TRANSOL_GetSeepageRiverDrain(XchModTranModRiverStage,XchModTranModNID,XchMod2TranIdx,XchMod2TranOff,mv,'srivs'); call DriverChk(ok,'TRANSOL_GetSeepageRiverDrain') ! TRANSOL gets the river Stage: S
+                XchModTranModRiverStage = mv
+                ok = mf2005_PutRiverStageSubsys(mf_igrid,XchModTranModRiverStage,XchModTranModCells,XchModTranModNID,mv,trivsys); call DriverChk(ok,'mf2005_PutRiverStageSubsys') ! MODFLOW puts the river stage for TRANSOL [m]: T
+                ok = TRANSOL_GetSeepageRiverDrain(XchModTranModRiverStage,XchModTranModNID,XchMod2TranIdx,XchMod2TranOff,mv,'srivt'); call DriverChk(ok,'TRANSOL_GetSeepageRiverDrain') ! TRANSOL gets the river Stage: T
+                XchModTranModRiverStage = mv                
+                
+                ! Seepage flux
                 ok = mf2005_PutSeepageFlux(mf_igrid,XchModTranModSeepageFlux,XchModTranModCells,XchModTranModNID,mv,.true.); call DriverChk(ok,'mf2005_PutSeepageFlux') ! MODFLOW puts the seepage flux for TRANSOL
-                ok = mf2005_PutRiverFlux(mf_igrid,XchModTranModRiverFlux,XchModTranModCells,XchModTranModNID,mv,&
-                                         nhrivsys,hrivsys,nwrivsys,wrivsys,.true.,.false.); call DriverChk(ok,'mf2005_PutRiverFlux') ! MODFLOW puts the river flux for TRANSOL: skip H and W [m]
+                ok = TRANSOL_GetSeepageRiverDrain(XchModTranModSeepageFlux,XchModTranModNID,XchMod2TranIdx,XchMod2TranOff,mv,'qseep'); call DriverChk(ok,'TRANSOL_GetSeepageRiverDrain') ! TRANSOL gets the seepage flux
+                XchModTranModSeepageFlux = mv
+                
+                ! River fluxes P, S, T (privsys, srivsys, trivsys)
+                ok = mf2005_PutRiverFluxSubsys(mf_igrid,XchModTranModRiverFlux,XchModTranModCells,XchModTranModNID,mv,.true.,privsys); call DriverChk(ok,'mf2005_PutRiverFluxSubsys') ! MODFLOW puts the river flux for TRANSOL [m]: P
+                ok = TRANSOL_GetSeepageRiverDrain(XchModTranModRiverFlux,XchModTranModNID,XchMod2TranIdx,XchMod2TranOff,mv,'qrivp'); call DriverChk(ok,'TRANSOL_GetSeepageRiverDrain') ! TRANSOL gets the river flux: P
+                XchModTranModRiverFlux = mv
+                ok = mf2005_PutRiverFluxSubsys(mf_igrid,XchModTranModRiverFlux,XchModTranModCells,XchModTranModNID,mv,.true.,srivsys); call DriverChk(ok,'mf2005_PutRiverFluxSubsys') ! MODFLOW puts the river flux for TRANSOL [m]: S
+                ok = TRANSOL_GetSeepageRiverDrain(XchModTranModRiverFlux,XchModTranModNID,XchMod2TranIdx,XchMod2TranOff,mv,'qrivs'); call DriverChk(ok,'TRANSOL_GetSeepageRiverDrain') ! TRANSOL gets the river flux: S
+                XchModTranModRiverFlux = mv
+                ok = mf2005_PutRiverFluxSubsys(mf_igrid,XchModTranModRiverFlux,XchModTranModCells,XchModTranModNID,mv,.true.,trivsys); call DriverChk(ok,'mf2005_PutRiverFluxSubsys') ! MODFLOW puts the river flux for TRANSOL [m]: T
+                ok = TRANSOL_GetSeepageRiverDrain(XchModTranModRiverFlux,XchModTranModNID,XchMod2TranIdx,XchMod2TranOff,mv,'qrivt'); call DriverChk(ok,'TRANSOL_GetSeepageRiverDrain') ! TRANSOL gets the river flux: T
+                XchModTranModRiverFlux = mv
+                
+                ! Drain fluxes B(uis) and O(overland flow) (bdrnsys, odrnsys)
+                ok = mf2005_PutDrainFluxSubsys(mf_igrid,XchModTranModDrainFlux,XchModTranModCells,XchModTranModNID,mv,.true.,bdrnsys); call DriverChk(ok,'mf2005_PutDrainFluxSubsys') ! MODFLOW puts the drain flux for TRANSOL [m]: b
+                ok = TRANSOL_GetSeepageRiverDrain(XchModTranModDrainFlux,XchModTranModNID,XchMod2TranIdx,XchMod2TranOff,mv,'qdrnb'); call DriverChk(ok,'TRANSOL_GetSeepageRiverDrain') ! TRANSOL gets the drain flux
+                XchModTranModDrainFlux = mv
+                ok = mf2005_PutDrainFluxSubsys(mf_igrid,XchModTranModDrainFlux,XchModTranModCells,XchModTranModNID,mv,.true.,odrnsys); call DriverChk(ok,'mf2005_PutDrainFluxSubsys') ! MODFLOW puts the drain flux for TRANSOL [m]: b
+                ok = TRANSOL_GetSeepageRiverDrain(XchModTranModDrainFlux,XchModTranModNID,XchMod2TranIdx,XchMod2TranOff,mv,'qdrno'); call DriverChk(ok,'TRANSOL_GetSeepageRiverDrain') ! TRANSOL gets the drain flux
+                XchModTranModDrainFlux = mv
+                
+                ! !##### MODFLOW-MOZART interface !#####
                 ok = mf2005_PutRiverFlux(mf_igrid,XchModMozModRiverFlux,XchModMozModCells,XchModMozModNID,mv,&
                                          nhrivsys,hrivsys,nwrivsys,wrivsys,.false.,.false.); call DriverChk(ok,'mf2005_PutRiverFlux') ! MODFLOW puts the river flux for MOZART: skip H and W [m3]
                 ok = mf2005_PutRiverFlux(mf_igrid,XchModMozModRiverFluxWells,XchModMozModCells,XchModMozModNID,mv,&
                                          nhrivsys,hrivsys,nwrivsys,wrivsys,.false.,.true.); call DriverChk(ok,'mf2005_PutRiverFlux') ! MODFLOW puts the river flux for MOZART ("wellen"): skip H; only W; [m3]
-                ok = mf2005_PutDrainFlux(mf_igrid,XchModTranModDrainFlux,XchModTranModCells,XchModTranModNID,mv,.true.); call DriverChk(ok,'mf2005_PutDrainFlux') ! MODFLOW puts the drain flux for TRANSOL: don't skip; all layers; [m]
                 ok = mf2005_PutDrainFlux(mf_igrid,XchModMozModDrainFlux,XchModMozModCells,XchModMozModNID,mv,.false.); call DriverChk(ok,'mf2005_PutDrainFlux') ! MODFLOW puts the drain flux for MOZART; don't skip; all layers; [m3]
                 ok = mf2005_PutSaltFlux(mf_igrid,XchModMozModSalt,XchModMozModCells,XchModMozModNID,mv,nwrivsys,wrivsys); call DriverChk(ok,'mf2005_PutSaltFlux') ! MODFLOW puts the salt flux for MOZART
-                ok = TRANSOL_GetSeepageRiverDrainFlux(XchModTranModSeepageFlux,XchModTranModNID,XchMod2TranIdx,XchMod2TranOff,mv,'see'); call DriverChk(ok,'TRANSOL_GetSeepageRiverDrainFlux') ! TRANSOL gets the seepage flux
-                XchModTranModSeepageFlux = mv
-                ok = TRANSOL_GetSeepageRiverDrainFlux(XchModTranModRiverFlux,XchModTranModNID,XchMod2TranIdx,XchMod2TranOff,mv,'riv'); call DriverChk(ok,'TRANSOL_GetSeepageRiverDrainFlux') ! TRANSOL gets the river flux
-                ok = TRANSOL_GetSeepageRiverDrainFlux(XchModTranModDrainFlux,XchModTranModNID,XchMod2TranIdx,XchMod2TranOff,mv,'drn'); call DriverChk(ok,'TRANSOL_GetSeepageRiverDrainFlux') ! TRANSOL gets the drain flux
-                XchModTranModDrainFlux = mv
                 ok = MOZART_GetRiverDrainFlux(XchModMozModRiverFlux,XchMozNID,XchMod2MozIdx,XchMod2MozOff,mv,1); call DriverChk(ok,'MOZART_GetRiverDrainFlux') ! MOZART gets the river flux
                 XchModMozModRiverFlux = mv
                 ok = MOZART_GetRiverDrainFlux(XchModMozModRiverFluxWells,XchMozNID,XchMod2MozIdx,XchMod2MozOff,mv,2); call DriverChk(ok,'MOZART_GetRiverDrainFlux') ! MOZART gets the river flux (wells)

@@ -43,35 +43,309 @@ real, parameter :: mv = -99999.
 ! MODFLOW-2005
 ! ##############################################################################
 ! functions
- logical, external :: mf2005_PutSimulationType,&      ! general
-            mf2005_PutGridDimensions,&      ! general
-            mf2005_PutNumberOfGrids,&       ! general
-            mf2005_PutLPFActive,&           ! general
-            mf2005_PutHeadNoFlo,&           ! general
-            mf2005_GetPestFlag,&            ! pest
-            mf2005_PutPWTActive,&           ! pest
-            mf2005_TimeserieInit,&          ! timeseries
-            mf2005_TimeserieGetHead,&       ! timeseries
-            mf2005_PutModSimNumberOfIDs,&   ! mod-sim coupling
-            mf2005_PutModSimIDs,&           ! mod-sim coupling
-            mf2005_PutModSimCells,&         ! mod-sim coupling
-            mf2005_PutHeads,&               ! mod-sim coupling
-            mf2005_GetUnsaturatedZoneFlux,& ! mod-sim coupling
-            mf2005_GetStorageFactor,&       ! mod-sim coupling
-            mf2005_GetStorageFactorLPF,&    ! mod-sim coupling
-            mf2005_PutSeepageFlux,&         ! mod-tran coupling
-            mf2005_PutRiverFlux,&           ! mod-tran and mod-moz coupling
-            mf2005_PutDrainFlux,&           ! mod-tran and mod-moz coupling
-            mf2005_PutSaltFlux,&            ! mod-moz
-            mf2005_PutModMozNumberOfIDs,&   ! mod-moz
-            mf2005_PutModMozIDs,&           ! mod-moz
-            mf2005_PutModMozCells,&         ! mod-moz
-            mf2005_GetLSWLevels,&           ! mod-moz
-            mf2005_PutModMozRiversToSkip,&  ! mod-moz
-            mf2005_PutModMozPVNumberOfIDs,& ! mod-mozpv
-            mf2005_PutModMozPVIDs,&         ! mod-mozpv
-            mf2005_GetPVLevels              ! mod-mozpv
+!            mf2005_PutSimulationType      ! general
+!            mf2005_PutGridDimensions      ! general
+!            mf2005_PutNumberOfGrids       ! general
+!            mf2005_PutLPFActive           ! general
+!            mf2005_PutHeadNoFlo           ! general
+!            mf2005_GetPestFlag            ! pest
+!            mf2005_PutPWTActive           ! pest
+!            mf2005_TimeserieInit          ! timeseries
+!            mf2005_TimeserieGetHead       ! timeseries
+!            mf2005_PutModSimNumberOfIDs   ! mod-sim coupling
+!            mf2005_PutModSimIDs           ! mod-sim coupling
+!            mf2005_PutModSimCells         ! mod-sim coupling
+!            mf2005_PutHeads               ! mod-sim coupling
+!            mf2005_GetUnsaturatedZoneFlux ! mod-sim coupling
+!            mf2005_GetStorageFactor       ! mod-sim coupling
+!            mf2005_GetStorageFactorLPF    ! mod-sim coupling
+!            mf2005_PutSeepageFlux         ! mod-tran coupling
+!            mf2005_PutRiverFlux           ! mod-tran and mod-moz coupling
+!            mf2005_PutRiverFluxSubsys     ! mod-tran coupling
+!            mf2005_PutDrainFlux           ! mod-tran and mod-moz coupling
+!            mf2005_PutDrainFluxSubsys     ! mod-tran coupling
+!            mf2005_PutSaltFlux            ! mod-moz
+!            mf2005_PutModMozNumberOfIDs   ! mod-moz
+!            mf2005_PutModMozIDs           ! mod-moz
+!            mf2005_PutModMozCells         ! mod-moz
+!            mf2005_GetLSWLevels           ! mod-moz
+!            mf2005_PutModMozRiversToSkip  ! mod-moz
+!            mf2005_PutModMozPVNumberOfIDs ! mod-mozpv
+!            mf2005_PutModMozPVIDs         ! mod-mozpv
+!            mf2005_GetPVLevels            ! mod-mozpv
 
+interface
+   logical function mf2005_PutNumberOfGrids(nGrids)
+      integer, intent(out) :: nGrids
+   end function
+end interface  
+interface
+   logical function mf2005_PutGridDimensions(igrid,nRows,nColumns,nLayers)
+      integer, intent(in)  :: igrid
+      integer, intent(out) :: nRows
+      integer, intent(out) :: nColumns
+     integer, intent(out) :: nLayers
+   end function
+end interface
+interface
+   logical function mf2005_PutModSimNumberOfIDs(igrid, nxch)
+      integer, intent(in) :: igrid
+      integer, intent(out) :: nxch
+   end function
+end interface
+interface
+   logical function mf2005_PutModSimIDs(igrid,ids)
+      integer, intent(in) :: igrid
+      integer, dimension(*), intent(out) :: ids
+   end function
+end interface
+interface
+   logical function mf2005_PutModSimCells(igrid,cells)
+      integer, intent(in) :: igrid
+      integer, dimension(3,*), intent(out) :: cells
+   end function
+end interface
+interface
+   logical function mf2005_PutModMozCells(igrid,cells)
+      integer, intent(in) :: igrid
+      integer, dimension(3,*), intent(out) :: cells
+   end function
+end interface
+interface
+   logical function mf2005_PutSimulationType(igrid, lss)
+      integer, intent(in) :: igrid
+      logical, intent(out) :: lss
+   end function
+end interface
+interface
+   logical function mf2005_PutLPFActive(igrid, llpf)
+      integer, intent(in) :: igrid
+      logical, intent(out) :: llpf
+   end function
+end interface   
+interface
+   logical function mf2005_PutPWTActive(igrid, lpwt)
+      integer, intent(in) :: igrid
+      logical, intent(out) :: lpwt
+   end function
+end interface   
+interface
+   logical function mf2005_PutHeadNoFlo(igrid, h)
+      integer, intent(in) :: igrid
+      real, intent(out) :: h
+   end function
+end interface
+interface
+  logical function mf2005_PutHeads(igrid,iliric,n,head,mv)
+      integer, intent(in) :: igrid, n
+      integer, dimension(3,n), intent(in) :: iliric
+      real, intent(in) :: mv
+      real, dimension(n), intent(out) :: head
+   end function
+end interface
+interface
+   logical function mf2005_GetUnsaturatedZoneFlux(igrid,nid,unsflux,xchIdx,xchOff,mv)
+      integer, intent(in)                    :: igrid
+      integer, intent(in)                    :: nid
+      real, dimension(*), intent(inout)      :: unsflux
+      integer, dimension(*), intent(in)      :: xchIdx
+      integer, dimension(nid), intent(in)    :: xchOff
+      real, intent(in)                       :: mv
+   end function
+end interface
+interface
+   logical function mf2005_GetStorageFactorLPF(igrid,strfct,nid,xchIdx,xchOff,mv)
+      integer, intent(in)                 :: igrid
+      integer, intent(in)                 :: nid
+      real, dimension(*), intent(inout)   :: strfct
+      integer, dimension(*), intent(in)   :: xchIdx
+      integer, dimension(nid), intent(in) :: xchOff
+      real, intent(in)                    :: mv
+   end function
+end interface
+interface
+   logical function mf2005_GetStorageFactor(igrid,strfct,nid,xchIdx,xchOff,mv)
+      integer, intent(in)                 :: igrid
+      integer, intent(in)                 :: nid
+      real, dimension(*), intent(inout)   :: strfct
+      integer, dimension(*), intent(in)   :: xchIdx
+      integer, dimension(nid), intent(in) :: xchOff
+      real, intent(in)                    :: mv
+   end function
+end interface
+interface
+   logical function mf2005_PutSeepageFlux(igrid,xchSeepage,xchCells,nxch,mv,mflag)
+      integer, intent(in)                    :: igrid
+      integer, intent(in)                    :: nxch
+      integer, dimension(3,nxch), intent(in) :: xchCells
+      real, dimension(nxch), intent(out)     :: xchSeepage
+      real, intent(in)                       :: mv
+      logical, intent(in)                    :: mflag
+   end function
+end interface
+interface
+   logical function mf2005_PutSeepageSalt(igrid,xchSalt,xchCells,nxch,mv,mflag)
+      integer, intent(in)                    :: igrid
+      integer, intent(in)                    :: nxch
+      integer, dimension(3,nxch), intent(in) :: xchCells
+      real, dimension(nxch), intent(out)     :: xchSalt
+      real, intent(in)                       :: mv
+      logical, intent(in)                    :: mflag
+   end function
+end interface
+interface
+   logical function mf2005_PutRiverFlux(igrid,xchRivFlux,&
+                      xchCells,nxch,mv,&
+                      nhrivsys,hrivsys,nwrivsys,wrivsys,&
+                      mflag,wells)
+      integer, intent(in)                         :: igrid
+      integer, intent(in)                         :: nxch
+      integer, dimension(3,nxch), intent(in)      :: xchCells
+      real, dimension(nxch), intent(out)          :: xchRivFlux
+      real, intent(in)                            :: mv
+      integer, intent(in)                         :: nhrivsys
+      integer, dimension(nhrivsys), intent(in) :: hrivsys
+      integer, intent(in)                         :: nwrivsys
+      integer, dimension(nwrivsys), intent(in) :: wrivsys
+      logical, intent(in)                         :: mflag
+      logical, intent(in)                         :: wells
+   end function
+end interface
+interface
+   logical function mf2005_PutRiverFluxSubsys(igrid,xchRivFlux,&
+                      xchCells,nxch,mv,&
+                      mflag,isubsys)
+      integer, intent(in)                         :: igrid
+      integer, intent(in)                         :: nxch
+      integer, dimension(3,nxch), intent(in)      :: xchCells
+      real, dimension(nxch), intent(out)          :: xchRivFlux
+      real, intent(in)                            :: mv
+      logical, intent(in)                         :: mflag
+      integer, intent(in)                         :: isubsys
+   end function
+end interface     
+interface
+   logical function mf2005_PutRiverStageSubsys(igrid,xchRivStage,&
+                      xchCells,nxch,mv,isubsys)
+      integer, intent(in)                         :: igrid
+      integer, intent(in)                         :: nxch
+      integer, dimension(3,nxch), intent(in)      :: xchCells
+      real, dimension(nxch), intent(out)          :: xchRivStage
+      real, intent(in)                            :: mv
+      integer, intent(in)                         :: isubsys
+   end function   
+end interface
+interface                    
+   logical function mf2005_PutSaltFlux(igrid,xchRivFlux,&
+                          xchCells,nxch,mv,nwrivsys,wrivsys)
+      integer, intent(in)                      :: igrid
+      integer, intent(in)                      :: nxch
+      integer, dimension(3,nxch), intent(in)   :: xchCells
+      real, dimension(nxch), intent(out)       :: xchRivFlux
+      real, intent(in)                         :: mv
+      integer, intent(in)                      :: nwrivsys
+      integer, dimension(nwrivsys), intent(in) :: wrivsys
+   end function
+end interface
+interface
+   logical function mf2005_PutSaltFluxSeepage(igrid,xchFlux,xchCells,nxch,mv)
+      integer, intent(in)                      :: igrid
+      integer, intent(in)                      :: nxch
+      integer, dimension(3,nxch), intent(in)   :: xchCells
+      real, dimension(nxch), intent(out)       :: xchFlux
+      real, intent(in)                         :: mv
+   end function
+end interface
+interface
+   logical function mf2005_PutDrainFlux(igrid,xchDrnFlux,&
+                        xchCells,nxch,mv,mflag)
+      integer, intent(in)                    :: igrid
+      integer, intent(in)                    :: nxch
+      integer, dimension(3,nxch), intent(in) :: xchCells
+      real, dimension(nxch), intent(out)     :: xchDrnFlux
+      real, intent(in)                       :: mv
+      logical, intent(in)                    :: mflag
+   end function
+end interface
+interface
+   logical function mf2005_PutDrainFluxSubsys(igrid,xchDrnFlux,&
+                           xchCells,nxch,mv,mflag,isubsys)
+      integer, intent(in)                    :: igrid
+      integer, intent(in)                    :: nxch
+      integer, dimension(3,nxch), intent(in) :: xchCells
+      real, dimension(nxch), intent(out)     :: xchDrnFlux
+      real, intent(in)                       :: mv
+      logical, intent(in)                    :: mflag
+      integer, intent(in)                    :: isubsys
+   end function
+end interface
+interface
+   logical function mf2005_PutModMozRiversToSkip(igrid,nhriv,hriv)
+      integer, intent(in) :: igrid
+      integer, intent(in) :: nhriv
+      integer, dimension(nhriv), intent(in) :: hriv
+   end function
+end interface
+interface
+   logical function mf2005_PutModMozNumberOfIDs(igrid, nxch)
+      integer, intent(in) :: igrid
+      integer, intent(out) :: nxch
+   end function
+end interface
+interface
+   logical function mf2005_PutModMozPVNumberOfIDs(igrid, nxch)
+      integer, intent(in) :: igrid
+      integer, intent(out) :: nxch
+   end function
+end interface
+interface
+   logical function mf2005_PutModMozIDs(igrid,ids)
+      integer, intent(in) :: igrid
+      integer, dimension(*), intent(out) :: ids
+   end function
+end interface
+interface
+   logical function mf2005_PutModMozPVIDs(igrid,ids)
+      integer, intent(in) :: igrid
+      integer, dimension(*), intent(out) :: ids
+   end function
+end interface
+interface
+   logical function mf2005_GetLSWLevels(igrid,levels,nid,xchIdx,xchOff,mv)
+      integer, intent(in)                    :: igrid
+      integer, intent(in)                    :: nid
+      real, dimension(*), intent(inout)      :: levels
+      integer, dimension(*), intent(in)      :: xchIdx
+      integer, dimension(nid), intent(in)    :: xchOff
+      real, intent(in)                       :: mv
+   end function
+end interface
+interface
+   logical function mf2005_GetPVLevels(igrid,levels,nid,xchIdx,xchOff,mv)
+      integer, intent(in)                    :: igrid
+      integer, intent(in)                    :: nid
+      real, dimension(*), intent(inout)      :: levels
+      integer, dimension(*), intent(in)      :: xchIdx
+      integer, dimension(nid), intent(in)    :: xchOff
+      real, intent(in)                       :: mv
+   end function
+end interface
+interface
+   logical function mf2005_TimeserieInit(igrid)
+      integer, intent(in) :: igrid
+   end function
+end interface
+interface
+   logical function mf2005_TimeserieGetHead(igrid)
+      integer, intent(in) :: igrid
+   end function
+end interface
+interface
+  logical function mf2005_GetPestFlag(flag)
+      logical, intent(in) :: flag
+   end function
+end interface 
+ 
  ! general
 integer, dimension(:,:), allocatable :: XchModSimModCells, XchModMozModCells, XchModTranModCells
 
@@ -95,21 +369,92 @@ integer, dimension(:,:), allocatable :: XchModSimModCells, XchModMozModCells, Xc
  integer, dimension(:), allocatable :: XchModTranModIds, XchTran2ModIdx, XchTran2ModOff
  real, dimension(:), allocatable :: XchModTranModSeepageFlux,&
                                     XchModTranModRiverFlux,&
-                                    XchModTranModDrainFlux
+                                    XchModTranModDrainFlux,&
+                                    XchModTranModRiverStage
 ! ##############################################################################
 ! MetaSWAP
 ! ##############################################################################
  ! functions
- logical, external :: metaswap_PutModSimNumberOfIDs,&             ! mod-sim coupling
-            metaswap_PutModSimIDs,&                     ! mod-sim coupling
-            metaswap_PutModSimUnsaturatedZoneFlux,&     ! mod-sim coupling
-            metaswap_PutStorageFactor,&                 ! mod-sim coupling
-            metaswap_GetHeads,&                         ! mod-sim coupling
-            metaswap_PutModMozNumberOfIDs,&             ! sim-moz coupling
-            metaswap_PutModMozIDs,&                     ! sim-moz coupling
-            metaswap_PutCumSWSprinklingDemandFluxes,&   ! sim-moz coupling
-            metaswap_PutCumRunonFluxes,&                ! sim-moz coupling
-            metaswap_GetFractions                       ! sim-moz coupling
+ !           metaswap_PutModSimNumberOfIDs             ! mod-sim coupling
+ !           metaswap_PutModSimIDs                     ! mod-sim coupling
+ !           metaswap_PutModSimUnsaturatedZoneFlux     ! mod-sim coupling
+ !           metaswap_PutStorageFactor                 ! mod-sim coupling
+ !           metaswap_GetHeads                         ! mod-sim coupling
+ !           metaswap_PutModMozNumberOfIDs             ! sim-moz coupling
+ !           metaswap_PutModMozIDs                     ! sim-moz coupling
+ !           metaswap_PutCumSWSprinklingDemandFluxes   ! sim-moz coupling
+ !           metaswap_PutCumRunonFluxes                ! sim-moz coupling
+ !           metaswap_GetFractions                     ! sim-moz coupling
+interface
+   logical function metaswap_PutModSimNumberOfIDs(nxch)
+      integer, intent(out) :: nxch
+   end function
+end interface
+interface
+   logical function metaswap_PutModSimIDs(ids)
+      logical :: retval
+      integer, dimension(*), intent(out) :: ids
+   end function
+end interface
+interface
+   logical function metaswap_GetHeads(gwheads,nid,xchIdx,xchOff,mv)
+      integer, intent(in)                 :: nid
+      real, dimension(*), intent(in)      :: gwheads
+      integer, dimension(*), intent(in)   :: xchIdx
+      integer, dimension(nid), intent(in) :: xchOff
+      real, intent(in)                    :: mv
+   end function
+end interface
+interface
+   logical function metaswap_PutModSimUnsaturatedZoneFlux(uszflux,mv)
+      real, dimension(*), intent(out) :: uszflux
+      real, intent(in)                :: mv ! not used yet 
+   end function
+end interface
+interface
+   logical function metaswap_PutSimMozUnsaturatedZoneFlux(uszflux,mv)
+      real, dimension(*), intent(out) :: uszflux
+      real, intent(in)                :: mv ! not used yet 
+   end function      
+end interface     
+interface
+   logical function metaswap_PutStorageFactor(strfct,mv)
+      real, dimension(*), intent(out) :: strfct 
+      real, intent(in)                :: mv ! not used yet 
+   end function      
+end interface
+interface
+   logical function metaswap_PutModMozNumberOfIDs(nid)
+      integer, intent(out) :: nid
+   end function
+end interface
+interface
+   logical function metaswap_PutModMozIDs(ids)
+      integer, dimension(*), intent(out) :: ids
+   end function      
+end interface
+interface
+   logical function MetaSWAP_PutCumSWSprinklingDemandFluxes(sprflux,mvin)
+      real, dimension(*), intent(out) :: sprflux
+      real, intent(in) :: mvin
+   end function      
+end interface
+interface
+   logical function MetaSWAP_PutCumRunonFluxes(runonflux,mvin)
+      real, dimension(*), intent(out) :: runonflux
+      real, intent(in) :: mvin
+   end function      
+end interface
+interface
+   logical function metaswap_GetFractions(fractions,nid,xchIdx,xchOff,mvin)
+      integer, intent(in)                 :: nid
+      real, dimension(*), intent(in)      :: fractions
+      integer, dimension(*), intent(in)   :: xchIdx
+      integer, dimension(nid), intent(in) :: xchOff
+      real, intent(in)                    :: mvin
+   end function      
+end interface
+ 
  ! MODFLOW - MetaSWAP coupling
  integer :: XchModSimSimNID
  integer, dimension(:), allocatable :: XchModSimSimIds, XchMod2SimIdx, XchMod2SimOff
@@ -124,9 +469,37 @@ integer, dimension(:,:), allocatable :: XchModSimModCells, XchModMozModCells, Xc
 ! TRANSOL
 ! ##############################################################################
 ! functions
- logical, external :: TRANSOL_GetSeepageRiverDrainFlux,& ! mod-tran coupling
-            TRANSOL_PutSalt,&                  ! tran-moz coupling
-            TRANSOL_GetSalt                    ! tran-moz coupling
+!            TRANSOL_GetSeepageRiverDrain ! mod-tran coupling
+!            TRANSOL_PutSalt              ! tran-moz coupling
+!            TRANSOL_GetSalt              ! tran-moz coupling
+
+interface
+   logical function TRANSOL_GetSeepageRiverDrain(flux,nid,&
+                                             xchIdx,xchOff,mvin,act)
+      integer, intent(in)                 :: nid
+      real, dimension(*), intent(in)      :: flux ! m
+      integer, dimension(*), intent(in)   :: xchIdx
+      integer, dimension(nid), intent(in) :: xchOff
+      real, intent(in)                    :: mvin
+      character(len=3), intent(in)        :: act              
+   end function
+end interface
+interface                                             
+   logical function TRANSOL_GetSalt(flux,nid,&
+                                 xchIdx,xchOff,mvin)
+      integer, intent(in)                 :: nid
+      real, dimension(*), intent(in)      :: flux ! kg/m3
+      integer, dimension(*), intent(in)   :: xchIdx
+      integer, dimension(nid), intent(in) :: xchOff
+      real, intent(in)                    :: mvin
+   end function
+end interface
+interface
+   logical function TRANSOL_PutSalt(salt,mvin)
+      real, dimension(*), intent(out) :: salt
+      real, intent(in) :: mvin
+   end function      
+end interface
 
  ! MODFLOW - TRANSOL coupling
  integer :: XchModTranTranNID
@@ -141,19 +514,126 @@ integer, dimension(:,:), allocatable :: XchModSimModCells, XchModMozModCells, Xc
 ! MOZART
 ! ##############################################################################
 ! functions
- logical, external :: mozart_PutModMozNumberOfIDs,&           ! mod-moz coupling
-            mozart_PutModMozIDs,&                   ! mod-moz coupling
-            mozart_PutLSWLevels,&                   ! mod-moz coupling
-            mozart_GetRiverDrainFlux,&              ! mod-moz coupling
-            mozart_PutModMozPVNumberOfIDs,&         ! mod-mozpv coupling
-            mozart_PutModMozPVIDs,&                 ! mod-mozpv coupling
-            mozart_PutPVLevels,&                    ! mod-mozpv coupling
-            mozart_PutLSWFractions,&                ! sim-moz coupling
-            mozart_GetCumSWSprinklingDemandFluxes,& ! sim-moz coupling
-            mozart_GetCumRunonFluxes,&              ! sim-moz coupling
-            mozart_PutLSWSalt,&                     ! tran-moz coupling
-            mozart_GetSalt                          ! tran-moz coupling
-
+!            mozart_PutModMozNumberOfIDs           ! mod-moz coupling
+!            mozart_PutModMozIDs                   ! mod-moz coupling
+!            mozart_PutLSWLevels                   ! mod-moz coupling
+!            mozart_GetRiverDrainFlux              ! mod-moz coupling
+!            mozart_PutModMozPVNumberOfIDs         ! mod-mozpv coupling
+!            mozart_PutModMozPVIDs                 ! mod-mozpv coupling
+!            mozart_PutPVLevels                    ! mod-mozpv coupling
+!            mozart_PutLSWFractions                ! sim-moz coupling
+!            mozart_GetCumSWSprinklingDemandFluxes ! sim-moz coupling
+!            mozart_GetCumRunonFluxes              ! sim-moz coupling
+!            mozart_PutLSWSalt                     ! tran-moz coupling
+!            mozart_GetSalt                        ! tran-moz coupling
+interface
+   logical function mozart_PutModMozNumberOfIDs(nid)
+      integer, intent(out) :: nid
+   end function
+end interface
+interface
+   logical function mozart_PutModMozPVNumberOfIDs(nid)
+      integer, intent(out) :: nid
+   end function
+end interface
+interface
+   logical function mozart_PutModMozIDs(ids,nid)
+      integer, intent(in) :: nid
+      integer, dimension(nid), intent(out) :: ids
+   end function
+end interface
+interface
+   logical function mozart_PutModMozPVIDs(ids,nid)
+      integer, intent(in) :: nid
+      integer, dimension(nid), intent(out) :: ids
+   end function
+end interface
+interface
+   logical function mozart_PutLSWLevels(levels,mvin)
+      real, dimension(*), intent(out) :: levels
+      real, intent(in) :: mvin
+   end function
+end interface
+interface
+   logical function mozart_PutPVLevels(levels,mvin)
+      real, dimension(*), intent(out) :: levels
+      real, intent(in) :: mvin
+   end function
+end interface
+interface
+   logical function mozart_PutLSWFractions(fractions,mvin)
+      real, dimension(*), intent(out) :: fractions
+      real, intent(in) :: mvin
+   end function
+end interface
+interface
+   logical function mozart_PutLSWSalt(salt,mvin)
+      real, dimension(*), intent(out) :: salt
+      real, intent(in) :: mvin
+   end function
+end interface
+interface
+   logical function MOZART_GetSalt(salt,nid,xchIdx,xchOff,mvin,iact)
+      integer, intent(in)                 :: nid
+      real, dimension(*), intent(in)      :: salt
+      integer, dimension(*), intent(in)   :: xchIdx
+      integer, dimension(nid), intent(in) :: xchOff
+      real, intent(in)                    :: mvin
+      integer, intent(in)                 :: iact
+   end function
+end interface   
+interface
+   logical function mozart_GetSeepageFlux(flux,nid,xchIdx,xchOff,mvin)
+      integer, intent(in)                 :: nid
+      real, dimension(*), intent(in)      :: flux
+      integer, dimension(*), intent(in)   :: xchIdx
+      integer, dimension(nid), intent(in) :: xchOff
+      real, intent(in)                    :: mvin
+    end function
+end interface
+interface
+   logical function MOZART_GetUnsaturatedZoneFlux(flux,nid,xchIdx,xchOff,mvin)
+      integer, intent(in)                 :: nid
+      real, dimension(*), intent(in)      :: flux
+      integer, dimension(*), intent(in)   :: xchIdx
+      integer, dimension(nid), intent(in) :: xchOff
+      real, intent(in)                    :: mvin
+   end function
+end interface
+interface
+   logical function mozart_GetRiverDrainFlux(flux,nid,xchIdx,xchOff,mvin,iact)
+      integer, intent(in)                 :: nid
+      real, dimension(*), intent(in)      :: flux
+      integer, dimension(*), intent(in)   :: xchIdx
+      integer, dimension(nid), intent(in) :: xchOff
+      real, intent(in)                    :: mvin
+      integer, intent(in)                 :: iact
+   end function
+end interface
+interface
+   logical function MOZART_GetCumSWSprinklingDemandFluxes(sprflux,nid,xchIdx,xchOff,mvin)
+      integer, intent(in)                 :: nid
+      real, dimension(*), intent(in)      :: sprflux
+      integer, dimension(*), intent(in)   :: xchIdx
+      integer, dimension(nid), intent(in) :: xchOff
+      real, intent(in)                    :: mvin
+   end function
+end interface
+interface
+   logical function MOZART_GetCumRunonFluxes(runonflux,nid,xchIdx,xchOff,mvin)
+      integer, intent(in)                 :: nid
+      real, dimension(*), intent(in)      :: runonflux
+      integer, dimension(*), intent(in)   :: xchIdx
+      integer, dimension(nid), intent(in) :: xchOff
+      real, intent(in)                    :: mvin
+   end function
+end interface
+interface
+   subroutine MOZART_GetCurrentTime(t)
+      double precision, intent(out) :: t
+   end subroutine 
+end interface
+ 
  ! general
  integer :: XchMozNID, XchMozPVNID
  integer, dimension(:), allocatable :: XchMozIds, XchMozPVIds
@@ -450,11 +930,13 @@ subroutine driverXchInitModSimTranMoz()
    allocate(XchModTranModCells(3,XchModTranModNID))
    allocate(XchModTranModSeepageFlux(XchModTranModNID))
    allocate(XchModTranModRiverFlux(XchModTranModNID))
+   allocate(XchModTranModRiverStage(XchModTranModNID))
    allocate(XchModTranModDrainFlux(XchModTranModNID))
    allocate(XchTranMozMozSalt(XchMozNID))
    allocate(XchTranMozTranSalt(XchTranMozTranNID))
    XchModTranModSeepageFlux = mv
    XchModTranModRiverFlux = mv
+   XchModTranModRiverStage = mv
    XchModTranModDrainFlux = mv
    XchTranMozMozSalt = mv
    XchTranMozTranSalt = mv
@@ -591,6 +1073,7 @@ if (allocated(XchTran2ModIdx                )) deallocate(XchTran2ModIdx        
 if (allocated(XchTran2ModOff                )) deallocate(XchTran2ModOff                )
 if (allocated(XchModTranModSeepageFlux      )) deallocate(XchModTranModSeepageFlux      )
 if (allocated(XchModTranModRiverFlux        )) deallocate(XchModTranModRiverFlux        )
+if (allocated(XchModTranModRiverStage       )) deallocate(XchModTranModRiverStage       )
 if (allocated(XchModTranModDrainFlux        )) deallocate(XchModTranModDrainFlux        )
 if (allocated(XchModSimSimIds               )) deallocate(XchModSimSimIds               )
 if (allocated(XchMod2SimIdx                 )) deallocate(XchMod2SimIdx                 )

@@ -240,8 +240,8 @@
       RETURN
       END
 !
-      !> Get MODFLOW fluxes.
-      logical function TRANSOL_GetSeepageRiverDrainFlux(flux,nid,
+      !> Get MODFLOW fluxes/stages.
+      logical function TRANSOL_GetSeepageRiverDrain(val,nid,
      1                                          xchIdx,xchOff,mvin,act)
 !...     modules  
 #ifdef INCLUDE_METASWAP 
@@ -251,15 +251,12 @@
 
 !...     arguments    
       integer, intent(in)                 :: nid
-      real, dimension(*), intent(in)      :: flux ! m
+      real, dimension(*), intent(in)      :: val ! m
       integer, dimension(*), intent(in)   :: xchIdx
       integer, dimension(nid), intent(in) :: xchOff
       real, intent(in)                    :: mvin
-      character(len=3), intent(in)        :: act              
-      
-!...     parameters
-      real, parameter :: mv = 0.0 ! In future to be replace by missing value from TRANSOL !
-      
+      character(len=5), intent(in)        :: act              
+            
 !...     locals
       character(len=10) :: action
       logical :: ok
@@ -269,11 +266,6 @@
 #ifdef INCLUDE_METASWAP 
       action = act
       call cfn_token(action ,'tu')
-      if (action(1:3).ne.'SEE' .and. action(1:3).ne.'RIV' 
-     1                    .and. action(1:3).ne.'DRN') then
-         write(*,*) 'Error, TRANSOL_GetSeepageRiverDrainFlux'
-      end if
-      
       ok = .true.
       
       js = 1
@@ -284,25 +276,48 @@
             if (k.le.0) then
                write(*,*) 'Error: coupling node index out of range'
                ok = .false.
-               TRANSOL_GetSeepageRiverDrainFlux = ok
+               TRANSOL_GetSeepageRiverDrain = ok
                return
             end if
-            fval = flux(k)
-            if (fval.eq.mvin) fval = mv
-            if (action(1:3).eq.'SEE') then
-               qseepmodi(i) = fval ! m
-            else if (action(1:3).eq.'RIV') then
-               qrivmodi(i) = fval
-            else
-               qdrnmodi(i) = fval
-            end if               
+            fval = val(k)
+            select case(action)
+            case('QSEEP')    
+               if (fval.eq.mvin) fval = 0.0
+               qseepmodi(i) = fval
+            case('QRIVP')
+               if (fval.eq.mvin) fval = 0.0
+               qrivmodi(i) = fval ! MODIFY: PUT IN CORRESPONDING VARIABLE
+            case('QRIVS')
+               if (fval.eq.mvin) fval = 0.0
+               qrivmodi(i) = fval ! MODIFY: PUT IN CORRESPONDING VARIABLE
+            case('QRIVT')
+               if (fval.eq.mvin) fval = 0.0
+               qrivmodi(i) = fval ! MODIFY: PUT IN CORRESPONDING VARIABLE
+            case('QDRNB')                
+               if (fval.eq.mvin) fval = 0.0
+               qdrnmodi(i) = fval ! ! MODIFY: PUT IN CORRESPONDING VARIABLE
+            case('QDRNO')                
+               if (fval.eq.mvin) fval = 0.0
+               qdrnmodi(i) = fval ! ! MODIFY: PUT IN CORRESPONDING VARIABLE
+            case('SRIVP')
+               if (fval.eq.mvin) fval = -9999.
+               !srivmodi(i) = fval ! MODIFY: PUT IN CORRESPONDING VARIABLE
+            case('SRIVS')
+               if (fval.eq.mvin) fval = -9999.
+               !srivmodi(i) = fval ! MODIFY: PUT IN CORRESPONDING VARIABLE
+            case('SRIVT')
+               if (fval.eq.mvin) fval = -9999.
+               !srivmodi(i) = fval ! MODIFY: PUT IN CORRESPONDING VARIABLE
+            case default
+               ok = .false.
+            end select
          end do 
          js = je + 1     
       end do
 #else
-      write(*,*) 'Error: TRANSOL_GetSeepageRiverDrainFlux'; stop 1
+      write(*,*) 'Error: TRANSOL_GetSeepageRiverDrain'; stop 1
 #endif
-      TRANSOL_GetSeepageRiverDrainFlux = ok
+      TRANSOL_GetSeepageRiverDrain = ok
       end function
 
       !> Get MODFLOW fluxes.
