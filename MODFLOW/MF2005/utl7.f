@@ -891,7 +891,9 @@ C2------FORMAT.  SET A FLAG SPECIFYING IF FREE FORMAT OR FIXED FORMAT.
       ICLOSE=0
       IFREE=1
       ICOL=1
-      loper = .false.                                                   ! DLT
+      loper = .false.  
+      CNSTNT=0.0                                                ! DLT
+      
       CALL URWORD(CNTRL,ICOL,ISTART,ISTOP,1,N,R,IOUT,IN)
       IF (CNTRL(ISTART:ISTOP).EQ.'CONSTANT') THEN
          LOCAT=0

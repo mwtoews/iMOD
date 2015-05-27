@@ -469,7 +469,7 @@ c local variables
       integer :: ret, lun, ios, mx, id, nid,
      1           i, ii, n, nn, m, l, icol, irow, iact
       real    :: x1, y1, x2, y2, xx1, yy1, xx2, yy2
-      real, allocatable, dimension(:) :: xa, ya, ln
+      real, allocatable, dimension(:) :: xa, ya, ln, fa
 
 c functions
       integer   cfn_getlun,
@@ -517,7 +517,8 @@ c init
       if(allocated(xa))deallocate(xa)
       if(allocated(ya))deallocate(ya)
       if(allocated(ln))deallocate(ln)
-      allocate(xa(mx),ya(mx),ln(mx))
+      if(allocated(fa))deallocate(fa)
+      allocate(xa(mx),ya(mx),ln(mx),fa(mx))
       if (allocated(genpos))deallocate(genpos)
       if (allocated(genip))deallocate(genip)
 
@@ -553,10 +554,10 @@ c read file
                y2 = yy2
                if(lqd)then
                   ok = imod_utl_intersect_equi(xmin,xmax,ymin,ymax,
-     1                    simcsize,x1,x2,y1,y2,mx,n,xa,ya,ln)
+     1                    simcsize,x1,x2,y1,y2,mx,n,xa,ya,fa,ln,.true.)
                else
                   ok = imod_utl_intersect_nonequi(cdelr,cdelc,nrow,ncol,
-     1                    x1,x2,y1,y2,mx,n,xa,ya,ln)
+     1                    x1,x2,y1,y2,mx,n,xa,ya,fa,ln,.true.)
                endif
                if(.not.ok) then
                   ret=-16
@@ -578,6 +579,7 @@ c read file
                         genpos(m,1) = icol
                         genpos(m,2) = irow
                         genpos(m,3) = nid
+                        genpos(m,4) = int(fa(l))
                      end if
                   end if
                enddo
@@ -599,7 +601,7 @@ c read file
 
       if (iact.eq.1) then
          rewind lun
-         if (m.gt.0) allocate(genpos(m,3))
+         if (m.gt.0) allocate(genpos(m,4))
          allocate(genip(0:nid))
          genip = 0
       else
@@ -610,6 +612,12 @@ c read file
 
 c close file
       close(lun)
+
+c clear memory
+      if(allocated(xa))deallocate(xa)
+      if(allocated(ya))deallocate(ya)
+      if(allocated(ln))deallocate(ln)
+      if(allocated(fa))deallocate(fa)
 
 c assign function value
       rdrs_rddata_gen = ret

@@ -9478,7 +9478,7 @@ ID_ICONZOOMNEXT                 BITMAP DISCARDABLE "..\\BMP\\zoomnext.bmp"
 //
 // Icons
 //
-ICON1                           ICON   DISCARDABLE "..\\ICO\\IMODLOGO32.ICO"
+ICON1                           ICON   DISCARDABLE "..\\ICO\\IMOD32.ICO"
 
 ///////////////////////////////////////////////////
 //

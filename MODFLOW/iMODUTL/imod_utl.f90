@@ -2128,324 +2128,408 @@ END SUBROUTINE IMOD_UTL_QKSORT
 
  END SUBROUTINE IMOD_UTL_GETICIR
 
- !###======================================================================
- LOGICAL FUNCTION IMOD_UTL_INTERSECT_EQUI(XMIN,XMAX,YMIN,YMAX,CS,X1,X2,Y1,Y2,MX,N,XA,YA,LN)
- !###======================================================================
- IMPLICIT NONE
- REAL,INTENT(IN) :: XMIN,XMAX,YMIN,YMAX,CS
- REAL,INTENT(INOUT) :: X1,X2,Y1,Y2
- INTEGER,INTENT(IN) :: MX
- INTEGER,INTENT(OUT) :: N
- REAL,INTENT(OUT),DIMENSION(MX) :: XA,YA,LN
- REAL :: X,Y,XMN,XMX,YMN,YMX,DX,DY,LENG
- INTEGER :: I,ICOL,IROW
- REAL :: A,B,XBEGIN,YBEGIN
+!###======================================================================
+LOGICAL FUNCTION IMOD_UTL_INTERSECT_EQUI(XMIN,XMAX,YMIN,YMAX,CS,X1,X2,Y1,Y2,MX,N,XA,YA,FA,LN,LHFB)
+!###======================================================================
+IMPLICIT NONE
+REAL,INTENT(IN) :: XMIN,XMAX,YMIN,YMAX,CS
+REAL,INTENT(INOUT) :: X1,X2,Y1,Y2
+INTEGER,INTENT(IN) :: MX
+INTEGER,INTENT(OUT) :: N
+REAL,INTENT(OUT),DIMENSION(MX) :: XA,YA,FA,LN !## XA=col, YA=row, FA=fraction to nearest corner, 1,2,3,4 clockwise
+LOGICAL,INTENT(IN) :: LHFB
+REAL :: X,Y,XMN,XMX,YMN,YMX,DX,DY,LENG,TD
+INTEGER :: I,ICOL,IROW,ID
+REAL :: A,B,XBEGIN,YBEGIN
 
- IMOD_UTL_INTERSECT_EQUI=.TRUE.
+IMOD_UTL_INTERSECT_EQUI=.TRUE.
 
- N=0
- IF((MIN(X1,X2).GE.XMAX.OR.MAX(X1,X2).LE.XMIN).OR. &
-    (MIN(Y1,Y2).GE.YMAX.OR.MAX(Y1,Y2).LE.YMIN))RETURN
+N=0
+IF((MIN(X1,X2).GE.XMAX.OR.MAX(X1,X2).LE.XMIN).OR. &
+   (MIN(Y1,Y2).GE.YMAX.OR.MAX(Y1,Y2).LE.YMIN))RETURN
 
- IMOD_UTL_INTERSECT_EQUI=.FALSE.
+IMOD_UTL_INTERSECT_EQUI=.FALSE.
 
- XBEGIN=X1
- YBEGIN=Y1
+IF(MX.LT.3)RETURN
 
- !#arrange x1,x2,y1,y2 such that x1<x2
- IF(X1.GT.X2)THEN
-  X    =X1
-  Y    =Y1
-  X1   =X2
-  Y1   =Y2
-  X2   =X
-  Y2   =Y
+XBEGIN=X1
+YBEGIN=Y1
+
+!#arrange x1,x2,y1,y2 such that x1<x2
+IF(X1.GT.X2)THEN
+ X    =X1
+ Y    =Y1
+ X1   =X2
+ Y1   =Y2
+ X2   =X
+ Y2   =Y
+ENDIF
+
+!## find search box - result can be negative, does not matter!
+I=1
+XMN=XMIN+CS*(INT((X1-XMIN)/CS)+I)
+I=0
+DX=X2-XMIN
+IF(MOD(DX,CS).EQ.0.0)I=-1
+XMX=XMIN+CS*(INT((X2-XMIN)/CS)+I)
+
+Y =MIN(Y1,Y2)
+I =0
+DY=YMAX-Y
+IF(MOD(DY,CS).EQ.0.0)I=-1
+YMN=YMAX-CS*(INT((YMAX-Y)/CS)+I)
+Y =MAX(Y1,Y2)
+I =1
+YMX=YMAX-CS*(INT((YMAX-Y)/CS)+I)
+
+!## use always mid between point x1,y1 and x2,y2 as first position
+!## duplicate first and last point to process them as well
+XA(1)= X1
+YA(1)= Y1
+XA(2)= X1
+YA(2)= Y1
+XA(3)=(X1+X2)/2.0
+YA(3)=(Y1+Y2)/2.0
+XA(4)= X2
+YA(4)= Y2
+XA(5)= X2
+YA(5)= Y2
+N    = 5
+
+!## find mathematical expression for line: y=ax+b
+DX=X2-X1
+DY=Y2-Y1
+IF(DX.EQ.0.0)DX=10.0E-10
+A=DY/DX
+B=Y1-A*X1
+
+!!## shift coordinates!
+!IF(Y1.NE.A*X1+B.OR. &
+!   Y2.NE.A*X2+B)THEN
+!ENDIF
+
+!## continue seach rest of intersections
+!## try intersections with y-axes firstly
+Y=YMN-CS
+DO
+ Y=Y+CS
+ IF(Y.GT.YMX)EXIT
+
+ !## array overwritten
+ N=N+1; IF(N.GT.MX)RETURN
+
+ XA(N)=(Y-B)/A
+ YA(N)=Y
+
+ !## double intersections, for better estimate for hfb
+ IF(LHFB)THEN
+  !## array overwritten
+  N=N+1; IF(N.GT.MX)RETURN
+  XA(N)=(Y-B)/A
+  YA(N)=Y
  ENDIF
+ 
+ENDDO
+!## try intersections with x-axes secondly
+X=XMN-CS
+DO
+ X=X+CS
+ IF(X.GT.XMX)EXIT
 
- !#adjust perfect 45/135/215,305 aanpassen
- DX=X2-X1
- DY=Y2-Y1
- IF(ABS(DX).EQ.ABS(DY))X1=X1+1.0
+ !## array overwritten
+ N=N+1; IF(N.GT.MX)RETURN
+ XA(N)=X
+ YA(N)=A*X+B
 
- !#find search box - result can be negative, does not matter!
- I=1
- XMN=XMIN+CS*(INT((X1-XMIN)/CS)+I)
- I=0
- DX=X2-XMIN
- IF(MOD(DX,CS).EQ.0.0)I=-1
- XMX=XMIN+CS*(INT((X2-XMIN)/CS)+I)
-
- Y =MIN(Y1,Y2)
- I =0
- DY=YMAX-Y
- IF(MOD(DY,CS).EQ.0.0)I=-1
- YMN=YMAX-CS*(INT((YMAX-Y)/CS)+I)
- Y =MAX(Y1,Y2)
- I =1
- YMX=YMAX-CS*(INT((YMAX-Y)/CS)+I)
-
- !use always mid between point x1,y1 and x2,y2 as first position
- XA(1)= X1
- YA(1)= Y1
- XA(2)=(X1+X2)/2.0
- YA(2)=(Y1+Y2)/2.0
- XA(3)= X2
- YA(3)= Y2
- N    = 3
-
- !find mathematical expression for line: y=ax+b
- DX=X2-X1
- DY=Y2-Y1
- IF(DX.EQ.0.0)DX=10.0E-10
- A=DY/DX
- B=Y1-A*X1
-
- !#shift coordinates!
- IF(Y1.NE.A*X1+B.OR. &
-   Y2.NE.A*X2+B)THEN
- ! WRITE(*,'(/1X,A,1X,2(F10.3,1X))') 'Y=AX+B: A/B',A,B
- ! WRITE(*,'(1X,A,1X,4(F10.3,1X))') 'X,Y1',X1,Y1,A*X1+B,Y1-(A*X1+B)
- ! WRITE(*,'(1X,A,1X,4(F10.3,1X)/)') 'X,Y2',X2,Y2,A*X2+B,Y2-(A*X2+B)
- ! PAUSE
+ !## double intersections, for better estimate for hfb
+ IF(LHFB)THEN
+  N=N+1; IF(N.GT.MX)RETURN
+  XA(N)=X
+  YA(N)=A*X+B
  ENDIF
+ 
+ENDDO
 
- !continue seach rest of intersections
- !try intersections with y-axes firstly
- Y=YMN-CS
+!## sort intersections, determined by the one with the largest difference
+IF(ABS(DX).GE.ABS(DY))THEN
+ CALL IMOD_UTL_QKSORT2(XA,YA,MX,N)
+ELSE
+ CALL IMOD_UTL_QKSORT2(YA,XA,MX,N)
+ENDIF
+
+!## resort - if neccessary
+IF(XA(1).NE.XBEGIN.OR.YA(1).NE.YBEGIN)THEN
+ DO I=1,N/2
+  X        =XA(I)
+  XA(I)    =XA(N-I+1)
+  XA(N-I+1)=X
+  Y        =YA(I)
+  YA(I)    =YA(N-I+1)
+  YA(N-I+1)=Y
+  LENG     =LN(I)
+  LN(I)    =LN(N-I+1)
+  LN(N-I+1)=LENG
+ END DO
+ENDIF
+
+!## sample each of the point to determine irow/icol, overwrite point with this
+!## skip first and last, they represented already by the second and one-last point
+DO I=2,N
+
+ !## mid point
+ X   =(XA(I-1)+XA(I))/2.0
+ Y   =(YA(I-1)+YA(I))/2.0
+ ICOL=INT((X-XMIN)/CS)+1
+ IROW=INT((YMAX-Y)/CS)+1
+
+ TD=CS*2.0; ID=0 !## fraction
+ CALL IMOD_UTL_INTERSECT_NCORNER(ID,TD,XMIN+(ICOL-1)*CS,YMAX-(IROW-1)*CS,X,Y,1)
+ CALL IMOD_UTL_INTERSECT_NCORNER(ID,TD,XMIN+ ICOL   *CS,YMAX-(IROW-1)*CS,X,Y,2)
+ CALL IMOD_UTL_INTERSECT_NCORNER(ID,TD,XMIN+ ICOL   *CS,YMAX- IROW   *CS,X,Y,3)
+ CALL IMOD_UTL_INTERSECT_NCORNER(ID,TD,XMIN+(ICOL-1)*CS,YMAX- IROW   *CS,X,Y,4)
+ FA(I-1)=REAL(ID) !+TD
+  
+ DX  =XA(I)-XA(I-1)
+ DY  =YA(I)-YA(I-1)
+ LENG=SQRT(DX**2.0+DY**2.0)
+ !## store results
+ XA(I-1)=REAL(ICOL)
+ YA(I-1)=REAL(IROW)
+ LN(I-1)=LENG
+END DO
+N=N-1
+
+IMOD_UTL_INTERSECT_EQUI=.TRUE.
+
+END FUNCTION IMOD_UTL_INTERSECT_EQUI
+ 
+!###======================================================================
+SUBROUTINE IMOD_UTL_INTERSECT_NCORNER(ID,TD,X1,Y1,XC,YC,JD)
+!###======================================================================
+IMPLICIT NONE
+INTEGER,INTENT(INOUT) :: ID
+REAL,INTENT(INOUT) :: TD
+INTEGER,INTENT(IN) :: JD
+REAL,INTENT(IN) :: X1,Y1,XC,YC
+REAL :: D
+  
+!## get nearest corner
+D=(XC-X1)**2.0+(YC-Y1)**2.0
+IF(D.GT.0.0)THEN
+ D=SQRT(D)
+ IF(D.LT.TD)THEN
+  ID=JD
+  TD=D
+ ENDIF
+ELSE
+ ID=JD
+ TD=0.0
+ENDIF
+
+END SUBROUTINE IMOD_UTL_INTERSECT_NCORNER
+
+!###======================================================================
+LOGICAL FUNCTION IMOD_UTL_INTERSECT_NONEQUI(DELR,DELC,NROW,NCOL,X1,X2,Y1,Y2,MX,N,XA,YA,FA,LN,LHFB)
+!###======================================================================
+IMPLICIT NONE
+INTEGER,INTENT(IN) :: MX,NROW,NCOL
+REAL,INTENT(IN),DIMENSION(0:NCOL) :: DELR
+REAL,INTENT(IN),DIMENSION(0:NROW) :: DELC
+REAL,INTENT(INOUT) :: X1,X2,Y1,Y2
+INTEGER,INTENT(OUT) :: N
+REAL,INTENT(OUT),DIMENSION(MX) :: XA,YA,FA,LN
+LOGICAL,INTENT(IN) :: LHFB
+REAL :: X,Y,XMN,XMX,YMN,YMX,DX,DY,LENG,XMIN,YMIN,XMAX,YMAX
+INTEGER :: I,ICOL,IROW,IMN,ID
+REAL :: A,B,XBEGIN,YBEGIN,CS,TD
+
+IMOD_UTL_INTERSECT_NONEQUI=.TRUE.
+
+XMIN=DELR(0)
+XMAX=DELR(NCOL)
+YMIN=DELC(NROW)
+YMAX=DELC(0)
+
+N=0
+IF((MIN(X1,X2).GE.XMAX.OR.MAX(X1,X2).LE.XMIN).OR. &
+   (MIN(Y1,Y2).GE.YMAX.OR.MAX(Y1,Y2).LE.YMIN))RETURN
+
+IMOD_UTL_INTERSECT_NONEQUI=.FALSE.
+
+IF(MX.LT.3)RETURN
+
+XBEGIN=X1
+YBEGIN=Y1
+
+!## arrange x1,x2,y1,y2 such that x1<x2
+IF(X1.GT.X2)THEN
+ X    =X1
+ Y    =Y1
+ X1   =X2
+ Y1   =Y2
+ X2   =X
+ Y2   =Y
+ENDIF
+
+!!## adjust perfect 45/135/215,305 aanpassen
+!DX=X2-X1; DY=Y2-Y1; IF(ABS(DX).EQ.ABS(DY))X1=X1+1.0
+
+!## use always mid between point x1,y1 and x2,y2 as first position
+XA(1)= X1
+YA(1)= Y1
+XA(2)= X1
+YA(2)= Y1
+XA(3)=(X1+X2)/2.0
+YA(3)=(Y1+Y2)/2.0
+XA(4)= X2
+YA(4)= Y2
+XA(5)= X2
+YA(5)= Y2
+N    = 5
+
+!## find mathematical expression for line: y=ax+b
+DX=X2-X1
+DY=Y2-Y1
+IF(DX.EQ.0.0)DX=10.0E-10
+A=DY/DX
+B=Y1-A*X1
+
+!!## shift coordinates!
+!IF(Y1.NE.A*X1+B.OR. &
+!   Y2.NE.A*X2+B)THEN
+!ENDIF
+
+!continue search rest of intersections
+!try intersections with y-axes firstly
+IMN=0
+DO I=1,NROW 
+ IF(DELC(I).GT.MIN(Y1,Y2))THEN
+  YMN=DELC(I)
+  IMN=I
+ ENDIF
+END DO
+DO I=NROW,1,-1 
+ IF(DELC(I).LT.MAX(Y1,Y2))YMX=DELC(I)
+END DO
+
+IF(IMN.GT.0)THEN
+ CS=DELC(IMN-1)-DELC(IMN)
+ Y =YMN-CS
  DO
   Y=Y+CS
   IF(Y.GT.YMX)EXIT
-  N=N+1
+  N    =N+1
+  !## array overwritten
+  IF(N.GT.MX)RETURN
   XA(N)=(Y-B)/A
   YA(N)=Y
+
+  !## double intersections, for better estimate for hfb
+  IF(LHFB)THEN
+   !## array overwritten
+   N=N+1; IF(N.GT.MX)RETURN
+   XA(N)=(Y-B)/A
+   YA(N)=Y
+  ENDIF
+  
+  IMN  =IMN-1
+  !## model is not bigger than line-segment
+  IF(IMN.LE.0)EXIT
+  CS=DELC(IMN-1)-DELC(IMN)
  ENDDO
- !try intersections with x-axes secondly
- X=XMN-CS
+ENDIF
+
+!## try intersections with x-axes secondly
+IMN=0
+DO I=NCOL,1,-1 !0,-1
+ IF(DELR(I).GT.X1)THEN
+  XMN=DELR(I)
+  IMN=I
+ ENDIF
+END DO
+DO I=0,NCOL
+ IF(DELR(I).LT.X2)XMX=DELR(I)
+END DO
+
+IF(IMN.GT.0)THEN
+ CS=DELC(IMN-1)-DELC(IMN)
+ X =XMN-CS
  DO
   X=X+CS
   IF(X.GT.XMX)EXIT
-  N=N+1
+  N    =N+1
+  !## array overwritten
+  IF(N.GT.MX)RETURN
   XA(N)=X
   YA(N)=A*X+B
- ENDDO
 
- !#sort intersections, determined by the one with the largest difference
- IF(ABS(DX).GE.ABS(DY))THEN
-  CALL IMOD_UTL_QKSORT2(XA,YA,MX,N)
- ELSE
-  CALL IMOD_UTL_QKSORT2(YA,XA,MX,N)
- ENDIF
-
- !#resort - if neccessary
- IF(XA(1).NE.XBEGIN.OR.YA(1).NE.YBEGIN)THEN
-  DO I=1,N/2
-   X        =XA(I)
-   XA(I)    =XA(N-I+1)
-   XA(N-I+1)=X
-   Y        =YA(I)
-   YA(I)    =YA(N-I+1)
-   YA(N-I+1)=Y
-   LENG     =LN(I)
-   LN(I)    =LN(N-I+1)
-   LN(N-I+1)=LENG
-  END DO
- ENDIF
-
- 
- !#sample each of the point to determine irow/icol, overwrite point with this
- !#skip first and last, they represented already by the second and one-last point
- DO I=2,N
- !#mid point
-  X   =(XA(I-1)+XA(I))/2.0
-  Y   =(YA(I-1)+YA(I))/2.0
-  ICOL=INT((X-XMIN)/CS)+1
-  IROW=INT((YMAX-Y)/CS)+1
-  DX  =XA(I)-XA(I-1)
-  DY  =YA(I)-YA(I-1)
-  LENG=SQRT(DX**2.0+DY**2.0)
- !#store results
-  XA(I-1)=REAL(ICOL)
-  YA(I-1)=REAL(IROW)
-  LN(I-1)=LENG
- END DO
- N=N-1
-
- IMOD_UTL_INTERSECT_EQUI=.TRUE.
-
- END FUNCTION IMOD_UTL_INTERSECT_EQUI
-
- !###======================================================================
- LOGICAL FUNCTION IMOD_UTL_INTERSECT_NONEQUI(DELR,DELC,NROW,NCOL,X1,X2,Y1,Y2,MX,N,XA,YA,LN)
- !###======================================================================
- IMPLICIT NONE
- INTEGER,INTENT(IN) :: MX,NROW,NCOL
- REAL,INTENT(IN),DIMENSION(0:NCOL) :: DELR
- REAL,INTENT(IN),DIMENSION(0:NROW) :: DELC
- REAL,INTENT(INOUT) :: X1,X2,Y1,Y2
- INTEGER,INTENT(OUT) :: N
- REAL,INTENT(OUT),DIMENSION(MX) :: XA,YA,LN
- REAL :: X,Y,XMN,XMX,YMN,YMX,DX,DY,LENG,XMIN,YMIN,XMAX,YMAX
- INTEGER :: I,ICOL,IROW,IMN
- REAL :: A,B,XBEGIN,YBEGIN,CS
-
- IMOD_UTL_INTERSECT_NONEQUI=.TRUE.
-
- XMIN=DELR(0)
- XMAX=DELR(NCOL)
- YMIN=DELC(NROW)
- YMAX=DELC(0)
-
- N=0
- IF((MIN(X1,X2).GE.XMAX.OR.MAX(X1,X2).LE.XMIN).OR. &
-    (MIN(Y1,Y2).GE.YMAX.OR.MAX(Y1,Y2).LE.YMIN))RETURN
-
- IMOD_UTL_INTERSECT_NONEQUI=.FALSE.
-
- XBEGIN=X1
- YBEGIN=Y1
-
- !## arrange x1,x2,y1,y2 such that x1<x2
- IF(X1.GT.X2)THEN
-  X    =X1
-  Y    =Y1
-  X1   =X2
-  Y1   =Y2
-  X2   =X
-  Y2   =Y
- ENDIF
-
- !## adjust perfect 45/135/215,305 aanpassen
- DX=X2-X1
- DY=Y2-Y1
- IF(ABS(DX).EQ.ABS(DY))X1=X1+1.0
-
- !## use always mid between point x1,y1 and x2,y2 as first position
- XA(1)= X1
- YA(1)= Y1
- XA(2)=(X1+X2)/2.0
- YA(2)=(Y1+Y2)/2.0
- XA(3)= X2
- YA(3)= Y2
- N    = 3
-
- !## find mathematical expression for line: y=ax+b
- DX=X2-X1
- DY=Y2-Y1
- IF(DX.EQ.0.0)DX=10.0E-10
- A=DY/DX
- B=Y1-A*X1
-
- !## shift coordinates!
- IF(Y1.NE.A*X1+B.OR. &
-    Y2.NE.A*X2+B)THEN
- ! WRITE(*,'(/1X,A,1X,2(F10.3,1X))') 'Y=AX+B: A/B',A,B
- ! WRITE(*,'(1X,A,1X,4(F10.3,1X))') 'X,Y1',X1,Y1,A*X1+B,Y1-(A*X1+B)
- ! WRITE(*,'(1X,A,1X,4(F10.3,1X)/)') 'X,Y2',X2,Y2,A*X2+B,Y2-(A*X2+B)
- ! PAUSE
- ENDIF
-
- !continue search rest of intersections
- !try intersections with y-axes firstly
- IMN=0
- DO I=1,NROW !0,NROW
-  IF(DELC(I).GT.MIN(Y1,Y2))THEN
-   YMN=DELC(I) 
-   IMN=I
-  ENDIF
- END DO
- DO I=NROW,1,-1 !0,-1
-  IF(DELC(I).LT.MAX(Y1,Y2))YMX=DELC(I)
- END DO
-
- IF(IMN.GT.0)THEN
-  CS=DELC(IMN-1)-DELC(IMN)
-  Y =YMN-CS
-  DO
-   Y=Y+CS
-   IF(Y.GT.YMX)EXIT
-   N    =N+1
-   XA(N)=(Y-B)/A
-   YA(N)=Y
-   IMN  =IMN-1
-   !## model is not bigger than line-segment
-   IF(IMN.LE.0)EXIT
-   CS=DELC(IMN-1)-DELC(IMN)
-  ENDDO
- ENDIF
-
- !try intersections with x-axes secondly
- IMN=0
- DO I=NCOL,1,-1 !0,-1
-  IF(DELR(I).GT.X1)THEN
-   XMN=DELR(I)
-   IMN=I
-  ENDIF
- END DO
- DO I=0,NCOL
-  IF(DELR(I).LT.X2)XMX=DELR(I)
- END DO
-
- IF(IMN.GT.0)THEN
-  CS=DELC(IMN-1)-DELC(IMN)
-  X =XMN-CS
-  DO
-   X=X+CS
-   IF(X.GT.XMX)EXIT
-   N    =N+1
+  !## double intersections, for better estimate for hfb
+  IF(LHFB)THEN
+   !## array overwritten
+   N=N+1; IF(N.GT.MX)RETURN
    XA(N)=X
    YA(N)=A*X+B
-   IMN  =IMN+1
-   !## model is not bigger than line-segment
-   IF(IMN.GT.NCOL)EXIT
-   CS=DELR(IMN)-DELR(IMN-1)
-  ENDDO
- ENDIF
+  ENDIF
+  
+  IMN  =IMN+1
+  !## model is not bigger than line-segment
+  IF(IMN.GT.NCOL)EXIT
+  CS=DELR(IMN)-DELR(IMN-1)
+ ENDDO
+ENDIF
 
- !#sort intersections, determined by the one with the largest difference
- IF(ABS(DX).GE.ABS(DY))THEN
-  CALL IMOD_UTL_QKSORT2(XA,YA,MX,N)
- ELSE
-  CALL IMOD_UTL_QKSORT2(YA,XA,MX,N)
- ENDIF
+!## sort intersections, determined by the one with the largest difference
+IF(ABS(DX).GE.ABS(DY))THEN
+ CALL IMOD_UTL_QKSORT2(XA,YA,MX,N)
+ELSE
+ CALL IMOD_UTL_QKSORT2(YA,XA,MX,N)
+ENDIF
 
- !#resort - if neccessary
- IF(XA(1).NE.XBEGIN.OR.YA(1).NE.YBEGIN)THEN
-  DO I=1,N/2
-   X        =XA(I)
-   XA(I)    =XA(N-I+1)
-   XA(N-I+1)=X
-   Y        =YA(I)
-   YA(I)    =YA(N-I+1)
-   YA(N-I+1)=Y
-   LENG     =LN(I)
-   LN(I)    =LN(N-I+1)
-   LN(N-I+1)=LENG
-  END DO
- ENDIF
-
- !#sample each of the point to determine irow/icol, overwrite point with this
- !#skip first and last, they represented already by the second and one-last point
- DO I=2,N
- !#mid point
-  X   =(XA(I-1)+XA(I))/2.0
-  Y   =(YA(I-1)+YA(I))/2.0
-
-  CALL IMOD_UTL_POL1LOCATER(DELR,NCOL+1,X,ICOL)
-  CALL IMOD_UTL_POL1LOCATER(DELC,NROW+1,Y,IROW)
-
-  DX  =XA(I)-XA(I-1)
-  DY  =YA(I)-YA(I-1)
-  LENG=SQRT(DX**2.0+DY**2.0)
- !#store results
-  XA(I-1)=REAL(ICOL)
-  YA(I-1)=REAL(IROW)
-  LN(I-1)=LENG
+!## resort - if neccessary
+IF(XA(1).NE.XBEGIN.OR.YA(1).NE.YBEGIN)THEN
+ DO I=1,N/2
+  X        =XA(I)
+  XA(I)    =XA(N-I+1)
+  XA(N-I+1)=X
+  Y        =YA(I)
+  YA(I)    =YA(N-I+1)
+  YA(N-I+1)=Y
+  LENG     =LN(I)
+  LN(I)    =LN(N-I+1)
+  LN(N-I+1)=LENG
  END DO
- N=N-1
+ENDIF
 
- IMOD_UTL_INTERSECT_NONEQUI=.TRUE.
+!## sample each of the point to determine irow/icol, overwrite point with this
+!## skip first and last, they represented already by the second and one-last point
+DO I=2,N
+ !## mid point
+ X   =(XA(I-1)+XA(I))/2.0
+ Y   =(YA(I-1)+YA(I))/2.0
 
- END FUNCTION IMOD_UTL_INTERSECT_NONEQUI
+ CALL IMOD_UTL_POL1LOCATER(DELR,NCOL+1,X,ICOL)
+ CALL IMOD_UTL_POL1LOCATER(DELC,NROW+1,Y,IROW)
+
+ TD=CS*2.0; ID=0 !## fraction
+ CALL IMOD_UTL_INTERSECT_NCORNER(ID,TD,DELR(ICOL-1),DELC(IROW-1),X,Y,1)
+ CALL IMOD_UTL_INTERSECT_NCORNER(ID,TD,DELR(ICOL)  ,DELC(IROW-1),X,Y,2)
+ CALL IMOD_UTL_INTERSECT_NCORNER(ID,TD,DELR(ICOL)  ,DELC(IROW)  ,X,Y,3)
+ CALL IMOD_UTL_INTERSECT_NCORNER(ID,TD,DELR(ICOL-1),DELC(IROW)  ,X,Y,4)
+ FA(I-1)=REAL(ID) !+TD
+
+ DX  =XA(I)-XA(I-1)
+ DY  =YA(I)-YA(I-1)
+ LENG=SQRT(DX**2.0+DY**2.0)
+ !## store results
+ XA(I-1)=REAL(ICOL)
+ YA(I-1)=REAL(IROW)
+ LN(I-1)=LENG
+END DO
+N=N-1
+
+IMOD_UTL_INTERSECT_NONEQUI=.TRUE.
+
+END FUNCTION IMOD_UTL_INTERSECT_NONEQUI
 
  !###====================================================
  REAL FUNCTION IMOD_UTL_GETMED2(A,NA,NODATA,NAJ)
