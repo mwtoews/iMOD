@@ -398,8 +398,8 @@ c map on cell centroids
          idfm%x = xmask
          do irow = 1, nrow
             do icol = 1, ncol
-               if (idfm%x(icol,irow)==nodata) then
-                  idfm%x(icol,irow)=idfc%nodata
+               if (idfm%x(icol,irow)==idfc%nodata) then
+                  idfm%x(icol,irow)=nodata
                end if
             end do
          end do
@@ -423,7 +423,8 @@ c set array
          do icol = 1, ncol
             val = idfm%x(icol,irow)
 c change data in case nodata value is used
-            if (val.eq.idfm%nodata) val = nodata
+!            if (val.eq.idfm%nodata) val = nodata
+            if (val.eq.idfc%nodata) val = nodata
             if (type.eq.'i') then
                iarray(icol,irow) = int(val)
             else

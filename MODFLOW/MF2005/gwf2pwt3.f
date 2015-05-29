@@ -191,14 +191,15 @@ c read the PWT data
                      rval = pwt_kd(icol,irow,1)
                      if (rval.ne.nodata) then
                          ilay = int(rval)
-                         if (ilay.gt.0.and.ilay.le.nlay.and.
-     1                      ibound(icol,irow,ilay).gt.0) then
-                            npwt = npwt + 1
-                            if (iact.eq.2) then
-                               pwt(1,npwt) = ilay
-                               pwt(2,npwt) = irow
-                               pwt(3,npwt) = icol
-                            end if
+                         if (ilay.gt.0.and.ilay.le.nlay)then
+                          if(ibound(icol,irow,ilay).gt.0) then
+                           npwt = npwt + 1
+                           if (iact.eq.2) then
+                            pwt(1,npwt) = ilay
+                            pwt(2,npwt) = irow
+                            pwt(3,npwt) = icol
+                           end if
+                          endif
                          end if
                      end if
                   end do
@@ -261,7 +262,7 @@ c save data
       use getfrombcflpf
       use gwfpwtmodule
       use global, only: nlay,nrow,ncol,delr,delc,cc,cr,cv,
-     1                  ibound,hnew,hold,issflg
+     1                  ibound,hnew,hold,issflg,rhs
       use gwfbcfmodule, only: laycon
       use gwflpfmodule, only: laytyp
 
@@ -277,10 +278,17 @@ c parameters
       real, parameter :: tiny = 1.0e-20
 
 c locals
-      integer :: iss, ip, ilay, irow, icol
+      integer :: iss, ip, ilay, irow, icol, i, ir, ic, ii
       integer, dimension(:), pointer :: layavg => null()
       real :: h, h1, t, fct, q1, q2
       real, dimension(:,:,:), pointer :: sc1 => null()
+      
+      integer,dimension(3,4) :: rci
+      data rci/-1, 0,-1,  !## row/col/cc (north)
+     1    0, 1, 2,        !## row/col/cr (east)
+     1    1, 0, 1,        !## row/col/cc (south)
+     1    0,-1,-2/        !## row/col/cr (west)
+
 c ------------------------------------------------------------------------------
 
 c check if PWT can be used in combination with BCF and LPF
@@ -332,10 +340,16 @@ c init the PWT data
       end do
       cc = pwt_kd
 
+      !## store top of pwt
+      rhs=-9999.0
+  
       do ip = 1, npwt
          ilay = pwt(ipilay,ip)
          irow = pwt(ipirow,ip)
          icol = pwt(ipicol,ip)
+
+         !## store top of pwt layer
+         rhs(icol,irow,ilay)=pwt(ipbot,ip) !xpwt(i,ipbot)
 
          !## storage below pwt layer
          t =  pwt(ipbot,ip)- pwt(iptop2,ip)
@@ -359,9 +373,10 @@ c init the PWT data
             !## computed by ax=b
             q2=(h-h1)*cv(icol,irow,ilay)
             !## correction to vertical conductance (smaller)
-            fct=0.0; if(q2.gt.0.0) fct=q1/(q2+tiny)
+            fct=0.0; if(q2.gt.0.0) fct=q1/q2 !(q2+tiny)
             cv(icol,irow,ilay)=fct*cv(icol,irow,ilay)
          endif
+
       end do
 
       ! compute transmissivities using harmonic mean
@@ -369,6 +384,42 @@ c init the PWT data
          call sgwf2bcf7c(ilay,cc,cr)
       end do
 
+      !## correct harmonic conductances whenever next cells are dry (below top pwt)
+      do ilay=1,nlay
+       do irow=1,nrow
+        do icol=1,ncol
+         !## found pwt top
+         if(rhs(icol,irow,ilay).eq.-9999.0)cycle
+         do i=1,4
+          ir=min(nrow,max(1,irow+rci(1,i)))
+          ic=min(ncol,max(1,icol+rci(2,i)))
+          ii=     rci(3,i)
+          if(rhs(ic,ir,ilay).ne.-9999.0)cycle
+          if(ihnew.eq.1)then
+           h1=hnew(ic,ir,ilay)
+          elseif(ihnew.eq.2)then
+           h1=hold(ic,ir,ilay)
+          endif
+          if(h1.lt.rhs(icol,irow,ilay))then
+           select case (ii)
+            case (-1) !## north
+             cc(icol,irow-1,ilay)=0.0
+            case (2) !## east
+             cr(icol,irow,ilay)=0.0
+            case (1) !## south
+             cc(icol,irow,ilay)=0.0
+            case (-2) !## west
+             cr(icol-1,irow,ilay)=0.0
+           end select
+          endif
+         enddo
+        enddo
+       enddo
+      enddo
+
+      !## clear rhs
+      rhs=0.0
+      
       ! extra checks conform imod
       do ilay=1,nlay
          do irow=1,nrow-1
@@ -392,26 +443,3 @@ c init the PWT data
 
       end subroutine
 
-!      subroutine gwf2pwt3ot(kstp,kper)
-!c modules
-!      use global, only: buff, hnew, hnoflo
-!      use gwfbasmodule,only:pertim,totim
-!      use gwfpwtmodule
-!
-!      implicit none
-!
-!c arguments
-!      integer, intent(in) :: kstp
-!      integer, intent(in) :: kper
-!
-!c locals
-!      integer :: irow, icol, ip, kk
-!
-!      character(len=16), dimension(2) :: text
-!      data text /'             pwt',
-!                 '             gwl'/
-!C
-!c ------------------------------------------------------------------------------
-!
-!      end subroutine
-!
