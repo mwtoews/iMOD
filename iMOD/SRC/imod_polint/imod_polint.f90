@@ -377,22 +377,58 @@ CONTAINS
  !* It is also assumed that the X(i) are in ascending    *
  !* order.                                               *
  !********************************************************
+ IMPLICIT NONE
  INTEGER,INTENT(IN) :: N,M
  REAL,DIMENSION(N),INTENT(IN) :: XB,YB
  REAL,DIMENSION(:),POINTER,INTENT(OUT) :: XI,ZI
  REAL,DIMENSION(:),ALLOCATABLE :: XM,Z,X,Y
- INTEGER :: NN
- 
+ INTEGER :: NN,I,IERROR
+ REAL :: DX,XX,SX1,SX2
+
+ DX=10.0
+
+ NN=N
+      
+ !## add one fake points to the begin
+ NN=NN+1
  !## add three fake points to the end
- NN=N+4
+ NN=NN+3
 
  ALLOCATE(XM(0:NN+3),Z(0:NN),X(0:NN),Y(0:NN)); X=0.0; Y=0.0
- DO I=1,N; X(I)=XB(I); Y(I)=YB(I); ENDDO
- DO I=N+1,NN; X(I)=X(I-1)+10.0; Y(I)=Y(I-1); ENDDO
 
+ !## add mid-section
+ DO I=2,N+1; X(I)=XB(I-1); Y(I)=YB(I-1); ENDDO
+
+ !## add to the begin
+ DO I=1,0,-1; X(I)=X(I+1)-DX; Y(I)=Y(I+1); ENDDO
+
+ !## add to the end
+ DO I=N+2,N+4; X(I)=X(I-1)+DX; Y(I)=Y(I-1); ENDDO
+ 
+ !## shift fix locations to avoid negative values in x-coordinates
+ DO I=0,N+4
+  X(I)=X(I)+DX*2.0
+ ENDDO
+ 
+ !## for spline it is not possible to have identical x(i) and x(i+1) coordinates
+ DO I=1,N+4
+  IF(X(I).LE.X(I-1))THEN
+   SX1=0.0; IF(I.GT.1)SX1=MIN(DX/2.0,X(I-1)-X(I-2))
+   SX2=0.0; IF(I.LT.N+4)SX2=MIN(DX/2.0,X(I+1)-X(I))
+   X(I-1)=X(I-1)-SX1
+   X(I)  =X(I)  +SX2
+  ENDIF
+ ENDDO
+ 
  DO I=1,M
   XM=0.0; Z=0.0
-  CALL INTERPOL_AKIMA(NN,X,Y,XI(I),ZI(I),XM,Z)
+  XX=XI(I)+DX
+  CALL INTERPOL_AKIMA(NN,X,Y,XX,ZI(I),XM,Z,IERROR)
+  XI(I)=XX-DX
+  !## could not spline current location
+  IF(IERROR.EQ.1)THEN
+write(*,*)
+  ENDIF
  ENDDO
  
  DEALLOCATE(XM,Z,X,Y)
@@ -400,24 +436,26 @@ CONTAINS
  END SUBROUTINE SPLINE_AKIMA_MAIN
 
  !###==================================================================
- SUBROUTINE INTERPOL_AKIMA(IV,X,Y,XX,YY,XM,Z)
+ SUBROUTINE INTERPOL_AKIMA(IV,X,Y,XX,YY,XM,Z,IERROR)
  !###==================================================================
  INTEGER,INTENT(IN) :: IV 
  REAL,INTENT(IN) :: XX
  REAL,INTENT(OUT) :: YY
- REAL,DIMENSION(0:IV),INTENT(INOUT) :: X,Y ! X (0:SIZE), Y (0:SIZE)
+ REAL,DIMENSION(0:IV),INTENT(INOUT) :: X,Y 
  REAL,DIMENSION(0:IV+3),INTENT(OUT) :: XM ! 
  REAL,DIMENSION(0:IV),INTENT(OUT) :: Z 
- INTEGER :: I,N
+ INTEGER,INTENT(OUT) :: IERROR
+ INTEGER :: I
+ REAL :: A,B
 
- N=1
+ IERROR=0
  !SPECIAL CASE XX=0
  IF (XX.EQ.0.0) THEN
-   YY=0.0; RETURN
+   YY=0.0; IERROR=1; RETURN
  END IF
  !CHECK TO SEE IF INTERPOLATION POINT IS CORRECT
  IF (XX.LT.X(1).OR.XX.GE.X(IV-3)) THEN
-   N=0 ; RETURN
+   IERROR=2 ; RETURN
  END IF
  X(0)=2.0*X(1)-X(2)
  !CALCULATE AKIMA COEFFICIENTS, A AND B

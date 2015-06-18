@@ -42,6 +42,49 @@ INTEGER(GLINT),DIMENSION(1) :: MAXCPLANES
 CONTAINS
 
  !###======================================================================
+ SUBROUTINE IMOD3D_INTERPOLATOR()
+ !###======================================================================
+ IMPLICIT NONE
+ REAL(KIND=GLfloat) :: U1,U2,V1,V2,X,Y
+ INTEGER(KIND=GLINT) :: USTRIDE,VSTRIDE
+ INTEGER(KIND=GLINT) :: UORDER,VORDER
+ REAL(KIND=GLfloat), DIMENSION(3) :: POINTS
+ INTEGER :: I
+  
+! !## select openGL as the current driver for plotting purposes
+! CALL WGLSELECT(1,IWIN,WGLDOUBLEBUFFER)
+
+ U1=0.0_GLFLOAT   !## A linear mapping of u, as presented to glEvalCoord1, the variable that is evaluated by the
+ U2=1.0_GLFLOAT   !## equations specified by this command
+ V1=0.0_GLFLOAT
+ V2=1.0_GLFLOAT
+ USTRIDE=3_GLINT  !## The number of floats or doubles between the beginning of one control point and the beginning
+                  !## of the next one in the array referenced in points. This allows control points to be embedded
+                  !## in arbitrary data structures. The only constraint is that the values for a particular control
+                  !## point must occupy contiguous memory locations. 
+ UORDER=4_GLINT  !## number of control-points
+ DO I=1,UORDER
+  POINTS(I)=X
+ ENDDO
+ 
+ !CALL GLMAP1F(GL_MAP1_VERTEX_3,U1,U2,USTRIDE,UORDER,POINTS)
+ !CALL GLENABLE(GL_MAP1_VERTEX_3)
+
+ CALL GLMAP2F(GL_MAP2_VERTEX_3,U1,U2,USTRIDE,UORDER,V1,V2,VSTRIDE,VORDER,POINTS)
+ CALL GLENABLE(GL_MAP2_VERTEX_3)
+ 
+ !CALL GLMAPGRID2()
+ !CALL GLEVALMESH2()
+ 
+ call glevalcoord2f(X,Y)
+ 
+ CALL GLDISABLE(GL_MAP1_VERTEX_3) 
+! !## disables openGL 
+! CALL WGLSELECT(0)
+  
+ END SUBROUTINE IMOD3D_INTERPOLATOR
+ 
+ !###======================================================================
  SUBROUTINE IMOD3D_MAIN()
  !###======================================================================
  IMPLICIT NONE

@@ -207,6 +207,20 @@ CONTAINS
      DO ITER1=1,MXITER1
       IF(IBATCH.EQ.0)CALL WMESSAGEPEEK(ITYPE,MESSAGE)
       CALL SOLID_CALC_CONSTRAINS(ILAY) 
+
+!solidf(ilay)%x=pcg(ilay)%ib
+!if(.not.idfwrite(solidf(ilay),'d:\ib.idf',1))return
+!solidf(ilay)%x=pcg(1)%cc
+!if(.not.idfwrite(solidf(ilay),'d:\cc.idf',1))return
+!solidf(ilay)%x=pcg(1)%cr
+!if(.not.idfwrite(solidf(ilay),'d:\cr.idf',1))return
+!solidf(ilay)%x=pcg(1)%rhs
+!if(.not.idfwrite(solidf(ilay),'d:\rhs.idf',1))return
+!solidf(ilay)%x=pcg(1)%hcof
+!if(.not.idfwrite(solidf(ilay),'d:\hcof.idf',1))return
+!solidf(ilay)%x=pcg(1)%hnew
+!if(.not.idfwrite(solidf(ilay),'d:\hnew.idf',1))return
+
       CALL PCG2AP(SOLIDF(ILAY)%NROW*SOLIDF(ILAY)%NCOL,SOLIDF(ILAY)%NROW,SOLIDF(ILAY)%NCOL,1,PCG(ILAY)%IB,PCG(1)%CR,PCG(1)%CC, &
                   PCG(1)%CV,PCG(1)%HCOF,PCG(1)%RHS,PCG(1)%V,PCG(1)%SS,PCG(1)%P,PCG(1)%CD,PCG(1)%HNEW,MXITER1,MXITER2,ITER1,   &
                   ITER2,ICNVG(ILAY),HCLOSE,RCLOSE,IECHO,NICNVG,RELAX,HCHG,RCHG)
@@ -1125,17 +1139,16 @@ CONTAINS
     IF(LSPLINE)THEN
      !## create spline-points
      N=SPF(ISPF)%PROF(ILAY)%NPOS
-     DX=SPF(ISPF)%PROF(ILAY)%PX(N)
-     M=CEILING(DX/SOLIDF(ILAY)%DX)   
+     DX=SPF(ISPF)%PROF(ILAY)%PX(N)-SPF(ISPF)%PROF(ILAY)%PX(1)
+     M=CEILING(DX/SOLIDF(ILAY)%DX)+1
      ALLOCATE(XI(M),ZI(M)); XI=0.0; ZI=0.0
-     X1=0.0; M=0
-     DO 
+     X1=SPF(ISPF)%PROF(ILAY)%PX(1)-SOLIDF(ILAY)%DX; M=0
+     DO
       X1=X1+SOLIDF(ILAY)%DX; M=M+1
       IF(X1.GE.SPF(ISPF)%PROF(ILAY)%PX(N))EXIT
       XI(M)=X1
      ENDDO   
      XI(M)=SPF(ISPF)%PROF(ILAY)%PX(N)
-     
      !## spline line
 !     CALL SPLINE_MAIN(SPF(ISPF)%PROF(ILAY)%PX,SPF(ISPF)%PROF(ILAY)%PZ,SPF(ISPF)%PROF(ILAY)%NPOS,XI,ZI,M)
      CALL SPLINE_AKIMA_MAIN(SPF(ISPF)%PROF(ILAY)%PX,SPF(ISPF)%PROF(ILAY)%PZ,SPF(ISPF)%PROF(ILAY)%NPOS,XI,ZI,M)  
