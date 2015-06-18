@@ -27,8 +27,8 @@ use driver_module
 use m_main_info
 use m_vcl, only: targ
 use imod_utl, only: imod_utl_closeunits, imod_utl_has_ext, imod_utl_printtext
-use mod_pest, only: pest1_meteo_metaswap, pest1alpha_metaswap, pest1appendlogfile, pestnext
-
+use mod_pest, only: pest1_meteo_metaswap, pest1alpha_metaswap, pest1appendlogfile, pestnext, pestdumpfct
+use PESTVAR, only : IUPESTOUT
 implicit none
 
 ! general
@@ -404,6 +404,12 @@ call imod_utl_printtext('=======================================================
  ok = mf2005_PutLPFActive(mf_igrid, llpf); call driverChk(ok,'mf2005_PutLPFActive') ! get flag if BCF is used or LPF
  ok = mf2005_PutSimulationType(mf_igrid, lss); call driverChk(ok,'mf2005_PutSimulationType')  ! get flag if simulation is steady-state or transient
  ok = mf2005_PutHeadNoFlo(mf_igrid, hnoflo);  call driverChk(ok,'mf2005_PutHeadNoFlo')  ! get hnoflo
+
+
+ ! append the PEST log-file
+ if (lipest) then
+    CALL PESTDUMPFCT(IUPESTOUT)
+ endif
 
  !#### TIMESERIES ####
  call tserie1init1(lipest,lss,hnoflo)

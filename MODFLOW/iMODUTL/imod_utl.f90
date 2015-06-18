@@ -2578,7 +2578,7 @@ END FUNCTION IMOD_UTL_INTERSECT_NONEQUI
  END FUNCTION IMOD_UTL_GETMED2
 
  !###====================================================================
-  SUBROUTINE IMOD_UTL_LUDECOMP(AA,IDX,N,ISING)
+ SUBROUTINE IMOD_UTL_LUDECOMP(AA,IDX,N,ISING)
  !###====================================================================
  IMPLICIT NONE
  INTEGER :: NMAX
@@ -2687,5 +2687,115 @@ END FUNCTION IMOD_UTL_INTERSECT_NONEQUI
 
  RETURN
  END SUBROUTINE IMOD_UTL_LUBACKSUB
+
+ !###====================================================================
+ SUBROUTINE IMOD_UTL_LUDECOMP_DBL(AA,IDX,N,ISING)
+ !###====================================================================
+ IMPLICIT NONE
+ INTEGER :: NMAX
+ DOUBLE PRECISION :: TINY
+ PARAMETER( TINY=1.0E-20, NMAX=2000)
+ INTEGER :: N
+ INTEGER :: ISING
+ INTEGER :: IDX(N)
+ DOUBLE PRECISION :: AA(N,N)
+ DOUBLE PRECISION :: VV(NMAX)
+ INTEGER :: I,IMAX,J,K
+ DOUBLE PRECISION :: AAMAX,DUM,SUM
+
+ DO I=1,N
+  IDX(I)=0
+ END DO
+ ISING=0
+
+ DO I=1,N
+  AAMAX=0.
+  DO J=1,N
+   IF(ABS(AA(I,J)).GT.AAMAX)AAMAX=ABS(AA(I,J))
+  ENDDO
+  IF(AAMAX.EQ.0.)THEN
+   WRITE(*,*) 'Matrix is singular'
+   ISING=1
+   RETURN
+  ENDIF
+  VV(I)=1./AAMAX
+ ENDDO
+ DO J=1,N
+  DO I=1,J-1
+   SUM=AA(I,J)
+   DO K=1,I-1
+    SUM=SUM-AA(I,K)*AA(K,J)
+   ENDDO
+   AA(I,J)=SUM
+  ENDDO
+  AAMAX=0.
+  DO I=J,N
+   SUM=AA(I,J)
+   DO K=1,J-1
+    SUM=SUM-AA(I,K)*AA(K,J)
+   ENDDO
+   AA(I,J)=SUM
+   DUM=VV(I)*ABS(SUM)
+   IF(DUM.GE.AAMAX)THEN
+    IMAX=I
+    AAMAX=DUM
+   ENDIF
+  ENDDO
+  IF(J.NE.IMAX)THEN
+   DO K=1,N
+    DUM=AA(IMAX,K)
+    AA(IMAX,K)=AA(J,K)
+    AA(J,K)=DUM
+   ENDDO
+   VV(IMAX)=VV(J)
+  ENDIF
+  IDX(J)=IMAX
+  IF(AA(J,J).EQ.0.)AA(J,J)=TINY
+  IF(J.NE.N)THEN
+   DUM=1./AA(J,J)
+   DO I=J+1,N
+    AA(I,J)=AA(I,J)*DUM
+   ENDDO
+  ENDIF
+ ENDDO
+
+ RETURN
+ END SUBROUTINE IMOD_UTL_LUDECOMP_DBL
+
+ !###====================================================================
+ SUBROUTINE IMOD_UTL_LUBACKSUB_DBL(AA,IDX,BB,N)
+ !###====================================================================
+ IMPLICIT NONE
+ INTEGER :: N
+ DOUBLE PRECISION :: AA(N,N)
+ DOUBLE PRECISION :: BB(N)
+ INTEGER :: IDX(N)
+ INTEGER :: I,II,J,LL
+ DOUBLE PRECISION :: SUM
+
+ II=0
+ DO I=1,N
+  LL=IDX(I)
+  SUM=BB(LL)
+  BB(LL)=BB(I)
+  IF(II.NE.0)THEN
+   DO J=II,I-1
+    SUM=SUM-AA(I,J)*BB(J)
+   ENDDO
+  ELSE IF(SUM.NE.0.)THEN
+   II=I
+  ENDIF
+  BB(I)=SUM
+ ENDDO
+ DO I=N,1,-1
+  SUM=BB(I)
+  DO J=I+1,N
+   SUM=SUM-AA(I,J)*BB(J)
+  ENDDO
+  BB(I)=SUM/AA(I,I)
+ ENDDO
+
+ RETURN
+ END SUBROUTINE IMOD_UTL_LUBACKSUB_DBL
  
 END MODULE IMOD_UTL

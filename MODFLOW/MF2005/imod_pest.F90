@@ -62,7 +62,9 @@ endif
 
 end subroutine pest1log
 
+!###====================================================================
 subroutine pest1alpha_grid(ptype,a,nrow,ncol,nlay,a2)
+!###====================================================================
 
 ! modules
 use imod_utl, only: imod_utl_printtext,imod_utl_itos,imod_utl_rtos
@@ -88,6 +90,9 @@ character(len=256) :: line
 integer :: i, j, k, ils, irow, icol
 real :: c, fct, ppart
 
+CHARACTER(LEN=2),DIMENSION(6) :: PPPARAM
+DATA PPPARAM/'KD','KH','KV','VC','SC','VA'/ !## variable for pilotpoints
+
 !###======================================================================
 
 #ifndef IPEST
@@ -107,41 +112,51 @@ if(pest_iter.eq.0)then
 
       ils=param(i)%ils ! layer
 
-      if(.not.associated(param(i)%x))allocate(param(i)%x(param(i)%nodes))
-      select case (trim(ptype))
-      case('KD','KH','KV','VA','SC','AF')
-         do j=1,param(i)%nodes
-            irow=param(i)%irow(j); icol=param(i)%icol(j)
-            param(i)%x(j)=a(icol,irow,ils)*param(i)%f(j)
-         enddo
-      case('VC')   !## vertical c values
-         do j=1,param(i)%nodes
-            irow=param(i)%irow(j); icol=param(i)%icol(j)
-            c = 1/(a(icol,irow,ils)+tiny)
-            param(i)%x(j)=c*param(i)%f(j)
-         enddo
-      case('AA')   !## anisotropy angle
-         if (.not.present(a2)) then
-            call imod_utl_printtext('Cannot apply PEST scaling factor for anisotrophy angle',2)
-         end if
-         do j=1,param(i)%nodes
-            irow=param(i)%irow(j); icol=param(i)%icol(j)
-            if (a2(icol,irow,ils).lt.1.0) then
-               param(i)%x(j)=a(icol,irow,ils)*param(i)%f(j)
-            endif
-         enddo
-      case default
-         call imod_utl_printtext('Something went wrong for PEST',2)
-      end select
-   end do
+      IF(PARAM(I)%ZTYPE.EQ.0)THEN
+
+       if(.not.associated(param(i)%x))allocate(param(i)%x(param(i)%nodes))
+       select case (trim(ptype))
+       case('KD','KH','KV','VA','SC','AF')
+          do j=1,param(i)%nodes
+             irow=param(i)%irow(j); icol=param(i)%icol(j)
+             param(i)%x(j)=a(icol,irow,ils)*param(i)%f(j)
+          enddo
+       case('VC')   !## vertical c values
+          do j=1,param(i)%nodes
+             irow=param(i)%irow(j); icol=param(i)%icol(j)
+             c = 1/(a(icol,irow,ils)+tiny)
+             param(i)%x(j)=c*param(i)%f(j)
+          enddo
+       case('AA')   !## anisotropy angle
+          if (.not.present(a2)) then
+             call imod_utl_printtext('Cannot apply PEST scaling factor for anisotrophy angle',2)
+          end if
+          do j=1,param(i)%nodes
+             irow=param(i)%irow(j); icol=param(i)%icol(j)
+             if (a2(icol,irow,ils).lt.1.0) then
+                param(i)%x(j)=a(icol,irow,ils)*param(i)%f(j)
+             endif
+          enddo
+       case default
+          call imod_utl_printtext('Something went wrong for PEST, missing parameter '//trim(ptype),2)
+       end select
+      !## pilot points, save initial values for f -- hoeft toch niet???
+      ELSEIF(PARAM(I)%ZTYPE.EQ.1)THEN
+
+      end if
+    end do
 end if
 
 do i=1,size(param)
 
    if (trim(param(i)%ptype).ne.trim(ptype)) cycle
 
+   !## skip pilot-points
+   IF(PARAM(I)%ZTYPE.EQ.1)CYCLE
+
    fct=param(i)%alpha(1); ils=param(i)%ils ! layer
-   fct=exp(fct) ! scaling
+!   fct=exp(fct) ! scaling
+   IF(PARAM(I)%LOG)FCT=EXP(FCT)
 
    select case (trim(ptype))
    case('KD','KH','KV','VA','SC','AF')
@@ -170,16 +185,94 @@ do i=1,size(param)
          endif
       enddo
    case default
-      call imod_utl_printtext('Something went wrong for PEST',2)
+      call imod_utl_printtext('Something went wrong for PEST, missing parameter '//trim(ptype),2)
    end select
    line=' * '//param(i)%ptype//' adjusted ('//trim(imod_utl_itos(param(i)%nodes))//')with alpha='//trim(imod_utl_rtos(fct,'f',7))
    call imod_utl_printtext(trim(line),-1,iupestout)
 end do
-
 #endif
+
+#ifdef IPEST_PILOTPOINTS
+ !## process any pilotpoints per modellayer/ adjustable parameter
+ DO IPP=1,SIZE(PPPARAM); DO ILS=1,NLAY
+  DO K=1,2
+   NXYZ=0
+   DO I=1,SIZE(PARAM)
+   
+    if (trim(param(i)%ptype).ne.trim(ptype)) cycle
+
+    !## skip NONE pilot-points
+    IF(PARAM(I)%ZTYPE.NE.1)CYCLE
+    !## not similar parameter
+    IF(PARAM(I)%PTYPE.NE.PPPARAM(IPP))CYCLE
+    !## not correct modellayer
+    IF(PARAM(I)%ILS.NE.ILS)CYCLE
+
+    FCT=PARAM(I)%ALPHA(1)
+    IF(K.EQ.2)THEN
+     LINE=' * Module '//PARAM(I)%PTYPE//' adjusted ('//TRIM(ITOS(SIZE(PARAM(I)%XY,1)))//') location(s) as PILOTPOINT with alpha='//TRIM(RTOS(EXP(FCT),'F',7))
+     CALL imod_utl_printtext(TRIM(LINE),1) 
+    ENDIF
+    
+    DO J=1,SIZE(PARAM(I)%XY,1)
+     NXYZ=NXYZ+1
+     IF(K.EQ.2)THEN
+      XYZ(NXYZ,1)=PARAM(I)%XY(J,1); XYZ(NXYZ,2)=PARAM(I)%XY(J,2); XYZ(NXYZ,3)=FCT 
+     ENDIF
+    ENDDO
+   ENDDO
+   IF(NXYZ.EQ.0)EXIT
+   IF(K.EQ.1)ALLOCATE(XYZ(NXYZ,3))
+  ENDDO
+  !# next parameter, this one is not used
+  IF(NXYZ.EQ.0)CYCLE
+
+  NODATA=-999.99; ALLOCATE(XPP(NCOL,NROW)); XPP=NODATA
+  RANGE=PEST_GETRANGE()
+    
+  CALL imod_utl_printtext('Kriging applied Range:'//TRIM(RTOS(RANGE,'F',2))//' meter',1)
+
+  !## apply kriging interpolation
+  CALL KRIGING_MAIN(NXYZ,XYZ(:,1),XYZ(:,2),XYZ(:,3),DELR,DELC,NROW,NCOL,XPP,NODATA,RANGE,PEST_KTYPE)
+  DO IROW=1,NROW; DO ICOL=1,NCOL
+   IF(IBOUND(ICOL,IROW,ILAY).EQ.0)THEN
+    XPP(ICOL,IROW)=NODATA
+   ELSE
+    XPP(ICOL,IROW)=EXP(XPP(ICOL,IROW))
+    !## areas outside range do get a value of 0.0, convert to 1.0
+    IF(XPP(ICOL,IROW).EQ.0.0)XPP(ICOL,IROW)=1.0
+   ENDIF
+  ENDDO; ENDDO
+  
+  WRITE(FNAME,'(A,I5.5,A)') TRIM(DIR)//CHAR(92)//PPPARAM(IPP),ILAY,'.IDF'
+  CALL WRITEIDF(XPP,1,NCOL,1,NROW,1,NROW,NCOL,1,DELR(0),DELC(NROW),SIMCSIZE,NODATA,FNAME)
+
+  SELECT CASE (PPPARAM(IPP))
+   CASE ('KD','KH','VC','KV','SC','VA')  !## transmissivities
+    A(:,:,ILS)=A(:,:,ILS)*XPP
+  END SELECT
+
+  DEALLOCATE(XYZ,XPP)
+ 
+ ENDDO; ENDDO
+#endif 
+
 end subroutine
 
+#ifdef IPEST_PILOTPOINTS
+!###====================================================================
+REAL FUNCTION PEST_GETRANGE()
+!###====================================================================
+IMPLICIT NONE
+    
+PEST_GETRANGE=0.9*SQRT((DELR(NCOL)-DELR(0))**2.0+(DELC(0)-DELC(NROW))**2.0)
+  
+END FUNCTION PEST_GETRANGE
+#endif
+ 
+!###====================================================================
 subroutine pest1alpha_list(ptype,nlist,rlist,ldim,mxlist,iopt1,iopt2)
+!###====================================================================
 
 ! modules
 use global, only: lipest
@@ -287,6 +380,8 @@ do i=1,size(param)
    nadj = 0
    if (trim(param(i)%ptype).ne.trim(ptype)) cycle
    fct=param(i)%alpha(1); ils=param(i)%ils ! system
+
+   IF(PARAM(I)%LOG)FCT=EXP(FCT); 
 
    select case (trim(ptype))
    case('RC','RI','IC','II','DC')
