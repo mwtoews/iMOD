@@ -1,0 +1,120 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<VisualStudioProject ProjectType="typeStaticLibrary" ProjectCreator="Intel Fortran" Keyword="Static Library" Version="11.0" ProjectIdGuid="{FA10EDF7-F7D7-4E90-9193-6EBF70FADB22}">
+	<Platforms>
+		<Platform Name="Win32"/>
+		<Platform Name="x64"/></Platforms>
+	<Configurations>
+		<Configuration Name="Debug|Win32" ConfigurationType="typeStaticLibrary">
+				<Tool Name="VFFortranCompilerTool" SuppressStartupBanner="true" DebugInformationFormat="debugEnabled" Optimization="optimizeDisabled" Preprocess="preprocessYes" PreprocessorDefinitions="IFORT; IPEST" Interfaces="true" Traceback="true" BoundsCheck="true" UninitializedVariablesCheck="true" RuntimeLibrary="rtMultiThreadedDebug"/>
+				<Tool Name="VFLibrarianTool"/>
+				<Tool Name="VFResourceCompilerTool"/>
+				<Tool Name="VFMidlTool" SuppressStartupBanner="true"/>
+				<Tool Name="VFCustomBuildTool"/>
+				<Tool Name="VFPreLinkEventTool"/>
+				<Tool Name="VFPreBuildEventTool"/>
+				<Tool Name="VFPostBuildEventTool"/>
+				<Tool Name="VFManifestTool" SuppressStartupBanner="true"/></Configuration>
+		<Configuration Name="Release|Win32" ConfigurationType="typeStaticLibrary">
+				<Tool Name="VFFortranCompilerTool" AdditionalOptions="/O2" SuppressStartupBanner="true" DebugInformationFormat="debugEnabled" Optimization="optimizeCustom" InlineFunctionExpansion="expandAnySuitable" FavorSizeOrSpeed="favorSpeed" BufferedIO="true" HeapArrays="0" Preprocess="preprocessYes" PreprocessorDefinitions="IFORT; IPEST"/>
+				<Tool Name="VFLibrarianTool"/>
+				<Tool Name="VFResourceCompilerTool"/>
+				<Tool Name="VFMidlTool" SuppressStartupBanner="true"/>
+				<Tool Name="VFCustomBuildTool"/>
+				<Tool Name="VFPreLinkEventTool"/>
+				<Tool Name="VFPreBuildEventTool"/>
+				<Tool Name="VFPostBuildEventTool"/>
+				<Tool Name="VFManifestTool" SuppressStartupBanner="true"/></Configuration>
+		<Configuration Name="Debug|x64" ConfigurationType="typeStaticLibrary">
+				<Tool Name="VFFortranCompilerTool" SuppressStartupBanner="true" DebugInformationFormat="debugEnabled" Optimization="optimizeDisabled" Preprocess="preprocessYes" AdditionalIncludeDirectories="..\iMOD\$(PlatformName)\$(ConfigurationName)" PreprocessorDefinitions="IFORT; IPEST" Interfaces="true" Traceback="true" BoundsCheck="true" UninitializedVariablesCheck="true" RuntimeLibrary="rtMultiThreadedDebug"/>
+				<Tool Name="VFLibrarianTool"/>
+				<Tool Name="VFResourceCompilerTool"/>
+				<Tool Name="VFMidlTool" SuppressStartupBanner="true" TargetEnvironment="midlTargetAMD64"/>
+				<Tool Name="VFCustomBuildTool"/>
+				<Tool Name="VFPreLinkEventTool"/>
+				<Tool Name="VFPreBuildEventTool"/>
+				<Tool Name="VFPostBuildEventTool"/>
+				<Tool Name="VFManifestTool" SuppressStartupBanner="true"/></Configuration>
+		<Configuration Name="Release|x64" ConfigurationType="typeStaticLibrary">
+				<Tool Name="VFFortranCompilerTool" SuppressStartupBanner="true" BufferedIO="true" Preprocess="preprocessYes" AdditionalIncludeDirectories="..\iMOD\$(PlatformName)\$(ConfigurationName)" PreprocessorDefinitions="IFORT; IPEST" FloatingPointSpeculation="fpSpeculationSafe"/>
+				<Tool Name="VFLinkerTool" SuppressStartupBanner="true"/>
+				<Tool Name="VFLibrarianTool"/>
+				<Tool Name="VFResourceCompilerTool"/>
+				<Tool Name="VFMidlTool" SuppressStartupBanner="true" TargetEnvironment="midlTargetAMD64"/>
+				<Tool Name="VFCustomBuildTool"/>
+				<Tool Name="VFPreLinkEventTool"/>
+				<Tool Name="VFPreBuildEventTool"/>
+				<Tool Name="VFPostBuildEventTool"/>
+				<Tool Name="VFManifestTool" SuppressStartupBanner="true"/></Configuration></Configurations>
+	<Files>
+		<Filter Name="Header Files" Filter="fi;fd"/>
+		<Filter Name="Resource Files" Filter="rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe"/>
+		<Filter Name="Source Files" Filter="f90;for;f;fpp;ftn;def;odl;idl">
+		<File RelativePath="..\..\mf2005\de47.f"/>
+		<File RelativePath="..\..\mf2005\gwf2ani3.f"/>
+		<File RelativePath="..\..\mf2005\gwf2bas7.f"/>
+		<File RelativePath="..\..\mf2005\gwf2bas7mod.f"/>
+		<File RelativePath="..\..\mf2005\gwf2bcf7.f"/>
+		<File RelativePath="..\..\mf2005\gwf2chd7.f"/>
+		<File RelativePath="..\..\mf2005\gwf2drn7.f"/>
+		<File RelativePath="..\..\mf2005\gwf2drt7.f"/>
+		<File RelativePath="..\..\mf2005\gwf2dxc1.f90"/>
+		<File RelativePath="..\..\mf2005\gwf2dxc1mod.f90"/>
+		<File RelativePath="..\..\mf2005\gwf2ets7.f"/>
+		<File RelativePath="..\..\mf2005\gwf2evt7.f"/>
+		<File RelativePath="..\..\mf2005\gwf2fhb7.f"/>
+		<File RelativePath="..\..\mf2005\gwf2gag7.f"/>
+		<File RelativePath="..\..\mf2005\gwf2ghb7.f"/>
+		<File RelativePath="..\..\mf2005\gwf2hfb7.f"/>
+		<File RelativePath="..\..\mf2005\gwf2huf7.f"/>
+		<File RelativePath="..\..\mf2005\gwf2hydmod7.f"/>
+		<File RelativePath="..\..\mf2005\gwf2ibs7.f"/>
+		<File RelativePath="..\..\mf2005\gwf2ins1.f"/>
+		<File RelativePath="..\..\mf2005\gwf2lak7.f"/>
+		<File RelativePath="..\..\mf2005\gwf2lpf7.f"/>
+		<File RelativePath="..\..\mf2005\gwf2met1.f"/>
+		<File RelativePath="..\..\mf2005\gwf2met1mod.f"/>
+		<File RelativePath="..\..\mf2005\gwf2mnw17.f"/>
+		<File RelativePath="..\..\mf2005\gwf2mnw27.f"/>
+		<File RelativePath="..\..\mf2005\gwf2mnw2i7.f"/>
+		<File RelativePath="..\..\mf2005\gwf2pwt3.f"/>
+		<File RelativePath="..\..\mf2005\gwf2rch7.f"/>
+		<File RelativePath="..\..\mf2005\gwf2res7.f"/>
+		<File RelativePath="..\..\mf2005\gwf2riv7.f"/>
+		<File RelativePath="..\..\mf2005\gwf2scr7.f"/>
+		<File RelativePath="..\..\mf2005\gwf2sfr7.f"/>
+		<File RelativePath="..\..\mf2005\gwf2str7.f"/>
+		<File RelativePath="..\..\mf2005\gwf2sub7.f"/>
+		<File RelativePath="..\..\mf2005\gwf2swt7.f"/>
+		<File RelativePath="..\..\mf2005\gwf2uzf1.f"/>
+		<File RelativePath="..\..\mf2005\gwf2wel7.f"/>
+		<File RelativePath="..\..\mf2005\gwfsfrmodule.f"/>
+		<File RelativePath="..\..\mf2005\gwfuzfmodule.f"/>
+		<File RelativePath="..\..\mf2005\hufutl7.f"/>
+		<File RelativePath="..\..\mf2005\imod_isg.f90"/>
+		<File RelativePath="..\..\mf2005\imod_isg_ifvdl.f90"/>
+		<File RelativePath="..\..\mf2005\imod_pest.F90"/>
+		<File RelativePath="..\..\mf2005\imod_tseries.f90"/>
+		<File RelativePath="..\..\mf2005\lmt7.f"/>
+		<File RelativePath="..\..\mf2005\mf2005_args.f90"/>
+		<File RelativePath="..\..\mf2005\mf2005_comp.f"/>
+		<File RelativePath="..\..\mf2005\mf2005_get.f90"/>
+		<File RelativePath="..\..\mf2005\mf2005_sts.for"/>
+		<File RelativePath="..\..\mf2005\mhc7.f"/>
+		<File RelativePath="..\..\mf2005\nogmg.f"/>
+		<File RelativePath="..\..\mf2005\obs2bas7.f"/>
+		<File RelativePath="..\..\mf2005\obs2chd7.f"/>
+		<File RelativePath="..\..\mf2005\obs2drn7.f"/>
+		<File RelativePath="..\..\mf2005\obs2ghb7.f"/>
+		<File RelativePath="..\..\mf2005\obs2riv7.f"/>
+		<File RelativePath="..\..\mf2005\obs2str7.f"/>
+		<File RelativePath="..\..\mf2005\parutl7.f"/>
+		<File RelativePath="..\..\mf2005\pcg7.f"/>
+		<File RelativePath="..\..\mf2005\rdrs_fsplit.for"/>
+		<File RelativePath="..\..\mf2005\rdrs_gcd.for"/>
+		<File RelativePath="..\..\mf2005\rdrs_lcd.for"/>
+		<File RelativePath="..\..\mf2005\rdrs_main.for"/>
+		<File RelativePath="..\..\mf2005\rdrs_mod.for"/>
+		<File RelativePath="..\..\mf2005\sip7.f"/>
+		<File RelativePath="..\..\mf2005\sts2.for"/>
+		<File RelativePath="..\..\mf2005\utl7.f"/></Filter></Files>
+	<Globals/></VisualStudioProject>
