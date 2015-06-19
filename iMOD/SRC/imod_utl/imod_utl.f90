@@ -29,7 +29,7 @@ USE MODPLOT, ONLY : MP,MPW,LEGENDOBJ,MXCLR,MXCLASS
 USE MOD_IDF_PAR, ONLY : IDFOBJ
 USE MOD_POLINT, ONLY : POL1LOCATE
 USE IMODVAR, ONLY : MXTP,TP
-USE MOD_OSD, ONLY : OSD_OPEN,OSD_GETENV
+USE MOD_OSD, ONLY : OSD_OPEN,OSD_GETENV,OS
 
 INTEGER,PARAMETER :: MXMESSAGE=16     !##max. number of messages
 INTEGER,DIMENSION(MXMESSAGE) :: IMESSAGE
@@ -53,6 +53,276 @@ END TYPE PROCOBJ
 REAL,PARAMETER,PRIVATE :: SDAY=86400.0
 
 CONTAINS
+
+ !###===================================================================
+ SUBROUTINE UTL_MODEL1CHECKFNAME(FNAME,LU)
+ !###===================================================================
+ IMPLICIT NONE
+ INTEGER,INTENT(IN) :: LU
+ CHARACTER(LEN=*),INTENT(IN) :: FNAME
+ REAL :: X
+ INTEGER :: IOS,I,J
+ LOGICAL :: LEX
+
+ IF(LEN_TRIM(FNAME).EQ.0)THEN
+  IF(LU.EQ.0)CALL UTL_PRINTTEXT('No file given',2)
+  IF(LU.GT.0)THEN
+   WRITE(LU,*) 'Error:'
+   WRITE(LU,*) '  No file given'
+  ENDIF
+ ENDIF
+
+ !get first non character
+ I=0
+ DO
+  I=I+1
+  J=ICHAR(FNAME(I:I))
+  IF(J.GT.32)EXIT
+ ENDDO
+
+ X=UTL_GETREAL(FNAME(I:),IOS)
+ IF(IOS.NE.0)THEN
+
+  INQUIRE(FILE=FNAME(I:),OPENED=LEX)
+  IF(LEX)RETURN
+
+  INQUIRE(FILE=FNAME(I:),EXIST=LEX)
+  IF(.NOT.LEX)THEN
+   IF(LU.EQ.0)CALL UTL_PRINTTEXT('File '//TRIM(FNAME(I:))//' does not exist !',2)
+   IF(LU.GT.0)THEN
+    WRITE(LU,*) 'Error:'
+    WRITE(LU,*)    TRIM(FNAME(I:))//' does not exist!'
+   ENDIF
+  ENDIF
+
+ ENDIF
+
+ END SUBROUTINE UTL_MODEL1CHECKFNAME
+ 
+ !###====================================================================
+ SUBROUTINE UTL_APPLYFCT_R(A,NODATA,NROW,NCOL,FCT,IMP)
+ !###====================================================================
+ IMPLICIT NONE
+ INTEGER,INTENT(IN) :: NROW,NCOL
+ REAL,INTENT(IN) :: FCT,IMP,NODATA
+ REAL,INTENT(INOUT),DIMENSION(NCOL,NROW) :: A
+ INTEGER :: IROW,ICOL
+
+ DO IROW=1,NROW
+  DO ICOL=1,NCOL
+   IF(A(ICOL,IROW).NE.NODATA)THEN
+    A(ICOL,IROW)=A(ICOL,IROW)*FCT
+    A(ICOL,IROW)=A(ICOL,IROW)+IMP
+   ENDIF
+  END DO
+ END DO
+
+ END SUBROUTINE UTL_APPLYFCT_R
+
+ !###====================================================================
+ SUBROUTINE UTL_APPLYFCT_I(A,NODATA,NROW,NCOL,FCT,IMP)
+ !###====================================================================
+ IMPLICIT NONE
+ INTEGER,INTENT(IN) :: NROW,NCOL
+ REAL,INTENT(IN) :: FCT,IMP,NODATA
+ INTEGER,INTENT(INOUT),DIMENSION(NCOL,NROW) :: A
+ INTEGER :: IROW,ICOL
+
+ DO IROW=1,NROW
+  DO ICOL=1,NCOL
+   IF(A(ICOL,IROW).NE.NODATA)THEN
+    A(ICOL,IROW)=A(ICOL,IROW)*FCT
+    A(ICOL,IROW)=A(ICOL,IROW)+IMP
+   ENDIF
+  END DO
+ END DO
+
+ END SUBROUTINE UTL_APPLYFCT_I
+ 
+ !###===================================================================
+ SUBROUTINE UTL_STRING(LINE)
+ !###===================================================================
+ IMPLICIT NONE
+ CHARACTER(LEN=*),INTENT(INOUT) :: LINE
+
+ CALL UTL_DELNULCHAR(LINE)
+ CALL UTL_DELCONTROLM(LINE)
+
+ END SUBROUTINE UTL_STRING
+
+ !###===================================================================
+ SUBROUTINE UTL_FILENAME(LINE)
+ !###===================================================================
+ IMPLICIT NONE
+ CHARACTER(LEN=*),INTENT(INOUT) :: LINE
+ LOGICAL :: LEX
+
+ CALL UTL_SWAPSLASH(LINE)
+ LINE=ADJUSTL(LINE)
+
+ END SUBROUTINE UTL_FILENAME
+
+ !###===================================================================
+ SUBROUTINE UTL_DELNULCHAR(LINE)
+ !###===================================================================
+ IMPLICIT NONE
+ CHARACTER(LEN=*),INTENT(INOUT) :: LINE
+ INTEGER :: I
+
+ !## find ^M (null character)
+ I=INDEX(LINE,CHAR(0))
+ IF(I.EQ.0)RETURN
+ !## replace by space
+ LINE(I:I)=CHAR(32)
+
+ END SUBROUTINE UTL_DELNULCHAR
+
+ !###===================================================================
+ SUBROUTINE UTL_DELCONTROLM(LINE)
+ !###===================================================================
+ IMPLICIT NONE
+ CHARACTER(LEN=*),INTENT(INOUT) :: LINE
+ INTEGER :: I
+
+ !#find ^M (carriage return)
+ I=INDEX(LINE,CHAR(13))
+ IF(I.LE.0)RETURN
+ !#replace by space
+ LINE(I:I)=CHAR(32)
+
+ END SUBROUTINE UTL_DELCONTROLM
+ 
+ !###===================================================================
+ REAL FUNCTION UTL_GETREAL(LINE,IOS)
+ !###===================================================================
+ IMPLICIT NONE
+ INTEGER,INTENT(OUT) :: IOS
+ CHARACTER(LEN=*),INTENT(IN) :: LINE
+ INTEGER :: ITYPE,CFN_DETERM_TYPE
+
+ READ(LINE,*,IOSTAT=IOS) UTL_GETREAL
+ IF(IOS.NE.0)UTL_GETREAL=0.0
+
+ END FUNCTION UTL_GETREAL
+
+ !###===================================================================
+ CHARACTER(LEN=256) FUNCTION UTL_GETFNAME(LINE)
+ !###===================================================================
+ IMPLICIT NONE
+ CHARACTER(LEN=*),INTENT(IN) :: LINE
+ INTEGER :: I,J,K
+
+ K=39
+ I=INDEX(LINE,CHAR(K),.FALSE.)  !## '-tje
+ IF(I.EQ.0)THEN
+  K=34
+  I=INDEX(LINE,CHAR(K),.FALSE.) !## "-tje
+ ENDIF
+ !## quotes found, find other, to be sure it is consistent
+ IF(I.GT.0)THEN
+  J=INDEX(LINE,CHAR(K),.TRUE.)
+  IF(I.EQ.J)THEN
+   CALL UTL_PRINTTEXT('',0)
+   CALL UTL_PRINTTEXT('Missing second quote '//CHAR(K)//' in line:',0)
+   CALL UTL_PRINTTEXT(TRIM(LINE),0)
+   CALL UTL_PRINTTEXT('',2)
+  ENDIF
+  UTL_GETFNAME=LINE(I+1:J-1)
+ ELSE
+  !## search for comma's, backward
+  I=INDEX(TRIM(LINE),',',.TRUE.)
+  J=INDEX(TRIM(LINE),' ',.TRUE.)
+  UTL_GETFNAME=LINE(MAX(I+1,J+1):) 
+ ENDIF
+
+ END FUNCTION UTL_GETFNAME
+
+ !###===================================================================
+ SUBROUTINE UTL_SWAPSLASH(LINE)
+ !###===================================================================
+ IMPLICIT NONE
+ CHARACTER(LEN=*),INTENT(INOUT) :: LINE
+ INTEGER :: I,IFR,ITO
+
+ IF(OS.EQ.1)THEN
+  IFR=47
+  ITO=92
+ ELSEIF(OS.EQ.2)THEN
+  IFR=92
+  ITO=47
+ ENDIF
+
+ DO
+  I=INDEX(LINE,CHAR(IFR))
+  IF(I.EQ.0)EXIT
+  LINE(I:I)=CHAR(ITO)
+ ENDDO
+
+ END SUBROUTINE UTL_SWAPSLASH
+
+ !###======================================================================
+ SUBROUTINE UTL_DIR_LEVEL_UP(FNAME)
+ !###======================================================================
+ 
+ IMPLICIT NONE
+
+ CHARACTER(LEN=*), INTENT(INOUT) :: FNAME
+ INTEGER :: N
+
+ N = LEN_TRIM(FNAME)
+
+ IF (N==0) RETURN
+
+ IF (FNAME(1:1)=='.')THEN
+  WRITE(FNAME,'(2A)') '..\',TRIM(FNAME)
+ END IF
+
+ CALL UTL_SWAPSLASH(FNAME)
+
+ END SUBROUTINE UTL_DIR_LEVEL_UP
+
+ !###===================================================================
+ SUBROUTINE UTL_PRINTTEXT(TXT,TXTTYPE,IU)
+ !###===================================================================
+ IMPLICIT NONE
+ CHARACTER(LEN=*),INTENT(IN) :: TXT
+ INTEGER,INTENT(IN) :: TXTTYPE
+ INTEGER,INTENT(IN),OPTIONAL :: IU
+
+ LOGICAL :: LEX
+
+  SELECT CASE (TXTTYPE)
+  !## file
+  CASE (0)
+   WRITE(*,'(A)') TRIM(TXT)
+  !## information
+  CASE (-1,1)
+   WRITE(*,'(A)') TRIM(TXT)
+   !IF(IFLAG(1).EQ.1)PAUSE
+  !## error
+  CASE (2)
+   WRITE(*,'(A)')
+   WRITE(*,'(A)') 'Error occured!'
+   WRITE(*,'(A)') TRIM(TXT)
+  CASE DEFAULT
+   WRITE(*,'(A)') TRIM(TXT)
+  END SELECT
+
+ IF(TXTTYPE.EQ.-1)THEN
+  IF (PRESENT(IU)) THEN
+   INQUIRE(UNIT=IU,OPENED=LEX)
+   IF(LEX)THEN
+    WRITE(IU,'(A)') TRIM(TXT)
+    CALL FLUSH(IU)
+   END IF
+  END IF
+ END IF
+
+ IF(TXTTYPE.EQ.2)THEN
+   CALL EXIT(1)
+ ENDIF
+
+ END SUBROUTINE UTL_PRINTTEXT
 
  !###======================================================================
  SUBROUTINE UTL_PROFILE_GETVIEWBOX(X1,Y1,X2,Y2,XSIGHT,XYPOL,XMN,YMN,XMX,YMX)
@@ -631,7 +901,7 @@ CONTAINS
  IF(I.GT.0.AND.I.LE.MXCLR)THEN
   UTL_IDFGETCLASS=LEG%RGB(I)
  ELSE
-  IF(EQUALS_REAL(GRD,LEG%CLASS(0)))UTL_IDFGETCLASS=LEG%RGB(1)
+  IF(UTL_EQUALS_REAL(GRD,LEG%CLASS(0)))UTL_IDFGETCLASS=LEG%RGB(1)
  ENDIF
  
  END FUNCTION UTL_IDFGETCLASS
@@ -1557,7 +1827,7 @@ CONTAINS
  CHARACTER(LEN=10)  :: JDATETOGDATE
  INTEGER :: IY,IM,ID
 
- CALL GDATE(I,IY,IM,ID)
+ CALL UTL_GDATE(I,IY,IM,ID)
  IF(PRESENT(DTYPE))THEN
   SELECT CASE (DTYPE)
    CASE (0)
@@ -1641,28 +1911,28 @@ CONTAINS
  END FUNCTION GDATETOJDATE
 
  !###====================================================================
- INTEGER FUNCTION IDATETOJDATE(IDATE)
+ INTEGER FUNCTION UTL_IDATETOJDATE(IDATE)
  !###====================================================================
  IMPLICIT NONE
  INTEGER,INTENT(IN) :: IDATE
  INTEGER :: IY,IM,ID
 
  CALL IDATETOGDATE(IDATE,IY,IM,ID)
- IDATETOJDATE=JD(IY,IM,ID)
+ UTL_IDATETOJDATE=JD(IY,IM,ID)
 
- END FUNCTION IDATETOJDATE
+ END FUNCTION UTL_IDATETOJDATE
 
  !###====================================================================
- INTEGER FUNCTION JDATETOIDATE(JDATE)
+ INTEGER FUNCTION UTL_JDATETOIDATE(JDATE)
  !###====================================================================
  IMPLICIT NONE
  INTEGER,INTENT(IN) :: JDATE
  INTEGER :: IY,IM,ID
 
- CALL GDATE(JDATE,IY,IM,ID)
- JDATETOIDATE=IY*10000+IM*100+ID
+ CALL UTL_GDATE(JDATE,IY,IM,ID)
+ UTL_JDATETOIDATE=IY*10000+IM*100+ID
 
- END FUNCTION JDATETOIDATE
+ END FUNCTION UTL_JDATETOIDATE
 
  !###====================================================================
  SUBROUTINE IDATETOGDATE(IDATE,IY,IM,ID)
@@ -1789,7 +2059,7 @@ CONTAINS
  END FUNCTION JD
 
  !###====================================================================
- SUBROUTINE GDATE(JD,YEAR,MONTH,DAY)
+ SUBROUTINE UTL_GDATE(JD,YEAR,MONTH,DAY)
  !###====================================================================
  !Reference: Fliegel, H. F. & van Flandern, T. C. 1968, Communications of the ACM, 11, 657.
  IMPLICIT NONE
@@ -1812,7 +2082,7 @@ CONTAINS
  MONTH=J
  DAY  =K
 
- END SUBROUTINE GDATE
+ END SUBROUTINE UTL_GDATE
 
  !###====================================================================
  FUNCTION UTL_SUBST(FNAME,SUB1,SUB2)
@@ -2119,16 +2389,12 @@ CONTAINS
 
  D=MOD(ABS(MINX),CS)
  IF(D.NE.0.0)MINX=(MINX+(CS-D))-CS
-! IF(D.NE.0.0)MINX=(MINX-D)+CS
  D=MOD(ABS(MAXX),CS)
  IF(D.NE.0.0)MAXX=(MAXX-D)+CS
-! IF(D.NE.0.0)MAXX=(MAXX+(CS-D))-CS
  D=MOD(ABS(MINY),CS)
  IF(D.NE.0.0)MINY=(MINY+(CS-D))-CS
-! IF(D.NE.0.0)MINY=(MINY-D)+CS
  D=MOD(ABS(MAXY),CS)
  IF(D.NE.0.0)MAXY=(MAXY-D)+CS
-! IF(D.NE.0.0)MAXY=(MAXY+(CS-D))-CS
 
  NCOL=INT((MAXX-MINX)/CS)
  NROW=INT((MAXY-MINY)/CS)
@@ -2354,7 +2620,7 @@ CONTAINS
  IMPLICIT NONE
  INTEGER,INTENT(IN) :: ISTARTDATE,IENDDATE
 
- CALCPERIODS=IDATETOJDATE(IENDDATE)-IDATETOJDATE(ISTARTDATE)+1
+ CALCPERIODS=UTL_IDATETOJDATE(IENDDATE)-UTL_IDATETOJDATE(ISTARTDATE)+1
 
  END FUNCTION CALCPERIODS
 
@@ -2444,7 +2710,7 @@ CONTAINS
  END SUBROUTINE UTL_GETUNIQUE_CHAR
 
  !###====================================================
- LOGICAL FUNCTION EQUALS_REAL(A,B)
+ LOGICAL FUNCTION UTL_EQUALS_REAL(A,B)
  !###====================================================
  IMPLICIT NONE
  REAL, INTENT(IN) :: A, B
@@ -2459,12 +2725,12 @@ CONTAINS
  END IF
 
  IF(ABS(A-B).GT.EPS)THEN
-  EQUALS_REAL=.FALSE. ! NOT EQUAL IF DIFFERENCE>EPS
+  UTL_EQUALS_REAL=.FALSE. ! NOT EQUAL IF DIFFERENCE>EPS
  ELSE
-  EQUALS_REAL=.TRUE.  ! EQUAL OTHERWISE
+  UTL_EQUALS_REAL=.TRUE.  ! EQUAL OTHERWISE
  ENDIF
 
- END FUNCTION EQUALS_REAL
+ END FUNCTION UTL_EQUALS_REAL
 
  !###====================================================
  SUBROUTINE PEUCKER_SIMPLIFYLINE(XC,YC,PDCODE,N)

@@ -279,6 +279,32 @@
 		<Filter Name="imod_mean">
 		<File RelativePath="..\..\..\iMOD\SRC\imod_mean\imod_mean_compute.f90"/>
 		<File RelativePath="..\..\..\iMOD\SRC\imod_mean\imod_mean_par.f90"/></Filter>
+		<Filter Name="imod_mf">
+		<File RelativePath="..\..\SRC\imod_mf\rf2mf_metaswap.f90">
+			<FileConfiguration Name="Debug|Win32" ExcludedFromBuild="true"/>
+			<FileConfiguration Name="Release|x64" ExcludedFromBuild="true"/>
+			<FileConfiguration Name="Debug|x64" ExcludedFromBuild="true"/>
+			<FileConfiguration Name="Release|Win32" ExcludedFromBuild="true"/></File>
+		<File RelativePath="..\..\SRC\imod_mf\rf2mf_mod.f90">
+			<FileConfiguration Name="Debug|Win32" ExcludedFromBuild="true"/>
+			<FileConfiguration Name="Release|x64" ExcludedFromBuild="true"/>
+			<FileConfiguration Name="Debug|x64" ExcludedFromBuild="true"/>
+			<FileConfiguration Name="Release|Win32" ExcludedFromBuild="true"/></File>
+		<File RelativePath="..\..\SRC\imod_mf\rf2mf_mod_conv.f90">
+			<FileConfiguration Name="Debug|Win32" ExcludedFromBuild="true"/>
+			<FileConfiguration Name="Release|x64" ExcludedFromBuild="true"/>
+			<FileConfiguration Name="Debug|x64" ExcludedFromBuild="true"/>
+			<FileConfiguration Name="Release|Win32" ExcludedFromBuild="true"/></File>
+		<File RelativePath="..\..\SRC\imod_mf\rf2mf_prg.f90">
+			<FileConfiguration Name="Debug|Win32" ExcludedFromBuild="true"/>
+			<FileConfiguration Name="Release|x64" ExcludedFromBuild="true"/>
+			<FileConfiguration Name="Debug|x64" ExcludedFromBuild="true"/>
+			<FileConfiguration Name="Release|Win32" ExcludedFromBuild="true"/></File>
+		<File RelativePath="..\..\SRC\imod_mf\rf2mf_read.f90">
+			<FileConfiguration Name="Debug|Win32" ExcludedFromBuild="true"/>
+			<FileConfiguration Name="Release|x64" ExcludedFromBuild="true"/>
+			<FileConfiguration Name="Debug|x64" ExcludedFromBuild="true"/>
+			<FileConfiguration Name="Release|Win32" ExcludedFromBuild="true"/></File></Filter>
 		<Filter Name="imod_model">
 		<File RelativePath="..\..\..\iMOD\SRC\imod_model\IMOD_MODEL.F90">
 			<FileConfiguration Name="Debug|Win32">
