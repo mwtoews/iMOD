@@ -1,9 +1,9 @@
            3
 4,2
-"Grensvlak,m-mv",-999.99
-"Lithologie",-999.99
-"Zandmediaanklasse NEN5104",-999.99
-"Bijmenging",-999.99
-12.30,Z,None,"Zwak Humeus"
-12.05,Z,ZMFO,"None"
+"Interface,m-msl",-999.99
+"Lithology",-999.99
+"Grain-size-distr. class NEN5104",-999.99
+"Admixture",-999.99
+12.30,S,None,"Weak Organic"
+12.05,S,CSFO,"None"
 9.05,-,-,-

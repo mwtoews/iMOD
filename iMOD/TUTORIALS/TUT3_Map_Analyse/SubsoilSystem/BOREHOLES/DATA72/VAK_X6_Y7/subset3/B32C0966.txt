@@ -1,22 +1,22 @@
           16
 4,2
-"Grensvlak,m-mv",-999.99
-"Lithologie",-999.99
-"Zandmediaanklasse NEN5104",-999.99
-"Bijmenging",-999.99
-2.40,K,None,"None"
-1.80,K,None,"Matig Zandig"
-1.60,Z,ZMFO,"None"
-1.25,Z,ZMFO,"None"
-0.95,Z,ZMFO,"None"
-0.40,Z,ZMFO,"None"
--0.50,Z,ZZFO,"None"
--1.53,Z,ZMFO,"None"
--2.95,Z,ZMGO,"None"
--3.55,Z,ZMFO,"None"
--4.10,Z,ZMFO,"None"
--4.19,Z,ZMFO,"Matig Grindig"
--4.50,Z,ZMFO,"None"
--4.60,Z,ZMGO,"None"
--6.97,K,None,"Matig Grindig"
+"Interface,m-msl",-999.99
+"Lithology",-999.99
+"Grain-size-distr. class NEN5104",-999.99
+"Admixture",-999.99
+2.40,C,None,"None"
+1.80,C,None,"Moderate Sandy"
+1.60,S,CSFO,"None"
+1.25,S,CSFO,"None"
+0.95,S,CSFO,"None"
+0.40,S,CSFO,"None"
+-0.50,S,ZFSO,"None"
+-1.53,S,CSFO,"None"
+-2.95,S,CSGO,"None"
+-3.55,S,CSFO,"None"
+-4.10,S,CSFO,"None"
+-4.19,S,CSFO,"Moderate Grainly"
+-4.50,S,CSFO,"None"
+-4.60,S,CSGO,"None"
+-6.97,C,None,"Moderate Grainly"
 -7.60,-,-,-

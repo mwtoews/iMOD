@@ -1,23 +1,23 @@
           17
 4,2
-"Grensvlak,m-mv",-999.99
-"Lithologie",-999.99
-"Zandmediaanklasse NEN5104",-999.99
-"Bijmenging",-999.99
-4.50,Z,None,"None"
-3.60,Z,ZFC,"None"
-2.40,Z,None,"Siltig"
--3.10,Z,None,"None"
--3.30,Z,None,"Zwak Grindig"
--3.50,Z,None,"None"
--9.20,Z,ZMFO,"None"
--9.60,Z,ZGC,"Zwak Grindig"
--9.70,Z,ZMGO,"Grindig"
--11.20,Z,ZMGO,"Grindig"
--11.60,Z,ZMGO,"None"
--11.90,Z,ZGC,"Grindig"
--12.10,Z,ZZGO,"None"
--12.70,Z,ZZGO,"Grindig"
+"Interface,m-msl",-999.99
+"Lithology",-999.99
+"Grain-size-distr. class NEN5104",-999.99
+"Admixture",-999.99
+4.50,S,None,"None"
+3.60,S,FSC,"None"
+2.40,S,None,"Silty"
+-3.10,S,None,"None"
+-3.30,S,None,"Weak Grainly"
+-3.50,S,None,"None"
+-9.20,S,CSFO,"None"
+-9.60,S,RSC,"Weak Grainly"
+-9.70,S,CSGO,"Grainly"
+-11.20,S,CSGO,"Grainly"
+-11.60,S,CSGO,"None"
+-11.90,S,RSC,"Grainly"
+-12.10,S,ZRSO,"None"
+-12.70,S,ZRSO,"Grainly"
 -13.50,G,None,"None"
--14.20,Z,ZGC,"Grindig"
+-14.20,S,RSC,"Grainly"
 -14.60,-,-,-

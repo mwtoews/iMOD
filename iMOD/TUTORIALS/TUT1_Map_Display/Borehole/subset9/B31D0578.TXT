@@ -1,19 +1,19 @@
           13
 4,2
-"Grensvlak,m-mv",-999.99
-"Lithologie",-999.99
-"Zandmediaanklasse NEN5104",-999.99
-"Bijmenging",-999.99
--1.70,V,None,"None"
--1.95,V,None,"None"
--3.90,V,None,"None"
--4.10,K,None,"Sterk Siltig"
--5.20,K,None,"None"
--5.70,K,None,"Sterk Humeus"
+"Interface,m-msl",-999.99
+"Lithology",-999.99
+"Grain-size-distr. class NEN5104",-999.99
+"Admixture",-999.99
+-1.70,P,None,"None"
+-1.95,P,None,"None"
+-3.90,P,None,"None"
+-4.10,C,None,"Strong Silty"
+-5.20,C,None,"None"
+-5.70,C,None,"Strong Organic"
 -6.10,GY,None,"None"
--7.10,V,None,"None"
--7.30,K,None,"None"
--7.40,V,None,"None"
--8.20,V,None,"None"
--8.40,Z,ZUFO,"None"
+-7.10,P,None,"None"
+-7.30,C,None,"None"
+-7.40,P,None,"None"
+-8.20,P,None,"None"
+-8.40,S,ZUFO,"None"
 -8.41,-,-,-

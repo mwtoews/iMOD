@@ -1,23 +1,23 @@
           17
 4,2
-"Grensvlak,m-mv",-999.99
-"Lithologie",-999.99
-"Zandmediaanklasse NEN5104",-999.99
-"Bijmenging",-999.99
-3.00,Z,None,"None"
-2.75,K,None,"None"
-1.60,Z,ZFC,"None"
-0.00,Z,ZGC,"Zwak Grindig"
--1.00,Z,ZMC,"Zwak Grindig"
--2.00,Z,ZGC,"None"
--4.00,Z,ZMC,"None"
--5.00,Z,ZMC,"None"
--6.00,Z,ZGC,"None"
--7.00,Z,ZGC,"Grindig"
--10.00,Z,ZMC,"Grindig"
--11.00,Z,ZGC,"Grindig"
--13.00,Z,ZMC,"Zwak Grindig"
--14.75,Z,ZGC,"Grindig"
--17.00,Z,ZMC,"Zwak Grindig"
--18.00,Z,ZGC,"Zwak Grindig"
+"Interface,m-msl",-999.99
+"Lithology",-999.99
+"Grain-size-distr. class NEN5104",-999.99
+"Admixture",-999.99
+3.00,S,None,"None"
+2.75,C,None,"None"
+1.60,S,FSC,"None"
+0.00,S,RSC,"Weak Grainly"
+-1.00,S,CSC,"Weak Grainly"
+-2.00,S,RSC,"None"
+-4.00,S,CSC,"None"
+-5.00,S,CSC,"None"
+-6.00,S,RSC,"None"
+-7.00,S,RSC,"Grainly"
+-10.00,S,CSC,"Grainly"
+-11.00,S,RSC,"Grainly"
+-13.00,S,CSC,"Weak Grainly"
+-14.75,S,RSC,"Grainly"
+-17.00,S,CSC,"Weak Grainly"
+-18.00,S,RSC,"Weak Grainly"
 -22.00,-,-,-

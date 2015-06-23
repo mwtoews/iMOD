@@ -1,23 +1,23 @@
           17
 4,2
-"Grensvlak,m-mv",-999.99
-"Lithologie",-999.99
-"Zandmediaanklasse NEN5104",-999.99
-"Bijmenging",-999.99
+"Interface,m-msl",-999.99
+"Lithology",-999.99
+"Grain-size-distr. class NEN5104",-999.99
+"Admixture",-999.99
 -0.10,GM,None,"None"
 -0.20,NBE,None,"None"
--1.25,Z,None,"None"
--5.50,Z,None,"None"
--5.90,Z,None,"Grindig"
--7.50,Z,ZMGO,"None"
--9.80,V,None,"None"
--10.10,Z,ZMGO,"None"
--13.70,Z,ZGC,"Zwak Grindig"
--14.30,Z,ZMGO,"None"
--18.20,Z,None,"Zwak Grindig"
--18.70,Z,ZGC,"None"
--27.10,Z,ZGC,"Grindig"
--32.80,Z,ZGC,"None"
--33.20,Z,ZGC,"Zwak Grindig"
--34.10,K,None,"None"
+-1.25,S,None,"None"
+-5.50,S,None,"None"
+-5.90,S,None,"Grainly"
+-7.50,S,CSGO,"None"
+-9.80,P,None,"None"
+-10.10,S,CSGO,"None"
+-13.70,S,RSC,"Weak Grainly"
+-14.30,S,CSGO,"None"
+-18.20,S,None,"Weak Grainly"
+-18.70,S,RSC,"None"
+-27.10,S,RSC,"Grainly"
+-32.80,S,RSC,"None"
+-33.20,S,RSC,"Weak Grainly"
+-34.10,C,None,"None"
 -35.10,-,-,-

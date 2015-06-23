@@ -1,23 +1,23 @@
           17
 4,2
-"Grensvlak,m-mv",-999.99
-"Lithologie",-999.99
-"Zandmediaanklasse NEN5104",-999.99
-"Bijmenging",-999.99
-0.93,K,None,"Zwak Siltig"
-0.43,K,ZFC,"Zandig"
-0.23,K,ZFC,"Zandig"
-0.18,K,ZFC,"Zandig"
--0.42,K,ZFC,"Zandig"
--1.32,K,None,"Zwak Siltig"
--1.52,K,None,"Zwak Siltig"
--1.72,K,None,"Zwak Siltig"
--3.77,K,None,"Zwak Siltig"
--6.07,K,None,"Zwak Siltig"
--6.17,Z,ZZGO,"Zwak Grindig"
--11.52,L,None,"Zandig"
--11.57,Z,ZMO,"Zwak Grindig"
--13.72,Z,ZMGO,"Sterk Grindig"
--16.27,Z,ZZGO,"Sterk Grindig"
--17.67,L,None,"Zandig"
+"Interface,m-msl",-999.99
+"Lithology",-999.99
+"Grain-size-distr. class NEN5104",-999.99
+"Admixture",-999.99
+0.93,C,None,"Weak Silty"
+0.43,C,FSC,"Sandy"
+0.23,C,FSC,"Sandy"
+0.18,C,FSC,"Sandy"
+-0.42,C,FSC,"Sandy"
+-1.32,C,None,"Weak Silty"
+-1.52,C,None,"Weak Silty"
+-1.72,C,None,"Weak Silty"
+-3.77,C,None,"Weak Silty"
+-6.07,C,None,"Weak Silty"
+-6.17,S,ZRSO,"Weak Grainly"
+-11.52,L,None,"Sandy"
+-11.57,S,CSO,"Weak Grainly"
+-13.72,S,CSGO,"Strong Grainly"
+-16.27,S,ZRSO,"Strong Grainly"
+-17.67,L,None,"Sandy"
 -19.97,-,-,-

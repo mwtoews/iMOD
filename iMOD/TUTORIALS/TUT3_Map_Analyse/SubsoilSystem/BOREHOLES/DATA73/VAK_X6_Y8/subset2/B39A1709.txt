@@ -1,12 +1,12 @@
            6
 4,2
-"Grensvlak,m-mv",-999.99
-"Lithologie",-999.99
-"Zandmediaanklasse NEN5104",-999.99
-"Bijmenging",-999.99
-2.90,K,None,"Zandig"
-2.60,K,None,"Matig Siltig"
-2.40,K,None,"Matig Siltig"
-1.60,K,None,"Zwak Zandig"
-1.40,Z,ZMFO,"Siltig"
+"Interface,m-msl",-999.99
+"Lithology",-999.99
+"Grain-size-distr. class NEN5104",-999.99
+"Admixture",-999.99
+2.90,C,None,"Sandy"
+2.60,C,None,"Moderate Silty"
+2.40,C,None,"Moderate Silty"
+1.60,C,None,"Weak Sandy"
+1.40,S,CSFO,"Silty"
 0.60,-,-,-

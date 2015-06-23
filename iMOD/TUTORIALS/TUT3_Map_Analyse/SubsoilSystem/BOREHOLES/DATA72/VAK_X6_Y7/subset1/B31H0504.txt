@@ -1,27 +1,27 @@
           21
 4,2
-"Grensvlak,m-mv",-999.99
-"Lithologie",-999.99
-"Zandmediaanklasse NEN5104",-999.99
-"Bijmenging",-999.99
-2.43,K,None,"None"
-1.63,L,None,"Zandig"
+"Interface,m-msl",-999.99
+"Lithology",-999.99
+"Grain-size-distr. class NEN5104",-999.99
+"Admixture",-999.99
+2.43,C,None,"None"
+1.63,L,None,"Sandy"
 1.23,L,None,"None"
-0.83,Z,None,"Matig Humeus"
-0.23,Z,ZMFO,"Zwak Siltig"
--3.97,Z,ZMGO,"Zwak Grindig"
--5.67,Z,ZGC,"Zwak Siltig"
--8.47,Z,ZMGO,"None"
--9.27,Z,ZGC,"Sterk Grindig"
--9.67,Z,ZZGO,"Zwak Grindig"
--10.97,Z,ZMGO,"Zwak Grindig"
--13.47,Z,ZMGO,"Zwak Grindig"
--15.77,Z,ZMGO,"None"
--16.27,Z,ZMGO,"None"
--18.17,Z,ZZGO,"Sterk Grindig"
--19.67,Z,ZZGO,"Sterk Grindig"
--21.87,Z,ZMGO,"None"
--22.67,Z,ZMGO,"Sterk Grindig"
--23.87,Z,ZZGO,"Sterk Grindig"
--26.67,Z,ZZGO,"Zwak Siltig"
+0.83,S,None,"Moderate Organic"
+0.23,S,CSFO,"Weak Silty"
+-3.97,S,CSGO,"Weak Grainly"
+-5.67,S,RSC,"Weak Silty"
+-8.47,S,CSGO,"None"
+-9.27,S,RSC,"Strong Grainly"
+-9.67,S,ZRSO,"Weak Grainly"
+-10.97,S,CSGO,"Weak Grainly"
+-13.47,S,CSGO,"Weak Grainly"
+-15.77,S,CSGO,"None"
+-16.27,S,CSGO,"None"
+-18.17,S,ZRSO,"Strong Grainly"
+-19.67,S,ZRSO,"Strong Grainly"
+-21.87,S,CSGO,"None"
+-22.67,S,CSGO,"Strong Grainly"
+-23.87,S,ZRSO,"Strong Grainly"
+-26.67,S,ZRSO,"Weak Silty"
 -28.97,-,-,-

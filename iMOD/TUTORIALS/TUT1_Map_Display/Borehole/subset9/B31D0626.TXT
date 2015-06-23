@@ -1,20 +1,20 @@
           14
 4,2
-"Grensvlak,m-mv",-999.99
-"Lithologie",-999.99
-"Zandmediaanklasse NEN5104",-999.99
-"Bijmenging",-999.99
--1.30,K,None,"Zwak Humeus"
--2.10,V,None,"Zwak"
--2.30,K,None,"Zwak Humeus"
--2.80,K,None,"Zwak Zandig"
--3.30,K,None,"Zwak Zandig"
--4.30,K,None,"None"
+"Interface,m-msl",-999.99
+"Lithology",-999.99
+"Grain-size-distr. class NEN5104",-999.99
+"Admixture",-999.99
+-1.30,C,None,"Weak Organic"
+-2.10,P,None,"Weak"
+-2.30,C,None,"Weak Organic"
+-2.80,C,None,"Weak Sandy"
+-3.30,C,None,"Weak Sandy"
+-4.30,C,None,"None"
 -5.60,GY,None,"None"
--6.30,K,None,"None"
+-6.30,C,None,"None"
 -6.80,GY,None,"None"
--7.40,K,None,"None"
--7.90,K,None,"Humeus"
--8.05,V,None,"None"
--8.50,Z,None,"Matig Humeus"
+-7.40,C,None,"None"
+-7.90,C,None,"Organic"
+-8.05,P,None,"None"
+-8.50,S,None,"Moderate Organic"
 -8.80,-,-,-
