@@ -166,6 +166,10 @@ c count number of hfb and fill
                
              ipc = int(0,1)
              is = genip(j-1)+1; ie = genip(j)
+
+             !## line not in current model dimensions
+             if(ie.eq.0)cycle
+             
              jcol = genpos(is,1); jrow = genpos(is,2);
 
              !## startpoint
