@@ -236,7 +236,7 @@ CONTAINS
   ELSE
    LINE(II:)=TRIM(BAT(J)%KEY(I))//'= ...'
    LINE(52:)='>> '//TRIM(INIFNAME)
-   WRITE(IU,'(A)') TRIM(LINE) !'echo ',TRIM(BAT(J)%KEY(I))//'=     >> ',TRIM(INIFNAME)
+   WRITE(IU,'(A)') TRIM(LINE) 
   ENDIF
  ENDDO 
  WRITE(IU,'(A)') 
