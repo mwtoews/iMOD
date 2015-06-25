@@ -1146,4 +1146,88 @@ driverGetRunType = rt
 
 end function driverGetRunType
 
+! ------------------------------------------------------------------------------
+
+subroutine imod_license()
+
+use imod_utl, only: imod_utl_getunit, imod_utl_getdir, imod_utl_s_cap,&
+                    imod_utl_printtext, imod_utl_openasc
+
+implicit none
+
+! parameters
+integer, parameter :: nlines = 15
+character(len=1024), dimension(nlines) :: lic
+data lic/'====================================================================',& !01
+         'You may use this compiled version of the iMOD-software if you are '  ,& !02
+         'entitled to this use under a iMOD software license agreement for the',& !03
+         'iMOD software executables with Deltares or with a party entitled by' ,& !04
+         'Deltares to provide sublicenses for the iMOD-software executables.'  ,& !05
+         'Otherwise use of this compiled version of the iMOD-software is'      ,& !06
+         'prohibited and illegal. If you are not allowed under a Deltares iMOD',& !07
+         'license agreement to use the iMOD-software executables, you may find',& !08
+         'a solution in compiling the open source version of the iMOD-software',& !09
+         'into an executable yourself (see oss.deltares.nl), or apply for a'   ,& !10
+         'Deltares iMOD license agreement by sending an email to'              ,& !11
+         '   sales@deltares.nl. '                                              ,& !12
+         ''                                                                    ,& !13 
+         'Version 3.01.00, 01/07/15'                                           ,& !14
+         '===================================================================='/  !15
+
+! locals
+character(len=1024) :: dir, licfile, agreestr
+character(len=1024) :: key
+logical :: lex, lagree
+integer :: i, iu
+integer, dimension(8) :: iedt
+
+! write license to standard output
+do i = 1, size(lic)
+   call imod_utl_printtext(trim(lic(i)),0)
+end do
+
+call getarg(0,dir) ! get full path of the executable
+call imod_utl_getdir(dir) ! get the directory (last character is a slash)
+write(licfile,'(2a)') trim(dir),'license_agreement.txt'
+inquire(file=licfile,exist=lex) ! check if file exists
+if (.not.lex) then
+   write(*,'(a)') 'Do you agree on using iMOD under the conditions stated in the' 
+   write(*,'(a)') 'iMOD licence agreement that can be found in <XXXXXXXXX>?'
+   write(*,'(a)') 'Please enter (Yes/No) followed by (Enter).'
+   lagree = .false.
+   do while(.true.)
+      read(*,*) key     
+      call imod_utl_s_cap(key,'l')
+      select case(key)
+      case('y','yes')
+         call date_and_time(values=iedt)
+         write(agreestr,10)(iedt(i),i=3,1,-1),(iedt(i),i=5,7) ! (yyyy/mm/dd hh:mm:ss)
+         lagree = .true.
+         exit
+      case('n','no')
+         write(*,'(a)') 'You have not agreed on the iMOD licenss, exiting program.'
+         stop 1
+      case default
+         write(*,'(a)') 'Invalid input, please enter (Yes/No) followed by (Enter).'
+      end select   
+   end do
+end if    
+
+! If agreed, then write license file
+if (lagree) then 
+   write(*,*) 'Writing license agreement.'
+   iu=imod_utl_getunit()
+   call imod_utl_openasc(iu,licfile,'w')    
+   call imod_utl_printtext(trim(agreestr),-1,iu)
+   call imod_utl_printtext('',-1,iu)
+   do i = 1, size(lic)
+      call imod_utl_printtext(trim(lic(i)),-1,iu)
+   end do
+   close(iu)
+end if
+
+10 format('Accepted on:',1x,i2.2,'/',i2.2,'/',i4,1x,i2,':',i2.2,':',i2.2)
+
+end subroutine imod_license
+
 end module driver_module

@@ -113,6 +113,36 @@ CONTAINS
  END SUBROUTINE IMOD_UTL_SWAPSLASH
 
  !###===================================================================
+ SUBROUTINE IMOD_UTL_GETSLASH(SLASH)
+ !###===================================================================
+ IMPLICIT NONE
+
+ CHARACTER(LEN=*),INTENT(OUT) :: SLASH
+
+ IF(OS.EQ.1)THEN ! DOS
+   SLASH='\'   
+ ELSEIF(OS.EQ.2)THEN ! UNIX
+   SLASH='/'   
+ ENDIF
+
+ END SUBROUTINE IMOD_UTL_GETSLASH
+ 
+ !###===================================================================
+ SUBROUTINE IMOD_UTL_GETDIR(DIR)
+ !###===================================================================
+ 
+ CHARACTER(LEN=*),INTENT(INOUT) :: DIR
+ 
+ INTEGER :: I
+ CHARACTER(LEN=1) :: SLASH
+ 
+ CALL IMOD_UTL_GETSLASH(SLASH) 
+ I = INDEX(DIR,SLASH,BACK=.TRUE.)
+ DIR = DIR(1:I)
+ 
+ END SUBROUTINE IMOD_UTL_GETDIR
+ 
+ !###===================================================================
  INTEGER FUNCTION IMOD_UTL_GETUNIT()
  !###===================================================================
  IMPLICIT NONE
