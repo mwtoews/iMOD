@@ -1191,9 +1191,10 @@ call imod_utl_getdir(dir) ! get the directory (last character is a slash)
 write(licfile,'(2a)') trim(dir),'license_agreement.txt'
 inquire(file=licfile,exist=lex) ! check if file exists
 if (.not.lex) then
-   write(*,'(a)') 'Do you agree on using iMOD under the conditions stated in the' 
-   write(*,'(a)') 'iMOD licence agreement that can be found in <XXXXXXXXX>?'
-   write(*,'(a)') 'Please enter (Yes/No) followed by (Enter).'
+   call imod_utl_printtext('Do you agree on using iMOD under the conditions stated in the',0) 
+   call imod_utl_printtext('iMOD licence agreement that can be found in <XXXXXXXXX>?',0)
+   call imod_utl_printtext('',0)
+   call imod_utl_printtext('Please enter (Yes/No) followed by (Enter).',0)
    lagree = .false.
    do while(.true.)
       read(*,*) key     
@@ -1205,17 +1206,18 @@ if (.not.lex) then
          lagree = .true.
          exit
       case('n','no')
-         write(*,'(a)') 'You have not agreed on the iMOD licenss, exiting program.'
+         call imod_utl_printtext('You have not agreed on the iMOD license, exiting program.',0)
          stop 1
       case default
-         write(*,'(a)') 'Invalid input, please enter (Yes/No) followed by (Enter).'
+         call imod_utl_printtext('Invalid input, please enter (Yes/No) followed by (Enter).',0)
       end select   
    end do
 end if    
 
 ! If agreed, then write license file
 if (lagree) then 
-   write(*,*) 'Writing license agreement.'
+   call imod_utl_printtext('Writing license agreement:',0)
+   call imod_utl_printtext('',0)
    iu=imod_utl_getunit()
    call imod_utl_openasc(iu,licfile,'w')    
    call imod_utl_printtext(trim(agreestr),-1,iu)
