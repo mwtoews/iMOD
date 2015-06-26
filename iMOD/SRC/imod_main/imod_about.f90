@@ -19,6 +19,7 @@
 !!  Stichting Deltares
 !!  P.O. Box 177
 !!  2600 MH Delft, The Netherlands.
+!!
 MODULE MOD_ABOUT
 
 USE WINTERACTER
@@ -44,20 +45,7 @@ CONTAINS
  ' •  generate sub-domain models of any part of the area covered by your data;'//NEWLINE// &
  ' •  maintain consistency between regional and inlying sub-domain models;'//NEWLINE// &
  ' •  update your data set with the details added in a sub-domain model.'//NEWLINE//NEWLINE// &
-! 'iMOD stands for Interactive MODeling and is a user-friendly interface (iMOD and iMODFLOW) to support the use of (large-scale) '//&
-! 'groundwater flow models, based upon the concept of MODFLOW. iMOD is specially designed to handle large models that can not be '//&
-! 'supported by commercial GUIs, such as GMS, Visual Modflow.'//NEWLINE// &
-! 'iMODs philosophy is to construct on a large scale input files for a variety of parameters that are needed for '// &
-! 'a groundwater flow model. Instead of focussing on a local area for which a local study needs to be carried out, '// &
-! 'data is collected '// &
-! 'for a large area. Within this large area other local models may be constructed in the near future. As a result, the '// &
-! 'applicability of '// &
-! 'the model increases, also because various models can be constructed with different grid sizes with local grid refinements. '// &
-! 'Another '// &
-! 'simplification compared to the commercial packages is that iMOD uses iMODLOW, restricting the number of different input '// &
-! 'formats drastically '//&
-! 'to maximal 4, with one format covering about 90% of all input- and output parameters.'//NEWLINE//NEWLINE// &
- 'iMOD Code Architect: dr.ing. Peter (PTM) Vermeulen.')
+ 'iMOD Code Architect: dr. Peter (PTM) Vermeulen.')
  CALL WDIALOGPUTIMAGE(IDF_PICTURE1,ID_ICONTNO,1)
  CALL WDIALOGPUTIMAGE(IDF_PICTURE2,ID_ICONIMOD,1)
  !CALL WDIALOGPUTIMAGE(IDF_PICTURE3,ID_ICONMAIN,1)
@@ -91,7 +79,7 @@ CONTAINS
  ENDIF
 
  CALL WDIALOGLOAD(ID_DDISCLAIMER)
- CALL WDIALOGTITLE('User Agreement')
+ CALL WDIALOGTITLE('iMOD Software License Agreement')
 ! CALL WDIALOGPUTIMAGE(IDF_PICTURE1,ID_ICONTNO,1)
 ! CALL WDIALOGPUTIMAGE(IDF_PICTURE2,ID_ICONIMOD,1)
 ! CALL WDIALOGPUTIMAGE(IDF_PICTURE3,ID_ICONMAIN,1)
@@ -141,7 +129,7 @@ CONTAINS
   CALL OSD_OPEN(IU,FILE=TRIM(PREFVAL(1))//'\license_agreement.txt',STATUS='UNKNOWN',ACTION='WRITE,DENYREAD')
   CALL IOSDATE(IY,IM,ID)
   CDATE=TRIM(ITOS(ID))//'-'//TRIM(ITOS(IM))//'-'//TRIM(ITOS(IY))
-  WRITE(IU,'(A)') 'ACCEPTED ON '//TRIM(CDATE)
+  WRITE(IU,'(A)') 'Accepted on '//TRIM(CDATE)
   WRITE(IU,*)
   WRITE(IU,'(A)') TRIM(IMODDISCL())
   CLOSE(IU)
@@ -172,21 +160,6 @@ CONTAINS
  IMPLICIT NONE
 
  CHARACTER(LEN=5000) :: IMODDISCL
-! IMODDISCL='Copyright (C) Stichting Deltares, 2005-2014.'//NEWLINE//NEWLINE// &
-!  'This program is free software: you can redistribute it and/or modify '// &
-!  'it under the terms of the GNU General Public License as published by '// &
-!  'the Free Software Foundation, either version 3 of the License, or '// &
-!  '(at your option) any later version.'//NEWLINE//NEWLINE// &
-!  'This program is distributed in the hope that it will be useful, '// &
-!  'but WITHOUT ANY WARRANTY; without even the implied warranty of '// &
-!  'MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the '// &
-!  'GNU General Public License for more details.'//NEWLINE//NEWLINE// &
-!  'You should have received a copy of the GNU General Public License '// &
-!  'along with this program.  If not, see <http://www.gnu.org/licenses/>.'//NEWLINE//NEWLINE// &
-!  'Contact: imod.support@deltares.nl'//NEWLINE// &
-!  'Stichting Deltares'//NEWLINE// &
-!  'P.O. Box 177'//NEWLINE// &
-!  '2600 MH Delft, The Netherlands.'
 
  IMODDISCL='You may use this compiled version of the iMOD-software if you are entitled to this use under a '// &
  'iMOD software license agreement for the iMOD software executables with Deltares or with a party entitled by '// &

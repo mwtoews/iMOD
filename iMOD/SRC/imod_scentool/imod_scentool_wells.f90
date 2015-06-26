@@ -19,6 +19,7 @@
 !!  Stichting Deltares
 !!  P.O. Box 177
 !!  2600 MH Delft, The Netherlands.
+!!
 MODULE MOD_SCENTOOL_WELLS
 
 USE WINTERACTER
@@ -32,6 +33,7 @@ USE MOD_UTL, ONLY : UTL_HIDESHOWDIALOG,JDATETOGDATE,ITOS,RTOS,GDATETOJDATE,UTL_G
 USE MOD_IDF, ONLY : IDFIROWICOL,IDFGETVAL,IDFREAD,IDFDEALLOCATE
 USE MOD_OSD, ONLY : OSD_OPEN
 USE MOD_IPF, ONLY : IPFPLOTLABEL,IPFREAD2,IPF,IPFWRITE
+USE MOD_PMANAGER, ONLY : PMANAGER_SAVEMF2005_PCK_GETTLP,PMANAGER_SAVEMF2005_PCK_READTXT
 
 INTEGER,PRIVATE :: ITIME  !## fill in dates (1) fill in durations (2)
 CHARACTER(LEN=10),PRIVATE :: CDATE
@@ -831,14 +833,15 @@ CONTAINS
   TLP=0.0
   IF(FMID.NE.FNODATA)THEN
    IF(IPF(1)%ACOL.GT.0)THEN
-    CALL ST1CREATEIPF_GETTLP(STNLAY,TLP,KH,C,TOP,BOT,IPF(1)%XYZ(3,I),IPF(1)%XYZ(4,I),MAXC,MINKH,ICLAY,IPF(1)%INFO(IPF(1)%ACOL,I))
+    CALL PMANAGER_SAVEMF2005_PCK_GETTLP(STNLAY,TLP,KH,TOP,BOT,IPF(1)%XYZ(3,I),IPF(1)%XYZ(4,I))
    ELSE
-    CALL ST1CREATEIPF_GETTLP(STNLAY,TLP,KH,C,TOP,BOT,IPF(1)%XYZ(3,I),IPF(1)%XYZ(4,I),MAXC,MINKH,ICLAY,'') 
+    CALL PMANAGER_SAVEMF2005_PCK_GETTLP(STNLAY,TLP,KH,TOP,BOT,IPF(1)%XYZ(3,I),IPF(1)%XYZ(4,I)) 
    ENDIF   
    IF(ISS.GT.0.AND.IPF(1)%ACOL.GT.0)THEN
     FNAME=IPF(1)%FNAME(:INDEX(IPF(1)%FNAME,'\',.TRUE.)-1)//'\'// &
           TRIM(IPF(1)%INFO(IPF(1)%ACOL,I))//'.txt'
-    IF(.NOT.ST1CREATEIPF_GETQ(SDATE,EDATE,IPF(1)%XYZ(5,I),FNAME,IFRAC,HNODATA))THEN
+!    IF(.NOT.ST1CREATEIPF_GETQ(SDATE,EDATE,IPF(1)%XYZ(5,I),FNAME,IFRAC,HNODATA))THEN
+    IF(.NOT.PMANAGER_SAVEMF2005_PCK_READTXT(2,SDATE,EDATE,2,IPF(1)%XYZ(5,I),FNAME))THEN
      WRITE(*,'(A)') 'Error IPF-TXT '//TRIM(IPF(1)%FNAME)//' failed'
     ENDIF
    ENDIF
@@ -933,236 +936,6 @@ CONTAINS
  DEALLOCATE(IU,TOP,BOT,KD,Q,C,KH)
 
  END FUNCTION ST1CREATEIPF_STEADY
-
- !###======================================================================
- SUBROUTINE ST1CREATEIPF_GETTLP(N,TLP,KH,C,TOP,BOT,Z1,Z2,MAXC,MINKH,ICLAY,CTXTFILE)
- !###======================================================================
- IMPLICIT NONE
-! REAL,PARAMETER :: MAXC=50.0
- REAL,PARAMETER :: MINP=0.05
- INTEGER,INTENT(IN) :: N,ICLAY
- CHARACTER(LEN=*),INTENT(IN) :: CTXTFILE
- REAL,INTENT(INOUT) :: Z1,Z2
- REAL,INTENT(IN) :: MAXC,MINKH
- REAL,INTENT(IN),DIMENSION(N) :: KH,TOP,BOT
- REAL,INTENT(IN),DIMENSION(N-1) :: C
- REAL,INTENT(INOUT),DIMENSION(N) :: TLP
- INTEGER :: JLAY,ILAY,K,IDIFF
- REAL :: ZM,ZT,ZB,ZC,FC,DZ
- REAL,ALLOCATABLE,DIMENSION(:) :: L,TL
- INTEGER,ALLOCATABLE,DIMENSION(:) :: IL
-   
- ALLOCATE(L(N),TL(N),IL(N))
- 
- !## make sure thickness is not exactly zero, minimal thickness is 0.01m
- IDIFF=0; IF(Z1.EQ.Z2)THEN; Z1=Z1+0.005; Z2=Z2-0.005; IDIFF=1; ENDIF
- 
- !## filterlength for each modellayer
- L=0.0
- DO ILAY=1,N
-  ZT=MIN(TOP(ILAY),Z1); ZB=MAX(BOT(ILAY),Z2)
-  L(ILAY)=MAX(0.0,ZT-ZB)
- ENDDO
- 
- !## correct whenever significant resistant layer is active
- TL=0.0; JLAY=1; IL=0
- DO ILAY=1,N
-  IF(L(ILAY).GT.0.0)THEN
-   TL(JLAY)=TL(JLAY)+L(ILAY); IL(ILAY)=JLAY
-   IF(ILAY.LT.N)THEN; IF(C(ILAY).GT.MAXC)JLAY=JLAY+1; ENDIF
-  ENDIF
- ENDDO
- !## filter over more layers, significant clay in between, take longest in aquifer, MAKE OTHER ZERO!
- IF(JLAY.GT.1)THEN
-  K=0; ZM=0.0; DO ILAY=1,JLAY; IF(TL(ILAY).GT.ZM)THEN; ZM=TL(ILAY); K=ILAY ; ENDIF; ENDDO
-  DO ILAY=1,N; IF(IL(ILAY).NE.K)L(ILAY)=0.0; ENDDO
- ENDIF
-  
- TLP=0.0
- !## well within any aquifer(s)
- IF(SUM(L).GT.0.0)THEN
-  !## compute percentage and include sumkd, only if itype.eq.2
-  L=L*KH
-  !## percentage (0-1) L*KH
-  DO ILAY=1,N; IF(L(ILAY).NE.0.0)TLP=(1.0/SUM(L))*L; ENDDO
- ENDIF
-
- !## correct for dismatch with centre of modelcell
- DO ILAY=1,N
-  IF(TLP(ILAY).GT.0.0)THEN
-   DZ= TOP(ILAY)-BOT(ILAY)
-   ZC=(TOP(ILAY)+BOT(ILAY))/2.0
-   ZT= MIN(TOP(ILAY),Z1)
-   ZB= MAX(BOT(ILAY),Z2)
-   FC=(ZT+ZB)/2.0
-   TLP(ILAY)=TLP(ILAY)*(1.0-(ABS(ZC-FC)/(0.5*DZ)))
-  ENDIF
- ENDDO
- 
- !## normalize tlp() again
- IF(SUM(TLP).GT.0.0)TLP=(1.0/SUM(TLP))*TLP
-
- !## remove small percentages
- DO ILAY=1,N; IF(TLP(ILAY).LT.MINP)TLP(ILAY)=0.0; ENDDO
-  
- !## normalize tlp() again
- IF(SUM(TLP).GT.0.0)TLP=(1.0/SUM(TLP))*TLP
-
- !## remove small PERMEABILITIES
- IF(MINKH.GT.0.0)THEN
-  ZT=SUM(TLP) 
-  DO ILAY=1,N; IF(KH(ILAY).LT.MINKH)TLP(ILAY)=0.0; ENDDO
-  IF(SUM(TLP).GT.0.0)THEN
-   ZT=ZT/SUM(TLP)
-   !## normalize tlp() again
-   TLP=ZT*TLP
-  ENDIF
- ENDIF
- 
- !## normalize tlp() again
- IF(SUM(TLP).GT.0.0)TLP=(1.0/SUM(TLP))*TLP
-
- !## if no layers has been used for the assignment, try to allocate it to the nearest if iclay.eq.1
- IF(SUM(TLP).EQ.0.AND.ICLAY.EQ.1)THEN
-  ZM=(Z1+Z2)/2.0; DZ=99999.0; JLAY=0
-  DO ILAY=1,N
-   ZT=TOP(ILAY); ZB=BOT(ILAY)
-   IF(ABS(ZT-ZM).LT.DZ.OR.ABS(ZB-ZM).LT.DZ)THEN
-    DZ  =MIN(ABS(ZT-ZM),ABS(ZB-ZM))
-    JLAY=ILAY
-   ENDIF
-  ENDDO
-  WRITE(*,*) JLAY,DZ,','//TRIM(CTXTFILE)
-  IF(JLAY.EQ.0)STOP 'JLAY.EQ.0, NO ABLE TO ASSIGN PROPER MODELLAYER'
-  TLP(JLAY)=-1.0
- ENDIF
- 
- !## make sure only one layer is assigned whenever z1.eq.z2
- IF(IDIFF.EQ.1)THEN
-  K=0; ZT=0.0; DO ILAY=1,N
-   IF(ABS(TLP(ILAY)).GT.ZT)THEN
-    ZT=ABS(TLP(ILAY)); K=ILAY
-   ENDIF
-  ENDDO
-  IF(K.GT.0)THEN
-   ZT=TLP(K)
-   TLP=0.0; TLP(K)=1.0 
-   IF(ZT.LT.0.0)TLP(K)=-1.0*TLP(K)
-  ELSE
-   WRITE(*,*) TRIM(CTXTFILE),K
-  ENDIF
-  !IF(K.NE.1)THEN; WRITE(*,*) TRIM(CTXTFILE); ENDIF
- ENDIF
- 
- DEALLOCATE(L,TL,IL)
- 
- END SUBROUTINE ST1CREATEIPF_GETTLP
-
- !###====================================================================
- LOGICAL FUNCTION ST1CREATEIPF_GETQ(SDATE,EDATE,Q,FNAME,IFRAC,HNODATA) 
- !###====================================================================
- IMPLICIT NONE
- INTEGER,INTENT(INOUT) :: SDATE,EDATE
- INTEGER,INTENT(IN) :: IFRAC
- CHARACTER(LEN=*),INTENT(IN) :: FNAME
- REAL,INTENT(OUT) :: Q
- REAL,INTENT(IN) :: HNODATA
- INTEGER :: IR,I,I1,I2,IU,NR,NC,IDATE,JDATE,NDATE,NAJ,N,IOS,TTIME
- REAL :: QQ,FRAC,Q1
- CHARACTER(LEN=8) :: ATTRIB
- REAL,DIMENSION(:),ALLOCATABLE :: NODATA
- REAL,DIMENSION(1) :: XMED
- REAL,DIMENSION(:),ALLOCATABLE :: QSORT
- CHARACTER(LEN=16) :: CDATE
-
- ST1CREATEIPF_GETQ=.FALSE.
-
- TTIME=(EDATE-SDATE)+1
- IF(ALLOCATED(QSORT))DEALLOCATE(QSORT); ALLOCATE(QSORT(TTIME))
- 
- Q=0.0
-
- !## open textfiles with pump information
- IU=UTL_GETUNIT(); CALL OSD_OPEN(IU,FILE=FNAME,ACTION='READ',IOSTAT=IOS); IF(IOS.NE.0)RETURN
- READ(IU,*,IOSTAT=IOS) NR; IF(IOS.NE.0)RETURN
- IF(NR.GT.0.0)THEN
-  READ(IU,*,IOSTAT=IOS) NC
-  IF(IOS.NE.0)RETURN
-  !IF(NC.GT.2)
-  
-  ALLOCATE(NODATA(NC))    
-  DO I=1,NC; READ(IU,*,IOSTAT=IOS) ATTRIB,NODATA(I); IF(IOS.NE.0)RETURN; END DO
-
-  !## overrule nodata value from text files
-  NODATA(2)=HNODATA
-  
-  QSORT=NODATA(2) !## transient
-  I1=1
-
-  DO IR=1,NR
-
-   IF(IR.EQ.1)THEN
-    READ(IU,*,IOSTAT=IOS) CDATE,QQ; IF(IOS.NE.0)RETURN
-    READ(CDATE,'(I8)',IOSTAT=IOS) IDATE; IF(IOS.NE.0)EXIT
-   ELSE
-    QQ=Q1; IDATE=JDATE
-   ENDIF
-
-   !## edate=end date of current simulation period
-   NDATE=EDATE
-   IF(IR.LT.NR)THEN
-    READ(IU,*,IOSTAT=IOS) CDATE,Q1; IF(IOS.NE.0)RETURN
-    READ(CDATE,'(I8)',IOSTAT=IOS) NDATE; IF(IOS.NE.0)RETURN
-    JDATE=NDATE; NDATE=UTL_IDATETOJDATE(NDATE) !## fname=optional for error message
-   ENDIF
-   !## ndate is min of end date in txt file or simulation period
-   NDATE=MIN(NDATE,EDATE)
-
-   !## is begin date read from txt file
-   IDATE=UTL_IDATETOJDATE(IDATE)  !## fname=optional for error message
-
-   !## stop searchin for data, outside modeling window!
-   IF(IDATE.GT.EDATE)EXIT
-
-   !## within modeling window
-   IF(NDATE.GT.SDATE)THEN 
-
-    !### defintions ($ time window current stressperiod)
-    !  $        |---------|         $ 
-    !sdate    idate     ndate     edate
-    
-    N=NDATE-SDATE
-    !## if startingdate (read from txt file) greater than start date of current stressperiod
-    IF(IDATE.GT.SDATE)N=N-(IDATE-SDATE)
-    I2=I1+N-1 
-
-    QSORT(I1:I2)=QQ
-
-    I1=I2+1
-
-   ENDIF
-
-  END DO
-  
-  CALL UTL_GETMED(QSORT,TTIME,NODATA(2),(/50.0/),1,NAJ,XMED)
-  Q=XMED(1)
-
-  IF(IFRAC.EQ.1)THEN
-   !## naj becomes zero if no values were found!
-   FRAC=REAL(NAJ)/REAL(TTIME)
-   Q=Q*FRAC
-  ENDIF
-  
-  DEALLOCATE(NODATA)
-  
- ENDIF
-
- CLOSE(IU)
- DEALLOCATE(QSORT)
- 
- ST1CREATEIPF_GETQ=.TRUE.
- 
- END FUNCTION ST1CREATEIPF_GETQ
 
  !###======================================================================
  SUBROUTINE STWEL1DELETE()

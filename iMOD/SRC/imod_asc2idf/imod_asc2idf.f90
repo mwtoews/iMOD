@@ -32,6 +32,7 @@ USE MOD_UTL, ONLY : UTL_GETUNIT,ITOS,RTOS,UTL_MESSAGEHANDLE,UTL_SUBST,UTL_WAITME
 USE MODPLOT
 USE MOD_PREF_PAR, ONLY : PREFVAL
 USE MOD_OSD, ONLY : OSD_OPEN,ICF
+USE MOD_PMANAGER, ONLY : PMANAGER_SAVEMF2005_PCK_READTXT
 
 INTEGER,ALLOCATABLE,DIMENSION(:),PRIVATE :: IOS
 CHARACTER(LEN=20),ALLOCATABLE,DIMENSION(:),PRIVATE :: TXT
@@ -640,7 +641,7 @@ CONTAINS
      IF(ASSF_COLUMN.EQ.0)THEN
       READ(STRING(IZCOL),*) Z
      ELSE
-      LEX=PCK2RPWEL(ASSF_COLUMN,ASSF_STARTDATE,ASSF_ENDDATE,ASSF_MTYPE,Z, &
+      LEX=PMANAGER_SAVEMF2005_PCK_READTXT(ASSF_COLUMN,ASSF_STARTDATE,ASSF_ENDDATE,ASSF_MTYPE,Z, &
           XYZFNAMES(IFILE)(:INDEX(XYZFNAMES(IFILE),'\',.TRUE.))//TRIM(STRING(IEXT))//'.'//TRIM(EXT)) 
      ENDIF
      IF(LEX)THEN
@@ -673,7 +674,7 @@ CONTAINS
      IF(ASSF_COLUMN.EQ.0)THEN
       READ(STRING(IZCOL),*) Z
      ELSE
-      LEX=PCK2RPWEL(ASSF_COLUMN,ASSF_STARTDATE,ASSF_ENDDATE,ASSF_MTYPE,Z, &
+      LEX=PMANAGER_SAVEMF2005_PCK_READTXT(ASSF_COLUMN,ASSF_STARTDATE,ASSF_ENDDATE,ASSF_MTYPE,Z, &
            XYZFNAMES(IFILE)(:INDEX(XYZFNAMES(IFILE),'\',.TRUE.))//TRIM(STRING(IEXT))//'.'//TRIM(EXT)) 
      ENDIF
      IF(LEX)THEN
@@ -703,7 +704,7 @@ CONTAINS
      IF(ASSF_COLUMN.EQ.0)THEN
       READ(STRING(IZCOL),*) ZA(J)
      ELSE
-      IF(.NOT.PCK2RPWEL(ASSF_COLUMN,ASSF_STARTDATE,ASSF_ENDDATE,ASSF_MTYPE,ZA(I), &
+      IF(.NOT.PMANAGER_SAVEMF2005_PCK_READTXT(ASSF_COLUMN,ASSF_STARTDATE,ASSF_ENDDATE,ASSF_MTYPE,ZA(I), &
           XYZFNAMES(IFILE)(:INDEX(XYZFNAMES(IFILE),'\',.TRUE.))//TRIM(STRING(IEXT))//'.'//TRIM(EXT)))J=J-1
      ENDIF
     ENDDO
@@ -843,101 +844,6 @@ CONTAINS
 
  END FUNCTION ASC2IDF_TYPE3
 
- !###====================================================================
- LOGICAL FUNCTION PCK2RPWEL(ICOL,SDATE,EDATE,MTYPE,Q,FNAME) 
- !###====================================================================
- IMPLICIT NONE
- INTEGER,INTENT(IN) :: SDATE,EDATE,ICOL,MTYPE
- REAL,DIMENSION(:),ALLOCATABLE :: QSORT
- CHARACTER(LEN=*),INTENT(IN) :: FNAME
- REAL,INTENT(OUT) :: Q
- INTEGER :: IR,I,I1,I2,IU,NR,NC,IDATE,JDATE,NDATE,NAJ,N,IOS,TTIME
- REAL :: FRAC,Q1,QQ
- CHARACTER(LEN=8) :: ATTRIB
- CHARACTER(LEN=256) :: LINE
- REAL,DIMENSION(:),ALLOCATABLE :: NODATA,QD
-
- !## transient(2)/steady-state(1)
- TTIME=EDATE-SDATE; ALLOCATE(QSORT(TTIME)); Q=0.0
-
- !## open textfiles with pump information
- IU=UTL_GETUNIT(); CALL OSD_OPEN(IU,FILE=FNAME,STATUS='OLD',ACTION='READ')
-
- READ(IU,*) NR
- IF(NR.GT.0.0)THEN
-  READ(IU,*) NC
-  
-  ALLOCATE(NODATA(NC),QD(NC)); QD=0.0
-  
-  DO I=1,NC; READ(IU,*) ATTRIB,NODATA(I); ENDDO 
-
-  QSORT=NODATA(ICOL)
-  I1=1
-
-  DO IR=1,NR
-
-   IF(IR.EQ.1)THEN
-    READ(IU,*) IDATE,(QD(I),I=2,NC)
-    QQ=QD(ICOL)
-   ELSE
-    QQ   =Q1
-    IDATE=JDATE
-   ENDIF
-
-   !## edate=end date of current simulation period
-   NDATE=EDATE
-   IF(IR.LT.NR)THEN
-    READ(IU,*) NDATE,(QD(I),I=2,NC) 
-    Q1=QD(ICOL)
-    JDATE=NDATE
-    NDATE=UTL_IDATETOJDATE(NDATE) !## fname=optional for error message
-   ENDIF
-   !## ndate is min of end date in txt file or simulation period
-   NDATE=MIN(NDATE,EDATE)
-
-   !## is begin date read from txt file
-   IDATE=UTL_IDATETOJDATE(IDATE)  !## fname=optional for error message
-
-   !## stop searching for data, outside modeling window!
-   IF(IDATE.GT.EDATE)EXIT
-
-   !## within modeling window
-   IF(NDATE.GT.SDATE)THEN
-
-    !### defintions ($ time window current stressperiod)
-    !  $        |---------|         $ 
-    !sdate    idate     ndate     edate
-    
-    N=NDATE-SDATE
-    !## if startingdate (read from txt file) greater than start date of current stressperiod
-    IF(IDATE.GT.SDATE)N=N-(IDATE-SDATE)
-    I2=I1+N-1
-    
-    IF(I2.GE.I1)QSORT(I1:I2)=QQ
-
-    I1=I2+1
-
-   ENDIF
-  END DO
-
-  IF(MTYPE.EQ.1)THEN
-   Q=SUM(QSORT(1:TTIME))/REAL(TTIME)
-  ELSEIF(MTYPE.EQ.2)THEN
-   CALL UTL_GETMED(QSORT,TTIME,NODATA(ICOL),(/0.5/),1,NAJ,QD)
-   Q=QD(1)
-   !## naj becomes zero if no values were found!
-   FRAC=REAL(NAJ)/REAL(TTIME)
-   Q   =Q*FRAC
-  ENDIF
-  
- ENDIF
- 
- PCK2RPWEL=.TRUE.; IF(Q.EQ.NODATA(ICOL))PCK2RPWEL=.FALSE.
- 
- CLOSE(IU); DEALLOCATE(QSORT,NODATA,QD)
- 
- END FUNCTION PCK2RPWEL
- 
  !###======================================================================
  SUBROUTINE ASC2IDF_CLOSE(IU)
  !###======================================================================
