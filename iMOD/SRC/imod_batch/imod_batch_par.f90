@@ -25,7 +25,7 @@ MODULE MOD_BATCH_PAR
 USE WINTERACTER
 USE RESOURCE
 
-INTEGER,PARAMETER :: NBAT=29
+INTEGER,PARAMETER :: NBAT=37
 
 TYPE MODBAT
  CHARACTER(LEN=52) :: CFUNC
@@ -72,6 +72,14 @@ CONTAINS
  CALL BATCHINIT_CREATESUBMODEL(27)
  CALL BATCHINIT_CREATESOF(28)
  CALL BATCHINIT_DRNSURF(29)
+ CALL BATCHINIT_SOLID(30)
+ CALL BATCHINIT_IPFSPOTIFY(31)
+ CALL BATCHINIT_ASSIGNWELL(32)
+ CALL BATCHINIT_GEN2ISG(33)
+ CALL BATCHINIT_GEOTOP(34)
+ CALL BATCHINIT_GEF2IPF(35)
+ CALL BATCHINIT_CREATEIZONE(36)
+ CALL BATCHINIT_IPFRESIDUAL(37)
 
  CALL WDIALOGPUTMENU(IDF_MENU1,BAT%CFUNC,SIZE(BAT),1)
  
@@ -216,6 +224,14 @@ CONTAINS
 
  END SUBROUTINE BATCHINIT_IDFCONSISTENCY
 
+  !###======================================================================
+ SUBROUTINE BATCHINIT_(I)
+ !###======================================================================
+ IMPLICIT NONE
+ INTEGER,INTENT(IN) :: I
+
+ END SUBROUTINE BATCHINIT_
+ 
  !###======================================================================
  SUBROUTINE BATCHINIT_IDFMERGE(I)
  !###======================================================================
@@ -719,5 +735,219 @@ CONTAINS
  BAT(I)%LVL(11)="(COMP)"; BAT(I)%KEY(11)="OUTIDF"
 
  END SUBROUTINE BATCHINIT_DRNSURF
+
+ !###======================================================================
+ SUBROUTINE BATCHINIT_SOLID(I)
+ !###======================================================================
+ IMPLICIT NONE
+ INTEGER,INTENT(IN) :: I
+ 
+ BAT(I)%CFUNC="SOLID"; BAT(I)%N=  33
+ ALLOCATE(BAT(I)%LVL(BAT(I)%N),BAT(I)%KEY(BAT(I)%N))
+
+ BAT(I)%LVL(1)="(COMP)"; BAT(I)%KEY(1)="NLAY"
+ BAT(I)%LVL(2)="(COMP)"; BAT(I)%KEY(2)="OUTPUTFOLDER"
+ BAT(I)%LVL(3)="(OPT)"; BAT(I)%KEY(3)="\MASK"
+ BAT(I)%LVL(4)="(OPT)"; BAT(I)%KEY(4)="\FFRAC"
+ BAT(I)%LVL(5)="(OPT)"; BAT(I)%KEY(5)="\CFRAC"
+ BAT(I)%LVL(6)="(OPT)"; BAT(I)%KEY(6)="MDL_TOP_{i=1,NLAY}"
+ BAT(I)%LVL(7)="(OPT)"; BAT(I)%KEY(7)="MDL_BOT_{i=1,NLAY}"
+ BAT(I)%LVL(8)="(OPT)"; BAT(I)%KEY(8)="MDL_KD_{i=1,NLAY}"
+ BAT(I)%LVL(9)="(OPT)"; BAT(I)%KEY(9)="MDL_VC_{i=1,NLAY}"
+ BAT(I)%LVL(10)="(OPT)"; BAT(I)%KEY(10)="MDL_KHV_{i=1,NLAY}"
+ BAT(I)%LVL(11)="(OPT)"; BAT(I)%KEY(11)="MDL_KVA_{i=1,NLAY}"
+ BAT(I)%LVL(12)="(OPT)"; BAT(I)%KEY(12)="MDL_KVV_{i=1,NLAY}"
+ BAT(I)%LVL(13)="(OPT)"; BAT(I)%KEY(13)="MDL_KDFRAC_{i=1,NLAY}"
+ BAT(I)%LVL(14)="(OPT)"; BAT(I)%KEY(14)="MDL_CFRAC_{i=1,NLAY}" 
+ BAT(I)%LVL(15)="(COMP)"; BAT(I)%KEY(15)="TOP_L{i=1,NLAY}"
+ BAT(I)%LVL(16)="(OPT)"; BAT(I)%KEY(16)="ICLC_TL{i=1,NLAY}"
+ BAT(I)%LVL(17)="(COMP)"; BAT(I)%KEY(17)="BOT_L{i=1,NLAY}"
+ BAT(I)%LVL(18)="(OPT)"; BAT(I)%KEY(18)="ICLC_BL{i=1,NLAY}"
+ BAT(I)%LVL(19)="(COMP)"; BAT(I)%KEY(19)="IMASK"
+ BAT(I)%LVL(20)="(OPT)"; BAT(I)%KEY(20)="ZOFFSET"
+ BAT(I)%LVL(21)="(COMP)"; BAT(I)%KEY(21)="IHYPO"
+ BAT(I)%LVL(22)="(OPT)"; BAT(I)%KEY(22)="DZ(.)"
+ BAT(I)%LVL(23)="(OPT)"; BAT(I)%KEY(23)="IMIDELEV"
+ BAT(I)%LVL(24)="(OPT)"; BAT(I)%KEY(24)="IBNDCHK"
+ BAT(I)%LVL(25)="(OPT)"; BAT(I)%KEY(25)="HCLOSE"
+ BAT(I)%LVL(26)="(OPT)"; BAT(I)%KEY(26)="MICNVG"
+ BAT(I)%LVL(27)="(COMP)"; BAT(I)%KEY(27)="ICKDC"
+ BAT(I)%LVL(28)="(COMP)"; BAT(I)%KEY(28)="REGISTOP"
+ BAT(I)%LVL(29)="(COMP)"; BAT(I)%KEY(29)="REGISBOT"
+ BAT(I)%LVL(30)="(COMP)"; BAT(I)%KEY(30)="REGISKHV"
+ BAT(I)%LVL(31)="(COMP)"; BAT(I)%KEY(31)="REGISKVV" 
+ BAT(I)%LVL(32)="(OPT)"; BAT(I)%KEY(32)="WINDOW"
+ BAT(I)%LVL(33)="(OPT)"; BAT(I)%KEY(33)="CELL_SIZE"
+
+ END SUBROUTINE BATCHINIT_SOLID
+ 
+ !###======================================================================
+ SUBROUTINE BATCHINIT_IPFSPOTIFY(I)
+ !###======================================================================
+ IMPLICIT NONE
+ INTEGER,INTENT(IN) :: I
+
+ BAT(I)%CFUNC="IPFSPOTIFY"; BAT(I)%N=  14
+ ALLOCATE(BAT(I)%LVL(BAT(I)%N),BAT(I)%KEY(BAT(I)%N))
+ 
+ BAT(I)%LVL(1)="(COMP)"; BAT(I)%KEY(1)="IPFFILE_IN"
+ BAT(I)%LVL(2)="(COMP)"; BAT(I)%KEY(2)="IPFFILE_OUT"
+ BAT(I)%LVL(3)="(OPT)"; BAT(I)%KEY(3)="IXCOL"
+ BAT(I)%LVL(4)="(OPT)"; BAT(I)%KEY(4)="IYCOL"
+ BAT(I)%LVL(5)="(OPT)"; BAT(I)%KEY(5)="IFCOL"
+ BAT(I)%LVL(6)="(OPT)"; BAT(I)%KEY(6)="IZ1COL"
+ BAT(I)%LVL(7)="(OPT)"; BAT(I)%KEY(7)="IZ2COL"
+ BAT(I)%LVL(8)="(OPT)"; BAT(I)%KEY(8)="ILCOL" 
+ BAT(I)%LVL(9)="(COMP)"; BAT(I)%KEY(9)="OUTPUTFOLDER"
+ BAT(I)%LVL(10)="(COMP)"; BAT(I)%KEY(10)="NLAY"
+ BAT(I)%LVL(11)="(COMP)"; BAT(I)%KEY(11)="TOP_L{i=1,NLAY}"
+ BAT(I)%LVL(12)="(COMP)"; BAT(I)%KEY(12)="BOT_L{i=1,NLAY}"
+ BAT(I)%LVL(13)="(COMP)"; BAT(I)%KEY(13)="REGISTOP"
+ BAT(I)%LVL(14)="(COMP)"; BAT(I)%KEY(14)="REGISBOT"
+  
+ END SUBROUTINE BATCHINIT_IPFSPOTIFY
+ 
+ !###======================================================================
+ SUBROUTINE BATCHINIT_ASSIGNWELL(I)
+ !###======================================================================
+ IMPLICIT NONE
+ INTEGER,INTENT(IN) :: I
+
+ BAT(I)%CFUNC="ASSIGNWELL"; BAT(I)%N=  10
+ ALLOCATE(BAT(I)%LVL(BAT(I)%N),BAT(I)%KEY(BAT(I)%N))
+
+ BAT(I)%LVL(1)="(COMP)"; BAT(I)%KEY(1)="IPFFILE_IN"
+ BAT(I)%LVL(2)="(COMP)"; BAT(I)%KEY(2)="IXCOL"
+ BAT(I)%LVL(3)="(COMP)"; BAT(I)%KEY(3)="IYCOL"
+ BAT(I)%LVL(4)="(COMP)"; BAT(I)%KEY(4)="IDCOL"
+ BAT(I)%LVL(5)="(COMP)"; BAT(I)%KEY(5)="IZ1COL"
+ BAT(I)%LVL(6)="(COMP)"; BAT(I)%KEY(6)="IZ2COL"
+ BAT(I)%LVL(7)="(COMP)"; BAT(I)%KEY(7)="NFORMATIONS"
+ BAT(I)%LVL(8)="(COMP)"; BAT(I)%KEY(8)="FORMATIONS{i=1,NFORMATIONS}"
+ BAT(I)%LVL(9)="(COMP)"; BAT(I)%KEY(9)="TOP_L{i=1,NLAY}"
+ BAT(I)%LVL(10)="(COMP)"; BAT(I)%KEY(10)="BOT_L{i=1,NLAY}"
+ 
+ END SUBROUTINE BATCHINIT_ASSIGNWELL
+ 
+ !###======================================================================
+ SUBROUTINE BATCHINIT_GEN2ISG(I)
+ !###======================================================================
+ IMPLICIT NONE
+ INTEGER,INTENT(IN) :: I
+
+ BAT(I)%CFUNC="GEN2ISG"; BAT(I)%N=  21
+ ALLOCATE(BAT(I)%LVL(BAT(I)%N),BAT(I)%KEY(BAT(I)%N))
+
+ BAT(I)%LVL(1)="(COMP)"; BAT(I)%KEY(1)="NLAY"
+ BAT(I)%LVL(2)="(COMP)"; BAT(I)%KEY(2)="TOPIDF{i=1,NLAY}"
+ BAT(I)%LVL(3)="(COMP)"; BAT(I)%KEY(3)="BOTIDF{i=1,NLAY}"
+ BAT(I)%LVL(4)="(COMP)"; BAT(I)%KEY(4)="KDIDF{i=1,NLAY}"
+ BAT(I)%LVL(5)="(COMP)"; BAT(I)%KEY(5)="CIDF{i=1,NLAY}"
+ BAT(I)%LVL(6)="(COMP)"; BAT(I)%KEY(6)="NIPF"
+ BAT(I)%LVL(7)="(COMP)"; BAT(I)%KEY(7)="IPF{i=1,NIPF}" 
+ BAT(I)%LVL(8)="(OPT)"; BAT(I)%KEY(8)="IXCOL"
+ BAT(I)%LVL(9)="(OPT)"; BAT(I)%KEY(9)="IYCOL"
+ BAT(I)%LVL(10)="(OPT)"; BAT(I)%KEY(10)="IQCOL"
+ BAT(I)%LVL(11)="(OPT)"; BAT(I)%KEY(11)="ITCOL"
+ BAT(I)%LVL(12)="(OPT)"; BAT(I)%KEY(12)="IBCOL"
+ BAT(I)%LVL(13)="(OPT)"; BAT(I)%KEY(13)="ISS"
+ BAT(I)%LVL(14)="(OPT)"; BAT(I)%KEY(14)="SDATE"
+ BAT(I)%LVL(15)="(OPT)"; BAT(I)%KEY(15)="EDATE"
+ BAT(I)%LVL(16)="(OPT)"; BAT(I)%KEY(16)="MAXC"
+ BAT(I)%LVL(17)="(OPT)"; BAT(I)%KEY(17)="MINKH"
+ BAT(I)%LVL(18)="(OPT)"; BAT(I)%KEY(18)="ICLAY"
+ BAT(I)%LVL(19)="(OPT)"; BAT(I)%KEY(19)="HNODATA"
+ BAT(I)%LVL(20)="(OPT)"; BAT(I)%KEY(20)="FNODATA"
+ BAT(I)%LVL(21)="(OPT)"; BAT(I)%KEY(21)="IFRAC"
+  
+ END SUBROUTINE BATCHINIT_GEN2ISG
+ 
+ !###======================================================================
+ SUBROUTINE BATCHINIT_GEOTOP(I)
+ !###======================================================================
+ IMPLICIT NONE
+ INTEGER,INTENT(IN) :: I
+
+ BAT(I)%CFUNC="GEOTOP"; BAT(I)%N=  14
+ ALLOCATE(BAT(I)%LVL(BAT(I)%N),BAT(I)%KEY(BAT(I)%N))
+
+ BAT(I)%LVL(1)="(COMP)"; BAT(I)%KEY(1)="RESULTFOLDER"
+ BAT(I)%LVL(2)="(COMP)"; BAT(I)%KEY(2)="NLAYG"
+ BAT(I)%LVL(3)="(COMP)"; BAT(I)%KEY(3)="KVG_L{i=1,NLAYG}"
+ BAT(I)%LVL(4)="(COMP)"; BAT(I)%KEY(4)="KHG_L{i=1,NLAYG}"
+ BAT(I)%LVL(5)="(COMP)"; BAT(I)%KEY(5)="NLAYM"
+ BAT(I)%LVL(6)="(COMP)"; BAT(I)%KEY(6)="IBM_L{i=1,NLAYM}"
+ BAT(I)%LVL(7)="(COMP)"; BAT(I)%KEY(7)="SHM_L{i=1,NLAYM}"
+ BAT(I)%LVL(8)="(COMP)"; BAT(I)%KEY(8)="TPM_L{i=1,NLAYM}"
+ BAT(I)%LVL(9)="(COMP)"; BAT(I)%KEY(9)="BTM_L{i=1,NLAYM}"
+ BAT(I)%LVL(10)="(COMP)"; BAT(I)%KEY(10)="KHM_L{i=1,NLAYM}"
+ BAT(I)%LVL(11)="(COMP)"; BAT(I)%KEY(11)="KAM_L{i=1,NLAYM}"
+ BAT(I)%LVL(12)="(COMP)"; BAT(I)%KEY(12)="KVM_L{i=1,NLAYM}"
+ BAT(I)%LVL(13)="(OPT)"; BAT(I)%KEY(13)="WINDOW"
+ BAT(I)%LVL(14)="(OPT)"; BAT(I)%KEY(14)="CELLSIZE"
+  
+ END SUBROUTINE BATCHINIT_GEOTOP
+ 
+ !###======================================================================
+ SUBROUTINE BATCHINIT_GEF2IPF(I)
+ !###======================================================================
+ IMPLICIT NONE
+ INTEGER,INTENT(IN) :: I
+
+ BAT(I)%CFUNC="GEF2IPF"; BAT(I)%N=  4
+ ALLOCATE(BAT(I)%LVL(BAT(I)%N),BAT(I)%KEY(BAT(I)%N))
+
+ BAT(I)%LVL(1)="(COMP)"; BAT(I)%KEY(1)="GEFDIR"
+ BAT(I)%LVL(2)="(COMP)"; BAT(I)%KEY(2)="IPFFILE"
+ BAT(I)%LVL(3)="(OPT)"; BAT(I)%KEY(3)="WINDOW"
+ BAT(I)%LVL(4)="(OPT)"; BAT(I)%KEY(4)="GENFILE"
+  
+ END SUBROUTINE BATCHINIT_GEF2IPF
+
+ !###======================================================================
+ SUBROUTINE BATCHINIT_CREATEIZONE(I)
+ !###======================================================================
+ IMPLICIT NONE
+ INTEGER,INTENT(IN) :: I
+
+ BAT(I)%CFUNC="CREATEIZONE"; BAT(I)%N=  9
+ ALLOCATE(BAT(I)%LVL(BAT(I)%N),BAT(I)%KEY(BAT(I)%N))
+
+ BAT(I)%LVL(1)="(COMP)"; BAT(I)%KEY(1)="OFOLDER"
+ BAT(I)%LVL(2)="(COMP)"; BAT(I)%KEY(2)="PFOLDER"
+ BAT(I)%LVL(3)="(COMP)"; BAT(I)%KEY(3)="NLAY"
+ BAT(I)%LVL(4)="(COMP)"; BAT(I)%KEY(4)="MINF"
+ BAT(I)%LVL(5)="(OPT)"; BAT(I)%KEY(5)="IZONEOFFSET"
+ BAT(I)%LVL(6)="(OPT)"; BAT(I)%KEY(6)="IGROUPOFFSET"
+ BAT(I)%LVL(7)="(COMP)"; BAT(I)%KEY(7)="NFORMATIONS"
+ BAT(I)%LVL(8)="(COMP)"; BAT(I)%KEY(8)="FORMATIONS{i=1,NFORMATIONS}"  
+ BAT(I)%LVL(9)="(COMP)"; BAT(I)%KEY(9)="TPARAMETER"
+ 
+ END SUBROUTINE BATCHINIT_CREATEIZONE
+
+ !###======================================================================
+ SUBROUTINE BATCHINIT_IPFRESIDUAL(I)
+ !###======================================================================
+ IMPLICIT NONE
+ INTEGER,INTENT(IN) :: I
+
+ BAT(I)%CFUNC="IPFRESIDUAL"; BAT(I)%N=  13
+ ALLOCATE(BAT(I)%LVL(BAT(I)%N),BAT(I)%KEY(BAT(I)%N))
+
+ BAT(I)%LVL(1)="(COMP)"; BAT(I)%KEY(1)="NIPF"
+ BAT(I)%LVL(2)="(OPT)"; BAT(I)%KEY(2)="POINTERIDF"
+ BAT(I)%LVL(3)="(COMP)"; BAT(I)%KEY(3)="NZONE"
+ BAT(I)%LVL(4)="(COMP)"; BAT(I)%KEY(4)="IZONE{i=1,NZONE}"
+ BAT(I)%LVL(5)="(OPT)"; BAT(I)%KEY(5)="ICOLLECT"
+ BAT(I)%LVL(6)="(OPT)"; BAT(I)%KEY(6)="HNODATA"
+ BAT(I)%LVL(7)="(COMP)"; BAT(I)%KEY(7)="IPFFILE{i=1,NIPF}"
+ BAT(I)%LVL(8)="(COMP)"; BAT(I)%KEY(8)="WTYPE{i=1,NIPF}"  
+ BAT(I)%LVL(9)="(COMP)"; BAT(I)%KEY(9)="IWCOL{i=1,NIPF}"
+ BAT(I)%LVL(10)="(OPT)"; BAT(I)%KEY(10)="IHCOL{i=1,NIPF}"
+ BAT(I)%LVL(11)="(OPT)"; BAT(I)%KEY(11)="IMCOL{i=1,NIPF}"
+ BAT(I)%LVL(12)="(OPT)"; BAT(I)%KEY(12)="ILCOL{i=1,NIPF}"
+ BAT(I)%LVL(13)="(COMP)"; BAT(I)%KEY(13)="OUTNAME"
+ 
+ END SUBROUTINE BATCHINIT_IPFRESIDUAL
 
 END MODULE MOD_BATCH_PAR
