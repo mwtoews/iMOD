@@ -245,7 +245,7 @@
      1                                          xchIdx,xchOff,mvin,act)
 !...     modules  
 #ifdef INCLUDE_METASWAP 
-      use simvar, only: qseepmodi, qrivmodi, qdrnmodi, mfi
+      use simvar, only: qseepmodi, qdrsymodi, lvswdrsymodi, mfi
 #endif
       implicit none
 
@@ -286,28 +286,28 @@
                qseepmodi(i) = fval
             case('QRIVP')
                if (fval.eq.mvin) fval = 0.0
-               qrivmodi(i) = fval ! MODIFY: PUT IN CORRESPONDING VARIABLE
+               qdrsymodi(i,1) = fval
             case('QRIVS')
                if (fval.eq.mvin) fval = 0.0
-               qrivmodi(i) = fval ! MODIFY: PUT IN CORRESPONDING VARIABLE
+               qdrsymodi(i,2) = fval
             case('QRIVT')
                if (fval.eq.mvin) fval = 0.0
-               qrivmodi(i) = fval ! MODIFY: PUT IN CORRESPONDING VARIABLE
+               qdrsymodi(i,3) = fval
             case('QDRNB')                
                if (fval.eq.mvin) fval = 0.0
-               qdrnmodi(i) = fval ! ! MODIFY: PUT IN CORRESPONDING VARIABLE
+               qdrsymodi(i,4) = fval
             case('QDRNO')                
                if (fval.eq.mvin) fval = 0.0
-               qdrnmodi(i) = fval ! ! MODIFY: PUT IN CORRESPONDING VARIABLE
+               qdrsymodi(i,5) = fval
             case('SRIVP')
                if (fval.eq.mvin) fval = -9999.
-               !srivmodi(i) = fval ! MODIFY: PUT IN CORRESPONDING VARIABLE
+               lvswdrsymodi(i,1) = fval
             case('SRIVS')
                if (fval.eq.mvin) fval = -9999.
-               !srivmodi(i) = fval ! MODIFY: PUT IN CORRESPONDING VARIABLE
+               lvswdrsymodi(i,2) = fval
             case('SRIVT')
                if (fval.eq.mvin) fval = -9999.
-               !srivmodi(i) = fval ! MODIFY: PUT IN CORRESPONDING VARIABLE
+               lvswdrsymodi(i,3) = fval
             case default
                ok = .false.
             end select
