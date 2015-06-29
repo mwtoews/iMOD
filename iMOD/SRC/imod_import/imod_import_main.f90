@@ -19,7 +19,7 @@
 !!  Stichting Deltares
 !!  P.O. Box 177
 !!  2600 MH Delft, The Netherlands.
-
+!!
 MODULE MOD_IMPORT
 
 USE WINTERACTER
@@ -74,13 +74,13 @@ CONTAINS
      SELECT CASE (MESSAGE%VALUE1)
       CASE (ID_OPEN)
        CALL WDIALOGGETRADIOBUTTON(IDF_RADIO1,IVERSION)
-       IF(IVERSION.EQ.1.OR.IVERSION.EQ.3)THEN
-        IF(UTL_WSELECTFILE('Modflow Bas file (*.bas)|*.bas|',LOADDIALOG+PROMPTON+DIRCHANGE+MUSTEXIST,FNAME_MDL,'Select Modflow File'))THEN
+       IF(IVERSION.EQ.1)THEN
+        IF(UTL_WSELECTFILE('Modflow Bas file (*.bas)|*.bas|Modflow Nam file (*.nam)|*.nam|', &
+            LOADDIALOG+PROMPTON+DIRCHANGE+MUSTEXIST,FNAME_MDL,'Select Modflow File'))THEN
          CALL WDIALOGPUTSTRING(IDF_STRING1,FNAME_MDL)
         ENDIF
-       ENDIF
-       IF(IVERSION.EQ.2)THEN
-        IF(UTL_WSELECTFILE('Modflow Bas file (*.dat)|*.dat|',LOADDIALOG+PROMPTON+DIRCHANGE+MUSTEXIST,FNAME_MDL,'Select Modflow File'))THEN
+       ELSE
+        IF(UTL_WSELECTFILE('Modflow Nam file (*.nam)|*.nam|',LOADDIALOG+PROMPTON+DIRCHANGE+MUSTEXIST,FNAME_MDL,'Select Modflow Nam File'))THEN
          CALL WDIALOGPUTSTRING(IDF_STRING1,FNAME_MDL)
         ENDIF
        ENDIF
@@ -121,9 +121,12 @@ CONTAINS
  SDATE=UTL_IDATETOJDATE(I*10000+K*100+J)
  
  CALL WDIALOGGETRADIOBUTTON(IDF_RADIO1,IVERSION)
- IF(IVERSION.EQ.1.OR.IVERSION.EQ.3)CALL WDIALOGPUTSTRING(IDF_LABEL5,'Locate one of the Modflow files (e.g. modflow.bas, modflow.drn):')
- IF(IVERSION.EQ.2)CALL WDIALOGPUTSTRING(IDF_LABEL5,'Locate one of the Modflow files (e.g. bas.dat, drn.dat):')
-
+ IF(IVERSION.EQ.1)THEN
+  CALL WDIALOGPUTSTRING(IDF_LABEL5,'Locate one of the Modflow files (e.g. modflow.bas, modflow.drn) or NAM file:')
+ ELSE
+  CALL WDIALOGPUTSTRING(IDF_LABEL5,'Locate the Modflow NAM file (e.g. model.nam):')
+ ENDIF
+ 
  I=1
  CALL WDIALOGGETSTRING(IDF_STRING1,FNAME_MDL)  !## modelfile
  IF(LEN_TRIM(FNAME_MDL).EQ.0)I=0

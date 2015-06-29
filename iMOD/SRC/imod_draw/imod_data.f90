@@ -329,6 +329,7 @@ DO IDF=1,NIDF
    MP(IPLOT)%TSIZE    =7  !textsize
    MP(IPLOT)%ASSCOL1=2 !## borehole plotting
    MP(IPLOT)%ASSCOL2=0 !## borehole plotting
+
   !## iff
   CASE (3)!  ELSEIF(MP(IPLOT)%IPLOT.EQ.3)THEN
    MP(IPLOT)%PRFTYPE=1    !active/non active in profile
