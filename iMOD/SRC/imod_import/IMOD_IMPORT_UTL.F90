@@ -223,7 +223,7 @@ CONTAINS
    ENDIF
    IF(UTL_CAP(FMTIN,'U').EQ.'(FREE)')FMTIN='*'
    FMTIN=ADJUSTL(FMTIN); LOCAT=1; IFILE=0
-   FREETYPE=2
+   FREETYPE=2; IUF=IU
   ENDIF
  
   !## external file stored
@@ -407,7 +407,7 @@ CONTAINS
    ENDIF
    IF(UTL_CAP(FMTIN,'U').EQ.'(FREE)')FMTIN='*'
    FMTIN=ADJUSTL(FMTIN); LOCAT=1; IFILE=0
-   FREETYPE=2
+   FREETYPE=2; IUF=IU
   ENDIF
  
   !## external file stored
