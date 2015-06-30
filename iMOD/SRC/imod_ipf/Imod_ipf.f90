@@ -359,7 +359,7 @@ CONTAINS
   IF(SUM(F).GT.0.0)THEN
    F=F/SUM(F)
    Z1=-9999; Z2=9999
-   !## get filter insize formations
+   !## get filter inside formations
    DO K=1,SIZE(IFCOL)
     T=IDFGETXYVAL(TOPIDF(K),XC,YC)
     B=IDFGETXYVAL(BOTIDF(K),XC,YC)
