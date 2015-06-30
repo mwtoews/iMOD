@@ -97,6 +97,7 @@ CONTAINS
  IU   =UTL_GETUNIT()
 
  IF(CODE.EQ.ID_LOADSHAPE)THEN
+
   IF(GENFNAME.EQ.'')THEN
    IF(.NOT.UTL_WSELECTFILE('All Possible Files (*.gen;*.shp)|*.gen;*.shp|ArcInfo Generate Files (*.gen)|*.gen|'// &
      'ArcGis Shape Files (*.shp)|*.shp|',&
