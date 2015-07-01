@@ -1157,8 +1157,31 @@ implicit none
 
 ! parameters
 character(len=1024), parameter :: licfile = 'license_agreement.txt'
-integer, parameter :: nlines = 34
-character(len=79), dimension(nlines) :: lic
+integer, parameter :: nlic = 32
+character(len=79), dimension(nlic) :: lic
+integer, parameter :: nhdr = 19
+character(len=79), dimension(nhdr) :: hdr
+
+!         1234567890123456789012345678901234567890123456789012345678901234567890123456789
+data hdr/'===============================================================================',&!01
+         'iMODFLOW Version 3.01.00, July 2015                                            ',&!02
+         '                                                                               ',&!03
+         'Copyright (C) Stichting Deltares, 2005-2015.                                   ',&!04
+         '                                                                               ',&!05
+         'This Deltares-software executable is part of iMOD. iMOD is Deltares-software;  ',&!06 
+         'the source code of iMOD is also available as free open source software at      ',&!07 
+         'oss.deltares.nl. You may use the Deltares-software executables of iMOD without ',&!08 
+         'any remuneration to be paid to Deltares since you accepted the iMOD Software   ',&!09 
+         'License Agreement (iMOD License).                                              ',&!10 
+         '                                                                               ',&!01
+         'The iMOD software is distributed in the hope that it will be useful, but       ',&!02
+         'WITHOUT ANY GUARANTEE OR (IMPLIED) WARRANTY. Any use of the                    ',&!03
+         'Deltares-executables of the iMOD-software is for your own risk. See the iMOD   ',&!04
+         'License for more details.                                                      ',&!05 
+         '                                                                               ',&!06
+         'For more info, please contact: Stichting Deltares, P.O. Box 177, 2600 MH Delft,',&!07
+         'The Netherlands. Email: imod.support@deltares.nl.                              ',&!08
+         '==============================================================================='/ !09
 
 !         1234567890123456789012345678901234567890123456789012345678901234567890123456789
 data lic/'===============================================================================',&!01
@@ -1192,9 +1215,7 @@ data lic/'======================================================================
          '                                                                               ',&!09
          'For more info, please contact: Stichting Deltares, P.O. Box 177, 2600 MH Delft,',&!10
          'The Netherlands. Email: imod.support@deltares.nl.                              ',&!01
-         '                                                                               ',&!02
-         'Version 3.01.00, July 2015                                                     ',&!03
-         '==============================================================================='/ !04
+         '==============================================================================='/ !02
 
 ! locals
 character(len=1024) :: dir, fname, datetime
@@ -1203,17 +1224,16 @@ logical :: lex, lagree
 integer :: i, iu
 integer, dimension(8) :: iedt
 
-! write license to standard output
-do i = 1, size(lic)
-   call imod_utl_printtext(trim(lic(i)),0)
-end do
-
 call getarg(0,dir) ! get full path of the executable
 call imod_utl_getdir(dir) ! get the directory (last character is a slash)
 write(fname,'(2a)') trim(dir), trim(licfile)
 inquire(file=fname,exist=lex) ! check if file exists
-call imod_utl_printtext('',0) 
 if (.not.lex) then
+   ! write license to standard output
+   do i = 1, size(lic)
+      call imod_utl_printtext(trim(lic(i)),0)
+   end do
+   call imod_utl_printtext('',0) 
    call imod_utl_printtext('I accept the iMOD License (please enter "Y" or "N" and hit the Enter-key):',0)    
    lagree = .false.
    do while(.true.)
@@ -1233,14 +1253,11 @@ if (.not.lex) then
          call imod_utl_printtext('I accept the iMOD License (please enter "Y" or "N" and hit the Enter-key):',0)    
       end select   
    end do
-else
-   call imod_utl_printtext('You already accepted the iMOD License, continuing...',0)
 end if
 
 ! If agreed, then write license file
 if (lagree) then 
    call imod_utl_printtext('Writing license agreement file ('//trim(licfile)//')...',0)
-   call imod_utl_printtext('',0)
    iu=imod_utl_getunit()
    call imod_utl_openasc(iu,fname,'w')    
    do i = 1, size(lic)
@@ -1252,6 +1269,10 @@ if (lagree) then
    call imod_utl_printtext(trim(datetime),-2,iu)
    close(iu)
 end if
+
+do i = 1, size(hdr)
+   call imod_utl_printtext(trim(hdr(i)),0)
+end do
 
 10 format(i2.2,'/',i2.2,'/',i4,1x,i2.2,':',i2.2,':',i2.2)
 
