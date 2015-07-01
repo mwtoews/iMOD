@@ -1197,7 +1197,7 @@ data lic/'======================================================================
          '==============================================================================='/ !04
 
 ! locals
-character(len=1024) :: dir, fname, agreestr
+character(len=1024) :: dir, fname, datetime
 character(len=1024) :: key
 logical :: lex, lagree
 integer :: i, iu
@@ -1222,7 +1222,7 @@ if (.not.lex) then
       select case(key)
       case('y')
          call date_and_time(values=iedt)
-         write(agreestr,10)(iedt(i),i=3,1,-1),(iedt(i),i=5,7) ! (yyyy/mm/dd hh:mm:ss)
+         write(datetime,10)(iedt(i),i=3,1,-1),(iedt(i),i=5,7) ! (yyyy/mm/dd hh:mm:ss)
          lagree = .true.
          exit
       case('n')
@@ -1247,11 +1247,13 @@ if (lagree) then
       call imod_utl_printtext(trim(lic(i)),-2,iu)
    end do
    call imod_utl_printtext('',-1,iu)
-   call imod_utl_printtext(trim(agreestr),-2,iu)
+   call imod_utl_printtext('I accepted the term and conditions of the iMOD Software License Agreement on:',-2,iu)
+   call imod_utl_printtext('',-2,iu)
+   call imod_utl_printtext(trim(datetime),-2,iu)
    close(iu)
 end if
 
-10 format('I accepted the iMOD License on:',1x,i2.2,'/',i2.2,'/',i4,1x,i2.2,':',i2.2,':',i2.2)
+10 format(i2.2,'/',i2.2,'/',i4,1x,i2.2,':',i2.2,':',i2.2)
 
 end subroutine imod_license
 
