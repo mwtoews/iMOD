@@ -1156,26 +1156,48 @@ use imod_utl, only: imod_utl_getunit, imod_utl_getdir, imod_utl_s_cap,&
 implicit none
 
 ! parameters
-integer, parameter :: nlines = 15
-character(len=1024), dimension(nlines) :: lic
-data lic/'====================================================================',& !01
-         'You may use this compiled version of the iMOD-software if you are '  ,& !02
-         'entitled to this use under a iMOD software license agreement for the',& !03
-         'iMOD software executables with Deltares or with a party entitled by' ,& !04
-         'Deltares to provide sublicenses for the iMOD-software executables.'  ,& !05
-         'Otherwise use of this compiled version of the iMOD-software is'      ,& !06
-         'prohibited and illegal. If you are not allowed under a Deltares iMOD',& !07
-         'license agreement to use the iMOD-software executables, you may find',& !08
-         'a solution in compiling the open source version of the iMOD-software',& !09
-         'into an executable yourself (see oss.deltares.nl), or apply for a'   ,& !10
-         'Deltares iMOD license agreement by sending an email to'              ,& !11
-         '   sales@deltares.nl. '                                              ,& !12
-         ''                                                                    ,& !13 
-         'Version 3.01.00, 01/07/15'                                           ,& !14
-         '===================================================================='/  !15
+character(len=1024), parameter :: licfile = 'license_agreement.txt'
+integer, parameter :: nlines = 34
+character(len=79), dimension(nlines) :: lic
+
+!         1234567890123456789012345678901234567890123456789012345678901234567890123456789
+data lic/'===============================================================================',&!01
+         'Copyright (C) Stichting Deltares, 2005-2015.                                   ',&!02
+         '                                                                               ',&!03
+         'This Deltares-software executable is part of iMOD. iMOD is Deltares-software;  ',&!04 
+         'the source code of iMOD is also available as free open source software at      ',&!05 
+         'oss.deltares.nl. You may use the Deltares-software executables of iMOD without ',&!06 
+         'any remuneration to be paid to Deltares if you accept the iMOD Software License',&!07 
+         'Agreement (iMOD License) which is offered to you as a PDF-file; you should have',&!08 
+         'received a copy of this PDF-file with this Deltares-software executable. If    ',&!09 
+         'not, see http://oss.deltares.nl/web/iMOD/iMOD_Software_License_Agreement.      ',&!10 
+         'Please go to the PDF-file of the iMOD License, read it and decide whether you  ',&!01 
+         'want or do not want to accept the iMOD License.                                ',&!02 
+         '                                                                               ',&!03 
+         'If you accept the iMOD License, please enter "Y" or "y" below this text and hit',&!04 
+         'the Enter-key.                                                                 ',&!05 
+         '                                                                               ',&!06 
+         'If you do not accept the iMOD License, please do NOT enter "Y" or "y" below    ',&!07 
+         'this text and hit the Enter-key and refrain from using the Deltares-software   ',&!08
+         'executables of iMOD; you may find a solution in downloading the source code of ',&!09
+         'the iMOD-software and compile the executables yourself (see oss.deltares.nl).  ',&!10
+         '                                                                               ',&!01
+         'Without your acceptance of the iMOD License the use of the Deltares-executables',&!02
+         'of the iMOD-software is prohibited and illegal.                                ',&!03
+         '                                                                               ',&!04
+         'The iMOD software is distributed in the hope that it will be useful, but       ',&!05
+         'WITHOUT ANY GUARANTEE OR (IMPLIED) WARRANTY. Any use of the                    ',&!06
+         'Deltares-executables of the iMOD-software is for your own risk. See the iMOD   ',&!07
+         'License for more details.                                                      ',&!08 
+         '                                                                               ',&!09
+         'For more info, please contact: Stichting Deltares, P.O. Box 177, 2600 MH Delft,',&!10
+         'The Netherlands. Email: imod.support@deltares.nl.                              ',&!01
+         '                                                                               ',&!02
+         'Version 3.01.00, July 2015                                                     ',&!03
+         '==============================================================================='/ !04
 
 ! locals
-character(len=1024) :: dir, licfile, agreestr
+character(len=1024) :: dir, fname, agreestr
 character(len=1024) :: key
 logical :: lex, lagree
 integer :: i, iu
@@ -1188,47 +1210,48 @@ end do
 
 call getarg(0,dir) ! get full path of the executable
 call imod_utl_getdir(dir) ! get the directory (last character is a slash)
-write(licfile,'(2a)') trim(dir),'license_agreement.txt'
-inquire(file=licfile,exist=lex) ! check if file exists
+write(fname,'(2a)') trim(dir), trim(licfile)
+inquire(file=fname,exist=lex) ! check if file exists
+call imod_utl_printtext('',0) 
 if (.not.lex) then
-   call imod_utl_printtext('Do you agree on using iMOD under the conditions stated in the',0) 
-   call imod_utl_printtext('iMOD licence agreement that can be found in <XXXXXXXXX>?',0)
-   call imod_utl_printtext('',0)
-   call imod_utl_printtext('Please enter (Yes/No) followed by (Enter).',0)
+   call imod_utl_printtext('I accept the iMOD License (please enter "Y" or "N" and hit the Enter-key):',0)    
    lagree = .false.
    do while(.true.)
       read(*,*) key     
       call imod_utl_s_cap(key,'l')
       select case(key)
-      case('y','yes')
+      case('y')
          call date_and_time(values=iedt)
          write(agreestr,10)(iedt(i),i=3,1,-1),(iedt(i),i=5,7) ! (yyyy/mm/dd hh:mm:ss)
          lagree = .true.
          exit
-      case('n','no')
-         call imod_utl_printtext('You have not agreed on the iMOD license, exiting program.',0)
+      case('n')
+         call imod_utl_printtext('I do NOT accept the iMOD License. Exiting program.',0)
          stop 1
       case default
-         call imod_utl_printtext('Invalid input, please enter (Yes/No) followed by (Enter).',0)
+         call imod_utl_printtext('Invalid input, please try again.',0)
+         call imod_utl_printtext('I accept the iMOD License (please enter "Y" or "N" and hit the Enter-key):',0)    
       end select   
    end do
-end if    
+else
+   call imod_utl_printtext('You already accepted the iMOD License, continuing...',0)
+end if
 
 ! If agreed, then write license file
 if (lagree) then 
-   call imod_utl_printtext('Writing license agreement:',0)
+   call imod_utl_printtext('Writing license agreement file ('//trim(licfile)//')...',0)
    call imod_utl_printtext('',0)
    iu=imod_utl_getunit()
-   call imod_utl_openasc(iu,licfile,'w')    
-   call imod_utl_printtext(trim(agreestr),-1,iu)
-   call imod_utl_printtext('',-1,iu)
+   call imod_utl_openasc(iu,fname,'w')    
    do i = 1, size(lic)
-      call imod_utl_printtext(trim(lic(i)),-1,iu)
+      call imod_utl_printtext(trim(lic(i)),-2,iu)
    end do
+   call imod_utl_printtext('',-1,iu)
+   call imod_utl_printtext(trim(agreestr),-2,iu)
    close(iu)
 end if
 
-10 format('Accepted on:',1x,i2.2,'/',i2.2,'/',i4,1x,i2,':',i2.2,':',i2.2)
+10 format('I accepted the iMOD License on:',1x,i2.2,'/',i2.2,'/',i4,1x,i2.2,':',i2.2,':',i2.2)
 
 end subroutine imod_license
 
