@@ -82,7 +82,7 @@ IF(.NOT.PRESENT(IDFNAMEGIVEN))THEN
                    'iMOD Flowline File (*.iff)|*.iff|'     //&
                    'ESRI Raster file (*.asc)|*.asc|'       //&
                    'ESRI Ungenerate file (*.gen)|*.gen|'   //&
-                   'Binary text file (*.map)|*.map|',        &
+                   'PC Raster Map file (*.map)|*.map|',        &
                    LOADDIALOG+MUSTEXIST+PROMPTON+DIRCHANGE+MULTIFILE,IDFNAME,&
                    'Load iMOD Map (*.idf,*.mdf,*.ipf,*.isg,*.iff,*.asc,*.gen,*.map)'))RETURN
  ELSEIF(INETCDF.EQ.1)THEN
@@ -96,7 +96,7 @@ IF(.NOT.PRESENT(IDFNAMEGIVEN))THEN
                    'NetCDF File (*.nc)|*.nc|'              //&
                    'ESRI Raster file (*.asc)|*.asc|'       //&
                    'ESRI Ungenerate file (*.gen)|*.gen|'   //&
-                   'Binary text file (*.map)|*.map|',        &
+                   'PC Raster Map file (*.map)|*.map|',        &
                    LOADDIALOG+MUSTEXIST+PROMPTON+DIRCHANGE+MULTIFILE,IDFNAME,&
                    'Load iMOD Map (*.idf,*.mdf,*.ipf,*.isg,*.iff,*.nc,*.asc,*.gen,*.map)'))RETURN
  ENDIF
