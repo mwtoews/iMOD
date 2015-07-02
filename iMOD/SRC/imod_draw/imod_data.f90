@@ -42,6 +42,7 @@ USE MOD_MANAGER, ONLY : MANAGERFILL,MANAGERUPDATE
 USE MOD_IFF, ONLY : UTL_GETUNITIFF
 USE MOD_OSD, ONLY : OSD_OPEN
 USE MOD_ISG_UTL, ONLY : UTL_GETUNITSISG
+USE MOD_MAP2IDF, ONLY : MAP2IDF_IMPORTMAP
 IMPLICIT NONE
 CHARACTER(LEN=*),INTENT(IN),OPTIONAL :: IDFNAMEGIVEN
 CHARACTER(LEN=*),INTENT(IN),OPTIONAL :: LEGNAME
@@ -72,30 +73,32 @@ IF(.NOT.PRESENT(IDFNAMEGIVEN))THEN
   IDFNAME=TRIM(OPENDIR)
  ENDIF
  IF(INETCDF.EQ.0)THEN
-  IF(.NOT.UTL_WSELECTFILE('All Known Files (*.idf;*.mdf;*.ipf;*.isg;*.iff;*.asc;*.gen)'//&
-                   '|*.idf;*.mdf;*.ipf;*.isg;*.iff;*.asc;*.gen|'// &
+  IF(.NOT.UTL_WSELECTFILE('All Known Files (*.idf;*.mdf;*.ipf;*.isg;*.iff;*.asc;*.gen;*.map)'//&
+                   '|*.idf;*.mdf;*.ipf;*.isg;*.iff;*.asc;*.gen;*.map|'// &
                    'iMOD Map (*.idf)|*.idf|'               //&
                    'iMOD Multi Data File (*.mdf)|*.mdf|'   //&
                    'iMOD Pointers (*.ipf)|*.ipf|'          //&
                    'iMOD Segment-River File (*.isg)|*.isg|'//&
                    'iMOD Flowline File (*.iff)|*.iff|'     //&
-                   'ESRI Raster file (*.asc)|*.asc|'        //&
-                   'ESRI Ungenerate file (*.gen)|*.gen|',       &
+                   'ESRI Raster file (*.asc)|*.asc|'       //&
+                   'ESRI Ungenerate file (*.gen)|*.gen|'   //&
+                   'Binary text file (*.map)|*.map|',        &
                    LOADDIALOG+MUSTEXIST+PROMPTON+DIRCHANGE+MULTIFILE,IDFNAME,&
-                   'Load iMOD Map (*.idf,*.mdf,*.ipf,*.isg,*.iff,*.asc,*.gen)'))RETURN
+                   'Load iMOD Map (*.idf,*.mdf,*.ipf,*.isg,*.iff,*.asc,*.gen,*.map)'))RETURN
  ELSEIF(INETCDF.EQ.1)THEN
-  IF(.NOT.UTL_WSELECTFILE('All Known Files (*.idf;*.mdf;*.ipf;*.isg;*.iff;*.nc;*.asc;*.gen)'//&
-                   '|*.idf;*.mdf;*.ipf;*.isg;*.iff,*.nc;*.asc;*.gen|'// &
+  IF(.NOT.UTL_WSELECTFILE('All Known Files (*.idf;*.mdf;*.ipf;*.isg;*.iff;*.nc;*.asc;*.gen,*.map)'//&
+                   '|*.idf;*.mdf;*.ipf;*.isg;*.iff,*.nc;*.asc;*.gen,*.map|'// &
                    'iMOD Map (*.idf)|*.idf|'               //&
                    'iMOD Multi Data File (*.mdf)|*.mdf|'   //&
                    'iMOD Pointers (*.ipf)|*.ipf|'          //&
                    'iMOD Segment-River File (*.isg)|*.isg|'//&
                    'iMOD Flowline File (*.iff)|*.iff|'     //&
-                   'NetCDF File (*.nc)|*.nc|'        //&
-                   'ESRI Raster file (*.asc)|*.asc|'        //&
-                   'ESRI Ungenerate file (*.gen)|*.gen|',       &
+                   'NetCDF File (*.nc)|*.nc|'              //&
+                   'ESRI Raster file (*.asc)|*.asc|'       //&
+                   'ESRI Ungenerate file (*.gen)|*.gen|'   //&
+                   'Binary text file (*.map)|*.map|',        &
                    LOADDIALOG+MUSTEXIST+PROMPTON+DIRCHANGE+MULTIFILE,IDFNAME,&
-                   'Load iMOD Map (*.idf,*.mdf,*.ipf,*.isg,*.iff,*.nc,*.asc,*.gen)'))RETURN
+                   'Load iMOD Map (*.idf,*.mdf,*.ipf,*.isg,*.iff,*.nc,*.asc,*.gen,*.map)'))RETURN
  ENDIF
 ELSE
  IDFNAME=IDFNAMEGIVEN
@@ -175,11 +178,13 @@ DO IDF=1,NIDF
    MP(IPLOT)%IPLOT=1
   CASE ('IPF')
    MP(IPLOT)%IPLOT=2
-  CASE ('ASC','NC ')
+  CASE ('ASC','NC ','MAP')
    IF(IDFNAME(I:I+2).EQ.'ASC')THEN
     CALL ASC2IDF_IMPORTASC(IDFNAME,0.0,0.0,I)
    ELSEIF(IDFNAME(I:I+2).EQ.'NC ')THEN
     CALL NC2IDF_IMPORTNC(IDFNAME,I)
+   ELSEIF(IDFNAME(I:I+2).EQ.'MAP')THEN
+    CALL MAP2IDF_IMPORTMAP(IDFNAME,I)
    ENDIF
    IF(I.EQ.0)THEN
     I=INDEXNOCASE(IDFNAME,'.',.TRUE.)
