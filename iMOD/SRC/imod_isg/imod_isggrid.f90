@@ -48,6 +48,45 @@ USE MOD_IPF, ONLY : IPFREAD2,IPFALLOCATE,IPFDEALLOCATE
 CONTAINS
 
  !##=====================================================================
+ SUBROUTINE ISG_EXPORT(EXPORTFNAME)
+ !##=====================================================================
+ IMPLICIT NONE
+ CHARACTER(LEN=*),INTENT(IN) :: EXPORTFNAME
+ INTEGER :: IU,NPNT,IPNT,NCLC,ICLC,J
+ REAL :: DIST,TD !IPNT,NPNT,ICLC,NCLC,I,J,K,IPOS,ISEG,N,ID,NTXT,MTXT,IU,IREF
+  
+ NISGFILES=1; IF(ALLOCATED(ISGIU))DEALLOCATE(ISGIU); ALLOCATE(ISGIU(MAXFILES,NISGFILES))
+ CALL UTL_GETUNITSISG(ISGIU,ISGFNAME,'OLD'); IF(MINVAL(ISGIU).LE.0)RETURN
+
+ !## read entire ISG file
+ CALL ISGREAD()
+     
+ !## read associated textfile for selected location
+ IU=UTL_GETUNIT()
+ CALL OSD_OPEN(IU,FILE=EXPORTFNAME,STATUS='UNKNOWN',FORM='FORMATTED',ACTION='WRITE,DENYREAD',ACCESS='SEQUENTIAL')
+ WRITE(IU,'(A10,A50,4A10,A32)') 'ISEGMENT','SEGNAME','ICALC','DISTANCE','X','Y','CALC.NAME'
+ 
+ !## proces each calculation point in the ISG
+ DO ISELISG=1,NISG
+
+  !## number of nodes on segment
+  NPNT=ISG(ISELISG)%NSEG; IPNT=ISG(ISELISG)%ISEG
+  NCLC=ISG(ISELISG)%NCLC; ICLC=ISG(ISELISG)%ICLC
+   
+  DO J=1,NCLC
+
+   DIST=ISD(ICLC+J-1)%DIST
+   !## compute correct x/y coordinate of current computational node
+   CALL ISGADJUSTCOMPUTEXY(IPNT,NPNT,DIST,TD)
+      
+   WRITE(IU,'(I10,A50,I10,3F10.2,A32)') ISELISG,ADJUSTR(ISG(ISELISG)%SNAME),J,DIST,ISGX,ISGY,ADJUSTR(ISD(ICLC+J-1)%CNAME)
+   
+  ENDDO
+ ENDDO 
+ 
+ END SUBROUTINE ISG_EXPORT
+
+ !##=====================================================================
  SUBROUTINE ISG_ADDSTAGES(IPFFILE)
  !##=====================================================================
  IMPLICIT NONE
@@ -173,7 +212,7 @@ CONTAINS
  CALL IPFDEALLOCATE()
  
  END SUBROUTINE ISG_ADDSTAGES
-
+ 
  !##=====================================================================
  SUBROUTINE ISG_ADDCROSSSECTION(FNAME,WIDTHFNAME,MAXDIST,CROSS_PNTR,CROSS_BATH,CELL_SIZE)
  !##=====================================================================

@@ -225,7 +225,6 @@
 		<File RelativePath="..\..\..\iMOD\SRC\imod_ludcmp\imod_ludcmp.f90"/></Filter>
 		<Filter Name="imod_main">
 		<File RelativePath="..\..\..\iMOD\SRC\imod_main\imod_about.f90"/>
-		<File RelativePath="..\..\..\iMOD\SRC\imod_main\imod_help.f90"/>
 		<File RelativePath="..\..\..\iMOD\SRC\imod_main\imod_main.f90">
 			<FileConfiguration Name="Debug|Win32">
 				<Tool Name="VFFortranCompilerTool" Preprocess="preprocessYes" PreprocessorDefinitions="WINTERACTER9"/></FileConfiguration>
