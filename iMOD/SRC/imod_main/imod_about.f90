@@ -29,6 +29,8 @@ USE MOD_UTL, ONLY : NEWLINE,UTL_GETUNIT,ITOS
 USE MOD_PREF_PAR, ONLY : PREFVAL
 USE MOD_OSD, ONLY : OSD_OPEN
 
+CHARACTER(LEN=32) :: LICFILE='I_accepted.txt'
+
 CONTAINS
 
  !###====================================================================
@@ -45,6 +47,8 @@ CONTAINS
  ' •  generate sub-domain models of any part of the area covered by your data;'//NEWLINE// &
  ' •  maintain consistency between regional and inlying sub-domain models;'//NEWLINE// &
  ' •  update your data set with the details added in a sub-domain model.'//NEWLINE//NEWLINE// &
+ 'See for more information the open-source website:'//NEWLINE// &
+ 'see http://oss.deltares.nl/web/iMOD.'//NEWLINE//NEWLINE// & 
  'iMOD Code Architect: dr. Peter (PTM) Vermeulen.')
  CALL WDIALOGPUTIMAGE(IDF_PICTURE1,ID_ICONTNO,1)
  CALL WDIALOGPUTIMAGE(IDF_PICTURE2,ID_ICONIMOD,1)
@@ -68,17 +72,17 @@ CONTAINS
  CHARACTER(LEN=10) :: CDATE
 
  IF(CODE.EQ.0)THEN
-  INQUIRE(FILE=TRIM(PREFVAL(1))//'\license_agreement.txt',EXIST=LEX)
+  INQUIRE(FILE=TRIM(PREFVAL(1))//'\'//TRIM(LICFILE),EXIST=LEX)
   IF(LEX)THEN; CODE=1; RETURN; ENDIF
  ENDIF
 
  CALL WDIALOGLOAD(ID_DDISCLAIMER)
  CALL WDIALOGTITLE('iMOD Software License Agreement')
 
- INQUIRE(FILE=TRIM(PREFVAL(1))//'\I_ACCEPTED.TXT',EXIST=LEX)
+ INQUIRE(FILE=TRIM(PREFVAL(1))//'\'//TRIM(LICFILE),EXIST=LEX)
  IF(LEX)THEN
   IU=UTL_GETUNIT()
-  CALL OSD_OPEN(IU,FILE=TRIM(PREFVAL(1))//'\I_ACCEPTED.TXT',STATUS='OLD',ACTION='READ,DENYWRITE')
+  CALL OSD_OPEN(IU,FILE=TRIM(PREFVAL(1))//'\'//TRIM(LICFILE),STATUS='OLD',ACTION='READ,DENYWRITE')
   READ(IU,'(A256)') TEXT
   CALL WDIALOGPUTCHECKBOX(IDF_RADIO1,1)
   CALL WDIALOGPUTSTRING(IDF_RADIO1,TEXT)
@@ -114,7 +118,7 @@ CONTAINS
  CALL WDIALOGUNLOAD()
  IF(I.EQ.1)THEN
   IU=UTL_GETUNIT()
-  CALL OSD_OPEN(IU,FILE=TRIM(PREFVAL(1))//'\I_ACCEPTED.TXT',STATUS='UNKNOWN',ACTION='WRITE,DENYREAD')
+  CALL OSD_OPEN(IU,FILE=TRIM(PREFVAL(1))//'\'//TRIM(LICFILE),STATUS='UNKNOWN',ACTION='WRITE,DENYREAD')
   CALL IOSDATE(IY,IM,ID); CDATE=TRIM(ITOS(ID))//'-'//TRIM(ITOS(IM))//'-'//TRIM(ITOS(IY))
   WRITE(IU,'( A )') 'You accepted the term and conditions of the iMOD Software License Agreement on '//TRIM(CDATE)
   WRITE(IU,'(/A/)') TRIM(IMODDISCL())

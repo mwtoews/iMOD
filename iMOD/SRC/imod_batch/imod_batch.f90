@@ -1154,7 +1154,6 @@ CONTAINS
  !###======================================================================
  USE MOD_ISG_PAR, ONLY : ISGFNAME
  IMPLICIT NONE
- INTEGER :: ISAVE
  CHARACTER(LEN=256) :: EXPORTFNAME
   
  IF(.NOT.UTL_READINITFILE('ISGFILE_IN',LINE,IU,0))RETURN
