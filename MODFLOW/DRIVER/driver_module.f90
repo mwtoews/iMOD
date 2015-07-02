@@ -1156,7 +1156,7 @@ use imod_utl, only: imod_utl_getunit, imod_utl_getdir, imod_utl_s_cap,&
 implicit none
 
 ! parameters
-character(len=1024), parameter :: licfile = 'license_agreement.txt'
+character(len=1024), parameter :: licfile = 'I_accepted.txt'
 integer, parameter :: nlic = 32
 character(len=79), dimension(nlic) :: lic
 integer, parameter :: nhdr = 19
