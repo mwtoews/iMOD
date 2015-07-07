@@ -8,7 +8,7 @@
 //
 // Winteracter resource script. 
 //
-// Modified : 02/Jul/2015 11:41:01
+// Modified : 07/Jul/2015 16:46:27
 //
 ///////////////////////////////////////////////////
 //
@@ -388,7 +388,6 @@
 #define ID_DSERIESPROPTAB4                129
 #define ID_DABOUT                         126
 #define ID_DDISCLAIMER                    131
-#define ID_DISCLAIMER                   40085
 #define ID_UAGREEMENT                   40086
 #define IDF_MENU4                        1094
 #define ID_GXG                          40087
@@ -8914,7 +8913,6 @@ BEGIN
     POPUP "&Help ..."
     BEGIN
         MENUITEM "&About iMOD ...",                          ID_ABOUT
-        MENUITEM "&Disclaimer ...",                          ID_DISCLAIMER
         MENUITEM "&User Agreement ...",                      ID_UAGREEMENT
         MENUITEM "&Contents ...\aF1",                        ID_HELP
     END
@@ -9089,7 +9087,6 @@ ID_SPOINTS,"Define startpoints to be used in a pathline computation\0",
 ID_WBAL,"Compute the sum of budget quantities for the entire model extent or for specified regions within t\0",
 ID_TS,"Compute timeseries of groundwater heads for selected locations\0",
 ID_ABOUT,"Information about the iMOD version\0",
-ID_DISCLAIMER,"Conditions under which the iMOD software may be used\0",
 ID_UAGREEMENT,"Agreement under which the iMOD software may be used\0",
 ID_HELP,"Open the contents of the iMOD Help\0",
 ID_SORT,"Sort Selected Maps According to their Values in a Ascending Order\0",
@@ -9644,5 +9641,5 @@ END
 //*WI* FORTSAVE    1
 //*WI* FILENAME    resource.f90
 //*WI* FMODNAME    RESOURCE
-//*WI* LASTTYPE        2
-//*WI* LASTRES        40
+//*WI* LASTTYPE        1
+//*WI* LASTRES         7

@@ -93,7 +93,8 @@ CONTAINS
   CLOSE(IU)
  ENDIF
 
- CALL WDIALOGPUTSTRING(IDF_STRING1,TRIM(IMODDISCL()))
+ CALL IMOD_PUTLICENSE(IDF_STRING1)
+! CALL WDIALOGPUTSTRING(IDF_STRING1,TRIM(IMODDISCL()))
  CALL WDIALOGPUTSTRING(IDF_LABEL1,'User Agreement')
  CALL WDIALOGSETFIELD(IDOK)
  IF(CODE.EQ.1.AND..NOT.LEX)THEN
@@ -122,25 +123,12 @@ CONTAINS
   CALL OSD_OPEN(IU,FILE=TRIM(PREFVAL(1))//'\'//TRIM(LICFILE),STATUS='UNKNOWN',ACTION='WRITE,DENYREAD')
   CALL IOSDATE(IY,IM,ID); CDATE=TRIM(ITOS(ID))//'-'//TRIM(ITOS(IM))//'-'//TRIM(ITOS(IY))
   WRITE(IU,'( A )') 'You accepted the term and conditions of the iMOD Software License Agreement on '//TRIM(CDATE)
-  WRITE(IU,'(/A/)') TRIM(IMODDISCL())
+  CALL IMOD_PUTLICENSE(-IU)
+!  WRITE(IU,'(/A/)') TRIM(IMODDISCL())
   CODE=1
  ENDIF
 
  END SUBROUTINE IMODAGREEMENT
-
- !###====================================================================
- SUBROUTINE IMODDISCLAIMER()
- !###====================================================================
- IMPLICIT NONE
-
- CALL WDIALOGLOAD(ID_DABOUT)
- CALL WDIALOGTITLE('Disclaimer iMOD')
- CALL WDIALOGPUTSTRING(IDF_STRING1,TRIM(IMODDISCL()))
-
- CALL WDIALOGSETFIELD(IDOK)
- CALL WDIALOGSHOW(-1,-1,0,1)
-
- END SUBROUTINE IMODDISCLAIMER
 
  !###====================================================================
  FUNCTION IMODDISCL()
@@ -159,17 +147,14 @@ CONTAINS
  END FUNCTION IMODDISCL
 
  !###====================================================================
- SUBROUTINE IMOD_PUTLICENSE()
+ SUBROUTINE IMOD_PUTLICENSE(ID)
  !###====================================================================
  IMPLICIT NONE
- INTEGER,PARAMETER :: STRLEN=1000 
-!    if (strlen > len(str)) then
-!       deallocate(str)
-!       allocate(character(len=strlen) :: str)
-!    end if    
-!character(len=:), allocatable :: str
+ INTEGER,INTENT(IN) :: ID
+ INTEGER,PARAMETER :: STRLEN=20000 
 
  ALLOCATE(CHARACTER(LEN=STRLEN) :: STR)
+ 
 STR='iMOD Software License Agreement'//NEWLINE// &
 NEWLINE// &
 'This is a license for the iMOD-executables, distributed from the Stichti'// &
@@ -444,6 +429,13 @@ NEWLINE// &
 'www.deltares.com'//NEWLINE// &
 'Chamber of Commerce no. 41146461'
 
+ IF(ID.LT.0)THEN
+  WRITE(ABS(ID),'(A)') TRIM(STR)
+ ELSE
+  CALL WDIALOGPUTSTRING(ID,TRIM(STR))
+ ENDIF
+ 
+ DEALLOCATE(STR)
  
  END SUBROUTINE IMOD_PUTLICENSE
  
@@ -456,7 +448,8 @@ NEWLINE// &
 
  CALL WDIALOGLOAD(ID_DSTARTSCREEN,ID_DSTARTSCREEN)
  CALL WDIALOGTITLE('iMOD, Interactive Modelling (version: '//TRIM(RVERSION)//')')
- CALL WDIALOGPUTSTRING(IDF_LABEL1,NEWLINE//TRIM(IMODDISCL()))
+ CALL IMOD_PUTLICENSE(IDF_LABEL1)
+! CALL WDIALOGPUTSTRING(IDF_LABEL1,NEWLINE//TRIM(IMODDISCL()))
  CALL WDIALOGPUTIMAGE(IDF_PICTURE3,ID_ICONMAIN,1)
  
  CALL WDIALOGSHOW(-1,-1,0,2)
