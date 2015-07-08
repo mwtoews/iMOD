@@ -35,7 +35,7 @@ CHARACTER(LEN=:),ALLOCATABLE :: STR
 CONTAINS
 
  !###====================================================================
- SUBROUTINE IMODABOUT()
+ SUBROUTINE IMOD_ABOUT()
  !###====================================================================
  IMPLICIT NONE
 
@@ -59,10 +59,10 @@ CONTAINS
  CALL WDIALOGSETFIELD(IDOK)
  CALL WDIALOGSHOW(-1,-1,0,1)
 
- END SUBROUTINE IMODABOUT
+ END SUBROUTINE IMOD_ABOUT
 
  !###====================================================================
- SUBROUTINE IMODAGREEMENT(CODE)
+ SUBROUTINE IMOD_AGREEMENT(CODE)
  !###====================================================================
  IMPLICIT NONE
  INTEGER,INTENT(INOUT) :: CODE
@@ -94,7 +94,6 @@ CONTAINS
  ENDIF
 
  CALL IMOD_PUTLICENSE(IDF_STRING1)
-! CALL WDIALOGPUTSTRING(IDF_STRING1,TRIM(IMODDISCL()))
  CALL WDIALOGPUTSTRING(IDF_LABEL1,'User Agreement')
  CALL WDIALOGSETFIELD(IDOK)
  IF(CODE.EQ.1.AND..NOT.LEX)THEN
@@ -124,27 +123,60 @@ CONTAINS
   CALL IOSDATE(IY,IM,ID); CDATE=TRIM(ITOS(ID))//'-'//TRIM(ITOS(IM))//'-'//TRIM(ITOS(IY))
   WRITE(IU,'( A )') 'You accepted the term and conditions of the iMOD Software License Agreement on '//TRIM(CDATE)
   CALL IMOD_PUTLICENSE(-IU)
-!  WRITE(IU,'(/A/)') TRIM(IMODDISCL())
   CODE=1
  ENDIF
 
- END SUBROUTINE IMODAGREEMENT
+ END SUBROUTINE IMOD_AGREEMENT
 
  !###====================================================================
- FUNCTION IMODDISCL()
+ SUBROUTINE IMOD_STARTLICENSE(ID)
  !###====================================================================
  IMPLICIT NONE
+ INTEGER,INTENT(IN) :: ID
+ INTEGER,PARAMETER :: STRLEN=20000 
 
- CHARACTER(LEN=5000) :: IMODDISCL
+ ALLOCATE(CHARACTER(LEN=STRLEN) :: STR)
 
- IMODDISCL='You may use this compiled version of the iMOD-software if you are entitled to this use under a '// &
- 'iMOD software license agreement for the iMOD software executables with Deltares or with a party entitled by '// &
- 'Deltares to provide sublicenses for the iMOD-software executables. Otherwise use of this compiled version of the '// &
- 'iMOD-software is prohibited and illegal. If you are not allowed under a Deltares iMOD license agreement to use the '// &
- 'iMOD-software executables, you may find a solution in compiling the open source version of the iMOD-software into an '// &
- 'executable yourself (see oss.deltares.nl), or apply for a Deltares iMOD license agreement by sending an email to sales@deltares.nl.'
+ STR='Copyright (C) Stichting Deltares, 2005-2015. '//NEWLINE// &
+NEWLINE// &
+'This Deltares-software executable is part of iMOD. iMOD is Deltares-soft'// &
+'ware; the source code of iMOD is also available as free open source soft'// &
+'ware at oss.deltares.nl. You may use the Deltares-software executables o'// &
+'f iMOD without any remuneration to be paid to Deltares if you accepted t'// &
+'he iMOD Software License Agreement (iMOD License) which is offered to yo'// &
+'u as a PDF-file; you should have received a copy of this PDF-file with t'// &
+'his Deltares-software '//NEWLINE// &
+'executable. If not, see '//NEWLINE// &
+'http://oss.deltares.nl/web/iMOD/iMOD_Software_License_Agreement. '//NEWLINE// &
+NEWLINE// &
+'According to the file "I_accepted.txt" on your computer you accepted the'// &
+' terms and conditions of the iMOD license on <date and time>; WARNING: I'// &
+'F IT WAS NOT YOU OR THE LEGAL ENTITY ON WHOSE BEHALF YOU INTENT TO USE T'// &
+'HE IMOD-EXECUTABLE, THAT ACCEPTED THE TERMS AND CONDITIONS OF THE iMOD L'// &
+'ICENSE YOU ARE NOT ENTITLED TO USE THIS DELTARES-EXECUTABLE OF IMOD. In '// &
+'this case your use of this Deltares-executable of the iMOD-software is p'// &
+'rohibited and illegal: abort the use of this Deltares-executable immedia'// &
+'tely and refrain from using the Deltares-executables of iMOD. To make us'// &
+'e of the Deltares-executables of iMOD please make sure to accept the ter'// &
+'ms and conditions or have it lawfully accepted by the legal entity on wh'// &
+'ose behalf you intent to use the iMOD-executable by re-invoking the ‘I a'// &
+'ccept’-procedure; to re-invoke the "I accept"-procedure abort the use of'// &
+' this Deltares-executable of iMOD, delete the file "I_accepted.txt", and'// &
+' invoke this Deltares-executable of iMOD again.'//NEWLINE// &
+NEWLINE// &
+'The iMOD software is distributed in the hope that it will be useful, but'// &
+' WITHOUT ANY GUARANTEE OR (IMPLIED) WARRANTY. Any use of the Deltares-ex'// &
+'ecutables of the iMOD-software is for your own risk. See the iMOD Licens'// &
+'e for more details.'//NEWLINE// &
+NEWLINE// &
+'For more info, please contact: Stichting Deltares, P.O. Box 177, 2600 MH'// &
+' Delft,The Netherlands. Email: imod.support@deltares.nl. '
 
- END FUNCTION IMODDISCL
+ CALL WDIALOGPUTSTRING(ID,TRIM(STR))
+ 
+ DEALLOCATE(STR)
+ 
+ END SUBROUTINE IMOD_STARTLICENSE
 
  !###====================================================================
  SUBROUTINE IMOD_PUTLICENSE(ID)
@@ -361,13 +393,15 @@ NEWLINE// &
 'bsite http://www.usgs.gov/. The original MODFLOW2005 source code incorpo'// &
 'rated in the Deltares-executables is covered by the USGS Software User R'// &
 'ights Notice; you should have received a copy of this notice along with '// &
-'this program. If not, see .'//NEWLINE// &
+'this program. If not, see http://water.usgs.gov/software/help/notice.'//NEWLINE// &
 NEWLINE// &
 'The MODFLOW computational core includes the MetaSWAP-module SVN version '// &
 'number 1031, part of SIMGRO V7_2_22 as described in the SIMGRO-release n'// &
-'otes . MetaSWAP has been developed by Alterra – Wageningen UR. For more '// &
+'otes ftp://ftp.wur.nl/simgro/doc/Change_log/ Release_Notes_SIMGRO_V7_2_2'// &
+'5.pdf. MetaSWAP has been developed by Alterra – Wageningen UR. For more '// &
 'info on MetaSWAP, see the iMOD user manual, Annex 1. For more info on Al'// &
-'terra – Wageningen UR, see .'//NEWLINE// &
+'terra – Wageningen UR, see http://www.wageningenur.nl/en/Expertise-Servi'// &
+'ces/Research-Institutes/alterra.htm.'//NEWLINE// &
 NEWLINE// &
 'iMOD user manual'//NEWLINE// &
 NEWLINE// &
@@ -376,9 +410,11 @@ NEWLINE// &
 NEWLINE// &
 'NETCDF'//NEWLINE// &
 NEWLINE// &
-'iMOD makes use of functions available in the NetCDF library of . The fil'// &
-'e ‘NetCDF.dll’ is redistributed together with the iMOD-executables. The '// &
-'NetCDF.dll-file can be used under the conditions as described in .'//NEWLINE// &
+'iMOD makes use of functions available in the NetCDF library of www.unida'// &
+'ta.ucar.edu. The file ‘NetCDF.dll’ is redistributed together with the iM'// &
+'OD-executables. The NetCDF.dll-file can be used under the conditions as '// &
+'described in http://www.unidata.ucar.edu/software/netcdf/copyright.html.'// &
+NEWLINE// &
 NEWLINE// &
 'OTHER REQUIREMENTS FOR THE USE OF iMOD'//NEWLINE// &
 NEWLINE// &
@@ -409,14 +445,14 @@ NEWLINE// &
 NEWLINE// &
 'SYSTEM SOFTWARE'//NEWLINE// &
 NEWLINE// &
-'Adobe Acrobat is a family of  developed by  to view, create, manipulate,'// &
-' print and manage files in  (PDF). All members of the family, except Ado'// &
-'be Reader (formerly Acrobat Reader), are commercial software; Adobe Read'// &
-'er however, is available as  and can be downloaded from Adobe"s web site'// &
-'. Adobe Reader enables users to view and print PDF files but has negligi'// &
-'ble PDF creation capabilities. Acrobat and Reader are widely used as a w'// &
-'ay to present information with a fixed layout similar to a paper publica'// &
-'tion.'//NEWLINE// &
+'Adobe Acrobat is a family of application software developed by Adobe Sys'// &
+'tems to view, create, manipulate, print and manage files in Portable Doc'// &
+'ument Format (PDF). All members of the family, except Adobe Reader (form'// &
+'erly Acrobat Reader), are commercial software; Adobe Reader however, is '// &
+'available as freeware and can be downloaded from Adobe"s web site. Adobe'// &
+' Reader enables users to view and print PDF files but has negligible PDF'// &
+' creation capabilities. Acrobat and Reader are widely used as a way to p'// &
+'resent information with a fixed layout similar to a paper publication.'//NEWLINE// &
 NEWLINE// &
 NEWLINE// &
 'Stichting Deltares'//NEWLINE// &
@@ -440,7 +476,7 @@ NEWLINE// &
  END SUBROUTINE IMOD_PUTLICENSE
  
  !###====================================================================
- SUBROUTINE IMODSTARTSCREEN()
+ SUBROUTINE IMOD_STARTSCREEN()
  !###====================================================================
  IMPLICIT NONE
  INTEGER :: I
@@ -448,8 +484,7 @@ NEWLINE// &
 
  CALL WDIALOGLOAD(ID_DSTARTSCREEN,ID_DSTARTSCREEN)
  CALL WDIALOGTITLE('iMOD, Interactive Modelling (version: '//TRIM(RVERSION)//')')
- CALL IMOD_PUTLICENSE(IDF_LABEL1)
-! CALL WDIALOGPUTSTRING(IDF_LABEL1,NEWLINE//TRIM(IMODDISCL()))
+ CALL IMOD_STARTLICENSE(IDF_LABEL1)
  CALL WDIALOGPUTIMAGE(IDF_PICTURE3,ID_ICONMAIN,1)
  
  CALL WDIALOGSHOW(-1,-1,0,2)
@@ -462,6 +497,6 @@ NEWLINE// &
  CALL IOSWAIT(150)
  CALL WDIALOGUNLOAD()
 
- END SUBROUTINE IMODSTARTSCREEN
+ END SUBROUTINE IMOD_STARTSCREEN
 
 END MODULE

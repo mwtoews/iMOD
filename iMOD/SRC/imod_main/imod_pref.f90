@@ -370,15 +370,12 @@ CONTAINS
  END SUBROUTINE PREFREAD
 
  !###======================================================================
- SUBROUTINE PREFINIT(IERROR)
+ SUBROUTINE PREFINIT()
  !###======================================================================
  IMPLICIT NONE
- INTEGER,INTENT(OUT) :: IERROR
  LOGICAL :: LEX
  INTEGER :: IU
  
- IERROR=1
-
  CALL IOSDIRNAME(PREFDIR)
  INQUIRE(FILE=TRIM(PREFDIR)//'\IMOD_INIT.PRF',EXIST=LEX)
  !## create dummy imod_init.prf
@@ -387,8 +384,7 @@ CONTAINS
    'If you agree iMOD will create this file and add the keyword'//CHAR(13)//&
    'USER='//TRIM(PREFDIR)//'\IMOD_USER'//CHAR(13)//'After that iMOD can start!','Error')
   IF(WINFODIALOG(4).NE.1)THEN
-   CALL WINDOWCLOSE()
-   STOP
+   CALL WINDOWCLOSE(); STOP
   ENDIF
   IU=UTL_GETUNIT()
   CALL OSD_OPEN(IU,FILE=TRIM(PREFDIR)//'\IMOD_INIT.PRF',STATUS='UNKNOWN')
@@ -397,7 +393,7 @@ CONTAINS
  ENDIF
 
  CALL PREFREAD(TRIM(PREFDIR)//'\IMOD_INIT.PRF')
- !not user keyword assigned
+ !## not user keyword assigned
  IF(PREFVAL(1).EQ.'')RETURN
 
 ! OPENDIR=PREFVAL(1)
@@ -406,8 +402,6 @@ CONTAINS
 
  MAXSHAPES=400 !400
  MAXSHPCRD=500  !0
-
- IERROR=0
 
  END SUBROUTINE PREFINIT
 
