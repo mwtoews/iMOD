@@ -1157,9 +1157,9 @@ implicit none
 
 ! parameters
 character(len=1024), parameter :: licfile = 'I_accepted.txt'
-integer, parameter :: nlic = 32
+integer, parameter :: nlic = 33
 character(len=79), dimension(nlic) :: lic
-integer, parameter :: nhdr = 19
+integer, parameter :: nhdr = 38
 character(len=79), dimension(nhdr) :: hdr
 
 !         1234567890123456789012345678901234567890123456789012345678901234567890123456789
@@ -1171,51 +1171,71 @@ data hdr/'======================================================================
          'This Deltares-software executable is part of iMOD. iMOD is Deltares-software;  ',&!06 
          'the source code of iMOD is also available as free open source software at      ',&!07 
          'oss.deltares.nl. You may use the Deltares-software executables of iMOD without ',&!08 
-         'any remuneration to be paid to Deltares since you accepted the iMOD Software   ',&!09 
-         'License Agreement (iMOD License).                                              ',&!10 
-         '                                                                               ',&!01
-         'The iMOD software is distributed in the hope that it will be useful, but       ',&!02
-         'WITHOUT ANY GUARANTEE OR (IMPLIED) WARRANTY. Any use of the                    ',&!03
-         'Deltares-executables of the iMOD-software is for your own risk. See the iMOD   ',&!04
-         'License for more details.                                                      ',&!05 
+         'any remuneration to be paid to Deltares if you accepted the iMOD Software      ',&!09 
+         'License Agreement (iMOD License) which is offered to you as a PDF-file; you    ',&!10 
+         'should have received a copy of this PDF-file with this Deltares-software       ',&!01 
+         'executable. If not, see                                                        ',&!02
+         'http://oss.deltares.nl/web/iMOD/iMOD_Software_License_Agreement.               ',&!03 
+         'Please go to the PDF-file of the iMOD License, read it and decide whether you  ',&!04 
+         'want or do not want to accept the iMOD License.                                ',&!05 
          '                                                                               ',&!06
-         'For more info, please contact: Stichting Deltares, P.O. Box 177, 2600 MH Delft,',&!07
-         'The Netherlands. Email: imod.support@deltares.nl.                              ',&!08
-         '==============================================================================='/ !09
-
-!         1234567890123456789012345678901234567890123456789012345678901234567890123456789
+         'According to the file "I_accepted.txt" on your computer you accepted the terms ',&!07
+         'and conditions of the iMOD license; WARNING: IF IT WAS NOT YOU OR THE LEGAL    ',&!08
+         'ENTITY ON WHOSE BEHALF YOU INTENT TO USE THE IMOD-EXECUTABLE, THAT ACCEPTED THE',&!09 
+         'TERMS AND CONDITIONS OF THE iMOD LICENSE YOU ARE NOT ENTITLED TO USE THIS      ',&!10
+         'DELTARES-EXECUTABLE OF IMOD. In this case your use of this Deltares-executable ',&!01
+         'of the iMOD-software is prohibited and illegal: abort the use of this          ',&!02
+         'Deltares-executable immediately and refrain from using the Deltares-executables',&!03 
+         'of iMOD. To make use of the Deltares-executables of iMOD please make sure to   ',&!04
+         'accept the terms and conditions or have it lawfully accepted by the legal      ',&!05
+         'entity on whose behalf you intent to use the iMOD-executable by re-invoking the',&!06 
+         '‘I accept’-procedure; to re-invoke the "I accept"-procedure abort the use of   ',&!07
+         'this Deltares-executable of iMOD, delete the file "I_accepted.txt", and invoke ',&!08
+         'this Deltares-executable of iMOD again.                                        ',&!09
+         '                                                                               ',&!10
+         'The iMOD software is distributed in the hope that it will be useful, but       ',&!01
+         'WITHOUT ANY GUARANTEE OR (IMPLIED) WARRANTY. Any use of the                    ',&!02
+         'Deltares-executables of the iMOD-software is for your own risk. See the iMOD   ',&!03
+         'License for more details.                                                      ',&!04 
+         '                                                                               ',&!05
+         'For more info, please contact: Stichting Deltares, P.O. Box 177, 2600 MH Delft,',&!06
+         'The Netherlands. Email: imod.support@deltares.nl.                              ',&!07
+         '==============================================================================='/ !08
+                                                                                            
+!         1234567890123456789012345678901234567890123456789012345678901234567890123456789   
 data lic/'===============================================================================',&!01
          'Copyright (C) Stichting Deltares, 2005-2015.                                   ',&!02
          '                                                                               ',&!03
          'This Deltares-software executable is part of iMOD. iMOD is Deltares-software;  ',&!04 
          'the source code of iMOD is also available as free open source software at      ',&!05 
          'oss.deltares.nl. You may use the Deltares-software executables of iMOD without ',&!06 
-         'any remuneration to be paid to Deltares if you accept the iMOD Software License',&!07 
-         'Agreement (iMOD License) which is offered to you as a PDF-file; you should have',&!08 
-         'received a copy of this PDF-file with this Deltares-software executable. If    ',&!09 
-         'not, see http://oss.deltares.nl/web/iMOD/iMOD_Software_License_Agreement.      ',&!10 
-         'Please go to the PDF-file of the iMOD License, read it and decide whether you  ',&!01 
-         'want or do not want to accept the iMOD License.                                ',&!02 
-         '                                                                               ',&!03 
-         'If you accept the iMOD License, please enter "Y" or "y" below this text and hit',&!04 
-         'the Enter-key.                                                                 ',&!05 
-         '                                                                               ',&!06 
-         'If you do not accept the iMOD License, please do NOT enter "Y" or "y" below    ',&!07 
-         'this text and hit the Enter-key and refrain from using the Deltares-software   ',&!08
-         'executables of iMOD; you may find a solution in downloading the source code of ',&!09
-         'the iMOD-software and compile the executables yourself (see oss.deltares.nl).  ',&!10
-         '                                                                               ',&!01
-         'Without your acceptance of the iMOD License the use of the Deltares-executables',&!02
-         'of the iMOD-software is prohibited and illegal.                                ',&!03
-         '                                                                               ',&!04
-         'The iMOD software is distributed in the hope that it will be useful, but       ',&!05
-         'WITHOUT ANY GUARANTEE OR (IMPLIED) WARRANTY. Any use of the                    ',&!06
-         'Deltares-executables of the iMOD-software is for your own risk. See the iMOD   ',&!07
-         'License for more details.                                                      ',&!08 
-         '                                                                               ',&!09
-         'For more info, please contact: Stichting Deltares, P.O. Box 177, 2600 MH Delft,',&!10
-         'The Netherlands. Email: imod.support@deltares.nl.                              ',&!01
-         '==============================================================================='/ !02
+         'any remuneration to be paid to Deltares if you accepted the iMOD Software      ',&!07 
+         'License Agreement (iMOD License) which is offered to you as a PDF-file; you    ',&!08 
+         'should have received a copy of this PDF-file with this Deltares-software       ',&!09 
+         'executable. If not, see                                                        ',&!10
+         'http://oss.deltares.nl/web/iMOD/iMOD_Software_License_Agreement.               ',&!01 
+         'Please go to the PDF-file of the iMOD License, read it and decide whether you  ',&!02 
+         'want or do not want to accept the iMOD License.                                ',&!03 
+         '                                                                               ',&!04 
+         'If you accept the iMOD License, please enter "Y" or "y" below this text and hit',&!05 
+         'the Enter-key.                                                                 ',&!06 
+         '                                                                               ',&!07 
+         'If you do not accept the iMOD License, please do NOT enter "Y" or "y" below    ',&!08 
+         'this text and hit the Enter-key and refrain from using the Deltares-software   ',&!09
+         'executables of iMOD; you may find a solution in downloading the source code of ',&!10
+         'the iMOD-software and compile the executables yourself (see oss.deltares.nl).  ',&!01
+         '                                                                               ',&!02
+         'Without your acceptance of the iMOD License the use of the Deltares-executables',&!03
+         'of the iMOD-software is prohibited and illegal.                                ',&!04
+         '                                                                               ',&!05
+         'The iMOD software is distributed in the hope that it will be useful, but       ',&!06
+         'WITHOUT ANY GUARANTEE OR (IMPLIED) WARRANTY. Any use of the                    ',&!07
+         'Deltares-executables of the iMOD-software is for your own risk. See the iMOD   ',&!08
+         'License for more details.                                                      ',&!09 
+         '                                                                               ',&!10
+         'For more info, please contact: Stichting Deltares, P.O. Box 177, 2600 MH Delft,',&!01
+         'The Netherlands. Email: imod.support@deltares.nl.                              ',&!02
+         '==============================================================================='/ !03
 
 ! locals
 character(len=1024) :: dir, fname, datetime
