@@ -197,6 +197,7 @@ CONTAINS
       IDN=IDN+1
       N  =N+1
       !## check iperiods first, whether we're interested at all!##
+      !## Liduin
       IF(GXG_IPERIOD(MM,IDN).EQ.1)THEN
        WRITE(CD,'(I2.2)') DN
 
