@@ -19,7 +19,7 @@
 !!  Stichting Deltares
 !!  P.O. Box 177
 !!  2600 MH Delft, The Netherlands.
-
+!!
 MODULE MOD_GXG_CLC
 
 USE WINTERACTER
@@ -180,7 +180,7 @@ CONTAINS
    DO I=1,12
     MM=MM+1
     IF(MM.GT.12)THEN
-     YY=YY+1        !FR 20131007
+     YY=YY+1        
      MM=1
     END IF
 

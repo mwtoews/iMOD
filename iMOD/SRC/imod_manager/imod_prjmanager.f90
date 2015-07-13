@@ -1830,9 +1830,14 @@ KLOOP: DO K=1,SIZE(TOPICS(JJ)%STRESS(1)%FILES,1)
    DO K=1,NTOP 
     
     SELECT CASE (ITOPIC)
-     CASE (24,26) !## evt,rch
-      SCL_D=1; SCL_U=2
      CASE (21) !## wel
+
+     CASE (24) !## evt
+      SCL_D=1
+      IF(K.EQ.1)SCL_U=4
+      IF(K.NE.1)SCL_U=2
+     CASE (26) !## rch
+      SCL_D=1; SCL_U=2
      
      CASE (22,23,25,27,28) !## drn,riv,ghb,chd,olf
       IF(K.EQ.1)THEN; SCL_D=0; SCL_U=5; ENDIF

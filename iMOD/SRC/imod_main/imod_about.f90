@@ -133,8 +133,11 @@ CONTAINS
  !###====================================================================
  IMPLICIT NONE
  INTEGER,INTENT(IN) :: ID
- INTEGER,PARAMETER :: STRLEN=20000 
-
+ INTEGER,PARAMETER :: STRLEN=2000
+ INTEGER :: IU,I
+ CHARACTER(LEN=256) :: TEXT
+ LOGICAL :: LEX
+ 
  ALLOCATE(CHARACTER(LEN=STRLEN) :: STR)
 
  STR='Copyright (C) Stichting Deltares, 2005-2015. '//NEWLINE// &
@@ -171,8 +174,21 @@ NEWLINE// &
 NEWLINE// &
 'For more info, please contact: Stichting Deltares, P.O. Box 177, 2600 MH'// &
 ' Delft,The Netherlands. Email: imod.support@deltares.nl. '
-
- CALL WDIALOGPUTSTRING(ID,TRIM(STR))
+ 
+ INQUIRE(FILE=TRIM(PREFVAL(1))//'\'//TRIM(LICFILE),EXIST=LEX)
+ IF(LEX)THEN
+  IU=UTL_GETUNIT()
+  CALL OSD_OPEN(IU,FILE=TRIM(PREFVAL(1))//'\'//TRIM(LICFILE),STATUS='OLD',ACTION='READ,DENYWRITE')
+  READ(IU,'(79X,A)') TEXT
+  CLOSE(IU)
+  I=INDEX(STR,'<date and time>')
+  IF(I.GT.0)THEN
+   WRITE(STR(I+1:I+13),'(A12)') ' '//TRIM(TEXT)//' '
+  ENDIF
+ ENDIF
+ 
+!
+  CALL WDIALOGPUTSTRING(ID,TRIM(STR))
  
  DEALLOCATE(STR)
  

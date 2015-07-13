@@ -328,7 +328,7 @@ CONTAINS
  ! 1 = SPECIAAL (IBOUNDARY)
  ! 2 = REKENKUNDIG (SHEAD/VCONT/S)
  ! 3 = GEOMETRISCH (KD)
- ! 4 = SUM(Q)
+ ! 4 = SUM(Q) (RCH/EVT)
  ! 5 = SUM(COND)*RATIO (RIV/DRN/GHB CONDUCTANCE; RCH MM/DAY)
  ! 6 = INVERSE (C)
  ! 7 = MOST FREQUENT OCCURENCE
@@ -375,12 +375,6 @@ CONTAINS
  ENDIF
  ALLOCATE(FREQ(MXN*MXM))
 
- !!## shift all coordinates to be zero at the origin
- !IDFM%SX=IDFM%SX-IDFM%XMIN
- !IDFM%SY=IDFM%YMAX-IDFM%SY 
- !IDFM%XMAX=IDFM%XMAX-IDFM%XMIN; IDFM%XMIN=0.0 
- !IDFM%YMIN=IDFM%YMIN-IDFM%YMIN; IDFM%YMAX=0.0  
- 
  !## read/scale parameters
  DO IRM=1,IDFM%NROW
 
@@ -509,7 +503,7 @@ CONTAINS
      ENDDO
     ENDDO
    !## arithmetic mean (HEAD/SC); sum
-   CASE (2,4,5)
+   CASE (2,5)
     DO IROW=IR1,IR2
      IR=IR+1; IC=0 
      DO ICOL=IC1,IC2
@@ -518,6 +512,15 @@ CONTAINS
        SVALUE=SVALUE+IDFVAL 
        NVALUE=NVALUE+1.0
       ENDIF
+     ENDDO
+    ENDDO
+   CASE (4) !## rch/evt
+    DO IROW=IR1,IR2
+     IR=IR+1; IC=0 
+     DO ICOL=IC1,IC2
+      IC=IC+1; IDFVAL=IDF%X(ICOL,IROW) 
+      IF(IDFVAL.NE.IDF%NODATA)SVALUE=SVALUE+IDFVAL 
+      NVALUE=NVALUE+1.0
      ENDDO
     ENDDO
    !## geometric mean (KD)
@@ -587,11 +590,15 @@ CONTAINS
       IF(SVALUE.EQ.0.AND.IDFVAL.GT.0)SVALUE=IDFVAL
       NVALUE=NVALUE+1.0
      !## arithmetic mean (HEAD/SC); sum
-     CASE (2,4,5)
+     CASE (2,5)
       IF(IDFVAL.NE.IDF%NODATA)THEN
        SVALUE=SVALUE+IDFVAL 
        NVALUE=NVALUE+1.0
       ENDIF
+     !## arithmetic mean (rch/evt)
+     CASE (4)
+      IF(IDFVAL.NE.IDF%NODATA)SVALUE=SVALUE+IDFVAL 
+      NVALUE=NVALUE+1.0
      !## geometric mean (KD)
      CASE (3)
       IF(IDFVAL.NE.IDF%NODATA.AND.IDFVAL.GT.0.0)THEN
@@ -627,9 +634,9 @@ CONTAINS
  ENDIF
 
  SELECT CASE (SCLTYPE)
-  CASE (1,4,10)!## boundary, sum
+  CASE (1,10)!## boundary, sum
 
-  CASE (2)  !## arithmetic mean
+  CASE (2,4)  !## arithmetic mean
    SVALUE=SVALUE/NVALUE
   CASE (3)  !## geometric
    SVALUE=EXP(SVALUE/NVALUE)
