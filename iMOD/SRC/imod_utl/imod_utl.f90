@@ -1094,9 +1094,10 @@ CONTAINS
  I=I+1
  LINE(1:N-I+1)=LINE(I:N)
  
- !## remove leading space, if there
+ UTL_READINITFILE=.TRUE.
+ !## remove leading space, if there is one
  LINE=ADJUSTL(LINE)
- 
+
  UTL_READINITFILE=.TRUE.
 
  END FUNCTION UTL_READINITFILE
