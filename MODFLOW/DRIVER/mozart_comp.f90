@@ -43,7 +43,7 @@
 
       double precision :: beginOfCurrentTimeStep, endOfCurrentTimeStep
 
-      integer, parameter :: mv = -9999.0 !< general missing value
+      integer, parameter :: mv = -1234.0 !< general missing value
 
       integer, parameter :: maxlswid = 1000000 !< maximum ID of the LSWs
       integer, save :: nlsw !< number of LSWs
