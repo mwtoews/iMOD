@@ -169,6 +169,7 @@ c count number of hfb and fill
 
              !## line not in current model dimensions
              if(ie.eq.0)cycle
+             if(is.gt.size(genpos,1).or.ie.gt.size(genpos,1))cycle
              
              jcol = genpos(is,1); jrow = genpos(is,2);
 
