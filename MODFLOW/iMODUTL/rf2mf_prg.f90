@@ -798,9 +798,9 @@ end if
 !call imod_utl_dir_level_up(root%resultdir)
 met%kws(imet_resultdir)%type = imetc
 if (len_trim(csubmodel).gt.0) then
-   met%kws(imet_resultdir)%cval = trim(root%resultdir)//'\'//trim(csubmodel)//'\modflow'
+   met%kws(imet_resultdir)%cval = trim(root%resultdir)//'\'//trim(csubmodel)
 else
-   met%kws(imet_resultdir)%cval = trim(root%resultdir)//'\modflow'
+   met%kws(imet_resultdir)%cval = trim(root%resultdir)
 end if
 
 END SUBROUTINE RF2MF_DATASET5

@@ -301,13 +301,13 @@ implicit none
 
  if (lrunfile) then
     if (nsub.gt.0) then
-       write(modwd2,'(4a)') trim(modwd1),'\',trim(submstr(isub)),'\modflow\mf2005_tmp'
+       write(modwd2,'(4a)') trim(modwd1),'\',trim(submstr(isub)),'\mf2005_tmp'
        if (usemetaswap) then
           write(simwd2,'(4a)') trim(simwd1),'\',trim(submstr(isub)),'\metaswap'
        end if
        write(*,'(50(''+''),/,1x,a,1x,a,1x,a,i3.3,a,i3.3,a,/,50(''+''))') 'Computing for submodel:',trim(submstr(isub)),'(',isub,'/',nsub,')'
     else
-       write(modwd2,'(2a)') trim(modwd1),'\modflow\mf2005_tmp'
+       write(modwd2,'(2a)') trim(modwd1),'\mf2005_tmp'
        if (usemetaswap) then
           write(simwd2,'(2a)') trim(simwd1),'\metaswap'
        end if

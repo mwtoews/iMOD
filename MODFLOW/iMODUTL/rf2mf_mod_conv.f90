@@ -572,13 +572,13 @@
             if (lmfroot) then
                nam%fname = trim(mfroot)//'\mf2005_tmp\'//trim(root%submodel)//'\'//trim(root%modelname)//'.nam'
             else
-               nam%fname = trim(root%resultdir)//'\'//trim(root%submodel)//'\modflow\mf2005_tmp\'//trim(root%modelname)//'.nam'
+               nam%fname = trim(root%resultdir)//'\'//trim(root%submodel)//'\mf2005_tmp\'//trim(root%modelname)//'.nam'
             end if
          else
             if (lmfroot) then
                nam%fname = trim(mfroot)//'\mf2005_tmp\'//trim(root%modelname)//'.nam'
             else
-               nam%fname = trim(root%resultdir)//'\modflow\mf2005_tmp\'//trim(root%modelname)//'.nam'
+               nam%fname = trim(root%resultdir)//'\mf2005_tmp\'//trim(root%modelname)//'.nam'
             end if
          end if
          call osd_s_filename(nam%fname)
@@ -592,13 +592,13 @@
                if (lmfroot) then
                   nam%package(i)%fname = trim(mfroot)//'\mf2005_tmp\'//trim(root%submodel)//'/'//trim(nam%package(i)%fnamenoroot)
                else
-                  nam%package(i)%fname = trim(root%resultdir)//'\'//trim(root%submodel)//'\modflow\mf2005_tmp\'//trim(nam%package(i)%fnamenoroot)
+                  nam%package(i)%fname = trim(root%resultdir)//'\'//trim(root%submodel)//'\mf2005_tmp\'//trim(nam%package(i)%fnamenoroot)
                end if
             else
                if (lmfroot) then
                   nam%package(i)%fname = trim(mfroot)//'\mf2005_tmp\'//trim(nam%package(i)%fnamenoroot)
                else
-                  nam%package(i)%fname = trim(root%resultdir)//'\modflow\mf2005_tmp\'//trim(nam%package(i)%fnamenoroot)
+                  nam%package(i)%fname = trim(root%resultdir)//'\mf2005_tmp\'//trim(nam%package(i)%fnamenoroot)
                end if
             end if
             call osd_s_filename(nam%package(i)%fname)

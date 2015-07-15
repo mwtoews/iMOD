@@ -144,10 +144,10 @@ CONTAINS
  ! set output directories
  call osd_getcwd(curwd)
  if (len_trim(root%submodel).gt.0) then
-     write(modwd,'(4a)') trim(root%resultdir),'\',trim(root%submodel),'\modflow\mf2005_tmp\'
-     write(simwd,'(4a)') trim(root%resultdir),'\',trim(root%submodel),'\metaswap\'
+    write(modwd,'(4a)') trim(root%resultdir),'\',trim(root%submodel),'\mf2005_tmp\'
+    write(simwd,'(4a)') trim(root%resultdir),'\',trim(root%submodel),'\metaswap\'
  else
-    write(modwd,'(4a)') trim(root%resultdir),'\modflow\mf2005_tmp\'
+    write(modwd,'(4a)') trim(root%resultdir),'\mf2005_tmp\'
     write(simwd,'(4a)') trim(root%resultdir),'\metaswap\'
  end if
  call osd_s_filename(modwd)
