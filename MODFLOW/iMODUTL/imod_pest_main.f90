@@ -2147,7 +2147,7 @@ CONTAINS
    W(PEST_NOBS)            = WW
    DHW                     = WW*((H-Z)**2.0)
    TJ                      = TJ+DHW
-   IF(IUPESTRESIDUAL.GT.0)WRITE(IUPESTRESIDUAL,'(30X,6F15.7)') Z,H,DHW,WW*Z,WW*(H-Z),WW
+   IF(IUPESTRESIDUAL.GT.0)WRITE(IUPESTRESIDUAL,'(30X,I10,6F15.7)') J,Z,H,DHW,WW*Z,WW*(H-Z),WW
   ENDDO
   CLOSE(IUBAT)
 
@@ -2189,17 +2189,14 @@ CONTAINS
  END SELECT
 
  !## scaling
- SELECT CASE (TRIM(PARAM(IP)%PTYPE))
-  CASE ('KD','KH','KV','VC','SC','RC','RI','IC','II','DC','AF','MS','MC','VA','HF','EX','NX')
-   IF(PARAM(IP)%DELTA.EQ.1.0)CALL IMOD_UTL_PRINTTEXT('You can not specify delta alpha eq 1.0 for KD,KH,KV,C,S,RC,RI,IC,II,DC,AF,HF,MS,MC',2)
-   IF(PARAM(IP)%MIN  .EQ.0.0)CALL IMOD_UTL_PRINTTEXT('You can not specify minimal value eq 0.0 for KD,KH,KV,C,S,RC,RI,IC,II,DC,AF,HF,MS,MC',2)
-   IF(PARAM(IP)%LOG)THEN
-    PARAM(IP)%INI  =LOG(PARAM(IP)%INI)
-    PARAM(IP)%MIN  =LOG(PARAM(IP)%MIN)
-    PARAM(IP)%MAX  =LOG(PARAM(IP)%MAX)
-    PARAM(IP)%DELTA=LOG(PARAM(IP)%DELTA)
-   ENDIF
- END SELECT
+ IF(PARAM(IP)%LOG)THEN
+  IF(PARAM(IP)%DELTA.EQ.1.0)CALL IMOD_UTL_PRINTTEXT('You can not specify delta alpha eq 1.0 for log-transformed parameters',2)
+  IF(PARAM(IP)%MIN  .EQ.0.0)CALL IMOD_UTL_PRINTTEXT('You can not specify minimal value eq 0.0 for log-transformed parameters',2)
+  PARAM(IP)%INI  =LOG(PARAM(IP)%INI)
+  PARAM(IP)%MIN  =LOG(PARAM(IP)%MIN)
+  PARAM(IP)%MAX  =LOG(PARAM(IP)%MAX)
+  PARAM(IP)%DELTA=LOG(PARAM(IP)%DELTA)
+ ENDIF
 
  END SUBROUTINE PEST1CHK
 
