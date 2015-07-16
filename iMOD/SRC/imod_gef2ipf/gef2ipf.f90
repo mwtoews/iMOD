@@ -197,7 +197,7 @@ CONTAINS
 
    ENDIF
 
-   WRITE(6,'(A,F10.2,A)') '+Progress ',REAL(I)/REAL(N)*100.0,'%              '  !FR 20131007
+   WRITE(6,'(A,F10.2,A)') '+Progress ',REAL(I)/REAL(N)*100.0,'%              '  
 
   ELSE
 

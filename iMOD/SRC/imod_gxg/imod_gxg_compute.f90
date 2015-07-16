@@ -196,8 +196,8 @@ CONTAINS
      DO DN=14,28,14
       IDN=IDN+1
       N  =N+1
+
       !## check iperiods first, whether we're interested at all!##
-      !## Liduin
       IF(GXG_IPERIOD(MM,IDN).EQ.1)THEN
        WRITE(CD,'(I2.2)') DN
 
@@ -267,7 +267,7 @@ CONTAINS
    DO I=1,12
     MM=MM+1
     IF(MM.GT.12)THEN
-     YY=YY+1         !FR 20131007
+     YY=YY+1         
      MM=1
     END IF
     !## lies within selected year
@@ -416,7 +416,7 @@ CONTAINS
 !       MM=(GXG_STARTMONTH-1)+I
        MM=MM+1 !(GXG_STARTMONTH-1)+I
        IF(MM.GT.12)THEN
-        YY=YY+1 !1        !FR 20131007 
+        YY=YY+1 !1         
         MM=1
        END IF
 

@@ -142,7 +142,7 @@ CONTAINS
    CALL WINDOWSELECT(0)
    CALL UTL_WAITMESSAGE(IRAT,IRAT1,I,NROW,'Progress Timeserie: ')
   ELSEIF(IBATCH.EQ.1)THEN
-   WRITE(6,'(A,F10.2,A)') '+Progress Timeserie: ',REAL(100*I)/REAL(NROW),'%' !FR 20131007
+   WRITE(6,'(A,F10.2,A)') '+Progress Timeserie: ',REAL(100*I)/REAL(NROW),'%' 
   ENDIF
 
  ENDDO

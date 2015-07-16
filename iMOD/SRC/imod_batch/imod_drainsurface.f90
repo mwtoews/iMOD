@@ -184,7 +184,7 @@ CONTAINS
   END DO
 
   LINE='(memory '//TRIM(ITOS(MP))//') searching '
-  WRITE(6,'(A,F10.3,A)') '+Progress '//TRIM(LINE),REAL(IROW*100)/REAL(IDF(4)%NROW),' %         '   !FR 20131007
+  WRITE(6,'(A,F10.3,A)') '+Progress '//TRIM(LINE),REAL(IROW*100)/REAL(IDF(4)%NROW),' %         '   
 
  ENDDO
 

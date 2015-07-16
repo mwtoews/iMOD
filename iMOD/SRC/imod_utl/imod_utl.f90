@@ -1094,7 +1094,6 @@ CONTAINS
  I=I+1
  LINE(1:N-I+1)=LINE(I:N)
  
- UTL_READINITFILE=.TRUE.
  !## remove leading space, if there is one
  LINE=ADJUSTL(LINE)
 
