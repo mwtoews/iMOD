@@ -41,8 +41,8 @@ CONTAINS
 
  CALL WDIALOGLOAD(ID_DABOUT)
  CALL WDIALOGPUTSTRING(IDF_STRING1,'About iMOD'//NEWLINE//NEWLINE// &
- 'iMOD: a new framework for MODFLOW and geo-modeling'//NEWLINE//NEWLINE// &
- 'iMOD is an easy to use Graphical User Interface + an accelerated Deltares-version of MODFLOW with fast, flexible and consistent sub-domain modeling techniques. iMOD facilitates very large, high resolution MODFLOW groundwater modeling and also geo-editing of the subsurface.'//NEWLINE//NEWLINE// &
+ 'iMOD: a new framework for iMODFLOW and geo-modeling'//NEWLINE//NEWLINE// &
+ 'iMOD is an easy to use Graphical User Interface + an accelerated Deltares-version of MODFLOW with fast, flexible and consistent sub-domain modeling techniques. iMOD facilitates very large, high resolution groundwater modeling and also geo-editing of the subsurface.'//NEWLINE//NEWLINE// &
  'WHY iMOD? iMOD is a fast groundwater modeling environment that allows to build large high resolution groundwater flow models based on a data set expandable to all possible future areas of interest:'//NEWLINE// &
  ' •  flexibility to generate high or low resolution models everywhere when needed;'//NEWLINE// &
  ' •  generate sub-domain models of any part of the area covered by your data;'//NEWLINE// &
@@ -208,7 +208,7 @@ NEWLINE// &
 'This is a license for the iMOD-executables, distributed from the Stichti'// &
 'ng Deltares website. If you require a printed version of this iMOD Softw'// &
 'are License Agreement, e.g. prior to accepting these terms and condition'// &
-'s, please print the pdf-file ‘iMOD_Software_License_Agreement.pdf’. You '// &
+'s, please print the pdf-file ‘iMOD_Software_License_Agreement_v3.01.pdf’. You '// &
 'should have received a copy of this pdf-file; if not, see '//NEWLINE// &
 'http://oss.deltares.nl/web/iMOD/iMOD_software_license_agreement.'//NEWLINE// &
 NEWLINE// &
@@ -390,16 +390,16 @@ NEWLINE// &
 'This iMOD Software License Agreement contains the following executables:'// &
 NEWLINE// &
 NEWLINE// &
-'- The iMOD Graphical User Interface (iMOD-GUI): iMOD_V3_1_X32R.exe and i'// &
-'MOD_V3_1_X64R.exe:'//NEWLINE// &
+'- The iMOD Graphical User Interface (iMOD-GUI): iMOD_V3_01_<xx>_X32R.exe and i'// &
+'MOD_V3_01_<xx>_X64R.exe:'//NEWLINE// &
 'A computer program to perform a variety of graphical visualizations of M'// &
 'odel Configurations and/or (in)directly related geographical information'// &
 '. The iMOD GUI itself if fully written in Fortran9x and compiled by the '// &
 'Intel Visual Fortran Compiler Professional v11.1.054 in conjunction with'// &
 ' Winteracter 10 (Interactive Software Services Ltd (ISS)).'//NEWLINE// &
 NEWLINE// &
-'- The MODFLOW computational core (MODFLOW): MODFLOW_V3_01_00_METASWAP_SV'// &
-'N1031_X32R.exe and MODFLOW_V3_01_00_METASWAP_SVN1031_X64R.exe:'//NEWLINE// &
+'- The iMODFLOW computational core (iMODFLOW): iMODFLOW_V3_01_00_METASWAP_SV'// &
+'N1031_X32R.exe and iMODFLOW_V3_01_00_METASWAP_SVN1031_X64R.exe:'//NEWLINE// &
 NEWLINE// &
 'The MODFLOW computational core is partly based on the USGS MODFLOW2005 s'// &
 'ource code; for iMOD the USGS MODFLOW2005 source code has been expanded '// &
