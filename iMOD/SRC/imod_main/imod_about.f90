@@ -208,7 +208,7 @@ NEWLINE// &
 'This is a license for the iMOD-executables, distributed from the Stichti'// &
 'ng Deltares website. If you require a printed version of this iMOD Softw'// &
 'are License Agreement, e.g. prior to accepting these terms and condition'// &
-'s, please print the pdf-file ‘iMOD_Software_License_Agreement_v3.01.pdf’. You '// &
+'s, please print the pdf-file ‘iMOD_Software_License_Agreement_v3_01.pdf’. You '// &
 'should have received a copy of this pdf-file; if not, see '//NEWLINE// &
 'http://oss.deltares.nl/web/iMOD/iMOD_software_license_agreement.'//NEWLINE// &
 NEWLINE// &
@@ -221,7 +221,7 @@ NEWLINE// &
 'fter “Deltares”) to license to Licensee the computer program called iMOD'// &
 ' as described below under “DESCRIPTION OF iMOD” (hereafter “iMOD”). '//NEWLINE// &
 'By marking the “Yes, I Accept”-checkbox in the iMOD-GUI or entering “Y” '// &
-'or “y” when prompted in MODFLOW:'//NEWLINE// &
+'or “y” when prompted in iMODFLOW:'//NEWLINE// &
 NEWLINE// &
 '1. You expressly declare being authorized to act on behalf of Licensee f'// &
 'or the purposes of accepting this software license agreement (hereafter '// &
@@ -231,12 +231,12 @@ NEWLINE// &
 NEWLINE// &
 'If you are not authorized to act on behalf of Licensee to agree upon thi'// &
 's License Agreement, please do not mark the “Yes, I accept”-checkbox in '// &
-'the iMOD-GUI and do not enter “Y” or “y” when prompted from MODFLOW and '// &
+'the iMOD-GUI and do not enter “Y” or “y” when prompted from iMODFLOW and '// &
 'exit the iMOD-program by clicking the “Cancel” checkbox in the iMOD-GUI '// &
-'and exit the iMOD-GUI and do not enter “Y” or “y” when prompted in MODFL'// &
-'OW and exit MODFLOW by hitting the enter-key. Furthermore do not mark th'// &
+'and exit the iMOD-GUI and do not enter “Y” or “y” when prompted in iMODFL'// &
+'OW and exit iMODFLOW by hitting the enter-key. Furthermore do not mark th'// &
 'e “Yes, I Accept”-checkbox in the iMOD-GUI or enter “Y” or “y” when prom'// &
-'pted in MODFLOW and end iMOD if Licensee does not agree with the License'// &
+'pted in iMODFLOW and end iMOD if Licensee does not agree with the License'// &
 ' Agreement. '//NEWLINE// &
 NEWLINE// &
 'WHEREAS:'//NEWLINE// &
@@ -387,7 +387,7 @@ NEWLINE// &
 NEWLINE// &
 'DESCRIPTION OF iMOD'//NEWLINE// &
 NEWLINE// &
-'This iMOD Software License Agreement contains the following executables:'// &
+'This iMOD Software License Agreement contains the following executables (<xx>: bugfix-versionnumber):'// &
 NEWLINE// &
 NEWLINE// &
 '- The iMOD Graphical User Interface (iMOD-GUI): iMOD_V3_01_<xx>_X32R.exe and i'// &
@@ -398,10 +398,12 @@ NEWLINE// &
 'Intel Visual Fortran Compiler Professional v11.1.054 in conjunction with'// &
 ' Winteracter 10 (Interactive Software Services Ltd (ISS)).'//NEWLINE// &
 NEWLINE// &
-'- The iMODFLOW computational core (iMODFLOW): iMODFLOW_V3_01_00_METASWAP_SV'// &
-'N1031_X32R.exe and iMODFLOW_V3_01_00_METASWAP_SVN1031_X64R.exe:'//NEWLINE// &
+'- The MODFLOW computational core (iMODFLOW):'//NEWLINE// &
+'iMODFLOW_V3_01_<xx>_X32R.exe and'//NEWLINE// &
+'iMODFLOW_V3_01_<xx>_X64R.exe and'//NEWLINE// &
+'iMODFLOW_V3_01_<xx>_METASWAP_SVN1031_X64R.exe:'//NEWLINE// &
 NEWLINE// &
-'The MODFLOW computational core is partly based on the USGS MODFLOW2005 s'// &
+'The iMODFLOW computational core is partly based on the USGS MODFLOW2005 s'// &
 'ource code; for iMOD the USGS MODFLOW2005 source code has been expanded '// &
 'and extensively modified by Stichting Deltares. '//NEWLINE// &
 NEWLINE// &
@@ -411,10 +413,11 @@ NEWLINE// &
 'ights Notice; you should have received a copy of this notice along with '// &
 'this program. If not, see http://water.usgs.gov/software/help/notice.'//NEWLINE// &
 NEWLINE// &
-'The MODFLOW computational core includes the MetaSWAP-module SVN version '// &
-'number 1031, part of SIMGRO V7_2_22 as described in the SIMGRO-release n'// &
-'otes ftp://ftp.wur.nl/simgro/doc/Change_log/ Release_Notes_SIMGRO_V7_2_2'// &
-'5.pdf. MetaSWAP has been developed by Alterra – Wageningen UR. For more '// &
+'One of the two X64-bit versions of the MODFLOW computational core includes'// &
+' the MetaSWAP-module SVN version number 1031, part of SIMGRO V7_2_22 as described '// &
+'in the SIMGRO-release notes ftp://ftp.wur.nl/simgro/doc/Change_log/ Release_Notes_'// &
+'SIMGRO_V7_2_25.pdf. The other X64-bit version of the MODFLOW computational core does '// &
+'not include MetaSWAP. MetaSWAP has been developed by Alterra - Wageningen UR. For more '// &
 'info on MetaSWAP, see the iMOD user manual, Annex 1. For more info on Al'// &
 'terra – Wageningen UR, see http://www.wageningenur.nl/en/Expertise-Servi'// &
 'ces/Research-Institutes/alterra.htm.'//NEWLINE// &
@@ -454,10 +457,10 @@ NEWLINE// &
 ' may endanger the working of the Model System and require adjustments in'// &
 ' the Configuration. '//NEWLINE// &
 NEWLINE// &
-'iMOD can be compiled/is available for a 32- and 64-bit system.'//NEWLINE// &
-'iMOD supports 32- and 64-bit machines working under the following platfo'// &
-'rms: Windows XP / Server 2003 / Vista Business / Vista Ultimate / Server'// &
-' 2008 / 7.'//NEWLINE// &
+'iMOD-GUI is available for a 32- and 64-bit system and runs on the following '// &
+'platforms: Windows XP / Server 2003 / Vista Business / Vista Ultimate / Server 2008 / 7'// &
+'; the MODFLOW computation core iMODFLOW incl. MetaSWAP is available for 64-bit machines '// &
+'only, the MODFLOW computational core excl. MetaSWAP is available for 32- and 64-bit systems.'//NEWLINE// &
 NEWLINE// &
 'SYSTEM SOFTWARE'//NEWLINE// &
 NEWLINE// &

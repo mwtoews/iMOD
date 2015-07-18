@@ -265,6 +265,9 @@
 				<Tool Name="VFFortranCompilerTool" Preprocess="preprocessYes" PreprocessorDefinitions="WINTERACTER9"/></FileConfiguration></File>
 		<File RelativePath="..\..\..\iMOD\SRC\imod_manager\imod_prjmanager_par.f90"/>
 		<File RelativePath="..\..\..\iMOD\SRC\imod_manager\imod_tagman.F90"/></Filter>
+		<Filter Name="imod_map2idf">
+		<File RelativePath="..\..\SRC\imod_map2idf\imod_map2idf.f90"/>
+		<File RelativePath="..\..\SRC\imod_map2idf\imod_map2idf_par.f90"/></Filter>
 		<Filter Name="imod_math">
 		<File RelativePath="..\..\..\iMOD\SRC\imod_math\imod_math.f90"/>
 		<File RelativePath="..\..\..\iMOD\SRC\imod_math\imod_math_calc.f90"/>
@@ -409,9 +412,6 @@
 		<Filter Name="imod_wbal">
 		<File RelativePath="..\..\..\iMOD\SRC\imod_wbal\imod_wbal_compute.f90"/>
 		<File RelativePath="..\..\..\iMOD\SRC\imod_wbal\imod_wbal_par.f90"/></Filter>
-		<Filter Name="imod_map2idf">
-		<File RelativePath="..\..\SRC\imod_map2idf\imod_map2idf.f90"/>
-		<File RelativePath="..\..\SRC\imod_map2idf\imod_map2idf_par.f90"/></Filter>
 		<Filter Name="programs">
 		<File RelativePath="..\..\..\iMOD\SRC\imod_main\imod_prg.f90">
 			<FileConfiguration Name="Debug|Win32">
