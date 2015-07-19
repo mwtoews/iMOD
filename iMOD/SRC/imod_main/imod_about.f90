@@ -403,7 +403,7 @@ NEWLINE// &
 'iMODFLOW_V3_01_<xx>_X64R.exe and'//NEWLINE// &
 'iMODFLOW_V3_01_<xx>_METASWAP_SVN1031_X64R.exe:'//NEWLINE// &
 NEWLINE// &
-'The iMODFLOW computational core is partly based on the USGS MODFLOW2005 s'// &
+'iMODFLOW is partly based on the USGS MODFLOW2005 s'// &
 'ource code; for iMOD the USGS MODFLOW2005 source code has been expanded '// &
 'and extensively modified by Stichting Deltares. '//NEWLINE// &
 NEWLINE// &
@@ -413,10 +413,10 @@ NEWLINE// &
 'ights Notice; you should have received a copy of this notice along with '// &
 'this program. If not, see http://water.usgs.gov/software/help/notice.'//NEWLINE// &
 NEWLINE// &
-'One of the two X64-bit versions of the MODFLOW computational core includes'// &
+'One of the two X64-bit versions of iMODFLOW includes'// &
 ' the MetaSWAP-module SVN version number 1031, part of SIMGRO V7_2_22 as described '// &
 'in the SIMGRO-release notes ftp://ftp.wur.nl/simgro/doc/Change_log/ Release_Notes_'// &
-'SIMGRO_V7_2_25.pdf. The other X64-bit version of the MODFLOW computational core does '// &
+'SIMGRO_V7_2_25.pdf. The other X64-bit version of iMODFLOW does '// &
 'not include MetaSWAP. MetaSWAP has been developed by Alterra - Wageningen UR. For more '// &
 'info on MetaSWAP, see the iMOD user manual, Annex 1. For more info on Al'// &
 'terra – Wageningen UR, see http://www.wageningenur.nl/en/Expertise-Servi'// &
@@ -459,8 +459,8 @@ NEWLINE// &
 NEWLINE// &
 'iMOD-GUI is available for a 32- and 64-bit system and runs on the following '// &
 'platforms: Windows XP / Server 2003 / Vista Business / Vista Ultimate / Server 2008 / 7'// &
-'; the MODFLOW computation core iMODFLOW incl. MetaSWAP is available for 64-bit machines '// &
-'only, the MODFLOW computational core excl. MetaSWAP is available for 32- and 64-bit systems.'//NEWLINE// &
+'; the iMODFLOW executable incl. MetaSWAP is available for 64-bit machines '// &
+'only, an iMODFLOW executable excl. MetaSWAP is available for 32- and 64-bit systems.'//NEWLINE// &
 NEWLINE// &
 'SYSTEM SOFTWARE'//NEWLINE// &
 NEWLINE// &
