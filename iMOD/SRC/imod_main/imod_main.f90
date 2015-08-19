@@ -1903,7 +1903,7 @@ ENDIF
 
 !## acrobat reader
 IF(LACROBAT)THEN
- LINE='"'//TRIM(PREFVAL(13))//'" /n /s /A "nameddest=sec:'//TRIM(CTOPIC)//'" "'//TRIM(PREFVAL(4))//'"'
+ LINE='"'//TRIM(PREFVAL(13))//'" /A "nameddest='//TRIM(CTOPIC)//'" "'//TRIM(PREFVAL(4))//'"'
 !## sumatra pdf
 ELSE
  LINE='"'//TRIM(PREFVAL(13))//'" -reuse-instance -named-dest sec:'//TRIM(CTOPIC)//' "'//TRIM(PREFVAL(4))//'"'

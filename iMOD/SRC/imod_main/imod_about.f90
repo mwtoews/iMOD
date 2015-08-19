@@ -50,7 +50,7 @@ CONTAINS
  ' •  update your data set with the details added in a sub-domain model.'//NEWLINE//NEWLINE// &
  'See for more information the open-source website:'//NEWLINE// &
  'see http://oss.deltares.nl/web/iMOD.'//NEWLINE//NEWLINE// & 
- 'iMOD Code Architect: dr. Peter (PTM) Vermeulen.')
+ 'iMOD Code Architect: dr. Peter (P.T.M.) Vermeulen.')
  CALL WDIALOGPUTIMAGE(IDF_PICTURE1,ID_ICONTNO,1)
  CALL WDIALOGPUTIMAGE(IDF_PICTURE2,ID_ICONIMOD,1)
  CALL WDIALOGPUTIMAGE(IDF_PICTURE4,ID_ICONOPENGL,1)
@@ -208,7 +208,7 @@ NEWLINE// &
 'This is a license for the iMOD-executables, distributed from the Stichti'// &
 'ng Deltares website. If you require a printed version of this iMOD Softw'// &
 'are License Agreement, e.g. prior to accepting these terms and condition'// &
-'s, please print the pdf-file ‘iMOD_Software_License_Agreement_v3_01.pdf’. You '// &
+'s, please print the pdf-file ‘iMOD_Software_License_Agreement_V3_01.pdf’. You '// &
 'should have received a copy of this pdf-file; if not, see '//NEWLINE// &
 'http://oss.deltares.nl/web/iMOD/iMOD_software_license_agreement.'//NEWLINE// &
 NEWLINE// &
@@ -244,7 +244,7 @@ NEWLINE// &
 'd by Deltares, including documentation, as described below under DESCRIP'// &
 'TION OF iMOD, hereinafter referred to as “iMOD”;'//NEWLINE// &
 'Licensee wishes to acquire a non-exclusive and non-transferable license,'// &
-' without the right of sub-licensing, to use iMOD within Licensee"s organ'// &
+' without the right of sub-licensing, to use iMOD within Licensee‘s organ'// &
 'isation;'//NEWLINE// &
 'Deltares grants Licensee an iMOD-license on the following conditions.'//NEWLINE// &
 NEWLINE// &
@@ -317,8 +317,8 @@ NEWLINE// &
 'Using information and/or data obtained solely for the purposes for which'// &
 ' they were obtained.'//NEWLINE// &
 NEWLINE// &
-'2. Licensee"s obligation of confidentiality referred to in Article 4.1 s'// &
-'hall not apply to information and/or data that were already at Licensee"'// &
+'2. Licensee‘s obligation of confidentiality referred to in Article 4.1 s'// &
+'hall not apply to information and/or data that were already at Licensee‘'// &
 's free disposal, or were part of the public domain, or were already incl'// &
 'uded in generally accessible literature at the time when they were obtai'// &
 'ned by Licensee, or that were obtained by Licensee from a third party or'// &
@@ -413,10 +413,10 @@ NEWLINE// &
 'ights Notice; you should have received a copy of this notice along with '// &
 'this program. If not, see http://water.usgs.gov/software/help/notice.'//NEWLINE// &
 NEWLINE// &
-'One of the two X64-bit versions of iMODFLOW includes'// &
+'One of the two X64-bit iMODFLOW-executables includes'// &
 ' the MetaSWAP-module SVN version number 1031, part of SIMGRO V7_2_22 as described '// &
 'in the SIMGRO-release notes ftp://ftp.wur.nl/simgro/doc/Change_log/ Release_Notes_'// &
-'SIMGRO_V7_2_25.pdf. The other X64-bit version of iMODFLOW does '// &
+'SIMGRO_V7_2_25.pdf. The other X64-bit iMODFLOW-executable does '// &
 'not include MetaSWAP. MetaSWAP has been developed by Alterra - Wageningen UR. For more '// &
 'info on MetaSWAP, see the iMOD user manual, Annex 1. For more info on Al'// &
 'terra – Wageningen UR, see http://www.wageningenur.nl/en/Expertise-Servi'// &
@@ -459,8 +459,8 @@ NEWLINE// &
 NEWLINE// &
 'iMOD-GUI is available for a 32- and 64-bit system and runs on the following '// &
 'platforms: Windows XP / Server 2003 / Vista Business / Vista Ultimate / Server 2008 / 7'// &
-'; the iMODFLOW executable incl. MetaSWAP is available for 64-bit machines '// &
-'only, an iMODFLOW executable excl. MetaSWAP is available for 32- and 64-bit systems.'//NEWLINE// &
+'; the iMODFLOW-executable incl. MetaSWAP is available for 64-bit systems '// &
+'only, an iMODFLOW-executable excl. MetaSWAP is available for 32- and 64-bit systems.'//NEWLINE// &
 NEWLINE// &
 'SYSTEM SOFTWARE'//NEWLINE// &
 NEWLINE// &
@@ -468,7 +468,7 @@ NEWLINE// &
 'tems to view, create, manipulate, print and manage files in Portable Doc'// &
 'ument Format (PDF). All members of the family, except Adobe Reader (form'// &
 'erly Acrobat Reader), are commercial software; Adobe Reader however, is '// &
-'available as freeware and can be downloaded from Adobe"s web site. Adobe'// &
+'available as freeware and can be downloaded from Adobe‘s web site. Adobe'// &
 ' Reader enables users to view and print PDF files but has negligible PDF'// &
 ' creation capabilities. Acrobat and Reader are widely used as a way to p'// &
 'resent information with a fixed layout similar to a paper publication.'//NEWLINE// &
@@ -477,11 +477,11 @@ NEWLINE// &
 'Stichting Deltares'//NEWLINE// &
 'Boussinesqweg 1'//NEWLINE// &
 'P.O. Box 177'//NEWLINE// &
-'2600 MH Delft, the Netherlands'//NEWLINE// &
-'Tel:	+31 (0) 88 335 82 73'//NEWLINE// &
-'Fax:	+31 (0) 88 355 85 82'//NEWLINE// &
+'2600 MH Delft, The Netherlands'//NEWLINE// &
+'Tel:	 +31 (0) 88 335 82 73'//NEWLINE// &
+'Fax:	 +31 (0) 88 355 85 82'//NEWLINE// &
 'e-mail: info@deltares.nl'//NEWLINE// &
-'www.deltares.com'//NEWLINE// &
+'web:    www.deltares.com'//NEWLINE// &
 'Chamber of Commerce no. 41146461'
 
  IF(ID.LT.0)THEN

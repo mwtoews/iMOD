@@ -15,7 +15,7 @@
 				<Tool Name="VFPostBuildEventTool"/>
 				<Tool Name="VFManifestTool" SuppressStartupBanner="true"/></Configuration>
 		<Configuration Name="Release|Win32">
-				<Tool Name="VFFortranCompilerTool" AdditionalOptions="/O2" SuppressStartupBanner="true" Optimization="optimizeCustom" InlineFunctionExpansion="expandAnySuitable" FavorSizeOrSpeed="favorSpeed" BufferedIO="true" HeapArrays="0" Preprocess="preprocessYes" PreprocessorDefinitions="IFORT"/>
+				<Tool Name="VFFortranCompilerTool" AdditionalOptions="/O2" SuppressStartupBanner="true" Optimization="optimizeCustom" InlineFunctionExpansion="expandAnySuitable" FavorSizeOrSpeed="favorSpeed" BufferedIO="true" HeapArrays="0" Preprocess="preprocessYes" AdditionalIncludeDirectories="..\iMOD\$(ConfigurationName);..\mf2005\$(ConfigurationName)" PreprocessorDefinitions="IFORT"/>
 				<Tool Name="VFLinkerTool" OutputFile="..\..\BIN\MODFLOW_x32_BR.exe" LinkIncremental="linkIncrementalNo" SuppressStartupBanner="true" GenerateDebugInformation="true" SubSystem="subSystemConsole"/>
 				<Tool Name="VFResourceCompilerTool"/>
 				<Tool Name="VFMidlTool" SuppressStartupBanner="true"/>

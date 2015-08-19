@@ -37,6 +37,7 @@ USE MODPLOT, ONLY : MP
 USE IMOD, ONLY : IDFINIT
 USE MOD_PREF_PAR, ONLY : PREFVAL
 USE DATEVAR
+USE MOD_ISG_GRID, ONLY : ISG2GRID
 
 TYPE PRJOBJ
  INTEGER :: ILAY,ICNST,IACT
@@ -2006,6 +2007,22 @@ KLOOP: DO K=1,SIZE(TOPICS(JJ)%STRESS(1)%FILES,1)
  LOGICAL FUNCTION PMANAGER_SAVEMF2005_PCK_ULSTRD(EXFNAME,PCK,NSYS,NTOP,IU, &
             HNOFLOW,JTOP,NP,BND,TOP,BOT,KD,IPER,KPER,ITOPIC)
  !###======================================================================
+ USE MOD_ISG_PAR, ONLY :  XMIN,YMIN,XMAX,YMAX, & !## area to be gridded (x1,y1,x2,y2)'
+                          ISS, & !## (1) mean over all periods, (2) mean over given period'
+!                          SDATE,EDATE, & !## startdate,enddate,ddate (yyyymmdd,yyyymmdd,dd)'
+                          IDIM, & !## (0) give area (2) entire domain of isg (3) selected isg'
+                          CS, & !## cellsize'
+                          MINDEPTH, & !## minimal waterdepth for computing conductances (m)'
+                          WDEPTH, & !## waterdepth only used in combination with isimgro>0'
+                          ICDIST, & !## (0) do not compute effect of weirs (1) do compute effect of weirs'
+                          ISIMGRO, & !## ISIMGRO'
+                          IEXPORT, & !## (0) idf (1) modflow river file
+                          ROOT, &  !## resultmap'
+                          POSTFIX, &  !## POSTFIX {POSTFIX}_stage.idf etc.'
+                          NODATA, & !## nodatavalue in ISG
+                          ISAVE, &
+                          MAXWIDTH, & !#3 maximum widht for computing rivier-width (in case cross-sections are rubbish)
+                          IAVERAGE !## (1) mean (2) median value
  IMPLICIT NONE
  INTEGER,INTENT(IN) :: IU,NSYS,NTOP,IPER,KPER,ITOPIC
  INTEGER,INTENT(INOUT) :: NP
@@ -2027,7 +2044,7 @@ KLOOP: DO K=1,SIZE(TOPICS(JJ)%STRESS(1)%FILES,1)
  CALL UTL_CREATEDIR(EXFNAME(:INDEX(EXFNAME,'\',.TRUE.)-1))
  
  LIPF=INDEX(EXFNAME,'\WEL7\').GT.0; LISG=INDEX(EXFNAME,'\ISG7\').GT.0
-
+ 
  !## fill tlp for each modellayer
  ALLOCATE(TLP(NLAY),KH(NLAY),TP(NLAY),BT(NLAY))
  
@@ -2039,6 +2056,30 @@ KLOOP: DO K=1,SIZE(TOPICS(JJ)%STRESS(1)%FILES,1)
   SDATE=  UTL_IDATETOJDATE(SDATE)
   EDATE=SDATE+MAX(1,INT(SIM(IPER)%DELT))
   MTYPE=2  !## median value
+ ENDIF
+ 
+ IF(LISG)THEN
+  XMIN=BND(1)%XMIN
+  YMIN=BND(1)%YMIN
+  XMAX=BND(1)%XMAX
+  YMAX=BND(1)%YMAX
+  ISS=2; IF(SDATE.EQ.0.AND.EDATE.EQ.0)ISS=1
+!  SDATE=
+!  EDATE=
+! DDATE=
+  IDIM=0
+  CS=BND(1)%DX
+  MINDEPTH=0.1
+  WDEPTH=0.0
+  ICDIST=1
+  ISIMGRO=0
+  IEXPORT=1
+  ROOT=''
+  POSTFIX=''
+  NODATA=-999.99
+  ISAVE=1
+  MAXWIDTH=1000.0
+  IAVERAGE=1
  ENDIF
  
  IF(TRIM(EXFNAME(INDEX(EXFNAME,'.',.TRUE.)+1:)).EQ.'ASC')THEN
@@ -2074,7 +2115,9 @@ KLOOP: DO K=1,SIZE(TOPICS(JJ)%STRESS(1)%FILES,1)
 
 !## export isg to riv package
 write(*,*) 'dd'
-   
+
+!   CALL ISG2GRID(LEX,PPOSTFIX,NROW,NCOL,IBATCH)
+
    !## open ipf file
    ELSEIF(LIPF)THEN
 
