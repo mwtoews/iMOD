@@ -111,7 +111,7 @@ CONTAINS
      CASE(ID_CLOSE)
       EXIT
      CASE(IDHELP)
-      CALL IMODGETHELP('3.3.3','Add Topography') 
+      CALL IMODGETHELP('3.3.3','VMO.AddTopo') 
     END SELECT
   END SELECT
  ENDDO

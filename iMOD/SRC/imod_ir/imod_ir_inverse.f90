@@ -154,7 +154,7 @@ ILOOP: DO I=1,NOPT
      CASE (IDCANCEL)
       EXIT
      CASE (IDHELP)
-       CALL IMODGETHELP('5.8.2','Start Quick Scan Tool')
+       CALL IMODGETHELP('5.8.2','TMO.QS.Start')
     END SELECT
   END SELECT
  ENDDO

@@ -246,7 +246,7 @@ CONTAINS
      CASE (ID_COPY)
       CALL WCLIPBOARDPUTBITMAP(IBITMAP)
      CASE (IDHELP)
-       CALL IMODGETHELP('5.9.2','Start Scenario Tool')              
+       CALL IMODGETHELP('5.9.2','TMO.PT.Start')              
      CASE (IDCANCEL)
       EXIT
     END SELECT

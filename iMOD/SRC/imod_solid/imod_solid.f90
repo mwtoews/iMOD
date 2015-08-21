@@ -80,7 +80,7 @@ CONTAINS
       CASE (IDCANCEL)
        CALL SOLIDCLOSE()
       CASE (IDHELP)
-       CALL IMODGETHELP('5.4','Solid Tool')               
+       CALL IMODGETHELP('5.4','TMO.SolTool')               
      END SELECT
     CASE(TABCHANGED)
      SELECT CASE (MESSAGE%VALUE2)
@@ -1056,7 +1056,7 @@ ILLOOP: DO
      CASE (IDCANCEL)
       EXIT
      CASE (IDHELP)
-       CALL IMODGETHELP('5.4.1','Create a Solid')
+       CALL IMODGETHELP('5.4.1','TMO.ST.Create')
     END SELECT
   END SELECT
 
@@ -1260,7 +1260,7 @@ ILLOOP: DO
      CASE (IDCANCEL)
       EXIT
      CASE (IDHELP)
-       CALL IMODGETHELP('5.4.1','Create a Solid')
+       CALL IMODGETHELP('5.4.1','TMO.ST.Create')
     END SELECT
   END SELECT
  ENDDO

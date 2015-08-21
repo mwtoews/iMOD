@@ -70,7 +70,7 @@ CONTAINS
      !## read/show current data from memory!     
      CALL GENDATAGRID('') 
     CASE (IDHELP)
-     CALL IMODGETHELP('3.2.2','Create a GEN-file')
+     CALL IMODGETHELP('3.2.2','EMO.CreateGEN')
     CASE (IDCANCEL)
      CALL CREATEGEN1CLOSE()
    END SELECT

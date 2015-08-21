@@ -93,7 +93,7 @@ CONTAINS
        CALL CREATEIDF1GETCRD(-1) !## automatically
 
       CASE (IDHELP)
-       CALL IMODGETHELP('3.2.1','Create an IDF-file') 
+       CALL IMODGETHELP('3.2.1','EMO.CreateIDF') 
       CASE (IDCANCEL)
        CALL CREATEIDF1CLOSE()
       CASE (ID_PROPERTIES)

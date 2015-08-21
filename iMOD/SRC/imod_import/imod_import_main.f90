@@ -97,7 +97,7 @@ CONTAINS
       CASE (IDCANCEL)
        EXIT
       CASE (IDHELP)
-       CALL IMODGETHELP('5.5.2','Import Modflow Models')
+       CALL IMODGETHELP('5.5.2','TMO.IT.Modflow')
     END SELECT
 
    END SELECT

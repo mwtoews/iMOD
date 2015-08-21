@@ -90,7 +90,7 @@ CONTAINS
       CASE (IDCANCEL)
        CALL STARTP1CLOSE(1)
       CASE (IDHELP)
-       CALL IMODGETHELP('5.10','Define Startpoints')
+       CALL IMODGETHELP('5.10','TMO.DefStartP')
      END SELECT
 
     CASE (ID_DSPTAB1)
@@ -159,7 +159,7 @@ CONTAINS
        EXIT
       ENDIF
      CASE (IDHELP)
-       CALL IMODGETHELP('5.10','Define Startpoints')
+       CALL IMODGETHELP('5.10','TMO.DefStartP')
      CASE (IDCANCEL)
       EXIT
     END SELECT

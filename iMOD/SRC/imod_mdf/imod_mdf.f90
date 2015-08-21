@@ -100,7 +100,7 @@ CONTAINS
      CASE (IDOK,IDCANCEL)
       EXIT
      CASE (IDHELP)
-      CALL IMODGETHELP('3.4.4','Grouping IDF Files')     
+      CALL IMODGETHELP('3.4.4','MMO.GroupIDF')     
     END SELECT
   END SELECT
  ENDDO

@@ -156,7 +156,7 @@ CONTAINS
      SELECT CASE (MESSAGE%VALUE1)
       !## help
       CASE (IDHELP)
-       CALL IMODGETHELP('5.7','Model Simulation')
+       CALL IMODGETHELP('5.7','TMO.ModSim')
       !## cancel modeling
       CASE (IDCANCEL)
        CALL MODEL1CLOSE()

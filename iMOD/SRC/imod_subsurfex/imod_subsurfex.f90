@@ -33,7 +33,7 @@ CONTAINS
      CASE (IDDELETE)
       CALL SUBSURFEXDELETE()
      CASE (IDHELP)
-      CALL IMODGETHELP('ssexplorer','Subsurface Explorer')
+      CALL IMODGETHELP('ssexplorer','VMO.SubsurfExpl')
      CASE (IDZOOMIN)
       CALL SUBSURFEXZOOMIN()
      CASE (IDZOOMOUT)

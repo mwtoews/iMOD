@@ -96,7 +96,7 @@ CONTAINS
     CASE (ID_DPATHLINES)
      SELECT CASE (MESSAGE%VALUE1)
       CASE (IDHELP)
-       CALL IMODGETHELP('5.11','Start Pathline Simulation')
+       CALL IMODGETHELP('5.11','TMO.StartPathSim')
       CASE (IDCANCEL)
        CALL PLINES1CLOSE()
      END SELECT

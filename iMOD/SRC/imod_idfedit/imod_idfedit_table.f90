@@ -176,7 +176,7 @@ CONTAINS
       CASE (IDCANCEL)
        EXIT
       CASE (IDHELP)
-       CALL IMODGETHELP('4.1.4','IDF Edit')
+       CALL IMODGETHELP('4.1.4','MMO.IDO.IDFEdit')
      END SELECT
    END SELECT
    

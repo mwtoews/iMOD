@@ -91,7 +91,7 @@ CONTAINS
         CALL PREFSAVECOLOURS(TRIM(PREFVAL(1))//'\IMOD_INIT.CLR')
         EXIT
        CASE (IDHELP)
-        CALL IMODGETHELP('2.3','Preferences')
+        CALL IMODGETHELP('2.3','GS.Preferences')
       END SELECT
     END SELECT
 

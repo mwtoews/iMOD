@@ -102,7 +102,7 @@ CONTAINS
       CALL WDIALOGGETSTRING(IDF_STRING4,MP(IPLOT)%ALIAS)
 
      CASE (IDHELP)
-      CALL IMODGETHELP('3.4.3','Map Info')
+      CALL IMODGETHELP('3.4.3','MMO.MapInfo')
 
      CASE (IDCANCEL)
       EXIT
@@ -345,7 +345,7 @@ CONTAINS
       !## display graph
       CALL PROFILE_PLOTGRAPH('Percentile','Values (-)',.FALSE.)
      CASE (IDHELP)
-       CALL IMODGETHELP('3.4.3','Map Info')
+       CALL IMODGETHELP('3.4.3','MMO.MapInfo')
      CASE (IDCANCEL)
       EXIT
     END SELECT

@@ -413,7 +413,7 @@ CONTAINS
      CALL SOLIDPROFILEFITDRILL()
      CALL SOLIDPROFILEUPDATECROSS(1)    
     CASE (IDHELP)
-       CALL IMODGETHELP('5.4.2','Solid Editing using Cross-Sections')
+       CALL IMODGETHELP('5.4.2','TMO.ST.CrossSec')
     CASE(IDCANCEL,ID_CLOSE)
      IF(IP.EQ.0)IEXIT=1
    END SELECT
@@ -995,7 +995,7 @@ CONTAINS
 
     !## help
     CASE(IDHELP)
-       CALL IMODGETHELP('5.4.2','Solid Editing using Cross-Sections')
+       CALL IMODGETHELP('5.4.2','TMO.ST.CrossSec')
    END SELECT
 
   !## main dialog
@@ -1005,7 +1005,7 @@ CONTAINS
      IF(IP.EQ.0)IEXIT=1
     !## help
     CASE(IDHELP)
-       CALL IMODGETHELP('5.4.2','Solid Editing using Cross-Sections')
+       CALL IMODGETHELP('5.4.2','TMO.ST.CrossSec')
    END SELECT
    
   !## legend dialog
@@ -1643,7 +1643,7 @@ CONTAINS
        IEXIT=3
        EXIT
       CASE (IDHELP)
-       CALL IMODGETHELP('5.4','Solid Tool')         
+       CALL IMODGETHELP('5.4','TMO.SolTool')         
      END SELECT
    END SELECT
   ENDIF
@@ -3509,7 +3509,7 @@ CONTAINS
      ENDIF
 
     CASE(IDHELP)
-       CALL IMODGETHELP('5.1.1','Properties')
+       CALL IMODGETHELP('5.1.1','TMO.CT.Prop')
 
    END SELECT
 

@@ -327,7 +327,7 @@ CONTAINS
    CASE (PUSHBUTTON)
     SELECT CASE (MESSAGE%VALUE1)
      CASE (IDHELP)
-      CALL IMODGETHELP('2','Getting Started') 
+      CALL IMODGETHELP('2','GettingStarted') 
      CASE (IDCANCEL)
       EXIT
     END SELECT

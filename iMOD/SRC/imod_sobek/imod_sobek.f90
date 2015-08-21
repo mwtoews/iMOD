@@ -100,7 +100,7 @@ CONTAINS
       CALL SOBEK1FIELDS
       IF(SOBEK1CALC())EXIT
      CASE (IDHELP)
-       CALL IMODGETHELP('5.5.1','Import SOBEK Models')
+       CALL IMODGETHELP('5.5.1','TMO.IT.SOBEK')
      !## cancel modeling
      CASE (IDCANCEL)
       EXIT

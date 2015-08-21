@@ -675,7 +675,7 @@ CONTAINS
        SOLID_CALC_INIT=.TRUE.; EXIT
       ENDIF
      CASE (IDHELP)
-       CALL IMODGETHELP('5.4','Solid Tool')
+       CALL IMODGETHELP('5.4','TMO.SolTool')
     END SELECT
   END SELECT
 

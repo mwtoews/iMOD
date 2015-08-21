@@ -247,7 +247,7 @@ CONTAINS
         ENDIF
 
        CASE (IDHELP)
-        CALL IMODGETHELP('3.4.5','Adjust Legends')
+        CALL IMODGETHELP('3.4.5','MMO.AdjustLeg')
 
       END SELECT
     END SELECT
@@ -715,7 +715,7 @@ CONTAINS
       MP(IPLOT)%LEG%NCLR=0
       EXIT
      CASE (IDHELP)
-      CALL IMODGETHELP('3.4.5','Adjust Legends')
+      CALL IMODGETHELP('3.4.5','MMO.AdjustLeg')
     END SELECT
   END SELECT
  ENDDO

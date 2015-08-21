@@ -195,7 +195,7 @@ CONTAINS
      CASE (IDCANCEL)
       EXIT
      CASE (IDHELP)
-       CALL IMODGETHELP('5.4.2','Solid Editing using Cross-Sections')
+       CALL IMODGETHELP('5.4.2','TMO.ST.CrossSec')
     END SELECT
   END SELECT
 

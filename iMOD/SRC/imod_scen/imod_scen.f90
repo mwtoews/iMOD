@@ -72,7 +72,7 @@ CONTAINS
       CASE (IDCANCEL)
        CALL SCEN1CLOSE(1)
       CASE (IDHELP)
-       CALL IMODGETHELP('5.6','Model Scenarios')         
+       CALL IMODGETHELP('5.6','TMO.ModScen')         
      END SELECT
    END SELECT
 
@@ -220,7 +220,7 @@ CONTAINS
        ENDIF
       ENDIF
      CASE (IDHELP)
-       CALL IMODGETHELP('5.6','Model Scenarios')
+       CALL IMODGETHELP('5.6','TMO.ModScen')
      CASE (IDCANCEL)
       EXIT
     END SELECT
