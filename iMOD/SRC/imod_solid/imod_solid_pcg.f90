@@ -1409,7 +1409,7 @@ CONTAINS
     CALL IOSTIME(I,J,K)
     WRITE(IU(ISPF),'(2A,3(I2.2,A1))') 'TIME      ',' : ',I,':',J,':',K
     WRITE(IU(ISPF),'(3A)') 'FILENAME  ',' : ',TRIM(FNAME)//'\SOLIDTOOL_CROSSECTION'//TRIM(ITOS(ISPF))//'.GEO'
-    WRITE(IU(ISPF),'(3A)') 'CREATED BY',' : ','iMOD version '//RVERSION(1:7)//'.00'
+    WRITE(IU(ISPF),'(3A)') 'CREATED BY',' : ','iMOD V'//TRIM(RVERSION)
     WRITE(IU(ISPF),'(78A1)') ('=',J=1,78)
     WRITE(IU(ISPF),'(A)') '[TITLES]'
     WRITE(IU(ISPF),'(A/)') '[END OF TITLES]'

@@ -2288,7 +2288,8 @@ CONTAINS
  !###======================================================================
  USE MOD_ISG_PAR
  IMPLICIT NONE
- INTEGER :: I
+ INTEGER :: I,NLAY
+ TYPE(IDFOBJ),ALLOCATABLE,DIMENSION(:) :: TOP,BOT                 
  
  MINDEPTH=0.10     !'mindepth          : minimal waterdepth for computing conductances (m)'
  WDEPTH=1.0        ! waterdepth        : for simgro trapezia
@@ -2385,7 +2386,7 @@ CONTAINS
   ENDIF
  ENDIF
  
- CALL ISG2GRIDMAIN(1)
+ IF(.NOT.ISG2GRIDMAIN(1,NLAY,TOP,BOT))THEN; WRITE(*,'(/A/)') 'Error occured in ISG Grid routine'; ENDIF
  CALL ISGDEAL(); IF(ALLOCATED(ISGIU))DEALLOCATE(ISGIU)
  DO I=1,NLAY
   CALL IDFDEALLOCATE(TOP,SIZE(TOP))
@@ -4588,7 +4589,7 @@ CONTAINS
 
  CALL WGRTEXTORIENTATION(IALIGN=ALIGNRIGHT,ANGLE=0.0)
  CALL WGRTEXTFONT(FFHELVETICA,WIDTH=X1/3.0,HEIGHT=Y1/3.0,ISTYLE=0)
- CALL WGRTEXTSTRING(XP-BND,0.0+0.5*BND,'Powered by iMOD v'//TRIM(RVERSION)//' Copyright © 2005-2013')
+ CALL WGRTEXTSTRING(XP-BND,0.0+0.5*BND,'Powered by iMOD V'//TRIM(RVERSION)//' Copyright © 2005-2013')
 
  CALL IMODBATH_PLOTFIG_DIM(MPW%IBITMAP,X1,X2,Y1,Y2,GR,YP)
  Y1=Y1+BND

@@ -105,7 +105,7 @@ IF(IMODBATCH())STOP
 
 !## get username and status and initialise window
 CALL WINDOWOPEN(FLAGS=SYSMENUON+MINBUTTON+MAXBUTTON+STATUSBAR+MAXWINDOW, &
-                TITLE='iMOD [Version '//TRIM(RVERSION)//'; Configuration '//TRIM(CCONFIG)//']')
+                TITLE='iMOD [V'//TRIM(RVERSION)//'; Configuration '//TRIM(CCONFIG)//']')
 CALL WINDOWSTATUSBARPARTS(4,(/2000,2000,750,-1/),(/1,1,1,1/))
 
 CALL IMOD_STARTSCREEN()
