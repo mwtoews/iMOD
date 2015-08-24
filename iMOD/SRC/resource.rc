@@ -8,13 +8,13 @@
 //
 // Winteracter resource script. 
 //
-// Modified : 21/Aug/2015 14:52:29
+// Modified : 21/Aug/2015 16:24:04
 //
 ///////////////////////////////////////////////////
 //
 // Include files
 //
-#include "..\LIB\WINTERACTER\OS_X32\include\winparam.h"
+#include "winparam.h"
 #ifdef XLIB
 #include "..\LIB\WINTERACTER\OS_X32\include\filesel.rc"
 #include "..\LIB\WINTERACTER\OS_X32\include\colour.rc"
@@ -995,6 +995,19 @@
 #define ID_DRAW2                         1114
 #define ID_ICONDRAWPLUS                  2141
 #define ID_WBALMAIN                       181
+#define ID_PLUGIN                       40085
+#define ID_Manage_Plugin1               40244
+#define ID_Manage_Plugin2               40245
+#define ID_PLUGIN1                      40246
+#define ID_PLUGIN2                      40247
+#define ID_PLUGIN3                      40248
+#define ID_PLUGIN4                      40249
+#define ID_PLUGIN5                      40250
+#define ID_PLUGIN6                      40251
+#define ID_PLUGIN7                      40252
+#define ID_PLUGIN8                      40253
+#define ID_PLUGIN9                      40254
+#define ID_PLUGIN10                     40255
 
 ///////////////////////////////////////////////////
 //
@@ -7924,10 +7937,10 @@ BEGIN
     CONTROL "OK",IDOK,"BUTTON",WS_CHILD | WS_VISIBLE | WS_GROUP | WS_TABSTOP | BS_PUSHBUTTON | BS_TEXT | BS_FLAT,    8,  245,   49,   14
     CONTROL "&Cancel",IDCANCEL,"BUTTON",WS_CHILD | WS_VISIBLE | WS_TABSTOP | BS_PUSHBUTTON | BS_TEXT | BS_FLAT,  360,  245,   49,   14
     CONTROL "&Help ...",IDHELP,"BUTTON",WS_CHILD | WS_VISIBLE | WS_TABSTOP | BS_PUSHBUTTON | BS_TEXT | BS_FLAT,  308,  245,   49,   14
-    CONTROL "Number of Modellayers:",IDF_LABEL1,"STATIC",WS_CHILD | WS_VISIBLE | WS_GROUP | SS_LEFT,   16,   53,   94,    8
-    CONTROL "0",IDF_INTEGER1,"INTEGERSPIN",WS_CHILD | WS_VISIBLE | WS_BORDER | WS_GROUP | WS_TABSTOP | ES_LEFT | ES_CENTER | ES_MULTILINE,  118,   51,   50,   12
-    CONTROL "Steady-State",IDF_RADIO1,"BUTTON",WS_CHILD | WS_VISIBLE | WS_GROUP | WS_TABSTOP | BS_AUTORADIOBUTTON | BS_TEXT,   18,   85,   74,   12
-    CONTROL "Transient",IDF_RADIO2,"BUTTON",WS_CHILD | WS_VISIBLE | WS_TABSTOP | BS_AUTORADIOBUTTON | BS_TEXT,   18,  101,   74,   12
+    CONTROL "Number of Modellayers:",IDF_LABEL1,"STATIC",WS_CHILD | WS_VISIBLE | WS_GROUP | SS_LEFT,   16,   53,   93,    8
+    CONTROL "0",IDF_INTEGER1,"INTEGERSPIN",WS_CHILD | WS_VISIBLE | WS_BORDER | WS_GROUP | WS_TABSTOP | ES_LEFT | ES_CENTER | ES_MULTILINE,  118,   51,   49,   12
+    CONTROL "Steady-State",IDF_RADIO1,"BUTTON",WS_CHILD | WS_VISIBLE | WS_GROUP | WS_TABSTOP | BS_AUTORADIOBUTTON | BS_TEXT,   18,   85,   73,   12
+    CONTROL "Transient",IDF_RADIO2,"BUTTON",WS_CHILD | WS_VISIBLE | WS_TABSTOP | BS_AUTORADIOBUTTON | BS_TEXT,   18,  101,   73,   12
     CONTROL "",IDF_MENU2,"COMBOBOX",WS_CHILD | WS_VISIBLE | WS_VSCROLL | WS_GROUP | WS_TABSTOP | CBS_DROPDOWNLIST | CBS_HASSTRINGS,  173,  111,   85,  248
     CONTROL "0",IDF_INTEGER2,"INTEGERSPIN",WS_CHILD | WS_VISIBLE | WS_BORDER | WS_GROUP | WS_TABSTOP | ES_LEFT | ES_CENTER | ES_MULTILINE,  119,  111,   49,   12
     CONTROL "0",IDF_INTEGER3,"INTEGERSPIN",WS_CHILD | WS_VISIBLE | WS_BORDER | WS_GROUP | WS_TABSTOP | ES_LEFT | ES_CENTER | ES_MULTILINE,  261,  111,   60,   12
@@ -7937,29 +7950,29 @@ BEGIN
     CONTROL "0",IDF_INTEGER5,"INTEGERSPIN",WS_CHILD | WS_VISIBLE | WS_BORDER | WS_GROUP | WS_TABSTOP | ES_LEFT | ES_CENTER | ES_MULTILINE,  261,  134,   60,   12
     CONTROL "Start Date",IDF_LABEL6,"STATIC",WS_CHILD | WS_VISIBLE | WS_GROUP | SS_LEFT,  118,  102,   40,    8
     CONTROL "End Date",IDF_LABEL7,"STATIC",WS_CHILD | WS_VISIBLE | WS_GROUP | SS_LEFT,  119,  126,   40,    8
-    CONTROL "Unconfinedness",IDF_CHECK1,"BUTTON",WS_CHILD | WS_VISIBLE | WS_GROUP | WS_TABSTOP | BS_AUTOCHECKBOX | BS_TEXT,   16,   38,   98,   12
-    CONTROL "Include Steady-State period",IDF_CHECK2,"BUTTON",WS_CHILD | WS_VISIBLE | WS_GROUP | WS_TABSTOP | BS_AUTOCHECKBOX | BS_TEXT,  119,  169,  182,   12
+    CONTROL "Unconfinedness",IDF_CHECK1,"BUTTON",WS_CHILD | WS_VISIBLE | WS_GROUP | WS_TABSTOP | BS_AUTOCHECKBOX | BS_TEXT,   16,   38,   97,   12
+    CONTROL "Include Steady-State period",IDF_CHECK2,"BUTTON",WS_CHILD | WS_VISIBLE | WS_GROUP | WS_TABSTOP | BS_AUTOCHECKBOX | BS_TEXT,  119,  169,  181,   12
     CONTROL "",IDF_MENU4,"COMBOBOX",WS_CHILD | WS_VISIBLE | WS_VSCROLL | WS_GROUP | WS_TABSTOP | CBS_DROPDOWNLIST | CBS_HASSTRINGS,  173,  153,   85,  248
     CONTROL "Timescale:",IDF_LABEL4,"STATIC",WS_CHILD | WS_VISIBLE | WS_GROUP | SS_LEFT,  119,  155,   43,    8
-    CONTROL "iMOD Runfile",IDF_RADIO3,"BUTTON",WS_CHILD | WS_VISIBLE | WS_GROUP | WS_TABSTOP | BS_AUTORADIOBUTTON | BS_TEXT,  120,  205,   74,   14
+    CONTROL "iMOD Runfile",IDF_RADIO3,"BUTTON",WS_CHILD | WS_VISIBLE | WS_GROUP | WS_TABSTOP | BS_AUTORADIOBUTTON | BS_TEXT,  120,  205,   73,   14
     CONTROL "MODFLOW 2005",IDF_RADIO4,"BUTTON",WS_CHILD | WS_VISIBLE | WS_TABSTOP | BS_AUTORADIOBUTTON | BS_TEXT,  196,  205,   84,   14
-    CONTROL "File Format",IDF_LABEL5,"STATIC",WS_CHILD | WS_VISIBLE | WS_GROUP | SS_LEFT,   18,  209,   94,    8
-    CONTROL "BCF",IDF_RADIO5,"BUTTON",WS_CHILD | WS_VISIBLE | WS_GROUP | WS_TABSTOP | BS_AUTORADIOBUTTON | BS_TEXT,  120,  221,   34,   14
-    CONTROL "LPF",IDF_RADIO6,"BUTTON",WS_CHILD | WS_VISIBLE | WS_TABSTOP | BS_AUTORADIOBUTTON | BS_TEXT,  158,  221,   34,   14
-    CONTROL "SubSoil Syntax",IDF_LABEL8,"STATIC",WS_CHILD | WS_VISIBLE | WS_GROUP | SS_LEFT,   18,  224,   94,    8
+    CONTROL "File Format",IDF_LABEL5,"STATIC",WS_CHILD | WS_VISIBLE | WS_GROUP | SS_LEFT,   18,  209,   93,    8
+    CONTROL "BCF",IDF_RADIO5,"BUTTON",WS_CHILD | WS_VISIBLE | WS_GROUP | WS_TABSTOP | BS_AUTORADIOBUTTON | BS_TEXT,  120,  221,   33,   14
+    CONTROL "LPF",IDF_RADIO6,"BUTTON",WS_CHILD | WS_VISIBLE | WS_TABSTOP | BS_AUTORADIOBUTTON | BS_TEXT,  158,  221,   33,   14
+    CONTROL "SubSoil Syntax",IDF_LABEL8,"STATIC",WS_CHILD | WS_VISIBLE | WS_GROUP | SS_LEFT,   18,  224,   93,    8
     CONTROL "Submodel",IDF_CHECK3,"BUTTON",WS_CHILD | WS_VISIBLE | WS_GROUP | WS_TABSTOP | BS_AUTOCHECKBOX | BS_TEXT,   16,   20,   96,   12
-    CONTROL "0.0000",IDF_REAL1,"REALEDIT",WS_CHILD | WS_VISIBLE | WS_BORDER | WS_GROUP | WS_TABSTOP | ES_LEFT | ES_CENTER | ES_MULTILINE,  119,   25,   50,   12
-    CONTROL "0.0000",IDF_REAL2,"REALEDIT",WS_CHILD | WS_VISIBLE | WS_BORDER | WS_GROUP | WS_TABSTOP | ES_LEFT | ES_CENTER | ES_MULTILINE,  171,   25,   50,   12
-    CONTROL "0.0000",IDF_REAL3,"REALEDIT",WS_CHILD | WS_VISIBLE | WS_BORDER | WS_GROUP | WS_TABSTOP | ES_LEFT | ES_CENTER | ES_MULTILINE,  227,   25,   50,   12
-    CONTROL "0.0000",IDF_REAL4,"REALEDIT",WS_CHILD | WS_VISIBLE | WS_BORDER | WS_GROUP | WS_TABSTOP | ES_LEFT | ES_CENTER | ES_MULTILINE,  279,   25,   50,   12
+    CONTROL "0.0000",IDF_REAL1,"REALEDIT",WS_CHILD | WS_VISIBLE | WS_BORDER | WS_GROUP | WS_TABSTOP | ES_LEFT | ES_CENTER | ES_MULTILINE,  119,   25,   49,   12
+    CONTROL "0.0000",IDF_REAL2,"REALEDIT",WS_CHILD | WS_VISIBLE | WS_BORDER | WS_GROUP | WS_TABSTOP | ES_LEFT | ES_CENTER | ES_MULTILINE,  171,   25,   49,   12
+    CONTROL "0.0000",IDF_REAL3,"REALEDIT",WS_CHILD | WS_VISIBLE | WS_BORDER | WS_GROUP | WS_TABSTOP | ES_LEFT | ES_CENTER | ES_MULTILINE,  227,   25,   49,   12
+    CONTROL "0.0000",IDF_REAL4,"REALEDIT",WS_CHILD | WS_VISIBLE | WS_BORDER | WS_GROUP | WS_TABSTOP | ES_LEFT | ES_CENTER | ES_MULTILINE,  279,   25,   49,   12
     CONTROL "Lower-left-corner XY (m):",IDF_LABEL9,"STATIC",WS_CHILD | WS_VISIBLE | WS_GROUP | SS_LEFT,  120,   15,  101,    8
     CONTROL "Upper-right-corner XY (m):",IDF_LABEL10,"STATIC",WS_CHILD | WS_VISIBLE | WS_GROUP | SS_LEFT,  227,   15,  104,    8
     CONTROL "Cellsize (m)",IDF_LABEL11,"STATIC",WS_CHILD | WS_VISIBLE | WS_GROUP | SS_LEFT,  335,   15,   48,    8
-    CONTROL "0.0000",IDF_REAL5,"REALEDIT",WS_CHILD | WS_VISIBLE | WS_BORDER | WS_GROUP | WS_TABSTOP | ES_LEFT | ES_CENTER | ES_MULTILINE,  332,   25,   50,   12
+    CONTROL "0.0000",IDF_REAL5,"REALEDIT",WS_CHILD | WS_VISIBLE | WS_BORDER | WS_GROUP | WS_TABSTOP | ES_LEFT | ES_CENTER | ES_MULTILINE,  332,   25,   49,   12
     CONTROL "Temporal Configuration",IDF_GROUP3,"BUTTON",WS_CHILD | WS_VISIBLE | WS_GROUP | BS_GROUPBOX | BS_TEXT | BS_LEFT,    8,   71,  400,  118
     CONTROL "Model Export Configuration",IDF_GROUP4,"BUTTON",WS_CHILD | WS_VISIBLE | WS_GROUP | BS_GROUPBOX | BS_TEXT | BS_LEFT,    8,  193,  400,   48
-    CONTROL "Model will simulate unconfined conditions",IDF_LABEL12,"STATIC",WS_CHILD | WS_VISIBLE | WS_GROUP | SS_LEFTNOWORDWRAP,  120,   40,  278,    9
-    CONTROL "Model layer 3 is simulated as a constant head boundary.",IDF_LABEL13,"STATIC",WS_CHILD | WS_VISIBLE | WS_GROUP | SS_LEFTNOWORDWRAP,  173,   53,  230,    8
+    CONTROL "Model will simulate unconfined conditions",IDF_LABEL12,"STATIC",WS_CHILD | WS_VISIBLE | WS_GROUP | SS_LEFTNOWORDWRAP,  120,   40,  277,    9
+    CONTROL "Model layer 3 is simulated as a constant head boundary.",IDF_LABEL13,"STATIC",WS_CHILD | WS_VISIBLE | WS_GROUP | SS_LEFTNOWORDWRAP,  173,   53,  229,    8
 END
 
 ID_DPMANAGER_SIM RCDATA
@@ -8919,6 +8932,23 @@ BEGIN
         MENUITEM "&3D Tool ...",                             ID_3DTOOL
         MENUITEM "Solid Tool ...",                           ID_SOLIDS
         MENUITEM SEPARATOR
+        POPUP "Plug-In"
+        BEGIN
+            MENUITEM "Manage Plug-in 1...",                      ID_Manage_Plugin1
+            MENUITEM "Manage Plug-in 2...",                      ID_Manage_Plugin2
+            MENUITEM SEPARATOR
+            MENUITEM "PL1 NAME1",                                ID_PLUGIN1
+            MENUITEM "PL1 NAME2",                                ID_PLUGIN2
+            MENUITEM "PL1 NAME3",                                ID_PLUGIN3
+            MENUITEM "PL1 NAME4",                                ID_PLUGIN4
+            MENUITEM "PL1 NAME5",                                ID_PLUGIN5
+            MENUITEM "PL1 NAME6",                                ID_PLUGIN6
+            MENUITEM "PL1 NAME7",                                ID_PLUGIN7
+            MENUITEM "PL1 NAME8",                                ID_PLUGIN8
+            MENUITEM "PL1 NAME9",                                ID_PLUGIN9
+            MENUITEM "PL1 NAME10",                               ID_PLUGIN10
+        END
+        MENUITEM SEPARATOR
         MENUITEM "Import &Sobek Model ...",                  ID_IMPORTSOBEK
         MENUITEM "&Import Modflow Model ...",                ID_IMPORTMODFLOW
         MENUITEM SEPARATOR
@@ -8977,6 +9007,7 @@ ID_LEGENDCOLUMNS,4,12,2,0,
 ID_LEGCD,4,13,0,
 ID_LEGED,4,14,0,
 ID_TOOLBOX,5,0,
+ID_PLUGIN,5,6,0,
 ID_HELPMAIN,6,0,
 0
 END
@@ -9126,6 +9157,19 @@ ID_SORTALPHA_ZA,"Sort the Selected Maps on Alphabetic Descending Order\0",
 ID_SUBSURFEX,"Start the Subsurface Explorer\0",
 ID_ZOOMPREVIOUS,"Go Back to Previous Extent\0",
 ID_ZOOMNEXT,"Go to Next Extent\0",
+ID_PLUGIN,"Use a prefered Plug-in tool within iMOD\0",
+ID_Manage_Plugin1,"Link to the specific plug-inn executable settings\0",
+ID_Manage_Plugin2,"Link to the specific plug-inn executable settings\0",
+ID_PLUGIN1,"Calls plugin executable within iMOD\0",
+ID_PLUGIN2,"Calls plugin executable within iMOD\0",
+ID_PLUGIN3,"Calls plugin executable within iMOD\0",
+ID_PLUGIN4,"Calls plugin executable within iMOD\0",
+ID_PLUGIN5,"Calls plugin executable within iMOD\0",
+ID_PLUGIN6,"Calls plugin executable within iMOD\0",
+ID_PLUGIN7,"Calls plugin executable within iMOD\0",
+ID_PLUGIN8,"Calls plugin executable within iMOD\0",
+ID_PLUGIN9,"Calls plugin executable within iMOD\0",
+ID_PLUGIN10,"Calls plugin executable within iMOD\0",
 0
 END
 
@@ -9669,5 +9713,5 @@ END
 //*WI* FORTSAVE    1
 //*WI* FILENAME    resource.f90
 //*WI* FMODNAME    RESOURCE
-//*WI* LASTTYPE        2
-//*WI* LASTRES       227
+//*WI* LASTTYPE        1
+//*WI* LASTRES         7

@@ -137,6 +137,8 @@ BH%LITHOCLR=WRGB(255,255,255)
 IBACKSLASH=1; ILABELNAME=0
 !## set ability to import sobek model
 CALL WMENUSETSTATE(ID_IMPORTSOBEK,1,ISOBEK)
+!## set ability to import plug-in tool
+CALL WMENUSETSTATE(ID_PLUGIN,1,0)
 !## initiate idproc for help-manual
 IDPROC=0
 
