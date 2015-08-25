@@ -180,7 +180,7 @@ CONTAINS
   ENDDO
 
   LINE=TRIM(ITOS(MTARGET))//' !## no.target'
-  WRITE(IU,*) TRIM(LINE)
+  WRITE(IU,'(A)') TRIM(LINE)
 
   !## get level of treeview
   CALL IR1GETTREEVIEWID(ITREE,IFIELD)
@@ -195,31 +195,31 @@ CONTAINS
    IF(TTREE(ITARGET)%IDPOS.NE.0)THEN
 
     LINE='"'//TRIM(TTREE(ITARGET)%CNAME)//'" !## target name'
-    WRITE(IU,*) TRIM(LINE)
+    WRITE(IU,'(A)') TRIM(LINE)
     LINE=TRIM(ITOS(TTREE(ITARGET)%NPOL))//' !## no.polygons'
-    WRITE(IU,*) TRIM(LINE)
+    WRITE(IU,'(A)') TRIM(LINE)
 
     !## polygons
     IDUMMY=0
     DO IPOL=1,TTREE(ITARGET)%NPOL
      LINE='"'//TRIM(TTREE(ITARGET)%POL(IPOL)%POLNAME)//'",'//TRIM(ITOS(IDUMMY))//','// &!TTREE(ITARGET)%POL(IPOL)%EFFECT))//','// &
           TRIM(ITOS(TTREE(ITARGET)%POL(IPOL)%NCRD))//' !## polygon name,dummy,no.coordinates'  !,effectiveness
-     WRITE(IU,*) TRIM(LINE)
+     WRITE(IU,'(A)') TRIM(LINE)
      !## coordinates
      DO ICRD=1,TTREE(ITARGET)%POL(IPOL)%NCRD
       LINE=TRIM(RTOS(TTREE(ITARGET)%POL(IPOL)%X(ICRD),'F',2))//','//TRIM(RTOS(TTREE(ITARGET)%POL(IPOL)%Y(ICRD),'F',2))
-      WRITE(IU,*) TRIM(LINE)
+      WRITE(IU,'(A)') TRIM(LINE)
      END DO
 
      LINE=TRIM(ITOS(TTREE(ITARGET)%POL(IPOL)%NDEF))//' !## no.definitions'
-     WRITE(IU,*) TRIM(LINE)
+     WRITE(IU,'(A)') TRIM(LINE)
      !## definitions
      DO IDEF=1,TTREE(ITARGET)%POL(IPOL)%NDEF
       LINE=TRIM(ITOS(TTREE(ITARGET)%POL(IPOL)%DEF(IDEF)%INEWP))      //','// &
            TRIM(ITOS(TTREE(ITARGET)%POL(IPOL)%DEF(IDEF)%INEWT))      //','// &
            TRIM(RTOS(TTREE(ITARGET)%POL(IPOL)%DEF(IDEF)%LOWER,'F',2))//','// &
            TRIM(RTOS(TTREE(ITARGET)%POL(IPOL)%DEF(IDEF)%UPPER,'F',2))//' !## iperiod,itopic,lowerlimit,upperlimit'
-      WRITE(IU,*) TRIM(LINE)
+      WRITE(IU,'(A)') TRIM(LINE)
      END DO
     END DO
 
@@ -232,32 +232,32 @@ CONTAINS
     ENDDO
 
     LINE=TRIM(ITOS(MMEASURE))//' !## no.measure'
-    WRITE(IU,*) TRIM(LINE)
+    WRITE(IU,'(A)') TRIM(LINE)
 
     !## measures
     DO IMEASURE=1,NMEASURE
      IF(MTREE(IMEASURE)%IDPOS.EQ.TTREE(ITARGET)%TARGET_ID)THEN
       LINE='"'//TRIM(MTREE(IMEASURE)%CNAME)//'" !## measure name'
-      WRITE(IU,*) TRIM(LINE)
+      WRITE(IU,'(A)') TRIM(LINE)
       LINE=TRIM(ITOS(MTREE(IMEASURE)%NPOL))//' !## no.polygons'
-      WRITE(IU,*) TRIM(LINE)
+      WRITE(IU,'(A)') TRIM(LINE)
       !## polygons
       DO IPOL=1,MTREE(IMEASURE)%NPOL
        LINE='"'//TRIM(MTREE(IMEASURE)%POL(IPOL)%POLNAME)//'",'//TRIM(ITOS(MTREE(IMEASURE)%POL(IPOL)%NCRD))// &
           ' !## polygon name,no.coordinates'
-       WRITE(IU,*) TRIM(LINE)
+       WRITE(IU,'(A)') TRIM(LINE)
        !## coordinates
        DO ICRD=1,MTREE(IMEASURE)%POL(IPOL)%NCRD
         LINE=TRIM(RTOS(MTREE(IMEASURE)%POL(IPOL)%X(ICRD),'F',2))//','//TRIM(RTOS(MTREE(IMEASURE)%POL(IPOL)%Y(ICRD),'F',2))
-        WRITE(IU,*) TRIM(LINE)
+        WRITE(IU,'(A)') TRIM(LINE)
        END DO
        LINE=TRIM(ITOS(MTREE(IMEASURE)%POL(IPOL)%NMES))//' !## no.measures'
-       WRITE(IU,*) TRIM(LINE)
+       WRITE(IU,'(A)') TRIM(LINE)
        !## measures
        DO IMES=1,MTREE(IMEASURE)%POL(IPOL)%NMES
         LINE=TRIM(ITOS(MTREE(IMEASURE)%POL(IPOL)%MES(IMES)%IMES))//','//TRIM(RTOS(MTREE(IMEASURE)%POL(IPOL)%MES(IMES)%IMP,'F',2))//&
              ' !## i-impulse,strength'
-        WRITE(IU,*) TRIM(LINE)
+        WRITE(IU,'(A)') TRIM(LINE)
        END DO
       END DO
 
@@ -268,7 +268,7 @@ CONTAINS
        LINE=TRIM(ITOS(MTREE(IMEASURE)%OPT(IOPT)%IFIXED))//','     //TRIM(ITOS(MTREE(IMEASURE)%OPT(IOPT)%ISEL))//','// &
             TRIM(RTOS(MTREE(IMEASURE)%OPT(IOPT)%LLIMP,'F',2))//','//TRIM(RTOS(MTREE(IMEASURE)%OPT(IOPT)%ULIMP,'F',2))//','// &
             TRIM(RTOS(MTREE(IMEASURE)%OPT(IOPT)%IMP,'F',2))//','//' !## i-constraint ifixed,type,lower/upper boundary,fixedimpulse'
-       WRITE(IU,*) TRIM(LINE)
+       WRITE(IU,'(A)') TRIM(LINE)
       END DO
 
       MRESULT=0
@@ -277,12 +277,12 @@ CONTAINS
       ENDDO
 
       LINE=TRIM(ITOS(MRESULT))//' !## no.results'
-      WRITE(IU,*) TRIM(LINE)
+      WRITE(IU,'(A)') TRIM(LINE)
 
       !## results
       DO IRESULT=1,NRESULT
        IF(RTREE(IRESULT)%IDPOS.EQ.MTREE(IMEASURE)%MEASURE_ID)THEN
-        WRITE(IU,*) '"'//TRIM(RTREE(IRESULT)%CNAME)//'" !## result name'
+        WRITE(IU,'(A)') '"'//TRIM(RTREE(IRESULT)%CNAME)//'" !## result name'
        ENDIF
       END DO
 

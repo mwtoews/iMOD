@@ -19,6 +19,7 @@
 !!  Stichting Deltares
 !!  P.O. Box 177
 !!  2600 MH Delft, The Netherlands.
+!!
 MODULE MOD_IR_LINEAR
 
 USE MOD_IR_PAR
@@ -422,7 +423,7 @@ CONTAINS
  END SUBROUTINE
 
  !###======================================================================
- SUBROUTINE IR1LINEAR_SHOWOUTPUT(IFIELD)!,JFIELD)
+ SUBROUTINE IR1LINEAR_SHOWOUTPUT(IFIELD)
  !###======================================================================
  IMPLICIT NONE
  INTEGER,INTENT(IN) :: IFIELD
