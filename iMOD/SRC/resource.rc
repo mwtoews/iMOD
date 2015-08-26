@@ -8,7 +8,7 @@
 //
 // Winteracter resource script. 
 //
-// Modified : 26/Aug/2015 16:16:20
+// Modified : 26/Aug/2015 17:19:11
 //
 ///////////////////////////////////////////////////
 //
@@ -997,6 +997,7 @@
 #define ID_WBALMAIN                       181
 #define ID_PLUGIN                       40085
 #define ID_DMANAGE_PLUGIN2              40244
+#define ID_MANAGE_PLUGIN                  262
 #define ID_PLUGIN1                      40246
 #define ID_PLUGIN2                      40247
 #define ID_PLUGIN3                      40248
@@ -8388,7 +8389,7 @@ BEGIN
 ,0
 END
 
-ID_DMANAGE_PLUGIN1 DIALOG 0, 0,  308,  235
+ID_MANAGE_PLUGIN DIALOG 0, 0,  308,  235
 STYLE WS_POPUP | WS_BORDER | WS_DLGFRAME | WS_SYSMENU | WS_THICKFRAME | WS_MINIMIZEBOX | DS_3DLOOK
 FONT    8, "MS Sans Serif"
 CAPTION "Plugin Manager 1"
@@ -8400,7 +8401,7 @@ BEGIN
     CONTROL "&Apply and close",IDOK,"BUTTON",WS_CHILD | WS_VISIBLE | WS_TABSTOP | BS_PUSHBUTTON | BS_TEXT | BS_FLAT,  233,  216,   58,   14
 END
 
-ID_DMANAGE_PLUGIN1 RCDATA
+ID_MANAGE_PLUGIN RCDATA
 BEGIN
 "[Dialog] \n"
 " 0  1004 0 \n"
