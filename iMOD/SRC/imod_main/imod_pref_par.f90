@@ -22,7 +22,7 @@
 !!
 MODULE MOD_PREF_PAR
 
-INTEGER,PARAMETER :: MAXPREF =26     !## max. preferences
+INTEGER,PARAMETER :: MAXPREF =28     !## max. preferences
 CHARACTER(LEN=256) :: PREFDIR
 CHARACTER(LEN=256),DIMENSION(MAXPREF) :: PREFVAL
 CHARACTER(LEN=25),DIMENSION(MAXPREF) :: PREF
@@ -51,7 +51,9 @@ DATA PREF/'USER', &          ! 1
           'URBAN_RANGE', &   !23
           'CROP_COSTS', &    !24
           '7ZIP', &          !25
-          'SUBSURFEXDBASE'/  !26
+          'SUBSURFEXDBASE', &!26
+          'PLUGIN1', &       !27
+          'PLUGIN2'/         !28
 
 END MODULE MOD_PREF_PAR
 

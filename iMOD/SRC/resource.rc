@@ -8,13 +8,13 @@
 //
 // Winteracter resource script. 
 //
-// Modified : 21/Aug/2015 16:24:04
+// Modified : 26/Aug/2015 16:16:20
 //
 ///////////////////////////////////////////////////
 //
 // Include files
 //
-#include "..\LIB\WINTERACTER\OS_X32\include\winparam.h"
+#include "winparam.h"
 #ifdef XLIB
 #include "..\LIB\WINTERACTER\OS_X32\include\filesel.rc"
 #include "..\LIB\WINTERACTER\OS_X32\include\colour.rc"
@@ -996,8 +996,7 @@
 #define ID_ICONDRAWPLUS                  2141
 #define ID_WBALMAIN                       181
 #define ID_PLUGIN                       40085
-#define ID_Manage_Plugin1               40244
-#define ID_Manage_Plugin2               40245
+#define ID_DMANAGE_PLUGIN2              40244
 #define ID_PLUGIN1                      40246
 #define ID_PLUGIN2                      40247
 #define ID_PLUGIN3                      40248
@@ -1008,6 +1007,10 @@
 #define ID_PLUGIN8                      40253
 #define ID_PLUGIN9                      40254
 #define ID_PLUGIN10                     40255
+#define IDD_TEMPLATE044                   177
+#define IDD_TEMPLATE045                   196
+#define IDF_GRID2                        1005
+#define ID_DMANAGE_PLUGIN1                200
 
 ///////////////////////////////////////////////////
 //
@@ -8385,6 +8388,41 @@ BEGIN
 ,0
 END
 
+ID_DMANAGE_PLUGIN1 DIALOG 0, 0,  308,  235
+STYLE WS_POPUP | WS_BORDER | WS_DLGFRAME | WS_SYSMENU | WS_THICKFRAME | WS_MINIMIZEBOX | DS_3DLOOK
+FONT    8, "MS Sans Serif"
+CAPTION "Plugin Manager 1"
+BEGIN
+    CONTROL "",IDF_GRID1,"ISSGRID",WS_CHILD | WS_VISIBLE | WS_BORDER | WS_VSCROLL | WS_HSCROLL | WS_GROUP | WS_TABSTOP | GS_DEFROWLABELS | GS_COLUMNLABELS,   21,   12,  270,   92
+    CONTROL "",IDF_GRID2,"ISSGRID",WS_CHILD | WS_VISIBLE | WS_BORDER | WS_VSCROLL | WS_HSCROLL | WS_GROUP | WS_TABSTOP | GS_COLUMNLABELS | GS_ROWLABELS,   21,  117,  270,   91
+    CONTROL "&Quit and not saving",IDCANCEL,"BUTTON",WS_CHILD | WS_VISIBLE | WS_GROUP | WS_TABSTOP | BS_PUSHBUTTON | BS_TEXT | BS_FLAT,   21,  216,   78,   14
+    CONTROL "&Help...",IDHELP,"BUTTON",WS_CHILD | WS_VISIBLE | WS_TABSTOP | BS_PUSHBUTTON | BS_TEXT | BS_FLAT,  184,  216,   40,   14
+    CONTROL "&Apply and close",IDOK,"BUTTON",WS_CHILD | WS_VISIBLE | WS_TABSTOP | BS_PUSHBUTTON | BS_TEXT | BS_FLAT,  233,  216,   58,   14
+END
+
+ID_DMANAGE_PLUGIN1 RCDATA
+BEGIN
+"[Dialog] \n"
+" 0  1004 0 \n"
+"[Grids] \n"
+" 1004     0      0   177 \n"
+" 1005     0      0   196 \n"
+"    0 \n"
+,0
+END
+
+IDD_TEMPLATE044 DIALOG 0, 0, 1000,   16
+STYLE DS_3DLOOK
+FONT    8, "MS Sans Serif"
+BEGIN
+END
+
+IDD_TEMPLATE045 DIALOG 0, 0, 1000,   16
+STYLE DS_3DLOOK
+FONT    8, "MS Sans Serif"
+BEGIN
+END
+
 ///////////////////////////////////////////////////
 //
 // Menus
@@ -8934,8 +8972,8 @@ BEGIN
         MENUITEM SEPARATOR
         POPUP "Plug-In"
         BEGIN
-            MENUITEM "Manage Plug-in 1...",                      ID_Manage_Plugin1
-            MENUITEM "Manage Plug-in 2...",                      ID_Manage_Plugin2
+            MENUITEM "Manage Plug-in 1...",                      ID_DMANAGE_PLUGIN1
+            MENUITEM "Manage Plug-in 2...",                      ID_DMANAGE_PLUGIN2
             MENUITEM SEPARATOR
             MENUITEM "PL1 NAME1",                                ID_PLUGIN1
             MENUITEM "PL1 NAME2",                                ID_PLUGIN2
@@ -9158,8 +9196,7 @@ ID_SUBSURFEX,"Start the Subsurface Explorer\0",
 ID_ZOOMPREVIOUS,"Go Back to Previous Extent\0",
 ID_ZOOMNEXT,"Go to Next Extent\0",
 ID_PLUGIN,"Use a prefered Plug-in tool within iMOD\0",
-ID_Manage_Plugin1,"Link to the specific plug-inn executable settings\0",
-ID_Manage_Plugin2,"Link to the specific plug-inn executable settings\0",
+ID_DMANAGE_PLUGIN2,"Start the iMOD Plugin Manager window to manage the specific plug-inn executable settings\0",
 ID_PLUGIN1,"Calls plugin executable within iMOD\0",
 ID_PLUGIN2,"Calls plugin executable within iMOD\0",
 ID_PLUGIN3,"Calls plugin executable within iMOD\0",
@@ -9713,5 +9750,5 @@ END
 //*WI* FORTSAVE    1
 //*WI* FILENAME    resource.f90
 //*WI* FMODNAME    RESOURCE
-//*WI* LASTTYPE        1
-//*WI* LASTRES         7
+//*WI* LASTTYPE        2
+//*WI* LASTRES       239
