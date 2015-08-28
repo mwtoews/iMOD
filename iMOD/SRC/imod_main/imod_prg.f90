@@ -108,6 +108,8 @@ CALL WINDOWOPEN(FLAGS=SYSMENUON+MINBUTTON+MAXBUTTON+STATUSBAR+MAXWINDOW, &
                 TITLE='iMOD [V'//TRIM(RVERSION)//'; Configuration '//TRIM(CCONFIG)//']')
 CALL WINDOWSTATUSBARPARTS(4,(/2000,2000,750,-1/),(/1,1,1,1/))
 
+!## initialize preferences
+CALL PREFINIT()
 CALL IMOD_STARTSCREEN()
 
 !## allocate zoom settings
@@ -127,6 +129,8 @@ CALL PMANAGERINIT()
 CALL LEGINIT()
 !##initialize iMOD
 CALL IMODINIT()
+!##initialize preferences
+CALL PREFINIT()
 !##initialize colours
 CALL PREFCOLOURSINIT(.TRUE.)
 !## no colour read

@@ -8,7 +8,7 @@
 //
 // Winteracter resource script. 
 //
-// Modified : 27/Aug/2015 15:42:37
+// Modified : 28/Aug/2015 09:15:04
 //
 ///////////////////////////////////////////////////
 //
@@ -996,8 +996,8 @@
 #define ID_ICONDRAWPLUS                  2141
 #define ID_WBALMAIN                       181
 #define ID_PLUGIN                       40085
-#define ID_DMANAGE_PLUGIN2              40244
-#define ID_MANAGE_PLUGIN                  262
+#define ID_MANAGE_PLUGIN2               40244
+#define ID_MANAGE_PLUGIN1               40245
 #define ID_PLUGIN1                      40246
 #define ID_PLUGIN2                      40247
 #define ID_PLUGIN3                      40248
@@ -1009,7 +1009,7 @@
 #define ID_PLUGIN9                      40254
 #define ID_PLUGIN10                     40255
 #define IDD_TEMPLATE044                   177
-#define ID_DMANAGE_PLUGIN1                200
+#define ID_DMANAGE_PLUGIN                 196
 
 ///////////////////////////////////////////////////
 //
@@ -8387,7 +8387,7 @@ BEGIN
 ,0
 END
 
-ID_MANAGE_PLUGIN DIALOG 0, 0,  312,  235
+ID_DMANAGE_PLUGIN DIALOG 0, 0,  312,  235
 STYLE WS_POPUP | WS_BORDER | WS_DLGFRAME | WS_SYSMENU | WS_THICKFRAME | WS_MINIMIZEBOX | DS_3DLOOK
 FONT    8, "MS Sans Serif"
 CAPTION "Plugin Manager 1"
@@ -8399,7 +8399,7 @@ BEGIN
     CONTROL "Plugin explanation text",IDF_LABEL1,"EDIT",WS_CHILD | WS_VISIBLE | WS_VSCROLL | WS_GROUP | WS_TABSTOP | ES_LEFT | ES_MULTILINE | ES_AUTOVSCROLL,   21,  112,  270,   92,WS_EX_STATICEDGE
 END
 
-ID_MANAGE_PLUGIN RCDATA
+ID_DMANAGE_PLUGIN RCDATA
 BEGIN
 "[Dialog] \n"
 " 0  1004 0 \n"
@@ -8980,8 +8980,8 @@ BEGIN
         MENUITEM SEPARATOR
         POPUP "Plug-In"
         BEGIN
-            MENUITEM "Manage Plug-in 1...",                      ID_DMANAGE_PLUGIN1
-            MENUITEM "Manage Plug-in 2...",                      ID_DMANAGE_PLUGIN2
+            MENUITEM "Manage Plug-in 1...",                      ID_MANAGE_PLUGIN1
+            MENUITEM "Manage Plug-in 2...",                      ID_MANAGE_PLUGIN2
             MENUITEM SEPARATOR
             MENUITEM "PL1 NAME1",                                ID_PLUGIN1
             MENUITEM "PL1 NAME2",                                ID_PLUGIN2
@@ -9204,7 +9204,7 @@ ID_SUBSURFEX,"Start the Subsurface Explorer\0",
 ID_ZOOMPREVIOUS,"Go Back to Previous Extent\0",
 ID_ZOOMNEXT,"Go to Next Extent\0",
 ID_PLUGIN,"Use a prefered Plug-in tool within iMOD\0",
-ID_DMANAGE_PLUGIN2,"Start the iMOD Plugin Manager window to manage the specific plug-inn executable settings\0",
+ID_MANAGE_PLUGIN2,"Start the iMOD Plugin Manager window to manage the specific plug-inn executable settings\0",
 ID_PLUGIN1,"Calls plugin executable within iMOD\0",
 ID_PLUGIN2,"Calls plugin executable within iMOD\0",
 ID_PLUGIN3,"Calls plugin executable within iMOD\0",
@@ -9215,7 +9215,7 @@ ID_PLUGIN7,"Calls plugin executable within iMOD\0",
 ID_PLUGIN8,"Calls plugin executable within iMOD\0",
 ID_PLUGIN9,"Calls plugin executable within iMOD\0",
 ID_PLUGIN10,"Calls plugin executable within iMOD\0",
-ID_DMANAGE_PLUGIN1,"Start the iMOD Plugin Manager window to manage the specific plug-inn executable settings\0",
+ID_MANAGE_PLUGIN1,"Start the iMOD Plugin Manager window to manage the specific plug-inn executable settings\0",
 0
 END
 
@@ -9759,5 +9759,5 @@ END
 //*WI* FORTSAVE    1
 //*WI* FILENAME    resource.f90
 //*WI* FMODNAME    RESOURCE
-//*WI* LASTTYPE        2
-//*WI* LASTRES       239
+//*WI* LASTTYPE        1
+//*WI* LASTRES         7
