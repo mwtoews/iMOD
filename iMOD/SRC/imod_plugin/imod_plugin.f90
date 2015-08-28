@@ -33,110 +33,50 @@ USE IMODVAR, ONLY : IDIAGERROR
 CONTAINS
 
 !###======================================================================
- SUBROUTINE PLUGINMAIN(ITYPE,MESSAGE)
+ SUBROUTINE PLUGINMAIN(IPLUGIN)
 !###======================================================================
  IMPLICIT NONE
- INTEGER,INTENT(IN) :: ITYPE
- TYPE(WIN_MESSAGE),INTENT(IN) :: MESSAGE
+ INTEGER,INTENT(IN) :: IPLUGIN
+ INTEGER :: ITYPE
+ TYPE(WIN_MESSAGE) :: MESSAGE
  
- CALL WDIALOGSELECT(MESSAGE%WIN)
- SELECT CASE (MESSAGE%WIN)
-
-  !## plugin manager 1
-  CASE (ID_DMANAGE_PLUGIN1)
-   SELECT CASE (ITYPE)
-   
-   CASE(PUSHBUTTON)
-    SELECT CASE (MESSAGE%VALUE1)
-
-    !## close Plugin-tool
-       CASE (IDCANCEL)
-        CALL PLUGINCLOSE()
-
-    !## save and close
-!       CASE (IDOK)
-!        CALL PLUGINSAVE()
-
-!       CASE(IDHELP)
-!       CALL IMODGETHELP(,)
-
-    END SELECT
-   
-   END SELECT
+ CALL WMENUSETSTATE(ID_PLUGIN,1,1)
+ CALL WDIALOGLOAD(ID_MANAGE_PLUGIN)
+ CALL WDIALOGSHOW(-1,-1,0,2)
  
-   !## plugin manager 2
-  CASE (ID_DMANAGE_PLUGIN2)
-   SELECT CASE (ITYPE)
-   CALL WDIALOGTITLE("Plugin Manager 2")
-   
-   CASE(PUSHBUTTON)
-    SELECT CASE (MESSAGE%VALUE1)
-
-    !## close Plugin-tool
-       CASE (IDCANCEL)
-        CALL PLUGINCLOSE()
-
-    !## save and close
-!       CASE (IDOK)
-!        CALL PLUGINSAVE()
-
-!       CASE(IDHELP)
-!       CALL IMODGETHELP(,)
-
-    END SELECT
-   
-   END SELECT
-  
- END SELECT
+ CALL PLUGUPDATE(IPLUGIN)
+ 
+ !## forces the program to close the manager window
+ DO WHILE(.TRUE.)
+  CALL WMESSAGE(ITYPE,MESSAGE)
+  IF(ITYPE.EQ.PUSHBUTTON.AND.MESSAGE%VALUE1.EQ.IDCANCEL)EXIT 
+ END DO
+ CALL WDIALOGUNLOAD()
  
  END SUBROUTINE PLUGINMAIN
+
+!###======================================================================
+ SUBROUTINE PLUGUPDATE(IPLUGIN)
+!###======================================================================
+!### updates plugin-menu with ungraying the manager chosen by the user
+ IMPLICIT NONE
+ INTEGER,INTENT(IN) :: IPLUGIN
+ 
+ SELECT CASE (IPLUGIN)
+  CASE(ID_DMANAGE_PLUGIN1)
+   CALL WMENUSETSTATE(ID_DMANAGE_PLUGIN1,1,0)
+  CASE(ID_DMANAGE_PLUGIN2)
+   CALL WMENUSETSTATE(ID_DMANAGE_PLUGIN2,1,0)
+   CALL WDIALOGTITLE('Plugin Manager 2')
+ END SELECT
+  
+ END SUBROUTINE PLUGUPDATE
  
 !###======================================================================
  SUBROUTINE PLUGINIT()
 !###======================================================================
  IMPLICIT NONE
  
- CALL WMENUSETSTATE(ID_PLUGIN,1,1)
- CALL WDIALOGLOAD(ID_MANAGE_PLUGIN,ID_DMANAGE_PLUGIN1)
- CALL WDIALOGSHOW(-1,-1,0,2) 
- 
  END SUBROUTINE PLUGINIT
 
- !###======================================================================
- SUBROUTINE PLUGINCLOSE()
- !###======================================================================
- IMPLICIT NONE
-
- IDIAGERROR=1
-
- !## save scenario?
-! CALL WMESSAGEBOX(YESNOCANCEL,QUESTIONICON,COMMONYES, &
-!      'Do you want to save the current settings'//CHAR(13)//'before stopping the Plugin manager?','Question')
-! IF(WINFODIALOG(4).EQ.0)RETURN  !## cancel
-! IF(WINFODIALOG(4).EQ.1)THEN
-!  IF(.NOT.PLUGINSAVELOAD(ID_SAVEAS))RETURN  !## yes, do save and quit if succesfull
-! ENDIF
-
-! CALL PLUGINDEALLOCATE()
-
- CALL WINDOWSELECT(0)
- CALL WMENUSETSTATE(ID_MANAGE_PLUGIN,2,0)
-
- CALL WDIALOGSELECT(ID_MANAGE_PLUGIN)
- CALL WDIALOGUNLOAD()
-
- IDIAGERROR=0
-
- END SUBROUTINE PLUGINCLOSE
-
- !###======================================================================
-! SUBROUTINE PLUGINDEALLOCATE()
- !###======================================================================
-! IMPLICIT NONE
-! INTEGER :: I
-! 
-!  CALL CLOSEUNITS()
-!
-! END SUBROUTINE PLUGINDEALLOCATE
-!
 END MODULE MOD_PLUGIN

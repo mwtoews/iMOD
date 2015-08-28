@@ -8,7 +8,7 @@
 //
 // Winteracter resource script. 
 //
-// Modified : 26/Aug/2015 17:19:11
+// Modified : 27/Aug/2015 15:42:37
 //
 ///////////////////////////////////////////////////
 //
@@ -1009,8 +1009,6 @@
 #define ID_PLUGIN9                      40254
 #define ID_PLUGIN10                     40255
 #define IDD_TEMPLATE044                   177
-#define IDD_TEMPLATE045                   196
-#define IDF_GRID2                        1005
 #define ID_DMANAGE_PLUGIN1                200
 
 ///////////////////////////////////////////////////
@@ -8389,39 +8387,48 @@ BEGIN
 ,0
 END
 
-ID_MANAGE_PLUGIN DIALOG 0, 0,  308,  235
+ID_MANAGE_PLUGIN DIALOG 0, 0,  312,  235
 STYLE WS_POPUP | WS_BORDER | WS_DLGFRAME | WS_SYSMENU | WS_THICKFRAME | WS_MINIMIZEBOX | DS_3DLOOK
 FONT    8, "MS Sans Serif"
 CAPTION "Plugin Manager 1"
 BEGIN
     CONTROL "",IDF_GRID1,"ISSGRID",WS_CHILD | WS_VISIBLE | WS_BORDER | WS_VSCROLL | WS_HSCROLL | WS_GROUP | WS_TABSTOP | GS_DEFROWLABELS | GS_COLUMNLABELS,   21,   12,  270,   92
-    CONTROL "",IDF_GRID2,"ISSGRID",WS_CHILD | WS_VISIBLE | WS_BORDER | WS_VSCROLL | WS_HSCROLL | WS_GROUP | WS_TABSTOP | GS_COLUMNLABELS | GS_ROWLABELS,   21,  117,  270,   91
     CONTROL "&Quit and not saving",IDCANCEL,"BUTTON",WS_CHILD | WS_VISIBLE | WS_GROUP | WS_TABSTOP | BS_PUSHBUTTON | BS_TEXT | BS_FLAT,   21,  216,   78,   14
     CONTROL "&Help...",IDHELP,"BUTTON",WS_CHILD | WS_VISIBLE | WS_TABSTOP | BS_PUSHBUTTON | BS_TEXT | BS_FLAT,  184,  216,   40,   14
     CONTROL "&Apply and close",IDOK,"BUTTON",WS_CHILD | WS_VISIBLE | WS_TABSTOP | BS_PUSHBUTTON | BS_TEXT | BS_FLAT,  233,  216,   58,   14
+    CONTROL "Plugin explanation text",IDF_LABEL1,"EDIT",WS_CHILD | WS_VISIBLE | WS_VSCROLL | WS_GROUP | WS_TABSTOP | ES_LEFT | ES_MULTILINE | ES_AUTOVSCROLL,   21,  112,  270,   92,WS_EX_STATICEDGE
 END
 
 ID_MANAGE_PLUGIN RCDATA
 BEGIN
 "[Dialog] \n"
 " 0  1004 0 \n"
+"[Fonts] \n"
+" 1004    8 Arial, 400 0 \n"
+"    2    8 Arial, 400 0 \n"
+"    9    8 Arial, 400 0 \n"
+"    1    8 Arial, 400 0 \n"
+" 1129    8 Arial, 400 0 \n"
 "[Grids] \n"
-" 1004     0      0   177 \n"
-" 1005     0      0   196 \n"
-"    0 \n"
+" 1004     2     10   177 \n"
+"[Colours] \n"
+" 1129 256 256 256 212 208 200 \n"
 ,0
 END
 
 IDD_TEMPLATE044 DIALOG 0, 0, 1000,   16
 STYLE DS_3DLOOK
-FONT    8, "MS Sans Serif"
+FONT    8, "Arial"
 BEGIN
+    CONTROL "Plugins (folder name)",ISS2,"EDIT",WS_CHILD | WS_VISIBLE | WS_BORDER | WS_TABSTOP | ES_LEFT,    0,    0,  216,   14
+    CONTROL "Active",ISS1,"BUTTON",WS_CHILD | WS_VISIBLE | WS_TABSTOP | BS_AUTOCHECKBOX | BS_TEXT | BS_FLAT,    0,    0,   40,   14
 END
 
-IDD_TEMPLATE045 DIALOG 0, 0, 1000,   16
-STYLE DS_3DLOOK
-FONT    8, "MS Sans Serif"
+IDD_TEMPLATE044 RCDATA
 BEGIN
+"[Checks] \n"
+" 1059 0 \n"
+,0
 END
 
 ///////////////////////////////////////////////////
@@ -9208,6 +9215,7 @@ ID_PLUGIN7,"Calls plugin executable within iMOD\0",
 ID_PLUGIN8,"Calls plugin executable within iMOD\0",
 ID_PLUGIN9,"Calls plugin executable within iMOD\0",
 ID_PLUGIN10,"Calls plugin executable within iMOD\0",
+ID_DMANAGE_PLUGIN1,"Start the iMOD Plugin Manager window to manage the specific plug-inn executable settings\0",
 0
 END
 
