@@ -108,14 +108,14 @@ CONTAINS
  !## subroutine to read ini-file of plugin tool and echoes this to plugin manager
  IMPLICIT NONE
  INTEGER,INTENT(IN) :: IROW,ICOL,IPI
- CHARACTER(LEN=256) :: DIRNAME,FNAME
+ CHARACTER(LEN=256) :: DIRNAME
+ CHARACTER(LEN=512) :: FNAME
  CHARACTER(LEN=1256) :: LINE
  INTEGER :: IOS,IU
  LOGICAL :: LEX
   
  CALL WGRIDGETCELLSTRING(IDF_GRID1,ICOL,IROW,DIRNAME)
- FNAME=PREFVAL(IPI)//'\'//TRIM(DIRNAME)//'\PLUG-IN.TXT'
- !FNAME=PREFVAL(IPI)//'\testplugje\PLUG-IN.TXT'
+ FNAME=TRIM(PREFVAL(IPI))//TRIM(DIRNAME)//'\PLUG-IN.INI'
  
  INQUIRE(FILE=FNAME,EXIST=LEX)
  IF(.NOT.LEX)THEN
@@ -128,8 +128,8 @@ CONTAINS
  CALL OSD_OPEN(IU,FILE=FNAME,STATUS='OLD',ACTION='READ',IOSTAT=IOS)
  
  !## read variables from plugin ini-file
- IF(.NOT.UTL_READINITFILE('TXT',LINE,IU,0))RETURN
- READ(LINE,*) FNAME
+ IF(.NOT.UTL_READINITFILE('TXT',LINE,IU,0))RETURN !zelfs als het keyword wel bestaat krijg je de genoemde error en daarna wordt de betreffende file gewoon uitgelezen, hoe kan dit??
+ !READ(LINE,*) FNAME
  
  CLOSE(IU)
  
