@@ -8,13 +8,13 @@
 //
 // Winteracter resource script. 
 //
-// Modified : 28/Aug/2015 09:15:04
+// Modified : 28/Aug/2015 13:21:27
 //
 ///////////////////////////////////////////////////
 //
 // Include files
 //
-#include "winparam.h"
+#include "..\LIB\WINTERACTER\OS_X32\include\winparam.h"
 #ifdef XLIB
 #include "..\LIB\WINTERACTER\OS_X32\include\filesel.rc"
 #include "..\LIB\WINTERACTER\OS_X32\include\colour.rc"
@@ -7931,9 +7931,9 @@ BEGIN
 ,0
 END
 
-ID_DPMANAGER_SIM DIALOG 0, 0,  419,  264
+ID_DPMANAGER_SIM DIALOG 0, 0,  416,  264
 STYLE WS_POPUP | WS_BORDER | WS_DLGFRAME | WS_SYSMENU | DS_3DLOOK | DS_MODALFRAME
-FONT    8, "Arial Narrow"
+FONT    8, "Arial"
 CAPTION "Define Simulation Configuration"
 BEGIN
     CONTROL "OK",IDOK,"BUTTON",WS_CHILD | WS_VISIBLE | WS_GROUP | WS_TABSTOP | BS_PUSHBUTTON | BS_TEXT | BS_FLAT,    8,  245,   49,   14
@@ -9759,5 +9759,5 @@ END
 //*WI* FORTSAVE    1
 //*WI* FILENAME    resource.f90
 //*WI* FMODNAME    RESOURCE
-//*WI* LASTTYPE        1
-//*WI* LASTRES         7
+//*WI* LASTTYPE        2
+//*WI* LASTRES       227

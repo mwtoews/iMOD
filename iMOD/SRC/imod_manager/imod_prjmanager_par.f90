@@ -24,7 +24,7 @@ MODULE MOD_PMANAGER_PAR
 
  INTEGER,PARAMETER :: MAXLEN      =52
  INTEGER,PARAMETER :: MAXTOPICS   =29
- INTEGER,PARAMETER :: MAXSUBTOPICS=6
+ INTEGER,PARAMETER :: MAXSUBTOPICS=24
  INTEGER,PARAMETER :: MAXPERIODS  =10
 
  TYPE PERIODOBJ
@@ -47,6 +47,7 @@ MODULE MOD_PMANAGER_PAR
   TYPE(FILESOBJ),POINTER,DIMENSION(:,:) :: FILES,FILES_TMP => NULL()     !stress information for current defined timestep
                                                                 !(I,:) = subtopic i
                                                                 !(:,I) = system i
+  CHARACTER(LEN=256),POINTER,DIMENSION(:) :: INPFILES => NULL()  !stores the inp files for metaswap
  END TYPE STRESSOBJ
  TYPE(STRESSOBJ),ALLOCATABLE,DIMENSION(:) :: STRESS
 

@@ -1273,7 +1273,7 @@ CONTAINS
  IPF(IIPF)%QCOL =MIN(IPF(IIPF)%NCOL,IPF(IIPF)%QCOL)
  
  IF(IDATA.EQ.1)THEN
-  IF(.NOT.IPFREADDATA(IIPF))RETURN
+  IF(.NOT.IPFREADDATA(IIPF,IQ))RETURN
  ENDIF
  
  IPFREAD2=.TRUE.
@@ -1385,10 +1385,10 @@ CONTAINS
  END FUNCTION IPFWRITEHEADER
 
  !###======================================================================
- LOGICAL FUNCTION IPFREADDATA(IIPF)
+ LOGICAL FUNCTION IPFREADDATA(IIPF,IQ)
  !###======================================================================
  IMPLICIT NONE
- INTEGER,INTENT(IN) :: IIPF
+ INTEGER,INTENT(IN) :: IIPF,IQ
  INTEGER :: I,J,NU
  INTEGER,DIMENSION(0:6) :: IOS
  CHARACTER(LEN=1024) :: READLINE
@@ -1443,14 +1443,19 @@ ILOOP: DO I=1,IPF(IIPF)%NROW
  ENDDO ILOOP
 
  IF(SUM(IOS).NE.0)THEN
-  IF(IOS(0).NE.0)CALL WMESSAGEBOX(OKONLY,EXCLAMATIONICON,COMMONOK,'Reading not enough records in '//CHAR(13)// &
-     '['//TRIM(IPF(IIPF)%FNAME)//']','ERROR')
-  IF(IOS(1).NE.0)CALL WMESSAGEBOX(OKONLY,EXCLAMATIONICON,COMMONOK,'Number of specified columns does not match actual number of '// &
-     'columns (check line ['//TRIM(ITOS(I+IPF(IIPF)%NCOL+3))//']'//CHAR(13)//'in ['//TRIM(IPF(IIPF)%FNAME)//']','ERROR')
-  DO J=1,NU
-   IF(IOS(2+J-1).NE.0)CALL WMESSAGEBOX(OKONLY,EXCLAMATIONICON,COMMONOK,'Not able to transform column '//TRIM(ITOS(IX(J)))// &
-            ' to a number in line ['//TRIM(ITOS(I+IPF(IIPF)%NCOL+3))//']'//CHAR(13)//'in ['//TRIM(IPF(IIPF)%FNAME)//']','ERROR')
-  ENDDO
+  IF(IQ.EQ.1)THEN
+   IF(IOS(0).NE.0)CALL WMESSAGEBOX(OKONLY,EXCLAMATIONICON,COMMONOK,'Reading not enough records in '//CHAR(13)// &
+      '['//TRIM(IPF(IIPF)%FNAME)//']','ERROR')
+   IF(IOS(1).NE.0)CALL WMESSAGEBOX(OKONLY,EXCLAMATIONICON,COMMONOK,'Number of specified columns does not match actual number of '// &
+      'columns (check line ['//TRIM(ITOS(I+IPF(IIPF)%NCOL+3))//']'//CHAR(13)//'in ['//TRIM(IPF(IIPF)%FNAME)//']','ERROR')
+   DO J=1,NU
+    IF(IOS(2+J-1).NE.0)CALL WMESSAGEBOX(OKONLY,EXCLAMATIONICON,COMMONOK,'Not able to transform column '//TRIM(ITOS(IX(J)))// &
+             ' to a number in line ['//TRIM(ITOS(I+IPF(IIPF)%NCOL+3))//']'//CHAR(13)//'in ['//TRIM(IPF(IIPF)%FNAME)//']','ERROR')
+   ENDDO
+  ELSE
+   !## no questions, continue without erroreneous lines
+   IPFREADDATA=.TRUE.; IPF(IIPF)%NROW=I
+  ENDIF
  ELSE
   IPFREADDATA=.TRUE.
  ENDIF

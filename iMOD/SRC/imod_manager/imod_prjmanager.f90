@@ -870,7 +870,7 @@ KLOOP: DO K=1,SIZE(TOPICS(JJ)%STRESS(1)%FILES,1)
  
  !## major topic selected, draw everything
  IF(IPER.EQ.0.AND.ISYS.EQ.0.AND.ISUBTOPIC.EQ.0)THEN
-  NPER=1; IF(ASSOCIATED(TOPICS(ITOPIC)%STRESS))NPER=SIZE(TOPICS(ITOPIC)%STRESS)
+  NPER=0; IF(ASSOCIATED(TOPICS(ITOPIC)%STRESS))NPER=SIZE(TOPICS(ITOPIC)%STRESS)
   DO IPER=1,NPER
    DO ISYS=1,SIZE(TOPICS(ITOPIC)%STRESS(1)%FILES,2)
     DO ISUBTOPIC=1,TOPICS(ITOPIC)%NSUBTOPICS
@@ -949,7 +949,7 @@ KLOOP: DO K=1,SIZE(TOPICS(JJ)%STRESS(1)%FILES,1)
   ENDIF
   
   IF(PMANAGER_SAVEPRJ(FNAME))THEN
-   CALL WMESSAGEBOX(OKONLY,EXCLAMATIONICON,COMMONOK,'Succesfully written project file:'//CHAR(13)//TRIM(FNAME),'Error')
+   CALL WMESSAGEBOX(OKONLY,EXCLAMATIONICON,COMMONOK,'Succesfully written project file:'//CHAR(13)//TRIM(FNAME),'Information')
    PMANAGERPRJ=.TRUE.
   ENDIF
  ENDIF
@@ -1671,9 +1671,9 @@ KLOOP: DO K=1,SIZE(TOPICS(JJ)%STRESS(1)%FILES,1)
  INTEGER,INTENT(IN) :: CB
  CHARACTER(LEN=*),INTENT(IN),DIMENSION(3) :: PCK
  INTEGER,DIMENSION(3) :: IU
- INTEGER,DIMENSION(2) :: JU,NO
+ INTEGER,DIMENSION(3) :: JU,NO,NO_PREV
  CHARACTER(LEN=256) :: LINE
- CHARACTER(LEN=256),DIMENSION(2) :: FNAME
+ CHARACTER(LEN=256),DIMENSION(3) :: FNAME,FNAME_PREV
  INTEGER :: I,J,IPER
  LOGICAL :: LEX
   
@@ -1700,58 +1700,62 @@ KLOOP: DO K=1,SIZE(TOPICS(JJ)%STRESS(1)%FILES,1)
   NO=0; DO I=1,2; READ(IU(I),*) NO(I); ENDDO
   !## use previous timestep for both
   IF(NO(1).EQ.-1.AND.NO(2).EQ.-1)THEN
-   WRITE(IU(3),*) -1; CYCLE
+   WRITE(IU(3),'(I2)') -1; CYCLE
   ENDIF 
 
+  FNAME=''
+
+  !## resuse previous values
+  DO I=1,2
+   IF(NO(I).LT.0)THEN; NO(I)=NO_PREV(I); FNAME(I)=FNAME_PREV(I); ENDIF
+  ENDDO
+  
   LINE=TRIM(ITOS(SUM(NO)))
   WRITE(IU(3),'(A)') TRIM(LINE)
-
-  FNAME=''
   
   JU=0
   DO I=1,2
    !## refresh external filename
-   IF(NO(I).GT.0)READ(IU(I),'(11X,A)') FNAME(I)
    IF(NO(I).GT.0)THEN
-    FNAME(I)=UTL_CAP(FNAME(I),'U')
-    J=INDEX(FNAME(I),'.ARR',.TRUE.)-1
-    FNAME(I)=DIR(:INDEX(DIR,'\',.TRUE.)-1)//TRIM(FNAME(I)(2:J))//'.ARR'
-   ENDIF
-   IF(I.EQ.1)THEN
-    IF(NO(I).GT.0)THEN
-     JU(I)=UTL_GETUNIT(); CALL OSD_OPEN(JU(I),FILE=FNAME(I),STATUS='OLD',ACTION='READ')
-    ENDIF
-   ENDIF
-   IF(I.EQ.2)THEN
-    !## no records written and therefore no outputname available - define again
     IF(LEN_TRIM(FNAME(I)).EQ.0)THEN
-     FNAME(I)=TRIM(DIR)//'\'//  TRIM(PCK(I))//'7\'//TRIM(PCK(I))//'_t'//TRIM(ITOS(IPER))//'.ARR'  !.\model\ISG7\ISG_t1.ARR
+     READ(IU(I),'(11X,A)') FNAME(I)
+     FNAME(I)=UTL_CAP(FNAME(I),'U')
+     J=INDEX(FNAME(I),'.ARR',.TRUE.)-1
+     FNAME(I)=DIR(:INDEX(DIR,'\',.TRUE.)-1)//TRIM(FNAME(I)(2:J))//'.ARR'
+     FNAME(I)=UTL_CAP(FNAME(I),'U')
     ENDIF
-    INQUIRE(FILE=FNAME(I),EXIST=LEX); JU(I)=UTL_GETUNIT()
-    IF(LEX)     CALL OSD_OPEN(JU(I),FILE=FNAME(I),STATUS='OLD'    ,ACTION='WRITE',POSITION='APPEND')
-    IF(.NOT.LEX)CALL OSD_OPEN(JU(I),FILE=FNAME(I),STATUS='UNKNOWN',ACTION='WRITE')
-
-    LINE=FNAME(I); DO J=1,3; LINE=LINE(:INDEX(LINE,'\',.TRUE.)-1); ENDDO
-    J=LEN_TRIM(LINE); LINE='.'//FNAME(I)(J+1:)
-
-    IF(SUM(NO).GT.0)WRITE(IU(3),'(A)') 'OPEN/CLOSE '//TRIM(LINE)//' 1.0 (FREE) -1'
-
+    JU(I)=UTL_GETUNIT(); CALL OSD_OPEN(JU(I),FILE=FNAME(I),STATUS='OLD',ACTION='READ')
    ENDIF
   ENDDO
-    
-  DO I=1,NO(1); READ(JU(1),'(A256)') LINE; WRITE(JU(2),'(A)') TRIM(LINE); ENDDO
+  
+  !## create (new) output file
+  FNAME(3)=TRIM(DIR)//'\'//  TRIM(PCK(2))//'7\'//TRIM(PCK(2))//'_t'//TRIM(ITOS(IPER))//'.ARR'
+  FNAME(3)=UTL_CAP(FNAME(3),'U')
 
-  CLOSE(JU(1),STATUS='DELETE') 
-  IF(SUM(NO).EQ.0)THEN
-   CLOSE(JU(2),STATUS='DELETE') 
+  !## append to existing file, create new file otherwise
+  JU(3)=UTL_GETUNIT()
+  IF(FNAME(3).EQ.FNAME(2))THEN
+   CLOSE(JU(2)); JU(2)=0
+   CALL OSD_OPEN(JU(3),FILE=FNAME(3),STATUS='OLD'    ,ACTION='WRITE',POSITION='APPEND')
   ELSE
-   CLOSE(JU(2))
+   CALL OSD_OPEN(JU(3),FILE=FNAME(3),STATUS='UNKNOWN',ACTION='WRITE')
   ENDIF
+
+  LINE=FNAME(I); DO J=1,3; LINE=LINE(:INDEX(LINE,'\',.TRUE.)-1); ENDDO
+  J=LEN_TRIM(LINE); LINE='.'//FNAME(I)(J+1:)
+
+  IF(SUM(NO).GT.0)WRITE(IU(3),'(A)') 'OPEN/CLOSE '//TRIM(LINE)//' 1.0 (FREE) -1'
+   
+  IF(JU(1).GT.0)THEN; DO I=1,NO(1); READ(JU(1),'(A256)') LINE; WRITE(JU(3),'(A)') TRIM(LINE); ENDDO; CLOSE(JU(1)); ENDIF
+  IF(JU(2).GT.0)THEN; DO I=1,NO(2); READ(JU(2),'(A256)') LINE; WRITE(JU(3),'(A)') TRIM(LINE); ENDDO; CLOSE(JU(2)); ENDIF
+  CLOSE(JU(3))
+  
+  DO I=1,2; NO_PREV(I)=NO(I); FNAME_PREV(I)=FNAME(I); ENDDO
 
  ENDDO
  
- CLOSE(IU(1),STATUS='DELETE')
- CLOSE(IU(2),STATUS='DELETE')
+ CLOSE(IU(1)) !,STATUS='DELETE')
+ CLOSE(IU(2)) !,STATUS='DELETE')
  CLOSE(IU(3))
  
  !## rename file
@@ -2016,7 +2020,7 @@ KLOOP: DO K=1,SIZE(TOPICS(JJ)%STRESS(1)%FILES,1)
  !###======================================================================
  USE MOD_ISG_PAR, ONLY :  XMIN,YMIN,XMAX,YMAX, & !## area to be gridded (x1,y1,x2,y2)'
                           ISS, & !## (1) mean over all periods, (2) mean over given period'
-!                          SDATE,EDATE, & !## startdate,enddate,ddate (yyyymmdd,yyyymmdd,dd)'
+                          SDATE,EDATE, & !## startdate,enddate,ddate (yyyymmdd,yyyymmdd,dd)'
                           IDIM, & !## (0) give area (2) entire domain of isg (3) selected isg'
                           CS, & !## cellsize'
                           MINDEPTH, & !## minimal waterdepth for computing conductances (m)'
@@ -2032,8 +2036,7 @@ KLOOP: DO K=1,SIZE(TOPICS(JJ)%STRESS(1)%FILES,1)
                           IAVERAGE, & !## (1) mean (2) median value
                           NISGFILES, &
                           ISGIU, &
-                          MAXFILES !, &
-!                          ISGFNAME
+                          MAXFILES
  IMPLICIT NONE
  INTEGER,INTENT(IN) :: IU,NSYS,NTOP,IPER,KPER,ITOPIC
  INTEGER,INTENT(INOUT) :: NP
@@ -2046,7 +2049,7 @@ KLOOP: DO K=1,SIZE(TOPICS(JJ)%STRESS(1)%FILES,1)
  CHARACTER(LEN=256) :: SFNAME,LINE,ID,CDIR
  CHARACTER(LEN=5) :: EXT
  CHARACTER(LEN=25) :: FRM
- INTEGER :: JU,KU,ILAY,IROW,ICOL,I,ITOP,ISYS,NROWIPF,NCOLIPF,IEXT,MP,SDATE,EDATE,IOS,MTYPE,IBATCH
+ INTEGER :: JU,KU,ILAY,IROW,ICOL,I,ITOP,ISYS,NROWIPF,NCOLIPF,IEXT,MP,IOS,MTYPE,IBATCH
  LOGICAL :: LIPF,LISG
  REAL,ALLOCATABLE,DIMENSION(:) :: TLP,KH,TP,BT
   
@@ -2073,9 +2076,6 @@ KLOOP: DO K=1,SIZE(TOPICS(JJ)%STRESS(1)%FILES,1)
   XMIN=BND(1)%XMIN; YMIN=BND(1)%YMIN
   XMAX=BND(1)%XMAX; YMAX=BND(1)%YMAX
   ISS=2; IF(SDATE.EQ.0.AND.EDATE.EQ.0)ISS=1
-!  SDATE=
-!  EDATE=
-! DDATE=
   IDIM=0
   CS=BND(1)%DX !## cellsize
   MINDEPTH=0.1
@@ -2133,8 +2133,11 @@ KLOOP: DO K=1,SIZE(TOPICS(JJ)%STRESS(1)%FILES,1)
     CALL ISGREAD()
 
     !## export isg to riv package
-    IF(.NOT.ISG2GRID(POSTFIX,BND(1)%NROW,BND(1)%NCOL,NLAY,TOP,BOT,IBATCH,MP,JU))EXIT
-
+    ILAY=PCK(1,ISYS)%ILAY
+    !## translate again to idate as it will be convered to jdate in next subroutine
+    SDATE=UTL_JDATETOIDATE(SDATE); EDATE=UTL_JDATETOIDATE(EDATE)
+    IF(.NOT.ISG2GRID(POSTFIX,BND(1)%NROW,BND(1)%NCOL,NLAY,ILAY,TOP,BOT,IBATCH,MP,JU))EXIT
+    
    !## open ipf file
    ELSEIF(LIPF)THEN
 
@@ -2199,7 +2202,7 @@ KLOOP: DO K=1,SIZE(TOPICS(JJ)%STRESS(1)%FILES,1)
      DO ILAY=1,NLAY
       IF(TLP(ILAY).GT.0.0)THEN
        WRITE(JU,FRM) ILAY,IROW,ICOL,Q*TLP(ILAY),ISYS
-       NP=NP+1; MP=MP+1
+       MP=MP+1
       ENDIF
      ENDDO
      
@@ -2243,7 +2246,7 @@ KLOOP: DO K=1,SIZE(TOPICS(JJ)%STRESS(1)%FILES,1)
      DO ILAY=1,NLAY
       IF(TLP(ILAY).LE.0.0)CYCLE
       WRITE(JU,FRM) ILAY,IROW,ICOL,(PCK(JTOP(ITOP),ISYS)%X(ICOL,IROW),ITOP=1,NTOP),ISYS
-      NP=NP+1; MP=MP+1
+      MP=MP+1
      ENDDO
 
     ENDDO; ENDDO
@@ -2258,6 +2261,9 @@ KLOOP: DO K=1,SIZE(TOPICS(JJ)%STRESS(1)%FILES,1)
  DEALLOCATE(TLP,TP,BT,KH)
  LINE=TRIM(ITOS(MP)); WRITE(IU,*) TRIM(LINE)
 
+ !## storage of maximum number of package elements
+ NP=MAX(NP,MP)
+ 
  IF(MP.GT.0)THEN
   SFNAME=EXFNAME; DO I=1,3; SFNAME=SFNAME(:INDEX(SFNAME,'\',.TRUE.)-1); ENDDO
   I=LEN_TRIM(SFNAME); SFNAME='.'//EXFNAME(I+1:)
@@ -2278,77 +2284,119 @@ KLOOP: DO K=1,SIZE(TOPICS(JJ)%STRESS(1)%FILES,1)
  REAL,DIMENSION(:),ALLOCATABLE :: QSORT
  CHARACTER(LEN=*),INTENT(IN) :: FNAME
  REAL,INTENT(OUT) :: Q
- INTEGER :: IR,I,I1,I2,IU,NR,NC,IDATE,JDATE,NDATE,NAJ,N,IOS,TTIME
- REAL :: FRAC,Q1,QQ
+ INTEGER :: IR,I,I1,I2,IU,NR,NC,IDATE,JDATE,NDATE,NAJ,N,IOS,TTIME,ITYPE,IZ,IZMIN,IZMAX,LUNIT,DIZ
+ REAL :: FRAC,Q1,QQ,Z1,Z
  CHARACTER(LEN=8) :: ATTRIB
  CHARACTER(LEN=256) :: LINE
  REAL,DIMENSION(:),ALLOCATABLE :: NODATA,QD
-
+ 
+ IF(EDATE.GT.SDATE)THEN
+  TTIME=EDATE-SDATE
+ ELSE
+  LUNIT=1
+  TTIME=ABS((EDATE*LUNIT)-(SDATE*LUNIT))
+ ENDIF
  !## transient(2)/steady-state(1)
- TTIME=EDATE-SDATE; ALLOCATE(QSORT(TTIME)); Q=0.0
+ ALLOCATE(QSORT(TTIME)); Q=0.0
 
  !## open textfiles with pump information
  IU=UTL_GETUNIT(); CALL OSD_OPEN(IU,FILE=FNAME,STATUS='OLD',ACTION='READ')
 
  READ(IU,*) NR
  IF(NR.GT.0.0)THEN
-  READ(IU,*) NC
+  READ(IU,'(A256)') LINE
+  READ(LINE,*,IOSTAT=IOS) NC,ITYPE
+  IF(IOS.NE.0)ITYPE=1
   
   ALLOCATE(NODATA(NC),QD(NC)); QD=0.0
   
   DO I=1,NC; READ(IU,*) ATTRIB,NODATA(I); ENDDO 
 
   QSORT=NODATA(ICOL)
-  I1=1
 
-  DO IR=1,NR
+  !## timeseries
+  IF(ITYPE.EQ.1)THEN  
 
-   IF(IR.EQ.1)THEN
-    READ(IU,*) IDATE,(QD(I),I=2,NC)
-    QQ=QD(ICOL)
-   ELSE
-    QQ   =Q1
-    IDATE=JDATE
-   ENDIF
+   I1=1
+   DO IR=1,NR
 
-   !## edate=end date of current simulation period
-   NDATE=EDATE
-   IF(IR.LT.NR)THEN
-    READ(IU,*) NDATE,(QD(I),I=2,NC) 
-    Q1=QD(ICOL)
-    JDATE=NDATE
-    NDATE=UTL_IDATETOJDATE(NDATE) !## fname=optional for error message
-   ENDIF
-   !## ndate is min of end date in txt file or simulation period
-   NDATE=MIN(NDATE,EDATE)
+    IF(IR.EQ.1)THEN
+     READ(IU,*) IDATE,(QD(I),I=2,NC)
+     QQ=QD(ICOL)
+    ELSE
+     QQ   =Q1
+     IDATE=JDATE
+    ENDIF
 
-   !## is begin date read from txt file
-   IDATE=UTL_IDATETOJDATE(IDATE)  !## fname=optional for error message
+    !## edate=end date of current simulation period
+    NDATE=EDATE
+    IF(IR.LT.NR)THEN
+     READ(IU,*) NDATE,(QD(I),I=2,NC) 
+     Q1=QD(ICOL)
+     JDATE=NDATE
+     NDATE=UTL_IDATETOJDATE(NDATE) !## fname=optional for error message
+    ENDIF
+    !## ndate is min of end date in txt file or simulation period
+    NDATE=MIN(NDATE,EDATE)
 
-   !## stop searching for data, outside modeling window!
-   IF(IDATE.GT.EDATE)EXIT
+    !## is begin date read from txt file
+    IDATE=UTL_IDATETOJDATE(IDATE)  !## fname=optional for error message
 
-   !## within modeling window
-   IF(NDATE.GT.SDATE)THEN
+    !## stop searching for data, outside modeling window!
+    IF(IDATE.GT.EDATE)EXIT
 
-    !### defintions ($ time window current stressperiod)
-    !  $        |---------|         $ 
-    !sdate    idate     ndate     edate
+    !## within modeling window
+    IF(NDATE.GT.SDATE)THEN
+
+     !### defintions ($ time window current stressperiod)
+     !  $        |---------|         $ 
+     !sdate    idate     ndate     edate
     
-    N=NDATE-SDATE
-    !## if startingdate (read from txt file) greater than start date of current stressperiod
-    IF(IDATE.GT.SDATE)N=N-(IDATE-SDATE)
-    I2=I1+N-1
+     N=NDATE-SDATE
+     !## if startingdate (read from txt file) greater than start date of current stressperiod
+     IF(IDATE.GT.SDATE)N=N-(IDATE-SDATE)
+     I2=I1+N-1
     
-    IF(I2.GE.I1)QSORT(I1:I2)=QQ
+     IF(I2.GE.I1)QSORT(I1:I2)=QQ
 
+     I1=I2+1
+
+    ENDIF
+   END DO
+  
+  ELSEIF(ITYPE.EQ.2.OR.ITYPE.EQ.3)THEN
+   
+   QQ=0.0; IZMAX=SDATE*LUNIT; IZMIN=EDATE*LUNIT; DIZ=(IZMAX-IZMIN)*LUNIT
+   READ(IU,*) Z,(QD(I),I=2,NC)
+   IZ=INT(Z*LUNIT); I1=IZMAX-IZ+1
+   DO IR=2,NR
+
+    READ(IU,*) Z,(QD(I),I=2,NC)
+    IZ=INT(Z*LUNIT)
+    I2=IZMAX-IZ
+    IF(I1.LE.DIZ.AND.I2.GT.0)THEN
+     I2=MIN(DIZ,I2)
+     I1=MAX(1,I1)
+     QSORT(I1:I2)=QD(ICOL)
+    ENDIF
     I1=I2+1
-
-   ENDIF
-  END DO
-
+    IF(I1.GT.DIZ)EXIT
+       
+   ENDDO
+    
+  ENDIF
+  
   IF(MTYPE.EQ.1)THEN
-   Q=SUM(QSORT(1:TTIME))/REAL(TTIME)
+   Q=0.0; I1=0
+   DO I=1,TTIME
+    IF(QSORT(I).NE.NODATA(ICOL))THEN; Q=Q+QSORT(I); I1=I1+1; ENDIF
+   ENDDO
+   IF(I1.GT.0)THEN
+    Q=Q/REAL(I1)
+   ELSE
+    Q=NODATA(ICOL)
+   ENDIF
+!   Q=SUM(QSORT(1:TTIME))/REAL(TTIME)
   ELSEIF(MTYPE.EQ.2)THEN
    CALL UTL_GETMED(QSORT,TTIME,NODATA(ICOL),(/0.5/),1,NAJ,QD)
    Q=QD(1)
@@ -2433,7 +2481,7 @@ KLOOP: DO K=1,SIZE(TOPICS(JJ)%STRESS(1)%FILES,1)
  ENDIF
 
  !## if no layers has been used for the assignment, try to allocate it to the nearest 
- IF(SUM(TLP).EQ.0)THEN
+ IF(SUM(TLP).EQ.0.0)THEN
   ZM=(Z1+Z2)/2.0; DZ=99999.0; JLAY=0
   DO ILAY=1,N
    ZT=TOP(ILAY); ZB=BOT(ILAY)
@@ -2442,7 +2490,6 @@ KLOOP: DO K=1,SIZE(TOPICS(JJ)%STRESS(1)%FILES,1)
     JLAY=ILAY
    ENDIF
   ENDDO
-!  WRITE(*,*) JLAY,DZ
   IF(JLAY.EQ.0)CALL WMESSAGEBOX(OKONLY,EXCLAMATIONICON,COMMONOK,'JLAY.EQ.0, Not able to assign proper modellayer','Error')
   TLP(JLAY)=-1.0
  ENDIF
@@ -2460,13 +2507,12 @@ KLOOP: DO K=1,SIZE(TOPICS(JJ)%STRESS(1)%FILES,1)
    IF(ZT.LT.0.0)TLP(K)=-1.0*TLP(K)
   ELSE
    CALL WMESSAGEBOX(OKONLY,EXCLAMATIONICON,COMMONOK,'K.EQ.0, Not able to assign proper modellayer','Error')
-!   WRITE(*,*) K
   ENDIF
  ENDIF
  
  !## nothing in model, whenever system on top of model, put them in first modellayer
- IF(SUM(TLP).LE.0)THEN
-  TLP=0; IF(Z2.GE.TOP(1))TLP(1)=1.0
+ IF(SUM(TLP).EQ.0.0)THEN
+  IF(Z2.GE.TOP(1))TLP(1)=1.0
  ENDIF
 
  DEALLOCATE(L,TL,IL)
@@ -3212,7 +3258,7 @@ KLOOP: DO K=1,SIZE(TOPICS(JJ)%STRESS(1)%FILES,1)
  IMPLICIT NONE
  INTEGER,INTENT(IN) :: IU
  INTEGER,INTENT(OUT) :: ITOPIC
- INTEGER :: I,J,IOS,IPER,KPER,NSYS,ISYS
+ INTEGER :: I,J,IOS,IPER,KPER,NSYS,ISYS,MSYS
  CHARACTER(LEN=256) :: LINE
  CHARACTER(LEN=52) :: CDATE,C
  REAL :: DELT,CNST
@@ -3232,7 +3278,11 @@ KLOOP: DO K=1,SIZE(TOPICS(JJ)%STRESS(1)%FILES,1)
    IF(TOPICS(ITOPIC)%IACT.EQ.1)THEN
    
     READ(LINE,*,IOSTAT=IOS) NSYS; IF(IOS.NE.0)RETURN; IF(NSYS.LE.0)CYCLE
-        
+    !## reduce number of system to 1 for metaswap
+    IF(ITOPIC.EQ.1)THEN
+     MSYS=NSYS; NSYS=NSYS-TOPICS(1)%NSUBTOPICS 
+    ENDIF
+      
     !## create stress-period
     IPER=0; CALL PMANAGER_STRESSES(ITOPIC,IPER)
     !## create systems
@@ -3244,13 +3294,19 @@ KLOOP: DO K=1,SIZE(TOPICS(JJ)%STRESS(1)%FILES,1)
      DO ISYS=1,NSYS
 
       SELECT CASE (ITOPIC)
-       CASE (1)  !## cap
-        READ(IU,'(A256)',IOSTAT=IOS) LINE; IF(IOS.NE.0)RETURN
-!       READ(LINE,*,IOSTAT=IOS) FILES(J)%FCT,FILES(J)%IMP,FILES(J)%FNAME
-!       IF(IOS.NE.0)THEN; READ(LINE,*,IOSTAT=IOS) FILES(J)%FNAME; FILES(J)%FCT='NaN'; FILES(J)%IMP='NaN'; ENDIF
-!       IF(IOS.NE.0)RETURN; FILES(J)%ILAY='NaN'      
-       CASE (13) !## pwt
-!       READ(IU,*,IOSTAT=IOS) FILES(J)%FCT,FILES(J)%IMP,FILES(J)%FNAME; IF(IOS.NE.0)RETURN; FILES(J)%ILAY='NaN'
+       CASE (1,13)  !## msp,pwt
+        READ(IU,*,IOSTAT=IOS) TOPICS(ITOPIC)%STRESS(IPER)%FILES(I,ISYS)%FCT,  &
+                              TOPICS(ITOPIC)%STRESS(IPER)%FILES(I,ISYS)%IMP,  &
+                              TOPICS(ITOPIC)%STRESS(IPER)%FILES(I,ISYS)%FNAME    
+        TOPICS(ITOPIC)%STRESS(IPER)%FILES(I,ISYS)%ILAY =1
+        READ(TOPICS(ITOPIC)%STRESS(IPER)%FILES(I,ISYS)%FNAME,*,IOSTAT=IOS) CNST
+        IF(IOS.EQ.0)THEN
+         TOPICS(ITOPIC)%STRESS(IPER)%FILES(I,ISYS)%ICNST=1
+         TOPICS(ITOPIC)%STRESS(IPER)%FILES(I,ISYS)%CNST =CNST
+        ELSE
+         TOPICS(ITOPIC)%STRESS(IPER)%FILES(I,ISYS)%ICNST=2
+         TOPICS(ITOPIC)%STRESS(IPER)%FILES(I,ISYS)%CNST =-999.99
+        ENDIF
        CASE (29) !## isg
         READ(IU,*,IOSTAT=IOS) TOPICS(ITOPIC)%STRESS(IPER)%FILES(I,ISYS)%ILAY, &
                               TOPICS(ITOPIC)%STRESS(IPER)%FILES(I,ISYS)%FCT,  &
@@ -3281,7 +3337,16 @@ KLOOP: DO K=1,SIZE(TOPICS(JJ)%STRESS(1)%FILES,1)
         UTL_CAP(TRIM(TOPICS(ITOPIC)%STRESS(IPER)%FILES(I,ISYS)%FNAME(INDEX(TOPICS(ITOPIC)%STRESS(IPER)%FILES(I,ISYS)%FNAME,'\',.TRUE.)+1:)),'L')
      ENDDO
     ENDDO
-    
+    !## read in the inp files
+    IF(ITOPIC.EQ.1)THEN
+
+     MSYS=MSYS-NSYS
+     ALLOCATE(TOPICS(ITOPIC)%STRESS(IPER)%INPFILES(MSYS))
+     DO ISYS=1,MSYS
+      READ(IU,'(A)',IOSTAT=IOS) TOPICS(ITOPIC)%STRESS(IPER)%INPFILES(ISYS)
+     ENDDO
+    ENDIF
+
    ENDIF
   ENDIF
  ENDDO
@@ -3545,7 +3610,7 @@ KLOOP: DO K=1,SIZE(TOPICS(JJ)%STRESS(1)%FILES,1)
  IMPLICIT NONE
  INTEGER :: I
  
- TOPICS(1)%TNAME ='(CAP) Capsim/MetaSwap [UZF]'
+ TOPICS(1)%TNAME ='(MSP) MetaSwap [UZF]'
  TOPICS(2)%TNAME ='(TOP) Top Elevation [DIS]'
  TOPICS(3)%TNAME ='(BOT) Bottom Elevation [DIS]'
  TOPICS(4)%TNAME ='(BND) Boundary Condition [BAS]'
@@ -3576,7 +3641,7 @@ KLOOP: DO K=1,SIZE(TOPICS(JJ)%STRESS(1)%FILES,1)
  TOPICS(29)%TNAME='(ISG) iMOD SeGment Rivers [-]'
  !TOPICS(30)%TNAME='(SCR) Subsidence [SWT]'
 
- TOPICS(1)%NSUBTOPICS =1 !CAP
+ TOPICS(1)%NSUBTOPICS =24 !CAP
  TOPICS(2)%NSUBTOPICS =1 !TOP
  TOPICS(3)%NSUBTOPICS =1 !BOT
  TOPICS(4)%NSUBTOPICS =1 !BND
@@ -3637,7 +3702,30 @@ KLOOP: DO K=1,SIZE(TOPICS(JJ)%STRESS(1)%FILES,1)
  TOPICS(28)%TIMDEP=.TRUE.  !CHD
  TOPICS(29)%TIMDEP=.TRUE.  !ISG
  
- TOPICS(1)%SNAME(1) ='Capsim Parameters'
+ TOPICS(1)%SNAME(1) ='MetaSwap Parameters'
+ TOPICS(1)%SNAME(2) ='Boundary'
+ TOPICS(1)%SNAME(3) ='Landuse'
+ TOPICS(1)%SNAME(4) ='Rootzone'
+ TOPICS(1)%SNAME(5) ='Soiltype'
+ TOPICS(1)%SNAME(6) ='Meteostation'
+ TOPICS(1)%SNAME(7) ='Surfacelevel'
+ TOPICS(1)%SNAME(8) ='Artificial discharge'
+ TOPICS(1)%SNAME(9) ='Artificial layer'
+ TOPICS(1)%SNAME(10)='Artificial location'
+ TOPICS(1)%SNAME(11)='Wetted Rural Area'
+ TOPICS(1)%SNAME(12)='Wetted Urban Area'
+ TOPICS(1)%SNAME(13)='Pondingdepth Urban Area'
+ TOPICS(1)%SNAME(14)='Pondingdepth Rural Area'
+ TOPICS(1)%SNAME(15)='Runoff Resistance Urban Area'
+ TOPICS(1)%SNAME(16)='Runoff Resistance Rural Area'
+ TOPICS(1)%SNAME(17)='Runon Resistance Urban Area'
+ TOPICS(1)%SNAME(18)='Runon Resistance Rural Area'
+ TOPICS(1)%SNAME(19)='Infiltration Capacity Urban Area'
+ TOPICS(1)%SNAME(20)='Infiltration Capacity Rural Area'
+ TOPICS(1)%SNAME(21)='Purgewater Depth'
+ TOPICS(1)%SNAME(22)='Soil Moisture Factor'
+ TOPICS(1)%SNAME(23)='Soild Permeability Factor'
+ TOPICS(1)%SNAME(24)='INP-files'
  TOPICS(2)%SNAME(1) ='Top of Modellayer'
  TOPICS(3)%SNAME(1) ='Bottom of Modellayer'
  TOPICS(4)%SNAME(1) ='Boundary Settings'
@@ -3733,19 +3821,16 @@ KLOOP: DO K=1,SIZE(TOPICS(JJ)%STRESS(1)%FILES,1)
  INTEGER,INTENT(IN) :: I
  INTEGER :: J
  
-! DO I=1,SIZE(TOPICS)
  IF(ASSOCIATED(TOPICS(I)%STRESS))THEN
   DO J=1,SIZE(TOPICS(I)%STRESS)
-   IF(ASSOCIATED(TOPICS(I)%STRESS(J)%FILES))THEN
-    DEALLOCATE(TOPICS(I)%STRESS(J)%FILES)
-   ENDIF
+   IF(ASSOCIATED(TOPICS(I)%STRESS(J)%FILES))DEALLOCATE(TOPICS(I)%STRESS(J)%FILES)
+   IF(ASSOCIATED(TOPICS(I)%STRESS(J)%INPFILES))DEALLOCATE(TOPICS(I)%STRESS(J)%INPFILES)
   ENDDO
   DEALLOCATE(TOPICS(I)%STRESS)
  ENDIF
- IF(ASSOCIATED(TOPICS(I)%IDT))   DEALLOCATE(TOPICS(I)%IDT)
- IF(ASSOCIATED(TOPICS(I)%ISD))   DEALLOCATE(TOPICS(I)%ISD)
+ IF(ASSOCIATED(TOPICS(I)%IDT))DEALLOCATE(TOPICS(I)%IDT)
+ IF(ASSOCIATED(TOPICS(I)%ISD))DEALLOCATE(TOPICS(I)%ISD)
  NULLIFY(TOPICS(I)%STRESS); NULLIFY(TOPICS(I)%IDT); NULLIFY(TOPICS(I)%ISD)
-! ENDDO
  
  END SUBROUTINE PMANAGER_DEALLOCATE
  
