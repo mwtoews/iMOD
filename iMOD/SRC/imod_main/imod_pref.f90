@@ -374,7 +374,10 @@ CONTAINS
    !## ro-tool
    CASE(14:24)
     IOR=IOR+1
-
+   CASE(27,28)
+   !## remove last backslash in preference directory if available 
+    J=LEN_TRIM(PREFVAL(I))
+    IF(INDEX(PREFVAL(I),'\',.TRUE.).EQ.J)PREFVAL(I)(J:J)=' '
   END SELECT
  END DO
 

@@ -36,6 +36,7 @@ CONTAINS
 !###======================================================================
  SUBROUTINE PLUGINMAIN(IPLUGIN)
 !###======================================================================
+ !# subroutine with main-program; includes call to all plugin-subroutines
  IMPLICIT NONE
  INTEGER,INTENT(IN) :: IPLUGIN
  INTEGER :: ITYPE,I,J,IROW,ICOL,IPI
@@ -103,20 +104,21 @@ CONTAINS
  END SUBROUTINE PLUGIN_UPDATEMENU
 
  !###======================================================================
- SUBROUTINE PLUGIN_FIELDCHANGE(IPI,IROW,ICOL)   !#plugin file number=J,plugin folder number=I
+ SUBROUTINE PLUGIN_FIELDCHANGE(IPI,IROW,ICOL)
  !###======================================================================
  !## subroutine to read ini-file of plugin tool and echoes this to plugin manager
  IMPLICIT NONE
  INTEGER,INTENT(IN) :: IROW,ICOL,IPI
  CHARACTER(LEN=256) :: DIRNAME
- CHARACTER(LEN=512) :: FNAME
- CHARACTER(LEN=1256) :: LINE
+ CHARACTER(LEN=1256) :: LINE,FNAME
  INTEGER :: IOS,IU
  LOGICAL :: LEX
   
+ !#sets directory+filename
  CALL WGRIDGETCELLSTRING(IDF_GRID1,ICOL,IROW,DIRNAME)
- FNAME=TRIM(PREFVAL(IPI))//TRIM(DIRNAME)//'\PLUG-IN.INI'
+ FNAME=TRIM(PREFVAL(IPI))//'\'//TRIM(DIRNAME)//'\PLUG-IN.INI'
  
+ !# raise expection error if the specific file cannot be found or an none-existing directory is given in preference file.
  INQUIRE(FILE=FNAME,EXIST=LEX)
  IF(.NOT.LEX)THEN
   CALL WDIALOGPUTSTRING(IDF_LABEL1,'Error, can not find '//TRIM(FNAME))
@@ -128,13 +130,16 @@ CONTAINS
  CALL OSD_OPEN(IU,FILE=FNAME,STATUS='OLD',ACTION='READ',IOSTAT=IOS)
  
  !## read variables from plugin ini-file
- IF(.NOT.UTL_READINITFILE('TXT',LINE,IU,0))RETURN !zelfs als het keyword wel bestaat krijg je de genoemde error en daarna wordt de betreffende file gewoon uitgelezen, hoe kan dit??
- !READ(LINE,*) FNAME
- 
+ IF(.NOT.UTL_READINITFILE('TXT',LINE,IU,0))RETURN
+ READ(LINE,*) FNAME
  CLOSE(IU)
+ 
+ !#select files from ini-file and read these files, echo to description part of plugin-manager
+ FNAME=TRIM(PREFVAL(IPI))//'\'//TRIM(DIRNAME)//'\'//TRIM(FNAME)
  
  IU=UTL_GETUNIT()
  CALL OSD_OPEN(IU,FILE=FNAME,STATUS='OLD',ACTION='READ',IOSTAT=IOS)
+ 
  READ(IU,'(A)') LINE
  CLOSE(IU)
 
@@ -151,9 +156,12 @@ CONTAINS
  INTEGER,INTENT(IN) :: I
  CHARACTER(LEN=512) :: LINE,TXTFILE
  CHARACTER(LEN=256),DIMENSION(:),POINTER :: LISTNAME
+ INTEGER :: NROW,ICOL,IROW
  
+ !#lists all file names in specific plugin-folder
  IF(.NOT.UTL_DIRINFO_POINTER(PREFVAL(I),'*',LISTNAME,'D'))THEN; ENDIF
 
+!# check the amount of plugins in folder, if none returns "No plugin found" in window.
  IF(ASSOCIATED(LISTNAME))THEN
   IF(SIZE(LISTNAME).EQ.0)THEN
    CALL WGRIDROWS(IDF_GRID1,1)
@@ -163,9 +171,14 @@ CONTAINS
    CALL WGRIDROWS(IDF_GRID1,SIZE(LISTNAME))
    CALL WGRIDPUTSTRING(IDF_GRID1,1,LISTNAME,SIZE(LISTNAME))
   ENDIF
-  CALL WGRIDSTATECELL(IDF_GRID1,1,1,2)
+  !# outgraying of all the rows in the first column of the plugin manager
+  !# in order to prevent the user from modifying the text in the dialog
+  NROW=SIZE(LISTNAME)
+  DO IROW = 1,NROW
+   CALL WGRIDSTATECELL(IDF_GRID1,1,IROW,2)
+  ENDDO  
  ENDIF
- !## checken vlag iact als plugin al in imf staat
+ !## check flag iact on occurance plugin in imf file
 !  CALL WGRIDPUTCHECKBOX(IDF_GRID1,1,PI(,J)%IACT,SIZE(LISTNAME))
 
  DEALLOCATE(LISTNAME)
