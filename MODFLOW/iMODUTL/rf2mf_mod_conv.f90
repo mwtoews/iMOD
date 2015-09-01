@@ -1939,7 +1939,7 @@
                         allocate(subsys(nsys))
                      else
                         riv%sp(iper)%gcd%nsubsys = nsys
-                        riv%sp(iper)%gcd%subsys = subsys
+                        riv%sp(iper)%gcd%subsys(1:nsys) = subsys
                         deallocate(subsys)
                      end if
                   end do

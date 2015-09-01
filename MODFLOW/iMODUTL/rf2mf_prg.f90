@@ -182,9 +182,10 @@ IF(IACT.NE.0)THEN
  READ(IURUN,*) LINE
  !## solve current model - lstop=.true.: quit ; lstop=.false. whenever effect 'bounds' to boundary!
  CALL RF2MF_MAIN(DXCFILE,lipest)
-ENDIF
-CLOSE(IURUN)
-CLOSE(IUOUT)
+ELSE
+ CLOSE(IURUN)
+ CLOSE(IUOUT)
+END IF
 
 !...     write package input files
 call WriteDis()
