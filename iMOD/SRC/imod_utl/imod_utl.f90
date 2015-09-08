@@ -1632,7 +1632,7 @@ CONTAINS
  END FUNCTION UTL_GETUNIT
 
  !###======================================================================
- SUBROUTINE CLOSEUNITS()
+ SUBROUTINE UTL_CLOSEUNITS()
  !###======================================================================
  IMPLICIT NONE
  INTEGER :: I
@@ -1643,7 +1643,7 @@ CONTAINS
   IF(LEX)CLOSE(I)
  END DO
 
- END SUBROUTINE CLOSEUNITS
+ END SUBROUTINE UTL_CLOSEUNITS
 
  !###======================================================================
  SUBROUTINE INFOUNITS()

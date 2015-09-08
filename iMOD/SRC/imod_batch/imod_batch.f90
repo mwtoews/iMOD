@@ -374,10 +374,6 @@ CONTAINS
  !## open Unit for Same Line Printing of echo (is equal to screen or '*')
  OPEN(UNIT=6, CARRIAGECONTROL='fortran')    
 
-! PREFVAL=''
-! !## set user environment
-! CALL IOSDIRNAME(PREFVAL(1))
-
  CALL UTL_CREATEDIR(TRIM(PREFVAL(1))//'\tmp')
  !## initialize polygons
  MAXSHAPES=500  
