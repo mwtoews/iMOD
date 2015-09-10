@@ -324,7 +324,7 @@ CONTAINS
  LOGICAL FUNCTION IDFREADSCALE_GETX(IDFC,IDFM,SCLTYPE_UP,SCLTYPE_DOWN,PERC)
  ! IDFM = mother idf and will return values on grid defined by IDFM
  ! IDFC = child  idf and uses grid defined by IDFC to scale on IDFM
- ! scltype:
+ ! SCLTYPE_UP:
  ! 1 = SPECIAAL (IBOUNDARY)
  ! 2 = REKENKUNDIG (SHEAD/VCONT/S)
  ! 3 = GEOMETRISCH (KD)
