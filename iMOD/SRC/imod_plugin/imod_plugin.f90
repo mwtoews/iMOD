@@ -30,16 +30,15 @@ USE MOD_IDF, ONLY : IDFDEALLOCATE,IDFNULLIFY
 USE MOD_OSD, ONLY : OSD_GETARG,OSD_OPEN,OSD_GETENV
 USE IMODVAR, ONLY : IDIAGERROR
 
-
 CONTAINS
 
 !###======================================================================
- SUBROUTINE PLUGINMAIN(IPLUGIN)
+ SUBROUTINE PLUGIN_MAIN(IPLUGIN)
 !###======================================================================
  !# subroutine with main-program; includes call to all plugin-subroutines
  IMPLICIT NONE
  INTEGER,INTENT(IN) :: IPLUGIN
- INTEGER :: ITYPE,I,J,IROW,ICOL,IPI
+ INTEGER :: ITYPE,I,J,IROW,ICOL,IPI,N
  TYPE(WIN_MESSAGE) :: MESSAGE
  
  CALL WDIALOGLOAD(ID_DMANAGE_PLUGIN)
@@ -51,9 +50,11 @@ CONTAINS
    CALL WDIALOGTITLE('Plugin Manager 2');IPI=28
  END SELECT
  
- CALL PLUGINREAD(IPI)
+ CALL PLUGIN_READ(IPI)
+ CALL WGRIDSETCELL(IDF_GRID1,1,1)
  CALL PLUGIN_FIELDCHANGE(IPI,1,1)
  CALL WDIALOGSHOW(-1,-1,0,2)
+ 
  
  !## forces the program to close the manager window
  DO WHILE(.TRUE.)
@@ -64,20 +65,27 @@ CONTAINS
     SELECT CASE (MESSAGE%VALUE1)
      CASE (IDCANCEL)
       EXIT
+     CASE (IDOK)    
+      IF(IPI.EQ.27)THEN; N=SIZE(PI1); CALL WGRIDGETCHECKBOX(IDF_GRID1,2,PI1%IACT,N); ENDIF
+      IF(IPI.EQ.28)THEN; N=SIZE(PI2); CALL WGRIDGETCHECKBOX(IDF_GRID1,2,PI2%IACT,N); ENDIF
+      EXIT
     END SELECT
    CASE (FIELDCHANGED)
     SELECT CASE (MESSAGE%VALUE2)
      CASE (IDF_GRID1)
-      CALL WGRIDPOS(MESSAGE%Y,ICOL,IROW)
-      CALL PLUGIN_FIELDCHANGE(IPI,IROW,ICOL)
+      CALL WGRIDPOS(MESSAGE%Y,ICOL,IROW) !#y="to"
+      IF(ICOL.EQ.1)CALL PLUGIN_FIELDCHANGE(IPI,IROW,ICOL)
     END SELECT
 
   END SELECT
 
  END DO
+ 
  CALL WDIALOGUNLOAD()
  
- END SUBROUTINE PLUGINMAIN
+ CALL PLUGIN_UPDATEMENU_FILL()
+ 
+ END SUBROUTINE PLUGIN_MAIN
 
 !###======================================================================
  SUBROUTINE PLUGIN_UPDATEMENU()
@@ -85,7 +93,7 @@ CONTAINS
 !### updates plugin-menu with ungraying the manager chosen by the user
  IMPLICIT NONE
  INTEGER :: I,J
- 
+  
  I=1; IF(LEN_TRIM(PREFVAL(27)).EQ.0)I=0
  CALL WMENUSETSTATE(ID_MANAGE_PLUGIN1,1,I)
  J=1; IF(LEN_TRIM(PREFVAL(28)).EQ.0)J=0
@@ -95,12 +103,8 @@ CONTAINS
   CALL WMENUSETSTATE(ID_PLUGIN,1,0); RETURN
  ENDIF  
 
- CALL WMENUSETSTATE(ID_PLUGIN,1,1)
-
- !## VULLEN VAN DEELMENUS ERONDER
- IF(ALLOCATED(PI))DEALLOCATE(PI)
- 
- 
+ CALL WMENUSETSTATE(ID_PLUGIN,1,1)  
+   
  END SUBROUTINE PLUGIN_UPDATEMENU
 
  !###======================================================================
@@ -149,7 +153,7 @@ CONTAINS
  END SUBROUTINE PLUGIN_FIELDCHANGE
  
 !###======================================================================
- SUBROUTINE PLUGINREAD(I)
+ SUBROUTINE PLUGIN_READ(I)
 !###======================================================================
  !## subroutine to read folderpath(s) and name(s) of plugin-ini files
  IMPLICIT NONE
@@ -178,11 +182,103 @@ CONTAINS
    CALL WGRIDSTATECELL(IDF_GRID1,1,IROW,2)
   ENDDO  
  ENDIF
- !## check flag iact on occurance plugin in imf file
-!  CALL WGRIDPUTCHECKBOX(IDF_GRID1,1,PI(,J)%IACT,SIZE(LISTNAME))
-
- DEALLOCATE(LISTNAME)
-
- END SUBROUTINE PLUGINREAD
  
+ !## check flag iact on occurance plugin in imf-file and save in imf-file after plugin-session 
+ !## (happens in imod_main.f90 -> imodsaveimf/imodloadimf).
+ 
+ IF(I.EQ.27)THEN  
+  CALL PLUGIN_CHECK(PI1,LISTNAME,SIZE(LISTNAME))
+ ELSEIF(I.EQ.28)THEN
+  CALL PLUGIN_CHECK(PI2,LISTNAME,SIZE(LISTNAME))
+ ENDIF
+  
+ DEALLOCATE(LISTNAME)
+ 
+ END SUBROUTINE PLUGIN_READ
+
+!##checking and saving
+ !#CALL WGRIDGETCHECKBOX(IDF_GRID1,2,PI(:)%IACT,NROW) !#naar andere subroutine 
+
+!###======================================================================
+ SUBROUTINE PLUGIN_CHECK(PI,LN,NLN)
+!###======================================================================
+!# Subroutine to check if PI# contains the same filenames as Listname (folder)
+ IMPLICIT NONE
+ INTEGER,INTENT(IN) :: NLN
+ TYPE(PIOBJ),POINTER,DIMENSION(:),INTENT(INOUT) :: PI
+ CHARACTER(LEN=*),DIMENSION(NLN),INTENT(IN) :: LN
+ TYPE(PIOBJ),POINTER,DIMENSION(:) :: PI3
+ INTEGER :: J,K
+ 
+  IF(.NOT.ASSOCIATED(PI))THEN
+   ALLOCATE(PI(NLN))
+   PI%PNAME=LN
+   PI%IACT=0
+  ELSE
+  !# check content of saved PI-list with avaiable plug-in files in specific folder
+  !# In case size(PI) isn't equal to size(listname) and if both lists are equal in size
+  !# this routine will be executed. Size(PI) needs to be equal to size(Listname)!!
+   ALLOCATE(PI3(SIZE(PI))); PI3=PI
+   DEALLOCATE(PI); ALLOCATE(PI(NLN)); PI%PNAME=LN; PI%IACT=0
+   DO K=1,NLN
+    DO J=1,SIZE(PI)
+     IF(TRIM(UTL_CAP(LN(K),'U')).EQ.TRIM(UTL_CAP(PI(J)%PNAME,'U')))THEN; PI(K)%IACT=PI3(J)%IACT; EXIT; ENDIF
+    ENDDO
+   ENDDO
+   DEALLOCATE(PI3)   
+  ENDIF
+  CALL WGRIDPUTCHECKBOX(IDF_GRID1,2,PI(:)%IACT,NLN)  
+
+ END SUBROUTINE PLUGIN_CHECK
+
+ !###======================================================================
+ SUBROUTINE PLUGIN_UPDATEMENU_FILL()
+ !###======================================================================
+!# Subroutine to connect the plugin-names to the plugin-menu
+ IMPLICIT NONE
+ INTEGER :: I,J,K,L
+ INTEGER,DIMENSION(11) :: MENUID
+ DATA MENUID/ID_PLUGIN1,ID_PLUGIN2,ID_PLUGIN3,ID_PLUGIN4,ID_PLUGIN5, &
+             ID_PLUGIN6,ID_PLUGIN7,ID_PLUGIN8,ID_PLUGIN9,ID_PLUGIN10/
+
+!#V 1. Call menu/submenu in hoofdmenu 
+!#V 2. Verander naam van plugin-name menu onderdelen op basis van PI-names
+!#V 3. Dit gebeurt voor zowel PI1 als PI2: vul op basis van beschikbare plugins
+!#    Totdat er 10 namen staan met PL1 of PL2 ervoor afhankelijk of de plugin in mapje 1 of mapje 2 staat.
+!#V 4. Link het veranderen van de namen aan het apply/save knopje in de manager.
+!#V 5. update de namen alleen als het apply/save knopje wordt aangeroepen, anders wordt er niks ingelezen.
+!# 6. Indien er minder plugin-namen beschikbaar zijn dan in totaal 10 (zowel manager 1 als 2) dan wordt de
+!#    plek weggegooid/verstopt.  
+!# 7. Het aantal namen in het menu worden opgeteld in de plugin-manager na klikken op het apply knopje.
+!#    if aantal namen > 10 dan komt er een melding met hoeveel namen er te veel zijn aangezet; 
+!#    count(aantal namen), if>10 then: "Menu is full. Amount of available places is exeeded with {amount-10}  
+!#V 8. Link IACT=1 aan checkbox=1   
+
+ DO I=1,11; CALL WMENUITEMDELETE(MENUID(I)); ENDDO
+ 
+ J=0
+ 
+ DO I=1,SIZE(PI1)
+  IF(PI1(I)%IACT.EQ.1)THEN
+   J=J+1
+    CALL WMENUITEMINSERT(ID_MANAGE_PLUGIN2,2,MENUID(J),'PL1 '//TRIM(PI1(I)%PNAME))
+   PI1(I)%ID=MENUID(J)
+  ELSE
+   PI1(I)%ID=0
+  ENDIF
+ ENDDO
+
+ DO I=1,SIZE(PI2)
+  IF(PI2(I)%IACT.EQ.1)THEN
+   J=J+1
+   CALL WMENUITEMINSERT(ID_MANAGE_PLUGIN2,2,MENUID(J),'PL2 '//TRIM(PI2(I)%PNAME))
+   PI2(I)%ID=MENUID(J)
+  ELSE
+   PI2(I)%ID=0
+  ENDIF
+ ENDDO
+
+ END SUBROUTINE PLUGIN_UPDATEMENU_FILL
+
 END MODULE MOD_PLUGIN
+
