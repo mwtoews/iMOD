@@ -43,6 +43,8 @@ USE MOD_IFF, ONLY : UTL_GETUNITIFF
 USE MOD_OSD, ONLY : OSD_OPEN
 USE MOD_ISG_UTL, ONLY : UTL_GETUNITSISG
 USE MOD_MAP2IDF, ONLY : MAP2IDF_IMPORTMAP
+USE MOD_GEF2IPF, ONLY : GEF2IPF_MAIN
+USE MOD_GEF2IPF_PAR, ONLY : GEFNAMES,IPFFNAME
 IMPLICIT NONE
 CHARACTER(LEN=*),INTENT(IN),OPTIONAL :: IDFNAMEGIVEN
 CHARACTER(LEN=*),INTENT(IN),OPTIONAL :: LEGNAME
@@ -55,7 +57,8 @@ INTEGER :: IDF,NIDF,I,J,K,IOS,IPLOT,N,IACT,M
 INTEGER,ALLOCATABLE,DIMENSION(:) :: ILIST
 INTEGER,DIMENSION(MAXFILES) :: IU
 CHARACTER(LEN=5000) :: IDFNAME,IDFLIST
-LOGICAL :: LLEG,LPLOTTING
+CHARACTER(LEN=256),ALLOCATABLE,DIMENSION(:) :: FNAMES
+LOGICAL :: LLEG,LPLOTTING,LGEF
 
 !## how many active before opening files
 IACT=MPW%NACT
@@ -73,8 +76,8 @@ IF(.NOT.PRESENT(IDFNAMEGIVEN))THEN
   IDFNAME=TRIM(OPENDIR)
  ENDIF
  IF(INETCDF.EQ.0)THEN
-  IF(.NOT.UTL_WSELECTFILE('All Known Files (*.idf;*.mdf;*.ipf;*.isg;*.iff;*.asc;*.gen;*.map)'//&
-                   '|*.idf;*.mdf;*.ipf;*.isg;*.iff;*.asc;*.gen;*.map|'// &
+  IF(.NOT.UTL_WSELECTFILE('All Known Files (*.idf;*.mdf;*.ipf;*.isg;*.iff;*.asc;*.gen;*.gef;*.map)'//&
+                   '|*.idf;*.mdf;*.ipf;*.isg;*.iff;*.asc;*.gen;*.gef;*.map|'// &
                    'iMOD Map (*.idf)|*.idf|'               //&
                    'iMOD Multi Data File (*.mdf)|*.mdf|'   //&
                    'iMOD Pointers (*.ipf)|*.ipf|'          //&
@@ -82,12 +85,13 @@ IF(.NOT.PRESENT(IDFNAMEGIVEN))THEN
                    'iMOD Flowline File (*.iff)|*.iff|'     //&
                    'ESRI Raster file (*.asc)|*.asc|'       //&
                    'ESRI Ungenerate file (*.gen)|*.gen|'   //&
-                   'PC Raster Map file (*.map)|*.map|',        &
+                   'GEF file (*.gef)|*.gef|'               //&
+                   'PC Raster Map file (*.map)|*.map|',      &
                    LOADDIALOG+MUSTEXIST+PROMPTON+DIRCHANGE+MULTIFILE,IDFNAME,&
-                   'Load iMOD Map (*.idf,*.mdf,*.ipf,*.isg,*.iff,*.asc,*.gen,*.map)'))RETURN
+                   'Load iMOD Map (*.idf,*.mdf,*.ipf,*.isg,*.iff,*.asc,*.gen,*.gef,*.map)'))RETURN
  ELSEIF(INETCDF.EQ.1)THEN
-  IF(.NOT.UTL_WSELECTFILE('All Known Files (*.idf;*.mdf;*.ipf;*.isg;*.iff;*.nc;*.asc;*.gen,*.map)'//&
-                   '|*.idf;*.mdf;*.ipf;*.isg;*.iff,*.nc;*.asc;*.gen,*.map|'// &
+  IF(.NOT.UTL_WSELECTFILE('All Known Files (*.idf;*.mdf;*.ipf;*.isg;*.iff;*.nc;*.asc;*.gen;*.gef;*.map)'//&
+                   '|*.idf;*.mdf;*.ipf;*.isg;*.iff,*.nc;*.asc;*.gen;*.gef;*.map|'// &
                    'iMOD Map (*.idf)|*.idf|'               //&
                    'iMOD Multi Data File (*.mdf)|*.mdf|'   //&
                    'iMOD Pointers (*.ipf)|*.ipf|'          //&
@@ -96,9 +100,10 @@ IF(.NOT.PRESENT(IDFNAMEGIVEN))THEN
                    'NetCDF File (*.nc)|*.nc|'              //&
                    'ESRI Raster file (*.asc)|*.asc|'       //&
                    'ESRI Ungenerate file (*.gen)|*.gen|'   //&
-                   'PC Raster Map file (*.map)|*.map|',        &
+                   'GEF file (*.gef)|*.gef|'               //&
+                   'PC Raster Map file (*.map)|*.map|',      &
                    LOADDIALOG+MUSTEXIST+PROMPTON+DIRCHANGE+MULTIFILE,IDFNAME,&
-                   'Load iMOD Map (*.idf,*.mdf,*.ipf,*.isg,*.iff,*.nc,*.asc,*.gen,*.map)'))RETURN
+                   'Load iMOD Map (*.idf,*.mdf,*.ipf,*.isg,*.iff,*.nc,*.asc,*.gen,*.gef,*.map)'))RETURN
  ENDIF
 ELSE
  IDFNAME=IDFNAMEGIVEN
@@ -128,30 +133,36 @@ ELSE
  MP%ISEL=.FALSE.
 ENDIF
 
+ALLOCATE(FNAMES(NIDF))
 DO IDF=1,NIDF
  !## construct new name in multi-file selection mode
  IF(NIDF.GT.1)THEN
   I=INDEX(IDFLIST,CHAR(0))+1
-
   DO K=1,IDF-1
    J=INDEX(IDFLIST(I:),CHAR(0))
    I=I+J
   END DO
-
   J=INDEX(IDFLIST(I:),CHAR(0))
   K=INDEX(IDFLIST,CHAR(0))-1
   IF(J.EQ.0)THEN
-   IDFNAME=IDFLIST(:K)//'\'//IDFLIST(I:)
+   FNAMES(IDF)=IDFLIST(:K)//'\'//IDFLIST(I:)
   ELSE
    J=J+I
-   IDFNAME=IDFLIST(:K)//'\'//IDFLIST(I:J-1)
+   FNAMES(IDF)=IDFLIST(:K)//'\'//IDFLIST(I:J-1)
   ENDIF
-  J=INDEXNOCASE(IDFNAME,CHAR(0),.TRUE.)
-  IF(J.GT.0)IDFNAME=IDFNAME(:J-1)
+  J=INDEXNOCASE(FNAMES(IDF),CHAR(0),.TRUE.)
+  IF(J.GT.0)FNAMES(IDF)=FNAMES(IDF)(:J-1)
+ ELSE
+  FNAMES(IDF)=IDFNAME
  ENDIF
+ CALL IUPPERCASE(FNAMES(IDF))
+ENDDO
 
- CALL IUPPERCASE(IDFNAME)
+LGEF=.FALSE.
+DO IDF=1,NIDF
 
+ IDFNAME=FNAMES(IDF)
+ 
  !## check whether file allready opened ... overwrite it otherwise
  DO IPLOT=1,MXMPLOT
   IF(MP(IPLOT)%IACT.AND.TRIM(UTL_CAP(MP(IPLOT)%IDFNAME,'U')).EQ.TRIM(UTL_CAP(IDFNAME,'U')))EXIT
@@ -178,6 +189,13 @@ DO IDF=1,NIDF
    MP(IPLOT)%IPLOT=1
   CASE ('IPF')
    MP(IPLOT)%IPLOT=2
+  CASE ('GEF')
+   LGEF=.TRUE.; MP(IPLOT)%IPLOT=0
+   IF(UTL_WSELECTFILE('iMOD Point file (*.ipf)|*.ipf|',SAVEDIALOG+PROMPTON+DIRCHANGE+APPENDEXT,&
+      IPFFNAME,'Save GEF files in a single IPF file (*.ipf)'))THEN
+    ALLOCATE(GEFNAMES(NIDF)); GEFNAMES=FNAMES; CALL GEF2IPF_MAIN(0); DEALLOCATE(GEFNAMES)
+    IDFNAME=IPFFNAME; MP(IPLOT)%IPLOT=2
+   ENDIF
   CASE ('ASC','NC ','MAP')
    IF(IDFNAME(I:I+2).EQ.'ASC')THEN
     CALL ASC2IDF_IMPORTASC(IDFNAME,0.0,0.0,I)
@@ -405,8 +423,12 @@ DO IDF=1,NIDF
 
  !## increase number of active plots
  IF(MPW%NACT.GE.MXMPLOT)EXIT
-
+ !## terminate in case GEF is read in
+ IF(LGEF)EXIT
+ 
 ENDDO
+
+DEALLOCATE(FNAMES)
 
 CALL UTL_MESSAGEHANDLE(1)
 

@@ -8,7 +8,7 @@
 //
 // Winteracter resource script. 
 //
-// Modified : 10/Sep/2015 16:49:51
+// Modified : 11/Sep/2015 13:48:05
 //
 ///////////////////////////////////////////////////
 //
@@ -7747,7 +7747,7 @@ END
 
 ID_DISGCROSS2D DIALOG 0, 0,  315,   89
 STYLE WS_POPUP | WS_BORDER | WS_DLGFRAME | WS_SYSMENU | DS_3DLOOK | DS_MODALFRAME
-FONT    8, "Arial Narrow"
+FONT    8, "Arial"
 CAPTION "Two-dimensional Cross-Sections"
 BEGIN
     CONTROL "&Help ...",IDHELP,"BUTTON",WS_CHILD | WS_VISIBLE | WS_GROUP | WS_TABSTOP | BS_PUSHBUTTON | BS_TEXT | BS_FLAT,  220,   68,   40,   14
@@ -7859,7 +7859,7 @@ END
 
 ID_DPMANAGEROPEN DIALOG 0, 0,  422,  246
 STYLE WS_POPUP | WS_BORDER | WS_DLGFRAME | WS_SYSMENU | DS_3DLOOK | DS_MODALFRAME
-FONT    8, "Arial Narrow"
+FONT    8, "Arial"
 CAPTION "Define File"
 BEGIN
     CONTROL "Adjust Existing Parameter",IDOK,"BUTTON",WS_CHILD | WS_VISIBLE | WS_GROUP | WS_TABSTOP | BS_PUSHBUTTON | BS_TEXT | BS_FLAT,    8,  224,  150,   14
@@ -8243,7 +8243,7 @@ END
 
 ID_DSUBSURFEX DIALOG 0, 0,  525,  285
 STYLE WS_POPUP | WS_BORDER | WS_DLGFRAME | WS_SYSMENU | WS_THICKFRAME | WS_MINIMIZEBOX | WS_MAXIMIZEBOX | DS_3DLOOK
-FONT    8, "Arial Narrow"
+FONT    8, "Arial"
 CAPTION "Subsurface Explorer ..."
 BEGIN
     CONTROL "Load ...",IDOK,"BUTTON",WS_CHILD | WS_VISIBLE | WS_GROUP | WS_TABSTOP | BS_PUSHBUTTON | BS_TEXT | BS_FLAT,  365,  267,   52,   14
@@ -8390,7 +8390,7 @@ END
 
 ID_DPMANAGER_SPECIALOPEN DIALOG 0, 0,  321,   77
 STYLE WS_POPUP | WS_BORDER | WS_DLGFRAME | WS_SYSMENU | DS_3DLOOK | DS_MODALFRAME
-FONT    8, "Arial Narrow"
+FONT    8, "Arial"
 CAPTION "Special Open"
 BEGIN
     CONTROL "OK",IDOK,"BUTTON",WS_CHILD | WS_VISIBLE | WS_GROUP | WS_TABSTOP | BS_DEFPUSHBUTTON | BS_TEXT | BS_FLAT,   10,   56,   40,   14
@@ -8431,7 +8431,7 @@ END
 
 ID_WBALMAIN DIALOG 0, 0,  251,  168
 STYLE WS_POPUP | WS_BORDER | WS_DLGFRAME | WS_SYSMENU | DS_3DLOOK | DS_MODALFRAME
-FONT    8, "Arial Narrow"
+FONT    8, "Arial"
 CAPTION "Waterbalance"
 BEGIN
     CONTROL "&Apply",IDOK,"BUTTON",WS_CHILD | WS_VISIBLE | WS_GROUP | WS_TABSTOP | BS_DEFPUSHBUTTON | BS_TEXT,   10,  140,   40,   14
@@ -8535,7 +8535,7 @@ END
 
 ID_DLISTOFFILES DIALOG 0, 0,  231,  124
 STYLE WS_POPUP | WS_BORDER | WS_DLGFRAME | WS_SYSMENU | WS_THICKFRAME | DS_3DLOOK
-FONT    8, "Arial Narrow"
+FONT    8, "Arial"
 CAPTION "Extra Files"
 BEGIN
     CONTROL "&Apply",IDOK,"BUTTON",WS_CHILD | WS_VISIBLE | WS_GROUP | WS_TABSTOP | BS_PUSHBUTTON | BS_TEXT | BS_FLAT,    8,  104,   40,   14
@@ -9117,7 +9117,6 @@ BEGIN
         BEGIN
             MENUITEM "Manage Plug-in 1...",                      ID_MANAGE_PLUGIN1
             MENUITEM "Manage Plug-in 2...",                      ID_MANAGE_PLUGIN2
-            MENUITEM SEPARATOR
             MENUITEM "PL1 NAME1",                                ID_PLUGIN1
             MENUITEM "PL1 NAME2",                                ID_PLUGIN2
             MENUITEM "PL1 NAME3",                                ID_PLUGIN3
@@ -9894,5 +9893,5 @@ END
 //*WI* FORTSAVE    1
 //*WI* FILENAME    resource.f90
 //*WI* FMODNAME    RESOURCE
-//*WI* LASTTYPE        2
-//*WI* LASTRES       227
+//*WI* LASTTYPE        1
+//*WI* LASTRES         7

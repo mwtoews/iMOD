@@ -1858,7 +1858,7 @@ CONTAINS
  !###======================================================================
  SUBROUTINE IMODBATCH_GEF2IPF_MAIN()
  !###======================================================================
- USE MOD_GEF2IPF_PAR, ONLY : GEFDIR,IPFFNAME,GENFNAME
+ USE MOD_GEF2IPF_PAR, ONLY : GEFDIR,IPFFNAME,GENFNAME,GEFNAMES
  IMPLICIT NONE
   
  IF(.NOT.UTL_READINITFILE('GEFDIR',LINE,IU,0))RETURN
@@ -1878,8 +1878,13 @@ CONTAINS
   READ(LINE,*) GENFNAME; WRITE(*,'(A)') 'GENFILE='//TRIM(GENFNAME)
  ENDIF
 
- CALL GEF2IPF_MAIN()
- 
+ IF(UTL_DIRINFO_POINTER(GEFDIR(:INDEX(GEFDIR,'\',.TRUE.)-1),GEFDIR(INDEX(GEFDIR,'\',.TRUE.)+1:),GEFNAMES,'F'))THEN
+  CALL GEF2IPF_MAIN(1)
+ ELSE
+  WRITE(*,'(/1X,A)') 'No files found that match'
+  WRITE(*,'(1X,A/)') TRIM(GEFDIR)
+ ENDIF
+
  END SUBROUTINE IMODBATCH_GEF2IPF_MAIN
  
   !###======================================================================
