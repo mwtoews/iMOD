@@ -247,7 +247,7 @@ CONTAINS
 !#    Totdat er 10 namen staan met PL1 of PL2 ervoor afhankelijk of de plugin in mapje 1 of mapje 2 staat.
 !#V 4. Link het veranderen van de namen aan het apply/save knopje in de manager.
 !#V 5. update de namen alleen als het apply/save knopje wordt aangeroepen, anders wordt er niks ingelezen.
-!# 6. Indien er minder plugin-namen beschikbaar zijn dan in totaal 10 (zowel manager 1 als 2) dan wordt de
+!#V 6. Indien er minder plugin-namen beschikbaar zijn dan in totaal 10 (zowel manager 1 als 2) dan wordt de
 !#    plek weggegooid/verstopt.  
 !# 7. Het aantal namen in het menu worden opgeteld in de plugin-manager na klikken op het apply knopje.
 !#    if aantal namen > 10 dan komt er een melding met hoeveel namen er te veel zijn aangezet; 
@@ -258,23 +258,23 @@ CONTAINS
  
  J=0
  
- DO I=1,SIZE(PI1)
-  IF(PI1(I)%IACT.EQ.1)THEN
-   J=J+1
-   CALL WMENUITEMINSERT(ID_MANAGE_PLUGIN2,2,MENUID(J),'PL1 '//TRIM(PI1(I)%PNAME))
-   PI1(I)%ID=MENUID(J)
-  ELSE
-   PI1(I)%ID=0
-  ENDIF
- ENDDO
-
- DO I=1,SIZE(PI2)
+  DO I=SIZE(PI2),1,-1
   IF(PI2(I)%IACT.EQ.1)THEN
    J=J+1
    CALL WMENUITEMINSERT(ID_MANAGE_PLUGIN2,2,MENUID(J),'PL2 '//TRIM(PI2(I)%PNAME))
    PI2(I)%ID=MENUID(J)
   ELSE
    PI2(I)%ID=0
+  ENDIF
+ ENDDO
+ 
+ DO I=SIZE(PI1),1,-1
+  IF(PI1(I)%IACT.EQ.1)THEN
+   J=J+1
+   CALL WMENUITEMINSERT(ID_MANAGE_PLUGIN2,2,MENUID(J),'PL1 '//TRIM(PI1(I)%PNAME))
+   PI1(I)%ID=MENUID(J)
+  ELSE
+   PI1(I)%ID=0
   ENDIF
  ENDDO
 
