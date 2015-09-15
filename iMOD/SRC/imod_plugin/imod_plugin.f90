@@ -25,7 +25,7 @@ USE WINTERACTER
 USE RESOURCE
 USE MOD_PLUGIN_PAR
 USE MOD_PREF_PAR, ONLY : PREFVAL        !## used for calling variables from preference file (*.prf) e.g. needed directorypath
-USE MOD_UTL, ONLY : UTL_GETUNIT,UTL_READINITFILE,UTL_DIRINFO_POINTER,UTL_CAP
+USE MOD_UTL, ONLY : UTL_GETUNIT,UTL_READINITFILE,UTL_DIRINFO_POINTER,UTL_CAP,ITOS
 USE MOD_IDF, ONLY : IDFDEALLOCATE,IDFNULLIFY
 USE MOD_OSD, ONLY : OSD_GETARG,OSD_OPEN,OSD_GETENV
 USE IMODVAR, ONLY : IDIAGERROR
@@ -68,7 +68,7 @@ CONTAINS
      CASE (IDOK)    
       IF(IPI.EQ.27)THEN; N=SIZE(PI1); CALL WGRIDGETCHECKBOX(IDF_GRID1,2,PI1%IACT,N); ENDIF
       IF(IPI.EQ.28)THEN; N=SIZE(PI2); CALL WGRIDGETCHECKBOX(IDF_GRID1,2,PI2%IACT,N); ENDIF
-      EXIT
+      IF(PLUGIN_UPDATEMENU_FILL())EXIT
     END SELECT
    CASE (FIELDCHANGED)
     SELECT CASE (MESSAGE%VALUE2)
@@ -82,8 +82,6 @@ CONTAINS
  END DO
  
  CALL WDIALOGUNLOAD()
- 
- !CALL PLUGIN_UPDATEMENU_FILL()
  
  END SUBROUTINE PLUGIN_MAIN
 
@@ -104,8 +102,7 @@ CONTAINS
  ENDIF  
 
  CALL WMENUSETSTATE(ID_PLUGIN,1,1)  
- CALL PLUGIN_UPDATEMENU_FILL()
-   
+    
  END SUBROUTINE PLUGIN_UPDATEMENU
 
  !###======================================================================
@@ -197,9 +194,6 @@ CONTAINS
  
  END SUBROUTINE PLUGIN_READ
 
-!##checking and saving
- !#CALL WGRIDGETCHECKBOX(IDF_GRID1,2,PI(:)%IACT,NROW) !#naar andere subroutine 
-
 !###======================================================================
  SUBROUTINE PLUGIN_CHECK(PI,LN,NLN)
 !###======================================================================
@@ -219,11 +213,14 @@ CONTAINS
   !# check content of saved PI-list with avaiable plug-in files in specific folder
   !# In case size(PI) isn't equal to size(listname) and if both lists are equal in size
   !# this routine will be executed. Size(PI) needs to be equal to size(Listname)!!
+  !# If size(pi) is not equal to size(listname) iact=0
    ALLOCATE(PI3(SIZE(PI))); PI3=PI
    DEALLOCATE(PI); ALLOCATE(PI(NLN)); PI%PNAME=LN; PI%IACT=0
    DO K=1,NLN
     DO J=1,SIZE(PI)
-     IF(TRIM(UTL_CAP(LN(K),'U')).EQ.TRIM(UTL_CAP(PI(J)%PNAME,'U')))THEN; PI(K)%IACT=PI3(J)%IACT; EXIT; ENDIF
+     IF(TRIM(UTL_CAP(LN(K),'U')).EQ.TRIM(UTL_CAP(PI(J)%PNAME,'U')))THEN
+      IF(K.LE.SIZE(PI3))THEN; PI(K)%IACT=PI3(J)%IACT; EXIT; ENDIF
+     ENDIF
     ENDDO
    ENDDO
    DEALLOCATE(PI3)   
@@ -233,28 +230,28 @@ CONTAINS
  END SUBROUTINE PLUGIN_CHECK
 
  !###======================================================================
- SUBROUTINE PLUGIN_UPDATEMENU_FILL()
+ LOGICAL FUNCTION PLUGIN_UPDATEMENU_FILL()
  !###======================================================================
-!# Subroutine to connect the plugin-names to the plugin-menu
+!# Function to connect the plugin-names to the plugin-menu
  IMPLICIT NONE
  INTEGER :: I,J,K,L
+ CHARACTER(LEN=3) :: AMOUNT
  INTEGER,DIMENSION(11) :: MENUID
  DATA MENUID/ID_PLUGIN1,ID_PLUGIN2,ID_PLUGIN3,ID_PLUGIN4,ID_PLUGIN5, &
              ID_PLUGIN6,ID_PLUGIN7,ID_PLUGIN8,ID_PLUGIN9,ID_PLUGIN10/
 
-!#V 1. Call menu/submenu in hoofdmenu 
-!#V 2. Verander naam van plugin-name menu onderdelen op basis van PI-names
-!#V 3. Dit gebeurt voor zowel PI1 als PI2: vul op basis van beschikbare plugins
-!#    Totdat er 10 namen staan met PL1 of PL2 ervoor afhankelijk of de plugin in mapje 1 of mapje 2 staat.
-!#V 4. Link het veranderen van de namen aan het apply/save knopje in de manager.
-!#V 5. update de namen alleen als het apply/save knopje wordt aangeroepen, anders wordt er niks ingelezen.
-!#V 6. Indien er minder plugin-namen beschikbaar zijn dan in totaal 10 (zowel manager 1 als 2) dan wordt de
-!#    plek weggegooid/verstopt.  
-!# 7. Het aantal namen in het menu worden opgeteld in de plugin-manager na klikken op het apply knopje.
-!#    if aantal namen > 10 dan komt er een melding met hoeveel namen er te veel zijn aangezet; 
-!#    count(aantal namen), if>10 then: "Menu is full. Amount of available places is exeeded with {amount-10}  
-!#V 8. Link IACT=1 aan checkbox=1   
-
+!##Procedure:
+!# 1. Call menu/submenu in mainmenu 
+!# 2. Change name of id-menu parts based on available PI-names
+!# 3. Fill menu based on available plugins in plugin-folder(s) for both PI1 and PI2 until total list has a size of 10.
+!# 4. Link routine to change the names to the apply/save button in the manager.
+!#    Only update the names if apply/save button is called, else nothing will be read into the menu.
+!# 6. If less than 10 names are available and activated in total in manager 1 and 2, the menuid place will be hided.
+!# 7. If more than 10 names are available and activated in total in manager 1 and 2, an error message will show up which counts the exceedence amount. 
+!#    {if>10 then: "Menu is full. Amount of available places is exeeded with {amount-10}}     
+ 
+ PLUGIN_UPDATEMENU_FILL = .FALSE.
+ 
  DO I=1,11; CALL WMENUITEMDELETE(MENUID(I)); ENDDO
  
  J=0
@@ -262,6 +259,10 @@ CONTAINS
   DO I=SIZE(PI2),1,-1
   IF(PI2(I)%IACT.EQ.1)THEN
    J=J+1
+   IF(J.GT.10)THEN
+    CALL WMESSAGEBOX(OKONLY,EXCLAMATIONICON,COMMONOK,'Menu is full. Amount of available places is exeeded with '//TRIM(ITOS(J-10)),'Error')
+    RETURN     
+   ENDIF
    CALL WMENUITEMINSERT(ID_MANAGE_PLUGIN2,2,MENUID(J),'PL2 '//TRIM(PI2(I)%PNAME))
    PI2(I)%ID=MENUID(J)
   ELSE
@@ -272,14 +273,20 @@ CONTAINS
  DO I=SIZE(PI1),1,-1
   IF(PI1(I)%IACT.EQ.1)THEN
    J=J+1
+   IF(J.GT.10)THEN
+    CALL WMESSAGEBOX(OKONLY,EXCLAMATIONICON,COMMONOK,'Menu is full. Amount of available places is exeeded with '//TRIM(ITOS(J-10)),'Error')
+    RETURN     
+   ENDIF
    CALL WMENUITEMINSERT(ID_MANAGE_PLUGIN2,2,MENUID(J),'PL1 '//TRIM(PI1(I)%PNAME))
    PI1(I)%ID=MENUID(J)
   ELSE
    PI1(I)%ID=0
   ENDIF
  ENDDO
-
- END SUBROUTINE PLUGIN_UPDATEMENU_FILL
+ 
+ PLUGIN_UPDATEMENU_FILL = .TRUE.
+ 
+ END FUNCTION PLUGIN_UPDATEMENU_FILL
 
 END MODULE MOD_PLUGIN
 
