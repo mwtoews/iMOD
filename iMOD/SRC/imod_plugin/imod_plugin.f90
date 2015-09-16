@@ -111,8 +111,9 @@ CONTAINS
  !## subroutine to read ini-file of plugin tool and echoes this to plugin manager
  IMPLICIT NONE
  INTEGER,INTENT(IN) :: IROW,ICOL,IPI
+ CHARACTER(LEN=52)  :: EXE
  CHARACTER(LEN=256) :: DIRNAME
- CHARACTER(LEN=1256) :: LINE,FNAME
+ CHARACTER(LEN=1256):: LINE,FNAME
  INTEGER :: IOS,IU
  LOGICAL :: LEX
   
@@ -123,7 +124,7 @@ CONTAINS
  !# raise expection error if the specific file cannot be found or an none-existing directory is given in preference file.
  INQUIRE(FILE=FNAME,EXIST=LEX)
  IF(.NOT.LEX)THEN
-  CALL WDIALOGPUTSTRING(IDF_LABEL1,'Error, can not find '//TRIM(FNAME))
+  CALL WDIALOGPUTSTRING(IDF_LABEL1,'Error, cannot find '//TRIM(FNAME))
   CALL WDIALOGFIELDSTATE(IDF_LABEL1,0)
   RETURN
  ENDIF
@@ -136,9 +137,9 @@ CONTAINS
  READ(LINE,*) FNAME
  CLOSE(IU)
  
- !#select files from ini-file and read these files, echo to description part of plugin-manager
+ !#select TXT-file from ini-file and read this file, echo to description part of plugin-manager
  FNAME=TRIM(PREFVAL(IPI))//'\'//TRIM(DIRNAME)//'\'//TRIM(FNAME)
- 
+  
  IU=UTL_GETUNIT()
  CALL OSD_OPEN(IU,FILE=FNAME,STATUS='OLD',ACTION='READ',IOSTAT=IOS)
  
@@ -147,7 +148,9 @@ CONTAINS
 
  CALL WDIALOGPUTSTRING(IDF_LABEL1,TRIM(LINE))
  CALL WDIALOGFIELDSTATE(IDF_LABEL1,0)
-  
+ 
+ CLOSE(IU)
+ 
  END SUBROUTINE PLUGIN_FIELDCHANGE
  
 !###======================================================================
@@ -236,9 +239,6 @@ CONTAINS
  IMPLICIT NONE
  INTEGER :: I,J,K,L
  CHARACTER(LEN=3) :: AMOUNT
- INTEGER,DIMENSION(11) :: MENUID
- DATA MENUID/ID_PLUGIN1,ID_PLUGIN2,ID_PLUGIN3,ID_PLUGIN4,ID_PLUGIN5, &
-             ID_PLUGIN6,ID_PLUGIN7,ID_PLUGIN8,ID_PLUGIN9,ID_PLUGIN10/
 
 !##Procedure:
 !# 1. Call menu/submenu in mainmenu 
@@ -252,7 +252,7 @@ CONTAINS
  
  PLUGIN_UPDATEMENU_FILL = .FALSE.
  
- DO I=1,11; CALL WMENUITEMDELETE(MENUID(I)); ENDDO
+ DO I=1,10; CALL WMENUITEMDELETE(MENUID(I)); ENDDO
  
  J=0
  
@@ -288,5 +288,99 @@ CONTAINS
  
  END FUNCTION PLUGIN_UPDATEMENU_FILL
 
+ !###======================================================================
+ SUBROUTINE PLUGIN_EXE(IDPLUGIN)
+ !###======================================================================
+ !## subroutine to execute the plugin executable. The connection with menu-item is made in 'PLUGIN_UPDATEMENU_FILL'-function
+ IMPLICIT NONE
+ INTEGER,INTENT(IN) :: IDPLUGIN
+ INTEGER :: IOS,IPI,IDP
+ 
+ CALL PLUGIN_EXE_PI_SEARCH(IPI,IDP,IDPLUGIN)    !# returns/discovers plugin number (PI1 or PI2)
+ IF(IDP.EQ.0)RETURN
+ 
+ CALL PLUGIN_EXE_READ_INI('CMD',IPI,IDP)
+ 
+ END SUBROUTINE PLUGIN_EXE
+
+ !###======================================================================
+ SUBROUTINE PLUGIN_EXE_PI_SEARCH(IPI,IDP,IDPLUGIN)
+ !###======================================================================
+ !## Subroutine to discover plugin number (PI1 or PI2) for specific selected plugin executable from menu
+ IMPLICIT NONE
+ INTEGER,INTENT(IN) :: IDPLUGIN
+ INTEGER,INTENT(OUT) :: IPI,IDP
+ INTEGER :: I,J
+
+ IDP=0
+  DO J=1,SIZE(PI1)
+   IF(PI1(J)%ID.EQ.IDPLUGIN)THEN
+    IDP=J; IPI=27; RETURN
+   ENDIF
+  ENDDO 
+  
+  DO J=1,SIZE(PI2)
+   IF(PI2(J)%ID.EQ.IDPLUGIN)THEN
+    IDP=J; IPI=28; RETURN
+   ENDIF
+  ENDDO 
+
+ END SUBROUTINE PLUGIN_EXE_PI_SEARCH
+ 
+ !###======================================================================
+ SUBROUTINE PLUGIN_EXE_READ_INI(COMMAND,IPI,IDP)
+ !###======================================================================
+ !## Function to read exe-specifications from plugin ini-file variables/commands
+ IMPLICIT NONE
+ CHARACTER(LEN=3),INTENT(IN) :: COMMAND
+ CHARACTER(LEN=1256):: DIRNAME
+ INTEGER,INTENT(IN) :: IPI,IDP
+ CHARACTER(LEN=52)  :: WNW
+ CHARACTER(LEN=1256):: EXE,LINE,FNAME
+ INTEGER :: IU,IOS,IFLAG
+ LOGICAL :: LEX
+
+ !#sets directory+filename
+ IF(IPI.EQ.27)THEN
+  FNAME=TRIM(PREFVAL(IPI))//'\'//TRIM(PI1(IDP)%PNAME)//'\PLUG-IN.INI'
+  DIRNAME=TRIM(PI1(IDP)%PNAME)
+ ELSE
+  FNAME=TRIM(PREFVAL(IPI))//'\'//TRIM(PI2(IDP)%PNAME)//'\PLUG-IN.INI'
+  DIRNAME=TRIM(PI2(IDP)%PNAME)
+ ENDIF
+ 
+ !# raise expection error if the specific file cannot be found or an none-existing directory is given in preference file.
+ INQUIRE(FILE=FNAME,EXIST=LEX)
+ IF(.NOT.LEX)THEN
+   CALL WMESSAGEBOX(OKONLY,EXCLAMATIONICON,COMMONOK,'Error, cannot find '//TRIM(FNAME),'Error')
+  RETURN
+ ENDIF
+ 
+ IU=UTL_GETUNIT()
+ CALL OSD_OPEN(IU,FILE=FNAME,STATUS='OLD',ACTION='READ',IOSTAT=IOS)
+ 
+ !#select executable file from ini-file and run this file based on the command wait/nowait
+ IF(TRIM(COMMAND).EQ.'CMD')THEN
+  IF(.NOT.UTL_READINITFILE(COMMAND,LINE,IU,0))RETURN
+  READ(LINE,*) EXE,WNW                                      !#read exe-name and wait/nowait command in 2 different variables
+  EXE=TRIM(PREFVAL(IPI))//'\'//TRIM(DIRNAME)//'\'//TRIM(EXE)
+  
+  IF(TRIM(WNW).EQ.'WAIT')THEN
+   !#Inbouwen link naar menu window
+   
+   IFLAG = 2
+   CALL IOSCOMMAND(TRIM(EXE),IFLAG)
+  ELSEIF(TRIM(WNW).EQ.'NOWAIT')THEN
+   !#Inbouwen link naar menu window
+   IFLAG = 1
+   CALL IOSCOMMAND(TRIM(EXE),IFLAG) 
+  ENDIF
+ 
+ ENDIF
+ 
+ CLOSE(IU)
+ 
+ END SUBROUTINE PLUGIN_EXE_READ_INI
+ 
 END MODULE MOD_PLUGIN
 
