@@ -430,7 +430,7 @@ CONTAINS
    CALL IMOD_UTL_PRINTTEXT('Copying file "'//TRIM(FNAME(1))//'" ...',0)
    cl = ''
    if (os.eq.1) then
-     cl = 'COPY "'//TRIM(FNAME(1))//'" "'//trim(simwd)//'" /Y '
+     cl = 'COPY "'//TRIM(FNAME(1))//'" "'//trim(simwd)//'." /Y '
    else if (os.eq.2) then
      cl = 'cp "'//TRIM(FNAME(1))//'" "'//trim(simwd)//'"'
    end if
