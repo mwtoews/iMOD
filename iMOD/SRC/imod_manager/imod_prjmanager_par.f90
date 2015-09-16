@@ -30,6 +30,7 @@ MODULE MOD_PMANAGER_PAR
  TYPE PERIODOBJ
   CHARACTER(LEN=MAXLEN) :: NAME
   INTEGER,DIMENSION(2) :: IDY,IMH,IYR
+  INTEGER,DIMENSION(2) :: IH ,IM ,IS
  END TYPE PERIODOBJ
  TYPE(PERIODOBJ),ALLOCATABLE,DIMENSION(:),SAVE :: PERIOD
  INTEGER :: NPERIOD
@@ -44,6 +45,7 @@ MODULE MOD_PMANAGER_PAR
   
  TYPE STRESSOBJ
   CHARACTER(LEN=MAXLEN) :: CDATE                                !date string of each time step
+  INTEGER :: IH,IM,IS                                           !hours,minutes,seconds
   TYPE(FILESOBJ),POINTER,DIMENSION(:,:) :: FILES,FILES_TMP => NULL()     !stress information for current defined timestep
                                                                 !(I,:) = subtopic i
                                                                 !(:,I) = system i
