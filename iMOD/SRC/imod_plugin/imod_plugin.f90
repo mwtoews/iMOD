@@ -305,8 +305,8 @@ CONTAINS
  CALL PLUGIN_EXE_READ_INI(IPI,IDP,WNW,EXE,BACK)
  
  !# If Back-file available read at fixed moments during executing time, based upon the PLUGIN.IN file
-  IU=UTL_GETUNIT()
-  CLOSE(IU)
+!  IU=UTL_GETUNIT()
+!  CLOSE(IU)
   
  !# executes with a status based upon the 'wait' or 'nowait' command given in the ini-file
  IF(TRIM(WNW).EQ.'WAIT')THEN

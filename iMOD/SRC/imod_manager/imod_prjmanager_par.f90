@@ -69,7 +69,8 @@ MODULE MOD_PMANAGER_PAR
   INTEGER :: ID                                                 !id of main topics
   INTEGER,POINTER,DIMENSION(:) :: IDT                           !id of each time step for current topic
   INTEGER,POINTER,DIMENSION(:,:) :: ISD                         !id of main subtopics for each timestep
-  INTEGER :: IACT                                               !active in runfile
+  INTEGER :: IACT                                               !active in projectmanager
+  INTEGER :: IACT_MODEL                                         !active in runfile/model
   CHARACTER(LEN=MAXLEN) :: TNAME                                !name of topic
   CHARACTER(LEN=MAXLEN),DIMENSION(MAXSUBTOPICS) :: SNAME        !name of subtopics
   INTEGER :: NSUBTOPICS                                         !number of subtopics

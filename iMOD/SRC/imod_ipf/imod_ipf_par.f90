@@ -60,25 +60,27 @@ TYPE IPFOBJ
 END TYPE IPFOBJ
 TYPE(IPFOBJ),ALLOCATABLE,DIMENSION(:) :: IPF
 
+INTEGER,PARAMETER :: MAXATTRIB=128
+
 INTEGER,PARAMETER :: MAXLITHO=250 !## size of grid on 3d-settings and within profile-setting
 INTEGER :: NLITHO 
 TYPE BHOBJ
- CHARACTER(LEN=20) :: LITHO
- CHARACTER(LEN=50) :: LITHOTXT
+ CHARACTER(LEN=MAXATTRIB) :: LITHO
+ CHARACTER(LEN=MAXATTRIB) :: LITHOTXT
  INTEGER :: LITHOCLR
  REAL :: LITHOWIDTH
 END TYPE BHOBJ
 TYPE(BHOBJ),DIMENSION(MAXLITHO) :: BH
 
 TYPE TYPE_IPF
- CHARACTER(LEN=30),POINTER,DIMENSION(:) :: ATTRIB
+ CHARACTER(LEN=MAXATTRIB),POINTER,DIMENSION(:) :: ATTRIB
  REAL,POINTER,DIMENSION(:) :: NODATA
 
  REAL(KIND=8),POINTER,DIMENSION(:) :: IDATE       !## time-data in timeseries
  REAL,POINTER,DIMENSION(:,:) :: MEASURE           !## data in timeseries/sonderingen
 
  REAL,POINTER,DIMENSION(:) :: Z                   !## z-coordinate in drills/sonderingen
- CHARACTER(LEN=256),POINTER,DIMENSION(:,:) :: L   !## data from drills
+ CHARACTER(LEN=MAXATTRIB),POINTER,DIMENSION(:,:) :: L   !## data from drills
 
  INTEGER :: ASSCOL1 !## columns used to plot the associated files
  INTEGER :: ASSCOL2 !## columns used to plot the associated files

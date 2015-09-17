@@ -501,6 +501,9 @@ CONTAINS
  IMPLICIT NONE
  CHARACTER(LEN=*),INTENT(IN) :: FNAME
  
+ TOPOGENTOSHP=.FALSE.
+ TOPOGENTOSHP=.TRUE.
+ 
  END FUNCTION TOPOGENTOSHP
  
  !###===============================================================================

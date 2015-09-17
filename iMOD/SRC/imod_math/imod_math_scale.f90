@@ -1073,7 +1073,10 @@ CONTAINS
  REAL FUNCTION MATH1GLOBALLOCAL()
  !###====================================================================
  IMPLICIT NONE
-
+ 
+ MATH1GLOBALLOCAL=.FALSE.
+ MATH1GLOBALLOCAL=.TRUE.
+ 
  END FUNCTION MATH1GLOBALLOCAL
 
  !###====================================================================
