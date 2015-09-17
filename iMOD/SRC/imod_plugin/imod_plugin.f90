@@ -39,7 +39,7 @@ CONTAINS
  !# subroutine with main-program; includes call to all plugin-subroutines
  IMPLICIT NONE
  INTEGER,INTENT(IN) :: IPLUGIN
- INTEGER :: ITYPE,I,J,IROW,ICOL,IPI,N
+ INTEGER :: ITYPE,IROW,ICOL,IPI,N
  TYPE(WIN_MESSAGE) :: MESSAGE
  
   CALL WDIALOGLOAD(ID_DMANAGE_PLUGIN)
@@ -112,7 +112,6 @@ CONTAINS
  !## subroutine to read ini-file of plugin tool and echoes this to plugin manager
  IMPLICIT NONE
  INTEGER,INTENT(IN) :: IROW,ICOL,IPI
- CHARACTER(LEN=52)  :: EXE
  CHARACTER(LEN=256) :: DIRNAME
  CHARACTER(LEN=1256):: LINE,FNAME
  INTEGER :: IOS,IU
@@ -160,9 +159,8 @@ CONTAINS
  !## subroutine to read folderpath(s) and name(s) of plugin-ini files
  IMPLICIT NONE
  INTEGER,INTENT(IN) :: I
- CHARACTER(LEN=512) :: LINE,TXTFILE
  CHARACTER(LEN=256),DIMENSION(:),POINTER :: LISTNAME
- INTEGER :: NROW,ICOL,IROW
+ INTEGER :: NROW,IROW
  
  !#lists all file names in specific plugin-folder
   IF(.NOT.UTL_DIRINFO_POINTER(PREFVAL(I),'*',LISTNAME,'D'))THEN; ENDIF
@@ -238,8 +236,7 @@ CONTAINS
  !###======================================================================
 !# Function to connect the plugin-names to the plugin-menu
  IMPLICIT NONE
- INTEGER :: I,J,K,L
- CHARACTER(LEN=3) :: AMOUNT
+ INTEGER :: I,J
 
 !##Procedure:
 !# 1. Call menu/submenu in mainmenu 
@@ -295,14 +292,14 @@ CONTAINS
  !## subroutine to execute the plugin executable. The connection with menu-item is made in 'PLUGIN_UPDATEMENU_FILL'-function
  IMPLICIT NONE
  INTEGER,INTENT(IN) :: IDPLUGIN
- INTEGER :: IOS,IPI,IDP,IFLAG
+ INTEGER :: IPI,IDP,IFLAG,IU
  CHARACTER(LEN=52) :: WNW 
  CHARACTER(LEN=256) :: EXE,BACK 
  
  CALL PLUGIN_EXE_PI_SEARCH(IPI,IDP,IDPLUGIN)    !# returns/discovers plugin number (PI1 or PI2)
  IF(IDP.EQ.0)RETURN
  
- CALL PLUGIN_EXE_READ_INI(IPI,IDP,WNW,EXE,BACK)
+ IF(PLUGIN_EXE_READ_INI(IPI,IDP,WNW,EXE,BACK))THEN;ENDIF
  
  !# If Back-file available read at fixed moments during executing time, based upon the PLUGIN.IN file
 !  IU=UTL_GETUNIT()
@@ -326,8 +323,8 @@ CONTAINS
  IMPLICIT NONE
  INTEGER,INTENT(IN) :: IDPLUGIN
  INTEGER,INTENT(OUT) :: IPI,IDP
- INTEGER :: I,J
-
+ INTEGER :: J
+ 
  IDP=0
   DO J=1,SIZE(PI1)
    IF(PI1(J)%ID.EQ.IDPLUGIN)THEN
@@ -344,7 +341,7 @@ CONTAINS
  END SUBROUTINE PLUGIN_EXE_PI_SEARCH
  
  !###======================================================================
- SUBROUTINE PLUGIN_EXE_READ_INI(IPI,IDP,WNW,EXE,BACK)
+ LOGICAL FUNCTION PLUGIN_EXE_READ_INI(IPI,IDP,WNW,EXE,BACK)
  !###======================================================================
  !## Function to read exe-specifications from plugin ini-file variables/commands
  IMPLICIT NONE
@@ -352,11 +349,13 @@ CONTAINS
  INTEGER,INTENT(IN) :: IPI,IDP
  INTEGER,PARAMETER :: STRLEN=256 
  CHARACTER(LEN=STRLEN),POINTER,DIMENSION(:) :: FLIST
- CHARACTER(LEN=256) :: DIRNAME,LINE,MENU,WINDOW,WNAME,BUTTON1,BUTTON2,BUTTON3,LIST,MENUCOM
+ CHARACTER(LEN=256) :: DIRNAME,LINE,MENU
  CHARACTER(LEN=256),DIMENSION(5) :: STRING
- INTEGER :: IU,IOS,IFLAG,I,J
+ INTEGER :: IU,IOS,I,J
  LOGICAL :: LEX
-
+ 
+ PLUGIN_EXE_READ_INI = .FALSE.
+ 
  !#sets directory+filename
   IF(IPI.EQ.27)THEN
    DIRNAME=TRIM(PREFVAL(IPI))//'\'//TRIM(PI1(IDP)%PNAME)
@@ -380,54 +379,48 @@ CONTAINS
   EXE=TRIM(DIRNAME)//'\'//TRIM(EXE)
  
  !#Read menu-file and link to menu window
-  IF(.NOT.UTL_READINITFILE('MENU',LINE,IU,0))RETURN
-  READ(LINE,*) MENU
+  MENU='';IF(.NOT.UTL_READINITFILE('MENU',LINE,IU,1))READ(LINE,*) MENU
  
  !#call back-file if available
-  IF(.NOT.UTL_READINITFILE('BACK',LINE,IU,0))RETURN
-  READ(LINE,*) BACK
+  BACK='';IF(.NOT.UTL_READINITFILE('BACK',LINE,IU,1))READ(LINE,*) BACK
  
   CLOSE(IU)
  
  !#read variables from menu-file and read file-list into UTL_LISTOFFILES()
-  IU=UTL_GETUNIT()
+  IF(MENU.NE.'')THEN
+   IU=UTL_GETUNIT(); MENU=TRIM(DIRNAME)//'\'//TRIM(MENU)  
+   CALL OSD_OPEN(IU,FILE=MENU,STATUS='OLD',ACTION='READ',IOSTAT=IOS)
+  
+   STRING = ''
+  
+   IF(.NOT.UTL_READINITFILE('WINDOW',LINE,IU,1))READ(LINE,*) STRING(1)
+   IF(.NOT.UTL_READINITFILE('BUTTON1',LINE,IU,1))READ(LINE,*) STRING(2)
+   IF(.NOT.UTL_READINITFILE('BUTTON2',LINE,IU,1))READ(LINE,*) STRING(3)
+   IF(.NOT.UTL_READINITFILE('BUTTON3',LINE,IU,1))READ(LINE,*) STRING(4)
+   IF(.NOT.UTL_READINITFILE('LIST',LINE,IU,1))READ(LINE,*) STRING(5)
+   CLOSE(IU)
  
-  MENU=TRIM(DIRNAME)//'\'//TRIM(MENU)  
-  CALL OSD_OPEN(IU,FILE=MENU,STATUS='OLD',ACTION='READ',IOSTAT=IOS)
- 
-  IF(.NOT.UTL_READINITFILE('WINDOW',LINE,IU,0))RETURN
-  READ(LINE,*) STRING(1)
-  IF(.NOT.UTL_READINITFILE('BUTTON1',LINE,IU,0))RETURN
-  READ(LINE,*) STRING(2)
-  IF(.NOT.UTL_READINITFILE('BUTTON2',LINE,IU,0))RETURN
-  READ(LINE,*) STRING(3)
-  IF(.NOT.UTL_READINITFILE('BUTTON3',LINE,IU,0))RETURN
-  READ(LINE,*) STRING(4)
-  IF(.NOT.UTL_READINITFILE('LIST',LINE,IU,0))RETURN
-  READ(LINE,*) STRING(5)
-  CLOSE(IU)
- 
- !#include files in exe-window from selected place based upon predefined List-name
-  IF(.NOT.ASSOCIATED(FLIST))THEN
-   J=0; DO I=1,SIZE(MP); IF(MP(I)%ISEL)J=J+1; ENDDO
-   ALLOCATE(FLIST(J))
-  ENDIF
-  IF(J.GT.0)THEN
+   !#include files in exe-window from selected place based upon predefined List-name
    IF(TRIM(STRING(5)).EQ.'IMODMANAGER')THEN  !#feeds from iMOD Manager
-    DO I=1,J; FLIST(I)=MP(I)%ALIAS; ENDDO
-    CALL UTL_LISTOFFILES(FLIST,STRING)   !#calls specific dialog window and changing interface-options -> needs to be a call to another window than other 2 list-options
-   ELSEIF(TRIM(STRING(5)).EQ.'F *IDF')THEN
-    DO I=1,J; FLIST(I)=MP(I)%ALIAS; ENDDO
-    CALL UTL_LISTOFFILES(FLIST,STRING)   !#calls specific dialog window and changing interface-options  
-   ELSEIF(TRIM(STRING(5)).EQ.'D *RUN')THEN
-    !#Call model run-directories and echo to screen
+    J=0; DO I=1,SIZE(MP); IF(MP(I)%ISEL)J=J+1; ENDDO
+   !#'Run plugin without making use of menu-setup' or 'stop process' -> now the process will be executed without making use of the menu-setup!!
+    IF(J.EQ.0)THEN
+     CALL WMESSAGEBOX(OKONLY,EXCLAMATIONICON,COMMONOK,'Menu window cannot be started: there are no files available in the iMOD Manager'//CHAR(13)// &
+    'to feed the Menu filelist. Choose another list or remove the MENU-command in PLUG-IN.INI.','Error');RETURN
     ENDIF
-  ELSE
-    !#'Run plugin without making use of menu-setup' or 'stop process' -> now the process will be executed without making use of the menu-setup!!
-    CALL WMESSAGEBOX(OKONLY,EXCLAMATIONICON,COMMONOK,'Menu window cannot be started: there are no files available in the iMOD Manager to feed the Menu filelist. Choose another list or remove the MENU-command in PLUG-IN.INI.','Error')
+    ALLOCATE(FLIST(J))
+    DO I=1,J; FLIST(I)=MP(I)%IDFNAME; ENDDO
+   ENDIF
+   CALL UTL_LISTOFFILES(FLIST,STRING)   !#calls specific dialog window and changing interface-options -> needs to be a call to another window than other 2 list-options
+   
+   IU=UTL_GETUNIT(); MENU=TRIM(DIRNAME)//'\PLUG-IN.IN' 
+   CALL OSD_OPEN(IU,FILE=MENU,STATUS='UNKNOWN',ACTION='WRITE',IOSTAT=IOS)
+   CLOSE(IU)
   ENDIF
-
- END SUBROUTINE PLUGIN_EXE_READ_INI
+  
+  PLUGIN_EXE_READ_INI = .TRUE.
+  
+ END FUNCTION PLUGIN_EXE_READ_INI
  
 END MODULE MOD_PLUGIN
 
