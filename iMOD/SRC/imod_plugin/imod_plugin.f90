@@ -276,9 +276,9 @@ CONTAINS
  !## subroutine to execute the plugin executable. The connection with menu-item is made in 'PLUGIN_UPDATEMENU_FILL'-function
  IMPLICIT NONE
  INTEGER,INTENT(IN) :: IDPLUGIN
- INTEGER :: IPI,IDP,IFLAG,IU
+ INTEGER :: IPI,IDP,IFLAG,IU,I
  CHARACTER(LEN=52) :: WNW 
- CHARACTER(LEN=256) :: EXE,BACK 
+ CHARACTER(LEN=256) :: EXE,BACK,DIRNAME
  
  CALL PLUGIN_EXE_PI_SEARCH(IPI,IDP,IDPLUGIN)    !# returns/discovers plugin number (PI1 or PI2)
  IF(IDP.EQ.0)RETURN
@@ -288,11 +288,27 @@ CONTAINS
    
  !# executes with a status based upon the 'wait' or 'nowait' command given in the ini-file
  IFLAG=1; IF(TRIM(UTL_CAP(WNW,'U')).EQ.'WAIT')IFLAG=2
+ 
+ !## move fysically to the plugin folder
+ CALL IOSDIRNAME(DIRNAME)
+ !## clear available errors first
+ I=WINFOERROR(LASTERROR)
+ CALL IOSDIRCHANGE(EXE(:INDEX(EXE,'\',.TRUE.)-1))
+ !## check whether dirchange was possible - if not, return
+ IF(WINFOERROR(LASTERROR).NE.0)THEN
+  CALL WMESSAGEBOX(OKONLY,EXCLAMATIONICON,COMMONOK,'iMOD cannot move to plugin directory'//CHAR(13)// &
+     EXE(:INDEX(EXE,'\',.TRUE.)-1),'Error')
+  RETURN
+ ENDIF
+ 
  CALL IOSCOMMAND(TRIM(EXE),IFLAG) 
   
  !## plugin finished, nothing to do furthermore
  IF(TRIM(BACK).EQ.'')RETURN
  
+ !## move back to the iMOD folder
+ CALL IOSDIRCHANGE(DIRNAME)
+
   !## If Back-file available read at fixed moments during executing time, based upon the PLUGIN.IN file
 !  IU=UTL_GETUNIT()
 !  CLOSE(IU)
@@ -353,8 +369,7 @@ CONTAINS
   RETURN
  ENDIF
  
- IU=UTL_GETUNIT()
- CALL OSD_OPEN(IU,FILE=TRIM(DIRNAME)//'\PLUG-IN.INI',STATUS='OLD',ACTION='READ')
+ IU=UTL_GETUNIT(); CALL OSD_OPEN(IU,FILE=TRIM(DIRNAME)//'\PLUG-IN.INI',STATUS='OLD',ACTION='READ')
  IF(IU.EQ.0)RETURN
  
  !## select executable file from ini-file and run this file based on the command wait/nowait
@@ -364,33 +379,32 @@ CONTAINS
  EXE=TRIM(DIRNAME)//'\'//TRIM(EXE)
  
  !## Read menu-file and link to menu window
- MENU=''; IF(.NOT.UTL_READINITFILE('MENU',LINE,IU,1))READ(LINE,*) MENU
+ MENU=''; IF(UTL_READINITFILE('MENU',LINE,IU,1))READ(LINE,*) MENU
  
  !## call back-file if available
- BACK=''; IF(.NOT.UTL_READINITFILE('BACK',LINE,IU,1))READ(LINE,*) BACK
+ BACK=''; IF(UTL_READINITFILE('BACK',LINE,IU,1))READ(LINE,*) BACK
  
  CLOSE(IU)
  
  !## read variables from menu-file and read file-list into UTL_LISTOFFILES()
  IF(MENU.NE.'')THEN
-  IU=UTL_GETUNIT(); MENU=TRIM(DIRNAME)//'\'//TRIM(MENU)  
-  CALL OSD_OPEN(IU,FILE=MENU,STATUS='OLD',ACTION='READ')
+  IU=UTL_GETUNIT(); CALL OSD_OPEN(IU,FILE=TRIM(DIRNAME)//'\'//TRIM(MENU),STATUS='OLD',ACTION='READ')
   IF(IU.EQ.0)RETURN
   
   STRING=''
-  IF(.NOT.UTL_READINITFILE('WINDOW',LINE,IU,1)) READ(LINE,*) STRING(1)
-  IF(.NOT.UTL_READINITFILE('BUTTON1',LINE,IU,1))READ(LINE,*) STRING(2)
-  IF(.NOT.UTL_READINITFILE('BUTTON2',LINE,IU,1))READ(LINE,*) STRING(3)
-  IF(.NOT.UTL_READINITFILE('BUTTON3',LINE,IU,1))READ(LINE,*) STRING(4)
-  IF(.NOT.UTL_READINITFILE('LIST',LINE,IU,1))   READ(LINE,*) STRING(5)
+  IF(UTL_READINITFILE('WINDOW',LINE,IU,1)) READ(LINE,*) STRING(1)
+  IF(UTL_READINITFILE('BUTTON1',LINE,IU,1))READ(LINE,*) STRING(2)
+  IF(UTL_READINITFILE('BUTTON2',LINE,IU,1))READ(LINE,*) STRING(3)
+  IF(UTL_READINITFILE('BUTTON3',LINE,IU,1))READ(LINE,*) STRING(4)
+  IF(UTL_READINITFILE('LIST',LINE,IU,1))   READ(LINE,*) STRING(5)
   CLOSE(IU)
  
   !## include files in exe-window from selected place based upon predefined List-name
   IF(TRIM(UTL_CAP(STRING(5),'U')).EQ.'IMODMANAGER')THEN  !#feeds from iMOD Manager
-   J=0; DO I=1,SIZE(MP); IF(MP(I)%IACT.EQ.1)J=J+1; ENDDO
+   J=0; DO I=1,SIZE(MP); IF(MP(I)%IACT)J=J+1; ENDDO
    !## no files found in the imod manager
    IF(J.EQ.0)THEN
-    CALL WMESSAGEBOX(OKONLY,EXCLAMATIONICON,COMMONOK,'Menu window cannot be started: there are no files available in the iMOD Manager.'//CHAR(13)// &
+    CALL WMESSAGEBOX(OKONLY,EXCLAMATIONICON,COMMONOK,'Menu window cannot be started: there are no files available in the iMOD Manager. '// &
       'Inspect your plugin settings.','Warning');RETURN
    ENDIF
    ALLOCATE(FLIST(J))
@@ -400,8 +414,7 @@ CONTAINS
   !## handling of files
   CALL UTL_LISTOFFILES(FLIST,STRING)
    
-  IU=UTL_GETUNIT(); MENU=TRIM(DIRNAME)//'\PLUG-IN.IN' 
-  CALL OSD_OPEN(IU,FILE=MENU,STATUS='UNKNOWN',ACTION='WRITE')
+  IU=UTL_GETUNIT(); CALL OSD_OPEN(IU,FILE=TRIM(DIRNAME)//'\PLUG-IN.IN',STATUS='UNKNOWN',ACTION='WRITE')
   IF(IU.EQ.0)RETURN
   DO I=1,SIZE(FLIST); WRITE(IU,'(A)') TRIM(FLIST(I)); ENDDO
   CLOSE(IU)
