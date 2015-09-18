@@ -1175,7 +1175,7 @@ CONTAINS
      INQUIRE(UNIT=IU,NAME=FNAME)
      CLOSE(IU)
      CALL WMESSAGEBOX(OKONLY,EXCLAMATIONICON,COMMONOK,'iMOD DID NOT find keyword: ['//TRIM(CKEY)//'] within Settings file:'// &
-           CHAR(13)//'[ '//TRIM(FNAME)//' ]','Error')
+           CHAR(13)//'['//TRIM(FNAME)//']','Error')
     ENDIF
     RETURN
    ELSE
