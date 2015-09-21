@@ -83,7 +83,8 @@ TYPE IPFSETTING
  INTEGER :: ASSCOL1  !## associated column # 1
  INTEGER :: ASSCOL2  !## associated column # 2
  INTEGER :: IPLOTLEGEND !## plotlegend
- INTEGER :: ISTYLE !## plotstyle
+ INTEGER :: ILEGDLF  !## legend dlf
+ INTEGER :: ISTYLE   !## plotstyle
  REAL :: RADIUS      !## percentage
  INTEGER,DIMENSION(3) :: ISELECT
  REAL,DIMENSION(3) :: RSELECT

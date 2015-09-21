@@ -35,6 +35,7 @@ TYPE IPFOBJ
  INTEGER :: XCOL,YCOL,ZCOL,Z2COL,QCOL !## column number of x,y,z coordinates
  INTEGER :: ACOL       !## column number of associated files
  INTEGER :: PCOL       !## plot column number of associated files - labeling
+ INTEGER :: ILEGDLF    !## dlf legend (1-10)
  INTEGER,DIMENSION(10) :: IAXES  !## which axes to be used for each column in the associated files
  INTEGER :: SYMBOL     !## plot symbol
  INTEGER :: THICKNESS  !## plot symbol grootte
@@ -63,14 +64,14 @@ TYPE(IPFOBJ),ALLOCATABLE,DIMENSION(:) :: IPF
 INTEGER,PARAMETER :: MAXATTRIB=128
 
 INTEGER,PARAMETER :: MAXLITHO=250 !## size of grid on 3d-settings and within profile-setting
-INTEGER :: NLITHO 
+INTEGER,DIMENSION(10) :: NLITHO 
 TYPE BHOBJ
  CHARACTER(LEN=MAXATTRIB) :: LITHO
  CHARACTER(LEN=MAXATTRIB) :: LITHOTXT
  INTEGER :: LITHOCLR
  REAL :: LITHOWIDTH
 END TYPE BHOBJ
-TYPE(BHOBJ),DIMENSION(MAXLITHO) :: BH
+TYPE(BHOBJ),DIMENSION(10,MAXLITHO) :: BH
 
 TYPE TYPE_IPF
  CHARACTER(LEN=MAXATTRIB),POINTER,DIMENSION(:) :: ATTRIB

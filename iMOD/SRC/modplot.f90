@@ -72,10 +72,11 @@ USE MOD_IDF_PAR, ONLY : IDFOBJ
   INTEGER                  :: IATTRIB                   !## use legend, for ipf/iff/gen selected attribute
   INTEGER                  :: SCOLOR                    !## color number for serie-plotting
   INTEGER                  :: PRFTYPE                   !## prof.type line(0)/filled(1)
-  INTEGER                  :: ISCREEN                   !## usage of screen (graph and/or 2d plot?)
+  INTEGER                  :: ISCREEN                   !## usage of screen 
   INTEGER                  :: ASSCOL1                   !## columns to express those to be used for plotting the associated files.
   INTEGER                  :: ASSCOL2                   !## columns to express those to be used for plotting the associated files.
   INTEGER,DIMENSION(2)     :: ASSFILES                  !## plot associated files for selected row in IPF (assfiles>0, or all assfiles<0)
+  INTEGER                  :: ILEGDLF                   !## number of the legend from the dlf
   TYPE(LEGENDOBJ) :: LEG
   CHARACTER(LEN=256)       :: IDFNAME                   !## name of idf/ipf-file
   CHARACTER(LEN=50)        :: ALIAS

@@ -323,6 +323,7 @@ DO IDF=1,NIDF
     ENDIF
    ELSE
     MP(IPLOT)%ILEG   =0    !no legend used for plotting, use colour in %scolor
+    MP(IPLOT)%ILEGDLF=1    !no legend used for plotting, use colour in %scolor
     MP(IPLOT)%IATTRIB=1    !initial first label for colouring
    ENDIF
    !## plot associated files
