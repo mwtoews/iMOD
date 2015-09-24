@@ -85,6 +85,7 @@ TYPE TYPE_IPF
 
  INTEGER :: ASSCOL1 !## columns used to plot the associated files
  INTEGER :: ASSCOL2 !## columns used to plot the associated files
+ INTEGER :: ILEGDLF    !## dlf legend (1-10)
 
  INTEGER :: IROW !## row number in ipf that trickers this drill/measure e.g.
  INTEGER :: NRASS,NCASS,ITOPIC

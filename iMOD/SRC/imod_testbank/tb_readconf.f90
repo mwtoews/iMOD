@@ -173,7 +173,7 @@ CONTAINS
      WRITE(IUOUT,'(/131A1)') ('-',I=1,131)
      WRITE(IUOUT,'(A)') 'Results for:'//TRIM(RES)
      WRITE(IUOUT,'(131A1)') ('-',I=1,131)
-     WRITE(IUOUT,'(A35,5(F15.1,A1),A15)') 'Result',(PERC(I),'%',I=1,SIZE(PERC)),'ABS_MEAN_DIFF'
+     WRITE(IUOUT,'(A35,5(F15.1,A1))') 'Result',(PERC(I),'%',I=1,SIZE(PERC)) !,'ABS_MEAN_DIFF'
      
      !## see whether error occured
      RES=TRIM(OUTMAP)//'\'//TRIM(RESDIR)//'\'//TRIM(EXE(IEXE)%ALIAS)
@@ -226,15 +226,11 @@ CONTAINS
              ENDIF
             ENDDO; ENDDO
             IF(N.GT.0)XMABS=XMABS/REAL(N)
-            WRITE(IUOUT,'(A35,5(F15.7,1X),F17.5)') TRIM(LISTNAME(I)),(XMED(J),J=1,SIZE(PERC)),XMABS
+           ELSE
+            XMED=0.0
            ENDIF       
-          ELSE
-!           FNAME=TRIM(OUTMAP)//'\'//TRIM(RESDIR)//'\'//TRIM(EXE(JEXE)%ALIAS)//'\'//TRIM(CMAP(IMAP))//'\'//TRIM(LISTNAME(I))
-!           WRITE(IUOUT,'(A)') '>>> missing '//TRIM(FNAME)//' <<<'
+           WRITE(IUOUT,'(A35,5(F15.7,1X))') TRIM(LISTNAME(I)),(XMED(J),J=1,SIZE(PERC)) !,XMABS
           ENDIF
-         ELSE
-!          FNAME=TRIM(OUTMAP)//'\'//TRIM(RESDIR)//'\'//TRIM(EXE(IEXE)%ALIAS)//'\'//TRIM(CMAP(IMAP))//'\'//TRIM(LISTNAME(I))
-!          WRITE(IUOUT,'(A)') '>>> missing '//TRIM(FNAME)//' <<<'
          ENDIF
         ENDDO
       

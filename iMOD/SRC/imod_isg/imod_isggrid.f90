@@ -469,7 +469,7 @@ CONTAINS
   !## reset GCODE
   DO J=NCLC,1,-1
    IF(ILIST(J).NE.0)THEN
-    GCODE(J)=GCODE(ILIST(J))
+    GCODE(J)=ABS(GCODE(ILIST(J)))
    ELSE
     GCODE(J)=0.0
    ENDIF
@@ -477,6 +477,10 @@ CONTAINS
   
   IREF=ISG(I)%ICLC-1
 
+  !## never remove the first or last
+  GCODE(1)   =ZTOLERANCE+1.0
+  GCODE(NCLC)=ZTOLERANCE+1.0
+  
   K=1
   DO J=2,NCLC
    K=K+1 
@@ -965,9 +969,7 @@ CONTAINS
      IF(DXY.GT.0.0)THEN
       DXY=SQRT(DXY)
 
-!      N=4
       DO J=1,4; RVAL(J,0)=(RVAL(J,ISEG)-RVAL(J,ISEG-1))/DXY; ENDDO
-!      RVAL(1:N,0)=(RVAL(1:N,ISEG)-RVAL(1:N,ISEG-1))/DXY
       
       !## intersect line with rectangular-regular-equidistantial-grid
       N=0; CALL INTERSECT_EQUI(XMIN,XMAX,YMIN,YMAX,CS,X1,X2,Y1,Y2,N)
@@ -1038,23 +1040,25 @@ CONTAINS
          !## interpolate to centre of line ...
          DXY=DXY+(LN(J)/2.0)
 
-         VALUE(1,2)=RVAL(1,ISEG-1)+DXY*RVAL(1,0)    !waterlevel
-         VALUE(1,3)=RVAL(2,ISEG-1)+DXY*RVAL(2,0)    !waterbottom
+         ISGVALUE(1,2)=RVAL(1,ISEG-1)+DXY*RVAL(1,0)    !waterlevel
+         ISGVALUE(1,3)=RVAL(2,ISEG-1)+DXY*RVAL(2,0)    !waterbottom
 
          !## translate from local to global coordinates and get proper wetted perimeter and width of channel!
-         CALL ISG2GRIDGETPARAM(XIN,YIN,NDIM,VALUE(1,3),VALUE(1,2),RWIDTH,WETPER,MINDEPTH)
+         CALL ISG2GRIDGETPARAM(XIN,YIN,NDIM,ISGVALUE(1,3),ISGVALUE(1,2),RWIDTH,WETPER,MINDEPTH)
          
-         VALUE(1,4)= RVAL(4,ISEG-1)+DXY*RVAL(4,0)   !inf.factors
-         C         = RVAL(3,ISEG-1)+DXY*RVAL(3,0)   !c-value
-         VALUE(1,1)=(LN(J)*WETPER)/C                !conductances
-
-         VALUE(1,5)= LN(J)
-         VALUE(1,6)= WETPER
-         VALUE(1,7)= RWIDTH
-         VALUE(1,8)= C
+         ISGVALUE(1,4)= RVAL(4,ISEG-1)+DXY*RVAL(4,0)   !inf.factors
+         C            = RVAL(3,ISEG-1)+DXY*RVAL(3,0)   !c-value
+         !## minimal c-value
+         IF(C.EQ.0.0)C=0.001
+         ISGVALUE(1,1)=(LN(J)*WETPER)/C    !conductances
+         
+         ISGVALUE(1,5)= LN(J)
+         ISGVALUE(1,6)= WETPER
+         ISGVALUE(1,7)= RWIDTH
+         ISGVALUE(1,8)= C
 
          IF(ICDIST.EQ.1)THEN
-          VALUE(1,10)=RVAL(1,ISEG-1)+DXY*RVAL(1,0)   !waterlevels
+          ISGVALUE(1,10)=RVAL(1,ISEG-1)+DXY*RVAL(1,0)   !waterlevels
          ENDIF
 
          !## export data for simgro
@@ -1094,7 +1098,7 @@ CONTAINS
 !          ENDDO
 
           !## correction factor
-          TC=VALUE(1,1)/TC
+          TC=ISGVALUE(1,1)/TC
           DO ITRAP=1,NTRAP
 
            !## compute nett waterdepth for current part of trapezium
@@ -1109,13 +1113,13 @@ CONTAINS
             !## compute wetted perimeter,bottomwidth,cotanges
             CALL ISG2GRIDPERIMETERTRAPEZIUM(XTRAP(:,ITRAP),YTRAP(:,ITRAP),WETPER,CT,BW,NETWD)
             !## get bottom height (bh)
-            BH  = VALUE(1,3)+YTRAP(3,ITRAP)
+            BH  = ISGVALUE(1,3)+YTRAP(3,ITRAP)
             COND=(LN(J)*WETPER)/C    !conductance(m2/dag)            
             COND= TC*COND
             
             !## minimal value cond=0.001
             CALL IDFGETLOC(IDF(1),IROW,ICOL,XC,YC)
-            WRITE(IUSIMGRO,'(2F10.2,2I10,6F10.2,A30,3F10.2)') XC,YC,IROW,ICOL,LN(J),BH,BW,CT,MAX(0.001,COND),MAX(0.001,COND*VALUE(1,4)), &
+            WRITE(IUSIMGRO,'(2F10.2,2I10,6F10.2,A30,3F10.2)') XC,YC,IROW,ICOL,LN(J),BH,BW,CT,MAX(0.001,COND),MAX(0.001,COND*ISGVALUE(1,4)), &
                                                          ISQ(JSEG)%CNAME,AORG-ATRAP,AORG,ATRAP
            ENDIF
 
@@ -1126,18 +1130,18 @@ CONTAINS
          !## level=conductance weighed mean
          DO II=2,NITEMS 
           !## read previous level/bottom/inf.factor
-          VALUE(2,II)=IDF(II)%X(ICOL,IROW)
+          ISGVALUE(2,II)=IDF(II)%X(ICOL,IROW)
           !## multiply with conductance (5-total length)
-          IF(II.NE.5)VALUE(1,II)=VALUE(1,II)*VALUE(1,1)
+          IF(II.NE.5)ISGVALUE(1,II)=ISGVALUE(1,II)*ISGVALUE(1,1)
           !## conductance weighed
-          IF(VALUE(2,II).NE.IDF(II)%NODATA)VALUE(1,II)=VALUE(2,II)+VALUE(1,II)
-          IDF(II)%X(ICOL,IROW)=VALUE(1,II)
+          IF(ISGVALUE(2,II).NE.IDF(II)%NODATA)ISGVALUE(1,II)=ISGVALUE(2,II)+ISGVALUE(1,II)
+          IDF(II)%X(ICOL,IROW)=ISGVALUE(1,II)
          END DO
          !## sum conductance
-         VALUE(2,1)=IDF(1)%X(ICOL,IROW)
-         IF(VALUE(2,1).NE.IDF(1)%NODATA)VALUE(1,1)=VALUE(2,1)+VALUE(1,1)
-         IDF(1)%X(ICOL,IROW)=VALUE(1,1)
-         
+         ISGVALUE(2,1)=IDF(1)%X(ICOL,IROW)
+         IF(ISGVALUE(2,1).NE.IDF(1)%NODATA)ISGVALUE(1,1)=ISGVALUE(2,1)+ISGVALUE(1,1)
+         IDF(1)%X(ICOL,IROW)=ISGVALUE(1,1)
+
          DXY=DXY+(LN(J)/2.0)
 
         ENDIF
@@ -1154,14 +1158,14 @@ CONTAINS
  !## devide by conductance again
  DO IROW=1,NROW
   DO ICOL=1,NCOL
-   VALUE(1,1)=IDF(1)%X(ICOL,IROW)
-   IF(VALUE(1,1).GT.0.0)THEN
+   ISGVALUE(1,1)=IDF(1)%X(ICOL,IROW)
+   IF(ISGVALUE(1,1).GT.0.0)THEN
     DO II=2,NITEMS
      !## skip length
      IF(II.EQ.5)CYCLE
-     VALUE(2,II)=IDF(II)%X(ICOL,IROW)
-     VALUE(1,II)=VALUE(2,II)/VALUE(1,1)
-     IDF(II)%X(ICOL,IROW)=VALUE(1,II)
+     ISGVALUE(2,II)=IDF(II)%X(ICOL,IROW)
+     ISGVALUE(1,II)=ISGVALUE(2,II)/ISGVALUE(1,1)
+     IDF(II)%X(ICOL,IROW)=ISGVALUE(1,II)
     ENDDO
    ENDIF
   ENDDO
@@ -1444,6 +1448,7 @@ CONTAINS
   IF(IDF(1)%X(ICOL,IROW).NE.0.0)IDF(9)%X(ICOL,IROW)=1.0
   DO I=1,4; IF(IDF(I)%X(ICOL,IROW).EQ.IDF(I)%NODATA)IDF(I)%X(ICOL,IROW)=0.0; ENDDO
   W=IDF(7)%X(ICOL,IROW)
+  W=MIN(W,MAXWIDTH)
   L=IDF(5)%X(ICOL,IROW)
   !## conductance assume to be cell-filled; f=dx/length-segment*dx/width
   IF(W.GT.IDF(1)%DX)THEN
@@ -1459,8 +1464,7 @@ CONTAINS
    !## river available
    IF(IDF(1)%X(ICOL,IROW).NE.0.0)THEN
     !## get mean width
-    W=IDF(7)%X(ICOL,IROW)
-    
+    W=IDF(7)%X(ICOL,IROW)  
     W=MIN(W,MAXWIDTH)
     
     !## current cellsize is less than current width of river
@@ -1692,9 +1696,6 @@ CONTAINS
    CALL IDFIROWICOL(IDF(1),IROW,ICOL,XC,YC)
    IF(IROW.GT.0.AND.ICOL.GT.0)THEN
 
-!IF(I.EQ.1955)THEN
-!WRITE(*,*)
-!ENDIF    
     NTHREAD=0; CALL ISG2GRIDCOMPUTESTUWENANGLE(ORIENT,NTHREAD,XC,YC,YSEL,MAXTHREAD,IDF(1))
     !## only whenever current waterlevel is less that structure level
     IF(IDF(1)%X(ICOL,IROW).LT.Z)THEN

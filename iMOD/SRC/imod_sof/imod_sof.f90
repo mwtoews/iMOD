@@ -326,7 +326,7 @@ if(irow.eq.ir.and.icol.eq.ic)f=1.0
  INTEGER,INTENT(IN) :: IPNTR !## ipntr=0 no pointer to stop, 1 use pointer to stop
  INTEGER :: ITIC,ITOC,I,IROW,ICOL
   
- !## idf(1)=level (adjusted)
+ !## idf(1)=level (adjusted by outlet-pointer)
  !## idf(2)=slope
  !## idf(3)=aspect
  !## idf(4)=visited places
@@ -354,12 +354,11 @@ if(irow.eq.ir.and.icol.eq.ic)f=1.0
 
  !## read pointer (scale with most frequent value, option 7)
  IF(IPNTR.EQ.1)THEN
-  CALL IDFCOPY(IDF(1),IDF(5)); IF(.NOT.IDFREADSCALE(IDF(5)%FNAME,IDF(5),7,1,0.0,0))THEN; RETURN; ENDIF
+  IF(.NOT.IDFREADSCALE(IDF(5)%FNAME,IDF(5),7,1,0.0,0))THEN; RETURN; ENDIF
   !## adjust idf(1) for pointer
   DO IROW=1,IDF(1)%NROW; DO ICOL=1,IDF(1)%NCOL
-   IF(IDF(5)%X(ICOL,IROW).EQ.IDF(5)%NODATA)IDF(1)%X(ICOL,IROW)=IDF(1)%NODATA
+   IF(IDF(5)%X(ICOL,IROW).NE.IDF(5)%NODATA)IDF(1)%X(ICOL,IROW)=IDF(1)%NODATA
   ENDDO; ENDDO
-  CALL IDFDEALLOCATEX(IDF(5))
  ENDIF
  
  !## indentify pitts
@@ -367,7 +366,7 @@ if(irow.eq.ir.and.icol.eq.ic)f=1.0
  IDF(5)%NODATA=0.0; IF(.NOT.IDFWRITE(IDF(5),IDF(3)%FNAME(:INDEX(IDF(3)%FNAME,'.',.TRUE.)-1)//'_pitt.idf',1))THEN; ENDIF
 
  !## copy dem
- IDF(5)%X=IDF(1)%X
+ IDF(5)%X=IDF(1)%X; IDF(5)%NODATA=IDF(1)%NODATA
  IF(IWINDOW.NE.0)THEN
   IF(.NOT.IDFWRITE(IDF(5),IDF(3)%FNAME(:INDEX(IDF(3)%FNAME,'.',.TRUE.)-1)//'_copydem.idf',1))THEN; ENDIF
  ENDIF
@@ -784,10 +783,6 @@ if(irow.eq.ir.and.icol.eq.ic)f=1.0
   !## total boundary list (cleaning)
   NTPX=1; TPX(NPPX)%ICOL=ICOL; TPX(NPPX)%IROW=IROW
 
-!  if(icol.eq.16.and.irow.eq.6)then
-!   write(*,*) 'area1'
-!  endif
-
   ITYPE=0
   DO     
    !## fill bnd-pixel list and pit-list with irow,icol
@@ -802,13 +797,9 @@ if(irow.eq.ir.and.icol.eq.ic)f=1.0
    ENDIF
   ENDDO
   
-!  if(abs(zmax-1001.962).le.0.01)then
-!   write(*,*) 'area1'
-!  endif
-
   !## change all pittpoints for this spill-value (zmax)
   DO J=1,NPPX; DEM%X(PPX(J)%ICOL,PPX(J)%IROW)=ZMAX; ENDDO
-      
+   
   F=REAL(I)/REAL(NP)*100.0; WRITE(6,'(A,F10.3,2(A,I5),A)') '+Processing pitt:',F,' % (nppx= ',NPPX,' ; nbpx= ',NBPX,')'
 
   CALL SOF_FILL_FLATAREAS(DEM,SLOPE,ASPECT,NPPX)
@@ -1063,7 +1054,7 @@ ROWLOOP: DO IROW=1,PCG%NROW
    NBPX=NBPX+1
    BPX(NBPX)%ICOL=IC
    BPX(NBPX)%IROW=IR
-   BPX(NBPX)%Z   =DEM%X(IC,IR)
+   BPX(NBPX)%Z   =Z 
    NTPX=NTPX+1
    TPX(NTPX)%ICOL=IC
    TPX(NTPX)%IROW=IR
