@@ -891,10 +891,11 @@ USE IMODVAR
 USE MODPLOT
 USE MOD_GENPLOT, ONLY : GEN,MXGEN
 USE BMPVAR
-USE MOD_UTL, ONLY : UTL_GETUNIT
+USE MOD_UTL, ONLY : UTL_GETUNIT,ITOS,RTOS
 USE MOD_OSD, ONLY : OSD_OPEN
 USE MOD_PLUGIN
 USE MOD_PREF_PAR, ONLY : PREFVAL
+USE MOD_IPF_PAR, ONLY : NLITHO,BH
 IMPLICIT NONE
 CHARACTER(LEN=*),INTENT(IN) :: FNAME
 CHARACTER(LEN=256) :: LINE
@@ -937,6 +938,7 @@ DO I=1,MXMPLOT
    WRITE(IU,'(A8,I10)')  'TSIZE=  ',MP(I)%TSIZE
    WRITE(IU,'(A8,I10)')  'ASSCOL1=',MP(I)%ASSCOL1
    WRITE(IU,'(A8,I10)')  'ASSCOL2=',MP(I)%ASSCOL2
+   WRITE(IU,'(A8,I10)')  'ILEGDLF=',MP(I)%ILEGDLF
   ENDIF
   !## mdf-settings
   IF(MP(I)%IPLOT.EQ.5)THEN
@@ -950,7 +952,6 @@ DO I=1,MXMPLOT
 !   WRITE(IU,'(A8,I10)') 'LCOLOR= ',MP(I)%SCOLOR  
 !   WRITE(IU,'(A8,I10)') 'LATTRIB=',MP(I)%IATTRIB  
 !  ENDIF
-  IF(MP(I)%IPLOT.EQ.2)WRITE(IU,'(A8,I10)') 'ILEGDLF=',MP(I)%ILEGDLF
   IF(MP(I)%IPLOT.NE.4)THEN !## ne isg
    WRITE(IU,'(A8,I10)') 'IATTRIB=',MP(I)%IATTRIB
    WRITE(IU,'(A8,I10)') 'IDFI=   ',MP(I)%IDFI
@@ -1014,6 +1015,20 @@ DO I=1,MXBMP
  ENDIF
 ENDDO
 
+!## write dlf legends
+
+WRITE(IU,'(50A1)') ('$',K=1,50)
+
+DO I=1,SIZE(NLITHO)
+ WRITE(IU,'(50A1)') ('+',K=1,50)
+ DO J=1,NLITHO(I)
+  LINE=TRIM(ITOS(BH(I,J)%LITHOCLR))//','//TRIM(RTOS(BH(I,J)%LITHOWIDTH,'F',2))//',"'//TRIM(BH(I,J)%LITHO)//'","'//TRIM(BH(I,J)%LITHOTXT)//'"'
+  WRITE(IU,'(A)',IOSTAT=IOS) TRIM(LINE)
+ END DO
+ WRITE(IU,'(50A1)') ('+',K=1,50)
+ENDDO
+
+!## start plugins
 WRITE(IU,'(50A1)') ('*',K=1,50)
 
 IF(SIZE(PI1).GE.1)THEN !If at least 1 plugin available call to plugin is performed
@@ -1052,6 +1067,7 @@ USE MOD_GENPLOT, ONLY : GEN,MXGEN
 USE BMPVAR
 USE MOD_UTL, ONLY : UTL_GETUNIT
 USE MOD_OSD, ONLY : OSD_OPEN
+USE MOD_IPF_PAR, ONLY : NLITHO,BH
 USE MOD_PLUGIN
 IMPLICIT NONE
 INTEGER,PARAMETER :: MAXMPWKEYS=5
@@ -1145,6 +1161,7 @@ DO IPLOT=1,MXMPLOT
  READ(IU,'(A256)',IOSTAT=IOS) LINE !reading ++++++-en
  IF(IOS.NE.0)EXIT
 
+ !## continue with overlays
  IF(LINE(1:10).EQ.'//////////')EXIT
 
  !## read INFORMATION for each plot
@@ -1278,6 +1295,7 @@ DO IPLOT=1,MXGEN
  READ(IU,*,IOSTAT=IOS) LINE !reading ++++++-en
  IF(IOS.NE.0)EXIT
 
+ !## continue with bmps
  IF(LINE(1:10).EQ.'[[[[[[[[[[')EXIT
 
 !#read INFORMATION for each plot
@@ -1335,13 +1353,14 @@ DO IPLOT=1,MXBMP
  READ(IU,*,IOSTAT=IOS) LINE !reading ++++++-en
  IF(IOS.NE.0)EXIT
  
- IF(LINE(1:10).EQ.'**********')EXIT
+ !## continue with dlf legends
+ IF(LINE(1:10).EQ.'$$$$$$$$$$')EXIT
  
-!#read INFORMATION for each plot
+ !## read INFORMATION for each plot
  DO
   READ(IU,'(A256)',IOSTAT=IOS) LINE
   IF(IOS.NE.0)EXIT
-!#stop INFORMATION for particular plot
+  !## stop INFORMATION for particular plot
   IF(LINE(1:10).EQ.'++++++++++')EXIT
 
   BMP(IPLOT)%IACT=1
@@ -1349,7 +1368,7 @@ DO IPLOT=1,MXBMP
   READ(LINE,'(A8)') CKEY
   CALL IUPPERCASE(CKEY)
 
-!#find keyword
+  !## find keyword
   DO I=1,MAXBMPKEYS
    IF(TRIM(CKEY).EQ.BMPKEYS(I))EXIT
   END DO
@@ -1393,6 +1412,30 @@ DO IPLOT=1,MXBMP
   ENDIF
  ENDDO
  NBMP=NBMP+1
+END DO
+
+DO I=1,SIZE(NLITHO)
+
+ READ(IU,*,IOSTAT=IOS) LINE !reading ++++++-en
+ IF(IOS.NE.0)EXIT
+
+ !## continue with plugins
+ IF(LINE(1:10).EQ.'**********')EXIT
+ 
+ !## read INFORMATION for each dlf legend
+ J=0
+ DO
+  READ(IU,'(A256)',IOSTAT=IOS) LINE
+  IF(IOS.NE.0)EXIT
+  !## stop INFORMATION for particular dlf
+  IF(LINE(1:10).EQ.'++++++++++')EXIT
+
+  J=J+1
+  READ(LINE,*) BH(I,J)%LITHOCLR,BH(I,J)%LITHOWIDTH,BH(I,J)%LITHO,BH(I,J)%LITHOTXT
+
+ ENDDO
+ NLITHO(I)=J
+
 END DO
 
 !## Read in plug-ins from .imf file into Plugin-manager en Plugin-menu

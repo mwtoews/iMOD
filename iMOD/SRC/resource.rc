@@ -8,17 +8,11 @@
 //
 // Winteracter resource script. 
 //
-<<<<<<< .mine
-// Modified : 24/Sep/2015 12:48:36
-=======
-// Modified : 23/Sep/2015 14:47:13
->>>>>>> .r307
-//
 ///////////////////////////////////////////////////
 //
 // Include files
 //
-#include "winparam.h"
+#include "..\LIB\WINTERACTER\OS_X32\include\winparam.h"
 #ifdef XLIB
 #include "..\LIB\WINTERACTER\OS_X32\include\filesel.rc"
 #include "..\LIB\WINTERACTER\OS_X32\include\colour.rc"
@@ -8568,7 +8562,7 @@ END
 
 ID_DMANAGE_PLUGIN DIALOG 0, 0,  341,  221
 STYLE WS_POPUP | WS_BORDER | WS_DLGFRAME | WS_SYSMENU | WS_THICKFRAME | WS_MINIMIZEBOX | DS_3DLOOK
-FONT    8, "Arial Narrow"
+FONT    8, "Arial"
 CAPTION "Plugin Manager 1"
 BEGIN
     CONTROL "",IDF_GRID1,"ISSGRID",WS_CHILD | WS_VISIBLE | WS_BORDER | WS_VSCROLL | WS_HSCROLL | WS_GROUP | WS_TABSTOP | GS_DEFROWLABELS | GS_COLUMNLABELS,    6,    4,  325,  108
@@ -10024,8 +10018,4 @@ END
 //*WI* FILENAME    resource.f90
 //*WI* FMODNAME    RESOURCE
 //*WI* LASTTYPE        2
-<<<<<<< .mine
 //*WI* LASTRES       119
-=======
-//*WI* LASTRES       239
->>>>>>> .r307
