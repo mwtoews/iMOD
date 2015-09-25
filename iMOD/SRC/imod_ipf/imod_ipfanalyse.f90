@@ -613,10 +613,10 @@ CONTAINS
  END SUBROUTINE IPFANALYSE_ADJUSTAXES
 
  !###====================================================================
- SUBROUTINE IPFANALYSE_FILLGRID()
+ SUBROUTINE IPFANALYSE_FILLGRID() 
  !###====================================================================
  IMPLICIT NONE
- INTEGER :: MAXNROW,IASSF,I,J,ICLRCOL,ICLR,IOS,ILEG
+ INTEGER :: MAXNROW,IASSF,I,J,ICLRCOL,ICLR,IOS,ILEG 
  REAL :: IWIDTH
  INTEGER,ALLOCATABLE,DIMENSION(:) :: IC,WC
  CHARACTER(LEN=MAXLEN) :: TXT,CTIME
@@ -708,6 +708,7 @@ CONTAINS
        CALL WGRIDCOLOURCELL(IDF_GRID1,ICLRCOL,I,-1,ICLR)
       ENDIF
       DO J=1,ASSF(IASSF)%NCASS
+       !## vertical coordinates
        IF(J.EQ.1)THEN
         CALL WGRIDPUTCELLSTRING(IDF_GRID1,1,I,TRIM(RTOS(ASSF(IASSF)%Z(I),'F',3))) 
        ELSE
@@ -715,7 +716,7 @@ CONTAINS
        ENDIF
       ENDDO
      END DO
-    
+
     !## sonderingen
     CASE (3)
      DO I=1,MIN(MAXNROW,ASSF(IASSF)%NRASS)

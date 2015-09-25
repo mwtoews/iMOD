@@ -795,8 +795,7 @@ CONTAINS
  INTEGER,INTENT(IN) :: IPFITYPE
  TYPE(WIN_MESSAGE),INTENT(INOUT) :: IPFMESSAGE
  INTEGER,INTENT(IN) :: IWINXY,IPROF
- INTEGER :: II,I,J,ICLOSE !,IQUICK,N
- !REAL :: GXMIN,GXMAX,GYMIN,GYMAX
+ INTEGER :: II,I,J,ICLOSE 
 
 ! !## select all "opened associated files" to be analysed
 ! N=0
@@ -838,7 +837,7 @@ CONTAINS
    CALL IGRUNITS(0.0,0.0,1.0,1.0)
 
    CALL IPFANALYSE_DIALOG(IPFITYPE,IPFMESSAGE,ICLOSE)
-   IF(ICLOSE.EQ.1)THEN  !EXIT
+   IF(ICLOSE.EQ.1)THEN  
     CALL IPFGETVALUE_QUICKVIEW_CLOSE(IPROF); IEXIT=1; IQUICK=0
    ENDIF
    
@@ -879,10 +878,16 @@ CONTAINS
         !## plot figures
         CALL IPFANALYSE_PLOT(0,0)
         !## fill grid if one selected
-        CALL IPFANALYSE_FILLGRID()
+        CALL IPFANALYSE_FILLGRID() 
         IPF(JIPF)%IP(ISEL)=INT(0,1)
-!        CALL IPFCLOSEASSFILE()
+       ELSE
+        !## look for correct location in grid, to highlight
+        DO I=1,ASSF(1)%NRASS-1
+         IF(ASSF(1)%Z(I).GE.IPFMESSAGE%GY.AND.ASSF(1)%Z(I+1).LE.IPFMESSAGE%GY)EXIT         
+        ENDDO
+        CALL WGRIDSETCELL(IDF_GRID1,1,I)
        ENDIF
+
       ENDIF 
 
       IF(IPROF.EQ.1)THEN
