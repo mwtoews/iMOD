@@ -352,7 +352,6 @@ CONTAINS
  IAXES=1   !## axes box on by default
  IBNDBOX=1
  IORIENT=0 !## orientation box off by default
- IPLOTLABELS=0 !## plot label, default turned off !1
  AXESINDEX=0
  LEGENDINDEX=0
  ORIENTINDEX=0

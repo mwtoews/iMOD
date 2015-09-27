@@ -83,6 +83,7 @@ TYPE IPFSETTING
  INTEGER :: ASSCOL1  !## associated column # 1
  INTEGER :: ASSCOL2  !## associated column # 2
  INTEGER :: IPLOTLEGEND !## plotlegend
+ INTEGER :: IPLOTLABELS !## plot labels
  INTEGER :: ILEGDLF  !## legend dlf
  INTEGER :: ISTYLE   !## plotstyle
  REAL :: RADIUS      !## percentage
@@ -234,7 +235,7 @@ REAL(KIND=GLDOUBLE) :: INIT_SHIFTZ = 0.0_GLDOUBLE
 INTEGER :: IAXES   !## axes on by default
 INTEGER :: IBNDBOX !## box on by default
 INTEGER :: IORIENT !## orientation box off by default
-INTEGER :: IPLOTLABELS !## plot label, default turned off !1
+!INTEGER,DIMENSION(:),ALLOCATABLE :: IPLOTLABELS !## plot labels for each ipf selected, default turned off !1
 INTEGER,SAVE :: ACOLOR,JACOLOR,OCOLOR,LCOLOR,BCOLOR,BGCOLOR !## colour of axes (copy) / color of orientation / color of label
 INTEGER(KIND=GLUINT),SAVE :: ORIENTINDEX,LEGENDINDEX,SPHEREINDEX  
 INTEGER(KIND=GLUINT),DIMENSION(0:10),SAVE :: AXESINDEX
