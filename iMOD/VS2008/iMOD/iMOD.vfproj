@@ -310,9 +310,6 @@
 		<File RelativePath="..\..\..\iMOD\SRC\imod_osd\imod_osdIVF95.f90"/></Filter>
 		<Filter Name="imod_pcg">
 		<File RelativePath="..\..\..\iMOD\SRC\imod_pcg\imod_pcg.f90"/></Filter>
-		<Filter Name="imod_plugin">
-		<File RelativePath="..\..\SRC\imod_plugin\imod_plugin.f90"/>
-		<File RelativePath="..\..\SRC\imod_plugin\imod_plugin_par.f90"/></Filter>
 		<Filter Name="imod_polint">
 		<File RelativePath="..\..\..\iMOD\SRC\imod_polint\imod_polint.f90"/></Filter>
 		<Filter Name="imod_polygon">
@@ -417,6 +414,9 @@
 		<Filter Name="imod_wbal">
 		<File RelativePath="..\..\..\iMOD\SRC\imod_wbal\imod_wbal_compute.f90"/>
 		<File RelativePath="..\..\..\iMOD\SRC\imod_wbal\imod_wbal_par.f90"/></Filter>
+		<Filter Name="imod_plugin">
+		<File RelativePath="..\..\SRC\imod_plugin\imod_plugin.f90"/>
+		<File RelativePath="..\..\SRC\imod_plugin\imod_plugin_par.f90"/></Filter>
 		<Filter Name="programs">
 		<File RelativePath="..\..\..\iMOD\SRC\imod_main\imod_prg.f90">
 			<FileConfiguration Name="Debug|Win32">
