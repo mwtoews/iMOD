@@ -1156,7 +1156,7 @@ use imod_utl, only: imod_utl_getunit, imod_utl_getdir, imod_utl_s_cap,&
 implicit none
 
 ! parameters
-character(len=1024), parameter :: licfile = 'I_accepted.txt'
+character(len=1024), parameter :: licfile = 'I_accepted_v3_02.txt'
 integer, parameter :: nlic = 33
 character(len=79), dimension(nlic) :: lic
 integer, parameter :: nhdr = 38
@@ -1164,7 +1164,7 @@ character(len=79), dimension(nhdr) :: hdr
 
 !         1234567890123456789012345678901234567890123456789012345678901234567890123456789
 data hdr/'===============================================================================',&!01
-         'iMODFLOW Version 3_01_00, July 2015                                            ',&!02
+         'iMODFLOW Version 3_02_00, September 2015                                       ',&!02
          '                                                                               ',&!03
          'Copyright (C) Stichting Deltares, 2005-2015.                                   ',&!04
          '                                                                               ',&!05
