@@ -185,16 +185,16 @@ C6------Allocate space for global arrays except discretization data.
       ALLOCATE (HNEW(NCOL,NROW,NLAY))
       ALLOCATE (HOLD(NCOL,NROW,NLAY))
       ALLOCATE (IBOUND(NCOL,NROW,NLAY))
-      ALLOCATE (CR(NCOL,NROW,NLAY))
-      ALLOCATE (CC(NCOL,NROW,NLAY))
+      ALLOCATE (CR(NCOL,NROW,NLAY)); CR = 0.
+      ALLOCATE (CC(NCOL,NROW,NLAY)); CC = 0.
       if (IUNIT(IUANI).gt.0.or.IUNIT(IUPWT).gt.0) then                  ! ANIPWT
          allocate(kdsv(ncol,nrow,nlay))                                 ! ANIPWT
       else                                                              ! ANIPWT
          allocate(kdsv(1,1,1))                                          ! ANIPWT
       end if                                                            ! ANIPWT
-      ALLOCATE (CV(NCOL,NROW,NLAY))
-      ALLOCATE (HCOF(NCOL,NROW,NLAY))
-      ALLOCATE (RHS(NCOL,NROW,NLAY))
+      ALLOCATE (CV(NCOL,NROW,NLAY)); CV = 0.
+      ALLOCATE (HCOF(NCOL,NROW,NLAY)); HCOF = 0.
+      ALLOCATE (RHS(NCOL,NROW,NLAY)); RHS = 0.      
       ALLOCATE (BUFF(NCOL,NROW,NLAY))
       ALLOCATE (STRT(NCOL,NROW,NLAY))
       DDREF=>STRT
