@@ -1378,9 +1378,6 @@ ILLOOP: DO IL=MAX(1,IELEV-1),MIN(NTBSOL,IELEV+1)
   RETURN
  ENDIF
   
-! CALL WDIALOGSELECT(ID_DSERIESTAB2)
-! CALL WDIALOGUNLOAD()
-
  END SUBROUTINE SOLIDPROFILECLOSE
 
  !###======================================================================

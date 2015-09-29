@@ -317,11 +317,11 @@ if(irow.eq.ir.and.icol.eq.ic)f=1.0
  END FUNCTION SOF_TRACE_GET_ANGLE_MEAN
  
  !###======================================================================
- SUBROUTINE SOF_MAIN(IDF,IPNTR,IWINDOW,XMIN,YMIN,XMAX,YMAX,CELLSIZE)
+ SUBROUTINE SOF_MAIN(IDF,IPNTR,IWINDOW,XMIN,YMIN,XMAX,YMAX,CELLSIZE,IGRAD)
  !###======================================================================
  IMPLICIT NONE
  TYPE(IDFOBJ),INTENT(INOUT),DIMENSION(:) :: IDF
- INTEGER,INTENT(IN) :: IWINDOW
+ INTEGER,INTENT(IN) :: IWINDOW,IGRAD
  REAL,INTENT(IN) :: XMIN,YMIN,XMAX,YMAX,CELLSIZE
  INTEGER,INTENT(IN) :: IPNTR !## ipntr=0 no pointer to stop, 1 use pointer to stop
  INTEGER :: ITIC,ITOC,I,IROW,ICOL
@@ -372,13 +372,14 @@ if(irow.eq.ir.and.icol.eq.ic)f=1.0
  ENDIF
  
  !## fill in pitts - fill in gradients for flat-areas
- CALL SOF_FILL_PITT(IDF(1),IDF(2),IDF(3),IDF(4))
+ CALL SOF_FILL_PITT(IDF(1),IDF(2),IDF(3),IDF(4),IGRAD)
  IF(.NOT.IDFWRITE(IDF(1),IDF(3)%FNAME,1))THEN; ENDIF
-! IF(.NOT.IDFWRITE(IDF(1),IDF(3)%FNAME(:INDEX(IDF(3)%FNAME,'.',.TRUE.)-1)//'_zmax.idf',1))THEN; ENDIF
 
- CALL SOF_COMPUTE_SLOPE_ASPECT(IDF(1),IDF(2),IDF(3))
- IF(.NOT.IDFWRITE(IDF(2),IDF(3)%FNAME(:INDEX(IDF(3)%FNAME,'.',.TRUE.)-1)//'_slope.idf',1))THEN; ENDIF
- IF(.NOT.IDFWRITE(IDF(3),IDF(3)%FNAME(:INDEX(IDF(3)%FNAME,'.',.TRUE.)-1)//'_aspect.idf',1))THEN; ENDIF
+ IF(IGRAD.EQ.1)THEN
+  CALL SOF_COMPUTE_SLOPE_ASPECT(IDF(1),IDF(2),IDF(3))
+  IF(.NOT.IDFWRITE(IDF(2),IDF(3)%FNAME(:INDEX(IDF(3)%FNAME,'.',.TRUE.)-1)//'_slope.idf',1))THEN; ENDIF
+  IF(.NOT.IDFWRITE(IDF(3),IDF(3)%FNAME(:INDEX(IDF(3)%FNAME,'.',.TRUE.)-1)//'_aspect.idf',1))THEN; ENDIF
+ ENDIF
  
  CALL OSD_TIMER(ITOC)
    
@@ -757,10 +758,11 @@ if(irow.eq.ir.and.icol.eq.ic)f=1.0
  END SUBROUTINE SOF_GET_PITT
 
  !###======================================================================
- SUBROUTINE SOF_FILL_PITT(DEM,SLOPE,ASPECT,IDFP)
+ SUBROUTINE SOF_FILL_PITT(DEM,SLOPE,ASPECT,IDFP,IGRAD)
  !###======================================================================
  IMPLICIT NONE
  TYPE(IDFOBJ),INTENT(INOUT) :: DEM,IDFP,SLOPE,ASPECT
+ INTEGER,INTENT(IN) :: IGRAD
  INTEGER :: I,J,ICOL,IROW,NBPX,NPPX,NTPX,ITYPE
  REAL :: F,ZMAX
  
@@ -802,8 +804,8 @@ if(irow.eq.ir.and.icol.eq.ic)f=1.0
    
   F=REAL(I)/REAL(NP)*100.0; WRITE(6,'(A,F10.3,2(A,I5),A)') '+Processing pitt:',F,' % (nppx= ',NPPX,' ; nbpx= ',NBPX,')'
 
-  CALL SOF_FILL_FLATAREAS(DEM,SLOPE,ASPECT,NPPX)
-
+  IF(IGRAD.EQ.1)CALL SOF_FILL_FLATAREAS(DEM,SLOPE,ASPECT,NPPX)
+  
   !## clean idfp%x()
   DO J=1,NTPX; IDFP%X(TPX(J)%ICOL,TPX(J)%IROW)=IDFP%NODATA; ENDDO 
    

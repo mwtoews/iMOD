@@ -1805,7 +1805,8 @@ DO JPLOT=1,MXMPLOT
      MP(IPLOT)%IDFKIND=0                       !type of plotting for associate file
      MP(IPLOT)%IDFI=MAX(0,MP(IPLOT)%IDFI)      !sight (m)
      MP(IPLOT)%SCOLOR=MAX(0,MP(IPLOT)%SCOLOR)  !no colouring, attribute colouring
-     MP(IPLOT)%TSIZE =MAX(1,MIN(10,MP(IPLOT)%TSIZE))
+     MP(IPLOT)%TSIZE =MAX(1,MIN(10,MP(IPLOT)%TSIZE)) !## size of legend in nbetween 1 and 10
+     MP(IPLOT)%ILEGDLF=MAX(1,MIN(10,MP(IPLOT)%ILEGDLF)) !## number of legend in between 1 and 10
      IF(MP(IPLOT)%ASSCOL1.LE.0)MP(IPLOT)%ASSCOL1=2 !## borehole plotting
      MP(IPLOT)%ASSCOL2=0 !## borehole plotting
     !## iff

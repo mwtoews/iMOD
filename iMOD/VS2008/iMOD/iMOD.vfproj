@@ -47,7 +47,6 @@
 	<Files>
 		<Filter Name="Header Files" Filter="fi;fd"/>
 		<Filter Name="Resource Files" Filter="rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe">
-		<File RelativePath="..\..\BMP\imod_logo_32x32.ico"/>
 		<File RelativePath="..\..\..\iMOD\SRC\resource.rc">
 			<FileConfiguration Name="Debug|Win32">
 				<Tool Name="VFCustomBuildTool" CommandLine="rc ..\..\..\iMOD\SRC\resource.rc" Outputs="..\..\..\iMOD\SRC\resource.res" AdditionalDependencies=""/></FileConfiguration>

@@ -2136,6 +2136,29 @@ CONTAINS
  END FUNCTION ITIMETOFTIME
 
  !###====================================================================
+ SUBROUTINE ITIMETOHMS(ITIME,IH,IM,IS)
+ !###====================================================================
+ IMPLICIT NONE
+ INTEGER,INTENT(IN) :: ITIME !## hhmmss notation
+ INTEGER :: IH,IM,IS
+
+ IH = ITIME / 10000
+ IM = MOD( ITIME, 10000 ) / 100
+ IS = MOD( ITIME, 100 ) 
+
+ END SUBROUTINE ITIMETOHMS
+
+ !###====================================================================
+ INTEGER FUNCTION HMSTOITIME(IH,IM,IS)
+ !###====================================================================
+ IMPLICIT NONE
+ INTEGER,INTENT(IN) :: IH,IM,IS
+
+ HMSTOITIME=IH*10000+IM*100+IS
+
+ END FUNCTION HMSTOITIME
+
+ !###====================================================================
  REAL FUNCTION CTIMETOFTIME(CTIME)
  !###====================================================================
  IMPLICIT NONE
