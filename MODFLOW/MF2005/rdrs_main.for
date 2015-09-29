@@ -642,6 +642,7 @@ c arguments
 c parameters
       real, parameter :: maxc = 1000000.0
       real, parameter :: minkh = 0.0
+      real, parameter :: tiny = 1.0e-20
       integer, parameter :: iclay = 1
 c locals
       logical :: found
@@ -657,14 +658,15 @@ c init
        do ilay = 1, nlay
           if (ibound(icol,irow,ilay).gt.0) then
              if (ilay.lt.nlay) then
-                c(ilay) = 1./(delr(icol)*delc(irow))/cv(icol,irow,ilay)
+                c(ilay) =
+     1          1./(delr(icol)*delc(irow))/(cv(icol,irow,ilay)+tiny)
              end if
              kh(ilay)=(cc(icol,irow,ilay)+cr(icol,irow,ilay))/2.0
              tp(ilay) = botm(icol,irow,lbotm(ilay)-1)
              bt(ilay) = botm(icol,irow,lbotm(ilay))
              dz = tp(ilay)-bt(ilay)
              if (dz.gt.0.0) then
-                kh(ilay) = kh(ilay)/dz
+                kh(ilay) = kh(ilay)/(dz+tiny)
              else
                 kh(ilay) = 0.0
              end if
