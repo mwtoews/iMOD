@@ -26,8 +26,11 @@ USE RESOURCE
 IMPLICIT NONE
 
 TYPE PIOBJ
- CHARACTER(LEN=52) :: PNAME
- INTEGER :: IACT,ID
+ CHARACTER(LEN=52) :: PNAME !## Name of the plugin
+ INTEGER :: IACT !##activates plugin in plugin-manager if iact=1
+ INTEGER :: ID !## menu-id of plugin menu
+ INTEGER :: IFLAG  !## if nowait-command IFLAG=1, if wait-command IFLAG=2
+ CHARACTER(LEN=256) :: BACK !##checks output-file: PLUG-IN.OUT
 END TYPE PIOBJ
 
 TYPE(PIOBJ),POINTER,DIMENSION(:) :: PI1,PI2
