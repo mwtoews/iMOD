@@ -373,9 +373,9 @@ CONTAINS
   WRITE(*,'(/A/)')
  ENDIF
  
- ISEG  =0  !segment-points
- ICRS  =0  !cross-sections
- ICLC  =0  !data
+ ISEG  =0  !## segment-points
+ ICRS  =0  !## cross-sections
+ ICLC  =0  !## data
  ISTW  =0
  IQHR  =0
  IREFSD=0
@@ -407,13 +407,13 @@ CONTAINS
  END DO
 
  WRITE(IU(ISP) ,REC=1)  8*256+247
- WRITE(IU(ISD1),REC=1) 44*256+247 !42*256+247
+ WRITE(IU(ISD1),REC=1) 44*256+247 
  WRITE(IU(ISD2),REC=1) 20*256+247
- WRITE(IU(ISC1),REC=1) 44*256+247 !42*256+247
+ WRITE(IU(ISC1),REC=1) 44*256+247 
  WRITE(IU(ISC2),REC=1) 12*256+247
- WRITE(IU(IST1),REC=1) 44*256+247 !42*256+247
+ WRITE(IU(IST1),REC=1) 44*256+247 
  WRITE(IU(IST2),REC=1) 12*256+247
- WRITE(IU(ISQ1),REC=1) 44*256+247 !42*256+247
+ WRITE(IU(ISQ1),REC=1) 44*256+247 
  WRITE(IU(ISQ2),REC=1) 16*256+247
 
  IF(IBATCH.NE.0)THEN
@@ -519,8 +519,10 @@ CONTAINS
   ENDIF
  END DO
 
- IF(ABS(TP2(IB)%AL-DIST).GT.1.0)STOP 'actual length not equal to computed length'
-
+ IF(ABS(TP2(IB)%AL-DIST).GT.1.0)THEN
+  WRITE(IU(IOUT),'(2(A,F15.7))') 'Actual length ',TP2(IB)%AL,' not equal to computed length',DIST
+ ENDIF
+ 
  !## adjust correct segment length
  TP2(IB)%AL=DIST
 

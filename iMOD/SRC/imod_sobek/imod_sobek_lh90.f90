@@ -19,6 +19,7 @@
 !!  Stichting Deltares
 !!  P.O. Box 177
 !!  2600 MH Delft, The Netherlands.
+!!
 MODULE MOD_SOBEK_PAR
  CHARACTER(LEN=256) :: NETWORKNAME,CALCPNTHISNAME,STRUCHISNAME,ISGNAME
  INTEGER :: IBATCH
@@ -33,14 +34,20 @@ INTEGER,PARAMETER :: ISOBEK=0
  !###======================================================================
  SUBROUTINE SOBEK1MAIN()
  !###======================================================================
-
+ IMPLICIT NONE
+ 
  END SUBROUTINE SOBEK1MAIN
 
  !###======================================================================
  LOGICAL FUNCTION SOBEK1CALC()
  !###======================================================================
+ IMPLICIT NONE
+ 
+ SOBEK1CALC=.FALSE.
  
  WRITE(*,'(//A//)') 'Can not use this function in this version of iMOD'
+ 
+ SOBEK1CALC=.TRUE. 
  
  END FUNCTION SOBEK1CALC
 

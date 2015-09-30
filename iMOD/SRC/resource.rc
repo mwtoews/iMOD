@@ -8,7 +8,7 @@
 //
 // Winteracter resource script. 
 //
-// Modified : 30/Sep/2015 13:18:53
+// Modified : 30/Sep/2015 16:21:35
 //
 ///////////////////////////////////////////////////
 //
@@ -1022,6 +1022,7 @@
 #define ID_PACKAGE                       1244
 #define ID_DPMANAGER_PACKAGES             344
 #define ID_SELECTNODES                  40256
+#define ID_DSOLID_ADJUST                  345
 
 ///////////////////////////////////////////////////
 //
@@ -2269,7 +2270,7 @@ BEGIN
 " 1183 0 \n"
 " 1184 1 \n"
 " 1185 0 \n"
-" 1187 0 \n"
+" 1187 1 \n"
 " 1188 0 \n"
 "[Ranges] \n"
 "[Formats] \n"
@@ -8662,6 +8663,38 @@ BEGIN
 ,0
 END
 
+ID_DSOLID_ADJUST DIALOG 0, 0,  222,   88
+STYLE WS_POPUP | WS_BORDER | WS_DLGFRAME | WS_SYSMENU | DS_3DLOOK | DS_MODALFRAME
+FONT    8, "Arial"
+CAPTION "Adjust Selected Nodes"
+BEGIN
+    CONTROL "Specify Action",IDF_GROUP1,"BUTTON",WS_CHILD | WS_VISIBLE | WS_GROUP | BS_GROUPBOX | BS_TEXT | BS_LEFT,    6,    4,  208,   60
+    CONTROL "&Apply",IDOK,"BUTTON",WS_CHILD | WS_VISIBLE | WS_GROUP | WS_TABSTOP | BS_PUSHBUTTON | BS_TEXT | BS_FLAT,    6,   67,   40,   14
+    CONTROL "&Close",IDCANCEL,"BUTTON",WS_CHILD | WS_VISIBLE | WS_TABSTOP | BS_PUSHBUTTON | BS_TEXT | BS_FLAT,  175,   67,   40,   14
+    CONTROL "&Help ...",IDHELP,"BUTTON",WS_CHILD | WS_VISIBLE | WS_TABSTOP | BS_PUSHBUTTON | BS_TEXT | BS_FLAT,  133,   67,   40,   14
+    CONTROL "",IDF_MENU1,"COMBOBOX",WS_CHILD | WS_VISIBLE | WS_VSCROLL | WS_GROUP | WS_TABSTOP | CBS_DROPDOWNLIST | CBS_HASSTRINGS,  156,   46,   49,   57
+    CONTROL "Delete Selected Nodes",IDF_RADIO1,"BUTTON",WS_CHILD | WS_VISIBLE | WS_GROUP | WS_TABSTOP | BS_AUTORADIOBUTTON | BS_TEXT,   12,   17,   93,   14
+    CONTROL "Split Selected Nodes, use ofset of (m):",IDF_RADIO2,"BUTTON",WS_CHILD | WS_VISIBLE | WS_TABSTOP | BS_AUTORADIOBUTTON | BS_TEXT,   12,   31,  141,   14
+    CONTROL "Merge Selected Nodes with interface:",IDF_RADIO3,"BUTTON",WS_CHILD | WS_VISIBLE | WS_TABSTOP | BS_AUTORADIOBUTTON | BS_TEXT,   12,   45,  136,   14
+    CONTROL "0.0000",IDF_REAL1,"REALEDIT",WS_CHILD | WS_VISIBLE | WS_BORDER | WS_GROUP | WS_TABSTOP | ES_LEFT | ES_CENTER | ES_MULTILINE,  157,   32,   49,   12
+END
+
+ID_DSOLID_ADJUST RCDATA
+BEGIN
+"[Checks] \n"
+" 1012 1 \n"
+" 1014 0 \n"
+" 1015 0 \n"
+"[Menus] \n"
+"[Ranges] \n"
+" 1130      0.0000          0.34028E+039 \n"
+"[Grids] \n"
+"[Lengths] \n"
+" 1192    52 \n"
+"[Formats] \n"
+,0
+END
+
 ///////////////////////////////////////////////////
 //
 // Menus
@@ -9991,5 +10024,5 @@ END
 //*WI* FORTSAVE    1
 //*WI* FILENAME    resource.f90
 //*WI* FMODNAME    RESOURCE
-//*WI* LASTTYPE        1
-//*WI* LASTRES        12
+//*WI* LASTTYPE        2
+//*WI* LASTRES       243
