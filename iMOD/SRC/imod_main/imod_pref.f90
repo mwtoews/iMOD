@@ -379,9 +379,6 @@ CONTAINS
    CASE(27,28)
    !## remove last backslash in preference directory if available 
     J=LEN_TRIM(PREFVAL(I)); IF(INDEX(PREFVAL(I),'\',.TRUE.).EQ.J)PREFVAL(I)(J:J)=' '
-   !## demo
-   !CASE(29)
-   !## type contains Cross-section-tool and/or 3D-tool
   END SELECT
  END DO
 

@@ -1,0 +1,58 @@
+!!  Copyright (C) Stichting Deltares, 2005-2015.
+!!
+!!  This file is part of iMOD.
+!!
+!!  This program is free software: you can redistribute it and/or modify
+!!  it under the terms of the GNU General Public License as published by
+!!  the Free Software Foundation, either version 3 of the License, or
+!!  (at your option) any later version.
+!!
+!!  This program is distributed in the hope that it will be useful,
+!!  but WITHOUT ANY WARRANTY; without even the implied warranty of
+!!  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+!!  GNU General Public License for more details.
+!!
+!!  You should have received a copy of the GNU General Public License
+!!  along with this program.  If not, see <http://www.gnu.org/licenses/>.
+!!
+!!  Contact: imod.support@deltares.nl
+!!  Stichting Deltares
+!!  P.O. Box 177
+!!  2600 MH Delft, The Netherlands.
+!!
+MODULE MOD_DEMO
+
+USE WINTERACTER
+USE RESOURCE
+USE MOD_DEMO_PAR
+USE MOD_PROFILE, ONLY : PROFILE_INIT
+USE MOD_PREF_PAR, ONLY : PREFVAL
+
+CONTAINS
+
+!###======================================================================
+ SUBROUTINE DEMO_MAIN()
+!###======================================================================
+!# subroutine with main-program; includes call to all demo-subroutines
+ IMPLICIT NONE
+ 
+ !# Starts cross-section tool if demo type name equals 'cross'
+ 
+ IF(TRIM(DEMO%TDNAME).EQ.'CROSS')THEN
+  CALL PROFILE_INIT()
+ ENDIF
+ 
+ END SUBROUTINE DEMO_MAIN
+
+!###======================================================================
+ SUBROUTINE DEMO_READFUNCTION(LINE)
+!###======================================================================
+!# subroutine with main-program; includes call to all demo-subroutines
+ IMPLICIT NONE
+ CHARACTER(LEN=256),INTENT(IN) :: LINE
+ 
+ READ(LINE,'(9X,A)') DEMO%TDNAME
+
+ END SUBROUTINE DEMO_READFUNCTION
+
+END MODULE MOD_DEMO
