@@ -8,7 +8,7 @@
 //
 // Winteracter resource script. 
 //
-// Modified : 29/Sep/2015 17:20:58
+// Modified : 30/Sep/2015 13:18:53
 //
 ///////////////////////////////////////////////////
 //
@@ -1021,6 +1021,7 @@
 #define IDHELP4                            12
 #define ID_PACKAGE                       1244
 #define ID_DPMANAGER_PACKAGES             344
+#define ID_SELECTNODES                  40256
 
 ///////////////////////////////////////////////////
 //
@@ -9624,6 +9625,7 @@ ID_WTIMENU MENU
 BEGIN
     MENUITEM "Change Label [name]",                      ID_ADDLINELABEL
     MENUITEM "Add Knickpoint",                           ID_WTIADD
+    MENUITEM "Select Nodes",                             ID_SELECTNODES
 END
 
 ID_WTIMENU RCDATA
@@ -9635,6 +9637,7 @@ ID_WTIMENU ISSMENUSTRING
 BEGIN
 ID_WTIADD,"Add a Knickpoint to the Cross-section\0",
 ID_ADDLINELABEL,"Add Label for Area below line\0",
+ID_SELECTNODES,"Click this option to select nodes\0",
 0
 END
 
@@ -9988,5 +9991,5 @@ END
 //*WI* FORTSAVE    1
 //*WI* FILENAME    resource.f90
 //*WI* FMODNAME    RESOURCE
-//*WI* LASTTYPE        2
-//*WI* LASTRES         9
+//*WI* LASTTYPE        1
+//*WI* LASTRES        12

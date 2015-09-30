@@ -225,6 +225,15 @@
 		<File RelativePath="..\..\..\iMOD\SRC\imod_ludcmp\imod_ludcmp.f90"/></Filter>
 		<Filter Name="imod_main">
 		<File RelativePath="..\..\..\iMOD\SRC\imod_main\imod_about.f90"/>
+		<File RelativePath="..\..\..\iMOD\SRC\imod_main\imod_main.f90">
+			<FileConfiguration Name="Debug|Win32">
+				<Tool Name="VFFortranCompilerTool" Preprocess="preprocessYes" PreprocessorDefinitions="WINTERACTER9"/></FileConfiguration>
+			<FileConfiguration Name="Release|x64">
+				<Tool Name="VFFortranCompilerTool" Preprocess="preprocessYes" PreprocessorDefinitions="WINTERACTER9"/></FileConfiguration>
+			<FileConfiguration Name="Debug|x64">
+				<Tool Name="VFFortranCompilerTool" Preprocess="preprocessYes" PreprocessorDefinitions="WINTERACTER9"/></FileConfiguration>
+			<FileConfiguration Name="Release|Win32">
+				<Tool Name="VFFortranCompilerTool" Preprocess="preprocessYes" PreprocessorDefinitions="WINTERACTER9"/></FileConfiguration></File>
 		<File RelativePath="..\..\..\iMOD\SRC\imod_main\imod_pref.f90"/>
 		<File RelativePath="..\..\..\iMOD\SRC\imod_main\imod_pref_par.f90"/>
 		<File RelativePath="..\..\..\iMOD\SRC\imodconfig_x32d.f90">
@@ -307,15 +316,6 @@
 		<Filter Name="imod_polint">
 		<File RelativePath="..\..\..\iMOD\SRC\imod_polint\imod_polint.f90"/></Filter>
 		<Filter Name="imod_polygon">
-		<File RelativePath="..\..\..\iMOD\SRC\imod_main\imod_main.f90">
-			<FileConfiguration Name="Debug|Win32">
-				<Tool Name="VFFortranCompilerTool" Preprocess="preprocessYes" PreprocessorDefinitions="WINTERACTER9"/></FileConfiguration>
-			<FileConfiguration Name="Release|x64">
-				<Tool Name="VFFortranCompilerTool" Preprocess="preprocessYes" PreprocessorDefinitions="WINTERACTER9"/></FileConfiguration>
-			<FileConfiguration Name="Debug|x64">
-				<Tool Name="VFFortranCompilerTool" Preprocess="preprocessYes" PreprocessorDefinitions="WINTERACTER9"/></FileConfiguration>
-			<FileConfiguration Name="Release|Win32">
-				<Tool Name="VFFortranCompilerTool" Preprocess="preprocessYes" PreprocessorDefinitions="WINTERACTER9"/></FileConfiguration></File>
 		<File RelativePath="..\..\..\iMOD\SRC\imod_polygon\imod_polygon.f90"/>
 		<File RelativePath="..\..\..\iMOD\SRC\imod_polygon\imod_polygon_draw.f90"/>
 		<File RelativePath="..\..\..\iMOD\SRC\imod_polygon\imod_polygon_utl.f90"/>
@@ -339,8 +339,6 @@
 		<File RelativePath="..\..\..\iMOD\SRC\imod_scentool\imod_scentool_utl.f90"/>
 		<File RelativePath="..\..\..\iMOD\SRC\imod_scentool\imod_scentool_wells.f90"/></Filter>
 		<Filter Name="imod_smplx">
-		<Filter Name="imod_sof">
-		<File RelativePath="..\..\..\iMOD\SRC\imod_sof\imod_sof.f90"/></Filter>
 		<File RelativePath="..\..\..\iMOD\SRC\imod_smplx\imod_smplx_compute.f90"/>
 		<File RelativePath="..\..\..\iMOD\SRC\imod_smplx\imod_smplx_main.f90"/>
 		<File RelativePath="..\..\..\iMOD\SRC\imod_smplx\imod_smplx_nswc.f90"/>
@@ -355,6 +353,8 @@
 		<File RelativePath="..\..\..\iMOD\SRC\imod_sobek\imod_sobek_par.f90">
 			<FileConfiguration Name="Release|x64" ExcludedFromBuild="true"/>
 			<FileConfiguration Name="Debug|x64" ExcludedFromBuild="true"/></File></Filter>
+		<Filter Name="imod_sof">
+		<File RelativePath="..\..\..\iMOD\SRC\imod_sof\imod_sof.f90"/></Filter>
 		<Filter Name="imod_solid">
 		<File RelativePath="..\..\..\iMOD\SRC\imod_solid\imod_solid.f90"/>
 		<File RelativePath="..\..\..\iMOD\SRC\imod_solid\imod_solid_par.f90"/>
