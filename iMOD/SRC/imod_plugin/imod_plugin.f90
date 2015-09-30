@@ -64,7 +64,7 @@ CONTAINS
    CASE (PUSHBUTTON)
     SELECT CASE (MESSAGE%VALUE1)
      CASE (IDCANCEL)
-      IF(PLUGIN_UPDATEMENU_FILL())EXIT
+      EXIT
      CASE (IDOK)    
       IF(IPI.EQ.27)THEN; N=SIZE(PI1); CALL WGRIDGETCHECKBOX(IDF_GRID1,2,PI1%IACT,N); ENDIF
       IF(IPI.EQ.28)THEN; N=SIZE(PI2); CALL WGRIDGETCHECKBOX(IDF_GRID1,2,PI2%IACT,N); ENDIF
@@ -204,17 +204,23 @@ CONTAINS
   ALLOCATE(PI(NLN))
   PI%PNAME=LN
   PI%IACT=0
+  PI%ID=0
+  PI%IFLAG=0
+  PI%BACK=''
  ELSE
   !# check content of saved PI-list with avaiable plug-in files in specific folder
   !# In case size(PI) isn't equal to size(listname) and if both lists are equal in size
   !# this routine will be executed. Size(PI) needs to be equal to size(Listname)!!
   !# If size(pi) is not equal to size(listname) iact=0
   ALLOCATE(PI3(SIZE(PI))); PI3=PI
-  DEALLOCATE(PI); ALLOCATE(PI(NLN)); PI%PNAME=LN; PI%IACT=0
+  DEALLOCATE(PI); ALLOCATE(PI(NLN)); PI%PNAME=LN; PI%IACT=0; PI%ID=0
   DO K=1,NLN
    DO J=1,SIZE(PI)
     IF(TRIM(UTL_CAP(LN(K),'U')).EQ.TRIM(UTL_CAP(PI(J)%PNAME,'U')))THEN
-     IF(K.LE.SIZE(PI3))THEN; PI(K)%IACT=PI3(J)%IACT; EXIT; ENDIF
+     IF(K.LE.SIZE(PI3))THEN
+      PI(K)=PI3(J)
+      EXIT
+     ENDIF
     ENDIF
    ENDDO
   ENDDO

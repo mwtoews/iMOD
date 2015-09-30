@@ -25,6 +25,7 @@ MODULE MOD_PLUGIN_PAR
 USE RESOURCE
 IMPLICIT NONE
 
+!#Be aware that you update PLUGIN_CHECK with the content of PIOBJ!!
 TYPE PIOBJ
  CHARACTER(LEN=52) :: PNAME !## Name of the plugin
  INTEGER :: IACT !##activates plugin in plugin-manager if iact=1
