@@ -1,4 +1,4 @@
-!!  Copyright (C) Stichting Deltares, 2005-2014.
+!!  Copyright (C) Stichting Deltares, 2005-2015.
 !!
 !!  This file is part of iMOD.
 !!

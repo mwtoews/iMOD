@@ -1,4 +1,4 @@
-!!  Copyright (C) Stichting Deltares, 2005-2014.
+!!  Copyright (C) Stichting Deltares, 2005-2015.
 !!
 !!  This file is part of iMOD.
 !!
@@ -31,6 +31,7 @@ USE MOD_IDF, ONLY : IDFDEALLOCATE,IDFNULLIFY
 USE MOD_OSD, ONLY : OSD_GETARG,OSD_OPEN,OSD_GETENV
 USE IMODVAR, ONLY : IDIAGERROR
 USE MODPLOT
+USE IMOD
 
 CONTAINS
 
@@ -84,6 +85,40 @@ CONTAINS
  CALL WDIALOGUNLOAD()
  
  END SUBROUTINE PLUGIN_MAIN
+
+ !###======================================================================
+ SUBROUTINE PLUGIN_SAVEPLUGIN(PI,IPI,LINE,IU)
+ !###======================================================================
+ IMPLICIT NONE
+ TYPE(PIOBJ),POINTER,DIMENSION(:),INTENT(INOUT) :: PI
+ CHARACTER(LEN=300),INTENT(IN) :: LINE
+ INTEGER, INTENT(IN) :: IPI,IU
+ INTEGER :: I,IVALUE,IOS !,POS
+ CHARACTER(LEN=256) :: PLUGDIR
+
+ IF(.NOT.ASSOCIATED(PI))THEN
+  READ(LINE,'(8X,I2)') IVALUE
+  ALLOCATE(PI(IVALUE))
+ ELSE
+  READ(LINE,'(8X,I2)') IVALUE
+  DEALLOCATE(PI); ALLOCATE(PI(IVALUE))
+ ENDIF
+
+ READ(IU,*,IOSTAT=IOS) PLUGDIR !# plugin-directory (not) equal to prefval test
+ IF(TRIM(PLUGDIR).NE.TRIM(PREFVAL(IPI)))THEN
+  CALL WMESSAGEBOX(OKONLY,EXCLAMATIONICON,COMMONOK,'Given plugin-directory ('//TRIM(PLUGDIR)//') in .imf file is not similar to given directory in preference file ('//TRIM(PREFVAL(IPI))//')','Error')     
+ ENDIF    
+ DO I=1,IVALUE
+  READ(IU,*,IOSTAT=IOS) PI(I)%PNAME,PI(I)%IACT
+  IF(IOS.NE.0)THEN
+   CALL WMESSAGEBOX(OKONLY,EXCLAMATIONICON,COMMONOK,'Cannot found plugin: '//TRIM(PI(I)%PNAME)//' in plugin folder.','Error')
+   DEALLOCATE(PI); EXIT
+  ENDIF
+ ENDDO 
+
+ IF(PLUGIN_UPDATEMENU_FILL())THEN;ENDIF
+
+ END SUBROUTINE PLUGIN_SAVEPLUGIN
 
 !###======================================================================
  SUBROUTINE PLUGIN_UPDATEMENU()
