@@ -22,11 +22,9 @@
 !!
 MODULE MOD_DEMO
 
-USE WINTERACTER
-USE RESOURCE
 USE MOD_DEMO_PAR
 USE MOD_PROFILE, ONLY : PROFILE_INIT
-USE MOD_PREF_PAR, ONLY : PREFVAL
+USE MOD_UTL, ONLY : UTL_CAP
 
 CONTAINS
 
@@ -35,24 +33,12 @@ CONTAINS
 !###======================================================================
 !# subroutine with main-program; includes call to all demo-subroutines
  IMPLICIT NONE
- 
  !# Starts cross-section tool if demo type name equals 'cross'
  
- IF(TRIM(DEMO%TDNAME).EQ.'CROSS')THEN
+ IF(TRIM(UTL_CAP(DEMO%TDNAME,'U')).EQ.'CROSS')THEN
   CALL PROFILE_INIT()
  ENDIF
  
  END SUBROUTINE DEMO_MAIN
-
-!###======================================================================
- SUBROUTINE DEMO_READFUNCTION(LINE)
-!###======================================================================
-!# subroutine with main-program; includes call to all demo-subroutines
- IMPLICIT NONE
- CHARACTER(LEN=256),INTENT(IN) :: LINE
  
- READ(LINE,'(9X,A)') DEMO%TDNAME
-
- END SUBROUTINE DEMO_READFUNCTION
-
 END MODULE MOD_DEMO

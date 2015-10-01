@@ -60,6 +60,7 @@ USE MOD_SOLID_UTL, ONLY : SOLIDOPENSOL,GETSOLNAME
 USE MOD_SOLID_PAR, ONLY : ISPF,NSPF,SPF,IMASK
 USE IMOD
 USE MOD_GEN2GEN_PUZZLE, ONLY : GENFNAME,PUZZLEMAIN
+USE MOD_DEMO_PAR
 
 !## local module variables
 TYPE(WIN_MESSAGE),PRIVATE :: MESSAGE
@@ -270,6 +271,8 @@ CONTAINS
  
  !## draw first selected cross-section if solid tool is active
  IF(ISOLID.EQ.1)CALL SOLIDPROFILEUPDATECROSS(0)
+ 
+ CALL PROFILE_DEMO() 
  
  DO
 
@@ -3972,6 +3975,29 @@ CONTAINS
  END DO
 
  END SUBROUTINE PROFILE_TRANSFORMXY
+
+ !###======================================================================
+ SUBROUTINE PROFILE_DEMO()
+ !###======================================================================
+ IMPLICIT NONE
+ INTEGER :: I
+ 
+ IF(IDEMO.EQ.0)RETURN
+ 
+ DO I=1,DEMO%NXY
+  XY(1,I)=DEMO%X(I)
+  XY(2,I)=DEMO%Y(I)
+ END DO
+ NXY=DEMO%NXY
+ 
+ CALL PROFILE_COMPUTEPLOT()
+ CALL PROFILE_IDFMINMAX()
+ CALL PROFILE_PLOT()
+ XPOS=0.0
+ CALL PROFILE_CLEAR()
+ CALL PROFILE_COORDINATES(0)
+ 
+ END SUBROUTINE PROFILE_DEMO
 
  !###======================================================================
  SUBROUTINE PROFILE_COPYINFO()
