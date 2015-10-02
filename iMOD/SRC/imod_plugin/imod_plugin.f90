@@ -317,7 +317,7 @@ CONTAINS
  !## subroutine to execute the plugin executable. The connection with menu-item is made in 'PLUGIN_UPDATEMENU_FILL'-function
  IMPLICIT NONE
  INTEGER,INTENT(IN) :: IDPLUGIN
- INTEGER :: IPI,IDP,IFLAG,IU,I,BACTION
+ INTEGER :: IPI,IDP,IFLAG,IU,I
  CHARACTER(LEN=52) :: WNW 
  CHARACTER(LEN=256) :: EXE,DIRNAME,DIRNAME_PL
  LOGICAL :: LEX
@@ -325,8 +325,8 @@ CONTAINS
  CALL PLUGIN_EXE_PI_SEARCH(IPI,IDP,IDPLUGIN)    !# returns/discovers plugin number (PI1 or PI2)
  IF(IDP.EQ.0)RETURN
  
- !## read in plug-in.ini, return/stop by error
- IF(.NOT.PLUGIN_EXE_READ_INI(IPI,IDP,WNW,EXE,BACTION))RETURN
+ !## read in plug-in.ini, return/stop by error/cancelation
+ IF(.NOT.PLUGIN_EXE_READ_INI(IPI,IDP,WNW,EXE))RETURN
    
  !# executes with a status based upon the 'wait' or 'nowait' command given in the ini-file
  IF(IPI.EQ.27)THEN
@@ -348,12 +348,11 @@ CONTAINS
  ENDIF
  
  !# executable runs only if "apply"-button is called
- IF(BACTION.EQ.3)THEN; CALL IOSCOMMAND(TRIM(EXE),IFLAG); ENDIF
-  
+ CALL IOSCOMMAND(TRIM(EXE),IFLAG)
+   
  !## plugin finished, nothing to do furthermore
  !## If Back-file available read at fixed moments during executing time, based upon the PLUGIN.IN file
-! IF(TRIM(BACK).NE.'')
- IF(BACTION.EQ.3)THEN; CALL PLUGIN_EXE_READ_BACK(IPI,IDP); ENDIF
+ CALL PLUGIN_EXE_READ_BACK(IPI,IDP)
   
  !## move back to the iMOD folder
  CALL IOSDIRCHANGE(DIRNAME)
@@ -385,18 +384,17 @@ CONTAINS
  END SUBROUTINE PLUGIN_EXE_PI_SEARCH
  
  !###======================================================================
- LOGICAL FUNCTION PLUGIN_EXE_READ_INI(IPI,IDP,WNW,EXE,BACTION)
+ LOGICAL FUNCTION PLUGIN_EXE_READ_INI(IPI,IDP,WNW,EXE)
  !###======================================================================
  !## Function to read exe-specifications from plugin ini-file variables/commands
  IMPLICIT NONE
  INTEGER,PARAMETER :: STRLEN=256 
  CHARACTER(LEN=*),INTENT(OUT) :: WNW,EXE
  INTEGER,INTENT(IN) :: IPI,IDP
- INTEGER,INTENT(OUT) :: BACTION
- CHARACTER(LEN=STRLEN),POINTER,DIMENSION(:) :: FLIST
+ CHARACTER(LEN=STRLEN),POINTER,DIMENSION(:) :: FLIST => NULL()
  CHARACTER(LEN=256) :: DIRNAME,LINE,MENU,BACK
  CHARACTER(LEN=256),DIMENSION(6) :: STRING
- INTEGER :: IU,I,J
+ INTEGER :: IU,I,J,BACTION
  LOGICAL :: LEX
  
  PLUGIN_EXE_READ_INI=.FALSE.
@@ -437,44 +435,56 @@ CONTAINS
  
  CLOSE(IU)
  
- !## read variables from menu-file and read file-list into UTL_LISTOFFILES()
- IF(MENU.NE.'')THEN
-  IU=UTL_GETUNIT(); CALL OSD_OPEN(IU,FILE=TRIM(DIRNAME)//'\'//TRIM(MENU),STATUS='OLD',ACTION='READ')
-  IF(IU.EQ.0)RETURN
-  
-  STRING=''
-  IF(UTL_READINITFILE('WINDOW',LINE,IU,1)) READ(LINE,'(A)') STRING(1)
-  IF(UTL_READINITFILE('BUTTON1',LINE,IU,1))READ(LINE,*) STRING(2)
-  IF(UTL_READINITFILE('BUTTON2',LINE,IU,1))READ(LINE,*) STRING(3)
-  IF(UTL_READINITFILE('BUTTON3',LINE,IU,1))READ(LINE,*) STRING(4)
-  IF(UTL_READINITFILE('LIST',LINE,IU,1))   READ(LINE,*) STRING(5)
-  IF(UTL_READINITFILE('TEXT',LINE,IU,1))   READ(LINE,'(A)') STRING(6)
-  CLOSE(IU)
- 
-  !## include files in exe-window from selected place based upon predefined List-name
-  IF(TRIM(UTL_CAP(STRING(5),'U')).EQ.'IMODMANAGER')THEN  !#feeds from iMOD Manager
-   J=0; DO I=1,SIZE(MP); IF(MP(I)%IACT)J=J+1; ENDDO
-   !## no files found in the imod manager
-   IF(J.EQ.0)THEN
-    CALL WMESSAGEBOX(OKONLY,EXCLAMATIONICON,COMMONOK,'Menu window cannot be started: there are no files available in the iMOD Manager. '// &
-      'Inspect your plugin settings.','Warning');RETURN
-   ENDIF
-   ALLOCATE(FLIST(J))
-   DO I=1,J; FLIST(I)=MP(I)%IDFNAME; ENDDO
-  ENDIF
+ !## no menu keyword available, return
+ IF(MENU.EQ.'')THEN; PLUGIN_EXE_READ_INI=.TRUE.; RETURN; ENDIF
 
-  !## handling of files
-  CALL UTL_LISTOFFILES(FLIST,STRING,BACTION)
-   
-  IU=UTL_GETUNIT(); CALL OSD_OPEN(IU,FILE=TRIM(DIRNAME)//'\PLUG-IN.IN',STATUS='UNKNOWN',ACTION='WRITE')
-  IF(IU.EQ.0)RETURN
-  DO I=1,SIZE(FLIST); WRITE(IU,'(A)') TRIM(FLIST(I)); ENDDO
-  CLOSE(IU)
+ !## read variables from menu-file and read file-list into utl_listoffiles()
+ IU=UTL_GETUNIT(); CALL OSD_OPEN(IU,FILE=TRIM(DIRNAME)//'\'//TRIM(MENU),STATUS='OLD',ACTION='READ')
+ IF(IU.EQ.0)RETURN
   
+ STRING=''
+ IF(UTL_READINITFILE('LIST',LINE,IU,1))   READ(LINE,*)     STRING(1)
+ IF(UTL_READINITFILE('WINDOW',LINE,IU,1)) READ(LINE,'(A)') STRING(2)
+ IF(UTL_READINITFILE('BUTTON1',LINE,IU,1))READ(LINE,*)     STRING(3)
+ IF(UTL_READINITFILE('BUTTON2',LINE,IU,1))READ(LINE,*)     STRING(4)
+ IF(UTL_READINITFILE('BUTTON3',LINE,IU,1))READ(LINE,*)     STRING(5)
+ IF(UTL_READINITFILE('TEXT',LINE,IU,1))   READ(LINE,'(A)') STRING(6)
+ CLOSE(IU)
+ 
+ !## include files in exe-window from selected place based upon predefined List-name
+ IF(TRIM(UTL_CAP(STRING(1),'U')).EQ.'IMODMANAGER')THEN  !#feeds from iMOD Manager
+  !## make sure it is capitals from now on - esier to evaluate in later subroutines
+  STRING(1)='IMODMANAGER'
+  J=0; DO I=1,SIZE(MP); IF(MP(I)%IACT)J=J+1; ENDDO
+  !## no files found in the imod manager
+  IF(J.EQ.0)THEN
+   CALL WMESSAGEBOX(OKONLY,EXCLAMATIONICON,COMMONOK,'Menu window cannot be started: there are no files available in the iMOD Manager. '// &
+     'Inspect your plugin settings.','Warning'); RETURN
+  ENDIF
+  ALLOCATE(FLIST(J)); DO I=1,J; FLIST(I)=MP(I)%IDFNAME; ENDDO
+ ENDIF
+
+ !## handling of files
+ CALL UTL_LISTOFFILES(FLIST,STRING,BACTION)
+ !## selected the OK button
+ IF(BACTION.EQ.1)THEN
+    
+  IU=UTL_GETUNIT(); CALL OSD_OPEN(IU,FILE=TRIM(DIRNAME)//'\PLUG-IN.IN',STATUS='UNKNOWN',ACTION='WRITE')
+  IF(IU.NE.0)THEN
+   DO I=1,SIZE(FLIST); WRITE(IU,'(A)') TRIM(FLIST(I)); ENDDO; CLOSE(IU)
+  ENDIF
+ 
  ENDIF
   
- PLUGIN_EXE_READ_INI=.TRUE.
-  
+ !## return function value to be true whenever files are selected
+ IF(ASSOCIATED(FLIST))THEN
+  IF(SIZE(FLIST).GT.0)PLUGIN_EXE_READ_INI=.TRUE.
+  DEALLOCATE(FLIST)
+ ENDIF
+ 
+ !## process terminated by user
+ IF(BACTION.EQ.0)PLUGIN_EXE_READ_INI=.FALSE.
+ 
  END FUNCTION PLUGIN_EXE_READ_INI
 
  !###======================================================================
@@ -566,12 +576,10 @@ CONTAINS
  
  !#Reset extend of plotting window based upon given coordinates by plugin executable if "window" command is available
  IF(UTL_READINITFILE('WINDOW',LINE,IU,1))THEN
-  READ(LINE,*,IOSTAT=IOS) WINDOW(1),WINDOW(2),WINDOW(3),WINDOW(4)
+  READ(LINE,*,IOSTAT=IOS) WINDOW
   IF(IOS.EQ.0)THEN
-   MPW%XMIN=WINDOW(1)
-   MPW%XMAX=WINDOW(2)
-   MPW%YMIN=WINDOW(3)
-   MPW%YMAX=WINDOW(4) 
+   MPW%XMIN=WINDOW(1); MPW%YMIN=WINDOW(2)
+   MPW%XMAX=WINDOW(3); MPW%YMAX=WINDOW(4) 
   ELSE
    CALL WMESSAGEBOX(OKONLY,EXCLAMATIONICON,COMMONOK,'Window-option is empty/not defined.'//CHAR(13)// &
    'Results are plotted with default window extend.','Warning')    
