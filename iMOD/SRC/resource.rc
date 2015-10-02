@@ -8,13 +8,13 @@
 //
 // Winteracter resource script. 
 //
-// Modified : 02/Oct/2015 10:51:51
+// Modified : 02/Oct/2015 13:31:54
 //
 ///////////////////////////////////////////////////
 //
 // Include files
 //
-#include "..\LIB\WINTERACTER\OS_X32\include\winparam.h"
+#include "winparam.h"
 #ifdef XLIB
 #include "..\LIB\WINTERACTER\OS_X32\include\filesel.rc"
 #include "..\LIB\WINTERACTER\OS_X32\include\colour.rc"
@@ -1024,6 +1024,10 @@
 #define ID_DSOLID_ADJUST                  345
 #define ID_DLISTOFFILES1                  310
 #define ID_DLISTOFFILES2                  342
+#define ID_ICONLOCK_SELECT               2140
+#define ID_ICONLOCK_DESELECT             2142
+#define ID_ICONSNAPPEN_SELECT            2143
+#define ID_ICONSNAPPEN_DESELECT          2144
 
 ///////////////////////////////////////////////////
 //
@@ -9921,6 +9925,10 @@ ID_ICONEDIT                     BITMAP DISCARDABLE "..\\BMP\\edit.bmp"
 ID_ICONNUMBERS                  BITMAP DISCARDABLE "..\\BMP\\NUMBERS.BMP"
 ID_ICONZOOMPREVIOUS             BITMAP DISCARDABLE "..\\BMP\\zoomprevious.bmp"
 ID_ICONZOOMNEXT                 BITMAP DISCARDABLE "..\\BMP\\zoomnext.bmp"
+ID_ICONLOCK_SELECT              BITMAP DISCARDABLE "..\\BMP\\LOCK_select.bmp"
+ID_ICONLOCK_DESELECT            BITMAP DISCARDABLE "..\\BMP\\LOCK_deselect.BMP"
+ID_ICONSNAPPEN_SELECT           BITMAP DISCARDABLE "..\\BMP\\snappen_select.bmp"
+ID_ICONSNAPPEN_DESELECT         BITMAP DISCARDABLE "..\\BMP\\snappen_deselect.bmp"
 
 ///////////////////////////////////////////////////
 //
