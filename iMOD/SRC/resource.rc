@@ -8,7 +8,7 @@
 //
 // Winteracter resource script. 
 //
-// Modified : 02/Oct/2015 13:31:54
+// Modified : 02/Oct/2015 17:58:04
 //
 ///////////////////////////////////////////////////
 //
@@ -867,7 +867,6 @@
 #define ID_DSOLIDTAB2                     314
 #define ID_DSOLIDTAB1                     315
 #define ID_ICONOPENGL                    2119
-#define ID_ICONLOCK                      2120
 #define ID_CURSORMOVENWSE                2121
 #define ID_CURSORMOVENESW                2122
 #define IDD_TEMPLATE039                   168
@@ -1024,10 +1023,9 @@
 #define ID_DSOLID_ADJUST                  345
 #define ID_DLISTOFFILES1                  310
 #define ID_DLISTOFFILES2                  342
-#define ID_ICONLOCK_SELECT               2140
-#define ID_ICONLOCK_DESELECT             2142
-#define ID_ICONSNAPPEN_SELECT            2143
-#define ID_ICONSNAPPEN_DESELECT          2144
+#define ID_ICONLOCK_OPEN                 2140
+#define ID_ICONLOCK_CLOSE                2142
+#define ID_ICONSNAPPEN_NOT               2144
 
 ///////////////////////////////////////////////////
 //
@@ -9905,7 +9903,6 @@ ID_ICONFITDRILL                 BITMAP DISCARDABLE "..\\bmp\\fitdrill.bmp"
 ID_IPFLABEL                     BITMAP DISCARDABLE "..\\BMP\\ipflabel.bmp"
 ID_ICONOKAY                     BITMAP DISCARDABLE "..\\BMP\\okay.bmp"
 ID_ICONOPENGL                   BITMAP DISCARDABLE "..\\BMP\\ogl_sm.bmp"
-ID_ICONLOCK                     BITMAP DISCARDABLE "..\\BMP\\LOCK.BMP"
 ID_ICONFIT                      BITMAP DISCARDABLE "..\\BMP\\fit.bmp"
 ID_ICONMOVEARROW                BITMAP DISCARDABLE "..\\BMP\\move_arrows.bmp"
 ID_ICONCONTOUR                  BITMAP DISCARDABLE "..\\BMP\\contour.bmp"
@@ -9925,10 +9922,9 @@ ID_ICONEDIT                     BITMAP DISCARDABLE "..\\BMP\\edit.bmp"
 ID_ICONNUMBERS                  BITMAP DISCARDABLE "..\\BMP\\NUMBERS.BMP"
 ID_ICONZOOMPREVIOUS             BITMAP DISCARDABLE "..\\BMP\\zoomprevious.bmp"
 ID_ICONZOOMNEXT                 BITMAP DISCARDABLE "..\\BMP\\zoomnext.bmp"
-ID_ICONLOCK_SELECT              BITMAP DISCARDABLE "..\\BMP\\LOCK_select.bmp"
-ID_ICONLOCK_DESELECT            BITMAP DISCARDABLE "..\\BMP\\LOCK_deselect.BMP"
-ID_ICONSNAPPEN_SELECT           BITMAP DISCARDABLE "..\\BMP\\snappen_select.bmp"
-ID_ICONSNAPPEN_DESELECT         BITMAP DISCARDABLE "..\\BMP\\snappen_deselect.bmp"
+ID_ICONLOCK_OPEN                BITMAP DISCARDABLE "..\\BMP\\LOCK_select.bmp"
+ID_ICONLOCK_CLOSE               BITMAP DISCARDABLE "..\\BMP\\LOCK_deselect.BMP"
+ID_ICONSNAPPEN_NOT              BITMAP DISCARDABLE "..\\BMP\\snappen_deselect.bmp"
 
 ///////////////////////////////////////////////////
 //
@@ -10086,5 +10082,5 @@ END
 //*WI* FORTSAVE    1
 //*WI* FILENAME    resource.f90
 //*WI* FMODNAME    RESOURCE
-//*WI* LASTTYPE        2
-//*WI* LASTRES       244
+//*WI* LASTTYPE        4
+//*WI* LASTRES       121
