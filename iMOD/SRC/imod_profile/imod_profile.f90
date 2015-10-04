@@ -753,11 +753,11 @@ CONTAINS
    CALL IGRCOLOURN(LINECOLORPLOT)
 
    IF(LLINE)THEN
-!    CALL IGRLINEWIDTH(LINEWIDTHPLOT)
-!    CALL IGRCOLOURN(LINECOLORPLOT)
     CALL IGRJOIN(XY(1,NXY),XY(2,NXY),XCRD,YCRD)
     !## removing optional plot viewing 'window' for particle/point plotting
     CALL PROFILE_PLOTVIEWBOX(XY(1,NXY),XY(2,NXY),XCRD,YCRD)
+    CALL IGRLINEWIDTH(LINEWIDTHPLOT)
+    CALL IGRCOLOURN(LINECOLORPLOT)
    ENDIF
    !## plot profile line and optional viewing 'window' for particle/point plotting
    LLINE=.TRUE.

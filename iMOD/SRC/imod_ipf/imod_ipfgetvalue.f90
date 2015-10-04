@@ -882,10 +882,12 @@ CONTAINS
         IPF(JIPF)%IP(ISEL)=INT(0,1)
        ELSE
         !## look for correct location in grid, to highlight
-        DO I=1,ASSF(1)%NRASS-1
-         IF(ASSF(1)%Z(I).GE.IPFMESSAGE%GY.AND.ASSF(1)%Z(I+1).LE.IPFMESSAGE%GY)EXIT         
-        ENDDO
-        CALL WGRIDSETCELL(IDF_GRID1,1,I)
+        IF(ALLOCATED(ASSF))THEN
+         DO I=1,ASSF(1)%NRASS-1
+          IF(ASSF(1)%Z(I).GE.IPFMESSAGE%GY.AND.ASSF(1)%Z(I+1).LE.IPFMESSAGE%GY)EXIT         
+         ENDDO
+         CALL WGRIDSETCELL(IDF_GRID1,1,I)
+        ENDIF
        ENDIF
 
       ENDIF 
