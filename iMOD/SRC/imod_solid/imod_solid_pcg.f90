@@ -74,9 +74,9 @@ CONTAINS
  REAL,DIMENSION(:,:),ALLOCATABLE :: XPINT
   
  !## solid tool from iMOD
- IF(IBATCH.EQ.0)THEN; IECHO= 0; IBNDCHK=0; ENDIF
+ IF(IBATCH.EQ.0)THEN; IECHO= 0; ENDIF
  !## solid tool from iMOD Batch
- IF(IBATCH.EQ.1)THEN; IECHO=-2; IDAMPING=0; RELAX=0.98; ENDIF
+ IF(IBATCH.EQ.1)THEN; IECHO=-2; IDAMPING=0; RELAX=0.98; IINT_IDF=1; ENDIF
 
  DO I=1,SIZE(IDFK); CALL IDFNULLIFY(IDFK(I)); ENDDO
  
@@ -213,7 +213,7 @@ CONTAINS
 !solidf(ilay)%x=pcg(1)%cc
 !if(.not.idfwrite(solidf(ilay),'d:\cc.idf',1))return
 !solidf(ilay)%x=pcg(1)%cr
-!if(.not.idfwrite(solidf(ilay),'d:\cr.idf',1))return
+!!if(.not.idfwrite(solidf(ilay),'d:\cr.idf',1))return
 !solidf(ilay)%x=pcg(1)%rhs
 !if(.not.idfwrite(solidf(ilay),'d:\rhs.idf',1))return
 !solidf(ilay)%x=pcg(1)%hcof
@@ -657,6 +657,8 @@ CONTAINS
        SLD(1)%ICHECK(I)=ICHECK(I+1)
        SLD(1)%XRESOLUTION(I)=XRESOLUTION(I+1)
       ENDDO
+      CALL WDIALOGGETCHECKBOX(IDF_CHECK6,IINT_IDF)
+      CALL WDIALOGGETCHECKBOX(IDF_CHECK5,IBNDCHK)
       CALL WDIALOGGETCHECKBOX(IDF_CHECK4,I)
       LSPLINE=.FALSE.; IF(I.EQ.1)LSPLINE=.TRUE.
       CALL WDIALOGGETCHECKBOX(IDF_CHECK3,I)
@@ -916,7 +918,7 @@ CONTAINS
  COND=(SOLIDF(JLAY)%DX*SOLIDF(JLAY)%DY)/C
  
  !## make sure interfaces do not cross with top- and bottom interfaces
- IF(.false.)then !ICHECK_IDF(JLAY).EQ.1)THEN
+ IF(IINT_IDF.EQ.1)THEN 
  
   !## fill dh with minimal thickness for aquifer
 
@@ -1191,6 +1193,11 @@ CONTAINS
     DO IPOS=2,SIZE(PX) !N 
      DX=PX(IPOS)-PX(IPOS-1); DZZ=PZ(IPOS)-PZ(IPOS-1)
      !## gradient (+) up (-) down
+
+IF(DX.EQ.0)THEN
+WRITE(*,*) 
+ENDIF
+
      G =DZZ/DX
      !## scan distance-table
      DO I=1,NLOC
@@ -1641,9 +1648,9 @@ CONTAINS
      IC=YSEL(1,I); IR=YSEL(2,I)
      PCG(ILAY)%IB(IC,IR)=0 !; PCG(ILAY)%HOLD(IC,IR)=HNOFLOW
     ENDDO
-!    WRITE(*,*) 'Removed ',N,' of modelcells that are not attached to a constant head'
-!   ELSE
-!    WRITE(*,*) 'Nothing removed' 
+    WRITE(*,*) 'Removed ',N,' of modelcells that are not attached to a constant head'
+   ELSE
+    WRITE(*,*) 'Nothing removed' 
    ENDIF
   ENDIF
  ENDDO; ENDDO
