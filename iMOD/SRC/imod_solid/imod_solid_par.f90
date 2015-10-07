@@ -36,6 +36,7 @@ TYPE SPFOBJ_PROF
  INTEGER :: NPOS                 !## number of points on cross-section
  INTEGER :: ICLR                 !## colour of the cross-section
  INTEGER :: IWIDTH               !## width of the cross-section
+ INTEGER :: IACTIVE              !## line active or not in interpolation
  CHARACTER(LEN=52) :: LNAME      !## line label
 END TYPE SPFOBJ_PROF
 

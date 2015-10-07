@@ -1080,10 +1080,9 @@ CONTAINS
   !## include masks (ibound)
   IF(NMASK.GT.0)THEN
    DO ILAY=1,NMASK
-!    IF(.NOT.IDFREAD(MASK(ILAY)%IDF,MASK(ILAY)%FNAME,1))RETURN
     CALL IDFCOPY(SOLIDF(ILAY),MASK(ILAY)%IDF)
     IF(.NOT.IDFREADSCALE(MASK(ILAY)%FNAME,MASK(ILAY)%IDF,1,1,0.0,0))RETURN
-    !## mask equal to solidf()  IF(.NOT.IDFREADSCALE(SLD(1)%INTNAME(I),SOLIDF(I),2,1,0.0,0))RETURN !## scale use mean algorithm
+    !## mask equal to solidf()  
     IF(.NOT.IDFEQUAL(MASK(ILAY)%IDF,SOLIDF(ILAY),1))RETURN
     DO IROW=1,SOLIDF(ILAY)%NROW; DO ICOL=1,SOLIDF(ILAY)%NCOL
      !## values in between -1,0,2
@@ -1128,7 +1127,10 @@ CONTAINS
 
    !## do for number of cross-sections
    DO ISPF=1,NSPF
-
+    
+    !## skip lines that do not need to be processed
+    IF(SPF(ISPF)%PROF(ILAY)%IACTIVE.EQ.0)CYCLE
+    
     !## get max. length
     DX=0.0
     DO I=2,SPF(ISPF)%NXY
@@ -1436,6 +1438,8 @@ ENDIF
   !## get number of layers to interpolate
   N=0; DO ISPF=1,NSPF; DO I=1,NTBSOL
    IF(I.NE.ILAY)CYCLE
+   !## skip lines that do not need to be processed
+   IF(SPF(ISPF)%PROF(I)%IACTIVE.EQ.0)CYCLE
    N=N+SPF(ISPF)%PROF(I)%NPOS
   ENDDO; ENDDO
   IF(ALLOCATED(XD))DEALLOCATE(XD)
@@ -1450,6 +1454,8 @@ ENDIF
   !## number of layers to interpolate
   DO I=1,NTBSOL
    IF(SPF(ISPF)%PROF(I)%NPOS.LE.0)CYCLE
+   !## skip lines that do not need to be processed
+   IF(SPF(ISPF)%PROF(I)%IACTIVE.EQ.0)CYCLE
    !## process each pos() 
    DO IPOS=1,SPF(ISPF)%PROF(I)%NPOS
     CALL SOLID_GETLOCATION(SPF(ISPF)%PROF(I)%PX(IPOS),XP,YP,SPF(ISPF)%X,SPF(ISPF)%Y)  

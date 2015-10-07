@@ -8,7 +8,7 @@
 //
 // Winteracter resource script. 
 //
-// Modified : 06/Oct/2015 17:44:29
+// Modified : 07/Oct/2015 15:42:44
 //
 ///////////////////////////////////////////////////
 //
@@ -1026,6 +1026,8 @@
 #define ID_ICONLOCK_OPEN                 2140
 #define ID_ICONLOCK_CLOSE                2142
 #define ID_ICONSNAPPEN_NOT               2144
+#define ID_ACTIVELINE                   40257
+#define ID_DEACTIVELINE                 40258
 
 ///////////////////////////////////////////////////
 //
@@ -8998,38 +9000,49 @@ END
 
 ID_MENU3 MENU
 BEGIN
-    MENUITEM "Delete Current Node?",                     ID_DELNODE
-    MENUITEM "Change Line Colour ...",                   ID_LINECOLOR
-    POPUP "Change Line Thickness"
+    MENUITEM "Delete Current Node",                      ID_DELNODE
+    MENUITEM SEPARATOR
+    MENUITEM "Change Current Line Colour ...",           ID_LINECOLOR
+    POPUP "Change Current Line Thickness"
     BEGIN
         MENUITEM "Thin (1)",                                 ID_LTHICKNESS1
         MENUITEM "Normal (2)",                               ID_LTHICKNESS2
         MENUITEM "Thick (3)",                                ID_LTHICKNESS3
     END
+    MENUITEM SEPARATOR
+    MENUITEM "Activate Current Line",                    ID_ACTIVELINE
+    MENUITEM "Deactivate Current Line",                  ID_DEACTIVELINE
 END
 
 ID_MENU3 RCDATA
 BEGIN
-ID_CHANGETHICKNESS,3,0,
+ID_CHANGETHICKNESS,4,0,
 0
 END
 
 ID_MENU3 ISSMENUSTRING
 BEGIN
 ID_LINECOLOR,"Change the Line Colour for the selected typology\0",
+ID_DELNODE,"Delete the current selected node\0",
+ID_CHANGETHICKNESS,"Change the Line Thickness\0",
+ID_LTHICKNESS1,"Change the linethickness to Thin\0",
+ID_LTHICKNESS2,"Change the linethickness to Normal\0",
+ID_LTHICKNESS3,"Change the linethickness to Thick\0",
+ID_ACTIVELINE,"Select this Item to Select the line for processing in the solid\0",
+ID_DEACTIVELINE,"Select this Item to Select the line to skip for processing in the solid\0",
 0
 END
 
 ID_MENU4 MENU
 BEGIN
     MENUITEM "Adjust Legend ...",                        ID_ADJUSTLEGEND
-    POPUP "Current Domain"
+    POPUP "Current Zoom Level"
     BEGIN
         MENUITEM "Percentiles",                              ID_CDLNL
         MENUITEM "Linear",                                   ID_CDLL
         MENUITEM "&Unique Values",                           ID_CDUV
     END
-    POPUP "Entire Domain"
+    POPUP "Entire Extent"
     BEGIN
         MENUITEM "Percentiles",                              ID_TDLNL
         MENUITEM "Linear",                                   ID_TDLL
@@ -9722,7 +9735,11 @@ ID_WTIMENU MENU
 BEGIN
     MENUITEM "Change Label [name]",                      ID_ADDLINELABEL
     MENUITEM "Add Knickpoint",                           ID_WTIADD
+    MENUITEM SEPARATOR
     MENUITEM "Select Nodes",                             ID_SELECTNODES
+    MENUITEM SEPARATOR
+    MENUITEM "Activate Current Line",                    ID_ACTIVELINE
+    MENUITEM "Deactivate Current Line",                  ID_DEACTIVELINE
 END
 
 ID_WTIMENU RCDATA
@@ -9735,6 +9752,8 @@ BEGIN
 ID_WTIADD,"Add a Knickpoint to the Cross-section\0",
 ID_ADDLINELABEL,"Add Label for Area below line\0",
 ID_SELECTNODES,"Click this option to select nodes\0",
+ID_ACTIVELINE,"Select this Item to Select the line for processing in the solid\0",
+ID_DEACTIVELINE,"Select this Item to Select the line to skip for processing in the solid\0",
 0
 END
 
@@ -10090,5 +10109,5 @@ END
 //*WI* FORTSAVE    1
 //*WI* FILENAME    resource.f90
 //*WI* FMODNAME    RESOURCE
-//*WI* LASTTYPE        2
-//*WI* LASTRES       204
+//*WI* LASTTYPE        1
+//*WI* LASTRES         4
