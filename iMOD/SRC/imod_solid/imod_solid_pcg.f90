@@ -1177,8 +1177,13 @@ CONTAINS
      DO J=1,N
       !## count number of locations
       NLOC=NLOC+1; IC(NLOC)=INT(XA(J)); IR(NLOC)=INT(YA(J))
-      IF(J.EQ.1)TL(NLOC)=TL(NLOC-1)+0.5*LN(J)
-      IF(J.GT.1)TL(NLOC)=TL(NLOC-1)+0.5*LN(J-1)+0.5*LN(J)
+      IF(J.EQ.1)THEN
+       TL(NLOC)=TL(NLOC-1)+0.5*LN(J)
+      ELSEIF(J.EQ.N)THEN
+       TL(NLOC)=TL(NLOC-1)+0.5*LN(J-1)+LN(J)
+      ELSE
+       TL(NLOC)=TL(NLOC-1)+0.5*LN(J-1)+0.5*LN(J)
+      ENDIF
      ENDDO
       
     ENDDO
@@ -1192,7 +1197,7 @@ CONTAINS
      N=SPF(ISPF)%PROF(ILAY)%NPOS
     ENDIF
 
-    DO IPOS=2,SIZE(PX) !N 
+    DO IPOS=2,SIZE(PX)  
      DX=PX(IPOS)-PX(IPOS-1); DZZ=PZ(IPOS)-PZ(IPOS-1)
      !## gradient (+) up (-) down
 
@@ -1205,17 +1210,18 @@ ENDIF
      DO I=1,NLOC
       !## within current segment and within model domain
       IF(TL(I).GE.PX(IPOS-1).AND. &
-         TL(I).LE.PX(IPOS).AND. &
+         TL(I).LE.PX(IPOS).AND.   &
          IC(I).GE.1.AND.IC(I).LE.SOLIDF(ILAY)%NCOL.AND. &
          IR(I).GE.1.AND.IR(I).LE.SOLIDF(ILAY)%NROW)THEN
 
        !## active location with n mask-value present
-       IF(PCG(ILAY)%IB(IC(I),IR(I)).EQ.1)THEN
+       !## PETER
+       IF(PCG(ILAY)%IB(IC(I),IR(I)).EQ.1.OR.PCG(ILAY)%IB(IC(I),IR(I)).EQ.-2)THEN
 
         PCG(ILAY)%IB(IC(I),IR(I))=-2
         PCG(ILAY)%RHS(IC(I),IR(I)) = PCG(ILAY)%RHS(IC(I),IR(I))+1.0
 
-        IF(PCG(ILAY)%RHS(IC(I),IR(I)).EQ.1)THEN
+        IF(PCG(ILAY)%RHS(IC(I),IR(I)).EQ.1.0)THEN
          !## overwrite HOLD with new value
          PCG(ILAY)%HOLD(IC(I),IR(I))=PZ(IPOS-1)+(TL(I)-PX(IPOS-1))*G
         ELSE
