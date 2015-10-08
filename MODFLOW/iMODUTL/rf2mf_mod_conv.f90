@@ -161,6 +161,7 @@
          integer :: isub   = -1
          real    :: factor = -1.
          logical :: lisg   = .false.
+         logical :: active = .true.
 !         type(tArrayRead), dimension(maxcol) :: data
          type(tArrayRead), dimension(:), pointer :: data
       end type tSubsys
@@ -2386,9 +2387,11 @@
       implicit none
 
 !...     locals
-      integer :: cfn_getlun, lun, iper, isub, n, i, luncb, ilay
+      integer :: cfn_getlun, lun, iper, isub, jsub, n, i, luncb, ilay, jlay, flag(nlay)
       character(len=maxlen) :: nstr
-      character(len=maxlen), dimension(3) :: str
+      character(len=maxlen), dimension(4) :: str
+      logical :: linterp, lfound
+      type(tArrayRead), pointer :: dataptr
 !.......................................................................
 
 !...     return in case package is not active
@@ -2405,6 +2408,48 @@
 !...     write chd file
       write(lun,'(a,1x,a)') '#', trim(chd%text)
 
+!...    check for factor usage
+      linterp = .false.
+      do iper = 1, nper
+         if (.not.chd%sp(iper)%reuse) then
+            n = chd%sp(iper)%gcd%nsubsys
+            if (n.gt.nlay) linterp = .true.
+         end if   
+      end do
+      if (linterp) then
+         do iper = 1, nper
+            if (.not.chd%sp(iper)%reuse) then
+               n = chd%sp(iper)%gcd%nsubsys
+               if (n.gt.nlay) then
+                  flag = 0
+                  do isub = 1, n
+                     ilay = chd%sp(iper)%gcd%subsys(isub)%ilay
+                     if (flag(ilay).eq.0) then
+                        lfound = .false.
+                        do jsub = 1, n
+                           if (jsub.ne.isub .and. chd%sp(iper)%gcd%subsys(jsub)%ilay.eq.ilay) then
+                              chd%sp(iper)%gcd%subsys(jsub)%active = .false. 
+                              dataptr => chd%sp(iper)%gcd%subsys(jsub)%data(1)
+                              lfound = .true.; exit
+                           end if
+                        end do
+                        if (.not.lfound) then
+                           write(*,*) 'Error, incomplete CHD data for applying factor'; stop 1
+                        end if
+                        chd%sp(iper)%gcd%subsys(isub)%data(2) = dataptr
+                        flag(ilay) = 1
+                     end if   
+                  end do
+               else
+                  do isub = 1, n
+                     chd%sp(iper)%gcd%subsys(isub)%data(2)%keyword='constant'
+                     chd%sp(iper)%gcd%subsys(isub)%data(2)%cnstnt=0.0
+                  end do                   
+               end if    
+           end if    
+         end do    
+      end if
+         
 !...     write mxactc
       n = 1
       write(str(n),*) chd%mxactc
@@ -2414,6 +2459,10 @@
          n = n + 1
          write(str(n),*) 'negbnd'
       end if
+      if(linterp) then
+         n = n + 1
+         write(str(n),*) 'interp'
+      end if          
       write(nstr,*) n
       write(lun,'('//trim(nstr)//'(a,1x))')(trim(adjustl(str(i))), i = 1, n)
       call writeSPckSPer(lun, nper, chd%sp, pckftype(chd%type))
@@ -2584,16 +2633,30 @@
       integer :: cfn_getlun
 
 !...     locals
-      integer :: isub, icol, i
+      integer :: isub, jsub, icol, i, nsubsys
       character(len=maxlen), dimension(5) :: str
+      logical :: lrenum
 !.......................................................................
 
 !...     open gcd file
-      write(str(1),*) gcd%nsubsys
-      write(lun,'(a)') trim(adjustl(str(1)))
+      nsubsys = 0; lrenum = .false.
       do isub = 1, gcd%nsubsys
+         if (gcd%subsys(isub)%active) nsubsys = nsubsys + 1
+      end do  
+      if (gcd%nsubsys.ne.nsubsys) lrenum = .true.
+      
+      write(str(1),*) nsubsys
+      write(lun,'(a)') trim(adjustl(str(1)))
+      jsub = 0
+      do isub = 1, gcd%nsubsys
+         if (.not.gcd%subsys(isub)%active) cycle     
+         jsub = jsub + 1
          write(str(1),*) gcd%subsys(isub)%ilay
-         write(str(2),*) gcd%subsys(isub)%isub
+         if (lrenum) then
+            write(str(2),*) jsub
+         else   
+            write(str(2),*) gcd%subsys(isub)%isub
+         end if   
          write(lun,'(2(a,1x))')(trim(adjustl(str(i))), i = 1, 2)
          do icol = 1, gcd%ncolumns
             call WriteArrayRead(gcd%subsys(isub)%data(icol),lun) ! column data

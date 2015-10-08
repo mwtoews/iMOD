@@ -126,11 +126,20 @@ c local variables
       character(len=200) :: line
       character(len=256) :: str, fname, tmplabel
       integer, dimension(10) :: jjj
-      data jjj/2,1,3,4,5,6,7,8,9,10/
 
 c program section
 c ------------------------------------------------------------------------------
 c
+      jjj = 0
+      do i = 1, 10
+         jjj(i) = i
+      end do   
+      if (label(1:3).eq.'CHD') then
+         jjj(1) = 1; jjj(2) = 2
+      else
+         jjj(1) = 2; jjj(2) = 1
+      end if
+
 c set pointers
       call sgwf2bas7pnt(1)
 

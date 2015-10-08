@@ -33,12 +33,14 @@ c   If not, see <http://water.usgs.gov/software/help/notice/>.
         INTEGER,SAVE,POINTER  ::NCHDS,MXCHD,NCHDVL,IPRCHD
         INTEGER,SAVE,POINTER  ::NPCHD,ICHDPB,NNPCHD
         integer,save,pointer  ::inegbnd                                 ! DLT
+        integer,save,pointer  ::iinterp                                 ! DLT
         CHARACTER(LEN=16),SAVE, DIMENSION(:),   POINTER     ::CHDAUX
         REAL,             SAVE, DIMENSION(:,:), POINTER     ::CHDS
       TYPE GWFCHDTYPE
         INTEGER,POINTER  ::NCHDS,MXCHD,NCHDVL,IPRCHD
         INTEGER,POINTER  ::NPCHD,ICHDPB,NNPCHD
         integer,pointer  ::inegbnd                                      ! DLT
+        integer,pointer  ::iinterp                                      ! DLT
         CHARACTER(LEN=16), DIMENSION(:),   POINTER     ::CHDAUX
         REAL,              DIMENSION(:,:), POINTER     ::CHDS
       END TYPE
@@ -57,12 +59,13 @@ C     ------------------------------------------------------------------
       USE GLOBAL,      ONLY:IOUT,NCOL,NROW,NLAY,IFREFM
       USE GWFCHDMODULE,ONLY:NCHDS,MXCHD,NCHDVL,IPRCHD,NPCHD,ICHDPB,
      1                      NNPCHD,CHDAUX,CHDS,
-     1                      inegbnd                                     ! DLT
+     1                      inegbnd, iinterp                            ! DLT
       CHARACTER*200 LINE
 C     ------------------------------------------------------------------
       ALLOCATE(NCHDS,MXCHD,NCHDVL,IPRCHD)
       ALLOCATE(NPCHD,ICHDPB,NNPCHD)
       allocate(inegbnd)                                                 ! DLT
+      allocate(iinterp)                                                 ! DLT
 C
 C1------IDENTIFY OPTION AND INITIALIZE # OF SPECIFIED-HEAD CELLS
       WRITE(IOUT,1)IN
@@ -71,6 +74,7 @@ C1------IDENTIFY OPTION AND INITIALIZE # OF SPECIFIED-HEAD CELLS
       NCHDS=0
       NNPCHD=0
       inegbnd=0                                                         ! DLT
+      iinterp=0                                                         ! DLT
 C
 C2------READ AND PRINT MXCHD (MAXIMUM NUMBER OF SPECIFIED-HEAD
 C2------CELLS TO BE SPECIFIED EACH STRESS PERIOD)
@@ -110,6 +114,9 @@ C3------READ AUXILIARY VARIABLES AND PRINT OPTION
          GO TO 10
       else if(line(istart:istop).eq.'NEGBND') then                      ! DLT
          inegbnd=1                                                      ! DLT
+         goto 10                                                        ! DLT
+      else if(line(istart:istop).eq.'INTERP') then                      ! DLT
+         iinterp=1                                                      ! DLT
          goto 10                                                        ! DLT
       END IF                                                            ! DLT
       NCHDVL=5+NAUX
@@ -166,9 +173,10 @@ C     ------------------------------------------------------------------
       USE GLOBAL,      ONLY:IOUT,NCOL,NROW,NLAY,IFREFM,IBOUND
       USE GWFCHDMODULE,ONLY:NCHDS,MXCHD,NCHDVL,IPRCHD,NPCHD,ICHDPB,
      1                      NNPCHD,CHDAUX,CHDS,
-     1                      inegbnd                                     ! DLT
+     1                      inegbnd, iinterp                            ! DLT
       real, dimension(:,:), allocatable :: tmplist                      ! DLT
       integer :: il,ir,ic                                               ! DLT
+      real :: val                                                       ! DLT
 C     ------------------------------------------------------------------
       CALL SGWF2CHD7PNT(IGRID)
 C
@@ -220,7 +228,7 @@ C3------IF THERE ARE NEW NON-PARAMETER CHDS, READ THEM
       END IF
 
 c...      clip for aux variable < 0 in case NEGBND is specified
-      if (inegbnd.gt.0) then                                            ! DLT
+      if (inegbnd.gt.0.and.itmp.gt.0) then                              ! DLT
          nchds = 0                                                      ! DLT
          do i = 1, nnpchd                                               ! DLT
             il=chds(1,i)                                                ! DLT
@@ -247,6 +255,15 @@ c...      clip for aux variable < 0 in case NEGBND is specified
          end if                                                         ! DLT
          nnpchd = nchds                                                 ! DLT
          mxchd = nchds                                                  ! DLT
+      end if                                                            ! DLT
+      
+c...      set average value
+      if (iinterp.gt.0.and.itmp.gt.0) then                              ! DLT
+         do i = 1, nchds                                                ! DLT
+            val = chds(4,i) + chds(5,i)                                 ! DLT
+            chds(4,i) = val                                             ! DLT
+            chds(5,i) = val                                             ! DLT
+          end do                                                        ! DLT
       end if                                                            ! DLT
 
       NCHDS=NNPCHD
@@ -326,7 +343,7 @@ C
 C3------GET COLUMN, ROW AND LAYER OF CELL CONTAINING BOUNDARY
       IL=CHDS(1,L)
       IR=CHDS(2,L)
-      IC=CHDS(3,L)
+      IC=CHDS(3,L)     
 C
       IF (PERLEN(KPER).EQ.0.0 .AND. CHDS(4,L).NE.CHDS(5,L)) THEN
         WRITE(IOUT,200)IL,IR,IC
@@ -361,6 +378,7 @@ C
         DEALLOCATE(GWFCHDDAT(IGRID)%CHDAUX)
         DEALLOCATE(GWFCHDDAT(IGRID)%CHDS)
         deallocate(gwfchddat(igrid)%inegbnd)                            ! DLT
+        deallocate(gwfchddat(igrid)%iinterp)                            ! DLT
 C
       RETURN
       END
@@ -378,6 +396,7 @@ C
         CHDAUX=>GWFCHDDAT(IGRID)%CHDAUX
         CHDS=>GWFCHDDAT(IGRID)%CHDS
         inegbnd=>gwfchddat(igrid)%inegbnd                               ! DLT
+        iinterp=>gwfchddat(igrid)%iinterp                               ! DLT
 C
       RETURN
       END
@@ -395,6 +414,7 @@ C
         GWFCHDDAT(IGRID)%CHDAUX=>CHDAUX
         GWFCHDDAT(IGRID)%CHDS=>CHDS
         gwfchddat(igrid)%inegbnd=>inegbnd                               ! DLT
+        gwfchddat(igrid)%iinterp=>iinterp                               ! DLT
 C
       RETURN
       END
