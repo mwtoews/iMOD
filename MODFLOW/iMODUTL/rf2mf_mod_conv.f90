@@ -2434,10 +2434,12 @@
                            end if
                         end do
                         if (.not.lfound) then
-                           write(*,*) 'Error, incomplete CHD data for applying factor'; stop 1
-                        end if
-                        chd%sp(iper)%gcd%subsys(isub)%data(2) = dataptr
-                        flag(ilay) = 1
+                           chd%sp(iper)%gcd%subsys(isub)%data(2)%keyword='constant'
+                           chd%sp(iper)%gcd%subsys(isub)%data(2)%cnstnt=0.0
+                        else
+                           chd%sp(iper)%gcd%subsys(isub)%data(2) = dataptr
+                           flag(ilay) = 1
+                        end if   
                      end if   
                   end do
                else
