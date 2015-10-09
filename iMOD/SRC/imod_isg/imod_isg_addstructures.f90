@@ -219,7 +219,7 @@ CONTAINS
 !    WP=WP+0.15
 !   ENDIF
    
-   !## check whether current structure id allready exists within isg, get distance too!
+   !## check whether current structure id already exists within isg, get distance too!
    IF(ISGSTUWEN_CHECKID(IISG,IIST))THEN
     !## compute x/y coordinates and angle for current structure
     CALL ISGSTUWEN_COMPUTEXY(IISG,IIST)

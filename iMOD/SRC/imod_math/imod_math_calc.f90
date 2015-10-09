@@ -124,7 +124,7 @@ CONTAINS
     INQUIRE(FILE=IDFNAMES(IREPEAT,3),EXIST=LEX)
     IF(LEX)THEN
      CALL WMESSAGEBOX(YESNO,QUESTIONICON,COMMONNO,'Output Map: '//TRIM(IDFNAMES(IREPEAT,3))//CHAR(13)// &
-     'allready exists, overwrite it (choose yes) or cancel (choose no) ?','Question')
+     'already exists, overwrite it (choose yes) or cancel (choose no) ?','Question')
      IF(WINFODIALOG(4).NE.1)RETURN
     ENDIF
    ENDIF

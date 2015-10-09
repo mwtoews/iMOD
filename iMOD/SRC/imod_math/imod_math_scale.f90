@@ -144,7 +144,7 @@ CONTAINS
    INQUIRE(FILE=OUTNAMES(I),EXIST=LEX)
    IF(LEX)THEN
     CALL WMESSAGEBOX(YESNO,QUESTIONICON,COMMONNO,'Output Map: '//TRIM(OUTNAMES(I))//CHAR(13)// &
-    'allready exists, overwrite it?','Question')
+    'already exists, overwrite it?','Question')
     IF(WINFODIALOG(4).NE.1)RETURN
    ENDIF
   ENDDO

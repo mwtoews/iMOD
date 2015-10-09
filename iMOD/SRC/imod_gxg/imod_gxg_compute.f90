@@ -110,25 +110,25 @@ CONTAINS
    INQUIRE(FILE=FGLG,EXIST=LEX)
    IF(LEX)THEN
     CALL WMESSAGEBOX(YESNO,QUESTIONICON,COMMONNO,'Current file:'//CHAR(13)// &
-     TRIM(FGLG)//CHAR(13)//'allready exists overwrite it and continue?','Question')
+     TRIM(FGLG)//CHAR(13)//'already exists overwrite it and continue?','Question')
     IF(WINFODIALOG(4).NE.1)RETURN
    ENDIF
    INQUIRE(FILE=FGHG,EXIST=LEX)
    IF(LEX)THEN
     CALL WMESSAGEBOX(YESNO,QUESTIONICON,COMMONNO,'Current file:'//CHAR(13)// &
-     TRIM(FGHG)//CHAR(13)//'allready exists overwrite it and continue?','Question')
+     TRIM(FGHG)//CHAR(13)//'already exists overwrite it and continue?','Question')
     IF(WINFODIALOG(4).NE.1)RETURN
    ENDIF
    INQUIRE(FILE=FGHG,EXIST=LEX)
    IF(LEX)THEN
     CALL WMESSAGEBOX(YESNO,QUESTIONICON,COMMONNO,'Current file:'//CHAR(13)// &
-     TRIM(FGHG)//CHAR(13)//'allready exists overwrite it and continue?','Question')
+     TRIM(FGHG)//CHAR(13)//'already exists overwrite it and continue?','Question')
     IF(WINFODIALOG(4).NE.1)RETURN
    ENDIF
    INQUIRE(FILE=FGVG,EXIST=LEX)
    IF(LEX)THEN
     CALL WMESSAGEBOX(YESNO,QUESTIONICON,COMMONNO,'Current file:'//CHAR(13)// &
-     TRIM(FGVG)//CHAR(13)//'allready exists overwrite it and continue?','Question')
+     TRIM(FGVG)//CHAR(13)//'already exists overwrite it and continue?','Question')
     IF(WINFODIALOG(4).NE.1)RETURN
    ENDIF
   ENDIF

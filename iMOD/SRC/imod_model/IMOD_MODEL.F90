@@ -1036,7 +1036,7 @@ MAINLOOP: DO
       IF(TRIM(SUBMAP).NE.'')FNAMETO=TRIM(RESDIR)//'\'//TRIM(SUBMAP)//'\VERSION_1\'//TRIM(FNAME(INDEX(FNAME,'\',.TRUE.)+1:))
      ENDIF
      
-     !## filename allready exists
+     !## filename already exists
      INQUIRE(FILE=FNAMETO,EXIST=LEX)
      !## boundaries always because of the boundary file that could be used previously
      IF(TRIM(SUBMAP).EQ.'BND')LEX=.FALSE.
@@ -1146,8 +1146,8 @@ MAINLOOP: DO
 
       ENDIF
      ELSE
-      IF(IBATCH.EQ.0)CALL WINDOWOUTSTATUSBAR(4,TRIM(FNAMETO)//' allready exists!')
-      IF(IBATCH.EQ.1)WRITE(*,'(A)') TRIM(FNAMETO)//' allready exists!'
+      IF(IBATCH.EQ.0)CALL WINDOWOUTSTATUSBAR(4,TRIM(FNAMETO)//' already exists!')
+      IF(IBATCH.EQ.1)WRITE(*,'(A)') TRIM(FNAMETO)//' already exists!'
      ENDIF
      LINE=UTL_SUBST(LINE,TRIM(FNAME),TRIM(FNAMETO))
      EXIT

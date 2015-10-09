@@ -122,7 +122,7 @@ CONTAINS
   IF(LEX)THEN
    IF(IBATCH.EQ.0)THEN
     CALL WMESSAGEBOX(YESNO,QUESTIONICON,COMMONNO,'Current file:'//CHAR(13)// &
-     TRIM(MEAN_FMEAN(II))//CHAR(13)//'allready exists overwrite it and continue?','Question')
+     TRIM(MEAN_FMEAN(II))//CHAR(13)//'already exists overwrite it and continue?','Question')
     IF(WINFODIALOG(4).NE.1)RETURN
    ENDIF
   ENDIF
@@ -130,7 +130,7 @@ CONTAINS
   IF(LEX)THEN
    IF(IBATCH.EQ.0)THEN
     CALL WMESSAGEBOX(YESNO,QUESTIONICON,COMMONNO,'Current file:'//CHAR(13)// &
-     TRIM(MEAN_FTOTAL(II))//CHAR(13)//'allready exists overwrite it and continue?','Question')
+     TRIM(MEAN_FTOTAL(II))//CHAR(13)//'already exists overwrite it and continue?','Question')
     IF(WINFODIALOG(4).NE.1)RETURN
    ENDIF
   ENDIF
@@ -552,7 +552,7 @@ CONTAINS
  INQUIRE(FILE=IDFNAMES(0),EXIST=LEX)
  IF(LEX)THEN
   CALL WMESSAGEBOX(YESNO,QUESTIONICON,COMMONNO,'Current file:'//CHAR(13)// &
-   TRIM(IDFNAMES(0))//CHAR(13)//'allready exists overwrite it and continue?','Question')
+   TRIM(IDFNAMES(0))//CHAR(13)//'already exists overwrite it and continue?','Question')
   IF(WINFODIALOG(4).NE.1)RETURN
  ENDIF
 
