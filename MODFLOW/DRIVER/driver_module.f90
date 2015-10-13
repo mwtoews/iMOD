@@ -1156,10 +1156,10 @@ use imod_utl, only: imod_utl_getunit, imod_utl_getdir, imod_utl_s_cap,&
 implicit none
 
 ! parameters
-character(len=1024), parameter :: licfile = 'I_accepted_v3_02.txt'
+character(len=1024), parameter :: licfile = 'I_accepted_v3_2.txt'
 integer, parameter :: nlic = 33
 character(len=79), dimension(nlic) :: lic
-integer, parameter :: nhdr = 38
+integer, parameter :: nhdr = 39
 character(len=79), dimension(nhdr) :: hdr
 
 !         1234567890123456789012345678901234567890123456789012345678901234567890123456789
@@ -1179,28 +1179,29 @@ data hdr/'======================================================================
          'Please go to the PDF-file of the iMOD License, read it and decide whether you  ',&!04 
          'want or do not want to accept the iMOD License.                                ',&!05 
          '                                                                               ',&!06
-         'According to the file "I_accepted.txt" on your computer you accepted the terms ',&!07
-         'and conditions of the iMOD license; WARNING: IF IT WAS NOT YOU OR THE LEGAL    ',&!08
-         'ENTITY ON WHOSE BEHALF YOU INTENT TO USE THE IMOD-EXECUTABLE, THAT ACCEPTED THE',&!09 
-         'TERMS AND CONDITIONS OF THE iMOD LICENSE YOU ARE NOT ENTITLED TO USE THIS      ',&!10
-         'DELTARES-EXECUTABLE OF IMOD. In this case your use of this Deltares-executable ',&!01
-         'of the iMOD-software is prohibited and illegal: abort the use of this          ',&!02
-         'Deltares-executable immediately and refrain from using the Deltares-executables',&!03 
-         'of iMOD. To make use of the Deltares-executables of iMOD please make sure to   ',&!04
-         'accept the terms and conditions or have it lawfully accepted by the legal      ',&!05
-         'entity on whose behalf you intent to use the iMOD-executable by re-invoking the',&!06 
-         '‘I accept’-procedure; to re-invoke the "I accept"-procedure abort the use of   ',&!07
-         'this Deltares-executable of iMOD, delete the file "I_accepted.txt", and invoke ',&!08
-         'this Deltares-executable of iMOD again.                                        ',&!09
-         '                                                                               ',&!10
-         'The iMOD software is distributed in the hope that it will be useful, but       ',&!01
-         'WITHOUT ANY GUARANTEE OR (IMPLIED) WARRANTY. Any use of the                    ',&!02
-         'Deltares-executables of the iMOD-software is for your own risk. See the iMOD   ',&!03
-         'License for more details.                                                      ',&!04 
-         '                                                                               ',&!05
-         'For more info, please contact: Stichting Deltares, P.O. Box 177, 2600 MH Delft,',&!06
-         'The Netherlands. Email: imod.support@deltares.nl.                              ',&!07
-         '==============================================================================='/ !08
+         'According to the file "I_accepted_v3_2.txt" on your computer you accepted the  ',&!07
+         'terms and conditions of the iMOD license; WARNING: IF IT WAS NOT YOU OR THE    ',&!08
+         'LEGAL ENTITY ON WHOSE BEHALF YOU INTENT TO USE THE IMOD-EXECUTABLE, THAT       ',&!09 
+         'ACCEPTED THE TERMS AND CONDITIONS OF THE iMOD LICENSE YOU ARE NOT ENTITLED TO  ',&!10
+         'USE THIS DELTARES-EXECUTABLE OF IMOD. In this case your use of this            ',&!01
+         'Deltares-executable of the iMOD-software is prohibited and illegal: abort the  ',&!02
+         'use of this Deltares-executable immediately and refrain from using the         ',&!03 
+         'Deltares-executables of iMOD. To make use of the Deltares-executables of iMOD  ',&!04
+         'please make sure to accept the terms and conditions or have it lawfully        ',&!05
+         'accepted by the legal entity on whose behalf you intent to use the             ',&!06 
+         'iMOD-executable byre-invoking the ‘I accept’-procedure; to re-invoke the       ',&!07
+         '"I accept"-procedure abort the use of this Deltares-executable of iMOD, delete ',&!08
+         'the file "I_accepted_v3_2.txt", and invoke this Deltares-executable of iMOD    ',&!09
+         'again.                                                                         ',&!10
+         '                                                                               ',&!01
+         'The iMOD software is distributed in the hope that it will be useful, but       ',&!02
+         'WITHOUT ANY GUARANTEE OR (IMPLIED) WARRANTY. Any use of the                    ',&!03
+         'Deltares-executables of the iMOD-software is for your own risk. See the iMOD   ',&!04
+         'License for more details.                                                      ',&!05 
+         '                                                                               ',&!06
+         'For more info, please contact: Stichting Deltares, P.O. Box 177, 2600 MH Delft,',&!07
+         'The Netherlands. Email: imod.support@deltares.nl.                              ',&!08
+         '==============================================================================='/ !09
                                                                                             
 !         1234567890123456789012345678901234567890123456789012345678901234567890123456789   
 data lic/'===============================================================================',&!01
