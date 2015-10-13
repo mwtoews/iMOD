@@ -56,10 +56,11 @@ DATA IDFTYPES/'Planes','Cubes','Voxels','Vectors','Off'/
 CONTAINS
 
  !###======================================================================
- SUBROUTINE IMOD3D_SETUPDISPLAY_MISC(LADJTB)
+ SUBROUTINE IMOD3D_SETUPDISPLAY_MISC(LADJTB,IZR)
  !###======================================================================
  IMPLICIT NONE
  LOGICAL,INTENT(IN) :: LADJTB
+ INTEGER,INTENT(IN),OPTIONAL :: IZR
  
  !## nothing changed
  IF(.NOT.LADJTB)RETURN
@@ -69,7 +70,12 @@ CONTAINS
  
  IF(NIPFLIST.GT.0.OR.NIDFLIST.GT.0.OR.NIFFLIST.GT.0)THEN
   !## depends on vertical size of drills
-  ZSCALE_FACTOR=4.0_GLDOUBLE/(TOP%Z-BOT%Z) 
+!  ZSCALE_FACTOR=2.0_GLDOUBLE/(TOP%Z-BOT%Z) 
+  IF(PRESENT(IZR))THEN
+   ZSCALE_FACTOR=4.0_GLDOUBLE/(TOP%Z-BOT%Z)/IZR
+  ELSE
+   ZSCALE_FACTOR=4.0_GLDOUBLE/(TOP%Z-BOT%Z)
+  ENDIF
   INIT_ZSCALE_FACTOR=ZSCALE_FACTOR
  ENDIF
 

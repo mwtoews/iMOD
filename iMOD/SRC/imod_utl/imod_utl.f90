@@ -2222,7 +2222,7 @@ CONTAINS
  !###====================================================================
  IMPLICIT NONE
  INTEGER,INTENT(IN) :: ITIME !## hhmmss notation
- INTEGER :: IH,IM,IS
+ INTEGER,INTENT(OUT) :: IH,IM,IS
 
  IH = ITIME / 10000
  IM = MOD( ITIME, 10000 ) / 100
@@ -2303,7 +2303,7 @@ CONTAINS
  IMPLICIT NONE
  INTEGER,INTENT(IN)  :: JD
  INTEGER,INTENT(OUT) :: YEAR,MONTH,DAY
- INTEGER             :: I,J,K,L,N
+ INTEGER :: I,J,K,L,N
 
  L=JD+68569
  N=4*L/146097
