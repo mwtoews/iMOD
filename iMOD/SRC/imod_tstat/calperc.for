@@ -31,6 +31,8 @@ c array will be sorted
 c declaration section
 c ------------------------------------------------------------------------------
 
+      USE MOD_QKSORT
+
       implicit none
 
 

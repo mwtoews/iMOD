@@ -8,7 +8,7 @@
 //
 // Winteracter resource script. 
 //
-// Modified : 13/Oct/2015 16:29:17
+// Modified : 13/Oct/2015 22:01:16
 //
 ///////////////////////////////////////////////////
 //
@@ -8804,8 +8804,8 @@ IDD_TEMPLATE045 DIALOG 0, 0, 1000,   16
 STYLE DS_3DLOOK
 FONT    8, "Arial"
 BEGIN
-    CONTROL "Date",ISS1,"EDIT",WS_CHILD | WS_VISIBLE | WS_BORDER | WS_TABSTOP | ES_LEFT,    0,    0,  125,   14
-    CONTROL "TimeStep",ISS2,"REALEDIT",WS_CHILD | WS_VISIBLE | WS_BORDER | WS_TABSTOP | ES_LEFT | ES_CENTER | ES_MULTILINE,    0,    0,   60,   14
+    CONTROL "Date",ISS1,"EDIT",WS_CHILD | WS_VISIBLE | WS_BORDER | WS_TABSTOP | ES_LEFT,    0,    0,  105,   14
+    CONTROL "TimeStep",ISS2,"REALEDIT",WS_CHILD | WS_VISIBLE | WS_BORDER | WS_TABSTOP | ES_LEFT | ES_CENTER | ES_MULTILINE,    0,    0,   80,   14
 END
 
 IDD_TEMPLATE045 RCDATA
@@ -8814,6 +8814,7 @@ BEGIN
 "[Lengths] \n"
 " 1059    52 \n"
 "[Formats] \n"
+" 1115 (f15.7) \n"
 ,0
 END
 
@@ -10180,4 +10181,4 @@ END
 //*WI* FILENAME    resource.f90
 //*WI* FMODNAME    RESOURCE
 //*WI* LASTTYPE        2
-//*WI* LASTRES       226
+//*WI* LASTRES       245
