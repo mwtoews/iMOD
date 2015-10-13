@@ -2216,7 +2216,7 @@ CONTAINS
    IF(MP(IPLOT)%ISEL.AND.MP(IPLOT)%IPLOT.EQ.2)THEN
     I=I+1
     CALL WINDOWSELECT(0)
-    !## check whether information for current ipf is allready in memory
+    !## check whether information for current ipf is already in memory
     IF(UTL_CAP(IPF(I)%FNAME,'U').EQ.UTL_CAP(MP(IPLOT)%IDFNAME,'U'))THEN
      CALL WINDOWOUTSTATUSBAR(3,'RF Memory ...')
     ELSE

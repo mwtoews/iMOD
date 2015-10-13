@@ -1019,7 +1019,7 @@ CONTAINS
   !## clean removed definition fields
   !## polygon information is adjusted in polygon1delete()
   DO IPOL1=IPOL2,MAXSHAPES
-   !## allready target to assigned - clean memory
+   !## already target to assigned - clean memory
    IF(TTREE(IFIELD)%POL(IPOL1)%NDEF.GT.0)THEN
     CALL IR1DEALLOCATE_TARGET2(IFIELD,IPOL1)
    ENDIF
@@ -1058,7 +1058,7 @@ CONTAINS
   !## clean removed definition fields
   !## polygon information is adjusted in polygon1delete()
   DO IPOL1=IPOL2,MAXSHAPES!SHPNO
-   !## allready target to assigned - clean memory
+   !## already target to assigned - clean memory
    IF(MTREE(IFIELD)%POL(IPOL1)%NMES.GT.0)THEN
     CALL IR1DEALLOCATE_MEASURE2(IFIELD,IPOL1)
    ENDIF

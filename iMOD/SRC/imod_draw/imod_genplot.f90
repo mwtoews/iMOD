@@ -111,7 +111,7 @@ CONTAINS
 
   CALL IUPPERCASE(GENFNAME)
 
-  !## check whether file allready opened ... overwrite it otherwise
+  !## check whether file already opened ... overwrite it otherwise
   DO IPLOT=1,MXGEN; IF(GEN(IPLOT)%IACT.AND.GEN(IPLOT)%GENFNAME.EQ.GENFNAME)EXIT; END DO
   !## get empty iplot-location
   IF(IPLOT.GT.MXGEN)THEN

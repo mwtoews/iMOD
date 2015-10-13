@@ -8,7 +8,7 @@
 //
 // Winteracter resource script. 
 //
-// Modified : 12/Oct/2015 15:07:38
+// Modified : 13/Oct/2015 16:29:17
 //
 ///////////////////////////////////////////////////
 //
@@ -8081,7 +8081,7 @@ BEGIN
     CONTROL "TimeSteps:",IDF_LABEL20,"STATIC",WS_CHILD | WS_VISIBLE | WS_GROUP | SS_LEFT,  119,  258,   37,    8
     CONTROL "&Activate Packages ...",ID_PACKAGE,"BUTTON",WS_CHILD | WS_VISIBLE | WS_TABSTOP | BS_PUSHBUTTON | BS_TEXT | BS_FLAT,  102,   16,   89,   14
     CONTROL "Packages:",IDF_LABEL2,"STATIC",WS_CHILD | WS_VISIBLE | WS_GROUP | SS_LEFT,   17,   19,   81,    8
-    CONTROL "Active: BND, SHD, KHV, ... BND, SHD, KHV, ... BND, SHD, KHV, ... BND, SHD, KHV, ...",IDF_LABEL21,"STATIC",WS_CHILD | WS_VISIBLE | WS_GROUP | SS_LEFT,  196,   13,  199,   16
+    CONTROL "Active: BND, SHD, KHV, ... BND, SHD, KHV, ... BND, SHD, KHV, ... BND, SHD, KHV, ...",IDF_LABEL21,"STATIC",WS_CHILD | WS_VISIBLE | WS_GROUP | SS_LEFT,  196,   13,  199,   19
 END
 
 ID_DPMANAGER_SIM RCDATA
@@ -10180,4 +10180,4 @@ END
 //*WI* FILENAME    resource.f90
 //*WI* FMODNAME    RESOURCE
 //*WI* LASTTYPE        2
-//*WI* LASTRES       245
+//*WI* LASTRES       226

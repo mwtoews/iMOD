@@ -152,7 +152,7 @@ CONTAINS
  CALL OSD_OPEN(IU,FILE=FNAME,STATUS='OLD',IOSTAT=I)
  IF(I.NE.0)THEN
   CALL WMESSAGEBOX(OKONLY,EXCLAMATIONICON,COMMONOK,'iMOD can not view the created file : '//CHAR(13)// &
-   TRIM(FNAME)//'.'//CHAR(13)//'It is probably opened allready in another application','Error')
+   TRIM(FNAME)//'.'//CHAR(13)//'It is probably opened already in another application','Error')
  ELSE
   CLOSE(IU)
   CALL WINDOWOPENCHILD(IWIN,FLAGS=SYSMENUON+MAXWINDOW,WIDTH=1000,HEIGHT=500)

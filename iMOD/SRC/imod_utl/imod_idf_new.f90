@@ -453,7 +453,7 @@ CONTAINS
 
  IDFFILLSXSY=.TRUE.
 
- !## allready filled in
+ !## already filled in
  IF(IDF%IEQ.EQ.1)RETURN
  
  IDFFILLSXSY=.FALSE.

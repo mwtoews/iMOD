@@ -2688,7 +2688,7 @@ CONTAINS
 
    CALL WINDOWSELECT(IWIN)
 
-   !## check whether information for current ipf is allready in memory
+   !## check whether information for current ipf is already in memory
    IF(UTL_CAP(IPF(IIPF)%FNAME,'U').EQ.UTL_CAP(MP(IPLOT)%IDFNAME,'U'))THEN
     CALL WINDOWOUTSTATUSBAR(1,'RF Memory ...'//TRIM(MP(IPLOT)%IDFNAME))
    ELSE

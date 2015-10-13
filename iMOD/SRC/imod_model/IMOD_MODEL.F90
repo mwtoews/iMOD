@@ -559,7 +559,7 @@ CONTAINS
  IU=UTL_GETUNIT()
  CALL OSD_OPEN(IU,FILE=TRIM(RUN2)//'\RUN.BAT',STATUS='REPLACE',ACTION='WRITE,DENYREAD',IOSTAT=IOS)
  IF(IOS.NE.0)THEN
-  CALL WMESSAGEBOX(OKONLY,EXCLAMATIONICON,COMMONOK,'Modflow is allready running, you can not start '//CHAR(13)// &
+  CALL WMESSAGEBOX(OKONLY,EXCLAMATIONICON,COMMONOK,'Modflow is already running, you can not start '//CHAR(13)// &
    'new run while previous run is still running'//CHAR(13)//'Error creating '//CHAR(13)// &
    TRIM(RUN2)//'\RUN.BAT','Error')
   RETURN
@@ -669,7 +669,7 @@ CONTAINS
  JU=UTL_GETUNIT()
  CALL OSD_OPEN(JU,FILE=TRIM(RUN2)//'\IMODFLOW.RUN',STATUS='REPLACE',ACTION='WRITE,DENYREAD',IOSTAT=IOS)
  IF(IOS.NE.0)THEN
-  CALL WMESSAGEBOX(OKONLY,EXCLAMATIONICON,COMMONOK,'Modflow is allready running, you can not start '//CHAR(13)// &
+  CALL WMESSAGEBOX(OKONLY,EXCLAMATIONICON,COMMONOK,'Modflow is already running, you can not start '//CHAR(13)// &
    'new run while previous run is still running','Error')
   RETURN
  ENDIF

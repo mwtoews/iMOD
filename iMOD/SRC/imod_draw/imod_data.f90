@@ -163,7 +163,7 @@ DO IDF=1,NIDF
 
  IDFNAME=FNAMES(IDF)
  
- !## check whether file allready opened ... overwrite it otherwise
+ !## check whether file already opened ... overwrite it otherwise
  DO IPLOT=1,MXMPLOT
   IF(MP(IPLOT)%IACT.AND.TRIM(UTL_CAP(MP(IPLOT)%IDFNAME,'U')).EQ.TRIM(UTL_CAP(IDFNAME,'U')))EXIT
  END DO
@@ -207,7 +207,7 @@ DO IDF=1,NIDF
    IF(I.EQ.0)THEN
     I=INDEXNOCASE(IDFNAME,'.',.TRUE.)
     IDFNAME=IDFNAME(:I)//'IDF'
-    !## Re-check whether file allready opened ... overwrite it otherwise
+    !## Re-check whether file already opened ... overwrite it otherwise
     DO I=1,MXMPLOT; IF(MP(I)%IACT.AND.MP(I)%IDFNAME.EQ.IDFNAME)EXIT; END DO
     IF(I.LE.MXMPLOT)IPLOT=I
     MP(IPLOT)%IPLOT=1

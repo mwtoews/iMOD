@@ -413,7 +413,7 @@ if(irow.eq.ir.and.icol.eq.ic)f=1.0
 
    !## nodata dem map
    IF(DEM%X(ICOL,IROW).EQ.DEM%NODATA)CYCLE
-   !## slope map allready filled in
+   !## slope map already filled in
    IF(SLOPE%X(ICOL,IROW).NE.SLOPE%NODATA)CYCLE
 
 !   if(icol.eq.219.and.irow.eq.184)then
@@ -1044,9 +1044,9 @@ ROWLOOP: DO IROW=1,PCG%NROW
   DO IC=MAX(ICOL-1,1),MIN(ICOL+1,DEM%NCOL)
    !## centre point
    IF(IC.EQ.ICOL.AND.IR.EQ.IROW)CYCLE
-   !## allready pit location
+   !## already pit location
    IF(DEM%X(IC,IR).EQ.10.0E10)CYCLE
-   !## allready member of boundary
+   !## already member of boundary
    IF(IDFP%X(IC,IR).NE.IDFP%NODATA)CYCLE
 
    Z=DEM%X(IC,IR)

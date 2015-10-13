@@ -1472,7 +1472,7 @@ CONTAINS
  N=(W/IDF(1)%DX)+2; ALLOCATE(MM(N,N)); NN=0
  
  DO IROW=1,IDF(1)%NROW; DO ICOL=1,IDF(1)%NCOL
-  !## allready visited by bathymetry routine - so skip it
+  !## already visited by bathymetry routine - so skip it
   IF(IDF(9)%X(ICOL,IROW).NE.0.0)THEN
    IDF(9)%X(ICOL,IROW)=-1.0*IDF(9)%X(ICOL,IROW)
    CYCLE
@@ -1491,7 +1491,7 @@ CONTAINS
  IRAT=0; IRAT1=0
  DO IROW=1,IDF(1)%NROW
   DO ICOL=1,IDF(1)%NCOL
-   !## allready process by bathymetry
+   !## already process by bathymetry
    IF(IDF(9)%X(ICOL,IROW).LE.0.0)CYCLE
    !## river available
    IF(IDF(1)%X(ICOL,IROW).NE.IDF(I)%NODATA)THEN
@@ -1582,7 +1582,7 @@ CONTAINS
  DEALLOCATE(MM)
   
  DO IROW=1,IDF(1)%NROW; DO ICOL=1,IDF(1)%NCOL
-  !## allready visited by bathymetry routine - so skip it
+  !## already visited by bathymetry routine - so skip it
   IF(IDF(1)%X(ICOL,IROW).LE.0.0)THEN
    DO I=1,4; IDF(I)%X(ICOL,IROW)=IDF(I)%NODATA; ENDDO
   ENDIF

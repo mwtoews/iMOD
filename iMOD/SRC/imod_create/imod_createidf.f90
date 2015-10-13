@@ -222,7 +222,7 @@ CONTAINS
 
  IF(ALLOCATED(IPF))THEN
   LEX=.FALSE.
-  !## check whether information for current ipf is allready in memory
+  !## check whether information for current ipf is already in memory
   IF(UTL_CAP(IPF(1)%FNAME,'U').NE.UTL_CAP(IPFNAME,'U'))THEN
    LEX=.TRUE.
   ELSE

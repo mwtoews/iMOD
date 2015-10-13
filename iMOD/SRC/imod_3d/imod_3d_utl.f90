@@ -407,7 +407,7 @@ CONTAINS
  REAL(KIND=GLFLOAT),ALLOCATABLE,DIMENSION(:) :: FRGB
 
  IMOD3D_BMP_INIT=.TRUE.
- !## okay, allready processed!
+ !## okay, already processed!
  IF(IREADBMP.EQ.1.AND.ISOLID_3D.EQ.0)RETURN
  
  IMOD3D_BMP_INIT=.FALSE.

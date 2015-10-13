@@ -170,7 +170,7 @@ CONTAINS
     CALL WMESSAGEPEEK(ITYPE,MESSAGE)
     IF(ITYPE.EQ.KEYDOWN.AND.MESSAGE%VALUE1.EQ.KEYESCAPE)THEN
      CALL WMESSAGEBOX(YESNO,QUESTIONICON,COMMONNO,'Are you sure to terminate current pathline computation?'//CHAR(13)// &
-      'Though, current results upto now, are allready stored in an IFF-format','Question')
+      'Though, current results upto now, are already stored in an IFF-format','Question')
      IF(WINFODIALOG(4).EQ.1)EXIT
     ENDIF
 

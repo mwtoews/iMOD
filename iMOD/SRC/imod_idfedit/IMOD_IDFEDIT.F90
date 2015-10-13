@@ -605,7 +605,7 @@ CONTAINS
 
       !## delete location
       ELSEIF(IBUTDOWN.EQ.2.AND.I.LE.SELIDF(1)%NTHREAD)THEN
-       !## get whether current icol/irow is selected allready
+       !## get whether current icol/irow is selected already
        CALL IDFEDITPENCIL_PLOTYSEL(I)
        SELIDF(1)%NTHREAD  =SELIDF(1)%NTHREAD-1
        DO J=I,SELIDF(1)%NTHREAD

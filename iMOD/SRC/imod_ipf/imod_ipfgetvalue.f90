@@ -323,7 +323,7 @@ CONTAINS
  IF(ISEL.EQ.0)THEN
   IF(WINFOMOUSE(MOUSECURSOR).NE.CURARROW)CALL WCURSORSHAPE(CURARROW)
  ELSE
-  !## see whether it has been selected allready... (simple/advanced/selected)
+  !## see whether it has been selected already... (simple/advanced/selected)
   IF(IPF(JIPF)%IP(ISEL).GT.0.AND.IPF(JIPF)%IP(ISEL).LE.3)THEN
    IF(WINFOMOUSE(MOUSECURSOR).NE.ID_CURSORPOINTMIN)CALL WCURSORSHAPE(ID_CURSORPOINTMIN)
   ELSE

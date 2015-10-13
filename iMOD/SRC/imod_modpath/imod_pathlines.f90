@@ -662,7 +662,7 @@ CONTAINS
  WRITE(IU,'(A)') TRIM(LINE)
 
  CALL WDIALOGSELECT(ID_DPATHTAB4)
- !##flow-direction allready known - but for sure check
+ !##flow-direction already known - but for sure check
  CALL WDIALOGGETRADIOBUTTON(IDF_RADIO7,IREV)
  IREV=IREV-1 !forwards:irev=0;backwards=1
  LINE=TRIM(ITOS(IREV))//', !## forwards=0;backwards=1'
@@ -1155,7 +1155,7 @@ CONTAINS
    !## number of periods
    PLNPER(IT)=0
    DO I=1,N(IT)
-    !## exists allready
+    !## exists already
     DO J=I+1,N(IT)
      IF(PLIPER(I,IT).EQ.PLIPER(J,IT))EXIT
     END DO

@@ -169,7 +169,7 @@ CONTAINS
         ENDIF
        ENDIF
 
-       !## area allready processed by previous thread(jz), stop tracing
+       !## area already processed by previous thread(jz), stop tracing
        JPZ=INT(IDFP%X(IC,IR)); IF(JPZ.NE.IDFP%NODATA.AND.JPZ.NE.IPZ)RETURN
                    
       ENDIF

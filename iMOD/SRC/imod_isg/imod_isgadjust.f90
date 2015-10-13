@@ -763,7 +763,7 @@ CONTAINS
   CALL OSD_OPEN(IULOG,FILE=LOGFNAME,STATUS='OLD',IOSTAT=I)
   IF(I.NE.0)THEN
    CALL WMESSAGEBOX(OKONLY,EXCLAMATIONICON,COMMONOK,'iMOD can not view the created file : '//CHAR(13)// &
-    TRIM(LOGFNAME)//'.'//CHAR(13)//'It is probably opened allready in another application','Error')
+    TRIM(LOGFNAME)//'.'//CHAR(13)//'It is probably opened already in another application','Error')
   ELSE
    CLOSE(IULOG)
    CALL WEDITFILE(LOGFNAME,ITYPE=MODAL,IDMENU=0, &

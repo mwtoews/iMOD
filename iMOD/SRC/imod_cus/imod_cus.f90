@@ -479,11 +479,11 @@ CONTAINS
       !## available thickness of j'th file, compute distance
       IF(BB.GE.T)THEN     !## j'th file above (positive)
        D=BB-T
-       !## check whether this layer is closer than layer allready processed
+       !## check whether this layer is closer than layer already processed
        IF(D.LT.DZTOP(ICOL,IROW))THEN; ILTOP(ICOL,IROW)=J; IZTOP(ICOL,IROW)=ZZ; DZTOP(ICOL,IROW)=D; ENDIF
       ELSEIF(TT.LE.B)THEN !## j'th file beneath (negative)
        D=B-TT
-       !## check whether this layer is closer than layer allready processed
+       !## check whether this layer is closer than layer already processed
        IF(D.LT.DZBOT(ICOL,IROW))THEN; ILBOT(ICOL,IROW)=J; IZBOT(ICOL,IROW)=ZZ; DZBOT(ICOL,IROW)=D; ENDIF
       ENDIF
      ENDIF

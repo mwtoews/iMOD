@@ -569,7 +569,7 @@ CONTAINS
   IF(LEX)CLOSE(IU)
   IF(IBATCH.EQ.0)CALL WMESSAGEBOX(OKONLY,EXCLAMATIONICON,COMMONOK,'iMOD can not create the file:'//CHAR(13)// &
    TRIM(WBAL_OUTFNAME)//CHAR(13)// &
-   'it is probably allready opened in another application','Error')
+   'it is probably already opened in another application','Error')
   IF(IBATCH.EQ.1)WRITE(*,*) 'Can not create file : '//TRIM(WBAL_OUTFNAME)
   RETURN
  ENDIF
@@ -755,7 +755,7 @@ CONTAINS
    IU=UTL_GETUNIT(); CALL OSD_OPEN(IU,FILE=WBAL_OUTFNAME,STATUS='OLD',IOSTAT=I)
    IF(I.NE.0)THEN
     CALL WMESSAGEBOX(OKONLY,EXCLAMATIONICON,COMMONOK,'iMOD can not view the created file : '//CHAR(13)// &
-     TRIM(WBAL_OUTFNAME)//'.'//CHAR(13)//'It is probably opened allready in another application','Error')
+     TRIM(WBAL_OUTFNAME)//'.'//CHAR(13)//'It is probably opened already in another application','Error')
    ELSE
     CLOSE(IU)
     CALL WINDOWOPENCHILD(IWIN,FLAGS=SYSMENUON+MAXWINDOW,WIDTH=1000,HEIGHT=500)
