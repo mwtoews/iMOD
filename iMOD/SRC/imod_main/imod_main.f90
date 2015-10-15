@@ -1052,7 +1052,7 @@ IF(SIZE(PI2).GE.1)THEN !If at least 1 plugin available call to plugin is perform
  WRITE(IU,'(50A1)') ('*',K=1,50)
 ENDIF
 
-!##Only for demo-version -> only if idemo=1
+!##Only for demo-version -> only if idemo>0
 WRITE(IU,'(50A1)') ('D',K=1,50)
 IF(DEMO%IDEMO.EQ.1)THEN
  WRITE(IU,'(A9,A)') 'FUNCTION=',DEMO%TDNAME
@@ -1061,6 +1061,8 @@ IF(DEMO%IDEMO.EQ.1)THEN
   WRITE(IU,*) DEMO%X(I)
   WRITE(IU,*) DEMO%Y(I) 
  ENDDO
+ELSEIF(DEMO%IDEMO.EQ.2)THEN
+ WRITE(IU,'(A9,A)') 'FUNCTION=',DEMO%TDNAME
 ENDIF
 WRITE(IU,'(50A1)') ('D',K=1,50)
 

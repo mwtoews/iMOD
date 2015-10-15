@@ -4232,14 +4232,16 @@ CONTAINS
    CALL WMESSAGEBOX(OKONLY,INFORMATIONICON,COMMONOK,'Succesfully written Postscript to:'//CHAR(13)//TRIM(FNAME),'Info')
   
   CASE('IMF')
-   DEMO%IDEMO = 1
+   IF(DEMO%IDEMO.NE.1)THEN
+    DEMO%IDEMO = 1
+   ENDIF
    DEMO%NXY = NXY 
    DO I=1,DEMO%NXY 
     DEMO%X(I) = XY(1,I)
     DEMO%Y(I) = XY(2,I)
    ENDDO
    CALL IMODSAVEIMF(FNAME)
-   CALL WMESSAGEBOX(OKONLY,INFORMATIONICON,COMMONOK,'Succesfully saved cross-section in iMOD project (*.imf) to:'//CHAR(13)//TRIM(FNAME),'Info')
+   CALL WMESSAGEBOX(OKONLY,INFORMATIONICON,COMMONOK,'Succesfully saved cross-section as DEMO iMOD project (*.imf) to:'//CHAR(13)//TRIM(FNAME),'Info')
    DEMO%IDEMO = 0
 
  END SELECT
