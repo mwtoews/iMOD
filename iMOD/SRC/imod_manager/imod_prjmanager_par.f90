@@ -117,4 +117,11 @@ MODULE MOD_PMANAGER_PAR
  DATA FEXT/'.ARR','.ASC'/
  REAL,DIMENSION(5) :: SUBMODEL
  
+ CHARACTER(LEN=8),DIMENSION(9 ) :: TMENU1
+ CHARACTER(LEN=8),DIMENSION(10) :: TMENU2
+ DATA TMENU1/'Hourly  ','Daily   ','Weekly  ','Decade  ', &
+             '14/28   ','Monthly ','Yearly  ','Packages','Custom  '/
+ DATA TMENU2/'Hourly  ','Daily   ','Weekly  ','Decade  ', &
+             '14/28   ','Monthly ','Yearly  ','Packages','Inherit','Custom  '/
+ 
 END MODULE MOD_PMANAGER_PAR
