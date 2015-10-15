@@ -26,7 +26,8 @@ INTEGER,DIMENSION(2) :: IDPROC
 
 REAL,PARAMETER :: PI=ATAN(1.0)*4.0  !##value pi
 
-CHARACTER(LEN=30),PARAMETER            :: RVERSION='3_01_<xx>'
+CHARACTER(LEN=30),PARAMETER            :: RVERSION='v3_01_xx'
+CHARACTER(LEN=32) :: LICFILE='I_accepted_'//TRIM(RVERSION)//'.txt'
 CHARACTER(LEN=256)                     :: IMFFNAME         !##name of drawing file
 CHARACTER(LEN=256)                     :: EXENAME
 CHARACTER(LEN=256)                     :: OPENDIR   !remember saved location

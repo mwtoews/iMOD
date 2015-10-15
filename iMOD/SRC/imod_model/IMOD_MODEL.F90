@@ -554,7 +554,6 @@ CONTAINS
  INTEGER :: IU,IOS,I,IFLAGS,IEXCOD,IERROR
  LOGICAL :: LEX
 
-! IF(IRUNMODE.EQ.0)THEN
  !## simulate batch-file, inclusive pause statement.
  IU=UTL_GETUNIT()
  CALL OSD_OPEN(IU,FILE=TRIM(RUN2)//'\RUN.BAT',STATUS='REPLACE',ACTION='WRITE,DENYREAD',IOSTAT=IOS)
@@ -564,7 +563,6 @@ CONTAINS
    TRIM(RUN2)//'\RUN.BAT','Error')
   RETURN
  ENDIF
-! ENDIF
 
  I=INDEXNOCASE(PREFVAL(8),'\',.TRUE.)+1
  !## remove previous version of imodflow
@@ -573,7 +571,7 @@ CONTAINS
  !## copy imodflow executable
  CALL IOSCOPYFILE(TRIM(PREFVAL(8)),TRIM(RUN2)//'\'//TRIM(PREFVAL(8)(I:)))
  
- INQUIRE(FILE=TRIM(PREFVAL(1))//'\license_agreement.txt',EXIST=LEX)
+ INQUIRE(FILE=TRIM(PREFVAL(1))//'\'//TRIM(LICFILE),EXIST=LEX)
  IF(.NOT.LEX)THEN
   IERROR=0; CALL IMOD_AGREEMENT(IERROR)
   IF(IERROR.NE.1)THEN
@@ -583,13 +581,11 @@ CONTAINS
  ENDIF
 
  !## copy imod license text
- CALL IOSCOPYFILE(TRIM(PREFVAL(1))//'\license_agreement.txt',TRIM(RUN2)//'\license_agreement.txt')
+ CALL IOSCOPYFILE(TRIM(PREFVAL(1))//'\'//TRIM(LICFILE),TRIM(RUN2)//'\'//TRIM(LICFILE))
  
-! IF(IRUNMODE.EQ.0)THEN
  !## write start script in batch file
  WRITE(IU,'(A)') 'START "Runfile:'//TRIM(RUN1(INDEX(RUN1,'\',.TRUE.):))//'" /B '//TRIM(PREFVAL(8)(I:))//' '//'IMODFLOW.RUN'
  CLOSE(IU)
-! ENDIF
 
  !## move iMOD to the simulation directory
  CALL IOSDIRNAME(DIRNAME)

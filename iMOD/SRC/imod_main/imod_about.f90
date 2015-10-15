@@ -29,7 +29,6 @@ USE MOD_UTL, ONLY : NEWLINE,UTL_GETUNIT,ITOS
 USE MOD_PREF_PAR, ONLY : PREFVAL
 USE MOD_OSD, ONLY : OSD_OPEN
 
-CHARACTER(LEN=32) :: LICFILE='I_accepted.txt'
 CHARACTER(LEN=:),ALLOCATABLE :: STR
 
 CONTAINS
@@ -125,10 +124,15 @@ CONTAINS
  IF(I.EQ.1)THEN
   IU=UTL_GETUNIT()
   CALL OSD_OPEN(IU,FILE=TRIM(PREFVAL(1))//'\'//TRIM(LICFILE),STATUS='UNKNOWN',ACTION='WRITE,DENYREAD')
-  CALL IOSDATE(IY,IM,ID); CDATE=TRIM(ITOS(ID))//'-'//TRIM(ITOS(IM))//'-'//TRIM(ITOS(IY))
-  WRITE(IU,'( A )') 'You accepted the term and conditions of the iMOD Software License Agreement on '//TRIM(CDATE)
-  CALL IMOD_PUTLICENSE(-IU)
-  CODE=1
+  IF(IU.EQ.0)THEN
+   CALL WMESSAGEBOX(OKONLY,EXCLAMATIONICON,COMMONOK,'iMOD cannot save license file:'//CHAR(13)// &
+      TRIM(PREFVAL(1))//'\'//TRIM(LICFILE),'Error')
+  ELSE
+   CALL IOSDATE(IY,IM,ID); CDATE=TRIM(ITOS(ID))//'-'//TRIM(ITOS(IM))//'-'//TRIM(ITOS(IY))
+   WRITE(IU,'( A )') 'You accepted the term and conditions of the iMOD Software License Agreement on '//TRIM(CDATE)
+   CALL IMOD_PUTLICENSE(-IU)
+   CODE=1
+  ENDIF
  ENDIF
 
  END SUBROUTINE IMOD_AGREEMENT
@@ -157,7 +161,7 @@ NEWLINE// &
 'executable. If not, see '//NEWLINE// &
 'http://oss.deltares.nl/web/iMOD/iMOD_Software_License_Agreement. '//NEWLINE// &
 NEWLINE// &
-'According to the file "I_accepted.txt" on your computer you accepted the'// &
+'According to the file "'//TRIM(LICFILE)//'" on your computer you accepted the'// &
 ' terms and conditions of the iMOD license on <date and time>; WARNING: I'// &
 'F IT WAS NOT YOU OR THE LEGAL ENTITY ON WHOSE BEHALF YOU INTENT TO USE T'// &
 'HE IMOD-EXECUTABLE, THAT ACCEPTED THE TERMS AND CONDITIONS OF THE iMOD L'// &
@@ -169,7 +173,7 @@ NEWLINE// &
 'ms and conditions or have it lawfully accepted by the legal entity on wh'// &
 'ose behalf you intent to use the iMOD-executable by re-invoking the ‘I a'// &
 'ccept’-procedure; to re-invoke the "I accept"-procedure abort the use of'// &
-' this Deltares-executable of iMOD, delete the file "I_accepted.txt", and'// &
+' this Deltares-executable of iMOD, delete the file "'//TRIM(LICFILE)//'", and'// &
 ' invoke this Deltares-executable of iMOD again.'//NEWLINE// &
 NEWLINE// &
 'The iMOD software is distributed in the hope that it will be useful, but'// &
