@@ -8,7 +8,7 @@
 //
 // Winteracter resource script. 
 //
-// Modified : 15/Oct/2015 13:22:50
+// Modified : 15/Oct/2015 15:36:44
 //
 ///////////////////////////////////////////////////
 //
@@ -8774,7 +8774,7 @@ BEGIN
 END
 
 ID_DPMANAGER_TIMES DIALOG 0, 0,  296,  311
-STYLE WS_POPUP | WS_BORDER | WS_DLGFRAME | WS_SYSMENU | DS_3DLOOK | DS_MODALFRAME
+STYLE WS_POPUP | WS_BORDER | WS_DLGFRAME | WS_SYSMENU | WS_THICKFRAME | DS_3DLOOK
 FONT    8, "Arial"
 CAPTION "Time Discretization Manager"
 BEGIN
@@ -8789,13 +8789,15 @@ END
 
 ID_DPMANAGER_TIMES RCDATA
 BEGIN
+"[Dialog] \n"
+" 0  1004 0 \n"
 "[Fonts] \n"
 "    1    8 Arial, 400 0 \n"
 "    2    8 Arial, 400 0 \n"
 "    9    8 Arial, 400 0 \n"
 " 1074    8 Arial, 400 0 \n"
 "[Grids] \n"
-" 1004     2   9999   200 \n"
+" 1004     3   9999   200 \n"
 "   50 \n"
 ,0
 END
@@ -8804,8 +8806,9 @@ IDD_TEMPLATE045 DIALOG 0, 0, 1000,   16
 STYLE DS_3DLOOK
 FONT    8, "Arial"
 BEGIN
-    CONTROL "Date",ISS1,"EDIT",WS_CHILD | WS_VISIBLE | WS_BORDER | WS_TABSTOP | ES_LEFT,    0,    0,  105,   14
-    CONTROL "TimeStep",ISS2,"REALEDIT",WS_CHILD | WS_VISIBLE | WS_BORDER | WS_TABSTOP | ES_LEFT | ES_CENTER | ES_MULTILINE,    0,    0,   80,   14
+    CONTROL "Date",ISS1,"EDIT",WS_CHILD | WS_VISIBLE | WS_BORDER | WS_TABSTOP | ES_LEFT,    0,    0,   85,   14
+    CONTROL "TimeStep",ISS2,"REALEDIT",WS_CHILD | WS_VISIBLE | WS_BORDER | WS_TABSTOP | ES_LEFT | ES_CENTER | ES_MULTILINE,    0,    0,   65,   14
+    CONTROL "Saving",ISS3,"INTEGEREDIT",WS_CHILD | WS_VISIBLE | WS_BORDER | WS_TABSTOP | ES_LEFT,    0,    0,   40,   14
 END
 
 IDD_TEMPLATE045 RCDATA
@@ -10180,5 +10183,5 @@ END
 //*WI* FORTSAVE    1
 //*WI* FILENAME    resource.f90
 //*WI* FMODNAME    RESOURCE
-//*WI* LASTTYPE        1
-//*WI* LASTRES         7
+//*WI* LASTTYPE        2
+//*WI* LASTRES       245
