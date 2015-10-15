@@ -8,13 +8,13 @@
 //
 // Winteracter resource script. 
 //
-// Modified : 13/Oct/2015 22:01:16
+// Modified : 15/Oct/2015 13:22:50
 //
 ///////////////////////////////////////////////////
 //
 // Include files
 //
-#include "..\LIB\WINTERACTER\OS_X32\include\winparam.h"
+#include "winparam.h"
 #ifdef XLIB
 #include "..\LIB\WINTERACTER\OS_X32\include\filesel.rc"
 #include "..\LIB\WINTERACTER\OS_X32\include\colour.rc"
@@ -10180,5 +10180,5 @@ END
 //*WI* FORTSAVE    1
 //*WI* FILENAME    resource.f90
 //*WI* FMODNAME    RESOURCE
-//*WI* LASTTYPE        2
-//*WI* LASTRES       245
+//*WI* LASTTYPE        1
+//*WI* LASTRES         7
