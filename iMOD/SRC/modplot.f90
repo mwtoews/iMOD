@@ -24,10 +24,10 @@ MODULE MODPLOT
 
 USE MOD_IDF_PAR, ONLY : IDFOBJ
 
- INTEGER,PARAMETER         :: MXCLR    =255  !## stretched
- INTEGER,PARAMETER         :: MXCGRAD  =7    !## max. color for gradient
- INTEGER,PARAMETER         :: MXCLASS  =50   !## classed
- INTEGER,PARAMETER         :: MXMPLOT  =1000 !## maximum plots in mp and mdf objects
+ INTEGER,PARAMETER :: MXCLR    =255  !## stretched
+ INTEGER,PARAMETER :: MXCGRAD  =7    !## max. color for gradient
+ INTEGER,PARAMETER :: MXCLASS  =50   !## classed
+ INTEGER,PARAMETER :: MXMPLOT  =1000 !## maximum plots in mp and mdf objects
 
  TYPE LEGENDOBJ
   INTEGER,DIMENSION(MXCLR) :: RGB
