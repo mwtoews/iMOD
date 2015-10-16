@@ -1431,7 +1431,7 @@ CONTAINS
   RETURN
  ENDIF
 
- WRITE(IU,'(A)') 'iMOD (V'//TRIM(RVERSION)//') Timeseries'
+ WRITE(IU,'(A)') 'iMOD ('//TRIM(RVERSION)//') Timeseries'
  CALL IOSDATE(I,J,IOS)
  LINE=TRIM(ITOS(IOS))//'/'//TRIM(CDATE(J))//'/'//TRIM(ITOS(I))
  WRITE(IU,'(A)') 'Created on: '//TRIM(LINE)
