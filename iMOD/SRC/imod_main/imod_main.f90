@@ -1055,14 +1055,16 @@ ENDIF
 !##Only for demo-version -> if idemo>0
 WRITE(IU,'(50A1)') ('D',K=1,50)
 IF(DEMO%IDEMO.EQ.1)THEN
- WRITE(IU,'(A9,A)') 'FUNCTION=',DEMO%TDNAME
+ WRITE(IU,'(A9,A)') 'FUNCTION=','CROSS'!#=DEMO%TDNAME
  WRITE(IU,'(I10 )') DEMO%NXY
  DO I=1,DEMO%NXY 
   WRITE(IU,*) DEMO%X(I),DEMO%Y(I)
  ENDDO
 ELSEIF(DEMO%IDEMO.EQ.2)THEN
- WRITE(IU,'(A9,A)') 'FUNCTION=',DEMO%TDNAME
- WRITE(IU,'(I10)') DEMO%CONFLAG
+ WRITE(IU,'(A9,A)') 'FUNCTION=','3D'!#=DEMO%TDNAME
+ WRITE(IU,'(A9,I1)') 'CONFIG=', DEMO%CONFLAG
+ WRITE(IU,'(A9,I1)') 'IFILL=', DEMO%IFILL
+ WRITE(IU,'(A9,I1)') 'IACC=',DEMO%ACCFLAG
 ENDIF
 WRITE(IU,'(50A1)') ('D',K=1,50)
 
@@ -1527,7 +1529,9 @@ DO
    
    ELSEIF(TRIM(UTL_CAP(DEMO%TDNAME,'U')).EQ.'3D')THEN   !## 3D-tool Demo
     DEMO%IDEMO=2
-    READ(IU,*) DEMO%CONFLAG !#reads configuration type in which 3D-model needs to be plotted (1 t/m 7)
+    READ(IU,'(9X,I1)') DEMO%CONFLAG !#reads configuration type in which 3D-model needs to be plotted (1 t/m 7)
+    READ(IU,'(9X,I1)') DEMO%IFILL !#reads display type in which 3D-model needs to be plotted (1 t/m 3)
+    READ(IU,'(9X,I1)') DEMO%ACCFLAG !#reads accuracy type (sets resolution of plotted 3D grid)
    ENDIF 
    
   ENDIF

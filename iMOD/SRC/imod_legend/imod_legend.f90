@@ -89,16 +89,7 @@ CONTAINS
  !###====================================================================
  IMPLICIT NONE
  INTEGER :: I,J
- INTEGER,DIMENSION(MXCGRAD,3) :: CLR
- DATA                  ((CLR(I,J),J=1,3),I=1,MXCGRAD) /&
-                                   64,0,0,     & !## brown
-                                   255,0,0,    & !## red
-                                   255,0,255  ,& !## purple
-                                   0,0,255    ,& !## blue
-                                   0,255,0    ,& !## green
-                                   255,255,0  ,& !## yellow
-                                   128,255,255/  !## cyan
-
+ 
  !## put colors on dialog
  CALL WDIALOGSELECT(ID_DLEGTAB2)
  DO I=1,MXCGRAD
