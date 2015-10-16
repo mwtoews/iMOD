@@ -33,6 +33,8 @@ TYPE DEMOBJ
  INTEGER :: CONFLAG !#Configuration flag
  INTEGER :: IFILL !#Display flag (1=solid,2=wireframe,3=solid+wireframe)
  INTEGER :: ACCFLAG !#Accuracy flag
+ INTEGER :: IBLOCKLINES !# show cross-section with blocklines
+ INTEGER :: IBLOCKFILLS !# show cross-section with filled blocks
 END TYPE DEMOBJ
 
 TYPE(DEMOBJ) :: DEMO
