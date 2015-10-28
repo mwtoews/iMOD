@@ -324,7 +324,7 @@ CONTAINS
  CALL WDIALOGFIELDSTATE(IDOK,I)
  CALL WDIALOGFIELDSTATE(IDF_RADIO2,I)
  IF(I.EQ.0)THEN
-  CALL WDIALOGPUTSTRING(IDOK,'&Incorrect Formulae')
+  CALL WDIALOGPUTSTRING(IDOK,'Incorrect Formulae')
   CALL WDIALOGPUTSTRING(IDF_RADIO2,'Unknown Map') 
  ELSE
   CALL WDIALOGPUTSTRING(IDOK,'&Compute ...')
@@ -352,10 +352,10 @@ CONTAINS
  CHARACTER(LEN=50) :: TXT
  CHARACTER(LEN=1),DIMENSION(5) :: COP
  CHARACTER(LEN=1),DIMENSION(2) :: CAB
- CHARACTER(LEN=3),DIMENSION(4) :: CEXP
+ CHARACTER(LEN=3),DIMENSION(5) :: CEXP
  INTEGER,DIMENSION(2) :: IO
  DATA COP/'-','+','/','*','?'/
- DATA CEXP/'ABS','LOG','EXP','GTP'/
+ DATA CEXP/'ABS','LOG','EXP','GTP','SGN'/
  DATA CAB/'A','B'/
  CHARACTER(LEN=10),DIMENSION(2) :: TXT_CLC
  
@@ -392,11 +392,13 @@ CONTAINS
     IEFUNC=3
    CASE ('GTP')
     IEFUNC=4
+   CASE ('SGN')
+    IEFUNC=5
    CASE DEFAULT
     IF(IBATCH.EQ.-1)CALL WDIALOGPUTSTRING(IDF_LABEL5,'Can not recognize External Function')
     IF(IBATCH.EQ.0)CALL WMESSAGEBOX(OKONLY,EXCLAMATIONICON,COMMONOK,'External Function not well defined!'//CHAR(13)// &
-     'External Function can be abs(), log(), exp(), gtp()','Warning')
-    IF(IBATCH.EQ.1)WRITE(*,*) 'External Function can be abs(), log(), exp(), gtp()'
+     'External Function can be abs(), log(), exp(), gtp(), sgn()','Warning')
+    IF(IBATCH.EQ.1)WRITE(*,*) 'External Function can be abs(), log(), exp(), gtp(), sgn()'
     RETURN
   END SELECT
   FUNC='C='//FUNC(I+1:J-1)
@@ -608,6 +610,8 @@ CONTAINS
        IDFRESULT=EXP(IDFRESULT)
       CASE (4)  !## gt
 !       IDFRESULT=EXP(IDFRESULT)
+      CASE (5)  !## sgn
+
      END SELECT
     ENDIF
    ENDIF
@@ -665,16 +669,10 @@ CONTAINS
   
  ENDDO
 
- IF(.NOT.LCOMP)THEN
-  IDFRESULT=IDFVAL(1)
-  RETURN
- ENDIF
+ IF(.NOT.LCOMP)THEN; IDFRESULT=IDFVAL(1); RETURN; ENDIF
 
- !## groundwatertrap
- IF(IEFUNC.EQ.4)THEN
-  IDFRESULT=GXG1GETGT(IDFVAL(2),IDFVAL(1),MATH(3)%NODATA)
-  RETURN
- ENDIF
+ !## groundwater classification
+ IF(IEFUNC.EQ.4)THEN; IDFRESULT=GXG1GETGT(IDFVAL(2),IDFVAL(1),MATH(3)%NODATA); RETURN; ENDIF
  
  !## pre-multiply values
  DO I=1,2
@@ -721,6 +719,17 @@ CONTAINS
   RETURN
  ENDIF
 
+ !# apply sgn()
+ IF(IEFUNC.EQ.5)THEN
+  !## check whether sign are equal
+  IF((IDFVAL(1).LT.0.0.AND.IDFVAL(2).GT.0.0).OR. &
+     (IDFVAL(1).GT.0.0.AND.IDFVAL(2).LT.0.0))THEN
+   !## if not --- modify idfval()
+   IDFVAL(1)=MATH(1)%NODATA
+   IDFVAL(2)=MATH(2)%NODATA
+  ENDIF
+ ENDIF
+ 
  !## get final idf-value for child-idf
  SELECT CASE (IOP(3))
   !## difference[-]

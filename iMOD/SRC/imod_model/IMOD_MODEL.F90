@@ -584,7 +584,8 @@ CONTAINS
  CALL IOSCOPYFILE(TRIM(PREFVAL(1))//'\'//TRIM(LICFILE),TRIM(RUN2)//'\'//TRIM(LICFILE))
  
  !## write start script in batch file
- WRITE(IU,'(A)') 'START "Runfile:'//TRIM(RUN1(INDEX(RUN1,'\',.TRUE.):))//'" /B '//TRIM(PREFVAL(8)(I:))//' '//'IMODFLOW.RUN'
+ WRITE(IU,'(A)') 'START "Runfile:'//TRIM(RUN1(INDEX(RUN1,'\',.TRUE.):))//'" /B '//TRIM(PREFVAL(8))//' '//'IMODFLOW.RUN'
+! WRITE(IU,'(A)') 'START "Runfile:'//TRIM(RUN1(INDEX(RUN1,'\',.TRUE.):))//'" /B '//TRIM(PREFVAL(8)(I:))//' '//'IMODFLOW.RUN'
  CLOSE(IU)
 
  !## move iMOD to the simulation directory
