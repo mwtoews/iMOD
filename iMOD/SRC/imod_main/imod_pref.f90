@@ -155,8 +155,9 @@ CONTAINS
       SELECT CASE (MESSAGE%VALUE1)
        CASE (ID_OPEN)
         CALL PREFOPENCOLOURS('')
-        CALL PREFFIELDS()
-       CASE (ID_SAVEAS)
+        CALL PREF_CLR_REFRESH()
+        CALL PREFFIELDS()       
+       CASE (ID_SAVEAS,ID_SAVE)
         CALL PREFSAVECOLOURS('')
        CASE (ID_PROPERTIES)
         CALL WDIALOGGETMENU(IDF_MENU1,I)
@@ -164,6 +165,8 @@ CONTAINS
         CALL WSELECTCOLOUR(J)
         IF(WINFODIALOG(4).EQ.1)ICOLOR(I)=J
         CALL PREFFIELDS()
+       CASE(ID_FLIP)
+        CALL PREF_CLR_FLIP()
       END SELECT
     END SELECT
 
@@ -221,7 +224,7 @@ CONTAINS
  CHARACTER(LEN=256)               :: CLRFNAME
  INTEGER,ALLOCATABLE,DIMENSION(:) :: IRGB
  INTEGER                          :: I,J,IU,IOS
-
+ 
  IF(LEN(TRIM(FNAME)).EQ.0)THEN
   CLRFNAME=TRIM(PREFVAL(1))//'\*.CLR'
   IF(.NOT.UTL_WSELECTFILE('iMOD Preferences Colours (*.clr)|*.clr|',&
@@ -239,16 +242,19 @@ CONTAINS
   IF(J.GT.0.AND.J.LE.MAXCOLOUR)ICOLOR(J)=WRGB(IRGB(1),IRGB(2),IRGB(3))
  END DO
  DEALLOCATE(IRGB)
- DO
-  READ(IU,*,IOSTAT=IOS)
-  IF(IOS.NE.0)EXIT
+
+ CALL WDIALOGSELECT(ID_DPREFTAB2) 
+
+ CLR=255
+ READ(IU,*,IOSTAT=IOS)
+ IF(IOS.EQ.0)THEN
   DO I=1,MXCGRAD
    READ(IU,*,IOSTAT=IOS) J,CLR(I,1),CLR(I,2),CLR(I,3)
-   IF(IOS.NE.0)EXIT
+   IF(IOS.NE.0)EXIT 
   END DO
- ENDDO
+ ENDIF
  CLOSE(IU)
-
+ 
  END SUBROUTINE PREFOPENCOLOURS
 
  !###======================================================================
@@ -293,8 +299,7 @@ CONTAINS
  SUBROUTINE PREF_CLR_REFRESH()
  !###====================================================================
  IMPLICIT NONE
- INTEGER :: I,J,IRGB,IRED,IGRN,IBLU,N
- REAL :: DY,Y,RRED,RGRN,RBLU,DRED,DGRN,DBLU
+ INTEGER :: I,IRGB
  
  CALL WDIALOGSELECT(ID_DPREFTAB2)
  
@@ -304,6 +309,17 @@ CONTAINS
   CALL WRGBSPLIT(IRGB,CLR(I,1),CLR(I,2),CLR(I,3))
   CALL WDIALOGCOLOUR(ID(I),IRGB,IRGB)
  END DO
+
+ CALL PREF_CLR_UPDATE()
+   
+ END SUBROUTINE PREF_CLR_REFRESH
+ 
+ !###====================================================================
+ SUBROUTINE PREF_CLR_UPDATE()
+ !###====================================================================
+ IMPLICIT NONE
+ INTEGER :: I,J,IRED,IGRN,IBLU,N
+ REAL :: DY,Y,DRED,DGRN,DBLU
 
  CALL IGRSELECT(DRAWFIELD,IDF_PICTURE1)
  CALL IGRAREA(0.0,0.0,1.0,1.0)
@@ -336,8 +352,43 @@ CONTAINS
   ENDDO
 
  END DO
-   
- END SUBROUTINE PREF_CLR_REFRESH
+
+ END SUBROUTINE PREF_CLR_UPDATE
+ 
+ !###====================================================================
+ SUBROUTINE PREF_CLR_FLIP()
+ !###====================================================================
+ IMPLICIT NONE
+ INTEGER :: I,J,IRGB
+ INTEGER,DIMENSION(MXCGRAD,3) :: ICLR
+ 
+  J=MXCGRAD
+  DO I=1,MXCGRAD
+   ICLR(I,1)=CLR(I,1)
+   ICLR(I,2)=CLR(I,2)
+   ICLR(I,3)=CLR(I,3)
+  END DO
+  
+  J=MXCGRAD
+  DO I=1,MXCGRAD
+   CLR(I,1)=ICLR(J,1)
+   CLR(I,2)=ICLR(J,2)
+   CLR(I,3)=ICLR(J,3)
+   J=J-1
+  ENDDO
+
+  !## read current color settings on preference-dialog
+  CALL WDIALOGSELECT(ID_DPREFTAB2)
+ 
+  !## get colors on dialog
+  DO I=1,MXCGRAD
+   IRGB= WRGB(CLR(I,1),CLR(I,2),CLR(I,3))
+   CALL WDIALOGCOLOUR(ID(I),IRGB,IRGB)
+  END DO
+  
+  CALL PREF_CLR_UPDATE()
+  
+ END SUBROUTINE PREF_CLR_FLIP
  
  !###======================================================================
  SUBROUTINE PREFUPDATE()

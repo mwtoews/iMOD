@@ -98,21 +98,6 @@ CONTAINS
  END DO
 
  END SUBROUTINE LEGDEFAULT
-
- !###====================================================================
- SUBROUTINE LEG_DEFAULT_PREF()
- !###====================================================================
- IMPLICIT NONE
- INTEGER :: I,J
- 
- !## put colors on dialog
- CALL WDIALOGSELECT(ID_DLEGTAB2)
- DO I=1,MXCGRAD
-  CALL WDIALOGPUTINTEGER(ID3(I),WRGB(CLR(I,1),CLR(I,2),CLR(I,3)))
-  CALL WDIALOGCOLOUR(ID3(I),WRGB(CLR(I,1),CLR(I,2),CLR(I,3)),WRGB(CLR(I,1),CLR(I,2),CLR(I,3)))
- END DO
-
- END SUBROUTINE LEG_DEFAULT_PREF
  
  !###====================================================================
  SUBROUTINE LEGMAIN(CODE)
@@ -155,9 +140,6 @@ CONTAINS
  
  CALL WDIALOGSELECT(ID_DLEGEND)
  CALL WDIALOGSHOW(-1,-1,1,3)
- 
-! CALL WDIALOGSELECT(ID_DLEGTAB2)
-! CALL LEG_DEFAULT_PREF()
 
  CALL UTL_FILLARRAY(IP,4,MP(IPLOT)%IDFKIND)
  CALL WDIALOGPUTCHECKBOX(IDF_CHECK1,IP(1))
@@ -1647,9 +1629,9 @@ CONTAINS
  INTEGER :: I,J,K,IRED,IGREEN,IBLUE,NCLRDEF,IRGB,II
  INTEGER,DIMENSION(MXCGRAD,3) :: CLR
  REAL,DIMENSION(3) :: INTCLR
- 
+
  !## default colors as set by preference file
- CALL LEG_DEFAULT_PREF()
+ !CALL LEG_DEFAULT_PREF()
  
  !## default number of classes between color-zones
  CALL LEGINITCLRGIVEN(IPLOT)
