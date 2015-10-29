@@ -1039,7 +1039,7 @@ DO I=1,SIZE(NLITHO)
  WRITE(IU,'(50A1)') ('+',K=1,50)
 ENDDO
 
-!## start plugins
+!## save settings for plugins
 WRITE(IU,'(50A1)') ('*',K=1,50)
 
 IF(SIZE(PI1).GE.1)THEN !If at least 1 plugin available call to plugin is performed
