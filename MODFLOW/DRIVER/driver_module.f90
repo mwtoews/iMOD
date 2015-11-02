@@ -1285,7 +1285,7 @@ if (lagree) then
       call imod_utl_printtext(trim(lic(i)),-2,iu)
    end do
    call imod_utl_printtext('',-1,iu)
-   call imod_utl_printtext('I accepted the term and conditions of the iMOD Software License Agreement on:',-2,iu)
+   call imod_utl_printtext('I accepted the terms and conditions of the iMOD Software License Agreement on:',-2,iu)
    call imod_utl_printtext('',-2,iu)
    call imod_utl_printtext(trim(datetime),-2,iu)
    close(iu)
