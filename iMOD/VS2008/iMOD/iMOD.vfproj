@@ -113,6 +113,9 @@
 		<Filter Name="imod_cus">
 		<File RelativePath="..\..\..\iMOD\SRC\imod_cus\imod_cus.f90"/>
 		<File RelativePath="..\..\..\iMOD\SRC\imod_cus\imod_cus_par.f90"/></Filter>
+		<Filter Name="imod_demo">
+		<File RelativePath="..\..\SRC\imod_demo\imod_demo.f90"/>
+		<File RelativePath="..\..\SRC\imod_demo\imod_demo_par.f90"/></Filter>
 		<Filter Name="imod_dino">
 		<File RelativePath="..\..\..\iMOD\SRC\imod_gef2ipf\gef2ipf.f90"/>
 		<File RelativePath="..\..\..\iMOD\SRC\imod_gef2ipf\gef2ipf_par.f90"/>
@@ -311,8 +314,10 @@
 		<Filter Name="imod_pcg">
 		<File RelativePath="..\..\..\iMOD\SRC\imod_pcg\imod_pcg.f90"/></Filter>
 		<Filter Name="imod_plugin">
-		<File RelativePath="..\..\SRC\imod_plugin\imod_plugin.f90"/>
-		<File RelativePath="..\..\SRC\imod_plugin\imod_plugin_par.f90"/></Filter>
+		<File RelativePath="..\..\..\..\branches\imod_plugin\imod_plugin.f90">
+			<FileConfiguration Name="Debug|x64">
+				<Tool Name="VFFortranCompilerTool" PreprocessorDefinitions=""/></FileConfiguration></File>
+		<File RelativePath="..\..\..\..\branches\imod_plugin\imod_plugin_par.f90"/></Filter>
 		<Filter Name="imod_polint">
 		<File RelativePath="..\..\..\iMOD\SRC\imod_polint\imod_polint.f90"/></Filter>
 		<Filter Name="imod_polygon">
@@ -417,9 +422,6 @@
 		<Filter Name="imod_wbal">
 		<File RelativePath="..\..\..\iMOD\SRC\imod_wbal\imod_wbal_compute.f90"/>
 		<File RelativePath="..\..\..\iMOD\SRC\imod_wbal\imod_wbal_par.f90"/></Filter>
-		<Filter Name="imod_demo">
-		<File RelativePath="..\..\SRC\imod_demo\imod_demo.f90"/>
-		<File RelativePath="..\..\SRC\imod_demo\imod_demo_par.f90"/></Filter>
 		<Filter Name="programs">
 		<File RelativePath="..\..\..\iMOD\SRC\imod_main\imod_prg.f90">
 			<FileConfiguration Name="Debug|Win32">

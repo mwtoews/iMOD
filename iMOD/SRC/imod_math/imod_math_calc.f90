@@ -159,9 +159,15 @@ CONTAINS
 
    !## determine size/parameters of result idf
    CALL IDFCOPY(MATH(CIDF),MATH(3))
-
-   !## overrule nodata value for fluxdiff function
-   IF(IEFUNC.EQ.5)MATH(3)%NODATA=-999.00
+!   MATH(3)%DX    =MATH(CIDF)%DX
+!   MATH(3)%DY    =MATH(CIDF)%DY
+!   MATH(3)%NODATA=MATH(CIDF)%NODATA
+!   MATH(3)%IEQ   =MATH(CIDF)%IEQ
+!   !## initial guess of dimensions
+!   MATH(3)%XMIN  =MATH(CIDF)%XMIN
+!   MATH(3)%XMAX  =MATH(CIDF)%XMAX
+!   MATH(3)%YMIN  =MATH(CIDF)%YMIN
+!   MATH(3)%YMAX  =MATH(CIDF)%YMAX
 
    !## first named selected idf's
    IF(IIEXT.EQ.2)THEN
@@ -321,7 +327,7 @@ CONTAINS
   CALL WDIALOGPUTSTRING(IDOK,'Incorrect Formulae')
   CALL WDIALOGPUTSTRING(IDF_RADIO2,'Unknown Map') 
  ELSE
-  CALL WDIALOGPUTSTRING(IDOK,'Compute ...')
+  CALL WDIALOGPUTSTRING(IDOK,'&Compute ...')
   IF(IG(1).EQ.0.AND.IG(2).GT.0)CALL WDIALOGPUTSTRING(IDF_RADIO2,'Map B') 
   IF(IG(1).GT.0.AND.IG(2).EQ.0)CALL WDIALOGPUTSTRING(IDF_RADIO2,'Map A') 
   IF(IG(1).GT.0.AND.IG(2).GT.0)THEN
@@ -356,7 +362,7 @@ CONTAINS
  MATH1GETFUNC=.FALSE.
 
  !## get function
- FUNC=UTL_CAP(FUNC,'U') 
+ CALL IUPPERCASE(FUNC)
  IIS=INDEX(FUNC,'C=')
  IF(IIS.EQ.0)THEN
   IF(IBATCH.EQ.-1)CALL WDIALOGPUTSTRING(IDF_LABEL5,'Function not well defined')
@@ -636,7 +642,6 @@ CONTAINS
  REAL,INTENT(IN) :: XC,YC
  REAL,INTENT(OUT) :: IDFRESULT
  INTEGER :: IROW,ICOL,I
- REAL :: SV
  REAL,DIMENSION(2) :: IDFVAL
  LOGICAL :: LEX
 
@@ -716,28 +721,13 @@ CONTAINS
 
  !# apply sgn()
  IF(IEFUNC.EQ.5)THEN
-
-  IF(IDFVAL(1).EQ.MATH(1)%NODATA.OR.IDFVAL(2).EQ.MATH(2)%NODATA)THEN
-   SV=MATH(3)%NODATA
-  ELSE
-   SV=0.0
-   IF(IDFVAL(1).LT.0.0.AND.IDFVAL(2).LT.0.0)THEN
-    IF(ABS(IDFVAL(1)-IDFVAL(2)).GE.TRIM_VALUE)THEN
-     IF(IDFVAL(2).LT.IDFVAL(1))SV=1.0 !## increase negative
-     IF(IDFVAL(2).GT.IDFVAL(1))SV=2.0 !## decrease negative
-    ENDIF
-   ELSEIF(IDFVAL(1).GT.0.0.AND.IDFVAL(2).GT.0.0)THEN
-    IF(ABS(IDFVAL(1)-IDFVAL(2)).GE.TRIM_VALUE)THEN
-     IF(IDFVAL(2).GT.IDFVAL(1))SV=3.0 !## decrease positive
-     IF(IDFVAL(2).LT.IDFVAL(1))SV=4.0 !## increase positive
-    ENDIF
-   ELSEIF(IDFVAL(1).LT.0.0.AND.IDFVAL(2).GT.0.0)THEN
-    SV=6.0
-   ELSEIF(IDFVAL(1).GT.0.0.AND.IDFVAL(2).LT.0.0)THEN
-    SV=5.0
-   ENDIF
+  !## check whether sign are equal
+  IF((IDFVAL(1).LT.0.0.AND.IDFVAL(2).GT.0.0).OR. &
+     (IDFVAL(1).GT.0.0.AND.IDFVAL(2).LT.0.0))THEN
+   !## if not --- modify idfval()
+   IDFVAL(1)=MATH(1)%NODATA
+   IDFVAL(2)=MATH(2)%NODATA
   ENDIF
-  IDFRESULT=SV; RETURN
  ENDIF
  
  !## get final idf-value for child-idf
@@ -811,9 +801,7 @@ CONTAINS
     IDFRESULT=MAX(IDFVAL(1),IDFVAL(2))
    ENDIF
  END SELECT
- 
- IF(IDFRESULT.LT.ABS(TRIM_VALUE))IDFRESULT=MATH(3)%NODATA
- 
+
  END SUBROUTINE MATH1CALCVALUE
 
  !###======================================================================

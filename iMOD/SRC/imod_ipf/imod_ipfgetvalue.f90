@@ -883,21 +883,9 @@ CONTAINS
        ELSE
         !## look for correct location in grid, to highlight
         IF(ALLOCATED(ASSF))THEN
-         SELECT CASE (ASSF(1)%ITOPIC)
-          !## time-series
-          CASE (1)
-           I=1
-          !## boreholes
-          CASE (2)
-           DO I=1,ASSF(1)%NRASS-1
-            IF(ASSF(1)%Z(I).GE.IPFMESSAGE%GY.AND.ASSF(1)%Z(I+1).LE.IPFMESSAGE%GY)EXIT         
-           ENDDO
-          !## logs
-          CASE (3)
-           DO I=1,ASSF(1)%NRASS-1
-            IF(ASSF(1)%MEASURE(1,I).GE.IPFMESSAGE%GY.AND.ASSF(1)%MEASURE(1,I+1).LE.IPFMESSAGE%GY)EXIT         
-           ENDDO        
-         END SELECT
+         DO I=1,ASSF(1)%NRASS-1
+          IF(ASSF(1)%Z(I).GE.IPFMESSAGE%GY.AND.ASSF(1)%Z(I+1).LE.IPFMESSAGE%GY)EXIT         
+         ENDDO
          CALL WGRIDSETCELL(IDF_GRID1,1,I)
         ENDIF
        ENDIF

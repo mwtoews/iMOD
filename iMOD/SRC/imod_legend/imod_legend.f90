@@ -348,12 +348,12 @@ CONTAINS
  LOGICAL FUNCTION LEGPREDEFINED()
  !###====================================================================
  IMPLICIT NONE
- INTEGER,PARAMETER :: MAXLEGEND=7
+ INTEGER,PARAMETER :: MAXLEGEND=6
  TYPE(WIN_MESSAGE)  :: MESSAGE
  INTEGER :: ITYPE,I
  CHARACTER(LEN=104),DIMENSION(MAXLEGEND) :: CLEGEND
  DATA CLEGEND/'GWS_NAP (-6:35)','GWS_SURFLEVEL (0:10)','FLUX_MMD (-1.5:0.05)','RESIDUAL (-2:2)','TRANSMISSIVITY (0:10.000)', &
-     'GT (100-802)','FLUXDIFF (0:6)'/ 
+     'GT (100-802)'/ 
  
  LEGPREDEFINED=.FALSE.
 
@@ -538,16 +538,6 @@ CONTAINS
    WRITE(IU,'(A)') '  103.0      101.0     88        76       208    "GT Ic"'
    WRITE(IU,'(A)') '  101.0      100.0     88        76       208    "GT Ia"'
    WRITE(IU,'(A)') '  100.0       99.0     88        76       208    "GT I"'  
-  CASE (7) !##fluxdiff
-   WRITE(IU,'(A)') '7,1,1,1,1,1,1,1'
-   WRITE(IU,'(A)') 'UPPER BND LOWER BND      IRED    IGREEN     IBLUE     DOMAIN'
-   WRITE(IU,'(A)') '6.000000,5.000000,255,255,128,"6 Switch Negative to Positive"'
-   WRITE(IU,'(A)') '5.000000,4.000000,255,128,255,"5 Switch Positive to Negative"'
-   WRITE(IU,'(A)') '4.000000,3.000000,0,255,128,"4 Positive Decrease"'
-   WRITE(IU,'(A)') '3.000000,2.000000,0,128,64,"3 Positive Increase"'
-   WRITE(IU,'(A)') '2.000000,1.000000,255,128,128,"2 Negative Decrease"'
-   WRITE(IU,'(A)') '1.000000,0.0000000E+00,255,0,0,"1 Negative Increase"'
-   WRITE(IU,'(A)') '0.0000000E+00,-1.000000,192,192,192,"0 Equal/Too small"'
  END SELECT
 
  CLOSE(IU)
@@ -1610,7 +1600,7 @@ CONTAINS
  !==============================================================================
  IMPLICIT NONE
  INTEGER,INTENT(IN) :: IPLOT
- INTEGER :: I,J,ICRIT,NCLR
+ INTEGER            :: I,J,ICRIT,NCLR
 
  !##number of classes between color-zones
  ICRIT=INT(REAL(MP(IPLOT)%LEG%NCLR)/REAL(MXCGRAD-1))
