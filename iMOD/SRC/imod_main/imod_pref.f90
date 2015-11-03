@@ -98,10 +98,10 @@ CONTAINS
 
    CASE (ID_DPREF)
     SELECT CASE (ITYPE)
-     CASE (TABCHANGED)
+     CASE (EXPOSE,TABCHANGED)
       SELECT CASE (MESSAGE%VALUE2)
        CASE (ID_DPREFTAB2)
-        CALL PREF_CLR_REFRESH()
+        CALL PREF_CLR_REFRESH_DEFAULT()
       END SELECT
      CASE (PUSHBUTTON)
       SELECT CASE (MESSAGE%VALUE1)
@@ -136,7 +136,7 @@ CONTAINS
     END SELECT
 
    CASE (ID_DPREFTAB2)   
-    SELECT CASE (ITYPE)
+    SELECT CASE (ITYPE)      
      CASE (FIELDCHANGED)
       SELECT CASE (MESSAGE%VALUE1)
        CASE (IDF_MENU1)
@@ -167,7 +167,10 @@ CONTAINS
         CALL PREFFIELDS()
        CASE(ID_FLIP)
         CALL PREF_CLR_FLIP()
-      END SELECT
+       CASE(ID_DEFAULT)
+        CALL COLOUR_INIT()
+        CALL PREF_CLR_REFRESH_DEFAULT()
+      END SELECT      
     END SELECT
 
   END SELECT
@@ -389,6 +392,25 @@ CONTAINS
   CALL PREF_CLR_UPDATE()
   
  END SUBROUTINE PREF_CLR_FLIP
+ 
+ !###====================================================================
+ SUBROUTINE PREF_CLR_REFRESH_DEFAULT()
+ !###====================================================================
+ IMPLICIT NONE
+ INTEGER :: I,IRGB
+ 
+  !## read current color settings on preference-dialog
+  CALL WDIALOGSELECT(ID_DPREFTAB2)
+ 
+  !## get colors on dialog
+  DO I=1,MXCGRAD
+   IRGB= WRGB(CLR(I,1),CLR(I,2),CLR(I,3))
+   CALL WDIALOGCOLOUR(ID(I),IRGB,IRGB)
+  END DO
+  
+  CALL PREF_CLR_UPDATE()
+  
+ END SUBROUTINE PREF_CLR_REFRESH_DEFAULT
  
  !###======================================================================
  SUBROUTINE PREFUPDATE()
