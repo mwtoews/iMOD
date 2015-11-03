@@ -19,6 +19,7 @@
 !!  Stichting Deltares
 !!  P.O. Box 177
 !!  2600 MH Delft, The Netherlands.
+!!
 MODULE MOD_MATH_PAR
 
 CHARACTER(LEN=80),SAVE :: FUNC  !## function
@@ -26,6 +27,7 @@ INTEGER,SAVE :: IIEXT           !## usage of window
 INTEGER,SAVE :: IGEN            !## usage of polygon
 INTEGER,SAVE :: INODATA         !## usage of nodata value
 REAL,SAVE :: NODATA_VALUE       !## nodata value to be used in computation
+REAL,SAVE :: TRIM_VALUE         !## trim value for results
 INTEGER,SAVE :: IEQUI           !## make equidist. idf as result
 CHARACTER(LEN=256),DIMENSION(:,:),ALLOCATABLE,SAVE :: IDFNAMES
 CHARACTER(LEN=256),SAVE :: GENNAME
