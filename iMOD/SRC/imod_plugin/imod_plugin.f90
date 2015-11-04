@@ -29,7 +29,7 @@ USE MOD_PREF_PAR, ONLY : PREFVAL
 USE MOD_UTL, ONLY : UTL_GETUNIT,UTL_READINITFILE,UTL_DIRINFO_POINTER,UTL_CAP,ITOS,UTL_LISTOFFILES
 USE MOD_IDF, ONLY : IDFDEALLOCATE,IDFNULLIFY
 USE MOD_OSD, ONLY : OSD_GETARG,OSD_OPEN,OSD_GETENV
-USE IMODVAR, ONLY : IDIAGERROR
+USE IMODVAR, ONLY : IDIAGERROR,IDPROC
 USE MODPLOT
 USE IMOD
 
@@ -70,6 +70,7 @@ CONTAINS
       IF(IPI.EQ.27)THEN; N=SIZE(PI1); CALL WGRIDGETCHECKBOX(IDF_GRID1,2,PI1%IACT,N); ENDIF
       IF(IPI.EQ.28)THEN; N=SIZE(PI2); CALL WGRIDGETCHECKBOX(IDF_GRID1,2,PI2%IACT,N); ENDIF
       IF(PLUGIN_UPDATEMENU_FILL())EXIT
+     CASE(IDHELP)
     END SELECT
    CASE (FIELDCHANGED)
     SELECT CASE (MESSAGE%VALUE2)
@@ -317,7 +318,7 @@ CONTAINS
  !## subroutine to execute the plugin executable. The connection with menu-item is made in 'PLUGIN_UPDATEMENU_FILL'-function
  IMPLICIT NONE
  INTEGER,INTENT(IN) :: IDPLUGIN
- INTEGER :: IPI,IDP,IFLAG,I
+ INTEGER :: IPI,IDP,I,IFLAG
  CHARACTER(LEN=52) :: WNW 
  CHARACTER(LEN=256) :: EXE,DIRNAME
 
@@ -346,13 +347,17 @@ CONTAINS
   RETURN
  ENDIF
  
- !# executable runs only if "apply"-button is called
- CALL IOSCOMMAND(TRIM(EXE),IFLAG)
-   
- !## plugin finished, nothing to do furthermore
- !## If Back-file available read at fixed moments during executing time, based upon the PLUGIN.IN file
- CALL PLUGIN_EXE_READ_BACK(IPI,IDP)
-  
+ !# executable runs only if "apply"-button is called, process identifer (IDPROC) is saved in PI-variable
+ IF(IPI.EQ.27)THEN
+  PI1%IDPROC=0
+  IFLAG=PI1(IDP)%IFLAG
+  CALL IOSCOMMAND(TRIM(EXE),IFLAG,0,IDPROC=PI1%IDPROC)
+ ELSEIF(IPI.EQ.28)THEN
+  PI2%IDPROC=0
+  IFLAG=PI2(IDP)%IFLAG
+  CALL IOSCOMMAND(TRIM(EXE),IFLAG,0,IDPROC=PI2%IDPROC)
+ ENDIF
+ 
  !## move back to the iMOD folder
  CALL IOSDIRCHANGE(DIRNAME)
 
@@ -391,8 +396,9 @@ CONTAINS
  CHARACTER(LEN=*),INTENT(OUT) :: WNW,EXE
  INTEGER,INTENT(IN) :: IPI,IDP
  CHARACTER(LEN=STRLEN),POINTER,DIMENSION(:) :: FLIST => NULL()
- CHARACTER(LEN=256) :: DIRNAME,LINE,MENU,BACK
+ CHARACTER(LEN=256) :: DIRNAME,LINE,MENU,BACK,FNAME,HELP
  CHARACTER(LEN=256),DIMENSION(6) :: STRING
+ CHARACTER(LEN=1256) :: TEXT
  INTEGER :: IU,I,J,BACTION
  LOGICAL :: LEX
  
@@ -424,7 +430,9 @@ CONTAINS
  !## Read menu-file and link to menu window
  MENU=''; IF(UTL_READINITFILE('MENU',LINE,IU,1))READ(LINE,*) MENU
  
- !## call back-file if available
+ !## call back-file if available AND read help file
+ HELP=''; IF(UTL_READINITFILE('HELP',LINE,IU,1))READ(LINE,*) HELP
+ HELP=TRIM(DIRNAME)//'\'//TRIM(HELP)
  BACK=''; IF(UTL_READINITFILE('BACK',LINE,IU,1))READ(LINE,*) BACK
  IF(IPI.EQ.27)THEN
   PI1(IDP)%BACK=BACK
@@ -434,20 +442,31 @@ CONTAINS
  
  CLOSE(IU)
  
- !## no menu keyword available, return
+ !# BACK: If output-file not available create new file, else replace by empty file
+ IU=UTL_GETUNIT()
+ FNAME=TRIM(DIRNAME)//'\'//TRIM(BACK)
+ INQUIRE(FILE=FNAME,EXIST=LEX)
+ IF(.NOT.LEX)THEN
+  OPEN(IU,FILE=TRIM(DIRNAME)//'\'//TRIM(BACK),STATUS='NEW')
+ ELSE
+  OPEN(IU,FILE=TRIM(DIRNAME)//'\'//TRIM(BACK),STATUS='REPLACE')
+ ENDIF
+ CLOSE(IU)
+ 
+ !## MENU: no menu keyword available, return
  IF(MENU.EQ.'')THEN; PLUGIN_EXE_READ_INI=.TRUE.; RETURN; ENDIF
 
- !## read variables from menu-file and read file-list into utl_listoffiles()
+ !## MENU: read variables from menu-file and read file-list into utl_listoffiles()
  IU=UTL_GETUNIT(); CALL OSD_OPEN(IU,FILE=TRIM(DIRNAME)//'\'//TRIM(MENU),STATUS='OLD',ACTION='READ')
  IF(IU.EQ.0)RETURN
   
  STRING=''
  IF(UTL_READINITFILE('LIST',LINE,IU,1))   READ(LINE,*)     STRING(1)
- IF(UTL_READINITFILE('TITLE',LINE,IU,1)) READ(LINE,'(A)') STRING(2)
+ IF(UTL_READINITFILE('TITLE',LINE,IU,1))  READ(LINE,'(A)') STRING(2)
  IF(UTL_READINITFILE('BUTTON1',LINE,IU,1))READ(LINE,*)     STRING(3)
  IF(UTL_READINITFILE('BUTTON2',LINE,IU,1))READ(LINE,*)     STRING(4)
  IF(UTL_READINITFILE('BUTTON3',LINE,IU,1))READ(LINE,*)     STRING(5)
- IF(UTL_READINITFILE('TEXT',LINE,IU,1))   READ(LINE,'(A)') STRING(6)
+ IF(UTL_READINITFILE('TEXT',LINE,IU,1))   READ(LINE,*)     STRING(6)
  CLOSE(IU)
  
  !## include files in exe-window from selected place based upon predefined List-name
@@ -462,9 +481,20 @@ CONTAINS
   ENDIF
   ALLOCATE(FLIST(J)); DO I=1,J; FLIST(I)=MP(I)%IDFNAME; ENDDO
  ENDIF
-
+ 
+ !## Read text from file (=string(6))
+ FNAME=TRIM(DIRNAME)//'\'//TRIM(STRING(6))
+ INQUIRE(FILE=FNAME,EXIST=LEX)
+ IF(.NOT.LEX)THEN
+  CALL WMESSAGEBOX(OKONLY,EXCLAMATIONICON,COMMONOK,'Error, cannot find '//TRIM(DIRNAME)//'\'//TRIM(STRING(6))//'. No requirements are given.','Error')
+  TEXT="No requirements given"
+  RETURN
+ ENDIF
+ 
  !## handling of files
- CALL UTL_LISTOFFILES(FLIST,STRING,BACTION)
+ CALL UTL_READTXTFILE(FNAME,TEXT)
+ CALL UTL_LISTOFFILES(FLIST,STRING,BACTION,TEXT,HELP)
+ 
  !## selected the OK button
  IF(BACTION.EQ.1)THEN
     
@@ -492,20 +522,24 @@ CONTAINS
  !## Subroutine to read variables from PLUG-IN.out
  IMPLICIT NONE
  INTEGER,INTENT(IN) :: IPI, IDP
- INTEGER :: I,IU,LEX,IOS,NFILE,IFLAG
- CHARACTER(LEN=256) :: DIRNAME,BACK,LINE,STOPCOM,MESSINFO,MESSERR,MESSPROG
+ INTEGER :: I,IU,LEX,IOS,NFILE,IFLAG,ISTATUS
+ CHARACTER(LEN=256) :: DIRNAME,BACK,LINE,MESSINFO,MESSERR,MESSPROG !,STEXT,STWORD
  CHARACTER(LEN=52) :: RESULTFILE
  REAL,DIMENSION(4) :: WINDOW
  
  IF(IPI.EQ.27)THEN
   BACK=PI1(IDP)%BACK
   IFLAG=PI1(IDP)%IFLAG
+  IDPROC=PI1(IDP)%IDPROC
+  DIRNAME=TRIM(PREFVAL(IPI))//'\'//TRIM(PI1(IDP)%PNAME)//'\'
  ELSE
   BACK=PI2(IDP)%BACK
   IFLAG=PI2(IDP)%IFLAG
+  IDPROC=PI2(IDP)%IDPROC
+  DIRNAME=TRIM(PREFVAL(IPI))//'\'//TRIM(PI2(IDP)%PNAME)//'\'
  ENDIF
  
- INQUIRE(FILE=BACK,EXIST=LEX)
+ INQUIRE(FILE=TRIM(DIRNAME)//TRIM(BACK),EXIST=LEX)
  IF(.NOT.LEX)THEN
   CALL WMESSAGEBOX(OKONLY,EXCLAMATIONICON,COMMONOK,'Error, cannot find '//TRIM(BACK)//'.'//CHAR(13)// &
   'Inspect your *.INI file in plugin folder.','Error')
@@ -514,10 +548,10 @@ CONTAINS
  
  IU=UTL_GETUNIT()
  
- IF(IFLAG.EQ.2)THEN !# if "wait"-command given then Back-file will be read
-  CALL OSD_OPEN(IU,FILE=BACK,STATUS='OLD',ACTION='READ')
+ !IF(IFLAG.EQ.2)THEN !# if "wait"-command given then Back-file will be read
+  CALL OSD_OPEN(IU,FILE=TRIM(DIRNAME)//TRIM(BACK),STATUS='OLD',ACTION='READ')
   IF(IU.EQ.0)RETURN
- ENDIF 
+ !ENDIF 
  
  !#Handling different types of optional Plugin-messages
  MESSINFO=''; IF(UTL_READINITFILE('MESSAGE_INFO',LINE,IU,1))READ(LINE,'(A)',IOSTAT=IOS) MESSINFO
@@ -539,12 +573,6 @@ CONTAINS
  ENDIF
 ! MESSPROG=''; IF(UTL_READINITFILE('MESSAGE_PROGRESS',LINE,IU,1))READ(LINE,*) MESSPROG
   
- IF(IPI.EQ.27)THEN
-  DIRNAME=TRIM(PREFVAL(IPI))//'\'//TRIM(PI1(IDP)%PNAME)//'\'
- ELSEIF(IPI.EQ.28)THEN
-  DIRNAME=TRIM(PREFVAL(IPI))//'\'//TRIM(PI2(IDP)%PNAME)//'\'
- ENDIF
-
  !#Reads list of files from line and returns this list to iMOD manager
  !#plot update at the end of reading all files
  !#select all new files in iMOD manager after executable is finsihed 
@@ -556,7 +584,7 @@ CONTAINS
    ENDIF
    READ(LINE,*,IOSTAT=IOS) RESULTFILE
    IF(IOS.EQ.0)THEN
-    INQUIRE(FILE=RESULTFILE,EXIST=LEX)
+    INQUIRE(FILE=TRIM(DIRNAME)//TRIM(RESULTFILE),EXIST=LEX)
     IF(.NOT.LEX)THEN
      CALL WMESSAGEBOX(OKONLY,EXCLAMATIONICON,COMMONOK,'Error, cannot find '//TRIM(RESULTFILE)//'.'//CHAR(13)// &
      'Inspect your plugin settings.','Error')
@@ -586,14 +614,119 @@ CONTAINS
  ENDIF
  
  !#If Stop is read in file then iMOD will check whether or not the executable is still running. 
- !#Only if exe runs in "nowait"-modus. If it is stopped running Plug-in.out won't be checked anymore
- STOPCOM=''; IF(UTL_READINITFILE('STOP',LINE,IU,1))READ(LINE,*) STOPCOM
+ !#Only if exe runs in "wait"-modus. If it is stopped running Plug-in.out won't be checked anymore
+! DO
+!  READ(IU,'(A)',IOSTAT=IOS) STEXT
+!  READ(TEXT,*) SWORD
+!  IF(TRIM(STWORD).EQ.'STOP')THEN
+!   CALL PLUGIN_EXE_CHECK_RUN(IPI,IDP)
+!   EXIT
+!  ENDIF
+! ENDDO
 
- CLOSE(IU)
+!## Closes the file and let the user choose to either delete or preserve the output file written by the plugin
+ INQUIRE(FILE=TRIM(DIRNAME)//TRIM(BACK),EXIST=LEX)
+ CALL IOSCOMMANDCHECK(IDPROC,ISTATUS)
+ IF(LEX.AND.ISTATUS.EQ.0)THEN
+  CALL WMESSAGEBOX(YESNO,EXCLAMATIONICON,COMMONYES,'iMOD is finished reading *.OUT and does not need this file anymore.'//CHAR(13)// &
+    'Would you like to delete this file?'//CHAR(13)//'(click on "yes" to delete *.OUT, else click on "no")','warning')    
+  IF(WINFODIALOG(EXITBUTTONCOMMON)==COMMONYES)THEN
+   CLOSE(IU,STATUS='DELETE',IOSTAT=IOS)
+  ELSEIF(WINFODIALOG(EXITBUTTONCOMMON)==COMMONNO)THEN
+   CLOSE(IU,STATUS='KEEP',IOSTAT=IOS)
+  ENDIF
+ ENDIF
 
  CALL IDFPLOTFAST(0) !#plot last loaded file in manager to window
 
  END SUBROUTINE PLUGIN_EXE_READ_BACK
+
+ !###======================================================================
+ SUBROUTINE PLUGIN_EXE_CHECK_RUN(IRUN)
+ !###======================================================================
+ !## Subroutine to check whether plugin executable is still running or not
+ IMPLICIT NONE
+ INTEGER,INTENT(IN) :: IRUN
+ INTEGER :: IPI,IDP,ISTATUS,IEXCOD,IFLAG
+  
+  
+  IF(IRUN.EQ.1)THEN
+  !#plugin1
+   DO IDP=1,SIZE(PI1)
+    IPI=27 
+    IDPROC=PI1(IDP)%IDPROC
+    IFLAG=PI1(IDP)%IFLAG
+    IF(IDPROC(1).NE.0.AND.IFLAG.EQ.1)THEN !## Only if iflag=1 -> running-command="nowait"
+     CALL IOSCOMMANDCHECK(IDPROC,ISTATUS,IEXCOD=IEXCOD)
+     CALL PLUGIN_EXE_READ_BACK(IPI,IDP)
+    ENDIF
+   ENDDO
+
+  !#plugin2
+   DO IDP=1,SIZE(PI2)
+    IPI=28 
+    IDPROC=PI2(IDP)%IDPROC
+    IFLAG=PI2(IDP)%IFLAG   
+    IF(IDPROC(1).NE.0.AND.IFLAG.EQ.1)THEN
+     CALL IOSCOMMANDCHECK(IDPROC,ISTATUS,IEXCOD=IEXCOD)
+     CALL PLUGIN_EXE_READ_BACK(IPI,IDP)
+    ENDIF
+   ENDDO
+  ELSEIF(IRUN.EQ.0)THEN
+   
+  ENDIF
+  
+!## If stop command is available in *.OUT file  
+! IF(IDPROC(1).NE.0)THEN
+!  #if (defined(WINTERACTER9))
+!   CALL IOSCOMMANDCHECK(IDPROC,ISTATUS,IEXCOD=IEXCOD)
+!  #endif
+!   IF(ISTATUS.EQ.1)THEN
+!    CALL WMESSAGEBOX(YESNO,EXCLAMATIONICON,COMMONYES,'iMOD read a "STOP"-command in *.OUT file, but plugin is not terminated yet.'//CHAR(13)// &
+!    'Are you sure you want to force the plugin to stop?'//CHAR(13)//'(Click on "Yes" to terminate the plugin, else click on "No")','Warning')    
+!    IF(WINFODIALOG(EXITBUTTONCOMMON)==COMMONYES)THEN
+!     #if (defined(WINTERACTER9))
+!      CALL IOSCOMMANDKILL(IDPROC,0)
+!     #endif  
+!    ELSEIF(WINFODIALOG(EXITBUTTONCOMMON)==COMMONNO)THEN
+!     !#proceed with the running process until the plugin stopped itself  
+!    ENDIF
+!  ENDIF
+! ENDIF
  
+ END SUBROUTINE PLUGIN_EXE_CHECK_RUN
+ 
+ !###======================================================================
+ SUBROUTINE UTL_READTXTFILE(FNAME,TEXT)
+ !###======================================================================
+ !## Subroutine to read text containing multiple lines 
+ IMPLICIT NONE
+ CHARACTER(LEN=*),INTENT(INOUT) :: TEXT
+ CHARACTER(LEN=:),ALLOCATABLE :: LINE
+ CHARACTER(LEN=*), INTENT(IN) :: FNAME
+ INTEGER :: IU,IOS,LENTXT
+ 
+ TEXT='' 
+ IU=UTL_GETUNIT(); CALL OSD_OPEN(IU,FILE=FNAME,STATUS='OLD',ACTION='READ')
+ IF(IU.EQ.0)RETURN
+ 
+ LENTXT = LEN(TEXT)
+ ALLOCATE(CHARACTER(LEN=LENTXT) :: LINE)
+ 
+ DO
+   READ(IU,'(A)',IOSTAT=IOS) LINE
+   IF(IOS.NE.0)EXIT
+   IF(LEN_TRIM(TEXT).EQ.0)THEN
+    TEXT=TRIM(LINE)
+   ELSE
+    TEXT=TRIM(TEXT)//CHAR(13)//CHAR(10)//TRIM(LINE)
+   ENDIF
+ ENDDO
+ CLOSE(IU)
+ 
+ DEALLOCATE(LINE)
+ 
+END SUBROUTINE UTL_READTXTFILE
+
 END MODULE MOD_PLUGIN
 

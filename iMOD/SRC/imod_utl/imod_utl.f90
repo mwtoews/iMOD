@@ -310,17 +310,7 @@ CONTAINS
  EXT=HELP(I+1:)
  
  !## open help file
- DO
-  IF(UTL_CAP(TRIM(EXT),'U').EQ.'PDF')THEN
-   LACROBAT=.TRUE.
-  ELSEIF(UTL_CAP(TRIM(EXT),'U').EQ.'HTM')THEN
-   LACROBAT=.FALSE.
-   CALL WHELPFILE(TRIM(HELP))
-   EXIT
-  ENDIF
- 
-  !LACROBAT=.TRUE.
-
+ IF(UTL_CAP(TRIM(EXT),'U').EQ.'PDF')THEN
   !## acrobat reader
   IF(PREFVAL(13).EQ.'')THEN
    CALL WMESSAGEBOX(OKONLY,COMMONOK,EXCLAMATIONICON,'You should specify the keyword ACROBATREADER in the Preference file of iMOD.'// &
@@ -332,39 +322,14 @@ CONTAINS
    CALL WMESSAGEBOX(OKONLY,COMMONOK,EXCLAMATIONICON,'Can not find the specified ACROBATREADER='//TRIM(PREFVAL(13)),'Warning')
    RETURN
   ENDIF
+  LINE='"'//TRIM(PREFVAL(13))//' '//TRIM(HELP)//'"'
+  CALL IOSCOMMAND(LINE,PROCSILENT)
 
-  !## acrobat reader
-  IF(LACROBAT)THEN
-   CALL WHELPFILE(TRIM(HELP))   
-   !LINE='"'//TRIM(PREFVAL(13))//'" /A "'//TRIM(HELP)//'"'
-  !## sumatra pdf
-  ELSE
-   LINE='"'//TRIM(PREFVAL(13))//'" -reuse-instance "'//TRIM(HELP)//'"'
-  ENDIF
-
-  IF(IDPROC(1).NE.0)THEN
-#if (defined(WINTERACTER9))
-    CALL IOSCOMMANDCHECK(IDPROC,ISTATUS,IEXCOD=IEXCOD)
-#endif
-   !## killed
-   IF(ISTATUS.EQ.0)THEN
-
-  !## still running, kill it
-   ELSEIF(ISTATUS.EQ.1)THEN
-#if (defined(WINTERACTER9))
-    CALL IOSCOMMANDKILL(IDPROC,0)
-#endif
-   ENDIF
-  ENDIF
-
-  CALL IOSCOMMAND(LINE,PROCSILENT,IDPROC=IDPROC)
-
-  !## SumatraPDF:
-  !"c:\Program Files (x86)\SumatraPDF\SumatraPDF.exe" -reuse-instance -named-dest sec:5.3 imod_um.pdf
-  !## AdobeReader:
-  !"c:\Program Files (x86)\Adobe\Reader 11.0\Reader\AcroRd32.exe" /n /s /A "nameddest=sec:5.3" imod_um.pdf
-  EXIT
- ENDDO
+ ELSEIF(UTL_CAP(TRIM(EXT),'U').EQ.'HTM')THEN
+  !## webpage
+  CALL WHELPFILE(TRIM(HELP))
+ 
+ ENDIF
  
  END SUBROUTINE UTL_LISTOFFILES_GETHELP
 
