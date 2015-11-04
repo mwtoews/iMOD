@@ -129,6 +129,7 @@
 		<File RelativePath="..\..\..\iMOD\SRC\imod_draw\imod_quickopen.f90"/>
 		<File RelativePath="..\..\..\iMOD\SRC\imod_draw\imod_topo.f90"/></Filter>
 		<Filter Name="imod_gen">
+		<File RelativePath="..\..\SRC\imod_gen\imod_gen_hfb.f90"/>
 		<File RelativePath="..\..\..\iMOD\SRC\imod_gen\imod_genpuzzle.f90">
 			<FileConfiguration Name="Debug|Win32">
 				<Tool Name="VFFortranCompilerTool" Interfaces="true" WarnInterfaces="false"/></FileConfiguration>
@@ -315,7 +316,7 @@
 		<File RelativePath="..\..\..\iMOD\SRC\imod_pcg\imod_pcg.f90"/></Filter>
 		<Filter Name="imod_plugin">
 		<File RelativePath="..\..\SRC\imod_plugin\imod_plugin.f90"/>
-		<File RelativePath="..\..\..\..\branches\imod_plugin\imod_plugin_par.f90"/></Filter>
+		<File RelativePath="..\..\SRC\imod_plugin\imod_plugin_par.f90"/></Filter>
 		<Filter Name="imod_polint">
 		<File RelativePath="..\..\..\iMOD\SRC\imod_polint\imod_polint.f90"/></Filter>
 		<Filter Name="imod_polygon">

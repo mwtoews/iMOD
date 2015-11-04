@@ -455,7 +455,7 @@ CONTAINS
      X1=IFF(1)%X; X2=IFF(2)%X
      Y1=IFF(1)%Y; Y2=IFF(2)%Y
      !## intersect line
-     N=0; CALL INTERSECT_EQUI(XMIN,XMAX,YMIN,YMAX,CS,X1,X2,Y1,Y2,N)
+     N=0; CALL INTERSECT_EQUI(XMIN,XMAX,YMIN,YMAX,CS,X1,X2,Y1,Y2,N,.FALSE.)
 
      !## fill result array
      DO L=1,N
@@ -746,7 +746,7 @@ CONTAINS
       X1=SHPXC(I,SHPI); X2=SHPXC(I+1,SHPI)
       Y1=SHPYC(I,SHPI); Y2=SHPYC(I+1,SHPI)
       !## intersect line
-      N=0; CALL INTERSECT_EQUI(X(1)%XMIN,X(1)%XMAX,X(1)%YMIN,X(1)%YMAX,X(1)%DX,X1,X2,Y1,Y2,N)
+      N=0; CALL INTERSECT_EQUI(X(1)%XMIN,X(1)%XMAX,X(1)%YMIN,X(1)%YMAX,X(1)%DX,X1,X2,Y1,Y2,N,.FALSE.)
       !## fill result array
       DO J=1,N
        IC=INT(XA(J)); IR=INT(YA(J))

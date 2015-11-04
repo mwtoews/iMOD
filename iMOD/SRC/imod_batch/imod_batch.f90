@@ -2580,6 +2580,7 @@ CONTAINS
  ISS=1             !'iss               : (1) mean over all periods, (2) mean over given period'
  IDIM=2            !'idim              : (1) give area (2) entire domain of isg (3) selected isg'
  POSTFIX='' 
+ STIME=INT(0,8); ETIME=INT(0,8); DTIME=INT(0,8)
  SDATE=0; EDATE=0; DDATE=0
  ISAVE=1
  MAXWIDTH=1000.0
@@ -2642,6 +2643,7 @@ CONTAINS
   READ(LINE,*) EDATE; WRITE(*,'(A,I8)') 'EDATE=',EDATE
   IF(UTL_READINITFILE('DDATE',LINE,IU,1))READ(LINE,*) DDATE
   WRITE(*,'(A,I10)') 'DDATE=',DDATE
+  STIME=SDATE*1000000; ETIME=EDATE*1000000; DTIME=DDATE*1000000
  ENDIF
  IF(UTL_READINITFILE('IAVERAGE',LINE,IU,1))READ(LINE,*) IAVERAGE
  WRITE(*,'(A,I1)') 'IAVERAGE=',IAVERAGE
