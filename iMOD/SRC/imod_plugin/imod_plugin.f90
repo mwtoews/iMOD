@@ -623,6 +623,7 @@ CONTAINS
  MESSPROG=''; IF(UTL_READINITFILE('MESSAGE_PROGRESS',LINE,IU,1))READ(LINE,'(A)') MESSPROG
  IF(MESSPROG.NE.'')THEN
   CALL WINDOWOUTSTATUSBAR(4,'PLUGIN MESSAGE - '//TRIM(PNAME)//': '//TRIM(MESSPROG))
+  CALL SLEEP(10)
  ENDIF
   
  !#Reads list of files from line and returns this list to iMOD manager
@@ -746,10 +747,10 @@ CONTAINS
  CALL WMESSAGEBOX(YESNO,QUESTIONICON,COMMONYES,'The '//TRIM(PNAME)//' plugin is running!'//CHAR(13)// &
   'This will be terminated if you close iMOD.'//CHAR(13)//'Are you sure you want to exit iMOD?','QUESTION')    
  IF(WINFODIALOG(EXITBUTTONCOMMON)==COMMONYES)THEN
-  #if (defined(WINTERACTER9))
+#if (defined(WINTERACTER9))
    CALL IOSCOMMANDKILL(IDPROC,0)
    IKILL=1
-  #endif  
+#endif  
  ELSEIF(WINFODIALOG(EXITBUTTONCOMMON)==COMMONNO)THEN
   !#proceed with the running process until the plugin stopped itself  
   CALL PLUGIN_EXE_CHECK_RUN(1,IKILL)

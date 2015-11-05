@@ -54,7 +54,7 @@ SELECT CASE (ITYPE)
  !## close selected window - if root window terminate iMOD
  CASE(CLOSEREQUEST)
   CALL PLUGIN_EXE_CHECK_RUN(0,IKILL)
-  IF(IKILL.EQ.1.AND.NPROC.GT.0)THEN !#only close iMOD
+  IF(IKILL.EQ.1)THEN !#only close iMOD
    CALL IMODCLOSE(MESSAGE%WIN)
   ENDIF
  !## mouse move
