@@ -365,7 +365,11 @@ CONTAINS
   ENDDO
 
  END DO
-
+ 
+ !# Update settings iMOD main window
+ CALL IGRSELECT(DRAWWIN,MPW%IWIN)
+ CALL IGRUNITS(MPW%XMIN,MPW%YMIN,MPW%XMAX,MPW%YMAX)
+ 
  END SUBROUTINE PREF_CLR_UPDATE
  
  !###====================================================================
