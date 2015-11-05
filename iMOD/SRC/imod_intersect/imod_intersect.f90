@@ -136,35 +136,38 @@ CONTAINS
  LOGICAL,INTENT(IN) :: LHFB
  REAL :: X,Y,XMN,XMX,YMN,YMX,DX,DY,LENG,TD
  INTEGER :: I,ICOL,IROW,ID,N_IN
- REAL :: A,B,XBEGIN,YBEGIN
+! REAL :: XBEGIN,YBEGIN
 
- IF(ASSOCIATED(XA))THEN; IF(SIZE(XA).LT.5)DEALLOCATE(XA); ENDIF
- IF(ASSOCIATED(YA))THEN; IF(SIZE(YA).LT.5)DEALLOCATE(YA); ENDIF
- IF(ASSOCIATED(FA))THEN; IF(SIZE(FA).LT.5)DEALLOCATE(FA); ENDIF
- IF(ASSOCIATED(LN))THEN; IF(SIZE(LN).LT.5)DEALLOCATE(LN); ENDIF
+! IF(ASSOCIATED(XA))THEN; IF(SIZE(XA).LT.5)DEALLOCATE(XA); ENDIF
+! IF(ASSOCIATED(YA))THEN; IF(SIZE(YA).LT.5)DEALLOCATE(YA); ENDIF
+! IF(ASSOCIATED(FA))THEN; IF(SIZE(FA).LT.5)DEALLOCATE(FA); ENDIF
+! IF(ASSOCIATED(LN))THEN; IF(SIZE(LN).LT.5)DEALLOCATE(LN); ENDIF
  
  IF(.NOT.ASSOCIATED(XA))ALLOCATE(XA(1000)); IF(.NOT.ASSOCIATED(YA))ALLOCATE(YA(1000))
  IF(.NOT.ASSOCIATED(FA))ALLOCATE(FA(1000)); IF(.NOT.ASSOCIATED(LN))ALLOCATE(LN(1000))
 
  N_IN=N
+
+ IF(.NOT.INTERSECT_EQUATION(XMIN,XMAX,YMIN,YMAX,X1,X2,Y1,Y2,N))RETURN
  
- IF((MIN(X1,X2).GE.XMAX.OR.MAX(X1,X2).LE.XMIN).OR. &
-    (MIN(Y1,Y2).GE.YMAX.OR.MAX(Y1,Y2).LE.YMIN))RETURN
-
- !IF(MX.LT.3)RETURN
-
- XBEGIN=X1
- YBEGIN=Y1
-
- !## arrange x1,x2,y1,y2 such that x1<x2
- IF(X1.GT.X2)THEN
-  X    =X1
-  Y    =Y1
-  X1   =X2
-  Y1   =Y2
-  X2   =X
-  Y2   =Y
- ENDIF
+! IF((MIN(X1,X2).GE.XMAX.OR.MAX(X1,X2).LE.XMIN).OR. &
+!    (MIN(Y1,Y2).GE.YMAX.OR.MAX(Y1,Y2).LE.YMIN))RETURN
+!
+! !IF(MX.LT.3)RETURN
+!
+! XBEGIN=X1
+! YBEGIN=Y1
+!
+! !## arrange x1,x2,y1,y2 such that x1<x2
+! IF(X1.GT.X2)THEN
+!  X    =X1
+!  Y    =Y1
+!  X1   =X2
+!  Y1   =Y2
+!  X2   =X
+!  Y2   =Y
+! ENDIF
+!
 
  !## find search box - result can be negative, does not matter!
  I=1
@@ -183,26 +186,27 @@ CONTAINS
  I =1
  YMX=YMAX-CS*(INT((YMAX-Y)/CS)+I)
 
- !## use always mid between point x1,y1 and x2,y2 as first position
- !## duplicate first and last point to process them as well
- XA(1)= X1
- YA(1)= Y1
- XA(2)= X1
- YA(2)= Y1
- XA(3)=(X1+X2)/2.0
- YA(3)=(Y1+Y2)/2.0
- XA(4)= X2
- YA(4)= Y2
- XA(5)= X2
- YA(5)= Y2
- N    = 5
-
- !## find mathematical expression for line: y=ax+b
- DX=X2-X1
- DY=Y2-Y1
- IF(DX.EQ.0.0)DX=10.0E-10
- A=DY/DX
- B=Y1-A*X1
+!
+! !## use always mid between point x1,y1 and x2,y2 as first position
+! !## duplicate first and last point to process them as well
+! XA(1)= X1
+! YA(1)= Y1
+! XA(2)= X1
+! YA(2)= Y1
+! XA(3)=(X1+X2)/2.0
+! YA(3)=(Y1+Y2)/2.0
+! XA(4)= X2
+! YA(4)= Y2
+! XA(5)= X2
+! YA(5)= Y2
+! N    = 5
+!
+! !## find mathematical expression for line: y=ax+b
+! DX=X2-X1
+! DY=Y2-Y1
+! IF(DX.EQ.0.0)DX=10.0E-10
+! A=DY/DX
+! B=Y1-A*X1
 
  !## continue seach rest of intersections
  !## try intersections with y-axes firstly
@@ -214,14 +218,24 @@ CONTAINS
   !## array overwritten
   N=N+1; CALL INTERSECT_RESIZEVECTORS(N) 
 
-  XA(N)=(Y-B)/A
+  IF(IVER.EQ.1)THEN
+   XA(N)=X1 !## same as xmx
+  ELSE
+   XA(N)=(Y-B)/A
+  ENDIF
+!  XA(N)=(Y-B)/A
   YA(N)=Y
 
   !## double intersections, for better estimate for hfb
   IF(LHFB)THEN
    !## array overwritten
    N=N+1; CALL INTERSECT_RESIZEVECTORS(N) 
-   XA(N)=(Y-B)/A
+   IF(IVER.EQ.1)THEN
+    XA(N)=X1 !## same as xmx
+   ELSE
+    XA(N)=(Y-B)/A
+   ENDIF 
+!   XA(N)=(Y-B)/A
    YA(N)=Y
   ENDIF
  
@@ -235,13 +249,23 @@ CONTAINS
   !## array overwritten
   N=N+1; CALL INTERSECT_RESIZEVECTORS(N) 
   XA(N)=X
-  YA(N)=A*X+B
+  IF(IHOR.EQ.1)THEN
+   YA(N)=Y1 !MN !## same as ymx
+  ELSE
+   YA(N)=A*X+B
+  ENDIF
+!  YA(N)=A*X+B
 
   !## double intersections, for better estimate for hfb
   IF(LHFB)THEN
    N=N+1; CALL INTERSECT_RESIZEVECTORS(N) 
    XA(N)=X
-   YA(N)=A*X+B
+   IF(IHOR.EQ.1)THEN
+    YA(N)=Y1 !MN !## same as ymx
+   ELSE
+    YA(N)=A*X+B
+   ENDIF
+!   YA(N)=A*X+B
   ENDIF
  
  ENDDO
@@ -290,7 +314,8 @@ CONTAINS
   
   DX  =XA(I)-XA(I-1)
   DY  =YA(I)-YA(I-1)
-  LENG=SQRT(DX**2.0+DY**2.0)
+  LENG=DX**2.0+DY**2.0; IF(LENG.GT.0.0)LENG=SQRT(LENG)
+
   !## store results
   XA(I-1)=REAL(ICOL)
   YA(I-1)=REAL(IROW)
@@ -339,11 +364,6 @@ CONTAINS
  INTEGER :: I,ICOL,IROW,IMN,ID,N_IN
  REAL :: A,B,XBEGIN,YBEGIN,CS,TD
 
- IF(ASSOCIATED(XA))THEN; IF(SIZE(XA).LT.5)DEALLOCATE(XA); ENDIF
- IF(ASSOCIATED(YA))THEN; IF(SIZE(YA).LT.5)DEALLOCATE(YA); ENDIF
- IF(ASSOCIATED(FA))THEN; IF(SIZE(FA).LT.5)DEALLOCATE(FA); ENDIF
- IF(ASSOCIATED(LN))THEN; IF(SIZE(LN).LT.5)DEALLOCATE(LN); ENDIF
- 
  IF(.NOT.ASSOCIATED(XA))ALLOCATE(XA(1000)); IF(.NOT.ASSOCIATED(YA))ALLOCATE(YA(1000))
  IF(.NOT.ASSOCIATED(FA))ALLOCATE(FA(1000)); IF(.NOT.ASSOCIATED(LN))ALLOCATE(LN(1000))
  
@@ -354,43 +374,45 @@ CONTAINS
 
  N_IN=N
  
- IF((MIN(X1,X2).GE.XMAX.OR.MAX(X1,X2).LE.XMIN).OR. &
-    (MIN(Y1,Y2).GE.YMAX.OR.MAX(Y1,Y2).LE.YMIN))RETURN
-
- !IF(MX.LT.3)RETURN
-
- XBEGIN=X1
- YBEGIN=Y1
-
- !## arrange x1,x2,y1,y2 such that x1<x2
- IF(X1.GT.X2)THEN
-  X    =X1
-  Y    =Y1
-  X1   =X2
-  Y1   =Y2
-  X2   =X
-  Y2   =Y
- ENDIF
-
- !## use always mid between point x1,y1 and x2,y2 as first position
- XA(1)= X1
- YA(1)= Y1
- XA(2)= X1
- YA(2)= Y1
- XA(3)=(X1+X2)/2.0
- YA(3)=(Y1+Y2)/2.0
- XA(4)= X2
- YA(4)= Y2
- XA(5)= X2
- YA(5)= Y2
- N    = 5
-
- !## find mathematical expression for line: y=ax+b
- DX=X2-X1
- DY=Y2-Y1
- IF(DX.EQ.0.0)DX=10.0E-10
- A=DY/DX
- B=Y1-A*X1
+ IF(.NOT.INTERSECT_EQUATION(XMIN,XMAX,YMIN,YMAX,X1,X2,Y1,Y2,N))RETURN
+ 
+! IF((MIN(X1,X2).GE.XMAX.OR.MAX(X1,X2).LE.XMIN).OR. &
+!    (MIN(Y1,Y2).GE.YMAX.OR.MAX(Y1,Y2).LE.YMIN))RETURN
+!
+! !IF(MX.LT.3)RETURN
+!
+! XBEGIN=X1
+! YBEGIN=Y1
+!
+! !## arrange x1,x2,y1,y2 such that x1<x2
+! IF(X1.GT.X2)THEN
+!  X    =X1
+!  Y    =Y1
+!  X1   =X2
+!  Y1   =Y2
+!  X2   =X
+!  Y2   =Y
+! ENDIF
+!
+! !## use always mid between point x1,y1 and x2,y2 as first position
+! XA(1)= X1
+! YA(1)= Y1
+! XA(2)= X1
+! YA(2)= Y1
+! XA(3)=(X1+X2)/2.0
+! YA(3)=(Y1+Y2)/2.0
+! XA(4)= X2
+! YA(4)= Y2
+! XA(5)= X2
+! YA(5)= Y2
+! N    = 5
+!
+! !## find mathematical expression for line: y=ax+b
+! DX=X2-X1
+! DY=Y2-Y1
+! IF(DX.EQ.0.0)DX=10.0E-10
+! A=DY/DX
+! B=Y1-A*X1
  
  !## continue search rest of intersections
  !## try intersections with y-axes firstly
@@ -412,14 +434,24 @@ CONTAINS
    Y=Y+CS
    IF(Y.GT.YMX)EXIT
    N=N+1; CALL INTERSECT_RESIZEVECTORS(N) 
-   XA(N)=(Y-B)/A
+   IF(IVER.EQ.1)THEN
+    XA(N)=X1 !## same as xmx
+   ELSE
+    XA(N)=(Y-B)/A
+   ENDIF
+!   XA(N)=(Y-B)/A
    YA(N)=Y
 
    !## double intersections, for better estimate for hfb
    IF(LHFB)THEN
     !## array overwritten
     N=N+1; CALL INTERSECT_RESIZEVECTORS(N)
-    XA(N)=(Y-B)/A
+    IF(IVER.EQ.1)THEN
+     XA(N)=X1 !## same as xmx
+    ELSE
+     XA(N)=(Y-B)/A
+    ENDIF
+!    XA(N)=(Y-B)/A
     YA(N)=Y
    ENDIF
   
@@ -450,14 +482,24 @@ CONTAINS
    IF(X.GT.XMX)EXIT
    N=N+1; CALL INTERSECT_RESIZEVECTORS(N) 
    XA(N)=X
-   YA(N)=A*X+B
+   IF(IHOR.EQ.1)THEN
+    YA(N)=Y1 !MN !## same as ymx
+   ELSE
+    YA(N)=A*X+B
+   ENDIF
+!   YA(N)=A*X+B
 
    !## double intersections, for better estimate for hfb
    IF(LHFB)THEN
     !## array overwritten
     N=N+1; CALL INTERSECT_RESIZEVECTORS(N) 
     XA(N)=X
-    YA(N)=A*X+B
+    IF(IHOR.EQ.1)THEN
+     YA(N)=Y1 !MN !## same as ymx
+    ELSE
+     YA(N)=A*X+B
+    ENDIF
+!    YA(N)=A*X+B
    ENDIF
   
    IMN  =IMN+1
@@ -468,6 +510,7 @@ CONTAINS
  ENDIF
 
  !## sort intersections, determined by the one with the largest difference
+ DX=X1-X2; DY=Y2-Y1
  CALL INTERSECT_SORT(DX,DY,N_IN+1,N)
 
 ! IF(ABS(DX).GE.ABS(DY))THEN
@@ -510,7 +553,8 @@ CONTAINS
 
   DX  =XA(I)-XA(I-1)
   DY  =YA(I)-YA(I-1)
-  LENG=SQRT(DX**2.0+DY**2.0)
+  LENG=DX**2.0+DY**2.0; IF(LENG.GT.0.0)LENG=SQRT(LENG)
+
   !## store results
   XA(I-1)=REAL(ICOL)
   YA(I-1)=REAL(IROW)
@@ -650,52 +694,72 @@ CONTAINS
  
  END SUBROUTINE INTERSECT_RESIZEVECTORS
  
-! !###======================================================================
-! LOGICAL FUNCTION INTERSECT_EQUATION(XMIN,XMAX,YMIN,YMAX,X1,X2,Y1,Y2,N)
-! !###======================================================================
-! IMPLICIT NONE
-! REAL,INTENT(IN) :: XMIN,XMAX,YMIN,YMAX
-! REAL,INTENT(INOUT) :: X1,X2,Y1,Y2
-! INTEGER,INTENT(INOUT) :: N
-! DOUBLE PRECISION :: X,Y,DX,DY
-!
-! INTERSECT_EQUATION=.FALSE.
-!
-! IF((MIN(X1,X2).GT.XMAX.OR.MAX(X1,X2).LT.XMIN).OR. &
-!    (MIN(Y1,Y2).GT.YMAX.OR.MAX(Y1,Y2).LT.YMIN))RETURN
-!
-! XBEGIN=X1; YBEGIN=Y1
-!
-! !## arrange x1,x2,y1,y2 such that x1<x2
-! IF(X1.GT.X2)THEN
-!  X =X1; Y =Y1
-!  X1=X2; Y1=Y2
-!  X2=X;  Y2=Y
-! ENDIF
-!
-! !## adjust perfect 45/135/215,305 aanpassen
-! DX=X2-X1; DY=Y2-Y1
-! IF(ABS(DX).EQ.ABS(DY))X1=X1+1.0
-!
-! !## use always mid between point x1,y1 and x2,y2 as first position
-! N=N+1; CALL INTERSECT_RESIZEVECTORS(N) 
-! XA(N)= X1; YA(N)= Y1
-! N=N+1; CALL INTERSECT_RESIZEVECTORS(N) 
-! XA(N)= X2; YA(N)= Y2
-!
-! !## find mathematical expression for line: y=ax+b
-! DX=X2-X1; DY=Y2-Y1
-! IVER=0; IHOR=0
-! IF(DX.EQ.0.0)IVER=1
-! IF(DY.EQ.0.0)IHOR=1
-! IF(DX.NE.0.0)THEN 
-!  A=DY/DX
-!  B=Y1-A*X1
-! ENDIF
-!
-! INTERSECT_EQUATION=.TRUE.
-!
-! END FUNCTION INTERSECT_EQUATION
+ !###======================================================================
+ LOGICAL FUNCTION INTERSECT_EQUATION(XMIN,XMAX,YMIN,YMAX,X1,X2,Y1,Y2,N)
+ !###======================================================================
+ IMPLICIT NONE
+ REAL,INTENT(IN) :: XMIN,XMAX,YMIN,YMAX
+ REAL,INTENT(INOUT) :: X1,X2,Y1,Y2
+ INTEGER,INTENT(INOUT) :: N
+ DOUBLE PRECISION :: X,Y,DX,DY
+
+ INTERSECT_EQUATION=.FALSE.
+
+ IF((MIN(X1,X2).GT.XMAX.OR.MAX(X1,X2).LT.XMIN).OR. &
+    (MIN(Y1,Y2).GT.YMAX.OR.MAX(Y1,Y2).LT.YMIN))RETURN
+
+ XBEGIN=X1; YBEGIN=Y1
+
+ !## arrange x1,x2,y1,y2 such that x1<x2
+ IF(X1.GT.X2)THEN
+  X =X1; Y =Y1
+  X1=X2; Y1=Y2
+  X2=X;  Y2=Y
+ ENDIF
+
+ !## adjust perfect 45/135/215,305 aanpassen
+ DX=X2-X1; DY=Y2-Y1
+ IF(ABS(DX).EQ.ABS(DY))X1=X1+1.0
+
+ !## use always mid between point x1,y1 and x2,y2 as first position
+ N=N+1; CALL INTERSECT_RESIZEVECTORS(N) 
+ XA(N)= X1; YA(N)= Y1
+ N=N+1; CALL INTERSECT_RESIZEVECTORS(N) 
+ XA(N)= X1; YA(N)= Y1
+
+ N=N+1; CALL INTERSECT_RESIZEVECTORS(N) 
+ XA(N)= (X1+X2)/2.0; YA(N)= (Y1+Y2)/2.0
+
+ N=N+1; CALL INTERSECT_RESIZEVECTORS(N) 
+ XA(N)= X2; YA(N)= Y2
+ N=N+1; CALL INTERSECT_RESIZEVECTORS(N) 
+ XA(N)= X2; YA(N)= Y2
+
+! XA(1)= X1
+! YA(1)= Y1
+! XA(2)= X1
+! YA(2)= Y1
+! XA(3)=(X1+X2)/2.0
+! YA(3)=(Y1+Y2)/2.0
+! XA(4)= X2
+! YA(4)= Y2
+! XA(5)= X2
+! YA(5)= Y2
+! N    = 5
+
+ !## find mathematical expression for line: y=ax+b
+ DX=X2-X1; DY=Y2-Y1
+ IVER=0; IHOR=0
+ IF(DX.EQ.0.0)IVER=1
+ IF(DY.EQ.0.0)IHOR=1
+ IF(DX.NE.0.0)THEN 
+  A=DY/DX
+  B=Y1-A*X1
+ ENDIF
+
+ INTERSECT_EQUATION=.TRUE.
+
+ END FUNCTION INTERSECT_EQUATION
 
  !###======================================================================
  SUBROUTINE INTERSECT_SORT(DX,DY,N_IN,N)
@@ -717,15 +781,15 @@ CONTAINS
  !## resort - if neccessary
  IF(XA(N_IN).NE.XBEGIN.OR.YA(N_IN).NE.YBEGIN)THEN
   DO I=N_IN,N_IN+((N-N_IN)/2)
-   X        =XA(I)
-   XA(I)    =XA(N-I+N_IN) 
+   X           =XA(I)
+   XA(I)       =XA(N-I+N_IN) 
    XA(N-I+N_IN)=X
-   Y        =YA(I)
-   YA(I)    =YA(N-I+N_IN) 
+   Y           =YA(I)
+   YA(I)       =YA(N-I+N_IN) 
    YA(N-I+N_IN)=Y
-   LENG     =LN(I)
-   LN(I)    =LN(N-I+1)
-   LN(N-I+1)=LENG
+   LENG        =LN(I)
+   LN(I)       =LN(N-I+N_IN)
+   LN(N-I+N_IN)=LENG
   END DO
  ENDIF
 
