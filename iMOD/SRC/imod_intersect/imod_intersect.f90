@@ -223,7 +223,6 @@ CONTAINS
   ELSE
    XA(N)=(Y-B)/A
   ENDIF
-!  XA(N)=(Y-B)/A
   YA(N)=Y
 
   !## double intersections, for better estimate for hfb
@@ -235,7 +234,6 @@ CONTAINS
    ELSE
     XA(N)=(Y-B)/A
    ENDIF 
-!   XA(N)=(Y-B)/A
    YA(N)=Y
   ENDIF
  
@@ -254,7 +252,6 @@ CONTAINS
   ELSE
    YA(N)=A*X+B
   ENDIF
-!  YA(N)=A*X+B
 
   !## double intersections, for better estimate for hfb
   IF(LHFB)THEN
@@ -265,7 +262,6 @@ CONTAINS
    ELSE
     YA(N)=A*X+B
    ENDIF
-!   YA(N)=A*X+B
   ENDIF
  
  ENDDO
@@ -439,7 +435,6 @@ CONTAINS
    ELSE
     XA(N)=(Y-B)/A
    ENDIF
-!   XA(N)=(Y-B)/A
    YA(N)=Y
 
    !## double intersections, for better estimate for hfb
@@ -451,7 +446,6 @@ CONTAINS
     ELSE
      XA(N)=(Y-B)/A
     ENDIF
-!    XA(N)=(Y-B)/A
     YA(N)=Y
    ENDIF
   
@@ -487,7 +481,6 @@ CONTAINS
    ELSE
     YA(N)=A*X+B
    ENDIF
-!   YA(N)=A*X+B
 
    !## double intersections, for better estimate for hfb
    IF(LHFB)THEN
@@ -499,7 +492,6 @@ CONTAINS
     ELSE
      YA(N)=A*X+B
     ENDIF
-!    YA(N)=A*X+B
    ENDIF
   
    IMN  =IMN+1
@@ -686,11 +678,20 @@ CONTAINS
  MM=NN+DN
  
  ALLOCATE(XA_DUMMY(MM),YA_DUMMY(MM),FA_DUMMY(MM),LN_DUMMY(MM))
+
  DO I=1,NN
-  XA_DUMMY(I)=XA(I); YA_DUMMY(I)=YA(I); LN_DUMMY(I)=LN(I); FA_DUMMY(I)=FA(I)
+  XA_DUMMY(I)=XA(I)
+  YA_DUMMY(I)=YA(I)
+  FA_DUMMY(I)=FA(I)
+  LN_DUMMY(I)=LN(I)
  ENDDO
+ 
  DEALLOCATE(XA,YA,FA,LN)
- XA=>XA_DUMMY; YA=>YA_DUMMY; FA=>FA_DUMMY; LN=>LN_DUMMY
+ 
+ XA=>XA_DUMMY
+ YA=>YA_DUMMY
+ FA=>FA_DUMMY
+ LN=>LN_DUMMY
  
  END SUBROUTINE INTERSECT_RESIZEVECTORS
  
