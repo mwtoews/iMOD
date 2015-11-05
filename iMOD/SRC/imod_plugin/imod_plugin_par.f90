@@ -34,8 +34,7 @@ TYPE PIOBJ
  INTEGER :: ID !## menu-id of plugin menu
  INTEGER :: IFLAG  !## if nowait-command IFLAG=1, if wait-command IFLAG=2
  CHARACTER(LEN=256) :: BACK !##checks output-file: PLUG-IN.OUT
- !CHARACTER(LEN=256) :: HELP !##checks HELP-file (PDF or html)
- INTEGER :: IDPROC !## proces id-number related to the plugin executable
+ INTEGER,DIMENSION(2) :: IDPROC !## proces id-number related to the plugin executable
 END TYPE PIOBJ
 
 TYPE(PIOBJ),POINTER,DIMENSION(:) :: PI1,PI2

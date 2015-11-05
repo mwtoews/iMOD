@@ -35,9 +35,9 @@ USE IMOD
 
 CONTAINS
 
-!###======================================================================
+ !###======================================================================
  SUBROUTINE PLUGIN_MAIN(IPLUGIN)
-!###======================================================================
+ !###======================================================================
  !# subroutine with main-program; includes call to all plugin-subroutines
  IMPLICIT NONE
  INTEGER,INTENT(IN) :: IPLUGIN
@@ -88,7 +88,7 @@ CONTAINS
  END SUBROUTINE PLUGIN_MAIN
 
  !###======================================================================
- SUBROUTINE PLUGIN_SAVEPLUGIN(PI,IPI,LINE,IU)
+ SUBROUTINE PLUGIN_LOAD(PI,IPI,LINE,IU)
  !###======================================================================
  IMPLICIT NONE
  TYPE(PIOBJ),POINTER,DIMENSION(:),INTENT(INOUT) :: PI
@@ -119,9 +119,9 @@ CONTAINS
 
  IF(PLUGIN_UPDATEMENU_FILL())THEN;ENDIF
 
- END SUBROUTINE PLUGIN_SAVEPLUGIN
+ END SUBROUTINE PLUGIN_LOAD
 
-!###======================================================================
+ !###======================================================================
  SUBROUTINE PLUGIN_UPDATEMENU()
  !###======================================================================
  !### updates plugin-menu with ungraying the manager chosen by the user
@@ -139,6 +139,37 @@ CONTAINS
     
  END SUBROUTINE PLUGIN_UPDATEMENU
 
+ !###======================================================================
+ SUBROUTINE PLUGIN_UPDATEMENU_RUN(NPROC)
+ !###======================================================================
+ !## Subroutine to check whether plugin executable is still running or not 
+ !## control outgraying plugin menu for plugin manager
+ IMPLICIT NONE
+ INTEGER,INTENT(IN) :: NPROC
+ INTEGER :: IPI,IDP
+ 
+ !#plugin1
+ IPI=27 
+ DO IDP=1,SIZE(PI1)
+  IF(PI1(IDP)%IDPROC(1).NE.0)THEN
+   CALL WMENUSETSTATE(ID_MANAGE_PLUGIN1,1,0)
+  ELSEIF(PI1(IDP)%IDPROC(1).EQ.0.AND.NPROC.EQ.0)THEN
+   CALL WMENUSETSTATE(ID_MANAGE_PLUGIN1,1,1)
+  ENDIF
+ ENDDO
+
+ !#plugin2
+ IPI=28 
+ DO IDP=1,SIZE(PI2)
+  IF(PI2(IDP)%IDPROC(1).NE.0)THEN
+   CALL WMENUSETSTATE(ID_MANAGE_PLUGIN2,1,0)
+  ELSEIF(PI2(IDP)%IDPROC(1).EQ.0.AND.NPROC.EQ.0)THEN
+   CALL WMENUSETSTATE(ID_MANAGE_PLUGIN2,1,1)
+  ENDIF
+ ENDDO
+ 
+ END SUBROUTINE PLUGIN_UPDATEMENU_RUN
+ 
  !###======================================================================
  SUBROUTINE PLUGIN_FIELDCHANGE(IPI,IROW,ICOL)
  !###======================================================================
@@ -243,6 +274,8 @@ CONTAINS
   PI%ID=0
   PI%IFLAG=0
   PI%BACK=''
+  PI%IDPROC(1)=0
+  PI%IDPROC(2)=0
  ELSE
   !# check content of saved PI-list with avaiable plug-in files in specific folder
   !# In case size(PI) isn't equal to size(listname) and if both lists are equal in size
@@ -270,7 +303,7 @@ CONTAINS
  !###======================================================================
  LOGICAL FUNCTION PLUGIN_UPDATEMENU_FILL()
  !###======================================================================
- !# Function to connect the plugin-names to the plugin-menu
+ !# Function to connect the plugin-names to the plugin-menu and initialize plugin-type
  IMPLICIT NONE
  INTEGER :: I,J
   
@@ -291,6 +324,10 @@ CONTAINS
    PI2(I)%ID=MENUID(J)
   ELSE
    PI2(I)%ID=0
+   PI2%IFLAG=0
+   PI2%BACK=''
+   PI2%IDPROC(1)=0
+   PI2%IDPROC(2)=0 
   ENDIF
  ENDDO
  
@@ -305,6 +342,10 @@ CONTAINS
    PI1(I)%ID=MENUID(J)
   ELSE
    PI1(I)%ID=0
+   PI1%IFLAG=0
+   PI1%BACK=''
+   PI1%IDPROC(1)=0
+   PI1%IDPROC(2)=0 
   ENDIF
  ENDDO
  
@@ -349,13 +390,13 @@ CONTAINS
  
  !# executable runs only if "apply"-button is called, process identifer (IDPROC) is saved in PI-variable
  IF(IPI.EQ.27)THEN
-  PI1%IDPROC=0
+  PI1(IDP)%IDPROC=0
   IFLAG=PI1(IDP)%IFLAG
-  CALL IOSCOMMAND(TRIM(EXE),IFLAG,0,IDPROC=PI1%IDPROC)
+  CALL IOSCOMMAND(TRIM(EXE),IFLAG,0,IDPROC=PI1(IDP)%IDPROC)
  ELSEIF(IPI.EQ.28)THEN
-  PI2%IDPROC=0
+  PI2(IDP)%IDPROC=0
   IFLAG=PI2(IDP)%IFLAG
-  CALL IOSCOMMAND(TRIM(EXE),IFLAG,0,IDPROC=PI2%IDPROC)
+  CALL IOSCOMMAND(TRIM(EXE),IFLAG,0,IDPROC=PI2(IDP)%IDPROC)
  ENDIF
  
  !## move back to the iMOD folder
@@ -404,10 +445,18 @@ CONTAINS
  
  PLUGIN_EXE_READ_INI=.FALSE.
  
- !## sets directory+filename
+ !## sets directory+filename and initialize plugin-type
  IF(IPI.EQ.27)THEN
+  PI1%IFLAG=0
+  PI1%BACK=''
+  PI1%IDPROC(1)=0
+  PI1%IDPROC(2)=0  
   DIRNAME=TRIM(PREFVAL(IPI))//'\'//TRIM(PI1(IDP)%PNAME)
  ELSEIF(IPI.EQ.28)THEN
+  PI2%IFLAG=0
+  PI2%BACK=''
+  PI2%IDPROC(1)=0
+  PI2%IDPROC(2)=0
   DIRNAME=TRIM(PREFVAL(IPI))//'\'//TRIM(PI2(IDP)%PNAME)
  ENDIF
  
@@ -436,7 +485,7 @@ CONTAINS
  BACK=''; IF(UTL_READINITFILE('BACK',LINE,IU,1))READ(LINE,*) BACK
  IF(IPI.EQ.27)THEN
   PI1(IDP)%BACK=BACK
- ELSE
+ ELSEIF(IPI.EQ.28)THEN
   PI2(IDP)%BACK=BACK
  ENDIF
  
@@ -447,9 +496,9 @@ CONTAINS
  FNAME=TRIM(DIRNAME)//'\'//TRIM(BACK)
  INQUIRE(FILE=FNAME,EXIST=LEX)
  IF(.NOT.LEX)THEN
-  OPEN(IU,FILE=TRIM(DIRNAME)//'\'//TRIM(BACK),STATUS='NEW')
+  OPEN(IU,FILE=FNAME,STATUS='NEW')
  ELSE
-  OPEN(IU,FILE=TRIM(DIRNAME)//'\'//TRIM(BACK),STATUS='REPLACE')
+  OPEN(IU,FILE=FNAME,STATUS='REPLACE')
  ENDIF
  CLOSE(IU)
  
@@ -486,7 +535,7 @@ CONTAINS
  FNAME=TRIM(DIRNAME)//'\'//TRIM(STRING(6))
  INQUIRE(FILE=FNAME,EXIST=LEX)
  IF(.NOT.LEX)THEN
-  CALL WMESSAGEBOX(OKONLY,EXCLAMATIONICON,COMMONOK,'Error, cannot find '//TRIM(DIRNAME)//'\'//TRIM(STRING(6))//'. No requirements are given.','Error')
+  CALL WMESSAGEBOX(OKONLY,EXCLAMATIONICON,COMMONOK,'Error, cannot find '//TRIM(FNAME)//'. No requirements are given.','Error')
   TEXT="No requirements given"
   RETURN
  ENDIF
@@ -523,35 +572,34 @@ CONTAINS
  IMPLICIT NONE
  INTEGER,INTENT(IN) :: IPI, IDP
  INTEGER :: I,IU,LEX,IOS,NFILE,IFLAG,ISTATUS
- CHARACTER(LEN=256) :: DIRNAME,BACK,LINE,MESSINFO,MESSERR,MESSPROG !,STEXT,STWORD
- CHARACTER(LEN=52) :: RESULTFILE
+ CHARACTER(LEN=256) :: DIRNAME,BACK,FNAME,LINE,MESSINFO,MESSERR,MESSPROG !,STEXT,STWORD
+ CHARACTER(LEN=52) :: RESULTFILE,PNAME
  REAL,DIMENSION(4) :: WINDOW
  
  IF(IPI.EQ.27)THEN
   BACK=PI1(IDP)%BACK
   IFLAG=PI1(IDP)%IFLAG
   IDPROC=PI1(IDP)%IDPROC
+  PNAME=PI1(IDP)%PNAME
   DIRNAME=TRIM(PREFVAL(IPI))//'\'//TRIM(PI1(IDP)%PNAME)//'\'
- ELSE
+ ELSEIF(IPI.EQ.28)THEN
   BACK=PI2(IDP)%BACK
   IFLAG=PI2(IDP)%IFLAG
   IDPROC=PI2(IDP)%IDPROC
+  PNAME=PI2(IDP)%PNAME
   DIRNAME=TRIM(PREFVAL(IPI))//'\'//TRIM(PI2(IDP)%PNAME)//'\'
  ENDIF
  
- INQUIRE(FILE=TRIM(DIRNAME)//TRIM(BACK),EXIST=LEX)
+ FNAME=TRIM(DIRNAME)//TRIM(BACK)
+ INQUIRE(FILE=FNAME,EXIST=LEX)
  IF(.NOT.LEX)THEN
   CALL WMESSAGEBOX(OKONLY,EXCLAMATIONICON,COMMONOK,'Error, cannot find '//TRIM(BACK)//'.'//CHAR(13)// &
   'Inspect your *.INI file in plugin folder.','Error')
   RETURN
  ENDIF
  
- IU=UTL_GETUNIT()
- 
- !IF(IFLAG.EQ.2)THEN !# if "wait"-command given then Back-file will be read
-  CALL OSD_OPEN(IU,FILE=TRIM(DIRNAME)//TRIM(BACK),STATUS='OLD',ACTION='READ')
-  IF(IU.EQ.0)RETURN
- !ENDIF 
+ IU=UTL_GETUNIT(); CALL OSD_OPEN(IU,FILE=FNAME,STATUS='OLD',ACTION='READ')
+ IF(IU.EQ.0)RETURN
  
  !#Handling different types of optional Plugin-messages
  MESSINFO=''; IF(UTL_READINITFILE('MESSAGE_INFO',LINE,IU,1))READ(LINE,'(A)',IOSTAT=IOS) MESSINFO
@@ -571,7 +619,11 @@ CONTAINS
    CALL WMESSAGEBOX(OKONLY,EXCLAMATIONICON,COMMONOK,'Error, reading message.','Error')  
   ENDIF 
  ENDIF
-! MESSPROG=''; IF(UTL_READINITFILE('MESSAGE_PROGRESS',LINE,IU,1))READ(LINE,*) MESSPROG
+
+ MESSPROG=''; IF(UTL_READINITFILE('MESSAGE_PROGRESS',LINE,IU,1))READ(LINE,'(A)') MESSPROG
+ IF(MESSPROG.NE.'')THEN
+  CALL WINDOWOUTSTATUSBAR(4,'PLUGIN MESSAGE - '//TRIM(PNAME)//': '//TRIM(MESSPROG))
+ ENDIF
   
  !#Reads list of files from line and returns this list to iMOD manager
  !#plot update at the end of reading all files
@@ -612,17 +664,6 @@ CONTAINS
    'Results are plotted with default window extend.','Warning')    
   ENDIF
  ENDIF
- 
- !#If Stop is read in file then iMOD will check whether or not the executable is still running. 
- !#Only if exe runs in "wait"-modus. If it is stopped running Plug-in.out won't be checked anymore
-! DO
-!  READ(IU,'(A)',IOSTAT=IOS) STEXT
-!  READ(TEXT,*) SWORD
-!  IF(TRIM(STWORD).EQ.'STOP')THEN
-!   CALL PLUGIN_EXE_CHECK_RUN(IPI,IDP)
-!   EXIT
-!  ENDIF
-! ENDDO
 
 !## Closes the file and let the user choose to either delete or preserve the output file written by the plugin
  INQUIRE(FILE=TRIM(DIRNAME)//TRIM(BACK),EXIST=LEX)
@@ -635,6 +676,8 @@ CONTAINS
   ELSEIF(WINFODIALOG(EXITBUTTONCOMMON)==COMMONNO)THEN
    CLOSE(IU,STATUS='KEEP',IOSTAT=IOS)
   ENDIF
+ ELSEIF(LEX.AND.ISTATUS.EQ.1)THEN
+  CLOSE(IU)
  ENDIF
 
  CALL IDFPLOTFAST(0) !#plot last loaded file in manager to window
@@ -642,58 +685,78 @@ CONTAINS
  END SUBROUTINE PLUGIN_EXE_READ_BACK
 
  !###======================================================================
- SUBROUTINE PLUGIN_EXE_CHECK_RUN(IRUN)
+ SUBROUTINE PLUGIN_EXE_CHECK_RUN(IRUN,IKILL)
  !###======================================================================
  !## Subroutine to check whether plugin executable is still running or not
  IMPLICIT NONE
  INTEGER,INTENT(IN) :: IRUN
- INTEGER :: IPI,IDP,ISTATUS,IEXCOD,IFLAG
-  
-  IF(IRUN.EQ.1)THEN
-  !#plugin1
-   DO IDP=1,SIZE(PI1)
-    IPI=27 
-    IDPROC=PI1(IDP)%IDPROC
-    IFLAG=PI1(IDP)%IFLAG
-    IF(IDPROC(1).NE.0.AND.IFLAG.EQ.1)THEN !## Only if iflag=1 -> running-command="nowait"
-     CALL IOSCOMMANDCHECK(IDPROC,ISTATUS,IEXCOD=IEXCOD)
-     CALL PLUGIN_EXE_READ_BACK(IPI,IDP)
-    ENDIF
-   ENDDO
-
-  !#plugin2
-   DO IDP=1,SIZE(PI2)
-    IPI=28 
-    IDPROC=PI2(IDP)%IDPROC
-    IFLAG=PI2(IDP)%IFLAG   
-    IF(IDPROC(1).NE.0.AND.IFLAG.EQ.1)THEN
-     CALL IOSCOMMANDCHECK(IDPROC,ISTATUS,IEXCOD=IEXCOD)
-     CALL PLUGIN_EXE_READ_BACK(IPI,IDP)
-    ENDIF
-   ENDDO
-  ELSEIF(IRUN.EQ.0)THEN
-   
+ INTEGER,INTENT(INOUT) :: IKILL
+ INTEGER :: NPROC
+ INTEGER :: IPI,IDP,ISTATUS,IEXCOD
+ 
+ IKILL=0
+ 
+ !#plugin1
+ IPI=27 
+ DO IDP=1,SIZE(PI1)
+  IF(PI1(IDP)%IDPROC(1).NE.0.AND.PI1(IDP)%IFLAG.EQ.1)THEN !## Only if iflag=1 -> running-command="nowait"
+   CALL IOSCOMMANDCHECK(PI1(IDP)%IDPROC,ISTATUS,IEXCOD=IEXCOD)
+   IF(IRUN.EQ.1)THEN
+    CALL PLUGIN_EXE_READ_BACK(IPI,IDP)
+   ELSEIF(IRUN.EQ.0)THEN
+    CALL PLUGIN_EXE_CHECK_STOP(PI1(IDP)%IDPROC,PI1(IDP)%PNAME,IKILL)
+   ENDIF
+   IF(ISTATUS.EQ.0)PI1(IDP)%IDPROC=0
   ENDIF
+ ENDDO
+
+ !#plugin2
+ IPI=28 
+ DO IDP=1,SIZE(PI2)
+  IF(PI2(IDP)%IDPROC(1).NE.0.AND.PI2(IDP)%IFLAG.EQ.1)THEN !## Only if iflag=1 -> running-command="nowait"
+   CALL IOSCOMMANDCHECK(PI2(IDP)%IDPROC,ISTATUS,IEXCOD=IEXCOD)
+   IF(IRUN.EQ.1)THEN
+    CALL PLUGIN_EXE_READ_BACK(IPI,IDP)
+   ELSEIF(IRUN.EQ.0)THEN
+    CALL PLUGIN_EXE_CHECK_STOP(PI1(IDP)%IDPROC,PI1(IDP)%PNAME,IKILL)
+   ENDIF 
+   IF(ISTATUS.EQ.0)PI2(IDP)%IDPROC=0
+  ENDIF
+ ENDDO
   
-!## If stop command is available in *.OUT file  
-! IF(IDPROC(1).NE.0)THEN
-!  #if (defined(WINTERACTER9))
-!   CALL IOSCOMMANDCHECK(IDPROC,ISTATUS,IEXCOD=IEXCOD)
-!  #endif
-!   IF(ISTATUS.EQ.1)THEN
-!    CALL WMESSAGEBOX(YESNO,EXCLAMATIONICON,COMMONYES,'iMOD read a "STOP"-command in *.OUT file, but plugin is not terminated yet.'//CHAR(13)// &
-!    'Are you sure you want to force the plugin to stop?'//CHAR(13)//'(Click on "Yes" to terminate the plugin, else click on "No")','Warning')    
-!    IF(WINFODIALOG(EXITBUTTONCOMMON)==COMMONYES)THEN
-!     #if (defined(WINTERACTER9))
-!      CALL IOSCOMMANDKILL(IDPROC,0)
-!     #endif  
-!    ELSEIF(WINFODIALOG(EXITBUTTONCOMMON)==COMMONNO)THEN
-!     !#proceed with the running process until the plugin stopped itself  
-!    ENDIF
-!  ENDIF
-! ENDIF
+ NPROC=0
+ DO IDP=1,SIZE(PI1); IF(PI1(IDP)%IDPROC(1).NE.0)NPROC=NPROC+1; ENDDO
+ DO IDP=1,SIZE(PI2); IF(PI2(IDP)%IDPROC(1).NE.0)NPROC=NPROC+1; ENDDO
+ 
+ CALL PLUGIN_UPDATEMENU_RUN(NPROC)
  
  END SUBROUTINE PLUGIN_EXE_CHECK_RUN
+ 
+ !###======================================================================
+ SUBROUTINE PLUGIN_EXE_CHECK_STOP(IDPROC,PNAME,IKILL)
+ !###======================================================================
+ !## Subroutine to check whether plugin executable is still running or not
+ IMPLICIT NONE
+ CHARACTER(LEN=52),INTENT(IN) :: PNAME
+ INTEGER,DIMENSION(2),INTENT(IN) :: IDPROC
+ INTEGER,INTENT(OUT) :: IKILL
+ CHARACTER(LEN=2) :: NC
+ 
+ !## If stop command is available in *.OUT file
+ CALL WMESSAGEBOX(YESNO,QUESTIONICON,COMMONYES,'The '//TRIM(PNAME)//' plugin is running!'//CHAR(13)// &
+  'This will be terminated if you close iMOD.'//CHAR(13)//'Are you sure you want to exit iMOD?','QUESTION')    
+ IF(WINFODIALOG(EXITBUTTONCOMMON)==COMMONYES)THEN
+  #if (defined(WINTERACTER9))
+   CALL IOSCOMMANDKILL(IDPROC,0)
+   IKILL=1
+  #endif  
+ ELSEIF(WINFODIALOG(EXITBUTTONCOMMON)==COMMONNO)THEN
+  !#proceed with the running process until the plugin stopped itself  
+  CALL PLUGIN_EXE_CHECK_RUN(1,IKILL)
+  IKILL=0
+ ENDIF
+
+ END SUBROUTINE PLUGIN_EXE_CHECK_STOP
  
  !###======================================================================
  SUBROUTINE UTL_READTXTFILE(FNAME,TEXT)
