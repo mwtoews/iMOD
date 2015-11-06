@@ -806,5 +806,48 @@ CONTAINS
 
  END SUBROUTINE PCG1CVG
 
+ !###====================================================================
+ SUBROUTINE PCG_HFB_FM(IPC,CC,CR,NROW,NCOL,FCT)
+ !###====================================================================
+ IMPLICIT NONE
+ INTEGER,INTENT(IN) :: NROW,NCOL
+ REAL,INTENT(IN) :: FCT
+ INTEGER(KIND=1),INTENT(IN),DIMENSION(NCOL,NROW,2) :: IPC
+ REAL,INTENT(INOUT),DIMENSION(NCOL,NROW) :: CC,CR
+ INTEGER :: IROW,ICOL
+
+ DO IROW=1,NROW; DO ICOL=1,NCOL
+
+  !## place vertical wall
+  IF(IPC(ICOL,IROW,1).EQ.INT(1,1))THEN
+   IF(ICOL.LT.NCOL)CR(ICOL,IROW)=FCT*CR(ICOL,IROW)
+  ENDIF
+
+  !## place horizontal wall
+  IF(IPC(ICOL,IROW,2).EQ.INT(1,1))THEN
+   IF(IROW.LT.NROW)CC(ICOL,IROW)=FCT*CC(ICOL,IROW)
+  ENDIF
+ 
+! !## place vertical wall
+! IF(IPC(ICOL,IROW,1).EQ.INT(1,1).AND.ICOL.LT.NCOL)THEN
+!  I=I+1
+!  WRITE(JUHFB,'(2I10)') I,JLINE
+!  WRITE(JUHFB,'(2(F10.2,A1))') DELR(ICOL),',',DELC(IROW-1)
+!  WRITE(JUHFB,'(2(F10.2,A1))') DELR(ICOL),',',DELC(IROW)
+!  WRITE(JUHFB,'(A)') 'END'
+! ENDIF
+! !## place horizontal wall
+! IF(IPC(ICOL,IROW,2).EQ.INT(1,1).AND.IROW.LT.NROW)THEN
+!  I=I+1
+!  WRITE(JUHFB,'(2I10)') I,JLINE
+!  WRITE(JUHFB,'(2(F10.2,A1))') DELR(ICOL-1),',',DELC(IROW)
+!  WRITE(JUHFB,'(2(F10.2,A1))') DELR(ICOL  ),',',DELC(IROW)
+!  WRITE(JUHFB,'(A)') 'END'
+! ENDIF
+
+ ENDDO; ENDDO
+ 
+ END SUBROUTINE PCG_HFB_FM
+
 END MODULE MOD_PCG
 

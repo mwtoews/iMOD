@@ -1,8 +1,8 @@
 MODULE MODULE_GEN_HFB
 
-USE MOD_UTL, ONLY : UTL_SWAPSLASH,UTL_STRING,UTL_CAP,UTL_FILENAME,UTL_GETUNIT
+USE MOD_UTL, ONLY : UTL_GETUNIT !UTL_SWAPSLASH,UTL_STRING,UTL_CAP,UTL_FILENAME,
 USE MOD_OSD, ONLY : OSD_OPEN
-USE MOD_INTERSECT
+USE MOD_INTERSECT, ONLY : INTERSECT_EQUI,INTERSECT_DEALLOCATE
 USE MOD_INTERSECT_PAR
 USE MOD_IDF_PAR
 
@@ -16,74 +16,75 @@ CONTAINS
  IMPLICIT NONE
  TYPE(IDFOBJ),INTENT(INOUT) :: IDF
  CHARACTER(LEN=*),INTENT(IN) :: FNAME
- CHARACTER(LEN=256) :: LINE
- REAL :: X1,Y1,X2,Y2,CONSTANTE,XX1,XX2,YY1,YY2
+ REAL :: X1,Y1,X2,Y2,X,Y
  REAL :: XMIN,XMAX,YMIN,YMAX
- INTEGER :: J,ID,JU,IL,IROW,ICOL,I,MX,II,L,N,M,ILINE,JROW,JCOL,DC,IOS,NHFB
+ INTEGER :: IU,I,J,IOS,ID,N,IROW,ICOL
 
- CALL INTERSECT_DEALLOCATE()
- MX=1000; IF(ASSOCIATED(HFBPOS)) DEALLOCATE(HFBPOS)
+ IU=UTL_GETUNIT(); CALL OSD_OPEN(IU,FILE=FNAME,ACTION='READ',STATUS='OLD',FORM='FORMATTED')
 
- ALLOCATE(XA(MX),YA(MX),FA(MX),LN(MX))
- ALLOCATE(HFBPOS(500,4)) 
-
- NHFB=0
-
- ILINE=0
- 
- JU=UTL_GETUNIT(); CALL OSD_OPEN(JU,FILE=FNAME,ACTION='READ',STATUS='OLD',FORM='FORMATTED')
- DO
-  ILINE=ILINE+1
-  II=0
-  READ(JU,'(A256)') LINE; CALL UTL_STRING(LINE); LINE=UTL_CAP(LINE,'U')
-  IOS=0
-  IF(INDEX(LINE,'END').GT.0)EXIT
-  READ(LINE,*,IOSTAT=IOS) ID; IF(IOS.NE.0)EXIT
-  DO
-   READ(JU,'(A256)') LINE; CALL UTL_STRING(LINE); LINE=UTL_CAP(LINE,'U')
-   IOS=0; IF(INDEX(LINE,'END').GT.0)EXIT
-   READ(LINE,*,IOSTAT=IOS) X2,Y2; IF(IOS.NE.0)EXIT 
-
-   IF(II.GT.0)THEN
-    !## intersect line
-    XX1=X1; YY1=Y1; XX2=X2; YY2=Y2
-
-    N=0
-    IF(IDF%IEQ.EQ.0)THEN
-     !## intersect line with rectangular-  regular-grid
-     CALL INTERSECT_EQUI(IDF%XMIN,IDF%XMAX,IDF%YMIN,IDF%YMAX,IDF%DX,XX1,XX2,YY1,YY2,N,.TRUE.)
-    ELSE
-     !## intersect line with rectangular-irregular-grid
-     CALL INTERSECT_NONEQUI(IDF%SX,IDF%SY,IDF%NROW,IDF%NCOL,XX1,XX2,YY1,YY2,N,.TRUE.)
-    ENDIF
-       
-    IF(NHFB+N.GT.SIZE(HFBPOS,1))THEN
-     ALLOCATE(HFBPOS_BU(NHFB*2,4))
-     DO J=1,NHFB
-      DO I=1,4; HFBPOS_BU(I,:)=HFBPOS(I,:); ENDDO
-     ENDDO
-     DEALLOCATE(HFBPOS)
-     HFBPOS=>HFBPOS_BU
-    ENDIF
-      
-    !## fill result array - check whether change in icol/irow is changed simultenously. This is signal that the line passes
-    !## through the centre which is not feasible, in that case, we add an extra node +1 for icol or irow
-    DO L=1,N
-     ICOL=INT(XA(L)); IROW=INT(YA(L)) 
-     IF(ICOL.GT.0.AND.IROW.GT.0.AND.ICOL.LE.IDF%NCOL.AND.IROW.LE.IDF%NROW)THEN
-      NHFB          =NHFB+1
-      HFBPOS(NHFB,1)=ICOL
-      HFBPOS(NHFB,2)=IROW
-      HFBPOS(NHFB,3)=ILINE
-      HFBPOS(NHFB,4)=INT(FA(L))
-     ENDIF
-    ENDDO
-   ENDIF
-   II=II+1; X1=X2; Y1=Y2
-  ENDDO
- ENDDO
-
- CALL INTERSECT_DEALLOCATE()
+  
+! MX=1000; IF(ASSOCIATED(HFBPOS)) DEALLOCATE(HFBPOS)
+!
+! ALLOCATE(XA(MX),YA(MX),FA(MX),LN(MX))
+! ALLOCATE(HFBPOS(500,4)) 
+!
+! NHFB=0
+!
+! ILINE=0
+! 
+! JU=UTL_GETUNIT(); CALL OSD_OPEN(JU,FILE=FNAME,ACTION='READ',STATUS='OLD',FORM='FORMATTED')
+! DO
+!  ILINE=ILINE+1
+!  II=0
+!  READ(JU,'(A256)') LINE; CALL UTL_STRING(LINE); LINE=UTL_CAP(LINE,'U')
+!  IOS=0
+!  IF(INDEX(LINE,'END').GT.0)EXIT
+!  READ(LINE,*,IOSTAT=IOS) ID; IF(IOS.NE.0)EXIT
+!  DO
+!   READ(JU,'(A256)') LINE; CALL UTL_STRING(LINE); LINE=UTL_CAP(LINE,'U')
+!   IOS=0; IF(INDEX(LINE,'END').GT.0)EXIT
+!   READ(LINE,*,IOSTAT=IOS) X2,Y2; IF(IOS.NE.0)EXIT 
+!
+!   IF(II.GT.0)THEN
+!    !## intersect line
+!    XX1=X1; YY1=Y1; XX2=X2; YY2=Y2
+!
+!    N=0
+!    IF(IDF%IEQ.EQ.0)THEN
+!     !## intersect line with rectangular-  regular-grid
+!     CALL INTERSECT_EQUI(IDF%XMIN,IDF%XMAX,IDF%YMIN,IDF%YMAX,IDF%DX,XX1,XX2,YY1,YY2,N,.TRUE.,.TRUE.)
+!    ELSE
+!     !## intersect line with rectangular-irregular-grid
+!     CALL INTERSECT_NONEQUI(IDF%SX,IDF%SY,IDF%NROW,IDF%NCOL,XX1,XX2,YY1,YY2,N,.TRUE.,.TRUE.)
+!    ENDIF
+!       
+!    IF(NHFB+N.GT.SIZE(HFBPOS,1))THEN
+!     ALLOCATE(HFBPOS_BU(NHFB*2,4))
+!     DO J=1,NHFB
+!      DO I=1,4; HFBPOS_BU(I,:)=HFBPOS(I,:); ENDDO
+!     ENDDO
+!     DEALLOCATE(HFBPOS)
+!     HFBPOS=>HFBPOS_BU
+!    ENDIF
+!      
+!    !## fill result array - check whether change in icol/irow is changed simultenously. This is signal that the line passes
+!    !## through the centre which is not feasible, in that case, we add an extra node +1 for icol or irow
+!    DO L=1,N
+!     ICOL=INT(XA(L)); IROW=INT(YA(L)) 
+!     IF(ICOL.GT.0.AND.IROW.GT.0.AND.ICOL.LE.IDF%NCOL.AND.IROW.LE.IDF%NROW)THEN
+!      NHFB          =NHFB+1
+!      HFBPOS(NHFB,1)=ICOL
+!      HFBPOS(NHFB,2)=IROW
+!      HFBPOS(NHFB,3)=ILINE
+!      HFBPOS(NHFB,4)=INT(FA(L))
+!     ENDIF
+!    ENDDO
+!   ENDIF
+!   II=II+1; X1=X2; Y1=Y2
+!  ENDDO
+! ENDDO
+!
+! CALL INTERSECT_DEALLOCATE()
 
  END SUBROUTINE GEN_HFB_RP
 
@@ -134,7 +135,7 @@ CONTAINS
 !   IC1=HFBPOS(J-1,1); IC2=HFBPOS(J  ,1)
 !   IR1=HFBPOS(J-1,2); IR2=HFBPOS(J  ,2)
 !   IP1=HFBPOS(J-1,4); IP2=HFBPOS(J  ,4)
-!   CALL HFBGETFACES(IC1,IC2,IR1,IR2,IP1,IP2,IPC,NROW,NCOL)
+!   CALL GEN_HFB_FACES(IC1,IC2,IR1,IR2,IP1,IP2,IPC,NROW,NCOL)
 !  ENDIF
 !  
 !  !## write fault-faces
@@ -196,7 +197,7 @@ CONTAINS
 !END SUBROUTINE
 !
 !###====================================================================
-SUBROUTINE HFBGETFACES(IC1,IC2,IR1,IR2,IP1,IP2,IPC,NROW,NCOL)
+SUBROUTINE GEN_HFB_FACES(IC1,IC2,IR1,IR2,IP1,IP2,IPC,NROW,NCOL)
 !###====================================================================
 IMPLICIT NONE
 INTEGER,INTENT(IN) :: IC1,IC2,IR1,IR2,IP1,IP2
@@ -258,7 +259,7 @@ IF(JPR(1).NE.JPR(2).AND.JPC(1).NE.JPC(2))THEN
  ENDIF
 ENDIF
 
-END SUBROUTINE HFBGETFACES
+END SUBROUTINE GEN_HFB_FACES
 !
 !!###====================================================================
 !SUBROUTINE HFB1FM()
@@ -347,113 +348,4 @@ END SUBROUTINE HFBGETFACES
 !RETURN
 !END SUBROUTINE
 !
-!!###====================================================================
-!SUBROUTINE HFB1EXPORT(IPC,NROW,NCOL,HFBFCT,IUHFB,JUHFB,NHFB,ILAY,JLINE)
-!!###====================================================================
-!USE BASVAR, ONLY : DELR,DELC,CC,TOP,BOT
-!USE GLBVAR, ONLY : MMOD,PHFB,PTOP,PBOT,IEXPORT
-!IMPLICIT NONE
-!INTEGER,INTENT(IN) :: NROW,NCOL,IUHFB,JUHFB,JLINE,ILAY
-!INTEGER,INTENT(INOUT) :: NHFB
-!REAL,INTENT(IN) :: HFBFCT
-!INTEGER(KIND=1),INTENT(IN),DIMENSION(NCOL,NROW,2) :: IPC
-!INTEGER :: IROW,ICOL,I
-!REAL :: FCT,DZ,DX,DY,C,T1,T2,CR
-!
-!I=0
-!DO IROW=1,NROW; DO ICOL=1,NCOL
-!
-! !## place vertical wall
-! IF(IPC(ICOL,IROW,1).EQ.INT(1,1))THEN
-!  IF(ICOL.LT.NCOL)THEN
-!   NHFB=NHFB+1
-!
-!   IF(IEXPORT.EQ.1.OR.IEXPORT.EQ.2)THEN
-!    !## reconstruct to a factor to be multiplied with the conductance, input is a resistance
-!    IF(MMOD(PTOP).EQ.1.AND.MMOD(PBOT).EQ.1)THEN
-!     !## cc is kD
-!     T1=CC(ICOL,IROW,ILAY); T2=CC(ICOL+1,IROW,ILAY)
-!     IF(T1.GT.0.0.AND.T2.GT.0.0)THEN
-!      CR=2.0*T2*T1*(DELC(IROW-1)-DELC(IROW))/(T1*(DELR(ICOL+1)-DELR(ICOL))+T2*(DELR(ICOL)-DELR(ICOL-1)))
-!      DX=(DELR(ICOL+1)-DELR(ICOL-1))/2.0
-!      DY= DELC(IROW-1)-DELC(IROW)
-!      DZ= 0.5*(TOP(ICOL,IROW,ILAY)-BOT(ICOL,IROW,ILAY))+0.5*(TOP(ICOL+1,IROW,ILAY)-BOT(ICOL+1,IROW,ILAY))
-!      IF(DZ.GT.0.0)THEN
-!       C = DX*(CR/(DY*DZ))
-!       FCT=C/HFBFCT
-!       !## not to become less than original
-!       FCT=MIN(1.0,FCT)
-!      ELSE
-!       FCT=1.0
-!      ENDIF
-!     ELSE
-!      FCT=1.0
-!     ENDIF
-!    !## reconstruct to a factor to be multiplied with the conductance, input is a factor
-!    ELSE
-!     FCT=HFBFCT
-!    ENDIF
-!   ELSE
-!    FCT=HFBFCT
-!   ENDIF
-!   WRITE(IUHFB,'(4I10,G10.4,I10)') IROW,ICOL,IROW,ICOL+1,FCT,JLINE !## x-direction
-!  ENDIF
-! ENDIF
-!
-! !## place horizontal wall
-! IF(IPC(ICOL,IROW,2).EQ.INT(1,1))THEN
-!  IF(IROW.LT.NROW)THEN
-!   NHFB=NHFB+1
-!
-!   IF(IEXPORT.EQ.1.OR.IEXPORT.EQ.2)THEN
-!    IF(MMOD(PTOP).EQ.1.AND.MMOD(PBOT).EQ.1)THEN
-!     T1=CC(ICOL,IROW,ILAY); T2=CC(ICOL,IROW+1,ILAY)
-!     IF(T1.GT.0.0.AND.T2.GT.0.0)THEN
-!      CR=2.0*T2*T1*(DELR(ICOL)-DELR(ICOL-1))/(T1*(DELC(IROW)-DELC(IROW+1))+T2*(DELC(IROW-1)-DELC(IROW)))
-!      DX= DELR(ICOL)-DELR(ICOL-1)
-!      DY=(DELC(IROW-1)-DELC(IROW+1))/2.0
-!      DZ= 0.5*(TOP(ICOL,IROW,ILAY)-BOT(ICOL,IROW,ILAY))+0.5*(TOP(ICOL,IROW+1,ILAY)-BOT(ICOL,IROW+1,ILAY))
-!      IF(DZ.GT.0.0)THEN
-!       C = DY*(CR/(DX*DZ))
-!       FCT=C/HFBFCT
-!       !## not to become less than original
-!       FCT=MIN(1.0,FCT)
-!      ELSE
-!       FCT=1.0
-!      ENDIF
-!     ELSE
-!      FCT=1.0
-!     ENDIF
-!    !## reconstruct to a factor to be multiplied with the conductance, input is a factor
-!    ELSE
-!     FCT=HFBFCT
-!    ENDIF
-!   ELSE
-!    FCT=HFBFCT
-!   ENDIF
-!   WRITE(IUHFB,'(4I10,G10.4,I10)') IROW,ICOL,IROW+1,ICOL,FCT,JLINE !## y-direction 
-!  ENDIF
-! ENDIF
-! 
-! !## place vertical wall
-! IF(IPC(ICOL,IROW,1).EQ.INT(1,1).AND.ICOL.LT.NCOL)THEN
-!  I=I+1
-!  WRITE(JUHFB,'(2I10)') I,JLINE
-!  WRITE(JUHFB,'(2(F10.2,A1))') DELR(ICOL),',',DELC(IROW-1)
-!  WRITE(JUHFB,'(2(F10.2,A1))') DELR(ICOL),',',DELC(IROW)
-!  WRITE(JUHFB,'(A)') 'END'
-! ENDIF
-! !## place horizontal wall
-! IF(IPC(ICOL,IROW,2).EQ.INT(1,1).AND.IROW.LT.NROW)THEN
-!  I=I+1
-!  WRITE(JUHFB,'(2I10)') I,JLINE
-!  WRITE(JUHFB,'(2(F10.2,A1))') DELR(ICOL-1),',',DELC(IROW)
-!  WRITE(JUHFB,'(2(F10.2,A1))') DELR(ICOL  ),',',DELC(IROW)
-!  WRITE(JUHFB,'(A)') 'END'
-! ENDIF
-!
-!ENDDO; ENDDO
-!
-!END SUBROUTINE HFB1EXPORT
-
 END MODULE MODULE_GEN_HFB

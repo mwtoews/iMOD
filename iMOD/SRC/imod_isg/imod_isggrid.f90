@@ -996,7 +996,7 @@ CONTAINS
       DO J=1,4; RVAL(J,0)=(RVAL(J,ISEG)-RVAL(J,ISEG-1))/DXY; ENDDO
       
       !## intersect line with rectangular-regular-equidistantial-grid
-      N=0; CALL INTERSECT_EQUI(XMIN,XMAX,YMIN,YMAX,CS,X1,X2,Y1,Y2,N,.FALSE.)
+      N=0; CALL INTERSECT_EQUI(XMIN,XMAX,YMIN,YMAX,CS,X1,X2,Y1,Y2,N,.FALSE.,.TRUE.)
 
       !## fill result array
       DXY=0.0

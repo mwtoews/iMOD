@@ -217,7 +217,7 @@ NEWLINE// &
 'This is a license for the iMOD-executables, distributed from the Stichti'// &
 'ng Deltares website. If you require a printed version of this iMOD Softw'// &
 'are License Agreement, e.g. prior to accepting these terms and condition'// &
-'s, please print the pdf-file ‘iMOD_Software_License_Agreement_V3_01.pdf’. You '// &
+'s, please print the pdf-file ‘iMOD_Software_License_Agreement_V3_2.pdf’. You '// &
 'should have received a copy of this pdf-file; if not, see '//NEWLINE// &
 'http://oss.deltares.nl/web/iMOD/iMOD_software_license_agreement.'//NEWLINE// &
 NEWLINE// &
@@ -409,8 +409,7 @@ NEWLINE// &
 NEWLINE// &
 '- The MODFLOW computational core (iMODFLOW):'//NEWLINE// &
 'iMODFLOW_'//TRIM(RVERSION)//'_X32R.exe and'//NEWLINE// &
-'iMODFLOW_'//TRIM(RVERSION)//'_X64R.exe and'//NEWLINE// &
-'iMODFLOW_'//TRIM(RVERSION)//'_METASWAP_SVN1031_X64R.exe:'//NEWLINE// &
+'iMODFLOW_'//TRIM(RVERSION)//'_METASWAP_SVN1044_X64R.exe:'//NEWLINE// &
 NEWLINE// &
 'iMODFLOW is partly based on the USGS MODFLOW2005 s'// &
 'ource code; for iMOD the USGS MODFLOW2005 source code has been expanded '// &
@@ -422,11 +421,11 @@ NEWLINE// &
 'ights Notice; you should have received a copy of this notice along with '// &
 'this program. If not, see http://water.usgs.gov/software/help/notice.'//NEWLINE// &
 NEWLINE// &
-'One of the two X64-bit iMODFLOW-executables includes'// &
-' the MetaSWAP-module SVN version number 1031, part of SIMGRO V7_2_22 as described '// &
+'The X64-bit iMODFLOW-executable includes the MetaSWAP-module '// &
+'SVN version number 1044, part of SIMGRO V7_2_27 as described '// &
 'in the SIMGRO-release notes ftp://ftp.wur.nl/simgro/doc/Change_log/ Release_Notes_'// &
-'SIMGRO_V7_2_25.pdf. The other X64-bit iMODFLOW-executable does '// &
-'not include MetaSWAP. MetaSWAP has been developed by Alterra - Wageningen UR. For more '// &
+'SIMGRO_V7_2_27.pdf. '// &
+'MetaSWAP has been developed by Alterra - Wageningen UR. For more '// &
 'info on MetaSWAP, see the iMOD user manual, Annex 1. For more info on Al'// &
 'terra – Wageningen UR, see http://www.wageningenur.nl/en/Expertise-Servi'// &
 'ces/Research-Institutes/alterra.htm.'//NEWLINE// &
@@ -468,8 +467,8 @@ NEWLINE// &
 NEWLINE// &
 'iMOD-GUI is available for a 32- and 64-bit system and runs on the following '// &
 'platforms: Windows XP / Server 2003 / Vista Business / Vista Ultimate / Server 2008 / 7'// &
-'; the iMODFLOW-executable incl. MetaSWAP is available for 64-bit systems '// &
-'only, an iMODFLOW-executable excl. MetaSWAP is available for 32- and 64-bit systems.'//NEWLINE// &
+'; the 64-bit version of the iMODFLOW-executable includes, the 32-bit '// &
+'version does not include MetaSWAP.'//NEWLINE// &
 NEWLINE// &
 'SYSTEM SOFTWARE'//NEWLINE// &
 NEWLINE// &
