@@ -435,6 +435,9 @@ CONTAINS
  !## move back to the iMOD folder
  CALL IOSDIRCHANGE(DIRNAME)
 
+ !## check outfile
+ CALL PLUGIN_EXE_READ_BACK(IPI,IDP)
+ 
  !## update menu
  CALL PLUGIN_INITMENU_RUN()
  
