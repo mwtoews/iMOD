@@ -1698,9 +1698,10 @@ KLOOP: DO K=1,SIZE(TOPICS(JJ)%STRESS(1)%FILES,1)
    ELSE
     LINE=TRIM(LINE)//' 0'
    ENDIF
+  ELSE
+   !## lowest layer has never a quasi-confining bed
+   LINE=TRIM(LINE)//' 0'
   ENDIF
-  !## lowest layer has never a quasi-confining bed
-  IF(ILAY.EQ.NLAY)LINE=TRIM(LINE)//' 0'
  ENDDO
 
  WRITE(IU,'(A)') TRIM(LINE)
@@ -3712,16 +3713,31 @@ KLOOP: DO K=1,SIZE(TOPICS(JJ)%STRESS(1)%FILES,1)
  INTEGER(KIND=8),DIMENSION(:),POINTER,INTENT(IN) :: ITIME
  INTEGER(KIND=8),DIMENSION(:),POINTER :: JTIME
  INTEGER :: IPER,I
+ INTEGER(KIND=8) :: STIME,ETIME
+   
+ !## starttime
+ STIME=ITIME(1)
+ !## end time
+ ETIME=ITIME(2)
    
  CALL SHELLSORT_DOUBLEINT(SIZE(ITIME),ITIME)
 
  ALLOCATE(JTIME(SIZE(ITIME)))
- !## get first date
- DO IPER=1,SIZE(ITIME); IF(ITIME(IPER).GT.0)EXIT; ENDDO
- JTIME(1)=ITIME(IPER)
-
+ 
+ NPER=1
+ 
+ !## start time
+ JTIME(1)=STIME
+ !## get first date inside time window
+ DO IPER=1,SIZE(ITIME)
+  !## too early
+  IF(ITIME(IPER).LE.STIME)CYCLE; EXIT
+ ENDDO
+ 
  !## get number of unique dates
- NPER=1; DO I=IPER+1,SIZE(ITIME)
+ DO I=IPER,SIZE(ITIME)
+  !## too late - stop
+  IF(ITIME(I).GT.ETIME)EXIT
   IF(ITIME(I).NE.ITIME(I-1))THEN
    NPER=NPER+1; JTIME(NPER)=ITIME(I)
   ENDIF

@@ -97,6 +97,9 @@ CONTAINS
  INTEGER :: I,IVALUE,IOS
  CHARACTER(LEN=256) :: PLUGDIR
 
+ !## nothing to do, proabably imf with plugin using in a configuration without plugins active
+ IF(TRIM(PREFVAL(IPI)).EQ.'')RETURN
+ 
  IF(.NOT.ASSOCIATED(PI))THEN
   READ(LINE,'(8X,I2)') IVALUE
   ALLOCATE(PI(IVALUE))
@@ -107,7 +110,7 @@ CONTAINS
 
  READ(IU,*,IOSTAT=IOS) PLUGDIR !# plugin-directory (not) equal to prefval test
  IF(TRIM(PLUGDIR).NE.TRIM(PREFVAL(IPI)))THEN
-  CALL WMESSAGEBOX(OKONLY,EXCLAMATIONICON,COMMONOK,'Given plugin-directory ('//TRIM(PLUGDIR)//') in .imf file is not similar to given directory in preference file ('//TRIM(PREFVAL(IPI))//')','Error')     
+  CALL WMESSAGEBOX(OKONLY,EXCLAMATIONICON,COMMONOK,'Given plugin-directory ('//TRIM(PLUGDIR)//') in .imf file is not similar to given directory in preference file ('//TRIM(PREFVAL(IPI))//')','Error')
  ENDIF    
  DO I=1,IVALUE
   READ(IU,*,IOSTAT=IOS) PI(I)%PNAME,PI(I)%IACT

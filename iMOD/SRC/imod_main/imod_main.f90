@@ -1504,11 +1504,11 @@ DO
     CALL PLUGIN_LOAD(PI2,28,LINE,IU)
    ENDIF
 
-   READ(IU,'(A256)',IOSTAT=IOS) LINE !reading ******-en
-   IF(IOS.NE.0)EXIT
-   IF(LINE(1:10).EQ.'**********')EXIT
-   
-  ENDIF 
+  ENDIF
+
+  READ(IU,'(A256)',IOSTAT=IOS) LINE !reading ******-en
+  IF(IOS.NE.0)EXIT
+  IF(LINE(1:10).EQ.'**********')EXIT
 
  ENDDO
  
