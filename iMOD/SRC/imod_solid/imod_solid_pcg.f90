@@ -770,7 +770,7 @@ CONTAINS
  
  !## apply faults
  IF(PRESENT(IPC))THEN
-  CALL PCG_HFB_FM(IPC,PCG(1)%CC,PCG(1)%CR,NROW,NCOL,0.0)
+  CALL PCG_HFB_FM(IPC,PCG(1)%CC,PCG(1)%CR,NROW,NCOL,0.1)
  ENDIF
  
  !## create boundary/fixed heads

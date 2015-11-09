@@ -32,7 +32,8 @@ USE MOD_IDF_PAR, ONLY : IDFOBJ
  TYPE LEGENDOBJ
   INTEGER,DIMENSION(MXCLR) :: RGB
   REAL,DIMENSION(0:MXCLR)  :: CLASS
-  INTEGER,DIMENSION(MXCGRAD) :: CGRAD                   !## selected color for gradient
+  INTEGER,DIMENSION(MXCGRAD) :: CGRAD           !## selected color for gradient
+  INTEGER,DIMENSION(MXCGRAD) :: ICLRGRAD        !## selected color for gradient
   CHARACTER(LEN=50),DIMENSION(MXCLR) :: LEGTXT
   CHARACTER(LEN=150) :: HEDTXT
   INTEGER :: NCLR

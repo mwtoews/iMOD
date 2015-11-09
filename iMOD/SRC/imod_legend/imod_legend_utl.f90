@@ -31,7 +31,7 @@ USE MOD_OSD, ONLY : OSD_OPEN,OSD_IOSTAT_MSG
 CONTAINS
 
  !###======================================================================
- SUBROUTINE LEGALLOCATE(LEG)
+ SUBROUTINE LEG_ALLOCATE(LEG)
  !###======================================================================
  IMPLICIT NONE
  TYPE(LEGENDOBJ) :: LEG
@@ -56,15 +56,19 @@ CONTAINS
 ! ENDIF
 ! IF(.NOT.ASSOCIATED(LEG%CLASS))ALLOCATE(LEG%CLASS(0:MXCLR))
 
- LEG%HEDTXT=''
- LEG%LEGTXT=''
- LEG%RGB   =0
- LEG%CLASS =0.0
- 
- END SUBROUTINE LEGALLOCATE
+ LEG%HEDTXT  =''
+ LEG%LEGTXT  =''
+ LEG%RGB     =0
+ LEG%CLASS   =0.0
+ LEG%NCLR    =0
+ LEG%CGRAD   =0
+ LEG%ICLRGRAD=0
+ LEG%LEGSIZE =0
+
+ END SUBROUTINE LEG_ALLOCATE
 
  !###======================================================================
- SUBROUTINE LEGDEALLOCATE(LEG)
+ SUBROUTINE LEG_DEALLOCATE(LEG)
  !###======================================================================
  IMPLICIT NONE
  TYPE(LEGENDOBJ) :: LEG
@@ -74,10 +78,10 @@ CONTAINS
 ! IF(ASSOCIATED(LEG%RGB))DEALLOCATE(LEG%RGB)
 ! IF(ASSOCIATED(LEG%CLASS))DEALLOCATE(LEG%CLASS)
 
- END SUBROUTINE LEGDEALLOCATE
+ END SUBROUTINE LEG_DEALLOCATE
 
  !###======================================================================
- SUBROUTINE LEGWRITE(LEG,LEGNAME)
+ SUBROUTINE LEG_WRITE(LEG,LEGNAME)
  !###======================================================================
  IMPLICIT NONE
  TYPE(LEGENDOBJ) :: LEG
@@ -94,14 +98,14 @@ CONTAINS
   RETURN
  ENDIF
 
- CALL LEGWRITE_LEGEND(IU,LEG)
+ CALL LEG_WRITE_LEGEND(IU,LEG)
 
  CLOSE(IU)
 
- END SUBROUTINE LEGWRITE
+ END SUBROUTINE LEG_WRITE
 
  !###======================================================================
- SUBROUTINE LEGWRITE_LEGEND(IU,LEG)
+ SUBROUTINE LEG_WRITE_LEGEND(IU,LEG)
  !###======================================================================
  IMPLICIT NONE
  TYPE(LEGENDOBJ) :: LEG
@@ -134,10 +138,10 @@ CONTAINS
   WRITE(IU,'(A)') TRIM(LINE)
  END DO
 
- END SUBROUTINE LEGWRITE_LEGEND
+ END SUBROUTINE LEG_WRITE_LEGEND
 
  !###======================================================================
- SUBROUTINE LEGREAD(LEG,LEGNAME,IOS)
+ SUBROUTINE LEG_READ(LEG,LEGNAME,IOS)
  !###======================================================================
  IMPLICIT NONE
  TYPE(LEGENDOBJ) :: LEG
@@ -155,14 +159,14 @@ CONTAINS
   RETURN
  ENDIF
 
- CALL LEGREAD_LEGEND(IU,LEG)
+ CALL LEG_READ_LEGEND(IU,LEG)
 
  CLOSE(IU)
 
- END SUBROUTINE LEGREAD
+ END SUBROUTINE LEG_READ
 
  !###======================================================================
- SUBROUTINE LEGREAD_LEGEND(IU,LEG)
+ SUBROUTINE LEG_READ_LEGEND(IU,LEG)
  !###======================================================================
  IMPLICIT NONE
  TYPE(LEGENDOBJ) :: LEG
@@ -179,7 +183,7 @@ CONTAINS
   LEG%RGB(I)=WRGB(IR,IG,IB)
  END DO
 
- END SUBROUTINE LEGREAD_LEGEND
+ END SUBROUTINE LEG_READ_LEGEND
 
 END MODULE MOD_LEGEND_UTL
 

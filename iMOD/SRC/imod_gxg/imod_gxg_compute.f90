@@ -368,7 +368,7 @@ CONTAINS
 
   !## Check for existence of legend, if not, then create one in tmp directory
   FNLEG=TRIM(PREFVAL(1))//'\TMP\GT.LEG'
-  CALL GXG1GTLEGWRITE(FNLEG)
+  CALL GXG1GTLEG_WRITE(FNLEG)
 
   !## copy settings --- USE FIRST ONE
   CALL IDFCOPY(GXG(1),IDFCP)
@@ -635,7 +635,7 @@ CONTAINS
  END SUBROUTINE GXG1ABORT
 
  !###======================================================================
- SUBROUTINE GXG1GTLEGWRITE(FNLEG)
+ SUBROUTINE GXG1GTLEG_WRITE(FNLEG)
  !###======================================================================
  IMPLICIT NONE
  CHARACTER(LEN=*),INTENT(IN) :: FNLEG
@@ -679,7 +679,7 @@ CONTAINS
  ENDIF
  CLOSE(IU)
 
- END SUBROUTINE GXG1GTLEGWRITE
+ END SUBROUTINE GXG1GTLEG_WRITE
 
  !###======================================================================
  !## GTNEW has 19 applicable classes and originates from 2000 (See also p 47 of Cultuur

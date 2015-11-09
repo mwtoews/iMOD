@@ -35,7 +35,6 @@ CONTAINS
  SUBROUTINE COLOUR_INIT()
  !###====================================================================
  IMPLICIT NONE
- INTEGER :: I
  INTEGER,DIMENSION(MXCGRAD) :: IRGB
  
  IRGB(1)=WRGB(64,0,0);      CALL WRGBSPLIT(IRGB(1),CLR(1,1),CLR(1,2),CLR(1,3)) !## brown
