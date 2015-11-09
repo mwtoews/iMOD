@@ -79,11 +79,9 @@ CALL IDEBUGLEVEL(DBGSILENT)
 #endif
 
 !## get executable name
-CALL GETARG(0,EXENAME)
+CALL GETARG(0,EXENAME); EXEPATH=TRIM(EXENAME(:INDEX(EXENAME,'\',.TRUE.)-1))
 
 CALL WINITIALISE(' ') 
-
-!CALL IMOD3D_INTERPOLATOR()
 
 !CALL IOSDATE(IY,IM,ID)
 !IF(JD(IY,IM,ID).GE.JD(2015,4,3))THEN
@@ -96,7 +94,7 @@ IF(IMODBATCH())STOP
 
 !## get username and status and initialise window
 CALL WINDOWOPEN(FLAGS=SYSMENUON+MINBUTTON+MAXBUTTON+STATUSBAR+MAXWINDOW, &
-                TITLE='iMOD ['//TRIM(RVERSION)//'; Configuration '//TRIM(CCONFIG)//']')
+                TITLE='iMOD ['//TRIM(RVERSION)//'; '//TRIM(CCONFIG)//']')
 CALL WINDOWSTATUSBARPARTS(4,(/2000,2000,750,-1/),(/1,1,1,1/))
 
 !## initialize preferences
@@ -123,14 +121,16 @@ CALL IGRCOLOURMODEL(24)
 CALL MANAGERINIT()
 !##load project-datamanager in memory
 CALL PMANAGERINIT()
+!##initialize colours
+CALL PREFCOLOURSINIT(.TRUE.)
 !##load legend in memory
 CALL LEGINIT()
 !##initialize iMOD
 CALL IMODINIT()
 !## initialize preferences
 CALL PREFINIT()
-!##initialize colours
-CALL PREFCOLOURSINIT(.TRUE.)
+!!##initialize colours
+!CALL PREFCOLOURSINIT(.TRUE.)
 !## no colour read
 NLITHO=0
 !## initiate white colors

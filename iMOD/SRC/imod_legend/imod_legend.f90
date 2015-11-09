@@ -1637,7 +1637,6 @@ CONTAINS
  IMPLICIT NONE
  INTEGER,INTENT(IN) :: IPLOT
  INTEGER :: I,J,K,IRED,IGREEN,IBLUE,NCLRDEF,IRGB,II
- INTEGER,DIMENSION(MXCGRAD,3) :: CLR
  REAL,DIMENSION(3) :: INTCLR
 
  !## default colors as set by preference file
@@ -1646,7 +1645,7 @@ CONTAINS
  !## default number of classes between color-zones
  CALL LEGINITCLRGIVEN(IPLOT)
 
- !##read current color settings on legend-dialog
+ !## read current color settings on legend-dialog
  CALL WDIALOGSELECT(ID_DLEGTAB2)
  NCLRDEF=0
  II     =0
