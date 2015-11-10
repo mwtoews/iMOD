@@ -55,6 +55,257 @@ REAL,PARAMETER,PRIVATE :: SDAY=86400.0
 
 CONTAINS
 
+ !###====================================================================
+ LOGICAL FUNCTION UTL_PCK_READTXT(ICOL,STIME,ETIME,MTYPE,Q,FNAME) 
+ !###====================================================================
+ IMPLICIT NONE
+ INTEGER,INTENT(IN) :: ICOL,MTYPE
+ INTEGER(KIND=8),INTENT(IN) :: STIME,ETIME
+ REAL,DIMENSION(:),ALLOCATABLE :: QSORT
+ CHARACTER(LEN=*),INTENT(IN) :: FNAME
+ REAL,INTENT(OUT) :: Q
+ INTEGER :: IR,I,I1,I2,IU,NR,NC,IDATE,JDATE,NDATE,NAJ,N,IOS,TTIME,ITYPE,IZ,IZMIN,IZMAX,LUNIT,DIZ,SDATE,EDATE
+ REAL :: FRAC,Q1,QQ,Z
+ CHARACTER(LEN=8) :: ATTRIB
+ CHARACTER(LEN=256) :: LINE
+ REAL,DIMENSION(:),ALLOCATABLE :: NODATA,QD
+ 
+ !## sdate=yyyymmddmmhhss
+ !## edate=yyyymmddmmhhss
+ SDATE=STIME/1000000
+ EDATE=ETIME/1000000
+ SDATE=UTL_IDATETOJDATE(SDATE)
+ EDATE=UTL_IDATETOJDATE(EDATE)
+ 
+ IF(EDATE.GT.SDATE)THEN
+  TTIME=EDATE-SDATE
+ ELSE
+  LUNIT=1
+  TTIME=ABS((EDATE*LUNIT)-(SDATE*LUNIT))
+ ENDIF
+ !## transient(2)/steady-state(1)
+ ALLOCATE(QSORT(TTIME)); Q=0.0
+
+ !## open textfiles with pump information
+ IU=UTL_GETUNIT(); CALL OSD_OPEN(IU,FILE=FNAME,STATUS='OLD',ACTION='READ')
+ 
+ READ(IU,*) NR
+ IF(NR.GT.0.0)THEN
+  READ(IU,'(A256)') LINE
+  READ(LINE,*,IOSTAT=IOS) NC,ITYPE
+  IF(IOS.NE.0)ITYPE=1
+  ITYPE=MAX(ITYPE,1)
+  
+  ALLOCATE(NODATA(NC),QD(NC)); QD=0.0
+  
+  DO I=1,NC; READ(IU,*) ATTRIB,NODATA(I); ENDDO 
+
+  QSORT=NODATA(ICOL)
+
+  !## timeseries
+  IF(ITYPE.EQ.1)THEN  
+
+   I1=1
+   DO IR=1,NR
+
+    IF(IR.EQ.1)THEN
+     READ(IU,*) IDATE,(QD(I),I=2,NC)
+     QQ=QD(ICOL)
+    ELSE
+     QQ   =Q1
+     IDATE=JDATE
+    ENDIF
+
+    !## edate=end date of current simulation period
+    NDATE=EDATE
+    IF(IR.LT.NR)THEN
+     READ(IU,*) NDATE,(QD(I),I=2,NC) 
+     Q1=QD(ICOL)
+     JDATE=NDATE
+     NDATE=UTL_IDATETOJDATE(NDATE) !## fname=optional for error message
+    ENDIF
+    !## ndate is min of end date in txt file or simulation period
+    NDATE=MIN(NDATE,EDATE)
+
+    !## is begin date read from txt file
+    IDATE=UTL_IDATETOJDATE(IDATE)  !## fname=optional for error message
+
+    !## stop searching for data, outside modeling window!
+    IF(IDATE.GT.EDATE)EXIT
+
+    !## within modeling window
+    IF(NDATE.GT.SDATE)THEN
+
+     !### definitions ($ time window current stressperiod)
+     !  $        |---------|         $ 
+     !sdate    idate     ndate     edate
+    
+     N=NDATE-SDATE
+     !## if startingdate (read from txt file) greater than start date of current stressperiod
+     IF(IDATE.GT.SDATE)N=N-(IDATE-SDATE)
+     I2=I1+N-1
+    
+     IF(I2.GE.I1)QSORT(I1:I2)=QQ
+
+     I1=I2+1
+
+    ENDIF
+   END DO
+  
+  ELSEIF(ITYPE.EQ.2.OR.ITYPE.EQ.3)THEN
+   
+   QQ=0.0; IZMAX=SDATE*LUNIT; IZMIN=EDATE*LUNIT; DIZ=(IZMAX-IZMIN)*LUNIT
+   READ(IU,*) Z,(QD(I),I=2,NC)
+   IZ=INT(Z*LUNIT); I1=IZMAX-IZ+1; Q1=QD(ICOL)
+   DO IR=2,NR
+
+    READ(IU,*) Z,(QD(I),I=2,NC)
+    IZ=INT(Z*LUNIT)
+    I2=IZMAX-IZ
+    IF(I1.LE.DIZ.AND.I2.GT.0)THEN
+     I2=MIN(DIZ,I2)
+     I1=MAX(1,I1)
+     QSORT(I1:I2)=Q1 
+    ENDIF
+    I1=I2+1; Q1=QD(ICOL)
+    IF(I1.GT.DIZ)EXIT
+       
+   ENDDO
+    
+  ENDIF
+  
+  IF(MTYPE.EQ.1)THEN
+   Q=0.0; I1=0
+   DO I=1,TTIME
+    IF(QSORT(I).NE.NODATA(ICOL))THEN; Q=Q+QSORT(I); I1=I1+1; ENDIF
+   ENDDO
+   IF(I1.GT.0)THEN
+    Q=Q/REAL(I1)
+   ELSE
+    Q=NODATA(ICOL)
+   ENDIF
+  ELSEIF(MTYPE.EQ.2)THEN
+   CALL UTL_GETMED(QSORT,TTIME,NODATA(ICOL),(/0.5/),1,NAJ,QD)
+   Q=QD(1)
+   !## naj becomes zero if no values were found!
+   FRAC=REAL(NAJ)/REAL(TTIME)
+   Q   =Q*FRAC
+  ENDIF
+  
+ ENDIF
+ 
+ UTL_PCK_READTXT=.TRUE.; IF(Q.EQ.NODATA(ICOL))UTL_PCK_READTXT=.FALSE.
+ 
+ CLOSE(IU); DEALLOCATE(QSORT,NODATA,QD)
+ 
+ END FUNCTION UTL_PCK_READTXT
+
+ !###======================================================================
+ SUBROUTINE UTL_PCK_GETTLP(N,TLP,KH,TOP,BOT,Z1,Z2)
+ !###======================================================================
+ IMPLICIT NONE
+ REAL,PARAMETER :: MINP=0.0, MINKH=0.0
+ INTEGER,INTENT(IN) :: N
+ REAL,INTENT(INOUT) :: Z1,Z2
+ REAL,INTENT(IN),DIMENSION(N) :: KH,TOP,BOT
+ REAL,INTENT(INOUT),DIMENSION(N) :: TLP
+ INTEGER :: JLAY,ILAY,K,IDIFF
+ REAL :: ZM,ZT,ZB,ZC,FC,DZ
+ REAL,ALLOCATABLE,DIMENSION(:) :: L,TL
+ INTEGER,ALLOCATABLE,DIMENSION(:) :: IL
+   
+ ALLOCATE(L(N),TL(N),IL(N))
+ 
+ !## make sure thickness is not exactly zero, minimal thickness is 0.01m
+ IDIFF=0; IF(Z1.EQ.Z2)THEN; Z1=Z1+0.005; Z2=Z2-0.005; IDIFF=1; ENDIF
+ 
+ !## filterlength for each modellayer
+ L=0.0
+ DO ILAY=1,N
+  ZT=MIN(TOP(ILAY),Z1); ZB=MAX(BOT(ILAY),Z2); L(ILAY)=MAX(0.0,ZT-ZB)
+ ENDDO
+ 
+ TLP=0.0
+ !## well within any aquifer(s)
+ IF(SUM(L).GT.0.0)THEN
+  !## compute percentage and include sumkd, only if itype.eq.2
+  L=L*KH
+  !## percentage (0-1) L*KH
+  DO ILAY=1,N; IF(L(ILAY).NE.0.0)TLP=(1.0/SUM(L))*L; ENDDO
+ ENDIF
+
+ !## correct for dismatch with centre of modelcell
+ DO ILAY=1,N
+  IF(TLP(ILAY).GT.0.0)THEN
+   DZ= TOP(ILAY)-BOT(ILAY)
+   ZC=(TOP(ILAY)+BOT(ILAY))/2.0
+   ZT= MIN(TOP(ILAY),Z1)
+   ZB= MAX(BOT(ILAY),Z2)
+   FC=(ZT+ZB)/2.0
+   TLP(ILAY)=TLP(ILAY)*(1.0-(ABS(ZC-FC)/(0.5*DZ)))
+  ENDIF
+ ENDDO
+ 
+ !## normalize tlp() again
+ IF(SUM(TLP).GT.0.0)TLP=(1.0/SUM(TLP))*TLP
+
+ IF(MINP.GT.0.0)THEN
+  !## remove small percentages
+  DO ILAY=1,N; IF(TLP(ILAY).LT.MINP)TLP(ILAY)=0.0; ENDDO
+  !## normalize tlp() again
+  IF(SUM(TLP).GT.0.0)TLP=(1.0/SUM(TLP))*TLP
+ ENDIF
+ 
+ !## remove small permeabilities
+ IF(MINKH.GT.0.0)THEN
+  ZT=SUM(TLP) 
+  DO ILAY=1,N; IF(KH(ILAY).LT.MINKH)TLP(ILAY)=0.0; ENDDO
+  IF(SUM(TLP).GT.0.0)THEN
+   ZT=ZT/SUM(TLP); TLP=ZT*TLP
+  ENDIF
+  !## normalize tlp() again
+  IF(SUM(TLP).GT.0.0)TLP=(1.0/SUM(TLP))*TLP
+ ENDIF
+
+ !## if no layers has been used for the assignment, try to allocate it to the nearest 
+ IF(SUM(TLP).EQ.0.0)THEN
+  ZM=(Z1+Z2)/2.0; DZ=99999.0; JLAY=0
+  DO ILAY=1,N
+   ZT=TOP(ILAY); ZB=BOT(ILAY)
+   IF(ABS(ZT-ZM).LT.DZ.OR.ABS(ZB-ZM).LT.DZ)THEN
+    DZ  =MIN(ABS(ZT-ZM),ABS(ZB-ZM))
+    JLAY=ILAY
+   ENDIF
+  ENDDO
+  IF(JLAY.EQ.0)CALL WMESSAGEBOX(OKONLY,EXCLAMATIONICON,COMMONOK,'JLAY.EQ.0, Not able to assign proper modellayer','Error')
+  TLP(JLAY)=-1.0
+ ENDIF
+ 
+ !## make sure only one layer is assigned whenever z1.eq.z2
+ IF(IDIFF.EQ.1)THEN
+  K=0; ZT=0.0; DO ILAY=1,N
+   IF(ABS(TLP(ILAY)).GT.ZT)THEN
+    ZT=ABS(TLP(ILAY)); K=ILAY
+   ENDIF
+  ENDDO
+  IF(K.GT.0)THEN
+   ZT=TLP(K)
+   TLP=0.0; TLP(K)=1.0 
+   IF(ZT.LT.0.0)TLP(K)=-1.0*TLP(K)
+  ELSE
+   CALL WMESSAGEBOX(OKONLY,EXCLAMATIONICON,COMMONOK,'K.EQ.0, Not able to assign proper modellayer','Error')
+  ENDIF
+ ENDIF
+ 
+ !## nothing in model, whenever system on top of model, put them in first modellayer
+ IF(SUM(TLP).EQ.0.0)THEN
+  IF(Z2.GE.TOP(1))TLP(1)=1.0
+ ENDIF
+
+ DEALLOCATE(L,TL,IL)
+ 
+ END SUBROUTINE UTL_PCK_GETTLP
+
  !###======================================================================
  SUBROUTINE UTL_LISTOFFILES(FNAME_IN,STRING,BACTION,TEXT,HELP)
  !###======================================================================

@@ -46,17 +46,6 @@ MODULE MOD_PMANAGER_PAR
  END TYPE SIMOBJ
  TYPE(SIMOBJ),POINTER,DIMENSION(:) :: SIM,SIM_C,SIM_C2
   
- TYPE STRESSOBJ
-  CHARACTER(LEN=MAXLEN) :: CDATE                                !date string of each time step
-  INTEGER :: IYR,IMH,IDY                                        !years,months ,days
-  INTEGER :: IHR,IMT,ISC                                        !hours,minutes,seconds
-  TYPE(FILESOBJ),POINTER,DIMENSION(:,:) :: FILES,FILES_TMP => NULL()     !stress information for current defined timestep
-                                                                !(I,:) = subtopic i
-                                                                !(:,I) = system i
-  CHARACTER(LEN=256),POINTER,DIMENSION(:) :: INPFILES => NULL()  !stores the inp files for metaswap
- END TYPE STRESSOBJ
- TYPE(STRESSOBJ),ALLOCATABLE,DIMENSION(:) :: STRESS
-
  TYPE FILESOBJ
   INTEGER :: IACT                                               !active in runfile
   CHARACTER(LEN=256) :: FNAME                                   !name of current file, could be a constant too!
@@ -68,6 +57,17 @@ MODULE MOD_PMANAGER_PAR
   REAL :: IMP                                      !impulse
   REAL :: CNST                                      !constant value
  END TYPE FILESOBJ
+
+ TYPE STRESSOBJ
+  CHARACTER(LEN=MAXLEN) :: CDATE                                !date string of each time step
+  INTEGER :: IYR,IMH,IDY                                        !years,months ,days
+  INTEGER :: IHR,IMT,ISC                                        !hours,minutes,seconds
+  TYPE(FILESOBJ),POINTER,DIMENSION(:,:) :: FILES,FILES_TMP => NULL()     !stress information for current defined timestep
+                                                                !(I,:) = subtopic i
+                                                                !(:,I) = system i
+  CHARACTER(LEN=256),POINTER,DIMENSION(:) :: INPFILES => NULL()  !stores the inp files for metaswap
+ END TYPE STRESSOBJ
+ TYPE(STRESSOBJ),ALLOCATABLE,DIMENSION(:) :: STRESS
 
  TYPE TOPICSOBJ
   INTEGER :: ID                                                 !id of main topics

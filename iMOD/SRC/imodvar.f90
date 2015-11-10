@@ -28,11 +28,11 @@ REAL,PARAMETER :: PI=ATAN(1.0)*4.0  !##value pi
 
 CHARACTER(LEN=30),PARAMETER :: RVERSION='V3_2'
 CHARACTER(LEN=32) :: LICFILE='I_accepted_'//TRIM(RVERSION)//'.txt'
-CHARACTER(LEN=256)                     :: IMFFNAME         !##name of drawing file
-CHARACTER(LEN=256)                     :: EXENAME,EXEPATH
-CHARACTER(LEN=256)                     :: OPENDIR   !remember saved location
-CHARACTER(LEN=256)                     :: SAVEDIR   !remember opened location
-REAL                                   :: MASKXMIN,MASKXMAX,MASKYMIN,MASKYMAX
+CHARACTER(LEN=256) :: IMFFNAME         !##name of drawing file
+CHARACTER(LEN=256) :: EXENAME,EXEPATH
+CHARACTER(LEN=256) :: OPENDIR   !remember saved location
+CHARACTER(LEN=256) :: SAVEDIR   !remember opened location
+REAL :: MASKXMIN,MASKXMAX,MASKYMIN,MASKYMAX
 REAL :: DOWNX,DOWNY
 INTEGER :: IDOWN
 INTEGER :: IW,IH,IBITMAP,DX,DY,PX,PY
