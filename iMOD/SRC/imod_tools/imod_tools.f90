@@ -619,7 +619,7 @@ CONTAINS
  IPF(1)%FNAME=''
  IF(LOKAY)THEN
   CALL IDFINIT(IDFNAMEGIVEN=ADIR)
-  CALL WMESSAGEBOX(OKONLY,INFORMATIONICON,COMMONOK,'successfully added timeserie information to'//CHAR(13)// &
+  CALL WMESSAGEBOX(OKONLY,INFORMATIONICON,COMMONOK,'Successfully added timeserie information to'//CHAR(13)// &
     TRIM(ADIR)//CHAR(13)//'File has been added to you imod-manager','Information')
  ENDIF
 

@@ -766,7 +766,7 @@ CONTAINS
    ENDIF
   ENDIF
  ELSE
-  WRITE(*,'(/A)') 'successfully completed waterbalance, results written in:'
+  WRITE(*,'(/A)') 'Successfully completed waterbalance, results written in:'
   WRITE(*,'(A/)') TRIM(WBAL_OUTFNAME)
  ENDIF
 

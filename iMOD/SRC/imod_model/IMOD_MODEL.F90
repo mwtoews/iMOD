@@ -603,11 +603,11 @@ CONTAINS
   CALL IOSCOMMAND('RUN.BAT',IFLAGS,IEXCOD=IEXCOD)
 
   IF(ISCEN.EQ.0)THEN
-   CALL WMESSAGEBOX(OKONLY,INFORMATIONICON,COMMONOK,'successfully STARTED the Modflow simulation using:'//CHAR(13)// &
+   CALL WMESSAGEBOX(OKONLY,INFORMATIONICON,COMMONOK,'Successfully STARTED the Modflow simulation using:'//CHAR(13)// &
                   'MODFLOW: '//TRIM(PREFVAL(8))//CHAR(13)// &
                   'RUNFILE: '//TRIM(RUN1),'Information')
   ELSE
-   CALL WMESSAGEBOX(OKONLY,INFORMATIONICON,COMMONOK,'successfully STARTED the Modflow simulation using:'//CHAR(13)// &
+   CALL WMESSAGEBOX(OKONLY,INFORMATIONICON,COMMONOK,'Successfully STARTED the Modflow simulation using:'//CHAR(13)// &
                   'MODFLOW: '//TRIM(PREFVAL(8))//CHAR(13)// &
                   'RUNFILE: '//TRIM(RUN1)//CHAR(13)// &
                   'SCENARIO: '//TRIM(SCENFNAME),'Information')
@@ -627,11 +627,11 @@ CONTAINS
   CALL IOSCOMMAND(TRIM(RUN),IFLAGS,IEXCOD=IEXCOD)
   IF(IEXCOD.EQ.0)THEN
    IF(ISCEN.EQ.0)THEN
-    CALL WMESSAGEBOX(OKONLY,INFORMATIONICON,COMMONOK,'successfully Simulated the Modflow simulation using:'//CHAR(13)// &
+    CALL WMESSAGEBOX(OKONLY,INFORMATIONICON,COMMONOK,'Successfully Simulated the Modflow simulation using:'//CHAR(13)// &
                    'MODFLOW: '//TRIM(PREFVAL(8))//CHAR(13)// &
                    'RUNFILE: '//TRIM(RUN1),'Information')
    ELSE
-    CALL WMESSAGEBOX(OKONLY,INFORMATIONICON,COMMONOK,'successfully Simulated the Modflow simulation using:'//CHAR(13)// &
+    CALL WMESSAGEBOX(OKONLY,INFORMATIONICON,COMMONOK,'Successfully Simulated the Modflow simulation using:'//CHAR(13)// &
                    'MODFLOW: '//TRIM(PREFVAL(8))//CHAR(13)// &
                    'RUNFILE: '//TRIM(RUN1)//CHAR(13)// &
                    'SCENARIO: '//TRIM(SCENFNAME),'Information')

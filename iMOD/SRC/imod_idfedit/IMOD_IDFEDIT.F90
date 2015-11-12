@@ -1809,7 +1809,7 @@ CONTAINS
 !     CALL KRIGING_MAIN(ND,XD,YD,ZD,IDF,MINP,MAXP,RANGE,SILL,NUGGET)
    END SELECT
    
-   !## successfully completed interpolation
+   !## Successfully completed interpolation
    IF(IOS.EQ.0)THEN   
     IC1=MINVAL(SELIDF(1)%YSEL(1,1:N))-1; IC2=MAXVAL(SELIDF(1)%YSEL(1,1:N))+1
     IR1=MINVAL(SELIDF(1)%YSEL(2,1:N))-1; IR2=MAXVAL(SELIDF(1)%YSEL(2,1:N))+1

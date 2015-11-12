@@ -295,10 +295,10 @@ CONTAINS
  IF(SUM(IOS).EQ.0)THEN
   IF(IBATCH.EQ.0)THEN
    CALL WMESSAGEBOX(OKONLY,INFORMATIONICON,COMMONOK,'Sobek Network and results from selected *his file(s):'//CHAR(13)// &
-    TRIM(FNAME(IHIS))//CHAR(13)//TRIM(FNAME(SHIS))//CHAR(13)//'successfully imported to iMOD-isg:'//CHAR(13)// &
+    TRIM(FNAME(IHIS))//CHAR(13)//TRIM(FNAME(SHIS))//CHAR(13)//'Successfully imported to iMOD-isg:'//CHAR(13)// &
     TRIM(FNAME(ISG)),'Information')
   ELSE
-   WRITE(*,'(/1X,A/)') ' Program successfully completed '
+   WRITE(*,'(/1X,A/)') ' Program Successfully completed '
   ENDIF
  ENDIF
  

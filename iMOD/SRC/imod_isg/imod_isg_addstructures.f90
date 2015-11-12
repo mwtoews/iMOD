@@ -109,7 +109,7 @@ CONTAINS
    ENDIF
   ELSE
    WRITE(*,*)
-   WRITE(*,*) 'successfully completed ISG Stuwen, results written in:'
+   WRITE(*,*) 'Successfully completed ISG Stuwen, results written in:'
    WRITE(*,*) TRIM(LOGFNAME)
   ENDIF
 ! ENDIF

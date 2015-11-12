@@ -594,7 +594,7 @@ CONTAINS
       'Do you want to save the current project'//CHAR(13)//'before stopping the Scenario Tool ?','Question')
  IF(WINFODIALOG(4).EQ.0)RETURN  !## cancel
  IF(WINFODIALOG(4).EQ.1)THEN
-  IF(.NOT.ST1SAVELOAD(ID_SAVEAS))RETURN  !## yes, do save and quit if successfull
+  IF(.NOT.ST1SAVELOAD(ID_SAVEAS))RETURN  !## yes, do save and quit if Successfull
  ENDIF
 
  CALL ST1DEALLOCATE()

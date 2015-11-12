@@ -227,7 +227,7 @@ CONTAINS
 
  IMPORT_CALC=.TRUE.
  
- CALL WMESSAGEBOX(OKONLY,INFORMATIONICON,COMMONOK,'Import successfully completed.'//CHAR(13)// &
+ CALL WMESSAGEBOX(OKONLY,INFORMATIONICON,COMMONOK,'Import Successfully completed.'//CHAR(13)// &
        'Modelfiles (IDFs,IPFs,GENs) saved in the folder:'//CHAR(13)// &
        TRIM(DIR_DBS)//CHAR(13)//CHAR(13)// &
        'Runfile (*.run) stored in the folder:,'//CHAR(13)// &

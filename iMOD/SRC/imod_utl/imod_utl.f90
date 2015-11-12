@@ -2825,7 +2825,7 @@ CONTAINS
  ENDIF
 
  INQUIRE(FILE=TXTFILE,EXIST=LEX)
- !## successfully deleted
+ !## Successfully deleted
  IF(LEX)THEN
   I=WINFOERROR(1)
   CALL IOSDELETEFILE(TXTFILE)
@@ -2909,7 +2909,7 @@ CONTAINS
  ENDIF
 
  INQUIRE(FILE=TXTFILE,EXIST=LEX)
- !## successfully deleted
+ !## Successfully deleted
  IF(LEX)THEN
   I=WINFOERROR(1)
   CALL IOSDELETEFILE(TXTFILE)
