@@ -727,7 +727,7 @@ CONTAINS
 
  CALL NC2IDF_EXPORTNC_CLOSE()
  
- CALL WMESSAGEBOX(OKONLY,INFORMATIONICON,COMMONOK,'Succesfully converted selected IDF file(s) to:'//CHAR(13)// &
+ CALL WMESSAGEBOX(OKONLY,INFORMATIONICON,COMMONOK,'successfully converted selected IDF file(s) to:'//CHAR(13)// &
     TRIM(FNAME)//CHAR(13)//' in NetCDF 3 format (*.nc)','Information')
 
  END SUBROUTINE NC2IDF_EXPORTNC

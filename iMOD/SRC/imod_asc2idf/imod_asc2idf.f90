@@ -1351,7 +1351,7 @@ END SUBROUTINE ASC2IDF_INT_GETFACES_HFB
  CALL UTL_MESSAGEHANDLE(1)
 
  IF(ISAVE.GT.0)THEN
-  CALL WMESSAGEBOX(OKONLY,INFORMATIONICON,COMMONOK,'Succesfully converted selected IDF file(s) to:'//CHAR(13)// &
+  CALL WMESSAGEBOX(OKONLY,INFORMATIONICON,COMMONOK,'successfully converted selected IDF file(s) to:'//CHAR(13)// &
     TRIM(PATH)//CHAR(13)//' in ESRI-Raster format (*.asc)','Information')
  ENDIF
  

@@ -245,7 +245,7 @@ CONTAINS
        OPEN(IU,FILE=TRIM(RES)//'\error.txt',STATUS='OLD',ACTION='READ',IOSTAT=IOS)
        CCODE='NaN'
        IF(IOS.EQ.0)THEN; READ(IU,*) CCODE; CLOSE(IU); ENDIF
-       WRITE(IUOUT,'(2X,A)') TRIM(RES)//' did NOT run succesfully, EXITCODE= '//TRIM(CCODE)
+       WRITE(IUOUT,'(2X,A)') TRIM(RES)//' did NOT run successfully, EXITCODE= '//TRIM(CCODE)
       ENDIF
       IF(LEX2)THEN
        IU=UTL_GETUNIT()
@@ -253,7 +253,7 @@ CONTAINS
        OPEN(IU,FILE=TRIM(RES)//'\error.txt',STATUS='OLD',ACTION='READ',IOSTAT=IOS)
        CCODE='NaN'
        IF(IOS.EQ.0)THEN; READ(IU,*) CCODE; CLOSE(IU); ENDIF
-       WRITE(IUOUT,'(2X,A)') TRIM(RES)//' did NOT run succesfully, EXITCODE= '//TRIM(CCODE)
+       WRITE(IUOUT,'(2X,A)') TRIM(RES)//' did NOT run successfully, EXITCODE= '//TRIM(CCODE)
       ENDIF
      
      ENDIF

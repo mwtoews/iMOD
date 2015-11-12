@@ -720,9 +720,9 @@ CONTAINS
  CALL GLREADBUFFER(GL_BACK)
  
  IF(ID.EQ.ID_SAVEAS)THEN
-  CALL WMESSAGEBOX(OKONLY,INFORMATIONICON,COMMONOK,'Succesfully saved the current image to'//CHAR(13)//TRIM(FNAME),'Information')
+  CALL WMESSAGEBOX(OKONLY,INFORMATIONICON,COMMONOK,'successfully saved the current image to'//CHAR(13)//TRIM(FNAME),'Information')
  ELSE
-  CALL WMESSAGEBOX(OKONLY,INFORMATIONICON,COMMONOK,'Succesfully copied the current image to'//CHAR(13)//'the Windows Clipboard','Information')
+  CALL WMESSAGEBOX(OKONLY,INFORMATIONICON,COMMONOK,'successfully copied the current image to'//CHAR(13)//'the Windows Clipboard','Information')
  ENDIF
  
  END SUBROUTINE IMOD3D_DISPLAY_SAVE
@@ -780,7 +780,7 @@ CONTAINS
    ENDDO
 
    CALL IMODSAVEIMF(FNAME)
-   CALL WMESSAGEBOX(OKONLY,INFORMATIONICON,COMMONOK,'Succesfully saved 3D-plot as DEMO iMOD project (*.imf) to:'//CHAR(13)//TRIM(FNAME),'Info')
+   CALL WMESSAGEBOX(OKONLY,INFORMATIONICON,COMMONOK,'successfully saved 3D-plot as DEMO iMOD project (*.imf) to:'//CHAR(13)//TRIM(FNAME),'Info')
    DEMO%IDEMO = 0
  END SELECT
  

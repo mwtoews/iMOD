@@ -502,7 +502,7 @@ CONTAINS
    CALL MODEL1START(CONF(I)%RUNF,DIR,1)
 
    CALL MODEL1DEALLOCATE()
-   !## succesfull completed
+   !## successfull completed
    IOKAY(I)=0
 
   ENDIF

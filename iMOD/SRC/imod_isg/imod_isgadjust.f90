@@ -772,7 +772,7 @@ CONTAINS
   ENDIF
  ELSE
   WRITE(*,*)
-  WRITE(*,*) 'Succesfully completed ISG editing, results written in:'
+  WRITE(*,*) 'successfully completed ISG editing, results written in:'
   WRITE(*,*) TRIM(LOGFNAME)
  ENDIF
  
