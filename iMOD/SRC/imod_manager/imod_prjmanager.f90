@@ -2999,12 +2999,19 @@ KLOOP: DO K=1,SIZE(TOPICS(JJ)%STRESS(1)%FILES,1)
        READ(KU,*,IOSTAT=IOS) X,Y,ID,Z1,Z2
       ENDIF
 
+      !## get correct cell-indices
+      CALL IDFIROWICOL(BND(1),IROW,ICOL,X,Y)
+      !## outside current model
+      IF(IROW.EQ.0.OR.ICOL.EQ.0)CYCLE
+      
       !## get filter fractions
       DO ILAY=1,NLAY; TP(ILAY)=TOP(ILAY)%X(ICOL,IROW); ENDDO
       DO ILAY=1,NLAY; BT(ILAY)=BOT(ILAY)%X(ICOL,IROW); ENDDO
       DO ILAY=1,NLAY; KH(ILAY)=KD (ILAY)%X(ICOL,IROW); ENDDO  
       DO ILAY=1,NLAY; KH(ILAY)=KH(ILAY)/(TP(ILAY)-BT(ILAY)); ENDDO
       CALL UTL_PCK_GETTLP(NLAY,TLP,KH,TP,BT,Z1,Z2) 
+
+      DO ILAY=1,NLAY; IF(BND(ILAY)%X(ICOL,IROW).LE.0)TLP(ILAY)=0; ENDDO
 
      !## find uppermost layer
      ELSE
@@ -3014,6 +3021,12 @@ KLOOP: DO K=1,SIZE(TOPICS(JJ)%STRESS(1)%FILES,1)
       ELSE
        READ(KU,*,IOSTAT=IOS) X,Y,ID
       ENDIF
+
+      !## get correct cell-indices
+      CALL IDFIROWICOL(BND(1),IROW,ICOL,X,Y)
+      !## outside current model
+      IF(IROW.EQ.0.OR.ICOL.EQ.0)CYCLE
+
       IF(ILAY.EQ.-1)THEN; DO ILAY=1,NLAY; IF(BND(ILAY)%X(ICOL,IROW).GT.0)EXIT; ENDDO; ENDIF
       !## outside current model dimensions, set ilay=0
       IF(ILAY.GT.NLAY)ILAY=0; TLP=0.0; IF(ILAY.NE.0)TLP(ILAY)=1.0
@@ -3025,11 +3038,6 @@ KLOOP: DO K=1,SIZE(TOPICS(JJ)%STRESS(1)%FILES,1)
       CLOSE(JU); CLOSE(KU); RETURN
      ENDIF     
      
-     !## get correct cell-indices
-     CALL IDFIROWICOL(BND(1),IROW,ICOL,X,Y)
-     !## outside current model
-     IF(IROW.EQ.0.OR.ICOL.EQ.0)CYCLE
-
      IF(IEXT.GT.0)THEN
       IF(.NOT.UTL_PCK_READTXT(2,ITIME,JTIME,MTYPE,Q,TRIM(CDIR)//'\'//TRIM(ID)//'.'//TRIM(EXT)))THEN
        CLOSE(JU); CLOSE(KU); RETURN
@@ -3051,15 +3059,16 @@ KLOOP: DO K=1,SIZE(TOPICS(JJ)%STRESS(1)%FILES,1)
     CLOSE(KU)
     
    ELSE 
-    
+
+    TLP=0.0; IF(PCK(1,ISYS)%ILAY.NE.0)TLP(PCK(1,ISYS)%ILAY)=1.0
+
     WRITE(FRM,'(A9,I2.2,A14)') '(3(I5,1X),',NTOP,'(F15.7,1X),I5)'
     DO IROW=1,PCK(1,1)%NROW; DO ICOL=1,PCK(1,1)%NCOL
      DO ITOP=1,NTOP; IF(PCK(JTOP(ITOP),ISYS)%X(ICOL,IROW).EQ.HNOFLOW)EXIT; ENDDO
      IF(ITOP.LE.NTOP)CYCLE
      
-     ILAY=PCK(1,ISYS)%ILAY
      !## assign to several layer
-     IF(ILAY.EQ.0)THEN
+     IF(PCK(1,ISYS)%ILAY.EQ.0)THEN
       !## get filter fractions
       DO ILAY=1,NLAY; TP(ILAY)=TOP(ILAY)%X(ICOL,IROW); ENDDO
       DO ILAY=1,NLAY; BT(ILAY)=BOT(ILAY)%X(ICOL,IROW); ENDDO
@@ -3076,30 +3085,39 @@ KLOOP: DO K=1,SIZE(TOPICS(JJ)%STRESS(1)%FILES,1)
         STOP 'not yet defined!'
       END SELECT
       CALL UTL_PCK_GETTLP(NLAY,TLP,KH,TP,BT,Z1,Z2) 
+      DO ILAY=1,NLAY; IF(BND(ILAY)%X(ICOL,IROW).LE.0)TLP(ILAY)=0; ENDDO
 
      !## find uppermost layer
      ELSE
-      IF(ILAY.EQ.-1)THEN; DO ILAY=1,NLAY; IF(BND(ILAY)%X(ICOL,IROW).GT.0)EXIT; ENDDO; ENDIF
-      !## outside current model dimensions, set ilay=0
-      IF(ILAY.GT.NLAY)ILAY=0; TLP=0.0; IF(ILAY.NE.0)TLP(ILAY)=1.0
+      IF(PCK(1,ISYS)%ILAY.EQ.-1)THEN
+       DO ILAY=1,NLAY; IF(BND(ILAY)%X(ICOL,IROW).GT.0)EXIT; ENDDO
+       !## outside current model dimensions, set ilay=0
+       IF(ILAY.GT.NLAY)ILAY=0;
+      ENDIF
+! TLP=0.0; IF(ILAY.NE.0)TLP(ILAY)=1.0
      ENDIF
      
-     DO ILAY=1,NLAY
-      !## not put into model layer
-      IF(TLP(ILAY).LE.0.0)CYCLE
-      !## single entry eq nodata, skip it
-      LEX=.TRUE.; DO ITOP=1,NTOP      
-       IF(PCK(ITOP,ISYS)%X(ICOL,IROW).EQ.PCK(ITOP,ISYS)%NODATA)THEN; LEX=.FALSE.; EXIT; ENDIF
-      ENDDO
-      IF(.NOT.LEX)CYCLE
-      
+!     !## single entry eq nodata, skip it
+!     LEX=.TRUE.; DO ITOP=1,NTOP      
+!      IF(PCK(ITOP,ISYS)%X(ICOL,IROW).EQ.PCK(ITOP,ISYS)%NODATA)THEN; LEX=.FALSE.; EXIT; ENDIF
+!     ENDDO
+!     IF(.NOT.LEX)CYCLE
+
+     IF(PCK(1,ISYS)%ILAY.GT.0)THEN
       !## correct rivers whenever bottom is higher than stage
       IF(ITOPIC.EQ.23)PCK(3,ISYS)%X(ICOL,IROW)=MIN(PCK(2,ISYS)%X(ICOL,IROW),PCK(3,ISYS)%X(ICOL,IROW))
-       
-      WRITE(JU,FRM) ILAY,IROW,ICOL,(PCK(JTOP(ITOP),ISYS)%X(ICOL,IROW),ITOP=1,NTOP),ISYS
+      WRITE(JU,FRM) PCK(1,ISYS)%ILAY,IROW,ICOL,(PCK(JTOP(ITOP),ISYS)%X(ICOL,IROW),ITOP=1,NTOP),ISYS
       MP=MP+1
-     
-     ENDDO
+     ELSE
+      DO ILAY=1,NLAY
+       !## not put into model layer
+       IF(TLP(ILAY).LE.0.0)CYCLE
+       !## correct rivers whenever bottom is higher than stage
+       IF(ITOPIC.EQ.23)PCK(3,ISYS)%X(ICOL,IROW)=MIN(PCK(2,ISYS)%X(ICOL,IROW),PCK(3,ISYS)%X(ICOL,IROW))
+       WRITE(JU,FRM) ILAY,IROW,ICOL,(PCK(JTOP(ITOP),ISYS)%X(ICOL,IROW),ITOP=1,NTOP),ISYS
+       MP=MP+1
+      ENDDO 
+     ENDIF
 
     ENDDO; ENDDO
    ENDIF
@@ -3846,10 +3864,11 @@ KLOOP: DO K=1,SIZE(TOPICS(JJ)%STRESS(1)%FILES,1)
   
  J=0
  IF(ASSOCIATED(TOPICS(2)%STRESS).AND.ASSOCIATED(TOPICS(3 )%STRESS).AND. &
-    ASSOCIATED(TOPICS(7)%STRESS))THEN
-  IF(ASSOCIATED(TOPICS(2 )%STRESS(1)%FILES).AND. & !## top
-     ASSOCIATED(TOPICS(3 )%STRESS(1)%FILES).AND. & !## bot
-     ASSOCIATED(TOPICS(7 )%STRESS(1)%FILES))THEN   !## khv
+    ASSOCIATED(TOPICS(7)%STRESS).AND.ASSOCIATED(TOPICS(8)%STRESS))THEN
+  IF(ASSOCIATED(TOPICS(2)%STRESS(1)%FILES).AND. & !## top
+     ASSOCIATED(TOPICS(3)%STRESS(1)%FILES).AND. & !## bot
+     ASSOCIATED(TOPICS(7)%STRESS(1)%FILES).AND. & !## khv
+     ASSOCIATED(TOPICS(8)%STRESS(1)%FILES))THEN   !## kva
    J=1
    IF(NLAY.GT.1)THEN
     IF(ASSOCIATED(TOPICS(10)%STRESS))THEN

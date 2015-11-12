@@ -277,8 +277,8 @@ CONTAINS
     JLAY=ILAY
    ENDIF
   ENDDO
-  IF(JLAY.EQ.0)CALL WMESSAGEBOX(OKONLY,EXCLAMATIONICON,COMMONOK,'JLAY.EQ.0, Not able to assign proper modellayer','Error')
-  TLP(JLAY)=-1.0
+!  IF(JLAY.EQ.0)CALL WMESSAGEBOX(OKONLY,EXCLAMATIONICON,COMMONOK,'JLAY.EQ.0, Not able to assign proper modellayer','Error')
+!  TLP(JLAY)=-1.0
  ENDIF
  
  !## make sure only one layer is assigned whenever z1.eq.z2
