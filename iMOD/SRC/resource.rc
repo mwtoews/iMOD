@@ -8,7 +8,7 @@
 //
 // Winteracter resource script. 
 //
-// Modified : 07/Nov/2015 11:56:14
+// Modified : 12/Nov/2015 10:42:00
 //
 ///////////////////////////////////////////////////
 //
@@ -9803,7 +9803,7 @@ BEGIN
         BEGIN
             MENUITEM "1:10",                                     ID_ZRATIO1
             MENUITEM "1:100",                                    ID_ZRATIO2
-            MENUITEM "1:1000",                                   ID_ZRATIO3
+            MENUITEM "1:1000",                                   ID_ZRATIO3, CHECKED
             MENUITEM "1:10000",                                  ID_ZRATIO4
             MENUITEM "1:100000",                                 ID_ZRATIO5
         END
@@ -10231,5 +10231,5 @@ END
 //*WI* FORTSAVE    1
 //*WI* FILENAME    resource.f90
 //*WI* FMODNAME    RESOURCE
-//*WI* LASTTYPE        2
-//*WI* LASTRES       226
+//*WI* LASTTYPE        1
+//*WI* LASTRES        10
