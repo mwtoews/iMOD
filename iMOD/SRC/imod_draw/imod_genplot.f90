@@ -651,8 +651,7 @@ CONTAINS
      WRITE(JU(1),'(A,A4,I3.3)') TRIM(CID(K)),',part',I
      DO J=IP(I),IP(I+1)-1
       READ(IU(1)) X,Y
-      LINE=TRIM(RTOS(REAL(X),'F',7))//','//TRIM(RTOS(REAL(Y),'F',7))
-      WRITE(JU(1),'(A)') TRIM(LINE)
+      WRITE(JU(1),*) X,Y
      ENDDO
      IF(ISHP.EQ.13.OR.ISHP.EQ.15)WRITE(JU(1),'(A3)') 'END'
      WRITE(JU(1),'(A3)') 'END'
@@ -674,8 +673,7 @@ CONTAINS
    CASE (1)    
     READ(IU(1)) X,Y
     K=K+1
-    LINE=TRIM(CID(K))//','//TRIM(RTOS(REAL(X),'F',7))//','//TRIM(RTOS(REAL(Y),'F',7))
-    WRITE(JU(1),'(A)') TRIM(LINE)
+    WRITE(JU(1),*) CID(K),X,Y
 
    !## multipoints -> gen
    CASE (8)
@@ -688,8 +686,7 @@ CONTAINS
     DO I=1,NUMPOINTS
      READ(IU(1)) X,Y
      K=K+1
-     LINE=TRIM(ITOS(K))//','//TRIM(RTOS(REAL(X),'F',7))//','//TRIM(RTOS(REAL(Y),'F',7))
-     WRITE(JU(1),'(A)') TRIM(LINE)
+     WRITE(JU(1),'(A)') K,X,Y
     ENDDO
 
    CASE DEFAULT
