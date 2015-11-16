@@ -811,7 +811,7 @@ CONTAINS
  IF(.NOT.UTL_READINITFILE('TSURFLEVEL',LINE,IU,0))RETURN
  READ(LINE,*) CRITAHN; WRITE(*,'(A,F10.2)') 'TSURFLEVEL=',CRITAHN
 
- !## Give Percentile for determining drainage level within each zone, Percentile (0-1, 0.5=median)'
+ !## Give Percentile for determining drainage level within each zone, Percentile (0-100, 50=median)'
  IF(.NOT.UTL_READINITFILE('PERCENTILE',LINE,IU,0))RETURN
  READ(LINE,*) SFCT; WRITE(*,'(A,F10.2)') 'PERCENTILE=',SFCT
 
