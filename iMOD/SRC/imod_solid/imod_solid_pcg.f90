@@ -1494,7 +1494,12 @@ CONTAINS
     CALL IOSTIME(I,J,K)
     WRITE(IU(ISPF),'(2A,3(I2.2,A1))') 'TIME      ',' : ',I,':',J,':',K
     WRITE(IU(ISPF),'(3A)') 'FILENAME  ',' : ',TRIM(FNAME)//'\SOLIDTOOL_CROSSECTION'//TRIM(ITOS(ISPF))//'.GEO'
-    WRITE(IU(ISPF),'(3A)') 'CREATED BY',' : ','iMOD '//TRIM(RVERSION)
+    !## write version without "v" character
+    IF(INDEX(UTL_CAP(RVERSION,'U'),'V').GT.0)THEN
+     WRITE(IU(ISPF),'(3A)') 'CREATED BY',' : ','iMOD Version '//TRIM(RVERSION(2:))
+    ELSE
+     WRITE(IU(ISPF),'(3A)') 'CREATED BY',' : ','iMOD Version '//TRIM(RVERSION)
+    ENDIF
     WRITE(IU(ISPF),'(78A1)') ('=',J=1,78)
     WRITE(IU(ISPF),'(A)') '[TITLES]'
     WRITE(IU(ISPF),'(A/)') '[END OF TITLES]'
