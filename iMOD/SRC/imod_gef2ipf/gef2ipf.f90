@@ -347,7 +347,7 @@ CONTAINS
     
     LINE='"'//TRIM(RTOS(X,'F',2))//'","'//TRIM(RTOS(Y,'F',2))//'","'// &
          TRIM(CID)//'","'//TRIM(RTOS(0.0,'F',2))//'","'//TRIM(ITOS(1))//'"'
-    DO ICOL=1,(MAXVAL(NCOLLINE)+5) !NCOLIPF     
+    DO ICOL=1,(MAXVAL(NCOLLINE)+5)   
      IF(IATTRIB(ICOL).EQ.0)THEN
       LINE=TRIM(LINE)//',"NotAvailable"'
      ELSE
@@ -366,7 +366,7 @@ CONTAINS
     
     LINE='"'//TRIM(RTOS(X,'F',2))//'","'//TRIM(RTOS(Y,'F',2))//'","subset'//TRIM(ITOS(IDIR))// &
          '\'//TRIM(CID)//'","'//TRIM(RTOS(ZEND,'F',2))//'","'//TRIM(ITOS(0))//'"'
-    DO ICOL=1,(MAXVAL(NCOLLINE)+5) !NCOLIPF 
+    DO ICOL=1,(MAXVAL(NCOLLINE)+5)
      IF(IATTRIB(ICOL).EQ.0)THEN
       LINE=TRIM(LINE)//',"NotAvailable"'
      ELSE
