@@ -97,7 +97,7 @@ CONTAINS
  INTEGER :: I,IVALUE,IOS
  CHARACTER(LEN=256) :: PLUGDIR
 
- !## nothing to do, proabably imf with plugin using in a configuration without plugins active
+ !## nothing to do, probably imf with plugin using in a configuration without plugins active
  IF(TRIM(PREFVAL(IPI)).EQ.'')RETURN
  
  IF(.NOT.ASSOCIATED(PI))THEN
@@ -762,12 +762,14 @@ CONTAINS
  INTEGER,DIMENSION(2),INTENT(INOUT) :: IDPROC
  INTEGER,INTENT(OUT) :: IKILL
  
+ IKILL=1
+ 
  !## If stop command is available in *.OUT file
  CALL WMESSAGEBOX(YESNO,QUESTIONICON,COMMONYES,'The '//TRIM(PNAME)//' plugin is running!'//CHAR(13)// &
   'This will be terminated if you close iMOD.'//CHAR(13)//'Are you sure you want to exit iMOD?','QUESTION')    
  IF(WINFODIALOG(EXITBUTTONCOMMON).EQ.1)THEN
 #if (defined(WINTERACTER9))
-  CALL IOSCOMMANDKILL(IDPROC,0)
+  CALL IOSCOMMANDKILL(IDPROC)
 #endif  
   !## no process
   IKILL=0; IDPROC=0
