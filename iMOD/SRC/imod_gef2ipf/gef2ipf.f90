@@ -228,6 +228,7 @@ CONTAINS
      END DO
      WRITE(KU,*) TRIM(LINE)
     END DO
+    
     CLOSE(KU)
 
    ENDIF
@@ -362,7 +363,7 @@ CONTAINS
 
     CALL IOSDIRMAKE(TRIM(IPFDIR)//'\subset'//TRIM(ITOS(IDIR)))
 
-    ZEND=Z-ABS(GEF(IATTRIB(1),NROW))
+    ZEND=Z-ABS(GEF(IATTRIB(2),NROW))
     
     LINE='"'//TRIM(RTOS(X,'F',2))//'","'//TRIM(RTOS(Y,'F',2))//'","subset'//TRIM(ITOS(IDIR))// &
          '\'//TRIM(CID)//'","'//TRIM(RTOS(ZEND,'F',2))//'","'//TRIM(ITOS(0))//'"'
@@ -378,7 +379,7 @@ CONTAINS
     !## write associated file
     KU=UTL_GETUNIT()
     OPEN(KU,FILE=TRIM(IPFDIR)//'\subset'//TRIM(ITOS(IDIR))//'\'//TRIM(CID)//'.TXT',STATUS='UNKNOWN',FORM='FORMATTED',ACTION='WRITE')
-    LINE=TRIM(ITOS(NROW))
+    LINE=TRIM(ITOS(NROW+1))
     WRITE(KU,'(A)') TRIM(LINE)
     LINE=TRIM(ITOS(MAXVAL(NCOLLINE)))//',2'
     WRITE(KU,'(A)') TRIM(LINE)
@@ -431,6 +432,13 @@ CONTAINS
      ENDDO
      WRITE(KU,*) TRIM(LINE)
     END DO
+    
+    LINE=TRIM(RTOS(Z-ABS(GEF(IATTRIB(2),NROW)),'F',1))
+    DO ICOL=2,NCOLIPF
+     LINE=TRIM(LINE)//',-'
+    ENDDO
+    WRITE(KU,*) TRIM(LINE)
+        
     CLOSE(KU)
     
    ENDIF
