@@ -77,7 +77,7 @@
 ! description:
 ! ------------------------------------------------------------------------------
 ! query a number of integer arguments from a Command Line Argument
-! 
+!
 
 ! declaration section
 ! ------------------------------------------------------------------------------
@@ -177,7 +177,7 @@
 ! description:
 ! ------------------------------------------------------------------------------
 ! query a number of real arguments from a Command Line Argument
-! 
+!
 
 ! declaration section
 ! ------------------------------------------------------------------------------
@@ -186,16 +186,16 @@
 
 
 ! function declaration
-      integer    cfn_cla_gtr  ! return value: -3: too few values     
-                              !               -2: values of wrong type  
-                              !               -1: CLA not found      
-                              !                0: OK                     
+      integer    cfn_cla_gtr  ! return value: -3: too few values
+                              !               -2: values of wrong type
+                              !               -1: CLA not found
+                              !                0: OK
 
 
 ! arguments
-      character arg*(*)       ! (I) string to search                      
+      character arg*(*)       ! (I) string to search
 
-      integer   nval          ! (I) number of values                        
+      integer   nval          ! (I) number of values
 
       real      val(nval)     ! (I) default waarden
                               ! (O) return value  0   : found values
@@ -271,12 +271,12 @@
 
 ! ******************************************************************************
 
-      function cfn_cla_gtd(arg,val,nval)                       
+      function cfn_cla_gtd(arg,val,nval)
 
 ! description:
 ! ------------------------------------------------------------------------------
-! query a number of double precision arguments from a Command Line Argument 
-! 
+! query a number of double precision arguments from a Command Line Argument
+!
 
 ! declaration section
 ! ------------------------------------------------------------------------------
@@ -285,16 +285,16 @@
 
 
 ! function declaration
-      integer    cfn_cla_gtd  ! return value: -3: too few values      
-                              !               -2: values of wrong type  
-                              !               -1: CLA not found      
-                              !                0: OK                     
+      integer    cfn_cla_gtd  ! return value: -3: too few values
+                              !               -2: values of wrong type
+                              !               -1: CLA not found
+                              !                0: OK
 
 
 ! arguments
-      character arg*(*)       ! (I) string to search                      
+      character arg*(*)       ! (I) string to search
 
-      integer   nval          ! (I) number of values                        
+      integer   nval          ! (I) number of values
 
       double precision val(nval)     ! (I) default values
                               ! (O) return value  0   : found values
@@ -370,12 +370,12 @@
 
 ! ******************************************************************************
 
-      function cfn_cla_gtc(arg,val,nval)                       
+      function cfn_cla_gtc(arg,val,nval)
 
 ! description:
 ! ------------------------------------------------------------------------------
-! query a number of character arguments from a Command Line Argument 
-! 
+! query a number of character arguments from a Command Line Argument
+!
 
 
 ! declaration section
@@ -385,16 +385,16 @@
 
 
 ! function declaration
-      integer    cfn_cla_gtc  ! return value: -3: too few values      
-                              !               -2: values of wrong type  
-                              !               -1: CLA not found      
-                              !                0: OK                     
+      integer    cfn_cla_gtc  ! return value: -3: too few values
+                              !               -2: values of wrong type
+                              !               -1: CLA not found
+                              !                0: OK
 
 
 ! arguments
-      character arg*(*)       ! (I) string to search                      
+      character arg*(*)       ! (I) string to search
 
-      integer   nval          ! (I) number of values                        
+      integer   nval          ! (I) number of values
 
       character val(nval)*(*) ! (I) default values
                               ! (O) return value  0   : found values
@@ -460,15 +460,15 @@
 
 ! ******************************************************************************
 
-      subroutine cfn_clas_ini()                
+      subroutine cfn_clas_ini()
 
 ! description:
 ! ------------------------------------------------------------------------------
-! initialize the command line in a string                              
+! initialize the command line in a string
 ! That string will later be used to read out values by means of cfn_clas_*
 ! routines. Once a value is read it will be deleted from the string.
 ! This routine must be called upon before another cfn_clas_*
-! routine will be used                                                  
+! routine will be used
 
 ! declaration section
 ! ------------------------------------------------------------------------------
@@ -519,13 +519,13 @@
 
 ! ******************************************************************************
 
-      function cfn_clas_fnd(arg)                                         
+      function cfn_clas_fnd(arg)
 
 ! description:
 ! ------------------------------------------------------------------------------
-! search for the position of a Command Line Argument         
-! Whenever the argument occurs multiple times, the last one will be taken  
-! Search for string independently of case  
+! search for the position of a Command Line Argument
+! Whenever the argument occurs multiple times, the last one will be taken
+! Search for string independently of case
 
 ! declaration section
 ! ------------------------------------------------------------------------------
@@ -534,12 +534,12 @@
 
 
 ! function declaration
-      integer   cfn_clas_fnd  ! return value: <0: not present        
-                              !               >0: argument number         
+      integer   cfn_clas_fnd  ! return value: <0: not present
+                              !               >0: argument number
 
 
 ! arguments
-      character arg*(*)       ! (I) string to search                      
+      character arg*(*)       ! (I) string to search
 
 
 ! local variables
@@ -597,12 +597,12 @@
 
 ! ******************************************************************************
 
-      function cfn_clas_gti(arg,val,nval)                       
+      function cfn_clas_gti(arg,val,nval)
 
 ! description:
 ! ------------------------------------------------------------------------------
-! query a number of integer arguments from a Command Line Argument String 
-! 
+! query a number of integer arguments from a Command Line Argument String
+!
 
 ! declaration section
 ! ------------------------------------------------------------------------------
@@ -611,16 +611,16 @@
 
 
 ! function declaration
-      integer    cfn_clas_gti ! return value: -3: too few values      
-                              !               -2: values of wrong type  
-                              !               -1: CLA not found      
-                              !                0: OK                     
+      integer    cfn_clas_gti ! return value: -3: too few values
+                              !               -2: values of wrong type
+                              !               -1: CLA not found
+                              !                0: OK
 
 
 ! arguments
-      character arg*(*)       ! (I) string to search                      
+      character arg*(*)       ! (I) string to search
 
-      integer   nval          ! (I) number of values                        
+      integer   nval          ! (I) number of values
 
       integer   val(nval)     ! (O) found values
 
@@ -702,12 +702,12 @@
 
 ! ******************************************************************************
 
-      function cfn_clas_gtr(arg,val,nval)                       
+      function cfn_clas_gtr(arg,val,nval)
 
 ! description:
 ! ------------------------------------------------------------------------------
-! query a number of real arguments from a Command Line Argument String 
-! 
+! query a number of real arguments from a Command Line Argument String
+!
 
 ! declaration section
 ! ------------------------------------------------------------------------------
@@ -716,18 +716,18 @@
 
 
 ! function declaration
-      integer    cfn_clas_gtr ! return value: -3: too few values      
-                              !               -2: values of wrong type  
-                              !               -1: CLA not found      
-                              !                0: OK                     
+      integer    cfn_clas_gtr ! return value: -3: too few values
+                              !               -2: values of wrong type
+                              !               -1: CLA not found
+                              !                0: OK
 
 
 ! arguments
-      character arg*(*)       ! (I) string to search                      
+      character arg*(*)       ! (I) string to search
 
-      integer   nval          ! (I) number of values                        
+      integer   nval          ! (I) number of values
 
-      real      val(nval)     ! (O) found values                  
+      real      val(nval)     ! (O) found values
 
 
 ! local variables
@@ -807,12 +807,12 @@
 
 ! ******************************************************************************
 
-      function cfn_clas_gtc(arg,val,nval)                       
+      function cfn_clas_gtc(arg,val,nval)
 
 ! description:
 ! ------------------------------------------------------------------------------
-! query a number of character arguments from a Command Line Argument String 
-! 
+! query a number of character arguments from a Command Line Argument String
+!
 
 ! declaration section
 ! ------------------------------------------------------------------------------
@@ -821,18 +821,18 @@
 
 
 ! function declaration
-      integer    cfn_clas_gtc ! return value: -3: too few values      
-                              !               -2: values of wrong type  
-                              !               -1: CLA not found      
-                              !                0: OK                     
+      integer    cfn_clas_gtc ! return value: -3: too few values
+                              !               -2: values of wrong type
+                              !               -1: CLA not found
+                              !                0: OK
 
 
 ! arguments
-      character arg*(*)       ! (I) string to search                      
+      character arg*(*)       ! (I) string to search
 
-      integer   nval          ! (I) number of values                        
+      integer   nval          ! (I) number of values
 
-      character val(nval)*(*) ! (O) found values                  
+      character val(nval)*(*) ! (O) found values
 
 
 ! local variables
@@ -903,12 +903,12 @@
 
 ! ******************************************************************************
 
-      subroutine cfn_clas_clr(beg,end)                
+      subroutine cfn_clas_clr(beg,end)
 
 ! description:
 ! ------------------------------------------------------------------------------
-! removal of arguments beg to end from the CLA-string   
-! 
+! removal of arguments beg to end from the CLA-string
+!
 
 ! declaration section
 ! ------------------------------------------------------------------------------
@@ -917,8 +917,8 @@
 
 
 ! arguments
-      integer   beg,&     ! (I) initial argument to remove        
-                end       ! (I) end  argument to remove        
+      integer   beg,&     ! (I) initial argument to remove
+                end       ! (I) end  argument to remove
 
 
 ! local variables
@@ -940,7 +940,7 @@
       tend=min(end,cfn_clas_narg)
 
 
-! run only if there is something that needs to be done, otherwise, finish 
+! run only if there is something that needs to be done, otherwise, finish
       if (tend.lt.tbeg) return
 
 
@@ -967,12 +967,12 @@
 
 ! ******************************************************************************
 
-      function cfn_clas_iargc()                
+      function cfn_clas_iargc()
 
 ! description:
 ! ------------------------------------------------------------------------------
-! query current number of arguments in CLA-string  
-! 
+! query current number of arguments in CLA-string
+!
 
 ! declaration section
 ! ------------------------------------------------------------------------------
@@ -981,8 +981,8 @@
 
 
 ! function declaration
-      integer cfn_clas_iargc   ! return value: number of elements        
-                               !               0=only command       
+      integer cfn_clas_iargc   ! return value: number of elements
+                               !               0=only command
 
 
 ! arguments
@@ -1012,11 +1012,11 @@
 
 ! ******************************************************************************
 
-      subroutine cfn_clas_getarg(iarg,arg)                
+      subroutine cfn_clas_getarg(iarg,arg)
 
 ! description:
 ! ------------------------------------------------------------------------------
-! query argument number iarg from CLA-string   
+! query argument number iarg from CLA-string
 ! after query this element will be removed from the string
 
 ! declaration section
@@ -1026,9 +1026,9 @@
 
 
 ! arguments
-      integer   iarg          ! (I) argument number                   
+      integer   iarg          ! (I) argument number
 
-      character arg*(*)       ! (O) value                            
+      character arg*(*)       ! (O) value
 
 
 ! local variables
@@ -1063,13 +1063,13 @@
 
 ! ******************************************************************************
 
-      subroutine cfn_scla_gti(arg,val,nval,found,exitcode)                
+      subroutine cfn_scla_gti(arg,val,nval,found,exitcode)
 
 ! description:
 ! ------------------------------------------------------------------------------
-! query a number of real arguments from a Command Line Argument 
-! subroutine version of cfn_cla_gtr(arg,val,nval)                                 
-! 
+! query a number of real arguments from a Command Line Argument
+! subroutine version of cfn_cla_gtr(arg,val,nval)
+!
 
 ! declaration section
 ! ------------------------------------------------------------------------------
@@ -1077,18 +1077,18 @@
       implicit none
 
 ! arguments
-      character arg*(*)       ! (I) string to search                      
+      character arg*(*)       ! (I) string to search
 
-      integer   nval          ! (I) number of values                        
+      integer   nval          ! (I) number of values
 
       integer   val(nval)     ! (I) default values
                               ! (O) exitcode  0  : found .true. : found values
                               !                          .false.: default  values
                               !               <>0: undefined
 
-      integer    exitcode     ! (O)  3: too few values      
-                              !      2: values of wrong type  
-                              !      0: OK                     
+      integer    exitcode     ! (O)  3: too few values
+                              !      2: values of wrong type
+                              !      0: OK
 
       logical    found        ! (O) .true.  argument found
                               !     .false. argument not found or corrupt
@@ -1135,13 +1135,13 @@
 
 ! ******************************************************************************
 
-      subroutine cfn_scla_gtr(arg,val,nval,found,exitcode)                
+      subroutine cfn_scla_gtr(arg,val,nval,found,exitcode)
 
 ! description:
 ! ------------------------------------------------------------------------------
-! query a number of real arguments form a Command Line Argument 
-! subroutine version of cfn_cla_gtr(arg,val,nval)                                 
-! 
+! query a number of real arguments form a Command Line Argument
+! subroutine version of cfn_cla_gtr(arg,val,nval)
+!
 
 ! declaration section
 ! ------------------------------------------------------------------------------
@@ -1149,18 +1149,18 @@
       implicit none
 
 ! arguments
-      character arg*(*)       ! (I) string to search                      
+      character arg*(*)       ! (I) string to search
 
-      integer   nval          ! (I) number of values                        
+      integer   nval          ! (I) number of values
 
       real      val(nval)     ! (I) default values
                               ! (O) exitcode  0  : found .true. : found values
                               !                          .false.: default  values
                               !               <>0: undefined
 
-      integer    exitcode     ! (O)  3: too few values      
-                              !      2: values of wrong type  
-                              !      0: OK                     
+      integer    exitcode     ! (O)  3: too few values
+                              !      2: values of wrong type
+                              !      0: OK
 
       logical    found        ! (O) .true.  argument found
                               !     .false. argument not found or corrupt
@@ -1207,14 +1207,14 @@
 !
 !*******************************************************************************
 
-      function cfn_compress(c)                                          
+      function cfn_compress(c)
 
 ! description:
 ! ------------------------------------------------------------------------------
-! compressing a string                                            
-! multiple consecutive spaces or null-characters are           
-! compressed to 1 character                                         
-! leading spaces are removed                                     
+! compressing a string
+! multiple consecutive spaces or null-characters are
+! compressed to 1 character
+! leading spaces are removed
 
 ! declaration section
 ! ------------------------------------------------------------------------------
@@ -1223,11 +1223,11 @@
 
 
 ! function declaration
-      character cfn_compress*(*) ! return value: compressed value 
+      character cfn_compress*(*) ! return value: compressed value
 
 
 ! arguments
-      character c*(*)          ! (I) string to compress              
+      character c*(*)          ! (I) string to compress
 
 
 ! local variables
@@ -1256,14 +1256,14 @@
 
 !*******************************************************************************
 
-      function cfn_compress2(c,lc)                                      
+      function cfn_compress2(c,lc)
 
 ! description:
 ! ------------------------------------------------------------------------------
-! compressing a string                                            
-! multiple consecutive spaces or null-characters are        
-! compressed to 1 character                                                       
-! leading spaces are removed                                               
+! compressing a string
+! multiple consecutive spaces or null-characters are
+! compressed to 1 character
+! leading spaces are removed
 
 ! declaration section
 ! ------------------------------------------------------------------------------
@@ -1276,9 +1276,9 @@
 
 
 ! arguments
-      integer   lc             ! (I) number of characters in c             
+      integer   lc             ! (I) number of characters in c
 
-      character c(lc)*1        ! (I) string to compress              
+      character c(lc)*1        ! (I) string to compress
 
 
 ! local variables
@@ -1306,15 +1306,15 @@
 
 ! ******************************************************************************
 
-      subroutine cfn_s_compress(c,lc)                                   
+      subroutine cfn_s_compress(c,lc)
 
 ! description:
 ! ------------------------------------------------------------------------------
-! compressing a string                                            
-! multiple consecutive spaces or null-characters are           
-! compressed to 1 character                                    
-! leading spaces are removed                                   
-! 
+! compressing a string
+! multiple consecutive spaces or null-characters are
+! compressed to 1 character
+! leading spaces are removed
+!
 
 ! declaration section
 ! ------------------------------------------------------------------------------
@@ -1323,9 +1323,9 @@
 
 
 ! arguments
-      integer   lc        ! (I) number of characters in c                 
+      integer   lc        ! (I) number of characters in c
 
-      character c(lc)*1   ! (I/O) string to compress                
+      character c(lc)*1   ! (I/O) string to compress
 
 
 ! local variables
@@ -1377,12 +1377,12 @@
       return
       end
 
-      subroutine cfn_cp_i2i(inarr,outarr,n)                             
+      subroutine cfn_cp_i2i(inarr,outarr,n)
 
 ! description:
 ! ------------------------------------------------------------------------------
-! copy n values of array inarr (integer) to outarr (integer)            
-! 
+! copy n values of array inarr (integer) to outarr (integer)
+!
 
 ! declaration section
 ! ------------------------------------------------------------------------------
@@ -1391,10 +1391,10 @@
 
 
 ! arguments
-      integer   n          ! (I) number of elements in arrays           
+      integer   n          ! (I) number of elements in arrays
 
-      integer   inarr(n)   ! (I) input array                            
-      integer   outarr(n)  ! (O) output array                           
+      integer   inarr(n)   ! (I) input array
+      integer   outarr(n)  ! (O) output array
 
 
 ! local variables
@@ -1424,12 +1424,12 @@
 
 ! ******************************************************************************
 
-      subroutine cfn_cp_i2r(inarr,outarr,n)                             
+      subroutine cfn_cp_i2r(inarr,outarr,n)
 
 ! description:
 ! ------------------------------------------------------------------------------
-! copy n values of array inarr (integer) to outarr (real)               
-! 
+! copy n values of array inarr (integer) to outarr (real)
+!
 
 ! declaration section
 ! ------------------------------------------------------------------------------
@@ -1438,10 +1438,10 @@
 
 
 ! arguments
-      integer   n          ! (I) number of elements in arrays           
+      integer   n          ! (I) number of elements in arrays
 
-      integer   inarr(n)   ! (I) input array                            
-      real      outarr(n)  ! (O) output array                           
+      integer   inarr(n)   ! (I) input array
+      real      outarr(n)  ! (O) output array
 
 
 ! local variables
@@ -1472,12 +1472,12 @@
 
 ! ******************************************************************************
 
-      subroutine cfn_cp_i2d(inarr,outarr,n)                             
+      subroutine cfn_cp_i2d(inarr,outarr,n)
 
 ! description:
 ! ------------------------------------------------------------------------------
-! copy n values of array inarr (integer) to outarr (real*8)             
-! 
+! copy n values of array inarr (integer) to outarr (real*8)
+!
 
 ! declaration section
 ! ------------------------------------------------------------------------------
@@ -1486,10 +1486,10 @@
 
 
 ! arguments
-      integer   n          ! (I) number of elements in arrays           
+      integer   n          ! (I) number of elements in arrays
 
-      integer   inarr(n)   ! (I) input array                            
-      real*8    outarr(n)  ! (O) output array                           
+      integer   inarr(n)   ! (I) input array
+      real*8    outarr(n)  ! (O) output array
 
 
 ! local variables
@@ -1519,12 +1519,12 @@
 
 ! ******************************************************************************
 
-      subroutine cfn_cp_r2i(inarr,outarr,n)                             
+      subroutine cfn_cp_r2i(inarr,outarr,n)
 
 ! description:
 ! ------------------------------------------------------------------------------
-! copy n values of array inarr (real) to outarr (integer)               
-! 
+! copy n values of array inarr (real) to outarr (integer)
+!
 
 ! declaration section
 ! ------------------------------------------------------------------------------
@@ -1533,10 +1533,10 @@
 
 
 ! arguments
-      integer   n          ! (I) number of elements in arrays           
+      integer   n          ! (I) number of elements in arrays
 
-      real      inarr(n)   ! (I) input array                            
-      integer   outarr(n)  ! (O) output array                           
+      real      inarr(n)   ! (I) input array
+      integer   outarr(n)  ! (O) output array
 
 
 ! local variables
@@ -1566,12 +1566,12 @@
 
 ! ******************************************************************************
 
-      subroutine cfn_cp_r2r(inarr,outarr,n)                             
+      subroutine cfn_cp_r2r(inarr,outarr,n)
 
 ! description:
 ! ------------------------------------------------------------------------------
-! copy n values of array inarr (real) to outarr (real)                  
-! 
+! copy n values of array inarr (real) to outarr (real)
+!
 
 ! declaration section
 ! ------------------------------------------------------------------------------
@@ -1580,10 +1580,10 @@
 
 
 ! arguments
-      integer   n          ! (I) number of elements in arrays           
+      integer   n          ! (I) number of elements in arrays
 
-      real      inarr(n)   ! (I) input array                            
-      real      outarr(n)  ! (O) output array                           
+      real      inarr(n)   ! (I) input array
+      real      outarr(n)  ! (O) output array
 
 
 ! local variables
@@ -1614,12 +1614,12 @@
 
 ! ******************************************************************************
 
-      subroutine cfn_cp_r2d(inarr,outarr,n)                             
+      subroutine cfn_cp_r2d(inarr,outarr,n)
 
 ! description:
 ! ------------------------------------------------------------------------------
-! copy n values of array inarr (real) to outarr (real*8)                
-! 
+! copy n values of array inarr (real) to outarr (real*8)
+!
 
 ! declaration section
 ! ------------------------------------------------------------------------------
@@ -1628,10 +1628,10 @@
 
 
 ! arguments
-      integer   n          ! (I) number of elements in arrays           
+      integer   n          ! (I) number of elements in arrays
 
-      real      inarr(n)   ! (I) input array                            
-      real*8    outarr(n)  ! (O) output array                           
+      real      inarr(n)   ! (I) input array
+      real*8    outarr(n)  ! (O) output array
 
 
 ! local variables
@@ -1661,12 +1661,12 @@
 
 ! ******************************************************************************
 
-      subroutine cfn_cp_d2i(inarr,outarr,n)                             
+      subroutine cfn_cp_d2i(inarr,outarr,n)
 
 ! description:
 ! ------------------------------------------------------------------------------
-! copy n values of array inarr (real*8) to outarr (integer)             
-! 
+! copy n values of array inarr (real*8) to outarr (integer)
+!
 
 ! declaration section
 ! ------------------------------------------------------------------------------
@@ -1675,10 +1675,10 @@
 
 
 ! arguments
-      integer   n          ! (I) number of elements in arrays           
+      integer   n          ! (I) number of elements in arrays
 
-      real*8    inarr(n)   ! (I) input array                            
-      integer   outarr(n)  ! (O) output array                           
+      real*8    inarr(n)   ! (I) input array
+      integer   outarr(n)  ! (O) output array
 
 
 ! local variables
@@ -1708,12 +1708,12 @@
 
 ! ******************************************************************************
 
-      subroutine cfn_cp_d2r(inarr,outarr,n)                             
+      subroutine cfn_cp_d2r(inarr,outarr,n)
 
 ! description:
 ! ------------------------------------------------------------------------------
-! copy n values of array inarr (real*8) to outarr (real)                
-! 
+! copy n values of array inarr (real*8) to outarr (real)
+!
 
 ! declaration section
 ! ------------------------------------------------------------------------------
@@ -1722,10 +1722,10 @@
 
 
 ! arguments
-      integer   n          ! (I) number of elements in arrays           
+      integer   n          ! (I) number of elements in arrays
 
-      real*8    inarr(n)   ! (I) input array                            
-      real      outarr(n)  ! (O) output array                           
+      real*8    inarr(n)   ! (I) input array
+      real      outarr(n)  ! (O) output array
 
 
 ! local variables
@@ -1756,12 +1756,12 @@
 
 ! ******************************************************************************
 
-      subroutine cfn_cp_d2d(inarr,outarr,n)                             
+      subroutine cfn_cp_d2d(inarr,outarr,n)
 
 ! description:
 ! ------------------------------------------------------------------------------
-! copy n values of array inarr (real*8) to outarr (real*8)              
-! 
+! copy n values of array inarr (real*8) to outarr (real*8)
+!
 
 ! declaration section
 ! ------------------------------------------------------------------------------
@@ -1770,10 +1770,10 @@
 
 
 ! arguments
-      integer   n          ! (I) number of elements in arrays           
+      integer   n          ! (I) number of elements in arrays
 
-      real*8    inarr(n)   ! (I) input array                            
-      real*8    outarr(n)  ! (O) output array                           
+      real*8    inarr(n)   ! (I) input array
+      real*8    outarr(n)  ! (O) output array
 
 
 ! local variables
@@ -1803,12 +1803,12 @@
 
 ! ******************************************************************************
 
-      subroutine cfn_debug_ini(commandlinestring,ltype)                
+      subroutine cfn_debug_ini(commandlinestring,ltype)
 
 ! description:
 ! ------------------------------------------------------------------------------
-! read debug value from command line and store it into a common block    
-! 
+! read debug value from command line and store it into a common block
+!
 
 ! declaration section
 ! ------------------------------------------------------------------------------
@@ -1817,7 +1817,7 @@
 
 
 ! arguments
-      character commandlinestring*(*) ! (I) search string in the command line  
+      character commandlinestring*(*) ! (I) search string in the command line
 
       logical   ltype     ! (I) type command line readout that must be
                           !     used.
@@ -1865,28 +1865,28 @@
 
 ! ******************************************************************************
 
-      function cfn_debug(code)                                          
+      function cfn_debug(code)
 
 ! description:
 ! ------------------------------------------------------------------------------
-! routine to check if particular debug parts of a program 
-! must be used or not                                         
-!                                                                        
-! in case debugcode<0:                                                    
-!        if code.eq.abs(debugcode)   then  .TRUE. else .FALSE.           
-!                                                                        
-! in case debugcode>=0:                                                   
-!        if code.le.debugcode        then  .TRUE. else .FALSE.           
-!                                                                        
-!                                                                        
-! recommendation for use, debugcode =                                  
-!   0  : do nothing                                                  
-!   1-3: only with 	ERROR                                                
-!   4-6: also with	WARNINGS                                             
-!   7-9: and also	MESSAGES                                             
-!                                                                        
-! use as 'code' mainly the values 2,5 and 8, in different     
-! cases 1 higher or lower value can be chosen                       
+! routine to check if particular debug parts of a program
+! must be used or not
+!
+! in case debugcode<0:
+!        if code.eq.abs(debugcode)   then  .TRUE. else .FALSE.
+!
+! in case debugcode>=0:
+!        if code.le.debugcode        then  .TRUE. else .FALSE.
+!
+!
+! recommendation for use, debugcode =
+!   0  : do nothing
+!   1-3: only with 	ERROR
+!   4-6: also with	WARNINGS
+!   7-9: and also	MESSAGES
+!
+! use as 'code' mainly the values 2,5 and 8, in different
+! cases 1 higher or lower value can be chosen
 !
 
 ! declaration section
@@ -1896,14 +1896,14 @@
 
 
 ! function declaration
-      logical    cfn_debug   ! return value:                             
-                             !      .true. : code satisfies the given  
-                             !               value                      
-                             !      .false.: code does not        
+      logical    cfn_debug   ! return value:
+                             !      .true. : code satisfies the given
+                             !               value
+                             !      .false.: code does not
 
 
 ! arguments
-      integer    code        ! (I) code to test                        
+      integer    code        ! (I) code to test
 
 
 ! local variables
@@ -1936,11 +1936,11 @@
       return
       end
 
-      subroutine cfn_findword(words,nwords,word,iword)                
+      subroutine cfn_findword(words,nwords,word,iword)
 
 ! description:
 ! ------------------------------------------------------------------------------
-! search a given word in an array                                 
+! search a given word in an array
 ! The given word is tested case independently and does not
 ! have to be complete, a unique beginning is sufficient
 ! related routine: cfn_findwordx
@@ -1952,12 +1952,12 @@
 
 
 ! arguments
-      integer   nwords,&           ! (I) number of words in WORDS          
+      integer   nwords,&           ! (I) number of words in WORDS
                 iword              ! (O) >1: found position in WORDS
                                    !      0: not found
                                    !     -1: not unique
 
-      character words(nwords)*(*),& ! (I) words which WORD must satisfy 
+      character words(nwords)*(*),& ! (I) words which WORD must satisfy
                                    !     This words do not have to be sorted
                 word*(*)           ! (I) word to search
 
@@ -2008,7 +2008,7 @@
                ! test
                if (cw1.ne.cw2) equal=.false.
             enddo
-            
+
             ! yes or yes
             if (equal) then
                ! check if this is the first one
@@ -2032,11 +2032,11 @@
 
 ! ******************************************************************************
 
-      subroutine cfn_findwordx(words,nwords,word,iword)                
+      subroutine cfn_findwordx(words,nwords,word,iword)
 
 ! description:
 ! ------------------------------------------------------------------------------
-! search a given word in an array                                
+! search a given word in an array
 ! The given word is tested case independently and must
 ! completely correspond to a value from words (eXact)
 ! related routine: cfn_findword
@@ -2048,7 +2048,7 @@
 
 
 ! arguments
-      integer   nwords,&           ! (I) number of words in WORDS          
+      integer   nwords,&           ! (I) number of words in WORDS
                 iword              ! (O) >1: found position in WORDS
                                    !      0: not found
                                    !     -1: not unique
@@ -2104,7 +2104,7 @@
                ! test
                if (cw1.ne.cw2) equal=.false.
             enddo
-            
+
             ! yes or yes
             if (equal) then
                ! check if this is the first one
@@ -2126,17 +2126,17 @@
       return
       end
 
-      subroutine cfn_getrec(lun,record,comm,cont)                        
+      subroutine cfn_getrec(lun,record,comm,cont)
 
 ! description:
 ! ------------------------------------------------------------------------------
-! read in a record from a file in a character variable         
-! Whenever a line contains a 'comment' character, the line will be ignored    
-! as from that point. Whenever the last character of a line (for      
-! any remarks) is a 'continuation mark' then the next 
-! line will be read in as well.                                                   
-! It will keep reading until data is found or EOF         
-! is reached                                                             
+! read in a record from a file in a character variable
+! Whenever a line contains a 'comment' character, the line will be ignored
+! as from that point. Whenever the last character of a line (for
+! any remarks) is a 'continuation mark' then the next
+! line will be read in as well.
+! It will keep reading until data is found or EOF
+! is reached
 
 ! declaration section
 ! ------------------------------------------------------------------------------
@@ -2145,17 +2145,17 @@
 
 
 ! arguments
-      integer   lun          ! (I) unit number from which must be  
-                             !     read                                
+      integer   lun          ! (I) unit number from which must be
+                             !     read
 
-      character record*(*),& ! (O) character variable for output  
-                             !     empty if end of file has been reached 
-                comm*(*),&   ! (I) comment character                     
-                             !     in case the string is longer than 1,   
-                             !     only the first character is used)     
-                cont*(*)     ! (I) continuation character                
-                             !     in case the string is longer than 1,  
-                             !     only the first character is used)     
+      character record*(*),& ! (O) character variable for output
+                             !     empty if end of file has been reached
+                comm*(*),&   ! (I) comment character
+                             !     in case the string is longer than 1,
+                             !     only the first character is used)
+                cont*(*)     ! (I) continuation character
+                             !     in case the string is longer than 1,
+                             !     only the first character is used)
 
 ! local variables
       integer   lrec,ios
@@ -2178,17 +2178,17 @@
 
 ! ******************************************************************************
 
-      subroutine cfn_getrec2(lun,record,ios,lrec,comm,cont)              
+      subroutine cfn_getrec2(lun,record,ios,lrec,comm,cont)
 
 ! description:
 ! ------------------------------------------------------------------------------
-! read in a record from a file in a character variable         
-! Whenever a line contains a 'comment' character, the line will be ignored   
-! as from that point. Whenever the last character of a line (for      
-! any remarks) is a 'continuation mark' then the next 
-! line will be read in as well.                                         
-! It will keep reading until data is found or EOF         
-! is reached                                                            
+! read in a record from a file in a character variable
+! Whenever a line contains a 'comment' character, the line will be ignored
+! as from that point. Whenever the last character of a line (for
+! any remarks) is a 'continuation mark' then the next
+! line will be read in as well.
+! It will keep reading until data is found or EOF
+! is reached
 
 ! declaration section
 ! ------------------------------------------------------------------------------
@@ -2197,21 +2197,21 @@
 
 
 ! arguments
-      integer   lun,&        ! (I) unit number from which must be  
-                             !     read                                
-                ios,&        ! (O) I/O status, 0=OK, otherwise error        
-                lrec         ! (O) length of the record        
+      integer   lun,&        ! (I) unit number from which must be
+                             !     read
+                ios,&        ! (O) I/O status, 0=OK, otherwise error
+                lrec         ! (O) length of the record
                              !     in case 0 than the end of the file is reached
 
-      character record*(*),& ! (O) character variable for output    
-                             !     empty if end of file has been reached   
-                             !     comment character                       
-                comm*(*),&   ! (I) in case the string is longer than 1,     
-                             !     only the first character is used)       
-                             !     continuation character                  
-                cont*(*)     ! (I) in case the string is longer than 1,    
+      character record*(*),& ! (O) character variable for output
+                             !     empty if end of file has been reached
+                             !     comment character
+                comm*(*),&   ! (I) in case the string is longer than 1,
                              !     only the first character is used)
-							 
+                             !     continuation character
+                cont*(*)     ! (I) in case the string is longer than 1,
+                             !     only the first character is used)
+
 ! local variables
       integer   b,e,i,ls,lr,p,lmin
 
@@ -2246,7 +2246,7 @@
 
       p   =  1      ! first free position in the record where the next data can be stored
       lmin=p-1      ! minimum length that a record must have after reading
-	  
+
       continue = .true.
 
       do while (continue)
@@ -2292,7 +2292,7 @@
 
             ls = cfn_length(record)
             ls = max(ls,lmin)
-            p  = ls+1  ! next position 
+            p  = ls+1  ! next position
 
             ! check if there is a continuation mark
             if (ls.gt.0) then
@@ -2300,7 +2300,7 @@
                   record(ls:)=' '
                   ls=ls-1
                   p=p-1
-                  
+
                else
 
                   ! nope, if length record > 0 at the moment, finish
@@ -2561,7 +2561,7 @@ subroutine cfn_mjd2datehms(mjd,date,hour,minute,seconds)
  endif
 
  call cfn_jd2datehms(jd,date,hour,minute,seconds)
-  
+
 ! end of program
  return
 end
@@ -2573,7 +2573,7 @@ end
 !! The binary representation of whole seconds will be in most cases
 !! a recurring decimal in binary representation.
 !! This routine rounds the fraction of jd to the nearest value with a binary
-!! representation of at most 17 bits. 
+!! representation of at most 17 bits.
 !! This will round the value to an accuracy of about 0.3 seconds
 function cfn_jd_round(jd)
 
@@ -2584,7 +2584,7 @@ function cfn_jd_round(jd)
 
 
 ! function declaration
- double precision  cfn_jd_round   !> return value: value of jd round to seconds   
+ double precision  cfn_jd_round   !> return value: value of jd round to seconds
 
 
 ! arguments
@@ -2593,7 +2593,7 @@ function cfn_jd_round(jd)
 
 ! local variables
  double precision, parameter :: roundfactor=131072. !> this is the first power
-                                                    !! of 2 (2**17) after the number of 
+                                                    !! of 2 (2**17) after the number of
                                                     !! seconds in one day (86400)
 
  double precision, parameter :: jdnodata=-9.9998D307
@@ -2629,7 +2629,7 @@ function cfn_mjd_round(mjd)
 
 
 ! function declaration
- double precision  cfn_mjd_round   !> return value: value of jd round to seconds   
+ double precision  cfn_mjd_round   !> return value: value of jd round to seconds
 
 
 ! arguments
@@ -2725,7 +2725,7 @@ end
 ! description:
 ! ------------------------------------------------------------------------------
 ! count the number of elements in a string
-! 
+!
 
 ! declaration section
 ! ------------------------------------------------------------------------------
@@ -2735,13 +2735,13 @@ end
 
 ! function declaration
       integer cfn_n_elem        ! return value: : number of elements
-                                !               :  
+                                !               :
 
 
 ! arguments
-      integer   as              ! (I) 
+      integer   as              ! (I)
 
-      character st(as)*1,&      ! (I) 
+      character st(as)*1,&      ! (I)
                 string*(*)      ! (I)
 
 
@@ -2769,7 +2769,7 @@ end
        IF(I.EQ.0)EXIT
        STRING(I:I)='''' !CHAR()
       ENDDO
-      
+
 ! assign function value
       cfn_n_elem = cfn_n_elem2(st,as,string,lstring)
 
@@ -2785,7 +2785,7 @@ end
 ! description:
 ! ------------------------------------------------------------------------------
 ! count the number of elements in a string
-! 
+!
 
 ! declaration section
 ! ------------------------------------------------------------------------------
@@ -2795,14 +2795,14 @@ end
 
 ! function declaration
       integer cfn_n_elem2          ! return value: : number of elements
-                                   !               :  
+                                   !               :
 
 
 ! arguments
-      integer   as,&               ! (I) 
+      integer   as,&               ! (I)
                 lstring            ! (I)
 
-      character st(as)*1,&         ! (I) 
+      character st(as)*1,&         ! (I)
                 string(lstring)*1  ! (I)
 
 
@@ -2840,7 +2840,7 @@ end
             enddo
          endif
 
-! search for a separator 
+! search for a separator
 
 !         do while (i.le.lstring  .and.
 !     1             .not.cfn_een_van(string(i),st,as))
@@ -2880,7 +2880,7 @@ end
 
          enddo
 
-! 
+!
 
          if (st(1).eq.' ' .and. i.lt.lstring) then
 ! skip the spaces until the next non-space
@@ -2889,7 +2889,7 @@ end
             enddo
          endif
 
-!                
+!
          if (i.le.lstring) then
             if (cfn_een_van(string(i),st,as)) then
                i=i+1 ! this will be the start of the next element
@@ -2907,11 +2907,11 @@ end
       return
       end
 
-      subroutine cfn_rtt_init(dbgcode)                                 
+      subroutine cfn_rtt_init(dbgcode)
 
 ! description:
 ! ------------------------------------------------------------------------------
-! routine timer init                                 
+! routine timer init
 ! by means of cfn_rttimer_* the elapsed time of different routines and
 ! parts of a program can be easily determined.
 !    cfn_rtt_init    initialize the timer, the timer is only used
@@ -2983,19 +2983,19 @@ end
 
 ! ******************************************************************************
 
-      subroutine cfn_rtt_strt(rttid)                                    
+      subroutine cfn_rtt_strt(rttid)
 
 ! description:
 ! ------------------------------------------------------------------------------
-! routine timer init                                 
+! routine timer init
 ! by means of cfn_rttimer_* the elapsed time of different routines and
 ! parts of a program can be easily determined.
-!    cfn_rtt_init    initialize the timer, the timer is only used   
-!                        whenever the dbgcode satisfies the debug   
-!                        status of the process (see cfn_debug)      
-!    cfn_rtt_strt    Start timing a routine   
-!    cfn_rtt_end     End timing a routine   
-!    cfn_rtt_list    Gives a overview of everything that has been timed so far   
+!    cfn_rtt_init    initialize the timer, the timer is only used
+!                        whenever the dbgcode satisfies the debug
+!                        status of the process (see cfn_debug)
+!    cfn_rtt_strt    Start timing a routine
+!    cfn_rtt_end     End timing a routine
+!    cfn_rtt_list    Gives a overview of everything that has been timed so far
 
 ! declaration section
 ! ------------------------------------------------------------------------------
@@ -3004,7 +3004,7 @@ end
 
 
 ! arguments
-      character rttid*(*)     ! (I) routine id                           
+      character rttid*(*)     ! (I) routine id
 
 
 ! local variables
@@ -3067,11 +3067,11 @@ end
 
 ! ******************************************************************************
 
-      subroutine cfn_rtt_end(rttid)                                    
+      subroutine cfn_rtt_end(rttid)
 
 ! description:
 ! ------------------------------------------------------------------------------
-! routine timer init                                 
+! routine timer init
 ! by means of cfn_rttimer_* the elapsed time of different routines and
 ! parts of a program can be easily determined.
 !    cfn_rtt_init    initialize the timer, the timer is only used
@@ -3088,7 +3088,7 @@ end
 
 
 ! arguments
-      character rttid*(*)     ! (I) routine id                           
+      character rttid*(*)     ! (I) routine id
 
 
 ! local variables
@@ -3143,11 +3143,11 @@ end
 
 ! ******************************************************************************
 
-      subroutine cfn_rtt_list(lun)                                     
+      subroutine cfn_rtt_list(lun)
 
 ! description:
 ! ------------------------------------------------------------------------------
-! routine timer init                                 
+! routine timer init
 ! by means of cfn_rttimer_* the elapsed time of different routines and
 ! parts of a program can be easily determined.
 !    cfn_rtt_init    initialize the timer, the timer is only used
@@ -3164,7 +3164,7 @@ end
 
 
 ! arguments
-      integer   lun    ! (I) unit number to write output files to      
+      integer   lun    ! (I) unit number to write output files to
                        !     <=0 is standard output
 
 
@@ -3217,22 +3217,22 @@ end
          write(lun,'(3(/,a))') string1(1:l1),string2(1:l2),string3(1:l3)
          do j=1,nrtt
             p=100.*irtttot(1,j)/max(1,irtttot(1,0))
-            write(lun,'(1x,a8,1x,i10,1x,f10.2,1x,i10)')& 
+            write(lun,'(1x,a8,1x,i10,1x,f10.2,1x,i10)')&
                   crttids(j),irtttot(1,j),p,irtttot(2,j)
          enddo
          write(lun,'(a,/)') string3(1:l3)
-         write(lun,'(1x,a8,1x,i10,1x,f10.2,1x,i10)')& 
+         write(lun,'(1x,a8,1x,i10,1x,f10.2,1x,i10)')&
                   crttids(0),irtttot(1,0),100.,irtttot(2,0)
          write(lun,'(a,/)') string3(1:l3)
       else
          write(*  ,'(3(/,a))') string1(1:l1),string2(1:l2),string3(1:l3)
          do j=1,nrtt
             p=100.*irtttot(1,j)/max(1,irtttot(1,0))
-            write(*  ,'(1x,a8,1x,i10,1x,f10.2,1x,i10)')& 
+            write(*  ,'(1x,a8,1x,i10,1x,f10.2,1x,i10)')&
                   crttids(j),irtttot(1,j),p,irtttot(2,j)
          enddo
          write(*  ,'(a,/)') string3(1:l3)
-         write(*  ,'(1x,a8,1x,i10,1x,f10.2,1x,i10)')& 
+         write(*  ,'(1x,a8,1x,i10,1x,f10.2,1x,i10)')&
                   crttids(0),irtttot(1,0),100.,irtttot(2,0)
          write(*  ,'(a,/)') string3(1:l3)
       endif
@@ -3316,12 +3316,12 @@ end
       return
       end
 
-      function cfn_unique_i(array,nin,mv)                                 
+      function cfn_unique_i(array,nin,mv)
 
 ! description:
 ! ------------------------------------------------------------------------------
-! takes the unique values from an array and places them sorted in    
-! the first cells                                                        
+! takes the unique values from an array and places them sorted in
+! the first cells
 
 ! declaration section
 ! ------------------------------------------------------------------------------
@@ -3330,16 +3330,16 @@ end
 
 
 ! function declaration
-      integer    cfn_unique_i ! return value: number of unique values     
-                              !               0 only with mv in array  
+      integer    cfn_unique_i ! return value: number of unique values
+                              !               0 only with mv in array
 
 
 ! arguments
-      integer   nin           ! (I) length array                        
+      integer   nin           ! (I) length array
 
-      integer   array(nin),&  ! (I/O) in : input array                  
-                              !       out: unique, sorted values  
-                mv            ! (I)   missing value                     
+      integer   array(nin),&  ! (I/O) in : input array
+                              !       out: unique, sorted values
+                mv            ! (I)   missing value
 
 
 ! local variables
@@ -3393,12 +3393,12 @@ end
 
 ! ******************************************************************************
 
-      function cfn_unique_r(array,nin,mv)                                 
+      function cfn_unique_r(array,nin,mv)
 
 ! description:
 ! ------------------------------------------------------------------------------
-! takes the unique values from an array and places them sorted in   
-! the first cells                                                   
+! takes the unique values from an array and places them sorted in
+! the first cells
 
 ! declaration section
 ! ------------------------------------------------------------------------------
@@ -3407,16 +3407,16 @@ end
 
 
 ! function declaration
-      integer    cfn_unique_r ! return value: number of unique values     
-                              !               0 only with mv in array  
+      integer    cfn_unique_r ! return value: number of unique values
+                              !               0 only with mv in array
 
 
 ! arguments
-      integer   nin           ! (I) length array                        
+      integer   nin           ! (I) length array
 
-      real      array(nin),&  ! (I/O) in : input array                  
-                              !       out: unique, sorted values  
-                mv            ! (I)   missing value                     
+      real      array(nin),&  ! (I/O) in : input array
+                              !       out: unique, sorted values
+                mv            ! (I)   missing value
 
 
 ! local variables
@@ -3470,12 +3470,12 @@ end
 
 ! ******************************************************************************
 
-      function cfn_unique_d(array,nin,mv)                                 
+      function cfn_unique_d(array,nin,mv)
 
 ! description:
 ! ------------------------------------------------------------------------------
-! takes the unique values from an array and places them sorted in    
-! the first cells                                                    
+! takes the unique values from an array and places them sorted in
+! the first cells
 
 ! declaration section
 ! ------------------------------------------------------------------------------
@@ -3484,17 +3484,17 @@ end
 
 
 ! function declaration
-      integer    cfn_unique_d ! return value: number of unique values   
-                              !               0 only with mv in array  
+      integer    cfn_unique_d ! return value: number of unique values
+                              !               0 only with mv in array
 
 
 ! arguments
-      integer   nin           ! (I) length array                        
+      integer   nin           ! (I) length array
 
-      double precision &                                                  
-                array(nin),&  ! (I/O) in : input array                  
-                              !       out: unique, sorted values  
-                mv            ! (I)   missing value                     
+      double precision &
+                array(nin),&  ! (I/O) in : input array
+                              !       out: unique, sorted values
+                mv            ! (I)   missing value
 
 
 ! local variables
@@ -3548,12 +3548,12 @@ end
 
 ! ******************************************************************************
 
-      function cfn_unique_c(array,la,nin,mv,lm)                          
+      function cfn_unique_c(array,la,nin,mv,lm)
 
 ! description:
 ! ------------------------------------------------------------------------------
-! takes the unique values from an array and places them sorted in    
-! the first cells                                                    
+! takes the unique values from an array and places them sorted in
+! the first cells
 
 ! declaration section
 ! ------------------------------------------------------------------------------
@@ -3562,18 +3562,18 @@ end
 
 
 ! function declaration
-      integer    cfn_unique_c ! return value: number of unique values   
-                              !               0 only with mv in array  
+      integer    cfn_unique_c ! return value: number of unique values
+                              !               0 only with mv in array
 
 
 ! arguments
-      integer   nin,&         ! (I) length array                        
-                la,&          ! (I) number of characters per element       
-                lm            ! (I) number of characters in mv             
+      integer   nin,&         ! (I) length array
+                la,&          ! (I) number of characters per element
+                lm            ! (I) number of characters in mv
 
-      character array(la,nin)*1,&! (I/O) in : input array               
-                              !       out: unique, sorted values  
-                mv(lm)*1      ! (I)   missing value                     
+      character array(la,nin)*1,&! (I/O) in : input array
+                              !       out: unique, sorted values
+                mv(lm)*1      ! (I)   missing value
 
 
 ! local variables
@@ -3640,7 +3640,7 @@ end
 ! description:
 ! ------------------------------------------------------------------------------
 ! unquote a character string
-! 
+!
 
 ! declaration section
 ! ------------------------------------------------------------------------------
@@ -3688,7 +3688,7 @@ end
 ! description:
 ! ------------------------------------------------------------------------------
 ! unquote a character string
-! 
+!
 
 ! declaration section
 ! ------------------------------------------------------------------------------
@@ -3783,7 +3783,7 @@ module m_vcl
    ! - When the program part is ready processing the command line it can
    !   check if unused arguments are left. This may cause an error.
    ! - specific options can be used from the command line first before
-   !   processing the remaining arguments. 
+   !   processing the remaining arguments.
 
    integer, parameter :: lcl=128     ! length of command line parts
    type vclstruct
@@ -3807,7 +3807,7 @@ module m_vcl
    integer, save :: mxvcl=0
 
    character (len=1024) :: targ    ! variable to store arguments temporarily
- 
+
 end module
 ! ******************************************************************************
 subroutine cfn_vcl_set(cl,ivcl)
@@ -3896,7 +3896,7 @@ subroutine cfn_vcl_set(cl,ivcl)
 
 ! determine array sizes
  if (usecl) then
- 
+
     ! number of arguments
     na=cfn_n_elem(st,as,cl)
 
@@ -3934,7 +3934,7 @@ subroutine cfn_vcl_set(cl,ivcl)
        targ=cl(b+p-1:e+p-1)
        ! new position for p
        p=p+e
-       
+
        e=e-b+1
        b=1
     else
@@ -3947,7 +3947,7 @@ subroutine cfn_vcl_set(cl,ivcl)
     pv%pos(i)=(ir-1)*lcl+ic
     do while (b.le.e)
        n1=e-b+1     ! number of characters left to store
-       n2=lcl-ic+1  ! number of positions left at current row 
+       n2=lcl-ic+1  ! number of positions left at current row
        n=min(n1,n2) ! number of characters to store in current row
 
        pv%cl(ir)(ic:ic+n-1)=targ(b:b+n-1)
@@ -3984,7 +3984,7 @@ subroutine cfn_vcl_narg(ivcl,narg)
 ! description:
 ! ------------------------------------------------------------------------------
 ! get number of arguments stored for ivcl
-! 
+!
 
 ! declaration section
 ! ------------------------------------------------------------------------------
@@ -4028,7 +4028,7 @@ subroutine cfn_vcl_arg(ivcl,iarg,arg,larg)
 ! description:
 ! ------------------------------------------------------------------------------
 ! get one argument of vcl
-! 
+!
 
 ! declaration section
 ! ------------------------------------------------------------------------------
@@ -4082,7 +4082,7 @@ subroutine cfn_vcl_arg(ivcl,iarg,arg,larg)
        p=1
        do while (b.le.e)
           n1=e-b+1     ! number of characters left to store
-          n2=lcl-ic+1  ! number of positions left at current row 
+          n2=lcl-ic+1  ! number of positions left at current row
           n=min(n1,n2) ! number of characters to store in current row
 
           arg(p:)=pv%cl(ir)(ic:ic+n-1)
@@ -4123,7 +4123,7 @@ subroutine cfn_vcl_fnd(ivcl,iarg,arg,remove)
 ! description:
 ! ------------------------------------------------------------------------------
 ! find the position of a command line argument
-! 
+!
 
 ! declaration section
 ! ------------------------------------------------------------------------------
@@ -4224,7 +4224,7 @@ subroutine cfn_vcl_inpi(ivcl,string,value,ldefault,lval,uval,ninterval,iarg)
 ! ------------------------------------------------------------------------------
 ! get an INTEGER value from the command line
 ! when no argument found, the argument will be asked for interactively
-! 
+!
 
 ! declaration section
 ! ------------------------------------------------------------------------------
@@ -4282,7 +4282,7 @@ subroutine cfn_vcl_inpi(ivcl,string,value,ldefault,lval,uval,ninterval,iarg)
  call cfn_vcl_arg(ivcl,iarg,targ,larg)
 
 
-! get argument interactive 
+! get argument interactive
  cont=.true.
  do while (cont)
 
@@ -4295,7 +4295,7 @@ subroutine cfn_vcl_inpi(ivcl,string,value,ldefault,lval,uval,ninterval,iarg)
        if (cfn_length(targ).gt.0 .or. ldefault) cont=.false.
     enddo
 
-    ! check 
+    ! check
     if (cfn_length(targ).le.0) then
        ! use default value
        cont=.false.
@@ -4324,7 +4324,7 @@ subroutine cfn_vcl_inpr(ivcl,string,value,ldefault,lval,uval,ninterval,iarg)
 ! ------------------------------------------------------------------------------
 ! get a REAL value from the command line
 ! when no argument found, the argument will be asked for interactively
-! 
+!
 
 ! declaration section
 ! ------------------------------------------------------------------------------
@@ -4382,7 +4382,7 @@ subroutine cfn_vcl_inpr(ivcl,string,value,ldefault,lval,uval,ninterval,iarg)
  call cfn_vcl_arg(ivcl,iarg,targ,larg)
 
 
-! get argument interactive 
+! get argument interactive
  cont=.true.
  do while (cont)
 
@@ -4395,7 +4395,7 @@ subroutine cfn_vcl_inpr(ivcl,string,value,ldefault,lval,uval,ninterval,iarg)
        if (cfn_length(targ).gt.0 .or. ldefault) cont=.false.
     enddo
 
-    ! check 
+    ! check
     if (cfn_length(targ).le.0) then
        ! use default value
        cont=.false.
@@ -4424,7 +4424,7 @@ subroutine cfn_vcl_inpc(ivcl,string,value,ldefault,lval,uval,ninterval,iarg)
 ! ------------------------------------------------------------------------------
 ! get an INTEGER value from the command line
 ! when no argument found, the argument will be asked for interactively
-! 
+!
 
 ! declaration section
 ! ------------------------------------------------------------------------------
@@ -4482,7 +4482,7 @@ subroutine cfn_vcl_inpc(ivcl,string,value,ldefault,lval,uval,ninterval,iarg)
  call cfn_vcl_arg(ivcl,iarg,targ,larg)
 
 
-! get argument interactive 
+! get argument interactive
  cont=.true.
  do while (cont)
 
@@ -4495,7 +4495,7 @@ subroutine cfn_vcl_inpc(ivcl,string,value,ldefault,lval,uval,ninterval,iarg)
        if (cfn_length(targ).gt.0 .or. ldefault) cont=.false.
     enddo
 
-    ! check 
+    ! check
     if (cfn_length(targ).le.0) then
        ! use default value
        cont=.false.
@@ -4522,7 +4522,7 @@ subroutine scfn_vcl_chki(arg,value,lval,uval,ninterval,ok)
 ! description:
 ! ------------------------------------------------------------------------------
 ! check INTEGER value
-! 
+!
 
 ! declaration section
 ! ------------------------------------------------------------------------------
@@ -4531,7 +4531,7 @@ subroutine scfn_vcl_chki(arg,value,lval,uval,ninterval,ok)
 
 
 ! arguments
- character (len=*), intent(in)  :: arg             ! 
+ character (len=*), intent(in)  :: arg             !
 
  integer  , intent(in)          :: ninterval       ! number of intervals
 
@@ -4598,7 +4598,7 @@ subroutine scfn_vcl_chkr(arg,value,lval,uval,ninterval,ok)
 ! description:
 ! ------------------------------------------------------------------------------
 ! check value
-! 
+!
 
 ! declaration section
 ! ------------------------------------------------------------------------------
@@ -4607,7 +4607,7 @@ subroutine scfn_vcl_chkr(arg,value,lval,uval,ninterval,ok)
 
 
 ! arguments
- character (len=*), intent(in)  :: arg             ! 
+ character (len=*), intent(in)  :: arg             !
 
  integer  , intent(in)          :: ninterval       ! number of intervals
 
@@ -4674,7 +4674,7 @@ subroutine scfn_vcl_chkc(arg,value,lval,uval,ninterval,ok)
 ! description:
 ! ------------------------------------------------------------------------------
 ! check value
-! 
+!
 
 ! declaration section
 ! ------------------------------------------------------------------------------
@@ -4683,7 +4683,7 @@ subroutine scfn_vcl_chkc(arg,value,lval,uval,ninterval,ok)
 
 
 ! arguments
- character (len=*), intent(in)  :: arg             ! 
+ character (len=*), intent(in)  :: arg             !
 
  integer  , intent(in)          :: ninterval       ! number of intervals
 
@@ -5162,7 +5162,7 @@ subroutine cfn_vcl_argsleft(ivcl,lprint,exitcode)
  exitcode = 0
 
  if (ivcl.ge.1 .and. ivcl.le.nvcl) then
-    
+
     pv=>vcl(ivcl)%pvcl
 
     if (pv%narg.gt.0) then
@@ -5240,8 +5240,8 @@ end
                         !               .false.: otherwise
 
 ! arguments
-      integer     l1,&  ! (I) number of characters in char1 
-                  l2    ! (I) number of characters in char2 
+      integer     l1,&  ! (I) number of characters in char1
+                  l2    ! (I) number of characters in char2
 
       character*1 char1(l1),&! (I) variable 1
                   char2(l2)  ! (I) variable 2
@@ -5326,8 +5326,8 @@ end
                         !               .false.: otherwise
 
 ! arguments
-      integer     l1,&  ! (I) number of characters in char1 
-                  l2    ! (I) number of characters in char2 
+      integer     l1,&  ! (I) number of characters in char1
+                  l2    ! (I) number of characters in char2
 
       character*1 char1(l1),&! (I) variable 1
                   char2(l2)  ! (I) variable 2
@@ -5369,8 +5369,8 @@ end
                         !               .false.: otherwise
 
 ! arguments
-      integer     l1,&  ! (I) number of characters in char1 
-                  l2    ! (I) number of characters in char2 
+      integer     l1,&  ! (I) number of characters in char1
+                  l2    ! (I) number of characters in char2
 
       character*1 char1(l1),&! (I) variable 1
                   char2(l2)  ! (I) variable 2
@@ -5412,8 +5412,8 @@ end
                         !               .false.: otherwise
 
 ! arguments
-      integer     l1,&  ! (I) number of characters in char1 
-                  l2    ! (I) number of characters in char2 
+      integer     l1,&  ! (I) number of characters in char1
+                  l2    ! (I) number of characters in char2
 
       character*1 char1(l1),&! (I) variable 1
                   char2(l2)  ! (I) variable 2
@@ -5454,8 +5454,8 @@ end
 
       implicit none
 
-      integer     l1,&  ! number of characters in char1 
-                  l2    ! number of characters in char2 
+      integer     l1,&  ! number of characters in char1
+                  l2    ! number of characters in char2
 
       character*1 char1(l1),&
                   char2(l2)
@@ -5557,7 +5557,7 @@ end
                         else
                            if (ls2.eq.0) then
                               ! match can now only be possible when char1 just
-                              ! consists of "wilds" 
+                              ! consists of "wilds"
                               do while (ok .and. ls1.gt.0)
                                  if (char1(ls1).ne.wilds) then
                                     ok=.false.
@@ -5599,7 +5599,7 @@ end
                      star=.true.
                      i=i+1
                      is=i  ! save position in case it goes wrong
-                     js=j  ! save position in case it goes wrong  
+                     js=j  ! save position in case it goes wrong
                   else if (char1(i).eq.wildc) then
                      j=j+1
                      i=i+1
@@ -5628,7 +5628,7 @@ end
                         ok=.true.
                      else
                         ! match can now only be possible when char1 just
-                        ! consists of "wilds" 
+                        ! consists of "wilds"
                         do while (ok .and. i.le.ls1)
                            if (char1(i).ne.wilds) then
                               ok=.false.
@@ -5667,7 +5667,7 @@ end
 
       function chf_COPY(char1,l1,char2,l2)
 
-! copy char1 to char2 
+! copy char1 to char2
 
 !     function: char2(1:l2)=char1(1:l1)
 
@@ -5714,7 +5714,7 @@ end
 
       function chf_APPEND(char1,lb,l1,char2,l2)
 
-! append of char2 to char1 
+! append of char2 to char1
 
 !     function: char1(1:l1) = char1(1:lb)//char2(1:l2)
 
@@ -5904,7 +5904,7 @@ end
 
 ! ******************************************************************************
 
-      function chf_lk(char1,l1,char2,l2)                
+      function chf_lk(char1,l1,char2,l2)
 
 ! description:
 ! ------------------------------------------------------------------------------
@@ -5914,7 +5914,7 @@ end
 ! wilds='*'
 !
 ! char1 may contain the wild cards, char2 only contains text
-! 
+!
 
 ! declaration section
 ! ------------------------------------------------------------------------------
@@ -5923,8 +5923,8 @@ end
 
 
 ! function declaration
-      logical   chf_lk   ! return value: .true. :                      
-                         !               .false.:                      
+      logical   chf_lk   ! return value: .true. :
+                         !               .false.:
 
 
 ! arguments
@@ -5962,10 +5962,10 @@ end
 !dd      debugstring='                                                ' ! debug
 ! algorithm
 ! ---------
-! char1 can consist of different blocks which are separated by 
-!       wild card wilds. A block can also contain a wild card of exact 1 
+! char1 can consist of different blocks which are separated by
+!       wild card wilds. A block can also contain a wild card of exact 1
 !       character(wildc), this is part of the block.
-! 
+!
 !     -------     -------     -------     -------
 !     |  1  |.....|  2  |.....|  2  |.....|  3  |  char1: number of wilds>0
 !     -------     -------     -------     -------
@@ -5976,7 +5976,7 @@ end
 !
 ! The blocks 1 and 3 are attached to the border because on the outside are
 ! no wild card wilds present. Those blocks cannot 'shift' over char2.
-! The blocks of type 2 can shift and so they have multiple 
+! The blocks of type 2 can shift and so they have multiple
 ! possibilities to fit into char2.
 !
 ! - if block 1 is present, then check if it fits into char2, if not, then .false.
@@ -5985,13 +5985,13 @@ end
 ! - if no wilds are present, then just test block0
 
 ! init
-      res=.true.  ! in the beginning by default the output is .true., once  
+      res=.true.  ! in the beginning by default the output is .true., once
                   ! the contrary is proven, the output turns .false. => end
 
       ib1=1       ! start position of first block to test in char1
       ie1=l1      ! end  position of last block to test in char1
 
-      ib2=1       ! start position of part to test in char2  
+      ib2=1       ! start position of part to test in char2
       ie2=l2      ! end  position of part to test in char2
 
 
@@ -6070,7 +6070,7 @@ end
 !dd      if (res) debugstring(ib2:ib2+ie1-ib1+1)=char1(ib1:ie1)         ! debug
          endif
 
-      endif   ! test end of block0 
+      endif   ! test end of block0
 
 !dd      write(*,*) ' 0 res,lblok0123: ',res,lblk0,lblk1,lblk2,lblk3    ! debug
 
@@ -6160,11 +6160,11 @@ end
          endif
 
 
-         ! search the end of previous block 
+         ! search the end of previous block
          do while (char1(ie1:ie1).eq.wilds .and. ib1.lt.ie1)
             ie1=ie1-1
          enddo
-         
+
       endif   ! test end block3
 
 !dd      write(*,*) ' 3 res,lblok0123: ',res,lblk0,lblk1,lblk2,lblk3    ! debug
@@ -6190,7 +6190,7 @@ end
             do while(.not.tres .and. ib2.le.p)
                tres=chf_lk_blk(char1,ib1,eblok,&
                                char2,ib2,ie2,wildc)
-               if (.not.tres) ib2=ib2+1 ! block has not fitted yet, try again 
+               if (.not.tres) ib2=ib2+1 ! block has not fitted yet, try again
                                         ! 1 character further on
 !dd      write(*,*) ' tst2: ',ib1,eblok,ie1,ib2,ie2,tres                ! debug
             enddo
@@ -6211,7 +6211,7 @@ end
          enddo
 
          ! whenever char1 is fully tested and there is still a part of char2 not tested
-         ! then that is not a problem any more. The remnant of 
+         ! then that is not a problem any more. The remnant of
          ! char2 is now part of a wilds character, so it always right!
 
       endif   ! test end of block2
@@ -6229,16 +6229,16 @@ end
 
 ! ******************************************************************************
 
-      function chf_lk_blk(char1,bblk,eblk,char2,bstr,estr,wildc)        
+      function chf_lk_blk(char1,bblk,eblk,char2,bstr,estr,wildc)
 
 ! description:
 ! ------------------------------------------------------------------------------
 !    char1(bblk,eblk) is being compared with char2(bstr,estr)
 !
-! compare two strings with one another at which the first one may contain 
-! multiple wild cards for 1 character                                            
+! compare two strings with one another at which the first one may contain
+! multiple wild cards for 1 character
 ! whenever char2 is too small to cover the entire block
-! then the answer is in any case .false. 
+! then the answer is in any case .false.
 
 ! declaration section
 ! ------------------------------------------------------------------------------
@@ -6247,17 +6247,17 @@ end
 
 
 ! function declaration
-      logical   chf_lk_blk     ! return value: .true. :                  
-                               !               .false.:                  
+      logical   chf_lk_blk     ! return value: .true. :
+                               !               .false.:
 
 
 ! arguments
-      integer   bblk,&          ! (I) start position block                 
-                eblk,&          ! (I) end  position block                 
-                bstr,&          ! (I) start position string               
-                estr            ! (I) end  position string               
+      integer   bblk,&          ! (I) start position block
+                eblk,&          ! (I) end  position block
+                bstr,&          ! (I) start position string
+                estr            ! (I) end  position string
 
-      character char1*(*),&     ! (I)                    
+      character char1*(*),&     ! (I)
                 char2*(*),&     ! (I)
                 wildc*1         ! (I)
 
@@ -6307,7 +6307,7 @@ end
 ! DATUM: 14/04/92
 !        15/11/95 adapted
 !
-      function cfn_collapse(arg)                                        
+      function cfn_collapse(arg)
 
 ! description:
 ! ------------------------------------------------------------------------------
@@ -6346,7 +6346,7 @@ end
 
 ! ******************************************************************************
 
-      function cfn_collapse2(arg,larg)                                  
+      function cfn_collapse2(arg,larg)
 
 ! description:
 ! ------------------------------------------------------------------------------
@@ -6394,12 +6394,12 @@ end
 
 ! ******************************************************************************
 
-      subroutine cfn_s_collapse2(arg,larg)                              
+      subroutine cfn_s_collapse2(arg,larg)
 
 ! description:
 ! ------------------------------------------------------------------------------
-! collapse function in a subroutine programmed to prevent        
-! declaration problems                                               
+! collapse function in a subroutine programmed to prevent
+! declaration problems
 
 ! declaration section
 ! ------------------------------------------------------------------------------
@@ -6408,9 +6408,9 @@ end
 
 
 ! arguments
-      integer   larg          ! (I) length argument arg                 
+      integer   larg          ! (I) length argument arg
 
-      character arg(larg)*1   ! (I/O) string to 'collapse'             
+      character arg(larg)*1   ! (I/O) string to 'collapse'
 
 
 ! local variables
@@ -6460,10 +6460,10 @@ end
       implicit none
 
       integer en,&                 ! element number to search
-              as                   ! # separators  
+              as                   ! # separators
 
       character*(*) cfn_elem,string
-      character*1   st(as)         ! separators 
+      character*1   st(as)         ! separators
 
       integer  lstring
 
@@ -6484,12 +6484,12 @@ end
       implicit none
 
       integer en,&                 ! element number to search
-              as,&                 ! # separators 
+              as,&                 ! # separators
               lstring
 
       character*(*) cfn_elem2
       character*1   string(lstring)
-      character*1   st(as)         ! separators 
+      character*1   st(as)         ! separators
 
 
       call cfn_s_elem2(en,st,as,string,lstring,cfn_elem2)
@@ -6506,7 +6506,7 @@ end
 ! ------------------------------------------------------------------------------
 ! query start and end position of field <enx> in <string>
 ! whenever element ENX does not exist, the value 0 will be assigned to
-! the start and end positions 
+! the start and end positions
 
 ! declaration section
 ! ------------------------------------------------------------------------------
@@ -6625,7 +6625,7 @@ end
 
          enddo
 
-! 
+!
 
          if (nr.eq.en) then
 !    check if separator is found even if at the end of the string
@@ -6642,7 +6642,7 @@ end
                enddo
             endif
 
-!                
+!
             if (i.le.lstring) then
                if (cfn_een_van(string(i),st,as)) then
                   i=i+1 ! this is going to be the start of the next element
@@ -6668,7 +6668,7 @@ end
 ! description:
 ! ------------------------------------------------------------------------------
 ! subroutine with element function
-! 
+!
 
 ! declaration section
 ! ------------------------------------------------------------------------------
@@ -6708,7 +6708,7 @@ end
 ! description:
 ! ------------------------------------------------------------------------------
 ! subroutine with element function
-! 
+!
 
 ! declaration section
 ! ------------------------------------------------------------------------------
@@ -6804,14 +6804,14 @@ end
 
 ! ******************************************************************************
 
-      function cfn_elem_pos(ne,st,as,string,lstring,begin,eind)         
+      function cfn_elem_pos(ne,st,as,string,lstring,begin,eind)
 
 ! description:
 ! ------------------------------------------------------------------------------
-! query the start and end positions of the first 'ne'   
-! elements in 'string'                                                 
-! Whenever 'string' is empty, then there are 0 fields found                
-! Whenever a field is empty, then end(*)=start(*)-1                    
+! query the start and end positions of the first 'ne'
+! elements in 'string'
+! Whenever 'string' is empty, then there are 0 fields found
+! Whenever a field is empty, then end(*)=start(*)-1
 
 
 ! declaration section
@@ -6821,19 +6821,19 @@ end
 
 
 ! function declaration
-      integer   cfn_elem_pos  ! return value: number of found elements   
+      integer   cfn_elem_pos  ! return value: number of found elements
 
 
 ! arguments
-      integer lstring,&     ! (I) length string                           
-              ne,&          ! (I) maximum number of elements to search      
-              as            ! (I) # separators                      
+      integer lstring,&     ! (I) length string
+              ne,&          ! (I) maximum number of elements to search
+              as            ! (I) # separators
 
-      character*1 string(lstring) ! (I) string in which needs to be searched 
-      character*1 st(as)          ! (I) separators                  
+      character*1 string(lstring) ! (I) string in which needs to be searched
+      character*1 st(as)          ! (I) separators
 
-      integer begin(ne),&         ! (O) start positions elements          
-              eind(ne)            ! (O) end positions elements           
+      integer begin(ne),&         ! (O) start positions elements
+              eind(ne)            ! (O) end positions elements
 
 
 ! local variables
@@ -6922,7 +6922,7 @@ end
 
          enddo
 
-! 
+!
 
 !    check if a separator is found even if at the end of the string
          if (i.gt.lstring) then
@@ -6938,7 +6938,7 @@ end
             enddo
          endif
 
-!                
+!
          if (i.le.lstring) then
             if (cfn_een_van(string(i),st,as)) then
                i=i+1 ! this is going to be the start of the next element
@@ -6981,12 +6981,12 @@ end
       return
       end
 
-      function eva_chk_var(eva,varnme)                                  
+      function eva_chk_var(eva,varnme)
 
 ! description:
 ! ------------------------------------------------------------------------------
-! test variable name and make it uppercase                           
-! 
+! test variable name and make it uppercase
+!
 
 ! declaration section
 ! ------------------------------------------------------------------------------
@@ -6995,16 +6995,16 @@ end
 
 
 ! function declaration
-      integer   eva_chk_var    ! return value:>0: number of characters of the name given     
+      integer   eva_chk_var    ! return value:>0: number of characters of the name given
                                !              -1: no name given
                                !              -2: name too long
                                !              -3: name contains wrong characters
-                               !              -4: name does not start with a letter 
+                               !              -4: name does not start with a letter
 
 ! arguments
       character eva(*)*(*)     ! (I) array in which everything is saved
 
-      character varnme*(*)     ! (I/O) variable name                   
+      character varnme*(*)     ! (I/O) variable name
 
 
 ! local variables
@@ -7065,7 +7065,7 @@ end
             c=varnme(i:i)
             if ((c.ge.'a' .and. c.le.'z')) then
 
-               ! OK, it is a letter. now it just needs to be made uppercase 
+               ! OK, it is a letter. now it just needs to be made uppercase
                varnme(i:i)=char(ichar(c)+d)
 
             else if (.not. (c.ge.'A' .and. c.le.'Z')) then
@@ -7102,12 +7102,12 @@ end
       return
       end
 
-      function eva_def_var(eva,varnme,lvar)                
+      function eva_def_var(eva,varnme,lvar)
 
 ! description:
 ! ------------------------------------------------------------------------------
-! (re)define a variable, create space in the array           
-! 
+! (re)define a variable, create space in the array
+!
 
 ! declaration section
 ! ------------------------------------------------------------------------------
@@ -7116,17 +7116,17 @@ end
 
 
 ! function declaration
-      integer   eva_def_var   ! return value: >0: position in eva array    
-                              !           -1..-4: error in name            
-                              !              -10: no space in eva 
+      integer   eva_def_var   ! return value: >0: position in eva array
+                              !           -1..-4: error in name
+                              !              -10: no space in eva
 
 
 ! arguments
       character eva(*)*(*)     ! (I) array in which everything is saved
 
-      character varnme*(*)     ! (I) variable name                     
+      character varnme*(*)     ! (I) variable name
 
-      integer   lvar           ! (I) number of characters space needed      
+      integer   lvar           ! (I) number of characters space needed
 
 
 ! local variables
@@ -7253,7 +7253,7 @@ end
       if (ret.eq.0) then
          ! nrec   = ichar(eva(1)(6:6))*256 + ichar(eva(1)(7:7))
          eva(1)(7:7)=char(mod(nrec,256))
-         eva(1)(6:6)=char(int(nrec/256))        
+         eva(1)(6:6)=char(int(nrec/256))
       endif
 
 
@@ -7270,12 +7270,12 @@ end
 ! end of program
       return
       end
-      function eva_fnd_var(eva,varnme)                                  
+      function eva_fnd_var(eva,varnme)
 
 ! description:
 ! ------------------------------------------------------------------------------
-! search a variable in EVA                   
-! 
+! search a variable in EVA
+!
 
 ! declaration section
 ! ------------------------------------------------------------------------------
@@ -7284,15 +7284,15 @@ end
 
 
 ! function declaration
-      integer   eva_fnd_var    ! return value: >1: position in EVA where it is found        
-                               !                0: not found        
-                               !               <0: other error          
+      integer   eva_fnd_var    ! return value: >1: position in EVA where it is found
+                               !                0: not found
+                               !               <0: other error
 
 
 ! arguments
-      character eva(*)*(*)     ! (I) array in which everything is saved 
+      character eva(*)*(*)     ! (I) array in which everything is saved
 
-      character varnme*(*)     ! (I/O) variable name                    
+      character varnme*(*)     ! (I/O) variable name
 
 
 ! local variables
@@ -7345,7 +7345,7 @@ end
                ! found, done
                pos=p
             else
-               ! add the number of 'records' that are occupied by the 
+               ! add the number of 'records' that are occupied by the
                ! current variable to p
                p=p+ichar(eva(p)(1:1))
             endif
@@ -7369,12 +7369,12 @@ end
       return
       end
 
-      function eva_get_set(eva,leva,mxrec,mxvlen,nrec)                
+      function eva_get_set(eva,leva,mxrec,mxvlen,nrec)
 
 ! description:
 ! ------------------------------------------------------------------------------
-! query the settings of the eva array                           
-! 
+! query the settings of the eva array
+!
 
 ! declaration section
 ! ------------------------------------------------------------------------------
@@ -7383,14 +7383,14 @@ end
 
 
 ! function declaration
-      integer   eva_get_set   ! return value:  0: OK                    
-                              !              <>0: error                 
+      integer   eva_get_set   ! return value:  0: OK
+                              !              <>0: error
 
 
 ! arguments
       character eva(*)*(*)     ! (I) array in which everything is saved
 
-      integer   leva,&         ! (O)   number of characters in a record                 
+      integer   leva,&         ! (O)   number of characters in a record
                 mxrec,&        ! (O)   maximum number of records in eva-array
                 mxvlen,&       ! (O)   maximum allowed length of a variable name
                 nrec           ! (O)   number of records in use from eva-array
@@ -7445,12 +7445,12 @@ end
       return
       end
 
-      subroutine eva_put_i(eva,varnme,var,ret)                
+      subroutine eva_put_i(eva,varnme,var,ret)
 
 ! description:
 ! ------------------------------------------------------------------------------
-! save an integer value in the eva array under the name varnme        
-! 
+! save an integer value in the eva array under the name varnme
+!
 
 ! declaration section
 ! ------------------------------------------------------------------------------
@@ -7459,13 +7459,13 @@ end
 
 
 ! arguments
-      character eva(*)*(*)     ! (I) array in which everything is saved 
+      character eva(*)*(*)     ! (I) array in which everything is saved
 
-      character varnme*(*)     ! (I) variable name                      
+      character varnme*(*)     ! (I) variable name
 
-      integer   ret            ! (O) 0: OK                               
+      integer   ret            ! (O) 0: OK
 
-      integer   var            ! (I) value assigned to varnme 
+      integer   var            ! (I) value assigned to varnme
 
 
 ! local variables
@@ -7500,12 +7500,12 @@ end
       end
 
 ! ******************************************************************************
-      subroutine eva_put_r(eva,varnme,var,ret)                
+      subroutine eva_put_r(eva,varnme,var,ret)
 
 ! description:
 ! ------------------------------------------------------------------------------
-! save a real value in the eva array under the name varnme        
-! 
+! save a real value in the eva array under the name varnme
+!
 
 ! declaration section
 ! ------------------------------------------------------------------------------
@@ -7514,13 +7514,13 @@ end
 
 
 ! arguments
-      character eva(*)*(*)     ! (I) array in which everything is saved 
+      character eva(*)*(*)     ! (I) array in which everything is saved
 
-      character varnme*(*)     ! (I) variable name                      
+      character varnme*(*)     ! (I) variable name
 
-      integer   ret            ! (O) 0: OK                              
+      integer   ret            ! (O) 0: OK
 
-      real      var            ! (I) value assigned to varnme 
+      real      var            ! (I) value assigned to varnme
 
 
 ! local variables
@@ -7540,13 +7540,13 @@ end
 ! ------------------------------------------------------------------------------
 
 
-! fill value in character 
+! fill value in character
       write(cvar,'(g15.7)') var
       call cfn_s_trim(cvar)
       l=cfn_length(cvar)
 
 
-! save via eva_put_c 
+! save via eva_put_c
       call eva_put_c(eva,varnme,cvar(1:l),ret)
 
 
@@ -7556,11 +7556,11 @@ end
 
 ! ******************************************************************************
 
-      subroutine eva_put_c(eva,varnme,var,ret)                
+      subroutine eva_put_c(eva,varnme,var,ret)
 
 ! description:
 ! ------------------------------------------------------------------------------
-! save a character value in the eva array under the name varnme    
+! save a character value in the eva array under the name varnme
 ! PAY ATTENTION! the length of the saved string contains len(var) characters!
 !         that means: the value of var is being saved, no trim
 
@@ -7571,13 +7571,13 @@ end
 
 
 ! arguments
-      character eva(*)*(*)     ! (I) array in which everything is saved 
+      character eva(*)*(*)     ! (I) array in which everything is saved
 
-      character varnme*(*)     ! (I) variable name                      
+      character varnme*(*)     ! (I) variable name
 
-      integer   ret            ! (O) 0: OK                               
+      integer   ret            ! (O) 0: OK
 
-      character var*(*)        ! (I) value assigned to varnme 
+      character var*(*)        ! (I) value assigned to varnme
 
 
 ! local variables
@@ -7603,7 +7603,7 @@ end
       lvar=len(var)
 
 
-! (re)define variable 
+! (re)define variable
       pos=eva_def_var(eva,lvarnme,lvar)
 
 
@@ -7621,11 +7621,11 @@ end
 
 ! ******************************************************************************
 
-      function eva_put_str(eva,pos,var,lvar)                
+      function eva_put_str(eva,pos,var,lvar)
 
 ! description:
 ! ------------------------------------------------------------------------------
-! fill in a string in record pos of the eva array    
+! fill in a string in record pos of the eva array
 ! in record pos is also the name of the variable defined
 
 
@@ -7643,10 +7643,10 @@ end
 ! arguments
       character eva(*)*(*)     ! (I/O) array in which everything is saved
 
-      integer   pos,&          ! (I) record position in eva where data needs to be saved  
+      integer   pos,&          ! (I) record position in eva where data needs to be saved
                 lvar           ! (I) number of characters of var that needs to be saved
 
-      character var*(*)        ! (I) value to save                   
+      character var*(*)        ! (I) value to save
 
 
 ! local variables
@@ -7781,12 +7781,12 @@ end
       return
       end
 
-      function cfn_idx_get_i(sv,sid,nid,index)                          
+      function cfn_idx_get_i(sv,sid,nid,index)
 
 ! description:
 ! ------------------------------------------------------------------------------
-! find the index number of the value sv in array sid                    
-! search method is binary search                                        
+! find the index number of the value sv in array sid
+! search method is binary search
 
 ! declaration section
 ! ------------------------------------------------------------------------------
@@ -7795,21 +7795,21 @@ end
 
 
 ! function declaration
-      integer   cfn_idx_get_i   ! return value: #: number of found      
-                                !                  matched elements     
+      integer   cfn_idx_get_i   ! return value: #: number of found
+                                !                  matched elements
 
 
 ! arguments
-      integer   index,&         ! (O) return index number               
-                                !     the index number is the first     
-                                !     matched value in array sid        
-                                !     if no value matched index is the  
-                                !     position where sv can be inserted 
-                                !     If sv > sid(nin) then index=nin+1 
-                nid             ! (I) number of elements in sid array   
+      integer   index,&         ! (O) return index number
+                                !     the index number is the first
+                                !     matched value in array sid
+                                !     if no value matched index is the
+                                !     position where sv can be inserted
+                                !     If sv > sid(nin) then index=nin+1
+                nid             ! (I) number of elements in sid array
 
-      integer   sv,&            ! (I) value to be searched in sid       
-                sid(nid)        ! (I) values array                      
+      integer   sv,&            ! (I) value to be searched in sid
+                sid(nid)        ! (I) values array
 
 
 ! local variables
@@ -7899,12 +7899,12 @@ end
 
 ! ******************************************************************************
 
-      function cfn_idx_get_r(sv,sid,nid,index)                          
+      function cfn_idx_get_r(sv,sid,nid,index)
 
 ! description:
 ! ------------------------------------------------------------------------------
-! find the index number of the value sv in array sid                    
-! search method is binary search                                        
+! find the index number of the value sv in array sid
+! search method is binary search
 
 
 ! declaration section
@@ -7914,18 +7914,18 @@ end
 
 
 ! function declaration
-      integer   cfn_idx_get_r   ! return value: #: number of found      
-                                !                  matched elements     
+      integer   cfn_idx_get_r   ! return value: #: number of found
+                                !                  matched elements
 
 
 ! arguments
-      integer   index,&         ! (O) return index number               
-                                !     the index number is the first     
-                                !     matched value in array sid        
-                nid             ! (I) number of elements in sid array   
+      integer   index,&         ! (O) return index number
+                                !     the index number is the first
+                                !     matched value in array sid
+                nid             ! (I) number of elements in sid array
 
-      real      sv,&            ! (I) value to be searched in sid       
-                sid(nid)        ! (I) values array                      
+      real      sv,&            ! (I) value to be searched in sid
+                sid(nid)        ! (I) values array
 
 
 ! local variables
@@ -8036,12 +8036,12 @@ end
 
 ! ******************************************************************************
 
-      function cfn_idx_get_d(sv,sid,nid,index)                          
+      function cfn_idx_get_d(sv,sid,nid,index)
 
 ! description:
 ! ------------------------------------------------------------------------------
-! find the index number of the value sv in array sid                    
-! search method is binary search                                        
+! find the index number of the value sv in array sid
+! search method is binary search
 
 
 ! declaration section
@@ -8051,19 +8051,19 @@ end
 
 
 ! function declaration
-      integer   cfn_idx_get_d   ! return value: #: number of found      
-                                !                  matched elements     
+      integer   cfn_idx_get_d   ! return value: #: number of found
+                                !                  matched elements
 
 
 ! arguments
-      integer   index,&         ! (O) return index number               
-                                !     the index number is the first     
-                                !     matched value in array sid        
-                nid             ! (I) number of elements in sid array   
+      integer   index,&         ! (O) return index number
+                                !     the index number is the first
+                                !     matched value in array sid
+                nid             ! (I) number of elements in sid array
 
-      double precision &                                                  
-                sv,&            ! (I) value to be searched in sid       
-                sid(nid)        ! (I) values array                      
+      double precision &
+                sv,&            ! (I) value to be searched in sid
+                sid(nid)        ! (I) values array
 
 
 ! local variables
@@ -8153,12 +8153,12 @@ end
 
 ! ******************************************************************************
 
-      function cfn_idx_get_c(sv,lsv,sid,lsid,nid,index)                 
+      function cfn_idx_get_c(sv,lsv,sid,lsid,nid,index)
 
 ! description:
 ! ------------------------------------------------------------------------------
-! find the index number of the value sv in array sid                    
-! search method is binary search                                        
+! find the index number of the value sv in array sid
+! search method is binary search
 
 ! declaration section
 ! ------------------------------------------------------------------------------
@@ -8167,20 +8167,20 @@ end
 
 
 ! function declaration
-      integer   cfn_idx_get_c   ! return value: #: number of found      
-                                !                  matched elements     
+      integer   cfn_idx_get_c   ! return value: #: number of found
+                                !                  matched elements
 
 
 ! arguments
-      integer   index,&         ! (O) return index number               
-                                !     the index number is the first     
-                                !     matched value in array sid        
-                nid,&           ! (I) number of elements in sid array   
-                lsv,&           ! (I) number of characters of sv        
-                lsid            ! (I) number of characters of sid       
+      integer   index,&         ! (O) return index number
+                                !     the index number is the first
+                                !     matched value in array sid
+                nid,&           ! (I) number of elements in sid array
+                lsv,&           ! (I) number of characters of sv
+                lsid            ! (I) number of characters of sid
 
-      character sv(lsv)*1,&     ! (I) value to be searched in sid       
-                sid(lsid,nid)*1 ! (I) values array                      
+      character sv(lsv)*1,&     ! (I) value to be searched in sid
+                sid(lsid,nid)*1 ! (I) values array
 
 
 ! local variables
@@ -8281,12 +8281,12 @@ end
 
 ! ******************************************************************************
 
-      function cfn_fidx_i(sv,sid,nid)                                   
+      function cfn_fidx_i(sv,sid,nid)
 
 ! description:
 ! ------------------------------------------------------------------------------
-! find the first index number of the value sv in array sid              
-! search method is binary search                                        
+! find the first index number of the value sv in array sid
+! search method is binary search
 
 ! declaration section
 ! ------------------------------------------------------------------------------
@@ -8295,15 +8295,15 @@ end
 
 
 ! function declaration
-      integer   cfn_fidx_i      ! return value: >0: first index found   
-                                !                0: value not found     
+      integer   cfn_fidx_i      ! return value: >0: first index found
+                                !                0: value not found
 
 
 ! arguments
-      integer   nid             ! (I) number of elements in sid array   
+      integer   nid             ! (I) number of elements in sid array
 
-      integer   sv,&            ! (I) value to be searched in sid       
-                sid(nid)        ! (I) values array                      
+      integer   sv,&            ! (I) value to be searched in sid
+                sid(nid)        ! (I) values array
 
       logical   continue
 
@@ -8374,12 +8374,12 @@ end
 
 ! ******************************************************************************
 
-      function cfn_fidx_r(sv,sid,nid)                                   
+      function cfn_fidx_r(sv,sid,nid)
 
 ! description:
 ! ------------------------------------------------------------------------------
-! find the first index number of the value sv in array sid              
-! search method is binary search                                        
+! find the first index number of the value sv in array sid
+! search method is binary search
 
 ! declaration section
 ! ------------------------------------------------------------------------------
@@ -8388,15 +8388,15 @@ end
 
 
 ! function declaration
-      integer   cfn_fidx_r      ! return value: >0: first index found   
-                                !                0: value not found     
+      integer   cfn_fidx_r      ! return value: >0: first index found
+                                !                0: value not found
 
 
 ! arguments
-      integer   nid             ! (I) number of elements in sid array   
+      integer   nid             ! (I) number of elements in sid array
 
-      real      sv,&            ! (I) value to be searched in sid       
-                sid(nid)        ! (I) values array                      
+      real      sv,&            ! (I) value to be searched in sid
+                sid(nid)        ! (I) values array
 
 
 ! local variables
@@ -8468,12 +8468,12 @@ end
 
 ! ******************************************************************************
 
-      function cfn_fidxrev_r(sv,sid,nid)                                   
+      function cfn_fidxrev_r(sv,sid,nid)
 
 ! description:
 ! ------------------------------------------------------------------------------
-! find the first index number of the value sv in array sid              
-! search method is binary search                                        
+! find the first index number of the value sv in array sid
+! search method is binary search
 ! array SID is ordered in reverse order
 
 ! declaration section
@@ -8483,15 +8483,15 @@ end
 
 
 ! function declaration
-      integer   cfn_fidxrev_r   ! return value: >0: first index found   
-                                !                0: value not found     
+      integer   cfn_fidxrev_r   ! return value: >0: first index found
+                                !                0: value not found
 
 
 ! arguments
-      integer   nid             ! (I) number of elements in sid array   
+      integer   nid             ! (I) number of elements in sid array
 
-      real      sv,&            ! (I) value to be searched in sid       
-                sid(nid)        ! (I) values array                      
+      real      sv,&            ! (I) value to be searched in sid
+                sid(nid)        ! (I) values array
 
 
 ! local variables
@@ -8563,12 +8563,12 @@ end
 
 ! ******************************************************************************
 
-      function cfn_fidxnear_r(sv,sid,nid)                                   
+      function cfn_fidxnear_r(sv,sid,nid)
 
 ! description:
 ! ------------------------------------------------------------------------------
 ! find the index number of the value sv in array sid which is nearest
-! search method is binary search                                        
+! search method is binary search
 ! SID may be in ascending or descending order
 
 ! declaration section
@@ -8578,15 +8578,15 @@ end
 
 
 ! function declaration
-      integer   cfn_fidxnear_r  ! return value: >0: first index found   
-                                !                0: value not found     
+      integer   cfn_fidxnear_r  ! return value: >0: first index found
+                                !                0: value not found
 
 
 ! arguments
-      integer   nid             ! (I) number of elements in sid array   
+      integer   nid             ! (I) number of elements in sid array
 
-      real      sv,&            ! (I) value to be searched in sid       
-                sid(nid)        ! (I) values array                      
+      real      sv,&            ! (I) value to be searched in sid
+                sid(nid)        ! (I) values array
 
 
 ! local variables
@@ -8677,12 +8677,12 @@ end
 
 ! ******************************************************************************
 
-      function cfn_fidxlow_r(sv,sid,nid)                                   
+      function cfn_fidxlow_r(sv,sid,nid)
 
 ! description:
 ! ------------------------------------------------------------------------------
 ! Find the first InDeX number in real array sid from which the value is within the interval [sv,...]
-! search method is binary search                                        
+! search method is binary search
 ! SID must be in ascending order
 
 ! declaration section
@@ -8692,15 +8692,15 @@ end
 
 
 ! function declaration
-      integer   cfn_fidxlow_r    ! return value: >0: found index number  
-                                 !                0: value not found     
+      integer   cfn_fidxlow_r    ! return value: >0: found index number
+                                 !                0: value not found
 
 
 ! arguments
-      integer   nid             ! (I) number of elements in sid array   
+      integer   nid             ! (I) number of elements in sid array
 
-      real      sv,&            ! (I) value to be searched in sid       
-                sid(nid)        ! (I) values array                      
+      real      sv,&            ! (I) value to be searched in sid
+                sid(nid)        ! (I) values array
 
 
 ! local variables
@@ -8777,12 +8777,12 @@ end
 
 ! ******************************************************************************
 
-      function cfn_fidxupp_r(sv,sid,nid)                                   
+      function cfn_fidxupp_r(sv,sid,nid)
 
 ! description:
 ! ------------------------------------------------------------------------------
 ! Find the last InDeX number in real array sid from which the value is within the interval [...,sv]
-! search method is binary search                                        
+! search method is binary search
 ! SID must be in ascending order
 
 ! declaration section
@@ -8792,15 +8792,15 @@ end
 
 
 ! function declaration
-      integer   cfn_fidxupp_r    ! return value: >0: found index number  
-                                 !                0: value not found     
+      integer   cfn_fidxupp_r    ! return value: >0: found index number
+                                 !                0: value not found
 
 
 ! arguments
-      integer   nid             ! (I) number of elements in sid array   
+      integer   nid             ! (I) number of elements in sid array
 
-      real      sv,&            ! (I) value to be searched in sid       
-                sid(nid)        ! (I) values array                      
+      real      sv,&            ! (I) value to be searched in sid
+                sid(nid)        ! (I) values array
 
 
 ! local variables
@@ -8877,13 +8877,13 @@ end
 
 ! ******************************************************************************
 
-      function cfn_fidxint_r(sv,sid,nid)                                   
+      function cfn_fidxint_r(sv,sid,nid)
 
 ! description:
 ! ------------------------------------------------------------------------------
 ! Find the last InDeX number in real array sid for which sv is element of [sid(idx),sid(idx+1)>
 ! or sv element of [sid(idx),sid(idx+1)] when sid(idx).eq.sid(idx+1)
-! search method is binary search                                        
+! search method is binary search
 ! SID must be in ascending order
 
 ! declaration section
@@ -8893,15 +8893,15 @@ end
 
 
 ! function declaration
-      integer   cfn_fidxint_r    ! return value: >0: found index number  
-                                 !                0: value not found     
+      integer   cfn_fidxint_r    ! return value: >0: found index number
+                                 !                0: value not found
 
 
 ! arguments
-      integer   nid             ! (I) number of elements in sid array   
+      integer   nid             ! (I) number of elements in sid array
 
-      real      sv,&            ! (I) value to be searched in sid       
-                sid(nid)        ! (I) values array                      
+      real      sv,&            ! (I) value to be searched in sid
+                sid(nid)        ! (I) values array
 
 
 ! local variables
@@ -9266,12 +9266,12 @@ end
 
       subroutine modellhs1(PDELR,ORGNCOL,newncol,&
                           IC1,IC2,OC1,OC2,INC,fincr,powr,&
-                          NOMINCELL,NOMaxCELL,lclip)     
+                          NOMINCELL,NOMaxCELL,lclip)
 
 ! description:
 ! ------------------------------------------------------------------------------
-!                                  
-! 
+!
+!
 
 ! declaration section
 ! ------------------------------------------------------------------------------
@@ -9433,7 +9433,7 @@ end
       enddo
 
 
-! when clip option is active (lclip=.true.) 
+! when clip option is active (lclip=.true.)
 ! The outermost active upscaled cell must consist at only 1 unscaled cell!
       if (lclip) then
 
@@ -9473,12 +9473,12 @@ end
 !
 #include "utl.h"
 
-      subroutine osd_chdir(dir)                
+      subroutine osd_chdir(dir)
 
 ! description:
 ! ------------------------------------------------------------------------------
-! change directory                                 
-! 
+! change directory
+!
 
 ! declaration section
 ! ------------------------------------------------------------------------------
@@ -9487,7 +9487,7 @@ end
 
 
 ! arguments
-      character dir*(*)          ! (I)                    
+      character dir*(*)          ! (I)
 
 
 ! local variables
@@ -9506,31 +9506,31 @@ end
 #if   (defined(OSD_CMP_IFORT))
 ! Intel Fortran compiler (DOS)
       call chdir(dir)                                        ! OSD_CMP_IFORT
-      
+
 #elif (defined(OSD_CMP_CVF))
 ! Compaq Visual Fortran (DOS)
       call chdir(dir)                                        ! OSD_CMP_CVF
-      
+
 #elif (defined(OSD_CMP_LF90))
 ! Lahey 90 (DOS)
       call iosdirchange(dir)                                 ! OSD_CMP_LF90
-      
+
 #elif (defined(OSD_CMP_PGF))
 ! Portland Group Fortran (LINUX)
       call chdir(dir)                                        ! OSD_CMP_PGF
-      
+
 #elif (defined(OSD_CMP_IFC))
 ! Intel Fortran (LINUX)
       call chdir(dir)                                        ! OSD_CMP_IFC
-      
+
 #elif (defined(OSD_CMP_GNU))
 ! GNU (...)
       call chdir(dir)                                        ! OSD_CMP_GNU
-      
+
 #elif (defined(OSD_CMP_SUN))
 ! SUN compiler
       call chdir(dir)                                        ! OSD_CMP_SUN
-      
+
 #else
 ! the next line is included to let the compiler crash when no symbol matched
       ERROR, unknown compiler
@@ -9543,12 +9543,12 @@ end
 !
 #include "utl.h"
 
-      function osd_direxists(dir)                
+      function osd_direxists(dir)
 
 ! description:
 ! ------------------------------------------------------------------------------
-! query if a directory exist                                     
-! 
+! query if a directory exist
+!
 
 ! declaration section
 ! ------------------------------------------------------------------------------
@@ -9560,10 +9560,10 @@ end
 
 ! function declaration
       logical    osd_direxists   ! return value: .true. : directory exists
-                                 !               .false.: directory doesn't exist                     
+                                 !               .false.: directory doesn't exist
 
 ! arguments
-      character dir*(*)          ! (I)                    
+      character dir*(*)          ! (I)
 
 
 ! local variables
@@ -9607,19 +9607,19 @@ end
 #elif (defined(OSD_CMP_PGF))
 ! Portland Group Fortran (LINUX)
       inquire(file=dir,exist=lexist,iostat=ios)              ! OSD_CMP_PGF
-            
+
 #elif (defined(OSD_CMP_IFC))
 ! Intel Fortran (LINUX)
       inquire(file=dir,exist=lexist,iostat=ios)              ! OSD_CMP_IFC
-      
+
 #elif (defined(OSD_CMP_GNU))
 ! GNU (...)
       inquire(file=dir,exist=lexist,iostat=ios)              ! OSD_CMP_GNU
-      
+
 #elif (defined(OSD_CMP_SUN))
 ! SUN compiler
       inquire(file=dir,exist=lexist,iostat=ios)              ! OSD_CMP_SUN
-      
+
 #else
 ! the next line is included to let the compiler crash when no symbol matched
       ERROR, unknown compiler
@@ -9634,12 +9634,12 @@ end
 ! end of program
       return
       end
-      function osd_filename(file)                
+      function osd_filename(file)
 
 ! description:
 ! ------------------------------------------------------------------------------
-! translate a file name from one operating system to another           
-! 
+! translate a file name from one operating system to another
+!
 
 ! declaration section
 ! ------------------------------------------------------------------------------
@@ -9648,11 +9648,11 @@ end
 
 
 ! function declaration
-      character osd_filename*(*) ! return value: translated name of 'file' 
+      character osd_filename*(*) ! return value: translated name of 'file'
 
 
 ! arguments
-      character file*(*)         ! (I) file name to be translated           
+      character file*(*)         ! (I) file name to be translated
 
 
 ! local variables
@@ -9688,12 +9688,12 @@ end
 
 ! ******************************************************************************
 
-      subroutine osd_s_filename(file)                                   
+      subroutine osd_s_filename(file)
 
 ! description:
 ! ------------------------------------------------------------------------------
-! translate a file name from one operating system to another             
-! 
+! translate a file name from one operating system to another
+!
 
 ! declaration section
 ! ------------------------------------------------------------------------------
@@ -9702,7 +9702,7 @@ end
 
 
 ! arguments
-      character file*(*)   ! (I/O) file name to be translated            
+      character file*(*)   ! (I/O) file name to be translated
 
 
 ! local variables
@@ -9725,7 +9725,7 @@ end
 ! ------------------------------------------------------------------------------
 
 ! init
-!     OS dependent delimiter: VMS, Unix, DOS, Linux 
+!     OS dependent delimiter: VMS, Unix, DOS, Linux
       osdel=']/'//char(92)//'/'
 
 
@@ -9788,7 +9788,7 @@ end
 ! description:
 ! ------------------------------------------------------------------------------
 ! routine to put a file pointer at a given position
-! 
+!
 
 ! declaration section
 ! ------------------------------------------------------------------------------
@@ -9798,9 +9798,9 @@ end
 
 ! arguments
       integer,   intent(in) :: lun      ! logical unit number
-      integer,   intent(in) :: offset   ! The number of bytes away from 
+      integer,   intent(in) :: offset   ! The number of bytes away from
                                         ! whence to place the pointer
-      integer,   intent(in) :: whence   ! 0: SEEK_SET offset from the 
+      integer,   intent(in) :: whence   ! 0: SEEK_SET offset from the
                                         !             beginning of file
                                         ! 1: SEEK_CUR offset from the current
                                         !             position of the file pointer
@@ -9828,11 +9828,11 @@ end
 #if   (defined(OSD_CMP_IFORT))
 ! Intel Fortran compiler (DOS and LINUX)
       call fseek(lun,offset,whence)                                      ! OSD_CMP_IFORT
-      
+
 #elif (defined(OSD_CMP_CVF))
 ! Compaq Visual Fortran (DOS)
       call fseek(lun,offset,whence)                                      ! OSD_CMP_CVF
-      
+
 #elif (defined(OSD_CMP_LF90))
 ! Lahey 90 (DOS)
       ! IFileSeek is a routine from the Winteracter library
@@ -9841,11 +9841,11 @@ end
 #elif (defined(OSD_CMP_PGF))
 ! Portland Group Fortran (LINUX)
       call fseek(lun,offset,whence)                                      ! OSD_CMP_PGF
-      
+
 #elif (defined(OSD_CMP_IFC))
 ! Intel Fortran (LINUX)
       call fseek(lun,offset,whence)                                      ! OSD_CMP_IFC
-      
+
 #elif (defined(OSD_CMP_GNU))
 ! GNU (...)
 
@@ -9878,7 +9878,7 @@ end
 #elif (defined(OSD_CMP_SUN))
 ! SUN compiler
       call fseek(lun,offset,whence)                                      ! OSD_CMP_SUN
-      
+
 #else
 ! the next line is included to let the compiler crash when no symbol matched
       ERROR, unknown compiler
@@ -9897,7 +9897,7 @@ end
 ! description:
 ! ------------------------------------------------------------------------------
 ! divide a file-identification in directory and name
-! 
+!
 
 ! declaration section
 ! ------------------------------------------------------------------------------
@@ -9989,26 +9989,26 @@ end
 !
 #include "utl.h"
 
-      subroutine osd_fstat(lun,ifstat)                                   
+      subroutine osd_fstat(lun,ifstat)
 
 ! description:
 ! ------------------------------------------------------------------------------
-! get file information                                                   
-!    ifstat( 1): Device on which the file resides                        
-!    ifstat( 2): I-node number of the file                               
-!    ifstat( 3): Protection mode of the file                             
-!    ifstat( 4): Number of hard links to the file                        
-!    ifstat( 5): User  identification of the file's owner                
-!    ifstat( 6): Group identification of the file's owner                
-!    ifstat( 7): Device type of the file if it is a device               
-!    ifstat( 8): Total size of the file in bytes                         
-!    ifstat( 9): Time the file was last accessed                         
-!    ifstat(10): Time the file was last modified                         
-!    ifstat(11): Time the file's status was last changed                 
-!                          /* Times measured in seconds since */         
-!                          /* 00:00:00 UTC, Jan. 1, 1970 */              
-!    ifstat(12): Optimal block size for file system operations           
-!    ifstat(13): actual number of blocks allocated (only Sun??)          
+! get file information
+!    ifstat( 1): Device on which the file resides
+!    ifstat( 2): I-node number of the file
+!    ifstat( 3): Protection mode of the file
+!    ifstat( 4): Number of hard links to the file
+!    ifstat( 5): User  identification of the file's owner
+!    ifstat( 6): Group identification of the file's owner
+!    ifstat( 7): Device type of the file if it is a device
+!    ifstat( 8): Total size of the file in bytes
+!    ifstat( 9): Time the file was last accessed
+!    ifstat(10): Time the file was last modified
+!    ifstat(11): Time the file's status was last changed
+!                          /* Times measured in seconds since */
+!                          /* 00:00:00 UTC, Jan. 1, 1970 */
+!    ifstat(12): Optimal block size for file system operations
+!    ifstat(13): actual number of blocks allocated (only Sun??)
 
 ! declaration section
 ! ------------------------------------------------------------------------------
@@ -10020,7 +10020,7 @@ end
       implicit none
 
 ! arguments
-      integer   lun,&         ! (I) unit number                   
+      integer   lun,&         ! (I) unit number
                 ifstat(13)    ! (O) file information
 
 
@@ -10107,19 +10107,19 @@ end
       call fstat(lun,ifstat)   ! not suer of this routine!!!!
 
 ! order for VisualFortran, idem sun, except from ifstat(13) does not exist
-!      statb(1)      Device the file resides on, W*32, W*64: Always 0 
-!      statb(2)      File inode number         , W*32, W*64: Always 0 
-!      statb(3)      Access mode of the file   , See the table in Results 
-!      statb(4)      Number of hard links to the file, W*32, W*64: Always 1 
-!      statb(5)      User ID of owner          , W*32, W*64: Always 1 
-!      statb(6)      Group ID of owner         , W*32, W*64: Always 1 
-!      statb(7)      Raw device the file resides on , W*32, W*64: Always 0 
+!      statb(1)      Device the file resides on, W*32, W*64: Always 0
+!      statb(2)      File inode number         , W*32, W*64: Always 0
+!      statb(3)      Access mode of the file   , See the table in Results
+!      statb(4)      Number of hard links to the file, W*32, W*64: Always 1
+!      statb(5)      User ID of owner          , W*32, W*64: Always 1
+!      statb(6)      Group ID of owner         , W*32, W*64: Always 1
+!      statb(7)      Raw device the file resides on , W*32, W*64: Always 0
 !      statb(8)      Size of the file          ,
 !      statb(9)      Time when the file was last accessed1,
-!                    W*32, W*64: Only available on non-FAT file systems; undefined on FAT systems 
+!                    W*32, W*64: Only available on non-FAT file systems; undefined on FAT systems
 !      statb(10)      Time when the file was last modified1 ,
-!      statb(11)      Time of last file status change1, W*32, W*64: Same as stat(10) 
-!      statb(12)      Block size for file system I/O operations , W*32, W*64: Always 1 
+!      statb(11)      Time of last file status change1, W*32, W*64: Same as stat(10)
+!      statb(12)      Block size for file system I/O operations , W*32, W*64: Always 1
 #elif (defined(OSD_CMP_CVF) || defined(OSD_CMP_IFORT))
       ios=fstat(lun,ifstat)
 #elif (defined(OSD_CMP_LF90))
@@ -10150,7 +10150,7 @@ end
 ! end of program
       return
       end
-      
+
 !
 #include "utl.h"
 
@@ -10159,7 +10159,7 @@ end
 ! description:
 ! ------------------------------------------------------------------------------
 ! Return the current position of a file
-! 
+!
 
 ! declaration section
 ! ------------------------------------------------------------------------------
@@ -10192,11 +10192,11 @@ end
 #if   (defined(OSD_CMP_IFORT))
 ! Intel Fortran compiler (DOS and LINUX)
       offset=ftell(lun)                                                  ! OSD_CMP_IFORT
-      
+
 #elif (defined(OSD_CMP_CVF))
 ! Compaq Visual Fortran (DOS)
       offset=ftell(lun)...                                               ! OSD_CMP_CVF
-      
+
 #elif (defined(OSD_CMP_LF90))
 ! Lahey 90 (DOS)
       ! IFileSeek is a routine from the Winteracter library
@@ -10206,11 +10206,11 @@ end
 #elif (defined(OSD_CMP_PGF))
 ! Portland Group Fortran (LINUX)
       offset=ftell(lun)                                                  ! OSD_CMP_PGF
-      
+
 #elif (defined(OSD_CMP_IFC))
 ! Intel Fortran (LINUX)
       offset=ftell(lun)                                                  ! OSD_CMP_IFC
-      
+
 #elif (defined(OSD_CMP_GNU))
 ! GNU (...)
       offset=ftell(lun)                                                  ! OSD_CMP_GNU
@@ -10218,7 +10218,7 @@ end
 #elif (defined(OSD_CMP_SUN))
 ! SUN compiler
       offset=ftell(lun)                                                  ! OSD_CMP_SUN
-      
+
 #else
 ! the next line is included to let the compiler crash when no symbol matched
       ERROR, unknown compiler
@@ -10232,12 +10232,12 @@ end
 !
 #include "utl.h"
 
-      subroutine osd_getarg(n,arg)                                     
+      subroutine osd_getarg(n,arg)
 
 ! description:
 ! ------------------------------------------------------------------------------
-! get the n-th argument of the command line                              
-! 
+! get the n-th argument of the command line
+!
 
 ! declaration section
 ! ------------------------------------------------------------------------------
@@ -10246,9 +10246,9 @@ end
 
 
 ! arguments
-      integer   n          ! (I) argument number                       
+      integer   n          ! (I) argument number
 
-      character arg*(*)    ! (O) argument string      
+      character arg*(*)    ! (O) argument string
 
 
 ! local variables
@@ -10293,12 +10293,12 @@ end
 !
 #include "utl.h"
 
-      subroutine osd_getcwd(dirname)                
+      subroutine osd_getcwd(dirname)
 
 ! description:
 ! ------------------------------------------------------------------------------
-! get current working directory name         
-! 
+! get current working directory name
+!
 
 ! declaration section
 ! ------------------------------------------------------------------------------
@@ -10307,7 +10307,7 @@ end
 
 
 ! arguments
-      character dirname*(*)          ! (O) name of current directory                    
+      character dirname*(*)          ! (O) name of current directory
 
 
 ! local variables
@@ -10341,7 +10341,7 @@ end
 
 ! description:
 ! ------------------------------------------------------------------------------
-! query architecture of the machine      
+! query architecture of the machine
 ! output: DOS, LINUX, SUN4SOL2
 
 ! declaration section
@@ -10400,16 +10400,16 @@ end
 
       return
       end
-      
+
 !
 #include "utl.h"
 
-      function osd_iargc()                
+      function osd_iargc()
 
 ! description:
 ! ------------------------------------------------------------------------------
-! query number of command line arguments                                
-! 
+! query number of command line arguments
+!
 
 ! declaration section
 ! ------------------------------------------------------------------------------
@@ -10418,7 +10418,7 @@ end
 
 
 ! function declaration
-      integer    osd_iargc ! return value: number of command line arguments 
+      integer    osd_iargc ! return value: number of command line arguments
 
 
 ! arguments
@@ -10433,7 +10433,7 @@ end
 
 ! functions
 #if   (defined(OSD_CMP_SUN))
-      integer   iargc                 ! sun 
+      integer   iargc                 ! sun
 #elif (defined(OSD_CMP_GNU))
       integer   iargc                 ! gnu
 #elif (defined(OSD_CMP_PGF))
@@ -10459,7 +10459,7 @@ end
 ! ------------------------------------------------------------------------------
 
 #if   (defined(OSD_CMP_SUN))
-      osd_iargc=iargc()               ! sun 
+      osd_iargc=iargc()               ! sun
 #elif (defined(OSD_CMP_GNU))
       osd_iargc=iargc()               ! gnu
 #elif (defined(OSD_CMP_PGF))
@@ -10490,7 +10490,7 @@ end
 ! description:
 ! ------------------------------------------------------------------------------
 ! translate a standard I/O status into an OS dependent code
-! 
+!
 
 ! declaration section
 ! ------------------------------------------------------------------------------
@@ -10587,16 +10587,16 @@ end
 ! end of program
       return
       end
-      
+
 !
 #include "utl.h"
 
-      subroutine osd_mkdir(dir,ios)                                     
+      subroutine osd_mkdir(dir,ios)
 
 ! description:
 ! ------------------------------------------------------------------------------
-! make a new directory which contains a couple of subdirectories               
-! 
+! make a new directory which contains a couple of subdirectories
+!
 
 ! declaration section
 ! ------------------------------------------------------------------------------
@@ -10605,9 +10605,9 @@ end
 
 
 ! arguments
-      integer   ios       ! (O) I/O status                   
+      integer   ios       ! (O) I/O status
 
-      character dir*(*)   ! (I) directory                    
+      character dir*(*)   ! (I) directory
 
 
 ! local variables
@@ -10661,7 +10661,7 @@ end
          comm='mkdir -p '//ldir(1:l)
 #elif (defined(OSD_OS_DOS))
 ! DOS
-         comm='mkdir '//ldir(1:l)
+         comm='mkdir '//'"'//ldir(1:l)//'"'
 #else
 ! the next line is included to let the compiler crash when no symbol matched
       ERROR, unknown compiler
@@ -10691,11 +10691,11 @@ end
 ! end of program
       return
       end
-      
+
 !
 #include "utl.h"
 
-      function osd_open2(lun,arecl,file,opts)                         
+      function osd_open2(lun,arecl,file,opts)
 
 ! description:
 ! ------------------------------------------------------------------------------
@@ -10727,15 +10727,15 @@ end
 
 
 ! function declaration
-      integer   osd_open2   ! return value: I/O-status                 
+      integer   osd_open2   ! return value: I/O-status
 
 
 ! arguments
-      integer   lun,&       ! (I) logical unit number                    
+      integer   lun,&       ! (I) logical unit number
                 arecl       ! (I) length of direct access record in BYTES
 
       character file*(*),&  ! (I) file name
-                opts*(*)    ! (I) options          
+                opts*(*)    ! (I) options
                             !     all options are defined in one string
                             !     separated by a space ' ' or comma ','
 
@@ -10819,7 +10819,7 @@ end
             option(1:l).eq.'LIST' &
             ) then
             carriagecontrol=option               ! *** CARRIAGECONTROL ***
-         else if ( & 
+         else if ( &
             option(1:l).eq.'READONLY' &
             ) then
             ! Unix (Sun): NO
@@ -11080,7 +11080,7 @@ end
 
             else
 
-               ! 
+               !
 
                open(unit=lun,file=file(1:l),iostat=ios,&
                    status=status(1:ls),&
@@ -11123,7 +11123,7 @@ end
 ! description:
 ! ------------------------------------------------------------------------------
 ! rename a file
-! 
+!
 
 ! declaration section
 ! ------------------------------------------------------------------------------
@@ -11163,31 +11163,31 @@ end
 #if   (defined(OSD_CMP_IFORT))
 ! Intel Fortran compiler (DOS and LINUX)
       ios=rename(from,to)                                               ! OSD_CMP_IFORT
-      
+
 #elif (defined(OSD_CMP_CVF))
 ! Compaq Visual Fortran (DOS)
       ERROR, not implemented yet                                                           ! OSD_CMP_CVF
-      
+
 #elif (defined(OSD_CMP_LF90))
 ! Lahey 90 (DOS)
       ERROR, not implemented yet                                                           ! OSD_CMP_LF90
-      
+
 #elif (defined(OSD_CMP_PGF))
 ! Portland Group Fortran (LINUX)
       ios=rename(from,to)                                               ! OSD_CMP_PGF
-      
+
 #elif (defined(OSD_CMP_IFC))
 ! Intel Fortran (LINUX)
       ios=rename(from,to)                                               ! OSD_CMP_IFC
-      
+
 #elif (defined(OSD_CMP_GNU))
 ! GNU (...)
       ios=rename(from,to)                                               ! OSD_CMP_GNU
-      
+
 #elif (defined(OSD_CMP_SUN))
 ! SUN compiler
       ios=rename(from,to)                                               ! OSD_CMP_SUN
-      
+
 #else
 ! the next line is included to let the compiler crash when no symbol matched
       ERROR, unknown compiler
@@ -11201,12 +11201,12 @@ end
 !
 #include "utl.h"
 
-      function osd_rindex(string,substring)                            
+      function osd_rindex(string,substring)
 
 ! description:
 ! ------------------------------------------------------------------------------
-! rindex (last occurrence of a sub string in a string)            
-! 
+! rindex (last occurrence of a sub string in a string)
+!
 
 ! declaration section
 ! ------------------------------------------------------------------------------
@@ -11216,14 +11216,14 @@ end
 
 ! function declaration
       integer     osd_rindex  ! return value:
-                              !      0: sub string not found          
-                              !     >0: start position of 'sub string'     
-                              !         in 'string'                      
+                              !      0: sub string not found
+                              !     >0: start position of 'sub string'
+                              !         in 'string'
 
 
 ! arguments
-      character string*(*),&    ! (I) string in which must be searched  
-                substring*(*)   ! (I) string to search in 'string'       
+      character string*(*),&    ! (I) string in which must be searched
+                substring*(*)   ! (I) string to search in 'string'
 
 
 ! local variables
@@ -11251,7 +11251,7 @@ end
 
 #elif (defined(OSD_CMP_LF90))
       osd_rindex=index(string,substring,.true.)
-      
+
 #else
 ! gnu...
 
@@ -11278,12 +11278,12 @@ end
 !
 #include "utl.h"
 
-      function osd_time()                
+      function osd_time()
 
 ! description:
 ! ------------------------------------------------------------------------------
-! get system clock time in seconds             
-! 
+! get system clock time in seconds
+!
 
 ! declaration section
 ! ------------------------------------------------------------------------------
@@ -11292,7 +11292,7 @@ end
 
 
 ! function declaration
-      integer    osd_time   ! return value: system time in seconds     
+      integer    osd_time   ! return value: system time in seconds
 
 
 ! arguments
@@ -11420,7 +11420,7 @@ end
 
       del=arg(1)
 
-! empty the last part of the variables 
+! empty the last part of the variables
 !c      if (i1.lt.lpar) par(1)((i1+1):lpar)=char(0)
 !c      if (i2.lt.l)    arg(1)((i2+1):l)=char(0)
       if (i1.lt.lpar) it=chf_copy(char(0),1,par(i1+1),lpar-i1)
@@ -11514,7 +11514,7 @@ end
 ! description:
 ! ------------------------------------------------------------------------------
 ! subroutine with trim function
-! 
+!
 
 ! declaration section
 ! ------------------------------------------------------------------------------
@@ -11524,7 +11524,7 @@ end
 
 ! arguments
       integer   larg                       ! (I)   length arg
-      character arg(larg)*1                ! (I/O) string to trim 
+      character arg(larg)*1                ! (I/O) string to trim
 
 
 ! local variables
@@ -11542,8 +11542,8 @@ end
 ! count number of leading spaces
       i=1
 !      do while(i.le.larg .and. arg(i).eq.' ')
-! 20080410 replace above mentioned '.le.' by '.lt.' because of a problem in 
-!          intel visual fortran compiler, whenever the first part is .false. it 
+! 20080410 replace above mentioned '.le.' by '.lt.' because of a problem in
+!          intel visual fortran compiler, whenever the first part is .false. it
 !          still start to evaluate the second part (after .and.) and then gives
 !          an error on boundary check
 !          It is no problem to skip the test of the last element, if it
@@ -11575,7 +11575,7 @@ end
 ! description:
 ! ------------------------------------------------------------------------------
 ! subroutine with trim function
-! 
+!
 
 ! declaration section
 ! ------------------------------------------------------------------------------
@@ -11672,7 +11672,7 @@ end
 ! description:
 ! ------------------------------------------------------------------------------
 ! convert string to uppercase
-! 
+!
 
 ! declaration section
 ! ------------------------------------------------------------------------------
@@ -11724,7 +11724,7 @@ end
 ! description:
 ! ------------------------------------------------------------------------------
 ! convert string to uppercase
-! 
+!
 
 ! declaration section
 ! ------------------------------------------------------------------------------
@@ -11766,7 +11766,7 @@ end
 ! end of program
       return
       end
-      
+
       subroutine cfn_determ(par,ii,rr,ll,cc,n)
 
       implicit none
@@ -11802,7 +11802,7 @@ end
       dquote=quote//quote
 
 
-! determine type 
+! determine type
 ! ------------
       lf=cfn_length(par)
 
@@ -11814,7 +11814,7 @@ end
       if (n.ge.1 .and. n.le.2) then
 ! par is at least a real
          ! the Sun compiler has difficulty reading a 1 character format
-         ! the VAX on the other hand has no difficulty at all reading in a 
+         ! the VAX on the other hand has no difficulty at all reading in a
          ! 1 character number via a 2 character format.
          ! that is why the 1 character number gets a different treatment
          if (lf.eq.1) then
@@ -11887,12 +11887,12 @@ end
 
 ! ******************************************************************************
 
-      function cfn_determ_type(string)                                  
+      function cfn_determ_type(string)
 
 ! description:
 ! ------------------------------------------------------------------------------
-! determine the type of a string                                   
-! 
+! determine the type of a string
+!
 
 ! declaration section
 ! ------------------------------------------------------------------------------
@@ -11901,15 +11901,15 @@ end
 
 
 ! function declaration
-      integer   cfn_determ_type   ! return value: 1: integer           
-                                  !               2: real              
-                                  !               3: logical           
-                                  !               4: 'character'       
-                                  !               5: character         
+      integer   cfn_determ_type   ! return value: 1: integer
+                                  !               2: real
+                                  !               3: logical
+                                  !               4: 'character'
+                                  !               5: character
 
 
 ! arguments
-      character string*(*)        ! (I) string to test      
+      character string*(*)        ! (I) string to test
 
 
 ! local variables
@@ -11942,12 +11942,12 @@ end
 
 ! ******************************************************************************
 
-      function cfn_determ_type2(string,lstring)                         
+      function cfn_determ_type2(string,lstring)
 
 ! description:
 ! ------------------------------------------------------------------------------
-! determine the type of a string                                   
-! 
+! determine the type of a string
+!
 
 ! declaration section
 ! ------------------------------------------------------------------------------
@@ -11956,29 +11956,29 @@ end
 
 
 ! function declaration
-      integer   cfn_determ_type2  ! return value: 1: integer           
-                                  !               2: real              
-                                  !               3: logical           
-                                  !               4: 'character'       
-                                  !               5: character         
+      integer   cfn_determ_type2  ! return value: 1: integer
+                                  !               2: real
+                                  !               3: logical
+                                  !               4: 'character'
+                                  !               5: character
 
 
 ! arguments
-      integer   lstring           ! (I) number of characters in the 
-                                  !     string to test                            
-                                  !     LET OP!                           
-                                  !     ALL characters take part in the    
-                                  !     test, so 'trailing' spaces and 
-                                  !     null-characters too!!!                 
+      integer   lstring           ! (I) number of characters in the
+                                  !     string to test
+                                  !     LET OP!
+                                  !     ALL characters take part in the
+                                  !     test, so 'trailing' spaces and
+                                  !     null-characters too!!!
 
-      character string(lstring)*1 ! (I) string to test              
+      character string(lstring)*1 ! (I) string to test
 
 
 ! local variables
-      integer   arr1(0:8),&  ! array to settle 0123456789 
-                arr2(0:8),&  ! array to settle +-         
-                arr3(0:8),&  ! array to settle .          
-                arr4(0:8),&  ! array to settle eEdD       
+      integer   arr1(0:8),&  ! array to settle 0123456789
+                arr2(0:8),&  ! array to settle +-
+                arr3(0:8),&  ! array to settle .
+                arr4(0:8),&  ! array to settle eEdD
                 arr5(0:8),&  ! array to convert w to type
                 i,w
 
@@ -12065,7 +12065,7 @@ end
          else
             w=8
          endif
-      enddo                  
+      enddo
 
 
 ! convert w from 0...8 to 1...5
@@ -12084,7 +12084,7 @@ end
 
 ! end of program
       return
-      end       
+      end
 
       function cfn_dat2cen(datum)
 
@@ -12195,7 +12195,7 @@ end
 !c end of program
       return
       end
-      
+
       function cfn_perc_r(array,np,perc)
 
 !c description:
@@ -12252,7 +12252,7 @@ end
 !c end of program
       return
       end
-      
+
       function osd_basename(file,ext)
 
 !c description:
@@ -12343,4 +12343,3 @@ end
 !c end of program
       return
       end
-      
