@@ -2716,13 +2716,12 @@
          write(*,*) 'ERROR. File splitting ipf.'
          stop 1
       end if
-
       call osd_mkdir(dir,ios)
 
-      if (ios.ne.0) then
-         write(*,*) 'ERROR. Creating directory.'
-         stop 1
-      end if
+!      if (ios.ne.0) then
+!         write(*,*) 'ERROR. Creating directory.'
+!         stop 1
+!      end if
 
       end subroutine CreateDir
 
