@@ -1741,6 +1741,38 @@ KLOOP: DO K=1,SIZE(TOPICS(JJ)%STRESS(1)%FILES,1)
    BOT(ILAY)%X(ICOL,IROW)=MIN(TOP(ILAY)%X(ICOL,IROW),BOT(ILAY)%X(ICOL,IROW))
 !   BOT(ILAY)%X(ICOL,IROW)=MIN(TOP(ILAY)%X(ICOL,IROW)-MINTHICKNESS  ,BOT(ILAY)%X(ICOL,IROW))
   ENDDO; ENDDO; ENDDO
+
+!## figure out how to come up with something to correct permeability later for minimal thicknesses
+!  DO ILAY=1,NLAY
+!   IF(BND(ILAY)%X(ICOL,IROW).EQ.0)CYCLE
+!   !## minimal aquifer thickness
+!   D=TOP(ILAY)%X(ICOL,IROW)-BOT(ILAY)%X(ICOL,IROW)
+!   !## correct whenever minimal thickness requirement is not met
+!   IF(D.LT.MINTHICKNESS)THEN
+!    !## get current available transmissivity
+!    KD=KHV(ICOL,IROW,ILAY)*D
+!    KV=KVA(ICOL,IROW,ILAY)*D
+!    !## assign new bottom
+!    D=MINTHICKNESS; BOT(ICOL,IROW,ILAY)=TOP(ICOL,IROW,ILAY)-D
+!    !## correct rest of interval that are within current adjusted interval and compute renewed permeability
+!    DO JLAY=ILAY+1,NLAY
+!    
+!     T1=MAX(TOP(ICOL,IROW,JLAY),BOT(ICOL,IROW,ILAY))
+!     B1=MAX(BOT(ICOL,IROW,JLAY),BOT(ICOL,IROW,ILAY))
+!    
+!     !## add available thickness of underlying modellayer, if positive
+!     D=T1-B1
+!         
+!     KD=KD+KHV(ICOL,IROW,JLAY)*D
+!     KV=KV+KVA(ICOL,IROW,JLAY)*D
+!     TOP(ICOL,IROW,JLAY)=MIN(TOP(ICOL,IROW,JLAY),BOT(ICOL,IROW,ILAY))
+!     BOT(ICOL,IROW,JLAY)=MIN(BOT(ICOL,IROW,JLAY),BOT(ICOL,IROW,ILAY))
+!    ENDDO
+!    KHV(ICOL,IROW,ILAY)=KD/MINTHICKNESS
+!    KVA(ICOL,IROW,ILAY)=KV/MINTHICKNESS
+!   ENDIF
+!  ENDDO
+
   !## apply consistency check constant head and top/bot
   DO IROW=1,IDF%NROW; DO ICOL=1,IDF%NCOL; DO ILAY=1,NLAY
    IF(BND(ILAY)%X(ICOL,IROW).LT.0)THEN

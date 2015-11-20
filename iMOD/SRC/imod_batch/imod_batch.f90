@@ -3818,9 +3818,10 @@ CONTAINS
  READ(LINE,*) FUNC
  FUNC=UTL_CAP(FUNC,'U'); WRITE(*,'(A)') 'FUNC='//TRIM(FUNC)
 
- !## exclude functions, they are within brackets "("
- I=INDEX(FUNC,'('); I=MAX(I,1)
-
+! !## exclude functions, they are within brackets "("
+! I=INDEX(FUNC,'('); I=MAX(I,1)
+ I=1
+ 
  IG(1)=INDEX(FUNC(I:),'A')
  IG(2)=INDEX(FUNC(I:),'B')
  IG(3)=INDEX(FUNC(I:),'C')
