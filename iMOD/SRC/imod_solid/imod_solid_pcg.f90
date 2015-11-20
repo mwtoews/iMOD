@@ -1136,6 +1136,7 @@ CONTAINS
     
     !## skip lines that do not need to be processed
     IF(SPF(ISPF)%PROF(ILAY)%IACTIVE.EQ.0)CYCLE
+    IF(SPF(ISPF)%PROF(ILAY)%NPOS.LE.0)CYCLE
     
     !## get max. length
     DX=0.0
@@ -1149,19 +1150,21 @@ CONTAINS
     IF(LSPLINE)THEN
      !## create spline-points
      N=SPF(ISPF)%PROF(ILAY)%NPOS
-     DX=SPF(ISPF)%PROF(ILAY)%PX(N)-SPF(ISPF)%PROF(ILAY)%PX(1)
-     M=CEILING(DX/SOLIDF(ILAY)%DX)+1
-     ALLOCATE(XI(M),ZI(M)); XI=0.0; ZI=0.0
-     X1=SPF(ISPF)%PROF(ILAY)%PX(1)-SOLIDF(ILAY)%DX; M=0
-     DO
-      X1=X1+SOLIDF(ILAY)%DX; M=M+1
-      IF(X1.GE.SPF(ISPF)%PROF(ILAY)%PX(N))EXIT
-      XI(M)=X1
-     ENDDO   
-     XI(M)=SPF(ISPF)%PROF(ILAY)%PX(N)
+     IF(N.GT.1)THEN
+      DX=SPF(ISPF)%PROF(ILAY)%PX(N)-SPF(ISPF)%PROF(ILAY)%PX(1)
+      M=CEILING(DX/SOLIDF(ILAY)%DX)+1
+      ALLOCATE(XI(M),ZI(M)); XI=0.0; ZI=0.0
+      X1=SPF(ISPF)%PROF(ILAY)%PX(1)-SOLIDF(ILAY)%DX; M=0
+      DO
+       X1=X1+SOLIDF(ILAY)%DX; M=M+1
+       IF(X1.GE.SPF(ISPF)%PROF(ILAY)%PX(N))EXIT
+       XI(M)=X1
+      ENDDO   
+      XI(M)=SPF(ISPF)%PROF(ILAY)%PX(N)
      !## spline line
 !     CALL SPLINE_MAIN(SPF(ISPF)%PROF(ILAY)%PX,SPF(ISPF)%PROF(ILAY)%PZ,SPF(ISPF)%PROF(ILAY)%NPOS,XI,ZI,M)
-     CALL SPLINE_AKIMA_MAIN(SPF(ISPF)%PROF(ILAY)%PX,SPF(ISPF)%PROF(ILAY)%PZ,SPF(ISPF)%PROF(ILAY)%NPOS,XI,ZI,M)  
+      CALL SPLINE_AKIMA_MAIN(SPF(ISPF)%PROF(ILAY)%PX,SPF(ISPF)%PROF(ILAY)%PZ,SPF(ISPF)%PROF(ILAY)%NPOS,XI,ZI,M)  
+     ENDIF
     ENDIF
        
     !## intersect/interpolate all segments of cross-section
@@ -1195,8 +1198,7 @@ CONTAINS
      ENDDO
       
     ENDDO
-
-    IF(SPF(ISPF)%PROF(ILAY)%NPOS.LE.0)CYCLE
+    
     !## process each pos()
     IF(LSPLINE)THEN
      PX=>XI; PZ=>ZI

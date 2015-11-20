@@ -615,7 +615,7 @@ CONTAINS
   
  ELSE
 
-  RUN=TRIM(PREFVAL(8)(I:))//' '//'IMODFLOW.RUN'
+  RUN=TRIM(PREFVAL(8))//' '//'IMODFLOW.RUN'
 
   IFLAGS=PROCBLOCKED
  !## executes on commandtool such that commands alike 'dir' etc. works
