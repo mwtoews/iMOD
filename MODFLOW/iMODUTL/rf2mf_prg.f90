@@ -1657,6 +1657,7 @@ logical :: lnamfile, lrfopt
 character(len=256) :: dxcfile, runfile, namfile, ext, cdum
 integer :: i, n, ivcl, iarg, ios, lun, osd_open2
 integer, dimension(2) :: rfopt
+character(len=256) :: cwrk
 
 lipest = .false.
 lmfroot = .false.
@@ -1679,7 +1680,16 @@ call cfn_vcl_fndc(ivcl,iarg,'-wd',.true.,root%modeldir,1)
 
 ! check if user has specified -run(file)
 call cfn_vcl_fndc(ivcl,iarg,'-run*file',.true.,runfile,1)
-if (iarg.gt.0) lrunfile = .true.
+if (iarg.gt.0) then
+   lrunfile = .true.
+   if (runfile(1:1).eq.'"') then
+      cwrk = record 
+      i = index(cwrk,trim(runfile))
+      cwrk = cwrk(i+1:)
+      i = index(cwrk,'"')
+      write(runfile,'(a)') cwrk(1:i-1)
+   end if   
+end if
 
 ! check if user has specified -runfileopt
 lrfopt = .false.; rfopt = -1
@@ -1688,7 +1698,16 @@ if (iarg.gt.0) lrfopt = .true.
 
 ! check if user has specified -nam(file)
 call cfn_vcl_fndc(ivcl,iarg,'-nam*file',.true.,namfile,1)
-if (iarg.gt.0) lnamfile = .true.
+if (iarg.gt.0) then
+   lnamfile = .true.
+   if (namfile(1:1).eq.'"') then
+      cwrk = record 
+      i = index(cwrk,trim(namfile))
+      cwrk = cwrk(i+1:)
+      i = index(cwrk,'"')
+      write(namfile,'(a)') cwrk(1:i-1)
+   end if   
+end if
 
 call cfn_vcl_fndc(ivcl,iarg,'-dxc*file',.true.,dxcfile,1)
 

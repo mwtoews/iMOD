@@ -147,9 +147,9 @@ implicit none
  if (lrunfile .or. lnamfile) then ! run-file or nam-file
     usemodflow=.true.
     modrecord=''
-    if (lnamfile) write(modrecord,'(a,1x,a)') '-namfile',trim(infile)
+    if (lnamfile) write(modrecord,'(a,1x,3a)') '-namfile','"',trim(infile),'"'
     if (lrunfile) then
-       write(modrecord,'(a,1x,a)') '-runfile',trim(infile)
+       write(modrecord,'(a,1x,3a)') '-runfile','"',trim(infile),'"'
        if (narg.eq.3) then ! runfile options
           call cfn_vcl_arg(ivcl,2,rfopt,n)
           write(modrecord,'(a,1x,a,1x,a)') trim(modrecord),'-rfopt',trim(rfopt)
