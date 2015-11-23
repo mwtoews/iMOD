@@ -24,10 +24,13 @@ MODULE MOD_PLINES_TRACE
 
 USE WINTERACTER
 USE RESOURCE
+USE OPENGL
+USE MODPLOT, ONLY : MPW
 USE MOD_ASC2IDF_PAR, ONLY : IDFFILE,IGRIDFUNC,CS,NODATA,XYZFNAMES,IXCOL,IYCOL,IZCOL
 USE MOD_ASC2IDF, ONLY : ASC2IDF_INT_MAIN
 USE MOD_PREF_PAR, ONLY : PREFVAL
-USE MOD_UTL, ONLY : ITOS,UTL_GETUNIT,RTOS,JD,UTL_IDATETOJDATE,UTL_WAITMESSAGE,UTL_IDFGETDATE,UTL_CAP,UTL_GETUNIQUE_CHAR,UTL_CREATEDIR
+USE MOD_UTL, ONLY : ITOS,UTL_GETUNIT,RTOS,JD,UTL_IDATETOJDATE,UTL_WAITMESSAGE,UTL_IDFGETDATE,UTL_CAP, &
+           UTL_GETUNIQUE_CHAR,UTL_CREATEDIR,UTL_IDFSNAPTOGRID
 USE MOD_IDF, ONLY : IDFREAD,IDFDEALLOCATEX,IDFALLOCATEX,IDFWRITE,IDFIROWICOL
 USE MOD_PLINES_PAR
 USE MOD_PLINES_READ, ONLY : TRACEREADBLOCK_R,TRACEREADBLOCK_I 
@@ -37,6 +40,128 @@ USE MOD_OSD, ONLY : OSD_OPEN,OSD_IOSTAT_MSG
 
 CONTAINS
 
+ !###======================================================================
+ LOGICAL FUNCTION TRACE_3D_INIT(RUNFILE)
+ !###======================================================================
+ IMPLICIT NONE
+ CHARACTER(LEN=*),INTENT(IN) :: RUNFILE
+ 
+ TRACE_3D_INIT=.FALSE.
+ 
+ !## deallocate all memory
+ CALL TRACEDEALLOCATE(1)
+
+ !## read runfile
+ IF(.NOT.TRACEREADRUNFILE(RUNFILE))RETURN
+
+ !## take head for determination model-dimensions
+ IF(.NOT.IDFREAD(IDF,HFFNAME(1,1,1),0))RETURN
+ !## define zoom area for particle tracking - overrule area
+ IDF%XMIN=MPW%XMIN; IDF%XMAX=MPW%XMAX; IDF%YMIN=MPW%YMIN; IDF%YMAX=MPW%YMAX
+ CALL UTL_IDFSNAPTOGRID(IDF%XMIN,IDF%XMAX,IDF%YMIN,IDF%YMAX,IDF%DX,IDF%NCOL,IDF%NROW)
+ 
+ !## read data 
+ IF(.NOT.TRACECALC_INIT(0))RETURN
+ 
+ ALLOCATE(IVISIT(IDF%NCOL*IDF%NROW*NLAY)); IVISIT=INT(0,1)
+ ALLOCATE(LVISIT(IDF%NCOL*IDF%NROW*MIN(2,NLAY))); LVISIT=0
+
+ !## maximal number of particles to be traced
+ NPART=1000; CALL TRACEALPART()
+ 
+ TRACE_3D_INIT=.TRUE.
+ 
+ END FUNCTION TRACE_3D_INIT
+ 
+ !###======================================================================
+ LOGICAL FUNCTION TRACE_3D_STARTPOINTS() 
+ !###======================================================================
+ IMPLICIT NONE
+
+ !## get new location/particle - click from the 3d tool
+ 
+! DO I=1,NPART
+!  READ(JU,'(3I10,4(F15.3,1X))') KLC(I),ILC(I),JLC(I),XLC(I,2),YLC(I,2),ZLC(I,2),ZLL(I,2)
+!  !## initial age set to zero!
+!  TOT(I,2)=0.0
+! END DO
+!
+! !## store startlocations!
+! XLC(:,1)=XLC(:,2)
+! YLC(:,1)=YLC(:,2)
+! ZLC(:,1)=ZLC(:,2)
+! SLAY    =KLC
+! MAXILAY =SLAY
+ 
+ END FUNCTION TRACE_3D_STARTPOINTS
+ 
+ !###======================================================================
+ LOGICAL FUNCTION TRACE_3D_COMPUTE() 
+ !###======================================================================
+ IMPLICIT NONE
+ INTEGER :: I,IPART,IDSCH
+ REAL :: TIME,TTMAX,MAXVELOCITY
+ 
+ TRACE_3D_COMPUTE=.FALSE.
+
+ !## maximal time of simulation - equal to refreshing rate or something to be trickered by the 3d tool
+ MAXVELOCITY=0.0
+ TTMAX=TMAX
+ 
+ !## wellicht slim om niet met drawniglst te werken .. hoe gaat dat dan grafisch. Je klikt op een locatie dan gaat er wat stromen
+ !## maar dat stop op een eggeven moment, er komt niks meer bij. Dan kun je met een slider terug in de tijd, dat kan alleen met een 
+ !## drawinglist, bijhouden hoeveel punten er bij komen, want daarna hoeft er geen nieuwe drwinglijst mee rbij te kokmen
+ !## reset knop om wee rleeg te beginnen, op menu vooruit of achteruit en maximale tijd? dus:
+ 
+ !## wel drawing list --- instellen op stapgrootte ... bijvoorbeedl 1 jaar  (in te stellen wellicht)
+ 
+! !## open drawing list per timestep/call
+! IF(IDFLISTINDEX(ILST).NE.0)CALL GLDELETELISTS(IDFLISTINDEX(ILST),1_GLSIZEI)
+! !## list index for,  !## start new drawing list
+! IDFLISTINDEX(ILST)=GLGENLISTS(1); CALL GLNEWLIST(IDFLISTINDEX(ILST),GL_COMPILE)
+ 
+ CALL GLBEGIN(GL_POINTS)
+
+ DO IPART=1,NPART
+  !## time in days
+  TIME=TOT(IPART,2)
+  !## trace selected particle, NOT YET discharged!
+  IF(KLC(IPART).NE.0)THEN
+   CALL FLOLIN(IPART,IMODE(1),TIME,TTMAX,IDSCH,JLC(IPART),ILC(IPART),KLC(IPART),   &
+               XLC(IPART,2),YLC(IPART,2),ZLC(IPART,2),ZLL(IPART,2),IBOUND,ZBOT, &
+               ZTOP,LDELR,LDELC,QX,QY,QZ,QSS,POR,NCON,IDF%NCOL,IDF%NROW,NLAY,  &
+               NLPOR,IDF%NCOL*IDF%NROW*NLAY,NCP1,NRP1,NLP1,ISNK,IREV,FRAC,IMODE(1),   &
+               ISS,MAXVELOCITY,DELX,DELY,MAXILAY(IPART),IVISIT,LVISIT,NVISIT)
+
+   !## clean visited places that have been visited before
+   DO I=1,NVISIT; IVISIT(LVISIT(I))=INT(0,1); ENDDO
+
+   !## time in days!
+   TOT(IPART,2)=TIME 
+   IF(TOT(IPART,2).GE.TTMAX)IDSCH=7
+   !## particle discharged whenever idsch.ne.0
+   IF(IDSCH.NE.0)KLC(IPART)=0
+  ENDIF
+ ENDDO
+
+ CALL GLEND()
+ CALL GLENDLIST()
+
+ TRACE_3D_COMPUTE=.TRUE.
+ 
+ END FUNCTION TRACE_3D_COMPUTE
+
+ !###======================================================================
+ SUBROUTINE TRACE_3D_CLOSE
+ !###======================================================================
+ IMPLICIT NONE
+
+ !## deallocate memory
+ CALL TRACEDEALLOCATE(0)
+ DEALLOCATE(IVISIT,LVISIT)
+ 
+ END SUBROUTINE TRACE_3D_CLOSE
+ 
  !###======================================================================
  LOGICAL FUNCTION TRACEMAIN(RUNFILE,IBATCH,ICONVERTGEN)
  !###======================================================================
@@ -52,13 +177,33 @@ CONTAINS
  !## read runfile
  IF(TRACEREADRUNFILE(RUNFILE))THEN
   !## trace particles
-  IF(TRACECALC(IBATCH,ICONVERTGEN))TRACEMAIN=.TRUE.
+  IF(TRACE_CALC(IBATCH,ICONVERTGEN))TRACEMAIN=.TRUE.
  ENDIF
   
  END FUNCTION TRACEMAIN
-
+ 
  !###======================================================================
- LOGICAL FUNCTION TRACECALC(IBATCH,ICONVERTGEN)
+ LOGICAL FUNCTION TRACECALC_INIT(IBATCH)
+ !###======================================================================
+ IMPLICIT NONE
+ INTEGER,INTENT(IN) :: IBATCH
+ INTEGER :: NCONS
+ 
+ TRACECALC_INIT=.FALSE.
+
+ !## allocate space
+ CALL TRACEAL()
+ !## create cell-sizes (cell-borders expressed in x,y-coordinates)
+ CALL TRACEDELRC()
+ !##read information-for particle tracking
+ IF(.NOT.TRACEDATIN(NCONS,IBATCH))RETURN
+ 
+ TRACECALC_INIT=.TRUE.
+ 
+ END FUNCTION TRACECALC_INIT
+ 
+ !###======================================================================
+ LOGICAL FUNCTION TRACE_CALC(IBATCH,ICONVERTGEN)
  !###======================================================================
  IMPLICIT NONE
  INTEGER,INTENT(IN) :: IBATCH,ICONVERTGEN
@@ -66,12 +211,10 @@ CONTAINS
  CHARACTER(LEN=1000) :: STRING
  REAL :: TIME,TTMAX,DT,MAXVELOCITY
  TYPE(WIN_MESSAGE) :: MESSAGE
- INTEGER :: I,J,ILAY,ITYPE,IPER,IPART,NCONS,IPERIOD,NIDSCH,IDSCH,IWIN,IP,IRAT,IRAT1,DPER,MPER,SPER,NVISIT
+ INTEGER :: I,J,ILAY,ITYPE,IPER,IPART,NCONS,IPERIOD,NIDSCH,IDSCH,IWIN,IP,IRAT,IRAT1,DPER,MPER,SPER
  LOGICAL :: LEX
- INTEGER(KIND=1),DIMENSION(:),ALLOCATABLE :: IVISIT
- INTEGER,DIMENSION(:),ALLOCATABLE :: LVISIT
  
- TRACECALC=.FALSE.
+ TRACE_CALC=.FALSE.
 
  IULOG=UTL_GETUNIT()
  IF(IBATCH.EQ.1)THEN
@@ -81,19 +224,13 @@ CONTAINS
  ENDIF
 
  !## take head for determination model-dimensions
- IF(.NOT.IDFREAD(IDF,HFFNAME(1,1,1),0))RETURN
-
- CLOSE(IDF%IU)
- !## allocate space
- CALL TRACEAL()
- !## create cell-sizes (cell-borders expressed in x,y-coordinates)
- CALL TRACEDELRC()
- !##read information-for particle tracking
- IF(.NOT.TRACEDATIN(NCONS,IBATCH))RETURN
+ IF(.NOT.IDFREAD(IDF,HFFNAME(1,1,1),0))RETURN; CLOSE(IDF%IU)
+ 
+ IF(.NOT.TRACECALC_INIT(IBATCH))RETURN
  
  ALLOCATE(IVISIT(IDF%NCOL*IDF%NROW*NLAY)); IVISIT=INT(0,1)
  ALLOCATE(LVISIT(IDF%NCOL*IDF%NROW*MIN(2,NLAY))); LVISIT=0
- 
+
  DO ISPFNAME=1,NSPFNAME
 
   !## read/process particles towards readable format
@@ -310,9 +447,9 @@ CONTAINS
  
  CLOSE(IULOG)
 
- TRACECALC=.TRUE.
+ TRACE_CALC=.TRUE.
 
- END FUNCTION TRACECALC
+ END FUNCTION TRACE_CALC
 
  !###======================================================================
  SUBROUTINE TRACECONVERTTOGEN(FNAME) 
