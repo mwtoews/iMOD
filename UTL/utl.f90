@@ -2763,13 +2763,6 @@ end
 
       lstring = cfn_length(string)
 
-! replace '"' for ''' otherwise it will not work properly
-      DO
-       I=INDEX(STRING,'"')
-       IF(I.EQ.0)EXIT
-       STRING(I:I)='''' !CHAR()
-      ENDDO
-
 ! assign function value
       cfn_n_elem = cfn_n_elem2(st,as,string,lstring)
 
