@@ -26,7 +26,8 @@ INTEGER,DIMENSION(2) :: IDPROC
 
 REAL,PARAMETER :: PI=ATAN(1.0)*4.0  !##value pi
 
-CHARACTER(LEN=30),PARAMETER :: RVERSION='V3_2_0'
+CHARACTER(LEN=30),PARAMETER :: RVERSION='V3_2'    !## release message - only with single subnummers
+CHARACTER(LEN=30),PARAMETER :: BVERSION='V3_2_00' !## banner message - no characters !!!
 CHARACTER(LEN=32) :: LICFILE='I_accepted_'//TRIM(RVERSION)//'.txt'
 CHARACTER(LEN=256) :: IMFFNAME         !##name of drawing file
 CHARACTER(LEN=256) :: EXENAME,EXEPATH
