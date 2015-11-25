@@ -123,8 +123,11 @@ CONTAINS
   ISEL_IDF(ILAY)  =SLD(1)%ICLC(ILAY)
   ICHECK_IDF(ILAY)=SLD(1)%ICHECK(ILAY)
  ENDDO
- !## check always from imodbatch
- IF(IBATCH.EQ.1)ICHECK_IDF=1
+ !## check always from imodbatch, turn smoothing off
+ IF(IBATCH.EQ.1)THEN
+  ICHECK_IDF=1
+  LSMOOTH=.FALSE.
+ ENDIF
  
  !## process all idf's (starting heads) + crosssections (fixed heads/ghb-heads)
  IF(.NOT.SOLID_CALC_FILL())RETURN
@@ -261,12 +264,12 @@ CONTAINS
 
     ENDIF  
     
-    !## copy PCG()%HOLD(ilay)->PCG()%HOLD(ilay+1)
-    IF(NSPF.EQ.0)THEN
-     DO IROW=1,SOLIDF(ILAY)%NROW; DO ICOL=1,SOLIDF(ILAY)%NCOL
-      IF(PCG(ILAY)%IB(ICOL,IROW).GT.0)PCG(ILAY+1)%HOLD(ICOL,IROW)=PCG(ILAY)%HOLD(ICOL,IROW)
-     ENDDO; ENDDO
-    ENDIF
+!    !## copy PCG()%HOLD(ilay)->PCG()%HOLD(ilay+1)
+!    IF(NSPF.EQ.0)THEN
+!     DO IROW=1,SOLIDF(ILAY)%NROW; DO ICOL=1,SOLIDF(ILAY)%NCOL
+!      IF(PCG(ILAY)%IB(ICOL,IROW).GT.0)PCG(ILAY+1)%HOLD(ICOL,IROW)=PCG(ILAY)%HOLD(ICOL,IROW)
+!     ENDDO; ENDDO
+!    ENDIF
 
    !## apply kriging; do not take too much points along cross-sections for the computation of a semivariogram solely
    ELSEIF(IKRIGING.EQ.2)THEN
@@ -371,19 +374,19 @@ CONTAINS
    ENDDO
   ENDIF
       
-  !## make sure top/bot are equal outside boundary=1 (hypothethical) or boundary=-2 (cross-section)
-  IF(NSPF.EQ.0)THEN
-   DO ILAY=3,NLAY-1,2
-    DO IROW=1,SOLIDF(ILAY)%NROW; DO ICOL=1,SOLIDF(ILAY)%NCOL
-     !## get current x/y location
-     CALL IDFGETLOC(SOLIDF(ILAY),IROW,ICOL,X,Y)
-     CALL IDFIROWICOL(SOLIDF(ILAY-1),JROW,JCOL,X,Y)
-     IF(JROW.NE.0.AND.JCOL.NE.0)THEN
-      IF(PCG(ILAY-1)%IB(JCOL,JROW).EQ.1.OR.PCG(ILAY-1)%IB(JCOL,JROW).EQ.-2)PCG(ILAY)%HOLD(ICOL,IROW)=PCG(ILAY-1)%HOLD(JCOL,JROW)
-     ENDIF
-    ENDDO; ENDDO
-   ENDDO
-  ENDIF
+!  !## make sure top/bot are equal outside boundary=1 (hypothethical) or boundary=-2 (cross-section)
+!  IF(NSPF.EQ.0)THEN
+!   DO ILAY=3,NLAY-1,2
+!    DO IROW=1,SOLIDF(ILAY)%NROW; DO ICOL=1,SOLIDF(ILAY)%NCOL
+!     !## get current x/y location
+!     CALL IDFGETLOC(SOLIDF(ILAY),IROW,ICOL,X,Y)
+!     CALL IDFIROWICOL(SOLIDF(ILAY-1),JROW,JCOL,X,Y)
+!     IF(JROW.NE.0.AND.JCOL.NE.0)THEN
+!      IF(PCG(ILAY-1)%IB(JCOL,JROW).EQ.1.OR.PCG(ILAY-1)%IB(JCOL,JROW).EQ.-2)PCG(ILAY)%HOLD(ICOL,IROW)=PCG(ILAY-1)%HOLD(JCOL,JROW)
+!     ENDIF
+!    ENDDO; ENDDO
+!   ENDDO
+!  ENDIF
 
 !  !## connect layers using the mask values
 !  ELSE
