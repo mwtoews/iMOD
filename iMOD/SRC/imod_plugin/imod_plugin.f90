@@ -767,7 +767,8 @@ CONTAINS
  
  !## If stop command is available in *.OUT file
  CALL WMESSAGEBOX(YESNO,QUESTIONICON,COMMONYES,'The '//TRIM(PNAME)//' plugin is running!'//CHAR(13)//CHAR(13)// &
-  'This will be terminated if you close iMOD.'//CHAR(13)//'Are you sure you want to exit iMOD?','QUESTION')    
+  'This will be terminated* if you close iMOD.'//CHAR(13)//'* only whenever the plugin is not redirecting'//CHAR(13)// &
+  'Are you sure you want to exit iMOD?','QUESTION')
  IF(WINFODIALOG(EXITBUTTONCOMMON).EQ.1)THEN
   I=INFOERROR(LASTERROR)
 #if (defined(WINTERACTER9))

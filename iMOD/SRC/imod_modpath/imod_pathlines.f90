@@ -31,7 +31,7 @@ USE MOD_UTL, ONLY : JD,UTL_GETUNIT,ITOS,RTOS,UTL_MESSAGEHANDLE,UTL_GDATE,UTL_JDA
      UTL_IMODFILLMENU,UTL_WSELECTFILE,UTL_CLOSEUNITS
 USE DATEVAR
 USE MOD_PLINES_PAR
-USE MOD_PLINES_TRACE, ONLY : TRACEMAIN,TRACEDEALLOCATE
+USE MOD_PLINES_TRACE, ONLY : TRACEMAIN,TRACEDEALLOCATE,TRACE_3D_INIT
 USE IMODVAR
 USE IMOD
 USE MOD_OSD, ONLY : OSD_OPEN
@@ -1252,6 +1252,43 @@ CONTAINS
 
  END SUBROUTINE PLINES1INIT
 
+ !###======================================================================
+ SUBROUTINE PLINES1_3DINIT()
+ !###======================================================================
+ IMPLICIT NONE
+ INTEGER :: N
+ CHARACTER(LEN=256) :: RUNFNAME
+ 
+ CALL WINDOWSELECT(0)
+ IF(WMENUGETSTATE(ID_INTERACTIVEPATHLINES,2).EQ.1)THEN
+  CALL PLINES1_3DCLOSE(); RETURN
+ ENDIF
+
+ IF(.NOT.UTL_WSELECTFILE('iMODPATH runfile (*.run)|*.run|', &
+                  LOADDIALOG+PROMPTON+DIRCHANGE+APPENDEXT, &
+                  RUNFNAME,'Select iMODPATH runfile (*.run)'))RETURN
+ 
+ !## read runfile
+ IF(.NOT.TRACE_3D_INIT(RUNFNAME))RETURN
+ !## put files into manager
+ 
+ !## call 3d tool
+ 
+ CALL WMENUSETSTATE(ID_INTERACTIVEPATHLINES,2,1)
+
+ END SUBROUTINE PLINES1_3DINIT
+
+ !###======================================================================
+ SUBROUTINE PLINES1_3DCLOSE()
+ !###======================================================================
+ IMPLICIT NONE
+ INTEGER :: N
+
+ CALL WINDOWSELECT(0)
+ CALL WMENUSETSTATE(ID_INTERACTIVEPATHLINES,2,0)
+ 
+ END SUBROUTINE PLINES1_3DCLOSE
+ 
  !###======================================================================
  SUBROUTINE PLINES1CLOSE()
  !###======================================================================

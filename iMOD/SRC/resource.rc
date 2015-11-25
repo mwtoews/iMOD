@@ -8,7 +8,7 @@
 //
 // Winteracter resource script. 
 //
-// Modified : 23/Nov/2015 21:10:06
+// Modified : 25/Nov/2015 21:27:02
 //
 ///////////////////////////////////////////////////
 //
@@ -1040,6 +1040,7 @@
 #define ID_SAVEAS_DEMO                  40266
 #define ID_ICONFLIPCOLOUR_90             2143
 #define ID_DGEF                           348
+#define ID_INTERACTIVEPATHLINES         40267
 
 ///////////////////////////////////////////////////
 //
@@ -8762,7 +8763,7 @@ BEGIN
     CONTROL "DD",ID_RIGHT,"BUTTON",WS_CHILD | WS_VISIBLE | WS_GROUP | WS_TABSTOP | BS_PUSHBUTTON | BS_TEXT | BS_BITMAP | BS_FLAT,  177,   76,   16,   14
     CONTROL "DD",ID_LEFT,"BUTTON",WS_CHILD | WS_VISIBLE | WS_GROUP | WS_TABSTOP | BS_PUSHBUTTON | BS_TEXT | BS_BITMAP | BS_FLAT,  177,   94,   16,   14
     CONTROL "",IDF_MENU2,"LISTBOX",WS_CHILD | WS_VISIBLE | WS_BORDER | WS_VSCROLL | WS_HSCROLL | WS_TABSTOP | LBS_NOTIFY | LBS_HASSTRINGS | LBS_USETABSTOPS | LBS_EXTENDEDSEL,  199,   76,  156,   92
-    CONTROL "",IDF_GROUP1,"BUTTON",WS_CHILD | WS_VISIBLE | WS_GROUP | BS_GROUPBOX | BS_TEXT | BS_LEFT,    8,    4,  358,  168
+    CONTROL "",IDF_GROUP1,"BUTTON",WS_CHILD | WS_VISIBLE | WS_GROUP | BS_GROUPBOX | BS_TEXT | BS_LEFT,    8,    4,  357,  168
     CONTROL "String",IDF_STRING1,"EDIT",WS_CHILD | WS_VISIBLE | WS_VSCROLL | WS_GROUP | WS_TABSTOP | ES_LEFT | ES_MULTILINE,   16,   14,  340,   54
 END
 
@@ -9466,6 +9467,7 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "&Define Startpoints ...",                  ID_SPOINTS
         MENUITEM "Start Pathline &Simulation ...",           ID_PATHLINES
+        MENUITEM "&Interactive Pathline Simulator ...",      ID_INTERACTIVEPATHLINES
         MENUITEM SEPARATOR
         MENUITEM "Compute &Water Balance ...",               ID_WBAL
         MENUITEM "Compute &GxG ...",                         ID_GXG
@@ -9676,6 +9678,7 @@ ID_PLUGIN8,"Calls plugin executable within iMOD\0",
 ID_PLUGIN9,"Calls plugin executable within iMOD\0",
 ID_PLUGIN10,"Calls plugin executable within iMOD\0",
 ID_MANAGE_PLUGIN1,"Start the iMOD Plugin Manager window to manage the specific plug-inn executable settings\0",
+ID_INTERACTIVEPATHLINES,"Start the 3-D Tool with an interactive display for particle simulation\0",
 0
 END
 
@@ -10242,5 +10245,5 @@ END
 //*WI* FORTSAVE    1
 //*WI* FILENAME    resource.f90
 //*WI* FMODNAME    RESOURCE
-//*WI* LASTTYPE        2
-//*WI* LASTRES        38
+//*WI* LASTTYPE        1
+//*WI* LASTRES         7
