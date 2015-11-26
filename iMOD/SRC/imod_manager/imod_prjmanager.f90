@@ -3301,6 +3301,7 @@ KLOOP: DO K=1,SIZE(TOPICS(JJ)%STRESS(1)%FILES,1)
 
    CALL ASC2IDF_INT_GETFACES(IDF,IDF%NROW,IDF%NCOL,IPC,IDF%FNAME)
   ENDDO
+  CALL PMANAGER_SAVEMF2005_HFBEXPORT(IPC,IDF%NROW,IDF%NCOL,FCT)
  ENDDO
  
 ! !## read/clip/scale idf file
@@ -3310,6 +3311,100 @@ KLOOP: DO K=1,SIZE(TOPICS(JJ)%STRESS(1)%FILES,1)
  DEALLOCATE(IPC)
  
  END FUNCTION PMANAGER_SAVEMF2005_HFB
+ 
+ !###====================================================================
+ SUBROUTINE PMANAGER_SAVEMF2005_HFBEXPORT(IPC,NROW,NCOL,HFBFCT) !,IUHFB,JUHFB,NHFB,ILAY,JLINE)
+ !###====================================================================
+! USE BASVAR, ONLY : DELR,DELC,CC,TOP,BOT
+! USE GLBVAR, ONLY : MMOD,PHFB,PTOP,PBOT,IEXPORT
+ IMPLICIT NONE
+ INTEGER,INTENT(IN) :: NROW,NCOL !,IUHFB,JUHFB,JLINE,ILAY
+! INTEGER,INTENT(INOUT) :: NHFB
+ REAL,INTENT(IN) :: HFBFCT
+ INTEGER(KIND=1),INTENT(IN),DIMENSION(NCOL,NROW,2) :: IPC
+! INTEGER :: IROW,ICOL,I
+! REAL :: FCT,DZ,DX,DY,C,T1,T2,CR
+!
+! I=0
+! DO IROW=1,NROW; DO ICOL=1,NCOL
+!
+!  !## place vertical wall
+!  IF(IPC(ICOL,IROW,1).EQ.INT(1,1))THEN
+!   IF(ICOL.LT.NCOL)THEN
+!    NHFB=NHFB+1
+!
+!    !## reconstruct to a factor to be multiplied with the conductance, input is a resistance
+!    T1=KD(ICOL,IROW,ILAY); T2=KD(ICOL+1,IROW,ILAY)
+!    IF(T1.GT.0.0.AND.T2.GT.0.0)THEN
+!     CR=2.0*T2*T1*(DELC(IROW-1)-DELC(IROW))/(T1*(DELR(ICOL+1)-DELR(ICOL))+T2*(DELR(ICOL)-DELR(ICOL-1)))
+!     DX=(DELR(ICOL+1)-DELR(ICOL-1))/2.0
+!     DY= DELC(IROW-1)-DELC(IROW)
+!     DZ= 0.5*(TOP(ICOL,IROW,ILAY)-BOT(ICOL,IROW,ILAY))+0.5*(TOP(ICOL+1,IROW,ILAY)-BOT(ICOL+1,IROW,ILAY))
+!     IF(DZ.GT.0.0)THEN
+!      C = DX*(CR/(DY*DZ))
+!      FCT=C/HFBFCT
+!      !## not to become less than original
+!      FCT=MIN(1.0,FCT)
+!     ELSE
+!      FCT=1.0
+!     ENDIF
+!    ELSE
+!     FCT=1.0
+!    ENDIF
+!   ELSE
+!    FCT=HFBFCT
+!   ENDIF
+!   WRITE(IUHFB,'(4I10,G10.4,I10)') IROW,ICOL,IROW,ICOL+1,FCT,JLINE !## x-direction
+!  ENDIF
+!
+!  !## place horizontal wall
+!  IF(IPC(ICOL,IROW,2).EQ.INT(1,1))THEN
+!   IF(IROW.LT.NROW)THEN
+!    NHFB=NHFB+1
+!
+!    T1=KD(ICOL,IROW,ILAY); T2=KD(ICOL,IROW+1,ILAY)
+!    IF(T1.GT.0.0.AND.T2.GT.0.0)THEN
+!     CR=2.0*T2*T1*(DELR(ICOL)-DELR(ICOL-1))/(T1*(DELC(IROW)-DELC(IROW+1))+T2*(DELC(IROW-1)-DELC(IROW)))
+!     DX= DELR(ICOL)-DELR(ICOL-1)
+!     DY=(DELC(IROW-1)-DELC(IROW+1))/2.0
+!     DZ= 0.5*(TOP(ICOL,IROW,ILAY)-BOT(ICOL,IROW,ILAY))+0.5*(TOP(ICOL,IROW+1,ILAY)-BOT(ICOL,IROW+1,ILAY))
+!     IF(DZ.GT.0.0)THEN
+!      C = DY*(CR/(DX*DZ))
+!      FCT=C/HFBFCT
+!      !## not to become less than original
+!      FCT=MIN(1.0,FCT)
+!     ELSE
+!      FCT=1.0
+!     ENDIF
+!    ELSE
+!     FCT=1.0
+!    ENDIF
+!   ELSE
+!    FCT=HFBFCT
+!   ENDIF
+!   WRITE(IUHFB,'(4I10,G10.4,I10)') IROW,ICOL,IROW+1,ICOL,FCT,JLINE !## y-direction 
+!  ENDIF
+! 
+!!  !## place vertical wall
+!!  IF(IPC(ICOL,IROW,1).EQ.INT(1,1).AND.ICOL.LT.NCOL)THEN
+!!   I=I+1
+!!   WRITE(JUHFB,'(2I10)') I,JLINE
+!!   WRITE(JUHFB,'(2(F10.2,A1))') DELR(ICOL),',',DELC(IROW-1)
+!!   WRITE(JUHFB,'(2(F10.2,A1))') DELR(ICOL),',',DELC(IROW)
+!!   WRITE(JUHFB,'(A)') 'END'
+!!  ENDIF
+!!  !## place horizontal wall
+!!  IF(IPC(ICOL,IROW,2).EQ.INT(1,1).AND.IROW.LT.NROW)THEN
+!!   I=I+1
+!!   WRITE(JUHFB,'(2I10)') I,JLINE
+!!   WRITE(JUHFB,'(2(F10.2,A1))') DELR(ICOL-1),',',DELC(IROW)
+!!   WRITE(JUHFB,'(2(F10.2,A1))') DELR(ICOL  ),',',DELC(IROW)
+!!   WRITE(JUHFB,'(A)') 'END'
+!!  ENDIF
+!!
+! ENDDO; ENDDO
+
+ END SUBROUTINE PMANAGER_SAVEMF2005_HFBEXPORT
  
  !###======================================================================
  LOGICAL FUNCTION PMANAGER_SAVEMF2005_MOD(IDF,ITOPIC,IPER,ISYS,ILAY,SCL_D,SCL_U,HNOFLOW,IINV) 

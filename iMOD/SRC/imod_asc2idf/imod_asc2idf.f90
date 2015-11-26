@@ -733,7 +733,9 @@ CONTAINS
    IF(.NOT.IDFREADSCALE(FNAME,IDF(2),2,1,0.0,0))RETURN 
    NP=IDF(1)%NCOL*IDF(1)%NROW; CALL ASC2IDF_INT_RESIZEVECTORS(NP,0)
    NP=0; DO IROW=1,IDF(1)%NROW; DO ICOL=1,IDF(1)%NCOL
-    NP=NP+1; CALL IDFGETLOC(IDF(1),IROW,ICOL,XP(NP),YP(NP)); ZP(NP)=IDF(1)%X(ICOL,IROW); WP(NP)=1.0
+    IF(IDF(2)%X(ICOL,IROW).NE.IDF(2)%NODATA)THEN 
+     NP=NP+1; CALL IDFGETLOC(IDF(2),IROW,ICOL,XP(NP),YP(NP)); ZP(NP)=IDF(2)%X(ICOL,IROW); WP(NP)=1.0
+    ENDIF
    ENDDO; ENDDO
 
   !## gen file (intersect)
@@ -857,70 +859,70 @@ CONTAINS
 
  END SUBROUTINE ASC2IDF_INT_GETFACES
 
-!###====================================================================
-SUBROUTINE ASC2IDF_INT_GETFACES_HFB(IC1,IC2,IR1,IR2,IP1,IP2,IPC,NROW,NCOL)
-!###====================================================================
-IMPLICIT NONE
-INTEGER,INTENT(IN) :: IC1,IC2,IR1,IR2,IP1,IP2
-INTEGER,INTENT(IN) :: NROW,NCOL
-INTEGER(KIND=1),INTENT(INOUT),DIMENSION(NCOL,NROW,2) :: IPC
-INTEGER,DIMENSION(2) :: JPC,JPR,JC,JR,JP
-INTEGER :: I,IC,IR
+ !###====================================================================
+ SUBROUTINE ASC2IDF_INT_GETFACES_HFB(IC1,IC2,IR1,IR2,IP1,IP2,IPC,NROW,NCOL)
+ !###====================================================================
+ IMPLICIT NONE
+ INTEGER,INTENT(IN) :: IC1,IC2,IR1,IR2,IP1,IP2
+ INTEGER,INTENT(IN) :: NROW,NCOL
+ INTEGER(KIND=1),INTENT(INOUT),DIMENSION(NCOL,NROW,2) :: IPC
+ INTEGER,DIMENSION(2) :: JPC,JPR,JC,JR,JP
+ INTEGER :: I,IC,IR
 
-JC(1)=IC1; JC(2)=IC2
-JR(1)=IR1; JR(2)=IR2
-JP(1)=IP1; JP(2)=IP2
+ JC(1)=IC1; JC(2)=IC2
+ JR(1)=IR1; JR(2)=IR2
+ JP(1)=IP1; JP(2)=IP2
 
-DO I=1,2
- IF(JP(I).EQ.2.OR.JP(I).EQ.3)JPC(I)=JC(I)
- IF(JP(I).EQ.1.OR.JP(I).EQ.4)JPC(I)=JC(I)-1
- IF(JP(I).EQ.1.OR.JP(I).EQ.2)JPR(I)=JR(I)-1
- IF(JP(I).EQ.3.OR.JP(I).EQ.4)JPR(I)=JR(I)
-ENDDO
+ DO I=1,2
+  IF(JP(I).EQ.2.OR.JP(I).EQ.3)JPC(I)=JC(I)
+  IF(JP(I).EQ.1.OR.JP(I).EQ.4)JPC(I)=JC(I)-1
+  IF(JP(I).EQ.1.OR.JP(I).EQ.2)JPR(I)=JR(I)-1
+  IF(JP(I).EQ.3.OR.JP(I).EQ.4)JPR(I)=JR(I)
+ ENDDO
 
-!## do nothing, is similar point
-IF(JPR(1).EQ.JPR(2).AND.JPC(1).EQ.JPC(2))RETURN
+ !## do nothing, is similar point
+ IF(JPR(1).EQ.JPR(2).AND.JPC(1).EQ.JPC(2))RETURN
 
-!## do nothing whenever jpc.eq.0 or jpr.eq.0
-IF(JPC(1).EQ.0.OR.JPC(2).EQ.0)RETURN
-IF(JPR(1).EQ.0.OR.JPR(2).EQ.0)RETURN
+ !## do nothing whenever jpc.eq.0 or jpr.eq.0
+ IF(JPC(1).EQ.0.OR.JPC(2).EQ.0)RETURN
+ IF(JPR(1).EQ.0.OR.JPR(2).EQ.0)RETURN
 
-!## horizontal fault ipc(,,1)=1
-IF(JPR(1).EQ.JPR(2).AND.JPC(1).NE.JPC(2))THEN
- IC=MAX(JPC(1),JPC(2)); IR=JPR(1); IPC(IC,IR,2)=INT(1,1)
-ENDIF
-!## vertical fault ipc(,,2)=1
-IF(JPC(1).EQ.JPC(2).AND.JPR(1).NE.JPR(2))THEN
- IC=JPC(1); IR=MAX(JPR(1),JPR(2)); IPC(IC,IR,1)=INT(1,1)
-ENDIF
-!## diagonal, add two faults
-IF(JPR(1).NE.JPR(2).AND.JPC(1).NE.JPC(2))THEN
- !## goto to the west
- IF(JPC(1).GT.JPC(2))THEN
-  !## goto to the north-west
-  IF(JPR(1).GT.JPR(2))THEN
-   IC=MIN(JPC(1),JPC(2)); IR=MAX(JPR(1),JPR(2)); IPC(IC,IR,1)=INT(1,1) !## vertical
-   IC=MAX(JPC(1),JPC(2)); IR=MAX(JPR(1),JPR(2)); IPC(IC,IR,2)=INT(1,1) !## horizontal
-  !## goto to the south-west
+ !## horizontal fault ipc(,,1)=1
+ IF(JPR(1).EQ.JPR(2).AND.JPC(1).NE.JPC(2))THEN
+  IC=MAX(JPC(1),JPC(2)); IR=JPR(1); IPC(IC,IR,2)=INT(1,1)
+ ENDIF
+ !## vertical fault ipc(,,2)=1
+ IF(JPC(1).EQ.JPC(2).AND.JPR(1).NE.JPR(2))THEN
+  IC=JPC(1); IR=MAX(JPR(1),JPR(2)); IPC(IC,IR,1)=INT(1,1)
+ ENDIF
+ !## diagonal, add two faults
+ IF(JPR(1).NE.JPR(2).AND.JPC(1).NE.JPC(2))THEN
+  !## goto to the west
+  IF(JPC(1).GT.JPC(2))THEN
+   !## goto to the north-west
+   IF(JPR(1).GT.JPR(2))THEN
+    IC=MIN(JPC(1),JPC(2)); IR=MAX(JPR(1),JPR(2)); IPC(IC,IR,1)=INT(1,1) !## vertical
+    IC=MAX(JPC(1),JPC(2)); IR=MAX(JPR(1),JPR(2)); IPC(IC,IR,2)=INT(1,1) !## horizontal
+   !## goto to the south-west
+   ELSE
+    IC=MIN(JPC(1),JPC(2)); IR=MAX(JPR(1),JPR(2)); IPC(IC,IR,1)=INT(1,1) !## vertical
+    IC=MAX(JPC(1),JPC(2)); IR=MIN(JPR(1),JPR(2)); IPC(IC,IR,2)=INT(1,1) !## horizontal
+   ENDIF
+  !## goto to the east
   ELSE
-   IC=MIN(JPC(1),JPC(2)); IR=MAX(JPR(1),JPR(2)); IPC(IC,IR,1)=INT(1,1) !## vertical
-   IC=MAX(JPC(1),JPC(2)); IR=MIN(JPR(1),JPR(2)); IPC(IC,IR,2)=INT(1,1) !## horizontal
-  ENDIF
- !## goto to the east
- ELSE
-  !## goto to the north-east
-  IF(JPR(1).GT.JPR(2))THEN
-   IC=MIN(JPC(1),JPC(2)); IR=MAX(JPR(1),JPR(2)); IPC(IC,IR,1)=INT(1,1) !## vertical
-   IC=MAX(JPC(1),JPC(2)); IR=MIN(JPR(1),JPR(2)); IPC(IC,IR,2)=INT(1,1) !## horizontal   
-  !## goto to the south-east
-  ELSE
-   IC=MIN(JPC(1),JPC(2)); IR=MAX(JPR(1),JPR(2)); IPC(IC,IR,1)=INT(1,1) !## vertical
-   IC=MAX(JPC(1),JPC(2)); IR=MAX(JPR(1),JPR(2)); IPC(IC,IR,2)=INT(1,1) !## horizontal  
+   !## goto to the north-east
+   IF(JPR(1).GT.JPR(2))THEN
+    IC=MIN(JPC(1),JPC(2)); IR=MAX(JPR(1),JPR(2)); IPC(IC,IR,1)=INT(1,1) !## vertical
+    IC=MAX(JPC(1),JPC(2)); IR=MIN(JPR(1),JPR(2)); IPC(IC,IR,2)=INT(1,1) !## horizontal   
+   !## goto to the south-east
+   ELSE
+    IC=MIN(JPC(1),JPC(2)); IR=MAX(JPR(1),JPR(2)); IPC(IC,IR,1)=INT(1,1) !## vertical
+    IC=MAX(JPC(1),JPC(2)); IR=MAX(JPR(1),JPR(2)); IPC(IC,IR,2)=INT(1,1) !## horizontal  
+   ENDIF
   ENDIF
  ENDIF
-ENDIF
 
-END SUBROUTINE ASC2IDF_INT_GETFACES_HFB
+ END SUBROUTINE ASC2IDF_INT_GETFACES_HFB
  
  !###======================================================================
  LOGICAL FUNCTION ASC2IDF_INT_GETEXTENT(FNAME,ITYPE)
@@ -978,7 +980,8 @@ END SUBROUTINE ASC2IDF_INT_GETFACES_HFB
   CASE (3)
   
    IF(.NOT.IDFREAD(IDF(1),FNAME,0))RETURN; IU=IDF(1)%IU
-
+   NP=IDF(1)%NROW*IDF(1)%NCOL 
+   
   !## gen-files
   CASE (4)
 
@@ -1051,7 +1054,7 @@ END SUBROUTINE ASC2IDF_INT_GETFACES_HFB
  
  !## make sure vector is equal to entered abs(n)
  IF(DN.EQ.0)THEN
-  MM=N; NN=N; IF(NN.EQ.SIZE(XP))RETURN
+  MM=N; NN=N; IF(NN.EQ.SIZE(XP))RETURN; NN=SIZE(XP)
  ELSE 
   NN=SIZE(XP); IF(N.LE.NN)RETURN; MM=NN+DN
  ENDIF
@@ -1063,7 +1066,7 @@ END SUBROUTINE ASC2IDF_INT_GETFACES_HFB
  ZP_DUMMY=0.0
  WP_DUMMY=0.0
 
- DO I=1,NN
+ DO I=1,MIN(MM,NN)
   XP_DUMMY(I)=XP(I)
   YP_DUMMY(I)=YP(I)
   ZP_DUMMY(I)=ZP(I)

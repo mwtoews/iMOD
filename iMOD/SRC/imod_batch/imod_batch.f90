@@ -3391,7 +3391,7 @@ CONTAINS
   WRITE(*,'(A,F10.2)') 'IMIDELEV=',FMIDELEV
   !## include top/bottom in interpolation
   IF(UTL_READINITFILE('IINT_IDF',LINE,IU,1))READ(LINE,*) IINT_IDF
-  WRITE(*,'(A,F10.2)') 'IINT_IDF=',IINT_IDF
+  WRITE(*,'(A,I1)') 'IINT_IDF=',IINT_IDF
 !  !## level of attachment
 !  IF(UTL_READINITFILE('ATTACH',LINE,IU,1))READ(LINE,*) ATTACH
 !  WRITE(*,'(A,I1)') 'ATTACH=',ATTACH
