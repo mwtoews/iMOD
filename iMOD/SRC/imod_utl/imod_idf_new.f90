@@ -1992,10 +1992,10 @@ CONTAINS
  IMPLICIT NONE
  TYPE(IDFOBJ),INTENT(INOUT) :: IDF
 
- !##deallocate sx
+ !## deallocate sx
  IF(ASSOCIATED(IDF%SX))DEALLOCATE(IDF%SX)
  NULLIFY(IDF%SX)
- !##deallocate sy
+ !## deallocate sy
  IF(ASSOCIATED(IDF%SY))DEALLOCATE(IDF%SY)
  NULLIFY(IDF%SY)
 

@@ -19,13 +19,13 @@
 !!  Stichting Deltares
 !!  P.O. Box 177
 !!  2600 MH Delft, The Netherlands.
+!!
 MODULE MOD_MATH_SCALE_PAR
 
 USE MOD_IDF_PAR, ONLY : IDFOBJ
 
 REAL,SAVE :: SCLSIZE    !## cellsize
 INTEGER,SAVE :: SCLTYPE_UP,SCLTYPE_DOWN
-!INTEGER,SAVE :: SCLTYPE !## scltype
 !iscale=+1 (upscaling)
 ! WRITE(*,'(1X,A)') ' 1 = special (iboundary)'
 ! WRITE(*,'(1X,A)') ' 2 = arithmetic mean (shead/vcont/s)'
@@ -56,6 +56,8 @@ REAL,SAVE :: QRATE    !## strength of extraction
 REAL,SAVE :: AQFR_KD  !## transmissivity of aquifer
 CHARACTER(LEN=256),DIMENSION(:),ALLOCATABLE :: IDFNAMES,OUTNAMES
 TYPE(IDFOBJ),DIMENSION(:),ALLOCATABLE :: TRIMIDF
+REAL :: KMIN
+INTEGER :: ILGROUP
 
 END MODULE MOD_MATH_SCALE_PAR
 

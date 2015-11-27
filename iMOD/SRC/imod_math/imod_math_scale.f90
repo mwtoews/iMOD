@@ -57,7 +57,7 @@ MODULE MOD_MATH_SCALE
  INTEGER,PARAMETER,PRIVATE :: IDAMPING=1
 
  REAL,ALLOCATABLE,DIMENSION(:,:,:),PRIVATE :: RHS,CC,CR,CV,P,V,SS,CD,HCOF
- REAL,ALLOCATABLE,DIMENSION(:),PRIVATE :: DZ
+ REAL,ALLOCATABLE,DIMENSION(:),PRIVATE :: DZ,TZ
  DOUBLE PRECISION,ALLOCATABLE,DIMENSION(:,:,:),PRIVATE :: HNEW
  INTEGER,ALLOCATABLE,DIMENSION(:,:,:),PRIVATE :: IB
 
@@ -393,9 +393,13 @@ CONTAINS
     !## allocate memory for 3d (pcg)-model
     IF(.NOT.MATH1_SIM_AL(MXNCOL,MXNROW,SIZE(IDFNAMES)+2))RETURN  !## nlay=idfnames+2 (top/bottom)
     !## compute thicknesses
-    DZ=0.0
-    DO ILAY=1,SIZE(IDFNAMES);DZ(ILAY+1)=MATH(ILAY)%TOP-MATH(ILAY)%BOT; ENDDO
-  END SELECT
+    DZ=0.0; TZ=0.0
+    DO ILAY=1,SIZE(IDFNAMES)
+     DZ(ILAY+1)=MATH(ILAY)%TOP-MATH(ILAY)%BOT
+     TZ(ILAY)  =MATH(ILAY)%TOP
+     TZ(ILAY+1)=MATH(ILAY)%BOT
+    ENDDO
+  END SELECT 
  ENDIF
 
  IF(IBATCH.EQ.0)THEN
@@ -421,7 +425,7 @@ CONTAINS
 
    CALL MATH1SCALEREADGETBLOCKVALUE(IR1,IR2,IC1,IC2,BVALUE,TVALUE)
 
-  !## neerschalen alleen voor conductances (riv,drn,ghb,scltype=5)
+   !## scale down for conductances only (riv,drn,ghb,scltype=5)
    IF((SCLTYPE_UP.EQ.5.OR.SCLTYPE_UP.EQ.6).AND.OUTF(1)%DX.LT.MATH(1)%DX)THEN
     RATIO=(OUTF(1)%DX**2.0)/(MATH(1)%DX**2.0)
     BVALUE(1)=BVALUE(1)/RATIO
@@ -534,7 +538,7 @@ CONTAINS
  INTEGER :: I,IROW,ICOL,NAJ,IR,IC,IOFFSET,NROW,NCOL,NLAY,J,ITOP,IBOT
  REAL :: IDFVAL,NVALUE,XTOP,XBOT,X,Y,ZMID
  REAL,DIMENSION(1) :: XTEMP
-
+ 
  BVALUE =0.0 !## bot value
  TVALUE =0.0 !## top value
  NVALUE =0.0
@@ -543,10 +547,6 @@ CONTAINS
   CASE (11,12,13)
    IOFFSET=1
   CASE (14)
-!   NCOL=SIZE(IB,1)
-!   NROW=SIZE(IB,2)
-!   NLAY=SIZE(IB,3)
-!   WRITE(*,*) 'Reading modeldata with size ',NROW,NCOL,NLAY,NCOL*NROW*NLAY
    CC=0.0
    CR=0.0
    CV=0.0
@@ -613,15 +613,15 @@ CONTAINS
  IF(SCLTYPE_UP.EQ.14)THEN
   !## get scaled cc for model area (i-1,i,i+1)   
   ITOP=0; DO I=1,SIZE(MATH); IF(IB(IC,IR,1+I).EQ.1)THEN
-  IF(MATH1GETK_CUBE(I+1,NROW,NCOL).LT.1.0)THEN; XTOP=MATH(I)%TOP; ITOP=I; EXIT; ENDIF
+  IF(MATH1GETK_CUBE(I+1,NROW,NCOL))THEN; XTOP=MATH(I)%TOP; ITOP=I; EXIT; ENDIF
   ENDIF; ENDDO
   IBOT=0; DO I=SIZE(MATH),1,-1; IF(IB(IC,IR,1+I).EQ.1)THEN
-  IF(MATH1GETK_CUBE(I+1,NROW,NCOL).LT.1.0)THEN; XBOT=MATH(I)%BOT; IBOT=I; EXIT; ENDIF
+  IF(MATH1GETK_CUBE(I+1,NROW,NCOL))THEN; XBOT=MATH(I)%BOT; IBOT=I; EXIT; ENDIF
   ENDIF; ENDDO
   IF(ITOP.EQ.0.AND.IBOT.EQ.0)THEN
    XTOP=MATH(1)%NODATA; XBOT=MATH(1)%NODATA
   ELSE
-   IF(ITOP.GE.IBOT)THEN
+   IF(ITOP.GT.IBOT)THEN
     DO I=SIZE(MATH),1,-1; IF(IB(IC,IR,1+I).EQ.1)THEN; XBOT=MATH(I)%BOT; EXIT; ENDIF
     ENDDO; XTOP=XBOT
    ENDIF
@@ -657,7 +657,7 @@ CONTAINS
  END SUBROUTINE MATH1SCALEREADGETBLOCKVALUE
 
  !###====================================================================
- REAL FUNCTION MATH1GETK_CUBE(IM,NROW,NCOL)
+ LOGICAL FUNCTION MATH1GETK_CUBE(IM,NROW,NCOL)
  !###====================================================================
  IMPLICIT NONE
  INTEGER,INTENT(IN) :: IM,NROW,NCOL
@@ -665,19 +665,25 @@ CONTAINS
  REAL :: C
  
  C=0.0; N=0
- DO I=IM-1,IM+1
-  DO IROW=1,SIZE(IB,2)
-   DO ICOL=1,SIZE(IB,1)
+ DO IROW=1,SIZE(IB,2)
+  DO ICOL=1,SIZE(IB,1)
+
+   !## skip mid cells that have values above kmin
+   IF(IB(ICOL,IROW,IM).GT.0.AND.CC(ICOL,IROW,IM).GT.KMIN)CYCLE
+
+   DO I=IM-ILGROUP,IM+ILGROUP
     IF(IB(ICOL,IROW,I).GT.0)THEN
      C=C+CC(ICOL,IROW,I)
      N=N+1
     ENDIF
    ENDDO
+
   ENDDO
  ENDDO
- MATH1GETK_CUBE=-999.99
- IF(N.GT.0)MATH1GETK_CUBE=C/REAL(N)
 
+ MATH1GETK_CUBE=.FALSE.
+ IF(N.GT.0)THEN; IF(C/REAL(N).LT.KMIN)MATH1GETK_CUBE=.TRUE.; ENDIF
+ 
  END FUNCTION MATH1GETK_CUBE
 
  !###====================================================================
@@ -685,12 +691,13 @@ CONTAINS
  !###====================================================================
  IMPLICIT NONE
  INTEGER,INTENT(IN) :: NCOL,NROW,NLAY
- REAL,INTENT(OUT),DIMENSION(3) :: BVALUE,TVALUE
- INTEGER :: ICNVG,ITER1,ITER2,IROW,ICOL,ILAY,NICNVG !,IR,IC
+ REAL,INTENT(OUT),DIMENSION(:) :: BVALUE,TVALUE
+ INTEGER :: ICNVG,ITER1,ITER2,IROW,ICOL,ILAY,NICNVG 
  REAL :: CVT,CT,DXY,NCV,HCHG,HCHGOLD,S,RCHG
  INTEGER :: MICNVG=25
  
  CALL MATH1_SIM_COND(NCOL,NROW,NLAY)
+ 
  NICNVG=0; RELAX=0.98
  DO ITER1=1,MXITER1
   RHS =0.0
@@ -720,11 +727,15 @@ CONTAINS
 
  ENDDO
  
- CALL MATH1_SIM_POSTPROC(NCOL,NROW,NLAY,TVALUE)
+ CALL MATH1_SIM_POSTPROC(NCOL,NROW,NLAY,TVALUE,BVALUE)
 
  !## compute arithmetic values for resistance
  CT =0.0
  DO ILAY=1,NLAY-1
+
+  !## skip outside top/bot
+  IF(TZ(ILAY).GT.TVALUE(4).OR.TZ(ILAY).LT.BVALUE(4))CYCLE
+
   CVT=0.0; NCV=0.0
   DO IROW=1,NROW
    DO ICOL=1,NCOL
@@ -737,40 +748,40 @@ CONTAINS
   ENDDO
   IF(CVT.GT.0.0)THEN
    DXY=NCV*MATH(1)%DX*MATH(1)%DY
-   CT =CT+(1.0/(DXY/CVT))
+   CT =CT+(DXY/CVT) 
   ENDIF
  ENDDO
 
  !## copy values from simulation, since we do not scale for transmissivites
- BVALUE=TVALUE
+ BVALUE(1:2)=TVALUE(1:2)
 
  !## total resistance (days)
  BVALUE(3)=CT
-! !## transform into k=values
-! BVALUE(3)=(MATH(1)%TOP-MATH(SIZE(MATH))%BOT)/BVALUE(3)
  
  END SUBROUTINE MATH1_SIM
 
  !###====================================================================
- SUBROUTINE MATH1_SIM_POSTPROC(NCOL,NROW,NLAY,K)
+ SUBROUTINE MATH1_SIM_POSTPROC(NCOL,NROW,NLAY,TVALUE,BVALUE)
  !###====================================================================
  IMPLICIT NONE
  INTEGER,INTENT(IN) :: NCOL,NROW,NLAY
- REAL,DIMENSION(3),INTENT(OUT) :: K
+ REAL,DIMENSION(:),INTENT(INOUT) :: TVALUE,BVALUE
  INTEGER :: IROW,ICOL,ILAY,I
  DOUBLE PRECISION,DIMENSION(3) :: TQ,DH
  DOUBLE PRECISION :: D,VCZ
- REAL :: KDX,KDY,TC,NH,SQ,DP,A,KV,TZ
-! real :: z
-! type(idfobj) :: idf
+ REAL :: KDX,KDY,TC,NH,SQ,DP,A,KV,SZ
  
  !## total thickness of volume
- TZ=SUM(DZ) !MATH(1)%TOP-MATH(SIZE(MATH))%BOT
+ SZ=SUM(DZ) 
+ SZ=TVALUE(4)-BVALUE(4)
  !## area
  A=(REAL(NCOL)*MATH(1)%DX*REAL(NROW)*MATH(1)%DY)
 
  KDX=0.0; KDY=0.0
  DO ILAY=1,NLAY-1 !## nlay-1 cause last layer is thickness zero or extraction aquifer
+  !## skip outside top/bot
+  IF(TZ(ILAY).GT.TVALUE(4).OR.TZ(ILAY).LT.BVALUE(4))CYCLE
+
   TQ=0.0
   DH=0.0
   DO IROW=1,NROW
@@ -799,10 +810,9 @@ CONTAINS
  ENDDO
 
  !## transform transmissivities into k-values for x- and y-direction
- K(1)=KDX/TZ !DZ
- K(2)=KDY/TZ !DZ
+ TVALUE(1)=KDX/SZ 
+ TVALUE(2)=KDY/SZ 
 
-! DO ILAY=2,NLAY
  ILAY=NLAY
 
  !## get total q over last
@@ -820,7 +830,6 @@ CONTAINS
    ENDIF
   ENDDO
  ENDDO
-!  WRITE(*,*) ILAY,DH(3),TQ(3),NH
  
  !## dz used --- m3/day -> m2/day
  IF(QRATE.EQ.0.0)THEN
@@ -832,26 +841,11 @@ CONTAINS
   DP=DH(3)/NH
  ENDIF
 
- KV=SQ/((DP/TZ)*A)
- TC=TZ/KV
+ KV=SQ/((DP/SZ)*A)
+ TC=SZ/KV
  
  !## storage resistance
- K(3)=TC
-
-! call idfnullify(idf)
-! idf%xmin=0.0; idf%ymin=0.0; idf%xmax=100.0; idf%ymax=100.0; idf%dx=0.5; idf%dy=idf%dx
-! idf%ncol=ncol; idf%nrow=nrow; idf%itb=1; idf%ieq=0
-! if(.not.idfallocatex(idf))then; endif
-! z=0.0
-! do i=1,nlay
-!  idf%x=real(hnew(:,:,i))
-!  idf%fname='d:\hnew'//trim(rtos(z,'f',2))//'.idf'
-!  idf%top=z
-!  idf%bot=idf%top-0.05
-!  if(idfwrite(idf,idf%fname,1))then
-!  endif
-!  z=idf%bot
-! enddo
+ TVALUE(3)=TC
 
  END SUBROUTINE MATH1_SIM_POSTPROC
 
@@ -872,7 +866,7 @@ CONTAINS
       IF(ILAY.EQ.1.OR.ILAY.EQ.NLAY)THEN
        IB(ICOL,IROW,ILAY)=-1
       ELSE
-       IB(ICOL,IROW,ILAY)=1
+       IB(ICOL,IROW,ILAY)= 1
       ENDIF
       CC(ICOL,IROW,ILAY)=MAXK
      ENDIF
@@ -909,7 +903,7 @@ CONTAINS
     IF(ILAY.LT.NLAY)THEN
      IF(IB(ICOL,IROW,ILAY).NE.0.AND.IB(ICOL,IROW,ILAY+1).NE.0)THEN
       C1=0.0; C2=0.0
-      IF(CC(ICOL,IROW,ILAY).NE.0.0)  C1=(0.5*DZ(ILAY  ))/(CC(ICOL,IROW,ILAY)*VER_FCT)
+      IF(CC(ICOL,IROW,ILAY).NE.0.0)  C1=(0.5*DZ(ILAY  ))/(CC(ICOL,IROW,ILAY)  *VER_FCT)
       IF(CC(ICOL,IROW,ILAY+1).NE.0.0)C2=(0.5*DZ(ILAY+1))/(CC(ICOL,IROW,ILAY+1)*VER_FCT)
       IF(C1+C2.NE.0.0)CV(ICOL,IROW,ILAY)=(1.0/(C1+C2))*(DX*DY)
      ENDIF
@@ -940,31 +934,6 @@ CONTAINS
 
  ENDDO
 
-! DO ILAY=1,NLAY
-!  WRITE(*,*) 'IB'
-!  DO IROW=1,NROW
-!   WRITE(*,'(99I15)') (IB(ICOL,IROW,ILAY),ICOL=1,NCOL)
-!  ENDDO
-!  WRITE(*,*) 'HNEW'
-!  DO IROW=1,NROW
-!   WRITE(*,'(99F15.7)') (HNEW(ICOL,IROW,ILAY),ICOL=1,NCOL)
-!  ENDDO
-!  WRITE(*,*) 'CC'
-!  DO IROW=1,NROW
-!   WRITE(*,'(99F15.7)') (CC(ICOL,IROW,ILAY),ICOL=1,NCOL)
-!  ENDDO
-!  WRITE(*,*) 'CR'
-!  DO IROW=1,NROW
-!   WRITE(*,'(99F15.7)') (CR(ICOL,IROW,ILAY),ICOL=1,NCOL)
-!  ENDDO
-!  IF(ILAY.LT.NLAY)THEN
-!   WRITE(*,*) 'CV'
-!   DO IROW=1,NROW
-!    WRITE(*,'(99F15.7)') (CV(ICOL,IROW,ILAY),ICOL=1,NCOL)
-!   ENDDO
-!  ENDIF
-! ENDDO
-
  END SUBROUTINE MATH1_SIM_COND
 
  !###====================================================================
@@ -975,19 +944,7 @@ CONTAINS
 
  MATH1_SIM_AL=.FALSE.
 
- ALLOCATE(IOS(12)) !,MEM(12))
-! MEM(1) ='PCG-P'
-! MEM(2) ='PCG-V'
-! MEM(3) ='PCG-SS'
-! MEM(4) ='PCG-CD'
-! MEM(5) ='PCG-RHS'
-! MEM(6) ='PCG-IB'
-! MEM(7) ='PCG-CC'
-! MEM(8) ='PCG-CR'
-! MEM(9) ='PCG-HNEW'
-! MEM(10)='PCG-HCOF'
-! MEM(11)='PCG-CV'
-! MEM(12)='DZ'
+ ALLOCATE(IOS(13)) 
 
  ALLOCATE(P(NCOL,NROW,NLAY)   ,STAT=IOS(1))
  ALLOCATE(V(NCOL,NROW,NLAY)   ,STAT=IOS(2))
@@ -1001,6 +958,7 @@ CONTAINS
  ALLOCATE(HCOF(NCOL,NROW,NLAY),STAT=IOS(10))
  ALLOCATE(CV(NCOL,NROW,NLAY-1),STAT=IOS(11))
  ALLOCATE(DZ(NLAY)            ,STAT=IOS(12))
+ ALLOCATE(TZ(NLAY)            ,STAT=IOS(13))
 
  IF(SUM(IOS).NE.0)THEN
   CALL WMESSAGEBOX(OKONLY,EXCLAMATIONICON,COMMONOK,'iMOD Can not allocate enough memory to solve this Problem!','Error')

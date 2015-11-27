@@ -35,7 +35,7 @@ USE MOD_OSD, ONLY : OSD_OPEN,ICF
 
 USE MOD_INTERSECT_PAR
 USE MOD_INTERSECT, ONLY : INTERSECT_EQUI,INTERSECT_DEALLOCATE
-
+USE MOD_ASC2IDF_HFB
 USE MOD_ASC2IDF_PAR
 USE MOD_KRIGING, ONLY : KRIGING_MAIN,KRIGING_VARIOGRAM,KRIGING_UNITTEST
 USE MOD_SOLID_PCG, ONLY : SOLID_PCGINT,MICNVG,MXITER2,HCLOSE,RCLOSE,ITIGHT
@@ -477,7 +477,7 @@ CONTAINS
 
  !## compute block-faces
  ALLOCATE(IPC(IDF(1)%NCOL,IDF(1)%NROW,2)); IPC=INT(0,1)
- CALL ASC2IDF_INT_GETFACES(IDF(1),IDF(1)%NROW,IDF(1)%NCOL,IPC,BLNFILE)
+ CALL ASC2IDF_HFB(IDF(1),IDF(1)%NROW,IDF(1)%NCOL,IPC,BLNFILE)
 
  !## collect x,y,z values
  WRITE(*,'(A)') 'Fill grid ...'
@@ -792,137 +792,137 @@ CONTAINS
  
  END FUNCTION ASC2IDF_INT_GETVALUES
 
- !###====================================================================
- SUBROUTINE ASC2IDF_INT_GETFACES(IDF,NROW,NCOL,IPC,FNAME)
- !###====================================================================
- IMPLICIT NONE
- INTEGER,INTENT(IN) :: NCOL,NROW
- TYPE(IDFOBJ),INTENT(INOUT) :: IDF
- INTEGER(KIND=1),DIMENSION(NCOL,NROW,2),INTENT(OUT) :: IPC
- CHARACTER(LEN=*),INTENT(IN) :: FNAME
- REAL :: X1,Y1,X2,Y2,X,Y
- REAL :: XMIN,XMAX,YMIN,YMAX
- INTEGER :: IU,I,J,IOS,ID,N,IROW,ICOL,ILINE,NP,IC1,IC2,IR1,IR2,IP1,IP2,IL1,IL2
- 
- IF(TRIM(FNAME).EQ.'')RETURN
- 
- IU=UTL_GETUNIT(); CALL OSD_OPEN(IU,FILE=FNAME,ACTION='READ',STATUS='OLD',FORM='FORMATTED')
- IF(IU.EQ.0)THEN
-  WRITE(*,'(A)') 'Error opening '//TRIM(FNAME); RETURN
- ENDIF
-  
- !## use blnfile
- NP=0; ILINE=0
- DO
-  READ(IU,*,IOSTAT=IOS) ID; IF(IOS.NE.0)EXIT
-  I=0; ILINE=ILINE+1
-  DO
-   READ(IU,*,IOSTAT=IOS) X2,Y2; IF(IOS.NE.0)EXIT
-   I=I+1
-   IF(I.GT.1)THEN
-    !## intersect line
-    N=0; CALL INTERSECT_EQUI(IDF%XMIN,IDF%XMAX,IDF%YMIN,IDF%YMAX,IDF%DX,X1,X2,Y1,Y2,N,.TRUE.,.TRUE.)
-    DO J=1,N
-     ICOL=INT(XA(J)); IROW=INT(YA(J))
-     IF(ICOL.GE.1.AND.IROW.GE.1.AND. &
-        ICOL.LE.IDF%NCOL.AND.IROW.LE.IDF%NROW)THEN
-      NP=NP+1; CALL ASC2IDF_INT_RESIZEVECTORS(NP,100)
-      XP(NP)=REAL(ICOL); YP(NP)=REAL(IROW); ZP(NP)=FA(J); WP(NP)=REAL(ILINE)
-     ENDIF
-    ENDDO
-   ENDIF     
-   X1=X2; Y1=Y2
-  ENDDO
- ENDDO
- CALL INTERSECT_DEALLOCATE()
-
- CLOSE(IU)
-
- CALL ASC2IDF_INT_RESIZEVECTORS(NP,0)
-
- DO I=2,SIZE(XP)
-  IL1=INT(WP(I))
-  IL2=INT(WP(I))
-  !## similar line
-  IF(IL1.NE.IL2)CYCLE
-
-  IC1=INT(XP(I-1))
-  IC2=INT(XP(I  ))
-  IR1=INT(YP(I-1))
-  IR2=INT(YP(I  ))
-  IP1=INT(ZP(I-1))
-  IP2=INT(ZP(I  ))
-   
-  CALL ASC2IDF_INT_GETFACES_HFB(IC1,IC2,IR1,IR2,IP1,IP2,IPC,NROW,NCOL)
-
- ENDDO
-
- END SUBROUTINE ASC2IDF_INT_GETFACES
-
- !###====================================================================
- SUBROUTINE ASC2IDF_INT_GETFACES_HFB(IC1,IC2,IR1,IR2,IP1,IP2,IPC,NROW,NCOL)
- !###====================================================================
- IMPLICIT NONE
- INTEGER,INTENT(IN) :: IC1,IC2,IR1,IR2,IP1,IP2
- INTEGER,INTENT(IN) :: NROW,NCOL
- INTEGER(KIND=1),INTENT(INOUT),DIMENSION(NCOL,NROW,2) :: IPC
- INTEGER,DIMENSION(2) :: JPC,JPR,JC,JR,JP
- INTEGER :: I,IC,IR
-
- JC(1)=IC1; JC(2)=IC2
- JR(1)=IR1; JR(2)=IR2
- JP(1)=IP1; JP(2)=IP2
-
- DO I=1,2
-  IF(JP(I).EQ.2.OR.JP(I).EQ.3)JPC(I)=JC(I)
-  IF(JP(I).EQ.1.OR.JP(I).EQ.4)JPC(I)=JC(I)-1
-  IF(JP(I).EQ.1.OR.JP(I).EQ.2)JPR(I)=JR(I)-1
-  IF(JP(I).EQ.3.OR.JP(I).EQ.4)JPR(I)=JR(I)
- ENDDO
-
- !## do nothing, is similar point
- IF(JPR(1).EQ.JPR(2).AND.JPC(1).EQ.JPC(2))RETURN
-
- !## do nothing whenever jpc.eq.0 or jpr.eq.0
- IF(JPC(1).EQ.0.OR.JPC(2).EQ.0)RETURN
- IF(JPR(1).EQ.0.OR.JPR(2).EQ.0)RETURN
-
- !## horizontal fault ipc(,,1)=1
- IF(JPR(1).EQ.JPR(2).AND.JPC(1).NE.JPC(2))THEN
-  IC=MAX(JPC(1),JPC(2)); IR=JPR(1); IPC(IC,IR,2)=INT(1,1)
- ENDIF
- !## vertical fault ipc(,,2)=1
- IF(JPC(1).EQ.JPC(2).AND.JPR(1).NE.JPR(2))THEN
-  IC=JPC(1); IR=MAX(JPR(1),JPR(2)); IPC(IC,IR,1)=INT(1,1)
- ENDIF
- !## diagonal, add two faults
- IF(JPR(1).NE.JPR(2).AND.JPC(1).NE.JPC(2))THEN
-  !## goto to the west
-  IF(JPC(1).GT.JPC(2))THEN
-   !## goto to the north-west
-   IF(JPR(1).GT.JPR(2))THEN
-    IC=MIN(JPC(1),JPC(2)); IR=MAX(JPR(1),JPR(2)); IPC(IC,IR,1)=INT(1,1) !## vertical
-    IC=MAX(JPC(1),JPC(2)); IR=MAX(JPR(1),JPR(2)); IPC(IC,IR,2)=INT(1,1) !## horizontal
-   !## goto to the south-west
-   ELSE
-    IC=MIN(JPC(1),JPC(2)); IR=MAX(JPR(1),JPR(2)); IPC(IC,IR,1)=INT(1,1) !## vertical
-    IC=MAX(JPC(1),JPC(2)); IR=MIN(JPR(1),JPR(2)); IPC(IC,IR,2)=INT(1,1) !## horizontal
-   ENDIF
-  !## goto to the east
-  ELSE
-   !## goto to the north-east
-   IF(JPR(1).GT.JPR(2))THEN
-    IC=MIN(JPC(1),JPC(2)); IR=MAX(JPR(1),JPR(2)); IPC(IC,IR,1)=INT(1,1) !## vertical
-    IC=MAX(JPC(1),JPC(2)); IR=MIN(JPR(1),JPR(2)); IPC(IC,IR,2)=INT(1,1) !## horizontal   
-   !## goto to the south-east
-   ELSE
-    IC=MIN(JPC(1),JPC(2)); IR=MAX(JPR(1),JPR(2)); IPC(IC,IR,1)=INT(1,1) !## vertical
-    IC=MAX(JPC(1),JPC(2)); IR=MAX(JPR(1),JPR(2)); IPC(IC,IR,2)=INT(1,1) !## horizontal  
-   ENDIF
-  ENDIF
- ENDIF
-
- END SUBROUTINE ASC2IDF_INT_GETFACES_HFB
+! !###====================================================================
+! SUBROUTINE ASC2IDF_INT_GETFACES(IDF,NROW,NCOL,IPC,FNAME)
+! !###====================================================================
+! IMPLICIT NONE
+! INTEGER,INTENT(IN) :: NCOL,NROW
+! TYPE(IDFOBJ),INTENT(INOUT) :: IDF
+! INTEGER(KIND=1),DIMENSION(NCOL,NROW,2),INTENT(OUT) :: IPC
+! CHARACTER(LEN=*),INTENT(IN) :: FNAME
+! REAL :: X1,Y1,X2,Y2,X,Y
+! REAL :: XMIN,XMAX,YMIN,YMAX
+! INTEGER :: IU,I,J,IOS,ID,N,IROW,ICOL,ILINE,NP,IC1,IC2,IR1,IR2,IP1,IP2,IL1,IL2
+! 
+! IF(TRIM(FNAME).EQ.'')RETURN
+! 
+! IU=UTL_GETUNIT(); CALL OSD_OPEN(IU,FILE=FNAME,ACTION='READ',STATUS='OLD',FORM='FORMATTED')
+! IF(IU.EQ.0)THEN
+!  WRITE(*,'(A)') 'Error opening '//TRIM(FNAME); RETURN
+! ENDIF
+!  
+! !## use blnfile
+! NP=0; ILINE=0
+! DO
+!  READ(IU,*,IOSTAT=IOS) ID; IF(IOS.NE.0)EXIT
+!  I=0; ILINE=ILINE+1
+!  DO
+!   READ(IU,*,IOSTAT=IOS) X2,Y2; IF(IOS.NE.0)EXIT
+!   I=I+1
+!   IF(I.GT.1)THEN
+!    !## intersect line
+!    N=0; CALL INTERSECT_EQUI(IDF%XMIN,IDF%XMAX,IDF%YMIN,IDF%YMAX,IDF%DX,X1,X2,Y1,Y2,N,.TRUE.,.TRUE.)
+!    DO J=1,N
+!     ICOL=INT(XA(J)); IROW=INT(YA(J))
+!     IF(ICOL.GE.1.AND.IROW.GE.1.AND. &
+!        ICOL.LE.IDF%NCOL.AND.IROW.LE.IDF%NROW)THEN
+!      NP=NP+1; CALL ASC2IDF_INT_RESIZEVECTORS(NP,100)
+!      XP(NP)=REAL(ICOL); YP(NP)=REAL(IROW); ZP(NP)=FA(J); WP(NP)=REAL(ILINE)
+!     ENDIF
+!    ENDDO
+!   ENDIF     
+!   X1=X2; Y1=Y2
+!  ENDDO
+! ENDDO
+! CALL INTERSECT_DEALLOCATE()
+!
+! CLOSE(IU)
+!
+! CALL ASC2IDF_INT_RESIZEVECTORS(NP,0)
+!
+! DO I=2,SIZE(XP)
+!  IL1=INT(WP(I))
+!  IL2=INT(WP(I))
+!  !## similar line
+!  IF(IL1.NE.IL2)CYCLE
+!
+!  IC1=INT(XP(I-1))
+!  IC2=INT(XP(I  ))
+!  IR1=INT(YP(I-1))
+!  IR2=INT(YP(I  ))
+!  IP1=INT(ZP(I-1))
+!  IP2=INT(ZP(I  ))
+!   
+!  CALL ASC2IDF_INT_GETFACES_HFB(IC1,IC2,IR1,IR2,IP1,IP2,IPC,NROW,NCOL)
+!
+! ENDDO
+!
+! END SUBROUTINE ASC2IDF_INT_GETFACES
+!
+! !###====================================================================
+! SUBROUTINE ASC2IDF_INT_GETFACES_HFB(IC1,IC2,IR1,IR2,IP1,IP2,IPC,NROW,NCOL)
+! !###====================================================================
+! IMPLICIT NONE
+! INTEGER,INTENT(IN) :: IC1,IC2,IR1,IR2,IP1,IP2
+! INTEGER,INTENT(IN) :: NROW,NCOL
+! INTEGER(KIND=1),INTENT(INOUT),DIMENSION(NCOL,NROW,2) :: IPC
+! INTEGER,DIMENSION(2) :: JPC,JPR,JC,JR,JP
+! INTEGER :: I,IC,IR
+!
+! JC(1)=IC1; JC(2)=IC2
+! JR(1)=IR1; JR(2)=IR2
+! JP(1)=IP1; JP(2)=IP2
+!
+! DO I=1,2
+!  IF(JP(I).EQ.2.OR.JP(I).EQ.3)JPC(I)=JC(I)
+!  IF(JP(I).EQ.1.OR.JP(I).EQ.4)JPC(I)=JC(I)-1
+!  IF(JP(I).EQ.1.OR.JP(I).EQ.2)JPR(I)=JR(I)-1
+!  IF(JP(I).EQ.3.OR.JP(I).EQ.4)JPR(I)=JR(I)
+! ENDDO
+!
+! !## do nothing, is similar point
+! IF(JPR(1).EQ.JPR(2).AND.JPC(1).EQ.JPC(2))RETURN
+!
+! !## do nothing whenever jpc.eq.0 or jpr.eq.0
+! IF(JPC(1).EQ.0.OR.JPC(2).EQ.0)RETURN
+! IF(JPR(1).EQ.0.OR.JPR(2).EQ.0)RETURN
+!
+! !## horizontal fault ipc(,,1)=1
+! IF(JPR(1).EQ.JPR(2).AND.JPC(1).NE.JPC(2))THEN
+!  IC=MAX(JPC(1),JPC(2)); IR=JPR(1); IPC(IC,IR,2)=INT(1,1)
+! ENDIF
+! !## vertical fault ipc(,,2)=1
+! IF(JPC(1).EQ.JPC(2).AND.JPR(1).NE.JPR(2))THEN
+!  IC=JPC(1); IR=MAX(JPR(1),JPR(2)); IPC(IC,IR,1)=INT(1,1)
+! ENDIF
+! !## diagonal, add two faults
+! IF(JPR(1).NE.JPR(2).AND.JPC(1).NE.JPC(2))THEN
+!  !## goto to the west
+!  IF(JPC(1).GT.JPC(2))THEN
+!   !## goto to the north-west
+!   IF(JPR(1).GT.JPR(2))THEN
+!    IC=MIN(JPC(1),JPC(2)); IR=MAX(JPR(1),JPR(2)); IPC(IC,IR,1)=INT(1,1) !## vertical
+!    IC=MAX(JPC(1),JPC(2)); IR=MAX(JPR(1),JPR(2)); IPC(IC,IR,2)=INT(1,1) !## horizontal
+!   !## goto to the south-west
+!   ELSE
+!    IC=MIN(JPC(1),JPC(2)); IR=MAX(JPR(1),JPR(2)); IPC(IC,IR,1)=INT(1,1) !## vertical
+!    IC=MAX(JPC(1),JPC(2)); IR=MIN(JPR(1),JPR(2)); IPC(IC,IR,2)=INT(1,1) !## horizontal
+!   ENDIF
+!  !## goto to the east
+!  ELSE
+!   !## goto to the north-east
+!   IF(JPR(1).GT.JPR(2))THEN
+!    IC=MIN(JPC(1),JPC(2)); IR=MAX(JPR(1),JPR(2)); IPC(IC,IR,1)=INT(1,1) !## vertical
+!    IC=MAX(JPC(1),JPC(2)); IR=MIN(JPR(1),JPR(2)); IPC(IC,IR,2)=INT(1,1) !## horizontal   
+!   !## goto to the south-east
+!   ELSE
+!    IC=MIN(JPC(1),JPC(2)); IR=MAX(JPR(1),JPR(2)); IPC(IC,IR,1)=INT(1,1) !## vertical
+!    IC=MAX(JPC(1),JPC(2)); IR=MAX(JPR(1),JPR(2)); IPC(IC,IR,2)=INT(1,1) !## horizontal  
+!   ENDIF
+!  ENDIF
+! ENDIF
+!
+! END SUBROUTINE ASC2IDF_INT_GETFACES_HFB
  
  !###======================================================================
  LOGICAL FUNCTION ASC2IDF_INT_GETEXTENT(FNAME,ITYPE)
@@ -1023,64 +1023,6 @@ CONTAINS
  IF(ALLOCATED(IDF))THEN; CALL IDFDEALLOCATE(IDF,SIZE(IDF)); DEALLOCATE(IDF); ENDIF
 
  END SUBROUTINE ASC2IDF_INT_CLOSE
-
- !###======================================================================
- SUBROUTINE ASC2IDF_INT_NULLIFY()
- !###======================================================================
- IMPLICIT NONE
- 
- NULLIFY(XP,YP,ZP,WP)
-  
- END SUBROUTINE ASC2IDF_INT_NULLIFY
-
- !###======================================================================
- SUBROUTINE ASC2IDF_INT_DEALLOCATE()
- !###======================================================================
- IMPLICIT NONE
- 
- IF(ASSOCIATED(XP))DEALLOCATE(XP)
- IF(ASSOCIATED(YP))DEALLOCATE(YP) 
- IF(ASSOCIATED(ZP))DEALLOCATE(ZP) 
- IF(ASSOCIATED(WP))DEALLOCATE(WP) 
-  
- END SUBROUTINE ASC2IDF_INT_DEALLOCATE
- 
- !###======================================================================
- SUBROUTINE ASC2IDF_INT_RESIZEVECTORS(N,DN)
- !###======================================================================
- IMPLICIT NONE
- INTEGER,INTENT(IN) :: N,DN
- INTEGER :: MM,NN,I
- 
- !## make sure vector is equal to entered abs(n)
- IF(DN.EQ.0)THEN
-  MM=N; NN=N; IF(NN.EQ.SIZE(XP))RETURN; NN=SIZE(XP)
- ELSE 
-  NN=SIZE(XP); IF(N.LE.NN)RETURN; MM=NN+DN
- ENDIF
- 
- ALLOCATE(XP_DUMMY(MM),YP_DUMMY(MM),ZP_DUMMY(MM),WP_DUMMY(MM))
- 
- XP_DUMMY=0.0
- YP_DUMMY=0.0
- ZP_DUMMY=0.0
- WP_DUMMY=0.0
-
- DO I=1,MIN(MM,NN)
-  XP_DUMMY(I)=XP(I)
-  YP_DUMMY(I)=YP(I)
-  ZP_DUMMY(I)=ZP(I)
-  WP_DUMMY(I)=WP(I)
- ENDDO
- 
- DEALLOCATE(XP,YP,ZP,WP)
- 
- XP=>XP_DUMMY
- YP=>YP_DUMMY
- ZP=>ZP_DUMMY
- WP=>WP_DUMMY
- 
- END SUBROUTINE ASC2IDF_INT_RESIZEVECTORS
 
  !###======================================================================
  SUBROUTINE ASC2IDF_EXPORTASC_MAIN(DIR,IQUICK)
