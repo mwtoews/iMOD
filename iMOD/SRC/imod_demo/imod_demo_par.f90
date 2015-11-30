@@ -26,15 +26,15 @@ USE RESOURCE
 IMPLICIT NONE
 
 TYPE DEMOBJ
- CHARACTER(LEN=52) :: TDNAME !## demo type name
- REAL,POINTER,DIMENSION(:) :: X,Y !#coordinates of the edges of the profile
- INTEGER :: NXY !#Number of cross-section points
- INTEGER :: IDEMO !#Type of demo (e.g. Cross-section=1, 3D-tool=2)
- INTEGER :: CONFLAG !#Configuration flag
- INTEGER :: IFILL !#Display flag (1=solid,2=wireframe,3=solid+wireframe)
- INTEGER :: ACCFLAG !#Accuracy flag
- INTEGER :: IBLOCKLINES !# show cross-section with blocklines
- INTEGER :: IBLOCKFILLS !# show cross-section with filled blocks
+ CHARACTER(LEN=52) :: TDNAME      !## demo type name
+ REAL,POINTER,DIMENSION(:) :: X,Y !## coordinates of the edges of the profile
+ INTEGER :: NXY         !## Number of cross-section points
+ INTEGER :: IDEMO       !## Type of demo (e.g. Cross-section=1, 3D-tool=2)
+ INTEGER :: CONFLAG     !## Configuration flag
+ INTEGER :: IFILL       !## Display flag (1=solid,2=wireframe,3=solid+wireframe)
+ INTEGER :: ACCFLAG     !## Accuracy flag
+ INTEGER :: IBLOCKLINES !## show cross-section with blocklines
+ INTEGER :: IBLOCKFILLS !## show cross-section with filled blocks
 END TYPE DEMOBJ
 
 TYPE(DEMOBJ) :: DEMO
