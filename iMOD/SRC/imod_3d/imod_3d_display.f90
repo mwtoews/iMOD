@@ -131,6 +131,8 @@ CONTAINS
   IF(NSOLLIST.GT.0)CALL IMOD3D_DISPLAY_SOL()
   !## draw gen's
   IF(NGENLIST.GT.0)CALL IMOD3D_DISPLAY_GEN()
+  !## draw interactive flowlines
+  IF(IPATHLINE_3D.GT.0)CALL IMOD3D_DISPLAY_PL()
 
   DO I=1,NCLPLIST; CALL GLDISABLE(CLPPLANES(I)); END DO
 
@@ -581,6 +583,24 @@ CONTAINS
 
  END SUBROUTINE IMOD3D_DISPLAY_CLP
 
+ !###======================================================================
+ SUBROUTINE IMOD3D_DISPLAY_PL()
+ !###======================================================================
+ IMPLICIT NONE
+ INTEGER :: I,PL_NPER
+ 
+ CALL WDIALOGSELECT(ID_D3DSETTINGS_TAB8)
+! CALL WDIALOGGETINTEGER(IDF_INTEGER1,PL_NPER)
+ CALL WDIALOGGETTRACKBAR(IDF_TRACKBAR1,PL_NPER)
+ IF(PL_NPER.LE.0)RETURN
+ 
+ !## draw particles upto pl_iper
+ DO I=1,PL_NPER
+  IF(PLLISTINDEX(I).NE.0)CALL GLCALLLIST(PLLISTINDEX(I))
+ ENDDO
+ 
+ END SUBROUTINE IMOD3D_DISPLAY_PL
+ 
  !###======================================================================
  SUBROUTINE IMOD3D_DISPLAY_GEN()
  !###======================================================================

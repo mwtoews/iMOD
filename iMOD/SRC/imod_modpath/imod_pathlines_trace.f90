@@ -40,6 +40,7 @@ USE MOD_PLINES_FLOLIN, ONLY : FLOLIN
 USE MOD_OSD, ONLY : OSD_OPEN,OSD_IOSTAT_MSG
 USE MOD_MANAGER, ONLY : MANAGERDELETE
 USE MOD_DEMO_PAR
+USE MOD_3D_PAR, ONLY : PLLISTINDEX
 
 CONTAINS
 
@@ -71,6 +72,11 @@ CONTAINS
  
  !## read data 
  IF(.NOT.TRACECALC_INIT(0))RETURN
+ !## read fluxes, default forward simulation
+ IREV=0; IF(.NOT.TRACEREADBUDGET(1,0))RETURN 
+ TMAX=100.0 !## maximum simulation time
+ TDEL=1.0   !## timestep
+ TINC=1.5   !## timestep increasement
  
  ALLOCATE(IVISIT(IDF%NCOL*IDF%NROW*NLAY)); IVISIT=INT(0,1)
  ALLOCATE(LVISIT(IDF%NCOL*IDF%NROW*MIN(2,NLAY))); LVISIT=0
@@ -86,9 +92,7 @@ CONTAINS
  END DO
 
  !## delete them all from manager
-! DO I=1,NFILES; 
  CALL MANAGERDELETE(IQ=0)
-! ENDDO
 
  DO ILAY=1,NLAY
   !## top
@@ -110,12 +114,54 @@ CONTAINS
  END FUNCTION TRACE_3D_INIT
  
  !###======================================================================
+ SUBROUTINE TRACE_3D_RESET() 
+ !###======================================================================
+ IMPLICIT NONE
+ INTEGER :: I,PL_NPER
+ REAL :: T
+ 
+! CALL WINDOWSELECT()
+ IF(ALLOCATED(PLLISTINDEX))THEN
+  DO I=1,SIZE(PLLISTINDEX)
+   IF(PLLISTINDEX(I).NE.0)THEN
+    CALL GLDELETELISTS(PLLISTINDEX(I),1_GLSIZEI)
+    CALL WINDOWOUTSTATUSBAR(4,'Clearing memory for Pathines '//TRIM(ITOS(I))//'...')
+   ENDIF
+  ENDDO
+  DEALLOCATE(PLLISTINDEX)
+ ENDIF
+ 
+ CALL WDIALOGSELECT(ID_D3DSETTINGS_TAB8)
+ CALL WDIALOGGETREAL(IDF_REAL4,TMAX)
+ CALL WDIALOGGETREAL(IDF_REAL5,TDEL)
+ CALL WDIALOGGETREAL(IDF_REAL6,TINC)
+
+ T=0.0; PL_NPER=0; DO
+  IF(T.GT.TMAX)EXIT
+  PL_NPER=PL_NPER+1
+  T=T+TDEL
+  TDEL=TDEL**TINC
+ ENDDO
+ PL_NPER=TMAX/TDEL
+
+ ALLOCATE(PLLISTINDEX(PL_NPER)); PLLISTINDEX=0
+ 
+ TCUR=0.0; PL_NPER=0; CALL WDIALOGPUTREAL(IDF_REAL7,TCUR); CALL WDIALOGPUTINTEGER(IDF_INTEGER1,PL_NPER)
+ CALL WDIALOGRANGETRACKBAR(IDF_TRACKBAR1,0,PL_NPER,1); CALL WDIALOGPUTTRACKBAR(IDF_TRACKBAR1,0)
+ 
+ END SUBROUTINE TRACE_3D_RESET
+ 
+ !###======================================================================
  LOGICAL FUNCTION TRACE_3D_STARTPOINTS() 
  !###======================================================================
  IMPLICIT NONE
 
  !## get new location/particle - click from the 3d tool
  
+ !  CALL WDIALOGPUTREAL(IDF_REAL1,X)
+!  CALL WDIALOGPUTREAL(IDF_REAL2,Y)
+!  CALL WDIALOGPUTREAL(IDF_REAL3,Z)
+
 ! DO I=1,NPART
 !  READ(JU,'(3I10,4(F15.3,1X))') KLC(I),ILC(I),JLC(I),XLC(I,2),YLC(I,2),ZLC(I,2),ZLL(I,2)
 !  !## initial age set to zero!
@@ -135,14 +181,28 @@ CONTAINS
  LOGICAL FUNCTION TRACE_3D_COMPUTE() 
  !###======================================================================
  IMPLICIT NONE
- INTEGER :: I,IPART,IDSCH
+ INTEGER :: I,IPART,IDSCH,PL_NPER
  REAL :: TIME,TTMAX,MAXVELOCITY
  
  TRACE_3D_COMPUTE=.FALSE.
 
  !## maximal time of simulation - equal to refreshing rate or something to be trickered by the 3d tool
  MAXVELOCITY=0.0
- TTMAX=TMAX
+
+ CALL WDIALOGSELECT(ID_D3DSETTINGS_TAB8)
+ CALL WDIALOGGETREAL(IDF_REAL4,TMAX)
+ CALL WDIALOGGETREAL(IDF_REAL5,TDEL)
+ CALL WDIALOGGETREAL(IDF_REAL6,TINC)
+ CALL WDIALOGGETREAL(IDF_REAL7,TCUR)
+ CALL WDIALOGGETINTEGER(IDF_INTEGER1,PL_NPER)
+ 
+ !## increase number of timesteps
+ PL_NPER=PL_NPER+1
+ 
+ !## get next timestep
+ TTMAX=TCUR+TDEL**TINC
+ !## maximize it for tmax
+ TTMAX=MIN(TTMAX,TMAX)
  
  !## wellicht slim om niet met drawniglst te werken .. hoe gaat dat dan grafisch. Je klikt op een locatie dan gaat er wat stromen
  !## maar dat stop op een eggeven moment, er komt niks meer bij. Dan kun je met een slider terug in de tijd, dat kan alleen met een 
@@ -151,10 +211,10 @@ CONTAINS
  
  !## wel drawing list --- instellen op stapgrootte ... bijvoorbeedl 1 jaar  (in te stellen wellicht)
  
-! !## open drawing list per timestep/call
-! IF(IDFLISTINDEX(ILST).NE.0)CALL GLDELETELISTS(IDFLISTINDEX(ILST),1_GLSIZEI)
-! !## list index for,  !## start new drawing list
-! IDFLISTINDEX(ILST)=GLGENLISTS(1); CALL GLNEWLIST(IDFLISTINDEX(ILST),GL_COMPILE)
+ !## open drawing list per timestep/call
+ IF(PLLISTINDEX(PL_NPER).NE.0)CALL GLDELETELISTS(PLLISTINDEX(PL_NPER),1_GLSIZEI)
+ !## list index for,  !## start new drawing list
+ PLLISTINDEX(PL_NPER)=GLGENLISTS(1); CALL GLNEWLIST(PLLISTINDEX(PL_NPER),GL_COMPILE)
  
  CALL GLBEGIN(GL_POINTS)
 
@@ -183,6 +243,8 @@ CONTAINS
  CALL GLEND()
  CALL GLENDLIST()
 
+ TCUR=TTMAX; CALL WDIALOGPUTREAL(IDF_REAL7,TCUR); CALL WDIALOGPUTINTEGER(IDF_INTEGER1,PL_NPER)
+ 
  TRACE_3D_COMPUTE=.TRUE.
  
  END FUNCTION TRACE_3D_COMPUTE
@@ -1243,11 +1305,9 @@ IPFLOOP: DO I=1,SIZE(IPF)
   IF(IBATCH.EQ.0)CALL WINDOWOUTSTATUSBAR(4,STRING)
   CALL TRACEREADBLOCK_R(BUFF(1,1,ILAY),IDF%NROW,IDF%NCOL,HFFNAME(1,ILAY,IPER),IU,4,DELC(0),DELR(0),0,QSS,NODATAVALUE)
   IF(IU.LE.0)RETURN
-  DO IROW=1,IDF%NROW
-   DO ICOL=1,IDF%NCOL
-    QX(ICOL+1,IROW,ILAY)=-BUFF(ICOL,IROW,ILAY)
-   ENDDO
-  ENDDO
+  DO IROW=1,IDF%NROW; DO ICOL=1,IDF%NCOL
+   QX(ICOL+1,IROW,ILAY)=-BUFF(ICOL,IROW,ILAY)
+  ENDDO; ENDDO
 !  idf%x=buff(:,:,ilay)
 !  IF(.not.idfwrite(idf,TRIM(PREFVAL(1))//'\qx_l'//TRIM(ITOS(ILAY))//'.idf',1))then
 !  endif
@@ -1263,11 +1323,9 @@ IPFLOOP: DO I=1,SIZE(IPF)
   IF(IBATCH.EQ.0)CALL WINDOWOUTSTATUSBAR(4,STRING)
   CALL TRACEREADBLOCK_R(BUFF(1,1,ILAY),IDF%NROW,IDF%NCOL,HFFNAME(2,ILAY,IPER),IU,4,DELC(0),DELR(0),0,QSS,NODATAVALUE)
   IF(IU.LE.0)RETURN
-  DO ICOL=1,IDF%NCOL
-   DO IROW=1,IDF%NROW
-    QY(ICOL,IROW+1,ILAY)= BUFF(ICOL,IROW,ILAY)
-   ENDDO
-  ENDDO
+  DO ICOL=1,IDF%NCOL; DO IROW=1,IDF%NROW
+   QY(ICOL,IROW+1,ILAY)= BUFF(ICOL,IROW,ILAY)
+  ENDDO; ENDDO
 !  idf%x=buff(:,:,ilay)
 !  IF(.not.idfwrite(idf,TRIM(PREFVAL(1))//'\qy_l'//TRIM(ITOS(ILAY))//'.idf',1))then
 !  endif
@@ -1288,13 +1346,11 @@ IPFLOOP: DO I=1,SIZE(IPF)
 !   IF(.not.idfwrite(idf,TRIM(PREFVAL(1))//'\qz_l'//TRIM(ITOS(ILAY))//'.idf',1))then
 !   endif
   ENDDO
-  DO IROW=1,IDF%NROW
-   DO ICOL=1,IDF%NCOL
-    DO ILAY=1,NLAY
-     QZ(ICOL,IROW,ILAY+1)= BUFF(ICOL,IROW,ILAY) !standaard modflow does it wrong!
-    ENDDO
+  DO IROW=1,IDF%NROW; DO ICOL=1,IDF%NCOL
+   DO ILAY=1,NLAY
+    QZ(ICOL,IROW,ILAY+1)= BUFF(ICOL,IROW,ILAY) !standaard modflow does it wrong!
    ENDDO
-  ENDDO
+  ENDDO; ENDDO
  ENDIF
 
  !##initialize qss - as nett-term waterbalance! - wordt alleen gebruikt in combi. met frac!!!

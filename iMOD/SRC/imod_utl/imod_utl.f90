@@ -562,8 +562,8 @@ CONTAINS
 !###=========================================================================
  IMPLICIT NONE
  CHARACTER(LEN=*),INTENT(IN) :: HELP
- LOGICAL :: LEX,LACROBAT
- INTEGER :: ISTATUS,IEXCOD,I
+ LOGICAL :: LEX
+ INTEGER :: I
  CHARACTER(LEN=256) :: LINE
  CHARACTER(LEN=10) :: EXT
  
