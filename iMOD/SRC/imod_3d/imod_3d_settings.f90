@@ -776,19 +776,6 @@ CONTAINS
 
  END SUBROUTINE IMOD3D_SETTINGS_VERTICALAXES
 
-! !###======================================================================
-! LOGICAL FUNCTION IMOD3D_HORIZONTALAXES(XMIN,YMIN,XMAX,YMAX)
-! !###======================================================================
-! IMPLICIT NONE
-! REAL,INTENT(IN) :: XMIN,YMIN,XMAX,YMAX
-! 
-! BOT%X=XMIN; BOT%Y=YMIN; TOP%X=XMAX; TOP%Y=XMAX
-! IMOD3D_HORIZONTALAXES=IMOD3D_SETTINGS_UPDATE_DISPLAY()
-!
-! IF(.NOT.IMOD3D_HORIZONTALAXES)CALL IMOD3D_CLOSE()
-!
-! END FUNCTION IMOD3D_HORIZONTALAXES
-
  !###======================================================================
  SUBROUTINE IMOD3D_DISPLAY_UPDATE(XMIN,YMIN,XMAX,YMAX)
  !###======================================================================
