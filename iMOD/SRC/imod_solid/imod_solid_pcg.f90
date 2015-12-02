@@ -217,7 +217,8 @@ CONTAINS
       J=0; DO I=1,SIZE(GEN)
        !## include proper layers only
        IF(GEN(I)%ILAY.NE.ILAY)CYCLE
-       J=J+1; CALL ASC2IDF_HFB(SOLIDF(ILAY),SOLIDF(ILAY)%NROW,SOLIDF(ILAY)%NCOL,IPC,GEN(I)%FNAME)
+       J=J+1; 
+       IF(LEN_TRIM(GEN(I)%FNAME).GT.0)CALL ASC2IDF_HFB(SOLIDF(ILAY),SOLIDF(ILAY)%NROW,SOLIDF(ILAY)%NCOL,IPC,GEN(I)%FNAME)
       ENDDO
       IF(J.GT.0)THEN
        WRITE(*,'(A)') 'Faults ('//TRIM(ITOS(J))//') are included'
