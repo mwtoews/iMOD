@@ -38,13 +38,13 @@ TYPE IDFOBJ
  REAL :: DX,DY        !equi.distance if ieq=0
  REAL :: TOP,BOT      !top and bot information
  REAL :: NODATA,DMIN,DMAX
- REAL,DIMENSION(:),POINTER :: SX   !x.coord. network
- REAL,DIMENSION(:),POINTER :: SY   !y.coord. network
- REAL,DIMENSION(:,:),POINTER :: X  !idfvalues in matrix
- REAL,DIMENSION(:),POINTER :: V    !idfvalues in vector
- REAL,DIMENSION(:,:,:),POINTER :: XV    !vector field, top,bot,vx,vy,vz1,vz2
- INTEGER(KIND=2),DIMENSION(:,:),POINTER :: YSEL    !idfvalues in vector, irow/icol
- CHARACTER(LEN=4),DIMENSION(:),POINTER :: COMMENT    !comments
+ REAL,DIMENSION(:),POINTER :: SX => NULL()                  !## x.coord. network
+ REAL,DIMENSION(:),POINTER :: SY => NULL()                  !## y.coord. network
+ REAL,DIMENSION(:,:),POINTER :: X => NULL()                 !## idfvalues in matrix
+ REAL,DIMENSION(:),POINTER :: V => NULL()                   !## idfvalues in vector
+ REAL,DIMENSION(:,:,:),POINTER :: XV  => NULL()             !## vector field, top,bot,vx,vy,vz1,vz2
+ INTEGER(KIND=2),DIMENSION(:,:),POINTER :: YSEL => NULL()   !## idfvalues in vector, irow/icol
+ CHARACTER(LEN=4),DIMENSION(:),POINTER :: COMMENT => NULL() !## comments
  INTEGER :: NTHREAD
  CHARACTER(LEN=256) :: FNAME  ! name of the idf
 END TYPE IDFOBJ
