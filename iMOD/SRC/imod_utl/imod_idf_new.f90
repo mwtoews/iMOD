@@ -208,7 +208,7 @@ CONTAINS
  LOGICAL FUNCTION IDFREAD(IDF,IDFNAME,IDATA,IQ)
  !###======================================================================
  IMPLICIT NONE
- TYPE(IDFOBJ),INTENT(OUT) :: IDF
+ TYPE(IDFOBJ),INTENT(INOUT) :: IDF
  CHARACTER(LEN=*),INTENT(IN) :: IDFNAME
  INTEGER,INTENT(IN) :: IDATA 
  INTEGER,INTENT(IN),OPTIONAL :: IQ !## 0=questioning 1=no questioning

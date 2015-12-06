@@ -120,10 +120,15 @@ CONTAINS
     NDATE=EDATE
     IF(IR.LT.NR)THEN
      READ(IU,*) NDATE,(QD(I),I=2,NC) 
+
+!## temporary vermeulen     
+!     IF(IR.EQ.NR-1)QD(ICOL)=0.0
+     
      Q1=QD(ICOL)
      JDATE=NDATE
      NDATE=UTL_IDATETOJDATE(NDATE) !## fname=optional for error message
     ENDIF
+
     !## ndate is min of end date in txt file or simulation period
     NDATE=MIN(NDATE,EDATE)
 
@@ -293,13 +298,17 @@ CONTAINS
    TLP=0.0; TLP(K)=1.0 
    IF(ZT.LT.0.0)TLP(K)=-1.0*TLP(K)
   ELSE
-   CALL WMESSAGEBOX(OKONLY,EXCLAMATIONICON,COMMONOK,'K.EQ.0, Not able to assign proper modellayer','Error')
+!   CALL WMESSAGEBOX(OKONLY,EXCLAMATIONICON,COMMONOK,'K.EQ.0, Not able to assign proper modellayer','Error')
   ENDIF
  ENDIF
  
- !## nothing in model, whenever system on top of model, put them in first modellayer
+ !## nothing in model, whenever system on top of model, put them in first modellayer with thickness
  IF(SUM(TLP).EQ.0.0)THEN
-  IF(Z2.GE.TOP(1))TLP(1)=1.0
+  IF(Z1.GE.TOP(1))THEN
+   DO ILAY=1,N
+    IF(TOP(ILAY)-BOT(ILAY).GT.0.0.AND.KH(ILAY).GT.MINKH)THEN; TLP(ILAY)=1.0; EXIT; ENDIF
+   ENDDO
+  ENDIF
  ENDIF
 
  DEALLOCATE(L,TL,IL)
