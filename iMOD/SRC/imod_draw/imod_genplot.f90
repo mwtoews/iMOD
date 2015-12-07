@@ -744,7 +744,7 @@ CONTAINS
  INTEGER,INTENT(IN) :: IPLOT,IPOLYGON
  INTEGER :: IOS,MAXP,N,ID,JL,IU
  LOGICAL :: LEX
- CHARACTER(LEN=52) :: STRING
+ CHARACTER(LEN=52) :: CID !STRING
  REAL :: TWIDTH,THEIGHT,XP,YP,RADIUS
  
  IF(MP(IPLOT)%PRFTYPE.NE.IPOLYGON)RETURN
@@ -794,9 +794,9 @@ CONTAINS
  DO
 
   !## header
-  READ(IU,'(A52)',IOSTAT=IOS) STRING
+  READ(IU,'(A)',IOSTAT=IOS) CID
   IF(IOS.NE.0)EXIT
-  READ(STRING,*,IOSTAT=IOS) ID !,XP,YP
+!  READ(STRING,'(A)',IOSTAT=IOS) CID !,XP,YP
   
   IOS=-1 !## nooit point 
   !## point
@@ -809,7 +809,7 @@ CONTAINS
    IF(XP.GT.MPW%XMIN.AND.XP.LT.MPW%XMAX.AND. &
       YP.GT.MPW%YMIN.AND.YP.LT.MPW%YMAX)THEN
     !## get proper label for id
-    CALL UTL_GENLABELSGET(ID,JL)
+    CALL UTL_GENLABELSGET(CID,JL)
     !## get colour of point (e.g. grey or based upon selected attribute)
     CALL IGRCOLOURN(GENLABELGETCOLOR(JL,IPLOT))
     IF(MP(IPLOT)%PRFTYPE.EQ.0)CALL IGRFILLPATTERN(OUTLINE)
@@ -868,7 +868,7 @@ CONTAINS
    !## if at least one point of a polygon is inside the map, then draw the polygon
    IF(LEX)THEN
     !## get proper label for id
-    CALL UTL_GENLABELSGET(ID,JL)
+    CALL UTL_GENLABELSGET(CID,JL)
     !## get colour of polygon (e.g. grey or based upon selected attribute)
     CALL IGRCOLOURN(GENLABELGETCOLOR(JL,IPLOT))
 

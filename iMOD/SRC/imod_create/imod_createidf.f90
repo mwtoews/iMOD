@@ -685,6 +685,7 @@ CONTAINS
  REAL :: X1,X2,Y1,Y2,XC,YC,ANGLE,D,MD,XV
  REAL,DIMENSION(:),POINTER :: XD,YD,ZD,XD_DUMMY,YD_DUMMY,ZD_DUMMY
  LOGICAL :: LEX
+ CHARACTER(LEN=52) :: CID
  
  IERROR=1
 
@@ -727,7 +728,8 @@ CONTAINS
       CALL WMESSAGEBOX(OKONLY,EXCLAMATIONICON,COMMONOK,'You should specify an appropriate column in the dat-file to be used for gridding','Error')
       RETURN
      ENDIF
-     CALL UTL_GENLABELSGET(SHPID(SHPI),JL)
+     WRITE(CID,*) SHPID(SHPI)
+     CALL UTL_GENLABELSGET(CID,JL)
      IF(JL.LE.0)THEN
       CALL WMESSAGEBOX(OKONLY,EXCLAMATIONICON,COMMONOK,'Can not get the right label for current shape '//TRIM(ITOS(IV)),'Error'); RETURN
      ENDIF
@@ -818,7 +820,8 @@ CONTAINS
       CALL WMESSAGEBOX(OKONLY,EXCLAMATIONICON,COMMONOK,'You should specify an appropriate column in the dat-file to be used for gridding','Error')
       DEALLOCATE(XD,YD,ZD); RETURN
      ENDIF
-     CALL UTL_GENLABELSGET(SHPID(SHPI),JL)
+     WRITE(CID,*) SHPID(SHPI)
+     CALL UTL_GENLABELSGET(CID,JL)
      READ(VAR(IV,JL),*,IOSTAT=IOS) XV
      IF(IOS.NE.0)THEN
       CALL WMESSAGEBOX(OKONLY,EXCLAMATIONICON,COMMONOK,'Can not convert '//TRIM(VAR(IV,JL))//' into a real','Error')

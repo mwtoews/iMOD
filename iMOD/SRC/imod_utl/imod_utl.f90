@@ -121,7 +121,7 @@ CONTAINS
     IF(IR.LT.NR)THEN
      READ(IU,*) NDATE,(QD(I),I=2,NC) 
 
-!## temporary vermeulen     
+!## temporary vermeulen
 !     IF(IR.EQ.NR-1)QD(ICOL)=0.0
      
      Q1=QD(ICOL)
@@ -206,11 +206,12 @@ CONTAINS
  END FUNCTION UTL_PCK_READTXT
 
  !###======================================================================
- SUBROUTINE UTL_PCK_GETTLP(N,TLP,KH,TOP,BOT,Z1,Z2)
+ SUBROUTINE UTL_PCK_GETTLP(N,TLP,KH,TOP,BOT,Z1,Z2,MINKH)
  !###======================================================================
  IMPLICIT NONE
- REAL,PARAMETER :: MINP=0.0, MINKH=0.0
+ REAL,PARAMETER :: MINP=0.0 
  INTEGER,INTENT(IN) :: N
+ REAL,INTENT(IN) :: MINKH
  REAL,INTENT(INOUT) :: Z1,Z2
  REAL,INTENT(IN),DIMENSION(N) :: KH,TOP,BOT
  REAL,INTENT(INOUT),DIMENSION(N) :: TLP
@@ -1134,13 +1135,13 @@ CONTAINS
  END FUNCTION UTL_DATA_CSV
 
  !###======================================================================
- SUBROUTINE UTL_GENLABELSGET(ID,JL)
+ SUBROUTINE UTL_GENLABELSGET(CID,JL)
  !###======================================================================
  IMPLICIT NONE
- INTEGER,INTENT(IN) :: ID
+ CHARACTER(LEN=*),INTENT(IN) :: CID
  INTEGER,INTENT(OUT) :: JL
- INTEGER :: SC,IOS,JD
- CHARACTER(LEN=100) :: STRING
+ INTEGER :: SC
+ CHARACTER(LEN=52) :: STRING
  
  JL=0; IF(NV.LE.0.OR.NL.LE.0)RETURN
 
@@ -1149,9 +1150,8 @@ CONTAINS
  !## evaluate the first
  DO JL=1,NL
   STRING=VAR(SC,JL)
-  READ(STRING,*,IOSTAT=IOS) JD
   !## math found
-  IF(IOS.EQ.0.AND.ID.EQ.JD)RETURN
+  IF(TRIM(UTL_CAP(CID,'U')).EQ.TRIM(UTL_CAP(STRING,'U')))RETURN
  END DO
  JL=0
  
