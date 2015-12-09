@@ -120,10 +120,7 @@ CONTAINS
     NDATE=EDATE
     IF(IR.LT.NR)THEN
      READ(IU,*) NDATE,(QD(I),I=2,NC) 
-
-!## temporary vermeulen
-!     IF(IR.EQ.NR-1)QD(ICOL)=0.0
-     
+   
      Q1=QD(ICOL)
      JDATE=NDATE
      NDATE=UTL_IDATETOJDATE(NDATE) !## fname=optional for error message
