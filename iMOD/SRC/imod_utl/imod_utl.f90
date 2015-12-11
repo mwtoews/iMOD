@@ -2615,6 +2615,22 @@ CONTAINS
  END FUNCTION HMSTOITIME
 
  !###====================================================================
+ SUBROUTINE ITIMETOGDATE(IDATE,IYR,IMH,IDY,IHR,IMT,ISC)
+ !###====================================================================
+ IMPLICIT NONE
+ INTEGER(KIND=8),INTENT(IN) :: IDATE
+ INTEGER,INTENT(OUT) :: IYR,IMH,IDY,IHR,IMT,ISC
+
+ IYR =      IDATE                / 10000000000
+ IMH = MOD( IDATE, 10000000000 ) / 100000000
+ IDY = MOD( IDATE, 100000000 )   / 1000000
+ IHR = MOD( IDATE, 1000000 )     / 10000
+ IMT = MOD( IDATE, 10000 )       / 100
+ ISC = MOD( IDATE, 100 )
+
+ END SUBROUTINE ITIMETOGDATE
+
+ !###====================================================================
  REAL FUNCTION CTIMETOFTIME(CTIME)
  !###====================================================================
  IMPLICIT NONE
