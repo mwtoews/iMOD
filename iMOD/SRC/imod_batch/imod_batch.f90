@@ -1310,59 +1310,61 @@ CONTAINS
   READ(LINE,*) PBMAN%ISS; WRITE(*,'(A,I1)') 'ISS=',PBMAN%ISS
   !## transient
   IF(PBMAN%ISS.EQ.1)THEN
-   !## sdate
-   IF(.NOT.UTL_READINITFILE('SDATE',LINE,IU,0))RETURN
-   READ(LINE,*) PBMAN%SDATE; WRITE(*,'(A,I14)') 'SDATE=',PBMAN%SDATE
-   !## edate
-   IF(.NOT.UTL_READINITFILE('EDATE',LINE,IU,0))RETURN
-   READ(LINE,*) PBMAN%EDATE; WRITE(*,'(A,I14)') 'EDATE=',PBMAN%EDATE
-   !## type of interval
-   IF(.NOT.UTL_READINITFILE('ITT',LINE,IU,0))RETURN
-   READ(LINE,*) PBMAN%ITT; WRITE(*,'(A,I14)') 'ITT=',PBMAN%ITT
-   SELECT CASE (PBMAN%ITT)
-    CASE (1,2,3,5,6)
-     !## timesteps
-     IF(.NOT.UTL_READINITFILE('IDT',LINE,IU,0))RETURN
-     READ(LINE,*) PBMAN%IDT; WRITE(*,'(A,I14)') 'IDT=',PBMAN%IDT
-   END SELECT
-   SELECT CASE (PBMAN%ITT)
-    CASE (1)
-     WRITE(*,'(A,I5,A)') 'Time step: ',PBMAN%IDT,' hours'
-    CASE (2)
-     WRITE(*,'(A,I5,A)') 'Time step: ',PBMAN%IDT,' daily'
-    CASE (3)
-     WRITE(*,'(A,I5,A)') 'Time step: ',PBMAN%IDT,' weeks'
-    CASE (4)
-     WRITE(*,'(A)')      'Time step: decades'; PBMAN%IDT=10
-    CASE (5)
-     WRITE(*,'(A)')      'Time step: every 14/28'; PBMAN%IDT=14
-    CASE (6)
-     WRITE(*,'(A,I5,A)') 'Time step: ',PBMAN%IDT,' monthly'
-    CASE (7)
-     WRITE(*,'(A,I5,A)') 'Time step: ',PBMAN%IDT,' yearly'
-    CASE (8)
-     WRITE(*,'(A)')      'Time step: depending on packages'; PBMAN%IDT=1
-   END SELECT
-  ENDIF    
+   PBMAN%TIMFNAME=''
+   !## tim-file?
+   IF(UTL_READINITFILE('TIMFNAME',LINE,IU,1))THEN
+    READ(LINE,*) PBMAN%TIMFNAME; WRITE(*,'(A,I14)') 'TIMFNAME=',PBMAN%TIMFNAME
+   ELSE
+    !## sdate
+    IF(.NOT.UTL_READINITFILE('SDATE',LINE,IU,0))RETURN
+    READ(LINE,*) PBMAN%SDATE; WRITE(*,'(A,I14)') 'SDATE=',PBMAN%SDATE
+    !## edate
+    IF(.NOT.UTL_READINITFILE('EDATE',LINE,IU,0))RETURN
+    READ(LINE,*) PBMAN%EDATE; WRITE(*,'(A,I14)') 'EDATE=',PBMAN%EDATE
+    !## type of interval
+    IF(.NOT.UTL_READINITFILE('ITT',LINE,IU,0))RETURN
+    READ(LINE,*) PBMAN%ITT; WRITE(*,'(A,I14)') 'ITT=',PBMAN%ITT
+    SELECT CASE (PBMAN%ITT)
+     CASE (1,2,3,5,6)
+      !## timesteps
+      IF(.NOT.UTL_READINITFILE('IDT',LINE,IU,0))RETURN
+      READ(LINE,*) PBMAN%IDT; WRITE(*,'(A,I14)') 'IDT=',PBMAN%IDT
+    END SELECT
+    SELECT CASE (PBMAN%ITT)
+     CASE (1)
+      WRITE(*,'(A,I5,A)') 'Time step: ',PBMAN%IDT,' hours'
+     CASE (2)
+      WRITE(*,'(A,I5,A)') 'Time step: ',PBMAN%IDT,' daily'
+     CASE (3)
+      WRITE(*,'(A,I5,A)') 'Time step: ',PBMAN%IDT,' weeks'
+     CASE (4)
+      WRITE(*,'(A)')      'Time step: decades'; PBMAN%IDT=10
+     CASE (5)
+      WRITE(*,'(A)')      'Time step: every 14/28'; PBMAN%IDT=14
+     CASE (6)
+      WRITE(*,'(A,I5,A)') 'Time step: ',PBMAN%IDT,' monthly'
+     CASE (7)
+      WRITE(*,'(A,I5,A)') 'Time step: ',PBMAN%IDT,' yearly'
+     CASE (8)
+      WRITE(*,'(A)')      'Time step: depending on packages'; PBMAN%IDT=1
+    END SELECT
+   ENDIF    
 
-!  !## tim-file?
-!  IF(.NOT.UTL_READINITFILE('TIMFNAME',LINE,IU,0))RETURN
-!  READ(LINE,*) PBMAN%TIMFNAME; WRITE(*,'(A,I14)') 'TIMFNAME=',PBMAN%TIMFNAME
-
-!  IF(.NOT.UTL_READINITFILE('IDT',LINE,IU,0))RETURN
-!  READ(LINE,*) PBMAN%IDT; WRITE(*,'(A,I14)') 'EDATE=',PBMAN%IDT
-  !## packages
+  ENDIF
+  
+  !## packages?
+ 
+  IF(.NOT.UTL_READINITFILE('IFORMAT',LINE,IU,0))RETURN
+  READ(LINE,*) PBMAN%IFORMAT; WRITE(*,'(A,I14)') 'IFORMAT=',PBMAN%IFORMAT
+  SELECT CASE (PBMAN%IFORMAT)
+   CASE (1)
+    WRITE(*,'(/A/)') 'Export to a RUNFILE'
+   CASE (2)
+    WRITE(*,'(/A/)') 'Export to standard MODFLOW2005 files' 
+  END SELECT
+ 
  ENDIF
- 
- IF(.NOT.UTL_READINITFILE('IFORMAT',LINE,IU,0))RETURN
- READ(LINE,*) PBMAN%IFORMAT; WRITE(*,'(A,I14)') 'IFORMAT=',PBMAN%IFORMAT
- SELECT CASE (PBMAN%IFORMAT)
-  CASE (1)
-   WRITE(*,'(/A/)') 'Export to a RUNFILE'
-  CASE (2)
-   WRITE(*,'(/A/)') 'Export to standard MODFLOW2005 files' 
- END SELECT
- 
+
  IF(UTL_READINITFILE('RUNFILE_IN',LINE,IU,1))THEN
   IMODE=2
   READ(LINE,*) RUNFILE; WRITE(*,'(A)') 'RUNFILE_IN='//TRIM(RUNFILE)
