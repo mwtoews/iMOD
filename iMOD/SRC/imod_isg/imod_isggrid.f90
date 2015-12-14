@@ -1466,6 +1466,7 @@ CONTAINS
  REAL,ALLOCATABLE,DIMENSION(:,:) :: MM
  REAL,DIMENSION(4) :: V
 
+ !## allocate memory for maximal erosion matrix
  W=0; DO IROW=1,IDF(1)%NROW; DO ICOL=1,IDF(1)%NCOL
   W=MAX(W,IDF(7)%X(ICOL,IROW))
  ENDDO; ENDDO
@@ -1575,14 +1576,14 @@ CONTAINS
   IF(IDF(9)%X(ICOL,IROW).GT.1.0)THEN
    IDF(9)%X(ICOL,IROW)=1.0
   ELSE
-   IDF(1)%X(ICOL,IROW)=IDF(1)%X(ICOL,IROW)*IDF(9)%X(ICOL,IROW)
+   IDF(9)%X(ICOL,IROW)=-1.0*IDF(9)%X(ICOL,IROW)
   ENDIF
  ENDDO; ENDDO
 
  DEALLOCATE(MM)
   
+ !## clean for conductances le zero
  DO IROW=1,IDF(1)%NROW; DO ICOL=1,IDF(1)%NCOL
-  !## already visited by bathymetry routine - so skip it
   IF(IDF(1)%X(ICOL,IROW).LE.0.0)THEN
    DO I=1,4; IDF(I)%X(ICOL,IROW)=IDF(I)%NODATA; ENDDO
   ENDIF
