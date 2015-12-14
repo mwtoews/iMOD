@@ -79,8 +79,8 @@ MODULE MOD_PMANAGER_PAR
 
  TYPE PSTOBJ
   INTEGER :: PE_MXITER=10
-  INTEGER :: PE_NPERIOD=0
-  INTEGER :: PE_NBATCH=0
+!  INTEGER :: PE_NPERIOD=0
+!  INTEGER :: PE_NBATCH=0
   INTEGER :: PE_SCALING=1
   INTEGER :: PE_KTYPE=1
   REAL,DIMENSION(2) :: PE_TARGET=(/1.0,0.0/)
@@ -170,8 +170,10 @@ MODULE MOD_PMANAGER_PAR
  DATA FEXT/'.ARR','.ASC'/
  REAL,DIMENSION(5) :: SUBMODEL
  
- CHARACTER(LEN=8),DIMENSION(9 ) :: TMENU
- DATA TMENU/'Hourly  ','Daily   ','Weekly  ','Decade  ', &
+ CHARACTER(LEN=8),DIMENSION(9) :: TMENU1,TMENU2
+ DATA TMENU1/'Hourly  ','Daily   ','Weekly  ','Decade  ', &
              '14/28   ','Monthly ','Yearly  ','Packages','Custom  '/
+ DATA TMENU2/'Hourly  ','Daily   ','Weekly  ','Decade  ', &
+             '14/28   ','Monthly ','Yearly  ','Packages','All     '/
  
 END MODULE MOD_PMANAGER_PAR
