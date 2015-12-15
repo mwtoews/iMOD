@@ -203,11 +203,11 @@ CONTAINS
  END FUNCTION UTL_PCK_READTXT
 
  !###======================================================================
- SUBROUTINE UTL_PCK_GETTLP(N,TLP,KH,TOP,BOT,Z1,Z2,MINKH)
+ SUBROUTINE UTL_PCK_GETTLP(N,TLP,KH,TOP,BOT,Z1,Z2,MINKH,ICLAY)
  !###======================================================================
  IMPLICIT NONE
  REAL,PARAMETER :: MINP=0.0 
- INTEGER,INTENT(IN) :: N
+ INTEGER,INTENT(IN) :: N,ICLAY
  REAL,INTENT(IN) :: MINKH
  REAL,INTENT(INOUT) :: Z1,Z2
  REAL,INTENT(IN),DIMENSION(N) :: KH,TOP,BOT
@@ -251,13 +251,6 @@ CONTAINS
  
  !## normalize tlp() again
  IF(SUM(TLP).GT.0.0)TLP=(1.0/SUM(TLP))*TLP
-
- IF(MINP.GT.0.0)THEN
-  !## remove small percentages
-  DO ILAY=1,N; IF(TLP(ILAY).LT.MINP)TLP(ILAY)=0.0; ENDDO
-  !## normalize tlp() again
-  IF(SUM(TLP).GT.0.0)TLP=(1.0/SUM(TLP))*TLP
- ENDIF
  
  !## remove small permeabilities
  IF(MINKH.GT.0.0)THEN
@@ -270,18 +263,27 @@ CONTAINS
   IF(SUM(TLP).GT.0.0)TLP=(1.0/SUM(TLP))*TLP
  ENDIF
 
+ IF(MINP.GT.0.0)THEN
+  !## remove small percentages
+  DO ILAY=1,N; IF(TLP(ILAY).LT.MINP)TLP(ILAY)=0.0; ENDDO
+  !## normalize tlp() again
+  IF(SUM(TLP).GT.0.0)TLP=(1.0/SUM(TLP))*TLP
+ ENDIF
+
  !## if no layers has been used for the assignment, try to allocate it to the nearest 
- IF(SUM(TLP).EQ.0.0)THEN
-  ZM=(Z1+Z2)/2.0; DZ=99999.0; JLAY=0
-  DO ILAY=1,N
-   ZT=TOP(ILAY); ZB=BOT(ILAY)
-   IF(ABS(ZT-ZM).LT.DZ.OR.ABS(ZB-ZM).LT.DZ)THEN
-    DZ  =MIN(ABS(ZT-ZM),ABS(ZB-ZM))
-    JLAY=ILAY
-   ENDIF
-  ENDDO
+ IF(ICLAY.EQ.1)THEN
+  IF(SUM(TLP).EQ.0.0)THEN
+   ZM=(Z1+Z2)/2.0; DZ=99999.0; JLAY=0
+   DO ILAY=1,N
+    ZT=TOP(ILAY); ZB=BOT(ILAY)
+    IF(ABS(ZT-ZM).LT.DZ.OR.ABS(ZB-ZM).LT.DZ)THEN
+     DZ  =MIN(ABS(ZT-ZM),ABS(ZB-ZM))
+     JLAY=ILAY
+    ENDIF
+   ENDDO
 !  IF(JLAY.EQ.0)CALL WMESSAGEBOX(OKONLY,EXCLAMATIONICON,COMMONOK,'JLAY.EQ.0, Not able to assign proper modellayer','Error')
 !  TLP(JLAY)=-1.0
+  ENDIF
  ENDIF
  
  !## make sure only one layer is assigned whenever z1.eq.z2
