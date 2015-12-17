@@ -1917,6 +1917,7 @@ c end of program
       end
 
       subroutine applyarithoper(file,a,jj,ii,ioper,cnstnt)
+      use rdrsmodule, only: nodata
       use gcdmodule
       use imod_utl, only: imod_utl_has_ext
 
@@ -1952,13 +1953,15 @@ c ------------------------------------------------------------------------------
          if (.not.lipf) then
             do i = 1, ii
                do j = 1, jj
-                  a(j,i)=a(j,i) * cnstnt(opermlt)
+                  if (a(j,i).ne.nodata) a(j,i)=a(j,i) * cnstnt(opermlt)
                end do
             end do
          else
             do i = 1, nlist
                val = ipflist(isub,icolumn)%list(3,i)
-               ipflist(isub,icolumn)%list(3,i) = val*cnstnt(opermlt)
+               if (val.ne.nodata) then
+                  ipflist(isub,icolumn)%list(3,i) = val*cnstnt(opermlt)
+               end if   
             end do
          end if
       end if
@@ -1966,13 +1969,15 @@ c ------------------------------------------------------------------------------
          if (.not.lipf) then
             do i = 1, ii
                do j = 1, jj
-                  a(j,i) = a(j,i) + cnstnt(operadd)
+                  if(a(j,i).ne.nodata) a(j,i) = a(j,i) + cnstnt(operadd)
                end do
             end do
          else
             do i = 1, nlist
                val = ipflist(isub,icolumn)%list(3,i)
-               ipflist(isub,icolumn)%list(3,i) = val+cnstnt(operadd)
+               if (val.ne.nodata) then
+                  ipflist(isub,icolumn)%list(3,i) = val+cnstnt(operadd)
+               end if   
             end do
          end if
       end if
@@ -1980,13 +1985,15 @@ c ------------------------------------------------------------------------------
          if (.not. lipf) then
             do i = 1, ii
                do j = 1, jj
-                  a(j,i) = a(j,i) - cnstnt(opersub)
+                  if (val.ne.nodata) a(j,i) = a(j,i) - cnstnt(opersub)
                end do
             end do
          else
             do i = 1, nlist
                val = ipflist(isub,icolumn)%list(3,i)
-               ipflist(isub,icolumn)%list(3,i) = val-cnstnt(opersub)
+               if (val.ne.nodata) then
+                  ipflist(isub,icolumn)%list(3,i) = val-cnstnt(opersub)
+               end if   
             end do
          end if
       end if
@@ -1995,13 +2002,15 @@ c ------------------------------------------------------------------------------
             if (.not.lipf) then
                do i = 1, ii
                   do j = 1, jj
-                     a(j,i)=a(j,i)/cnstnt(operdiv)
+                     if (val.ne.nodata) a(j,i)=a(j,i)/cnstnt(operdiv)
                   end do
                end do
             else
                do i = 1, nlist
                   val = ipflist(isub,icolumn)%list(3,i)
+                  if (val.ne.nodata) then
                   ipflist(isub,icolumn)%list(3,i) = val/cnstnt(operdiv)
+                  end if
                end do
             end if
          end if
@@ -2010,13 +2019,15 @@ c ------------------------------------------------------------------------------
          if (.not.lipf) then
             do i = 1, ii
                do j = 1, jj
-                  a(j,i) = a(j,i)**cnstnt(operexp)
+                  if (val.ne.nodata) a(j,i) = a(j,i)**cnstnt(operexp)
                end do
             end do
          else
             do i = 1, nlist
                val = ipflist(isub,icolumn)%list(3,i)
-               ipflist(isub,icolumn)%list(3,i) = val**cnstnt(operexp)
+               if (val.ne.nodata) then
+                  ipflist(isub,icolumn)%list(3,i) = val**cnstnt(operexp)
+               end if   
             end do
          end if
       end if

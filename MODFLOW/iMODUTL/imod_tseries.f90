@@ -462,7 +462,7 @@ ELSE
      LINE=TS(JJ)%IPFNAME(:J)//TRIM(TS(JJ)%STVALUE(I)%ID)//'.'//TRIM(TS(JJ)%EXT)
      CALL IMOD_UTL_SWAPSLASH(LINE)
      CALL IMOD_UTL_OPENASC(JUTXT(II),LINE,'R')
-     IF(JUTXT(I).LE.0)CALL IMOD_UTL_PRINTTEXT('Can not open file '//TRIM(LINE),2)
+     IF(JUTXT(II).LE.0)CALL IMOD_UTL_PRINTTEXT('Can not open file '//TRIM(LINE),2)
      READ(JUTXT(II),*)
      READ(JUTXT(II),*) N
 !     IF(N.NE.2)CALL IMOD_UTL_PRINTTEXT('Number of columns in associated text file should be 2.',2)
