@@ -3165,19 +3165,20 @@ CONTAINS
  INTEGER :: I,J,IP
  REAL :: FRAC
 
- XMED=NODATA 
+ XMED=NODATA; MX=0
 
  IF(NX.LE.0)RETURN
 
  !## only one sample
  IF(NX.EQ.1)THEN
-  XMED=X(1)
-  MX  =1
+  IF(X(1).NE.NODATA)THEN
+   XMED=X(1)
+   MX  =1
+  ENDIF
   RETURN
  ENDIF
 
  !## do not include nodata values for median-computation
- MX=0
  DO I=1,NX
   IF(X(I).NE.NODATA)THEN
    MX   =MX+1

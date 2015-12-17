@@ -69,14 +69,24 @@ CONTAINS
  IDF%XMIN=MAX(IDF%XMIN,MPW%XMIN); IDF%XMAX=MIN(IDF%XMAX,MPW%XMAX)
  IDF%YMIN=MAX(IDF%YMIN,MPW%YMIN); IDF%YMAX=MIN(IDF%YMAX,MPW%YMAX)
  CALL UTL_IDFSNAPTOGRID(IDF%XMIN,IDF%XMAX,IDF%YMIN,IDF%YMAX,IDF%DX,IDF%NCOL,IDF%NROW)
- 
+
+ IF(IDF%NCOL.LE.0.OR.IDF%NROW.LE.0)THEN
+  CALL WMESSAGEBOX(OKONLY,EXCLAMATIONICON,COMMONOK,'The selected results of the iMODPATH runfile are not within'//CHAR(13)// &
+      'the limits of the current graphical zoom extent','Error')
+  CALL TRACE_3D_CLOSE()
+  RETURN
+ ENDIF
+
  !## read data 
  IF(.NOT.TRACECALC_INIT(0))RETURN
  !## read fluxes, default forward simulation
- IREV=0; IF(.NOT.TRACEREADBUDGET(1,0))RETURN 
- TMAX=100.0 !## maximum simulation time
- TDEL=1.0   !## timestep
- TINC=1.5   !## timestep increasement
+ IF(.NOT.TRACEREADBUDGET(1,0))RETURN 
+
+ !## initiate tracing variables
+ PL%IREV=0     !## 0=forward; 1=backward simulation (operates as a switch)
+ PL%TMAX=100.0 !## maximum simulation time (year)
+ PL%TDEL=1.0   !## Intermediate Travelsteps (year)
+ PL%TINC=1.5   !## Intermediate Increasement Travelsteps (quotient)
  
  ALLOCATE(IVISIT(IDF%NCOL*IDF%NROW*NLAY)); IVISIT=INT(0,1)
  ALLOCATE(LVISIT(IDF%NCOL*IDF%NROW*MIN(2,NLAY))); LVISIT=0
@@ -132,51 +142,146 @@ CONTAINS
  ENDIF
  
  CALL WDIALOGSELECT(ID_D3DSETTINGS_TAB8)
- CALL WDIALOGGETREAL(IDF_REAL4,TMAX)
- CALL WDIALOGGETREAL(IDF_REAL5,TDEL)
- CALL WDIALOGGETREAL(IDF_REAL6,TINC)
+ CALL WDIALOGGETREAL(IDF_REAL4,PL%TMAX)
+ CALL WDIALOGGETREAL(IDF_REAL5,PL%TDEL)
+ CALL WDIALOGGETREAL(IDF_REAL6,PL%TINC)
 
  T=0.0; PL_NPER=0; DO
-  IF(T.GT.TMAX)EXIT
+  IF(T.GT.PL%TMAX)EXIT
   PL_NPER=PL_NPER+1
-  T=T+TDEL
-  TDEL=TDEL**TINC
+  T=T+PL%TDEL
+  PL%TDEL=PL%TDEL**PL%TINC
  ENDDO
- PL_NPER=TMAX/TDEL
+ PL_NPER=PL%TMAX/PL%TDEL
 
  ALLOCATE(PLLISTINDEX(PL_NPER)); PLLISTINDEX=0
  
- TCUR=0.0; PL_NPER=0; CALL WDIALOGPUTREAL(IDF_REAL7,TCUR); CALL WDIALOGPUTINTEGER(IDF_INTEGER1,PL_NPER)
+ PL%TCUR=0.0; PL_NPER=0; CALL WDIALOGPUTREAL(IDF_REAL7,PL%TCUR); CALL WDIALOGPUTINTEGER(IDF_INTEGER1,PL_NPER)
  CALL WDIALOGRANGETRACKBAR(IDF_TRACKBAR1,0,PL_NPER,1); CALL WDIALOGPUTTRACKBAR(IDF_TRACKBAR1,0)
  
  END SUBROUTINE TRACE_3D_RESET
  
  !###======================================================================
- LOGICAL FUNCTION TRACE_3D_STARTPOINTS() 
+ SUBROUTINE TRACE_3D_STARTPOINTS() 
  !###======================================================================
  IMPLICIT NONE
-
- !## get new location/particle - click from the 3d tool
+ INTEGER :: I,J,K,NX,NZ,N
+ REAL :: X,Y,Z,DX,DZ,XC,YC,ZC
+ REAL,DIMENSION(:),ALLOCATABLE :: XSP,YSP,ZSP
  
- !  CALL WDIALOGPUTREAL(IDF_REAL1,X)
-!  CALL WDIALOGPUTREAL(IDF_REAL2,Y)
-!  CALL WDIALOGPUTREAL(IDF_REAL3,Z)
+ !## get location of mouse
+ CALL WDIALOGSELECT(ID_D3DSETTINGS_TAB8)
+ CALL WDIALOGGETREAL(IDF_REAL1,XC)
+ CALL WDIALOGGETREAL(IDF_REAL2,YC)
+ CALL WDIALOGGETREAL(IDF_REAL3,ZC)
+ CALL WDIALOGGETREAL(IDF_REAL8,DX)
+ CALL WDIALOGGETREAL(IDF_REAL9,DZ)
+ CALL WDIALOGGETINTEGER(IDF_INTEGER3,NX)
+ CALL WDIALOGGETINTEGER(IDF_INTEGER2,NZ)
 
-! DO I=1,NPART
-!  READ(JU,'(3I10,4(F15.3,1X))') KLC(I),ILC(I),JLC(I),XLC(I,2),YLC(I,2),ZLC(I,2),ZLL(I,2)
-!  !## initial age set to zero!
-!  TOT(I,2)=0.0
-! END DO
-!
-! !## store startlocations!
-! XLC(:,1)=XLC(:,2)
-! YLC(:,1)=YLC(:,2)
-! ZLC(:,1)=ZLC(:,2)
+XC=561000.0
+YC=5804000.0
+ZC=750.0
+
+! DX=0.0; DZ=0.0; NX=1; NZ=1
+
+ !## allocate memory for temporary storage of locations
+ N=NZ*NX**2; ALLOCATE(XSP(N),YSP(N),ZSP(N))
+ 
+ !## start at lower-left/bottom-corner
+ XC=XC-0.5*DX; YC=YC-0.5*DX; ZC=ZC-0.5*DZ
+
+ DX=DX/REAL(NX); DZ=DZ/REAL(NZ)
+
+ N=0; Z=ZC-DZ
+ DO K=1,NZ
+  Z=Z+DZ; Y=YC-DX
+  DO I=1,NX
+   Y=Y+DX; X=XC-DX
+   DO J=1,NX
+    X=X+DX
+    N=N+1; XSP(N)=X; YSP(N)=Y; ZSP(N)=Z
+   ENDDO
+  ENDDO
+ ENDDO
+ 
+ !## get new location/particle - click from the 3d tool
+ CALL TRACE_3D_STARTPOINTS_ASSIGN(XSP,YSP,ZSP)
+
+ !## deallocate memory for temporary storage of locations
+ DEALLOCATE(XSP,YSP,ZSP)
+
 ! SLAY    =KLC
 ! MAXILAY =SLAY
  
- END FUNCTION TRACE_3D_STARTPOINTS
+ END SUBROUTINE TRACE_3D_STARTPOINTS
  
+ !###======================================================================
+ SUBROUTINE TRACE_3D_STARTPOINTS_ASSIGN(XSP,YSP,ZSP)
+ !###======================================================================
+ IMPLICIT NONE
+ REAL,INTENT(IN),DIMENSION(:) :: XSP,YSP,ZSP
+ INTEGER :: IROW,ICOL,ILAY,I
+ REAL :: XC,YC,ZC,ZL,Z,DZ
+
+ DO I=1,SIZE(XSP)
+
+  XC=XSP(I); YC=YSP(I); ZC=ZSP(I)
+  
+  !## location outside model dimensions - skip
+  IF(XC.LE.IDF%XMIN.OR.XC.GE.IDF%XMAX.OR. &
+     YC.LE.IDF%YMIN.OR.YC.GE.IDF%YMAX)CYCLE
+
+  !## get current irow/icol for model-idf
+  CALL IDFIROWICOL(IDF,IROW,ICOL,XC,YC)
+ 
+  !## particle too high - above surfacelevel
+  IF(ZC.GT.ZTOP(ICOL,IROW,1))CYCLE
+  !## particle too low - below lowest bottom
+  IF(ZC.LT.ZBOT(ICOL,IROW,NLAY))CYCLE
+    
+  !## determine in which layer location is situated, skip positions within clay-layers
+  DO ILAY=1,NLAY
+   !## skip inactive/constant head cells
+   IF(IBOUND(ICOL,IROW,ILAY).LE.0)CYCLE
+   
+   ZL=0.0
+
+   !## inside current modellayer
+   IF(Z.LE.ZTOP(ICOL,IROW,ILAY).AND.Z.GE.ZBOT(ICOL,IROW,ILAY))THEN
+    !## compute local z: top (zl=1); mid (zl=0.5); bot (zl=0)
+    DZ=ZTOP(ICOL,IROW,ILAY)-ZBOT(ICOL,IROW,ILAY)
+    IF(DZ.NE.0.0)ZL=(Z-ZBOT(ICOL,IROW,ILAY))/DZ
+   ENDIF
+   IF(ZL.EQ.0.AND.ILAY.LT.NLAY)THEN
+    !## skip inactive/constant head cells under layer
+    IF(IBOUND(ICOL,IROW,ILAY+1).LE.0)CYCLE
+    !## inside interbed between modellayers
+    IF(Z.LT.ZBOT(ICOL,IROW,ILAY).AND.Z.GT.ZTOP(ICOL,IROW,ILAY+1))THEN
+     !## compute local z: top (zl=1); mid (zl=0.5); bot (zl=0)
+     DZ=ZBOT(ICOL,IROW,ILAY)-ZTOP(ICOL,IROW,ILAY+1)
+     IF(DZ.NE.0.0)ZL=(ZTOP(ICOL,IROW,ILAY+1)-Z)/DZ
+    ENDIF
+   ENDIF
+
+   IF(ZL.GT.0.0)THEN
+    !## count number of particles
+    NPART=NPART+1
+    XLC(NPART,2)=XC-IDF%XMIN
+    YLC(NPART,2)=YC-IDF%YMIN
+    ZLC(NPART,2)=Z
+    ZLL(NPART,2)=ZL
+    KLC(NPART)  =ILAY
+    ILC(NPART)  =IROW
+    JLC(NPART)  =ICOL
+    EXIT
+   ENDIF
+  ENDDO
+
+ ENDDO
+
+ END SUBROUTINE TRACE_3D_STARTPOINTS_ASSIGN
+
  !###======================================================================
  LOGICAL FUNCTION TRACE_3D_COMPUTE() 
  !###======================================================================
@@ -190,19 +295,19 @@ CONTAINS
  MAXVELOCITY=0.0
 
  CALL WDIALOGSELECT(ID_D3DSETTINGS_TAB8)
- CALL WDIALOGGETREAL(IDF_REAL4,TMAX)
- CALL WDIALOGGETREAL(IDF_REAL5,TDEL)
- CALL WDIALOGGETREAL(IDF_REAL6,TINC)
- CALL WDIALOGGETREAL(IDF_REAL7,TCUR)
+ CALL WDIALOGGETREAL(IDF_REAL4,PL%TMAX)
+ CALL WDIALOGGETREAL(IDF_REAL5,PL%TDEL)
+ CALL WDIALOGGETREAL(IDF_REAL6,PL%TINC)
+ CALL WDIALOGGETREAL(IDF_REAL7,PL%TCUR)
  CALL WDIALOGGETINTEGER(IDF_INTEGER1,PL_NPER)
  
  !## increase number of timesteps
  PL_NPER=PL_NPER+1
  
  !## get next timestep
- TTMAX=TCUR+TDEL**TINC
+ TTMAX=PL%TCUR+PL%TDEL**PL%TINC
  !## maximize it for tmax
- TTMAX=MIN(TTMAX,TMAX)
+ TTMAX=MIN(TTMAX,PL%TMAX)
  
  !## wellicht slim om niet met drawniglst te werken .. hoe gaat dat dan grafisch. Je klikt op een locatie dan gaat er wat stromen
  !## maar dat stop op een eggeven moment, er komt niks meer bij. Dan kun je met een slider terug in de tijd, dat kan alleen met een 
@@ -243,7 +348,7 @@ CONTAINS
  CALL GLEND()
  CALL GLENDLIST()
 
- TCUR=TTMAX; CALL WDIALOGPUTREAL(IDF_REAL7,TCUR); CALL WDIALOGPUTINTEGER(IDF_INTEGER1,PL_NPER)
+ PL%TCUR=TTMAX; CALL WDIALOGPUTREAL(IDF_REAL7,PL%TCUR); CALL WDIALOGPUTINTEGER(IDF_INTEGER1,PL_NPER)
  
  TRACE_3D_COMPUTE=.TRUE.
  
@@ -256,8 +361,9 @@ CONTAINS
 
  !## deallocate memory
  CALL TRACEDEALLOCATE(1)
- DEALLOCATE(IVISIT,LVISIT)
-
+ IF(ALLOCATED(IVISIT))DEALLOCATE(IVISIT)
+ IF(ALLOCATED(LVISIT))DEALLOCATE(LVISIT)
+ 
  CALL WINDOWSELECT(0); CALL WMENUSETSTATE(ID_INTERACTIVEPATHLINES,2,0)
  CALL WMENUSETSTATE(ID_INTERACTIVEPATHLINES,1,1)
  
@@ -1292,8 +1398,6 @@ IPFLOOP: DO I=1,SIZE(IPF)
  TYPE(WIN_MESSAGE) :: MESSAGE
 
  TRACEREADBUDGET=.FALSE.
-
-! if(.not.idfallocatex(idf))return
 
  !## read flux-right-face
  BUFF=0.0
