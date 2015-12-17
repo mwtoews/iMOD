@@ -732,12 +732,15 @@ CONTAINS
 
  IF(NX.LE.0)RETURN
 
- !## only one sample
- IF(NX.EQ.1)THEN
-  XMED=X(1)
-  MX  =1
+!## only one sample
+IF(NX.EQ.1)THEN
+  MX=0
+  IF(X(1).NE.NODATA)THEN
+   XMED=X(1)
+   MX  =1
+  ENDIF
   RETURN
- ENDIF
+ENDIF
 
  !## do not include nodata values for median-computation
  MX=0
