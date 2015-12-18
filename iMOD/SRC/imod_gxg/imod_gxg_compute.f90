@@ -60,6 +60,7 @@ CONTAINS
  INTEGER :: MVICOL,MVIROW,IRAT,IRAT1,II,YY,MM,JAAR,DN,IUSEMV,ILAY,JLAY, &
             I,J,N,IDN,IROW,ICOL,IOS,JU,NLOC,NIP,MINMEASUREMENT
  INTEGER :: FYR,TYR,NYR,YCNT     ! FromYear, ToYear, Number of Years, YearCounter
+ INTEGER :: IIDF                 ! nr of first IDF that exists in IDFarray
  LOGICAL :: LEX,LEXMV
  CHARACTER(LEN=52) :: IDFFILE
 
@@ -205,6 +206,7 @@ CONTAINS
 
        INQUIRE(FILE=FN,EXIST=LEX)
        IF(LEX)THEN
+        IIDF=N
         IF(IDFREAD(IDF(N),FN,0))THEN
          NOYEAR(YCNT)=NOYEAR(YCNT)+1
          LINE=TRIM(IDFFILE)//'_'//CY//CM//CD//'_L'//TRIM(ITOS(ILAY))//'.IDF'
@@ -466,7 +468,8 @@ CONTAINS
      ENDDO !## year loop
 
      !## mid coordinates of cell
-     CALL IDFGETLOC(IDF(1),IROW,ICOL,XC,YC)
+     
+     CALL IDFGETLOC(IDF(IIDF),IROW,ICOL,XC,YC)   
      LEXMV=.TRUE.
      MV   =0.0
      IF(IUSEMV.EQ.1)THEN

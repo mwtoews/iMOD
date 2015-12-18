@@ -1391,7 +1391,7 @@ CONTAINS
   !## create aquifers as solids top/bot bot/top
   CASE (3)
    !## combine top-bot, top-bot, top-bot
-   DO I=IS-1,NIDFLIST,2; IDFPLOT(I)%ICOMBINE=I+1; IDFPLOT(I+1)%ICUBE=5; ENDDO
+   DO I=IS-1,NIDFLIST-1,2; IDFPLOT(I)%ICOMBINE=I+1; IDFPLOT(I+1)%ICUBE=5; ENDDO
    IDFPLOT%IPLOTLEGEND=0 
    IF(DEMO%IDEMO.EQ.2)THEN
     IDFPLOT%IFILL=DEMO%IFILL

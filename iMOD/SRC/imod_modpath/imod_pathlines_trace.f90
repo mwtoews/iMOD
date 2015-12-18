@@ -40,7 +40,7 @@ USE MOD_PLINES_FLOLIN, ONLY : FLOLIN
 USE MOD_OSD, ONLY : OSD_OPEN,OSD_IOSTAT_MSG
 USE MOD_MANAGER, ONLY : MANAGERDELETE
 USE MOD_DEMO_PAR
-USE MOD_3D_PAR, ONLY : PLLISTINDEX
+USE MOD_3D_PAR, ONLY : PLLISTINDEX,MIDPOS,TOP,BOT,XYZAXES
 
 CONTAINS
 
@@ -53,10 +53,12 @@ CONTAINS
   
  TRACE_3D_INIT=.FALSE.
 
- IF(.NOT.UTL_WSELECTFILE('iMODPATH runfile (*.run)|*.run|', &
-                  LOADDIALOG+PROMPTON+DIRCHANGE+APPENDEXT, &
-                  RUNFILE,'Select iMODPATH runfile (*.run)'))RETURN
-  
+! IF(.NOT.UTL_WSELECTFILE('iMODPATH runfile (*.run)|*.run|', &
+!                  LOADDIALOG+PROMPTON+DIRCHANGE+APPENDEXT, &
+!                  RUNFILE,'Select iMODPATH runfile (*.run)'))RETURN
+ 
+ RUNFILE='d:\iMOD-Gebruikersdag\IMOD_USER\RUNFILES\imodpath.run'
+   
  !## deallocate all memory
  CALL TRACEDEALLOCATE(1)
 
@@ -83,10 +85,14 @@ CONTAINS
  IF(.NOT.TRACEREADBUDGET(1,0))RETURN 
 
  !## initiate tracing variables
- PL%IREV=0     !## 0=forward; 1=backward simulation (operates as a switch)
- PL%TMAX=100.0 !## maximum simulation time (year)
- PL%TDEL=1.0   !## Intermediate Travelsteps (year)
- PL%TINC=1.5   !## Intermediate Increasement Travelsteps (quotient)
+ PL%IREV =0     !## 0=forward; 1=backward simulation (operates as a switch)
+ PL%TMAX =100.0 !## maximum simulation time (year)
+ PL%TDEL =1.0   !## Intermediate Travelsteps (year)
+ PL%TINC =1.5   !## Intermediate Increasement Travelsteps (quotient)
+ PL%NPART=0     !## number of particles active
+ PL%IPLOTSP=0   !## plotsp
+ PL%SPCOLOR=WRGB(200,10,10) !## colour of start-locations
+ PL%LISTINDEX=0
  
  ALLOCATE(IVISIT(IDF%NCOL*IDF%NROW*NLAY)); IVISIT=INT(0,1)
  ALLOCATE(LVISIT(IDF%NCOL*IDF%NROW*MIN(2,NLAY))); LVISIT=0
@@ -211,7 +217,7 @@ ZC=750.0
  !## deallocate memory for temporary storage of locations
  DEALLOCATE(XSP,YSP,ZSP)
 
-! SLAY    =KLC
+! SLAY    =KLC  
 ! MAXILAY =SLAY
  
  END SUBROUTINE TRACE_3D_STARTPOINTS
@@ -222,7 +228,7 @@ ZC=750.0
  IMPLICIT NONE
  REAL,INTENT(IN),DIMENSION(:) :: XSP,YSP,ZSP
  INTEGER :: IROW,ICOL,ILAY,I
- REAL :: XC,YC,ZC,ZL,Z,DZ
+ REAL :: XC,YC,ZC,ZL,DZ
 
  DO I=1,SIZE(XSP)
 
@@ -248,32 +254,37 @@ ZC=750.0
    ZL=0.0
 
    !## inside current modellayer
-   IF(Z.LE.ZTOP(ICOL,IROW,ILAY).AND.Z.GE.ZBOT(ICOL,IROW,ILAY))THEN
+   IF(ZC.LE.ZTOP(ICOL,IROW,ILAY).AND.ZC.GE.ZBOT(ICOL,IROW,ILAY))THEN
     !## compute local z: top (zl=1); mid (zl=0.5); bot (zl=0)
     DZ=ZTOP(ICOL,IROW,ILAY)-ZBOT(ICOL,IROW,ILAY)
-    IF(DZ.NE.0.0)ZL=(Z-ZBOT(ICOL,IROW,ILAY))/DZ
+    IF(DZ.NE.0.0)ZL=(ZC-ZBOT(ICOL,IROW,ILAY))/DZ
    ENDIF
    IF(ZL.EQ.0.AND.ILAY.LT.NLAY)THEN
     !## skip inactive/constant head cells under layer
     IF(IBOUND(ICOL,IROW,ILAY+1).LE.0)CYCLE
     !## inside interbed between modellayers
-    IF(Z.LT.ZBOT(ICOL,IROW,ILAY).AND.Z.GT.ZTOP(ICOL,IROW,ILAY+1))THEN
+    IF(ZC.LT.ZBOT(ICOL,IROW,ILAY).AND.ZC.GT.ZTOP(ICOL,IROW,ILAY+1))THEN
      !## compute local z: top (zl=1); mid (zl=0.5); bot (zl=0)
      DZ=ZBOT(ICOL,IROW,ILAY)-ZTOP(ICOL,IROW,ILAY+1)
-     IF(DZ.NE.0.0)ZL=(ZTOP(ICOL,IROW,ILAY+1)-Z)/DZ
+     IF(DZ.NE.0.0)ZL=(ZTOP(ICOL,IROW,ILAY+1)-ZC)/DZ
     ENDIF
    ENDIF
 
    IF(ZL.GT.0.0)THEN
     !## count number of particles
-    NPART=NPART+1
-    XLC(NPART,2)=XC-IDF%XMIN
-    YLC(NPART,2)=YC-IDF%YMIN
-    ZLC(NPART,2)=Z
-    ZLL(NPART,2)=ZL
-    KLC(NPART)  =ILAY
-    ILC(NPART)  =IROW
-    JLC(NPART)  =ICOL
+    PL%NPART=PL%NPART+1
+    
+    IF(PL%NPART.GT.SIZE(XLC))THEN
+    
+    ENDIF
+    
+    XLC(PL%NPART,2)=XC-IDF%XMIN
+    YLC(PL%NPART,2)=YC-IDF%YMIN
+    ZLC(PL%NPART,2)=ZC
+    ZLL(PL%NPART,2)=ZL
+    KLC(PL%NPART)  =ILAY
+    ILC(PL%NPART)  =IROW
+    JLC(PL%NPART)  =ICOL
     EXIT
    ENDIF
   ENDDO
@@ -282,6 +293,40 @@ ZC=750.0
 
  END SUBROUTINE TRACE_3D_STARTPOINTS_ASSIGN
 
+ !###======================================================================
+ SUBROUTINE TRACE_3D_STARTPOINTS_SHOW()
+ !###======================================================================
+ IMPLICIT NONE
+ REAL :: DX,DY
+ REAL(KIND=GLFLOAT) :: X,Y,Z
+ INTEGER :: I
+  
+ DX=(TOP%X-BOT%X)/2.0_GLFLOAT/XYZAXES(1)
+ DY=(TOP%Y-BOT%Y)/2.0_GLFLOAT/XYZAXES(2)
+
+ !## open drawing list per timestep/call
+ IF(PL%LISTINDEX.NE.0)CALL GLDELETELISTS(PL%LISTINDEX,1_GLSIZEI)
+
+ PL%LISTINDEX=0; IF(PL%NPART.LE.0)RETURN
+
+ !## list index for,  !## start new drawing list
+ PL%LISTINDEX=GLGENLISTS(1); CALL GLNEWLIST(PL%LISTINDEX,GL_COMPILE)
+ 
+ CALL GLBEGIN(GL_POINTS)
+
+ DO I=1,PL%NPART
+  
+  !## current position 
+  X= XLC(I,2)+IDF%XMIN; Y= YLC(I,2)+IDF%YMIN; Z= ZLC(I,2)
+  X=(X-MIDPOS%X)/DX; Y=(Y-MIDPOS%Y)/DY
+  CALL GLVERTEX3F(X,Y,Z)
+ ENDDO
+ 
+ CALL GLEND()
+ CALL GLENDLIST()
+ 
+ END SUBROUTINE
+ 
  !###======================================================================
  LOGICAL FUNCTION TRACE_3D_COMPUTE() 
  !###======================================================================

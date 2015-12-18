@@ -8,7 +8,7 @@
 //
 // Winteracter resource script. 
 //
-// Modified : 17/Dec/2015 19:25:18
+// Modified : 18/Dec/2015 17:22:19
 //
 ///////////////////////////////////////////////////
 //
@@ -1060,7 +1060,9 @@
 #define ID_DPMANAGER_PESTFILES_TAB4       359
 #define IDF_INTEGER12                    1225
 #define IDD_DIALOG005                     361
-#define ID_RESET2                        1251
+#define ID_LOCATE                        1257
+#define ID_STRONGSINKS                   1256
+#define ID_WEAKSINKS                     1255
 
 ///////////////////////////////////////////////////
 //
@@ -8667,7 +8669,7 @@ END
 ID_DLISTOFFILES1 RCDATA
 BEGIN
 "[Dialog] \n"
-" 0  1078 1 \n"
+" 0  1192 1 \n"
 "[Menus] \n"
 " 1192     6     1 \n"
 "File1 \n"
@@ -8885,7 +8887,7 @@ BEGIN
 ,0
 END
 
-ID_D3DSETTINGS_TAB8 DIALOG 0, 0,  207,  275
+ID_D3DSETTINGS_TAB8 DIALOG 0, 0,  213,  275
 STYLE WS_CHILD | DS_CONTROL | DS_3DLOOK
 FONT    8, "Arial"
 BEGIN
@@ -8922,8 +8924,13 @@ BEGIN
     CONTROL "XY interval:",IDF_LABEL11,"STATIC",WS_CHILD | WS_VISIBLE | WS_GROUP | SS_LEFT,   99,   50,   40,    8
     CONTROL "1",IDF_INTEGER2,"INTEGERSPIN",WS_CHILD | WS_VISIBLE | WS_BORDER | WS_GROUP | WS_TABSTOP | ES_LEFT | ES_CENTER | ES_MULTILINE,  139,   63,   40,   12
     CONTROL "1",IDF_INTEGER3,"INTEGERSPIN",WS_CHILD | WS_VISIBLE | WS_BORDER | WS_GROUP | WS_TABSTOP | ES_LEFT | ES_CENTER | ES_MULTILINE,  139,   48,   40,   12
-    CONTROL "Locate ...",ID_RESET2,"BUTTON",WS_CHILD | WS_VISIBLE | WS_GROUP | WS_TABSTOP | BS_DEFPUSHBUTTON | BS_TEXT,   10,   16,   40,   14
-    CONTROL "Add",ID_ADD,"BUTTON",WS_CHILD | WS_VISIBLE | WS_GROUP | WS_TABSTOP | BS_PUSHBUTTON | BS_TEXT,   54,   16,   40,   14
+    CONTROL "Locate ...",ID_LOCATE,"BUTTON",WS_CHILD | WS_VISIBLE | WS_GROUP | WS_TABSTOP | BS_PUSHBUTTON | BS_TEXT | BS_BITMAP,   27,   16,   16,   14
+    CONTROL "Add",ID_ADD,"BUTTON",WS_CHILD | WS_VISIBLE | WS_GROUP | WS_TABSTOP | BS_PUSHBUTTON | BS_TEXT | BS_BITMAP,   45,   16,   16,   14
+    CONTROL "Strong Sinks",ID_STRONGSINKS,"BUTTON",WS_CHILD | WS_VISIBLE | WS_GROUP | WS_TABSTOP | BS_PUSHBUTTON | BS_TEXT,   88,   84,   49,   14
+    CONTROL "Weak Sinks",ID_WEAKSINKS,"BUTTON",WS_CHILD | WS_VISIBLE | WS_GROUP | WS_TABSTOP | BS_PUSHBUTTON | BS_TEXT,   34,   84,   49,   14
+    CONTROL "Check",ID_SHOW,"BUTTON",WS_CHILD | WS_VISIBLE | WS_GROUP | WS_TABSTOP | BS_AUTOCHECKBOX | BS_TEXT | BS_BITMAP | BS_PUSHLIKE | BS_FLAT,   62,   16,   16,   14
+    CONTROL "COLOUR",ID_COLOUR,"BUTTON",WS_CHILD | WS_VISIBLE | WS_GROUP | WS_TABSTOP | BS_PUSHBUTTON | BS_TEXT | BS_BITMAP,   79,   16,   16,   14
+    CONTROL "new",ID_NEW,"BUTTON",WS_CHILD | WS_VISIBLE | WS_GROUP | WS_TABSTOP | BS_DEFPUSHBUTTON | BS_TEXT | BS_BITMAP,   10,   16,   16,   14
 END
 
 ID_D3DSETTINGS_TAB8 RCDATA
@@ -8933,6 +8940,7 @@ BEGIN
 " 1014 1 \n"
 " 1015 0 \n"
 " 1016 0 \n"
+" 1099 0 \n"
 "[Ranges] \n"
 " 1154               0             100 \n"
 " 1195               1             999 \n"
