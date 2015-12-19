@@ -94,6 +94,13 @@ CONTAINS
  PL%SPCOLOR=WRGB(200,10,10) !## colour of start-locations
  PL%LISTINDEX=0
  
+ CALL WDIALOGSELECT(ID_D3DSETTINGS_TAB8)
+ CALL WDIALOGPUTREAL(IDF_REAL4,PL%TMAX)
+ CALL WDIALOGPUTREAL(IDF_REAL5,PL%TDEL)
+ CALL WDIALOGPUTREAL(IDF_REAL6,PL%TINC)
+ 
+ CALL TRACE_3D_RESET()
+ 
  ALLOCATE(IVISIT(IDF%NCOL*IDF%NROW*NLAY)); IVISIT=INT(0,1)
  ALLOCATE(LVISIT(IDF%NCOL*IDF%NROW*MIN(2,NLAY))); LVISIT=0
 
@@ -285,6 +292,8 @@ ZC=750.0
     KLC(PL%NPART)  =ILAY
     ILC(PL%NPART)  =IROW
     JLC(PL%NPART)  =ICOL
+    TOT(PL%NPART,2)=0.0
+    
     EXIT
    ENDIF
   ENDDO
@@ -331,7 +340,7 @@ ZC=750.0
  LOGICAL FUNCTION TRACE_3D_COMPUTE() 
  !###======================================================================
  IMPLICIT NONE
- INTEGER :: I,IPART,IDSCH,PL_NPER
+ INTEGER :: I,IPART,IDSCH,PL_NPER,NPACT
  REAL :: TIME,TTMAX,MAXVELOCITY
  
  TRACE_3D_COMPUTE=.FALSE.
@@ -354,6 +363,9 @@ ZC=750.0
  !## maximize it for tmax
  TTMAX=MIN(TTMAX,PL%TMAX)
  
+ !## convert to days
+ TTMAX=TTMAX*365.25
+ 
  !## wellicht slim om niet met drawniglst te werken .. hoe gaat dat dan grafisch. Je klikt op een locatie dan gaat er wat stromen
  !## maar dat stop op een eggeven moment, er komt niks meer bij. Dan kun je met een slider terug in de tijd, dat kan alleen met een 
  !## drawinglist, bijhouden hoeveel punten er bij komen, want daarna hoeft er geen nieuwe drwinglijst mee rbij te kokmen
@@ -368,11 +380,14 @@ ZC=750.0
  
  CALL GLBEGIN(GL_POINTS)
 
- DO IPART=1,NPART
+ !## count number of active particles
+ NPACT=0
+ DO IPART=1,PL%NPART
   !## time in days
   TIME=TOT(IPART,2)
   !## trace selected particle, NOT YET discharged!
   IF(KLC(IPART).NE.0)THEN
+   NPACT=NPACT+1
    CALL FLOLIN(IPART,IMODE(1),TIME,TTMAX,IDSCH,JLC(IPART),ILC(IPART),KLC(IPART),   &
                XLC(IPART,2),YLC(IPART,2),ZLC(IPART,2),ZLL(IPART,2),IBOUND,ZBOT, &
                ZTOP,LDELR,LDELC,QX,QY,QZ,QSS,POR,NCON,IDF%NCOL,IDF%NROW,NLAY,  &
@@ -395,7 +410,7 @@ ZC=750.0
 
  PL%TCUR=TTMAX; CALL WDIALOGPUTREAL(IDF_REAL7,PL%TCUR); CALL WDIALOGPUTINTEGER(IDF_INTEGER1,PL_NPER)
  
- TRACE_3D_COMPUTE=.TRUE.
+ IF(NPACT.GT.0)TRACE_3D_COMPUTE=.TRUE.
  
  END FUNCTION TRACE_3D_COMPUTE
 

@@ -217,7 +217,7 @@ NEWLINE// &
 'This is a license for the iMOD-executables, distributed from the Stichti'// &
 'ng Deltares website. If you require a printed version of this iMOD Softw'// &
 'are License Agreement, e.g. prior to accepting these terms and condition'// &
-'s, please print the pdf-file ‘iMOD_Software_License_Agreement_V3_2.pdf’. You '// &
+'s, please print the pdf-file ‘iMOD_Software_License_Agreement_V'//TRIM(RVERSION)//'.pdf’. You '// &
 'should have received a copy of this pdf-file; if not, see '//NEWLINE// &
 'http://oss.deltares.nl/web/iMOD/iMOD_software_license_agreement.'//NEWLINE// &
 NEWLINE// &
