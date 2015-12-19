@@ -2813,6 +2813,28 @@ CONTAINS
  END FUNCTION INVERSECOLOUR
 
  !###======================================================================
+ SUBROUTINE UTL_FADEOUTCOLOUR(ICLR,FCT) 
+ !###======================================================================
+ IMPLICIT NONE
+ INTEGER,INTENT(INOUT) :: ICLR
+ REAL,INTENT(IN) :: FCT
+ INTEGER :: IR,IG,IB
+
+ IF(FCT.GT.1.0.OR.FCT.LE.0.0)RETURN
+ 
+ CALL WRGBSPLIT(ICLR,IR,IG,IB)
+ IR =IR+((255-IR)*FCT)
+ IG =IG+((255-IG)*FCT)
+ IB =IB+((255-IB)*FCT)
+ IR=MIN(255,MAX(0,IR))
+ IG=MIN(255,MAX(0,IG))
+ IB=MIN(255,MAX(0,IB))
+ !## faded colour becomes
+ ICLR=WRGB(IR,IG,IB)
+
+ END SUBROUTINE UTL_FADEOUTCOLOUR
+
+ !###======================================================================
  LOGICAL FUNCTION EQUALNAMES(NAME1,NAME2)
  !###======================================================================
  IMPLICIT NONE

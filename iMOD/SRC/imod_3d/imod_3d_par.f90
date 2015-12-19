@@ -239,7 +239,6 @@ REAL(KIND=GLDOUBLE) :: INIT_SHIFTZ = 0.0_GLDOUBLE
 INTEGER :: IAXES   !## axes on by default
 INTEGER :: IBNDBOX !## box on by default
 INTEGER :: IORIENT !## orientation box off by default
-!INTEGER,DIMENSION(:),ALLOCATABLE :: IPLOTLABELS !## plot labels for each ipf selected, default turned off !1
 INTEGER,SAVE :: ACOLOR,JACOLOR,OCOLOR,LCOLOR,BCOLOR,BGCOLOR !## colour of axes (copy) / color of orientation / color of label
 INTEGER(KIND=GLUINT),SAVE :: ORIENTINDEX,LEGENDINDEX,SPHEREINDEX  
 INTEGER(KIND=GLUINT),DIMENSION(0:10),SAVE :: AXESINDEX
@@ -249,7 +248,9 @@ INTEGER :: IINDPOS !# identifier position off by default
 
 INTEGER(KIND=GLUINT),ALLOCATABLE,DIMENSION(:) :: GENLISTINDEX,IFFLISTINDEX,BMPLISTINDEX,IDFLISTINDEX,CLPLISTINDEX,PLLISTINDEX
 INTEGER(KIND=GLUINT),ALLOCATABLE,DIMENSION(:,:) :: IPFLISTINDEX,SOLLISTINDEX
-INTEGER,ALLOCATABLE,DIMENSION(:,:) :: IPFDLIST !## selected features of the ipf, used for selection purposes
+INTEGER,ALLOCATABLE,DIMENSION(:,:) :: IPFDLIST !## selected features of the 
+INTEGER,ALLOCATABLE,DIMENSION(:) :: PLLISTCLR !## selected features of the ipf, used for selection purposes
+REAL,ALLOCATABLE,DIMENSION(:) :: PLLISTAGE !## selected features of the ipf, used for selection purposes
 
 TYPE(IDFOBJ),ALLOCATABLE,DIMENSION(:) :: IDF_CC  !## idf (part)
 
