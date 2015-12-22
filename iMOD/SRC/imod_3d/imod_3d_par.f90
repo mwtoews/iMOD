@@ -246,11 +246,15 @@ INTEGER :: ISELECTED,JSELECTED
 INTEGER,DIMENSION(3) :: IDFDATA
 INTEGER :: IINDPOS !# identifier position off by default
 
-INTEGER(KIND=GLUINT),ALLOCATABLE,DIMENSION(:) :: GENLISTINDEX,IFFLISTINDEX,BMPLISTINDEX,IDFLISTINDEX,CLPLISTINDEX,PLLISTINDEX
-INTEGER(KIND=GLUINT),ALLOCATABLE,DIMENSION(:,:) :: IPFLISTINDEX,SOLLISTINDEX
+INTEGER(KIND=GLUINT),ALLOCATABLE,DIMENSION(:) ::   GENLISTINDEX,IFFLISTINDEX,BMPLISTINDEX,IDFLISTINDEX,CLPLISTINDEX,STPLISTINDEX
+INTEGER(KIND=GLUINT),ALLOCATABLE,DIMENSION(:,:) :: IPFLISTINDEX,SOLLISTINDEX,PLLISTINDEX
 INTEGER,ALLOCATABLE,DIMENSION(:,:) :: IPFDLIST !## selected features of the 
-INTEGER,ALLOCATABLE,DIMENSION(:) :: PLLISTCLR !## selected features of the ipf, used for selection purposes
-REAL,ALLOCATABLE,DIMENSION(:) :: PLLISTAGE !## selected features of the ipf, used for selection purposes
+INTEGER,ALLOCATABLE,DIMENSION(:) :: PLLISTCLR  !## color fraction of current time in drawing list
+REAL,ALLOCATABLE,DIMENSION(:) :: PLLISTAGE     !## age of current time in drawing list
+INTEGER,ALLOCATABLE,DIMENSION(:) :: SPGCLR     !## specific color for each startpoint group
+INTEGER,ALLOCATABLE,DIMENSION(:,:) :: SPGPOS   !## position when each group starts
+INTEGER :: NSPG                                !## number of startpoint groups
+INTEGER :: MAXNSPG                             !## maximum number of startpoint groups
 
 TYPE(IDFOBJ),ALLOCATABLE,DIMENSION(:) :: IDF_CC  !## idf (part)
 
