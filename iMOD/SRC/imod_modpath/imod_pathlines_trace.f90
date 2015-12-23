@@ -205,7 +205,8 @@ CONTAINS
  SUBROUTINE TRACE_3D_STARTPOINTS() 
  !###======================================================================
  IMPLICIT NONE
- INTEGER :: I,J,II,JJ,K,NX,NZ,N,ISP,IROW,ICOL,ILAY,IOPT,ISTRONG,IC1,IC2,IR1,IR2,ISHAPE,NC
+ INTEGER :: I,J,II,JJ,K,NX,NZ,N,ISP,IROW,ICOL,ILAY,IOPT,ISTRONG,IC1,IC2, &
+    IR1,IR2,ISHAPE,NC,IRANDOM,DR,DC
  REAL :: X,Y,Z,DX,DY,DZ,XC,YC,ZC,Q,QERROR,G2R,OR,R,OFR
  REAL,DIMENSION(:),ALLOCATABLE :: XSP,YSP,ZSP
  INTEGER,DIMENSION(:),ALLOCATABLE :: ILAYERS
@@ -280,9 +281,10 @@ CONTAINS
    CALL WDIALOGGETINTEGER(IDF_INTEGER6,NC)       !## number on circle
    CALL WDIALOGGETINTEGER(IDF_INTEGER7,NZ)       !## number vertially
    CALL WDIALOGGETREAL(IDF_REAL14,R)             !## radius
+   CALL WDIALOGGETCHECKBOX(IDF_CHECK1,IRANDOM)   !## randomize positions
    ALLOCATE(ILAYERS(NLAY)); CALL WDIALOGGETMENU(IDF_MENU1,ILAYERS)
 
-   !## from degress to radians
+   !## from degrees to radians
    G2R=360.0/(2.0*PI); OR=360.0/REAL(NC); OR=OR/G2R
 
    DO I=1,2
@@ -293,9 +295,17 @@ CONTAINS
 
      !## check whether strong-sink
      IF(ISTRONG.EQ.1)THEN
-      IF(QX(ICOL,IROW,ILAY).LE.0.0.OR.QX(ICOL+1,IROW,ILAY).GE.0.0.OR. &
-         QY(ICOL,IROW,ILAY).GE.0.0.OR.QY(ICOL,IROW+1,ILAY).LE.0.0.OR. &
-         QZ(ICOL,IROW,ILAY).GE.0.0.OR.QZ(ICOL,IROW,ILAY+1).LE.0.0)LEX=.FALSE.
+      !## forward simulation
+      IF(PL%IREV.EQ.0)THEN
+       IF(QX(ICOL,IROW,ILAY).LE.0.0.OR.QX(ICOL+1,IROW,ILAY).GE.0.0.OR. &
+          QY(ICOL,IROW,ILAY).GE.0.0.OR.QY(ICOL,IROW+1,ILAY).LE.0.0.OR. &
+          QZ(ICOL,IROW,ILAY).GE.0.0.OR.QZ(ICOL,IROW,ILAY+1).LE.0.0)LEX=.FALSE.
+      !## backward simulation
+      ELSE
+       IF(QX(ICOL,IROW,ILAY).GE.0.0.OR.QX(ICOL+1,IROW,ILAY).LE.0.0.OR. &
+          QY(ICOL,IROW,ILAY).LE.0.0.OR.QY(ICOL,IROW+1,ILAY).GE.0.0.OR. &
+          QZ(ICOL,IROW,ILAY).LE.0.0.OR.QZ(ICOL,IROW,ILAY+1).GE.0.0)LEX=.FALSE.
+      ENDIF
      ENDIF
      !## no a strong sink
      IF(.NOT.LEX)CYCLE
@@ -304,36 +314,37 @@ CONTAINS
      QERROR=QSS(ICOL,IROW,ILAY) 
 
      LEX=.FALSE.
+     !## forward simulation
      SELECT CASE (IOPT)
       CASE (1) !## >=
        IF(QERROR.GE.Q)LEX=.TRUE.
       CASE (2) !## <=
        IF(QERROR.LE.Q)LEX=.TRUE.
      END SELECT
-     
+
      !## try next
      IF(.NOT.LEX)CYCLE
    
      CALL IDFGETLOC(IDF,IROW,ICOL,XC,YC)
      DZ=ZTOP(ICOL,IROW,ILAY)-ZBOT(ICOL,IROW,ILAY)
-     DZ=DZ/REAL(NZ)
+     IF(IRANDOM.EQ.0)DZ=DZ/REAL(NZ)
      
      IF(LEX)THEN
-!      CALL RANDOM_NUMBER(X)
-!      OFR=X*REAL(NC)
       DO II=1,NC  !## number on circle      
-!       OFR=OFR+1.0
-!       X=XC+R*COS(OFR*OR); Y=YC+R*SIN(OFR*OR)
-       X=XC+R*COS(REAL(II)*OR); Y=YC+R*SIN(REAL(II)*OR)
-       Z=ZTOP(ICOL,IROW,ILAY)+(DZ*0.5)
+       !## get coordinates
+       IF(IRANDOM.EQ.0)THEN
+        X=XC+R*COS(REAL(II)*OR); Y=YC+R*SIN(REAL(II)*OR)
+        Z=ZTOP(ICOL,IROW,ILAY)+(DZ*0.5)
+       ENDIF
        DO JJ=1,NZ !## number vertically
         N=N+1
-        Z=Z-DZ
-        IF(I.EQ.2)THEN
-         XSP(N)=X
-         YSP(N)=Y         
-         ZSP(N)=Z 
+        IF(IRANDOM.EQ.0)THEN
+         Z=Z-DZ
+        ELSE
+         CALL RANDOM_NUMBER(X); OFR=(X*360.0)/G2R; X=XC+R*COS(OFR); Y=YC+R*SIN(OFR)
+         CALL RANDOM_NUMBER(Z); Z=Z*DZ;            Z=Z +ZBOT(ICOL,IROW,ILAY)
         ENDIF
+        IF(I.EQ.2)THEN; XSP(N)=X; YSP(N)=Y; ZSP(N)=Z; ENDIF
        ENDDO
       ENDDO
      ENDIF
@@ -343,28 +354,36 @@ CONTAINS
    ENDDO
    DEALLOCATE(ILAYERS)
   
-  !## border
+  !## border - layers
   CASE (4)
    CALL WDIALOGGETRADIOBUTTON(IDF_RADIO12,IOPT) 
    CALL WDIALOGSELECT(ID_D3DSETTINGS_LAYER)
    CALL WDIALOGGETINTEGER(IDF_INTEGER8,NZ)
    ALLOCATE(ILAYERS(NLAY)); CALL WDIALOGGETMENU(IDF_MENU1,ILAYERS)
    
-   IC1=1; IC2=IDF%NCOL; IR1=1; IR2=IDF%NROW
+   IC1=1; IC2=IDF%NCOL; IR1=1; IR2=IDF%NROW; DC=1; DR=1
    
-   IF(IOPT.EQ.1)IC2=1;        IF(IOPT.EQ.2)IR2=1
-   IF(IOPT.EQ.3)IC1=IDF%NCOL; IF(IOPT.EQ.4)IR1=IDF%NROW
+   !## east
+   IF(IOPT.EQ.3)THEN; DC=-1; IC1=IDF%NCOL; IC2=1; ENDIF
+   !## south
+   IF(IOPT.EQ.4)THEN; DR=-1; IR1=IDF%NROW; IR2=1; ENDIF
 
    N=NZ*NLAY*MAX(IC2,IR2); ALLOCATE(XSP(N),YSP(N),ZSP(N))
 
-   N=0; DO ICOL=IC1,IC2; DO IROW=IR1,IR2; DO ILAY=1,NLAY; IF(ILAYERS(ILAY).EQ.0)CYCLE; 
-    DZ=(ZTOP(ICOL,IROW,ILAY)-ZBOT(ICOL,IROW,ILAY))/REAL(NZ)
-    Z = ZTOP(ICOL,IROW,ILAY)+(0.5*DZ)
-    CALL IDFGETLOC(IDF,IROW,ICOL,XC,YC)
-    DO J=1,NZ
-     N=N+1; Z=Z-DZ; XSP(N)=XC; YSP(N)=YC; ZSP(N)=Z
-    ENDDO
-   ENDDO; ENDDO; ENDDO
+   N=0
+   DO ILAY=1,NLAY
+    IF(ILAYERS(ILAY).EQ.0)CYCLE
+    DO ICOL=IC1,IC2,DC; DO IROW=IR1,IR2,DR
+     IF(IBOUND(ICOL,IROW,ILAY).EQ.0)CYCLE
+     DZ=(ZTOP(ICOL,IROW,ILAY)-ZBOT(ICOL,IROW,ILAY))/REAL(NZ)
+     Z = ZTOP(ICOL,IROW,ILAY)+(0.5*DZ)
+     CALL IDFGETLOC(IDF,IROW,ICOL,XC,YC)
+     DO J=1,NZ
+      N=N+1; Z=Z-DZ; XSP(N)=XC; YSP(N)=YC; ZSP(N)=Z
+     ENDDO
+     EXIT
+    ENDDO; ENDDO
+   ENDDO
    DEALLOCATE(ILAYERS)
 
   !## file
@@ -468,7 +487,7 @@ CONTAINS
  IMPLICIT NONE
  INTEGER :: I,J,N
  
- IF(PL%NPART.GT.SIZE(XLC,1))RETURN
+ IF(PL%NPART.LE.SIZE(XLC,1))RETURN
  
  N=PL%NPART+999
  ALLOCATE(XLC_BU(N,2),YLC_BU(N,2),ZLC_BU(N,2),ZLL_BU(N,2),KLC_BU(N,2),ILC_BU(N,2),JLC_BU(N,2),TOT_BU(N,2),SLAY_BU(N),MAXILAY_BU(N))
@@ -556,7 +575,7 @@ CONTAINS
  !###======================================================================
  IMPLICIT NONE
  REAL,PARAMETER :: DYEAR=365.25
- INTEGER :: I,IPART,IDSCH,NPACT,NPER,IG
+ INTEGER :: I,IPART,IDSCH,NPACT,NPER,IG,ITRAPPED
  REAL :: TIME,TTMAX,MAXVELOCITY
  
  TRACE_3D_COMPUTE=.FALSE.
@@ -567,18 +586,19 @@ CONTAINS
  CALL WDIALOGSELECT(ID_D3DSETTINGS_TAB8)
  CALL WDIALOGGETREAL(IDF_REAL4,PL%TMAX); PL%TMAX=PL%TMAX*DYEAR
  CALL WDIALOGGETREAL(IDF_REAL5,PL%TDEL); PL%TDEL=PL%TDEL*DYEAR
- CALL WDIALOGGETREAL(IDF_REAL6,PL%TINC)
+ CALL WDIALOGGETREAL(IDF_REAL6,PL%TREP); PL%TREP=PL%TREP*PL%TDEL
  CALL WDIALOGGETREAL(IDF_REAL7,PL%TCUR); PL%TCUR=PL%TCUR*DYEAR
+ CALL WDIALOGGETCHECKBOX(IDF_CHECK2,ITRAPPED)
 
- NPER=PL%NPER
- WRITE(*,*) PL%NPER,NPER
+! NPER=PL%NPER
+! WRITE(*,*) PL%NPER,NPER
  !## increase number of timesteps
  PL%NPER=PL%NPER+1
- NPER=NPER+1
- WRITE(*,*) PL%NPER,NPER
+! NPER=NPER+1
+! WRITE(*,*) PL%NPER,NPER
 
- PL%NPER=NPER
- WRITE(*,*) PL%NPER,NPER
+! PL%NPER=NPER
+! WRITE(*,*) PL%NPER,NPER
 
  !## shift all one position
  DO I=1,SIZE(PLLISTCLR); PLLISTCLR(I)=PLLISTCLR(I)+1; ENDDO
@@ -587,9 +607,11 @@ CONTAINS
  IF(PL%NPER.GT.SIZE(PLLISTINDEX,1))PL%NPER=1
 
  !## get next timestep
- TTMAX=PL%TCUR+PL%TDEL**PL%TINC
+ TTMAX=PL%TCUR+PL%TDEL
  !## maximize it for tmax
  TTMAX=MIN(TTMAX,PL%TMAX)
+
+ PL%TCUR=TTMAX/DYEAR; CALL WDIALOGPUTREAL(IDF_REAL7,PL%TCUR) 
 
  !## age of current drawing list
  PLLISTAGE(PL%NPER)=TTMAX
@@ -603,7 +625,7 @@ CONTAINS
 
   !## open drawing list per timestep/call
   IF(PLLISTINDEX(PL%NPER,IG).NE.0)CALL GLDELETELISTS(PLLISTINDEX(PL%NPER,IG),1_GLSIZEI)
-  !## list index for,  !## start new drawing list
+  !## list index for, start new drawing list
   PLLISTINDEX(PL%NPER,IG)=GLGENLISTS(1); CALL GLNEWLIST(PLLISTINDEX(PL%NPER,IG),GL_COMPILE)
  
   !## points
@@ -613,6 +635,17 @@ CONTAINS
 
    !## time in days
    TIME=TOT(IPART,2)
+   
+   !## compute ttmax per particle
+   TTMAX=TIME+PL%TDEL
+   !## maximize it for tmax
+   TTMAX=MIN(TTMAX,PL%TMAX)   
+  
+   !## create new particle ttmax/pl%trep another integer ...
+   IF(TTMAX.GE.PL%TREP)THEN
+
+   ENDIF
+   
    !## trace selected particle, not yet discharged!
    IF(KLC(IPART,2).GT.0)THEN
 
@@ -631,17 +664,30 @@ CONTAINS
 
     !## clean visited places that have been visited before
     DO I=1,NVISIT; IVISIT(LVISIT(I))=INT(0,1); ENDDO
-
-    !## time in days!
+    !## current time in days
     TOT(IPART,2)=TIME
-
     !## reached tmax - particle can continue next step
     IF(IDSCH.EQ.7)IDSCH=0
-    !## particle discharged whenever idsch.ne.0
-    IF(IDSCH.NE.0)KLC(IPART,2)=0
-
+    !## particle discharged whenever idsch.ne.0 or maximal time exceeds
+    IF(IDSCH.NE.0.OR.TIME.GE.PL%TMAX)KLC(IPART,2)=0
+    
+   ELSE
+    
+    !## check whether to restart again
+    IF(ITRAPPED.EQ.1)THEN
+     ILC(IPART,2)=ILC(IPART,1)
+     JLC(IPART,2)=JLC(IPART,1)
+     KLC(IPART,2)=KLC(IPART,1)
+     XLC(IPART,2)=XLC(IPART,1)
+     YLC(IPART,2)=YLC(IPART,1)
+     ZLC(IPART,2)=ZLC(IPART,1)
+     ZLL(IPART,2)=ZLL(IPART,1)
+     TOT(IPART,2)=0.0
+     MAXILAY(IPART)=0
+     SLAY(IPART)=0
+    ENDIF
+   
    ENDIF
-
   ENDDO
 
   !## point strip
@@ -650,9 +696,7 @@ CONTAINS
   CALL GLENDLIST()
  
  ENDDO
- 
- PL%TCUR=TTMAX/DYEAR; CALL WDIALOGPUTREAL(IDF_REAL7,PL%TCUR) 
- 
+  
  !## clean drawing list, whenever nothing in it
  IF(NPACT.LE.0)THEN
   DO IG=1,NSPG
