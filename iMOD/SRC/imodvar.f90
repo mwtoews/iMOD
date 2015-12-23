@@ -26,10 +26,14 @@ INTEGER,DIMENSION(2) :: IDPROC
 
 REAL,PARAMETER :: PI=ATAN(1.0)*4.0  !##value pi
 
+LOGICAL :: LBETA=.TRUE.
+LOGICAL :: LEXPDATE=.TRUE.
+INTEGER :: EXPDATE=20160215
+
 CHARACTER(LEN=30),PARAMETER :: RVERSION='V3_3'      !## release message - only with single subnummers
-CHARACTER(LEN=30),PARAMETER :: BVERSION='V3_3 Bèta' !## banner message - no characters !!!
+CHARACTER(LEN=30),PARAMETER :: BVERSION='Beta'      !## banner message - no characters !!!
 CHARACTER(LEN=32) :: LICFILE='I_accepted_'//TRIM(RVERSION)//'.txt'
-CHARACTER(LEN=256) :: IMFFNAME         !##name of drawing file
+CHARACTER(LEN=256) :: IMFFNAME         !## name of drawing file
 CHARACTER(LEN=256) :: EXENAME,EXEPATH
 CHARACTER(LEN=256) :: OPENDIR   !remember saved location
 CHARACTER(LEN=256) :: SAVEDIR   !remember opened location

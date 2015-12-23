@@ -575,7 +575,11 @@ CONTAINS
  IF(.NOT.LEX)THEN
   IERROR=0; CALL IMOD_AGREEMENT(IERROR)
   IF(IERROR.NE.1)THEN
-   CALL WMESSAGEBOX(OKONLY,COMMONOK,EXCLAMATIONICON,'Can not start iMODFLOW unless you accept the iMOD Software License Agreement','Error')
+   IF(LBETA)THEN
+    CALL WMESSAGEBOX(OKONLY,COMMONOK,EXCLAMATIONICON,'Cannot start Beta-iMOD because you are not authorized in writing for Beta-iMOD','Error')
+   ELSE
+    CALL WMESSAGEBOX(OKONLY,COMMONOK,EXCLAMATIONICON,'Can not start iMODFLOW unless you accept the iMOD Software License Agreement','Error')
+   ENDIF
    RETURN
   ENDIF
  ENDIF

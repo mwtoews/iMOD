@@ -19,8 +19,9 @@
 !!  Stichting Deltares
 !!  P.O. Box 177
 !!  2600 MH Delft, The Netherlands.
+!!
 MODULE IMODCONFIG
 
-CHARACTER(LEN=20),PARAMETER            :: CCONFIG='X64 Release'
+CHARACTER(LEN=20),PARAMETER :: CCONFIG='X64 Release'
 
 END MODULE IMODCONFIG

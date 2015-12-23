@@ -25,7 +25,7 @@ MODULE MOD_ABOUT
 USE WINTERACTER
 USE RESOURCE
 USE IMODVAR
-USE MOD_UTL, ONLY : NEWLINE,UTL_GETUNIT,ITOS
+USE MOD_UTL, ONLY : NEWLINE,UTL_GETUNIT,ITOS,UTL_IMODVERSION
 USE MOD_PREF_PAR, ONLY : PREFVAL
 USE MOD_OSD, ONLY : OSD_OPEN
 
@@ -53,7 +53,7 @@ CONTAINS
  CALL WDIALOGPUTIMAGE(IDF_PICTURE1,ID_ICONTNO,1)
  CALL WDIALOGPUTIMAGE(IDF_PICTURE2,ID_ICONIMOD,1)
  CALL WDIALOGPUTIMAGE(IDF_PICTURE4,ID_ICONOPENGL,1)
- CALL WDIALOGTITLE('About iMOD '//TRIM(BVERSION))
+ CALL WDIALOGTITLE('About '//TRIM(UTL_IMODVERSION()))
  CALL WDIALOGPUTSTRING(IDOK,'OK')
  CALL WDIALOGSETFIELD(IDOK)
  CALL WDIALOGSHOW(-1,-1,0,1)
@@ -71,6 +71,35 @@ CONTAINS
  CHARACTER(LEN=256) :: TEXT
  CHARACTER(LEN=10) :: CDATE
 
+ IF(LBETA)THEN
+  CALL WDIALOGLOAD(ID_DDISCLAIMER)
+  CALL WDIALOGTITLE('Beta-iMOD Software License Agreement')
+  CALL IMOD_STARTLICENSE_BETA(IDF_STRING1)
+  CALL WDIALOGPUTSTRING(IDF_LABEL1,'User Agreement')
+  CALL WDIALOGSETFIELD(IDOK)
+  CALL WDIALOGPUTSTRING(IDF_RADIO1,'Yes, I am authorized in writing for Beta-iMOD')
+  CALL WDIALOGPUTSTRING(IDF_RADIO2,'No, I am not authorized in writing for Beta-iMOD')
+  IF(CODE.EQ.1)THEN
+   CALL WDIALOGFIELDSTATE(IDF_RADIO1,3)
+   CALL WDIALOGFIELDSTATE(IDF_RADIO2,3)
+  ENDIF
+  CALL WDIALOGSHOW(-1,-1,0,2)
+  CODE=0
+  DO
+   CALL WMESSAGE(ITYPE,MESSAGE)
+   SELECT CASE (ITYPE)
+    CASE (PUSHBUTTON)
+    SELECT CASE (MESSAGE%VALUE1)
+     CASE (IDOK)
+      CALL WDIALOGGETCHECKBOX(IDF_RADIO1,I); EXIT
+     CASE (IDCANCEL)
+      I=2; EXIT
+    END SELECT
+   END SELECT
+  END DO
+  CALL WDIALOGUNLOAD(); IF(I.EQ.1)CODE=1; RETURN
+ ENDIF
+ 
  IF(CODE.EQ.0)THEN
   INQUIRE(FILE=TRIM(EXEPATH)//'\'//TRIM(LICFILE),EXIST=LEX)
   IF(LEX)THEN; CODE=1; RETURN; ENDIF
@@ -203,6 +232,38 @@ NEWLINE// &
  
  END SUBROUTINE IMOD_STARTLICENSE
 
+ !###====================================================================
+ SUBROUTINE IMOD_STARTLICENSE_BETA(ID)
+ !###====================================================================
+ IMPLICIT NONE
+ INTEGER,INTENT(IN) :: ID
+ INTEGER,PARAMETER :: STRLEN=2000
+ INTEGER :: IU,I
+ CHARACTER(LEN=256) :: TEXT
+ LOGICAL :: LEX
+ 
+ ALLOCATE(CHARACTER(LEN=STRLEN) :: STR)
+
+ STR='Copyright (C) Stichting Deltares, 2005-2015. '//NEWLINE// &
+ NEWLINE// &
+ 'WARNING: Use of ‘Beta-iMOD’ by Licensee is only allowed when Licensee and '// &
+ 'Deltares have both signed the Agreement for use of beta-versions of iMOD '// & 
+ 'titled “Software License Agreement iMOD-Version B plus Beta 1.5, July 2014”; '// & 
+ 'use of this beta-version of iMOD is subject to that Agreement and its terms and '// & 
+ 'conditions. If you are not authorized by that License Agreement “Software License '// &
+ 'Agreement iMOD-Version B plus Beta 1.5, July 2014”, please do not mark the “Yes, I am '// & 
+ 'licensed in writing for Beta-iMOD”-checkbox in the iMOD-GUI and exit the iMOD-program by selecting '// & 
+ 'the “No, I am not authorized in writing for Beta-iMOD” checkbox in the iMOD-GUI and exit the iMOD-GUI. In this case your use of '// & 
+ 'this beta-version of the iMOD-software is prohibited and illegal: abort the use of this '// &
+ 'Deltares-executable immediately and refrain from using this beta-version of the '// &
+ 'Deltares-executables of iMOD.'
+
+ CALL WDIALOGPUTSTRING(ID,TRIM(STR))
+ 
+ DEALLOCATE(STR)
+ 
+ END SUBROUTINE IMOD_STARTLICENSE_BETA
+ 
  !###====================================================================
  SUBROUTINE IMOD_PUTLICENSE(ID)
  !###====================================================================
@@ -510,8 +571,12 @@ NEWLINE// &
  REAL :: X
 
  CALL WDIALOGLOAD(ID_DSTARTSCREEN,ID_DSTARTSCREEN)
- CALL WDIALOGTITLE('iMOD, Interactive Modelling ('//TRIM(BVERSION)//')')
- CALL IMOD_STARTLICENSE(IDF_LABEL1)
+ CALL WDIALOGTITLE('iMOD, Interactive Modelling ('//TRIM(UTL_IMODVERSION())//')')
+ IF(LBETA)THEN
+  CALL IMOD_STARTLICENSE_BETA(IDF_LABEL1)
+ ELSE
+  CALL IMOD_STARTLICENSE(IDF_LABEL1)
+ ENDIF
  CALL WDIALOGPUTIMAGE(IDF_PICTURE3,ID_ICONMAIN,1)
  
  CALL WDIALOGSHOW(-1,-1,0,2)
