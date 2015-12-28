@@ -133,8 +133,10 @@ CONTAINS
  ALLOCATE(SPGCLR(NG)); SPGCLR=WRGB(255,0,0)
  ALLOCATE(STPLISTINDEX(NG)); STPLISTINDEX=0
 
+ !## initiate particles
+ CALL TRACE_INIT_SP(NG)
  !## maximal number of particles to be traced
- NPART=10000; CALL TRACE_AL_SP(NG)
+ CALL TRACE_AL_SP(1000,NG)
 
  DEMO%IDEMO=2; DEMO%CONFLAG=4; DEMO%ACCFLAG=3; DEMO%IFILL=1
  
@@ -777,7 +779,8 @@ CONTAINS
  CHARACTER(LEN=1000) :: STRING
  REAL :: TIME,TTMAX,DT,MAXVELOCITY
  TYPE(WIN_MESSAGE) :: MESSAGE
- INTEGER :: I,J,ILAY,ITYPE,IPER,IPART,NCONS,IPERIOD,NIDSCH,IDSCH,IWIN,IP,IRAT,IRAT1,DPER,MPER,SPER,MAXILAY
+ INTEGER :: I,J,ILAY,ITYPE,IPER,IPART,NPART,NCONS,IPERIOD,NIDSCH,IDSCH,IWIN,IP,IRAT, &
+                IRAT1,DPER,MPER,SPER,MAXILAY
  LOGICAL :: LEX
  
  TRACE_CALC=.FALSE.
@@ -800,14 +803,20 @@ CONTAINS
  DO ISPFNAME=1,NSPFNAME
 
   !## read/process particles towards readable format
-  IF(.NOT.TRACEPREPARESP(IBATCH))RETURN
+  IF(.NOT.TRACEPREPARESP(NPART,IBATCH))RETURN
   !## initialize outputfiles
-  IF(.NOT.TRACEINITOUTFILES())RETURN
-  !#allocate memory to store particles (spec. for transient sim.)
-  CALL TRACE_AL_SP(1)
-  !## read particle in memory
+  IF(.NOT.TRACEINITOUTFILES(NPART))RETURN
+
+  !## initialize startpoints memory
+  CALL TRACE_INIT_SP(1)
+  !## read all particle in memory
+  CALL TRACE_AL_SP(NPART,1)
   !## set initial time for each particle to zero
-  CALL TRACEREADSP()
+  CALL TRACEREADSP(1,NPART)
+
+  !## copy particles to runtime particles
+  CALL TRACE_INIT_SPR(1)
+  CALL TRACE_AL_SPR()
 
   TTMAX  =0.0
   IPERIOD=1
@@ -904,21 +913,21 @@ CONTAINS
     IF(ISS.EQ.1)THEN
      CPERIOD=' [Duration '//TRIM(ITOS(INT(DT)))//' day; Period '//TRIM(ITOS(IPERIOD))//', max. '//TRIM(ITOS(INT(TTMAX)))//' days]'
      I=0
-     DO IPART=1,NPART
+     DO IPART=1,SP(1)%NPART
       IF(SP(1)%KLC(IPART).NE.0)I=I+1
      ENDDO
-     STRING='Still tracing '//TRIM(ITOS(I))//' out of '//TRIM(ITOS(NPART))//' particles for Stress '// &
+     STRING='Still tracing '//TRIM(ITOS(I))//' out of '//TRIM(ITOS(SP(1)%NPART))//' particles for Stress '// &
                               TRIM(ITOS(IPER))//' out of '//TRIM(ITOS(NPER))//TRIM(CPERIOD)
      IF(IBATCH.EQ.1)WRITE(*,'(A)') TRIM(STRING)
      IF(IBATCH.EQ.0)CALL WINDOWOUTSTATUSBAR(4,STRING)
     ELSE
-     STRING='Tracing '//TRIM(ITOS(NPART))//' particles (Steady-state) ...'
+     STRING='Tracing '//TRIM(ITOS(SP(1)%NPART))//' particles (Steady-state) ...'
      IF(IBATCH.EQ.1)WRITE(*,'(A)') TRIM(STRING)
      IF(IBATCH.EQ.0)CALL WINDOWOUTSTATUSBAR(4,STRING)
     ENDIF
 
     NIDSCH=0
-    DO IPART=1,NPART
+    DO IPART=1,SP(1)%NPART
      CALL WMESSAGEPEEK(ITYPE,MESSAGE)
      !## time in days!
      TIME=SPR(1)%TOT(IPART)
@@ -953,7 +962,7 @@ CONTAINS
        NIDSCH=NIDSCH+1
       ENDIF
      ENDIF
-     IF(IBATCH.EQ.0)CALL UTL_WAITMESSAGE(IRAT,IRAT1,IPART,NPART,'Busy tracking particle '//TRIM(ITOS(IPART))//' ')
+     IF(IBATCH.EQ.0)CALL UTL_WAITMESSAGE(IRAT,IRAT1,IPART,SP(1)%NPART,'Busy tracking particle '//TRIM(ITOS(IPART))//' ')
      IF(IBATCH.EQ.1)WRITE(*,'(A,I10)') 'Busy tracking particle ',IPART
     ENDDO
     !## no particles left, stop tracking process!
@@ -981,7 +990,7 @@ CONTAINS
   !## write remaining non-stopped particles for endpoints (IDSCH=0)
   IF(IMODE(2).GT.0)THEN
    IDSCH=0
-   DO IPART=1,NPART; IF(SPR(1)%KLC(IPART).NE.0)CALL TRACECREATEIPF(IMODE(2),IDSCH,IPART); ENDDO
+   DO IPART=1,SP(1)%NPART; IF(SPR(1)%KLC(IPART).NE.0)CALL TRACECREATEIPF(IMODE(2),IDSCH,IPART); ENDDO
   ENDIF
 
   IF(IMODE(1).GT.0)THEN; CLOSE(IMODE(1)); IMODE(1)=1; ENDIF
@@ -989,7 +998,7 @@ CONTAINS
   
   STRING='Completed particle tracking. '// &
    'Results are stored within: '//CHAR(13)//TRIM(IFFFNAME(ISPFNAME))//CHAR(13)//'and added to the iMOD-manager.'//CHAR(13)//CHAR(13)// &
-    TRIM(ITOS(NPART))//' particles were released out of '//TRIM(ITOS(TPART))//'. '//CHAR(13)//  &
+    TRIM(ITOS(SP(1)%NPART))//' particles were released out of '//TRIM(ITOS(TPART))//'. '//CHAR(13)//  &
    'Unreleased particles occured due to inactive/constant head boundary conditions'//CHAR(13)// &
    'and/or particles positioned above/beneath given thresshold.'//CHAR(13)//&
     TRIM(ITOS(NCONS))//' inconsequences were removed from top/bottom information!'//CHAR(13)//CHAR(13)// &
@@ -1127,7 +1136,7 @@ CONTAINS
    J=INDEX(IPFFLOW,'.',.TRUE.)-1; IF(J.LE.0)J=LEN_TRIM(IPFFLOW)
    CALL OSD_OPEN(JU(I,2),FILE=IPFFLOW(:J)//'_'//TRIM(IPF(I)%UNQLABEL)//'_.ipf',STATUS='REPLACE', &
                          ACTION='WRITE',IOSTAT=IOS,FORM='FORMATTED')
-   CALL TRACEINITOUTFILES_IPF(JU(I,2))
+   CALL TRACEINITOUTFILES_IPF(JU(I,2),0)
   ENDIF
  ENDDO
 
@@ -1306,9 +1315,10 @@ IPFLOOP: DO I=1,SIZE(IPF)
  END FUNCTION TRACEPOSTPROCESSING_INIT
  
  !###======================================================================
- LOGICAL FUNCTION TRACEINITOUTFILES()
+ LOGICAL FUNCTION TRACEINITOUTFILES(NPART)
  !###======================================================================
  IMPLICIT NONE
+ INTEGER,INTENT(IN) :: NPART
  INTEGER :: IOS,I
  CHARACTER(LEN=50) :: ERRORMESSAGE
 
@@ -1326,7 +1336,7 @@ IPFLOOP: DO I=1,SIZE(IPF)
  IF(IMODE(2).GT.0)THEN
   IMODE(2)=UTL_GETUNIT()
   CALL OSD_OPEN(IMODE(2),FILE=IFFFNAME(ISPFNAME)(:I)//'.ipf',STATUS='REPLACE',ACTION='WRITE',IOSTAT=IOS)
-  CALL TRACEINITOUTFILES_IPF(IMODE(2))
+  CALL TRACEINITOUTFILES_IPF(IMODE(2),NPART)
  ENDIF
  IF(IOS.NE.0)THEN
   CALL OSD_IOSTAT_MSG(IOS,ERRORMESSAGE)
@@ -1361,13 +1371,13 @@ IPFLOOP: DO I=1,SIZE(IPF)
  END SUBROUTINE TRACEINITOUTFILES_IFF
 
 !###======================================================================
- SUBROUTINE TRACEINITOUTFILES_IPF(IU)
+ SUBROUTINE TRACEINITOUTFILES_IPF(IU,NPART)
  !###======================================================================
  IMPLICIT NONE
- INTEGER,INTENT(IN) :: IU
+ INTEGER,INTENT(IN) :: IU,NPART
 
  WRITE(IU,'(I10)') NPART
- WRITE(IU,'(A)') '17'
+ WRITE(IU,'(A)') '16'
  WRITE(IU,'(A)') 'SP_XCRD.'
  WRITE(IU,'(A)') 'SP_YCRD.'
  WRITE(IU,'(A)') 'SP_ZCRD.'
@@ -1380,11 +1390,10 @@ IPFLOOP: DO I=1,SIZE(IPF)
  WRITE(IU,'(A)') 'END_ILAY'
  WRITE(IU,'(A)') 'END_IROW'
  WRITE(IU,'(A)') 'END_ICOL'
- WRITE(IU,'(A)') 'IDENT.NO.'
  WRITE(IU,'(A)') 'TIME(YEARS)'
  WRITE(IU,'(A)') 'DISTANCE'
+ WRITE(IU,'(A)') 'IDENT.NO.'
  WRITE(IU,'(A)') 'CAPTURED_BY'
- WRITE(IU,'(A)') 'MAX_ILAY'
  WRITE(IU,'(A)') '0,TXT'
 
  END SUBROUTINE TRACEINITOUTFILES_IPF
@@ -1577,33 +1586,13 @@ IPFLOOP: DO I=1,SIZE(IPF)
  INTEGER :: I
  LOGICAL :: LEX
 
- !## reset particles
- DO I=1,SIZE(SP)
-  IF(ASSOCIATED(SP(I)%XLC)) DEALLOCATE(SP(I)%XLC )
-  IF(ASSOCIATED(SP(I)%YLC)) DEALLOCATE(SP(I)%YLC )
-  IF(ASSOCIATED(SP(I)%ZLC)) DEALLOCATE(SP(I)%ZLC )
-  IF(ASSOCIATED(SP(I)%ILC)) DEALLOCATE(SP(I)%ILC )
-  IF(ASSOCIATED(SP(I)%JLC)) DEALLOCATE(SP(I)%JLC )
-  IF(ASSOCIATED(SP(I)%KLC)) DEALLOCATE(SP(I)%KLC )
-  IF(ASSOCIATED(SP(I)%ZLL)) DEALLOCATE(SP(I)%ZLL )
-  IF(ASSOCIATED(SP(I)%TOT)) DEALLOCATE(SP(I)%TOT )
-  IF(ASSOCIATED(SPR(I)%XLC))DEALLOCATE(SPR(I)%XLC)
-  IF(ASSOCIATED(SPR(I)%YLC))DEALLOCATE(SPR(I)%YLC)
-  IF(ASSOCIATED(SPR(I)%ZLC))DEALLOCATE(SPR(I)%ZLC)
-  IF(ASSOCIATED(SPR(I)%ILC))DEALLOCATE(SPR(I)%ILC)
-  IF(ASSOCIATED(SPR(I)%JLC))DEALLOCATE(SPR(I)%JLC)
-  IF(ASSOCIATED(SPR(I)%KLC))DEALLOCATE(SPR(I)%KLC)
-  IF(ASSOCIATED(SPR(I)%ZLL))DEALLOCATE(SPR(I)%ZLL)
-  IF(ASSOCIATED(SPR(I)%TOT))DEALLOCATE(SPR(I)%TOT)
- ENDDO
- 
+ CALL TRACE_DEAL_SP()
+ CALL TRACE_DEAL_SPR()
+  
  IF(ICODE.EQ.0)RETURN
-! IF(ISPFNAME.NE.NSPFNAME)RETURN
 
  IF(ALLOCATED(ITBFNAME))DEALLOCATE(ITBFNAME)
  IF(ALLOCATED(HFFNAME)) DEALLOCATE(HFFNAME)
-! IF(ALLOCATED(XP))      DEALLOCATE(XP);     IF(ALLOCATED(YP))   DEALLOCATE(YP)
-! IF(ALLOCATED(X))       DEALLOCATE(X);      IF(ALLOCATED(Y))    DEALLOCATE(Y)
  IF(ALLOCATED(QX))      DEALLOCATE(QX);     IF(ALLOCATED(QY))   DEALLOCATE(QY)
  IF(ALLOCATED(QZ))      DEALLOCATE(QZ);     IF(ALLOCATED(POR))  DEALLOCATE(POR)
  IF(ALLOCATED(DELR))    DEALLOCATE(DELR);   IF(ALLOCATED(DELC)) DEALLOCATE(DELC)
@@ -1673,7 +1662,7 @@ IPFLOOP: DO I=1,SIZE(IPF)
 !      TRIM(ITOS(MAXILAY(IPART)))
 ! WRITE(IU,'(A)') TRIM(LINE)
 
- WRITE(IU,'(2(3(E15.8,1X),3(I10,1X)),(E15.8,1X),I10)') &
+ WRITE(IU,'(2(3(E15.8,1X),3(I10,1X)),2(E15.8,1X),3(I10,1X))') &
        SP(1) %XLC(IPART)+IDF%XMIN, &
        SP(1) %YLC(IPART)+IDF%YMIN, &
        SP(1) %ZLC(IPART),          &
@@ -1688,6 +1677,7 @@ IPFLOOP: DO I=1,SIZE(IPF)
        SPR(1)%ILC(IPART),          &
        SPR(1)%TOT(IPART)/365.25,   &
        DIST,                       &
+       IPART,                      &
        IDSCH
 
  END SUBROUTINE TRACECREATEIPF
@@ -1743,26 +1733,55 @@ IPFLOOP: DO I=1,SIZE(IPF)
  END SUBROUTINE
 
  !###======================================================================
- SUBROUTINE TRACE_AL_SP(NG)
+ SUBROUTINE TRACE_INIT_SP(NG)
  !###======================================================================
  IMPLICIT NONE
  INTEGER,INTENT(IN) :: NG
  INTEGER :: I
  
  !## particle groups
- ALLOCATE(SP(NG),SPR(NG))
+ ALLOCATE(SP(NG))
 
  DO I=1,NG
 
-  NULLIFY(SP(I)%XLC ,SP(I)%YLC ,SP(I)%ZLC ,SP(I)%ZLL, &
-          SP(I)%ILC ,SP(I)%JLC ,SP(I)%KLC ,SP(I)%TOT)
+  NULLIFY(SP(I)%XLC   ,SP(I)%YLC   ,SP(I)%ZLC   ,SP(I)%ZLL   , &
+          SP(I)%ILC   ,SP(I)%JLC   ,SP(I)%KLC   ,SP(I)%TOT   )
   NULLIFY(SP(I)%XLC_BU,SP(I)%YLC_BU,SP(I)%ZLC_BU,SP(I)%ZLL_BU, &
           SP(I)%ILC_BU,SP(I)%JLC_BU,SP(I)%KLC_BU,SP(I)%TOT_BU)
 
-  NULLIFY(SPR(I)%XLC,SPR(I)%YLC,SPR(I)%ZLC,SPR(I)%ZLL, &
-          SPR(I)%ILC,SPR(I)%JLC,SPR(I)%KLC,SPR(I)%TOT)
+ ENDDO
+ 
+ END SUBROUTINE TRACE_INIT_SP
+
+ !###======================================================================
+ SUBROUTINE TRACE_INIT_SPR(NG)
+ !###======================================================================
+ IMPLICIT NONE
+ INTEGER,INTENT(IN) :: NG
+ INTEGER :: I
+ 
+ !## particle groups
+ ALLOCATE(SPR(NG))
+
+ DO I=1,NG
+
+  NULLIFY(SPR(I)%XLC   ,SPR(I)%YLC   ,SPR(I)%ZLC   ,SPR(I)%ZLL   , &
+          SPR(I)%ILC   ,SPR(I)%JLC   ,SPR(I)%KLC   ,SPR(I)%TOT   )
   NULLIFY(SPR(I)%XLC_BU,SPR(I)%YLC_BU,SPR(I)%ZLC_BU,SPR(I)%ZLL_BU, &
           SPR(I)%ILC_BU,SPR(I)%JLC_BU,SPR(I)%KLC_BU,SPR(I)%TOT_BU)
+
+ ENDDO
+ 
+ END SUBROUTINE TRACE_INIT_SPR
+ 
+ !###======================================================================
+ SUBROUTINE TRACE_AL_SP(NPART,NG)
+ !###======================================================================
+ IMPLICIT NONE
+ INTEGER,INTENT(IN) :: NPART,NG
+ INTEGER :: I
+ 
+ DO I=1,NG
 
   !## reals
   ALLOCATE(SP(I)%XLC(NPART), &
@@ -1779,24 +1798,19 @@ IPFLOOP: DO I=1,SIZE(IPF)
  ENDDO
  
  END SUBROUTINE TRACE_AL_SP
-
+ 
  !###======================================================================
  SUBROUTINE TRACE_AL_SPR()
  !###======================================================================
  IMPLICIT NONE
  INTEGER :: I,J
  
+ CALL TRACE_DEAL_SPR()
+ 
+ ALLOCATE(SPR(SIZE(SP)))
+ 
  !## reset particles
  DO I=1,SIZE(SPR)
-
-  IF(ASSOCIATED(SPR(I)%XLC))DEALLOCATE(SPR(I)%XLC)
-  IF(ASSOCIATED(SPR(I)%YLC))DEALLOCATE(SPR(I)%YLC)
-  IF(ASSOCIATED(SPR(I)%ZLC))DEALLOCATE(SPR(I)%ZLC)
-  IF(ASSOCIATED(SPR(I)%ILC))DEALLOCATE(SPR(I)%ILC)
-  IF(ASSOCIATED(SPR(I)%JLC))DEALLOCATE(SPR(I)%JLC)
-  IF(ASSOCIATED(SPR(I)%KLC))DEALLOCATE(SPR(I)%KLC)
-  IF(ASSOCIATED(SPR(I)%ZLL))DEALLOCATE(SPR(I)%ZLL)
-  IF(ASSOCIATED(SPR(I)%TOT))DEALLOCATE(SPR(I)%TOT)
 
   !## reals
   ALLOCATE(SPR(I)%XLC(SP(I)%NPART), &
@@ -1825,6 +1839,58 @@ IPFLOOP: DO I=1,SIZE(IPF)
  ENDDO
      
  END SUBROUTINE TRACE_AL_SPR
+ 
+ !###======================================================================
+ SUBROUTINE TRACE_DEAL_SP()
+ !###======================================================================
+ IMPLICIT NONE
+ INTEGER :: I
+
+ IF(.NOT.ALLOCATED(SP))RETURN
+ 
+ !## reset particles
+ DO I=1,SIZE(SP)
+ 
+  IF(ASSOCIATED(SP(I)%XLC))DEALLOCATE(SP(I)%XLC )
+  IF(ASSOCIATED(SP(I)%YLC))DEALLOCATE(SP(I)%YLC )
+  IF(ASSOCIATED(SP(I)%ZLC))DEALLOCATE(SP(I)%ZLC )
+  IF(ASSOCIATED(SP(I)%ILC))DEALLOCATE(SP(I)%ILC )
+  IF(ASSOCIATED(SP(I)%JLC))DEALLOCATE(SP(I)%JLC )
+  IF(ASSOCIATED(SP(I)%KLC))DEALLOCATE(SP(I)%KLC )
+  IF(ASSOCIATED(SP(I)%ZLL))DEALLOCATE(SP(I)%ZLL )
+  IF(ASSOCIATED(SP(I)%TOT))DEALLOCATE(SP(I)%TOT )
+
+ ENDDO
+ 
+ DEALLOCATE(SP)
+ 
+ END SUBROUTINE TRACE_DEAL_SP
+ 
+ !###======================================================================
+ SUBROUTINE TRACE_DEAL_SPR()
+ !###======================================================================
+ IMPLICIT NONE
+ INTEGER :: I
+ 
+ IF(.NOT.ALLOCATED(SPR))RETURN
+
+ !## reset particles
+ DO I=1,SIZE(SPR)
+
+  IF(ASSOCIATED(SPR(I)%XLC))DEALLOCATE(SPR(I)%XLC)
+  IF(ASSOCIATED(SPR(I)%YLC))DEALLOCATE(SPR(I)%YLC)
+  IF(ASSOCIATED(SPR(I)%ZLC))DEALLOCATE(SPR(I)%ZLC)
+  IF(ASSOCIATED(SPR(I)%ILC))DEALLOCATE(SPR(I)%ILC)
+  IF(ASSOCIATED(SPR(I)%JLC))DEALLOCATE(SPR(I)%JLC)
+  IF(ASSOCIATED(SPR(I)%KLC))DEALLOCATE(SPR(I)%KLC)
+  IF(ASSOCIATED(SPR(I)%ZLL))DEALLOCATE(SPR(I)%ZLL)
+  IF(ASSOCIATED(SPR(I)%TOT))DEALLOCATE(SPR(I)%TOT)
+  
+ ENDDO
+ 
+ DEALLOCATE(SPR)
+ 
+ END SUBROUTINE TRACE_DEAL_SPR
  
  !###======================================================================
  LOGICAL FUNCTION TRACEREADBUDGET(IPER,IBATCH)
