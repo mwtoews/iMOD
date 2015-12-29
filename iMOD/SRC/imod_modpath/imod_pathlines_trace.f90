@@ -444,7 +444,7 @@ CONTAINS
    ENDIF
    IF(ZL.EQ.0.0.AND.ILAY.LT.NLAY)THEN
     !## skip inactive/constant head cells under layer
-    IF(IBOUND(ICOL,IROW,ILAY+1).LE.0)CYCLE
+    IF(IBOUND(ICOL,IROW,ILAY+1).EQ.0)CYCLE
     !## inside interbed between modellayers
     IF(ZC.LT.ZBOT(ICOL,IROW,ILAY).AND.ZC.GT.ZTOP(ICOL,IROW,ILAY+1))THEN
      !## compute local z: top (zl=1); mid (zl=0.5); bot (zl=0)
@@ -801,7 +801,7 @@ CONTAINS
  ALLOCATE(LVISIT(IDF%NCOL*IDF%NROW*MIN(2,NLAY))); LVISIT=0
 
  DO ISPFNAME=1,NSPFNAME
-
+  
   !## read/process particles towards readable format
   IF(.NOT.TRACEPREPARESP(NPART,IBATCH))RETURN
   !## initialize outputfiles
@@ -944,7 +944,7 @@ CONTAINS
       DO I=1,NVISIT; IVISIT(LVISIT(I))=INT(0,1); ENDDO
 
       !## time in days
-      SPR(1)%TOT(IPART)=TIME !(days)
+      SPR(1)%TOT(IPART)=TIME !## days
       IF(ISS.EQ.1)THEN
        !## end of current simulation
        IF(IDSCH.EQ.7)IDSCH=0
@@ -974,7 +974,7 @@ CONTAINS
    !## stop whenever tmax.eq.ttmax
    IF(TTMAX.GE.TMAX)EXIT
    !## determing stopcriterion whenever transient simulation concerned!
-   IF(IPER.EQ.MPER)THEN !NPER)THEN
+   IF(IPER.EQ.MPER)THEN 
     !## stop after last period, assume last period duration is similar to previous one!
     !## continue until particle stops (given tmax, else tmax=10e30)
     IF(ISTOPCRIT.EQ.1.OR.ISTOPCRIT.EQ.3)EXIT
@@ -1381,15 +1381,15 @@ IPFLOOP: DO I=1,SIZE(IPF)
  WRITE(IU,'(A)') 'SP_XCRD.'
  WRITE(IU,'(A)') 'SP_YCRD.'
  WRITE(IU,'(A)') 'SP_ZCRD.'
- WRITE(IU,'(A)') 'START_ILAY'
- WRITE(IU,'(A)') 'START_IROW'
- WRITE(IU,'(A)') 'START_ICOL'
+ WRITE(IU,'(A)') 'SP_ILAY'
+ WRITE(IU,'(A)') 'SP_IROW'
+ WRITE(IU,'(A)') 'SP_ICOL'
  WRITE(IU,'(A)') 'EP_XCRD.'
  WRITE(IU,'(A)') 'EP_YCRD.'
  WRITE(IU,'(A)') 'EP_ZCRD.'
- WRITE(IU,'(A)') 'END_ILAY'
- WRITE(IU,'(A)') 'END_IROW'
- WRITE(IU,'(A)') 'END_ICOL'
+ WRITE(IU,'(A)') 'EP_ILAY'
+ WRITE(IU,'(A)') 'EP_IROW'
+ WRITE(IU,'(A)') 'EP_ICOL'
  WRITE(IU,'(A)') 'TIME(YEARS)'
  WRITE(IU,'(A)') 'DISTANCE'
  WRITE(IU,'(A)') 'IDENT.NO.'
@@ -1455,8 +1455,9 @@ IPFLOOP: DO I=1,SIZE(IPF)
  IF(IBATCH.EQ.1)WRITE(*,'(A10,I2)') 'IREV: ',IREV
  READ(IU,*,IOSTAT=IOS) ISNK;  IF(.NOT.TRACECHECKRUN(IOS,'ISNK'))RETURN
  IF(IBATCH.EQ.1)WRITE(*,'(A10,I2)') 'ISNK: ',ISNK
+ ISNK=ISNK-1
  READ(IU,*,IOSTAT=IOS) FRAC;  IF(.NOT.TRACECHECKRUN(IOS,'FRAC'))RETURN
- IF(ISNK.NE.2)FRAC=0.99; FRAC=MIN(0.99,MAX(0.0,FRAC))
+ IF(ISNK.NE.2)FRAC=1.0; FRAC=MIN(1.0,MAX(0.0,FRAC))
  IF(IBATCH.EQ.1)WRITE(*,'(A10,F5.2)') 'FRAC: ',FRAC
  READ(IU,*,IOSTAT=IOS) ISTOPCRIT; IF(.NOT.TRACECHECKRUN(IOS,'ISTOPCRIT'))RETURN
  IF(IBATCH.EQ.1)WRITE(*,'(A10,I2)') 'ISTOPCRIT: ',ISTOPCRIT
@@ -1472,8 +1473,6 @@ IPFLOOP: DO I=1,SIZE(IPF)
  READ(IU,*,IOSTAT=IOS) IDATE; IF(.NOT.TRACECHECKRUN(IOS,'END WINDOW'))RETURN
  IF(IBATCH.EQ.1)WRITE(*,'(A10,I10)') 'END WINDOW: ',IDATE
  IF(NPER.GT.1)JD2=UTL_IDATETOJDATE(IDATE)
-
- ISNK=ISNK-1
 
  !## ib,top,bot,por_aqf,por_aqt
  DO ILAY=1,NLAY
@@ -1965,7 +1964,7 @@ IPFLOOP: DO I=1,SIZE(IPF)
   ENDDO; ENDDO
  ENDIF
 
- !##initialize qss - as nett-term waterbalance! - wordt alleen gebruikt in combi. met frac!!!
+ !##initialize qss - as nett-term waterbalance
  QSS=0.0
  DO ILAY=1,NLAY
   DO IROW=1,IDF%NROW
