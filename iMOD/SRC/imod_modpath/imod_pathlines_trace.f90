@@ -187,7 +187,8 @@ CONTAINS
  
  PL%TCUR=0.0
  PL%NPER=0
-
+ PL%NTIME=0
+ 
  CALL WDIALOGPUTREAL(IDF_REAL7,PL%TCUR) 
  
  TRACE_3D_RESET=.TRUE.
@@ -199,7 +200,7 @@ CONTAINS
  !###======================================================================
  IMPLICIT NONE
  INTEGER :: I,J,II,JJ,K,NX,NZ,N,ISP,IROW,ICOL,ILAY,IOPT,ISTRONG,IC1,IC2, &
-    IR1,IR2,ISHAPE,NC,IRANDOM,DR,DC,NG
+    IR1,IR2,ISHAPE,NC,IRANDOM,DR,DC
  REAL :: X,Y,Z,DX,DY,DZ,XC,YC,ZC,Q,QERROR,G2R,OR,R,OFR
  REAL,DIMENSION(:),ALLOCATABLE :: XSP,YSP,ZSP
  INTEGER,DIMENSION(:),ALLOCATABLE :: ILAYERS
@@ -387,7 +388,7 @@ CONTAINS
  NSPG=NSPG+1
  
  !## get new location/particle - click from the 3d tool
- CALL TRACE_3D_STARTPOINTS_ASSIGN(NG,XSP,YSP,ZSP)
+ CALL TRACE_3D_STARTPOINTS_ASSIGN(NSPG,XSP,YSP,ZSP)
  !## total particles for this group
  PL%NPART=PL%NPART+SP(NSPG)%NPART
  !## assign current colour to group
@@ -458,7 +459,7 @@ CONTAINS
     !## count number of particles
     SP(IG)%NPART=SP(IG)%NPART+1
     
-    CALL TRACE_3D_STARTPOINTS_MEMORY(IG)  
+    CALL TRACE_3D_STARTPOINTS_MEMORY_SP(IG)  
 
     SP(IG)%XLC(SP(IG)%NPART)=XC-IDF%XMIN
     SP(IG)%YLC(SP(IG)%NPART)=YC-IDF%YMIN
@@ -478,7 +479,7 @@ CONTAINS
  END SUBROUTINE TRACE_3D_STARTPOINTS_ASSIGN
 
  !###======================================================================
- SUBROUTINE TRACE_3D_STARTPOINTS_MEMORY(IG)
+ SUBROUTINE TRACE_3D_STARTPOINTS_MEMORY_SP(IG)
  !###======================================================================
  IMPLICIT NONE
  INTEGER,INTENT(IN) :: IG
@@ -516,8 +517,49 @@ CONTAINS
  SP(IG)%JLC=>SP(IG)%JLC_BU
  SP(IG)%TOT=>SP(IG)%TOT_BU
     
- END SUBROUTINE TRACE_3D_STARTPOINTS_MEMORY
+ END SUBROUTINE TRACE_3D_STARTPOINTS_MEMORY_SP
 
+ !###======================================================================
+ SUBROUTINE TRACE_3D_STARTPOINTS_MEMORY_SPR(IG)
+ !###======================================================================
+ IMPLICIT NONE
+ INTEGER,INTENT(IN) :: IG
+ INTEGER :: I,J,N
+ 
+ IF(SPR(IG)%NPART.LE.SIZE(SPR(IG)%XLC))RETURN
+ 
+ N=SPR(IG)%NPART+999
+ 
+ ALLOCATE(SPR(IG)%XLC_BU(N),SPR(IG)%YLC_BU(N),SPR(IG)%ZLC_BU(N), &
+          SPR(IG)%ZLL_BU(N),SPR(IG)%KLC_BU(N),SPR(IG)%ILC_BU(N), &
+          SPR(IG)%JLC_BU(N),SPR(IG)%TOT_BU(N))
+
+ DO I=1,SPR(IG)%NPART-1
+  SPR(IG)%XLC_BU(I)=SPR(IG)%XLC(I)
+  SPR(IG)%YLC_BU(I)=SPR(IG)%YLC(I)
+  SPR(IG)%ZLC_BU(I)=SPR(IG)%ZLC(I)
+  SPR(IG)%ZLL_BU(I)=SPR(IG)%ZLL(I)
+  SPR(IG)%KLC_BU(I)=SPR(IG)%KLC(I)
+  SPR(IG)%ILC_BU(I)=SPR(IG)%ILC(I)
+  SPR(IG)%JLC_BU(I)=SPR(IG)%JLC(I)
+  SPR(IG)%TOT_BU(I)=SPR(IG)%TOT(I)
+ ENDDO
+
+ DEALLOCATE(SPR(IG)%XLC,SPR(IG)%YLC,SPR(IG)%ZLC, &
+            SPR(IG)%ZLL,SPR(IG)%KLC,SPR(IG)%ILC, &
+            SPR(IG)%JLC,SPR(IG)%TOT)
+
+ SPR(IG)%XLC=>SPR(IG)%XLC_BU
+ SPR(IG)%YLC=>SPR(IG)%YLC_BU
+ SPR(IG)%ZLC=>SPR(IG)%ZLC_BU
+ SPR(IG)%ZLL=>SPR(IG)%ZLL_BU
+ SPR(IG)%KLC=>SPR(IG)%KLC_BU
+ SPR(IG)%ILC=>SPR(IG)%ILC_BU
+ SPR(IG)%JLC=>SPR(IG)%JLC_BU
+ SPR(IG)%TOT=>SPR(IG)%TOT_BU
+    
+ END SUBROUTINE TRACE_3D_STARTPOINTS_MEMORY_SPR
+ 
  !###======================================================================
  SUBROUTINE TRACE_3D_STARTPOINTS_SHOW()
  !###======================================================================
@@ -574,8 +616,8 @@ CONTAINS
  !###======================================================================
  IMPLICIT NONE
  REAL,PARAMETER :: DYEAR=365.25
- INTEGER :: I,IPART,IDSCH,NPACT,NPER,IG,ITRAPPED,MAXILAY
- REAL :: TIME,TTMAX,MAXVELOCITY
+ INTEGER :: I,IPART,IDSCH,NPACT,NPER,IG,ITRAPPED,MAXILAY,NTAIL,N,IFREQ
+ REAL :: TIME,TTMAX,MAXVELOCITY,XTREP
  
  TRACE_3D_COMPUTE=.FALSE.
 
@@ -585,14 +627,20 @@ CONTAINS
  CALL WDIALOGSELECT(ID_D3DSETTINGS_TAB8)
  CALL WDIALOGGETREAL(IDF_REAL4,PL%TMAX); PL%TMAX=PL%TMAX*DYEAR
  CALL WDIALOGGETREAL(IDF_REAL5,PL%TDEL); PL%TDEL=PL%TDEL*DYEAR
- CALL WDIALOGGETREAL(IDF_REAL6,PL%TREP); PL%TREP=PL%TREP*PL%TDEL
+ CALL WDIALOGGETREAL(IDF_REAL6,XTREP)
  CALL WDIALOGGETREAL(IDF_REAL7,PL%TCUR); PL%TCUR=PL%TCUR*DYEAR
+ CALL WDIALOGGETINTEGER(IDF_INTEGER4,NTAIL)
  CALL WDIALOGGETCHECKBOX(IDF_CHECK2,ITRAPPED)
+ CALL WDIALOGGETCHECKBOX(IDF_CHECK3,IFREQ)
+ IF(IFREQ.EQ.1)ITRAPPED=0
+ 
+ PL%NTREP=INT((XTREP+1.0)*REAL(NTAIL))
 
 ! NPER=PL%NPER
 ! WRITE(*,*) PL%NPER,NPER
  !## increase number of timesteps
- PL%NPER=PL%NPER+1
+ PL%NPER =PL%NPER+1
+ PL%NTIME=PL%NTIME+1
 ! NPER=NPER+1
 ! WRITE(*,*) PL%NPER,NPER
 
@@ -630,7 +678,7 @@ CONTAINS
   !## points
   IF(PL%ITYPE.EQ.2)CALL GLBEGIN(GL_POINTS)
 
-  DO IPART=1,SP(IG)%NPART 
+  DO IPART=1,SPR(IG)%NPART 
 
    !## time in days
    TIME=SPR(IG)%TOT(IPART)
@@ -639,12 +687,7 @@ CONTAINS
    TTMAX=TIME+PL%TDEL
    !## maximize it for tmax
    TTMAX=MIN(TTMAX,PL%TMAX)   
-  
-   !## create new particle ttmax/pl%trep another integer ...
-   IF(TTMAX.GE.PL%TREP)THEN
-
-   ENDIF
-   
+     
    !## trace selected particle, not yet discharged!
    IF(SPR(IG)%KLC(IPART).GT.0)THEN
 
@@ -693,6 +736,43 @@ CONTAINS
   
   CALL GLENDLIST()
  
+  !## create new particles ttmax/pl%trep another integer ...
+  IF(IFREQ.EQ.1)THEN
+   !## initiate a new series of particles
+   IF(MOD(PL%NTIME,PL%NTREP).EQ.0)THEN
+
+    I=0
+    !## duplicate
+    DO IPART=1,SP(IG)%NPART
+
+     !## find "empty" spot of terminated particle
+     DO
+      I=I+1; IF(I.GT.SPR(IG)%NPART)EXIT
+      IF(SPR(IG)%KLC(I).EQ.0)EXIT
+     ENDDO
+     
+     IF(I.GT.SPR(IG)%NPART)THEN
+      !## count number of particles
+      SPR(IG)%NPART=SPR(IG)%NPART+1
+      CALL TRACE_3D_STARTPOINTS_MEMORY_SPR(IG)
+     ENDIF
+
+     SPR(IG)%ILC(I)=SP(IG)%ILC(IPART)
+     SPR(IG)%JLC(I)=SP(IG)%JLC(IPART)
+     SPR(IG)%KLC(I)=SP(IG)%KLC(IPART)
+     SPR(IG)%XLC(I)=SP(IG)%XLC(IPART)
+     SPR(IG)%YLC(I)=SP(IG)%YLC(IPART)
+     SPR(IG)%ZLC(I)=SP(IG)%ZLC(IPART)
+     SPR(IG)%ZLL(I)=SP(IG)%ZLL(IPART)
+     SPR(IG)%TOT(I)=SP(IG)%TOT(IPART)
+  
+     !## add active particles
+     NPACT=NPACT+1
+    
+    ENDDO
+   ENDIF
+   
+  ENDIF
  ENDDO
   
  !## clean drawing list, whenever nothing in it
@@ -702,6 +782,8 @@ CONTAINS
   ENDDO
  ENDIF
  
+ CALL WDIALOGPUTINTEGER(IDF_INTEGER6,NPACT)
+
  !## trace as long as there are active particles available
  IF(SUM(PLLISTINDEX).NE.0)TRACE_3D_COMPUTE=.TRUE.
  
