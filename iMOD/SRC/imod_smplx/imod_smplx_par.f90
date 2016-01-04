@@ -1,4 +1,4 @@
-!!  Copyright (C) Stichting Deltares, 2005-2014.
+!!  Copyright (C) Stichting Deltares, 2005-2016.
 !!
 !!  This file is part of iMOD.
 !!
@@ -19,6 +19,7 @@
 !!  Stichting Deltares
 !!  P.O. Box 177
 !!  2600 MH Delft, The Netherlands.
+!!
 MODULE MOD_SMPLX_PAR
 
 USE SMPLX_CONSTANTS_NSWC, ONLY : DP

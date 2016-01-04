@@ -1,4 +1,4 @@
-!!  Copyright (C) Stichting Deltares, 2005-2014.
+!!  Copyright (C) Stichting Deltares, 2005-2016.
 !!
 !!  This file is part of iMOD.
 !!
@@ -77,8 +77,8 @@ CONTAINS
   CALL IMOD_STARTLICENSE_BETA(IDF_STRING1)
   CALL WDIALOGPUTSTRING(IDF_LABEL1,'User Agreement')
   CALL WDIALOGSETFIELD(IDOK)
-  CALL WDIALOGPUTSTRING(IDF_RADIO1,'Yes, I am authorized in writing for Beta-iMOD')
-  CALL WDIALOGPUTSTRING(IDF_RADIO2,'No, I am not authorized in writing for Beta-iMOD')
+  CALL WDIALOGPUTSTRING(IDF_RADIO1,'Yes, I am allowed to use Beta-iMOD under the Software License Agreement iMOD B plus Beta 1.5, July 2015')
+  CALL WDIALOGPUTSTRING(IDF_RADIO2,'No, I am not allowed to use Beta-iMOD')
   IF(CODE.EQ.1)THEN
    CALL WDIALOGFIELDSTATE(IDF_RADIO1,3)
    CALL WDIALOGFIELDSTATE(IDF_RADIO2,3)
@@ -178,7 +178,7 @@ CONTAINS
  
  ALLOCATE(CHARACTER(LEN=STRLEN) :: STR)
 
- STR='Copyright (C) Stichting Deltares, 2005-2015. '//NEWLINE// &
+ STR='Copyright (C) Stichting Deltares, 2005-2016. '//NEWLINE// &
 NEWLINE// &
 'This Deltares-software executable is part of iMOD. iMOD is Deltares-soft'// &
 'ware; the source code of iMOD is also available as free open source soft'// &
@@ -244,19 +244,17 @@ NEWLINE// &
  
  ALLOCATE(CHARACTER(LEN=STRLEN) :: STR)
 
- STR='Copyright (C) Stichting Deltares, 2005-2015. '//NEWLINE// &
+ STR='Copyright (C) Stichting Deltares, 2005-2016. '//NEWLINE// &
  NEWLINE// &
- 'WARNING: Use of ‘Beta-iMOD’ by Licensee is only allowed when Licensee and '// &
- 'Deltares have both signed the Agreement for use of beta-versions of iMOD '// & 
- 'titled “Software License Agreement iMOD-Version B plus Beta 1.5, July 2014”; '// & 
- 'use of this beta-version of iMOD is subject to that Agreement and its terms and '// & 
- 'conditions. If you are not authorized by that License Agreement “Software License '// &
- 'Agreement iMOD-Version B plus Beta 1.5, July 2014”, please do not mark the “Yes, I am '// & 
- 'licensed in writing for Beta-iMOD”-checkbox in the iMOD-GUI and exit the iMOD-program by selecting '// & 
- 'the “No, I am not authorized in writing for Beta-iMOD” checkbox in the iMOD-GUI and exit the iMOD-GUI. In this case your use of '// & 
- 'this beta-version of the iMOD-software is prohibited and illegal: abort the use of this '// &
- 'Deltares-executable immediately and refrain from using this beta-version of the '// &
- 'Deltares-executables of iMOD.'
+ 'WARNING: Use of ‘Beta-iMOD’ by Licensee is only allowed under the terms and conditions '// &
+ 'of the “Software License Agreement iMOD-Version B plus Beta 1.5, July 2014” agreed between '// &
+ 'Licensee and Deltares; use of this beta-version of iMOD is subject to that Agreement '// &
+ 'and its terms and conditions. If the terms and conditions of the “Software License Agreement '// &
+ 'iMOD-Version B plus Beta 1.5, July 2014” do not allow you to use the Beta iMOD, please do not '// &
+ 'mark the “Yes, I am allowed to use Beta-iMOD-checkbox in the iMOD-GUI and exit the iMOD-program '// &
+ 'by clicking the “Cancel” checkbox in the iMOD-GUI and exit the iMOD-GUI. In this case your use '// &
+ 'of this beta-version of the iMOD-software is prohibited and illegal: abort the use of this '// &
+ 'Deltares-executable immediately and refrain from using this beta-version of the Deltares-executables of iMOD.'
 
  CALL WDIALOGPUTSTRING(ID,TRIM(STR))
  

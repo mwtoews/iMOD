@@ -1,4 +1,4 @@
-!!  Copyright (C) Stichting Deltares, 2005-2014.
+!!  Copyright (C) Stichting Deltares, 2005-2016.
 !!
 !!  This file is part of iMOD.
 !!
@@ -92,7 +92,7 @@ CONTAINS
  PL%IREV =0     !## 0=forward; 1=backward simulation (operates as a switch)
  PL%NPART=0     !## number of particles active
  PL%IPLOTSP=0   !## plotsp
- PL%SPCOLOR=WRGB(200,10,10) !## initial olour of start-locations
+ PL%SPCOLOR=WRGB(200,10,10) !## initial colour of start-locations
  
  ALLOCATE(IVISIT(IDF%NCOL*IDF%NROW*NLAY)); IVISIT=INT(0,1)
  ALLOCATE(LVISIT(IDF%NCOL*IDF%NROW*MIN(2,NLAY))); LVISIT=0
@@ -200,7 +200,7 @@ CONTAINS
  !###======================================================================
  IMPLICIT NONE
  INTEGER :: I,J,II,JJ,K,NX,NZ,N,ISP,IROW,ICOL,ILAY,IOPT,ISTRONG,IC1,IC2, &
-    IR1,IR2,ISHAPE,NC,IRANDOM,DR,DC
+    IR1,IR2,ISHAPE,NC,IRANDOM,DR,DC,IIDF
  REAL :: X,Y,Z,DX,DY,DZ,XC,YC,ZC,Q,QERROR,G2R,OR,R,OFR
  REAL,DIMENSION(:),ALLOCATABLE :: XSP,YSP,ZSP
  INTEGER,DIMENSION(:),ALLOCATABLE :: ILAYERS
@@ -244,19 +244,41 @@ CONTAINS
     ENDDO
    ENDDO
 
-  !## spatial distributed via an IDF-file
-  CASE (2)
-   CALL WDIALOGGETMENU(IDF_MENU1,I)  
+  !## spatial distributed via an IDF/IPF-file
+  CASE (2,5)
+   !## file
+   IF(ISP.EQ.2)CALL WDIALOGGETMENU(IDF_MENU1,IIDF)
+   IF(ISP.EQ.5)CALL WDIALOGGETSTRING(IDF_STRING2,PIDF%FNAME)
+
+   CALL WDIALOGSELECT(ID_D3DSETTINGS_IDF)
+   CALL WDIALOGGETMENU(IDF_MENU1,J)
+   CALL WDIALOGGETINTEGER(IDF_INTEGER1,NX)
+
    CALL IDFCOPY(IDF,PIDF)
-   IF(.NOT.IDFREADSCALE(IDFPLOT(IDFPLOT(I)%DISP_ILIST)%FNAME,PIDF,2,0,0.0,0))RETURN
+   IF(ISP.EQ.2)THEN
+    IF(.NOT.IDFREADSCALE(IDFPLOT(IDFPLOT(IIDF)%DISP_ILIST)%FNAME,PIDF,2,0,0.0,0))RETURN
+   ELSEIF(ISP.EQ.5)THEN
+    IF(.NOT.IDFREADSCALE(PIDF%FNAME,PIDF,2,0,0.0,0))RETURN
+   ENDIF
    DO I=1,2
     N=0
     DO IROW=1,PIDF%NROW; DO ICOL=1,PIDF%NCOL 
      IF(PIDF%X(ICOL,IROW).NE.PIDF%NODATA)THEN
-      N=N+1
-      IF(I.EQ.2)THEN
-       CALL IDFGETLOC(PIDF,IROW,ICOL,XSP(N),YSP(N))
-       ZSP(N)=PIDF%X(ICOL,IROW)
+      LEX=.FALSE.
+      SELECT CASE (J)
+       CASE (1) !## both (-/+)
+        LEX=.TRUE.
+       CASE (2) !## down (-)
+        IF(PIDF%X(ICOL,IROW).GT.0.0)LEX=.TRUE.
+       CASE (3) !## up (+)
+        IF(PIDF%X(ICOL,IROW).LT.0.0)LEX=.TRUE.
+      END SELECT
+      IF(LEX)THEN
+       N=N+1
+       IF(I.EQ.2)THEN
+        CALL IDFGETLOC(PIDF,IROW,ICOL,XSP(N),YSP(N))
+        ZSP(N)=PIDF%X(ICOL,IROW)
+       ENDIF
       ENDIF
      ENDIF
     ENDDO; ENDDO
@@ -379,9 +401,6 @@ CONTAINS
     ENDDO; ENDDO
    ENDDO
    DEALLOCATE(ILAYERS)
-
-  !## file
-  CASE (5)
   
  END SELECT
  
