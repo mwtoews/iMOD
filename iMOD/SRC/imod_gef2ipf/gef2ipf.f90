@@ -34,7 +34,7 @@ CONTAINS
  !###======================================================================
  IMPLICIT NONE
  INTEGER,INTENT(IN) :: IBATCH,GEFTYPE
- INTEGER :: I,ITYPE,IGEFTYPE
+ INTEGER :: ITYPE,IGEFTYPE
  TYPE(WIN_MESSAGE) :: MESSAGE
  
  IGEFTYPE=GEFTYPE

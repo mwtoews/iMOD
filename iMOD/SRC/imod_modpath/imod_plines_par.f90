@@ -57,7 +57,7 @@ REAL,ALLOCATABLE,DIMENSION(:) :: DELR,DELC,LDELR,LDELC,DELX,DELY
 REAL,ALLOCATABLE,DIMENSION(:,:,:) :: ZTOP,ZBOT,POR,QX,QY,QZ,BUFF,QSS
 INTEGER,ALLOCATABLE,DIMENSION(:,:,:) :: IBOUND
 INTEGER,ALLOCATABLE,DIMENSION(:) :: NCON
-INTEGER :: NSPG    !## number of startpoint groups
+INTEGER,SAVE :: NSPG    !## number of startpoint groups
 
 TYPE SPOBJ
  REAL,POINTER,DIMENSION(:)    :: XLC   ,YLC   ,ZLC   ,ZLL   ,TOT
@@ -68,6 +68,8 @@ TYPE SPOBJ
  INTEGER :: ICLR   !## particle colour
  INTEGER :: IACT   !## particle active (0=no; 1=yes)
  INTEGER :: IREV   !## direction (0=forward; 1=backward)
+ REAL :: SPWIDTH  !## plot size startpoint (0=no, 1.0,2,3,4,5.0 = size)
+ REAL :: PWIDTH  !## plot size particle (0=no, 1.0,2,3,4,5.0 = size)
 END TYPE SPOBJ
 TYPE(SPOBJ),DIMENSION(:),ALLOCATABLE :: SP,SPR
 

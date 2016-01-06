@@ -251,10 +251,6 @@ INTEGER(KIND=GLUINT),ALLOCATABLE,DIMENSION(:,:) :: IPFLISTINDEX,SOLLISTINDEX,PLL
 INTEGER,ALLOCATABLE,DIMENSION(:,:) :: IPFDLIST !## selected features of the 
 INTEGER,ALLOCATABLE,DIMENSION(:) :: PLLISTCLR  !## color fraction of current time in drawing list
 REAL,ALLOCATABLE,DIMENSION(:) :: PLLISTAGE     !## age of current time in drawing list
-!INTEGER,ALLOCATABLE,DIMENSION(:) :: SPGCLR     !## specific color for each startpoint group
-!INTEGER,ALLOCATABLE,DIMENSION(:,:) :: SPGPOS   !## position when each group starts
-!INTEGER :: NSPG                                !## number of startpoint groups
-!INTEGER :: MAXNSPG                             !## maximum number of startpoint groups
 
 TYPE(IDFOBJ),ALLOCATABLE,DIMENSION(:) :: IDF_CC  !## idf (part)
 

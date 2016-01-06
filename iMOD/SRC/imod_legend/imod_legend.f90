@@ -307,7 +307,6 @@ CONTAINS
  SUBROUTINE LEG_INIT()
  !###====================================================================
  IMPLICIT NONE
- INTEGER :: I
 
  CALL WDIALOGLOAD(ID_DLEGEND)
  CALL WDIALOGPUTIMAGE(ID_OPEN,ID_ICONOPEN,1)
@@ -1664,7 +1663,7 @@ CONTAINS
  !##==============================================================================
  IMPLICIT NONE
  INTEGER,INTENT(IN) :: IPLOT
- INTEGER :: I,J,K,IRED,IGREEN,IBLUE,NCLRDEF,IRGB,II
+ INTEGER :: I,J,K,IRED,IGREEN,IBLUE,NCLRDEF,II
  REAL,DIMENSION(3) :: INTCLR
  INTEGER,DIMENSION(MXCGRAD,3) :: PCLR
  
