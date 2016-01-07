@@ -277,9 +277,9 @@ DO IDF=1,NIDF
 
  MP(IPLOT)%ALIAS=IDFNAME(J:)
 
- I=IPLOT
- IF(IPLOT.GT.MAXCOLOUR)I=1
- MP(IPLOT)%SCOLOR    =ICOLOR(I)   !## color for profile
+ I=MOD(IPLOT,MAXCOLOUR)
+! I=IPLOT; IF(IPLOT.GT.MAXCOLOUR)I=1
+ MP(IPLOT)%SCOLOR=ICOLOR(I)   !## color for profile
  CALL UTL_READARRAY((/1,1,0,0,0,0/),6,MP(IPLOT)%PRFTYPE) !active - drawing lines in profile on default
 
  MP(IPLOT)%IDFI =0
@@ -335,13 +335,13 @@ DO IDF=1,NIDF
    MP(IPLOT)%SCOLOR =WRGB(100,100,100)! single - colour    !no colouring, attribute colouring
    MP(IPLOT)%UNITS  =1    !plot associated files within ipf profile mode
    IF(PRESENT(IPFICOL))THEN
-    MP(IPLOT)%XCOL   =IPFICOL(1)    !column used for X-COORDINATE
-    MP(IPLOT)%YCOL   =IPFICOL(2)    !column used for Y-COORDINATE
-    MP(IPLOT)%HCOL   =IPFICOL(4)    !column used for HIGHLIGHTING
+    MP(IPLOT)%XCOL  =IPFICOL(1)    !column used for X-COORDINATE
+    MP(IPLOT)%YCOL  =IPFICOL(2)    !column used for Y-COORDINATE
+    MP(IPLOT)%HCOL  =IPFICOL(4)    !column used for HIGHLIGHTING
    ELSE
-    MP(IPLOT)%XCOL   =1    !column used for X-COORDINATE
-    MP(IPLOT)%YCOL   =2    !column used for Y-COORDINATE
-    MP(IPLOT)%HCOL   =0    !no column used for highlighting
+    MP(IPLOT)%XCOL  =1    !column used for X-COORDINATE
+    MP(IPLOT)%YCOL  =2    !column used for Y-COORDINATE
+    MP(IPLOT)%HCOL  =0    !no column used for highlighting
    ENDIF
    MP(IPLOT)%ZCOL   =1    !column used for Z-COORDINATE, default x-coordinate
    MP(IPLOT)%IAXES  =1    !all columns to be plotted on the first axes

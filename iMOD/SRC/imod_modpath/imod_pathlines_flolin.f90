@@ -35,7 +35,7 @@ USE WINTERACTER
 USE OPENGL
 USE MOD_UTL, ONLY : ITOS,RTOS
 USE MOD_PLINES_PAR, ONLY : IDF
-USE MOD_3D_PAR, ONLY : MIDPOS,TOP,BOT,XYZAXES,IPATHLINE_3D
+USE MOD_3D_PAR, ONLY : MIDPOS,TOP,BOT,XYZAXES,IPATHLINE_3D,VIEWDX,VIEWDY
 
 REAL,PARAMETER :: ACCURACY=0.0 
 REAL,PARAMETER :: PLUSINFINITY=HUGE(1.0)
@@ -98,10 +98,10 @@ CONTAINS
                                       VLZ2,F,XPP,YPP,ZPP,XNEW,YNEW, &
                                       ZNEW,VELOCITY,TTM!,MAXVELOCITY
 
- LOGICAL                           :: LOGCON  !in confining bed
+ LOGICAL                           :: LOGCON  !##in confining bed
 
- IF(ZLOC.LE.0.0)ZLOC=0.001
- IF(ZLOC.GE.1.0)ZLOC=0.999
+! IF(ZLOC.LE.0.0)ZLOC=0.001
+! IF(ZLOC.GE.1.0)ZLOC=0.999
  
  KOLD =KP
  IDSCH=0
@@ -157,7 +157,7 @@ CONTAINS
   TIM=TIME+DT
 
  !######check to see if maximum time has been reached or exceeded.
- !######if so, set time equal to tmax, caluculate particle location,
+ !######if so, set time equal to tmax, calculate particle location,
  !######exit subroutine.
   IF(TMAX.GT.TIM)THEN ! GO TO 10                                          # C01060
   ELSE !IF(TIM.GE.TMAX)THEN
@@ -513,24 +513,17 @@ CONTAINS
  INTEGER,INTENT(IN) :: IPART,KP,IU,IROW,ICOL
  REAL,INTENT(IN) :: XP,YP,ZP,TIME,V
  CHARACTER(LEN=256) :: LINE
- REAL(KIND=GLFLOAT) :: X,Y,Z,DX,DY
+ REAL(KIND=GLFLOAT) :: X,Y,Z 
  
  IF(IPATHLINE_3D.EQ.0)THEN
 
-!  LINE=TRIM(ITOS(IPART))//','//TRIM(ITOS(KP))//','//TRIM(RTOS(XP+IDF%XMIN,'F',2))//','// &
-!       TRIM(RTOS(YP+IDF%YMIN,'F',2))//','//TRIM(RTOS(ZP,'F',3))//','//TRIM(RTOS(TIME,'E',5))//','// &
-!       TRIM(RTOS(V,'E',5))//','//TRIM(ITOS(IROW))//','//TRIM(ITOS(ICOL))
-!  WRITE(IU,*) TRIM(LINE)
   WRITE(IU,'(2(I10,1X),5(E15.7,1X),2(I10,1X))') IPART,KP,XP+IDF%XMIN,YP+IDF%YMIN,ZP,TIME,V,IROW,ICOL
        
  ELSE
  
-  DX=(TOP%X-BOT%X)/2.0_GLFLOAT/XYZAXES(1)
-  DY=(TOP%Y-BOT%Y)/2.0_GLFLOAT/XYZAXES(2)
-
   !## translate current position to view=position
-  X= XP+IDF%XMIN;    Y= YP+IDF%YMIN; Z=ZP 
-  X=(X-MIDPOS%X)/DX; Y=(Y-MIDPOS%Y)/DY
+  X= XP+IDF%XMIN;        Y= YP+IDF%YMIN; Z=ZP 
+  X=(X-MIDPOS%X)/VIEWDX; Y=(Y-MIDPOS%Y)/VIEWDY
   !## current position 
   CALL GLVERTEX3F(X,Y,Z)
  
