@@ -171,9 +171,10 @@ CONTAINS
  END FUNCTION TRACE_3D_INIT
  
  !###======================================================================
- LOGICAL FUNCTION TRACE_3D_RESET() 
+ LOGICAL FUNCTION TRACE_3D_RESET(ICODE) 
  !###======================================================================
  IMPLICIT NONE
+ INTEGER,INTENT(IN) :: ICODE
  INTEGER :: I,J,N,M
  REAL :: T
  
@@ -199,8 +200,11 @@ CONTAINS
  !## number of groups active
  CALL WDIALOGGETINTEGER(IDF_INTEGER11,M)
  !## no group active
- IF(M.LE.0)RETURN
-
+ IF(M.LE.0)THEN
+  IF(ICODE.EQ.1)CALL WMESSAGEBOX(OKONLY,EXCLAMATIONICON,COMMONOK,'Create a set of particles first!','Information')
+  RETURN
+ ENDIF
+ 
  !## drawinglist index
  ALLOCATE(PLLISTINDEX(N,M)); PLLISTINDEX=0
  !## colour fraction
