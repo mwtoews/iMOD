@@ -8,7 +8,7 @@
 //
 // Winteracter resource script. 
 //
-// Modified : 09/Jan/2016 20:08:23
+// Modified : 11/Jan/2016 11:37:27
 //
 ///////////////////////////////////////////////////
 //
@@ -8547,14 +8547,16 @@ END
 ID_DPMANAGER_SPECIALOPEN RCDATA
 BEGIN
 "[Menus] \n"
-" 1192     7     1 \n"
+" 1192     9     1 \n"
 "1) TOP1 - BOT1 - TOP2 - ... \n"
 "2) TOP1 - KDW1 - BOT1 - TOP2 - KDW2 - BOT2 ... \n"
-"3) TOP1 - KDW1 - BOT1 - VCW1 - TOP2 - BOT2 - VCW2 - TOP3 ... \n"
+"3) TOP1 - KDW1 - BOT1 - VCW1 - TOP2 - KDW2 - BOT2 - VCW2 - TOP3 ... \n"
 "4) TOP1 - BOT1 - VCW1 - TOP2 - BOT2 - VCW2 - TOP3 ... \n"
 "5) TOP1 - SHD1 - BOT1 - TOP2 - SHD2 - BOT2 ... \n"
 "6) TOP1 - KHV1 - BOT1 - TOP2 - KHV2 - BOT2 ... \n"
 "7) TOP1 - BOT1 - KVV1 - TOP2 - BOT2 - KVV2 - TOP3 ... \n"
+"8) TOP1 - KHV1 - BOT1 -KVV1 - TOP2 - KHV2 - BOT2 - KVV2 - TOP3 ... \n"
+" \n"
 "[Ranges] \n"
 "[Fonts] \n"
 "    1    8 Arial, 400 0 \n"
@@ -11111,4 +11113,4 @@ END
 //*WI* FILENAME    resource.f90
 //*WI* FMODNAME    RESOURCE
 //*WI* LASTTYPE        2
-//*WI* LASTRES       266
+//*WI* LASTRES       236

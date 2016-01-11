@@ -30,8 +30,8 @@ LOGICAL :: LBETA=.TRUE.
 LOGICAL :: LEXPDATE=.TRUE.
 INTEGER :: EXPDATE=20160215
 
-CHARACTER(LEN=30),PARAMETER :: RVERSION='V3_3'      !## release message - only with single subnummers
-CHARACTER(LEN=30),PARAMETER :: BVERSION='Beta'      !## banner message - no characters !!!
+CHARACTER(LEN=30),PARAMETER :: RVERSION='V3_3'         !## release message - only with single subnummers
+CHARACTER(LEN=30),PARAMETER :: BVERSION='Beta(2)'      !## banner message !!!
 CHARACTER(LEN=32) :: LICFILE='I_accepted_'//TRIM(RVERSION)//'.txt'
 CHARACTER(LEN=256) :: IMFFNAME         !## name of drawing file
 CHARACTER(LEN=256) :: EXENAME,EXEPATH

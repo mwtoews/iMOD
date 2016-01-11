@@ -429,12 +429,19 @@ CONTAINS
   IF(IDFPLOT(I)%IFILL.EQ.1.OR.IDFPLOT(I)%IFILL.EQ.3)THEN
 
    !## opaque mode
-   CALL GLBLENDFUNC(GL_ONE,GL_ZERO)  !## (1) source (2) destination
+!   CALL GLBLENDFUNC(GL_ONE,GL_ZERO)  !## (1) source (2) destination
+
+ !## blend mode (peter)
+ CALL GLBLENDFUNC(GL_SRC_ALPHA,GL_ONE_MINUS_SRC_ALPHA)  !## (1) source (2) destination
    
    CALL GLPOLYGONMODE(GL_BACK, GL_FILL); CALL GLPOLYGONMODE(GL_FRONT,GL_FILL)
 
    IF(IDFPLOT(I)%ILEG.EQ.1)THEN
-    CALL IMOD3D_SETCOLOR(IDFPLOT(I)%ICOLOR)
+
+!## peter
+    CALL IMOD3D_SETCOLOR(IDFPLOT(I)%ICOLOR,50)
+
+!    CALL IMOD3D_SETCOLOR(IDFPLOT(I)%ICOLOR)
    ELSEIF(IDFPLOT(I)%ILEG.EQ.2)THEN  !## legend colour - reread as not yet filled with legend-colouring
     !## do not change colour since colour is inside display-list
    ENDIF
