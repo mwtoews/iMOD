@@ -26,6 +26,7 @@ USE RESOURCE
 IMPLICIT NONE
 
 CHARACTER(LEN=256) :: HELP
+INTEGER :: TI   !#Stores time interval for checking plugin
 
 !#Be aware that you update PLUGIN_CHECK with the content of PIOBJ!!
 TYPE PIOBJ

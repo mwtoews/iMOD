@@ -84,7 +84,7 @@
 		<File RelativePath="..\..\..\iMOD\SRC\imod_ahnfilter\imod_ahnfilter_par.f90"/></Filter>
 		<Filter Name="imod_asc2idf">
 		<File RelativePath="..\..\..\iMOD\SRC\imod_asc2idf\imod_asc2idf.f90"/>
-		<File RelativePath="..\..\SRC\imod_asc2idf\imod_asc2idf_hfb.f90"/>
+		<File RelativePath="..\..\..\iMOD\SRC\imod_asc2idf\imod_asc2idf_hfb.f90"/>
 		<File RelativePath="..\..\..\iMOD\SRC\imod_asc2idf\imod_asc2idf_par.f90"/></Filter>
 		<Filter Name="imod_batch">
 		<File RelativePath="..\..\..\iMOD\SRC\imod_batch\imod_batch.f90">

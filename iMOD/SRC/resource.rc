@@ -8,13 +8,13 @@
 //
 // Winteracter resource script. 
 //
-// Modified : 11/Jan/2016 11:37:27
+// Modified : 11/Jan/2016 17:13:07
 //
 ///////////////////////////////////////////////////
 //
 // Include files
 //
-#include "..\LIB\WINTERACTER\OS_X32\include\winparam.h"
+#include "winparam.h"
 #ifdef XLIB
 #include "..\LIB\WINTERACTER\OS_X32\include\filesel.rc"
 #include "..\LIB\WINTERACTER\OS_X32\include\colour.rc"
@@ -1085,6 +1085,11 @@
 #define ID_INTERACTIVEPATHLINES_MANUAL  40268
 #define ID_INTERACTIVEPATHLINES_DEF     40269
 #define ID_IPS                          40270
+#define ID_PLUGIN_TIMECHECK             40271
+#define ID_TI1                          40272
+#define ID_TI2                          40273
+#define ID_TI3                          40274
+#define ID_TI4                          40275
 
 ///////////////////////////////////////////////////
 //
@@ -10299,6 +10304,13 @@ BEGIN
         MENUITEM SEPARATOR
         POPUP "Plug-In"
         BEGIN
+            POPUP "Time check interval"
+            BEGIN
+                MENUITEM "60 sec",                                   ID_TI1
+                MENUITEM "30 sec",                                   ID_TI2
+                MENUITEM "15 sec",                                   ID_TI3
+                MENUITEM "1 sec",                                    ID_TI4
+            END
             MENUITEM "Manage Plug-in 1...",                      ID_MANAGE_PLUGIN1
             MENUITEM "Manage Plug-in 2...",                      ID_MANAGE_PLUGIN2
             MENUITEM "PL1 NAME1",                                ID_PLUGIN1
@@ -10379,6 +10391,7 @@ ID_LEGCD,4,13,0,
 ID_LEGED,4,14,0,
 ID_TOOLBOX,5,0,
 ID_PLUGIN,5,6,0,
+ID_PLUGIN_TIMECHECK,5,6,1,0,
 ID_IPS,5,19,0,
 ID_HELPMAIN,6,0,
 0
@@ -11112,5 +11125,5 @@ END
 //*WI* FORTSAVE    1
 //*WI* FILENAME    resource.f90
 //*WI* FMODNAME    RESOURCE
-//*WI* LASTTYPE        2
-//*WI* LASTRES       236
+//*WI* LASTTYPE        1
+//*WI* LASTRES         7
