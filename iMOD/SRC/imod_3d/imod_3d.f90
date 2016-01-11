@@ -645,6 +645,11 @@ CONTAINS
  CALL GLDEPTHFUNC(GL_LESS)
  CALL GLENABLE(GL_DEPTH_TEST)
 
+ !## completely enclosed surface constructed from opaque polygons with a consistent
+ !## orientation, none of the back-facing polygons are ever visible
+! CALL GLENABLE(GL_CULL_FACE)
+! CALL GLCULLFACE(GL_FRONT_AND_BACK)
+  
  !## reset viewing properties and draw image
  CALL IMOD3D_RESET_TO_INIT()
  !## initialize light

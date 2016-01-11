@@ -56,7 +56,7 @@ CONTAINS
   CALL GLENABLE(GL_POINT_SMOOTH)
   !## antialiasing lines
   CALL GLENABLE(GL_LINE_SMOOTH)
-  !## enable blending -  aliasing werkt (nog) niet voor polygonen... komt door ontbreken alpha factor!
+  !## enable blending
   CALL GLENABLE(GL_BLEND)
   !## fastest mode
   CALL GLHINT(GL_POINT_SMOOTH_HINT,GL_FASTEST)
@@ -141,7 +141,7 @@ CONTAINS
   IF(IMODE.EQ.1.AND.IBNDBOX.EQ.1)THEN
    CALL GLBLENDFUNC(GL_SRC_ALPHA,GL_ONE_MINUS_SRC_ALPHA)  !## (1) source (2) destination
   !## draw filled background in gl_cull_face mode
-   CALL IMOD3D_SETCOLOR(BCOLOR)
+   CALL IMOD3D_SETCOLOR(BCOLOR,100)
    CALL GLLINEWIDTH(1.0_GLFLOAT)
    !## draw box
    IF(AXESINDEX(1).GT.0)CALL GLCALLLIST(AXESINDEX(1))
@@ -153,7 +153,7 @@ CONTAINS
   IF(IMODE.EQ.1.AND.IAXES.EQ.1)THEN
    CALL GLBLENDFUNC(GL_SRC_ALPHA,GL_ONE_MINUS_SRC_ALPHA)  !## (1) source (2) destination
    !## draw labels
-   CALL IMOD3D_SETCOLOR(ACOLOR)
+   CALL IMOD3D_SETCOLOR(ACOLOR,100)
    IF(AXESINDEX(3).GT.0)CALL GLCALLLIST(AXESINDEX(3))
   ENDIF
  
@@ -428,19 +428,29 @@ CONTAINS
  
   IF(IDFPLOT(I)%IFILL.EQ.1.OR.IDFPLOT(I)%IFILL.EQ.3)THEN
 
-   !## opaque mode
-!   CALL GLBLENDFUNC(GL_ONE,GL_ZERO)  !## (1) source (2) destination
+   !## blend mode (peter)
+   IF(IMODE.EQ.1)THEN
 
- !## blend mode (peter)
- CALL GLBLENDFUNC(GL_SRC_ALPHA,GL_ONE_MINUS_SRC_ALPHA)  !## (1) source (2) destination
-   
-   CALL GLPOLYGONMODE(GL_BACK, GL_FILL); CALL GLPOLYGONMODE(GL_FRONT,GL_FILL)
+    !## blending function using GL_ONE_MINUS_DST_ALPHA for the source factor and GL_ONE for the destination factor.
+! CALL GLDISABLE(GL_DEPTH_TEST)
+!## draw furthers first --- with depth test enabled
+!    CALL GLBLENDFUNC(GL_SRC_ALPHA,GL_ONE)
+!    CALL GLBLENDFUNC(GL_SRC_COLOR,GL_ONE_MINUS_SRC_COLOR)  !## (1) source (2) destination
+    CALL GLBLENDFUNC(GL_SRC_ALPHA,GL_ONE_MINUS_SRC_ALPHA)  !## (1) source (2) destination
+!    CALL GLBLENDFUNC(GL_DST_ALPHA,GL_ONE_MINUS_DST_ALPHA)  !## (1) source (2) destination
+!    CALL GLBLENDFUNC(GL_ONE_MINUS_DST_ALPHA,GL_DST_ALPHA)  !## (1) source (2) destination
 
+   ELSE
+    !## opaque mode
+    CALL GLBLENDFUNC(GL_ONE,GL_ZERO)  !## (1) source (2) destination
+   ENDIF
+  
+   CALL GLPOLYGONMODE(GL_BACK, GL_FILL); CALL GLPOLYGONMODE(GL_FRONT,GL_FILL) 
+                  
    IF(IDFPLOT(I)%ILEG.EQ.1)THEN
 
 !## peter
-    CALL IMOD3D_SETCOLOR(IDFPLOT(I)%ICOLOR,50)
-
+    CALL IMOD3D_SETCOLOR(IDFPLOT(I)%ICOLOR,50) 
 !    CALL IMOD3D_SETCOLOR(IDFPLOT(I)%ICOLOR)
    ELSEIF(IDFPLOT(I)%ILEG.EQ.2)THEN  !## legend colour - reread as not yet filled with legend-colouring
     !## do not change colour since colour is inside display-list
@@ -458,7 +468,7 @@ CONTAINS
     ENDIF
 
     !## flat shading
-    CALL GLSHADEMODEL(GL_FLAT) !## heeft te maken met invullen kleuren
+    CALL GLSHADEMODEL(GL_FLAT) !## GL_SMOOTH
     CALL GLENABLE(GL_LIGHTING)
 
    ENDIF
@@ -466,9 +476,7 @@ CONTAINS
    CALL GLCALLLIST(IDFLISTINDEX(I))
 
    !## turn of light
-   IF(IDFPLOT(I)%ISHADED.EQ.1)THEN
-    CALL GLDISABLE(GL_LIGHTING)
-   ENDIF
+   IF(IDFPLOT(I)%ISHADED.EQ.1)CALL GLDISABLE(GL_LIGHTING)
   
   ENDIF
 
@@ -493,7 +501,8 @@ CONTAINS
 
  !## default
  CALL GLPOLYGONMODE(GL_BACK, GL_FILL); CALL GLPOLYGONMODE(GL_FRONT,GL_FILL)
- 
+! CALL GLENABLE(GL_DEPTH_TEST)
+
  END SUBROUTINE IMOD3D_DISPLAY_IDF
 
  !###======================================================================
@@ -645,7 +654,7 @@ CONTAINS
 
  DO I=1,NGENLIST
   IF(GENPLOT(I)%ISEL.NE.1.OR.GENLISTINDEX(I).EQ.0)CYCLE
-  
+
   IF(GENPLOT(I)%L3D)THEN
    !## show shaded surface
    CALL IMOD3D_SETCOLOR(GENPLOT(I)%ICOLOR,GENPLOT(I)%ITRANSPARANCY)
