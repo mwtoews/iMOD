@@ -149,21 +149,34 @@ CONTAINS
  ENDIF
 #endif
  
- IF(TI.EQ.0) CALL WMENUSETSTATE(ID_TI1,2,1)
- 
  END SUBROUTINE PLUGIN_INITMENU
  
  !###======================================================================
- SUBROUTINE PLUGIN_INITMENU_TIMECHECK()
+ SUBROUTINE PLUGIN_INITMENU_SETTIMECHECK()
  !###======================================================================
- !# Subroutine to set time interval to check if plugin is finished or not
+ !# Subroutine to set initial time interval to check if plugin is finished or not
  
  CALL WINDOWSELECT(0)
+ IF(TI.LE.0)THEN !in case of a clean iMOD session; TI=0 (or smaller)
+  CALL WMENUSETSTATE(ID_TI1,2,1)
+  TI=60
+ ENDIF
  IF(TI.EQ.60) CALL WMENUSETSTATE(ID_TI1,2,1)
  IF(TI.EQ.30) CALL WMENUSETSTATE(ID_TI2,2,1)
  IF(TI.EQ.15) CALL WMENUSETSTATE(ID_TI3,2,1)
  IF(TI.EQ.1) CALL WMENUSETSTATE(ID_TI4,2,1)
  
+ CALL WMESSAGETIMER(TI*1000,ID=2,IREPEAT=1)  !minutes
+ IMESSAGE(TIMEREXPIRED)=1
+ 
+ END SUBROUTINE PLUGIN_INITMENU_SETTIMECHECK
+ 
+ !###======================================================================
+ SUBROUTINE PLUGIN_MENU_SETTIMECHECK()
+ !###======================================================================
+ !# Subroutine to set time interval to check if plugin is finished or not
+ 
+ CALL WINDOWSELECT(0)
  IF(WMENUGETSTATE(ID_TI1,2).EQ.1) TI=60
  IF(WMENUGETSTATE(ID_TI2,2).EQ.1) TI=30
  IF(WMENUGETSTATE(ID_TI3,2).EQ.1) TI=15
@@ -172,7 +185,7 @@ CONTAINS
  CALL WMESSAGETIMER(TI*1000,ID=2,IREPEAT=1)  !minutes
  IMESSAGE(TIMEREXPIRED)=1
     
- END SUBROUTINE PLUGIN_INITMENU_TIMECHECK
+ END SUBROUTINE PLUGIN_MENU_SETTIMECHECK
  
  !###======================================================================
  LOGICAL FUNCTION PLUGIN_INITMENU_FILL()
@@ -656,9 +669,9 @@ CONTAINS
  !## Subroutine to read variables from PLUG-IN.out
  IMPLICIT NONE
  INTEGER,INTENT(IN) :: IPI,IDP
- INTEGER :: I,IU,IOS,NFILE 
- CHARACTER(LEN=256) :: DIRNAME,BACK,FNAME,LINE,MESSINFO,MESSERR,MESSPROG
- CHARACTER(LEN=52) :: PNAME,RESULTFILE
+ INTEGER :: I,J,K,IU,IOS,NFILE 
+ CHARACTER(LEN=256) :: DIRNAME,BACK,FNAME,LINE,MESSINFO,MESSERR,MESSPROG,RESULTFILE
+ CHARACTER(LEN=52) :: PNAME
  REAL,DIMENSION(4) :: WINDOW
  LOGICAL :: LEX
  
@@ -716,6 +729,8 @@ CONTAINS
     CLOSE(IU,STATUS='DELETE'); RETURN
    ENDIF
    READ(LINE,*,IOSTAT=IOS) RESULTFILE
+   !# if resultfile contains directory path, remove it.
+   J=LEN_TRIM(RESULTFILE); IF(INDEX(RESULTFILE,':',.TRUE.).LE.3)K=INDEX(RESULTFILE,'\',.TRUE.); RESULTFILE(1:K)=' '
    IF(IOS.EQ.0)THEN
     INQUIRE(FILE=TRIM(DIRNAME)//TRIM(RESULTFILE),EXIST=LEX)
     IF(.NOT.LEX)THEN
