@@ -648,8 +648,7 @@ CONTAINS
  !## reset to entire window
  CALL IDFPLOT2BITMAP()
 
- CALL WMESSAGETIMER(60*1000,1,IREPEAT=1)  !1 minute, autosave
- CALL WMESSAGETIMER(TI*1000,2,IREPEAT=1)  !interval minute, plugin  
+ CALL MAIN_TIMERS()
  
  IDIAGERROR=0
 

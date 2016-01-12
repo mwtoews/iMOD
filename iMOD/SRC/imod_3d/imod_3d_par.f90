@@ -73,6 +73,7 @@ TYPE IDFSETTING
  INTEGER :: ICUBE     !## (0)flat;(1)cube
  INTEGER :: ICONFIG  !## configuration number
  INTEGER :: IACC    !## accuracy (=resolution) number
+ INTEGER :: ITRANSPARANCY   !## transparancy
  CHARACTER(LEN=50) :: ALIAS,DISP_ALIAS
  CHARACTER(LEN=256) :: FNAME
  TYPE(LEGENDOBJ) :: LEG

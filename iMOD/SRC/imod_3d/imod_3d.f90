@@ -298,7 +298,7 @@ CONTAINS
 
  !## initially no background loaded
  IACTBITMAP=0
- ITRANSPARANCYBITMAP=1
+ ITRANSPARANCYBITMAP=50 !## transparant 50%
  IREADBMP=0
  
  !## initialize settings-dialog
@@ -383,7 +383,7 @@ CONTAINS
  !## orientation colour (wit)
  OCOLOR=WRGB(255,255,255)
  !## background colour (black)
- BGCOLOR=WRGB(0,0,0)
+ BGCOLOR=WRGB(255,255,255) !0,0,0)
   
  F_L1_AMBIENT =0.4_GLFLOAT
  F_L1_DIFFUSE =0.8_GLFLOAT

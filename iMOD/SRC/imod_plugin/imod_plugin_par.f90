@@ -26,15 +26,14 @@ USE RESOURCE
 IMPLICIT NONE
 
 CHARACTER(LEN=256) :: HELP
-INTEGER :: TI   !#Stores time interval for checking plugin
 
 !#Be aware that you update PLUGIN_CHECK with the content of PIOBJ!!
 TYPE PIOBJ
- CHARACTER(LEN=52) :: PNAME !## Name of the plugin
- INTEGER :: IACT !##activates plugin in plugin-manager if iact=1
- INTEGER :: ID !## menu-id of plugin menu
+ CHARACTER(LEN=52) :: PNAME !## name of the plugin
+ INTEGER :: IACT   !## activates plugin in plugin-manager if iact=1
+ INTEGER :: ID     !## menu-id of plugin menu
  INTEGER :: IFLAG  !## if nowait-command IFLAG=1, if wait-command IFLAG=2
- CHARACTER(LEN=256) :: BACK !##checks output-file: PLUG-IN.OUT
+ CHARACTER(LEN=256) :: BACK     !## checks output-file: PLUG-IN.OUT
  INTEGER,DIMENSION(2) :: IDPROC !## proces id-number related to the plugin executable
 END TYPE PIOBJ
 

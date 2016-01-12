@@ -39,7 +39,6 @@ CONTAINS
  !###======================================================================
  SUBROUTINE PLUGIN_MAIN(IPLUGIN)
  !###======================================================================
- !# subroutine with main-program; includes call to all plugin-subroutines
  IMPLICIT NONE
  INTEGER,INTENT(IN) :: IPLUGIN
  INTEGER :: ITYPE,IROW,ICOL,IPI,N
@@ -85,6 +84,7 @@ CONTAINS
  END DO
 
  CALL WDIALOGUNLOAD()
+ CALL PLUGIN_SETTIMER()
  
  END SUBROUTINE PLUGIN_MAIN
 
@@ -152,40 +152,37 @@ CONTAINS
  END SUBROUTINE PLUGIN_INITMENU
  
  !###======================================================================
- SUBROUTINE PLUGIN_INITMENU_SETTIMECHECK()
+ SUBROUTINE PLUGIN_SETTIMER()
  !###======================================================================
- !# Subroutine to set initial time interval to check if plugin is finished or not
+ IMPLICIT NONE
+ INTEGER :: TI,I
  
- CALL WINDOWSELECT(0)
- IF(TI.LE.0)THEN !in case of a clean iMOD session; TI=0 (or smaller)
-  CALL WMENUSETSTATE(ID_TI1,2,1)
-  TI=60
+ !## no plugin available/active, do not set the timer for plugins (ID=2)
+ IF(.NOT.ASSOCIATED(PI1).AND..NOT.ASSOCIATED(PI2))THEN
+  CALL WMENUSETSTATE(ID_PLUGIN_TIMECHECK,1,0); RETURN
+ ELSE
+  CALL WMENUSETSTATE(ID_PLUGIN_TIMECHECK,1,0)
+  !## check whether plugin are active
+  IF(ASSOCIATED(PI1))THEN
+   DO I=1,SIZE(PI1); IF(PI1(I)%IACT.EQ.1)EXIT; ENDDO
+   IF(I.LE.SIZE(PI1))CALL WMENUSETSTATE(ID_PLUGIN_TIMECHECK,1,1)
+  ENDIF
+  IF(ASSOCIATED(PI2))THEN
+   DO I=1,SIZE(PI2); IF(PI2(I)%IACT.EQ.1)EXIT; ENDDO
+   IF(I.LE.SIZE(PI2))CALL WMENUSETSTATE(ID_PLUGIN_TIMECHECK,1,1)
+  ENDIF
+  RETURN
  ENDIF
- IF(TI.EQ.60) CALL WMENUSETSTATE(ID_TI1,2,1)
- IF(TI.EQ.30) CALL WMENUSETSTATE(ID_TI2,2,1)
- IF(TI.EQ.15) CALL WMENUSETSTATE(ID_TI3,2,1)
- IF(TI.EQ.1) CALL WMENUSETSTATE(ID_TI4,2,1)
- 
- CALL WMESSAGETIMER(TI*1000,ID=2,IREPEAT=1)  !minutes
- IMESSAGE(TIMEREXPIRED)=1
- 
- END SUBROUTINE PLUGIN_INITMENU_SETTIMECHECK
- 
- !###======================================================================
- SUBROUTINE PLUGIN_MENU_SETTIMECHECK()
- !###======================================================================
- !# Subroutine to set time interval to check if plugin is finished or not
- 
+
  CALL WINDOWSELECT(0)
- IF(WMENUGETSTATE(ID_TI1,2).EQ.1) TI=60
- IF(WMENUGETSTATE(ID_TI2,2).EQ.1) TI=30
- IF(WMENUGETSTATE(ID_TI3,2).EQ.1) TI=15
- IF(WMENUGETSTATE(ID_TI4,2).EQ.1) TI=1
+ IF(WMENUGETSTATE(ID_TI1,2).EQ.1)TI=60
+ IF(WMENUGETSTATE(ID_TI2,2).EQ.1)TI=30
+ IF(WMENUGETSTATE(ID_TI3,2).EQ.1)TI=15
+ IF(WMENUGETSTATE(ID_TI4,2).EQ.1)TI=1
  
- CALL WMESSAGETIMER(TI*1000,ID=2,IREPEAT=1)  !minutes
- IMESSAGE(TIMEREXPIRED)=1
+ CALL WMESSAGETIMER(TI*1000,ID=2,IREPEAT=1)  !## minutes
     
- END SUBROUTINE PLUGIN_MENU_SETTIMECHECK
+ END SUBROUTINE PLUGIN_SETTIMER
  
  !###======================================================================
  LOGICAL FUNCTION PLUGIN_INITMENU_FILL()

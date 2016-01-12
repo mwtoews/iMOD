@@ -428,44 +428,37 @@ CONTAINS
  
   IF(IDFPLOT(I)%IFILL.EQ.1.OR.IDFPLOT(I)%IFILL.EQ.3)THEN
 
-   !## blend mode (peter)
-   IF(IMODE.EQ.1)THEN
-
-    !## blending function using GL_ONE_MINUS_DST_ALPHA for the source factor and GL_ONE for the destination factor.
-! CALL GLDISABLE(GL_DEPTH_TEST)
-!## draw furthers first --- with depth test enabled
-!    CALL GLBLENDFUNC(GL_SRC_ALPHA,GL_ONE)
-!    CALL GLBLENDFUNC(GL_SRC_COLOR,GL_ONE_MINUS_SRC_COLOR)  !## (1) source (2) destination
+   !## blend mode 
+   IF(IMODE.EQ.1.AND.IDFPLOT(I)%ITRANSPARANCY.LT.100)THEN
+    !## draw furthers first
     CALL GLBLENDFUNC(GL_SRC_ALPHA,GL_ONE_MINUS_SRC_ALPHA)  !## (1) source (2) destination
-!    CALL GLBLENDFUNC(GL_DST_ALPHA,GL_ONE_MINUS_DST_ALPHA)  !## (1) source (2) destination
-!    CALL GLBLENDFUNC(GL_ONE_MINUS_DST_ALPHA,GL_DST_ALPHA)  !## (1) source (2) destination
-
    ELSE
     !## opaque mode
     CALL GLBLENDFUNC(GL_ONE,GL_ZERO)  !## (1) source (2) destination
    ENDIF
   
    CALL GLPOLYGONMODE(GL_BACK, GL_FILL); CALL GLPOLYGONMODE(GL_FRONT,GL_FILL) 
-                  
-   IF(IDFPLOT(I)%ILEG.EQ.1)THEN
 
-!## peter
-    CALL IMOD3D_SETCOLOR(IDFPLOT(I)%ICOLOR,50) 
-!    CALL IMOD3D_SETCOLOR(IDFPLOT(I)%ICOLOR)
-   ELSEIF(IDFPLOT(I)%ILEG.EQ.2)THEN  !## legend colour - reread as not yet filled with legend-colouring
-    !## do not change colour since colour is inside display-list
+   IF(IDFPLOT(I)%ILEG.EQ.1)THEN
+    !## apply transparancy
+    IF(IDFPLOT(I)%ITRANSPARANCY.LT.100)THEN
+     CALL IMOD3D_SETCOLOR(IDFPLOT(I)%ICOLOR,IDFPLOT(I)%ITRANSPARANCY) 
+    ELSE
+     CALL IMOD3D_SETCOLOR(IDFPLOT(I)%ICOLOR)
+    ENDIF
    ENDIF
+
    !## turn on light if neccessary
    IF(IDFPLOT(I)%ISHADED.EQ.1)THEN
 
     !## set material ...
 
-    !## one single colour used
-    IF(IDFPLOT(I)%ILEG.EQ.1)THEN
-     !## show shaded surface
+!    !## one single colour used
+!    IF(IDFPLOT(I)%ILEG.EQ.1)THEN
+!     !## show shaded surface
 !     CALL IMOD3D_RETURNCOLOR(IDFPLOT(I)%ICOLOR,AMBIENT)
 !     CALL GLMATERIALFV(GL_FRONT_AND_BACK,GL_AMBIENT_AND_DIFFUSE,AMBIENT)
-    ENDIF
+!    ENDIF
 
     !## flat shading
     CALL GLSHADEMODEL(GL_FLAT) !## GL_SMOOTH
@@ -483,8 +476,8 @@ CONTAINS
   !## draw mesh
   IF(IDFPLOT(I)%IFILL.EQ.2.OR.IDFPLOT(I)%IFILL.EQ.3)THEN
 
-   !## blend mode
-   CALL GLBLENDFUNC(GL_SRC_ALPHA,GL_ONE_MINUS_SRC_ALPHA)  !## (1) source (2) destination
+!   !## blend mode
+!   CALL GLBLENDFUNC(GL_SRC_ALPHA,GL_ONE_MINUS_SRC_ALPHA)  !## (1) source (2) destination
 
    !## show lines to represent rectangles/triangles
    IF(IDFPLOT(I)%IFILL.EQ.2)CALL IMOD3D_SETCOLOR(IDFPLOT(I)%ICOLOR)
@@ -562,11 +555,7 @@ CONTAINS
 
  CALL GLDISABLE(GL_LIGHTING)
 
-! IF(ITRANSPARANCYBITMAP.EQ.1)THEN
-!  CALL GLBLENDFUNC(GL_SRC_ALPHA,GL_ONE_MINUS_SRC_ALPHA)
-! ELSE
-  CALL GLDISABLE(GL_BLEND)
-! ENDIF
+ CALL GLDISABLE(GL_BLEND)
 
  CALL GLCOLOR4F(1.0_GLFLOAT,1.0_GLFLOAT,1.0_GLFLOAT,1.0_GLFLOAT)
 
@@ -674,24 +663,23 @@ CONTAINS
  !###======================================================================
  IMPLICIT NONE
  INTEGER :: I
-
+ REAL(GLFLOAT) :: ALPHA
+ 
  !## not background bitmap plotting
  IF(IACTBITMAP.EQ.0)RETURN
 
- IF(ITRANSPARANCYBITMAP.EQ.1)THEN
-  CALL GLBLENDFUNC(GL_SRC_ALPHA,GL_ONE_MINUS_SRC_ALPHA)
- ELSE
-  CALL GLDISABLE(GL_BLEND)
- ENDIF
+ CALL WDIALOGSELECT(ID_D3DSETTINGS_TAB5)
+ CALL WDIALOGGETTRACKBAR(IDF_TRACKBAR6,ITRANSPARANCYBITMAP)
+ 
+ CALL GLBLENDFUNC(GL_SRC_ALPHA,GL_ONE_MINUS_SRC_ALPHA)
+ ALPHA=REAL(ITRANSPARANCYBITMAP)/100.0
 
- CALL GLCOLOR4F(1.0_GLFLOAT,1.0_GLFLOAT,1.0_GLFLOAT,1.0_GLFLOAT)
+ CALL GLCOLOR4F(1.0_GLFLOAT,1.0_GLFLOAT,1.0_GLFLOAT,ALPHA) 
 
  I=1
  CALL GLENABLE(GL_TEXTURE_2D)
  CALL GLCALLLIST(BMPLISTINDEX(I))
  CALL GLDISABLE(GL_TEXTURE_2D)
-
- CALL GLENABLE(GL_BLEND)
 
  END SUBROUTINE IMOD3D_DISPLAY_BMP
 

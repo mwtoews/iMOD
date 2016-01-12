@@ -135,8 +135,6 @@ CALL PREFCOLOURSINIT(.TRUE.)
 CALL IMODINIT()
 !## initialize preferences
 CALL PREFINIT()
-!!##initialize colours
-!CALL PREFCOLOURSINIT(.TRUE.)
 !## no colour read
 NLITHO=0
 !## initiate white colors
@@ -209,6 +207,9 @@ ZM%ZOOMXY(ZM%NZOOM,4)=MPW%YMAX
 
 CALL DEMO_MAIN()  !##calls demo-version iMOD directly after initialisation of iMOD manager and plotting available files
 
+!## initiate timers
+CALL MAIN_TIMERS()
+
 DO
 
  IF(PL%IRUN.EQ.1)THEN
@@ -221,7 +222,7 @@ DO
 
  SELECT CASE(MESSAGE%WIN)
 
-  !## messages from child-windows/ir window
+  !## Messages from child-windows/ir window
   CASE(0:20)
    IF(MESSAGE%WIN.NE.0.AND.MESSAGE%WIN.EQ.IRWIN)THEN
     CALL IR1MENU(ITYPE,MESSAGE)
@@ -312,14 +313,14 @@ DO
   CASE(ID_DEXTRACT)
    IF(WMENUGETSTATE(ID_EXTRACTIPF,2).EQ.1)CALL EXTRACTIPF1MAIN(ITYPE,MESSAGE)
 
-  !## Message from ROSCEN
+  !## Message from roscen
   CASE (ID_DROSCEN,ID_DROSCENT1,ID_DROSCENT2,ID_DROSCENT3,ID_DROSCENT4)
    CALL ROSCENMAIN(ITYPE,MESSAGE)
 
-  !## Message from CREATEGEN
+  !## Message from creategen
   CASE (ID_DCREATEGEN)
    CALL CREATEGEN1MAIN(ITYPE,MESSAGE)
-  !## Message from CREATEIPF
+  !## Message from createipf
   CASE (ID_DCREATEIPF)
    CALL CREATEIPF1MAIN(ITYPE,MESSAGE)
   !## Message from createidf
@@ -331,7 +332,7 @@ DO
 
  END SELECT
 
- !## do a particle tracking - if existing
+ !## do a particle tracking - if exists
  IF(PL%IRUN.EQ.1)THEN
   !## if not .true., than all particles finished
   IF(.NOT.TRACE_3D_COMPUTE())THEN
