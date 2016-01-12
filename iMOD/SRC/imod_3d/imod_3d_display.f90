@@ -122,8 +122,8 @@ CONTAINS
    ENDIF
   END DO
 
-  !## draw idf's - last cause antialiasing and blending not for polygons
-  IF(NIDFLIST.GT.0)CALL IMOD3D_DISPLAY_IDF(IMODE)
+!  !## draw idf's - last cause antialiasing and blending not for polygons
+!  IF(NIDFLIST.GT.0)CALL IMOD3D_DISPLAY_IDF(IMODE)
   !## draw ipf-drills/points
   IF(NIPFLIST.GT.0)CALL IMOD3D_DISPLAY_IPF(IMODE)
   !## draw iff's
@@ -157,6 +157,9 @@ CONTAINS
    IF(AXESINDEX(3).GT.0)CALL GLCALLLIST(AXESINDEX(3))
   ENDIF
  
+  !## draw idf's - last cause antialiasing and blending not for polygons
+  IF(NIDFLIST.GT.0)CALL IMOD3D_DISPLAY_IDF(IMODE)
+
   !## plot and update indentifier-position
   IF(IINDPOS.EQ.1)THEN
    CALL IMOD3D_PLOT_INDPOS()

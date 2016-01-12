@@ -1535,7 +1535,7 @@ CONTAINS
     IF(.NOT.IDFREAD(IDF(5),IDFPLOT(ID_IDF(II))%FNAME,0))EXIT
     !## template idf will become idf(1) based upon original idf(4)
     IF(IMOD3D_DRAWIDF_SIZE(IDF(5),IDF(1)))THEN
-     IF(.NOT.IDFREADSCALE_GETX(IDF(5),IDF(1),IDFDATA(3),1,0.0))EXIT   !# child,mother,blockvalue,percentile
+     IF(.NOT.IDFREADSCALE_GETX(IDF(5),IDF(1),IDFDATA(3),1,0.0))EXIT   !## child,mother,blockvalue,percentile
     ELSE
      !## copy idf(5) to idf(1) to become the original
      CALL IDFCOPY(IDF(5),IDF(1)); IDF(1)%IU=IDF(5)%IU
