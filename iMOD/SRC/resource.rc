@@ -8,7 +8,7 @@
 //
 // Winteracter resource script. 
 //
-// Modified : 11/Jan/2016 17:13:07
+// Modified : 12/Jan/2016 09:20:42
 //
 ///////////////////////////////////////////////////
 //
@@ -10304,7 +10304,7 @@ BEGIN
         MENUITEM SEPARATOR
         POPUP "Plug-In"
         BEGIN
-            POPUP "Time check interval"
+            POPUP "Running Check Time Interval"
             BEGIN
                 MENUITEM "60 sec",                                   ID_TI1
                 MENUITEM "30 sec",                                   ID_TI2
