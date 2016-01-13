@@ -110,6 +110,26 @@ CONTAINS
   
   CALL GLCOLORMASK(LRED,LGREEN,LBLUE,LALPHA)
  
+   !## draw axes,roundbox
+  IF(IMODE.EQ.1.AND.IBNDBOX.EQ.1)THEN
+   CALL GLBLENDFUNC(GL_SRC_ALPHA,GL_ONE_MINUS_SRC_ALPHA)  !## (1) source (2) destination
+  !## draw filled background in gl_cull_face mode
+   CALL IMOD3D_SETCOLOR(BCOLOR,50) !100)
+   CALL GLLINEWIDTH(1.0_GLFLOAT)
+   !## draw box
+   IF(AXESINDEX(1).GT.0)CALL GLCALLLIST(AXESINDEX(1))
+   !## draw axes
+   IF(AXESINDEX(2).GT.0)CALL GLCALLLIST(AXESINDEX(2))
+  ENDIF
+ 
+  !## draw axes text,roundbox
+  IF(IMODE.EQ.1.AND.IAXES.EQ.1)THEN
+   CALL GLBLENDFUNC(GL_SRC_ALPHA,GL_ONE_MINUS_SRC_ALPHA)  !## (1) source (2) destination
+   !## draw labels
+   CALL IMOD3D_SETCOLOR(ACOLOR,50) !100)
+   IF(AXESINDEX(3).GT.0)CALL GLCALLLIST(AXESINDEX(3))
+  ENDIF
+
   DO I=1,NCLPLIST
    IF(CLPPLOT(I)%ISEL.EQ.1)THEN
     CALL GLENABLE(CLPPLANES(I))
@@ -135,27 +155,25 @@ CONTAINS
   !## draw interactive flowlines
   IF(IPATHLINE_3D.GT.0)CALL IMOD3D_DISPLAY_PL()
 
-  DO I=1,NCLPLIST; CALL GLDISABLE(CLPPLANES(I)); END DO
-
-  !## draw axes,roundbox
-  IF(IMODE.EQ.1.AND.IBNDBOX.EQ.1)THEN
-   CALL GLBLENDFUNC(GL_SRC_ALPHA,GL_ONE_MINUS_SRC_ALPHA)  !## (1) source (2) destination
-  !## draw filled background in gl_cull_face mode
-   CALL IMOD3D_SETCOLOR(BCOLOR,100)
-   CALL GLLINEWIDTH(1.0_GLFLOAT)
-   !## draw box
-   IF(AXESINDEX(1).GT.0)CALL GLCALLLIST(AXESINDEX(1))
-   !## draw axes
-   IF(AXESINDEX(2).GT.0)CALL GLCALLLIST(AXESINDEX(2))
-  ENDIF
- 
-  !## draw axes text,roundbox
-  IF(IMODE.EQ.1.AND.IAXES.EQ.1)THEN
-   CALL GLBLENDFUNC(GL_SRC_ALPHA,GL_ONE_MINUS_SRC_ALPHA)  !## (1) source (2) destination
-   !## draw labels
-   CALL IMOD3D_SETCOLOR(ACOLOR,100)
-   IF(AXESINDEX(3).GT.0)CALL GLCALLLIST(AXESINDEX(3))
-  ENDIF
+!  !## draw axes,roundbox
+!  IF(IMODE.EQ.1.AND.IBNDBOX.EQ.1)THEN
+!   CALL GLBLENDFUNC(GL_SRC_ALPHA,GL_ONE_MINUS_SRC_ALPHA)  !## (1) source (2) destination
+!  !## draw filled background in gl_cull_face mode
+!   CALL IMOD3D_SETCOLOR(BCOLOR,100)
+!   CALL GLLINEWIDTH(1.0_GLFLOAT)
+!   !## draw box
+!   IF(AXESINDEX(1).GT.0)CALL GLCALLLIST(AXESINDEX(1))
+!   !## draw axes
+!   IF(AXESINDEX(2).GT.0)CALL GLCALLLIST(AXESINDEX(2))
+!  ENDIF
+! 
+!  !## draw axes text,roundbox
+!  IF(IMODE.EQ.1.AND.IAXES.EQ.1)THEN
+!   CALL GLBLENDFUNC(GL_SRC_ALPHA,GL_ONE_MINUS_SRC_ALPHA)  !## (1) source (2) destination
+!   !## draw labels
+!   CALL IMOD3D_SETCOLOR(ACOLOR,100)
+!   IF(AXESINDEX(3).GT.0)CALL GLCALLLIST(AXESINDEX(3))
+!  ENDIF
  
   !## draw idf's - last cause antialiasing and blending not for polygons
   IF(NIDFLIST.GT.0)CALL IMOD3D_DISPLAY_IDF(IMODE)
@@ -168,6 +186,8 @@ CONTAINS
   !## draw bmp
   CALL IMOD3D_DISPLAY_BMP()
  
+  DO I=1,NCLPLIST; CALL GLDISABLE(CLPPLANES(I)); END DO
+
  ENDDO
  
  !## draw axes,roundbox

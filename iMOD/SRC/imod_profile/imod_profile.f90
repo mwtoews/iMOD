@@ -3561,6 +3561,11 @@ CONTAINS
         IF(IOS.NE.0)THEN
          CLABEL=''; READ(LINE,*,IOSTAT=IOS) XC,YC; IF(IOS.NE.0)EXIT
         ENDIF
+        !## check duplicates
+        IF(NXY.GT.0)THEN
+         !## skip equal coordinates
+         IF(UTL_EQUALS_REAL(XY(1,NXY),XC).AND.UTL_EQUALS_REAL(XY(2,NXY),YC))CYCLE
+        ENDIF
         NXY=NXY+1; CALL PROFILE_WTIADDPOINT_MEMORY(NXY); XY(1,NXY)=XC; XY(2,NXY)=YC; XYLABEL(NXY)=CLABEL
        END DO
        CLOSE(IU)
