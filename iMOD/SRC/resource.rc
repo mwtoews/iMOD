@@ -8,7 +8,7 @@
 //
 // Winteracter resource script. 
 //
-// Modified : 12/Jan/2016 18:28:53
+// Modified : 13/Jan/2016 12:49:25
 //
 ///////////////////////////////////////////////////
 //
@@ -3239,9 +3239,9 @@ END
 ID_DADDTOPO DIALOG 0, 0,  304,  165
 STYLE WS_POPUP | WS_BORDER | WS_DLGFRAME | WS_SYSMENU | DS_3DLOOK | DS_MODALFRAME
 FONT    8, "Arial"
-CAPTION "Add Topography"
+CAPTION "Add Background Image(s)"
 BEGIN
-    CONTROL "Existing BMP's",IDF_GROUP1,"BUTTON",WS_CHILD | WS_VISIBLE | WS_GROUP | BS_GROUPBOX | BS_TEXT,    4,    3,  288,  137
+    CONTROL "Existing Background Image(s)",IDF_GROUP1,"BUTTON",WS_CHILD | WS_VISIBLE | WS_GROUP | BS_GROUPBOX | BS_TEXT | BS_LEFT,    4,    3,  288,  137
     CONTROL "Columns",IDF_LABEL1,"STATIC",WS_CHILD | WS_VISIBLE | WS_GROUP | SS_LEFT,  180,   16,   40,    8
     CONTROL "Rows",IDF_LABEL2,"STATIC",WS_CHILD | WS_VISIBLE | WS_GROUP | SS_LEFT,  180,   30,   40,    8
     CONTROL "XLLC (km)",IDF_LABEL3,"STATIC",WS_CHILD | WS_VISIBLE | WS_GROUP | SS_LEFT,  181,   46,   40,    8
@@ -10207,9 +10207,9 @@ BEGIN
             MENUITEM "Mark Data Points",                         ID_MARKDATA, GRAYED
         END
         MENUITEM SEPARATOR
-        MENUITEM "&Show Topography",                         ID_TOPOGRAPHY
-        MENUITEM "Add Topography ...",                       ID_ADDTOPO
-        MENUITEM "Transparent Topography",                   ID_TOPTRANSPARACY
+        MENUITEM "&Show Background Image(s)",                ID_TOPOGRAPHY
+        MENUITEM "Add Background Image(s) ...",              ID_ADDTOPO
+        MENUITEM "Transparent Background Image(s)",          ID_TOPTRANSPARACY
         POPUP "Accuracy"
         BEGIN
             MENUITEM "Low",                                      ID_LOWACCURACY
@@ -10444,7 +10444,7 @@ ID_IDFCALC,"Start the Map Operations window to create new IDF files by calculati
 ID_TRANSPARANTIDF,"Show all selected IDFs in 50% transparent mode\0",
 ID_AUTOSAVE,"Saves current map configuration every minute\0",
 ID_PATHLINES,"Run iMODPATH to calculate groundwater flow pathlines\0",
-ID_ADDTOPO,"Add topographical information from BMPs to be used as background\0",
+ID_ADDTOPO,"Add Background Image(s)\0",
 ID_TIMESERIES,"View timeseries directly for data stored in different IDF-files\0",
 ID_ZOOMMASK,"Zoom to the zoom level in the last used or saved mask file\0",
 ID_MEAN,"Compute mean values of groundwater budget or heads\0",
@@ -10483,8 +10483,8 @@ ID_ZOOMFULLMAP,"Zoom in on the entire extent of the selected maps\0",
 ID_ITEM346,"Area defined to be displayed\0",
 ID_GOTOXY,"Start the Goto XY window to zoom to the specified coordinates or cell indices\0",
 ID_SFIGURE,"Not available\0",
-ID_TOPOGRAPHY,"Display the defined topographical background\0",
-ID_TOPTRANSPARACY,"Display the topographical background in transparent mode\0",
+ID_TOPOGRAPHY,"Display Background Image(s)\0",
+ID_TOPTRANSPARACY,"Display the Background Image(s) in Transparent Mode\0",
 ID_ACCURACY,"Define the resolution at which the maps are shown in the graphical display\0",
 ID_LOWACCURACY,"Show the maps in the graphical display at a 10th of the optimal detail\0",
 ID_MEDIUMACCURACY,"Show the maps in the graphical display at a 5th of the optimal detail\0",

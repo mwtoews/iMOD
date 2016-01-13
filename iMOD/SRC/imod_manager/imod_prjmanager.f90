@@ -4650,36 +4650,46 @@ KLOOP: DO K=1,SIZE(TOPICS(JJ)%STRESS(1)%FILES,1)
  !###======================================================================
  IMPLICIT NONE
  INTEGER,INTENT(IN) :: IPER,ITOPIC
- INTEGER(KIND=8) :: ITIME,JTIME
+ INTEGER(KIND=8) :: ITIME,JTIME,KTIME
  INTEGER :: KPER
  
  PMANAGER_GETCURRENTIPER=0
 
+ KTIME=INT(0,8); JTIME=INT(0,8); ITIME=INT(0,8)
+ 
  !## get appropriate stress-period to store in runfile   
- IF(SIM(IPER)%DELT.EQ.0.0)THEN !## steady-state
-  KPER=PMANAGER_GETIPER(IPER,INT(0,8),INT(0,8),TOPICS(ITOPIC)%STRESS)   
- ELSE
-  ITIME=SIM(IPER  )%IYR*10000000000+SIM(IPER  )%IMH*100000000+SIM(IPER)%IDY*1000000+ &
-        SIM(IPER  )%IHR*10000      +SIM(IPER  )%IMT*100      +SIM(IPER)%ISC
-  !## previous timestep steady-state
+ IF(SIM(IPER)%DELT.GT.0.0)THEN !## transient
+  !## previous timestep
+  IF(IPER.GT.1)THEN
+   IF(SIM(IPER-1)%DELT.GT.0.0)THEN
+    KTIME=SIM(IPER-1)%IYR*10000000000+SIM(IPER-1)%IMH*100000000+SIM(IPER-1)%IDY*1000000+ &
+          SIM(IPER-1)%IHR*10000      +SIM(IPER-1)%IMT*100      +SIM(IPER-1)%ISC
+   ENDIF
+  ENDIF
+  !## current timestep
+  ITIME=SIM(IPER  )%IYR*10000000000+SIM(IPER  )%IMH*100000000+SIM(IPER  )%IDY*1000000+ &
+        SIM(IPER  )%IHR*10000      +SIM(IPER  )%IMT*100      +SIM(IPER  )%ISC
+  !## next timestep
   JTIME=SIM(IPER+1)%IYR*10000000000+SIM(IPER+1)%IMH*100000000+SIM(IPER+1)%IDY*1000000+ &
         SIM(IPER+1)%IHR*10000      +SIM(IPER+1)%IMT*100      +SIM(IPER+1)%ISC
-  KPER=PMANAGER_GETIPER(IPER,ITIME,JTIME,TOPICS(ITOPIC)%STRESS)
+!  KPER=PMANAGER_GETIPER(IPER,KTIME,ITIME,JTIME,TOPICS(ITOPIC)%STRESS)
  ENDIF
+
+ KPER=PMANAGER_GETIPER(IPER,KTIME,ITIME,JTIME,TOPICS(ITOPIC)%STRESS)   
 
  PMANAGER_GETCURRENTIPER=KPER
 
  END FUNCTION PMANAGER_GETCURRENTIPER
 
  !###======================================================================
- INTEGER FUNCTION PMANAGER_GETIPER(IPER,STIME,ETIME,STRESS) 
+ INTEGER FUNCTION PMANAGER_GETIPER(IPER,PTIME,STIME,ETIME,STRESS) 
  !###======================================================================
  IMPLICIT NONE
  INTEGER,INTENT(IN) :: IPER
- INTEGER(KIND=8),INTENT(IN) :: STIME,ETIME
+ INTEGER(KIND=8),INTENT(IN) :: STIME,ETIME,PTIME
  TYPE(STRESSOBJ),INTENT(IN),DIMENSION(:) :: STRESS
  INTEGER :: I,J,ID,IYR
- INTEGER(KIND=8) :: PTIME,MD
+ INTEGER(KIND=8) :: PCKTIME,MD
  
  !## initially nothing found
  PMANAGER_GETIPER=0
@@ -4713,16 +4723,16 @@ KLOOP: DO K=1,SIZE(TOPICS(JJ)%STRESS(1)%FILES,1)
     DO 
 
      !## package time
-     PTIME=IYR*10000000000+PERIOD(J)%IMH*100000000+PERIOD(J)%IDY*1000000+PERIOD(J)%IHR*10000+PERIOD(J)%IMT*100+PERIOD(J)%ISC
+     PCKTIME=IYR*10000000000+PERIOD(J)%IMH*100000000+PERIOD(J)%IDY*1000000+PERIOD(J)%IHR*10000+PERIOD(J)%IMT*100+PERIOD(J)%ISC
 
      !## outside (appears to be later) current time-window
-     IF(PTIME.GE.ETIME)EXIT !CYCLE
+     IF(PCKTIME.GE.ETIME)EXIT 
      !## defined at the same period as the current timestep - better than this it will not become, stop search
-     IF(STIME.EQ.PTIME)THEN; ID=I; EXIT; ENDIF
+     IF(STIME.EQ.PCKTIME)THEN; ID=I; EXIT; ENDIF
      !## get closest defined before current timestep
-     IF(STIME.GT.PTIME)THEN
+     IF(STIME.GT.PCKTIME)THEN
       !## closer than what we had already
-      IF(STIME-PTIME.LE.MD)THEN; MD=STIME-PTIME; ID=-I; ENDIF
+      IF(STIME-PCKTIME.LE.MD)THEN; MD=STIME-PCKTIME; ID=-I; ENDIF
      ENDIF
      !## insert period next year
      IYR=IYR+1
@@ -4730,20 +4740,20 @@ KLOOP: DO K=1,SIZE(TOPICS(JJ)%STRESS(1)%FILES,1)
     ENDDO
 
     !## defined at the same period as the current timestep - better than this it will not become, stop search
-    IF(STIME.EQ.PTIME)EXIT
+    IF(STIME.EQ.PCKTIME)EXIT
 
    ELSE
     !## package time
-    PTIME=STRESS(I)%IYR*10000000000+STRESS(I)%IMH*100000000+STRESS(I)%IDY*1000000+STRESS(I)%IHR*10000+STRESS(I)%IMT*100+STRESS(I)%ISC
+    PCKTIME=STRESS(I)%IYR*10000000000+STRESS(I)%IMH*100000000+STRESS(I)%IDY*1000000+STRESS(I)%IHR*10000+STRESS(I)%IMT*100+STRESS(I)%ISC
 
     !## outside (appears to be later) current time-window - try next
-    IF(PTIME.GE.ETIME)CYCLE
+    IF(PCKTIME.GE.ETIME)CYCLE
     !## defined at the same period as the current timestep - better than this it will not become, stop search
-    IF(STIME.EQ.PTIME)THEN; ID=I; EXIT; ENDIF
+    IF(STIME.EQ.PCKTIME)THEN; ID=I; EXIT; ENDIF
     !## get closest defined before current timestep
-    IF(STIME.GT.PTIME)THEN
+    IF(STIME.GT.PCKTIME)THEN
      !## closer than what we had already
-     IF(STIME-PTIME.LE.MD)THEN; MD=STIME-PTIME; ID=-I; ENDIF
+     IF(STIME-PCKTIME.LE.MD)THEN; MD=STIME-PCKTIME; ID=-I; ENDIF
     ENDIF
 
    ENDIF
@@ -4756,15 +4766,20 @@ KLOOP: DO K=1,SIZE(TOPICS(JJ)%STRESS(1)%FILES,1)
   PMANAGER_GETIPER=0
  !## use previous input
  ELSEIF(ID.LT.0)THEN
-  !## cannot use -1 for first timestep
+  !## no matter what; cannot use -1 for first timestep
   IF(IPER.EQ.1)THEN
    PMANAGER_GETIPER=ABS(ID)
   ELSE
-   !## cannot use -1 for first timestep after steady-state
+   !## no matter what; cannot use -1 for first timestep after steady-state
    IF(SIM(IPER-1)%DELT.EQ.0.0)THEN
     PMANAGER_GETIPER=ABS(ID)
    ELSE
-    PMANAGER_GETIPER=ID 
+    !## check whether date is after last time-step (ktime)
+    IF(STIME-MD.GT.PTIME)THEN
+     PMANAGER_GETIPER=ABS(ID)
+    ELSE
+     PMANAGER_GETIPER=ID
+    ENDIF
    ENDIF
   ENDIF
  !## number of systems for current stress period
