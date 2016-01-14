@@ -116,7 +116,6 @@ CONTAINS
     CASE(PUSHBUTTON)
      SELECT CASE (MESSAGE%VALUE1)
       CASE (ID_OPEN)
-       TMPNAME=TRIM(PREFVAL(1))//'\*.IPF'
        IF(UTL_WSELECTFILE('iMOD Point File (*.ipf)|*.ipf|',&
                     LOADDIALOG+MUSTEXIST+PROMPTON+DIRCHANGE+APPENDEXT+MULTIFILE,TMPNAME,&
                     'Load iMOD Point File (*.ipf)'))THEN
@@ -168,7 +167,7 @@ CONTAINS
 !       CALL CREATEIDF1GETCRD(0) !## automatically
 
       CASE (ID_OPEN)
-       IFFNAME=TRIM(PREFVAL(1))//'\*.IFF'
+       IFFNAME=''
        IF(UTL_WSELECTFILE('iMOD Flowline File (*.iff)|*.iff|',&
                     LOADDIALOG+MUSTEXIST+PROMPTON+DIRCHANGE+APPENDEXT+MULTIFILE,IFFNAME,&
                     'Load iMOD Flowline File (*.iff)'))THEN
@@ -304,7 +303,7 @@ CONTAINS
  IF(IINT.EQ.4)THEN
   IDFNAME=''
  ELSE
-  IDFNAME=TRIM(PREFVAL(1))//'\*.idf'
+  IDFNAME=''
   IF(.NOT.UTL_WSELECTFILE('iMOD IDF File (*.idf)|*.idf|', &
    SAVEDIALOG+PROMPTON+DIRCHANGE+APPENDEXT,IDFNAME,TITLE='Specify New IDF'))RETURN
  ENDIF

@@ -69,12 +69,9 @@ IU=0
 LPLOTTING=.TRUE.
 IF(PRESENT(LPLOT))LPLOTTING=LPLOT
 
+
 IF(.NOT.PRESENT(IDFNAMEGIVEN))THEN
- IF(TRIM(OPENDIR).EQ.'')THEN
-  IDFNAME=TRIM(PREFVAL(1))//'\'
- ELSE
-  IDFNAME=TRIM(OPENDIR)
- ENDIF
+ IDFNAME=''
  IF(INETCDF.EQ.0)THEN
   IF(.NOT.UTL_WSELECTFILE('All Known Files (*.idf;*.mdf;*.ipf;*.isg;*.iff;*.asc;*.gen;*.gef;*.map)'//&
                    '|*.idf;*.mdf;*.ipf;*.isg;*.iff;*.asc;*.gen;*.gef;*.map|'// &
@@ -179,8 +176,8 @@ DO IDF=1,NIDF
  ENDIF
  
  !## remember location of opened idf/ipf/etc.etc.
- I=INDEXNOCASE(IDFNAME,'\',.TRUE.)
- OPENDIR=IDFNAME(:I-1)
+ !I=INDEXNOCASE(IDFNAME,'\',.TRUE.)
+ !OPENDIR=IDFNAME(:I-1)
 
  !## determine what kind of file *.idf, *.ipf etc.
  I=INDEXNOCASE(IDFNAME,'.',.TRUE.)+1

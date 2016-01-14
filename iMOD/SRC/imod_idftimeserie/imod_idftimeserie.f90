@@ -535,7 +535,7 @@ CONTAINS
  CHARACTER(LEN=256) :: FNAME,LINE
  INTEGER :: IOS,I,J,IU,JU
 
- FNAME=TRIM(PREFVAL(1))//'\*.ipf'
+ !FNAME=TRIM(PREFVAL(1))//'\*.ipf'
  IF(.NOT.UTL_WSELECTFILE('iMOD Point file (*.ipf)|*.ipf|',SAVEDIALOG+PROMPTON+DIRCHANGE+APPENDEXT,&
       FNAME,'Save Current Timeseries sequentually within an ipf (*.ipf)'))RETURN
 
@@ -609,7 +609,7 @@ CONTAINS
  CHARACTER(LEN=256) :: FNAME
  INTEGER :: IOS,I,IU,N
 
- FNAME=TRIM(PREFVAL(1))//'\*.ipf'
+ !FNAME=TRIM(PREFVAL(1))//'\*.ipf'
  IF(.NOT.UTL_WSELECTFILE('iMOD Point file (*.ipf)|*.ipf|',LOADDIALOG+PROMPTON+DIRCHANGE+APPENDEXT,&
       FNAME,'Open ipf to use points (*.ipf)'))RETURN
 
@@ -1420,7 +1420,7 @@ CONTAINS
  INTEGER :: IU,IOS,I,J
  CHARACTER(LEN=100) :: EXTRAINFO
 
- FNAME=TRIM(PREFVAL(1))//'\*.csv'
+ !FNAME=TRIM(PREFVAL(1))//'\*.csv'
  IF(.NOT.UTL_WSELECTFILE('Comma-delimited file (*.csv)|*.csv|',SAVEDIALOG+PROMPTON+DIRCHANGE+APPENDEXT,&
       FNAME,'Save Current Timeseries in a comma-delimited file (*.csv)'))RETURN
 

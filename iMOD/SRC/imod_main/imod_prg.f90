@@ -146,7 +146,11 @@ CALL WMENUSETSTATE(ID_IMPORTSOBEK,1,ISOBEK)
 !## initiate idproc for help-manual
 IDPROC=0
 
+!## initialize demo-mode
 DEMO%IDEMO=0
+
+!## initialize save directory location of open/save windows
+SAVEDIR=TRIM(PREFVAL(1))//'\'
 
 LEGNAME=''; CALL OSD_GETNARG(NARG)
 IF(NARG.GT.0)THEN

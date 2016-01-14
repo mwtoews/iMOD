@@ -315,15 +315,15 @@ CONTAINS
  REAL :: DX,DY,OR1,OR2
 
  IF(OPENDIALOG.EQ.1)THEN !## when .eq. '0', images can be loaded in the background without opening a dialog
-  BMP(NBMP+1)%BMPFNAME=TRIM(OPENDIR)
+  BMP(NBMP+1)%BMPFNAME=''
   IF(.NOT.UTL_WSELECTFILE('All Known Files (*.bmp;*.pcx;*.png;*.jpg)|*.bmp;*.pcx;*.png;*.jpg|BitMap (*.bmp)|*.bmp| &
                            ZSoft PC Paintbrush (*.pcx)|*.pcx|Portable Network Graphic image (*.png)|*.png|JPEG Image (*.jpg)|*.jpg|',&
                    LOADDIALOG+MUSTEXIST+PROMPTON+DIRCHANGE+APPENDEXT+MULTIFILE,BMP(NBMP+1)%BMPFNAME,&
                    'Load Background Image (*.bmp;*.pcx;*.png;*.jpg)'))RETURN
  END IF                 
 
- I=INDEXNOCASE(BMP(NBMP+1)%BMPFNAME,'\',.TRUE.)
- OPENDIR=BMP(NBMP+1)%BMPFNAME(:I-1)
+ !I=INDEXNOCASE(BMP(NBMP+1)%BMPFNAME,'\',.TRUE.)
+ !OPENDIR=BMP(NBMP+1)%BMPFNAME(:I-1)
 
  CALL IUPPERCASE(BMP(NBMP+1)%BMPFNAME)
  IF(ALLOCATED(INFO))DEALLOCATE(INFO)

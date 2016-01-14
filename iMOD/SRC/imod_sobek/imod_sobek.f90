@@ -71,28 +71,28 @@ CONTAINS
    CASE(PUSHBUTTON)
     SELECT CASE (MESSAGE%VALUE1)
      CASE (ID_OPEN1)
-      FNAME='' !TRIM(PREFVAL(1))
+      FNAME='' 
       IF(UTL_WSELECTFILE('iMOD ISG file|*.isg|', &
                    SAVEDIALOG+PROMPTON+DIRCHANGE+APPENDEXT,FNAME,&
                    'Save iMOD ISG File (*.isg)'))THEN
        CALL WDIALOGPUTSTRING(IDF_STRING1,FNAME)
       ENDIF
      CASE (ID_OPEN2)
-      FNAME='' !TRIM(PREFVAL(1))
+      FNAME='' 
       IF(UTL_WSELECTFILE('Sobek Network File|*.tp|', &
                    LOADDIALOG+MUSTEXIST+PROMPTON+DIRCHANGE+APPENDEXT,FNAME,&
                    'Load Sobek Network File (network.tp)'))THEN
        CALL WDIALOGPUTSTRING(IDF_STRING2,FNAME)
       ENDIF
      CASE (ID_OPEN3)
-      FNAME='' !TRIM(PREFVAL(1))
+      FNAME='' 
       IF(UTL_WSELECTFILE('SOBEK Calcpnt His-file|*.his|', &
                    LOADDIALOG+MUSTEXIST+PROMPTON+DIRCHANGE+APPENDEXT,FNAME,&
                    'Load SOBEK His file (*.his)'))THEN
        CALL WDIALOGPUTSTRING(IDF_STRING3,FNAME)
       ENDIF
      CASE (ID_OPEN4)
-      FNAME='' !TRIM(PREFVAL(1))
+      FNAME='' 
       IF(UTL_WSELECTFILE('SOBEK Struc His-file|*.his|', &
                    LOADDIALOG+MUSTEXIST+PROMPTON+DIRCHANGE+APPENDEXT,FNAME,&
                    'Load SOBEK His file (*.his)'))THEN

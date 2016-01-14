@@ -58,7 +58,7 @@ CONTAINS
   ENDIF
  ELSE
   GENFNAME=''
-  IF(LEN_TRIM(PREFVAL(3)).GT.0)GENFNAME=TRIM(PREFVAL(3))//'\'
+  !IF(LEN_TRIM(PREFVAL(3)).GT.0)GENFNAME=TRIM(PREFVAL(3))//'\'
   IF(.NOT.UTL_WSELECTFILE('All Possible Files (*.gen;*.shp;*.ipf)|*.gen;*.shp;*.ipf|ESRI Generate File (*.gen)|*.gen|'// &
       'ESRI Shape Files (*.shp)|*.shp|iMOD Point File (*.ipf)|*.ipf|',&
        LOADDIALOG+MUSTEXIST+PROMPTON+DIRCHANGE+APPENDEXT+MULTIFILE,GENFNAME,'Load background Map (*.gen,*.ipf,*.shp)'))RETURN
