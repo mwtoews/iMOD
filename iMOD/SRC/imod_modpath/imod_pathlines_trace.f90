@@ -64,9 +64,9 @@ CONTAINS
 !                  RUNFILE,'Select iMODPATH runfile (*.run)'))RETURN
  
 ! RUNFILE='d:\iMOD-Gebruikersdag\IMOD_USER\RUNFILES\imodpath.run'
- RUNFILE='d:\IMOD-MODELS\IBRAHYM_V2.0\iMOD\IMOD_USER\RUNFILES\erfverband.run'
+! RUNFILE='d:\IMOD-MODELS\IBRAHYM_V2.0\iMOD\IMOD_USER\RUNFILES\erfverband.run'
 ! RUNFILE='d:\IMOD-MODELS\COLUMBIA\IMOD_USER\RUNFILES\imodpath.run'
-! RUNFILE='d:\IMOD-MODELS\NHI\imodpath.run'
+ RUNFILE='d:\IMOD-MODELS\NHI\imodpath.run'
 ! RUNFILE='d:\IMOD-MODELS\vanMarvin\imodpath.run'
 !  RUNFILE='d:\IMOD-MODELS\SANFRANSISCO\IMOD_USER\RUNFILES\imodpath.run'
   

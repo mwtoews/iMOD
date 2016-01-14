@@ -114,7 +114,7 @@ CONTAINS
   IF(IMODE.EQ.1.AND.IBNDBOX.EQ.1)THEN
    CALL GLBLENDFUNC(GL_SRC_ALPHA,GL_ONE_MINUS_SRC_ALPHA)  !## (1) source (2) destination
   !## draw filled background in gl_cull_face mode
-   CALL IMOD3D_SETCOLOR(BCOLOR,50) !100)
+   CALL IMOD3D_SETCOLOR(BCOLOR) !,100)
    CALL GLLINEWIDTH(1.0_GLFLOAT)
    !## draw box
    IF(AXESINDEX(1).GT.0)CALL GLCALLLIST(AXESINDEX(1))
@@ -126,7 +126,7 @@ CONTAINS
   IF(IMODE.EQ.1.AND.IAXES.EQ.1)THEN
    CALL GLBLENDFUNC(GL_SRC_ALPHA,GL_ONE_MINUS_SRC_ALPHA)  !## (1) source (2) destination
    !## draw labels
-   CALL IMOD3D_SETCOLOR(ACOLOR,50) !100)
+   CALL IMOD3D_SETCOLOR(ACOLOR) !,50) !100)
    IF(AXESINDEX(3).GT.0)CALL GLCALLLIST(AXESINDEX(3))
   ENDIF
 
@@ -144,7 +144,8 @@ CONTAINS
 
 !  !## draw idf's - last cause antialiasing and blending not for polygons
 !  IF(NIDFLIST.GT.0)CALL IMOD3D_DISPLAY_IDF(IMODE)
-  !## draw ipf-drills/points
+  !## draw ipf-drills/points  
+  CALL GLBLENDFUNC(GL_ONE,GL_ZERO) 
   IF(NIPFLIST.GT.0)CALL IMOD3D_DISPLAY_IPF(IMODE)
   !## draw iff's
   IF(NIFFLIST.GT.0)CALL IMOD3D_DISPLAY_IFF()
