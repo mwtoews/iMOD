@@ -703,8 +703,14 @@ CONTAINS
   
  END SELECT
  
+ !## check if really many particles are supposed to be added
+ IF(N.GT.10000)THEN
+  CALL WMESSAGEBOX(YESNO,QUESTIONICON,COMMONNO,'Are you sure to add '//TRIM(ITOS(N))//' particles','Question')
+  IF(WINFODIALOG(4).NE.1)N=-1
+ ENDIF
+
  IF(N.GT.0)THEN
- 
+  
   NSPG=NSPG+1
  
   !## get new location/particle - click from the 3d tool
@@ -722,7 +728,7 @@ CONTAINS
   SP(NSPG)%PWIDTH=1.0
  
  ELSE
-  CALL WMESSAGEBOX(OKONLY,INFORMATIONICON,COMMONOK,'iMOD cannot place particles for current configuration.','Information')
+  IF(N.EQ.0)CALL WMESSAGEBOX(OKONLY,INFORMATIONICON,COMMONOK,'iMOD cannot place particles for current configuration.','Information')
  ENDIF
  
  !## deallocate memory for temporary storage of locations

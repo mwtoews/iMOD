@@ -1067,16 +1067,14 @@ ENDDO
 !## save settings for plugins
 WRITE(IU,'(50A1)') ('*',K=1,50)
 
-IF(SIZE(PI1).GE.1.OR.SIZE(PI2).GE.1)THEN
- CALL WINDOWSELECT(0)
- IF(WMENUGETSTATE(ID_TI1,2).EQ.1)TI=60
- IF(WMENUGETSTATE(ID_TI2,2).EQ.1)TI=30
- IF(WMENUGETSTATE(ID_TI3,2).EQ.1)TI=15
- IF(WMENUGETSTATE(ID_TI4,2).EQ.1)TI=1
- WRITE(IU,'(A3,I2)') 'TI=',TI !chosen and saved check interval (in seconds) for plugin when running
-ENDIF
+CALL WINDOWSELECT(0)
+IF(WMENUGETSTATE(ID_TI1,2).EQ.1)TI=60
+IF(WMENUGETSTATE(ID_TI2,2).EQ.1)TI=30
+IF(WMENUGETSTATE(ID_TI3,2).EQ.1)TI=15
+IF(WMENUGETSTATE(ID_TI4,2).EQ.1)TI=1
 
 IF(SIZE(PI1).GE.1)THEN !If at least 1 plugin available call to plugin is performed
+ WRITE(IU,'(A3,I2)') 'TI=',TI !chosen and saved check interval (in seconds) for plugin when running
  WRITE(IU,'(A8,I2)') 'PLUGIN1=',SIZE(PI1)
  WRITE(IU,'(A)') TRIM(PREFVAL(27))
  DO J=1,SIZE(PI1,1)
@@ -1088,6 +1086,7 @@ ENDIF
 WRITE(IU,'(50A1)') ('*',K=1,50)
 
 IF(SIZE(PI2).GE.1)THEN !If at least 1 plugin available call to plugin is performed
+ WRITE(IU,'(A3,I2)') 'TI=',TI !chosen and saved check interval (in seconds) for plugin when running
  WRITE(IU,'(A8,I2)') 'PLUGIN2=',SIZE(PI2)
  WRITE(IU,'(A)') TRIM(PREFVAL(28))
  DO J=1,SIZE(PI2,1)
