@@ -25,6 +25,7 @@ MODULE MOD_PLINES_TRACE
 USE WINTERACTER
 USE RESOURCE
 USE OPENGL
+USE MOD_COLOURS
 USE IMODVAR, ONLY : PI
 USE MOD_IDF_PAR
 USE IMOD, ONLY : IDFINIT
@@ -44,12 +45,15 @@ USE MOD_DEMO_PAR
 USE MOD_3D_PAR, ONLY : PLLISTINDEX,PLLISTCLR,PLLISTAGE,STPLISTINDEX,MIDPOS,TOP,BOT,XYZAXES,IDFPLOT,IPATHLINE_3D,VIEWDX,VIEWDY
 USE MOD_IPF, ONLY : IPFALLOCATE,IPFDEALLOCATE,IPFREAD2,NIPF,IPFFILE => IPF
 
+REAL,DIMENSION(:),ALLOCATABLE,PRIVATE :: XSP,YSP,ZSP
+
 CONTAINS
 
  !###======================================================================
- LOGICAL FUNCTION TRACE_3D_INIT()
+ LOGICAL FUNCTION TRACE_3D_INIT(FNAME)
  !###======================================================================
  IMPLICIT NONE
+ CHARACTER(LEN=*),INTENT(IN) :: FNAME
  CHARACTER(LEN=256) :: RUNFILE
  INTEGER :: IBATCH,ILAY,IPLOT,NG,IDEF
  INTEGER,DIMENSION(:),ALLOCATABLE :: ILAYERS
@@ -59,16 +63,20 @@ CONTAINS
 
  IDEF=WMENUGETSTATE(ID_INTERACTIVEPATHLINES_DEF,2)
 
+ IF(TRIM(FNAME).EQ.'')THEN
 ! IF(.NOT.UTL_WSELECTFILE('iMODPATH runfile (*.run)|*.run|', &
 !                  LOADDIALOG+PROMPTON+DIRCHANGE+APPENDEXT, &
 !                  RUNFILE,'Select iMODPATH runfile (*.run)'))RETURN
- 
 ! RUNFILE='d:\iMOD-Gebruikersdag\IMOD_USER\RUNFILES\imodpath.run'
 ! RUNFILE='d:\IMOD-MODELS\IBRAHYM_V2.0\iMOD\IMOD_USER\RUNFILES\erfverband.run'
 ! RUNFILE='d:\IMOD-MODELS\COLUMBIA\IMOD_USER\RUNFILES\imodpath.run'
- RUNFILE='d:\IMOD-MODELS\NHI\imodpath.run'
+! RUNFILE='d:\IMOD-MODELS\NHI\imodpath.run'
+ RUNFILE='d:\IMOD-MODELS\ALBERTA\SYLVAN_LAKE\IMOD_USER\RUNFILES\MODPATH\iMODPATH_IPS.RUN'
 ! RUNFILE='d:\IMOD-MODELS\vanMarvin\imodpath.run'
 !  RUNFILE='d:\IMOD-MODELS\SANFRANSISCO\IMOD_USER\RUNFILES\imodpath.run'
+ ELSE
+  RUNFILE=FNAME
+ ENDIF 
   
  CALL WDIALOGLOAD(ID_D3DSETTINGS_LAYER,ID_D3DSETTINGS_LAYER)
  CALL WDIALOGLOAD(ID_D3DSETTINGS_SINKS,ID_D3DSETTINGS_SINKS)
@@ -314,7 +322,6 @@ CONTAINS
  !###======================================================================
  IMPLICIT NONE
  INTEGER,INTENT(IN) :: ID
- REAL,DIMENSION(:),ALLOCATABLE :: XSP,YSP,ZSP
  CHARACTER(LEN=256) :: FNAME
  INTEGER :: IU,I,J
  LOGICAL :: LIPF
@@ -337,7 +344,7 @@ CONTAINS
    ALLOCATE(XSP(SP(I)%NPART),YSP(SP(I)%NPART),ZSP(SP(I)%NPART))
    DO J=1,SP(I)%NPART; READ(IU,'(3F10.2)') XSP(J),YSP(J),ZSP(J); ENDDO
    !## get new location/particle - click from the 3d tool
-   CALL TRACE_3D_STARTPOINTS_ASSIGN(I,XSP,YSP,ZSP)
+   CALL TRACE_3D_STARTPOINTS_ASSIGN(I,1,SP(I)%NPART) !XSP,YSP,ZSP)
    DEALLOCATE(XSP,YSP,ZSP)
    !## total particles for this group
    PL%NPART=PL%NPART+SP(I)%NPART
@@ -377,12 +384,11 @@ CONTAINS
  SUBROUTINE TRACE_3D_STARTPOINTS() 
  !###======================================================================
  IMPLICIT NONE
- INTEGER :: I,J,II,JJ,K,NX,NZ,N,ISP,IROW,ICOL,ILAY,ISTRONG,IC1,IC2, &
-    IR1,IR2,ISHAPE,NC,IRANDOM,DR,DC,IIDF,INCLD,ISUBSQ,IL1,IL2
+ INTEGER :: I,J,II,JJ,K,NX,NZ,N,ISP,IROW,ICOL,ILAY,ISTRONG,IC1,IC2,JLAY,NP, &
+    IR1,IR2,ISHAPE,NC,IRANDOM,DR,DC,IIDF,INCLD,ISUBSQ,IL1,IL2,ISGRP,NG,IG,IG1,IG2
  INTEGER,DIMENSION(2) :: IOPT
  REAL :: X,Y,Z,DX,DY,DZ,XC,YC,ZC,Q,QERROR,G2R,OR,R,OFR
- REAL,DIMENSION(:),ALLOCATABLE :: XSP,YSP,ZSP
- INTEGER,DIMENSION(:),ALLOCATABLE :: ILAYERS,JLAYERS
+ INTEGER,DIMENSION(:),ALLOCATABLE :: ILAYERS,JLAYERS,NSGRP
  TYPE(IDFOBJ) :: PIDF
  LOGICAL :: LIDF,LIPF
  LOGICAL,DIMENSION(2) :: LEX
@@ -391,6 +397,9 @@ CONTAINS
  CALL WDIALOGSELECT(ID_D3DSETTINGS_TAB8)
  CALL WDIALOGGETRADIOBUTTON(IDF_RADIO5,ISP)
 
+ ALLOCATE(NSGRP(NLAY)); NSGRP=0
+ ALLOCATE(ILAYERS(NLAY),JLAYERS(NLAY)); ILAYERS=0; JLAYERS=0
+ 
  SELECT CASE (ISP)
   !## spatial distributed
   CASE (1)
@@ -423,6 +432,7 @@ CONTAINS
      ENDDO
     ENDDO
    ENDDO
+   NG=1; NSGRP(NG)=N
 
   !## spatial distributed via an IDF (2) or an external IPF/IDF-file (5)
   CASE (2,5)
@@ -499,6 +509,7 @@ CONTAINS
     ENDDO
     CALL IPFDEALLOCATE()
    ENDIF
+   NG=1; NSGRP(NG)=N
 
   !## sinks
   CASE (3)
@@ -515,89 +526,108 @@ CONTAINS
    CALL WDIALOGGETMENU(IDF_MENU4,INCLD)
    CALL WDIALOGGETMENU(IDF_MENU3,IOPT(2))
 
-   ALLOCATE(ILAYERS(NLAY)); CALL WDIALOGGETMENU(IDF_MENU1,ILAYERS)
+   CALL WDIALOGGETMENU(IDF_MENU1,ILAYERS)
+   DO I=1,NLAY; IF(ILAYERS(I).EQ.1)ILAYERS(I)=I; ENDDO; JLAYERS=ILAYERS
+   CALL WDIALOGGETCHECKBOX(IDF_CHECK2,ISUBSQ)    !## subsequent layers
+   CALL WDIALOGGETCHECKBOX(IDF_CHECK3,ISGRP)     !## new group per (group of) layer(s)
 
+   IF(ISUBSQ.EQ.1)CALL TRACE_3D_STARTPOINTS_SUBQ(NLAY,ILAYERS,JLAYERS) 
+
+   NSGRP=0
+   
    !## from degrees to radians
    G2R=360.0/(2.0*PI); OR=360.0/REAL(NC); OR=OR/G2R
 
    DO I=1,2
-    N=0
-    DO ILAY=1,NLAY; IF(ILAYERS(ILAY).EQ.0)CYCLE; DO IROW=1,IDF%NROW; DO ICOL=1,IDF%NCOL
-       
-     !## correct, proven otherwise
-     LEX=.TRUE.
-
-     !## check whether strong-sink
-     IF(ISTRONG.EQ.1)THEN
-      !## forward simulation
-      IF(PL%IREV.EQ.0)THEN
-       IF(QX(ICOL,IROW,ILAY).LE.0.0.OR.QX(ICOL+1,IROW,ILAY).GE.0.0.OR. &
-          QY(ICOL,IROW,ILAY).GE.0.0.OR.QY(ICOL,IROW+1,ILAY).LE.0.0.OR. &
-          QZ(ICOL,IROW,ILAY).GE.0.0.OR.QZ(ICOL,IROW,ILAY+1).LE.0.0)LEX(1)=.FALSE.
-      !## backward simulation
-      ELSE
-       IF(QX(ICOL,IROW,ILAY).GE.0.0.OR.QX(ICOL+1,IROW,ILAY).LE.0.0.OR. &
-          QY(ICOL,IROW,ILAY).LE.0.0.OR.QY(ICOL,IROW+1,ILAY).GE.0.0.OR. &
-          QZ(ICOL,IROW,ILAY).LE.0.0.OR.QZ(ICOL,IROW,ILAY+1).GE.0.0)LEX(1)=.FALSE.
-      ENDIF
-     ENDIF
-     !## no a strong sink
-     IF(.NOT.LEX(1))CYCLE
-     
-     !## net inflow is negative
-     QERROR=QSS(ICOL,IROW,ILAY) 
-
-     !## not correct, proven otherwise
-     LEX=.FALSE.
-     DO J=1,2
-      !## forward simulation
-      SELECT CASE (IOPT(J))
-       CASE (1) !## =
-        IF(QERROR.EQ.Q)LEX(J)=.TRUE.
-       CASE (2) !## >
-        IF(QERROR.GT.Q)LEX(J)=.TRUE.
-       CASE (3) !## <
-        IF(QERROR.LT.Q)LEX(J)=.TRUE.
-       CASE (4) !## >=
-        IF(QERROR.GE.Q)LEX(J)=.TRUE.
-       CASE (5) !## <=
-        IF(QERROR.LE.Q)LEX(J)=.TRUE.
-      END SELECT
-     ENDDO
-     !## and
-     IF(INCLD.EQ.2)LEX(1)=LEX(1).AND.LEX(2)
-     !## or
-     IF(INCLD.EQ.3)LEX(1)=LEX(1).OR.LEX(2)
-          
-     !## try next
-     IF(.NOT.LEX(1))CYCLE
-   
-     CALL IDFGETLOC(IDF,IROW,ICOL,XC,YC)
-     DZ=ZTOP(ICOL,IROW,ILAY)-ZBOT(ICOL,IROW,ILAY)
-     IF(IRANDOM.EQ.0)DZ=DZ/REAL(NZ)
-     
-     DO II=1,NC  !## number on circle      
-      !## get coordinates
-      IF(IRANDOM.EQ.0)THEN
-       X=XC+R*COS(REAL(II)*OR); Y=YC+R*SIN(REAL(II)*OR)
-       Z=ZTOP(ICOL,IROW,ILAY)+(DZ*0.5)
-      ENDIF
-      DO JJ=1,NZ !## number vertically
-       N=N+1
-       IF(IRANDOM.EQ.0)THEN
-        Z=Z-DZ
-       ELSE
-        CALL RANDOM_NUMBER(X); OFR=(X*360.0)/G2R; X=XC+R*COS(OFR); Y=YC+R*SIN(OFR)
-        CALL RANDOM_NUMBER(Z); Z=Z*DZ;            Z=Z +ZBOT(ICOL,IROW,ILAY)
-       ENDIF
-       IF(I.EQ.2)THEN; XSP(N)=X; YSP(N)=Y; ZSP(N)=Z; ENDIF
-      ENDDO
-     ENDDO
+    N=0; NG=0
+    DO JLAY=1,NLAY 
     
-    ENDDO; ENDDO; ENDDO
+     IF(ILAYERS(JLAY).EQ.0.OR.JLAYERS(JLAY).EQ.0)CYCLE
+     IL1=ILAYERS(JLAY); IL2=JLAYERS(JLAY)
+
+     DO ILAY=IL1,IL2; DO IROW=1,IDF%NROW; DO ICOL=1,IDF%NCOL
+       
+      !## correct, proven otherwise
+      LEX=.TRUE.
+
+      !## check whether strong-sink
+      IF(ISTRONG.EQ.1)THEN
+       !## forward simulation
+       IF(PL%IREV.EQ.0)THEN
+        IF(QX(ICOL,IROW,ILAY).LE.0.0.OR.QX(ICOL+1,IROW,ILAY).GE.0.0.OR. &
+           QY(ICOL,IROW,ILAY).GE.0.0.OR.QY(ICOL,IROW+1,ILAY).LE.0.0.OR. &
+           QZ(ICOL,IROW,ILAY).GE.0.0.OR.QZ(ICOL,IROW,ILAY+1).LE.0.0)LEX(1)=.FALSE.
+       !## backward simulation
+       ELSE
+        IF(QX(ICOL,IROW,ILAY).GE.0.0.OR.QX(ICOL+1,IROW,ILAY).LE.0.0.OR. &
+           QY(ICOL,IROW,ILAY).LE.0.0.OR.QY(ICOL,IROW+1,ILAY).GE.0.0.OR. &
+           QZ(ICOL,IROW,ILAY).LE.0.0.OR.QZ(ICOL,IROW,ILAY+1).GE.0.0)LEX(1)=.FALSE.
+       ENDIF
+      ENDIF
+      !## no a strong sink
+      IF(.NOT.LEX(1))CYCLE
+      
+      !## net inflow is negative
+      QERROR=QSS(ICOL,IROW,ILAY) 
+
+      !## not correct, proven otherwise
+      LEX=.FALSE.
+      DO J=1,2
+       !## forward simulation
+       SELECT CASE (IOPT(J))
+        CASE (1) !## =
+         IF(QERROR.EQ.Q)LEX(J)=.TRUE.
+        CASE (2) !## >
+         IF(QERROR.GT.Q)LEX(J)=.TRUE.
+        CASE (3) !## <
+         IF(QERROR.LT.Q)LEX(J)=.TRUE.
+        CASE (4) !## >=
+         IF(QERROR.GE.Q)LEX(J)=.TRUE.
+        CASE (5) !## <=
+         IF(QERROR.LE.Q)LEX(J)=.TRUE.
+       END SELECT
+      ENDDO
+      !## and
+      IF(INCLD.EQ.2)LEX(1)=LEX(1).AND.LEX(2)
+      !## or
+      IF(INCLD.EQ.3)LEX(1)=LEX(1).OR.LEX(2)
+          
+      !## try next
+      IF(.NOT.LEX(1))CYCLE
+   
+      CALL IDFGETLOC(IDF,IROW,ICOL,XC,YC)
+      DZ=ZTOP(ICOL,IROW,ILAY)-ZBOT(ICOL,IROW,ILAY)
+      IF(IRANDOM.EQ.0)DZ=DZ/REAL(NZ)
+     
+      DO II=1,NC  !## number on circle      
+       !## get coordinates
+       IF(IRANDOM.EQ.0)THEN
+        X=XC+R*COS(REAL(II)*OR); Y=YC+R*SIN(REAL(II)*OR)
+        Z=ZTOP(ICOL,IROW,ILAY)+(DZ*0.5)
+       ENDIF
+       DO JJ=1,NZ !## number vertically
+        N=N+1
+        IF(IRANDOM.EQ.0)THEN
+         Z=Z-DZ
+        ELSE
+         CALL RANDOM_NUMBER(X); OFR=(X*360.0)/G2R; X=XC+R*COS(OFR); Y=YC+R*SIN(OFR)
+         CALL RANDOM_NUMBER(Z); Z=Z*DZ;            Z=Z +ZBOT(ICOL,IROW,ILAY)
+        ENDIF
+        IF(I.EQ.2)THEN; XSP(N)=X; YSP(N)=Y; ZSP(N)=Z; ENDIF
+       ENDDO
+      ENDDO
+    
+     ENDDO; ENDDO; ENDDO
+     IF(NG.EQ.0)THEN
+      NG=NG+1
+     ELSE
+      NG=NG+ISGRP
+     ENDIF
+     NSGRP(NG)=NSGRP(NG)+N
+    
+    ENDDO
     IF(I.EQ.1)ALLOCATE(XSP(N),YSP(N),ZSP(N))
    ENDDO
-   DEALLOCATE(ILAYERS)
   
   !## border - layers
   CASE (4)
@@ -605,21 +635,15 @@ CONTAINS
    CALL WDIALOGSELECT(ID_D3DSETTINGS_LAYER)
    CALL WDIALOGGETINTEGER(IDF_INTEGER8,NZ)
    CALL WDIALOGGETINTEGER(IDF_INTEGER1,NX)
-   ALLOCATE(ILAYERS(NLAY),JLAYERS(NLAY)); CALL WDIALOGGETMENU(IDF_MENU1,ILAYERS)
+   CALL WDIALOGGETMENU(IDF_MENU1,ILAYERS)
    DO I=1,NLAY; IF(ILAYERS(I).EQ.1)ILAYERS(I)=I; ENDDO; JLAYERS=ILAYERS
    CALL WDIALOGGETCHECKBOX(IDF_CHECK1,IRANDOM)
    CALL WDIALOGGETCHECKBOX(IDF_CHECK2,ISUBSQ)
- 
-   IF(ISUBSQ.EQ.1)THEN
-    JLAYERS=0; J=0
-    DO I=1,NLAY
-     IF(ILAYERS(I).NE.0)THEN
-      IF(J.EQ.0)J=I
-     ELSE
-      IF(J.NE.0)JLAYERS(J)=I-1; J=0
-     ENDIF
-    ENDDO
-   ENDIF
+   CALL WDIALOGGETCHECKBOX(IDF_CHECK3,ISGRP)
+
+   IF(ISUBSQ.EQ.1)CALL TRACE_3D_STARTPOINTS_SUBQ(NLAY,ILAYERS,JLAYERS) 
+
+   NSGRP=0
    
    !## iopt=1 west
    !## iopt=2 north
@@ -642,7 +666,7 @@ CONTAINS
    NX=0; DO I=1,NLAY; IF(JLAYERS(I).GT.0)NX=NX+N; ENDDO; N=NX
    ALLOCATE(XSP(N),YSP(N),ZSP(N))
 
-   N=0
+   N=0; NG=0
    DO ILAY=1,NLAY
     IF(ILAYERS(ILAY).EQ.0.OR.JLAYERS(ILAY).EQ.0)CYCLE
     IL1=ILAYERS(ILAY); IL2=JLAYERS(ILAY)
@@ -698,61 +722,108 @@ CONTAINS
        ENDDO
       ENDDO; ENDDO
     END SELECT
+    IF(NG.EQ.0)THEN
+     NG=NG+1
+    ELSE
+     NG=NG+ISGRP
+    ENDIF
+    NSGRP(NG)=NSGRP(NG)+N
    ENDDO
-   DEALLOCATE(ILAYERS)
   
  END SELECT
  
  !## check if really many particles are supposed to be added
- IF(N.GT.10000)THEN
+ IF(SUM(NSGRP).GT.10000)THEN
   CALL WMESSAGEBOX(YESNO,QUESTIONICON,COMMONNO,'Are you sure to add '//TRIM(ITOS(N))//' particles','Question')
   IF(WINFODIALOG(4).NE.1)N=-1
  ENDIF
 
  IF(N.GT.0)THEN
   
-  NSPG=NSPG+1
- 
-  !## get new location/particle - click from the 3d tool
-  CALL TRACE_3D_STARTPOINTS_ASSIGN(NSPG,XSP,YSP,ZSP)
-  !## total particles for this group
-  PL%NPART=PL%NPART+SP(NSPG)%NPART
-  !## assign current colour to group
-  SP(NSPG)%ICLR=PL%SPCOLOR
-  !## activate current group
-  SP(NSPG)%IACT=1
-  !## flow direction current group = current 
-  SP(NSPG)%IREV=PL%IREV
-  !## plot size
-  SP(NSPG)%SPWIDTH=3.0
-  SP(NSPG)%PWIDTH=1.0
- 
+  IF(NSPG+NG.GT.SIZE(SP))THEN
+   CALL WMESSAGEBOX(YESNO,QUESTIONICON,COMMONNO,'Total groups '//TRIM(ITOS(NSPG+NG))//' overwrite'//CHAR(13)// &
+      'maximal groups sustained ('//TRIM(ITOS(SIZE(SP)))//')'//CHAR(13)//CHAR(13)//'Continue?','Question')
+   IF(WINFODIALOG(4).NE.1)NG=0
+  ENDIF
+  
+  DO IG=1,NG
+
+   IG1=1; IF(IG.GT.1)IG1=NSGRP(IG-1)+1; IG2=NSGRP(IG); NP=(IG2-IG1)+1   
+   
+   NSPG=NSPG+1
+   
+   IF(NSPG.GT.SIZE(SP))EXIT
+   
+   !## get new location/particle - click from the 3d tool
+   CALL TRACE_3D_STARTPOINTS_ASSIGN(NSPG,IG1,IG2) !,XSP(IG1:IG2),YSP(IG1:IG2),ZSP(IG1:IG2))
+   !## total particles for this group
+   PL%NPART=PL%NPART+(IG2-IG1+1)
+   !## assign current colour to group
+   IF(IG.EQ.1)THEN
+    SP(NSPG)%ICLR=PL%SPCOLOR
+   ELSE
+    !## apply other colour for rest of group
+    I=MOD(NSPG,MAXCOLOUR); I=MAX(1,I)
+    SP(NSPG)%ICLR=ICOLOR(I)
+   ENDIF
+   !## activate current group
+   SP(NSPG)%IACT=1
+   !## flow direction current group = current 
+   SP(NSPG)%IREV=PL%IREV
+   !## plot size
+   SP(NSPG)%SPWIDTH=3.0
+   SP(NSPG)%PWIDTH=1.0
+  
+  ENDDO
+  
  ELSE
   IF(N.EQ.0)CALL WMESSAGEBOX(OKONLY,INFORMATIONICON,COMMONOK,'iMOD cannot place particles for current configuration.','Information')
  ENDIF
  
  !## deallocate memory for temporary storage of locations
- IF(ALLOCATED(XSP))DEALLOCATE(XSP)
- IF(ALLOCATED(YSP))DEALLOCATE(YSP)
- IF(ALLOCATED(ZSP))DEALLOCATE(ZSP)
+ IF(ALLOCATED(XSP))    DEALLOCATE(XSP)
+ IF(ALLOCATED(YSP))    DEALLOCATE(YSP)
+ IF(ALLOCATED(ZSP))    DEALLOCATE(ZSP)
+ IF(ALLOCATED(NSGRP))  DEALLOCATE(NSGRP)
+ IF(ALLOCATED(ILAYERS))DEALLOCATE(ILAYERS)
+ IF(ALLOCATED(JLAYERS))DEALLOCATE(JLAYERS)
 
  CALL WDIALOGSELECT(ID_D3DSETTINGS_TAB8)
- IF(NSPG.GT.SIZE(SP))CALL WDIALOGFIELDSTATE(ID_ADD,0)
+ IF(NSPG.GE.SIZE(SP))CALL WDIALOGFIELDSTATE(ID_ADD,0)
+ NSPG=MIN(NSPG,SIZE(SP))
  
  END SUBROUTINE TRACE_3D_STARTPOINTS
  
  !###======================================================================
- SUBROUTINE TRACE_3D_STARTPOINTS_ASSIGN(IG,XSP,YSP,ZSP)
+ SUBROUTINE TRACE_3D_STARTPOINTS_SUBQ(N,ILAYERS,JLAYERS) 
  !###======================================================================
  IMPLICIT NONE
- INTEGER,INTENT(IN) :: IG
- REAL,INTENT(IN),DIMENSION(:) :: XSP,YSP,ZSP
+ INTEGER,INTENT(IN) :: N
+ INTEGER,INTENT(INOUT),DIMENSION(N) :: ILAYERS,JLAYERS
+ INTEGER :: I,J
+ 
+ JLAYERS=0; J=0
+ DO I=1,N 
+  IF(ILAYERS(I).NE.0)THEN
+   IF(J.EQ.0)J=I
+  ELSE
+   IF(J.NE.0)JLAYERS(J)=I-1; J=0
+  ENDIF
+ ENDDO
+   
+ END SUBROUTINE TRACE_3D_STARTPOINTS_SUBQ
+
+ !###======================================================================
+ SUBROUTINE TRACE_3D_STARTPOINTS_ASSIGN(IG,IG1,IG2) 
+ !###======================================================================
+ IMPLICIT NONE
+ INTEGER,INTENT(IN) :: IG,IG1,IG2
  INTEGER :: IROW,ICOL,ILAY,I,J,K,N
  REAL :: XC,YC,ZC,ZL,DZ
 
  SP(IG)%NPART=0
  
- DO I=1,SIZE(XSP)
+ DO I=1,IG1,IG2 
 
   XC=XSP(I); YC=YSP(I); ZC=ZSP(I)
   
@@ -1060,15 +1131,7 @@ CONTAINS
   IF(PL%ITYPE.EQ.2)CALL GLBEGIN(GL_POINTS)
 
   DO IPART=1,SPR(IG)%NPART 
-
-!   !## time in days
-!   TIME=SPR(IG)%TOT(IPART)
-!
-!   !## compute ttmax per particle
-!   TTMAX=TIME+PL%TDEL
-!   !## maximize it for tmax
-!   TTMAX=MIN(TTMAX,PL%TMAX)   
-     
+  
    !## trace selected particle, not yet discharged!
    IF(SPR(IG)%KLC(IPART).GT.0)THEN
 

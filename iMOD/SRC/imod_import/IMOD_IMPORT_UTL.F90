@@ -652,17 +652,21 @@ CONTAINS
   DO ILAY=1,NLAY
 
    NP   =0
-   IDF%X=0.0
    IX   =0.0
-   IDF%NODATA=NODATA(J)
+   IDF%NODATA=NODATA(IPCK)
+   IDF%X=IDF%NODATA
    DO I=1,N
     IF(XP(I)%ILAY.EQ.ILAY)THEN
      TLAY(J,ILAY)=1
      NP=NP+1
      ICOL=XP(I)%ICOL
      IROW=XP(I)%IROW
-     IDF%X(ICOL,IROW)=IDF%X(ICOL,IROW)+XP(I)%X(IPCK)
-     IX(ICOL,IROW)   =IX(ICOL,IROW)+1.0
+     IF(IX(ICOL,IROW).EQ.0.0)THEN
+      IDF%X(ICOL,IROW)=XP(I)%X(IPCK)
+     ELSE
+      IDF%X(ICOL,IROW)=IDF%X(ICOL,IROW)+XP(I)%X(IPCK)
+     ENDIF
+     IX(ICOL,IROW)=IX(ICOL,IROW)+1.0
     ENDIF
    ENDDO
 
@@ -681,7 +685,7 @@ CONTAINS
 
      !## refill x in case retain option is selected
      IF(TLAY(J,ILAY).GT.1)THEN
-      IDF%X=0.0
+      IDF%X=IDF%NODATA
       IX   =0.0
       DO I=1,N
        IF(XP(I)%ILAY.EQ.ILAY)THEN
@@ -772,7 +776,6 @@ CONTAINS
  IF(IBATCH.EQ.1)WRITE(*,'(A)') 'Writing '//TRIM(FNAME)//' ...'
  
  !## will be written with appropriate nodata value
- IDF%NODATA=-999.99
  IF(.NOT.IDFWRITE(IDF,FNAME,1))RETURN
 
  IMPORT_WRT1IDF=.TRUE.

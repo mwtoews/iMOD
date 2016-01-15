@@ -174,10 +174,6 @@ DO IDF=1,NIDF
   EXIT
  ENDIF
  
- !## remember location of opened idf/ipf/etc.etc.
- I=INDEXNOCASE(IDFNAME,'\',.TRUE.)
- OPENDIR=IDFNAME(:I-1)
-
  !## determine what kind of file *.idf, *.ipf etc.
  I=INDEXNOCASE(IDFNAME,'.',.TRUE.)+1
  SELECT CASE (IDFNAME(I:I+2))
@@ -266,15 +262,9 @@ DO IDF=1,NIDF
   ENDIF
  ENDIF
 
-! IF(LLEG)THEN
-!  MP(IPLOT)%LEG%LEGTXT    =''      !## default name of the legend file
-!  MP(IPLOT)%LEG%CGRAD     =1       !## all checkboxes selected
-! ENDIF
-
  MP(IPLOT)%ALIAS=IDFNAME(J:)
 
  I=MOD(IPLOT,MAXCOLOUR); I=MAX(1,I)
-! I=IPLOT; IF(IPLOT.GT.MAXCOLOUR)I=1
  MP(IPLOT)%SCOLOR=ICOLOR(I)   !## color for profile
  CALL UTL_READARRAY((/1,1,0,0,0,0/),6,MP(IPLOT)%PRFTYPE) !active - drawing lines in profile on default
 
@@ -284,7 +274,7 @@ DO IDF=1,NIDF
  SELECT CASE (MP(IPLOT)%IPLOT)
   !## idf
   CASE (1)
-   MP(IPLOT)%THICKNESS=1  !contour width
+   MP(IPLOT)%THICKNESS=1  !## contour width
    IF(PRESENT(ISTYLE))THEN
     MP(IPLOT)%IDFKIND=ISTYLE
    ELSE

@@ -121,10 +121,6 @@ CONTAINS
    CYCLE
   ENDIF
 
-  !## remember location of opened idf/ipf/etc.etc.
-  I=INDEXNOCASE(GENFNAME,'\',.TRUE.)
-  OPENDIR=GENFNAME(:I)
-
   !## determine what kind of file *.idf, *.ipf or *.shp
   I=INDEXNOCASE(GENFNAME,'.',.TRUE.)+1
   SELECT CASE (GENFNAME(I:I+2))
