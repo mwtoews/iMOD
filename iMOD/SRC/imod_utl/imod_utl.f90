@@ -1448,14 +1448,14 @@ CONTAINS
  CHARACTER(LEN=*),INTENT(INOUT) :: FILEDIR
  INTEGER,INTENT(IN) :: IFLAGS
  CHARACTER(LEN=*),INTENT(IN),OPTIONAL :: TITLE
- CHARACTER(LEN=256) :: DIR
- INTEGER :: I,J,K
+ INTEGER :: I,J,K,ISAVE
  CHARACTER(LEN=10) :: EXT
  
  UTL_WSELECTFILE=.FALSE.
  
  !## store original filedir
- DIR=FILEDIR; IF(TRIM(FILEDIR).EQ.'')FILEDIR=SAVEDIR
+ ISAVE=1; IF(INDEX(FILEDIR,'*').GT.0)ISAVE=0
+ IF(ISAVE.EQ.1)FILEDIR=SAVEDIR
 
  DO
     
@@ -1485,9 +1485,10 @@ CONTAINS
 
  ENDDO
  
- !## save directory name into SAVEDIR
+ !## removes filename from directory name before saving
  K=INDEX(FILEDIR,'\',.TRUE.)
- IF(TRIM(DIR).EQ.'')SAVEDIR=FILEDIR(:K) !## removes filename from directory name before saving
+ !## save directory name into SAVEDIR
+ IF(ISAVE.EQ.1)SAVEDIR=FILEDIR(:K) 
  
  UTL_WSELECTFILE=.TRUE.
  
