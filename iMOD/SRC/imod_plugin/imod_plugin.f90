@@ -486,15 +486,15 @@ CONTAINS
   RETURN
  ENDIF
  
- !# executable runs only if "apply"-button is called, process identifer (IDPROC) is saved in PI-variable
+ !## executable runs only if "apply"-button is called, process identifer (IDPROC) is saved in PI-variable
  IF(IPI.EQ.27)THEN
   PI1(IDP)%IDPROC=0
-  CALL IOSCOMMAND(TRIM(EXE),PI1(IDP)%IFLAG,0,IDPROC=PI1(IDP)%IDPROC)
+  CALL IOSCOMMAND(TRIM(EXE),IFLAGS=PI1(IDP)%IFLAG,IDPROC=PI1(IDP)%IDPROC)
   !## clear idproc in case wait status is used
   IF(PI1(IDP)%IFLAG.EQ.2)PI1(IDP)%IDPROC=0
  ELSEIF(IPI.EQ.28)THEN
   PI2(IDP)%IDPROC=0
-  CALL IOSCOMMAND(TRIM(EXE),PI2(IDP)%IFLAG,0,IDPROC=PI2(IDP)%IDPROC)
+  CALL IOSCOMMAND(TRIM(EXE),IFLAGS=PI2(IDP)%IFLAG,IDPROC=PI2(IDP)%IDPROC)
   !## clear idproc in case wait status is used
   IF(PI2(IDP)%IFLAG.EQ.2)PI2(IDP)%IDPROC=0
  ENDIF
@@ -694,7 +694,7 @@ CONTAINS
   CALL WMESSAGEBOX(OKONLY,INFORMATIONICON,COMMONOK,'iMOD cannot read output file:'//CHAR(13)//TRIM(FNAME),'Warning'); RETURN
  ENDIF
   
- !## Handling different types of optional Plugin-messages
+ !## handling different types of optional Plugin-messages
  IF(UTL_READINITFILE('MESSAGE_INFO',LINE,IU,1))THEN
   READ(LINE,'(A)',IOSTAT=IOS) MESSINFO
   IF(IOS.EQ.0)THEN
@@ -718,7 +718,7 @@ CONTAINS
   IF(IOS.EQ.0)THEN; CALL WINDOWSELECT(0); CALL WINDOWOUTSTATUSBAR(4,'Plugin message - '//TRIM(PNAME)//': '//TRIM(MESSPROG)); ENDIF
  ENDIF
    
- !## Reads list of files from line and returns this list to iMOD manager
+ !## reads list of files from line and returns this list to iMOD manager
  !## plot update at the end of reading all files
  !## select all new files in iMOD manager after executable is finsihed 
  NFILE=0; IF(UTL_READINITFILE('NFILE',LINE,IU,1))READ(LINE,*,IOSTAT=IOS) NFILE
@@ -753,7 +753,7 @@ CONTAINS
   ENDDO
  ENDIF
  
- !#Reset extend of plotting window based upon given coordinates by plugin executable if "window" command is available
+ !## reset extend of plotting window based upon given coordinates by plugin executable if "window" command is available
  IF(UTL_READINITFILE('WINDOW',LINE,IU,1))THEN
   READ(LINE,*,IOSTAT=IOS) WINDOW
   IF(IOS.EQ.0)THEN

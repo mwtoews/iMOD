@@ -254,7 +254,6 @@ CONTAINS
         CALL IDFTIMESERIE_ZOOMFULL(X,Y)
        CASE (ID_ZOOMBOX,ID_ZOOMIN,ID_ZOOMOUT,ID_MOVE)
         CALL IDFTIMESERIE_ZOOM(MESSAGE%VALUE1,X,Y)
-
        !## add current point to the opened ipf file
        CASE (ID_PLUS)
         CALL IDFTIMESERIE_PLUS(X,Y)
@@ -262,10 +261,8 @@ CONTAINS
         CALL IDFTIMESERIE_PLUSSAVE()
        CASE (ID_PLUSLOAD)
         CALL IDFTIMESERIE_PLUSLOAD()
-
        CASE (ID_DRAW)
         CALL IDFTIMESERIE_START(IDOWN,NDOWN)
-
        CASE (ID_SAVEAS)
         CALL IDFTIMESERIE_SAVE()
        CASE (ID_COPY)
@@ -535,7 +532,6 @@ CONTAINS
  CHARACTER(LEN=256) :: FNAME,LINE
  INTEGER :: IOS,I,J,IU,JU
 
- !FNAME=TRIM(PREFVAL(1))//'\*.ipf'
  IF(.NOT.UTL_WSELECTFILE('iMOD Point file (*.ipf)|*.ipf|',SAVEDIALOG+PROMPTON+DIRCHANGE+APPENDEXT,&
       FNAME,'Save Current Timeseries sequentually within an ipf (*.ipf)'))RETURN
 
@@ -1420,7 +1416,6 @@ CONTAINS
  INTEGER :: IU,IOS,I,J
  CHARACTER(LEN=100) :: EXTRAINFO
 
- !FNAME=TRIM(PREFVAL(1))//'\*.csv'
  IF(.NOT.UTL_WSELECTFILE('Comma-delimited file (*.csv)|*.csv|',SAVEDIALOG+PROMPTON+DIRCHANGE+APPENDEXT,&
       FNAME,'Save Current Timeseries in a comma-delimited file (*.csv)'))RETURN
 
@@ -1553,12 +1548,17 @@ CONTAINS
    IF(ILOOP.EQ.2.OR.ITYPE.EQ.0)WRITE(IU,'(A)') TRIM(LINE)
    
    !## finished all
-   IF(SUM(IT).EQ.0)EXIT
+   DO I=1,NIDF
+    !## check whether variable timeseries are finished - disregard the rest
+    IF(NFILES(I).GT.1.AND.IT(I).NE.0)EXIT
+   ENDDO
+   !## all variable timeseries finished
+   IF(I.GT.NIDF)EXIT
 
   ENDDO
 
-  !## write header
-  IF(ILOOP.EQ.1.AND.ITYPE.EQ.2)THEN
+  !## write header for IPF files
+  IF(ILOOP.EQ.1.AND.ITYPE.EQ.1)THEN
    WRITE(IU,*) NPER
    WRITE(IU,*) NT+1 !## inclusive date attribute
 
