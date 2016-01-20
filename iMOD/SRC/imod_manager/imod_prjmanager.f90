@@ -2231,18 +2231,6 @@ KLOOP: DO K=1,SIZE(TOPICS(JJ)%STRESS(1)%FILES,1)
      ELSEIF(TOPICS(I)%STRESS(1)%FILES(K,J)%ICNST.EQ.2)THEN
       LINE=TRIM(LINE)//CHAR(39)//TRIM(TOPICS(I)%STRESS(1)%FILES(K,J)%FNAME)//CHAR(39)
      ENDIF
-!      WRITE(IU,'(1X,I4.4,3(A1,G15.7))') &
-!                                  TOPICS(I)%STRESS(1)%FILES(K,J)%ILAY,',', &
-!                                  TOPICS(I)%STRESS(1)%FILES(K,J)%FCT ,',', &
-!                                  TOPICS(I)%STRESS(1)%FILES(K,J)%IMP ,',', &
-!                                  TOPICS(I)%STRESS(1)%FILES(K,J)%CNST
-!     ELSEIF(TOPICS(I)%STRESS(1)%FILES(K,J)%ICNST.EQ.2)THEN
-!      WRITE(IU,'(1X,I4.4,2(A1,G15.7),A1,A)') &
-!                                  TOPICS(I)%STRESS(1)%FILES(K,J)%ILAY,',', &
-!                                  TOPICS(I)%STRESS(1)%FILES(K,J)%FCT ,',', &
-!                                  TOPICS(I)%STRESS(1)%FILES(K,J)%IMP ,',', &
-!                   CHAR(39)//TRIM(TOPICS(I)%STRESS(1)%FILES(K,J)%FNAME)//CHAR(39)
-!     ENDIF
     ENDDO
    ENDDO
   
