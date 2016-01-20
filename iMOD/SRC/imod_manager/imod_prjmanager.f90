@@ -2215,19 +2215,34 @@ KLOOP: DO K=1,SIZE(TOPICS(JJ)%STRESS(1)%FILES,1)
     DO J=1,SIZE(TOPICS(I)%STRESS(1)%FILES,2)
      !## skip temporary deactivated packages
      IF(TOPICS(I)%STRESS(1)%FILES(K,J)%IACT.EQ.0)CYCLE
-     IF(TOPICS(I)%STRESS(1)%FILES(K,J)%ICNST.EQ.1)THEN
-      WRITE(IU,'(1X,I4.4,3(A1,G15.7))') &
+     !## pwt - skip ilay
+     IF(I.EQ.13)THEN
+      WRITE(LINE,'(5X,     2(G15.7,A1))') &
+                                  TOPICS(I)%STRESS(1)%FILES(K,J)%FCT ,',', &
+                                  TOPICS(I)%STRESS(1)%FILES(K,J)%IMP ,','
+     ELSE
+      WRITE(LINE,'(1X,I4.4,2(A1,G15.7),A1)') &
                                   TOPICS(I)%STRESS(1)%FILES(K,J)%ILAY,',', &
                                   TOPICS(I)%STRESS(1)%FILES(K,J)%FCT ,',', &
-                                  TOPICS(I)%STRESS(1)%FILES(K,J)%IMP ,',', &
-                                  TOPICS(I)%STRESS(1)%FILES(K,J)%CNST
-     ELSEIF(TOPICS(I)%STRESS(1)%FILES(K,J)%ICNST.EQ.2)THEN
-      WRITE(IU,'(1X,I4.4,2(A1,G15.7),A1,A)') &
-                                  TOPICS(I)%STRESS(1)%FILES(K,J)%ILAY,',', &
-                                  TOPICS(I)%STRESS(1)%FILES(K,J)%FCT ,',', &
-                                  TOPICS(I)%STRESS(1)%FILES(K,J)%IMP ,',', &
-                   CHAR(39)//TRIM(TOPICS(I)%STRESS(1)%FILES(K,J)%FNAME)//CHAR(39)
+                                  TOPICS(I)%STRESS(1)%FILES(K,J)%IMP ,','
      ENDIF
+     IF(TOPICS(I)%STRESS(1)%FILES(K,J)%ICNST.EQ.1)THEN
+      LINE=TRIM(LINE)//TRIM(RTOS(TOPICS(I)%STRESS(1)%FILES(K,J)%CNST,'G',7))
+     ELSEIF(TOPICS(I)%STRESS(1)%FILES(K,J)%ICNST.EQ.2)THEN
+      LINE=TRIM(LINE)//CHAR(39)//TRIM(TOPICS(I)%STRESS(1)%FILES(K,J)%FNAME)//CHAR(39)
+     ENDIF
+!      WRITE(IU,'(1X,I4.4,3(A1,G15.7))') &
+!                                  TOPICS(I)%STRESS(1)%FILES(K,J)%ILAY,',', &
+!                                  TOPICS(I)%STRESS(1)%FILES(K,J)%FCT ,',', &
+!                                  TOPICS(I)%STRESS(1)%FILES(K,J)%IMP ,',', &
+!                                  TOPICS(I)%STRESS(1)%FILES(K,J)%CNST
+!     ELSEIF(TOPICS(I)%STRESS(1)%FILES(K,J)%ICNST.EQ.2)THEN
+!      WRITE(IU,'(1X,I4.4,2(A1,G15.7),A1,A)') &
+!                                  TOPICS(I)%STRESS(1)%FILES(K,J)%ILAY,',', &
+!                                  TOPICS(I)%STRESS(1)%FILES(K,J)%FCT ,',', &
+!                                  TOPICS(I)%STRESS(1)%FILES(K,J)%IMP ,',', &
+!                   CHAR(39)//TRIM(TOPICS(I)%STRESS(1)%FILES(K,J)%FNAME)//CHAR(39)
+!     ENDIF
     ENDDO
    ENDDO
   

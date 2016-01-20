@@ -1291,6 +1291,10 @@ CONTAINS
 
    ISTEP=MAX(SOLIDF(ILAY)%NROW,SOLIDF(ILAY)%NCOL)/10
    COND=SOLIDF(ILAY)%DX
+
+!Solidtool maken van polylines voor iedere rij en kolom met lage wegingsfactoren.
+!Experimenteren met wegingsfactoren die hoger zijn naarmate ze dichter bij een crosspsection liggen.
+!Door horizontale en verticale lijnen mee te nemen krijg je wellicht een realistischer interpolatie.
   
    !## define spline points along columns per row
    N=SOLIDF(ILAY)%NCOL; ALLOCATE(XI(N),ZI(N),X(N),Z(N)); XI=0.0; X=0.0; Z=0.0
