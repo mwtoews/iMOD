@@ -1312,13 +1312,13 @@ CONTAINS
     IF(N.GT.2)THEN
      ZI=SOLIDF(ILAY)%NODATA; NN=N
      CALL SPLINE_AKIMA_MAIN(X,Z,N,XI,ZI,SIZE(XI))  
-     DO ICOL=1,SOLIDF(ILAY)%NCOL
-      IF(ZI(ICOL).NE.SOLIDF(ILAY)%NODATA)THEN
+     N=0; DO ICOL=1,SOLIDF(ILAY)%NCOL
+      N=N+1
+      IF(ZI(N).NE.SOLIDF(ILAY)%NODATA)THEN
        !## add to a non-cross-sectional location
        IF(PCG(ILAY)%IB(ICOL,IROW).NE.-2)THEN
         FX=SOLID_CALC_FILL_DISTANCE(XI(N),X,NN)
-!        FX=1.0
-        MH1(ICOL,IROW)=ZI(ICOL); CD1(ICOL,IROW)=(COND/10.0)*FX
+        MH1(ICOL,IROW)=ZI(N); CD1(ICOL,IROW)=COND*FX
        ENDIF
       ENDIF
      ENDDO
@@ -1347,8 +1347,7 @@ CONTAINS
        !## add to a non-cross-sectional location
        IF(PCG(ILAY)%IB(ICOL,IROW).NE.-2)THEN
         FX=SOLID_CALC_FILL_DISTANCE(XI(N),X,NN)
-!        FX=1.0
-        MH2(ICOL,IROW)=ZI(N); CD2(ICOL,IROW)=(COND/10.0)*FX
+        MH2(ICOL,IROW)=ZI(N); CD2(ICOL,IROW)=COND*FX
        ENDIF
       ENDIF
      ENDDO
