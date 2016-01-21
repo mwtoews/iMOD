@@ -32,8 +32,8 @@ TYPE IDFOBJ
  INTEGER :: IPG     !=0: =1:usage of polygon used in IDFEDIT
  INTEGER :: IXV     !=0:storage in x =1:storage in v
  INTEGER :: JD      !=julian date (if neccessary)
- INTEGER :: IDY,IMH,IYR
- INTEGER :: IHR,IMT,ISC 
+ INTEGER :: IDY,IMH,IYR  !## days,months,years
+ INTEGER :: IHR,IMT,ISC  !## hours,minutes,seconds
  REAL :: DAYFRACTION !=daily fraction 
  INTEGER :: ILAY    !=ilay of idf (if neccessary)
  REAL :: XMIN,YMIN,XMAX,YMAX
