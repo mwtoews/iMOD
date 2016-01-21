@@ -87,7 +87,7 @@ TYPE TYPE_IPF
  INTEGER :: ASSCOL2 !## columns used to plot the associated files
  INTEGER :: ILEGDLF    !## dlf legend (1-10)
 
- INTEGER :: IROW !## row number in ipf that trickers this drill/measure e.g.
+ INTEGER :: IROW !## row number in ipf that triggers this drill/measure e.g.
  INTEGER :: NRASS,NCASS,ITOPIC
  REAL :: XMIN,XMAX  !## for top  and bottom axes
  REAL :: YMIN,YMAX  !## for left and right  axes
