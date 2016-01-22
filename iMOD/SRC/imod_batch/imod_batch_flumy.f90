@@ -37,6 +37,8 @@ TYPE FLMOBJ
 END TYPE FLMOBJ
 TYPE(FLMOBJ),ALLOCATABLE,DIMENSION(:) :: FLM
 
+REAL :: OFFSET
+
 CONTAINS
 
  !###======================================================================
@@ -46,7 +48,7 @@ CONTAINS
  CHARACTER(LEN=*),INTENT(IN) :: IPFFNAME
  INTEGER :: IU,JU,I,J,K,IOS
  CHARACTER(LEN=256) :: FNAME,DIR,LINE
- REAL :: X,Y
+ REAL :: X,Y,DZ,DZT,DZV
  
  NIPF=1; CALL IPFALLOCATE()
  IPF(1)%XCOL =1 !## x
@@ -112,15 +114,19 @@ CONTAINS
       WRITE(JU,'(A)')'~Ascii' 
      
       !#search for lithology class in data string, and compare with GRAIN-variable in batch-file.
-      DO K=1,ASSF(1)%NRASS !loop over rows associated file
+      DO K=1,ASSF(1)%NRASS-1 !loop over rows associated file
        DO J=1,SIZE(FLM)
         IF(TRIM(UTL_CAP(ASSF(1)%L(3,K),'U')).EQ.TRIM(FLM(J)%GRAIN))EXIT
        ENDDO
        !## grain found
        IF(J.LE.SIZE(FLM))THEN
-        LINE=TRIM(ITOS(FLM(J)%FACN))//' '//TRIM(UTL_CAP(FLM(J)%FACL,'U'))//' '//TRIM(RTOS(ASSF(1)%Z(1)-ASSF(1)%Z(K),'F',3))
+        DZT=ASSF(1)%Z(1)-ASSF(1)%Z(ASSF(1)%NRASS) !#difference between top and bottom of borehole
+        DZ=ASSF(1)%Z(1)-ASSF(1)%Z(K+1) !# difference between 2 layers
+        DZV=DZ-DZT !#difference between total depth borehole and the depth of specific layer
+        LINE=TRIM(ITOS(FLM(J)%FACN))//' '//TRIM(UTL_CAP(FLM(J)%FACL,'U'))//' '//TRIM(RTOS(DZT+DZV+OFFSET,'F',3))
         WRITE(JU,'(A)') TRIM(LINE)
        ELSE
+        write(*,*) 'K=',K
         WRITE(*,'(A)') 'iMOD cannot find '//TRIM(UTL_CAP(ASSF(1)%L(3,K),'U'))//' in *.ini file. Check your *.ini file on missing GRAIN-parameter.'
         RETURN
        ENDIF
