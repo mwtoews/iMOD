@@ -402,11 +402,9 @@ CONTAINS
  
  !## check if really many particles are supposed to be added
  IF(SUM(NSGRP).GT.10000)THEN
-  CALL WMESSAGEBOX(YESNO,QUESTIONICON,COMMONNO,'Are you sure to add '//TRIM(ITOS(N))//' particles','Question')
-  IF(WINFODIALOG(4).NE.1)N=-1
+  CALL WMESSAGEBOX(YESNO,QUESTIONICON,COMMONNO,'Are you sure to add '//TRIM(ITOS(SUM(NSGRP)))//' particles','Question')
+  IF(WINFODIALOG(4).NE.1)NSGRP=-1
  ENDIF
-
-! write(*,*) nspg
  
  IF(SUM(NSGRP).GT.0)THEN
   
@@ -451,7 +449,7 @@ CONTAINS
   ENDDO
   
  ELSE
-  IF(N.EQ.0)CALL WMESSAGEBOX(OKONLY,INFORMATIONICON,COMMONOK,'iMOD cannot place particles for current configuration.','Information')
+  IF(SUM(NSGRP).EQ.0)CALL WMESSAGEBOX(OKONLY,INFORMATIONICON,COMMONOK,'iMOD cannot place particles for current configuration.','Information')
  ENDIF
  
  !## deallocate memory for temporary storage of locations

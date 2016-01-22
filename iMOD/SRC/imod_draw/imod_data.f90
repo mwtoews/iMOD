@@ -645,7 +645,7 @@ IF(IPLOTFAST.EQ.1)THEN
   ENDIF
  END DO
 
- !## imod-flow-line-files plotting!!!
+ !## imodflow-line-files plotting!!!
  CALL IGRSELECT(DRAWBITMAP,MPW%IBITMAP)
  CALL IGRPLOTMODE(MODECOPY); CALL IFFDRAW()
 
