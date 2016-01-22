@@ -28,7 +28,7 @@ USE MOD_IPF_PAR
 USE MOD_IPF, ONLY : IPFREAD2,IPFALLOCATE,IPFDEALLOCATE
 USE MOD_IPFASSFILE,ONLY : IPFOPENASSFILE,IPFREADASSFILELABEL,IPFREADASSFILE,IPFASSFILEALLOCATE
 USE MOD_OSD, ONLY : OSD_OPEN
-USE MOD_UTL, ONLY : UTL_CAP,UTL_GETUNIT,UTL_CREATEDIR
+USE MOD_UTL, ONLY : UTL_CAP,UTL_GETUNIT,UTL_CREATEDIR,RTOS,ITOS
 
 TYPE FLMOBJ
  CHARACTER(LEN=12) :: GRAIN
@@ -44,8 +44,9 @@ CONTAINS
  !###======================================================================
  IMPLICIT NONE
  CHARACTER(LEN=*),INTENT(IN) :: IPFFNAME
- INTEGER :: IU,JU,I,J,K,M,X,Y,IOS
- CHARACTER(LEN=256) :: FNAME,DIR
+ INTEGER :: IU,JU,I,J,K,IOS
+ CHARACTER(LEN=256) :: FNAME,DIR,LINE
+ REAL :: X,Y
  
  NIPF=1; CALL IPFALLOCATE()
  IPF(1)%XCOL =1 !## x
@@ -83,43 +84,52 @@ CONTAINS
      CALL UTL_CREATEDIR(FNAME(1:INDEX(FNAME,'\',.TRUE.)-1))
      JU=UTL_GETUNIT(); CALL OSD_OPEN(JU,FILE=FNAME,STATUS='UNKNOWN',ACTION='WRITE',IOSTAT=IOS)
      IF(JU.NE.0)THEN
-      WRITE(JU,*) '# ====================================================================='
-      WRITE(JU,*) '# Well '//TRIM(IPF(1)%INFO(IPF(1)%ACOL,I))
-      WRITE(JU,*) '#'
-      WRITE(JU,*) '# Coordinates, depth and thickness are expressed in meters'
-      WRITE(JU,*) '# ====================================================================='
-      WRITE(JU,*) '# Well Location'
-      WRITE(JU,*) 'X_WELL=',X
-      WRITE(JU,*) 'Y_WELL=',Y
-      WRITE(JU,*) '#'
-      WRITE(JU,*) '# Bottom elevation'
-      WRITE(JU,*) 'Z_BOTTOM=',ASSF(1)%Z(1)  
-      WRITE(JU,*) '# Top elevation'
-      WRITE(JU,*) 'Z_TOP=',ASSF(1)%Z(ASSF(1)%NRASS)
-      WRITE(JU,*) '#'
-      WRITE(JU,*) '# Deposits From top to bottom'
-      WRITE(JU,*) '# Facies_id Facies Depth'
-      WRITE(JU,*) '#   Warning : Depth from top of deposit basis'
-      WRITE(JU,*) 'ATTRIBUTE_COLUMN=1'
-      WRITE(JU,*) 'DEPTH_COLUMN=3'
-      WRITE(JU,*) 'DISCRETE_ATTRIBUTE=1'
-      WRITE(JU,*) 'STANDARD_FACIES=1'
-      WRITE(JU,*) '~Ascii' 
+      WRITE(JU,'(A)')'# ====================================================================='
+      WRITE(JU,'(A)')'# Well '//TRIM(IPF(1)%INFO(IPF(1)%ACOL,I))
+      WRITE(JU,'(A)')'#'
+      WRITE(JU,'(A)')'# Coordinates, depth and thickness are expressed in meters'
+      WRITE(JU,'(A)')'# ====================================================================='
+      WRITE(JU,'(A)')'# Well Location'
+      LINE='X_WELL='//TRIM(RTOS(X,'F',7))
+      WRITE(JU,'(A)') TRIM(LINE)
+      LINE='Y_WELL='//TRIM(RTOS(Y,'F',7))
+      WRITE(JU,'(A)') TRIM(LINE)
+      WRITE(JU,'(A)')'#'
+      WRITE(JU,'(A)')'# Bottom elevation'
+      LINE='Z_BOTTOM='//TRIM(RTOS(ASSF(1)%Z(ASSF(1)%NRASS),'F',5))
+      WRITE(JU,'(A)') TRIM(LINE)  
+      WRITE(JU,'(A)')'# Top elevation'
+      LINE='Z_TOP='//TRIM(RTOS(ASSF(1)%Z(1),'F',5))
+      WRITE(JU,'(A)') TRIM(LINE)
+      WRITE(JU,'(A)')'#'
+      WRITE(JU,'(A)')'# Deposits From top to bottom'
+      WRITE(JU,'(A)')'# Facies_id Facies Depth'
+      WRITE(JU,'(A)')'#   Warning : Depth from top of deposit basis'
+      WRITE(JU,'(A)')'ATTRIBUTE_COLUMN=1'
+      WRITE(JU,'(A)')'DEPTH_COLUMN=3'
+      WRITE(JU,'(A)')'DISCRETE_ATTRIBUTE=1'
+      WRITE(JU,'(A)')'STANDARD_FACIES=1'
+      WRITE(JU,'(A)')'~Ascii' 
      
       !#search for lithology class in data string, and compare with GRAIN-variable in batch-file.
       DO K=1,ASSF(1)%NRASS !loop over rows associated file
        DO J=1,SIZE(FLM)
-        IF(TRIM(UTL_CAP(ASSF(1)%L(4,K),'U')).EQ.TRIM(FLM(J)%GRAIN))EXIT
+        IF(TRIM(UTL_CAP(ASSF(1)%L(3,K),'U')).EQ.TRIM(FLM(J)%GRAIN))EXIT
        ENDDO
        !## grain found
        IF(J.LE.SIZE(FLM))THEN
-!        WRITE(JU,*) FACN(K),TRIM(UTL_CAP(FACL(K),'U')),ASSF(1)%Z(K)
+        LINE=TRIM(ITOS(FLM(J)%FACN))//' '//TRIM(UTL_CAP(FLM(J)%FACL,'U'))//' '//TRIM(RTOS(ASSF(1)%Z(1)-ASSF(1)%Z(K),'F',3))
+        WRITE(JU,'(A)') TRIM(LINE)
+       ELSE
+        WRITE(*,'(A)') 'iMOD cannot find '//TRIM(UTL_CAP(ASSF(1)%L(3,K),'U'))//' in *.ini file. Check your *.ini file on missing GRAIN-parameter.'
+        RETURN
        ENDIF
 
       ENDDO
       CLOSE(JU)
      ELSE
-!@## error message want imod kan bestand niet maken !
+      !## error message iMOD isn't able to make the file
+      WRITE(*,'(A)') 'iMOD cannot create file :'//TRIM(FNAME)//'. It is probably opened already in another application.'
      ENDIF   
     ENDIF
    ENDIF
