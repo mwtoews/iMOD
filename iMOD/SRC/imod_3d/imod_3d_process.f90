@@ -185,10 +185,7 @@ CONTAINS
  SUBROUTINE IMOD3D_PROCESSMOUSEBUTTON(ITYPE,IBUTTON,X_WINT,Y_WINT)
  !###======================================================================
  IMPLICIT NONE
- INTEGER, INTENT(IN) :: ITYPE
- INTEGER, INTENT(IN) :: IBUTTON
- INTEGER, INTENT(IN) :: X_WINT
- INTEGER, INTENT(IN) :: Y_WINT
+ INTEGER,INTENT(IN) :: ITYPE,IBUTTON,X_WINT,Y_WINT
  INTEGER :: X,Y
 
  !## convert winteracter window units to pixels
@@ -226,11 +223,10 @@ CONTAINS
  SUBROUTINE IMOD3D_PROCESSMOUSEMOVE(X_WINT,Y_WINT)
  !###======================================================================
  IMPLICIT NONE
- INTEGER, INTENT(IN) :: X_WINT
- INTEGER, INTENT(IN) :: Y_WINT
+ INTEGER,INTENT(IN) :: X_WINT,Y_WINT
  REAL :: X,Y
- INTEGER             :: BUTTON_FUNCTION,IX,IY
- TYPE(CART2D)        :: BEGIN
+ INTEGER :: BUTTON_FUNCTION,IX,IY
+ TYPE(CART2D) :: BEGIN
  LOGICAL :: LINDPOS=.FALSE.
  
  !## no mouse move currently active
@@ -390,6 +386,45 @@ CONTAINS
  BEGIN_LEFT%Y=WY
 
  END SUBROUTINE IMOD3D_PROCESSMOUSEMOVE_WALK
+ 
+  !###======================================================================
+ SUBROUTINE IMOD3D_PROCESS_SPIN(X_WINT,Y_WINT)
+ !###======================================================================
+ IMPLICIT NONE
+ INTEGER,INTENT(IN) :: X_WINT,Y_WINT
+ INTEGER :: IX,IY !,DX,DY
+ REAL(KIND=GLDOUBLE) :: DX,DZ,ANGLE 
+ REAL :: WX,WY
+  
+ !## not left mouse button pressed
+ IF(.NOT.MOVING_LEFT)RETURN
+
+ !## convert winteracter window units to pixels
+ CALL WINDOWUNITSTOPIXELS(X_WINT,Y_WINT,IX,IY)
+ 
+ !## get current heading and tilt
+ CALL IMOD3D_GET_HEADING_TILE(LENXY=DX,LENXZ=DZ)
+ 
+ WX=REAL(IX); WY=REAL(IY)
+
+ !## viewable angle (radians)
+ ANGLE=(FOVY/(360.0/(2.0*PI)))/(REAL(IWINWIDTH)/10.0) !/50.0)
+
+ !## change heading/tilt according to mouse movement
+ HEADING=HEADING+(BEGIN_LEFT%X-WX)*ANGLE 
+ TILT   =TILT   +(BEGIN_LEFT%Y-WY)*ANGLE
+
+ LOOKAT%X=LOOKFROM%X+COS(HEADING)*DX
+ LOOKAT%Y=LOOKFROM%Y+SIN(HEADING)*DX 
+ LOOKAT%Z=LOOKFROM%Z+SIN(TILT)*DZ 
+
+ CALL IMOD3D_RESET_TO_INIT()
+ CALL IMOD3D_DISPLAY(1)
+ 
+ BEGIN_LEFT%X=WX
+ BEGIN_LEFT%Y=WY
+
+ END SUBROUTINE IMOD3D_PROCESS_SPIN
  
  !###======================================================================
  SUBROUTINE IMOD3D_PROCESSRESIZE(ID1,ID2)
