@@ -25,12 +25,14 @@ MODULE MOD_LUDCMP
 CONTAINS
 
  !###====================================================================
- SUBROUTINE LUDCMP(A,B,N)
+ SUBROUTINE LUDCMP(A,B,N) !L,U,N)
  !###====================================================================
  IMPLICIT NONE
  INTEGER,INTENT(IN)   :: N
  REAL,DIMENSION(N,N),INTENT(INOUT)  :: A
+! REAL,DIMENSION(N,N),INTENT(OUT)  :: L,U
  REAL,DIMENSION(N),INTENT(INOUT)  :: B
+! REAL,DIMENSION(N:N) :: L,U
  REAL,DIMENSION(:,:),ALLOCATABLE :: L,U
  INTEGER :: I,J,K
  REAL :: X
