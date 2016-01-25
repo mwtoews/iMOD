@@ -604,13 +604,13 @@ CONTAINS
   !## kriging
   CASE (-6,6)
    
-   IF(MINP.EQ.0)MINP=SIZE(XP); IF(MAXP.EQ.0)MAXP=SIZE(XP)
+   IF(MINP.EQ.0)MINP=SIZE(XP)
    !## each cell need to be interpolated
    IDF(1)%X=IDF(1)%NODATA
    !## simple kriging (+), ordinary kriging(-)
    KTYPE=SIGN(KTYPE,IGRIDFUNC)
-   CALL KRIGING_MAIN(SIZE(XP),XP,YP,ZP,IDF(1),IDF(4),MINP,MAXP,RANGE,SILL,NUGGET, KTYPE,SEARCHDISTANCE,NOSEARCH, &
-                              IEXPVARIOGRAM,LAGINTERVAL,LAGDISTANCE,IBATCH=1) !## simple kriging
+   CALL KRIGING_MAIN(SIZE(XP),XP,YP,ZP,IDF(1),IDF(4),MINP,RANGE,SILL,NUGGET, KTYPE,PNTSEARCH, &
+                              IEXPVARIOGRAM,LAGINTERVAL,LAGDISTANCE,1,'') !## simple kriging
 
   !## variogram
   CASE (7)

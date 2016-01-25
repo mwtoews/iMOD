@@ -415,10 +415,9 @@ CONTAINS
       !## twelve months
       DO I=1,12
        !## starting with april = 4 (start with march = 3)
-!       MM=(GXG_STARTMONTH-1)+I
-       MM=MM+1 !(GXG_STARTMONTH-1)+I
+       MM=MM+1 
        IF(MM.GT.12)THEN
-        YY=YY+1 !1         
+        YY=YY+1 
         MM=1
        END IF
 
