@@ -31,7 +31,7 @@ USE MOD_OSD, ONLY : OSD_OPEN
 USE MOD_UTL, ONLY : UTL_CAP,UTL_GETUNIT,UTL_CREATEDIR,RTOS,ITOS
 
 TYPE FLMOBJ
- CHARACTER(LEN=12) :: GRAIN
+ CHARACTER(LEN=52) :: GRAIN
  CHARACTER(LEN=2) :: FACL
  INTEGER :: FACN
 END TYPE FLMOBJ
@@ -98,10 +98,10 @@ CONTAINS
       WRITE(JU,'(A)') TRIM(LINE)
       WRITE(JU,'(A)')'#'
       WRITE(JU,'(A)')'# Bottom elevation'
-      LINE='Z_BOTTOM='//TRIM(RTOS(ASSF(1)%Z(ASSF(1)%NRASS),'F',5))
+      LINE='Z_BOTTOM='//TRIM(RTOS(ASSF(1)%Z(ASSF(1)%NRASS)+OFFSET,'F',5))
       WRITE(JU,'(A)') TRIM(LINE)  
       WRITE(JU,'(A)')'# Top elevation'
-      LINE='Z_TOP='//TRIM(RTOS(ASSF(1)%Z(1),'F',5))
+      LINE='Z_TOP='//TRIM(RTOS(ASSF(1)%Z(1)+OFFSET,'F',5))
       WRITE(JU,'(A)') TRIM(LINE)
       WRITE(JU,'(A)')'#'
       WRITE(JU,'(A)')'# Deposits From top to bottom'
@@ -123,7 +123,7 @@ CONTAINS
         DZT=ASSF(1)%Z(1)-ASSF(1)%Z(ASSF(1)%NRASS) !#difference between top and bottom of borehole
         DZ=ASSF(1)%Z(1)-ASSF(1)%Z(K+1) !# difference between 2 layers
         DZV=DZ-DZT !#difference between total depth borehole and the depth of specific layer
-        LINE=TRIM(ITOS(FLM(J)%FACN))//' '//TRIM(UTL_CAP(FLM(J)%FACL,'U'))//' '//TRIM(RTOS(DZT+DZV+OFFSET,'F',3))
+        LINE=TRIM(ITOS(FLM(J)%FACN))//' '//TRIM(UTL_CAP(FLM(J)%FACL,'U'))//' '//TRIM(RTOS(DZT+DZV,'F',3))
         WRITE(JU,'(A)') TRIM(LINE)
        ELSE
         write(*,*) 'K=',K
