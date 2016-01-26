@@ -128,6 +128,8 @@ CONTAINS
   LSMOOTH=.FALSE.
  ENDIF
  
+ IF(IKRIGING.EQ.2)LSMOOTH=.FALSE.
+ 
  !## process all idf's (starting heads) + crosssections (fixed heads/ghb-heads)
  IF(.NOT.SOLID_CALC_FILL())RETURN
  
@@ -307,7 +309,7 @@ CONTAINS
 
      !## copy solution into hold for active areas only
      DO IROW=1,SOLIDF(ILAY)%NROW; DO ICOL=1,SOLIDF(ILAY)%NCOL
-      IF(PCG(ILAY)%IB(ICOL,IROW).GT.0)PCG(ILAY)%HOLD(ICOL,IROW)=IDFK(1)%X(ICOL,IROW)
+      IF(PCG(ILAY)%IB(ICOL,IROW).GT.0)PCG(ILAY)%HOLD(ICOL,IROW)=IDFK(1)%X(ICOL,IROW) !IROW)
      ENDDO; ENDDO
      ICNVG(ILAY)=1
 
@@ -410,23 +412,6 @@ CONTAINS
     ENDIF
    ENDDO
   ENDIF
-      
-!  !## make sure top/bot are equal outside boundary=1 (hypothethical) or boundary=-2 (cross-section)
-!  IF(NSPF.EQ.0)THEN
-!   DO ILAY=3,NLAY-1,2
-!    DO IROW=1,SOLIDF(ILAY)%NROW; DO ICOL=1,SOLIDF(ILAY)%NCOL
-!     !## get current x/y location
-!     CALL IDFGETLOC(SOLIDF(ILAY),IROW,ICOL,X,Y)
-!     CALL IDFIROWICOL(SOLIDF(ILAY-1),JROW,JCOL,X,Y)
-!     IF(JROW.NE.0.AND.JCOL.NE.0)THEN
-!      IF(PCG(ILAY-1)%IB(JCOL,JROW).EQ.1.OR.PCG(ILAY-1)%IB(JCOL,JROW).EQ.-2)PCG(ILAY)%HOLD(ICOL,IROW)=PCG(ILAY-1)%HOLD(JCOL,JROW)
-!     ENDIF
-!    ENDDO; ENDDO
-!   ENDDO
-!  ENDIF
-
-!  !## connect layers using the mask values
-!  ELSE
 
   DO ILAY=2,NLAY
    DO IROW=1,SOLIDF(ILAY)%NROW; DO ICOL=1,SOLIDF(ILAY)%NCOL
@@ -438,7 +423,6 @@ CONTAINS
     ENDIF
    ENDDO; ENDDO
   ENDDO  
-!  ENDIF
             
   !## make sure lowest bot is lower than upper top
   IF(ICHECK_IDF(NLAY).EQ.1)THEN
