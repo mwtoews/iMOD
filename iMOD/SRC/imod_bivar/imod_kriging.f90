@@ -123,8 +123,8 @@ CONTAINS
   ENDIF
  ENDDO
 
- IF(ALLOCATED(XLAG))DEALLOCATE(XLAG);   IF(ALLOCATED(ZLAG))DEALLOCATE(ZLAG)
- IF(ASSOCIATED(XY))DEALLOCATE(XY);      IF(ASSOCIATED(IXY))DEALLOCATE(IXY)
+ IF(ALLOCATED(XLAG))DEALLOCATE(XLAG); IF(ALLOCATED(ZLAG))DEALLOCATE(ZLAG)
+ IF(ASSOCIATED(XY))DEALLOCATE(XY);    IF(ASSOCIATED(IXY))DEALLOCATE(IXY)
  
  DEALLOCATE(SELID,SELD,A,B,L,U)
  
@@ -324,17 +324,14 @@ CONTAINS
  
  IF(PNTSEARCH.EQ.1)THEN
 
-
   !## maximal search is minp - get them
   SELID=0; SELD=HUGE(1.0)
   N=0; DO ID=1,ND
 
-!## range is afhanjelijk van wat er aan minp punten inzit ...
-
    !## get distance between points
    DXY=KRIGING_DIST(XD(ID),YD(ID),X,Y) 
    !## outside range, take next
-   IF(DXY.LE.0.0)CYCLE !.OR.DXY.GT.RANGE)CYCLE
+   IF(DXY.LE.0.0)CYCLE 
    !## not in current list
    IF(DXY.GE.SELD(MINP))CYCLE
    !## get position in sort
@@ -344,8 +341,8 @@ CONTAINS
    !## put new location in nearest list
    SELID(I)=ID; SELD(I)=DXY; N=N+1
   ENDDO
-  NP=MIN(N,MINP)
-  range=seld(np)
+  
+  NP=MIN(N,MINP); RANGE=SELD(NP)
 
  ELSE
 
@@ -353,9 +350,7 @@ CONTAINS
   DO ID=1,NP
    DXY=KRIGING_DIST(XD(ID),YD(ID),X,Y)
    IF(DXY.LE.0.0.OR.DXY.GT.RANGE)CYCLE
-!   IF(DXY.GT.0.0.AND.DXY.LE.RANGE)THEN
    J=J+1; SELID(J)=ID
-!   ENDIF
   ENDDO
   NP=J
 
