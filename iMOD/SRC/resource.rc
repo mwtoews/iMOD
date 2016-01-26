@@ -8,13 +8,13 @@
 //
 // Winteracter resource script. 
 //
-// Modified : 25/Jan/2016 17:33:35
+// Modified : 26/Jan/2016 16:25:10
 //
 ///////////////////////////////////////////////////
 //
 // Include files
 //
-#include "..\LIB\WINTERACTER\OS_X32\include\winparam.h"
+#include "winparam.h"
 #ifdef XLIB
 #include "..\LIB\WINTERACTER\OS_X32\include\filesel.rc"
 #include "..\LIB\WINTERACTER\OS_X32\include\colour.rc"
@@ -9568,8 +9568,8 @@ BEGIN
 "[Menus] \n"
 " 1002     3     1 \n"
 "BW / FW \n"
-"Backwards \n"
 "Forwards \n"
+"Backwards \n"
 "[Ranges] \n"
 " 1030      0.0000           10.000      \n"
 " 1031      0.0000           10.000      \n"
@@ -11253,4 +11253,4 @@ END
 //*WI* FILENAME    resource.f90
 //*WI* FMODNAME    RESOURCE
 //*WI* LASTTYPE        2
-//*WI* LASTRES       248
+//*WI* LASTRES       261
