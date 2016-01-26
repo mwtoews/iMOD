@@ -181,7 +181,7 @@ CONTAINS
   IF(ISEL_IDF(ILAY).EQ.1)THEN
   
    !## solve system
-   IF(IBATCH.EQ.0)CALL WINDOWOUTSTATUSBAR(3,'Computing Elevation: '//TRIM(ITOS(ILAY)))
+   IF(IBATCH.EQ.0)CALL WINDOWOUTSTATUSBAR(3,'Comp. Elev.: '//TRIM(ITOS(ILAY)))
    IF(IBATCH.EQ.1)WRITE(*,'(A,I10,A,F17.5)') 'Computing Elevation: ',ILAY, ' hclose=',HCLOSE
 
    !## pcg-solving
@@ -289,7 +289,7 @@ CONTAINS
 !     ENDDO; ENDDO
 !    ENDIF
 
-   !## apply kriging; do not take too much points along cross-sections for the computation of a semivariogram solely
+   !## apply kriging
    ELSEIF(IKRIGING.EQ.2)THEN
    
     CALL SOLID_EXPORT(TRIM(OUTPUTFOLDER)//'\EXPORT',ILAY)
@@ -310,7 +310,22 @@ CONTAINS
       IF(PCG(ILAY)%IB(ICOL,IROW).GT.0)PCG(ILAY)%HOLD(ICOL,IROW)=IDFK(1)%X(ICOL,IROW)
      ENDDO; ENDDO
      ICNVG(ILAY)=1
+
+     !## write variance of kriging interpolation
+     SOLIDF(ILAY)%X=IDFK(2)%X; TXT='Variance'
+     CALL IDFFILLCOMMENT(SOLIDF(ILAY),'Created by SolidTool'//NEWLINE//'Units: m2'//NEWLINE// &
+                              TRIM(TXT)//' '//TRIM(ITOS(ILAY)))
+     SOLIDF(ILAY)%NODATA=IDFK(2)%NODATA
+     FNAME=TRIM(OUTPUTFOLDER)//'\'//SOLIDF(ILAY)%FNAME(INDEX(SOLIDF(ILAY)%FNAME,'\',.TRUE.)+1:)
+     FNAME=FNAME(:INDEX(FNAME,'.',.TRUE.)-1)//'_VARIANCE.IDF'
+     CALL WINDOWOUTSTATUSBAR(4,'Writing '//TRIM(FNAME))
+     IF(.NOT.IDFWRITE(SOLIDF(ILAY),FNAME,1))THEN
+      CALL WMESSAGEBOX(OKONLY,EXCLAMATIONICON,COMMONOK,'Can not write IDF file:'//CHAR(13)//TRIM(FNAME),'Error')
+     ENDIF
+
+     !## clean memory
      DO I=1,SIZE(IDFK); CALL IDFDEALLOCATEX(IDFK(I)); ENDDO
+  
     ELSE
      CALL WMESSAGEBOX(OKONLY,COMMONOK,EXCLAMATIONICON,'iMOD can not allocate memory for storage of IDF-files.','Error')
      EXIT
