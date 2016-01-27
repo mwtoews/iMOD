@@ -87,7 +87,9 @@
 		<File RelativePath="..\..\..\iMOD\SRC\imod_asc2idf\imod_asc2idf_hfb.f90"/>
 		<File RelativePath="..\..\..\iMOD\SRC\imod_asc2idf\imod_asc2idf_par.f90"/></Filter>
 		<Filter Name="imod_batch">
-		<File RelativePath="..\..\SRC\imod_batch\imod_batch.f90"/>
+		<File RelativePath="..\..\SRC\imod_batch\imod_batch.f90">
+			<FileConfiguration Name="Debug|x64">
+				<Tool Name="VFFortranCompilerTool" Preprocess="preprocessYes" PreprocessorDefinitions="WINTERACTER9"/></FileConfiguration></File>
 		<File RelativePath="..\..\SRC\imod_batch\imod_batch_flumy.f90"/>
 		<File RelativePath="..\..\SRC\imod_batch\imod_batch_par.f90"/>
 		<File RelativePath="..\..\..\iMOD\SRC\imod_batch\imod_createizone.f90"/>

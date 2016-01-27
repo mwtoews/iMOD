@@ -107,9 +107,16 @@ REAL :: HCLOSE=0.001    !## m
 REAL :: RCLOSE=10000.0  !## m3/dag
 REAL :: RELAX=0.98      !##
 REAL :: FMIDELEV=1.0    !## average in between aquifers
-REAL :: FTIGHT=100.0      !## how tight works itight=2
+REAL :: FTIGHT=100.0    !## how tight works itight=2
 INTEGER :: ITIGHT=1     !## using constant head boundary condition
 REAL,PARAMETER :: HNOFLOW=-9999.0
 INTEGER :: MICNVG=25
+
+!## kriging settings per interface
+TYPE KRIGINGOBJ
+ INTEGER ::MINP,KTYPE,PNTSEARCH,IADJRANGE,IQUADRANT
+ REAL :: RANGE,SILL,NUGGET
+END TYPE KRIGINGOBJ
+TYPE(KRIGINGOBJ),ALLOCATABLE,DIMENSION(:) :: KSETTINGS
 
 END MODULE MOD_SOLID_PAR
