@@ -610,7 +610,7 @@ CONTAINS
    !## simple kriging (+), ordinary kriging(-)
    KTYPE=SIGN(KTYPE,IGRIDFUNC)
    CALL KRIGING_MAIN(SIZE(XP),XP,YP,ZP,IDF(1),IDF(4),MINP,RANGE,SILL,NUGGET, KTYPE,PNTSEARCH, &
-                              IEXPVARIOGRAM,LAGINTERVAL,LAGDISTANCE,IADJRANGE,IQUADRANT,1,'') !## simple kriging
+                              LAGINTERVAL,LAGDISTANCE,IADJRANGE,IQUADRANT,1,'') !## simple kriging
 
   !## variogram
   CASE (7)
