@@ -37,7 +37,7 @@ TYPE FLMOBJ
 END TYPE FLMOBJ
 TYPE(FLMOBJ),ALLOCATABLE,DIMENSION(:) :: FLM
 
-REAL :: OFFSET
+REAL :: XOFFSET,YOFFSET,ZOFFSET
 
 CONTAINS
 
@@ -48,7 +48,7 @@ CONTAINS
  CHARACTER(LEN=*),INTENT(IN) :: IPFFNAME
  INTEGER :: IU,JU,I,J,K,IOS
  CHARACTER(LEN=256) :: FNAME,DIR,LINE
- REAL :: X,Y,DZ,DZT,DZV
+ REAL :: X,Y,DZ,DZT,DZV,DY,DX
  
  NIPF=1; CALL IPFALLOCATE()
  IPF(1)%XCOL =1 !## x
@@ -92,16 +92,18 @@ CONTAINS
       WRITE(JU,'(A)')'# Coordinates, depth and thickness are expressed in meters'
       WRITE(JU,'(A)')'# ====================================================================='
       WRITE(JU,'(A)')'# Well Location'
-      LINE='X_WELL='//TRIM(RTOS(X,'F',7))
+      DZ=X-XOFFSET
+      LINE='X_WELL='//TRIM(RTOS(DZ,'F',4))
       WRITE(JU,'(A)') TRIM(LINE)
-      LINE='Y_WELL='//TRIM(RTOS(Y,'F',7))
+      DY=Y-YOFFSET
+      LINE='Y_WELL='//TRIM(RTOS(DY,'F',4))
       WRITE(JU,'(A)') TRIM(LINE)
       WRITE(JU,'(A)')'#'
       WRITE(JU,'(A)')'# Bottom elevation'
-      LINE='Z_BOTTOM='//TRIM(RTOS(ASSF(1)%Z(ASSF(1)%NRASS)+OFFSET,'F',5))
+      LINE='Z_BOTTOM='//TRIM(RTOS(ASSF(1)%Z(ASSF(1)%NRASS)+ZOFFSET,'F',1))
       WRITE(JU,'(A)') TRIM(LINE)  
       WRITE(JU,'(A)')'# Top elevation'
-      LINE='Z_TOP='//TRIM(RTOS(ASSF(1)%Z(1)+OFFSET,'F',5))
+      LINE='Z_TOP='//TRIM(RTOS(ASSF(1)%Z(1)+ZOFFSET,'F',1))
       WRITE(JU,'(A)') TRIM(LINE)
       WRITE(JU,'(A)')'#'
       WRITE(JU,'(A)')'# Deposits From top to bottom'
@@ -123,7 +125,7 @@ CONTAINS
         DZT=ASSF(1)%Z(1)-ASSF(1)%Z(ASSF(1)%NRASS) !#difference between top and bottom of borehole
         DZ=ASSF(1)%Z(1)-ASSF(1)%Z(K+1) !# difference between 2 layers
         DZV=DZ-DZT !#difference between total depth borehole and the depth of specific layer
-        LINE=TRIM(ITOS(FLM(J)%FACN))//' '//TRIM(UTL_CAP(FLM(J)%FACL,'U'))//' '//TRIM(RTOS(DZT+DZV,'F',3))
+        LINE=TRIM(ITOS(FLM(J)%FACN))//' '//TRIM(UTL_CAP(FLM(J)%FACL,'U'))//' '//TRIM(RTOS(DZT+DZV,'F',1))
         WRITE(JU,'(A)') TRIM(LINE)
        ELSE
         write(*,*) 'K=',K
