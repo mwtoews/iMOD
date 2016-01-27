@@ -306,8 +306,6 @@ CONTAINS
      JLAY=ILAY
     ENDIF
    ENDDO
-!  IF(JLAY.EQ.0)CALL WMESSAGEBOX(OKONLY,EXCLAMATIONICON,COMMONOK,'JLAY.EQ.0, Not able to assign proper modellayer','Error')
-!  TLP(JLAY)=-1.0
   ENDIF
  ENDIF
  
@@ -322,8 +320,6 @@ CONTAINS
    ZT=TLP(K)
    TLP=0.0; TLP(K)=1.0 
    IF(ZT.LT.0.0)TLP(K)=-1.0*TLP(K)
-  ELSE
-!   CALL WMESSAGEBOX(OKONLY,EXCLAMATIONICON,COMMONOK,'K.EQ.0, Not able to assign proper modellayer','Error')
   ENDIF
  ENDIF
  
