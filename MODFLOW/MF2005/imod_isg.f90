@@ -345,11 +345,11 @@ DO I=1,NISGH
    J=J+1
    IF(IPOS(J).GT.0)THEN
     READ(ISGIU(3),REC=IPOS(J)+ICF) NR,IREF
-    CALL PCK2RPISG(SDATE,EDATE,TTIME,QSORT,ISGIU(4),MAXITEMS,RVAL(1,J),NR,IREF,I,1)
+    CALL PCK2RPISG(SDATE,EDATE,TTIME,QSORT,ISGIU(4),MAXITEMS,RVAL(1,J),NR,IREF,I,1,NODATA)
    ENDIF
    IF(IPOS(J).LT.0)THEN
     READ(ISGIU(7),REC=ABS(IPOS(J))+ICF) NR,IREF
-    CALL PCK2RPISG(SDATE,EDATE,TTIME,QSORT,ISGIU(8),MAXITEMS,RVAL(1,J),NR,IREF,I,-1)
+    CALL PCK2RPISG(SDATE,EDATE,TTIME,QSORT,ISGIU(8),MAXITEMS,RVAL(1,J),NR,IREF,I,-1,NODATA)
     J=J+1
     !## put waterlevel down on waterlevel
     RVAL(1,J)=RVAL(2,J-1)
@@ -362,8 +362,8 @@ DO I=1,NISGH
 
   !## determine flow-direction
   LNODAT=.TRUE.
-  DO JJ=1,4; IF(RVAL(JJ,1)   .EQ.NODATA)THEN; LNODAT=.TRUE.; EXIT; ENDIF; ENDDO
-  DO JJ=1,4; IF(RVAL(JJ,NSEG).EQ.NODATA)THEN; LNODAT=.TRUE.; EXIT; ENDIF; ENDDO
+  DO JJ=1,4; IF(RVAL(JJ,1)   .EQ.NODATA)THEN; LNODAT=.FALSE.; EXIT; ENDIF; ENDDO
+  DO JJ=1,4; IF(RVAL(JJ,NSEG).EQ.NODATA)THEN; LNODAT=.FALSE.; EXIT; ENDIF; ENDDO
   IF(LNODAT)THEN
    H1=RVAL(1,1)
    H2=RVAL(1,NSEG)
@@ -640,33 +640,38 @@ DEALLOCATE(XA,YA,FA,LN)
 RETURN
 END SUBROUTINE
 
-
 !###====================================================================
-SUBROUTINE PCK2RPISG(SDATE,EDATE,TTIME,QSORT,LU,MAXITEMS,RVAL, &
-                     NR,IREF,IISGH,ITYPE)
+SUBROUTINE PCK2RPISG(SDATE,EDATE,TTIME,QSORT,XNR,LU,MAXITEMS,RVAL, &
+                     NR,IREF,IISGH,ITYPE,NODATA)
 !###====================================================================
 USE MOD_GLBVAR, ONLY : LINE,ISS
 USE IMOD_UTL, ONLY: IMOD_UTL_IDATETOJDATE,IMOD_UTL_GETMED2,IMOD_UTL_ITOS,IMOD_UTL_PRINTTEXT, ICF
+!USE GLBVAR, ONLY : LINE,ISS
+!USE MOD_UTL, ONLY : IDATETOJDATE,GETMED,ITOS,PRINTTEXT
+!USE MOD_OSD, ONLY : ICF
 IMPLICIT NONE
+REAL,INTENT(IN) :: NODATA
+!REAL,PARAMETER :: NODATA=-999.99
 INTEGER,INTENT(IN) :: SDATE,EDATE,TTIME,MAXITEMS,LU,IISGH,NR,IREF,ITYPE
 REAL,INTENT(INOUT),DIMENSION(TTIME,MAXITEMS) :: QSORT
-REAL,DIMENSION(MAXITEMS),INTENT(INOUT) :: RVAL
-INTEGER :: IR,I,I1,I2,IDATE,NDATE,NAJ,IREC,N
+REAL,DIMENSION(MAXITEMS),INTENT(INOUT) :: RVAL,XNR
+INTEGER :: IR,I,J,I1,I2,IDATE,NDATE,NAJ,IREC,N
 INTEGER :: IAVERAGE=2 !## median values
+REAL :: X
 
 IREC=IREF-1
 
 IF(NR.GT.0)THEN
 
  IF(ISS.EQ.1)QSORT= 0.0
- IF(ISS.EQ.2)QSORT=-999.99
- I1=1
+ IF(ISS.EQ.2)QSORT=NODATA 
 
- IR=0
- DO ! IR=1,NR
-
+ I1=1; IR=0; XNR=0.0
+ 
+ DO 
+  
   IR=IR+1; IF(IR.GT.NR)EXIT
-
+    
   IREC=IREC+1
 
   RVAL=0.0
@@ -675,12 +680,12 @@ IF(NR.GT.0)THEN
 
   !## don't bother for steady-state, take the mean!
   IF(ISS.EQ.1)THEN
-   QSORT(1,:)=QSORT(1,:)+RVAL(:)
+   DO I=1,MAXITEMS; IF(RVAL(I).NE.NODATA)THEN; QSORT(1,I)=QSORT(1,I)+RVAL(I); XNR(I)=XNR(I)+1.0; ENDIF; ENDDO
   !## transient simulation
   ELSEIF(ISS.EQ.2)THEN
-
+   
    IDATE=IMOD_UTL_IDATETOJDATE(IDATE)
-
+   
    !## try to speed up the search for transient searches
    IF(IR.EQ.1)THEN
     READ(LU,REC=IREC+1+ICF) NDATE
@@ -688,9 +693,7 @@ IF(NR.GT.0)THEN
     N=IMOD_UTL_IDATETOJDATE(NDATE)-IDATE
     N=(SDATE-IDATE)/N; N=MAX(N-1,0)
     IF(IR+N.LT.NR)THEN
-!     write(*,*) 'rec=',IREC+1+N+ICF
      READ(LU,REC=IREC+1+N+ICF) NDATE
-!     WRITE(*,*) IDATETOJDATE(NDATE),SDATE
      !## okay, take this jump in time
      IF(IMOD_UTL_IDATETOJDATE(NDATE).LE.SDATE)THEN
       IR  =IR  +N
@@ -705,8 +708,6 @@ IF(NR.GT.0)THEN
     NDATE=IMOD_UTL_IDATETOJDATE(NDATE)
    ENDIF
    NDATE=MIN(NDATE,EDATE)
-
-!   IDATE=IDATETOJDATE(IDATE)
 
    !## stop searchin for data, outside modeling window!
    IF(IDATE.GT.EDATE)EXIT
@@ -732,17 +733,35 @@ IF(NR.GT.0)THEN
  IF(ISS.EQ.1)THEN
   !## determine for each period appropriate attribute term
   IF(NR.EQ.0)CALL IMOD_UTL_PRINTTEXT('No data found for steady-state in ISG file!',2)
-  DO I=1,MAXITEMS; RVAL(I)=QSORT(1,I)/REAL(NR); ENDDO
+  DO I=1,MAXITEMS
+   IF(XNR(I).GT.0.0)THEN
+    RVAL(I)=QSORT(1,I)/XNR(I)
+   ELSE
+    RVAL(I)=NODATA
+   ENDIF
+  ENDDO
  ELSEIF(ISS.EQ.2)THEN
   IF(IAVERAGE.EQ.1)THEN
    !## arithmetic mean
+   XNR=0.0; RVAL=0.0
    DO I=1,MAXITEMS
-    RVAL(I)=SUM(QSORT(:,I))/REAL(TTIME)
-   ENDDO
+    DO J=1,TTIME
+     IF(QSORT(J,I).NE.NODATA)THEN
+      RVAL(I)=RVAL(I)+QSORT(J,I)
+      XNR(I) =XNR(I)+1.0
+     ENDIF
+    ENDDO
+    IF(XNR(I).GT.0.0)THEN
+     RVAL(I)=RVAL(I)/XNR(I)
+    ELSE
+     RVAL(I)=NODATA
+    ENDIF
+   ENDDO 
+!    RVAL(I)=SUM(QSORT(:,I))/REAL(TTIME)
   ELSEIF(IAVERAGE.EQ.2)THEN
    !## median
    DO I=1,MAXITEMS
-    RVAL(I)=IMOD_UTL_GETMED2(QSORT(:,I),TTIME,-999.99,NAJ) !NODATA,(/50.0/),1,NAJ,RVAL(I))
+    RVAL(I)=IMOD_UTL_GETMED2(QSORT(:,I),TTIME,NODATA,NAJ) 
     IF(NAJ.EQ.0)CALL IMOD_UTL_PRINTTEXT('No data found for current stress period in ISG file!',2)
    ENDDO
   ENDIF
@@ -754,6 +773,121 @@ ENDIF
 
 RETURN
 END SUBROUTINE
+
+!!###====================================================================
+!SUBROUTINE PCK2RPISG(SDATE,EDATE,TTIME,QSORT,LU,MAXITEMS,RVAL, &
+!                     NR,IREF,IISGH,ITYPE)
+!!###====================================================================
+!USE MOD_GLBVAR, ONLY : LINE,ISS
+!USE IMOD_UTL, ONLY: IMOD_UTL_IDATETOJDATE,IMOD_UTL_GETMED2,IMOD_UTL_ITOS,IMOD_UTL_PRINTTEXT, ICF
+!IMPLICIT NONE
+!INTEGER,INTENT(IN) :: SDATE,EDATE,TTIME,MAXITEMS,LU,IISGH,NR,IREF,ITYPE
+!REAL,INTENT(INOUT),DIMENSION(TTIME,MAXITEMS) :: QSORT
+!REAL,DIMENSION(MAXITEMS),INTENT(INOUT) :: RVAL
+!INTEGER :: IR,I,I1,I2,IDATE,NDATE,NAJ,IREC,N
+!INTEGER :: IAVERAGE=2 !## median values
+!
+!IREC=IREF-1
+!
+!IF(NR.GT.0)THEN
+!
+! IF(ISS.EQ.1)QSORT= 0.0
+! IF(ISS.EQ.2)QSORT=-999.99
+! I1=1
+!
+! IR=0
+! DO ! IR=1,NR
+!
+!  IR=IR+1; IF(IR.GT.NR)EXIT
+!
+!  IREC=IREC+1
+!
+!  RVAL=0.0
+!  IF(ITYPE.EQ. 1)READ(LU,REC=IREC+ICF) IDATE,(RVAL(I),I=1,MAXITEMS)
+!  IF(ITYPE.EQ.-1)READ(LU,REC=IREC+ICF) IDATE,(RVAL(I),I=1,2)
+!
+!  !## don't bother for steady-state, take the mean!
+!  IF(ISS.EQ.1)THEN
+!   QSORT(1,:)=QSORT(1,:)+RVAL(:)
+!  !## transient simulation
+!  ELSEIF(ISS.EQ.2)THEN
+!
+!   IDATE=IMOD_UTL_IDATETOJDATE(IDATE)
+!
+!   !## try to speed up the search for transient searches
+!   IF(IR.EQ.1)THEN
+!    READ(LU,REC=IREC+1+ICF) NDATE
+!    !## number of days in between
+!    N=IMOD_UTL_IDATETOJDATE(NDATE)-IDATE
+!    N=(SDATE-IDATE)/N; N=MAX(N-1,0)
+!    IF(IR+N.LT.NR)THEN
+!!     write(*,*) 'rec=',IREC+1+N+ICF
+!     READ(LU,REC=IREC+1+N+ICF) NDATE
+!!     WRITE(*,*) IDATETOJDATE(NDATE),SDATE
+!     !## okay, take this jump in time
+!     IF(IMOD_UTL_IDATETOJDATE(NDATE).LE.SDATE)THEN
+!      IR  =IR  +N
+!      IREC=IREC+N
+!     ENDIF
+!    ENDIF
+!   ENDIF
+!
+!   NDATE=EDATE
+!   IF(IR.LT.NR)THEN
+!    READ(LU,REC=IREC+1+ICF) NDATE
+!    NDATE=IMOD_UTL_IDATETOJDATE(NDATE)
+!   ENDIF
+!   NDATE=MIN(NDATE,EDATE)
+!
+!!   IDATE=IDATETOJDATE(IDATE)
+!
+!   !## stop searchin for data, outside modeling window!
+!   IF(IDATE.GT.EDATE)EXIT
+!
+!   !## within modeling window
+!   IF(NDATE.GE.SDATE)THEN
+!
+!    N=NDATE-SDATE
+!    IF(IDATE.GT.SDATE)N=N-(IDATE-SDATE)
+!    I2=I1+N-1
+!
+!    DO I=1,MAXITEMS
+!     QSORT(I1:I2,I)=RVAL(I)
+!    END DO
+!
+!    I1=I2+1
+!
+!   ENDIF
+!  ENDIF
+!
+! END DO
+!
+! IF(ISS.EQ.1)THEN
+!  !## determine for each period appropriate attribute term
+!  IF(NR.EQ.0)CALL IMOD_UTL_PRINTTEXT('No data found for steady-state in ISG file!',2)
+!  DO I=1,MAXITEMS; RVAL(I)=QSORT(1,I)/REAL(NR); ENDDO
+! ELSEIF(ISS.EQ.2)THEN
+!  IF(IAVERAGE.EQ.1)THEN
+!   !## arithmetic mean
+!   DO I=1,MAXITEMS
+!    RVAL(I)=SUM(QSORT(:,I))/REAL(TTIME)
+!   ENDDO
+!  ELSEIF(IAVERAGE.EQ.2)THEN
+!   !## median
+!   DO I=1,MAXITEMS
+!    RVAL(I)=IMOD_UTL_GETMED2(QSORT(:,I),TTIME,-999.99,NAJ) !NODATA,(/50.0/),1,NAJ,RVAL(I))
+!    IF(NAJ.EQ.0)CALL IMOD_UTL_PRINTTEXT('No data found for current stress period in ISG file!',2)
+!   ENDDO
+!  ENDIF
+! ENDIF
+!
+!ELSE
+! IF(ITYPE.EQ.1)CALL IMOD_UTL_PRINTTEXT('No waterlevels found for SEGMENT '//TRIM(IMOD_UTL_ITOS(IISGH)),2)
+!ENDIF
+!
+!RETURN
+!END SUBROUTINE
+
 !###====================================================================
 SUBROUTINE PCK4RPISG(JCRS,BH,WP,RWIDTH,WETPER)
 !###====================================================================
