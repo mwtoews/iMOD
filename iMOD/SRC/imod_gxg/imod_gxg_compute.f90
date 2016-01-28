@@ -237,7 +237,8 @@ CONTAINS
     CALL UTL_MESSAGEHANDLE(1)
    ELSEIF(IBATCH.EQ.1)THEN
     WRITE(*,'(A)') 'No '//TRIM(IDFFILE)//' Files found for specified period, should be save for the 14/28e of each month'
-    WRITE(*,'(A)') 'iMOD checked the folder: '//TRIM(GXG_RESDIR)//'\'//TRIM(IDFFILE)//'_yyyymmdd_L'//TRIM(ITOS(ILAY))//'.IDF'
+    LINE='iMOD checked the folder: '//TRIM(GXG_RESDIR)//'\'//TRIM(IDFFILE)//'_yyyymmdd_L'//TRIM(ITOS(ILAY))//'.IDF'
+    WRITE(*,'(A)') TRIM(LINE)
    ENDIF
    CALL GXG1ABORT()
    RETURN

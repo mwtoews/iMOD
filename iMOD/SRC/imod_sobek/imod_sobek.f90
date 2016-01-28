@@ -1409,6 +1409,7 @@ CONTAINS
  REAL :: X,BL,BW,BS,OR,DOR,RD
  INTEGER :: IOS,ND,I,J,N
  REAL,POINTER,DIMENSION(:) :: XPROF,YPROF,XPROF_DUM,YPROF_DUM
+ CHARACTER(LEN=256) :: LINE
  
  !## get profile definitions from PROFILES.DEF
  ND=0
@@ -1570,7 +1571,8 @@ CONTAINS
      ENDIF
 
     CASE DEFAULT
-     WRITE(IU(IOUT),'(A)') 'Do not recognize profile type '//TRIM(ITOS(PDEF(ND)%PTYPE))
+     LINE='Do not recognize profile type '//TRIM(ITOS(PDEF(ND)%PTYPE))
+     WRITE(IU(IOUT),'(A)') TRIM(LINE)
      PDEF(ND)%NNXY=0
 
    END SELECT

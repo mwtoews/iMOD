@@ -1513,7 +1513,7 @@ CONTAINS
  !###======================================================================
  USE MOD_ISG_PAR, ONLY : ISGFNAME
  IMPLICIT NONE
- CHARACTER(LEN=256) :: EXPORTFNAME
+ CHARACTER(LEN=256) :: EXPORTFNAME,LINE
  INTEGER :: IEXPORT
   
  IF(.NOT.UTL_READINITFILE('ISGFILE_IN',LINE,IU,0))RETURN
@@ -1523,9 +1523,11 @@ CONTAINS
  READ(LINE,*) IEXPORT
  SELECT CASE (IEXPORT)
   CASE (1)
-   WRITE(*,'(A)') 'IEXPORT='//TRIM(ITOS(IEXPORT))//' exporting stages'
+   LINE='IEXPORT='//TRIM(ITOS(IEXPORT))//' exporting stages'
+   WRITE(*,'(A)') TRIM(LINE)
   CASE (2)
-   WRITE(*,'(A)') 'IEXPORT='//TRIM(ITOS(IEXPORT))//' exporting cross-sections'
+   LINE='IEXPORT='//TRIM(ITOS(IEXPORT))//' exporting cross-sections'
+   WRITE(*,'(A)') TRIM(LINE)
   CASE DEFAULT
    STOP 'No proper value for IEXPORT given'
  END SELECT

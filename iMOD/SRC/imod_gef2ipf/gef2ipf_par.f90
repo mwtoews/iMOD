@@ -88,7 +88,8 @@ CONTAINS
     RETURN
    ENDIF
 !  ELSE
-!   WRITE(*,*) 'Asigned for #COLUMNVOID='//TRIM(ITOS(I))//',-999.99'
+!   LINE='Asigned for #COLUMNVOID='//TRIM(ITOS(I))//',-999.99'
+!   WRITE(*,*) TRIM(LINE)
   ENDIF
  END DO
 
@@ -199,7 +200,8 @@ CONTAINS
     RETURN
    ENDIF
 !  ELSE
-!   WRITE(*,*) 'Asigned for #COLUMNVOID='//TRIM(ITOS(I))//',-999.99'
+!   LINE='Asigned for #COLUMNVOID='//TRIM(ITOS(I))//',-999.99'
+!   WRITE(*,*) TRIM(LINE)
   ENDIF
  END DO
 
