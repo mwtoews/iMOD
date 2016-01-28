@@ -8,7 +8,7 @@
 //
 // Winteracter resource script. 
 //
-// Modified : 28/Jan/2016 16:24:19
+// Modified : 28/Jan/2016 21:56:32
 //
 ///////////////////////////////////////////////////
 //
@@ -1098,6 +1098,7 @@
 #define ID_FLYPATH                      40276
 #define IDF_CHECK9                       1189
 #define ID_SEMIVARIOGRAM                 1269
+#define ID_D3DSETTINGS_RENDER             370
 
 ///////////////////////////////////////////////////
 //
@@ -9858,6 +9859,35 @@ BEGIN
 ,0
 END
 
+ID_D3DSETTINGS_RENDER DIALOG 0, 0,  203,  115
+STYLE WS_POPUP | WS_BORDER | WS_DLGFRAME | WS_SYSMENU | DS_3DLOOK | DS_MODALFRAME
+FONT    8, "Arial"
+CAPTION "IDF Rendering"
+BEGIN
+    CONTROL "Settings",IDF_GROUP1,"BUTTON",WS_CHILD | WS_VISIBLE | WS_GROUP | BS_GROUPBOX | BS_TEXT | BS_LEFT,    8,    4,  184,   84
+    CONTROL "&Apply",IDOK,"BUTTON",WS_CHILD | WS_VISIBLE | WS_GROUP | WS_TABSTOP | BS_PUSHBUTTON | BS_TEXT | BS_FLAT,    8,   92,   40,   14
+    CONTROL "&Help ...",ID_HELP,"BUTTON",WS_CHILD | WS_VISIBLE | WS_GROUP | WS_TABSTOP | BS_DEFPUSHBUTTON | BS_TEXT | BS_FLAT,  152,   92,   40,   14
+    CONTROL "Current Angle (degrees):",IDF_LABEL18,"STATIC",WS_CHILD | WS_VISIBLE | WS_GROUP | SS_LEFT,   16,   24,   96,    8
+    CONTROL "0.00",IDF_REAL1,"REALSPIN",WS_CHILD | WS_VISIBLE | WS_BORDER | WS_GROUP | WS_TABSTOP | ES_LEFT | ES_CENTER | ES_MULTILINE,  126,   22,   49,   12
+    CONTROL "0.50",IDF_REAL2,"REALSPIN",WS_CHILD | WS_VISIBLE | WS_BORDER | WS_GROUP | WS_TABSTOP | ES_LEFT | ES_CENTER | ES_MULTILINE,  126,   40,   49,   12
+    CONTROL "Skip Angle (degrees):",IDF_LABEL19,"STATIC",WS_CHILD | WS_VISIBLE | WS_GROUP | SS_LEFT,   16,   42,   96,    8
+END
+
+ID_D3DSETTINGS_RENDER RCDATA
+BEGIN
+"[Ranges] \n"
+"[Fonts] \n"
+" 1019    8 Arial, 400 0 \n"
+"    1    8 Arial, 400 0 \n"
+"40013    8 Arial, 400 0 \n"
+" 1272    8 Arial, 400 0 \n"
+" 1085    8 Arial, 400 0 \n"
+"[Formats] \n"
+" 1130 (f10.2) \n"
+" 1132 (f10.2) \n"
+,0
+END
+
 ///////////////////////////////////////////////////
 //
 // Menus
@@ -11245,4 +11275,4 @@ END
 //*WI* FILENAME    resource.f90
 //*WI* FMODNAME    RESOURCE
 //*WI* LASTTYPE        2
-//*WI* LASTRES       224
+//*WI* LASTRES       269

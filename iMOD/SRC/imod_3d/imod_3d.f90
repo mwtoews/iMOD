@@ -37,51 +37,9 @@ USE MOD_PLINES_PAR, ONLY : IDF
 INTEGER(GLINT),DIMENSION(1) :: MAXSTDEPTH,STDEPTH !## max./current stack depth selection
 INTEGER(GLINT),DIMENSION(1) :: DUMMY
 INTEGER(GLINT),DIMENSION(1) :: MAXCPLANES
+REAL,PARAMETER :: G2R=360.0/(2.0*PI) !; OR=DEGREES; OR=DDEGREES/G2R
 
 CONTAINS
-
- !###======================================================================
- SUBROUTINE IMOD3D_INTERPOLATOR()
- !###======================================================================
- IMPLICIT NONE
- REAL(KIND=GLFLOAT) :: U1,U2,V1,V2,X,Y
- INTEGER(KIND=GLINT) :: USTRIDE,VSTRIDE
- INTEGER(KIND=GLINT) :: UORDER,VORDER
- REAL(KIND=GLFLOAT), DIMENSION(3) :: POINTS
- INTEGER :: I
-  
-! !## select openGL as the current driver for plotting purposes
-! CALL WGLSELECT(1,IWIN,WGLDOUBLEBUFFER)
-
- U1=0.0_GLFLOAT   !## A linear mapping of u, as presented to glEvalCoord1, the variable that is evaluated by the
- U2=1.0_GLFLOAT   !## equations specified by this command
- V1=0.0_GLFLOAT
- V2=1.0_GLFLOAT
- USTRIDE=3_GLINT  !## The number of floats or doubles between the beginning of one control point and the beginning
-                  !## of the next one in the array referenced in points. This allows control points to be embedded
-                  !## in arbitrary data structures. The only constraint is that the values for a particular control
-                  !## point must occupy contiguous memory locations. 
- UORDER=4_GLINT  !## number of control-points
- DO I=1,UORDER
-  POINTS(I)=X
- ENDDO
- 
- !CALL GLMAP1F(GL_MAP1_VERTEX_3,U1,U2,USTRIDE,UORDER,POINTS)
- !CALL GLENABLE(GL_MAP1_VERTEX_3)
-
- CALL GLMAP2F(GL_MAP2_VERTEX_3,U1,U2,USTRIDE,UORDER,V1,V2,VSTRIDE,VORDER,POINTS)
- CALL GLENABLE(GL_MAP2_VERTEX_3)
- 
- !CALL GLMAPGRID2()
- !CALL GLEVALMESH2()
- 
- call glevalcoord2f(X,Y)
- 
- CALL GLDISABLE(GL_MAP1_VERTEX_3) 
-! !## disables openGL 
-! CALL WGLSELECT(0)
-  
- END SUBROUTINE IMOD3D_INTERPOLATOR
 
  !###======================================================================
  SUBROUTINE IMOD3D_MAIN_MESSAGES(ITYPE,MESSAGE)
@@ -134,13 +92,33 @@ CONTAINS
  !###======================================================================
  IMPLICIT NONE
  INTEGER,INTENT(IN) :: ID
- INTEGER :: IOPT
+ INTEGER :: IOPT,DID,ITYPE
+ TYPE(WIN_MESSAGE) :: MESSAGE
  REAL(KIND=GLDOUBLE) :: DX,DZ
  
  SELECT CASE (ID)
 
   CASE (ID_FLYPATH)
-   CALL IMOD3D_PROCESS_FLY()
+   DID=WINFODIALOG(CURRENTDIALOG)
+   CALL WDIALOGSELECT(ID_D3DSETTINGS_RENDER)       
+   CALL WDIALOGSHOW(-1,-1,0,3)
+   DO
+    CALL WMESSAGE(ITYPE,MESSAGE)
+    SELECT CASE (ITYPE)
+     CASE (FIELDCHANGED)
+      SELECT CASE (MESSAGE%VALUE2)
+      END SELECT
+     CASE (EXPOSE)
+      CALL IMOD3D_DISPLAY(1)
+     CASE (PUSHBUTTON)
+      SELECT CASE (MESSAGE%VALUE1)
+       CASE (IDOK,IDCANCEL)
+        EXIT
+      END SELECT
+    END SELECT
+   ENDDO
+   CALL WDIALOGHIDE(); CALL WDIALOGSELECT(DID)
+!   CALL IMOD3D_PROCESS_FLY()
 
   CASE (ID_ZRATIO1,ID_ZRATIO2,ID_ZRATIO3,ID_ZRATIO4,ID_ZRATIO5)
    CALL WMENUSETSTATE(ID_ZRATIO1,ITEMCHECKED,0)
@@ -276,6 +254,68 @@ CONTAINS
  END SUBROUTINE IMOD3D_MENUSELECT
 
  !###======================================================================
+ SUBROUTINE IMOD3D_RENDER()
+ !###======================================================================
+ IMPLICIT NONE
+ INTEGER :: I,DID
+ REAL(KIND=GLDOUBLE) :: DX,DZ,XC,YC,DEGREES !,DDEGREES !,G2R
+ REAL :: DEGR,DDEGR
+  
+ !## get current heading and tilt
+ CALL IMOD3D_GET_HEADING_TILE(LENXY=DX,LENXZ=DZ)
+ 
+! DX=DX/100_GLDOUBLE; DZ=DZ/100_GLDOUBLE
+
+ XC=LOOKAT%X; YC=LOOKAT%Y
+ 
+! !## from degrees to radians
+! G2R=360.0/(2.0*PI) !; OR=DEGREES; OR=DDEGREES/G2R
+
+ DID=WINFODIALOG(CURRENTDIALOG)
+ CALL WDIALOGSELECT(ID_D3DSETTINGS_RENDER)       
+
+ CALL WDIALOGGETREAL(IDF_REAL1,DEGR)
+ CALL WDIALOGGETREAL(IDF_REAL2,DDEGR)
+
+ DEGR=DEGR+DDEGR !10_GLDOUBLE/G2R
+ IF(DEGR.GT.360.0)DEGR=DEGR-360.0
+ CALL WDIALOGPUTREAL(IDF_REAL1,DEGR)
+
+ DEGREES=DEGR/G2R !10_GLDOUBLE/G2R
+
+! DEGREES=DDEGR !0.0_GLDOUBLE
+
+! DO
+  
+!  DEGREES=DEGREES+DDEGREES
+!## circle
+
+  LOOKFROM%X=XC+DX*COS(DEGREES) !LOOKFROM%X+COS(HEADING)*DX
+  LOOKFROM%Y=YC+DX*SIN(DEGREES) !LOOKFROM%Y+SIN(HEADING)*DX 
+!  LOOKFROM%Z=LOOKFROM%Z+SIN(TILT)*DZ 
+
+!## moving in direction
+!  LOOKFROM%X=LOOKFROM%X+COS(HEADING)*DX
+!  LOOKFROM%Y=LOOKFROM%Y+SIN(HEADING)*DX 
+!  LOOKFROM%Z=LOOKFROM%Z+SIN(TILT)*DZ 
+
+!  LOOKAT%X=LOOKAT%X+COS(HEADING)*DX
+!  LOOKAT%Y=LOOKAT%Y+SIN(HEADING)*DX 
+!  LOOKAT%Z=LOOKAT%Z+SIN(TILT)*DZ 
+
+  CALL IMOD3D_RESET_TO_INIT()
+  CALL IMOD3D_DISPLAY(1)
+
+! ENDDO
+ 
+ CALL WDIALOGSELECT(DID)
+
+! BEGIN_LEFT%X=WX
+! BEGIN_LEFT%Y=WY
+
+ END SUBROUTINE IMOD3D_RENDER
+ 
+ !###======================================================================
  SUBROUTINE IMOD3D_INIT(IACTSOLID,IACTPATHLINE)
  !###======================================================================
  IMPLICIT NONE
@@ -303,6 +343,9 @@ CONTAINS
  IACTBITMAP=0
  ITRANSPARANCYBITMAP=50 !## transparant 50%
  IREADBMP=0
+ IRENDER_3D=-1
+ 
+ CALL WDIALOGLOAD(ID_D3DSETTINGS_RENDER)
  
  !## initialize settings-dialog
  CALL WDIALOGLOAD(ID_D3DSETTINGS,ID_D3DSETTINGS)

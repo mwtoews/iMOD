@@ -1184,7 +1184,7 @@ ILLOOP: DO
  !###======================================================================
  IMPLICIT NONE
  CHARACTER(LEN=50) :: FNAME
- INTEGER :: I,II,JJ,J,ICLIP,ISUP,ICLR,ITOPBOT
+ INTEGER :: I,J,ICLIP,ICLR,ITOPBOT
  REAL :: XMIN,YMIN,XMAX,YMAX,CS
  LOGICAL :: LEX,LEQUAL
 
@@ -1309,7 +1309,7 @@ ILLOOP: DO
  !###======================================================================
  IMPLICIT NONE
  INTEGER,INTENT(IN) :: ICLIP
- INTEGER :: N,I,K,IROW,ICOL,JROW,JCOL,ITOPBOT,IOS
+ INTEGER :: N,I,IROW,ICOL,JROW,JCOL,IOS
  REAL :: X,Y,TOP,BOT,DZZ,XTOP,XBOT
  TYPE(WIN_MESSAGE) :: MESSAGE
  INTEGER :: ITYPE

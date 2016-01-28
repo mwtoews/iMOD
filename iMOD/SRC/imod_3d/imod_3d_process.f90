@@ -388,54 +388,6 @@ CONTAINS
  END SUBROUTINE IMOD3D_PROCESSMOUSEMOVE_WALK
  
  !###======================================================================
- SUBROUTINE IMOD3D_PROCESS_FLY()
- !###======================================================================
- IMPLICIT NONE
- INTEGER :: I
- REAL(KIND=GLDOUBLE) :: DX,DZ,XC,YC,DEGREES,DDEGREES,G2R
-  
- !## get current heading and tilt
- CALL IMOD3D_GET_HEADING_TILE(LENXY=DX,LENXZ=DZ)
- 
-! DX=DX/100_GLDOUBLE; DZ=DZ/100_GLDOUBLE
-
- XC=LOOKAT%X; YC=LOOKAT%Y
- 
- !## from degrees to radians
- G2R=360.0/(2.0*PI) !; OR=DEGREES; OR=DDEGREES/G2R
-
- DDEGREES=10_GLDOUBLE/G2R
- DEGREES=0.0_GLDOUBLE
-
- DO
-  
-  DEGREES=DEGREES+DDEGREES
-!## circle
-
-  LOOKFROM%X=XC+DX*COS(DEGREES) !LOOKFROM%X+COS(HEADING)*DX
-  LOOKFROM%Y=YC+DX*SIN(DEGREES) !LOOKFROM%Y+SIN(HEADING)*DX 
-!  LOOKFROM%Z=LOOKFROM%Z+SIN(TILT)*DZ 
-
-!## moving in direction
-!  LOOKFROM%X=LOOKFROM%X+COS(HEADING)*DX
-!  LOOKFROM%Y=LOOKFROM%Y+SIN(HEADING)*DX 
-!  LOOKFROM%Z=LOOKFROM%Z+SIN(TILT)*DZ 
-
-!  LOOKAT%X=LOOKAT%X+COS(HEADING)*DX
-!  LOOKAT%Y=LOOKAT%Y+SIN(HEADING)*DX 
-!  LOOKAT%Z=LOOKAT%Z+SIN(TILT)*DZ 
-
-  CALL IMOD3D_RESET_TO_INIT()
-  CALL IMOD3D_DISPLAY(1)
-
- ENDDO
- 
-! BEGIN_LEFT%X=WX
-! BEGIN_LEFT%Y=WY
-
- END SUBROUTINE IMOD3D_PROCESS_FLY
- 
- !###======================================================================
  SUBROUTINE IMOD3D_PROCESSRESIZE(ID1,ID2)
  !###======================================================================
  IMPLICIT NONE
