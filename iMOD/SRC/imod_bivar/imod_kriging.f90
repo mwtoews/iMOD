@@ -331,19 +331,17 @@ CONTAINS
    ENDDO 
   ENDDO 
   
-!  NP=MIN(N,MINP); IF(NP.GT.0.AND.IADJRANGE.EQ.1)USERANGE=SELD(NP)+0.05*SELD(NP)
   IF(NP.GT.0.AND.IADJRANGE.EQ.1)USERANGE=MAXRANGE+0.05*MAXRANGE
   
  ELSE
 
-!  NP=ND;
   J=0
-  DO ID=1,ND !P
+  DO ID=1,ND
    DXY=KRIGING_DIST(XD(ID),YD(ID),X,Y)
    IF(DXY.LE.0.0.OR.DXY.GE.USERANGE)CYCLE
    J=J+1; SELID(J)=ID
   ENDDO
-  NP=J
+  NP=J 
 
  ENDIF
   
@@ -507,7 +505,10 @@ CONTAINS
  INTEGER,INTENT(OUT) :: ND
  INTEGER :: I,J,N,IS,IE,IROW,ICOL
  REAL,ALLOCATABLE,DIMENSION(:) :: XCOL,YROW
+ REAL :: XYCRIT 
  
+ XYCRIT=0.1*IDF%DX
+  
  !## sort x, to skip double coordinates
  CALL SORTEM(1,MD,XD,2,YD,ZD,ZD,ZD,ZD,ZD,ZD)
 
@@ -527,7 +528,8 @@ CONTAINS
  N=1
  !## mark doubles with nodata and compute mean for those double points
  DO I=2,MD
-  IF(XD(I).EQ.XD(I-1).AND.YD(I).EQ.YD(I-1))THEN
+  IF(ABS(XD(I)-XD(I-1)).LE.XYCRIT.AND. &
+     ABS(YD(I)-YD(I-1)).LE.XYCRIT)THEN
    IF(N.EQ.1)J=I-1
    N=N+1
    ZD(J)=ZD(J)+ZD(I)
@@ -539,6 +541,8 @@ CONTAINS
    ENDIF
   ENDIF
  END DO
+ !## correct last if neccessary
+ IF(N.GT.1)ZD(J)=ZD(J)/REAL(N)
 
  !## eliminate doubles
  J=0
@@ -641,9 +645,7 @@ CONTAINS
   SELECT CASE (ITYPE)
    CASE(FIELDCHANGED)
     SELECT CASE (MESSAGE%VALUE2)
-     CASE (IDF_INTEGER1)
-      CALL KRIGINGSETTINGSFIELDS()
-     CASE (IDF_CHECK1,IDF_CHECK3)
+     CASE (IDF_INTEGER1,IDF_CHECK1,IDF_CHECK3,IDF_MENU1,IDF_MENU2)
       CALL KRIGINGSETTINGSFIELDS()
     END SELECT
 
@@ -708,6 +710,32 @@ CONTAINS
  ELSE
   CALL WDIALOGPUTSTRING(IDF_CHECK3,'Apply Quadrants')
  ENDIF
+ 
+ CALL WDIALOGGETMENU(IDF_MENU1,I)
+ SELECT CASE (I)
+  CASE (1)
+    CALL WDIALOGPUTSTRING(IDF_LABEL11,'Linear act linearly. Appropriate for representing properties with higher level of short-range variability.')
+  CASE (2)
+    CALL WDIALOGPUTSTRING(IDF_LABEL11,'Spherical acts linear in the beginning. '// &
+       'Appropriate for representing properties with higher level of short-range variability')
+  CASE (3)
+    CALL WDIALOGPUTSTRING(IDF_LABEL11,'Exponential acts linear in the beginning but curves rapidly for points further away and approaces the sill asymptotically.')
+  CASE (4)
+    CALL WDIALOGPUTSTRING(IDF_LABEL11,'Gaussian weights the points nearest least heavy as a "S"-curve and approaces the sill asymptotically. '// &
+       'It gives very smooth varying properties.')
+  CASE (5)
+    CALL WDIALOGPUTSTRING(IDF_LABEL11,'Power models are appropriate for properties exhibiting fractal behaviour.')
+ END SELECT
+
+ CALL WDIALOGGETMENU(IDF_MENU2,I)
+ SELECT CASE (I)
+  CASE (1)
+    CALL WDIALOGPUTSTRING(IDF_LABEL12,'Simple Kriging assumes a mean constant over the entire domain. The result tend to fullfill the total mean.')
+  CASE (2)
+    CALL WDIALOGPUTSTRING(IDF_LABEL12,'Ordinary Kriging assumes that the mean is constant in the neighborhoud of the estimated point. '// &
+      'This option gives more smooth result.')
+ END SELECT
+
 ! I=ABS(I-1)
 ! CALL WDIALOGFIELDSTATE(IDF_LABEL4,I)
 ! CALL WDIALOGFIELDSTATE(IDF_LABEL8,I)

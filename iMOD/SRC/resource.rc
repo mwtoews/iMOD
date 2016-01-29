@@ -8,7 +8,7 @@
 //
 // Winteracter resource script. 
 //
-// Modified : 29/Jan/2016 11:53:43
+// Modified : 29/Jan/2016 19:23:09
 //
 ///////////////////////////////////////////////////
 //
@@ -8012,7 +8012,7 @@ BEGIN
 ,0
 END
 
-ID_DKRIGING DIALOG 0, 0,  270,  163
+ID_DKRIGING DIALOG 0, 0,  273,  215
 STYLE WS_POPUP | WS_BORDER | WS_DLGFRAME | WS_SYSMENU | DS_3DLOOK | DS_MODALFRAME
 FONT    8, "Arial"
 CAPTION "Kriging Settings"
@@ -8023,20 +8023,22 @@ BEGIN
     CONTROL "RANGE (distance where SILL is reached)",IDF_LABEL4,"STATIC",WS_CHILD | WS_VISIBLE | WS_GROUP | SS_LEFT,   14,   79,  149,    8
     CONTROL "0.0000",IDF_REAL2,"REALEDIT",WS_CHILD | WS_VISIBLE | WS_BORDER | WS_GROUP | WS_TABSTOP | ES_LEFT | ES_CENTER | ES_MULTILINE,  170,   77,   60,   12
     CONTROL "SILL (level where semivariogram flattens)",IDF_LABEL3,"STATIC",WS_CHILD | WS_VISIBLE | WS_GROUP | SS_LEFT,   14,   63,  149,    8
-    CONTROL "OK",IDOK,"BUTTON",WS_CHILD | WS_VISIBLE | WS_GROUP | WS_TABSTOP | BS_PUSHBUTTON | BS_TEXT | BS_FLAT,    7,  144,   40,   14
-    CONTROL "Kriging Settings",IDF_GROUP2,"BUTTON",WS_CHILD | WS_VISIBLE | WS_GROUP | BS_GROUPBOX | BS_TEXT | BS_LEFT,    8,    4,  257,  136
+    CONTROL "OK",IDOK,"BUTTON",WS_CHILD | WS_VISIBLE | WS_GROUP | WS_TABSTOP | BS_PUSHBUTTON | BS_TEXT | BS_FLAT,    7,  192,   40,   14
+    CONTROL "Kriging Settings",IDF_GROUP2,"BUTTON",WS_CHILD | WS_VISIBLE | WS_GROUP | BS_GROUPBOX | BS_TEXT | BS_LEFT,    8,    4,  257,  184
     CONTROL "meter",IDF_LABEL8,"STATIC",WS_CHILD | WS_VISIBLE | WS_GROUP | SS_LEFT,  233,   79,   25,    8
     CONTROL "Semivariogram",IDF_LABEL5,"STATIC",WS_CHILD | WS_VISIBLE | WS_GROUP | SS_LEFT,   14,  108,  149,    8
     CONTROL "",IDF_MENU1,"COMBOBOX",WS_CHILD | WS_VISIBLE | WS_VSCROLL | WS_GROUP | WS_TABSTOP | CBS_DROPDOWNLIST | CBS_HASSTRINGS,  170,  108,   89,  150
     CONTROL "NUGGET (offset)",IDF_LABEL6,"STATIC",WS_CHILD | WS_VISIBLE | WS_GROUP | SS_LEFT,   14,   94,  149,    8
     CONTROL "0.0000",IDF_REAL3,"REALEDIT",WS_CHILD | WS_VISIBLE | WS_BORDER | WS_GROUP | WS_TABSTOP | ES_LEFT | ES_CENTER | ES_MULTILINE,  170,   92,   60,   12
     CONTROL "meter",IDF_LABEL9,"STATIC",WS_CHILD | WS_VISIBLE | WS_GROUP | SS_LEFT,  233,   94,   25,    8
-    CONTROL "Kriging Type",IDF_LABEL10,"STATIC",WS_CHILD | WS_VISIBLE | WS_GROUP | SS_LEFT,   15,  125,  149,    8
-    CONTROL "",IDF_MENU2,"COMBOBOX",WS_CHILD | WS_VISIBLE | WS_VSCROLL | WS_GROUP | WS_TABSTOP | CBS_DROPDOWNLIST | CBS_HASSTRINGS,  171,  125,   89,  150
+    CONTROL "Kriging Type",IDF_LABEL10,"STATIC",WS_CHILD | WS_VISIBLE | WS_GROUP | SS_LEFT,   15,  147,  149,    8
+    CONTROL "",IDF_MENU2,"COMBOBOX",WS_CHILD | WS_VISIBLE | WS_VSCROLL | WS_GROUP | WS_TABSTOP | CBS_DROPDOWNLIST | CBS_HASSTRINGS,  171,  147,   89,  150
     CONTROL "Use minimal number of Points",IDF_CHECK1,"BUTTON",WS_CHILD | WS_VISIBLE | WS_GROUP | WS_TABSTOP | BS_AUTOCHECKBOX | BS_TEXT,   14,   16,  144,   12
-    CONTROL "&Help ...",IDHELP,"BUTTON",WS_CHILD | WS_VISIBLE | WS_GROUP | WS_TABSTOP | BS_PUSHBUTTON | BS_TEXT | BS_FLAT,  226,  144,   40,   14
+    CONTROL "&Help ...",IDHELP,"BUTTON",WS_CHILD | WS_VISIBLE | WS_GROUP | WS_TABSTOP | BS_PUSHBUTTON | BS_TEXT | BS_FLAT,  226,  192,   40,   14
     CONTROL "Increase RANGE to reach minimal number of points",IDF_CHECK2,"BUTTON",WS_CHILD | WS_VISIBLE | WS_GROUP | WS_TABSTOP | BS_AUTOCHECKBOX | BS_TEXT | BS_MULTILINE,   26,   29,  140,   14
     CONTROL "Apply Quadrants",IDF_CHECK3,"BUTTON",WS_CHILD | WS_VISIBLE | WS_GROUP | WS_TABSTOP | BS_AUTOCHECKBOX | BS_TEXT | BS_MULTILINE,   26,   43,  192,   14
+    CONTROL "Exponential acts linear in the beginning but curves rapidly for points further away and approaces the sill asymptotically",IDF_LABEL11,"STATIC",WS_CHILD | WS_VISIBLE | WS_GROUP | SS_LEFT,   40,  124,  217,   16
+    CONTROL "Simple means that ...",IDF_LABEL12,"STATIC",WS_CHILD | WS_VISIBLE | SS_LEFT,   40,  166,  217,   16
 END
 
 ID_DKRIGING RCDATA
@@ -8046,10 +8048,12 @@ BEGIN
 " 1183 0 \n"
 " 1186 0 \n"
 "[Menus] \n"
-" 1192     3     3 \n"
+" 1192     5     3 \n"
 "Linear \n"
 "Spherical \n"
 "Exponential \n"
+"Gaussian \n"
+"Power \n"
 " 1064     2     1 \n"
 "Simple \n"
 "Ordinary \n"
@@ -10848,7 +10852,7 @@ BEGIN
         MENUITEM "Orthographic Projection",                  ID_ORTHO
         MENUITEM SEPARATOR
         MENUITEM "&Reset View Angle",                        ID_3DVIEW_RESET
-        MENUITEM "&Fly Path ...",                            ID_FLYPATH
+        MENUITEM "&Scenic Path ...",                         ID_FLYPATH
         POPUP "Horizontal / Vertical Ratio"
         BEGIN
             MENUITEM "1:10",                                     ID_ZRATIO1
@@ -11289,5 +11293,5 @@ END
 //*WI* FORTSAVE    1
 //*WI* FILENAME    resource.f90
 //*WI* FMODNAME    RESOURCE
-//*WI* LASTTYPE        1
-//*WI* LASTRES         7
+//*WI* LASTTYPE        2
+//*WI* LASTRES       224
