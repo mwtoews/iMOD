@@ -8,7 +8,7 @@
 //
 // Winteracter resource script. 
 //
-// Modified : 28/Jan/2016 21:56:32
+// Modified : 29/Jan/2016 11:53:43
 //
 ///////////////////////////////////////////////////
 //
@@ -1099,6 +1099,9 @@
 #define IDF_CHECK9                       1189
 #define ID_SEMIVARIOGRAM                 1269
 #define ID_D3DSETTINGS_RENDER             370
+#define ID_HIDEBITMAP                   40277
+#define ID_FIXBITMAP                    40278
+#define ID_REMOVEBITMAP                 40279
 
 ///////////////////////////////////////////////////
 //
@@ -1531,6 +1534,7 @@ BEGIN
     CONTROL "Plot Coordinates Cross-Section",IDF_CHECK1,"BUTTON",WS_CHILD | WS_VISIBLE | WS_GROUP | WS_TABSTOP | BS_AUTOCHECKBOX | BS_TEXT,    8,   84,  112,   10
     CONTROL "Show Coordinates with Labels Only",IDF_CHECK2,"BUTTON",WS_CHILD | WS_VISIBLE | WS_GROUP | WS_TABSTOP | BS_AUTOCHECKBOX | BS_TEXT,  125,   84,  131,   10
     CONTROL "Clean ...",IDF_BUTTON3,"BUTTON",WS_CHILD | WS_VISIBLE | WS_GROUP | WS_TABSTOP | BS_PUSHBUTTON | BS_TEXT | BS_FLAT,  260,   82,   40,   14
+    CONTROL "P",ID_FLIP,"BUTTON",WS_CHILD | WS_VISIBLE | WS_GROUP | WS_TABSTOP | BS_PUSHBUTTON | BS_TEXT | BS_BITMAP | BS_FLAT,  288,   37,   16,   14
 END
 
 ID_DSERIESPROPTAB2 RCDATA
@@ -10317,6 +10321,10 @@ BEGIN
             MENUITEM "Draw Lines as Splines",                    ID_DRAWLINEASSPLINE
             MENUITEM SEPARATOR
             MENUITEM "Mark Data Points",                         ID_MARKDATA, GRAYED
+            MENUITEM SEPARATOR
+            MENUITEM "Hide Background Image",                    ID_HIDEBITMAP
+            MENUITEM "Fixate Background Image",                  ID_FIXBITMAP
+            MENUITEM "Remove Background Image ...",              ID_REMOVEBITMAP
         END
         MENUITEM SEPARATOR
         MENUITEM "&Show Background Image(s)",                ID_TOPOGRAPHY
@@ -10899,11 +10907,14 @@ BEGIN
     MENUITEM "Add Knickpoint",                           ID_WTIADD
     MENUITEM SEPARATOR
     MENUITEM "Select Nodes",                             ID_SELECTNODES
-    MENUITEM SEPARATOR
     MENUITEM "Activate Current Line",                    ID_ACTIVELINE
     MENUITEM "Deactivate Current Line",                  ID_DEACTIVELINE
-    MENUITEM SEPARATOR
     MENUITEM "Draw Lines as Splines",                    ID_DRAWLINEASSPLINE
+    MENUITEM SEPARATOR
+    MENUITEM "Open Background Image ...",                ID_BITMAP
+    MENUITEM "Hide Background Image",                    ID_HIDEBITMAP
+    MENUITEM "Fixate Background Image",                  ID_FIXBITMAP
+    MENUITEM "Remove Background Image ...",              ID_REMOVEBITMAP
 END
 
 ID_WTIMENU RCDATA
@@ -10918,6 +10929,10 @@ ID_ADDLINELABEL,"Add Label for Area below line\0",
 ID_SELECTNODES,"Click this option to select nodes\0",
 ID_ACTIVELINE,"Select this Item to Select the line for processing in the solid\0",
 ID_DEACTIVELINE,"Select this Item to Select the line to skip for processing in the solid\0",
+ID_HIDEBITMAP,"Hide the Attached Background Image\0",
+ID_FIXBITMAP,"Fixate the Background Image, so it will not move anymore\0",
+ID_REMOVEBITMAP,"Remove the Background Image\0",
+ID_BITMAP,"Open Background Image to Attach to Cross-Section\0",
 0
 END
 
@@ -11274,5 +11289,5 @@ END
 //*WI* FORTSAVE    1
 //*WI* FILENAME    resource.f90
 //*WI* FMODNAME    RESOURCE
-//*WI* LASTTYPE        2
-//*WI* LASTRES       269
+//*WI* LASTTYPE        1
+//*WI* LASTRES         7

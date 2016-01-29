@@ -704,7 +704,7 @@ CONTAINS
  
  ISPF=NSPF
  !## turn off a bitmap for this new cross-section
- PBITMAP%IACT=0; CALL WMENUSETSTATE(ID_BITMAP,2,0)
+ PBITMAP%IACT=0; 
 
  SOLID_PROFILEADD=.TRUE.
  
