@@ -194,9 +194,7 @@ CONTAINS
     ENDIF
    ENDIF
   ENDIF
-  
-!   IFF(1)%IPART,IFF(1)%IL,IFF(1)%X,IFF(1)%Y,IFF(1)%Z,(IFF(1)%XVAL(J),J=1,N)
-   
+ 
   IFF(2)%IPART=IFF(1)%IPART
   IFF(2)%IL   =IFF(1)%IL
   IFF(2)%X    =IFF(1)%X
