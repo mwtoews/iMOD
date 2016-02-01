@@ -417,6 +417,9 @@
 		<Filter Name="imod_wbal">
 		<File RelativePath="..\..\..\iMOD\SRC\imod_wbal\imod_wbal_compute.f90"/>
 		<File RelativePath="..\..\..\iMOD\SRC\imod_wbal\imod_wbal_par.f90"/></Filter>
+		<Filter Name="imod_geoconnect">
+		<File RelativePath="..\..\SRC\imod_geoconnect\imod_geoconnect.f90"/>
+		<File RelativePath="..\..\SRC\imod_geoconnect\imod_geoconnect_par.f90"/></Filter>
 		<Filter Name="programs">
 		<File RelativePath="..\..\..\iMOD\SRC\imod_main\imod_prg.f90">
 			<FileConfiguration Name="Debug|Win32">
