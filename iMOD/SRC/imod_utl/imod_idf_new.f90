@@ -1828,7 +1828,7 @@ CONTAINS
  !###======================================================================
  IMPLICIT NONE
  TYPE(IDFOBJ),INTENT(IN) :: IDF1
- TYPE(IDFOBJ),INTENT(OUT) :: IDF2
+ TYPE(IDFOBJ),INTENT(INOUT) :: IDF2
 
  IDF2%NCOL  =IDF1%NCOL
  IDF2%NROW  =IDF1%NROW

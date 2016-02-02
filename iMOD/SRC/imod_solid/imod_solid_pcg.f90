@@ -800,7 +800,7 @@ CONTAINS
  
  PCG(1)%CR=1.0; PCG(1)%CC=1.0; PCG(1)%RHS=0.0; PCG(1)%HCOF=0.0; PCG(1)%SS=0.0
  
- !## apply given conductance
+ !## blank-out value
  IF(PRESENT(CC_GIVEN))THEN
   DO IROW=1,NROW; DO ICOL=1,NCOL
    IF(CC_GIVEN%X(ICOL,IROW).EQ.CC_GIVEN%NODATA)THEN
