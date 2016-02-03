@@ -24,10 +24,21 @@ MODULE MOD_GEOCONNECT_PAR
 
 USE WINTERACTER
 USE RESOURCE
+USE MOD_IDF_PAR, ONLY : IDFOBJ
 
 !#### Define global variables: ####
-!# NLAYM (model), NLAYR (Regis)
-!# IDF-types to read IDF-files from given folders: TOPM(.), BOTM(.), IACTM(.), FORMATION(.), FFORMATION(.)
+TYPE(IDFOBJ),ALLOCATABLE,DIMENSION(:),SAVE :: TOPM,BOTM,FFRAC,TBR,KHR,KVR !# IDF-types to read IDF-files from given folders: TOPM(.), BOTM(.), IACTM(.), FORMATION(.), FFORMATION(.)
+INTEGER,ALLOCATABLE,DIMENSION(:) :: IACTM
+INTEGER,SAVE :: NLAYM,NLAYR,IOPTW !# NLAYM (model), NLAYR (Regis)
+CHARACTER(LEN=256),SAVE :: OUTPUTFOLDER,FRACTIONFOLDER
+CHARACTER(LEN=12),ALLOCATABLE,DIMENSION(:) :: FORMR !# FORMR now stored in CTYPE, this variable may not be needed??
+CHARACTER(LEN=256),DIMENSION(:),POINTER,PRIVATE :: REGISTOP,REGISBOT,REGISKHV,REGISKVV
+
+TYPE FRMOBJ
+ CHARACTER(LEN=12) :: FORM
+ REAL :: FACT
+END TYPE
+TYPE(FRMOBJ),ALLOCATABLE,DIMENSION(:) :: IPFAC
 
 CONTAINS
 
@@ -37,8 +48,8 @@ CONTAINS
  !# subroutine to read all settings options for either use in iMOD-Batch or in iMOD-GUI
  IMPLICIT NONE
 
+ IOPTW= !#Read write option from Settingsfile or window checkboxes
  
-
  END SUBROUTINE GC_READ_SETTINGS
  
  !###======================================================================
