@@ -5209,20 +5209,20 @@ CONTAINS
  !###======================================================================
  SUBROUTINE IMODBATCH_GEOCONNECT()
  !###======================================================================
- USE MOD_GEOCONNECT
- USE MOD_GEOCONNECT_PAR
+! USE MOD_GEOCONNECT
+! USE MOD_GEOCONNECT_PAR
  IMPLICIT NONE
  
- CALL GC_READ_SETTINGS() !#call to read settings-variables from ini-file
- 
- IF(PREPROCESSING)THEN !# call to read preprocessing variables from ini-file
-  CALL GC_READ_PRE()
-  CALL GC_PRE(1) !# Call to calculation-subroutine in MOD_GEOCONNECT 
- ELSEIF(POSTPROCESSING)THEN !# call to read postprocessing variables from ini-file
-  CALL GC_READ_POST()
-  CALL GC_POST(1)!# Call to calculation-subroutine in MOD_GEOCONNECT
- ENDIF
- 
+! CALL GC_READ_SETTINGS() !#call to read settings-variables from ini-file
+! 
+! IF(PREPROCESSING)THEN !# call to read preprocessing variables from ini-file
+!  CALL GC_READ_PRE()
+!  CALL GC_PRE(1) !# Call to calculation-subroutine in MOD_GEOCONNECT 
+! ELSEIF(POSTPROCESSING)THEN !# call to read postprocessing variables from ini-file
+!  CALL GC_READ_POST()
+!  CALL GC_POST(1)!# Call to calculation-subroutine in MOD_GEOCONNECT
+! ENDIF
+! 
  END SUBROUTINE IMODBATCH_GEOCONNECT
   
 END MODULE MOD_BATCH

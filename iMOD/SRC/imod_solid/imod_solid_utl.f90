@@ -457,8 +457,6 @@ CONTAINS
   WRITE(IU,'(A)',IOSTAT=IOS) TRIM(LINE)
   !## read coordinates
   DO I=1,SPF(ISPF)%NXY
-!   LINE=TRIM(RTOS(SPF(ISPF)%X(I),'F',2))//','//TRIM(RTOS(SPF(ISPF)%Y(I),'F',2))
-!   WRITE(IU,'(A)',IOSTAT=IOS) TRIM(LINE)
    WRITE(IU,*,IOSTAT=IOS) SPF(ISPF)%X(I),',',SPF(ISPF)%Y(I)
   ENDDO
   LINE=TRIM(RTOS(SPF(ISPF)%TX,'F',2))//' !## length of the cross-section'
@@ -473,8 +471,6 @@ CONTAINS
    WRITE(IU,'(A)',IOSTAT=IOS) TRIM(LINE)
    !## read all dist/zvalue on the segments
    DO I=1,SPF(ISPF)%PROF(IL)%NPOS
-!    LINE=TRIM(RTOS(SPF(ISPF)%PROF(IL)%PX(I),'F',2))//','//TRIM(RTOS(SPF(ISPF)%PROF(IL)%PZ(I),'F',2))
-!    WRITE(IU,'(A)',IOSTAT=IOS) TRIM(LINE)
     WRITE(IU,*,IOSTAT=IOS) SPF(ISPF)%PROF(IL)%PX(I),',',SPF(ISPF)%PROF(IL)%PZ(I)
    ENDDO
   ENDDO
