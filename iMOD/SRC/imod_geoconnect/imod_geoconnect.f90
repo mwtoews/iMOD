@@ -89,75 +89,51 @@ CONTAINS
  CHARACTER(LEN=256) :: FNAME,ROOT,LINE
  CHARACTER(LEN=52) :: WC,CTYPE
  
- !## try to read all idf's (WAARVOOR DIENT DE J-VARIABELE?)
- J=1
- DO I=1,NLAYM
-  FNAME=TRIM(OUTPUTFOLDER)//'\'//TRIM(TOPM(1)%FNAME(I)(TOPM(1)%FNAME(I),'\',.TRUE.)+1:))
-  IF(MOD(I,2).NE.0)THEN; IF(.NOT.IDFREAD(TOPM(J),FNAME,1))RETURN; ENDIF
-  FNAME=TRIM(OUTPUTFOLDER)//'\'//TRIM(BOTM(1)%FNAME(I)(BOTM(1)%FNAME(I),'\',.TRUE.)+1:))
-  IF(MOD(I,2).EQ.0)THEN; IF(.NOT.IDFREAD(BOTM(J),FNAME,1))RETURN; J=J+1; ENDIF
- ENDDO
+ !## try to read all idf's
+ IF(.NOT.GC_READ_MODELTB())RETURN
  
- !## get list of "regis"-files
- IF(.NOT.SOLID_CALC_KDC_INIT(NLAYM))RETURN !#??
-
- !#define subdirections for needed REGIS-files
- I=INDEX(REGISFOLDER,'\',.TRUE.); ROOT=REGISFOLDER(:I-1); WC='*.IDF'
- IF(.NOT.UTL_DIRINFO_POINTER(TRIM(ROOT)//'\TOP',WC,REGISTOP,'F'))RETURN
- IF(.NOT.UTL_DIRINFO_POINTER(TRIM(ROOT)//'\BOT',WC,REGISBOT,'F'))RETURN
- IF(.NOT.UTL_DIRINFO_POINTER(TRIM(ROOT)//'\KHV',WC,REGISKHV,'F'))RETURN
- IF(.NOT.UTL_DIRINFO_POINTER(TRIM(ROOT)//'\KVV',WC,REGISKVV,'F'))RETURN
- DO I=1,SIZE(REGISTOP); REGISTOP(I)=UTL_CAP(TRIM(ROOT)//'\TOP\'//TRIM(REGISTOP(I)),'U'); ENDDO
- DO I=1,SIZE(REGISBOT); REGISBOT(I)=UTL_CAP(TRIM(ROOT)//'\BOT\'//TRIM(REGISBOT(I)),'U'); ENDDO
- DO I=1,SIZE(REGISKHV); REGISKHV(I)=UTL_CAP(TRIM(ROOT)//'\KHV\'//TRIM(REGISKHV(I)),'U'); ENDDO
- DO I=1,SIZE(REGISKVV); REGISKVV(I)=UTL_CAP(TRIM(ROOT)//'\KVV\'//TRIM(REGISKVV(I)),'U'); ENDDO
- 
- !# Nodig om 'Nullify' toe te passen? Initialisatie wel nodig.
- IF(.NOT.GC_PRE_COMPUTE_KDC_INIT(NLAY))RETURN
-
- !#Genereren logfile nodig?? 
-! IU=UTL_GETUNIT(); CALL OSD_OPEN(IU,FILE=TRIM(OUTPUTFOLDER)//'\GeoConnect_log.txt',STATUS='UNKNOWN',ACTION='WRITE',IOSTAT=IOS)
-! IF(IOS.NE.0)THEN; WRITE(*,'(/A/)') 'Can not CREATE '//TRIM(OUTPUTFOLDER)//'\GeoConnect_log.txt'; RETURN; ENDIF
+ !## get list of "regis"-files 
+ IF(.NOT.GC_PRE_COMPUTE_INIT(NLAYM))RETURN
+ IF(.NOT.GC_READ_REGIS(WC))RETURN
   
- NLAYR=SIZE(REGISTOP)
+ NLAYR=SIZE(TOPR)
     
  !## read/process
  DO I=1,NLAYR
   
   WRITE(*,'(2(I10,1X),F10.2)') I,NLAYR,REAL(I*100)/REAL(NLAYR)
   
-  J=INDEX(REGISTOP(I),'\',.TRUE.)+1; K=INDEX(REGISTOP(I),TRIM(WC(2:)))-1
-  CTYPE=REGISTOP(I)(J:K) !#=Formation name related part filename
+  J=INDEX(TOPR(I),'\',.TRUE.)+1; K=INDEX(TOPR(I),TRIM(WC(2:)))-1
+  CTYPE=TOPR(I)(J:K) !#=Formation name related part filename
 
-  WRITE(* ,'(A)') 'Reading:' !; WRITE(IU,'(A)') 'Reading:'
+  WRITE(* ,'(A)') 'Reading:'
   !## try top
-  FNAME=UTL_SUBST(REGISTOP(I),'*',TRIM(CTYPE))
-  WRITE(* ,'(A)') '-'//TRIM(FNAME) !; WRITE(IU,'(A)') '-'//TRIM(FNAME)
-  IF(.NOT.IDFREADSCALE(FNAME,TBR(1),2,1,0.0,0))RETURN !## scale mean
+  FNAME=UTL_SUBST(TOPR(I),'*',TRIM(CTYPE))
+  WRITE(* ,'(A)') '-'//TRIM(FNAME)
+  IF(.NOT.IDFREADSCALE(FNAME,TOPR(I),2,1,0.0,0))RETURN !## scale mean
   TBR(1)%FNAME=TRIM(OUTPUTFOLDER)//'\REGIS\'//TRIM(FNAME(INDEX(FNAME,'\',.TRUE.):))
   !## try bot
-  FNAME=UTL_SUBST(REGISBOT(I),'*',TRIM(CTYPE))
-  WRITE(* ,'(A)') '-'//TRIM(FNAME) !; WRITE(IU,'(A)') '-'//TRIM(FNAME)
-  IF(.NOT.IDFREADSCALE(FNAME,TBR(2),2,1,0.0,0))RETURN !## scale mean
+  FNAME=UTL_SUBST(BOTR(I),'*',TRIM(CTYPE))
+  WRITE(* ,'(A)') '-'//TRIM(FNAME)
+  IF(.NOT.IDFREADSCALE(FNAME,BOTR(I),2,1,0.0,0))RETURN !## scale mean
   TBR(2)%FNAME=TRIM(OUTPUTFOLDER)//'\REGIS\'//TRIM(FNAME(INDEX(FNAME,'\',.TRUE.):))
   !## try kh
-  FNAME=UTL_SUBST(REGISKHV(I),'*',TRIM(CTYPE))
-  IKHR=1; IF(.NOT.IDFREADSCALE(FNAME,KHR(1),3,1,0.0,1))IKHR=0
-  IF(IKHR.EQ.1)THEN; WRITE(*,'(A)') '-'//TRIM(FNAME) !; WRITE(IU,'(A)') '-'//TRIM(FNAME); ENDIF
+  FNAME=UTL_SUBST(KHVR(I),'*',TRIM(CTYPE))
+  IKHR=1; IF(.NOT.IDFREADSCALE(FNAME,KHVR(I),3,1,0.0,1))IKHR=0
+  IF(IKHR.EQ.1)THEN; WRITE(*,'(A)') '-'//TRIM(FNAME)
   KHR(1)%FNAME=TRIM(OUTPUTFOLDER)//'\REGIS\'//TRIM(FNAME(INDEX(FNAME,'\',.TRUE.):))
   !## try kv
-  FNAME=UTL_SUBST(REGISKVV(I),'*',TRIM(CTYPE))
-  IKVR=1; IF(.NOT.IDFREADSCALE(FNAME,KVR(1),3,1,0.0,1))IKVR=0
-  IF(IKVR.EQ.1)THEN; WRITE(*,'(A)') '-'//TRIM(FNAME) !; WRITE(IU,'(A)') '-'//TRIM(FNAME); ENDIF
+  FNAME=UTL_SUBST(KVVR(I),'*',TRIM(CTYPE))
+  IKVR=1; IF(.NOT.IDFREADSCALE(FNAME,KVVR(I),3,1,0.0,1))IKVR=0
+  IF(IKVR.EQ.1)THEN; WRITE(*,'(A)') '-'//TRIM(FNAME)
   KVR(1)%FNAME=TRIM(OUTPUTFOLDER)//'\REGIS\'//TRIM(FNAME(INDEX(FNAME,'\',.TRUE.):))
   
   IF(IKHR.EQ.0.AND.IKVR.EQ.0)THEN
    WRITE(*,'(/A/)')  'No horizontal/vertical permeabilities found, formation will be skipped!'
-   !WRITE(IU,'(/A/)') 'No horizontal/vertical permeabilities found, formation will be skipped!'
    CYCLE
   ENDIF
 
-  CALL GC_READ_FRACTIONS() !#Read fraction files and content into memory (FFRAC(ILAY)%X(ICOL,IROW))
+  !CALL GC_READ_FRACTIONS() !#Read fraction files and content into memory (FFRAC(ILAY)%X(ICOL,IROW))
     
   !## process data
   WRITE(*,'(A)') 'Process data ...'
@@ -184,7 +160,7 @@ CONTAINS
      !## and select the correct formation factor per Regislayer/modellayer
      DO J=1,SIZE(IPFAC%FORM)
       IF(TRIM(CTYPE).EQ.TRIM(IPFAC(J)%FORM)THEN !#stored in IPFAC by reading in iPEST-files
-       KDHIDF(ILAY)%X(ICOL,IROW)=KDHIDF(ILAY)%X(ICOL,IROW)+((Z1-Z2)*KVAL*FFRAC(ILAY)%X(ICOL,IROW)*IPFAC(J)%FACT)
+       KDHIDF(ILAY)%X(ICOL,IROW)=KDHIDF(ILAY)%X(ICOL,IROW)+((Z1-Z2)*KVAL*IPFAC(J)%FACT)
       ENDIF
      ENDDO
      
@@ -199,7 +175,7 @@ CONTAINS
      !## sum vertical transmissivity for each model layer
      DO J=1,SIZE(IPFAC%FORM)
       IF(TRIM(CTYPE).EQ.TRIM(IPFAC(J)%FORM)THEN !#stored in IPFAC by reading in iPEST-files
-       KDVIDF(ILAY)%X(ICOL,IROW)=KDVIDF(ILAY)%X(ICOL,IROW)+((Z1-Z2)*KVAL*FFRAC(ILAY)%X(ICOL,IROW)*IPFAC(J)%FACT)
+       KDVIDF(ILAY)%X(ICOL,IROW)=KDVIDF(ILAY)%X(ICOL,IROW)+((Z1-Z2)*KVAL*IPFAC(J)%FACT)
       ENDIF
      ENDDO
          
@@ -209,7 +185,6 @@ CONTAINS
   ENDDO ; ENDDO
     
  ENDDO
- !CLOSE(IU)
  
  !## write transmissivities/vertical resistances
  LINE=TRIM(OUTPUTFOLDER)//'\mdl_kd_l'//TRIM(ITOS(I))//'.idf'
@@ -256,6 +231,54 @@ CONTAINS
  ENDIF
  
  END SUBROUTINE GC_PRE_COMPUTE
+
+ !###======================================================================
+ LOGICAL FUNCTION GC_READ_MODELTB()
+ !###======================================================================
+ !# function to read model top and bot files
+ IMPLICIT NONE
+ INTEGER :: I,J
+ CHARACTER(LEN=256) :: FNAME
+ 
+ GC_READ_MODELTB=.FALSE.
+ 
+ J=1
+ DO I=1,NLAYM
+  FNAME=TRIM(OUTPUTFOLDER)//'\'//TRIM(TOPM(1)%FNAME(I)(TOPM(1)%FNAME(I),'\',.TRUE.)+1:))
+  IF(MOD(I,2).NE.0)THEN; IF(.NOT.IDFREAD(TOPM(J),FNAME,1))RETURN; ENDIF
+  FNAME=TRIM(OUTPUTFOLDER)//'\'//TRIM(BOTM(1)%FNAME(I)(BOTM(1)%FNAME(I),'\',.TRUE.)+1:))
+  IF(MOD(I,2).EQ.0)THEN; IF(.NOT.IDFREAD(BOTM(J),FNAME,1))RETURN; J=J+1; ENDIF
+ ENDDO
+ 
+ GC_READ_MODELTB=.TRUE.
+ 
+ END LOGICAL FUNCTION GC_READ_MODELTB
+
+ !###======================================================================
+ LOGICAL FUNCTION GC_READ_REGIS(WC)
+ !###======================================================================
+ !# function to read model top and bot files
+ IMPLICIT NONE
+ INTEGER :: I
+ CHARACTER(LEN=52),INTENT(OUT) :: WC
+ CHARACTER(LEN=256) :: ROOT
+ 
+ GC_READ_REGIS=.FALSE.
+ 
+ !#define subdirections for needed REGIS-files
+ I=INDEX(REGISFOLDER,'\',.TRUE.); ROOT=REGISFOLDER(:I-1); WC='*.IDF'
+ IF(.NOT.UTL_DIRINFO_POINTER(TRIM(ROOT)//'\TOP',WC,TOPR,'F'))RETURN
+ IF(.NOT.UTL_DIRINFO_POINTER(TRIM(ROOT)//'\BOT',WC,BOTR,'F'))RETURN
+ IF(.NOT.UTL_DIRINFO_POINTER(TRIM(ROOT)//'\KHV',WC,KHVR,'F'))RETURN
+ IF(.NOT.UTL_DIRINFO_POINTER(TRIM(ROOT)//'\KVV',WC,KVVR,'F'))RETURN
+ DO I=1,SIZE(TOPR); TOPR(I)=UTL_CAP(TRIM(ROOT)//'\TOP\'//TRIM(TOPR(I)),'U'); ENDDO
+ DO I=1,SIZE(BOTR); BOTR(I)=UTL_CAP(TRIM(ROOT)//'\BOT\'//TRIM(BOTR(I)),'U'); ENDDO
+ DO I=1,SIZE(KHVR); KHVR(I)=UTL_CAP(TRIM(ROOT)//'\KHV\'//TRIM(KHVR(I)),'U'); ENDDO
+ DO I=1,SIZE(KVVR); KVVR(I)=UTL_CAP(TRIM(ROOT)//'\KVV\'//TRIM(KVVR(I)),'U'); ENDDO
+ 
+ GC_READ_REGIS=.TRUE.
+ 
+ END LOGICAL FUNCTION GC_READ_REGIS
 
  !###======================================================================
  LOGICAL FUNCTION GC_PRE_COMPUTE_INIT(NLAY)

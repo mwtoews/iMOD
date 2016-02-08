@@ -5206,23 +5206,26 @@ CONTAINS
  
  END SUBROUTINE IMODBATCH_FLUMY
 
-! !###======================================================================
-! SUBROUTINE IMODBATCH_GEOCONNECT()
-! !###======================================================================
-! USE MOD_GEOCONNECT
-! USE MOD_GEOCONNECT_PAR
-! IMPLICIT NONE
-! 
-! CALL GC_READ_SETTINGS() !#call to read settings-variables from ini-file
-! 
-! IF(PREPROCESSING)THEN !# call to read preprocessing variables from ini-file
-!  CALL GC_READ_PRE()
-!  CALL GC_PRE(1) !# Call to calculation-subroutine in MOD_GEOCONNECT 
-! ELSEIF(POSTPROCESSING)THEN !# call to read postprocessing variables from ini-file
-!  CALL GC_READ_POST()
-!  CALL GC_POST(1)!# Call to calculation-subroutine in MOD_GEOCONNECT
-! ENDIF
-! 
-! END SUBROUTINE IMODBATCH_GEOCONNECT
+ !###======================================================================
+ SUBROUTINE IMODBATCH_GEOCONNECT()
+ !###======================================================================
+ USE MOD_GEOCONNECT
+ USE MOD_GEOCONNECT_PAR
+ IMPLICIT NONE
+ INTEGER :: IU
+ 
+ CALL GC_READ_INI(IU,IFLAG) !#call to read settings-variables from ini-file
+ 
+ IF(IFLAG.EQ.1)THEN !# call to identify routine
+  
+ ELSEIF(IFLAG.EQ.2)THEN !# call to read preprocessing variables from ini-file
+  CALL GC_PRE(1) !# Call to calculation-subroutine in MOD_GEOCONNECT 
+ ELSEIF(IFLAG.EQ.3)THEN !# call to read postprocessing variables from ini-file
+  CALL GC_POST(1)!# Call to calculation-subroutine in MOD_GEOCONNECT
+ ENDIF
+ 
+ CALL GC_CLOSE()
+ 
+ END SUBROUTINE IMODBATCH_GEOCONNECT
   
 END MODULE MOD_BATCH

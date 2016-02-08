@@ -27,12 +27,13 @@ USE RESOURCE
 USE MOD_IDF_PAR, ONLY : IDFOBJ
 
 !#### Define global variables: ####
-TYPE(IDFOBJ),ALLOCATABLE,DIMENSION(:),SAVE :: TOPM,BOTM,FFRAC,TBR,KHR,KVR !# IDF-types to read IDF-files from given folders: TOPM(.), BOTM(.), IACTM(.), FORMATION(.), FFORMATION(.)
+TYPE(IDFOBJ),ALLOCATABLE,DIMENSION(:),SAVE :: TOPM,BOTM,FFRAC !,TBR,KHR,KVR !# IDF-types to read IDF-files from given folders: TOPM(.), BOTM(.), IACTM(.), FORMATION(.), FFORMATION(.)
 INTEGER,ALLOCATABLE,DIMENSION(:) :: IACTM
 INTEGER,SAVE :: NLAYM,NLAYR,IOPTW !# NLAYM (model), NLAYR (Regis)
 CHARACTER(LEN=256),SAVE :: OUTPUTFOLDER,FRACTIONFOLDER
 CHARACTER(LEN=12),ALLOCATABLE,DIMENSION(:) :: FORMR !# FORMR now stored in CTYPE, this variable may not be needed??
-CHARACTER(LEN=256),DIMENSION(:),POINTER,PRIVATE :: REGISTOP,REGISBOT,REGISKHV,REGISKVV
+CHARACTER(LEN=256),DIMENSION(:),POINTER,PRIVATE :: TOPR,BOTR,KHVR,KVVR
+INTEGER :: GC_IFLAG !# IFLAG related to GC computation options 1=identify, 2=preprocessing, 3=postprocessing
 
 TYPE FRMOBJ
  CHARACTER(LEN=12) :: FORM
@@ -43,24 +44,35 @@ TYPE(FRMOBJ),ALLOCATABLE,DIMENSION(:) :: IPFAC
 CONTAINS
 
  !###======================================================================
- SUBROUTINE GC_READ_SETTINGS()
+ SUBROUTINE GC_INIT(UNIT,IFLAG)
  !###======================================================================
  !# subroutine to read all settings options for either use in iMOD-Batch or in iMOD-GUI
  IMPLICIT NONE
-
+ INTEGER,INTENT(IN) :: UNIT !# Unit number of GEOCONNECT.txt or GEOCONNECT.ini 
+ INTEGER,INTENT(OUT) :: IFLAG !# IFLAG read from ini-file, related to type of computation
+  
  IOPTW= !#Read write option from Settingsfile or window checkboxes
  
- END SUBROUTINE GC_READ_SETTINGS
+ END SUBROUTINE GC_READ_INIT
  
  !###======================================================================
- SUBROUTINE GC_READ_PRE()
+ SUBROUTINE GC_READ_INI()
  !###======================================================================
  !# subroutine to read all preprocessing options for either use in iMOD-Batch or in iMOD-GUI 
  IMPLICIT NONE
+ INTEGER :: IU !# Unit number of GEOCONNECT.txt or GEOCONNECT.ini
 
+ CALL GC_READ_INIT(IU)
+
+ END SUBROUTINE GC_READ_INI
  
+ !###======================================================================
+ SUBROUTINE GC_CLOSE()
+ !###======================================================================
+ !# subroutine to close all used files and deallocate allocated variables 
+ IMPLICIT NONE
 
- END SUBROUTINE GC_READ_PRE
+ END SUBROUTINE GC_CLOSE 
  
  !###======================================================================
  SUBROUTINE GC_WRITE_SETTINGS()
