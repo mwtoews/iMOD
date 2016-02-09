@@ -505,6 +505,8 @@ CONTAINS
    CALL IMODBATCH_RUNFILE()
   CASE (57)!## make flumy-files
    CALL IMODBATCH_FLUMY()
+  CASE (58)!## GeoConnect
+   CALL IMODBATCH_GEOCONNECT()
  END SELECT
 
  CLOSE(IU)
@@ -5212,19 +5214,19 @@ CONTAINS
  USE MOD_GEOCONNECT
  USE MOD_GEOCONNECT_PAR
  IMPLICIT NONE
- INTEGER :: IU
+ INTEGER :: IU,IFLAG
  
  CALL GC_READ_INI(IU,IFLAG) !#call to read settings-variables from ini-file
  
- IF(IFLAG.EQ.1)THEN !# call to identify routine
-  
- ELSEIF(IFLAG.EQ.2)THEN !# call to read preprocessing variables from ini-file
-  CALL GC_PRE(1) !# Call to calculation-subroutine in MOD_GEOCONNECT 
- ELSEIF(IFLAG.EQ.3)THEN !# call to read postprocessing variables from ini-file
-  CALL GC_POST(1)!# Call to calculation-subroutine in MOD_GEOCONNECT
- ENDIF
+! IF(IFLAG.EQ.1)THEN !# call to identify routine
+!  CALL GC_IDENTIFY(1)
+! ELSEIF(IFLAG.EQ.2)THEN !# call to read preprocessing variables from ini-file
+!  CALL GC_PRE(1) !# Call to calculation-subroutine in MOD_GEOCONNECT 
+! ELSEIF(IFLAG.EQ.3)THEN !# call to read postprocessing variables from ini-file
+!  CALL GC_POST(1)!# Call to calculation-subroutine in MOD_GEOCONNECT
+! ENDIF
  
- CALL GC_CLOSE()
+ CALL GC_CLOSE_DEALLOC(IU)
  
  END SUBROUTINE IMODBATCH_GEOCONNECT
   
