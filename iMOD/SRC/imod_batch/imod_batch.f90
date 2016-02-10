@@ -5214,19 +5214,26 @@ CONTAINS
  USE MOD_GEOCONNECT
  USE MOD_GEOCONNECT_PAR
  IMPLICIT NONE
- INTEGER :: IU,IFLAG
  
- CALL GC_READ_INI(IU,IFLAG) !#call to read settings-variables from ini-file
+ !## call to read settings-variables from ini-file and allocate memory
+ IF(GC_INIT(IU))THEN
+   
+  SELECT CASE (GC_IFLAG)
+   !## call to identify routine
+   CASE (1)
+!    CALL GC_IDENTIFY()
+   !## Call to calculation-subroutine in MOD_GEOCONNECT 
+   CASE (2) !# call to read preprocessing variables from ini-file
+    CALL GC_PRE_COMPUTE(1)
+   !## call to read postprocessing variables from ini-file
+   CASE (3) 
+!  CALL GC_POST()!# Call to calculation-subroutine in MOD_GEOCONNECT
+  END SELECT
  
-! IF(IFLAG.EQ.1)THEN !# call to identify routine
-!  CALL GC_IDENTIFY(1)
-! ELSEIF(IFLAG.EQ.2)THEN !# call to read preprocessing variables from ini-file
-!  CALL GC_PRE(1) !# Call to calculation-subroutine in MOD_GEOCONNECT 
-! ELSEIF(IFLAG.EQ.3)THEN !# call to read postprocessing variables from ini-file
-!  CALL GC_POST(1)!# Call to calculation-subroutine in MOD_GEOCONNECT
-! ENDIF
+ ENDIF
  
- CALL GC_CLOSE_DEALLOC(IU)
+ !## clean memory
+ CALL GC_DEALLOCATE()
  
  END SUBROUTINE IMODBATCH_GEOCONNECT
   
