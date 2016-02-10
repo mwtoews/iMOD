@@ -27,6 +27,7 @@ USE RESOURCE
 USE MOD_GEOCONNECT_PAR
 USE MOD_UTL, ONLY : UTL_GETUNIT,UTL_SUBST,ITOS,UTL_DIRINFO_POINTER,UTL_CAP
 USE MOD_IDF, ONLY : IDFGETXYVAL,IDFREADSCALE,IDFWRITE,IDFREAD
+USE MOD_OSD, ONLY : OSD_OPEN
 
 CONTAINS
 
@@ -110,14 +111,12 @@ CONTAINS
 !    Z1=MIN(TR,XTOP); Z2=MAX(BR,XBOT)
 !    IF(Z1.GT.Z2.AND.XTOP.GT.XBOT)THEN
 !     F=(Z1-Z2)/(XTOP-XBOT) 
-!!     !## sum up the total fractions
-!!     FFRAC(ILAY)%X(ICOL,IROW)=F
 !    ENDIF     
 !   ENDDO
 !  ENDDO; ENDDO
 !  
 !!  DO ILAY=1,NLAYM
-!!   FVAL(ILAY)=IDFGETXYVAL(FFRAC(ILAY)%X,X_ID,Y_ID) !#fraction value related to layer and formation
+!!   FVAL(ILAY)=IDFGETXYVAL(?,X_ID,Y_ID) !#fraction value related to layer and formation
 !!  ENDDO
 !
 !  !##Write FVAL to screen (GUI) or to txt-file (iMODBATCH)
@@ -149,6 +148,9 @@ CONTAINS
  
  !## get list of "regis"-files
  IF(.NOT.GC_GET_REGISFILES())RETURN
+ 
+ !## get iPEST variables
+ !IF(.NOT.GC_READ_IPEST(IPEST,IPESTNR))RETURN
   
  !## read/process
  DO I=1,NLAYR
@@ -158,6 +160,8 @@ CONTAINS
      
   !## process data
   IF(IOPT.EQ.1)WRITE(*,'(A)') 'Process data ...'
+  write(*,*) 'nrow model: ',TOPM(1)%NROW,'ncol model: ',TOPM(1)%NCOL
+  
   DO IROW=1,TOPM(1)%NROW; DO ICOL=1,TOPM(1)%NCOL
    
    TR=TOPR%X(ICOL,IROW); BR=BOTR%X(ICOL,IROW)   
@@ -179,12 +183,16 @@ CONTAINS
       IF(IKVR.EQ.1)KVAL=MAX(KVAL,(3.0*KVR%X(ICOL,IROW)))
      ENDIF
      !## sum horizontal transmissivity for each model layer by using fraction grids and formationfactors of model
-     !## and select the correct formation factor per Regislayer/modellayer
-     DO J=1,SIZE(IPFAC%FORM)
-      IF(TRIM(FTYPE).EQ.TRIM(IPFAC(J)%FORM))THEN !#stored in IPFAC by reading in iPEST-files
-       KDHIDF(ILAY)%X(ICOL,IROW)=KDHIDF(ILAY)%X(ICOL,IROW)+((Z1-Z2)*KVAL*IPFAC(J)%FACT)
-      ENDIF
-     ENDDO
+     !## and select the correct formation factor per Regislayer/modellayer, if IPFAC is filled, else IPFAC(J)%FACT=1.0
+     IF(TRIM(IPEST).NE.'')THEN
+      DO J=1,SIZE(IPFAC%FORM)
+       IF(TRIM(FTYPE).EQ.TRIM(IPFAC(J)%FORM))THEN !#stored in IPFAC by reading in iPEST-files
+        KDHIDF(ILAY)%X(ICOL,IROW)=KDHIDF(ILAY)%X(ICOL,IROW)+((Z1-Z2)*KVAL*IPFAC(J)%FACT)
+       ENDIF
+      ENDDO
+     ELSE
+      KDHIDF(ILAY)%X(ICOL,IROW)=KDHIDF(ILAY)%X(ICOL,IROW)+((Z1-Z2)*KVAL*1.0)
+     ENDIF
      
      KVAL=0.0
      !## found vertical permeability
@@ -195,14 +203,12 @@ CONTAINS
       IF(IKHR.EQ.1)KVAL=MAX(KVAL,(0.3*KHR%X(ICOL,IROW)))
      ENDIF
      !## sum vertical transmissivity for each model layer
+     !## if IPFAC is filled, else IPFAC(J)%FACT=1.0
      DO J=1,SIZE(IPFAC%FORM)
       IF(TRIM(FTYPE).EQ.TRIM(IPFAC(J)%FORM))THEN !#stored in IPFAC by reading in iPEST-files
        KDVIDF(ILAY)%X(ICOL,IROW)=KDVIDF(ILAY)%X(ICOL,IROW)+((Z1-Z2)*KVAL*IPFAC(J)%FACT)
       ENDIF
      ENDDO
-
-!     !## sum up the total fractions - deden we toch niet?
-!     FFRAC(ILAY)%X(ICOL,IROW)=F 
          
     ENDIF
    ENDDO
@@ -228,10 +234,7 @@ CONTAINS
      IF(KVAL.GT.0.0)THEN
       CIDF(ILAY)%X(ICOL,IROW)=CIDF(ILAY)%X(ICOL,IROW)+((Z1-Z2)/KVAL)
      ENDIF
-     
-!     !## sum up the total fractions
-!     CFRAC(ILAY)%X(ICOL,IROW)=F 
-    
+         
     ENDIF
    ENDDO
    
@@ -277,57 +280,65 @@ CONTAINS
  !###======================================================================
  !# subroutine to calculate KH,KV,KVA and write K- and C-values to file (KHV, KVV, KVA, KDW and VCW)
  IMPLICIT NONE
- !INTEGER,INTENT(IN) :: IOPT !# Write options related to checkbox options
  INTEGER :: I
  CHARACTER(LEN=256) :: LINE
   
  !## write K- and C-values to file
  IF(ISAVEK.EQ.1.AND.ISAVEC.EQ.0)THEN !# Option only write KHV, KVV and KVA
-  LINE=TRIM(OUTPUTFOLDER)//'\mdl_khv_l'//TRIM(ITOS(I))//'.idf'
-  DO I=1,SIZE(KDVIDF);  IF(.NOT.IDFWRITE(KDVIDF(I),TRIM(LINE),1))RETURN; ENDDO
-  LINE=TRIM(OUTPUTFOLDER)//'\mdl_kvv_l'//TRIM(ITOS(I))//'.idf'
-  DO I=1,SIZE(KVVIDF);  IF(.NOT.IDFWRITE(KVVIDF(I),TRIM(LINE),1))RETURN; ENDDO
-  LINE=TRIM(OUTPUTFOLDER)//'\mdl_kva_l'//TRIM(ITOS(I))//'.idf'
-  DO I=1,SIZE(KVAIDF); IF(.NOT.IDFWRITE(KVAIDF(I),TRIM(LINE),1))RETURN; ENDDO
+  DO I=1,SIZE(KDVIDF); LINE=TRIM(OUTPUTFOLDER)//'\mdl_khv_l'//TRIM(ITOS(I))//'.idf'
+   IF(.NOT.IDFWRITE(KDVIDF(I),TRIM(LINE),1))RETURN; ENDDO
+  DO I=1,SIZE(KVVIDF); LINE=TRIM(OUTPUTFOLDER)//'\mdl_kvv_l'//TRIM(ITOS(I))//'.idf'
+   IF(.NOT.IDFWRITE(KVVIDF(I),TRIM(LINE),1))RETURN; ENDDO
+  DO I=1,SIZE(KVAIDF); LINE=TRIM(OUTPUTFOLDER)//'\mdl_kva_l'//TRIM(ITOS(I))//'.idf'
+   IF(.NOT.IDFWRITE(KVAIDF(I),TRIM(LINE),1))RETURN; ENDDO
  
  ELSEIF(ISAVEK.EQ.0.AND.ISAVEC.EQ.1)THEN !# Option only write KDW and VCW
-  LINE=TRIM(OUTPUTFOLDER)//'\mdl_kd_l'//TRIM(ITOS(I))//'.idf'
-  DO I=1,SIZE(KDHIDF); IF(.NOT.IDFWRITE(KDHIDF(I),TRIM(LINE),1))RETURN; ENDDO
-  LINE=TRIM(OUTPUTFOLDER)//'\mdl_vc_l'//TRIM(ITOS(I))//'.idf'
-  DO I=1,SIZE(CIDF);   IF(.NOT.IDFWRITE(CIDF(I),TRIM(LINE),1))RETURN; ENDDO
+  DO I=1,SIZE(KDHIDF); LINE=TRIM(OUTPUTFOLDER)//'\mdl_kd_l'//TRIM(ITOS(I))//'.idf'
+   IF(.NOT.IDFWRITE(KDHIDF(I),TRIM(LINE),1))RETURN; ENDDO
+  DO I=1,SIZE(CIDF); LINE=TRIM(OUTPUTFOLDER)//'\mdl_vc_l'//TRIM(ITOS(I))//'.idf'
+   IF(.NOT.IDFWRITE(CIDF(I),TRIM(LINE),1))RETURN; ENDDO
  
  ELSEIF(ISAVEK.EQ.1.AND.ISAVEC.EQ.1)THEN !# Option to write all variables (KHV, KVV, KVA, KDW and VCW)
-  LINE=TRIM(OUTPUTFOLDER)//'\mdl_khv_l'//TRIM(ITOS(I))//'.idf'
-  DO I=1,SIZE(KDVIDF);  IF(.NOT.IDFWRITE(KDVIDF(I),TRIM(LINE),1))RETURN; ENDDO
-  LINE=TRIM(OUTPUTFOLDER)//'\mdl_kvv_l'//TRIM(ITOS(I))//'.idf'
-  DO I=1,SIZE(KVVIDF);  IF(.NOT.IDFWRITE(KVVIDF(I),TRIM(LINE),1))RETURN; ENDDO
-  LINE=TRIM(OUTPUTFOLDER)//'\mdl_kva_l'//TRIM(ITOS(I))//'.idf'
-  DO I=1,SIZE(KVAIDF); IF(.NOT.IDFWRITE(KVAIDF(I),TRIM(LINE),1))RETURN; ENDDO
-   LINE=TRIM(OUTPUTFOLDER)//'\mdl_kd_l'//TRIM(ITOS(I))//'.idf'
-  DO I=1,SIZE(KDHIDF); IF(.NOT.IDFWRITE(KDHIDF(I),TRIM(LINE),1))RETURN; ENDDO
-  LINE=TRIM(OUTPUTFOLDER)//'\mdl_vc_l'//TRIM(ITOS(I))//'.idf'
-  DO I=1,SIZE(CIDF);   IF(.NOT.IDFWRITE(CIDF(I),TRIM(LINE),1))RETURN; ENDDO
+  DO I=1,SIZE(KDVIDF); LINE=TRIM(OUTPUTFOLDER)//'\mdl_khv_l'//TRIM(ITOS(I))//'.idf'
+   IF(.NOT.IDFWRITE(KDVIDF(I),TRIM(LINE),1))RETURN; ENDDO
+  DO I=1,SIZE(KVVIDF); LINE=TRIM(OUTPUTFOLDER)//'\mdl_kvv_l'//TRIM(ITOS(I))//'.idf'
+   IF(.NOT.IDFWRITE(KVVIDF(I),TRIM(LINE),1))RETURN; ENDDO
+  DO I=1,SIZE(KVAIDF); LINE=TRIM(OUTPUTFOLDER)//'\mdl_kva_l'//TRIM(ITOS(I))//'.idf'
+   IF(.NOT.IDFWRITE(KVAIDF(I),TRIM(LINE),1))RETURN; ENDDO
+  DO I=1,SIZE(KDHIDF); LINE=TRIM(OUTPUTFOLDER)//'\mdl_kd_l'//TRIM(ITOS(I))//'.idf'
+   IF(.NOT.IDFWRITE(KDHIDF(I),TRIM(LINE),1))RETURN; ENDDO
+  DO I=1,SIZE(CIDF); LINE=TRIM(OUTPUTFOLDER)//'\mdl_vc_l'//TRIM(ITOS(I))//'.idf'
+   IF(.NOT.IDFWRITE(CIDF(I),TRIM(LINE),1))RETURN; ENDDO
  ENDIF
 
  END SUBROUTINE GC_PRE_COMPUTE_WRITE
 
  !###======================================================================
- SUBROUTINE GC_READ_IPEST(FNAME,NR)
+ LOGICAL FUNCTION GC_READ_IPEST(FNAME,NR)
  !###======================================================================
  !# subroutine to read IPEST factors from file
  IMPLICIT NONE
  CHARACTER(LEN=*),INTENT(IN) :: FNAME
  INTEGER,INTENT(IN) :: NR
- INTEGER :: I
-  
- ALLOCATE(IPFAC(NLAYM))
- !#Read variables from file into IPFAC-array
- DO I=1,NLAYM !# loop over total amount of modellayers
-!  IPFAC(I)%FORM=
-!  IPFAC(I)%FAC=
- ENDDO
+ INTEGER :: I,IU,IOS
  
- END SUBROUTINE GC_READ_IPEST
+ GC_READ_IPEST=.FALSE.
+ IPFAC%FORM=''
+ IPFAC%FACT=1.0
+ 
+ !#Read variables from file into IPFAC-array
+ IF(TRIM(FNAME).NE.'')THEN
+  IU=UTL_GETUNIT(); CALL OSD_OPEN(IU,FILE=FNAME,STATUS='OLD',FORM='FORMATTED',ACTION='READ',IOSTAT=IOS)
+  IF(IOS.NE.0)THEN; WRITE(*,'(A)') 'Can not open file: ['//TRIM(FNAME)//'] for reading'; RETURN; ENDIF
+  DO I=1,NLAYM !# loop over total amount of modellayers
+ !  IPFAC(I)%FORM=
+ !  IPFAC(I)%FAC=
+  ENDDO
+ ENDIF
+ 
+ GC_READ_IPEST=.TRUE.
+ 
+ END FUNCTION GC_READ_IPEST
 
  !###======================================================================
  LOGICAL FUNCTION GC_READ_MODELTB()
@@ -343,13 +354,15 @@ CONTAINS
 
   !## get TOP filename and add layer number
   FNAME=TRIM(TOPFOLDER(INDEX(TOPFOLDER,'\',.TRUE.)+1:));  FNAME=TRIM(FNAME)//'_L'//TRIM(ITOS(ILAY))//'.IDF'
-  TOPM(ILAY)%FNAME=TRIM(TOPFOLDER)//'\'//TRIM(FNAME)
-  IF(.NOT.IDFREADSCALE(FNAME,TOPM(ILAY),2,1,0.0,1))RETURN
+  TOPM(ILAY)%FNAME=TRIM(TOPFOLDER(:INDEX(TOPFOLDER,'\',.TRUE.)-1))//'\'//TRIM(FNAME)
+  IF(.NOT.IDFREAD(TOPM(ILAY),TOPM(ILAY)%FNAME,0))RETURN
+  !IF(.NOT.IDFREADSCALE(TOPM(ILAY)%FNAME,TOPM(ILAY),2,0,0.0,1))RETURN
 
   !## get BOTTOM filename and add layer number
   FNAME=TRIM(BOTFOLDER(INDEX(BOTFOLDER,'\',.TRUE.)+1:));  FNAME=TRIM(FNAME)//'_L'//TRIM(ITOS(ILAY))//'.IDF'
-  BOTM(ILAY)%FNAME=TRIM(BOTFOLDER)//'\'//TRIM(FNAME)
-  IF(.NOT.IDFREADSCALE(FNAME,BOTM(ILAY),2,1,0.0,1))RETURN
+  BOTM(ILAY)%FNAME=TRIM(BOTFOLDER(:INDEX(BOTFOLDER,'\',.TRUE.)-1))//'\'//TRIM(FNAME)
+  IF(.NOT.IDFREAD(BOTM(ILAY),BOTM(ILAY)%FNAME,0))RETURN
+  !IF(.NOT.IDFREADSCALE(BOTM(ILAY)%FNAME,BOTM(ILAY),2,0,0.0,1))RETURN
 
  ENDDO
  
@@ -360,7 +373,7 @@ CONTAINS
  !###======================================================================
  LOGICAL FUNCTION GC_GET_REGISFILES()
  !###======================================================================
- !# function to read model top and bot files - als je comment doet, moet het wel goed zijn :-)
+ !# function to get REGIS files
  IMPLICIT NONE
  INTEGER :: I
  
@@ -381,11 +394,13 @@ CONTAINS
  !###======================================================================
  LOGICAL FUNCTION GC_GET_REGISDATA(IFILE,IKHR,IKVR,FTYPE)
  !###======================================================================
+ !## function to collect the data from the REGIS files.
  IMPLICIT NONE
  INTEGER,INTENT(IN) :: IFILE
  INTEGER,INTENT(OUT) :: IKHR,IKVR
  INTEGER :: I,J,K
  CHARACTER(LEN=52),INTENT(OUT) :: FTYPE
+ CHARACTER(LEN=256) :: FNAME
  
  GC_GET_REGISDATA=.FALSE.
    
@@ -402,17 +417,21 @@ CONTAINS
  !## kvv= formationname-t-ck,  thus apz1-kv-sk.idf
 
  !## try top
- TOPR%FNAME=REGISFILES(IFILE)(1:J)//TRIM(FTYPE)//'-T-CK.IDF'
- IF(.NOT.IDFREADSCALE(TOPR%FNAME,TOPR,2,1,0.0,0))RETURN !## scale mean
+ TOPR%FNAME=TRIM(REGISFOLDER)//TRIM(FTYPE)//'T-CK.IDF'
+ IF(.NOT.IDFREAD(TOPR,TOPR%FNAME,0))RETURN
+ !IF(.NOT.IDFREADSCALE(TOPR%FNAME,TOPR,2,0,0.0,0))RETURN !## scale mean
  !## try bot
- BOTR%FNAME=REGISFILES(IFILE)(1:J)//TRIM(FTYPE)//'-B-CK.IDF'
- IF(.NOT.IDFREADSCALE(BOTR%FNAME,BOTR,2,1,0.0,0))RETURN !## scale mean
+ BOTR%FNAME=TRIM(REGISFOLDER)//TRIM(FTYPE)//'B-CK.IDF'
+ IF(.NOT.IDFREAD(BOTR,BOTR%FNAME,0))RETURN
+ !IF(.NOT.IDFREADSCALE(BOTR%FNAME,BOTR,2,0,0.0,0))RETURN !## scale mean
  !## try kh
- KHR%FNAME=REGISFILES(IFILE)(1:J)//TRIM(FTYPE)//'-KH-SK.IDF'
- IKHR=1; IF(.NOT.IDFREADSCALE(KHR%FNAME,KHR,3,1,0.0,1))IKHR=0
+ KHR%FNAME=TRIM(REGISFOLDER)//TRIM(FTYPE)//'KH-SK.IDF'
+ IKHR=1; IF(.NOT.IDFREAD(KHR,KHR%FNAME,0))IKHR=0 
+ !IKHR=1; IF(.NOT.IDFREADSCALE(KHR%FNAME,KHR,3,0,0.0,0))IKHR=0
  !## try kv
- KVR%FNAME=REGISFILES(IFILE)(1:J)//TRIM(FTYPE)//'-KV-SK.IDF'
- IKVR=1; IF(.NOT.IDFREADSCALE(KVR%FNAME,KVR,3,1,0.0,1))IKVR=0
+ KVR%FNAME=TRIM(REGISFOLDER)//TRIM(FTYPE)//'KV-SK.IDF'
+ IKVR=1; IF(.NOT.IDFREAD(KVR,KVR%FNAME,0))IKVR=0 
+ !IKVR=1; IF(.NOT.IDFREADSCALE(KVR%FNAME,KVR,3,0,0.0,0))IKVR=0
  
  !## No horizontal/vertical permeabilities found, formation will be skipped
  IF(IKHR.EQ.0.AND.IKVR.EQ.0)RETURN
