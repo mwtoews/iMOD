@@ -5360,6 +5360,7 @@ CONTAINS
  USE MOD_GEOCONNECT
  USE MOD_GEOCONNECT_PAR
  IMPLICIT NONE
+ CHARACTER(LEN=256) :: FNAME
  
  !## call to read settings-variables from ini-file and allocate memory
  IF(GC_INIT(IU))THEN
@@ -5371,12 +5372,17 @@ CONTAINS
    !## Call to calculation-subroutine in MOD_GEOCONNECT 
    CASE (2) !# call to read preprocessing variables from ini-file
     CALL GC_PRE_COMPUTE(1)
+    TXTFILE=TRIM(PREFVAL(1))//'\IMOD_USER\SETTINGS\Geoconnect_pre.txt' !# of beter om deze al te callen in GC_INIT_PREPROCESSING_WRITE, dit is alleen niet handig met het oog op de GUI?
+    CALL GC_INIT_PREPROCESSING_WRITE(TXTFILE)
    !## call to read postprocessing variables from ini-file
    CASE (3) 
 !  CALL GC_POST()!# Call to calculation-subroutine in MOD_GEOCONNECT
   END SELECT
  
  ENDIF
+ 
+ FNAME=TRIM(PREFVAL(1))//'\IMOD_USER\SETTINGS\Geoconnect_pre.ini' !# of beter om deze al te callen in GC_INIT_PREPROCESSING_WRITE, dit is alleen niet handig met het oog op de GUI (of hier ook standaard laten wegschrijven??)?
+ CALL GC_INIT_WRITE(FNAME)
  
  !## clean memory
  CALL GC_DEALLOCATE()

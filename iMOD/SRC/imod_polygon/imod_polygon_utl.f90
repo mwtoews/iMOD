@@ -131,6 +131,10 @@ CONTAINS
   
   DO
    READ(IU,*,IOSTAT=IOS) I
+   IF(I.EQ.0)THEN
+    CALL WMESSAGEBOX(OKONLY,EXCLAMATIONICON,COMMONOK,'UNKNOWN RECORD; check your gen-file.'//CHAR(13)//'The first shape-record needs to be of the form:'//CHAR(13)//'"1,par001", 2nd record "2,par001", etc.','Error')
+    RETURN    
+   ENDIF
    IF(IOS.NE.0)EXIT
    NSHAPE=NSHAPE+1
    NCRDS =0

@@ -169,109 +169,118 @@ CONTAINS
       
    !## compute KDH and KDV model-values for aquifers
    DO ILAY=1,NLAYM
-    XTOP=TOPM(ILAY)%X(ICOL,IROW); XBOT=BOTM(ILAY)%X(ICOL,IROW)
-    Z1=MIN(TR,XTOP); Z2=MAX(BR,XBOT)
-    IF(Z1.GT.Z2.AND.XTOP.GT.XBOT)THEN
-     F=(Z1-Z2)/(XTOP-XBOT) 
-     !## assign maximum k values for aquifers
-     KVAL=0.0
-     !## found horizontal permeability
-     IF(IKHR.EQ.1)THEN
-      KVAL=MAX(KVAL,KHR%X(ICOL,IROW))
-     !## if not, try vertical permeability
-     ELSE
-      IF(IKVR.EQ.1)KVAL=MAX(KVAL,(3.0*KVR%X(ICOL,IROW)))
-     ENDIF
-     !## sum horizontal transmissivity for each model layer by using fraction grids and formationfactors of model
-     !## and select the correct formation factor per Regislayer/modellayer, if IPFAC is filled, else IPFAC(J)%FACT=1.0
-     IF(TRIM(IPEST).NE.'')THEN
+    !#only calculate for active layers IACTM(I)=1...of alleen laten wegschrijven ipv ook alleen laten berekenen voor geactiveerde lagen??
+    IF(IACTM(ILAY).EQ.1)THEN
+     XTOP=TOPM(ILAY)%X(ICOL,IROW); XBOT=BOTM(ILAY)%X(ICOL,IROW)
+     Z1=MIN(TR,XTOP); Z2=MAX(BR,XBOT)
+     IF(Z1.GT.Z2.AND.XTOP.GT.XBOT)THEN
+      F=(Z1-Z2)/(XTOP-XBOT) 
+      !## assign maximum k values for aquifers
+      KVAL=0.0
+      !## found horizontal permeability
+      IF(IKHR.EQ.1)THEN
+       KVAL=MAX(KVAL,KHR%X(ICOL,IROW))
+      !## if not, try vertical permeability
+      ELSE
+       IF(IKVR.EQ.1)KVAL=MAX(KVAL,(3.0*KVR%X(ICOL,IROW)))
+      ENDIF
+      !## sum horizontal transmissivity for each model layer by using fraction grids and formationfactors of model
+      !## and select the correct formation factor per Regislayer/modellayer, if IPFAC is filled, else IPFAC(J)%FACT=1.0
+      IF(TRIM(IPEST).NE.'')THEN
+       DO J=1,SIZE(IPFAC%FORM)
+        IF(TRIM(FTYPE).EQ.TRIM(IPFAC(J)%FORM))THEN !#stored in IPFAC by reading in iPEST-files
+         KDHIDF(ILAY)%X(ICOL,IROW)=KDHIDF(ILAY)%X(ICOL,IROW)+((Z1-Z2)*KVAL*IPFAC(J)%FACT)
+        ENDIF
+       ENDDO
+      ELSE
+       KDHIDF(ILAY)%X(ICOL,IROW)=KDHIDF(ILAY)%X(ICOL,IROW)+((Z1-Z2)*KVAL*1.0)
+      ENDIF
+     
+      KVAL=0.0
+      !## found vertical permeability
+      IF(IKVR.EQ.1)THEN
+       KVAL=MAX(KVAL,KVR%X(ICOL,IROW))
+      !## if not, try the horizontal permeability
+      ELSE
+       IF(IKHR.EQ.1)KVAL=MAX(KVAL,(0.3*KHR%X(ICOL,IROW)))
+      ENDIF
+      !## sum vertical transmissivity for each model layer
+      !## if IPFAC is filled, else IPFAC(J)%FACT=1.0
       DO J=1,SIZE(IPFAC%FORM)
        IF(TRIM(FTYPE).EQ.TRIM(IPFAC(J)%FORM))THEN !#stored in IPFAC by reading in iPEST-files
-        KDHIDF(ILAY)%X(ICOL,IROW)=KDHIDF(ILAY)%X(ICOL,IROW)+((Z1-Z2)*KVAL*IPFAC(J)%FACT)
+        KDVIDF(ILAY)%X(ICOL,IROW)=KDVIDF(ILAY)%X(ICOL,IROW)+((Z1-Z2)*KVAL*IPFAC(J)%FACT)
        ENDIF
       ENDDO
-     ELSE
-      KDHIDF(ILAY)%X(ICOL,IROW)=KDHIDF(ILAY)%X(ICOL,IROW)+((Z1-Z2)*KVAL*1.0)
-     ENDIF
-     
-     KVAL=0.0
-     !## found vertical permeability
-     IF(IKVR.EQ.1)THEN
-      KVAL=MAX(KVAL,KVR%X(ICOL,IROW))
-     !## if not, try the horizontal permeability
-     ELSE
-      IF(IKHR.EQ.1)KVAL=MAX(KVAL,(0.3*KHR%X(ICOL,IROW)))
-     ENDIF
-     !## sum vertical transmissivity for each model layer
-     !## if IPFAC is filled, else IPFAC(J)%FACT=1.0
-     DO J=1,SIZE(IPFAC%FORM)
-      IF(TRIM(FTYPE).EQ.TRIM(IPFAC(J)%FORM))THEN !#stored in IPFAC by reading in iPEST-files
-       KDVIDF(ILAY)%X(ICOL,IROW)=KDVIDF(ILAY)%X(ICOL,IROW)+((Z1-Z2)*KVAL*IPFAC(J)%FACT)
-      ENDIF
-     ENDDO
          
+     ENDIF
     ENDIF
    ENDDO
 
    !## compute fractions for aquitards, resistance between mid aquifer1 and aquifer2
    DO ILAY=1,NLAYM-1  
-    XTOP=BOTM(ILAY  )%X(ICOL,IROW)
-    XBOT=TOPM(ILAY+1)%X(ICOL,IROW)
-    Z1=MIN(TR,XTOP); Z2=MAX(BR,XBOT)
-    !## fraction in aquitards
-    IF(Z1.GT.Z2)THEN
-     F=(Z1-Z2)/(XTOP-XBOT)
-     !## assign minimum values for aquitards
-     KVAL=10.0E10
-     !## found vertical permeability
-     IF(IKVR.EQ.1)THEN
-      KVAL=MIN(KVAL,KVR%X(ICOL,IROW))
-     !## if not, try the horizontal permeability
-     ELSE
-      IF(IKHR.EQ.1)KVAL=MIN(KVAL,(0.3*KHR%X(ICOL,IROW)))
-     ENDIF
-     !## sum up the total resistance
-     IF(KVAL.GT.0.0)THEN
-      CIDF(ILAY)%X(ICOL,IROW)=CIDF(ILAY)%X(ICOL,IROW)+((Z1-Z2)/KVAL)
-     ENDIF
+    !#only calculate for active layers IACTM(I)=1...of alleen laten wegschrijven ipv ook alleen laten berekenen voor geactiveerde lagen??
+    IF(IACTM(ILAY).EQ.1)THEN    
+     XTOP=BOTM(ILAY  )%X(ICOL,IROW)
+     XBOT=TOPM(ILAY+1)%X(ICOL,IROW)
+     Z1=MIN(TR,XTOP); Z2=MAX(BR,XBOT)
+     !## fraction in aquitards
+     IF(Z1.GT.Z2)THEN
+      F=(Z1-Z2)/(XTOP-XBOT)
+      !## assign minimum values for aquitards
+      KVAL=10.0E10
+      !## found vertical permeability
+      IF(IKVR.EQ.1)THEN
+       KVAL=MIN(KVAL,KVR%X(ICOL,IROW))
+      !## if not, try the horizontal permeability
+      ELSE
+       IF(IKHR.EQ.1)KVAL=MIN(KVAL,(0.3*KHR%X(ICOL,IROW)))
+      ENDIF
+      !## sum up the total resistance
+      IF(KVAL.GT.0.0)THEN
+       CIDF(ILAY)%X(ICOL,IROW)=CIDF(ILAY)%X(ICOL,IROW)+((Z1-Z2)/KVAL)
+      ENDIF
          
     ENDIF
-   ENDDO
+   ENDIF; ENDDO
    
-  ENDDO ; ENDDO
+  ENDDO; ENDDO
     
  ENDDO 
  
  !## compute KH,KV,KVA,KVV 
- DO IROW=1,TOPM(1)%NROW; DO ICOL=1,TOPM(1)%NCOL; DO ILAY=1,NLAYM
-  TR=TOPM(ILAY)%X(ICOL,IROW); BR=BOTM(ILAY)%X(ICOL,IROW)   
-  IF(TR.EQ.TOPM(ILAY)%NODATA.OR.BR.EQ.BOTM(ILAY)%NODATA)CYCLE
-  IF(TR-BR.LE.0.0)THEN
-   KHIDF(ILAY)%X(ICOL,IROW)=0.0
-   KVIDF(ILAY)%X(ICOL,IROW)=1.0
-  ELSE
-   KHIDF(ILAY)%X(ICOL,IROW)=KDHIDF(ILAY)%X(ICOL,IROW)/(TR-BR) !#KH-value modellayer
-   KVIDF(ILAY)%X(ICOL,IROW)=KDVIDF(ILAY)%X(ICOL,IROW)/(TR-BR) !#KV-value modellayer
-   IF(KHIDF(ILAY)%X(ICOL,IROW).EQ.0.0)THEN
-    KVIDF(ILAY)%X(ICOL,IROW)=1.0
-   ELSE
-    KVAIDF(ILAY)%X(ICOL,IROW)=KVIDF(ILAY)%X(ICOL,IROW)/KHIDF(ILAY)%X(ICOL,IROW) !#KVA-value modellayer (vertical anisotropy)
-   ENDIF
-  ENDIF
-  !## compute vertical permeability
-  IF(ILAY.LT.NLAYM)THEN
-   TR=BOTM(ILAY)%X(ICOL,IROW); BR=TOPM(ILAY+1)%X(ICOL,IROW)   
-   IF(TR.EQ.TOPM(ILAY)%NODATA.OR.BR.EQ.BOTM(ILAY)%NODATA)CYCLE
-   IF(CIDF(ILAY)%X(ICOL,IROW).LE.0.0)THEN
-    CIDF(ILAY)%X(ICOL,IROW)= 0.0
-   ELSE
-    KVVIDF(ILAY)%X(ICOL,IROW)=(TR-BR)/CIDF(ILAY)%X(ICOL,IROW) !#KVV-value modellayer
-   ENDIF
-  ENDIF
- ENDDO; ENDDO; ENDDO
+! DO IROW=1,TOPM(1)%NROW; DO ICOL=1,TOPM(1)%NCOL; DO ILAY=1,NLAYM
+!  !#only calculate for active layers IACTM(I)=1...of alleen laten wegschrijven ipv ook alleen laten berekenen voor geactiveerde lagen??
+!  IF(IACTM(ILAY).EQ.1)THEN
+!   TR=TOPM(ILAY)%X(ICOL,IROW); BR=BOTM(ILAY)%X(ICOL,IROW)   
+!   IF(TR.EQ.TOPM(ILAY)%NODATA.OR.BR.EQ.BOTM(ILAY)%NODATA)CYCLE
+!   IF(TR-BR.LE.0.0)THEN
+!    KHIDF(ILAY)%X(ICOL,IROW)=0.0
+!    KVIDF(ILAY)%X(ICOL,IROW)=1.0
+!   ELSE
+!    KHIDF(ILAY)%X(ICOL,IROW)=KDHIDF(ILAY)%X(ICOL,IROW)/(TR-BR) !#KH-value modellayer
+!    KVIDF(ILAY)%X(ICOL,IROW)=KDVIDF(ILAY)%X(ICOL,IROW)/(TR-BR) !#KV-value modellayer
+!    IF(KHIDF(ILAY)%X(ICOL,IROW).EQ.0.0)THEN
+!     KVIDF(ILAY)%X(ICOL,IROW)=1.0
+!    ELSE
+!     KVAIDF(ILAY)%X(ICOL,IROW)=KVIDF(ILAY)%X(ICOL,IROW)/KHIDF(ILAY)%X(ICOL,IROW) !#KVA-value modellayer (vertical anisotropy)
+!    ENDIF
+!   ENDIF
+!   !## compute vertical permeability
+!   IF(ILAY.LT.NLAYM)THEN
+!    TR=BOTM(ILAY)%X(ICOL,IROW); BR=TOPM(ILAY+1)%X(ICOL,IROW)   
+!    IF(TR.EQ.TOPM(ILAY)%NODATA.OR.BR.EQ.BOTM(ILAY)%NODATA)CYCLE
+!    IF(CIDF(ILAY)%X(ICOL,IROW).LE.0.0)THEN
+!     CIDF(ILAY)%X(ICOL,IROW)= 0.0
+!    ELSE
+!     KVVIDF(ILAY)%X(ICOL,IROW)=(TR-BR)/CIDF(ILAY)%X(ICOL,IROW) !#KVV-value modellayer
+!    ENDIF
+!   ENDIF
+!  ENDIF
+! ENDDO; ENDDO; ENDDO
  
- IF(IMODBATCH.EQ.1)WRITE(*,'(A)') 'Write data ...'
- CALL GC_PRE_COMPUTE_WRITE() !# Write variables to file depending on checkbox options
+ !#only write for active layers IACTM(I)=1...
+! IF(IMODBATCH.EQ.1)WRITE(*,'(A)') 'Write data ...'
+! CALL GC_PRE_COMPUTE_WRITE() !# Write variables to file depending on checkbox options
  
  END SUBROUTINE GC_PRE_COMPUTE
 
@@ -283,10 +292,12 @@ CONTAINS
  INTEGER :: I
  CHARACTER(LEN=256) :: LINE
   
- !## write K- and C-values to file
+ !## write K- and C-values to file and only write for active layers IACTM(I)=1 (nog toe te voegen voor alles (zie vb KDVIDF)!!)
  IF(ISAVEK.EQ.1.AND.ISAVEC.EQ.0)THEN !# Option only write KHV, KVV and KVA
-  DO I=1,SIZE(KDVIDF); LINE=TRIM(OUTPUTFOLDER)//'\mdl_khv_l'//TRIM(ITOS(I))//'.idf'
-   IF(.NOT.IDFWRITE(KDVIDF(I),TRIM(LINE),1))RETURN; ENDDO
+  
+  DO I=1,SIZE(KDVIDF); IF(IACTM(I).EQ.1)THEN
+   LINE=TRIM(OUTPUTFOLDER)//'\mdl_khv_l'//TRIM(ITOS(I))//'.idf'; IF(.NOT.IDFWRITE(KDVIDF(I),TRIM(LINE),1))RETURN 
+  ENDIF; ENDDO
   DO I=1,SIZE(KVVIDF); LINE=TRIM(OUTPUTFOLDER)//'\mdl_kvv_l'//TRIM(ITOS(I))//'.idf'
    IF(.NOT.IDFWRITE(KVVIDF(I),TRIM(LINE),1))RETURN; ENDDO
   DO I=1,SIZE(KVAIDF); LINE=TRIM(OUTPUTFOLDER)//'\mdl_kva_l'//TRIM(ITOS(I))//'.idf'
