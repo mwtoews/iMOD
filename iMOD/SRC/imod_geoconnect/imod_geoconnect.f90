@@ -89,7 +89,7 @@ CONTAINS
 ! CHARACTER(LEN=52) :: FTYPE
 !  
 ! !## try to read all idf's with model Top and Bot values 
-! IF(.NOT.GC_READ_MODELTB())RETURN
+! IF(.NOT.GC_READ_MODELDATA())RETURN
 !
 ! !## get list of "regis"-files 
 ! IF(.NOT.GC_GET_REGISFILES())RETURN
@@ -134,17 +134,17 @@ CONTAINS
 ! END SUBROUTINE GC_ID_COMPUTE
 
  !###======================================================================
- SUBROUTINE GC_PRE_COMPUTE(IOPT)
+ SUBROUTINE GC_PRE_COMPUTE(IMODBATCH)
  !###======================================================================
  !# subroutine to compute K-values for preprocessing purposes 
  IMPLICIT NONE
- INTEGER,INTENT(IN) :: IOPT !# =1 Only write to dos-window if started in batch modus
+ INTEGER,INTENT(IN) :: IMODBATCH !# =1 Only write to dos-window if started in batch modus
  INTEGER :: I,J,IROW,ICOL,ILAY,IKHR,IKVR
  REAL :: TR,BR,Z1,Z2,F,KVAL,XTOP,XBOT
  CHARACTER(LEN=52) :: FTYPE
 
  !## read all idf's with model top and bot values  (detail: geen capitals in comments)
- IF(.NOT.GC_READ_MODELTB())RETURN
+ IF(.NOT.GC_READ_MODELDATA())RETURN
  
  !## get list of "regis"-files
  IF(.NOT.GC_GET_REGISFILES())RETURN
@@ -159,7 +159,7 @@ CONTAINS
   IF(.NOT.GC_GET_REGISDATA(I,IKHR,IKVR,FTYPE))CYCLE
      
   !## process data
-  IF(IOPT.EQ.1)WRITE(*,'(A)') 'Process data ...'
+  IF(IMODBATCH.EQ.1)WRITE(*,'(A)') 'Process data ...'
   write(*,*) 'nrow model: ',TOPM(1)%NROW,'ncol model: ',TOPM(1)%NCOL
   
   DO IROW=1,TOPM(1)%NROW; DO ICOL=1,TOPM(1)%NCOL
@@ -270,7 +270,7 @@ CONTAINS
   ENDIF
  ENDDO; ENDDO; ENDDO
  
- IF(IOPT.EQ.1)WRITE(*,'(A)') 'Write data ...'
+ IF(IMODBATCH.EQ.1)WRITE(*,'(A)') 'Write data ...'
  CALL GC_PRE_COMPUTE_WRITE() !# Write variables to file depending on checkbox options
  
  END SUBROUTINE GC_PRE_COMPUTE
@@ -341,34 +341,34 @@ CONTAINS
  END FUNCTION GC_READ_IPEST
 
  !###======================================================================
- LOGICAL FUNCTION GC_READ_MODELTB()
+ LOGICAL FUNCTION GC_READ_MODELDATA()
  !###======================================================================
  !## function to read model top and bot files
  IMPLICIT NONE
  INTEGER :: ILAY
  CHARACTER(LEN=52) :: FNAME
  
- GC_READ_MODELTB=.FALSE.
+ GC_READ_MODELDATA=.FALSE.
  
  DO ILAY=1,NLAYM
 
   !## get TOP filename and add layer number
   FNAME=TRIM(TOPFOLDER(INDEX(TOPFOLDER,'\',.TRUE.)+1:));  FNAME=TRIM(FNAME)//'_L'//TRIM(ITOS(ILAY))//'.IDF'
   TOPM(ILAY)%FNAME=TRIM(TOPFOLDER(:INDEX(TOPFOLDER,'\',.TRUE.)-1))//'\'//TRIM(FNAME)
-  IF(.NOT.IDFREAD(TOPM(ILAY),TOPM(ILAY)%FNAME,0))RETURN
-  !IF(.NOT.IDFREADSCALE(TOPM(ILAY)%FNAME,TOPM(ILAY),2,0,0.0,1))RETURN
+  IF(.NOT.IDFREAD(TOPM(ILAY),TOPM(ILAY)%FNAME,1))RETURN
+!  IF(.NOT.IDFREADSCALE(TOPM(ILAY)%FNAME,TOPM(ILAY),2,1,0.0,0))RETURN
 
   !## get BOTTOM filename and add layer number
   FNAME=TRIM(BOTFOLDER(INDEX(BOTFOLDER,'\',.TRUE.)+1:));  FNAME=TRIM(FNAME)//'_L'//TRIM(ITOS(ILAY))//'.IDF'
   BOTM(ILAY)%FNAME=TRIM(BOTFOLDER(:INDEX(BOTFOLDER,'\',.TRUE.)-1))//'\'//TRIM(FNAME)
-  IF(.NOT.IDFREAD(BOTM(ILAY),BOTM(ILAY)%FNAME,0))RETURN
-  !IF(.NOT.IDFREADSCALE(BOTM(ILAY)%FNAME,BOTM(ILAY),2,0,0.0,1))RETURN
+  IF(.NOT.IDFREAD(BOTM(ILAY),BOTM(ILAY)%FNAME,1))RETURN
+!  IF(.NOT.IDFREADSCALE(BOTM(ILAY)%FNAME,BOTM(ILAY),2,1,0.0,0))RETURN
 
  ENDDO
  
- GC_READ_MODELTB=.TRUE.
+ GC_READ_MODELDATA=.TRUE.
  
- END FUNCTION GC_READ_MODELTB
+ END FUNCTION GC_READ_MODELDATA
 
  !###======================================================================
  LOGICAL FUNCTION GC_GET_REGISFILES()
@@ -404,6 +404,12 @@ CONTAINS
  
  GC_GET_REGISDATA=.FALSE.
    
+ !## create correct dimensions for idf files for regis
+ CALL IDFCOPY(TOPM(1),TOPR)
+ CALL IDFCOPY(TOPM(1),BOTR)
+ CALL IDFCOPY(TOPM(1),KHR)
+ CALL IDFCOPY(TOPM(1),KVR)
+   
  !## we assume that formation is before first "-"-sign and after "\"-sign, so
  !## apz1-t-ck.idf - formation becomes apz1
  J=INDEX(REGISFILES(IFILE),'\',.TRUE.)+1; K=INDEX(REGISFILES(IFILE)(J:),'-')
@@ -418,20 +424,16 @@ CONTAINS
 
  !## try top
  TOPR%FNAME=TRIM(REGISFOLDER)//TRIM(FTYPE)//'T-CK.IDF'
- IF(.NOT.IDFREAD(TOPR,TOPR%FNAME,0))RETURN
- !IF(.NOT.IDFREADSCALE(TOPR%FNAME,TOPR,2,0,0.0,0))RETURN !## scale mean
+ IF(.NOT.IDFREADSCALE(TOPR%FNAME,TOPR,2,0,0.0,0))RETURN !## scale mean
  !## try bot
  BOTR%FNAME=TRIM(REGISFOLDER)//TRIM(FTYPE)//'B-CK.IDF'
- IF(.NOT.IDFREAD(BOTR,BOTR%FNAME,0))RETURN
- !IF(.NOT.IDFREADSCALE(BOTR%FNAME,BOTR,2,0,0.0,0))RETURN !## scale mean
+ IF(.NOT.IDFREADSCALE(BOTR%FNAME,BOTR,2,0,0.0,0))RETURN !## scale mean
  !## try kh
  KHR%FNAME=TRIM(REGISFOLDER)//TRIM(FTYPE)//'KH-SK.IDF'
- IKHR=1; IF(.NOT.IDFREAD(KHR,KHR%FNAME,0))IKHR=0 
- !IKHR=1; IF(.NOT.IDFREADSCALE(KHR%FNAME,KHR,3,0,0.0,0))IKHR=0
+ IKHR=1; IF(.NOT.IDFREADSCALE(KHR%FNAME,KHR,3,0,0.0,0))IKHR=0
  !## try kv
  KVR%FNAME=TRIM(REGISFOLDER)//TRIM(FTYPE)//'KV-SK.IDF'
- IKVR=1; IF(.NOT.IDFREAD(KVR,KVR%FNAME,0))IKVR=0 
- !IKVR=1; IF(.NOT.IDFREADSCALE(KVR%FNAME,KVR,3,0,0.0,0))IKVR=0
+ IKVR=1; IF(.NOT.IDFREADSCALE(KVR%FNAME,KVR,3,0,0.0,0))IKVR=0
  
  !## No horizontal/vertical permeabilities found, formation will be skipped
  IF(IKHR.EQ.0.AND.IKVR.EQ.0)RETURN
@@ -446,7 +448,13 @@ CONTAINS
  !# subroutine to compute K-values for postprocessing purposes
  IMPLICIT NONE
 
+ !## read all idf's with model top and bot values  (detail: geen capitals in comments)
+ IF(.NOT.GC_READ_MODELDATA())RETURN
  
+ !## get list of "regis"-files
+ IF(.NOT.GC_GET_REGISFILES())RETURN
+ 
+ !## etc... 
 
  END SUBROUTINE GC_POST_COMPUTE
 
