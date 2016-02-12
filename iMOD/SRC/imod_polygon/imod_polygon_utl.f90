@@ -131,10 +131,6 @@ CONTAINS
   
   DO
    READ(IU,*,IOSTAT=IOS) I
-   IF(I.EQ.0)THEN
-    CALL WMESSAGEBOX(OKONLY,EXCLAMATIONICON,COMMONOK,'UNKNOWN RECORD; check your gen-file.'//CHAR(13)//'The first shape-record needs to be of the form:'//CHAR(13)//'"1,par001", 2nd record "2,par001", etc.','Error')
-    RETURN    
-   ENDIF
    IF(IOS.NE.0)EXIT
    NSHAPE=NSHAPE+1
    NCRDS =0
@@ -228,7 +224,7 @@ CONTAINS
     IF(SHPXC(1,J).EQ.SHPXC(SHPNCRD(J),J).AND. &
        SHPYC(1,J).EQ.SHPYC(SHPNCRD(J),J))THEN
      !## remove last point
-     SHPNCRD(J)  =SHPNCRD(J)-1
+     SHPNCRD(J)=SHPNCRD(J)-1
      SHPTYPE(J)=ID_POLYGON
      CTYPE='POLYGON'
     ELSE
