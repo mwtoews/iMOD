@@ -32,6 +32,75 @@ USE MOD_OSD, ONLY : OSD_OPEN
 CONTAINS
 
  !###======================================================================
+ SUBROUTINE GC_MAIN(ITYPE,MESSAGE)
+ !###======================================================================
+ IMPLICIT NONE
+ TYPE(WIN_MESSAGE),INTENT(IN) :: MESSAGE
+ INTEGER,INTENT(IN) :: ITYPE
+ 
+ CALL WDIALOGSELECT(MESSAGE%WIN)
+ CALL WDIALOGSHOW(-1,-1,0,2)
+
+ SELECT CASE (MESSAGE%WIN)
+
+  CASE (ID_DGEOCONNECT)
+   SELECT CASE(ITYPE)
+    CASE (PUSHBUTTON)
+     SELECT CASE (MESSAGE%VALUE1)
+      CASE (IDCANCEL)
+      CASE(IDHELP)
+     END SELECT
+    CASE(TABCHANGED)
+     SELECT CASE (MESSAGE%VALUE2)
+      CASE(ID_DGEOCONNECT_TAB1)
+       CALL WDIALOGSETTAB(ID_GCTAB,ID_DGEOCONNECT_TAB1)
+      CASE(ID_DGEOCONNECT_TAB2)
+       CALL WDIALOGSETTAB(ID_GCTAB,ID_DGEOCONNECT_TAB2)
+      CASE(ID_DGEOCONNECT_TAB3)
+       CALL WDIALOGSETTAB(ID_GCTAB,ID_DGEOCONNECT_TAB3)
+      CASE(ID_DGEOCONNECT_TAB4)
+       CALL WDIALOGSETTAB(ID_GCTAB,ID_DGEOCONNECT_TAB4)
+     END SELECT
+   END SELECT
+ END SELECT
+
+! CALL WDIALOGUNLOAD()
+  
+ END SUBROUTINE GC_MAIN
+
+ !###======================================================================
+ SUBROUTINE GC_MAIN_INIT()
+ !###======================================================================
+ IMPLICIT NONE
+ INTEGER :: I
+
+ CALL WINDOWSELECT(0)
+
+ !## clean everything
+ !CALL GC_DEALLOCATE()
+ 
+ !##Open Geoconnect dialog 
+ CALL WDIALOGLOAD(ID_DGEOCONNECT,ID_DGEOCONNECT)
+ CALL WDIALOGSELECT(ID_DGEOCONNECT); CALL WDIALOGSETTAB(ID_GCTAB,ID_DGEOCONNECT_TAB2)
+ 
+ CALL WDIALOGSELECT(ID_DGEOCONNECT_TAB1) 
+ 
+ CALL WDIALOGSELECT(ID_DGEOCONNECT_TAB2)
+ CALL WDIALOGPUTIMAGE(ID_OPEN_REGIS,ID_ICONOPEN)
+ CALL WDIALOGPUTIMAGE(ID_OPEN_TOP,ID_ICONOPEN)
+ CALL WDIALOGPUTIMAGE(ID_OPEN_BOT,ID_ICONOPEN)
+
+ CALL WDIALOGSELECT(ID_DGEOCONNECT_TAB3)
+ CALL WDIALOGPUTIMAGE(ID_OPEN_OUTFOLDER,ID_ICONOPEN)
+ 
+ CALL WDIALOGSELECT(ID_DGEOCONNECT_TAB4)
+ 
+ CALL WDIALOGSELECT(ID_DGEOCONNECT)
+ CALL WDIALOGSHOW(-1,-1,0,2)
+
+ END SUBROUTINE GC_MAIN_INIT
+
+ !###======================================================================
  SUBROUTINE GC_IDENTIFY(IMODBATCH)
  !###======================================================================
  !# subroutine to manage all preprocessing steps
@@ -217,31 +286,31 @@ CONTAINS
    ENDDO
 
    !## compute fractions for aquitards, resistance between mid aquifer1 and aquifer2
-   DO ILAY=1,NLAYM-1  
-    !#only calculate for active layers IACTM(I)=1...of alleen laten wegschrijven ipv ook alleen laten berekenen voor geactiveerde lagen??
-    IF(IACTM(ILAY).EQ.1)THEN    
-     XTOP=BOTM(ILAY  )%X(ICOL,IROW)
-     XBOT=TOPM(ILAY+1)%X(ICOL,IROW)
-     Z1=MIN(TR,XTOP); Z2=MAX(BR,XBOT)
-     !## fraction in aquitards
-     IF(Z1.GT.Z2)THEN
-      F=(Z1-Z2)/(XTOP-XBOT)
-      !## assign minimum values for aquitards
-      KVAL=10.0E10
-      !## found vertical permeability
-      IF(IKVR.EQ.1)THEN
-       KVAL=MIN(KVAL,KVR%X(ICOL,IROW))
-      !## if not, try the horizontal permeability
-      ELSE
-       IF(IKHR.EQ.1)KVAL=MIN(KVAL,(0.3*KHR%X(ICOL,IROW)))
-      ENDIF
-      !## sum up the total resistance
-      IF(KVAL.GT.0.0)THEN
-       CIDF(ILAY)%X(ICOL,IROW)=CIDF(ILAY)%X(ICOL,IROW)+((Z1-Z2)/KVAL)
-      ENDIF
-         
-    ENDIF
-   ENDIF; ENDDO
+!   DO ILAY=1,NLAYM-1  
+!    !#only calculate for active layers IACTM(I)=1...of alleen laten wegschrijven ipv ook alleen laten berekenen voor geactiveerde lagen??
+!    IF(IACTM(ILAY).EQ.1)THEN    
+!     XTOP=BOTM(ILAY  )%X(ICOL,IROW)
+!     XBOT=TOPM(ILAY+1)%X(ICOL,IROW)
+!     Z1=MIN(TR,XTOP); Z2=MAX(BR,XBOT)
+!     !## fraction in aquitards
+!     IF(Z1.GT.Z2)THEN
+!      F=(Z1-Z2)/(XTOP-XBOT)
+!      !## assign minimum values for aquitards
+!      KVAL=10.0E10
+!      !## found vertical permeability
+!      IF(IKVR.EQ.1)THEN
+!       KVAL=MIN(KVAL,KVR%X(ICOL,IROW))
+!      !## if not, try the horizontal permeability
+!      ELSE
+!       IF(IKHR.EQ.1)KVAL=MIN(KVAL,(0.3*KHR%X(ICOL,IROW)))
+!      ENDIF
+!      !## sum up the total resistance
+!      IF(KVAL.GT.0.0)THEN
+!       CIDF(ILAY)%X(ICOL,IROW)=CIDF(ILAY)%X(ICOL,IROW)+((Z1-Z2)/KVAL)
+!      ENDIF
+!         
+!    ENDIF
+!   ENDIF; ENDDO
    
   ENDDO; ENDDO
     

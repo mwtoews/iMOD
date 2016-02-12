@@ -5375,8 +5375,8 @@ CONTAINS
     CALL GC_PRE_COMPUTE(1)
     !## write variables to file depending on checkbox options
     CALL GC_PRE_COMPUTE_WRITE(1) 
-!    TXTFILE=TRIM(PREFVAL(1))//'\IMOD_USER\SETTINGS\Geoconnect_pre.txt' !# of beter om deze al te callen in GC_INIT_PREPROCESSING_WRITE, dit is alleen niet handig met het oog op de GUI?
-!    CALL GC_INIT_PREPROCESSING_WRITE(TXTFILE)
+    TXTFILE=TRIM(PREFVAL(1))//'\IMOD_USER\SETTINGS\Geoconnect_pre.txt' !# of beter om deze al te callen in GC_INIT_PREPROCESSING_WRITE, dit is alleen niet handig met het oog op de GUI?
+    CALL GC_INIT_PREPROCESSING_WRITE(TXTFILE)
    !## call to read postprocessing variables from ini-file
    CASE (3) 
 !  CALL GC_POST()!# Call to calculation-subroutine in MOD_GEOCONNECT
