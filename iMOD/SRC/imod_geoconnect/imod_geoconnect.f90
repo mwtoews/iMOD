@@ -101,105 +101,133 @@ CONTAINS
  END SUBROUTINE GC_MAIN_INIT
 
  !###======================================================================
- SUBROUTINE GC_IDENTIFY(IMODBATCH)
+ SUBROUTINE GC_COMPUTE_MAIN(IMODBATCH)
  !###======================================================================
  !# subroutine to manage all preprocessing steps
  IMPLICIT NONE
  INTEGER,INTENT(IN) :: IMODBATCH
  
-! IF(IMODBATCH.EQ.1)THEN !# iMODbatch
-!  CALL GC_ID_COMPUTE(IOPT)
-! ELSEIF(IMODBATCH.EQ.0)THEN !# iMOD GUI
-!  !# use CALL GC_ID_FIND() related to button 'identify' on dialog
-! ENDIF
+ !## call to read settings-variables from ini-file and allocate memory
+  SELECT CASE (GC_IFLAG)
+   !## call to identify routine
+   CASE (1)
+!    CALL GC_IDENTIFY()
+   !## Call to calculation-subroutine in MOD_GEOCONNECT 
+   CASE (2) 
+    !## call to read preprocessing variables from ini-file
+    CALL GC_PRE_COMPUTE(1)
+    !## write variables to file depending on checkbox options
+    CALL GC_PRE_COMPUTE_WRITE(1) 
+   !## call to read postprocessing variables from ini-file
+   CASE (3) 
+!  CALL GC_POST()!# Call to calculation-subroutine in MOD_GEOCONNECT
+  END SELECT
  
- END SUBROUTINE GC_IDENTIFY
+ END SUBROUTINE GC_COMPUTE_MAIN
 
 ! !###======================================================================
-! SUBROUTINE GC_PRE(IMODBATCH)
-! !###======================================================================
-! !# subroutine to manage all preprocessing steps
-! IMPLICIT NONE
-! INTEGER,INTENT(IN) :: IMODBATCH
-! 
-! IF(IMODBATCH.EQ.1)THEN !# iMODbatch
-!!  CALL GC_READ_IPEST(IPEST,IPESTNR) !#FNAME=iPEST-CSV file (stored in "IPEST"-variable and read in GC_READ_PRE), #NR= number of block to be used from iPEST-file (stored in "IPESTNO"-variable and read in GC_READ_PRE).
-!  CALL GC_PRE_COMPUTE(IMODBATCH)
-! ELSEIF(IMODBATCH.EQ.0)THEN !# iMOD GUI
-!  !# use CALL GC_READ_IPEST(FNAME,NR) related to button 'iPEST' on dialog
-!  !# use CALL GC_PRE_COMPUTE(IOPT) related to button 'Apply' on dialog
-! ENDIF
-! 
-! END SUBROUTINE GC_PRE
-
- !###======================================================================
- SUBROUTINE GC_POST(IOPT)
- !###======================================================================
- !# subroutine to manage all postprocessing steps
- IMPLICIT NONE
- INTEGER,INTENT(IN) :: IOPT
- 
- IF(IOPT.EQ.1)THEN !# iMODbatch
-  CALL GC_POST_COMPUTE()
- ELSEIF(IOPT.EQ.0)THEN !# iMOD GUI
-  !# use CALL GC_POST_COMPUTE() related to button 'Apply' on dialog
- ENDIF
- 
- END SUBROUTINE GC_POST
-
-! !###======================================================================
-! SUBROUTINE GC_ID_COMPUTE(IOPT)
+! SUBROUTINE GC_ID_COMPUTE(IMODBATCH)
 ! !###======================================================================
 ! !# subroutine to identify fractions per layer AND per x,y-location 
 ! IMPLICIT NONE
-! INTEGER,INTENT(IN) :: IOPT
-! INTEGER :: I,IU,ILAY,NLAYR,ICOL,IROW
-! REAL :: F,Z1,Z2,XTOP,XBOT,TR,BR
-! CHARACTER(LEN=52) :: FTYPE
-!  
-! !## try to read all idf's with model Top and Bot values 
-! IF(.NOT.GC_READ_MODELDATA())RETURN
-!
-! !## get list of "regis"-files 
-! IF(.NOT.GC_GET_REGISFILES())RETURN
+! INTEGER,INTENT(IN) :: IMODBATCH !# =1 Only write to dos-window if started in batch modus
+! INTEGER :: ILAY,J
+! REAL :: X_ID,Y_ID,TMVAL
 ! 
-! !# Open txt-file in case of iMODbatch
-! IF(IOPT.EQ.1)THEN
-!  IU=UTL_GETUNIT(); OPEN(IU,FILE=TRIM(OUTPUTFOLDER)//'identify.txt',STATUS='UNKNOWN',ACTION='WRITE')
-! ENDIF
-!  
-! DO I=1,NLAYR
+! !# Get specific coordinates for calculating fractions
+! X_ID=
+! Y_ID=
 ! 
-!  IF(.NOT.GC_GET_REGISDATA(I,IKHR,IKVR,FTYPE))RETURN
-! 
-!  DO IROW=1,TOPM(1)%NROW; DO ICOL=1,TOPM(1)%NCOL 
-!   TR=TOPR%X(ICOL,IROW); BR=BOTR%X(ICOL,IROW)   
-!   IF(TR.EQ.TOPR%NODATA.OR.BR.EQ.BOTR%NODATA)CYCLE
-!   DO ILAY=1,NLAYM
-!    XTOP=TOPM(ILAY)%X(ICOL,IROW); XBOT=BOTM(ILAY)%X(ICOL,IROW)
-!    Z1=MIN(TR,XTOP); Z2=MAX(BR,XBOT)
-!    IF(Z1.GT.Z2.AND.XTOP.GT.XBOT)THEN
-!     F=(Z1-Z2)/(XTOP-XBOT) 
-!    ENDIF     
-!   ENDDO
-!  ENDDO; ENDDO
+! !## Read in names of needed files
+! !# Model Top/Bot
+! DO ILAY=1,NLAYM
+!  FNAME=TRIM(TOPFOLDER(INDEX(TOPFOLDER,'\',.TRUE.)+1:));  FNAME=TRIM(FNAME)//'_L'//TRIM(ITOS(ILAY))//'.IDF'
+!  TOPM(ILAY)%FNAME=TRIM(TOPFOLDER(:INDEX(TOPFOLDER,'\',.TRUE.)-1))//'\'//TRIM(FNAME)
 !  
-!!  DO ILAY=1,NLAYM
-!!   FVAL(ILAY)=IDFGETXYVAL(?,X_ID,Y_ID) !#fraction value related to layer and formation
-!!  ENDDO
-!
-!  !##Write FVAL to screen (GUI) or to txt-file (iMODBATCH)
-!  IF(IOPT.EQ.1)THEN
-!  !#Write grid to txt-file organized as columns=layers, rows=fractions per formation
-!   WRITE(IU,*) CTYPE,FVAL
-!  ELSEIF(IOPT.EQ.0)THEN
-!   !# Write grid to screen see figure in documentation
-!  ENDIF
-!
+!  FNAME=TRIM(BOTFOLDER(INDEX(BOTFOLDER,'\',.TRUE.)+1:));  FNAME=TRIM(FNAME)//'_L'//TRIM(ITOS(ILAY))//'.IDF'
+!  BOTM(ILAY)%FNAME=TRIM(BOTFOLDER(:INDEX(BOTFOLDER,'\',.TRUE.)-1))//'\'//TRIM(FNAME)
 ! ENDDO
+! !# Regis Top/Bot
+! J=INDEX(REGISFILES(IFILE),'\',.TRUE.)+1; K=INDEX(REGISFILES(IFILE)(J:),'-')
+! FTYPE=REGISFILES(IFILE)(J:K) 
+! TOPR%FNAME=TRIM(REGISFOLDER)//TRIM(FTYPE)//'T-CK.IDF'
+! BOTR%FNAME=TRIM(REGISFOLDER)//TRIM(FTYPE)//'B-CK.IDF'
+!
+! !# Open TOPM,BOTM,TOPR,BOTR --> in functie, omdat dit 4x herhaald moet worden??
+! I= !# ilay to compute fractions for
+! TOPM(I)%IU=UTL_GETUNIT()
+! IF(ICF.EQ.0)THEN
+!  CALL OSD_OPEN(TOPM(I)%IU,FILE=TOPM%FNAME,STATUS='OLD',FORM='UNFORMATTED',ACCESS='DIRECT', &
+!                RECL=4,ACTION='READWRITE',IOSTAT=IOS)
+! ELSEIF(ICF.EQ.1)THEN
+!  CALL OSD_OPEN(TOPM(I)%IU,FILE=TOPM%FNAME,STATUS='OLD',FORM='UNFORMATTED',ACCESS='DIRECT', &
+!                RECL=1,ACTION='READWRITE',IOSTAT=IOS)
+! ENDIF
+! IF(IOS.NE.0)THEN
+!  CALL WMESSAGEBOX(OKONLY,EXCLAMATIONICON,COMMONOK,'iMOD can not adjust current file'//CHAR(13)// &
+!    TRIM(TOPM%FNAME)//CHAR(13)//'IDF has been marked probably as READ-ONLY','Error')
+!  IF(TOPM(I)%IU.GT.0)CLOSE(IU)
+!  RETURN
+! ENDIF
 ! 
-! CLOSE(IU)
+! TMVAL=IDFGETXYVAL(TOPM(I),X_ID,Y_ID) !# --> als output variabele teruggeven uit bovenstaande functie??
+! BMVAL=IDFGETXYVAL(BOTM(I),X_ID,Y_ID) !# --> ook in bovenstaande functie??
+! TRVAL=IDFGETXYVAL(TOPR(I),X_ID,Y_ID) !# --> ook in bovenstaande functie??
+! BRVAL=IDFGETXYVAL(BOTR(I),X_ID,Y_ID) !# --> ook in bovenstaande functie??
 ! 
+! !# loop over Regis layers
+! !# loop over model layers
+! !# compute fractions per model layer depending on Regis layers
+!  FRAC=
+!
+!! INTEGER,INTENT(IN) :: IOPT
+!! INTEGER :: I,IU,ILAY,NLAYR,ICOL,IROW
+!! REAL :: F,Z1,Z2,XTOP,XBOT,TR,BR
+!! CHARACTER(LEN=52) :: FTYPE
+!!  
+!! !## try to read all idf's with model Top and Bot values 
+!! IF(.NOT.GC_READ_MODELDATA())RETURN
+!!
+!! !## get list of "regis"-files 
+!! IF(.NOT.GC_GET_REGISFILES())RETURN
+!! 
+!! !# Open txt-file in case of iMODbatch
+!! IF(IOPT.EQ.1)THEN
+!!  IU=UTL_GETUNIT(); OPEN(IU,FILE=TRIM(OUTPUTFOLDER)//'identify.txt',STATUS='UNKNOWN',ACTION='WRITE')
+!! ENDIF
+!!  
+!! DO I=1,NLAYR
+!! 
+!!  IF(.NOT.GC_GET_REGISDATA(I,IKHR,IKVR,FTYPE))RETURN
+!! 
+!!  DO IROW=1,TOPM(1)%NROW; DO ICOL=1,TOPM(1)%NCOL 
+!!   TR=TOPR%X(ICOL,IROW); BR=BOTR%X(ICOL,IROW)   
+!!   IF(TR.EQ.TOPR%NODATA.OR.BR.EQ.BOTR%NODATA)CYCLE
+!!   DO ILAY=1,NLAYM
+!!    XTOP=TOPM(ILAY)%X(ICOL,IROW); XBOT=BOTM(ILAY)%X(ICOL,IROW)
+!!    Z1=MIN(TR,XTOP); Z2=MAX(BR,XBOT)
+!!    IF(Z1.GT.Z2.AND.XTOP.GT.XBOT)THEN
+!!     F=(Z1-Z2)/(XTOP-XBOT) 
+!!    ENDIF     
+!!   ENDDO
+!!  ENDDO; ENDDO
+!!  
+!!!  DO ILAY=1,NLAYM
+!!!   FVAL(ILAY)=IDFGETXYVAL(?,X_ID,Y_ID) !#fraction value related to layer and formation
+!!!  ENDDO
+!!
+!!  !##Write FVAL to screen (GUI) or to txt-file (iMODBATCH)
+!!  IF(IOPT.EQ.1)THEN
+!!  !#Write grid to txt-file organized as columns=layers, rows=fractions per formation
+!!   WRITE(IU,*) CTYPE,FVAL
+!!  ELSEIF(IOPT.EQ.0)THEN
+!!   !# Write grid to screen see figure in documentation
+!!  ENDIF
+!!
+!! ENDDO
+!! 
+!! CLOSE(IU)
+!! 
 ! END SUBROUTINE GC_ID_COMPUTE
 
  !###======================================================================
@@ -228,124 +256,129 @@ CONTAINS
   IF(.NOT.GC_GET_REGISDATA(I,IKHR,IKVR,FTYPE))CYCLE
      
   !## process data
-  IF(IMODBATCH.EQ.1)WRITE(*,'(A)') 'Process data ...'
-  write(*,*) 'nrow model: ',TOPM(1)%NROW,'ncol model: ',TOPM(1)%NCOL
+  IF(IMODBATCH.EQ.1)WRITE(*,'(A,I)') 'Process data for layer: ',I
   
-  DO IROW=1,TOPM(1)%NROW; DO ICOL=1,TOPM(1)%NCOL
+   DO IROW=1,TOPM(1)%NROW; DO ICOL=1,TOPM(1)%NCOL
    
    TR=TOPR%X(ICOL,IROW); BR=BOTR%X(ICOL,IROW)   
    IF(TR.EQ.TOPR%NODATA.OR.BR.EQ.BOTR%NODATA)CYCLE
       
    !## compute KDH and KDV model-values for aquifers
    DO ILAY=1,NLAYM
-    !#only calculate for active layers IACTM(I)=1...of alleen laten wegschrijven ipv ook alleen laten berekenen voor geactiveerde lagen??
-    IF(IACTM(ILAY).EQ.1)THEN
-     XTOP=TOPM(ILAY)%X(ICOL,IROW); XBOT=BOTM(ILAY)%X(ICOL,IROW)
-     Z1=MIN(TR,XTOP); Z2=MAX(BR,XBOT)
-     IF(Z1.GT.Z2.AND.XTOP.GT.XBOT)THEN
-      F=(Z1-Z2)/(XTOP-XBOT) 
-      !## assign maximum k values for aquifers
-      KVAL=0.0
-      !## found horizontal permeability
-      IF(IKHR.EQ.1)THEN
-       KVAL=MAX(KVAL,KHR%X(ICOL,IROW))
-      !## if not, try vertical permeability
-      ELSE
-       IF(IKVR.EQ.1)KVAL=MAX(KVAL,(3.0*KVR%X(ICOL,IROW)))
-      ENDIF
-      !## sum horizontal transmissivity for each model layer by using fraction grids and formationfactors of model
-      !## and select the correct formation factor per Regislayer/modellayer, if IPFAC is filled, else IPFAC(J)%FACT=1.0
-      IF(TRIM(IPEST).NE.'')THEN
-       DO J=1,SIZE(IPFAC%FORM)
-        IF(TRIM(FTYPE).EQ.TRIM(IPFAC(J)%FORM))THEN !#stored in IPFAC by reading in iPEST-files
-         KDHIDF(ILAY)%X(ICOL,IROW)=KDHIDF(ILAY)%X(ICOL,IROW)+((Z1-Z2)*KVAL*IPFAC(J)%FACT)
-        ENDIF
-       ENDDO
-      ELSE
-       KDHIDF(ILAY)%X(ICOL,IROW)=KDHIDF(ILAY)%X(ICOL,IROW)+((Z1-Z2)*KVAL*1.0)
-      ENDIF
-     
-      KVAL=0.0
-      !## found vertical permeability
-      IF(IKVR.EQ.1)THEN
-       KVAL=MAX(KVAL,KVR%X(ICOL,IROW))
-      !## if not, try the horizontal permeability
-      ELSE
-       IF(IKHR.EQ.1)KVAL=MAX(KVAL,(0.3*KHR%X(ICOL,IROW)))
-      ENDIF
-      !## sum vertical transmissivity for each model layer
-      !## if IPFAC is filled, else IPFAC(J)%FACT=1.0
+    XTOP=TOPM(ILAY)%X(ICOL,IROW); XBOT=BOTM(ILAY)%X(ICOL,IROW)
+    Z1=MIN(TR,XTOP); Z2=MAX(BR,XBOT)
+    IF(Z1.GT.Z2.AND.XTOP.GT.XBOT)THEN
+     F=(Z1-Z2)/(XTOP-XBOT) 
+     !## assign maximum k values for aquifers
+     KVAL=0.0
+     !## found horizontal permeability
+     IF(IKHR.EQ.1)THEN
+      KVAL=MAX(KVAL,KHR%X(ICOL,IROW))
+     !## if not, try vertical permeability
+     ELSE
+      IF(IKVR.EQ.1)KVAL=MAX(KVAL,(3.0*KVR%X(ICOL,IROW)))
+     ENDIF
+     !## sum horizontal transmissivity for each model layer by using fraction grids and formationfactors of model
+     !## and select the correct formation factor per Regislayer/modellayer, if IPFAC is filled, else IPFAC(J)%FACT=1.0
+     IF(LEN_TRIM(IPEST).NE.0)THEN
+      DO J=1,SIZE(IPFAC%FORM)
+       IF(TRIM(FTYPE).EQ.TRIM(IPFAC(J)%FORM))THEN !#stored in IPFAC by reading in iPEST-files
+        KDHIDF(ILAY)%X(ICOL,IROW)=KDHIDF(ILAY)%X(ICOL,IROW)+((Z1-Z2)*KVAL*IPFAC(J)%FACT)
+       ENDIF
+      ENDDO
+     ELSE
+      KDHIDF(ILAY)%X(ICOL,IROW)=KDHIDF(ILAY)%X(ICOL,IROW)+((Z1-Z2)*KVAL*1.0)
+     ENDIF
+    
+     KVAL=0.0
+     !## found vertical permeability
+     IF(IKVR.EQ.1)THEN
+      KVAL=MAX(KVAL,KVR%X(ICOL,IROW))
+     !## if not, try the horizontal permeability
+     ELSE
+      IF(IKHR.EQ.1)KVAL=MAX(KVAL,(0.3*KHR%X(ICOL,IROW)))
+     ENDIF
+     !## sum vertical transmissivity for each model layer
+     !## if IPFAC is filled, else IPFAC(J)%FACT=1.0
+     IF(TRIM(IPEST).NE.'')THEN
       DO J=1,SIZE(IPFAC%FORM)
        IF(TRIM(FTYPE).EQ.TRIM(IPFAC(J)%FORM))THEN !#stored in IPFAC by reading in iPEST-files
         KDVIDF(ILAY)%X(ICOL,IROW)=KDVIDF(ILAY)%X(ICOL,IROW)+((Z1-Z2)*KVAL*IPFAC(J)%FACT)
        ENDIF
       ENDDO
-         
+     ELSE
+      KDVIDF(ILAY)%X(ICOL,IROW)=KDVIDF(ILAY)%X(ICOL,IROW)+((Z1-Z2)*KVAL*1.0)
      ENDIF
+        
     ENDIF
    ENDDO
 
-   !## compute fractions for aquitards, resistance between mid aquifer1 and aquifer2
-!   DO ILAY=1,NLAYM-1  
-!    !#only calculate for active layers IACTM(I)=1...of alleen laten wegschrijven ipv ook alleen laten berekenen voor geactiveerde lagen??
-!    IF(IACTM(ILAY).EQ.1)THEN    
-!     XTOP=BOTM(ILAY  )%X(ICOL,IROW)
-!     XBOT=TOPM(ILAY+1)%X(ICOL,IROW)
-!     Z1=MIN(TR,XTOP); Z2=MAX(BR,XBOT)
-!     !## fraction in aquitards
-!     IF(Z1.GT.Z2)THEN
-!      F=(Z1-Z2)/(XTOP-XBOT)
-!      !## assign minimum values for aquitards
-!      KVAL=10.0E10
-!      !## found vertical permeability
-!      IF(IKVR.EQ.1)THEN
-!       KVAL=MIN(KVAL,KVR%X(ICOL,IROW))
-!      !## if not, try the horizontal permeability
-!      ELSE
-!       IF(IKHR.EQ.1)KVAL=MIN(KVAL,(0.3*KHR%X(ICOL,IROW)))
-!      ENDIF
-!      !## sum up the total resistance
-!      IF(KVAL.GT.0.0)THEN
-!       CIDF(ILAY)%X(ICOL,IROW)=CIDF(ILAY)%X(ICOL,IROW)+((Z1-Z2)/KVAL)
-!      ENDIF
-!         
-!    ENDIF
-!   ENDIF; ENDDO
+   !## compute fractions for aquitards, resistance of aquitard
+   DO ILAY=1,NLAYM-1    
+    XTOP=BOTM(ILAY)%X(ICOL,IROW)
+    XBOT=TOPM(ILAY+1)%X(ICOL,IROW)
+    Z1=MIN(TR,XTOP); Z2=MAX(BR,XBOT)
+    !## fraction in aquitards
+    IF(Z1.GT.Z2)THEN
+     F=(Z1-Z2)/(XTOP-XBOT)
+     !## assign minimum values for aquitards
+     KVAL=10.0E10
+     !## found vertical permeability
+     IF(IKVR.EQ.1)THEN
+      KVAL=MIN(KVAL,KVR%X(ICOL,IROW))
+     !## if not, try the horizontal permeability
+     ELSE
+      IF(IKHR.EQ.1)KVAL=MIN(KVAL,(0.3*KHR%X(ICOL,IROW)))
+     ENDIF
+     !## sum up the total resistance
+     IF(TRIM(IPEST).NE.'')THEN
+      DO J=1,SIZE(IPFAC%FORM)
+       IF(TRIM(FTYPE).EQ.TRIM(IPFAC(J)%FORM))THEN !#stored in IPFAC by reading in iPEST-files
+        IF(KVAL.GT.0.0)THEN
+         CIDF(ILAY)%X(ICOL,IROW)=CIDF(ILAY)%X(ICOL,IROW)+(((Z1-Z2)/KVAL)*IPFAC(J)%FACT)
+        ENDIF
+       ENDIF
+      ENDDO
+     ELSE
+      IF(KVAL.GT.0.0)THEN
+       CIDF(ILAY)%X(ICOL,IROW)=CIDF(ILAY)%X(ICOL,IROW)+(((Z1-Z2)/KVAL)*1.0)
+      ENDIF
+     ENDIF
+         
+    ENDIF
+   ENDDO
    
   ENDDO; ENDDO
     
  ENDDO 
  
  !## compute KH,KV,KVA,KVV 
-! DO IROW=1,TOPM(1)%NROW; DO ICOL=1,TOPM(1)%NCOL; DO ILAY=1,NLAYM
-!  !#only calculate for active layers IACTM(I)=1...of alleen laten wegschrijven ipv ook alleen laten berekenen voor geactiveerde lagen??
-!  IF(IACTM(ILAY).EQ.1)THEN
-!   TR=TOPM(ILAY)%X(ICOL,IROW); BR=BOTM(ILAY)%X(ICOL,IROW)   
-!   IF(TR.EQ.TOPM(ILAY)%NODATA.OR.BR.EQ.BOTM(ILAY)%NODATA)CYCLE
-!   IF(TR-BR.LE.0.0)THEN
-!    KHIDF(ILAY)%X(ICOL,IROW)=0.0
-!    KVIDF(ILAY)%X(ICOL,IROW)=1.0
-!   ELSE
-!    KHIDF(ILAY)%X(ICOL,IROW)=KDHIDF(ILAY)%X(ICOL,IROW)/(TR-BR) !#KH-value modellayer
-!    KVIDF(ILAY)%X(ICOL,IROW)=KDVIDF(ILAY)%X(ICOL,IROW)/(TR-BR) !#KV-value modellayer
-!    IF(KHIDF(ILAY)%X(ICOL,IROW).EQ.0.0)THEN
-!     KVIDF(ILAY)%X(ICOL,IROW)=1.0
-!    ELSE
-!     KVAIDF(ILAY)%X(ICOL,IROW)=KVIDF(ILAY)%X(ICOL,IROW)/KHIDF(ILAY)%X(ICOL,IROW) !#KVA-value modellayer (vertical anisotropy)
-!    ENDIF
-!   ENDIF
-!   !## compute vertical permeability
-!   IF(ILAY.LT.NLAYM)THEN
-!    TR=BOTM(ILAY)%X(ICOL,IROW); BR=TOPM(ILAY+1)%X(ICOL,IROW)   
-!    IF(TR.EQ.TOPM(ILAY)%NODATA.OR.BR.EQ.BOTM(ILAY)%NODATA)CYCLE
-!    IF(CIDF(ILAY)%X(ICOL,IROW).LE.0.0)THEN
-!     CIDF(ILAY)%X(ICOL,IROW)= 0.0
-!    ELSE
-!     KVVIDF(ILAY)%X(ICOL,IROW)=(TR-BR)/CIDF(ILAY)%X(ICOL,IROW) !#KVV-value modellayer
-!    ENDIF
-!   ENDIF
-!  ENDIF
-! ENDDO; ENDDO; ENDDO
+ DO IROW=1,TOPM(1)%NROW; DO ICOL=1,TOPM(1)%NCOL; DO ILAY=1,NLAYM
+  TR=TOPM(ILAY)%X(ICOL,IROW); BR=BOTM(ILAY)%X(ICOL,IROW)   
+  IF(TR.EQ.TOPM(ILAY)%NODATA.OR.BR.EQ.BOTM(ILAY)%NODATA)CYCLE
+  IF(TR-BR.LE.0.0)THEN
+   KHIDF(ILAY)%X(ICOL,IROW)=0.0
+   KVIDF(ILAY)%X(ICOL,IROW)=1.0
+  ELSE
+   KHIDF(ILAY)%X(ICOL,IROW)=KDHIDF(ILAY)%X(ICOL,IROW)/(TR-BR) !#KH-value modellayer
+   KVIDF(ILAY)%X(ICOL,IROW)=KDVIDF(ILAY)%X(ICOL,IROW)/(TR-BR) !#KV-value modellayer
+   IF(KHIDF(ILAY)%X(ICOL,IROW).EQ.0.0)THEN
+    KVIDF(ILAY)%X(ICOL,IROW)=1.0
+   ELSE
+    KVAIDF(ILAY)%X(ICOL,IROW)=KVIDF(ILAY)%X(ICOL,IROW)/KHIDF(ILAY)%X(ICOL,IROW) !#KVA-value modellayer (vertical anisotropy)
+   ENDIF
+  ENDIF
+  !## compute vertical permeability
+  IF(ILAY.LT.NLAYM)THEN
+   TR=BOTM(ILAY)%X(ICOL,IROW); BR=TOPM(ILAY+1)%X(ICOL,IROW)   
+   IF(TR.EQ.TOPM(ILAY)%NODATA.OR.BR.EQ.BOTM(ILAY)%NODATA)CYCLE
+   IF(CIDF(ILAY)%X(ICOL,IROW).LE.0.0)THEN
+    CIDF(ILAY)%X(ICOL,IROW)= 0.0
+   ELSE
+    KVVIDF(ILAY)%X(ICOL,IROW)=(TR-BR)/CIDF(ILAY)%X(ICOL,IROW) !#KVV-value modellayer
+   ENDIF
+  ENDIF
+ ENDDO; ENDDO; ENDDO
 
  END SUBROUTINE GC_PRE_COMPUTE
 
@@ -364,9 +397,6 @@ CONTAINS
   DO I=1,SIZE(KDVIDF); LINE=TRIM(OUTPUTFOLDER)//'\mdl_khv_l'//TRIM(ITOS(I))//'.idf'
    IF(.NOT.IDFWRITE(KDVIDF(I),TRIM(LINE),1))RETURN
   ENDDO
-  DO I=1,SIZE(KDVIDF); IF(IACTM(I).EQ.1)THEN
-   LINE=TRIM(OUTPUTFOLDER)//'\mdl_khv_l'//TRIM(ITOS(I))//'.idf'; IF(.NOT.IDFWRITE(KDVIDF(I),TRIM(LINE),1))RETURN 
-  ENDIF; ENDDO
   DO I=1,SIZE(KVVIDF); LINE=TRIM(OUTPUTFOLDER)//'\mdl_kvv_l'//TRIM(ITOS(I))//'.idf'
    IF(.NOT.IDFWRITE(KVVIDF(I),TRIM(LINE),1))RETURN
   ENDDO
@@ -399,7 +429,9 @@ CONTAINS
    IF(.NOT.IDFWRITE(CIDF(I),TRIM(LINE),1))RETURN
   ENDDO
  ENDIF
-
+ 
+ IF(IMODBATCH.EQ.1)WRITE(*,'(A)') 'Finished writing data to file(s).'
+ 
  END SUBROUTINE GC_PRE_COMPUTE_WRITE
 
  !###======================================================================
@@ -434,7 +466,7 @@ CONTAINS
  !###======================================================================
  !## function to read model top and bot files
  IMPLICIT NONE
- INTEGER :: ILAY
+ INTEGER :: ILAY,I
  CHARACTER(LEN=52) :: FNAME
  
  GC_READ_MODELDATA=.FALSE.
@@ -454,6 +486,19 @@ CONTAINS
 !  IF(.NOT.IDFREADSCALE(BOTM(ILAY)%FNAME,BOTM(ILAY),2,1,0.0,0))RETURN
 
  ENDDO
+ 
+ !## copy IDF settings
+ DO I=1,SIZE(CIDF);   CALL IDFCOPY(TOPM(1),CIDF(I)); ENDDO 
+ DO I=1,SIZE(KDHIDF); CALL IDFCOPY(TOPM(1),KDHIDF(I)); ENDDO 
+ DO I=1,SIZE(KDVIDF); CALL IDFCOPY(TOPM(1),KDVIDF(I)); ENDDO 
+ DO I=1,SIZE(KHIDF);  CALL IDFCOPY(TOPM(1),KHIDF(I)); ENDDO 
+ DO I=1,SIZE(KVIDF);  CALL IDFCOPY(TOPM(1),KVIDF(I)); ENDDO
+ DO I=1,SIZE(KVVIDF); CALL IDFCOPY(TOPM(1),KVVIDF(I)); ENDDO 
+ DO I=1,SIZE(KVAIDF); CALL IDFCOPY(TOPM(1),KVAIDF(I)); ENDDO 
+ CALL IDFCOPY(TOPM(1),TOPR)
+ CALL IDFCOPY(TOPM(1),BOTR)
+ CALL IDFCOPY(TOPM(1),KHR)
+ CALL IDFCOPY(TOPM(1),KVR) 
  
  GC_READ_MODELDATA=.TRUE.
  
@@ -493,12 +538,6 @@ CONTAINS
  
  GC_GET_REGISDATA=.FALSE.
    
- !## create correct dimensions for idf files for regis
- CALL IDFCOPY(TOPM(1),TOPR)
- CALL IDFCOPY(TOPM(1),BOTR)
- CALL IDFCOPY(TOPM(1),KHR)
- CALL IDFCOPY(TOPM(1),KVR)
-   
  !## we assume that formation is before first "-"-sign and after "\"-sign, so
  !## apz1-t-ck.idf - formation becomes apz1
  J=INDEX(REGISFILES(IFILE),'\',.TRUE.)+1; K=INDEX(REGISFILES(IFILE)(J:),'-')
@@ -519,10 +558,10 @@ CONTAINS
  IF(.NOT.IDFREADSCALE(BOTR%FNAME,BOTR,2,0,0.0,0))RETURN !## scale mean
  !## try kh
  KHR%FNAME=TRIM(REGISFOLDER)//TRIM(FTYPE)//'KH-SK.IDF'
- IKHR=1; IF(.NOT.IDFREADSCALE(KHR%FNAME,KHR,3,0,0.0,0))IKHR=0
+ IKHR=1; IF(.NOT.IDFREADSCALE(KHR%FNAME,KHR,3,0,0.0,IOPTIONAL=1))IKHR=0
  !## try kv
  KVR%FNAME=TRIM(REGISFOLDER)//TRIM(FTYPE)//'KV-SK.IDF'
- IKVR=1; IF(.NOT.IDFREADSCALE(KVR%FNAME,KVR,3,0,0.0,0))IKVR=0
+ IKVR=1; IF(.NOT.IDFREADSCALE(KVR%FNAME,KVR,3,0,0.0,IOPTIONAL=1))IKVR=0
  
  !## No horizontal/vertical permeabilities found, formation will be skipped
  IF(IKHR.EQ.0.AND.IKVR.EQ.0)RETURN

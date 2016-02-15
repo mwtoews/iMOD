@@ -77,11 +77,11 @@ TYPE(VISVAR),DIMENSION(:),ALLOCATABLE :: VARVIS
 TYPE(IDFOBJ),DIMENSION(:,:),ALLOCATABLE :: ROSCEN
 
 CHARACTER(LEN=25),DIMENSION(MAXOPT)	:: RONAME
-DATA RONAME /'Wet_Damage_Agriculture','Drought_Damage_Agriculture','Objective_Wet_Agriculture',&
-		 'Objective_Drought_Agriculture','Objective_Nature','Objective_Urban_Area'/
+!DATA RONAME /'Wet_Damage_Agriculture','Drought_Damage_Agriculture','Objective_Wet_Agriculture',&
+!		 'Objective_Drought_Agriculture','Objective_Nature','Objective_Urban_Area'/
 !CHARACTER(LEN=25),DIMENSION(MAXOPT)	:: ROSUBS
-!DATA ROSUBS /'natschade_lanbouw','droogteschade_landbouw','doelrealisatie_lb_nat',&
-!		 'doelrealisatie_lb_droog','doelrealisatie_natuur','doelrealisatie_stedelijk'/
+DATA RONAME /'natschade_lanbouw','droogteschade_landbouw','doelrealisatie_lb_nat',&
+		 'doelrealisatie_lb_droog','doelrealisatie_natuur','doelrealisatie_stedelijk'/
 
 !twee maal een array voor bijhouden van kaartmateriaal
 !SUBTYPE			  IACT 	GHG	GLG		LUSE	SOIL	  LUT1      LUT2	    LUT3
