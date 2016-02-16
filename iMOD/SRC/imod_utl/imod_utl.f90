@@ -3290,7 +3290,7 @@ CONTAINS
  INTEGER,INTENT(OUT) :: MX                 !## number of values ne nodata
  REAL,INTENT(IN),DIMENSION(NPERC) :: PERC  !## percentile 0-100%
  REAL,INTENT(OUT),DIMENSION(NPERC) :: XMED !## yielding percentile(s)
- REAL,INTENT(IN) :: NODATA                 !## nodata value !,PERC
+ REAL,INTENT(IN) :: NODATA                 !## nodata value 
  REAL,DIMENSION(NX),INTENT(INOUT) :: X     !## array
  INTEGER :: I,IP
  REAL :: FRAC

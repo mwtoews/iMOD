@@ -24,6 +24,7 @@ MODULE MOD_GEOCONNECT
 
 USE WINTERACTER
 USE RESOURCE
+USE IMODVAR, ONLY : IDIAGERROR
 USE MOD_GEOCONNECT_PAR
 USE MOD_UTL, ONLY : UTL_GETUNIT,UTL_SUBST,ITOS,UTL_DIRINFO_POINTER,UTL_CAP
 USE MOD_IDF, ONLY : IDFGETXYVAL,IDFREADSCALE,IDFWRITE,IDFREAD
@@ -45,58 +46,19 @@ CONTAINS
  SELECT CASE (MESSAGE%WIN)
 
   CASE (ID_DGEOCONNECT)
-   SELECT CASE (ITYPE)
-    
-    CASE (PUSHBUTTON)
-     SELECT CASE (MESSAGE%VALUE1)
-      CASE (IDCANCEL)
-       CALL GC_CLOSE()
-      CASE (IDHELP)
-      CASE (IDOK) !#UITGRIJZEN INDIEN NIET ALLE BENODIGDE VARIABELEN ZIJN INGEVULD OP SETTINGSTAB+PROCESSINGTAB(S)!!
-       IF(ITAB.EQ.3)THEN
-        CALL WMESSAGEBOX(YESNO,QUESTIONICON,COMMONYES,'Are you sure to compute the preprocessing variables?','Question')
-        IF(WINFODIALOG(4).EQ.1)THEN
-         CALL GC_INIT_READ() !# Read initial settings from Settings-tab
-         CALL GC_INIT_PREPROCESSING_READ() !# Read initial settings from Preprocessing-tab
-         CALL GC_COMPUTE_MAIN(0) !# Compute preprocessing 
-        ENDIF
-       ELSEIF(ITAB.EQ.4)THEN
-        !# call postprocessing routines  
-        CALL WMESSAGEBOX(YESNO,QUESTIONICON,COMMONYES,'Are you sure to compute the postprocessing files?','Question')              
-       ENDIF
-     END SELECT
-     CASE (ID_SAVEAS_INI)
-      !# ...include subroutine to open save-window and put FNAME in memory
-      CALL GC_INIT_PREPROCESSING_WRITE(FNAME) !# Write *.ini-file
-     CASE (ID_OPEN_INI)
-      !# ...include subroutine to open open-window and put IU in memory + settings on window
-      IF(.NOT.GC_INIT_PREPROCESSING(IU))RETURN !# read *.ini-file
-
-    CASE (FIELDCHANGED)
-     !# UITGRIJZGEN OPTIES
-    CASE (TABCHANGED)
-     SELECT CASE (MESSAGE%VALUE2)
-      CASE (ID_DGEOCONNECT_TAB3)
-       ITAB=3
-      CASE (ID_DGEOCONNECT_TAB4)
-       ITAB=4 
-     END SELECT
-   END SELECT
- 
- ! CASE (ID_DGEOCONNECT_TAB1)
- 
- ! CASE (ID_DGEOCONNECT_TAB2)  
- 
-  CASE (ID_DGEOCONNECT_TAB3)
-   SELECT CASE (ITYPE)
-    CASE (PUSHBUTTON)
-     SELECT CASE (MESSAGE%VALUE1)
-     END SELECT
-    CASE (FIELDCHANGED)
-    !# uitgrijzen...
-   END SELECT
+   CALL GC_MAIN_DIALOG(ITYPE,MESSAGE)
    
-!  CASE (ID_DGEOCONNECT_TAB4)
+  CASE (ID_DGEOCONNECT_TAB1)
+   CALL GC_MAIN_TAB1(ITYPE,MESSAGE)
+ 
+  CASE (ID_DGEOCONNECT_TAB2)
+   CALL GC_MAIN_TAB1(ITYPE,MESSAGE)
+
+  CASE (ID_DGEOCONNECT_TAB3)
+   CALL GC_MAIN_TAB1(ITYPE,MESSAGE)
+
+  CASE (ID_DGEOCONNECT_TAB4)
+   CALL GC_MAIN_TAB1(ITYPE,MESSAGE)
   
  END SELECT
 
@@ -105,37 +67,195 @@ CONTAINS
  END SUBROUTINE GC_MAIN
 
  !###======================================================================
+ SUBROUTINE GC_MAIN_DIALOG(ITYPE,MESSAGE)
+ !###======================================================================
+ IMPLICIT NONE
+ TYPE(WIN_MESSAGE),INTENT(IN) :: MESSAGE
+ INTEGER,INTENT(IN) :: ITYPE
+ INTEGER :: ITAB
+ 
+ SELECT CASE (ITYPE)
+    
+  CASE (PUSHBUTTON)
+   SELECT CASE (MESSAGE%VALUE1)
+    CASE (IDCANCEL)
+     CALL GC_CLOSE()
+    CASE (IDHELP)
+      
+    CASE (IDOK) 
+     CALL WDIALOGGETTAB(ID_GCTAB,ITAB)
+     SELECT CASE (ITAB)
+      !## identify
+      CASE (1)
+
+      !## call postprocessing routines  
+      CASE (2)
+       CALL WMESSAGEBOX(YESNO,QUESTIONICON,COMMONYES,'Are you sure to compute the preprocessing variables?','Question')
+       IF(WINFODIALOG(4).EQ.1)THEN
+        CALL GC_INIT_READ()               !## read initial settings from settings-tab
+        CALL GC_INIT_PREPROCESSING_READ() !## read initial settings from preprocessing-tab
+        CALL GC_COMPUTE_MAIN(0)           !## compute preprocessing 
+       ENDIF
+      !## call postprocessing routines
+      CASE (3)
+       CALL WMESSAGEBOX(YESNO,QUESTIONICON,COMMONYES,'Are you sure to compute the postprocessing files?','Question')              
+       IF(WINFODIALOG(4).EQ.1)THEN
+       ENDIF
+     END SELECT
+   END SELECT
+
+   CASE (ID_SAVEAS)
+    CALL WDIALOGGETTAB(ID_GCTAB,ITAB)
+    SELECT CASE (ITAB)
+     CASE (1)
+     !## call preprocessing routines  
+     CASE (2)
+!      !## include subroutine to open save-window and put FNAME in memory
+!      CALL GC_INIT_PREPROCESSING_WRITE(FNAME) !# Write *.ini-file
+     CASE (3)
+     CASE (4)
+    END SELECT
+   CASE (ID_OPEN)
+    CALL WDIALOGGETTAB(ID_GCTAB,ITAB)
+    SELECT CASE (ITAB)
+     CASE (1)
+     CASE (2)
+!      !## include subroutine to open open-window and put IU in memory + settings on window
+!      IF(.NOT.GC_INIT_PREPROCESSING(IU))RETURN !# read *.ini-file
+ !## add subroutine to write results on screen !!!
+     CASE (3)
+     CASE (4)
+    END SELECT
+  CASE (TABCHANGED)
+   SELECT CASE (MESSAGE%VALUE2)
+    CASE (ID_DGEOCONNECT_TAB1)
+     CALL WDIALOGFIELDSTATE(IDOK,1)
+    CASE (ID_DGEOCONNECT_TAB2)
+     CALL WDIALOGFIELDSTATE(IDOK,1)
+    CASE (ID_DGEOCONNECT_TAB3)
+     CALL WDIALOGFIELDSTATE(IDOK,1)
+    CASE (ID_DGEOCONNECT_TAB4)
+     CALL WDIALOGFIELDSTATE(IDOK,0)
+   END SELECT
+ END SELECT
+
+ END SUBROUTINE GC_MAIN_DIALOG
+
+ !###======================================================================
+ SUBROUTINE GC_MAIN_TAB1(ITYPE,MESSAGE)
+ !###======================================================================
+ IMPLICIT NONE
+ TYPE(WIN_MESSAGE),INTENT(IN) :: MESSAGE
+ INTEGER,INTENT(IN) :: ITYPE
+ 
+ SELECT CASE (ITYPE)
+  CASE (PUSHBUTTON)
+   SELECT CASE (MESSAGE%VALUE1)
+   END SELECT
+  CASE (FIELDCHANGED)
+   SELECT CASE (MESSAGE%VALUE2)
+   END SELECT
+ END SELECT
+
+ END SUBROUTINE GC_MAIN_TAB1
+
+ !###======================================================================
+ SUBROUTINE GC_MAIN_TAB2(ITYPE,MESSAGE)
+ !###======================================================================
+ IMPLICIT NONE
+ TYPE(WIN_MESSAGE),INTENT(IN) :: MESSAGE
+ INTEGER,INTENT(IN) :: ITYPE
+ 
+ SELECT CASE (ITYPE)
+  CASE (PUSHBUTTON)
+   SELECT CASE (MESSAGE%VALUE1)
+   END SELECT
+  CASE (FIELDCHANGED)
+   SELECT CASE (MESSAGE%VALUE2)
+   END SELECT
+ END SELECT
+
+ END SUBROUTINE GC_MAIN_TAB2
+ 
+ !###======================================================================
+ SUBROUTINE GC_MAIN_TAB3(ITYPE,MESSAGE)
+ !###======================================================================
+ IMPLICIT NONE
+ TYPE(WIN_MESSAGE),INTENT(IN) :: MESSAGE
+ INTEGER,INTENT(IN) :: ITYPE
+ 
+ SELECT CASE (ITYPE)
+  CASE (PUSHBUTTON)
+   SELECT CASE (MESSAGE%VALUE1)
+   END SELECT
+  CASE (FIELDCHANGED)
+   SELECT CASE (MESSAGE%VALUE2)
+   END SELECT
+ END SELECT
+
+ END SUBROUTINE GC_MAIN_TAB3
+
+ !###======================================================================
+ SUBROUTINE GC_MAIN_TAB4(ITYPE,MESSAGE)
+ !###======================================================================
+ IMPLICIT NONE
+ TYPE(WIN_MESSAGE),INTENT(IN) :: MESSAGE
+ INTEGER,INTENT(IN) :: ITYPE
+ 
+ SELECT CASE (ITYPE)
+  CASE (PUSHBUTTON)
+   SELECT CASE (MESSAGE%VALUE1)
+   END SELECT
+  CASE (FIELDCHANGED)
+   SELECT CASE (MESSAGE%VALUE2)
+   END SELECT
+ END SELECT
+
+ END SUBROUTINE GC_MAIN_TAB4
+
+ !###======================================================================
  SUBROUTINE GC_MAIN_INIT()
  !###======================================================================
  IMPLICIT NONE
  INTEGER :: I
-
- !## clean everything
- !CALL GC_DEALLOCATE()
  
- !##Open Geoconnect dialog 
+ CALL WINDOWSELECT(0)
+ IF(WMENUGETSTATE(ID_GEOCONNECT,2).EQ.1)THEN
+  CALL GC_CLOSE(); RETURN
+ ENDIF
+
+ CALL MAIN1INACTMODULE(ID_GEOCONNECT)
+
+ !## other module no closed, no approvement given
+ IF(IDIAGERROR.EQ.1)RETURN
+
+ CALL WMENUSETSTATE(ID_GEOCONNECT,2,1)
+
+ !## open geoconnect dialog 
  CALL WDIALOGLOAD(ID_DGEOCONNECT,ID_DGEOCONNECT)
  
+ !## identify
  CALL WDIALOGSELECT(ID_DGEOCONNECT_TAB1) 
  
+ !## preprocessing
  CALL WDIALOGSELECT(ID_DGEOCONNECT_TAB2)
- CALL WDIALOGPUTIMAGE(ID_OPEN_REGIS,ID_ICONOPEN) !# open folder with Regis files
- CALL WDIALOGPUTIMAGE(ID_OPEN_TOP,ID_ICONOPEN) !# open folder with TOP.idf files
- CALL WDIALOGPUTIMAGE(ID_OPEN_BOT,ID_ICONOPEN) !# open folder with BOT.idf files
- CALL WDIALOGPUTIMAGE(ID_SAVEAS,ID_ICONSAVEAS) !# save settings as *.txt file
- CALL WDIALOGPUTIMAGE(ID_OPEN,ID_ICONOPEN) !# open settings *.txt file
+ CALL WDIALOGPUTIMAGE(ID_OPEN_OUTFOLDER,ID_ICONOPEN) !## open folder where output files need to be stored
 
+ !## postprocessing
  CALL WDIALOGSELECT(ID_DGEOCONNECT_TAB3)
- CALL WDIALOGPUTIMAGE(ID_OPEN_OUTFOLDER,ID_ICONOPEN) !# open folder where output files need to be stored
- 
- CALL WDIALOGSELECT(ID_DGEOCONNECT_TAB4)
  CALL WDIALOGPUTIMAGE(ID_IDENTIFY,ID_ICONPIPET)
- CALL WDIALOGPUTIMAGE(ID_SAVEAS_CSV,ID_ICONSAVEAS)
- CALL WDIALOGPUTIMAGE(ID_OPEN_CSV,ID_ICONOPEN)
- 
+ CALL WDIALOGPUTIMAGE(ID_SAVEAS,ID_ICONSAVEAS) !## saveas
+ CALL WDIALOGPUTIMAGE(ID_OPEN,ID_ICONOPEN)     !## open
+
+ !## settings
+ CALL WDIALOGSELECT(ID_DGEOCONNECT_TAB4)
+ CALL WDIALOGPUTIMAGE(ID_OPEN_REGIS,ID_ICONOPEN) !## open folder with Regis files
+ CALL WDIALOGPUTIMAGE(ID_OPEN_TOP,ID_ICONOPEN)   !## open folder with TOP.idf files
+ CALL WDIALOGPUTIMAGE(ID_OPEN_BOT,ID_ICONOPEN)   !## open folder with BOT.idf files
+  
  CALL WDIALOGSELECT(ID_DGEOCONNECT)
- CALL WDIALOGPUTIMAGE(ID_SAVEAS_INI,ID_ICONSAVEAS) !# save settings as *.ini file
- CALL WDIALOGPUTIMAGE(ID_OPEN_INI,ID_ICONOPEN) !# open settings *.ini file
+ CALL WDIALOGPUTIMAGE(ID_SAVEAS,ID_ICONSAVEAS) !## saveas
+ CALL WDIALOGPUTIMAGE(ID_OPEN,ID_ICONOPEN)     !## open
 
  CALL WDIALOGSETTAB(ID_GCTAB,ID_DGEOCONNECT_TAB2)
 
@@ -634,9 +754,10 @@ CONTAINS
  !###======================================================================
  IMPLICIT NONE
 
+ CALL WINDOWSELECT(0); CALL WMENUSETSTATE(ID_GEOCONNECT,2,0)
+
  CALL WDIALOGSELECT(ID_DGEOCONNECT); CALL WDIALOGUNLOAD()
 
  END SUBROUTINE GC_CLOSE
-
 
 END MODULE MOD_GEOCONNECT

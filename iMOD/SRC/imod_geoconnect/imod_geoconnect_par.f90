@@ -48,8 +48,6 @@ TYPE FRMOBJ
 END TYPE
 TYPE(FRMOBJ),ALLOCATABLE,DIMENSION(:) :: IPFAC
 
-INTEGER,SAVE :: ITAB
-
 CONTAINS
 
  !###======================================================================
@@ -246,19 +244,22 @@ CONTAINS
  !###======================================================================
  SUBROUTINE GC_INIT_PREPROCESSING_READ()
  !###======================================================================
- !# read initial settings from Preprocessing tab
+ !# read initial settings from preprocessing tab
  IMPLICIT NONE
  INTEGER :: I
  
- GC_IFLAG=2 !# set flag
+ !## set flag
+ GC_IFLAG=2 
  
  CALL WDIALOGGETSTRING(IDF_STRING1,OUTPUTFOLDER) !# Get directory+name of outputfile
  CALL WDIALOGGETCHECKBOX(IDF_CHECK1,ISAVEK) !# Get Save option KHV-,KVV,KVA
  CALL WDIALOGGETCHECKBOX(IDF_CHECK2,ISAVEC) !# Get Save option KDW and VCW
  
+ !## read formation name from grid
  DO I=1,SIZE(IPFAC%FORM)
-  CALL WGRIDGETCELLSTRING(IDF_GRID1,1,I,IPFAC(I)%FORM) !# Read formation name from grid
-  CALL WGRIDGETCELLREAL(IDF_GRID1,2,I,IPFAC(I)%FACT) !# Read factor related to formation name from grid
+  CALL WGRIDGETCELLSTRING(IDF_GRID1,1,I,IPFAC(I)%FORM)
+  !## read factor related to formation name from grid
+  CALL WGRIDGETCELLREAL(IDF_GRID1,2,I,IPFAC(I)%FACT) 
  ENDDO
  
  END SUBROUTINE GC_INIT_PREPROCESSING_READ 
@@ -266,22 +267,27 @@ CONTAINS
  !###======================================================================
  SUBROUTINE GC_INIT_READ()
  !###======================================================================
- !# read initial settings from Preprocessing tab
+ !# read initial settings from preprocessing tab
  IMPLICIT NONE
  INTEGER :: I
  
  CALL WDIALOGSELECT(ID_DGEOCONNECT_TAB2)
 
- CALL WDIALOGGETINTEGER(IDF_INTEGER1,NLAYM) !#Get amount of model layers
+ !## get amount of model layers
+ CALL WDIALOGGETINTEGER(IDF_INTEGER1,NLAYM) 
  
- IF(.NOT.GC_ALLOCATE())RETURN !# allocate all needed variables based upon NLAYM
+ !## allocate all needed variables based upon NLAYM
+ IF(.NOT.GC_ALLOCATE())RETURN 
  
- CALL WDIALOGGETSTRING(IDF_STRING1,REGISFOLDER) !#Get directory of REGIS files
- CALL WDIALOGGETSTRING(IDF_STRING1,TOPFOLDER) !#Get directory of REGIS files
- CALL WDIALOGGETSTRING(IDF_STRING1,BOTFOLDER) !#Get directory of REGIS files
- 
- DO I=1,NLAYM
-  CALL WGRIDGETCELLINTEGER(IDF_GRID1,2,I,IACTM(I)) !# Read formation name from grid
+ !## get directory of REGIS files
+ CALL WDIALOGGETSTRING(IDF_STRING1,REGISFOLDER)
+ !## get directory of TOP files model
+ CALL WDIALOGGETSTRING(IDF_STRING2,TOPFOLDER) 
+ !## get directory of BOT files model
+ CALL WDIALOGGETSTRING(IDF_STRING3,BOTFOLDER) 
+ !## read formation name from grid 
+ DO I=1,SIZE(IACTM)
+  CALL WGRIDGETCELLINTEGER(IDF_GRID1,2,I,IACTM(I))
  ENDDO
  
  END SUBROUTINE GC_INIT_READ 
