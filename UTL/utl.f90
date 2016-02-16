@@ -3803,172 +3803,172 @@ module m_vcl
 
 end module
 ! ******************************************************************************
-!subroutine cfn_vcl_set(cl,ivcl)
-!
-!! description:
-!! ------------------------------------------------------------------------------
-!! Virtual command line
-!! Set a virtual command line
-!
-!! declaration section
-!! ------------------------------------------------------------------------------
-! use m_vcl
-!
-! implicit none
-!
-!
-!! arguments
-! character (len=*), intent(in)   :: cl    ! text for the command line to store
-!                                          ! If it is empty the real command line is used
-! integer  , intent(out)          :: ivcl  ! Index of data structure where the data is stored
-!                                          ! This index is needed by the calling program
-!                                          ! when trying to get an argument
-!
-!! local variables
-! integer   i,na,ns,b,e,ic,ir,p,n,n1,n2,l
-!
-! integer   as
-! character st*1
-!
-! logical   usecl
-!
-! type(pvclstruct), pointer :: tvcl(:)
-! type(vclstruct) , pointer :: pv
-!
-!! functions
-! integer   cfn_length,osd_iargc,cfn_n_elem,cfn_elem_pos
-!
-!
-!! program section
-!! ------------------------------------------------------------------------------
-!
-!! init
-! st=' '
-! as=1
-!
-!
-!! check allocation of pointer array
-! if (.not.associated(vcl)) then
-!    ! allocate structure
-!    mxvcl=10
-!    allocate(vcl(mxvcl))
-! endif
-!
-!! check size of pointer array
-! if (nvcl.ge.mxvcl) then
-!    ! create larger array
-!    mxvcl=int(1.5*max(nvcl,mxvcl))
-!    allocate(tvcl(mxvcl))
-!    ! copy data
-!    do i=1,nvcl
-!       tvcl(i)%pvcl=>vcl(i)%pvcl
-!       nullify(vcl(i)%pvcl)
-!    enddo
-!    ! move pointer
-!    nullify(vcl)
-!    vcl=>tvcl
-!    nullify(tvcl)
-! endif
-!
-!
-!! store cl
-! nvcl=nvcl+1
-! ivcl=nvcl
-! ! pointer
-! allocate(vcl(ivcl)%pvcl)
-! pv=>vcl(ivcl)%pvcl
-!
-! l=cfn_length(cl)
-! if (l.gt.0) then
-!    ! cl contains data, use this
-!    usecl=.true.
-! else
-!    ! use real command line data
-!    usecl=.false.
-! endif
-!
-!! determine array sizes
-! if (usecl) then
-!
-!    ! number of arguments
-!    na=cfn_n_elem(st,as,cl)
-!
-! else
-!     ! number of arguments
-!    na=osd_iargc()
-!
-!    ! get total command line length
-!    l=0
-!    do i=1,na
-!       call osd_getarg(i,targ)
-!       l=l+cfn_length(targ)
-!    enddo
-!
-! endif
-!
-! ! calculate number of sub-strings to be used
-! ns=int((l+lcl-1)/lcl)
-!
-!
-!! allocate
-! allocate(pv%pos(na+1))
-! allocate(pv%arg(na))
-! allocate(pv%cl(ns))
-!
-!! store
-! ir=1  ! row    number in pv%cl
-! ic=1  ! column number in pv%cl
-! p =1  ! position in cl to search for the next argument
-! do i=1,na
-!    ! get argument
-!    if (usecl) then
-!       n=cfn_elem_pos(1,st,as,cl(p:l),l-p+1,b,e)
-!       ! copy sub string
-!       targ=cl(b+p-1:e+p-1)
-!       ! new position for p
-!       p=p+e
-!
-!       e=e-b+1
-!       b=1
-!    else
-!       call osd_getarg(i,targ)
-!       e=cfn_length(targ)
-!       b=1
-!    endif
-!
-!    ! store
-!    pv%pos(i)=(ir-1)*lcl+ic
-!    do while (b.le.e)
-!       n1=e-b+1     ! number of characters left to store
-!       n2=lcl-ic+1  ! number of positions left at current row
-!       n=min(n1,n2) ! number of characters to store in current row
-!
-!       pv%cl(ir)(ic:ic+n-1)=targ(b:b+n-1)
-!       ! next
-!       b=b+n
-!       ic=ic+n
-!       if (ic.gt.lcl) then
-!          ic=ic-lcl
-!          ir=ir+1
-!       endif
-!    enddo
-!
-! enddo
-! ! store last position
-! pv%pos(na+1)=(ir-1)*lcl+ic
-! ! store number of arguments
-! pv%narg =na
-! pv%mxarg=na
-!
-! ! fill arg
-! do i=1,na
-!    pv%arg(i)=i
-! enddo
-!
-!
-!! end of program
-! return
-!end
+subroutine cfn_vcl_set(cl,ivcl)
+
+! description:
+! ------------------------------------------------------------------------------
+! Virtual command line
+! Set a virtual command line
+
+! declaration section
+! ------------------------------------------------------------------------------
+ use m_vcl
+
+ implicit none
+
+
+! arguments
+ character (len=*), intent(in)   :: cl    ! text for the command line to store
+                                          ! If it is empty the real command line is used
+ integer  , intent(out)          :: ivcl  ! Index of data structure where the data is stored
+                                          ! This index is needed by the calling program
+                                          ! when trying to get an argument
+
+! local variables
+ integer   i,na,ns,b,e,ic,ir,p,n,n1,n2,l
+
+ integer   as
+ character st*1
+
+ logical   usecl
+
+ type(pvclstruct), pointer :: tvcl(:)
+ type(vclstruct) , pointer :: pv
+
+! functions
+ integer   cfn_length,osd_iargc,cfn_n_elem,cfn_elem_pos
+
+
+! program section
+! ------------------------------------------------------------------------------
+
+! init
+ st=' '
+ as=1
+
+
+! check allocation of pointer array
+ if (.not.associated(vcl)) then
+    ! allocate structure
+    mxvcl=10
+    allocate(vcl(mxvcl))
+ endif
+
+! check size of pointer array
+ if (nvcl.ge.mxvcl) then
+    ! create larger array
+    mxvcl=int(1.5*max(nvcl,mxvcl))
+    allocate(tvcl(mxvcl))
+    ! copy data
+    do i=1,nvcl
+       tvcl(i)%pvcl=>vcl(i)%pvcl
+       nullify(vcl(i)%pvcl)
+    enddo
+    ! move pointer
+    nullify(vcl)
+    vcl=>tvcl
+    nullify(tvcl)
+ endif
+
+
+! store cl
+ nvcl=nvcl+1
+ ivcl=nvcl
+ ! pointer
+ allocate(vcl(ivcl)%pvcl)
+ pv=>vcl(ivcl)%pvcl
+
+ l=cfn_length(cl)
+ if (l.gt.0) then
+    ! cl contains data, use this
+    usecl=.true.
+ else
+    ! use real command line data
+    usecl=.false.
+ endif
+
+! determine array sizes
+ if (usecl) then
+
+    ! number of arguments
+    na=cfn_n_elem(st,as,cl)
+
+ else
+     ! number of arguments
+    na=osd_iargc()
+
+    ! get total command line length
+    l=0
+    do i=1,na
+       call osd_getarg(i,targ)
+       l=l+cfn_length(targ)
+    enddo
+
+ endif
+
+ ! calculate number of sub-strings to be used
+ ns=int((l+lcl-1)/lcl)
+
+
+! allocate
+ allocate(pv%pos(na+1))
+ allocate(pv%arg(na))
+ allocate(pv%cl(ns))
+
+! store
+ ir=1  ! row    number in pv%cl
+ ic=1  ! column number in pv%cl
+ p =1  ! position in cl to search for the next argument
+ do i=1,na
+    ! get argument
+    if (usecl) then
+       n=cfn_elem_pos(1,st,as,cl(p:l),l-p+1,b,e)
+       ! copy sub string
+       targ=cl(b+p-1:e+p-1)
+       ! new position for p
+       p=p+e
+
+       e=e-b+1
+       b=1
+    else
+       call osd_getarg(i,targ)
+       e=cfn_length(targ)
+       b=1
+    endif
+
+    ! store
+    pv%pos(i)=(ir-1)*lcl+ic
+    do while (b.le.e)
+       n1=e-b+1     ! number of characters left to store
+       n2=lcl-ic+1  ! number of positions left at current row
+       n=min(n1,n2) ! number of characters to store in current row
+
+       pv%cl(ir)(ic:ic+n-1)=targ(b:b+n-1)
+       ! next
+       b=b+n
+       ic=ic+n
+       if (ic.gt.lcl) then
+          ic=ic-lcl
+          ir=ir+1
+       endif
+    enddo
+
+ enddo
+ ! store last position
+ pv%pos(na+1)=(ir-1)*lcl+ic
+ ! store number of arguments
+ pv%narg =na
+ pv%mxarg=na
+
+ ! fill arg
+ do i=1,na
+    pv%arg(i)=i
+ enddo
+
+
+! end of program
+ return
+end
 
 ! ******************************************************************************
 
