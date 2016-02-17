@@ -78,7 +78,7 @@ CONTAINS
  READ(LINE,*) BOTFOLDER; WRITE(*,'(A)') 'BOTFOLDER='//TRIM(BOTFOLDER)
    
  !## on default all layers are activated 
- IACTM=1; IF(UTL_READINITFILE('ACTLAYERS',LINE,IU,1))READ(LINE,'(99I1)') (IACTM(I),I=1,NLAYM)
+ IACTM=1; IF(UTL_READINITFILE('ACTLAYERS',LINE,IU,1))READ(LINE,*) (IACTM(I),I=1,NLAYM)
  WRITE(*,'(A,99I1)') 'ACTLAYERS=',IACTM
   
  GC_INIT=.TRUE.
@@ -248,34 +248,50 @@ CONTAINS
  IMPLICIT NONE
  INTEGER :: I
 
- CALL WDIALOGPUTSTRING(IDF_STRING1,OUTPUTFOLDER) !# Get directory+name of outputfile
- CALL WDIALOGPUTCHECKBOX(IDF_CHECK1,ISAVEK) !# Get Save option KHV-,KVV,KVA
- CALL WDIALOGPUTCHECKBOX(IDF_CHECK2,ISAVEC) !# Get Save option KDW and VCW
+ !## put directory+name of outputfile
+ CALL WDIALOGPUTSTRING(IDF_STRING1,TRIM(OUTPUTFOLDER)) 
+ !## put Save option KHV-,KVV,KVA
+ CALL WDIALOGPUTCHECKBOX(IDF_CHECK1,ISAVEK) 
+ !## put Save option KDW and VCW
+ CALL WDIALOGPUTCHECKBOX(IDF_CHECK2,ISAVEC) 
  
  END SUBROUTINE GC_INIT_PREPROCESSING_PUT 
  
  !###======================================================================
- SUBROUTINE GC_INIT_PREPROCESSING_GET()
+ LOGICAL FUNCTION GC_INIT_PREPROCESSING_GET()
  !###======================================================================
  !# read initial settings from preprocessing tab
  IMPLICIT NONE
  INTEGER :: I
  
- !## set flag
- GC_IFLAG=2 
+ GC_INIT_PREPROCESSING_GET=.FALSE.
  
- CALL WDIALOGGETSTRING(IDF_STRING1,OUTPUTFOLDER) !# Get directory+name of outputfile
- CALL WDIALOGGETCHECKBOX(IDF_CHECK1,ISAVEK) !# Get Save option KHV-,KVV,KVA
- CALL WDIALOGGETCHECKBOX(IDF_CHECK2,ISAVEC) !# Get Save option KDW and VCW
+ CALL WDIALOGSELECT(ID_DGEOCONNECT_TAB2)
+ 
+ !## get directory+name of outputfile
+ CALL WDIALOGGETSTRING(IDF_STRING1,OUTPUTFOLDER) 
+ IF(TRIM(OUTPUTFOLDER).EQ.'')THEN
+  CALL WMESSAGEBOX(OKONLY,EXCLAMATIONICON,COMMONOK,'You should specify an output folder.','Error')
+  RETURN
+ ENDIF
+ !## get save option KHV-,KVV,KVA
+ CALL WDIALOGGETCHECKBOX(IDF_CHECK1,ISAVEK)      
+ !## get save option KDW and VCW
+ CALL WDIALOGGETCHECKBOX(IDF_CHECK2,ISAVEC)      
  
  !## read formation name from grid
-! DO I=1,SIZE(IPFAC%FORM)
+ DO I=1,NLAYR 
 !  CALL WGRIDGETCELLSTRING(IDF_GRID1,1,I,IPFAC(I)%FORM)
-!  !## read factor related to formation name from grid
-!  CALL WGRIDGETCELLREAL(IDF_GRID1,2,I,IPFAC(I)%FACT) 
-! ENDDO
+  !## read factor related to formation name from grid
+  CALL WGRIDGETCELLREAL(IDF_GRID1,2,I,IPFAC(I)%FACT) 
+ ENDDO
  
- END SUBROUTINE GC_INIT_PREPROCESSING_GET 
+ !## set flag
+ GC_IFLAG=2 
+
+ GC_INIT_PREPROCESSING_GET=.TRUE.
+ 
+ END FUNCTION GC_INIT_PREPROCESSING_GET 
 
  !###======================================================================
  SUBROUTINE GC_INIT_GET()
@@ -288,10 +304,7 @@ CONTAINS
 
  !## get amount of model layers
  CALL WDIALOGGETINTEGER(IDF_INTEGER1,NLAYM) 
- 
- !## allocate all needed variables based upon NLAYM
- IF(.NOT.GC_ALLOCATE())RETURN 
- 
+  
  !## get directory of REGIS files
  CALL WDIALOGGETSTRING(IDF_STRING1,REGISFOLDER)
  !## get directory of TOP files model
@@ -316,7 +329,8 @@ CONTAINS
 
  !## get amount of model layers
  CALL WDIALOGPUTINTEGER(IDF_INTEGER1,NLAYM) 
- 
+ CALL WDIALOGFIELDSTATE(IDF_INTEGER1,2)
+  
  !## get directory of REGIS files
  CALL WDIALOGPUTSTRING(IDF_STRING1,REGISFOLDER)
  !## get directory of TOP files model
@@ -324,6 +338,7 @@ CONTAINS
  !## get directory of BOT files model
  CALL WDIALOGPUTSTRING(IDF_STRING3,BOTFOLDER) 
  !## read formation name from grid 
+ CALL WGRIDROWS(IDF_GRID1,NLAYM)
  DO I=1,SIZE(IACTM)
   CALL WGRIDLABELROW(IDF_GRID1,I,'Layer '//TRIM(ITOS(I)))
   CALL WGRIDPUTCELLCHECKBOX(IDF_GRID1,1,I,IACTM(I))
