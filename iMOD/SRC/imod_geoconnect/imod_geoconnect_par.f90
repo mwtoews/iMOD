@@ -247,18 +247,10 @@ CONTAINS
  !# put initial settings from preprocessing *.ini file on window
  IMPLICIT NONE
  INTEGER :: I
- 
- !## set flag
+
  CALL WDIALOGPUTSTRING(IDF_STRING1,OUTPUTFOLDER) !# Get directory+name of outputfile
  CALL WDIALOGPUTCHECKBOX(IDF_CHECK1,ISAVEK) !# Get Save option KHV-,KVV,KVA
  CALL WDIALOGPUTCHECKBOX(IDF_CHECK2,ISAVEC) !# Get Save option KDW and VCW
- 
- !## read formation name from grid
- DO I=1,SIZE(IPFAC%FORM)
-  CALL WGRIDPUTCELLSTRING(IDF_GRID1,1,I,IPFAC(I)%FORM)
-  !## read factor related to formation name from grid
-  CALL WGRIDPUTCELLREAL(IDF_GRID1,2,I,IPFAC(I)%FACT) 
- ENDDO
  
  END SUBROUTINE GC_INIT_PREPROCESSING_PUT 
  

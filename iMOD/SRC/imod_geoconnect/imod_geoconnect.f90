@@ -109,12 +109,12 @@ CONTAINS
      SELECT CASE (ITAB)
       CASE (ID_DGEOCONNECT_TAB1)
       !## call settings routines
-       TXTFILE=TRIM(PREFVAL(1))//'\IMOD_USER\SETTINGS\Geoconnect.txt'
+       TXTFILE=TRIM(PREFVAL(1))//'\SETTINGS\Geoconnect.txt'
        IF(.NOT.UTL_WSELECTFILE('Textfile (*.txt)|*.txt|',SAVEDIALOG+PROMPTON+DIRCHANGE+APPENDEXT,TXTFILE,&
                    'Save Current Settings into a textfile (*.txt)'))RETURN  
        CALL GC_INIT_WRITE(TXTFILE) 
       CASE (ID_DGEOCONNECT_TAB2)
-       FNAME=TRIM(PREFVAL(1))//'\IMOD_USER\SETTINGS\Geoconnect_pre.ini'
+       FNAME=TRIM(PREFVAL(1))//'\SETTINGS\Geoconnect_pre.ini'
        IF(.NOT.UTL_WSELECTFILE('Initialization file (*.ini)|*.ini|',SAVEDIALOG+PROMPTON+DIRCHANGE+APPENDEXT,FNAME,&
                    'Save Current Settings into an initialization file (*.ini)'))RETURN
        !## write *.ini-file
@@ -199,16 +199,16 @@ CONTAINS
   CASE (PUSHBUTTON)
    SELECT CASE (MESSAGE%VALUE1)
     CASE (ID_OPEN)
-     IF(.NOT.UTL_WSELECTFILE('iMOD Map (*.idf)|*.idf|',&
-        LOADDIALOG+MUSTEXIST+PROMPTON+DIRCHANGE+APPENDEXT,OUTPUTFOLDER,'Load iMOD Map (*.idf)'))RETURN
+     CALL WSELECTDIR(DIRCHANGE+DIRCREATE,OUTPUTFOLDER,'Load output folder')
      !## put fname on window
      CALL WDIALOGPUTSTRING(IDF_STRING1,TRIM(OUTPUTFOLDER))
     CASE (ID_OPEN_IPEST)
      IF(.NOT.UTL_WSELECTFILE('Text file (*.txt)|*.txt|',&
         LOADDIALOG+MUSTEXIST+PROMPTON+DIRCHANGE+APPENDEXT,FNAME,'Load Textfile (*.txt)'))RETURN 
      !## call to subroutine to read iPEST file into variable and put on grid ... 
-    CASE (IDRESET)
+    CASE (ID_REFRESH)
      !## call to subroutine to reset all formation factors to 1 in grid... 
+     IF(.NOT.GC_REGISFILES_PUT())RETURN
    END SELECT
   CASE (FIELDCHANGED)
    SELECT CASE (MESSAGE%VALUE2)
@@ -303,10 +303,15 @@ CONTAINS
  CALL WDIALOGPUTIMAGE(ID_OPEN_TOP,ID_ICONOPEN)   !## open folder with TOP.idf files
  CALL WDIALOGPUTIMAGE(ID_OPEN_BOT,ID_ICONOPEN)   !## open folder with BOT.idf files
 
- TXTFILE=TRIM(PREFVAL(1))//'\IMOD_USER\SETTINGS\Geoconnect.txt'
+ TXTFILE=TRIM(PREFVAL(1))//'\SETTINGS\Geoconnect.txt'
  IF(.NOT.GC_INIT())THEN; CALL GC_CLOSE(); RETURN; ENDIF
  !## put settings on tab4
  CALL GC_INIT_PUT()
+ 
+ !## call to routine that 1. reads REGIS files, 2. fills IPFAC%FORM with Regis formation names, 
+ !## 3. fills IPFAC%FACT with 1.0 and 4. put this in grid on tab2
+ CALL WDIALOGSELECT(ID_DGEOCONNECT_TAB2)
+ IF(.NOT.GC_REGISFILES_PUT())RETURN
   
  CALL WDIALOGSELECT(ID_DGEOCONNECT)
  CALL WDIALOGPUTIMAGE(ID_SAVEAS,ID_ICONSAVEAS) !## saveas
@@ -653,7 +658,7 @@ CONTAINS
  END SUBROUTINE GC_PRE_COMPUTE_WRITE
 
  !###======================================================================
- LOGICAL FUNCTION GC_READ_IPEST(FNAME,NR)
+ LOGICAL FUNCTION GC_IPEST_READ(FNAME,NR)
  !###======================================================================
  !# subroutine to read IPEST factors from file
  IMPLICIT NONE
@@ -661,7 +666,7 @@ CONTAINS
  INTEGER,INTENT(IN) :: NR
  INTEGER :: I,IU,IOS
  
- GC_READ_IPEST=.FALSE.
+ GC_IPEST_READ=.FALSE.
  IPFAC%FORM=''
  IPFAC%FACT=1.0
  
@@ -675,9 +680,9 @@ CONTAINS
   ENDDO
  ENDIF
  
- GC_READ_IPEST=.TRUE.
+ GC_IPEST_READ=.TRUE.
  
- END FUNCTION GC_READ_IPEST
+ END FUNCTION GC_IPEST_READ
 
  !###======================================================================
  LOGICAL FUNCTION GC_READ_MODELDATA()
@@ -721,13 +726,26 @@ CONTAINS
  GC_READ_MODELDATA=.TRUE.
  
  END FUNCTION GC_READ_MODELDATA
-
+ 
+! !###======================================================================
+! LOGICAL FUNCTION GC_IPEST_RESET()
+! !###====================================================================== 
+! IMPLICIT NONE
+! INTEGER :: I
+! 
+! DO I=1,NLAYR
+!  IPFAC(I)%FACT=1.0
+!  CALL WGRIDPUTCELLREAL(IDF_GRID1,2,I,IPFAC(I)%FACT,'(F10.3)')
+! ENDDO
+! 
+! END FUNCTION GC_IPEST_RESET
+ 
  !###======================================================================
  LOGICAL FUNCTION GC_REGISFILES_PUT()
  !###======================================================================
- !# function to get REGIS files onto the dialog
+ !# function to get REGIS files onto the dialog and used for Refresh option
  IMPLICIT NONE
- INTEGER :: I,J,K
+ INTEGER :: I,J,K,L
  
  GC_REGISFILES_PUT=.FALSE.
  
@@ -742,13 +760,26 @@ CONTAINS
  
  CALL WDIALOGSELECT(ID_DGEOCONNECT_TAB2)
  CALL WGRIDROWS(IDF_GRID1,NLAYR)
+ L=1 
  DO I=1,NLAYR
   CALL WGRIDLABELROW(IDF_GRID1,I,TRIM(ITOS(I)))
   J=INDEX(REGISFILES(I),'\',.TRUE.)+1; K=INDEX(REGISFILES(I)(J:),'-')
-  IPFAC(I)%FORM=REGISFILES(I)(J:K) 
-  CALL WGRIDPUTCELLSTRING(IDF_GRID1,1,I,TRIM(IPFAC(I)%FORM))
-  CALL WGRIDSTATECELL    (IDF_GRID1,1,I,2)
-  CALL WGRIDPUTCELLREAL  (IDF_GRID1,2,I,IPFAC(I)%FACT,'(F10.3)')
+  IF(L.GT.1)THEN
+   IPFAC(L)%FORM=TRIM(REGISFILES(I)(J:K-1))
+   IPFAC(L)%FACT=1.0
+   !## find double formation names in Regis-filelist and skip them
+   IF(IPFAC(L)%FORM.NE.IPFAC(L-1)%FORM)THEN
+    CALL WGRIDPUTCELLSTRING(IDF_GRID1,1,L,TRIM(IPFAC(L)%FORM))
+    CALL WGRIDSTATECELL    (IDF_GRID1,1,L,2)
+    CALL WGRIDPUTCELLREAL  (IDF_GRID1,2,L,IPFAC(L)%FACT,'(F10.3)')
+    L=L+1
+   ENDIF
+  ELSE 
+   CALL WGRIDPUTCELLSTRING(IDF_GRID1,1,L,TRIM(IPFAC(L)%FORM))
+   CALL WGRIDSTATECELL    (IDF_GRID1,1,L,2)
+   CALL WGRIDPUTCELLREAL  (IDF_GRID1,2,L,IPFAC(L)%FACT,'(F10.3)')
+   L=L+1    
+  ENDIF
  ENDDO
  
  GC_REGISFILES_PUT=.TRUE.
@@ -798,7 +829,7 @@ CONTAINS
  !## top= formationname-t-ck, thus  apz1-t-ck.idf
  !## bot= formationname-b-ck, thus  apz1-b-ck.idf
  !## khv= formationname-kh-sk, thus apz1-ks-sk.idf
- !## kvv= formationname-t-ck,  thus apz1-kv-sk.idf
+ !## kvv= formationname-kv-ck,  thus apz1-kv-sk.idf
 
  !## try top
  TOPR%FNAME=TRIM(REGISFOLDER)//TRIM(FTYPE)//'T-CK.IDF'
