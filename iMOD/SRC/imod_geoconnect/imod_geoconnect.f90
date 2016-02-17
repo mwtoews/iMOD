@@ -94,8 +94,8 @@ CONTAINS
       CASE (ID_DGEOCONNECT_TAB2)
        CALL WMESSAGEBOX(YESNO,QUESTIONICON,COMMONYES,'Are you sure to compute the preprocessing variables?','Question')
        IF(WINFODIALOG(4).EQ.1)THEN
-        CALL GC_INIT_READ()               !## read initial settings from settings-tab
-        CALL GC_INIT_PREPROCESSING_READ() !## read initial settings from preprocessing-tab
+        CALL GC_INIT_GET()               !## read initial settings from settings-tab
+        CALL GC_INIT_PREPROCESSING_GET() !## read initial settings from preprocessing-tab
         CALL GC_COMPUTE_MAIN(0)           !## compute preprocessing 
        ENDIF
       !## call postprocessing routines
@@ -212,10 +212,15 @@ CONTAINS
    END SELECT
   CASE (FIELDCHANGED)
    SELECT CASE (MESSAGE%VALUE2)
-    CASE (IDF_CHECK1)
+    CASE (IDF_CHECK1,IDF_CHECK2)
      CALL WDIALOGGETCHECKBOX(IDF_CHECK1,ISAVEK)
-    CASE (IDF_CHECK2)
      CALL WDIALOGGETCHECKBOX(IDF_CHECK2,ISAVEC)
+     CALL WDIALOGSELECT(ID_DGEOCONNECT)
+     IF(ISAVEK+ISAVEC.EQ.0)THEN
+      CALL WDIALOGFIELDSTATE(IDOK,0)
+     ELSE
+      CALL WDIALOGFIELDSTATE(IDOK,1)
+     ENDIF
    END SELECT
  END SELECT
 
@@ -297,8 +302,10 @@ CONTAINS
  CALL WDIALOGPUTIMAGE(ID_OPEN_REGIS,ID_ICONOPEN) !## open folder with Regis files
  CALL WDIALOGPUTIMAGE(ID_OPEN_TOP,ID_ICONOPEN)   !## open folder with TOP.idf files
  CALL WDIALOGPUTIMAGE(ID_OPEN_BOT,ID_ICONOPEN)   !## open folder with BOT.idf files
- TXTFILE=PREFVAL(1)//'\IMOD_USER\SETTINGS\Geoconnect.txt'
- IF(.NOT.GC_INIT())RETURN
+
+ TXTFILE=TRIM(PREFVAL(1))//'\IMOD_USER\SETTINGS\Geoconnect.txt'
+ IF(.NOT.GC_INIT())THEN; CALL GC_CLOSE(); RETURN; ENDIF
+ !## put settings on tab4
  CALL GC_INIT_PUT()
   
  CALL WDIALOGSELECT(ID_DGEOCONNECT)
@@ -400,7 +407,7 @@ CONTAINS
 !! IF(.NOT.GC_READ_MODELDATA())RETURN
 !!
 !! !## get list of "regis"-files 
-!! IF(.NOT.GC_GET_REGISFILES())RETURN
+!! IF(.NOT.GC_REGISFILES_GET())RETURN
 !! 
 !! !# Open txt-file in case of iMODbatch
 !! IF(IOPT.EQ.1)THEN
@@ -454,8 +461,8 @@ CONTAINS
  !## read all idf's with model top and bot values  (detail: geen capitals in comments)
  IF(.NOT.GC_READ_MODELDATA())RETURN
  
- !## get list of "regis"-files
- IF(.NOT.GC_GET_REGISFILES())RETURN
+ !## get factors "regis"-files
+ IF(.NOT.GC_REGISFILES_GET())RETURN
  
  !## get iPEST variables
  !IF(.NOT.GC_READ_IPEST(IPEST,IPESTNR))RETURN
@@ -716,13 +723,13 @@ CONTAINS
  END FUNCTION GC_READ_MODELDATA
 
  !###======================================================================
- LOGICAL FUNCTION GC_GET_REGISFILES()
+ LOGICAL FUNCTION GC_REGISFILES_PUT()
  !###======================================================================
- !# function to get REGIS files
+ !# function to get REGIS files onto the dialog
  IMPLICIT NONE
- INTEGER :: I
+ INTEGER :: I,J,K
  
- GC_GET_REGISFILES=.FALSE.
+ GC_REGISFILES_PUT=.FALSE.
  
  !## define subdirections for needed REGIS-files
  IF(.NOT.UTL_DIRINFO_POINTER(REGISFOLDER,'*.IDF',REGISFILES,'F'))RETURN
@@ -731,11 +738,43 @@ CONTAINS
  
  !## number of regis files - based upon the top-files
  NLAYR=SIZE(REGISFILES)
-
- GC_GET_REGISFILES=.TRUE.
+ ALLOCATE(IPFAC(NLAYR))
  
- END FUNCTION GC_GET_REGISFILES
+ CALL WDIALOGSELECT(ID_DGEOCONNECT_TAB2)
+ CALL WGRIDROWS(IDF_GRID1,NLAYR)
+ DO I=1,NLAYR
+  CALL WGRIDLABELROW(IDF_GRID1,I,TRIM(ITOS(I)))
+  J=INDEX(REGISFILES(I),'\',.TRUE.)+1; K=INDEX(REGISFILES(I)(J:),'-')
+  IPFAC(I)%FORM=REGISFILES(I)(J:K) 
+  CALL WGRIDPUTCELLSTRING(IDF_GRID1,1,I,TRIM(IPFAC(I)%FORM))
+  CALL WGRIDSTATECELL    (IDF_GRID1,1,I,2)
+  CALL WGRIDPUTCELLREAL  (IDF_GRID1,2,I,IPFAC(I)%FACT,'(F10.3)')
+ ENDDO
+ 
+ GC_REGISFILES_PUT=.TRUE.
+ 
+ END FUNCTION GC_REGISFILES_PUT
 
+ !###======================================================================
+ LOGICAL FUNCTION GC_REGISFILES_GET()
+ !###======================================================================
+ !# function to get REGIS files from the dialog
+ IMPLICIT NONE
+ INTEGER :: I
+ 
+ GC_REGISFILES_GET=.FALSE.
+ 
+ CALL WDIALOGSELECT(ID_DGEOCONNECT_TAB2)
+
+ DO I=1,NLAYR
+!  CALL WGRIDGETCELLSTRING(IDF_GRID1,1,I,TRIM(IPFAC(I)%FORM))
+  CALL WGRIDGETCELLREAL  (IDF_GRID1,2,I,IPFAC(I)%FACT)
+ ENDDO
+
+ GC_REGISFILES_GET=.TRUE.
+ 
+ END FUNCTION GC_REGISFILES_GET
+ 
  !###======================================================================
  LOGICAL FUNCTION GC_GET_REGISDATA(IFILE,IKHR,IKVR,FTYPE)
  !###======================================================================
@@ -791,7 +830,7 @@ CONTAINS
  IF(.NOT.GC_READ_MODELDATA())RETURN
  
  !## get list of "regis"-files
- IF(.NOT.GC_GET_REGISFILES())RETURN
+ IF(.NOT.GC_REGISFILES_GET())RETURN
  
  !## etc... 
 
@@ -805,7 +844,9 @@ CONTAINS
  CALL WINDOWSELECT(0); CALL WMENUSETSTATE(ID_GEOCONNECT,2,0)
 
  CALL WDIALOGSELECT(ID_DGEOCONNECT); CALL WDIALOGUNLOAD()
-
+ 
+ CALL GC_DEALLOCATE()
+ 
  END SUBROUTINE GC_CLOSE
 
 END MODULE MOD_GEOCONNECT
