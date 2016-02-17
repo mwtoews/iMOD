@@ -206,14 +206,11 @@ CONTAINS
  CALL OSD_OPEN(IU,FILE=TRIM(FNAME),STATUS='UNKNOWN',FORM='FORMATTED',ACTION='WRITE,DENYREAD',IOSTAT=IOS)
  IF(IOS.NE.0)RETURN
  
- WRITE(IU,'(A19)') 'FUNCTION=GEOCONNECT'
- WRITE(IU,'(A6,I1)') 'IFLAG=',GC_IFLAG
  WRITE(IU,'(A5,I3)') 'NLAY=',NLAYM
  WRITE(IU,'(A10,99I1)') 'ACTLAYERS=',(IACTM(I),I=1,NLAYM)
  WRITE(IU,'(A)') 'REGISFOLDER='//TRIM(REGISFOLDER)
  WRITE(IU,'(A)') 'TOPFOLDER='//TRIM(TOPFOLDER)
  WRITE(IU,'(A)') 'BOTFOLDER='//TRIM(BOTFOLDER)
- WRITE(IU,'(A)') 'TXTFILE='//TRIM(TXTFILE)
  
  CLOSE(IU)
  
@@ -231,15 +228,39 @@ CONTAINS
  CALL OSD_OPEN(IU,FILE=FNAME,STATUS='UNKNOWN',FORM='FORMATTED',ACTION='WRITE,DENYREAD',IOSTAT=IOS)
  IF(IOS.NE.0)RETURN
  
+ WRITE(IU,'(A)') 'FUNCTION=GEOCONNECT'
+ WRITE(IU,'(A6,I1)') 'IFLAG=',GC_IFLAG
  IF(TRIM(IPEST).NE.'')WRITE(IU,'(A6)') 'IPEST='//TRIM(IPEST)
  IF(IPESTNR.NE.0)WRITE(IU,'(A8,I3)') 'IPESTNR=',IPESTNR
  WRITE(IU,'(A)') 'OUTPUTFOLDER='//TRIM(OUTPUTFOLDER)
  WRITE(IU,'(A,I1)') 'ISAVEK=',ISAVEK
  WRITE(IU,'(A,I1)') 'ISAVEC=',ISAVEC
+ WRITE(IU,'(A)') 'TXTFILE='//TRIM(TXTFILE)
  
  CLOSE(IU)
 
  END SUBROUTINE GC_INIT_PREPROCESSING_WRITE
+ 
+ !###======================================================================
+ SUBROUTINE GC_INIT_PREPROCESSING_PUT()
+ !###======================================================================
+ !# put initial settings from preprocessing *.ini file on window
+ IMPLICIT NONE
+ INTEGER :: I
+ 
+ !## set flag
+ CALL WDIALOGPUTSTRING(IDF_STRING1,OUTPUTFOLDER) !# Get directory+name of outputfile
+ CALL WDIALOGPUTCHECKBOX(IDF_CHECK1,ISAVEK) !# Get Save option KHV-,KVV,KVA
+ CALL WDIALOGPUTCHECKBOX(IDF_CHECK2,ISAVEC) !# Get Save option KDW and VCW
+ 
+ !## read formation name from grid
+ DO I=1,SIZE(IPFAC%FORM)
+  CALL WGRIDPUTCELLSTRING(IDF_GRID1,1,I,IPFAC(I)%FORM)
+  !## read factor related to formation name from grid
+  CALL WGRIDPUTCELLREAL(IDF_GRID1,2,I,IPFAC(I)%FACT) 
+ ENDDO
+ 
+ END SUBROUTINE GC_INIT_PREPROCESSING_PUT 
  
  !###======================================================================
  SUBROUTINE GC_INIT_PREPROCESSING_READ()
@@ -292,4 +313,32 @@ CONTAINS
  
  END SUBROUTINE GC_INIT_READ 
  
+ !###======================================================================
+ SUBROUTINE GC_INIT_PUT()
+ !###======================================================================
+ !# read initial settings from preprocessing tab
+ IMPLICIT NONE
+ INTEGER :: I
+ 
+ CALL WDIALOGSELECT(ID_DGEOCONNECT_TAB2)
+
+ !## get amount of model layers
+ CALL WDIALOGPUTINTEGER(IDF_INTEGER1,NLAYM) 
+ 
+ !## allocate all needed variables based upon NLAYM
+ IF(.NOT.GC_ALLOCATE())RETURN 
+ 
+ !## get directory of REGIS files
+ CALL WDIALOGPUTSTRING(IDF_STRING1,REGISFOLDER)
+ !## get directory of TOP files model
+ CALL WDIALOGPUTSTRING(IDF_STRING2,TOPFOLDER) 
+ !## get directory of BOT files model
+ CALL WDIALOGPUTSTRING(IDF_STRING3,BOTFOLDER) 
+ !## read formation name from grid 
+ DO I=1,SIZE(IACTM)
+  CALL WGRIDPUTCELLINTEGER(IDF_GRID1,2,I,IACTM(I))
+ ENDDO
+ 
+ END SUBROUTINE GC_INIT_PUT
+  
 END MODULE MOD_GEOCONNECT_PAR
