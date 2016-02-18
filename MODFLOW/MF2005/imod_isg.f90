@@ -515,42 +515,44 @@ DO I=1,NISGH
  ENDIF
 ENDDO
 
-ALLOCATE(IDF(8)); DO I=1,SIZE(IDF); CALL IDFNULLIFY(IDF(I)); IDF(I)%IU=0; ENDDO
-IDF%XMIN=SIMBOX(1); IDF%YMIN=SIMBOX(2); IDF%XMAX=SIMBOX(3); IDF%YMAX=SIMBOX(4)
-IDF%DX=SIMCSIZE; IDF%IEQ=0; IDF%DY=IDF%DX; IDF%IXV=0; IDF%ITB=0; IDF%NCOL=NCOL; IDF%NROW=NROW
-DO I=1,SIZE(IDF);
- IF(.NOT.IDFALLOCATEX(IDF(I)))THEN
-  CALL IMOD_UTL_PRINTTEXT('Can not allocate memory for idf(i)',1)
- ENDIF; IDF(I)%X=0.0
-ENDDO
- 
-!## create grid with waterlevels,bottomlevels and resistances
-DO I=1,NISG
- IROW=ISGLIST(NISG,2)
- ICOL=ISGLIST(NISG,3)
+IF(iact.gt.0)THEN
+
+ ALLOCATE(IDF(8)); DO I=1,SIZE(IDF); CALL IDFNULLIFY(IDF(I)); IDF(I)%IU=0; ENDDO
+ IDF%XMIN=SIMBOX(1); IDF%YMIN=SIMBOX(2); IDF%XMAX=SIMBOX(3); IDF%YMAX=SIMBOX(4)
+ IDF%DX=SIMCSIZE; IDF%IEQ=0; IDF%DY=IDF%DX; IDF%IXV=0; IDF%ITB=0; IDF%NCOL=NCOL; IDF%NROW=NROW
+ DO I=1,SIZE(IDF);
+  IF(.NOT.IDFALLOCATEX(IDF(I)))THEN
+   CALL IMOD_UTL_PRINTTEXT('Can not allocate memory for idf(i)',1)
+  ENDIF; IDF(I)%X=0.0
+ ENDDO
+
+ !## create grid with waterlevels,bottomlevels and resistances
+ DO I=1,NISG
+  IROW=ISGLIST(NISG,2)
+  ICOL=ISGLIST(NISG,3)
 ! NODE=BUFIISG(I)
- !## skip nodata
- IF(ISGLIST(I,5).EQ.NODATA)CYCLE
-! CALL IMOD_UTL_GETRCL(NODE,NROW,NCOL,J,IROW,ICOL)
- IDF(1)%X(ICOL,IROW)=IDF(1)%X(ICOL,IROW)+ ISGLIST(I,5)                !## conductance
- IDF(2)%X(ICOL,IROW)=IDF(2)%X(ICOL,IROW)+(ISGLIST(I,4)*ISGLIST(I,5))  !## wl
- IDF(3)%X(ICOL,IROW)=IDF(3)%X(ICOL,IROW)+(ISGLIST(I,6)*ISGLIST(I,5))  !## bh
- IDF(4)%X(ICOL,IROW)=IDF(4)%X(ICOL,IROW)+(ISGLIST(I,7)*ISGLIST(I,5))  !## inf
- IDF(5)%X(ICOL,IROW)=IDF(5)%X(ICOL,IROW)+(ISGLIST(I,10)*ISGLIST(I,5)) !## c
- IDF(7)%X(ICOL,IROW)=IDF(7)%X(ICOL,IROW)+(ISGLIST(I,11)*ISGLIST(I,5)) !## rwidth
-ENDDO
-DO IROW=1,NROW; DO ICOL=1,NCOL
- IF(IDF(1)%X(ICOL,IROW).GT.0.0)THEN
-  IDF(2)%X(ICOL,IROW)=IDF(2)%X(ICOL,IROW)/IDF(1)%X(ICOL,IROW)
-  IDF(3)%X(ICOL,IROW)=IDF(3)%X(ICOL,IROW)/IDF(1)%X(ICOL,IROW)
-  IDF(4)%X(ICOL,IROW)=IDF(4)%X(ICOL,IROW)/IDF(1)%X(ICOL,IROW)
-  IDF(5)%X(ICOL,IROW)=IDF(5)%X(ICOL,IROW)/IDF(1)%X(ICOL,IROW)
-  IDF(7)%X(ICOL,IROW)=IDF(7)%X(ICOL,IROW)/IDF(1)%X(ICOL,IROW)
- ENDIF
-ENDDO; ENDDO
+  !## skip nodata
+  IF(ISGLIST(I,5).EQ.NODATA)CYCLE
+ ! CALL IMOD_UTL_GETRCL(NODE,NROW,NCOL,J,IROW,ICOL)
+  IDF(1)%X(ICOL,IROW)=IDF(1)%X(ICOL,IROW)+ ISGLIST(I,5)                !## conductance
+  IDF(2)%X(ICOL,IROW)=IDF(2)%X(ICOL,IROW)+(ISGLIST(I,4)*ISGLIST(I,5))  !## wl
+  IDF(3)%X(ICOL,IROW)=IDF(3)%X(ICOL,IROW)+(ISGLIST(I,6)*ISGLIST(I,5))  !## bh
+  IDF(4)%X(ICOL,IROW)=IDF(4)%X(ICOL,IROW)+(ISGLIST(I,7)*ISGLIST(I,5))  !## inf
+  IDF(5)%X(ICOL,IROW)=IDF(5)%X(ICOL,IROW)+(ISGLIST(I,10)*ISGLIST(I,5)) !## c
+  IDF(7)%X(ICOL,IROW)=IDF(7)%X(ICOL,IROW)+(ISGLIST(I,11)*ISGLIST(I,5)) !## rwidth
+ ENDDO
+ DO IROW=1,NROW; DO ICOL=1,NCOL
+  IF(IDF(1)%X(ICOL,IROW).GT.0.0)THEN
+   IDF(2)%X(ICOL,IROW)=IDF(2)%X(ICOL,IROW)/IDF(1)%X(ICOL,IROW)
+   IDF(3)%X(ICOL,IROW)=IDF(3)%X(ICOL,IROW)/IDF(1)%X(ICOL,IROW)
+   IDF(4)%X(ICOL,IROW)=IDF(4)%X(ICOL,IROW)/IDF(1)%X(ICOL,IROW)
+   IDF(5)%X(ICOL,IROW)=IDF(5)%X(ICOL,IROW)/IDF(1)%X(ICOL,IROW)
+   IDF(7)%X(ICOL,IROW)=IDF(7)%X(ICOL,IROW)/IDF(1)%X(ICOL,IROW)
+  ENDIF
+ ENDDO; ENDDO
   
-!## existence of two-dimensional cross-sections
-IF(N2DIM.GT.0 .and. iact.gt.0)THEN
+ !## existence of two-dimensional cross-sections
+ IF(N2DIM.GT.0)THEN ! .and. iact.gt.0)THEN
 
 ! !## create grid with waterlevels,bottomlevels and resistances
 ! DO I=1,NISG
@@ -571,88 +573,90 @@ IF(N2DIM.GT.0 .and. iact.gt.0)THEN
 !  ENDIF
 ! ENDDO; ENDDO
 
- REWIND(ISGIU(1)); READ(ISGIU(1),*) NISGH
- DO I=1,NISGH
-  READ(ISGIU(1),*) CISGH,ISEG,NSEG,ICLC,NCLC,ICRS,NCRS,ISTW,NSTW
-  IF(NSEG.LT.2)CYCLE; IF(NCLC.LT.2)CYCLE
+  REWIND(ISGIU(1)); READ(ISGIU(1),*) NISGH
+  DO I=1,NISGH
+   READ(ISGIU(1),*) CISGH,ISEG,NSEG,ICLC,NCLC,ICRS,NCRS,ISTW,NSTW
+   IF(NSEG.LT.2)CYCLE; IF(NCLC.LT.2)CYCLE
 
-  !## read segments
-  IREC=ISEG-1; DO J=1,NSEG; READ(ISGIU(2),REC=IREC+J+ICF) X(J),Y(J); END DO
+   !## read segments
+   IREC=ISEG-1; DO J=1,NSEG; READ(ISGIU(2),REC=IREC+J+ICF) X(J),Y(J); END DO
 
-  !## evaluate whether line is within model areas, otherwise skip rest of procedure ...
-  IF(MAXVAL(X(1:NSEG)).LE.SIMBOX(1).OR.MAXVAL(Y(1:NSEG)).LE.SIMBOX(2).OR. &
-     MINVAL(X(1:NSEG)).GE.SIMBOX(3).OR.MINVAL(Y(1:NSEG)).GE.SIMBOX(4))CYCLE
+   !## evaluate whether line is within model areas, otherwise skip rest of procedure ...
+   IF(MAXVAL(X(1:NSEG)).LE.SIMBOX(1).OR.MAXVAL(Y(1:NSEG)).LE.SIMBOX(2).OR. &
+      MINVAL(X(1:NSEG)).GE.SIMBOX(3).OR.MINVAL(Y(1:NSEG)).GE.SIMBOX(4))CYCLE
 
-  !## read cross-section information from *.isc
-  IF(NCRS.GT.SIZE(DWP))THEN; IF(ALLOCATED(DWP))DEALLOCATE(DWP);ALLOCATE(DWP(NCRS)); ENDIF
+   !## read cross-section information from *.isc
+   IF(NCRS.GT.SIZE(DWP))THEN; IF(ALLOCATED(DWP))DEALLOCATE(DWP);ALLOCATE(DWP(NCRS)); ENDIF
 
-  !## read cross-sectional data
-  MAXCROS=0; IREC=ICRS-1
-  DO J=1,NCRS
-   READ(ISGIU(5),REC=IREC+J+ICF) DWP(J)%NCROS
-   !## take two-dimensional cross-sections only
-   MAXCROS=MAXCROS+MIN(0,DWP(J)%NCROS)
-  END DO
-  MAXCROS=ABS(MAXCROS)
-  !## skip this segment since no two-dimensional cross-sections available
-  IF(MAXCROS.EQ.0)CYCLE
-
-  IF(MAXCROS.GT.SIZE(CROS,2).OR.NCRS.GT.SIZE(CROS,1))THEN
-   IF(ALLOCATED(CROS))DEALLOCATE(CROS); ALLOCATE(CROS(NCRS,MAXCROS))
-  ENDIF
-
-  !## read cross-sectional data
-  IREC=ICRS-1
-  DO J=1,NCRS
-   READ(ISGIU(5),REC=IREC+J+ICF) DWP(J)%NCROS,IREF,DWP(J)%DIST
-   IF(DWP(J)%NCROS.GE.0)CYCLE
-
-   JREC=IREF-1
-   DO ICROS=1,ABS(DWP(J)%NCROS)
-    JREC=JREC+1
-    READ(ISGIU(6),REC=JREC+ICF) CROS(J,ICROS)%DIST,CROS(J,ICROS)%BOTTOM,CROS(J,ICROS)%KM
+   !## read cross-sectional data
+   MAXCROS=0; IREC=ICRS-1
+   DO J=1,NCRS
+    READ(ISGIU(5),REC=IREC+J+ICF) DWP(J)%NCROS
+    !## take two-dimensional cross-sections only
+    MAXCROS=MAXCROS+MIN(0,DWP(J)%NCROS)
    END DO
+   MAXCROS=ABS(MAXCROS)
+   !## skip this segment since no two-dimensional cross-sections available
+   IF(MAXCROS.EQ.0)CYCLE
 
-   CALL ISGADJUSTCOMPUTEXY(J)         !## compute correct x/y coordinate of current cross-section
-   CALL IDFIROWICOL(IDF(1),IROW,ICOL,ISGX,ISGY)               !## get location in raster
-   !## skip if outside current model network
-   IF(IROW.EQ.0.OR.ICOL.EQ.0)CYCLE
-   IF(ISGATTRIBUTES_2DCROSS_READ(J,ICROSS))THEN               !## read bathymetry current cross-section
-    WL  =IDF(2)%X(ICOL,IROW)                                  !## waterlevel at cross-section
-    C   =IDF(5)%X(ICOL,IROW)                                  !## resistance at location of cross-section
-    INFF=IDF(4)%X(ICOL,IROW)                                  !## infiltration factor at location of cross-section
-    CALL ISG2GRID_BATHEMETRY(IDF,SIZE(IDF),ICROSS,WL,C,INFF)  !## adjust stage grid for bathemetrie
-    CALL IDFDEALLOCATEX(ICROSS)
+   IF(MAXCROS.GT.SIZE(CROS,2).OR.NCRS.GT.SIZE(CROS,1))THEN
+    IF(ALLOCATED(CROS))DEALLOCATE(CROS); ALLOCATE(CROS(NCRS,MAXCROS))
    ENDIF
 
-  END DO
- ENDDO
- 
-ENDIF
- 
-!## extent grids based upon their width
-CALL ISG2GRID_EXTENT_WITH_WIDTH(SIZE(IDF),IDF)
+   !## read cross-sectional data
+   IREC=ICRS-1
+   DO J=1,NCRS
+    READ(ISGIU(5),REC=IREC+J+ICF) DWP(J)%NCROS,IREF,DWP(J)%DIST
+    IF(DWP(J)%NCROS.GE.0)CYCLE
 
-!## reuse isg from the grid, that is the consequence of using 2d cross-sections
-NISG=0
-DO IROW=1,NROW; DO ICOL=1,NCOL
- IF(IDF(1)%X(ICOL,IROW).GT.0.0)THEN
-  NISG=NISG+1
-  ISGLIST(NISG,1) = ILAY
-  ISGLIST(NISG,2) = IROW
-  ISGLIST(NISG,3) = ICOL
-  ISGLIST(NISG,5)= IDF(1)%X(ICOL,IROW) ! cond
-  ISGLIST(NISG,4)= IDF(2)%X(ICOL,IROW) ! stage
-  ISGLIST(NISG,6)= IDF(3)%X(ICOL,IROW) ! rbot
-  ISGLIST(NISG,7)= IDF(4)%X(ICOL,IROW) ! inf.
-  ISGLIST(NISG,8)= LN(J)            !length
-  ISGLIST(NISG,9)= WETPER           !wettedperimeter
-  ISGLIST(NISG,10)= IDF(5)%X(ICOL,IROW) ! resis
+    JREC=IREF-1
+    DO ICROS=1,ABS(DWP(J)%NCROS)
+     JREC=JREC+1
+     READ(ISGIU(6),REC=JREC+ICF) CROS(J,ICROS)%DIST,CROS(J,ICROS)%BOTTOM,CROS(J,ICROS)%KM
+    END DO
+
+    CALL ISGADJUSTCOMPUTEXY(J)         !## compute correct x/y coordinate of current cross-section
+    CALL IDFIROWICOL(IDF(1),IROW,ICOL,ISGX,ISGY)               !## get location in raster
+    !## skip if outside current model network
+    IF(IROW.EQ.0.OR.ICOL.EQ.0)CYCLE
+    IF(ISGATTRIBUTES_2DCROSS_READ(J,ICROSS))THEN               !## read bathymetry current cross-section
+     WL  =IDF(2)%X(ICOL,IROW)                                  !## waterlevel at cross-section
+     C   =IDF(5)%X(ICOL,IROW)                                  !## resistance at location of cross-section
+     INFF=IDF(4)%X(ICOL,IROW)                                  !## infiltration factor at location of cross-section
+     CALL ISG2GRID_BATHEMETRY(IDF,SIZE(IDF),ICROSS,WL,C,INFF)  !## adjust stage grid for bathemetrie
+     CALL IDFDEALLOCATEX(ICROSS)
+    ENDIF
+
+   END DO
+  ENDDO
+ 
  ENDIF
-ENDDO; ENDDO
+ 
+ !## extent grids based upon their width
+ CALL ISG2GRID_EXTENT_WITH_WIDTH(SIZE(IDF),IDF)
 
-CALL IDFDEALLOCATE(IDF,SIZE(IDF))
-CALL IMOD_UTL_PRINTTEXT('Finished gridding 2d cross-sections',0)
+ !## reuse isg from the grid, that is the consequence of using 2d cross-sections
+ NISG=0
+ DO IROW=1,NROW; DO ICOL=1,NCOL
+  IF(IDF(1)%X(ICOL,IROW).GT.0.0)THEN
+   NISG=NISG+1
+   ISGLIST(NISG,1) = ILAY
+   ISGLIST(NISG,2) = IROW
+   ISGLIST(NISG,3) = ICOL
+   ISGLIST(NISG,5)= IDF(1)%X(ICOL,IROW) ! cond
+   ISGLIST(NISG,4)= IDF(2)%X(ICOL,IROW) ! stage
+   ISGLIST(NISG,6)= IDF(3)%X(ICOL,IROW) ! rbot
+   ISGLIST(NISG,7)= IDF(4)%X(ICOL,IROW) ! inf.
+   ISGLIST(NISG,8)= LN(J)            !length
+   ISGLIST(NISG,9)= WETPER           !wettedperimeter
+   ISGLIST(NISG,10)= IDF(5)%X(ICOL,IROW) ! resis
+  ENDIF
+ ENDDO; ENDDO
+
+ CALL IDFDEALLOCATE(IDF,SIZE(IDF))
+ CALL IMOD_UTL_PRINTTEXT('Finished gridding 2d cross-sections',0)
+
+ENDIF
 
 DO I=1,8; CLOSE(ISGIU(I)); END DO
 
