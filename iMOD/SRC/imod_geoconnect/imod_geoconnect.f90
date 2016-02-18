@@ -486,7 +486,7 @@ CONTAINS
  IMPLICIT NONE
  INTEGER,INTENT(IN) :: IMODBATCH !# =1 Only write to dos-window if started in batch modus
  INTEGER :: I,J,IROW,ICOL,ILAY,IKHR,IKVR
- REAL :: TR,BR,Z1,Z2,F,KVAL,XTOP,XBOT
+ REAL :: TR,BR,Z1,Z2,F,KVAL,XTOP,XBOT,KV
  CHARACTER(LEN=52) :: FTYPE
 
  !## read all idf's with model top and bot values 
@@ -494,7 +494,16 @@ CONTAINS
  
  !## get factors "regis"-files
  IF(.NOT.GC_REGISFILES_GET(IMODBATCH))RETURN
-  
+ 
+ DO I=1,NLAYM
+  KDHIDF(I)%X=0.0
+  KDVIDF(I)%X=0.0
+  KVAIDF(I)%X=0.0
+ ENDDO
+ DO I=1,NLAYM-1
+  CIDF(I)%X=0.0; KVVIDF(I)%X=0.0
+ ENDDO  
+
  !## read/process
  DO I=1,NLAYR
   
@@ -510,8 +519,9 @@ CONTAINS
    TR=TOPR%X(ICOL,IROW); BR=BOTR%X(ICOL,IROW)   
    IF(TR.EQ.TOPR%NODATA.OR.BR.EQ.BOTR%NODATA)CYCLE
       
-   !## compute KDH and KDV model-values for aquifers
    DO ILAY=1,NLAYM
+
+    !## compute KDH (horizontal transmissivity) 
     XTOP=TOPM(ILAY)%X(ICOL,IROW); XBOT=BOTM(ILAY)%X(ICOL,IROW)
     Z1=MIN(TR,XTOP); Z2=MAX(BR,XBOT)
     IF(Z1.GT.Z2.AND.XTOP.GT.XBOT)THEN
@@ -527,16 +537,14 @@ CONTAINS
      ENDIF
      !## sum horizontal transmissivity for each model layer by using fraction grids and formationfactors of model
      !## and select the correct formation factor per Regislayer/modellayer, if IPFAC is filled, else IPFAC(J)%FACT=1.0
-     IF(LEN_TRIM(IPEST).NE.0)THEN
-      DO J=1,SIZE(IPFAC%FORM)
-       IF(TRIM(FTYPE).EQ.TRIM(IPFAC(J)%FORM))THEN !#stored in IPFAC by reading in iPEST-files
-        KDHIDF(ILAY)%X(ICOL,IROW)=KDHIDF(ILAY)%X(ICOL,IROW)+((Z1-Z2)*KVAL*IPFAC(J)%FACT)
-       ENDIF
-      ENDDO
-     ELSE
-      KDHIDF(ILAY)%X(ICOL,IROW)=KDHIDF(ILAY)%X(ICOL,IROW)+((Z1-Z2)*KVAL*1.0)
-     ENDIF
+     DO J=1,SIZE(IPFAC%FORM)
+      !## stored in IPFAC by reading in iPEST-files
+      IF(TRIM(FTYPE).EQ.TRIM(IPFAC(J)%FORM))THEN 
+       KDHIDF(ILAY)%X(ICOL,IROW)=KDHIDF(ILAY)%X(ICOL,IROW)+((Z1-Z2)*KVAL*IPFAC(J)%FACT)
+      ENDIF
+     ENDDO
     
+     !## compute KDV (vertical transmissivity) model-values for aquifers
      KVAL=0.0
      !## found vertical permeability
      IF(IKVR.EQ.1)THEN
@@ -547,15 +555,12 @@ CONTAINS
      ENDIF
      !## sum vertical transmissivity for each model layer
      !## if IPFAC is filled, else IPFAC(J)%FACT=1.0
-     IF(TRIM(IPEST).NE.'')THEN
-      DO J=1,SIZE(IPFAC%FORM)
-       IF(TRIM(FTYPE).EQ.TRIM(IPFAC(J)%FORM))THEN !#stored in IPFAC by reading in iPEST-files
-        KDVIDF(ILAY)%X(ICOL,IROW)=KDVIDF(ILAY)%X(ICOL,IROW)+((Z1-Z2)*KVAL*IPFAC(J)%FACT)
-       ENDIF
-      ENDDO
-     ELSE
-      KDVIDF(ILAY)%X(ICOL,IROW)=KDVIDF(ILAY)%X(ICOL,IROW)+((Z1-Z2)*KVAL*1.0)
-     ENDIF
+     DO J=1,SIZE(IPFAC%FORM)
+      !## stored in IPFAC by reading in iPEST-files
+      IF(TRIM(FTYPE).EQ.TRIM(IPFAC(J)%FORM))THEN 
+       KDVIDF(ILAY)%X(ICOL,IROW)=KDVIDF(ILAY)%X(ICOL,IROW)+((Z1-Z2)*KVAL*IPFAC(J)%FACT)
+      ENDIF
+     ENDDO
         
     ENDIF
    ENDDO
@@ -577,21 +582,16 @@ CONTAINS
      ELSE
       IF(IKHR.EQ.1)KVAL=MIN(KVAL,(0.3*KHR%X(ICOL,IROW)))
      ENDIF
-     !## sum up the total resistance
-     IF(TRIM(IPEST).NE.'')THEN
+     IF(KVAL.GT.0.0)THEN
+      !## sum up the total resistance
       DO J=1,SIZE(IPFAC%FORM)
-       IF(TRIM(FTYPE).EQ.TRIM(IPFAC(J)%FORM))THEN !#stored in IPFAC by reading in iPEST-files
-        IF(KVAL.GT.0.0)THEN
-         CIDF(ILAY)%X(ICOL,IROW)=CIDF(ILAY)%X(ICOL,IROW)+(((Z1-Z2)/KVAL)*IPFAC(J)%FACT)
-        ENDIF
+       !## stored in IPFAC by reading in iPEST-files
+       IF(TRIM(FTYPE).EQ.TRIM(IPFAC(J)%FORM))THEN
+        CIDF(ILAY)%X(ICOL,IROW)=CIDF(ILAY)%X(ICOL,IROW)+(((Z1-Z2)/KVAL)*IPFAC(J)%FACT)
        ENDIF
       ENDDO
-     ELSE
-      IF(KVAL.GT.0.0)THEN
-       CIDF(ILAY)%X(ICOL,IROW)=CIDF(ILAY)%X(ICOL,IROW)+(((Z1-Z2)/KVAL)*1.0)
-      ENDIF
      ENDIF
-         
+        
     ENDIF
    ENDDO
    
@@ -603,16 +603,14 @@ CONTAINS
  DO IROW=1,TOPM(1)%NROW; DO ICOL=1,TOPM(1)%NCOL; DO ILAY=1,NLAYM
   TR=TOPM(ILAY)%X(ICOL,IROW); BR=BOTM(ILAY)%X(ICOL,IROW)   
   IF(TR.EQ.TOPM(ILAY)%NODATA.OR.BR.EQ.BOTM(ILAY)%NODATA)CYCLE
-  IF(TR-BR.LE.0.0)THEN
-   KHIDF(ILAY)%X(ICOL,IROW)=0.0
-   KVIDF(ILAY)%X(ICOL,IROW)=1.0
-  ELSE
-   KHIDF(ILAY)%X(ICOL,IROW)=KDHIDF(ILAY)%X(ICOL,IROW)/(TR-BR) !#KH-value modellayer
-   KVIDF(ILAY)%X(ICOL,IROW)=KDVIDF(ILAY)%X(ICOL,IROW)/(TR-BR) !## KV-value modellayer
-   IF(KHIDF(ILAY)%X(ICOL,IROW).EQ.0.0)THEN
-    KVIDF(ILAY)%X(ICOL,IROW)=1.0
-   ELSE
-    KVAIDF(ILAY)%X(ICOL,IROW)=KVIDF(ILAY)%X(ICOL,IROW)/KHIDF(ILAY)%X(ICOL,IROW) !## KVA-value modellayer (vertical anisotropy)
+  IF(TR-BR.GT.0.0)THEN
+   !## KH-value modellayer
+   KHVIDF(ILAY)%X(ICOL,IROW)=KDHIDF(ILAY)%X(ICOL,IROW)/(TR-BR) 
+   IF(KHVIDF(ILAY)%X(ICOL,IROW).NE.0.0)THEN 
+    !## KV-value modellayer
+    KV=KDVIDF(ILAY)%X(ICOL,IROW)/(TR-BR) 
+    !## KVA-value modellayer (vertical anisotropy)
+    KVAIDF(ILAY)%X(ICOL,IROW)=KV/KHVIDF(ILAY)%X(ICOL,IROW)
    ENDIF
   ENDIF
   !## compute vertical permeability
@@ -641,9 +639,10 @@ CONTAINS
  IF(IMODBATCH.EQ.0)CALL WINDOWOUTSTATUSBAR(4,'Write data ...')
  IF(IMODBATCH.EQ.1)WRITE(*,'(A)') 'Write data ...'
 
- IF(ISAVEK.EQ.1.AND.ISAVEC.EQ.0)THEN !# Option only write KHV, KVV and KVA
-  DO I=1,SIZE(KDVIDF); LINE=TRIM(OUTPUTFOLDER)//'\mdl_khv_l'//TRIM(ITOS(I))//'.idf'
-   IF(.NOT.IDFWRITE(KDVIDF(I),TRIM(LINE),1))RETURN
+ !## option only write KHV, KVV and KVA
+ IF(ISAVEK.EQ.1)THEN 
+  DO I=1,SIZE(KHVIDF); LINE=TRIM(OUTPUTFOLDER)//'\mdl_khv_l'//TRIM(ITOS(I))//'.idf'
+   IF(.NOT.IDFWRITE(KHVIDF(I),TRIM(LINE),1))RETURN
   ENDDO
   DO I=1,SIZE(KVVIDF); LINE=TRIM(OUTPUTFOLDER)//'\mdl_kvv_l'//TRIM(ITOS(I))//'.idf'
    IF(.NOT.IDFWRITE(KVVIDF(I),TRIM(LINE),1))RETURN
@@ -651,25 +650,10 @@ CONTAINS
   DO I=1,SIZE(KVAIDF); LINE=TRIM(OUTPUTFOLDER)//'\mdl_kva_l'//TRIM(ITOS(I))//'.idf'
    IF(.NOT.IDFWRITE(KVAIDF(I),TRIM(LINE),1))RETURN
   ENDDO
+ ENDIF 
  
- ELSEIF(ISAVEK.EQ.0.AND.ISAVEC.EQ.1)THEN !# Option only write KDW and VCW
-  DO I=1,SIZE(KDHIDF); LINE=TRIM(OUTPUTFOLDER)//'\mdl_kd_l'//TRIM(ITOS(I))//'.idf'
-   IF(.NOT.IDFWRITE(KDHIDF(I),TRIM(LINE),1))RETURN
-  ENDDO
-  DO I=1,SIZE(CIDF); LINE=TRIM(OUTPUTFOLDER)//'\mdl_vc_l'//TRIM(ITOS(I))//'.idf'
-   IF(.NOT.IDFWRITE(CIDF(I),TRIM(LINE),1))RETURN
-  ENDDO
- 
- ELSEIF(ISAVEK.EQ.1.AND.ISAVEC.EQ.1)THEN !# Option to write all variables (KHV, KVV, KVA, KDW and VCW)
-  DO I=1,SIZE(KDVIDF); LINE=TRIM(OUTPUTFOLDER)//'\mdl_khv_l'//TRIM(ITOS(I))//'.idf'
-   IF(.NOT.IDFWRITE(KDVIDF(I),TRIM(LINE),1))RETURN
-  ENDDO
-  DO I=1,SIZE(KVVIDF); LINE=TRIM(OUTPUTFOLDER)//'\mdl_kvv_l'//TRIM(ITOS(I))//'.idf'
-   IF(.NOT.IDFWRITE(KVVIDF(I),TRIM(LINE),1))RETURN
-  ENDDO
-  DO I=1,SIZE(KVAIDF); LINE=TRIM(OUTPUTFOLDER)//'\mdl_kva_l'//TRIM(ITOS(I))//'.idf'
-   IF(.NOT.IDFWRITE(KVAIDF(I),TRIM(LINE),1))RETURN
-  ENDDO
+ !## option only write KDW and VCW
+ IF(ISAVEC.EQ.1)THEN 
   DO I=1,SIZE(KDHIDF); LINE=TRIM(OUTPUTFOLDER)//'\mdl_kd_l'//TRIM(ITOS(I))//'.idf'
    IF(.NOT.IDFWRITE(KDHIDF(I),TRIM(LINE),1))RETURN
   ENDDO
@@ -680,7 +664,7 @@ CONTAINS
  
  IF(IMODBATCH.EQ.0)THEN
   CALL WINDOWOUTSTATUSBAR(4,'')
-  CALL WMESSAGEOX(OKONLY,INFORMATIONICON,COMMONOK,'Succesfully saved the files in'//CHAR(13)//TRIM(OUTPUTFOLDER),'Information')
+  CALL WMESSAGEBOX(OKONLY,INFORMATIONICON,COMMONOK,'Succesfully saved the files in'//CHAR(13)//TRIM(OUTPUTFOLDER),'Information')
  ENDIF
 
  IF(IMODBATCH.EQ.1)WRITE(*,'(A)') 'Finished writing data to file(s).'
@@ -741,8 +725,7 @@ CONTAINS
  DO I=1,SIZE(CIDF);   CALL IDFCOPY(TOPM(1),CIDF(I)); ENDDO 
  DO I=1,SIZE(KDHIDF); CALL IDFCOPY(TOPM(1),KDHIDF(I)); ENDDO 
  DO I=1,SIZE(KDVIDF); CALL IDFCOPY(TOPM(1),KDVIDF(I)); ENDDO 
- DO I=1,SIZE(KHIDF);  CALL IDFCOPY(TOPM(1),KHIDF(I)); ENDDO 
- DO I=1,SIZE(KVIDF);  CALL IDFCOPY(TOPM(1),KVIDF(I)); ENDDO
+ DO I=1,SIZE(KHVIDF); CALL IDFCOPY(TOPM(1),KHVIDF(I)); ENDDO 
  DO I=1,SIZE(KVVIDF); CALL IDFCOPY(TOPM(1),KVVIDF(I)); ENDDO 
  DO I=1,SIZE(KVAIDF); CALL IDFCOPY(TOPM(1),KVAIDF(I)); ENDDO 
  CALL IDFCOPY(TOPM(1),TOPR)
@@ -841,8 +824,6 @@ CONTAINS
  !## apz1-t-ck.idf - formation becomes apz1
  J=INDEX(REGISFILES(IFILE),'\',.TRUE.)+1; K=INDEX(REGISFILES(IFILE)(J:),'-')-1
  FTYPE=REGISFILES(IFILE)(J:K) 
-
-!BALNGRIJKE WIJZIGING - we gaan ervan uit dat alle regis data in de regisfolder staan !!!
 
  !## top= formationname-t-ck, thus  apz1-t-ck.idf
  !## bot= formationname-b-ck, thus  apz1-b-ck.idf
