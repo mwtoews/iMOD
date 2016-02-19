@@ -19,7 +19,7 @@
 !!  Stichting Deltares
 !!  P.O. Box 177
 !!  2600 MH Delft, The Netherlands.
-
+!!
 MODULE MOD_GEOCONNECT
 
 USE WINTERACTER
@@ -86,9 +86,6 @@ CONTAINS
     CASE (IDOK) 
      CALL WDIALOGGETTAB(ID_GCTAB,ITAB)
      SELECT CASE (ITAB)
-      !## identify
-      CASE (ID_DGEOCONNECT_TAB1)
-
       !## call preprocessing routines  
       CASE (ID_DGEOCONNECT_TAB2)
        CALL WMESSAGEBOX(YESNO,QUESTIONICON,COMMONYES,'Are you sure to compute the preprocessing variables?','Question')
@@ -155,6 +152,7 @@ CONTAINS
      CALL WDIALOGFIELDSTATE(IDOK,0)
      CALL WDIALOGFIELDSTATE(ID_SAVEAS,0)
      CALL WDIALOGFIELDSTATE(ID_OPEN,0)
+     CALL GC_IDENTIFY_INITGRID()
     CASE (ID_DGEOCONNECT_TAB2,ID_DGEOCONNECT_TAB3)
      CALL WDIALOGFIELDSTATE(IDOK,1)
      CALL WDIALOGFIELDSTATE(ID_SAVEAS,1)
@@ -178,6 +176,10 @@ CONTAINS
  SELECT CASE (ITYPE)
   CASE (PUSHBUTTON)
    SELECT CASE (MESSAGE%VALUE1)
+    !## identify
+    CASE (IDOK)
+     !## compute preprocessing 
+     GC_IFLAG=1; CALL GC_COMPUTE_MAIN(0)     
    END SELECT
   CASE (FIELDCHANGED)
    SELECT CASE (MESSAGE%VALUE2)
@@ -357,22 +359,79 @@ CONTAINS
  INTEGER,INTENT(IN) :: IMODBATCH
  
  !## call to read settings-variables from ini-file and allocate memory
-  SELECT CASE (GC_IFLAG)
-   !## call to identify routine
-   CASE (1)
-!    CALL GC_IDENTIFY()
-   !## Call to calculation-subroutine in MOD_GEOCONNECT 
-   CASE (2)
-    !## call to read preprocessing variables from ini-file
-    CALL GC_PRE_COMPUTE(IMODBATCH)
-    !## write variables to file depending on checkbox options
-    CALL GC_PRE_COMPUTE_WRITE(IMODBATCH) 
-   !## call to read postprocessing variables from ini-file
-   CASE (3) 
+ SELECT CASE (GC_IFLAG)
+  !## call to identify routine
+  CASE (1)
+   CALL GC_IDENTIFY(IMODBATCH)
+  !## call to calculation-subroutine in MOD_GEOCONNECT 
+  CASE (2)
+   !## call to read preprocessing variables from ini-file
+   CALL GC_PRE_COMPUTE(IMODBATCH)
+   !## write variables to file depending on checkbox options
+   CALL GC_PRE_COMPUTE_WRITE(IMODBATCH) 
+  !## call to read postprocessing variables from ini-file
+  CASE (3) 
 !  CALL GC_POST()!# Call to calculation-subroutine in MOD_GEOCONNECT
-  END SELECT
+ END SELECT
  
  END SUBROUTINE GC_COMPUTE_MAIN
+
+ !###======================================================================
+ SUBROUTINE GC_IDENTIFY_INITGRID()
+ !###======================================================================
+ IMPLICIT NONE
+ INTEGER :: I,J,N
+ INTEGER,DIMENSION(:),ALLOCATABLE :: ICOLS
+ 
+ !## refresh settings
+ CALL GC_INIT_GET()
+ 
+ !## get how many layers and fill grid accordingly
+ N=SUM(IACTM); ALLOCATE(ICOLS(N)); ICOLS=1
+ CALL WDIALOGSELECT(ID_DGEOCONNECT_TAB1)
+ CALL WGRIDCLEAR(IDF_GRID1); CALL WGRIDCOLUMNS(IDF_GRID1,N,ICOLS)
+ DEALLOCATE(ICOLS)
+ J=0; DO I=1,NLAYM
+  IF(IACTM(I).EQ.1)THEN
+   J=J+1
+   CALL WGRIDLABELCOLUMN(IDF_GRID1,J,'Layer '//TRIM(ITOS(I)))
+  ENDIF
+ ENDDO
+  
+ END SUBROUTINE GC_IDENTIFY_INITGRID
+
+ !###======================================================================
+ SUBROUTINE GC_IDENTIFY(IMODBATCH)
+ !###======================================================================
+ IMPLICIT NONE
+ INTEGER,INTENT(IN) :: IMODBATCH
+ INTEGER :: I,J,K,N
+ 
+ !## scan all files for current location
+ N=0; DO I=1,NLAYR
+
+  IPFAC(I)%FVAL=0.5
+  N=N+1
+ 
+ ENDDO
+
+ !## fill results in grid
+ CALL WDIALOGSELECT(ID_DGEOCONNECT_TAB1)
+ CALL WGRIDROWS(IDF_GRID1,N) 
+ 
+ N=0; DO I=1,NLAYR
+  !## none of the layers contains current formation, skip it
+  IF(SUM(IPFAC(I)%FVAL).LE.0.0)CYCLE
+  !## current formation contains results, fractions gt 0.0
+  N=N+1; CALL WGRIDLABELROW(IDF_GRID1,N,TRIM(IPFAC(I)%FORM))
+  K=0; DO J=1,NLAYM
+   !## skip deselected layer
+   IF(IACTM(J).EQ.0)CYCLE
+   K=K+1; CALL WGRIDPUTCELLREAL(IDF_GRID1,K,N,IPFAC(I)%FVAL(J))
+  ENDDO
+ ENDDO
+
+ END SUBROUTINE GC_IDENTIFY
 
 ! !###======================================================================
 ! SUBROUTINE GC_ID_COMPUTE(IMODBATCH)
@@ -770,6 +829,7 @@ CONTAINS
  !## number of regis files - based upon the top-files
  NLAYR=SIZE(REGISFILES)
  IF(.NOT.ALLOCATED(IPFAC))ALLOCATE(IPFAC(NLAYR))
+ DO I=1,NLAYR; NULLIFY(IPFAC(I)%FVAL); ALLOCATE(IPFAC(I)%FVAL(NLAYM)); ENDDO
  
  CALL WDIALOGSELECT(ID_DGEOCONNECT_TAB2)
  CALL WGRIDROWS(IDF_GRID1,NLAYR)
