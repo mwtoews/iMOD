@@ -27,8 +27,9 @@ USE RESOURCE
 USE IMODVAR, ONLY : IDIAGERROR
 USE MODPLOT, ONLY : MPW
 USE MOD_GEOCONNECT_PAR
-USE MOD_UTL, ONLY : UTL_GETUNIT,UTL_SUBST,ITOS,RTOS,UTL_DIRINFO_POINTER,UTL_CAP,UTL_WSELECTFILE
-USE MOD_IDF, ONLY : IDFGETXYVAL,IDFREADSCALE,IDFWRITE,IDFREAD
+USE MOD_UTL, ONLY : UTL_GETUNIT,UTL_SUBST,ITOS,RTOS,UTL_DIRINFO_POINTER,UTL_CAP,UTL_WSELECTFILE,UTL_MESSAGEHANDLE, &
+    INVERSECOLOUR,UTL_PLOTLOCATIONIDF
+USE MOD_IDF, ONLY : IDFGETXYVAL,IDFREADSCALE,IDFWRITE,IDFREAD,IDFIROWICOL,IDFGETXYVAL
 USE MOD_OSD, ONLY : OSD_OPEN
 USE MOD_PREF_PAR, ONLY : PREFVAL
 
@@ -314,10 +315,7 @@ CONTAINS
  CALL WDIALOGSELECT(ID_DGEOCONNECT_TAB3)
  CALL WDIALOGPUTIMAGE(ID_IDENTIFY,ID_ICONPIPET)
  CALL WDIALOGPUTIMAGE(ID_SAVEAS,ID_ICONSAVEAS) !## saveas
- CALL WDIALOGPUTIMAGE(ID_OPEN1,ID_ICONOPEN)     !## open
  CALL WDIALOGPUTIMAGE(ID_OPEN2,ID_ICONOPEN)     !## open
- CALL WDIALOGPUTIMAGE(ID_OPEN4,ID_ICONOPEN)     !## open
- CALL WDIALOGPUTIMAGE(ID_OPEN7,ID_ICONOPEN)     !## open
  CALL WDIALOGPUTIMAGE(ID_OPEN8,ID_ICONOPEN)     !## open
  CALL WDIALOGPUTIMAGE(ID_OPEN9,ID_ICONOPEN)     !## open
  CALL WDIALOGPUTREAL(IDF_REAL1,MPW%XMIN,'(F10.2)')
@@ -365,10 +363,14 @@ CONTAINS
    CALL GC_IDENTIFY(IMODBATCH)
   !## call to calculation-subroutine in MOD_GEOCONNECT 
   CASE (2)
+   !## turn message off
+   CALL UTL_MESSAGEHANDLE(0)
    !## call to read preprocessing variables from ini-file
    CALL GC_PRE_COMPUTE(IMODBATCH)
    !## write variables to file depending on checkbox options
    CALL GC_PRE_COMPUTE_WRITE(IMODBATCH) 
+   !## turn message on again
+   CALL UTL_MESSAGEHANDLE(1)
   !## call to read postprocessing variables from ini-file
   CASE (3) 
 !  CALL GC_POST()!# Call to calculation-subroutine in MOD_GEOCONNECT
@@ -405,138 +407,122 @@ CONTAINS
  !###======================================================================
  IMPLICIT NONE
  INTEGER,INTENT(IN) :: IMODBATCH
- INTEGER :: I,J,K,N
+ INTEGER :: I,J,K,N,ITYPE,IROW,ICOL
+ REAL :: XC,YC
+ REAL,ALLOCATABLE,DIMENSION(:) :: TM,BM
+ TYPE(WIN_MESSAGE) :: MESSAGE
  
- !## scan all files for current location
- N=0; DO I=1,NLAYR
-
-  IPFAC(I)%FVAL=0.5
-  N=N+1
- 
- ENDDO
-
- !## fill results in grid
- CALL WDIALOGSELECT(ID_DGEOCONNECT_TAB1)
+ !## read all idf's with model top and bot values opening files only
+ IF(.NOT.GC_READ_MODELDATA(0))RETURN
+ ALLOCATE(TM(NLAYM),BM(NLAYM))
+  
  CALL WGRIDROWS(IDF_GRID1,N) 
- 
- N=0; DO I=1,NLAYR
-  !## none of the layers contains current formation, skip it
-  IF(SUM(IPFAC(I)%FVAL).LE.0.0)CYCLE
-  !## current formation contains results, fractions gt 0.0
-  N=N+1; CALL WGRIDLABELROW(IDF_GRID1,N,TRIM(IPFAC(I)%FORM))
-  K=0; DO J=1,NLAYM
-   !## skip deselected layer
-   IF(IACTM(J).EQ.0)CYCLE
-   K=K+1; CALL WGRIDPUTCELLREAL(IDF_GRID1,K,N,IPFAC(I)%FVAL(J))
-  ENDDO
- ENDDO
+ CALL WDIALOGSELECT(ID_DGEOCONNECT_TAB1)
 
+ CALL WCURSORSHAPE(ID_CURSORIDFVALUE)
+ CALL IGRCOLOURN(INVERSECOLOUR(WRGB(255,0,0))) 
+ IROW=0; ICOL=0
+  
+ DO
+  CALL WMESSAGE(ITYPE,MESSAGE)
+  SELECT CASE (ITYPE)
+   CASE (MOUSEMOVE)
+   
+    CALL WINDOWSELECT(0)
+    CALL WINDOWOUTSTATUSBAR(1,'X:'//TRIM(ITOS(INT(MESSAGE%GX)))//' m, Y:'//TRIM(ITOS(INT(MESSAGE%GY)))//' m')
+    XC=MESSAGE%GX; YC=MESSAGE%GY
+    
+    !## remove previous rectangle
+    CALL UTL_PLOTLOCATIONIDF(TOPM(1),IROW,ICOL)
+    CALL IDFIROWICOL(TOPM(1),IROW,ICOL,XC,YC)
+    !## draw new rectangle
+    CALL UTL_PLOTLOCATIONIDF(TOPM(1),IROW,ICOL)
+   
+    CALL GC_IDENTIFY_COMPUTE(MESSAGE%GX,MESSAGE%GY,TM,BM)
+
+    !## fill results in grid
+    CALL WDIALOGSELECT(ID_DGEOCONNECT_TAB1) 
+    N=0; DO I=1,NLAYR
+     !## none of the layers contains current formation, skip it
+     IF(SUM(IPFAC(I)%FVAL).LE.0.0)CYCLE
+     !## current formation contains results, fractions gt 0.0
+      N=N+1; CALL WGRIDLABELROW(IDF_GRID1,N,TRIM(IPFAC(I)%FORM))
+      K=0; DO J=1,NLAYM
+      !## skip deselected layer
+      IF(IACTM(J).EQ.0)CYCLE
+      K=K+1; CALL WGRIDPUTCELLREAL(IDF_GRID1,K,N,IPFAC(I)%FVAL(J))
+     ENDDO
+    ENDDO
+
+   CASE (MOUSEBUTDOWN)
+    EXIT
+
+    !## bitmap scrolled, renew top-left pixel coordinates
+   CASE (BITMAPSCROLLED)
+    MPW%IX=MESSAGE%VALUE1
+    MPW%IY=MESSAGE%VALUE2
+
+   CASE (EXPOSE)
+!    CALL IGRUNITS(MPW%XMIN,MPW%YMIN,MPW%XMAX,MPW%YMAX)
+!    CALL WDIALOGSELECT(ID_DIDFINFO)
+
+  END SELECT
+
+ ENDDO
+ 
+ !## remove previous rectangle
+ CALL UTL_PLOTLOCATIONIDF(TOPM(1),IROW,ICOL)
+
+ CALL WCURSORSHAPE(CURARROW)
+ DEALLOCATE(TM,BM)
+  
  END SUBROUTINE GC_IDENTIFY
 
-! !###======================================================================
-! SUBROUTINE GC_ID_COMPUTE(IMODBATCH)
-! !###======================================================================
-! !# subroutine to identify fractions per layer AND per x,y-location 
-! IMPLICIT NONE
-! INTEGER,INTENT(IN) :: IMODBATCH !# =1 Only write to dos-window if started in batch modus
-! INTEGER :: ILAY,J
-! REAL :: X_ID,Y_ID,TMVAL
-! 
-! !# Get specific coordinates for calculating fractions
-! X_ID=
-! Y_ID=
-! 
-! !## Read in names of needed files
-! !# Model Top/Bot
-! DO ILAY=1,NLAYM
-!  FNAME=TRIM(TOPFOLDER(INDEX(TOPFOLDER,'\',.TRUE.)+1:));  FNAME=TRIM(FNAME)//'_L'//TRIM(ITOS(ILAY))//'.IDF'
-!  TOPM(ILAY)%FNAME=TRIM(TOPFOLDER(:INDEX(TOPFOLDER,'\',.TRUE.)-1))//'\'//TRIM(FNAME)
-!  
-!  FNAME=TRIM(BOTFOLDER(INDEX(BOTFOLDER,'\',.TRUE.)+1:));  FNAME=TRIM(FNAME)//'_L'//TRIM(ITOS(ILAY))//'.IDF'
-!  BOTM(ILAY)%FNAME=TRIM(BOTFOLDER(:INDEX(BOTFOLDER,'\',.TRUE.)-1))//'\'//TRIM(FNAME)
-! ENDDO
-! !# Regis Top/Bot
-! J=INDEX(REGISFILES(IFILE),'\',.TRUE.)+1; K=INDEX(REGISFILES(IFILE)(J:),'-')
-! FTYPE=REGISFILES(IFILE)(J:K) 
-! TOPR%FNAME=TRIM(REGISFOLDER)//TRIM(FTYPE)//'T-CK.IDF'
-! BOTR%FNAME=TRIM(REGISFOLDER)//TRIM(FTYPE)//'B-CK.IDF'
-!
-! !# Open TOPM,BOTM,TOPR,BOTR --> in functie, omdat dit 4x herhaald moet worden??
-! I= !# ilay to compute fractions for
-! TOPM(I)%IU=UTL_GETUNIT()
-! IF(ICF.EQ.0)THEN
-!  CALL OSD_OPEN(TOPM(I)%IU,FILE=TOPM%FNAME,STATUS='OLD',FORM='UNFORMATTED',ACCESS='DIRECT', &
-!                RECL=4,ACTION='READWRITE',IOSTAT=IOS)
-! ELSEIF(ICF.EQ.1)THEN
-!  CALL OSD_OPEN(TOPM(I)%IU,FILE=TOPM%FNAME,STATUS='OLD',FORM='UNFORMATTED',ACCESS='DIRECT', &
-!                RECL=1,ACTION='READWRITE',IOSTAT=IOS)
-! ENDIF
-! IF(IOS.NE.0)THEN
-!  CALL WMESSAGEBOX(OKONLY,EXCLAMATIONICON,COMMONOK,'iMOD can not adjust current file'//CHAR(13)// &
-!    TRIM(TOPM%FNAME)//CHAR(13)//'IDF has been marked probably as READ-ONLY','Error')
-!  IF(TOPM(I)%IU.GT.0)CLOSE(IU)
-!  RETURN
-! ENDIF
-! 
-! TMVAL=IDFGETXYVAL(TOPM(I),X_ID,Y_ID) !# --> als output variabele teruggeven uit bovenstaande functie??
-! BMVAL=IDFGETXYVAL(BOTM(I),X_ID,Y_ID) !# --> ook in bovenstaande functie??
-! TRVAL=IDFGETXYVAL(TOPR(I),X_ID,Y_ID) !# --> ook in bovenstaande functie??
-! BRVAL=IDFGETXYVAL(BOTR(I),X_ID,Y_ID) !# --> ook in bovenstaande functie??
-! 
-! !# loop over Regis layers
-! !# loop over model layers
-! !# compute fractions per model layer depending on Regis layers
-!  FRAC=
-!
-!! INTEGER,INTENT(IN) :: IOPT
-!! INTEGER :: I,IU,ILAY,NLAYR,ICOL,IROW
-!! REAL :: F,Z1,Z2,XTOP,XBOT,TR,BR
-!! CHARACTER(LEN=52) :: FTYPE
-!!  
-!! !## try to read all idf's with model Top and Bot values 
-!! IF(.NOT.GC_READ_MODELDATA())RETURN
-!!
-!! !## get list of "regis"-files 
-!! IF(.NOT.GC_REGISFILES_GET())RETURN
-!! 
-!! !# Open txt-file in case of iMODbatch
-!! IF(IOPT.EQ.1)THEN
-!!  IU=UTL_GETUNIT(); OPEN(IU,FILE=TRIM(OUTPUTFOLDER)//'identify.txt',STATUS='UNKNOWN',ACTION='WRITE')
-!! ENDIF
-!!  
-!! DO I=1,NLAYR
-!! 
-!!  IF(.NOT.GC_GET_REGISDATA(I,IKHR,IKVR,FTYPE))RETURN
-!! 
-!!  DO IROW=1,TOPM(1)%NROW; DO ICOL=1,TOPM(1)%NCOL 
-!!   TR=TOPR%X(ICOL,IROW); BR=BOTR%X(ICOL,IROW)   
-!!   IF(TR.EQ.TOPR%NODATA.OR.BR.EQ.BOTR%NODATA)CYCLE
-!!   DO ILAY=1,NLAYM
-!!    XTOP=TOPM(ILAY)%X(ICOL,IROW); XBOT=BOTM(ILAY)%X(ICOL,IROW)
-!!    Z1=MIN(TR,XTOP); Z2=MAX(BR,XBOT)
-!!    IF(Z1.GT.Z2.AND.XTOP.GT.XBOT)THEN
-!!     F=(Z1-Z2)/(XTOP-XBOT) 
-!!    ENDIF     
-!!   ENDDO
-!!  ENDDO; ENDDO
-!!  
-!!!  DO ILAY=1,NLAYM
-!!!   FVAL(ILAY)=IDFGETXYVAL(?,X_ID,Y_ID) !#fraction value related to layer and formation
-!!!  ENDDO
-!!
-!!  !##Write FVAL to screen (GUI) or to txt-file (iMODBATCH)
-!!  IF(IOPT.EQ.1)THEN
-!!  !#Write grid to txt-file organized as columns=layers, rows=fractions per formation
-!!   WRITE(IU,*) CTYPE,FVAL
-!!  ELSEIF(IOPT.EQ.0)THEN
-!!   !# Write grid to screen see figure in documentation
-!!  ENDIF
-!!
-!! ENDDO
-!! 
-!! CLOSE(IU)
-!! 
-! END SUBROUTINE GC_ID_COMPUTE
+ !###======================================================================
+ SUBROUTINE GC_IDENTIFY_COMPUTE(XC,YC,TM,BM)
+ !###======================================================================
+ IMPLICIT NONE
+ REAL,INTENT(IN) :: XC,YC
+ REAL,DIMENSION(:),INTENT(INOUT) :: TM,BM
+ INTEGER :: I,J,IKHR,IKVR
+ REAL :: TR,BR,Z1,Z2
+ CHARACTER(LEN=52) :: FTYPE
+ 
+ !## get top/bottom of current location in model grid
+ DO I=1,NLAYM
+  TM(I)=IDFGETXYVAL(TOPM(I),XC,YC) 
+  BM(I)=IDFGETXYVAL(BOTM(I),XC,YC) 
+ ENDDO
+ 
+ !## scan all files for current location
+ DO I=1,NLAYR
+  
+  !## initiate fractions
+  IPFAC(I)%FVAL=0.0
+
+  !## take the next if current regisfiles - not concerning kh values
+  IKHR=0; IKVR=0; IF(.NOT.GC_READ_REGISDATA(I,IKHR,IKVR,FTYPE,0))CYCLE
+
+  TR=IDFGETXYVAL(TOPR,XC,YC)
+  BR=IDFGETXYVAL(BOTR,XC,YC)
+
+  !## skip nodata
+  IF(TR.EQ.TOPR%NODATA.OR.BR.EQ.BOTR%NODATA)CYCLE
+
+  !## assign fraction to different modellayers
+  DO J=1,NLAYM
+   !## model contains nodata - skip it
+   IF(TM(J).EQ.TOPM(J)%NODATA.OR.BM(J).EQ.BOTM(J)%NODATA)CYCLE
+
+   Z1=MIN(TR,TM(J)); Z2=MAX(BR,BM(J))
+   IF(Z1.GT.Z2.AND.TM(J).GT.BM(J))THEN
+    IPFAC(I)%FVAL(J)=(Z1-Z2)/(TM(J)-BM(J)) 
+   ENDIF     
+  ENDDO
+    
+ ENDDO
+ 
+ END SUBROUTINE GC_IDENTIFY_COMPUTE
 
  !###======================================================================
  SUBROUTINE GC_PRE_COMPUTE(IMODBATCH)
@@ -549,7 +535,7 @@ CONTAINS
  CHARACTER(LEN=52) :: FTYPE
 
  !## read all idf's with model top and bot values 
- IF(.NOT.GC_READ_MODELDATA())RETURN
+ IF(.NOT.GC_READ_MODELDATA(1))RETURN
  
  !## get factors "regis"-files
  IF(.NOT.GC_REGISFILES_GET(IMODBATCH))RETURN
@@ -568,7 +554,7 @@ CONTAINS
  DO I=1,NLAYR
   
   !## take the next if current regisfiles does not have khv of kvv
-  IF(.NOT.GC_GET_REGISDATA(I,IKHR,IKVR,FTYPE))CYCLE
+  IKHR=1; IKVR=1; IF(.NOT.GC_READ_REGISDATA(I,IKHR,IKVR,FTYPE,1))CYCLE
      
   !## process data
   IF(IMODBATCH.EQ.1)WRITE(*,'(A,I)') 'Process data for layer: ',I
@@ -758,45 +744,6 @@ CONTAINS
  
  END FUNCTION GC_IPEST_READ
 
- !###======================================================================
- LOGICAL FUNCTION GC_READ_MODELDATA()
- !###======================================================================
- !## function to read model top and bot files
- IMPLICIT NONE
- INTEGER :: ILAY,I
- 
- GC_READ_MODELDATA=.FALSE.
- 
- DO ILAY=1,NLAYM
-
-  !## get TOP filename and add layer number
-  TOPM(ILAY)%FNAME=TRIM(TOPFOLDER)//'\TOP_L'//TRIM(ITOS(ILAY))//'.IDF'
-  IF(.NOT.IDFREAD(TOPM(ILAY),TOPM(ILAY)%FNAME,1))RETURN
-!  IF(.NOT.IDFREADSCALE(TOPM(ILAY)%FNAME,TOPM(ILAY),2,1,0.0,0))RETURN
-
-  !## get BOTTOM filename and add layer number
-  BOTM(ILAY)%FNAME=TRIM(BOTFOLDER)//'\BOT_L'//TRIM(ITOS(ILAY))//'.IDF'
-  IF(.NOT.IDFREAD(BOTM(ILAY),BOTM(ILAY)%FNAME,1))RETURN
-!  IF(.NOT.IDFREADSCALE(BOTM(ILAY)%FNAME,BOTM(ILAY),2,1,0.0,0))RETURN
-
- ENDDO
- 
- !## copy IDF settings
- DO I=1,SIZE(CIDF);   CALL IDFCOPY(TOPM(1),CIDF(I)); ENDDO 
- DO I=1,SIZE(KDHIDF); CALL IDFCOPY(TOPM(1),KDHIDF(I)); ENDDO 
- DO I=1,SIZE(KDVIDF); CALL IDFCOPY(TOPM(1),KDVIDF(I)); ENDDO 
- DO I=1,SIZE(KHVIDF); CALL IDFCOPY(TOPM(1),KHVIDF(I)); ENDDO 
- DO I=1,SIZE(KVVIDF); CALL IDFCOPY(TOPM(1),KVVIDF(I)); ENDDO 
- DO I=1,SIZE(KVAIDF); CALL IDFCOPY(TOPM(1),KVAIDF(I)); ENDDO 
- CALL IDFCOPY(TOPM(1),TOPR)
- CALL IDFCOPY(TOPM(1),BOTR)
- CALL IDFCOPY(TOPM(1),KHR)
- CALL IDFCOPY(TOPM(1),KVR) 
- 
- GC_READ_MODELDATA=.TRUE.
- 
- END FUNCTION GC_READ_MODELDATA
- 
 ! !###======================================================================
 ! LOGICAL FUNCTION GC_IPEST_RESET()
 ! !###====================================================================== 
@@ -867,49 +814,123 @@ CONTAINS
  GC_REGISFILES_GET=.TRUE.
  
  END FUNCTION GC_REGISFILES_GET
- 
+
  !###======================================================================
- LOGICAL FUNCTION GC_GET_REGISDATA(IFILE,IKHR,IKVR,FTYPE)
+ LOGICAL FUNCTION GC_READ_MODELDATA(IREAD)
+ !###======================================================================
+ !## function to read model top and bot files
+ IMPLICIT NONE
+ INTEGER,INTENT(IN) :: IREAD
+ INTEGER :: ILAY,I
+ 
+ GC_READ_MODELDATA=.FALSE.
+ 
+ DO ILAY=1,NLAYM
+
+  !## get TOP filename and add layer number
+  TOPM(ILAY)%FNAME=TRIM(TOPFOLDER)//'\TOP_L'//TRIM(ITOS(ILAY))//'.IDF'
+  IF(.NOT.IDFREAD(TOPM(ILAY),TOPM(ILAY)%FNAME,IREAD))RETURN
+!  IF(.NOT.IDFREADSCALE(TOPM(ILAY)%FNAME,TOPM(ILAY),2,1,0.0,0))RETURN
+
+  !## get BOTTOM filename and add layer number
+  BOTM(ILAY)%FNAME=TRIM(BOTFOLDER)//'\BOT_L'//TRIM(ITOS(ILAY))//'.IDF'
+  IF(.NOT.IDFREAD(BOTM(ILAY),BOTM(ILAY)%FNAME,IREAD))RETURN
+!  IF(.NOT.IDFREADSCALE(BOTM(ILAY)%FNAME,BOTM(ILAY),2,1,0.0,0))RETURN
+
+ ENDDO
+ 
+ !## copy IDF settings
+ DO I=1,SIZE(CIDF);   CALL IDFCOPY(TOPM(1),CIDF(I)); ENDDO 
+ DO I=1,SIZE(KDHIDF); CALL IDFCOPY(TOPM(1),KDHIDF(I)); ENDDO 
+ DO I=1,SIZE(KDVIDF); CALL IDFCOPY(TOPM(1),KDVIDF(I)); ENDDO 
+ DO I=1,SIZE(KHVIDF); CALL IDFCOPY(TOPM(1),KHVIDF(I)); ENDDO 
+ DO I=1,SIZE(KVVIDF); CALL IDFCOPY(TOPM(1),KVVIDF(I)); ENDDO 
+ DO I=1,SIZE(KVAIDF); CALL IDFCOPY(TOPM(1),KVAIDF(I)); ENDDO 
+ CALL IDFCOPY(TOPM(1),TOPR)
+ CALL IDFCOPY(TOPM(1),BOTR)
+ CALL IDFCOPY(TOPM(1),KHR)
+ CALL IDFCOPY(TOPM(1),KVR) 
+ 
+ GC_READ_MODELDATA=.TRUE.
+ 
+ END FUNCTION GC_READ_MODELDATA
+  
+ !###======================================================================
+ LOGICAL FUNCTION GC_READ_REGISDATA(IFILE,IKHR,IKVR,FTYPE,IREAD)
  !###======================================================================
  !## function to collect the data from the REGIS files.
  IMPLICIT NONE
- INTEGER,INTENT(IN) :: IFILE
- INTEGER,INTENT(OUT) :: IKHR,IKVR
- INTEGER :: I,J,K
+ INTEGER,INTENT(IN) :: IFILE,IREAD
+ INTEGER,INTENT(INOUT) :: IKHR,IKVR
+ INTEGER :: I,J,K,JKHR,JKVR
  CHARACTER(LEN=52),INTENT(OUT) :: FTYPE
  CHARACTER(LEN=256) :: FNAME
  
- GC_GET_REGISDATA=.FALSE.
-   
+ GC_READ_REGISDATA=.FALSE.
+
+ !## copy request parameters
+ JKHR=IKHR; JKVR=IKVR
+
  !## we assume that formation is before first "-"-sign and after "\"-sign, so
  !## apz1-t-ck.idf - formation becomes apz1
  J=INDEX(REGISFILES(IFILE),'\',.TRUE.)+1; K=INDEX(REGISFILES(IFILE)(J:),'-')-1
  FTYPE=REGISFILES(IFILE)(J:K) 
 
- !## top= formationname-t-ck, thus  apz1-t-ck.idf
- !## bot= formationname-b-ck, thus  apz1-b-ck.idf
+ !## top= formationname-t-ck,  thus  apz1-t-ck.idf
+ !## bot= formationname-b-ck,  thus  apz1-b-ck.idf
  !## khv= formationname-kh-sk, thus apz1-ks-sk.idf
- !## kvv= formationname-kv-ck,  thus apz1-kv-sk.idf
+ !## kvv= formationname-kv-ck, thus apz1-kv-sk.idf
 
  !## try top
  TOPR%FNAME=TRIM(REGISFOLDER)//'\'//TRIM(FTYPE)//'-T-CK.IDF'
- IF(.NOT.IDFREADSCALE(TOPR%FNAME,TOPR,2,0,0.0,0))RETURN !## scale mean
+ IF(IREAD.EQ.0)THEN
+  !## open file only
+  IF(.NOT.IDFREAD(TOPR,TOPR%FNAME,IREAD))RETURN 
+ ELSE
+  !## scale mean
+  IF(.NOT.IDFREADSCALE(TOPR%FNAME,TOPR,2,0,0.0,0))RETURN 
+ ENDIF
+ 
  !## try bot
  BOTR%FNAME=TRIM(REGISFOLDER)//'\'//TRIM(FTYPE)//'-B-CK.IDF'
- IF(.NOT.IDFREADSCALE(BOTR%FNAME,BOTR,2,0,0.0,0))RETURN !## scale mean
- !## try kh
- KHR%FNAME=TRIM(REGISFOLDER)//'\'//TRIM(FTYPE)//'-KH-SK.IDF'
- IKHR=1; IF(.NOT.IDFREADSCALE(KHR%FNAME,KHR,3,0,0.0,IOPTIONAL=1))IKHR=0
- !## try kv
- KVR%FNAME=TRIM(REGISFOLDER)//'\'//TRIM(FTYPE)//'-KV-SK.IDF'
- IKVR=1; IF(.NOT.IDFREADSCALE(KVR%FNAME,KVR,3,0,0.0,IOPTIONAL=1))IKVR=0
+ IF(IREAD.EQ.0)THEN
+  !## open file only
+  IF(.NOT.IDFREAD(BOTR,BOTR%FNAME,IREAD))RETURN 
+ ELSE
+  !## scale mean
+  IF(.NOT.IDFREADSCALE(BOTR%FNAME,BOTR,2,0,0.0,0))RETURN 
+ ENDIF
+
+ !## try kh - if requested ikhr.eq.1
+ IF(IKHR.EQ.1)THEN
+  KHR%FNAME=TRIM(REGISFOLDER)//'\'//TRIM(FTYPE)//'-KH-SK.IDF'
+  IKHR=1
+  IF(IREAD.EQ.0)THEN
+   IF(.NOT.IDFREAD(KHR,KHR%FNAME,0,IQ=1))IKHR=0
+  ELSE
+   IF(.NOT.IDFREADSCALE(KHR%FNAME,KHR,3,0,0.0,IOPTIONAL=1))IKHR=0
+  ENDIF
+ ENDIF
  
- !## No horizontal/vertical permeabilities found, formation will be skipped
- IF(IKHR.EQ.0.AND.IKVR.EQ.0)RETURN
+ !## try kv - if requested ikvr.eq.1
+ IF(IKVR.EQ.1)THEN
+  KVR%FNAME=TRIM(REGISFOLDER)//'\'//TRIM(FTYPE)//'-KV-SK.IDF'
+  IKVR=1
+  IF(IREAD.EQ.0)THEN
+   IF(.NOT.IDFREAD(KVR,KVR%FNAME,0,IQ=1))IKVR=0
+  ELSE
+   IF(.NOT.IDFREADSCALE(KVR%FNAME,KVR,3,0,0.0,IOPTIONAL=1))IKVR=0
+  ENDIF
+ ENDIF
  
- GC_GET_REGISDATA=.TRUE.
+ !## No horizontal/vertical permeabilities found, formation will be skipped - if requested
+ IF(JKHR.EQ.1.AND.JKVR.EQ.1)THEN
+  IF(IKHR.EQ.0.AND.IKVR.EQ.0)RETURN
+ ENDIF
+ 
+ GC_READ_REGISDATA=.TRUE.
   
- END FUNCTION GC_GET_REGISDATA
+ END FUNCTION GC_READ_REGISDATA
  
  !###======================================================================
  SUBROUTINE GC_POST_COMPUTE()
@@ -918,7 +939,7 @@ CONTAINS
  IMPLICIT NONE
 
  !## read all idf's with model top and bot values  (detail: geen capitals in comments)
- IF(.NOT.GC_READ_MODELDATA())RETURN
+ IF(.NOT.GC_READ_MODELDATA(1))RETURN
  
  !## get list of "regis"-files
  !IF(.NOT.GC_REGISFILES_GET(IMODBATCH))RETURN
@@ -931,12 +952,21 @@ CONTAINS
  SUBROUTINE GC_CLOSE()
  !###======================================================================
  IMPLICIT NONE
-
+ INTEGER :: I
+ 
  CALL WINDOWSELECT(0); CALL WMENUSETSTATE(ID_GEOCONNECT,2,0)
 
  CALL WDIALOGSELECT(ID_DGEOCONNECT); CALL WDIALOGUNLOAD()
  
  CALL GC_DEALLOCATE()
+ IF(ALLOCATED(IACTM))THEN; DEALLOCATE(IACTM); ENDIF
+ IF(ALLOCATED(IPFAC))THEN
+  DO I=1,SIZE(IPFAC)
+   IF(ASSOCIATED(IPFAC(I)%FVAL))DEALLOCATE(IPFAC(I)%FVAL)
+  ENDDO
+  DEALLOCATE(IPFAC)
+ ENDIF
+ IF(ASSOCIATED(REGISFILES))DEALLOCATE(REGISFILES)
  
  END SUBROUTINE GC_CLOSE
 
