@@ -8,7 +8,7 @@
 //
 // Winteracter resource script. 
 //
-// Modified : 19/Feb/2016 20:13:58
+// Modified : 21/Feb/2016 00:14:48
 //
 ///////////////////////////////////////////////////
 //
@@ -8048,12 +8048,14 @@ BEGIN
     CONTROL "meter",IDF_LABEL9,"STATIC",WS_CHILD | WS_VISIBLE | WS_GROUP | SS_LEFT,  233,   94,   25,    8
     CONTROL "Kriging Type",IDF_LABEL10,"STATIC",WS_CHILD | WS_VISIBLE | WS_GROUP | SS_LEFT,   15,  147,  149,    8
     CONTROL "",IDF_MENU2,"COMBOBOX",WS_CHILD | WS_VISIBLE | WS_VSCROLL | WS_GROUP | WS_TABSTOP | CBS_DROPDOWNLIST | CBS_HASSTRINGS,  171,  147,   89,  150
-    CONTROL "Use minimal number of Points",IDF_CHECK1,"BUTTON",WS_CHILD | WS_VISIBLE | WS_GROUP | WS_TABSTOP | BS_AUTOCHECKBOX | BS_TEXT,   14,   16,  144,   12
+    CONTROL "Use maximal number of Points",IDF_CHECK1,"BUTTON",WS_CHILD | WS_VISIBLE | WS_GROUP | WS_TABSTOP | BS_AUTOCHECKBOX | BS_TEXT,   14,   16,  144,   12
     CONTROL "&Help ...",IDHELP,"BUTTON",WS_CHILD | WS_VISIBLE | WS_GROUP | WS_TABSTOP | BS_PUSHBUTTON | BS_TEXT | BS_FLAT,  226,  192,   40,   14
-    CONTROL "Increase RANGE to reach minimal number of points",IDF_CHECK2,"BUTTON",WS_CHILD | WS_VISIBLE | WS_GROUP | WS_TABSTOP | BS_AUTOCHECKBOX | BS_TEXT | BS_MULTILINE,   26,   29,  140,   14
-    CONTROL "Apply Quadrants",IDF_CHECK3,"BUTTON",WS_CHILD | WS_VISIBLE | WS_GROUP | WS_TABSTOP | BS_AUTOCHECKBOX | BS_TEXT | BS_MULTILINE,   26,   43,  192,   14
+    CONTROL "Coincident Point Aggregate Distance (points will be averaged)",IDF_CHECK2,"BUTTON",WS_CHILD | WS_VISIBLE | WS_GROUP | WS_TABSTOP | BS_AUTOCHECKBOX | BS_TEXT | BS_MULTILINE,   26,   28,  140,   18
+    CONTROL "Apply Quadrants",IDF_CHECK3,"BUTTON",WS_CHILD | WS_VISIBLE | WS_GROUP | WS_TABSTOP | BS_AUTOCHECKBOX | BS_TEXT | BS_MULTILINE,   26,   45,  138,   14
     CONTROL "Exponential acts linear in the beginning but curves rapidly for points further away and approaces the sill asymptotically",IDF_LABEL11,"STATIC",WS_CHILD | WS_VISIBLE | WS_GROUP | SS_LEFT,   40,  124,  217,   16
     CONTROL "Simple means that ...",IDF_LABEL12,"STATIC",WS_CHILD | WS_VISIBLE | SS_LEFT,   40,  166,  217,   16
+    CONTROL "10.000",IDF_REAL4,"REALEDIT",WS_CHILD | WS_VISIBLE | WS_BORDER | WS_GROUP | WS_TABSTOP | ES_LEFT | ES_CENTER | ES_MULTILINE,  170,   31,   60,   12
+    CONTROL "meter",IDF_LABEL13,"STATIC",WS_CHILD | WS_VISIBLE | WS_GROUP | SS_LEFT,  233,   33,   25,    8
 END
 
 ID_DKRIGING RCDATA
@@ -8077,6 +8079,7 @@ BEGIN
 " 1130      0.0000          0.34028E+039 \n"
 " 1132      0.0000          0.34028E+039 \n"
 " 1133      0.0000          0.34028E+039 \n"
+" 1134      0.0000          0.34028E+039 \n"
 "[Formats] \n"
 ,0
 END
@@ -11592,5 +11595,5 @@ END
 //*WI* FORTSAVE    1
 //*WI* FILENAME    resource.f90
 //*WI* FMODNAME    RESOURCE
-//*WI* LASTTYPE        1
-//*WI* LASTRES         7
+//*WI* LASTTYPE        2
+//*WI* LASTRES       224
