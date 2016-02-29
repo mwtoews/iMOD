@@ -29,7 +29,7 @@ USE MODPLOT, ONLY : MPW
 USE MOD_GEOCONNECT_PAR
 USE MOD_UTL, ONLY : UTL_GETUNIT,UTL_SUBST,ITOS,RTOS,UTL_DIRINFO_POINTER,UTL_CAP,UTL_WSELECTFILE,UTL_MESSAGEHANDLE, &
     INVERSECOLOUR,UTL_PLOTLOCATIONIDF
-USE MOD_IDF, ONLY : IDFGETXYVAL,IDFREADSCALE,IDFWRITE,IDFREAD,IDFIROWICOL,IDFGETXYVAL
+USE MOD_IDF, ONLY : IDFGETXYVAL,IDFREADSCALE,IDFWRITE,IDFREAD,IDFIROWICOL,IDFGETXYVAL,IDFGETLOC
 USE MOD_OSD, ONLY : OSD_OPEN
 USE MOD_PREF_PAR, ONLY : PREFVAL
 
@@ -103,6 +103,13 @@ CONTAINS
       CASE (ID_DGEOCONNECT_TAB3)
        CALL WMESSAGEBOX(YESNO,QUESTIONICON,COMMONYES,'Are you sure to compute the postprocessing files?','Question')              
        IF(WINFODIALOG(4).EQ.1)THEN
+        !## read initial settings from settings-tab
+        CALL GC_INIT_GET()               
+        !## read initial settings from preprocessing-tab
+        IF(GC_INIT_POSTPROCESSING_GET())THEN
+         !## compute preprocessing 
+         CALL GC_COMPUTE_MAIN(0)           
+        ENDIF
        ENDIF
      END SELECT
     CASE (ID_SAVEAS)
@@ -315,8 +322,8 @@ CONTAINS
  CALL WDIALOGSELECT(ID_DGEOCONNECT_TAB3)
  CALL WDIALOGPUTIMAGE(ID_IDENTIFY,ID_ICONPIPET)
  CALL WDIALOGPUTIMAGE(ID_SAVEAS,ID_ICONSAVEAS) !## saveas
+ CALL WDIALOGPUTIMAGE(ID_OPEN1,ID_ICONOPEN)     !## open
  CALL WDIALOGPUTIMAGE(ID_OPEN2,ID_ICONOPEN)     !## open
- CALL WDIALOGPUTIMAGE(ID_OPEN8,ID_ICONOPEN)     !## open
  CALL WDIALOGPUTIMAGE(ID_OPEN9,ID_ICONOPEN)     !## open
  CALL WDIALOGPUTREAL(IDF_REAL1,MPW%XMIN,'(F10.2)')
  CALL WDIALOGPUTREAL(IDF_REAL2,MPW%YMIN,'(F10.2)')
@@ -373,7 +380,8 @@ CONTAINS
    CALL UTL_MESSAGEHANDLE(1)
   !## call to read postprocessing variables from ini-file
   CASE (3) 
-!  CALL GC_POST()!# Call to calculation-subroutine in MOD_GEOCONNECT
+   !## call to calculation-subroutine in MOD_GEOCONNECT
+   CALL GC_POST(IMODBATCH)
  END SELECT
  
  END SUBROUTINE GC_COMPUTE_MAIN
@@ -933,21 +941,77 @@ CONTAINS
  END FUNCTION GC_READ_REGISDATA
  
  !###======================================================================
- SUBROUTINE GC_POST_COMPUTE()
+ SUBROUTINE GC_POST(IMODBATCH)
  !###======================================================================
  !# subroutine to compute K-values for postprocessing purposes
  IMPLICIT NONE
-
- !## read all idf's with model top and bot values  (detail: geen capitals in comments)
- IF(.NOT.GC_READ_MODELDATA(1))RETURN
+ INTEGER,INTENT(IN) :: IMODBATCH
+ REAL,ALLOCATABLE,DIMENSION(:) :: TM,BM
+ REAL :: XC,YC
+ INTEGER :: IROW,ICOL
+  
+ !## read all idf's with model top and bot values opening files only
+ IF(.NOT.GC_READ_MODELDATA(0))RETURN
+ ALLOCATE(TM(NLAYM),BM(NLAYM))
  
- !## get list of "regis"-files
- !IF(.NOT.GC_REGISFILES_GET(IMODBATCH))RETURN
+ DO IROW=1,IDF%NROW
+  DO ICOL=1,IDF%NCOL
+   CALL IDFGETLOC(IDF,IROW,ICOL,XC,YC)
+   CALL GC_POST_COMPUTE(XC,YC,TM,BM)
+  ENDDO
+ ENDDO
  
- !## etc... 
+ !## deallocate
+ DEALLOCATE(TM,BM)
+ 
+ END SUBROUTINE GC_POST
 
+ !###======================================================================
+ SUBROUTINE GC_POST_COMPUTE(XC,YC,TM,BM)
+ !###======================================================================
+ IMPLICIT NONE
+ REAL,INTENT(IN) :: XC,YC
+ REAL,DIMENSION(:),INTENT(INOUT) :: TM,BM
+ INTEGER :: I,J,IKHR,IKVR
+ REAL :: TR,BR,Z1,Z2
+ CHARACTER(LEN=52) :: FTYPE
+ 
+ !## get top/bottom of current location in model grid
+ DO I=1,NLAYM
+  TM(I)=IDFGETXYVAL(TOPM(I),XC,YC) 
+  BM(I)=IDFGETXYVAL(BOTM(I),XC,YC) 
+ ENDDO
+ 
+ !## scan all files for current location
+ DO I=1,NLAYR
+  
+!  !## initiate fractions
+!  IPFAC(I)%FVAL=0.0
+
+  !## take the next if current regisfiles - not concerning kh values
+  IKHR=0; IKVR=0; IF(.NOT.GC_READ_REGISDATA(I,IKHR,IKVR,FTYPE,0))CYCLE
+
+  TR=IDFGETXYVAL(TOPR,XC,YC)
+  BR=IDFGETXYVAL(BOTR,XC,YC)
+
+  !## skip nodata
+  IF(TR.EQ.TOPR%NODATA.OR.BR.EQ.BOTR%NODATA)CYCLE
+
+  !## assign fraction to different modellayers
+  DO J=1,NLAYM
+   !## model contains nodata - skip it
+   IF(TM(J).EQ.TOPM(J)%NODATA.OR.BM(J).EQ.BOTM(J)%NODATA)CYCLE
+
+   Z1=MIN(TR,TM(J)); Z2=MAX(BR,BM(J))
+   IF(Z1.GT.Z2.AND.TM(J).GT.BM(J))THEN
+!    IPFAC(I)%FVAL(J)=(Z1-Z2)/(TM(J)-BM(J)) 
+   ENDIF     
+  ENDDO
+    
+ ENDDO
+ 
  END SUBROUTINE GC_POST_COMPUTE
-
+ 
  !###======================================================================
  SUBROUTINE GC_CLOSE()
  !###======================================================================

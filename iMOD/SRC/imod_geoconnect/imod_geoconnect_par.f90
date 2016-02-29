@@ -31,18 +31,22 @@ USE MOD_OSD, ONLY : OSD_OPEN
 !## IDF-types to read IDF-files from given folders
 TYPE(IDFOBJ),ALLOCATABLE,DIMENSION(:),SAVE :: TOPM,BOTM,CIDF,KDHIDF,KDVIDF,KHVIDF,KVAIDF,KVVIDF 
 !## IDF-types for REGIS-files
-TYPE(IDFOBJ),SAVE :: TOPR,BOTR,KHR,KVR
+TYPE(IDFOBJ),SAVE :: TOPR,BOTR,KHR,KVR,IDF
 !## store availabel filenames
 CHARACTER(LEN=256),DIMENSION(:),POINTER :: REGISFILES
 
 INTEGER,ALLOCATABLE,DIMENSION(:) :: IACTM
-INTEGER,SAVE :: NLAYM, & !## NLAYM (model), 
-                NLAYR, & !## NLAYR (Regis)
+INTEGER,SAVE :: NLAYM, &     !## NLAYM (model), 
+                NLAYR, &     !## NLAYR (Regis)
+                IAGGR, &     !## aggregate number (1,2, or 3)
+                IWINDOW, &   !## window specified
+                MODELTYPE, & !## type of model results to aggregate
+                INPUTTYPE, & !## type of input to aggregate
+                IAGGR_DUPLICATES, & !## expression to aggregate (1,2,3,4)
                 IOPTW, &
                 IPESTNR
-CHARACTER(LEN=256),SAVE :: OUTPUTFOLDER,REGISFOLDER,TOPFOLDER,BOTFOLDER,IPEST,TXTFILE
+CHARACTER(LEN=256),SAVE :: OUTPUTFOLDER,DBASEFOLDER,MODELFOLDER,REGISFOLDER,TOPFOLDER,BOTFOLDER,IPEST,TXTFILE,IPFFILE
 INTEGER :: GC_IFLAG,ISAVEK,ISAVEC !# IFLAG related to GC computation options 1=identify, 2=preprocessing, 3=postprocessing
-!REAL :: X_ID,Y_ID !#X and Y coordinates read from ini-file or window
 
 TYPE FRMOBJ
  CHARACTER(LEN=12) :: FORM
@@ -245,6 +249,8 @@ CONTAINS
  IMPLICIT NONE
  INTEGER :: I
 
+ CALL WDIALOGSELECT(ID_DGEOCONNECT_TAB2)
+
  !## put directory+name of outputfile
  CALL WDIALOGPUTSTRING(IDF_STRING1,TRIM(OUTPUTFOLDER)) 
  !## put Save option KHV-,KVV,KVA
@@ -289,6 +295,100 @@ CONTAINS
  GC_INIT_PREPROCESSING_GET=.TRUE.
  
  END FUNCTION GC_INIT_PREPROCESSING_GET 
+
+ !###======================================================================
+ SUBROUTINE GC_INIT_POSTPROCESSING_PUT()
+ !###======================================================================
+ !# put initial settings from preprocessing *.ini file on window
+ IMPLICIT NONE
+ INTEGER :: I
+
+ CALL WDIALOGSELECT(ID_DGEOCONNECT_TAB3)
+
+! !## put directory+name of outputfile
+! CALL WDIALOGPUTSTRING(IDF_STRING1,TRIM(OUTPUTFOLDER)) 
+! !## put Save option KHV-,KVV,KVA
+! CALL WDIALOGPUTCHECKBOX(IDF_CHECK1,ISAVEK) 
+! !## put Save option KDW and VCW
+! CALL WDIALOGPUTCHECKBOX(IDF_CHECK2,ISAVEC) 
+ 
+ END SUBROUTINE GC_INIT_POSTPROCESSING_PUT 
+ 
+ !###======================================================================
+ LOGICAL FUNCTION GC_INIT_POSTPROCESSING_GET()
+ !###======================================================================
+ !# read initial settings from preprocessing tab
+ IMPLICIT NONE
+ INTEGER :: I
+ 
+ GC_INIT_POSTPROCESSING_GET=.FALSE.
+ 
+ CALL IDFNULLIFY(IDF)
+
+ CALL WDIALOGSELECT(ID_DGEOCONNECT_TAB3)
+ 
+ !## get window
+ CALL WDIALOGGETRADIOBUTTON(IDF_RADIO1,IWINDOW)
+ IF(IWINDOW.EQ.1)THEN
+ ELSE
+  CALL WDIALOGGETREAL(IDF_REAL1,IDF%XMIN); CALL WDIALOGGETREAL(IDF_REAL2,IDF%YMIN)
+  CALL WDIALOGGETREAL(IDF_REAL3,IDF%XMAX); CALL WDIALOGGETREAL(IDF_REAL4,IDF%YMAX)
+ ENDIF
+ 
+ !## get dbase-directory+name of outputfile
+ CALL WDIALOGGETSTRING(IDF_STRING1,DBASEFOLDER) 
+ IF(TRIM(DBASEFOLDER).EQ.'')THEN
+  CALL WMESSAGEBOX(OKONLY,EXCLAMATIONICON,COMMONOK,'You should specify a DBASE folder.','Error')
+  RETURN
+ ENDIF
+
+ !## read formation name from grid
+ DO I=1,NLAYR 
+!  !## read factor related to formation name from grid
+!  CALL WGRIDGETCELLREAL(IDF_GRID1,2,I,IPFAC(I)%FACT) 
+ ENDDO
+
+ !## get aggregate option (1=model; 2=input; 3=ipf)
+ CALL WDIALOGGETRADIOBUTTON(IDF_RADIO3,IAGGR)
+ SELECT CASE (IAGGR)
+  !## model results
+  CASE (1)
+   !## get dbase-directory+name of outputfile
+   CALL WDIALOGGETSTRING(IDF_STRING2,MODELFOLDER) 
+   IF(TRIM(MODELFOLDER).EQ.'')THEN
+    CALL WMESSAGEBOX(OKONLY,EXCLAMATIONICON,COMMONOK,'You should specify a model results folder.','Error')
+    RETURN
+   ENDIF
+   CALL WDIALOGGETMENU(IDF_MENU1,MODELTYPE) 
+  !## model input
+  CASE (2)
+   CALL WDIALOGGETMENU(IDF_MENU2,INPUTTYPE) 
+  !## ipf-file
+  CASE (3)
+   !## get ipffile
+   CALL WDIALOGGETSTRING(IDF_STRING3,IPFFILE) 
+   IF(TRIM(IPFFILE).EQ.'')THEN
+    CALL WMESSAGEBOX(OKONLY,EXCLAMATIONICON,COMMONOK,'You should specify an ipf-file.','Error')
+    RETURN
+   ENDIF
+ END SELECT
+
+ !## get aggregate option (1=model; 2=input; 3=ipf)
+ CALL WDIALOGGETRADIOBUTTON(IDF_RADIO6,IAGGR_DUPLICATES)
+  
+ !## get dbase-directory+name of outputfile
+ CALL WDIALOGGETSTRING(IDF_STRING4,OUTPUTFOLDER) 
+ IF(TRIM(OUTPUTFOLDER).EQ.'')THEN
+  CALL WMESSAGEBOX(OKONLY,EXCLAMATIONICON,COMMONOK,'You should specify an output folder.','Error')
+  RETURN
+ ENDIF
+
+ !## set flag
+ GC_IFLAG=3
+
+ GC_INIT_POSTPROCESSING_GET=.TRUE.
+ 
+ END FUNCTION GC_INIT_POSTPROCESSING_GET 
 
  !###======================================================================
  SUBROUTINE GC_INIT_GET()

@@ -6351,7 +6351,7 @@ KLOOP: DO K=1,SIZE(TOPICS(JJ)%STRESS(1)%FILES,1)
  IMPLICIT NONE
  INTEGER :: I
  
- TOPICS(1)%TNAME ='(MSP) MetaSwap [UZF]'
+ TOPICS(1)%TNAME ='(MSP) MetaSwap [-]'
  TOPICS(2)%TNAME ='(TOP) Top Elevation [DIS]'
  TOPICS(3)%TNAME ='(BOT) Bottom Elevation [DIS]'
  TOPICS(4)%TNAME ='(BND) Boundary Condition [BAS]'
