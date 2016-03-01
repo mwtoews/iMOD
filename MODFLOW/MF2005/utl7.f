@@ -1985,7 +1985,7 @@ c ------------------------------------------------------------------------------
          if (.not. lipf) then
             do i = 1, ii
                do j = 1, jj
-                  if (val.ne.nodata) a(j,i) = a(j,i) - cnstnt(opersub)
+                 if (a(j,i).ne.nodata) a(j,i) = a(j,i) - cnstnt(opersub)
                end do
             end do
          else
@@ -2002,14 +2002,14 @@ c ------------------------------------------------------------------------------
             if (.not.lipf) then
                do i = 1, ii
                   do j = 1, jj
-                     if (val.ne.nodata) a(j,i)=a(j,i)/cnstnt(operdiv)
+                     if (a(j,i).ne.nodata) a(j,i)=a(j,i)/cnstnt(operdiv)
                   end do
                end do
             else
                do i = 1, nlist
                   val = ipflist(isub,icolumn)%list(3,i)
                   if (val.ne.nodata) then
-                  ipflist(isub,icolumn)%list(3,i) = val/cnstnt(operdiv)
+                   ipflist(isub,icolumn)%list(3,i) = val/cnstnt(operdiv)
                   end if
                end do
             end if
@@ -2019,7 +2019,7 @@ c ------------------------------------------------------------------------------
          if (.not.lipf) then
             do i = 1, ii
                do j = 1, jj
-                  if (val.ne.nodata) a(j,i) = a(j,i)**cnstnt(operexp)
+                  if (a(j,i).ne.nodata) a(j,i) = a(j,i)**cnstnt(operexp)
                end do
             end do
          else
