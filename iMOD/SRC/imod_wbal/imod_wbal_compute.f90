@@ -592,7 +592,8 @@ CONTAINS
    WRITE(IU,'(A)') TRIM(WBAL_GENFNAME)
   ENDIF
 
-  WRITE(IU,'(/A/)') 'Bear in mind that disclosure of the waterbalance might be caused by absent budget terms !'
+  WRITE(IU,'(/A/)') 'Bear in mind that disclosure of the waterbalance might be caused by absent budget '// &
+                    'terms or different unit of the terms (m3/d or mm/d)! '
  
  ENDIF
  
@@ -842,7 +843,8 @@ CONTAINS
  WRITE(IU,'(122A1)') ('=',I=1,122)
  WRITE(IU,*)
  WRITE(IU,'(2X,A25,2A10,5A15)') 'Waterbalance budget','Q_in','Q_out','Q_in','Q_out','Q_in','Q_out','Area'
- WRITE(IU,'(27X,2A10,5A15)') '%','%','m3/d','m3/d','mm/d','mm/d','km2'
+ !WRITE(IU,'(27X,2A10,5A15)') '%','%','m3/d','m3/d','mm/d','mm/d','km2'
+ WRITE(IU,'(27X,2A10,5A15)') '%','%','m3/d or mm/d','m3/d or mm/d','mm/d or -','mm/d or -','km2'
  WRITE(IU,*)
 
  END SUBROUTINE WBALCOMPUTETXT_INI
@@ -915,17 +917,18 @@ CONTAINS
       QRAT   =0.0
       IF(QTOT(1).NE.0.0)QRAT(1)=QIN /QTOT(1)*100.0
       IF(QTOT(2).NE.0.0)QRAT(2)=QOUT/QTOT(2)*100.0
-      WRITE(IU,'(2X,A25,2F10.3,5E15.7,A)') TRIM(TP(IBAL)%ALIAS),QRAT(1),QRAT(2),QIN,QOUT,QIN/QACT*1000.0,QOUT/QACT*1000.0, &
-            QACT/1.0E6,' "'//TRIM(IDFFNAME)//'"'
+      WRITE(IU,'(2X,A25,2F10.3,5E15.7,A)') TRIM(TP(IBAL)%ALIAS)//'('//TRIM(TP(IBAL)%UNIT)//')', &
+            QRAT(1),QRAT(2),QIN,QOUT,QIN/QACT*1000.0,QOUT/QACT*1000.0,QACT/1.0E6,' "'//TRIM(IDFFNAME)//'"'
      ELSE
-      WRITE(IU,'(2X,A25,20X,4A15,E15.7,A)') TRIM(TP(IBAL)%ALIAS),'---','---','---','---',0.0,' "'//TRIM(IDFFNAME)//'"'
+      WRITE(IU,'(2X,A25,20X,4A15,E15.7,A)')TRIM(TP(IBAL)%ALIAS)//'('//TRIM(TP(IBAL)%UNIT)//')', &
+            '---','---','---','---',0.0,' "'//TRIM(IDFFNAME)//'"'
      ENDIF
     ENDIF
    ENDDO
   ENDDO
 
   WRITE(IU,'(122A1)') ('-',I=1,122)
-  WRITE(IU,'(2X,A25,20X,2E15.7,A15,E15.7,A)') 'TOTALS',QTOT(1),QTOT(2),'Error :',QTOT(1)+QTOT(2),' (m3/d)'
+  WRITE(IU,'(2X,A25,20X,2E15.7,A15,E15.7,A)') 'TOTALS',QTOT(1),QTOT(2),'Error :',QTOT(1)+QTOT(2),' (-)'
   WRITE(IU,*)
  ENDDO
  WRITE(IU,'(122A1)') ('=',I=1,122)
@@ -965,10 +968,10 @@ CONTAINS
   IF(TP(IBAL)%IACT.NE.1)CYCLE
   DO JSYS=1,TP(IBAL)%NSYS
    IF(TP(IBAL)%ISYS(JSYS).EQ.0)THEN
-    HSTRING=TRIM(HSTRING)//',"m3/d","m3/d"' !,"mm/d","mm/d"'
-    IF(IBAL.EQ.3)HSTRING=TRIM(HSTRING)//',"m3/d","m3/d"' !,"mm/d","mm/d"'
+    HSTRING=TRIM(HSTRING)//','//TP(IBAL)%UNIT//','//TP(IBAL)%UNIT !,"mm/d","mm/d"'
+    IF(IBAL.EQ.3)HSTRING=TRIM(HSTRING)//','//TP(IBAL)%UNIT//','//TP(IBAL)%UNIT !,"mm/d","mm/d"'
    ELSE
-    HSTRING=TRIM(HSTRING)//',"m3/d","m3/d"' !,"mm/d","mm/d"'
+    HSTRING=TRIM(HSTRING)//','//TP(IBAL)%UNIT//','//TP(IBAL)%UNIT !,"mm/d","mm/d"'
    ENDIF
   ENDDO
  ENDDO

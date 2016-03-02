@@ -780,6 +780,8 @@ CONTAINS
   !## header
   READ(IU,'(A)',IOSTAT=IOS) CID
   IF(IOS.NE.0)EXIT
+  CID=ADJUSTL(CID)
+
 !  READ(STRING,'(A)',IOSTAT=IOS) CID !,XP,YP
   
   IOS=-1 !## nooit point 

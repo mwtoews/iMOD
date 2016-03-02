@@ -761,9 +761,11 @@ CONTAINS
     IF(TRIM(UTL_CAP(CID,'U')).EQ.'END')EXIT
     
     !## get value for line
+    CID=ADJUSTL(CID)
     CALL UTL_GENLABELSGET(CID,J)
+
     IF(J.LE.0)THEN
-     WRITE(*,'(A)') 'Cannot get the label for current line '//TRIM(CID); RETURN
+    WRITE(*,'(A)') 'Cannot get the label for current line '//TRIM(CID); RETURN
     ENDIF
     READ(VAR(IZCOL,J),*,IOSTAT=IOS) ZV
     IF(IOS.NE.0)THEN; WRITE(*,'(A)') 'Cannot convert '//TRIM(VAR(IZCOL,J))//' into a real.'; RETURN; ENDIF

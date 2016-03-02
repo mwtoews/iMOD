@@ -26,11 +26,11 @@ INTEGER,DIMENSION(2) :: IDPROC
 
 REAL,PARAMETER :: PI=ATAN(1.0)*4.0  !## value pi
 
-LOGICAL :: LBETA=.TRUE.      !## if TRUE: Show question whether it is allowed to use Beta-version or not
+LOGICAL :: LBETA=.FALSE.      !## if TRUE: Show question whether it is allowed to use Beta-version or not
 LOGICAL :: LEXPDATE=.TRUE.   !## if TRUE: activate expire date
 INTEGER :: EXPDATE=20160315  !## expire data, after this date the iMOD-beta version cannot be used.
 
-CHARACTER(LEN=30),PARAMETER :: RVERSION='V3_3_13'    !## release message - only with single subnummers
+CHARACTER(LEN=30),PARAMETER :: RVERSION='V3_3_14'    !## release message - only with single subnummers
 CHARACTER(LEN=30),PARAMETER :: BVERSION='Beta'       !## banner message !!!
 CHARACTER(LEN=32) :: LICFILE='I_accepted_'//TRIM(RVERSION)//'.txt'
 CHARACTER(LEN=256) :: IMFFNAME         !## name of drawing file
@@ -45,37 +45,43 @@ INTEGER :: IDIAGERROR
 INTEGER :: IBACKSLASH  !##  label trimmen achter backslash
 INTEGER :: ILABELNAME  !##  plot of labels optional
 
-INTEGER,PARAMETER :: MXTP=35  !## no of TYPE
+INTEGER,PARAMETER :: MXTP=36  !## no of TYPE
 INTEGER,PARAMETER :: MXSYS=10
 TYPE TPOBJ
  CHARACTER(LEN=15) :: ACRNM  !## acronym waterbalance budget
  CHARACTER(LEN=50) :: ALIAS  !## alias of acronym
+ CHARACTER(LEN=4) :: UNIT   !## unit of the budget element
  INTEGER :: IACT
  INTEGER,DIMENSION(:),POINTER :: ISYS  !## system numbers  *_sys{i}.idf
  INTEGER :: NSYS !## number of systems in waterbalance
 END TYPE TPOBJ
 TYPE(TPOBJ),DIMENSION(MXTP)   :: TP
-DATA TP%ACRNM/'HEAD  ','BDGBND'       ,'BDGFLF'  ,'BDGFRF' ,   'BDGFFF'    ,'BDGSTO' ,'BDGWEL' ,'BDGDRN' ,'BDGRIV'  ,'BDGEVT'  , &
-              'BDGGHB','BDGOLF'       ,'BDGRCH'  ,'BDGISG' ,   'BDGCAP'    ,'BDGDS ' ,'BDGPM ' ,'BDGPS ' ,'BDGEVA'  ,'BDGQRUN' , &
-              'PWTHEAD','GWL'         ,'BDGETACT','BDGPSGW',   'MSW_EBSPOT','MSW_EIC','MSW_EPD','MSW_ESP','MSW_TPOT','BDGQSPGW', &
-              'MSW_EBS','MSW_QMODFBOT','MSW_QMR' ,'BDGDECSTOT','BDGPSSW'/
-DATA TP%ALIAS/'GROUNDWATERHEAD','CONSTANT_HEAD','FLUX_LOWER_FACE','FLUX_RIGHT_FACE','FLUX_FRONT_FACE','STORAGE',   &
-              'WELLS','DRAINAGE','RIVERS','EVAPOTRANSPIRATION','GENERAL_HEAD_BOUNDARY','OVERLAND_FLOW','RECHARGE', &
-              'SEGMENTS','CAPSIM','DECREASE_WATER_ST_ROOTZ.','MEASURED_PRECIPITATION','SPRINKLING_PRECIPITATION', &
-              'NET_EVAPORATION_WATER','RUNOFF','PURGE_WATER_TABLE_HEAD','GROUNDWATERLEVEL',&
-              'TOTAL_ACTUAL_TRANSPIRATION',&
-              'SPRINKLING_PRECIPITATION_FROM_GROUNDWATER',&
-              'POTENTIAL_EVAPORATION_BARE_SOIL',&
-              'EVAPORATION_INTERCEPTION_WATER', &
-              'EVAPORATION_PONDING_WATER',&
-              'EVAPORATION_SPRINKLING_WATER',&
-              'POTENTIAL_TRANSPIRATION_VEGETATION',&
-              'GROUNDWATER_EXTRACTION_FOR_SPRINKLING',&
-              'EVAPORATION_BARE_SOIL',&
-              'UPWARD_SEEPAGE_OF_MODFLOW_CELL',&
-              'FLOW_THROUGH_BOTTOM_OF_BOX1_ROOT_ZONE', &
-              'DECREASE_STORAGE',&
-              'SPRINKLING_PRECIPITATION_FROM_SURFACEWATER'/
+DATA TP%ACRNM/'HEAD','BDGBND','BDGFLF','BDGFRF','BDGFFF',&
+              'BDGSTO','BDGWEL','BDGDRN','BDGRIV','BDGEVT',&
+              'BDGGHB','BDGOLF','BDGRCH','BDGISG','BDGCAP',&
+              'BDGDS','BDGPM','BDGPS','BDGEVA','BDGQRUN',&
+              'PWTHEAD','GWL','BDGETACT','BDGPSGW','MSW_EBSPOT',&
+              'MSW_EIC','MSW_EPD','MSW_ESP','MSW_TPOT','BDGQSPGW',&
+              'MSW_EBS','MSW_QMODFBOT','MSW_QMR','BDGDECSTOT','BDGPSSW',&
+              'MSW_TACT'/
+
+DATA TP%UNIT/ '   m','m3/d','m3/d','m3/d','m3/d',&
+              'm3/d','m3/d','m3/d','m3/d','m3/d',&
+              'm3/d','m3/d','m3/d','m3/d','m3/d',&
+              'm3/d',' m/d','m3/d','m3/d',' m/d',&
+              '   m','   m',' m/d',' m/d',' m/d',&
+              ' m/d',' m/d',' m/d',' m/d',' m/d',&
+              ' m/d',' m/d',' m/d',' m/d',' m/d',&
+              ' m/d'/
+
+DATA TP%ALIAS/'GROUNDWATERHEAD','CONSTANT_HEAD','FLUX_LOWER_FACE','FLUX_RIGHT_FACE','FLUX_FRONT_FACE',&
+              'STORAGE','WELLS','DRAINAGE','RIVERS','EVAPOTRANSPIRATION',&
+              'GENERAL_HEAD_BOUNDARY','OVERLAND_FLOW','RECHARGE','SEGMENTS','CAPSIM',&
+              'DECREASE_WATER_ST_ROOTZONE','MEASURED_PRECIPITATION','SPRINKLING_PRECIPITATION','NET_EVAPORATION_WATER','RUNOFF',&
+              'PURGE_WATER_TABLE_HEAD','GROUNDWATERLEVEL','TOTAL_ACTUAL_TRANSPIRATION','SPRINKLING_PRECIPITATION_FROM_GROUNDWATER','POTENTIAL_EVAPORATION_BARE_SOIL',&
+              'EVAPORATION_INTERCEPTION_WATER','EVAPORATION_PONDING_WATER','EVAPORATION_SPRINKLING_WATER','POTENTIAL_TRANSPIRATION_VEGETATION','GROUNDWATER_EXTRACTION_FOR_SPRINKLING',&
+              'EVAPORATION_BARE_SOIL','UPWARD_SEEPAGE_OF_MODFLOW_CELL','FLOW_THROUGH_BOTTOM_OF_BOX1_ROOT_ZONE','DECREASE_STORAGE','SPRINKLING_PRECIPITATION_FROM_SURFACEWATER',&
+              'ACTUAL_TRANSPIRATION_VEGETATION'/
 
 END MODULE IMODVAR
 
