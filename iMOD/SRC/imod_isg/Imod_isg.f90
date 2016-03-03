@@ -3595,7 +3595,7 @@ CONTAINS
   K   =K+1
   DN  =TISD(I)-ISD(K)%N
 
- !#increase memory
+  !## increase memory
   CALL ISGMEMORYDATISD(DN,K,J)
 
   DO L=1,TISD(I)
@@ -3645,7 +3645,7 @@ CONTAINS
   K   =K+1
   DN  =TIST(I)-IST(K)%N
 
- !#increase memory
+  !## increase memory
   CALL ISGMEMORYDATIST(DN,K,J)
 
   DO L=1,TIST(I)
@@ -3669,7 +3669,7 @@ CONTAINS
   K   =K+1
   DN  =TISQ(I)-ISQ(K)%N
 
- !#increase memory
+  !## increase memory
   CALL ISGMEMORYDATISQ(DN,K,J)
 
   DO L=1,TISQ(I)
@@ -3689,7 +3689,7 @@ CONTAINS
 
  DN=TISP-ISG(ISELISG)%NSEG
 
- !#increase memory
+ !## increase memory
  CALL ISGMEMORYISP(DN,ISELISG,J)
 
  TD=0.0
@@ -4319,7 +4319,7 @@ CONTAINS
  ICROSS_PNTR=MAX(1,ICROSS_PNTR); ICROSS_ZVAL=MAX(1,ICROSS_ZVAL)
  CALL WDIALOGPUTMENU(IDF_MENU1,MP%ALIAS,MPW%NACT,ICROSS_PNTR)
  CALL WDIALOGPUTMENU(IDF_MENU2,MP%ALIAS,MPW%NACT,ICROSS_ZVAL)
- CALL WDIALOGSHOW(-1,-1,0,2)                                                   !123456789012
+ CALL WDIALOGSHOW(-1,-1,0,2)                                                   
 
  DO
   CALL WMESSAGE(ITYPE,MESSAGE)
@@ -4380,7 +4380,11 @@ CONTAINS
  IF(IROW.NE.0.AND.ICOL.NE.0)THEN
   IP=ICROSS(1)%X(ICOL,IROW)
   IF(IP.NE.ICROSS(1)%NODATA)THEN
-   I=0; DO IROW=1,ICROSS(1)%NROW; DO ICOL=1,ICROSS(1)%NCOL
+   I=1
+   CALL WGRIDPUTCELLREAL(IDF_GRID1,1,I,ICROSS(1)%DX,'(F10.2)')
+   CALL WGRIDPUTCELLREAL(IDF_GRID1,2,I,ICROSS(1)%DY,'(F10.2)')
+   CALL WGRIDPUTCELLREAL(IDF_GRID1,3,I,0.0,'(F10.2)')
+   DO IROW=1,ICROSS(1)%NROW; DO ICOL=1,ICROSS(1)%NCOL
     !## location of gridcell equal to pointer value at location of cross-section
     IF(ICROSS(1)%X(ICOL,IROW).EQ.IP)THEN
      ZVAL=ICROSS(2)%X(ICOL,IROW)

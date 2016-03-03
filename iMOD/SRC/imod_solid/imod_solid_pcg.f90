@@ -460,8 +460,8 @@ CONTAINS
     IF(PCG(ILAY)%IB(ICOL,IROW).EQ.2.AND.PCG(ILAY-1)%IB(JCOL,JROW).NE.0)PCG(ILAY)%HOLD(ICOL,IROW)=PCG(ILAY-1)%HOLD(JCOL,JROW)
    ENDIF
   ENDDO; ENDDO
- ENDDO  
-             
+ ENDDO
+
 ! !## make sure lowest bot is lower than upper top
 ! IF(ICHECK_IDF(NLAY).EQ.1)THEN
 !  DO IROW=1,SOLIDF(NLAY)%NROW
@@ -476,7 +476,7 @@ CONTAINS
 ! ENDIF
   
  !## correct if layers overlap
- DO ILAY=2,NLAY !-1
+ DO ILAY=2,NLAY 
   !## check only whenever icheck is active
   IF(ICHECK_IDF(ILAY).EQ.0)CYCLE
   DO IROW=1,SOLIDF(ILAY)%NROW
