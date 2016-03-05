@@ -28,7 +28,7 @@ USE IMODVAR, ONLY : IDIAGERROR
 USE MODPLOT, ONLY : MPW
 USE MOD_GEOCONNECT_PAR
 USE MOD_UTL, ONLY : UTL_GETUNIT,UTL_SUBST,ITOS,RTOS,UTL_DIRINFO_POINTER,UTL_CAP,UTL_WSELECTFILE,UTL_MESSAGEHANDLE, &
-    INVERSECOLOUR,UTL_PLOTLOCATIONIDF
+    INVERSECOLOUR,UTL_PLOTLOCATIONIDF,UTL_GETUNIQUE_INT
 USE MOD_IDF, ONLY : IDFGETXYVAL,IDFREADSCALE,IDFWRITE,IDFREAD,IDFIROWICOL,IDFGETXYVAL,IDFGETLOC
 USE MOD_OSD, ONLY : OSD_OPEN
 USE MOD_PREF_PAR, ONLY : PREFVAL
@@ -215,12 +215,14 @@ CONTAINS
      IF(.NOT.UTL_WSELECTFILE('Text file (*.txt)|*.txt|',&
         LOADDIALOG+MUSTEXIST+PROMPTON+DIRCHANGE+APPENDEXT,FNAME,'Load Textfile (*.txt)'))RETURN 
      !## call to subroutine to read iPEST file into variable and put on grid ... 
+!     CALL 
     CASE (ID_REFRESH)
      !## call to subroutine to reset all formation factors to 1 in grid... 
      CALL WMESSAGEBOX(YESNO,QUESTIONICON,COMMONYES,'Are you sure to refresh all formation factors'//CHAR(13)// &
           'based upon the given Regis formations?','Question')
      IF(WINFODIALOG(4).EQ.1)THEN
-      IF(.NOT.GC_REGISFILES_PUT())RETURN
+      !## reset factors
+      IPFAC%FACT=1.0; IF(.NOT.GC_REGISFILES_PUT(ID_DGEOCONNECT_TAB2))RETURN
      ENDIF
    END SELECT
   CASE (FIELDCHANGED)
@@ -344,8 +346,11 @@ CONTAINS
  !## call to routine that 1. reads REGIS files, 2. fills IPFAC%FORM with Regis formation names, 
  !## 3. fills IPFAC%FACT with 1.0 and 4. put this in grid on tab2
  CALL WDIALOGSELECT(ID_DGEOCONNECT_TAB2)
- IF(.NOT.GC_REGISFILES_PUT())RETURN
+ IF(.NOT.GC_REGISFILES_GETLIST())RETURN
   
+ IF(.NOT.GC_REGISFILES_PUT(ID_DGEOCONNECT_TAB2))RETURN
+ IF(.NOT.GC_REGISFILES_PUT(ID_DGEOCONNECT_TAB3))RETURN
+ 
  CALL WDIALOGSELECT(ID_DGEOCONNECT)
  CALL WDIALOGPUTIMAGE(ID_SAVEAS,ID_ICONSAVEAS) !## saveas
  CALL WDIALOGPUTIMAGE(ID_OPEN,ID_ICONOPEN)     !## open
@@ -372,7 +377,7 @@ CONTAINS
   CASE (2)
    !## turn message off
    CALL UTL_MESSAGEHANDLE(0)
-   !## call to read preprocessing variables from ini-file
+   !## call to compute
    CALL GC_PRE_COMPUTE(IMODBATCH)
    !## write variables to file depending on checkbox options
    CALL GC_PRE_COMPUTE_WRITE(IMODBATCH) 
@@ -380,7 +385,7 @@ CONTAINS
    CALL UTL_MESSAGEHANDLE(1)
   !## call to read postprocessing variables from ini-file
   CASE (3) 
-   !## call to calculation-subroutine in MOD_GEOCONNECT
+   !## call to calculation-subroutine
    CALL GC_POST(IMODBATCH)
  END SELECT
  
@@ -744,7 +749,7 @@ CONTAINS
   IF(IOS.NE.0)THEN; WRITE(*,'(A)') 'Can not open file: ['//TRIM(FNAME)//'] for reading'; RETURN; ENDIF
   DO I=1,NLAYM !# loop over total amount of modellayers
  !  IPFAC(I)%FORM=
- !  IPFAC(I)%FAC=
+ !  IPFAC(I)%FACT=
   ENDDO
  ENDIF
  
@@ -766,13 +771,13 @@ CONTAINS
 ! END FUNCTION GC_IPEST_RESET
  
  !###======================================================================
- LOGICAL FUNCTION GC_REGISFILES_PUT()
+ LOGICAL FUNCTION GC_REGISFILES_GETLIST()
  !###======================================================================
  !# function to get REGIS files onto the dialog and used for Refresh option
  IMPLICIT NONE
  INTEGER :: I,J,K
  
- GC_REGISFILES_PUT=.FALSE.
+ GC_REGISFILES_GETLIST=.FALSE.
  
  IF(ASSOCIATED(REGISFILES))DEALLOCATE(REGISFILES)
  
@@ -784,18 +789,43 @@ CONTAINS
  !## number of regis files - based upon the top-files
  NLAYR=SIZE(REGISFILES)
  IF(.NOT.ALLOCATED(IPFAC))ALLOCATE(IPFAC(NLAYR))
- DO I=1,NLAYR; NULLIFY(IPFAC(I)%FVAL); ALLOCATE(IPFAC(I)%FVAL(NLAYM)); ENDDO
- 
- CALL WDIALOGSELECT(ID_DGEOCONNECT_TAB2)
- CALL WGRIDROWS(IDF_GRID1,NLAYR)
  DO I=1,NLAYR
+  NULLIFY(IPFAC(I)%FVAL); ALLOCATE(IPFAC(I)%FVAL(NLAYM))
+  IPFAC(I)%FVAL=0.0; IPFAC(I)%FACT=1.0; IPFAC(I)%IGRP=I
+ ENDDO
+  
+ GC_REGISFILES_GETLIST=.TRUE.
+ 
+ END FUNCTION GC_REGISFILES_GETLIST
+
+ !###======================================================================
+ LOGICAL FUNCTION GC_REGISFILES_PUT(DID)
+ !###======================================================================
+ IMPLICIT NONE
+ INTEGER,INTENT(IN) :: DID
+ INTEGER :: I,J,K
+ 
+ GC_REGISFILES_PUT=.FALSE.
+ 
+ IF(.NOT.ASSOCIATED(REGISFILES))RETURN
+ 
+ CALL WDIALOGSELECT(DID)
+ CALL WGRIDROWS(IDF_GRID1,NLAYR)
+
+ DO I=1,NLAYR
+
   CALL WGRIDLABELROW(IDF_GRID1,I,TRIM(ITOS(I)))
+
   J=INDEX(REGISFILES(I),'\',.TRUE.)+1; K=INDEX(REGISFILES(I)(J:),'-')
   IPFAC(I)%FORM=TRIM(REGISFILES(I)(J:K-1))
   IPFAC(I)%FACT=1.0  
   CALL WGRIDPUTCELLSTRING(IDF_GRID1,1,I,TRIM(IPFAC(I)%FORM))
   CALL WGRIDSTATECELL    (IDF_GRID1,1,I,2)
-  CALL WGRIDPUTCELLREAL  (IDF_GRID1,2,I,IPFAC(I)%FACT,'(F10.3)')
+  IF(DID.EQ.ID_DGEOCONNECT_TAB2)THEN
+   CALL WGRIDPUTCELLREAL  (IDF_GRID1,2,I,IPFAC(I)%FACT,'(F10.3)')
+  ELSEIF(DID.EQ.ID_DGEOCONNECT_TAB3)THEN
+   CALL WGRIDPUTCELLINTEGER(IDF_GRID1,2,I,IPFAC(I)%IGRP)
+  ENDIF
  ENDDO
  
  GC_REGISFILES_PUT=.TRUE.
@@ -837,13 +867,24 @@ CONTAINS
 
   !## get TOP filename and add layer number
   TOPM(ILAY)%FNAME=TRIM(TOPFOLDER)//'\TOP_L'//TRIM(ITOS(ILAY))//'.IDF'
-  IF(.NOT.IDFREAD(TOPM(ILAY),TOPM(ILAY)%FNAME,IREAD))RETURN
-!  IF(.NOT.IDFREADSCALE(TOPM(ILAY)%FNAME,TOPM(ILAY),2,1,0.0,0))RETURN
+
+  IF(IDF%NROW.EQ.0.OR.IDF%NCOL.EQ.0)THEN
+   IF(.NOT.IDFREAD(TOPM(ILAY),TOPM(ILAY)%FNAME,IREAD))RETURN
+  ELSE
+   !## scale mean
+   CALL IDFCOPY(IDF,TOPM(ILAY))
+   IF(.NOT.IDFREADSCALE(TOPM(ILAY)%FNAME,TOPM(ILAY),2,0,0.0,0))RETURN 
+  ENDIF
 
   !## get BOTTOM filename and add layer number
   BOTM(ILAY)%FNAME=TRIM(BOTFOLDER)//'\BOT_L'//TRIM(ITOS(ILAY))//'.IDF'
-  IF(.NOT.IDFREAD(BOTM(ILAY),BOTM(ILAY)%FNAME,IREAD))RETURN
-!  IF(.NOT.IDFREADSCALE(BOTM(ILAY)%FNAME,BOTM(ILAY),2,1,0.0,0))RETURN
+  IF(IDF%NROW.EQ.0.OR.IDF%NCOL.EQ.0)THEN
+   IF(.NOT.IDFREAD(BOTM(ILAY),BOTM(ILAY)%FNAME,IREAD))RETURN
+  ELSE
+   !## scale mean
+   CALL IDFCOPY(IDF,BOTM(ILAY))
+   IF(.NOT.IDFREADSCALE(BOTM(ILAY)%FNAME,BOTM(ILAY),2,0,0.0,0))RETURN 
+  ENDIF
 
  ENDDO
  
@@ -946,71 +987,123 @@ CONTAINS
  !# subroutine to compute K-values for postprocessing purposes
  IMPLICIT NONE
  INTEGER,INTENT(IN) :: IMODBATCH
- REAL,ALLOCATABLE,DIMENSION(:) :: TM,BM
  REAL :: XC,YC
- INTEGER :: IROW,ICOL
+ INTEGER :: IROW,ICOL,NU,I
+ INTEGER,ALLOCATABLE,DIMENSION(:) :: IGRP
   
- !## read all idf's with model top and bot values opening files only
- IF(.NOT.GC_READ_MODELDATA(0))RETURN
- ALLOCATE(TM(NLAYM),BM(NLAYM))
+ !## read/scale idf's with model top and bot values
+ IF(.NOT.GC_READ_MODELDATA(1))RETURN
  
- DO IROW=1,IDF%NROW
-  DO ICOL=1,IDF%NCOL
-   CALL IDFGETLOC(IDF,IROW,ICOL,XC,YC)
-   CALL GC_POST_COMPUTE(XC,YC,TM,BM)
-  ENDDO
+ ALLOCATE(IGRP(NLAYR)); IGRP=IPFAC%IGRP
+
+ !## get number of unique groups
+ CALL UTL_GETUNIQUE_INT(IGRP,NLAYR,NU)
+ 
+ !## do for each group
+ DO I=1,NU
+
+  CALL GC_POST_COMPUTE(IGRP(I))
+ 
  ENDDO
  
+ !## save results
+! CALL GC_POST_COMPUTE_WRITE(IMODBATCH)
+
  !## deallocate
- DEALLOCATE(TM,BM)
+ DEALLOCATE(IGRP)
  
  END SUBROUTINE GC_POST
 
  !###======================================================================
- SUBROUTINE GC_POST_COMPUTE(XC,YC,TM,BM)
+ SUBROUTINE GC_POST_COMPUTE(IGRP)
  !###======================================================================
  IMPLICIT NONE
- REAL,INTENT(IN) :: XC,YC
- REAL,DIMENSION(:),INTENT(INOUT) :: TM,BM
- INTEGER :: I,J,IKHR,IKVR
- REAL :: TR,BR,Z1,Z2
+ INTEGER,INTENT(IN) :: IGRP
+ INTEGER :: I,J,IKHR,IKVR,IROW,ICOL
+ REAL :: TR,BR,TM,BM,FM,FP,Z1,Z2
  CHARACTER(LEN=52) :: FTYPE
- 
- !## get top/bottom of current location in model grid
- DO I=1,NLAYM
-  TM(I)=IDFGETXYVAL(TOPM(I),XC,YC) 
-  BM(I)=IDFGETXYVAL(BOTM(I),XC,YC) 
- ENDDO
- 
+  
  !## scan all files for current location
  DO I=1,NLAYR
   
-!  !## initiate fractions
-!  IPFAC(I)%FVAL=0.0
-
+  !# skip this formation, not in current group
+  IF(IPFAC(I)%IGRP.NE.IGRP)CYCLE
+  
   !## take the next if current regisfiles - not concerning kh values
-  IKHR=0; IKVR=0; IF(.NOT.GC_READ_REGISDATA(I,IKHR,IKVR,FTYPE,0))CYCLE
+  IKHR=1; IKVR=1; IF(.NOT.GC_READ_REGISDATA(I,IKHR,IKVR,FTYPE,1))CYCLE
 
-  TR=IDFGETXYVAL(TOPR,XC,YC)
-  BR=IDFGETXYVAL(BOTR,XC,YC)
+  DO IROW=1,IDF%NROW; DO ICOL=1,IDF%NCOL
+  
+   !## skip nodata
+   TR=TOPR%X(ICOL,IROW); BR=BOTR%X(ICOL,IROW)
+   IF(TR.EQ.TOPR%NODATA.OR.BR.EQ.BOTR%NODATA)CYCLE
 
-  !## skip nodata
-  IF(TR.EQ.TOPR%NODATA.OR.BR.EQ.BOTR%NODATA)CYCLE
+   !## assign fraction to different modellayers
+   DO J=1,NLAYM
 
-  !## assign fraction to different modellayers
-  DO J=1,NLAYM
-   !## model contains nodata - skip it
-   IF(TM(J).EQ.TOPM(J)%NODATA.OR.BM(J).EQ.BOTM(J)%NODATA)CYCLE
+    !## model contains nodata - skip it
+    TM=TOPM(J)%X(ICOL,IROW); BM=BOTM(J)%X(ICOL,IROW)
+    IF(TM.EQ.TOPM(J)%NODATA.OR.BM.EQ.BOTM(J)%NODATA)CYCLE
 
-   Z1=MIN(TR,TM(J)); Z2=MAX(BR,BM(J))
-   IF(Z1.GT.Z2.AND.TM(J).GT.BM(J))THEN
-!    IPFAC(I)%FVAL(J)=(Z1-Z2)/(TM(J)-BM(J)) 
-   ENDIF     
-  ENDDO
+    Z1=MIN(TR,TM); Z2=MAX(BR,BM)
+    IF(Z1.GT.Z2.AND.TM.GT.BM)THEN
+     !## fraction
+     FM=(Z1-Z2)/(TM-BM)
+     !## ipest factor
+     FP= IPFAC(I)%FACT
+    ENDIF
+
+   ENDDO
     
+  ENDDO; ENDDO
+  
  ENDDO
  
  END SUBROUTINE GC_POST_COMPUTE
+ 
+  !###======================================================================
+ SUBROUTINE GC_POST_COMPUTE_WRITE(IMODBATCH)
+ !###======================================================================
+ !# subroutine to calculate KH,KV,KVA and write K- and C-values to file (KHV, KVV, KVA, KDW and VCW)
+ IMPLICIT NONE
+ INTEGER,INTENT(IN) :: IMODBATCH !# =1 Only write to dos-window if started in batch modus
+ INTEGER :: I
+ CHARACTER(LEN=256) :: LINE
+  
+ IF(IMODBATCH.EQ.0)CALL WINDOWOUTSTATUSBAR(4,'Write data ...')
+ IF(IMODBATCH.EQ.1)WRITE(*,'(A)') 'Write data ...'
+
+! !## option only write KHV, KVV and KVA
+! IF(ISAVEK.EQ.1)THEN 
+!  DO I=1,SIZE(KHVIDF); LINE=TRIM(OUTPUTFOLDER)//'\mdl_khv_l'//TRIM(ITOS(I))//'.idf'
+!   IF(.NOT.IDFWRITE(KHVIDF(I),TRIM(LINE),1))RETURN
+!  ENDDO
+!  DO I=1,SIZE(KVVIDF); LINE=TRIM(OUTPUTFOLDER)//'\mdl_kvv_l'//TRIM(ITOS(I))//'.idf'
+!   IF(.NOT.IDFWRITE(KVVIDF(I),TRIM(LINE),1))RETURN
+!  ENDDO
+!  DO I=1,SIZE(KVAIDF); LINE=TRIM(OUTPUTFOLDER)//'\mdl_kva_l'//TRIM(ITOS(I))//'.idf'
+!   IF(.NOT.IDFWRITE(KVAIDF(I),TRIM(LINE),1))RETURN
+!  ENDDO
+! ENDIF 
+! 
+! !## option only write KDW and VCW
+! IF(ISAVEC.EQ.1)THEN 
+!  DO I=1,SIZE(KDHIDF); LINE=TRIM(OUTPUTFOLDER)//'\mdl_kd_l'//TRIM(ITOS(I))//'.idf'
+!   IF(.NOT.IDFWRITE(KDHIDF(I),TRIM(LINE),1))RETURN
+!  ENDDO
+!  DO I=1,SIZE(CIDF); LINE=TRIM(OUTPUTFOLDER)//'\mdl_vc_l'//TRIM(ITOS(I))//'.idf'
+!   IF(.NOT.IDFWRITE(CIDF(I),TRIM(LINE),1))RETURN
+!  ENDDO
+! ENDIF
+ 
+ IF(IMODBATCH.EQ.0)THEN
+  CALL WINDOWOUTSTATUSBAR(4,'')
+  CALL WMESSAGEBOX(OKONLY,INFORMATIONICON,COMMONOK,'Succesfully saved the files in'//CHAR(13)//TRIM(OUTPUTFOLDER),'Information')
+ ENDIF
+
+ IF(IMODBATCH.EQ.1)WRITE(*,'(A)') 'Finished writing data to file(s).'
+ 
+ END SUBROUTINE GC_POST_COMPUTE_WRITE
  
  !###======================================================================
  SUBROUTINE GC_CLOSE()

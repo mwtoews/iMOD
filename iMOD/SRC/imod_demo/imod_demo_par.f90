@@ -35,6 +35,7 @@ TYPE DEMOBJ
  INTEGER :: ACCFLAG     !## Accuracy flag
  INTEGER :: IBLOCKLINES !## show cross-section with blocklines
  INTEGER :: IBLOCKFILLS !## show cross-section with filled blocks
+ INTEGER :: ISAVEBMP    !## copies the image and saves it to disk
 END TYPE DEMOBJ
 
 TYPE(DEMOBJ) :: DEMO
