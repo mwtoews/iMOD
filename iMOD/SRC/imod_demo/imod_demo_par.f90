@@ -28,6 +28,7 @@ IMPLICIT NONE
 TYPE DEMOBJ
  CHARACTER(LEN=52) :: TDNAME      !## demo type name
  REAL,POINTER,DIMENSION(:) :: X,Y !## coordinates of the edges of the profile
+ CHARACTER(LEN=52),POINTER,DIMENSION(:) :: L !## label for the coordinates
  INTEGER :: NXY         !## Number of cross-section points
  INTEGER :: IDEMO       !## Type of demo (e.g. Cross-section=1, 3D-tool=2)
  INTEGER :: CONFLAG     !## Configuration flag
