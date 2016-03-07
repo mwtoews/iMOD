@@ -34,11 +34,11 @@ CONTAINS
 !###======================================================================
 !# subroutine with main-program; includes call to all demo-subroutines
  IMPLICIT NONE
+
  !# Starts cross-section tool if demo type name equals 'cross'
- 
  IF(TRIM(UTL_CAP(DEMO%TDNAME,'U')).EQ.'CROSS')THEN
   CALL PROFILE_INIT()
-  CALL IDFPLOTFAST(0)
+  IF(DEMO%ISAVEBMP.EQ.0)CALL IDFPLOTFAST(0)
  ELSEIF(TRIM(UTL_CAP(DEMO%TDNAME,'U')).EQ.'3D')THEN
   CALL IMOD3D_INIT(0,0)
  ENDIF

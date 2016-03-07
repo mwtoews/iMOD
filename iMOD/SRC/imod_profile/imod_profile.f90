@@ -27,7 +27,7 @@ USE RESOURCE
 USE MODPLOT, ONLY : MP,MPW,DRWLIST,MXMPLOT,MXCLR,MXCGRAD,ZM
 USE MOD_PREF_PAR, ONLY : PREFVAL
 
-USE IMODVAR, ONLY : IDIAGERROR
+USE IMODVAR, ONLY : IDIAGERROR,IMFFNAME
 USE MOD_UTL, ONLY : ITOS,RTOS,UTL_GETUNIT,UTL_CLOSEUNITS,UTL_HIDESHOWDIALOG,INVERSECOLOUR,UTL_DRAWLEGENDBOX,UTL_DIST,UTL_EQUALS_REAL,NEWLINE, &
                     UTL_READARRAY,UTL_FILLARRAY,UTL_GETUNIQUE,UTL_IDFCRDCOR,UTL_IDFGETCLASS,UTL_MESSAGEHANDLE,UTL_WSELECTFILE,UTL_CAP,&
                     UTL_PROFILE_COMPVIEWBOX,UTL_PROFILE_GETVIEWBOX,UTL_CAP_BIG
@@ -257,6 +257,7 @@ CONTAINS
  !###====================================================================
  IMPLICIT NONE
  INTEGER :: IEXIT
+ LOGICAL :: LEX
  
  !## initialisation, array (de)allocation e.g.
  CALL PROFILE_ALLOCATE()
@@ -289,18 +290,25 @@ CONTAINS
  !## draw first selected cross-section if solid tool is active
  IF(ISOLID.EQ.1)CALL SOLID_PROFILEUPDATECROSS(0,0)
  
- CALL PROFILE_DEMO() 
+ !## stop whenever isavebmp.eq.1
+ CALL PROFILE_DEMO()
  
- DO
+ LEX=.TRUE.; IF(DEMO%ISAVEBMP.EQ.1)LEX=.FALSE.
 
-  !## get messages
-  CALL WMESSAGE(ITYPE,MESSAGE)
+ IF(LEX)THEN
 
-  CALL PROFILE_MAIN_MESSAGE(ITYPE,MESSAGE,IEXIT)
-  IF(IEXIT.EQ.1)EXIT
+  DO
 
- ENDDO
+   !## get messages
+   CALL WMESSAGE(ITYPE,MESSAGE)
 
+   CALL PROFILE_MAIN_MESSAGE(ITYPE,MESSAGE,IEXIT)
+   IF(IEXIT.EQ.1)EXIT
+
+  ENDDO
+ 
+ ENDIF
+ 
  IF(NXY.GT.0)CALL PROFILE_CLEAR()
 
  !## herstel selektie
@@ -1247,7 +1255,7 @@ CONTAINS
    GYMAX=GRAPHUNITS(4,1)
   !## save profile
   CASE (ID_SAVEAS)
-   CALL PROFILE_SAVE()
+   CALL PROFILE_SAVE('',0)
   !## print profile
   CASE (ID_PRINT)
    DO I=1,SIZE(IWINPROFILE)
@@ -1497,9 +1505,10 @@ CONTAINS
  SUBROUTINE PROFILE_BACKGROUND_OPENBITMAP()
  !###======================================================================
  IMPLICIT NONE
+ INTEGER,PARAMETER :: RSIZE=1000
  INTEGER,ALLOCATABLE,DIMENSION(:) :: INFO
- INTEGER :: IW,IH
- REAL :: X1,Y1,X2,Y2
+ INTEGER :: I,IW,IH,SH,SW
+ REAL :: X1,Y1,X2,Y2,RW
  
  PBITMAP%FNAME=''
  IF(.NOT.UTL_WSELECTFILE('All Known Files (*.bmp;*.png;*.jpg)|*.bmp;*.png;*.jpg|BitMap (*.bmp)|*.bmp| &
@@ -1507,16 +1516,46 @@ CONTAINS
                   LOADDIALOG+MUSTEXIST+PROMPTON+DIRCHANGE+APPENDEXT,PBITMAP%FNAME,&
                   'Load Background BitMap (*.bmp;*.png;*.jpg)'))RETURN
 
- IF(ALLOCATED(INFO))DEALLOCATE(INFO); ALLOCATE(INFO(6))
- CALL IGRFILEINFO(PBITMAP%FNAME,INFO,6)
- PBITMAP%ITYPE=INFO(1)
- PBITMAP%NCOL =INFO(2) !## Image width in pixels.
- PBITMAP%NROW =INFO(3) !## Image height in pixels.
- PBITMAP%NCLR =INFO(4) !## Number of colours.
- PBITMAP%COMPR=INFO(5) !## Is file compressed ? 0 = no , 1 = yes.
- PBITMAP%CDEPT=INFO(6) !## Colour depth in bits-per-pixel (1-32)
- IF(ALLOCATED(INFO))DEALLOCATE(INFO)
+ DO I=1,2
+  
+  IF(ALLOCATED(INFO))DEALLOCATE(INFO); ALLOCATE(INFO(6))
+  CALL IGRFILEINFO(PBITMAP%FNAME,INFO,6)
+  PBITMAP%ITYPE=INFO(1)
+  PBITMAP%NCOL =INFO(2) !## Image width in pixels.
+  PBITMAP%NROW =INFO(3) !## Image height in pixels.
+  PBITMAP%NCLR =INFO(4) !## Number of colours.
+  PBITMAP%COMPR=INFO(5) !## Is file compressed ? 0 = no , 1 = yes.
+  PBITMAP%CDEPT=INFO(6) !## Colour depth in bits-per-pixel (1-32)
+  IF(ALLOCATED(INFO))DEALLOCATE(INFO)
 
+  IF(I.EQ.2)EXIT
+  
+  !## try to resample - and save
+  IF(PBITMAP%NCOL.GT.RSIZE.OR.PBITMAP%NROW.GT.RSIZE)THEN
+   CALL WMESSAGEBOX(YESNO,QUESTIONICON,COMMONNO,'Do you want to resize the image and save it ?','Question')
+   IF(WINFODIALOG(4).EQ.1)THEN
+    RW=REAL(PBITMAP%NCOL)/REAL(PBITMAP%NROW)
+    IF(PBITMAP%NCOL.GT.PBITMAP%NROW)THEN
+     SW=RSIZE; SH=SW/RW
+    ELSE
+     SH=RSIZE; SW=SH*RW
+    ENDIF
+
+    CALL WBITMAPCREATE(PBITMAP%IBITMAP,SW,SH)
+!    PBITMAP%IW=SW; PBITMAP%IH=SH
+    CALL WBITMAPSTRETCHMODE(STRETCHHALFTONE)
+    CALL WBITMAPLOAD(PBITMAP%IBITMAP,PBITMAP%FNAME,1)
+
+!    CALL WBITMAPRESIZE(PBITMAP%IBITMAP,SW,SH) !,IFLAGS)
+    PBITMAP%FNAME=PBITMAP%FNAME(1:INDEX(PBITMAP%FNAME,'.',.TRUE.)-1)//'_resized.png'
+    CALL WBITMAPSAVE(PBITMAP%IBITMAP,PBITMAP%FNAME)  
+    CALL WBITMAPDESTROY(PBITMAP%IBITMAP)
+    
+   ENDIF
+  ENDIF
+ 
+ ENDDO
+ 
  IW=WINFODRAWABLE(DRAWABLEWIDTH)
  IH=WINFODRAWABLE(DRAWABLEHEIGHT)
 
@@ -2462,6 +2501,8 @@ CONTAINS
    DO I=1,SERIE(IIDF)%N 
     IF(SERIE(IIDF)%Y(I).NE.PROFIDF(IIDF)%IDF%NODATA)THEN
      ICLR=UTL_IDFGETCLASS(PROFIDF(IIDF)%LEG,SERIE(IIDF)%Y(I))
+     !## skip white-colour
+     IF(ICLR.EQ.WRGB(255,255,255))CYCLE
      CALL IGRCOLOURN(ICLR)
      IF(I.EQ.1)THEN
       CALL IGRRECTANGLE( SERIE(IIDF)%X(I),PROFIDF(IIDF)%IDF%BOT, &
@@ -4198,6 +4239,10 @@ CONTAINS
  CALL PROFILE_CLEAR()
  CALL PROFILE_COORDINATES(0)
  
+ IF(DEMO%ISAVEBMP.EQ.1)THEN
+  CALL PROFILE_SAVE(IMFFNAME(:INDEX(IMFFNAME,'.',.TRUE.)-1)//'.JPG',1)
+ ENDIF
+ 
  END SUBROUTINE PROFILE_DEMO
 
  !###======================================================================
@@ -4311,22 +4356,28 @@ CONTAINS
  END SUBROUTINE PROFILE_CLOSE
 
  !###======================================================================
- SUBROUTINE PROFILE_SAVE()
+ SUBROUTINE PROFILE_SAVE(SAVENAME,IDEMO)
  !###======================================================================
  IMPLICIT NONE
+ CHARACTER(LEN=*),INTENT(IN) :: SAVENAME
+ INTEGER,INTENT(IN) :: IDEMO
  INTEGER :: IU,IIDF,I,IOS,IDELIM,IP,IB,JP,JB
  REAL :: XC,YC 
  CHARACTER(LEN=256) :: FNAME
  CHARACTER(LEN=3) :: EXT
  
- FNAME=TRIM(PREFVAL(1))//'\shapes\*.csv'
- IF(.NOT.UTL_WSELECTFILE('iMOD Comma-Separated File (*.csv)|*.csv|Postscript File (*.ps)|*.ps|Encapsulated Postscript File (*.eps)|*.eps|iMOD Project (*.imf)|*.imf|'// &
-           'Windows Bitmap (*.bmp)|*.bmp|ZSoft PC Paintbrush (*.pcx)|*.pcx|Portable Network Graphic image (*.png)|*.png|JPEG Image (*.jpg)|*.jpg|', &
-           SAVEDIALOG+PROMPTON+DIRCHANGE+APPENDEXT,FNAME,'Select File Format'))RETURN
-
+ IF(TRIM(SAVENAME).EQ.'')THEN
+  FNAME=TRIM(PREFVAL(1))//'\shapes\*.csv'
+  IF(.NOT.UTL_WSELECTFILE('iMOD Comma-Separated File (*.csv)|*.csv|Postscript File (*.ps)|*.ps|Encapsulated Postscript File (*.eps)|*.eps|iMOD Project (*.imf)|*.imf|'// &
+            'Windows Bitmap (*.bmp)|*.bmp|ZSoft PC Paintbrush (*.pcx)|*.pcx|Portable Network Graphic image (*.png)|*.png|JPEG Image (*.jpg)|*.jpg|', &
+            SAVEDIALOG+PROMPTON+DIRCHANGE+APPENDEXT,FNAME,'Select File Format'))RETURN
+ ELSE
+  FNAME=SAVENAME
+ ENDIF
+ 
  EXT=UTL_CAP(FNAME(INDEX(FNAME,'.',.TRUE.)+1:),'U')
  SELECT CASE (TRIM(EXT))
-  CASE ('BMP','PNG','PCX')
+  CASE ('BMP','PNG','PCX','JPG')
    DO I=1,SIZE(IWINPROFILE)
     CALL WBITMAPSAVE(IBITMAP(I),FNAME)
    ENDDO
@@ -4354,7 +4405,7 @@ CONTAINS
     ENDIF
    ENDDO
    CLOSE(IU)
-   CALL WMESSAGEBOX(OKONLY,INFORMATIONICON,COMMONOK,'Successfully written output to:'//CHAR(13)//TRIM(FNAME),'Info')
+   IF(IDEMO.EQ.0)CALL WMESSAGEBOX(OKONLY,INFORMATIONICON,COMMONOK,'Successfully written output to:'//CHAR(13)//TRIM(FNAME),'Info')
   CASE ('PS','EPS')
    
    IP=WINFOGRHARDCOPY(PAPERWIDTH)  !## in points
@@ -4397,7 +4448,7 @@ CONTAINS
    !## replot as bitmap
    CALL PROFILE_PLOT()
    
-   CALL WMESSAGEBOX(OKONLY,INFORMATIONICON,COMMONOK,'Successfully written Postscript to:'//CHAR(13)//TRIM(FNAME),'Info')
+   IF(IDEMO.EQ.0)CALL WMESSAGEBOX(OKONLY,INFORMATIONICON,COMMONOK,'Successfully written Postscript to:'//CHAR(13)//TRIM(FNAME),'Info')
   
   CASE('IMF')
    IF(DEMO%IDEMO.NE.1)THEN
@@ -4415,9 +4466,9 @@ CONTAINS
    DEMO%IBLOCKLINES = IBLOCKLINES
    DEMO%IBLOCKFILLS = IBLOCKFILLS
    CALL IMODSAVEIMF(FNAME)
-   CALL WMESSAGEBOX(OKONLY,INFORMATIONICON,COMMONOK,'Successfully saved cross-section as DEMO iMOD project (*.imf) to:'//CHAR(13)//TRIM(FNAME),'Info')
-   DEMO%IDEMO = 0
-
+   IF(IDEMO.EQ.0)CALL WMESSAGEBOX(OKONLY,INFORMATIONICON,COMMONOK,'Successfully saved cross-section as DEMO iMOD project (*.imf) to:'//CHAR(13)//TRIM(FNAME),'Info')
+   DEMO%IDEMO=0
+   DEMO%ISAVEBMP=0
  END SELECT
 
  END SUBROUTINE PROFILE_SAVE

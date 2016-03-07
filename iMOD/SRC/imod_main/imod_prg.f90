@@ -214,7 +214,8 @@ ZM%ZOOMXY(ZM%NZOOM,2)=MPW%YMIN
 ZM%ZOOMXY(ZM%NZOOM,3)=MPW%XMAX
 ZM%ZOOMXY(ZM%NZOOM,4)=MPW%YMAX
 
-CALL DEMO_MAIN()  !##calls demo-version iMOD directly after initialisation of iMOD manager and plotting available files
+CALL DEMO_MAIN()  !## calls demo-version iMOD directly after initialisation of iMOD manager and plotting available files
+IF(DEMO%ISAVEBMP.EQ.1)THEN; CALL WINDOWCLOSE(); STOP; ENDIF
 
 !## initiate timers
 CALL MAIN_TIMERS()

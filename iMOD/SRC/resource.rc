@@ -8,7 +8,7 @@
 //
 // Winteracter resource script. 
 //
-// Modified : 06/Mar/2016 15:36:21
+// Modified : 07/Mar/2016 11:45:36
 //
 ///////////////////////////////////////////////////
 //
@@ -2363,7 +2363,7 @@ STYLE WS_CHILD | DS_CONTROL | DS_3DLOOK
 FONT    8, "Arial"
 BEGIN
     CONTROL "Fix X-axis",IDF_CHECK1,"BUTTON",WS_CHILD | WS_VISIBLE | WS_GROUP | WS_TABSTOP | BS_AUTOCHECKBOX | BS_TEXT,   12,   16,   49,   10
-    CONTROL "Axes Settings",IDF_GROUP3,"BUTTON",WS_CHILD | WS_VISIBLE | WS_GROUP | BS_GROUPBOX | BS_TEXT | BS_LEFT,    6,    5,  334,   67
+    CONTROL "Axes Settings",IDF_GROUP3,"BUTTON",WS_CHILD | WS_VISIBLE | WS_GROUP | BS_GROUPBOX | BS_TEXT | BS_LEFT,    6,    5,  333,   67
     CONTROL "IFF/IPF Settings",IDF_GROUP4,"BUTTON",WS_CHILD | WS_VISIBLE | WS_GROUP | BS_GROUPBOX | BS_TEXT | BS_LEFT,    6,   74,  148,   86
     CONTROL "m",IDF_LABEL2,"STATIC",WS_CHILD | WS_VISIBLE | WS_GROUP | SS_LEFT,  143,   88,    7,    8
     CONTROL "250.00",IDF_REAL2,"REALEDIT",WS_CHILD | WS_VISIBLE | WS_BORDER | WS_GROUP | WS_TABSTOP | ES_LEFT | ES_CENTER | ES_MULTILINE,   90,   86,   49,   12
@@ -2415,8 +2415,8 @@ BEGIN
 " 1015 0 \n"
 " 1016 0 \n"
 " 1017 0 \n"
-" 1018 0 \n"
-" 1110 1 \n"
+" 1018 1 \n"
+" 1110 0 \n"
 "[Menus] \n"
 " 1192    13     5 \n"
 "1:1 \n"

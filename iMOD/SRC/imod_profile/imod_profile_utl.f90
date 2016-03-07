@@ -67,7 +67,7 @@ CONTAINS
  !###======================================================================
  IMPLICIT NONE
  INTEGER :: IW,IH,I
-
+ 
  IF(PBITMAP%IBITMAP.GT.0)THEN; CALL WBITMAPDESTROY(PBITMAP%IBITMAP); PBITMAP%IBITMAP=0; ENDIF
 
  IW=0; IH=0
