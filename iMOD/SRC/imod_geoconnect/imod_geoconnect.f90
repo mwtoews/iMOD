@@ -254,11 +254,29 @@ CONTAINS
    END SELECT
   CASE (FIELDCHANGED)
    SELECT CASE (MESSAGE%VALUE2)
+    CASE (IDF_RADIO3,IDF_RADIO4,IDF_RADIO5)
+     CALL GC_MAIN_TAB3_FIELDS(MESSAGE%VALUE2)
    END SELECT
  END SELECT
 
  END SUBROUTINE GC_MAIN_TAB3
 
+ !###======================================================================
+ SUBROUTINE GC_MAIN_TAB3_FIELDS(ID)
+ !###======================================================================
+ IMPLICIT NONE
+ INTEGER,INTENT(IN) :: ID
+ INTEGER :: I,J,K,IOPTION
+ 
+ CALL WDIALOGGETRADIOBUTTON(ID,IOPTION)
+ SELECT CASE (IOPTION)
+  CASE (1); I=1; J=0; K=0
+  CASE (2); I=0; J=1; K=0
+  CASE (3); I=0; J=0; K=1
+ END SELECT
+  
+ END SUBROUTINE GC_MAIN_TAB3_FIELDS
+ 
  !###======================================================================
  SUBROUTINE GC_MAIN_TAB4(ITYPE,MESSAGE)
  !###======================================================================
@@ -364,7 +382,6 @@ CONTAINS
  !###======================================================================
  SUBROUTINE GC_COMPUTE_MAIN(IMODBATCH)
  !###======================================================================
- !# subroutine to manage all preprocessing steps
  IMPLICIT NONE
  INTEGER,INTENT(IN) :: IMODBATCH
  
@@ -540,7 +557,6 @@ CONTAINS
  !###======================================================================
  SUBROUTINE GC_PRE_COMPUTE(IMODBATCH)
  !###======================================================================
- !# subroutine to compute K-values for preprocessing purposes 
  IMPLICIT NONE
  INTEGER,INTENT(IN) :: IMODBATCH !# =1 Only write to dos-window if started in batch modus
  INTEGER :: I,J,IROW,ICOL,ILAY,IKHR,IKVR
@@ -689,10 +705,9 @@ CONTAINS
  !###======================================================================
  SUBROUTINE GC_PRE_COMPUTE_WRITE(IMODBATCH)
  !###======================================================================
- !# subroutine to calculate KH,KV,KVA and write K- and C-values to file (KHV, KVV, KVA, KDW and VCW)
  IMPLICIT NONE
  INTEGER,INTENT(IN) :: IMODBATCH !# =1 Only write to dos-window if started in batch modus
- INTEGER :: I
+ INTEGER :: I,IU
  CHARACTER(LEN=256) :: LINE
   
  IF(IMODBATCH.EQ.0)CALL WINDOWOUTSTATUSBAR(4,'Write data ...')
@@ -700,26 +715,28 @@ CONTAINS
 
  !## option only write KHV, KVV and KVA
  IF(ISAVEK.EQ.1)THEN 
-  DO I=1,SIZE(KHVIDF); LINE=TRIM(OUTPUTFOLDER)//'\mdl_khv_l'//TRIM(ITOS(I))//'.idf'
+  DO I=1,SIZE(KHVIDF); LINE=TRIM(OUTPUTFOLDER)//'\KHV\VERSION_1\MDL_KHV_L'//TRIM(ITOS(I))//'.IDF'
    IF(.NOT.IDFWRITE(KHVIDF(I),TRIM(LINE),1))RETURN
   ENDDO
-  DO I=1,SIZE(KVVIDF); LINE=TRIM(OUTPUTFOLDER)//'\mdl_kvv_l'//TRIM(ITOS(I))//'.idf'
+  DO I=1,SIZE(KVVIDF); LINE=TRIM(OUTPUTFOLDER)//'\KVV\VERSION_1\MDL_KVV_L'//TRIM(ITOS(I))//'.IDF'
    IF(.NOT.IDFWRITE(KVVIDF(I),TRIM(LINE),1))RETURN
   ENDDO
-  DO I=1,SIZE(KVAIDF); LINE=TRIM(OUTPUTFOLDER)//'\mdl_kva_l'//TRIM(ITOS(I))//'.idf'
+  DO I=1,SIZE(KVAIDF); LINE=TRIM(OUTPUTFOLDER)//'\KVA\VERSION_1\MDL_KVA_L'//TRIM(ITOS(I))//'.IDF'
    IF(.NOT.IDFWRITE(KVAIDF(I),TRIM(LINE),1))RETURN
   ENDDO
  ENDIF 
  
  !## option only write KDW and VCW
  IF(ISAVEC.EQ.1)THEN 
-  DO I=1,SIZE(KDHIDF); LINE=TRIM(OUTPUTFOLDER)//'\mdl_kd_l'//TRIM(ITOS(I))//'.idf'
+  DO I=1,SIZE(KDHIDF); LINE=TRIM(OUTPUTFOLDER)//'\KDW\VERSION_1\MDL_KDW_L'//TRIM(ITOS(I))//'.IDF'
    IF(.NOT.IDFWRITE(KDHIDF(I),TRIM(LINE),1))RETURN
   ENDDO
-  DO I=1,SIZE(CIDF); LINE=TRIM(OUTPUTFOLDER)//'\mdl_vc_l'//TRIM(ITOS(I))//'.idf'
+  DO I=1,SIZE(CIDF); LINE=TRIM(OUTPUTFOLDER)//'\VCW\VERSION_1\MDL_VCW_L'//TRIM(ITOS(I))//'.IDF'
    IF(.NOT.IDFWRITE(CIDF(I),TRIM(LINE),1))RETURN
   ENDDO
  ENDIF
+ 
+ IF(.NOT.GC_IPEST_WRITE(TRIM(OUTPUTFOLDER)//'\FACTORS.TXT'))RETURN
  
  IF(IMODBATCH.EQ.0)THEN
   CALL WINDOWOUTSTATUSBAR(4,'')
@@ -731,49 +748,63 @@ CONTAINS
  END SUBROUTINE GC_PRE_COMPUTE_WRITE
 
  !###======================================================================
- LOGICAL FUNCTION GC_IPEST_READ(FNAME,NR)
+ LOGICAL FUNCTION GC_IPEST_READ(FNAME,IMODBATCH)
  !###======================================================================
- !# subroutine to read IPEST factors from file
  IMPLICIT NONE
  CHARACTER(LEN=*),INTENT(IN) :: FNAME
- INTEGER,INTENT(IN) :: NR
+ INTEGER,INTENT(IN) :: IMODBATCH
  INTEGER :: I,IU,IOS
+ REAL :: FACT
+ CHARACTER(LEN=12) :: FORM
  
  GC_IPEST_READ=.FALSE.
- IPFAC%FORM=''
- IPFAC%FACT=1.0
  
- !#Read variables from file into IPFAC-array
- IF(TRIM(FNAME).NE.'')THEN
-  IU=UTL_GETUNIT(); CALL OSD_OPEN(IU,FILE=FNAME,STATUS='OLD',FORM='FORMATTED',ACTION='READ',IOSTAT=IOS)
-  IF(IOS.NE.0)THEN; WRITE(*,'(A)') 'Can not open file: ['//TRIM(FNAME)//'] for reading'; RETURN; ENDIF
-  DO I=1,NLAYM !# loop over total amount of modellayers
- !  IPFAC(I)%FORM=
- !  IPFAC(I)%FACT=
-  ENDDO
+! IPFAC%FORM=''
+! IPFAC%FACT=1.0
+ 
+ !## read variables from file into IPFAC-array
+ IU=UTL_GETUNIT(); CALL OSD_OPEN(IU,FILE=FNAME,STATUS='OLD',FORM='FORMATTED',ACTION='READ',IOSTAT=IOS)
+ IF(IOS.NE.0)THEN
+  IF(IMODBATCH.EQ.0)CALL WMESSAGEBOX(OKONLY,EXCLAMATIONICON,COMMONOK,'Can not open file: ['//TRIM(FNAME)//'] for reading','Error')
+  IF(IMODBATCH.EQ.1)WRITE(*,'(A)') 'Can not open file: ['//TRIM(FNAME)//'] for reading'
+  RETURN
  ENDIF
+ 
+ !## loop over total amount of regislayers
+ DO I=1,NLAYR 
+  READ(IU,'(A12,1X,F10.3)',IOSTAT=IOS) FORM,FACT
+!IPFAC(I)%FORM
+!IPFAC(I)%
+ ENDDO
+ CLOSE(IU)
  
  GC_IPEST_READ=.TRUE.
  
  END FUNCTION GC_IPEST_READ
 
-! !###======================================================================
-! LOGICAL FUNCTION GC_IPEST_RESET()
-! !###====================================================================== 
-! IMPLICIT NONE
-! INTEGER :: I
-! 
-! DO I=1,NLAYR
-!  IPFAC(I)%FACT=1.0
-!  CALL WGRIDPUTCELLREAL(IDF_GRID1,2,I,IPFAC(I)%FACT,'(F10.3)')
-! ENDDO
-! 
-! END FUNCTION GC_IPEST_RESET
+ !###======================================================================
+ LOGICAL FUNCTION GC_IPEST_WRITE(FNAME)
+ !###======================================================================
+ IMPLICIT NONE
+ CHARACTER(LEN=*),INTENT(IN) :: FNAME
+ INTEGER :: I,IU
+ 
+ GC_IPEST_WRITE=.FALSE.
+ 
+ !## write pest-factors
+ IU=UTL_GETUNIT(); OPEN(IU,FILE=FNAME,STATUS='UNKNOWN',ACTION='WRITE')
+ DO I=1,NLAYR
+  WRITE(IU,'(A12,1X,F10.3)') IPFAC(I)%FORM,IPFAC(I)%FACT
+ ENDDO
+ CLOSE(IU)
+ 
+ GC_IPEST_WRITE=.TRUE.
+ 
+ END FUNCTION GC_IPEST_WRITE
  
  !###======================================================================
  LOGICAL FUNCTION GC_REGISFILES_GETLIST()
  !###======================================================================
- !# function to get REGIS files onto the dialog and used for Refresh option
  IMPLICIT NONE
  INTEGER :: I,J,K
  
@@ -835,7 +866,6 @@ CONTAINS
  !###======================================================================
  LOGICAL FUNCTION GC_REGISFILES_GET(IMODBATCH)
  !###======================================================================
- !# function to get REGIS files from the dialog
  IMPLICIT NONE
  INTEGER,INTENT(IN) :: IMODBATCH
  INTEGER :: I
@@ -856,7 +886,6 @@ CONTAINS
  !###======================================================================
  LOGICAL FUNCTION GC_READ_MODELDATA(IREAD)
  !###======================================================================
- !## function to read model top and bot files
  IMPLICIT NONE
  INTEGER,INTENT(IN) :: IREAD
  INTEGER :: ILAY,I
@@ -907,7 +936,6 @@ CONTAINS
  !###======================================================================
  LOGICAL FUNCTION GC_READ_REGISDATA(IFILE,IKHR,IKVR,FTYPE,IREAD)
  !###======================================================================
- !## function to collect the data from the REGIS files.
  IMPLICIT NONE
  INTEGER,INTENT(IN) :: IFILE,IREAD
  INTEGER,INTENT(INOUT) :: IKHR,IKVR
@@ -984,16 +1012,18 @@ CONTAINS
  !###======================================================================
  SUBROUTINE GC_POST(IMODBATCH)
  !###======================================================================
- !# subroutine to compute K-values for postprocessing purposes
  IMPLICIT NONE
  INTEGER,INTENT(IN) :: IMODBATCH
  REAL :: XC,YC
- INTEGER :: IROW,ICOL,NU,I
+ INTEGER :: IROW,ICOL,NU,I,IOS,IU
  INTEGER,ALLOCATABLE,DIMENSION(:) :: IGRP
-  
+ CHARACTER(LEN=12) :: FORM
+ 
  !## read/scale idf's with model top and bot values
  IF(.NOT.GC_READ_MODELDATA(1))RETURN
- 
+
+ IF(.NOT.GC_IPEST_READ(TRIM(OUTPUTFOLDER)//'\factors.txt',IMODBATCH))RETURN
+
  ALLOCATE(IGRP(NLAYR)); IGRP=IPFAC%IGRP
 
  !## get number of unique groups
@@ -1064,7 +1094,6 @@ CONTAINS
   !###======================================================================
  SUBROUTINE GC_POST_COMPUTE_WRITE(IMODBATCH)
  !###======================================================================
- !# subroutine to calculate KH,KV,KVA and write K- and C-values to file (KHV, KVV, KVA, KDW and VCW)
  IMPLICIT NONE
  INTEGER,INTENT(IN) :: IMODBATCH !# =1 Only write to dos-window if started in batch modus
  INTEGER :: I
