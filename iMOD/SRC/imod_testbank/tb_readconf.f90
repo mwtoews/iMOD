@@ -84,7 +84,6 @@ CONTAINS
   J=INDEX(RUN(IRUN)%FNAME,'.',.true.)-1
   FNAME=TRIM(RUN(IRUN)%FNAME(I:J))
   OPEN(IUOUT,FILE=TRIM(OUTDIR)//'\testbank_out_'//TRIM(FNAME)//'.txt',STATUS='UNKNOWN',ACTION='WRITE',IOSTAT=IOS)
-  WRITE(*,*) TRIM(OUTDIR)//'\testbank_out_'//TRIM(FNAME)//'.txt'
   IF(IOS.NE.0)THEN
    CALL UTL_PRINTTEXT('OPENING OUTPUT FILE',2)
   ENDIF
@@ -96,8 +95,6 @@ CONTAINS
    ENDIF
   ENDDO
   CALL TB_DIFFRUN(IRUN)
-  write(*,*) "RUN(IRUN)%FNAME:",RUN(IRUN)%FNAME
-  write(*,*) "OUTMAP:",OUTMAP
   CLOSE(IUOUT)
  ENDDO
   
@@ -159,7 +156,7 @@ CONTAINS
  INTEGER,PARAMETER :: MXMAP=14
  INTEGER,INTENT(IN) :: IRUN
  INTEGER :: IU,IOS,IEXE,JEXE,I,J,NNODATA,IMAP,N,IROW,ICOL
- REAL :: XMABS
+ REAL :: XMABS,THDX
  CHARACTER(LEN=256) :: RESDIR,RES,FNAME
  CHARACTER(LEN=12),DIMENSION(MXMAP) :: CMAP
  CHARACTER(LEN=256),DIMENSION(:),POINTER :: LISTNAME
@@ -232,6 +229,14 @@ CONTAINS
 
           IF(IDFREAD(IDF(2),FNAME,1))THEN
            !## diff
+           
+           !## define threshold for fluxes (higher threshold is required fluxes than for heads)
+!           IDF(1)%DX=MIN(IDF(1)%DX,IDF(2)%DX)
+!           IF(TRIM(CMAP(IMAP)).EQ.'head')THEN
+!            THDX=THRESHOLD
+!           ELSE
+!            THDX=THRESHOLD*IDF(1)%DX
+!           ENDIF
        
            IDF(1)%X=IDF(1)%X-IDF(2)%X
            IF(MAXVAL(ABS(IDF(1)%X)).GE.THRESHOLD)THEN
