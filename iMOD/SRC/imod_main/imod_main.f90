@@ -1346,7 +1346,7 @@ DO IPLOT=1,MXMPLOT
     CASE (17)
      MP(IPLOT)%HCOL=IVALUE
     CASE (18)
-     READ(CVALUE,'(10I1)') MP(IPLOT)%IAXES 
+     READ(CVALUE,'(20I1)') MP(IPLOT)%IAXES 
      !## first two are always plotted on first y-axes
      MP(IPLOT)%IAXES(1:2)=1
      DO J=3,SIZE(MP(IPLOT)%IAXES)

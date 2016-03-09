@@ -49,7 +49,7 @@ USE MOD_IDF_PAR, ONLY : IDFOBJ
 
   INTEGER                  :: NLIDF                     !## number of listed idf to be plotted
 
-  INTEGER,DIMENSION(10) :: IAXES  !## which axes to be used for each column in the associated files
+  INTEGER,DIMENSION(20) :: IAXES  !## which axes to be used for each column in the associated files
 
   INTEGER                  :: XCOL
   INTEGER                  :: YCOL

@@ -433,17 +433,17 @@ CONTAINS
       IF(GEFEX(ICOL,IROW).NE.'')THEN
        LINE=TRIM(LINE)//','//TRIM(GEFEX(ICOL,IROW))
       ELSE
-       LINE=TRIM(LINE)//','''
+       LINE=TRIM(LINE)//',-'
       ENDIF
      ENDDO
-     WRITE(KU,*) TRIM(LINE)
+     WRITE(KU,'(A)') TRIM(LINE)
     END DO
     
     LINE=TRIM(RTOS(Z-ABS(GEF(IATTRIB(2),NROW)),'F',1))
     DO ICOL=2,NCOLIPF
      LINE=TRIM(LINE)//',-'
     ENDDO
-    WRITE(KU,*) TRIM(LINE)
+    WRITE(KU,'(A)') TRIM(LINE)
         
     CLOSE(KU)
     

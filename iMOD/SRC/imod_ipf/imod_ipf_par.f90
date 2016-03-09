@@ -36,7 +36,7 @@ TYPE IPFOBJ
  INTEGER :: ACOL       !## column number of associated files
  INTEGER :: PCOL       !## plot column number of associated files - labeling
  INTEGER :: ILEGDLF    !## dlf legend (1-10)
- INTEGER,DIMENSION(10) :: IAXES  !## which axes to be used for each column in the associated files
+ INTEGER,DIMENSION(20) :: IAXES  !## which axes to be used for each column in the associated files
  INTEGER :: SYMBOL     !## plot symbol
  INTEGER :: THICKNESS  !## plot symbol grootte
  CHARACTER(LEN=10) :: FEXT !## extent of associated files
@@ -92,7 +92,7 @@ TYPE TYPE_IPF
  REAL :: XMIN,XMAX  !## for top  and bottom axes
  REAL :: YMIN,YMAX  !## for left and right  axes
  REAL :: Y2MIN,Y2MAX  !## second yaxes
- INTEGER,DIMENSION(10) :: IAXES !## 1=left,bottom ;2=right
+ INTEGER,DIMENSION(20) :: IAXES !## 1=left,bottom ;2=right
  CHARACTER(LEN=50) :: FNAME
 END TYPE TYPE_IPF
 TYPE(TYPE_IPF),DIMENSION(:),ALLOCATABLE :: ASSF
