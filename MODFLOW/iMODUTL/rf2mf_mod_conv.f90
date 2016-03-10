@@ -1840,8 +1840,8 @@
       end if
       n = n + 1
       write(str(n),*) luncb
-      n = n + 1
-      write(str(n),*) 'noprint'
+!      n = n + 1
+!      write(str(n),*) 'print' !noprint'
       if (riv%ifvdl) then
          n = n + 1
          write(str(n),*) 'ifvdl'

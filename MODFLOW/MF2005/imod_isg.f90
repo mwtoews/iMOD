@@ -194,7 +194,7 @@ END MODULE MOD_BASVAR
 !###====================================================================
 SUBROUTINE PCK1RPISG(ISGLIST,mxisg,NISG,FNAME,ILAY,iact)
 !###====================================================================
-USE IMOD_UTL, ONLY : IMOD_UTL_IDATETOJDATE,IMOD_UTL_FILENAME,IMOD_UTL_PRINTTEXT, &
+USE IMOD_UTL, ONLY : IMOD_UTL_IDATETOJDATE,IMOD_UTL_FILENAME,IMOD_UTL_PRINTTEXT,IMOD_UTL_ITOS, &
     IMOD_UTL_OPENIDF,IMOD_UTL_OPENASC,IMOD_UTL_INTERSECT_EQUI,IMOD_UTL_INTERSECT_NONEQUI,IMOD_UTL_GETRCL
 USE MOD_GLBVAR, ONLY : LINE,ISS,CDATE,DELT,SIMCSIZE,SIMBOX,LQD
 USE IMOD_UTL, ONLY : ICF
@@ -521,22 +521,22 @@ ENDDO
 IF(iact.gt.0)THEN
 
  ALLOCATE(IDF(10)); DO I=1,SIZE(IDF); CALL IDFNULLIFY(IDF(I)); IDF(I)%IU=0; ENDDO
- IDF%XMIN=SIMBOX(1); IDF%YMIN=SIMBOX(2); IDF%XMAX=SIMBOX(3); IDF%YMAX=SIMBOX(4)
+ IDF%XMIN=SIMBOX(1); IDF%YMIN=SIMBOX(2); IDF%XMAX=SIMBOX(3); IDF%YMAX=SIMBOX(4); IDF%NODATA=NODATA
  IDF%DX=SIMCSIZE; IDF%IEQ=0; IDF%DY=IDF%DX; IDF%IXV=0; IDF%ITB=0; IDF%NCOL=NCOL; IDF%NROW=NROW
  DO I=1,SIZE(IDF);
   IF(.NOT.IDFALLOCATEX(IDF(I)))THEN
    CALL IMOD_UTL_PRINTTEXT('Can not allocate memory for idf(i)',1)
-  ENDIF; IDF(I)%X=0.0
+  ENDIF
+  IDF(I)%X=0.0
  ENDDO
+
+!WRITE(*,*) 2,NISG,SUM(IDF(1)%X)
 
  !## create grid with waterlevels,bottomlevels and resistances
  DO I=1,NISG
-  IROW=ISGLIST(I,2)
-  ICOL=ISGLIST(I,3)
-! NODE=BUFIISG(I)
+  IROW=ISGLIST(I,2); ICOL=ISGLIST(I,3)
   !## skip nodata
   IF(ISGLIST(I,5).EQ.NODATA)CYCLE
- ! CALL IMOD_UTL_GETRCL(NODE,NROW,NCOL,J,IROW,ICOL)
   IDF(1) %X(ICOL,IROW)=IDF(1) %X(ICOL,IROW)+ ISGLIST(I,5)                !## conductance
   IDF(2) %X(ICOL,IROW)=IDF(2) %X(ICOL,IROW)+(ISGLIST(I,4)*ISGLIST(I,5))  !## wl
   IDF(3) %X(ICOL,IROW)=IDF(3) %X(ICOL,IROW)+(ISGLIST(I,6)*ISGLIST(I,5))  !## bh
@@ -558,27 +558,10 @@ IF(iact.gt.0)THEN
   ENDIF
  ENDDO; ENDDO
   
+!WRITE(*,*) 22,NISG,SUM(IDF(1)%X)
+
  !## existence of two-dimensional cross-sections
  IF(N2DIM.GT.0)THEN ! .and. iact.gt.0)THEN
-
-! !## create grid with waterlevels,bottomlevels and resistances
-! DO I=1,NISG
-!  IROW=ISGLIST(NISG,2)
-!  ICOL=ISGLIST(NISG,3)
-!  IDF(1)%X(ICOL,IROW)=IDF(1)%X(ICOL,IROW)+ISGLIST(I,5) !## conductance
-!  IDF(2)%X(ICOL,IROW)=IDF(2)%X(ICOL,IROW)+(ISGLIST(I,4)*ISGLIST(I,5)) !## wl
-!  IDF(3)%X(ICOL,IROW)=IDF(3)%X(ICOL,IROW)+(ISGLIST(I,6)*ISGLIST(I,5)) !## bh
-!  IDF(4)%X(ICOL,IROW)=IDF(4)%X(ICOL,IROW)+(ISGLIST(I,7)*ISGLIST(I,5)) !## inf
-!  IDF(5)%X(ICOL,IROW)=IDF(5)%X(ICOL,IROW)+(ISGLIST(I,10)*ISGLIST(I,5)) !## c
-! ENDDO
-! DO IROW=1,NROW; DO ICOL=1,NCOL
-!  IF(IDF(1)%X(ICOL,IROW).GT.0.0)THEN
-!   IDF(2)%X(ICOL,IROW)=IDF(2)%X(ICOL,IROW)/IDF(1)%X(ICOL,IROW)
-!   IDF(3)%X(ICOL,IROW)=IDF(3)%X(ICOL,IROW)/IDF(1)%X(ICOL,IROW)
-!   IDF(4)%X(ICOL,IROW)=IDF(4)%X(ICOL,IROW)/IDF(1)%X(ICOL,IROW)
-!   IDF(5)%X(ICOL,IROW)=IDF(5)%X(ICOL,IROW)/IDF(1)%X(ICOL,IROW)
-!  ENDIF
-! ENDDO; ENDDO
 
   REWIND(ISGIU(1)); READ(ISGIU(1),*) NISGH
   DO I=1,NISGH
@@ -642,8 +625,14 @@ IF(iact.gt.0)THEN
  !## extent grids based upon their width
  CALL ISG2GRID_EXTENT_WITH_WIDTH(SIZE(IDF),IDF)
 
+ !## clean list
+ DO I=1,10; ISGLIST(:,I)=0.0; ENDDO
+
  !## reuse isg from the grid, that is the consequence of using 2d cross-sections
  NISG=0
+
+!WRITE(*,*) 3,NISG,SUM(IDF(1)%X),IDF(1)%X(10,10)
+
  DO IROW=1,NROW; DO ICOL=1,NCOL
   IF(IDF(1)%X(ICOL,IROW).GT.0.0)THEN
    NISG=NISG+1
@@ -661,8 +650,10 @@ IF(iact.gt.0)THEN
   ENDIF
  ENDDO; ENDDO
 
+!WRITE(*,*) 4,NISG
+
  CALL IDFDEALLOCATE(IDF,SIZE(IDF))
- CALL IMOD_UTL_PRINTTEXT('Finished gridding 2d cross-sections',0)
+ CALL IMOD_UTL_PRINTTEXT('Finished gridding 2d cross-sections, no. of isg elements '//TRIM(IMOD_UTL_ITOS(NISG)),0)
 
 ENDIF
 
@@ -681,7 +672,7 @@ SUBROUTINE PCK2RPISG(SDATE,EDATE,TTIME,QSORT,XNR,LU,MAXITEMS,RVAL, &
                      NR,IREF,IISGH,ITYPE,NODATA)
 !###====================================================================
 USE MOD_GLBVAR, ONLY : LINE,ISS
-USE IMOD_UTL, ONLY: IMOD_UTL_IDATETOJDATE,IMOD_UTL_GETMED2,IMOD_UTL_ITOS,IMOD_UTL_PRINTTEXT, ICF
+USE IMOD_UTL, ONLY: IMOD_UTL_IDATETOJDATE,IMOD_UTL_GETMED2,IMOD_UTL_ITOS,IMOD_UTL_PRINTTEXT,ICF
 IMPLICIT NONE
 REAL,INTENT(IN) :: NODATA
 INTEGER,INTENT(IN) :: SDATE,EDATE,TTIME,MAXITEMS,LU,IISGH,NR,IREF,ITYPE
@@ -1376,14 +1367,7 @@ END SUBROUTINE
  REAL :: W,L,X,Y,X1,Y1,F
  REAL,ALLOCATABLE,DIMENSION(:,:) :: MM
  REAL,DIMENSION(4) :: V
- 
-! IDF(1)%X(ICOL,IROW)=IDF(1)%X(ICOL,IROW)+ BUFISG(I,1)              !## conductance
-! IDF(2)%X(ICOL,IROW)=IDF(2)%X(ICOL,IROW)+(BUFISG(I,2)*BUFISG(I,1)) !## wl
-! IDF(3)%X(ICOL,IROW)=IDF(3)%X(ICOL,IROW)+(BUFISG(I,3)*BUFISG(I,1)) !## bh
-! IDF(4)%X(ICOL,IROW)=IDF(4)%X(ICOL,IROW)+(BUFISG(I,4)*BUFISG(I,1)) !## inf
-! IDF(5)%X(ICOL,IROW)=IDF(5)%X(ICOL,IROW)+(BUFISG(I,7)*BUFISG(I,1)) !## c
-! IDF(6)%X(ICOL,IROW)=IDF(6)%X(ICOL,IROW)                           !## count
- 
+  
  W=0; DO IROW=1,IDF(1)%NROW; DO ICOL=1,IDF(1)%NCOL
   W=MAX(W,IDF(7)%X(ICOL,IROW))
  ENDDO; ENDDO
@@ -1400,6 +1384,8 @@ END SUBROUTINE
    IDF(1)%X(ICOL,IROW)=IDF(1)%X(ICOL,IROW)*IDF(5)%DX/L*IDF(5)%DX/W
   ENDIF
  ENDDO; ENDDO
+
+! write(*,*) 'a1',sum(idf(1)%x),idf(1)%x(10,10),idf(8)%x(10,10)
  
  WRITE(*,'(A)') 'Start computing erosion matrix' 
  DO IROW=1,IDF(1)%NROW
@@ -1474,6 +1460,9 @@ END SUBROUTINE
  ENDDO
  WRITE(*,'(A)') 'Finished computing erosion matrix' 
 
+! write(*,*) 'a2',sum(idf(1)%x),idf(1)%x(10,10),idf(8)%x(10,10)
+! write(*,*) 'a22',IDF%NODATA
+
  DO IROW=1,IDF(1)%NROW; DO ICOL=1,IDF(1)%NCOL
   DO I=1,4
    IF(IDF(8)%X(ICOL,IROW).GT.0.0)IDF(I)%X(ICOL,IROW)=IDF(I)%X(ICOL,IROW)/IDF(8)%X(ICOL,IROW)
@@ -1481,11 +1470,15 @@ END SUBROUTINE
   ENDDO
  ENDDO; ENDDO
 
+! write(*,*) 'a3',sum(idf(1)%x),idf(1)%x(10,10)
+
  !## correct to be sure multiplication matrix does not exceed factor 1.0 and multiply conductance with erosion matrix
  DO IROW=1,IDF(1)%NROW; DO ICOL=1,IDF(1)%NCOL
   IF(IDF(8)%X(ICOL,IROW).GT.1.0)IDF(8)%X(ICOL,IROW)=1.0
   IDF(1)%X(ICOL,IROW)=IDF(1)%X(ICOL,IROW)*IDF(8)%X(ICOL,IROW)
  ENDDO; ENDDO
+
+! write(*,*) 'a4',sum(idf(1)%x),idf(1)%x(10,10)
 
  !## clean for conductances le zero
  DO IROW=1,IDF(1)%NROW; DO ICOL=1,IDF(1)%NCOL
@@ -1493,6 +1486,8 @@ END SUBROUTINE
    DO I=1,4; IDF(I)%X(ICOL,IROW)=IDF(I)%NODATA; ENDDO
   ENDIF
  ENDDO; ENDDO
+
+! write(*,*) 'a5',sum(idf(1)%x),idf(1)%x(10,10)
 
  DEALLOCATE(MM)
   
