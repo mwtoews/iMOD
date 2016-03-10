@@ -29,7 +29,7 @@ USE MODPLOT, ONLY : MPW
 USE MOD_GEOCONNECT_PAR
 USE MOD_UTL, ONLY : UTL_GETUNIT,UTL_SUBST,ITOS,RTOS,UTL_DIRINFO_POINTER,UTL_CAP,UTL_WSELECTFILE,UTL_MESSAGEHANDLE, &
     INVERSECOLOUR,UTL_PLOTLOCATIONIDF,UTL_GETUNIQUE_INT
-USE MOD_IDF, ONLY : IDFGETXYVAL,IDFREADSCALE,IDFWRITE,IDFREAD,IDFIROWICOL,IDFGETXYVAL,IDFGETLOC
+USE MOD_IDF, ONLY : IDFGETXYVAL,IDFREADSCALE,IDFWRITE,IDFREAD,IDFIROWICOL,IDFGETXYVAL,IDFGETLOC,IDFALLOCATEX
 USE MOD_OSD, ONLY : OSD_OPEN
 USE MOD_PREF_PAR, ONLY : PREFVAL
 
@@ -254,27 +254,49 @@ CONTAINS
    END SELECT
   CASE (FIELDCHANGED)
    SELECT CASE (MESSAGE%VALUE2)
-    CASE (IDF_RADIO3,IDF_RADIO4,IDF_RADIO5)
-     CALL GC_MAIN_TAB3_FIELDS(MESSAGE%VALUE2)
+    CASE (IDF_RADIO1,IDF_RADIO2,IDF_RADIO3,IDF_RADIO4,IDF_RADIO5)
+     CALL GC_MAIN_TAB3_FIELDS()
    END SELECT
  END SELECT
 
  END SUBROUTINE GC_MAIN_TAB3
 
  !###======================================================================
- SUBROUTINE GC_MAIN_TAB3_FIELDS(ID)
+ SUBROUTINE GC_MAIN_TAB3_FIELDS()
  !###======================================================================
  IMPLICIT NONE
- INTEGER,INTENT(IN) :: ID
  INTEGER :: I,J,K,IOPTION
  
- CALL WDIALOGGETRADIOBUTTON(ID,IOPTION)
+ CALL WDIALOGSELECT(ID_DGEOCONNECT_TAB3)
+
+ CALL WDIALOGGETRADIOBUTTON(IDF_RADIO3,IOPTION)
  SELECT CASE (IOPTION)
   CASE (1); I=1; J=0; K=0
   CASE (2); I=0; J=1; K=0
   CASE (3); I=0; J=0; K=1
  END SELECT
+ CALL WDIALOGFIELDSTATE(IDF_STRING2,I)
+ CALL WDIALOGFIELDSTATE(IDF_MENU1,I)
+ CALL WDIALOGFIELDSTATE(IDF_MENU2,J)
+ CALL WDIALOGFIELDSTATE(IDF_STRING3,K)
+ CALL WDIALOGFIELDSTATE(IDF_OPEN3,K)
   
+ CALL WDIALOGGETRADIOBUTTON(IDF_RADIO1,IOPTION)
+ SELECT CASE (IOPTION)
+  CASE (1); I=0
+  CASE (2); I=1
+ END SELECT
+ CALL WDIALOGFIELDSTATE(IDF_LABEL1,I)
+ CALL WDIALOGFIELDSTATE(IDF_LABEL2,I)
+ CALL WDIALOGFIELDSTATE(IDF_LABEL3,I)
+ CALL WDIALOGFIELDSTATE(IDF_LABEL4,I)
+ CALL WDIALOGFIELDSTATE(IDF_LABEL5,I)
+ CALL WDIALOGFIELDSTATE(IDF_REAL1,I)
+ CALL WDIALOGFIELDSTATE(IDF_REAL2,I)
+ CALL WDIALOGFIELDSTATE(IDF_REAL3,I)
+ CALL WDIALOGFIELDSTATE(IDF_REAL4,I)
+ CALL WDIALOGFIELDSTATE(IDF_REAL5,I)
+
  END SUBROUTINE GC_MAIN_TAB3_FIELDS
  
  !###======================================================================
@@ -369,10 +391,12 @@ CONTAINS
  IF(.NOT.GC_REGISFILES_PUT(ID_DGEOCONNECT_TAB2))RETURN
  IF(.NOT.GC_REGISFILES_PUT(ID_DGEOCONNECT_TAB3))RETURN
  
+ CALL GC_MAIN_TAB3_FIELDS()
+
  CALL WDIALOGSELECT(ID_DGEOCONNECT)
  CALL WDIALOGPUTIMAGE(ID_SAVEAS,ID_ICONSAVEAS) !## saveas
  CALL WDIALOGPUTIMAGE(ID_OPEN,ID_ICONOPEN)     !## open
-
+ 
  CALL WDIALOGSETTAB(ID_GCTAB,ID_DGEOCONNECT_TAB4)
  CALL WDIALOGFIELDSTATE(IDOK,0)
  CALL WDIALOGSHOW(-1,-1,0,2)
@@ -649,13 +673,13 @@ CONTAINS
     IF(Z1.GT.Z2)THEN
      F=(Z1-Z2)/(XTOP-XBOT)
      !## assign minimum values for aquitards
-     KVAL=10.0E10
+     KVAL=0.0
      !## found vertical permeability
      IF(IKVR.EQ.1)THEN
-      KVAL=MIN(KVAL,KVR%X(ICOL,IROW))
+      KVAL=MAX(KVAL,KVR%X(ICOL,IROW))
      !## if not, try the horizontal permeability
      ELSE
-      IF(IKHR.EQ.1)KVAL=MIN(KVAL,(0.3*KHR%X(ICOL,IROW)))
+      IF(IKHR.EQ.1)KVAL=MAX(KVAL,(0.3*KHR%X(ICOL,IROW)))
      ENDIF
      IF(KVAL.GT.0.0)THEN
       !## sum up the total resistance
@@ -1022,22 +1046,44 @@ CONTAINS
  !## read/scale idf's with model top and bot values
  IF(.NOT.GC_READ_MODELDATA(1))RETURN
 
- IF(.NOT.GC_IPEST_READ(TRIM(OUTPUTFOLDER)//'\factors.txt',IMODBATCH))RETURN
+ IF(.NOT.GC_IPEST_READ(TRIM(DBASEFOLDER)//'\factors.txt',IMODBATCH))RETURN
 
  ALLOCATE(IGRP(NLAYR)); IGRP=IPFAC%IGRP
 
  !## get number of unique groups
  CALL UTL_GETUNIQUE_INT(IGRP,NLAYR,NU)
+
+! SELECT CASE (IAGGR)
+!  !## model results
+!  CASE (1)
+!   CALL WDIALOGGETSTRING(IDF_STRING2,MODELFOLDER) 
+!   CALL WDIALOGGETMENU(IDF_MENU1,MODELTYPE) 
+!  !## model input
+!  CASE (2)
+!   CALL WDIALOGGETMENU(IDF_MENU2,INPUTTYPE) 
+!  !## ipf-file
+!  CASE (3)
+!   !## get ipffile
+!   CALL WDIALOGGETSTRING(IDF_STRING3,IPFFILE) 
+! END SELECT
+! CALL WDIALOGGETRADIOBUTTON(IDF_RADIO6,IAGGR_DUPLICATES)
+! !## get dbase-directory+name of outputfile
+! CALL WDIALOGGETSTRING(IDF_STRING4,OUTPUTFOLDER) 
+ 
+ IF(.NOT.IDFALLOCATEX(IDF))RETURN
+ CALL IDFCOPY(IDF,TOP); CALL IDFCOPY(IDF,BOT)
+ IF(.NOT.IDFALLOCATEX(TOP))RETURN
+ IF(.NOT.IDFALLOCATEX(BOT))RETURN
  
  !## do for each group
  DO I=1,NU
 
   CALL GC_POST_COMPUTE(IGRP(I))
  
+  !## save results
+  CALL GC_POST_COMPUTE_WRITE(IGRP(I),IMODBATCH)
+
  ENDDO
- 
- !## save results
-! CALL GC_POST_COMPUTE_WRITE(IMODBATCH)
 
  !## deallocate
  DEALLOCATE(IGRP)
@@ -1050,9 +1096,12 @@ CONTAINS
  IMPLICIT NONE
  INTEGER,INTENT(IN) :: IGRP
  INTEGER :: I,J,IKHR,IKVR,IROW,ICOL
- REAL :: TR,BR,TM,BM,FM,FP,Z1,Z2
+ REAL :: TR,BR,TM,BM,F,FM,FP,Z1,Z2,KVAL
  CHARACTER(LEN=52) :: FTYPE
   
+ !## initiate x()
+ IDF%X=0.0
+ 
  !## scan all files for current location
  DO I=1,NLAYR
   
@@ -1073,15 +1122,95 @@ CONTAINS
 
     !## model contains nodata - skip it
     TM=TOPM(J)%X(ICOL,IROW); BM=BOTM(J)%X(ICOL,IROW)
-    IF(TM.EQ.TOPM(J)%NODATA.OR.BM.EQ.BOTM(J)%NODATA)CYCLE
+    IF(TM.NE.TOPM(J)%NODATA.AND.BM.NE.BOTM(J)%NODATA)THEN
 
-    Z1=MIN(TR,TM); Z2=MAX(BR,BM)
-    IF(Z1.GT.Z2.AND.TM.GT.BM)THEN
-     !## fraction
-     FM=(Z1-Z2)/(TM-BM)
-     !## ipest factor
-     FP= IPFAC(I)%FACT
+     Z1=MIN(TR,TM); Z2=MAX(BR,BM)
+
+     !## aquifer
+     IF(Z1.GT.Z2.AND.TM.GT.BM)THEN
+
+      !## fraction
+      FM=(Z1-Z2)/(TM-BM)
+      !## ipest factor
+      FP= IPFAC(I)%FACT
+      !## final factor
+      F =FM*FP
+     
+      !## store total thickness
+      TOP%X(ICOL,IROW)=MAX(TOP%X(ICOL,IROW),Z1)
+      BOT%X(ICOL,IROW)=MAX(BOT%X(ICOL,IROW),Z2)
+
+      !## assign maximum k values for aquifers
+      KVAL=0.0
+      !## found horizontal permeability
+      IF(IKHR.EQ.1)THEN
+       KVAL=MAX(KVAL,KHR%X(ICOL,IROW))
+      !## if not, try vertical permeability
+      ELSE
+       IF(IKVR.EQ.1)KVAL=MAX(KVAL,(3.0*KVR%X(ICOL,IROW)))
+      ENDIF
+          
+      !## compute aggregate values
+      SELECT CASE (IAGGR)
+       CASE (1) !## modelresults
+
+       CASE (2) !## modelinput
+        SELECT CASE (INPUTTYPE)
+         CASE (1,3) !# kdw/khv
+          IDF%X(ICOL,IROW)=IDF%X(ICOL,IROW)+(Z1-Z2)*KVAL*F
+        END SELECT
+      END SELECT
+     
+     ENDIF
     ENDIF
+    
+    !## compute fractions for aquitards, resistance of aquitard
+    IF(J.LT.NLAYM)THEN
+     TM=BOTM(J)%X(ICOL,IROW); BM=TOPM(J+1)%X(ICOL,IROW)
+     IF(TM.NE.BOTM(J)%NODATA.AND.BM.NE.TOPM(J+1)%NODATA)THEN
+    
+      Z1=MIN(TR,TM); Z2=MAX(BR,BM)
+      !## fraction in aquitards
+      IF(Z1.GT.Z2)THEN
+
+       !## fraction
+       FM=(Z1-Z2)/(TM-BM)
+       !## ipest factor
+       FP= IPFAC(I)%FACT
+       !## final factor
+       F =FM*FP 
+
+       !## store total thickness
+       TOP%X(ICOL,IROW)=MAX(TOP%X(ICOL,IROW),Z1)
+       BOT%X(ICOL,IROW)=MAX(BOT%X(ICOL,IROW),Z2)
+
+       F=(Z1-Z2)/(TM-BM)
+
+       !## assign minimum values for aquitards
+       KVAL=0.0
+       !## found vertical permeability
+       IF(IKVR.EQ.1)THEN
+        KVAL=MAX(KVAL,KVR%X(ICOL,IROW))
+       !## if not, try the horizontal permeability
+       ELSE
+        IF(IKHR.EQ.1)KVAL=MAX(KVAL,(0.3*KHR%X(ICOL,IROW)))
+       ENDIF
+       IF(KVAL.GT.0.0)THEN
+
+        !## compute aggregate values
+        SELECT CASE (IAGGR)
+         CASE (1) !## modelresults
+         CASE (2) !## modelinput
+          SELECT CASE (INPUTTYPE)
+           CASE (2,4) !# vcw/kvv
+            IDF%X(ICOL,IROW)=IDF%X(ICOL,IROW)+(((Z1-Z2)/KVAL)*F)
+          END SELECT 
+        END SELECT
+      
+       ENDIF      
+      ENDIF
+     ENDIF
+    ENDIF   
 
    ENDDO
     
@@ -1089,41 +1218,66 @@ CONTAINS
   
  ENDDO
  
+ DO IROW=1,IDF%NROW; DO ICOL=1,IDF%NCOL
+  !## compute aggregate values
+  SELECT CASE (IAGGR)
+   CASE (1) !## modelresults
+   CASE (2) !## modelinput
+    SELECT CASE (INPUTTYPE)
+     CASE (3,4) !# khv
+      IF(TOP%X(ICOL,IROW)-BOT%X(ICOL,IROW).GT.0.0)THEN
+       IDF%X(ICOL,IROW)=IDF%X(ICOL,IROW)/(TOP%X(ICOL,IROW)-BOT%X(ICOL,IROW))
+      ELSE
+       IDF%X(ICOL,IROW)=IDF%NODATA
+      ENDIF
+    END SELECT
+  END SELECT
+ ENDDO; ENDDO
+ 
  END SUBROUTINE GC_POST_COMPUTE
  
   !###======================================================================
- SUBROUTINE GC_POST_COMPUTE_WRITE(IMODBATCH)
+ SUBROUTINE GC_POST_COMPUTE_WRITE(IGRP,IMODBATCH)
  !###======================================================================
  IMPLICIT NONE
- INTEGER,INTENT(IN) :: IMODBATCH !# =1 Only write to dos-window if started in batch modus
+ INTEGER,INTENT(IN) :: IGRP,IMODBATCH !# =1 Only write to dos-window if started in batch modus
  INTEGER :: I
- CHARACTER(LEN=256) :: LINE
+ CHARACTER(LEN=256) :: FNAME,FORMNAME
   
  IF(IMODBATCH.EQ.0)CALL WINDOWOUTSTATUSBAR(4,'Write data ...')
  IF(IMODBATCH.EQ.1)WRITE(*,'(A)') 'Write data ...'
 
-! !## option only write KHV, KVV and KVA
-! IF(ISAVEK.EQ.1)THEN 
-!  DO I=1,SIZE(KHVIDF); LINE=TRIM(OUTPUTFOLDER)//'\mdl_khv_l'//TRIM(ITOS(I))//'.idf'
-!   IF(.NOT.IDFWRITE(KHVIDF(I),TRIM(LINE),1))RETURN
-!  ENDDO
-!  DO I=1,SIZE(KVVIDF); LINE=TRIM(OUTPUTFOLDER)//'\mdl_kvv_l'//TRIM(ITOS(I))//'.idf'
-!   IF(.NOT.IDFWRITE(KVVIDF(I),TRIM(LINE),1))RETURN
-!  ENDDO
-!  DO I=1,SIZE(KVAIDF); LINE=TRIM(OUTPUTFOLDER)//'\mdl_kva_l'//TRIM(ITOS(I))//'.idf'
-!   IF(.NOT.IDFWRITE(KVAIDF(I),TRIM(LINE),1))RETURN
-!  ENDDO
-! ENDIF 
-! 
-! !## option only write KDW and VCW
-! IF(ISAVEC.EQ.1)THEN 
-!  DO I=1,SIZE(KDHIDF); LINE=TRIM(OUTPUTFOLDER)//'\mdl_kd_l'//TRIM(ITOS(I))//'.idf'
-!   IF(.NOT.IDFWRITE(KDHIDF(I),TRIM(LINE),1))RETURN
-!  ENDDO
-!  DO I=1,SIZE(CIDF); LINE=TRIM(OUTPUTFOLDER)//'\mdl_vc_l'//TRIM(ITOS(I))//'.idf'
-!   IF(.NOT.IDFWRITE(CIDF(I),TRIM(LINE),1))RETURN
-!  ENDDO
-! ENDIF
+ !## get outputname as contegated name of all formations
+ FORMNAME=''
+ DO I=1,NLAYR
+  !# skip this formation, not in current group
+  IF(IPFAC(I)%IGRP.NE.IGRP)CYCLE
+  FORMNAME=TRIM(FORMNAME)//'_'//TRIM(IPFAC(I)%FORM)
+ ENDDO
+ 
+ !## option save results
+ SELECT CASE (IAGGR)
+  CASE (1) !## modelresults
+  CASE (2) !## modelinput
+   SELECT CASE (INPUTTYPE)
+    CASE (1)
+     FNAME=TRIM(OUTPUTFOLDER)//'\'//TRIM(FORMNAME)//'_KDW.IDF'
+    CASE (2) !# vcw
+     FNAME=TRIM(OUTPUTFOLDER)//'\'//TRIM(FORMNAME)//'_VCW.IDF'
+    CASE (3) !# khv
+     FNAME=TRIM(OUTPUTFOLDER)//'\'//TRIM(FORMNAME)//'_KHV.IDF'
+    CASE (4) !# kvv
+     FNAME=TRIM(OUTPUTFOLDER)//'\'//TRIM(FORMNAME)//'_KVV.IDF'
+   END SELECT
+ END SELECT
+ IF(.NOT.IDFWRITE(IDF,FNAME,1))RETURN
+ 
+ IF(ISAVETB.EQ.1)THEN
+  FNAME=TRIM(OUTPUTFOLDER)//'\'//TRIM(FORMNAME)//'_TOP.IDF'
+  IF(.NOT.IDFWRITE(TOP,FNAME,1))RETURN
+  FNAME=TRIM(OUTPUTFOLDER)//'\'//TRIM(FORMNAME)//'_BOT.IDF'
+  IF(.NOT.IDFWRITE(BOT,FNAME,1))RETURN
+ ENDIF
  
  IF(IMODBATCH.EQ.0)THEN
   CALL WINDOWOUTSTATUSBAR(4,'')

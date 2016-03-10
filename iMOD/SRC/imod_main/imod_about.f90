@@ -465,7 +465,7 @@ NEWLINE// &
 NEWLINE// &
 '- The MODFLOW computational core (iMODFLOW):'//NEWLINE// &
 'iMODFLOW_'//TRIM(RVERSION)//'_X32R.exe and'//NEWLINE// &
-'iMODFLOW_'//TRIM(RVERSION)//'_METASWAP_SVN1044_X64R.exe:'//NEWLINE// &
+'iMODFLOW_'//TRIM(RVERSION)//'_METASWAP_SVN1047_X64R.exe:'//NEWLINE// &
 NEWLINE// &
 'iMODFLOW is partly based on the USGS MODFLOW2005 s'// &
 'ource code; for iMOD the USGS MODFLOW2005 source code has been expanded '// &
@@ -478,7 +478,7 @@ NEWLINE// &
 'this program. If not, see http://water.usgs.gov/software/help/notice.'//NEWLINE// &
 NEWLINE// &
 'The X64-bit iMODFLOW-executable includes the MetaSWAP-module '// &
-'SVN version number 1044, part of SIMGRO V7_2_27 as described '// &
+'SVN version number 1047, part of SIMGRO V7_2_27 as described '// &
 'in the SIMGRO-release notes ftp://ftp.wur.nl/simgro/doc/Change_log/ Release_Notes_'// &
 'SIMGRO_V7_2_27.pdf. '// &
 'MetaSWAP has been developed by Alterra - Wageningen UR. For more '// &
