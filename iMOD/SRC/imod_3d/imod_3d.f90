@@ -615,10 +615,10 @@ CONTAINS
   ALLOCATE(SOLPLOT(NSOLLIST))
   !## get display-list pointers
   ALLOCATE(SOLLISTINDEX(NSOLLIST,2))
-  SOLPLOT%ISEL=1
-  SOLPLOT%IBLEND=0
-  SOLPLOT%IINTERFACE=0
-  SOLPLOT%IBITMAP=0
+  SOLPLOT%ISEL=1       !## activate cross-section
+  SOLPLOT%IBLEND=100   !## opaque
+  SOLPLOT%IINTERFACE=0 !## filled polygon drawn
+  SOLPLOT%IBITMAP=0    !## don't show bitmap, but if available, show them
   !## fill display with solids
   IF(.NOT.IMOD3D_SOL())THEN
   !## error occured, what to do?

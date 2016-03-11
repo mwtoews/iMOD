@@ -560,17 +560,47 @@ CONTAINS
  CALL GLENABLE(GL_LIGHTING)
  CALL GLSHADEMODEL(GL_FLAT) !## heeft te maken met invullen kleuren
 
+!It depends on the effect you're trying to achieve.
+!
+!If you want blending to occur after the texture has been applied, then use the OpenGL blending feature. Try this:
+!
+!glEnable (GL_BLEND);
+!glBlendFunc (GL_ONE, GL_ONE);
+!You might want to use the alpha values that result from texture mapping in the blend function. If so,
+!(GL_SRC_ALPHA,GL_ONE_MINUS_SRC_ALPHA) is always a good function to start with.
+!
+!However, if you want blending to occur when the primitive is texture mapped (i.e., you want parts of the
+!texture map to allow the underlying color of the primitive to show through), then don't use OpenGL blending.
+!Instead, you'd use glTexEnv(), and set the texture environment mode to GL_BLEND. In this case, you'd want to leave
+!the texture environment color to its default value of (0,0,0,0).
+!
+!Column Header
+! CALL GLENABLE(GL_BLEND)
+
  DO I=1,NSOLLIST
 
   IF(SOLPLOT(I)%ISEL.EQ.0)CYCLE
   IF(SOLPLOT(I)%IBITMAP.EQ.1)CYCLE
   IF(SOLLISTINDEX(I,1).EQ.0)CYCLE
-  CALL GLBLENDFUNC(GL_ONE,GL_ZERO)  !## (1) source (2) destination
+
+!  CALL GLENABLE(GL_ALPHA_TEST)
+!  CALL GLALPHAFUNC(GL_NEVER,0.0_GLFLOAT) !GL_GREATER,0.0_GLFLOAT)
+  
+!  !## blend mode 
+!  IF(SOLPLOT(I)%IBLEND.LT.100)THEN
+   !## draw furthers first
+!   CALL GLBLENDFUNC(GL_SRC_ALPHA,GL_SRC_ALPHA) !GL_ONE_MINUS_SRC_ALPHA)  !## (1) source (2) destination
+!  ELSE
+!   !## opaque mode
+!   CALL GLBLENDFUNC(GL_ONE,GL_ZERO)  !## (1) source (2) destination
+!  ENDIF
+
+  !## not showing interfaces
   IF(SOLPLOT(I)%IINTERFACE.EQ.0)THEN 
    CALL GLENABLE(GL_LIGHTING)
-   IF(SOLPLOT(I)%IBLEND.EQ.1)THEN
-    CALL GLBLENDFUNC(GL_SRC_ALPHA,GL_ONE_MINUS_SRC_ALPHA)  !## (1) source (2) destination
-   ENDIF
+!   IF(SOLPLOT(I)%IBLEND.EQ.1)THEN
+!    CALL GLBLENDFUNC(GL_SRC_ALPHA,GL_ONE_MINUS_SRC_ALPHA)  !## (1) source (2) destination
+!   ENDIF
   ELSE
    CALL GLDISABLE(GL_LIGHTING)
   ENDIF
@@ -578,8 +608,8 @@ CONTAINS
  END DO
 
  CALL GLDISABLE(GL_LIGHTING)
-
- CALL GLDISABLE(GL_BLEND)
+! CALL GLDISABLE(GL_ALPHA_TEST)
+! CALL GLDISABLE(GL_BLEND)
 
  CALL GLCOLOR4F(1.0_GLFLOAT,1.0_GLFLOAT,1.0_GLFLOAT,1.0_GLFLOAT)
 

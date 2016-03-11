@@ -3832,11 +3832,12 @@ SOLLOOP: DO I=1,NSOLLIST
        XCOR(3)=(X(3)-MIDPOS%X)/VIEWDX; YCOR(3)=(Y(3)-MIDPOS%Y)/VIEWDY
        XCOR(4)= XCOR(3)          ; YCOR(4)= YCOR(3)
 
+       !## show filled in polygons
        IF(SOLPLOT(I)%IINTERFACE.EQ.0)THEN
 
         !## get color for z-mean between two segments
         IICLR=SLD(1)%INTCLR(IPROF)
-        CALL IMOD3D_SETCOLOR(IICLR) 
+        CALL IMOD3D_SETCOLOR(IICLR) !## include alpha
         !## show shaded surface
         CALL IMOD3D_RETURNCOLOR(IICLR,AMBIENT)
 
@@ -3852,6 +3853,7 @@ SOLLOOP: DO I=1,NSOLLIST
        
        ENDIF
        
+       !## show interfaces
        IF(SOLPLOT(I)%IINTERFACE.EQ.1)THEN
         IICLR=SPF(I)%PROF(IPROF)%ICLR
         CALL IMOD3D_SETCOLOR(IICLR) 
@@ -3867,6 +3869,7 @@ SOLLOOP: DO I=1,NSOLLIST
        !## draw bottom (only for the last)
        IF(IPROF.EQ.SIZE(SPF(I)%PROF)-1)THEN
 
+        !## show interfaces
         IF(SOLPLOT(I)%IINTERFACE.EQ.1)THEN
          IICLR=SPF(I)%PROF(IPROF+1)%ICLR
          CALL IMOD3D_SETCOLOR(IICLR)
@@ -3900,6 +3903,7 @@ SOLLOOP: DO I=1,NSOLLIST
 
  CALL WINDOWOUTSTATUSBAR(1,'')
 
+ !## read, process and stick bitmaps to cross-sections
  IMOD3D_SOL=IMOD3D_SOL_BMP(VIEWDX,VIEWDY) 
  !## read background again if this has been updated
  IREADBMP=0
@@ -3925,7 +3929,10 @@ SOLLOOP: DO I=1,NSOLLIST
   NSOLLIST=NSOLLIST+1
   SOLLISTINDEX(NSOLLIST,2)=0
   IF(SPF(I)%PBITMAP%IACT.EQ.0)CYCLE
- 
+  
+  !## skip whenever interfaces need to be drawn
+  IF(SOLPLOT(NSOLLIST)%IINTERFACE.EQ.1)THEN; SOLPLOT(NSOLLIST)%IBITMAP=0; CYCLE; ENDIF
+  
   !## list index for
   SOLLISTINDEX(NSOLLIST,2)=GLGENLISTS(1)
   IF(SOLLISTINDEX(NSOLLIST,2).NE.0)CALL GLDELETELISTS(SOLLISTINDEX(NSOLLIST,2),1_GLSIZEI)
@@ -3985,7 +3992,7 @@ SOLLOOP: DO I=1,NSOLLIST
   CALL GLENDLIST()
 
   SOLPLOT(NSOLLIST)%IBITMAP=1
-
+  
  ENDDO
  
  IMOD3D_SOL_BMP=.TRUE.
@@ -4042,7 +4049,12 @@ SOLLOOP: DO I=1,NSOLLIST
    CALL IMOD3D_RETURNCOLOR(IBMPDATA(I),FRGB(J))
    !## mask out white, to be translucent (make pure black=background)
    IF(IALPHA.EQ.1)THEN
-    FRGB(J+3)=ALPHA !## alpha value
+!    !## white(iss)
+!    IF(FRGB(I).EQ.1.0)THEN
+!     FRGB(J+3)=0.0_GLFLOAT !ALPHA !## alpha value
+!    ELSE
+     FRGB(J+3)=1.0_GLFLOAT !ALPHA !## alpha value
+!    ENDIF
    ENDIF
   ENDDO
  ENDDO
@@ -4052,8 +4064,12 @@ SOLLOOP: DO I=1,NSOLLIST
  !## sets the drawing mode to GL_DECAL so that the textured
  !## polygons are drawn using the colors from the texture map (rather than taking into account what color the polygons
  !## would have been drawn without the texture)
+
+! CALL GLTEXENVI(GL_TEXTURE_ENV,GL_TEXTURE_ENV_MODE,GL_BLEND)
+! CALL GLTEXENVI(GL_TEXTURE_ENV,GL_TEXTURE_ENV_COLOR,GL_RGBA)
+
  CALL GLTEXENVI(GL_TEXTURE_ENV,GL_TEXTURE_ENV_MODE,GL_MODULATE)
- CALL GLCOLOR4F(1.0_GLFLOAT,1.0_GLFLOAT,1.0_GLFLOAT,1.0_GLFLOAT)
+ CALL GLCOLOR4F(1.0_GLFLOAT,1.0_GLFLOAT,1.0_GLFLOAT,0.0_GLFLOAT) !1.0_GLFLOAT)
 
  !## it describes how the bitmap data is stored in computer memory
  CALL GLPIXELSTOREI(GL_UNPACK_ALIGNMENT,1)
