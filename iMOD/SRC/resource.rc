@@ -8,7 +8,7 @@
 //
 // Winteracter resource script. 
 //
-// Modified : 10/Mar/2016 15:31:06
+// Modified : 12/Mar/2016 19:59:20
 //
 ///////////////////////////////////////////////////
 //
@@ -1115,6 +1115,8 @@
 #define ID_IDENTIFY                      1280
 #define IDD_TEMPLATE054                   369
 #define ID_OPEN9                         1071
+#define ID_FLIPBITMAP_HORIZONTAL        40282
+#define ID_FLIPBITMAP_VERTICAL          40283
 
 ///////////////////////////////////////////////////
 //
@@ -10659,6 +10661,8 @@ BEGIN
             MENUITEM "Hide Background Image",                    ID_HIDEBITMAP
             MENUITEM "Fixate Background Image",                  ID_FIXBITMAP
             MENUITEM "Remove Background Image ...",              ID_REMOVEBITMAP
+            MENUITEM "Flip Horizontally",                        ID_FLIPBITMAP_HORIZONTAL
+            MENUITEM "Flip Vertically",                          ID_FLIPBITMAP_VERTICAL
         END
         MENUITEM SEPARATOR
         MENUITEM "&Show Background Image(s)",                ID_TOPOGRAPHY
@@ -11247,9 +11251,13 @@ BEGIN
     MENUITEM "Draw Lines as Splines",                    ID_DRAWLINEASSPLINE
     MENUITEM SEPARATOR
     MENUITEM "Open Background Image ...",                ID_BITMAP
-    MENUITEM "Hide Background Image",                    ID_HIDEBITMAP
-    MENUITEM "Fixate Background Image",                  ID_FIXBITMAP
     MENUITEM "Remove Background Image ...",              ID_REMOVEBITMAP
+    MENUITEM SEPARATOR
+    MENUITEM "Hide Background Image",                    ID_HIDEBITMAP
+    MENUITEM "Lock Background Image",                    ID_FIXBITMAP
+    MENUITEM SEPARATOR
+    MENUITEM "Flip Background Image Horizontally ...",   ID_FLIPBITMAP_HORIZONTAL
+    MENUITEM "Flip Background Image Vertically ...",     ID_FLIPBITMAP_VERTICAL
 END
 
 ID_WTIMENU RCDATA
@@ -11265,9 +11273,11 @@ ID_SELECTNODES,"Click this option to select nodes\0",
 ID_ACTIVELINE,"Select this Item to Select the line for processing in the solid\0",
 ID_DEACTIVELINE,"Select this Item to Select the line to skip for processing in the solid\0",
 ID_HIDEBITMAP,"Hide the Attached Background Image\0",
-ID_FIXBITMAP,"Fixate the Background Image, so it will not move anymore\0",
-ID_REMOVEBITMAP,"Remove the Background Image\0",
+ID_FIXBITMAP,"Lock the Background Image, so it will not move anymore\0",
+ID_FLIPBITMAP_HORIZONTAL,"Flip Background Image Horizontally\0",
 ID_BITMAP,"Open Background Image to Attach to Cross-Section\0",
+ID_REMOVEBITMAP,"Remove the Background Image\0",
+ID_FLIPBITMAP_VERTICAL,"Flip Background Image Vertically\0",
 0
 END
 
@@ -11624,5 +11634,5 @@ END
 //*WI* FORTSAVE    1
 //*WI* FILENAME    resource.f90
 //*WI* FMODNAME    RESOURCE
-//*WI* LASTTYPE        2
-//*WI* LASTRES       277
+//*WI* LASTTYPE        1
+//*WI* LASTRES        12

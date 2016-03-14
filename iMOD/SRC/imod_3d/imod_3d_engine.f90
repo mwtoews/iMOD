@@ -4027,7 +4027,7 @@ SOLLOOP: DO I=1,NSOLLIST
  ENDIF
 
  ALPHA=0.75_GLFLOAT
- IALPHA=1
+ IALPHA=0
 
  ALLOCATE(FRGB(IWIDTH*IHEIGHT*(3+IALPHA)),STAT=IOS)
  IF(IOS.NE.0)THEN
@@ -4049,12 +4049,12 @@ SOLLOOP: DO I=1,NSOLLIST
    CALL IMOD3D_RETURNCOLOR(IBMPDATA(I),FRGB(J))
    !## mask out white, to be translucent (make pure black=background)
    IF(IALPHA.EQ.1)THEN
-!    !## white(iss)
-!    IF(FRGB(I).EQ.1.0)THEN
-!     FRGB(J+3)=0.0_GLFLOAT !ALPHA !## alpha value
-!    ELSE
+    !## white
+    IF(FRGB(I).EQ.1.0)THEN
+     FRGB(J+3)=0.0_GLFLOAT !ALPHA !## alpha value
+    ELSE
      FRGB(J+3)=1.0_GLFLOAT !ALPHA !## alpha value
-!    ENDIF
+    ENDIF
    ENDIF
   ENDDO
  ENDDO
@@ -4065,11 +4065,16 @@ SOLLOOP: DO I=1,NSOLLIST
  !## polygons are drawn using the colors from the texture map (rather than taking into account what color the polygons
  !## would have been drawn without the texture)
 
-! CALL GLTEXENVI(GL_TEXTURE_ENV,GL_TEXTURE_ENV_MODE,GL_BLEND)
-! CALL GLTEXENVI(GL_TEXTURE_ENV,GL_TEXTURE_ENV_COLOR,GL_RGBA)
+ IF(IALPHA.EQ.0)THEN
+  !## print image over the polygons
+  CALL GLTEXENVI(GL_TEXTURE_ENV,GL_TEXTURE_ENV_MODE,GL_DECAL) !MODULATE)
+ ELSE
+  CALL GLTEXENVI(GL_TEXTURE_ENV,GL_TEXTURE_ENV_MODE,GL_BLEND)
+  CALL GLTEXENVFV(GL_TEXTURE_ENV,GL_TEXTURE_ENV_COLOR,FRGB) !GL_RGBA)
+ ENDIF
 
- CALL GLTEXENVI(GL_TEXTURE_ENV,GL_TEXTURE_ENV_MODE,GL_MODULATE)
- CALL GLCOLOR4F(1.0_GLFLOAT,1.0_GLFLOAT,1.0_GLFLOAT,0.0_GLFLOAT) !1.0_GLFLOAT)
+!kan weg
+! CALL GLCOLOR4F(1.0_GLFLOAT,1.0_GLFLOAT,1.0_GLFLOAT,0.0_GLFLOAT) !1.0_GLFLOAT)
 
  !## it describes how the bitmap data is stored in computer memory
  CALL GLPIXELSTOREI(GL_UNPACK_ALIGNMENT,1)

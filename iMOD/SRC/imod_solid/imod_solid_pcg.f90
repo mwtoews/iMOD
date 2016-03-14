@@ -1832,7 +1832,7 @@ CONTAINS
  DO IROW=1,NROW; DO ICOL=1,NCOL
   IF(Y(ICOL,IROW).EQ.0.AND.PCG(ILAY)%IB(ICOL,IROW).GT.0)THEN
    IP=1
-   CALL SOLID_TRACE(IROW,ICOL,PCG(ILAY)%IB,PCG(1)%CC,PCG(1)%CR,Y,THREAD,ISPEC,YSEL,N,NROW, &
+   CALL SOLID_TRACE_2D(IROW,ICOL,PCG(ILAY)%IB,PCG(1)%CC,PCG(1)%CR,Y,THREAD,ISPEC,YSEL,N,NROW, &
                     NCOL,IP,LCNST,MAXTHREAD,MAXN)
    !## no constant head attached, remove group of cells
    IF(.NOT.LCNST)THEN
@@ -1852,7 +1852,7 @@ CONTAINS
  END SUBROUTINE SOLID_CHECKIBND
 
  !###======================================================================
- SUBROUTINE SOLID_TRACE(IROW,ICOL,IB,CC,CR,Y,THREAD,ISPEC,YSEL,N,NROW,NCOL,IP,LCNST,MAXTHREAD,MAXN)
+ SUBROUTINE SOLID_TRACE_2D(IROW,ICOL,IB,CC,CR,Y,THREAD,ISPEC,YSEL,N,NROW,NCOL,IP,LCNST,MAXTHREAD,MAXN)
  !###======================================================================
  IMPLICIT NONE
  REAL,INTENT(IN),DIMENSION(NCOL,NROW) :: CC,CR
@@ -1893,7 +1893,7 @@ CONTAINS
   !## get direction and do not use this direction again!
   IDIR          =ISPEC(NTHREAD)+1
   ISPEC(NTHREAD)=IDIR
-  CALL SOLID_GETDIR(JCOL,JROW,IR,IC,IDIR)
+  CALL SOLID_GETDIR_2D(JCOL,JROW,IR,IC,IDIR)
 
   !## possible direction found
   IF(IDIR.LE.4)THEN
@@ -1908,10 +1908,10 @@ CONTAINS
      !## check whether cc/cr/cv are not zero
      LEX=.TRUE.
      SELECT CASE (IDIR)
-      CASE (1); IF(CC(IC,IR).LE.0.0)LEX=.FALSE. !## north
-      CASE (2); IF(CR(IC-1,IR).LE.0.0)LEX=.FALSE.        !## east
-      CASE (3); IF(CC(IC,IR-1).LE.0.0)LEX=.FALSE.        !## south
-      CASE (4); IF(CR(IC,IR).LE.0.0)LEX=.FALSE. !## west
+      CASE (1); IF(CC(IC,IR).LE.0.0)LEX=.FALSE.   !## north
+      CASE (2); IF(CR(IC-1,IR).LE.0.0)LEX=.FALSE. !## east
+      CASE (3); IF(CC(IC,IR-1).LE.0.0)LEX=.FALSE. !## south
+      CASE (4); IF(CR(IC,IR).LE.0.0)LEX=.FALSE.   !## west
      END SELECT
 
      IF(LEX)THEN
@@ -1955,24 +1955,152 @@ CONTAINS
   ENDIF
  END DO
 
- END SUBROUTINE SOLID_TRACE
+ END SUBROUTINE SOLID_TRACE_2D
 
  !###====================================================
- SUBROUTINE SOLID_GETDIR(JCOL,JROW,IR,IC,IDIR)
+ SUBROUTINE SOLID_GETDIR_2D(JCOL,JROW,IR,IC,IDIR)
  !###====================================================
  IMPLICIT NONE
- INTEGER,INTENT(IN)     :: JCOL,JROW
- INTEGER,INTENT(OUT)    :: IC,IR
+ INTEGER,INTENT(IN) :: JCOL,JROW
+ INTEGER,INTENT(OUT) :: IC,IR
  INTEGER,INTENT(IN OUT) :: IDIR
 
- !##get new direction to search in
- IC=JCOL
- IR=JROW
+ !## get new direction to search in
+ IC=JCOL; IR=JROW
+ 
  IF(IDIR.EQ.1)IR=IR-1
  IF(IDIR.EQ.2)IC=IC+1
  IF(IDIR.EQ.3)IR=IR+1
  IF(IDIR.EQ.4)IC=IC-1
 
- END SUBROUTINE SOLID_GETDIR
+ END SUBROUTINE SOLID_GETDIR_2D
+  
+ !###======================================================================
+ SUBROUTINE SOLID_TRACE_3D(ILAY,IROW,ICOL,IB,Y,NLAY,NROW,NCOL,IP,MAXTHREAD,MAXN,PCOUNT,PSIZE)
+ !###======================================================================
+ IMPLICIT NONE
+ INTEGER,INTENT(IN) :: NCOL,NROW,NLAY,ILAY,IROW,ICOL
+ INTEGER,INTENT(INOUT) :: IP,MAXTHREAD,MAXN
+ INTEGER(KIND=1),DIMENSION(NCOL,NROW,NLAY),INTENT(INOUT) :: Y
+ INTEGER,INTENT(IN),DIMENSION(NCOL,NROW,NLAY) :: IB
+ INTEGER,INTENT(OUT),DIMENSION(:) :: PCOUNT,PSIZE
+ INTEGER :: NTHREAD,IR,IC,IL,IDIR,JROW,JCOL,JLAY,N1,N2,N3,M1,M2,I,N
+ INTEGER(KIND=1),POINTER,DIMENSION(:) :: ISPEC,ISPEC_BU
+ INTEGER(KIND=2),POINTER,DIMENSION(:,:) :: YSEL,YSEL_BU,THREAD,THREAD_BU
+ LOGICAL :: LEX
+
+ ALLOCATE(ISPEC(MAXTHREAD),THREAD(3,MAXTHREAD),YSEL(3,MAXTHREAD))
+
+ !## copy current location
+ JCOL=ICOL; JROW=IROW; JLAY=ILAY
+
+ !## define first point in thread
+ NTHREAD          =1
+ THREAD(1,NTHREAD)=JCOL; THREAD(2,NTHREAD)=JROW; THREAD(3,NTHREAD)=JLAY
+ ISPEC(NTHREAD)   =0
+ Y(JCOL,JROW,JLAY)=IP
+
+ N=1; YSEL(1,N)=JCOL; YSEL(2,N)=JROW; YSEL(3,N)=JLAY
+
+ DO WHILE(NTHREAD.GT.0)
+
+  !## get row/column number current location in thread
+  JCOL=THREAD(1,NTHREAD); JROW=THREAD(2,NTHREAD); JLAY=THREAD(3,NTHREAD)
+
+  !## get direction and do not use this direction again!
+  IDIR          =ISPEC(NTHREAD)+1
+  ISPEC(NTHREAD)=IDIR
+  CALL SOLID_GETDIR_3D(JCOL,JROW,JLAY,IL,IR,IC,IDIR)
+
+  !## possible direction found
+  IF(IDIR.LE.6)THEN
+
+   !## existing location in grid
+   IF(IR.GE.1.AND.IR.LE.NROW.AND. &
+      IC.GE.1.AND.IC.LE.NCOL.AND. &
+      IL.GE.1.AND.IL.LE.NLAY)THEN
+
+    IF(Y(IC,IR,IL).EQ.0.AND. &         !## not yet been there
+       IB(IC,IR,IL).NE.0)THEN          !## correct location
+
+     !## check whether cc/cr/cv are not zero
+     LEX=.TRUE.
+!     SELECT CASE (IDIR)
+!      CASE (1); IF(IB(IC,IR,IL).LE.0.0)LEX=.FALSE.   !## north
+!      CASE (2); IF(IB(IC-1,IR,IL).LE.0.0)LEX=.FALSE. !## east
+!      CASE (3); IF(IB(IC,IR-1,IL).LE.0.0)LEX=.FALSE. !## south
+!      CASE (4); IF(IB(IC,IR,IL).LE.0.0)LEX=.FALSE.   !## west
+!      CASE (5); IF(IB(IC,IR,IL).LE.0.0)LEX=.FALSE.   !## up
+!      CASE (6); IF(IB(IC,IR,IL-1).LE.0.0)LEX=.FALSE. !## down
+!     END SELECT
+
+     IF(LEX)THEN
+      Y(IC,IR,IL)=IP; NTHREAD=NTHREAD+1
+     
+      IF(NTHREAD+1.GT.MAXTHREAD)THEN
+       N1=SIZE(THREAD,1); N2=SIZE(THREAD,2); N3=SIZE(ISPEC,1)
+       MAXTHREAD=MIN(NROW*NCOL*NLAY,2*MAXTHREAD)
+       ALLOCATE(THREAD_BU(N1,MAXTHREAD),ISPEC_BU(MAXTHREAD))
+       THREAD_BU(1:N1,1:N2)=THREAD(1:N1,1:N2); ISPEC_BU(1:N3)=ISPEC(1:N3)
+       DEALLOCATE(THREAD,ISPEC)
+       THREAD=>THREAD_BU; ISPEC=>ISPEC_BU
+      ENDIF
+
+      THREAD(1,NTHREAD)=IC; THREAD(2,NTHREAD)=IR; THREAD(3,NTHREAD)=IL
+      ISPEC(NTHREAD)   =0
+      !## correct places visited
+      N=N+1
+     
+      IF(N+1.GT.MAXN)THEN
+       M1=SIZE(YSEL,1); M2=SIZE(YSEL,2)
+       MAXN=MIN(NROW*NCOL*NLAY,2*MAXN)
+       ALLOCATE(YSEL_BU(M1,MAXN)); YSEL_BU(1:M1,1:M2)=YSEL(1:M1,1:M2)
+       DEALLOCATE(YSEL); YSEL=>YSEL_BU
+      ENDIF
+
+      YSEL(1,N)=IC; YSEL(2,N)=IR; YSEL(3,N)=IL
+
+     ENDIF
+    
+    ENDIF
+   ENDIF
+
+  ELSE
+   !## no more places to go, move one step backwards in thread
+   NTHREAD=NTHREAD-1
+  ENDIF
+ END DO
+
+ !## no constant head attached, remove group of cells
+ DO I=1,SIZE(PCOUNT)
+  PCOUNT(I)=PCOUNT(I)+N/PSIZE(I)
+ ENDDO
+! DO I=1,N
+!  IC=YSEL(1,I); IR=YSEL(2,I); IL=YSEL(3,I)
+! ENDDO
+ 
+ DEALLOCATE(THREAD,ISPEC,YSEL)
+
+ END SUBROUTINE SOLID_TRACE_3D
+
+ !###====================================================
+ SUBROUTINE SOLID_GETDIR_3D(JCOL,JROW,JLAY,IL,IR,IC,IDIR)
+ !###====================================================
+ IMPLICIT NONE
+ INTEGER,INTENT(IN) :: JCOL,JROW,JLAY
+ INTEGER,INTENT(OUT) :: IC,IR,IL
+ INTEGER,INTENT(IN OUT) :: IDIR
+
+ !## get new direction to search in
+ IC=JCOL; IR=JROW; IL=JLAY
+ 
+ IF(IDIR.EQ.1)IR=IR-1
+ IF(IDIR.EQ.2)IC=IC+1
+ IF(IDIR.EQ.3)IR=IR+1
+ IF(IDIR.EQ.4)IC=IC-1
+ IF(IDIR.EQ.5)IL=IL-1
+ IF(IDIR.EQ.6)IL=IL+1
+
+ END SUBROUTINE SOLID_GETDIR_3D
   
 END MODULE MOD_SOLID_PCG
