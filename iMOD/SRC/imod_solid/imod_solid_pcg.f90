@@ -2025,14 +2025,6 @@ CONTAINS
 
      !## check whether cc/cr/cv are not zero
      LEX=.TRUE.
-!     SELECT CASE (IDIR)
-!      CASE (1); IF(IB(IC,IR,IL).LE.0.0)LEX=.FALSE.   !## north
-!      CASE (2); IF(IB(IC-1,IR,IL).LE.0.0)LEX=.FALSE. !## east
-!      CASE (3); IF(IB(IC,IR-1,IL).LE.0.0)LEX=.FALSE. !## south
-!      CASE (4); IF(IB(IC,IR,IL).LE.0.0)LEX=.FALSE.   !## west
-!      CASE (5); IF(IB(IC,IR,IL).LE.0.0)LEX=.FALSE.   !## up
-!      CASE (6); IF(IB(IC,IR,IL-1).LE.0.0)LEX=.FALSE. !## down
-!     END SELECT
 
      IF(LEX)THEN
       Y(IC,IR,IL)=IP; NTHREAD=NTHREAD+1
