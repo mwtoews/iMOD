@@ -530,8 +530,6 @@ IF(iact.gt.0)THEN
   IDF(I)%X=0.0
  ENDDO
 
-!WRITE(*,*) 2,NISG,SUM(IDF(1)%X)
-
  !## create grid with waterlevels,bottomlevels and resistances
  DO I=1,NISG
   IROW=ISGLIST(I,2); ICOL=ISGLIST(I,3)
@@ -558,8 +556,6 @@ IF(iact.gt.0)THEN
   ENDIF
  ENDDO; ENDDO
   
-!WRITE(*,*) 22,NISG,SUM(IDF(1)%X)
-
  !## existence of two-dimensional cross-sections
  IF(N2DIM.GT.0)THEN ! .and. iact.gt.0)THEN
 
@@ -630,9 +626,6 @@ IF(iact.gt.0)THEN
 
  !## reuse isg from the grid, that is the consequence of using 2d cross-sections
  NISG=0
-
-!WRITE(*,*) 3,NISG,SUM(IDF(1)%X),IDF(1)%X(10,10)
-
  DO IROW=1,NROW; DO ICOL=1,NCOL
   IF(IDF(1)%X(ICOL,IROW).GT.0.0)THEN
    NISG=NISG+1
@@ -649,8 +642,6 @@ IF(iact.gt.0)THEN
 
   ENDIF
  ENDDO; ENDDO
-
-!WRITE(*,*) 4,NISG
 
  CALL IDFDEALLOCATE(IDF,SIZE(IDF))
  CALL IMOD_UTL_PRINTTEXT('Finished gridding 2d cross-sections, no. of isg elements '//TRIM(IMOD_UTL_ITOS(NISG)),0)
@@ -1367,7 +1358,7 @@ END SUBROUTINE
  REAL :: W,L,X,Y,X1,Y1,F
  REAL,ALLOCATABLE,DIMENSION(:,:) :: MM
  REAL,DIMENSION(4) :: V
-  
+ 
  W=0; DO IROW=1,IDF(1)%NROW; DO ICOL=1,IDF(1)%NCOL
   W=MAX(W,IDF(7)%X(ICOL,IROW))
  ENDDO; ENDDO
@@ -1384,8 +1375,6 @@ END SUBROUTINE
    IDF(1)%X(ICOL,IROW)=IDF(1)%X(ICOL,IROW)*IDF(5)%DX/L*IDF(5)%DX/W
   ENDIF
  ENDDO; ENDDO
-
-! write(*,*) 'a1',sum(idf(1)%x),idf(1)%x(10,10),idf(8)%x(10,10)
  
  WRITE(*,'(A)') 'Start computing erosion matrix' 
  DO IROW=1,IDF(1)%NROW
@@ -1460,9 +1449,6 @@ END SUBROUTINE
  ENDDO
  WRITE(*,'(A)') 'Finished computing erosion matrix' 
 
-! write(*,*) 'a2',sum(idf(1)%x),idf(1)%x(10,10),idf(8)%x(10,10)
-! write(*,*) 'a22',IDF%NODATA
-
  DO IROW=1,IDF(1)%NROW; DO ICOL=1,IDF(1)%NCOL
   DO I=1,4
    IF(IDF(8)%X(ICOL,IROW).GT.0.0)IDF(I)%X(ICOL,IROW)=IDF(I)%X(ICOL,IROW)/IDF(8)%X(ICOL,IROW)
@@ -1470,15 +1456,11 @@ END SUBROUTINE
   ENDDO
  ENDDO; ENDDO
 
-! write(*,*) 'a3',sum(idf(1)%x),idf(1)%x(10,10)
-
  !## correct to be sure multiplication matrix does not exceed factor 1.0 and multiply conductance with erosion matrix
  DO IROW=1,IDF(1)%NROW; DO ICOL=1,IDF(1)%NCOL
   IF(IDF(8)%X(ICOL,IROW).GT.1.0)IDF(8)%X(ICOL,IROW)=1.0
   IDF(1)%X(ICOL,IROW)=IDF(1)%X(ICOL,IROW)*IDF(8)%X(ICOL,IROW)
  ENDDO; ENDDO
-
-! write(*,*) 'a4',sum(idf(1)%x),idf(1)%x(10,10)
 
  !## clean for conductances le zero
  DO IROW=1,IDF(1)%NROW; DO ICOL=1,IDF(1)%NCOL
@@ -1486,8 +1468,6 @@ END SUBROUTINE
    DO I=1,4; IDF(I)%X(ICOL,IROW)=IDF(I)%NODATA; ENDDO
   ENDIF
  ENDDO; ENDDO
-
-! write(*,*) 'a5',sum(idf(1)%x),idf(1)%x(10,10)
 
  DEALLOCATE(MM)
   

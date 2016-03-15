@@ -599,6 +599,8 @@ IF(IFLAG(2).GT.0)THEN
 ENDIF
 
 IF(IEXPORT.EQ.1.OR.IEXPORT.EQ.2)IIDEBUG=0
+debugflag = iidebug
+
 IF(IEXPORT.EQ.1.AND..NOT.LQD)   CALL IMOD_UTL_PRINTTEXT('MODFLOW export #1 not sustained in comination with non-equidistantial networks',2)
 IF(IEXPORT.LT.0.OR.IEXPORT.GT.5)CALL IMOD_UTL_PRINTTEXT('IEXPORT should be 1 <= IEXPORT <= 5',2)
 IF(NMULT.GE.1.AND.NSCL.EQ.0)    CALL IMOD_UTL_PRINTTEXT('You can not combine nmult.ge.1. with given raster definition (nscl.eq.0)',2)

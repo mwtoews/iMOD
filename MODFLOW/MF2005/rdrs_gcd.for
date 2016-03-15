@@ -224,11 +224,8 @@ c                  check if file is of type isg
                   deallocate(isglist(isub)%list)
                   nalloc = 2*isglist(isub)%nlist+nrow*ncol
                   allocate(isglist(isub)%list(nalloc,11))
-!                  write(*,*) NALLOC,isglist(isub)%nlist
                   call pck1rpisg(isglist(isub)%list,nalloc,
      1               isglist(isub)%nlist,fname,ilay(isub),1)
-!                  write(*,*) NALLOC,isglist(isub)%nlist
-!                  PAUSE
                   read(in,'(a)') line
                else
 c                    read basic fields
@@ -353,14 +350,14 @@ c              check if subsystem is of type ISG
                            end if
                         end do
                       end do
-                  else
-                     nisg = isglist(isub)%nlist
-                     if (jact.eq.2) isglist2 = isglist(isub)%list
-                  end if
-                  if (jact.eq.1) then
-                     if (allocated(isglist2)) deallocate(isglist2)
-                     allocate(isglist2(max(nisg,1),11))
-                  end if
+                   else
+                      nisg = isglist(isub)%nlist
+                      if (jact.eq.2) isglist2 = isglist(isub)%list
+                   end if
+                   if (jact.eq.1) then
+                      if (allocated(isglist2)) deallocate(isglist2)
+                      allocate(isglist2(max(nisg,1),11))
+                   end if
                end do
 
                call pck3rpisg(isglist2,nisg)
@@ -451,7 +448,6 @@ c              check if subsystem is of type ISG
                rlist=0.0
             end if
          end if ! iact = 1
-         
       end do ! iact
 
 c deallocate data

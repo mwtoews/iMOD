@@ -528,6 +528,7 @@
       type(tEvt), public, save :: evt
 
       character(len=8), public, save :: starttime
+      integer, public, save :: debugflag = 0
 
       public :: AllocNam,AllocDis,AllocBas,AllocBcf,AllocMet,AllocOc, &
                 AllocRiv,AllocDrn,AllocGhb,AllocWel,AllocAni,AllocHfb,AllocRch,AllocEvt,AllocChd,AllocPcg,AllocScr,AllocPwt
@@ -1840,8 +1841,10 @@
       end if
       n = n + 1
       write(str(n),*) luncb
-!      n = n + 1
-!      write(str(n),*) 'print' !noprint'
+      if (debugflag.eq.0) then
+         n = n + 1
+         write(str(n),*) 'noprint'
+      end if
       if (riv%ifvdl) then
          n = n + 1
          write(str(n),*) 'ifvdl'
@@ -1999,8 +2002,10 @@
       end if
       n = n + 1
       write(str(n),*) luncb
-      n = n + 1
-      write(str(n),*) 'noprint'
+      if (debugflag.eq.0) then
+         n = n + 1
+         write(str(n),*) 'noprint'
+      end if
       if (drn%dsubsys) then
          n = n + 1
          write(str(n),*) 'aux isub'
@@ -2070,8 +2075,10 @@
       end if
       n = n + 1
       write(str(n),*) luncb
-      n = n + 1
-      write(str(n),*) 'noprint'
+      if (debugflag.eq.0) then
+         n = n + 1
+         write(str(n),*) 'noprint'
+      end if
       write(nstr,*) n
       write(lun,'('//trim(nstr)//'(a,1x))')(trim(adjustl(str(i))), i = 1, n)
 
@@ -2124,8 +2131,10 @@
       end if
       n = n + 1
       write(str(n),*) luncb
-      n = n + 1
-      write(str(n),*) 'noprint'
+      if (debugflag.eq.0) then
+         n = n + 1
+         write(str(n),*) 'noprint'
+      end if
       write(nstr,*) n
       write(lun,'('//trim(nstr)//'(a,1x))')(trim(adjustl(str(i))), i = 1, n)
 
@@ -2169,9 +2178,10 @@
       write(str(n),*) hfb%mxfb
       n = n + 1
       write(str(n),*) hfb%nhfbnp
-      n = n + 1
-      write(str(n),*) 'noprint'
-
+      if (debugflag.eq.0) then
+         n = n + 1
+         write(str(n),*) 'noprint'
+      end if
       if(dis%settop .and. dis%setbot) then
          n = n + 1
          write(str(n),*) 'hfbresis'
@@ -2455,8 +2465,10 @@
 !...     write mxactc
       n = 1
       write(str(n),*) chd%mxactc
-      n = n + 1
-      write(str(n),*) 'noprint'
+      if (debugflag.eq.0) then
+         n = n + 1
+         write(str(n),*) 'noprint'
+      end if   
       if (chd%negbnd) then
          n = n + 1
          write(str(n),*) 'negbnd'
