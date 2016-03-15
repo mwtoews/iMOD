@@ -8,13 +8,13 @@
 //
 // Winteracter resource script. 
 //
-// Modified : 12/Mar/2016 19:59:20
+// Modified : 15/Mar/2016 10:48:34
 //
 ///////////////////////////////////////////////////
 //
 // Include files
 //
-#include "..\LIB\WINTERACTER\OS_X32\include\winparam.h"
+#include "winparam.h"
 #ifdef XLIB
 #include "..\LIB\WINTERACTER\OS_X32\include\filesel.rc"
 #include "..\LIB\WINTERACTER\OS_X32\include\colour.rc"
@@ -10794,7 +10794,7 @@ BEGIN
         MENUITEM "&TimeSerie Tool ...",                      ID_TIMESERIES
         MENUITEM "&3D Tool ...",                             ID_3DTOOL
         MENUITEM "&Solid Tool ...",                          ID_SOLIDS
-        MENUITEM "&GeoConnect Tool ...",                     ID_GEOCONNECT
+        MENUITEM "&GeoConnect Tool ...",                     ID_GEOCONNECT, GRAYED
         MENUITEM SEPARATOR
         POPUP "Plug-In"
         BEGIN
@@ -11635,4 +11635,4 @@ END
 //*WI* FILENAME    resource.f90
 //*WI* FMODNAME    RESOURCE
 //*WI* LASTTYPE        1
-//*WI* LASTRES        12
+//*WI* LASTRES         7
