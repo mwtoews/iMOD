@@ -118,7 +118,8 @@ c check for ipf (u2drel only)
          filetype = igen
          ios = rdrs_rddata_gen(file,iout)
       else
-         ios = -1
+         rdrs_main = -1
+         return
       end if
 
       if (ios.ne.0) call ustop(' Stopped in routine rdrs_main')
