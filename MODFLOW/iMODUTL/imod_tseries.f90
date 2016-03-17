@@ -328,8 +328,8 @@ IF(LSS)THEN
          TRIM(IMOD_UTL_RTOS(TS(JJ)%STVALUE(I)%W,'F',2))//','//TRIM(IMOD_UTL_RTOS(H,'G',7))//            ','// &
          TRIM(IMOD_UTL_RTOS(DH1,'G',7))          //','//TRIM(IMOD_UTL_RTOS(DH2,'G',7))
     WRITE(TS(JJ)%IUIPF,'(A)') TRIM(LINE)
-
    ENDDO
+   CLOSE(TS(JJ)%IUIPF)
   ENDDO
  ENDIF
 
@@ -473,7 +473,7 @@ ELSE
     LINE='Computed_Head,'//TRIM(IMOD_UTL_RTOS(MV,'G',7)); WRITE(IUTXT(II),'(A)') TRIM(LINE)
 
    ENDDO
-  ENDDO
+    ENDDO
 
 !  ## write summary into different *.txt files
   TSDATE=0
