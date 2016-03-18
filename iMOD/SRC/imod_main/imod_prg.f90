@@ -217,6 +217,8 @@ ZM%ZOOMXY(ZM%NZOOM,4)=MPW%YMAX
 CALL DEMO_MAIN()  !## calls demo-version iMOD directly after initialisation of iMOD manager and plotting available files
 IF(DEMO%ISAVEBMP.EQ.1)THEN; CALL WINDOWCLOSE(); STOP; ENDIF
 
+IF(LBETA)CALL WMENUSETSTATE(ID_GEOCONNECT,1,1)
+
 !## initiate timers
 CALL MAIN_TIMERS()
 
