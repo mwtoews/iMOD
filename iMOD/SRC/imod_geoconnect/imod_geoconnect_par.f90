@@ -51,8 +51,9 @@ INTEGER :: GC_IFLAG,ISAVEK,ISAVEC !# IFLAG related to GC computation options 1=i
 
 TYPE FRMOBJ
  CHARACTER(LEN=12) :: FORM
+ CHARACTER(LEN=1) :: LITHO
  REAL :: FACT
- INTEGER :: IGRP
+ INTEGER :: IGRP,LITHOCLR
  REAL,POINTER,DIMENSION(:) :: FVAL
 END TYPE
 TYPE(FRMOBJ),ALLOCATABLE,DIMENSION(:) :: IPFAC
@@ -291,7 +292,7 @@ CONTAINS
  DO I=1,NLAYR 
 !  CALL WGRIDGETCELLSTRING(IDF_GRID1,1,I,IPFAC(I)%FORM)
   !## read factor related to formation name from grid
-  CALL WGRIDGETCELLREAL(IDF_GRID1,2,I,IPFAC(I)%FACT) 
+  CALL WGRIDGETCELLREAL(IDF_GRID1,3,I,IPFAC(I)%FACT) 
  ENDDO
  
  !## set flag
@@ -357,7 +358,7 @@ CONTAINS
  !## read formation name from grid
  DO I=1,NLAYR
   !## read factor related to formation name from grid
-  CALL WGRIDGETCELLINTEGER(IDF_GRID1,2,I,IPFAC(I)%IGRP)
+  CALL WGRIDGETCELLINTEGER(IDF_GRID1,3,I,IPFAC(I)%IGRP)
  ENDDO
 
  !## get aggregate option (1=model; 2=input; 3=ipf)

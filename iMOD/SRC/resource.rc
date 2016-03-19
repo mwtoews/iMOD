@@ -8,7 +8,7 @@
 //
 // Winteracter resource script. 
 //
-// Modified : 18/Mar/2016 00:13:41
+// Modified : 19/Mar/2016 20:15:47
 //
 ///////////////////////////////////////////////////
 //
@@ -9929,7 +9929,7 @@ BEGIN
 END
 
 ID_DGEOCONNECT DIALOG 0, 0,  280,  341
-STYLE WS_POPUP | WS_BORDER | WS_DLGFRAME | WS_SYSMENU | WS_MINIMIZEBOX | DS_3DLOOK | DS_MODALFRAME
+STYLE WS_POPUP | WS_BORDER | WS_DLGFRAME | WS_SYSMENU | WS_THICKFRAME | WS_MINIMIZEBOX | DS_3DLOOK
 FONT    8, "Arial"
 CAPTION "GeoConnect Tool"
 BEGIN
@@ -9943,6 +9943,8 @@ END
 
 ID_DGEOCONNECT RCDATA
 BEGIN
+"[Dialog] \n"
+" 0  1233 0 \n"
 "[Tabs] \n"
 " 1233     4   376 \n"
 "  376  Identify \n"
@@ -9969,11 +9971,13 @@ END
 
 ID_DGEOCONNECT_TAB1 RCDATA
 BEGIN
+"[Dialog] \n"
+" 0  1004 0 \n"
 "[Fonts] \n"
 " 1004    8 Arial, 400 0 \n"
 "    1    8 Arial, 400 0 \n"
 "[Grids] \n"
-" 1004     1    100   375 \n"
+" 1004     2    100   375 \n"
 "   50 \n"
 ,0
 END
@@ -9982,12 +9986,15 @@ IDD_TEMPLATE051 DIALOG 0, 0, 1000,   16
 STYLE DS_3DLOOK
 FONT    8, "Arial"
 BEGIN
-    CONTROL "Layer",ISS2,"REALEDIT",WS_CHILD | WS_VISIBLE | WS_BORDER | WS_TABSTOP | ES_LEFT,    0,    0,   40,   14
+    CONTROL "Lith.",ISS1,"EDIT",WS_CHILD | WS_VISIBLE | WS_BORDER | WS_TABSTOP | ES_LEFT | ES_CENTER | ES_MULTILINE,    0,    0,   25,   14
+    CONTROL "Layer",ISS2,"REALEDIT",WS_CHILD | WS_VISIBLE | WS_BORDER | WS_TABSTOP | ES_LEFT | ES_CENTER | ES_MULTILINE,    0,    0,   40,   14
 END
 
 IDD_TEMPLATE051 RCDATA
 BEGIN
 "[Ranges] \n"
+"[Lengths] \n"
+" 1059     1 \n"
 "[Formats] \n"
 ,0
 END
@@ -10076,7 +10083,7 @@ BEGIN
 " 1182    8 Arial, 400 0 \n"
 " 1183    8 Arial, 400 0 \n"
 "[Grids] \n"
-" 1004     2    200   379 \n"
+" 1004     3    200   379 \n"
 "   40 \n"
 ,0
 END
@@ -10085,8 +10092,16 @@ IDD_TEMPLATE053 DIALOG 0, 0, 1000,   16
 STYLE DS_3DLOOK
 FONT    8, "Arial"
 BEGIN
-    CONTROL "Formation",ISS1,"EDIT",WS_CHILD | WS_VISIBLE | WS_BORDER | WS_TABSTOP | ES_LEFT,    0,    0,   90,   14
-    CONTROL "Factor",ISS2,"EDIT",WS_CHILD | WS_VISIBLE | WS_BORDER | WS_TABSTOP | ES_LEFT,    0,    0,   50,   14
+    CONTROL "Lith.",ISS3,"EDIT",WS_CHILD | WS_VISIBLE | WS_BORDER | WS_TABSTOP | ES_LEFT | ES_CENTER | ES_MULTILINE,    0,    0,   25,   14
+    CONTROL "Formation",ISS1,"EDIT",WS_CHILD | WS_VISIBLE | WS_BORDER | WS_TABSTOP | ES_LEFT | ES_CENTER | ES_MULTILINE,    0,    0,   65,   14
+    CONTROL "Factor",ISS2,"EDIT",WS_CHILD | WS_VISIBLE | WS_BORDER | WS_TABSTOP | ES_LEFT | ES_CENTER | ES_MULTILINE,    0,    0,   50,   14
+END
+
+IDD_TEMPLATE053 RCDATA
+BEGIN
+"[Lengths] \n"
+" 1247     1 \n"
+,0
 END
 
 ID_DGEOCONNECT_TAB3 DIALOG 0, 0,  260,  290
@@ -10188,7 +10203,7 @@ BEGIN
 " 1135    8 Arial, 400 0 \n"
 " 1068    8 Arial, 400 0 \n"
 "[Grids] \n"
-" 1004     2    250   369 \n"
+" 1004     3    250   369 \n"
 "   40 \n"
 "[Lengths] \n"
 " 1078   256 \n"
@@ -10209,13 +10224,16 @@ IDD_TEMPLATE054 DIALOG 0, 0, 1000,   16
 STYLE DS_3DLOOK
 FONT    8, "Arial"
 BEGIN
-    CONTROL "Formation",ISS3,"EDIT",WS_CHILD | WS_VISIBLE | WS_BORDER | WS_TABSTOP | ES_LEFT | ES_CENTER | ES_MULTILINE,    0,    0,   85,   14
+    CONTROL "Lith.",ISS2,"EDIT",WS_CHILD | WS_VISIBLE | WS_BORDER | WS_TABSTOP | ES_LEFT | ES_CENTER | ES_MULTILINE,    0,    0,   25,   14
+    CONTROL "Formation",ISS3,"EDIT",WS_CHILD | WS_VISIBLE | WS_BORDER | WS_TABSTOP | ES_LEFT | ES_CENTER | ES_MULTILINE,    0,    0,   60,   14
     CONTROL "Number",ISS1,"INTEGERSPIN",WS_CHILD | WS_VISIBLE | WS_BORDER | WS_TABSTOP | ES_LEFT | ES_CENTER | ES_MULTILINE,    0,    0,   50,   14
 END
 
 IDD_TEMPLATE054 RCDATA
 BEGIN
 "[Ranges] \n"
+"[Lengths] \n"
+" 1115     1 \n"
 ,0
 END
 
@@ -11626,4 +11644,4 @@ END
 //*WI* FILENAME    resource.f90
 //*WI* FMODNAME    RESOURCE
 //*WI* LASTTYPE        2
-//*WI* LASTRES       277
+//*WI* LASTRES       273
