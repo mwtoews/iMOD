@@ -8,7 +8,7 @@
 //
 // Winteracter resource script. 
 //
-// Modified : 20/Mar/2016 08:13:48
+// Modified : 20/Mar/2016 20:09:40
 //
 ///////////////////////////////////////////////////
 //
@@ -11674,4 +11674,4 @@ END
 //*WI* FILENAME    resource.f90
 //*WI* FMODNAME    RESOURCE
 //*WI* LASTTYPE        2
-//*WI* LASTRES       275
+//*WI* LASTRES       277
