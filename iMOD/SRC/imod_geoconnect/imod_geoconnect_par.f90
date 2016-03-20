@@ -46,7 +46,10 @@ INTEGER,SAVE :: NLAYM, &     !## NLAYM (model),
                 IOPTW, &
                 ISAVETB, &   !## save top/bottom after aggregation
                 IPESTNR
-CHARACTER(LEN=256),SAVE :: OUTPUTFOLDER,DBASEFOLDER,MODELFOLDER,REGISFOLDER,TOPFOLDER,BOTFOLDER,IPEST,TXTFILE,IPFFILE
+CHARACTER(LEN=256),SAVE :: OUTPUTFOLDER,DBASEFOLDER,MODELFOLDER,REGISFOLDER,TOPFOLDER,BOTFOLDER,IPEST,IPFFILE
+
+!TXTFILE
+
 INTEGER :: GC_IFLAG,ISAVEK,ISAVEC !# IFLAG related to GC computation options 1=identify, 2=preprocessing, 3=postprocessing
 
 TYPE FRMOBJ
@@ -61,84 +64,6 @@ TYPE(FRMOBJ),ALLOCATABLE,DIMENSION(:) :: IPFAC
 CONTAINS
 
  !###======================================================================
- LOGICAL FUNCTION GC_INIT()
- !###======================================================================
- !# subroutine to read all settings options for either use in iMOD-Batch or in iMOD-GUI
- IMPLICIT NONE
- INTEGER :: IU,I,J,IOS
- CHARACTER(LEN=256) :: LINE 
-
- GC_INIT=.FALSE.
- 
- !## read *.txt-file
- IU=UTL_GETUNIT(); CALL OSD_OPEN(IU,FILE=TRIM(TXTFILE),STATUS='OLD',FORM='FORMATTED',ACTION='READ',IOSTAT=IOS)
- IF(IOS.NE.0)RETURN
- 
- IF(.NOT.UTL_READINITFILE('NLAY',LINE,IU,0))RETURN
- READ(LINE,*) NLAYM; WRITE(*,'(A,I3)') 'NLAY=',NLAYM  
- 
- !## allocate arrays
- IF(.NOT.GC_ALLOCATE())RETURN
- 
- IF(.NOT.UTL_READINITFILE('REGISFOLDER',LINE,IU,0))RETURN
- READ(LINE,*) REGISFOLDER; WRITE(*,'(A)') 'REGISFOLDER='//TRIM(REGISFOLDER)
- IF(.NOT.UTL_READINITFILE('TOPFOLDER',LINE,IU,0))RETURN
- READ(LINE,*) TOPFOLDER; WRITE(*,'(A)') 'TOPFOLDER='//TRIM(TOPFOLDER)
- IF(.NOT.UTL_READINITFILE('BOTFOLDER',LINE,IU,0))RETURN
- READ(LINE,*) BOTFOLDER; WRITE(*,'(A)') 'BOTFOLDER='//TRIM(BOTFOLDER)
-   
- !## on default all layers are activated 
- IACTM=1; IF(UTL_READINITFILE('ACTLAYERS',LINE,IU,1))READ(LINE,'(99I1)') (IACTM(I),I=1,NLAYM)
- WRITE(*,'(A,99I1)') 'ACTLAYERS=',IACTM
-  
- GC_INIT=.TRUE.
-
- CLOSE(IU)
-
- END FUNCTION GC_INIT
- 
- !###======================================================================
- LOGICAL FUNCTION GC_INIT_PREPROCESSING(IU)
- !###======================================================================
- !# subroutine to read all initial options for either use in iMOD-Batch or in iMOD-GUI 
- IMPLICIT NONE
- INTEGER,INTENT(IN) :: IU !# Unit number of GEOCONNECT.ini
- INTEGER :: IOS
- CHARACTER(LEN=256) :: LINE
- 
- GC_INIT_PREPROCESSING=.FALSE.
- 
- IPEST=''
- OUTPUTFOLDER=''
- IPESTNR=0
- ISAVEK=1
- ISAVEC=0 
- 
- IF(UTL_READINITFILE('IPEST',LINE,IU,1))THEN
-  READ(LINE,*) IPEST; WRITE(*,'(A)') 'IPEST='//TRIM(IPEST)
- ENDIF
- IF(TRIM(IPEST).NE.''.AND.UTL_READINITFILE('IPESTNR',LINE,IU,1))THEN
-  READ(LINE,*) IPESTNR; WRITE(*,'(A8,I1)') 'IPESTNR=',IPESTNR
- ENDIF 
- IF(UTL_READINITFILE('ISAVEK',LINE,IU,1))THEN
-  READ(LINE,*) ISAVEK; WRITE(*,'(A7,I1)') 'ISAVEK=',ISAVEK
- ENDIF
- IF(UTL_READINITFILE('ISAVEC',LINE,IU,1))THEN
-  READ(LINE,*) ISAVEC; WRITE(*,'(A7,I1)') 'ISAVEC=',ISAVEC
- ENDIF 
-
- IF(.NOT.UTL_READINITFILE('OUTPUTFOLDER',LINE,IU,0))RETURN
- READ(LINE,*) OUTPUTFOLDER; WRITE(*,'(A)') 'OUTPUTFOLDER='//TRIM(OUTPUTFOLDER)
-
- !## read name of *.txt-file 
- IF(.NOT.UTL_READINITFILE('TXTFILE',LINE,IU,0))RETURN
- READ(LINE,*) TXTFILE; WRITE(*,'(A)') 'TXTFILE='//TRIM(TXTFILE)
- 
- GC_INIT_PREPROCESSING=.TRUE.
-
- END FUNCTION GC_INIT_PREPROCESSING
- 
-  !###======================================================================
  LOGICAL FUNCTION GC_ALLOCATE()
  !###======================================================================
  IMPLICIT NONE
@@ -178,7 +103,6 @@ CONTAINS
  !###======================================================================
  SUBROUTINE GC_DEALLOCATE() 
  !###======================================================================
- !# subroutine to close all used files and deallocate allocated variables 
  IMPLICIT NONE
  INTEGER :: I
  
@@ -202,16 +126,62 @@ CONTAINS
  END SUBROUTINE GC_DEALLOCATE 
  
  !###======================================================================
- SUBROUTINE GC_INIT_WRITE(FNAME)
+ LOGICAL FUNCTION GC_INIT_READ(JU,FNAME)
  !###======================================================================
- !# subroutine to write all settings options into a *.txt file 
  IMPLICIT NONE
- INTEGER :: I,IU,IOS
- CHARACTER(LEN=256),INTENT(IN) :: FNAME
+ INTEGER,INTENT(IN) :: JU
+ CHARACTER(LEN=*),INTENT(IN) :: FNAME
+ INTEGER :: IU,I,J,IOS
+ CHARACTER(LEN=256) :: LINE 
+
+ GC_INIT_READ=.FALSE.
  
- IU=UTL_GETUNIT()
- CALL OSD_OPEN(IU,FILE=TRIM(FNAME),STATUS='UNKNOWN',FORM='FORMATTED',ACTION='WRITE,DENYREAD',IOSTAT=IOS)
- IF(IOS.NE.0)RETURN
+ !## read *.txt-file
+ IF(JU.EQ.0)THEN
+  IU=UTL_GETUNIT(); CALL OSD_OPEN(IU,FILE=TRIM(FNAME),STATUS='OLD',FORM='FORMATTED',ACTION='READ',IOSTAT=IOS)
+  IF(IOS.NE.0)RETURN
+ ELSE
+  IU=JU
+ ENDIF
+
+ IF(.NOT.UTL_READINITFILE('NLAY',LINE,IU,0))RETURN
+ READ(LINE,*) NLAYM; WRITE(*,'(A,I3)') 'NLAY=',NLAYM  
+ 
+ !## allocate arrays
+ IF(.NOT.GC_ALLOCATE())RETURN
+ 
+ IF(.NOT.UTL_READINITFILE('REGISFOLDER',LINE,IU,0))RETURN
+ READ(LINE,*) REGISFOLDER; WRITE(*,'(A)') 'REGISFOLDER='//TRIM(REGISFOLDER)
+ IF(.NOT.UTL_READINITFILE('TOPFOLDER',LINE,IU,0))RETURN
+ READ(LINE,*) TOPFOLDER; WRITE(*,'(A)') 'TOPFOLDER='//TRIM(TOPFOLDER)
+ IF(.NOT.UTL_READINITFILE('BOTFOLDER',LINE,IU,0))RETURN
+ READ(LINE,*) BOTFOLDER; WRITE(*,'(A)') 'BOTFOLDER='//TRIM(BOTFOLDER)
+   
+ !## on default all layers are activated 
+ IACTM=1; IF(UTL_READINITFILE('ACTLAYERS',LINE,IU,1))READ(LINE,'(99I1)') (IACTM(I),I=1,NLAYM)
+ WRITE(*,'(A,99I1)') 'ACTLAYERS=',IACTM
+  
+ GC_INIT_READ=.TRUE.
+
+ IF(JU.EQ.0)CLOSE(IU)
+
+ END FUNCTION GC_INIT_READ
+
+ !###======================================================================
+ SUBROUTINE GC_INIT_WRITE(JU,FNAME)
+ !###======================================================================
+ IMPLICIT NONE
+ INTEGER,INTENT(IN) :: JU
+ CHARACTER(LEN=*),INTENT(IN) :: FNAME
+ INTEGER :: I,IU,IOS
+ 
+ IF(JU.EQ.0)THEN
+  IU=UTL_GETUNIT()
+  CALL OSD_OPEN(IU,FILE=TRIM(FNAME),STATUS='UNKNOWN',FORM='FORMATTED',ACTION='WRITE,DENYREAD',IOSTAT=IOS)
+  IF(IOS.NE.0)RETURN
+ ELSE
+  IU=JU
+ ENDIF
  
  WRITE(IU,'(A5,I3)') 'NLAY=',NLAYM
  WRITE(IU,'(A10,99I1)') 'ACTLAYERS=',(IACTM(I),I=1,NLAYM)
@@ -219,16 +189,66 @@ CONTAINS
  WRITE(IU,'(A)') 'TOPFOLDER='//TRIM(TOPFOLDER)
  WRITE(IU,'(A)') 'BOTFOLDER='//TRIM(BOTFOLDER)
  
- CLOSE(IU)
+ IF(JU.EQ.0)CLOSE(IU)
  
  END SUBROUTINE GC_INIT_WRITE
  
  !###======================================================================
+ SUBROUTINE GC_INIT_GET()
+ !###======================================================================
+ IMPLICIT NONE
+ INTEGER :: I
+ 
+ CALL WDIALOGSELECT(ID_DGEOCONNECT_TAB4)
+
+ !## get amount of model layers
+ CALL WDIALOGGETINTEGER(IDF_INTEGER1,NLAYM) 
+  
+ !## get directory of REGIS files
+ CALL WDIALOGGETSTRING(IDF_STRING1,REGISFOLDER)
+ !## get directory of TOP files model
+ CALL WDIALOGGETSTRING(IDF_STRING2,TOPFOLDER) 
+ !## get directory of BOT files model
+ CALL WDIALOGGETSTRING(IDF_STRING3,BOTFOLDER) 
+ !## read formation name from grid 
+ DO I=1,SIZE(IACTM)
+  CALL WGRIDGETCELLCHECKBOX(IDF_GRID1,1,I,IACTM(I))
+ ENDDO
+ 
+ END SUBROUTINE GC_INIT_GET 
+ 
+ !###======================================================================
+ SUBROUTINE GC_INIT_PUT()
+ !###======================================================================
+ IMPLICIT NONE
+ INTEGER :: I
+ 
+ CALL WDIALOGSELECT(ID_DGEOCONNECT_TAB4)
+
+ !## get amount of model layers
+ CALL WDIALOGPUTINTEGER(IDF_INTEGER1,NLAYM) 
+ CALL WDIALOGFIELDSTATE(IDF_INTEGER1,2)
+  
+ !## get directory of REGIS files
+ CALL WDIALOGPUTSTRING(IDF_STRING1,REGISFOLDER)
+ !## get directory of TOP files model
+ CALL WDIALOGPUTSTRING(IDF_STRING2,TOPFOLDER) 
+ !## get directory of BOT files model
+ CALL WDIALOGPUTSTRING(IDF_STRING3,BOTFOLDER) 
+ !## read formation name from grid 
+ CALL WGRIDROWS(IDF_GRID1,NLAYM)
+ DO I=1,SIZE(IACTM)
+  CALL WGRIDLABELROW(IDF_GRID1,I,'Layer '//TRIM(ITOS(I)))
+  CALL WGRIDPUTCELLCHECKBOX(IDF_GRID1,1,I,IACTM(I))
+ ENDDO
+ 
+ END SUBROUTINE GC_INIT_PUT
+  
+ !###======================================================================
  SUBROUTINE GC_INIT_PREPROCESSING_WRITE(FNAME)
  !###======================================================================
- !# subroutine to write all preprocessing options into a *.ini file 
  IMPLICIT NONE
- INTEGER :: IU,IOS
+ INTEGER :: IU,IOS,I
  CHARACTER(LEN=256),INTENT(IN) :: FNAME
  
  IU=UTL_GETUNIT()
@@ -236,22 +256,78 @@ CONTAINS
  IF(IOS.NE.0)RETURN
  
  WRITE(IU,'(A)') 'FUNCTION=GEOCONNECT'
+
+ !## write common settings
+ CALL GC_INIT_WRITE(IU,'')
+
  WRITE(IU,'(A6,I1)') 'IFLAG=',GC_IFLAG
- IF(TRIM(IPEST).NE.'')WRITE(IU,'(A6)') 'IPEST='//TRIM(IPEST)
- IF(IPESTNR.NE.0)WRITE(IU,'(A8,I3)') 'IPESTNR=',IPESTNR
+ IF(IWINDOW.EQ.1)THEN
+  WRITE(IU,'(A7,4(F10.2,1X))') 'WINDOW=',IDF%XMIN,IDF%XMAX,IDF%YMIN,IDF%YMAX
+ ENDIF
+
+ WRITE(IU,'(A,I10)') 'NFORM=',SIZE(IPFAC%FORM)
+ DO I=1,SIZE(IPFAC%FORM)
+  WRITE(IU,'(A10,1X,F10.2)') TRIM(IPFAC(I)%FORM),IPFAC(I)%FACT
+ ENDDO
+ !IF(TRIM(IPEST).NE.'')WRITE(IU,'(A6)') 'IPEST='//TRIM(IPEST)
+ !IF(IPESTNR.NE.0)WRITE(IU,'(A8,I3)') 'IPESTNR=',IPESTNR
  WRITE(IU,'(A)') 'OUTPUTFOLDER='//TRIM(OUTPUTFOLDER)
  WRITE(IU,'(A,I1)') 'ISAVEK=',ISAVEK
  WRITE(IU,'(A,I1)') 'ISAVEC=',ISAVEC
- WRITE(IU,'(A)') 'TXTFILE='//TRIM(TXTFILE)
+! WRITE(IU,'(A)') 'TXTFILE='//TRIM(TXTFILE)
  
  CLOSE(IU)
 
  END SUBROUTINE GC_INIT_PREPROCESSING_WRITE
+
+ !###======================================================================
+ LOGICAL FUNCTION GC_INIT_PREPROCESSING_READ(IU)
+ !###======================================================================
+ IMPLICIT NONE
+ INTEGER,INTENT(IN) :: IU !# Unit number of GEOCONNECT.ini
+ INTEGER :: IOS,I,N
+ CHARACTER(LEN=256) :: LINE
  
+ GC_INIT_PREPROCESSING_READ=.FALSE.
+ 
+ OUTPUTFOLDER=''
+ ISAVEK=1
+ ISAVEC=0 
+ 
+ !## read common settings
+ IF(.NOT.GC_INIT_READ(IU,''))RETURN
+
+ IF(.NOT.UTL_READINITFILE('NFORM',LINE,IU,0))RETURN
+ READ(LINE,*) N; WRITE(*,'(A,I10)') 'NFORM=',N
+ ALLOCATE(IPFAC(N))
+ DO I=1,SIZE(IPFAC%FORM)
+  IF(.NOT.UTL_READINITFILE('FORM'//TRIM(ITOS(I)),LINE,IU,0))RETURN
+  READ(LINE,*) IPFAC(I)%FORM,IPFAC(I)%FACT
+  LINE='FORM'//TRIM(ITOS(I))//'='
+  WRITE(IU,'(A,1X,A,1X,F10.2)') TRIM(LINE),TRIM(IPFAC(I)%FORM),IPFAC(I)%FACT
+ ENDDO
+
+ IF(UTL_READINITFILE('ISAVEK',LINE,IU,1))THEN
+  READ(LINE,*) ISAVEK; WRITE(*,'(A7,I1)') 'ISAVEK=',ISAVEK
+ ENDIF
+ IF(UTL_READINITFILE('ISAVEC',LINE,IU,1))THEN
+  READ(LINE,*) ISAVEC; WRITE(*,'(A7,I1)') 'ISAVEC=',ISAVEC
+ ENDIF 
+
+ IF(.NOT.UTL_READINITFILE('OUTPUTFOLDER',LINE,IU,0))RETURN
+ READ(LINE,*) OUTPUTFOLDER; WRITE(*,'(A)') 'OUTPUTFOLDER='//TRIM(OUTPUTFOLDER)
+
+! !## read name of *.txt-file 
+! IF(.NOT.UTL_READINITFILE('TXTFILE',LINE,IU,0))RETURN
+! READ(LINE,*) TXTFILE; WRITE(*,'(A)') 'TXTFILE='//TRIM(TXTFILE)
+ 
+ GC_INIT_PREPROCESSING_READ=.TRUE.
+
+ END FUNCTION GC_INIT_PREPROCESSING_READ
+  
  !###======================================================================
  SUBROUTINE GC_INIT_PREPROCESSING_PUT()
  !###======================================================================
- !# put initial settings from preprocessing *.ini file on window
  IMPLICIT NONE
  INTEGER :: I
 
@@ -269,7 +345,6 @@ CONTAINS
  !###======================================================================
  LOGICAL FUNCTION GC_INIT_PREPROCESSING_GET()
  !###======================================================================
- !# read initial settings from preprocessing tab
  IMPLICIT NONE
  INTEGER :: I
  
@@ -277,6 +352,21 @@ CONTAINS
  
  CALL WDIALOGSELECT(ID_DGEOCONNECT_TAB2)
  
+  !## get window
+ CALL WDIALOGGETRADIOBUTTON(IDF_RADIO1,IWINDOW)
+ IF(IWINDOW.EQ.1)THEN
+  IDF%NCOL=0; IDF%NROW=0
+ ELSE
+  CALL WDIALOGGETREAL(IDF_REAL1,IDF%XMIN); CALL WDIALOGGETREAL(IDF_REAL2,IDF%YMIN)
+  CALL WDIALOGGETREAL(IDF_REAL3,IDF%XMAX); CALL WDIALOGGETREAL(IDF_REAL4,IDF%YMAX)
+  CALL WDIALOGGETREAL(IDF_REAL5,IDF%DX); IDF%DY=IDF%DX
+  IF(IDF%DX.LE.0.0)THEN
+   CALL WMESSAGEBOX(OKONLY,EXCLAMATIONICON,COMMONOK,'You should specify a CellSize of greater than 0.0.','Error')
+   RETURN
+  ENDIF
+  CALL UTL_IDFSNAPTOGRID(IDF%XMIN,IDF%XMAX,IDF%YMIN,IDF%YMAX,IDF%DX,IDF%NCOL,IDF%NROW)
+ ENDIF
+
  !## get directory+name of outputfile
  CALL WDIALOGGETSTRING(IDF_STRING1,OUTPUTFOLDER) 
  IF(TRIM(OUTPUTFOLDER).EQ.'')THEN
@@ -305,7 +395,6 @@ CONTAINS
  !###======================================================================
  SUBROUTINE GC_INIT_POSTPROCESSING_PUT()
  !###======================================================================
- !# put initial settings from preprocessing *.ini file on window
  IMPLICIT NONE
  INTEGER :: I
 
@@ -323,7 +412,6 @@ CONTAINS
  !###======================================================================
  LOGICAL FUNCTION GC_INIT_POSTPROCESSING_GET()
  !###======================================================================
- !# read initial settings from preprocessing tab
  IMPLICIT NONE
  INTEGER :: I
  
@@ -405,57 +493,6 @@ CONTAINS
  
  END FUNCTION GC_INIT_POSTPROCESSING_GET 
 
- !###======================================================================
- SUBROUTINE GC_INIT_GET()
- !###======================================================================
- !# read initial settings from preprocessing tab
- IMPLICIT NONE
- INTEGER :: I
- 
- CALL WDIALOGSELECT(ID_DGEOCONNECT_TAB4)
 
- !## get amount of model layers
- CALL WDIALOGGETINTEGER(IDF_INTEGER1,NLAYM) 
-  
- !## get directory of REGIS files
- CALL WDIALOGGETSTRING(IDF_STRING1,REGISFOLDER)
- !## get directory of TOP files model
- CALL WDIALOGGETSTRING(IDF_STRING2,TOPFOLDER) 
- !## get directory of BOT files model
- CALL WDIALOGGETSTRING(IDF_STRING3,BOTFOLDER) 
- !## read formation name from grid 
- DO I=1,SIZE(IACTM)
-  CALL WGRIDGETCELLCHECKBOX(IDF_GRID1,1,I,IACTM(I))
- ENDDO
- 
- END SUBROUTINE GC_INIT_GET 
- 
- !###======================================================================
- SUBROUTINE GC_INIT_PUT()
- !###======================================================================
- !# read initial settings from preprocessing tab
- IMPLICIT NONE
- INTEGER :: I
- 
- CALL WDIALOGSELECT(ID_DGEOCONNECT_TAB4)
-
- !## get amount of model layers
- CALL WDIALOGPUTINTEGER(IDF_INTEGER1,NLAYM) 
- CALL WDIALOGFIELDSTATE(IDF_INTEGER1,2)
-  
- !## get directory of REGIS files
- CALL WDIALOGPUTSTRING(IDF_STRING1,REGISFOLDER)
- !## get directory of TOP files model
- CALL WDIALOGPUTSTRING(IDF_STRING2,TOPFOLDER) 
- !## get directory of BOT files model
- CALL WDIALOGPUTSTRING(IDF_STRING3,BOTFOLDER) 
- !## read formation name from grid 
- CALL WGRIDROWS(IDF_GRID1,NLAYM)
- DO I=1,SIZE(IACTM)
-  CALL WGRIDLABELROW(IDF_GRID1,I,'Layer '//TRIM(ITOS(I)))
-  CALL WGRIDPUTCELLCHECKBOX(IDF_GRID1,1,I,IACTM(I))
- ENDDO
- 
- END SUBROUTINE GC_INIT_PUT
   
 END MODULE MOD_GEOCONNECT_PAR

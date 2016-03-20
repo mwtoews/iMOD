@@ -104,7 +104,7 @@ CONTAINS
        CALL WMESSAGEBOX(YESNO,QUESTIONICON,COMMONYES,'Are you sure to compute the postprocessing files?','Question')              
        IF(WINFODIALOG(4).EQ.1)THEN
         !## read initial settings from settings-tab
-        CALL GC_INIT_GET()               
+        CALL GC_INIT_GET()
         !## read initial settings from preprocessing-tab
         IF(GC_INIT_POSTPROCESSING_GET())THEN
          !## compute preprocessing 
@@ -116,17 +116,17 @@ CONTAINS
      CALL WDIALOGGETTAB(ID_GCTAB,ITAB)
      SELECT CASE (ITAB)
       CASE (ID_DGEOCONNECT_TAB1)
-      !## call settings routines
-       TXTFILE=TRIM(PREFVAL(1))//'\SETTINGS\Geoconnect.txt'
-       IF(.NOT.UTL_WSELECTFILE('Textfile (*.txt)|*.txt|',SAVEDIALOG+PROMPTON+DIRCHANGE+APPENDEXT,TXTFILE,&
-                   'Save Current Settings into a textfile (*.txt)'))RETURN  
-       CALL GC_INIT_WRITE(TXTFILE) 
+      
       CASE (ID_DGEOCONNECT_TAB2)
-       FNAME=TRIM(PREFVAL(1))//'\SETTINGS\Geoconnect_pre.ini'
+       FNAME=TRIM(PREFVAL(1))//'\IMODBATCH\*.ini'
        IF(.NOT.UTL_WSELECTFILE('Initialization file (*.ini)|*.ini|',SAVEDIALOG+PROMPTON+DIRCHANGE+APPENDEXT,FNAME,&
                    'Save Current Settings into an initialization file (*.ini)'))RETURN
-       !## write *.ini-file
-       CALL GC_INIT_PREPROCESSING_WRITE(FNAME)
+       !## read initial settings from preprocessing-tab
+       IF(GC_INIT_PREPROCESSING_GET())THEN
+        !## write *.ini-file
+        CALL GC_INIT_PREPROCESSING_WRITE(FNAME)
+       ENDIF
+       
       CASE (ID_DGEOCONNECT_TAB3)
 !       !## call postprocessing routines
 !       FNAME=TRIM(PREFVAL(1))//'\IMOD_USER\SETTINGS\Geoconnect_post.ini'
@@ -135,23 +135,31 @@ CONTAINS
 !       !## Write *.ini-file
 !       CALL GC_INIT_POSTPROCESSING_WRITE(FNAME)      
       CASE (ID_DGEOCONNECT_TAB4)
+      !## call settings routines
+       FNAME=TRIM(PREFVAL(1))//'\SETTINGS\Geoconnect.txt'
+       IF(.NOT.UTL_WSELECTFILE('Textfile (*.txt)|*.txt|',SAVEDIALOG+PROMPTON+DIRCHANGE+APPENDEXT,FNAME,&
+                   'Save Current Settings into a textfile (*.txt)'))RETURN  
+       CALL GC_INIT_WRITE(0,FNAME) 
      END SELECT
     CASE (ID_OPEN)
      CALL WDIALOGGETTAB(ID_GCTAB,ITAB)
      SELECT CASE (ITAB)
       CASE (ID_DGEOCONNECT_TAB1)
-      !## open general settings
-      CASE (ID_DGEOCONNECT_TAB2)
+
       !## open preprocessing settings
+      CASE (ID_DGEOCONNECT_TAB2)
        IF(.NOT.UTL_WSELECTFILE('Initialization file (*.ini)|*.ini|',&
          LOADDIALOG+MUSTEXIST+PROMPTON+DIRCHANGE+APPENDEXT,FNAME,'Load initialization file (*.ini)'))RETURN
        IU=UTL_GETUNIT(); CALL OSD_OPEN(IU,FILE=TRIM(FNAME),STATUS='OLD',FORM='FORMATTED',ACTION='READ',IOSTAT=IOS)
-       IF(.NOT.GC_INIT_PREPROCESSING(IU))RETURN
+       IF(.NOT.GC_INIT_PREPROCESSING_READ(IU))RETURN
        CALL GC_INIT_PREPROCESSING_PUT()
-      CASE (ID_DGEOCONNECT_TAB3)
+       
       !## open postprocessing settings
+      CASE (ID_DGEOCONNECT_TAB3)
      
+      !## open general settings
       CASE (ID_DGEOCONNECT_TAB4)
+
      END SELECT
    END SELECT
   CASE (TABCHANGED)
@@ -227,6 +235,8 @@ CONTAINS
    END SELECT
   CASE (FIELDCHANGED)
    SELECT CASE (MESSAGE%VALUE2)
+    CASE (IDF_RADIO1,IDF_RADIO2,IDF_RADIO3,IDF_RADIO4,IDF_RADIO5)
+     CALL GC_MAIN_TAB_FIELDS(ID_DGEOCONNECT_TAB2)
     CASE (IDF_CHECK1,IDF_CHECK2)
      CALL WDIALOGGETCHECKBOX(IDF_CHECK1,ISAVEK)
      CALL WDIALOGGETCHECKBOX(IDF_CHECK2,ISAVEC)
@@ -255,19 +265,20 @@ CONTAINS
   CASE (FIELDCHANGED)
    SELECT CASE (MESSAGE%VALUE2)
     CASE (IDF_RADIO1,IDF_RADIO2,IDF_RADIO3,IDF_RADIO4,IDF_RADIO5)
-     CALL GC_MAIN_TAB3_FIELDS()
+     CALL GC_MAIN_TAB_FIELDS(ID_DGEOCONNECT_TAB3)
    END SELECT
  END SELECT
 
  END SUBROUTINE GC_MAIN_TAB3
 
  !###======================================================================
- SUBROUTINE GC_MAIN_TAB3_FIELDS()
+ SUBROUTINE GC_MAIN_TAB_FIELDS(DID)
  !###======================================================================
  IMPLICIT NONE
+ INTEGER,INTENT(IN) :: DID
  INTEGER :: I,J,K,IOPTION
  
- CALL WDIALOGSELECT(ID_DGEOCONNECT_TAB3)
+ CALL WDIALOGSELECT(DID)
 
  CALL WDIALOGGETRADIOBUTTON(IDF_RADIO3,IOPTION)
  SELECT CASE (IOPTION)
@@ -297,7 +308,10 @@ CONTAINS
  CALL WDIALOGFIELDSTATE(IDF_REAL4,I)
  CALL WDIALOGFIELDSTATE(IDF_REAL5,I)
 
- END SUBROUTINE GC_MAIN_TAB3_FIELDS
+ CALL WDIALOGPUTREAL(IDF_REAL1,MPW%XMIN,'(F10.2)'); CALL WDIALOGPUTREAL(IDF_REAL2,MPW%YMIN,'(F10.2)')
+ CALL WDIALOGPUTREAL(IDF_REAL3,MPW%XMAX,'(F10.2)'); CALL WDIALOGPUTREAL(IDF_REAL4,MPW%YMAX,'(F10.2)')
+
+ END SUBROUTINE GC_MAIN_TAB_FIELDS
  
  !###======================================================================
  SUBROUTINE GC_MAIN_TAB4(ITYPE,MESSAGE)
@@ -359,6 +373,8 @@ CONTAINS
  CALL WDIALOGPUTIMAGE(ID_OPEN2,ID_ICONOPEN) !## open folder where output files need to be stored
  CALL WDIALOGPUTIMAGE(ID_REFRESH,ID_ICONREDRAW) !## open folder where output files need to be stored
  CALL WDIALOGPUTCHECKBOX(IDF_CHECK1,1) !# default=> save KHV,KVV,KVA (ISAVEK=1)
+ CALL WDIALOGPUTREAL(IDF_REAL1,MPW%XMIN,'(F10.2)'); CALL WDIALOGPUTREAL(IDF_REAL2,MPW%YMIN,'(F10.2)')
+ CALL WDIALOGPUTREAL(IDF_REAL3,MPW%XMAX,'(F10.2)'); CALL WDIALOGPUTREAL(IDF_REAL4,MPW%YMAX,'(F10.2)')
  
  !## postprocessing
  CALL WDIALOGSELECT(ID_DGEOCONNECT_TAB3)
@@ -367,10 +383,8 @@ CONTAINS
  CALL WDIALOGPUTIMAGE(ID_OPEN1,ID_ICONOPEN)     !## open
  CALL WDIALOGPUTIMAGE(ID_OPEN2,ID_ICONOPEN)     !## open
  CALL WDIALOGPUTIMAGE(ID_OPEN9,ID_ICONOPEN)     !## open
- CALL WDIALOGPUTREAL(IDF_REAL1,MPW%XMIN,'(F10.2)')
- CALL WDIALOGPUTREAL(IDF_REAL2,MPW%YMIN,'(F10.2)')
- CALL WDIALOGPUTREAL(IDF_REAL3,MPW%XMAX,'(F10.2)')
- CALL WDIALOGPUTREAL(IDF_REAL4,MPW%YMAX,'(F10.2)')
+ CALL WDIALOGPUTREAL(IDF_REAL1,MPW%XMIN,'(F10.2)'); CALL WDIALOGPUTREAL(IDF_REAL2,MPW%YMIN,'(F10.2)')
+ CALL WDIALOGPUTREAL(IDF_REAL3,MPW%XMAX,'(F10.2)'); CALL WDIALOGPUTREAL(IDF_REAL4,MPW%YMAX,'(F10.2)')
 
  !## settings
  CALL WDIALOGSELECT(ID_DGEOCONNECT_TAB4)
@@ -378,8 +392,7 @@ CONTAINS
  CALL WDIALOGPUTIMAGE(ID_OPEN2,ID_ICONOPEN) !## open folder with TOP.idf files
  CALL WDIALOGPUTIMAGE(ID_OPEN3,ID_ICONOPEN) !## open folder with BOT.idf files
 
- TXTFILE=TRIM(PREFVAL(1))//'\SETTINGS\Geoconnect.txt'
- IF(.NOT.GC_INIT())THEN; CALL GC_CLOSE(); RETURN; ENDIF
+ IF(.NOT.GC_INIT_READ(0,TRIM(PREFVAL(1))//'\SETTINGS\Geoconnect.txt'))THEN; CALL GC_CLOSE(); RETURN; ENDIF
  !## put settings on tab4
  CALL GC_INIT_PUT()
  
@@ -391,7 +404,8 @@ CONTAINS
  IF(.NOT.GC_REGISFILES_PUT(ID_DGEOCONNECT_TAB2))RETURN
  IF(.NOT.GC_REGISFILES_PUT(ID_DGEOCONNECT_TAB3))RETURN
  
- CALL GC_MAIN_TAB3_FIELDS()
+ CALL GC_MAIN_TAB_FIELDS(ID_DGEOCONNECT_TAB2)
+ CALL GC_MAIN_TAB_FIELDS(ID_DGEOCONNECT_TAB3)
 
  CALL WDIALOGSELECT(ID_DGEOCONNECT)
  CALL WDIALOGPUTIMAGE(ID_SAVEAS,ID_ICONSAVEAS) !## saveas
@@ -426,8 +440,12 @@ CONTAINS
    CALL UTL_MESSAGEHANDLE(1)
   !## call to read postprocessing variables from ini-file
   CASE (3) 
+   !## turn message off
+   CALL UTL_MESSAGEHANDLE(0)
    !## call to calculation-subroutine
    CALL GC_POST(IMODBATCH)
+   !## turn message on again
+   CALL UTL_MESSAGEHANDLE(1)
  END SELECT
  
  END SUBROUTINE GC_COMPUTE_MAIN
@@ -467,6 +485,7 @@ CONTAINS
  TYPE(WIN_MESSAGE) :: MESSAGE
  
  !## read all idf's with model top and bot values opening files only
+ IDF%NROW=0; IDF%NCOL=0
  IF(.NOT.GC_READ_MODELDATA(0))RETURN
  ALLOCATE(TM(NLAYM),BM(NLAYM))
   
@@ -497,10 +516,16 @@ CONTAINS
     !## fill results in grid
     CALL WDIALOGSELECT(ID_DGEOCONNECT_TAB1) 
     
-    CALL WDialogClearField(IDF_GRID1)
-    CALL WGridClear(IDF_GRID1)
+    CALL WGRIDCLEAR(IDF_GRID1)
+    !## reset colour
+    K=0; DO J=1,NLAYM
+     !## skip deselected layer
+     IF(IACTM(J).EQ.0)CYCLE
+     K=K+1; CALL WGRIDCOLOURCOLUMN(IDF_GRID1,K,-1,WRGB(255,255,255))
+    ENDDO
     
     N=0; DO I=1,NLAYR
+     CALL WGRIDLABELROW(IDF_GRID1,I,'')
      !## none of the layers contains current formation, skip it
      IF(SUM(IPFAC(I)%FVAL).LE.0.0)CYCLE
       !## current formation contains results, fractions gt 0.0
@@ -511,7 +536,7 @@ CONTAINS
       K=1; DO J=1,NLAYM
       !## skip deselected layer
       IF(IACTM(J).EQ.0)CYCLE
-      K=K+1; CALL WGRIDPUTCELLREAL(IDF_GRID1,K,N,IPFAC(I)%FVAL(J),'(F10.3)')
+      K=K+1; CALL WGRIDPUTCELLREAL(IDF_GRID1,K,N,IPFAC(I)%FVAL(J)*100.0,'(F10.3)')
       IF(IPFAC(I)%FVAL(J).LE.0.0)THEN
        ICLR=WRGB(255,255,255)
       ELSE
@@ -550,7 +575,7 @@ CONTAINS
  !###======================================================================
  IMPLICIT NONE
  REAL,INTENT(IN) :: XC,YC
- REAL,DIMENSION(:),INTENT(INOUT) :: TM,BM
+ REAL,DIMENSION(:),INTENT(OUT) :: TM,BM
  INTEGER :: I,J,IKHR,IKVR
  REAL :: TR,BR,Z1,Z2
  CHARACTER(LEN=52) :: FTYPE
@@ -584,7 +609,21 @@ CONTAINS
    Z1=MIN(TR,TM(J)); Z2=MAX(BR,BM(J))
    IF(Z1.GT.Z2.AND.TM(J).GT.BM(J))THEN
     IPFAC(I)%FVAL(J)=(Z1-Z2)/(TM(J)-BM(J)) 
-   ENDIF     
+   ENDIF
+
+   !## find clayey layers
+   IF(J.LT.NLAYM)THEN
+   
+    !## model contains nodata - skip it
+    IF(BM(J+1).EQ.TOPM(J+1)%NODATA.OR.TM(J).EQ.BOTM(J)%NODATA)CYCLE
+
+    Z1=MIN(TR,BM(J)); Z2=MAX(BR,TM(J+1))
+    IF(Z1.GT.Z2.AND.BM(J).GT.TM(J+1))THEN
+     IPFAC(I)%FVAL(J)=(Z1-Z2)/(BM(J)-TM(J+1)) 
+    ENDIF
+   
+   ENDIF
+   
   ENDDO
     
  ENDDO
@@ -607,10 +646,8 @@ CONTAINS
  IF(.NOT.GC_REGISFILES_GET(IMODBATCH))RETURN
  
  DO I=1,NLAYM
-  KDHIDF(I)%X=0.0
-  KDVIDF(I)%X=0.0
-  KVAIDF(I)%X=0.0
-  KHVIDF(I)%X=0.0
+  KDHIDF(I)%X=0.0; KDVIDF(I)%X=0.0
+  KVAIDF(I)%X=0.0; KHVIDF(I)%X=0.0
  ENDDO
  DO I=1,NLAYM-1
   CIDF(I)%X=0.0; KVVIDF(I)%X=0.0
