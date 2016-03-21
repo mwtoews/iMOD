@@ -117,30 +117,37 @@ CONTAINS
      SELECT CASE (ITAB)
       CASE (ID_DGEOCONNECT_TAB1)
       
+      !## call preprocessing routines
       CASE (ID_DGEOCONNECT_TAB2)
        FNAME=TRIM(PREFVAL(1))//'\IMODBATCH\*.ini'
-       IF(.NOT.UTL_WSELECTFILE('Initialization file (*.ini)|*.ini|',SAVEDIALOG+PROMPTON+DIRCHANGE+APPENDEXT,FNAME,&
-                   'Save Current Settings into an initialization file (*.ini)'))RETURN
+       IF(.NOT.UTL_WSELECTFILE('iMODBATCH INI file (*.ini)|*.ini|',SAVEDIALOG+PROMPTON+DIRCHANGE+APPENDEXT,FNAME,&
+                   'Save Current Settings into an iMODBATCH INI file (*.ini)'))RETURN
        !## read initial settings from preprocessing-tab
        IF(GC_INIT_PREPROCESSING_GET())THEN
         !## write *.ini-file
         CALL GC_INIT_PREPROCESSING_WRITE(FNAME)
        ENDIF
        
+      !## call postprocessing routines
       CASE (ID_DGEOCONNECT_TAB3)
-!       !## call postprocessing routines
-!       FNAME=TRIM(PREFVAL(1))//'\IMOD_USER\SETTINGS\Geoconnect_post.ini'
-!       IF(.NOT.UTL_WSELECTFILE('Initialization file (*.ini)|*.ini|',SAVEDIALOG+PROMPTON+DIRCHANGE+APPENDEXT,FNAME,&
-!                    'Save Current Settings into an initialization file (*.ini)'))RETURN
-!       !## Write *.ini-file
-!       CALL GC_INIT_POSTPROCESSING_WRITE(FNAME)      
-      CASE (ID_DGEOCONNECT_TAB4)
+       FNAME=TRIM(PREFVAL(1))//'\IMODBATCH\*.ini'
+       IF(.NOT.UTL_WSELECTFILE('iMODBATCH INI file (*.ini)|*.ini|',SAVEDIALOG+PROMPTON+DIRCHANGE+APPENDEXT,FNAME,&
+                   'Save Current Settings into an iMODBATCH INI file (*.ini)'))RETURN
+       !## read initial settings from preprocessing-tab
+       IF(GC_INIT_POSTPROCESSING_GET())THEN
+        !## write *.ini-file
+        CALL GC_INIT_POSTPROCESSING_WRITE(FNAME)
+       ENDIF
+
       !## call settings routines
+      CASE (ID_DGEOCONNECT_TAB4)
        FNAME=TRIM(PREFVAL(1))//'\SETTINGS\Geoconnect.txt'
        IF(.NOT.UTL_WSELECTFILE('Textfile (*.txt)|*.txt|',SAVEDIALOG+PROMPTON+DIRCHANGE+APPENDEXT,FNAME,&
                    'Save Current Settings into a textfile (*.txt)'))RETURN  
        CALL GC_INIT_WRITE(0,FNAME) 
+
      END SELECT
+
     CASE (ID_OPEN)
      CALL WDIALOGGETTAB(ID_GCTAB,ITAB)
      SELECT CASE (ITAB)
@@ -148,15 +155,20 @@ CONTAINS
 
       !## open preprocessing settings
       CASE (ID_DGEOCONNECT_TAB2)
-       IF(.NOT.UTL_WSELECTFILE('Initialization file (*.ini)|*.ini|',&
-         LOADDIALOG+MUSTEXIST+PROMPTON+DIRCHANGE+APPENDEXT,FNAME,'Load initialization file (*.ini)'))RETURN
+       IF(.NOT.UTL_WSELECTFILE('iMODBATCH INI file (*.ini)|*.ini|',&
+         LOADDIALOG+MUSTEXIST+PROMPTON+DIRCHANGE+APPENDEXT,FNAME,'Load iMODBATCH INI file (*.ini)'))RETURN
        IU=UTL_GETUNIT(); CALL OSD_OPEN(IU,FILE=TRIM(FNAME),STATUS='OLD',FORM='FORMATTED',ACTION='READ',IOSTAT=IOS)
        IF(.NOT.GC_INIT_PREPROCESSING_READ(IU))RETURN
        CALL GC_INIT_PREPROCESSING_PUT()
-       
+
       !## open postprocessing settings
       CASE (ID_DGEOCONNECT_TAB3)
-     
+       IF(.NOT.UTL_WSELECTFILE('iMODBATCH INI file (*.ini)|*.ini|',&
+         LOADDIALOG+MUSTEXIST+PROMPTON+DIRCHANGE+APPENDEXT,FNAME,'Load iMODBATCH INI file (*.ini)'))RETURN
+       IU=UTL_GETUNIT(); CALL OSD_OPEN(IU,FILE=TRIM(FNAME),STATUS='OLD',FORM='FORMATTED',ACTION='READ',IOSTAT=IOS)
+       IF(.NOT.GC_INIT_POSTPROCESSING_READ(IU))RETURN
+       CALL GC_INIT_POSTPROCESSING_PUT()
+
       !## open general settings
       CASE (ID_DGEOCONNECT_TAB4)
 
