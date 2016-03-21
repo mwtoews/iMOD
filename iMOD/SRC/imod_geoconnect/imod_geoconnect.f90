@@ -43,8 +43,6 @@ CONTAINS
  IMPLICIT NONE
  TYPE(WIN_MESSAGE),INTENT(IN) :: MESSAGE
  INTEGER,INTENT(IN) :: ITYPE
- CHARACTER(LEN=256) :: FNAME
- INTEGER :: IU
  
  CALL WDIALOGSELECT(MESSAGE%WIN)
 
@@ -363,7 +361,6 @@ CONTAINS
  SUBROUTINE GC_MAIN_INIT()
  !###======================================================================
  IMPLICIT NONE
- INTEGER :: I
  
  CALL WINDOWSELECT(0)
  IF(WMENUGETSTATE(ID_GEOCONNECT,2).EQ.1)THEN
@@ -525,9 +522,8 @@ CONTAINS
     CALL IDFIROWICOL(TOPM(1),IROW,ICOL,XC,YC)
     !## draw new rectangle
     CALL UTL_PLOTLOCATIONIDF(TOPM(1),IROW,ICOL)
-   
+    !## get fractions
     CALL GC_IDENTIFY_COMPUTE(MESSAGE%GX,MESSAGE%GY,TM,BM)
-
     !## fill results in grid
     CALL WDIALOGSELECT(ID_DGEOCONNECT_TAB1) 
     
@@ -799,9 +795,8 @@ CONTAINS
  SUBROUTINE GC_PRE_COMPUTE_WRITE(IMODBATCH)
  !###======================================================================
  IMPLICIT NONE
- INTEGER,INTENT(IN) :: IMODBATCH !# =1 Only write to dos-window if started in batch modus
- INTEGER :: I,IU
-! CHARACTER(LEN=256) :: LINE
+ INTEGER,INTENT(IN) :: IMODBATCH 
+ INTEGER :: I
   
  IF(IMODBATCH.EQ.0)CALL WINDOWOUTSTATUSBAR(4,'Write data ...')
  IF(IMODBATCH.EQ.1)WRITE(*,'(A)') 'Write data ...'
@@ -1006,7 +1001,7 @@ CONTAINS
  !###======================================================================
  IMPLICIT NONE
  INTEGER,INTENT(IN) :: DID
- INTEGER :: I,J,K
+ INTEGER :: I
  
  GC_REGISFILES_PUT=.FALSE.
  
@@ -1110,14 +1105,55 @@ CONTAINS
  END FUNCTION GC_READ_MODELDATA
   
  !###======================================================================
+ LOGICAL FUNCTION GC_READ_RESULTDATA(IMODBATCH)
+ !###======================================================================
+ IMPLICIT NONE
+ INTEGER,INTENT(IN) :: IMODBATCH
+ INTEGER :: ILAY,I
+ CHARACTER(LEN=12) :: FORM
+   
+ GC_READ_RESULTDATA=.FALSE.
+ 
+ !## read in appropriate model results
+ SELECT CASE (MODELTYPE)
+  CASE (1) !## head
+   FORM='HEAD'
+  CASE (2) !## bdgwel
+   FORM='BDGWEL'
+  CASE (3) !## bdgriv
+   FORM='BDGRIV'
+  CASE (4) !## bdgdrn
+   FORM='BDGDRN'
+ END SELECT
+ 
+ ALLOCATE(RESM(NLAYM)); DO I=1,SIZE(RESM); CALL IDFNULLIFY(RESM(I)); ENDDO
+ 
+ DO ILAY=1,NLAYM
+
+  !## get appropriate filename for results
+  RESM(ILAY)%FNAME=TRIM(MODELFOLDER)//'\'//TRIM(FORM)//'\'//TRIM(FORM)//'_STEADY-STATE_L'//TRIM(ITOS(ILAY))//'.IDF'
+
+  IF(IMODBATCH.EQ.0)CALL WINDOWOUTSTATUSBAR(4,'Reading '//TRIM(RESM(ILAY)%FNAME))
+  IF(IMODBATCH.EQ.1)WRITE(*,'(A)') 'Reading '//TRIM(RESM(ILAY)%FNAME)
+    
+  !## scale mean
+  CALL IDFCOPY(IDF,RESM(ILAY))
+  IF(.NOT.IDFREADSCALE(RESM(ILAY)%FNAME,RESM(ILAY),10,0,0.0,0))RETURN 
+
+ ENDDO
+ 
+ GC_READ_RESULTDATA=.TRUE.
+ 
+ END FUNCTION GC_READ_RESULTDATA
+ 
+ !###======================================================================
  LOGICAL FUNCTION GC_READ_REGISDATA(IFILE,IKHR,IKVR,FTYPE,IREAD)
  !###======================================================================
  IMPLICIT NONE
  INTEGER,INTENT(IN) :: IFILE,IREAD
  INTEGER,INTENT(INOUT) :: IKHR,IKVR
- INTEGER :: I,J,K,JKHR,JKVR
+ INTEGER :: JKHR,JKVR
  CHARACTER(LEN=52),INTENT(OUT) :: FTYPE
- CHARACTER(LEN=256) :: FNAME
  
  GC_READ_REGISDATA=.FALSE.
 
@@ -1188,14 +1224,18 @@ CONTAINS
  !###======================================================================
  IMPLICIT NONE
  INTEGER,INTENT(IN) :: IMODBATCH
- REAL :: XC,YC
- INTEGER :: IROW,ICOL,NU,I,IOS,IU
+ INTEGER :: NU,I
  INTEGER,ALLOCATABLE,DIMENSION(:) :: IGRP
- CHARACTER(LEN=12) :: FORM
  
  !## read/scale idf's with model top and bot values
  IF(.NOT.GC_READ_MODELDATA(1,IMODBATCH))RETURN
 
+ !## read/scale idf's with appropriate model results steady-state)
+ IF(IAGGR.EQ.1)THEN
+  IF(.NOT.GC_READ_RESULTDATA(IMODBATCH))RETURN
+ ENDIF
+ 
+ !## read multiplication factors
  IF(.NOT.GC_IPEST_READ(TRIM(DBASEFOLDER)//'\factors.txt',IMODBATCH))RETURN
 
  ALLOCATE(IGRP(NLAYR)); IGRP=IPFAC%IGRP
@@ -1301,6 +1341,7 @@ CONTAINS
       !## compute aggregate values
       SELECT CASE (IAGGR)
        CASE (1) !## modelresults
+        IDF%X(ICOL,IROW)=IDF%X(ICOL,IROW)+(Z1-Z2)*KVAL*F
 
        CASE (2) !## modelinput
         SELECT CASE (INPUTTYPE)
