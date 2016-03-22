@@ -1340,8 +1340,8 @@ CONTAINS
           
       !## compute aggregate values
       SELECT CASE (IAGGR)
-       CASE (1) !## modelresults
-        IDF%X(ICOL,IROW)=IDF%X(ICOL,IROW)+(Z1-Z2)*KVAL*F
+       CASE (1) !## modelresults - take the weighted sum
+        IDF%X(ICOL,IROW)=IDF%X(ICOL,IROW)+(Z1-Z2)*FM*RESM(J)%X(ICOL,IROW)
 
        CASE (2) !## modelinput
         SELECT CASE (INPUTTYPE)
@@ -1355,7 +1355,7 @@ CONTAINS
      ENDIF
     ENDIF
     
-    !## compute fractions for aquitards, resistance of aquitard
+    !## compute fractions for aquitards, resistance of aquitard (not feasible for model results)
     IF(J.LT.NLAYM)THEN
      TM=BOTM(J)%X(ICOL,IROW); BM=TOPM(J+1)%X(ICOL,IROW)
      IF(TM.NE.BOTM(J)%NODATA.AND.BM.NE.TOPM(J+1)%NODATA)THEN
@@ -1391,6 +1391,7 @@ CONTAINS
         !## compute aggregate values
         SELECT CASE (IAGGR)
          CASE (1) !## modelresults
+!## not to be here ...
          CASE (2) !## modelinput
           SELECT CASE (INPUTTYPE)
            CASE (2,4) !# vcw/kvv
@@ -1417,6 +1418,13 @@ CONTAINS
    !## compute aggregate values
    SELECT CASE (IAGGR)
     CASE (1) !## modelresults
+     SELECT CASE (MODELTYPE)
+      CASE (1) !## head, get the average
+       IDF%X(ICOL,IROW)=IDF%X(ICOL,IROW)/(TOP%X(ICOL,IROW)-BOT%X(ICOL,IROW))
+      CASE (2) !## bdgwel
+      CASE (3) !## bdgriv
+      CASE (4) !## bdgdrn
+     END SELECT   
     CASE (2) !## modelinput
      SELECT CASE (INPUTTYPE)
       CASE (3,4) !# khv
@@ -1460,6 +1468,16 @@ CONTAINS
  !## option save results
  SELECT CASE (IAGGR)
   CASE (1) !## modelresults
+   SELECT CASE (MODELTYPE)
+    CASE (1)
+     FNAME=TRIM(OUTPUTFOLDER)//'\'//TRIM(FORMNAME)//'_HEAD.IDF'
+    CASE (2)
+     FNAME=TRIM(OUTPUTFOLDER)//'\'//TRIM(FORMNAME)//'_BDGWEL.IDF'
+    CASE (3)
+     FNAME=TRIM(OUTPUTFOLDER)//'\'//TRIM(FORMNAME)//'_BDGRIV.IDF'
+    CASE (4)
+     FNAME=TRIM(OUTPUTFOLDER)//'\'//TRIM(FORMNAME)//'_BDGDRN.IDF'
+   END SELECT
   CASE (2) !## modelinput
    SELECT CASE (INPUTTYPE)
     CASE (1)

@@ -617,7 +617,7 @@ CONTAINS
  SUBROUTINE PROFILE_MOUSEBUTDOWN()
  !###====================================================================
  IMPLICIT NONE
- INTEGER :: IIPF,I
+ INTEGER :: I
 
  !## snap coordinates ... yes-or-no
  CALL PROFILE_SNAPCOORDINATES()
@@ -2699,7 +2699,8 @@ CONTAINS
      ENDIF
      !## determine for each line-segment what to draw!
      REWIND(KU(I))
-     CALL IFFPLOT(KU(I),XMN,XMX,YMN,YMX,ZMIN,ZMAX,KPLOT(I),XY(:,J:J+1),DX)
+     CALL IFFPLOT(KU(I),XMN,XMX,YMN,YMX,KPLOT(I),XY(:,J:J+1),DX)
+!     CALL IFFPLOT(KU(I),XMN,XMX,YMN,YMX,ZMIN,ZMAX,KPLOT(I),XY(:,J:J+1),DX)
     END DO
    ENDIF
   ENDIF
@@ -3045,7 +3046,7 @@ CONTAINS
  SUBROUTINE PROFILE_PROPMAIN()
  !###======================================================================
  IMPLICIT NONE
- INTEGER :: IEXIT,IFIXX,IFIXY,IIPF,I
+ INTEGER :: IEXIT,IFIXX,IFIXY,I
  REAL :: BMPX1,BMPX2,BMPY1,BMPY2
 
  CALL PROFILE_CLEAR()
@@ -4706,7 +4707,7 @@ CONTAINS
  SUBROUTINE PROFILE_ALLOCATE()
  !###====================================================================
  IMPLICIT NONE
- INTEGER :: IPLOT,I,IIPF
+ INTEGER :: IPLOT,I
  REAL :: DX
 
  MXNIDF=0

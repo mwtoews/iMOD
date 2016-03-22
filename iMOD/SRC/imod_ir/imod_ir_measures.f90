@@ -165,7 +165,7 @@ ILOOP: DO I=1,NMES
  SUBROUTINE IR1PUTMEASURES()
  !###======================================================================
  IMPLICIT NONE
- INTEGER :: I,IMES
+ INTEGER :: I
 
  !## expand grid
  CALL WDIALOGSELECT(ID_DIRMEASURES)
