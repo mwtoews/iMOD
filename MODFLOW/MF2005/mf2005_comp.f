@@ -554,6 +554,7 @@ c next stress period
 C7------SIMULATE EACH STRESS PERIOD.
 c      DO 100 KPER = 1, NPER
         CALL GWF2BAS7ST(KKPER,IGRID)
+        if(IUNIT(IUMET).gt.0) call gwf2met1st(igrid)                    ! MET
         IF(IUNIT(IUIBS).GT.0) CALL GWF2IBS7ST(KKPER,IGRID)
         IF(IUNIT(IUSUB).GT.0) CALL GWF2SUB7ST(KKPER,IGRID)
         IF(IUNIT(IUSWT).GT.0) CALL GWF2SWT7ST(KKPER,IGRID)
@@ -625,7 +626,6 @@ C7C1----CALCULATE TIME STEP LENGTH. SET HOLD=HNEW.
           IF(IUNIT(IUFHB).GT.0) CALL GWF2FHB7AD(IGRID)
           IF(IUNIT(IULAK).GT.0) CALL GWF2LAK7AD(KKPER,KKSTP,
      1                                    IUNIT(IUGWT),IGRID)
-          if(IUNIT(IUMET).gt.0) call gwf2met1ad(igrid)                  ! MET
           IF(IUNIT(IUMNW2).GT.0) THEN
             IF (IUNIT(IUBCF6).GT.0) THEN
               CALL GWF2MNW27BCF(KPER,IGRID)

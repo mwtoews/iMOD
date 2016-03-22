@@ -154,7 +154,7 @@ c ------------------------------------------------------------------------------
       use m_mf2005_main, only: kper
       use gwfbasmodule, only: delt
       use gcdmodule
-      use gwfmetmodule, only: coord_xll, coord_yll, time_cstring, ieq,
+      use gwfmetmodule, only: coord_xll, coord_yll, time_ostring, ieq,
      1                        cdelr, cdelc, iss
       use imod_utl
       use m_mf2005_iu, only: iumet
@@ -254,7 +254,7 @@ c determine root and date
          end if
 
 c ### work-around Jualian date ###
-         read(time_cstring(1:8),*) idate
+         read(time_ostring(1:8),*) idate
          sdate=imod_utl_idatetojdate(idate)
 c ### work-around Jualian date ###
 c         sdate = time_cjd

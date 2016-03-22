@@ -485,11 +485,11 @@ c save data
       return
       end
 
-      subroutine gwf2met1ad(igrid)
+      subroutine gwf2met1st(igrid)
 
 c description:
 c ------------------------------------------------------------------------------
-c Update time for METadata package.
+c Setup time for METadata package.
 c
 
 c declaration section
@@ -512,6 +512,7 @@ c local variables
       double precision :: factor
 
 c functions
+      double precision :: sutl_getTimeStepLength      
 
 c include files
 
@@ -532,12 +533,8 @@ c ------------------------------------------------------------------------------
       end if
 
 c update current time
-!      time_cjd = time_cjd + factor*delt
-!############### work-around #################
       call sgwf2ins1pnt(igrid)
-      time_cjd = timesteptime
-!############### work-around #################
-
+      time_cjd = timesteptime+sutl_getTimeStepLength(igrid)      
       time_ostring = time_cstring
       call cfn_mjd2datehms(time_cjd,date,hour,minute,second)
       write(time_cstring,'(i8)') date
@@ -1093,11 +1090,11 @@ c create output file name
          fmt = 'i3,2a)'
       end if
 
-      if (issflg(kper).eq.0 .and. associated(time_cstring)) then ! TR
+      if (issflg(kper).eq.0 .and. associated(time_ostring)) then ! TR
          fmt = '(5a,'//fmt
          write(fname,fmt) root(1:cfn_length(root)),
      1                    prefix(1:cfn_length(prefix)),'_',
-     1                    time_cstring(1:cfn_length(time_cstring)),
+     1                    time_ostring(1:cfn_length(time_ostring)),
      1                    '_l', ilay, '.',ext(1:cfn_length(ext))
       else ! SS
          fmt = '(5a,'//fmt
