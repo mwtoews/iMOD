@@ -1511,8 +1511,11 @@ END SUBROUTINE IMOD_UTL_QKSORT
 
    IF(IR.EQ.1.OR.ISS.EQ.1)THEN
     READ(IU,*) IDATE,QQ
+    !## first nodata q set to zero
+    IF(QQ.EQ.NODATA(2))QQ=0.0
    ELSE
-    QQ   =Q1
+    !## use previous q, if not equal to nodata(2) - otherwise reuse latest one
+    IF(Q1.NE.NODATA(2))QQ=Q1
     IDATE=JDATE
    ENDIF
 
@@ -1539,7 +1542,7 @@ END SUBROUTINE IMOD_UTL_QKSORT
     IF(IDATE.GT.EDATE)EXIT
 
     !## within modeling window
-    IF(NDATE.GT.SDATE)THEN !.AND. &
+    IF(NDATE.GT.SDATE)THEN 
 
      !### defintions ($ time window current stressperiod)
      !  $        |---------|         $
