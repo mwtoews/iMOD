@@ -298,8 +298,9 @@ c allocate
                read(string(3),*) q(1)
             else
                txtfile = trim(root)//trim(string(iext))//'.'//trim(ext)
-               call imod_utl_readipf(sdate,edate,ttime,
-     1                               qsort,q(1),txtfile,iss)
+               call imod_utl_readipf(sdate,edate,q(1),txtfile,iss)
+!               call imod_utl_readipf(sdate,edate,ttime,
+!     1                               qsort,q(1),txtfile,iss)
             end if
 
             ii = ii + 1

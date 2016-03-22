@@ -1470,21 +1470,23 @@ END SUBROUTINE IMOD_UTL_QKSORT
  END FUNCTION IMOD_UTL_SUBST
 
  !###====================================================================
- SUBROUTINE IMOD_UTL_READIPF(SDATE,EDATE,TTIME,QSORT,Q,FNAME,ISS)
+ SUBROUTINE IMOD_UTL_READIPF(SDATE,EDATE,QT,FNAME,ISS) !,TTIME,QSORT,Q,FNAME,ISS)
  !###====================================================================
  IMPLICIT NONE
- INTEGER,INTENT(IN) :: SDATE,EDATE,TTIME
- REAL,INTENT(INOUT),DIMENSION(TTIME) :: QSORT
+ INTEGER,INTENT(IN) :: SDATE,EDATE !,TTIME
+! REAL,INTENT(INOUT),DIMENSION(TTIME) :: QSORT
  CHARACTER(LEN=*),INTENT(IN) :: FNAME
- REAL,DIMENSION(1),INTENT(OUT) :: Q
+! REAL,DIMENSION(1),INTENT(OUT) :: Q
+ REAL,INTENT(OUT) :: QT
  INTEGER, INTENT(IN) :: ISS
- INTEGER :: IR,I,I1,I2,IU,NR,NC,IDATE,JDATE,NDATE,NAJ,N,IOS
+ INTEGER :: IR,I,I1,I2,IU,NR,NC,IDATE,JDATE,NDATE,NAJ,N,IOS,TTIME
  REAL :: QQ,FRAC,Q1
  CHARACTER(LEN=8),DIMENSION(2) :: ATTRIB
  REAL,DIMENSION(2) :: NODATA
 
- Q=0.0
-
+ QT=0.0
+ TTIME=EDATE-SDATE
+ 
  !## open textfiles with pump information
  IU=IMOD_UTL_GETUNIT()
  CALL IMOD_UTL_OPENASC(IU,FNAME,'R')
@@ -1501,8 +1503,8 @@ END SUBROUTINE IMOD_UTL_QKSORT
    IF(IOS.NE.0)CALL IMOD_UTL_PRINTTEXT('Can not read attribute '//TRIM(IMOD_UTL_ITOS(I))//' in '//TRIM(FNAME),2)
   END DO
 
-  IF(ISS.EQ.1)QSORT=0.0
-  IF(ISS.EQ.2)QSORT=NODATA(2)!-999.99
+!  IF(ISS.EQ.1)QSORT=0.0
+!  IF(ISS.EQ.2)QSORT=NODATA(2)!-999.99
   I1=1
 
   DO IR=1,NR
@@ -1514,9 +1516,10 @@ END SUBROUTINE IMOD_UTL_QKSORT
     IDATE=JDATE
    ENDIF
 
- !#don't bother for steady-state, take the mean!
+   !## don't bother for steady-state, take the mean!
    IF(ISS.EQ.1)THEN
-    QSORT(1)=QSORT(1)+QQ
+!    QSORT(1)=QSORT(1)+QQ
+    QT=QT+QQ
    ELSE
 
     !## edate=end date of current simulation period
@@ -1546,8 +1549,9 @@ END SUBROUTINE IMOD_UTL_QKSORT
      !## if startingdate (read from txt file) greater than start date of current stressperiod
      IF(IDATE.GT.SDATE)N=N-(IDATE-SDATE)
      I2=I1+N-1
-
-     QSORT(I1:I2)=QQ
+     
+     IF(I2.GE.I1)QT=QT+REAL(I2-I1+1)*QQ
+!     QSORT(I1:I2)=QQ
 
      I1=I2+1
 
@@ -1556,15 +1560,17 @@ END SUBROUTINE IMOD_UTL_QKSORT
    ENDIF
   END DO
 
+  !## determine for each period appropriate attribute term
   IF(ISS.EQ.1)THEN
- !##determine for each period appropriate attribute term
-   Q   =QSORT(1)/REAL(NR)
- !#determine for each period appropriate q-median term
+   QT=QT/REAL(NR)
+!   Q   =QSORT(1)/REAL(NR)
+  !## determine for each period appropriate q-median term
   ELSEIF(ISS.EQ.2)THEN
+   QT=QT/REAL(TTIME)
  !  Q   =IMOD_UTL_GETMED_OLD(QSORT,TTIME,NODATA(2),NAJ)
-   CALL IMOD_UTL_GETMED(QSORT,TTIME,NODATA(2),(/50.0/),1,NAJ,Q(1))
-   FRAC=REAL(NAJ)/REAL(TTIME)
-   Q   =Q*FRAC
+!   CALL IMOD_UTL_GETMED(QSORT,TTIME,NODATA(2),(/50.0/),1,NAJ,Q(1))
+!   FRAC=REAL(NAJ)/REAL(TTIME)
+!   Q   =Q*FRAC
   ENDIF
 
  ENDIF
