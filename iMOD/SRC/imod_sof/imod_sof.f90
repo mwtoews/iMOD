@@ -74,8 +74,8 @@ CONTAINS
  !## nothing found
  IF(.NOT.ASSOCIATED(LISTNAME))RETURN
  
- NIDF=SIZE(LISTNAME); ALLOCATE(FIDF(NIDF),RIDF(NIDF))
- DO I=1,NIDF; CALL IDFNULLIFY(FIDF(I)); CALL IDFNULLIFY(RIDF(I)); ENDDO
+ NIDF=SIZE(LISTNAME); IF(NIDF.LE.0)THEN; WRITE(*,'(/A/)') 'No resultfiles found'; RETURN; ENDIF
+ ALLOCATE(FIDF(NIDF),RIDF(NIDF));DO I=1,NIDF; CALL IDFNULLIFY(FIDF(I)); CALL IDFNULLIFY(RIDF(I)); ENDDO
  
  !## read in all result files in fidf() and make a copy of it to ridf()
  DO I=1,SIZE(LISTNAME)
@@ -124,11 +124,13 @@ CONTAINS
   !## add fluxes
   XSORT=0.0; YSORT=0.0; NSORT=0
   DO J=1,NIDF
+   !## month of current result idf-file
+   IMND=FIDF(J)%IMH
+   !## skip if month cannot be derived
+   IF(IMND.LE.0)CYCLE
+   NSORT(IMND)=NSORT(IMND)+1
    DO I=1,NTHREAD
     JCOL=YSEL(1,I); JROW=YSEL(2,I)
-    !## month of current result idf-file
-    IMND=FIDF(J)%IMH
-    NSORT(IMND)=NSORT(IMND)+1
     XSORT(NSORT(IMND),IMND)=XSORT(NSORT(IMND),IMND)+FIDF(J)%X(JCOL,JROW)
 !    XSORT(J)=XSORT(J)+FIDF(J)%X(JCOL,JROW)
 !    !## sum fluxes
@@ -173,6 +175,8 @@ CONTAINS
   !## check what category of percentile
   DO J=1,NIDF
    IMND=FIDF(J)%IMH
+   !## skip if month cannot be derived
+   IF(IMND.LE.0)CYCLE
    CALL POL1LOCATE(XMED(:,IMND),NSORT(IMND),REAL(YSORT(J,IMND),8),I)
 !   CALL POL1LOCATE(XMED,SIZE(XMED),REAL(YSORT(J,IMND),8),I)
    RIDF(J)%X(ICOL,IROW)=REAL(I)
@@ -183,7 +187,7 @@ CONTAINS
       
  ENDDO; WRITE(6,'(A,F7.3,A)') '+Progress ',REAL(IROW*100)/REAL(IDF(1)%NROW),' % finished        '; ENDDO
 
- !## save percentile discharge
+ !## save percentile discharges
  IF(ITQP.EQ.1)THEN
   DO I=1,SIZE(TQP,1); DO J=1,SIZE(TQP,2)
    IF(.NOT.IDFWRITE(TQP(I,J),TQP(I,J)%FNAME,1))RETURN
@@ -191,7 +195,7 @@ CONTAINS
  ENDIF
 
 ! IF(.NOT.IDFWRITE(IDF(3),IDF(1)%FNAME(:INDEX(IDF(1)%FNAME,'.',.TRUE.)-1)//'_TEST.IDF',1))THEN; ENDIF
- IYR=1981; IMD=0
+ IYR=YTQP; IMD=0
  DO I=1,NIDF
   IMD=IMD+1
   IF(IMD.GT.12)THEN
