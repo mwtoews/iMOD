@@ -19,6 +19,7 @@
 !!  Stichting Deltares
 !!  P.O. Box 177
 !!  2600 MH Delft, The Netherlands.
+!!
 MODULE DATEVAR
 
 INTEGER,PARAMETER :: MXDATE=12
@@ -26,8 +27,12 @@ CHARACTER(LEN=9),DIMENSION(MXDATE) :: CDATE = &
     (/'January  ','February ','March    ','April    ','May      ', &
       'June     ','July     ', &
       'August   ','September','October  ','November ','December '/)
-!DATA CDATE
+CHARACTER(LEN=3),DIMENSION(MXDATE) :: CDATE_SHORT = &
+    (/'Jan','Feb','Mar','Apr','May', &
+      'Jun','Jul','Aug','Sep','Oct', &
+      'Nov','Dec'/)
 CHARACTER(LEN=3), DIMENSION(7) :: DAY = &
   (/'Mon','Tue','Wed','Thu','Fri','Sat','Sun'/)
+
 END MODULE
 
