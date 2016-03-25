@@ -34,10 +34,10 @@ INTEGER,PRIVATE :: IHOR,IVER
 CONTAINS
 
  !###======================================================================
- SUBROUTINE INTERSECT_EQUI(XMIN,XMAX,YMIN,YMAX,CS,XIN1,XIN2,YIN1,YIN2,N,LHFB,LROWCOL) 
+ SUBROUTINE INTERSECT_EQUI(XMIN,XMAX,YMIN,YMAX,CSX,CSY,XIN1,XIN2,YIN1,YIN2,N,LHFB,LROWCOL) 
  !###======================================================================
  IMPLICIT NONE
- REAL,INTENT(IN) :: XMIN,XMAX,YMIN,YMAX,CS
+ REAL,INTENT(IN) :: XMIN,XMAX,YMIN,YMAX,CSX,CSY
  REAL,INTENT(IN) :: XIN1,XIN2,YIN1,YIN2
  INTEGER,INTENT(OUT) :: N
  LOGICAL,INTENT(IN) :: LHFB,LROWCOL
@@ -55,26 +55,26 @@ CONTAINS
  
  !## find search box - result can be negative, does not matter!
  I=1
- XMN=XMIN+CS*(INT((X1-XMIN)/CS)+I)
+ XMN=XMIN+CSX*(INT((X1-XMIN)/CSX)+I)
  I=0
  DX=X2-XMIN
- IF(MOD(DX,CS).EQ.0.0)I=-1
- XMX=XMIN+CS*(INT((X2-XMIN)/CS)+I) 
+ IF(MOD(DX,CSX).EQ.0.0)I=-1
+ XMX=XMIN+CSX*(INT((X2-XMIN)/CSX)+I) 
 
  Y =MIN(Y1,Y2)
  I =0
  DY=YMAX-Y
- IF(MOD(DY,CS).EQ.0.0)I=-1
- YMN=YMAX-CS*(INT((YMAX-Y)/CS)+I)
+ IF(MOD(DY,CSY).EQ.0.0)I=-1
+ YMN=YMAX-CSY*(INT((YMAX-Y)/CSY)+I)
  Y =MAX(Y1,Y2)
  I =1
- YMX=YMAX-CS*(INT((YMAX-Y)/CS)+I)
+ YMX=YMAX-CSY*(INT((YMAX-Y)/CSY)+I)
 
  !## continue seach rest of intersections
  !## try intersections with y-axes firstly
- Y=YMN-CS
+ Y=YMN-CSY
  DO
-  Y=Y+CS
+  Y=Y+CSY
   IF(Y.GT.YMX)EXIT
 
   !## array overwritten
@@ -101,9 +101,9 @@ CONTAINS
  
  ENDDO
  !## try intersections with x-axes secondly
- X=XMN-CS
+ X=XMN-CSX
  DO
-  X=X+CS
+  X=X+CSX
   IF(X.GT.XMX)EXIT
 
   !## array overwritten
@@ -138,14 +138,14 @@ CONTAINS
   !## mid point
   X   =(XA(I-1)+XA(I))/2.0
   Y   =(YA(I-1)+YA(I))/2.0
-  ICOL=INT((X-XMIN)/CS)+1
-  IROW=INT((YMAX-Y)/CS)+1
+  ICOL=INT((X-XMIN)/CSX)+1
+  IROW=INT((YMAX-Y)/CSY)+1
 
-  TD=CS*2.0; ID=0 !## fraction
-  CALL INTERSECT_NCORNER(ID,TD,XMIN+(ICOL-1)*CS,YMAX-(IROW-1)*CS,X,Y,1)
-  CALL INTERSECT_NCORNER(ID,TD,XMIN+ ICOL   *CS,YMAX-(IROW-1)*CS,X,Y,2)
-  CALL INTERSECT_NCORNER(ID,TD,XMIN+ ICOL   *CS,YMAX- IROW   *CS,X,Y,3)
-  CALL INTERSECT_NCORNER(ID,TD,XMIN+(ICOL-1)*CS,YMAX- IROW   *CS,X,Y,4)
+  TD=CSX*CSY; ID=0 !## fraction
+  CALL INTERSECT_NCORNER(ID,TD,XMIN+(ICOL-1)*CSX,YMAX-(IROW-1)*CSY,X,Y,1)
+  CALL INTERSECT_NCORNER(ID,TD,XMIN+ ICOL   *CSX,YMAX-(IROW-1)*CSY,X,Y,2)
+  CALL INTERSECT_NCORNER(ID,TD,XMIN+ ICOL   *CSX,YMAX- IROW   *CSY,X,Y,3)
+  CALL INTERSECT_NCORNER(ID,TD,XMIN+(ICOL-1)*CSX,YMAX- IROW   *CSY,X,Y,4)
   FA(I-1)=REAL(ID) 
   
   DX  =XA(I)-XA(I-1)

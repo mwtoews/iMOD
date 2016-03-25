@@ -57,12 +57,11 @@ CONTAINS
  REAL,DIMENSION(:),INTENT(IN) :: PTQP
  INTEGER,INTENT(IN) :: ITQP,TTQP
  TYPE(IDFOBJ),ALLOCATABLE,DIMENSION(:) :: FIDF,RIDF
- INTEGER :: I,J,IROW,ICOL,JROW,JCOL,IPZ,JPZ,NIDF,NX,IMND,YTQP,MTQP,DTQP
- REAL :: FP
- INTEGER,ALLOCATABLE,DIMENSION(:) :: NSORT
+ INTEGER :: I,II,J,IROW,ICOL,JROW,JCOL,IPZ,JPZ,NIDF,NX,IMND,MTQP
+ INTEGER,ALLOCATABLE,DIMENSION(:) :: NSORT,NMED
  INTEGER(KIND=1),POINTER,DIMENSION(:) :: ISPEC
  INTEGER(KIND=2),POINTER,DIMENSION(:,:) :: THREAD,YSEL
- INTEGER :: MAXTHREAD,NTHREAD,MAXN,DTERM,ISTOP,IMENU,IYR,IMD
+ INTEGER :: MAXTHREAD,NTHREAD,MAXN,DTERM,ISTOP,IMENU,IYR,IMD,IDY,IU
  CHARACTER(LEN=256),DIMENSION(:),POINTER :: LISTNAME
  CHARACTER(LEN=256) :: DIR
  CHARACTER(LEN=52) :: WCD
@@ -79,17 +78,17 @@ CONTAINS
  ALLOCATE(FIDF(NIDF),RIDF(NIDF));DO I=1,NIDF; CALL IDFNULLIFY(FIDF(I)); CALL IDFNULLIFY(RIDF(I)); ENDDO
  
  !## read in all result files in fidf() and make a copy of it to ridf()
- J=JD(2100,1,1)
+! J=JD(2100,1,1)
  DO I=1,SIZE(LISTNAME)
   FIDF(I)%FNAME=TRIM(DIR)//'\'//TRIM(LISTNAME(I))
   WRITE(*,'(A)') 'Reading '//TRIM(FIDF(I)%FNAME)
   IF(.NOT.IDFREAD(FIDF(I),FIDF(I)%FNAME,1))RETURN
-  IF(FIDF(I)%JD.NE.0)J=MIN(J,FIDF(I)%JD)
+!  IF(FIDF(I)%JD.NE.0)J=MIN(J,FIDF(I)%JD)
   CALL IDFCOPY(FIDF(I),RIDF(I))
  ENDDO
  
- WRITE(*,'(/A/)') 'Found minimal start date in results of '//TRIM(ITOS(UTL_JDATETOIDATE(J)))
- CALL UTL_GDATE(J,YTQP,MTQP,DTQP)
+! WRITE(*,'(/A/)') 'Found minimal start date in results of '//TRIM(ITOS(UTL_JDATETOIDATE(J)))
+! CALL UTL_GDATE(J,YTQP,MTQP,DTQP)
  
  IMENU=-2 !## smaller and equal
  ISTOP= 0 !## 
@@ -101,7 +100,9 @@ CONTAINS
  IF(.NOT.IDFREAD(IDF(1),IDF(1)%FNAME,1))THEN; ENDIF
  !# read percentiles
  IF(ITQP.EQ.0)THEN
+  !## number of percentiles (i), number of month (j)
   DO I=1,SIZE(TQP,1); DO J=1,SIZE(TQP,2)
+   WRITE(*,'(A)') 'Reading '//TRIM(TQP(I,J)%FNAME)
    IF(.NOT.IDFREAD(TQP(I,J),TQP(I,J)%FNAME,1))THEN; ENDIF
   ENDDO; ENDDO
  ELSE
@@ -112,7 +113,7 @@ CONTAINS
 
  !## extra array of trace-functionality
  CALL IDFCOPY(IDF(1),IDF(2)) 
- J=1+11*TTQP; ALLOCATE(XSORT(NIDF,J),YSORT(NIDF,J),NSORT(J),XMED(SIZE(TQP,1),J))
+ J=1+11*TTQP; ALLOCATE(XSORT(NIDF,J),YSORT(NIDF,J),NSORT(J),NMED(J),XMED(SIZE(TQP,1),J))
 
  MAXTHREAD=1000; ALLOCATE(ISPEC(MAXTHREAD),THREAD(3,MAXTHREAD),YSEL(2,MAXTHREAD)); MAXN=MAXTHREAD
  
@@ -130,7 +131,7 @@ CONTAINS
   !## trace all higher than neighbouring cell, imenu=-4, idf(1) will be adjusted
   CALL IDFEDITTRACE(IDF(1),IDF(2),THREAD,YSEL,ISPEC,DTERM,IMENU,MAXTHREAD,MAXN,IDF(1)%X(ICOL,IROW),NTHREAD,IPZ)
 
-  !## add fluxes to get total discharge per catchment
+  !## add fluxes to get total discharge per catchment per month
   XSORT=0.0; YSORT=0.0; NSORT=0
   DO J=1,NIDF
    !## month of current result idf-file
@@ -150,19 +151,30 @@ CONTAINS
   !## make a copy of xsort to ysort
   YSORT=XSORT
 
-  !## get percentile
+  !## compute percentile
   IF(ITQP.EQ.1)THEN
 
    !## get percentiles q (per month)
    DO IMND=1,SIZE(TQP,2)
     CALL UTL_GETMED(XSORT(:,IMND),NSORT(IMND),FIDF(1)%NODATA,PTQP,SIZE(PTQP),NX,XMED(:,IMND))
-    !## use discharge only whenevet larger than specified minq
+    !## use discharge only whenever larger than specified minq
     IF(ABS(XMED(1,IMND)).GT.MINQ)THEN
      DO I=1,SIZE(TQP,1)
+      !## percentile (q) i for each month imnd
       TQP(I,IMND)%X(ICOL,IROW)=XMED(I,IMND)
      ENDDO
+     NMED(IMND)=SIZE(TQP,1)
+    ELSE
+     NMED(IMND)=0
     ENDIF
    ENDDO
+
+IU=UTL_GETUNIT()
+OPEN(IU,FILE='d:\IMOD-MODELS\ALBERTA\WCAB\DBASE\OVERLANDFLOW\VERSION_1\PERPERMONTH.CSV',STATUS='UNKNOWN',ACTION='WRITE')
+DO IMND=1,SIZE(TQP,2)
+ write(iu,'(I10,A1,99(F10.2,A1))') IMND,',',(Xmed(i,imnd),',', I=1,SIZE(TQP,1))
+ENDDO
+CLOSE(IU)
 
 !   DO J=1,NIDF
 !    !## found appropriate percentile in xsort()
@@ -181,19 +193,51 @@ CONTAINS
   !## read percentile
   ELSE
   
-   DO I=1,SIZE(TQP,1); DO J=1,SIZE(TQP,2); XMED(I,J)=TQP(I,J)%X(ICOL,IROW); ENDDO; ENDDO
-   NSORT=SIZE(TQP,2)
-
+   !## number of percentiles
+   DO I=1,SIZE(TQP,1)
+    !## number of months
+    DO J=1,SIZE(TQP,2); XMED(I,J)=TQP(I,J)%X(ICOL,IROW); ENDDO
+    !## if percentiles are zero for months, reset nsort
+    NMED(I)=SIZE(TQP,1); IF(SUM(XMED(I,:)).EQ.0.0)NMED(I)=0
+   ENDDO
+   
   ENDIF
   
   !## check what category of percentile
+  NSORT=0
   DO J=1,NIDF
    IMND=FIDF(J)%IMH
    !## skip if month cannot be derived
    IF(IMND.LE.0)CYCLE
-   CALL POL1LOCATE(XMED(:,IMND),NSORT(IMND),REAL(YSORT(J,IMND),8),I)
-!   CALL POL1LOCATE(XMED,SIZE(XMED),REAL(YSORT(J,IMND),8),I)
-   RIDF(J)%X(ICOL,IROW)=REAL(I)
+   
+   NSORT(IMND)=NSORT(IMND)+1
+   
+   !## apply classes
+   !##   xmed(1) xmed(2) xmed(3) xmed(4) xmed(5)
+   !##     |       |       |       |       |
+   !##  0      1       2       3       4       5
+
+   II=-1
+
+   IF(NMED(IMND).GT.0)THEN   
+    IF(YSORT(NSORT(IMND),IMND).LT.XMED(1,IMND))THEN
+     II=0
+    ELSEIF(YSORT(NSORT(IMND),IMND).GT.XMED(NMED(IMND),IMND))THEN
+     II=NMED(IMND)
+    ELSE
+     DO I=1,NMED(IMND)-1
+      IF(YSORT(NSORT(IMND),IMND).GE.XMED(I,IMND).AND.YSORT(NSORT(IMND),IMND).LE.XMED(I+1,IMND))THEN; II=I; EXIT; ENDIF
+     ENDDO
+    ENDIF
+   ENDIF
+   
+!   IF(NSORT(IMND).EQ.0)THEN
+!    I=0
+!   ELSE
+!    CALL POL1LOCATE(XMED(:,IMND),NSORT(IMND),REAL(YSORT(J,IMND),8),I)
+!!   CALL POL1LOCATE(XMED,SIZE(XMED),REAL(YSORT(J,IMND),8),I)
+!   ENDIF
+   RIDF(J)%X(ICOL,IROW)=REAL(II)
   ENDDO
    
   !## clean visited place
@@ -212,18 +256,25 @@ CONTAINS
  WRITE(*,*)
  
 ! IF(.NOT.IDFWRITE(IDF(3),IDF(1)%FNAME(:INDEX(IDF(1)%FNAME,'.',.TRUE.)-1)//'_TEST.IDF',1))THEN; ENDIF
- IYR=YTQP; IMD=MTQP
+! IYR=YTQP; IMD=MTQP
+
+ !## write results
  DO I=1,NIDF
-  WRITE(WCD,'(I4.4,2I2.2)') IYR,IMD,DTQP
+
+  IMD=FIDF(J)%IMH
+  IYR=FIDF(J)%IYR
+  IDY=FIDF(J)%IDY
+
+  !## skip if month cannot be derived
+  IF(IMD.LE.0)CYCLE
+  
+  WRITE(WCD,'(I4.4,2I2.2)') IYR,IMD,IDY
   WRITE(*,'(A)') 'Writing '//TRIM(OUTPUTFOLDER)//'\TQ_PERCENT_'//TRIM(WCD)//'.IDF'
   IF(.NOT.IDFWRITE(RIDF(I),TRIM(OUTPUTFOLDER)//'\TQ_PERCENT_'//TRIM(WCD)//'.IDF',1))THEN; ENDIF
-  IMD=IMD+1
-  IF(IMD.GT.12)THEN
-   IYR=IYR+1; IMD=1
-  ENDIF
+
  ENDDO
  
- DEALLOCATE(LISTNAME,XSORT,YSORT,XMED)
+ DEALLOCATE(LISTNAME,XSORT,YSORT,XMED,NMED)
  CALL IDFDEALLOCATE(FIDF,SIZE(FIDF)); DEALLOCATE(FIDF)  
 
  END SUBROUTINE SOF_CATCHMENTS
@@ -411,7 +462,7 @@ CONTAINS
  TYPE(IDFOBJ),INTENT(IN) :: IDF
  REAL,INTENT(IN) :: XC,YC
  REAL,DIMENSION(2) :: A
- INTEGER :: IQ,IROW,ICOL,IC1,IC2,IR1,IR2,IC,IR,IWINDOW
+ INTEGER :: IROW,ICOL,IC1,IC2,IR1,IR2,IC,IR,IWINDOW
  REAL :: DX,DY,X1,Y1,F,AF,TD,X2,Y2
 
  !## get proper cell
@@ -1006,8 +1057,7 @@ if(irow.eq.ir.and.icol.eq.ic)f=1.0
  TYPE(IDFOBJ),INTENT(INOUT) :: SLOPE,ASPECT,DEM
  INTEGER,INTENT(IN) :: NPPX
  TYPE(IDFOBJ) :: PCG 
- INTEGER :: IC1,IC2,IR1,IR2,I,IERROR,ICOL,IROW,IFCT,IC,IR
- REAL,POINTER,DIMENSION(:) :: XA,YA,ZA 
+ INTEGER :: IC1,IC2,IR1,IR2,I,ICOL,IROW,IC,IR
  REAL :: A
  REAL,PARAMETER :: HINI=0.0
    

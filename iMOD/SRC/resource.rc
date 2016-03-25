@@ -8,7 +8,7 @@
 //
 // Winteracter resource script. 
 //
-// Modified : 24/Mar/2016 14:35:55
+// Modified : 25/Mar/2016 17:33:30
 //
 ///////////////////////////////////////////////////
 //
@@ -1117,6 +1117,8 @@
 #define ID_OPEN9                         1071
 #define ID_FLIPBITMAP_HORIZONTAL        40282
 #define ID_FLIPBITMAP_VERTICAL          40283
+#define IDD_DIALOG006                     380
+#define ID_DSOLIDTAB5                     381
 
 ///////////////////////////////////////////////////
 //
@@ -7283,11 +7285,12 @@ BEGIN
 "[Dialog] \n"
 " 0  1089 0 \n"
 "[Tabs] \n"
-" 1089     4   315 \n"
+" 1089     5   315 \n"
 "  315  Solids \n"
 "  314  Polygons \n"
 "  319  Masks \n"
 "  363  Faults \n"
+"  381  IPF files \n"
 ,0
 END
 
@@ -10269,6 +10272,38 @@ BEGIN
 ,0
 END
 
+ID_DSOLIDTAB5 DIALOG 0, 0,  164,  112
+STYLE WS_CHILD | DS_CONTROL | DS_3DLOOK
+FONT    8, "Arial"
+BEGIN
+    CONTROL "",IDF_GRID1,"ISSGRID",WS_CHILD | WS_VISIBLE | WS_BORDER | WS_VSCROLL | WS_HSCROLL | WS_GROUP | WS_TABSTOP | GS_DEFROWLABELS | GS_COLUMNLABELS | GS_RESIZECOLUMNS,    6,    4,  152,  104
+END
+
+ID_DSOLIDTAB5 RCDATA
+BEGIN
+"[Dialog] \n"
+" 0  1004 0 \n"
+"[Grids] \n"
+" 1004     2     50   380 \n"
+,0
+END
+
+IDD_DIALOG006 DIALOG 0, 0, 1000,   16
+STYLE DS_3DLOOK
+FONT    8, "Arial"
+BEGIN
+    CONTROL "Interface",ISS1,"INTEGERSPIN",WS_CHILD | WS_VISIBLE | WS_BORDER | WS_TABSTOP | ES_LEFT | ES_CENTER | ES_MULTILINE,    0,    0,   50,   14
+    CONTROL "IPF-File",ISS2,"EDIT",WS_CHILD | WS_VISIBLE | WS_BORDER | WS_TABSTOP | ES_LEFT | ES_AUTOHSCROLL,    0,    0,  128,   14
+END
+
+IDD_DIALOG006 RCDATA
+BEGIN
+"[Ranges] \n"
+"[Lengths] \n"
+" 1115   256 \n"
+,0
+END
+
 ///////////////////////////////////////////////////
 //
 // Menus
@@ -11675,5 +11710,5 @@ END
 //*WI* FORTSAVE    1
 //*WI* FILENAME    resource.f90
 //*WI* FMODNAME    RESOURCE
-//*WI* LASTTYPE        1
-//*WI* LASTRES         7
+//*WI* LASTTYPE        2
+//*WI* LASTRES       197
