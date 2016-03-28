@@ -81,12 +81,11 @@ CONTAINS
  END FUNCTION UTL_IMODVERSION
  
  !###====================================================================
- LOGICAL FUNCTION UTL_PCK_READTXT(ICOL,STIME,ETIME,MTYPE,QT,FNAME) 
+ LOGICAL FUNCTION UTL_PCK_READTXT(ICOL,STIME,ETIME,QT,FNAME) 
  !###====================================================================
  IMPLICIT NONE
- INTEGER,INTENT(IN) :: ICOL,MTYPE
+ INTEGER,INTENT(IN) :: ICOL
  INTEGER(KIND=8),INTENT(IN) :: STIME,ETIME
-! REAL,DIMENSION(:),ALLOCATABLE :: QSORT
  CHARACTER(LEN=*),INTENT(IN) :: FNAME
  REAL,INTENT(OUT) :: QT
  INTEGER :: IR,I,I1,I2,IU,NR,NC,IDATE,JDATE,NDATE,N,IOS,TTIME,ITYPE,IZ,IZMIN,IZMAX,LUNIT,DIZ,SDATE,EDATE
@@ -94,146 +93,126 @@ CONTAINS
  CHARACTER(LEN=8) :: ATTRIB
  CHARACTER(LEN=256) :: LINE
  REAL,DIMENSION(:),ALLOCATABLE :: NODATA,QD
- 
- !## sdate=yyyymmddmmhhss
- !## edate=yyyymmddmmhhss
- SDATE=STIME/1000000
- EDATE=ETIME/1000000
- SDATE=UTL_IDATETOJDATE(SDATE)
- EDATE=UTL_IDATETOJDATE(EDATE)
- 
- IF(EDATE.GT.SDATE)THEN
-  TTIME=EDATE-SDATE
- ELSE
-  LUNIT=1
-  TTIME=ABS((EDATE*LUNIT)-(SDATE*LUNIT))
- ENDIF
- !## transient(2)/steady-state(1)
-! ALLOCATE(QSORT(TTIME)); 
- QT=0.0
- 
+  
+ UTL_PCK_READTXT=.FALSE.
+
  !## open textfiles with pump information
  IU=UTL_GETUNIT(); CALL OSD_OPEN(IU,FILE=FNAME,STATUS='OLD',ACTION='READ')
+ IF(IU.LE.0)RETURN
  
- READ(IU,*) NR
- IF(NR.GT.0.0)THEN
-  READ(IU,'(A256)') LINE
-  READ(LINE,*,IOSTAT=IOS) NC,ITYPE
-  IF(IOS.NE.0)ITYPE=1
-  ITYPE=MAX(ITYPE,1)
-  
-  ALLOCATE(NODATA(NC),QD(NC)); QD=0.0
-  
-  DO I=1,NC; READ(IU,*) ATTRIB,NODATA(I); ENDDO 
+ READ(IU,*) NR; IF(NR.LE.0)THEN; UTL_PCK_READTXT=.TRUE.; RETURN; ENDIF
 
-!  QSORT=NODATA(ICOL)
-
+ READ(IU,'(A256)') LINE
+ READ(LINE,*,IOSTAT=IOS) NC,ITYPE
+ IF(IOS.NE.0)ITYPE=1
+ ITYPE=MAX(ITYPE,1)
+  
+ !## what type of file?
+ SELECT CASE (ITYPE)
   !## timeseries
-  IF(ITYPE.EQ.1)THEN  
+  CASE (1)
+   !## sdate=yyyymmddmmhhss; edate=yyyymmddmmhhss
+   SDATE=STIME/1000000; EDATE=ETIME/1000000
+   SDATE=UTL_IDATETOJDATE(SDATE); EDATE=UTL_IDATETOJDATE(EDATE)
+   TTIME=EDATE-SDATE
 
-   I1=1
-   DO IR=1,NR
+  !## boreholes/seismic
+  CASE (2,3)
+   SDATE=STIME; EDATE=ETIME
+   LUNIT=1; TTIME=ABS((EDATE*LUNIT)-(SDATE*LUNIT))
 
-    IF(IR.EQ.1)THEN
-     READ(IU,*) IDATE,(QD(I),I=2,NC)
-     QQ=QD(ICOL)
-     !## reset to zero for nodata value
-     IF(QQ.EQ.NODATA(ICOL))QQ=0.0
-    ELSE
-     !## use only whenever not equal to nodata
-     IF(Q1.NE.NODATA(ICOL))QQ=Q1
-     IDATE=JDATE
-    ENDIF
+ END SELECT
+ 
+ !## transient(2)/steady-state(1)
+ QT=0.0
 
-    !## edate=end date of current simulation period
-    NDATE=EDATE
-    IF(IR.LT.NR)THEN
-     READ(IU,*) NDATE,(QD(I),I=2,NC) 
-   
-     Q1=QD(ICOL)
-     JDATE=NDATE
-     NDATE=UTL_IDATETOJDATE(NDATE) !## fname=optional for error message
-    ENDIF
-
-    !## ndate is min of end date in txt file or simulation period
-    NDATE=MIN(NDATE,EDATE)
-
-    !## is begin date read from txt file
-    IDATE=UTL_IDATETOJDATE(IDATE)  !## fname=optional for error message
-
-    !## stop searching for data, outside modeling window!
-    IF(IDATE.GT.EDATE)EXIT
-
-    !## within modeling window
-    IF(NDATE.GT.SDATE)THEN
-
-     !### definitions ($ time window current stressperiod)
-     !  $        |---------|         $ 
-     !sdate    idate     ndate     edate
-    
-     N=NDATE-SDATE
-     !## if startingdate (read from txt file) greater than start date of current stressperiod
-     IF(IDATE.GT.SDATE)N=N-(IDATE-SDATE)
-     I2=I1+N-1
-    
-     IF(I2.GE.I1)QT=QT+REAL(I2-I1+1)*QQ !QSORT(I1:I2)=QQ
-
-     I1=I2+1
-
-    ENDIF
-   END DO
+ ALLOCATE(NODATA(NC),QD(NC)); QD=0.0
   
-  !## itype=2 borehole; itype=3 seismic
-  ELSEIF(ITYPE.EQ.2.OR.ITYPE.EQ.3)THEN
+ DO I=1,NC; READ(IU,*) ATTRIB,NODATA(I); ENDDO 
+
+ !## timeseries
+ IF(ITYPE.EQ.1)THEN  
+
+  I1=1
+  DO IR=1,NR
+
+   IF(IR.EQ.1)THEN
+    READ(IU,*) IDATE,(QD(I),I=2,NC)
+    QQ=QD(ICOL)
+    !## reset to zero for nodata value
+    IF(QQ.EQ.NODATA(ICOL))QQ=0.0
+   ELSE
+    !## use only whenever not equal to nodata
+    IF(Q1.NE.NODATA(ICOL))QQ=Q1
+    IDATE=JDATE
+   ENDIF
+
+   !## edate=end date of current simulation period
+   NDATE=EDATE
+   IF(IR.LT.NR)THEN
+    READ(IU,*) NDATE,(QD(I),I=2,NC) 
    
-   QQ=0.0; IZMAX=SDATE*LUNIT; IZMIN=EDATE*LUNIT; DIZ=(IZMAX-IZMIN)*LUNIT
+    Q1=QD(ICOL)
+    JDATE=NDATE
+    NDATE=UTL_IDATETOJDATE(NDATE) !## fname=optional for error message
+   ENDIF
+
+   !## ndate is min of end date in txt file or simulation period
+   NDATE=MIN(NDATE,EDATE)
+
+   !## is begin date read from txt file
+   IDATE=UTL_IDATETOJDATE(IDATE)  !## fname=optional for error message
+
+   !## stop searching for data, outside modeling window!
+   IF(IDATE.GT.EDATE)EXIT
+
+   !## within modeling window
+   IF(NDATE.GT.SDATE)THEN
+
+    !### definitions ($ time window current stressperiod)
+    !  $        |---------|         $ 
+    !sdate    idate     ndate     edate
+    
+    N=NDATE-SDATE
+    !## if startingdate (read from txt file) greater than start date of current stressperiod
+    IF(IDATE.GT.SDATE)N=N-(IDATE-SDATE)
+    I2=I1+N-1
+    
+    IF(I2.GE.I1)QT=QT+REAL(I2-I1+1)*QQ 
+
+    I1=I2+1
+
+   ENDIF
+  END DO
+  
+ !## itype=2 borehole; itype=3 seismic
+ ELSEIF(ITYPE.EQ.2.OR.ITYPE.EQ.3)THEN
+   
+  QQ=0.0; IZMAX=SDATE*LUNIT; IZMIN=EDATE*LUNIT; DIZ=(IZMAX-IZMIN)*LUNIT
+  READ(IU,*) Z,(QD(I),I=2,NC)
+  IZ=INT(Z*LUNIT); I1=IZMAX-IZ+1; Q1=QD(ICOL)
+  DO IR=2,NR
+
    READ(IU,*) Z,(QD(I),I=2,NC)
-   IZ=INT(Z*LUNIT); I1=IZMAX-IZ+1; Q1=QD(ICOL)
-   DO IR=2,NR
-
-    READ(IU,*) Z,(QD(I),I=2,NC)
-    IZ=INT(Z*LUNIT)
-    I2=IZMAX-IZ
-    IF(I1.LE.DIZ.AND.I2.GT.0)THEN
-     I2=MIN(DIZ,I2)
-     I1=MAX(1,I1)
-     IF(I2.GE.I1)QT=QT+REAL(I2-I1+1)*Q1
-!     QSORT(I1:I2)=Q1 
-    ENDIF
-    I1=I2+1; Q1=QD(ICOL)
-    IF(I1.GT.DIZ)EXIT
+   IZ=INT(Z*LUNIT)
+   I2=IZMAX-IZ
+   IF(I1.LE.DIZ.AND.I2.GT.0)THEN
+    I2=MIN(DIZ,I2)
+    I1=MAX(1,I1)
+    IF(I2.GE.I1)QT=QT+REAL(I2-I1+1)*Q1
+   ENDIF
+   I1=I2+1; Q1=QD(ICOL)
+   IF(I1.GT.DIZ)EXIT
        
-   ENDDO
+  ENDDO
     
-  ENDIF
-  
-  !## mean value
-  IF(MTYPE.EQ.1)THEN
-   QT=QT/REAL(TTIME)
-!   Q=0.0; I1=0
-!   DO I=1,TTIME
-!    IF(QSORT(I).NE.NODATA(ICOL))THEN; Q=Q+QSORT(I); I1=I1+1; ENDIF
-!   ENDDO
-!   IF(I1.GT.0)THEN
-!    Q=Q/REAL(I1)
-!   ELSE
-!    Q=NODATA(ICOL)
-!   ENDIF
-  !## median value
-  ELSEIF(MTYPE.EQ.2)THEN
-   write(*,*) 'MTYPE=2 NOT SUPPORTED'
-!   CALL UTL_GETMED(QSORT,TTIME,NODATA(ICOL),(/0.5/),1,NAJ,QD)
-!   Q=QD(1)
-!   !## naj becomes zero if no values were found!
-!   FRAC=REAL(NAJ)/REAL(TTIME)
-!   Q   =Q*FRAC
-  ENDIF
-  
  ENDIF
+  
+ QT=QT/REAL(TTIME)
+   
+ UTL_PCK_READTXT=.TRUE. 
  
- UTL_PCK_READTXT=.TRUE. !; IF(Q.EQ.NODATA(ICOL))UTL_PCK_READTXT=.FALSE.
- 
- CLOSE(IU); DEALLOCATE(QD) !QSORT,NODATA,QD)
+ CLOSE(IU); DEALLOCATE(QD) 
  
  END FUNCTION UTL_PCK_READTXT
 
