@@ -169,13 +169,6 @@ CONTAINS
     ENDIF
    ENDDO
 
-IU=UTL_GETUNIT()
-OPEN(IU,FILE='d:\IMOD-MODELS\ALBERTA\WCAB\DBASE\OVERLANDFLOW\VERSION_1\PERPERMONTH.CSV',STATUS='UNKNOWN',ACTION='WRITE')
-DO IMND=1,SIZE(TQP,2)
- write(iu,'(I10,A1,99(F10.2,A1))') IMND,',',(Xmed(i,imnd),',', I=1,SIZE(TQP,1))
-ENDDO
-CLOSE(IU)
-
 !   DO J=1,NIDF
 !    !## found appropriate percentile in xsort()
 !    CALL POL1LOCATE(XSORT,NIDF,REAL(YSORT(J),8),I)
@@ -193,16 +186,27 @@ CLOSE(IU)
   !## read percentile
   ELSE
   
-   !## number of percentiles
-   DO I=1,SIZE(TQP,1)
-    !## number of months
-    DO J=1,SIZE(TQP,2); XMED(I,J)=TQP(I,J)%X(ICOL,IROW); ENDDO
+   !## number of months
+   DO IMND=1,SIZE(TQP,2);
+    !## number of percentiles
+    DO I=1,SIZE(TQP,1); XMED(I,IMND)=TQP(I,IMND)%X(ICOL,IROW); ENDDO
     !## if percentiles are zero for months, reset nsort
-    NMED(I)=SIZE(TQP,1); IF(SUM(XMED(I,:)).EQ.0.0)NMED(I)=0
+    NMED(IMND)=SIZE(TQP,1); IF(SUM(XMED(:,IMND)).EQ.0.0)NMED(IMND)=0
+!    WRITE(*,*) IMND,NMED(IMND)
    ENDDO
    
   ENDIF
   
+!IF(ICOL.EQ.163.AND.IROW.EQ.187)THEN
+! IU=UTL_GETUNIT()
+!! OPEN(IU,FILE='d:\IMOD-MODELS\ALBERTA\WCAB\DBASE\OVERLANDFLOW\VERSION_1\PERPERMONTH_NOWELLS.CSV',STATUS='UNKNOWN',ACTION='WRITE')
+! OPEN(IU,FILE='D:\IMOD-MODELS\ALBERTA\WCAB\DBASE\OVERLANDFLOW\VERSION_1\PERPERMONTH_WELLS.CSV',STATUS='UNKNOWN',ACTION='WRITE')
+! DO IMND=1,SIZE(TQP,2)
+!  write(iu,'(I10,A1,99(F10.2,A1))') IMND,',',(Xmed(i,imnd),',', I=1,SIZE(TQP,1))
+! ENDDO
+! CLOSE(IU)
+!ENDIF
+
   !## check what category of percentile
   NSORT=0
   DO J=1,NIDF
@@ -216,6 +220,11 @@ CLOSE(IU)
    !##   xmed(1) xmed(2) xmed(3) xmed(4) xmed(5)
    !##     |       |       |       |       |
    !##  0      1       2       3       4       5
+
+   IF(NMED(IMND).GT.5)THEN
+ WRITE(*,*) IMND,NMED(IMND)
+ PAUSE
+   ENDIF
 
    II=-1
 
@@ -237,6 +246,10 @@ CLOSE(IU)
 !    CALL POL1LOCATE(XMED(:,IMND),NSORT(IMND),REAL(YSORT(J,IMND),8),I)
 !!   CALL POL1LOCATE(XMED,SIZE(XMED),REAL(YSORT(J,IMND),8),I)
 !   ENDIF
+   IF(II.GT.5)THEN
+   WRITE(*,*) II,IMND !,XMED(:,IMND)
+   ENDIF
+   
    RIDF(J)%X(ICOL,IROW)=REAL(II)
   ENDDO
    
@@ -261,9 +274,9 @@ CLOSE(IU)
  !## write results
  DO I=1,NIDF
 
-  IMD=FIDF(J)%IMH
-  IYR=FIDF(J)%IYR
-  IDY=FIDF(J)%IDY
+  IMD=FIDF(I)%IMH
+  IYR=FIDF(I)%IYR
+  IDY=FIDF(I)%IDY
 
   !## skip if month cannot be derived
   IF(IMD.LE.0)CYCLE

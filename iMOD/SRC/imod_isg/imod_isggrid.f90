@@ -1967,7 +1967,7 @@ CONTAINS
  ELSEIF(ISS.EQ.2)THEN
   IF(IAVERAGE.EQ.1)THEN
    !## arithmetic mean
-   DO I=1,MAXITEMS
+   DO I=1,NITEMS
     XNR(I)=0.0; RVAL(I)=0.0
     DO J=1,TTIME
      IF(QSORT(J,I).NE.NODATA)THEN
@@ -1981,7 +1981,6 @@ CONTAINS
      RVAL(I)=NODATA
     ENDIF
    ENDDO 
-!    RVAL(I)=SUM(QSORT(:,I))/REAL(TTIME)
   ELSEIF(IAVERAGE.EQ.2)THEN
    !## median - exclude nodata
    DO I=1,NITEMS

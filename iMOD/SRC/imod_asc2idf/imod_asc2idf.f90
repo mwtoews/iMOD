@@ -665,7 +665,8 @@ CONTAINS
 
   !## apply depth-correction
   IF(IDEPTH.EQ.1)THEN
-   IDF(1)%ITB=INT(1,1)
+   IF(ASSF_COLUMN.EQ.1)IDF(1)%ITB=INT(0,1)
+   IF(ASSF_COLUMN.GT.1)IDF(1)%ITB=INT(1,1)
    IDF(1)%TOP=REAL(ASSF_STARTDATE)
    IDF(1)%BOT=REAL(ASSF_ENDDATE)
    !## blank-out in case surface has been read in

@@ -133,7 +133,11 @@
 			<FileConfiguration Name="Debug|x64">
 				<Tool Name="VFFortranCompilerTool" WarnInterfaces="false"/></FileConfiguration></File></Filter>
 		<Filter Name="imod_geoconnect">
-		<File RelativePath="..\..\SRC\imod_geoconnect\imod_geoconnect.f90"/>
+		<File RelativePath="..\..\SRC\imod_geoconnect\imod_geoconnect.f90">
+			<FileConfiguration Name="Release|x64">
+				<Tool Name="VFFortranCompilerTool" Preprocess="preprocessYes" PreprocessorDefinitions="WINTERACTER9"/></FileConfiguration>
+			<FileConfiguration Name="Debug|x64">
+				<Tool Name="VFFortranCompilerTool" Preprocess="preprocessYes" PreprocessorDefinitions="WINTERACTER9"/></FileConfiguration></File>
 		<File RelativePath="..\..\SRC\imod_geoconnect\imod_geoconnect_par.f90"/></Filter>
 		<Filter Name="imod_googleearth">
 		<File RelativePath="..\..\SRC\imod_googleearth\imod_google.f90"/></Filter>
@@ -300,7 +304,11 @@
 		<File RelativePath="..\..\..\iMOD\SRC\imod_modpath\imod_pathlines.f90"/>
 		<File RelativePath="..\..\..\iMOD\SRC\imod_modpath\imod_pathlines_flolin.f90"/>
 		<File RelativePath="..\..\..\iMOD\SRC\imod_modpath\imod_pathlines_sp.f90"/>
-		<File RelativePath="..\..\..\iMOD\SRC\imod_modpath\imod_pathlines_trace.f90"/>
+		<File RelativePath="..\..\..\iMOD\SRC\imod_modpath\imod_pathlines_trace.f90">
+			<FileConfiguration Name="Release|x64">
+				<Tool Name="VFFortranCompilerTool" Preprocess="preprocessYes" PreprocessorDefinitions="WINTERACTER9"/></FileConfiguration>
+			<FileConfiguration Name="Debug|x64">
+				<Tool Name="VFFortranCompilerTool" Preprocess="preprocessYes" PreprocessorDefinitions="WINTERACTER9"/></FileConfiguration></File>
 		<File RelativePath="..\..\..\iMOD\SRC\imod_modpath\imod_plines_par.f90"/></Filter>
 		<Filter Name="imod_nc2idf">
 		<File RelativePath="..\..\..\iMOD\SRC\imod_nc2idf\imod_nc2idf.f90">
