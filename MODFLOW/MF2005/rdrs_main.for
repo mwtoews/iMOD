@@ -253,10 +253,10 @@ c determine root and date
             iss = 2
          end if
 
-c ### work-around Jualian date ###
+c ### work-around Julian date ###
          read(time_ostring(1:8),*) idate
          sdate=imod_utl_idatetojdate(idate)
-c ### work-around Jualian date ###
+c ### work-around Julian date ###
 c         sdate = time_cjd
          ttime = int(delt)
          if (iss==1) ttime = 1
@@ -299,8 +299,6 @@ c allocate
             else
                txtfile = trim(root)//trim(string(iext))//'.'//trim(ext)
                call imod_utl_readipf(sdate,edate,q(1),txtfile,iss)
-!               call imod_utl_readipf(sdate,edate,ttime,
-!     1                               qsort,q(1),txtfile,iss)
             end if
 
             ii = ii + 1
