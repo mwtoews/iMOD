@@ -256,7 +256,7 @@ CONTAINS
  SUBROUTINE IMOD3D_RENDER()
  !###======================================================================
  IMPLICIT NONE
- INTEGER :: I,DID
+ INTEGER :: DID
  REAL(KIND=GLDOUBLE) :: DX,DZ,XC,YC,DEGREES !,DDEGREES !,G2R
  REAL :: DEGR,DDEGR
   

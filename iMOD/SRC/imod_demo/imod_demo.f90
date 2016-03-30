@@ -29,10 +29,9 @@ USE MOD_3D, ONLY : IMOD3D_INIT
 
 CONTAINS
 
-!###======================================================================
+ !###======================================================================
  SUBROUTINE DEMO_MAIN()
-!###======================================================================
-!# subroutine with main-program; includes call to all demo-subroutines
+ !###======================================================================
  IMPLICIT NONE
 
  !# Starts cross-section tool if demo type name equals 'cross'
