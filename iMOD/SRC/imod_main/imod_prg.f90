@@ -206,8 +206,8 @@ CRDITYPE=0
 IDOWN   =0
 DOWNX   =0.0
 DOWNY   =0.0
-ISHPEDIT=1 !## shapes are editable
-PL%IRUN=0  !## no particle tracking active
+ISHPEDIT=1    !## shapes are editable
+PL%IRUN=0     !## no particle tracking active
 IRENDER_3D=0  !## 0=3D INACTIVE; -1=3D ACTIVE, 1=RENDERING ACTIVE
 
 !## store first zoom-extent

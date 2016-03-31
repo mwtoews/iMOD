@@ -221,11 +221,6 @@ CONTAINS
    !##     |       |       |       |       |
    !##  0      1       2       3       4       5
 
-   IF(NMED(IMND).GT.5)THEN
- WRITE(*,*) IMND,NMED(IMND)
- PAUSE
-   ENDIF
-
    II=-1
 
    IF(NMED(IMND).GT.0)THEN   
@@ -246,9 +241,6 @@ CONTAINS
 !    CALL POL1LOCATE(XMED(:,IMND),NSORT(IMND),REAL(YSORT(J,IMND),8),I)
 !!   CALL POL1LOCATE(XMED,SIZE(XMED),REAL(YSORT(J,IMND),8),I)
 !   ENDIF
-   IF(II.GT.5)THEN
-   WRITE(*,*) II,IMND !,XMED(:,IMND)
-   ENDIF
    
    RIDF(J)%X(ICOL,IROW)=REAL(II)
   ENDDO
