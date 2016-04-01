@@ -8,7 +8,7 @@
 //
 // Winteracter resource script. 
 //
-// Modified : 29/Mar/2016 10:45:09
+// Modified : 01/Apr/2016 10:28:12
 //
 ///////////////////////////////////////////////////
 //
@@ -9970,6 +9970,7 @@ FONT    8, "Arial"
 BEGIN
     CONTROL "",IDF_GRID1,"ISSGRID",WS_CHILD | WS_VISIBLE | WS_BORDER | WS_VSCROLL | WS_HSCROLL | WS_GROUP | WS_TABSTOP | GS_READONLYCOLOUR | GS_DEFROWLABELS | GS_COLUMNLABELS | GS_ROWLABELS | GS_RESIZECOLUMNS,    6,    4,  251,  264
     CONTROL "Identify ...",IDOK,"BUTTON",WS_CHILD | WS_VISIBLE | WS_GROUP | WS_TABSTOP | BS_PUSHBUTTON | BS_TEXT | BS_FLAT,    6,  271,   60,   14
+    CONTROL "Current Location: (0.0,0.0)",IDF_LABEL1,"STATIC",WS_CHILD | WS_VISIBLE | WS_GROUP | SS_LEFT,   72,  274,  181,    8
 END
 
 ID_DGEOCONNECT_TAB1 RCDATA
@@ -11719,4 +11720,4 @@ END
 //*WI* FILENAME    resource.f90
 //*WI* FMODNAME    RESOURCE
 //*WI* LASTTYPE        2
-//*WI* LASTRES       273
+//*WI* LASTRES       271

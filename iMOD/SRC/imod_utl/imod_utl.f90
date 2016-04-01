@@ -57,6 +57,34 @@ REAL,PARAMETER,PRIVATE :: SDAY=86400.0
 CONTAINS
 
  !###====================================================================
+ SUBROUTINE UTL_RELPATHNAME(PATH,RFNAME,GFNAME)
+ !###====================================================================
+ IMPLICIT NONE
+ CHARACTER(LEN=*),INTENT(IN) :: PATH
+ CHARACTER(LEN=*),INTENT(INOUT) :: RFNAME
+ CHARACTER(LEN=*),INTENT(OUT) :: GFNAME
+ CHARACTER(LEN=256) :: ROOTNAME
+ 
+ !## check relative-pathnames
+ IF(INDEX(RFNAME,':').EQ.0)THEN
+  !## rootname
+  ROOTNAME=PATH(:INDEX(PATH,'\',.TRUE.)-1)   
+  !## clip number of "..\" from the rootname  
+  DO
+   IF(INDEX(RFNAME,'..\',.FALSE.).EQ.0)EXIT
+   RFNAME=RFNAME(INDEX(RFNAME,'..\',.FALSE.)+3:) 
+   ROOTNAME=ROOTNAME(:INDEX(ROOTNAME,'\',.TRUE.)-1)   
+  ENDDO
+  !## construct global filename
+  GFNAME=TRIM(ROOTNAME)//'\'//TRIM(RFNAME)
+ ELSE
+  !## drive letter found
+  GFNAME=RFNAME
+ ENDIF
+
+ END SUBROUTINE UTL_RELPATHNAME
+
+ !###====================================================================
  FUNCTION UTL_IMODVERSION(S1,S2)
  !###====================================================================
  IMPLICIT NONE

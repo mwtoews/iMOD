@@ -32,6 +32,8 @@ USE MOD_UTL, ONLY : UTL_GETUNIT,UTL_SUBST,ITOS,RTOS,UTL_CAP,UTL_WSELECTFILE,UTL_
 USE MOD_IDF, ONLY : IDFGETXYVAL,IDFREADSCALE,IDFWRITE,IDFREAD,IDFIROWICOL,IDFGETXYVAL,IDFGETLOC,IDFALLOCATEX
 USE MOD_OSD, ONLY : OSD_OPEN
 USE MOD_PREF_PAR, ONLY : PREFVAL
+USE MOD_IPF_PAR, ONLY : NIPF,IPF
+USE MOD_IPF, ONLY : IPFREAD2,IPFWRITE,IPFALLOCATE,IPFDEALLOCATE
 
 CHARACTER(LEN=256),PRIVATE :: LINE
 
@@ -183,6 +185,8 @@ CONTAINS
      CALL WDIALOGFIELDSTATE(ID_SAVEAS,0)
      CALL WDIALOGFIELDSTATE(ID_OPEN,0)
      CALL GC_IDENTIFY_INITGRID()
+     CALL GC_IDENTIFY_FILLGRID()
+
     CASE (ID_DGEOCONNECT_TAB2,ID_DGEOCONNECT_TAB3)
      CALL WDIALOGFIELDSTATE(IDOK,1)
      CALL WDIALOGFIELDSTATE(ID_SAVEAS,1)
@@ -513,7 +517,7 @@ CONTAINS
  !###======================================================================
  IMPLICIT NONE
  INTEGER,INTENT(IN) :: IMODBATCH
- INTEGER :: I,J,K,N,ITYPE,IROW,ICOL,ICLR
+ INTEGER :: ITYPE,IROW,ICOL
  REAL :: XC,YC
  REAL,ALLOCATABLE,DIMENSION(:) :: TM,BM
  TYPE(WIN_MESSAGE) :: MESSAGE
@@ -536,6 +540,7 @@ CONTAINS
    
     CALL WINDOWSELECT(0)
     CALL WINDOWOUTSTATUSBAR(1,'X:'//TRIM(ITOS(INT(MESSAGE%GX)))//' m, Y:'//TRIM(ITOS(INT(MESSAGE%GY)))//' m')
+
     XC=MESSAGE%GX; YC=MESSAGE%GY
     
     !## remove previous rectangle
@@ -547,42 +552,9 @@ CONTAINS
     CALL GC_IDENTIFY_COMPUTE(MESSAGE%GX,MESSAGE%GY,TM,BM)
     !## fill results in grid
     CALL WDIALOGSELECT(ID_DGEOCONNECT_TAB1) 
+    CALL WDIALOGPUTSTRING(IDF_LABEL1,'Current Location ('//TRIM(RTOS(XC,'F',2))//'m,'//TRIM(RTOS(YC,'F',2))//'m)')
     
-#if (defined(WINTERACTER8))
-    CALL WDIALOGCLEARFIELD(IDF_GRID1)
-#endif
-#if (defined(WINTERACTER9))
-    CALL WGRIDCLEAR(IDF_GRID1)
-#endif
-
-    !## reset colour
-    K=0; DO J=1,NLAYM
-     !## skip deselected layer
-     IF(IACTM(J).EQ.0)CYCLE
-     K=K+1; CALL WGRIDCOLOURCOLUMN(IDF_GRID1,K,-1,WRGB(255,255,255))
-    ENDDO
-    
-    N=0; DO I=1,NLAYR
-     CALL WGRIDLABELROW(IDF_GRID1,I,'')
-     !## none of the layers contains current formation, skip it
-     IF(SUM(IPFAC(I)%FVAL).LE.0.0)CYCLE
-      !## current formation contains results, fractions gt 0.0
-      N=N+1; CALL WGRIDLABELROW(IDF_GRID1,N,TRIM(IPFAC(I)%FORM))
-      CALL WGRIDPUTCELLSTRING(IDF_GRID1,1,N,IPFAC(I)%LITHO)
-      CALL WGRIDCOLOURCELL(IDF_GRID1,1,N,-1,IPFAC(I)%LITHOCLR)
-
-      K=1; DO J=1,NLAYM
-      !## skip deselected layer
-      IF(IACTM(J).EQ.0)CYCLE
-      K=K+1; CALL WGRIDPUTCELLREAL(IDF_GRID1,K,N,IPFAC(I)%FVAL(J)*100.0,'(F10.3)')
-      IF(IPFAC(I)%FVAL(J).LE.0.0)THEN
-       ICLR=WRGB(255,255,255)
-      ELSE
-       ICLR=100*(1.0-IPFAC(I)%FVAL(J)); ICLR=WRGB(0,150+ICLR,0)
-      ENDIF
-      CALL WGRIDCOLOURCELL(IDF_GRID1,K,N,-1,ICLR)
-     ENDDO
-    ENDDO
+    CALL GC_IDENTIFY_FILLGRID()
 
    CASE (MOUSEBUTDOWN)
     EXIT
@@ -599,7 +571,7 @@ CONTAINS
   END SELECT
 
  ENDDO
- 
+
  !## remove previous rectangle
  CALL UTL_PLOTLOCATIONIDF(TOPM(1),IROW,ICOL)
 
@@ -607,6 +579,50 @@ CONTAINS
  DEALLOCATE(TM,BM)
   
  END SUBROUTINE GC_IDENTIFY
+
+ !###======================================================================
+ SUBROUTINE GC_IDENTIFY_FILLGRID()
+ !###======================================================================
+ IMPLICIT NONE
+ INTEGER :: I,J,K,N,ICLR
+ 
+#if (defined(WINTERACTER8))
+    CALL WDIALOGCLEARFIELD(IDF_GRID1)
+#endif
+#if (defined(WINTERACTER9))
+    CALL WGRIDCLEAR(IDF_GRID1)
+#endif
+
+ !## reset colour
+ K=0; DO J=1,NLAYM
+  !## skip deselected layer
+  IF(IACTM(J).EQ.0)CYCLE
+  K=K+1; CALL WGRIDCOLOURCOLUMN(IDF_GRID1,K,-1,WRGB(255,255,255))
+ ENDDO
+    
+ N=0; DO I=1,NLAYR
+  CALL WGRIDLABELROW(IDF_GRID1,I,'')
+  !## none of the layers contains current formation, skip it
+  IF(SUM(IPFAC(I)%FVAL).LE.0.0)CYCLE
+  !## current formation contains results, fractions gt 0.0
+  N=N+1; CALL WGRIDLABELROW(IDF_GRID1,N,TRIM(IPFAC(I)%FORM))
+  CALL WGRIDPUTCELLSTRING(IDF_GRID1,1,N,IPFAC(I)%LITHO)
+  CALL WGRIDCOLOURCELL(IDF_GRID1,1,N,-1,IPFAC(I)%LITHOCLR)
+
+  K=1; DO J=1,NLAYM
+   !## skip deselected layer
+   IF(IACTM(J).EQ.0)CYCLE
+   K=K+1; CALL WGRIDPUTCELLREAL(IDF_GRID1,K,N,IPFAC(I)%FVAL(J)*100.0,'(F10.3)')
+   IF(IPFAC(I)%FVAL(J).LE.0.0)THEN
+    ICLR=WRGB(255,255,255)
+   ELSE
+    ICLR=100*(1.0-IPFAC(I)%FVAL(J)); ICLR=WRGB(0,150+ICLR,0)
+   ENDIF
+   CALL WGRIDCOLOURCELL(IDF_GRID1,K,N,-1,ICLR)
+  ENDDO
+ ENDDO
+
+ END SUBROUTINE GC_IDENTIFY_FILLGRID
 
  !###======================================================================
  SUBROUTINE GC_IDENTIFY_COMPUTE(XC,YC,TM,BM)
@@ -1242,35 +1258,33 @@ CONTAINS
         END SELECT
        CASE (2)       !## modelinput
         SELECT CASE (INPUTTYPE)
-         CASE (1,3)   !# kdw/khv
+         CASE (1,3)   !## kdw/khv
           IDF%X(ICOL,IROW)=IDF%X(ICOL,IROW)+(Z1-Z2)*KVAL*FP
         END SELECT
-       CASE (3)       !## ipf file
-
       END SELECT
      
      ENDIF
     ENDIF
-    
+   
     !## compute fractions for aquitards, resistance of aquitard (not feasible for model results)
     IF(J.LT.NLAYM.AND.IAGGR.NE.1)THEN
      TM=BOTM(J)%X(ICOL,IROW); BM=TOPM(J+1)%X(ICOL,IROW)
      IF(TM.NE.BOTM(J)%NODATA.AND.BM.NE.TOPM(J+1)%NODATA)THEN
-    
+   
       Z1=MIN(TR,TM); Z2=MAX(BR,BM)
       !## fraction in aquitards
-      IF(Z1.GT.Z2)THEN
+      IF(Z1.GT.Z2)THEN 
 
        !## fraction
        FM=(Z1-Z2)/(TM-BM)
        !## ipest factor
-       FP= IPFAC(I)%FACT
+       FP= IPFAC(I)%FACT 
 
        !## store maximum top and minimum bottom
        TOP%X(ICOL,IROW)=MAX(TOP%X(ICOL,IROW),Z1)
        BOT%X(ICOL,IROW)=MIN(BOT%X(ICOL,IROW),Z2)
        !## store total thickness
-       THK%X(ICOL,IROW)=THK%X(ICOL,IROW)+(Z1-Z2)
+       THK%X(ICOL,IROW)=THK%X(ICOL,IROW)+(Z1-Z2) 
 
        !## assign minimum values for aquitards
        KVAL=0.0
@@ -1281,17 +1295,15 @@ CONTAINS
        ELSE
         IF(IKHR.EQ.1)KVAL=MAX(KVAL,(0.3*KHR%X(ICOL,IROW)))
        ENDIF
-       IF(KVAL.GT.0.0)THEN
+       IF(KVAL.GT.0.0)THEN 
 
         !## compute aggregate values
         SELECT CASE (IAGGR)
          CASE (2) !## modelinput
           SELECT CASE (INPUTTYPE)
-           CASE (2,4) !# vcw/kvv
+           CASE (2,4) !## vcw/kvv
             IDF%X(ICOL,IROW)=IDF%X(ICOL,IROW)+(((Z1-Z2)/KVAL)*FP)
           END SELECT 
-         CASE (3) !## ipf file
-  
         END SELECT
       
        ENDIF      
@@ -1318,7 +1330,7 @@ CONTAINS
      END SELECT   
     CASE (2) !## modelinput
      SELECT CASE (INPUTTYPE)
-      CASE (3,4) !# khv
+      CASE (3,4) !## khv
        IDF%X(ICOL,IROW)=IDF%X(ICOL,IROW)/THK%X(ICOL,IROW)
      END SELECT
     CASE (3) !## ipf file
@@ -1379,9 +1391,17 @@ CONTAINS
     CASE (4) !# kvv
      FNAME=TRIM(OUTPUTFOLDER)//'\'//TRIM(FORMNAME)//'_KVV.IDF'
    END SELECT
+  CASE (3) !## ipf file
+   FNAME=TRIM(OUTPUTFOLDER)//'\'//TRIM(FORMNAME)//'.IPF'
  END SELECT
- IF(.NOT.IDFWRITE(IDF,FNAME,1))RETURN
- 
+
+ SELECT CASE (IAGGR)
+  CASE (1,2)
+   IF(.NOT.IDFWRITE(IDF,FNAME,1))RETURN
+  CASE (3)
+   CALL GC_POST_COMPUTE_WRITE_IPF(FNAME)
+ END SELECT
+  
  IF(ISAVETB.EQ.1)THEN
   FNAME=TRIM(OUTPUTFOLDER)//'\'//TRIM(FORMNAME)//'_TOP.IDF'
   IF(.NOT.IDFWRITE(TOP,FNAME,1))RETURN
@@ -1395,7 +1415,30 @@ CONTAINS
  IF(IMODBATCH.EQ.1)WRITE(*,'(A)') 'Finished writing data to file(s).'
  
  END SUBROUTINE GC_POST_COMPUTE_WRITE
- 
+
+ !###======================================================================
+ SUBROUTINE GC_POST_COMPUTE_WRITE_IPF(FNAME)
+ !###======================================================================
+ IMPLICIT NONE
+ CHARACTER(LEN=*),INTENT(IN) :: FNAME
+  
+ NIPF=1; CALL IPFALLOCATE()
+ IPF(1)%XCOL =1 !## x
+ IPF(1)%YCOL =2 !## y
+ IPF(1)%QCOL =1 !## q not used
+ IPF(1)%ZCOL =1 !## z not used
+ IPF(1)%Z2COL=1 !## z2 not used  
+ IPF(1)%FNAME=IPFFILE
+ !# read entire ipf
+ IF(.NOT.IPFREAD2(1,1,1))RETURN
+ !## only write locations within formation-values
+   
+ IPF(1)%FNAME=FNAME
+ IF(.NOT.IPFWRITE(1))RETURN
+ CALL IPFDEALLOCATE()
+
+ END SUBROUTINE GC_POST_COMPUTE_WRITE_IPF
+
  !###======================================================================
  SUBROUTINE GC_CLOSE()
  !###======================================================================

@@ -40,7 +40,7 @@ CONTAINS
  LOGICAL FUNCTION CUS_MAIN()
  !###======================================================================
  IMPLICIT NONE
- INTEGER :: I,J,IOS,I1,I2
+ INTEGER :: I,J,IOS
  
  CUS_MAIN=.FALSE.
  
@@ -101,7 +101,7 @@ CONTAINS
  LOGICAL FUNCTION CUS_CREATETOPBOT()
  !###======================================================================
  IMPLICIT NONE
- INTEGER :: IROW,ICOL,I,J,ILAY,IIDF,ICOR 
+ INTEGER :: IROW,ICOL,I,J,ILAY,IIDF
  REAL :: T,B,D
  
  CUS_CREATETOPBOT=.FALSE.

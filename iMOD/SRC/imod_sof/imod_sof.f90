@@ -384,10 +384,10 @@ CONTAINS
     
     !## outside model
     IF(IR.EQ.0.OR.IR.GT.IDF(1)%NROW.OR.IC.EQ.0.OR.IC.GT.IDF(1)%NCOL)THEN
-     IF(LX(0).GT.IDF(1)%XMAX)IC=IDF(1)%NCOL
-     IF(LX(0).LT.IDF(1)%XMIN)IC=1
-     IF(LY(0).GT.IDF(1)%YMAX)IR=1
-     IF(LY(0).LT.IDF(1)%YMIN)IR=IDF(1)%NROW
+     IF(LX(1).GT.IDF(1)%XMAX)IC=IDF(1)%NCOL
+     IF(LX(1).LT.IDF(1)%XMIN)IC=1
+     IF(LY(1).GT.IDF(1)%YMAX)IR=1
+     IF(LY(1).LT.IDF(1)%YMIN)IR=IDF(1)%NROW
      LSTOP=.TRUE.
     ENDIF
     
@@ -647,9 +647,9 @@ if(irow.eq.ir.and.icol.eq.ic)f=1.0
  DO IROW=1,DEM%NROW
   DO ICOL=1,DEM%NCOL
 
-!   if(icol.eq.61.and.irow.eq.28)then
-!   write(*,*) 'dsds'
-!   endif
+   if(icol.eq.608.and.irow.eq.222)then
+   write(*,*) 'dsds'
+   endif
 
    !## nodata dem map
    IF(DEM%X(ICOL,IROW).EQ.DEM%NODATA)CYCLE
@@ -760,11 +760,12 @@ if(irow.eq.ir.and.icol.eq.ic)f=1.0
  IF(LNODATSINK)THEN
   DO I=1,8
    IF(Z(I).EQ.DEM%NODATA)THEN
-    IF(I.LE.4)THEN
-     Z(I)=-1.0*Z(I+4)
-    ELSE
-     Z(I)=-1.0*Z(I-4)
-    ENDIF
+    Z(I)=MINVAL(Z)-1.0
+!    IF(I.LE.4)THEN
+!     Z(I)=-1.0*Z(I+4)
+!    ELSE
+!     Z(I)=-1.0*Z(I-4)
+!    ENDIF
    ENDIF
   ENDDO
 
@@ -802,7 +803,7 @@ if(irow.eq.ir.and.icol.eq.ic)f=1.0
    ENDIF
   ENDIF
  ENDDO
- !## perfect dome in flat area - occurs, but direction is irrelevant, choose flow right
+ !## perfect dome in flat area - occurs, but direction is irrelevant, choose flow south
  IF(J.EQ.0)THEN
   J=6
  ENDIF
