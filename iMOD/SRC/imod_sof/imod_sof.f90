@@ -611,8 +611,8 @@ if(irow.eq.ir.and.icol.eq.ic)f=1.0
   IF(.NOT.IDFWRITE(IDF(5),IDF(3)%FNAME(:INDEX(IDF(3)%FNAME,'.',.TRUE.)-1)//'_copydem.idf',1))THEN; ENDIF
  ENDIF
  
- !## fill in pitts - fill in gradients for flat-areas
- CALL SOF_FILL_PITT(IDF(1),IDF(2),IDF(3),IDF(4),IGRAD)
+ !## fill in pitts; fill in gradients
+ CALL SOF_FILL_PITT(IDF(1),IDF(2),IDF(3),IDF(4),IDF(5),IGRAD)
  IF(.NOT.IDFWRITE(IDF(1),IDF(3)%FNAME,1))THEN; ENDIF
 
  IF(IGRAD.EQ.1)THEN
@@ -999,23 +999,36 @@ if(irow.eq.ir.and.icol.eq.ic)f=1.0
  END SUBROUTINE SOF_GET_PITT
 
  !###======================================================================
- SUBROUTINE SOF_FILL_PITT(DEM,SLOPE,ASPECT,IDFP,IGRAD)
+ SUBROUTINE SOF_FILL_PITT(DEM,SLOPE,ASPECT,IDFP,DEMORG,IGRAD)
  !###======================================================================
  IMPLICIT NONE
- TYPE(IDFOBJ),INTENT(INOUT) :: DEM,IDFP,SLOPE,ASPECT
+ TYPE(IDFOBJ),INTENT(INOUT) :: DEM,IDFP,SLOPE,ASPECT,DEMORG
  INTEGER,INTENT(IN) :: IGRAD
  INTEGER :: I,J,ICOL,IROW,NBPX,NPPX,NTPX,ITYPE
  REAL :: F,ZMAX
  
- WRITE(6,'(1X,A/)') 'Filling in pitts'
+ WRITE(6,'(1X,A,I10,A/)') 'Filling in ',NP,' pitts'
   
  ALLOCATE(BPX(DEM%NROW*DEM%NCOL),PPX(DEM%NROW*DEM%NCOL),TPX(DEM%NROW*DEM%NCOL))
  IDFP%NODATA=0.0; IDFP%X=IDFP%NODATA
   
+! !## compute gradient/orientation for all
+! CALL SOF_COMPUTE_SLOPE_ASPECT(DEMORG,SLOPE,ASPECT)
+
  !## trace depression for exit points
  DO I=1,NP 
   ICOL=INT(PL(I,1)); IROW=INT(PL(I,2))
-    
+  
+  !## skip pit locations allready processed
+  IF(ICOL.EQ.0.OR.IROW.EQ.0)CYCLE
+  
+!  if(i.eq.26222)then
+!  write(*,*)
+!  endif
+!  if(icol.eq.284.and.irow.eq.41)then
+!  write(*,*)
+!  endif
+  
   !## add this point to the pitt list, remove from the DEM
   !## pitt list
   NPPX=1; PPX(NPPX)%ICOL=ICOL; PPX(NPPX)%IROW=IROW; PPX(NPPX)%Z=DEM%X(ICOL,IROW); DEM%X(ICOL,IROW)=10.0E10
@@ -1029,10 +1042,12 @@ if(irow.eq.ir.and.icol.eq.ic)f=1.0
   ITYPE=0
   DO     
    !## fill bnd-pixel list and pit-list with irow,icol
-   CALL SOF_FILL_BND(DEM,IDFP,IROW,ICOL,NBPX,NTPX)
+   IF(ITYPE.EQ.0)CALL SOF_FILL_BND(DEM,IDFP,IROW,ICOL,NBPX,NTPX)
    !## get lowest point in boundary list, natural exit function value becomes true
    IF(SOF_GET_EXITPOINT(DEM,IDFP,IROW,ICOL,ZMAX,NBPX,NPPX,ITYPE))THEN
+    !## found location on boundary that is lower that current pit location
     IF(ITYPE.EQ.0)THEN
+     !## add all locations on current boundary with equal values as zmax to the pit-core list
      ITYPE=1
     ELSE
      EXIT
@@ -1043,12 +1058,31 @@ if(irow.eq.ir.and.icol.eq.ic)f=1.0
   !## change all pittpoints for this spill-value (zmax)
   DO J=1,NPPX; DEM%X(PPX(J)%ICOL,PPX(J)%IROW)=ZMAX; ENDDO
    
-  F=REAL(I)/REAL(NP)*100.0; WRITE(6,'(A,F10.3,2(A,I5),A)') '+Processing pitt:',F,' % (nppx= ',NPPX,' ; nbpx= ',NBPX,')'
+  F=REAL(I)/REAL(NP)*100.0; WRITE(6,'(A,F10.3,2(A,I8),A,F10.3,A)') '+Processing pitt:',F,' % (nppx= ',NPPX,' ; nbpx= ',NBPX,'; z=',PPX(1)%Z,')'
 
-  IF(IGRAD.EQ.1)CALL SOF_FILL_FLATAREAS(DEM,SLOPE,ASPECT,NPPX)
-  
+  IF(IGRAD.EQ.1)CALL SOF_FILL_FLATAREAS(DEM,DEMORG,SLOPE,ASPECT,NPPX)
+
   !## clean idfp%x()
   DO J=1,NTPX; IDFP%X(TPX(J)%ICOL,TPX(J)%IROW)=IDFP%NODATA; ENDDO 
+
+  !## clean for pits inside current core-volume
+  DO J=1,NPPX-1; IDFP%X(PPX(J)%ICOL,PPX(J)%IROW)=1.0; ENDDO
+  !## clean pit list for pits inside current flat area
+  DO J=I,NP 
+   ICOL=INT(PL(J,1)); IROW=INT(PL(J,2))
+   !## skip pit locations allready processed
+   IF(ICOL.EQ.0.OR.IROW.EQ.0)CYCLE
+   !## remove from pit list
+   IF(IDFP%X(ICOL,IROW).NE.IDFP%NODATA)THEN
+
+!  if(icol.eq.284.and.irow.eq.41)then
+!  write(*,*)
+!  endif
+
+    PL(J,1)=0; PL(J,2)=0
+   ENDIF
+  ENDDO
+  DO J=1,NPPX-1; IDFP%X(PPX(J)%ICOL,PPX(J)%IROW)=IDFP%NODATA; ENDDO
    
  ENDDO
  
@@ -1057,22 +1091,21 @@ if(irow.eq.ir.and.icol.eq.ic)f=1.0
  END SUBROUTINE SOF_FILL_PITT 
  
  !###======================================================================
- SUBROUTINE SOF_FILL_FLATAREAS(DEM,SLOPE,ASPECT,NPPX)
+ SUBROUTINE SOF_FILL_FLATAREAS(DEM,DEMORG,SLOPE,ASPECT,NPPX)
  !###======================================================================
  IMPLICIT NONE
- TYPE(IDFOBJ),INTENT(INOUT) :: SLOPE,ASPECT,DEM
+ TYPE(IDFOBJ),INTENT(INOUT) :: SLOPE,ASPECT,DEM,DEMORG
  INTEGER,INTENT(IN) :: NPPX
- TYPE(IDFOBJ) :: PCG 
+ TYPE(IDFOBJ) :: PCG
+ INTEGER,DIMENSION(2) :: PITLOC,OUTLOC
  INTEGER :: IC1,IC2,IR1,IR2,I,ICOL,IROW,IC,IR
  REAL :: A
  REAL,PARAMETER :: HINI=0.0
    
  CALL IDFNULLIFY(PCG)
 
- IC1=MINVAL(PPX(1:NPPX)%ICOL)
- IC2=MAXVAL(PPX(1:NPPX)%ICOL)
- IR1=MINVAL(PPX(1:NPPX)%IROW)
- IR2=MAXVAL(PPX(1:NPPX)%IROW)
+ IC1=MINVAL(PPX(1:NPPX)%ICOL); IC2=MAXVAL(PPX(1:NPPX)%ICOL)
+ IR1=MINVAL(PPX(1:NPPX)%IROW); IR2=MAXVAL(PPX(1:NPPX)%IROW)
 
  PCG%NCOL=IC2-IC1+1; PCG%NROW=IR2-IR1+1; PCG%DX=DEM%DX; PCG%DY=DEM%DY
  PCG%XMIN=DEM%XMIN+(IC1-1)*DEM%DX; PCG%XMAX=PCG%XMIN+PCG%NCOL*DEM%DX
@@ -1082,19 +1115,34 @@ if(irow.eq.ir.and.icol.eq.ic)f=1.0
 
  IF(.NOT.IDFALLOCATEX(PCG))RETURN; PCG%NODATA=SLOPE%NODATA; PCG%X=PCG%NODATA 
  
+ !## pitloc
+ PITLOC(1)=PPX(1)%ICOL-IC1+1
+ PITLOC(2)=PPX(1)%IROW-IR1+1
+ !## outlet loc
+ OUTLOC(1)=PPX(NPPX)%ICOL-IC1+1
+ OUTLOC(2)=PPX(NPPX)%IROW-IR1+1
+
  !## activate mid locations, exclusive spill level
  DO I=1,NPPX-1
   IC=PPX(I)%ICOL-IC1+1
   IR=PPX(I)%IROW-IR1+1
+
+!  PCG%X(IC,IR)=ASPECT%X(PPX(I)%ICOL,PPX(I)%IROW) 
   PCG%X(IC,IR)=HINI
+
  ENDDO
+ !## locate spill-location
  IC=PPX(NPPX)%ICOL-IC1+1
  IR=PPX(NPPX)%IROW-IR1+1
+
+! PCG%X(IC,IR)=ASPECT%X(PPX(NPPX)%ICOL,PPX(NPPX)%IROW)
  PCG%X(IC,IR)=-1.0
  
+ !# if flat area --
+ CALL SOF_SOLVE(PCG,PITLOC,OUTLOC)
+ !## remove all the pits in the current-flat area, not to be processed again !!!
+ 
 ! if(.not.idfwrite(pcg,'d:\pcg_ini'//trim(itos(1))//'X'//trim(itos(1))//'.idf',1))then; endif
-
- CALL SOF_SOLVE(PCG)
 
  DO I=1,NPPX-1
   ICOL=PPX(I)%ICOL-IC1+1
@@ -1107,7 +1155,7 @@ if(irow.eq.ir.and.icol.eq.ic)f=1.0
    ASPECT%X(ICOL,IROW)=A
   ENDIF
  ENDDO
- !## clear pit location
+ !## clear outflow location
  I=NPPX
  ICOL=PPX(I)%ICOL
  IROW=PPX(I)%IROW
@@ -1121,25 +1169,36 @@ if(irow.eq.ir.and.icol.eq.ic)f=1.0
  END SUBROUTINE SOF_FILL_FLATAREAS
  
  !###======================================================================
- SUBROUTINE SOF_SOLVE(PCG)
+ SUBROUTINE SOF_SOLVE(PCG,PITLOC,OUTLOC)
  !###======================================================================
  IMPLICIT NONE
  TYPE(IDFOBJ) :: PCG
+ INTEGER,DIMENSION(2),INTENT(IN) :: PITLOC,OUTLOC
  INTEGER(KIND=1),ALLOCATABLE,DIMENSION(:,:) :: ID
  INTEGER(KIND=2),POINTER,DIMENSION(:,:,:) :: CR
  REAL,ALLOCATABLE,DIMENSION(:,:) :: A
  INTEGER :: IROW,ICOL,NCR,D,DR,DC,IL,I,IR,IC,ICR,JCR
+ REAL :: XC,YC,ASPECT,DX,DY
  
  ALLOCATE(A(PCG%NCOL,PCG%NROW),ID(PCG%NCOL,PCG%NROW),CR(PCG%NCOL*PCG%NROW,2,2))
  A=PCG%NODATA; ID=INT(3,1)
  
- !## find starting location
-ROWLOOP: DO IROW=1,PCG%NROW
-  DO ICOL=1,PCG%NCOL
-   IF(PCG%X(ICOL,IROW).EQ.-1)EXIT ROWLOOP
-  ENDDO
- ENDDO ROWLOOP
+! !## find starting location
+!ROWLOOP: DO IROW=1,PCG%NROW
+!  DO ICOL=1,PCG%NCOL
+!   IF(PCG%X(ICOL,IROW).EQ.-1)EXIT ROWLOOP
+!  ENDDO
+! ENDDO ROWLOOP
  
+! !## trace all to pit
+! ICOL=PITLOC(1)
+! IROW=PITLOC(2)
+ !## trace all to outlet
+ ICOL=OUTLOC(1)
+ IROW=OUTLOC(2)
+
+!## use a() om locaties die nodata moeten blijven te markeren
+
  NCR=1; ICR=1; JCR=2
  CR(NCR,1,ICR)=ICOL; CR(NCR,2,ICR)=IROW
  DO
@@ -1155,6 +1214,7 @@ ROWLOOP: DO IROW=1,PCG%NROW
    DO IR=MAX(1,IROW-1),MIN(PCG%NROW,IROW+1)
     DO IC=MAX(1,ICOL-1),MIN(PCG%NCOL,ICOL+1)
      IF(PCG%X(IC,IR).EQ.0.0)THEN
+!     IF(PCG%X(IC,IR).EQ.PCG%NODATA)THEN
       !## relative distance
       DR=IR-IROW
       DC=IC-ICOL
@@ -1163,7 +1223,7 @@ ROWLOOP: DO IROW=1,PCG%NROW
       IF(D.LT.ID(IC,IR))THEN
        ID(IC,IR)=D
        A(IC,IR)=ATAN2(-1.0*REAL(DR),REAL(DC))
-       !## add to list
+       !## add to new list of to be analysed locations
        IL=IL+1
        CR(IL,1,JCR)=IC
        CR(IL,2,JCR)=IR
@@ -1188,6 +1248,25 @@ ROWLOOP: DO IROW=1,PCG%NROW
 
  ENDDO
 
+! !## backtrace from the outlet towards the pit - reverse angles
+! ICOL=OUTLOC(1); IROW=OUTLOC(2)
+! !## start in the middle
+! CALL IDFGETLOC(PCG,IROW,ICOL,XC,YC)
+!
+! DO
+!  !## reverse angle
+!  ASPECT=PCG%X(ICOL,IROW)+PI
+!
+!  DX=-COS(ASPECT)*PCG%DX; DY=-SIN(ASPECT)*PCG%DY
+!  XC=XC+DX; YC=YC+DY
+!
+!  !## get new grid location
+!  CALL IDFIROWICOL(PCG,IROW,ICOL,XC,YC)
+!  !## arrived at pit - exit
+!  IF(ICOL.EQ.PITLOC(1).AND.IROW.EQ.PITLOC(2))EXIT
+!
+! ENDDO
+  
  !## fill pcg%x with angles
  PCG%X=A
 
@@ -1214,7 +1293,7 @@ ROWLOOP: DO IROW=1,PCG%NROW
   I1=1; IBND=0
  ENDIF
  DO I=I1,NBPX
-  !## search for lowest
+  !## search for lowest, lower than pitlocation
   IF(ITYPE.EQ.0)THEN
    IF(BPX(I)%Z.LT.ZMIN)THEN
     IBND=I; ZMIN=BPX(I)%Z
@@ -1222,7 +1301,7 @@ ROWLOOP: DO IROW=1,PCG%NROW
   !## search for equal
   ELSEIF(ITYPE.EQ.1)THEN
    IF(BPX(I)%Z.EQ.ZMAX)THEN
-    IBND=I
+    IBND=I; EXIT
    ENDIF  
   ENDIF
  ENDDO
@@ -1239,7 +1318,7 @@ ROWLOOP: DO IROW=1,PCG%NROW
   IF(IBND.EQ.0)THEN; SOF_GET_EXITPOINT=.TRUE.; RETURN; ENDIF
  ENDIF
  
- !## set new spill level
+ !## set new spill level = higher
  IF(ITYPE.EQ.0)ZMAX=ZMIN
  
  !## include a very high offset
@@ -1248,7 +1327,7 @@ ROWLOOP: DO IROW=1,PCG%NROW
  IDFP%X(BPX(IBND)%ICOL,BPX(IBND)%IROW)=IDFP%NODATA  
  DO I=IBND,NBPX-1; BPX(I)=BPX(I+1); ENDDO; NBPX=NBPX-1
  
- !## add this point to the pitt list
+ !## add this point to the core volume list
  IF(ITYPE.EQ.0)THEN
   NPPX            =NPPX+1
   PPX(NPPX)%ICOL  =ICOL

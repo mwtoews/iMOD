@@ -1252,14 +1252,35 @@ CONTAINS
        CASE (1)       !## modelresults
         SELECT CASE (MODELTYPE)
          CASE (1)     !## head
-          IDF%X(ICOL,IROW)=IDF%X(ICOL,IROW)+(Z1-Z2)*RESM(J)%X(ICOL,IROW)
+          SELECT CASE (IAGGR_TYPE)
+           CASE (1) !## min
+            IDF%X(ICOL,IROW)=MIN(IDF%X(ICOL,IROW),(Z1-Z2)*RESM(J)%X(ICOL,IROW))
+           CASE (2) !## max
+            IDF%X(ICOL,IROW)=MAX(IDF%X(ICOL,IROW),(Z1-Z2)*RESM(J)%X(ICOL,IROW))
+           CASE (3,4) !## mean/sum
+            IDF%X(ICOL,IROW)=IDF%X(ICOL,IROW)+(Z1-Z2)*RESM(J)%X(ICOL,IROW)
+          END SELECT
          CASE (2,3,4) !## bdgwel,bdgriv,bdgdrn
-          IDF%X(ICOL,IROW)=IDF%X(ICOL,IROW)+FM*RESM(J)%X(ICOL,IROW)
+          SELECT CASE (IAGGR_TYPE)
+           CASE (1) !## min
+            IDF%X(ICOL,IROW)=MIN(IDF%X(ICOL,IROW),FM*RESM(J)%X(ICOL,IROW))
+           CASE (2) !## max
+            IDF%X(ICOL,IROW)=MAX(IDF%X(ICOL,IROW),FM*RESM(J)%X(ICOL,IROW))
+           CASE (3,4) !## mean/sum
+            IDF%X(ICOL,IROW)=IDF%X(ICOL,IROW)+FM*RESM(J)%X(ICOL,IROW)
+          END SELECT
         END SELECT
        CASE (2)       !## modelinput
         SELECT CASE (INPUTTYPE)
          CASE (1,3)   !## kdw/khv
-          IDF%X(ICOL,IROW)=IDF%X(ICOL,IROW)+(Z1-Z2)*KVAL*FP
+          SELECT CASE (IAGGR_TYPE)
+           CASE (1) !## min
+            IDF%X(ICOL,IROW)=MIN(IDF%X(ICOL,IROW),(Z1-Z2)*KVAL*FP)
+           CASE (2) !## max
+            IDF%X(ICOL,IROW)=MAX(IDF%X(ICOL,IROW),(Z1-Z2)*KVAL*FP)
+           CASE (3,4) !## mean/sum
+            IDF%X(ICOL,IROW)=IDF%X(ICOL,IROW)+(Z1-Z2)*KVAL*FP
+          END SELECT
         END SELECT
       END SELECT
      
@@ -1302,7 +1323,14 @@ CONTAINS
          CASE (2) !## modelinput
           SELECT CASE (INPUTTYPE)
            CASE (2,4) !## vcw/kvv
-            IDF%X(ICOL,IROW)=IDF%X(ICOL,IROW)+(((Z1-Z2)/KVAL)*FP)
+            SELECT CASE (IAGGR_TYPE)
+             CASE (1) !## min
+              IDF%X(ICOL,IROW)=MIN(IDF%X(ICOL,IROW),(((Z1-Z2)/KVAL)*FP))
+             CASE (2) !## max
+              IDF%X(ICOL,IROW)=MAX(IDF%X(ICOL,IROW),(((Z1-Z2)/KVAL)*FP))
+             CASE (3,4) !## mean/sum
+              IDF%X(ICOL,IROW)=IDF%X(ICOL,IROW)+(((Z1-Z2)/KVAL)*FP)
+            END SELECT
           END SELECT 
         END SELECT
       
@@ -1320,22 +1348,27 @@ CONTAINS
  DO IROW=1,IDF%NROW; DO ICOL=1,IDF%NCOL
   IF(TOP%X(ICOL,IROW)-BOT%X(ICOL,IROW).GT.0.0)THEN
 
-   !## compute aggregate values
-   SELECT CASE (IAGGR)
-    CASE (1) !## modelresults
-     SELECT CASE (MODELTYPE)
-      CASE (1) !## head, get the average
-       IDF%X(ICOL,IROW)=IDF%X(ICOL,IROW)/THK%X(ICOL,IROW)
-      CASE (2,3,4) !## bdgwel,bdgriv,bdgdrn
-     END SELECT   
-    CASE (2) !## modelinput
-     SELECT CASE (INPUTTYPE)
-      CASE (3,4) !## khv
-       IDF%X(ICOL,IROW)=IDF%X(ICOL,IROW)/THK%X(ICOL,IROW)
-     END SELECT
-    CASE (3) !## ipf file
+   !## average values
+   IF(IAGGR_TYPE.EQ.3)THEN
 
-   END SELECT
+    !## compute aggregate values
+    SELECT CASE (IAGGR)
+     CASE (1) !## modelresults
+      SELECT CASE (MODELTYPE)
+       CASE (1) !## head, get the average
+        IDF%X(ICOL,IROW)=IDF%X(ICOL,IROW)/THK%X(ICOL,IROW)
+       CASE (2,3,4) !## bdgwel,bdgriv,bdgdrn
+      END SELECT   
+     CASE (2) !## modelinput
+      SELECT CASE (INPUTTYPE)
+       CASE (3,4) !## khv
+        IDF%X(ICOL,IROW)=IDF%X(ICOL,IROW)/THK%X(ICOL,IROW)
+      END SELECT
+     CASE (3) !## ipf file
+
+    END SELECT
+   ENDIF
+
   ELSE
    IDF%X(ICOL,IROW)=IDF%NODATA; TOP%X(ICOL,IROW)=TOP%NODATA
    BOT%X(ICOL,IROW)=BOT%NODATA; THK%X(ICOL,IROW)=THK%NODATA
@@ -1421,7 +1454,9 @@ CONTAINS
  !###======================================================================
  IMPLICIT NONE
  CHARACTER(LEN=*),INTENT(IN) :: FNAME
-  
+ REAL :: XC,YC
+ INTEGER :: I,J,IROW,ICOL,N
+ 
  NIPF=1; CALL IPFALLOCATE()
  IPF(1)%XCOL =1 !## x
  IPF(1)%YCOL =2 !## y
@@ -1432,7 +1467,18 @@ CONTAINS
  !# read entire ipf
  IF(.NOT.IPFREAD2(1,1,1))RETURN
  !## only write locations within formation-values
-   
+ N=0; DO I=1,IPF(1)%NROW
+  XC=IPF(1)%XYZ(1,I); YC=IPF(1)%XYZ(2,I)
+  CALL IDFIROWICOL(IDF,IROW,ICOL,XC,YC)
+  IF(IDF%X(ICOL,IROW).NE.IDF%NODATA)THEN
+   N=N+1
+   IF(N.NE.I)THEN
+    DO J=1,5; IPF(1)%INFO(J,N)=IPF(1)%INFO(J,I); ENDDO
+   ENDIF
+  ENDIF
+ ENDDO
+ IPF(1)%NROW=N
+     
  IPF(1)%FNAME=FNAME
  IF(.NOT.IPFWRITE(1))RETURN
  CALL IPFDEALLOCATE()
