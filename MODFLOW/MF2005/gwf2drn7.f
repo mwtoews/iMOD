@@ -302,10 +302,16 @@ C1C-----IF THERE ARE ACTIVE DRN PARAMETERS, READ THEM AND SUBSTITUTE
    30    CONTINUE
       END IF
 C
-      if(.not.associated(drnlev)) allocate(drnlev(ndrain))              ! NHI
+      if(.not.associated(drnlev))then                                   ! NHI
+       allocate(drnlev(ndrain))                                         ! NHI
+      else                                                              ! NHI
+       if(size(drnlev).le.ndrain)then                                   ! NHI
+        deallocate(drnlev); allocate(drnlev(ndrain))                    ! NHI
+       endif                                                            ! NHI
+      endif                                                             ! NHI
       do i = 1, ndrain ! save original drain levels                     ! NHI
-         drnlev(i) = drai(4,i)
-      end do
+         drnlev(i) = drai(4,i)                                          ! NHI
+      end do                                                            ! NHI
 
 C3------PRINT NUMBER OF DRAINS IN CURRENT STRESS PERIOD.
       WRITE (IOUT,101) NDRAIN
