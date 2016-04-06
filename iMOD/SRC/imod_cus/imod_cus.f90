@@ -62,6 +62,15 @@ CONTAINS
    WRITE(IU,'(I4)') CUS_NLAY 
 
    IF(.NOT.CUS_READFILES())RETURN
+
+   IF(NCLIP.EQ.1)THEN
+    WRITE(*,'(/A)') 'Reading clip file:'
+    WRITE(*,'(A)') '[CLIP] - '//TRIM(CLIPIDF%FNAME)
+    CALL IDFCOPY(MDLIDF(1),CLIPIDF)
+    !## take data most frequent number
+    IF(.NOT.IDFREADSCALE(CLIPIDF%FNAME,CLIPIDF,10,0,0.0,0))RETURN
+   ENDIF
+   
    DO I=1,SIZE(TOPIDF)
     IF(.NOT.CUS_CALCTHICKNESS(I))RETURN
     IF(.NOT.CUS_TRACE(I))RETURN
@@ -582,7 +591,7 @@ CONTAINS
  !###======================================================================
  IMPLICIT NONE
  INTEGER,INTENT(IN) :: IIDF
- INTEGER :: IROW,ICOL,IPZ,I,MAXTHREAD,NTHREAD,DTERM,IMENU,MAXN
+ INTEGER :: IROW,ICOL,JROW,JCOL,IPZ,I,MAXTHREAD,NTHREAD,DTERM,IMENU,MAXN
  REAL :: THICKNESS  
  INTEGER(KIND=1),POINTER,DIMENSION(:) :: ISPEC 
  INTEGER(KIND=2),POINTER,DIMENSION(:,:) :: THREAD,YSEL
@@ -612,10 +621,22 @@ CONTAINS
      MDLIDF(1)%X(ICOL,IROW).NE.MDLIDF(1)%NODATA)THEN    !## level.ne.nodata
     
    !## set begin values
-   NTHREAD=1; YSEL(1,NTHREAD)=ICOL; YSEL(2,NTHREAD)=IROW; IPZ=IPZ+1; MDLIDF(2)%X(ICOL,IROW)=REAL(IPZ)
-   !## trace all ne equal nodata and step less than thickness (mdlidf(3))
-   CALL IDFEDITTRACE(MDLIDF(1),MDLIDF(2),THREAD,YSEL,ISPEC,DTERM,IMENU,MAXTHREAD,MAXN, &
-                     MDLIDF(1)%NODATA,NTHREAD,IPZ,THRESHOLD=MDLIDF(3))
+   IPZ=IPZ+1; JROW=IROW; JCOL=ICOL
+   !## try to find another, close by start point associated with this zone
+   DO
+
+    NTHREAD=1; YSEL(1,NTHREAD)=JCOL; YSEL(2,NTHREAD)=JROW; MDLIDF(2)%X(JCOL,JROW)=REAL(IPZ)
+
+    !## trace all ne equal nodata and step less than thickness (mdlidf(3))
+    CALL IDFEDITTRACE(MDLIDF(1),MDLIDF(2),THREAD,YSEL,ISPEC,DTERM,IMENU,MAXTHREAD,MAXN, &
+                      MDLIDF(1)%NODATA,NTHREAD,IPZ,THRESHOLD=MDLIDF(3))
+    !## do not try to find another startlocation
+    IF(IEXPZONE.EQ.0)EXIT
+    !## try to find another start location for current zone
+    IF(.NOT.CUS_EXTENTSEARCH(JROW,JCOL,IPZ))EXIT
+
+   ENDDO
+   !## store number of poins for current zone
    IF(IPZ.GT.SIZE(NT))THEN
     I=SIZE(NT); ALLOCATE(NT_DUMMY(I*2)); NT_DUMMY(1:I)=NT(1:I); DEALLOCATE(NT); NT=>NT_DUMMY
    ENDIF
@@ -639,11 +660,36 @@ CONTAINS
  END FUNCTION CUS_TRACE
  
  !###======================================================================
+ LOGICAL FUNCTION CUS_EXTENTSEARCH(JROW,JCOL,IPZ)
+ !###======================================================================
+ IMPLICIT NONE
+ INTEGER,INTENT(IN) :: IPZ
+ INTEGER,INTENT(OUT) :: JROW,JCOL
+ INTEGER :: IROW,ICOL 
+
+ CUS_EXTENTSEARCH=.FALSE.
+ 
+ !## find another start location close enough
+ DO IROW=1,MDLIDF(1)%NROW; DO ICOL=1,MDLIDF(1)%NCOL
+  IF(INT(MDLIDF(2)%X(IROW,ICOL)).EQ.IPZ)THEN
+!   !## search along north
+!   DO JROW=IROW-
+! IF()EXIT
+! JROW=IROW
+! JCOL=ICOL
+
+  ENDIF
+ !## stap te groot, niet doen
+ ENDDO; ENDDO
+ 
+ END FUNCTION CUS_EXTENTSEARCH
+
+ !###======================================================================
  LOGICAL FUNCTION CUS_CALCTHICKNESS(IIDF)
  !###======================================================================
  IMPLICIT NONE
  INTEGER,INTENT(IN) :: IIDF
- INTEGER :: IROW,ICOL,I,J
+ INTEGER :: IROW,ICOL,I,J,NCOR
  REAL :: T,B,D
 
  CUS_CALCTHICKNESS=.FALSE.
@@ -657,7 +703,8 @@ CONTAINS
  IF(.NOT.IDFREADSCALE(BOTIDF(IIDF)%FNAME,MDLIDF(2),10,0,0.0,0))RETURN
  
  !## check consistency (thickness<0.0)
- DO IROW=1,MDLIDF(1)%NROW; DO ICOL=1,MDLIDF(1)%NCOL
+ NCOR=0
+ DO IROW=1,MDLIDF(1)%NROW; DO ICOL=1,MDLIDF(1)%NCOL  
   T=MDLIDF(1)%X(ICOL,IROW); B=MDLIDF(2)%X(ICOL,IROW) 
   IF(T.NE.MDLIDF(1)%NODATA.AND.B.NE.MDLIDF(2)%NODATA)THEN
    IF(T.LE.B)THEN
@@ -666,7 +713,17 @@ CONTAINS
   ELSE
    MDLIDF(1)%X(ICOL,IROW)=MDLIDF(1)%NODATA; MDLIDF(2)%X(ICOL,IROW)=MDLIDF(2)%NODATA
   ENDIF
+  IF(NCLIP.EQ.1)THEN
+   !## check clip
+   IF(CLIPIDF%X(ICOL,IROW).NE.ICLIP(IIDF,1).AND. &
+      CLIPIDF%X(ICOL,IROW).NE.ICLIP(IIDF,2))THEN
+    NCOR=NCOR+1; MDLIDF(1)%X(ICOL,IROW)=MDLIDF(1)%NODATA; MDLIDF(2)%X(ICOL,IROW)=MDLIDF(2)%NODATA
+   ENDIF
+  ENDIF
  ENDDO; ENDDO
+
+ !## clip data for clip-idf
+ IF(NCLIP.EQ.1)WRITE(*,'(A)') '[COR] - '//TRIM(ITOS(NCOR))
 
  I=INDEX(TOPIDF(IIDF)%FNAME,'\',.TRUE.); J=INDEX(TOPIDF(IIDF)%FNAME,'.',.TRUE.)
  TOPIDF(IIDF)%FNAME=TRIM(OUTPUTFOLDER)//'\topbottom\'//TOPIDF(IIDF)%FNAME(I+1:J-1)//'.idf'
