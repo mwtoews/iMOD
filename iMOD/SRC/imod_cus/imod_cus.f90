@@ -591,7 +591,7 @@ CONTAINS
  !###======================================================================
  IMPLICIT NONE
  INTEGER,INTENT(IN) :: IIDF
- INTEGER :: IROW,ICOL,JROW,JCOL,IPZ,I,MAXTHREAD,NTHREAD,DTERM,IMENU,MAXN
+ INTEGER :: IROW,ICOL,JROW,JCOL,IPZ,I,MAXTHREAD,NTHREAD,DTERM,IMENU,MAXN,TTHREAD
  REAL :: THICKNESS  
  INTEGER(KIND=1),POINTER,DIMENSION(:) :: ISPEC 
  INTEGER(KIND=2),POINTER,DIMENSION(:,:) :: THREAD,YSEL
@@ -621,7 +621,7 @@ CONTAINS
      MDLIDF(1)%X(ICOL,IROW).NE.MDLIDF(1)%NODATA)THEN    !## level.ne.nodata
     
    !## set begin values
-   IPZ=IPZ+1; JROW=IROW; JCOL=ICOL
+   IPZ=IPZ+1; JROW=IROW; JCOL=ICOL; TTHREAD=0
    !## try to find another, close by start point associated with this zone
    DO
 
@@ -630,6 +630,9 @@ CONTAINS
     !## trace all ne equal nodata and step less than thickness (mdlidf(3))
     CALL IDFEDITTRACE(MDLIDF(1),MDLIDF(2),THREAD,YSEL,ISPEC,DTERM,IMENU,MAXTHREAD,MAXN, &
                       MDLIDF(1)%NODATA,NTHREAD,IPZ,THRESHOLD=MDLIDF(3))
+
+    !## count total length of thread
+    TTHREAD=TTHREAD+NTHREAD
     !## do not try to find another startlocation
     IF(IEXPZONE.EQ.0)EXIT
     !## try to find another start location for current zone
@@ -640,7 +643,7 @@ CONTAINS
    IF(IPZ.GT.SIZE(NT))THEN
     I=SIZE(NT); ALLOCATE(NT_DUMMY(I*2)); NT_DUMMY(1:I)=NT(1:I); DEALLOCATE(NT); NT=>NT_DUMMY
    ENDIF
-   NT(IPZ)=NTHREAD  
+   NT(IPZ)=TTHREAD !NTHREAD  
   ENDIF  
    
  ENDDO; ENDDO
@@ -665,22 +668,31 @@ CONTAINS
  IMPLICIT NONE
  INTEGER,INTENT(IN) :: IPZ
  INTEGER,INTENT(OUT) :: JROW,JCOL
- INTEGER :: IROW,ICOL 
+ INTEGER :: IROW,ICOL
+ REAL :: DZ
 
- CUS_EXTENTSEARCH=.FALSE.
+ CUS_EXTENTSEARCH=.TRUE.
  
  !## find another start location close enough
  DO IROW=1,MDLIDF(1)%NROW; DO ICOL=1,MDLIDF(1)%NCOL
-  IF(INT(MDLIDF(2)%X(IROW,ICOL)).EQ.IPZ)THEN
-!   !## search along north
-!   DO JROW=IROW-
-! IF()EXIT
-! JROW=IROW
-! JCOL=ICOL
-
+  IF(INT(MDLIDF(2)%X(ICOL,IROW)).EQ.IPZ)THEN
+   !## search along north
+   JCOL=ICOL-IEXPZONE
+   DO JROW=MAX(1,IROW-IEXPZONE),MIN(IROW+IEXPZONE,MDLIDF(1)%NROW)
+    DO JCOL=MAX(1,ICOL-IEXPZONE),MIN(ICOL+IEXPZONE,MDLIDF(1)%NCOL)
+     !## found appropriate location, continue from there
+     IF(    MDLIDF(1)%X(JCOL,JROW) .NE.MDLIDF(1)%NODATA.AND. &
+        INT(MDLIDF(2)%X(JCOL,JROW)).EQ.MDLIDF(2)%NODATA)THEN
+      DZ=MDLIDF(1)%X(ICOL,IROW)-MDLIDF(1)%X(JCOL,JROW)
+      IF(ABS(DZ).LE.MDLIDF(3)%X(JCOL,JROW))RETURN
+     ENDIF
+    ENDDO
+   ENDDO
   ENDIF
  !## stap te groot, niet doen
  ENDDO; ENDDO
+ 
+ CUS_EXTENTSEARCH=.FALSE.
  
  END FUNCTION CUS_EXTENTSEARCH
 

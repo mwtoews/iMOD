@@ -646,29 +646,7 @@ if(irow.eq.ir.and.icol.eq.ic)f=1.0
  DO IROW=1,DEM%NROW
   DO ICOL=1,DEM%NCOL
 
-   !## nodata dem map
-   IF(DEM%X(ICOL,IROW).EQ.DEM%NODATA)CYCLE
-   !## slope map already filled in
-   IF(SLOPE%X(ICOL,IROW).NE.SLOPE%NODATA)CYCLE
-
-!   CALL SOF_COMPUTE_GRAD(DEM,ICOL,IROW,DZDX,DZDY)
-
-   !## from DEM it is much better to use this direction instead - treat nodata as sink
-   CALL SOF_COMPUTE_GRAD_STEEPEST(DEM,ICOL,IROW,DZDX,DZDY,.TRUE.)
-        
-   !## radians  
-   S=ATAN(SQRT(DZDX**2.0+DZDY**2.0))
-   A=ATAN2(-1.0*DZDY,DZDX)
-
-    !## degrees
-!    S=S*(360.0/(2.0*3.1415)) 
-!    A=A*(360.0/(2.0*3.1415))
-    
-   !## not a flat area
-   IF(S.NE.0.0)THEN
-    SLOPE%X(ICOL,IROW) =S
-    ASPECT%X(ICOL,IROW)=A
-   ENDIF
+   CALL SOF_COMPUTE_SLOPE_ASPECT_CALC(DEM,SLOPE,ASPECT,IROW,ICOL)
       
   ENDDO
  ENDDO
@@ -685,6 +663,36 @@ if(irow.eq.ir.and.icol.eq.ic)f=1.0
      
  END SUBROUTINE SOF_COMPUTE_SLOPE_ASPECT
  
+ !###======================================================================
+ SUBROUTINE SOF_COMPUTE_SLOPE_ASPECT_CALC(DEM,SLOPE,ASPECT,IROW,ICOL)
+ !###======================================================================
+ TYPE(IDFOBJ) :: DEM,SLOPE,ASPECT
+ INTEGER :: ICOL,IROW
+
+ !## nodata dem map
+ IF(DEM%X(ICOL,IROW).EQ.DEM%NODATA)RETURN
+ !## slope map already filled in
+ IF(SLOPE%X(ICOL,IROW).NE.SLOPE%NODATA)RETURN
+
+ !## from DEM it is much better to use this direction instead - treat nodata as sink
+ CALL SOF_COMPUTE_GRAD_STEEPEST(DEM,ICOL,IROW,DZDX,DZDY,.TRUE.)
+        
+ !## radians  
+ S=ATAN(SQRT(DZDX**2.0+DZDY**2.0))
+ A=ATAN2(-1.0*DZDY,DZDX)
+
+    !## degrees
+!    S=S*(360.0/(2.0*3.1415)) 
+!    A=A*(360.0/(2.0*3.1415))
+    
+ !## not a flat area
+ IF(S.NE.0.0)THEN
+  SLOPE%X(ICOL,IROW) =S
+  ASPECT%X(ICOL,IROW)=A
+ ENDIF
+
+ END SUBROUTINE SOF_COMPUTE_SLOPE_ASPECT_CALC
+
  !###======================================================================
  SUBROUTINE SOF_COMPUTE_GRAD_STEEPEST(DEM,ICOL,IROW,DZDX,DZDY,LNODATSINK)
  !###====================================================================== 
@@ -1006,6 +1014,7 @@ if(irow.eq.ir.and.icol.eq.ic)f=1.0
   
  !## compute gradient/orientation for all
  CALL SOF_COMPUTE_SLOPE_ASPECT(DEMORG,SLOPE,ASPECT)
+
  !## clean aspects for pitts
  DO I=1,NP 
   ICOL=INT(PL(I,1)); IROW=INT(PL(I,2))
@@ -1094,8 +1103,6 @@ if(irow.eq.ir.and.icol.eq.ic)f=1.0
  IR1=MINVAL(PPX(1:NPPX)%IROW); IR2=MAXVAL(PPX(1:NPPX)%IROW)
 
  PCG%NCOL=IC2-IC1+1; PCG%NROW=IR2-IR1+1; PCG%DX=DEM%DX; PCG%DY=DEM%DY
-! PCG%XMIN=0.0; PCG%XMAX=REAL(PCG%NCOL)*DEM%DX
-! PCG%YMAX=REAL(PCG%NROW)*DEM%DY; PCG%YMIN=0.0
  PCG%XMIN=DEM%XMIN+(IC1-1)*DEM%DX; PCG%XMAX=PCG%XMIN+PCG%NCOL*DEM%DX
  PCG%YMAX=DEM%YMAX-(IR1-1)*DEM%DY; PCG%YMIN=PCG%YMAX-PCG%NROW*DEM%DY
 
@@ -1114,6 +1121,9 @@ if(irow.eq.ir.and.icol.eq.ic)f=1.0
  DO I=1,NPPX !-1
   IC=PPX(I)%ICOL-IC1+1
   IR=PPX(I)%IROW-IR1+1
+
+! CALL SOF_COMPUTE_SLOPE_ASPECT_CALC(DEM,SLOPE,ASPECT,PPX(I)%IROW,PPX(I)%ICOL)
+
   PCG%X(IC,IR)=ASPECT%X(PPX(I)%ICOL,PPX(I)%IROW) 
 !  PCG%X(IC,IR)=HINI
  ENDDO
