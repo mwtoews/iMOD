@@ -691,7 +691,8 @@ CONTAINS
 
  !read,denywrite -> 'unknown,formatted,readonly,shared,append'  !rest default
 
- IU     = CFN_GETLUN(10,99)
+ !## number of units 10-999
+ IU     = CFN_GETLUN(10,999)
  MESSAGE=''
 
  !#dos
@@ -1989,9 +1990,12 @@ END SUBROUTINE IMOD_UTL_QKSORT
     ZT=ABS(TLP(ILAY)); K=ILAY
    ENDIF
   ENDDO
-  ZT=TLP(K)
-  TLP=0.0; TLP(K)=1.0
-  IF(ZT.LT.0.0)TLP(K)=-1.0*TLP(K)
+  !## not assigned to any layer
+  IF(K.NE.0)THEN
+   ZT=TLP(K)
+   TLP=0.0; TLP(K)=1.0
+   IF(ZT.LT.0.0)TLP(K)=-1.0*TLP(K)
+  ENDIF
  ENDIF
 
  DEALLOCATE(L,TL,IL)

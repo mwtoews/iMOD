@@ -55,8 +55,31 @@ CONTAINS
  integer :: scltype, ismooth
 
  IF(IMODPCK.EQ.0)NTOPICS=MDIM(IPCK)
- IF(IMODPCK.EQ.1)NTOPICS=PDIM(IPCK)
-
+ IF(IMODPCK.EQ.1)THEN
+  NTOPICS=PDIM(IPCK)
+  !## reset reuse variable on default on .false.
+  SELECT CASE (IPCK)
+   CASE (PWEL)     !## (PWEL) well
+    if(associated(wel%sp))wel%sp(kper)%reuse = .false.
+   CASE (PDRN)     !## (PDRN) drainage
+    if(associated(drn%sp))drn%sp(kper)%reuse = .false.
+   CASE (PRIV)     !## (PRIV) rivers
+    if(associated(riv%sp))riv%sp(kper)%lriv  = .true.
+   CASE (PEVT)     !## (PEVT) evapotranspiration
+    if(associated(evt%sp))evt%sp(kper)%reuse = .false.
+   CASE (PGHB)     !## (PGHB) general head boundary
+    if(associated(ghb%sp))ghb%sp(kper)%reuse = .false.
+   CASE (PRCH)     !## (PRCH) recharge
+    if(associated(rch%sp))rch%sp(kper)%reuse = .false.
+   CASE (POLF)     !## (POLF) overlandflow
+    if(associated(drn%sp))drn%sp(kper)%reuse = .false.
+   CASE (PCHD)     !## (PCHD) constant head
+    if(associated(chd%sp))chd%sp(kper)%reuse = .false.
+   CASE (PISG)     !## (PISG) riversegments
+    if(associated(riv%sp))riv%sp(kper)%reuse = .false.
+  END SELECT
+ ENDIF
+ 
  !## read three extra idf files for scr module
  IF(IMODPCK.EQ.0.AND.IPCK.EQ.PSCR.AND.MMOD(PSCR).EQ.1)THEN
   scr%nsys=nlines; call AllocScr(ialloc)
@@ -75,6 +98,7 @@ CONTAINS
 
  DO IT=1,NTOPICS
   nsys=0
+
   DO isub=1,NLINES
 
    READ(IURUN,'(A256)',IOSTAT=IOS) LINE

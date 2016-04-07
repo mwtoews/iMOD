@@ -2515,10 +2515,14 @@
             write(lun,'(a,1x,i5.5)') '-1',iper
          else
             if (sp(iper)%usegcd) then
-               write(str,*) sp(iper)%np
-               write(lun,'(a)') trim(adjustl(str))
-               write(lun,'(a,1x,i5.5)') 'gcd',iper
-               call WriteGcd(sp(iper)%gcd, lun)
+               if(sp(iper)%gcd%nsubsys.gt.0)then
+                write(str,*) sp(iper)%np
+                write(lun,'(a)') trim(adjustl(str))
+                write(lun,'(a,1x,i5.5)') 'gcd',iper
+                call WriteGcd(sp(iper)%gcd, lun)
+               else
+                write(lun,'(a)') '0'
+               endif
             else if (sp(iper)%uselcd) then
                write(lun,'(a,1x,i5.5)') 'lcd',iper
                call WriteLcd(sp(iper)%lcd, lun)
