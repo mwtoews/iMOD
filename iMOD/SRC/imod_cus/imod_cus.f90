@@ -29,7 +29,7 @@ USE MOD_UTL, ONLY : UTL_CAP,UTL_DIRINFO_POINTER,UTL_SUBST,UTL_CREATEDIR,UTL_IDFS
                     UTL_GETMED,UTL_GETUNIT,ITOS
 USE MOD_IDFEDIT_TRACE, ONLY : IDFEDITTRACE,IDFEDITGETDIR
 USE MOD_SMPLX, ONLY : SMPLX_MAIN
-USE MOD_SMPLX_PAR, ONLY : IN_CON,NVAR,NCON,IN_OBJ,ZOBJ,XVAR,LPSTATUS,A,B,C,CONSTR_TYPE,NUMLE,NUMGE
+USE MOD_SMPLX_PAR, ONLY : IN_CON,NVAR,NCON,IN_OBJ,ZOBJ,XVAR,LPSTATUS,A,B,C,CONSTR_TYPE,NUMLE,NUMGE,ICNVG
 USE MOD_QKSORT
 
 INTEGER,PRIVATE :: IU
@@ -129,10 +129,8 @@ CONTAINS
  
  WRITE(*,'(/A)') 'Reading data from:'
  WRITE(*,'(A)') '[TOPSYSTEM] - '//TRIM(TOPSYSTEM)
-! IF(.NOT.IDFREADSCALE(TOPSYSTEM,MDLTOP(1),2,1,0.0,0))RETURN
  IF(.NOT.IDFREADSCALE(TOPSYSTEM,MDLTOP(1),10,0,0.0,0))RETURN
  WRITE(*,'(A)') '[BOTSYSTEM] - '//TRIM(BOTSYSTEM)
-! IF(.NOT.IDFREADSCALE(BOTSYSTEM,MDLBOT(NLAY),2,1,0.0,0))RETURN
  IF(.NOT.IDFREADSCALE(BOTSYSTEM,MDLBOT(NLAY),10,0,0.0,0))RETURN
  DO I=1,NLAY; MDLTOP(I)%FNAME=TRIM(OUTPUTFOLDER)//'\model\mdl_top_l'//TRIM(ITOS(I))//'.idf'; ENDDO
  DO I=1,NLAY; MDLBOT(I)%FNAME=TRIM(OUTPUTFOLDER)//'\model\mdl_bot_l'//TRIM(ITOS(I))//'.idf'; ENDDO
@@ -163,16 +161,13 @@ CONTAINS
   WRITE(*,'(2(I3.3,A))') IIDF,'-',CUS_NLAY,' Reading Pointer Files for '//TRIM(ZIDF(IIDF)%FNAME)//' ...'
   CALL IDFDEALLOCATEX(ZIDF(IIDF)); CALL IDFCOPY(MDLIDF(1),ZIDF(IIDF))
   IF(.NOT.IDFREADSCALE(ZIDF(IIDF)%FNAME,ZIDF(IIDF),7,0,0.0,0))RETURN
-!  IF(.NOT.IDFREADSCALE(ZIDF(IIDF)%FNAME,ZIDF(IIDF),7,1,0.0,0))RETURN
   
   WRITE(*,'(2(I3.3,A))') IIDF,'-',CUS_NLAY,' Reading Top Files for '//TRIM(TOPIDF(IIDF)%FNAME)//' ...'
   CALL IDFDEALLOCATEX(TOPIDF(IIDF)); CALL IDFCOPY(MDLIDF(1),TOPIDF(IIDF))
-!  IF(.NOT.IDFREADSCALE(TOPIDF(IIDF)%FNAME,TOPIDF(IIDF),2,1,0.0,0))RETURN
   IF(.NOT.IDFREADSCALE(TOPIDF(IIDF)%FNAME,TOPIDF(IIDF),10,0,0.0,0))RETURN
 
   WRITE(*,'(2(I3.3,A))') IIDF,'-',CUS_NLAY,' Reading Bot Files for '//TRIM(BOTIDF(IIDF)%FNAME)//' ...'
   CALL IDFDEALLOCATEX(BOTIDF(IIDF)); CALL IDFCOPY(MDLIDF(1),BOTIDF(IIDF))
-!  IF(.NOT.IDFREADSCALE(BOTIDF(IIDF)%FNAME,BOTIDF(IIDF),2,1,0.0,0))RETURN
   IF(.NOT.IDFREADSCALE(BOTIDF(IIDF)%FNAME,BOTIDF(IIDF),10,0,0.0,0))RETURN
 
   DO IROW=1,MDLTOP(1)%NROW; DO ICOL=1,MDLTOP(1)%NCOL
@@ -314,6 +309,7 @@ CONTAINS
  DO I=1,NVAR; WRITE(*,'(1X,I10,F10.2)') I,XVAR(I); ENDDO
  WRITE(*,'(/A,F10.2)') 'Objective Function Value:',ZOBJ
  WRITE(*,'(/A/)') TRIM(LPSTATUS)
+ IF(ICNVG.NE.0)STOP
  
  DO I=1,NVAR; ILP(I,IPERC)=INT(XVAR(I),1); ENDDO
  NLAY=0; DO I=1,NVAR; IF(ILP(I,0).GE.0)NLAY=MAX(NLAY,ILP(I,0)+1); ENDDO; NLAY=NLAY+1   
@@ -357,6 +353,9 @@ CONTAINS
     ELSE
      ZIDF(IIDF)%X(ICOL,IROW)=XVAR(IL(IZ))
     ENDIF
+   ELSE
+    !## remove the negative zone numbers that denote the buffers
+    ZIDF(IIDF)%X(ICOL,IROW)=ZIDF(IIDF)%NODATA
    ENDIF
   ENDDO; ENDDO
 
@@ -431,8 +430,8 @@ CONTAINS
    !## turn smallest off (remove it!)
    IF(SMPLX(I)%IAREA.LE.SMPLX(J)%IAREA)SMPLX(I)%IAREA=0
    IF(SMPLX(J)%IAREA.LE.SMPLX(I)%IAREA)SMPLX(J)%IAREA=0
-   write(*,'(A,8I4)') 'DDEF #',SMPLX(I)%IF1,SMPLX(I)%IZ1,SMPLX(I)%IVAR1,SMPLX(I)%IVAR2, &
-                               SMPLX(J)%IF1,SMPLX(J)%IZ1,SMPLX(J)%IVAR1,SMPLX(J)%IVAR2
+   write(*,'(A,5I4,A1,5I4)') 'DDEF #',I,SMPLX(I)%IF1,SMPLX(I)%IZ1,SMPLX(I)%IVAR1,SMPLX(I)%IVAR2,'-', &
+                                      J,SMPLX(J)%IF1,SMPLX(J)%IZ1,SMPLX(J)%IVAR1,SMPLX(J)%IVAR2
   ENDIF 
  ENDDO; ENDDO
  
@@ -463,14 +462,16 @@ CONTAINS
   CALL IDFDEALLOCATEX(BOTIDF(I)); IF(.NOT.IDFREAD(BOTIDF(I),BOTIDF(I)%FNAME,1))RETURN
   CALL IDFDEALLOCATEX(ZIDF(I))  ; IF(.NOT.IDFREAD(ZIDF(I)  ,ZIDF(I)%FNAME  ,1))RETURN
 
+  IF(IEXPZONE.GT.0)CALL CUS_EXTENT_TOPBOT(I)
+  
   !## get array above/beneath
   ALLOCATE(DZTOP(TOPIDF(I)%NCOL,TOPIDF(I)%NROW),DZBOT(TOPIDF(I)%NCOL,TOPIDF(I)%NROW), &
            IZTOP(TOPIDF(I)%NCOL,TOPIDF(I)%NROW),IZBOT(TOPIDF(I)%NCOL,TOPIDF(I)%NROW), &
            ILTOP(TOPIDF(I)%NCOL,TOPIDF(I)%NROW),ILBOT(TOPIDF(I)%NCOL,TOPIDF(I)%NROW))  
-           
+
   !## initialize arrays
   DZTOP=10.0E10; DZBOT=10.0E10; IZTOP=0; IZBOT=0; ILTOP=0; ILBOT=0
-   
+
   !## loop over all other files
   DO J=1,SIZE(TOPIDF)
    IF(I.EQ.J)CYCLE
@@ -479,12 +480,17 @@ CONTAINS
    CALL IDFDEALLOCATEX(BOTIDF(J)); IF(.NOT.IDFREAD(BOTIDF(J),BOTIDF(J)%FNAME,1))RETURN
    CALL IDFDEALLOCATEX(ZIDF(J))  ; IF(.NOT.IDFREAD(ZIDF(J)  ,ZIDF(J)%FNAME  ,1))RETURN
 
+   !## construct buffer
+   CALL CUS_EXTENT_TOPBOT(J)
+
    DO IROW=1,MDLIDF(1)%NROW; DO ICOL=1,MDLIDF(1)%NCOL
-    T=TOPIDF(I)%X(ICOL,IROW); B=BOTIDF(I)%X(ICOL,IROW) 
+
+    T=TOPIDF(I)%X(ICOL,IROW); B=BOTIDF(I)%X(ICOL,IROW); Z=INT(ZIDF(I)%X(ICOL,IROW)); Z=ABS(Z)
+        
     !## available thickness of i'th file
     IF(T-B.GT.0.0)THEN
      !## top, bot and zone number
-     TT=TOPIDF(J)%X(ICOL,IROW); BB=BOTIDF(J)%X(ICOL,IROW); ZZ=INT(ZIDF(J)%X(ICOL,IROW))
+     TT=TOPIDF(J)%X(ICOL,IROW); BB=BOTIDF(J)%X(ICOL,IROW); ZZ=INT(ZIDF(J)%X(ICOL,IROW)); ZZ=ABS(ZZ)
      !## available thickness of j'th file
      IF(TT-BB.GT.0.0)THEN
       !## available thickness of j'th file, compute distance
@@ -496,10 +502,18 @@ CONTAINS
        D=B-TT
        !## check whether this layer is closer than layer already processed
        IF(D.LT.DZBOT(ICOL,IROW))THEN; ILBOT(ICOL,IROW)=J; IZBOT(ICOL,IROW)=ZZ; DZBOT(ICOL,IROW)=D; ENDIF
+      ELSE
+       !## check whether clayey element intersect - if so, set distance to zero
+       IF(BB.LT.T.AND.TT.GT.T)THEN
+        ILTOP(ICOL,IROW)=J; IZTOP(ICOL,IROW)=ZZ; DZTOP(ICOL,IROW)=0.0
+       ELSEIF(TT.GT.B.AND.BB.LT.B)THEN
+        ILBOT(ICOL,IROW)=J; IZBOT(ICOL,IROW)=ZZ; DZBOT(ICOL,IROW)=0.0
+       ENDIF
       ENDIF
      ENDIF
     ENDIF
    ENDDO; ENDDO
+      
    CALL IDFDEALLOCATEX(TOPIDF(J)); CALL IDFDEALLOCATEX(BOTIDF(J)); CALL IDFDEALLOCATEX(ZIDF(J))
     
   ENDDO
@@ -520,30 +534,24 @@ CONTAINS
    DZ%NZ=0
    DO IROW=1,MDLIDF(1)%NROW; DO ICOL=1,MDLIDF(1)%NCOL
     Z=INT(ZIDF(I)%X(ICOL,IROW))
+    Z=ABS(Z)
     IF(Z.GT.0)THEN
      !## try top current modellayer il
      IF(ILTOP(ICOL,IROW).EQ.IL)THEN
       ZZ =IZTOP(ICOL,IROW)
-      IF(Z.GT.0)THEN
-       D                 = DZTOP(ICOL,IROW)
-       DZ(Z)%NZ          = DZ(Z)%NZ+1
-       DZ(Z)%D (DZ(Z)%NZ)= D
-       DZ(Z)%IZ(DZ(Z)%NZ)= ZZ
-      ENDIF
+      D                 = DZTOP(ICOL,IROW)
+      DZ(Z)%NZ          = DZ(Z)%NZ+1
+      DZ(Z)%D (DZ(Z)%NZ)= D
+      DZ(Z)%IZ(DZ(Z)%NZ)= ZZ
      ENDIF
      !## try bottom current modellayer il
      IF(ILBOT(ICOL,IROW).EQ.IL)THEN
       ZZ=IZBOT(ICOL,IROW)
-      IF(Z.GT.0)THEN
-       D                 = DZBOT(ICOL,IROW)
-       DZ(Z)%NZ          = DZ(Z)%NZ+1
-       DZ(Z)%D (DZ(Z)%NZ)= D
-       DZ(Z)%IZ(DZ(Z)%NZ)=-ZZ
-      ENDIF
+      D                 = DZBOT(ICOL,IROW)
+      DZ(Z)%NZ          = DZ(Z)%NZ+1
+      DZ(Z)%D (DZ(Z)%NZ)= D
+      DZ(Z)%IZ(DZ(Z)%NZ)=-ZZ
      ENDIF
-    !## buffer around it
-    ELSEIF(Z.LT.0)THEN
-
     ENDIF
    ENDDO; ENDDO
 
@@ -639,11 +647,15 @@ CONTAINS
     IF(.NOT.CUS_EXTENTSEARCH(JROW,JCOL,IPZ))EXIT
 
    ENDDO
+   
+   !## extent zone by a buffer with -zone numbers filled in
+   IF(IEXPZONE.GT.0)CALL CUS_EXTENT_ZONE(IPZ,TTHREAD)
+      
    !## store number of poins for current zone
    IF(IPZ.GT.SIZE(NT))THEN
     I=SIZE(NT); ALLOCATE(NT_DUMMY(I*2)); NT_DUMMY(1:I)=NT(1:I); DEALLOCATE(NT); NT=>NT_DUMMY
    ENDIF
-   NT(IPZ)=TTHREAD !NTHREAD  
+   NT(IPZ)=TTHREAD 
   ENDIF  
    
  ENDDO; ENDDO
@@ -676,25 +688,74 @@ CONTAINS
  !## find another start location close enough
  DO IROW=1,MDLIDF(1)%NROW; DO ICOL=1,MDLIDF(1)%NCOL
   IF(INT(MDLIDF(2)%X(ICOL,IROW)).EQ.IPZ)THEN
-   !## search along north
-   JCOL=ICOL-IEXPZONE
+   !## search along square box
    DO JROW=MAX(1,IROW-IEXPZONE),MIN(IROW+IEXPZONE,MDLIDF(1)%NROW)
     DO JCOL=MAX(1,ICOL-IEXPZONE),MIN(ICOL+IEXPZONE,MDLIDF(1)%NCOL)
      !## found appropriate location, continue from there
-     IF(    MDLIDF(1)%X(JCOL,JROW) .NE.MDLIDF(1)%NODATA.AND. &
-        INT(MDLIDF(2)%X(JCOL,JROW)).EQ.MDLIDF(2)%NODATA)THEN
+     IF(MDLIDF(1)%X(JCOL,JROW).NE.MDLIDF(1)%NODATA.AND. &
+        MDLIDF(2)%X(JCOL,JROW).EQ.MDLIDF(2)%NODATA)THEN
       DZ=MDLIDF(1)%X(ICOL,IROW)-MDLIDF(1)%X(JCOL,JROW)
       IF(ABS(DZ).LE.MDLIDF(3)%X(JCOL,JROW))RETURN
      ENDIF
     ENDDO
    ENDDO
   ENDIF
- !## stap te groot, niet doen
  ENDDO; ENDDO
  
  CUS_EXTENTSEARCH=.FALSE.
  
  END FUNCTION CUS_EXTENTSEARCH
+
+ !###======================================================================
+ SUBROUTINE CUS_EXTENT_ZONE(IPZ,TTHREAD)
+ !###======================================================================
+ IMPLICIT NONE
+ INTEGER,INTENT(IN) :: IPZ
+ INTEGER,INTENT(INOUT) :: TTHREAD
+ INTEGER :: IROW,ICOL,JROW,JCOL
+
+ !## find another start location close enough
+ DO IROW=1,MDLIDF(1)%NROW; DO ICOL=1,MDLIDF(1)%NCOL
+  IF(INT(MDLIDF(2)%X(ICOL,IROW)).EQ.IPZ)THEN
+   !## search along square box
+   DO JROW=MAX(1,IROW-IEXPZONE),MIN(IROW+IEXPZONE,MDLIDF(1)%NROW)
+    DO JCOL=MAX(1,ICOL-IEXPZONE),MIN(ICOL+IEXPZONE,MDLIDF(1)%NCOL)
+     !## found appropriate location, insert buffer
+     IF(MDLIDF(2)%X(JCOL,JROW).EQ.MDLIDF(2)%NODATA)THEN
+      MDLIDF(2)%X(JCOL,JROW)=-REAL(IPZ)
+      TTHREAD=TTHREAD+1
+     ENDIF
+    ENDDO
+   ENDDO
+  ENDIF
+ ENDDO; ENDDO
+ 
+ END SUBROUTINE CUS_EXTENT_ZONE
+ 
+ !###======================================================================
+ SUBROUTINE CUS_EXTENT_TOPBOT(I)
+ !###======================================================================
+ IMPLICIT NONE
+ INTEGER,INTENT(IN) :: I
+ INTEGER :: IROW,ICOL,JROW,JCOL
+
+ !## find another start location close enough
+ DO IROW=1,TOPIDF(I)%NROW; DO ICOL=1,TOPIDF(I)%NCOL
+  IF(INT(ZIDF(I)%X(ICOL,IROW)).GT.0)THEN
+   !## search along square box
+   DO JROW=MAX(1,IROW-IEXPZONE),MIN(IROW+IEXPZONE,TOPIDF(I)%NROW)
+    DO JCOL=MAX(1,ICOL-IEXPZONE),MIN(ICOL+IEXPZONE,TOPIDF(I)%NCOL)
+     !## found appropriate location, insert buffer
+     IF(ABS(INT(ZIDF(I)%X(JCOL,JROW))).EQ.INT(ZIDF(I)%X(ICOL,IROW)))THEN
+      TOPIDF(I)%X(JCOL,JROW)=TOPIDF(I)%X(ICOL,IROW)
+      BOTIDF(I)%X(JCOL,JROW)=BOTIDF(I)%X(ICOL,IROW)
+     ENDIF
+    ENDDO
+   ENDDO
+  ENDIF
+ ENDDO; ENDDO
+ 
+ END SUBROUTINE CUS_EXTENT_TOPBOT
 
  !###======================================================================
  LOGICAL FUNCTION CUS_CALCTHICKNESS(IIDF)
