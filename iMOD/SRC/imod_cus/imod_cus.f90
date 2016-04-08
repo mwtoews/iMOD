@@ -427,11 +427,14 @@ CONTAINS
  DO I=1,NCON; DO J=1,NCON; IF(I.EQ.J)CYCLE
   IF(SMPLX(I)%IVAR1     .EQ.SMPLX(J)%IVAR1.AND. &
      ABS(SMPLX(I)%IVAR2).EQ.ABS(SMPLX(J)%IVAR2))THEN
-   !## turn smallest off (remove it!)
-   IF(SMPLX(I)%IAREA.LE.SMPLX(J)%IAREA)SMPLX(I)%IAREA=0
-   IF(SMPLX(J)%IAREA.LE.SMPLX(I)%IAREA)SMPLX(J)%IAREA=0
-   write(*,'(A,5I4,A1,5I4)') 'DDEF #',I,SMPLX(I)%IF1,SMPLX(I)%IZ1,SMPLX(I)%IVAR1,SMPLX(I)%IVAR2,'-', &
-                                      J,SMPLX(J)%IF1,SMPLX(J)%IZ1,SMPLX(J)%IVAR1,SMPLX(J)%IVAR2
+   !## remove the one from the buffer - apparently zero-distances
+   IF(SMPLX(I)%PERC(1).EQ.0.0)SMPLX(I)%IAREA=0
+!   IF(SMPLX(I)%IAREA.LE.SMPLX(J)%IAREA)SMPLX(I)%IAREA=0
+!   IF(SMPLX(J)%IAREA.LE.SMPLX(I)%IAREA)SMPLX(J)%IAREA=0
+   write(*,'(A,7I4,A3,7I4)') 'DDEF #',I,SMPLX(I)%IF1,SMPLX(I)%IZ1,SMPLX(I)%IVAR1,       &
+                                        SMPLX(I)%IF2,SMPLX(I)%IZ2,SMPLX(I)%IVAR2,' - ', &
+                                      J,SMPLX(J)%IF1,SMPLX(J)%IZ1,SMPLX(J)%IVAR1,       &
+                                        SMPLX(J)%IF2,SMPLX(J)%IZ2,SMPLX(J)%IVAR2
   ENDIF 
  ENDDO; ENDDO
  
@@ -449,12 +452,15 @@ CONTAINS
  IMPLICIT NONE
  INTEGER :: I,J,K,KK,IROW,ICOL,Z,ZZ,N,MX,IL1,IL2,IL
  REAL :: T,TT,B,BB,D
+ INTEGER(KIND=1),ALLOCATABLE,DIMENSION(:,:) :: ILTB,IZTB
 
  CUS_DISTANCES=.FALSE.
  
  WRITE(IU,'(/A/)') 'Distances'
  WRITE(IU,'(6A6,A10,99F10.2)') '#file','izone','#','#file','izone','#','size',PERC 
- 
+
+ N=SUM(ZINFO%NZ); ALLOCATE(ILTB(SIZE(TOPIDF),2),IZTB(N,2))
+
  DO I=1,SIZE(TOPIDF)
 
   WRITE(*,'(2(I3.3,A))') I,'-',SIZE(TOPIDF),' Computing distances for '//TRIM(TOPIDF(I)%FNAME)//' ...'
@@ -470,7 +476,7 @@ CONTAINS
            ILTOP(TOPIDF(I)%NCOL,TOPIDF(I)%NROW),ILBOT(TOPIDF(I)%NCOL,TOPIDF(I)%NROW))  
 
   !## initialize arrays
-  DZTOP=10.0E10; DZBOT=10.0E10; IZTOP=0; IZBOT=0; ILTOP=0; ILBOT=0
+  DZTOP=10.0E10; DZBOT=10.0E10; IZTOP=0; IZBOT=0; ILTOP=0; ILBOT=0; ILTB=INT(0,1); IZTB=INT(0,1)
 
   !## loop over all other files
   DO J=1,SIZE(TOPIDF)
@@ -481,11 +487,11 @@ CONTAINS
    CALL IDFDEALLOCATEX(ZIDF(J))  ; IF(.NOT.IDFREAD(ZIDF(J)  ,ZIDF(J)%FNAME  ,1))RETURN
 
    !## construct buffer
-   CALL CUS_EXTENT_TOPBOT(J)
+   IF(IEXPZONE.GT.0)CALL CUS_EXTENT_TOPBOT(J)
 
    DO IROW=1,MDLIDF(1)%NROW; DO ICOL=1,MDLIDF(1)%NCOL
 
-    T=TOPIDF(I)%X(ICOL,IROW); B=BOTIDF(I)%X(ICOL,IROW); Z=INT(ZIDF(I)%X(ICOL,IROW)); Z=ABS(Z)
+    T=TOPIDF(I)%X(ICOL,IROW); B=BOTIDF(I)%X(ICOL,IROW); Z=INT(ZIDF(I)%X(ICOL,IROW)) !; Z=ABS(Z)
         
     !## available thickness of i'th file
     IF(T-B.GT.0.0)THEN
@@ -497,17 +503,19 @@ CONTAINS
       IF(BB.GE.T)THEN     !## j'th file above (positive)
        D=BB-T
        !## check whether this layer is closer than layer already processed
-       IF(D.LT.DZTOP(ICOL,IROW))THEN; ILTOP(ICOL,IROW)=J; IZTOP(ICOL,IROW)=ZZ; DZTOP(ICOL,IROW)=D; ENDIF
+       IF(D.LT.DZTOP(ICOL,IROW))THEN; ILTOP(ICOL,IROW)=J; IZTOP(ICOL,IROW)=ZZ; DZTOP(ICOL,IROW)=D; ILTB(J,1)=INT(1,1); IZTB(ZZ,1)=INT(1,1); ENDIF
       ELSEIF(TT.LE.B)THEN !## j'th file beneath (negative)
        D=B-TT
        !## check whether this layer is closer than layer already processed
-       IF(D.LT.DZBOT(ICOL,IROW))THEN; ILBOT(ICOL,IROW)=J; IZBOT(ICOL,IROW)=ZZ; DZBOT(ICOL,IROW)=D; ENDIF
+       IF(D.LT.DZBOT(ICOL,IROW))THEN; ILBOT(ICOL,IROW)=J; IZBOT(ICOL,IROW)=ZZ; DZBOT(ICOL,IROW)=D; ILTB(J,2)=INT(1,1); IZTB(ZZ,2)=INT(1,1); ENDIF
       ELSE
-       !## check whether clayey element intersect - if so, set distance to zero
-       IF(BB.LT.T.AND.TT.GT.T)THEN
-        ILTOP(ICOL,IROW)=J; IZTOP(ICOL,IROW)=ZZ; DZTOP(ICOL,IROW)=0.0
-       ELSEIF(TT.GT.B.AND.BB.LT.B)THEN
-        ILBOT(ICOL,IROW)=J; IZBOT(ICOL,IROW)=ZZ; DZBOT(ICOL,IROW)=0.0
+       IF(Z.LT.0)THEN
+        !## check whether clayey element intersect - if so, set distance to zero
+        IF(BB.LT.T.AND.TT.GT.T)THEN
+         ILTOP(ICOL,IROW)=J; IZTOP(ICOL,IROW)=ZZ; DZTOP(ICOL,IROW)=0.0
+        ELSEIF(TT.GT.B.AND.BB.LT.B)THEN
+         ILBOT(ICOL,IROW)=J; IZBOT(ICOL,IROW)=ZZ; DZBOT(ICOL,IROW)=0.0
+        ENDIF
        ENDIF
       ENDIF
      ENDIF
@@ -517,7 +525,21 @@ CONTAINS
    CALL IDFDEALLOCATEX(TOPIDF(J)); CALL IDFDEALLOCATEX(BOTIDF(J)); CALL IDFDEALLOCATEX(ZIDF(J))
     
   ENDDO
-
+  
+  !## clean buffer assignment for those allready assigned outside buffer
+  IF(IEXPZONE.GT.0)THEN
+   DO IROW=1,MDLIDF(1)%NROW; DO ICOL=1,MDLIDF(1)%NCOL
+    Z=INT(ZIDF(I)%X(ICOL,IROW))
+    !## clean whenever reference allready made by positive zone-numbers
+    IF(Z.LT.0.AND.Z.NE.ZIDF(I)%NODATA)THEN
+     J=ILTOP(ICOL,IROW); K=IZTOP(ICOL,IROW)
+     IF(J.GT.0)THEN; IF(ILTB(J,1).EQ.INT(1,1).AND.IZTB(K,1).EQ.INT(1,1))ILTOP(ICOL,IROW)=0; ENDIF
+     J=ILBOT(ICOL,IROW); K=IZBOT(ICOL,IROW)
+     IF(J.GT.0)THEN; IF(ILTB(J,2).EQ.INT(1,1).AND.IZTB(K,2).EQ.INT(1,1))ILBOT(ICOL,IROW)=0; ENDIF
+    ENDIF
+   ENDDO; ENDDO
+  ENDIF
+  
   !## number of zones --- allocate sort()
   ALLOCATE(DZ(ZINFO(I)%NZ))
   DO J=1,ZINFO(I)%NZ
@@ -538,7 +560,7 @@ CONTAINS
     IF(Z.GT.0)THEN
      !## try top current modellayer il
      IF(ILTOP(ICOL,IROW).EQ.IL)THEN
-      ZZ =IZTOP(ICOL,IROW)
+      ZZ                = IZTOP(ICOL,IROW)
       D                 = DZTOP(ICOL,IROW)
       DZ(Z)%NZ          = DZ(Z)%NZ+1
       DZ(Z)%D (DZ(Z)%NZ)= D
@@ -546,7 +568,7 @@ CONTAINS
      ENDIF
      !## try bottom current modellayer il
      IF(ILBOT(ICOL,IROW).EQ.IL)THEN
-      ZZ=IZBOT(ICOL,IROW)
+      ZZ                = IZBOT(ICOL,IROW)
       D                 = DZBOT(ICOL,IROW)
       DZ(Z)%NZ          = DZ(Z)%NZ+1
       DZ(Z)%D (DZ(Z)%NZ)= D
@@ -589,7 +611,9 @@ CONTAINS
  
  ENDDO
  CLOSE(IU)
- 
+
+ DEALLOCATE(ILTB,IZTB)
+
  CUS_DISTANCES=.TRUE.
 
  END FUNCTION CUS_DISTANCES
@@ -746,7 +770,7 @@ CONTAINS
    DO JROW=MAX(1,IROW-IEXPZONE),MIN(IROW+IEXPZONE,TOPIDF(I)%NROW)
     DO JCOL=MAX(1,ICOL-IEXPZONE),MIN(ICOL+IEXPZONE,TOPIDF(I)%NCOL)
      !## found appropriate location, insert buffer
-     IF(ABS(INT(ZIDF(I)%X(JCOL,JROW))).EQ.INT(ZIDF(I)%X(ICOL,IROW)))THEN
+     IF(INT(ZIDF(I)%X(JCOL,JROW)).EQ.-INT(ZIDF(I)%X(ICOL,IROW)))THEN
       TOPIDF(I)%X(JCOL,JROW)=TOPIDF(I)%X(ICOL,IROW)
       BOTIDF(I)%X(JCOL,JROW)=BOTIDF(I)%X(ICOL,IROW)
      ENDIF
