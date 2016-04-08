@@ -245,8 +245,8 @@ CONTAINS
  !## add constraints from distance table for current percentile (iperc)
  IVAR=1
  DO I=1,NCON
-  !## not for removed duplicate definitions
-  IF(SMPLX(I)%IAREA.LE.0)CYCLE
+!  !## not for removed duplicate definitions
+!  IF(SMPLX(I)%IAREA.LE.0)CYCLE
 
   IVAR=SMPLX(I)%IVAR1 
   JVAR=SMPLX(I)%IVAR2 
@@ -398,9 +398,9 @@ CONTAINS
  IF(IOS.NE.0)THEN; WRITE(*,'(A)') 'Can not open '//TRIM(FDISTANCES); RETURN; ENDIF
  READ(IU,*) CUS_NLAY; ALLOCATE(ZIDF(CUS_NLAY),TOPIDF(CUS_NLAY),BOTIDF(CUS_NLAY),ZINFO(CUS_NLAY))
  DO I=1,CUS_NLAY
-  READ(IU,'(A)') TOPIDF(I)%FNAME; IF(.NOT.IDFREAD(TOPIDF(I),TOPIDF(I)%FNAME,0))RETURN
-  READ(IU,'(A)') BOTIDF(I)%FNAME; IF(.NOT.IDFREAD(BOTIDF(I),BOTIDF(I)%FNAME,0))RETURN
-  READ(IU,'(A)') ZIDF(I)%FNAME; IF(.NOT.IDFREAD(ZIDF(I),ZIDF(I)%FNAME,0))RETURN
+  READ(IU,'(I10,1X,A)') J,TOPIDF(I)%FNAME; IF(.NOT.IDFREAD(TOPIDF(I),TOPIDF(I)%FNAME,0))RETURN
+  READ(IU,'(I10,1X,A)') J,BOTIDF(I)%FNAME; IF(.NOT.IDFREAD(BOTIDF(I),BOTIDF(I)%FNAME,0))RETURN
+  READ(IU,'(I10,1X,A)') J,ZIDF(I)%FNAME; IF(.NOT.IDFREAD(ZIDF(I),ZIDF(I)%FNAME,0))RETURN
   IF(ZIDF(I)%DMAX.LT.ZIDF(I)%DMIN)ZIDF(I)%DMAX=0.0
   ZINFO(I)%NZ=ZIDF(I)%DMAX; NULLIFY(ZINFO(I)%NP)
  ENDDO
@@ -428,7 +428,7 @@ CONTAINS
   IF(SMPLX(I)%IVAR1     .EQ.SMPLX(J)%IVAR1.AND. &
      ABS(SMPLX(I)%IVAR2).EQ.ABS(SMPLX(J)%IVAR2))THEN
    !## remove the one from the buffer - apparently zero-distances
-   IF(SMPLX(I)%PERC(1).EQ.0.0)SMPLX(I)%IAREA=0
+!   IF(SMPLX(I)%PERC(1).EQ.0.0)SMPLX(I)%IAREA=0
 !   IF(SMPLX(I)%IAREA.LE.SMPLX(J)%IAREA)SMPLX(I)%IAREA=0
 !   IF(SMPLX(J)%IAREA.LE.SMPLX(I)%IAREA)SMPLX(J)%IAREA=0
    write(*,'(A,7I4,A3,7I4)') 'DDEF #',I,SMPLX(I)%IF1,SMPLX(I)%IZ1,SMPLX(I)%IVAR1,       &
@@ -491,31 +491,46 @@ CONTAINS
 
    DO IROW=1,MDLIDF(1)%NROW; DO ICOL=1,MDLIDF(1)%NCOL
 
-    T=TOPIDF(I)%X(ICOL,IROW); B=BOTIDF(I)%X(ICOL,IROW); Z=INT(ZIDF(I)%X(ICOL,IROW)) !; Z=ABS(Z)
-        
+    !## skip nodata zone
+    Z=INT(ZIDF(I)%X(ICOL,IROW)); IF(Z.EQ.ZIDF(I)%NODATA)CYCLE
+    
+    T=TOPIDF(I)%X(ICOL,IROW); B=BOTIDF(I)%X(ICOL,IROW)
+    
     !## available thickness of i'th file
     IF(T-B.GT.0.0)THEN
      !## top, bot and zone number
-     TT=TOPIDF(J)%X(ICOL,IROW); BB=BOTIDF(J)%X(ICOL,IROW); ZZ=INT(ZIDF(J)%X(ICOL,IROW)); ZZ=ABS(ZZ)
-     !## available thickness of j'th file
-     IF(TT-BB.GT.0.0)THEN
-      !## available thickness of j'th file, compute distance
-      IF(BB.GE.T)THEN     !## j'th file above (positive)
-       D=BB-T
-       !## check whether this layer is closer than layer already processed
-       IF(D.LT.DZTOP(ICOL,IROW))THEN; ILTOP(ICOL,IROW)=J; IZTOP(ICOL,IROW)=ZZ; DZTOP(ICOL,IROW)=D; ILTB(J,1)=INT(1,1); IZTB(ZZ,1)=INT(1,1); ENDIF
-      ELSEIF(TT.LE.B)THEN !## j'th file beneath (negative)
-       D=B-TT
-       !## check whether this layer is closer than layer already processed
-       IF(D.LT.DZBOT(ICOL,IROW))THEN; ILBOT(ICOL,IROW)=J; IZBOT(ICOL,IROW)=ZZ; DZBOT(ICOL,IROW)=D; ILTB(J,2)=INT(1,1); IZTB(ZZ,2)=INT(1,1); ENDIF
-      ELSE
-       IF(Z.LT.0)THEN
-        !## check whether clayey element intersect - if so, set distance to zero
-        IF(BB.LT.T.AND.TT.GT.T)THEN
-         ILTOP(ICOL,IROW)=J; IZTOP(ICOL,IROW)=ZZ; DZTOP(ICOL,IROW)=0.0
-        ELSEIF(TT.GT.B.AND.BB.LT.B)THEN
-         ILBOT(ICOL,IROW)=J; IZBOT(ICOL,IROW)=ZZ; DZBOT(ICOL,IROW)=0.0
+     TT=TOPIDF(J)%X(ICOL,IROW); BB=BOTIDF(J)%X(ICOL,IROW); ZZ=INT(ZIDF(J)%X(ICOL,IROW))
+     IF(ZZ.EQ.ZIDF(I)%NODATA)CYCLE
+     IF(Z.GT.0.AND.ZZ.GT.0)THEN
+      !## available thickness of j'th file
+      IF(TT-BB.GT.0.0)THEN
+       !## available thickness of j'th file, compute distance
+       IF(BB.GE.T)THEN     !## j'th file above (positive)
+        D=BB-T
+        !## check whether this layer is closer than layer already processed
+        IF(D.LT.DZTOP(ICOL,IROW))THEN
+         ILTOP(ICOL,IROW)=J; IZTOP(ICOL,IROW)=ZZ; DZTOP(ICOL,IROW)=D
         ENDIF
+       ELSEIF(TT.LE.B)THEN !## j'th file beneath (negative)
+        D=B-TT
+        !## check whether this layer is closer than layer already processed
+        IF(D.LT.DZBOT(ICOL,IROW))THEN
+         ILBOT(ICOL,IROW)=J; IZBOT(ICOL,IROW)=ZZ; DZBOT(ICOL,IROW)=D
+        ENDIF
+       ENDIF
+      ENDIF
+     ELSEIF(Z.GT.0)THEN
+      !## check whether clayey element intersects - if so, set distance to zero
+      IF(BB.LT.T.AND.TT.GT.T)THEN
+       !## remaining thickness of current layer
+       D=(T-B)-(T-BB)
+       IF(D.LT.DZTOP(ICOL,IROW))THEN
+        ILTOP(ICOL,IROW)=J; IZTOP(ICOL,IROW)=ZZ; DZTOP(ICOL,IROW)=D !0.0 !D 
+       ENDIF
+      ELSEIF(TT.GT.B.AND.BB.LT.B)THEN
+       D=(T-B)-(TT-B)
+       IF(D.LT.DZTOP(ICOL,IROW))THEN
+        ILTOP(ICOL,IROW)=J; IZTOP(ICOL,IROW)=ZZ; DZTOP(ICOL,IROW)=D !0.0 !D
        ENDIF
       ENDIF
      ENDIF
@@ -528,15 +543,40 @@ CONTAINS
   
   !## clean buffer assignment for those allready assigned outside buffer
   IF(IEXPZONE.GT.0)THEN
+
+   !## fill in zones captured/found nearest of "real" connections of parts of layers
    DO IROW=1,MDLIDF(1)%NROW; DO ICOL=1,MDLIDF(1)%NCOL
-    Z=INT(ZIDF(I)%X(ICOL,IROW))
-    !## clean whenever reference allready made by positive zone-numbers
-    IF(Z.LT.0.AND.Z.NE.ZIDF(I)%NODATA)THEN
-     J=ILTOP(ICOL,IROW); K=IZTOP(ICOL,IROW)
-     IF(J.GT.0)THEN; IF(ILTB(J,1).EQ.INT(1,1).AND.IZTB(K,1).EQ.INT(1,1))ILTOP(ICOL,IROW)=0; ENDIF
-     J=ILBOT(ICOL,IROW); K=IZBOT(ICOL,IROW)
-     IF(J.GT.0)THEN; IF(ILTB(J,2).EQ.INT(1,1).AND.IZTB(K,2).EQ.INT(1,1))ILBOT(ICOL,IROW)=0; ENDIF
+    Z=INT(ZIDF(I)%X(ICOL,IROW)); IF(Z.LT.0)CYCLE
+    J=ILTOP(ICOL,IROW); K=IZTOP(ICOL,IROW)
+    IF(J.GT.0.AND.K.GT.0)THEN; ILTB(J,1)=INT(1,1); IZTB(K,1)=INT(1,1); ENDIF
+    J=ILBOT(ICOL,IROW); K=IZBOT(ICOL,IROW)
+    IF(J.GT.0.AND.K.GT.0)THEN; ILTB(J,2)=INT(1,1); IZTB(K,2)=INT(1,1); ENDIF
+   ENDDO; ENDDO
+   
+   !## set distance to zero for lateral connection
+   DO IROW=1,MDLIDF(1)%NROW; DO ICOL=1,MDLIDF(1)%NCOL
+    J=ILTOP(ICOL,IROW); K=IZTOP(ICOL,IROW)
+    IF(J.GT.0.AND.K.LT.0)THEN; DZTOP(ICOL,IROW)=0.0; ENDIF
+    J=ILBOT(ICOL,IROW); K=IZBOT(ICOL,IROW)
+    IF(J.GT.0.AND.K.LT.0)THEN; DZTOP(ICOL,IROW)=0.0; ENDIF
+   ENDDO; ENDDO
+
+   DO IROW=1,MDLIDF(1)%NROW; DO ICOL=1,MDLIDF(1)%NCOL
+
+    !## clean "buffer" whenever reference already made from "real" to "real" part of layer
+    J=ILTOP(ICOL,IROW); K=IZTOP(ICOL,IROW)
+    IF(J.GT.0.AND.K.LT.0)THEN
+     K=ABS(K); IF(ILTB(J,1).EQ.INT(1,1).AND.IZTB(K,1).EQ.INT(1,1))THEN
+      ILTOP(ICOL,IROW)=0 !; ILBOT(ICOL,IROW)=0
+     ENDIF
     ENDIF
+    J=ILBOT(ICOL,IROW); K=IZBOT(ICOL,IROW)
+    IF(J.GT.0.AND.K.LT.0)THEN
+     K=ABS(K); IF(ILTB(J,2).EQ.INT(1,1).AND.IZTB(K,2).EQ.INT(1,1))THEN
+      ILBOT(ICOL,IROW)=0 !; ILTOP(ICOL,IROW)=0; 
+     ENDIF
+    ENDIF
+
    ENDDO; ENDDO
   ENDIF
   
@@ -844,9 +884,9 @@ CONTAINS
  MDLIDF(2)%FNAME =TRIM(OUTPUTFOLDER)//'\objects\'  //TOPIDF(IIDF)%FNAME(I+1:J-1)//'_objects.idf'
  ZIDF(IIDF)%FNAME=MDLIDF(2)%FNAME
 
- WRITE(IU,'(A)') TRIM(TOPIDF(IIDF)%FNAME)
- WRITE(IU,'(A)') TRIM(BOTIDF(IIDF)%FNAME)
- WRITE(IU,'(A)') TRIM(MDLIDF(2)%FNAME)
+ WRITE(IU,'(I10,1X,A)') IIDF,TRIM(TOPIDF(IIDF)%FNAME)
+ WRITE(IU,'(I10,1X,A)') IIDF,TRIM(BOTIDF(IIDF)%FNAME)
+ WRITE(IU,'(I10,1X,A)') IIDF,TRIM(MDLIDF(2)%FNAME)
 
  CUS_CALCTHICKNESS=.TRUE.
  
