@@ -935,10 +935,10 @@ CONTAINS
  END SUBROUTINE ASC2IDF_INT_CLOSE
 
  !###======================================================================
- SUBROUTINE ASC2IDF_EXPORTASC_MAIN(DIR,IQUICK,IBATCH)
+ SUBROUTINE ASC2IDF_EXPORTASC_MAIN(DIR,IBATCH)
  !###======================================================================
  IMPLICIT NONE
- INTEGER,INTENT(IN) :: IQUICK,IBATCH
+ INTEGER,INTENT(IN) :: IBATCH
  CHARACTER(LEN=*),INTENT(INOUT) :: DIR
  CHARACTER(LEN=256) :: ROOT,WC
  CHARACTER(LEN=15) :: CH
