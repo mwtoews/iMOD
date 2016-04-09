@@ -452,14 +452,14 @@ CONTAINS
  IMPLICIT NONE
  INTEGER :: I,J,K,KK,IROW,ICOL,Z,ZZ,N,MX,IL1,IL2,IL
  REAL :: T,TT,B,BB,D
- INTEGER(KIND=1),ALLOCATABLE,DIMENSION(:,:) :: ILTB,IZTB
+ INTEGER(KIND=1),ALLOCATABLE,DIMENSION(:) :: ILTB,IZTB
 
  CUS_DISTANCES=.FALSE.
  
  WRITE(IU,'(/A/)') 'Distances'
  WRITE(IU,'(6A6,A10,99F10.2)') '#file','izone','#','#file','izone','#','size',PERC 
 
- N=SUM(ZINFO%NZ); ALLOCATE(ILTB(SIZE(TOPIDF),2),IZTB(N,2))
+ N=SUM(ZINFO%NZ); ALLOCATE(ILTB(SIZE(TOPIDF)),IZTB(N))
 
  DO I=1,SIZE(TOPIDF)
 
@@ -492,7 +492,7 @@ CONTAINS
    DO IROW=1,MDLIDF(1)%NROW; DO ICOL=1,MDLIDF(1)%NCOL
 
     !## skip nodata zone
-    Z=INT(ZIDF(I)%X(ICOL,IROW)); IF(Z.EQ.ZIDF(I)%NODATA)CYCLE
+    Z=INT(ZIDF(I)%X(ICOL,IROW)); IF(Z.EQ.INT(ZIDF(I)%NODATA))CYCLE
     
     T=TOPIDF(I)%X(ICOL,IROW); B=BOTIDF(I)%X(ICOL,IROW)
     
@@ -500,7 +500,7 @@ CONTAINS
     IF(T-B.GT.0.0)THEN
      !## top, bot and zone number
      TT=TOPIDF(J)%X(ICOL,IROW); BB=BOTIDF(J)%X(ICOL,IROW); ZZ=INT(ZIDF(J)%X(ICOL,IROW))
-     IF(ZZ.EQ.ZIDF(I)%NODATA)CYCLE
+     IF(ZZ.EQ.INT(ZIDF(I)%NODATA))CYCLE
      IF(Z.GT.0.AND.ZZ.GT.0)THEN
       !## available thickness of j'th file
       IF(TT-BB.GT.0.0)THEN
@@ -519,20 +519,44 @@ CONTAINS
         ENDIF
        ENDIF
       ENDIF
-     ELSEIF(Z.GT.0)THEN
-      !## check whether clayey element intersects - if so, set distance to zero
-      IF(BB.LT.T.AND.TT.GT.T)THEN
-       !## remaining thickness of current layer
-       D=(T-B)-(T-BB)
+     ELSEIF(ZZ.GT.0)THEN !IF(Z.GT.0)THEN !.OR.ZZ.GT.0)THEN
+      
+!      !## check whether clayey element intersects - see whether they need to be a minimal layer thickness
+!      IF(T.GT.TT.AND.B.LT.TT)THEN
+!       ILTOP(ICOL,IROW)=J; IZTOP(ICOL,IROW)=ZZ; DZTOP(ICOL,IROW)=0.0
+!      ELSE
+      IF(B.LT.BB.AND.T.GT.BB)THEN
+       D=BB-B
+       !## check whether this layer is closer than layer already processed
        IF(D.LT.DZTOP(ICOL,IROW))THEN
-        ILTOP(ICOL,IROW)=J; IZTOP(ICOL,IROW)=ZZ; DZTOP(ICOL,IROW)=D !0.0 !D 
-       ENDIF
-      ELSEIF(TT.GT.B.AND.BB.LT.B)THEN
-       D=(T-B)-(TT-B)
-       IF(D.LT.DZTOP(ICOL,IROW))THEN
-        ILTOP(ICOL,IROW)=J; IZTOP(ICOL,IROW)=ZZ; DZTOP(ICOL,IROW)=D !0.0 !D
+        ILTOP(ICOL,IROW)=J; IZTOP(ICOL,IROW)=-ZZ; DZTOP(ICOL,IROW)=D
+!        ILBOT(ICOL,IROW)=J; IZBOT(ICOL,IROW)=ZZ; DZBOT(ICOL,IROW)=D !0.0
        ENDIF
       ENDIF
+
+!      !## check whether clayey element intersects - if so, take the one with the thickest coverage
+!      IF(TT.GT.B.AND.BB.LT.T)THEN
+!       !## remaining thickness of current layer
+!       D=(T-B)-(MIN(T,TT)-MAX(B,BB))
+!       IF(D.LT.DZTOP(ICOL,IROW))THEN
+!        ILTOP(ICOL,IROW)=J; IZTOP(ICOL,IROW)=ZZ; DZTOP(ICOL,IROW)=D
+!       ENDIF
+
+!      !## check whether clayey element intersects - if so, set distance to zero
+!      IF(TT.GT.B.AND.BB.LT.T)THEN
+!       !## remaining thickness of current layer
+!       D=(T-B)-(T-BB)
+!       IF(D.LT.DZTOP(ICOL,IROW))THEN
+!        ILTOP(ICOL,IROW)=J; IZTOP(ICOL,IROW)=ZZ; DZTOP(ICOL,IROW)=D !0.0 !D 
+!       ENDIF
+!      ELSEIF(TT.GT.B.AND.BB.LT.B)THEN
+!       D=(T-B)-(TT-B)
+!       IF(D.LT.DZTOP(ICOL,IROW))THEN
+!        ILTOP(ICOL,IROW)=J; IZTOP(ICOL,IROW)=ZZ; DZTOP(ICOL,IROW)=D !0.0 !D
+!       ENDIF
+!      ENDIF
+!      ENDIF
+
      ENDIF
     ENDIF
    ENDDO; ENDDO
@@ -540,46 +564,60 @@ CONTAINS
    CALL IDFDEALLOCATEX(TOPIDF(J)); CALL IDFDEALLOCATEX(BOTIDF(J)); CALL IDFDEALLOCATEX(ZIDF(J))
     
   ENDDO
-  
+    
   !## clean buffer assignment for those allready assigned outside buffer
+!if(.false.)then
   IF(IEXPZONE.GT.0)THEN
 
    !## fill in zones captured/found nearest of "real" connections of parts of layers
    DO IROW=1,MDLIDF(1)%NROW; DO ICOL=1,MDLIDF(1)%NCOL
     Z=INT(ZIDF(I)%X(ICOL,IROW)); IF(Z.LT.0)CYCLE
     J=ILTOP(ICOL,IROW); K=IZTOP(ICOL,IROW)
-    IF(J.GT.0.AND.K.GT.0)THEN; ILTB(J,1)=INT(1,1); IZTB(K,1)=INT(1,1); ENDIF
+    IF(J.GT.0.AND.K.GT.0)THEN; ILTB(J)=INT(1,1); IZTB(K)=INT(1,1); ENDIF
     J=ILBOT(ICOL,IROW); K=IZBOT(ICOL,IROW)
-    IF(J.GT.0.AND.K.GT.0)THEN; ILTB(J,2)=INT(1,1); IZTB(K,2)=INT(1,1); ENDIF
+    IF(J.GT.0.AND.K.GT.0)THEN; ILTB(J)=INT(1,1); IZTB(K)=INT(1,1); ENDIF
    ENDDO; ENDDO
    
-   !## set distance to zero for lateral connection
-   DO IROW=1,MDLIDF(1)%NROW; DO ICOL=1,MDLIDF(1)%NCOL
-    J=ILTOP(ICOL,IROW); K=IZTOP(ICOL,IROW)
-    IF(J.GT.0.AND.K.LT.0)THEN; DZTOP(ICOL,IROW)=0.0; ENDIF
-    J=ILBOT(ICOL,IROW); K=IZBOT(ICOL,IROW)
-    IF(J.GT.0.AND.K.LT.0)THEN; DZTOP(ICOL,IROW)=0.0; ENDIF
-   ENDDO; ENDDO
+!   !## set distance to zero for lateral connection
+!   DO IROW=1,MDLIDF(1)%NROW; DO ICOL=1,MDLIDF(1)%NCOL
+!    J=ILTOP(ICOL,IROW); K=IZTOP(ICOL,IROW)
+!    IF(J.GT.0.AND.K.LT.0)THEN; DZTOP(ICOL,IROW)=0.0; ENDIF
+!    J=ILBOT(ICOL,IROW); K=IZBOT(ICOL,IROW)
+!    IF(J.GT.0.AND.K.LT.0)THEN; DZTOP(ICOL,IROW)=0.0; ENDIF
+!   ENDDO; ENDDO
 
    DO IROW=1,MDLIDF(1)%NROW; DO ICOL=1,MDLIDF(1)%NCOL
 
     !## clean "buffer" whenever reference already made from "real" to "real" part of layer
     J=ILTOP(ICOL,IROW); K=IZTOP(ICOL,IROW)
     IF(J.GT.0.AND.K.LT.0)THEN
-     K=ABS(K); IF(ILTB(J,1).EQ.INT(1,1).AND.IZTB(K,1).EQ.INT(1,1))THEN
-      ILTOP(ICOL,IROW)=0 !; ILBOT(ICOL,IROW)=0
+     K=ABS(K); IF(ILTB(J).EQ.INT(1,1).AND.IZTB(K).EQ.INT(1,1))THEN
+      ILTOP(ICOL,IROW)=0; IZTOP(ICOL,IROW)=0 
      ENDIF
     ENDIF
     J=ILBOT(ICOL,IROW); K=IZBOT(ICOL,IROW)
     IF(J.GT.0.AND.K.LT.0)THEN
-     K=ABS(K); IF(ILTB(J,2).EQ.INT(1,1).AND.IZTB(K,2).EQ.INT(1,1))THEN
-      ILBOT(ICOL,IROW)=0 !; ILTOP(ICOL,IROW)=0; 
+     K=ABS(K); IF(ILTB(J).EQ.INT(1,1).AND.IZTB(K).EQ.INT(1,1))THEN
+      ILBOT(ICOL,IROW)=0; IZBOT(ICOL,IROW)=0
      ENDIF
     ENDIF
 
    ENDDO; ENDDO
   ENDIF
   
+  TOPIDF(I)%X=DZTOP; TOPIDF(I)%NODATA=10.0E10
+  IF(.NOT.IDFWRITE(  TOPIDF(I),'d:\iMOD-TEST\IMODBATCH_CUS\tmp\dztop_l'//TRIM(ITOS(i))//'.IDF',1))STOP
+  TOPIDF(I)%X=DZBOT; TOPIDF(I)%NODATA=10.0E10
+  IF(.NOT.IDFWRITE(  TOPIDF(I),'d:\iMOD-TEST\IMODBATCH_CUS\tmp\dzbot_l'//TRIM(ITOS(i))//'.IDF',1))STOP
+  TOPIDF(I)%X=ILTOP; TOPIDF(I)%NODATA=0.0
+  IF(.NOT.IDFWRITE(  TOPIDF(I),'d:\iMOD-TEST\IMODBATCH_CUS\tmp\iltop_l'//TRIM(ITOS(i))//'.IDF',1))STOP
+  TOPIDF(I)%X=ILBOT; TOPIDF(I)%NODATA=0.0
+  IF(.NOT.IDFWRITE(  TOPIDF(I),'d:\iMOD-TEST\IMODBATCH_CUS\tmp\ilbot_l'//TRIM(ITOS(i))//'.IDF',1))STOP
+  TOPIDF(I)%X=IZTOP; TOPIDF(I)%NODATA=0.0
+  IF(.NOT.IDFWRITE(  TOPIDF(I),'d:\iMOD-TEST\IMODBATCH_CUS\tmp\iztop_l'//TRIM(ITOS(i))//'.IDF',1))STOP
+  TOPIDF(I)%X=IZBOT; TOPIDF(I)%NODATA=0.0
+  IF(.NOT.IDFWRITE(  TOPIDF(I),'d:\iMOD-TEST\IMODBATCH_CUS\tmp\izbot_l'//TRIM(ITOS(i))//'.IDF',1))STOP
+
   !## number of zones --- allocate sort()
   ALLOCATE(DZ(ZINFO(I)%NZ))
   DO J=1,ZINFO(I)%NZ
