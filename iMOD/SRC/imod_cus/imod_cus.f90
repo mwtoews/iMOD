@@ -492,7 +492,7 @@ CONTAINS
    DO IROW=1,MDLIDF(1)%NROW; DO ICOL=1,MDLIDF(1)%NCOL
 
     !## skip nodata zone
-    Z=INT(ZIDF(I)%X(ICOL,IROW)); IF(Z.EQ.INT(ZIDF(I)%NODATA))CYCLE
+    Z=INT(ZIDF(I)%X(ICOL,IROW)); IF(Z.LE.0)CYCLE !IF(Z.EQ.INT(ZIDF(I)%NODATA))CYCLE
     
     T=TOPIDF(I)%X(ICOL,IROW); B=BOTIDF(I)%X(ICOL,IROW)
     
@@ -501,62 +501,35 @@ CONTAINS
      !## top, bot and zone number
      TT=TOPIDF(J)%X(ICOL,IROW); BB=BOTIDF(J)%X(ICOL,IROW); ZZ=INT(ZIDF(J)%X(ICOL,IROW))
      IF(ZZ.EQ.INT(ZIDF(I)%NODATA))CYCLE
-     IF(Z.GT.0.AND.ZZ.GT.0)THEN
-      !## available thickness of j'th file
-      IF(TT-BB.GT.0.0)THEN
-       !## available thickness of j'th file, compute distance
-       IF(BB.GE.T)THEN     !## j'th file above (positive)
-        D=BB-T
-        !## check whether this layer is closer than layer already processed
-        IF(D.LT.DZTOP(ICOL,IROW))THEN
-         ILTOP(ICOL,IROW)=J; IZTOP(ICOL,IROW)=ZZ; DZTOP(ICOL,IROW)=D
-        ENDIF
-       ELSEIF(TT.LE.B)THEN !## j'th file beneath (negative)
-        D=B-TT
-        !## check whether this layer is closer than layer already processed
-        IF(D.LT.DZBOT(ICOL,IROW))THEN
-         ILBOT(ICOL,IROW)=J; IZBOT(ICOL,IROW)=ZZ; DZBOT(ICOL,IROW)=D
-        ENDIF
-       ENDIF
-      ENDIF
-     ELSEIF(ZZ.GT.0)THEN !IF(Z.GT.0)THEN !.OR.ZZ.GT.0)THEN
-      
-!      !## check whether clayey element intersects - see whether they need to be a minimal layer thickness
-!      IF(T.GT.TT.AND.B.LT.TT)THEN
-!       ILTOP(ICOL,IROW)=J; IZTOP(ICOL,IROW)=ZZ; DZTOP(ICOL,IROW)=0.0
-!      ELSE
-      IF(B.LT.BB.AND.T.GT.BB)THEN
-       D=BB-B
+
+     !## adjust tt/bb in case of buffer on top/bottom of it, ignore layer in between
+     IF(ZZ.LT.0)THEN
+      !## layer on top of it
+      IF(TT.GE.T.AND.BB.LT.T)BB=MAX(BB,T)
+      !## layer beneath it
+      IF(BB.LE.B.AND.TT.GT.B)TT=MIN(TT,B)
+     ENDIF
+     
+     !## available thickness of j'th file
+     IF(TT-BB.GT.0.0)THEN
+      !## available thickness of j'th file, compute distance
+      IF(BB.GE.T)THEN     !## j'th file above (positive)
+       D=BB-T
+       !## do not include layers from buffer not connected to current layer
+       IF(ZZ.LT.0.AND.D.NE.0.0)D=10.E10
        !## check whether this layer is closer than layer already processed
        IF(D.LT.DZTOP(ICOL,IROW))THEN
-        ILTOP(ICOL,IROW)=J; IZTOP(ICOL,IROW)=-ZZ; DZTOP(ICOL,IROW)=D
-!        ILBOT(ICOL,IROW)=J; IZBOT(ICOL,IROW)=ZZ; DZBOT(ICOL,IROW)=D !0.0
+        ILTOP(ICOL,IROW)=J; IZTOP(ICOL,IROW)=ZZ; DZTOP(ICOL,IROW)=D
+       ENDIF
+      ELSEIF(TT.LE.B)THEN !## j'th file beneath (negative)
+       D=B-TT
+       !## do not include layers from buffer not connected to current layer
+       IF(ZZ.LT.0.AND.D.NE.0.0)D=10.E10
+       !## check whether this layer is closer than layer already processed
+       IF(D.LT.DZBOT(ICOL,IROW))THEN
+        ILBOT(ICOL,IROW)=J; IZBOT(ICOL,IROW)=ZZ; DZBOT(ICOL,IROW)=D
        ENDIF
       ENDIF
-
-!      !## check whether clayey element intersects - if so, take the one with the thickest coverage
-!      IF(TT.GT.B.AND.BB.LT.T)THEN
-!       !## remaining thickness of current layer
-!       D=(T-B)-(MIN(T,TT)-MAX(B,BB))
-!       IF(D.LT.DZTOP(ICOL,IROW))THEN
-!        ILTOP(ICOL,IROW)=J; IZTOP(ICOL,IROW)=ZZ; DZTOP(ICOL,IROW)=D
-!       ENDIF
-
-!      !## check whether clayey element intersects - if so, set distance to zero
-!      IF(TT.GT.B.AND.BB.LT.T)THEN
-!       !## remaining thickness of current layer
-!       D=(T-B)-(T-BB)
-!       IF(D.LT.DZTOP(ICOL,IROW))THEN
-!        ILTOP(ICOL,IROW)=J; IZTOP(ICOL,IROW)=ZZ; DZTOP(ICOL,IROW)=D !0.0 !D 
-!       ENDIF
-!      ELSEIF(TT.GT.B.AND.BB.LT.B)THEN
-!       D=(T-B)-(TT-B)
-!       IF(D.LT.DZTOP(ICOL,IROW))THEN
-!        ILTOP(ICOL,IROW)=J; IZTOP(ICOL,IROW)=ZZ; DZTOP(ICOL,IROW)=D !0.0 !D
-!       ENDIF
-!      ENDIF
-!      ENDIF
-
      ENDIF
     ENDIF
    ENDDO; ENDDO
@@ -602,6 +575,9 @@ CONTAINS
      ENDIF
     ENDIF
 
+    IZTOP(ICOL,IROW)=ABS(IZTOP(ICOL,IROW))
+    IZBOT(ICOL,IROW)=ABS(IZBOT(ICOL,IROW))
+   
    ENDDO; ENDDO
   ENDIF
   
