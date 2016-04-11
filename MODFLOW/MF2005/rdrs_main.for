@@ -21,7 +21,7 @@ c   P.O. Box 177
 c   2600 MH Delft, The Netherlands.
 
       function rdrs_main(file,array,larray,ndimi,type,iout,
-     1                        iupsc,idosc)
+     1                        iupsc,idosc,ilay)
 
 c description:
 c ------------------------------------------------------------------------------
@@ -59,7 +59,9 @@ c                 If necessary, conversion will be applied
 
       character :: file*(*)        ! (I)
       character :: type*(*)        ! (I)
-
+      
+      integer,intent(in) :: ilay
+      
       integer :: iupsc ! (I)
       integer :: idosc ! (I)
 
@@ -86,7 +88,7 @@ c set nodata
 c check for ipf (u2drel only)
       if (imod_utl_has_ext(file,'ipf')) then
          filetype = iipf
-         ios = rdrs_rddata_ipf(file,iout)
+         ios = rdrs_rddata_ipf(file,iout,ilay)
       else if (imod_utl_has_ext(file,'idf')) then
          filetype = iidf
          if (type(1:1).eq.'i') then
@@ -141,7 +143,7 @@ c end of program
       return
       end
 
-      function rdrs_rddata_ipf(file,iout)
+      function rdrs_rddata_ipf(file,iout,ilay)
 
 c description:
 c ------------------------------------------------------------------------------
@@ -163,11 +165,12 @@ c ------------------------------------------------------------------------------
 
 c function declaration
       integer   rdrs_rddata_ipf   ! return value: ios
-
+      
 c arguments
       character file*(*)      ! (I)
       integer   iout          ! (O)
-
+      integer,intent(in) :: ilay
+      
 c local variables
       character(len=8) :: cdate
       character(len=300) :: line, txtfile, root, name
@@ -290,9 +293,17 @@ c allocate
          if (irow.lt.1.or.irow.gt.nrow) found = .false.
 
          if (found) then
-            if (nc.ge.5) then
-               read(string(4),*) tf(1)
-               read(string(5),*) bf(1)
+            if (ilay.eq.0)then !nc.ge.5) then
+               read(string(4),*,iostat=ios) tf(1)
+               if(ios.ne.0) then
+                write(*,*) 'ERROR. Reading ipf.'
+                call ustop(' ')
+               end if
+               read(string(5),*,iostat=ios) bf(1)
+               if(ios.ne.0) then
+                write(*,*) 'ERROR. Reading ipf.'
+                call ustop(' ')
+               end if
             end if
             if (iext.eq.0) then
                read(string(3),*) q(1)

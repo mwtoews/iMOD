@@ -522,7 +522,7 @@ C2------FORMAT.  SET A FLAG SPECIFYING IF FREE FORMAT OR FIXED FORMAT.
             call urword(cntrl,icol,istart,istop,2,idosc,r,iout,in)      ! DLT
          end if                                                         ! DLT
          icol = jcol                                                    ! DLT
-         rdrsflg=rdrs_main(fname,a,jj,1,'r',iout,iupsc,idosc)           ! DLT
+         rdrsflg=rdrs_main(fname,a,jj,1,'r',iout,iupsc,idosc,0)         ! DLT
          if (rdrsflg.ge.0) then ! supported file type found             ! DLT
             ! read cnstnt and iprn                                      ! DLT
             call urword(cntrl,icol,istart,istop,3,n,cnstnt,iout,in)     ! DLT
@@ -662,7 +662,7 @@ C2------FORMAT.  SET A FLAG SPECIFYING IF FREE FORMAT OR FIXED FORMAT.
             call urword(cntrl,icol,istart,istop,2,idosc,r,iout,in)      ! DLT
          end if                                                         ! DLT
          icol = jcol                                                    ! DLT
-         rdrsflg=rdrs_main(fname,ia,ii*jj,2,'i',iout,iupsc,idosc)       ! DLT
+         rdrsflg=rdrs_main(fname,ia,ii*jj,2,'i',iout,iupsc,idosc,k)     ! DLT
          if (rdrsflg.ge.0) then ! supported file type found             ! DLT
             ! read cnstnt and iprn                                      ! DLT
             call urword(cntrl,icol,istart,istop,2,iconst,r,iout,in)     ! DLT
@@ -922,7 +922,7 @@ C2------FORMAT.  SET A FLAG SPECIFYING IF FREE FORMAT OR FIXED FORMAT.
             call urword(cntrl,icol,istart,istop,2,idosc,r,iout,in)      ! DLT
          end if                                                         ! DLT
          icol = jcol                                                    ! DLT
-         rdrsflg=rdrs_main(fname,a,ii*jj,2,'r',iout,iupsc,idosc)        ! DLT
+         rdrsflg=rdrs_main(fname,a,ii*jj,2,'r',iout,iupsc,idosc,k)      ! DLT
          if (rdrsflg.ge.0) then ! supported file type found             ! DLT
 c            ! read cnstnt and iprn                                     ! DLT
             call urword(cntrl,icol,istart,istop,1,n,r,iout,in)          ! DLT

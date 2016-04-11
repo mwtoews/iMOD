@@ -691,8 +691,8 @@ CONTAINS
 
  !read,denywrite -> 'unknown,formatted,readonly,shared,append'  !rest default
 
- !## number of units 10-999
- IU     = CFN_GETLUN(10,999)
+ !## number of units 10-9999 for timeseries
+ IU     = CFN_GETLUN(10,9999)
  MESSAGE=''
 
  !#dos
