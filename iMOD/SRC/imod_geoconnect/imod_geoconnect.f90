@@ -300,6 +300,8 @@ CONTAINS
     CASE (ID_OPEN9)
      CALL WSELECTDIR(DIRCHANGE+DIRCREATE,OUTPUTFOLDER,'Load OUTPUTFOLDER')
      IF (WINFODIALOG(EXITBUTTONCOMMON).EQ.COMMONOK)CALL WDIALOGPUTSTRING(IDF_STRING4,TRIM(OUTPUTFOLDER))
+    CASE (ID_IDENTIFY)
+     CALL GC_IDENTIFY_WINDOW(0)
    END SELECT
   CASE (FIELDCHANGED)
    SELECT CASE (MESSAGE%VALUE2)
@@ -581,6 +583,63 @@ CONTAINS
  END SUBROUTINE GC_IDENTIFY
 
  !###======================================================================
+ SUBROUTINE GC_IDENTIFY_WINDOW(IMODBATCH)
+ !###======================================================================
+ IMPLICIT NONE
+ INTEGER,INTENT(IN) :: IMODBATCH
+ INTEGER :: IROW,ICOL,I,J
+ REAL :: XC,YC
+ REAL,ALLOCATABLE,DIMENSION(:) :: TM,BM
+ INTEGER,ALLOCATABLE,DIMENSION(:) :: IGRP
+ 
+ !## read all idf's with model top and bot values opening files only
+ IDF%XMIN=MPW%XMIN; IDF%YMIN=MPW%YMIN; IDF%XMAX=MPW%XMAX; IDF%YMAX=MPW%YMAX
+ CALL WDIALOGSELECT(ID_DGEOCONNECT_TAB3)
+ CALL WDIALOGGETREAL(IDF_REAL5,IDF%DX); IDF%DY=IDF%DX
+ IF(IDF%DX.LE.0.0)THEN
+  CALL WMESSAGEBOX(OKONLY,EXCLAMATIONICON,COMMONOK,'You should specify a CellSize of greater than 0.0.','Error')
+  RETURN
+ ENDIF
+ CALL UTL_IDFSNAPTOGRID(IDF%XMIN,IDF%XMAX,IDF%YMIN,IDF%YMAX,IDF%DX,IDF%NCOL,IDF%NROW)
+
+ !## turn message off
+ IF(IMODBATCH.EQ.0)CALL UTL_MESSAGEHANDLE(0)
+
+ IF(.NOT.GC_READ_MODELDATA(0,IMODBATCH))RETURN
+ ALLOCATE(TM(NLAYM),BM(NLAYM))
+ 
+ !## get fractions
+ CALL GC_IDENTIFY_COMPUTE_WINDOW(TM,BM,IMODBATCH)
+ 
+ ALLOCATE(IGRP(SIZE(IPFAC))); IGRP=0
+ 
+ !## get number of formation with higher fractions than one
+ DO I=1,SIZE(IPFAC)
+  DO J=1,SIZE(IPFAC(I)%FVAL)
+   IF(IPFAC(I)%FVAL(J).GT.0.0)IGRP(I)=1
+  ENDDO
+ ENDDO
+
+ !## turn them all off
+ IPFAC%IGRP=0; J=0
+ DO I=1,SIZE(IPFAC)
+  IF(IGRP(I).EQ.1)THEN; J=J+1; IPFAC(I)%IGRP=J; ENDIF
+ ENDDO 
+
+ !## write formation name from grid
+ DO I=1,NLAYR
+  !## read factor related to formation name from grid
+  CALL WGRIDPUTCELLINTEGER(IDF_GRID1,3,I,IPFAC(I)%IGRP)
+ ENDDO
+
+ DEALLOCATE(TM,BM)
+  
+ !## turn message off
+ IF(IMODBATCH.EQ.0)CALL UTL_MESSAGEHANDLE(1)
+
+ END SUBROUTINE GC_IDENTIFY_WINDOW
+ 
+ !###======================================================================
  SUBROUTINE GC_IDENTIFY_FILLGRID()
  !###======================================================================
  IMPLICIT NONE
@@ -633,11 +692,12 @@ CONTAINS
  INTEGER :: I,J,IKHR,IKVR
  REAL :: TR,BR,Z1,Z2
  CHARACTER(LEN=52) :: FTYPE
+ REAL,PARAMETER :: MINFRAC=0.01
  
  !## get top/bottom of current location in model grid
  DO I=1,NLAYM
-  TM(I)=IDFGETXYVAL(TOPM(I),XC,YC) 
-  BM(I)=IDFGETXYVAL(BOTM(I),XC,YC) 
+  TM(I)=IDFGETXYVAL(TOPM(I),XC,YC)
+  BM(I)=IDFGETXYVAL(BOTM(I),XC,YC)
  ENDDO
  
  !## scan all files for current location
@@ -649,8 +709,7 @@ CONTAINS
   !## take the next if current regisfiles - not concerning kh values
   IKHR=0; IKVR=0; IF(.NOT.GC_READ_REGISDATA(I,IKHR,IKVR,FTYPE,0))CYCLE
 
-  TR=IDFGETXYVAL(TOPR,XC,YC)
-  BR=IDFGETXYVAL(BOTR,XC,YC)
+  TR=IDFGETXYVAL(TOPR,XC,YC); BR=IDFGETXYVAL(BOTR,XC,YC)
 
   !## skip nodata
   IF(TR.EQ.TOPR%NODATA.OR.BR.EQ.BOTR%NODATA)CYCLE
@@ -665,6 +724,7 @@ CONTAINS
    Z1=MIN(TR,TM(J)); Z2=MAX(BR,BM(J))
    IF(Z1.GT.Z2.AND.TM(J).GT.BM(J))THEN
     IPFAC(I)%FVAL(J)=(Z1-Z2)/(TM(J)-BM(J)) 
+    IPFAC(I)%FVAL(J)=MAX(MINFRAC,IPFAC(I)%FVAL(J))
    ENDIF
 
    !## find clayey layers
@@ -676,6 +736,7 @@ CONTAINS
     Z1=MIN(TR,BM(J)); Z2=MAX(BR,TM(J+1))
     IF(Z1.GT.Z2.AND.BM(J).GT.TM(J+1))THEN
      IPFAC(I)%FVAL(J)=(Z1-Z2)/(BM(J)-TM(J+1)) 
+     IPFAC(I)%FVAL(J)=MAX(MINFRAC,IPFAC(I)%FVAL(J))
     ENDIF
    
    ENDIF
@@ -687,11 +748,85 @@ CONTAINS
  END SUBROUTINE GC_IDENTIFY_COMPUTE
 
  !###======================================================================
+ SUBROUTINE GC_IDENTIFY_COMPUTE_WINDOW(TM,BM,IMODBATCH)
+ !###======================================================================
+ IMPLICIT NONE
+ REAL,DIMENSION(:),INTENT(OUT) :: TM,BM
+ INTEGER,INTENT(IN) :: IMODBATCH
+ INTEGER :: I,J,IKHR,IKVR,IROW,ICOL,ITYPE
+ TYPE(WIN_MESSAGE) :: MESSAGE
+ REAL :: TR,BR,Z1,Z2
+ CHARACTER(LEN=52) :: FTYPE
+ REAL,PARAMETER :: MINFRAC=0.01
+ 
+ !## initiate fractions
+ DO I=1,NLAYR; IPFAC(I)%FVAL=0.0; ENDDO
+
+ !## scan all files for current location
+ DO I=1,NLAYR
+
+  !## clean messages
+  CALL WMESSAGEPEEK(ITYPE,MESSAGE)
+
+  !## take the next if current regisfiles - not concerning kh values
+  IKHR=0; IKVR=0; IF(.NOT.GC_READ_REGISDATA(I,IKHR,IKVR,FTYPE,1))CYCLE
+
+  !## process data
+  LINE='Process Formation: '//TRIM(FTYPE)//' '//TRIM(RTOS(REAL(I*100)/REAL(NLAYR),'F',2))//'%'
+  IF(IMODBATCH.EQ.1)WRITE(*,'(A)') TRIM(LINE)
+  IF(IMODBATCH.EQ.0)CALL WINDOWOUTSTATUSBAR(4,TRIM(LINE))
+
+  DO IROW=1,IDF%NROW; DO ICOL=1,IDF%NCOL
+
+   TR=TOPR%X(ICOL,IROW); BR=BOTR%X(ICOL,IROW)
+   !## skip nodata
+   IF(TR.EQ.TOPR%NODATA.OR.BR.EQ.BOTR%NODATA)CYCLE
+
+   !## assign fraction to different modellayers
+   DO J=1,NLAYM
+    
+    TM(J)=TOPM(J)%X(ICOL,IROW); BM(J)=BOTM(J)%X(ICOL,IROW)
+
+    !## skip inactivate layer
+    IF(IACTM(J).EQ.0)CYCLE
+    !## model contains nodata - skip it
+    IF(TM(J).EQ.TOPM(J)%NODATA.OR.BM(J).EQ.BOTM(J)%NODATA)CYCLE
+
+    Z1=MIN(TR,TM(J)); Z2=MAX(BR,BM(J))
+    IF(Z1.GT.Z2.AND.TM(J).GT.BM(J))THEN
+     IPFAC(I)%FVAL(J)=(Z1-Z2)/(TM(J)-BM(J)) 
+     IPFAC(I)%FVAL(J)=MAX(MINFRAC,IPFAC(I)%FVAL(J))
+    ENDIF
+
+    !## find clayey layers
+    IF(J.LT.NLAYM)THEN
+   
+     !## model contains nodata - skip it
+     IF(BM(J+1).EQ.TOPM(J+1)%NODATA.OR.TM(J).EQ.BOTM(J)%NODATA)CYCLE
+
+     Z1=MIN(TR,BM(J)); Z2=MAX(BR,TM(J+1))
+     IF(Z1.GT.Z2.AND.BM(J).GT.TM(J+1))THEN
+      IPFAC(I)%FVAL(J)=(Z1-Z2)/(BM(J)-TM(J+1)) 
+      IPFAC(I)%FVAL(J)=MAX(MINFRAC,IPFAC(I)%FVAL(J))
+     ENDIF
+   
+    ENDIF
+   
+   ENDDO
+  
+  ENDDO; ENDDO
+   
+ ENDDO
+ 
+ END SUBROUTINE GC_IDENTIFY_COMPUTE_WINDOW
+ 
+ !###======================================================================
  SUBROUTINE GC_PRE_COMPUTE(IMODBATCH)
  !###======================================================================
  IMPLICIT NONE
  INTEGER,INTENT(IN) :: IMODBATCH !# =1 Only write to dos-window if started in batch modus
- INTEGER :: I,J,IROW,ICOL,ILAY,IKHR,IKVR
+ INTEGER :: I,J,IROW,ICOL,ILAY,IKHR,IKVR,ITYPE
+ TYPE(WIN_MESSAGE) :: MESSAGE
  REAL :: TR,BR,Z1,Z2,F,KVAL,XTOP,XBOT,KV
  CHARACTER(LEN=52) :: FTYPE
  
@@ -711,6 +846,9 @@ CONTAINS
 
  !## read/process
  DO I=1,NLAYR
+  
+  !## clean messages
+  CALL WMESSAGEPEEK(ITYPE,MESSAGE)
   
   !## take the next if current regisfiles does not have khv of kvv
   IKHR=1; IKVR=1; IF(.NOT.GC_READ_REGISDATA(I,IKHR,IKVR,FTYPE,1))CYCLE

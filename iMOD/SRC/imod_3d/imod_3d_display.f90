@@ -175,7 +175,7 @@ CONTAINS
 !   CALL IMOD3D_SETCOLOR(ACOLOR,100)
 !   IF(AXESINDEX(3).GT.0)CALL GLCALLLIST(AXESINDEX(3))
 !  ENDIF
- 
+
   !## draw idf's - last cause antialiasing and blending not for polygons
   IF(NIDFLIST.GT.0)CALL IMOD3D_DISPLAY_IDF(IMODE)
 
@@ -222,8 +222,16 @@ CONTAINS
 
  CALL IMOD3D_DISPLAY_LEGEND()
 
+! write(*,*) WInfoDrawable(DrawableType )
+! write(*,*) WInfoDrawable(DrawableID )
+! write(*,*) WInfoDrawable(DrawableDialog)
+
+! CALL WDIALOGSELECT(ID_D3DSETTINGS)
+! CALL WGLSELECT(3,IDF_PICTURE2,WGLDOUBLEBUFFER)
  !## show buffer only in imode.eq.1, other mode will be used for selecting in false-colour mode
  IF(IMODE.EQ.1)CALL WGLSWAPBUFFERS()
+
+!call IMOD3D_ERROR('swpapbuffer')
 
  CALL GLMATRIXMODE(GL_PROJECTION)
  CALL GLLOADIDENTITY()
@@ -925,6 +933,8 @@ CONTAINS
  !###======================================================================
  IMPLICIT NONE
  
+ CALL IMOD3D_ERROR('IMOD3D_RESET_VIEW_ENTRY')
+
  CALL GLTRANSLATED(SHIFT%X, SHIFT%Y, SHIFT%Z)
  CALL GLROTATED(ANGLE%X, 0.0_GLDOUBLE, 0.0_GLDOUBLE, 1.0_GLDOUBLE)
  CALL GLROTATED(ANGLE%Y, COS(PI*ANGLE%X/180.0_GLDOUBLE), &

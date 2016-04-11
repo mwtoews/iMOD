@@ -653,7 +653,7 @@ CONTAINS
  !## get dbase-directory+name of outputfile
  CALL WDIALOGPUTSTRING(IDF_STRING1,DBASEFOLDER) 
 
- !## read formation name from grid
+ !## write formation name from grid
  DO I=1,NLAYR
   !## read factor related to formation name from grid
   CALL WGRIDPUTCELLINTEGER(IDF_GRID1,3,I,IPFAC(I)%IGRP)
