@@ -266,7 +266,8 @@ CONTAINS
  IF(IBATCH.EQ.1)ICHECK_IDF=1
  
  !## process all idf's (starting heads) + crosssections (fixed heads/ghb-heads)
- IF(.NOT.SOLID_CALC_FILL())RETURN
+ IF(.NOT.SOLID_CALC_FILL_BND())RETURN
+! IF(.NOT.SOLID_CALC_FILL())RETURN
  
  !## pcg-solving
  !## ibound=-1 actual borehole, ibound=-2 cross-section, ibound=3 ghb
@@ -952,55 +953,53 @@ CONTAINS
  
  PCG(1)%RHS=0.0; PCG(1)%HCOF=0.0
  COND=(SOLIDF(JLAY)%DX*SOLIDF(JLAY)%DY)/C
- 
- !## make sure interfaces do not cross with top- and bottom interfaces
- IF(IINT_IDF.EQ.1)THEN 
- 
-  !## fill dh with minimal thickness for aquifer
 
-  !## fill top constrains (drain, all above available layers, filled in yet!)
-  DO IROW=1,SOLIDF(JLAY)%NROW; DO ICOL=1,SOLIDF(JLAY)%NCOL
+ !## fill top constrains (drain, all above available layers, filled in yet!)
+ DO IROW=1,SOLIDF(JLAY)%NROW; DO ICOL=1,SOLIDF(JLAY)%NCOL
 
-   IF(PCG(JLAY)%IB(ICOL,IROW).GT.0)THEN
+  IF(PCG(JLAY)%IB(ICOL,IROW).GT.0)THEN
 
-    !## get current x/y location
-    CALL IDFGETLOC(SOLIDF(JLAY),IROW,ICOL,X,Y)
+   !## get current x/y location
+   CALL IDFGETLOC(SOLIDF(JLAY),IROW,ICOL,X,Y)
 
-    !## find top aquifer 
-    ITOP=0
-    DO IL1=JLAY-1,1,-1
-     CALL IDFIROWICOL(SOLIDF(IL1),JROW,JCOL,X,Y)
-     IF(JROW.NE.0.AND.JCOL.NE.0)THEN
-      IF(PCG(IL1)%IB(JCOL,JROW).LT.0)THEN
-       TOP=PCG(IL1)%HOLD(JCOL,JROW); ITOP=1; EXIT
-      ENDIF
+   !## find top aquifer 
+   ITOP=0
+   DO IL1=JLAY-1,1,-1
+    CALL IDFIROWICOL(SOLIDF(IL1),JROW,JCOL,X,Y)
+    IF(JROW.NE.0.AND.JCOL.NE.0)THEN
+     IF(PCG(IL1)%IB(JCOL,JROW).LT.0)THEN
+      TOP=PCG(IL1)%HOLD(JCOL,JROW); ITOP=1; EXIT
      ENDIF
-    ENDDO
-    !## use last one - surfacelevel
-    IL1=MAX(1,IL1)
-    IF(ITOP.EQ.0.AND.JLAY.GT.1)THEN; TOP=PCG(IL1)%HOLD(JCOL,JROW); ITOP=1; ENDIF
-    
-    !## find bot aquifer 
-    IBOT=0
-    DO IL2=JLAY+1,NLAY
-     CALL IDFIROWICOL(SOLIDF(IL2),JROW,JCOL,X,Y)
-     IF(JROW.NE.0.AND.JCOL.NE.0)THEN
-      IF(PCG(IL2)%IB(JCOL,JROW).LT.0)THEN
-       BOT=PCG(IL2)%HOLD(JCOL,JROW); IBOT=1; EXIT
-      ENDIF
+    ENDIF
+   ENDDO
+   !## use last one - surfacelevel
+   IL1=MAX(1,IL1)
+   IF(ITOP.EQ.0.AND.JLAY.GT.1)THEN; TOP=PCG(IL1)%HOLD(JCOL,JROW); ITOP=1; ENDIF
+   
+   !## find bot aquifer 
+   IBOT=0
+   DO IL2=JLAY+1,NLAY
+    CALL IDFIROWICOL(SOLIDF(IL2),JROW,JCOL,X,Y)
+    IF(JROW.NE.0.AND.JCOL.NE.0)THEN
+     IF(PCG(IL2)%IB(JCOL,JROW).LT.0)THEN
+      BOT=PCG(IL2)%HOLD(JCOL,JROW); IBOT=1; EXIT
      ENDIF
-    ENDDO
-    !## use last one - base
-    IL2=MIN(NLAY,IL2)
-    IF(IBOT.EQ.0.AND.JLAY.LT.NLAY)THEN; BOT=PCG(IL2)%HOLD(JCOL,JROW); IBOT=1; ENDIF
+    ENDIF
+   ENDDO
+   !## use last one - base
+   IL2=MIN(NLAY,IL2)
+   IF(IBOT.EQ.0.AND.JLAY.LT.NLAY)THEN; BOT=PCG(IL2)%HOLD(JCOL,JROW); IBOT=1; ENDIF
         
-    !## top/bottom found
-    IF(ITOP.EQ.1.AND.IBOT.EQ.1)THEN
+   !## top/bottom found
+   IF(ITOP.EQ.1.AND.IBOT.EQ.1)THEN
     
-     !## mean thickness available
-     DSYS=(TOP-BOT)/REAL(IL2-IL1-1)
-     !## can not be negative
-     DSYS=MAX(0.0,DSYS)
+    !## mean thickness available
+    DSYS=(TOP-BOT)/REAL(IL2-IL1-1)
+    !## can not be negative
+    DSYS=MAX(0.0,DSYS)
+
+    !## make sure interfaces do not cross with top- and bottom interfaces
+    IF(IINT_IDF.EQ.1)THEN 
    
      !## add drain(s) if head above level above layer
      DO ILAY=JLAY-1,1,-1
@@ -1030,19 +1029,18 @@ CONTAINS
        ENDIF
       ENDIF
      ENDDO
-     
-     IF(FMIDELEV.GT.0.0)THEN
-      D=DSYS*REAL(JLAY-IL1)
-      !## create ghb as estimate
-      PCG(1)%HCOF(ICOL,IROW)=PCG(1)%HCOF(ICOL,IROW)-(FMIDELEV*COND/10000.0)
-      PCG(1)%RHS(ICOL,IROW) =PCG(1)%RHS(ICOL,IROW) -(FMIDELEV*COND/10000.0)*(TOP-D)
-     ENDIF
-     
     ENDIF
+     
+    IF(FMIDELEV.GT.0.0)THEN
+     D=DSYS*REAL(JLAY-IL1)
+     !## create ghb as estimate
+     PCG(1)%HCOF(ICOL,IROW)=PCG(1)%HCOF(ICOL,IROW)-(FMIDELEV*COND/10000.0)
+     PCG(1)%RHS(ICOL,IROW) =PCG(1)%RHS(ICOL,IROW) -(FMIDELEV*COND/10000.0)*(TOP-D)
+    ENDIF
+     
    ENDIF
-  ENDDO; ENDDO
- 
- ENDIF
+  ENDIF
+ ENDDO; ENDDO
  
  !## cross-section in between looser
  IF(ITIGHT.EQ.2)THEN
@@ -1056,7 +1054,7 @@ CONTAINS
   ENDDO; ENDDO
  ENDIF
  
- IF(MINVAL(PCG(1)%IB).EQ.0.AND.MINVAL(PCG(1)%HCOF).EQ.0.0.AND.MAXVAL(PCG(1)%HCOF).EQ.0)THEN
+ IF(MINVAL(PCG(JLAY)%IB).EQ.0.AND.MINVAL(PCG(1)%HCOF).EQ.0.0.AND.MAXVAL(PCG(1)%HCOF).EQ.0)THEN
   IF(IBATCH.EQ.0)CALL WMESSAGEBOX(OKONLY,EXCLAMATIONICON,COMMONOK,'Probably this interface will not compute due to missing boundary conditions','Error')
   IF(IBATCH.EQ.1)WRITE(*,'(A)') 'Probably this interface will not compute due to missing boundary conditions'
  ENDIF
@@ -1163,238 +1161,240 @@ CONTAINS
    
  SOLID_CALC_FILL=.FALSE.
 
- IF(.NOT.SOLID_CALC_FILL_BND())RETURN
- 
  IF(IBATCH.EQ.0)CALL WINDOWOUTSTATUSBAR(4,'Filling in Boundary Conditions ...')
  IF(IBATCH.EQ.1)WRITE(*,'(A)') 'Filling in Boundary Conditions ...'
- 
- !## count number of values in cell
- DO I=1,SIZE(PCG); PCG(I)%RHS=0.0; ENDDO
 
- !## number of layers to interpolate
- DO ILAY=1,NTBSOL
-  IF(ISEL_IDF(ILAY).EQ.0)CYCLE
+ IF(.NOT.SOLID_CALC_FILL_BND())RETURN
 
-  !## do for number of cross-sections
-  DO ISPF=1,NSPF
-    
-   !## skip lines that do not need to be processed
-   IF(SPF(ISPF)%PROF(ILAY)%IACTIVE.EQ.0)CYCLE
-   IF(SPF(ISPF)%PROF(ILAY)%NPOS.LE.0)CYCLE
-    
-   !## get max. length
-   DX=0.0
-   DO I=2,SPF(ISPF)%NXY
-    DX=DX+SQRT((SPF(ISPF)%X(I)-SPF(ISPF)%X(I-1))**2.0+(SPF(ISPF)%Y(I)-SPF(ISPF)%Y(I-1))**2.0)
-   ENDDO
-   !## use minimal cellsize to estimate number of points to be used (times two)!
-   MX=MAX(100,2*INT(DX/SOLIDF(ILAY)%DX))
-   ALLOCATE(IC(MX),IR(MX),TL(0:MX))
-
-   IF(LSPLINE)THEN
-    !## create spline-points
-    N=SPF(ISPF)%PROF(ILAY)%NPOS
-    IF(N.GT.1)THEN
-     DX=SPF(ISPF)%PROF(ILAY)%PX(N)-SPF(ISPF)%PROF(ILAY)%PX(1)
-     M=CEILING(DX/SOLIDF(ILAY)%DX)+1
-     ALLOCATE(XI(M),ZI(M)); XI=0.0; ZI=0.0
-     X1=SPF(ISPF)%PROF(ILAY)%PX(1)-SOLIDF(ILAY)%DX; M=0
-     DO
-      X1=X1+SOLIDF(ILAY)%DX; M=M+1
-      IF(X1.GE.SPF(ISPF)%PROF(ILAY)%PX(N))EXIT
-      XI(M)=X1
-     ENDDO   
-     XI(M)=SPF(ISPF)%PROF(ILAY)%PX(N)
-    !## spline line
-!    CALL SPLINE_MAIN(SPF(ISPF)%PROF(ILAY)%PX,SPF(ISPF)%PROF(ILAY)%PZ,SPF(ISPF)%PROF(ILAY)%NPOS,XI,ZI,M)
-     CALL SPLINE_AKIMA_MAIN(SPF(ISPF)%PROF(ILAY)%PX,SPF(ISPF)%PROF(ILAY)%PZ,SPF(ISPF)%PROF(ILAY)%NPOS,XI,ZI,M)  
-    ENDIF
-   ENDIF
-       
-   !## intersect/interpolate all segments of cross-section
-   NLOC=0
-   TL(0)=0.0
-   DO I=2,SPF(ISPF)%NXY
-
-    X1=SPF(ISPF)%X(I-1); X2=SPF(ISPF)%X(I)
-    Y1=SPF(ISPF)%Y(I-1); Y2=SPF(ISPF)%Y(I)
-
-    IF(SOLIDF(ILAY)%IEQ.EQ.0)THEN
-     !## intersect line with rectangular-regular-equidistantial-grid
-     N=0; CALL INTERSECT_EQUI(SOLIDF(ILAY)%XMIN,SOLIDF(ILAY)%XMAX,SOLIDF(ILAY)%YMIN,SOLIDF(ILAY)%YMAX, &
-                              SOLIDF(ILAY)%DX,SOLIDF(ILAY)%DY,X1,X2,Y1,Y2,N,.FALSE.,.TRUE.)
-    ELSE
-     !## intersect line with rectangular-irregular-non-equidistantial-grid
-     N=0; CALL INTERSECT_NONEQUI(SOLIDF(ILAY)%SX,SOLIDF(ILAY)%SY,SOLIDF(ILAY)%NROW,SOLIDF(ILAY)%NCOL, &
-                                 X1,X2,Y1,Y2,N,.FALSE.,.TRUE.)
-    ENDIF
-
-    DO J=1,N
-     !## count number of locations
-     NLOC=NLOC+1; IC(NLOC)=INT(XA(J)); IR(NLOC)=INT(YA(J))
-     IF(J.EQ.1)THEN
-      TL(NLOC)=TL(NLOC-1)+0.5*LN(J)
-     ELSEIF(J.EQ.N)THEN
-      TL(NLOC)=TL(NLOC-1)+0.5*LN(J-1)+LN(J)
-     ELSE
-      TL(NLOC)=TL(NLOC-1)+0.5*LN(J-1)+0.5*LN(J)
-     ENDIF
-    ENDDO
-      
-   ENDDO
-    
-   !## process each pos()
-   IF(LSPLINE)THEN
-    PX=>XI; PZ=>ZI
-   ELSE
-    PX=>SPF(ISPF)%PROF(ILAY)%PX; PZ=>SPF(ISPF)%PROF(ILAY)%PZ
-    N=SPF(ISPF)%PROF(ILAY)%NPOS
-   ENDIF
-
-   DO IPOS=2,SIZE(PX)  
-    DX=PX(IPOS)-PX(IPOS-1); DZZ=PZ(IPOS)-PZ(IPOS-1)
-    !## gradient (+) up (-) down
-    G =DZZ/DX
-    !## scan distance-table
-    DO I=1,NLOC
-     !## within current segment and within model domain
-     IF(TL(I).GE.PX(IPOS-1).AND. &
-        TL(I).LE.PX(IPOS).AND.   &
-        IC(I).GE.1.AND.IC(I).LE.SOLIDF(ILAY)%NCOL.AND. &
-        IR(I).GE.1.AND.IR(I).LE.SOLIDF(ILAY)%NROW)THEN
-      !## active location with n mask-value present
-      IF(PCG(ILAY)%IB(IC(I),IR(I)).EQ.1.OR.PCG(ILAY)%IB(IC(I),IR(I)).EQ.-2)THEN
-
-       PCG(ILAY)%IB(IC(I),IR(I)) =-2
-       PCG(ILAY)%RHS(IC(I),IR(I))= PCG(ILAY)%RHS(IC(I),IR(I))+1.0
-
-       IF(PCG(ILAY)%RHS(IC(I),IR(I)).EQ.1.0)THEN
-        !## overwrite HOLD with new value
-        PCG(ILAY)%HOLD(IC(I),IR(I))=PZ(IPOS-1)+(TL(I)-PX(IPOS-1))*G
-        PCG(ILAY)%COND(IC(I),IR(I))=TL(I)-TL(I-1)
-       ELSE
-        !## add new value to HOLD
-        PCG(ILAY)%HOLD(IC(I),IR(I))=PCG(ILAY)%HOLD(IC(I),IR(I)) + (PZ(IPOS-1)+(TL(I)-PX(IPOS-1))*G)
-        PCG(ILAY)%COND(IC(I),IR(I))=PCG(ILAY)%COND(IC(I),IR(I)) + (TL(I)-TL(I-1))
-       ENDIF
-
-      ENDIF
-       
-     ENDIF
-    END DO
-   ENDDO
-   NULLIFY(PX,PZ)
-   DEALLOCATE(TL,IC,IR)
-  END DO !DO ISPF=1,NSPF
-  CALL INTERSECT_DEALLOCATE()
- END DO !DO ILAY=1,NTBSOL 
-
- !## get mean values in case more values in one single cell
- DO ILAY=1,NLAY; DO IROW=1,SOLIDF(ILAY)%NROW; DO ICOL=1,SOLIDF(ILAY)%NCOL
-  !## skip inactive cells
-  IF(PCG(ILAY)%IB(ICOL,IROW).EQ.0)CYCLE
-  IF(PCG(ILAY)%RHS(ICOL,IROW).GT.1.0)THEN
-   PCG(ILAY)%HOLD(ICOL,IROW)=PCG(ILAY)%HOLD(ICOL,IROW)/PCG(ILAY)%RHS(ICOL,IROW)
-  ENDIF 
- END DO; END DO; END DO
- 
- IF(ITIGHT.EQ.2)THEN
-
-  !## include more artifically spline lines
-  DO ILAY=1,NLAY
-
-   ALLOCATE(CD1(SOLIDF(ILAY)%NCOL,SOLIDF(ILAY)%NROW))
-   ALLOCATE(CD2(SOLIDF(ILAY)%NCOL,SOLIDF(ILAY)%NROW))
-   ALLOCATE(MH1(SOLIDF(ILAY)%NCOL,SOLIDF(ILAY)%NROW))
-   ALLOCATE(MH2(SOLIDF(ILAY)%NCOL,SOLIDF(ILAY)%NROW))
-
-   ISTEP=1; COND=SOLIDF(ILAY)%DX
-
-   !## store conductance in row/column directory
-   CD1=0.0; CD2=0.0; MH1=0.0; MH2=0.0
-
-   !## define spline points along columns per row
-   N=SOLIDF(ILAY)%NCOL; ALLOCATE(XI(N),ZI(N),X(N),Z(N)); XI=0.0; X=0.0; Z=0.0
-   DO ICOL=1,N; CALL IDFGETLOC(SOLIDF(ILAY),1,ICOL,XI(ICOL),Y1); ENDDO   
-
-   DO IROW=1,SOLIDF(ILAY)%NROW,ISTEP
-    N=0; DO ICOL=1,SOLIDF(ILAY)%NCOL
-     !## cross-section
-     IF(PCG(ILAY)%IB(ICOL,IROW).EQ.-2)THEN
-      N=N+1; CALL IDFGETLOC(SOLIDF(ILAY),IROW,ICOL,X(N),Y1); Z(N)=PCG(ILAY)%HOLD(ICOL,IROW)
-     ENDIF
-    ENDDO
-    IF(N.GT.2)THEN
-     ZI=SOLIDF(ILAY)%NODATA; NN=N
-     CALL SPLINE_AKIMA_MAIN(X,Z,N,XI,ZI,SIZE(XI))  
-     N=0; DO ICOL=1,SOLIDF(ILAY)%NCOL
-      N=N+1
-      IF(ZI(N).NE.SOLIDF(ILAY)%NODATA)THEN
-       !## add to a non-cross-sectional location
-       IF(PCG(ILAY)%IB(ICOL,IROW).NE.-2)THEN
-        FX=SOLID_CALC_FILL_DISTANCE(XI(N),X,NN)
-        MH1(ICOL,IROW)=ZI(N); CD1(ICOL,IROW)=COND*FX
-       ENDIF
-      ENDIF
-     ENDDO
-    ENDIF
-   ENDDO
+ return
   
-   DEALLOCATE(XI,ZI,X,Z)
-  
-   !## define spline points along columns per row
-   N=SOLIDF(ILAY)%NROW; ALLOCATE(XI(N),ZI(N),X(N),Z(N)); XI=0.0; X=0.0; Z=0.0
-   I=0; DO IROW=N,1,-1; I=I+1; CALL IDFGETLOC(SOLIDF(ILAY),IROW,1,X1,XI(I)); ENDDO   
-
-   DO ICOL=1,SOLIDF(ILAY)%NCOL,ISTEP
-    N=0; DO IROW=SOLIDF(ILAY)%NROW,1,-1
-     !## cross-section
-     IF(PCG(ILAY)%IB(ICOL,IROW).EQ.-2)THEN
-      N=N+1; CALL IDFGETLOC(SOLIDF(ILAY),IROW,ICOL,X1,X(N)); Z(N)=PCG(ILAY)%HOLD(ICOL,IROW)
-     ENDIF
-    ENDDO
-    IF(N.GT.2)THEN
-     ZI=SOLIDF(ILAY)%NODATA; NN=N
-     CALL SPLINE_AKIMA_MAIN(X,Z,N,XI,ZI,SIZE(XI))
-     N=0; DO IROW=SOLIDF(ILAY)%NROW,1,-1
-      N=N+1
-      IF(ZI(N).NE.SOLIDF(ILAY)%NODATA)THEN
-       !## add to a non-cross-sectional location
-       IF(PCG(ILAY)%IB(ICOL,IROW).NE.-2)THEN
-        FX=SOLID_CALC_FILL_DISTANCE(XI(N),X,NN)
-        MH2(ICOL,IROW)=ZI(N); CD2(ICOL,IROW)=COND*FX
-       ENDIF
-      ENDIF
-     ENDDO
-    ENDIF
-   ENDDO
-  
-   DEALLOCATE(XI,ZI,X,Z)
-
-   !## get average conductions
-   DO IROW=1,SOLIDF(ILAY)%NROW
-    DO ICOL=1,SOLIDF(ILAY)%NCOL
-     IF(PCG(ILAY)%IB(ICOL,IROW).NE.-2)THEN
-
-      G=CD1(ICOL,IROW)+CD2(ICOL,IROW)
-      IF(G.GT.0.0)THEN
-       X1=CD1(ICOL,IROW)*MH1(ICOL,IROW)+ &
-          CD2(ICOL,IROW)*MH2(ICOL,IROW)
-       PCG(ILAY)%COND(ICOL,IROW)=0.5*G
-       PCG(ILAY)%HOLD(ICOL,IROW)=X1/G
-      ENDIF
-      
-     ENDIF
-    ENDDO
-   ENDDO   
-
-   DEALLOCATE(CD1,CD2,MH1,MH2)
- 
-  ENDDO
-   
- ENDIF
-
- SOLID_CALC_FILL=.TRUE.
+! !## count number of values in cell
+! DO I=1,SIZE(PCG); PCG(I)%RHS=0.0; ENDDO
+!
+! !## number of layers to interpolate
+! DO ILAY=1,NTBSOL
+!  IF(ISEL_IDF(ILAY).EQ.0)CYCLE
+!
+!  !## do for number of cross-sections
+!  DO ISPF=1,NSPF
+!    
+!   !## skip lines that do not need to be processed
+!   IF(SPF(ISPF)%PROF(ILAY)%IACTIVE.EQ.0)CYCLE
+!   IF(SPF(ISPF)%PROF(ILAY)%NPOS.LE.0)CYCLE
+!    
+!   !## get max. length
+!   DX=0.0
+!   DO I=2,SPF(ISPF)%NXY
+!    DX=DX+SQRT((SPF(ISPF)%X(I)-SPF(ISPF)%X(I-1))**2.0+(SPF(ISPF)%Y(I)-SPF(ISPF)%Y(I-1))**2.0)
+!   ENDDO
+!   !## use minimal cellsize to estimate number of points to be used (times two)!
+!   MX=MAX(100,2*INT(DX/SOLIDF(ILAY)%DX))
+!   ALLOCATE(IC(MX),IR(MX),TL(0:MX))
+!
+!   IF(LSPLINE)THEN
+!    !## create spline-points
+!    N=SPF(ISPF)%PROF(ILAY)%NPOS
+!    IF(N.GT.1)THEN
+!     DX=SPF(ISPF)%PROF(ILAY)%PX(N)-SPF(ISPF)%PROF(ILAY)%PX(1)
+!     M=CEILING(DX/SOLIDF(ILAY)%DX)+1
+!     ALLOCATE(XI(M),ZI(M)); XI=0.0; ZI=0.0
+!     X1=SPF(ISPF)%PROF(ILAY)%PX(1)-SOLIDF(ILAY)%DX; M=0
+!     DO
+!      X1=X1+SOLIDF(ILAY)%DX; M=M+1
+!      IF(X1.GE.SPF(ISPF)%PROF(ILAY)%PX(N))EXIT
+!      XI(M)=X1
+!     ENDDO   
+!     XI(M)=SPF(ISPF)%PROF(ILAY)%PX(N)
+!    !## spline line
+!!    CALL SPLINE_MAIN(SPF(ISPF)%PROF(ILAY)%PX,SPF(ISPF)%PROF(ILAY)%PZ,SPF(ISPF)%PROF(ILAY)%NPOS,XI,ZI,M)
+!     CALL SPLINE_AKIMA_MAIN(SPF(ISPF)%PROF(ILAY)%PX,SPF(ISPF)%PROF(ILAY)%PZ,SPF(ISPF)%PROF(ILAY)%NPOS,XI,ZI,M)  
+!    ENDIF
+!   ENDIF
+!       
+!   !## intersect/interpolate all segments of cross-section
+!   NLOC=0
+!   TL(0)=0.0
+!   DO I=2,SPF(ISPF)%NXY
+!
+!    X1=SPF(ISPF)%X(I-1); X2=SPF(ISPF)%X(I)
+!    Y1=SPF(ISPF)%Y(I-1); Y2=SPF(ISPF)%Y(I)
+!
+!    IF(SOLIDF(ILAY)%IEQ.EQ.0)THEN
+!     !## intersect line with rectangular-regular-equidistantial-grid
+!     N=0; CALL INTERSECT_EQUI(SOLIDF(ILAY)%XMIN,SOLIDF(ILAY)%XMAX,SOLIDF(ILAY)%YMIN,SOLIDF(ILAY)%YMAX, &
+!                              SOLIDF(ILAY)%DX,SOLIDF(ILAY)%DY,X1,X2,Y1,Y2,N,.FALSE.,.TRUE.)
+!    ELSE
+!     !## intersect line with rectangular-irregular-non-equidistantial-grid
+!     N=0; CALL INTERSECT_NONEQUI(SOLIDF(ILAY)%SX,SOLIDF(ILAY)%SY,SOLIDF(ILAY)%NROW,SOLIDF(ILAY)%NCOL, &
+!                                 X1,X2,Y1,Y2,N,.FALSE.,.TRUE.)
+!    ENDIF
+!
+!    DO J=1,N
+!     !## count number of locations
+!     NLOC=NLOC+1; IC(NLOC)=INT(XA(J)); IR(NLOC)=INT(YA(J))
+!     IF(J.EQ.1)THEN
+!      TL(NLOC)=TL(NLOC-1)+0.5*LN(J)
+!     ELSEIF(J.EQ.N)THEN
+!      TL(NLOC)=TL(NLOC-1)+0.5*LN(J-1)+LN(J)
+!     ELSE
+!      TL(NLOC)=TL(NLOC-1)+0.5*LN(J-1)+0.5*LN(J)
+!     ENDIF
+!    ENDDO
+!      
+!   ENDDO
+!    
+!   !## process each pos()
+!   IF(LSPLINE)THEN
+!    PX=>XI; PZ=>ZI
+!   ELSE
+!    PX=>SPF(ISPF)%PROF(ILAY)%PX; PZ=>SPF(ISPF)%PROF(ILAY)%PZ
+!    N=SPF(ISPF)%PROF(ILAY)%NPOS
+!   ENDIF
+!
+!   DO IPOS=2,SIZE(PX)  
+!    DX=PX(IPOS)-PX(IPOS-1); DZZ=PZ(IPOS)-PZ(IPOS-1)
+!    !## gradient (+) up (-) down
+!    G =DZZ/DX
+!    !## scan distance-table
+!    DO I=1,NLOC
+!     !## within current segment and within model domain
+!     IF(TL(I).GE.PX(IPOS-1).AND. &
+!        TL(I).LE.PX(IPOS).AND.   &
+!        IC(I).GE.1.AND.IC(I).LE.SOLIDF(ILAY)%NCOL.AND. &
+!        IR(I).GE.1.AND.IR(I).LE.SOLIDF(ILAY)%NROW)THEN
+!      !## active location with n mask-value present
+!      IF(PCG(ILAY)%IB(IC(I),IR(I)).EQ.1.OR.PCG(ILAY)%IB(IC(I),IR(I)).EQ.-2)THEN
+!
+!       PCG(ILAY)%IB(IC(I),IR(I)) =-2
+!       PCG(ILAY)%RHS(IC(I),IR(I))= PCG(ILAY)%RHS(IC(I),IR(I))+1.0
+!
+!       IF(PCG(ILAY)%RHS(IC(I),IR(I)).EQ.1.0)THEN
+!        !## overwrite HOLD with new value
+!        PCG(ILAY)%HOLD(IC(I),IR(I))=PZ(IPOS-1)+(TL(I)-PX(IPOS-1))*G
+!        PCG(ILAY)%COND(IC(I),IR(I))=TL(I)-TL(I-1)
+!       ELSE
+!        !## add new value to HOLD
+!        PCG(ILAY)%HOLD(IC(I),IR(I))=PCG(ILAY)%HOLD(IC(I),IR(I)) + (PZ(IPOS-1)+(TL(I)-PX(IPOS-1))*G)
+!        PCG(ILAY)%COND(IC(I),IR(I))=PCG(ILAY)%COND(IC(I),IR(I)) + (TL(I)-TL(I-1))
+!       ENDIF
+!
+!      ENDIF
+!       
+!     ENDIF
+!    END DO
+!   ENDDO
+!   NULLIFY(PX,PZ)
+!   DEALLOCATE(TL,IC,IR)
+!  END DO !DO ISPF=1,NSPF
+!  CALL INTERSECT_DEALLOCATE()
+! END DO !DO ILAY=1,NTBSOL 
+!
+! !## get mean values in case more values in one single cell
+! DO ILAY=1,NLAY; DO IROW=1,SOLIDF(ILAY)%NROW; DO ICOL=1,SOLIDF(ILAY)%NCOL
+!  !## skip inactive cells
+!  IF(PCG(ILAY)%IB(ICOL,IROW).EQ.0)CYCLE
+!  IF(PCG(ILAY)%RHS(ICOL,IROW).GT.1.0)THEN
+!   PCG(ILAY)%HOLD(ICOL,IROW)=PCG(ILAY)%HOLD(ICOL,IROW)/PCG(ILAY)%RHS(ICOL,IROW)
+!  ENDIF 
+! END DO; END DO; END DO
+! 
+! IF(ITIGHT.EQ.2)THEN
+!
+!  !## include more artifically spline lines
+!  DO ILAY=1,NLAY
+!
+!   ALLOCATE(CD1(SOLIDF(ILAY)%NCOL,SOLIDF(ILAY)%NROW))
+!   ALLOCATE(CD2(SOLIDF(ILAY)%NCOL,SOLIDF(ILAY)%NROW))
+!   ALLOCATE(MH1(SOLIDF(ILAY)%NCOL,SOLIDF(ILAY)%NROW))
+!   ALLOCATE(MH2(SOLIDF(ILAY)%NCOL,SOLIDF(ILAY)%NROW))
+!
+!   ISTEP=1; COND=SOLIDF(ILAY)%DX
+!
+!   !## store conductance in row/column directory
+!   CD1=0.0; CD2=0.0; MH1=0.0; MH2=0.0
+!
+!   !## define spline points along columns per row
+!   N=SOLIDF(ILAY)%NCOL; ALLOCATE(XI(N),ZI(N),X(N),Z(N)); XI=0.0; X=0.0; Z=0.0
+!   DO ICOL=1,N; CALL IDFGETLOC(SOLIDF(ILAY),1,ICOL,XI(ICOL),Y1); ENDDO   
+!
+!   DO IROW=1,SOLIDF(ILAY)%NROW,ISTEP
+!    N=0; DO ICOL=1,SOLIDF(ILAY)%NCOL
+!     !## cross-section
+!     IF(PCG(ILAY)%IB(ICOL,IROW).EQ.-2)THEN
+!      N=N+1; CALL IDFGETLOC(SOLIDF(ILAY),IROW,ICOL,X(N),Y1); Z(N)=PCG(ILAY)%HOLD(ICOL,IROW)
+!     ENDIF
+!    ENDDO
+!    IF(N.GT.2)THEN
+!     ZI=SOLIDF(ILAY)%NODATA; NN=N
+!     CALL SPLINE_AKIMA_MAIN(X,Z,N,XI,ZI,SIZE(XI))  
+!     N=0; DO ICOL=1,SOLIDF(ILAY)%NCOL
+!      N=N+1
+!      IF(ZI(N).NE.SOLIDF(ILAY)%NODATA)THEN
+!       !## add to a non-cross-sectional location
+!       IF(PCG(ILAY)%IB(ICOL,IROW).NE.-2)THEN
+!        FX=SOLID_CALC_FILL_DISTANCE(XI(N),X,NN)
+!        MH1(ICOL,IROW)=ZI(N); CD1(ICOL,IROW)=COND*FX
+!       ENDIF
+!      ENDIF
+!     ENDDO
+!    ENDIF
+!   ENDDO
+!  
+!   DEALLOCATE(XI,ZI,X,Z)
+!  
+!   !## define spline points along columns per row
+!   N=SOLIDF(ILAY)%NROW; ALLOCATE(XI(N),ZI(N),X(N),Z(N)); XI=0.0; X=0.0; Z=0.0
+!   I=0; DO IROW=N,1,-1; I=I+1; CALL IDFGETLOC(SOLIDF(ILAY),IROW,1,X1,XI(I)); ENDDO   
+!
+!   DO ICOL=1,SOLIDF(ILAY)%NCOL,ISTEP
+!    N=0; DO IROW=SOLIDF(ILAY)%NROW,1,-1
+!     !## cross-section
+!     IF(PCG(ILAY)%IB(ICOL,IROW).EQ.-2)THEN
+!      N=N+1; CALL IDFGETLOC(SOLIDF(ILAY),IROW,ICOL,X1,X(N)); Z(N)=PCG(ILAY)%HOLD(ICOL,IROW)
+!     ENDIF
+!    ENDDO
+!    IF(N.GT.2)THEN
+!     ZI=SOLIDF(ILAY)%NODATA; NN=N
+!     CALL SPLINE_AKIMA_MAIN(X,Z,N,XI,ZI,SIZE(XI))
+!     N=0; DO IROW=SOLIDF(ILAY)%NROW,1,-1
+!      N=N+1
+!      IF(ZI(N).NE.SOLIDF(ILAY)%NODATA)THEN
+!       !## add to a non-cross-sectional location
+!       IF(PCG(ILAY)%IB(ICOL,IROW).NE.-2)THEN
+!        FX=SOLID_CALC_FILL_DISTANCE(XI(N),X,NN)
+!        MH2(ICOL,IROW)=ZI(N); CD2(ICOL,IROW)=COND*FX
+!       ENDIF
+!      ENDIF
+!     ENDDO
+!    ENDIF
+!   ENDDO
+!  
+!   DEALLOCATE(XI,ZI,X,Z)
+!
+!   !## get average conductions
+!   DO IROW=1,SOLIDF(ILAY)%NROW
+!    DO ICOL=1,SOLIDF(ILAY)%NCOL
+!     IF(PCG(ILAY)%IB(ICOL,IROW).NE.-2)THEN
+!
+!      G=CD1(ICOL,IROW)+CD2(ICOL,IROW)
+!      IF(G.GT.0.0)THEN
+!       X1=CD1(ICOL,IROW)*MH1(ICOL,IROW)+ &
+!          CD2(ICOL,IROW)*MH2(ICOL,IROW)
+!       PCG(ILAY)%COND(ICOL,IROW)=0.5*G
+!       PCG(ILAY)%HOLD(ICOL,IROW)=X1/G
+!      ENDIF
+!      
+!     ENDIF
+!    ENDDO
+!   ENDDO   
+!
+!   DEALLOCATE(CD1,CD2,MH1,MH2)
+! 
+!  ENDDO
+!   
+! ENDIF
+!
+! SOLID_CALC_FILL=.TRUE.
 
  END FUNCTION SOLID_CALC_FILL
 
