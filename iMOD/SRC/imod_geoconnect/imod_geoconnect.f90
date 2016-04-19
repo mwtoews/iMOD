@@ -240,8 +240,10 @@ CONTAINS
     CASE (ID_OPEN1)
      IF(.NOT.UTL_WSELECTFILE('Text file (*.txt)|*.txt|',&
         LOADDIALOG+MUSTEXIST+PROMPTON+DIRCHANGE+APPENDEXT,FNAME,'Load Textfile (*.txt)'))RETURN 
-     !## call to subroutine to read iPEST file into variable and put on grid ... 
-!     CALL 
+     !## read multiplication factors
+     IF(GC_IPEST_READ(FNAME,0,0))THEN
+      IF(.NOT.GC_REGISFILES_PUT(ID_DGEOCONNECT_TAB2))RETURN
+     ENDIF
     CASE (ID_REFRESH)
      !## call to subroutine to reset all formation factors to 1 in grid... 
      CALL WMESSAGEBOX(YESNO,QUESTIONICON,COMMONYES,'Are you sure to refresh all formation factors'//CHAR(13)// &
@@ -1032,11 +1034,11 @@ CONTAINS
  END SUBROUTINE GC_PRE_COMPUTE_WRITE
 
  !###======================================================================
- LOGICAL FUNCTION GC_IPEST_READ(FNAME,IMODBATCH)
+ LOGICAL FUNCTION GC_IPEST_READ(FNAME,IMODBATCH,IRESET)
  !###======================================================================
  IMPLICIT NONE
  CHARACTER(LEN=*),INTENT(IN) :: FNAME
- INTEGER,INTENT(IN) :: IMODBATCH
+ INTEGER,INTENT(IN) :: IMODBATCH,IRESET
  INTEGER :: I,J,IU,IOS
  REAL :: FACT
  CHARACTER(LEN=12) :: FORM
@@ -1051,15 +1053,24 @@ CONTAINS
   RETURN
  ENDIF
  
- IPFAC%FACT=-999.00
+ IF(IRESET.EQ.1)THEN
+  IPFAC%FACT=-999.00
+  !## loop over total amount of regislayers
+  DO I=1,NLAYR
+   READ(IU,*,IOSTAT=IOS) FORM,FACT
+   IF(IOS.NE.0)THEN
+    CALL WMESSAGEBOX(OKONLY,EXCLAMATIONICON,COMMONOK,'Reading not enough record in the file'//CHAR(13)// &
+     TRIM(FNAME),'Error'); CLOSE(IU); RETURN
+   ENDIF
+  ENDDO
+  REWIND(IU)
+ ENDIF
  
  !## loop over total amount of regislayers
- DO I=1,NLAYR  
-  READ(IU,'(A12,1X,F10.3)',IOSTAT=IOS) FORM,FACT
-  IF(IOS.NE.0)THEN
-   CALL WMESSAGEBOX(OKONLY,EXCLAMATIONICON,COMMONOK,'Reading not enough record in the file'//CHAR(13)// &
-    TRIM(FNAME),'Error'); CLOSE(IU); RETURN
-  ENDIF
+ DO !I=1,NLAYR
+  READ(IU,*,IOSTAT=IOS) FORM,FACT
+  IF(IOS.NE.0)EXIT
+
   FORM=UTL_CAP(FORM,'U')
   !## make sure to connect with correct formation
   DO J=1,NLAYR
@@ -1069,6 +1080,7 @@ CONTAINS
   ENDDO
  ENDDO
  CLOSE(IU)
+ 
  DO J=1,NLAYR
   IF(IPFAC(J)%FACT.LT.0.0)THEN
    CALL WMESSAGEBOX(OKONLY,EXCLAMATIONICON,COMMONOK,'iMOD found factor less then zero in the file'//CHAR(13)// &
@@ -1287,7 +1299,7 @@ CONTAINS
  ENDIF
  
  !## read multiplication factors
- IF(.NOT.GC_IPEST_READ(TRIM(DBASEFOLDER)//'\factors.txt',IMODBATCH))RETURN
+ IF(.NOT.GC_IPEST_READ(TRIM(DBASEFOLDER)//'\factors.txt',IMODBATCH,1))RETURN
 
  ALLOCATE(IGRP(NLAYR)); IGRP=IPFAC%IGRP
 
