@@ -518,20 +518,21 @@ CONTAINS
  IF(COINCIDENT.EQ.1)XYCRIT=MAX(COINCIDENTDIST,XYCRIT)
  
  !## sort x, to skip double coordinates
- CALL SORTEM(1,MD,XD,2,YD,ZD,ZD,ZD,ZD,ZD,ZD)
+ CALL SORTEM(1,MD,XD,7,YD,ZD,ZD,ZD,ZD,ZD,ZD)
+! CALL SORTEM(1,MD,XD,2,YD,ZD,ZD,ZD,ZD,ZD,ZD)
 
  !## sort y numbers
  IS=1
  DO I=2,MD
   IF(XD(I).NE.XD(I-1))THEN
    IE=I-1
-   CALL SORTEM(IS,IE,YD,2,XD,ZD,ZD,ZD,ZD,ZD,ZD)
+   CALL SORTEM(IS,IE,YD,2,XD,ZD,(/0.0/),(/0.0/),(/0.0/),(/0.0/),(/0.0/)) !,ZD,ZD,ZD,ZD,ZD)
    IS=I
   ENDIF
  ENDDO
  !## sort last
  IE=I-1
- CALL SORTEM(IS,IE,YD,2,XD,ZD,ZD,ZD,ZD,ZD,ZD)
+ CALL SORTEM(IS,IE,YD,2,XD,ZD,(/0.0/),(/0.0/),(/0.0/),(/0.0/),(/0.0/)) !,ZD,ZD,ZD,ZD,ZD)
 
  N=1
  !## mark doubles with nodata and compute mean for those double points

@@ -75,9 +75,12 @@ INTEGER,DIMENSION(:),ALLOCATABLE :: TISD
 
 TYPE ISCOBJ
  REAL :: DISTANCE,BOTTOM,KM
- INTEGER(KIND=2) :: ZM          !## z bathemetery in meters
- INTEGER(KIND=1) :: ZC          !## z bathemetry in centimeters
- INTEGER(KIND=1) :: ZP          !## bathemetry pointer (0/1)
+! REAL :: ZM          !## z bathymetery in meters
+! INTEGER(KIND=1) :: ZC          !## z bathymetry in centimeters
+ INTEGER :: ZP          !## bathymetry pointer (0/1)
+! INTEGER(KIND=2) :: ZM          !## z bathymetery in meters
+! INTEGER(KIND=1) :: ZC          !## z bathymetry in centimeters
+! INTEGER(KIND=1) :: ZP          !## bathymetry pointer (0/1)
 END TYPE ISCOBJ
 TYPE(ISCOBJ),ALLOCATABLE,DIMENSION(:) :: DATISC,DUMDATISC,ISGEDITISC
 TYPE(ISCOBJ),ALLOCATABLE,DIMENSION(:,:) :: DATISC2

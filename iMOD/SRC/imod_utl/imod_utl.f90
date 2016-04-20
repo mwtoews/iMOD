@@ -57,6 +57,18 @@ REAL,PARAMETER,PRIVATE :: SDAY=86400.0
 CONTAINS
 
  !###====================================================================
+ REAL FUNCTION UTL_CREATEREAL(Z1,Z2)
+ !###====================================================================
+ IMPLICIT NONE
+ INTEGER,INTENT(IN) :: Z1,Z2
+ CHARACTER(LEN=52) :: CZ1,CZ2,CZ12
+ 
+ WRITE(CZ1,*) Z1; WRITE(CZ2,*) Z2; CZ12=TRIM(CZ1)//'.'//TRIM(CZ2)
+ READ(CZ12,*) UTL_CREATEREAL
+ 
+ END FUNCTION UTL_CREATEREAL
+ 
+ !###====================================================================
  SUBROUTINE UTL_RELPATHNAME(PATH,RFNAME,GFNAME)
  !###====================================================================
  IMPLICIT NONE

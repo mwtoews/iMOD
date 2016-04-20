@@ -560,7 +560,7 @@ CONTAINS
   
    !## sort array
    WRITE(*,'(A)') 'Sorting grid ...'
-   M=INT(N); CALL SORTEM(1,M,RR,2,RC,ZV,ZV,ZV,ZV,ZV,ZV)
+   M=INT(N); CALL SORTEM(1,M,RR,2,RC,ZV,(/0.0/),(/0.0/),(/0.0/),(/0.0/),(/0.0/)) !,ZV,ZV,ZV,ZV,ZV)
    WRITE(*,'(A)') 'Finished Sorting grid ...'
    WRITE(*,'(A)') 'Start assigning percentiles to grid ...'
 
@@ -581,7 +581,7 @@ CONTAINS
     !## row found
     IF(M.GT.0)THEN
 
-     CALL SORTEM(1,M,RC(I:),2,RR(I:),ZV(I:),ZV(I:),ZV(I:),ZV(I:),ZV(I:),ZV(I:))
+     CALL SORTEM(1,M,RC(I:),2,RR(I:),ZV(I:),(/0.0/),(/0.0/),(/0.0/),(/0.0/),(/0.0/)) !,ZV(I:),ZV(I:),ZV(I:),ZV(I:),ZV(I:))
 
      II=I
      DO

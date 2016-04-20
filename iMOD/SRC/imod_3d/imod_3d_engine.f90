@@ -3736,8 +3736,9 @@ SOLLOOP: DO I=1,NSOLLIST
    ENDDO
    N=IPOS
  
-   CALL SORTEM(1,N,XT,2,ZT(:,1),ZT(:,2),XT,XT,XT,XT,XT)
-
+   !CALL SORTEM(1,N,XT,2,ZT(:,1),ZT(:,2),XT,XT,XT,XT,XT)
+   CALL SORTEM(1,N,XT,2,ZT(:,1),ZT(:,2),(/0.0/),(/0.0/),(/0.0/),(/0.0/),(/0.0/))
+   
    !## fill first and last
    DO K=1,2
     IF(ZT(1,K).EQ.NODATA_Z)THEN

@@ -994,7 +994,7 @@ if(irow.eq.ir.and.icol.eq.ic)f=1.0
  ENDDO
  
  !## sort list
- CALL SORTEM(1,NP,PL(:,3),2,PL(:,1),PL(:,2),PL,PL,PL,PL,PL)
+ CALL SORTEM(1,NP,PL(:,3),2,PL(:,1),PL(:,2),(/0.0/),(/0.0/),(/0.0/),(/0.0/),(/0.0/)) !,PL,PL,PL,PL,PL)
  
  END SUBROUTINE SOF_GET_PITT
 
