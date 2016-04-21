@@ -749,7 +749,7 @@ CONTAINS
  TYPE(WIN_MESSAGE) :: MESSAGE
  INTEGER :: I,J,K,II,JJ,TTIME,IROW,ICOL,NETTRAP,ITYPE,N,ISTW
  INTEGER :: JCRS,MAXNSEG,IRAT,IRAT1
- REAL :: C,INFF,DXY,RWIDTH,WETPER,ISGLEN,AORG,ATRAP,XSTW,YSTW,GSTW
+ REAL :: C,INFF,DXY,RWIDTH,WETPER,ISGLEN,AORG,ATRAP,XSTW,YSTW,GSTW,ZCHK
  REAL,ALLOCATABLE,DIMENSION(:,:) :: QSORT,RVAL
  REAL,ALLOCATABLE,DIMENSION(:) :: DIST,XNR
  REAL,ALLOCATABLE,DIMENSION(:) :: X,Y
@@ -761,7 +761,7 @@ CONTAINS
  LOGICAL :: LEX,LNODAT
  CHARACTER(LEN=256) :: LINE,TMPFNAME
  TYPE(IDFOBJ),ALLOCATABLE,DIMENSION(:) :: IDF
- TYPE(IDFOBJ) :: ICROSS
+ TYPE(IDFOBJ) :: ICROSS,PCROSS
  REAL,PARAMETER :: NODATAIDF=0.0 !## do not change !!!
  
  ISG2GRID=.FALSE.
@@ -1217,12 +1217,12 @@ CONTAINS
    CALL IDFIROWICOL(IDF(2),IROW,ICOL,ISGX,ISGY)               !## get location in raster
    !## skip if outside current model network
    IF(IROW.EQ.0.OR.ICOL.EQ.0)CYCLE
-   IF(ISGATTRIBUTES_2DCROSS_READ(I,ICROSS))THEN               !## read bathymetry current cross-section
+   IF(ISGATTRIBUTES_2DCROSS_READ(I,ICROSS,PCROSS,ZCHK))THEN   !## read bathymetry current cross-section
     WL=IDF(2)%X(ICOL,IROW)                                    !## waterlevel at cross-section
     C =IDF(8)%X(ICOL,IROW)                                    !## resistance at location of cross-section
     INFF=IDF(4)%X(ICOL,IROW)                                  !## infiltration factor at location of cross-section
-    CALL ISG2GRID_BATHEMETRY(IDF,SIZE(IDF),ICROSS,WL,C,INFF)  !## adjust stage grid for bathymetry
-    CALL IDFDEALLOCATEX(ICROSS)
+    CALL ISG2GRID_BATHEMETRY(IDF,SIZE(IDF),ICROSS,PCROSS,ZCHK,WL,C,INFF)  !## adjust stage grid for bathymetry
+    CALL IDFDEALLOCATEX(ICROSS); CALL IDFDEALLOCATEX(PCROSS)
    ENDIF
    IF(IBATCH.EQ.0)CALL UTL_WAITMESSAGE(IRAT,IRAT1,ISELISG,NISG,'Progress gridding 2d cross-sections')
   ENDDO 
@@ -1395,13 +1395,13 @@ CONTAINS
  END SUBROUTINE ISG2GRID_EXPORTRIVER
  
   !###====================================================================
- SUBROUTINE ISG2GRID_BATHEMETRY(IDF,NIDF,ICROSS,WL,C,INFF) 
+ SUBROUTINE ISG2GRID_BATHEMETRY(IDF,NIDF,ICROSS,PCROSS,ZCHK,WL,C,INFF) 
  !###====================================================================
  IMPLICIT NONE
  INTEGER,INTENT(IN) :: NIDF
  TYPE(IDFOBJ),DIMENSION(NIDF),INTENT(INOUT) :: IDF
- TYPE(IDFOBJ),INTENT(IN) :: ICROSS
- REAL,INTENT(IN) :: WL,C,INFF
+ TYPE(IDFOBJ),INTENT(IN) :: ICROSS,PCROSS
+ REAL,INTENT(IN) :: WL,C,INFF,ZCHK
  INTEGER :: IR1,IR2,IC1,IC2,IROW,ICOL,JROW,JCOL
  REAL :: XC,YC
    
@@ -1409,8 +1409,12 @@ CONTAINS
  IF(ICROSS%DX.LE.IDF(1)%DX)THEN
   !## spotify cross-section (actual bathemetry of current 2d cross-section) in mother idf
   DO IROW=1,ICROSS%NROW; DO ICOL=1,ICROSS%NCOL
+   !## nodata found for waterlevel
    IF(ICROSS%X(ICOL,IROW).EQ.ICROSS%NODATA)CYCLE
-   IF(ICROSS%X(ICOL,IROW).GT.WL)CYCLE
+   !## waterlevel equal or less than riverbot
+   IF(WL.LE.ICROSS%X(ICOL,IROW))CYCLE
+   !## if inundation-criterion applied, only inundate if zchk criterion is met
+   IF(PCROSS%X(ICOL,IROW).NE.0.0.AND.ICROSS%X(ICOL,IROW).LT.ZCHK) CYCLE
    CALL IDFGETLOC(ICROSS  ,IROW,ICOL,XC,YC)
    CALL IDFIROWICOL(IDF(1),JROW,JCOL,XC,YC)
    IF(JROW.NE.0.AND.JCOL.NE.0)THEN
@@ -1437,8 +1441,14 @@ CONTAINS
    CALL IDFGETLOC(IDF(1)  ,IROW,ICOL,XC,YC)
    CALL IDFIROWICOL(ICROSS,JROW,JCOL,XC,YC)
    IF(JROW.NE.0.AND.JCOL.NE.0)THEN
-    IF(ICROSS%X(JCOL,JROW).EQ.ICROSS%NODATA)CYCLE  !## no data available in 2d cross-section
-    IF(WL.LT.ICROSS%X(JCOL,JROW))CYCLE             !## waterlevel lower than bathemetrie
+    !## nodata found for waterlevel
+    IF(ICROSS%X(JCOL,JROW).EQ.ICROSS%NODATA)CYCLE
+    !## waterlevel equal or less than riverbot
+    IF(WL.LE.ICROSS%X(JCOL,JROW))CYCLE
+    !## if inundation-criterion applied, only inundate if zchk criterion is met
+    IF(PCROSS%X(JCOL,JROW).NE.0.0.AND.ICROSS%X(JCOL,JROW).LT.ZCHK) CYCLE
+!    IF(ICROSS%X(JCOL,JROW).EQ.ICROSS%NODATA)CYCLE  !## no data available in 2d cross-section
+!    IF(WL.LT.ICROSS%X(JCOL,JROW))CYCLE             !## waterlevel lower than bathemetrie
     IDF(1)%X(ICOL,IROW)=IDFGETAREA(ICROSS,ICOL,IROW)/C 
     IDF(2)%X(ICOL,IROW)=WL
     IDF(3)%X(ICOL,IROW)=ICROSS%X(JCOL,JROW)

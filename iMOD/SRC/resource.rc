@@ -8,7 +8,7 @@
 //
 // Winteracter resource script. 
 //
-// Modified : 20/Apr/2016 14:06:23
+// Modified : 21/Apr/2016 13:04:33
 //
 ///////////////////////////////////////////////////
 //
@@ -3920,13 +3920,14 @@ BEGIN
     CONTROL "Y",ISS3,"REALEDIT",WS_CHILD | WS_VISIBLE | WS_BORDER | WS_TABSTOP | ES_LEFT | ES_CENTER | ES_MULTILINE,    0,    0,   40,   14
     CONTROL "Z",ISS4,"REALEDIT",WS_CHILD | WS_VISIBLE | WS_BORDER | WS_TABSTOP | ES_LEFT | ES_CENTER | ES_MULTILINE,    0,    0,   40,   14
     CONTROL "kM",ISS5,"REALEDIT",WS_CHILD | WS_VISIBLE | WS_BORDER | WS_TABSTOP | ES_LEFT | ES_CENTER | ES_MULTILINE,    0,    0,   40,   14
-    CONTROL "Pnt",ISS1,"INTEGEREDIT",WS_CHILD | WS_VISIBLE | WS_BORDER | WS_TABSTOP | ES_LEFT | ES_CENTER | ES_MULTILINE,    0,    0,   20,   14
+    CONTROL "Pnt",ISS1,"REALEDIT",WS_CHILD | WS_VISIBLE | WS_BORDER | WS_TABSTOP | ES_LEFT | ES_CENTER | ES_MULTILINE,    0,    0,   20,   14
 END
 
 IDD_TEMPLATE018 RCDATA
 BEGIN
 "[Ranges] \n"
 "[Formats] \n"
+" 1059 (F3.1) \n"
 ,0
 END
 
@@ -11742,4 +11743,4 @@ END
 //*WI* FILENAME    resource.f90
 //*WI* FMODNAME    RESOURCE
 //*WI* LASTTYPE        2
-//*WI* LASTRES        84
+//*WI* LASTRES        86

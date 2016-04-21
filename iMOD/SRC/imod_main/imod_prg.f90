@@ -101,9 +101,6 @@ ENDIF
 
 IF(IMODBATCH())STOP
 
-!use HideWindow
-!do not start 2d-childwindow
-
 !## get username and status and initialise window
 CALL WINDOWOPEN(FLAGS=SYSMENUON+MINBUTTON+MAXBUTTON+STATUSBAR+MAXWINDOW,TITLE=TRIM(UTL_IMODVERSION()))
 CALL WINDOWSTATUSBARPARTS(4,(/2000,2000,750,-1/),(/1,1,1,1/))
@@ -130,15 +127,15 @@ NULLIFY(ZM%ZOOMXY,ZM%ZOOMXY_BU); ALLOCATE(ZM%ZOOMXY(10,4)); ZM%NZOOM=0; ZM%IZOOM
 CALL INTERSECT_NULLIFY()
 !## allocate memory fo graph-variables ipf plotting
 CALL IPFANALYSE_INIT_GRAPHVARIABLES()
-!##24-bits colour application
+!## 24-bits colour application
 CALL IGRCOLOURMODEL(24)
-!##load datamanager in memory
+!## load datamanager in memory
 CALL MANAGERINIT()
-!##load project-datamanager in memory
+!## load project-datamanager in memory
 CALL PMANAGERINIT(); CALL PMANAGERUPDATE(0,0,0); CALL PMANAGERFIELDS()
-!##initialize colours
+!## initialize colours
 CALL PREFCOLOURSINIT(.TRUE.)
-!##initialize iMOD
+!## initialize iMOD
 CALL IMODINIT()
 !## initialize preferences
 CALL PREFINIT()
@@ -192,6 +189,17 @@ IF(NARG.GT.0)THEN
   ENDIF
  END DO
 ENDIF
+
+IF(DEMO%IDEMO.NE.0)THEN
+ CALL WINDOWSELECT(0); CALL WINDOWSIZEPOS(ISTATE=WINMINIMISED )
+! CALL WindowSizePos(ISTATE=WINHIDDEN)
+ENDIF
+
+!CALL WINDOWRAISE(0)
+!CALL WINDOWRAISE(MPW%IWIN)
+!!## get username and status and initialise window
+!CALL WINDOWOPEN(FLAGS=SYSMENUON+MINBUTTON+MAXBUTTON+STATUSBAR+MAXWINDOW,TITLE=TRIM(UTL_IMODVERSION()))
+!CALL WINDOWSTATUSBARPARTS(4,(/2000,2000,750,-1/),(/1,1,1,1/))
 
 IF(NARG.EQ.0)THEN
  !## get username and status and initialise window
