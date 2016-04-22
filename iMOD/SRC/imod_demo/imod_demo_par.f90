@@ -37,6 +37,7 @@ TYPE DEMOBJ
  INTEGER :: IBLOCKLINES !## show cross-section with blocklines
  INTEGER :: IBLOCKFILLS !## show cross-section with filled blocks
  INTEGER :: ISAVEBMP    !## copies the image and saves it to disk
+ INTEGER :: INIT        !## determines whether demo started from beginning (1) or read from dialog (0)
 END TYPE DEMOBJ
 
 TYPE(DEMOBJ) :: DEMO

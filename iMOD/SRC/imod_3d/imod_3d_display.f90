@@ -151,8 +151,8 @@ CONTAINS
   IF(NIFFLIST.GT.0)CALL IMOD3D_DISPLAY_IFF()
   !## draw sol's
   IF(NSOLLIST.GT.0)CALL IMOD3D_DISPLAY_SOL()
-  !## draw gen's
-  IF(NGENLIST.GT.0)CALL IMOD3D_DISPLAY_GEN()
+!  !## draw gen's
+!  IF(NGENLIST.GT.0)CALL IMOD3D_DISPLAY_GEN()
   !## draw interactive flowlines
   IF(IPATHLINE_3D.GT.0)CALL IMOD3D_DISPLAY_PL()
 
@@ -178,6 +178,8 @@ CONTAINS
 
   !## draw idf's - last cause antialiasing and blending not for polygons
   IF(NIDFLIST.GT.0)CALL IMOD3D_DISPLAY_IDF(IMODE)
+  !## draw gen's
+  IF(NGENLIST.GT.0)CALL IMOD3D_DISPLAY_GEN()
 
   !## plot and update indentifier-position
   IF(IINDPOS.EQ.1)THEN
