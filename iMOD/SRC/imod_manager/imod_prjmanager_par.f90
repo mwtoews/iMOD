@@ -55,15 +55,15 @@ MODULE MOD_PMANAGER_PAR
  TYPE(SIMOBJ),POINTER,DIMENSION(:) :: SIM,SIM_C,SIM_C2
   
  TYPE FILESOBJ
-  INTEGER :: IACT                                               !active in runfile
-  CHARACTER(LEN=256) :: FNAME                                   !name of current file, could be a constant too!
-  CHARACTER(LEN=MAXLEN) :: ALIAS                                !alias name of current file, could be a constant too!
-  INTEGER :: ID                                                 !id in treeview field
-  INTEGER :: ILAY                                     !layer of current file
-  INTEGER :: ICNST                                    !to be constant yes (1) or no (2)
-  REAL :: FCT                                      !factor
-  REAL :: IMP                                      !impulse
-  REAL :: CNST                                      !constant value
+  INTEGER :: IACT                                  !## active in runfile
+  CHARACTER(LEN=256) :: FNAME                      !## name of current file, could be a constant too!
+  CHARACTER(LEN=MAXLEN) :: ALIAS                   !## alias name of current file, could be a constant too!
+  INTEGER :: ID                                    !## id in treeview field
+  INTEGER :: ILAY                                  !## layer of current file
+  INTEGER :: ICNST                                 !## to be constant yes (1) or no (2)
+  REAL :: FCT                                      !## factor
+  REAL :: IMP                                      !## impulse
+  REAL :: CNST                                     !## constant value
  END TYPE FILESOBJ
 
  TYPE STRESSOBJ
