@@ -1683,7 +1683,11 @@ C3A-----BRANCH CONDUCTANCE IN THE ROW DIRECTION (CR) TO THE RIGHT.
                   T1 = MAX(T1,MINKD)                                    ! DLT
                   T2 = MAX(T2,MINKD)                                    ! DLT
                END IF                                                   ! DLT
-               CR(J,I,K)=TWO*T2*T1*DELC(I)/(T1*DELR(J+1)+T2*DELR(J))
+               IF(T1+T2.GT.0.0)THEN                                     ! DLT
+                CR(J,I,K)=TWO*T2*T1*DELC(I)/(T1*DELR(J+1)+T2*DELR(J))
+               ELSE                                                     ! DLT
+                CR(J,I,K)=ZERO                                          ! DLT
+               ENDIF                                                    ! DLT
             ELSE
                CR(J,I,K)=ZERO
             END IF
@@ -1709,7 +1713,11 @@ C3C-----BRANCH CONDUCTANCE IN THE COLUMN DIRECTION (CC) TO THE FRONT.
                   T1 = MAX(T1,MINKD)                                    ! DLT
                   T2 = MAX(T2,MINKD)                                    ! DLT
                END IF                                                   ! DLT
-               CC(J,I,K)=TWO*T2*T1*DELR(J)/(T1*DELC(I+1)+T2*DELC(I))
+               IF(T1+T2.GT.0.0)THEN                                     ! DLT
+                CC(J,I,K)=TWO*T2*T1*DELR(J)/(T1*DELC(I+1)+T2*DELC(I))
+               ELSE                                                     ! DLT
+                CC(J,I,K)=ZERO                                          ! DLT
+               ENDIF                                                    ! DLT
             ELSE
 C3D-----IF THIS IS THE LAST ROW, SET BRANCH CONDUCTANCE=0.
                CC(J,I,K)=ZERO
