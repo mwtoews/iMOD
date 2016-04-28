@@ -398,6 +398,8 @@ CONTAINS
    NPNT=ISG(ISELISG)%NSEG; IPNT=ISG(ISELISG)%ISEG
    ICRS=ISG(ISELISG)%ICRS; NCRS=ISG(ISELISG)%NCRS
    
+   WRITE(6,'(2(A,I10),A)') '+Busy with segment ',ISELISG,' adding ',NCRS,' cross-sections'
+   
    DO J=1,NCRS
 
     DIST=ISC(ICRS+J-1)%DIST
@@ -449,16 +451,23 @@ CONTAINS
          DATISC(ISEG+N-1)%DISTANCE=XC
          DATISC(ISEG+N-1)%BOTTOM  =YC
          DATISC(ISEG+N-1)%KM      =ICROSS(2)%X(ICOL,IROW)
-         IF(ZCHK.EQ.1)DATISC(ISEG+N-1)%ZP=INT(ICROSS(1)%X(ICOL,IROW))
+         IF(ZCHK.EQ.1)THEN
+          IF(ICROSS(1)%X(ICOL,IROW).GT.0)DATISC(ISEG+N-1)%ZP=INT(0,1)
+          IF(ICROSS(1)%X(ICOL,IROW).LT.0)DATISC(ISEG+N-1)%ZP=INT(1,1)
+!          DATISC(ISEG+N-1)%ZP=INT(ICROSS(1)%X(ICOL,IROW))
+!       IF(INT(ICROSS(1)%X(ICOL,IROW)).LT.0)CALL WGRIDPUTCELLINTEGER(IDF_GRID1,4,I,1) !## inundated if thresshold exceeded
+!       IF(INT(ICROSS(1)%X(ICOL,IROW)).GT.0)CALL WGRIDPUTCELLINTEGER(IDF_GRID1,4,I,0) !## inundated no matter what
+         ENDIF       
         ENDIF
        ENDIF
       ENDDO; ENDDO
     
      ELSE
-      WRITE(*,'(A,I10)') 'Pointer value is equal to nodata value/or le 0, IP=',IP
+      WRITE(*,'(/A,I10)') 'Pointer value is equal to nodata value/or le 0, IP=',IP
+      WRITE(*,'(2(A,I10)/)') 'For cross-section ',J,' on segment ',ISELISG
      ENDIF
     ELSE
-     WRITE(*,'(A)') 'Position of cross-section is outside Pointer IDF'
+     WRITE(*,'(/2(A,I10),A/)') 'Position of cross-section ',J,' on segment ',ISELISG,' is outside Pointer IDF'
     ENDIF
    ENDDO
   ENDDO
