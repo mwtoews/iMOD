@@ -100,8 +100,9 @@ CONTAINS
 
  LOGICAL                           :: LOGCON  !##in confining bed
 
-! IF(ZLOC.LE.0.0)ZLOC=0.001
-! IF(ZLOC.GE.1.0)ZLOC=0.999
+ IF(ZLOC.EQ.0.0 )ZLOC= 0.001
+ IF(ZLOC.GE.1.0 )ZLOC= 0.999
+ IF(ZLOC.LE.-1.0)ZLOC=-0.999
  
  KOLD =KP
  IDSCH=0
