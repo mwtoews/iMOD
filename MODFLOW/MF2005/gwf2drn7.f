@@ -441,10 +441,7 @@ C
       integer  isub,lbeg,lend                                           ! dsubsys
 C     ------------------------------------------------------------------
       CALL SGWF2DRN7PNT(IGRID)
-C
-C4------IF THERE ARE NO DRAINS THEN DO NOT ACCUMULATE DRAIN FLOW.
-      IF(NDRAIN.LE.0) GO TO 200
-C
+
 C1------INITIALIZE CELL-BY-CELL FLOW TERM FLAG (IBD) AND
 C1------ACCUMULATOR (RATOUT).
       ZERO=0.
@@ -453,6 +450,9 @@ C1------ACCUMULATOR (RATOUT).
       IF(IDRNCB.LT.0 .AND. ICBCFL.NE.0) IBD=-1
       IF(IDRNCB.GT.0) IBD=ICBCFL
       IBDLBL=0
+C
+C4------IF THERE ARE NO DRAINS THEN DO NOT ACCUMULATE DRAIN FLOW.
+      IF(NDRAIN.LE.0) GO TO 200
 C
 c loop for subsystems
       lend=0                                                            ! dsubsys

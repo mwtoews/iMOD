@@ -60,23 +60,24 @@ CONTAINS
   !## reset reuse variable on default on .false.
   SELECT CASE (IPCK)
    CASE (PWEL)     !## (PWEL) well
-    if(associated(wel%sp))wel%sp(kper)%reuse = .false.
+    if(associated(wel%sp))wel%sp(kper)%reuse = NLINES.lt.0 ! .false.
    CASE (PDRN)     !## (PDRN) drainage
-    if(associated(drn%sp))drn%sp(kper)%reuse = .false.
+    if(associated(drn%sp))drn%sp(kper)%reuse = NLINES.lt.0 ! .false.
    CASE (PRIV)     !## (PRIV) rivers
-    if(associated(riv%sp))riv%sp(kper)%lriv  = .true.
+    if(associated(riv%sp))riv%sp(kper)%reuse = NLINES.lt.0 ! .false.
+!    if(associated(riv%sp))riv%sp(kper)%lriv = .false.
    CASE (PEVT)     !## (PEVT) evapotranspiration
-    if(associated(evt%sp))evt%sp(kper)%reuse = .false.
+    if(associated(evt%sp))evt%sp(kper)%reuse = NLINES.lt.0 ! .false.
    CASE (PGHB)     !## (PGHB) general head boundary
-    if(associated(ghb%sp))ghb%sp(kper)%reuse = .false.
+    if(associated(ghb%sp))ghb%sp(kper)%reuse = NLINES.lt.0 ! .false.
    CASE (PRCH)     !## (PRCH) recharge
-    if(associated(rch%sp))rch%sp(kper)%reuse = .false.
+    if(associated(rch%sp))rch%sp(kper)%reuse = NLINES.lt.0 ! .false.
    CASE (POLF)     !## (POLF) overlandflow
-    if(associated(drn%sp))drn%sp(kper)%reuse = .false.
+    if(associated(drn%sp))drn%sp(kper)%reuse = NLINES.lt.0 ! .false.
    CASE (PCHD)     !## (PCHD) constant head
-    if(associated(chd%sp))chd%sp(kper)%reuse = .false.
+    if(associated(chd%sp))chd%sp(kper)%reuse = NLINES.lt.0 ! .false.
    CASE (PISG)     !## (PISG) riversegments
-    if(associated(riv%sp))riv%sp(kper)%reuse = .false.
+    if(associated(riv%sp))riv%sp(kper)%reuse = NLINES.lt.0 ! .false.
   END SELECT
  ENDIF
  
