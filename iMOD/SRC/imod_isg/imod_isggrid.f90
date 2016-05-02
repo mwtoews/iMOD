@@ -440,7 +440,6 @@ CONTAINS
        DATISC(ISEG)%DISTANCE=-ICROSS(1)%DX
        DATISC(ISEG)%BOTTOM  =-ICROSS(1)%DY
       ENDIF
-!      DATISC(ISEG+N-1)%KM      =0.0 !## empty, not to be used (yet)
 
       N=0
       DO IROW=1,ICROSS(1)%NROW; DO ICOL=1,ICROSS(1)%NCOL
