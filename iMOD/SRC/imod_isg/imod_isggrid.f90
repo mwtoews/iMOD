@@ -432,31 +432,31 @@ CONTAINS
       CALL ISGMEMORYDATISC(N,IPOS,ISEG)
       ISC(IPOS)%N=-1.0*ABS(ISC(IPOS)%N)
       
-      N=1
       IF(ZCHK.EQ.0)THEN
-       DATISC(ISEG+N-1)%DISTANCE= ICROSS(1)%DX
-       DATISC(ISEG+N-1)%BOTTOM  = ICROSS(1)%DY
+       DATISC(ISEG)%DISTANCE= ICROSS(1)%DX
+       DATISC(ISEG)%BOTTOM  = ICROSS(1)%DY
+       DATISC(ISEG)%KM      = 0.0 !## empty, not to be used (yet)
       ELSE
-       DATISC(ISEG+N-1)%DISTANCE=-ICROSS(1)%DX
-       DATISC(ISEG+N-1)%BOTTOM  =-ICROSS(1)%DY
+       DATISC(ISEG)%DISTANCE=-ICROSS(1)%DX
+       DATISC(ISEG)%BOTTOM  =-ICROSS(1)%DY
       ENDIF
-      DATISC(ISEG+N-1)%KM      =0.0 !## empty, not to be used (yet)
+!      DATISC(ISEG+N-1)%KM      =0.0 !## empty, not to be used (yet)
 
+      N=0
       DO IROW=1,ICROSS(1)%NROW; DO ICOL=1,ICROSS(1)%NCOL
        !## location of gridcell equal to pointer value at location of cross-section
        IF(ABS(ICROSS(1)%X(ICOL,IROW)).EQ.ABS(IP))THEN
         IF(ICROSS(2)%X(ICOL,IROW).NE.ICROSS(2)%NODATA)THEN
          N=N+1
          CALL IDFGETLOC(ICROSS(1),IROW,ICOL,XC,YC)
-         DATISC(ISEG+N-1)%DISTANCE=XC
-         DATISC(ISEG+N-1)%BOTTOM  =YC
-         DATISC(ISEG+N-1)%KM      =ICROSS(2)%X(ICOL,IROW)
+         DATISC(ISEG+N)%DISTANCE=XC
+         DATISC(ISEG+N)%BOTTOM  =YC
+         DATISC(ISEG+N)%KM      =ICROSS(2)%X(ICOL,IROW)
          IF(ZCHK.EQ.1)THEN
-          IF(ICROSS(1)%X(ICOL,IROW).GT.0)DATISC(ISEG+N-1)%ZP=INT(0,1)
-          IF(ICROSS(1)%X(ICOL,IROW).LT.0)DATISC(ISEG+N-1)%ZP=INT(1,1)
-!          DATISC(ISEG+N-1)%ZP=INT(ICROSS(1)%X(ICOL,IROW))
-!       IF(INT(ICROSS(1)%X(ICOL,IROW)).LT.0)CALL WGRIDPUTCELLINTEGER(IDF_GRID1,4,I,1) !## inundated if thresshold exceeded
-!       IF(INT(ICROSS(1)%X(ICOL,IROW)).GT.0)CALL WGRIDPUTCELLINTEGER(IDF_GRID1,4,I,0) !## inundated no matter what
+          !## store z-threshold
+          IF(N.EQ.1)DATISC(ISEG)%KM=ICROSS(3)%X(ICOL,IROW) !## threshold
+          IF(ICROSS(1)%X(ICOL,IROW).GT.0)DATISC(ISEG+N)%ZP=INT(0,1)
+          IF(ICROSS(1)%X(ICOL,IROW).LT.0)DATISC(ISEG+N)%ZP=INT(1,1)
          ENDIF       
         ENDIF
        ENDIF
