@@ -607,7 +607,7 @@ if(irow.eq.ir.and.icol.eq.ic)f=1.0
  !## copy dem
  IDF(5)%X=IDF(1)%X; IDF(5)%NODATA=IDF(1)%NODATA
  IF(IWINDOW.NE.0)THEN
-  IF(.NOT.IDFWRITE(IDF(5),IDF(3)%FNAME(:INDEX(IDF(3)%FNAME,'.',.TRUE.)-1)//'_copydem.idf',1))THEN; ENDIF
+  IF(.NOT.IDFWRITE(IDF(5),IDF(3)%FNAME(:INDEX(IDF(3)%FNAME,'.',.TRUE.)-1)//'_copy.idf',1))THEN; ENDIF
  ENDIF
  
  !## fill in pitts; fill in gradients

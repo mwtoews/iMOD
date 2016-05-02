@@ -830,7 +830,7 @@ CONTAINS
     CALL WMESSAGEBOX(OKONLY,EXCLAMATIONICON,COMMONOK,'Can not allocate memory for IDF '//TRIM(FNAME(I))//TRIM(PPOSTFIX)//'.IDF'//CHAR(13)// &
       'Row/Column='//TRIM(ITOS(IDF(I)%NROW))//'-'//TRIM(ITOS(IDF(I)%NCOL)),'Error')
    ELSEIF(IBATCH.EQ.1)THEN
-    WRITE(*,*) 'Can not allocate memory for IDF '//TRIM(FNAME(I))//TRIM(PPOSTFIX)//'.IDF'
+    WRITE(*,*) 'Cannot allocate memory for IDF '//TRIM(FNAME(I))//TRIM(PPOSTFIX)//'.IDF'
     WRITE(*,*) 'Nrow/Ncolumn=',IDF(I)%NCOL,IDF(I)%NROW
    ENDIF
    CALL IDFDEALLOCATE(IDF,SIZE(IDF)); DEALLOCATE(IDF)
@@ -859,7 +859,7 @@ CONTAINS
  IF(ALLOCATED(IPOS))DEALLOCATE(IPOS)
  !## max. numbers of coordinates AND number of calculation points AND number of structures
  MAXNSEG=MAXVAL(ISG(1:NISG)%NSEG)+MAXVAL(ISG(1:NISG)%NCLC)+2*MAXVAL(ISG(1:NISG)%NSTW)
- ALLOCATE(DIST(MAXNSEG),IPOS(MAXNSEG),RVAL(4,0:MAXNSEG), & !NITEMS,0:MAXNSEG), &
+ ALLOCATE(DIST(MAXNSEG),IPOS(MAXNSEG),RVAL(4,0:MAXNSEG), & 
           X(MAXNSEG),Y(MAXNSEG))
 
  MAXDIM=0
@@ -1101,7 +1101,7 @@ CONTAINS
          ISGVALUE(1,4)= RVAL(4,ISEG-1)+DXY*RVAL(4,0)   !inf.factors
          C            = RVAL(3,ISEG-1)+DXY*RVAL(3,0)   !c-value
          !## minimal c-value
-         IF(C.EQ.0.0)C=0.001
+         C=MAX(0.001,C)
          ISGVALUE(1,1)=(LN(J)*WETPER)/C    !conductances
          
          ISGVALUE(1,5)= LN(J)
@@ -1475,8 +1475,6 @@ CONTAINS
     IF(WL.LE.ICROSS%X(JCOL,JROW))CYCLE
     !## if inundation-criterion applied, only inundate if zchk criterion is met
     IF(PCROSS%X(JCOL,JROW).NE.0.0.AND.ICROSS%X(JCOL,JROW).LT.ZCHK) CYCLE
-!    IF(ICROSS%X(JCOL,JROW).EQ.ICROSS%NODATA)CYCLE  !## no data available in 2d cross-section
-!    IF(WL.LT.ICROSS%X(JCOL,JROW))CYCLE             !## waterlevel lower than bathemetrie
     IDF(1)%X(ICOL,IROW)=IDFGETAREA(ICROSS,ICOL,IROW)/C 
     IDF(2)%X(ICOL,IROW)=WL
     IDF(3)%X(ICOL,IROW)=ICROSS%X(JCOL,JROW)
