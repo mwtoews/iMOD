@@ -119,6 +119,7 @@ C     create instance for mf2005 run, igrid is generated
 
       use m_mf2005_main
       use m_mf2005_iu
+      use imod_utl, only : hdr, lic
 
       implicit none
 
@@ -135,6 +136,11 @@ c local variables
 
 c init
       retVal = 0
+
+      !## write banner in commandtool
+      do i = 1, size(hdr)
+       write(*,'(a)') trim(hdr(i))
+      end do
 
 C2------WRITE BANNER TO SCREEN AND DEFINE CONSTANTS.
       WRITE (*,1) MFVNAM,VERSION
@@ -171,6 +177,7 @@ cDLT      IGRID=1
       NSOL=1
       CALL GWF2BAS7AR(INUNIT,CUNIT,VERSION,24,31,32,MAXUNIT,IGRID,12,
      1                HEADNG,26,MFVNAM)
+
       IF(IUNIT(IUMNW2).GT.0 .AND. IUNIT(IUMNW1).GT.0) THEN
         WRITE(IOUT,'(1X,/,1X,A)')
      1  'MNW1 and MNW2 cannot both be active in the same simulation'

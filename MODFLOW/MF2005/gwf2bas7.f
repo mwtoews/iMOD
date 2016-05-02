@@ -1779,6 +1779,7 @@ C     ******************************************************************
 C
 C        SPECIFICATIONS:
 C     ------------------------------------------------------------------
+      use imod_utl, only : hdr, lic
       INCLUDE 'openspec.inc'
       DIMENSION IUNIT(NIUNIT)
       CHARACTER*4 CUNIT(NIUNIT)
@@ -1869,6 +1870,12 @@ C6------SPECIAL CHECK FOR 1ST FILE.
           OPEN(UNIT=IU,FILE=filename,STATUS='REPLACE',
      1          FORM='FORMATTED',ACCESS='SEQUENTIAL')
           call sts2subscribe(IU)                                        ! DLT: subscribe unit number for save/restore
+
+          !## write banner in logfile
+          do i = 1, size(hdr)
+           write(iout,'(a)') trim(hdr(i))
+          end do
+
           WRITE(IOUT,60) MFVNAM,SPACES(1:INDENT),VERSION(1:LENVER)
 60        FORMAT(34X,'MODFLOW',A,/,
      &             6X,'U.S. GEOLOGICAL SURVEY MODULAR',
