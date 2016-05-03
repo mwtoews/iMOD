@@ -2190,18 +2190,11 @@
          write(str(n),*) 'hfbfact'
       end if
 
-      !if (hfb%hfbfact) then
-      !   n = n + 1
-      !   write(str(n),*) 'hfbfact'
-      !end if
-      !if (hfb%hfbresis) then
-      !   n = n + 1
-      !   write(str(n),*) 'hfbresis'
-      !end if
       write(nstr,*) n
       write(lun,'('//trim(nstr)//'(a,1x))')(trim(adjustl(str(i))), i = 1, n)
 
-      call writeSPckSPer(lun, nper, hfb%sp, pckftype(hfb%type))
+      call writeSPckSPer(lun, 1, hfb%sp, pckftype(hfb%type))
+!      call writeSPckSPer(lun, nper, hfb%sp, pckftype(hfb%type))
 
 !...     close hfb file
       close(lun)
@@ -2304,10 +2297,14 @@
             write(str(1),*) rch%sp(iper)%inrech
             write(str(2),*) rch%sp(iper)%inirch
             write(lun,'(2(a,1x))')(trim(adjustl(str(i))), i = 1, 2)
-            if (rch%sp(iper)%inrech >= 0) then
+            if (rch%sp(iper)%inrech.gt.0) then
                do i = 1, rch%sp(iper)%inrech
                   call WriteArrayRead(rch%sp(iper)%rech(i),lun)
                end do
+            elseif (rch%sp(iper)%inrech.eq.0) then
+             write(str(1),*) 'constant'
+             write(str(2),*) 0.0
+             write(lun,'(2(a,1x))')(trim(adjustl(str(i))), i = 1, 2)
             end if
             if (rch%nrchop == 2 .and. rch%sp(iper)%inirch >= 0) then
                call WriteArrayRead(rch%sp(iper)%irch,lun)
@@ -2373,15 +2370,23 @@
             write(str(2),*) evt%sp(iper)%inevtr
             write(str(3),*) evt%sp(iper)%inexdp
             write(lun,'(3(a,1x))')(trim(adjustl(str(i))), i = 1, 3)
-            if (evt%sp(iper)%insurf >= 0) then
+            if(evt%sp(iper)%insurf.ne.0.and.evt%sp(iper)%inevtr.ne.0.and.evt%sp(iper)%inexdp.ne.0)then
+             if (evt%sp(iper)%insurf >= 0) then
                call WriteArrayRead(evt%sp(iper)%surf,lun)
-            end if
-            if (evt%sp(iper)%inevtr >= 0) then
+             end if
+             if (evt%sp(iper)%inevtr >= 0) then
                call WriteArrayRead(evt%sp(iper)%evtr,lun)
-            end if
-            if (evt%sp(iper)%inexdp >= 0) then
+             end if
+             if (evt%sp(iper)%inexdp >= 0) then
                call WriteArrayRead(evt%sp(iper)%exdp,lun)
-            end if
+             end if
+            else
+             write(str(1),*) 'constant'
+             write(str(2),*) 0.0
+             write(lun,'(2(a,1x))')(trim(adjustl(str(i))), i = 1, 2)
+             write(lun,'(2(a,1x))')(trim(adjustl(str(i))), i = 1, 2)
+             write(lun,'(2(a,1x))')(trim(adjustl(str(i))), i = 1, 2)
+            endif
          end if
       end do
 

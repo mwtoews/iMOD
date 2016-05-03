@@ -118,7 +118,7 @@ c check for ipf (u2drel only)
          end if
       else if (imod_utl_has_ext(file,'gen')) then
          filetype = igen
-         ios = rdrs_rddata_gen(file,iout)
+         ios = rdrs_rddata_gen(file,iout,ilay)
       else
          rdrs_main = -1
          return
@@ -454,7 +454,7 @@ c end of program
       return
       end
 
-      function rdrs_rddata_gen(file,iout)
+      function rdrs_rddata_gen(file,iout,ilay)
 c description:
 c ------------------------------------------------------------------------------
 c Read GEN file.
@@ -473,14 +473,15 @@ c function declaration
 
 c arguments
       character(len=*) :: file
-      integer, intent(in) :: iout
+      integer, intent(in) :: iout,ilay
 
 c local variables
       character(len=256) :: line
       logical :: ok
       integer :: ret, lun, ios, mx, id, nid,
      1           i, ii, n, nn, m, l, icol, irow, iact
-      real    :: x1, y1, x2, y2, xx1, yy1, xx2, yy2
+      real    :: x1, y1, x2, y2, xx1, yy1, xx2, yy2, tl, zl, z1, z2, 
+     1           zz1, zz2, dz
       real, allocatable, dimension(:) :: xa, ya, ln, fa
 
 c functions
@@ -554,7 +555,13 @@ c read file
             call cfn_s_lowcase(line)
             ios=0
             if(index(line,'end').gt.0)exit
-            read(line,*,iostat=ios) xx2,yy2
+
+            IF(ilay.EQ.0)THEN
+             READ(LINE,*,IOSTAT=IOS) xx2,yy2,Z2; IF(IOS.NE.0)EXIT
+            ELSE
+             READ(LINE,*,IOSTAT=IOS) xx2,yy2; IF(IOS.NE.0)EXIT
+            ENDIF
+!            read(line,*,iostat=ios) xx2,yy2
             if(ios.ne.0)exit
 
             if(ii.gt.0)then
@@ -564,6 +571,7 @@ c read file
                y1 = yy1
                x2 = xx2
                y2 = yy2
+               IF(ilay.EQ.0)THEN; ZZ1=Z1; ZZ2=Z2; ENDIF
                if(lqd)then
                   ok = imod_utl_intersect_equi(xmin,xmax,ymin,ymax,
      1                    simcsize,x1,x2,y1,y2,mx,n,xa,ya,fa,ln,.true.)
@@ -576,11 +584,15 @@ c read file
                   exit
                end if
 
+               IF(ilay.EQ.0)THEN
+                !## skip, probably a perfect-vertical segment
+                IF(SUM(LN(1:N)).LE.0.0)N=0
+                TL=0.0; DZ=(Z2-Z1)/SUM(LN(1:N))
+               ENDIF
+
 !######fill result array
                nn = 0
                do l = 1, n
-!                  icol=int(xa(l))-1
-!                  irow=int(ya(l))-1
                   icol=int(xa(l))
                   irow=int(ya(l))
 
@@ -592,6 +604,16 @@ c read file
                         genpos(m,2) = irow
                         genpos(m,3) = nid
                         genpos(m,4) = int(fa(l))
+                        
+                        IF(ilay.EQ.0)THEN
+                         IF(L.EQ.1)THEN
+                          TL=0.5*LN(L)
+                         ELSE
+                          TL=TL+0.5*LN(L-1)+0.5*LN(L)
+                         ENDIF
+                         ZL=Z1+(TL*DZ); genpos(m,5)=ZL*100.0
+                        ENDIF
+
                      end if
                   end if
                enddo
@@ -602,6 +624,7 @@ c read file
             ii=ii+1
             xx1=xx2
             yy1=yy2
+            IF(ilay.EQ.0)Z1=Z2
          enddo
       if (ios.ne.0) then
          write(*,*) 'ERROR. Reading ',trim(file)
@@ -613,7 +636,7 @@ c read file
 
       if (iact.eq.1) then
          rewind lun
-         if (m.gt.0) allocate(genpos(m,4))
+         if (m.gt.0) allocate(genpos(m,5))
          allocate(genip(0:nid))
          genip = 0
       else
