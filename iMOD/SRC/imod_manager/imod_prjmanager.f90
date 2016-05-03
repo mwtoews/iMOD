@@ -3554,7 +3554,7 @@ KLOOP: DO K=1,SIZE(TOPICS(JJ)%STRESS(1)%FILES,1)
     CASE (24) !## evt 
      WRITE(IU,'(A)') '-1,-1,-1'
     CASE (21,22,23,25,26,27,28,29) !## wel,drn,riv,ghb,rch,chd,olf,isg
-     WRITE(IU,'(I10)') -1 !MAX(IPER,-1) !'-1'
+     WRITE(IU,'(I10)') -1 
    END SELECT
   
   ELSE
