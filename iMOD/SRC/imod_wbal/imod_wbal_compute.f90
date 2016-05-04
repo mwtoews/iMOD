@@ -489,7 +489,9 @@ CONTAINS
   FNAME=TRIM(TP(IBAL)%ACRNM)//'*_SYS*.IDF'
   
   !## found "sys"-indications
-  IF(UTL_DIRINFO_POINTER(ROOT,FNAME,IDFNAMES,'F'))THEN
+  IF(.NOT.UTL_DIRINFO_POINTER(ROOT,FNAME,IDFNAMES,'F'))RETURN
+
+  IF(SIZE(IDFNAMES).GT.0)THEN
   
    !## get unique system-numbers
    ALLOCATE(NSYS(SIZE(IDFNAMES))); NSYS=0
@@ -508,23 +510,10 @@ CONTAINS
    DO I=1,NU; TP(IBAL)%ISYS(I)=NSYS(I); ENDDO
    DEALLOCATE(NSYS)
   ELSE
-   TP(IBAL)%NSYS=0
+   TP(IBAL)%NSYS=1; ALLOCATE(TP(IBAL)%ISYS(1)); TP(IBAL)%ISYS(1)=0
   ENDIF
      
  ENDDO
-! CALL WDIALOGGETCHECKBOX(IDF_CHECK2,J)
-! DO I=1,SIZE(TP)
-!  IF(ASSOCIATED(TP(I)%ISYS))DEALLOCATE(TP(I)%ISYS)
-!  ALLOCATE(TP(I)%ISYS(MXSYS))
-!  TP(I)%ISYS=0
-!  IF(J.EQ.1)THEN
-!   DO K=1,MXSYS; TP(I)%ISYS(K)=K; ENDDO
-!   TP(I)%NSYS=MXSYS
-!  ELSE
-!   TP(I)%NSYS=1
-!   TP(I)%ISYS(1)=0
-!  ENDIF
-! ENDDO
 
  DO IBAL=1,MXTP  
   !## current balance term not active
@@ -537,17 +526,19 @@ CONTAINS
    IF(WBAL_ISTEADY.EQ.0)THEN
 
     LDATE=.TRUE.
-    FNAME=TRIM(TP(IBAL)%ACRNM)//'_????????'
+
+    !## construct filename
+    FNAME=TRIM(TP(IBAL)%ACRNM)
     IF(TP(IBAL)%ISYS(JSYS).GT.0)FNAME=TRIM(FNAME)//'_SYS'//TRIM(ITOS(TP(IBAL)%ISYS(JSYS)))
-    FNAME=TRIM(FNAME)//'_L'//TRIM(ITOS(ILAY))//'.IDF'
+    FNAME=TRIM(FNAME)//'_????????_L'//TRIM(ITOS(ILAY))//'.IDF'
     CALL IOSDIRCOUNT(ROOT,FNAME,NFILES)
 
     !## try to read extent date notation - if nothing has been found
     IF(NFILES.EQ.0)THEN
      LDATE=.FALSE.
-     FNAME=TRIM(TP(IBAL)%ACRNM)//'_??????????????'
+     FNAME=TRIM(TP(IBAL)%ACRNM)
      IF(TP(IBAL)%ISYS(JSYS).GT.0)FNAME=TRIM(FNAME)//'_SYS'//TRIM(ITOS(TP(IBAL)%ISYS(JSYS)))
-     FNAME=TRIM(FNAME)//'_L'//TRIM(ITOS(ILAY))//'.IDF'   
+     FNAME=TRIM(FNAME)//'_??????????????_L'//TRIM(ITOS(ILAY))//'.IDF'   
      CALL IOSDIRCOUNT(ROOT,FNAME,NFILES)
      IF(NFILES.EQ.0)THEN
       CALL WMESSAGEBOX(OKONLY,EXCLAMATIONICON,COMMONOK,'Nothing found for:'//CHAR(13)// &
@@ -558,9 +549,9 @@ CONTAINS
    !## steady-state
    ELSE
 
-    FNAME=TRIM(TP(IBAL)%ACRNM)//'_STEADY-STATE'
+    FNAME=TRIM(TP(IBAL)%ACRNM)
     IF(TP(IBAL)%ISYS(JSYS).GT.0)FNAME=TRIM(FNAME)//'_SYS'//TRIM(ITOS(TP(IBAL)%ISYS(JSYS)))
-    FNAME=TRIM(FNAME)//'_L'//TRIM(ITOS(ILAY))//'.IDF'
+    FNAME=TRIM(FNAME)//'_STEADY-STATE_L'//TRIM(ITOS(ILAY))//'.IDF'
     CALL IOSDIRCOUNT(ROOT,FNAME,NFILES)
 
    ENDIF
@@ -638,8 +629,8 @@ CONTAINS
    WRITE(IU,'(A)') TRIM(WBAL_GENFNAME)
   ENDIF
 
-  WRITE(IU,'(/A/)') 'Bear in mind that disclosure of the waterbalance might be caused by absent budget '// &
-                    'terms or different unit of the terms (m3/d or mm/d)! '
+  WRITE(IU,'(/A)') 'Bear in mind that disclosure of the waterbalance might be caused by absent budget '
+  WRITE(IU,'(A/)') 'terms or different unit of the terms (m3/d or mm/d)! '
  
  ENDIF
  
