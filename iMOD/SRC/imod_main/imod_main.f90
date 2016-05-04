@@ -668,43 +668,34 @@ SELECT CASE (MESSAGE%VALUE1)
    CALL WMENUSETSTATE(ID_INTERACTIVEPATHLINES_MANUAL,2,0)
   ENDIF
  CASE (ID_INTERACTIVEPATHLINES)
-
-! RUNFILE='d:\iMOD-Gebruikersdag\IMOD_USER\RUNFILES\imodpath.run'
-! RUNFILE='d:\Projects\1209723-IPS_pathlines\IBRAHYM\DBASE\erfverband.run'
-! RUNFILE='d:\IMOD-MODELS\COLUMBIA\IMOD_USER\RUNFILES\imodpath.run'
-! RUNFILE='d:\IMOD-MODELS\NHI\imodpath.run'
-! RUNFILE='d:\IMOD-MODELS\ALBERTA\SYLVAN_LAKE\IMOD_USER\RUNFILES\MODPATH\iMODPATH_IPS.RUN'
-! RUNFILE='d:\IMOD-MODELS\vanMarvin\imodpath.run'
-!  IF(TRACE_3D_INIT('d:\IMOD-MODELS\ALBERTA\SYLVAN_LAKE\IMOD_USER\RUNFILES\MODPATH\iMODPATH_IPS.RUN'))CALL IMOD3D_INIT(0,1)
-!  IF(TRACE_3D_INIT('d:\Projects\1209723-IPS_pathlines\IBRAHYM\DBASE\erfverband.run'))CALL IMOD3D_INIT(0,1)
-  IF(TRACE_3D_INIT(''))CALL IMOD3D_INIT(0,1)
-!## (tools) waterbalance; GxG; compute timeseries
+  IF(TRACE_3D_INIT(''))CALL IMOD3D_INIT(0,1); DEMO%IDEMO=0
+ !## (tools) waterbalance; GxG; compute timeseries
  CASE (ID_WBAL,ID_GXG,ID_TS,ID_MEAN)
   CALL TOOLS1INIT(MESSAGE%VALUE1)
-!## time-variant statistics
+ !## time-variant statistics
  CASE (ID_TSTAT)
   CALL TSTAT1INIT()
-!## ipf extract
+ !## ipf extract
  CASE (ID_EXTRACTIPF)
   CALL EXTRACTIPF1INIT()
-!## ir-manager
+ !## ir-manager
  CASE (ID_IRDATABASE)
   CALL IR1INIT()
-!## ro-tool ro (equivalent of waternood)
+ !## ro-tool ro (equivalent of waternood)
  CASE (ID_ROTOOL)
   CALL ROSCENINIT()
-!## copy to clipboard
+ !## copy to clipboard
  CASE (ID_COPY)
   CALL WCLIPBOARDPUTBITMAP(MPW%IBITMAP)
-!## draw topography
+ !## draw topography
  CASE (ID_TOPOGRAPHY)
   CALL TOPOINIT()
-!## add topo-information
+ !## add topo-information
  CASE (ID_ADDTOPO)
   CALL TOPO1MAIN()
   CALL MANAGERUPDATE()
   CALL IDFPLOTFAST(0)!(1)
-!## adjust accuracy/show visible extent
+ !## adjust accuracy/show visible extent
  CASE (ID_TOPTRANSPARACY,ID_TRANSPARANTIDF,ID_TRANSPARANTNODATAIDF,ID_SHOWOPAQUE)
   CALL WINDOWSELECT(0)
   IF(WMENUGETSTATE(MESSAGE%VALUE1,2).EQ.1)THEN
