@@ -118,7 +118,7 @@ CONTAINS
      IF(ILAY.GE.1.AND.ILAY.LT.NLAY)LLAY=.TRUE.
     ENDIF
     IF((IPCK.NE.PVCW.OR.IPCK.NE.PKVV).AND.ILAY.EQ.NLAY)LLAY=.TRUE.
-    IF(IPCK.EQ.PVCW.AND.ILAY.EQ.NLAY)LLAY=.FALSE.
+    IF((IPCK.EQ.PVCW.OR.IPCK.EQ.PKVV).AND.ILAY.EQ.NLAY)LLAY=.FALSE.
     IF(MMOD(IPCK).EQ.0)LLAY=.FALSE.    !## not active in header
    ELSEIF(IMODPCK.EQ.1)THEN
     IF(ILAY.GE.0.AND.ILAY.LE.NLAY)LLAY=.TRUE.
@@ -168,7 +168,7 @@ CONTAINS
        call RF2MF_READ1MAIN_system(dis%aquiferbot(ilay),ios,ilay,fct,imp,constante,iarr,fname,iusclarith,idsclintp)
       CASE (PCON)     !## (PCON) con
       CASE (PKHV)     !## (PKHV) horizontal.k.value
-       !bcf%ltype(ilay) = 1 ! unconfined
+       bcf%llpf = .true. ! lpf needed
        call RF2MF_READ1MAIN_system(bcf%hhy(ilay),ios,ilay,fct,imp,constante,iarr,fname,iusclarith,idsclintp)
       CASE (PKVV)     !## (PKVV) vertical.k.value
        bcf%llpf = .true. ! lpf needed
