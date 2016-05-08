@@ -167,20 +167,6 @@ CONTAINS
      NMED(IMND)=0
     ENDIF
    ENDDO
-
-!   DO J=1,NIDF
-!    !## found appropriate percentile in xsort()
-!    CALL POL1LOCATE(XSORT,NIDF,REAL(YSORT(J),8),I)
-!    IF(I.EQ.0)THEN
-!     FP=1.0
-!    ELSEIF(I.EQ.NIDF)THEN
-!     FP=REAL(NIDF)
-!    ELSE
-!     FP=REAL(I)+(YSORT(J)-XSORT(I))/(XSORT(I+1)-XSORT(I))
-!    ENDIF
-!    FP=FP/REAL(NIDF)*100.0
-!    RIDF(J)%X(ICOL,IROW)=FP !-PMED(1) !fp !YSORT(J) !real(i) !ysort(j) !fp !ysort(j) !FP !YSORT(J)-IDF(3)%X(ICOL,IROW)
-!   ENDDO
    
   !## read percentile
   ELSE
@@ -667,6 +653,7 @@ if(irow.eq.ir.and.icol.eq.ic)f=1.0
  SUBROUTINE SOF_COMPUTE_SLOPE_ASPECT_CALC(DEM,SLOPE,ASPECT,IROW,ICOL)
  !###======================================================================
  TYPE(IDFOBJ) :: DEM,SLOPE,ASPECT
+ REAL :: TG
  INTEGER :: ICOL,IROW
 
  !## nodata dem map
@@ -675,10 +662,11 @@ if(irow.eq.ir.and.icol.eq.ic)f=1.0
  IF(SLOPE%X(ICOL,IROW).NE.SLOPE%NODATA)RETURN
 
  !## from DEM it is much better to use this direction instead - treat nodata as sink
- CALL SOF_COMPUTE_GRAD_STEEPEST(DEM,ICOL,IROW,DZDX,DZDY,.TRUE.)
+ CALL SOF_COMPUTE_GRAD_STEEPEST(DEM,ICOL,IROW,DZDX,DZDY,TG,.TRUE.)
         
- !## radians  
- S=ATAN(SQRT(DZDX**2.0+DZDY**2.0))
+ !## slope ...
+ S=TG !ATAN(SQRT(DZDX**2.0+DZDY**2.0))
+ !## aspect
  A=ATAN2(-1.0*DZDY,DZDX)
 
     !## degrees
@@ -694,16 +682,16 @@ if(irow.eq.ir.and.icol.eq.ic)f=1.0
  END SUBROUTINE SOF_COMPUTE_SLOPE_ASPECT_CALC
 
  !###======================================================================
- SUBROUTINE SOF_COMPUTE_GRAD_STEEPEST(DEM,ICOL,IROW,DZDX,DZDY,LNODATSINK)
+ SUBROUTINE SOF_COMPUTE_GRAD_STEEPEST(DEM,ICOL,IROW,DZDX,DZDY,TG,LNODATSINK)
  !###====================================================================== 
  IMPLICIT NONE
  TYPE(IDFOBJ),INTENT(IN) :: DEM
  INTEGER,INTENT(IN) :: ICOL,IROW
- REAL,INTENT(OUT) :: DZDX,DZDY
+ REAL,INTENT(OUT) :: DZDX,DZDY,TG
  LOGICAL,INTENT(IN) :: LNODATSINK
  REAL,DIMENSION(9) :: Z,GRADX,GRADY
  INTEGER :: IC1,IC2,IR1,IR2,I,J
- REAL :: AX,AY,ZM,F,TG,G
+ REAL :: AX,AY,ZM,F,G
  DATA GRADX/-1.0, 0.0, 1.0, 1.0, 1.0, 0.0,-1.0,-1.0,0.0/
  DATA GRADY/ 1.0, 1.0, 1.0, 0.0,-1.0,-1.0,-1.0, 0.0,0.0/
                    
@@ -804,9 +792,7 @@ if(irow.eq.ir.and.icol.eq.ic)f=1.0
   ENDIF
  ENDDO
  !## perfect dome in flat area - occurs, but direction is irrelevant, choose flow south
- IF(J.EQ.0)THEN
-  J=6
- ENDIF
+ IF(J.EQ.0)J=6
  AX=GRADX(J)
  AY=GRADY(J)
 
@@ -814,9 +800,7 @@ if(irow.eq.ir.and.icol.eq.ic)f=1.0
  DZDY= AY 
 
  !## perfect dome in flat area - occurs, but direction is irrelevant, choose 
- IF(DZDX.EQ.0.0.AND.DZDY.EQ.0.0)THEN
-  DZDX=1.0
- ENDIF
+ IF(DZDX.EQ.0.0.AND.DZDY.EQ.0.0)DZDX=1.0
   
  END SUBROUTINE SOF_COMPUTE_GRAD_STEEPEST
  
