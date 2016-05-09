@@ -116,17 +116,17 @@ CONTAINS
   IP1=INT(FP(I-1))
   IP2=INT(FP(I  ))
 
-  IF(IC1.EQ.IC2.AND.IR1.EQ.IR2)THEN
-   !## look for next
-   IF(J.LT.SIZE(XP))THEN
-    !## column direction
+!  IF(IC1.EQ.IC2.AND.IR1.EQ.IR2)THEN
+!   !## look for next
+!   IF(J.LT.SIZE(XP))THEN
+!    !## column direction
 !     IF(HFBPOS(J+1,1).GT.IC2)IC1=IC1-1
-    IF(INT(XP(I+1)).LT.IC1)IC2=IC2+1
-    !## row direction
+!    IF(INT(XP(I+1)).LT.IC1)IC2=IC2+1
+!    !## row direction
 !     IF(HFBPOS(J+1,2).GT.IR2)IR1=IR1-1
-    IF(INT(YP(I+1)).LT.IR2)IR2=IR2+1
-   ENDIF
-  ENDIF
+!    IF(INT(YP(I+1)).LT.IR2)IR2=IR2+1
+!   ENDIF
+!  ENDIF
    
   CALL ASC2IDF_HFB_GETFACES(IC1,IC2,IR1,IR2,IP1,IP2,IPC,NROW,NCOL)
 
@@ -173,10 +173,10 @@ CONTAINS
  IF(JPR(1).EQ.JPR(2).AND.JPC(1).EQ.JPC(2))RETURN
 
  !## do nothing whenever jpc.eq.0 or jpr.eq.0
- IF(JPC(1).EQ.0.AND.JPC(2).EQ.0)RETURN
- IF(JPR(1).EQ.0.AND.JPR(2).EQ.0)RETURN
-! IF(JPC(1).EQ.0.OR.JPC(2).EQ.0)RETURN
-! IF(JPR(1).EQ.0.OR.JPR(2).EQ.0)RETURN
+! IF(JPC(1).EQ.0.AND.JPC(2).EQ.0)RETURN
+! IF(JPR(1).EQ.0.AND.JPR(2).EQ.0)RETURN
+ IF(JPC(1).EQ.0.OR.JPC(2).EQ.0)RETURN
+ IF(JPR(1).EQ.0.OR.JPR(2).EQ.0)RETURN
 
  !## horizontal fault ipc(,,1)=1
  IF(JPR(1).EQ.JPR(2).AND.JPC(1).NE.JPC(2))THEN
