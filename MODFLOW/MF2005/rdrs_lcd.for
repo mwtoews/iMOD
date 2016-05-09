@@ -220,15 +220,15 @@ c count number of hfb and fill
                IC1=GENPOS(il-1,1); IC2=GENPOS(il  ,1)
                IR1=GENPOS(il-1,2); IR2=GENPOS(il  ,2)
                IP1=GENPOS(il-1,4); IP2=GENPOS(il  ,4)
-               IF(IC1.EQ.IC2.AND.IR1.EQ.IR2)THEN
-                !## look for next
-                IF(il.LT.ie)THEN
-                 !## column direction
-                 IF(genpos(il+1,1).LT.IC1)IC2=IC2+1
-                 !## row direction
-                 IF(genpos(il+1,2).LT.IR2)IR2=IR2+1
-                ENDIF
-               ENDIF
+!               IF(IC1.EQ.IC2.AND.IR1.EQ.IR2)THEN
+!                !## look for next
+!                IF(il.LT.ie)THEN
+!                 !## column direction
+!                 IF(genpos(il+1,1).LT.IC1)IC2=IC2+1
+!                 !## row direction
+!                 IF(genpos(il+1,2).LT.IR2)IR2=IR2+1
+!                ENDIF
+!               ENDIF
                CALL HFBGETFACES(IC1,IC2,IR1,IR2,IP1,IP2,IPC,NROW,NCOL)
               ENDIF
               
@@ -442,12 +442,12 @@ c end of program
       !## do nothing, is similar point
       IF(JPR(1).EQ.JPR(2).AND.JPC(1).EQ.JPC(2))RETURN 
 
-      !## do nothing whenever jpc.eq.0 or jpr.eq.0
-      IF(JPC(1).EQ.0.AND.JPC(2).EQ.0)RETURN
-      IF(JPR(1).EQ.0.AND.JPR(2).EQ.0)RETURN
 !      !## do nothing whenever jpc.eq.0 or jpr.eq.0
-!      IF(JPC(1).EQ.0.OR.JPC(2).EQ.0)RETURN
-!      IF(JPR(1).EQ.0.OR.JPR(2).EQ.0)RETURN
+!      IF(JPC(1).EQ.0.AND.JPC(2).EQ.0)RETURN
+!      IF(JPR(1).EQ.0.AND.JPR(2).EQ.0)RETURN
+      !## do nothing whenever jpc.eq.0 or jpr.eq.0
+      IF(JPC(1).EQ.0.OR.JPC(2).EQ.0)RETURN
+      IF(JPR(1).EQ.0.OR.JPR(2).EQ.0)RETURN
 
       !## horizontal fault ipc(,,1)=1
       IF(JPR(1).EQ.JPR(2).AND.JPC(1).NE.JPC(2))THEN
