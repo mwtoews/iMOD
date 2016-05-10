@@ -333,7 +333,7 @@ c count number of hfb and fill
                end do ! irow
 
                !## reset for the next line   
-               IPC=INT(0,1); JLINE=GENPOS(J,3)            
+               IPC=INT(0,1); JLINE=GENPOS(is,3)            
 
               endif  !if(iline.eq.jline)then
              end do ! do il = is, ie
