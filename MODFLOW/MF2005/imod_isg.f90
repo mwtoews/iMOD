@@ -1215,7 +1215,7 @@ END SUBROUTINE
    !## waterlevel equal or less than riverbot
    IF(WL.LE.ICROSS%X(ICOL,IROW))CYCLE
    !## if inundation-criterion applied, only inundate if zchk criterion is met
-   IF(PCROSS%X(ICOL,IROW).NE.0.0.AND.ICROSS%X(ICOL,IROW).LT.ZCHK) CYCLE
+   IF(PCROSS%X(ICOL,IROW).NE.0.0.AND.WL.LE.ZCHK)CYCLE
    CALL IDFGETLOC(ICROSS  ,IROW,ICOL,XC,YC)
    CALL IDFIROWICOL(IDF(1),JROW,JCOL,XC,YC)
    IF(JROW.NE.0.AND.JCOL.NE.0)THEN
@@ -1247,7 +1247,7 @@ END SUBROUTINE
     !## waterlevel equal or less than riverbot
     IF(WL.LT.ICROSS%X(JCOL,JROW))CYCLE
     !## if inundation-criterion applied, only inundate if zchk criterion is met
-    IF(PCROSS%X(JCOL,JROW).NE.0.0.AND.ICROSS%X(JCOL,JROW).LT.ZCHK) CYCLE
+    IF(PCROSS%X(JCOL,JROW).NE.0.0.AND.WL.LE.ZCHK)CYCLE
     IF(IDF(6)%X(ICOL,IROW).EQ.0.0)THEN
      IDF(1)%X(ICOL,IROW)=IDFGETAREA(IDF(1),ICOL,IROW)/C  
     ELSE
