@@ -839,6 +839,8 @@ c ------------------------------------------------------------------------------
       subroutine scl1fmd(cc,cr,cv,ibound,dcu,dcd,dcc,dcr,hcof,
      1           rhs,diag,ncol,nrow,nlay,anifactor)
 !###====================================================================
+      use gwfbasmodule,only:hnoflo
+      use global,only:hnew
       implicit none
       integer ncol,nrow,nlay
       integer ibound(ncol,nrow,nlay)
@@ -852,7 +854,8 @@ c      double precision rhs(ncol,nrow,nlay)
       integer ilay,irow,icol
       real      ccrit,sumc
       parameter (ccrit=10.0e-3)
-      integer :: ic1,ic2,ir1,ir2
+      integer :: ic1,ic2,ir1,ir2,il1,il2
+      integer, dimension(:,:,:), allocatable :: iwrk
 
       do ilay=1,nlay
        do irow=1,nrow
@@ -913,7 +916,32 @@ c      double precision rhs(ncol,nrow,nlay)
         enddo
        enddo
       enddo
-
+      
+!#####cleaning for constant head cells that are only connected to other constant head cells    
+      allocate(iwrk(ncol,nrow,nlay))
+      iwrk = ibound
+      do ilay=1,nlay
+       do irow=1,nrow
+        do icol=1,ncol
+         ic1=max(icol-1,1); ic2=min(icol+1,ncol)
+         ir1=max(irow-1,1); ir2=min(irow+1,nrow)
+         il1=max(ilay-1,1); il2=min(ilay+1,nlay)
+         if(iwrk(icol,irow,ilay).lt.0)then         
+          if((iwrk(icol,ir1,ilay).lt.0).and. !N
+     1       (iwrk(icol,ir2,ilay).lt.0).and. !S
+     1       (iwrk(ic1,irow,ilay).lt.0).and. !W
+     1       (iwrk(ic2,irow,ilay).lt.0).and. !E
+     1       (iwrk(icol,irow,il1).lt.0).and. !T
+     1       (iwrk(icol,irow,il2).lt.0))then !B
+            ibound(icol,irow,ilay) = 0
+            hnew(icol,irow,ilay) = hnoflo
+           end if
+         end if    
+        end do    
+       end do    
+      enddo
+      deallocate(iwrk)
+      
 !#####construct main diagonal 5 and 9-point stencil
       do ilay=1,nlay
        do irow=1,nrow
