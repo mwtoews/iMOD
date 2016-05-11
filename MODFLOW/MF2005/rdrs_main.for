@@ -586,8 +586,12 @@ c read file
 
                IF(ilay.EQ.0)THEN
                 !## skip, probably a perfect-vertical segment
-                IF(SUM(LN(1:N)).LE.0.0)N=0
-                TL=0.0; DZ=(Z2-Z1)/SUM(LN(1:N))
+                TL=0.0; DZ=0.0
+                IF(SUM(LN(1:N)).LE.0.0)THEN
+                 N=0
+                ELSE
+                 DZ=(Z2-Z1)/SUM(LN(1:N))
+                ENDIF
                ENDIF
 
 !######fill result array
