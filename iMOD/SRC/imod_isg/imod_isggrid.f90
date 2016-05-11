@@ -1256,6 +1256,19 @@ CONTAINS
    ICRS=ICRS+1
    !## found 2d cross-section
    IF(ISC(ICRS)%N.GE.0)CYCLE
+
+   IF(ISC(ICRS)%N.GT.0)THEN
+    IF(ISC(ICRS)%N.LE.2)THEN
+     CALL WMESSAGEBOX(OKONLY,EXCLAMATIONICON,COMMONOK,'iMODFLOW can not apply a 1D cross-section with less or equal 2 points'//CHAR(13)// &
+       'Cross-section name '//TRIM(ISC(ICRS)%CNAME),'Error')
+    ENDIF
+   ELSE
+    IF(ABS(ISC(ICRS)%N).LE.1)THEN
+     CALL WMESSAGEBOX(OKONLY,EXCLAMATIONICON,COMMONOK,'iMODFLOW can not apply a 2D cross-section with no locations'//CHAR(13)// &
+      'Cross-section name '//TRIM(ISC(ICRS)%CNAME),'Error')
+    ENDIF
+   ENDIF
+
    CALL ISGADJUSTCOMPUTEXY(ISEG,NSEG,ISC(ICRS)%DIST,TD)       !## compute correct x/y coordinate of current cross-section
    CALL IDFIROWICOL(IDF(2),IROW,ICOL,ISGX,ISGY)               !## get location in raster
    !## skip if outside current model network

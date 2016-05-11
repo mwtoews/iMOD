@@ -1729,8 +1729,7 @@ CONTAINS
 
  UTL_READINITFILE=.FALSE.
 
- N=LEN(LINE)
- WRITE(FRMT,'(A2,I4.4,A1)') '(A',N,')'
+ N=LEN(LINE); WRITE(FRMT,'(A2,I4.4,A1)') '(A',N,')'
 
  !## backup line
  ALLOCATE(CHARACTER(LEN=N) :: STR)
@@ -1742,8 +1741,7 @@ CONTAINS
   IF(IOS.NE.0)THEN
    IF(ITRY.EQ.2)THEN
     IF(IOPT.EQ.0)THEN
-     INQUIRE(UNIT=IU,NAME=FNAME)
-     CLOSE(IU)
+     INQUIRE(UNIT=IU,NAME=FNAME); CLOSE(IU)
      CALL WMESSAGEBOX(OKONLY,EXCLAMATIONICON,COMMONOK,'iMOD DID NOT find keyword: ['//TRIM(CKEY)//'] within Settings file:'// &
            CHAR(13)//'['//TRIM(FNAME)//']','Error')
     ENDIF
@@ -1791,21 +1789,28 @@ CONTAINS
  
  I=INDEX(LINE,'=')
  IF(I.LE.0)THEN
-  INQUIRE(UNIT=IU,NAME=FNAME)
-  CLOSE(IU)
+  INQUIRE(UNIT=IU,NAME=FNAME); CLOSE(IU)
   CALL WMESSAGEBOX(OKONLY,EXCLAMATIONICON,COMMONOK,'iMOD misses "=" after keyword: ['//TRIM(CKEY)//'] within Settings file:'// &
              CHAR(13)//'[ '//TRIM(FNAME)//' ]','Error')
   RETURN
  ENDIF
 
  I=I+1
- LINE(1:N-I+1)=STR(I:N) !LINE(I:N)
- 
+ LINE(1:N-I+1)=STR(I:N) 
+  
  !## remove leading space, if there is one
  LINE=ADJUSTL(LINE)
  
  DEALLOCATE(STR)
  
+ !## check whether there is an argment given ...
+ IF(TRIM(LINE).EQ.'')THEN
+  INQUIRE(UNIT=IU,NAME=FNAME); CLOSE(IU)
+  CALL WMESSAGEBOX(OKONLY,EXCLAMATIONICON,COMMONOK,'iMOD misses an argument after the "=" sign for keyword: ['//TRIM(CKEY)//'] within Settings file:'// &
+             CHAR(13)//'[ '//TRIM(FNAME)//' ]','Error')
+  RETURN 
+ ENDIF
+  
  UTL_READINITFILE=.TRUE.
 
  END FUNCTION UTL_READINITFILE
