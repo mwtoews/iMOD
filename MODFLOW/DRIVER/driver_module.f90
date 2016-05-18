@@ -1249,6 +1249,7 @@ call getarg(0,dir) ! get full path of the executable
 call imod_utl_getdir(dir) ! get the directory (last character is a slash)
 write(fname,'(2a)') trim(dir), trim(licfile)
 inquire(file=fname,exist=lex) ! check if file exists
+lagree=.false.
 if (.not.lex) then
    ! write license to standard output
    do i = 1, size(lic)
@@ -1256,7 +1257,6 @@ if (.not.lex) then
    end do
    call imod_utl_printtext('',0) 
    call imod_utl_printtext('I accept the iMOD License (please enter "Y" or "N" and hit the Enter-key):',0)    
-   lagree = .false.
    do while(.true.)
       read(*,*) key     
       call imod_utl_s_cap(key,'l')
