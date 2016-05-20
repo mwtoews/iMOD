@@ -2922,7 +2922,7 @@ CONTAINS
  STIME=INT(0,8); ETIME=INT(0,8); DTIME=INT(0,8)
  SDATE=0; EDATE=0; DDATE=0
  ISAVE=1
- MAXWIDTH=1000.0
+ MAXWIDTH=250.0
  IAVERAGE=1 !## (1) take the mean (2) take the median value
  IEXPORT=0  !## (0) idf (1) modflow river file
  NLAY=0     !## number of layer read in

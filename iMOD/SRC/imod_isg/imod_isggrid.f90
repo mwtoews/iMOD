@@ -117,11 +117,13 @@ CONTAINS
  IMPLICIT NONE
  CHARACTER(LEN=*),INTENT(IN) :: IPFFILE
  INTEGER :: IPNT,NPNT,ICLC,NCLC,I,J,K,IPOS,ISEG,N,ID,NTXT,MTXT,IU,IREF
+ INTEGER,ALLOCATABLE,DIMENSION(:) :: ISORT
  REAL :: MD,D,DIST,TD,DX,INFF,BTML,RESIS,STAGE
  CHARACTER(LEN=256) :: FNAME
  CHARACTER(LEN=14) :: CDATE
  TYPE FTXTOBJ
   INTEGER,POINTER,DIMENSION(:) :: IDATE
+  INTEGER,POINTER,DIMENSION(:) :: ITYPE
   REAL,POINTER,DIMENSION(:) :: STAGE
   REAL,POINTER,DIMENSION(:) :: NODATA
   CHARACTER(LEN=52),POINTER,DIMENSION(:) :: LABEL
@@ -173,7 +175,14 @@ CONTAINS
    IU=UTL_GETUNIT()
    CALL OSD_OPEN(IU,FILE=FNAME,STATUS='OLD',FORM='FORMATTED',ACTION='READ,DENYWRITE',ACCESS='SEQUENTIAL')
    READ(IU,*) NTXT; READ(IU,*) MTXT
-   ALLOCATE(FTXT%IDATE(NTXT),FTXT%STAGE(NTXT),FTXT%LABEL(MTXT),FTXT%NODATA(MTXT))
+
+   !## get location of calculation node
+   IPOS=ISG(ISELISG)%ICLC-1+J
+
+   !## store total content
+   K=NTXT+ISD(IPOS)%N
+   ALLOCATE(FTXT%ITYPE(K),FTXT%IDATE(K),FTXT%STAGE(K),FTXT%LABEL(MTXT),FTXT%NODATA(MTXT),ISORT(K))
+
    DO I=1,MTXT; READ(IU,*) FTXT%LABEL(I),FTXT%NODATA(I); ENDDO
    K=0
    DO I=1,NTXT
@@ -182,37 +191,20 @@ CONTAINS
      K=K+1
      READ(CDATE,'(I8)') FTXT%IDATE(K)
      FTXT%STAGE(K)=STAGE
+     FTXT%ITYPE(K)=1
     ENDIF
    ENDDO
    NTXT=K
    CLOSE(IU)
 
-   !## get location of calculation node
-   IPOS=ISG(ISELISG)%ICLC-1+J
-
    !## get available date TO start insertion
    IREF=ISD(IPOS)%IREF-1
    DO I=1,ISD(IPOS)%N
     IREF=IREF+1
-    IF(DATISD(IREF)%IDATE.GE.FTXT%IDATE(1))EXIT
-   ENDDO
-
-   !## number to be re-used
-   N=1+(ISD(IPOS)%N-I)
-
-   !## add number of extra records to it
-   N=NTXT-N
-   
-   !## increase/decrease memory data calculation node - data will be replaced to the back
-   CALL ISGMEMORYDATISD(N,IPOS,ISEG)
-!   ISD(IPOS)%N=ISD(IPOS)%N+1
-
-   !## rewrite data
-   IREF=ISEG-1
-   DO I=1,ISD(IPOS)%N-NTXT
-    IREF=IREF+1
-    DATISD(IREF)=DATISD(IREF+NTXT)
-!    DATISD(IREF)%WLVL=DATISD(IREF+NTXT)%WLVL
+    K=K+1
+    FTXT%IDATE(K)=DATISD(IREF)%IDATE
+    FTXT%STAGE(K)=DATISD(IREF)%WLVL
+    FTXT%ITYPE(K)=0
    ENDDO
 
    !## store latest information
@@ -220,16 +212,55 @@ CONTAINS
    RESIS=DATISD(IREF)%RESIS
    INFF =DATISD(IREF)%INFF
 
-   DO I=1,NTXT
+   !## sort date
+   CALL WSORT(FTXT%IDATE,1,K,IORDER=ISORT)
+  
+   !## get number of unique dates
+   N=0
+   DO I=1,K
+    !## for doubles only use itype.eq.1
+    IF(I.LT.K)THEN
+     IF(FTXT%IDATE(I+1).EQ.FTXT%IDATE(I))THEN
+      IF(FTXT%ITYPE(ISORT(I)).EQ.0)CYCLE
+     ENDIF
+    ENDIF
+    IF(I.GT.1)THEN
+     IF(FTXT%IDATE(I-1).EQ.FTXT%IDATE(I))THEN
+      IF(FTXT%ITYPE(ISORT(I)).EQ.0)CYCLE
+     ENDIF
+    ENDIF 
+    N=N+1
+   ENDDO
+   
+   !## increase/decrease memory data calculation node - data will be replaced to the back
+   CALL ISGMEMORYDATISD(N-ISD(IPOS)%N,IPOS,ISEG)
+
+   !## rewrite data
+   IREF=ISEG-1
+
+   DO I=1,K 
+
+    !## for doubles only use itype.eq.1
+    IF(I.LT.K)THEN
+     IF(FTXT%IDATE(I+1).EQ.FTXT%IDATE(I))THEN
+      IF(FTXT%ITYPE(ISORT(I)).EQ.0)CYCLE
+     ENDIF
+    ENDIF
+    IF(I.GT.1)THEN
+     IF(FTXT%IDATE(I-1).EQ.FTXT%IDATE(I))THEN
+      IF(FTXT%ITYPE(ISORT(I)).EQ.0)CYCLE
+     ENDIF
+    ENDIF
+        
     IREF=IREF+1    
     DATISD(IREF)%IDATE=FTXT%IDATE(I)
-    DATISD(IREF)%WLVL =FTXT%STAGE(I)
+    DATISD(IREF)%WLVL =FTXT%STAGE(ISORT(I))
     DATISD(IREF)%BTML =BTML
     DATISD(IREF)%RESIS=RESIS
     DATISD(IREF)%INFF =INFF
    ENDDO
     
-   DEALLOCATE(FTXT%LABEL,FTXT%NODATA,FTXT%STAGE,FTXT%IDATE)
+   DEALLOCATE(FTXT%LABEL,FTXT%ITYPE,FTXT%NODATA,FTXT%STAGE,FTXT%IDATE,ISORT)
  
   ENDDO
  ENDDO 
@@ -790,7 +821,7 @@ CONTAINS
  TYPE(IDFOBJ),DIMENSION(NLAY),INTENT(INOUT) :: TOP,BOT
  CHARACTER(LEN=*),INTENT(IN) :: PPOSTFIX 
  TYPE(WIN_MESSAGE) :: MESSAGE
- INTEGER :: I,J,K,II,JJ,TTIME,IROW,ICOL,NETTRAP,ITYPE,N,ISTW
+ INTEGER :: I,J,K,II,JJ,TTIME,IROW,ICOL,NETTRAP,ITYPE,N,ISTW,IR,IC
  INTEGER :: JCRS,MAXNSEG,IRAT,IRAT1
  REAL :: C,INFF,DXY,RWIDTH,WETPER,ISGLEN,AORG,ATRAP,XSTW,YSTW,GSTW,ZCHK
  REAL,ALLOCATABLE,DIMENSION(:,:) :: QSORT,RVAL
@@ -1233,6 +1264,9 @@ CONTAINS
      !## skip length
      IF(II.EQ.5)CYCLE
      ISGVALUE(2,II)=IDF(II)%X(ICOL,IROW)
+!IF(ISGVALUE(1,1).LE.0.0)THEN
+!WRITE(*,*)
+!ENDIF
      ISGVALUE(1,II)=ISGVALUE(2,II)/ISGVALUE(1,1)
      IDF(II)%X(ICOL,IROW)=ISGVALUE(1,II)
     ENDDO
@@ -1275,8 +1309,24 @@ CONTAINS
    IF(IROW.EQ.0.OR.ICOL.EQ.0)CYCLE
    IF(ISGATTRIBUTES_2DCROSS_READ(I,ICROSS,PCROSS,ZCHK))THEN   !## read bathymetry current cross-section
     WL=IDF(2)%X(ICOL,IROW)                                    !## waterlevel at cross-section
+    !## infiltration factor at location of cross-section
+    INFF=IDF(4)%X(ICOL,IROW)                                  
     C =IDF(8)%X(ICOL,IROW)                                    !## resistance at location of cross-section
-    INFF=IDF(4)%X(ICOL,IROW)                                  !## infiltration factor at location of cross-section
+    !## intersection migth miss the cell
+    IF(C.LE.0.0)THEN
+     !## look around
+IRLOOP: DO IR=MAX(1,IROW-1),MIN(NROW,IROW+1)
+      DO IC=MAX(1,ICOL-1),MIN(NCOL,ICOL+1)
+       !## infiltration factor at location of cross-section
+       INFF=IDF(4)%X(IC,IR)                                  
+       !## waterlevel at cross-section
+       WL=IDF(2)%X(IC,IR)   
+       !## resistance
+       C=IDF(8)%X(IC,IR)
+       IF(C.NE.0.0)EXIT IRLOOP
+      ENDDO
+     ENDDO IRLOOP
+    ENDIF
     CALL ISG2GRID_BATHEMETRY(IDF,SIZE(IDF),ICROSS,PCROSS,ZCHK,WL,C,INFF)  !## adjust stage grid for bathymetry
     CALL IDFDEALLOCATEX(ICROSS); CALL IDFDEALLOCATEX(PCROSS)
    ENDIF
