@@ -40,7 +40,7 @@ character(len=79), dimension(nhdr) :: hdr
 
 !         1234567890123456789012345678901234567890123456789012345678901234567890123456789
 data hdr/'===============================================================================',&!01
-         'iMODFLOW Version 3_4, March 2016                                               ',&!02
+         'iMODFLOW Version 3_4, June 2016                                                ',&!02
          '                                                                               ',&!03
          'Copyright (C) Stichting Deltares, 2005-2016.                                   ',&!04
          '                                                                               ',&!05
@@ -1349,7 +1349,7 @@ END SUBROUTINE IMOD_UTL_QKSORT
    !IF(IFLAG(1).EQ.1)PAUSE
   END SELECT
 
- IF(TXTTYPE.EQ.-1.OR.TXTTYPE.EQ.-2)THEN
+ IF(TXTTYPE.LE.0)THEN !TXTTYPE.EQ.-1.OR.TXTTYPE.EQ.-2)THEN
   IF (PRESENT(IU)) THEN
    INQUIRE(UNIT=IU,OPENED=LEX)
    IF(LEX)THEN

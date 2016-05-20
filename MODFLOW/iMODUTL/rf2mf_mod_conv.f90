@@ -161,6 +161,7 @@
          integer :: isub   = -1
          real    :: factor = -1.
          logical :: lisg   = .false.
+         logical :: lolf   = .false.
          logical :: active = .true.
 !         type(tArrayRead), dimension(maxcol) :: data
          type(tArrayRead), dimension(:), pointer :: data
@@ -181,6 +182,8 @@
          logical :: reuse = .true.
          logical :: lriv = .false.
          logical :: lisg = .false.
+         logical :: ldrn = .false.
+         logical :: lolf = .false.
          integer :: np = 1
          logical :: usegcd = .true.
          logical :: uselcd = .false.
@@ -1967,9 +1970,11 @@
       implicit none
 
 !...     locals
-      integer :: cfn_getlun, lun, iper, isub, n, i, luncb
+      integer :: cfn_getlun, lun, iper, isub, n, i, luncb, kper, jper, iact, nsys, isys
       character(len=maxlen) :: nstr
       character(len=maxlen), dimension(10) :: str
+      type(tsubsys), dimension(:), pointer :: subsys => null()
+
 !.......................................................................
 
 !...     return in case package is not active
@@ -2025,6 +2030,74 @@
 
       write(nstr,*) n
       write(lun,'('//trim(nstr)//'(a,1x))')(trim(adjustl(str(i))), i = 1, n)
+
+      ! merge drn and olf data
+      do iper = 1, nper
+         if (.not.drn%sp(iper)%reuse) then
+            if (drn%sp(iper)%ldrn .and. .not.drn%sp(iper)%lolf) then
+               kper = 0
+               do jper = iper, 1, -1 ! find most recent olf
+                  if (drn%sp(jper)%lolf) then
+                     kper = jper; exit
+                  end if
+               end do
+               if (kper.gt.0) then
+                  do iact = 1, 2
+                     nsys = drn%sp(iper)%gcd%nsubsys
+                     if (iact.eq.2) then
+                        subsys(1:nsys) = drn%sp(iper)%gcd%subsys
+                     end if
+                     do isys = 1, drn%sp(kper)%gcd%nsubsys
+                        if (drn%sp(kper)%gcd%subsys(isys)%lolf) then ! find olf
+                           nsys = nsys + 1
+                           if (iact.eq.2) then
+                              subsys(nsys) = drn%sp(kper)%gcd%subsys(isys)
+                           end if
+                        end if
+                     end do
+                     if (iact.eq.1) then
+                        allocate(subsys(nsys))
+                     else
+                        drn%sp(iper)%gcd%nsubsys = nsys
+                        drn%sp(iper)%gcd%subsys = subsys
+                        deallocate(subsys)
+                     end if
+                  end do
+               end if
+            else if (.not.drn%sp(iper)%ldrn .and. drn%sp(iper)%lolf) then
+               kper = 0
+               do jper = iper, 1, -1 ! find most recent drn
+                  if (drn%sp(jper)%ldrn) then
+                     kper = jper; exit
+                  end if
+               end do
+               if (kper.gt.0) then
+                  do iact = 1, 2
+                     nsys = drn%sp(iper)%gcd%nsubsys
+                     if (iact.eq.2) then
+                        subsys(1:nsys) = drn%sp(iper)%gcd%subsys
+                     end if
+                     do isys = 1, drn%sp(kper)%gcd%nsubsys
+                        if (.not.drn%sp(kper)%gcd%subsys(isys)%lolf) then ! find olf
+                           nsys = nsys + 1
+                           if (iact.eq.2) then
+                              subsys(nsys) = drn%sp(kper)%gcd%subsys(isys)
+                           end if
+                        end if
+                     end do
+                     if (iact.eq.1) then
+                        allocate(subsys(nsys))
+                     else
+                        drn%sp(iper)%gcd%nsubsys = nsys
+                        drn%sp(iper)%gcd%subsys(1:nsys) = subsys
+                        deallocate(subsys)
+                     end if
+                  end do
+               end if
+            else
+            end if
+         end if
+      end do
 
       call writeSPckSPer(lun, nper, drn%sp, pckftype(drn%type))
 

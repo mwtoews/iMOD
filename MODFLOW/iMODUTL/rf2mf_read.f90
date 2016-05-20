@@ -60,23 +60,25 @@ CONTAINS
   !## reset reuse variable on default on .false.
   SELECT CASE (IPCK)
    CASE (PWEL)     !## (PWEL) well
-    if(associated(wel%sp))wel%sp(kper)%reuse = NLINES.lt.0 ! .false.
+    if(associated(wel%sp))wel%sp(kper)%reuse = nlines.lt.0 
    CASE (PDRN)     !## (PDRN) drainage
-    if(associated(drn%sp))drn%sp(kper)%reuse = NLINES.lt.0 ! .false.
+    if(associated(drn%sp))drn%sp(kper)%reuse = nlines.lt.0 
+!     if(drn%sp(kper)%lolf)drn%sp(kper)%reuse = nlines.lt.0 
+!    endif
    CASE (PRIV)     !## (PRIV) rivers
-    if(associated(riv%sp))riv%sp(kper)%reuse = NLINES.lt.0 ! .false.
+    if(associated(riv%sp))riv%sp(kper)%reuse = nlines.lt.0 
    CASE (PEVT)     !## (PEVT) evapotranspiration
-    if(associated(evt%sp))evt%sp(kper)%reuse = NLINES.lt.0 ! .false.
+    if(associated(evt%sp))evt%sp(kper)%reuse = nlines.lt.0 
    CASE (PGHB)     !## (PGHB) general head boundary
-    if(associated(ghb%sp))ghb%sp(kper)%reuse = NLINES.lt.0 ! .false.
+    if(associated(ghb%sp))ghb%sp(kper)%reuse = nlines.lt.0 
    CASE (PRCH)     !## (PRCH) recharge
-    if(associated(rch%sp))rch%sp(kper)%reuse = NLINES.lt.0 ! .false.
+    if(associated(rch%sp))rch%sp(kper)%reuse = nlines.lt.0 
    CASE (POLF)     !## (POLF) overlandflow
-    if(associated(drn%sp))drn%sp(kper)%reuse = NLINES.lt.0 ! .false.
+    if(associated(drn%sp))drn%sp(kper)%reuse = nlines.lt.0 
    CASE (PCHD)     !## (PCHD) constant head
-    if(associated(chd%sp))chd%sp(kper)%reuse = NLINES.lt.0 ! .false.
+    if(associated(chd%sp))chd%sp(kper)%reuse = nlines.lt.0 
    CASE (PISG)     !## (PISG) riversegments
-    if(associated(riv%sp))riv%sp(kper)%reuse = NLINES.lt.0 ! .false.
+    if(associated(riv%sp))riv%sp(kper)%reuse = nlines.lt.0 
   END SELECT
  ENDIF
  
@@ -202,6 +204,7 @@ CONTAINS
        if (.not.associated(wel%sp(kper)%gcd%subsys(nsys)%data)) allocate(wel%sp(kper)%gcd%subsys(nsys)%data(1))
        call RF2MF_READ1MAIN_system(wel%sp(kper)%gcd%subsys(nsys)%data(it),ios,ilay,fct,imp,constante,iarr,fname,iusclnodata,idsclnodata)
       CASE (PDRN)     !## (PDRN) drainage
+       drn%sp(kper)%ldrn  = .true.
        drn%sp(kper)%reuse = .false.
        drn%sp(kper)%gcd%nsubsys = nsys
        if (.not. associated(drn%sp(kper)%gcd%subsys)) allocate(drn%sp(kper)%gcd%subsys(maxsubsys))
@@ -268,6 +271,7 @@ CONTAINS
        call RF2MF_READ1MAIN_system(rch%sp(kper)%rech(isub),ios,ilay,fct,imp,constante,iarr,fname,iusclarith,idsclintp)
        rch%sp(kper)%rech(isub)%fct = rch%sp(kper)%rech(isub)%fct * 0.001
       CASE (POLF)     !## (POLF) overlandflow
+       drn%sp(kper)%lolf  = .true.
        drn%sp(kper)%reuse = .false.
        msys = drn%sp(kper)%gcd%nsubsys+nsys
        drn%sp(kper)%gcd%nsubsys = msys
