@@ -631,17 +631,23 @@ IF(iact.gt.0)THEN
     IF(IROW.EQ.0.OR.ICOL.EQ.0)CYCLE
     IF(ISGATTRIBUTES_2DCROSS_READ(J,ICROSS,PCROSS,ZCHK))THEN               !## read bathymetry current cross-section
      WL  =IDF(2)%X(ICOL,IROW)                                  !## waterlevel at cross-section
+     INFF=IDF(4)%X(ICOL,IROW)                                  !## infiltration factor at location of cross-section
      C   =IDF(5)%X(ICOL,IROW)                                  !## resistance at location of cross-section
      !## intersection migth miss the cell
      IF(C.LE.0.0)THEN
       !## look around
 IRLOOP: DO IR=MAX(1,IROW-1),MIN(NROW,IROW+1)
        DO IC=MAX(1,ICOL-1),MIN(NCOL,ICOL+1)
-        C=IDF(8)%X(IC,IR); IF(C.NE.0.0)EXIT IRLOOP
+        !## infiltration factor at location of cross-section
+        INFF=IDF(4)%X(IC,IR)                                  
+        !## waterlevel at cross-section
+        WL=IDF(2)%X(IC,IR)   
+        !## resistance
+        C=IDF(8)%X(IC,IR)
+        IF(C.NE.0.0)EXIT IRLOOP
        ENDDO
       ENDDO IRLOOP
      ENDIF
-     INFF=IDF(4)%X(ICOL,IROW)                                  !## infiltration factor at location of cross-section
      CALL ISG2GRID_BATHEMETRY(IDF,SIZE(IDF),ICROSS,PCROSS,ZCHK,WL,C,INFF)  !## adjust stage grid for bathemetrie
      CALL IDFDEALLOCATEX(ICROSS); CALL IDFDEALLOCATEX(PCROSS)
     ENDIF
