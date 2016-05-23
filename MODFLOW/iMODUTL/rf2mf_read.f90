@@ -23,7 +23,7 @@
 MODULE MOD_RF2MF_READ
 
 USE IMOD_UTL, ONLY : IMOD_UTL_ITOS,IMOD_UTL_RTOS,IMOD_UTL_GETFNAME,IMOD_UTL_GETREAL,IMOD_UTL_PRINTTEXT, &
-                          IMOD_UTL_STRING,IMOD_UTL_FILENAME
+                          IMOD_UTL_STRING,IMOD_UTL_FILENAME,IUOUT
 USE rf2mf_module, ONLY : nlay,bas,bcf,pwt,dis,wel,drn,riv,ghb,hfb,ani,rch,mxrech,evt,chd,iarr,iari,nper,&
                          oc,maxsubsys,maxgen,maxcol,scr,ialloc,allocscr,&
                          iusclnodata,iusclspec,iusclarith,iusclgeom,iusclsumq,iusclsumcdr,iusclinvc,iusclmostfr,iusclsuminvcvr,iusclperc,&
@@ -88,8 +88,8 @@ CONTAINS
   DO IT=1,3
    READ(IURUN,'(A256)',IOSTAT=IOS) LINE
    IF(IOS.NE.0)THEN
-    CALL IMOD_UTL_PRINTTEXT('Error reading '//TRIM(LINE),0)
-    CALL IMOD_UTL_PRINTTEXT('Busy processing module: '//TRIM(CMOD(IPCK)),2)
+    CALL IMOD_UTL_PRINTTEXT('Error reading '//TRIM(LINE),0,IUOUT)
+    CALL IMOD_UTL_PRINTTEXT('Busy processing module: '//TRIM(CMOD(IPCK)),2,IUOUT)
    ENDIF
    CALL RF2MF_READ_IDF(LINE,FCT,IMP,ILAY,CONSTANTE,FNAME,IOS,IMODPCK,PCAP) !,IPCK) --- because i need no layer (is trick)
    IF(IT.EQ.1)call RF2MF_READ1MAIN_system(scr%gl0(1),ios,ilay,fct,imp,simcsize,iarr,fname,iusclarith,idsclintp)
@@ -105,9 +105,9 @@ CONTAINS
 
    READ(IURUN,'(A256)',IOSTAT=IOS) LINE
    IF(IOS.NE.0)THEN
-    CALL IMOD_UTL_PRINTTEXT('Error reading '//TRIM(LINE),0)
-    IF(IMODPCK.EQ.0)CALL IMOD_UTL_PRINTTEXT('Busy processing module: '//TRIM(CMOD(IPCK)),2)
-    IF(IMODPCK.EQ.1)CALL IMOD_UTL_PRINTTEXT('Busy processing package: '//TRIM(CPCK(IPCK)),2)
+    CALL IMOD_UTL_PRINTTEXT('Error reading '//TRIM(LINE),0,IUOUT)
+    IF(IMODPCK.EQ.0)CALL IMOD_UTL_PRINTTEXT('Busy processing module: '//TRIM(CMOD(IPCK)),2,IUOUT)
+    IF(IMODPCK.EQ.1)CALL IMOD_UTL_PRINTTEXT('Busy processing package: '//TRIM(CPCK(IPCK)),2,IUOUT)
    ENDIF
 
    LLAY=.FALSE.
@@ -319,8 +319,8 @@ CONTAINS
   DO IT=1,NLAY
    READ(IURUN,'(A256)',IOSTAT=IOS) LINE
    IF(IOS.NE.0)THEN
-    CALL IMOD_UTL_PRINTTEXT('Error reading '//TRIM(LINE),0)
-    CALL IMOD_UTL_PRINTTEXT('Busy processing module: '//TRIM(CMOD(IPCK)),2)
+    CALL IMOD_UTL_PRINTTEXT('Error reading '//TRIM(LINE),0,IUOUT)
+    CALL IMOD_UTL_PRINTTEXT('Busy processing module: '//TRIM(CMOD(IPCK)),2,IUOUT)
    ENDIF
    CALL RF2MF_READ_IDF(LINE,FCT,IMP,ILAY,CONSTANTE,FNAME,IOS,IMODPCK,IPCK)
    if(scr%istpc.ne.0)then

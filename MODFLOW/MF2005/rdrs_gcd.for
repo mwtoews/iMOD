@@ -268,6 +268,30 @@ c                    read auxiliary fields
                         end if
                      end if
                   end do ! naux
+
+c                    adjust conductance whenever a single parameter is equal to nodata                  
+                  do jj = 2, nread1+naux
+                   do irow = 1, nrow
+                    do icol = 1, ncol
+                     if (data(icol,irow,isub,jj).eq.nodata)then
+                      data(icol,irow,isub,1)=nodata !0.0 
+                     endif
+                    end do
+                   end do
+                  enddo
+
+c                  apply correction for stage/bottom rivers
+                  if(label(1:5).eq.'REACH')then
+                   do irow = 1, nrow
+                    do icol = 1, ncol
+                     if (data(icol,irow,isub,1).ne.nodata)then
+                      data(icol,irow,isub,3)=min(data(icol,irow,isub,2),
+     1data(icol,irow,isub,3))
+                     endif
+                    enddo
+                   enddo
+                  endif
+                      
                   ! do not use mask anymore
                   usexmask = .false.
                end if
