@@ -284,9 +284,18 @@ c                  apply correction for stage/bottom rivers
                   if(label(1:5).eq.'REACH')then
                    do irow = 1, nrow
                     do icol = 1, ncol
-                     if (data(icol,irow,isub,1).ne.nodata)then
-                      data(icol,irow,isub,3)=min(data(icol,irow,isub,2),
-     1data(icol,irow,isub,3))
+                     if (data(icol,irow,isub,1).eq.nodata)cycle
+
+                     if(data(icol,irow,isub,3).gt.data(icol,irow,isub,2)
+     1)then
+                      data(icol,irow,isub,3)=data(icol,irow,isub,2)
+c                   set system number negative - sign that input is corrected                      
+                      do jj=1,naux
+                       if (caux(jj).eq.'ISUB            ')then
+                        data(icol,irow,isub,nread1+jj)=-1*data(icol,irow
+     1,isub,nread1+jj)
+                       endif
+                      enddo
                      endif
                     enddo
                    enddo

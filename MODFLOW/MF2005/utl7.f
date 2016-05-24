@@ -265,6 +265,7 @@ c      DIMENSION RLIST(LDIM,MXLIST)
       real, dimension(:,:), pointer :: rlist
       CHARACTER*200 LINE,FNAME
       integer   kk       ! loop variable to replace II
+      integer iii,jjj
       real      usf      ! upscale factor, can be added to read parameters
       logical   used     ! indicates or read coordinates have to be used or not
       real, dimension(:,:), pointer :: rlisttmp                         ! GCD
@@ -403,6 +404,15 @@ C5E-----Write the values that were read if IPRFLG is 1.
       IF(IPRFLG.EQ.1)
      1    WRITE(IOUT,205) NN,K,I,J,(RLIST(JJ,II),JJ=4,NREAD2)
 205   FORMAT(1X,I6,I7,I7,I7,26G16.4)
+
+c------ make system number absolute again
+      iii=nread1
+      do jjj=1,ncaux
+       iii=iii+1
+       if (caux(jjj).eq.'ISUB            ')then
+        rlist(iii,ii)=abs(rlist(iii,ii))
+       endif
+      enddo
 C
 C5F-----Check for illegal grid location
       IF(K.LT.1 .OR. K.GT.NLAY) THEN
