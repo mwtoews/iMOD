@@ -383,10 +383,10 @@ CONTAINS
   READ(LINE,*,IOSTAT=IOS) ILAY,FCT,IMP
  ENDIF
  IF(IOS.NE.0)THEN
-     CALL IMOD_UTL_PRINTTEXT('Expected to read more on line: ['//TRIM(LINE)//']',2)
+     CALL IMOD_UTL_PRINTTEXT('Expected to read more on line: ['//TRIM(LINE)//']',2,IUOUT)
  END IF
  IF(ILAY.GT.MXNLAY)CALL IMOD_UTL_PRINTTEXT('Error reading ILAY='//TRIM(IMOD_UTL_ITOS(ILAY))// &
-        ' that is larger than MXNLAY ('//TRIM(IMOD_UTL_ITOS(MXNLAY))//')',2)
+        ' that is larger than MXNLAY ('//TRIM(IMOD_UTL_ITOS(MXNLAY))//')',2,IUOUT)
 
  FNAME=IMOD_UTL_GETFNAME(LINE)
 
@@ -410,52 +410,52 @@ CONTAINS
  CONSTANTE=IMOD_UTL_GETREAL(FNAME,IOS)
  IF(IOS.EQ.0)THEN
   IF(LEX)THEN
-   CALL IMOD_UTL_PRINTTEXT('Read Constant Value '//TRIM(IMOD_UTL_RTOS(CONSTANTE,'G',4)),0)
+   CALL IMOD_UTL_PRINTTEXT('Read Constant Value '//TRIM(IMOD_UTL_RTOS(CONSTANTE,'G',4)),0,IUOUT)
    CALL IMOD_UTL_PRINTTEXT(CHAR(9)//'* Modellayer: '//TRIM(IMOD_UTL_ITOS(ILAY))// &
                            '; Mult. Factor: '//TRIM(IMOD_UTL_RTOS(FCT,'G',4))// &
-                           '; Addition: '//TRIM(IMOD_UTL_RTOS(IMP,'G',4)),0)
+                           '; Addition: '//TRIM(IMOD_UTL_RTOS(IMP,'G',4)),0,IUOUT)
    CONSTANTE=CONSTANTE*FCT+IMP
-   CALL IMOD_UTL_PRINTTEXT(CHAR(9)//'Constant Value becomes '//TRIM(IMOD_UTL_RTOS(CONSTANTE,'G',4)),0)
+   CALL IMOD_UTL_PRINTTEXT(CHAR(9)//'Constant Value becomes '//TRIM(IMOD_UTL_RTOS(CONSTANTE,'G',4)),0,IUOUT)
   ENDIF
  ELSE
   CALL IMOD_UTL_FILENAME(FNAME)
   IF(LEX)THEN
-   CALL IMOD_UTL_PRINTTEXT('Assigned '//TRIM(FNAME),0)
+   CALL IMOD_UTL_PRINTTEXT('Assigned '//TRIM(FNAME),0,IUOUT)
    CALL IMOD_UTL_PRINTTEXT(CHAR(9)//'* Modellayer: '//TRIM(IMOD_UTL_ITOS(ILAY))// &
                           '; Mult. Factor: '//TRIM(IMOD_UTL_RTOS(FCT,'G',4))// &
-                           '; Addition: '//TRIM(IMOD_UTL_RTOS(IMP,'G',4)),0)
+                           '; Addition: '//TRIM(IMOD_UTL_RTOS(IMP,'G',4)),0,IUOUT)
   ENDIF
  ENDIF
 
  !## check combination khv/kvv and top/bot
  IF(IMODPCK.EQ.0)THEN
   IF(MMOD(PKHV).EQ.1)THEN
-   IF(MMOD(PTOP).NE.1.OR.MMOD(PBOT).NE.1)CALL IMOD_UTL_PRINTTEXT('Horizontal K value needs usage TOP and BOT!',2)
+   IF(MMOD(PTOP).NE.1.OR.MMOD(PBOT).NE.1)CALL IMOD_UTL_PRINTTEXT('Horizontal K value needs usage TOP and BOT!',2,IUOUT)
   ENDIF
   IF(MMOD(PKVV).EQ.1)THEN
-   IF(MMOD(PTOP).NE.1.OR.MMOD(PBOT).NE.1)CALL IMOD_UTL_PRINTTEXT('Vertical K value needs usage TOP and BOT!',2)
+   IF(MMOD(PTOP).NE.1.OR.MMOD(PBOT).NE.1)CALL IMOD_UTL_PRINTTEXT('Vertical K value needs usage TOP and BOT!',2,IUOUT)
   ENDIF
  ENDIF
 
  IF(ILAY.LE.0)THEN
   IF(IMODPCK.EQ.0)THEN
-   IF(IPCK.NE.PHFB)CALL IMOD_UTL_PRINTTEXT(TRIM(TXTMOD(IPCK))//' ilay less or equal zero!',2)
+   IF(IPCK.NE.PHFB)CALL IMOD_UTL_PRINTTEXT(TRIM(TXTMOD(IPCK))//' ilay less or equal zero!',2,IUOUT)
   ELSE
    SELECT CASE (IPCK)
     CASE (PRCH)
-     IF(ILAY.EQ.0)CALL IMOD_UTL_PRINTTEXT('Modellayer number equal to zero for '//TRIM(TXTPCK(IPCK))//' package!',2)
+     IF(ILAY.EQ.0)CALL IMOD_UTL_PRINTTEXT('Modellayer number equal to zero for '//TRIM(TXTPCK(IPCK))//' package!',2,IUOUT)
     CASE DEFAULT
      IF(ILAY.EQ.0)THEN
       IF(MMOD(PTOP).NE.1.OR.MMOD(PBOT).NE.1)THEN
-       CALL IMOD_UTL_PRINTTEXT('Usage of modellayers equal to zero only sustained in combination with both TOP and BOT!',2)
+       CALL IMOD_UTL_PRINTTEXT('Usage of modellayers equal to zero only sustained in combination with both TOP and BOT!',2,IUOUT)
       ENDIF
      ENDIF
    END SELECT
   ENDIF
  ENDIF
 
- IF(ILAY.LT.0)CALL IMOD_UTL_PRINTTEXT(CHAR(9)//'# Will be assigned to first active model layer',0)
- IF(ILAY.EQ.0)CALL IMOD_UTL_PRINTTEXT(CHAR(9)//'# Layer will be computed by TOP and BOT data',0)
+ IF(ILAY.LT.0)CALL IMOD_UTL_PRINTTEXT(CHAR(9)//'# Will be assigned to first active model layer',0,IUOUT)
+ IF(ILAY.EQ.0)CALL IMOD_UTL_PRINTTEXT(CHAR(9)//'# Layer will be computed by TOP and BOT data',0,IUOUT)
 
  END SUBROUTINE RF2MF_READ_IDF
 

@@ -100,7 +100,7 @@
       integer, public, parameter :: iarr      = 1   ! real
       integer, public, parameter :: iari      = 2   ! integer
       integer, parameter :: maxlen    = 256 ! maximum string length
-      integer, public, parameter :: maxsubsys = 500  ! maximum number of subsystems
+      integer, public, parameter :: maxsubsys = 50  ! maximum number of subsystems
       integer, public, parameter :: maxgen    = 10  ! maximum number of gen files
       integer, public, parameter :: maxcol    = 10  ! maximum number of stress package columns
       integer, public, parameter :: ialloc    = 1   ! allocate
@@ -1902,7 +1902,7 @@
                   do iact = 1, 2
                      nsys = riv%sp(iper)%gcd%nsubsys
                      if (iact.eq.2) then
-                        subsys(1:nsys) = riv%sp(iper)%gcd%subsys
+                        do i=1,nsys; subsys(i) = riv%sp(iper)%gcd%subsys(i); enddo
                      end if
                      do isys = 1, riv%sp(kper)%gcd%nsubsys
                         if (riv%sp(kper)%gcd%subsys(isys)%lisg) then ! find isg
@@ -1916,7 +1916,7 @@
                         allocate(subsys(nsys))
                      else
                         riv%sp(iper)%gcd%nsubsys = nsys
-                        riv%sp(iper)%gcd%subsys = subsys
+                        do i=1,nsys; riv%sp(iper)%gcd%subsys(i) = subsys(i); enddo
                         deallocate(subsys)
                      end if
                   end do
@@ -1932,7 +1932,7 @@
                   do iact = 1, 2
                      nsys = riv%sp(iper)%gcd%nsubsys
                      if (iact.eq.2) then
-                        subsys(1:nsys) = riv%sp(iper)%gcd%subsys
+                        do i=1,nsys; subsys(i) = riv%sp(iper)%gcd%subsys(i); enddo
                      end if
                      do isys = 1, riv%sp(kper)%gcd%nsubsys
                         if (.not.riv%sp(kper)%gcd%subsys(isys)%lisg) then ! find riv
@@ -1946,7 +1946,7 @@
                         allocate(subsys(nsys))
                      else
                         riv%sp(iper)%gcd%nsubsys = nsys
-                        riv%sp(iper)%gcd%subsys(1:nsys) = subsys
+                        do i=1,nsys; riv%sp(iper)%gcd%subsys(i) = subsys(i); enddo
                         deallocate(subsys)
                      end if
                   end do
@@ -2045,7 +2045,7 @@
                   do iact = 1, 2
                      nsys = drn%sp(iper)%gcd%nsubsys
                      if (iact.eq.2) then
-                        subsys(1:nsys) = drn%sp(iper)%gcd%subsys
+                        do i=1,nsys; subsys(i) = drn%sp(iper)%gcd%subsys(i); enddo
                      end if
                      do isys = 1, drn%sp(kper)%gcd%nsubsys
                         if (drn%sp(kper)%gcd%subsys(isys)%lolf) then ! find olf
@@ -2059,7 +2059,7 @@
                         allocate(subsys(nsys))
                      else
                         drn%sp(iper)%gcd%nsubsys = nsys
-                        drn%sp(iper)%gcd%subsys = subsys
+                        do i=1,nsys; drn%sp(iper)%gcd%subsys(i) = subsys(i); enddo
                         deallocate(subsys)
                      end if
                   end do
@@ -2075,7 +2075,7 @@
                   do iact = 1, 2
                      nsys = drn%sp(iper)%gcd%nsubsys
                      if (iact.eq.2) then
-                        subsys(1:nsys) = drn%sp(iper)%gcd%subsys
+                        do i=1,nsys; subsys(i) = drn%sp(iper)%gcd%subsys(i); enddo
                      end if
                      do isys = 1, drn%sp(kper)%gcd%nsubsys
                         if (.not.drn%sp(kper)%gcd%subsys(isys)%lolf) then ! find olf
@@ -2089,7 +2089,7 @@
                         allocate(subsys(nsys))
                      else
                         drn%sp(iper)%gcd%nsubsys = nsys
-                        drn%sp(iper)%gcd%subsys(1:nsys) = subsys
+                        do i=1,nsys; drn%sp(iper)%gcd%subsys(i) = subsys(i); enddo
                         deallocate(subsys)
                      end if
                   end do
