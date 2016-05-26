@@ -1,9 +1,9 @@
 SHAPEID,SHAPETYPE,SHAPENAME,Level
 1,Polygon,SHAPE1,0
-2,Polygon,SHAPE2,0.25
-3,Polygon,SHAPE3,0.5
-4,Polygon,SHAPE4,0.5
-5,Polygon,SHAPE5,-0.25
-6,Polygon,SHAPE6,-1.5
-7,Lines,SHAPE7,1.5
-8,Lines,SHAPE8,1.5
+2,Polygon,SHAPE2,2
+3,Polygon,SHAPE3,5
+4,Polygon,SHAPE4,5
+5,Polygon,SHAPE5,-1
+6,Polygon,SHAPE6,-5
+7,Lines,SHAPE7,15
+8,Lines,SHAPE8,15
