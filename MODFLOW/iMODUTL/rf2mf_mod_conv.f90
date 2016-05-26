@@ -100,7 +100,7 @@
       integer, public, parameter :: iarr      = 1   ! real
       integer, public, parameter :: iari      = 2   ! integer
       integer, parameter :: maxlen    = 256 ! maximum string length
-      integer, public, parameter :: maxsubsys = 50  ! maximum number of subsystems
+      integer, public, parameter :: maxsubsys = 500 ! maximum number of subsystems (wells can be much)
       integer, public, parameter :: maxgen    = 10  ! maximum number of gen files
       integer, public, parameter :: maxcol    = 10  ! maximum number of stress package columns
       integer, public, parameter :: ialloc    = 1   ! allocate
