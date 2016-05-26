@@ -8,7 +8,7 @@
 //
 // Winteracter resource script. 
 //
-// Modified : 21/May/2016 23:41:16
+// Modified : 26/May/2016 12:15:57
 //
 ///////////////////////////////////////////////////
 //
@@ -725,7 +725,6 @@
 #define ID_3DVIEW_AXES                  40157
 #define ID_DIR_PMTAB2TAB4                 248
 #define IDD_DIALOG022                     275
-#define ID_D3DIPFINFOTAB2                 276
 #define ID_VIEWBC1                      40163
 #define ID_VIEWBC2                      40164
 #define ID_ICON3DTOOL                    2107
@@ -747,9 +746,8 @@
 #define ID_3DVIEW_AXES_ON               40176
 #define ID_3DVIEW_AXES_OFF              40177
 #define IDF_MENU7                        1066
-#define ID_D3DIPFINFOTAB1                 240
+#define ID_D3DSETTINGS_TAB9_TAB2          240
 #define IDD_DIALOG023                     278
-#define ID_D3DIPFINFO                     281
 #define ID_3DWHEEL                      40170
 #define ID_3DWHEEL_ROTATE               40171
 #define ID_3DWHEEL_PAN                  40174
@@ -1120,6 +1118,8 @@
 #define IDD_DIALOG006                     380
 #define ID_DSOLIDTAB5                     381
 #define ID_3DVIEW_LEGEND                40281
+#define ID_D3DSETTINGS_TAB9_TAB1          372
+#define ID_D3DSETTINGS_TAB9               382
 
 ///////////////////////////////////////////////////
 //
@@ -5832,7 +5832,7 @@ BEGIN
 "[Dialog] \n"
 " 0  1020 1 \n"
 "[Tabs] \n"
-" 1089     8   160 \n"
+" 1089     9   160 \n"
 "  160  IDF's \n"
 "  349  Pathlines \n"
 "  163  IPF's \n"
@@ -5841,6 +5841,7 @@ BEGIN
 "  172  GEN's \n"
 "  312  Clipplanes \n"
 "  273  Miscelaneous \n"
+"  382  Identify \n"
 ,0
 END
 
@@ -6125,17 +6126,17 @@ BEGIN
     CONTROL "&Report ...",ID_REPORT,"BUTTON",WS_CHILD | WS_VISIBLE | WS_GROUP | WS_TABSTOP | BS_PUSHBUTTON | BS_TEXT | BS_FLAT,  140,    4,   39,   14
 END
 
-ID_D3DIPFINFOTAB2 DIALOG 0, 0,  188,  171
+ID_D3DSETTINGS_TAB9_TAB2 DIALOG 0, 0,  175,  277
 STYLE WS_CHILD | DS_CONTROL | DS_3DLOOK
 FONT    8, "Arial"
 BEGIN
-    CONTROL "",IDF_GRID1,"ISSGRID",WS_CHILD | WS_VISIBLE | WS_BORDER | WS_VSCROLL | WS_HSCROLL | WS_GROUP | WS_TABSTOP | GS_READONLYCOLOUR | GS_REPSELECTION | GS_REPCUTPASTE | GS_DEFROWLABELS | GS_COLUMNLABELS | GS_RESIZECOLUMNS,   15,   28,  160,  108
-    CONTROL "Overview for the current drill",IDF_GROUP1,"BUTTON",WS_CHILD | WS_VISIBLE | WS_GROUP | BS_GROUPBOX | BS_TEXT,    6,    4,  176,  164
-    CONTROL "",IDF_LABEL1,"STATIC",WS_CHILD | WS_VISIBLE | WS_GROUP | SS_LEFT,   15,   17,  161,    8
-    CONTROL "Define for each zone (if neccessary) the vertical position and activate to be used in calculation.",IDF_LABEL2,"STATIC",WS_CHILD | WS_VISIBLE | WS_GROUP | SS_CENTER,   18,  145,  157,   16
+    CONTROL "",IDF_GRID1,"ISSGRID",WS_CHILD | WS_VISIBLE | WS_BORDER | WS_VSCROLL | WS_HSCROLL | WS_GROUP | WS_TABSTOP | GS_READONLYCOLOUR | GS_REPSELECTION | GS_REPCUTPASTE | GS_DEFROWLABELS | GS_COLUMNLABELS | GS_RESIZECOLUMNS,    6,   27,  161,  224
+    CONTROL "",IDF_LABEL1,"STATIC",WS_CHILD | WS_VISIBLE | WS_GROUP | SS_LEFT,    6,   15,  161,    8
+    CONTROL "Define for each zone (if neccessary) the vertical position and activate to be used in calculation.",IDF_LABEL2,"STATIC",WS_CHILD | WS_VISIBLE | WS_GROUP | SS_CENTER,    4,  255,  164,   16
+    CONTROL "Overview for the current drill",IDF_LABEL3,"STATIC",WS_CHILD | WS_VISIBLE | WS_GROUP | SS_LEFT,    6,    4,  120,    8
 END
 
-ID_D3DIPFINFOTAB2 RCDATA
+ID_D3DSETTINGS_TAB9_TAB2 RCDATA
 BEGIN
 "[Dialog] \n"
 " 0  1004 0 \n"
@@ -6228,17 +6229,16 @@ BEGIN
 ,0
 END
 
-ID_D3DIPFINFOTAB1 DIALOG 0, 0,  186,  172
+ID_D3DSETTINGS_TAB9_TAB1 DIALOG 0, 0,  175,  277
 STYLE WS_CHILD | DS_CONTROL | DS_3DLOOK
 FONT    8, "Arial"
 BEGIN
-    CONTROL "",IDF_GRID1,"ISSGRID",WS_CHILD | WS_VISIBLE | WS_BORDER | WS_VSCROLL | WS_HSCROLL | WS_GROUP | WS_TABSTOP | GS_READONLYCOLOUR | GS_REPSELECTION | GS_REPCUTPASTE | GS_DEFROWLABELS | GS_COLUMNLABELS | GS_RESIZECOLUMNS,   15,   96,  160,   64
-    CONTROL "Overview for the current selected point",IDF_GROUP1,"BUTTON",WS_CHILD | WS_VISIBLE | WS_GROUP | BS_GROUPBOX | BS_TEXT,    6,    4,  176,  164
-    CONTROL "",IDF_MENU1,"LISTBOX",WS_CHILD | WS_VISIBLE | WS_BORDER | WS_VSCROLL | WS_TABSTOP | LBS_NOTIFY | LBS_HASSTRINGS | LBS_USETABSTOPS,   15,   16,  141,   76
-    CONTROL "OK",ID_PROPERTIES,"BUTTON",WS_CHILD | WS_VISIBLE | WS_GROUP | WS_TABSTOP | BS_PUSHBUTTON | BS_TEXT | BS_BITMAP | BS_FLAT,  159,   16,   16,   14
+    CONTROL "",IDF_GRID1,"ISSGRID",WS_CHILD | WS_VISIBLE | WS_BORDER | WS_VSCROLL | WS_HSCROLL | WS_GROUP | WS_TABSTOP | GS_READONLYCOLOUR | GS_REPSELECTION | GS_REPCUTPASTE | GS_DEFROWLABELS | GS_COLUMNLABELS | GS_RESIZECOLUMNS,    4,   92,  164,  180
+    CONTROL "",IDF_MENU1,"LISTBOX",WS_CHILD | WS_VISIBLE | WS_BORDER | WS_VSCROLL | WS_TABSTOP | LBS_NOTIFY | LBS_HASSTRINGS | LBS_USETABSTOPS,    4,   16,  161,   72
+    CONTROL "Overview for the current selected point",IDF_LABEL1,"STATIC",WS_CHILD | WS_VISIBLE | WS_GROUP | SS_LEFT,    5,    4,  129,    8
 END
 
-ID_D3DIPFINFOTAB1 RCDATA
+ID_D3DSETTINGS_TAB9_TAB1 RCDATA
 BEGIN
 "[Dialog] \n"
 " 0  1004 0 \n"
@@ -6256,27 +6256,6 @@ FONT    8, "Arial"
 BEGIN
     CONTROL "IDF",ISS1,"EDIT",WS_CHILD | WS_VISIBLE | WS_BORDER | WS_TABSTOP | ES_LEFT,    0,    0,  110,   14
     CONTROL "Value",ISS4,"EDIT",WS_CHILD | WS_VISIBLE | WS_BORDER | WS_TABSTOP | ES_LEFT,    0,    0,   40,   14
-END
-
-ID_D3DIPFINFO DIALOG 0, 0,  210,  217
-STYLE WS_POPUP | WS_BORDER | WS_DLGFRAME | WS_SYSMENU | WS_THICKFRAME | WS_MINIMIZEBOX | DS_3DLOOK
-FONT    8, "Arial"
-BEGIN
-    CONTROL "&Cancel",IDCANCEL,"BUTTON",WS_CHILD | WS_VISIBLE | WS_TABSTOP | BS_PUSHBUTTON | BS_TEXT | BS_FLAT,  163,  197,   40,   14
-    CONTROL "&Help ...",IDHELP,"BUTTON",WS_CHILD | WS_VISIBLE | WS_TABSTOP | BS_PUSHBUTTON | BS_TEXT | BS_FLAT,  121,  197,   40,   14
-    CONTROL "",IDF_TAB1,"SYSTABCONTROL32",WS_CHILD | WS_VISIBLE | WS_GROUP | WS_TABSTOP | TCS_TABS | TCS_SINGLELINE | TCS_MULTILINE | TCS_RIGHTJUSTIFY,    8,   24,  193,  168
-    CONTROL "OK",ID_SELECT,"BUTTON",WS_CHILD | WS_VISIBLE | WS_GROUP | WS_TABSTOP | BS_PUSHBUTTON | BS_TEXT | BS_BITMAP | BS_FLAT,    8,    6,   16,   14
-END
-
-ID_D3DIPFINFO RCDATA
-BEGIN
-"[Dialog] \n"
-" 0  1089 0 \n"
-"[Tabs] \n"
-" 1089     2   240 \n"
-"  240  Point Info \n"
-"  276  Drill Info \n"
-,0
 END
 
 ID_DTIMESERIESTAB3 DIALOG 0, 0,  325,  139
@@ -10352,6 +10331,25 @@ BEGIN
 ,0
 END
 
+ID_D3DSETTINGS_TAB9 DIALOG 0, 0,  193,  314
+STYLE WS_CHILD | DS_CONTROL | DS_3DLOOK
+FONT    8, "Arial"
+BEGIN
+    CONTROL "",IDF_TAB1,"SYSTABCONTROL32",WS_CHILD | WS_VISIBLE | WS_GROUP | WS_TABSTOP | TCS_TABS | TCS_SINGLELINE | TCS_MULTILINE | TCS_RIGHTJUSTIFY,    6,   24,  180,  284
+    CONTROL "OK",ID_SELECT,"BUTTON",WS_CHILD | WS_VISIBLE | WS_GROUP | WS_TABSTOP | BS_PUSHBUTTON | BS_TEXT | BS_BITMAP | BS_FLAT,    6,    6,   16,   14
+END
+
+ID_D3DSETTINGS_TAB9 RCDATA
+BEGIN
+"[Dialog] \n"
+" 0  1089 0 \n"
+"[Tabs] \n"
+" 1089     2   372 \n"
+"  372  Point Information \n"
+"  240  Borehole Information \n"
+,0
+END
+
 ///////////////////////////////////////////////////
 //
 // Menus
@@ -11233,7 +11231,6 @@ BEGIN
     END
     POPUP "&Edit"
     BEGIN
-        MENUITEM "&Select ...",                              ID_SELECT
         MENUITEM "&Copy to Clipboard",                       ID_CLIPBOARD
     END
     POPUP "&Control"
@@ -11762,4 +11759,4 @@ END
 //*WI* FILENAME    resource.f90
 //*WI* FMODNAME    RESOURCE
 //*WI* LASTTYPE        2
-//*WI* LASTRES       253
+//*WI* LASTRES       162

@@ -57,6 +57,29 @@ REAL,PARAMETER,PRIVATE :: SDAY=86400.0
 CONTAINS
 
  !###====================================================================
+ FUNCTION UTL_REALTOSTRING(X)
+ !###====================================================================
+ IMPLICIT NONE
+ CHARACTER(LEN=15) :: UTL_REALTOSTRING,FSTRING
+ REAL,INTENT(IN) :: X
+ INTEGER :: I,J
+ REAL :: F
+ 
+ I=INT(X); F=X-I
+ UTL_REALTOSTRING=TRIM(ITOS(I))
+ IF(F.NE.0.0)THEN
+  WRITE(FSTRING,*) F; FSTRING=ADJUSTL(FSTRING)
+  !## search backwards for first non-zero
+  DO J=LEN_TRIM(FSTRING),1,-1
+   IF(FSTRING(J:J).NE.'0')EXIT
+  ENDDO
+  IF(F.GT.0.0)UTL_REALTOSTRING=TRIM(UTL_REALTOSTRING)//'.'//FSTRING(3:J)
+  IF(F.LT.0.0)UTL_REALTOSTRING=TRIM(UTL_REALTOSTRING)//'.'//FSTRING(4:J)
+ ENDIF
+
+ END FUNCTION UTL_REALTOSTRING
+
+ !###====================================================================
  SUBROUTINE UTL_RELPATHNAME(PATH,RFNAME,GFNAME)
  !###====================================================================
  IMPLICIT NONE
