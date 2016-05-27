@@ -62,11 +62,31 @@ CONTAINS
    CASE (PWEL)     !## (PWEL) well
     if(associated(wel%sp))wel%sp(kper)%reuse = nlines.lt.0 
    CASE (PDRN)     !## (PDRN) drainage
-    if(associated(drn%sp))drn%sp(kper)%reuse = nlines.lt.0 
-!     if(drn%sp(kper)%lolf)drn%sp(kper)%reuse = nlines.lt.0 
-!    endif
+    if(associated(drn%sp))then
+     !## only apply reuse whenever lolf defined as reuse
+     if(nlines.ge.0)then
+      drn%sp(kper)%ldrn=.true.
+      if (.not.associated(drn%sp(kper)%gcd%subsys)) allocate(drn%sp(kper)%gcd%subsys(maxsubsys))
+     endif
+     if(drn%sp(kper)%lolf)then
+      if(drn%sp(kper)%reuse.and.nlines.ge.0)drn%sp(kper)%reuse=.false.
+     else
+      drn%sp(kper)%reuse = nlines.lt.0 
+     endif
+    endif
    CASE (PRIV)     !## (PRIV) rivers
-    if(associated(riv%sp))riv%sp(kper)%reuse = nlines.lt.0 
+    if(associated(riv%sp))then
+     if(nlines.ge.0)then
+      riv%sp(kper)%lriv=.true.
+      if (.not.associated(drn%sp(kper)%gcd%subsys)) allocate(drn%sp(kper)%gcd%subsys(maxsubsys))
+     endif
+     !## only apply reuse whenever lolf defined as reuse
+     if(riv%sp(kper)%lisg)then
+      if(riv%sp(kper)%reuse.and.nlines.ge.0)riv%sp(kper)%reuse=.false.
+     else
+      riv%sp(kper)%reuse = nlines.lt.0 
+     endif
+    endif
    CASE (PEVT)     !## (PEVT) evapotranspiration
     if(associated(evt%sp))evt%sp(kper)%reuse = nlines.lt.0 
    CASE (PGHB)     !## (PGHB) general head boundary
@@ -74,11 +94,34 @@ CONTAINS
    CASE (PRCH)     !## (PRCH) recharge
     if(associated(rch%sp))rch%sp(kper)%reuse = nlines.lt.0 
    CASE (POLF)     !## (POLF) overlandflow
-    if(associated(drn%sp))drn%sp(kper)%reuse = nlines.lt.0 
+    if(associated(drn%sp))then
+     if(nlines.ge.0)then
+      drn%sp(kper)%lolf=.true.
+      if (.not.associated(drn%sp(kper)%gcd%subsys)) allocate(drn%sp(kper)%gcd%subsys(maxsubsys))
+     endif
+     !## only apply reuse whenever ldrn defined as reuse
+     if(drn%sp(kper)%ldrn)then
+      if(drn%sp(kper)%reuse.and.nlines.ge.0)drn%sp(kper)%reuse=.false.
+     else
+      drn%sp(kper)%reuse = nlines.lt.0 
+     endif
+    endif
    CASE (PCHD)     !## (PCHD) constant head
     if(associated(chd%sp))chd%sp(kper)%reuse = nlines.lt.0 
    CASE (PISG)     !## (PISG) riversegments
-    if(associated(riv%sp))riv%sp(kper)%reuse = nlines.lt.0 
+!    if(associated(riv%sp))riv%sp(kper)%reuse = nlines.lt.0 
+    if(associated(riv%sp))then
+     if(nlines.ge.0)then
+      riv%sp(kper)%lisg=.true.
+      if (.not.associated(drn%sp(kper)%gcd%subsys)) allocate(drn%sp(kper)%gcd%subsys(maxsubsys))
+     endif
+     !## only apply reuse whenever lolf defined as reuse
+     if(riv%sp(kper)%lriv)then
+      if(riv%sp(kper)%reuse.and.nlines.ge.0)riv%sp(kper)%reuse=.false.
+     else
+      riv%sp(kper)%reuse = nlines.lt.0 
+     endif
+    endif
   END SELECT
  ENDIF
  
