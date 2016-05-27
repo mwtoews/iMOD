@@ -77,7 +77,7 @@ CONTAINS
  CHARACTER(LEN=256) :: LINE,IPFDIR
  INTEGER,PARAMETER :: NCOLIPF=5
  
- WRITE(*,*) "Reading GEF-file with probing information"
+ WRITE(*,*) 'Reading GEF-file with probing information'
  
  IF(.NOT.ASSOCIATED(GEFNAMES))THEN
   CALL WMESSAGEBOX(OKONLY,EXCLAMATIONICON,COMMONOK,'Can not find any files!','Error'); RETURN
@@ -265,7 +265,7 @@ CONTAINS
  CHARACTER(LEN=512) :: LINE
  INTEGER,PARAMETER :: NCOLIPF=22
  
- WRITE(*,*) "Reading GEF-file with boring hole information"
+ IF(IBATCH.EQ.1)WRITE(*,'(A)') "Reading GEF-file with borehole information"
  
  IF(.NOT.ASSOCIATED(GEFNAMES))THEN
   CALL WMESSAGEBOX(OKONLY,EXCLAMATIONICON,COMMONOK,'Can not find any files!','Error'); RETURN
@@ -351,13 +351,13 @@ CONTAINS
      ENDDO
     ENDIF
     
-    LINE='"'//TRIM(RTOS(X,'F',2))//'","'//TRIM(RTOS(Y,'F',2))//'","'// &
-         TRIM(CID)//'","'//TRIM(RTOS(0.0,'F',2))//'","'//TRIM(ITOS(1))//'"'
+    LINE=CHAR(39)//TRIM(RTOS(X,'F',2))//CHAR(39)//','//CHAR(39)//TRIM(RTOS(Y,'F',2))//CHAR(39)//','//CHAR(39)// &
+         TRIM(CID)//CHAR(39)//','//CHAR(39)//TRIM(RTOS(0.0,'F',2))//CHAR(39)//','//CHAR(39)//TRIM(ITOS(1))//CHAR(39)
     DO ICOL=1,(MAXVAL(NCOLLINE)+5)   
      IF(IATTRIB(ICOL).EQ.0)THEN
-      LINE=TRIM(LINE)//',"NotAvailable"'
+      LINE=TRIM(LINE)//','//CHAR(39)//'NotAvailable'//CHAR(39)
      ELSE
-      LINE=TRIM(LINE)//',"'//TRIM(ATTRIB1(IATTRIB(ICOL)))//'-'//TRIM(ATTRIB2(IATTRIB(ICOL)))//'"'
+      LINE=TRIM(LINE)//','//CHAR(39)//TRIM(ATTRIB1(IATTRIB(ICOL)))//'-'//TRIM(ATTRIB2(IATTRIB(ICOL)))//CHAR(39)
      ENDIF
     ENDDO
     WRITE(JU,'(A)') TRIM(LINE)
@@ -370,13 +370,13 @@ CONTAINS
 
     ZEND=Z-ABS(GEF(IATTRIB(2),NROW))
     
-    LINE='"'//TRIM(RTOS(X,'F',2))//'","'//TRIM(RTOS(Y,'F',2))//'","subset'//TRIM(ITOS(IDIR))// &
-         '\'//TRIM(CID)//'","'//TRIM(RTOS(ZEND,'F',2))//'","'//TRIM(ITOS(0))//'"'
+    LINE=CHAR(39)//TRIM(RTOS(X,'F',2))//CHAR(39)//','//CHAR(39)//TRIM(RTOS(Y,'F',2))//CHAR(39)//','//CHAR(39)//'subset'//TRIM(ITOS(IDIR))// &
+         '\'//TRIM(CID)//CHAR(39)//','//CHAR(39)//TRIM(RTOS(ZEND,'F',2))//CHAR(39)//','//CHAR(39)//TRIM(ITOS(0))//CHAR(39)
     DO ICOL=1,(MAXVAL(NCOLLINE)+5)
      IF(IATTRIB(ICOL).EQ.0)THEN
-      LINE=TRIM(LINE)//',"NotAvailable"'
+      LINE=TRIM(LINE)//','//CHAR(39)//'NotAvailable'//CHAR(39)
      ELSE
-      LINE=TRIM(LINE)//',"'//TRIM(ATTRIB1(IATTRIB(ICOL)))//'-'//TRIM(ATTRIB2(IATTRIB(ICOL)))//'"'
+      LINE=TRIM(LINE)//','//CHAR(39)//TRIM(ATTRIB1(IATTRIB(ICOL)))//'-'//TRIM(ATTRIB2(IATTRIB(ICOL)))//CHAR(39)
      ENDIF
     ENDDO
     WRITE(JU,'(A)') TRIM(LINE)
@@ -391,16 +391,16 @@ CONTAINS
     WRITE(KU,'(A)') TRIM(LINE)
 
     DO ICOL=1,NCOL+1
-     IF(ICOL.EQ.1)LINE='"m,NAP",' 
-     IF(ICOL.EQ.2)LINE='"m,NAP",'
-     IF(ICOL.EQ.3)LINE='"mm,Zandmediaan",'
-     IF(ICOL.EQ.4)LINE='"mm,Grindmediaan",'
-     IF(ICOL.EQ.5)LINE='"%,Lutum percentage",'
-     IF(ICOL.EQ.6)LINE='"%,Silt percentage",'
-     IF(ICOL.EQ.7)LINE='"%,Zand percentage",'
-     IF(ICOL.EQ.8)LINE='"%,Grind percentage",'
-     IF(ICOL.EQ.9)LINE='"%,Organisch stof percentage",'
-     IF(ICOL.EQ.10)LINE='"[],Lithology",'
+     IF(ICOL.EQ.1)LINE=CHAR(39)//'m,NAP'//CHAR(39)//','
+     IF(ICOL.EQ.2)LINE=CHAR(39)//'m,NAP'//CHAR(39)//','
+     IF(ICOL.EQ.3)LINE=CHAR(39)//'mm,Zandmediaan'//CHAR(39)//','
+     IF(ICOL.EQ.4)LINE=CHAR(39)//'mm,Grindmediaan'//CHAR(39)//','
+     IF(ICOL.EQ.5)LINE=CHAR(39)//'%,Lutum percentage'//CHAR(39)//','
+     IF(ICOL.EQ.6)LINE=CHAR(39)//'%,Silt percentage'//CHAR(39)//','
+     IF(ICOL.EQ.7)LINE=CHAR(39)//'%,Zand percentage'//CHAR(39)//','
+     IF(ICOL.EQ.8)LINE=CHAR(39)//'%,Grind percentage'//CHAR(39)//','
+     IF(ICOL.EQ.9)LINE=CHAR(39)//'%,Organisch stof percentage'//CHAR(39)//','
+     IF(ICOL.EQ.10)LINE=CHAR(39)//'[],Lithology'//CHAR(39)//','
      
      IF(IATTRIB(ICOL).GT.0)THEN
       LINE=TRIM(LINE)//TRIM(RTOS(NODATA(IATTRIB(ICOL)),'*',1))
@@ -411,13 +411,15 @@ CONTAINS
     END DO
     
     DO ICOL=11,MAXVAL(NCOLLINE)
-     LINE='"[],Extra variable",-9999.990'
+     LINE=CHAR(39)//'[],Extra variable'//CHAR(39)//',-9999.990'
      WRITE(KU,*) TRIM(LINE)
     ENDDO
     
     DO IROW=1,NROW
-     LINE=TRIM(RTOS(Z-ABS(GEF(IATTRIB(1),IROW)),'F',1))
-     LINE=TRIM(LINE)//','//TRIM(RTOS(Z-ABS(GEF(IATTRIB(2),IROW)),'F',1))
+!     LINE=TRIM(RTOS(Z-ABS(GEF(IATTRIB(1),IROW)),'F',2))
+     LINE=TRIM(RTOS(Z-GEF(IATTRIB(1),IROW),'F',2))
+     LINE=TRIM(LINE)//','//TRIM(RTOS(Z-GEF(IATTRIB(2),IROW),'F',2))
+!     LINE=TRIM(LINE)//','//TRIM(RTOS(Z-ABS(GEF(IATTRIB(2),IROW)),'F',2))
      DO ICOL=3,NCOL 
       IF(IATTRIB(ICOL).NE.0)THEN
        IF(GEF(IATTRIB(ICOL),IROW).NE.NODATA(IATTRIB(ICOL)))THEN
@@ -430,8 +432,8 @@ CONTAINS
       ENDIF
      END DO
      DO ICOL=1,NCOLLINE(IROW)-(NCOL+1)
-      IF(GEFEX(ICOL,IROW).NE.'')THEN
-       LINE=TRIM(LINE)//','//TRIM(GEFEX(ICOL,IROW))
+      IF(TRIM(GEFEX(ICOL,IROW)).NE.'')THEN
+       LINE=TRIM(LINE)//','//CHAR(39)//TRIM(GEFEX(ICOL,IROW))//CHAR(39)
       ELSE
        LINE=TRIM(LINE)//',-'
       ENDIF
@@ -439,7 +441,8 @@ CONTAINS
      WRITE(KU,'(A)') TRIM(LINE)
     END DO
     
-    LINE=TRIM(RTOS(Z-ABS(GEF(IATTRIB(2),NROW)),'F',1))
+!    LINE=TRIM(RTOS(Z-ABS(GEF(IATTRIB(2),NROW)),'F',2))
+    LINE=TRIM(RTOS(Z-GEF(IATTRIB(2),NROW),'F',2))
     DO ICOL=2,NCOLIPF
      LINE=TRIM(LINE)//',-'
     ENDDO
@@ -453,9 +456,9 @@ CONTAINS
 
   ELSE
 
-   LINE='"'//TRIM(RTOS(X,'F',2))//'","'//TRIM(RTOS(Y,'F',2))//'","'// &
-         TRIM(CID)//'","'//TRIM(RTOS(0.0,'F',2))//'","'//TRIM(ITOS(1))//'"'
-   DO ICOL=1,NCOLLINE(IROW); LINE=TRIM(LINE)//',"NotAvailable"'; ENDDO
+   LINE=CHAR(39)//TRIM(RTOS(X,'F',2))//CHAR(39)//','//CHAR(39)//TRIM(RTOS(Y,'F',2))//CHAR(39)//','//CHAR(39)// &
+         TRIM(CID)//CHAR(39)//','//CHAR(39)//TRIM(RTOS(0.0,'F',1))//CHAR(39)//','//CHAR(39)//TRIM(ITOS(1))//CHAR(39)
+   DO ICOL=1,NCOLLINE(IROW); LINE=TRIM(LINE)//','//CHAR(39)//'NotAvailable'//CHAR(39); ENDDO
    WRITE(JU,'(A)') TRIM(LINE)
 
   ENDIF

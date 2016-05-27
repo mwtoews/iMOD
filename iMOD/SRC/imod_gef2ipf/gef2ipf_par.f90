@@ -221,7 +221,7 @@ CONTAINS
   Z=0.0
  ELSE
   READ(STRING,*,IOSTAT=IOS) Z,Z
-  Z=Z*-1.0
+ ! Z=-1.0*Z
   IF(IOS.NE.0)THEN
    WRITE(*,*) 'Z NOT READ PROPERLY '//TRIM(GEFNAMES(INAME))
    WRITE(*,*) 'Z WILL BE PUT ON 0'
@@ -277,7 +277,7 @@ CONTAINS
    WRITE(*,*) 'File not fully available '//TRIM(GEFNAMES(INAME))
    RETURN
   ENDIF
-  WRITE(*,*) "GEF2 #1:",NCOL+1,maxval(ncolline)
+!  WRITE(*,*) "GEF2 #1:",NCOL+1,maxval(ncolline)
   DO I=1,10
    IF((NCOLLINE(IROW)-NCOL).GE.I)THEN
     GEFEX(I,IROW)=GEF2(NCOL+I,IROW)

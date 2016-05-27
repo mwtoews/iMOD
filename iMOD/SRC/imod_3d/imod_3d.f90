@@ -473,8 +473,8 @@ CONTAINS
  !## turn all message off
  CALL UTL_MESSAGEHANDLE(0)
 
- FOVY =10.0_GLDOUBLE
- ZFAR =200.0_GLDOUBLE
+ FOVY =10.0_GLDOUBLE 
+ ZFAR =500.0_GLDOUBLE !200
  ZNEAR=0.1_GLDOUBLE
 
  !## get viewable area of current display
