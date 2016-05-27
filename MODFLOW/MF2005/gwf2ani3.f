@@ -146,7 +146,7 @@ C
       return
       end
 
-      subroutine gwf2ani3ar(inani,inpwt,igrid)
+      subroutine gwf2ani3ar(inani,inpwt,inhfb,igrid)
 c description:
 c ------------------------------------------------------------------------------
 c Allocate and read for ani package.
@@ -160,16 +160,18 @@ c modules
       use gwfanimodule
       use gwfpwtmodule, only: npwt,pwt,ipilay,ipirow,ipicol
       use rdrsmodule, only: nodata
-
+      USE GWFHFBMODULE,ONLY:NHFB,HFB
       implicit none
 
 c arguments
       integer, intent(in) :: inani
       integer, intent(in) :: inpwt
+      integer, intent(in) :: inhfb
       integer, intent(in) :: igrid
 
 c        locals
-      integer :: j, i, k, kk, ilay, irow, icol, n, ip
+      integer :: j, i, k, kk, ilay, irow, icol, n, ip, ii, i1, i2, j1,
+     1 j2
       character(len=1024) :: str
 
 c program section
@@ -262,7 +264,39 @@ C4------READ ANISOTROPY-FACTOR EN -HOEK
             end do
          end do
          write(iout,*) 'ANI check for PWT:',n,'cells removed'
+         write(*,*)    'ANI check for PWT:',n,'cells removed'
       end if
+
+! removed anisotrophy in case for fault
+      if (inhfb.gt.0) then
+       call SGWF2HFB7PNT(IGRID) 
+       n=0
+       DO II=1,NHFB
+        K = HFB(1,II)
+        I1 = HFB(2,II)  !row
+        J1 = HFB(3,II)  !col
+        I2 = HFB(4,II)  !row
+        J2 = HFB(5,II)  !col
+C6------IF I1=I2, MODIFY HORIZONTAL BRANCH CONDUCTANCES ALONG ROW
+C6------DIRECTION.
+        IF (I1.EQ.I2) THEN
+         if(anifactor(J1,I1,k).lt.1.0)n=n+1
+         if(anifactor(J2,I1,k).lt.1.0)n=n+1
+         anifactor(J1,I1,k)=1.0
+         anifactor(J2,I1,k)=1.0
+        endif
+C6------IF I1=I2, MODIFY HORIZONTAL BRANCH CONDUCTANCES ALONG COLUMN
+C6------DIRECTION.
+        IF (J1.EQ.J2) THEN
+         if(anifactor(J1,I1,k).lt.1.0)n=n+1
+         if(anifactor(J1,I2,k).lt.1.0)n=n+1
+         anifactor(J1,I1,k)=1.0
+         anifactor(J1,I2,k)=1.0
+        endif
+       enddo
+       write(iout,*) 'ANI check for HFB:',n,'cells removed'
+       write(*,*)    'ANI check for HFB:',n,'cells removed'
+      endif
 
       call translatekxx(ncol,nrow,nlay,kdsv,anifactor,
      1                  aniangle,kxx,kyy,kxy)

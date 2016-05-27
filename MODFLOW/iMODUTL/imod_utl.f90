@@ -65,7 +65,7 @@ data hdr/'======================================================================
          'Deltares-executables of iMOD. To make use of the Deltares-executables of iMOD  ',&!04
          'please make sure to accept the terms and conditions or have it lawfully        ',&!05
          'accepted by the legal entity on whose behalf you intent to use the             ',&!06 
-         'iMOD-executable byre-invoking the ‘I accept’-procedure; to re-invoke the       ',&!07
+         'iMOD-executable byre-invoking the "I accept"-procedure; to re-invoke the       ',&!07
          '"I accept"-procedure abort the use of this Deltares-executable of iMOD, delete ',&!08
          'the file "I_accepted_v3_4.txt", and invoke this Deltares-executable of iMOD    ',&!09
          'again.                                                                         ',&!10

@@ -78,7 +78,7 @@ CONTAINS
     if(associated(riv%sp))then
      if(nlines.ge.0)then
       riv%sp(kper)%lriv=.true.
-      if (.not.associated(drn%sp(kper)%gcd%subsys)) allocate(drn%sp(kper)%gcd%subsys(maxsubsys))
+      if (.not.associated(riv%sp(kper)%gcd%subsys)) allocate(riv%sp(kper)%gcd%subsys(maxsubsys))
      endif
      !## only apply reuse whenever lolf defined as reuse
      if(riv%sp(kper)%lisg)then
@@ -113,7 +113,7 @@ CONTAINS
     if(associated(riv%sp))then
      if(nlines.ge.0)then
       riv%sp(kper)%lisg=.true.
-      if (.not.associated(drn%sp(kper)%gcd%subsys)) allocate(drn%sp(kper)%gcd%subsys(maxsubsys))
+      if (.not.associated(riv%sp(kper)%gcd%subsys)) allocate(riv%sp(kper)%gcd%subsys(maxsubsys))
      endif
      !## only apply reuse whenever lolf defined as reuse
      if(riv%sp(kper)%lriv)then
@@ -202,7 +202,7 @@ CONTAINS
         if (.not.associated(hfb%sp(iper)%lcd%gen)) allocate(hfb%sp(iper)%lcd%gen(maxsubsys))
         if (.not.associated(hfb%sp(iper)%lcd%gen(isub)%data)) allocate(hfb%sp(iper)%lcd%gen(isub)%data(1))
         hfb%sp(iper)%lcd%gen(isub)%ilay   = ilay
-        hfb%sp(iper)%lcd%gen(isub)%factor = fct
+        hfb%sp(iper)%lcd%gen(isub)%factor = fct+imp
         hfb%sp(iper)%lcd%gen(isub)%data(it)%fname = trim(fname)
        end do
       CASE (PTOP)     !## (PTOP) top

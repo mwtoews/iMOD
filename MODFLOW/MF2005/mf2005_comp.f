@@ -247,10 +247,13 @@ c program
 
       IF(IUNIT(IUBCF6).GT.0) CALL GWF2BCF7AR(IUNIT(IUBCF6),IGRID)
       IF(IUNIT(IULPF).GT.0) CALL GWF2LPF7AR(IUNIT(IULPF),IGRID)
+c read pwt before ani for correction of ani
       if(IUNIT(IUPWT).gt.0) call gwf2pwt3ar(IUNIT(IUPWT),IUNIT(IUBCF6),
      1                           igrid,iout)                            ! PWT3
+c read hfb before ani for corrections of ani      
+      IF(IUNIT(IUHFB6).GT.0) CALL GWF2HFB7AR(IUNIT(IUHFB6),IGRID)
       if(IUNIT(IUANI).gt.0) call gwf2ani3ar(IUNIT(IUANI),               ! ANI
-     1                      IUNIT(IUPWT),igrid)                         ! ANI
+     1                      IUNIT(IUPWT),IUNIT(IUHFB6),igrid)           ! ANI
       IF(IUNIT(IUHUF2).GT.0) CALL GWF2HUF7AR(IUNIT(IUHUF2),
      1                             IUNIT(IULVDA),IUNIT(IUKDEP),IGRID)
       IF(IUNIT(IUWEL).GT.0) CALL GWF2WEL7AR(IUNIT(IUWEL),IGRID)
@@ -265,7 +268,7 @@ c program
       IF(IUNIT(IUIBS).GT.0) CALL GWF2IBS7AR(IUNIT(IUIBS),
      1                                      IUNIT(IUSUB),IGRID)
       IF(IUNIT(IUCHD).GT.0) CALL GWF2CHD7AR(IUNIT(IUCHD),IGRID)
-      IF(IUNIT(IUHFB6).GT.0) CALL GWF2HFB7AR(IUNIT(IUHFB6),IGRID)
+!      IF(IUNIT(IUHFB6).GT.0) CALL GWF2HFB7AR(IUNIT(IUHFB6),IGRID)
       IF(IUNIT(IUSFR).GT.0) CALL GWF2SFR7AR(IUNIT(IUSFR),IUNIT(IUBCF6),
      1      IUNIT(IULPF), IUNIT(IUHUF2),IUNIT(IUGWT),NSOL,IOUTS,IGRID)
       IF(IUNIT(IUUZF).GT.0) CALL GWF2UZF1AR(IUNIT(IUUZF),IUNIT(IUBCF6),

@@ -159,7 +159,7 @@ c count number of hfb and fill
          end if
          ii = lstbeg-1
          do igen = 1, ngen
-            read(in,*) ilay, factor
+            read(in,*) ilay, factor 
             kk = ilay
             call u2drel(tmp,aname(1),
      1                  nrow,ncol,kk,in,iout) ! fill genpos list
