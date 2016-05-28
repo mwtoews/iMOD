@@ -171,7 +171,7 @@ c arguments
 
 c        locals
       integer :: j, i, k, kk, ilay, irow, icol, n, ip, ii, i1, i2, j1,
-     1 j2
+     1 j2, icol1, icol2, irow1, irow2
       character(len=1024) :: str
 
 c program section
@@ -277,25 +277,53 @@ C4------READ ANISOTROPY-FACTOR EN -HOEK
         J1 = HFB(3,II)  !col
         I2 = HFB(4,II)  !row
         J2 = HFB(5,II)  !col
-C6------IF I1=I2, MODIFY HORIZONTAL BRANCH CONDUCTANCES ALONG ROW
-C6------DIRECTION.
+
         IF (I1.EQ.I2) THEN
-         if(anifactor(J1,I1,k).lt.1.0)n=n+1
-         if(anifactor(J2,I1,k).lt.1.0)n=n+1
-         anifactor(J1,I1,k)=1.0
-         anifactor(J2,I1,k)=1.0
+         icol1=min(j1,j2); icol2=max(j1,j2)
+         irow1=i1; irow2=i2        
         endif
-C6------IF I1=I2, MODIFY HORIZONTAL BRANCH CONDUCTANCES ALONG COLUMN
-C6------DIRECTION.
-        IF (J1.EQ.J2) THEN
-         if(anifactor(J1,I1,k).lt.1.0)n=n+1
-         if(anifactor(J1,I2,k).lt.1.0)n=n+1
-         anifactor(J1,I1,k)=1.0
-         anifactor(J1,I2,k)=1.0
-        endif
+        IF (j1.EQ.j2) THEN
+         irow1=min(i1,i2); irow2=max(i1,i2)
+         icol1=j1; icol2=j2
+        endif 
+        
+        do irow=max(1,irow1-1),min(nrow,irow2+1)
+         do icol=max(1,icol1-1),min(ncol,icol2+1)
+          if(anifactor(icol,irow,k).lt.1.0)then
+           n=n+1; anifactor(icol,irow,k)=1.0
+          endif
+         enddo
+        enddo
+
+!C6------IF I1=I2, MODIFY HORIZONTAL BRANCH CONDUCTANCES ALONG ROW
+!C6------DIRECTION.
+!        IF (I1.EQ.I2) THEN
+!         if(anifactor(J1,I1,k).lt.1.0)then
+!          n=n+1; anifactor(J1,I1,k)=1.0
+!          write(*,*) j1,i1,k
+!         endif
+!         if(anifactor(J2,I1,k).lt.1.0)then
+!          n=n+1; anifactor(J2,I1,k)=1.0
+!          write(*,*) j2,i1,k
+!         endif
+!        endif
+!C6------IF I1=I2, MODIFY HORIZONTAL BRANCH CONDUCTANCES ALONG COLUMN
+!C6------DIRECTION.
+!        IF (J1.EQ.J2) THEN
+!         if(anifactor(J1,I1,k).lt.1.0)then
+!          n=n+1; anifactor(J1,I1,k)=1.0
+!          write(*,*) j1,i1,k
+!         endif
+!         if(anifactor(J1,I2,k).lt.1.0)then
+!          n=n+1; anifactor(J1,I2,k)=1.0
+!          write(*,*) j1,i2,k
+!         endif
+!        endif
        enddo
-       write(iout,*) 'ANI check for HFB:',n,'cells removed'
-       write(*,*)    'ANI check for HFB:',n,'cells removed'
+       write(iout,*) 'ANI check for HFB:',n,'cells transfered into isotr
+     1opic conditions'
+       write(*,*)    'ANI check for HFB:',n,'cells transfered into isotr
+     1opic conditions'
       endif
 
       call translatekxx(ncol,nrow,nlay,kdsv,anifactor,
