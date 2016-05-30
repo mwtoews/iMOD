@@ -590,8 +590,7 @@ CONTAINS
  !###======================================================================
  IMPLICIT NONE
  INTEGER,INTENT(IN) :: IMODBATCH
- INTEGER :: IROW,ICOL,I,J
- REAL :: XC,YC
+ INTEGER :: I,J
  REAL,ALLOCATABLE,DIMENSION(:) :: TM,BM
  INTEGER,ALLOCATABLE,DIMENSION(:) :: IGRP
  
