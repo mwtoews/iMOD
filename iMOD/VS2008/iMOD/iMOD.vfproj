@@ -323,6 +323,8 @@
 		<File RelativePath="..\..\..\iMOD\SRC\imod_pcg\imod_pcg.f90"/></Filter>
 		<Filter Name="imod_plugin">
 		<File RelativePath="..\..\SRC\imod_plugin\imod_plugin.f90">
+			<FileConfiguration Name="Release|x64">
+				<Tool Name="VFFortranCompilerTool" Preprocess="preprocessYes" PreprocessorDefinitions="WINTERACTER9"/></FileConfiguration>
 			<FileConfiguration Name="Debug|x64">
 				<Tool Name="VFFortranCompilerTool" Preprocess="preprocessYes" PreprocessorDefinitions="WINTERACTER9"/></FileConfiguration></File>
 		<File RelativePath="..\..\SRC\imod_plugin\imod_plugin_par.f90"/></Filter>

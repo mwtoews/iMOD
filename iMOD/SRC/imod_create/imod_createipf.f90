@@ -43,7 +43,6 @@ CONTAINS
  IMPLICIT NONE
  TYPE(WIN_MESSAGE),INTENT(IN) :: MESSAGE
  INTEGER,INTENT(IN)           :: ITYPE
- INTEGER :: MSHPNO
  
  !## check polygon actions
  IACTSHAPES=(/1,3,3,3,3,3/)
@@ -121,7 +120,7 @@ CONTAINS
  !###======================================================================
  IMPLICIT NONE
  INTEGER,PARAMETER :: MAXPOL=50
- INTEGER :: I,NPOL,ITYPE
+ INTEGER :: NPOL,ITYPE
  TYPE(WIN_MESSAGE) :: MESSAGE
  LOGICAL :: LEX
  REAL,ALLOCATABLE,DIMENSION(:) :: XPOL,YPOL
@@ -196,7 +195,6 @@ CONTAINS
  SUBROUTINE CREATEIPF1INIT()
  !###======================================================================
  IMPLICIT NONE
- LOGICAL :: LEX
  
  CALL WINDOWSELECT(0)
  IF(WMENUGETSTATE(ID_CREATEIPF,2).EQ.1)THEN

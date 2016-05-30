@@ -4505,8 +4505,8 @@ CONTAINS
        IF(ICAL.EQ.1)THEN
         IF(INT(ICROSS(4)%X(ICOL,IROW)).LE.HUGE(CF))CF=INT(ICROSS(4)%X(ICOL,IROW))
        ENDIF
-       IF(ICROSS(1)%X(ICOL,IROW).LT.0.0)CALL WGRIDPUTCELLINTEGER(IDF_GRID1,4,I,-CF) !## inundated if thresshold exceeded
-       IF(ICROSS(1)%X(ICOL,IROW).GT.0.0)CALL WGRIDPUTCELLINTEGER(IDF_GRID1,4,I, CF) !## inundated no matter what
+       IF(ICROSS(1)%X(ICOL,IROW).LT.0.0)CALL WGRIDPUTCELLINTEGER(IDF_GRID1,4,I,-INT(CF)) !## inundated if thresshold exceeded
+       IF(ICROSS(1)%X(ICOL,IROW).GT.0.0)CALL WGRIDPUTCELLINTEGER(IDF_GRID1,4,I, INT(CF)) !## inundated no matter what
       ENDIF
      ENDIF
     ENDIF
