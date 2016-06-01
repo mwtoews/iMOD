@@ -1296,8 +1296,8 @@ C     ------------------------------------------------------------------
      1                      IMINC,MINC                                  ! DLT
 C
       DOUBLE PRECISION HCNV
-      REAL :: C, MAXC, TINY                                             ! DLT
-      PARAMETER( MAXC = 1.0E6,TINY=1.0E-20)                             ! DLT
+      REAL :: C, MAXC, TINY, MAXVCOND                                   ! DLT
+      PARAMETER( MAXC = 1.0E6,TINY=1.0E-20,MAXVCOND=1.0E6)              ! DLT
 C     ------------------------------------------------------------------
 C
 C1------MULTIPLY VERTICAL LEAKANCE BY AREA TO MAKE CONDUCTANCE.
@@ -1308,13 +1308,14 @@ C1------MULTIPLY VERTICAL LEAKANCE BY AREA TO MAKE CONDUCTANCE.
       DO 10 I=1,NROW
       DO 10 J=1,NCOL
          IF (IMINC.EQ.1) THEN                                           ! DLT
-            C = 1/(CV(J,I,K)+TINY)                                      ! DLT
-            C = MIN(C,MAXC)                                             ! DLT
+            C = 1.0/(CV(J,I,K)+TINY)                                    ! DLT
+!            C = MIN(C,MAXC)                                             ! DLT
             C = MAX(C,MINC)                                             ! DLT
             CV(J,I,K)=DELR(J)*DELC(I)/C                                 ! DLT
          ELSE
             CV(J,I,K)=CV(J,I,K)*DELR(J)*DELC(I)
          END IF
+         CV(j,i,k)=MIN(MAXVCOND,CV(j,i,k))
    10 CONTINUE
 C
 C2------IF WETTING CAPABILITY IS ACTIVATED, SAVE CV IN CVWD FOR USE WHEN

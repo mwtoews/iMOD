@@ -115,8 +115,8 @@ c functions
 c local variables
       logical :: storeisub, valid, found, ipfonly
       integer :: ii, jj, kk, nread1, nread2, nisub,
-     1           icol, irow, ic, ir, jsub, iact, jact, nalloc
-      integer, dimension(:), allocatable :: ilay
+     1           icol, irow, ic, ir, iact, jact, nalloc
+      integer, dimension(:), allocatable :: ilay,jsub
       real, dimension(:,:,:,:), allocatable :: data
       real :: rval
       real :: tlp(nlay)
@@ -166,7 +166,7 @@ c allocate
       allocate(data(ncol,nrow,nisub,nread2))
       allocate(ipflist(nisub,nread2))
       allocate(isglist(nisub))
-      allocate(ilay(nisub))
+      allocate(ilay(nisub),jsub(nisub))
 
 c read data and count nlist
 
@@ -186,7 +186,7 @@ c           loop over the number of subsystems
 c
 c                 layer applied for this subsystem; subsystem index
                read(in,'(a)') str
-               read(str,*) ilay(isub), jsub
+               read(str,*) ilay(isub), jsub(isub)
                call cfn_s_lowcase(str)
                read(in,'(a)') line
                backspace(in)
@@ -264,7 +264,7 @@ c                    read auxiliary fields
                            write(iout,*) 'ERROR. AUX ISUB'
                            call ustop(' ')
                         else
-                           data(:,:,isub,nread1+jj) = jsub
+                           data(:,:,isub,nread1+jj) = jsub(isub)
                         end if
                      end if
                   end do ! naux
@@ -291,7 +291,7 @@ c                  apply correction for stage/bottom rivers
                       data(icol,irow,isub,3)=data(icol,irow,isub,2)
 c                   set system number negative - sign that input is corrected                      
                       do jj=1,naux
-                       if (caux(jj).eq.'ISUB            ')then
+                       if (caux(jj).eq.'RFCT            ')then
                         data(icol,irow,isub,nread1+jj)=-1*data(icol,irow
      1,isub,nread1+jj)
                        endif
@@ -404,7 +404,8 @@ c              check if subsystem is of type ISG
                         rlisttmp(kk,ii) = isglist2(jj,kk)
                      end do
                      if (storeisub) then
-                        rlisttmp(8,ii) = -jsub ! for ISG label subnumber negative!
+                        rlisttmp(8,ii) = jsub(isub) ! for ISG label subnumber negative!
+!                        rlisttmp(8,ii) = -jsub ! for ISG label subnumber negative!
                      end if
                   end do
                end if

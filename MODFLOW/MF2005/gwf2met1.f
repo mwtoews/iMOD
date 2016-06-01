@@ -972,7 +972,7 @@ c parameters
       CHARACTER(LEN=16), PARAMETER :: CELTXT = 'CENTER ELEVATION'
 
 c funtions
-      logical :: done, rivflg, isgflg
+      logical :: done, rivflg, isgflg, olfflg, drnflg, ldrn, lriv
       integer :: cfn_length
 
 c program section
@@ -1046,39 +1046,53 @@ c assemble root
       end if
 
 c check for subsystem
-      isub = index(text,trim(rivtxt))
-      rivflg = .false.
-      if (isub.gt.0) rivflg = .true.
-      if (isub.eq.0 .and. .not.done) then
-         isub = index(text,trim(drntxt))
-      end if
-      if (isub.gt.0 .and. .not.done) then
-         if (cfn_length(text(14:)).gt.0) then
-            read(text(14:),*) isub
-            isgflg = .false.
-            if (isub.lt.0) isgflg = .true.
-            isub = abs(isub)
-         end if
-      end if
-      if (isub.gt.0 .and. .not.done) then
-         if (isub.lt.10) then
-            fmt = '(2a,i1)'
-         else
-            fmt = '(2a,i2)'
-         end if
-         ! for isg, riv --> isg
-         if (rivflg.and.isgflg) then
-             i = index(prefix,'riv')
-             if (i.gt.0) prefix(i:i+2) = 'isg'
+      lriv = .false.; rivflg = .false.; isgflg = .false.
+      ldrn = .false.; drnflg = .false.; olfflg = .false.
+      
+      i = index(text,trim(rivtxt))
+      if (i.gt.0)then
+       lriv=.true. !rivflg = .true.
+      endif
+      i = index(text,trim(drntxt))
+      if(i.gt.0)then
+       ldrn=.true.
+      endif
+      
+      if(lriv.or.ldrn)then
+       if (cfn_length(text(14:)).gt.0) then
+        read(text(14:),*) isub
+        if (isub.lt.0)then
+         if(lriv) isgflg = .true.
+         if(ldrn) olfflg = .true.
+         isub = abs(isub)
+        else
+         if(lriv) rivflg = .true.
+         if(ldrn) drnflg = .true.
+        end if
+       end if
+       if (isub.lt.10) then
+        fmt = '(2a,i1)'
+       else
+        fmt = '(2a,i2)'
+       end if
+       ! for isg, riv --> isg
+       if (isgflg) then
+        i = index(prefix,'riv')
+        if (i.gt.0) prefix(i:i+2) = 'isg'
+       end if
+       ! for olf, drn --> olf
+       if (olfflg) then
+        i = index(prefix,'drn')
+        if (i.gt.0) prefix(i:i+2) = 'olf'
+       end if
 c assemble root
-             root = ''
-             if (associated(resultdir)) then
-                root = resultdir(1:cfn_length(resultdir))//
+       root = ''
+       if (associated(resultdir)) then
+        root = resultdir(1:cfn_length(resultdir))//
      1             '\'//prefix(1:cfn_length(prefix)) //'\'
-                call osd_s_filename(root)
-             end if
-         end if
-         write(prefix,fmt) prefix(1:cfn_length(prefix)),'_sys', isub
+        call osd_s_filename(root)
+       end if
+       write(prefix,fmt) prefix(1:cfn_length(prefix)),'_sys', isub
       end if
 
 c create output file name

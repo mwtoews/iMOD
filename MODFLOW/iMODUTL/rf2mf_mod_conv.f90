@@ -1822,6 +1822,17 @@
 
 !...     write oc-data
       nam%data(irivflux)%fname  = 'bdgriv'
+!      do iper = 1, nper
+!       if (riv%sp(iper)%lriv)then
+!        nam%data(irivflux)%fname  = trim(nam%data(irivflux)%fname)//' bdgriv'; exit
+!       endif
+!      enddo
+!      do iper = 1, nper
+!       if (riv%sp(iper)%lisg)then
+!        nam%data(irivflux)%fname  = trim(nam%data(irivflux)%fname)//' bdgisg'; exit
+!       endif
+!      enddo
+!      nam%data(irivflux)%fname=adjustl(nam%data(irivflux)%fname)
       nam%data(irivflux)%cbnlay = riv%cbnlay
       nam%data(irivflux)%cblay  = riv%cblay
 
@@ -1985,6 +1996,17 @@
 
 !...     write oc-data
       nam%data(idrnflux)%fname  = 'bdgdrn'
+!      do iper = 1, nper
+!       if (drn%sp(iper)%ldrn)then
+!        nam%data(idrnflux)%fname  = trim(nam%data(idrnflux)%fname)//' bdgdrn'; exit
+!       endif
+!      enddo
+!      do iper = 1, nper
+!       if (drn%sp(iper)%lolf)then
+!        nam%data(idrnflux)%fname  = trim(nam%data(idrnflux)%fname)//' bdgolf'; exit
+!       endif
+!      enddo
+!      nam%data(idrnflux)%fname=adjustl(nam%data(idrnflux)%fname)
       nam%data(idrnflux)%cbnlay = drn%cbnlay
       nam%data(idrnflux)%cblay  = drn%cblay
 

@@ -263,7 +263,7 @@ C     ******************************************************************
       CHARACTER*16 CAUX(NCAUX)
 c      DIMENSION RLIST(LDIM,MXLIST)
       real, dimension(:,:), pointer :: rlist
-      CHARACTER*200 LINE,FNAME
+      CHARACTER*200 LINE,FNAME,frm
       integer   kk       ! loop variable to replace II
       integer iii,jjj
       real      usf      ! upscale factor, can be added to read parameters
@@ -348,6 +348,10 @@ C4------Setup indices for reading the list
       NREAD2=LDIM-IAL
       NREAD1=NREAD2-NAUX
       N=NLIST+LSTBEG-1
+                               !123456789012345678901234567890
+      write(frm,'(A16,I3.3,A9)') '(1X,I6,I7,I7,I7,',NREAD2-3,
+     1'G16.4,A1)'
+
 C
 C5------Read the list.
       II=LSTBEG-1                                                        ! OSC3
@@ -401,15 +405,24 @@ C5D-----Get the optional values from the line
 C
 C5E-----Write the values that were read if IPRFLG is 1.
       NN=II-LSTBEG+1
-      IF(IPRFLG.EQ.1)
-     1    WRITE(IOUT,205) NN,K,I,J,(RLIST(JJ,II),JJ=4,NREAD2)
-205   FORMAT(1X,I6,I7,I7,I7,26G16.4)
+      IF(IPRFLG.EQ.1)then
 
-c------ make system number absolute again
+       string=' '; iii=nread1
+       do jjj=1,ncaux
+        iii=iii+1
+        if (caux(jjj).eq.'RFCT            ')then
+         if(rlist(iii,ii).lt.0.0)string='*'
+        endif
+       enddo
+       
+       WRITE(IOUT,FRM) NN,K,I,J,(RLIST(JJ,II),JJ=4,NREAD2),STRING
+!205   FORMAT(1X,I6,I7,I7,I7,26G16.4)
+      ENDIF
+c------ make infiltration factor absolute again
       iii=nread1
       do jjj=1,ncaux
        iii=iii+1
-       if (caux(jjj).eq.'ISUB            ')then
+       if (caux(jjj).eq.'RFCT            ')then
         rlist(iii,ii)=abs(rlist(iii,ii))
        endif
       enddo

@@ -3013,8 +3013,8 @@ c ------------------------------------------------------------------------------
            y = ts(jj)%stvalue(i)%y
            ilay = ts(jj)%stvalue(i)%ilay
            valid = .true.
-           if (x.lt.coord_xll_nb .or. x.gt.coord_xur_nb) valid = .false.
-           if (y.lt.coord_yll_nb .or. y.gt.coord_yur_nb) valid = .false.
+           if (x.le.coord_xll_nb .or. x.ge.coord_xur_nb) valid = .false.
+           if (y.le.coord_yll_nb .or. y.ge.coord_yur_nb) valid = .false.
            if (ilay.lt.0 .or. ilay.gt.nlay) valid = .false.
            ts(jj)%stvalue(i)%valid = valid
            if (valid) then ! store indices

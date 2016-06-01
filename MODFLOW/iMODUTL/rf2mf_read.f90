@@ -319,8 +319,8 @@ CONTAINS
        msys = drn%sp(kper)%gcd%nsubsys+nsys
        drn%sp(kper)%gcd%nsubsys = msys
        if (.not.associated(drn%sp(kper)%gcd%subsys)) allocate(drn%sp(kper)%gcd%subsys(maxsubsys))
-       drn%sp(kper)%gcd%subsys(msys)%ilay = ilay
-       drn%sp(kper)%gcd%subsys(msys)%isub = drn%sp(kper)%gcd%subsys(nsys)%isub + 1
+       drn%sp(kper)%gcd%subsys(msys)%ilay =  ilay
+       drn%sp(kper)%gcd%subsys(msys)%isub = -isub !drn%sp(kper)%gcd%subsys(nsys)%isub + 1
        if (.not.associated(drn%sp(kper)%gcd%subsys(msys)%data)) allocate(drn%sp(kper)%gcd%subsys(msys)%data(3))
        call RF2MF_READ1MAIN_system(drn%sp(kper)%gcd%subsys(msys)%data(2),ios,ilay,fct,imp,constante,iarr,fname,iusclarith,idsclintp)
        drn%sp(kper)%gcd%subsys(msys)%data(1)%keyword = 'constant'
@@ -345,8 +345,8 @@ CONTAINS
        msys = riv%sp(kper)%gcd%nsubsys+1
        riv%sp(kper)%gcd%nsubsys = msys
        if (.not.associated(riv%sp(kper)%gcd%subsys)) allocate(riv%sp(kper)%gcd%subsys(maxsubsys))
-       riv%sp(kper)%gcd%subsys(msys)%ilay = ilay
-       riv%sp(kper)%gcd%subsys(msys)%isub = isub
+       riv%sp(kper)%gcd%subsys(msys)%ilay =  ilay
+       riv%sp(kper)%gcd%subsys(msys)%isub = -isub
        riv%sp(kper)%gcd%subsys(msys)%lisg = .true.
        if (.not.associated(riv%sp(kper)%gcd%subsys(msys)%data)) allocate(riv%sp(kper)%gcd%subsys(msys)%data(4))
        call RF2MF_READ1MAIN_system(riv%sp(kper)%gcd%subsys(msys)%data(itp(it)),ios,ilay,fct,imp,constante,iarr,fname,iusclnodata,idsclnodata)
