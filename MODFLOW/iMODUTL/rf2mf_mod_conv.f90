@@ -162,6 +162,8 @@
          real    :: factor = -1.
          logical :: lisg   = .false.
          logical :: lolf   = .false.
+         logical :: lriv   = .false.
+         logical :: ldrn   = .false.
          logical :: active = .true.
 !         type(tArrayRead), dimension(maxcol) :: data
          type(tArrayRead), dimension(:), pointer :: data
@@ -1946,7 +1948,7 @@
                         do i=1,nsys; subsys(i) = riv%sp(iper)%gcd%subsys(i); enddo
                      end if
                      do isys = 1, riv%sp(kper)%gcd%nsubsys
-                        if (.not.riv%sp(kper)%gcd%subsys(isys)%lisg) then ! find riv
+                        if (riv%sp(kper)%gcd%subsys(isys)%lriv) then ! find riv
                            nsys = nsys + 1
                            if (iact.eq.2) then
                               subsys(nsys) = riv%sp(kper)%gcd%subsys(isys)
@@ -1996,17 +1998,6 @@
 
 !...     write oc-data
       nam%data(idrnflux)%fname  = 'bdgdrn'
-!      do iper = 1, nper
-!       if (drn%sp(iper)%ldrn)then
-!        nam%data(idrnflux)%fname  = trim(nam%data(idrnflux)%fname)//' bdgdrn'; exit
-!       endif
-!      enddo
-!      do iper = 1, nper
-!       if (drn%sp(iper)%lolf)then
-!        nam%data(idrnflux)%fname  = trim(nam%data(idrnflux)%fname)//' bdgolf'; exit
-!       endif
-!      enddo
-!      nam%data(idrnflux)%fname=adjustl(nam%data(idrnflux)%fname)
       nam%data(idrnflux)%cbnlay = drn%cbnlay
       nam%data(idrnflux)%cblay  = drn%cblay
 
@@ -2100,7 +2091,7 @@
                         do i=1,nsys; subsys(i) = drn%sp(iper)%gcd%subsys(i); enddo
                      end if
                      do isys = 1, drn%sp(kper)%gcd%nsubsys
-                        if (.not.drn%sp(kper)%gcd%subsys(isys)%lolf) then ! find olf
+                        if (drn%sp(kper)%gcd%subsys(isys)%ldrn) then ! find drn
                            nsys = nsys + 1
                            if (iact.eq.2) then
                               subsys(nsys) = drn%sp(kper)%gcd%subsys(isys)
@@ -2116,7 +2107,6 @@
                      end if
                   end do
                end if
-            else
             end if
          end if
       end do

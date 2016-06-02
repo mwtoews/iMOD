@@ -109,7 +109,6 @@ CONTAINS
    CASE (PCHD)     !## (PCHD) constant head
     if(associated(chd%sp))chd%sp(kper)%reuse = nlines.lt.0 
    CASE (PISG)     !## (PISG) riversegments
-!    if(associated(riv%sp))riv%sp(kper)%reuse = nlines.lt.0 
     if(associated(riv%sp))then
      if(nlines.ge.0)then
       riv%sp(kper)%lisg=.true.
@@ -254,6 +253,7 @@ CONTAINS
        drn%sp(kper)%gcd%subsys(nsys)%ilay = ilay
 !       drn%sp(kper)%gcd%subsys(nsys)%factor = fct
        drn%sp(kper)%gcd%subsys(nsys)%isub = isub
+       drn%sp(kper)%gcd%subsys(nsys)%ldrn = .true.
        if (.not.associated(drn%sp(kper)%gcd%subsys(nsys)%data)) allocate(drn%sp(kper)%gcd%subsys(nsys)%data(3))
        if (itp(it).eq.1) then
         scltype=iusclsumcdr
@@ -274,6 +274,7 @@ CONTAINS
        riv%sp(kper)%gcd%subsys(nsys)%ilay = ilay
 !       riv%sp(kper)%gcd%subsys(nsys)%factor = fct
        riv%sp(kper)%gcd%subsys(nsys)%isub = isub
+       riv%sp(kper)%gcd%subsys(nsys)%lriv = .true.
        if (.not.associated(riv%sp(kper)%gcd%subsys(nsys)%data)) allocate(riv%sp(kper)%gcd%subsys(nsys)%data(5))
        if (itp(it).eq.1) then
         scltype=iusclsumcdr
@@ -318,6 +319,7 @@ CONTAINS
        drn%sp(kper)%reuse = .false.
        msys = drn%sp(kper)%gcd%nsubsys+nsys
        drn%sp(kper)%gcd%nsubsys = msys
+       drn%sp(kper)%gcd%subsys(msys)%lolf = .true.
        if (.not.associated(drn%sp(kper)%gcd%subsys)) allocate(drn%sp(kper)%gcd%subsys(maxsubsys))
        drn%sp(kper)%gcd%subsys(msys)%ilay =  ilay
        drn%sp(kper)%gcd%subsys(msys)%isub = -isub !drn%sp(kper)%gcd%subsys(nsys)%isub + 1

@@ -495,7 +495,7 @@ c deallocate data
       deallocate(ipflist)
       deallocate(isglist)
       if (allocated(isglist2)) deallocate(isglist2)
-      deallocate(ilay)
+      deallocate(ilay,jsub)
 
 c end of program
       return
