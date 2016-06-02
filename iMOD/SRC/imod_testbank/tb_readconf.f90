@@ -66,7 +66,6 @@ CONTAINS
  OUTDIR=TRIM(OUTMAP)//'\Summary_Testresults'
  CALL UTL_CREATEDIR(OUTDIR)
  OPEN(IUOUTG,FILE=TRIM(OUTMAP)//'\testbank_out.txt',STATUS='UNKNOWN',ACTION='WRITE',IOSTAT=IOS)
- !IF(IOS.NE.0)CALL UTL_PRINTTEXT('OPENING OUTPUT FILE',2)
 
  END SUBROUTINE TB_READCONFIG
  
@@ -218,7 +217,7 @@ CONTAINS
          ELSE
           FNAME=TRIM(OUTMAP)//'\'//TRIM(RESDIR)//'\'//TRIM(EXE(IEXE)%ALIAS)//'\MODFLOW\'//TRIM(CMAP(IMAP))//'\'//TRIM(LISTNAME(I))
          ENDIF
-         IF(IDFREAD(IDF(1),FNAME,1))THEN
+         IF(IDFREAD(IDF(1),FNAME,1,IQ=1))THEN
 
           !## read idf - exe 2
           IF(EXE(JEXE)%IMAP.EQ.0)THEN
@@ -227,7 +226,7 @@ CONTAINS
            FNAME=TRIM(OUTMAP)//'\'//TRIM(RESDIR)//'\'//TRIM(EXE(JEXE)%ALIAS)//'\'//TRIM(CMAP(IMAP))//'\MODFLOW\'//TRIM(LISTNAME(I))
           ENDIF
 
-          IF(IDFREAD(IDF(2),FNAME,1))THEN
+          IF(IDFREAD(IDF(2),FNAME,1,IQ=1))THEN
            !## diff
            
            !## define threshold for fluxes (higher threshold is required fluxes than for heads)

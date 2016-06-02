@@ -32,7 +32,7 @@ USE MOD_OSD, ONLY : OSD_GETARG,OSD_OPEN,OSD_GETENV
 USE IMODVAR, ONLY : IDIAGERROR
 USE MODPLOT
 USE IMOD
-USE MOD_UTL, ONLY : IMESSAGE
+USE MOD_UTL, ONLY : IMESSAGE,UTL_DEBUGLEVEL
 
 CONTAINS
 
@@ -187,7 +187,6 @@ CONTAINS
  !###======================================================================
  LOGICAL FUNCTION PLUGIN_INITMENU_FILL()
  !###======================================================================
- !# Function to connect the plugin-names to the plugin-menu and initialize plugin-type
  IMPLICIT NONE
  INTEGER :: I,J,MXPLUGIN,ID
  
@@ -195,8 +194,10 @@ CONTAINS
 
  MXPLUGIN=SIZE(MENUID)
  
+ CALL UTL_DEBUGLEVEL(0)
  DO I=1,MXPLUGIN; CALL WMENUITEMDELETE(MENUID(I)); ENDDO
-
+ CALL UTL_DEBUGLEVEL(1)
+ 
  IF(ASSOCIATED(PI1))THEN
   
   !## initiate all

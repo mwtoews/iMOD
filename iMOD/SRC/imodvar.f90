@@ -29,6 +29,7 @@ REAL,PARAMETER :: PI=ATAN(1.0)*4.0  !## value pi
 LOGICAL :: LBETA=.TRUE.       !## if TRUE: Show question whether it is allowed to use Beta-version or not
 LOGICAL :: LEXPDATE=.TRUE.     !## if TRUE: activate expire date
 INTEGER :: EXPDATE=20160615    !## expire data, after this date the iMOD-beta version cannot be used.
+INTEGER,SAVE :: ICDEBUGLEVEL   !## applied current debuglevel
 
 CHARACTER(LEN=30),PARAMETER :: RVERSION='V3_4_9'     !## release message - only with single subnummers
 CHARACTER(LEN=30),PARAMETER :: BVERSION='Beta'       !## banner message !!!
