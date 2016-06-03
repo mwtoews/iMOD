@@ -197,6 +197,8 @@ CONTAINS
  CALL UTL_DEBUGLEVEL(0)
  DO I=1,MXPLUGIN; CALL WMENUITEMDELETE(MENUID(I)); ENDDO
  CALL UTL_DEBUGLEVEL(1)
+
+ J=0
  
  IF(ASSOCIATED(PI1))THEN
   
@@ -206,7 +208,6 @@ CONTAINS
   PI1%BACK=''
   PI1%IDPROC(1)=0; PI1%IDPROC(2)=0 
 
-  J=0
   DO I=1,SIZE(PI1)
    IF(PI1(I)%IACT.EQ.1)THEN
     J=J+1
@@ -331,7 +332,7 @@ CONTAINS
  LOGICAL :: LEX
   
  !## sets directory+filename
- CALL WGRIDGETCELLSTRING(IDF_GRID1,ICOL,IROW,DIRNAME)
+ CALL WGRIDGETCELLSTRING(IDF_GRID1,1,IROW,DIRNAME)
  FNAME=TRIM(PREFVAL(IPI))//'\'//TRIM(DIRNAME)//'\PLUG-IN.INI'
  
  !## raise expection error if the specific file cannot be found or a none-existing directory given in preference file.

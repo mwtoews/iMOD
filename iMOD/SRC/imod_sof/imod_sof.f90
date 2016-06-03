@@ -652,8 +652,9 @@ if(irow.eq.ir.and.icol.eq.ic)f=1.0
  !###======================================================================
  SUBROUTINE SOF_COMPUTE_SLOPE_ASPECT_CALC(DEM,SLOPE,ASPECT,IROW,ICOL)
  !###======================================================================
+ IMPLICIT NONE
  TYPE(IDFOBJ) :: DEM,SLOPE,ASPECT
- REAL :: TG
+ REAL :: TG,DZDX,DZDY,S,A
  INTEGER :: ICOL,IROW
 
  !## nodata dem map
