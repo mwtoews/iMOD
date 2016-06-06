@@ -557,7 +557,8 @@ c
 c declaration section
 c ------------------------------------------------------------------------------
 c modules
-      use global, only: iunit
+      use global, only: iunit, ibound
+      use gwfbasmodule, only: HNOFLO
       use fsplitmodule
       use m_mf2005_iu, only: iumet
       implicit none
@@ -573,7 +574,7 @@ c arguments
 c local variables
       logical :: writefile
       character(len=1024) :: fname
-      integer :: ilay, type, isplit, iuidx
+      integer :: ilay, type, isplit, iuidx, i, j
       real :: nodata
 
 c functions
@@ -618,6 +619,12 @@ c swap sign for bcf fluxes
 
 c loop over the layers
       do ilay = 1, nlay
+
+c     clean for nodata
+      DO I=1,NROW; DO J=1,NCOL
+       IF(IBOUND(J,I,ilay).EQ.0) buff(J,I,ilay)=hnoflo
+      enddo; enddo
+
          if (type.eq.splitidf) then
             fname = met1fname(isplit,text,ilay,'idf')
             writefile = .true.
@@ -627,7 +634,7 @@ c loop over the layers
                if (fooclay(iuidx,ilay).eq.0) writefile = .false.
             end if
             if (writefile) then
-               nodata = 0.
+               nodata = HNOFLO !0.
                call met1wrtidf(fname,buff(:,:,ilay),ncol,nrow,
      1                         nodata,iout)
             end if

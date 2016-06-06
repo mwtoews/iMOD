@@ -243,7 +243,7 @@
          character(len=maxlen) :: text = 'Basic Package file'
          character(len=maxlen) :: options = 'free'
          type(tArrayRead), dimension(:), pointer :: ibound => null()
-         real :: hnoflo = -999.99
+         real :: hnoflo = huge(1.0) !-999.99
          type(tArrayRead), dimension(:), pointer :: strt => null()
       end type tBas
       type(tBas), public, save :: bas
@@ -253,7 +253,7 @@
          character(len=maxlen) :: text   = 'Block-Centered Flow Package file'
          integer                        :: cbnlay = 0
          integer, dimension(:), pointer :: cblay => null()
-         real                           :: hdry   = -9999.
+         real                           :: hdry   = huge(1.0) !-9999.
          integer                        :: iwdflg = 0
          real                           :: wetfct = 0.
          integer                        :: iwetit = 0
