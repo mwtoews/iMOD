@@ -8,7 +8,7 @@
 //
 // Winteracter resource script. 
 //
-// Modified : 03/Jun/2016 18:23:10
+// Modified : 06/Jun/2016 13:13:55
 //
 ///////////////////////////////////////////////////
 //
@@ -1121,6 +1121,10 @@
 #define ID_D3DSETTINGS_TAB9_TAB1          372
 #define ID_D3DSETTINGS_TAB9               382
 #define IDF_TRACKBAR7                    1157
+#define ID_ACTIVEDEBUG                  40284
+#define ID_IDEBUGLEVEL0                 40285
+#define ID_IDEBUGLEVEL4                 40286
+#define ID_IDEBUGLEVEL1                 40287
 
 ///////////////////////////////////////////////////
 //
@@ -3306,7 +3310,7 @@ BEGIN
 ,0
 END
 
-ID_DADDTOPO DIALOG 0, 0,  304,  165
+ID_DADDTOPO DIALOG 0, 0,  300,  165
 STYLE WS_POPUP | WS_BORDER | WS_DLGFRAME | WS_SYSMENU | DS_3DLOOK | DS_MODALFRAME
 FONT    8, "Arial"
 CAPTION "Add Background Image(s)"
@@ -8480,7 +8484,7 @@ BEGIN
 ,0
 END
 
-ID_DPMANAGERDATES DIALOG 0, 0,  288,   96
+ID_DPMANAGERDATES DIALOG 0, 0,  284,   97
 STYLE WS_POPUP | WS_BORDER | WS_DLGFRAME | WS_SYSMENU | WS_MINIMIZEBOX | DS_3DLOOK | DS_MODALFRAME
 FONT    8, "Arial"
 CAPTION "Define Period"
@@ -8501,6 +8505,7 @@ BEGIN
     CONTROL "0",IDF_INTEGER8,"INTEGERSPIN",WS_CHILD | WS_VISIBLE | WS_BORDER | WS_GROUP | WS_TABSTOP | ES_LEFT | ES_CENTER | ES_MULTILINE,  237,   51,   29,   12
     CONTROL ":",IDF_LABEL5,"STATIC",WS_CHILD | WS_VISIBLE | WS_GROUP | SS_LEFT,  200,   53,    3,    8
     CONTROL ":",IDF_LABEL6,"STATIC",WS_CHILD | WS_VISIBLE | WS_GROUP | SS_LEFT,  233,   53,    3,    8
+    CONTROL "0",IDF_INTEGER4,"INTEGERSPIN",WS_CHILD | WS_VISIBLE | WS_BORDER | WS_GROUP | WS_TABSTOP | ES_LEFT | ES_CENTER | ES_MULTILINE,  316,   20,   29,   12
 END
 
 ID_DPMANAGERDATES RCDATA
@@ -8510,12 +8515,14 @@ BEGIN
 " 1197               0              24 \n"
 " 1198               0              59 \n"
 " 1199               0              59 \n"
+" 1224               0              59 \n"
 "[Fonts] \n"
 " 1197    8 Arial, 400 0 \n"
 " 1198    8 Arial, 400 0 \n"
 " 1199    8 Arial, 400 0 \n"
 " 1068    8 Arial, 400 0 \n"
 " 1082    8 Arial, 400 0 \n"
+" 1224    8 Arial, 400 0 \n"
 ,0
 END
 
@@ -10975,6 +10982,13 @@ BEGIN
         MENUITEM "&About iMOD ...",                          ID_ABOUT
         MENUITEM "&User Agreement ...",                      ID_UAGREEMENT
         MENUITEM "&Contents ...\aF1",                        ID_HELP
+        MENUITEM SEPARATOR
+        POPUP "Winteracter Error Reporting"
+        BEGIN
+            MENUITEM "Silent",                                   ID_IDEBUGLEVEL0, CHECKED
+            MENUITEM "Report to standard output",                ID_IDEBUGLEVEL1
+            MENUITEM "Report in a message box",                  ID_IDEBUGLEVEL4
+        END
     END
 END
 
@@ -11013,6 +11027,7 @@ ID_PLUGIN,5,7,0,
 ID_PLUGIN_TIMECHECK,5,7,1,0,
 ID_IPS,5,19,0,
 ID_HELPMAIN,6,0,
+ID_ACTIVEDEBUG,6,5,0,
 0
 END
 
@@ -11179,6 +11194,10 @@ ID_INTERACTIVEPATHLINES_MANUAL,"Start the 3-D Tool with the selected files from 
 ID_INTERACTIVEPATHLINES_DEF,"Start the 3-D Tool with settings from the selected Runfile\0",
 ID_IPS,"Start the 3-D Tool with settings from the selected Runfile\0",
 ID_GEOCONNECT,"Identify, preprocess and postprocess (aggregation) model K and C values.\0",
+ID_ACTIVEDEBUG,"Winteracter error reporting\0",
+ID_IDEBUGLEVEL0,"Do not show any errors\0",
+ID_IDEBUGLEVEL4,"Report in a message box\0",
+ID_IDEBUGLEVEL1,"Report to standard output\0",
 0
 END
 
@@ -11762,5 +11781,5 @@ END
 //*WI* FORTSAVE    1
 //*WI* FILENAME    resource.f90
 //*WI* FMODNAME    RESOURCE
-//*WI* LASTTYPE        2
-//*WI* LASTRES       111
+//*WI* LASTTYPE        1
+//*WI* LASTRES         7
