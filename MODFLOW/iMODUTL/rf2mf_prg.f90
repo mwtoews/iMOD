@@ -1417,7 +1417,6 @@ IFULL=0
 IF(XMIN.EQ.SIMBOX(1))IFULL(1)=1; IF(XMAX.EQ.SIMBOX(3))IFULL(3)=1
 IF(YMIN.EQ.SIMBOX(2))IFULL(2)=1; IF(YMAX.EQ.SIMBOX(4))IFULL(4)=1
 
-
 if (ifull(1).eq.0) met%kws(imet_ibound_fixed_west)%type = imetc
 if (ifull(3).eq.0) met%kws(imet_ibound_fixed_east)%type = imetc
 if (ifull(2).eq.0) met%kws(imet_ibound_fixed_south)%type = imetc

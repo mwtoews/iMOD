@@ -250,7 +250,7 @@ c program
 c read pwt before ani for correction of ani
       if(IUNIT(IUPWT).gt.0) call gwf2pwt3ar(IUNIT(IUPWT),IUNIT(IUBCF6),
      1                           igrid,iout)                            ! PWT3
-c read hfb before ani for corrections of ani      
+c read hfb before ani for corrections of ani
       IF(IUNIT(IUHFB6).GT.0) CALL GWF2HFB7AR(IUNIT(IUHFB6),IGRID)
       if(IUNIT(IUANI).gt.0) call gwf2ani3ar(IUNIT(IUANI),               ! ANI
      1                      IUNIT(IUPWT),IUNIT(IUHFB6),igrid)           ! ANI
