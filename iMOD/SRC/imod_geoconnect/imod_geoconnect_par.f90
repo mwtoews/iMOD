@@ -77,7 +77,7 @@ CONTAINS
  !## try to allocate all memory
  ALLOCATE(CIDF(NLAYM-1),KDHIDF(NLAYM),KDVIDF(NLAYM),TOPM(NLAYM),  &
           BOTM(NLAYM)  ,KHVIDF(NLAYM),KVAIDF(NLAYM),KVVIDF(NLAYM-1), &
-          IACTM(NLAYM),STAT=IOS)
+          IACTM(NLAYM) ,RESM(NLAYM),STAT=IOS)
 
  IF(IOS.NE.0)THEN
   CALL WMESSAGEBOX(OKONLY,EXCLAMATIONICON,COMMONOK,'iMOD cannot allocate neccessary memory.','Error')
@@ -93,6 +93,7 @@ CONTAINS
  DO I=1,SIZE(KVAIDF); CALL IDFNULLIFY(KVAIDF(I)); ENDDO 
  CALL IDFNULLIFY(KHR);  CALL IDFNULLIFY(KVR)
  CALL IDFNULLIFY(TOPR); CALL IDFNULLIFY(BOTR)
+ DO I=1,SIZE(RESM); CALL IDFNULLIFY(RESM(I)); ENDDO
    
  GC_ALLOCATE=.TRUE.
  
@@ -565,18 +566,21 @@ CONTAINS
  READ(LINE,*) N; IF(IMODBATCH.EQ.1)WRITE(*,'(A,I10)') 'NFORM=',N
  !## check consistency with current geoconnect settings
  IF(IMODBATCH.EQ.0)THEN
-  IF(N.NE.NLAYR)THEN
-   CALL WMESSAGEBOX(OKONLY,EXCLAMATIONICON,COMMONOK,'The current ini file does not match with your current GeoConnect settings'//CHAR(13)// &
-    'iMOD found too many geological formation compared to the current ones loading in the GeoConnect Tool','Error')
-   RETURN
-  ENDIF
+!  IF(N.NE.NLAYR)THEN
+!   CALL WMESSAGEBOX(OKONLY,EXCLAMATIONICON,COMMONOK,'The current ini file does not match with your current GeoConnect settings'//CHAR(13)// &
+!    'iMOD found too many geological formation compared to the current ones loading in the GeoConnect Tool','Error')
+!   RETURN
+!  ENDIF
  ELSE
   NLAYR=N
   !## started from imodbatch - allocate memory
   ALLOCATE(IPFAC(NLAYR))
  ENDIF
 
- DO I=1,NLAYR
+ !## initialise values
+ IPFAC%IGRP=0
+ 
+ DO I=1,N !LAYR
   IF(.NOT.UTL_READINITFILE('FORM'//TRIM(ITOS(I)),LINE,IU,0))RETURN
   READ(LINE,*) FORM,IGRP
 

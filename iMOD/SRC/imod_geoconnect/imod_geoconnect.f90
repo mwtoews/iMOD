@@ -605,6 +605,10 @@ CONTAINS
  ENDIF
  CALL UTL_IDFSNAPTOGRID(IDF%XMIN,IDF%XMAX,IDF%YMIN,IDF%YMAX,IDF%DX,IDF%NCOL,IDF%NROW)
 
+ CALL WMESSAGEBOX(YESNO,QUESTIONICON,COMMONNO,'Are you sure to start the identify option?'//CHAR(13)// &
+   'It can take quiet some time','Question')
+ IF(WINFODIALOG(4).NE.1)RETURN
+ 
  !## turn message off
  IF(IMODBATCH.EQ.0)CALL UTL_MESSAGEHANDLE(0)
 
@@ -1054,16 +1058,16 @@ CONTAINS
  ENDIF
  
  IF(IRESET.EQ.1)THEN
-  IPFAC%FACT=-999.00
-  !## loop over total amount of regislayers
-  DO I=1,NLAYR
-   READ(IU,*,IOSTAT=IOS) FORM,FACT
-   IF(IOS.NE.0)THEN
-    CALL WMESSAGEBOX(OKONLY,EXCLAMATIONICON,COMMONOK,'Reading not enough record in the file'//CHAR(13)// &
-     TRIM(FNAME),'Error'); CLOSE(IU); RETURN
-   ENDIF
-  ENDDO
-  REWIND(IU)
+  IPFAC%FACT=1.0 !-999.00
+!  !## loop over total amount of regislayers
+!  DO I=1,NLAYR
+!   READ(IU,*,IOSTAT=IOS) FORM,FACT
+!   IF(IOS.NE.0)THEN
+!    CALL WMESSAGEBOX(OKONLY,EXCLAMATIONICON,COMMONOK,'Reading not enough record in the file'//CHAR(13)// &
+!     TRIM(FNAME),'Error'); CLOSE(IU); RETURN
+!   ENDIF
+!  ENDDO
+!  REWIND(IU)
  ENDIF
  
  !## loop over total amount of regislayers
@@ -1189,7 +1193,7 @@ CONTAINS
    FORM='BDGDRN'
  END SELECT
  
- ALLOCATE(RESM(NLAYM)); DO I=1,SIZE(RESM); CALL IDFNULLIFY(RESM(I)); ENDDO
+! ALLOCATE(RESM(NLAYM)); DO I=1,SIZE(RESM); CALL IDFNULLIFY(RESM(I)); ENDDO
  
  DO ILAY=1,NLAYM
 
@@ -1301,7 +1305,7 @@ CONTAINS
  !## read multiplication factors
  IF(.NOT.GC_IPEST_READ(TRIM(DBASEFOLDER)//'\factors.txt',IMODBATCH,1))RETURN
 
- ALLOCATE(IGRP(NLAYR)); IGRP=IPFAC%IGRP
+ IF(ALLOCATED(IGRP))DEALLOCATE(IGRP); ALLOCATE(IGRP(NLAYR)); IGRP=IPFAC%IGRP
 
  !## get number of unique groups
  CALL UTL_GETUNIQUE_INT(IGRP,NLAYR,NU)
@@ -1349,6 +1353,11 @@ CONTAINS
  TOP%X=-10.0E10; TOP%NODATA=-999.99
  BOT%X= 10.0E10; BOT%NODATA=-999.99
  THK%X=  0.0;    THK%NODATA=-999.99
+ 
+ !## find minimal values
+ IF(IAGGR_TYPE.EQ.1)IDF%X= 10.0E10
+ !## find maximal values
+ IF(IAGGR_TYPE.EQ.2)IDF%X=-10.0E10
  
  !## scan all files for current location
  DO I=1,NLAYR
@@ -1410,18 +1419,18 @@ CONTAINS
          CASE (1)     !## head
           SELECT CASE (IAGGR_TYPE)
            CASE (1) !## min
-            IDF%X(ICOL,IROW)=MIN(IDF%X(ICOL,IROW),(Z1-Z2)*RESM(J)%X(ICOL,IROW))
+            IDF%X(ICOL,IROW)=MIN(IDF%X(ICOL,IROW),RESM(J)%X(ICOL,IROW))
            CASE (2) !## max
-            IDF%X(ICOL,IROW)=MAX(IDF%X(ICOL,IROW),(Z1-Z2)*RESM(J)%X(ICOL,IROW))
+            IDF%X(ICOL,IROW)=MAX(IDF%X(ICOL,IROW),RESM(J)%X(ICOL,IROW))
            CASE (3,4) !## mean/sum
             IDF%X(ICOL,IROW)=IDF%X(ICOL,IROW)+(Z1-Z2)*RESM(J)%X(ICOL,IROW)
           END SELECT
          CASE (2,3,4) !## bdgwel,bdgriv,bdgdrn
           SELECT CASE (IAGGR_TYPE)
            CASE (1) !## min
-            IDF%X(ICOL,IROW)=MIN(IDF%X(ICOL,IROW),FM*RESM(J)%X(ICOL,IROW))
+            IDF%X(ICOL,IROW)=MIN(IDF%X(ICOL,IROW),RESM(J)%X(ICOL,IROW))
            CASE (2) !## max
-            IDF%X(ICOL,IROW)=MAX(IDF%X(ICOL,IROW),FM*RESM(J)%X(ICOL,IROW))
+            IDF%X(ICOL,IROW)=MAX(IDF%X(ICOL,IROW),RESM(J)%X(ICOL,IROW))
            CASE (3,4) !## mean/sum
             IDF%X(ICOL,IROW)=IDF%X(ICOL,IROW)+FM*RESM(J)%X(ICOL,IROW)
           END SELECT
@@ -1431,9 +1440,9 @@ CONTAINS
          CASE (1,3)   !## kdw/khv
           SELECT CASE (IAGGR_TYPE)
            CASE (1) !## min
-            IDF%X(ICOL,IROW)=MIN(IDF%X(ICOL,IROW),(Z1-Z2)*KVAL*FP)
+            IDF%X(ICOL,IROW)=MIN(IDF%X(ICOL,IROW),KVAL*FP)
            CASE (2) !## max
-            IDF%X(ICOL,IROW)=MAX(IDF%X(ICOL,IROW),(Z1-Z2)*KVAL*FP)
+            IDF%X(ICOL,IROW)=MAX(IDF%X(ICOL,IROW),KVAL*FP)
            CASE (3,4) !## mean/sum
             IDF%X(ICOL,IROW)=IDF%X(ICOL,IROW)+(Z1-Z2)*KVAL*FP
           END SELECT
@@ -1481,9 +1490,9 @@ CONTAINS
            CASE (2,4) !## vcw/kvv
             SELECT CASE (IAGGR_TYPE)
              CASE (1) !## min
-              IDF%X(ICOL,IROW)=MIN(IDF%X(ICOL,IROW),(((Z1-Z2)/KVAL)*FP))
+              IDF%X(ICOL,IROW)=MIN(IDF%X(ICOL,IROW),(1.0/KVAL)*FP)
              CASE (2) !## max
-              IDF%X(ICOL,IROW)=MAX(IDF%X(ICOL,IROW),(((Z1-Z2)/KVAL)*FP))
+              IDF%X(ICOL,IROW)=MAX(IDF%X(ICOL,IROW),(1.0/KVAL)*FP)
              CASE (3,4) !## mean/sum
               IDF%X(ICOL,IROW)=IDF%X(ICOL,IROW)+(((Z1-Z2)/KVAL)*FP)
             END SELECT

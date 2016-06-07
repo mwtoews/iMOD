@@ -237,7 +237,15 @@ CONTAINS
 !            THDX=THRESHOLD*IDF(1)%DX
 !           ENDIF
        
-           IDF(1)%X=IDF(1)%X-IDF(2)%X
+           DO IROW=1,IDF(1)%NROW; DO ICOL=1,IDF(1)%NCOL
+            IF(IDF(1)%X(ICOL,IROW).NE.IDF(1)%NODATA.AND. &
+               IDF(2)%X(ICOL,IROW).NE.IDF(2)%NODATA)THEN
+             IDF(1)%X(ICOL,IROW)=IDF(1)%X(ICOL,IROW)-IDF(2)%X(ICOL,IROW)
+            ELSE
+             IDF(1)%X(ICOL,IROW)=IDF(1)%NODATA
+            ENDIF
+           ENDDO; ENDDO
+           
            IF(MAXVAL(ABS(IDF(1)%X)).GE.THRESHOLD)THEN
             FNAME=TRIM(OUTMAP)//'\'//TRIM(RESDIR)//'\'//TRIM(EXE(IEXE)%ALIAS)//'-'//TRIM(EXE(JEXE)%ALIAS)// &
                   '\diff_'//TRIM(LISTNAME(I))

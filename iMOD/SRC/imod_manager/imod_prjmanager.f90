@@ -2198,7 +2198,7 @@ KLOOP: DO K=1,SIZE(TOPICS(JJ)%STRESS(1)%FILES,1)
 
   !## pst module is exception
   IF(I.EQ.20)THEN
-   LINE='(PST),'//TRIM(ITOS(SIZE(PEST%PARAM))); WRITE(IU,'(A)') TRIM(LINE) 
+   LINE=TRIM(ITOS(SIZE(PEST%PARAM)))//',(PST)'; WRITE(IU,'(A)') TRIM(LINE) 
    CALL PMANAGER_SAVEPST(IU,0); CYCLE
   ENDIF
   
@@ -4216,7 +4216,16 @@ KLOOP: DO K=1,SIZE(TOPICS(JJ)%STRESS(1)%FILES,1)
  DO IWRITE=0,1
 
   !## MXFB—is the maximum number of HFB barriers that will be defined using parameters.
-  IF(IWRITE.EQ.1)WRITE(IU,'(3I10,A)') NPHFB,MXFB,SUM(NHFBNP),' NOPRINT'
+  IF(IWRITE.EQ.1)WRITE(IU,'(3I10,A)') NPHFB,MXFB,SUM(NHFBNP),' NOPRINT' !to be included yet HFBFCT/HFBRESIS !!!
+  
+!      if(dis%settop .and. dis%setbot) then
+!         n = n + 1
+!         write(str(n),*) 'hfbresis'
+!      else
+!         n = n + 1
+!         write(str(n),*) 'hfbfact'
+!      end if
+  
   
   !## process per system
   DO ISYS=1,SIZE(TOPICS(ITOPIC)%STRESS(1)%FILES,2)
@@ -6245,6 +6254,9 @@ KLOOP: DO K=1,SIZE(TOPICS(JJ)%STRESS(1)%FILES,1)
    DEALLOCATE(TOPICS(ITOPIC)%STRESS(IPER)%FILES) 
    DEALLOCATE(TOPICS(ITOPIC)%STRESS)
   ENDIF
+  
+  !## if pest associated, remove number of pest parameters
+  IF(ITOPIC.EQ.20)CALL PMANAGER_DEALLOCATE_PEST()
   
   !## update the project manager for changes - on topic level, other is not possible
   CALL PMANAGERUPDATE(ITOPIC,IPER,ISUBTOPIC)
