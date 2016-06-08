@@ -237,15 +237,14 @@ C     ------------------------------------------------------------------
       BIGGESTNEG = -BIGGESTPOS
 C
 
-
-c      IF(NITER.EQ.0) THEN
-c        WRITE(IOUT,895)
-c        WRITE(IOUT,900) (I,CC(I),CR(I),CV(I),HCOF(I),
-c     1     RHS(I),HNEW(I),IBOUND(I),I=1,nodes)
-c      ENDIF
-c 895  FORMAT ('    I',5X,'CC',13X,'CR',13X,'CV',12X,'HCOF',12X,'RHS',
-c     &        12X,'HNEW',7X,'IBOUND')
-c 900  FORMAT (I7,6G15.8,I5)
+!      IF(NITER.EQ.0) THEN
+!        WRITE(IOUT,895)
+!        WRITE(IOUT,900) (I,CC(I),CR(I),CV(I),HCOF(I),
+!     1     RHS(I),HNEW(I),IBOUND(I),I=1,nodes)
+!      ENDIF
+! 895  FORMAT ('    I',5X,'CC',13X,'CR',13X,'CV',12X,'HCOF',12X,'RHS',
+!     &        12X,'HNEW',7X,'IBOUND')
+! 900  FORMAT (I7,6G15.8,I5)
 
 
       DDAMP=DAMP
@@ -293,7 +292,8 @@ C
               IF (N.LE.(NODES-NRC)) CV(N) = 0.
               IF (N.GT.1) CR(N-1) = 0.
               IF (N.GT.NCOL) CC(N-NCOL) = 0.
-              IF (N.LE.(NODES-NRC) .AND. N.GT.NRC) CV(N-NRC) = 0.
+              IF (N.GT.NRC) CV(N-NRC) = 0.
+!              IF (N.LE.(NODES-NRC) .AND. N.GT.NRC) CV(N-NRC) = 0.
               HCOF(N) = 0.
               RHS(N) = 0.
             ENDIF
@@ -846,7 +846,7 @@ C-------AT END OF EXTERNAL ITERATION, APPLY DAMP
 C
 C-------IF END OF TIME STEP, PRINT # OF ITERATIONS THIS STEP
       WRITE (*,111) KPER,KSTP,NITER,HCHG(NITER),(LHCH(I,NITER),I=1,3)   ! DLT
-  111 FORMAT((1X,'stress per. =',i4,' step =',i4,'  iter =',I3,         ! DLT
+  111 FORMAT((1X,'stress per. =',i4,' step =',i4,'  iter =',I5,         ! DLT
      1' dh =',G12.3,' cell=(',I3,',',I4,',',I4,')'))                    ! DLT
       WRITE (*,112) RCHG(NITER),(LRCH(I,NITER),I=1,3)                   ! DLT
   112 FORMAT((41X,'rc =',G12.4,' cell=(',I3,',',I4,',',I4,')'))         ! DLT
