@@ -332,7 +332,7 @@ C4------READ ANISOTROPY-FACTOR EN -HOEK
       call scl1ten(dcu,dcd,dcc,
      1             dcr,kxx,kyy,kxy,ibound,
      1             delr,delc,ncol,nrow,nlay,
-     1             a,b,c,indx,anifactor)
+     1             a,b,c,indx)
 
       call scl1fmd(cc,cr,cv,ibound,dcu,
      1             dcd,dcc,dcr,hcof,rhs,
@@ -412,7 +412,7 @@ c ------------------------------------------------------------------------------
 
 !###====================================================================
       subroutine scl1ten(dcu,dcd,dcc,dcr,kxx,kyy,kxy,ibound,
-     1                   delr,delc,ncol,nrow,nlay,a,b,c,indx,anifactor)
+     1                   delr,delc,ncol,nrow,nlay,a,b,c,indx)
 !###====================================================================
       use imod_utl, only: imod_utl_ludecomp, imod_utl_lubacksub
       implicit none
@@ -423,13 +423,12 @@ c ------------------------------------------------------------------------------
       real a(4,4),b(4,4)
       integer indx(4)
       real dcc(ncol,nrow,nlay),dcr(ncol,nrow,nlay),
-     %     dcu(ncol,nrow,nlay),dcd(ncol,nrow,nlay),
-     %     anifactor(ncol,nrow,nlay)
+     %     dcu(ncol,nrow,nlay),dcd(ncol,nrow,nlay)
       real kxx(ncol,nrow,nlay),kyy(ncol,nrow,nlay),
      %     kxy(ncol,nrow,nlay)
       real delr(ncol)
       real delc(nrow)
-      integer irow,icol,i,j,ii,ising,col,row,lay,ic1,ic2,ir1,ir2
+      integer irow,icol,i,j,ii,ising,col,row,lay
       real detk,t1,t2
 
 !##initialise variables
@@ -652,18 +651,6 @@ c ------------------------------------------------------------------------------
       do ilay=1,nlay
        do irow=1,nrow-1
         do icol=1,ncol-1
-         ic2=min(icol+1,ncol); ir2=min(irow+1,nrow)
-         ic1=max(icol-1,1);    ir1=max(irow-1,1)       
-         if ((anifactor(icol,irow,ilay).ge.1.).and. !P
-     1       (anifactor(icol,ir1,ilay).ge.1.).and. !N
-     2       (anifactor(icol,ir2,ilay).ge.1.).and. !S
-     3       (anifactor(ic2,irow,ilay).ge.1.).and. !E
-     4       (anifactor(ic1,irow,ilay).ge.1.)) then !W
-          dcr(icol,irow,ilay)=0.0
-          dcc(icol,irow,ilay)=0.0
-          dcd(icol,irow,ilay)=0.0
-          dcu(icol,irow,ilay)=0.0
-         endif
          if(ibound(icol,irow,ilay).lt.0)then
           if(ibound(icol+1,irow,ilay).lt.0)  dcr(icol,irow,ilay)=0.0
           if(ibound(icol,irow+1,ilay).lt.0)  dcc(icol,irow,ilay)=0.0
@@ -944,26 +931,23 @@ c      double precision rhs(ncol,nrow,nlay)
       integer :: ic1,ic2,ir1,ir2,il1,il2
       integer, dimension(:,:,:), allocatable :: iwrk
 
-      RHS=0.0
-      HCOF=0.0
-      DIAG=0.0
-!      do ilay=1,nlay
-!       do irow=1,nrow
-!        do icol=1,ncol
-!         ic2=min(icol+1,ncol); ir2=min(irow+1,nrow)
-!         ic1=max(icol-1,1);    ir1=max(irow-1,1)       
-!         if ((anifactor(icol,irow,ilay).lt.1.).or. !P
-!     1       (anifactor(icol,ir1,ilay).lt.1.).or. !N
-!     2       (anifactor(icol,ir2,ilay).lt.1.).or. !S
-!     3       (anifactor(ic2,irow,ilay).lt.1.).or. !E
-!     4       (anifactor(ic1,irow,ilay).lt.1.)) then !W
-!          rhs(icol,irow,ilay) =0.0
-!          hcof(icol,irow,ilay)=0.0
-!         endif
-!         diag(icol,irow,ilay)=0.0
-!        end do
-!       end do
-!      end do
+      do ilay=1,nlay
+       do irow=1,nrow
+        do icol=1,ncol
+         ic2=min(icol+1,ncol); ir2=min(irow+1,nrow)
+         ic1=max(icol-1,1);    ir1=max(irow-1,1)       
+         if ((anifactor(icol,irow,ilay).lt.1.).or. !P
+     1       (anifactor(icol,ir1,ilay).lt.1.).or. !N
+     2       (anifactor(icol,ir2,ilay).lt.1.).or. !S
+     3       (anifactor(ic2,irow,ilay).lt.1.).or. !E
+     4       (anifactor(ic1,irow,ilay).lt.1.)) then !W
+          rhs(icol,irow,ilay) =0.0
+          hcof(icol,irow,ilay)=0.0
+         endif
+         diag(icol,irow,ilay)=0.0
+        end do
+       end do
+      end do
 
 !#####cleaning cc/cr/cv for anisotropical issues
       do ilay=1,nlay
@@ -1153,24 +1137,16 @@ c      double precision rhs(ncol,nrow,nlay)
        do irow=1,nrow
         do icol=1,ncol
          if(ibound(icol,irow,ilay).ne.0)then
-          ic2=min(icol+1,ncol); ir2=min(irow+1,nrow)
-          ic1=max(icol-1,1);    ir1=max(irow-1,1)       
-          if ((anifactor(icol,irow,ilay).lt.1.).or. !P
-     1       (anifactor(icol,ir1,ilay).lt.1.).or. !N
-     2       (anifactor(icol,ir2,ilay).lt.1.).or. !S
-     3       (anifactor(ic2,irow,ilay).lt.1.).or. !E
-     4       (anifactor(ic1,irow,ilay).lt.1.)) then !W
-           if(irow.lt.nrow)then
-            if(ibound(icol,irow+1,ilay).ne.0)then
-             dcc(icol,irow,ilay) =dcc(icol,irow,ilay)-cc(icol,irow,ilay)
-            endif
+          if(irow.lt.nrow)then
+           if(ibound(icol,irow+1,ilay).ne.0)then
+            dcc(icol,irow,ilay) =dcc(icol,irow,ilay)-cc(icol,irow,ilay)
            endif
-           if(icol.lt.ncol)then
-            if(ibound(icol+1,irow,ilay).ne.0)then
-             dcr(icol,irow,ilay) =dcr(icol,irow,ilay)-cr(icol,irow,ilay)
-            endif
+          endif
+          if(icol.lt.ncol)then
+           if(ibound(icol+1,irow,ilay).ne.0)then
+            dcr(icol,irow,ilay) =dcr(icol,irow,ilay)-cr(icol,irow,ilay)
            endif
-          ENDIF
+          endif
          endif
         end do
        end do

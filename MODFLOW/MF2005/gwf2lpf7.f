@@ -545,7 +545,8 @@ C
                       kdsv(icol,irow,ilay)=                             ! ANIPWT
      1                   max(minkd,kdsv(icol,irow,ilay))                ! ANIPWT
                   end if                                                ! ANIPWT
-                  kdsv(icol,irow,ilay)=max(1.0e-12,kdsv(icol,irow,ilay))! ANIPWT
+                  kdsv(icol,irow,ilay)=max(0.0,kdsv(icol,irow,ilay))    ! ANIPWT
+!                  kdsv(icol,irow,ilay)=max(1.0e-12,kdsv(icol,irow,ilay))! ANIPWT
                end do                                                   ! ANIPWT
             end do                                                      ! ANIPWT
          end do                                                         ! ANIPWT
@@ -559,7 +560,8 @@ C
             do irow=1,nrow                                              ! DLT
                do icol=1,ncol                                           ! DLT
                   !prevent vcont to be zero                             ! DLT
-                  cv(icol,irow,ilay)=max(1.0e-12,cv(icol,irow,ilay))    ! DLT
+                  cv(icol,irow,ilay)=max(0.0,cv(icol,irow,ilay))        ! DLT
+!                  cv(icol,irow,ilay)=max(1.0e-12,cv(icol,irow,ilay))   ! DLT
                end do                                                   ! DLT
             end do                                                      ! DLT
          end do                                                         ! DLT

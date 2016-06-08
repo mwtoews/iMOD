@@ -178,7 +178,6 @@ C
       if(IUNIT(IUMET).gt.0) call gwf2met1ar(IUNIT(IUMET),igrid,iout)    ! MET
 C5------Allocate and read discretization data.
       CALL SGWF2BAS7ARDIS(IUDIS,IOUT,igrid)
-!      if(IUNIT(IUMET).gt.0) call gwf2met1ar(IUNIT(IUMET),igrid)        ! MET
       NODES=NCOL*NROW*NLAY
 C
 C6------Allocate space for global arrays except discretization data.

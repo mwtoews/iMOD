@@ -329,7 +329,8 @@ c let cc and cv be greater then 0., Necessary for ANI package
             do irow=1,nrow                                              ! ANI
                do icol=1,ncol                                           ! ANI
                   !prevent transmissivity to be zero                    ! ANI
-                  cc(icol,irow,ilay)=max(1.0e-12,cc(icol,irow,ilay))    ! ANI
+                  cc(icol,irow,ilay)=max(0.0,cc(icol,irow,ilay))        ! ANI
+!                  cc(icol,irow,ilay)=max(1.0e-12,cc(icol,irow,ilay))   ! ANI
                end do                                                   ! ANI
             end do                                                      ! ANI
          end do                                                         ! ANI
@@ -337,7 +338,8 @@ c let cc and cv be greater then 0., Necessary for ANI package
             do irow=1,nrow                                              ! ANI
                do icol=1,ncol                                           ! ANI
                   !prevent vcont to be zero                             ! ANI
-                  cv(icol,irow,ilay)=max(1.0e-12,cv(icol,irow,ilay))    ! ANI
+                  cv(icol,irow,ilay)=max(0.0,cv(icol,irow,ilay))        ! ANI
+!                  cv(icol,irow,ilay)=max(1.0e-12,cv(icol,irow,ilay))    ! ANI
                end do                                                   ! ANI
             end do                                                      ! ANI
          end do                                                         ! ANI
