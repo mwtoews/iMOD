@@ -868,7 +868,9 @@ c local variables
 
       integer    :: iteration
       logical    :: converged
-
+      
+      integer :: i
+      logical :: lss
 c ------------------------------------------------------------------------------
 
 c init
@@ -876,6 +878,16 @@ c init
 
 c     Moved from prepare iter (2 lines)
       call mf2005_prepareIterWrp0(Iteration,converged)
+      if (iteration.lt.0.and..not.converged) then
+         lss = .true.
+         do i=1, nper
+            if (issflg(i).eq.0) lss = .false.
+         end do
+         if (lss) then
+            retval = -1
+            return
+         end if   
+      end if 
       call mf2005_initIter(retVal)
 c
       do igrid=1,ninstance                                                      ! DLT: instances
