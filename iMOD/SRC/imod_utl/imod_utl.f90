@@ -3219,6 +3219,28 @@ CONTAINS
  END SUBROUTINE UTL_IDFSNAPTOGRID
 
  !###======================================================================
+ SUBROUTINE UTL_IDFSNAPTONICEGRID(MINX,MAXX,MINY,MAXY,CS,NCOL,NROW)
+ !###======================================================================
+ REAL,INTENT(INOUT) :: MINX,MAXX,MINY,MAXY
+ REAL,INTENT(IN) :: CS
+ INTEGER,INTENT(OUT) :: NCOL,NROW
+ REAL :: D
+ 
+ D=MOD(ABS(MINX),CS)
+ IF(D.NE.0.0)MINX=(MINX+(CS-D))-CS
+ D=MOD(ABS(MAXX),CS)
+ IF(D.NE.0.0)MAXX=(MAXX-D)+CS
+ D=MOD(ABS(MINY),CS)
+ IF(D.NE.0.0)MINY=(MINY+(CS-D))-CS
+ D=MOD(ABS(MAXY),CS)
+ IF(D.NE.0.0)MAXY=(MAXY-D)+CS
+
+ NCOL=INT((MAXX-MINX)/CS)
+ NROW=INT((MAXY-MINY)/CS)
+
+ END SUBROUTINE UTL_IDFSNAPTONICEGRID
+
+ !###======================================================================
  SUBROUTINE UTL_IDFSNAPTOGRID_LLC(MINX,MAXX,MINY,MAXY,CS,NCOL,NROW,LLC)
  !###======================================================================
  REAL,INTENT(INOUT) :: MINX,MAXX,MINY,MAXY

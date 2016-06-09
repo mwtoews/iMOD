@@ -45,6 +45,7 @@ USE MOD_ISG_UTL, ONLY : UTL_GETUNITSISG
 USE MOD_MAP2IDF, ONLY : MAP2IDF_IMPORTMAP
 USE MOD_GEF2IPF, ONLY : GEF2IPF_MAIN
 USE MOD_GEF2IPF_PAR, ONLY : GEFNAMES,IPFFNAME
+USE MOD_GENPLOT, ONLY : TOPOSHPTOGEN
 IMPLICIT NONE
 CHARACTER(LEN=*),INTENT(IN),OPTIONAL :: IDFNAMEGIVEN
 CHARACTER(LEN=*),INTENT(IN),OPTIONAL :: LEGNAME
@@ -58,7 +59,7 @@ INTEGER,ALLOCATABLE,DIMENSION(:) :: ILIST
 INTEGER,DIMENSION(MAXFILES) :: IU
 CHARACTER(LEN=10000) :: IDFNAME,IDFLIST
 CHARACTER(LEN=256),ALLOCATABLE,DIMENSION(:) :: FNAMES
-LOGICAL :: LLEG,LPLOTTING,LGEF
+LOGICAL :: LLEG,LPLOTTING,LGEF,LIPF
 
 !## how many active before opening files
 IACT=MPW%NACT
@@ -72,22 +73,23 @@ IF(PRESENT(LPLOT))LPLOTTING=LPLOT
 IF(.NOT.PRESENT(IDFNAMEGIVEN))THEN
  IDFNAME=''
  IF(INETCDF.EQ.0)THEN
-  IF(.NOT.UTL_WSELECTFILE('All Known Files (*.idf;*.mdf;*.ipf;*.isg;*.iff;*.asc;*.gen;*.gef;*.map)'//&
-                   '|*.idf;*.mdf;*.ipf;*.isg;*.iff;*.asc;*.gen;*.gef;*.map|'// &
+  IF(.NOT.UTL_WSELECTFILE('All Known Files (*.idf;*.mdf;*.ipf;*.isg;*.iff;*.asc;*.shp;*.gen;*.gef;*.map)'//&
+                   '|*.idf;*.mdf;*.ipf;*.isg;*.iff;*.asc;*.shp;*.gen;*.gef;*.map|'// &
                    'iMOD Map (*.idf)|*.idf|'               //&
                    'iMOD Multi Data File (*.mdf)|*.mdf|'   //&
                    'iMOD Pointers (*.ipf)|*.ipf|'          //&
                    'iMOD Segment-River File (*.isg)|*.isg|'//&
                    'iMOD Flowline File (*.iff)|*.iff|'     //&
                    'ESRI Raster file (*.asc)|*.asc|'       //&
+                   'ESRI Shape file (*.shp)|*.shp|'       //&
                    'ESRI Ungenerate file (*.gen)|*.gen|'   //&
                    'GEF file (*.gef)|*.gef|'               //&
                    'PC Raster Map file (*.map)|*.map|',      &
                    LOADDIALOG+MUSTEXIST+PROMPTON+DIRCHANGE+MULTIFILE,IDFNAME,&
-                   'Load iMOD Map (*.idf,*.mdf,*.ipf,*.isg,*.iff,*.asc,*.gen,*.gef,*.map)'))RETURN
+                   'Load iMOD Map (*.idf,*.mdf,*.ipf,*.isg,*.iff,*.asc,*.shp,*.gen,*.gef,*.map)'))RETURN
  ELSEIF(INETCDF.EQ.1)THEN
-  IF(.NOT.UTL_WSELECTFILE('All Known Files (*.idf;*.mdf;*.ipf;*.isg;*.iff;*.nc;*.asc;*.gen;*.gef;*.map)'//&
-                   '|*.idf;*.mdf;*.ipf;*.isg;*.iff,*.nc;*.asc;*.gen;*.gef;*.map|'// &
+  IF(.NOT.UTL_WSELECTFILE('All Known Files (*.idf;*.mdf;*.ipf;*.isg;*.iff;*.nc;*.asc;*.shp;*.gen;*.gef;*.map)'//&
+                   '|*.idf;*.mdf;*.ipf;*.isg;*.iff,*.nc;*.asc;*.shp;*.gen;*.gef;*.map|'// &
                    'iMOD Map (*.idf)|*.idf|'               //&
                    'iMOD Multi Data File (*.mdf)|*.mdf|'   //&
                    'iMOD Pointers (*.ipf)|*.ipf|'          //&
@@ -95,11 +97,12 @@ IF(.NOT.PRESENT(IDFNAMEGIVEN))THEN
                    'iMOD Flowline File (*.iff)|*.iff|'     //&
                    'NetCDF File (*.nc)|*.nc|'              //&
                    'ESRI Raster file (*.asc)|*.asc|'       //&
+                   'ESRI Shape file (*.shp)|*.shp|'       //&
                    'ESRI Ungenerate file (*.gen)|*.gen|'   //&
                    'GEF file (*.gef)|*.gef|'               //&
                    'PC Raster Map file (*.map)|*.map|',      &
                    LOADDIALOG+MUSTEXIST+PROMPTON+DIRCHANGE+MULTIFILE,IDFNAME,&
-                   'Load iMOD Map (*.idf,*.mdf,*.ipf,*.isg,*.iff,*.nc,*.asc,*.gen,*.gef,*.map)'))RETURN
+                   'Load iMOD Map (*.idf,*.mdf,*.ipf,*.isg,*.iff,*.nc,*.asc,*.shp,*.gen,*.gef,*.map)'))RETURN
  ENDIF
 ELSE
  IDFNAME=IDFNAMEGIVEN
@@ -215,6 +218,14 @@ DO IDF=1,NIDF
    MP(IPLOT)%IPLOT=5
   CASE ('GEN')
    MP(IPLOT)%IPLOT=6
+  CASE ('SHP')
+   !## transform shp/dbf -> gen/dat
+   IF(.NOT.TOPOSHPTOGEN(TRIM(IDFNAME),LIPF))CYCLE
+   IF(LIPF)THEN
+    MP(IPLOT)%IPLOT=2; IDFNAME=IDFNAME(:INDEX(IDFNAME,'.',.TRUE.)-1)//'.IPF'
+   ELSE
+    MP(IPLOT)%IPLOT=6; IDFNAME=IDFNAME(:INDEX(IDFNAME,'.',.TRUE.)-1)//'.GEN'
+   ENDIF
   CASE DEFAULT
    CALL WMESSAGEBOX(OKONLY,EXCLAMATIONICON,COMMONOK,'iMOD can not recognize current extension in'//CHAR(13)//TRIM(IDFNAME),'Error')
    EXIT
