@@ -63,6 +63,8 @@ CONTAINS
                                 SP(IG)%ZLL(I)
   !## initial age set to zero!
   SP(IG)%TOT(I)=0.0
+  !## maximal layer
+  SP(IG)%MXL(I)=SP(IG)%KLC(I)
  END DO
  SP(IG)%NPART=NPART
 
@@ -73,8 +75,8 @@ CONTAINS
 ! YLC(:,1)=YLC(:,2)
 ! ZLC(:,1)=ZLC(:,2)
 
-! SP%SLAY    =SP%KLC
-! SP%MAXILAY =SP%SLAY
+! SP%SLAY=SP%KLC
+! SP%MXL =SP%SLAY
  
  END SUBROUTINE TRACEREADSP
 

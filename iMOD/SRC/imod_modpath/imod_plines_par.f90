@@ -64,6 +64,7 @@ TYPE SPOBJ
  REAL,POINTER,DIMENSION(:)    :: XLC_BU,YLC_BU,ZLC_BU,ZLL_BU,TOT_BU
  INTEGER,POINTER,DIMENSION(:) :: ILC   ,JLC   ,KLC   
  INTEGER,POINTER,DIMENSION(:) :: ILC_BU,JLC_BU,KLC_BU 
+ INTEGER,POINTER,DIMENSION(:) :: MXL   ,MXL_BU          !## max. modellayer
  INTEGER :: NPART  !## number particles per group
  INTEGER :: ICLR   !## particle colour
  INTEGER :: IACT   !## particle active (0=no; 1=yes)
