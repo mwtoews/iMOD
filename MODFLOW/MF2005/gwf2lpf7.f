@@ -878,7 +878,8 @@ C
 C     SPECIFICATIONS:
 C     ------------------------------------------------------------------
       USE GLOBAL,      ONLY:NCOL,NROW,NLAY,IBOUND,HNEW,BUFF,CR,CC,CV,
-     1                      BOTM,LBOTM,IOUT
+     1                      BOTM,LBOTM,IOUT,IUNIT
+      USE M_MF2005_IU, ONLY : IUANI    
       USE GWFBASMODULE,ONLY:ICBCFL,DELT,PERTIM,TOTIM,ICHFLG
       USE GWFLPFMODULE,ONLY:ILPFCB,LAYTYP,NOVFC
 C
@@ -944,6 +945,9 @@ C3B-----FOR EACH CELL CALCULATE FLOW THRU RIGHT FACE & STORE IN BUFFER.
       HDIFF=HNEW(J,I,K)-HNEW(J+1,I,K)
       BUFF(J,I,K)=HDIFF*CR(J,I,K)
   400 CONTINUE
+
+      if(IUNIT(IUANI).gt.0) call gwf2ani7bd(igrid,idir)                    ! DLT
+
 C
 C3C-----RECORD CONTENTS OF BUFFER AND RETURN.
       IF(IBD.EQ.1)
@@ -987,6 +991,9 @@ C4B-----FOR EACH CELL CALCULATE FLOW THRU FRONT FACE & STORE IN BUFFER.
       HDIFF=HNEW(J,I,K)-HNEW(J,I+1,K)
       BUFF(J,I,K)=HDIFF*CC(J,I,K)
   500 CONTINUE
+
+      if(IUNIT(IUANI).gt.0) call gwf2ani7bd(igrid,idir)                    ! DLT
+
 C
 C4C-----RECORD CONTENTS OF BUFFER AND RETURN.
       IF(IBD.EQ.1)
@@ -1155,7 +1162,8 @@ C
 C     SPECIFICATIONS:
 C     ------------------------------------------------------------------
       USE GLOBAL,      ONLY:NCOL,NROW,NLAY,IBOUND,HNEW,BUFF,CR,CC,CV,
-     1                      BOTM,LBOTM,IOUT
+     1                      BOTM,LBOTM,IOUT,IUNIT
+      USE M_MF2005_IU, ONLY : IUANI
       USE GWFBASMODULE,ONLY:MSUM,VBVL,VBNM,DELT,PERTIM,TOTIM,ICBCFL,
      1                      ICHFLG
       USE GWFLPFMODULE,ONLY:ILPFCB,LAYTYP,NOVFC
@@ -1184,6 +1192,23 @@ C3------CLEAR BUFFER.
       DO 5 J=1,NCOL
       BUFF(J,I,K)=ZERO
 5     CONTINUE
+
+      !## compute addition of diagonal fluxes from constant heads
+      if(iunit(iuani).gt.0)then 
+       call gwf2ani8bd_chd(IGRID)
+       DO K=1,NLAY
+        DO I=1,NROW
+         DO J=1,NCOL
+          IF(buff(j,i,k).LT.ZERO) THEN
+           CHOUT=CHOUT-buff(j,i,k)
+          ELSE
+           CHIN=CHIN+buff(j,i,k)
+          END IF
+         ENDDO
+        ENDDO
+       ENDDO
+      ENDIF
+
 C
 C3A-----IF SAVING CELL-BY-CELL FLOW IN A LIST, COUNT CONSTANT-HEAD
 C3A-----CELLS AND WRITE HEADER RECORDS.
@@ -1234,8 +1259,9 @@ C7A-----ADJACENT NO-FLOW CELL, OR TO AN ADJACENT CONSTANT-HEAD CELL.
 C
 C7B-----CALCULATE FLOW THROUGH THIS FACE INTO THE ADJACENT CELL.
       HDIFF=HNEW(J,I,K)-HNEW(J-1,I,K)
-      CHCH1=HDIFF*CR(J-1,I,K)
+!      CHCH1=HDIFF*CR(J-1,I,K)
       IF(IBOUND(J-1,I,K).LT.0) GO TO 30
+      CHCH1=HDIFF*CR(J-1,I,K)
       X1=CHCH1
       XX1=X1
 C
@@ -1251,8 +1277,9 @@ C8------CALCULATE FLOW THROUGH THE RIGHT FACE.
       IF(IBOUND(J+1,I,K).EQ.0) GO TO 60
       IF(IBOUND(J+1,I,K).LT.0 .AND. ICHFLG.EQ.0) GO TO 60
       HDIFF=HNEW(J,I,K)-HNEW(J+1,I,K)
-      CHCH2=HDIFF*CR(J,I,K)
+!      CHCH2=HDIFF*CR(J,I,K)
       IF(IBOUND(J+1,I,K).LT.0) GO TO 60
+      CHCH2=HDIFF*CR(J,I,K)
       X2=CHCH2
       XX2=X2
       IF(X2.LT.ZERO) THEN
@@ -1266,8 +1293,9 @@ C9------CALCULATE FLOW THROUGH THE BACK FACE.
       IF (IBOUND(J,I-1,K).EQ.0) GO TO 90
       IF (IBOUND(J,I-1,K).LT.0 .AND. ICHFLG.EQ.0) GO TO 90
       HDIFF=HNEW(J,I,K)-HNEW(J,I-1,K)
-      CHCH3=HDIFF*CC(J,I-1,K)
+!      CHCH3=HDIFF*CC(J,I-1,K)
       IF(IBOUND(J,I-1,K).LT.0) GO TO 90
+      CHCH3=HDIFF*CC(J,I-1,K)
       X3=CHCH3
       XX3=X3
       IF(X3.LT.ZERO) THEN
@@ -1281,8 +1309,9 @@ C10-----CALCULATE FLOW THROUGH THE FRONT FACE.
       IF(IBOUND(J,I+1,K).EQ.0) GO TO 120
       IF(IBOUND(J,I+1,K).LT.0 .AND. ICHFLG.EQ.0) GO TO 120
       HDIFF=HNEW(J,I,K)-HNEW(J,I+1,K)
-      CHCH4=HDIFF*CC(J,I,K)
+!      CHCH4=HDIFF*CC(J,I,K)
       IF(IBOUND(J,I+1,K).LT.0) GO TO 120
+      CHCH4=HDIFF*CC(J,I,K)
       X4=CHCH4
       XX4=X4
       IF(X4.LT.ZERO) THEN
@@ -1301,8 +1330,9 @@ C11-----CALCULATE FLOW THROUGH THE UPPER FACE.
       TOP=BOTM(J,I,LBOTM(K)-1)
       IF(TMP.LT.TOP) HD=TOP
   122 HDIFF=HD-HNEW(J,I,K-1)
-      CHCH5=HDIFF*CV(J,I,K-1)
+!      CHCH5=HDIFF*CV(J,I,K-1)
       IF(IBOUND(J,I,K-1).LT.0) GO TO 150
+      CHCH5=HDIFF*CV(J,I,K-1)
       X5=CHCH5
       XX5=X5
       IF(X5.LT.ZERO) THEN
@@ -1321,8 +1351,9 @@ C12-----CALCULATE FLOW THROUGH THE LOWER FACE.
       TOP=BOTM(J,I,LBOTM(K+1)-1)
       IF(TMP.LT.TOP) HD=TOP
   152 HDIFF=HNEW(J,I,K)-HD
-      CHCH6=HDIFF*CV(J,I,K)
+!      CHCH6=HDIFF*CV(J,I,K)
       IF(IBOUND(J,I,K+1).LT.0) GO TO 180
+      CHCH6=HDIFF*CV(J,I,K)
       X6=CHCH6
       XX6=X6
       IF(X6.LT.ZERO) THEN
@@ -1334,7 +1365,13 @@ C
 C13-----SUM THE FLOWS THROUGH SIX FACES OF CONSTANT HEAD CELL, AND
 C13-----STORE SUM IN BUFFER.
  180  RATE=CHCH1+CHCH2+CHCH3+CHCH4+CHCH5+CHCH6
-      BUFF(J,I,K)=RATE
+
+      if(iunit(iuani).gt.0)then
+       BUFF(J,I,K)=buff(j,i,k)+RATE
+      else     
+       BUFF(J,I,K)=RATE
+      endif
+
 C
 C14-----PRINT THE FLOW FOR THE CELL IF REQUESTED.
       IF(IBD.LT.0) THEN

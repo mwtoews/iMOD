@@ -376,7 +376,6 @@ c ------------------------------------------------------------------------------
       return
       end
 
-
       subroutine gwf2ani7bd(igrid,idir)
 c description:
 c ------------------------------------------------------------------------------
@@ -409,6 +408,171 @@ c ------------------------------------------------------------------------------
 
       return
       end subroutine gwf2ani7bd
+
+!##====================
+      subroutine gwf2ani8bd_chd(igrid)
+!##====================
+      use global, only: ncol, nrow, nlay, buff, ibound, hnew
+      use gwfanimodule
+
+      implicit none
+
+c arguments
+      integer, intent(in) :: igrid
+
+c program section
+c ------------------------------------------------------------------------------
+
+      ! set pointers for this igrid
+      call sgwf2ani3pnt(igrid)
+
+      call ani8fm(dfu,ncol,nrow,nlay,dcu,dcd,dcc,dcr,diag,ibound,hnew,1)
+      call ani8fm(dfd,ncol,nrow,nlay,dcu,dcd,dcc,dcr,diag,ibound,hnew,2)
+      call ani8fm(dff,ncol,nrow,nlay,dcu,dcd,dcc,dcr,diag,ibound,hnew,3)
+      call ani8fm(dfr,ncol,nrow,nlay,dcu,dcd,dcc,dcr,diag,ibound,hnew,4)
+
+      !## total flux caused by anisotropy and constant heads
+      buff=dfu+dfd+dff+dfr
+      buff=-1.0*buff
+      
+      return
+      end subroutine gwf2ani8bd_chd
+
+      !###====================================================================
+      subroutine ani8fm(x,ncol,nrow,nlay,dcu,dcd,dcc,dcr,diag,
+     1                 ibound,hnew,i)
+      !###====================================================================
+      implicit none
+
+      integer, intent(in) :: ncol,nrow,nlay
+      real, dimension(ncol,nrow,nlay), intent(out) :: x
+      real, dimension(ncol,nrow,nlay), intent(in) :: dcu
+      real, dimension(ncol,nrow,nlay), intent(in) :: dcc
+      real, dimension(ncol,nrow,nlay), intent(in) :: dcd
+      real, dimension(ncol,nrow,nlay), intent(in) :: dcr
+      real, dimension(ncol,nrow,nlay), intent(in) :: diag
+      integer, dimension(ncol,nrow,nlay), intent(in) :: ibound
+      double precision, dimension(ncol,nrow,nlay), intent(in) :: hnew
+      integer, intent(in) :: i
+
+      real,parameter :: ccrit=10.0e-03
+      integer:: ilay,irow,icol
+      real :: sumc
+
+      x = 0.
+
+      do ilay=1,nlay
+       do irow=1,nrow
+        do icol=1,ncol
+
+        !## constant head
+         if(ibound(icol,irow,ilay).lt.0)then
+          sumc=abs(dcu(icol,irow,ilay))+
+     1         abs(dcd(icol,irow,ilay))+
+     1         abs(dcc(icol,irow,ilay))+
+     1         abs(dcr(icol,irow,ilay))+
+     1         abs(diag(icol,irow,ilay))
+          if(sumc.gt.ccrit)then
+            !## connection towards right direction
+            if(icol.lt.ncol)then
+             if(ibound(icol+1,irow,ilay).gt.0)then
+             if(i.eq.4)then
+              x(icol,irow,ilay)=x(icol,irow,ilay)+
+     1        dcr(icol,irow,ilay)*
+     1         (hnew(icol+1,irow,ilay)-hnew(icol,irow,ilay))
+             end if
+            end if
+            if(irow.lt.nrow)then
+             !## diagonal
+             if(ibound(icol+1,irow+1,ilay).gt.0)then
+              if(i.eq.2)then
+               x(icol,irow,ilay)=x(icol,irow,ilay)+dcd(icol,irow,ilay)*
+     1          (hnew(icol+1,irow+1,ilay)-hnew(icol,irow,ilay))
+              endif
+             endif
+            end if
+            if(irow.gt.1)then
+             if(ibound(icol+1,irow-1,ilay).gt.0)then
+              if(i.eq.1)then
+               x(icol,irow,ilay)=x(icol,irow,ilay)+dcu(icol,irow,ilay)*
+     1          (hnew(icol+1,irow-1,ilay)-hnew(icol,irow,ilay))
+              endif
+             endif
+            endif
+           endif
+           !## connection towards bottom direction
+           if(irow.lt.nrow)then
+            if(ibound(icol,irow+1,ilay).gt.0)then
+             if(i.eq.3)then
+              x(icol,irow,ilay)=x(icol,irow,ilay)+
+     1         dcc(icol,irow,ilay)*
+     1         (hnew(icol,irow+1,ilay)-hnew(icol,irow,ilay))
+             endif
+            endif
+           endif
+          endif
+         endif
+
+!      IF(IBOUND(ICOL+1,IROW,ILAY).LT.0)THEN
+!       RHS(ICOL+1,IROW,ILAY)=RHS(ICOL+1,IROW,ILAY)+ANI(IPCK,4)*(HNEW(ICOL,IROW,ILAY)-HNEW(ICOL+1,IROW,ILAY))
+!      ENDIF
+   
+        !## constant head
+         if(ibound(icol,irow,ilay).gt.0)then
+          sumc=abs(dcu(icol,irow,ilay))+
+     1         abs(dcd(icol,irow,ilay))+
+     1         abs(dcc(icol,irow,ilay))+
+     1         abs(dcr(icol,irow,ilay))+
+     1         abs(diag(icol,irow,ilay))
+          if(sumc.gt.ccrit)then
+            !## connection towards right direction
+            if(icol.lt.ncol)then
+             if(ibound(icol+1,irow,ilay).lt.0)then
+             if(i.eq.4)then
+              x(icol+1,irow,ilay)=x(icol+1,irow,ilay)+
+     1        dcr(icol,irow,ilay)*
+     1         (hnew(icol,irow,ilay)-hnew(icol+1,irow,ilay))
+             end if
+            end if
+            if(irow.lt.nrow)then
+             !## diagonal
+             if(ibound(icol+1,irow+1,ilay).lt.0)then
+              if(i.eq.2)then
+               x(icol+1,irow+1,ilay)=x(icol+1,irow+1,ilay)+
+     1           dcd(icol,irow,ilay)*
+     1          (hnew(icol,irow,ilay)-hnew(icol+1,irow+1,ilay))
+              endif
+             endif
+            end if
+            if(irow.gt.1)then
+             if(ibound(icol+1,irow-1,ilay).lt.0)then
+              if(i.eq.1)then
+               x(icol+1,irow-1,ilay)=x(icol+1,irow-1,ilay)+
+     1           dcu(icol,irow,ilay)*
+     1          (hnew(icol,irow,ilay)-hnew(icol+1,irow-1,ilay))
+              endif
+             endif
+            endif
+           endif
+           !## connection towards bottom direction
+           if(irow.lt.nrow)then
+            if(ibound(icol,irow+1,ilay).lt.0)then
+             if(i.eq.3)then
+              x(icol,irow+1,ilay)=x(icol,irow+1,ilay)+
+     1         dcc(icol,irow,ilay)*
+     1         (hnew(icol,irow,ilay)-hnew(icol,irow+1,ilay))
+             endif
+            endif
+           endif
+          endif
+         endif
+
+        end do
+       end do
+      end do
+
+      return
+      end subroutine
 
 !###====================================================================
       subroutine scl1ten(dcu,dcd,dcc,dcr,kxx,kyy,kxy,ibound,
