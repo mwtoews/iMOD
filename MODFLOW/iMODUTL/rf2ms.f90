@@ -36,14 +36,10 @@ USE rf2mf_module, ONLY: NLAY,NROW,NCOL,root
 USE MOD_RF2MF, ONLY: DELR,DELC
 USE IDFMODULE
 USE IMOD_IDF, ONLY: IDFWRITE_WRAPPER
-
-!USE SCEN_MOD, ONLY : SCEN1READSCN
-
 IMPLICIT NONE
 
 PRIVATE
 
-!REAL,ALLOCATABLE,DIMENSION(:),SAVE :: DELR,DELC
 INTEGER :: SIMGRO_NROW,SIMGRO_NCOL,SIMGRO_NLAY
 TYPE SIMGRO_OBJ
  INTEGER :: IBOUND   !boundary condition
@@ -107,7 +103,8 @@ CONTAINS
  REAL,DIMENSION(:),ALLOCATABLE :: FCT,IMP,CONSTANTE,NODATA
  INTEGER,DIMENSION(:),ALLOCATABLE :: IERROR
  INTEGER,ALLOCATABLE,DIMENSION(:) :: ITMP
- CHARACTER(LEN=256) :: FFNAME, CL
+ CHARACTER(LEN=256) :: FFNAME
+ CHARACTER(LEN=512) :: CL
  CHARACTER(LEN=256),DIMENSION(:),ALLOCATABLE :: FNAME
  CHARACTER(LEN=256),DIMENSION(22) :: MSWP_IDFNAMES
  DATA MSWP_IDFNAMES/ &
@@ -172,9 +169,6 @@ CONTAINS
 
  !## initialize unit numbers
  INDSB=0; IAREA=0; ISELSVAT=0; IGWMP=0; IMODSIM=0; ISCAP=0; IINFI=0; IIDF =0
-
-! inquire(unit=IULOGFILE,opened=lex)
-! write(*,*) IULOGFILE,lex
 
  !## open indsb
  write(FFNAME,'(2a)') trim(simwd), 'svat2swnr_roff.inp'
@@ -437,6 +431,9 @@ CONTAINS
    else if (os.eq.2) then
      cl = 'cp "'//TRIM(FNAME(1))//'" "'//trim(simwd)//'"'
    end if
+   if(len_trim(cl).eq.len(cl))then
+    write(*,'(a)') 'Cannot copy file - increase length of string cl'; stop
+   endif
    CALL SYSTEM(trim(cl))
   ENDIF
  END DO
