@@ -31,7 +31,7 @@ LOGICAL :: LEXPDATE=.TRUE.     !## if TRUE: activate expire date
 INTEGER :: EXPDATE=20160630    !## expire data, after this date the iMOD-beta version cannot be used.
 INTEGER,SAVE :: ICDEBUGLEVEL   !## applied current debuglevel
 
-CHARACTER(LEN=30),PARAMETER :: RVERSION='V3_4_12'     !## release message - only with single subnummers
+CHARACTER(LEN=30),PARAMETER :: RVERSION='V3_4_13'     !## release message - only with single subnummers
 CHARACTER(LEN=30),PARAMETER :: BVERSION='Beta'       !## banner message !!!
 CHARACTER(LEN=32) :: LICFILE='I_accepted_'//TRIM(RVERSION)//'.txt'
 CHARACTER(LEN=256) :: IMFFNAME         !## name of drawing file
