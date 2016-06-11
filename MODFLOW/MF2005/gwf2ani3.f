@@ -419,6 +419,7 @@ c ------------------------------------------------------------------------------
 
 c arguments
       integer, intent(in) :: igrid
+      integer :: irow, icol, ilay
 
 c program section
 c ------------------------------------------------------------------------------
@@ -432,8 +433,15 @@ c ------------------------------------------------------------------------------
       call ani8fm(dfr,ncol,nrow,nlay,dcu,dcd,dcc,dcr,diag,ibound,hnew,4)
 
       !## total flux caused by anisotropy and constant heads
-      buff=dfu+dfd+dff+dfr
-      buff=-1.0*buff
+      do ilay=1,nlay
+       do irow=1,nrow
+        do icol=1,ncol
+         buff(icol,irow,ilay)=dfu(icol,irow,ilay)+dfd(icol,irow,ilay)+
+     1                        dff(icol,irow,ilay)+dfr(icol,irow,ilay)
+         buff(icol,irow,ilay)=-1.0*buff(icol,irow,ilay)
+        enddo
+       enddo
+      enddo
       
       return
       end subroutine gwf2ani8bd_chd
