@@ -593,6 +593,9 @@ IF(IOS.NE.0)THEN
 ENDIF
 IF(IOS.NE.0)CALL IMOD_UTL_PRINTTEXT('ERROR DataSet 4 (see manual):'//TRIM(LINE),2)
 
+bcf%minkd = MAX(0.0001,bcf%minkd)
+bcf%minc  = MAX(0.0001,bcf%minc)
+
 !#overrule submodel whenever iflag(2)=active
 IF(IFLAG(2).GT.0)THEN
  IF(IFLAG(2).GT.NMULT)CALL IMOD_UTL_PRINTTEXT('IFLAG(2).GT.NMULT',2)
