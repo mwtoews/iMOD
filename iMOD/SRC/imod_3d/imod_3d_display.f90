@@ -180,11 +180,6 @@ CONTAINS
   IF(NIDFLIST.GT.0)CALL IMOD3D_DISPLAY_IDF(IMODE)
   !## draw gen's
   IF(NGENLIST.GT.0)CALL IMOD3D_DISPLAY_GEN()
-
-!  !## plot and update indentifier-position
-!  IF(IINDPOS.EQ.1)THEN
-!   CALL IMOD3D_PLOT_INDPOS()
-!  ENDIF
   
   !## draw bmp
   CALL IMOD3D_DISPLAY_BMP()
