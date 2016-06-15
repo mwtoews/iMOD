@@ -335,8 +335,11 @@ c init the PWT data
          ilay = pwt(ipilay,ip)
          irow = pwt(ipirow,ip)
          icol = pwt(ipicol,ip)
-         sc1(icol,irow,ilay+1)= pwt(ipsc1,ip)
-         cv(icol,irow,ilay)   = pwt(ipvcont,ip)
+         if (ibound(icol,irow,ilay)  .gt.0 .and.
+     1       ibound(icol,irow,ilay+1).gt.0) then
+            sc1(icol,irow,ilay+1)= pwt(ipsc1,ip)
+            cv(icol,irow,ilay)   = pwt(ipvcont,ip)
+         end if   
       end do
       cc = pwt_kd
 
@@ -348,35 +351,38 @@ c init the PWT data
          irow = pwt(ipirow,ip)
          icol = pwt(ipicol,ip)
 
+         if (ibound(icol,irow,ilay)  .gt.0 .and.
+     1       ibound(icol,irow,ilay+1).gt.0) then
+         
          !## store top of pwt layer
-         rhs(icol,irow,ilay)=pwt(ipbot,ip) !xpwt(i,ipbot)
-
-         !## storage below pwt layer
-         t =  pwt(ipbot,ip)- pwt(iptop2,ip)
-         if(ihnew.eq.1)then
-            h =real(hnew(icol,irow,ilay))
-            h1=real(hnew(icol,irow,ilay+1))
-         elseif(ihnew.eq.2)then
-            h =real(hold(icol,irow,ilay))
-            h1=real(hold(icol,irow,ilay+1))
-         endif
-         if(h1.lt.t)sc1(icol,irow,ilay+1)=pwt(ipsc2,ip) !## conductance
-
-         !## adjust transmissivity
-         fct=(h-pwt(ipbot,ip))/pwt(ipthkaf,ip)
-         cc(icol,irow,ilay)=max(0.01,cc(icol,irow,ilay)*fct)
-
-         !## head below pwt is lower than pwt layer
-         if(h1.lt.pwt(ipbot,ip))then
-            !## force cv to yield hnew>=bot()
-            q1=max(0.0,h-pwt(ipbot,ip))*cv(icol,irow,ilay)
-            !## computed by ax=b
-            q2=(h-h1)*cv(icol,irow,ilay)
-            !## correction to vertical conductance (smaller)
-            fct=0.0; if(q2.gt.0.0) fct=q1/q2 !(q2+tiny)
-            cv(icol,irow,ilay)=fct*cv(icol,irow,ilay)
-         endif
-
+            rhs(icol,irow,ilay)=pwt(ipbot,ip) !xpwt(i,ipbot)
+   
+            !## storage below pwt layer
+            t =  pwt(ipbot,ip)- pwt(iptop2,ip)
+            if(ihnew.eq.1)then
+               h =real(hnew(icol,irow,ilay))
+               h1=real(hnew(icol,irow,ilay+1))
+            elseif(ihnew.eq.2)then
+               h =real(hold(icol,irow,ilay))
+               h1=real(hold(icol,irow,ilay+1))
+            endif
+            if(h1.lt.t)sc1(icol,irow,ilay+1)=pwt(ipsc2,ip) !## conductance
+   
+            !## adjust transmissivity
+            fct=(h-pwt(ipbot,ip))/pwt(ipthkaf,ip)
+            cc(icol,irow,ilay)=max(0.01,cc(icol,irow,ilay)*fct)
+   
+            !## head below pwt is lower than pwt layer
+            if(h1.lt.pwt(ipbot,ip))then
+               !## force cv to yield hnew>=bot()
+               q1=max(0.0,h-pwt(ipbot,ip))*cv(icol,irow,ilay)
+               !## computed by ax=b
+               q2=(h-h1)*cv(icol,irow,ilay)
+               !## correction to vertical conductance (smaller)
+               fct=0.0; if(q2.gt.0.0) fct=q1/q2 !(q2+tiny)
+               cv(icol,irow,ilay)=fct*cv(icol,irow,ilay)
+            endif
+         end if
       end do
 
       ! compute transmissivities using harmonic mean
@@ -435,8 +441,13 @@ c init the PWT data
             enddo
          enddo
       enddo
-      cr(ncol,1:nrow,1:nlay)=0.0
-      cc(1:ncol,nrow,1:nlay)=0.0
+      
+      do ilay=1,nlay
+         do irow=1,nrow; cc(ncol,irow,ilay)=0.0; enddo
+         do icol=1,ncol; cr(icol,nrow,ilay)=0.0; enddo
+      enddo
+c      cr(ncol,1:nrow,1:nlay)=0.0
+c      cc(1:ncol,nrow,1:nlay)=0.0
 
       ! save pointers
       call sgwf2bas7psv(igrid)
