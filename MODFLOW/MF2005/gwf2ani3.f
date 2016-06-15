@@ -834,10 +834,16 @@ c ------------------------------------------------------------------------------
         enddo
        enddo
       enddo
-      dcr(ncol,1:nrow,1:nlay)=0.0
-      dcc(1:ncol,nrow,1:nlay)=0.0
-      dcd(1:ncol,nrow,1:nlay)=0.0
-      dcu(1:ncol,1,1:nlay)   =0.0
+      do ilay=1,nlay
+       do irow=1,nrow; dcr(ncol,irow,ilay)=0.0; enddo
+       do icol=1,ncol; dcc(icol,nrow,ilay)=0.0; enddo
+       do icol=1,ncol; dcd(icol,nrow,ilay)=0.0; enddo
+       do icol=1,ncol; dcu(icol,1,ilay)   =0.0; enddo
+      enddo
+!      dcr(ncol,1:nrow,1:nlay)=0.0
+!      dcc(1:ncol,nrow,1:nlay)=0.0
+!      dcd(1:ncol,nrow,1:nlay)=0.0
+!      dcu(1:ncol,1,1:nlay)   =0.0
 
       return
       end
