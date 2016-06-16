@@ -228,7 +228,7 @@ C3------IF THERE ARE NEW NON-PARAMETER CHDS, READ THEM
       END IF
 
 c...      clip for aux variable < 0 in case NEGBND is specified
-      if (inegbnd.gt.0.and.itmp.gt.0) then                              ! DLT
+      if (inegbnd.gt.0) then                              ! DLT
          nchds = 0                                                      ! DLT
          do i = 1, nnpchd                                               ! DLT
             il=chds(1,i)                                                ! DLT
