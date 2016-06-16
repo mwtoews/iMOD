@@ -431,13 +431,16 @@ c ------------------------------------------------------------------------------
       call ani8fm(dfd,ncol,nrow,nlay,dcu,dcd,dcc,dcr,diag,ibound,hnew,2)
       call ani8fm(dff,ncol,nrow,nlay,dcu,dcd,dcc,dcr,diag,ibound,hnew,3)
       call ani8fm(dfr,ncol,nrow,nlay,dcu,dcd,dcc,dcr,diag,ibound,hnew,4)
-
+   
       !## total flux caused by anisotropy and constant heads
       do ilay=1,nlay
        do irow=1,nrow
         do icol=1,ncol
          buff(icol,irow,ilay)=dfu(icol,irow,ilay)+dfd(icol,irow,ilay)+
      1                        dff(icol,irow,ilay)+dfr(icol,irow,ilay)
+!        if(buff(icol,irow,ilay).gt.1.0)then
+!         write(*,*)
+!        endif
          buff(icol,irow,ilay)=-1.0*buff(icol,irow,ilay)
         enddo
        enddo
@@ -467,8 +470,14 @@ c ------------------------------------------------------------------------------
       integer:: ilay,irow,icol
       real :: sumc
 
-      x = 0.
-
+      do ilay=1,nlay
+       do irow=1,nrow
+        do icol=1,ncol
+         x(icol,irow,ilay) = 0.
+        enddo
+       enddo
+      enddo
+      
       do ilay=1,nlay
        do irow=1,nrow
         do icol=1,ncol
@@ -588,7 +597,7 @@ c ------------------------------------------------------------------------------
 !###====================================================================
       use imod_utl, only: imod_utl_ludecomp, imod_utl_lubacksub
       implicit none
-      integer ncol,nrow,ilay,nlay
+      integer ncol,nrow,ilay,nlay,ic1,ic2,ir1,ir2
 
       integer ibound(ncol,nrow,nlay)
       real c(ncol*nrow*16)
@@ -638,13 +647,13 @@ c ------------------------------------------------------------------------------
 
        do irow=2,nrow
         do icol=1,ncol-1
-
+      
 !########construct A
          do i=1,4
           do j=1,4
            a(j,i)=0.0
           end do
-         end do
+         end do 
 !########fill main diagonal of dual-mesh - control volume
          a(1,1)= kyy(icol,irow,ilay)+kyy(icol+1,irow,ilay)     ! ten1(2,2)+ten2(2,2);
          a(2,2)= kxx(icol+1,irow,ilay)+kxx(icol+1,irow-1,ilay) ! ten2(1,1)+ten3(1,1);
@@ -821,33 +830,33 @@ c ------------------------------------------------------------------------------
 
       !## array-cleaning
       do ilay=1,nlay
-       do irow=1,nrow-1
-        do icol=1,ncol-1
+       do irow=1,nrow
+        do icol=1,ncol
+         ic2=min(icol+1,ncol); ir2=min(irow+1,nrow)
+         ic1=max(icol-1,1);    ir1=max(irow-1,1)       
          if(ibound(icol,irow,ilay).lt.0)then
-          if(ibound(icol+1,irow,ilay).lt.0)  dcr(icol,irow,ilay)=0.0
-          if(ibound(icol,irow+1,ilay).lt.0)  dcc(icol,irow,ilay)=0.0
-          if(ibound(icol+1,irow+1,ilay).lt.0)dcd(icol,irow,ilay)=0.0
+          if(ibound(ic2,irow,ilay).lt.0)dcr(icol,irow,ilay)=0.0
+          if(ibound(icol,ir2,ilay).lt.0)dcc(icol,irow,ilay)=0.0
+          if(ibound(ic2,ir2,ilay).lt.0) dcd(icol,irow,ilay)=0.0
           if(irow.gt.1)then
-           if(ibound(icol+1,irow-1,ilay).lt.0)dcu(icol,irow,ilay)=0.0
+           if(ibound(ic2,ir1,ilay).lt.0)dcu(icol,irow,ilay)=0.0
           endif
          endif
         enddo
        enddo
       enddo
+
+      !## array-cleaning
       do ilay=1,nlay
        do irow=1,nrow; dcr(ncol,irow,ilay)=0.0; enddo
        do icol=1,ncol; dcc(icol,nrow,ilay)=0.0; enddo
        do icol=1,ncol; dcd(icol,nrow,ilay)=0.0; enddo
        do icol=1,ncol; dcu(icol,1,ilay)   =0.0; enddo
       enddo
-!      dcr(ncol,1:nrow,1:nlay)=0.0
-!      dcc(1:ncol,nrow,1:nlay)=0.0
-!      dcd(1:ncol,nrow,1:nlay)=0.0
-!      dcu(1:ncol,1,1:nlay)   =0.0
 
       return
       end
-
+      
 !###====================================================================
       subroutine scl1fmt(dcu,dcd,dcc,dcr,diag,rhs,ibound,hnew,ncol,nrow,
      1                   nlay,hcof,anifactor)
@@ -1112,16 +1121,8 @@ c      double precision rhs(ncol,nrow,nlay)
       do ilay=1,nlay
        do irow=1,nrow
         do icol=1,ncol
-         ic2=min(icol+1,ncol); ir2=min(irow+1,nrow)
-         ic1=max(icol-1,1);    ir1=max(irow-1,1)       
-         if ((anifactor(icol,irow,ilay).lt.1.).or. !P
-     1       (anifactor(icol,ir1,ilay).lt.1.).or. !N
-     2       (anifactor(icol,ir2,ilay).lt.1.).or. !S
-     3       (anifactor(ic2,irow,ilay).lt.1.).or. !E
-     4       (anifactor(ic1,irow,ilay).lt.1.)) then !W
-          rhs(icol,irow,ilay) =0.0
-          hcof(icol,irow,ilay)=0.0
-         endif
+         rhs(icol,irow,ilay) =0.0
+         hcof(icol,irow,ilay)=0.0
          diag(icol,irow,ilay)=0.0
         end do
        end do
@@ -1133,38 +1134,32 @@ c      double precision rhs(ncol,nrow,nlay)
         do icol=1,ncol
          ic2=min(icol+1,ncol); ir2=min(irow+1,nrow)
          ic1=max(icol-1,1);    ir1=max(irow-1,1)       
-         if ((anifactor(icol,irow,ilay).lt.1.).or. !P
-     1       (anifactor(icol,ir1,ilay).lt.1.).or. !N
-     2       (anifactor(icol,ir2,ilay).lt.1.).or. !S
-     3       (anifactor(ic2,irow,ilay).lt.1.).or. !E
-     4       (anifactor(ic1,irow,ilay).lt.1.)) then !W
-          if(ibound(icol,irow,ilay).eq.0)then
-           cr(icol,irow,ilay)=0.0
-           cc(icol,irow,ilay)=0.0
-           if(ilay.lt.nlay)cv(icol,irow,ilay)=0.0
-          else
-           if(icol.lt.ncol)then
-            if(ibound(ic2,irow,ilay).eq.0)cr(icol,irow,ilay)=0.0
-           endif
-           if(irow.lt.nrow)then
-            if(ibound(icol,ir2,ilay).eq.0)cc(icol,irow,ilay)=0.0
-           endif
-           if(ilay.lt.nlay)then
-            if(ibound(icol,irow,ilay+1).eq.0)cv(icol,irow,ilay)=0.0
-           endif
+         if(ibound(icol,irow,ilay).eq.0)then
+          cr(icol,irow,ilay)=0.0
+          cc(icol,irow,ilay)=0.0
+          if(ilay.lt.nlay)cv(icol,irow,ilay)=0.0
+         else
+          if(icol.lt.ncol)then
+           if(ibound(ic2,irow,ilay).eq.0)cr(icol,irow,ilay)=0.0
           endif
-          if(ibound(icol,irow,ilay).lt.0)then
-           if(icol.lt.ncol)then
-            if(ibound(ic2,irow,ilay).lt.0)cr(icol,irow,ilay)=0.0
-           endif
-           if(irow.lt.nrow)then
-            if(ibound(icol,ir2,ilay).lt.0)cc(icol,irow,ilay)=0.0
-           endif
-           if(ilay.lt.nlay)then
-            if(ibound(icol,irow,ilay+1).lt.0)cv(icol,irow,ilay)=0.0
-           endif
+          if(irow.lt.nrow)then
+           if(ibound(icol,ir2,ilay).eq.0)cc(icol,irow,ilay)=0.0
           endif
-         endif 
+          if(ilay.lt.nlay)then
+           if(ibound(icol,irow,ilay+1).eq.0)cv(icol,irow,ilay)=0.0
+          endif
+         endif
+         if(ibound(icol,irow,ilay).lt.0)then
+          if(icol.lt.ncol)then
+           if(ibound(ic2,irow,ilay).lt.0)cr(icol,irow,ilay)=0.0
+          endif
+          if(irow.lt.nrow)then
+           if(ibound(icol,ir2,ilay).lt.0)cc(icol,irow,ilay)=0.0
+          endif
+          if(ilay.lt.nlay)then
+           if(ibound(icol,irow,ilay+1).lt.0)cv(icol,irow,ilay)=0.0
+          endif
+         endif
         enddo
        enddo
       enddo
@@ -1304,7 +1299,15 @@ c      double precision rhs(ncol,nrow,nlay)
        do irow=1,nrow
         do icol=1,ncol
          if(ibound(icol,irow,ilay).ne.0)then
-          diag(icol,irow,ilay)=hcof(icol,irow,ilay)-rhs(icol,irow,ilay)
+          ic2=min(icol+1,ncol); ir2=min(irow+1,nrow)
+          ic1=max(icol-1,1);    ir1=max(irow-1,1)       
+          if ((anifactor(icol,irow,ilay).lt.1.).or. !P
+     1        (anifactor(icol,ir1,ilay).lt.1.).or. !N
+     2        (anifactor(icol,ir2,ilay).lt.1.).or. !S
+     3        (anifactor(ic2,irow,ilay).lt.1.).or. !E
+     4        (anifactor(ic1,irow,ilay).lt.1.)) then !W
+           diag(icol,irow,ilay)=hcof(icol,irow,ilay)-rhs(icol,irow,ilay)
+          endif
          endif
         end do
        end do
@@ -1315,20 +1318,32 @@ c      double precision rhs(ncol,nrow,nlay)
        do irow=1,nrow
         do icol=1,ncol
          if(ibound(icol,irow,ilay).ne.0)then
-          if(irow.lt.nrow)then
-           if(ibound(icol,irow+1,ilay).ne.0)then
-            dcc(icol,irow,ilay) =dcc(icol,irow,ilay)-cc(icol,irow,ilay)
+          ic2=min(icol+1,ncol); ir2=min(irow+1,nrow)
+          ic1=max(icol-1,1);    ir1=max(irow-1,1)       
+          if ((anifactor(icol,irow,ilay).lt.1.).or. !P
+     1        (anifactor(icol,ir1,ilay).lt.1.).or. !N
+     2        (anifactor(icol,ir2,ilay).lt.1.).or. !S
+     3        (anifactor(ic2,irow,ilay).lt.1.).or. !E
+     4        (anifactor(ic1,irow,ilay).lt.1.)) then !W
+
+           if(irow.lt.nrow)then
+            if(ibound(icol,irow+1,ilay).ne.0)then
+             dcc(icol,irow,ilay) =dcc(icol,irow,ilay)-cc(icol,irow,ilay)
+            endif 
            endif
-          endif
-          if(icol.lt.ncol)then
-           if(ibound(icol+1,irow,ilay).ne.0)then
-            dcr(icol,irow,ilay) =dcr(icol,irow,ilay)-cr(icol,irow,ilay)
+           if(icol.lt.ncol)then
+            if(ibound(icol+1,irow,ilay).ne.0)then
+             dcr(icol,irow,ilay) =dcr(icol,irow,ilay)-cr(icol,irow,ilay)
+            endif
            endif
+          else
+           dcc(icol,irow,ilay) =0.0
+           dcr(icol,irow,ilay) =0.0
           endif
          endif
         end do
        end do
       end do
-
+      
       return
       end
