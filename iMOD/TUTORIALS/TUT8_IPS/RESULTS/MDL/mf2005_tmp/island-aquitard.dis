@@ -1,0 +1,12 @@
+# Discretization file
+3 355 402 1 4 2 tbcheck
+1 1 0
+constant 10.00000
+constant 10.00000
+open/close 'd:\OSS\iMOD\TUTORIALS\TUT5_Solid_Building\RESULTS\surface_level.idf' 1.000000 (free) -1 scaling 2 1
+open/close 'd:\OSS\iMOD\TUTORIALS\TUT5_Solid_Building\RESULTS\Aquitard_top.idf' 1.000000 (free) -1 scaling 2 1
+open/close 'd:\OSS\iMOD\TUTORIALS\TUT5_Solid_Building\RESULTS\Aquitard_top.idf' 1.000000 (free) -1 scaling 2 1
+open/close 'd:\OSS\iMOD\TUTORIALS\TUT5_Solid_Building\RESULTS\Aquitard_bot.idf' 1.000000 (free) -1 scaling 2 1
+open/close 'd:\OSS\iMOD\TUTORIALS\TUT5_Solid_Building\RESULTS\Aquitard_bot.idf' 1.000000 (free) -1 scaling 2 1
+open/close 'd:\OSS\iMOD\TUTORIALS\TUT5_Solid_Building\RESULTS\BEDROCK.IDF' 1.000000 (free) -1 scaling 2 1
+0.0000000E+00 1 1.000000 SS

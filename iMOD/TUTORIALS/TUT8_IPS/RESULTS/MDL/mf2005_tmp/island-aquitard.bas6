@@ -1,0 +1,9 @@
+# Basic Package file
+free
+open/close 'd:\OSS\iMOD\TUTORIALS\TUT5_Solid_Building\RESULTS\BOUNDARY.IDF' 1 (free) -1 scaling 1 0
+constant 1
+constant 1
+ 3.4028235E+38
+constant 0.0000000E+00
+constant 0.0000000E+00
+constant 0.0000000E+00
