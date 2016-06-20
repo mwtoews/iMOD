@@ -2579,7 +2579,7 @@ IPFLOOP: DO I=1,SIZE(IPF)
  LOGICAL FUNCTION TRACEREADBUDGET(IPER,IBATCH)
  !###======================================================================
  IMPLICIT NONE
- REAL,PARAMETER :: QCRIT=0.1  !## if bigger, it potential discharges water
+ REAL,PARAMETER :: QCRIT=0.01  !## smaller value might be noise
  INTEGER,INTENT(IN) :: IBATCH,IPER
  CHARACTER(LEN=256) :: STRING
  INTEGER :: ILAY,IROW,ICOL,ITYPE
@@ -2635,8 +2635,6 @@ IPFLOOP: DO I=1,SIZE(IPF)
   ENDDO; ENDDO
  ENDDO
 
- CALL IDFDEALLOCATEX(IDFTMP)
-
  !## read flux-lower-face
  QZ  =0.0
  IF(NLAY.GT.1)THEN
@@ -2677,6 +2675,12 @@ IPFLOOP: DO I=1,SIZE(IPF)
   ENDDO
  ENDDO
  
+! idf%fname='d:\qss.idf'
+! idf%x=qss(:,:,1)
+! if(idfwrite(idf,idf%fname,1))then; endif
+ 
+ CALL IDFDEALLOCATEX(IDFTMP)
+
  TRACEREADBUDGET=.TRUE.
 
  END FUNCTION TRACEREADBUDGET

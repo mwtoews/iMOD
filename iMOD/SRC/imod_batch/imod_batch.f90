@@ -3612,7 +3612,7 @@ CONTAINS
     ENDIF
     IDATE=JDATE; Q1=Q2; JD1=JD2
    ENDDO
-   !## truck
+   !## trick for last - assume that continues a month
    BAL(IBAL)%Q(IPER)=BAL(IBAL)%Q(IPER)+Q1*31.0
    CLOSE(KU)
   ENDDO
