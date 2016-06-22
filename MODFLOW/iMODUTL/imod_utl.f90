@@ -33,6 +33,7 @@ MODULE IMOD_UTL
  INTEGER,DIMENSION(2),SAVE :: IFLAG
  REAL,PARAMETER :: MSWPMV=10.0       !##   add meter to surface level urban area
 
+character(len=1024), parameter :: licfile = 'I_accepted_v3_4.txt' 
 integer, parameter :: nlic = 33
 character(len=79), dimension(nlic) :: lic
 integer, parameter :: nhdr = 40
