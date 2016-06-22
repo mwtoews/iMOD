@@ -24,6 +24,8 @@ MODULE MOD_IPF_PAR
 
 USE RESOURCE, ONLY : ID_DIPFINFO_TAB1TAB1,ID_DIPFINFO_TAB1TAB2,ID_DIPFINFO_TAB1TAB3, &
                      ID_DIPFINFO_TAB1TAB4,ID_DIPFINFO_TAB1TAB5
+USE MODPLOT, ONLY : MAXIAXES
+
 INTEGER,PARAMETER :: MAXLEN=50
 
 CHARACTER(LEN=MAXLEN),ALLOCATABLE,DIMENSION(:,:) :: CIPF
@@ -36,7 +38,7 @@ TYPE IPFOBJ
  INTEGER :: ACOL       !## column number of associated files
  INTEGER :: PCOL       !## plot column number of associated files - labeling
  INTEGER :: ILEGDLF    !## dlf legend (1-10)
- INTEGER,DIMENSION(20) :: IAXES  !## which axes to be used for each column in the associated files
+ INTEGER,DIMENSION(MAXIAXES) :: IAXES  !## which axes to be used for each column in the associated files
  INTEGER :: SYMBOL     !## plot symbol
  INTEGER :: THICKNESS  !## plot symbol grootte
  CHARACTER(LEN=10) :: FEXT !## extent of associated files
@@ -92,7 +94,7 @@ TYPE TYPE_IPF
  REAL :: XMIN,XMAX  !## for top  and bottom axes
  REAL :: YMIN,YMAX  !## for left and right  axes
  REAL :: Y2MIN,Y2MAX  !## second yaxes
- INTEGER,DIMENSION(20) :: IAXES !## 1=left,bottom ;2=right
+ INTEGER,DIMENSION(MAXIAXES) :: IAXES !## 1=left,bottom ;2=right
  CHARACTER(LEN=50) :: FNAME
 END TYPE TYPE_IPF
 TYPE(TYPE_IPF),DIMENSION(:),ALLOCATABLE :: ASSF

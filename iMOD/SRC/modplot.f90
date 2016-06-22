@@ -28,7 +28,8 @@ USE MOD_IDF_PAR, ONLY : IDFOBJ
  INTEGER,PARAMETER :: MXCGRAD  =7    !## max. color for gradient
  INTEGER,PARAMETER :: MXCLASS  =50   !## classed
  INTEGER,PARAMETER :: MXMPLOT  =1000 !## maximum plots in mp and mdf objects
-
+ INTEGER,PARAMETER :: MAXIAXES =50   !## maximum number of column in associates txt-files
+ 
  TYPE LEGENDOBJ
   INTEGER,DIMENSION(MXCLR) :: RGB
   REAL,DIMENSION(0:MXCLR)  :: CLASS
@@ -52,7 +53,7 @@ USE MOD_IDF_PAR, ONLY : IDFOBJ
 
   INTEGER                  :: NLIDF                     !## number of listed idf to be plotted
 
-  INTEGER,DIMENSION(20) :: IAXES  !## which axes to be used for each column in the associated files
+  INTEGER,DIMENSION(MAXIAXES) :: IAXES  !## which axes to be used for each column in the associated files
 
   INTEGER                  :: XCOL
   INTEGER                  :: YCOL
