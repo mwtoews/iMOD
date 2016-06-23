@@ -443,8 +443,8 @@ c init the PWT data
       enddo
       
       do ilay=1,nlay
-         do irow=1,nrow; cc(ncol,irow,ilay)=0.0; enddo
-         do icol=1,ncol; cr(icol,nrow,ilay)=0.0; enddo
+         do irow=1,nrow; cr(ncol,irow,ilay)=0.0; enddo
+         do icol=1,ncol; cc(icol,nrow,ilay)=0.0; enddo
       enddo
 c      cr(ncol,1:nrow,1:nlay)=0.0
 c      cc(1:ncol,nrow,1:nlay)=0.0
