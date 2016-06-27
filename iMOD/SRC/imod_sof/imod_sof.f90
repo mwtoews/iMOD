@@ -556,7 +556,8 @@ if(irow.eq.ir.and.icol.eq.ic)f=1.0
  !## idf(3)=aspect
  !## idf(4)=visited places
  !## idf(5)=pointer flow area, then copy of dem
-
+ !## idf(6)=pits
+ 
  CALL OSD_TIMER(ITIC); WRITE(6,'(/A/)') '----'
 
  !## read levelidf
@@ -587,8 +588,9 @@ if(irow.eq.ir.and.icol.eq.ic)f=1.0
  ENDIF
  
  !## indentify pitts
- CALL SOF_GET_PITT(IDF(1),IDF(5))
- IDF(5)%NODATA=0.0; IF(.NOT.IDFWRITE(IDF(5),IDF(3)%FNAME(:INDEX(IDF(3)%FNAME,'.',.TRUE.)-1)//'_pitt.idf',1))THEN; ENDIF
+ CALL SOF_GET_PITT(IDF(1),IDF(6)) !5))
+ IDF(6)%NODATA=0.0; IF(.NOT.IDFWRITE(IDF(6),IDF(3)%FNAME(:INDEX(IDF(3)%FNAME,'.',.TRUE.)-1)//'_pitt.idf',1))THEN; ENDIF
+! IDF(5)%NODATA=0.0; IF(.NOT.IDFWRITE(IDF(5),IDF(3)%FNAME(:INDEX(IDF(3)%FNAME,'.',.TRUE.)-1)//'_pitt.idf',1))THEN; ENDIF
 
  !## copy dem
  IDF(5)%X=IDF(1)%X; IDF(5)%NODATA=IDF(1)%NODATA
@@ -597,7 +599,7 @@ if(irow.eq.ir.and.icol.eq.ic)f=1.0
  ENDIF
  
  !## fill in pitts; fill in gradients
- CALL SOF_FILL_PITT(IDF(1),IDF(2),IDF(3),IDF(4),IDF(5),IGRAD)
+ CALL SOF_FILL_PITT(IDF(1),IDF(2),IDF(3),IDF(4),IDF(5),IDF(6),IGRAD)
  IF(.NOT.IDFWRITE(IDF(1),IDF(3)%FNAME,1))THEN; ENDIF
 
  IF(IGRAD.EQ.1)THEN
@@ -979,15 +981,15 @@ if(irow.eq.ir.and.icol.eq.ic)f=1.0
  ENDDO
  
  !## sort list
- CALL SORTEM(1,NP,PL(:,3),2,PL(:,1),PL(:,2),(/0.0/),(/0.0/),(/0.0/),(/0.0/),(/0.0/)) !,PL,PL,PL,PL,PL)
+ CALL SORTEM(1,NP,PL(:,3),2,PL(:,1),PL(:,2),(/0.0/),(/0.0/),(/0.0/),(/0.0/),(/0.0/)) 
  
  END SUBROUTINE SOF_GET_PITT
 
  !###======================================================================
- SUBROUTINE SOF_FILL_PITT(DEM,SLOPE,ASPECT,IDFP,DEMORG,IGRAD)
+ SUBROUTINE SOF_FILL_PITT(DEM,SLOPE,ASPECT,IDFP,DEMORG,PITS,IGRAD)
  !###======================================================================
  IMPLICIT NONE
- TYPE(IDFOBJ),INTENT(INOUT) :: DEM,IDFP,SLOPE,ASPECT,DEMORG
+ TYPE(IDFOBJ),INTENT(INOUT) :: DEM,IDFP,SLOPE,ASPECT,DEMORG,PITS
  INTEGER,INTENT(IN) :: IGRAD
  INTEGER :: I,J,ICOL,IROW,NBPX,NPPX,NTPX,ITYPE
  REAL :: F,ZMAX
@@ -1045,7 +1047,7 @@ if(irow.eq.ir.and.icol.eq.ic)f=1.0
    
   F=REAL(I)/REAL(NP)*100.0; WRITE(6,'(A,F10.3,2(A,I8),A,F10.3,A)') '+Processing pitt:',F,' % (nppx= ',NPPX,' ; nbpx= ',NBPX,'; z=',PPX(1)%Z,')'
 
-  IF(IGRAD.EQ.1)CALL SOF_FILL_FLATAREAS(DEM,DEMORG,SLOPE,ASPECT,NPPX)
+  IF(IGRAD.EQ.1)CALL SOF_FILL_FLATAREAS(DEM,DEMORG,SLOPE,ASPECT,PITS,NPPX)
 
   !## clean idfp%x()
   DO J=1,NTPX; IDFP%X(TPX(J)%ICOL,TPX(J)%IROW)=IDFP%NODATA; ENDDO 
@@ -1071,10 +1073,10 @@ if(irow.eq.ir.and.icol.eq.ic)f=1.0
  END SUBROUTINE SOF_FILL_PITT 
  
  !###======================================================================
- SUBROUTINE SOF_FILL_FLATAREAS(DEM,DEMORG,SLOPE,ASPECT,NPPX)
+ SUBROUTINE SOF_FILL_FLATAREAS(DEM,DEMORG,SLOPE,ASPECT,PITS,NPPX)
  !###======================================================================
  IMPLICIT NONE
- TYPE(IDFOBJ),INTENT(INOUT) :: SLOPE,ASPECT,DEM,DEMORG
+ TYPE(IDFOBJ),INTENT(INOUT) :: SLOPE,ASPECT,DEM,DEMORG,PITS
  INTEGER,INTENT(IN) :: NPPX
  TYPE(IDFOBJ) :: PCG
  INTEGER,DIMENSION(2) :: PITLOC,OUTLOC
@@ -1106,17 +1108,22 @@ if(irow.eq.ir.and.icol.eq.ic)f=1.0
  DO I=1,NPPX 
   IC=PPX(I)%ICOL-IC1+1
   IR=PPX(I)%IROW-IR1+1
-
-! CALL SOF_COMPUTE_SLOPE_ASPECT_CALC(DEM,SLOPE,ASPECT,PPX(I)%IROW,PPX(I)%ICOL)
-
+  !## reset angle
+  SLOPE%X(PPX(I)%ICOL,PPX(I)%IROW)=SLOPE%NODATA
+  CALL SOF_COMPUTE_SLOPE_ASPECT_CALC(DEM,SLOPE,ASPECT,PPX(I)%IROW,PPX(I)%ICOL)
+  !## if pitt, set angle to nodata
+  IF(PITS%X(PPX(I)%ICOL,PPX(I)%IROW).EQ.1.0)ASPECT%X(PPX(I)%ICOL,PPX(I)%IROW)=ASPECT%NODATA
   PCG%X(IC,IR)=ASPECT%X(PPX(I)%ICOL,PPX(I)%IROW) 
-!  PCG%X(IC,IR)=HINI
  ENDDO
-! !## locate spill-location
-! IC=PPX(NPPX)%ICOL-IC1+1
-! IR=PPX(NPPX)%IROW-IR1+1
-! PCG%X(IC,IR)=ASPECT%X(PPX(NPPX)%ICOL,PPX(NPPX)%IROW)
-! PCG%X(IC,IR)=-1.0
+
+! !## fill in all known aspects (so far)
+! DO ICOL=1,PCG%NCOL
+!  DO IROW=1,PCG%NROW
+!   IC=ICOL+IC1-1
+!   IR=IROW+IR1-1
+!   PCG%X(ICOL,IROW)=ASPECT%X(IC,IR)
+!  ENDDO
+! ENDDO
  
  !# if flat area --
  CALL SOF_SOLVE(PCG,PITLOC,OUTLOC)
@@ -1158,21 +1165,16 @@ if(irow.eq.ir.and.icol.eq.ic)f=1.0
  INTEGER(KIND=2),POINTER,DIMENSION(:,:,:) :: CR
  REAL,ALLOCATABLE,DIMENSION(:,:) :: A
  INTEGER :: IROW,ICOL,NCR,D,DR,DC,IL,I,IR,IC,ICR,JCR
- REAL :: XC,YC,ASPECT,DX,DY
+ REAL :: XC,YC,ASPECT,DX,DY,ASPILL
  
  ALLOCATE(A(PCG%NCOL,PCG%NROW),ID(PCG%NCOL,PCG%NROW),CR(PCG%NCOL*PCG%NROW,2,2))
  A=PCG%NODATA; ID=INT(3,1)
   
- !## use a() om locaties die nodata moeten blijven te markeren
+ !## use a() to denote locations that need to remain nodata
  A=PCG%X
 
- IF(IDFWRITE(PCG,'D:\PCG.IDF',1))THEN; ENDIF
+ IF(IDFWRITE(PCG,'D:\PCG1.IDF',1))THEN; ENDIF
  
-! write(*,*)
-! do irow=1,pcg%nrow
-!  write(*,'(99f10.2)') (a(icol,irow),icol=1,pcg%ncol)
-! enddo
-
  !## trace all to pit - nodata only
  ICOL=PITLOC(1); IROW=PITLOC(2)
  !## no gradient in pit location
@@ -1180,21 +1182,11 @@ if(irow.eq.ir.and.icol.eq.ic)f=1.0
 
  !## trace all to outlet
  ICOL=OUTLOC(1); IROW=OUTLOC(2)
- !## no gradient in outlet location
- A(ICOL,IROW)=PCG%NODATA
-
-! write(*,*) 'pit',PITLOC(1),PITLOC(2)
-! do irow=1,pcg%nrow
-!  write(*,'(99f10.2)') (a(icol,irow),icol=1,pcg%ncol)
-! enddo
+ !## no gradient in outlet location, save angle though
+ ASPILL=A(ICOL,IROW); A(ICOL,IROW)=PCG%NODATA
 
  !## store visited locations
  PCG%X=0.0
-! DO IROW=1,PCG%NROW
-!  DO ICOL=1,PCG%NCOL
-!   IF(A(ICOL,IROW).NE.PCG%NODATA)PCG%X(ICOL,IROW)=2.0
-!  ENDDO
-! ENDDO
  
  !## trace all to pit - nodata only
  ICOL=PITLOC(1); IROW=PITLOC(2)
@@ -1228,13 +1220,13 @@ if(irow.eq.ir.and.icol.eq.ic)f=1.0
         ID(IC,IR)=D
         A(IC,IR)=ATAN2(-1.0*REAL(DR),REAL(DC))
        ENDIF
-!      ENDIF
-       !## add to new list of to be analysed locations
-       IL=IL+1
-       CR(IL,1,JCR)=IC
-       CR(IL,2,JCR)=IR
-       PCG%X(IC,IR)=2.0
       ENDIF
+      !## add to new list of to be analysed locations
+      IL=IL+1
+      CR(IL,1,JCR)=IC
+      CR(IL,2,JCR)=IR
+      PCG%X(IC,IR)=2.0
+!      ENDIF
      ENDIF
     ENDDO
    ENDDO
@@ -1260,9 +1252,11 @@ if(irow.eq.ir.and.icol.eq.ic)f=1.0
 !  write(*,'(99f10.2)') (a(icol,irow),icol=1,pcg%ncol)
 ! enddo
 
+! PCG%X=ID
+ IF(IDFWRITE(PCG,'D:\PCG2.IDF',1))THEN; ENDIF
+
  !## fill pcg%x with angles
  PCG%X=A
-
  IF(IDFWRITE(PCG,'D:\PCG.IDF',1))THEN; ENDIF
 
  !## backtrace from the outlet towards the pit - reverse angles
@@ -1296,6 +1290,11 @@ if(irow.eq.ir.and.icol.eq.ic)f=1.0
   CALL IDFGETLOC(PCG,IROW,ICOL,XC,YC)
 
  ENDDO
+
+! !## trace all to outlet
+! ICOL=OUTLOC(1); IROW=OUTLOC(2)
+! !## no gradient in outlet location, save angle though
+! PCG%X(ICOL,IROW)=ASPILL
 
  IF(IDFWRITE(PCG,'D:\PCG.IDF',1))THEN; ENDIF
 

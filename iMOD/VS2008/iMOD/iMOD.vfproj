@@ -136,6 +136,8 @@
 				<Tool Name="VFFortranCompilerTool" WarnInterfaces="false"/></FileConfiguration></File></Filter>
 		<Filter Name="imod_geoconnect">
 		<File RelativePath="..\..\SRC\imod_geoconnect\imod_geoconnect.f90">
+			<FileConfiguration Name="Debug|Win32">
+				<Tool Name="VFFortranCompilerTool" Preprocess="preprocessYes" PreprocessorDefinitions="WINTERACTER9"/></FileConfiguration>
 			<FileConfiguration Name="Release|x64">
 				<Tool Name="VFFortranCompilerTool" Preprocess="preprocessYes" PreprocessorDefinitions="WINTERACTER9"/></FileConfiguration>
 			<FileConfiguration Name="Debug|x64">
@@ -327,6 +329,8 @@
 		<File RelativePath="..\..\..\iMOD\SRC\imod_pcg\imod_pcg.f90"/></Filter>
 		<Filter Name="imod_plugin">
 		<File RelativePath="..\..\SRC\imod_plugin\imod_plugin.f90">
+			<FileConfiguration Name="Debug|Win32">
+				<Tool Name="VFFortranCompilerTool" Preprocess="preprocessYes" PreprocessorDefinitions="WINTERACTER9"/></FileConfiguration>
 			<FileConfiguration Name="Release|x64">
 				<Tool Name="VFFortranCompilerTool" Preprocess="preprocessYes" PreprocessorDefinitions="WINTERACTER9"/></FileConfiguration>
 			<FileConfiguration Name="Debug|x64">
