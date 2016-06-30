@@ -8,7 +8,7 @@
 //
 // Winteracter resource script. 
 //
-// Modified : 27/Jun/2016 17:59:08
+// Modified : 28/Jun/2016 13:27:22
 //
 ///////////////////////////////////////////////////
 //
@@ -806,7 +806,6 @@
 #define ID_DIPFLABELS                     300
 #define IDF_LABELING                     1179
 #define ID_GENOPTIONS                   40196
-#define ID_EXTRACTGEN                   40197
 #define ID_DEXTRACT                       301
 #define ID_SHOWNARROW                   40198
 #define ID_DMDFFILES                      302
@@ -10466,7 +10465,6 @@ BEGIN
     POPUP "GEN Options"
     BEGIN
         MENUITEM "GEN &Configure ...",                       ID_GENCONFIGURE
-        MENUITEM "GEN &Extract ...",                         ID_EXTRACTGEN
     END
     MENUITEM SEPARATOR
     POPUP "Legend"
@@ -10555,7 +10553,6 @@ ID_ISGSTUWEN,"Display the locations (symbol = triangle) that contain time depend
 ID_ISGQHR,"Display the nodes (symbol = square with two colours) with a discharge-head relationship\0",
 ID_GENOPTIONS,"Basic functionalities to manipulate GEN-files\0",
 ID_GENCONFIGURE,"Define the settings for display of the GEN-files\0",
-ID_EXTRACTGEN,"Create a new GEN file by extracting features from a GEN-file\0",
 ID_LEGEND,"Basic functionalities to manipulate legends\0",
 ID_PLOTLEGEND,"Display the legend on the graphical window\0",
 ID_LEGENDCOLUMNS,"Define the number of columns displayed in the legend\0",
@@ -11784,5 +11781,5 @@ END
 //*WI* FORTSAVE    1
 //*WI* FILENAME    resource.f90
 //*WI* FMODNAME    RESOURCE
-//*WI* LASTTYPE        2
-//*WI* LASTRES        58
+//*WI* LASTTYPE        1
+//*WI* LASTRES         2
