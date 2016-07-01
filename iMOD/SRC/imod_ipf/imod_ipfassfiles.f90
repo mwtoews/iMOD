@@ -958,8 +958,8 @@ CONTAINS
 
  !## error occured let calling routine handle error
  IF(IOS.NE.0)THEN
-!  CALL WMESSAGEBOX(OKONLY,EXCLAMATIONICON,COMMONOK,'Error reading DATA record number: '//TRIM(ITOS(I))//' in:'//CHAR(13)// &
-!    'file: '//TRIM(FNAME),'Error')
+  CALL WMESSAGEBOX(OKONLY,EXCLAMATIONICON,COMMONOK,'Error reading DATA record number: '//TRIM(ITOS(I))//' in:'//CHAR(13)// &
+    'file: '//TRIM(FNAME),'Error')
 !  RETURN
   ASSF(IASSF)%NRASS=I-1
  ENDIF
