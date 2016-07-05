@@ -40,8 +40,8 @@ INTEGER,PRIVATE :: NXY
 INTEGER,ALLOCATABLE,DIMENSION(:),PRIVATE :: SELID
 INTEGER,ALLOCATABLE,DIMENSION(:,:),PRIVATE :: SELQID
 REAL,ALLOCATABLE,DIMENSION(:,:),PRIVATE :: SELD 
-REAL,ALLOCATABLE,DIMENSION(:),PRIVATE :: B
-REAL,ALLOCATABLE,DIMENSION(:,:),PRIVATE :: A,L,U
+REAL,ALLOCATABLE,DIMENSION(:),PRIVATE :: B,C
+REAL,ALLOCATABLE,DIMENSION(:,:),PRIVATE :: A,L,U,AI
 
 CONTAINS
 
@@ -65,7 +65,16 @@ CONTAINS
  INTEGER :: ITYPE,NR,NC,MX,I,J
  
  !## clean points for duplicates and get mean for simple kriging
- CALL KRIGING_INIT(MD,XD,YD,ZD,ND,IDF,KTYPE,MZ,COINCIDENT,COINCIDENTDIST) 
+ CALL KRIGING_INIT(MD,XD,YD,ZD,ND,IDF,KTYPE,COINCIDENT,COINCIDENTDIST) 
+
+ !## compute mean and substract values from mean - simple kriging
+ IF(KTYPE.GT.0)THEN
+  MZ=0.0; DO I=1,ND; MZ=MZ+ZD(I); ENDDO; MZ=MZ/REAL(ND)
+  DO I=1,ND; ZD(I)=ZD(I)-MZ; ENDDO
+ ENDIF
+
+ !## solve system
+ IF(IBATCH.EQ.0)CALL WINDOWOUTSTATUSBAR(4,'Number of kriging points '//TRIM(ITOS(ND)))
 
  !## read polygon in GENfile is available
  NXY=0; CALL KRIGING_READGEN(GENFNAME)
@@ -100,7 +109,8 @@ CONTAINS
  IF(ASSOCIATED(XY))DEALLOCATE(XY);    IF(ASSOCIATED(IXY))DEALLOCATE(IXY)
  
  DEALLOCATE(SELID,SELD,SELQID,A,B,L,U)
- 
+ IF(ALLOCATED(AI))DEALLOCATE(AI,C)
+  
  END SUBROUTINE KRIGING_MAIN
 
  !###======================================================================
@@ -291,13 +301,16 @@ CONTAINS
  REAL,INTENT(IN) :: X,Y,SILL,NUGGET,MZ,NODATA,RANGE
  REAL,INTENT(IN),DIMENSION(ND) :: XD,YD,ZD 
  INTEGER,INTENT(IN) :: NR,NC
- INTEGER :: I,J,K,IC,IR,NP,N,ID,JD,IROW,ICOL,IQ
+ INTEGER :: I,J,K,IC,IR,NP,N,ID,JD,IROW,ICOL,IQ,ICMPINV
  REAL :: DX,DY,DXY,GAMMA,H,MZZ,F,USERANGE,C0,C1
  
  USERANGE=RANGE
- C0=NUGGET
- C1=SILL-NUGGET
+ C0      =NUGGET
+ C1      =SILL-NUGGET
  
+ !## already computed inverse of A
+ ICMPINV=0; IF(ALLOCATED(AI))ICMPINV=1
+
  IF(PNTSEARCH.EQ.1)THEN
 
   !## maximal search is minp - get them
@@ -335,12 +348,12 @@ CONTAINS
 
   J=0
   DO ID=1,ND
-   DXY=KRIGING_DIST(XD(ID),YD(ID),X,Y)
-   IF(DXY.LT.0.0.OR.DXY.GE.USERANGE)CYCLE
+!    DXY=KRIGING_DIST(XD(ID),YD(ID),X,Y)
+!   IF(DXY.LT.0.0.OR.DXY.GE.USERANGE)CYCLE
    J=J+1; SELID(J)=ID
   ENDDO
   NP=J 
-
+  
  ENDIF
   
  !## no points left, interpolated value equals nodata
@@ -349,41 +362,54 @@ CONTAINS
  !## simple kriging (ktype.gt.0) and ordinary kriging (ktype.lt.0)
  N=NP; IF(KTYPE.LT.0)N=NP+1
  
- IF(N.GT.SIZE(B))THEN; DEALLOCATE(A,B,L,U); ALLOCATE(A(N,N),L(N,N),U(N,N),B(N)); ENDIF
- 
- A=0.0; B=0.0
- DO I=1,NP 
-  ID=SELID(I)
-  !## semivariance
-  A(I,I)=SILL 
-  DO J=I+1,NP 
-   JD=SELID(J)
-   GAMMA=KRIGING_GETGAMMA(XD(ID),YD(ID),XD(JD),YD(JD),USERANGE,C1,C0,KTYPE)
-   A(I,J)=SILL-GAMMA; A(J,I)=A(I,J)
-  ENDDO
+ IF(ICMPINV.EQ.0)THEN
 
-  ID=SELID(I)
-  GAMMA=KRIGING_GETGAMMA(XD(ID),YD(ID),X,Y,USERANGE,C1,C0,KTYPE)
-  B(I)=SILL-GAMMA
-  
- ENDDO
+  IF(N.GT.SIZE(B))THEN
+   DEALLOCATE(A,B,L,U); ALLOCATE(A(N,N),L(N,N),U(N,N),B(N))
+  ENDIF
  
- !## ordinary kriging
- IF(KTYPE.LT.0)THEN
-  !## fill for lambda
-  J=N 
-  DO I=1,J; A(I,J)=1.0; A(J,I)=1.0; ENDDO; A(J,J)=0.0; B(J)=1.0
+  !## fill in A()
+  A=0.0
+  DO I=1,NP 
+   ID=SELID(I)
+   !## semivariance
+   A(I,I)=SILL 
+   DO J=I+1,NP 
+    JD=SELID(J)
+    GAMMA=KRIGING_GETGAMMA(XD(ID),YD(ID),XD(JD),YD(JD),USERANGE,C1,C0,KTYPE)
+    A(I,J)=SILL-GAMMA; A(J,I)=A(I,J)
+   ENDDO 
+  ENDDO
+  !## ordinary kriging, fill for lambda
+  IF(KTYPE.LT.0)THEN
+   DO I=1,N; A(I,N)=1.0; A(N,I)=1.0; ENDDO; A(N,N)=0.0
+  ENDIF
+ 
  ENDIF
  
- CALL KRIGING_LUDCMP(N) 
+ !## fill in B()
+ B=0.0
+ DO I=1,NP
+  ID=SELID(I)
+  GAMMA=KRIGING_GETGAMMA(XD(ID),YD(ID),X,Y,USERANGE,C1,C0,KTYPE)
+  B(I)=SILL-GAMMA  
+ ENDDO
  
-! !## check solution (allright)
-! DO I=1,N
-!  KEST=0.0
-!  DO J=1,N
-!   KEST=KEST+A(I,J)*B(J)
-!  ENDDO
-! ENDDO
+ !## ordinary kriging, fill for lambda
+ IF(KTYPE.LT.0)B(N)=1.0
+!  !## fill for lambda
+!  J=N 
+!  DO I=1,J; A(I,J)=1.0; A(J,I)=1.0; ENDDO; A(J,J)=0.0; B(J)=1.0
+! ENDIF
+ 
+ IF(ICMPINV.EQ.0)THEN
+  IF(PNTSEARCH.EQ.0)ALLOCATE(AI(N,N),C(N))
+  CALL KRIGING_LUDCMP(N,ABS(PNTSEARCH-1))
+ ENDIF
+ 
+ IF(PNTSEARCH.EQ.0)THEN
+  C=MATMUL(AI,B); B=C
+ ENDIF
  
  !## ordinary kriging compute the local mean mzz instead of the global mean mz
  IF(KTYPE.LT.0)THEN
@@ -409,10 +435,9 @@ CONTAINS
  DO I=1,NP
   ID=SELID(I)
   GAMMA=KRIGING_GETGAMMA(XD(ID),YD(ID),X,Y,USERANGE,C1,C0,KTYPE)
-  KVAR=KVAR+B(I)*(SILL-GAMMA) !GAMMA
+  KVAR=KVAR+B(I)*(SILL-GAMMA) 
  ENDDO
  KVAR=SILL-KVAR
-! IF(KTYPE.LT.0)KVAR=KVAR+B(N)
  
  END SUBROUTINE KRIGING_FILLSYSTEM
 
@@ -471,7 +496,11 @@ CONTAINS
  !## no part of kriging, beyond given range, equal to sill
  SELECT CASE (ABS(KTYPE))
   CASE (1) !## linear
-   H=DXY/RANGE
+   IF(DXY.GT.RANGE)THEN
+    H=1.0
+   ELSE
+    H=DXY/RANGE
+   ENDIF
    KRIGING_GETGAMMA=C0+C1*H
   CASE (2) !## spherical
    IF(DXY.GT.RANGE)THEN
@@ -500,23 +529,61 @@ CONTAINS
  END FUNCTION KRIGING_GETGAMMA
 
  !###======================================================================
- SUBROUTINE KRIGING_INIT(MD,XD,YD,ZD,ND,IDF,KTYPE,MZ,COINCIDENT,COINCIDENTDIST)
+ SUBROUTINE KRIGING_INIT(MD,XD,YD,ZD,ND,IDF,KTYPE,COINCIDENT,COINCIDENTDIST)
  !###======================================================================
  IMPLICIT NONE
- TYPE(IDFOBJ),INTENT(INOUT) :: IDF
+ TYPE(IDFOBJ),INTENT(IN) :: IDF
  INTEGER,INTENT(IN) :: MD,KTYPE,COINCIDENT
  REAL,INTENT(INOUT),DIMENSION(MD) :: XD,YD,ZD 
- REAL,INTENT(OUT) :: MZ
  REAL,INTENT(IN) :: COINCIDENTDIST
  INTEGER,INTENT(OUT) :: ND
  INTEGER :: I,J,N,IS,IE,IROW,ICOL
  REAL,ALLOCATABLE,DIMENSION(:) :: XCOL,YROW
- REAL :: XYCRIT 
+ REAL :: XYCRIT,XP,YP,ZP
  
  XYCRIT=0.1*IDF%DX
 
  !## apply a user specified critical distance
- IF(COINCIDENT.EQ.1)XYCRIT=MAX(COINCIDENTDIST,XYCRIT)
+ IF(COINCIDENT.EQ.1)THEN
+  XYCRIT=MAX(COINCIDENTDIST,XYCRIT)
+!  XMIN=MINVAL(XD); XMAX=MAXVAL(XD); YMIN=MINVAL(YD); YMAX=MAXVAL(YD)
+!  NC=(XMAX-XMIN)/XYCRIT
+!  ALLOCATE(NP(NC,NR),XP(NC,NR),YP(NC,NR),ZP(NC,NR)); XP=0.0; YP=0.0; ZP=0.0; NP=0.0
+ ENDIF
+ 
+ !## mark doubles with nodata and compute mean for those double points
+ DO I=1,MD
+  !## done allready
+  IF(ZD(I).EQ.IDF%NODATA)CYCLE
+  N=1; XP=XD(I); YP=YD(I); ZP=ZD(I)
+  DO J=I+1,MD
+!   !## skip identical location
+!   IF(I.EQ.J)CYCLE
+   !## done allready
+   IF(ZD(J).EQ.IDF%NODATA)CYCLE
+   !## get distance between points
+   IF(KRIGING_DIST(XD(I),YD(I),XD(J),YD(J)).LE.XYCRIT)THEN
+    N=N+1
+    !## add point to existing point and turn location off
+    XP=XP+XD(J); YP=YP+YD(J); ZP=ZP+ZD(J); ZD(J)=IDF%NODATA
+   ENDIF
+  ENDDO
+  XD(I)=XP/REAL(N); YD(I)=YP/REAL(N); ZD(I)=ZP/REAL(N)
+ END DO
+  
+ !## eliminate doubles
+ J=0
+ DO I=1,MD
+  IF(ZD(I).NE.IDF%NODATA)THEN
+   J=J+1
+   IF(J.NE.I)THEN
+    XD(J)=XD(I); YD(J)=YD(I); ZD(J)=ZD(I)
+   ENDIF
+  ENDIF
+ END DO
+ ND=J
+
+ RETURN
  
  !## sort x, to skip double coordinates
  CALL SORTEM(1,MD,XD,2,YD,ZD,(/0.0/),(/0.0/),(/0.0/),(/0.0/),(/0.0/))
@@ -565,11 +632,11 @@ CONTAINS
  END DO
  ND=J
  
- !## compute mean and substract values from mean - simple kriging
- IF(KTYPE.GT.0)THEN
-  MZ=0.0; DO I=1,ND; MZ=MZ+ZD(I); ENDDO; MZ=MZ/REAL(ND)
-  DO I=1,ND; ZD(I)=ZD(I)-MZ; ENDDO
- ENDIF
+! !## compute mean and substract values from mean - simple kriging
+! IF(KTYPE.GT.0)THEN
+!  MZ=0.0; DO I=1,ND; MZ=MZ+ZD(I); ENDDO; MZ=MZ/REAL(ND)
+!  DO I=1,ND; ZD(I)=ZD(I)-MZ; ENDDO
+! ENDIF
  
  END SUBROUTINE KRIGING_INIT
 
@@ -614,8 +681,14 @@ CONTAINS
 ! sill=10.0
 ! nugget=5.0
   
- CALL KRIGING_INIT(MD,XD,YD,ZD,ND,IDF,KTYPE,MZ,COINCIDENT,COINCIDENTDIST)
+ CALL KRIGING_INIT(MD,XD,YD,ZD,ND,IDF,KTYPE,COINCIDENT,COINCIDENTDIST)
  
+ !## compute mean and substract values from mean - simple kriging
+ IF(KTYPE.GT.0)THEN
+  MZ=0.0; DO I=1,ND; MZ=MZ+ZD(I); ENDDO; MZ=MZ/REAL(ND)
+  DO I=1,ND; ZD(I)=ZD(I)-MZ; ENDDO
+ ENDIF
+
  ND=MD
  ALLOCATE(SELID(ND),SELD(4,MINP),SELQID(4,MINP),A(10,10),B(10),L(10,10),U(10,10))
 
@@ -784,11 +857,11 @@ CONTAINS
  END SUBROUTINE KRIGINGSETTINGSFIELDS
 
  !###====================================================================
- SUBROUTINE KRIGING_LUDCMP(N)
+ SUBROUTINE KRIGING_LUDCMP(N,IINV)
  !###====================================================================
  IMPLICIT NONE
- INTEGER,INTENT(IN)   :: N
- INTEGER :: I,J,K
+ INTEGER,INTENT(IN) :: N,IINV
+ INTEGER :: I,II,J,K
  REAL :: X
 
  L=0.0; U=0.0
@@ -824,25 +897,56 @@ CONTAINS
  ENDDO
  L(N,N)=A(N,N)-X
  
- !## forward substitution
- B(1)=B(1)/L(1,1)
- DO I=2,N
-  X=0.0
-  DO J=1,I-1
-   X=X+L(I,J)*B(J)
-  ENDDO
-  B(I)=(B(I)-X)/L(I,I)
- ENDDO
+ !## compute inverse matrix of A called AI
+ IF(IINV.EQ.1)THEN
 
- !## backward substitution
- DO I=N-1,1,-1
-  X=0.0
-  DO J=I+1,N
-   X=X+U(I,J)*B(J)
-  ENDDO
-  B(I)=B(I)-X
- ENDDO
+  AI=0.0; DO II=1,N; AI(II,II)=1.0; ENDDO
+  DO II=1,N
 
+   !## forward substitution
+   AI(II,1)=AI(II,1)/L(1,1)
+   DO I=2,N
+    X=0.0
+    DO J=1,I-1
+     X=X+L(I,J)*AI(II,J)
+    ENDDO
+    AI(II,I)=(AI(II,I)-X)/L(I,I)
+   ENDDO
+
+   !## backward substitution
+   DO I=N-1,1,-1
+    X=0.0
+    DO J=I+1,N
+     X=X+U(I,J)*AI(II,J)
+    ENDDO
+    AI(II,I)=AI(II,I)-X
+   ENDDO
+  
+  ENDDO
+  
+ ELSE
+
+  !## forward substitution
+  B(1)=B(1)/L(1,1)
+  DO I=2,N
+   X=0.0
+   DO J=1,I-1
+    X=X+L(I,J)*B(J)
+   ENDDO
+   B(I)=(B(I)-X)/L(I,I)
+  ENDDO
+
+  !## backward substitution
+  DO I=N-1,1,-1
+   X=0.0
+   DO J=I+1,N
+    X=X+U(I,J)*B(J)
+   ENDDO
+   B(I)=B(I)-X
+  ENDDO
+
+ ENDIF
+ 
  END SUBROUTINE KRIGING_LUDCMP
 
 END MODULE MOD_KRIGING

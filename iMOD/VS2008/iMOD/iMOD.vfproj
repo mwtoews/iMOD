@@ -344,7 +344,15 @@
 		<File RelativePath="..\..\..\iMOD\SRC\imod_polygon\imod_polygon_utl.f90"/>
 		<File RelativePath="..\..\..\iMOD\SRC\imod_polygon\polygon_par.f90"/></Filter>
 		<Filter Name="imod_profile">
-		<File RelativePath="..\..\..\iMOD\SRC\imod_profile\imod_profile.f90"/>
+		<File RelativePath="..\..\..\iMOD\SRC\imod_profile\imod_profile.f90">
+			<FileConfiguration Name="Debug|Win32">
+				<Tool Name="VFFortranCompilerTool" Preprocess="preprocessYes" PreprocessorDefinitions="WINTERACTER9"/></FileConfiguration>
+			<FileConfiguration Name="Release|x64">
+				<Tool Name="VFFortranCompilerTool" Preprocess="preprocessYes" PreprocessorDefinitions="WINTERACTER9"/></FileConfiguration>
+			<FileConfiguration Name="Debug|x64">
+				<Tool Name="VFFortranCompilerTool" Preprocess="preprocessYes" PreprocessorDefinitions="WINTERACTER9"/></FileConfiguration>
+			<FileConfiguration Name="Release|Win32">
+				<Tool Name="VFFortranCompilerTool" Preprocess="preprocessYes" PreprocessorDefinitions="WINTERACTER9"/></FileConfiguration></File>
 		<File RelativePath="..\..\..\iMOD\SRC\imod_profile\imod_profile_par.f90"/>
 		<File RelativePath="..\..\..\iMOD\SRC\imod_profile\imod_profile_utl.f90"/></Filter>
 		<Filter Name="imod_ro">
