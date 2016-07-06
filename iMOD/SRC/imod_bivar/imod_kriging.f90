@@ -96,9 +96,9 @@ CONTAINS
   ENDDO
   IF(IBATCH.EQ.0)THEN
    IF(KTYPE.GT.0)THEN
-    CALL UTL_WAITMESSAGE(IRAT,IRAT1,IROW,IDF%NROW,'Progress Simple Kriging')
+    CALL UTL_WAITMESSAGE(IRAT,IRAT1,IROW,IDF%NROW,'Progress Simple Kriging ('//TRIM(ITOS(ND))//') points')
    ELSE
-    CALL UTL_WAITMESSAGE(IRAT,IRAT1,IROW,IDF%NROW,'Progress Ordinary Kriging')
+    CALL UTL_WAITMESSAGE(IRAT,IRAT1,IROW,IDF%NROW,'Progress Ordinary Kriging ('//TRIM(ITOS(ND))//') points')
    ENDIF  
   ELSE
    WRITE(6,'(A,F10.3,A)') '+Progress ',REAL(100*IROW)/REAL(IDF%NROW),' %'
@@ -493,38 +493,45 @@ CONTAINS
  DX=(X1-X2)**2.0; DY=(Y1-Y2)**2.0; DXY=DX+DY
  IF(DXY.GT.0.0)DXY=SQRT(DXY)
  
- !## no part of kriging, beyond given range, equal to sill
- SELECT CASE (ABS(KTYPE))
-  CASE (1) !## linear
-   IF(DXY.GT.RANGE)THEN
-    H=1.0
-   ELSE
+ IF(DXY.GT.RANGE)THEN
+  H=0.999 !1.0
+ ELSE
+
+  !## no part of kriging, beyond given range, equal to sill
+  SELECT CASE (ABS(KTYPE))
+   CASE (1) !## linear
+!   IF(DXY.GT.RANGE)THEN
+!    H=0.999 !1.0
+!   ELSE
     H=DXY/RANGE
-   ENDIF
-   KRIGING_GETGAMMA=C0+C1*H
-  CASE (2) !## spherical
-   IF(DXY.GT.RANGE)THEN
-    H=1.0
-   ELSE
+!   ENDIF
+!   KRIGING_GETGAMMA=C0+C1*H
+   CASE (2) !## spherical
+!   IF(DXY.GT.RANGE)THEN
+!    H=0.999 !1.0
+!   ELSE
     H=(3.0*DXY)/(2.0*RANGE)-(0.5*(DXY/RANGE)**3.0)
-   ENDIF
-   KRIGING_GETGAMMA=C0+C1*H
+!   ENDIF
+!   KRIGING_GETGAMMA=C0+C1*H
 
-  CASE (3) !## exponential
-   H=1.0-EXP(-3.0*(DXY/RANGE))
-   KRIGING_GETGAMMA=C0+C1*H
+   CASE (3) !## exponential
+    H=1.0-EXP(-3.0*(DXY/RANGE))
+!   KRIGING_GETGAMMA=C0+C1*H
 
-  CASE (4) !## gaussian
-   H=1.0-EXP(-3.0*(DXY**2.0)/(RANGE**2.0))
-   KRIGING_GETGAMMA=C0+C1*H
+   CASE (4) !## gaussian
+    H=1.0-EXP(-3.0*(DXY**2.0)/(RANGE**2.0))
+!   KRIGING_GETGAMMA=C0+C1*H
 
-  CASE (5) !## power
-   H=DXY**0.5
-   KRIGING_GETGAMMA=C0+C1*H
+   CASE (5) !## power
+    H=DXY**0.5
+!   KRIGING_GETGAMMA=C0+C1*H
 
-  CASE DEFAULT
-   WRITE(*,*) 'UNKNOWN KTYPE',KTYPE; PAUSE; STOP
- END SELECT
+   CASE DEFAULT
+    WRITE(*,*) 'UNKNOWN KTYPE',KTYPE; PAUSE; STOP
+  END SELECT
+ ENDIF
+ 
+ KRIGING_GETGAMMA=C0+C1*H
  
  END FUNCTION KRIGING_GETGAMMA
 
