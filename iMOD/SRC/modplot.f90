@@ -86,6 +86,8 @@ USE MOD_IDF_PAR, ONLY : IDFOBJ
   CHARACTER(LEN=256)       :: IDFNAME                   !## name of idf/ipf-file
   CHARACTER(LEN=50)        :: ALIAS
   INTEGER                  :: TSIZE                     !## text size (1 t/m 10 * 0.02)
+  INTEGER,DIMENSION(2)     :: ICPERC                    !## Associated file attributes: gravel and mud column numbers
+  INTEGER                  :: GPERC                     !## checkbox value for plotting percentages 
  END TYPE MPLOTOBJ
 
  TYPE MPWINOBJ
