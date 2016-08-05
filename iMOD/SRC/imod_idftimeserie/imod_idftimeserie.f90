@@ -1575,7 +1575,11 @@ CONTAINS
    DO I=1,NIDF
     K=K+1
     IF(NFILES(I).GT.1)THEN
-     IF(TS(I)%IDATE(IT(K)).LE.MINT)MINT=TS(I)%IDATE(IT(K))
+     IF(IT(K).EQ.0)THEN !##Liduin issue-719
+      WRITE(*,*) 'IDF-file '//trim(itos(k))//' is finished, datapoint will be empty in csv-file'
+     ELSE
+      IF(TS(I)%IDATE(IT(K)).LE.MINT)MINT=TS(I)%IDATE(IT(K))
+     ENDIF
     ENDIF
    ENDDO
    IF(NIPF.GT.0)THEN
@@ -1597,7 +1601,9 @@ CONTAINS
    DO I=1,NIDF
     K=K+1
     IF(NFILES(I).GT.1)THEN
-     IF(TS(I)%IDATE(IT(K)).EQ.MINT)THEN
+     IF(IT(K).EQ.0)THEN !##Liduin issue-719
+      LINE=TRIM(LINE)//CHAR(IDELIM)//TRIM(RTOS(NODATA,'F',3))       
+     ELSEIF(TS(I)%IDATE(IT(K)).EQ.MINT.AND.IT(K).GT.0)THEN
       LINE=TRIM(LINE)//CHAR(IDELIM)//TRIM(RTOS(TS(I)%VALUE(IT(K)),'F',7))
       IT(K)=IT(K)+1; IF(IT(K).GT.SIZE(TS(I)%IDATE))IT(K)=0  !## finished
      ELSE
