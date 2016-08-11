@@ -2591,6 +2591,7 @@ CONTAINS
       CALL IGRRECTANGLE( SERIE(IIDF)%X(I),PROFIDF(IIDF)%IDF%BOT, &
                         (SERIE(IIDF)%X(I)+SERIE(IIDF)%X(I+1))/2.0,PROFIDF(IIDF)%IDF%TOP)   
      ELSEIF(I.EQ.SERIE(IIDF)%N)THEN 
+      IF(SERIE(IIDF)%X(I).EQ.SERIE(IIDF)%X(I-1))SERIE(IIDF)%X(I-1)=SERIE(IIDF)%X(I-1)-1 !##Liduin: winteracter error "...width/height=0 for a rectangle/triangle/parallelogram..."
       CALL IGRRECTANGLE((SERIE(IIDF)%X(I)+SERIE(IIDF)%X(I-1))/2.0,PROFIDF(IIDF)%IDF%BOT, &
                          SERIE(IIDF)%X(I)                        ,PROFIDF(IIDF)%IDF%TOP)   
      ELSE

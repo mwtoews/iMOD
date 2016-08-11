@@ -1225,7 +1225,7 @@ DO
  IF(I.LE.MAXMPWKEYS)THEN
   SELECT CASE (I)
    !## integer
-   CASE (1,7)
+   CASE (1,6,7)
     READ(LINE,'(8X,I10)')   IVALUE
    !## real
    CASE (2:5)

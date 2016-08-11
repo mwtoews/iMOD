@@ -1062,7 +1062,7 @@ CONTAINS
  I=INT(1,1)
  !## subset selection
  IF(IADDSEL.EQ.4)I=INT(2,1)
-
+ 
  !## reset selection pointer
  SELIDF(1)%YSEL=INT(0,2)
  N=0
