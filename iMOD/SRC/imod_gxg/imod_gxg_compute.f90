@@ -40,6 +40,7 @@ CHARACTER(LEN=256) :: FGLG,FGHG,FGVG,FGT,FNLEG,FHG1,FHG2,FHG3,FLG1,FLG2,FLG3
 REAL,ALLOCATABLE,DIMENSION(:,:) :: LG,HG
 INTEGER,ALLOCATABLE,DIMENSION(:) :: NOYEAR
 TYPE(IDFOBJ),ALLOCATABLE,DIMENSION(:) :: IDF,GXG
+TYPE(IDFOBJ),ALLOCATABLE,DIMENSION(:,:) :: GXGLH
 TYPE(IDFOBJ) :: MVIDF
 TYPE(IDFOBJ),PRIVATE :: IDFCP !## pointer idf to be computed
 TYPE(IDFOBJ),PRIVATE :: IDFRP !## pointer idf to be read
@@ -53,13 +54,14 @@ CONTAINS
  TYPE(WIN_MESSAGE) :: MESSAGE
  INTEGER :: ITYPE
  CHARACTER(LEN=256) :: FN,LINE,LINEP
- CHARACTER(LEN=256),ALLOCATABLE,DIMENSION(:) :: FGXG
+ CHARACTER(LEN=256),DIMENSION(4) :: FGXG
+ CHARACTER(LEN=256),ALLOCATABLE,DIMENSION(:,:) :: FGXGLH
  CHARACTER(LEN=4) :: CY
  CHARACTER(LEN=2) :: CD,CM
  REAL :: RS,SUMLG,SUMHG,NGXG,MV,XC,YC,NODATA,XMIN,YMIN,XMAX,YMAX
  INTEGER :: MVICOL,MVIROW,IRAT,IRAT1,II,YY,MM,JAAR,DN,IUSEMV,ILAY,JLAY, &
             I,J,N,IDN,IROW,ICOL,IOS,JU,NLOC,NIP,MINMEASUREMENT
- INTEGER :: FYR,TYR,NYR,YCNT     ! FromYear, ToYear, Number of Years, YearCounter
+ INTEGER :: FYR,TYR,NYR,YCNT,IYR ! FromYear, ToYear, Number of Years, YearCounter,yearnumber
  INTEGER :: IIDF                 ! nr of first IDF that exists in IDFarray
  LOGICAL :: LEX,LEXMV
  CHARACTER(LEN=52) :: IDFFILE
@@ -69,11 +71,8 @@ CONTAINS
  MINMEASUREMENT=24; IF(SUM(GXG_IPERIOD).NE.24)MINMEASUREMENT=3
  
  !##allocate number of FGXG files, based on HG3/LG3 option
- IF(ALLOCATED(FGXG))DEALLOCATE(FGXG)
  IF(GXG_HGLG3.EQ.1)THEN
-  ALLOCATE(FGXG(10))
- ELSE
-  ALLOCATE(FGXG(4))
+  ALLOCATE(FGXGLH(6,SIZE(GXG_IYEAR)))
  ENDIF
  
  !## nodata value for new created idf's: glg,ghg,gvg,gt
@@ -96,7 +95,9 @@ CONTAINS
 
  FYR=MINVAL(GXG_IYEAR)
  TYR=MAXVAL(GXG_IYEAR)
- 
+ !## determine no of years
+ NYR=TYR-FYR; IF(GXG_STARTMONTH.EQ.1)NYR=NYR+1
+  
  IDFFILE=GXG_RESDIR(INDEX(GXG_RESDIR,'\',.TRUE.)+1:)
  IF(IBATCH.EQ.1)GXG_RESDIR=GXG_RESDIR(:INDEX(GXG_RESDIR,'\',.TRUE.)-1)
  
@@ -113,19 +114,22 @@ CONTAINS
   FGXG(3)=FGVG
   FGT    ='GT_'// TRIM(ITOS(FYR))//'-'//TRIM(ITOS(TYR))//'_L'//TRIM(ITOS(ILAY))//'.IDF'
   FGXG(4)=FGT
+  !## Concatenate years to layer files for 3 days with highest and 3 days with lowest stages
   IF(GXG_HGLG3.EQ.1)THEN
-   FLG1   ='LG1_'//TRIM(ITOS(FYR))//'-'//TRIM(ITOS(TYR))//'_L'//TRIM(ITOS(ILAY))//'.IDF'
-   FGXG(5)=FLG1
-   FHG1   ='HG1_'//TRIM(ITOS(FYR))//'-'//TRIM(ITOS(TYR))//'_L'//TRIM(ITOS(ILAY))//'.IDF'
-   FGXG(6)=FHG2
-   FLG2   ='LG2_'//TRIM(ITOS(FYR))//'-'//TRIM(ITOS(TYR))//'_L'//TRIM(ITOS(ILAY))//'.IDF'
-   FGXG(7)=FLG2
-   FHG2   ='HG2_'//TRIM(ITOS(FYR))//'-'//TRIM(ITOS(TYR))//'_L'//TRIM(ITOS(ILAY))//'.IDF'
-   FGXG(8)=FHG3
-   FLG3   ='LG3_'//TRIM(ITOS(FYR))//'-'//TRIM(ITOS(TYR))//'_L'//TRIM(ITOS(ILAY))//'.IDF'
-   FGXG(9)=FLG3
-   FHG3   ='HG3_'//TRIM(ITOS(FYR))//'-'//TRIM(ITOS(TYR))//'_L'//TRIM(ITOS(ILAY))//'.IDF'
-   FGXG(10)=FHG3         
+   DO IYR=1,NYR  
+    FLG1   ='LG1_'//TRIM(ITOS(GXG_IYEAR(IYR)))//'_L'//TRIM(ITOS(ILAY))//'.IDF'
+    FGXGLH(1,IYR)=FLG1
+    FHG1   ='HG1_'//TRIM(ITOS(GXG_IYEAR(IYR)))//'_L'//TRIM(ITOS(ILAY))//'.IDF'
+    FGXGLH(2,IYR)=FHG1
+    FLG2   ='LG2_'//TRIM(ITOS(GXG_IYEAR(IYR)))//'_L'//TRIM(ITOS(ILAY))//'.IDF'
+    FGXGLH(3,IYR)=FLG2
+    FHG2   ='HG2_'//TRIM(ITOS(GXG_IYEAR(IYR)))//'_L'//TRIM(ITOS(ILAY))//'.IDF'
+    FGXGLH(4,IYR)=FHG2
+    FLG3   ='LG3_'//TRIM(ITOS(GXG_IYEAR(IYR)))//'_L'//TRIM(ITOS(ILAY))//'.IDF'
+    FGXGLH(5,IYR)=FLG3
+    FHG3   ='HG3_'//TRIM(ITOS(GXG_IYEAR(IYR)))//'_L'//TRIM(ITOS(ILAY))//'.IDF'
+    FGXGLH(6,IYR)=FHG3         
+   ENDDO
   ENDIF
   
   !## check existence GXG files
@@ -154,49 +158,21 @@ CONTAINS
      TRIM(FGVG)//CHAR(13)//'already exists overwrite it and continue?','Question')
     IF(WINFODIALOG(4).NE.1)RETURN
    ENDIF
+  !## in case of HG3 and LG3
    IF(GXG_HGLG3.EQ.1)THEN
-    INQUIRE(FILE=FLG1,EXIST=LEX)
-    IF(LEX)THEN
-     CALL WMESSAGEBOX(YESNO,QUESTIONICON,COMMONNO,'Current file:'//CHAR(13)// &
-      TRIM(FLG1)//CHAR(13)//'already exists overwrite it and continue?','Question')
-     IF(WINFODIALOG(4).NE.1)RETURN
-    ENDIF
-    INQUIRE(FILE=FLG2,EXIST=LEX)
-    IF(LEX)THEN
-     CALL WMESSAGEBOX(YESNO,QUESTIONICON,COMMONNO,'Current file:'//CHAR(13)// &
-      TRIM(FLG2)//CHAR(13)//'already exists overwrite it and continue?','Question')
-     IF(WINFODIALOG(4).NE.1)RETURN
-    ENDIF
-    INQUIRE(FILE=FLG3,EXIST=LEX)
-    IF(LEX)THEN
-     CALL WMESSAGEBOX(YESNO,QUESTIONICON,COMMONNO,'Current file:'//CHAR(13)// &
-      TRIM(FLG3)//CHAR(13)//'already exists overwrite it and continue?','Question')
-     IF(WINFODIALOG(4).NE.1)RETURN
-    ENDIF
-    INQUIRE(FILE=FHG1,EXIST=LEX)
-    IF(LEX)THEN
-     CALL WMESSAGEBOX(YESNO,QUESTIONICON,COMMONNO,'Current file:'//CHAR(13)// &
-      TRIM(FHG1)//CHAR(13)//'already exists overwrite it and continue?','Question')
-     IF(WINFODIALOG(4).NE.1)RETURN
-    ENDIF
-    INQUIRE(FILE=FHG2,EXIST=LEX)
-    IF(LEX)THEN
-     CALL WMESSAGEBOX(YESNO,QUESTIONICON,COMMONNO,'Current file:'//CHAR(13)// &
-      TRIM(FHG2)//CHAR(13)//'already exists overwrite it and continue?','Question')
-     IF(WINFODIALOG(4).NE.1)RETURN
-    ENDIF
-    INQUIRE(FILE=FHG3,EXIST=LEX)
-    IF(LEX)THEN
-     CALL WMESSAGEBOX(YESNO,QUESTIONICON,COMMONNO,'Current file:'//CHAR(13)// &
-      TRIM(FHG3)//CHAR(13)//'already exists overwrite it and continue?','Question')
-     IF(WINFODIALOG(4).NE.1)RETURN
-    ENDIF
+    DO I=1,6 
+     DO IYR=1,NYR  
+      INQUIRE(FILE=FGXGLH(I,IYR),EXIST=LEX)
+      IF(LEX)THEN
+       CALL WMESSAGEBOX(YESNO,QUESTIONICON,COMMONNO,'Current file:'//CHAR(13)// &
+        TRIM(FGXGLH(I,IYR))//CHAR(13)//'already exists overwrite it and continue?','Question')
+       IF(WINFODIALOG(4).NE.1)RETURN
+      ENDIF
+     ENDDO
+    ENDDO
    ENDIF
   ENDIF
-
-  !## determine no of years
-  NYR=TYR-FYR; IF(GXG_STARTMONTH.EQ.1)NYR=NYR+1
-
+  
   IF(NYR.LE.0)THEN
    IF(IBATCH.EQ.0)CALL WMESSAGEBOX(OKONLY,INFORMATIONICON,COMMONOK,'You need to select one year at least'//CHAR(13)// &
      'to form a hydrological year','Information')
@@ -353,18 +329,13 @@ CONTAINS
   ENDDO
   CLOSE(JU)
 
-  IF(GXG_HGLG3.EQ.1)THEN
-   ALLOCATE(GXG(10))
-   DO I=1,10; CALL IDFNULLIFY(GXG(I)); ENDDO
-  ELSE 
-   ALLOCATE(GXG(4))
-   DO I=1,4; CALL IDFNULLIFY(GXG(I)); ENDDO
-  ENDIF
+  ALLOCATE(GXG(4))
+  DO I=1,4; CALL IDFNULLIFY(GXG(I)); ENDDO
 
   !## computational window is equal to idf's
   DO II=1,24*NYR
    IF(IDF(II)%IU.GT.0)THEN
-    DO I=1,SIZE(GXG)
+    DO I=1,4
      GXG(I)%NCOL  =IDF(II)%NCOL
      GXG(I)%NROW  =IDF(II)%NROW
      GXG(I)%XMIN  =IDF(II)%XMIN
@@ -410,7 +381,7 @@ CONTAINS
    IF(IDF(II)%IU.GT.0)EXIT
   ENDDO
 
-  DO I=1,SIZE(GXG)
+  DO I=1,4
    IF(.NOT.IDFALLOCATEX(GXG(I)))THEN
     CALL GXG1ABORT()
     RETURN
@@ -433,14 +404,49 @@ CONTAINS
   FGVG=TRIM(GXG_RESDIR)//'\'//TRIM(FGVG)
   !## create gt file
   FGT =TRIM(GXG_RESDIR)//'\'//TRIM(FGT)
-  !## create HG3 en LG3 files
+
   IF(GXG_HGLG3.EQ.1)THEN
-   FHG1=TRIM(GXG_RESDIR)//'\'//TRIM(FHG1)
-   FHG2=TRIM(GXG_RESDIR)//'\'//TRIM(FHG2)
-   FHG3=TRIM(GXG_RESDIR)//'\'//TRIM(FHG3)
-   FLG1=TRIM(GXG_RESDIR)//'\'//TRIM(FLG1)
-   FLG2=TRIM(GXG_RESDIR)//'\'//TRIM(FLG2)
-   FLG3=TRIM(GXG_RESDIR)//'\'//TRIM(FLG3)   
+   ALLOCATE(GXGLH(6,NYR))
+   DO I=1,6
+    DO IYR=1,NYR; CALL IDFNULLIFY(GXGLH(I,IYR)); ENDDO
+   ENDDO
+   DO IYR=1,NYR
+    DO I=1,6
+     GXGLH(I,IYR)%NCOL  =GXG(1)%NCOL
+     GXGLH(I,IYR)%NROW  =GXG(1)%NROW
+     GXGLH(I,IYR)%XMIN  =GXG(1)%XMIN
+     GXGLH(I,IYR)%XMAX  =GXG(1)%XMAX
+     GXGLH(I,IYR)%YMIN  =GXG(1)%YMIN
+     GXGLH(I,IYR)%YMAX  =GXG(1)%YMAX
+     GXGLH(I,IYR)%DX    =GXG(1)%DX
+     GXGLH(I,IYR)%DY    =GXG(1)%DY
+     GXGLH(I,IYR)%IEQ   =GXG(1)%IEQ
+     GXGLH(I,IYR)%NODATA=NODATA
+    END DO
+
+    DO I=1,6
+     IF(.NOT.IDFALLOCATEX(GXGLH(I,IYR)))THEN
+      CALL GXG1ABORT()
+      RETURN
+     ENDIF
+     IF(GXGLH(I,IYR)%IEQ.EQ.1)THEN
+      IF(.NOT.IDFALLOCATESXY(GXGLH(I,IYR)))THEN
+       CALL GXG1ABORT()
+       RETURN
+      ENDIF
+      GXGLH(I,IYR)%SX=GXG(1)%SX
+      GXGLH(I,IYR)%SY=GXG(1)%SY
+     ENDIF
+    END DO
+   
+    !## create HG3 en LG3 files 
+    FGXGLH(1,IYR)=TRIM(GXG_RESDIR)//'\'//TRIM(FGXGLH(1,IYR))
+    FGXGLH(2,IYR)=TRIM(GXG_RESDIR)//'\'//TRIM(FGXGLH(2,IYR))
+    FGXGLH(3,IYR)=TRIM(GXG_RESDIR)//'\'//TRIM(FGXGLH(3,IYR))
+    FGXGLH(4,IYR)=TRIM(GXG_RESDIR)//'\'//TRIM(FGXGLH(4,IYR))
+    FGXGLH(5,IYR)=TRIM(GXG_RESDIR)//'\'//TRIM(FGXGLH(5,IYR))
+    FGXGLH(6,IYR)=TRIM(GXG_RESDIR)//'\'//TRIM(FGXGLH(6,IYR))   
+   ENDDO
   ENDIF
 
   !## Check for existence of legend, if not, then create one in tmp directory
@@ -568,39 +574,52 @@ CONTAINS
          SUMLG=SUMLG+LG(II,JAAR)
         ENDDO
        ENDIF
+       !## Liduin: NHI 100-jarige reeks, optie wegschrijven HG3 en LG3 (6 IDF's in totaal per jaar)
+       IF(GXG_HGLG3.EQ.1)THEN
+        GXGLH(1,JAAR)%X(ICOL,IROW)=LG(1,JAAR)
+        GXGLH(2,JAAR)%X(ICOL,IROW)=HG(1,JAAR)
+        GXGLH(3,JAAR)%X(ICOL,IROW)=LG(2,JAAR)
+        GXGLH(4,JAAR)%X(ICOL,IROW)=HG(2,JAAR)
+        GXGLH(5,JAAR)%X(ICOL,IROW)=LG(3,JAAR)
+        GXGLH(6,JAAR)%X(ICOL,IROW)=HG(3,JAAR)
+        IF(IUSEMV.EQ.1)THEN
+         GXGLH(1,JAAR)%X(ICOL,IROW)=MV-GXGLH(1,JAAR)%X(ICOL,IROW)
+         GXGLH(2,JAAR)%X(ICOL,IROW)=MV-GXGLH(2,JAAR)%X(ICOL,IROW)
+         GXGLH(3,JAAR)%X(ICOL,IROW)=MV-GXGLH(3,JAAR)%X(ICOL,IROW)
+         GXGLH(4,JAAR)%X(ICOL,IROW)=MV-GXGLH(4,JAAR)%X(ICOL,IROW)
+         GXGLH(5,JAAR)%X(ICOL,IROW)=MV-GXGLH(5,JAAR)%X(ICOL,IROW)
+         GXGLH(6,JAAR)%X(ICOL,IROW)=MV-GXGLH(6,JAAR)%X(ICOL,IROW)
+        ENDIF
+       ENDIF
       ENDDO
 
       GXG(1)%X(ICOL,IROW)=SUMHG/REAL(NGXG*3)  !## ghg
-      GXG(2)%X(ICOL,IROW)=SUMLG/REAL(NGXG*3)  !## glg
-      IF(GXG_HGLG3.EQ.1)THEN
-       GXG(5)%X(ICOL,IROW)=HG(II,JAAR)
-       GXG(6)%X(ICOL,IROW)=
-       GXG(7)%X(ICOL,IROW)=
-       GXG(8)%X(ICOL,IROW)=
-       GXG(9)%X(ICOL,IROW)=
-       GXG(10)%X(ICOL,IROW)=
-      ENDIF
-       
+      GXG(2)%X(ICOL,IROW)=SUMLG/REAL(NGXG*3)  !## glg       
       IF(IUSEMV.EQ.1)THEN
        !## ghg
        GXG(1)%X(ICOL,IROW)=MV-GXG(1)%X(ICOL,IROW)
        !## glg
        GXG(2)%X(ICOL,IROW)=MV-GXG(2)%X(ICOL,IROW)
-      !## Liduin: NHI 100-jarige reeks, optie wegschrijven HG3 en LG3 (6 IDF's in totaal)
-       IF(GXG_HGLG3.EQ.1)THEN
-        
-       ENDIF
       ENDIF
       !## gvg (VANDER SLUIJS 1990)
       GXG(3)%X(ICOL,IROW)=0.05+(0.8*GXG(1)%X(ICOL,IROW))+(0.2*GXG(2)%X(ICOL,IROW))
       !## gt
       GXG(4)%X(ICOL,IROW)=GXG1GETGT(GXG(2)%X(ICOL,IROW),GXG(1)%X(ICOL,IROW),NODATA)
-
      ELSE
       DO II=1,4; GXG(II)%X(ICOL,IROW)=NODATA; ENDDO
+      IF(GXG_HGLG3.EQ.1)THEN
+       DO II=1,6
+        DO IYR=1,NYR; GXGLH(II,IYR)%X(ICOL,IROW)=NODATA; ENDDO
+       ENDDO
+      ENDIF
      ENDIF
     ELSE
      DO II=1,4; GXG(II)%X(ICOL,IROW)=NODATA; ENDDO
+      IF(GXG_HGLG3.EQ.1)THEN
+       DO II=1,6
+        DO IYR=1,NYR; GXGLH(II,IYR)%X(ICOL,IROW)=NODATA; ENDDO
+       ENDDO
+      ENDIF     
     ENDIF
    ENDDO
    IF(IBATCH.EQ.0)THEN
@@ -654,6 +673,15 @@ CONTAINS
      .NOT.IDFWRITE(GXG(3),FGVG,1).OR..NOT.IDFWRITE(GXG(4),FGT,1))THEN
   !## error occured
   ENDIF
+  IF(GXG_HGLG3.EQ.1)THEN
+   DO I=1,6; 
+    DO JAAR=1,NYR
+     IF(.NOT.IDFWRITE(GXGLH(I,JAAR),FGXGLH(I,JAAR),1))THEN
+     !## error occured
+     ENDIF 
+    ENDDO
+   ENDDO
+  ENDIF
 
   !## make cut to fit polygon only
   IF(ISEL.EQ.2)THEN
@@ -690,8 +718,6 @@ CONTAINS
   CALL WEDITFILE(TRIM(GXG_RESDIR)//'\summary_l'//TRIM(ITOS(ILAY))//'_'//TRIM(OSD_GETENV('USERNAME'))//'.txt',MODAL,0,0,COURIERNEW,ISIZE=8)
 
  ENDIF
- 
- IF(ALLOCATED(FGXG))DEALLOCATE(FGXG)
  
  GXG1COMPUTEGXG=.TRUE.
 
