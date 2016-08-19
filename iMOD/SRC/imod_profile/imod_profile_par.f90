@@ -29,7 +29,7 @@ INTEGER,SAVE :: ISOLID !## 0=no solid modeling 1=yes solid modeling
 
 !## parameters
 INTEGER,PARAMETER :: MXCRD    =250 !## max. coord.
-INTEGER,PARAMETER :: MXSERIE  =200 !## max.pnt on line (initally, will increase if necessary!
+INTEGER,PARAMETER :: MXSERIE  =200 !## max.pnt on line (initally, increases if necessary!
 
 TYPE SERIETYPE
  INTEGER :: N
@@ -45,6 +45,7 @@ INTEGER,SAVE :: LINECOLORPLOT !## color of profile-line
 
 INTEGER :: IBLOCKLINES
 INTEGER :: IBLOCKFILLS
+INTEGER :: ISKIPSHORTS
 INTEGER,SAVE :: LINETHICKNESS=1
 
 INTEGER,SAVE :: MXNIDF,MXNIFF,MXSAMPLING 
