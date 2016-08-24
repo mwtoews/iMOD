@@ -2615,6 +2615,7 @@ CONTAINS
   !## normal cross-section
   IF(PROFIDF(IIDF)%IDF%ITB.NE.0)CYCLE
 
+  !## issue 658
   CALL IGRCOLOURN(PROFIDF(IIDF)%SCOLOR)
 
   !## lines
