@@ -972,18 +972,23 @@ CONTAINS
  WRITE(IU,'(122A1)') ('=',I=1,122)
  
  !## write exchange between zones
-! IF()THEN
+ IF(.TRUE.)THEN
+
+  WRITE(IU,'(999A1)') 'Interchange fluxes '
+  WRITE(IU,'(\A5,99(I12,1X))') 'Zone:',(IPLIST(JJP),JJP=1,NIP)
+  WRITE(IU,'(999A1)') ('-',I=1,5+NIP*13)
+
   DO IIP=1,NIP
-!   TQEX=0.0
-!   DO JJP=1,NP
-!    IF(WBEX(IIP,JJP).NE.0.0)TQEX=TQEX+WBEX(IIP,JJP)
-!    IF(WBEX(JJP,IIP).NE.0.0)TQEX=TQEX-WBEX(IIP,JJP)
-!   ENDDO
-   WRITE(IU,'(99(E15.5,1X))') (WBEX(IIP,JJP)%QACT,JJP=1,NIP)
-!   WRITE(IU,'(99(E15.5,1X))') (WBEX(IIP,JJP)%qOUT,JJP=1,NIP)
+
+   TQEX=0.0
+   DO JJP=1,NIP
+    TQEX(JJP)=WBEX(IIP,JJP)%QACT-WBEX(JJP,IIP)%QACT
+   ENDDO
+!   WRITE(IU,'(99(E15.5,1X))') (WBEX(IIP,JJP)%QACT,JJP=1,NIP)
+   WRITE(IU,'(I5,99(E12.5,1X))') IPLIST(IIP),(TQEX(JJP),JJP=1,NIP)
   ENDDO
-! ENDIF
- 
+ ENDIF
+  
  END SUBROUTINE WBALCOMPUTETXT_WRITE
 
  !###======================================================================
@@ -1499,56 +1504,52 @@ CONTAINS
 
  IF(IBAL.NE.4.AND.IBAL.NE.5)RETURN
  
- DO IP=1,NIP
+ DO IROW=1,IPIDF%NROW
+  DO ICOL=1,IPIDF%NCOL
 
-!  !## real balance zone number, but in ipidf is the sequence number given
-!  IP=IPLIST(I)
-
-  DO IROW=1,IPIDF%NROW
-   DO ICOL=1,IPIDF%NCOL
-
-    IIP=INT(IPIDF%X(ICOL,IROW)); IF(IIP.EQ.0)CYCLE
-    LEX=.FALSE.
+   IIP=INT(IPIDF%X(ICOL,IROW)); IF(IIP.EQ.0)CYCLE
+   LEX=.FALSE.
     
-    SELECT CASE (IBAL)
-     !## frf - right face
-     CASE (4)
-      IF(ICOL.LT.IPIDF%NCOL)THEN
-       JJP =INT(IPIDF%X(ICOL+1,IROW))
-       !## different zone next to current zone
-       IF(IIP.NE.JJP.AND.JJP.NE.0)LEX=.TRUE.
-      ENDIF
-
-     !## fff - front face
-     CASE (5)
-      IF(IROW.LT.IPIDF%NROW)THEN
-       JJP=INT(IPIDF%X(ICOL,IROW+1))
-       IF(IIP.NE.JJP.AND.JJP.NE.0)LEX=.TRUE.
-      ENDIF
-
-    END SELECT
-
-    IF(LEX)THEN
-
-     !## get x/y coordinates based upon ipidf coordinates
-     CALL IDFGETLOC(IPIDF,IROW,ICOL,X,Y)
-     CALL IDFIROWICOL(WBALIDF,JROW,JCOL,X,Y)
-    
-     IF(JROW.GE.1.AND.JROW.LE.IPIDF%NROW.AND. &
-        JCOL.GE.1.AND.JCOL.LE.IPIDF%NCOL)THEN
-       
-      IDFVAL=IDFGETVAL(WBALIDF,JROW,JCOL)
-      IF(IDFVAL.EQ.WBALIDF%NODATA)IDFVAL=0.0
-
-!      IF(IDFVAL.LT.0.0)
-      WBEX(IIP,JJP)%QACT=WBEX(IIP,JJP)%QACT+IDFVAL
-!      IF(IDFVAL.GT.0.0)WBEX(IIP,JJP)%QACT =WBEX(IIP,JJP)%QACT+IDFVAL
-
+   SELECT CASE (IBAL)
+    !## frf - right face
+    CASE (4)
+     IF(ICOL.LT.IPIDF%NCOL)THEN
+      JJP =INT(IPIDF%X(ICOL+1,IROW))
+      !## different zone next to current zone
+      IF(IIP.NE.JJP.AND.JJP.NE.0)LEX=.TRUE.
      ENDIF
-    
-    ENDIF
 
-   ENDDO
+    !## fff - front face
+    CASE (5)
+     IF(IROW.LT.IPIDF%NROW)THEN
+      JJP=INT(IPIDF%X(ICOL,IROW+1))
+      IF(IIP.NE.JJP.AND.JJP.NE.0)LEX=.TRUE.
+     ENDIF
+
+   END SELECT
+
+   IF(LEX)THEN
+
+!if(jjp.eq.3)then
+!write(*,*) 
+!endif
+
+    !## get x/y coordinates based upon ipidf coordinates
+    CALL IDFGETLOC(IPIDF,IROW,ICOL,X,Y)
+    CALL IDFIROWICOL(WBALIDF,JROW,JCOL,X,Y)
+    
+    IF(JROW.GE.1.AND.JROW.LE.IPIDF%NROW.AND. &
+       JCOL.GE.1.AND.JCOL.LE.IPIDF%NCOL)THEN
+       
+     IDFVAL=IDFGETVAL(WBALIDF,JROW,JCOL)
+     IF(IDFVAL.EQ.WBALIDF%NODATA)IDFVAL=0.0
+
+     WBEX(IIP,JJP)%QACT=WBEX(IIP,JJP)%QACT+IDFVAL
+
+    ENDIF
+    
+   ENDIF
+
   ENDDO
  ENDDO
 
