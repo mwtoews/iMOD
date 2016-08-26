@@ -619,21 +619,23 @@ CONTAINS
   CALL IOSDATE(IY,IM,ID)
   CALL WDATETOSTRING(CDATE,IY,IM,ID)
   WRITE(IU,'(A/)') 'Waterbalance file created at '//CDATE
- 
-  IF(SUM(SHPIACT).EQ.0)THEN
-   IF(IDF%IU.EQ.0)WRITE(IU,'(A)') 'Waterbalance for entire size of model.'
-   IF(IDF%IU.GT.0)THEN
-    WRITE(IU,'(A)') 'Waterbalance for values not equal to nodata value within:'
-    WRITE(IU,'(A)') TRIM(WBAL_IDFNAME)
-   ENDIF
-  ELSE
-   WRITE(IU,'(A)') 'Waterbalance for selected area given by polygon(s) read from :'
-   WRITE(IU,'(A)') TRIM(WBAL_GENFNAME)
-  ENDIF
 
-  WRITE(IU,'(/A)') 'Bear in mind that disclosure of the waterbalance might be caused by absent budget '
-  WRITE(IU,'(A/)') 'terms or different unit of the terms (m3/d or mm/d)! '
- 
+  IF(WBAL_WBEX.EQ.0)THEN 
+   IF(SUM(SHPIACT).EQ.0)THEN
+    IF(IDF%IU.EQ.0)WRITE(IU,'(A)') 'Waterbalance for entire size of model.'
+    IF(IDF%IU.GT.0)THEN
+     WRITE(IU,'(A)') 'Waterbalance for values not equal to nodata value within:'
+     WRITE(IU,'(A)') TRIM(WBAL_IDFNAME)
+    ENDIF
+   ELSE
+    WRITE(IU,'(A)') 'Waterbalance for selected area given by polygon(s) read from :'
+    WRITE(IU,'(A)') TRIM(WBAL_GENFNAME)
+   ENDIF
+
+   WRITE(IU,'(/A)') 'Bear in mind that disclosure of the waterbalance might be caused by absent budget '
+   WRITE(IU,'(A/)') 'terms or different unit of the terms (m3/d or mm/d)! '
+  ENDIF
+  
  ENDIF
  
 ! IF(ICSV.EQ.2)CALL WBALCOMPUTECSV_INI(IU)
@@ -995,11 +997,9 @@ CONTAINS
   
   DO IIP=1,NIP
 
-   TQEX=0.0
    DO JJP=1,NIP
     TQEX(IIP,JJP)=TQEX(IIP,JJP)+WBEX(IIP,JJP)%QACT-WBEX(JJP,IIP)%QACT
    ENDDO
-!   WRITE(IU,'(99(E15.5,1X))') (WBEX(IIP,JJP)%QACT,JJP=1,NIP)
    IF(LLAY)WRITE(IU,'(I5,1X,99(E12.5,1X))') IPLIST(IIP),(TQEX(IIP,JJP),JJP=1,NIP)
 
   ENDDO
@@ -1016,7 +1016,6 @@ CONTAINS
  IMPLICIT NONE
  INTEGER,INTENT(IN) :: IU
  INTEGER :: IBAL,JSYS,I,IIP,JJP
- CHARACTER(LEN=256) :: LINE
  
  IF(WBAL_WBEX.EQ.0)THEN
   HSTRING = 'Date,Layer,Zone'
@@ -1052,19 +1051,22 @@ CONTAINS
  ELSE
  
   WRITE(IU,'(/A/)') 'Interchange fluxes '
-  LINE=' Zone |'
+  HSTRING='                From'
   DO IIP=1,NIP-1
-   IF(IIP.GT.1)LINE=TRIM(LINE)//'  Zone |'
    DO JJP=IIP+1,NIP
-    WRITE(LINE,'(A,I12)') TRIM(LINE),IPLIST(JJP)
+    WRITE(HSTRING,'(A,I12)') TRIM(HSTRING)//',',IPLIST(IIP)
    ENDDO
   ENDDO
-  WRITE(IU,'(A)') TRIM(LINE)
-  WRITE(IU,'(999A1)') ('-',I=1,LEN_TRIM(LINE))
+  WRITE(IU,'(A)') TRIM(HSTRING)
+  HSTRING='Date              To'
+  DO IIP=1,NIP-1
+   DO JJP=IIP+1,NIP
+    WRITE(HSTRING,'(A,I12)') TRIM(HSTRING)//',',IPLIST(JJP)
+   ENDDO
+  ENDDO
+  WRITE(IU,'(A)') TRIM(HSTRING)
+  WRITE(IU,'(999A1)') ('-',I=1,LEN_TRIM(HSTRING))
   
-!  WRITE(IU,'(99(A5,1X,4(I12,1X)))') ('Zone:',(IPLIST(JJP),JJP=1,NIP),I=1,NIP)
-!  WRITE(IU,'(999A1)') ('-',I=1,5+NIP*13)
- 
  ENDIF
   
  END SUBROUTINE WBALCOMPUTECSV_INI
@@ -1078,7 +1080,6 @@ CONTAINS
  CHARACTER(LEN=*),INTENT(IN) :: CDATE
  INTEGER :: JP,IBAL,JSYS,IIP,JJP
  REAL :: QIN,QOUT,QACT
- CHARACTER(LEN=256) :: LINE
 
  IF(WBAL_WBEX.EQ.0)THEN
   DO JP=1,NIP
@@ -1111,7 +1112,6 @@ CONTAINS
  ELSE
 
   DO IIP=1,NIP
-   TQEX=0.0
    DO JJP=1,NIP
     TQEX(IIP,JJP)=TQEX(IIP,JJP)+WBEX(IIP,JJP)%QACT-WBEX(JJP,IIP)%QACT
    ENDDO
@@ -1119,20 +1119,18 @@ CONTAINS
 
   IF(LLAY)THEN
   
-   WRITE(LINE,'(I5)') IPLIST(1)
+   WRITE(HSTRING,'(A20)') ADJUSTR(CDATE)
+
    DO IIP=1,NIP-1
-    IF(IIP.GT.1)LINE=TRIM(LINE)//' Zone:'
+!    WRITE(HSTRING,'(A,I6)') TRIM(HSTRING),IPLIST(IIP)
     DO JJP=IIP+1,NIP
-     WRITE(LINE,'(A,I12)') TRIM(LINE),IPLIST(JJP)
+     WRITE(HSTRING,'(A,E12.5)') TRIM(HSTRING)//',',TQEX(IIP,JJP)
     ENDDO
    ENDDO
-   WRITE(IU,'(A)') TRIM(LINE)
-
-  ELSE
-!
-!  IF(LLAY)WRITE(IU,'(999A1)') ('-',I=1,5+NIP*13)
+   WRITE(IU,'(A)') TRIM(HSTRING)
 
   ENDIF
+
  ENDIF
  
  END SUBROUTINE WBALCOMPUTECSV_WRITE
