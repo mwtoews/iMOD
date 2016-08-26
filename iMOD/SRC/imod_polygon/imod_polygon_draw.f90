@@ -83,7 +83,7 @@ CONTAINS
    X2=MAX(SHPXC(1,SHPI),SHPXC(2,SHPI))
    Y1=MIN(SHPYC(1,SHPI),SHPYC(2,SHPI))
    Y2=MAX(SHPYC(1,SHPI),SHPYC(2,SHPI))
-   IF(X1.EQ.X2)X2=X2+1; IF(Y1.EQ.Y2)Y2=Y2+1 !##Liduin: issue-684, winteracter error "...width/height=0 for a rectangle/triangle/parallelogram..."
+   IF(X1.EQ.X2)X2=X2+1; IF(Y1.EQ.Y2)Y2=Y2+1
    CALL IGRRECTANGLE(X1,Y1,X2,Y2)
    X=(X1+X2)/2.0; Y=(Y1+Y2)/2.0
 !   SHPXC(3,SHPI)=SHPXC(2,SHPI)

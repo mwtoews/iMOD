@@ -1449,7 +1449,7 @@ CONTAINS
  REAL :: PXD,PYD
  REAL,DIMENSION(4) :: XXD,YYD 
  
- UTL_INSIDEPOLYGON=-1 !##Liduin: issue-684 'kan geen polygoon vinden indien er maar 2 punten gedefinieerd zijn bij het trekken van een rechthoek, minimaal 3 punten nodig'
+ UTL_INSIDEPOLYGON=-1
  IF(N.EQ.2)THEN
   ND=4
   XXD(1)=XX(1); YYD(1)=YY(1)

@@ -209,7 +209,7 @@ CONTAINS
         CALL WDIALOGSELECT(ID_DLEGTAB1)
         CALL WGRIDPOS(MESSAGE%Y,ICOL,IROW)
         IF(ICOL.EQ.3)THEN
-         IF(MESSAGE%Y.NE.MESSAGE%X)THEN !## Liduin issue 593 (weet nog niet waarom bij scrollen de loop 2x doorlopen wordt en message%y=message%x bij 2e keer, openen colour dialog kan niet worden voorkomen omdat het onderdeel is van fieldchange en geen aparte message geeft bij scrollen)
+         IF(MESSAGE%Y.NE.MESSAGE%X)THEN
           CALL WGRIDGETCELLINTEGER(ID_GRIDLEVELS,3,IROW,IRGB)
           CALL WSELECTCOLOUR(IRGB)
           IF(WINFODIALOG(4).EQ.1)CALL WGRIDPUTCELLINTEGER(ID_GRIDLEVELS,3,IROW,IRGB)
