@@ -4580,7 +4580,7 @@ CONTAINS
       
     !## replot as vector image
     CALL IGRHARDCOPY(FNAME)
-    CALL PROFILE_PLOT(LPS=.TRUE.)
+    CALL PROFILE_PLOT(LPS=.TRUE.) !##TRUE
     !## stop hardcopy export
     CALL IGRHARDCOPY('S') 
    
