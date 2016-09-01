@@ -8,7 +8,7 @@
 //
 // Winteracter resource script. 
 //
-// Modified : 30/Aug/2016 14:53:41
+// Modified : 01/Sep/2016 09:36:11
 //
 ///////////////////////////////////////////////////
 //
@@ -10443,7 +10443,19 @@ ID_MENU1 MENU
 BEGIN
     POPUP "IDF Options"
     BEGIN
-        MENUITEM "IDF &Analyse ...\aF3",                     ID_IDFVALUE
+        POPUP "IDF &Analyse"
+        BEGIN
+            MENUITEM "&Analyse ...\aF3",                         ID_IDFVALUE
+            MENUITEM SEPARATOR
+            MENUITEM "Plot &No Location",                        ID_IDFGETVALUE_NONE
+            MENUITEM "&Plot All locations",                      ID_IDFGETVALUE_ALL
+            MENUITEM "Plot &First Location Only",                ID_IDFGETVALUE_FIRST, CHECKED
+            MENUITEM SEPARATOR
+            MENUITEM "Points",                                   ID_IDFSHAPEVALUEPOINTS, CHECKED
+            MENUITEM "Rectangle",                                ID_IDFSHAPEVALUERECTANGLE
+            MENUITEM "Polygon",                                  ID_IDFSHAPEVALUEPOLYGON
+            MENUITEM "Circle",                                   ID_IDFSHAPEVALUECIRCLE, GRAYED
+        END
         MENUITEM "IDF Calculate ...",                        ID_IDFCALC
         MENUITEM "IDF &Edit ...",                            ID_IDFEDIT
         MENUITEM SEPARATOR
@@ -10529,6 +10541,7 @@ END
 ID_MENU1 RCDATA
 BEGIN
 ID_IDFOPTIONS,1,0,
+ID_IDFMAPVALUES,1,1,0,
 ID_MAPEXPORT,1,8,0,
 ID_ESRIASCFORMAT,1,8,1,0,
 ID_NETCDFFORMAT,1,8,2,0,
@@ -10550,7 +10563,7 @@ ID_ZOOMTAG,"Zoom to selected Tags\0",
 ID_ZOOMMASK,"Zoom to selected Mask\0",
 ID_ANALYSEIPF,"Display interactively the attribute and time series data of selected locations in an IPF\0",
 ID_IDFOPTIONS,"Basic functionalities to inspect, edit and manipulate IDF files\0",
-ID_IDFVALUE,"Interactive inspection of the IDF values\0",
+ID_IDFMAPVALUES,"Interactive inspection of the IDF values\0",
 ID_IDFCALC,"Start the Map Operations window to create new IDF files by calculation\0",
 ID_IDFEDIT,"Start the IDF Edit window to edit rastercell values of IDF files\0",
 ID_IDFGROUP,"Group selected IDF-files into a *.MDF file\0",
@@ -10599,6 +10612,14 @@ ID_LEGED,"Adjust the legend automatically for the entire extent\0",
 ID_TDLNL,"Adjust by building a non-linear legend based upon the distribution of values in the selected IDFs fo\0",
 ID_TDLL,"Adjust by building a linear legend based upon the minimum and maximum values in the selected IDFs fo\0",
 ID_TDUV,"Adjust by building a legend with unique values that appear in the selected IDFs for the entire exten\0",
+ID_IDFVALUE,"Interactive inspection of the IDF values\0",
+ID_IDFGETVALUE_NONE,"No display of raster cell values\0",
+ID_IDFGETVALUE_ALL,"Display of raster cell values of all selected IDFs\0",
+ID_IDFGETVALUE_FIRST,"Display of raster cell values of the first selected IDF only\0",
+ID_IDFSHAPEVALUEPOINTS,"Display of raster cell values of the current mouse location\0",
+ID_IDFSHAPEVALUERECTANGLE,"Display of the sum of the raster cell values of the cells selected by drawing a rectangle\0",
+ID_IDFSHAPEVALUEPOLYGON,"Display of the sum of the raster cell values of the cells selected by drawing a polygon\0",
+ID_IDFSHAPEVALUECIRCLE,"Display of the sum of the raster cell values of the cells selected by drawing a circle\0",
 0
 END
 
@@ -11810,5 +11831,5 @@ END
 //*WI* FORTSAVE    1
 //*WI* FILENAME    resource.f90
 //*WI* FMODNAME    RESOURCE
-//*WI* LASTTYPE        2
+//*WI* LASTTYPE        1
 //*WI* LASTRES         2
