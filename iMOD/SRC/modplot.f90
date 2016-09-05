@@ -60,6 +60,7 @@ USE MOD_IDF_PAR, ONLY : IDFOBJ
   INTEGER                  :: ZCOL
   INTEGER                  :: Z2COL
   INTEGER                  :: HCOL                      !## high-light
+  INTEGER                  :: PCOL                      !## plot-column for ipf labeling
 
   INTEGER                  :: SYMBOL                    !## line/point symbol
   INTEGER                  :: FADEOUT                   !## fade out depth

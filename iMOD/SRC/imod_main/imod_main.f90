@@ -1988,6 +1988,7 @@ DO JPLOT=1,MXMPLOT
      MP(IPLOT)%ILEGDLF=MAX(1,MIN(10,MP(IPLOT)%ILEGDLF)) !## number of legend in between 1 and 10
      IF(MP(IPLOT)%ASSCOL1.LE.0)MP(IPLOT)%ASSCOL1=2 !## borehole plotting
      MP(IPLOT)%ASSCOL2=0 !## borehole plotting
+     MP(IPLOT)%PCOL=0                           !column for plotting ipf labels
     !## iff
     CASE (3)
      IF(MP(IPLOT)%PRFTYPE.LT.0)MP(IPLOT)%PRFTYPE=0

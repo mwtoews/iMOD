@@ -35,8 +35,8 @@ TYPE IPFOBJ
  INTEGER :: IU         !## unit number assigned to ipf
  INTEGER :: NROW,NCOL  !## number of rows and columns within ipf
  INTEGER :: XCOL,YCOL,ZCOL,Z2COL,QCOL !## column number of x,y,z coordinates
- INTEGER :: ACOL       !## column number of associated files
- INTEGER :: PCOL       !## plot column number of associated files - labeling
+ INTEGER :: ACOL=0       !## column number of associated files
+ INTEGER :: PCOL=0       !## plot column number of associated files - labeling
  INTEGER :: ILEGDLF    !## dlf legend (1-10)
  INTEGER,DIMENSION(MAXIAXES) :: IAXES  !## which axes to be used for each column in the associated files
  INTEGER :: SYMBOL     !## plot symbol
