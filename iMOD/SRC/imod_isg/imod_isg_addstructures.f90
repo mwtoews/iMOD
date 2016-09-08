@@ -19,6 +19,7 @@
 !!  Stichting Deltares
 !!  P.O. Box 177
 !!  2600 MH Delft, The Netherlands.
+!!
 MODULE MOD_ISG_STRUCTURES
 
 USE WINTERACTER
@@ -47,10 +48,11 @@ CHARACTER(LEN=3),PRIVATE :: TXT
 CONTAINS
 
  !###===============================================================================
- LOGICAL FUNCTION ISG_ADDSTRUCTURES()
+ LOGICAL FUNCTION ISG_ADDSTRUCTURES(ISGFILE)
  !###===============================================================================
  IMPLICIT NONE
- INTEGER :: I,J,IWIN
+ CHARACTER(LEN=*),INTENT(IN) :: ISGFILE
+ INTEGER :: I,IWIN
 
  ISG_ADDSTRUCTURES=.FALSE.
 
@@ -66,21 +68,11 @@ CONTAINS
  !#read isg file
  IF(IBATCH.EQ.1)THEN
 
-  NISGFILES=1; IF(ALLOCATED(ISGIU))DEALLOCATE(ISGIU); ALLOCATE(ISGIU(MAXFILES,NISGFILES))
-
-  CALL UTL_GETUNITSISG(ISGIU(:,1),ISGFNAME,'OLD')
-  IF(MINVAL(ISGIU(:,1)).LE.0)THEN
-   DO I=1,NISGFILES; DO J=1,MAXFILES
-    IF(ISGIU(J,I).GT.0)CLOSE(ISGIU(J,I))
-   END DO; END DO
-   WRITE(*,*) 'Can not allocate files for writing ! '; RETURN
-  ENDIF
-  WRITE(*,'(/1X,A/)') 'Reading '//TRIM(ISGFNAME)//'...'
-  CALL ISGREAD()
+  CALL ISGREAD((/ISGFILE/),IBATCH)
   IF(NISG.LE.0)THEN
    IF(IBATCH.EQ.0)CALL WMESSAGEBOX(OKONLY,EXCLAMATIONICON,COMMONOK,'iMOD can not read any element from:'//CHAR(13)// &
-         TRIM(ISGFNAME),'Error')
-   IF(IBATCH.EQ.1)WRITE(*,'(/1X,A/)') 'iMOD can not read any element from: '//TRIM(ISGFNAME)
+         TRIM(ISGFILE),'Error')
+   IF(IBATCH.EQ.1)WRITE(*,'(/1X,A/)') 'iMOD can not read any element from: '//TRIM(ISGFILE)
    RETURN
   ENDIF
  ENDIF
@@ -502,7 +494,7 @@ CONTAINS
  IMPLICIT NONE
  REAL,INTENT(OUT) :: H
  INTEGER,INTENT(IN) :: I
- INTEGER :: J,K,N,ID,IM,IY,DD,MIND,MAXD,ND
+ INTEGER :: J,K,N,DD,MIND,MAXD,ND
  REAL :: H1,H2
  INTEGER,DIMENSION(4) :: JULD
 

@@ -448,6 +448,9 @@
 		<Filter Name="imod_wbal">
 		<File RelativePath="..\..\..\iMOD\SRC\imod_wbal\imod_wbal_compute.f90"/>
 		<File RelativePath="..\..\..\iMOD\SRC\imod_wbal\imod_wbal_par.f90"/></Filter>
+		<Filter Name="imod_residualplot">
+		<File RelativePath="..\..\SRC\imod_residualplot\imod_residualplot.f90"/>
+		<File RelativePath="..\..\SRC\imod_residualplot\imod_residualplot_par.f90"/></Filter>
 		<Filter Name="programs">
 		<File RelativePath="..\..\..\iMOD\SRC\imod_main\imod_prg.f90">
 			<FileConfiguration Name="Debug|Win32">

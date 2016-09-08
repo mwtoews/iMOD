@@ -1445,8 +1445,7 @@ CONTAINS
  INTEGER,INTENT(IN) :: N
  REAL,INTENT(IN) :: PX,PY
  REAL,DIMENSION(N),INTENT(IN) :: XX,YY
- INTEGER :: ND,I
- REAL :: PXD,PYD
+ INTEGER :: ND
  REAL,DIMENSION(4) :: XXD,YYD 
  
  UTL_INSIDEPOLYGON=-1
@@ -2588,6 +2587,28 @@ CONTAINS
  IMESSAGE(MOUSEMOVE)=ONOFF
 
  END SUBROUTINE UTL_MESSAGEHANDLE3D
+
+ !###======================================================================
+ INTEGER FUNCTION UTL_GETCURRENTDATE()
+ !###======================================================================
+ IMPLICIT NONE
+ INTEGER :: IY,IM,ID
+ 
+ CALL IOSDATE(IY,IM,ID)
+ UTL_GETCURRENTDATE=IY*10000+IM*100+ID
+ 
+ END FUNCTION UTL_GETCURRENTDATE
+
+ !###======================================================================
+ INTEGER FUNCTION UTL_GETCURRENTTIME()
+ !###======================================================================
+ IMPLICIT NONE
+ INTEGER :: IH,IM,IS
+ 
+ CALL IOSTIME(IH,IM,IS)
+ UTL_GETCURRENTTIME=IH*10000+IM*100+IS
+ 
+ END FUNCTION UTL_GETCURRENTTIME
 
  !###======================================================================
  FUNCTION JDATETOGDATE(I,DTYPE)

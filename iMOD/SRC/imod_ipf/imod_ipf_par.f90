@@ -34,6 +34,7 @@ INTEGER :: NIPF     !## number of ips"s active for plotting/analysing
 TYPE IPFOBJ
  INTEGER :: IU         !## unit number assigned to ipf
  INTEGER :: NROW,NCOL  !## number of rows and columns within ipf
+ INTEGER :: IPLOT      !## number of rows and columns within ipf
  INTEGER :: XCOL,YCOL,ZCOL,Z2COL,QCOL !## column number of x,y,z coordinates
  INTEGER :: ACOL=0       !## column number of associated files
  INTEGER :: PCOL=0       !## plot column number of associated files - labeling

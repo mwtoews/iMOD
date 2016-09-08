@@ -19,6 +19,7 @@
 !!  Stichting Deltares
 !!  P.O. Box 177
 !!  2600 MH Delft, The Netherlands.
+!!
 MODULE MOD_ISG_PLOT
 
 USE WINTERACTER
@@ -59,7 +60,7 @@ CONTAINS
 
  IF(.NOT.LEX)CALL ISGCLOSEFILES()
 
- CALL IGRCOLOURN(WRGB(255,255,255))  !wit!
+ CALL IGRCOLOURN(WRGB(255,255,255)) 
  CALL IGRFILLPATTERN(OUTLINE)
  CALL WINDOWOUTSTATUSBAR(2,'')
  CALL WINDOWOUTSTATUSBAR(4,'')
@@ -124,17 +125,12 @@ CONTAINS
  REAL,PARAMETER :: TSIZE=0.5
  INTEGER,INTENT(IN) :: IPLOT
  REAL,INTENT(INOUT) :: XMIN,YMIN,XMAX,YMAX
- INTEGER :: IRAT,IRAT1,I,J,NSEG,NCRS,IREC,IQHR,ISTW,NSTW,IISGLABEL,  &
-            DIMCRS,INDS,ISND,ICRS,DIMCLC,NCLC,ICLC,IP,IISG,DIMSTW,NQHR,DIMQHR  !,NC
+ INTEGER :: IRAT,IRAT1,I,J,NSEG,NCRS,IREC,IQHR,ISFR,ISTW,NSTW,IISGLABEL,  &
+            DIMCRS,INDS,ISND,ICRS,DIMCLC,NCLC,ICLC,IP,IISG,DIMSTW,NQHR,DIMQHR  
  INTEGER,ALLOCATABLE,DIMENSION(:) :: ID
  REAL :: DX,X1,Y1,X,Y,TWIDTH,THEIGHT,XPOS,YPOS,DIST
  REAL,DIMENSION(4) :: TDIST
  CHARACTER(LEN=50) :: CID
- !TYPE DATOBJ1
- ! INTEGER :: N,IREF
- ! REAL :: DIST
- ! CHARACTER(LEN=MAXLEN) :: CNAME
- !END TYPE DATOBJ1
  TYPE OBJ
   CHARACTER(LEN=32) :: CNAME
   REAL :: DIST
@@ -143,8 +139,6 @@ CONTAINS
  TYPE(OBJ),ALLOCATABLE,DIMENSION(:) :: CRS,CLC,STW,QHR
  LOGICAL :: LEX,LOPEN
 
-! open(99,file='d:\germany.ipf',status='unknown')
- 
  IF(ALLOCATED(ID))DEALLOCATE(ID)
 
  !## whether isg is opened or will be drawn from memory
@@ -176,10 +170,11 @@ CONTAINS
  ICLC=WMENUGETSTATE(ID_ISGCLCNODES,2)
  ISTW=WMENUGETSTATE(ID_ISGSTUWEN,2)
  IQHR=WMENUGETSTATE(ID_ISGQHR,2)
+ ISFR=WMENUGETSTATE(ID_ISGSFR,2)
 
  IRAT  =0
 
- ALLOCATE(ID(5))     !id numbers
+ ALLOCATE(ID(5))     !## id numbers
 
  IF(LOPEN)THEN
 
@@ -217,34 +212,43 @@ CONTAINS
     ALLOCATE(QHR(DIMQHR))
    ENDIF
 
- !#read calculation point information from *.isd1,*.isd2
+   !## read calculation point information from *.isd1,*.isd2
    IREC=ID(2)-1
    DO J=1,NCLC
     READ(ISGIU(3,1),REC=IREC+J+ICF) CLC(J)%N,IP,CLC(J)%DIST,CLC(J)%CNAME
    END DO
- !#read cross-section information from *.isc1,*.isc2
+   !## read cross-section information from *.isc1,*.isc2
    IREC=ID(3)-1
    DO J=1,NCRS
     READ(ISGIU(5,1),REC=IREC+J+ICF) CRS(J)%N,IP,CRS(J)%DIST,CRS(J)%CNAME
    END DO
- !#read structure information from *.ist1,*.ist2
+   !## read structure information from *.ist1,*.ist2
    IREC=ID(4)-1
    DO J=1,NSTW
     READ(ISGIU(7,1),REC=IREC+J+ICF) STW(J)%N,IP,STW(J)%DIST,STW(J)%CNAME
    END DO
- !#read qh information from *.isq1,*.isq2
+   !## read qh information from *.isq1,*.isq2
    IREC=ID(5)-1
    DO J=1,NQHR
     READ(ISGIU(9,1),REC=IREC+J+ICF) QHR(J)%N,IP,QHR(J)%DIST,QHR(J)%CNAME
    END DO
 
- !##initialize tdist for all!
+   !## initialize tdist for all!
    TDIST=0.0
 
- !#read segments
+   !## read segments
    IREC=ID(1)-1
    DO J=1,NSEG
     READ(ISGIU(2,1),REC=IREC+J+ICF) X,Y
+
+    !## draw circles - nodes
+    IF(ISND.EQ.1)THEN
+     IF(X.LT.XMAX.AND.X.GT.XMIN.AND.Y.GT.YMIN.AND.Y.LT.YMAX)THEN
+      CALL IGRCOLOURN(ICLRSP)
+      CALL IGRCIRCLE(X,Y,DX)
+     ENDIF
+    ENDIF
+
     IF(J.EQ.1)THEN
      X1=X
      Y1=Y
@@ -256,7 +260,7 @@ CONTAINS
     ENDIF
 
     IF(LEX)THEN
-    !## draw squares - begin node
+     !## draw squares - begin node
      IF(X.LT.XMAX.AND.X.GT.XMIN.AND.Y.GT.YMIN.AND.Y.LT.YMAX)THEN
       IF(INDS.EQ.1.AND.(J.EQ.1.OR.J.EQ.NSEG))THEN
        CALL IGRCOLOURN(ICLRND)
@@ -289,11 +293,11 @@ CONTAINS
        IF(NQHR.GT.0)THEN
         IF(IQHR.EQ.1)CALL ISGPLOTLOCCRS(X1,X,Y1,Y,DX,TDIST(4),DIMQHR,QHR%DIST,QHR%CNAME,QHR%N,NQHR,4,IISGLABEL)
        ENDIF
-       !## draw circles - nodes
-       IF(ISND.EQ.1.AND.J.NE.NSEG)THEN
-        CALL IGRCOLOURN(ICLRSP)
-        CALL IGRCIRCLE(X,Y,DX)
-       ENDIF
+!       !## draw circles - nodes
+!       IF(ISND.EQ.1.AND.J.NE.NSEG)THEN
+!        CALL IGRCOLOURN(ICLRSP)
+!        CALL IGRCIRCLE(X,Y,DX)
+!       ENDIF
       ELSE
        DIST =SQRT((X1-X)**2.0+(Y1-Y)**2.0)
        TDIST=TDIST+DIST
@@ -310,7 +314,6 @@ CONTAINS
       CALL IGRCOLOURN(MP(IPLOT)%SCOLOR)
       CALL IGRJOIN(X1,Y1,X,Y)
       CALL IGRLINEWIDTH(1)
-
      ENDIF
     ENDIF
 
@@ -438,8 +441,6 @@ CONTAINS
  IF(ALLOCATED(ID))DEALLOCATE(ID)
  CALL WGRTEXTORIENTATION(ALIGNLEFT,0.0,DIRHORIZ,ALIGNLEFT)
  
-! close(99)
- 
  END SUBROUTINE ISGPLOT
 
  !###======================================================================
@@ -460,7 +461,7 @@ CONTAINS
 
  IF(LEX)RETURN
 
- CALL ISGOPENFILES(1,(/FNAME/),LOPEN,CSTATUS)
+ CALL ISGOPENFILES(FNAME,LOPEN,CSTATUS)
 
  END SUBROUTINE ISGPLOTOPENFILES
 
@@ -512,8 +513,6 @@ CONTAINS
    XC    = X2-((X2-X1)*FACTOR)
    YC    = Y2-((Y2-Y1)*FACTOR)
 
-!write(99,*) xc,yc
-
    CALL ISGPLOTSHAPE(ISHAPE,XC,YC,D)
    
    IF(IISGLABEL.EQ.1)THEN
@@ -547,7 +546,7 @@ CONTAINS
  REAL,INTENT(IN) :: XC,YC,D
  INTEGER,INTENT(IN) :: ISHAPE
 
- !#crossed-rectangle
+ !## crossed-rectangle
  IF(ISHAPE.EQ.1)THEN
   CALL IGRCOLOURN(ICLRSD)
   CALL IGRFILLPATTERN(OUTLINE)
@@ -555,21 +554,20 @@ CONTAINS
   CALL IGRJOIN(XC-D,YC-D,XC+D,YC+D)         !  | /|\ |
   CALL IGRJOIN(XC-D,YC+D,XC+D,YC-D)         !  |--|--|
   CALL IGRFILLPATTERN(SOLID)
- !#triangle
+ !## triangle
  ELSEIF(ISHAPE.EQ.2)THEN
-!  CALL IGRFILLPATTERN(OUTLINE)
   CALL IGRCOLOURN(ICLRSC)
   CALL IGRJOIN(XC-2.0*D,YC+D,XC+2.0*D,YC+D) !\--------/
   CALL IGRJOIN(XC-2.0*D,YC+D,XC-D,YC-D)     ! \      /
   CALL IGRJOIN(XC-D,YC-D,XC+D,YC-D)         !  \ *  /
   CALL IGRJOIN(XC+D,YC-D,XC+2.0*D,YC+D)     !   \--/
- !#structure
+ !## structure
  ELSEIF(ISHAPE.EQ.3)THEN
   CALL IGRCOLOURN(ICLRST)
   CALL IGRJOIN(XC-D,YC-D,XC,YC+D)       !    /\
   CALL IGRJOIN(XC,YC+D,XC+D,YC-D)       !   /* \
   CALL IGRJOIN(XC+D,YC-D,XC-D,YC-D)     !  /----\
- !#qh-relationship
+ !## qh-relationship
  ELSEIF(ISHAPE.EQ.4)THEN
   CALL IGRCOLOURN(ICLRQH)
   CALL IGRPOLYGONCOMPLEX((/XC-D,XC-D,XC+D/),(/YC-D,YC+D,YC+D/),3)
