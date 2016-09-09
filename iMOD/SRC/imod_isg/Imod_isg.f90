@@ -2373,7 +2373,8 @@ CONTAINS
  CALL WDIALOGSELECT(ID_DISGATTRIBUTES)
  CALL WDIALOGFIELDSTATE(IDF_REAL1,I)
  CALL WDIALOGFIELDSTATE(IDF_REAL2,I)
- CALL WDIALOGFIELDSTATE(IDF_STRING1,3)  !date string
+ !## hide date string
+ CALL WDIALOGFIELDSTATE(IDF_STRING1,3) 
  CALL WDIALOGFIELDSTATE(IDF_LABEL4,I)
 
  IF(I.EQ.3)THEN
@@ -2621,8 +2622,8 @@ CONTAINS
  REAL :: XINTER,YINTER
 
  IF(ISFR.EQ.1)THEN
-  CALL WMESSAGEBOX(OKONLY,EXCLAMATIONICON,COMMONOK,'You may not modify any of the attributes on a segment whenever'//CHAR(13)// &
-    'your ISG file is used for a SFR-package','Information')
+  CALL WMESSAGEBOX(OKONLY,EXCLAMATIONICON,COMMONOK,'You may not modify any of the attributes on a segment'//CHAR(13)// &
+    'whenever your ISG file is used for an SFR-package','Information')
    RETURN
  ENDIF
  

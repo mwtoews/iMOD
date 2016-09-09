@@ -128,7 +128,7 @@ CONTAINS
  IF(IPLOT.EQ.1)THEN
   !## settings: option 1=type of plot, 2=number of sets, 3=amount of points, 4=no extra plotting options, 5=reset styles (1=yes)
   CALL IPGNEWPLOT(PGSCATTERPLOT,NSETS,SIZE(X),0,1) 
-  !## settings: option 1=set number, 2=marker type (0-4), 3='not used', 4='not used', 5=marker colour (31=red), 6='not used'
+  !## settings: option 1=set number, 2=marker number, 3=marker type (0-4), 4='not used', 5='not used', 6=marker colour (31=red), 7='not used'
   CALL IPGSTYLE(1,1,3,0,32,31,1) 
   !## settings: option 1=set number, 2=marker type (14=dot)
   CALL IPGMARKER(1,14) 
@@ -143,7 +143,7 @@ CONTAINS
  ENDIF
 
  CALL IPGCLIPRECTANGLE('G')
- CALL IPGAREA(0.1,0.1,0.9,0.9)
+! CALL IPGAREA(0.1,0.1,0.9,0.9)
  
  !## set grahpic layout settings
  CALL WGRTEXTFONT(IFAMILY=FFHELVETICA,ISTYLE=0,WIDTH=0.0133,HEIGHT=0.0333)
@@ -162,22 +162,23 @@ CONTAINS
  
  !## draw actual axis
  CALL IGRCOLOURN(223)
+ !## Draws a set of axes in the current Presentation Graphics area
  CALL IPGAXES() 
+ !## set number of decimal places (automatic, maximum=9)
+ CALL IPGDECIMALPLACES(-1)
  
  !## adjust tick position for bottom X Axis
  CALL IPGXTICKPOS(1) 
  CALL IPGXTICKLENGTH(1.00)
- CALL IPGDECIMALPLACES(-1)
- CALL IPGXUSERSCALE(NPOINT=0)
+! CALL IPGXUSERSCALE(NPOINT=0)
  CALL IPGXSCALEANGLE(0.00,0.00)
- CALL IPGXSCALEPOS(0.35)
+ CALL IPGXSCALEPOS(0.38)
  CALL IPGXSCALE('NT')
  
  !## adjust tick position for left Y Axis
  CALL IPGYTICKPOS(1) 
  CALL IPGYTICKLENGTH(1.00)
- CALL IPGDECIMALPLACES(-1)
- CALL IPGYUSERSCALE(NPOINT=0)
+! CALL IPGYUSERSCALE(NPOINT=0)
  CALL IPGYSCALEANGLE(0.00,0.00)
  CALL IPGYSCALEPOS(1.50)
  CALL IPGYSCALELEFT('NT')
