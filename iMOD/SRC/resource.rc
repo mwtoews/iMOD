@@ -8,7 +8,7 @@
 //
 // Winteracter resource script. 
 //
-// Modified : 08/Sep/2016 16:30:50
+// Modified : 09/Sep/2016 13:09:56
 //
 ///////////////////////////////////////////////////
 //
@@ -10729,21 +10729,21 @@ BEGIN
         MENUITEM "Add Cross-Section ...",                    ID_ADDCROSSSECTION
         MENUITEM "Add Calculation Point ...",                ID_ADDCALCPOINT
         MENUITEM "Add Structure ...",                        ID_ADDWEIR
-        MENUITEM "Add Qh-relationship",                      ID_ADDQH
+        MENUITEM "Add Qh-relationship ...",                  ID_ADDQH
     END
     POPUP "Delete"
     BEGIN
         MENUITEM "Delete Cross-Section ...",                 ID_DELETECROSSSECTION
         MENUITEM "Delete Calculation Point ...",             ID_DELETECALCPOINT
         MENUITEM "Delete Structure ...",                     ID_DELETEWEIR
-        MENUITEM "Delete Qh-relationship",                   ID_DELETEQH
+        MENUITEM "Delete Qh-relationship ...",               ID_DELETEQH
     END
     POPUP "Move"
     BEGIN
         MENUITEM "Move Cross-Section ...",                   ID_MOVECROSSSECTION
         MENUITEM "Move Calculation Point ...",               ID_MOVECALCPOINT
         MENUITEM "Move Structure ...",                       ID_MOVEWEIR
-        MENUITEM "Move Qh-relationship",                     ID_MOVEQH
+        MENUITEM "Move Qh-relationship ...",                 ID_MOVEQH
     END
     MENUITEM SEPARATOR
     MENUITEM "Delete Segment ...",                       ID_ISGDEL
@@ -11852,5 +11852,5 @@ END
 //*WI* FORTSAVE    1
 //*WI* FILENAME    resource.f90
 //*WI* FMODNAME    RESOURCE
-//*WI* LASTTYPE        2
-//*WI* LASTRES        85
+//*WI* LASTTYPE        1
+//*WI* LASTRES         6

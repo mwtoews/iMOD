@@ -1282,7 +1282,7 @@ CONTAINS
  REAL :: DIST
  INTEGER :: ISEG,NSEG,I
 
- !#enough cross-sections both side of split-point?
+ !## enough cross-sections both side of split-point?
  ISEG =ISG(ISELISG)%ISEG
  NSEG =ISG(ISELISG)%NSEG
  TDIST=0.0
