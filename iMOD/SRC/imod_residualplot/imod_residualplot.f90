@@ -109,7 +109,7 @@ CONTAINS
  !###===================================
  IMPLICIT NONE
  INTEGER :: I,NSETS,IPLOTBMP
- REAL :: MINX,MINY,MAXX,MAXY
+ REAL :: MINX,MINY,MAXX,MAXY,X1,X2,Y1,Y2
 
  !## get minimum and maximum x and y values for plotting area scatter plot)
  MINX=X(1); MAXX=X(1)
@@ -117,11 +117,13 @@ CONTAINS
  MINY=Y(1); MAXY=Y(1)
  DO I=2,SIZE(Y); MINY=MIN(MINY,Y(I)); MAXY=MAX(MAXY,Y(I)); ENDDO
 
- !## create bitmap
+ !## create bitmap - resolution
  CALL WBITMAPCREATE(IPLOTBMP,500,500)
  CALL IGRSELECT(DRAWBITMAP,IPLOTBMP)
+ !## plot area is the entire bitmap
  CALL IGRAREA(0.0,0.0,1.0,1.0)
-
+ CALL IGRUNITS(0.0,0.0,1.0,1.0)
+ 
  NSETS=1
 
  !## plot data in scatterplot
@@ -132,19 +134,25 @@ CONTAINS
   CALL IPGSTYLE(1,1,3,0,32,31,1) 
   !## settings: option 1=set number, 2=marker type (14=dot)
   CALL IPGMARKER(1,14) 
-  CALL IPGUNITS(MINX,MINY,MAXX,MAXY)
+  !## for scatter plot it is important to have a 1:1 ratio
+  MINX=MIN(MINX,MINY); MAXX=MAX(MAXX,MAXY)
+  CALL IPGUNITS(MINX,MINX,MAXX,MAXX)
  !## plot data in histogram
  ELSEIF(IPLOT.EQ.2)THEN
-  CALL IPGNEWPLOT(PGHISTOGRAM,NSETS,SIZE(X),PGLAYOVERLAP,1)
+  CALL IPGNEWPLOT(PGHISTOGRAM,NSETS,SIZE(X),PgLayAdjacent ,1)
   !## settings: option 1=fill style (0-5), 2=fill density (1-4), 3=fill angle (1-4), 4=primary colour (31=red), 5=secondary colour, 6='not used'
   CALL IPGSTYLE(1,4,2,0,31,64,1) 
   !## minimum x-value, minimum y-value, maximum x-value, maximum y-value
-  CALL IPGUNITS(-5.0,0.0,5.0,1.0) 
+  !## to be computed ourselves beforehand ...
+  CALL IPGUNITS(-5.0,0.0,5.0,100.0) 
  ENDIF
 
- CALL IPGCLIPRECTANGLE('G')
-! CALL IPGAREA(0.1,0.1,0.9,0.9)
- 
+ !## clip graph on graphical area
+ CALL IPGCLIPRECTANGLE('P')
+ !## area of the graph
+ CALL IPGAREA(0.125,0.1,0.95,0.9)
+ CALL IPGBORDER()
+  
  !## set grahpic layout settings
  CALL WGRTEXTFONT(IFAMILY=FFHELVETICA,ISTYLE=0,WIDTH=0.0133,HEIGHT=0.0333)
  CALL IGRCOLOURN(223)
@@ -164,36 +172,51 @@ CONTAINS
  CALL IGRCOLOURN(223)
  !## Draws a set of axes in the current Presentation Graphics area
  CALL IPGAXES() 
- !## set number of decimal places (automatic, maximum=9)
+ !## set number of decimal places (automatic=-1, maximum=9)
  CALL IPGDECIMALPLACES(-1)
  
  !## adjust tick position for bottom X Axis
- CALL IPGXTICKPOS(1) 
+ CALL IPGXTICKPOS(2) 
  CALL IPGXTICKLENGTH(1.00)
 ! CALL IPGXUSERSCALE(NPOINT=0)
  CALL IPGXSCALEANGLE(0.00,0.00)
- CALL IPGXSCALEPOS(0.38)
+ !## describes the position of the X scale numbers or descriptions as a proportion of the distance from the edge 
+ !## of the PG area to the edge of the main graphics area. 
+ CALL IPGXSCALEPOS(0.2) !5) !38)
+ !## numbering and tick outside
  CALL IPGXSCALE('NT')
- 
+! !## get 
+! CALL IPgXGetScale(VALUE,NVALUE)
+
  !## adjust tick position for left Y Axis
- CALL IPGYTICKPOS(1) 
+ CALL IPGYTICKPOS(2) 
  CALL IPGYTICKLENGTH(1.00)
 ! CALL IPGYUSERSCALE(NPOINT=0)
  CALL IPGYSCALEANGLE(0.00,0.00)
- CALL IPGYSCALEPOS(1.50)
+ !## describes the position of the Y scale numbers or descriptions as a multiple of the length of a normal (i.e. non-log scale)
+ !## Y-axis tick mark.  
+ CALL IPGYSCALEPOS(1.5)
+ !## numbering and tick outside
  CALL IPGYSCALELEFT('NT')
   
+ CALL IPGXGRATICULES(DASHED) !LTYPE)
+ CALL IPGyGRATICULES(DASHED) !LTYPE)
+
  !## draw graph
  IF(IPLOT.EQ.1)THEN
   CALL IPGSCATTERPLOT(X,Y,SIZE(X))
+!  CALL IPGUNITSTOGRUNITS(MINX,MINX,X1,Y1)
+!  CALL IPGUNITSTOGRUNITS(MAXX,MAXX,X2,Y2)
+!  CALL IGRJOIN(X1,Y1,X2,Y2)
+  CALL IPGPOLYLINE2((/MINX,MAXX/),(/MINX,MAXX/),2)
  ELSEIF(IPLOT.EQ.2)THEN
   CALL IPGHISTOGRAM(X)
  ENDIF
 
  !## add legend to graph
- CALL IPGKEYAREA(0.05,0.80,0.15,0.95)
-
- CALL IPGKEYALL((/'dataset1'/),'B')
+ CALL IPGKEYAREA(0.2,0.80,0.35,0.9)
+ !## clear legend area
+ CALL IPGKEYALL((/'dataset1'/),'C')
 
  !## save graph
  CALL WBITMAPSAVE(IPLOTBMP,TRIM(BMPNAME))
