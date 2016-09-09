@@ -11,7 +11,8 @@ TYPE IPFOBJ
 END TYPE IPFOBJ
 TYPE(IPFOBJ),DIMENSION(:),ALLOCATABLE :: IPF          !## stores original values from txtfile per ipf
 REAL,DIMENSION(:),ALLOCATABLE :: X,Y,Z                !## values to be plotted
-CHARACTER(LEN=256) :: FNAME                           !## name of txtfile
+CHARACTER(LEN=256) :: INPUTFILE,BMPNAME               !## name of txtfile
 INTEGER :: IPLOT                                      !## plot type
+INTEGER,DIMENSION(3) :: ICOL
 
 END MODULE MOD_RESIDUALPLOT_PAR

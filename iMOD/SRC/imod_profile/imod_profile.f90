@@ -2204,7 +2204,11 @@ CONTAINS
   !## plot coordinates of profile
   CALL PROFILE_PLOTCOORDINATES()
   !## plot 2d plot of selected layer
-  CALL PROFILE_PLOT_2DIDF()
+  IF(PRESENT(LPS))THEN
+   CALL PROFILE_PLOT_2DIDF(LPS)
+  ELSE
+   CALL PROFILE_PLOT_2DIDF(.TRUE.)
+  ENDIF
 
   !## plot cross-sections (if isolid.eq.1)
   !## solid-modeling not activated
@@ -2246,9 +2250,10 @@ CONTAINS
  END SUBROUTINE PROFILE_PLOT
 
  !###======================================================================
- SUBROUTINE PROFILE_PLOT_2DIDF()
+ SUBROUTINE PROFILE_PLOT_2DIDF(LPS)
  !###======================================================================
  IMPLICIT NONE
+ LOGICAL,INTENT(IN) :: LPS
  INTEGER :: I,J,IPLOT,II
  REAL :: XMIN_ORG,YMIN_ORG,XMAX_ORG,YMAX_ORG,XA1,YA1,XA2,YA2,RD,DX,DY
 
@@ -2309,12 +2314,14 @@ CONTAINS
 
    !## draw line of the profile...
 !   CALL IGRCOLOURN(WRGB(0,0,0))
-   DO J=2,NXY
-    CALL IGRLINEWIDTH(LINEWIDTHPLOT)
-    CALL IGRCOLOURN(LINECOLORPLOT)
-    CALL IGRJOIN(XY(1,J-1),XY(2,J-1),XY(1,J),XY(2,J))
-    CALL PROFILE_PLOTVIEWBOX(XY(1,J-1),XY(2,J-1),XY(1,J),XY(2,J))
-   END DO
+   IF(.NOT.LPS)THEN
+    DO J=2,NXY
+     CALL IGRLINEWIDTH(LINEWIDTHPLOT)
+     CALL IGRCOLOURN(LINECOLORPLOT)
+     CALL IGRJOIN(XY(1,J-1),XY(2,J-1),XY(1,J),XY(2,J))
+     CALL PROFILE_PLOTVIEWBOX(XY(1,J-1),XY(2,J-1),XY(1,J),XY(2,J))
+    END DO
+   ENDIF
    CALL IGRLINEWIDTH(1)
 
    MPW%XMIN=XMIN_ORG
