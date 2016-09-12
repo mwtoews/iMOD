@@ -2,6 +2,7 @@ MODULE MOD_RESIDUALPLOT
 
 USE MOD_RESIDUALPLOT_PAR
 USE WINTERACTER
+USE IMODVAR, ONLY : RVERSION
 USE MOD_IDF_PAR, ONLY : IDFOBJ
 USE MOD_IDF, ONLY : IDFREAD,IDFWRITE,IDFNULLIFY,IDFDEALLOCATE
 USE MOD_UTL
@@ -15,7 +16,8 @@ CONTAINS
  IMPLICIT NONE
 
  CALL WINDOWOPEN(FLAGS=HIDEWINDOW ) 
-
+ CALL IGRCOLOURMODEL(24)
+ 
  !## read in complete txtfile
  CALL RESIDUAL_DATA()
  !## process txtfile into xyz variables
@@ -112,7 +114,6 @@ CONTAINS
  !## subroutine to calculate histogram classes
  CALL RESIDUAL_PROC_HISTCLASS()
  
- 
  END SUBROUTINE RESIDUAL_PROC
 
  !###=================================== 
@@ -142,7 +143,7 @@ CONTAINS
  LOGICAL FUNCTION RESIDUAL_PROC_SELLAY(I,J)
  !###===================================
  IMPLICIT NONE
- INTEGER,INTENT(IN) ::  I,J
+ INTEGER,INTENT(IN) :: I,J
  INTEGER :: K
  
  RESIDUAL_PROC_SELLAY=.TRUE.
@@ -160,9 +161,10 @@ CONTAINS
  !###===================================
  IMPLICIT NONE
  INTEGER :: I,NSETS,IPLOTBMP,IPLOTBMP2,NCLR
- REAL :: MINX,MINY,MAXX,MAXY,X1,X2,Y1,Y2
+ REAL :: MINX,MINY,MAXX,MAXY,X1,X2,Y1,Y2,DY
  CHARACTER(LEN=4),DIMENSION(22) :: XLABELS=(/'<-5','-5','-4.5','-4','-3.5','-3','-2.5','-2','-1.5','-1','-0.5','0.5','1','1.5','2','2.5','3','3.5','4','4.5','5','>5'/)
-
+ INTEGER,ALLOCATABLE,DIMENSION(:) :: IBARS
+ 
  !## get minimum and maximum x and y values for plotting area scatter plot
  MINX=X(1); MAXX=X(1)
  DO I=2,SIZE(X); MINX=MIN(MINX,X(I)); MAXX=MAX(MAXX,X(I)); ENDDO
@@ -170,18 +172,15 @@ CONTAINS
  DO I=2,SIZE(Y); MINY=MIN(MINY,Y(I)); MAXY=MAX(MAXY,Y(I)); ENDDO
 
  !## create bitmap - resolution
- CALL IGRPALETTE(0,WRGB(6,165,205))
- CALL WBITMAPCREATE(IPLOTBMP,520,520)
- CALL IGRPALETTE(0,WRGB(255,255,255))
- CALL WBITMAPCREATE(IPLOTBMP2,500,500)
+! CALL IGRPALETTE(0,WRGB(6,165,205))
+ CALL WBITMAPCREATE(IPLOTBMP,2000,2000)
  CALL IGRSELECT(DRAWBITMAP,IPLOTBMP)
- CALL WBITMAPPUT(IPLOTBMP2,1,0,10,10,510,510)
  !## plot area is the entire bitmap
  CALL IGRAREA(0.0,0.0,1.0,1.0)
  CALL IGRUNITS(0.0,0.0,1.0,1.0)
- 
+  
  NSETS=1
- NCLR=150
+ NCLR=WRGB(6,165,205) !150
  !## plot data in scatterplot
  IF(IPLOT.EQ.1)THEN
   !## settings: option 1=type of plot, 2=number of sets, 3=amount of points, 4=no extra plotting options, 5=reset styles (1=yes)
@@ -195,13 +194,14 @@ CONTAINS
   CALL IPGUNITS(MINX,MINX,MAXX,MAXX)
  !## plot data in histogram
  ELSEIF(IPLOT.EQ.2)THEN
-  CALL IPGNEWPLOT(PGHISTOGRAM,NSETS,SIZE(XCLASSES),PgLayAdjacent,1)
+  CALL IPGNEWPLOT(PGHISTOGRAM,NSETS,SIZE(XCLASSES),PGLAYADJACENT,1)
   !## settings: option 1=fill style (0-5), 2=fill density (1-4), 3=fill angle (1-4), 4=primary colour (31=red), 5=secondary colour, 6='not used'
-  CALL IPGSTYLE(1,4,2,0,NCLR,64,1) 
+  CALL IPGSTYLE(1,4,2,0,NCLR,WRGB(6,165,205),1) 
   !## minimum x-value, minimum y-value, maximum x-value, maximum y-value
   !## to be computed ourselves beforehand in subroutine "RESIDUAL_PROC_HISTCLASS"
 !  CALL IPGUNITS(HCLASSES(2)-1,MINVAL(XCLASSES),HCLASSES(SIZE(HCLASSES)-1)+1,MAXVAL(XCLASSES)) !## in principe wil ik deze regel gebruiken, maar...
-  CALL IPGUNITS(1.,MINVAL(XCLASSES),22.,MAXVAL(XCLASSES))  !## ... deze regel is voor het testen en dat levert dezelfde resultaten op.
+  X1=0.0; X2=22.0; Y1=MINVAL(XCLASSES); Y2=MAXVAL(XCLASSES); DY=(Y2-Y1)/50.0; Y2=Y2+DY
+  CALL IPGUNITS(X1,Y1,X2,Y2)  !## ... deze regel is voor het testen en dat levert dezelfde resultaten op.
  ENDIF
 
  !## clip graph on graphical area
@@ -210,9 +210,11 @@ CONTAINS
  CALL IPGAREA(0.125,0.1,0.95,0.9)
  CALL IPGBORDER()
   
+ !## set all text black
+ CALL IGRCOLOURN(WRGB(0,0,0))
+
  !## set grahpic layout settings
  CALL WGRTEXTFONT(IFAMILY=FFHELVETICA,ISTYLE=0,WIDTH=0.0133,HEIGHT=0.0333)
- CALL IGRCOLOURN(223)
  CALL IPGTITLEPOS(0.50)
  !## title
  CALL IPGTITLE('TITLE','C')
@@ -226,7 +228,7 @@ CONTAINS
  CALL IPGYLABELLEFT('Y AXIS','C9') 
  
  !## draw actual axis
- CALL IGRCOLOURN(223)
+! CALL IGRCOLOURN(223)
  !## Draws a set of axes in the current Presentation Graphics area
  CALL IPGAXES() 
  !## set number of decimal places (automatic=-1, maximum=9)
@@ -244,8 +246,11 @@ CONTAINS
   !## numbering and tick outside
   CALL IPGXSCALE('NT')
  ELSEIF(IPLOT.EQ.2)THEN
-  CALL IPGXSCALE('T')
-  CALL IPGXTEXT(XLABELS,23)
+  ALLOCATE(IBARS(22)); DO I=1,22; IBARS(I)=I; ENDDO
+  CALL IPGXUSERSCALEHIST(IBARS,22)
+  DEALLOCATE(IBARS)
+!  CALL IPGXSCALE('T')
+  CALL IPGXTEXT(XLABELS,22) 
  ENDIF
 
  !## adjust tick position for left Y Axis
@@ -280,7 +285,7 @@ CONTAINS
  
  !## put textblock on plotting area
  CALL WGRTEXTFONT(FFHELVETICA,ISTYLE=0,WIDTH=0.01,HEIGHT=0.03)
- CALL WGRTEXTBLOCK(0.75,0.0,1.0,0.05,'(C) iMOD, 2016')
+ CALL WGRTEXTBLOCK(0.75,0.0,1.0,0.05,'(c) Powered by iMOD '//TRIM(RVERSION)//', 2016')
   
  !## save graph
  CALL WBITMAPSAVE(IPLOTBMP,TRIM(BMPNAME))
