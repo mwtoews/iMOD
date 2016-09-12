@@ -5,6 +5,7 @@ USE WINTERACTER
 USE MOD_IDF_PAR, ONLY : IDFOBJ
 USE MOD_IDF, ONLY : IDFREAD,IDFWRITE,IDFNULLIFY,IDFDEALLOCATE
 USE MOD_UTL
+USE MOD_POLINT
 
 CONTAINS
 
@@ -88,10 +89,11 @@ CONTAINS
 
  !## allocate memory
  ALLOCATE(X(N),Y(N),Z(N))
-
+ 
  N=0
  DO I=1,SIZE(IPFR)
   DO J=1,IPFR(I)%NPOINTS
+   IF(.NOT.(RESIDUAL_PROC_SELLAY(I,J)))CYCLE
    N=N+1
    SELECT CASE (IPLOT)
     !## scatter measurement/observation
@@ -102,36 +104,90 @@ CONTAINS
   ENDDO
  ENDDO
 
+ ALLOCATE(X_TMP(N),Y_TMP(N),Z_TMP(N))
+ DO I=1,N; X_TMP(I)=X(I); Y_TMP(I)=Y(I); Z_TMP(I)=Z(I); ENDDO
+ DEALLOCATE(X,Y,Z)
+ X=>X_TMP; Y=>Y_TMP; Z=>Z_TMP
+ 
+ !## subroutine to calculate histogram classes
+ CALL RESIDUAL_PROC_HISTCLASS()
+ 
+ 
  END SUBROUTINE RESIDUAL_PROC
 
+ !###=================================== 
+ SUBROUTINE RESIDUAL_PROC_HISTCLASS()
+ !###===================================
+ IMPLICIT NONE
+ INTEGER :: I,J
+ 
+ !## define histogram classes
+ HCLASSES(1)=-10.0E10
+ HCLASSES(2)=-5.0
+ DO I=3,SIZE(HCLASSES)-1
+  HCLASSES(I)=HCLASSES(I-1)+0.5
+ ENDDO
+ HCLASSES(SIZE(HCLASSES))=10.0E10
+ 
+ !## count amount of points per class
+ XCLASSES=0.0
+ DO J=1,SIZE(X) 
+  CALL POL1LOCATE(HCLASSES,SIZE(HCLASSES),REAL(X(J),8),I)
+  XCLASSES(I)=XCLASSES(I)+1
+ ENDDO
+ 
+ END SUBROUTINE RESIDUAL_PROC_HISTCLASS
+ 
+ !###===================================
+ LOGICAL FUNCTION RESIDUAL_PROC_SELLAY(I,J)
+ !###===================================
+ IMPLICIT NONE
+ INTEGER,INTENT(IN) ::  I,J
+ INTEGER :: K
+ 
+ RESIDUAL_PROC_SELLAY=.TRUE.
+ 
+ !## function to count the amount of data points for the selected layers need to be plotted and which needs to be ommitted
+ DO K=1,NLAYER
+  RESIDUAL_PROC_SELLAY=IPFR(I)%L(J).EQ.ILAYER(K)
+  IF(RESIDUAL_PROC_SELLAY)RETURN
+ ENDDO 
+
+ END FUNCTION RESIDUAL_PROC_SELLAY
+ 
  !###===================================
  SUBROUTINE RESIDUAL_PLOT()
  !###===================================
  IMPLICIT NONE
- INTEGER :: I,NSETS,IPLOTBMP
+ INTEGER :: I,NSETS,IPLOTBMP,IPLOTBMP2,NCLR
  REAL :: MINX,MINY,MAXX,MAXY,X1,X2,Y1,Y2
+ CHARACTER(LEN=4),DIMENSION(22) :: XLABELS=(/'<-5','-5','-4.5','-4','-3.5','-3','-2.5','-2','-1.5','-1','-0.5','0.5','1','1.5','2','2.5','3','3.5','4','4.5','5','>5'/)
 
- !## get minimum and maximum x and y values for plotting area scatter plot)
+ !## get minimum and maximum x and y values for plotting area scatter plot
  MINX=X(1); MAXX=X(1)
  DO I=2,SIZE(X); MINX=MIN(MINX,X(I)); MAXX=MAX(MAXX,X(I)); ENDDO
  MINY=Y(1); MAXY=Y(1)
  DO I=2,SIZE(Y); MINY=MIN(MINY,Y(I)); MAXY=MAX(MAXY,Y(I)); ENDDO
 
  !## create bitmap - resolution
- CALL WBITMAPCREATE(IPLOTBMP,500,500)
+ CALL IGRPALETTE(0,WRGB(6,165,205))
+ CALL WBITMAPCREATE(IPLOTBMP,520,520)
+ CALL IGRPALETTE(0,WRGB(255,255,255))
+ CALL WBITMAPCREATE(IPLOTBMP2,500,500)
  CALL IGRSELECT(DRAWBITMAP,IPLOTBMP)
+ CALL WBITMAPPUT(IPLOTBMP2,1,0,10,10,510,510)
  !## plot area is the entire bitmap
  CALL IGRAREA(0.0,0.0,1.0,1.0)
  CALL IGRUNITS(0.0,0.0,1.0,1.0)
  
  NSETS=1
-
+ NCLR=150
  !## plot data in scatterplot
  IF(IPLOT.EQ.1)THEN
   !## settings: option 1=type of plot, 2=number of sets, 3=amount of points, 4=no extra plotting options, 5=reset styles (1=yes)
   CALL IPGNEWPLOT(PGSCATTERPLOT,NSETS,SIZE(X),0,1) 
   !## settings: option 1=set number, 2=marker number, 3=marker type (0-4), 4='not used', 5='not used', 6=marker colour (31=red), 7='not used'
-  CALL IPGSTYLE(1,1,3,0,32,31,1) 
+  CALL IPGSTYLE(1,1,3,0,32,NCLR,1) 
   !## settings: option 1=set number, 2=marker type (14=dot)
   CALL IPGMARKER(1,14) 
   !## for scatter plot it is important to have a 1:1 ratio
@@ -139,12 +195,13 @@ CONTAINS
   CALL IPGUNITS(MINX,MINX,MAXX,MAXX)
  !## plot data in histogram
  ELSEIF(IPLOT.EQ.2)THEN
-  CALL IPGNEWPLOT(PGHISTOGRAM,NSETS,SIZE(X),PgLayAdjacent ,1)
+  CALL IPGNEWPLOT(PGHISTOGRAM,NSETS,SIZE(XCLASSES),PgLayAdjacent,1)
   !## settings: option 1=fill style (0-5), 2=fill density (1-4), 3=fill angle (1-4), 4=primary colour (31=red), 5=secondary colour, 6='not used'
-  CALL IPGSTYLE(1,4,2,0,31,64,1) 
+  CALL IPGSTYLE(1,4,2,0,NCLR,64,1) 
   !## minimum x-value, minimum y-value, maximum x-value, maximum y-value
-  !## to be computed ourselves beforehand ...
-  CALL IPGUNITS(-5.0,0.0,5.0,100.0) 
+  !## to be computed ourselves beforehand in subroutine "RESIDUAL_PROC_HISTCLASS"
+!  CALL IPGUNITS(HCLASSES(2)-1,MINVAL(XCLASSES),HCLASSES(SIZE(HCLASSES)-1)+1,MAXVAL(XCLASSES)) !## in principe wil ik deze regel gebruiken, maar...
+  CALL IPGUNITS(1.,MINVAL(XCLASSES),22.,MAXVAL(XCLASSES))  !## ... deze regel is voor het testen en dat levert dezelfde resultaten op.
  ENDIF
 
  !## clip graph on graphical area
@@ -174,19 +231,22 @@ CONTAINS
  CALL IPGAXES() 
  !## set number of decimal places (automatic=-1, maximum=9)
  CALL IPGDECIMALPLACES(-1)
- 
- !## adjust tick position for bottom X Axis
- CALL IPGXTICKPOS(2) 
- CALL IPGXTICKLENGTH(1.00)
-! CALL IPGXUSERSCALE(NPOINT=0)
+
  CALL IPGXSCALEANGLE(0.00,0.00)
  !## describes the position of the X scale numbers or descriptions as a proportion of the distance from the edge 
  !## of the PG area to the edge of the main graphics area. 
- CALL IPGXSCALEPOS(0.2) !5) !38)
- !## numbering and tick outside
- CALL IPGXSCALE('NT')
-! !## get 
-! CALL IPgXGetScale(VALUE,NVALUE)
+ CALL IPGXSCALEPOS(0.2)
+   
+ IF(IPLOT.EQ.1)THEN
+  !## adjust tick position for bottom X Axis
+  CALL IPGXTICKPOS(2) 
+  CALL IPGXTICKLENGTH(1.00)
+  !## numbering and tick outside
+  CALL IPGXSCALE('NT')
+ ELSEIF(IPLOT.EQ.2)THEN
+  CALL IPGXSCALE('T')
+  CALL IPGXTEXT(XLABELS,23)
+ ENDIF
 
  !## adjust tick position for left Y Axis
  CALL IPGYTICKPOS(2) 
@@ -210,14 +270,18 @@ CONTAINS
 !  CALL IGRJOIN(X1,Y1,X2,Y2)
   CALL IPGPOLYLINE2((/MINX,MAXX/),(/MINX,MAXX/),2)
  ELSEIF(IPLOT.EQ.2)THEN
-  CALL IPGHISTOGRAM(X)
+  CALL IPGHISTOGRAM(XCLASSES)
  ENDIF
 
  !## add legend to graph
- CALL IPGKEYAREA(0.2,0.80,0.35,0.9)
+ CALL IPGKEYAREA(0.20,0.80,0.40,0.90)
  !## clear legend area
- CALL IPGKEYALL((/'dataset1'/),'C')
-
+ CALL IPGKEYALL((/'Dataset size: '//TRIM(ITOS(SIZE(X)))/),'C')
+ 
+ !## put textblock on plotting area
+ CALL WGRTEXTFONT(FFHELVETICA,ISTYLE=0,WIDTH=0.01,HEIGHT=0.03)
+ CALL WGRTEXTBLOCK(0.75,0.0,1.0,0.05,'(C) iMOD, 2016')
+  
  !## save graph
  CALL WBITMAPSAVE(IPLOTBMP,TRIM(BMPNAME))
  CALL WBITMAPDESTROY(IPLOTBMP)
@@ -242,9 +306,9 @@ CONTAINS
   ENDDO
   DEALLOCATE(IPFR)
  ENDIF
- IF(ALLOCATED(X))DEALLOCATE(X)
- IF(ALLOCATED(X))DEALLOCATE(Y)
- IF(ALLOCATED(X))DEALLOCATE(Z)
+ IF(ASSOCIATED(X))DEALLOCATE(X)
+ IF(ASSOCIATED(Y))DEALLOCATE(Y)
+ IF(ASSOCIATED(Z))DEALLOCATE(Z)
 
  END SUBROUTINE RESIDUAL_CLEAN
 
