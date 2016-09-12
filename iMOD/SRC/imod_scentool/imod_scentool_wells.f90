@@ -694,6 +694,7 @@ CONTAINS
  CHARACTER(LEN=521) :: LINE
  CHARACTER(LEN=256) :: DIR,FNAME
  CHARACTER(LEN=50) :: QID
+ CHARACTER(LEN=1) :: CA
  LOGICAL :: LEX
  INTEGER(KIND=8) :: STIME,ETIME
   
@@ -710,7 +711,23 @@ CONTAINS
 
  DO ILAY=-1,STNLAY
   IU(ILAY)=UTL_GETUNIT()
-  CALL OSD_OPEN(IU(ILAY),FILE=TRIM(DIR)//'\imod_mkipf_wells_l'//TRIM(ITOS(ILAY))//'_tmp.ipf',STATUS='UNKNOWN',IOSTAT=IOS)
+  IF(ILAY.EQ.-1)THEN
+   INQUIRE(FILE=TRIM(DIR)//'\imod_mkipf_wells_unassigned.ipf',EXIST=LEX)
+   IF(LEX)THEN
+    WRITE(*,*) TRIM(DIR)//'\imod_mkipf_wells_unassigned.ipf allready exists, overwrite it ?'; READ(*,'(A1)') CA
+    IF(CA.NE.'Y'.AND.CA.NE.'y')STOP
+   ENDIF
+   CALL OSD_OPEN(IU(ILAY),FILE=TRIM(DIR)//'\imod_mkipf_wells_unassigned.ipf',STATUS='UNKNOWN',IOSTAT=IOS)
+  ELSEIF(ILAY.EQ.0)THEN
+   INQUIRE(FILE=TRIM(DIR)//'\imod_mkipf_wells_all.ipf',EXIST=LEX)
+   IF(LEX)THEN
+    WRITE(*,*) TRIM(DIR)//'\imod_mkipf_wells_all.ipf allready exists, overwrite it ?'; READ(*,'(A1)') CA
+    IF(CA.NE.'Y'.AND.CA.NE.'y')STOP
+   ENDIF
+   CALL OSD_OPEN(IU(ILAY),FILE=TRIM(DIR)//'\imod_mkipf_wells_all.ipf',STATUS='UNKNOWN',IOSTAT=IOS)
+  ELSE
+   CALL OSD_OPEN(IU(ILAY),FILE=TRIM(DIR)//'\imod_mkipf_wells_l'//TRIM(ITOS(ILAY))//'_tmp.ipf',STATUS='UNKNOWN',IOSTAT=IOS)
+  ENDIF
   IF(IOS.NE.0)THEN
    CALL WMESSAGEBOX(OKONLY,EXCLAMATIONICON,COMMONOK,'Can not create '//TRIM(DIR)//'\imod_mkipf_wells_l'// &
         TRIM(ITOS(ILAY))//'_tmp.ipf','Error'); GOTO 10
@@ -942,11 +959,12 @@ CONTAINS
  DO ILAY=0,STNLAY; IF(IU(ILAY).GT.0)THEN; INQUIRE(IU(ILAY),OPENED=LEX); IF(LEX)CLOSE(IU(ILAY)); ENDIF; ENDDO
  
  MEANQ=0.0
+ WRITE(*,'(A10,A15)') 'Layer','Total_Rate'
  DO I=1,SIZE(QT)
   WRITE(*,'(I10,F15.3)') I,QT(I); MEANQ=MEANQ+QT(I)
  ENDDO
+ WRITE(*,'(/10X,A15)') 'Total'
  WRITE(*,'(10X,F15.3)') MEANQ
- pause
  
  DEALLOCATE(IU,TOP,BOT,KD,Q,C,KH,QT)
 

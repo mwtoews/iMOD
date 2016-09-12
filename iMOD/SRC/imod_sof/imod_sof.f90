@@ -588,9 +588,8 @@ if(irow.eq.ir.and.icol.eq.ic)f=1.0
  ENDIF
  
  !## indentify pitts
- CALL SOF_GET_PITT(IDF(1),IDF(6)) !5))
+ CALL SOF_GET_PITT(IDF(1),IDF(6)) 
  IDF(6)%NODATA=0.0; IF(.NOT.IDFWRITE(IDF(6),IDF(3)%FNAME(:INDEX(IDF(3)%FNAME,'.',.TRUE.)-1)//'_pitt.idf',1))THEN; ENDIF
-! IDF(5)%NODATA=0.0; IF(.NOT.IDFWRITE(IDF(5),IDF(3)%FNAME(:INDEX(IDF(3)%FNAME,'.',.TRUE.)-1)//'_pitt.idf',1))THEN; ENDIF
 
  !## copy dem
  IDF(5)%X=IDF(1)%X; IDF(5)%NODATA=IDF(1)%NODATA
@@ -1110,7 +1109,8 @@ if(irow.eq.ir.and.icol.eq.ic)f=1.0
   IR=PPX(I)%IROW-IR1+1
   !## reset angle
   SLOPE%X(PPX(I)%ICOL,PPX(I)%IROW)=SLOPE%NODATA
-  CALL SOF_COMPUTE_SLOPE_ASPECT_CALC(DEM,SLOPE,ASPECT,PPX(I)%IROW,PPX(I)%ICOL)
+  CALL SOF_COMPUTE_SLOPE_ASPECT_CALC(DEMORG,SLOPE,ASPECT,PPX(I)%IROW,PPX(I)%ICOL)
+!  CALL SOF_COMPUTE_SLOPE_ASPECT_CALC(DEM,SLOPE,ASPECT,PPX(I)%IROW,PPX(I)%ICOL)
   !## if pitt, set angle to nodata
   IF(PITS%X(PPX(I)%ICOL,PPX(I)%IROW).EQ.1.0)ASPECT%X(PPX(I)%ICOL,PPX(I)%IROW)=ASPECT%NODATA
   PCG%X(IC,IR)=ASPECT%X(PPX(I)%ICOL,PPX(I)%IROW) 
@@ -1191,6 +1191,8 @@ if(irow.eq.ir.and.icol.eq.ic)f=1.0
  !## trace all to pit - nodata only
  ICOL=PITLOC(1); IROW=PITLOC(2)
 
+write(*,*) 'pit',icol,irow
+
  NCR=1; ICR=1; JCR=2
  CR(NCR,1,ICR)=ICOL; CR(NCR,2,ICR)=IROW
  DO
@@ -1226,7 +1228,6 @@ if(irow.eq.ir.and.icol.eq.ic)f=1.0
       CR(IL,1,JCR)=IC
       CR(IL,2,JCR)=IR
       PCG%X(IC,IR)=2.0
-!      ENDIF
      ENDIF
     ENDDO
    ENDDO
@@ -1257,7 +1258,7 @@ if(irow.eq.ir.and.icol.eq.ic)f=1.0
 
  !## fill pcg%x with angles
  PCG%X=A
- IF(IDFWRITE(PCG,'D:\PCG.IDF',1))THEN; ENDIF
+ IF(IDFWRITE(PCG,'D:\PCG3.IDF',1))THEN; ENDIF
 
  !## backtrace from the outlet towards the pit - reverse angles
  ICOL=OUTLOC(1); IROW=OUTLOC(2)
@@ -1271,7 +1272,7 @@ if(irow.eq.ir.and.icol.eq.ic)f=1.0
   DX=-COS(ASPECT)*PCG%DX; DY=-SIN(ASPECT)*PCG%DY
   XC=XC+DX; YC=YC+DY
 
-!write(*,*) 1,aspect,icol,irow
+write(*,*) 1,aspect,icol,irow
 
   !## get new grid location
   CALL IDFIROWICOL(PCG,IROW,ICOL,XC,YC)
@@ -1296,7 +1297,7 @@ if(irow.eq.ir.and.icol.eq.ic)f=1.0
 ! !## no gradient in outlet location, save angle though
 ! PCG%X(ICOL,IROW)=ASPILL
 
- IF(IDFWRITE(PCG,'D:\PCG.IDF',1))THEN; ENDIF
+ IF(IDFWRITE(PCG,'D:\PCG4.IDF',1))THEN; ENDIF
 
 ! write(*,*) 'result'
 ! do irow=1,pcg%nrow

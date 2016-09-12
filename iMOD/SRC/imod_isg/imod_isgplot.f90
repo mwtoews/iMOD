@@ -28,7 +28,7 @@ USE IMODVAR, ONLY : PI
 USE MODPLOT
 USE MOD_ISG_PAR
 USE MOD_OSD, ONLY : ICF
-USE MOD_UTL, ONLY : UTL_CAP,INVERSECOLOUR,UTL_WAITMESSAGE,UTL_MESSAGEHANDLE
+USE MOD_UTL, ONLY : UTL_CAP,INVERSECOLOUR,UTL_WAITMESSAGE,UTL_MESSAGEHANDLE,UTL_DIST
 USE MOD_ISG_UTL, ONLY : ISGCLOSEFILES,ISGOPENFILES
 
 CONTAINS
@@ -128,6 +128,7 @@ CONTAINS
             DIMCRS,INDS,ISND,ICRS,DIMCLC,NCLC,ICLC,IP,IISG,DIMSTW,NQHR,DIMQHR  
  INTEGER,ALLOCATABLE,DIMENSION(:) :: ID
  REAL :: DX,X1,Y1,X,Y,TWIDTH,THEIGHT,XPOS,YPOS,DIST
+ REAL,DIMENSION(:),ALLOCATABLE :: XSEG,YSEG
  REAL,DIMENSION(4) :: TDIST
  CHARACTER(LEN=50) :: CID
  TYPE OBJ
@@ -233,14 +234,6 @@ CONTAINS
    DO J=1,NSEG
     READ(ISGIU(2,1),REC=IREC+J+ICF) X,Y
 
-    !## draw circles - nodes
-    IF(ISND.EQ.1)THEN
-     IF(X.LT.XMAX.AND.X.GT.XMIN.AND.Y.GT.YMIN.AND.Y.LT.YMAX)THEN
-      CALL IGRCOLOURN(ICLRSP)
-      CALL IGRCIRCLE(X,Y,DX)
-     ENDIF
-    ENDIF
-
     IF(J.EQ.1)THEN
      X1=X
      Y1=Y
@@ -254,6 +247,15 @@ CONTAINS
     IF(LEX)THEN
      !## draw squares - begin node
      IF(X.LT.XMAX.AND.X.GT.XMIN.AND.Y.GT.YMIN.AND.Y.LT.YMAX)THEN
+
+      !## draw circles - nodes
+      IF(ISND.EQ.1)THEN
+       IF(X.LT.XMAX.AND.X.GT.XMIN.AND.Y.GT.YMIN.AND.Y.LT.YMAX)THEN
+        CALL IGRCOLOURN(ICLRSP)
+        CALL IGRCIRCLE(X,Y,DX)
+       ENDIF
+      ENDIF
+
       IF(INDS.EQ.1.AND.(J.EQ.1.OR.J.EQ.NSEG))THEN
        CALL IGRCOLOURN(ICLRND)
        CALL IGRRECTANGLE(X-DX,Y-DX,X+DX,Y+DX)
@@ -309,12 +311,27 @@ CONTAINS
 
    END DO
 
+   !## plot flow directions
+   IF(IFDR.EQ.1)THEN
+    CALL IGRCOLOURN(ICLRSF); CALL IGRFILLPATTERN(SOLID)
+    !## get correct record-number for coordinates
+    IREC=ID(1)-1
+    !## read segments
+    IF(ALLOCATED(XSEG))THEN
+     IF(SIZE(XSEG).LT.NSEG)DEALLOCATE(XSEG,YSEG)
+    ENDIF
+    IF(.NOT.ALLOCATED(XSEG))ALLOCATE(XSEG(NSEG),YSEG(NSEG))
+    DO J=1,NSEG; READ(ISGIU(2,1),REC=IREC+J+ICF) XSEG(J),YSEG(J); ENDDO
+    CALL ISGPLOT_FDIRECTION(XSEG,YSEG,NSEG,XMIN,XMAX,YMIN,YMAX)
+   ENDIF
+   
    CALL UTL_WAITMESSAGE(IRAT,IRAT1,I,NISG,'Drawing ISG ...')
 
   END DO
 
-  IF(ALLOCATED(CRS))DEALLOCATE(CRS); IF(ALLOCATED(CLC))DEALLOCATE(CLC)
-  IF(ALLOCATED(STW))DEALLOCATE(STW); IF(ALLOCATED(QHR))DEALLOCATE(QHR)
+  IF(ALLOCATED(XSEG))DEALLOCATE(XSEG); IF(ALLOCATED(YSEG))DEALLOCATE(YSEG)
+  IF(ALLOCATED(CRS))DEALLOCATE(CRS);   IF(ALLOCATED(CLC))DEALLOCATE(CLC)
+  IF(ALLOCATED(STW))DEALLOCATE(STW);   IF(ALLOCATED(QHR))DEALLOCATE(QHR)
 
  ELSE
 
@@ -335,18 +352,12 @@ CONTAINS
    !## initialize tdist for all!
    TDIST=0.0
 
-!   IF(IFDR.EQ.1)THEN
-!    !## read segments
-!    IREC=ID(1)-1
-!    DO J=1,NSEG
-!     X=ISP(IREC+J)%X
-!     Y=ISP(IREC+J)%Y
-!    ENDDO
-!   ENDIF
-   
-   !## read segments
+   !## get correct record-number for coordinates
    IREC=ID(1)-1
+    
+   !## read segments
    DO J=1,NSEG
+
     X=ISP(IREC+J)%X
     Y=ISP(IREC+J)%Y
 
@@ -365,6 +376,15 @@ CONTAINS
     IF(LEX)THEN
      !## draw squares - begin node
      IF(X.LT.XMAX.AND.X.GT.XMIN.AND.Y.GT.YMIN.AND.Y.LT.YMAX)THEN
+
+      !## draw circles - nodes
+      IF(ISND.EQ.1)THEN
+       IF(X.LT.XMAX.AND.X.GT.XMIN.AND.Y.GT.YMIN.AND.Y.LT.YMAX)THEN
+        CALL IGRCOLOURN(ICLRSP)
+        CALL IGRCIRCLE(X,Y,DX)
+       ENDIF
+      ENDIF
+
       IF(INDS.EQ.1.AND.(J.EQ.1.OR.J.EQ.NSEG))THEN
        CALL IGRCOLOURN(ICLRND)
        CALL IGRRECTANGLE(X-DX,Y-DX,X+DX,Y+DX)
@@ -400,11 +420,6 @@ CONTAINS
         IF(IQHR.EQ.1)CALL ISGPLOTLOCCRS(X1,X,Y1,Y,DX,TDIST(4),NQHR,ISQ(ID(5):ID(5)+NQHR-1)%DIST, &
                                         ISQ(ID(5):ID(5)+NQHR-1)%CNAME,ISQ(ID(5):ID(5)+NQHR-1)%N,NQHR,4,IISGLABEL)
        ENDIF
-       !## draw circles - nodes
-       IF(ISND.EQ.1.AND.J.NE.NSEG)THEN
-        CALL IGRCOLOURN(ICLRSP)
-        CALL IGRCIRCLE(X,Y,DX)
-       ENDIF
       ELSE
        DIST =SQRT((X1-X)**2.0+(Y1-Y)**2.0)
        TDIST=TDIST+DIST
@@ -429,6 +444,13 @@ CONTAINS
 
    END DO
 
+   !## plot flow directions
+   IF(IFDR.EQ.1)THEN
+    CALL IGRCOLOURN(ICLRSF); CALL IGRFILLPATTERN(SOLID)
+    !## get correct record-number for coordinates
+    IREC=ID(1)-1; CALL ISGPLOT_FDIRECTION(ISP(IREC+1:)%X,ISP(IREC+1:)%Y,NSEG,XMIN,XMAX,YMIN,YMAX)
+   ENDIF
+
    CALL UTL_WAITMESSAGE(IRAT,IRAT1,I,NISG,'Drawing ISG ...')
 
   END DO
@@ -439,6 +461,55 @@ CONTAINS
  
  END SUBROUTINE ISGPLOT
 
+ !###======================================================================
+ SUBROUTINE ISGPLOT_FDIRECTION(X,Y,N,XMIN,XMAX,YMIN,YMAX)
+ !###======================================================================
+ IMPLICIT NONE
+ INTEGER,INTENT(IN) :: N
+ REAL,INTENT(IN) :: XMIN,XMAX,YMIN,YMAX
+ REAL,DIMENSION(N) :: X,Y
+ INTEGER :: I,II,J,M
+ REAL :: DIST,TDIST,XC,YC,DX,DY,YFRAC
+ LOGICAL :: LEX
+ 
+ !## size-function
+ DY=YMAX-YMIN; YFRAC=LOG(DY/1000.0)*50.0; YFRAC=MAX(YFRAC,50.0); YFRAC=DY/YFRAC
+ 
+ TDIST=0.0; J=0
+ DO I=1,N-1
+  !## to be drawn
+  LEX=MIN(X(I),X(I+1)).LT.XMAX.AND.MAX(X(I),X(I+1)).GT.XMIN.AND. &
+      MIN(Y(I),Y(I+1)).LT.YMAX.AND.MAX(Y(I),Y(I+1)).GT.YMIN
+  IF(LEX)THEN
+   !## store first of segment inside graphical view
+   IF(J.EQ.0)J=I
+   TDIST=TDIST+UTL_DIST(X(I),Y(I),X(I+1),Y(I+1))
+  ENDIF
+  IF(.NOT.LEX.OR.I.EQ.N-1)THEN
+   !## plot arrow for current line-segment
+   IF(TDIST.GT.0.0)THEN
+    !## plot at half of the distance
+    TDIST=TDIST/2.0
+    !## find segment in which mid exists
+    M=1; IF(.NOT.LEX)M=2
+    DIST=0.0; DO II=J,I-M
+     DIST=DIST+UTL_DIST(X(II),Y(II),X(II+1),Y(II+1))
+     !## found segment of mid
+     IF(DIST.GT.TDIST)EXIT
+    ENDDO
+
+    DX=X(II+1)-X(II); DY=Y(II+1)-Y(II); XC=(X(II)+X(II+1))/2.0; YC=(Y(II)+Y(II+1))/2.0
+    CALL ISGPLOTARROW(DX,DY,XC,YC,YFRAC)
+    
+    !## reset j
+    J=0; TDIST=0.0
+   ENDIF
+  ENDIF
+ 
+ ENDDO
+  
+ END SUBROUTINE ISGPLOT_FDIRECTION
+ 
  !###======================================================================
  SUBROUTINE ISGPLOTOPENFILES(LEX,LOPEN,FNAME,CSTATUS)
  !###======================================================================
@@ -573,6 +644,27 @@ CONTAINS
 
  END SUBROUTINE ISGPLOTSHAPE
 
+ !###======================================================================
+ SUBROUTINE ISGPLOTARROW(DX,DY,XC,YC,XSIZE)
+ !###======================================================================
+ IMPLICIT NONE
+ REAL,PARAMETER :: PIT=(2.0*PI)/3.0 !## radian of triangle
+ REAL,INTENT(IN) :: DX,DY,XSIZE,XC,YC
+ REAL,DIMENSION(4) :: XPOL,YPOL
+ REAL :: A
+ 
+ !## radians  
+ A=ATAN2(DY,DX)
+
+ XPOL(1)=XC+COS(A)*XSIZE; YPOL(1)=YC+SIN(A)*XSIZE
+ A=A-PIT; XPOL(2)=XC+COS(A)*XSIZE; YPOL(2)=YC+SIN(A)*XSIZE
+ A=A-PIT; XPOL(3)=XC+COS(A)*XSIZE; YPOL(3)=YC+SIN(A)*XSIZE
+ XPOL(4)=XPOL(1); YPOL(4)=YPOL(1)
+ 
+ CALL IGRPOLYGONCOMPLEX(XPOL,YPOL,4)
+
+ END SUBROUTINE ISGPLOTARROW
+ 
  !###======================================================================
  SUBROUTINE ISGTEXTANGLE(DX,DY,ROFFSET,DOFFSET,IALIGN,XPOS,YPOS)
  !###======================================================================

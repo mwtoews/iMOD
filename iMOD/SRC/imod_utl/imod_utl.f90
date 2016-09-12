@@ -367,17 +367,16 @@ CONTAINS
  ENDIF
 
  !## if no layers has been used for the assignment, try to allocate it to the nearest 
- IF(ICLAY.EQ.1)THEN
-  IF(SUM(TLP).EQ.0.0)THEN
-   ZM=(Z1+Z2)/2.0; DZ=99999.0; JLAY=0
-   DO ILAY=1,N
-    ZT=TOP(ILAY); ZB=BOT(ILAY)
-    IF(ABS(ZT-ZM).LT.DZ.OR.ABS(ZB-ZM).LT.DZ)THEN
-     DZ  =MIN(ABS(ZT-ZM),ABS(ZB-ZM))
-     JLAY=ILAY
-    ENDIF
-   ENDDO
-  ENDIF
+ IF(ICLAY.EQ.1.AND.SUM(TLP).EQ.0.0)THEN
+  ZM=(Z1+Z2)/2.0; DZ=99999.0; JLAY=0
+  DO ILAY=1,N
+   ZT=TOP(ILAY); ZB=BOT(ILAY)
+   IF(ABS(ZT-ZM).LT.DZ.OR.ABS(ZB-ZM).LT.DZ)THEN
+    DZ  =MIN(ABS(ZT-ZM),ABS(ZB-ZM))
+    JLAY=ILAY
+   ENDIF
+  ENDDO
+  IF(JLAY.NE.0)TLP(JLAY)=-1.0
  ENDIF
  
  !## make sure only one layer is assigned whenever z1.eq.z2
