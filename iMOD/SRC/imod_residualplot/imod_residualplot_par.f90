@@ -7,17 +7,17 @@ TYPE IPFRESOBJ
  REAL,POINTER,DIMENSION(:) :: O => NULL()              !## observation
  REAL,POINTER,DIMENSION(:) :: W => NULL()              !## weight value
  INTEGER,POINTER,DIMENSION(:) :: L => NULL()           !## layer
- CHARACTER(LEN=52),POINTER,DIMENSION(:) :: D => NULL() !## date
+ INTEGER,POINTER,DIMENSION(:) :: D => NULL()           !## date
  INTEGER :: NPOINTS                                    !## number of points in ipf
 END TYPE IPFRESOBJ
 TYPE(IPFRESOBJ),DIMENSION(:),ALLOCATABLE :: IPFR       !## stores original values from txtfile per ipf
 REAL,DIMENSION(:),POINTER :: X,Y,Z                     !## values to be plotted
 REAL,DIMENSION(:),POINTER :: X_TMP,Y_TMP,Z_TMP         !## values to be plotted
 CHARACTER(LEN=256) :: INPUTFILE,BMPNAME                !## name of txtfile
-INTEGER :: IPLOT                                       !## plot type
+INTEGER :: IPLOT,IWEIGHT                               !## plot type
 INTEGER :: ITRANSIENT                                  !## transient/steadystate (lacking date)
-INTEGER,POINTER,DIMENSION(:) :: ILAYER                 !## all layer numbers to be read
-INTEGER :: NLAYER                                      !## amount of layers to be read
+INTEGER,POINTER,DIMENSION(:) :: ILAYER,IIPFS,IRDATE    !## all layer numbers/IPF-files to be read
+INTEGER :: NLAYER,NIPFS,NRDATE                         !## amount of layers/IPF-files to be read
 REAL,DIMENSION(23) :: HCLASSES                         !## defined histogram classes
 REAL,DIMENSION(22) :: XCLASSES                         !## amount of points per defined histogram class for x-array
 

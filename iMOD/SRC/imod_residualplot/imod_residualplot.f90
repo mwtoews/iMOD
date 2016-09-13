@@ -34,6 +34,7 @@ CONTAINS
  !###===================================
  IMPLICIT NONE
  INTEGER :: I,IU,NIPF,IOS
+ REAL :: J,WMDL,WRES,MMSR,MMDL,CC,DYNMSR,DYNMLD
  CHARACTER(LEN=256) :: LINE
 
  IU=UTL_GETUNIT(); CALL OSD_OPEN(IU,FILE=TRIM(INPUTFILE),ACTION='READ',FORM='FORMATTED',STATUS='OLD')
@@ -57,11 +58,13 @@ CONTAINS
      IF(I.GE.2)IPFR(NIPF)%NPOINTS=IPFR(NIPF)%NPOINTS+1
      IF(I.EQ.3)THEN
       IF(ITRANSIENT.EQ.1)THEN
-       READ(LINE,*) IPFR(NIPF)%D(IPFR(NIPF)%NPOINTS),IPFR(NIPF)%X(IPFR(NIPF)%NPOINTS),IPFR(NIPF)%Y(IPFR(NIPF)%NPOINTS), &
-                    IPFR(NIPF)%L(IPFR(NIPF)%NPOINTS),IPFR(NIPF)%O(IPFR(NIPF)%NPOINTS),IPFR(NIPF)%M(IPFR(NIPF)%NPOINTS)
+       READ(LINE,'(I10,2F15.7,I10,3F15.7)') IPFR(NIPF)%D(IPFR(NIPF)%NPOINTS),IPFR(NIPF)%X(IPFR(NIPF)%NPOINTS),IPFR(NIPF)%Y(IPFR(NIPF)%NPOINTS), &
+                    IPFR(NIPF)%L(IPFR(NIPF)%NPOINTS),IPFR(NIPF)%O(IPFR(NIPF)%NPOINTS),IPFR(NIPF)%M(IPFR(NIPF)%NPOINTS), &
+                    IPFR(NIPF)%W(IPFR(NIPF)%NPOINTS)
       ELSE
-       READ(LINE,*) IPFR(NIPF)%X(IPFR(NIPF)%NPOINTS),IPFR(NIPF)%Y(IPFR(NIPF)%NPOINTS), &
-                    IPFR(NIPF)%L(IPFR(NIPF)%NPOINTS),IPFR(NIPF)%O(IPFR(NIPF)%NPOINTS),IPFR(NIPF)%M(IPFR(NIPF)%NPOINTS)
+       READ(LINE,'(2F15.7,I10,6F15.7)') IPFR(NIPF)%X(IPFR(NIPF)%NPOINTS),IPFR(NIPF)%Y(IPFR(NIPF)%NPOINTS), &
+                    IPFR(NIPF)%L(IPFR(NIPF)%NPOINTS),IPFR(NIPF)%O(IPFR(NIPF)%NPOINTS),IPFR(NIPF)%M(IPFR(NIPF)%NPOINTS), &
+                    J,WMDL,WRES,IPFR(NIPF)%W(IPFR(NIPF)%NPOINTS)
       ENDIF
      ENDIF
     ENDDO
@@ -69,7 +72,8 @@ CONTAINS
    IF(I.EQ.2)THEN
     IF(ITRANSIENT.EQ.1)ALLOCATE(IPFR(NIPF)%D(IPFR(NIPF)%NPOINTS))
     ALLOCATE(IPFR(NIPF)%X(IPFR(NIPF)%NPOINTS),IPFR(NIPF)%Y(IPFR(NIPF)%NPOINTS), &
-             IPFR(NIPF)%L(IPFR(NIPF)%NPOINTS),IPFR(NIPF)%O(IPFR(NIPF)%NPOINTS),IPFR(NIPF)%M(IPFR(NIPF)%NPOINTS))
+             IPFR(NIPF)%L(IPFR(NIPF)%NPOINTS),IPFR(NIPF)%O(IPFR(NIPF)%NPOINTS),IPFR(NIPF)%M(IPFR(NIPF)%NPOINTS),&
+             IPFR(NIPF)%W(IPFR(NIPF)%NPOINTS))
    ENDIF
   ENDDO
   IF(I.EQ.1)ALLOCATE(IPFR(NIPF))
@@ -94,18 +98,34 @@ CONTAINS
  
  N=0
  DO I=1,SIZE(IPFR)
+  IF(.NOT.(RESIDUAL_PROC_SELIPF(I)))CYCLE
   DO J=1,IPFR(I)%NPOINTS
-   IF(.NOT.(RESIDUAL_PROC_SELLAY(I,J)))CYCLE
+   IF(.NOT.((RESIDUAL_PROC_SELLAY(I,J)).AND.(RESIDUAL_PROC_SELDATE(I,J)).AND.(RESIDUAL_PROC_SELWEIGHT(I,J))))CYCLE
    N=N+1
    SELECT CASE (IPLOT)
     !## scatter measurement/observation
-    CASE (1); X(N)=IPFR(I)%M(J); Y(N)=IPFR(I)%O(J)
+    CASE (1)
+     IF(IWEIGHT.EQ.1)THEN
+      X(N)=IPFR(I)%M(J)*IPFR(I)%W(J); Y(N)=IPFR(I)%O(J)*IPFR(I)%W(J)
+     ELSE
+      X(N)=IPFR(I)%M(J); Y(N)=IPFR(I)%O(J)
+     ENDIF
     !## histogram
-    CASE (2); X(N)=IPFR(I)%M(J)-IPFR(I)%O(J)
+    CASE (2) 
+     IF(IWEIGHT.EQ.1)THEN
+      X(N)=(IPFR(I)%M(J)*IPFR(I)%W(J))-(IPFR(I)%O(J)*IPFR(I)%W(J))
+     ELSE
+      X(N)=IPFR(I)%M(J)-IPFR(I)%O(J)
+     ENDIF
    END SELECT
   ENDDO
  ENDDO
-
+ 
+ IF(N.EQ.0)THEN
+  WRITE(*,*) "No data points are found, check your initial settings if you selected the right layers, dates or ipf's"
+  STOP
+ ENDIF
+ 
  ALLOCATE(X_TMP(N),Y_TMP(N),Z_TMP(N))
  DO I=1,N; X_TMP(I)=X(I); Y_TMP(I)=Y(I); Z_TMP(I)=Z(I); ENDDO
  DEALLOCATE(X,Y,Z)
@@ -148,14 +168,63 @@ CONTAINS
  
  RESIDUAL_PROC_SELLAY=.TRUE.
  
- !## function to count the amount of data points for the selected layers need to be plotted and which needs to be ommitted
  DO K=1,NLAYER
   RESIDUAL_PROC_SELLAY=IPFR(I)%L(J).EQ.ILAYER(K)
   IF(RESIDUAL_PROC_SELLAY)RETURN
  ENDDO 
-
+ 
  END FUNCTION RESIDUAL_PROC_SELLAY
  
+ !###===================================
+ LOGICAL FUNCTION RESIDUAL_PROC_SELDATE(I,J)
+ !###===================================
+ IMPLICIT NONE
+ INTEGER,INTENT(IN) :: I,J
+ INTEGER :: K 
+ 
+ RESIDUAL_PROC_SELDATE=.TRUE.
+ 
+ IF(ITRANSIENT.EQ.1)THEN
+  DO K=1,NRDATE
+   RESIDUAL_PROC_SELDATE=IPFR(I)%D(J).EQ.IRDATE(K)
+   IF(RESIDUAL_PROC_SELDATE)RETURN
+  ENDDO 
+ ENDIF
+ 
+ END FUNCTION RESIDUAL_PROC_SELDATE
+
+ !###===================================
+ LOGICAL FUNCTION RESIDUAL_PROC_SELWEIGHT(I,J)
+ !###===================================
+ IMPLICIT NONE
+ INTEGER,INTENT(IN) :: I,J 
+ 
+ RESIDUAL_PROC_SELWEIGHT=.TRUE.
+ 
+ IF(IWEIGHT.EQ.1)THEN
+  RESIDUAL_PROC_SELWEIGHT=IPFR(I)%W(J).NE.0.0
+  IF(RESIDUAL_PROC_SELWEIGHT)RETURN
+ ENDIF
+ 
+ END FUNCTION RESIDUAL_PROC_SELWEIGHT
+
+ !###===================================
+ LOGICAL FUNCTION RESIDUAL_PROC_SELIPF(I)
+ !###===================================
+ IMPLICIT NONE
+ INTEGER,INTENT(IN) :: I
+ INTEGER :: K
+ 
+ RESIDUAL_PROC_SELIPF=.TRUE.
+ 
+ !## function to count the amount of data points for the selected layers need to be plotted and which needs to be ommitted
+ DO K=1,NIPFS
+  RESIDUAL_PROC_SELIPF=I.EQ.IIPFS(K)
+  IF(RESIDUAL_PROC_SELIPF)RETURN
+ ENDDO 
+
+ END FUNCTION RESIDUAL_PROC_SELIPF
+  
  !###===================================
  SUBROUTINE RESIDUAL_PLOT()
  !###===================================
@@ -216,19 +285,29 @@ CONTAINS
  !## set grahpic layout settings
  CALL WGRTEXTFONT(IFAMILY=FFHELVETICA,ISTYLE=0,WIDTH=0.0133,HEIGHT=0.0333)
  CALL IPGTITLEPOS(0.50)
- !## title
- CALL IPGTITLE('TITLE','C')
- 
- !## x-axis
  CALL IPGXLABELPOS(0.50)
- CALL IPGXLABEL('X AXIS','C') 
+ CALL IPGYLABELPOS(0.75)
  
- !## y-axis
- CALL IPGYLABELPOS(0.50)
- CALL IPGYLABELLEFT('Y AXIS','C9') 
+ !## title, x-axis, y-axis
+ IF(IPLOT.EQ.1)THEN
+  IF(IWEIGHT.EQ.1)THEN
+   CALL IPGTITLE('Calculated vs. Observed weighted heads','C')
+  ELSE
+   CALL IPGTITLE('Calculated vs. Observed heads','C')
+  ENDIF
+  CALL IPGXLABEL('Calculated heads (m)','C') 
+  CALL IPGYLABELLEFT('Observed heads (m)','C9')
+ ELSEIF(IPLOT.EQ.2)THEN
+  IF(IWEIGHT.EQ.1)THEN
+   CALL IPGTITLE('Histogram of weighted residuals','C')
+  ELSE
+   CALL IPGTITLE('Histogram of residuals','C')
+  ENDIF
+  CALL IPGXLABEL('Residual (measured-model) (m)','C') 
+  CALL IPGYLABELLEFT('Count','C9') 
+ ENDIF
  
  !## draw actual axis
-! CALL IGRCOLOURN(223)
  !## Draws a set of axes in the current Presentation Graphics area
  CALL IPGAXES() 
  !## set number of decimal places (automatic=-1, maximum=9)
