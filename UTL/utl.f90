@@ -2746,7 +2746,7 @@ end
 
 
 ! local variables
-      integer   lstring,i
+      integer   lstring
 
 
 ! functions

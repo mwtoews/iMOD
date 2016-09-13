@@ -1231,7 +1231,6 @@ subroutine idpdrv ( ndp, xd, yd, zd, nt, ipt, pd, wk )
   integer ipti(3)
   integer it
   integer iv
-  integer jpd
   integer jpd0
   integer jpdmx
   integer jpt

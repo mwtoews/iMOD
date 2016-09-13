@@ -55,6 +55,60 @@ END TYPE PROCOBJ
 REAL,PARAMETER,PRIVATE :: SDAY=86400.0
 
 CONTAINS
+ 
+ !###======================================================================
+ SUBROUTINE UTL_GETAXESCALES(XMIN,YMIN,XMAX,YMAX,SX,NSX,SY,NSY)
+ !###======================================================================
+ IMPLICIT NONE
+ REAL,INTENT(OUT),DIMENSION(:) :: SX,SY
+ INTEGER,INTENT(OUT) :: NSX,NSY
+ REAL,INTENT(IN) :: XMIN,YMIN,XMAX,YMAX
+
+ CALL IPGNEWPLOT(PGSCATTERPLOT,1,1,0,1) 
+
+ CALL IPGUNITS(XMIN,YMIN,XMAX,YMAX)
+ CALL IPGXGETSCALE(SX,NSX)
+ CALL IPGYGETSCALE(SY,NSY) 
+
+ END SUBROUTINE UTL_GETAXESCALES
+
+ !###======================================================================
+ CHARACTER(LEN=10) FUNCTION UTL_GETFORMAT(X)
+ !###======================================================================
+ IMPLICIT NONE
+ REAL,INTENT(IN) :: X
+ CHARACTER(LEN=20) :: XC
+ INTEGER :: I,J,K,NDEC
+
+ WRITE(XC,*) X
+ XC=ADJUSTL(XC)
+
+ CALL IUPPERCASE(XC)
+ J=INDEX(XC,'E+00')
+ IF(J.GT.0)XC=XC(:J-1) 
+ I=INDEX(XC,'E')
+ IF(I.GT.0)THEN
+  UTL_GETFORMAT='(E10.4)'
+ ELSE
+  I=INDEX(XC,'.')
+  IF(I.EQ.0)THEN
+   UTL_GETFORMAT='(F10.0)'
+  ELSE
+   J=LEN_TRIM(XC)
+   DO K=J,I+1,-1
+    IF(XC(K:K).NE.'0')EXIT
+   END DO
+   NDEC=K-I
+
+   IF(NDEC.EQ.0)THEN
+    UTL_GETFORMAT='(F10.0)'
+   ELSE
+    WRITE(UTL_GETFORMAT,'(A5,I2.2,A)') '(F10.',NDEC,')'
+   ENDIF
+  ENDIF
+ ENDIF
+
+ END FUNCTION UTL_GETFORMAT
 
  !###======================================================================
  SUBROUTINE UTL_DEBUGLEVEL(IONOFF)

@@ -53,14 +53,14 @@ subroutine calcgxg(x,y,nval,gxgdat,result)
 
  real      gx3(np),sday,eday,bper,eper,gh3,gl3,d,ds,cper
 
- integer   measdate(np)
+! integer   measdate(np)
 
 ! functions
  integer   cfn_dat2cen,cfn_fidxlow_r,cfn_fidxupp_r
 
 ! data
- data measdate/0114,0128,0214,0228,0314,0328,0414,0428,0514,0528,0614,0628,  &
-               0714,0728,0814,0828,0914,0928,1014,1028,1114,1128,1214,1228/
+! data measdate/0114,0128,0214,0228,0314,0328,0414,0428,0514,0528,0614,0628,  &
+!               0714,0728,0814,0828,0914,0928,1014,1028,1114,1128,1214,1228/
 
 ! program section
 ! ------------------------------------------------------------------------------
