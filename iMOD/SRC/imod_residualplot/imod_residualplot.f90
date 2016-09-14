@@ -38,7 +38,8 @@ CONTAINS
  CHARACTER(LEN=256) :: LINE
 
  IU=UTL_GETUNIT(); CALL OSD_OPEN(IU,FILE=TRIM(INPUTFILE),ACTION='READ',FORM='FORMATTED',STATUS='OLD')
-
+ IF(IU.EQ.0)STOP
+ 
  !## three loops, first to get number of ipf files, second to get number of points per ipf, third to read all in memory
  DO I=1,3
   NIPF=0
