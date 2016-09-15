@@ -209,61 +209,61 @@ CONTAINS
   X2=MAXVAL(SHPXC(1:SHPNCRD(II),II)); Y2=MAXVAL(SHPYC(1:SHPNCRD(II),II)); DX=XGRIDSIZE(II); DY=DX
   
   !## call to subroutine to calculate x and y arrays (SX and SY) -WERKT NOG NIET, ONDERSTAANDE REGELS T/M REGEL 265 MOET NOG IN ONDERSTAANDE ROUTINE
-  CALL IDFEDITSAVEGRIDSIZE_XY()
+  CALL IDFEDITSAVEGRIDSIZE_INSERT(SX,NSX,X1,X2,DX,MP(IPLOT)%IDF%XMAX)
+  CALL IDFEDITSAVEGRIDSIZE_INSERT(SY,NSY,Y1,Y2,DX,MP(IPLOT)%IDF%YMAX)
 
-  !## x-direction  
-  !## get location in network
-  CALL POL1LOCATE(SX,NSX,REAL(X1,8),I1); CALL POL1LOCATE(SX,NSX,REAL(X2,8),I2)
-  X1=SX(I1); X2=SX(I2); MSX=NSX+(X2-X1)/DX
-  ALLOCATE(SX_BU(MSX))
-
-  DO I=1,NSX
-   IF(SX(I).GT.X1)EXIT; SX_BU(I)=SX(I)
-  ENDDO
-  
-  !## fill in modified gridcells
-  J=I-1
-  DO
-   J=J+1; SX_BU(J)=SX_BU(J-1)+DX
-   IF(SX_BU(J).GT.X2)EXIT
-  ENDDO
-  
-  DO 
-   I=I+1
-   IF(SX(I).GT.X2)THEN; J=J+1; SX_BU(J)=SX(I); ENDIF
-   IF(SX_BU(J).EQ.MP(IPLOT)%IDF%XMAX)EXIT
-  ENDDO
-
-  DEALLOCATE(SX); NSX=J; ALLOCATE(SX(NSX))
-  DO I=1,NSX; SX(I)=SX_BU(I); ENDDO 
-
-  !## y-direction
-  J=0
-  !## get location in network
-  CALL POL1LOCATE(SY,NSY,REAL(Y1,8),I1); CALL POL1LOCATE(SY,NSY,REAL(Y2,8),I2)
-  Y1=SY(I1); Y2=SY(I2); MSY=NSY+(Y2-Y1)/DY
-  ALLOCATE(SY_BU(MSY))
-
-  DO I=1,NSY
-   IF(SY(I).GT.Y1)EXIT; SY_BU(I)=SY(I)
-  ENDDO
-  
-  !## fill in modified gridcells
-  J=I-1
-  DO
-   J=J+1; SY_BU(J)=SY_BU(J-1)+DY
-   IF(SY_BU(J).GT.Y2)EXIT
-  ENDDO
-  
-  DO 
-   I=I+1
-   IF(SY(I).GT.Y2)THEN; J=J+1; SY_BU(J)=SY(I); ENDIF
-   IF(SY_BU(J).EQ.MP(IPLOT)%IDF%YMAX)EXIT
-  ENDDO
-
-  DEALLOCATE(SY); NSY=J; ALLOCATE(SY(NSY))
-  DO I=1,NSY; SY(I)=SY_BU(I); ENDDO 
-
+!  !## x-direction  
+!  !## get location in network
+!  CALL POL1LOCATE(SX,NSX,REAL(X1,8),I1); CALL POL1LOCATE(SX,NSX,REAL(X2,8),I2)
+!  X1=SX(I1); X2=SX(I2); MSX=NSX+(X2-X1)/DX
+!  ALLOCATE(SX_BU(MSX))
+!
+!  DO I=1,NSX
+!   IF(SX(I).GT.X1)EXIT; SX_BU(I)=SX(I)
+!  ENDDO
+!  
+!  !## fill in modified gridcells
+!  J=I-1
+!  DO
+!   J=J+1; SX_BU(J)=SX_BU(J-1)+DX
+!   IF(SX_BU(J).GT.X2)EXIT
+!  ENDDO
+!  
+!  DO 
+!   I=I+1
+!   IF(SX(I).GT.X2)THEN; J=J+1; SX_BU(J)=SX(I); ENDIF
+!   IF(SX_BU(J).EQ.MP(IPLOT)%IDF%XMAX)EXIT
+!  ENDDO
+!
+!  DEALLOCATE(SX); NSX=J; ALLOCATE(SX(NSX))
+!  DO I=1,NSX; SX(I)=SX_BU(I); ENDDO 
+!
+!  !## y-direction
+!  J=0
+!  !## get location in network
+!  CALL POL1LOCATE(SY,NSY,REAL(Y1,8),I1); CALL POL1LOCATE(SY,NSY,REAL(Y2,8),I2)
+!  Y1=SY(I1); Y2=SY(I2); MSY=NSY+(Y2-Y1)/DY
+!  ALLOCATE(SY_BU(MSY))
+!
+!  DO I=1,NSY
+!   IF(SY(I).GT.Y1)EXIT; SY_BU(I)=SY(I)
+!  ENDDO
+!  
+!  !## fill in modified gridcells
+!  J=I-1
+!  DO
+!   J=J+1; SY_BU(J)=SY_BU(J-1)+DY
+!   IF(SY_BU(J).GT.Y2)EXIT
+!  ENDDO
+!  
+!  DO 
+!   I=I+1
+!   IF(SY(I).GT.Y2)THEN; J=J+1; SY_BU(J)=SY(I); ENDIF
+!   IF(SY_BU(J).EQ.MP(IPLOT)%IDF%YMAX)EXIT
+!  ENDDO
+!
+!  DEALLOCATE(SY); NSY=J; ALLOCATE(SY(NSY))
+!  DO I=1,NSY; SY(I)=SY_BU(I); ENDDO 
   
  ENDDO 
 
@@ -271,7 +271,10 @@ CONTAINS
  DEALLOCATE(IDFRESIZE%SX); ALLOCATE(IDFRESIZE%SX(0:NSX-1))
  DO I=1,NSX; IDFRESIZE%SX(I-1)=SX(I); ENDDO
  DEALLOCATE(IDFRESIZE%SY); ALLOCATE(IDFRESIZE%SY(0:NSY-1))
+
+!## liever geen implied do-loops , die geven vaak problem met re release versie van iMOD
  SY=SY(NSY:1:-1)
+
  DO I=1,NSY; IDFRESIZE%SY(I-1)=SY(I); ENDDO 
  IDFRESIZE%NCOL=NSX-1; IDFRESIZE%NROW=NSY-1; IDFRESIZE%IEQ=1
  
@@ -284,44 +287,44 @@ CONTAINS
  END SUBROUTINE IDFEDITSAVEGRIDSIZE
 
  !###======================================================================
- SUBROUTINE IDFEDITSAVEGRIDSIZE_XY()
+ SUBROUTINE IDFEDITSAVEGRIDSIZE_INSERT(SXY,NSXY,X1,X2,DX,XMAX)
  !###======================================================================
  IMPLICIT NONE
+ REAL,POINTER,DIMENSION(:),INTENT(INOUT) :: SXY
+ INTEGER,INTENT(INOUT) :: NSXY
+ REAL,INTENT(INOUT) :: X1,X2
+ REAL,INTENT(IN) :: DX,XMAX
+ REAL,POINTER,DIMENSION(:) :: SXY_BU
+ INTEGER :: I,J,N,I1,I2
  
- !## MOET NOG WORDEN UITGEWERKT EN GETEST...
-  CALL POL1LOCATE(SX,NSX,REAL(X1,8),I1); CALL POL1LOCATE(SX,NSX,REAL(X2,8),I2)
-  X1=SX(I1); X2=SX(I2); MSX=NSX+(X2-X1)/DX
-  ALLOCATE(SX_BU(MSX))
+ !## 
+ CALL POL1LOCATE(SXY,NSXY,REAL(X1,8),I1); CALL POL1LOCATE(SXY,NSXY,REAL(X2,8),I2)
+ X1=SXY(I1); X2=SXY(I2); N=NSXY+(X2-X1)/DX
+ ALLOCATE(SXY_BU(N))
 
-  DO I=1,NSX
-   IF(SX(I).GT.X1)EXIT; SX_BU(I)=SX(I)
-  ENDDO
+ DO I=1,NSXY
+  IF(SXY(I).GT.X1)EXIT; SXY_BU(I)=SXY(I)
+ ENDDO
   
-  !## fill in modified gridcells
-  J=I-1
-  DO
-   J=J+1; SX_BU(J)=SX_BU(J-1)+DX
-   IF(SX_BU(J).GT.X2)EXIT
-  ENDDO
+ !## fill in modified gridcells
+ J=I-1
+ DO
+  J=J+1; SXY_BU(J)=SXY_BU(J-1)+DX
+  IF(SXY_BU(J).GT.X2)EXIT
+ ENDDO
   
-  DO 
-   I=I+1
-   IF(SX(I).GT.X2)THEN; J=J+1; SX_BU(J)=SX(I); ENDIF
-   IF(SX_BU(J).EQ.MP(IPLOT)%IDF%XMAX)EXIT
-  ENDDO
+ DO 
+  I=I+1
+  IF(SXY(I).GT.X2)THEN
+   J=J+1
+   SXY_BU(J)=SXY(I)
+  ENDIF
+  IF(SXY_BU(J).EQ.XMAX)EXIT
+ ENDDO
 
-  DEALLOCATE(SX); NSX=J; ALLOCATE(SX(NSX))
-  DO I=1,NSX; SX(I)=SX_BU(I); ENDDO 
-
- END SUBROUTINE IDFEDITSAVEGRIDSIZE_XY
-
- !###======================================================================
- SUBROUTINE IDFEDITSAVEGRIDSIZE_INSERT(SX)
- !###======================================================================
- IMPLICIT NONE
- REAL,POINTER,DIMENSION(:),INTENT(INOUT) :: SX
- REAL,POINTER,DIMENSION(:) :: SX_BU
-
+ DEALLOCATE(SXY); NSXY=J; ALLOCATE(SXY(NSXY))
+ DO I=1,NSXY; SXY(I)=SXY_BU(I); ENDDO 
+  
  END SUBROUTINE IDFEDITSAVEGRIDSIZE_INSERT
  
  !###======================================================================
