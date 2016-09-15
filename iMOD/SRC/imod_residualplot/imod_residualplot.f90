@@ -304,7 +304,7 @@ CONTAINS
   ELSE
    CALL IPGTITLE('Histogram of residuals','C')
   ENDIF
-  CALL IPGXLABEL('Residual (measured-model) (m)','C') 
+  CALL IPGXLABEL('Residual (model-measured) (m)','C') 
   CALL IPGYLABELLEFT('Count','C9') 
  ENDIF
  
