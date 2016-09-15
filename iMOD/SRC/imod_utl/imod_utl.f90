@@ -74,6 +74,18 @@ CONTAINS
  END SUBROUTINE UTL_GETAXESCALES
 
  !###======================================================================
+ CHARACTER(LEN=15) FUNCTION UTL_WRITENUMBER(X)
+ !###======================================================================
+ IMPLICIT NONE
+ REAL,INTENT(IN) :: X
+ CHARACTER(LEN=15) :: FRM
+ 
+! FRM=UTL_GETFORMAT(X)
+ WRITE(UTL_WRITENUMBER,UTL_GETFORMAT(X)) X
+ 
+ END FUNCTION UTL_WRITENUMBER
+ 
+ !###======================================================================
  CHARACTER(LEN=15) FUNCTION UTL_GETFORMAT(X)
  !###======================================================================
  IMPLICIT NONE
