@@ -53,7 +53,7 @@ INTEGER,PARAMETER :: MXSYS=10
 TYPE TPOBJ
  CHARACTER(LEN=15) :: ACRNM  !## acronym waterbalance budget
  CHARACTER(LEN=50) :: ALIAS  !## alias of acronym
- CHARACTER(LEN=4) :: UNIT   !## unit of the budget element
+ CHARACTER(LEN=5) :: UNIT   !## unit of the budget element
  INTEGER :: IACT
  INTEGER,DIMENSION(:),POINTER :: ISYS  !## system numbers  *_sys{i}.idf
  INTEGER :: NSYS !## number of systems in waterbalance
@@ -68,14 +68,14 @@ DATA TP%ACRNM/'HEAD','BDGBND','BDGFLF','BDGFRF','BDGFFF',&
               'MSW_EBS','MSW_QMODFBOT','MSW_QMR','BDGDECSTOT','BDGPSSW',&
               'MSW_TACT'/
 
-DATA TP%UNIT/ '   m','m3/d','m3/d','m3/d','m3/d',&
-              'm3/d','m3/d','m3/d','m3/d','m3/d',&
-              'm3/d','m3/d','m3/d','m3/d','m3/d',&
-              'm3/d',' m/d','m3/d','m3/d',' m/d',&
-              '   m','   m',' m/d',' m/d',' m/d',&
-              ' m/d',' m/d',' m/d',' m/d',' m/d',&
-              ' m/d',' m/d',' m/d',' m/d',' m/d',&
-              ' m/d'/
+DATA TP%UNIT/ '    m',' m3/d',' m3/d',' m3/d',' m3/d',&
+              ' m3/d',' m3/d',' m3/d',' m3/d',' m3/d',&
+              ' m3/d',' m3/d',' m3/d',' m3/d',' m3/d',&
+              ' m3/d','  m/d',' m3/d',' m3/d','  m/d',&
+              '    m','    m','m3/m2','m3/m2','m3/m2',&
+              'm3/m2','m3/m2','m3/m2','m3/m2','m3/m2',&
+              'm3/m2','m3/m2','m3/m2','m3/m2','m3/m2',&
+              'm3/m2'/
 
 DATA TP%ALIAS/'GROUNDWATERHEAD','CONSTANT_HEAD','FLUX_LOWER_FACE','FLUX_RIGHT_FACE','FLUX_FRONT_FACE',&
               'STORAGE','WELLS','DRAINAGE','RIVERS','EVAPOTRANSPIRATION',&
