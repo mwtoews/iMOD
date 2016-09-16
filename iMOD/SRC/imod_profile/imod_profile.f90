@@ -2142,7 +2142,7 @@ CONTAINS
  AXES%XINT =XINT
  AXES%YINT =YINT
  AXES%ICLRRASTER=ICLRRASTER
- AXES%XFACTOR=1.0 !0.001
+ AXES%XFACTOR=1.0 
  AXES%YFACTOR=1.0
  !## 1.0/factor is ratio of screen to be used for margins
  AXES%DXAXESL=40.0  !## left
