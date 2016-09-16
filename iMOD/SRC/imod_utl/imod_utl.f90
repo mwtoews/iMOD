@@ -2702,10 +2702,10 @@ CONTAINS
  END FUNCTION JDATETOGDATE
 
  !###======================================================================
- FUNCTION JDATETOFDATE(X,JOFFSET,DTYPE)
+ CHARACTER(LEN=20) FUNCTION JDATETOFDATE(X,JOFFSET,DTYPE)
  !###======================================================================
  IMPLICIT NONE
- CHARACTER(LEN=20)  :: JDATETOFDATE
+! CHARACTER(LEN=20)  :: JDATETOFDATE
  INTEGER,INTENT(IN) :: JOFFSET
  INTEGER,INTENT(IN),OPTIONAL :: DTYPE
  REAL,INTENT(IN) :: X
