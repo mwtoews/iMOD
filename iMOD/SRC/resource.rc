@@ -8,13 +8,13 @@
 //
 // Winteracter resource script. 
 //
-// Modified : 15/Sep/2016 18:04:38
+// Modified : 16/Sep/2016 15:35:59
 //
 ///////////////////////////////////////////////////
 //
 // Include files
 //
-#include "..\LIB\WINTERACTER\OS_X32\include\winparam.h"
+#include "winparam.h"
 #ifdef XLIB
 #include "..\LIB\WINTERACTER\OS_X32\include\filesel.rc"
 #include "..\LIB\WINTERACTER\OS_X32\include\colour.rc"
@@ -1131,6 +1131,7 @@
 #define ID_ROTATE                        1275
 #define ID_ISGCREATERIV                 40288
 #define ID_ISGCREATESFR                 40289
+#define ID_RESIZE                        1160
 
 ///////////////////////////////////////////////////
 //
@@ -7934,12 +7935,11 @@ FONT    8, "Arial"
 BEGIN
     CONTROL "Reshape selected IDF file",IDF_LABEL1,"STATIC",WS_CHILD | WS_VISIBLE | WS_GROUP | SS_LEFT,    7,    6,  149,    8
     CONTROL "",IDF_MENU2,"COMBOBOX",WS_CHILD | WS_VISIBLE | WS_VSCROLL | WS_GROUP | WS_TABSTOP | CBS_DROPDOWNLIST | CBS_HASSTRINGS | CBS_UPPERCASE,    7,   17,  156,  100
-    CONTROL "DD",ID_SAVE,"BUTTON",WS_CHILD | WS_VISIBLE | WS_GROUP | WS_TABSTOP | BS_PUSHBUTTON | BS_TEXT | BS_BITMAP | BS_FLAT,  130,   68,   16,   14
-    CONTROL "DD",ID_SAVEAS,"BUTTON",WS_CHILD | WS_VISIBLE | WS_GROUP | WS_TABSTOP | BS_PUSHBUTTON | BS_TEXT | BS_BITMAP | BS_FLAT,  148,   68,   16,   14
     CONTROL "",IDF_MENU1,"COMBOBOX",WS_CHILD | WS_VISIBLE | WS_VSCROLL | WS_TABSTOP | CBS_DROPDOWNLIST | CBS_HASSTRINGS,   50,   35,  113,  100
     CONTROL "Upscale Algortihm",IDF_LABEL2,"STATIC",WS_CHILD | WS_VISIBLE | WS_GROUP | SS_LEFT,    8,   33,   33,   16
-    CONTROL "",IDF_MENU3,"COMBOBOX",WS_CHILD | WS_VISIBLE | WS_VSCROLL | WS_TABSTOP | CBS_DROPDOWNLIST | CBS_HASSTRINGS,   48,   52,  115,  100
+    CONTROL "",IDF_MENU3,"COMBOBOX",WS_CHILD | WS_VISIBLE | WS_VSCROLL | WS_TABSTOP | CBS_DROPDOWNLIST | CBS_HASSTRINGS,   50,   52,  113,  100
     CONTROL "Downscale Algortihm",IDF_LABEL3,"STATIC",WS_CHILD | WS_VISIBLE | WS_GROUP | SS_LEFT,    8,   50,   37,   16
+    CONTROL "Resize ...",ID_RESIZE,"BUTTON",WS_CHILD | WS_VISIBLE | WS_GROUP | WS_TABSTOP | BS_PUSHBUTTON | BS_TEXT | BS_FLAT,  114,   68,   50,   14
 END
 
 ID_DIDFEDITTAB2 RCDATA
@@ -11843,4 +11843,4 @@ END
 //*WI* FILENAME    resource.f90
 //*WI* FMODNAME    RESOURCE
 //*WI* LASTTYPE        2
-//*WI* LASTRES        49
+//*WI* LASTRES       217
