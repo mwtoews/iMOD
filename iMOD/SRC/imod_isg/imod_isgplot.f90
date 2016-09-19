@@ -472,12 +472,12 @@ CONTAINS
  REAL,INTENT(IN) :: XMIN,XMAX,YMIN,YMAX,FMULT
  REAL,DIMENSION(N) :: X,Y
  INTEGER :: I,II,J,M
- REAL :: DIST,TDIST,XC,YC,DX,DY,YFRAC
+ REAL :: DIST,TDIST,XC,YC,DX,DY,YFRAC,D,F
  LOGICAL :: LEX
  
  !## skip if not in current window
- IF(MAXVAL(X).GT.XMAX.OR.MINVAL(X).LT.XMIN.OR. &
-    MAXVAL(Y).GT.YMAX.OR.MINVAL(Y).LT.YMIN)RETURN
+ IF(MINVAL(X).GT.XMAX.OR.MAXVAL(X).LT.XMIN.OR. &
+    MINVAL(Y).GT.YMAX.OR.MAXVAL(Y).LT.YMIN)RETURN
     
  !## size-function
  DY=YMAX-YMIN; YFRAC=LOG(DY/1000.0)*100.0; YFRAC=MAX(YFRAC,100.0); YFRAC=DY/YFRAC
@@ -485,8 +485,12 @@ CONTAINS
  TDIST=0.0; J=0
  DO I=1,N-1
   !## to be drawn
-  LEX=MIN(X(I),X(I+1)).LT.XMAX.AND.MAX(X(I),X(I+1)).GT.XMIN.AND. &
-      MIN(Y(I),Y(I+1)).LT.YMAX.AND.MAX(Y(I),Y(I+1)).GT.YMIN
+  LEX=X(I)  .LT.XMAX.AND.X(I)  .GT.XMIN.AND. &
+      Y(I)  .LT.YMAX.AND.Y(I)  .GT.YMIN.AND. &
+      X(I+1).LT.XMAX.AND.X(I+1).GT.XMIN.AND. &
+      Y(I+1).LT.YMAX.AND.Y(I+1).GT.YMIN
+!  LEX=MIN(X(I),X(I+1)).LT.XMAX.AND.MAX(X(I),X(I+1)).GT.XMIN.AND. &
+!      MIN(Y(I),Y(I+1)).LT.YMAX.AND.MAX(Y(I),Y(I+1)).GT.YMIN
   IF(LEX)THEN
    !## store first of segment inside graphical view
    IF(J.EQ.0)J=I
@@ -500,12 +504,17 @@ CONTAINS
     !## find segment in which mid exists
     M=1; IF(.NOT.LEX)M=2
     DIST=0.0; DO II=J,I-M
-     DIST=DIST+UTL_DIST(X(II),Y(II),X(II+1),Y(II+1))
+     D   =UTL_DIST(X(II),Y(II),X(II+1),Y(II+1))
+     DIST=DIST+D
      !## found segment of mid
      IF(DIST.GT.TDIST)EXIT
     ENDDO
 
-    DX=X(II+1)-X(II); DY=Y(II+1)-Y(II); XC=(X(II)+X(II+1))/2.0; YC=(Y(II)+Y(II+1))/2.0
+    DX=X(II+1)-X(II); DY=Y(II+1)-Y(II)
+!    F =(DIST-TDIST)/D
+!    XC=X(II)+DX*(1.0-F)
+!    YC=Y(II)+DY*(1.0-F)
+    XC=(X(II)+X(II+1))/2.0; YC=(Y(II)+Y(II+1))/2.0
     CALL ISGPLOTARROW(DX,DY,XC,YC,YFRAC*FMULT)
     
     !## reset j

@@ -698,9 +698,10 @@ CONTAINS
     READ(ISGIU(4,ISGFILES),REC=IREC+ICF) DATISD(KREC)%IDATE,DATISD(KREC)%WLVL,DATISD(KREC)%BTML, &
                                          DATISD(KREC)%RESIS,DATISD(KREC)%INFF
    ELSEIF(ISFR.EQ.1)THEN
-    READ(ISGIU(4,ISGFILES),REC=IREC+ICF) DATISD(KREC)%IDATE,DATISD(KREC)%ITIME,DATISD(KREC)%BTML,  &
-                                         DATISD(KREC)%THCK ,DATISD(KREC)%HCND ,DATISD(KREC)%WIDTH, &
-                                         DATISD(KREC)%DEPTH,DATISD(KREC)%DWNS ,DATISD(KREC)%UPSG,  &
+    READ(ISGIU(4,ISGFILES),REC=IREC+ICF) DATISD(KREC)%IDATE,DATISD(KREC)%ITIME,DATISD(KREC)%WLVL, &   
+                                         DATISD(KREC)%BTML,  &
+                                         DATISD(KREC)%THCK ,DATISD(KREC)%HCND ,DATISD(KREC)%WIDTH,&
+                                         DATISD(KREC)%DEPTH,DATISD(KREC)%DWNS ,DATISD(KREC)%UPSG, &
                                          DATISD(KREC)%ICLC ,DATISD(KREC)%IPRI ,DATISD(KREC)%QFLW, &
                                          DATISD(KREC)%QROF
    ENDIF
@@ -1130,32 +1131,32 @@ CONTAINS
  INTEGER,INTENT(IN) :: IISG,IPOS
  INTEGER :: IREF,N,I,J
 
- !##remove from current ipos
+ !## remove from current ipos
  IREF            =IST(IPOS)%IREF
  N               =IST(IPOS)%N
 
- !##adjust isd variable
+ !## adjust isd variable
  IST(IPOS:NIST-1)=IST(IPOS+1:NIST)
  NIST            =NIST-1
  ISG(IISG)%NSTW  =ISG(IISG)%NSTW-1
 
- !##adjust other references to selected calc.pnt definition from ISG
+ !## adjust other references to selected calc.pnt definition from ISG
  DO I=1,NISG
   IF(ISG(I)%ISTW.GT.ISG(IISG)%ISTW)ISG(I)%ISTW=ISG(I)%ISTW-1
  END DO
 
  IF(ISG(IISG)%NSTW.EQ.0)ISG(IISG)%ISTW=0
 
- !##find other references to selected cross-section definition
+ !## find other references to selected cross-section definition
  DO J=1,NIST
   IF(IST(J)%IREF.EQ.IREF)EXIT
  ENDDO
 
- !##remove from iscdat = only whenever no other refers to cross-section
+ !## remove from iscdat = only whenever no other refers to cross-section
  IF(J.GT.NIST.AND.N.GT.0)THEN
   DATIST(IREF:NDIST-N)=DATIST(IREF+N:NDIST)
   NDIST               =NDIST-N
- !##adjust other references to selected cross-section definition
+ !## adjust other references to selected cross-section definition
   DO I=1,NIST
    IF(IST(I)%IREF.GT.IREF)IST(I)%IREF=IST(I)%IREF-N
   ENDDO
@@ -1170,32 +1171,32 @@ CONTAINS
  INTEGER,INTENT(IN) :: IISG,IPOS
  INTEGER :: IREF,N,I,J
 
- !##remove from current ipos
+ !## remove from current ipos
  IREF            =ISQ(IPOS)%IREF
  N               =ISQ(IPOS)%N
 
- !##adjust isq variable
+ !## adjust isq variable
  ISQ(IPOS:NISQ-1)=ISQ(IPOS+1:NISQ)
  NISQ            =NISQ-1
  ISG(IISG)%NQHR  =ISG(IISG)%NQHR-1
 
- !##adjust other references to selected calc.pnt definition from ISG
+ !## adjust other references to selected calc.pnt definition from ISG
  DO I=1,NISG
   IF(ISG(I)%IQHR.GT.ISG(IISG)%IQHR)ISG(I)%IQHR=ISG(I)%IQHR-1
  END DO
 
  IF(ISG(IISG)%NQHR.EQ.0)ISG(IISG)%IQHR=0
 
- !##find other references to selected cross-section definition
+ !## find other references to selected cross-section definition
  DO J=1,NISQ
   IF(ISQ(J)%IREF.EQ.IREF)EXIT
  ENDDO
 
- !##remove from iscdat = only whenever no other refers to cross-section
+ !## remove from iscdat = only whenever no other refers to cross-section
  IF(J.GT.NISQ.AND.N.GT.0)THEN
   DATISQ(IREF:NDISQ-N)=DATISQ(IREF+N:NDISQ)
   NDISQ               =NDISQ-N
- !##adjust other references to selected cross-section definition
+ !## adjust other references to selected cross-section definition
   DO I=1,NISQ
    IF(ISQ(I)%IREF.GT.IREF)ISQ(I)%IREF=ISQ(I)%IREF-N
   ENDDO
@@ -1359,7 +1360,6 @@ CONTAINS
   IF(ISFR.EQ.0)IREC=SIZE(TATTRIB1)*4
   IF(ISFR.EQ.1)IREC=SIZE(TATTRIB2)*4
   WRITE(ISGIU(4,1),REC=1)  (IREC      *256)+247  !## isd2
-!  WRITE(ISGIU(4,1),REC=1)  (RECLEN(4) *256)+247  !## isd2
   WRITE(ISGIU(5,1),REC=1)  (RECLEN(5) *256)+247  !## isc1
   WRITE(ISGIU(6,1),REC=1)  (RECLEN(6) *256)+247  !## isc2
   WRITE(ISGIU(7,1),REC=1)  (RECLEN(7) *256)+247  !## ist1
@@ -1397,7 +1397,8 @@ CONTAINS
      WRITE(ISGIU(4,1),REC=JREC+ICF) DATISD(JREC)%IDATE,DATISD(JREC)%WLVL, &
                                     DATISD(JREC)%BTML,DATISD(JREC)%RESIS,DATISD(JREC)%INFF
     ELSEIF(ISFR.EQ.1)THEN
-     WRITE(ISGIU(4,1),REC=JREC+ICF) DATISD(JREC)%IDATE,DATISD(JREC)%ITIME,DATISD(JREC)%BTML,  &
+     WRITE(ISGIU(4,1),REC=JREC+ICF) DATISD(JREC)%IDATE,DATISD(JREC)%ITIME,DATISD(JREC)%WLVL, &
+                                    DATISD(JREC)%BTML,  &
                                     DATISD(JREC)%THCK ,DATISD(JREC)%HCND ,DATISD(JREC)%WIDTH, &
                                     DATISD(JREC)%DEPTH,DATISD(JREC)%DWNS ,DATISD(JREC)%UPSG,  &
                                     DATISD(JREC)%ICLC ,DATISD(JREC)%IPRI ,DATISD(JREC)%QFLW, &

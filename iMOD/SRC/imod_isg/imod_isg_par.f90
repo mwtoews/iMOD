@@ -135,16 +135,16 @@ DATA TFORM/'FORMATTED  ','UNFORMATTED','UNFORMATTED','UNFORMATTED', &
            'UNFORMATTED','UNFORMATTED'/
 
 CHARACTER(LEN=10),DIMENSION(5) :: TATTRIB1
-CHARACTER(LEN=10),DIMENSION(13) :: TATTRIB2
+CHARACTER(LEN=10),DIMENSION(14) :: TATTRIB2
 INTEGER,DIMENSION(5) :: CTATTRIB1
-INTEGER,DIMENSION(13) :: CTATTRIB2
+INTEGER,DIMENSION(14) :: CTATTRIB2
 
 !## items for isd2-file for 1) riv approach and 2) sfr approach
 DATA TATTRIB1/'Date','Waterlevel','Bottomlevel','Resistance','Infilt.fct'/
-DATA TATTRIB2/'Date','Time','Bottomlvl','Thickness','Conduct.','AvgWidth','Avg.Depth','UpSeg','DownSeg','CalcOpt', &
+DATA TATTRIB2/'Date','Time','Waterlevel','Bottomlvl','Thickness','Conduct.','AvgWidth','Avg.Depth','UpSeg','DownSeg','CalcOpt', &
               'DivOpt','QInFlow','QRunoff'/
 DATA CTATTRIB1/1,2,2,2,2/   !## 1=integer,2=real,3=menu
-DATA CTATTRIB2/1,1,2,2,2,2,2,1,1,3,3,2,2/
+DATA CTATTRIB2/1,1,2,2,2,2,2,2,1,1,3,3,2,2/
 
 TYPE ISGTYPE
  INTEGER :: ISOURCE,IACT
