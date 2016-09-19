@@ -1396,9 +1396,10 @@ CONTAINS
 
   !## trace particles
   IF(TRACE_CALC(IBATCH,IULOG,ICONVERTGEN))TRACEMAIN=.TRUE.
+  
+  INQUIRE(UNIT=IULOG,OPENED=LEX); IF(LEX)CLOSE(IULOG)
+
  ENDIF
- 
- INQUIRE(UNIT=IULOG,OPENED=LEX); IF(LEX)CLOSE(IULOG)
   
  END FUNCTION TRACEMAIN
  
@@ -1415,7 +1416,7 @@ CONTAINS
  CALL TRACEAL()
  !## create cell-sizes (cell-borders expressed in x,y-coordinates)
  CALL TRACEDELRC()
- !##read information-for particle tracking
+ !## read information-for particle tracking
  IF(.NOT.TRACEDATIN(NCONS,IBATCH))RETURN
  
  TRACECALC_INIT=.TRUE.
@@ -1440,11 +1441,16 @@ CONTAINS
  !## take head for determination model-dimensions
  IF(.NOT.IDFREAD(IDF,HFFNAME(1,1,1),0))RETURN; CLOSE(IDF%IU)
  
+!(peter)
+ !## define zoom area for particle tracking - overrule area
+ IDF%XMIN=188000.0; IDF%XMAX=193000.0
+ IDF%YMIN=356000.0; IDF%YMAX=360000.0
+ CALL UTL_IDFSNAPTOGRID(IDF%XMIN,IDF%XMAX,IDF%YMIN,IDF%YMAX,IDF%DX,IDF%NCOL,IDF%NROW)
+
  IF(.NOT.TRACECALC_INIT(IBATCH))RETURN
  
  ALLOCATE(IVISIT(IDF%NCOL*IDF%NROW*NLAY)); IVISIT=INT(0,1)
  ALLOCATE(LVISIT(IDF%NCOL*IDF%NROW*NLAY)); LVISIT=0
-! ALLOCATE(LVISIT(IDF%NCOL*IDF%NROW*MIN(2,NLAY))); LVISIT=0
 
  DO ISPFNAME=1,NSPFNAME
   
@@ -1477,17 +1483,13 @@ CONTAINS
    IF(IREV.EQ.0)THEN
     DO IPER=1,NPER
      IF(PLIPER(IPER,1).LE.JD0.AND.PLIPER(IPER+1,1).GT.JD0)EXIT
-    ENDDO   
-    TTMAX=PLIPER(IPER,1)-JD0
-    WRITE(IULOG,*) 'Initial StartDate Offset:',TTMAX
+    ENDDO
     IPER=IPER-1; DPER=1; MPER=NPER; SPER=1
    !## backwards
    ELSEIF(IREV.EQ.1)THEN
     DO IPER=NPER,1,-1
-     IF(PLIPER(IPER,1).LE.JD0.AND.PLIPER(IPER+1,1).GT.JD0)EXIT
+     IF(PLIPER(IPER,1).LE.JD0.AND.PLIPER(IPER+1,1).GE.JD0)EXIT
     ENDDO   
-    TTMAX=JD0-PLIPER(IPER+1,1)
-    WRITE(IULOG,*) 'Initial StartDate Offset:',TTMAX
     IPER=IPER+1; DPER=-1; MPER=1; SPER=NPER
    ENDIF
    
@@ -1505,12 +1507,12 @@ CONTAINS
     ELSE
      !## within selected time-window
      LEX=.FALSE.
-     !# added one day to pliper(nper+1,1)
-     IF(PLIPER(IPER+1,1).LE.JD2+1.AND.PLIPER(IPER,1).GE.JD1)THEN
+     !# get time difference between stress-periods
+     IF(PLIPER(IPER+1,1).LE.JD2.AND.PLIPER(IPER,1).GE.JD1)THEN
       !## length of stress-period (days)
       DT =MIN(JD2,PLIPER(IPER+1,1))-MAX(JD1,PLIPER(IPER,1))
       TTMAX=TTMAX+DT
-      LEX  =.TRUE.
+      IF(DT.GT.0.0)LEX=.TRUE.
      ENDIF
     ENDIF
 
@@ -1533,8 +1535,8 @@ CONTAINS
      IF(WINFODIALOG(4).EQ.1)EXIT
     ENDIF
 
-    IF(ISS.EQ.0)WRITE(IULOG,'(1X,A,I10,A,F10.2,A)') 'Using following files for steady-state simulation'
-    IF(ISS.EQ.1)WRITE(IULOG,'(1X,A,I10,A,F10.2,A)') 'Using following files for current stressperiod',IPER,' time upto: ',TTMAX,' days'
+    IF(ISS.EQ.0)WRITE(IULOG,'(1X,A,I10,A,F10.2,A)')    'Using following files for steady-state simulation'
+    IF(ISS.EQ.1)WRITE(IULOG,'(1X,A,I10,A,2(F10.2,A))') 'Using following files for current stressperiod',IPER,' time upto: ',TTMAX,' days (timestep',DT,' days)'
     DO ILAY=1,NLAY
      STRING=TRIM(ITOS(ILAY))
      J=1; IF(ILAY.EQ.NLAY)J=0
@@ -2096,8 +2098,8 @@ IPFLOOP: DO I=1,SIZE(IPF)
  IF(ALLOCATED(SPFNAME)) DEALLOCATE(SPFNAME)
  IF(ALLOCATED(IFFFNAME))DEALLOCATE(IFFFNAME)
 
- ALLOCATE(HFFNAME(3,NLAY,NPER))  !BDGFRF,BDGFFF,BDGFLF
- ALLOCATE(ITBFNAME(5,NLAY))      !IBOUND,TOP,BOT,POR_AQF,POR_AQT
+ ALLOCATE(HFFNAME(3,NLAY,NPER))  !## bdgfrf,bdgfff,bdgflf
+ ALLOCATE(ITBFNAME(5,NLAY))      !## ibound,top,bot,por_aqf,por_aqt
  HFFNAME=''; ITBFNAME=''
  
  NSPFNAME=1; ALLOCATE(SPFNAME(NSPFNAME),IFFFNAME(NSPFNAME))
@@ -2238,6 +2240,7 @@ IPFLOOP: DO I=1,SIZE(IPF)
  ENDDO
  CALL WSORT(PLIPER(:,1),1,NPER)
  !## artifically extent with one day
+ WRITE(*,*) JD0,JD1,JD2
  PLIPER(NPER+1,1)=PLIPER(NPER,1)+(JD2-PLIPER(NPER,1)) !1
  
  TRACEREADRUNFILE=.TRUE.

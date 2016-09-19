@@ -2543,9 +2543,13 @@ CONTAINS
   IF(.NOT.IOSDIREXISTS(DIRNAME(:J-2)))CALL IOSDIRMAKE(DIRNAME(:J-2))
   I=J
  END DO
- !## last remaining of string
- IF(.NOT.IOSDIREXISTS(TRIM(DIRNAME)))CALL IOSDIRMAKE(TRIM(DIRNAME))
-
+ 
+ !## only create folder, is there is a subfolder left
+ IF(INDEX(DIRNAME,'\').NE.0)THEN
+  !## last remaining of string (peter)
+  IF(.NOT.IOSDIREXISTS(TRIM(DIRNAME)))CALL IOSDIRMAKE(TRIM(DIRNAME))
+ ENDIF
+ 
  END SUBROUTINE UTL_CREATEDIR
 
  !###======================================================================
