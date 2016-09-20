@@ -55,11 +55,11 @@ CONTAINS
  CHARACTER(LEN=*),INTENT(IN) :: EXPORTFNAME
  INTEGER,INTENT(IN) :: IEXPORT,IBATCH
  INTEGER :: IU,NPNT,IPNT,NCLC,ICLC,J,ICRS,NCRS
- REAL :: DIST,TD 
-  
+ REAL :: DIST,TD
+
  !## read entire ISG file
  CALL ISGREAD((/ISGFILE/),IBATCH)
-     
+
  !## read associated textfile for selected location
  IU=UTL_GETUNIT()
  CALL OSD_OPEN(IU,FILE=EXPORTFNAME,STATUS='UNKNOWN',FORM='FORMATTED',ACTION='WRITE,DENYREAD',ACCESS='SEQUENTIAL')
@@ -68,7 +68,7 @@ CONTAINS
  ELSEIF(IEXPORT.EQ.2)THEN
   WRITE(IU,'(A11,A51,4A11,A32)') 'ISEGMENT,','SEGNAME,','ICROSS,','DISTANCE,','X,','Y,','CROSS.NAME'
  ENDIF
- 
+
  !## proces each calculation point in the ISG
  DO ISELISG=1,NISG
 
@@ -84,7 +84,7 @@ CONTAINS
     DIST=ISD(ICLC+J-1)%DIST
     !## compute correct x/y coordinate of current computational node
     CALL ISGADJUSTCOMPUTEXY(IPNT,NPNT,DIST,TD)
-       
+
     WRITE(IU,'(I10,A1,A50,A1,I10,3(A1,F10.2),A1,A32)') ISELISG,',',ADJUSTR(ISG(ISELISG)%SNAME),',',J,',', &
            DIST,',',ISGX,',',ISGY,',',ADJUSTR(ISD(ICLC+J-1)%CNAME)
 
@@ -99,14 +99,14 @@ CONTAINS
     DIST=ISC(ICRS+J-1)%DIST
     !## compute correct x/y coordinate of current computational node
     CALL ISGADJUSTCOMPUTEXY(IPNT,NPNT,DIST,TD)
-       
+
     WRITE(IU,'(I10,A1,A50,A1,I10,3(A1,F10.2),A1,A32)') ISELISG,',',ADJUSTR(ISG(ISELISG)%SNAME),',',J,',', &
            DIST,',',ISGX,',',ISGY,',',ADJUSTR(ISC(ICRS+J-1)%CNAME)
-  
+
    ENDDO
   ENDIF
- ENDDO 
- 
+ ENDDO
+
  END SUBROUTINE ISG_EXPORT
 
  !##=====================================================================
@@ -128,7 +128,7 @@ CONTAINS
   CHARACTER(LEN=52),POINTER,DIMENSION(:) :: LABEL
  END TYPE FTXTOBJ
  TYPE(FTXTOBJ) :: FTXT
-  
+
  !## allocate memory for ipf-plotting, they will be read in memory and drawn from that
  NIPF=1; CALL IPFALLOCATE()
 
@@ -138,20 +138,20 @@ CONTAINS
 
  !## read entire ISG file
  CALL ISGREAD((/ISGFILE/),IBATCH)
-     
+
  !## proces each calculation point in the ISG
  DO ISELISG=1,NISG
 
   !## number of nodes on segment
   NPNT=ISG(ISELISG)%NSEG; IPNT=ISG(ISELISG)%ISEG
   NCLC=ISG(ISELISG)%NCLC; ICLC=ISG(ISELISG)%ICLC
-   
+
   DO J=1,NCLC
 
    DIST=ISD(ICLC+J-1)%DIST
    !## compute correct x/y coordinate of current computational node
    CALL ISGADJUSTCOMPUTEXY(IPNT,NPNT,DIST,TD)
-   
+
    !## get closest point from ipf
    ID=0
    DO I=1,IPF(1)%NROW
@@ -161,11 +161,11 @@ CONTAINS
      MD=DX; ID=I
     ENDIF
    ENDDO
-     
+
    WRITE(*,'(A,F10.2)') 'Location found for calculation node '//TRIM(ISD(ICLC+J-1)%CNAME)//';distance ',MD
    FNAME=IPFFILE(:INDEX(IPFFILE,'\',.TRUE.)-1)//'\'//TRIM(IPF(1)%INFO(IPF(1)%ACOL,ID))//'.txt'
    WRITE(*,'(A)') ' - Reading associated file: '//TRIM(FNAME)
-   
+
    !## read associated textfile for selected location
    IU=UTL_GETUNIT()
    CALL OSD_OPEN(IU,FILE=FNAME,STATUS='OLD',FORM='FORMATTED',ACTION='READ,DENYWRITE',ACCESS='SEQUENTIAL')
@@ -209,7 +209,7 @@ CONTAINS
 
    !## sort date
    CALL WSORT(FTXT%IDATE,1,K,IORDER=ISORT)
-  
+
    !## get number of unique dates
    N=0
    DO I=1,K
@@ -223,17 +223,17 @@ CONTAINS
      IF(FTXT%IDATE(I-1).EQ.FTXT%IDATE(I))THEN
       IF(FTXT%ITYPE(ISORT(I)).EQ.0)CYCLE
      ENDIF
-    ENDIF 
+    ENDIF
     N=N+1
    ENDDO
-   
+
    !## increase/decrease memory data calculation node - data will be replaced to the back
    CALL ISGMEMORYDATISD(N-ISD(IPOS)%N,IPOS,ISEG)
 
    !## rewrite data
    IREF=ISEG-1
 
-   DO I=1,K 
+   DO I=1,K
 
     !## for doubles only use itype.eq.1
     IF(I.LT.K)THEN
@@ -246,24 +246,24 @@ CONTAINS
       IF(FTXT%ITYPE(ISORT(I)).EQ.0)CYCLE
      ENDIF
     ENDIF
-        
-    IREF=IREF+1    
+
+    IREF=IREF+1
     DATISD(IREF)%IDATE=FTXT%IDATE(I)
     DATISD(IREF)%WLVL =FTXT%STAGE(ISORT(I))
     DATISD(IREF)%BTML =BTML
     DATISD(IREF)%RESIS=RESIS
     DATISD(IREF)%INFF =INFF
    ENDDO
-    
+
    DEALLOCATE(FTXT%LABEL,FTXT%ITYPE,FTXT%NODATA,FTXT%STAGE,FTXT%IDATE,ISORT)
- 
+
   ENDDO
- ENDDO 
- 
+ ENDDO
+
  CALL IPFDEALLOCATE()
- 
+
  END SUBROUTINE ISG_ADDSTAGES
- 
+
  !##=====================================================================
  SUBROUTINE ISG_ADDCROSSSECTION(ISGFILE,FNAME,WIDTHFNAME,MAXDIST,CROSS_PNTR,CROSS_BATH,CROSS_ZCHK,CROSS_CVAL,CELL_SIZE,IBATCH)
  !##=====================================================================
@@ -279,13 +279,13 @@ CONTAINS
  CHARACTER(LEN=MAXLEN) :: LABEL
  TYPE(IDFOBJ) :: IDF
  TYPE(IDFOBJ),ALLOCATABLE,DIMENSION(:) :: ICROSS
- 
+
  !## read entire ISG file
  CALL ISGREAD((/ISGFILE/),IBATCH)
 
  IF(CROSS_PNTR.EQ.'')THEN
-  IF(.NOT.IDFREAD(IDF,WIDTHFNAME,0))STOP 'Cannot read width fname' 
- 
+  IF(.NOT.IDFREAD(IDF,WIDTHFNAME,0))STOP 'Cannot read width fname'
+
   !## remove all cross-sections on segment
   WRITE(*,'(/A/)') 'Removing all cross-sections ...'
 
@@ -294,12 +294,12 @@ CONTAINS
    DO I=1,NCRS; CALL ISGDELISC(ISELISG,ICRS); END DO
   ENDDO
   ISC%N=0; ISC%IREF=0; ISC%DIST=0.0; ISC%CNAME=''
- 
+
   WRITE(*,'(/A/)') 'Adding cross-sections from '//TRIM(FNAME)
 
   IU=UTL_GETUNIT()
   CALL OSD_OPEN(IU,FILE=FNAME,STATUS='OLD',ACTION='READ')
-  DO 
+  DO
    READ(IU,'(A1000)',IOSTAT=IOS) STRING; IF(IOS.NE.0)EXIT; IF(LEN_TRIM(STRING).EQ.0)EXIT
    N=6; DO
     READ(STRING,*,IOSTAT=IOS) XCRD,YCRD,LABEL,(X(I),I=1,N); IF(IOS.NE.0)EXIT; N=N+2
@@ -308,7 +308,7 @@ CONTAINS
     WRITE(*,*) XCRD,YCRD,TRIM(LABEL)
     DO I=1,N/2; WRITE(*,*) X(I),X(I+N/2); ENDDO; STOP 'N.LE.4'
    ENDIF
- 
+
    !## find distance of point on segment iisg that is closest
    CALL ISGSTUWEN_INTERSECT(MAXDIST,XCRD,YCRD,IISG,TDIST)
 
@@ -317,7 +317,7 @@ CONTAINS
     ISELISG=IISG
 
     N=N/2
-   
+
     !## increase memory location cross-section
     CALL ISGMEMORYISC(1,ISELISG,IPOS)
     ISC(IPOS)%N    =0
@@ -332,19 +332,19 @@ CONTAINS
      DATISC(ISEG+I-1)%BOTTOM  =X(I+N)
      DATISC(ISEG+I-1)%KM      =25.0
     ENDDO
-   
+
    ENDIF
   ENDDO
- 
+
   CLOSE(IU)
- 
+
   WRITE(*,'(/A/)') 'Adding default cross-sections for remaining segments'
 
   !## put cross-sections on segment that did not got a cross-section
   DO ISELISG=1,NISG
 
    ICRS=ISG(ISELISG)%ICRS; NCRS=ISG(ISELISG)%NCRS
-   IF(NCRS.EQ.0)THEN  
+   IF(NCRS.EQ.0)THEN
 
     !## get distance of segment, put cross-section in mid
     ISEG =ISG(ISELISG)%ISEG; NSEG =ISG(ISELISG)%NSEG
@@ -354,13 +354,13 @@ CONTAINS
      IF(DIST.GT.0.0)DIST=SQRT(DIST); TDIST=TDIST+DIST
     END DO
     TDIST=TDIST/2.0
-   
-    !## get x,y coordinates for current cross-section location  
+
+    !## get x,y coordinates for current cross-section location
     ISEG=ISG(ISELISG)%ISEG
     CALL ISGGETXY(ISP(ISEG:)%X,ISP(ISEG:)%Y,NSEG,TDIST,XCRD,YCRD)
     W=ABS(IDFGETXYVAL(IDF,XCRD,YCRD))
-              
-    N=4 
+
+    N=4
     !## increase memory
     CALL ISGMEMORYISC(1,ISELISG,IPOS)
     ISC(IPOS)%N    =0
@@ -382,34 +382,34 @@ CONTAINS
     DATISC(ISEG+3)%KM      =25.0
    ENDIF
   ENDDO
- 
+
  ELSE
- 
+
   ALLOCATE(ICROSS(5)); DO I=1,SIZE(ICROSS); CALL IDFNULLIFY(ICROSS(I)); ENDDO
 
   !## select finest resolution
   IF(.NOT.IDFREAD(ICROSS(1),CROSS_PNTR,0))RETURN
-  IF(.NOT.IDFREAD(ICROSS(2),CROSS_BATH,0))RETURN    
+  IF(.NOT.IDFREAD(ICROSS(2),CROSS_BATH,0))RETURN
   CLOSE(ICROSS(1)%IU); CLOSE(ICROSS(2)%IU)
-  
+
   !## read additional reference heights
   ZCHK=0; IF(TRIM(CROSS_ZCHK).NE.'')THEN
-   ZCHK=1; IF(.NOT.IDFREAD(ICROSS(3),CROSS_ZCHK,0))RETURN    
+   ZCHK=1; IF(.NOT.IDFREAD(ICROSS(3),CROSS_ZCHK,0))RETURN
    CLOSE(ICROSS(3)%IU)
   ENDIF
   !## read additional resistances
   CVAL=0; IF(TRIM(CROSS_CVAL).NE.'')THEN
-   CVAL=1; IF(.NOT.IDFREAD(ICROSS(4),CROSS_CVAL,0))RETURN    
+   CVAL=1; IF(.NOT.IDFREAD(ICROSS(4),CROSS_CVAL,0))RETURN
    CLOSE(ICROSS(4)%IU)
   ENDIF
 
   IF(.NOT.IDF_EXTENT(2+ZCHK+CVAL,ICROSS,ICROSS(5),2))RETURN
-  
+
   IF(CELL_SIZE.NE.0.0)THEN
    ICROSS(5)%DX=CELL_SIZE; ICROSS(5)%DY=ICROSS(5)%DX
    CALL UTL_IDFSNAPTOGRID(ICROSS(5)%XMIN,ICROSS(5)%XMAX,ICROSS(5)%YMIN,ICROSS(5)%YMAX,ICROSS(5)%DX,ICROSS(5)%NCOL,ICROSS(5)%NROW)
   ENDIF
-  
+
   !## read pointer
   CALL IDFCOPY(ICROSS(5),ICROSS(1))
   IF(.NOT.IDFREADSCALE(CROSS_PNTR,ICROSS(1),7,0,0.0,0))RETURN !## most frequent occurence
@@ -426,15 +426,15 @@ CONTAINS
    CALL IDFCOPY(ICROSS(5),ICROSS(4))
    IF(.NOT.IDFREADSCALE(CROSS_CVAL,ICROSS(4),2,1,0.0,0))RETURN !## average value
   ENDIF
-     
+
   DO ISELISG=1,NISG
 
    !## number of nodes on segment
    NPNT=ISG(ISELISG)%NSEG; IPNT=ISG(ISELISG)%ISEG
    ICRS=ISG(ISELISG)%ICRS; NCRS=ISG(ISELISG)%NCRS
-   
+
    WRITE(6,'(2(A,I10),A)') '+Busy with segment ',ISELISG,' adding ',NCRS,' cross-sections'
-   
+
    DO J=1,NCRS
 
     DIST=ISC(ICRS+J-1)%DIST
@@ -456,7 +456,7 @@ CONTAINS
 
       !## add extra record to store dx,dy
       N=N+1
-      
+
 !      !## increase memory location cross-section
 !      CALL ISGMEMORYISC(1,ISELISG,IPOS)
 
@@ -466,7 +466,7 @@ CONTAINS
       N=N-ABS(ISC(IPOS)%N)
       CALL ISGMEMORYDATISC(N,IPOS,ISEG)
       ISC(IPOS)%N=-1.0*ABS(ISC(IPOS)%N)
-      
+
       IF(ZCHK.EQ.0)THEN
        DATISC(ISEG)%DISTANCE= ICROSS(1)%DX
        DATISC(ISEG)%BOTTOM  = ICROSS(1)%DY
@@ -495,11 +495,11 @@ CONTAINS
           ENDIF
           IF(ICROSS(1)%X(ICOL,IROW).GT.0)DATISC(ISEG+N)%ZP=INT( CF,1)
           IF(ICROSS(1)%X(ICOL,IROW).LT.0)DATISC(ISEG+N)%ZP=INT(-CF,1)
-         ENDIF       
+         ENDIF
         ENDIF
        ENDIF
       ENDDO; ENDDO
-    
+
      ELSE
       WRITE(*,'(/A,I10)') 'Pointer value is equal to nodata value/or le 0, IP=',IP
       WRITE(*,'(2(A,I10)/)') 'For cross-section ',J,' on segment ',ISELISG
@@ -510,10 +510,10 @@ CONTAINS
    ENDDO
   ENDDO
   CALL IDFDEALLOCATE(ICROSS,SIZE(ICROSS)); DEALLOCATE(ICROSS)
- ENDIF 
- 
+ ENDIF
+
  END SUBROUTINE ISG_ADDCROSSSECTION
- 
+
  !##=====================================================================
  SUBROUTINE ISG_SIMPLIFYMAIN(ISGFILE,ZTOLERANCE,NODATA,IBATCH)
  !##=====================================================================
@@ -523,37 +523,39 @@ CONTAINS
  INTEGER,INTENT(IN) :: IBATCH
  INTEGER :: I,J,K,ITYPE,ISS,IREF,NCLC
  REAL,DIMENSION(4) :: RVAL,XNR
- REAL,DIMENSION(1,4) :: QSORT
+ REAL,DIMENSION(1,4) :: QSORT,NDATA
  REAL,ALLOCATABLE,DIMENSION(:) :: ZDIST,XDIST,GCODE
  INTEGER,ALLOCATABLE,DIMENSION(:) :: ILIST
-   
+
  !## read entire ISG file
  CALL ISGREAD((/ISGFILE/),IBATCH)
 
  ITYPE=1 !## itype=1: isd
  ISS=1   !## mean value
  NCLC=MAXVAL(ISG%NCLC); ALLOCATE(ZDIST(NCLC),XDIST(NCLC),GCODE(NCLC),ILIST(NCLC))
- 
+
+ NDATA=NODATA
+
  !## process each segment in ISG file to simplify calculation points
  DO I=1,NISG
-  
+
   !## get mean waterlevels in segment
   IREF=ISG(I)%ICLC-1; NCLC=ISG(I)%NCLC
   DO J=1,NCLC
    IREF=IREF+1
-   CALL ISG2GRIDGETDATA(0,0,1,QSORT,XNR,4,RVAL,ISD(IREF)%N,ISD(IREF)%IREF,ISS,ITYPE,NODATA) 
+   CALL ISG2GRIDGETDATA(0,0,1,QSORT,XNR,4,RVAL,ISD(IREF)%N,ISD(IREF)%IREF,ISS,ITYPE,NDATA)
    XDIST(J)=ISD(IREF)%DIST; ZDIST(J)=RVAL(1)
    IF(SUM(XNR)/4.NE.XNR(1))ZDIST(J)=NODATA
   ENDDO
-    
+
   !## remove nodata --- interpolate
   ILIST=0; K=0; DO J=1,NCLC
    IF(ZDIST(J).NE.NODATA)THEN
     K=K+1; ILIST(J)=K; ZDIST(K)=ZDIST(J); XDIST(K)=XDIST(J)
    ENDIF
   ENDDO
-  !## process line       
-  CALL PEUCKER_SIMPLIFYLINE(XDIST,ZDIST,GCODE,K) !ISG(I)%NCLC)
+  !## process line
+  CALL PEUCKER_SIMPLIFYLINE(XDIST,ZDIST,GCODE,K)
   !## reset GCODE
   DO J=NCLC,1,-1
    IF(ILIST(J).NE.0)THEN
@@ -562,16 +564,16 @@ CONTAINS
     GCODE(J)=0.0
    ENDIF
   ENDDO
-  
+
   IREF=ISG(I)%ICLC-1
 
   !## never remove the first or last
   GCODE(1)   =ZTOLERANCE+1.0
   GCODE(NCLC)=ZTOLERANCE+1.0
-  
+
   K=1
   DO J=2,NCLC
-   K=K+1 
+   K=K+1
    !## remove point from Urs-Douglas-Peucker algorithm (less then given tolerance)
    IF(GCODE(J).LT.ZTOLERANCE)THEN
     CALL ISGDELISD(I,IREF+K)
@@ -579,27 +581,27 @@ CONTAINS
     K=K-1
    ENDIF
   ENDDO
-  
+
   WRITE(*,'(A,F10.2,A)') 'Progress ',REAL(I*100)/REAL(NISG),'%'
-  
+
  ENDDO
 
- DEALLOCATE(ZDIST,XDIST,GCODE,ILIST) 
- 
+ DEALLOCATE(ZDIST,XDIST,GCODE,ILIST)
+
  END SUBROUTINE ISG_SIMPLIFYMAIN
 
  !###====================================================================
- LOGICAL FUNCTION ISG2GRIDMAIN(ISGFILE,IBATCH,NLAY,TOP,BOT) 
+ LOGICAL FUNCTION ISG2GRIDMAIN(ISGFILE,IBATCH,NLAY,TOP,BOT)
  !###====================================================================
  IMPLICIT NONE
  INTEGER,INTENT(IN) :: IBATCH,NLAY
  CHARACTER(LEN=*),INTENT(IN) :: ISGFILE
  TYPE(IDFOBJ),DIMENSION(NLAY),INTENT(INOUT) :: TOP,BOT
  INTEGER :: NROW,NCOL,SIMDATE1,SIMDATE2,SIMDATE3,MP
- CHARACTER(LEN=52) :: PPOSTFIX 
- 
+ CHARACTER(LEN=52) :: PPOSTFIX
+
  ISG2GRIDMAIN=.FALSE.
- 
+
  IF(IBATCH.EQ.1)THEN
   !## deallocate memory
   CALL ISGREAD((/ISGFILE/),IBATCH)
@@ -615,7 +617,7 @@ CONTAINS
   IF(DDATE.EQ.0)THEN
    SIMDATE2=SIMDATE3
   ELSE
-   SIMDATE2=SIMDATE1+MAX(0,DDATE-1) 
+   SIMDATE2=SIMDATE1+MAX(0,DDATE-1)
   ENDIF
   IF(SIMDATE2.GT.SIMDATE3.AND.ISS.EQ.2)EXIT
 
@@ -638,7 +640,7 @@ CONTAINS
   ISG2GRIDMAIN=ISG2GRID(PPOSTFIX,NROW,NCOL,NLAY,0,TOP,BOT,IBATCH,MP,0)
   IF(.NOT.ISG2GRIDMAIN)RETURN
   IF(ISIMGRO.EQ.1)CALL ISG2GRIDMAIN_SVAT()
-  
+
   !## no multiply griddings
   IF(DDATE.EQ.0)EXIT
   SIMDATE1=SIMDATE2+1
@@ -662,14 +664,14 @@ CONTAINS
  INTEGER :: IU,JU,ISWNR,I,J,IOS,ITRAP,ISVAT
  LOGICAL :: LEX
  REAL :: MV
- 
+
  !## reading ahn
  WRITE(*,'(A)') 'Opening '//TRIM(AHNFNAME)//' ...'
  CALL IDFNULLIFY(AHN); IF(.NOT.IDFREAD(AHN,AHNFNAME,0))THEN; ENDIF
  WRITE(*,'(A)') 'Opening '//TRIM(THIESSENFNAME)//' ...'
  CALL IDFNULLIFY(THIESSEN); IF(.NOT.IDFREAD(THIESSEN,THIESSENFNAME,0))THEN; ENDIF
  CALL ISG2GRID_SEGREAD()
- 
+
  IU=UTL_GETUNIT()
  CALL OSD_OPEN(IU,FILE=TRIM(ROOT)//'\'//TRIM(SVAT2SWNR_DRNG),STATUS='OLD'    ,FORM='FORMATTED',ACTION='READ,DENYWRITE',ACCESS='SEQUENTIAL')
  JU=UTL_GETUNIT()
@@ -743,10 +745,10 @@ CONTAINS
       TRAP(1,ITRAP)%COND_IN  =1.0/(TRAP(1,ITRAP)%COND_IN/(CS**2.0))
       TRAP(1,ITRAP)%COND_OUT =1.0/(TRAP(1,ITRAP)%COND_OUT/(CS**2.0))
       TRAP(1,ITRAP)%COND_IN  =MIN(TRAP(1,ITRAP)%COND_IN,99999.99)
-      TRAP(1,ITRAP)%COND_OUT =MIN(TRAP(1,ITRAP)%COND_OUT,99999.99) 
+      TRAP(1,ITRAP)%COND_OUT =MIN(TRAP(1,ITRAP)%COND_OUT,99999.99)
 
       WRITE(JU,'(I10,I6,3F8.2,8X,2F8.2,8X,F8.2,8X,I10,8X,A30)') ISVAT,SYSID,MV-TRAP(1,ITRAP)%BH,TRAP(1,ITRAP)%BW,TRAP(1,ITRAP)%CT, &
-                     TRAP(1,ITRAP)%LN,TRAP(1,ITRAP)%COND_IN,TRAP(1,ITRAP)%COND_OUT,ISWNR,TRAP(1,ITRAP)%CSEGMENT 
+                     TRAP(1,ITRAP)%LN,TRAP(1,ITRAP)%COND_IN,TRAP(1,ITRAP)%COND_OUT,ISWNR,TRAP(1,ITRAP)%CSEGMENT
      ENDDO
 
     ENDIF
@@ -771,9 +773,9 @@ CONTAINS
 
  CALL IOSRENAMEFILE(TRIM(ROOT)//'\'//SVAT2SWNR_DRNG(:INDEX(SVAT2SWNR_DRNG,'.',.TRUE.))//'_tmp', &
                     TRIM(ROOT)//'\'//TRIM(SVAT2SWNR_DRNG))
- 
+
  END SUBROUTINE ISG2GRIDMAIN_SVAT
- 
+
  !###======================================================================
  SUBROUTINE ISG2GRID_SEGREAD()
  !###======================================================================
@@ -802,13 +804,13 @@ CONTAINS
  INTEGER,INTENT(IN) :: NROW,NCOL,NLAY,ILAY,IBATCH,JU
  INTEGER,INTENT(INOUT) :: MP
  TYPE(IDFOBJ),DIMENSION(NLAY),INTENT(INOUT) :: TOP,BOT
- CHARACTER(LEN=*),INTENT(IN) :: PPOSTFIX 
+ CHARACTER(LEN=*),INTENT(IN) :: PPOSTFIX
  TYPE(WIN_MESSAGE) :: MESSAGE
  INTEGER :: I,J,K,II,JJ,TTIME,IROW,ICOL,NETTRAP,ITYPE,N,ISTW,IR,IC
  INTEGER :: JCRS,MAXNSEG,IRAT,IRAT1
  REAL :: C,INFF,DXY,RWIDTH,WETPER,ISGLEN,AORG,ATRAP,XSTW,YSTW,GSTW,ZCHK
  REAL,ALLOCATABLE,DIMENSION(:,:) :: QSORT,RVAL
- REAL,ALLOCATABLE,DIMENSION(:) :: DIST,XNR
+ REAL,ALLOCATABLE,DIMENSION(:) :: DIST,XNR,NDATA
  REAL,ALLOCATABLE,DIMENSION(:) :: X,Y
  INTEGER,ALLOCATABLE,DIMENSION(:) :: IPOS
  REAL,ALLOCATABLE,DIMENSION(:) :: XIN,YIN,XSYM,YSYM
@@ -820,10 +822,10 @@ CONTAINS
  TYPE(IDFOBJ),ALLOCATABLE,DIMENSION(:) :: IDF
  TYPE(IDFOBJ) :: ICROSS,PCROSS
  REAL,PARAMETER :: NODATAIDF=0.0 !## do not change !!!
- 
+
  ISG2GRID=.FALSE.
  NSVATS=0
- 
+
  IF(IBATCH.EQ.0)THEN
   CALL WINDOWSELECT(0); CALL WINDOWOUTSTATUSBAR(2,''); CALL WINDOWOUTSTATUSBAR(4,'Initialisation 0%')
  ENDIF
@@ -831,12 +833,12 @@ CONTAINS
  IF(ISIMGRO.EQ.1)THEN
   CALL OSD_OPEN(IUSIMGRO,FILE=TRIM(ROOT)//'\'//TRIM(SVAT2SWNR_DRNG),STATUS='UNKNOWN',FORM='FORMATTED',ACTION='WRITE,DENYREAD',ACCESS='SEQUENTIAL')
  ENDIF
- 
+
  !## compute structure influences between sdate and edate
  IF(ICDIST.EQ.1)DATISD%WL_STW=DATISD%WLVL
 
- NITEMS=MAXITEMS; IF(ICDIST.EQ.0)NITEMS=9 
- 
+ NITEMS=MAXITEMS; IF(ICDIST.EQ.0)NITEMS=9
+
  !## open idf-filename
  ALLOCATE(IDF(NITEMS))
 
@@ -867,7 +869,7 @@ CONTAINS
   ENDIF
   IDF(I)%X=0.0
  END DO
- 
+
  !## translate cdate in to julian date - for transient simulations only!
  IF(ISS.EQ.2)THEN
   SDATE=UTL_IDATETOJDATE(SDATE)
@@ -877,9 +879,8 @@ CONTAINS
   TTIME=1
  ENDIF
 
- IF(ALLOCATED(QSORT))DEALLOCATE(QSORT)
- IF(ALLOCATED(XNR))DEALLOCATE(XNR)
- ALLOCATE(QSORT(TTIME,4),XNR(4))
+ IF(ALLOCATED(QSORT))DEALLOCATE(QSORT); IF(ALLOCATED(XNR))DEALLOCATE(XNR); IF(ALLOCATED(NDATA))DEALLOCATE(NDATA)
+ ALLOCATE(QSORT(TTIME,4),XNR(4),NDATA(4))
 
  IF(ALLOCATED(X))DEALLOCATE(X)
  IF(ALLOCATED(Y))DEALLOCATE(Y)
@@ -888,7 +889,7 @@ CONTAINS
  IF(ALLOCATED(IPOS))DEALLOCATE(IPOS)
  !## max. numbers of coordinates AND number of calculation points AND number of structures
  MAXNSEG=MAXVAL(ISG(1:NISG)%NSEG)+MAXVAL(ISG(1:NISG)%NCLC)+2*MAXVAL(ISG(1:NISG)%NSTW)
- ALLOCATE(DIST(MAXNSEG),IPOS(MAXNSEG),RVAL(4,0:MAXNSEG), & 
+ ALLOCATE(DIST(MAXNSEG),IPOS(MAXNSEG),RVAL(4,0:MAXNSEG), &
           X(MAXNSEG),Y(MAXNSEG))
 
  MAXDIM=0
@@ -969,11 +970,11 @@ CONTAINS
     J=J+1
     IF(IPOS(J).GT.0)THEN
      IREF=ISG(I)%ICLC+IPOS(J)-1
-     CALL ISG2GRIDGETDATA(SDATE,EDATE,TTIME,QSORT,XNR,4,RVAL(1,J),ISD(IREF)%N,ISD(IREF)%IREF,ISS,1,NODATA) 
+     CALL ISG2GRIDGETDATA(SDATE,EDATE,TTIME,QSORT,XNR,4,RVAL(1,J),ISD(IREF)%N,ISD(IREF)%IREF,ISS, 1,NDATA)
     ENDIF
     IF(IPOS(J).LT.0)THEN
      IREF=ISG(I)%ISTW+ABS(IPOS(J))-1
-     CALL ISG2GRIDGETDATA(SDATE,EDATE,TTIME,QSORT,XNR,4,RVAL(1,J),IST(IREF)%N,IST(IREF)%IREF,ISS,-1,NODATA)
+     CALL ISG2GRIDGETDATA(SDATE,EDATE,TTIME,QSORT,XNR,4,RVAL(1,J),IST(IREF)%N,IST(IREF)%IREF,ISS,-1,NDATA)
      J=J+1
      !## replace waterlevel_down to waterlevel structure
      RVAL(1,J)=RVAL(2,J-1)
@@ -988,7 +989,7 @@ CONTAINS
    LNODAT=.TRUE.
    DO JJ=1,4; IF(RVAL(JJ,1)   .EQ.NODATA)THEN; LNODAT=.FALSE. ; EXIT; ENDIF; ENDDO
    DO JJ=1,4; IF(RVAL(JJ,NSEG).EQ.NODATA)THEN; LNODAT=.FALSE. ; EXIT; ENDIF; ENDDO
-   IF(LNODAT)THEN 
+   IF(LNODAT)THEN
     H1=RVAL(1,1)
     H2=RVAL(1,NSEG)
     !## flow direction other-way-around
@@ -1051,7 +1052,7 @@ CONTAINS
       DXY=SQRT(DXY)
 
       DO J=1,4; RVAL(J,0)=(RVAL(J,ISEG)-RVAL(J,ISEG-1))/DXY; ENDDO
-      
+
       !## intersect line with rectangular-regular-equidistantial-grid
       N=0; CALL INTERSECT_EQUI(XMIN,XMAX,YMIN,YMAX,CS,CS,X1,X2,Y1,Y2,N,.FALSE.,.TRUE.)
 
@@ -1070,11 +1071,11 @@ CONTAINS
        ELSE
         !## use default cross-section for current segment since no 1d cross-section or other has been found
         NDIM=4
-       ENDIF    
+       ENDIF
 
        !## there will be no cross-section
        IF(NDIM.LE.0)CYCLE
-       
+
        IF(NDIM*2.GT.MAXDIM)THEN
         MAXDIM=NDIM*2
         IF(ALLOCATED(XIN))DEALLOCATE(XIN,YIN,XSYM,YSYM,XTRAP,YTRAP)
@@ -1094,7 +1095,7 @@ CONTAINS
 
        !## make sure cross-section its minimal z-coordinate is zero!
        Z=MINVAL(YIN(1:NSYM)); YIN(1:NSYM)=YIN(1:NSYM)-Z
-                   
+
        !## compute trapezia
        IF(ISIMGRO.EQ.1)THEN
         CALL ISGCOMPUTETRAPEZIUM(XIN,YIN,XSYM,YSYM,XTRAP,YTRAP,NTRAP,MAXDIM,NSYM,AORG,ATRAP)
@@ -1126,13 +1127,13 @@ CONTAINS
 
          !## translate from local to global coordinates and get proper wetted perimeter and width of channel!
          CALL ISG2GRIDGETPARAM(XIN,YIN,NDIM,ISGVALUE(1,3),ISGVALUE(1,2),RWIDTH,WETPER,MINDEPTH)
-         
+
          ISGVALUE(1,4)= RVAL(4,ISEG-1)+DXY*RVAL(4,0)   !inf.factors
          C            = RVAL(3,ISEG-1)+DXY*RVAL(3,0)   !c-value
          !## minimal c-value
          C=MAX(0.001,C)
          ISGVALUE(1,1)=(LN(J)*WETPER)/C    !conductances
-         
+
          ISGVALUE(1,5)= LN(J)
          ISGVALUE(1,6)= WETPER
          ISGVALUE(1,7)= RWIDTH
@@ -1195,9 +1196,9 @@ CONTAINS
             CALL ISG2GRIDPERIMETERTRAPEZIUM(XTRAP(:,ITRAP),YTRAP(:,ITRAP),WETPER,CT,BW,NETWD)
             !## get bottom height (bh)
             BH  = ISGVALUE(1,3)+YTRAP(3,ITRAP)
-            COND=(LN(J)*WETPER)/C    !conductance(m2/dag)            
+            COND=(LN(J)*WETPER)/C    !conductance(m2/dag)
             COND= TC*COND
-            
+
             !## minimal value cond=0.001
             CALL IDFGETLOC(IDF(1),IROW,ICOL,XC,YC)
             WRITE(IUSIMGRO,'(2F10.2,2I10,6F10.2,A30,3F10.2)') XC,YC,IROW,ICOL,LN(J),BH,BW,CT,MAX(0.001,COND),MAX(0.001,COND*ISGVALUE(1,4)), &
@@ -1230,7 +1231,7 @@ CONTAINS
         ENDIF
        ENDIF
       ENDDO
-     ENDIF  
+     ENDIF
     ENDDO
    ENDIF
   ENDIF
@@ -1256,7 +1257,7 @@ CONTAINS
    ENDIF
   ENDDO
  ENDDO
- 
+
  !## add 2d cross-section
  IRAT=0; IRAT1=0
  DO ISELISG=1,NISG
@@ -1293,7 +1294,7 @@ CONTAINS
    IF(ISGATTRIBUTES_2DCROSS_READ(I,ICROSS,PCROSS,ZCHK))THEN   !## read bathymetry current cross-section
     WL=IDF(2)%X(ICOL,IROW)                                    !## waterlevel at cross-section
     !## infiltration factor at location of cross-section
-    INFF=IDF(4)%X(ICOL,IROW)                                  
+    INFF=IDF(4)%X(ICOL,IROW)
     C =IDF(8)%X(ICOL,IROW)                                    !## resistance at location of cross-section
     !## intersection migth miss the cell
     IF(C.LE.0.0)THEN
@@ -1301,9 +1302,9 @@ CONTAINS
 IRLOOP: DO IR=MAX(1,IROW-1),MIN(NROW,IROW+1)
       DO IC=MAX(1,ICOL-1),MIN(NCOL,ICOL+1)
        !## infiltration factor at location of cross-section
-       INFF=IDF(4)%X(IC,IR)                                  
+       INFF=IDF(4)%X(IC,IR)
        !## waterlevel at cross-section
-       WL=IDF(2)%X(IC,IR)   
+       WL=IDF(2)%X(IC,IR)
        !## resistance
        C=IDF(8)%X(IC,IR)
        IF(C.NE.0.0)EXIT IRLOOP
@@ -1314,9 +1315,9 @@ IRLOOP: DO IR=MAX(1,IROW-1),MIN(NROW,IROW+1)
     CALL IDFDEALLOCATEX(ICROSS); CALL IDFDEALLOCATEX(PCROSS)
    ENDIF
    IF(IBATCH.EQ.0)CALL UTL_WAITMESSAGE(IRAT,IRAT1,ISELISG,NISG,'Progress gridding 2d cross-sections')
-  ENDDO 
+  ENDDO
  ENDDO
- IF(IBATCH.EQ.1)WRITE(*,'(A)') 'Finished gridding 2d cross-sections' 
+ IF(IBATCH.EQ.1)WRITE(*,'(A)') 'Finished gridding 2d cross-sections'
 
  IF(ALLOCATED(DATISC2))DEALLOCATE(DATISC2); IF(ALLOCATED(TISC))DEALLOCATE(TISC); IF(ALLOCATED(ISCN))DEALLOCATE(ISCN)
 
@@ -1338,6 +1339,7 @@ IRLOOP: DO IR=MAX(1,IROW-1),MIN(NROW,IROW+1)
 
  IF(ALLOCATED(QSORT))DEALLOCATE(QSORT)
  IF(ALLOCATED(XNR))DEALLOCATE(XNR)
+ IF(ALLOCATED(NDATA))DEALLOCATE(NDATA)
  CALL INTERSECT_DEALLOCATE()
 
  IF(ISIMGRO.EQ.1)THEN
@@ -1357,7 +1359,7 @@ IRLOOP: DO IR=MAX(1,IROW-1),MIN(NROW,IROW+1)
                                             TRIM(ROOT)//'\'//TRIM(FNAME(11))//TRIM(PPOSTFIX)//'.IDF') ! & !## current_id
 !                                            TRIM(ROOT)//'\'//TRIM(FNAME(12))//TRIM(PPOSTFIX)//'.IDF')    !## next_id
  ENDIF
- 
+
  !## extent grids based upon their width
  CALL ISG2GRID_EXTENT_WITH_WIDTH(SIZE(IDF),IDF,IBATCH)
 
@@ -1369,7 +1371,7 @@ IRLOOP: DO IR=MAX(1,IROW-1),MIN(NROW,IROW+1)
   ENDIF
  ENDDO; ENDDO
  IDF%NODATA=-9999.00
- 
+
  IF(IEXPORT.EQ.0)THEN
   DO I=1,9
    IF(ISAVE(I).EQ.0)CYCLE
@@ -1382,13 +1384,180 @@ IRLOOP: DO IR=MAX(1,IROW-1),MIN(NROW,IROW+1)
  ELSEIF(IEXPORT.EQ.1)THEN
   CALL ISG2GRID_EXPORTRIVER(JU,IDF,NLAY,ILAY,TOP,BOT,MP)
  ENDIF
- 
+
  CALL IDFDEALLOCATE(IDF,SIZE(IDF)); DEALLOCATE(IDF)
  IF(ISIMGRO.EQ.1)CLOSE(IUSIMGRO)
- 
+
  ISG2GRID=.TRUE.
 
  END FUNCTION ISG2GRID
+
+ !###====================================================================
+ LOGICAL FUNCTION ISG2SFR(NROW,NCOL,NLAY,ILAY,TOP,BOT,IPER,NSTREAM,JU)
+ !###====================================================================
+ IMPLICIT NONE
+ INTEGER,INTENT(IN) :: NROW,NCOL,NLAY,ILAY,JU,IPER
+ INTEGER,INTENT(INOUT) :: NSTREAM
+ TYPE(IDFOBJ),DIMENSION(NLAY),INTENT(INOUT) :: TOP,BOT
+ INTEGER :: I,II,J,K,TTIME,IROW,ICOL,N,ISEG,JSEG,NSEG,IREF,NDIM,NREACH, &
+       ICALC,OUTSEG,IUPSEG,IPRIOR,NSTRPTS
+ REAL :: DXY,X1,X2,Y1,Y2,QFLOW,QROFF,EVT,PREC,ROUGHCH,ROUGHBK,CDPTH,FDPTH,AQDTH,BWDTH, &
+       HC1FCT,THICKM1,ELEVUP,WIDTH1,DEPTH1,HC2FCT,THICKM2,ELEVDN,WIDTH2,DEPTH2
+ REAL,ALLOCATABLE,DIMENSION(:,:) :: QSORT,RVAL
+ REAL,ALLOCATABLE,DIMENSION(:) :: XNR,NDATA
+ CHARACTER(LEN=512) :: LINE
+ 
+ ISG2SFR=.FALSE.
+
+ !## translate cdate in to julian date - for transient simulations only!
+ IF(ISS.EQ.2)THEN
+  SDATE=UTL_IDATETOJDATE(SDATE)
+  EDATE=UTL_IDATETOJDATE(EDATE)+1
+  TTIME=EDATE-SDATE
+ ELSEIF(ISS.EQ.1)THEN
+  TTIME=1
+ ENDIF
+
+ NDIM=12
+
+ IF(ALLOCATED(QSORT))DEALLOCATE(QSORT); IF(ALLOCATED(XNR))DEALLOCATE(XNR); IF(ALLOCATED(NDATA))DEALLOCATE(NDATA)
+ ALLOCATE(QSORT(TTIME,NDIM),XNR(NDIM),NDATA(NDIM))
+
+ IF(ALLOCATED(RVAL))DEALLOCATE(RVAL)
+ ALLOCATE(RVAL(NDIM,2))
+
+ N=2; IF(IPER.EQ.1)N=1
+
+ DO II=N,2
+  !## only specify for first tress-period
+  DO I=1,NISG
+
+   IF(II.EQ.2)THEN !## read data
+    RVAL=0.0
+
+    !## read data for start-point
+    IREF=ISG(I)%ICLC
+    CALL ISG2GRIDGETDATA(SDATE,EDATE,TTIME,QSORT,XNR,NDIM,RVAL(1,J),ISD(IREF)%N,ISD(IREF)%IREF,ISS,1,NDATA)
+    !## read data for end-point
+    IREF=ISG(I)%ICLC+1
+    CALL ISG2GRIDGETDATA(SDATE,EDATE,TTIME,QSORT,XNR,NDIM,RVAL(1,J),ISD(IREF)%N,ISD(IREF)%IREF,ISS,1,NDATA)
+   ENDIF
+
+   NSEG=ISG(I)%NSEG; ISEG=ISG(I)%ISEG; JSEG=ISEG+NSEG-1
+
+   !## start to intersect all segment/segmentpoints to the model-grid
+   DO J=ISEG+1,JSEG
+
+    !## get coordinates of current reach in segment
+    X1 =ISP(J-1)%X; Y1=ISP(J-1)%Y; X2=ISP(J)%X; Y2=ISP(J)%Y
+
+    !## distance between two points with information
+    DXY=(X2-X1)**2.0+(Y2-Y1)**2.0; IF(DXY.LE.0.0)CYCLE
+    DXY=SQRT(DXY)
+
+    !## intersect line with rectangular-regular-equidistantial-grid
+    N=0; CALL INTERSECT_EQUI(XMIN,XMAX,YMIN,YMAX,CS,CS,X1,X2,Y1,Y2,N,.FALSE.,.TRUE.)
+
+    !## fill result array
+    NREACH=0
+    DO K=1,N
+
+     IF(LN(K).LE.0.0)CYCLE
+
+     ICOL=INT(XA(K)); IROW=INT(YA(K))
+     !## within model-domain
+     IF(ICOL.GE.1.AND.IROW.GE.1.AND.ICOL.LE.NCOL.AND.IROW.LE.NROW)THEN
+
+      !## increae number of stream reaches
+      NREACH=NREACH+1
+      !## increase number of streams
+      IF(NREACH.EQ.1)NSTREAM=NSTREAM+1
+      !## fill in for first stressperiod
+      IF(II.EQ.1)THEN
+       WRITE(JU,'()') ILAY,IROW,ICOL,NSTREAM,NREACH,LN(K)
+      ELSEIF(II.EQ.2)THEN
+       !ICALC=INT(RVAL()); OUTSEG=INT(RVAL()); IUPSEG=INT(RVAL())
+       ICALC=1
+       IPRIOR=0
+       OUTSEG=1
+       IUPSEG=2
+       QFLOW=0.0
+       QROFF=0.0
+       EVT=0.0
+       PREC=0.0
+       LINE=TRIM(ITOS(NSTREAM))//','//TRIM(ITOS(ICALC))//','//TRIM(ITOS(OUTSEG))//','//TRIM(ITOS(IUPSEG))
+       IF(IUPSEG.GT.0)LINE=TRIM(LINE)//','//TRIM(ITOS(IPRIOR))
+       IF(ICALC.EQ.4)THEN
+        NSTRPTS=0 !## number of discharge flow relationships
+        LINE=TRIM(LINE)//','//TRIM(ITOS(NSTRPTS))
+       ENDIF
+       LINE=TRIM(LINE)//','//TRIM(RTOS(QFLOW,'F',2))//','//TRIM(RTOS(QROFF,'F',2))//','// &
+                             TRIM(RTOS(EVT,'F',2))//','//TRIM(RTOS(PREC,'F',2))
+       IF(ICALC.EQ.1.OR.ICALC.EQ.2)THEN
+        ROUGHCH=25.0
+        LINE=TRIM(LINE)//','//TRIM(RTOS(ROUGHCH,'F',2))
+       ENDIF
+       IF(ICALC.EQ.2)THEN
+        ROUGHBK=25.0
+        LINE=TRIM(LINE)//','//TRIM(RTOS(ROUGHBK,'F',2))
+       ENDIF
+       IF(ICALC.EQ.3)THEN
+        CDPTH=0.0
+        FDPTH=0.0
+        AQDTH=0.0
+        BWDTH=0.0
+        LINE=TRIM(LINE)//','//TRIM(RTOS(CDPTH,'F',2))//','//TRIM(RTOS(FDPTH,'F',2))//','// &
+                              TRIM(RTOS(AQDTH,'F',2))//','//TRIM(RTOS(BWDTH,'F',2))
+       ENDIF
+       WRITE(JU,'(A)') TRIM(LINE)
+
+       LINE=TRIM(RTOS(HC1FCT,'F',2))//','//TRIM(RTOS(THICKM1,'F',2))//','//TRIM(RTOS(ELEVUP,'F',2))
+       IF(ICALC.LE.1)LINE=TRIM(LINE)//','//TRIM(RTOS(WIDTH1,'F',2))
+       IF(ICALC.EQ.0)LINE=TRIM(LINE)//','//TRIM(RTOS(DEPTH1,'F',2))
+       WRITE(JU,'(A)') TRIM(LINE)
+
+       LINE=TRIM(RTOS(HC2FCT,'F',2))//','//TRIM(RTOS(THICKM2,'F',2))//','//TRIM(RTOS(ELEVDN,'F',2))
+       IF(ICALC.LE.1)LINE=TRIM(LINE)//','//TRIM(RTOS(WIDTH2,'F',2))
+       IF(ICALC.EQ.0)LINE=TRIM(LINE)//','//TRIM(RTOS(DEPTH2,'F',2))
+       WRITE(JU,'(A)') TRIM(LINE)
+
+       !## eight points cross-section
+       IF(ICALC.EQ.2)THEN
+       !##
+       ELSEIF(ICALC.EQ.4)THEN
+       ENDIF
+
+      ENDIF
+
+     ENDIF
+    ENDDO
+
+   ENDDO
+  ENDDO
+ ENDDO
+
+!       !## which cross-section is active within current segment
+!       CALL ISG2GRIDGETCROSS(JCRS,ISG(I)%ICRS,ISG(I)%NCRS,ISGLEN)
+!       IF(JCRS.GT.0)THEN
+!        !## start of cross-section
+!        JSEG=ISG(I)%ICRS+JCRS-1
+!        NDIM=ABS(ISC(JSEG)%N)
+!       ELSE
+!        !## use default cross-section for current segment since no 1d cross-section or other has been found
+!        NDIM=4
+!       ENDIF
+
+! ENDDO
+
+ write(*,*) nstream,nreach
+
+ IF(ALLOCATED(RVAL))DEALLOCATE(RVAL)
+ IF(ALLOCATED(QSORT))DEALLOCATE(QSORT); IF(ALLOCATED(XNR))DEALLOCATE(XNR); IF(ALLOCATED(NDATA))DEALLOCATE(NDATA)
+ CALL INTERSECT_DEALLOCATE()
+
+ ISG2SFR=.TRUE.
+
+ END FUNCTION ISG2SFR
 
  !###====================================================================
  SUBROUTINE ISG2GRID_EXPORTRIVER(JU,IDF,NLAY,ILAY,TOP,BOT,MP)
@@ -1401,7 +1570,7 @@ IRLOOP: DO IR=MAX(1,IROW-1),MIN(NROW,IROW+1)
  INTEGER :: IROW,ICOL,N,IU,I
  REAL :: T,B,WL,BL,CD,F
  CHARACTER(LEN=25) :: FRM
- 
+
  IF(ILAY.EQ.0)THEN
   !## read in all top/bottom layers
   DO I=1,NLAY
@@ -1417,7 +1586,7 @@ IRLOOP: DO IR=MAX(1,IROW-1),MIN(NROW,IROW+1)
    ENDIF
   ENDDO
  ENDIF
- 
+
  !## idf(1)=cond
  !## idf(2)=stage
  !## idf(3)=bottom
@@ -1438,7 +1607,7 @@ IRLOOP: DO IR=MAX(1,IROW-1),MIN(NROW,IROW+1)
  ENDDO; ENDDO
 
  MP=MP+N
- 
+
  IF(JU.EQ.0)THEN
   IU=UTL_GETUNIT()
   IF(DDATE.EQ.0)THEN
@@ -1452,16 +1621,16 @@ IRLOOP: DO IR=MAX(1,IROW-1),MIN(NROW,IROW+1)
  ELSE
   IU=JU
  ENDIF
- 
+
  WRITE(FRM,'(A9,I2.2,A14)') '(3(I5,1X),',4,'(F15.7,1X),I5)'
 
  DO IROW=1,IDF(1)%NROW; DO ICOL=1,IDF(1)%NCOL
   IF(IDF(1)%X(ICOL,IROW).GT.0.0)THEN
    !## assign to modellayer 1 by default, when no layers are read in
    IF(ILAY.NE.0)THEN
-   
+
     WRITE(IU,FRM) ILAY,IROW,ICOL,IDF(2)%X(ICOL,IROW),IDF(1)%X(ICOL,IROW),IDF(3)%X(ICOL,IROW),IDF(4)%X(ICOL,IROW),1
- 
+
    ELSE
     WL=IDF(2)%X(ICOL,IROW); BL=IDF(3)%X(ICOL,IROW)
     DO I=1,NLAY
@@ -1477,13 +1646,13 @@ IRLOOP: DO IR=MAX(1,IROW-1),MIN(NROW,IROW+1)
    ENDIF
   ENDIF
  ENDDO; ENDDO
- 
+
  IF(JU.EQ.0)CLOSE(IU)
- 
+
  END SUBROUTINE ISG2GRID_EXPORTRIVER
- 
+
   !###====================================================================
- SUBROUTINE ISG2GRID_BATHEMETRY(IDF,NIDF,ICROSS,PCROSS,ZCHK,WL,C,INFF) 
+ SUBROUTINE ISG2GRID_BATHEMETRY(IDF,NIDF,ICROSS,PCROSS,ZCHK,WL,C,INFF)
  !###====================================================================
  IMPLICIT NONE
  INTEGER,INTENT(IN) :: NIDF
@@ -1492,7 +1661,7 @@ IRLOOP: DO IR=MAX(1,IROW-1),MIN(NROW,IROW+1)
  REAL,INTENT(IN) :: WL,C,INFF,ZCHK
  INTEGER :: IR1,IR2,IC1,IC2,IROW,ICOL,JROW,JCOL
  REAL :: XC,YC,CR
-   
+
  !## defined cross-sections are finer than model network
  IF(ICROSS%DX.LE.IDF(1)%DX)THEN
   !## spotify cross-section (actual bathemetry of current 2d cross-section) in mother idf
@@ -1503,7 +1672,7 @@ IRLOOP: DO IR=MAX(1,IROW-1),MIN(NROW,IROW+1)
    IF(WL.LE.ICROSS%X(ICOL,IROW))CYCLE
    !## if inundation-criterion applied, only inundate if zchk criterion is met
    IF(PCROSS%X(ICOL,IROW).LT.0.0.AND.WL.LE.ZCHK)CYCLE
-   !## manipulate resistance 
+   !## manipulate resistance
    CR=C*ABS(PCROSS%X(ICOL,IROW))
    CALL IDFGETLOC(ICROSS  ,IROW,ICOL,XC,YC)
    CALL IDFIROWICOL(IDF(1),JROW,JCOL,XC,YC)
@@ -1523,7 +1692,7 @@ IRLOOP: DO IR=MAX(1,IROW-1),MIN(NROW,IROW+1)
  ELSE
   CALL IDFIROWICOL(IDF(1),IR2,IC1,ICROSS%XMIN,ICROSS%YMIN)
   CALL IDFIROWICOL(IDF(1),IR1,IC2,ICROSS%XMAX,ICROSS%YMAX)
-  IF(IC2.EQ.0)IC2=IDF(1)%NCOL; IF(IR2.EQ.0)IR2=IDF(1)%NROW   
+  IF(IC2.EQ.0)IC2=IDF(1)%NCOL; IF(IR2.EQ.0)IR2=IDF(1)%NROW
   IC1=MAX(1,IC1); IC2=MIN(IC2,IDF(1)%NCOL)
   IR1=MAX(1,IR1); IR2=MIN(IR2,IDF(1)%NROW)
   !## spottify cross-section (actual bathemetry of current 2d cross-section) in mother idf
@@ -1537,7 +1706,7 @@ IRLOOP: DO IR=MAX(1,IROW-1),MIN(NROW,IROW+1)
     IF(WL.LE.ICROSS%X(JCOL,JROW))CYCLE
     !## if inundation-criterion applied, only inundate if zchk criterion is met
     IF(PCROSS%X(JCOL,JROW).LT.0.0.AND.WL.LE.ZCHK) CYCLE
-    !## manipulate resistance 
+    !## manipulate resistance
     CR=C*ABS(PCROSS%X(JCOL,JROW))
     IF(IDF(9)%X(ICOL,IROW).EQ.0.0)THEN
      IDF(1)%X(ICOL,IROW)=IDFGETAREA(ICROSS,ICOL,IROW)/CR
@@ -1552,9 +1721,9 @@ IRLOOP: DO IR=MAX(1,IROW-1),MIN(NROW,IROW+1)
    ENDIF
   ENDDO; ENDDO
  ENDIF
- 
+
  END SUBROUTINE ISG2GRID_BATHEMETRY
- 
+
  !###====================================================================
  SUBROUTINE ISG2GRID_EXTENT_WITH_WIDTH(NIDF,IDF,IBATCH)
  !###====================================================================
@@ -1571,7 +1740,7 @@ IRLOOP: DO IR=MAX(1,IROW-1),MIN(NROW,IROW+1)
   W=MAX(W,IDF(7)%X(ICOL,IROW))
  ENDDO; ENDDO
  N=(W/IDF(1)%DX)+2; ALLOCATE(MM(N,N)); NN=0
- 
+
  DO IROW=1,IDF(1)%NROW; DO ICOL=1,IDF(1)%NCOL
   !## already visited by bathymetry routine - so skip it
   IF(IDF(9)%X(ICOL,IROW).NE.0.0)THEN
@@ -1588,7 +1757,7 @@ IRLOOP: DO IR=MAX(1,IROW-1),MIN(NROW,IROW+1)
    IDF(1)%X(ICOL,IROW)=IDF(1)%X(ICOL,IROW)*IDF(5)%DX/L*IDF(5)%DX/W
   ENDIF
  ENDDO; ENDDO
- 
+
  IRAT=0; IRAT1=0
  DO IROW=1,IDF(1)%NROW
   DO ICOL=1,IDF(1)%NCOL
@@ -1597,36 +1766,36 @@ IRLOOP: DO IR=MAX(1,IROW-1),MIN(NROW,IROW+1)
    !## river available
    IF(IDF(1)%X(ICOL,IROW).NE.IDF(I)%NODATA)THEN
     !## get mean width
-    W=IDF(7)%X(ICOL,IROW)  
+    W=IDF(7)%X(ICOL,IROW)
     W=MIN(W,MAXWIDTH)
-    
+
     !## current cellsize is less than current width of river
     IF(W.GT.IDF(1)%DX)THEN
      DO I=1,4; V(I)=IDF(I)%X(ICOL,IROW)/IDF(9)%X(ICOL,IROW); ENDDO
-    
+
      !## create antialiased erosion/fattening matrix
      CALL IDFGETLOC(IDF(1),IROW,ICOL,X,Y)
      CALL ISG2GRID_EROSION_MATRIX(N,NN,MM,W,X,Y,IDF(1)%DX)
- 
+
      !## apply multiplication matrix
      IF(IROW-NN/2.GE.1.AND.IROW+NN/2.LE.IDF(9)%NROW.AND. &
         ICOL-NN/2.GE.1.AND.ICOL+NN/2.LE.IDF(9)%NCOL)THEN
       IRR=IROW-NN/2
       DO IR=1,NN; ICC=ICOL-NN/2; DO IC=1,NN
-       
+
        X1=IDF(9)%XMIN+(IDF(9)%DX*(ICC-1))+(0.5*IDF(9)%DX)
        IF(ICC.LT.ICOL)X1=IDF(9)%XMIN+(IDF(9)%DX*ICC-1) !## left  border
        IF(ICC.GT.ICOL)X1=IDF(9)%XMIN+ IDF(9)%DX*ICC    !## right border
        Y1=IDF(9)%YMAX-(IDF(9)%DY*(IRR+1))-(0.5*IDF(9)%DY)
        IF(IRR.LT.IROW)Y1=IDF(9)%YMAX-(IDF(9)%DY*IRR+1) !## top    border
        IF(IRR.GT.IROW)Y1=IDF(9)%YMAX- IDF(9)%DY*IRR    !## bottom border
-       
+
        F=(X-X1)**2.0+(Y-Y1)**2.0
        IF(F.GT.0.0)F=SQRT(F)
        F=MIN(1.0,(W/2.0)/F)
        !## count for doublicates (assumption)
        F=F**2.0
-       
+
        IDF(9)%X(ICC,IRR)=IDF(9)%X(ICC,IRR)+F*MM(IR,IC)
        DO I=1,4; IDF(I)%X(ICC,IRR)=IDF(I)%X(ICC,IRR)+V(I)*F*MM(IR,IC); ENDDO
        ICC=ICC+1
@@ -1643,7 +1812,7 @@ IRLOOP: DO IR=MAX(1,IROW-1),MIN(NROW,IROW+1)
         Y1=IDF(9)%YMAX-(IDF(9)%DY*(IRR+1))-(0.5*IDF(9)%DY)
         IF(IRR.LT.IROW)Y1=IDF(9)%YMAX-(IDF(9)%DY*IRR+1) !## top    border
         IF(IRR.GT.IROW)Y1=IDF(9)%YMAX- IDF(9)%DY*IRR    !## bottom border
-       
+
         F=(X-X1)**2.0+(Y-Y1)**2.0
         IF(F.GT.0.0)F=SQRT(F)
         F=MIN(1.0,(W/2.0)/F)
@@ -1656,13 +1825,13 @@ IRLOOP: DO IR=MAX(1,IROW-1),MIN(NROW,IROW+1)
        ICC=ICC+1
       ENDDO; IRR=IRR+1; ENDDO
      ENDIF
-     
+
     ENDIF
    ENDIF
   ENDDO
   IF(IBATCH.EQ.0)CALL UTL_WAITMESSAGE(IRAT,IRAT1,IROW,IDF(1)%NROW,'Progress computing erosion matrix')
  ENDDO
- IF(IBATCH.EQ.1)WRITE(*,'(A)') 'Finished computing erosion matrix' 
+ IF(IBATCH.EQ.1)WRITE(*,'(A)') 'Finished computing erosion matrix'
 
  DO IROW=1,IDF(1)%NROW; DO ICOL=1,IDF(1)%NCOL
   DO I=1,4
@@ -1681,7 +1850,7 @@ IRLOOP: DO IR=MAX(1,IROW-1),MIN(NROW,IROW+1)
  ENDDO; ENDDO
 
  DEALLOCATE(MM)
-  
+
  !## clean for conductances le zero
  DO IROW=1,IDF(1)%NROW; DO ICOL=1,IDF(1)%NCOL
   IF(IDF(1)%X(ICOL,IROW).LE.0.0)THEN
@@ -1690,7 +1859,7 @@ IRLOOP: DO IR=MAX(1,IROW-1),MIN(NROW,IROW+1)
  ENDDO; ENDDO
 
  END SUBROUTINE ISG2GRID_EXTENT_WITH_WIDTH
- 
+
  !###====================================================================
  SUBROUTINE ISG2GRID_EROSION_MATRIX(N,NN,MM,W,X,Y,DX)
  !###====================================================================
@@ -1701,18 +1870,18 @@ IRLOOP: DO IR=MAX(1,IROW-1),MIN(NROW,IROW+1)
  REAL,DIMENSION(N,N),INTENT(INOUT) :: MM
  INTEGER :: NNN,I,IROW,ICOL
  REAL :: XMIN,YMAX,X1,X2,Y1,Y2,RADIUS,TRAD
- 
+
  NNN=INT(W/DX)+1; IF(MOD(NNN,2).EQ.0)NNN=NNN+1
  IF(SUM(MM).NE.0.0.AND.NNN.EQ.NN)RETURN
- 
- NN=NNN; MM=0.0; RADIUS=(REAL(NN)*DX)/2.0; TRAD=W/2.0 
- 
+
+ NN=NNN; MM=0.0; RADIUS=(REAL(NN)*DX)/2.0; TRAD=W/2.0
+
  XMIN=X-RADIUS; YMAX=Y+RADIUS
- 
+
  Y2=YMAX; Y1=YMAX-DX
  DO IROW=1,NNN
   X1=XMIN; X2=XMIN+DX
-  DO ICOL=1,NNN 
+  DO ICOL=1,NNN
 
    I=0;
    IF(SQRT((X1-X)**2.0+(Y2-Y)**2.0).LE.TRAD)I=I+1 !## top left
@@ -1721,13 +1890,13 @@ IRLOOP: DO IR=MAX(1,IROW-1),MIN(NROW,IROW+1)
    IF(SQRT((X1-X)**2.0+(Y1-Y)**2.0).LE.TRAD)I=I+1 !## bottom left
    MM(ICOL,IROW)=REAL(I)/4.0
    X1=X1+DX; X2=X2+DX
-  
+
   ENDDO
   Y2=Y2-DX; Y1=Y1-DX
  ENDDO
- 
+
  END SUBROUTINE ISG2GRID_EROSION_MATRIX
- 
+
  !###====================================================================
  SUBROUTINE ISG2GRIDGETDIMENSION(IDIM,XMIN,YMIN,XMAX,YMAX,NROW,NCOL,CS)
  !###====================================================================
@@ -1774,7 +1943,7 @@ IRLOOP: DO IR=MAX(1,IROW-1),MIN(NROW,IROW+1)
     ENDIF
 
    ENDDO
-   
+
    !## increase it a little bit to make sure everything is captured
    XMIN=XMIN-CS
    XMAX=XMAX+CS
@@ -1800,9 +1969,9 @@ IRLOOP: DO IR=MAX(1,IROW-1),MIN(NROW,IROW+1)
 
  IF(ALLOCATED(IDF))DEALLOCATE(IDF)
  ALLOCATE(IDF(2)); DO I=1,SIZE(IDF); CALL IDFNULLIFY(IDF(I)); ENDDO
- 
+
  IF(.NOT.IDFREAD(IDF(1),IDFFNAME1,1))RETURN
- IF(.NOT.IDFREAD(IDF(2),IDFFNAME2,1))RETURN 
+ IF(.NOT.IDFREAD(IDF(2),IDFFNAME2,1))RETURN
 
  IU=UTL_GETUNIT()
  CALL OSD_OPEN(IU,FILE=IPFFNAME,STATUS='OLD')
@@ -1819,7 +1988,7 @@ IRLOOP: DO IR=MAX(1,IROW-1),MIN(NROW,IROW+1)
  SELIDF(1)%X=SELIDF(1)%NODATA
 
  MAXTHREAD=1000; MAXN=MAXTHREAD; ALLOCATE(ISPEC(MAXTHREAD),THREAD(3,MAXTHREAD),YSEL(2,MAXTHREAD))
- 
+
  IMENU=3 !le
 ! IMENU=2 !lt
  DTERM=0
@@ -1840,9 +2009,9 @@ IRLOOP: DO IR=MAX(1,IROW-1),MIN(NROW,IROW+1)
     !## only whenever current waterlevel is less that structure level
     IF(IDF(1)%X(ICOL,IROW).LT.Z)THEN
      CALL IDFEDITTRACE(IDF(1),SELIDF(1),THREAD,YSEL,ISPEC,DTERM,IMENU,MAXTHREAD,MAXN,Z,NTHREAD,1, &
-          X2CRIT=IDF(1)%X(ICOL,IROW)) !-0.1) 
+          X2CRIT=IDF(1)%X(ICOL,IROW)) !-0.1)
     ENDIF
-    DO J=1,NTHREAD 
+    DO J=1,NTHREAD
      ICOL=INT(YSEL(1,J)); IROW=INT(YSEL(2,J))
      IF(ICOL.GT.0.AND.ICOL.LE.IDF(1)%NCOL.AND. &
         IROW.GT.0.AND.IROW.LE.IDF(1)%NROW)THEN
@@ -1861,7 +2030,7 @@ IRLOOP: DO IR=MAX(1,IROW-1),MIN(NROW,IROW+1)
  ENDDO
 
  IF(.NOT.IDFWRITE(IDF(1),IDFFNAME1,1))RETURN
- IF(.NOT.IDFWRITE(IDF(2),IDFFNAME2,1))RETURN 
+ IF(.NOT.IDFWRITE(IDF(2),IDFFNAME2,1))RETURN
 
  CALL IDFDEALLOCATE(IDF,SIZE(IDF))
  CALL POLYGON1DEALLOCATE_SELIDF()
@@ -1925,19 +2094,19 @@ IRLOOP: DO IR=MAX(1,IROW-1),MIN(NROW,IROW+1)
  TYPE(IDFOBJ),INTENT(IN) :: IDF
  INTEGER,INTENT(INOUT) :: NTHREAD
  INTEGER,INTENT(IN) :: MAXTHREAD
- INTEGER(KIND=2),DIMENSION(2,MAXTHREAD) :: YSEL 
+ INTEGER(KIND=2),DIMENSION(2,MAXTHREAD) :: YSEL
  REAL :: OR,X,Y,DXY
  INTEGER :: ICOL,IROW
 
- DXY=0.5*(IDF%DX+IDF%DY) 
- DXY=1.0*(IDF%DX+IDF%DY) 
-  
+ DXY=0.5*(IDF%DX+IDF%DY)
+ DXY=1.0*(IDF%DX+IDF%DY)
+
  !## block correct side of structure
  OR=90.0
  DO
   OR=OR+5.0; IF(OR.GT.270.0)EXIT
-  X=XC-COS((ORIENT-OR)/GRAD)*DXY 
-  Y=YC-SIN((ORIENT-OR)/GRAD)*DXY 
+  X=XC-COS((ORIENT-OR)/GRAD)*DXY
+  Y=YC-SIN((ORIENT-OR)/GRAD)*DXY
   CALL IDFIROWICOL(IDF,IROW,ICOL,X,Y)
   IF(IROW.GT.0.AND.ICOL.GT.0)THEN
    !## been there ... artificially
@@ -1980,36 +2149,47 @@ IRLOOP: DO IR=MAX(1,IROW-1),MIN(NROW,IROW+1)
 
  !###====================================================================
  SUBROUTINE ISG2GRIDGETDATA(SDATE,EDATE,TTIME,QSORT,XNR,NITEMS,RVAL, &
-                            NR,IREF,ISS,ITYPE,NODATA) 
+                            NR,IREF,ISS,ITYPE,NDATA)
  !###====================================================================
  IMPLICIT NONE
- REAL,INTENT(IN) :: NODATA
+ REAL,INTENT(IN),DIMENSION(NITEMS) :: NDATA
  INTEGER,INTENT(IN) :: SDATE,EDATE,TTIME,NITEMS,NR,IREF,ISS,ITYPE
  REAL,INTENT(INOUT),DIMENSION(TTIME,NITEMS) :: QSORT
  REAL,DIMENSION(NITEMS),INTENT(OUT) :: XNR
  REAL,DIMENSION(NITEMS),INTENT(INOUT) :: RVAL
- INTEGER :: IR,N,I,J,I1,I2,IDATE,NAJ,IREC,NDATE 
- 
+ INTEGER :: IR,N,I,J,I1,I2,IDATE,NAJ,IREC,NDATE
+
  IREC=IREF-1
 
  IF(NR.LE.0)RETURN
 
  IF(ISS.EQ.1)QSORT=0.0
- IF(ISS.EQ.2)QSORT=NODATA 
+ IF(ISS.EQ.2)THEN; DO I=1,TTIME; DO J=1,NITEMS; QSORT(I,J)=NDATA(J); ENDDO; ENDDO; ENDIF
  I1   = 1
- 
+
  XNR=0.0
  DO IR=1,NR
-  
+
   IREC=IREC+1
 
   IF(ITYPE.EQ.1)THEN
-   IDATE  =DATISD(IREC)%IDATE
-   RVAL(1)=DATISD(IREC)%WLVL
-   RVAL(2)=DATISD(IREC)%BTML
-   RVAL(3)=DATISD(IREC)%RESIS
-   RVAL(4)=DATISD(IREC)%INFF
-!   IF(NITEMS.GT.8)RVAL(5)=DATISD(IREC)%WL_STW
+   IF(ISFR.EQ.0)THEN
+    IDATE  =DATISD(IREC)%IDATE
+    RVAL(1)=DATISD(IREC)%WLVL
+    RVAL(2)=DATISD(IREC)%BTML
+    RVAL(3)=DATISD(IREC)%RESIS
+    RVAL(4)=DATISD(IREC)%INFF
+   ELSEIF(ISFR.EQ.1)THEN
+    IDATE  =DATISD(IREC)%IDATE
+    RVAL(1)=DATISD(IREC)%WLVL
+    RVAL(2)=DATISD(IREC)%BTML
+!    RVAL(2)=DATISD(IREC)%BTML
+!    RVAL(2)=DATISD(IREC)%BTML
+!    RVAL(2)=DATISD(IREC)%BTML
+!    RVAL(2)=DATISD(IREC)%BTML
+!    RVAL(2)=DATISD(IREC)%BTML
+!    RVAL(2)=DATISD(IREC)%BTML
+   ENDIF
   ELSEIF(ITYPE.EQ.-1)THEN
    IDATE  =DATIST(IREC)%IDATE
    RVAL(1)=DATIST(IREC)%WLVL_UP
@@ -2020,7 +2200,7 @@ IRLOOP: DO IR=MAX(1,IROW-1),MIN(NROW,IROW+1)
 
   !## don't bother for steady-state, take the mean!
   IF(ISS.EQ.1)THEN
-   DO I=1,NITEMS; IF(RVAL(I).NE.NODATA)THEN; QSORT(1,I)=QSORT(1,I)+RVAL(I); XNR(I)=XNR(I)+1.0; ENDIF; ENDDO
+   DO I=1,NITEMS; IF(RVAL(I).NE.NDATA(I))THEN; QSORT(1,I)=QSORT(1,I)+RVAL(I); XNR(I)=XNR(I)+1.0; ENDIF; ENDDO
   !## transient simulation
   ELSEIF(ISS.EQ.2)THEN
 
@@ -2049,12 +2229,12 @@ IRLOOP: DO IR=MAX(1,IROW-1),MIN(NROW,IROW+1)
       QSORT(MAX(1,I1):I2,I)=RVAL(I)
      END DO
     ENDIF
-    
-    I1=I2+1 
+
+    I1=I2+1
 
    ENDIF
 
-  ENDIF !## ELSEIF(ISS.EQ.2)THEN
+  ENDIF
 
  END DO
 
@@ -2064,7 +2244,7 @@ IRLOOP: DO IR=MAX(1,IROW-1),MIN(NROW,IROW+1)
    IF(XNR(I).GT.0.0)THEN
     RVAL(I)=QSORT(1,I)/REAL(XNR(I))
    ELSE
-    RVAL(I)=NODATA
+    RVAL(I)=NDATA(I)
    ENDIF
   ENDDO
  !## take the mean (better than median)
@@ -2074,7 +2254,7 @@ IRLOOP: DO IR=MAX(1,IROW-1),MIN(NROW,IROW+1)
    DO I=1,NITEMS
     XNR(I)=0.0; RVAL(I)=0.0
     DO J=1,TTIME
-     IF(QSORT(J,I).NE.NODATA)THEN
+     IF(QSORT(J,I).NE.NDATA(I))THEN
       RVAL(I)=RVAL(I)+QSORT(J,I)
       XNR(I) =XNR(I)+1.0
      ENDIF
@@ -2082,13 +2262,13 @@ IRLOOP: DO IR=MAX(1,IROW-1),MIN(NROW,IROW+1)
     IF(XNR(I).GT.0.0)THEN
      RVAL(I)=RVAL(I)/XNR(I)
     ELSE
-     RVAL(I)=NODATA
+     RVAL(I)=NDATA(I)
     ENDIF
-   ENDDO 
+   ENDDO
   ELSEIF(IAVERAGE.EQ.2)THEN
    !## median - exclude nodata
    DO I=1,NITEMS
-    CALL UTL_GETMED(QSORT(:,I),TTIME,NODATA,(/50.0/),1,NAJ,RVAL(I))
+    CALL UTL_GETMED(QSORT(:,I),TTIME,NDATA(I),(/50.0/),1,NAJ,RVAL(I))
    ENDDO
   ENDIF
  ENDIF
@@ -2134,7 +2314,7 @@ IRLOOP: DO IR=MAX(1,IROW-1),MIN(NROW,IROW+1)
  END DO
  !## cross-section not high enough left
  IF(X1.EQ.DISTANCE(N))X1=DISTANCE(1)
- 
+
  !## find right-x-coordinate - upwards direction
  X2=DISTANCE(1)
  DO I=N-1,1,-1
@@ -2153,7 +2333,7 @@ IRLOOP: DO IR=MAX(1,IROW-1),MIN(NROW,IROW+1)
  END DO
  !## cross-section not high enough right
  IF(X2.EQ.DISTANCE(1))X2=DISTANCE(N)
- 
+
  !## proces wetted perimeter for 'in-between' sections
  DO I=1,N-1
   IF(BOTTOM(I).LT.WPCOR.AND.BOTTOM(I+1).LT.WPCOR)THEN
@@ -2198,7 +2378,7 @@ IRLOOP: DO IR=MAX(1,IROW-1),MIN(NROW,IROW+1)
  REAL :: DCL,DCR,D
 
  JCRS=0
- 
+
  IF(NCRS.EQ.1)THEN; JCRS=1; RETURN; ENDIF
 
  IC1 =0  !cross-section left
@@ -2261,8 +2441,7 @@ IRLOOP: DO IR=MAX(1,IROW-1),MIN(NROW,IROW+1)
  END SUBROUTINE ISG2GRIDGETQHR
 
  !###====================================================================
- SUBROUTINE ISG2GRIDINCLUDECLCNODES(ITYP,NTYP,NSEG,MAXNSEG,X,Y,DIST,IPOS,&
-                                    ITYPE)
+ SUBROUTINE ISG2GRIDINCLUDECLCNODES(ITYP,NTYP,NSEG,MAXNSEG,X,Y,DIST,IPOS,ITYPE)
  !###====================================================================
  IMPLICIT NONE
  INTEGER,INTENT(IN) :: ITYP,NTYP,MAXNSEG,ITYPE
@@ -2272,62 +2451,68 @@ IRLOOP: DO IR=MAX(1,IROW-1),MIN(NROW,IROW+1)
  INTEGER :: IREC,ISEG,I
  REAL :: DXY,D1,D2,F,XC,YC
 
- !#include calculation nodes as segments!
+ !## include calculation nodes as segments!
  IREC=ITYP-1
- !#determine which nodes possess heads/etc.
+ !## determine which nodes possess heads/etc.
  DO I=1,NTYP
- !#get tot distances
+  !## get tot distances
   CALL ISG2GRIDINTSEGMENT(X,Y,DIST,NSEG,MAXNSEG)
   IREC=IREC+1
   IF(ITYPE.EQ.1) DXY=ISD(IREC)%DIST
   IF(ITYPE.EQ.-1)DXY=IST(IREC)%DIST
 
- !#find position in between segments
+  !## find position in between segments
   DO ISEG=2,NSEG
    IF(DXY.GE.DIST(ISEG-1).AND.DXY.LE.DIST(ISEG))EXIT
   END DO
 
-  !##caused by inaccuracy of comparison of dxy and dist()
+  !## caused by inaccuracy of comparison of dxy and dist()
   ISEG=MIN(ISEG,NSEG)
 
- !#distance current segment
+  !## distance current segment
   D1=DIST(ISEG)-DIST(ISEG-1)
   D2=DXY-DIST(ISEG-1)
   F =0.0
   IF(D1.NE.0.0)F=D2/D1
 
- !#put in extra coordinate
+  !## put in extra coordinate
   IF(F.LE.0.0.AND.ITYPE.EQ.1)THEN
-   IPOS(ISEG-1)=I*ITYPE  !##put data to current node
+   !## put data to current node
+   IPOS(ISEG-1)=I*ITYPE
   ELSEIF(F.GE.1.0.AND.ITYPE.EQ.1)THEN
-   IPOS(ISEG)  =I*ITYPE  !##put data to current node
+   !## put data to current node
+   IPOS(ISEG)  =I*ITYPE
   ELSE
    XC=X(ISEG-1)+((X(ISEG)-X(ISEG-1))*F)
    YC=Y(ISEG-1)+((Y(ISEG)-Y(ISEG-1))*F)
- !##position coordinates in between
+   !## position coordinates in between
    X(ISEG+1:NSEG+1)   =X(ISEG:NSEG)
    Y(ISEG+1:NSEG+1)   =Y(ISEG:NSEG)
    IPOS(ISEG+1:NSEG+1)=IPOS(ISEG:NSEG)
    X(ISEG)            =XC
    Y(ISEG)            =YC
-   NSEG               =NSEG+1     !##increase number of segments
-   IPOS(ISEG)         =I*ITYPE    !##put data to current node
+   !## increase number of segments
+   NSEG               =NSEG+1
+   !## put data to current node
+   IPOS(ISEG)         =I*ITYPE
   ENDIF
 
- !#duplicate point in case of structure
+  !## duplicate point in case of structure
   IF(ITYPE.EQ.-1)THEN
    X(ISEG+1:NSEG+1)   =X(ISEG:NSEG)
    Y(ISEG+1:NSEG+1)   =Y(ISEG:NSEG)
    IPOS(ISEG+1:NSEG+1)=IPOS(ISEG:NSEG)
    X(ISEG)            =XC
    Y(ISEG)            =YC
-   NSEG               =NSEG+1     !##increase number of segments
-   IPOS(ISEG)         =I*ITYPE    !##put data to current node
+   !## increase number of segments
+   NSEG               =NSEG+1
+   !## put data to current node
+   IPOS(ISEG)         =I*ITYPE
   ENDIF
 
  END DO
 
- !#put last ipos() for secerity reasons ... could happen in case of accuray of coordinates
+ !## put last ipos() for security reasons ... could happen in case of accuray of coordinates
  IF(IPOS(NSEG).EQ.0)THEN
 
   DO I=NSEG,1,-1

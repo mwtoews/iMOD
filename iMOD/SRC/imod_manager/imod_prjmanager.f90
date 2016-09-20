@@ -37,8 +37,8 @@ USE MODPLOT, ONLY : MP,MPW
 USE IMOD, ONLY : IDFINIT
 USE MOD_PREF_PAR, ONLY : PREFVAL
 USE DATEVAR
-USE MOD_ISG_GRID, ONLY : ISG2GRID
-USE MOD_ISG_UTL, ONLY : ISGDEAL,ISGREAD !UTL_GETUNITSISG
+USE MOD_ISG_GRID, ONLY : ISG2GRID,ISG2SFR
+USE MOD_ISG_UTL, ONLY : ISGDEAL,ISGREAD
 USE MOD_POLINT, ONLY : POL1LOCATE
 USE MOD_QKSORT
 USE MOD_ASC2IDF_HFB, ONLY : ASC2IDF_HFB
@@ -1621,7 +1621,7 @@ KLOOP: DO K=1,SIZE(TOPICS(JJ)%STRESS(1)%FILES,1)
  IF(ID.EQ.ID_OPEN)THEN
 
   IF(RUNFNAME.EQ.'')THEN
-   FNAME=TRIM(PREFVAL(1))//'\RUNFILES\*.prj'
+   FNAME='' !TRIM(PREFVAL(1))//'\RUNFILES\*.prj'
    IF(.NOT.UTL_WSELECTFILE('iMOD Project File (*.prj)|*.prj|',     &
         LOADDIALOG+MUSTEXIST+PROMPTON+DIRCHANGE+APPENDEXT,FNAME,&
         'Load iMOD Project File'))RETURN
@@ -1638,7 +1638,7 @@ KLOOP: DO K=1,SIZE(TOPICS(JJ)%STRESS(1)%FILES,1)
  ELSEIF(ID.EQ.ID_SAVE)THEN
 
   IF(RUNFNAME.EQ.'')THEN
-   FNAME=TRIM(PREFVAL(1))//'\RUNFILES\*.prj'
+   FNAME='' !TRIM(PREFVAL(1))//'\RUNFILES\*.prj'
    IF(.NOT.UTL_WSELECTFILE('iMOD Project Files (*.prj)|*.prj|',  &
          SAVEDIALOG+PROMPTON+DIRCHANGE+APPENDEXT,FNAME,'Save iMOD Project File'))RETURN
   ELSE
@@ -2048,7 +2048,7 @@ KLOOP: DO K=1,SIZE(TOPICS(JJ)%STRESS(1)%FILES,1)
  IF(ID.EQ.ID_OPENRUN)THEN
 
   IF(RUNFNAME.EQ.'')THEN
-   FNAME=TRIM(PREFVAL(1))//'\RUNFILES\*.run'
+   FNAME='' !TRIM(PREFVAL(1))//'\RUNFILES\*.run'
    IF(.NOT.UTL_WSELECTFILE('iMOD Run File (*.run)|*.run|',     &
         LOADDIALOG+MUSTEXIST+PROMPTON+DIRCHANGE+APPENDEXT,FNAME,&
         'Load iMOD Run File'))RETURN
@@ -2121,6 +2121,7 @@ KLOOP: DO K=1,SIZE(TOPICS(JJ)%STRESS(1)%FILES,1)
  
  MXNLAY=NLAY
  
+ CALL UTL_CREATEDIR(FNAME(1:INDEX(FNAME,'\',.TRUE.)-1))
  IU=UTL_GETUNIT()
  CALL OSD_OPEN(IU,FILE=FNAME,STATUS='REPLACE',ACTION='WRITE,DENYREAD',FORM='FORMATTED')
  IF(IU.EQ.0)RETURN
@@ -3628,8 +3629,8 @@ KLOOP: DO K=1,SIZE(TOPICS(JJ)%STRESS(1)%FILES,1)
       IF(K.NE.1)THEN; SCL_D=0; SCL_U=2; ENDIF
      CASE (28)
       SCL_D=1; SCL_U=2
-     CASE (29) !## isg - nothing to do here
-     
+     CASE (29,30) !## isg - nothing to do here
+
      CASE DEFAULT 
       STOP 'ERROR PMANAGER_SAVEMF2005_PCK'
     END SELECT
@@ -3684,7 +3685,6 @@ KLOOP: DO K=1,SIZE(TOPICS(JJ)%STRESS(1)%FILES,1)
     CASE (21) !## wel
      EXFNAME=TRIM(DIR)//'\'//TRIM(EXT)//'_t'//TRIM(ITOS(IPER))//FEXT(IIDEBUG)
      IF(.NOT.PMANAGER_SAVEMF2005_PCK_ULSTRD(EXFNAME,PCK,NSYS,NTOP,IU,HNOFLOW,(/1/),NP,BND,TOP,BOT,KD,IPER,KPER,ITOPIC))RETURN
-    
     CASE (22) !## drn
      EXFNAME=TRIM(DIR)//'\'//TRIM(EXT)//'_t'//TRIM(ITOS(IPER))//FEXT(IIDEBUG)
      IF(.NOT.PMANAGER_SAVEMF2005_PCK_ULSTRD(EXFNAME,PCK,NSYS,NTOP,IU,HNOFLOW,(/2,1/),NP,BND,TOP,BOT,KD,IPER,KPER,ITOPIC))RETURN
@@ -3733,7 +3733,7 @@ KLOOP: DO K=1,SIZE(TOPICS(JJ)%STRESS(1)%FILES,1)
    END SELECT
 
    SELECT CASE (ITOPIC)
-    CASE (21,22,23,25,27,28,29) !## wel,drn,riv,ghb,chd,olf,isg
+    CASE (21,22,23,25,27,28,29,30) !## wel,drn,riv,ghb,chd,olf,isg,sfr
      !## clean up
      DO K=1,NTOP; DO ISYS=1,NSYS; CALL IDFDEALLOCATEX(PCK(K,ISYS)); ENDDO; ENDDO; DEALLOCATE(PCK)
    END SELECT
@@ -3814,7 +3814,6 @@ KLOOP: DO K=1,SIZE(TOPICS(JJ)%STRESS(1)%FILES,1)
                           ISAVE, &
                           MAXWIDTH, & !#3 maximum widht for computing rivier-width (in case cross-sections are rubbish)
                           IAVERAGE, & !## (1) mean (2) median value
-!                          NISGFILES, &
                           ISGIU, &
                           MAXFILES, &
                           ISGFNAME
@@ -3833,7 +3832,6 @@ KLOOP: DO K=1,SIZE(TOPICS(JJ)%STRESS(1)%FILES,1)
  CHARACTER(LEN=30) :: FRM
  CHARACTER(LEN=52),ALLOCATABLE,DIMENSION(:) :: STRING
  INTEGER :: JU,KU,ILAY,IROW,ICOL,I,J,ITOP,ISYS,NROWIPF,NCOLIPF,IEXT,MP,IOS,IBATCH
- LOGICAL :: LIPF,LISG
  REAL,ALLOCATABLE,DIMENSION(:) :: TLP,KH,TP,BT
  INTEGER(KIND=8) :: ITIME,JTIME
  REAL,PARAMETER :: MINKH=0.0
@@ -3842,12 +3840,6 @@ KLOOP: DO K=1,SIZE(TOPICS(JJ)%STRESS(1)%FILES,1)
  PMANAGER_SAVEMF2005_PCK_ULSTRD=.FALSE.
 
  CALL UTL_CREATEDIR(EXFNAME(:INDEX(EXFNAME,'\',.TRUE.)-1))
- 
- LIPF=.FALSE.; LISG=.FALSE.
- !## wel
- IF(ITOPIC.EQ.21)LIPF=.TRUE.
- !## isg
- IF(ITOPIC.EQ.29)LISG=.TRUE.
   
  !## fill tlp for each modellayer
  ALLOCATE(TLP(NLAY),KH(NLAY),TP(NLAY),BT(NLAY))
@@ -3865,25 +3857,27 @@ KLOOP: DO K=1,SIZE(TOPICS(JJ)%STRESS(1)%FILES,1)
   EDATE=SDATE+MAX(1,INT(SIM(IPER)%DELT))
  ENDIF
  
- IF(LISG)THEN
-  XMIN=BND(1)%XMIN; YMIN=BND(1)%YMIN
-  XMAX=BND(1)%XMAX; YMAX=BND(1)%YMAX
-  ISS=2; IF(SDATE.EQ.0.AND.EDATE.EQ.0)ISS=1
-  IDIM=0
-  CS=BND(1)%DX !## cellsize
-  MINDEPTH=0.1
-  WDEPTH=0.0
-  ICDIST=1     !## compute influence of structures
-  ISIMGRO=0    !## no simgro
-  IEXPORT=1    !## modflow river files
-  ROOT=EXFNAME(1:INDEX(EXFNAME,'\',.TRUE.)-1)  !## output folder
-  POSTFIX=''
-  NODATA=-999.99
-  ISAVE=1
-  MAXWIDTH=1000.0
-  IAVERAGE=1
-  IBATCH=0
- ENDIF
+ !## set global variable for isg-gridding
+ SELECT CASE (ITOPIC)
+  CASE (29,30)
+   XMIN=BND(1)%XMIN; YMIN=BND(1)%YMIN
+   XMAX=BND(1)%XMAX; YMAX=BND(1)%YMAX
+   ISS=2; IF(SDATE.EQ.0.AND.EDATE.EQ.0)ISS=1
+   IDIM=0
+   CS=BND(1)%DX !## cellsize
+   MINDEPTH=0.1
+   WDEPTH=0.0
+   ICDIST=1     !## compute influence of structures
+   ISIMGRO=0    !## no simgro
+   IEXPORT=1    !## modflow river files
+   ROOT=EXFNAME(1:INDEX(EXFNAME,'\',.TRUE.)-1)  !## output folder
+   POSTFIX=''
+   NODATA=-999.99
+   ISAVE=1
+   MAXWIDTH=1000.0
+   IAVERAGE=1
+   IBATCH=0
+ END SELECT
  
  IF(TRIM(EXFNAME(INDEX(EXFNAME,'.',.TRUE.)+1:)).EQ.'ASC')THEN
 
@@ -3915,161 +3909,163 @@ KLOOP: DO K=1,SIZE(TOPICS(JJ)%STRESS(1)%FILES,1)
    SFNAME=TOPICS(ITOPIC)%STRESS(KPER)%FILES(1,ISYS)%FNAME
    
    !## open isg file
-   IF(LISG)THEN
-
-    !## read complete ISG file
-    CALL ISGREAD((/SFNAME/),IBATCH)
-
-    !## export isg to riv package
-    ILAY=PCK(1,ISYS)%ILAY
-    !## translate again to idate as it will be convered to jdate in next subroutine
-    SDATE=UTL_JDATETOIDATE(SDATE); EDATE=UTL_JDATETOIDATE(EDATE)-1  !<- edate is equal to sdate if one day is meant
-    IF(.NOT.ISG2GRID(POSTFIX,BND(1)%NROW,BND(1)%NCOL,NLAY,ILAY,TOP,BOT,IBATCH,MP,JU))EXIT
+   SELECT CASE (ITOPIC)
     
-   !## open sfr file
-   ELSEIF(LSFR)THEN
+    !## isg
+    CASE (29) 
 
-    !## read complete ISG file
-    CALL ISGREAD((/SFNAME/),IBATCH)
+     !## read complete ISG file
+     CALL ISGREAD((/SFNAME/),IBATCH)
 
-!    !## export isg to riv package
-!    ILAY=PCK(1,ISYS)%ILAY
-!    !## translate again to idate as it will be convered to jdate in next subroutine
-!    SDATE=UTL_JDATETOIDATE(SDATE); EDATE=UTL_JDATETOIDATE(EDATE)-1  !<- edate is equal to sdate if one day is meant
-!    IF(.NOT.ISG2GRID(POSTFIX,BND(1)%NROW,BND(1)%NCOL,NLAY,ILAY,TOP,BOT,IBATCH,MP,JU))EXIT
-
-   !## open ipf file
-   ELSEIF(LIPF)THEN
-
-    ALLOCATE(STRING(5))
-    WRITE(FRM,'(A9,I2.2,A14)') '(3(I5,1X),',1,'(F15.7,1X),I5)'
-
-    CDIR=PCK(1,ISYS)%FNAME(:INDEX(PCK(1,ISYS)%FNAME,'\',.TRUE.)-1)
-    KU=UTL_GETUNIT(); CALL OSD_OPEN(KU,PCK(1,ISYS)%FNAME,STATUS='OLD',ACTION='READ',FORM='FORMATTED'); IF(KU.EQ.0)RETURN
-    READ(KU,*) NROWIPF; READ(KU,*) NCOLIPF
-    DO I=1,NCOLIPF; READ(KU,*); ENDDO; READ(KU,*) IEXT,EXT
-    DO I=1,NROWIPF
-
+     !## export isg to riv package
      ILAY=PCK(1,ISYS)%ILAY
-     !## assign to several layer
-     IF(ILAY.EQ.0)THEN
-      READ(KU,*,IOSTAT=IOS) (STRING(J),J=1,5)
-      IF(IOS.EQ.0)THEN
-       READ(STRING(1),*,IOSTAT=IOS) X
-       READ(STRING(2),*,IOSTAT=IOS) Y
-      ENDIF
-
-      !## get correct cell-indices
-      CALL IDFIROWICOL(BND(1),IROW,ICOL,X,Y)
-      !## outside current model
-      IF(IROW.EQ.0.OR.ICOL.EQ.0)CYCLE
-      
-      IF(IEXT.EQ.0)READ(STRING(3),*,IOSTAT=IOS) Q
-      IF(IEXT.EQ.3)READ(STRING(3),*,IOSTAT=IOS) ID
-      READ(STRING(4),*,IOSTAT=IOS) Z1
-      READ(STRING(5),*,IOSTAT=IOS) Z2
-
-      !## get filter fractions
-      DO ILAY=1,NLAY; TP(ILAY)=TOP(ILAY)%X(ICOL,IROW); ENDDO
-      DO ILAY=1,NLAY; BT(ILAY)=BOT(ILAY)%X(ICOL,IROW); ENDDO
-      DO ILAY=1,NLAY; KH(ILAY)=KD (ILAY)%X(ICOL,IROW); ENDDO  
-      DO ILAY=1,NLAY; KH(ILAY)=KH(ILAY)/(TP(ILAY)-BT(ILAY)); ENDDO
-      CALL UTL_PCK_GETTLP(NLAY,TLP,KH,TP,BT,Z1,Z2,MINKH,ICLAY) 
-
-      DO ILAY=1,NLAY; IF(BND(ILAY)%X(ICOL,IROW).LE.0)TLP(ILAY)=0; ENDDO
-
-     !## find uppermost layer
-     ELSE
-
-      READ(KU,*,IOSTAT=IOS) (STRING(J),J=1,3)
-      IF(IOS.EQ.0)THEN
-       READ(STRING(1),*,IOSTAT=IOS) X
-       READ(STRING(2),*,IOSTAT=IOS) Y
-      ENDIF
-
-      !## get correct cell-indices
-      CALL IDFIROWICOL(BND(1),IROW,ICOL,X,Y)
-      !## outside current model
-      IF(IROW.EQ.0.OR.ICOL.EQ.0)CYCLE
-
-      IF(IEXT.EQ.0)READ(STRING(3),*,IOSTAT=IOS) Q
-      IF(IEXT.EQ.3)READ(STRING(3),*,IOSTAT=IOS) ID
-
-      IF(ILAY.EQ.-1)THEN; DO ILAY=1,NLAY; IF(BND(ILAY)%X(ICOL,IROW).GT.0)EXIT; ENDDO; ENDIF
-      !## outside current model dimensions, set ilay=0
-      IF(ILAY.GT.NLAY)ILAY=0; TLP=0.0; IF(ILAY.NE.0)TLP(ILAY)=1.0
-
-     ENDIF
-     IF(IOS.NE.0)THEN
-      CALL WMESSAGEBOX(OKONLY,EXCLAMATIONICON,COMMONOK,'Error reading IPF file'//CHAR(13)//TRIM(PCK(1,ISYS)%FNAME)//CHAR(13)// &
-         'Linenumber '//TRIM(ITOS(I)),'Error')
-      CLOSE(JU); CLOSE(KU); RETURN
-     ENDIF     
-     
-     IF(IEXT.GT.0)THEN
-      IF(.NOT.UTL_PCK_READTXT(2,ITIME,JTIME,Q,TRIM(CDIR)//'\'//TRIM(ID)//'.'//TRIM(EXT)))THEN
-       CLOSE(JU); CLOSE(KU); RETURN
-      ENDIF
-     ENDIF
-         
-     !## use factor/impulse
-     Q=Q*FCT  !## use factor
-     Q=Q+IMP  !## use impulse     
-
-     IF(Q.NE.0.0)THEN
-      DO ILAY=1,NLAY
-       IF(TLP(ILAY).GT.0.0)THEN
-        WRITE(JU,FRM) ILAY,IROW,ICOL,Q*TLP(ILAY),ISYS
-        MP=MP+1
-       ENDIF
-      ENDDO
-     ENDIF
-     
-    ENDDO
-    DEALLOCATE(STRING); CLOSE(KU)
+     !## translate again to idate as it will be convered to jdate in next subroutine
+     SDATE=UTL_JDATETOIDATE(SDATE); EDATE=UTL_JDATETOIDATE(EDATE)-1  !<- edate is equal to sdate if one day is meant
+     IF(.NOT.ISG2GRID(POSTFIX,BND(1)%NROW,BND(1)%NCOL,NLAY,ILAY,TOP,BOT,IBATCH,MP,JU))EXIT
     
-   ELSE 
+    !## open sfr file
+    CASE (30) !ELSEIF(LSFR)THEN
 
-    TLP=0.0; IF(PCK(1,ISYS)%ILAY.NE.0)TLP(PCK(1,ISYS)%ILAY)=1.0
+     !## read complete ISG file
+     CALL ISGREAD((/SFNAME/),IBATCH)
 
-    !## chd/olf
-    IF(ITOPIC.EQ.28.OR.ITOPIC.EQ.27)THEN
-     WRITE(FRM,'(A10,I2.2,A14)') '(3(I5,1X),',NTOP+1,'(F15.7,1X),I5)'
-    ELSE
-     WRITE(FRM,'(A10,I2.2,A14)') '(3(I5,1X),',NTOP,'(F15.7,1X),I5)'
-    ENDIF
-    DO IROW=1,PCK(1,1)%NROW; DO ICOL=1,PCK(1,1)%NCOL
-     DO ITOP=1,NTOP; IF(PCK(JTOP(ITOP),ISYS)%X(ICOL,IROW).EQ.HNOFLOW)EXIT; ENDDO
-     IF(ITOP.LE.NTOP)CYCLE
-     
-     !## assign to several layer
-     IF(PCK(1,ISYS)%ILAY.EQ.0)THEN
-      !## get filter fractions
-      DO ILAY=1,NLAY; TP(ILAY)=TOP(ILAY)%X(ICOL,IROW); ENDDO
-      DO ILAY=1,NLAY; BT(ILAY)=BOT(ILAY)%X(ICOL,IROW); ENDDO
-      DO ILAY=1,NLAY; KH(ILAY)=KD (ILAY)%X(ICOL,IROW); ENDDO  
-      DO ILAY=1,NLAY; KH(ILAY)=KH(ILAY)/(TP(ILAY)-BT(ILAY)); ENDDO
-      SELECT CASE (ITOPIC)
-       CASE (22) !## drn
-        Z1=PCK(2,ISYS)%X(ICOL,IROW); Z2=Z1
-       CASE (23) !## riv
-        Z1=PCK(2,ISYS)%X(ICOL,IROW); Z2=PCK(3,ISYS)%X(ICOL,IROW)
-       CASE (27) !## olf
-        Z1=PCK(2,ISYS)%X(ICOL,IROW); Z2=Z1
-       CASE DEFAULT
-        STOP 'not yet defined!'
-      END SELECT
-      CALL UTL_PCK_GETTLP(NLAY,TLP,KH,TP,BT,Z1,Z2,MINKH,ICLAY) 
-      DO ILAY=1,NLAY; IF(BND(ILAY)%X(ICOL,IROW).LE.0)TLP(ILAY)=0; ENDDO
+     !## export isg to riv package
+     ILAY=PCK(1,ISYS)%ILAY
+     !## translate again to idate as it will be convered to jdate in next subroutine
+     SDATE=UTL_JDATETOIDATE(SDATE); EDATE=UTL_JDATETOIDATE(EDATE)-1  !<- edate is equal to sdate if one day is meant
+     IF(.NOT.ISG2SFR(BND(1)%NROW,BND(1)%NCOL,NLAY,ILAY,TOP,BOT,IPER,MP,JU))EXIT
+    !## wel
+    CASE (21)
 
-     !## find uppermost layer
-     ELSE
-      IF(PCK(1,ISYS)%ILAY.EQ.-1)THEN
-       DO ILAY=1,NLAY; IF(BND(ILAY)%X(ICOL,IROW).GT.0)EXIT; ENDDO
+     ALLOCATE(STRING(5))
+     WRITE(FRM,'(A9,I2.2,A14)') '(3(I5,1X),',1,'(F15.7,1X),I5)'
+
+     CDIR=PCK(1,ISYS)%FNAME(:INDEX(PCK(1,ISYS)%FNAME,'\',.TRUE.)-1)
+     KU=UTL_GETUNIT(); CALL OSD_OPEN(KU,PCK(1,ISYS)%FNAME,STATUS='OLD',ACTION='READ',FORM='FORMATTED'); IF(KU.EQ.0)RETURN
+     READ(KU,*) NROWIPF; READ(KU,*) NCOLIPF
+     DO I=1,NCOLIPF; READ(KU,*); ENDDO; READ(KU,*) IEXT,EXT
+     DO I=1,NROWIPF
+
+      ILAY=PCK(1,ISYS)%ILAY
+      !## assign to several layer
+      IF(ILAY.EQ.0)THEN
+       READ(KU,*,IOSTAT=IOS) (STRING(J),J=1,5)
+       IF(IOS.EQ.0)THEN
+        READ(STRING(1),*,IOSTAT=IOS) X
+        READ(STRING(2),*,IOSTAT=IOS) Y
+       ENDIF
+
+       !## get correct cell-indices
+       CALL IDFIROWICOL(BND(1),IROW,ICOL,X,Y)
+       !## outside current model
+       IF(IROW.EQ.0.OR.ICOL.EQ.0)CYCLE
+      
+       IF(IEXT.EQ.0)READ(STRING(3),*,IOSTAT=IOS) Q
+       IF(IEXT.EQ.3)READ(STRING(3),*,IOSTAT=IOS) ID
+       READ(STRING(4),*,IOSTAT=IOS) Z1
+       READ(STRING(5),*,IOSTAT=IOS) Z2
+
+       !## get filter fractions
+       DO ILAY=1,NLAY; TP(ILAY)=TOP(ILAY)%X(ICOL,IROW); ENDDO
+       DO ILAY=1,NLAY; BT(ILAY)=BOT(ILAY)%X(ICOL,IROW); ENDDO
+       DO ILAY=1,NLAY; KH(ILAY)=KD (ILAY)%X(ICOL,IROW); ENDDO  
+       DO ILAY=1,NLAY; KH(ILAY)=KH(ILAY)/(TP(ILAY)-BT(ILAY)); ENDDO
+       CALL UTL_PCK_GETTLP(NLAY,TLP,KH,TP,BT,Z1,Z2,MINKH,ICLAY) 
+
+       DO ILAY=1,NLAY; IF(BND(ILAY)%X(ICOL,IROW).LE.0)TLP(ILAY)=0; ENDDO
+
+      !## find uppermost layer
+      ELSE
+
+       READ(KU,*,IOSTAT=IOS) (STRING(J),J=1,3)
+       IF(IOS.EQ.0)THEN
+        READ(STRING(1),*,IOSTAT=IOS) X
+        READ(STRING(2),*,IOSTAT=IOS) Y
+       ENDIF
+
+       !## get correct cell-indices
+       CALL IDFIROWICOL(BND(1),IROW,ICOL,X,Y)
+       !## outside current model
+       IF(IROW.EQ.0.OR.ICOL.EQ.0)CYCLE
+
+       IF(IEXT.EQ.0)READ(STRING(3),*,IOSTAT=IOS) Q
+       IF(IEXT.EQ.3)READ(STRING(3),*,IOSTAT=IOS) ID
+
+       IF(ILAY.EQ.-1)THEN; DO ILAY=1,NLAY; IF(BND(ILAY)%X(ICOL,IROW).GT.0)EXIT; ENDDO; ENDIF
        !## outside current model dimensions, set ilay=0
-       IF(ILAY.GT.NLAY)ILAY=0;
+       IF(ILAY.GT.NLAY)ILAY=0; TLP=0.0; IF(ILAY.NE.0)TLP(ILAY)=1.0
+
       ENDIF
+      IF(IOS.NE.0)THEN
+       CALL WMESSAGEBOX(OKONLY,EXCLAMATIONICON,COMMONOK,'Error reading IPF file'//CHAR(13)//TRIM(PCK(1,ISYS)%FNAME)//CHAR(13)// &
+          'Linenumber '//TRIM(ITOS(I)),'Error')
+       CLOSE(JU); CLOSE(KU); RETURN
+      ENDIF     
+     
+      IF(IEXT.GT.0)THEN
+       IF(.NOT.UTL_PCK_READTXT(2,ITIME,JTIME,Q,TRIM(CDIR)//'\'//TRIM(ID)//'.'//TRIM(EXT)))THEN
+        CLOSE(JU); CLOSE(KU); RETURN
+       ENDIF
+      ENDIF
+         
+      !## use factor/impulse
+      Q=Q*FCT  !## use factor
+      Q=Q+IMP  !## use impulse     
+
+      IF(Q.NE.0.0)THEN
+       DO ILAY=1,NLAY
+        IF(TLP(ILAY).GT.0.0)THEN
+         WRITE(JU,FRM) ILAY,IROW,ICOL,Q*TLP(ILAY),ISYS
+         MP=MP+1
+        ENDIF
+       ENDDO
+      ENDIF
+     
+     ENDDO
+     DEALLOCATE(STRING); CLOSE(KU)
+    
+    CASE DEFAULT !ELSE 
+
+     TLP=0.0; IF(PCK(1,ISYS)%ILAY.NE.0)TLP(PCK(1,ISYS)%ILAY)=1.0
+
+     !## chd/olf
+     IF(ITOPIC.EQ.28.OR.ITOPIC.EQ.27)THEN
+      WRITE(FRM,'(A10,I2.2,A14)') '(3(I5,1X),',NTOP+1,'(F15.7,1X),I5)'
+     ELSE
+      WRITE(FRM,'(A10,I2.2,A14)') '(3(I5,1X),',NTOP,'(F15.7,1X),I5)'
      ENDIF
+     DO IROW=1,PCK(1,1)%NROW; DO ICOL=1,PCK(1,1)%NCOL
+      DO ITOP=1,NTOP; IF(PCK(JTOP(ITOP),ISYS)%X(ICOL,IROW).EQ.HNOFLOW)EXIT; ENDDO
+      IF(ITOP.LE.NTOP)CYCLE
+      
+      !## assign to several layer
+      IF(PCK(1,ISYS)%ILAY.EQ.0)THEN
+       !## get filter fractions
+       DO ILAY=1,NLAY; TP(ILAY)=TOP(ILAY)%X(ICOL,IROW); ENDDO
+       DO ILAY=1,NLAY; BT(ILAY)=BOT(ILAY)%X(ICOL,IROW); ENDDO
+       DO ILAY=1,NLAY; KH(ILAY)=KD (ILAY)%X(ICOL,IROW); ENDDO  
+       DO ILAY=1,NLAY; KH(ILAY)=KH(ILAY)/(TP(ILAY)-BT(ILAY)); ENDDO
+       SELECT CASE (ITOPIC)
+        CASE (22) !## drn
+         Z1=PCK(2,ISYS)%X(ICOL,IROW); Z2=Z1
+        CASE (23) !## riv
+         Z1=PCK(2,ISYS)%X(ICOL,IROW); Z2=PCK(3,ISYS)%X(ICOL,IROW)
+        CASE (27) !## olf
+         Z1=PCK(2,ISYS)%X(ICOL,IROW); Z2=Z1
+        CASE DEFAULT
+         STOP 'not yet defined!'
+       END SELECT
+       CALL UTL_PCK_GETTLP(NLAY,TLP,KH,TP,BT,Z1,Z2,MINKH,ICLAY) 
+       DO ILAY=1,NLAY; IF(BND(ILAY)%X(ICOL,IROW).LE.0)TLP(ILAY)=0; ENDDO 
+
+      !## find uppermost layer
+      ELSE 
+       IF(PCK(1,ISYS)%ILAY.EQ.-1)THEN
+        DO ILAY=1,NLAY; IF(BND(ILAY)%X(ICOL,IROW).GT.0)EXIT; ENDDO
+        !## outside current model dimensions, set ilay=0
+        IF(ILAY.GT.NLAY)ILAY=0;
+       ENDIF
+      ENDIF
      
 !     !## single entry eq nodata, skip it
 !     LEX=.TRUE.; DO ITOP=1,NTOP      
@@ -4077,49 +4073,50 @@ KLOOP: DO K=1,SIZE(TOPICS(JJ)%STRESS(1)%FILES,1)
 !     ENDDO
 !     IF(.NOT.LEX)CYCLE
 
-     !## correct rivers whenever bottom is higher than stage
-     IF(ITOPIC.EQ.23)PCK(3,ISYS)%X(ICOL,IROW)=MIN(PCK(2,ISYS)%X(ICOL,IROW),PCK(3,ISYS)%X(ICOL,IROW))
+      !## correct rivers whenever bottom is higher than stage
+      IF(ITOPIC.EQ.23)PCK(3,ISYS)%X(ICOL,IROW)=MIN(PCK(2,ISYS)%X(ICOL,IROW),PCK(3,ISYS)%X(ICOL,IROW))
 
-     IF(PCK(1,ISYS)%ILAY.GT.0)THEN
-      !## chd - specify head twice
-      IF(ITOPIC.EQ.28)THEN
-       IF(BND(PCK(1,ISYS)%ILAY)%X(ICOL,IROW).LT.0)THEN
-        WRITE(JU,FRM) PCK(1,ISYS)%ILAY,IROW,ICOL,PCK(JTOP(1),ISYS)%X(ICOL,IROW),PCK(JTOP(1),ISYS)%X(ICOL,IROW),ISYS
-        MP=MP+1
-       ENDIF
-      !## olf
-      ELSEIF(ITOPIC.EQ.27)THEN
-       OLFCOND=(IDFGETAREA(PCK(JTOP(1),ISYS),ICOL,IROW)/COLF)   !## drainage conductance
-       WRITE(JU,FRM) PCK(1,ISYS)%ILAY,IROW,ICOL,PCK(JTOP(1),ISYS)%X(ICOL,IROW),OLFCOND,ISYS
-       MP=MP+1
-      ELSE
-       WRITE(JU,FRM) PCK(1,ISYS)%ILAY,IROW,ICOL,(PCK(JTOP(ITOP),ISYS)%X(ICOL,IROW),ITOP=1,NTOP),ISYS
-       MP=MP+1
-      ENDIF
-     ELSE
-      DO ILAY=1,NLAY
-       !## not put into model layer
-       IF(TLP(ILAY).LE.0.0)CYCLE
+      IF(PCK(1,ISYS)%ILAY.GT.0)THEN
        !## chd - specify head twice
        IF(ITOPIC.EQ.28)THEN
-        IF(BND(ILAY)%X(ICOL,IROW).LT.0)THEN
+        IF(BND(PCK(1,ISYS)%ILAY)%X(ICOL,IROW).LT.0)THEN
          WRITE(JU,FRM) PCK(1,ISYS)%ILAY,IROW,ICOL,PCK(JTOP(1),ISYS)%X(ICOL,IROW),PCK(JTOP(1),ISYS)%X(ICOL,IROW),ISYS
          MP=MP+1
         ENDIF
        !## olf
        ELSEIF(ITOPIC.EQ.27)THEN
         OLFCOND=(IDFGETAREA(PCK(JTOP(1),ISYS),ICOL,IROW)/COLF)   !## drainage conductance
-        WRITE(JU,FRM) PCK(JTOP(1),ISYS)%ILAY,IROW,ICOL,PCK(JTOP(1),ISYS)%X(ICOL,IROW),OLFCOND,ISYS
+        WRITE(JU,FRM) PCK(1,ISYS)%ILAY,IROW,ICOL,PCK(JTOP(1),ISYS)%X(ICOL,IROW),OLFCOND,ISYS
         MP=MP+1
        ELSE
-        WRITE(JU,FRM) PCK(JTOP(1),ISYS)%ILAY,IROW,ICOL,(PCK(JTOP(ITOP),ISYS)%X(ICOL,IROW),ITOP=1,NTOP),ISYS
+        WRITE(JU,FRM) PCK(1,ISYS)%ILAY,IROW,ICOL,(PCK(JTOP(ITOP),ISYS)%X(ICOL,IROW),ITOP=1,NTOP),ISYS
         MP=MP+1
        ENDIF
-      ENDDO 
-     ENDIF
+      ELSE
+       DO ILAY=1,NLAY
+        !## not put into model layer
+        IF(TLP(ILAY).LE.0.0)CYCLE
+        !## chd - specify head twice
+        IF(ITOPIC.EQ.28)THEN
+         IF(BND(ILAY)%X(ICOL,IROW).LT.0)THEN
+          WRITE(JU,FRM) PCK(1,ISYS)%ILAY,IROW,ICOL,PCK(JTOP(1),ISYS)%X(ICOL,IROW),PCK(JTOP(1),ISYS)%X(ICOL,IROW),ISYS
+          MP=MP+1
+         ENDIF
+        !## olf
+        ELSEIF(ITOPIC.EQ.27)THEN
+         OLFCOND=(IDFGETAREA(PCK(JTOP(1),ISYS),ICOL,IROW)/COLF)   !## drainage conductance
+         WRITE(JU,FRM) PCK(JTOP(1),ISYS)%ILAY,IROW,ICOL,PCK(JTOP(1),ISYS)%X(ICOL,IROW),OLFCOND,ISYS
+         MP=MP+1
+        ELSE
+         WRITE(JU,FRM) PCK(JTOP(1),ISYS)%ILAY,IROW,ICOL,(PCK(JTOP(ITOP),ISYS)%X(ICOL,IROW),ITOP=1,NTOP),ISYS
+         MP=MP+1
+        ENDIF
+       ENDDO 
+      ENDIF
 
-    ENDDO; ENDDO
-   ENDIF
+     ENDDO; ENDDO
+   
+   END SELECT
   
   ENDDO
  
@@ -6585,8 +6582,8 @@ KLOOP: DO K=1,SIZE(TOPICS(JJ)%STRESS(1)%FILES,1)
  TOPICS(8)%TNAME ='(KVA) Vertical Anisotropy [LPF]'
  TOPICS(9)%TNAME ='(VCW) Vertical Resistance [LPF]'
  TOPICS(10)%TNAME='(KVV) Vertical Permeability [BCF/LPF]'
- TOPICS(11)%TNAME='(STO) Storage Coefficient [BCF/LPF]'
- TOPICS(12)%TNAME='(SSC) Secundary Storage Coefficient [BCF/LPF]'
+ TOPICS(11)%TNAME='(STO) Primary Storage Coefficient [BCF/LPF]'
+ TOPICS(12)%TNAME='(SSY) Specific Yield [BCF/LPF]'
  TOPICS(13)%TNAME='(PWT) Perched Water Table [-]'
  TOPICS(14)%TNAME='(ANI) Anisotropy [LPF]'
  TOPICS(15)%TNAME='(HFB) Horizontal Flow Boundary [HFB]'
@@ -6700,8 +6697,8 @@ KLOOP: DO K=1,SIZE(TOPICS(JJ)%STRESS(1)%FILES,1)
  TOPICS(9)%SNAME(1) ='Vertical Resistance (IDF)'
  TOPICS(10)%SNAME(1)='Vertical Permeability (IDF)'
  TOPICS(11)%SNAME(1)='Storage Coefficient (IDF)'
- TOPICS(12)%SNAME(1)='Unconfined Storage Coefficient (IDF)'
- TOPICS(12)%SNAME(2)='Confined Storage Coefficient (IDF)'
+ TOPICS(12)%SNAME(1)='Specific Yield / Confined Storage Coef. (IDF)'
+ TOPICS(12)%SNAME(2)='Specific Yield (IDF)'
  TOPICS(13)%SNAME(1)='Layer Identification (IDF)'
  TOPICS(13)%SNAME(2)='Phreatic Storage Coefficient (IDF)'
  TOPICS(13)%SNAME(3)='Top of Aquifer above PWT-layer (IDF)'
