@@ -77,12 +77,10 @@ TYPE ISDOBJ
  REAL :: INFF         !## infiltration factor
  REAL :: WL_STW       !## influenced waterlevel
 
- INTEGER :: ITIME  !## time in hhmmss
+ CHARACTER(LEN=8) :: CTIME !## time in hhmmss
  REAL :: BTML      !## bottom level
  REAL :: THCK      !## thickness of riverbed
  REAL :: HCND      !## permeability of riverbed
- REAL :: WIDTH     !## average width of stream channel
- REAL :: DEPTH     !## average depth of stream channel
  INTEGER :: DWNS   !## downstream segment number
  INTEGER :: UPSG   !## upstream segment number
  INTEGER :: ICLC   !## calculation option
@@ -135,16 +133,16 @@ DATA TFORM/'FORMATTED  ','UNFORMATTED','UNFORMATTED','UNFORMATTED', &
            'UNFORMATTED','UNFORMATTED'/
 
 CHARACTER(LEN=10),DIMENSION(5) :: TATTRIB1
-CHARACTER(LEN=10),DIMENSION(14) :: TATTRIB2
+CHARACTER(LEN=10),DIMENSION(12) :: TATTRIB2
 INTEGER,DIMENSION(5) :: CTATTRIB1
-INTEGER,DIMENSION(14) :: CTATTRIB2
+INTEGER,DIMENSION(12) :: CTATTRIB2
 
 !## items for isd2-file for 1) riv approach and 2) sfr approach
 DATA TATTRIB1/'Date','Waterlevel','Bottomlevel','Resistance','Infilt.fct'/
-DATA TATTRIB2/'Date','Time','Waterlevel','Bottomlvl','Thickness','Conduct.','AvgWidth','Avg.Depth','UpSeg','DownSeg','CalcOpt', &
-              'DivOpt','QInFlow','QRunoff'/
+DATA TATTRIB2/'Date','Time','Waterlevel','Bottomlevel','Thickness','HcFact','IupSeg','IdownSeg','CalcOpt', &
+              'DivOpt','QFlow','Qrunoff'/
 DATA CTATTRIB1/1,2,2,2,2/   !## 1=integer,2=real,3=menu
-DATA CTATTRIB2/1,1,2,2,2,2,2,2,1,1,3,3,2,2/
+DATA CTATTRIB2/1,4,2,2,2,2,1,1,3,3,2,2/
 
 TYPE ISGTYPE
  INTEGER :: ISOURCE,IACT

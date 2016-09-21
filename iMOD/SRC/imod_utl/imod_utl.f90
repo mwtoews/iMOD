@@ -2685,13 +2685,16 @@ CONTAINS
  END FUNCTION UTL_GETCURRENTDATE
 
  !###======================================================================
- INTEGER FUNCTION UTL_GETCURRENTTIME()
+ CHARACTER(LEN=8) FUNCTION UTL_GETCURRENTTIME()
  !###======================================================================
  IMPLICIT NONE
  INTEGER :: IH,IM,IS
- 
+ CHARACTER(LEN=8) :: CTIME
+  
  CALL IOSTIME(IH,IM,IS)
- UTL_GETCURRENTTIME=IH*10000+IM*100+IS
+ WRITE(CTIME,'(3(I2.2,A1))') IH,':',IM,':',IS
+ 
+ UTL_GETCURRENTTIME=TRIM(CTIME)
  
  END FUNCTION UTL_GETCURRENTTIME
 

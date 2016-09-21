@@ -1441,10 +1441,10 @@ CONTAINS
  !## take head for determination model-dimensions
  IF(.NOT.IDFREAD(IDF,HFFNAME(1,1,1),0))RETURN; CLOSE(IDF%IU)
  
-! !## define zoom area for particle tracking - overrule area
-! IDF%XMIN=188000.0; IDF%XMAX=193000.0
-! IDF%YMIN=356000.0; IDF%YMAX=360000.0
-! CALL UTL_IDFSNAPTOGRID(IDF%XMIN,IDF%XMAX,IDF%YMIN,IDF%YMAX,IDF%DX,IDF%NCOL,IDF%NROW)
+ !## define zoom area for particle tracking - overrule area
+ IDF%XMIN=188000.0; IDF%XMAX=193000.0
+ IDF%YMIN=356000.0; IDF%YMAX=360000.0
+ CALL UTL_IDFSNAPTOGRID(IDF%XMIN,IDF%XMAX,IDF%YMIN,IDF%YMAX,IDF%DX,IDF%NCOL,IDF%NROW)
 
  IF(.NOT.TRACECALC_INIT(IBATCH))RETURN
  
@@ -1643,14 +1643,14 @@ CONTAINS
   IF(IMODE(1).GT.0)THEN; CLOSE(IMODE(1)); IMODE(1)=1; ENDIF
   IF(IMODE(2).GT.0)THEN; CLOSE(IMODE(2)); IMODE(2)=1; ENDIF
   
-  STRING='Completed particle tracking. Results are stored within: '//CHAR(13)
-  IF(IMODE(1).GT.0)STRING=TRIM(STRING)//TRIM(IFFFNAME(ISPFNAME))//'.IFF'//CHAR(13)
-  IF(IMODE(2).GT.0)STRING=TRIM(STRING)//TRIM(IFFFNAME(ISPFNAME))//'.IPF'//CHAR(13)
-  STRING=TRIM(STRING)//'and added to the iMOD-manager.'//CHAR(13)//CHAR(13)// &
-    TRIM(ITOS(SP(1)%NPART))//' particles were released out of '//TRIM(ITOS(TPART))//'. '//CHAR(13)//  &
-   'Unreleased particles occured due to inactive/constant head boundary conditions'//CHAR(13)// &
-   'and/or particles positioned above/beneath given thresshold.'//CHAR(13)//&
-    TRIM(ITOS(NCONS))//' inconsequences were removed from top/bottom information!'//CHAR(13)//CHAR(13)// &
+  STRING='Completed particle tracking. Results are stored within:'
+  IF(IMODE(1).GT.0)STRING=TRIM(STRING)//' '//TRIM(IFFFNAME(ISPFNAME))//'.IFF'
+  IF(IMODE(2).GT.0)STRING=TRIM(STRING)//' '//TRIM(IFFFNAME(ISPFNAME))//'.IPF'
+  STRING=TRIM(STRING)//' and added to the iMOD-manager.'// &
+    TRIM(ITOS(SP(1)%NPART))//' particles were released out of '//TRIM(ITOS(TPART))//'. '//  &
+   'Unreleased particles occured due to inactive/constant head boundary conditions '// &
+   'and/or particles positioned above/beneath given thresshold.'// &
+    TRIM(ITOS(NCONS))//' inconsequences were removed from top/bottom information! '// &
     'IMPORTANT: Maximum velocity that occured: '//TRIM(RTOS(MAXVELOCITY,'E',4))//' m/day'
   WRITE(IULOG,'(/A/)') TRIM(STRING)
   IF(IBATCH.EQ.1)WRITE(*,'(A)') TRIM(STRING)
@@ -1990,8 +1990,6 @@ IPFLOOP: DO I=1,SIZE(IPF)
 
  TRACEINITOUTFILES=.FALSE.
 
- I=INDEX(IFFFNAME(ISPFNAME),'.',.TRUE.)-1
- IF(I.LE.0)I=LEN_TRIM(IFFFNAME(ISPFNAME))
  CALL UTL_CREATEDIR(IFFFNAME(ISPFNAME)(:INDEX(IFFFNAME(ISPFNAME),'\',.TRUE.)-1))
 
  I=INDEX(IFFFNAME(ISPFNAME),'.',.TRUE.)-1
@@ -2239,7 +2237,6 @@ IPFLOOP: DO I=1,SIZE(IPF)
  ENDDO
  CALL WSORT(PLIPER(:,1),1,NPER)
  !## artifically extent with one day
- WRITE(*,*) JD0,JD1,JD2
  PLIPER(NPER+1,1)=PLIPER(NPER,1)+(JD2-PLIPER(NPER,1)) !1
  
  TRACEREADRUNFILE=.TRUE.

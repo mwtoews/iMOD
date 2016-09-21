@@ -207,8 +207,8 @@ CONTAINS
 
   IF(I.EQ.4)THEN
    !## depends on type of ISG what size of database is applied
-   IF(ISFR.EQ.0)IRECL=SIZE(TATTRIB1)*4
-   IF(ISFR.EQ.1)IRECL=SIZE(TATTRIB2)*4
+   IF(ISFR.EQ.0)IRECL= SIZE(TATTRIB1)*4
+   IF(ISFR.EQ.1)IRECL=(SIZE(TATTRIB2)-1)*4+8
   ENDIF
   
   J=INDEX(ISGNAME,'.',.TRUE.)-1
@@ -698,10 +698,11 @@ CONTAINS
     READ(ISGIU(4,ISGFILES),REC=IREC+ICF) DATISD(KREC)%IDATE,DATISD(KREC)%WLVL,DATISD(KREC)%BTML, &
                                          DATISD(KREC)%RESIS,DATISD(KREC)%INFF
    ELSEIF(ISFR.EQ.1)THEN
-    READ(ISGIU(4,ISGFILES),REC=IREC+ICF) DATISD(KREC)%IDATE,DATISD(KREC)%ITIME,DATISD(KREC)%WLVL, &   
+    READ(ISGIU(4,ISGFILES),REC=IREC+ICF) DATISD(KREC)%IDATE,DATISD(KREC)%CTIME,DATISD(KREC)%WLVL, &   
                                          DATISD(KREC)%BTML,  &
-                                         DATISD(KREC)%THCK ,DATISD(KREC)%HCND ,DATISD(KREC)%WIDTH,&
-                                         DATISD(KREC)%DEPTH,DATISD(KREC)%DWNS ,DATISD(KREC)%UPSG, &
+                                         DATISD(KREC)%THCK ,DATISD(KREC)%HCND, & !,DATISD(KREC)%WIDTH,&
+!                                         DATISD(KREC)%DEPTH,
+                                         DATISD(KREC)%DWNS ,DATISD(KREC)%UPSG, &
                                          DATISD(KREC)%ICLC ,DATISD(KREC)%IPRI ,DATISD(KREC)%QFLW, &
                                          DATISD(KREC)%QROF
    ENDIF
@@ -1357,8 +1358,8 @@ CONTAINS
   WRITE(ISGIU(2,1),REC=1)  (RECLEN(2) *256)+247  !## segments
   WRITE(ISGIU(3,1),REC=1)  (RECLEN(3) *256)+247  !## isd1
   !## depends on type of ISG what size of database is applied
-  IF(ISFR.EQ.0)IREC=SIZE(TATTRIB1)*4
-  IF(ISFR.EQ.1)IREC=SIZE(TATTRIB2)*4
+  IF(ISFR.EQ.0)IREC= SIZE(TATTRIB1)*4
+  IF(ISFR.EQ.1)IREC=(SIZE(TATTRIB2)-1)*4+8
   WRITE(ISGIU(4,1),REC=1)  (IREC      *256)+247  !## isd2
   WRITE(ISGIU(5,1),REC=1)  (RECLEN(5) *256)+247  !## isc1
   WRITE(ISGIU(6,1),REC=1)  (RECLEN(6) *256)+247  !## isc2
@@ -1397,10 +1398,11 @@ CONTAINS
      WRITE(ISGIU(4,1),REC=JREC+ICF) DATISD(JREC)%IDATE,DATISD(JREC)%WLVL, &
                                     DATISD(JREC)%BTML,DATISD(JREC)%RESIS,DATISD(JREC)%INFF
     ELSEIF(ISFR.EQ.1)THEN
-     WRITE(ISGIU(4,1),REC=JREC+ICF) DATISD(JREC)%IDATE,DATISD(JREC)%ITIME,DATISD(JREC)%WLVL, &
+     WRITE(ISGIU(4,1),REC=JREC+ICF) DATISD(JREC)%IDATE,DATISD(JREC)%CTIME,DATISD(JREC)%WLVL, &
                                     DATISD(JREC)%BTML,  &
-                                    DATISD(JREC)%THCK ,DATISD(JREC)%HCND ,DATISD(JREC)%WIDTH, &
-                                    DATISD(JREC)%DEPTH,DATISD(JREC)%DWNS ,DATISD(JREC)%UPSG,  &
+                                    DATISD(JREC)%THCK ,DATISD(JREC)%HCND , & !DATISD(JREC)%WIDTH, &
+!                                    DATISD(JREC)%DEPTH,
+                                    DATISD(JREC)%DWNS ,DATISD(JREC)%UPSG,  &
                                     DATISD(JREC)%ICLC ,DATISD(JREC)%IPRI ,DATISD(JREC)%QFLW, &
                                     DATISD(JREC)%QROF
     ENDIF
