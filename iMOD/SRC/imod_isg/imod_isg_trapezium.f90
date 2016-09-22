@@ -27,7 +27,6 @@ USE MOD_QKSORT
 
 CONTAINS
 
- !     Last change:  PTM  26 Nov 2010    1:35 pm
  !###====================================================================
  SUBROUTINE ISGCOMPUTETRAPEZIUM(X,Y,XSYM,YSYM,XTRAP,YTRAP,NTRAP,NDIM,N,AORG,ATRAP)
  !###====================================================================
@@ -44,20 +43,11 @@ CONTAINS
  REAL,ALLOCATABLE,DIMENSION(:,:) :: XN,YN
  INTEGER,ALLOCATABLE,DIMENSION(:) :: IPOS
  REAL :: AREA
- !INTEGER :: IU
-
- !IU=UTL_GETUNIT()
- !OPEN(IU,FILE='test.csv',STATUS='unknown')
 
  AORG =0.0
  ATRAP=0.0
 
- !DO I=1,N
- ! WRITE(*,*) I,X(I),Y(I)
- !END DO
- !WRITE(*,*)
-
- !determine number of points, CLIP outside point if they point downwards
+ !## determine number of points, CLIP outside point if they point downwards
  DO I=1,N-1
   IF(Y(I).GT.Y(I+1))EXIT
  END DO
@@ -70,7 +60,7 @@ CONTAINS
 
  NN=I2-I1+1
 
- !##something wrong in profile, probably up-side-down
+ !## something wrong in profile, probably up-side-down
  IF(NN.LE.1)THEN
   N=0
   RETURN
@@ -79,16 +69,9 @@ CONTAINS
  X(1:NN)=X(I1:I2)
  Y(1:NN)=Y(I1:I2)
 
- !DO I=1,NN
- ! WRITE(*,*) I,X(I),Y(I),ndim
- !END DO
- !WRITE(*,*)
-
  AREA=UTL_POLYGON1AREA(X,Y,NN)
- !WRITE(*,*) 'AREA=',AREA
- !WRITE(*,*)
 
- !find lowest point
+ !## find lowest point
  YMIN=MAXVAL(Y(1:NN))
  DO I=1,NN
   IF(Y(I).LT.YMIN)THEN
@@ -97,10 +80,10 @@ CONTAINS
   ENDIF
  END DO
 
- !shift to mid-point
+ !## shift to mid-point
  X(1:NN)=X(1:NN)-X(I1)
 
- !#sort symmetric profile down- and upwards
+ !## sort symmetric profile down- and upwards
  DO
   J=0
   DO I=2,I1
@@ -126,26 +109,15 @@ CONTAINS
   IF(J.EQ.0)EXIT
  ENDDO
 
- !DO I=1,NN
- ! WRITE(IU,*) I,X(I),Y(I)
- !END DO
- !PAUSE
- !WRITE(*,*) I1
-
  ALLOCATE(XN(NDIM,3),YN(NDIM,3),IPOS(NDIM))
 
- !construct two symmetric cross-sections
+ !## construct two symmetric cross-sections
  N1=0
  DO I=1,I1
   N1      =N1+1
   XN(N1,1)=X(I)
   YN(N1,1)=Y(I)
  END DO
-
- !DO I=1,N1
- ! WRITE(*,*) I,XN(I,1),YN(I,1)
- !END DO
- !WRITE(*,*)
 
  N2=0
  DO I=NN,I1,-1
@@ -154,12 +126,7 @@ CONTAINS
   YN(N2,2)=Y(I)
  END DO
 
- !DO I=1,N2
- ! WRITE(*,*) I,XN(I,2),YN(I,2)
- !END DO
- !WRITE(*,*)
-
- !#intersect first symmetric-cross-section
+ !## intersect first symmetric-cross-section
  N3  =0
  IPOS=0
  DO I=1,N1
@@ -173,9 +140,9 @@ CONTAINS
      EXIT
     ENDIF
    ENDIF
- !#intersect
+   !## intersect
    IF(YN(J,2).GT.YN(I,1).AND.YN(J+1,2).LT.YN(I,1))THEN
- !##get line-formulae
+    !## get line-formulae
     XC=ISGGETX(XN(J,2),YN(J,2),XN(J+1,2),YN(J+1,2),YN(I,1))
     N3      = N3+1
     XN(N3,3)=(XN(I,1)+XC)/2.0
@@ -185,13 +152,7 @@ CONTAINS
   END DO
  END DO
 
- !WRITE(*,*) 'INTERSECT FIRST'
- !DO I=1,N3
- ! WRITE(*,*) I,XN(I,3),YN(I,3)
- !END DO
- !WRITE(*,*)
-
- !#intersect second symmetric-cross-section
+ !## intersect second symmetric-cross-section
  IPOS=0
  DO J=1,N2
   DO I=1,N1
@@ -204,9 +165,9 @@ CONTAINS
      EXIT
     ENDIF
    ENDIF
- !#intersect
+   !## intersect
    IF(YN(I,1).GT.YN(J,2).AND.YN(I+1,1).LT.YN(J,2))THEN
- !#get line-formulae
+    !## get line-formulae
     XC=ISGGETX(XN(I,1),YN(I,1),XN(I+1,1),YN(I+1,1),YN(J,2))
     N3      = N3+1
     XN(N3,3)=(XN(J,2)+XC)/2.0
@@ -216,13 +177,7 @@ CONTAINS
   END DO
  END DO
 
- !WRITE(*,*) 'INTERSECT SECOND'
- !DO I=1,N3
- ! WRITE(*,*) I,XN(3,I),YN(3,I)
- !END DO
- !WRITE(*,*)
-
- !#sort sequence
+ !## sort sequence
  CALL UTL_QKSORT2(XN(:,3),YN(:,3),NDIM,N3)
 
  CALL ISGDOUBLES(N3,NDIM,XN,YN)
@@ -237,16 +192,9 @@ CONTAINS
 
  CALL ISGDOUBLES(N3,NDIM,XN,YN)
 
- !DO I=1,N3
- ! WRITE(IU,*) I,XN(I,3),YN(I,3)
- !END DO
- !WRITE(IU,*)
-
  AREA=UTL_POLYGON1AREA(XN(:,3),YN(:,3),N3)
- !WRITE(*,*) 'AREA=',AREA
- !WRITE(*,*)
 
- !#create surfaces for each interval
+ !## create surfaces for each interval
  IMID   =(N3-1)/2+1
  K      = IMID
  YN(K,2)= 0.0
@@ -262,15 +210,10 @@ CONTAINS
   YN(2,1)=YN(I+1,3)
   YN(3,1)=YN(N3-I,3)
   YN(4,1)=YN(N3-I+1,3)
- !#total area for current z-level
+  !## total area for current z-level
   YN(K,2)=UTL_POLYGON1AREA(XN(:,1),YN(:,1),4)
- ! WRITE(*,*) 'AREA=',K,YN(1,1),yn(K,2)
   XN(K,2)=YN(1,1)
  ENDDO
-
- !DO I=IMID,N3
- ! WRITE(*,*) I,XN(I,2),YN(I,2)
- !END DO
 
  ITRAP=0
  NN   =0
@@ -298,45 +241,28 @@ CONTAINS
 
  NTRAP=ITRAP
 
- !DO I=1,NTRAP
- ! DO J=1,4
- !  WRITE(*,*) I,J,XTRAP(J,I),YTRAP(J,I)
- ! END DO
- !END DO
- !PAUSE
-
- !#correction of trapeziums, except first trapezium (of course)
+ !## correction of trapeziums, except first trapezium (of course)
  DO I=2,NTRAP
  !#extend
   A3  =0.0
   XT  =0.0
   XMIN=XTRAP(1,I)
- ! WRITE(*,*) 'minx=',XMIN
 
   DO J=1,I-1
 
- !  DO K=1,4
- !   WRITE(*,*) j,K,XTRAP(K,j),YTRAP(K,j)
- !  ENDDO
-
    XC=ISGGETX(XTRAP(1,J),YTRAP(1,J),XTRAP(4,J),YTRAP(4,J),YTRAP(1,I))
 
- !#surface trapezium previous (original, before extension)
+   !## surface trapezium previous (original, before extension)
    A1=ABS(UTL_POLYGON1AREA(XTRAP(:,J),YTRAP(:,J),4))
-
- !  WRITE(*,*) 'a1(original)=',a1,J
 
    IF(A1.GT.0.0)THEN
 
     XT=XT+XC
- !   WRITE(*,*) 'xt,xc,xmin=',xt,XC,XMIN
 
- !#it is not allowed to oversize maximum width of current profile(s)
+    !## it is not allowed to oversize maximum width of current profile(s)
     IF(XT.LT.XMIN)THEN
      XT        = XT-XC
-     XC        = SUM(XTRAP(1,1:J))-XT !<--- KIEZEN VOOR RECHTHOEKIG PROFIEL!!!???
- !    XC        = XTRAP(1,J)-XT !<--- KIEZEN VOOR RECHTHOEKIG PROFIEL!!!???
- !WRITE(*,*) xt,xc,xtrap(1,j)
+     XC        = SUM(XTRAP(1,1:J))-XT 
      XT        = XT+XC
      DX        = XC
      XTRAP(1,J)= DX
@@ -348,56 +274,37 @@ CONTAINS
      XTRAP(2,J)=-1.0*XTRAP(1,J)
     ENDIF
 
- !#extended cross-section
+    !## extended cross-section
     YTRAP(1,J)= YTRAP(1,I)
     YTRAP(2,J)= YTRAP(1,I)
 
- !   DO K=1,4
- !    WRITE(*,*) j,K,XTRAP(K,j),YTRAP(K,j)
- !   ENDDO
-
- !#area of extended trapezium
+    !## area of extended trapezium
     A2=ABS(UTL_POLYGON1AREA(XTRAP(:,J),YTRAP(:,J),4))
- !   WRITE(*,*) 'a1(extended)=',a2
 
     A3=A3+(A2-A1)
    ENDIF
   ENDDO
 
- !#area current trapezium i
+  !## area current trapezium i
   A1=ABS(UTL_POLYGON1AREA(XTRAP(:,I),YTRAP(:,I),4))
 
- ! WRITE(*,*) 'a1(second original)=',a1
-
- !#net area
+  !## net area
   A2=A1-A3
-
- ! WRITE(*,*) a2,a1,a3
 
   DX=XT-XTRAP(1,I)
 
- !#if net area > 0.0 than add trapezium, otherwise skip it!
+  !## if net area > 0.0 than add trapezium, otherwise skip it!
   IF(A2.GT.0.0.AND.DX.GT.0.0)THEN
 
- !  WRITE(*,*) 'XT=',XT,XTRAP(1,I),DX,A2/2.0
-
- !#new crosssection
+   !## new crosssection
    XTRAP(1,I)= 0.0
    XTRAP(2,I)= DX
    XTRAP(3,I)= 0.0 !to be fitted
    XTRAP(4,I)= 0.0
 
- !  DO K=1,4
- !   WRITE(*,*) i,K,XTRAP(K,I),YTRAP(K,I)
- !  ENDDO
-
    CALL ISGFITPOLYGON(XTRAP(:,I),YTRAP(:,I),4,A2/2.0)
 
- !  DO K=1,4
- !   WRITE(*,*) i,K,XTRAP(K,I),YTRAP(K,I)
- !  ENDDO
-
- !#make sure profile is always less wide on the bottom than on the top!
+   !## make sure profile is always less wide on the bottom than on the top!
    IF(XTRAP(2,I).LT.XTRAP(3,I))THEN
     DX        =(XTRAP(3,I)-XTRAP(2,I))/2.0
     XTRAP(2,I)= DX
@@ -411,11 +318,6 @@ CONTAINS
    YTRAP(:,I)=0.0
   ENDIF
 
- !#total area for current z-level
- !  WRITE(*,*) 'itrap',i,ABS(POLYGONAREA(XTRAP(:,I),YTRAP(:,I),4))
- !  YN(K,2)=POLYGONAREA(XN(:,1),YN(:,1),4)
-
- ! END DO
  ENDDO
 
  A1=0.0
@@ -431,28 +333,14 @@ CONTAINS
  END DO
  NTRAP=K
 
- !WRITE(*,*) AREA,A1,NTRAP
-
  AORG =AREA
  ATRAP=A1
-
- !A1=0.0
- !DO I=1,ITRAP
- ! A1=A1+ABS(POLYGONAREA(XTRAP(:,I),YTRAP(:,I),4))
- ! DO J=1,4
- !  WRITE(IU,*) XTRAP(J,I),YTRAP(J,I)
- ! END DO
- !END DO
-
- !WRITE(*,*) AREA,A1
 
  N        =N3
  XSYM(1:N)=XN(1:N,3)
  YSYM(1:N)=YN(1:N,3)
 
  DEALLOCATE(XN,YN,IPOS)
-
- !CLOSE(IU)
 
  RETURN
  END SUBROUTINE
@@ -475,10 +363,8 @@ CONTAINS
  ELSE
   ISGGETX=(-Y3+B)/(-1.0*RC)
  ENDIF
- !ISGGETX=(-Y3+B)/(-1.0*RC)
 
- RETURN
- END FUNCTION
+ END FUNCTION ISGGETX
 
  !###====================================================================
  SUBROUTINE ISGDOUBLES(N3,NDIM,XN,YN)
@@ -488,11 +374,6 @@ CONTAINS
  INTEGER,INTENT(INOUT) :: N3
  REAL,INTENT(INOUT),DIMENSION(NDIM,3) :: XN,YN
  INTEGER :: J,I,N
-
- !DO I=1,N3
- ! WRITE(*,*) I,XN(I,3),YN(I,3)
- !END DO
- !WRITE(*,*)
 
  N =N3
  N3=0
@@ -508,13 +389,7 @@ CONTAINS
  END DO
  N3=N3+1
 
- !DO I=1,N3
- ! WRITE(*,*) I,XN(I,3),YN(I,3)
- !END DO
- !WRITE(*,*)
-
- RETURN
- END SUBROUTINE
+ END SUBROUTINE ISGDOUBLES
 
  !###====================================================================
  SUBROUTINE ISGFIT(I,J,NN,XTRAP,YTRAP,XN,YN,XA,NDIM)
@@ -532,7 +407,7 @@ CONTAINS
  ENDDO
  AREA=AREA/2.0
 
- !##compute x1
+ !## compute x1
  XTRAP(1)=0.0
  XTRAP(2)=XN(I)
  XTRAP(3)=0.0
@@ -544,8 +419,7 @@ CONTAINS
 
  CALL ISGFITPOLYGON(XTRAP,YTRAP,NDIM,AREA)
 
- RETURN
- END SUBROUTINE
+ END SUBROUTINE ISGFIT
 
  !###====================================================================
  SUBROUTINE ISGFITPOLYGON(X,Y,N,AREA)
@@ -564,22 +438,12 @@ CONTAINS
     0.5*(X(4)*Y(3))
  B= 0.5*Y(4)- &
     0.5*Y(2)
- !WRITE(*,*) A,B
+ 
  X(3)=ABS((AREA-ABS(A))/B)
- !WRITE(*,*) X(3)
-
- !X(5)=X(1)
- !Y(5)=Y(1)
-
- !WRITE(*,*) 'HALVE AREA ',ABS(POLYGONAREA(X,Y,4)),AREA
-
+ 
  X(1)=-1.0*X(2)
  X(4)=-1.0*X(3)
- !X(5)= X(1)
 
- !WRITE(*,*) 'FULL AREA  ',ABS(POLYGONAREA(X,Y,4)),AREA*2.0
-
- RETURN
- END SUBROUTINE
+ END SUBROUTINE ISGFITPOLYGON
 
 END MODULE MOD_ISG_TRAPEZIUM

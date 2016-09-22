@@ -330,7 +330,7 @@ CONTAINS
     DO I=1,N
      DATISC(ISEG+I-1)%DISTANCE=X(I)
      DATISC(ISEG+I-1)%BOTTOM  =X(I+N)
-     DATISC(ISEG+I-1)%KM      =25.0
+     DATISC(ISEG+I-1)%MRC      =25.0
     ENDDO
 
    ENDIF
@@ -370,16 +370,16 @@ CONTAINS
     CALL ISGMEMORYDATISC(N,IPOS,ISEG)
     DATISC(ISEG)%DISTANCE  =-W/2.0
     DATISC(ISEG)%BOTTOM    = 5.0
-    DATISC(ISEG)%KM        =25.0
+    DATISC(ISEG)%MRC        =25.0
     DATISC(ISEG+1)%DISTANCE=-W/2.0
     DATISC(ISEG+1)%BOTTOM  = 0.0
-    DATISC(ISEG+1)%KM      =25.0
+    DATISC(ISEG+1)%MRC      =25.0
     DATISC(ISEG+2)%DISTANCE= W/2.0
     DATISC(ISEG+2)%BOTTOM  = 0.0
-    DATISC(ISEG+2)%KM      =25.0
+    DATISC(ISEG+2)%MRC      =25.0
     DATISC(ISEG+3)%DISTANCE= W/2.0
     DATISC(ISEG+3)%BOTTOM  = 5.0
-    DATISC(ISEG+3)%KM      =25.0
+    DATISC(ISEG+3)%MRC      =25.0
    ENDIF
   ENDDO
 
@@ -470,7 +470,7 @@ CONTAINS
       IF(ZCHK.EQ.0)THEN
        DATISC(ISEG)%DISTANCE= ICROSS(1)%DX
        DATISC(ISEG)%BOTTOM  = ICROSS(1)%DY
-       DATISC(ISEG)%KM      = 0.0 !## empty, not to be used (yet)
+       DATISC(ISEG)%MRC      = 0.0 !## empty, not to be used (yet)
       ELSE
        DATISC(ISEG)%DISTANCE=-ICROSS(1)%DX
        DATISC(ISEG)%BOTTOM  =-ICROSS(1)%DY
@@ -485,10 +485,10 @@ CONTAINS
          CALL IDFGETLOC(ICROSS(1),IROW,ICOL,XC,YC)
          DATISC(ISEG+N)%DISTANCE=XC
          DATISC(ISEG+N)%BOTTOM  =YC
-         DATISC(ISEG+N)%KM      =ICROSS(2)%X(ICOL,IROW)
+         DATISC(ISEG+N)%MRC      =ICROSS(2)%X(ICOL,IROW)
          IF(ZCHK.EQ.1)THEN
           !## store z-threshold
-          IF(N.EQ.1)DATISC(ISEG)%KM=ICROSS(3)%X(ICOL,IROW) !## threshold
+          IF(N.EQ.1)DATISC(ISEG)%MRC=ICROSS(3)%X(ICOL,IROW) !## threshold
           CF=INT(1,1)
           IF(CVAL.EQ.1)THEN
            IF(INT(ICROSS(4)%X(ICOL,IROW)).LE.HUGE(CF))CF=INT(ICROSS(4)%X(ICOL,IROW))
@@ -1399,17 +1399,55 @@ IRLOOP: DO IR=MAX(1,IROW-1),MIN(NROW,IROW+1)
  INTEGER,INTENT(IN) :: NROW,NCOL,NLAY,ILAY,JU,IPER
  INTEGER,INTENT(INOUT) :: NSTREAM
  TYPE(IDFOBJ),DIMENSION(NLAY),INTENT(INOUT) :: TOP,BOT
- INTEGER :: I,II,J,K,TTIME,IROW,ICOL,N,ISEG,JSEG,NSEG,IREF,NDIM,NREACH, &
-       ICALC,OUTSEG,IUPSEG,IPRIOR,NSTRPTS
+ INTEGER :: I,J,K,TTIME,IROW,ICOL,N,ISEG,JSEG,NSEG,IREF,NDIM,NREACH, &
+       ICALC,OUTSEG,IUPSEG,IPRIOR,NSTRPTS,ICRS
  REAL :: DXY,X1,X2,Y1,Y2,QFLOW,QROFF,EVT,PREC,ROUGHCH,ROUGHBK,CDPTH,FDPTH,AQDTH,BWDTH, &
-       HC1FCT,THICKM1,ELEVUP,WIDTH1,DEPTH1,HC2FCT,THICKM2,ELEVDN,WIDTH2,DEPTH2
+       HC1FCT,THICKM1,ELEVUP,WIDTH1,DEPTH1,HC2FCT,THICKM2,ELEVDN,WIDTH2,DEPTH2,WLVLUP,WLVLDN
  REAL,ALLOCATABLE,DIMENSION(:,:) :: QSORT,RVAL
  REAL,ALLOCATABLE,DIMENSION(:) :: XNR,NDATA
+ INTEGER,ALLOCATABLE,DIMENSION(:) :: ISTR
+ REAL,ALLOCATABLE,DIMENSION(:) :: XCRS,ZCRS,KMCRS
  CHARACTER(LEN=512) :: LINE
  
  ISG2SFR=.FALSE.
 
- !## translate cdate in to julian date - for transient simulations only!
+ !## variable used to stored number of reaches per segment
+ IF(ALLOCATED(ISTR))DEALLOCATE(ISTR); ALLOCATE(ISTR(NISG)); ISTR=0
+
+ !## only specify for first tress-period
+ IF(IPER.EQ.1)THEN
+  DO I=1,NISG
+   NSEG=ISG(I)%NSEG; ISEG=ISG(I)%ISEG; JSEG=ISEG+NSEG-1
+   !## start to intersect all segment/segmentpoints to the model-grid
+   ISTR(I)=0
+   DO J=ISEG+1,JSEG
+    !## get coordinates of current reach in segment
+    X1 =ISP(J-1)%X; Y1=ISP(J-1)%Y; X2=ISP(J)%X; Y2=ISP(J)%Y
+    !## distance between two points with information
+    DXY=(X2-X1)**2.0+(Y2-Y1)**2.0; IF(DXY.LE.0.0)CYCLE; DXY=SQRT(DXY)
+    !## intersect line with rectangular-regular-equidistantial-grid
+    N=0; CALL INTERSECT_EQUI(XMIN,XMAX,YMIN,YMAX,CS,CS,X1,X2,Y1,Y2,N,.FALSE.,.TRUE.)
+    !## fill result array
+    DO K=1,N
+     IF(LN(K).LE.0.0)CYCLE
+     ICOL=INT(XA(K)); IROW=INT(YA(K))
+     !## within model-domain
+     IF(ICOL.GE.1.AND.IROW.GE.1.AND.ICOL.LE.NCOL.AND.IROW.LE.NROW)THEN
+      !## increae number of stream reaches
+      ISTR(I)=ISTR(I)+1
+      !## increase number of streams
+      IF(ISTR(I).EQ.1)NSTREAM=NSTREAM+1
+      LINE=TRIM(ITOS(ILAY))//','//TRIM(ITOS(IROW))//','//TRIM(ITOS(ICOL))//','// &
+           TRIM(ITOS(NSTREAM))//','//TRIM(ITOS(ISTR(I)))//','//TRIM(RTOS(LN(K),'F',2))
+      WRITE(JU,'(A)') TRIM(LINE)
+     ENDIF
+    ENDDO
+   ENDDO
+  ENDDO
+ ENDIF
+ NREACH=SUM(ISTR)
+ 
+  !## translate cdate in to julian date - for transient simulations only!
  IF(ISS.EQ.2)THEN
   SDATE=UTL_IDATETOJDATE(SDATE)
   EDATE=UTL_IDATETOJDATE(EDATE)+1
@@ -1418,136 +1456,140 @@ IRLOOP: DO IR=MAX(1,IROW-1),MIN(NROW,IROW+1)
   TTIME=1
  ENDIF
 
- NDIM=10
-
  IF(ALLOCATED(QSORT))DEALLOCATE(QSORT); IF(ALLOCATED(XNR))DEALLOCATE(XNR); IF(ALLOCATED(NDATA))DEALLOCATE(NDATA)
- ALLOCATE(QSORT(TTIME,NDIM),XNR(NDIM),NDATA(NDIM))
+ NDIM=10; ALLOCATE(QSORT(TTIME,NDIM),XNR(NDIM),NDATA(NDIM))
 
- IF(ALLOCATED(RVAL))DEALLOCATE(RVAL)
- ALLOCATE(RVAL(NDIM,2))
+ !## allocate storage for cross-sectional data
+ ALLOCATE(XCRS(NDIM),ZCRS(NDIM),KMCRS(NDIM))
 
- N=2; IF(IPER.EQ.1)N=1
+ !## variable used to store segment information
+ IF(ALLOCATED(RVAL))DEALLOCATE(RVAL); ALLOCATE(RVAL(NDIM,2)); RVAL=0.0
 
- DO II=N,2
-  !## only specify for first tress-period
-  DO I=1,NISG
+ !## write cross-sectional data
+ DO I=1,NISG
+  
+  !## get this information from the cross-sectional data (only one cross-section available)
+  ICRS=ISG(I)%ICRS       !## position in isc that starts cross-section
+  NDIM=ABS(ISC(ICRS)%N)  !## number of cross-sectional data-points
 
-   IF(II.EQ.2)THEN !## read data
-    RVAL=0.0
+  IF(NDIM.GT.SIZE(XCRS))THEN
+   DEALLOCATE(XCRS,ZCRS,KMCRS)
+   ALLOCATE(XCRS(NDIM),ZCRS(NDIM),KMCRS(NDIM))
+  ENDIF
 
-    !## read data for start-point
-    IREF=ISG(I)%ICLC
-    CALL ISG2GRIDGETDATA(SDATE,EDATE,TTIME,QSORT,XNR,NDIM,RVAL(1,1),ISD(IREF)%N,ISD(IREF)%IREF,ISS,1,NDATA)
-    !## read data for end-point
-    IREF=ISG(I)%ICLC+1
-    CALL ISG2GRIDGETDATA(SDATE,EDATE,TTIME,QSORT,XNR,NDIM,RVAL(1,2),ISD(IREF)%N,ISD(IREF)%IREF,ISS,1,NDATA)
-   ENDIF
-
-   NSEG=ISG(I)%NSEG; ISEG=ISG(I)%ISEG; JSEG=ISEG+NSEG-1
-
-   !## start to intersect all segment/segmentpoints to the model-grid
-   NREACH=0
-   DO J=ISEG+1,JSEG
-
-    !## get coordinates of current reach in segment
-    X1 =ISP(J-1)%X; Y1=ISP(J-1)%Y; X2=ISP(J)%X; Y2=ISP(J)%Y
-
-    !## distance between two points with information
-    DXY=(X2-X1)**2.0+(Y2-Y1)**2.0; IF(DXY.LE.0.0)CYCLE
-    DXY=SQRT(DXY)
-
-    !## intersect line with rectangular-regular-equidistantial-grid
-    N=0; CALL INTERSECT_EQUI(XMIN,XMAX,YMIN,YMAX,CS,CS,X1,X2,Y1,Y2,N,.FALSE.,.TRUE.)
-
-    !## fill result array
-    DO K=1,N
-
-     IF(LN(K).LE.0.0)CYCLE
-
-     ICOL=INT(XA(K)); IROW=INT(YA(K))
-     !## within model-domain
-     IF(ICOL.GE.1.AND.IROW.GE.1.AND.ICOL.LE.NCOL.AND.IROW.LE.NROW)THEN
-
-      !## increae number of stream reaches
-      NREACH=NREACH+1
-      !## increase number of streams
-      IF(NREACH.EQ.1)NSTREAM=NSTREAM+1
-      !## fill in for first stressperiod
-      IF(II.EQ.1)THEN 
-       LINE=TRIM(ITOS(ILAY))//','//TRIM(ITOS(IROW))//','//TRIM(ITOS(ICOL))//','// &
-            TRIM(ITOS(NSTREAM))//','//TRIM(ITOS(NREACH))//','//TRIM(RTOS(LN(K),'F',2))
-       WRITE(JU,'(A)') TRIM(LINE)
-!       WRITE(JU,'(5I10,F15.7)') ILAY,IROW,ICOL,NSTREAM,NREACH,LN(K)
-      ELSEIF(II.EQ.2)THEN
-       !ICALC=INT(RVAL()); OUTSEG=INT(RVAL()); IUPSEG=INT(RVAL())
-       ICALC=1
-       IPRIOR=0
-       OUTSEG=1
-       IUPSEG=2
-       QFLOW=0.0
-       QROFF=0.0
-       EVT=0.0
-       PREC=0.0
-       LINE=TRIM(ITOS(NSTREAM))//','//TRIM(ITOS(ICALC))//','//TRIM(ITOS(OUTSEG))//','//TRIM(ITOS(IUPSEG))
-       IF(IUPSEG.GT.0)LINE=TRIM(LINE)//','//TRIM(ITOS(IPRIOR))
-       IF(ICALC.EQ.4)THEN
-        NSTRPTS=0 !## number of discharge flow relationships
-        LINE=TRIM(LINE)//','//TRIM(ITOS(NSTRPTS))
-       ENDIF
-       LINE=TRIM(LINE)//','//TRIM(RTOS(QFLOW,'F',2))//','//TRIM(RTOS(QROFF,'F',2))//','// &
-                             TRIM(RTOS(EVT,'F',2))//','//TRIM(RTOS(PREC,'F',2))
-       IF(ICALC.EQ.1.OR.ICALC.EQ.2)THEN
-        ROUGHCH=25.0
-        LINE=TRIM(LINE)//','//TRIM(RTOS(ROUGHCH,'F',2))
-       ENDIF
-       IF(ICALC.EQ.2)THEN
-        ROUGHBK=25.0
-        LINE=TRIM(LINE)//','//TRIM(RTOS(ROUGHBK,'F',2))
-       ENDIF
-       IF(ICALC.EQ.3)THEN
-        CDPTH=0.0
-        FDPTH=0.0
-        AQDTH=0.0
-        BWDTH=0.0
-        LINE=TRIM(LINE)//','//TRIM(RTOS(CDPTH,'F',2))//','//TRIM(RTOS(FDPTH,'F',2))//','// &
-                              TRIM(RTOS(AQDTH,'F',2))//','//TRIM(RTOS(BWDTH,'F',2))
-       ENDIF
-       WRITE(JU,'(A)') TRIM(LINE)
-       
-       HC1FCT =0.0
-       THICKM1=0.0
-       ELEVUP =0.0
-       WIDTH1 =0.0
-       DEPTH1 =0.0
-       HC2FCT =0.0
-       THICKM2=0.0
-       ELEVDN =0.0
-       WIDTH2 =0.0
-       DEPTH2 =0.0
-       
-       LINE=TRIM(RTOS(HC1FCT,'F',2))//','//TRIM(RTOS(THICKM1,'F',2))//','//TRIM(RTOS(ELEVUP,'F',2))
-       IF(ICALC.LE.1)LINE=TRIM(LINE)//','//TRIM(RTOS(WIDTH1,'F',2))
-       IF(ICALC.EQ.0)LINE=TRIM(LINE)//','//TRIM(RTOS(DEPTH1,'F',2))
-       WRITE(JU,'(A)') TRIM(LINE)
-
-       LINE=TRIM(RTOS(HC2FCT,'F',2))//','//TRIM(RTOS(THICKM2,'F',2))//','//TRIM(RTOS(ELEVDN,'F',2))
-       IF(ICALC.LE.1)LINE=TRIM(LINE)//','//TRIM(RTOS(WIDTH2,'F',2))
-       IF(ICALC.EQ.0)LINE=TRIM(LINE)//','//TRIM(RTOS(DEPTH2,'F',2))
-       WRITE(JU,'(A)') TRIM(LINE)
-
-       !## eight points cross-section
-       IF(ICALC.EQ.2)THEN
-       !##
-       ELSEIF(ICALC.EQ.4)THEN
-       ENDIF
-
-      ENDIF
-
-     ENDIF
-    ENDDO
-
-   ENDDO
+  J=ISC(ICRS)%IREF-1 ; DO K=1,NDIM
+   J=J+1; XCRS(K)=DATISC(J)%DISTANCE; ZCRS(K)=DATISC(J)%BOTTOM; KMCRS(K)=DATISC(J)%MRC
   ENDDO
+
+  RVAL=0.0
+  !## read data for start-point
+  IREF=ISG(I)%ICLC
+  CALL ISG2GRIDGETDATA(SDATE,EDATE,TTIME,QSORT,XNR,SIZE(XNR),RVAL(1,1),ISD(IREF)%N,ISD(IREF)%IREF,ISS,1,NDATA)
+  !## read data for end-point
+  IREF=ISG(I)%ICLC+1
+  CALL ISG2GRIDGETDATA(SDATE,EDATE,TTIME,QSORT,XNR,SIZE(XNR),RVAL(1,2),ISD(IREF)%N,ISD(IREF)%IREF,ISS,1,NDATA)
+
+!    RVAL(1) =DATISD(IREC)%WLVL
+!    RVAL(2) =DATISD(IREC)%BTML
+!    RVAL(3) =DATISD(IREC)%THCK
+!    RVAL(4) =DATISD(IREC)%HCND
+!    RVAL(5) =DATISD(IREC)%DWNS
+!    RVAL(6) =DATISD(IREC)%UPSG
+!    RVAL(7) =DATISD(IREC)%ICLC
+!    RVAL(8) =DATISD(IREC)%IPRI
+!    RVAL(9) =DATISD(IREC)%QFLW
+!    RVAL(10)=DATISD(IREC)%QROF
+
+  WLVLUP =RVAL(1,1); WLVLDN =RVAL(1,2)
+  ELEVUP =RVAL(2,1); ELEVDN =RVAL(2,2)
+  THICKM1=RVAL(3,1); THICKM2=RVAL(3,2)
+  HC1FCT =RVAL(4,1); HC2FCT =RVAL(4,2)
+  ICALC =INT(RVAL(7,1)) !## calculation option streamdepth
+  OUTSEG=INT(RVAL(5,2)) !## downstream segment
+  IUPSEG=INT(RVAL(6,1)) !## upstream segment
+  IPRIOR=INT(RVAL(8,2)) !## dividing option
+  QFLOW =RVAL(9,1)      !## inflow
+  QROFF =RVAL(10,1)     !## runoff flow
+
+  !## corrections for reding out of a menu
+  ICALC=ICALC-1; IPRIOR=IPRIOR-1
+  
+  EVT=0.0
+  PREC=0.0
+  LINE=TRIM(ITOS(NSTREAM))//','//TRIM(ITOS(ICALC))//','//TRIM(ITOS(OUTSEG))//','//TRIM(ITOS(IUPSEG))
+  
+  IF(IUPSEG.GT.0)LINE=TRIM(LINE)//','//TRIM(ITOS(IPRIOR))
+  IF(ICALC.EQ.4)THEN
+  
+!   !## get this information from the cross-sectional data (only one cross-section available)
+!  ICRS=ISG(I)%ICRS       !## position in isc that starts cross-section
+!  NDIM=ABS(ISC(ICRS)%N)  !## number of cross-sectional data-points
+
+   NSTRPTS=0 !## number of discharge flow relationships
+   LINE=TRIM(LINE)//','//TRIM(ITOS(NSTRPTS))
+  ENDIF
+  LINE=TRIM(LINE)//','//TRIM(RTOS(QFLOW,'F',2))//','//TRIM(RTOS(QROFF,'F',2))//','// &
+                        TRIM(RTOS(EVT,'F',2))//','//TRIM(RTOS(PREC,'F',2))
+  !## riverbed mannings coefficient
+  IF(ICALC.EQ.1.OR.ICALC.EQ.2)THEN
+   ROUGHCH=KMCRS(4) 
+   LINE=TRIM(LINE)//','//TRIM(RTOS(ROUGHCH,'F',2))
+  ENDIF
+  !## riverbank mannings coefficient
+  IF(ICALC.EQ.2)THEN
+   ROUGHBK=KMCRS(1) 
+   LINE=TRIM(LINE)//','//TRIM(RTOS(ROUGHBK,'F',2))
+  ENDIF
+  IF(ICALC.EQ.3)THEN
+   CDPTH=0.0
+   FDPTH=0.0
+   AQDTH=0.0
+   BWDTH=0.0
+   LINE=TRIM(LINE)//','//TRIM(RTOS(CDPTH,'F',2))//','//TRIM(RTOS(FDPTH,'F',2))//','// &
+                         TRIM(RTOS(AQDTH,'F',2))//','//TRIM(RTOS(BWDTH,'F',2))
+  ENDIF
+  WRITE(JU,'(A)') TRIM(LINE)
+              
+  WIDTH1 =MAXVAL(XCRS(1:NDIM))-MINVAL(XCRS(1:NDIM))
+  DEPTH1 =MAXVAL(ZCRS(1:NDIM))-MINVAL(ZCRS(1:NDIM))
+  !## identical for up- and downstream - not neccessary for SFR but for now perhaps most optimal choice
+  WIDTH2 =WIDTH1
+  DEPTH2 =DEPTH1
+      
+  LINE=TRIM(RTOS(HC1FCT,'F',2))//','//TRIM(RTOS(THICKM1,'F',2))//','//TRIM(RTOS(ELEVUP,'F',2))
+  IF(ICALC.LE.1)LINE=TRIM(LINE)//','//TRIM(RTOS(WIDTH1,'F',2))
+  IF(ICALC.EQ.0)LINE=TRIM(LINE)//','//TRIM(RTOS(DEPTH1,'F',2))
+  WRITE(JU,'(A)') TRIM(LINE)
+
+  LINE=TRIM(RTOS(HC2FCT,'F',2))//','//TRIM(RTOS(THICKM2,'F',2))//','//TRIM(RTOS(ELEVDN,'F',2))
+  IF(ICALC.LE.1)LINE=TRIM(LINE)//','//TRIM(RTOS(WIDTH2,'F',2))
+  IF(ICALC.EQ.0)LINE=TRIM(LINE)//','//TRIM(RTOS(DEPTH2,'F',2))
+  WRITE(JU,'(A)') TRIM(LINE)
+
+  !## eight points cross-section
+  IF(ICALC.EQ.2)THEN
+   LINE=TRIM(RTOS(0.0,'F',2)); DO J=2,NDIM; LINE=TRIM(LINE)//','//TRIM(RTOS(XCRS(J)-XCRS(1),'F',2)); ENDDO
+   WRITE(JU,'(A)') TRIM(LINE)
+   LINE=TRIM(RTOS(ZCRS(1),'F',2)); DO J=2,NDIM; LINE=TRIM(LINE)//','//TRIM(RTOS(ZCRS(J),'F',2)); ENDDO
+   WRITE(JU,'(A)') TRIM(LINE)
+  !##
+  ELSEIF(ICALC.EQ.4)THEN
+
+!  !## get this information from the cross-sectional data (only one cross-section available)
+!  ICRS=ISG(I)%ICRS       !## position in isc that starts cross-section
+!  NDIM=ABS(ISC(ICRS)%N)  !## number of cross-sectional data-points
+!
+!  IF(NDIM.GT.SIZE(XCRS))THEN
+!   DEALLOCATE(XCRS,ZCRS,KMCRS)
+!   ALLOCATE(XCRS(NDIM),ZCRS(NDIM),KMCRS(NDIM))
+!  ENDIF
+!
+!  J=ISC(ICRS)%IREF-1 ; DO K=1,NDIM
+!   J=J+1; XCRS(K)=DATISC(J)%DISTANCE; ZCRS(K)=DATISC(J)%BOTTOM; KMCRS(K)=DATISC(J)%MRC
+!  ENDDO
+
+  ENDIF
+
  ENDDO
 
 !       !## which cross-section is active within current segment
@@ -1565,6 +1607,8 @@ IRLOOP: DO IR=MAX(1,IROW-1),MIN(NROW,IROW+1)
 
  write(*,*) nstream,nreach
 
+ DEALLOCATE(XCRS,ZCRS,KMCRS)
+ IF(ALLOCATED(ISTR))DEALLOCATE(ISTR)
  IF(ALLOCATED(RVAL))DEALLOCATE(RVAL)
  IF(ALLOCATED(QSORT))DEALLOCATE(QSORT); IF(ALLOCATED(XNR))DEALLOCATE(XNR); IF(ALLOCATED(NDATA))DEALLOCATE(NDATA)
  CALL INTERSECT_DEALLOCATE()

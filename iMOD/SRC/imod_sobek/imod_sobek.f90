@@ -792,7 +792,7 @@ CONTAINS
  
  DO I=1,NBDFR
   IF(TRIM(TP2(IB)%ID).EQ.TRIM(BDFR(I)%CI))THEN
-   KM=BDFR(I)%KM
+   KM=BDFR(I)%MRC
    EXIT
   ENDIF
  END DO
@@ -1611,7 +1611,7 @@ CONTAINS
    ENDIF
 
  !#nog iets met kd doen!
-   BDFR(NB)%KM=25.0
+   BDFR(NB)%MRC=25.0
 
   ENDIF
  ENDDO
