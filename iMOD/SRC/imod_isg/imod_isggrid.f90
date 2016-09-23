@@ -597,7 +597,8 @@ CONTAINS
  INTEGER,INTENT(IN) :: IBATCH,NLAY
  CHARACTER(LEN=*),INTENT(IN) :: ISGFILE
  TYPE(IDFOBJ),DIMENSION(NLAY),INTENT(INOUT) :: TOP,BOT
- INTEGER :: NROW,NCOL,SIMDATE1,SIMDATE2,SIMDATE3,MP
+ INTEGER :: NROW,NCOL,SIMDATE1,SIMDATE2,SIMDATE3
+ INTEGER,DIMENSION(1) :: MP
  CHARACTER(LEN=52) :: PPOSTFIX
 
  ISG2GRIDMAIN=.FALSE.
@@ -802,7 +803,7 @@ CONTAINS
  !###====================================================================
  IMPLICIT NONE
  INTEGER,INTENT(IN) :: NROW,NCOL,NLAY,ILAY,IBATCH,JU
- INTEGER,INTENT(INOUT) :: MP
+ INTEGER,INTENT(INOUT),DIMENSION(:) :: MP
  TYPE(IDFOBJ),DIMENSION(NLAY),INTENT(INOUT) :: TOP,BOT
  CHARACTER(LEN=*),INTENT(IN) :: PPOSTFIX
  TYPE(WIN_MESSAGE) :: MESSAGE
@@ -1393,20 +1394,20 @@ IRLOOP: DO IR=MAX(1,IROW-1),MIN(NROW,IROW+1)
  END FUNCTION ISG2GRID
 
  !###====================================================================
- LOGICAL FUNCTION ISG2SFR(NROW,NCOL,NLAY,ILAY,TOP,BOT,IPER,NSTREAM,JU)
+ LOGICAL FUNCTION ISG2SFR(NROW,NCOL,NLAY,ILAY,TOP,BOT,IPER,MP,JU)
  !###====================================================================
  IMPLICIT NONE
  INTEGER,INTENT(IN) :: NROW,NCOL,NLAY,ILAY,JU,IPER
- INTEGER,INTENT(INOUT) :: NSTREAM
+ INTEGER,INTENT(INOUT),DIMENSION(:) :: MP
  TYPE(IDFOBJ),DIMENSION(NLAY),INTENT(INOUT) :: TOP,BOT
- INTEGER :: I,J,K,TTIME,IROW,ICOL,N,ISEG,JSEG,NSEG,IREF,NDIM,NREACH, &
-       ICALC,OUTSEG,IUPSEG,IPRIOR,NSTRPTS,ICRS
+ INTEGER :: I,J,K,TTIME,IROW,ICOL,N,ISEG,JSEG,NSEG,IREF,NDIM, &
+       ICALC,OUTSEG,IUPSEG,IPRIOR,NSTRPTS,ICRS,IQHR,NSTREAM,NREACH
  REAL :: DXY,X1,X2,Y1,Y2,QFLOW,QROFF,EVT,PREC,ROUGHCH,ROUGHBK,CDPTH,FDPTH,AQDTH,BWDTH, &
        HC1FCT,THICKM1,ELEVUP,WIDTH1,DEPTH1,HC2FCT,THICKM2,ELEVDN,WIDTH2,DEPTH2,WLVLUP,WLVLDN
  REAL,ALLOCATABLE,DIMENSION(:,:) :: QSORT,RVAL
  REAL,ALLOCATABLE,DIMENSION(:) :: XNR,NDATA
  INTEGER,ALLOCATABLE,DIMENSION(:) :: ISTR
- REAL,ALLOCATABLE,DIMENSION(:) :: XCRS,ZCRS,KMCRS
+ REAL,ALLOCATABLE,DIMENSION(:) :: XCRS,ZCRS,MCRS,QCRS,WCRS,DCRS
  CHARACTER(LEN=512) :: LINE
  
  ISG2SFR=.FALSE.
@@ -1414,6 +1415,9 @@ IRLOOP: DO IR=MAX(1,IROW-1),MIN(NROW,IROW+1)
  !## variable used to stored number of reaches per segment
  IF(ALLOCATED(ISTR))DEALLOCATE(ISTR); ALLOCATE(ISTR(NISG)); ISTR=0
 
+ !## count number of streams
+ NSTREAM=0
+ 
  !## only specify for first tress-period
  IF(IPER.EQ.1)THEN
   DO I=1,NISG
@@ -1460,7 +1464,7 @@ IRLOOP: DO IR=MAX(1,IROW-1),MIN(NROW,IROW+1)
  NDIM=10; ALLOCATE(QSORT(TTIME,NDIM),XNR(NDIM),NDATA(NDIM))
 
  !## allocate storage for cross-sectional data
- ALLOCATE(XCRS(NDIM),ZCRS(NDIM),KMCRS(NDIM))
+ ALLOCATE(XCRS(NDIM),ZCRS(NDIM),MCRS(NDIM))
 
  !## variable used to store segment information
  IF(ALLOCATED(RVAL))DEALLOCATE(RVAL); ALLOCATE(RVAL(NDIM,2)); RVAL=0.0
@@ -1473,12 +1477,12 @@ IRLOOP: DO IR=MAX(1,IROW-1),MIN(NROW,IROW+1)
   NDIM=ABS(ISC(ICRS)%N)  !## number of cross-sectional data-points
 
   IF(NDIM.GT.SIZE(XCRS))THEN
-   DEALLOCATE(XCRS,ZCRS,KMCRS)
-   ALLOCATE(XCRS(NDIM),ZCRS(NDIM),KMCRS(NDIM))
+   DEALLOCATE(XCRS,ZCRS,MCRS)
+   ALLOCATE(XCRS(NDIM),ZCRS(NDIM),MCRS(NDIM))
   ENDIF
 
   J=ISC(ICRS)%IREF-1 ; DO K=1,NDIM
-   J=J+1; XCRS(K)=DATISC(J)%DISTANCE; ZCRS(K)=DATISC(J)%BOTTOM; KMCRS(K)=DATISC(J)%MRC
+   J=J+1; XCRS(K)=DATISC(J)%DISTANCE; ZCRS(K)=DATISC(J)%BOTTOM; MCRS(K)=DATISC(J)%MRC
   ENDDO
 
   RVAL=0.0
@@ -1521,26 +1525,28 @@ IRLOOP: DO IR=MAX(1,IROW-1),MIN(NROW,IROW+1)
   IF(IUPSEG.GT.0)LINE=TRIM(LINE)//','//TRIM(ITOS(IPRIOR))
   IF(ICALC.EQ.4)THEN
   
-!   !## get this information from the cross-sectional data (only one cross-section available)
-!  ICRS=ISG(I)%ICRS       !## position in isc that starts cross-section
-!  NDIM=ABS(ISC(ICRS)%N)  !## number of cross-sectional data-points
+   !## get this information from the q-width/depth relationships data (only one q-width/depth relationships available)
+   IQHR=ISG(I)%IQHR       !## position in isq that starts q-width/depth relationships
+   NDIM=ABS(ISQ(IQHR)%N)  !## number of q-width/depth relationships
 
-   NSTRPTS=0 !## number of discharge flow relationships
+   NSTRPTS=NDIM           !## number of discharge flow relationships
    LINE=TRIM(LINE)//','//TRIM(ITOS(NSTRPTS))
+
   ENDIF
   LINE=TRIM(LINE)//','//TRIM(RTOS(QFLOW,'F',2))//','//TRIM(RTOS(QROFF,'F',2))//','// &
                         TRIM(RTOS(EVT,'F',2))//','//TRIM(RTOS(PREC,'F',2))
   !## riverbed mannings coefficient
   IF(ICALC.EQ.1.OR.ICALC.EQ.2)THEN
-   ROUGHCH=KMCRS(4) 
+   ROUGHCH=MCRS(4) 
    LINE=TRIM(LINE)//','//TRIM(RTOS(ROUGHCH,'F',2))
   ENDIF
   !## riverbank mannings coefficient
   IF(ICALC.EQ.2)THEN
-   ROUGHBK=KMCRS(1) 
+   ROUGHBK=MCRS(1) 
    LINE=TRIM(LINE)//','//TRIM(RTOS(ROUGHBK,'F',2))
   ENDIF
   IF(ICALC.EQ.3)THEN
+   !## not supported
    CDPTH=0.0
    FDPTH=0.0
    AQDTH=0.0
@@ -1572,42 +1578,37 @@ IRLOOP: DO IR=MAX(1,IROW-1),MIN(NROW,IROW+1)
    WRITE(JU,'(A)') TRIM(LINE)
    LINE=TRIM(RTOS(ZCRS(1),'F',2)); DO J=2,NDIM; LINE=TRIM(LINE)//','//TRIM(RTOS(ZCRS(J),'F',2)); ENDDO
    WRITE(JU,'(A)') TRIM(LINE)
-  !##
+  !## q-width/depth relationships
   ELSEIF(ICALC.EQ.4)THEN
 
-!  !## get this information from the cross-sectional data (only one cross-section available)
-!  ICRS=ISG(I)%ICRS       !## position in isc that starts cross-section
-!  NDIM=ABS(ISC(ICRS)%N)  !## number of cross-sectional data-points
-!
-!  IF(NDIM.GT.SIZE(XCRS))THEN
-!   DEALLOCATE(XCRS,ZCRS,KMCRS)
-!   ALLOCATE(XCRS(NDIM),ZCRS(NDIM),KMCRS(NDIM))
-!  ENDIF
-!
-!  J=ISC(ICRS)%IREF-1 ; DO K=1,NDIM
-!   J=J+1; XCRS(K)=DATISC(J)%DISTANCE; ZCRS(K)=DATISC(J)%BOTTOM; KMCRS(K)=DATISC(J)%MRC
-!  ENDDO
+   !## get this information from the q-width/depth relationships data
+   IQHR=ISG(I)%IQHR      
+
+   IF(NSTRPTS.GT.SIZE(XCRS))THEN
+    DEALLOCATE(QCRS,DCRS,WCRS)
+    ALLOCATE(QCRS(NSTRPTS),DCRS(NSTRPTS),WCRS(NSTRPTS))
+   ENDIF
+
+   J=ISC(IQHR)%IREF-1 ; DO K=1,NSTRPTS
+    J=J+1; QCRS(K)=DATISQ(J)%Q; WCRS(K)=DATISQ(J)%W; DCRS(K)=DATISQ(J)%D
+   ENDDO
+
+   LINE=TRIM(RTOS(0.0,'F',2)); DO J=1,NSTRPTS; LINE=TRIM(LINE)//','//TRIM(RTOS(QCRS(J),'F',2)); ENDDO
+   WRITE(JU,'(A)') TRIM(LINE)
+   LINE=TRIM(RTOS(0.0,'F',2)); DO J=1,NSTRPTS; LINE=TRIM(LINE)//','//TRIM(RTOS(DCRS(J),'F',2)); ENDDO
+   WRITE(JU,'(A)') TRIM(LINE)
+   LINE=TRIM(RTOS(0.0,'F',2)); DO J=1,NSTRPTS; LINE=TRIM(LINE)//','//TRIM(RTOS(WCRS(J),'F',2)); ENDDO
+   WRITE(JU,'(A)') TRIM(LINE)
 
   ENDIF
 
  ENDDO
 
-!       !## which cross-section is active within current segment
-!       CALL ISG2GRIDGETCROSS(JCRS,ISG(I)%ICRS,ISG(I)%NCRS,ISGLEN)
-!       IF(JCRS.GT.0)THEN
-!        !## start of cross-section
-!        JSEG=ISG(I)%ICRS+JCRS-1
-!        NDIM=ABS(ISC(JSEG)%N)
-!       ELSE
-!        !## use default cross-section for current segment since no 1d cross-section or other has been found
-!        NDIM=4
-!       ENDIF
-
-! ENDDO
-
- write(*,*) nstream,nreach
-
- DEALLOCATE(XCRS,ZCRS,KMCRS)
+ MP(1)=NSTREAM
+ MP(2)=NREACH
+ 
+ IF(ALLOCATED(XCRS))DEALLOCATE(XCRS,ZCRS,MCRS)
+ IF(ALLOCATED(QCRS))DEALLOCATE(QCRS,WCRS,DCRS)
  IF(ALLOCATED(ISTR))DEALLOCATE(ISTR)
  IF(ALLOCATED(RVAL))DEALLOCATE(RVAL)
  IF(ALLOCATED(QSORT))DEALLOCATE(QSORT); IF(ALLOCATED(XNR))DEALLOCATE(XNR); IF(ALLOCATED(NDATA))DEALLOCATE(NDATA)
@@ -1622,7 +1623,7 @@ IRLOOP: DO IR=MAX(1,IROW-1),MIN(NROW,IROW+1)
  !###====================================================================
  IMPLICIT NONE
  INTEGER,INTENT(IN) :: NLAY,ILAY,JU
- INTEGER,INTENT(INOUT) :: MP
+ INTEGER,INTENT(INOUT),DIMENSION(:) :: MP
  TYPE(IDFOBJ),DIMENSION(:),INTENT(INOUT) :: IDF
  TYPE(IDFOBJ),DIMENSION(NLAY),INTENT(INOUT) :: TOP,BOT
  INTEGER :: IROW,ICOL,N,IU,I
@@ -1664,7 +1665,7 @@ IRLOOP: DO IR=MAX(1,IROW-1),MIN(NROW,IROW+1)
   ENDIF
  ENDDO; ENDDO
 
- MP=MP+N
+ MP(1)=MP(1)+N
 
  IF(JU.EQ.0)THEN
   IU=UTL_GETUNIT()
