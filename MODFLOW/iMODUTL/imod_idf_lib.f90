@@ -1360,7 +1360,7 @@ CONTAINS
  !###======================================================================
  IMPLICIT NONE
  INTEGER,INTENT(IN)  :: IDATA
- TYPE(IDFOBJ),INTENT(OUT) :: IDF
+ TYPE(IDFOBJ),INTENT(INOUT) :: IDF
  INTEGER :: I,IREC,IOS
  INTEGER(KIND=1) :: I1,I2,I3,I4
 
