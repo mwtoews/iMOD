@@ -38,6 +38,7 @@ USE IMOD, ONLY : IDFINIT
 USE MOD_PREF_PAR, ONLY : PREFVAL
 USE DATEVAR
 USE MOD_ISG_GRID, ONLY : ISG2GRID,ISG2SFR
+USE MOD_ISG_PAR, ONLY : IRDFLG,IPTFLG
 USE MOD_ISG_UTL, ONLY : ISGDEAL,ISGREAD
 USE MOD_POLINT, ONLY : POL1LOCATE
 USE MOD_QKSORT
@@ -3594,8 +3595,12 @@ KLOOP: DO K=1,SIZE(TOPICS(JJ)%STRESS(1)%FILES,1)
    SELECT CASE (ITOPIC)
     CASE (24) !## evt 
      WRITE(IU,'(A)') '-1,-1,-1'
-    CASE (21,22,23,25,26,27,28,29,30) !## wel,drn,riv,ghb,rch,chd,olf,isg,sfr
+    CASE (21,22,23,25,26,27,28,29) !## wel,drn,riv,ghb,rch,chd,olf,isg
      WRITE(IU,'(I10)') -1 
+    CASE (30) !## sfr
+     !## to be filled in later - number of streams
+     LINE='-1,'//TRIM(ITOS(IRDFLG))//','//TRIM(ITOS(IPTFLG))//',0'
+     WRITE(IU,'(A)') TRIM(LINE)
    END SELECT
   
   ELSE
@@ -3855,7 +3860,8 @@ KLOOP: DO K=1,SIZE(TOPICS(JJ)%STRESS(1)%FILES,1)
   
  PMANAGER_SAVEMF2005_PCK_ULSTRD=.FALSE.
 
- CALL UTL_CREATEDIR(EXFNAME(:INDEX(EXFNAME,'\',.TRUE.)-1))
+ !## no subfolders for SFR-package needed
+ IF(ITOPIC.NE.30)CALL UTL_CREATEDIR(EXFNAME(:INDEX(EXFNAME,'\',.TRUE.)-1))
   
  !## fill tlp for each modellayer
  ALLOCATE(TLP(NLAY),KH(NLAY),TP(NLAY),BT(NLAY))
@@ -3916,7 +3922,12 @@ KLOOP: DO K=1,SIZE(TOPICS(JJ)%STRESS(1)%FILES,1)
   
  ELSE
 
-  JU=UTL_GETUNIT(); CALL OSD_OPEN(JU,FILE=EXFNAME,STATUS='UNKNOWN',ACTION='WRITE',FORM='FORMATTED'); IF(JU.EQ.0)RETURN
+  !## write package in same file as steering-file for SFR-package
+  IF(ITOPIC.EQ.30)THEN
+   JU=IU
+  ELSE
+   JU=UTL_GETUNIT(); CALL OSD_OPEN(JU,FILE=EXFNAME,STATUS='UNKNOWN',ACTION='WRITE',FORM='FORMATTED'); IF(JU.EQ.0)RETURN
+  ENDIF
   MP=0
 
   DO ISYS=1,NSYS
@@ -4139,16 +4150,17 @@ KLOOP: DO K=1,SIZE(TOPICS(JJ)%STRESS(1)%FILES,1)
  
  ENDIF
 
- CLOSE(JU)
-
- !## current number of elements for this stress-period
- LINE=TRIM(ITOS(MP(1))); WRITE(IU,*) TRIM(LINE)
-
+ IF(ITOPIC.NE.30)THEN
+  CLOSE(JU)
+  !## current number of elements for this stress-period
+  LINE=TRIM(ITOS(MP(1))); WRITE(IU,*) TRIM(LINE)
+ ENDIF
+ 
  !## storage of maximum number of package elements for entire simulation
- !## be aware that for the SFR hte number of streams/segments cannot be varied throughout the simulation
+ !## be aware that for the SFR the number of streams/segments cannot be varied throughout the simulation
  NP=MAX(NP,MP)
  
- IF(MP(1).GT.0)THEN
+ IF(MP(1).GT.0.AND.ITOPIC.NE.30)THEN
   SFNAME=EXFNAME; DO I=1,3; SFNAME=SFNAME(:INDEX(SFNAME,'\',.TRUE.)-1); ENDDO
   I=LEN_TRIM(SFNAME); SFNAME='.'//EXFNAME(I+1:)
   WRITE(IU,'(A)') 'OPEN/CLOSE '//TRIM(SFNAME)//' 1.0 (FREE) -1'

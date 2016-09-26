@@ -64,22 +64,45 @@ CONTAINS
  !###======================================================================
  IMPLICIT NONE
  REAL,INTENT(IN) :: XMIN,YMIN,XMAX,YMAX
- REAL :: DX
+ REAL :: DX,DY,X1,X2,Y1,Y2
  INTEGER :: I
  
  CALL IPGNEWPLOT(PGSCATTERPLOT,1,1,0,1) 
 
- CALL IPGUNITS(XMIN,YMIN,XMAX,YMAX)
+ X1=XMIN; Y1=YMIN; X2=XMAX; Y2=YMAX
 
+ DO
+ 
+  CALL IPGUNITS(X1,Y1,X2,Y2)
+
+  !## get x-scale intervals
+  SXVALUE=0.0; CALL IPGXGETSCALE(SXVALUE,NSX)
+  !## get y-scale intervals
+  SYVALUE=0.0; CALL IPGYGETSCALE(SYVALUE,NSY) 
+
+  I=0
+  !## see whether x-classes are distinghuisable
+  IF(UTL_EQUALS_REAL(SXVALUE(2),SXVALUE(1)))THEN
+   DX=EPSILON(X1); X1=X1-DX; DX=EPSILON(X2); X2=X2+DX; I=I+1
+  ENDIF
+  !## see whether y-classes are distinghuisable
+  IF(UTL_EQUALS_REAL(SYVALUE(2),SYVALUE(1)))THEN
+   DY=ABS(Y1)*EPSILON(Y1); Y1=Y1-DY
+   DY=ABS(Y2)*EPSILON(Y2); Y2=Y2+DY
+   I=I+1
+  ENDIF
+
+  IF(I.EQ.0)EXIT
+  
+ ENDDO
+ 
  !## get x-scale intervals
- SXVALUE=0.0; CALL IPGXGETSCALE(SXVALUE,NSX)
  DX=SXVALUE(2)-SXVALUE(1)
  DO I=2,NSX; SXVALUE(I)=SXVALUE(I-1)+DX; ENDDO
 
  !## get y-scale intervals
- SYVALUE=0.0; CALL IPGYGETSCALE(SYVALUE,NSY) 
- DX=SYVALUE(2)-SYVALUE(1)
- DO I=2,NSY; SYVALUE(I)=SYVALUE(I-1)+DX; ENDDO
+ DY=SYVALUE(2)-SYVALUE(1)
+ DO I=2,NSY; SYVALUE(I)=SYVALUE(I-1)+DY; ENDDO
  
  END SUBROUTINE UTL_GETAXESCALES
 
@@ -266,7 +289,7 @@ CONTAINS
    SDATE=UTL_IDATETOJDATE(SDATE); EDATE=UTL_IDATETOJDATE(EDATE)
    TTIME=EDATE-SDATE
    IF(TTIME.LE.0)THEN
-    CALL WMESSAGEBOX(OKONLY,EXCLAMATIONICON,COMMONOK,'Timestep to extract data is '//TRIM(ITOS(TTIME)),'Error')
+    CALL WMESSAGEBOX(OKONLY,EXCLAMATIONICON,COMMONOK,'Timestep size to extract data is '//TRIM(ITOS(TTIME)),'Error')
     RETURN
    ENDIF
   !## boreholes/seismic
@@ -3770,6 +3793,28 @@ CONTAINS
  ENDDO
 
  END SUBROUTINE PEUCKER_CALCDISTANCE
+
+ !###====================================================================
+ REAL FUNCTION UTL_GOODNESS_OF_FIT(GF_H,GF_O,N)
+ !###====================================================================
+ IMPLICIT NONE
+ INTEGER,INTENT(IN) :: N
+ REAL,INTENT(IN),DIMENSION(N) :: GF_H,GF_O
+ REAL :: MU_H,MU_O,X1,X2
+ INTEGER :: I
+ 
+ MU_H=SUM(GF_H)/REAL(N)
+ MU_O=SUM(GF_O)/REAL(N)
+ 
+ X1=0.0; X2=0.0
+ DO I=1,N
+  X1=X1+(GF_H(I)-MU_H)*(GF_O(I)-MU_O)
+  X2=X2+(GF_H(I)-MU_H)**2.0*(GF_O(I)-MU_O)**2.0
+ ENDDO
+
+ UTL_GOODNESS_OF_FIT=X1/SQRT(X2)
+  
+ END FUNCTION UTL_GOODNESS_OF_FIT
 
  !###====================================================
  SUBROUTINE UTL_FIT_REGRESSION(X,Y,NDATA,SIG,MWT,A,B,SIGA,SIGB,CHI2,Q)

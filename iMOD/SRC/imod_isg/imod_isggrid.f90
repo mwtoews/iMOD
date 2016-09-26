@@ -1400,7 +1400,7 @@ IRLOOP: DO IR=MAX(1,IROW-1),MIN(NROW,IROW+1)
  INTEGER,INTENT(IN) :: NROW,NCOL,NLAY,ILAY,JU,IPER
  INTEGER,INTENT(INOUT),DIMENSION(:) :: MP
  TYPE(IDFOBJ),DIMENSION(NLAY),INTENT(INOUT) :: TOP,BOT
- INTEGER :: I,J,K,TTIME,IROW,ICOL,N,ISEG,JSEG,NSEG,IREF,NDIM, &
+ INTEGER :: I,J,K,TTIME,IROW,ICOL,N,ISEG,JSEG,NSEG,IREF,NDIM,IRDFLG,IPTFLG,NP, &
        ICALC,OUTSEG,IUPSEG,IPRIOR,NSTRPTS,ICRS,IQHR,NSTREAM,NREACH
  REAL :: DXY,X1,X2,Y1,Y2,QFLOW,QROFF,EVT,PREC,ROUGHCH,ROUGHBK,CDPTH,FDPTH,AQDTH,BWDTH, &
        HC1FCT,THICKM1,ELEVUP,WIDTH1,DEPTH1,HC2FCT,THICKM2,ELEVDN,WIDTH2,DEPTH2,WLVLUP,WLVLDN
@@ -1409,7 +1409,7 @@ IRLOOP: DO IR=MAX(1,IROW-1),MIN(NROW,IROW+1)
  INTEGER,ALLOCATABLE,DIMENSION(:) :: ISTR
  REAL,ALLOCATABLE,DIMENSION(:) :: XCRS,ZCRS,MCRS,QCRS,WCRS,DCRS
  CHARACTER(LEN=512) :: LINE
- 
+
  ISG2SFR=.FALSE.
 
  !## variable used to stored number of reaches per segment
@@ -1417,8 +1417,8 @@ IRLOOP: DO IR=MAX(1,IROW-1),MIN(NROW,IROW+1)
 
  !## count number of streams
  NSTREAM=0
- 
- !## only specify for first tress-period
+
+ !## only specify for first stress-period
  IF(IPER.EQ.1)THEN
   DO I=1,NISG
    NSEG=ISG(I)%NSEG; ISEG=ISG(I)%ISEG; JSEG=ISEG+NSEG-1
@@ -1450,7 +1450,7 @@ IRLOOP: DO IR=MAX(1,IROW-1),MIN(NROW,IROW+1)
   ENDDO
  ENDIF
  NREACH=SUM(ISTR)
- 
+
   !## translate cdate in to julian date - for transient simulations only!
  IF(ISS.EQ.2)THEN
   SDATE=UTL_IDATETOJDATE(SDATE)
@@ -1469,9 +1469,13 @@ IRLOOP: DO IR=MAX(1,IROW-1),MIN(NROW,IROW+1)
  !## variable used to store segment information
  IF(ALLOCATED(RVAL))DEALLOCATE(RVAL); ALLOCATE(RVAL(NDIM,2)); RVAL=0.0
 
+ !## to be filled in later - number of streams
+ LINE='NaN1,'//TRIM(ITOS(IRDFLG))//','//TRIM(ITOS(IPTFLG))//',0'
+ WRITE(JU,'(A)') TRIM(LINE)
+
  !## write cross-sectional data
  DO I=1,NISG
-  
+
   !## get this information from the cross-sectional data (only one cross-section available)
   ICRS=ISG(I)%ICRS       !## position in isc that starts cross-section
   NDIM=ABS(ISC(ICRS)%N)  !## number of cross-sectional data-points
@@ -1517,14 +1521,14 @@ IRLOOP: DO IR=MAX(1,IROW-1),MIN(NROW,IROW+1)
 
   !## corrections for reding out of a menu
   ICALC=ICALC-1; IPRIOR=IPRIOR-1
-  
+
   EVT=0.0
   PREC=0.0
   LINE=TRIM(ITOS(NSTREAM))//','//TRIM(ITOS(ICALC))//','//TRIM(ITOS(OUTSEG))//','//TRIM(ITOS(IUPSEG))
-  
+
   IF(IUPSEG.GT.0)LINE=TRIM(LINE)//','//TRIM(ITOS(IPRIOR))
   IF(ICALC.EQ.4)THEN
-  
+
    !## get this information from the q-width/depth relationships data (only one q-width/depth relationships available)
    IQHR=ISG(I)%IQHR       !## position in isq that starts q-width/depth relationships
    NDIM=ABS(ISQ(IQHR)%N)  !## number of q-width/depth relationships
@@ -1537,12 +1541,12 @@ IRLOOP: DO IR=MAX(1,IROW-1),MIN(NROW,IROW+1)
                         TRIM(RTOS(EVT,'F',2))//','//TRIM(RTOS(PREC,'F',2))
   !## riverbed mannings coefficient
   IF(ICALC.EQ.1.OR.ICALC.EQ.2)THEN
-   ROUGHCH=MCRS(4) 
+   ROUGHCH=MCRS(4)
    LINE=TRIM(LINE)//','//TRIM(RTOS(ROUGHCH,'F',2))
   ENDIF
   !## riverbank mannings coefficient
   IF(ICALC.EQ.2)THEN
-   ROUGHBK=MCRS(1) 
+   ROUGHBK=MCRS(1)
    LINE=TRIM(LINE)//','//TRIM(RTOS(ROUGHBK,'F',2))
   ENDIF
   IF(ICALC.EQ.3)THEN
@@ -1555,13 +1559,13 @@ IRLOOP: DO IR=MAX(1,IROW-1),MIN(NROW,IROW+1)
                          TRIM(RTOS(AQDTH,'F',2))//','//TRIM(RTOS(BWDTH,'F',2))
   ENDIF
   WRITE(JU,'(A)') TRIM(LINE)
-              
+
   WIDTH1 =MAXVAL(XCRS(1:NDIM))-MINVAL(XCRS(1:NDIM))
   DEPTH1 =MAXVAL(ZCRS(1:NDIM))-MINVAL(ZCRS(1:NDIM))
   !## identical for up- and downstream - not neccessary for SFR but for now perhaps most optimal choice
   WIDTH2 =WIDTH1
   DEPTH2 =DEPTH1
-      
+
   LINE=TRIM(RTOS(HC1FCT,'F',2))//','//TRIM(RTOS(THICKM1,'F',2))//','//TRIM(RTOS(ELEVUP,'F',2))
   IF(ICALC.LE.1)LINE=TRIM(LINE)//','//TRIM(RTOS(WIDTH1,'F',2))
   IF(ICALC.EQ.0)LINE=TRIM(LINE)//','//TRIM(RTOS(DEPTH1,'F',2))
@@ -1582,7 +1586,7 @@ IRLOOP: DO IR=MAX(1,IROW-1),MIN(NROW,IROW+1)
   ELSEIF(ICALC.EQ.4)THEN
 
    !## get this information from the q-width/depth relationships data
-   IQHR=ISG(I)%IQHR      
+   IQHR=ISG(I)%IQHR
 
    IF(NSTRPTS.GT.SIZE(XCRS))THEN
     DEALLOCATE(QCRS,DCRS,WCRS)
@@ -1606,7 +1610,7 @@ IRLOOP: DO IR=MAX(1,IROW-1),MIN(NROW,IROW+1)
 
  MP(1)=NSTREAM
  MP(2)=NREACH
- 
+
  IF(ALLOCATED(XCRS))DEALLOCATE(XCRS,ZCRS,MCRS)
  IF(ALLOCATED(QCRS))DEALLOCATE(QCRS,WCRS,DCRS)
  IF(ALLOCATED(ISTR))DEALLOCATE(ISTR)
@@ -2217,7 +2221,7 @@ IRLOOP: DO IR=MAX(1,IROW-1),MIN(NROW,IROW+1)
  REAL,DIMENSION(NITEMS),INTENT(OUT) :: XNR
  REAL,DIMENSION(NITEMS),INTENT(INOUT) :: RVAL
  INTEGER :: IR,N,I,J,I1,I2,IDATE,NAJ,IREC,NDATE,IH,IM,IS
- 
+
  IREC=IREF-1
 
  IF(NR.LE.0)RETURN

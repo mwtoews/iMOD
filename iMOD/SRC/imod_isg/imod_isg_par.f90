@@ -24,6 +24,18 @@ MODULE MOD_ISG_PAR
 
 USE MOD_IDF_PAR, ONLY : IDFOBJ
 
+INTEGER,PARAMETER :: IRDFLG=-1
+!If IRDFLG <= 0, input data for this stress period will be printed. If IRDFLG > 0, then input data for this stress period will not be printed.
+!If the absolute value of IRDFLG = 2, The elevation of top of streambed of diversion segments (canals/laterals) follows the slope of ground surface at a depth defined by the interpolation of:
+!(1) the difference between the ground surface elevation and the elevation of the upstream end of a diversion segment, as specified in the SFR input file; and
+!(2) the difference between the ground surface elevation and the elevation of the downstream end of a diversion segment, as specified in the SFR input file.
+!Note limitation: IRDFLG = 2 cannot be chosen if the number of the diversion segment is equal to the total number of segments.
+
+INTEGER,PARAMETER :: IPTFLG=0
+ !An integer value for printing streamflow-routing results during this stress period. If IPTFLG = 0, or whenever the variable
+ !ICBCFL or 'Save Budget' is specified in Output Control, the results for specified time steps during this stress period will
+ !be printed. If IPTFLG > 0, then the results during this stress period will not be printed.
+
 INTEGER,PARAMETER :: MAXLEN  =32
 INTEGER,PARAMETER :: MAXFILES=10 !## number of files for ISG-"family"
 INTEGER,PARAMETER :: MAXITEMS=12
