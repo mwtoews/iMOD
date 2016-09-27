@@ -40,6 +40,7 @@
 
 !...     Parameters
       integer, parameter :: tsleep  = 1 !< time in seconds to check coupling signal file
+      integer, parameter :: ntry = 10
 
       double precision :: beginOfCurrentTimeStep, endOfCurrentTimeStep
 
@@ -280,7 +281,7 @@
       logical :: lcont, lexit
       character(len=1)  :: dora
       character(len=15) :: time
-      integer :: lun, ios, date, year, month, day, hour, minute, second
+      integer :: lun, ios, date, year, month, day, hour, minute, second, itry
       double precision :: dt
 !.......................................................................
 
@@ -306,7 +307,22 @@
       write(*,*) 'mz: found ',mzsignal(1:len_trim(mzsignal)),' and reading'
       lun = cfn_getlun(10,99)
       open(unit=lun,file=mzsignal,status='old',form='formatted',iostat=ios)
-      if (ios.ne.0) write(*,*) 'Error opening file...'
+      if (ios.ne.0) then
+         itry = 0
+         do while(itry.le.ntry)
+            write(*,*) 'Error opening file, retrying...'
+            call sleep(tsleep)   
+            open(unit=lun,file=mzsignal,status='old',form='formatted',iostat=ios)
+            if (ios.eq.0) then
+               exit
+            else   
+               itry = itry + 1
+            end if   
+         end do
+      end if            
+      if (ios.ne.0) then
+         write(*,*) 'Error opening file'; stop 1
+      end if             
 
 !...     read MOZART signal file
       read(lun,*) dora, time, dt
