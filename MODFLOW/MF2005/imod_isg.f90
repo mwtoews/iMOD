@@ -432,8 +432,11 @@ DO I=1,NISGH
      READ(ISGIU(6),REC=JREC+ICF) CROS(J,ICROS)%DIST,CROS(J,ICROS)%BOTTOM,CROS(J,ICROS)%KM
     END DO
     !## make sure lowest bottom = 0.0
-    MIND                         =MINVAL(CROS(J,1:DWP(J)%NCROS)%BOTTOM)
-    CROS(J,1:DWP(J)%NCROS)%BOTTOM=CROS(J,1:DWP(J)%NCROS)%BOTTOM-MIND
+    MIND=MINVAL(CROS(J,1:DWP(J)%NCROS)%BOTTOM)
+    DO JJ=1,DWP(J)%NCROS
+     CROS(J,JJ)%BOTTOM=CROS(J,JJ)%BOTTOM-MIND
+    ENDDO
+!    CROS(J,1:DWP(J)%NCROS)%BOTTOM=CROS(J,1:DWP(J)%NCROS)%BOTTOM-MIND
    END DO
 
    !## start to intersect all segment/segmentpoints to the model-grid
@@ -446,7 +449,10 @@ DO I=1,NISGH
     IF(DXY.GT.0.0)THEN
      DXY=SQRT(DXY)
 
-     RVAL(:,0)=(RVAL(:,ISEG)-RVAL(:,ISEG-1))/DXY
+     DO JJ=1,4
+      RVAL(JJ,0)=(RVAL(JJ,ISEG)-RVAL(JJ,ISEG-1))/DXY
+     ENDDO
+!     RVAL(:,0)=(RVAL(:,ISEG)-RVAL(:,ISEG-1))/DXY
 
      DO
       IF(LQD)THEN
@@ -661,7 +667,8 @@ IRLOOP: DO IR=MAX(1,IROW-1),MIN(NROW,IROW+1)
  CALL ISG2GRID_EXTENT_WITH_WIDTH(SIZE(IDF),IDF)
 
  !## clean list
- DO I=1,10; ISGLIST(:,I)=0.0; ENDDO
+! DO I=1,10; ISGLIST(:,I)=0.0; ENDDO
+ DO J=1,SIZE(ISGLIST,1); DO I=1,SIZE(ISGLIST,2); ISGLIST(J,I)=0.0; ENDDO; ENDDO
 
  !## reuse isg from the grid, that is the consequence of using 2d cross-sections
  NISG=0

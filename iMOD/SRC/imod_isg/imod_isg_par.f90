@@ -24,6 +24,8 @@ MODULE MOD_ISG_PAR
 
 USE MOD_IDF_PAR, ONLY : IDFOBJ
 
+INTEGER,DIMENSION(:),ALLOCATABLE :: IACTSTREAM !## active yes/no (1/0) of stream in model domain
+
 INTEGER,PARAMETER :: IRDFLG=-1
 !If IRDFLG <= 0, input data for this stress period will be printed. If IRDFLG > 0, then input data for this stress period will not be printed.
 !If the absolute value of IRDFLG = 2, The elevation of top of streambed of diversion segments (canals/laterals) follows the slope of ground surface at a depth defined by the interpolation of:

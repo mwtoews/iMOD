@@ -1400,8 +1400,8 @@ IRLOOP: DO IR=MAX(1,IROW-1),MIN(NROW,IROW+1)
  INTEGER,INTENT(IN) :: NROW,NCOL,NLAY,ILAY,JU,IPER
  INTEGER,INTENT(INOUT),DIMENSION(:) :: MP
  TYPE(IDFOBJ),DIMENSION(NLAY),INTENT(INOUT) :: TOP,BOT
- INTEGER :: I,J,K,TTIME,IROW,ICOL,N,ISEG,JSEG,NSEG,IREF,NDIM,IRDFLG,IPTFLG,NP, &
-       ICALC,OUTSEG,IUPSEG,IPRIOR,NSTRPTS,ICRS,IQHR,NSTREAM,NREACH
+ INTEGER :: I,J,K,TTIME,IROW,ICOL,N,ISEG,JSEG,NSEG,IREF,NDIM, &
+       ICALC,OUTSEG,IUPSEG,IPRIOR,NSTRPTS,ICRS,IQHR,NREACH,NSTREAM
  REAL :: DXY,X1,X2,Y1,Y2,QFLOW,QROFF,EVT,PREC,ROUGHCH,ROUGHBK,CDPTH,FDPTH,AQDTH,BWDTH, &
        HC1FCT,THICKM1,ELEVUP,WIDTH1,DEPTH1,HC2FCT,THICKM2,ELEVDN,WIDTH2,DEPTH2,WLVLUP,WLVLDN
  REAL,ALLOCATABLE,DIMENSION(:,:) :: QSORT,RVAL
@@ -1412,14 +1412,15 @@ IRLOOP: DO IR=MAX(1,IROW-1),MIN(NROW,IROW+1)
 
  ISG2SFR=.FALSE.
 
- !## variable used to stored number of reaches per segment
- IF(ALLOCATED(ISTR))DEALLOCATE(ISTR); ALLOCATE(ISTR(NISG)); ISTR=0
-
- !## count number of streams
- NSTREAM=0
-
  !## only specify for first stress-period
  IF(IPER.EQ.1)THEN
+
+  !## variable used to stored number of reaches per segment
+  IF(ALLOCATED(ISTR))DEALLOCATE(ISTR); ALLOCATE(ISTR(NISG)); ISTR=0
+
+  !## count number of streams
+  ALLOCATE(IACTSTREAM(NISG)); IACTSTREAM=0; NSTREAM=0
+
   DO I=1,NISG
    NSEG=ISG(I)%NSEG; ISEG=ISG(I)%ISEG; JSEG=ISEG+NSEG-1
    !## start to intersect all segment/segmentpoints to the model-grid
@@ -1437,18 +1438,26 @@ IRLOOP: DO IR=MAX(1,IROW-1),MIN(NROW,IROW+1)
      ICOL=INT(XA(K)); IROW=INT(YA(K))
      !## within model-domain
      IF(ICOL.GE.1.AND.IROW.GE.1.AND.ICOL.LE.NCOL.AND.IROW.LE.NROW)THEN
-      !## increae number of stream reaches
+      !## increase number of stream reaches
       ISTR(I)=ISTR(I)+1
       !## increase number of streams
       IF(ISTR(I).EQ.1)NSTREAM=NSTREAM+1
+      !## total number of reacher per segment
+      IACTSTREAM(I)=IACTSTREAM(I)+1
       LINE=TRIM(ITOS(ILAY))//','//TRIM(ITOS(IROW))//','//TRIM(ITOS(ICOL))//','// &
            TRIM(ITOS(NSTREAM))//','//TRIM(ITOS(ISTR(I)))//','//TRIM(RTOS(LN(K),'F',2))
       WRITE(JU,'(A)') TRIM(LINE)
      ENDIF
     ENDDO
+    IF(IACTSTREAM(I).NE.N)THEN
+     WRITE(*,*) 'stream ',i,' probably partly out of the model domain'
+    ENDIF
    ENDDO
   ENDDO
+ 
  ENDIF
+
+ !## total number of reaches - determines for stress-period 1, stays the same
  NREACH=SUM(ISTR)
 
   !## translate cdate in to julian date - for transient simulations only!
@@ -1464,7 +1473,7 @@ IRLOOP: DO IR=MAX(1,IROW-1),MIN(NROW,IROW+1)
  NDIM=10; ALLOCATE(QSORT(TTIME,NDIM),XNR(NDIM),NDATA(NDIM))
 
  !## allocate storage for cross-sectional data
- ALLOCATE(XCRS(NDIM),ZCRS(NDIM),MCRS(NDIM))
+ ALLOCATE(XCRS(NDIM),ZCRS(NDIM),MCRS(NDIM),QCRS(NDIM),WCRS(NDIM),DCRS(NDIM))
 
  !## variable used to store segment information
  IF(ALLOCATED(RVAL))DEALLOCATE(RVAL); ALLOCATE(RVAL(NDIM,2)); RVAL=0.0
@@ -1474,8 +1483,14 @@ IRLOOP: DO IR=MAX(1,IROW-1),MIN(NROW,IROW+1)
  WRITE(JU,'(A)') TRIM(LINE)
 
  !## write cross-sectional data
- DO I=1,NISG
+ NSTREAM=0; DO I=1,NISG
 
+  !## skip this if not in current model domain
+  IF(IACTSTREAM(I).LE.0)CYCLE
+  
+  !## subsequent numbering of segments
+  NSTREAM=NSTREAM+1
+  
   !## get this information from the cross-sectional data (only one cross-section available)
   ICRS=ISG(I)%ICRS       !## position in isc that starts cross-section
   NDIM=ABS(ISC(ICRS)%N)  !## number of cross-sectional data-points
@@ -1530,10 +1545,8 @@ IRLOOP: DO IR=MAX(1,IROW-1),MIN(NROW,IROW+1)
   IF(ICALC.EQ.4)THEN
 
    !## get this information from the q-width/depth relationships data (only one q-width/depth relationships available)
-   IQHR=ISG(I)%IQHR       !## position in isq that starts q-width/depth relationships
-   NDIM=ABS(ISQ(IQHR)%N)  !## number of q-width/depth relationships
-
-   NSTRPTS=NDIM           !## number of discharge flow relationships
+   IQHR=ISG(I)%IQHR          !## position in isq that starts q-width/depth relationships
+   NSTRPTS=ABS(ISQ(IQHR)%N)  !## number of q-width/depth relationships
    LINE=TRIM(LINE)//','//TRIM(ITOS(NSTRPTS))
 
   ENDIF
@@ -1588,7 +1601,7 @@ IRLOOP: DO IR=MAX(1,IROW-1),MIN(NROW,IROW+1)
    !## get this information from the q-width/depth relationships data
    IQHR=ISG(I)%IQHR
 
-   IF(NSTRPTS.GT.SIZE(XCRS))THEN
+   IF(NSTRPTS.GT.SIZE(QCRS))THEN
     DEALLOCATE(QCRS,DCRS,WCRS)
     ALLOCATE(QCRS(NSTRPTS),DCRS(NSTRPTS),WCRS(NSTRPTS))
    ENDIF
