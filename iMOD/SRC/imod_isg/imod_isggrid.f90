@@ -1516,8 +1516,8 @@ IRLOOP: DO IR=MAX(1,IROW-1),MIN(NROW,IROW+1)
 !    RVAL(2) =DATISD(IREC)%BTML
 !    RVAL(3) =DATISD(IREC)%THCK
 !    RVAL(4) =DATISD(IREC)%HCND
-!    RVAL(5) =DATISD(IREC)%DWNS
-!    RVAL(6) =DATISD(IREC)%UPSG
+!    RVAL(5) =DATISD(IREC)%UPSG
+!    RVAL(6) =DATISD(IREC)%DWNS
 !    RVAL(7) =DATISD(IREC)%ICLC
 !    RVAL(8) =DATISD(IREC)%IPRI
 !    RVAL(9) =DATISD(IREC)%QFLW
@@ -1528,8 +1528,8 @@ IRLOOP: DO IR=MAX(1,IROW-1),MIN(NROW,IROW+1)
   THICKM1=RVAL(3,1); THICKM2=RVAL(3,2)
   HC1FCT =RVAL(4,1); HC2FCT =RVAL(4,2)
   ICALC =INT(RVAL(7,1)) !## calculation option streamdepth
-  OUTSEG=INT(RVAL(5,2)) !## downstream segment
-  IUPSEG=INT(RVAL(6,1)) !## upstream segment
+  IUPSEG=INT(RVAL(5,1)) !## upstream segment
+  OUTSEG=INT(RVAL(6,2)) !## downstream segment
   IPRIOR=INT(RVAL(8,2)) !## dividing option
   QFLOW =RVAL(9,1)      !## inflow
   QROFF =RVAL(10,1)     !## runoff flow
@@ -1564,10 +1564,10 @@ IRLOOP: DO IR=MAX(1,IROW-1),MIN(NROW,IROW+1)
   ENDIF
   IF(ICALC.EQ.3)THEN
    !## not supported
-   CDPTH=0.0
-   FDPTH=0.0
-   AQDTH=0.0
-   BWDTH=0.0
+   CDPTH=0.3
+   FDPTH=0.35
+   AQDTH=3.8
+   BWDTH=0.6
    LINE=TRIM(LINE)//','//TRIM(RTOS(CDPTH,'F',2))//','//TRIM(RTOS(FDPTH,'F',2))//','// &
                          TRIM(RTOS(AQDTH,'F',2))//','//TRIM(RTOS(BWDTH,'F',2))
   ENDIF

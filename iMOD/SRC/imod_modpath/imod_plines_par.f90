@@ -48,6 +48,7 @@ CHARACTER(LEN=256),ALLOCATABLE,DIMENSION(:,:,:) :: HFFNAME  !## BDGFRF,BDGFFF,BD
 CHARACTER(LEN=256),ALLOCATABLE,DIMENSION(:,:) :: ITBFNAME   !## IBOUND,TOP,BOT,POR_AQF,POR_AQT
 INTEGER,SAVE :: NPER,NLAY,ISS,IREV,ISNK,ISTOPCRIT,JD0,JD1,JD2 !,IULOG
 INTEGER,DIMENSION(2) :: IMODE
+INTEGER,ALLOCATABLE,DIMENSION(:,:) :: IUOUT
 REAL :: FRAC,TMAX 
 CHARACTER(LEN=256),ALLOCATABLE,DIMENSION(:) :: SPFNAME,IFFFNAME
 INTEGER :: NSPFNAME,ISPFNAME
@@ -69,8 +70,8 @@ TYPE SPOBJ
  INTEGER :: ICLR   !## particle colour
  INTEGER :: IACT   !## particle active (0=no; 1=yes)
  INTEGER :: IREV   !## direction (0=forward; 1=backward)
- REAL :: SPWIDTH  !## plot size startpoint (0=no, 1.0,2,3,4,5.0 = size)
- REAL :: PWIDTH  !## plot size particle (0=no, 1.0,2,3,4,5.0 = size)
+ REAL :: SPWIDTH   !## plot size startpoint (0=no, 1.0,2,3,4,5.0 = size)
+ REAL :: PWIDTH    !## plot size particle (0=no, 1.0,2,3,4,5.0 = size)
 END TYPE SPOBJ
 TYPE(SPOBJ),DIMENSION(:),ALLOCATABLE :: SP,SPR
 

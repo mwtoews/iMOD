@@ -57,7 +57,7 @@ CONTAINS
  IMPLICIT NONE
  CHARACTER(LEN=*),INTENT(IN) :: FNAME
  CHARACTER(LEN=256) :: RUNFILE
- INTEGER :: IBATCH,ILAY,IPLOT,NG,IDEF
+ INTEGER :: I,IBATCH,ILAY,IPLOT,NG,IDEF
 
  TRACE_3D_INIT=.FALSE.
 
@@ -158,7 +158,7 @@ CONTAINS
  !## initiate particles
  CALL TRACE_INIT_SP(NG)
  !## maximal number of particles to be traced
- CALL TRACE_AL_SP(1000,NG)
+ DO I=1,NG; CALL TRACE_AL_SP(1000,I); ENDDO
 
  IF(IDEF.EQ.1)THEN
   DEMO%IDEMO=2; DEMO%CONFLAG=4; DEMO%ACCFLAG=3; DEMO%IFILL=1
@@ -1066,7 +1066,7 @@ CONTAINS
  CALL TRACE_DEAL_SP(); CALL TRACE_DEAL_SPR() 
 
  !## maximal number of particles to be traced
- CALL TRACE_AL_SP(1000,SIZE(SP))
+ DO I=1,SIZE(SP); CALL TRACE_AL_SP(1000,I); ENDDO !SIZE(SP))
 
  CALL WDIALOGSELECT(ID_D3DSETTINGS_TAB8)
  CALL WDIALOGPUTINTEGER(IDF_INTEGER5,PL%NPART)
@@ -1441,214 +1441,237 @@ CONTAINS
  !## take head for determination model-dimensions
  IF(.NOT.IDFREAD(IDF,HFFNAME(1,1,1),0))RETURN; CLOSE(IDF%IU)
  
- !## define zoom area for particle tracking - overrule area
- IDF%XMIN=188000.0; IDF%XMAX=193000.0
- IDF%YMIN=356000.0; IDF%YMAX=360000.0
- CALL UTL_IDFSNAPTOGRID(IDF%XMIN,IDF%XMAX,IDF%YMIN,IDF%YMAX,IDF%DX,IDF%NCOL,IDF%NROW)
-pause 'peter zoom extent uitzetten !'
+! !## define zoom area for particle tracking - overrule area
+! IDF%XMIN=188000.0; IDF%XMAX=193000.0
+! IDF%YMIN=356000.0; IDF%YMAX=360000.0
+! CALL UTL_IDFSNAPTOGRID(IDF%XMIN,IDF%XMAX,IDF%YMIN,IDF%YMAX,IDF%DX,IDF%NCOL,IDF%NROW)
+!WRITE (*,*) 'peter zoom extent uitzetten !'
 
  IF(.NOT.TRACECALC_INIT(IBATCH))RETURN
  
  ALLOCATE(IVISIT(IDF%NCOL*IDF%NROW*NLAY)); IVISIT=INT(0,1)
  ALLOCATE(LVISIT(IDF%NCOL*IDF%NROW*NLAY)); LVISIT=0
 
+ !## initialize startpoints memory
+ CALL TRACE_INIT_SP(NSPFNAME) 
+ 
+ ALLOCATE(IUOUT(NSPFNAME,2)); IUOUT=0
+ 
  DO ISPFNAME=1,NSPFNAME
   
   !## read/process particles towards readable format
-  IF(.NOT.TRACEPREPARESP(NPART,IBATCH))RETURN
+  IF(.NOT.TRACEPREPARESP(SP(ISPFNAME)%NPART,IBATCH))RETURN 
   !## initialize outputfiles
-  IF(.NOT.TRACEINITOUTFILES(NPART))RETURN
-
-  !## initialize startpoints memory
-  CALL TRACE_INIT_SP(1)
+  IF(.NOT.TRACEINITOUTFILES(SP(ISPFNAME)%NPART))RETURN 
+ 
   !## read all particle in memory
-  CALL TRACE_AL_SP(NPART,1)
+  CALL TRACE_AL_SP(SP(ISPFNAME)%NPART,ISPFNAME) 
   !## set initial time for each particle to zero
-  CALL TRACEREADSP(1,NPART)
+  CALL TRACEREADSP(ISPFNAME,SP(ISPFNAME)%NPART)
 
-  !## copy particles to runtime particles
-  CALL TRACE_INIT_SPR(1)
-  CALL TRACE_AL_SPR()
+ ENDDO
+ 
+ !## copy particles to runtime particles
+ CALL TRACE_INIT_SPR(NSPFNAME)
+ CALL TRACE_AL_SPR()
 
-  TTMAX  =0.0
-  IPERIOD=1
-  IRAT   =0
-  IRAT1  =IRAT
-  MAXVELOCITY=0.0
-  IPATHLINE_3D=0
+ TTMAX  =0.0
+ IPERIOD=1
+ IRAT   =0
+ IRAT1  =IRAT
+ MAXVELOCITY=0.0
+ IPATHLINE_3D=0
   
-  !## transient simulation
-  IF(ISS.EQ.1)THEN
-   !## forwards
-   IF(IREV.EQ.0)THEN
-    DO IPER=1,NPER
-     IF(PLIPER(IPER,1).LE.JD0.AND.PLIPER(IPER+1,1).GT.JD0)EXIT
-    ENDDO
-    IPER=IPER-1; DPER=1; MPER=NPER; SPER=1
-   !## backwards
-   ELSEIF(IREV.EQ.1)THEN
-    DO IPER=NPER,1,-1
-     IF(PLIPER(IPER,1).LE.JD0.AND.PLIPER(IPER+1,1).GE.JD0)EXIT
-    ENDDO   
-    IPER=IPER+1; DPER=-1; MPER=1; SPER=NPER
-   ENDIF
-   
+ !## transient simulation
+ IF(ISS.EQ.1)THEN
+  !## forwards
+  IF(IREV.EQ.0)THEN
+   DO IPER=1,NPER
+    IF(PLIPER(IPER,1).LE.JD0.AND.PLIPER(IPER+1,1).GT.JD0)EXIT
+   ENDDO
+   IPER=IPER-1; DPER=1; MPER=NPER; SPER=1
+  !## backwards
+  ELSEIF(IREV.EQ.1)THEN
+   DO IPER=NPER,1,-1
+    IF(PLIPER(IPER,1).LE.JD0.AND.PLIPER(IPER+1,1).GE.JD0)EXIT
+   ENDDO   
+   IPER=IPER+1; DPER=-1; MPER=1; SPER=NPER
   ENDIF
    
-  DO
+ ENDIF
+   
+ DO
 
-   !## transient simulation
-   IF(ISS.EQ.1)THEN
-    IPER=IPER+DPER   
-    !## what to do after sequence has almost ended
-    IF(IPER.EQ.MPER)THEN 
-     LEX=.TRUE.; DT=PLIPER(IPER+1,1)-PLIPER(IPER,1)
-     IF(ISTOPCRIT.EQ.3)THEN; TTMAX=TMAX; ELSE; TTMAX=TTMAX+DT; ENDIF
-    ELSE
-     !## within selected time-window
-     LEX=.FALSE.
-     !# get time difference between stress-periods
-     IF(PLIPER(IPER+1,1).LE.JD2.AND.PLIPER(IPER,1).GE.JD1)THEN
-      !## length of stress-period (days)
-      DT =MIN(JD2,PLIPER(IPER+1,1))-MAX(JD1,PLIPER(IPER,1))
-      TTMAX=TTMAX+DT
-      IF(DT.GT.0.0)LEX=.TRUE.
-     ENDIF
-    ENDIF
-
-   !## steady-state simulation
+  !## transient simulation
+  IF(ISS.EQ.1)THEN
+   IPER=IPER+DPER   
+   !## what to do after sequence has almost ended
+   IF(IPER.EQ.MPER)THEN 
+    LEX=.TRUE.; DT=PLIPER(IPER+1,1)-PLIPER(IPER,1)
+    IF(ISTOPCRIT.EQ.3)THEN; TTMAX=TMAX; ELSE; TTMAX=TTMAX+DT; ENDIF
    ELSE
-    TTMAX=TMAX
-    LEX=.TRUE.
-    IPER=1
+    !## within selected time-window
+    LEX=.FALSE.
+    !# get time difference between stress-periods
+    IF(PLIPER(IPER+1,1).LE.JD2.AND.PLIPER(IPER,1).GE.JD1)THEN
+     !## length of stress-period (days)
+     DT =MIN(JD2,PLIPER(IPER+1,1))-MAX(JD1,PLIPER(IPER,1))
+     TTMAX=TTMAX+DT
+     IF(DT.GT.0.0)LEX=.TRUE.
+    ENDIF
    ENDIF
 
-   !## never exceeds given tmax
-   TTMAX=MIN(TTMAX,TMAX)
+  !## steady-state simulation
+  ELSE
+   TTMAX=TMAX
+   LEX=.TRUE.
+   IPER=1
+  ENDIF
 
-   IF(LEX)THEN
+  !## never exceeds given tmax
+  TTMAX=MIN(TTMAX,TMAX)
 
-    CALL WMESSAGEPEEK(ITYPE,MESSAGE)
-    IF(ITYPE.EQ.KEYDOWN.AND.MESSAGE%VALUE1.EQ.KEYESCAPE)THEN
-     CALL WMESSAGEBOX(YESNO,QUESTIONICON,COMMONNO,'Are you sure to terminate current pathline computation?'//CHAR(13)// &
-      'Though, current results upto now, are already stored in an IFF-format','Question')
-     IF(WINFODIALOG(4).EQ.1)EXIT
-    ENDIF
+  IF(LEX)THEN
 
-    IF(ISS.EQ.0)WRITE(IULOG,'(1X,A,I10,A,F10.2,A)')    'Using following files for steady-state simulation'
-    IF(ISS.EQ.1)WRITE(IULOG,'(1X,A,I10,A,2(F10.2,A))') 'Using following files for current stressperiod',IPER,' time upto: ',TTMAX,' days (timestep',DT,' days)'
-    DO ILAY=1,NLAY
-     STRING=TRIM(ITOS(ILAY))
-     J=1; IF(ILAY.EQ.NLAY)J=0
-     DO I=1,2+J 
-      IP=INDEX(HFFNAME(I,ILAY,IPER),'\',.TRUE.)+1
-      STRING=TRIM(STRING)//','//TRIM(HFFNAME(I,ILAY,IPER)(IP:))
-     END DO
-     WRITE(IULOG,'(A)') TRIM(STRING)
+   CALL WMESSAGEPEEK(ITYPE,MESSAGE)
+   IF(ITYPE.EQ.KEYDOWN.AND.MESSAGE%VALUE1.EQ.KEYESCAPE)THEN
+    CALL WMESSAGEBOX(YESNO,QUESTIONICON,COMMONNO,'Are you sure to terminate current pathline computation?'//CHAR(13)// &
+     'Though, current results upto now, are already stored in an IFF-format','Question')
+    IF(WINFODIALOG(4).EQ.1)EXIT
+   ENDIF
+
+   IF(ISS.EQ.0)WRITE(IULOG,'(1X,A,I10,A,F10.2,A)')    'Using following files for steady-state simulation'
+   IF(ISS.EQ.1)WRITE(IULOG,'(1X,A,I10,A,2(F10.2,A))') 'Using following files for current stressperiod',IPER,' time upto: ',TTMAX,' days (timestep',DT,' days)'
+   DO ILAY=1,NLAY
+    STRING=TRIM(ITOS(ILAY))
+    J=1; IF(ILAY.EQ.NLAY)J=0
+    DO I=1,2+J 
+     IP=INDEX(HFFNAME(I,ILAY,IPER),'\',.TRUE.)+1
+     STRING=TRIM(STRING)//','//TRIM(HFFNAME(I,ILAY,IPER)(IP:))
     END DO
-    WRITE(IULOG,*)
+    WRITE(IULOG,'(A)') TRIM(STRING)
+   END DO
+   WRITE(IULOG,*)
 
-    !## read time-dependent data for particle tracking
-    IF((ISS.EQ.0.AND.ISPFNAME.EQ.1).OR.ISS.EQ.1)THEN
-     IF(.NOT.TRACEREADBUDGET(IPER,IBATCH))RETURN 
-     !## backwards tracking
-     IF(IREV.EQ.1)CALL TRACEIREV()
-    ENDIF
+   !## read time-dependent data for particle tracking
+   IF((ISS.EQ.0.AND.ISPFNAME.EQ.1).OR.ISS.EQ.1)THEN
+    IF(.NOT.TRACEREADBUDGET(IPER,IBATCH))RETURN 
+    !## backwards tracking
+    IF(IREV.EQ.1)CALL TRACEIREV()
+   ENDIF
 
-    !## start particle loop
-    IF(IBATCH.EQ.0)CALL WINDOWSELECT(0)
+   !## start particle loop
+   IF(IBATCH.EQ.0)CALL WINDOWSELECT(0)
 
-    IF(ISS.EQ.1)THEN
-     CPERIOD=' [Duration '//TRIM(ITOS(INT(DT)))//' day; Period '//TRIM(ITOS(IPERIOD))//', max. '//TRIM(ITOS(INT(TTMAX)))//' days]'
-     I=0
-     DO IPART=1,SP(1)%NPART
-      IF(SP(1)%KLC(IPART).NE.0)I=I+1
+   IF(ISS.EQ.1)THEN
+    CPERIOD=' [Duration '//TRIM(ITOS(INT(DT)))//' day; Period '//TRIM(ITOS(IPERIOD))//', max. '//TRIM(ITOS(INT(TTMAX)))//' days]'
+    I=0
+    DO ISPFNAME=1,NSPFNAME
+     DO IPART=1,SP(ISPFNAME)%NPART
+      IF(SP(ISPFNAME)%KLC(IPART).NE.0)I=I+1
      ENDDO
-     STRING='Still tracing '//TRIM(ITOS(I))//' out of '//TRIM(ITOS(SP(1)%NPART))//' particles for Stress '// &
-                              TRIM(ITOS(IPER))//' out of '//TRIM(ITOS(NPER))//TRIM(CPERIOD)
-     IF(IBATCH.EQ.1)WRITE(*,'(A)') TRIM(STRING)
-     IF(IBATCH.EQ.0)CALL WINDOWOUTSTATUSBAR(4,STRING)
-    ELSE
-     STRING='Tracing '//TRIM(ITOS(SP(1)%NPART))//' particles (Steady-state) ...'
-     IF(IBATCH.EQ.1)WRITE(*,'(A)') TRIM(STRING)
-     IF(IBATCH.EQ.0)CALL WINDOWOUTSTATUSBAR(4,STRING)
-    ENDIF
+    ENDDO
+    STRING='Still tracing '//TRIM(ITOS(I))//' out of '//TRIM(ITOS(SUM(SP%NPART)))//' particles for Stress '// &
+                             TRIM(ITOS(IPER))//' out of '//TRIM(ITOS(NPER))//TRIM(CPERIOD)
+    IF(IBATCH.EQ.1)WRITE(*,'(A)') TRIM(STRING)
+    IF(IBATCH.EQ.0)CALL WINDOWOUTSTATUSBAR(4,STRING)
+   ELSE
+    STRING='Tracing '//TRIM(ITOS(SUM(SP%NPART)))//' particles (steady-state) ...'
+    IF(IBATCH.EQ.1)WRITE(*,'(A)') TRIM(STRING)
+    IF(IBATCH.EQ.0)CALL WINDOWOUTSTATUSBAR(4,STRING)
+   ENDIF
+
+   !## loop over startpunt groups
+   DO ISPFNAME=1,NSPFNAME
+
+    IF(IBATCH.EQ.0)CALL UTL_WAITMESSAGE(IRAT,IRAT1,ISPFNAME,NSPFNAME,'Busy tracking particles ('//TRIM(ITOS(SP(ISPFNAME)%NPART))// &
+      ') startpoints from '//TRIM(SPFNAME(ISPFNAME))//' ...')
+    IF(IBATCH.EQ.1)WRITE(*,'(A)') 'Busy tracking particles ('//TRIM(ITOS(SP(ISPFNAME)%NPART))// &
+      ') startpoints from '//TRIM(SPFNAME(ISPFNAME))//' ...'
 
     NIDSCH=0
-    DO IPART=1,SP(1)%NPART
+    DO IPART=1,SP(ISPFNAME)%NPART 
      CALL WMESSAGEPEEK(ITYPE,MESSAGE)
      !## time in days!
-     TIME=SPR(1)%TOT(IPART)
+     TIME=SPR(ISPFNAME)%TOT(IPART) 
      !## trace selected particle, NOT YET discharged!
-     IF(SPR(1)%KLC(IPART).NE.0)THEN
-      SPR(1)%MXL(IPART)=0
+     IF(SPR(ISPFNAME)%KLC(IPART).NE.0)THEN
+      SPR(ISPFNAME)%MXL(IPART)=0
       CALL FLOLIN(IPART,IMODE(1),TIME,TTMAX,IDSCH, &
-                  SPR(1)%JLC(IPART),SPR(1)%ILC(IPART),SPR(1)%KLC(IPART),   &
-                  SPR(1)%XLC(IPART),SPR(1)%YLC(IPART),SPR(1)%ZLC(IPART),SPR(1)%ZLL(IPART), &
+                  SPR(ISPFNAME)%JLC(IPART),SPR(ISPFNAME)%ILC(IPART),SPR(ISPFNAME)%KLC(IPART),  &
+                  SPR(ISPFNAME)%XLC(IPART),SPR(ISPFNAME)%YLC(IPART),SPR(ISPFNAME)%ZLC(IPART),  &
+                  SPR(ISPFNAME)%ZLL(IPART), &
                   IBOUND,ZBOT,ZTOP,LDELR,LDELC,QX,QY,QZ,QSS,POR,NCON,IDF%NCOL,IDF%NROW,NLAY,  &
-                  NLPOR,IDF%NCOL*IDF%NROW*NLAY,NCP1,NRP1,NLP1,ISNK,IREV,FRAC,IMODE(1),   &
-                  ISS,MAXVELOCITY,DELX,DELY,SPR(1)%MXL(IPART),IVISIT,LVISIT,NVISIT)
+                  NLPOR,IDF%NCOL*IDF%NROW*NLAY,NCP1,NRP1,NLP1,ISNK,IREV,FRAC,IUOUT(ISPFNAME,1),   &
+                  ISS,MAXVELOCITY,DELX,DELY,SPR(ISPFNAME)%MXL(IPART),IVISIT,LVISIT,NVISIT)
       !## clean visited places that have been visited before
       DO I=1,NVISIT; IVISIT(LVISIT(I))=INT(0,1); ENDDO
 
       !## time in days
-      SPR(1)%TOT(IPART)=TIME !## days
+      SPR(ISPFNAME)%TOT(IPART)=TIME !## days
       IF(ISS.EQ.1)THEN
        !## end of current simulation
        IF(IDSCH.EQ.7)IDSCH=0
       ELSE
        !## end of simulation reached!
-       IF(SPR(1)%TOT(IPART).GE.TTMAX)IDSCH=7
+       IF(SPR(ISPFNAME)%TOT(IPART).GE.TTMAX)IDSCH=7
       ENDIF
       !## particle discharged whenever idsch.ne.0
       IF(IDSCH.NE.0)THEN
        !## write endpoint information current particle that has stopped
-       IF(IMODE(2).GT.0)CALL TRACECREATEIPF(IMODE(2),IDSCH,IPART)
-       SPR(1)%KLC(IPART)=0
+       IF(IMODE(2).GT.0)CALL TRACECREATEIPF(IDSCH,IPART)
+       SPR(ISPFNAME)%KLC(IPART)=0
       ELSE
        !## particle NOT discharged!
        NIDSCH=NIDSCH+1
       ENDIF
      ENDIF
-     IF(IBATCH.EQ.0)CALL UTL_WAITMESSAGE(IRAT,IRAT1,IPART,SP(1)%NPART,'Busy tracking particle '//TRIM(ITOS(IPART))//' ')
-     IF(IBATCH.EQ.1)WRITE(*,'(A,I10)') 'Busy tracking particle ',IPART
     ENDDO
-    !## no particles left, stop tracking process!
-    IF(NIDSCH.EQ.0)EXIT
-   ENDIF
+   ENDDO
 
-   !## stop while doing a steady-state simulation
-   IF(ISS.EQ.0)EXIT 
-   !## stop whenever tmax.eq.ttmax
-   IF(TTMAX.GE.TMAX)EXIT
-   !## determing stopcriterion whenever transient simulation concerned!
-   IF(IPER.EQ.MPER)THEN 
-    !## stop after last period, assume last period duration is similar to previous one!
-    !## continue until particle stops (given tmax, else tmax=10e30)
-    IF(ISTOPCRIT.EQ.1.OR.ISTOPCRIT.EQ.3)EXIT
-    !## repeat period again tmax
-    IF(ISTOPCRIT.EQ.2)THEN
-     IPER   =SPER+(-1.0*DPER)
-     IPERIOD=IPERIOD+1
-    ENDIF
-   ENDIF
-
-  ENDDO
-
-  !## write remaining non-stopped particles for endpoints (IDSCH=0)
-  IF(IMODE(2).GT.0)THEN
-   IDSCH=0
-   DO IPART=1,SP(1)%NPART; IF(SPR(1)%KLC(IPART).NE.0)CALL TRACECREATEIPF(IMODE(2),IDSCH,IPART); ENDDO
+   !## no particles left, stop tracking process!
+   IF(NIDSCH.EQ.0)EXIT
   ENDIF
 
-  IF(IMODE(1).GT.0)THEN; CLOSE(IMODE(1)); IMODE(1)=1; ENDIF
-  IF(IMODE(2).GT.0)THEN; CLOSE(IMODE(2)); IMODE(2)=1; ENDIF
-  
+  !## stop while doing a steady-state simulation
+  IF(ISS.EQ.0)EXIT 
+  !## stop whenever tmax.eq.ttmax
+  IF(TTMAX.GE.TMAX)EXIT
+  !## determing stopcriterion whenever transient simulation concerned!
+  IF(IPER.EQ.MPER)THEN 
+   !## stop after last period, assume last period duration is similar to previous one!
+   !## continue until particle stops (given tmax, else tmax=10e30)
+   IF(ISTOPCRIT.EQ.1.OR.ISTOPCRIT.EQ.3)EXIT
+   !## repeat period again tmax
+   IF(ISTOPCRIT.EQ.2)THEN
+    IPER   =SPER+(-1.0*DPER)
+    IPERIOD=IPERIOD+1
+   ENDIF
+  ENDIF
+
+ ENDDO
+
+ !## write remaining non-stopped particles for endpoints (IDSCH=0)
+ IF(IMODE(2).GT.0)THEN
+  IDSCH=0
+  DO ISPFNAME=1,NSPFNAME
+   DO IPART=1,SP(ISPFNAME)%NPART; IF(SPR(ISPFNAME)%KLC(IPART).NE.0)CALL TRACECREATEIPF(IDSCH,IPART); ENDDO
+  ENDDO
+ ENDIF
+
+ IF(IMODE(1).GT.0)THEN
+  DO ISPFNAME=1,NSPFNAME; CLOSE(IUOUT(ISPFNAME,1)); ENDDO; IMODE(1)=1
+ ENDIF
+ IF(IMODE(2).GT.0)THEN
+  DO ISPFNAME=1,NSPFNAME; CLOSE(IUOUT(ISPFNAME,2)); ENDDO; IMODE(2)=1
+ ENDIF
+ 
+ DO ISPFNAME=1,NSPFNAME
   STRING='Completed particle tracking. Results are stored within:'
   IF(IMODE(1).GT.0)STRING=TRIM(STRING)//' '//TRIM(IFFFNAME(ISPFNAME))//'.IFF'
   IF(IMODE(2).GT.0)STRING=TRIM(STRING)//' '//TRIM(IFFFNAME(ISPFNAME))//'.IPF'
   STRING=TRIM(STRING)//' and added to the iMOD-manager.'// &
-    TRIM(ITOS(SP(1)%NPART))//' particles were released out of '//TRIM(ITOS(TPART))//'. '//  &
+    TRIM(ITOS(SP(ISPFNAME)%NPART))//' particles were released out of '//TRIM(ITOS(TPART))//'. '//  &
    'Unreleased particles occured due to inactive/constant head boundary conditions '// &
    'and/or particles positioned above/beneath given thresshold.'// &
     TRIM(ITOS(NCONS))//' inconsequences were removed from top/bottom information! '// &
@@ -1658,15 +1681,15 @@ pause 'peter zoom extent uitzetten !'
   IF(IBATCH.EQ.0)THEN
    CALL WMESSAGEBOX(OKONLY,INFORMATIONICON,COMMONOK,TRIM(STRING),'Information')
   ENDIF
- 
-  !## deallocate memory
-  CALL TRACEDEALLOCATE(0)
+ ENDDO
+
+ !## deallocate memory
+ CALL TRACEDEALLOCATE(0)
+
+ DO ISPFNAME=1,NSPFNAME
   !## convert to gen if desired
   IF(ICONVERTGEN.EQ.1)CALL TRACECONVERTTOGEN(TRIM(IFFFNAME(ISPFNAME))//'.iff')
-  
  ENDDO
- 
-! DEALLOCATE(IVISIT,LVISIT)
  
  CLOSE(IULOG)
 
@@ -2000,14 +2023,14 @@ IPFLOOP: DO I=1,SIZE(IPF)
  
  !## open output channel pathlines
  IF(IMODE(1).GT.0)THEN
-  IMODE(1)=UTL_GETUNIT()
-  CALL OSD_OPEN(IMODE(1),FILE=IFFFNAME(ISPFNAME)(:I)//'.iff',STATUS='REPLACE',ACTION='WRITE',IOSTAT=IOS,FORM='FORMATTED')
-  CALL TRACEINITOUTFILES_IFF(IMODE(1))
+  IUOUT(ISPFNAME,1)=UTL_GETUNIT()
+  CALL OSD_OPEN(IUOUT(ISPFNAME,1),FILE=IFFFNAME(ISPFNAME)(:I)//'.iff',STATUS='REPLACE',ACTION='WRITE',IOSTAT=IOS,FORM='FORMATTED')
+  CALL TRACEINITOUTFILES_IFF(IUOUT(ISPFNAME,1))
  ENDIF
  IF(IMODE(2).GT.0)THEN
-  IMODE(2)=UTL_GETUNIT()
-  CALL OSD_OPEN(IMODE(2),FILE=IFFFNAME(ISPFNAME)(:I)//'.ipf',STATUS='REPLACE',ACTION='WRITE',IOSTAT=IOS)
-  CALL TRACEINITOUTFILES_IPF(IMODE(2),NPART)
+  IUOUT(ISPFNAME,2)=UTL_GETUNIT()
+  CALL OSD_OPEN(IUOUT(ISPFNAME,2),FILE=IFFFNAME(ISPFNAME)(:I)//'.ipf',STATUS='REPLACE',ACTION='WRITE',IOSTAT=IOS)
+  CALL TRACEINITOUTFILES_IPF(IUOUT(ISPFNAME,2),NPART)
  ENDIF
  IF(IOS.NE.0)THEN
   CALL OSD_IOSTAT_MSG(IOS,ERRORMESSAGE)
@@ -2287,79 +2310,42 @@ IPFLOOP: DO I=1,SIZE(IPF)
  IF(ALLOCATED(IFFFNAME))DEALLOCATE(IFFFNAME)
  IF(ALLOCATED(IVISIT))  DEALLOCATE(IVISIT)
  IF(ALLOCATED(LVISIT))  DEALLOCATE(LVISIT)
+ IF(ALLOCATED(IUOUT))   DEALLOCATE(IUOUT)
 
  END SUBROUTINE TRACEDEALLOCATE
 
  !###======================================================================
- SUBROUTINE TRACECREATEIPF(IU,IDSCH,IPART)
+ SUBROUTINE TRACECREATEIPF(IDSCH,IPART)
  !###======================================================================
  IMPLICIT NONE
- INTEGER,INTENT(IN) :: IDSCH,IPART,IU
+ INTEGER,INTENT(IN) :: IDSCH,IPART
+ INTEGER  :: IU,IG
  REAL :: DIST
-! INTEGER :: IC1,IC2,IR1,IR2
-! CHARACTER(LEN=256) :: LINE
  
- ! WRITE(IU,*) 'SP_XCRD.'
- ! WRITE(IU,*) 'SP_YCRD.'
- ! WRITE(IU,*) 'SP_ZCRD.'
- ! WRITE(IU,*) 'START_ILAY'
- ! WRITE(IU,*) 'START_IROW'
- ! WRITE(IU,*) 'START_ICOL'
- ! WRITE(IU,*) 'EP_XCRD.'
- ! WRITE(IU,*) 'EP_YCRD.'
- ! WRITE(IU,*) 'EP_ZCRD.'
- ! WRITE(IU,*) 'END_ILAY'
- ! WRITE(IU,*) 'END_IROW'
- ! WRITE(IU,*) 'END_ICOL'
- ! WRITE(IU,*) 'IDENT.NO.'
- ! WRITE(IU,*) 'TIME(YEARS)'
- ! WRITE(IU,*) 'DISTANCE'
- ! WRITE(IU,*) 'CAPTURED BY'
- ! WRITE(IU,*) 'MIN_ILAY'
- 
-! CALL IDFIROWICOL(IDF,IR1,IC1,XLC(IPART,1)+IDF%XMIN,YLC(IPART,1)+IDF%YMIN)
-! CALL IDFIROWICOL(IDF,IR2,IC2,XLC(IPART,2)+IDF%XMIN,YLC(IPART,2)+IDF%YMIN)
- 
- DIST=SQRT((SP(1)%XLC(IPART)-SPR(1)%XLC(IPART))**2.0+ &
-           (SP(1)%YLC(IPART)-SPR(1)%YLC(IPART))**2.0+ &
-           (SP(1)%ZLC(IPART)-SPR(1)%ZLC(IPART))**2.0)
-
-! LINE=TRIM(RTOS(SP(1)%XLC(IPART)+IDF%XMIN,'F',2))//','// &
-!      TRIM(RTOS(SP(1)%YLC(IPART)+IDF%YMIN,'F',2))//','// &
-!      TRIM(RTOS(SP(1)%ZLC(IPART),'F',3))//','// &
-!      TRIM(ITOS(SP(1)%KLC(IPART)))//','// &      
-!      TRIM(ITOS(SP(1)%JLC(IPART)))//','// &      
-!      TRIM(ITOS(SP(1)%ILC(IPART)))//','// &      
-!      TRIM(RTOS(SPR(1)%XLC(IPART)+IDF%XMIN,'F',2))//','// &
-!      TRIM(RTOS(SPR(1)%YLC(IPART)+IDF%YMIN,'F',2))//','// &
-!      TRIM(RTOS(SPR(1)%ZLC(IPART),'F',3))//','// &
-!      TRIM(ITOS(SPR(1)%KLC(IPART)))//','// &      
-!      TRIM(ITOS(SPR(1)%JLC(IPART)))//','// &      
-!      TRIM(ITOS(SPR(1)%ILC(IPART)))//','// &      
-!      TRIM(ITOS(IPART))//','// &      
-!      TRIM(RTOS(SPR(1)%TOT(IPART)/365.25,'E',5))//','// &
-!      TRIM(RTOS(DIST,'F',2))//','// &
-!      TRIM(ITOS(IDSCH))//','// &            
-!      TRIM(ITOS(MAXILAY(IPART)))
-! WRITE(IU,'(A)') TRIM(LINE)
+ IU=IUOUT(ISPFNAME,2)
+ IG=ISPFNAME
+  
+ DIST=SQRT((SP(IG)%XLC(IPART)-SPR(IG)%XLC(IPART))**2.0+ &
+           (SP(IG)%YLC(IPART)-SPR(IG)%YLC(IPART))**2.0+ &
+           (SP(IG)%ZLC(IPART)-SPR(IG)%ZLC(IPART))**2.0)
 
  WRITE(IU,'(2(3(E15.7,1X),3(I10,1X)),E15.7,1X,I10,1X,E15.7,1X,2(I10,1X))') &
-       SP(1) %XLC(IPART)+IDF%XMIN, &
-       SP(1) %YLC(IPART)+IDF%YMIN, &
-       SP(1) %ZLC(IPART),          &
-       SP(1) %KLC(IPART),          &
-       SP(1) %ILC(IPART),          &
-       SP(1) %JLC(IPART),          &
-       SPR(1)%XLC(IPART)+IDF%XMIN, &
-       SPR(1)%YLC(IPART)+IDF%YMIN, &
-       SPR(1)%ZLC(IPART),          &
-       SPR(1)%KLC(IPART),          &
-       SPR(1)%ILC(IPART),          &
-       SPR(1)%JLC(IPART),          &
-       SPR(1)%TOT(IPART)/365.25,   &
-       SPR(1)%MXL(IPART),          &
-       DIST,                       &
-       IPART,                      &
+       SP(IG) %XLC(IPART)+IDF%XMIN, &
+       SP(IG) %YLC(IPART)+IDF%YMIN, &
+       SP(IG) %ZLC(IPART),          &
+       SP(IG) %KLC(IPART),          &
+       SP(IG) %ILC(IPART),          &
+       SP(IG) %JLC(IPART),          &
+       SPR(IG)%XLC(IPART)+IDF%XMIN, &
+       SPR(IG)%YLC(IPART)+IDF%YMIN, &
+       SPR(IG)%ZLC(IPART),          &
+       SPR(IG)%KLC(IPART),          &
+       SPR(IG)%ILC(IPART),          &
+       SPR(IG)%JLC(IPART),          &
+       SPR(IG)%TOT(IPART)/365.25,   &
+       SPR(IG)%MXL(IPART),          &
+       DIST,                        &
+       IPART,                       &
        IDSCH
 
  END SUBROUTINE TRACECREATEIPF
@@ -2460,28 +2446,28 @@ IPFLOOP: DO I=1,SIZE(IPF)
  END SUBROUTINE TRACE_INIT_SPR
  
  !###======================================================================
- SUBROUTINE TRACE_AL_SP(NPART,NG)
+ SUBROUTINE TRACE_AL_SP(NPART,IG)
  !###======================================================================
  IMPLICIT NONE
- INTEGER,INTENT(IN) :: NPART,NG
+ INTEGER,INTENT(IN) :: NPART,IG
  INTEGER :: I
  
- DO I=1,NG
+! DO I=1,NG
 
-  !## reals
-  ALLOCATE(SP(I)%XLC(NPART), &
-           SP(I)%YLC(NPART), &
-           SP(I)%ZLC(NPART), &
-           SP(I)%ZLL(NPART), &
-           SP(I)%TOT(NPART))
+ !## reals
+ ALLOCATE(SP(IG)%XLC(NPART), &
+          SP(IG)%YLC(NPART), &
+          SP(IG)%ZLC(NPART), &
+          SP(IG)%ZLL(NPART), &
+          SP(IG)%TOT(NPART))
 
-  !## integers
-  ALLOCATE(SP(I)%KLC(NPART), &
-           SP(I)%JLC(NPART), &
-           SP(I)%ILC(NPART), &
-           SP(I)%MXL(NPART))
+ !## integers
+ ALLOCATE(SP(IG)%KLC(NPART), &
+          SP(IG)%JLC(NPART), &
+          SP(IG)%ILC(NPART), &
+          SP(IG)%MXL(NPART))
 
- ENDDO
+! ENDDO
  
  END SUBROUTINE TRACE_AL_SP
  
