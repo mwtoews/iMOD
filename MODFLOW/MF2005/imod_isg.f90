@@ -1006,8 +1006,13 @@ DO I=1,NTYP
 !#distance current segment
  D1= DIST(ISEG)-DIST(ISEG-1)
  D2= DXY-DIST(ISEG-1)
- F = D2/D1
-
+ !## segment itself is zero
+ IF(D1.LE.0.0)THEN
+  F=1.0
+ ELSE
+  F=D2/D1
+ ENDIF
+ 
 !#put in extra coordinate
  IF(F.LE.0.01)THEN
   IPOS(ISEG-1)=IREC*ITYPE  !##put data to current node
