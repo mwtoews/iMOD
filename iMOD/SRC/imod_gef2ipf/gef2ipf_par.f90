@@ -270,7 +270,7 @@ CONTAINS
    WRITE(*,*) 'File not fully available '//TRIM(GEFNAMES(INAME))
    RETURN
   ENDIF
-  ICOL=1
+!  ICOL=1
   ALLOCATE(GEF2(NCOLLINE(IROW),NROW)) !#GEF2=dummy array for storing whole row into an array and extract only the character part later)  
   READ(LINE,*,IOSTAT=IOS) (GEF2(ICOL,IROW),ICOL=1,NCOLLINE(IROW))
   IF(IOS.NE.0)THEN

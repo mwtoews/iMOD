@@ -258,9 +258,6 @@ CONTAINS
  !## buffer around it
  X1=X1+DX; X2=X2-DX; Y1=Y1+2.0*DY; Y2=Y2-DY
  
-! CALL IGRCOLOURN(WRGB(155,155,155))
-! CALL IGRRECTANGLE(X1,Y1,X2,Y2)
- 
  !## streched (igry=0) or classes (igry=1)
  IGRY=0; IF(LEG%NCLR.LE.MXCLASS)IGRY=1
 

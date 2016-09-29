@@ -99,7 +99,7 @@ CONTAINS
  IF(SUM(XY).NE.0.0)THEN
   DX =XY(1,2)-XY(1,1)  !## x2-x1
   DY =XY(2,2)-XY(2,1)  !## y2-y1
-  XDIS=SQRT(DX**2.0+DY**2.0)
+!  XDIS=SQRT(DX**2.0+DY**2.0)
   RAD=0.0
   IF(DY.NE.0.0)RAD=ATAN2(DY,DX)
   CALL UTL_PROFILE_GETVIEWBOX(XY(1,1),XY(2,1),XY(1,2),XY(2,2),TDIS,XYPOL,XMN,YMN,XMX,YMX)
@@ -173,8 +173,8 @@ CONTAINS
       !## rotated coordinates become ...
       X1=XS1* COS(RAD)+YS1*SIN(RAD)       !x1'
       X2=XS2* COS(RAD)+YS2*SIN(RAD)       !x2'
-      Y1=YS1*(-1.0*SIN(RAD))+YS1*COS(RAD) !y1'
-      Y2=YS2*(-1.0*SIN(RAD))+YS2*COS(RAD) !y2'
+!      Y1=YS1*(-1.0*SIN(RAD))+YS1*COS(RAD) !y1'
+!      Y2=YS2*(-1.0*SIN(RAD))+YS2*COS(RAD) !y2'
 
       IF(MP(IPLOT)%FADEOUT.EQ.1)THEN
        XS1=(IFF(1)%X+IFF(2)%X)/2.0

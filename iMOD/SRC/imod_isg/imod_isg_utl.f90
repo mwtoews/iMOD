@@ -700,8 +700,7 @@ CONTAINS
    ELSEIF(ISFR.EQ.1)THEN
     READ(ISGIU(4,ISGFILES),REC=IREC+ICF) DATISD(KREC)%IDATE,DATISD(KREC)%CTIME,DATISD(KREC)%WLVL, &   
                                          DATISD(KREC)%BTML,  &
-                                         DATISD(KREC)%THCK ,DATISD(KREC)%HCND, & !,DATISD(KREC)%WIDTH,&
-!                                         DATISD(KREC)%DEPTH,
+                                         DATISD(KREC)%THCK ,DATISD(KREC)%HCND, &
                                          DATISD(KREC)%DWNS ,DATISD(KREC)%UPSG, &
                                          DATISD(KREC)%ICLC ,DATISD(KREC)%IPRI ,DATISD(KREC)%QFLW, &
                                          DATISD(KREC)%QROF
