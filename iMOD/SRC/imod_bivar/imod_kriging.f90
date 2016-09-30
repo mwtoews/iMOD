@@ -337,8 +337,8 @@ CONTAINS
   SELQID=0; SELD=HUGE(1.0)
   DO ID=1,ND
    
-   !## get distance between points
-   DXY=KRIGING_DIST(XD(ID),YD(ID),X,Y)
+   !## get distance between points - remove whenever intersected by faults
+   DXY=KRIGING_DIST(XD(ID),YD(ID),X,Y,0)
    !## otherside of fault, if exists, take next
    IF(DXY.LT.0.0)CYCLE
    
@@ -476,15 +476,16 @@ CONTAINS
  END FUNCTION KRIGING_QUADRANT
 
  !###======================================================================
- REAL FUNCTION KRIGING_DIST(X1,Y1,X2,Y2)
+ REAL FUNCTION KRIGING_DIST(X1,Y1,X2,Y2,IDATA)
  !###======================================================================
  IMPLICIT NONE
+ INTEGER,INTENT(IN) :: IDATA
  REAL,INTENT(IN) :: X1,Y1,X2,Y2
  REAL :: X3,Y3,X4,Y4,XINTER,YINTER
  INTEGER :: I,J,I1,I2,ISTATUS
  
  KRIGING_DIST=UTL_DIST(X1,Y1,X2,Y2)
-
+ 
  IF(.NOT.ASSOCIATED(IXY))RETURN 
 
  DO J=1,SIZE(IXY) 
@@ -495,7 +496,15 @@ CONTAINS
    X4=XY(I  ,1); Y4=XY(I  ,2)
    CALL IGRINTERSECTLINE(X1,Y1,X2,Y2,X3,Y3,X4,Y4,XINTER,YINTER,ISTATUS)
    !## if line intersect, increase distance as a penalty
-   IF(ISTATUS.EQ.5)KRIGING_DIST=-999.0 !KRIGING_DIST*10000.0
+   IF(ISTATUS.EQ.5)THEN
+    !## remove point if intersected by fault
+    IF(IDATA.EQ.0)THEN
+     KRIGING_DIST=-999.0
+    !## include in dataset
+    ELSEIF(IDATA.EQ.1)THEN
+     KRIGING_DIST=KRIGING_DIST*10000.0
+    ENDIF
+   ENDIF
   ENDDO
  ENDDO
  
@@ -514,38 +523,21 @@ CONTAINS
  IF(DXY.GT.0.0)DXY=SQRT(DXY)
  
  IF(DXY.GT.RANGE)THEN
-  H=0.999 !1.0
+  H=0.999 
  ELSE
 
   !## no part of kriging, beyond given range, equal to sill
   SELECT CASE (ABS(KTYPE))
    CASE (1) !## linear
-!   IF(DXY.GT.RANGE)THEN
-!    H=0.999 !1.0
-!   ELSE
     H=DXY/RANGE
-!   ENDIF
-!   KRIGING_GETGAMMA=C0+C1*H
    CASE (2) !## spherical
-!   IF(DXY.GT.RANGE)THEN
-!    H=0.999 !1.0
-!   ELSE
     H=(3.0*DXY)/(2.0*RANGE)-(0.5*(DXY/RANGE)**3.0)
-!   ENDIF
-!   KRIGING_GETGAMMA=C0+C1*H
-
    CASE (3) !## exponential
     H=1.0-EXP(-3.0*(DXY/RANGE))
-!   KRIGING_GETGAMMA=C0+C1*H
-
    CASE (4) !## gaussian
     H=1.0-EXP(-3.0*(DXY**2.0)/(RANGE**2.0))
-!   KRIGING_GETGAMMA=C0+C1*H
-
    CASE (5) !## power
     H=DXY**0.5
-!   KRIGING_GETGAMMA=C0+C1*H
-
    CASE DEFAULT
     WRITE(*,*) 'UNKNOWN KTYPE',KTYPE; PAUSE; STOP
   END SELECT
@@ -571,12 +563,7 @@ CONTAINS
  XYCRIT=0.1*IDF%DX
 
  !## apply a user specified critical distance
- IF(COINCIDENT.EQ.1)THEN
-  XYCRIT=MAX(COINCIDENTDIST,XYCRIT)
-!  XMIN=MINVAL(XD); XMAX=MAXVAL(XD); YMIN=MINVAL(YD); YMAX=MAXVAL(YD)
-!  NC=(XMAX-XMIN)/XYCRIT
-!  ALLOCATE(NP(NC,NR),XP(NC,NR),YP(NC,NR),ZP(NC,NR)); XP=0.0; YP=0.0; ZP=0.0; NP=0.0
- ENDIF
+ IF(COINCIDENT.EQ.1)XYCRIT=MAX(COINCIDENTDIST,XYCRIT)
  
  !## mark doubles with nodata and compute mean for those double points
  DO I=1,MD
@@ -584,12 +571,10 @@ CONTAINS
   IF(ZD(I).EQ.IDF%NODATA)CYCLE
   N=1; XP=XD(I); YP=YD(I); ZP=ZD(I)
   DO J=I+1,MD
-!   !## skip identical location
-!   IF(I.EQ.J)CYCLE
    !## done allready
    IF(ZD(J).EQ.IDF%NODATA)CYCLE
-   !## get distance between points
-   IF(KRIGING_DIST(XD(I),YD(I),XD(J),YD(J)).LE.XYCRIT)THEN
+   !## get distance between points - increase distance whenever points are intersected by fault
+   IF(KRIGING_DIST(XD(I),YD(I),XD(J),YD(J),1).LE.XYCRIT)THEN
     N=N+1
     !## add point to existing point and turn location off
     XP=XP+XD(J); YP=YP+YD(J); ZP=ZP+ZD(J); ZD(J)=IDF%NODATA
@@ -610,61 +595,6 @@ CONTAINS
  END DO
  ND=J
 
-! RETURN
-! 
-! !## sort x, to skip double coordinates
-! CALL SORTEM(1,MD,XD,2,YD,ZD,(/0.0/),(/0.0/),(/0.0/),(/0.0/),(/0.0/))
-!
-! !## sort y numbers
-! IS=1
-! DO I=2,MD
-!  IF(XD(I).NE.XD(I-1))THEN
-!   IE=I-1
-!   CALL SORTEM(IS,IE,YD,2,XD,ZD,(/0.0/),(/0.0/),(/0.0/),(/0.0/),(/0.0/)) 
-!   IS=I
-!  ENDIF
-! ENDDO
-! !## sort last
-! IE=I-1
-! CALL SORTEM(IS,IE,YD,2,XD,ZD,(/0.0/),(/0.0/),(/0.0/),(/0.0/),(/0.0/)) 
-!
-! N=1
-! !## mark doubles with nodata and compute mean for those double points
-! DO I=2,MD
-!  IF(ABS(XD(I)-XD(I-1)).LE.XYCRIT.AND. &
-!     ABS(YD(I)-YD(I-1)).LE.XYCRIT)THEN
-!   IF(N.EQ.1)J=I-1
-!   N=N+1
-!   ZD(J)=ZD(J)+ZD(I)
-!   ZD(I)=IDF%NODATA
-!  ELSE
-!   IF(N.GT.1)THEN
-!    ZD(J)=ZD(J)/REAL(N)
-!    N=1
-!   ENDIF
-!  ENDIF
-! END DO
-! !## correct last if neccessary
-! IF(N.GT.1)ZD(J)=ZD(J)/REAL(N)
-!
-! !## eliminate doubles
-! J=0
-! DO I=1,MD
-!  IF(ZD(I).NE.IDF%NODATA)THEN
-!   J=J+1
-!   IF(J.NE.I)THEN
-!    XD(J)=XD(I); YD(J)=YD(I); ZD(J)=ZD(I)
-!   ENDIF
-!  ENDIF
-! END DO
-! ND=J
-! 
-!! !## compute mean and substract values from mean - simple kriging
-!! IF(KTYPE.GT.0)THEN
-!!  MZ=0.0; DO I=1,ND; MZ=MZ+ZD(I); ENDDO; MZ=MZ/REAL(ND)
-!!  DO I=1,ND; ZD(I)=ZD(I)-MZ; ENDDO
-!! ENDIF
- 
  END SUBROUTINE KRIGING_INIT
 
  !###======================================================================
@@ -757,7 +687,7 @@ CONTAINS
  CALL WDIALOGLOAD(ID_DKRIGING,ID_DKRIGING)
  CALL WDIALOGSHOW(-1,-1,0,3)
  
- IF(NGEN.GT.0)THEN; PNTSEARCH=1; CALL WDIALOGFIELDSTATE(IDF_CHECK1,2); ENDIF
+ IF(NGEN.GT.0)THEN; PNTSEARCH=1; CALL WDIALOGFIELDSTATE(IDF_CHECK1,0); ENDIF
  CALL WDIALOGPUTCHECKBOX(IDF_CHECK1,PNTSEARCH)
  CALL WDIALOGPUTCHECKBOX(IDF_CHECK2,COINCIDENT)
  CALL WDIALOGPUTCHECKBOX(IDF_CHECK3,IQUADRANT)
