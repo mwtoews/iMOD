@@ -1398,12 +1398,9 @@ CONTAINS
                                     DATISD(JREC)%BTML,DATISD(JREC)%RESIS,DATISD(JREC)%INFF
     ELSEIF(ISFR.EQ.1)THEN
      WRITE(ISGIU(4,1),REC=JREC+ICF) DATISD(JREC)%IDATE,DATISD(JREC)%CTIME,DATISD(JREC)%WLVL, &
-                                    DATISD(JREC)%BTML,  &
-                                    DATISD(JREC)%THCK ,DATISD(JREC)%HCND , & !DATISD(JREC)%WIDTH, &
-!                                    DATISD(JREC)%DEPTH,
-                                    DATISD(JREC)%DWNS ,DATISD(JREC)%UPSG,  &
-                                    DATISD(JREC)%ICLC ,DATISD(JREC)%IPRI ,DATISD(JREC)%QFLW, &
-                                    DATISD(JREC)%QROF
+                                    DATISD(JREC)%BTML, DATISD(JREC)%THCK ,DATISD(JREC)%HCND, &
+                                    DATISD(JREC)%UPSG, DATISD(JREC)%DWNS ,DATISD(JREC)%ICLC, &
+                                    DATISD(JREC)%IPRI, DATISD(JREC)%QFLW ,DATISD(JREC)%QROF
     ENDIF
    ENDDO
   ENDDO

@@ -126,7 +126,7 @@ CONTAINS
  REAL,INTENT(INOUT) :: XMIN,YMIN,XMAX,YMAX
  INTEGER :: IRAT,IRAT1,I,J,NSEG,NCRS,IREC,IQHR,IFDR,ISTW,NSTW,IISGLABEL,DWNSEG,  &
             DIMCRS,INDS,ISND,ICRS,DIMCLC,NCLC,ICLC,IISG,DIMSTW,NQHR,DIMQHR,IUPSEG, &
-            IREF  
+            IREF,JREC,MSEG
  INTEGER,ALLOCATABLE,DIMENSION(:) :: ID
  REAL :: DX,X1,Y1,X,Y,TWIDTH,THEIGHT,XPOS,YPOS,DIST
  REAL,DIMENSION(:),ALLOCATABLE :: XSEG,YSEG
@@ -218,7 +218,7 @@ CONTAINS
    !## read qh information from *.isq1,*.isq2
    IREC=ID(5)-1
    DO J=1,NQHR
-    READ(ISGIU(7,1),REC=IREC+J+ICF) ISQ(J)%N,ISQ(J)%IREF,ISQ(J)%DIST,ISQ(J)%CNAME
+    READ(ISGIU(9,1),REC=IREC+J+ICF) ISQ(J)%N,ISQ(J)%IREF,ISQ(J)%DIST,ISQ(J)%CNAME
    END DO
 
    !## initialize tdist for all!
@@ -335,11 +335,11 @@ CONTAINS
    !## initialize tdist for all!
    TDIST=0.0
 
-   !## get correct record-number for coordinates
-   IREC=ID(1)-1
-    
    !## read segments
    DO J=1,NSEG
+
+    !## get correct record-number for coordinates
+    IREC=ID(1)-1
 
     X=ISP(IREC+J)%X
     Y=ISP(IREC+J)%Y
@@ -352,7 +352,7 @@ CONTAINS
 
     LEX=.TRUE.
     IF(IISG.EQ.1)THEN
-     LEX=.FALSE.; IF(ISG(I)%ILIST.NE.1)LEX=.FALSE. 
+     IF(ISG(I)%ILIST.NE.1)LEX=.FALSE. 
     ENDIF
 
     IF(LEX)THEN
@@ -433,7 +433,7 @@ CONTAINS
     IF(LEX)THEN
      CALL IGRCOLOURN(ICLRSF); CALL IGRFILLPATTERN(SOLID)
      !## get correct record-number for coordinates
-     IREC=ID(1); CALL ISGPLOT_FDIRECTION(ISP(IREC:IREC+NSEG-1)%X,ISP(IREC:IREC+NSEG-1)%Y,NSEG,XMIN,XMAX,YMIN,YMAX,0)
+     IREC=ISG(I)%ISEG; CALL ISGPLOT_FDIRECTION(ISP(IREC:IREC+NSEG-1)%X,ISP(IREC:IREC+NSEG-1)%Y,NSEG,XMIN,XMAX,YMIN,YMAX,0)
 !     IREC=ID(1)-1; CALL ISGPLOT_FDIRECTION(ISP(IREC+1:IREC+NSEG)%X,ISP(IREC+1:IREC+NSEG)%Y,NSEG,XMIN,XMAX,YMIN,YMAX,0)
      
    !  ID(2)=ISG(I)%ICLC
@@ -441,12 +441,14 @@ CONTAINS
      IF(ISFR.EQ.1.AND.IFDR.EQ.1)THEN
         
       !## get downstream connection (second entry)
-      IREF=ISD(ID(2))%IREF
+      IREC=ISG(I)%ICLC; IREF=ISD(IREC)%IREF
       !## use first defined entry for connection
       IUPSEG=DATISD(IREF)%UPSG
       IF(IUPSEG.GT.0)THEN
-!           CALL ISGPLOT_FCONNECTION(XSEG,YSEG,NSEG,XCON,YCON,NCON,XMIN,XMAX,YMIN,YMAX,0)
-
+       JREC=ISG(IUPSEG)%ISEG; MSEG=ISG(IUPSEG)%NSEG
+       CALL ISGPLOT_FCONNECTION(ISP(IREC:IREC+NSEG-1)%X,ISP(IREC:IREC+NSEG-1)%Y,NSEG, &
+                                ISP(JREC:JREC+MSEG-1)%X,ISP(JREC:JREC+MSEG-1)%Y,MSEG, &
+                                XMIN,XMAX,YMIN,YMAX)
       ENDIF
 
       !## get downstream connection (second entry)
@@ -454,20 +456,13 @@ CONTAINS
       !## use first defined entry for connection
       DWNSEG=DATISD(IREF)%DWNS
       IF(DWNSEG.GT.0)THEN
-!     CALL ISGPLOT_FCONNECTION(XSEG,YSEG,NSEG,XCON,YCON,NCON,XMIN,XMAX,YMIN,YMAX,0)
-      
+       JREC=ISG(DWNSEG)%ISEG; MSEG=ISG(DWNSEG)%NSEG
+       CALL ISGPLOT_FCONNECTION(ISP(IREC:IREC+NSEG-1)%X,ISP(IREC:IREC+NSEG-1)%Y,NSEG, &
+                                ISP(JREC:JREC+MSEG-1)%X,ISP(JREC:JREC+MSEG-1)%Y,MSEG, &
+                                XMIN,XMAX,YMIN,YMAX)
       ENDIF
      ENDIF
           
-!     !## read first record of segment
-!     JREC=1
-!     READ(ISGIU(4,1),REC=ISD(J)%IREF) DATISD(JREC)%IDATE,DATISD(JREC)%CTIME,DATISD(JREC)%WLVL, &   
-!                                      DATISD(JREC)%BTML, DATISD(JREC)%THCK ,DATISD(JREC)%HCND, &
-!                                      DATISD(JREC)%DWNS ,DATISD(JREC)%UPSG, DATISD(JREC)%ICLC, &
-!                                      DATISD(JREC)%IPRI ,DATISD(JREC)%QFLW, DATISD(JREC)%QROF 
-!     DWNSEG=DATISD(JREC)%DWNS  
-!    ENDIF
-
     ENDIF
    ENDIF
 
@@ -498,7 +493,7 @@ CONTAINS
     
  !## 2d plot - size of arrow never larger than dimensions of line
  IF(ISIZE.EQ.0)THEN
-  YFRAC=SQRT((XMAX-XMIN)**2.0+(YMAX-YMIN)**2.0)/100.0
+  YFRAC=SQRT((XMAX-XMIN)**2.0+(YMAX-YMIN)**2.0)/250.0
   DX=(MAXVAL(X)-MINVAL(X))**2.0+(MAXVAL(Y)-MINVAL(Y))**2.0; IF(DX.NE.0.0)DX=SQRT(DX)
   IF(YFRAC.GT.DX/5.0)YFRAC=DX/5.0
  ELSE
@@ -544,6 +539,70 @@ CONTAINS
   
  END SUBROUTINE ISGPLOT_FDIRECTION
  
+ !###======================================================================
+ SUBROUTINE ISGPLOT_FCONNECTION(X1,Y1,N1,X2,Y2,N2,XMIN,XMAX,YMIN,YMAX)
+ !###======================================================================
+ IMPLICIT NONE
+ INTEGER,PARAMETER :: NVERT=40
+ INTEGER,INTENT(IN) :: N1,N2
+ REAL,INTENT(IN) :: XMIN,XMAX,YMIN,YMAX
+ REAL,DIMENSION(N1) :: X1,Y1
+ REAL,DIMENSION(N2) :: X2,Y2
+ REAL,DIMENSION(4) :: XC,YC
+ REAL :: YFRAC,DX,DY
+ REAL,DIMENSION(NVERT) :: XPOS,YPOS
+ 
+ !## skip if not in current window
+ IF(MINVAL(X1).GT.XMAX.OR.MAXVAL(X1).LT.XMIN.OR. &
+    MINVAL(Y1).GT.YMAX.OR.MAXVAL(Y1).LT.YMIN)RETURN
+ !## skip if not in current window
+ IF(MINVAL(X2).GT.XMAX.OR.MAXVAL(X2).LT.XMIN.OR. &
+    MINVAL(Y2).GT.YMAX.OR.MAXVAL(Y2).LT.YMIN)RETURN
+    
+ YFRAC=SQRT((XMAX-XMIN)**2.0+(YMAX-YMIN)**2.0)/250.0
+  
+ !## determine curve-coordinates
+ XC(1)=X1(N1-1); XC(2)=X1(N1)
+ YC(1)=Y1(N1-1); YC(2)=Y1(N1)
+
+ XC(3)=X2(1)   ; XC(4)=X2(2)
+ YC(3)=Y2(1)   ; YC(4)=Y2(2)
+ 
+ DX=(MAXVAL(XC)-MINVAL(XC))**2.0+(MAXVAL(YC)-MINVAL(YC))**2.0; IF(DX.NE.0.0)DX=SQRT(DX)
+ IF(YFRAC.GT.DX/5.0)YFRAC=DX/5.0
+
+ call igrlineWIDTH(2)
+ call igrcolourn(wrgb(255,0,0))
+ CALL WGRBEZIERPOINTS(XC,YC,SIZE(XC),XPOS,YPOS,NVERT)
+ CALL IGRPOLYLINE(XPOS,YPOS,NVERT)
+
+ call igrcolourn(wrgb(0,255,0))
+ CALL WGRBSPLINEPOINTS(XC,YC,SIZE(XC),XPOS,YPOS,NVERT)
+ CALL IGRPOLYLINE(XPOS,YPOS,NVERT)
+
+!REAL X(*) Array of control point X co-ordinates 
+!REAL Y(*) Array of control point Y co-ordinates 
+!INTEGER NCONTROL Number of control points in the X/Y arrays (>=3) 
+!REAL XPOS(*) Returned array of curve X co-ordinates 
+!REAL YPOS(*) Returned array of curve Y co-ordinates 
+!INTEGER, OPTIONAL NVERT Number of vertices to return in XPOS/YPOS (default = NCONTROL*10) 
+
+! CALL WGRCURVE(XC,YC,SIZE(XC)) !,NVERT)
+
+ DX=XC(4)-XC(3); DY=YC(4)-YC(3)
+ CALL ISGPLOTARROW(DX,DY,XC(4),YC(4),YFRAC)
+
+ DX=XPOS(NVERT)-XPOS(NVERT-1); DY=YPOS(NVERT)-YPOS(NVERT-1)
+ CALL ISGPLOTARROW(DX,DY,XPOS(NVERT),YPOS(NVERT),YFRAC)
+
+!REAL X(*) Array of control point X co-ordinates 
+!REAL Y(*) Array of control point Y co-ordinates 
+!INTEGER NCONTROL Number of control points in the X/Y arrays (>=3) 
+!INTEGER, OPTIONAL NVERT Number of vertices in drawn curve (default = NCONTROL*10) 
+!Draws a curve which passes through all of the supplied control points
+
+ END SUBROUTINE ISGPLOT_FCONNECTION
+
  !###======================================================================
  SUBROUTINE ISGPLOTOPENFILES(LEX,LOPEN,FNAME,CSTATUS)
  !###======================================================================
