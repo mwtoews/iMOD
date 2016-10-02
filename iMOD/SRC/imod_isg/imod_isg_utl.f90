@@ -699,11 +699,9 @@ CONTAINS
                                          DATISD(KREC)%RESIS,DATISD(KREC)%INFF
    ELSEIF(ISFR.EQ.1)THEN
     READ(ISGIU(4,ISGFILES),REC=IREC+ICF) DATISD(KREC)%IDATE,DATISD(KREC)%CTIME,DATISD(KREC)%WLVL, &   
-                                         DATISD(KREC)%BTML,  &
-                                         DATISD(KREC)%THCK ,DATISD(KREC)%HCND, &
-                                         DATISD(KREC)%DWNS ,DATISD(KREC)%UPSG, &
-                                         DATISD(KREC)%ICLC ,DATISD(KREC)%IPRI ,DATISD(KREC)%QFLW, &
-                                         DATISD(KREC)%QROF
+                                         DATISD(KREC)%BTML, DATISD(KREC)%THCK ,DATISD(KREC)%HCND, &
+                                         DATISD(KREC)%UPSG, DATISD(KREC)%DWNS, DATISD(KREC)%ICLC, &
+                                         DATISD(KREC)%IPRI ,DATISD(KREC)%QFLW, DATISD(KREC)%QROF
    ENDIF
   ENDDO
   ISD(JREC)%IREF=MAX(0,ISD(JREC)%IREF+IOFF)

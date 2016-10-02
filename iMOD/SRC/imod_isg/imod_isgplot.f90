@@ -454,11 +454,12 @@ CONTAINS
      !## get connection-number
      IF(ISFR.EQ.1.AND.IFDR.EQ.1)THEN
         
-      !## get downstream connection (second entry)
+      !## get upstream connection (first entry)
       IREC=ISG(I)%ICLC; IREF=ISD(IREC)%IREF
       !## use first defined entry for connection
       IUPSEG=DATISD(IREF)%UPSG
       IF(IUPSEG.GT.0)THEN
+       IREC=ISG(I)%ISEG !; NSEG=ISG(DWNSEG)%NSEG
        JREC=ISG(IUPSEG)%ISEG; MSEG=ISG(IUPSEG)%NSEG
        CALL ISGPLOT_FCONNECTION(ISP(IREC:IREC+NSEG-1)%X,ISP(IREC:IREC+NSEG-1)%Y,NSEG, &
                                 ISP(JREC:JREC+MSEG-1)%X,ISP(JREC:JREC+MSEG-1)%Y,MSEG, &
@@ -466,10 +467,11 @@ CONTAINS
       ENDIF
 
       !## get downstream connection (second entry)
-      IREF=ISD(ID(2))%IREF+1
+      IREC=ISG(I)%ICLC; IREF=ISD(IREC)%IREF+1
       !## use first defined entry for connection
       DWNSEG=DATISD(IREF)%DWNS
       IF(DWNSEG.GT.0)THEN
+       IREC=ISG(I)%ISEG !; NSEG=ISG(DWNSEG)%NSEG
        JREC=ISG(DWNSEG)%ISEG; MSEG=ISG(DWNSEG)%NSEG
        CALL ISGPLOT_FCONNECTION(ISP(IREC:IREC+NSEG-1)%X,ISP(IREC:IREC+NSEG-1)%Y,NSEG, &
                                 ISP(JREC:JREC+MSEG-1)%X,ISP(JREC:JREC+MSEG-1)%Y,MSEG, &
