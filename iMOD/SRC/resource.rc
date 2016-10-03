@@ -8,7 +8,7 @@
 //
 // Winteracter resource script. 
 //
-// Modified : 22/Sep/2016 17:15:30
+// Modified : 03/Oct/2016 19:21:03
 //
 ///////////////////////////////////////////////////
 //
@@ -1132,6 +1132,8 @@
 #define ID_ISGCREATERIV                 40288
 #define ID_ISGCREATESFR                 40289
 #define ID_RESIZE                        1160
+#define IDF_STRING8                      1083
+#define ID_ISGSFC                       40290
 
 ///////////////////////////////////////////////////
 //
@@ -3747,7 +3749,7 @@ BEGIN
     CONTROL "Check",IDF_CHECK4,"BUTTON",WS_CHILD | WS_VISIBLE | WS_GROUP | WS_TABSTOP | BS_AUTOCHECKBOX | BS_TEXT,   14,  241,    9,   12
     CONTROL "Seg.Node",IDF_STRING4,"EDIT",WS_CHILD | WS_VISIBLE | WS_BORDER | WS_GROUP | WS_TABSTOP | ES_LEFT,   26,  241,   40,   12
     CONTROL "Show Selected",IDF_CHECK7,"BUTTON",WS_CHILD | WS_VISIBLE | WS_GROUP | WS_TABSTOP | BS_AUTOCHECKBOX | BS_TEXT,   14,  271,   61,   12
-    CONTROL "Update",ID_UPDATE,"BUTTON",WS_CHILD | WS_VISIBLE | WS_GROUP | WS_TABSTOP | BS_PUSHBUTTON | BS_TEXT | BS_FLAT,  142,  270,   35,   14
+    CONTROL "Update",ID_UPDATE,"BUTTON",WS_CHILD | WS_VISIBLE | WS_GROUP | WS_TABSTOP | BS_DEFPUSHBUTTON | BS_TEXT | BS_FLAT,  142,  270,   35,   14
     CONTROL "Check",IDF_CHECK5,"BUTTON",WS_CHILD | WS_VISIBLE | WS_GROUP | WS_TABSTOP | BS_AUTOCHECKBOX | BS_TEXT,  124,  225,    9,   12
     CONTROL "Struct.",IDF_STRING5,"EDIT",WS_CHILD | WS_VISIBLE | WS_BORDER | WS_GROUP | WS_TABSTOP | ES_LEFT,  136,  225,   40,   12
     CONTROL "QH",IDF_STRING6,"EDIT",WS_CHILD | WS_VISIBLE | WS_BORDER | WS_GROUP | WS_TABSTOP | ES_LEFT,  136,  241,   40,   12
@@ -3758,6 +3760,8 @@ BEGIN
     CONTROL "Save",ID_SAVE,"BUTTON",WS_CHILD | WS_VISIBLE | WS_GROUP | WS_TABSTOP | BS_PUSHBUTTON | BS_TEXT | BS_FLAT,    5,  292,   29,   14
     CONTROL "Check",IDF_CHECK9,"BUTTON",WS_CHILD | WS_VISIBLE | WS_GROUP | WS_TABSTOP | BS_AUTOCHECKBOX | BS_TEXT,   14,  256,    9,   12
     CONTROL "Direction",IDF_STRING7,"EDIT",WS_CHILD | WS_VISIBLE | WS_BORDER | WS_GROUP | WS_TABSTOP | ES_LEFT,   26,  256,   40,   12
+    CONTROL "Connection",IDF_STRING8,"EDIT",WS_CHILD | WS_VISIBLE | WS_BORDER | WS_GROUP | WS_TABSTOP | ES_LEFT,   80,  256,   40,   12
+    CONTROL "Check",IDF_CHECK10,"BUTTON",WS_CHILD | WS_VISIBLE | WS_GROUP | WS_TABSTOP | BS_AUTOCHECKBOX | BS_TEXT,   68,  256,    9,   12
 END
 
 ID_DISGEDIT RCDATA
@@ -3772,6 +3776,7 @@ BEGIN
 " 1187 0 \n"
 " 1047 0 \n"
 " 1189 0 \n"
+" 1273 0 \n"
 "[Tabs] \n"
 " 1058     7   227 \n"
 "  227  Segments \n"
@@ -10942,6 +10947,7 @@ BEGIN
                 MENUITEM "Structures",                               ID_ISGSTUWEN
                 MENUITEM "QH-relationships",                         ID_ISGQHR
                 MENUITEM "Stream Direction",                         ID_ISGSFR
+                MENUITEM "Stream Flow Connections",                  ID_ISGSFC
             END
         END
         POPUP "&GEN-options"
@@ -11841,5 +11847,5 @@ END
 //*WI* FORTSAVE    1
 //*WI* FILENAME    resource.f90
 //*WI* FMODNAME    RESOURCE
-//*WI* LASTTYPE        2
-//*WI* LASTRES        86
+//*WI* LASTTYPE        1
+//*WI* LASTRES         7
