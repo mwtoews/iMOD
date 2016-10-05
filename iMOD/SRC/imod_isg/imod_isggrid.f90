@@ -807,7 +807,7 @@ CONTAINS
  TYPE(IDFOBJ),DIMENSION(NLAY),INTENT(INOUT) :: TOP,BOT
  CHARACTER(LEN=*),INTENT(IN) :: PPOSTFIX
  TYPE(WIN_MESSAGE) :: MESSAGE
- INTEGER :: I,J,K,II,JJ,TTIME,IROW,ICOL,NETTRAP,ITYPE,N,ISTW,IR,IC
+ INTEGER :: I,J,K,II,JJ,TTIME,IROW,ICOL,NETTRAP,ITYPE,N,ISTW,IR,IC,MDIM
  INTEGER :: JCRS,MAXNSEG,IRAT,IRAT1
  REAL :: C,INFF,DXY,RWIDTH,WETPER,ISGLEN,AORG,ATRAP,XSTW,YSTW,GSTW,ZCHK
  REAL,ALLOCATABLE,DIMENSION(:,:) :: QSORT,RVAL
@@ -881,17 +881,14 @@ CONTAINS
  ENDIF
 
  IF(ALLOCATED(QSORT))DEALLOCATE(QSORT); IF(ALLOCATED(XNR))DEALLOCATE(XNR); IF(ALLOCATED(NDATA))DEALLOCATE(NDATA)
- ALLOCATE(QSORT(TTIME,4),XNR(4),NDATA(4))
+ MDIM=4; IF(ISFR.EQ.1)MDIM=10; ALLOCATE(QSORT(TTIME,MDIM),XNR(MDIM),NDATA(MDIM))
 
- IF(ALLOCATED(X))DEALLOCATE(X)
- IF(ALLOCATED(Y))DEALLOCATE(Y)
- IF(ALLOCATED(RVAL))DEALLOCATE(RVAL)
- IF(ALLOCATED(DIST))DEALLOCATE(DIST)
+ IF(ALLOCATED(X))DEALLOCATE(X);       IF(ALLOCATED(Y))DEALLOCATE(Y)
+ IF(ALLOCATED(RVAL))DEALLOCATE(RVAL); IF(ALLOCATED(DIST))DEALLOCATE(DIST)
  IF(ALLOCATED(IPOS))DEALLOCATE(IPOS)
  !## max. numbers of coordinates AND number of calculation points AND number of structures
  MAXNSEG=MAXVAL(ISG(1:NISG)%NSEG)+MAXVAL(ISG(1:NISG)%NCLC)+2*MAXVAL(ISG(1:NISG)%NSTW)
- ALLOCATE(DIST(MAXNSEG),IPOS(MAXNSEG),RVAL(4,0:MAXNSEG), &
-          X(MAXNSEG),Y(MAXNSEG))
+ ALLOCATE(DIST(MAXNSEG),IPOS(MAXNSEG),RVAL(MDIM,0:MAXNSEG),X(MAXNSEG),Y(MAXNSEG))
 
  MAXDIM=0
 
@@ -948,43 +945,41 @@ CONTAINS
    NSEG=ISG(I)%NSEG
    ISEG=ISG(I)%ISEG
    JSEG=ISEG+NSEG-1
-
+   
    !## copy coordinates
-   K=0
-   DO J=ISEG,JSEG
-    K   =K+1
-    X(K)=ISP(J)%X
-    Y(K)=ISP(J)%Y
-   END DO
+   K=0; DO J=ISEG,JSEG; K=K+1; X(K)=ISP(J)%X; Y(K)=ISP(J)%Y; END DO
 
-   IPOS=0
-   RVAL=0.0
-
-   !## include calculation nodes in between segments
-   CALL ISG2GRIDINCLUDECLCNODES(ISG(I)%ICLC,ISG(I)%NCLC,NSEG,MAXNSEG,X,Y,DIST,IPOS,+1)
-   !## include structure nodes in between segments
-   CALL ISG2GRIDINCLUDECLCNODES(ISG(I)%ISTW,ISG(I)%NSTW,NSEG,MAXNSEG,X,Y,DIST,IPOS,-1)
-
-   !## read/prepare all information for current date/segment where information is connected to
-   J=0
-   DO
-    J=J+1
-    IF(IPOS(J).GT.0)THEN
-     IREF=ISG(I)%ICLC+IPOS(J)-1
-     CALL ISG2GRIDGETDATA(SDATE,EDATE,TTIME,QSORT,XNR,4,RVAL(1,J),ISD(IREF)%N,ISD(IREF)%IREF,ISS, 1,NDATA)
-    ENDIF
-    IF(IPOS(J).LT.0)THEN
-     IREF=ISG(I)%ISTW+ABS(IPOS(J))-1
-     CALL ISG2GRIDGETDATA(SDATE,EDATE,TTIME,QSORT,XNR,4,RVAL(1,J),IST(IREF)%N,IST(IREF)%IREF,ISS,-1,NDATA)
-     J=J+1
-     !## replace waterlevel_down to waterlevel structure
-     RVAL(1,J)=RVAL(2,J-1)
-    ENDIF
-    IF(J.EQ.NSEG)EXIT
-   END DO
-
-   !## interpolate all segments in between and give proper values!
-   CALL ISG2GRIDINTSEGMENT(X,Y,DIST,NSEG,MAXNSEG)
+   CALL ISGGRIDGETSTREAMDATA(X,Y,DIST,IPOS,RVAL,ISG(I)%ICLC,ISG(I)%NCLC,ISG(I)%ISTW,ISG(I)%NSTW,NSEG,MAXNSEG, &
+                             QSORT,XNR,NDATA,TTIME,MDIM)
+  
+!   IPOS=0
+!   RVAL=0.0
+!
+!   !## include calculation nodes in between segments
+!   CALL ISG2GRIDINCLUDECLCNODES(ISG(I)%ICLC,ISG(I)%NCLC,NSEG,MAXNSEG,X,Y,DIST,IPOS,+1)
+!   !## include structure nodes in between segments
+!   CALL ISG2GRIDINCLUDECLCNODES(ISG(I)%ISTW,ISG(I)%NSTW,NSEG,MAXNSEG,X,Y,DIST,IPOS,-1)
+!
+!   !## read/prepare all information for current date/segment where information is connected to
+!   J=0
+!   DO
+!    J=J+1
+!    IF(IPOS(J).GT.0)THEN
+!     IREF=ISG(I)%ICLC+IPOS(J)-1
+!     CALL ISG2GRIDGETDATA(SDATE,EDATE,TTIME,QSORT,XNR,4,RVAL(1,J),ISD(IREF)%N,ISD(IREF)%IREF,ISS, 1,NDATA)
+!    ENDIF
+!    IF(IPOS(J).LT.0)THEN
+!     IREF=ISG(I)%ISTW+ABS(IPOS(J))-1
+!     CALL ISG2GRIDGETDATA(SDATE,EDATE,TTIME,QSORT,XNR,4,RVAL(1,J),IST(IREF)%N,IST(IREF)%IREF,ISS,-1,NDATA)
+!     J=J+1
+!     !## replace waterlevel_down to waterlevel structure
+!     RVAL(1,J)=RVAL(2,J-1)
+!    ENDIF
+!    IF(J.EQ.NSEG)EXIT
+!   END DO
+!
+!   !## interpolate all segments in between and give proper values!
+!   CALL ISG2GRIDINTSEGMENT(X,Y,DIST,NSEG,MAXNSEG)
 
    !## determine flow-direction
    LNODAT=.TRUE.
@@ -1025,21 +1020,7 @@ CONTAINS
     ENDDO
 
     !## interpolate waterlevel,waterbottom,inf.factor,c-value - do not interupt it by structures (ipos().gt.0)!
-    DO JJ=1,4
-     DO J=1,NSEG
-      IF(IPOS(J).GT.0.AND.RVAL(JJ,J).NE.NODATA)THEN
-       DO II=J+1,NSEG
-        IF(IPOS(II).GT.0.AND.RVAL(JJ,II).NE.NODATA)EXIT
-       ENDDO
-       D=MAX(0.0,DIST(II)-DIST(J))
-       DO K=J+1,II-1
-        FCT=0.0
-        IF(D.GT.0.0)FCT=(DIST(K)-DIST(J))/D
-        RVAL(JJ,K)=RVAL(JJ,J)+((RVAL(JJ,II)-RVAL(JJ,J))*FCT)
-       END DO
-      ENDIF
-     ENDDO
-    ENDDO
+    CALL ISGGRIDINTSTREAMDATA(DIST,IPOS,RVAL,NSEG,MAXNSEG)
 
     !## start to intersect all segment/segmentpoints to the model-grid
     ISGLEN=0.0
@@ -1392,6 +1373,81 @@ IRLOOP: DO IR=MAX(1,IROW-1),MIN(NROW,IROW+1)
  ISG2GRID=.TRUE.
 
  END FUNCTION ISG2GRID
+
+ !###====================================================================
+ SUBROUTINE ISGGRIDGETSTREAMDATA(X,Y,DIST,IPOS,RVAL,ICLC,NCLC,ISTW,NSTW, &
+                                 NSEG,MAXNSEG,QSORT,XNR,NDATA,TTIME,NDIM)
+ !###====================================================================
+ IMPLICIT NONE
+ INTEGER,INTENT(IN) :: MAXNSEG,ICLC,ISTW,NCLC,NSTW,TTIME,NDIM
+ INTEGER,INTENT(INOUT) :: NSEG
+ REAL,INTENT(OUT),DIMENSION(MAXNSEG) :: X,Y,DIST
+ REAL,INTENT(OUT),DIMENSION(NDIM,0:MAXNSEG) :: RVAL
+ REAL,INTENT(OUT),DIMENSION(NDIM) :: XNR
+ REAL,INTENT(IN),DIMENSION(NDIM) :: NDATA
+ REAL,INTENT(OUT),DIMENSION(TTIME,NDIM) :: QSORT
+ INTEGER,INTENT(OUT),DIMENSION(MAXNSEG) :: IPOS
+ INTEGER :: I,IREF
+ 
+ IPOS=0
+ RVAL=0.0
+
+ !## include calculation nodes in between segments
+ CALL ISG2GRIDINCLUDECLCNODES(ICLC,NCLC,NSEG,MAXNSEG,X,Y,DIST,IPOS,+1)
+ !## include structure nodes in between segments
+ CALL ISG2GRIDINCLUDECLCNODES(ISTW,NSTW,NSEG,MAXNSEG,X,Y,DIST,IPOS,-1)
+
+ !## read/prepare all information for current date/segment where information is connected to
+ I=0
+ DO
+  I=I+1
+  IF(IPOS(I).GT.0)THEN
+   IREF=ICLC+IPOS(I)-1
+   CALL ISG2GRIDGETDATA(SDATE,EDATE,TTIME,QSORT,XNR,NDIM,RVAL(1,I),ISD(IREF)%N,ISD(IREF)%IREF,ISS, 1,NDATA)
+  ENDIF
+  IF(IPOS(I).LT.0)THEN
+   IREF=ISTW+ABS(IPOS(I))-1
+   CALL ISG2GRIDGETDATA(SDATE,EDATE,TTIME,QSORT,XNR,NDIM,RVAL(1,I),IST(IREF)%N,IST(IREF)%IREF,ISS,-1,NDATA)
+   I=I+1
+   !## replace waterlevel_down to waterlevel structure
+   RVAL(1,I)=RVAL(2,I-1)
+  ENDIF
+  IF(I.EQ.NSEG)EXIT
+ END DO
+
+ !## interpolate all segments in between and give proper values!
+ CALL ISG2GRIDINTSEGMENT(X,Y,DIST,NSEG,MAXNSEG)
+
+ END SUBROUTINE ISGGRIDGETSTREAMDATA
+
+ !###====================================================================
+ SUBROUTINE ISGGRIDINTSTREAMDATA(DIST,IPOS,RVAL,NSEG,MAXNSEG)
+ !###====================================================================
+ IMPLICIT NONE
+ INTEGER,INTENT(IN) :: MAXNSEG,NSEG
+ REAL,INTENT(INOUT),DIMENSION(MAXNSEG) :: DIST
+ REAL,INTENT(INOUT),DIMENSION(4,0:MAXNSEG) :: RVAL
+ INTEGER,INTENT(INOUT),DIMENSION(MAXNSEG) :: IPOS
+ INTEGER :: I,II,J,K
+ REAL :: FCT,D
+ 
+ DO I=1,4
+  DO J=1,NSEG
+   IF(IPOS(J).GT.0.AND.RVAL(I,J).NE.NODATA)THEN
+    DO II=J+1,NSEG
+     IF(IPOS(II).GT.0.AND.RVAL(I,II).NE.NODATA)EXIT
+    ENDDO
+    D=MAX(0.0,DIST(II)-DIST(J))
+    DO K=J+1,II-1
+     FCT=0.0
+     IF(D.GT.0.0)FCT=(DIST(K)-DIST(J))/D
+     RVAL(I,K)=RVAL(I,J)+((RVAL(I,II)-RVAL(I,J))*FCT)
+    END DO
+   ENDIF
+  ENDDO
+ ENDDO
+
+ END SUBROUTINE ISGGRIDINTSTREAMDATA
 
  !###====================================================================
  LOGICAL FUNCTION ISG2SFR(NROW,NCOL,NLAY,ILAY,TOP,BOT,IPER,MP,JU)
@@ -2527,7 +2583,7 @@ IRLOOP: DO IR=MAX(1,IROW-1),MIN(NROW,IROW+1)
  INTEGER,INTENT(INOUT) :: NSEG
  REAL,INTENT(INOUT),DIMENSION(MAXNSEG) :: DIST,X,Y
  INTEGER,INTENT(OUT),DIMENSION(MAXNSEG) :: IPOS
- INTEGER :: IREC,ISEG,I
+ INTEGER :: IREC,ISEG,I,II,JJ
  REAL :: DXY,D1,D2,F,XC,YC
 
  !## include calculation nodes as segments!
@@ -2537,7 +2593,7 @@ IRLOOP: DO IR=MAX(1,IROW-1),MIN(NROW,IROW+1)
   !## get tot distances
   CALL ISG2GRIDINTSEGMENT(X,Y,DIST,NSEG,MAXNSEG)
   IREC=IREC+1
-  IF(ITYPE.EQ.1) DXY=ISD(IREC)%DIST
+  IF(ITYPE.EQ. 1)DXY=ISD(IREC)%DIST
   IF(ITYPE.EQ.-1)DXY=IST(IREC)%DIST
 
   !## find position in between segments
@@ -2565,9 +2621,15 @@ IRLOOP: DO IR=MAX(1,IROW-1),MIN(NROW,IROW+1)
    XC=X(ISEG-1)+((X(ISEG)-X(ISEG-1))*F)
    YC=Y(ISEG-1)+((Y(ISEG)-Y(ISEG-1))*F)
    !## position coordinates in between
-   X(ISEG+1:NSEG+1)   =X(ISEG:NSEG)
-   Y(ISEG+1:NSEG+1)   =Y(ISEG:NSEG)
-   IPOS(ISEG+1:NSEG+1)=IPOS(ISEG:NSEG)
+   JJ=ISEG-1; DO II=ISEG+1,NSEG+1
+    JJ      =JJ+1
+    X(II)   =X(JJ)
+    Y(II)   =Y(JJ)
+    IPOS(II)=IPOS(JJ)
+   ENDDO
+!   X(ISEG+1:NSEG+1)   =X(ISEG:NSEG)
+!   Y(ISEG+1:NSEG+1)   =Y(ISEG:NSEG)
+!   IPOS(ISEG+1:NSEG+1)=IPOS(ISEG:NSEG)
    X(ISEG)            =XC
    Y(ISEG)            =YC
    !## increase number of segments
@@ -2578,9 +2640,16 @@ IRLOOP: DO IR=MAX(1,IROW-1),MIN(NROW,IROW+1)
 
   !## duplicate point in case of structure
   IF(ITYPE.EQ.-1)THEN
-   X(ISEG+1:NSEG+1)   =X(ISEG:NSEG)
-   Y(ISEG+1:NSEG+1)   =Y(ISEG:NSEG)
-   IPOS(ISEG+1:NSEG+1)=IPOS(ISEG:NSEG)
+   !## position coordinates in between
+   JJ=ISEG-1; DO II=ISEG+1,NSEG+1
+    JJ      =JJ+1
+    X(II)   =X(JJ)
+    Y(II)   =Y(JJ)
+    IPOS(II)=IPOS(JJ)
+   ENDDO
+!   X(ISEG+1:NSEG+1)   =X(ISEG:NSEG)
+!   Y(ISEG+1:NSEG+1)   =Y(ISEG:NSEG)
+!   IPOS(ISEG+1:NSEG+1)=IPOS(ISEG:NSEG)
    X(ISEG)            =XC
    Y(ISEG)            =YC
    !## increase number of segments
