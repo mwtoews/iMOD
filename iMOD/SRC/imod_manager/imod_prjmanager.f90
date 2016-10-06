@@ -3847,7 +3847,7 @@ KLOOP: DO K=1,SIZE(TOPICS(JJ)%STRESS(1)%FILES,1)
             HNOFLOW,JTOP,NP,BND,TOP,BOT,KD,IPER,KPER,ITOPIC)
  !###======================================================================
  USE MOD_ISG_PAR, ONLY :  XMIN,YMIN,XMAX,YMAX, & !## area to be gridded (x1,y1,x2,y2)'
-                          ISS, & !## (1) mean over all periods, (2) mean over given period'
+!                          ISS, & !## (1) mean over all periods, (2) mean over given period'
                           SDATE,EDATE, & !## startdate,enddate,ddate (yyyymmdd,yyyymmdd,dd)'
                           STIME,ETIME, & !## starttime,endtime,ddate (yyyymmddmmhhss,yyyymmddmmhhss,dd)'
                           IDIM, & !## (0) give area (2) entire domain of isg (3) selected isg'
@@ -3881,7 +3881,7 @@ KLOOP: DO K=1,SIZE(TOPICS(JJ)%STRESS(1)%FILES,1)
  CHARACTER(LEN=5) :: EXT
  CHARACTER(LEN=30) :: FRM
  CHARACTER(LEN=52),ALLOCATABLE,DIMENSION(:) :: STRING
- INTEGER :: JU,KU,ILAY,IROW,ICOL,I,J,ITOP,ISYS,NROWIPF,NCOLIPF,IEXT,IOS,IBATCH
+ INTEGER :: JU,KU,ILAY,IROW,ICOL,I,J,ITOP,ISYS,NROWIPF,NCOLIPF,IEXT,IOS,IBATCH,ISTEADY
  REAL,ALLOCATABLE,DIMENSION(:) :: TLP,KH,TP,BT
  INTEGER(KIND=8) :: ITIME,JTIME
  REAL,PARAMETER :: MINKH=0.0
@@ -3914,7 +3914,7 @@ KLOOP: DO K=1,SIZE(TOPICS(JJ)%STRESS(1)%FILES,1)
   CASE (29,30)
    XMIN=BND(1)%XMIN; YMIN=BND(1)%YMIN
    XMAX=BND(1)%XMAX; YMAX=BND(1)%YMAX
-   ISS=2; IF(SDATE.EQ.0.AND.EDATE.EQ.0)ISS=1
+   ISTEADY=2; IF(SDATE.EQ.0.AND.EDATE.EQ.0)ISTEADY=1
    IDIM=0
    CS=BND(1)%DX !## cellsize
    MINDEPTH=0.1
@@ -3978,7 +3978,7 @@ KLOOP: DO K=1,SIZE(TOPICS(JJ)%STRESS(1)%FILES,1)
      ILAY=PCK(1,ISYS)%ILAY
      !## translate again to idate as it will be convered to jdate in next subroutine
      SDATE=UTL_JDATETOIDATE(SDATE); EDATE=UTL_JDATETOIDATE(EDATE)-1  !<- edate is equal to sdate if one day is meant
-     IF(.NOT.ISG2GRID(POSTFIX,BND(1)%NROW,BND(1)%NCOL,NLAY,ILAY,TOP,BOT,IBATCH,MP,JU))EXIT
+     IF(.NOT.ISG2GRID(POSTFIX,BND(1)%NROW,BND(1)%NCOL,NLAY,ILAY,TOP,BOT,IBATCH,MP,JU,ISTEADY))EXIT
     
     !## open sfr file
     CASE (30) !ELSEIF(LSFR)THEN
@@ -3990,7 +3990,7 @@ KLOOP: DO K=1,SIZE(TOPICS(JJ)%STRESS(1)%FILES,1)
      ILAY=PCK(1,ISYS)%ILAY
      !## translate again to idate as it will be convered to jdate in next subroutine
      SDATE=UTL_JDATETOIDATE(SDATE); EDATE=UTL_JDATETOIDATE(EDATE)-1  !<- edate is equal to sdate if one day is meant
-     IF(.NOT.ISG2SFR(BND(1)%NROW,BND(1)%NCOL,NLAY,ILAY,TOP,BOT,IPER,MP,JU))EXIT
+     IF(.NOT.ISG2SFR(BND(1)%NROW,BND(1)%NCOL,NLAY,ILAY,TOP,BOT,IPER,MP,JU,ISTEADY))EXIT
     !## wel
     CASE (21)
 

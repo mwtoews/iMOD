@@ -23,6 +23,7 @@
 MODULE MOD_ISG_PAR
 
 USE MOD_IDF_PAR, ONLY : IDFOBJ
+USE MODPLOT, ONLY : LEGENDOBJ
 
 INTEGER,DIMENSION(:),ALLOCATABLE :: IACTSTREAM !## active yes/no (1/0) of stream in model domain
 
@@ -74,6 +75,8 @@ TYPE ISGOBJ
 END TYPE ISGOBJ
 TYPE(ISGOBJ),ALLOCATABLE,DIMENSION(:) :: ISG,DUMISG
 
+TYPE(LEGENDOBJ),ALLOCATABLE,DIMENSION(:) :: ISGLEG
+
 !## general type for all
 TYPE DATOBJ1
  INTEGER :: N,IREF
@@ -84,13 +87,14 @@ TYPE(DATOBJ1),ALLOCATABLE,DIMENSION(:) :: ISD,ISC,IST,ISQ,DUMISD,DUMISC,DUMIST,D
 
 !## type for calculation points
 TYPE ISDOBJ
+ !## isfr=0
  INTEGER :: IDATE  !## date in yyyymmdd
  INTEGER :: ID_STW    !## influenced by structure #
  REAL :: WLVL         !## waterlevel
  REAL :: RESIS        !## resistance
  REAL :: INFF         !## infiltration factor
  REAL :: WL_STW       !## influenced waterlevel
-
+ !## isfr=1
  CHARACTER(LEN=8) :: CTIME !## time in hhmmss
  REAL :: BTML      !## bottom level
  REAL :: THCK      !## thickness of riverbed
@@ -101,7 +105,6 @@ TYPE ISDOBJ
  INTEGER :: IPRI   !## diversion option
  REAL :: QFLW      !## streamflow entering segment
  REAL :: QROF      !## runoff 
-
 END TYPE ISDOBJ
 TYPE(ISDOBJ),ALLOCATABLE,DIMENSION(:) :: DATISD,DUMDATISD,ISGEDITISD
 TYPE(ISDOBJ),ALLOCATABLE,DIMENSION(:,:) :: DATISD2
@@ -176,7 +179,7 @@ INTEGER,SAVE :: NXY,IULOG
 INTEGER,DIMENSION(4) :: NRECORDS
 
 REAL :: XMIN,YMIN,XMAX,YMAX          !## area to be gridded (x1,y1,x2,y2)'
-INTEGER :: ISS                       !## (1) mean over all periods, (2) mean over given period'
+!INTEGER :: ISS                       !## (1) mean over all periods, (2) mean over given period'
 INTEGER :: SDATE,EDATE,DDATE         !## startdate,enddate,ddate (yyyymmdd,yyyymmdd,dd)'
 INTEGER(KIND=8) :: STIME,ETIME,DTIME !## starttime,endtime (yyyymmddmmhhss,yyyymmddmmhhss)'
 INTEGER :: IDIM                      !## (0) give area (2) entire domain of isg (3) selected isg'

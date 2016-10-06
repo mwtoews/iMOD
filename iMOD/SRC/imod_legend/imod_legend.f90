@@ -972,6 +972,9 @@ CONTAINS
 
  CALL WDIALOGSELECT(ID_DLEGTAB2)
 
+ !## check first and last always fixed
+ CLRGIVEN(1)=1; CLRGIVEN(MXCGRAD)=MXCLR !1
+ 
  !## give min/max values
  J=0
  DO I=1,MXCGRAD
@@ -1467,7 +1470,7 @@ CONTAINS
 
  !## nonlinear legend - based upon percentiles
  IF(LEGOPTION.EQ.'NON')THEN
- !##read extent of entire domain
+  !## read extent of entire domain
   IF(LEGDOMAIN.EQ.'ALE')THEN
    LNCOL=MP(IPLOT)%IDF%NCOL
    LNROW=MP(IPLOT)%IDF%NROW
@@ -1475,7 +1478,7 @@ CONTAINS
    NC2  =LNCOL
    NR1  =1
    NR2  =LNROW
- !##define extent of current domain (col*row)
+  !## define extent of current domain (col*row)
   ELSEIF(LEGDOMAIN.EQ.'ALC')THEN
    XMIN=MAX(MP(IPLOT)%IDF%XMIN,MPW%XMIN)
    XMAX=MIN(MP(IPLOT)%IDF%XMAX,MPW%XMAX)

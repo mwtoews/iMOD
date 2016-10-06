@@ -2905,7 +2905,7 @@ CONTAINS
  !###======================================================================
  USE MOD_ISG_PAR
  IMPLICIT NONE
- INTEGER :: I,NLAY
+ INTEGER :: I,NLAY,ISTEADY
  TYPE(IDFOBJ),ALLOCATABLE,DIMENSION(:) :: TOP,BOT                 
  CHARACTER(LEN=256) :: ISGFILE
  
@@ -2919,7 +2919,7 @@ CONTAINS
  SEGMENTCSVFNAME=''
  SYSID=0
  
- ISS=1             !'iss               : (1) mean over all periods, (2) mean over given period'
+ ISTEADY=1         !'iss               : (1) mean over all periods, (2) mean over given period'
  IDIM=2            !'idim              : (1) give area (2) entire domain of isg (3) selected isg'
  POSTFIX='' 
  STIME=INT(0,8); ETIME=INT(0,8); DTIME=INT(0,8)
@@ -2974,9 +2974,9 @@ CONTAINS
  IF(.NOT.UTL_READINITFILE('ISAVE',LINE,IU,0))RETURN
  READ(LINE,*) ISAVE; WRITE(*,'(A,99I1)') 'ISAVE=',ISAVE
 
- IF(UTL_READINITFILE('IPERIOD',LINE,IU,1))READ(LINE,*) ISS
- WRITE(*,'(A,I1)') 'IPERIOD=',ISS
- IF(ISS.EQ.2)THEN
+ IF(UTL_READINITFILE('IPERIOD',LINE,IU,1))READ(LINE,*) ISTEADY
+ WRITE(*,'(A,I1)') 'IPERIOD=',ISTEADY
+ IF(ISTEADY.EQ.2)THEN
   IF(.NOT.UTL_READINITFILE('SDATE',LINE,IU,0))RETURN
   READ(LINE,*) SDATE; WRITE(*,'(A,I8)') 'SDATE=',SDATE
   IF(.NOT.UTL_READINITFILE('EDATE',LINE,IU,0))RETURN
@@ -3010,7 +3010,7 @@ CONTAINS
  IF(.NOT.UTL_READINITFILE('ISGFILE_IN',LINE,IU,0))RETURN
  READ(LINE,*) ISGFILE; WRITE(*,'(A)') 'ISGFILE_IN='//TRIM(ISGFILE)
 
- IF(.NOT.ISG2GRIDMAIN(ISGFILE,1,NLAY,TOP,BOT))THEN; WRITE(*,'(/A/)') 'Error occured in ISG Grid routine'; ENDIF
+ IF(.NOT.ISG2GRIDMAIN(ISGFILE,1,NLAY,TOP,BOT,ISTEADY))THEN; WRITE(*,'(/A/)') 'Error occured in ISG Grid routine'; ENDIF
  CALL ISGDEAL(1) 
  DO I=1,NLAY
   CALL IDFDEALLOCATE(TOP,SIZE(TOP))
