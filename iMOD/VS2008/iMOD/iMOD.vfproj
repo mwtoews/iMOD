@@ -341,8 +341,8 @@
 		<Filter Name="imod_polygon">
 		<File RelativePath="..\..\..\iMOD\SRC\imod_polygon\imod_polygon.f90"/>
 		<File RelativePath="..\..\..\iMOD\SRC\imod_polygon\imod_polygon_draw.f90"/>
-		<File RelativePath="..\..\..\iMOD\SRC\imod_polygon\imod_polygon_utl.f90"/>
-		<File RelativePath="..\..\..\iMOD\SRC\imod_polygon\polygon_par.f90"/></Filter>
+		<File RelativePath="..\..\SRC\imod_polygon\imod_polygon_par.f90"/>
+		<File RelativePath="..\..\..\iMOD\SRC\imod_polygon\imod_polygon_utl.f90"/></Filter>
 		<Filter Name="imod_profile">
 		<File RelativePath="..\..\..\iMOD\SRC\imod_profile\imod_profile.f90">
 			<FileConfiguration Name="Debug|Win32">

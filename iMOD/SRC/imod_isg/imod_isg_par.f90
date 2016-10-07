@@ -149,15 +149,15 @@ DATA TFORM/'FORMATTED  ','UNFORMATTED','UNFORMATTED','UNFORMATTED', &
            'UNFORMATTED','UNFORMATTED','UNFORMATTED','UNFORMATTED'  , &
            'UNFORMATTED','UNFORMATTED'/
 
-CHARACTER(LEN=10),DIMENSION(5) :: TATTRIB1
-CHARACTER(LEN=10),DIMENSION(12) :: TATTRIB2
+CHARACTER(LEN=12),DIMENSION(5) :: TATTRIB1
+CHARACTER(LEN=12),DIMENSION(12) :: TATTRIB2
 INTEGER,DIMENSION(5) :: CTATTRIB1
 INTEGER,DIMENSION(12) :: CTATTRIB2
 
 !## items for isd2-file for 1) riv approach and 2) sfr approach
-DATA TATTRIB1/'Date','Waterlevel','Bottomlevel','Resistance','Infilt.fct'/
-DATA TATTRIB2/'Date','Time','Waterlevel','Bottomlevel','Thickness','HcFact','IupSeg','IdownSeg','CalcOpt', &
-              'DivOpt','QFlow','Qrunoff'/
+DATA TATTRIB1/'Date','Water level','Bottom level','Resistance','Inf.factor'/
+DATA TATTRIB2/'Date','Time','Water level','Bottom level','Bed Thickn.','Bed Perm.','Iup Seg','Idown Seg','Calc Opt', &
+              'Div Opt','Q Flow','Q Runoff'/
 DATA CTATTRIB1/1,2,2,2,2/   !## 1=integer,2=real,3=menu
 DATA CTATTRIB2/1,4,2,2,2,2,1,1,3,3,2,2/
 
@@ -178,29 +178,30 @@ REAL,ALLOCATABLE,DIMENSION(:) :: XPOL,YPOL
 INTEGER,SAVE :: NXY,IULOG
 INTEGER,DIMENSION(4) :: NRECORDS
 
-REAL :: XMIN,YMIN,XMAX,YMAX          !## area to be gridded (x1,y1,x2,y2)'
-!INTEGER :: ISS                       !## (1) mean over all periods, (2) mean over given period'
-INTEGER :: SDATE,EDATE,DDATE         !## startdate,enddate,ddate (yyyymmdd,yyyymmdd,dd)'
-INTEGER(KIND=8) :: STIME,ETIME,DTIME !## starttime,endtime (yyyymmddmmhhss,yyyymmddmmhhss)'
-INTEGER :: IDIM                      !## (0) give area (2) entire domain of isg (3) selected isg'
-REAL :: CS                           !## cellsize'
-REAL :: MINDEPTH                     !## minimal waterdepth for computing conductances (m)'
-REAL :: WDEPTH                       !## waterdepth only used in combination with isimgro>0'
-INTEGER :: ICDIST                    !## (0) do not compute effect of weirs (1) do compute effect of weirs'
-INTEGER :: ISIMGRO                   !## ISIMGRO'
-INTEGER :: IEXPORT                   !## (0) idf (1) modflow river file
-CHARACTER(LEN=256) :: ROOT           !## resultmap'
-CHARACTER(LEN=52) :: POSTFIX         !## POSTFIX {POSTFIX}_stage.idf etc.'
-REAL :: NODATA                       !## nodatavalue in ISG
-INTEGER,DIMENSION(12) :: ISAVE       !## array to specify the attributes to be saved
-REAL :: MAXWIDTH                     !## 3 maximum widht for computing rivier-width (in case cross-sections are rubbish)
-INTEGER :: IAVERAGE                  !## (1) mean (2) median value
-
-!## applicable for svat export to swnr_svat_drng.inp
-CHARACTER(LEN=256) :: THIESSENFNAME,AHNFNAME,SEGMENTCSVFNAME,SVAT2SWNR_DRNG
-CHARACTER(LEN=30),ALLOCATABLE,DIMENSION(:) :: CSOBEK
-INTEGER,ALLOCATABLE,DIMENSION(:) :: SWNR
-INTEGER :: NSVATS,NSWNR,SYSID
+TYPE GRIDISGOBJ
+ REAL :: XMIN,YMIN,XMAX,YMAX          !## area to be gridded (x1,y1,x2,y2)'
+ INTEGER :: ISTEADY                   !## (1) mean over all periods, (2) mean over given period'
+ INTEGER :: SDATE,EDATE,DDATE         !## startdate,enddate,ddate (yyyymmdd,yyyymmdd,dd)'
+ INTEGER(KIND=8) :: STIME,ETIME,DTIME !## starttime,endtime (yyyymmddmmhhss,yyyymmddmmhhss)'
+ INTEGER :: IDIM                      !## (0) give area (2) entire domain of isg (3) selected isg'
+ REAL :: CS                           !## cellsize'
+ REAL :: MINDEPTH                     !## minimal waterdepth for computing conductances (m)'
+ REAL :: WDEPTH                       !## waterdepth only used in combination with isimgro>0'
+ INTEGER :: ICDIST                    !## (0) do not compute effect of weirs (1) do compute effect of weirs'
+ INTEGER :: ISIMGRO                   !## ISIMGRO'
+ INTEGER :: IEXPORT                   !## (0) idf (1) modflow river file
+ CHARACTER(LEN=256) :: ROOT           !## resultmap'
+ CHARACTER(LEN=52) :: POSTFIX         !## POSTFIX {POSTFIX}_stage.idf etc.'
+ REAL :: NODATA                       !## nodatavalue in ISG
+ INTEGER,DIMENSION(12) :: ISAVE       !## array to specify the attributes to be saved
+ REAL :: MAXWIDTH                     !## 3 maximum widht for computing rivier-width (in case cross-sections are rubbish)
+ INTEGER :: IAVERAGE                  !## (1) mean (2) median value
+ !## applicable for svat export to swnr_svat_drng.inp
+ CHARACTER(LEN=256) :: THIESSENFNAME,AHNFNAME,SEGMENTCSVFNAME,SVAT2SWNR_DRNG
+ CHARACTER(LEN=30),POINTER,DIMENSION(:) :: CSOBEK
+ INTEGER,POINTER,DIMENSION(:) :: SWNR
+ INTEGER :: NSVATS,NSWNR,SYSID
+END TYPE GRIDISGOBJ
 
 END MODULE MOD_ISG_PAR
 

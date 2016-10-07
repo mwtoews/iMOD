@@ -3846,27 +3846,29 @@ KLOOP: DO K=1,SIZE(TOPICS(JJ)%STRESS(1)%FILES,1)
  LOGICAL FUNCTION PMANAGER_SAVEMF2005_PCK_ULSTRD(EXFNAME,PCK,NSYS,NTOP,IU, &
             HNOFLOW,JTOP,NP,BND,TOP,BOT,KD,IPER,KPER,ITOPIC)
  !###======================================================================
- USE MOD_ISG_PAR, ONLY :  XMIN,YMIN,XMAX,YMAX, & !## area to be gridded (x1,y1,x2,y2)'
-!                          ISS, & !## (1) mean over all periods, (2) mean over given period'
-                          SDATE,EDATE, & !## startdate,enddate,ddate (yyyymmdd,yyyymmdd,dd)'
-                          STIME,ETIME, & !## starttime,endtime,ddate (yyyymmddmmhhss,yyyymmddmmhhss,dd)'
-                          IDIM, & !## (0) give area (2) entire domain of isg (3) selected isg'
-                          CS, & !## cellsize'
-                          MINDEPTH, & !## minimal waterdepth for computing conductances (m)'
-                          WDEPTH, & !## waterdepth only used in combination with isimgro>0'
-                          ICDIST, & !## (0) do not compute effect of weirs (1) do compute effect of weirs'
-                          ISIMGRO, & !## ISIMGRO'
-                          IEXPORT, & !## (0) idf (1) modflow river file
-                          ROOT, &  !## resultmap'
-                          POSTFIX, &  !## POSTFIX {POSTFIX}_stage.idf etc.'
-                          NODATA, & !## nodatavalue in ISG
-                          ISAVE, &
-                          MAXWIDTH, & !#3 maximum widht for computing rivier-width (in case cross-sections are rubbish)
-                          IAVERAGE, & !## (1) mean (2) median value
-                          ISGIU, &
-                          MAXFILES, &
-                          ISGFNAME
+ USE MOD_ISG_PAR, ONLY : GRIDISGOBJ
+!  XMIN,YMIN,XMAX,YMAX, & !## area to be gridded (x1,y1,x2,y2)'
+!!                          ISS, & !## (1) mean over all periods, (2) mean over given period'
+!                          SDATE,EDATE, & !## startdate,enddate,ddate (yyyymmdd,yyyymmdd,dd)'
+!                          STIME,ETIME, & !## starttime,endtime,ddate (yyyymmddmmhhss,yyyymmddmmhhss,dd)'
+!                          IDIM, & !## (0) give area (2) entire domain of isg (3) selected isg'
+!                          CS, & !## cellsize'
+!                          MINDEPTH, & !## minimal waterdepth for computing conductances (m)'
+!                          WDEPTH, & !## waterdepth only used in combination with isimgro>0'
+!                          ICDIST, & !## (0) do not compute effect of weirs (1) do compute effect of weirs'
+!                          ISIMGRO, & !## ISIMGRO'
+!                          IEXPORT, & !## (0) idf (1) modflow river file
+!                          ROOT, &  !## resultmap'
+!                          POSTFIX, &  !## POSTFIX {POSTFIX}_stage.idf etc.'
+!                          NODATA, & !## nodatavalue in ISG
+!                          ISAVE, &
+!                          MAXWIDTH, & !#3 maximum widht for computing rivier-width (in case cross-sections are rubbish)
+!                          IAVERAGE, & !## (1) mean (2) median value
+!                          ISGIU, &
+!                          MAXFILES, &
+!                          ISGFNAME
  IMPLICIT NONE
+ TYPE(GRIDISGOBJ) :: GRIDISG
  REAL,PARAMETER :: COLF=1.0
  INTEGER,INTENT(IN) :: IU,NSYS,NTOP,IPER,KPER,ITOPIC
  INTEGER,INTENT(INOUT),DIMENSION(:) :: NP
@@ -3904,30 +3906,30 @@ KLOOP: DO K=1,SIZE(TOPICS(JJ)%STRESS(1)%FILES,1)
   JTIME=SIM(IPER+1)%IYR*10000000000+SIM(IPER+1)%IMH*100000000+SIM(IPER+1)%IDY*1000000+SIM(IPER+1)%IHR*10000+SIM(IPER+1)%IMT*100+SIM(IPER+1)%ISC
 
   !## ISG not yet supports timescales less than 1 day
-  SDATE=SIM(IPER)%IYR*10000+SIM(IPER)%IMH*100+SIM(IPER)%IDY
-  SDATE=UTL_IDATETOJDATE(SDATE)
-  EDATE=SDATE+MAX(1,INT(SIM(IPER)%DELT))
+  GRIDISG%SDATE=SIM(IPER)%IYR*10000+SIM(IPER)%IMH*100+SIM(IPER)%IDY
+  GRIDISG%SDATE=UTL_IDATETOJDATE(GRIDISG%SDATE)
+  GRIDISG%EDATE=GRIDISG%SDATE+MAX(1,INT(SIM(IPER)%DELT))
  ENDIF
  
  !## set global variable for isg-gridding
  SELECT CASE (ITOPIC)
   CASE (29,30)
-   XMIN=BND(1)%XMIN; YMIN=BND(1)%YMIN
-   XMAX=BND(1)%XMAX; YMAX=BND(1)%YMAX
-   ISTEADY=2; IF(SDATE.EQ.0.AND.EDATE.EQ.0)ISTEADY=1
-   IDIM=0
-   CS=BND(1)%DX !## cellsize
-   MINDEPTH=0.1
-   WDEPTH=0.0
-   ICDIST=1     !## compute influence of structures
-   ISIMGRO=0    !## no simgro
-   IEXPORT=1    !## modflow river files
-   ROOT=EXFNAME(1:INDEX(EXFNAME,'\',.TRUE.)-1)  !## output folder
-   POSTFIX=''
-   NODATA=-999.99
-   ISAVE=1
-   MAXWIDTH=1000.0
-   IAVERAGE=1
+   GRIDISG%XMIN=BND(1)%XMIN; GRIDISG%YMIN=BND(1)%YMIN
+   GRIDISG%XMAX=BND(1)%XMAX; GRIDISG%YMAX=BND(1)%YMAX
+   GRIDISG%ISTEADY=2; IF(GRIDISG%SDATE.EQ.0.AND.GRIDISG%EDATE.EQ.0)GRIDISG%ISTEADY=1
+   GRIDISG%IDIM=0
+   GRIDISG%CS=BND(1)%DX !## cellsize
+   GRIDISG%MINDEPTH=0.1
+   GRIDISG%WDEPTH=0.0
+   GRIDISG%ICDIST=1     !## compute influence of structures
+   GRIDISG%ISIMGRO=0    !## no simgro
+   GRIDISG%IEXPORT=1    !## modflow river files
+   GRIDISG%ROOT=EXFNAME(1:INDEX(EXFNAME,'\',.TRUE.)-1)  !## output folder
+   GRIDISG%POSTFIX=''
+   GRIDISG%NODATA=-999.99
+   GRIDISG%ISAVE=1
+   GRIDISG%MAXWIDTH=1000.0
+   GRIDISG%IAVERAGE=1
    IBATCH=0
  END SELECT
  
@@ -3977,8 +3979,9 @@ KLOOP: DO K=1,SIZE(TOPICS(JJ)%STRESS(1)%FILES,1)
      !## export isg to riv package
      ILAY=PCK(1,ISYS)%ILAY
      !## translate again to idate as it will be convered to jdate in next subroutine
-     SDATE=UTL_JDATETOIDATE(SDATE); EDATE=UTL_JDATETOIDATE(EDATE)-1  !<- edate is equal to sdate if one day is meant
-     IF(.NOT.ISG2GRID(POSTFIX,BND(1)%NROW,BND(1)%NCOL,NLAY,ILAY,TOP,BOT,IBATCH,MP,JU,ISTEADY))EXIT
+     GRIDISG%SDATE=UTL_JDATETOIDATE(GRIDISG%SDATE)
+     GRIDISG%EDATE=UTL_JDATETOIDATE(GRIDISG%EDATE)-1  !<- edate is equal to sdate if one day is meant
+     IF(.NOT.ISG2GRID(GRIDISG%POSTFIX,BND(1)%NROW,BND(1)%NCOL,NLAY,ILAY,TOP,BOT,IBATCH,MP,JU,GRIDISG))EXIT !ISTEADY))EXIT
     
     !## open sfr file
     CASE (30) !ELSEIF(LSFR)THEN
@@ -3989,8 +3992,9 @@ KLOOP: DO K=1,SIZE(TOPICS(JJ)%STRESS(1)%FILES,1)
      !## export isg to riv package
      ILAY=PCK(1,ISYS)%ILAY
      !## translate again to idate as it will be convered to jdate in next subroutine
-     SDATE=UTL_JDATETOIDATE(SDATE); EDATE=UTL_JDATETOIDATE(EDATE)-1  !<- edate is equal to sdate if one day is meant
-     IF(.NOT.ISG2SFR(BND(1)%NROW,BND(1)%NCOL,NLAY,ILAY,TOP,BOT,IPER,MP,JU,ISTEADY))EXIT
+     GRIDISG%SDATE=UTL_JDATETOIDATE(GRIDISG%SDATE)
+     GRIDISG%EDATE=UTL_JDATETOIDATE(GRIDISG%EDATE)-1  !<- edate is equal to sdate if one day is meant
+     IF(.NOT.ISG2SFR(BND(1)%NROW,BND(1)%NCOL,NLAY,ILAY,TOP,BOT,IPER,MP,JU,GRIDISG))EXIT !ISTEADY))EXIT
     !## wel
     CASE (21)
 
