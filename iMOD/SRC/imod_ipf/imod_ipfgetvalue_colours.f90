@@ -116,7 +116,7 @@ CONTAINS
  LOGICAL :: LEX
 
  IF(LEN_TRIM(DLFNAME).EQ.0)THEN
-  FNAME=TRIM(PREFVAL(1))//'\SETTINGS\*.dlf'
+  FNAME='' !TRIM(PREFVAL(1))//'\SETTINGS\*.dlf'
   IF(ID.EQ.ID_SAVEAS)THEN
    IF(.NOT.UTL_WSELECTFILE('iMOD Borehole Legend File (*.dlf)|*.dlf|', &
          SAVEDIALOG+PROMPTON+DIRCHANGE+APPENDEXT,FNAME,'Save iMOD Borehole Legend file'))RETURN
@@ -173,6 +173,8 @@ CONTAINS
    DO
     READ(IU,'(A256)',IOSTAT=IOS) LINE
     IF(IOS.NE.0)EXIT
+    !## empty line, skip remainder of file
+    IF(LEN_TRIM(LINE).EQ.0)EXIT
     IF(I+1.GT.SIZE(BH))THEN
      CALL WMESSAGEBOX(OKONLY,EXCLAMATIONICON,COMMONOK,'Maximum of '//TRIM(ITOS(SIZE(BH)))//' records read in:'//CHAR(13)// &
       TRIM(FNAME),'Warning')
