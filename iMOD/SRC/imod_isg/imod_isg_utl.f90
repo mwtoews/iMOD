@@ -47,7 +47,7 @@ CONTAINS
  
  CALL IDFNULLIFY(IDF); CALL IDFNULLIFY(PIDF)
  IF(.NOT.ISGATTRIBUTES_2DCROSS_IDFDIM(IDF,J))THEN
-   CALL WMESSAGEBOX(OKONLY,EXCLAMATIONICON,COMMONOK,'iMOD can not present results in table.'//CHAR(13)// &
+   CALL WMESSAGEBOX(OKONLY,EXCLAMATIONICON,COMMONOK,'iMOD cannot present results in table.'//CHAR(13)// &
     'no cellsizes can be determined','Warning')
   RETURN
  ENDIF
@@ -193,10 +193,8 @@ CONTAINS
  CHARACTER(LEN=256) :: FNAME
  INTEGER :: IOS,I,J,IRECL,IBYTE
 
- TSTATUS=TSTAT
- CALL IUPPERCASE(TSTATUS)
- TACT='READWRITE'
- IF(TSTATUS(1:3).EQ.'OLD')TACT='READ,DENYWRITE'
+ TSTATUS=TSTAT; CALL IUPPERCASE(TSTATUS)
+ TACT='READWRITE'; IF(TSTATUS(1:3).EQ.'OLD')TACT='READ,DENYWRITE'
 
  !## initialise all
  IU=0
@@ -223,7 +221,7 @@ CONTAINS
    INQUIRE(FILE=FNAME,EXIST=LEX)
    !## skip if file cannot be found
    IF(.NOT.LEX)THEN
-    CALL WMESSAGEBOX(OKONLY,EXCLAMATIONICON,COMMONOK,'Can not find'//CHAR(13)//TRIM(FNAME),'Error')
+    CALL WMESSAGEBOX(OKONLY,EXCLAMATIONICON,COMMONOK,'Cannot find'//CHAR(13)//TRIM(FNAME),'Error')
     EXIT
    ENDIF
 
@@ -244,7 +242,7 @@ CONTAINS
      SELECT CASE (EXT(I))
       CASE ('ISD1','ISC1','IST1','ISQ1')
        CALL WMESSAGEBOX(YESNO,QUESTIONICON,COMMONNO,'Record length needed:'//TRIM(ITOS(IRECL))//' bytes'//CHAR(13)// &
-       'Record length read :'//TRIM(ITOS(IBYTE))//' bytes'//CHAR(13)//'Wrong record length, can not open'//CHAR(13)// &
+       'Record length read :'//TRIM(ITOS(IBYTE))//' bytes'//CHAR(13)//'Wrong record length, cannot open'//CHAR(13)// &
        TRIM(FNAME)//CHAR(13)//CHAR(13)//'iMOD can rewrite this file to be consistent with this iMOD version.'//CHAR(13)// &
        'A copy of the original file will be called *_old_imod_version, continue?','Question?')
        IF(WINFODIALOG(4).NE.1)EXIT
@@ -253,7 +251,7 @@ CONTAINS
 
       CASE DEFAULT
        CALL WMESSAGEBOX(OKONLY,EXCLAMATIONICON,COMMONOK,'Record length needed:'//TRIM(ITOS(IRECL))//' bytes'//CHAR(13)// &
-        'Record length read :'//TRIM(ITOS(IOS))//' bytes'//CHAR(13)//'Wrong record length, can not open'//CHAR(13)//&
+        'Record length read :'//TRIM(ITOS(IBYTE))//' bytes'//CHAR(13)//'Wrong record length, cannot open'//CHAR(13)//&
         TRIM(FNAME),'Error')
        EXIT
      END SELECT
@@ -270,7 +268,7 @@ CONTAINS
 
   IF(IOS.NE.0)THEN
    CALL OSD_IOSTAT_MSG(IOS,MESSAGE)
-   CALL WMESSAGEBOX(OKONLY,EXCLAMATIONICON,COMMONOK,'Can not open'//CHAR(13)//TRIM(FNAME)//CHAR(13)// &
+   CALL WMESSAGEBOX(OKONLY,EXCLAMATIONICON,COMMONOK,'Cannot open'//CHAR(13)//TRIM(FNAME)//CHAR(13)// &
    TRIM(MESSAGE),'Error')
    EXIT
   ENDIF
@@ -313,7 +311,7 @@ CONTAINS
  IU(1)=UTL_GETUNIT()
  CALL OSD_OPEN(IU(1),FILE=FNAME,STATUS='OLD',FORM=TFORM,ACTION='READ,DENYWRITE',ACCESS='TRANSPARENT',IOSTAT=IOS(1))
  IF(IOS(1).NE.0)THEN
-  CALL WMESSAGEBOX(OKONLY,EXCLAMATIONICON,COMMONOK,'Can not open file: '//CHAR(13)// &
+  CALL WMESSAGEBOX(OKONLY,EXCLAMATIONICON,COMMONOK,'Cannot open file: '//CHAR(13)// &
     TRIM(FNAME),'Error')
   RETURN
  ENDIF
@@ -325,7 +323,7 @@ CONTAINS
       ACCESS='DIRECT',RECL=IREC,IOSTAT=IOS(2))  !## record length in words/bytes!
  IF(IOS(2).NE.0)THEN
   CLOSE(IU(1))
-  CALL WMESSAGEBOX(OKONLY,EXCLAMATIONICON,COMMONOK,'Can not create temporary file: '//CHAR(13)// &
+  CALL WMESSAGEBOX(OKONLY,EXCLAMATIONICON,COMMONOK,'Cannot create temporary file: '//CHAR(13)// &
     TRIM(PREFVAL(1))//'\tmp\xxx.tmp','Error')
   RETURN
  ENDIF
@@ -699,7 +697,8 @@ CONTAINS
                                          DATISD(KREC)%RESIS,DATISD(KREC)%INFF
    ELSEIF(ISFR.EQ.1)THEN
     READ(ISGIU(4,ISGFILES),REC=IREC+ICF) DATISD(KREC)%IDATE,DATISD(KREC)%CTIME,DATISD(KREC)%WLVL, &   
-                                         DATISD(KREC)%BTML, DATISD(KREC)%THCK ,DATISD(KREC)%HCND, &
+                                         DATISD(KREC)%BTML, DATISD(KREC)%WIDTH, &
+                                         DATISD(KREC)%THCK ,DATISD(KREC)%HCND, &
                                          DATISD(KREC)%UPSG, DATISD(KREC)%DWNS, DATISD(KREC)%ICLC, &
                                          DATISD(KREC)%IPRI ,DATISD(KREC)%QFLW, DATISD(KREC)%QROF
    ENDIF
@@ -1322,7 +1321,7 @@ CONTAINS
 
  CALL ISGOPENFILES(ISGFILE,LEX,'REPLACE')
  IF(.NOT.LEX)THEN
-  CALL WMESSAGEBOX(OKONLY,EXCLAMATIONICON,COMMONOK,'iMOD can not (re)write ISG file:'//CHAR(13)//TRIM(ISGFILE),'Error')
+  CALL WMESSAGEBOX(OKONLY,EXCLAMATIONICON,COMMONOK,'iMOD cannot (re)write ISG file:'//CHAR(13)//TRIM(ISGFILE),'Error')
   RETURN
  ENDIF
 
@@ -1396,7 +1395,8 @@ CONTAINS
                                     DATISD(JREC)%BTML,DATISD(JREC)%RESIS,DATISD(JREC)%INFF
     ELSEIF(ISFR.EQ.1)THEN
      WRITE(ISGIU(4,1),REC=JREC+ICF) DATISD(JREC)%IDATE,DATISD(JREC)%CTIME,DATISD(JREC)%WLVL, &
-                                    DATISD(JREC)%BTML, DATISD(JREC)%THCK ,DATISD(JREC)%HCND, &
+                                    DATISD(JREC)%BTML, DATISD(JREC)%WIDTH, &
+                                    DATISD(JREC)%THCK ,DATISD(JREC)%HCND, &
                                     DATISD(JREC)%UPSG, DATISD(JREC)%DWNS ,DATISD(JREC)%ICLC, &
                                     DATISD(JREC)%IPRI, DATISD(JREC)%QFLW ,DATISD(JREC)%QROF
     ENDIF

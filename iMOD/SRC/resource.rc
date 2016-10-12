@@ -1129,8 +1129,8 @@
 #define ID_ISGSFR                       40197
 #define IDF_STRING7                      1082
 #define ID_ROTATE                        1275
-#define ID_ISGCREATERIV                 40288
-#define ID_ISGCREATESFR                 40289
+#define ID_ISGGEN_CREATEISGRIV                 40288
+#define ID_ISGGEN_CREATEISGSFR                 40289
 #define ID_RESIZE                        1160
 #define IDF_STRING8                      1083
 #define ID_ISGSFC                       40290
@@ -10927,8 +10927,8 @@ BEGIN
             MENUITEM "&IPFs ...",                                ID_CREATEIPF
             POPUP "ISGs"
             BEGIN
-                MENUITEM "RIV Applicable...",                        ID_ISGCREATERIV
-                MENUITEM "SFR Applicable ...",                       ID_ISGCREATESFR
+                MENUITEM "RIV Applicable...",                        ID_ISGGEN_CREATEISGRIV
+                MENUITEM "SFR Applicable ...",                       ID_ISGGEN_CREATEISGSFR
             END
         END
         MENUITEM "iMOD Batch ...",                           ID_IMODBATCH
@@ -11397,8 +11397,8 @@ ID_IDEBUGLEVEL0,"Do not show any errors\0",
 ID_IDEBUGLEVEL4,"Report in a message box\0",
 ID_IDEBUGLEVEL1,"Report to standard output\0",
 ID_ISGSFR,"Shows the stream direction\0",
-ID_ISGCREATERIV,"Initiate an ISG file and add it to the ISG Edit to modify, applicable for the RIV Package\0",
-ID_ISGCREATESFR,"Initiate an ISG file and add it to the ISG Edit to modify, applicable for the SFR Package\0",
+ID_ISGGEN_CREATEISGRIV,"Initiate an ISG file and add it to the ISG Edit to modify, applicable for the RIV Package\0",
+ID_ISGGEN_CREATEISGSFR,"Initiate an ISG file and add it to the ISG Edit to modify, applicable for the SFR Package\0",
 0
 END
 

@@ -83,10 +83,10 @@ CONTAINS
 
  IF(IOS.NE.0)THEN
   IF(RW.EQ.'R'.OR.RW.EQ.'r')THEN
-   CALL WMESSAGEBOX(OKONLY,EXCLAMATIONICON,COMMONOK,'Can not open *.sol for reading.'//CHAR(13)// &
+   CALL WMESSAGEBOX(OKONLY,EXCLAMATIONICON,COMMONOK,'Cannot open *.sol for reading.'//CHAR(13)// &
      '['//TRIM(SOLNAME)//']','Warning')
   ELSEIF(RW.EQ.'W'.OR.RW.EQ.'w')THEN
-   CALL WMESSAGEBOX(OKONLY,EXCLAMATIONICON,COMMONOK,'Can not open *.sol for writing.'//CHAR(13)// &
+   CALL WMESSAGEBOX(OKONLY,EXCLAMATIONICON,COMMONOK,'Cannot open *.sol for writing.'//CHAR(13)// &
      '['//TRIM(SOLNAME)//']','Warning')
   ENDIF
   RETURN
@@ -418,10 +418,10 @@ CONTAINS
  ENDIF
  IF(IOS.NE.0)THEN
   IF(RW.EQ.'R'.OR.RW.EQ.'r')THEN
-   CALL WMESSAGEBOX(OKONLY,EXCLAMATIONICON,COMMONOK,'Can not open Solid Cross-Section File (*.spf) for reading.'//CHAR(13)// &
+   CALL WMESSAGEBOX(OKONLY,EXCLAMATIONICON,COMMONOK,'Cannot open Solid Cross-Section File (*.spf) for reading.'//CHAR(13)// &
     '['//TRIM(DIR)//'\'//TRIM(SPF(ISPF)%FNAME)//']','Warning')
   ELSEIF(RW.EQ.'W'.OR.RW.EQ.'w')THEN
-   CALL WMESSAGEBOX(OKONLY,EXCLAMATIONICON,COMMONOK,'Can not open Solid Cross-Section File (*.spf) for writing.'//CHAR(13)// &
+   CALL WMESSAGEBOX(OKONLY,EXCLAMATIONICON,COMMONOK,'Cannot open Solid Cross-Section File (*.spf) for writing.'//CHAR(13)// &
     '['//TRIM(DIR)//'\'//TRIM(SPF(ISPF)%FNAME)//']','Warning')
   ENDIF
   RETURN

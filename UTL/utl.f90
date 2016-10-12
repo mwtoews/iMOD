@@ -10385,7 +10385,7 @@ end
       osd_get_os=4                  ! LINUX
 
 #else
-      ERROR, can not compile routine OSD_GTOS, compiler directives unknown
+      ERROR, cannot compile routine OSD_GTOS, compiler directives unknown
       osd_get_os=-1
       write(*,*) ' ERROR in compilation of routine OSD_GTOS.'
       call exit(1)

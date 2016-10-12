@@ -120,7 +120,7 @@ IF(IERROR.NE.1)THEN
  IF(LBETA)THEN
   CALL WMESSAGEBOX(OKONLY,COMMONOK,EXCLAMATIONICON,'Cannot start Beta-iMOD because you are not authorized in writing for Beta-iMOD','Error')
  ELSE
-  CALL WMESSAGEBOX(OKONLY,COMMONOK,EXCLAMATIONICON,'Can not start iMOD unless you accept the iMOD Software License Agreement','Error')
+  CALL WMESSAGEBOX(OKONLY,COMMONOK,EXCLAMATIONICON,'Cannot start iMOD unless you accept the iMOD Software License Agreement','Error')
  ENDIF
  CALL WINDOWCLOSE(); STOP
 ENDIF
@@ -192,7 +192,7 @@ IF(NARG.GT.0)THEN
     CALL IOSCOPYFILE(ARGSTRING,TRIM(PREFVAL(1))//'\RUNFILES\'//TRIM(ARGSTRING(INDEX(ARGSTRING,'\',.TRUE.):)))
    ENDIF
   ELSE
-   CALL WMESSAGEBOX(OKONLY,EXCLAMATIONICON,COMMONOK,'iMOD can not recognize given argument'//CHAR(13)//TRIM(ARGSTRING),'Error')
+   CALL WMESSAGEBOX(OKONLY,EXCLAMATIONICON,COMMONOK,'iMOD cannot recognize given argument'//CHAR(13)//TRIM(ARGSTRING),'Error')
    STOP
   ENDIF
  END DO

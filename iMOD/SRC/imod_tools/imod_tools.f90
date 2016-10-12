@@ -263,7 +263,7 @@ CONTAINS
   CASE ('IPF')
    ICSV=3
   CASE DEFAULT
-   CALL WMESSAGEBOX(OKONLY,EXCLAMATIONICON,COMMONOK,'iMOD can not recognize the file extension given','Error')
+   CALL WMESSAGEBOX(OKONLY,EXCLAMATIONICON,COMMONOK,'iMOD cannot recognize the file extension given','Error')
    RETURN
  END SELECT
 
@@ -769,7 +769,7 @@ CONTAINS
 
  CALL TOOLS1FIELDS1_GETTOPIC()
 
- !## can not continue for steady-state solutions and/or more than one selected item in case of gxg/timeseries/mean
+ !## cannot continue for steady-state solutions and/or more than one selected item in case of gxg/timeseries/mean
  IF(TOOLSID.EQ.ID_GXG.OR.TOOLSID.EQ.ID_TS.OR.TOOLSID.EQ.ID_MEAN)THEN
   IF(SUM(TP%IACT).NE.1)TP%IACT=0
  ENDIF
@@ -832,7 +832,7 @@ CONTAINS
   TLAY=ILAY
   NLAY=SUM(TLAY)
 
-  !## can not continue for steady-state solutions and/or more than one selected item in case of gxg/timeseries/mean
+  !## cannot continue for steady-state solutions and/or more than one selected item in case of gxg/timeseries/mean
   IF(TOOLSID.EQ.ID_GXG.OR.TOOLSID.EQ.ID_TS.OR.TOOLSID.EQ.ID_MEAN)THEN
    IF(TIT.EQ.0.OR.SUM(TP%IACT).NE.1)TIS=0
   ENDIF

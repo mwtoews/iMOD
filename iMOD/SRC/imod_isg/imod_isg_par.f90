@@ -90,13 +90,15 @@ TYPE ISDOBJ
  !## isfr=0
  INTEGER :: IDATE  !## date in yyyymmdd
  INTEGER :: ID_STW    !## influenced by structure #
- REAL :: WLVL         !## waterlevel
  REAL :: RESIS        !## resistance
  REAL :: INFF         !## infiltration factor
  REAL :: WL_STW       !## influenced waterlevel
+ !## isfr=0/1
+ REAL :: WLVL         !## average waterlevel
  !## isfr=1
  CHARACTER(LEN=8) :: CTIME !## time in hhmmss
- REAL :: BTML      !## bottom level
+ REAL :: BTML      !## averagebottom level
+ REAL :: WIDTH     !## average width
  REAL :: THCK      !## thickness of riverbed
  REAL :: HCND      !## permeability of riverbed
  INTEGER :: DWNS   !## downstream segment number
@@ -150,16 +152,16 @@ DATA TFORM/'FORMATTED  ','UNFORMATTED','UNFORMATTED','UNFORMATTED', &
            'UNFORMATTED','UNFORMATTED'/
 
 CHARACTER(LEN=12),DIMENSION(5) :: TATTRIB1
-CHARACTER(LEN=12),DIMENSION(12) :: TATTRIB2
+CHARACTER(LEN=12),DIMENSION(13) :: TATTRIB2
 INTEGER,DIMENSION(5) :: CTATTRIB1
-INTEGER,DIMENSION(12) :: CTATTRIB2
+INTEGER,DIMENSION(13) :: CTATTRIB2
 
 !## items for isd2-file for 1) riv approach and 2) sfr approach
 DATA TATTRIB1/'Date','Water level','Bottom level','Resistance','Inf.factor'/
-DATA TATTRIB2/'Date','Time','Water level','Bottom level','Bed Thickn.','Bed Perm.','Iup Seg','Idown Seg','Calc Opt', &
+DATA TATTRIB2/'Date','Time','Water level','Bottom level','Stream Width','Bed Thickn.','Bed Perm.','Iup Seg','Idown Seg','Calc Opt', &
               'Div Opt','Q Flow','Q Runoff'/
 DATA CTATTRIB1/1,2,2,2,2/   !## 1=integer,2=real,3=menu
-DATA CTATTRIB2/1,4,2,2,2,2,1,1,3,3,2,2/
+DATA CTATTRIB2/1,4,2,2,2,2,2,1,1,3,3,2,2/
 
 TYPE ISGTYPE
  INTEGER :: ISOURCE,IACT

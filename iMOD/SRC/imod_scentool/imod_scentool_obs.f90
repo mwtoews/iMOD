@@ -48,7 +48,7 @@ CONTAINS
 
  IF(IOPT.EQ.ID_ADD)THEN
   IF(NOBS.EQ.MAXNOBS)THEN
-   CALL WMESSAGEBOX(OKONLY,EXCLAMATIONICON,COMMONOK,'You can not add another OBS SYSTEM in the current configuration.'//CHAR(13)// &
+   CALL WMESSAGEBOX(OKONLY,EXCLAMATIONICON,COMMONOK,'You cannot add another OBS SYSTEM in the current configuration.'//CHAR(13)// &
      'Currently the maximum OBS SYSTEMS is '//TRIM(ITOS(MAXNOBS))//'.'//CHAR(13)// &
      'Increase/add the keyword MAXNOBS= in the SCENTOOL file to increase the number of OBS SYSTEMS allowed','Information')
    IMODE=0

@@ -491,9 +491,9 @@ CONTAINS
 
   ILAY=0
   READ(IU,*,IOSTAT=IOS) ILAY
-  !## can not load ips file as nlay.ne.ilay
+  !## cannot load ips file as nlay.ne.ilay
   IF(ILAY.NE.NLAY)THEN
-   CALL WMESSAGEBOX(OKONLY,EXCLAMATIONICON,COMMONOK,'Can not load ips file appropriately'//CHAR(13)// &
+   CALL WMESSAGEBOX(OKONLY,EXCLAMATIONICON,COMMONOK,'Cannot load ips file appropriately'//CHAR(13)// &
     'since the current number of model layers ('//TRIM(ITOS(NLAY))//')'//CHAR(13)// &
     'does not match the number of model layers inside the ips file ('//TRIM(ITOS(ILAY))//')'//CHAR(13)// &
     TRIM(NAMES),'Error')

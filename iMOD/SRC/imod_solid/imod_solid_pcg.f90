@@ -164,7 +164,7 @@ CONTAINS
    DO I=1,SIZE(IDFK); CALL IDFDEALLOCATEX(IDFK(I)); ENDDO
   
   ELSE
-   CALL WMESSAGEBOX(OKONLY,COMMONOK,EXCLAMATIONICON,'iMOD can not allocate memory for storage of IDF-files.','Error')
+   CALL WMESSAGEBOX(OKONLY,COMMONOK,EXCLAMATIONICON,'iMOD cannot allocate memory for storage of IDF-files.','Error')
    EXIT
   ENDIF
 
@@ -192,8 +192,8 @@ CONTAINS
    IF(IBATCH.EQ.0)CALL WINDOWOUTSTATUSBAR(4,'Writing '//TRIM(FNAME))
    IF(IBATCH.EQ.1)WRITE(*,'(A)') 'Writing '//TRIM(FNAME)
    IF(.NOT.IDFWRITE(SOLIDF(ILAY),FNAME,1))THEN
-    IF(IBATCH.EQ.0)CALL WMESSAGEBOX(OKONLY,EXCLAMATIONICON,COMMONOK,'Can not write IDF file:'//CHAR(13)//TRIM(FNAME),'Error')
-    IF(IBATCH.EQ.1)WRITE(*,'(A)') 'Can not write IDF file:'//CHAR(13)//TRIM(FNAME)
+    IF(IBATCH.EQ.0)CALL WMESSAGEBOX(OKONLY,EXCLAMATIONICON,COMMONOK,'Cannot write IDF file:'//CHAR(13)//TRIM(FNAME),'Error')
+    IF(IBATCH.EQ.1)WRITE(*,'(A)') 'Cannot write IDF file:'//CHAR(13)//TRIM(FNAME)
     EXIT
    ENDIF
   END DO
@@ -308,7 +308,7 @@ CONTAINS
     !## reset isotropic
     PCG(1)%CR=(SOLIDF(ILAY)%DX*SOLIDF(ILAY)%DY)/C; PCG(1)%CC=(SOLIDF(ILAY)%DX*SOLIDF(ILAY)%DY)/C
 
-    !## check for isolated active cell that can not be solved
+    !## check for isolated active cell that cannot be solved
     IF(IBNDCHK.EQ.1)CALL SOLID_CHECKIBND(ILAY,SOLIDF(ILAY)%NROW,SOLIDF(ILAY)%NCOL)
 
     !## include boundaries from genfiles
@@ -424,8 +424,8 @@ CONTAINS
    FNAME=TRIM(OUTPUTFOLDER)//'\'//TRIM(SOLIDF(ILAY)%FNAME(INDEX(SOLIDF(ILAY)%FNAME,'\',.TRUE.)+1:))
    WRITE(*,'(A)') 'Writing '//TRIM(FNAME)
    IF(.NOT.IDFWRITE(SOLIDF(ILAY),FNAME,1))THEN
-    IF(IBATCH.EQ.0)CALL WMESSAGEBOX(OKONLY,EXCLAMATIONICON,COMMONOK,'Can not write IDF file:'//CHAR(13)//TRIM(FNAME),'Error')
-    IF(IBATCH.EQ.1)WRITE(*,'(A)') 'Can not write IDF file:'//CHAR(13)//TRIM(FNAME)
+    IF(IBATCH.EQ.0)CALL WMESSAGEBOX(OKONLY,EXCLAMATIONICON,COMMONOK,'Cannot write IDF file:'//CHAR(13)//TRIM(FNAME),'Error')
+    IF(IBATCH.EQ.1)WRITE(*,'(A)') 'Cannot write IDF file:'//CHAR(13)//TRIM(FNAME)
     EXIT
    ENDIF
   END DO
@@ -622,7 +622,7 @@ CONTAINS
  CALL WDIALOGTITLE('Compute Interfaces')
  
  IF(WINFOGRID(IDF_GRID1,GRIDROWSMAX).LT.NTBSOL+1)THEN
-  CALL WMESSAGEBOX(OKONLY,EXCLAMATIONICON,COMMONOK,'iMOD can not store '//TRIM(ITOS(N))//' rows in grid','Error')
+  CALL WMESSAGEBOX(OKONLY,EXCLAMATIONICON,COMMONOK,'iMOD cannot store '//TRIM(ITOS(N))//' rows in grid','Error')
   CALL WDIALOGUNLOAD(); RETURN  
  ENDIF
 
@@ -783,7 +783,7 @@ CONTAINS
 
  IERROR=1
  
- !## pcg can not solve perfect flat area, so idf%x=zd
+ !## pcg cannot solve perfect flat area, so idf%x=zd
  Z1=MINVAL(ZD(1:ND)); Z2=MAXVAL(ZD(1:ND))
  IF(Z1.EQ.Z2)THEN; IDF%X(:,:)=Z1; CALL UTL_MESSAGEHANDLE(1); IERROR=0; RETURN; ENDIF
  
@@ -998,7 +998,7 @@ CONTAINS
     
     !## mean thickness available
     DSYS=(TOP-BOT)/REAL(IL2-IL1-1)
-    !## can not be negative
+    !## cannot be negative
     DSYS=MAX(0.0,DSYS)
 
     !## make sure interfaces do not cross with top- and bottom interfaces
@@ -1481,7 +1481,7 @@ CONTAINS
  
  IF(SUM(IOS).NE.0)THEN
   CALL SOLID_CALC_DAL()
-  CALL WMESSAGEBOX(OKONLY,EXCLAMATIONICON,COMMONOK,'iMOD Can not allocate enough memory to solve this Problem!','Error')
+  CALL WMESSAGEBOX(OKONLY,EXCLAMATIONICON,COMMONOK,'iMOD Cannot allocate enough memory to solve this Problem!','Error')
   RETURN
  ENDIF
 

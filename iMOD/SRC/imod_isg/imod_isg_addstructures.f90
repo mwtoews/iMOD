@@ -59,9 +59,9 @@ CONTAINS
  !#create logfile
  IULOG=UTL_GETUNIT(); CALL OSD_OPEN(IULOG,FILE=LOGFNAME,STATUS='UNKNOWN',IOSTAT=IOS,ACTION='WRITE')
  IF(IOS.NE.0)THEN
-  IF(IBATCH.EQ.0)CALL WMESSAGEBOX(OKONLY,EXCLAMATIONICON,COMMONOK,'iMOD can not create logfile: '//CHAR(13)// &
+  IF(IBATCH.EQ.0)CALL WMESSAGEBOX(OKONLY,EXCLAMATIONICON,COMMONOK,'iMOD cannot create logfile: '//CHAR(13)// &
     TRIM(LOGFNAME),'Error')
-  IF(IBATCH.EQ.1)WRITE(*,*) 'iMOD can not create logfile: '//TRIM(LOGFNAME)
+  IF(IBATCH.EQ.1)WRITE(*,*) 'iMOD cannot create logfile: '//TRIM(LOGFNAME)
   RETURN
  ENDIF
 
@@ -70,9 +70,9 @@ CONTAINS
 
   CALL ISGREAD((/ISGFILE/),IBATCH)
   IF(NISG.LE.0)THEN
-   IF(IBATCH.EQ.0)CALL WMESSAGEBOX(OKONLY,EXCLAMATIONICON,COMMONOK,'iMOD can not read any element from:'//CHAR(13)// &
+   IF(IBATCH.EQ.0)CALL WMESSAGEBOX(OKONLY,EXCLAMATIONICON,COMMONOK,'iMOD cannot read any element from:'//CHAR(13)// &
          TRIM(ISGFILE),'Error')
-   IF(IBATCH.EQ.1)WRITE(*,'(/1X,A/)') 'iMOD can not read any element from: '//TRIM(ISGFILE)
+   IF(IBATCH.EQ.1)WRITE(*,'(/1X,A/)') 'iMOD cannot read any element from: '//TRIM(ISGFILE)
    RETURN
   ENDIF
  ENDIF
@@ -92,7 +92,7 @@ CONTAINS
    IULOG=UTL_GETUNIT()
    CALL OSD_OPEN(IULOG,FILE=LOGFNAME,STATUS='OLD',IOSTAT=I)
    IF(I.NE.0)THEN
-    CALL WMESSAGEBOX(OKONLY,EXCLAMATIONICON,COMMONOK,'iMOD can not view the created file: '//CHAR(13)// &
+    CALL WMESSAGEBOX(OKONLY,EXCLAMATIONICON,COMMONOK,'iMOD cannot view the created file: '//CHAR(13)// &
      TRIM(LOGFNAME)//'.'//CHAR(13)//'It is probably opened already in another application','Error')
    ELSE
     CLOSE(IULOG)
@@ -327,8 +327,8 @@ CONTAINS
  IUIPF=UTL_GETUNIT()
  CALL OSD_OPEN(IUIPF,FILE=IPFFNAME,STATUS='OLD',ACTION='READ,DENYWRITE',IOSTAT=IOS)
  IF(IOS.NE.0)THEN
-  IF(IBATCH.EQ.0)CALL WMESSAGEBOX(OKONLY,EXCLAMATIONICON,COMMONOK,'iMOD can not open file:'//CHAR(13)//TRIM(IPFFNAME),'Error')
-  IF(IBATCH.EQ.1)WRITE(*,*) 'iMOD can not open file: '//TRIM(IPFFNAME)
+  IF(IBATCH.EQ.0)CALL WMESSAGEBOX(OKONLY,EXCLAMATIONICON,COMMONOK,'iMOD cannot open file:'//CHAR(13)//TRIM(IPFFNAME),'Error')
+  IF(IBATCH.EQ.1)WRITE(*,*) 'iMOD cannot open file: '//TRIM(IPFFNAME)
   RETURN
  ENDIF
  READ(IUIPF,*) NROWIPF
@@ -638,8 +638,8 @@ CONTAINS
  IF(IOS.EQ.0)THEN; GETSTRINGVALUE=.TRUE.; RETURN; ENDIF
 
  IF(IBATCH.EQ.0)CALL WMESSAGEBOX(OKONLY,EXCLAMATIONICON,COMMONOK, &
-             'iMOD can not translate ['//TRIM(STRING)//'] into a real variable','Error')
- IF(IBATCH.EQ.1)WRITE(*,*) 'iMOD can not translate ['//TRIM(STRING)//'] into a real variable'
+             'iMOD cannot translate ['//TRIM(STRING)//'] into a real variable','Error')
+ IF(IBATCH.EQ.1)WRITE(*,*) 'iMOD cannot translate ['//TRIM(STRING)//'] into a real variable'
  
  END FUNCTION GETSTRINGVALUE
 
@@ -657,8 +657,8 @@ CONTAINS
  I=INDEX(DATE,'-')
  IF(I.EQ.0)THEN
   IF(IBATCH.EQ.0)CALL WMESSAGEBOX(OKONLY,EXCLAMATIONICON,COMMONOK, &
-              'iMOD can not translate ['//TRIM(DATE)//'] into a day or month, missing "-"','Error')
-  IF(IBATCH.EQ.1)WRITE(*,*) 'iMOD can not translate ['//TRIM(DATE)//'] into a day or month, missing "-"'
+              'iMOD cannot translate ['//TRIM(DATE)//'] into a day or month, missing "-"','Error')
+  IF(IBATCH.EQ.1)WRITE(*,*) 'iMOD cannot translate ['//TRIM(DATE)//'] into a day or month, missing "-"'
  ENDIF
  !#before '-'
  IF(IFN.EQ.1)THEN
@@ -670,8 +670,8 @@ CONTAINS
 
  IF(IOS.NE.0)THEN
   IF(IBATCH.EQ.0)CALL WMESSAGEBOX(OKONLY,EXCLAMATIONICON,COMMONOK, &
-              'iMOD can not translate ['//TRIM(DATE)//'] into a day or month','Error')
-  IF(IBATCH.EQ.1)WRITE(*,*) 'iMOD can not translate ['//TRIM(DATE)//'] into a day or month'
+              'iMOD cannot translate ['//TRIM(DATE)//'] into a day or month','Error')
+  IF(IBATCH.EQ.1)WRITE(*,*) 'iMOD cannot translate ['//TRIM(DATE)//'] into a day or month'
   RETURN
  ENDIF
 

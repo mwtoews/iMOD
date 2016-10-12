@@ -224,8 +224,8 @@ CONTAINS
    ELSEIF(IIEXT.EQ.3)THEN
 
     IF(MATH(3)%IEQ.EQ.1)THEN
-     IF(IBATCH.EQ.0)CALL WMESSAGEBOX(OKONLY,EXCLAMATIONICON,COMMONOK,'Can not combine IEXT=3 and non-equidistantial IDF"s!','Error')
-     IF(IBATCH.EQ.1)WRITE(*,*) 'Can not combine IEXT=3 and non-equidistantial IDF"s!'
+     IF(IBATCH.EQ.0)CALL WMESSAGEBOX(OKONLY,EXCLAMATIONICON,COMMONOK,'Cannot combine IEXT=3 and non-equidistantial IDF"s!','Error')
+     IF(IBATCH.EQ.1)WRITE(*,*) 'Cannot combine IEXT=3 and non-equidistantial IDF"s!'
      RETURN
     ENDIF
     MATH(3)%XMIN=MPW%XMIN; MATH(3)%XMAX=MPW%XMAX
@@ -262,8 +262,8 @@ CONTAINS
     IF(I.EQ.0)LEX=IDFWRITE(MATH(3),IDFNAMES(IREPEAT,3),1)
     IF(I.EQ.1)LEX=IDFWRITE_EQUI(MATH(3),IDFNAMES(IREPEAT,3))!,0)
     IF(.NOT.LEX)THEN
-     IF(IBATCH.EQ.0)CALL WMESSAGEBOX(OKONLY,EXCLAMATIONICON,COMMONOK,'Can not write IDF '//TRIM(IDFNAMES(IREPEAT,3)),'Error: Termination')
-     IF(IBATCH.EQ.1)WRITE(*,*) 'Can not write IDF '//TRIM(IDFNAMES(IREPEAT,3))
+     IF(IBATCH.EQ.0)CALL WMESSAGEBOX(OKONLY,EXCLAMATIONICON,COMMONOK,'Cannot write IDF '//TRIM(IDFNAMES(IREPEAT,3)),'Error: Termination')
+     IF(IBATCH.EQ.1)WRITE(*,*) 'Cannot write IDF '//TRIM(IDFNAMES(IREPEAT,3))
     ENDIF
    ELSE
     IF(IBATCH.EQ.0)CALL WMESSAGEBOX(OKONLY,EXCLAMATIONICON,COMMONOK,STRING,'Error: Termination')
@@ -389,7 +389,7 @@ CONTAINS
    CASE ('SGN')
     IEFUNC=5
    CASE DEFAULT
-    IF(IBATCH.EQ.-1)CALL WDIALOGPUTSTRING(IDF_LABEL5,'Can not recognize External Function')
+    IF(IBATCH.EQ.-1)CALL WDIALOGPUTSTRING(IDF_LABEL5,'Cannot recognize External Function')
     IF(IBATCH.EQ.0)CALL WMESSAGEBOX(OKONLY,EXCLAMATIONICON,COMMONOK,'External Function not well defined!'//CHAR(13)// &
      'External Function can be abs(), log(), exp(), gtp(), sgn()','Warning')
     IF(IBATCH.EQ.1)WRITE(*,*) 'External Function can be abs(), log(), exp(), gtp(), sgn()'

@@ -247,8 +247,8 @@ CONTAINS
   !## should be able to store entire results
   DO I=1,SIZE(OUTF)
    IF(.NOT.IDFALLOCATEX(OUTF(I)))THEN
-    IF(IBATCH.EQ.0)CALL WMESSAGEBOX(OKONLY,EXCLAMATIONICON,COMMONOK,'iMOD can not allocate enough memory','Warning')
-    IF(IBATCH.EQ.1)WRITE(*,'(/1X,A,2I10/)') 'iMOD can not allocate enough memory ',OUTF(1)%NCOL,OUTF(1)%NROW
+    IF(IBATCH.EQ.0)CALL WMESSAGEBOX(OKONLY,EXCLAMATIONICON,COMMONOK,'iMOD cannot allocate enough memory','Warning')
+    IF(IBATCH.EQ.1)WRITE(*,'(/1X,A,2I10/)') 'iMOD cannot allocate enough memory ',OUTF(1)%NCOL,OUTF(1)%NROW
     RETURN
    ENDIF
   ENDDO
@@ -271,8 +271,8 @@ CONTAINS
      ENDIF
      IF(.NOT.IDFWRITE(OUTF(I),OUTNAMES(I),1))THEN
       !## error occured
-      IF(IBATCH.EQ.0)CALL WMESSAGEBOX(OKONLY,EXCLAMATIONICON,COMMONOK,'Can not write IDF '//TRIM(OUTNAMES(I)),'Error: Termination')
-      IF(IBATCH.EQ.1)WRITE(*,*) 'Can not write IDF '//TRIM(OUTNAMES(I))
+      IF(IBATCH.EQ.0)CALL WMESSAGEBOX(OKONLY,EXCLAMATIONICON,COMMONOK,'Cannot write IDF '//TRIM(OUTNAMES(I)),'Error: Termination')
+      IF(IBATCH.EQ.1)WRITE(*,*) 'Cannot write IDF '//TRIM(OUTNAMES(I))
       RETURN
      ENDIF
     ENDIF
@@ -362,8 +362,8 @@ CONTAINS
  ALLOCATE(PDELC(2,OUTF(1)%NROW),STAT=IOS(3))
  ALLOCATE(PDELR(2,OUTF(1)%NCOL),STAT=IOS(4))
  IF(SUM(IOS).NE.0)THEN
-  IF(IBATCH.EQ.0)CALL WMESSAGEBOX(OKONLY,EXCLAMATIONICON,COMMONOK,'Can not allocate enough memory!','Error')
-  IF(IBATCH.EQ.1)WRITE(*,*) 'Can not allocate enough memory!'
+  IF(IBATCH.EQ.0)CALL WMESSAGEBOX(OKONLY,EXCLAMATIONICON,COMMONOK,'Cannot allocate enough memory!','Error')
+  IF(IBATCH.EQ.1)WRITE(*,*) 'Cannot allocate enough memory!'
   RETURN
  ENDIF
 
@@ -959,7 +959,7 @@ CONTAINS
  ALLOCATE(TZ(NLAY)            ,STAT=IOS(13))
 
  IF(SUM(IOS).NE.0)THEN
-  CALL WMESSAGEBOX(OKONLY,EXCLAMATIONICON,COMMONOK,'iMOD Can not allocate enough memory to solve this Problem!','Error')
+  CALL WMESSAGEBOX(OKONLY,EXCLAMATIONICON,COMMONOK,'iMOD Cannot allocate enough memory to solve this Problem!','Error')
   RETURN
  ENDIF
 

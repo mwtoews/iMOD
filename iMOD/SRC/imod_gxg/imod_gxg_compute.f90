@@ -182,7 +182,7 @@ CONTAINS
   IF(LEN_TRIM(GXG_MVIDFNAME).GT.0)THEN
    !## initialise dimensions for elevation data
    IF(.NOT.IDFREAD(MVIDF,GXG_MVIDFNAME,0))THEN
-    IF(IBATCH.EQ.1)WRITE(*,*) 'Can not open '//TRIM(GXG_MVIDFNAME)
+    IF(IBATCH.EQ.1)WRITE(*,*) 'Cannot open '//TRIM(GXG_MVIDFNAME)
     CALL GXG1ABORT()
     RETURN
    ENDIF
@@ -277,7 +277,7 @@ CONTAINS
      STATUS='UNKNOWN',IOSTAT=IOS)
   IF(IOS.NE.0)THEN
    LINE=TRIM(GXG_RESDIR)//'\summary_l'//TRIM(ITOS(ILAY))//'_'//TRIM(OSD_GETENV('USERNAME'))//'.txt'
-   IF(IBATCH.EQ.1)WRITE(*,*) 'Can not open '//TRIM(LINE)
+   IF(IBATCH.EQ.1)WRITE(*,*) 'Cannot open '//TRIM(LINE)
    CALL GXG1ABORT()
    RETURN
   ENDIF

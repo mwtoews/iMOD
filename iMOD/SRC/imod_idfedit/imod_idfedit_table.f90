@@ -95,7 +95,7 @@ CONTAINS
  NC=(IC2-IC1)+1; NR=(IR2-IR1)+1
  
  IF(NR.GT.WINFOGRID(IDF_GRID1,GRIDROWSMAX))THEN
-  CALL WMESSAGEBOX(OKONLY,EXCLAMATIONICON,COMMONOK,'iMOD can not present results in table'//CHAR(13)// &
+  CALL WMESSAGEBOX(OKONLY,EXCLAMATIONICON,COMMONOK,'iMOD cannot present results in table'//CHAR(13)// &
     'with more than '//TRIM(ITOS(WINFOGRID(IDF_GRID1,GRIDROWSMAX)))//' rows','Warning')
  ELSE
  
@@ -168,7 +168,7 @@ CONTAINS
         CALL OSD_OPEN(IU,FILE=TRIM(PREFVAL(1))//'\TMP\IDFEDIT_'//TRIM(OSD_GETENV('USERNAME'))//'.CSV', &
          STATUS='UNKNOWN',ACTION='WRITE',IOSTAT=IOS)
         IF(IOS.NE.0)THEN
-         CALL WMESSAGEBOX(OKONLY,EXCLAMATIONICON,COMMONOK,'iMOD can not save the spreadsheet into the temporary file:'//CHAR(13)// &
+         CALL WMESSAGEBOX(OKONLY,EXCLAMATIONICON,COMMONOK,'iMOD cannot save the spreadsheet into the temporary file:'//CHAR(13)// &
            TRIM(PREFVAL(1))//'\TMP\IDFEDIT_'//TRIM(OSD_GETENV('USERNAME'))//'.CSV','Error')
         ELSE
          DO I=1,SELIDF(1)%NTHREAD

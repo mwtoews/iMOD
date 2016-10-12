@@ -89,7 +89,7 @@ CONTAINS
 
  IU=UTL_GETUNIT(); CALL OSD_OPEN(IU,FILE=CSVFNAME,STATUS='OLD',ACTION='READ',IOSTAT=IOS)
  IF(IOS.NE.0)THEN
-  CALL WMESSAGEBOX(OKONLY,EXCLAMATIONICON,COMMONOK,'iMOD can not OPEN/READ file called:'//CHAR(13)//&
+  CALL WMESSAGEBOX(OKONLY,EXCLAMATIONICON,COMMONOK,'iMOD cannot OPEN/READ file called:'//CHAR(13)//&
     TRIM(CSVFNAME),'Error')
   RETURN
  ENDIF
@@ -592,14 +592,14 @@ CONTAINS
   CASE ('IPF')
    ICSV=3
    IF(WBAL_NLAYER.GT.1)THEN
-    IF(IBATCH.EQ.0)CALL WMESSAGEBOX(OKONLY,EXCLAMATIONICON,COMMONOK,'You can not create an IPF file format for more than one modellayer','Error')
-    IF(IBATCH.EQ.1)WRITE(*,*) 'You can not create an IPF file format for more than one modellayer'
+    IF(IBATCH.EQ.0)CALL WMESSAGEBOX(OKONLY,EXCLAMATIONICON,COMMONOK,'You cannot create an IPF file format for more than one modellayer','Error')
+    IF(IBATCH.EQ.1)WRITE(*,*) 'You cannot create an IPF file format for more than one modellayer'
     RETURN
    ENDIF
   CASE DEFAULT
-   IF(IBATCH.EQ.0)CALL WMESSAGEBOX(OKONLY,EXCLAMATIONICON,COMMONOK,'iMOD can not associate file:'//CHAR(13)// &
+   IF(IBATCH.EQ.0)CALL WMESSAGEBOX(OKONLY,EXCLAMATIONICON,COMMONOK,'iMOD cannot associate file:'//CHAR(13)// &
    TRIM(WBAL_OUTFNAME),'Error')
-   IF(IBATCH.EQ.1)WRITE(*,*) 'Can not associate file '//TRIM(WBAL_OUTFNAME)
+   IF(IBATCH.EQ.1)WRITE(*,*) 'Cannot associate file '//TRIM(WBAL_OUTFNAME)
    RETURN
  END SELECT
 
@@ -608,10 +608,10 @@ CONTAINS
  IF(I.NE.0)THEN
   INQUIRE(UNIT=IU,OPENED=LEX)
   IF(LEX)CLOSE(IU)
-  IF(IBATCH.EQ.0)CALL WMESSAGEBOX(OKONLY,EXCLAMATIONICON,COMMONOK,'iMOD can not create the file:'//CHAR(13)// &
+  IF(IBATCH.EQ.0)CALL WMESSAGEBOX(OKONLY,EXCLAMATIONICON,COMMONOK,'iMOD cannot create the file:'//CHAR(13)// &
    TRIM(WBAL_OUTFNAME)//CHAR(13)// &
    'it is probably already opened in another application','Error')
-  IF(IBATCH.EQ.1)WRITE(*,*) 'Can not create file : '//TRIM(WBAL_OUTFNAME)
+  IF(IBATCH.EQ.1)WRITE(*,*) 'Cannot create file : '//TRIM(WBAL_OUTFNAME)
   RETURN
  ENDIF
 
@@ -803,7 +803,7 @@ CONTAINS
   ELSE
    IU=UTL_GETUNIT(); CALL OSD_OPEN(IU,FILE=WBAL_OUTFNAME,STATUS='OLD',IOSTAT=I)
    IF(I.NE.0)THEN
-    CALL WMESSAGEBOX(OKONLY,EXCLAMATIONICON,COMMONOK,'iMOD can not view the created file : '//CHAR(13)// &
+    CALL WMESSAGEBOX(OKONLY,EXCLAMATIONICON,COMMONOK,'iMOD cannot view the created file : '//CHAR(13)// &
      TRIM(WBAL_OUTFNAME)//'.'//CHAR(13)//'It is probably opened already in another application','Error')
    ELSE
     CLOSE(IU)

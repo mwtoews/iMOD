@@ -45,7 +45,7 @@ INTEGER,PARAMETER :: ISOBEK=0
  
  SOBEK1CALC=.FALSE.
  
- WRITE(*,'(//A//)') 'Can not use this function in this version of iMOD'
+ WRITE(*,'(//A//)') 'Cannot use this function in this version of iMOD'
  
  SOBEK1CALC=.TRUE. 
  

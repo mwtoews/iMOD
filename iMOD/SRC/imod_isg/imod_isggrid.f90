@@ -732,7 +732,7 @@ CONTAINS
     END DO
 
     IF(I.GT.2)THEN
-     WRITE(*,'(A)') 'Can not find label '//TRIM(TRAP(1,1)%CSEGMENT)//' in '//TRIM(GRIDISG%SEGMENTCSVFNAME)
+     WRITE(*,'(A)') 'Cannot find label '//TRIM(TRAP(1,1)%CSEGMENT)//' in '//TRIM(GRIDISG%SEGMENTCSVFNAME)
     ELSE
      DO ITRAP=1,NETTRAP(1)
 
@@ -864,7 +864,7 @@ CONTAINS
   CALL IDFNULLIFY(IDF(I))
   IF(.NOT.IDFALLOCATEX(IDF(I)))THEN
    IF(IBATCH.EQ.0)THEN
-    CALL WMESSAGEBOX(OKONLY,EXCLAMATIONICON,COMMONOK,'Can not allocate memory for IDF '//TRIM(FNAME(I))//TRIM(PPOSTFIX)//'.IDF'//CHAR(13)// &
+    CALL WMESSAGEBOX(OKONLY,EXCLAMATIONICON,COMMONOK,'Cannot allocate memory for IDF '//TRIM(FNAME(I))//TRIM(PPOSTFIX)//'.IDF'//CHAR(13)// &
       'Row/Column='//TRIM(ITOS(IDF(I)%NROW))//'-'//TRIM(ITOS(IDF(I)%NCOL)),'Error')
    ELSEIF(IBATCH.EQ.1)THEN
     WRITE(*,*) 'Cannot allocate memory for IDF '//TRIM(FNAME(I))//TRIM(PPOSTFIX)//'.IDF'
@@ -1237,12 +1237,12 @@ CONTAINS
 
    IF(ISC(ICRS)%N.GT.0)THEN
     IF(ISC(ICRS)%N.LE.2)THEN
-     CALL WMESSAGEBOX(OKONLY,EXCLAMATIONICON,COMMONOK,'iMODFLOW can not apply a 1D cross-section with less or equal 2 points'//CHAR(13)// &
+     CALL WMESSAGEBOX(OKONLY,EXCLAMATIONICON,COMMONOK,'iMODFLOW cannot apply a 1D cross-section with less or equal 2 points'//CHAR(13)// &
        'Cross-section name '//TRIM(ISC(ICRS)%CNAME),'Error')
     ENDIF
    ELSE
     IF(ABS(ISC(ICRS)%N).LE.1)THEN
-     CALL WMESSAGEBOX(OKONLY,EXCLAMATIONICON,COMMONOK,'iMODFLOW can not apply a 2D cross-section with no locations'//CHAR(13)// &
+     CALL WMESSAGEBOX(OKONLY,EXCLAMATIONICON,COMMONOK,'iMODFLOW cannot apply a 2D cross-section with no locations'//CHAR(13)// &
       'Cross-section name '//TRIM(ISC(ICRS)%CNAME),'Error')
     ENDIF
    ENDIF
@@ -1554,25 +1554,27 @@ IRLOOP: DO IR=MAX(1,IROW-1),MIN(NROW,IROW+1)
 
 !    RVAL(1) =DATISD(IREC)%WLVL
 !    RVAL(2) =DATISD(IREC)%BTML
-!    RVAL(3) =DATISD(IREC)%THCK
-!    RVAL(4) =DATISD(IREC)%HCND
-!    RVAL(5) =DATISD(IREC)%UPSG
-!    RVAL(6) =DATISD(IREC)%DWNS
-!    RVAL(7) =DATISD(IREC)%ICLC
-!    RVAL(8) =DATISD(IREC)%IPRI
-!    RVAL(9) =DATISD(IREC)%QFLW
-!    RVAL(10)=DATISD(IREC)%QROF
+!    RVAL(3) =DATISD(IREC)%BTML
+!    RVAL(4) =DATISD(IREC)%THCK
+!    RVAL(5) =DATISD(IREC)%HCND
+!    RVAL(6) =DATISD(IREC)%UPSG
+!    RVAL(7) =DATISD(IREC)%DWNS
+!    RVAL(8) =DATISD(IREC)%ICLC
+!    RVAL(9) =DATISD(IREC)%IPRI
+!    RVAL(10) =DATISD(IREC)%QFLW
+!    RVAL(11)=DATISD(IREC)%QROF
 
   WLVLUP =RVAL(1,1); WLVLDN =RVAL(1,2)
   ELEVUP =RVAL(2,1); ELEVDN =RVAL(2,2)
-  THICKM1=RVAL(3,1); THICKM2=RVAL(3,2)
-  HC1FCT =RVAL(4,1); HC2FCT =RVAL(4,2)
-  ICALC =INT(RVAL(7,1)) !## calculation option streamdepth
-  IUPSEG=INT(RVAL(5,1)) !## upstream segment
-  OUTSEG=INT(RVAL(6,2)) !## downstream segment
-  IPRIOR=INT(RVAL(8,2)) !## dividing option
-  QFLOW =RVAL(9,1)      !## inflow
-  QROFF =RVAL(10,1)     !## runoff flow
+  WIDTH1 =RVAL(3,1); WIDTH2 =RVAL(3,2)
+  THICKM1=RVAL(4,1); THICKM2=RVAL(4,2)
+  HC1FCT =RVAL(5,1); HC2FCT =RVAL(5,2)
+  ICALC =INT(RVAL(8,1)) !## calculation option streamdepth
+  IUPSEG=INT(RVAL(6,1)) !## upstream segment
+  OUTSEG=INT(RVAL(7,2)) !## downstream segment
+  IPRIOR=INT(RVAL(9,2)) !## dividing option
+  QFLOW =RVAL(10,1)      !## inflow
+  QROFF =RVAL(11,1)     !## runoff flow
 
   !## corrections for reding out of a menu
   ICALC=ICALC-1; IPRIOR=IPRIOR-1
@@ -1613,11 +1615,11 @@ IRLOOP: DO IR=MAX(1,IROW-1),MIN(NROW,IROW+1)
   ENDIF
   WRITE(JU,'(A)') TRIM(LINE)
 
-  WIDTH1 =MAXVAL(XCRS(1:NDIM))-MINVAL(XCRS(1:NDIM))
-  DEPTH1 =MAXVAL(ZCRS(1:NDIM))-MINVAL(ZCRS(1:NDIM))
-  !## identical for up- and downstream - not neccessary for SFR but for now perhaps most optimal choice
-  WIDTH2 =WIDTH1
-  DEPTH2 =DEPTH1
+!  WIDTH1 =MAXVAL(XCRS(1:NDIM))-MINVAL(XCRS(1:NDIM))
+  DEPTH1 =WLVLUP-ELEVUP !MAXVAL(ZCRS(1:NDIM))-MINVAL(ZCRS(1:NDIM))
+!  !## identical for up- and downstream - not neccessary for SFR but for now perhaps most optimal choice
+!  WIDTH2 =WIDTH1
+  DEPTH2 =WLVLDN-ELEVDN !DEPTH1
 
   LINE=TRIM(RTOS(HC1FCT,'F',2))//','//TRIM(RTOS(THICKM1,'F',2))//','//TRIM(RTOS(ELEVUP,'F',2))
   IF(ICALC.LE.1)LINE=TRIM(LINE)//','//TRIM(RTOS(WIDTH1,'F',2))

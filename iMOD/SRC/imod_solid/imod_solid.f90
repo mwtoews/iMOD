@@ -150,7 +150,7 @@ CONTAINS
         CALL WINDOWSELECT(IWIN)
         CALL WEDITFILE(GETSOLNAME(),ITYPE=MODAL,IDMENU=0,IFONT=COURIERNEW,ISIZE=10)
        ELSE
-        CALL WMESSAGEBOX(OKONLY,EXCLAMATIONICON,COMMONOK,'iMOD can not find/open:'//CHAR(13)//TRIM(GETSOLNAME()),'Error')
+        CALL WMESSAGEBOX(OKONLY,EXCLAMATIONICON,COMMONOK,'iMOD cannot find/open:'//CHAR(13)//TRIM(GETSOLNAME()),'Error')
        ENDIF
       CASE (ID_3D)
        CALL SOLID_3D()
@@ -1469,7 +1469,7 @@ ILLOOP: DO
    IF(DZZ.LT.0.0)THEN
     DO I=1,SIZE(SOLIDF); CLOSE(SOLIDF(I)%IU); ENDDO
     CALL UTL_MESSAGEHANDLE(1)
-    CALL WMESSAGEBOX(OKONLY,INFORMATIONICON,COMMONOK,'iMOD can not create a Solid whenever the values from the first'//CHAR(13)// &
+    CALL WMESSAGEBOX(OKONLY,INFORMATIONICON,COMMONOK,'iMOD cannot create a Solid whenever the values from the first'//CHAR(13)// &
      'given IDF are lower than the values in for the second given IDF.'//CHAR(13)// &
      'Check whether you should change the order of the selected IDF files.','Information')
     RETURN
@@ -1536,7 +1536,7 @@ ILLOOP: DO
  IF(.NOT.SOLID_CALC_KDC_INIT(NLAY))RETURN
  
  IU=UTL_GETUNIT(); CALL OSD_OPEN(IU,FILE=TRIM(OUTPUTFOLDER)//'\solid_log.txt',STATUS='UNKNOWN',ACTION='WRITE',IOSTAT=IOS)
- IF(IOS.NE.0)THEN; WRITE(*,'(/A/)') 'Can not CREATE '//TRIM(OUTPUTFOLDER)//'\solid_log.txt'; RETURN; ENDIF
+ IF(IOS.NE.0)THEN; WRITE(*,'(/A/)') 'Cannot CREATE '//TRIM(OUTPUTFOLDER)//'\solid_log.txt'; RETURN; ENDIF
 
  IF(ASSOCIATED(REGISFILES))    N=SIZE(REGISFILES)
  IF(ASSOCIATED(REGISFILES_TOP))N=SIZE(REGISFILES_TOP)

@@ -1067,8 +1067,8 @@ CONTAINS
  !## read variables from file into IPFAC-array
  IU=UTL_GETUNIT(); CALL OSD_OPEN(IU,FILE=FNAME,STATUS='OLD',FORM='FORMATTED',ACTION='READ',IOSTAT=IOS)
  IF(IOS.NE.0)THEN
-  IF(IMODBATCH.EQ.0)CALL WMESSAGEBOX(OKONLY,EXCLAMATIONICON,COMMONOK,'Can not open file: ['//TRIM(FNAME)//'] for reading','Error')
-  IF(IMODBATCH.EQ.1)WRITE(*,'(A)') 'Can not open file: ['//TRIM(FNAME)//'] for reading'
+  IF(IMODBATCH.EQ.0)CALL WMESSAGEBOX(OKONLY,EXCLAMATIONICON,COMMONOK,'Cannot open file: ['//TRIM(FNAME)//'] for reading','Error')
+  IF(IMODBATCH.EQ.1)WRITE(*,'(A)') 'Cannot open file: ['//TRIM(FNAME)//'] for reading'
   RETURN
  ENDIF
  

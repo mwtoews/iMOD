@@ -205,9 +205,9 @@ CONTAINS
   !## error opening file
   IF(IOS(I).NE.0)THEN
    IF(IBATCH.EQ.0)THEN
-    CALL WMESSAGEBOX(OKONLY,EXCLAMATIONICON,COMMONOK,'Can not find:'//CHAR(13)//TRIM(FNAME(I)),'Error')
+    CALL WMESSAGEBOX(OKONLY,EXCLAMATIONICON,COMMONOK,'Cannot find:'//CHAR(13)//TRIM(FNAME(I)),'Error')
    ELSE
-    WRITE(*,'(A)') 'Can not find:'//CHAR(13)//TRIM(FNAME(I))
+    WRITE(*,'(A)') 'Cannot find:'//CHAR(13)//TRIM(FNAME(I))
    ENDIF
    RETURN
   ENDIF
@@ -237,9 +237,9 @@ CONTAINS
  DO I=8,18
   IF(IOS(I).NE.0)THEN
    IF(IBATCH.EQ.0)THEN
-    CALL WMESSAGEBOX(OKONLY,EXCLAMATIONICON,COMMONOK,'Can not create:'//CHAR(13)//TRIM(FNAME(I)),'Error')
+    CALL WMESSAGEBOX(OKONLY,EXCLAMATIONICON,COMMONOK,'Cannot create:'//CHAR(13)//TRIM(FNAME(I)),'Error')
    ELSE
-    WRITE(*,'(A)') 'Can not create:'//CHAR(13)//TRIM(FNAME(I))
+    WRITE(*,'(A)') 'Cannot create:'//CHAR(13)//TRIM(FNAME(I))
    ENDIF
    RETURN
   ENDIF
@@ -281,9 +281,9 @@ CONTAINS
    IF(LEX)CLOSE(IU(I))
   ELSE
    IF(IBATCH.EQ.0)THEN
-    CALL WMESSAGEBOX(OKONLY,EXCLAMATIONICON,COMMONOK,'Can not open/find: '//TRIM(FNAME(I)),'Error')
+    CALL WMESSAGEBOX(OKONLY,EXCLAMATIONICON,COMMONOK,'Cannot open/find: '//TRIM(FNAME(I)),'Error')
    ELSE
-    WRITE(*,'(1X,A)') 'Can not open/find: '//TRIM(FNAME(I))
+    WRITE(*,'(1X,A)') 'Cannot open/find: '//TRIM(FNAME(I))
    ENDIF
   ENDIF
  END DO
@@ -347,7 +347,7 @@ CONTAINS
  CALL MAIN1RDPROFILEDEF()
  CALL MAIN1RDFRICTIONDAT()
 
- ISFR=0; CALL ISGCREATE()
+ ISFR=0; CALL ISGGEN_CREATEISG()
 
  DO I=1,SIZE(PDEF)
   IF(ASSOCIATED(PDEF(I)%XPROF))DEALLOCATE(PDEF(I)%XPROF)
@@ -359,7 +359,7 @@ CONTAINS
  END SUBROUTINE MAIN
 
  !##=====================================================================
- SUBROUTINE ISGCREATE()
+ SUBROUTINE ISGGEN_CREATEISG()
  !##=====================================================================
  IMPLICIT NONE
  INTEGER :: ISEG,ICRS,IB,NNP,ICLC,NSEG,NCLC,NCRS,IREFSD,IREFSC,IREFST, &
@@ -387,9 +387,9 @@ CONTAINS
  NNP   =0
  DO IB=1,NBRCH
 
-  IF(.NOT.ISPCREATE(IB,ISEG,NNP,NSEG))EXIT
-  CALL ISD1CREATE(ICLC,NCLC,IREFSD,IB)
-  CALL ISC1CREATE(ICRS,IB,NCRS,IREFSC)
+  IF(.NOT.ISGGEN_CREATEISP(IB,ISEG,NNP,NSEG))EXIT
+  CALL ISGGEN_CREATEISD1(ICLC,NCLC,IREFSD,IB)
+  CALL ISGGEN_CREATEISC1(ICRS,IB,NCRS,IREFSC)
   CALL IST1CREATE(ISTW,IB,NSTW,IREFST)
   CALL ISQ1CREATE(IQHR,IB,NQHR,IREFSQ)
 
@@ -434,10 +434,10 @@ CONTAINS
  IF(ALLOCATED(JULIANTIMES))DEALLOCATE(JULIANTIMES)
  IF(ALLOCATED(SELECTEDVALUES))DEALLOCATE(SELECTEDVALUES)
 
- END SUBROUTINE ISGCREATE
+ END SUBROUTINE ISGGEN_CREATEISG
 
  !##=====================================================================
- LOGICAL FUNCTION ISPCREATE(IB,ISEG,NNP,NSEG)
+ LOGICAL FUNCTION ISGGEN_CREATEISP(IB,ISEG,NNP,NSEG)
  !##=====================================================================
  IMPLICIT NONE
  REAL,PARAMETER :: RAD=360.0/(2.0*3.1415926)
@@ -448,7 +448,7 @@ CONTAINS
  DOUBLE PRECISION :: XC,YC
  INTEGER :: I,J,K
 
- ISPCREATE=.FALSE.
+ ISGGEN_CREATEISP=.FALSE.
  
  !#begin node
  J=1
@@ -466,9 +466,9 @@ CONTAINS
   IF(I.LE.NNDLK)THEN
    XC=TP3(I)%PX; YC=TP3(I)%PY
   ELSE
-   IF(IBATCH.EQ.0)CALL WMESSAGEBOX(OKONLY,EXCLAMATIONICON,COMMONOK,'Can not match identification ('//TRIM(TP2(IB)%CBN)// &
+   IF(IBATCH.EQ.0)CALL WMESSAGEBOX(OKONLY,EXCLAMATIONICON,COMMONOK,'Cannot match identification ('//TRIM(TP2(IB)%CBN)// &
     ') for branch: '//TRIM(ITOS(IB)),'Error')
-   IF(IBATCH.EQ.1)WRITE(*,'(A,I10)') 'Can not match identification ('//TRIM(TP2(IB)%CBN)//') for branch: ',IB
+   IF(IBATCH.EQ.1)WRITE(*,'(A,I10)') 'Cannot match identification ('//TRIM(TP2(IB)%CBN)//') for branch: ',IB
    RETURN
   ENDIF
  ENDIF
@@ -531,12 +531,12 @@ CONTAINS
  NSEG=J
  NNP =NNP+J
 
- ISPCREATE=.TRUE.
+ ISGGEN_CREATEISP=.TRUE.
 
- END FUNCTION ISPCREATE
+ END FUNCTION ISGGEN_CREATEISP
 
  !##=====================================================================
- SUBROUTINE ISD1CREATE(ICLC,NCLC,IREFSD,IB)
+ SUBROUTINE ISGGEN_CREATEISD1(ICLC,NCLC,IREFSD,IB)
  !##=====================================================================
  IMPLICIT NONE
  REAL,PARAMETER :: NODATA=-999.99
@@ -766,7 +766,7 @@ CONTAINS
  END SUBROUTINE ISDPROCESSDATA
 
  !##=====================================================================
- SUBROUTINE ISC1CREATE(ICRS,IB,NCRS,IREFSC)
+ SUBROUTINE ISGGEN_CREATEISC1(ICRS,IB,NCRS,IREFSC)
  !##=====================================================================
  IMPLICIT NONE
  INTEGER,INTENT(IN) :: IB
@@ -839,7 +839,7 @@ CONTAINS
 
  IF(NCRS.EQ.0)WRITE(IU(IOUT),'(A)') '>>> No profile found for '//TRIM(TP2(IB)%ID)//' <<<'
 
- END SUBROUTINE ISC1CREATE
+ END SUBROUTINE ISGGEN_CREATEISC1
 
  !##=====================================================================
  SUBROUTINE IST1CREATE(ISTW,IB,NSTW,IREFST)
@@ -1628,13 +1628,13 @@ CONTAINS
  IMPLICIT NONE
  CHARACTER(LEN=*),INTENT(IN) :: CERROR,LINE
 
- WRITE(IU(IOUT),'(/1X,A/)') 'Can not find keyword ['//TRIM(CERROR)//'] in line:'
+ WRITE(IU(IOUT),'(/1X,A/)') 'Cannot find keyword ['//TRIM(CERROR)//'] in line:'
  WRITE(IU(IOUT),'(1X,A)') TRIM(LINE)
  IF(IBATCH.EQ.0)THEN
-  CALL WMESSAGEBOX(OKONLY,EXCLAMATIONICON,COMMONOK,'Can not find keyword ['//TRIM(CERROR)//'] in line:'//CHAR(13)// &
+  CALL WMESSAGEBOX(OKONLY,EXCLAMATIONICON,COMMONOK,'Cannot find keyword ['//TRIM(CERROR)//'] in line:'//CHAR(13)// &
    TRIM(LINE),'Error')
  ELSE
-  WRITE(*,'(/1X,A/)') 'Can not find keyword ['//TRIM(CERROR)//'] in line:'
+  WRITE(*,'(/1X,A/)') 'Cannot find keyword ['//TRIM(CERROR)//'] in line:'
   WRITE(*,'(1X,A)') TRIM(LINE)
   STOP
  ENDIF

@@ -143,7 +143,7 @@ CONTAINS
    IF(I.EQ.NCOL)EXIT
   END DO
   IF(IROW.GT.NROW)THEN
-   CALL WMESSAGEBOX(OKONLY,EXCLAMATIONICON,COMMONOK,'Can not insert more points!','Information')
+   CALL WMESSAGEBOX(OKONLY,EXCLAMATIONICON,COMMONOK,'Cannot insert more points!','Information')
    RETURN
   ENDIF
   CALL WCURSORSHAPE(ID_CURSORPOINTPLUS)
@@ -263,7 +263,7 @@ CONTAINS
        ENDDO
        IROW=IROW+1
        IF(IROW.GT.NROW)THEN
-        CALL WMESSAGEBOX(OKONLY,EXCLAMATIONICON,COMMONOK,'Can not insert more points!','Information')
+        CALL WMESSAGEBOX(OKONLY,EXCLAMATIONICON,COMMONOK,'Cannot insert more points!','Information')
         EXIT
        ENDIF
       !## move
@@ -463,7 +463,7 @@ CONTAINS
  ELSE 
   CALL OSD_OPEN(IU,FILE=FNAME,STATUS='REPLACE',ACTION='WRITE,DENYREAD',FORM='FORMATTED',IOSTAT=IOS)
  ENDIF
- IF(ST1ERROR(IOS,'iMOD can not open file '//TRIM(FNAME)).NE.0)RETURN
+ IF(ST1ERROR(IOS,'iMOD cannot open file '//TRIM(FNAME)).NE.0)RETURN
 
  CALL WDIALOGSELECT(ID)
  CALL WDIALOGUNDEFINED(RVALUE=NODATAGRID)
@@ -486,7 +486,7 @@ CONTAINS
      IF(IOS.NE.0)EXIT
      I=I+1
      IF(I.GT.NROWQ)THEN
-      CALL WMESSAGEBOX(OKONLY,EXCLAMATIONICON,COMMONOK,'Current iMOD version can not read more than '//TRIM(ITOS(NROWQ))// &
+      CALL WMESSAGEBOX(OKONLY,EXCLAMATIONICON,COMMONOK,'Current iMOD version cannot read more than '//TRIM(ITOS(NROWQ))// &
        ' lines'//CHAR(13)//'Current table will be filled in with max '//TRIM(ITOS(NROWQ))//' values','Error/warning')
       EXIT
      ENDIF
@@ -528,7 +528,7 @@ CONTAINS
      IF(IOS.NE.0)EXIT
      I=I+1
      IF(I.GT.NROWL)THEN
-      CALL WMESSAGEBOX(OKONLY,EXCLAMATIONICON,COMMONOK,'Current iMOD version can not read more than '//TRIM(ITOS(NROWL))// &
+      CALL WMESSAGEBOX(OKONLY,EXCLAMATIONICON,COMMONOK,'Current iMOD version cannot read more than '//TRIM(ITOS(NROWL))// &
        ' lines'//CHAR(13)//'Current table will be filled in with max '//TRIM(ITOS(NROWL))//' values','Error/warning')
       EXIT
      ENDIF

@@ -51,18 +51,18 @@ CONTAINS
  !## use/read Mask-IDF
  IF(IMASK.EQ.1)THEN
   IF(.NOT.IDFREAD(MATH(0),MSKNAME,0))THEN
-   IF(IBATCH.EQ.0)CALL WMESSAGEBOX(OKONLY,EXCLAMATIONICON,COMMONOK,'Can not read Mask IDF '//CHAR(13)// &
+   IF(IBATCH.EQ.0)CALL WMESSAGEBOX(OKONLY,EXCLAMATIONICON,COMMONOK,'Cannot read Mask IDF '//CHAR(13)// &
      TRIM(MSKNAME),'Error')
-   IF(IBATCH.EQ.1)WRITE(*,'(A)') 'Can not read Mask IDF '//TRIM(MSKNAME)
+   IF(IBATCH.EQ.1)WRITE(*,'(A)') 'Cannot read Mask IDF '//TRIM(MSKNAME)
    RETURN
   ENDIF
  ENDIF
 
  DO I=1,NIDF !## nidf is output filename
   IF(.NOT.IDFREAD(MATH(I),IDFNAMES(I),0,1))THEN
-   IF(IBATCH.EQ.0)CALL WMESSAGEBOX(OKONLY,EXCLAMATIONICON,COMMONOK,'Can not read IDF '//CHAR(13)// &
+   IF(IBATCH.EQ.0)CALL WMESSAGEBOX(OKONLY,EXCLAMATIONICON,COMMONOK,'Cannot read IDF '//CHAR(13)// &
      TRIM(IDFNAMES(I)),'Error')
-   IF(IBATCH.EQ.1)WRITE(*,'(A)') 'Can not read IDF '//TRIM(IDFNAMES(I))
+   IF(IBATCH.EQ.1)WRITE(*,'(A)') 'Cannot read IDF '//TRIM(IDFNAMES(I))
    MATH(I)%IU=0
   ENDIF
  ENDDO
@@ -85,7 +85,7 @@ CONTAINS
  
  !## it is not allowed to merge non-equidistant IDF files
  IF(MATH(NIDF+1)%IEQ.EQ.1)THEN
-  CALL WMESSAGEBOX(OKONLY,EXCLAMATIONICON,COMMONOK,'You can not merge non-equidistantial IDF files','Warning')
+  CALL WMESSAGEBOX(OKONLY,EXCLAMATIONICON,COMMONOK,'You cannot merge non-equidistantial IDF files','Warning')
   RETURN
  ENDIF
  
@@ -109,8 +109,8 @@ CONTAINS
  ELSEIF(IEXT.EQ.1)THEN
 
   IF(MATH(NIDF+1)%IEQ.EQ.1)THEN
-   IF(IBATCH.EQ.0)CALL WMESSAGEBOX(OKONLY,EXCLAMATIONICON,COMMONOK,'Can not combine IEXT=2 and non-equidistantial IDF"s!','Error')
-   IF(IBATCH.EQ.1)WRITE(*,'(A)') 'Can not combine IEXT=2 and non-equidistantial IDF"s!'
+   IF(IBATCH.EQ.0)CALL WMESSAGEBOX(OKONLY,EXCLAMATIONICON,COMMONOK,'Cannot combine IEXT=2 and non-equidistantial IDF"s!','Error')
+   IF(IBATCH.EQ.1)WRITE(*,'(A)') 'Cannot combine IEXT=2 and non-equidistantial IDF"s!'
    RETURN
   ENDIF
   MATH(NIDF+1)%XMIN=MPW%XMIN; MATH(NIDF+1)%XMAX=MPW%XMAX

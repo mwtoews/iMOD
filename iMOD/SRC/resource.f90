@@ -1113,8 +1113,8 @@
       INTEGER, PARAMETER :: ID_ISGSFR                       = 40197
       INTEGER, PARAMETER :: IDF_STRING7                     =  1082
       INTEGER, PARAMETER :: ID_ROTATE                       =  1275
-      INTEGER, PARAMETER :: ID_ISGCREATERIV                 = 40288
-      INTEGER, PARAMETER :: ID_ISGCREATESFR                 = 40289
+      INTEGER, PARAMETER :: ID_ISGGEN_CREATEISGRIV                 = 40288
+      INTEGER, PARAMETER :: ID_ISGGEN_CREATEISGSFR                 = 40289
       INTEGER, PARAMETER :: ID_RESIZE                       =  1160
       INTEGER, PARAMETER :: IDF_STRING8                     =  1083
       INTEGER, PARAMETER :: ID_ISGSFC                       = 40290

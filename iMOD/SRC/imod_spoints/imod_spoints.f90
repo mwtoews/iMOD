@@ -258,7 +258,7 @@ CONTAINS
       READ(IU,*,IOSTAT=IOS) SPNT(SHPI)%ISX
       SPNT(SHPI)%ISX=MAX(0.01,SPNT(SHPI)%ISX)
      CASE (ID_RECTANGLE)
-      IF(.NOT.STARTP1CHECK(IU,IOS,'iMOD can not recognize other shapes than polygon,circle and/or lines in an *,.isd-file'))RETURN
+      IF(.NOT.STARTP1CHECK(IU,IOS,'iMOD cannot recognize other shapes than polygon,circle and/or lines in an *,.isd-file'))RETURN
     END SELECT
     IF(.NOT.STARTP1CHECK(IU,IOS,'ShapeLat.Dimension'//TRIM(ITOS(SHPI))))RETURN
     READ(IU,*,IOSTAT=IOS) SPNT(SHPI)%TOPIDF

@@ -336,7 +336,7 @@ CONTAINS
  CALL CREATEIDF1GETCRD(1)
 
  IF(NCOL.LE.0.OR.NROW.LE.0)THEN
-  CALL WMESSAGEBOX(OKONLY,EXCLAMATIONICON,COMMONOK,'Can not create an IDF with zero/negative number of columns/rows!','Error')
+  CALL WMESSAGEBOX(OKONLY,EXCLAMATIONICON,COMMONOK,'Cannot create an IDF with zero/negative number of columns/rows!','Error')
   RETURN
  ENDIF
 
@@ -747,11 +747,11 @@ CONTAINS
      CID=ADJUSTL(CID)
      CALL UTL_GENLABELSGET(CID,JL)
      IF(JL.LE.0)THEN
-      CALL WMESSAGEBOX(OKONLY,EXCLAMATIONICON,COMMONOK,'Can not get the right label for current shape '//TRIM(ITOS(IV)),'Error'); RETURN
+      CALL WMESSAGEBOX(OKONLY,EXCLAMATIONICON,COMMONOK,'Cannot get the right label for current shape '//TRIM(ITOS(IV)),'Error'); RETURN
      ENDIF
      READ(VAR(IV,JL),*,IOSTAT=IOS) XV
      IF(IOS.NE.0)THEN
-      CALL WMESSAGEBOX(OKONLY,EXCLAMATIONICON,COMMONOK,'Can not convert '//TRIM(VAR(IV,JL))//' into a real','Error'); RETURN
+      CALL WMESSAGEBOX(OKONLY,EXCLAMATIONICON,COMMONOK,'Cannot convert '//TRIM(VAR(IV,JL))//' into a real','Error'); RETURN
      ENDIF
     ENDIF
     LEX=.FALSE.
@@ -841,7 +841,7 @@ CONTAINS
      CALL UTL_GENLABELSGET(CID,JL)
      READ(VAR(IV,JL),*,IOSTAT=IOS) XV
      IF(IOS.NE.0)THEN
-      CALL WMESSAGEBOX(OKONLY,EXCLAMATIONICON,COMMONOK,'Can not convert '//TRIM(VAR(IV,JL))//' into a real','Error')
+      CALL WMESSAGEBOX(OKONLY,EXCLAMATIONICON,COMMONOK,'Cannot convert '//TRIM(VAR(IV,JL))//' into a real','Error')
       DEALLOCATE(XD,YD,ZD); RETURN
      ENDIF
     ENDIF
