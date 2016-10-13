@@ -79,7 +79,7 @@ CONTAINS
 
      WRITE(LINE,'(I3,A4,2(I3,A1),5(F5.2,A1),I3)') 1,','//TRIM(TPARAMETER)//',',I,',',NZ,',',1.0,',',1.1,',',0.1,',',10.0,',',10.0,',',IG
      WRITE(IU,'(A)') TRIM(LINE)
-     WRITE(JU,*) TRIM(IDF(I)%FNAME)
+     WRITE(JU,'(A)') TRIM(IDF(I)%FNAME)
     ENDIF
     
    ENDIF
