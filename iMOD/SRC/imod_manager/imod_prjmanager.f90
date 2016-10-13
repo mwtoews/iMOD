@@ -4555,7 +4555,7 @@ KLOOP: DO K=1,SIZE(TOPICS(JJ)%STRESS(1)%FILES,1)
 
  IOPT=0
  
- !## no associated --- use default for kva
+ !## not associated --- use default for kva
  IF(.NOT.ASSOCIATED(TOPICS(ITOPIC)%STRESS))THEN
   SELECT CASE (ITOPIC)
    !## optional, use default values
