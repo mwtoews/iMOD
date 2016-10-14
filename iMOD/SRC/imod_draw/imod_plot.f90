@@ -20,9 +20,9 @@
 !!  P.O. Box 177
 !!  2600 MH Delft, The Netherlands.
 !!
-!====================================================================
+!###======================================================================
 SUBROUTINE IDFMOVE(IWIN_ID)
-!====================================================================
+!###======================================================================
 USE WINTERACTER
 USE RESOURCE
 USE IMODVAR
@@ -116,9 +116,9 @@ ENDIF
 RETURN
 END SUBROUTINE
 
-!====================================================================
+!###======================================================================
 SUBROUTINE IDFMOVEINIT(ITYPE,IWIN_ID)
-!====================================================================
+!###======================================================================
 USE WINTERACTER
 USE RESOURCE
 USE MODPLOT
@@ -147,9 +147,9 @@ IF(ITYPE.EQ.1)CALL WINDOWOUTSTATUSBAR(4,'Release Ctrl-Left Mouse Button to leave
 RETURN
 END SUBROUTINE
 
-!====================================================================
+!###======================================================================
 SUBROUTINE IDFMOVECLOSE(IWIN_ID)
-!====================================================================
+!###======================================================================
 USE WINTERACTER
 USE RESOURCE
 USE MODPLOT
@@ -179,9 +179,9 @@ ENDIF
 RETURN
 END SUBROUTINE
 
-!====================================================================
+!###======================================================================
 SUBROUTINE IDFMOVEIT(GX,GY,IWIN_ID)
-!====================================================================
+!###======================================================================
 USE WINTERACTER
 USE RESOURCE
 USE MODPLOT
@@ -247,9 +247,9 @@ CALL IGRUNITS(0.0,0.0,REAL(IW),REAL(IH))
 RETURN
 END SUBROUTINE
 
-!====================================================================
+!###======================================================================
 SUBROUTINE IDFMOVEPLOT(IWIN_ID)
-!====================================================================
+!###======================================================================
 USE WINTERACTER
 USE RESOURCE
 USE MODPLOT
@@ -303,9 +303,9 @@ CALL WBITMAPCREATE(IBITMAP,IW,IH)
 RETURN
 END SUBROUTINE
 
-!====================================================================
+!###======================================================================
 SUBROUTINE IDFZOOM(IDZ,GX,GY,IWIN_ID)
-!====================================================================
+!###======================================================================
 USE WINTERACTER
 USE RESOURCE
 USE MOD_IDF, ONLY : IDFREAD
@@ -579,9 +579,9 @@ IF(IDZ.NE.ID_ZOOMPREVIOUS.AND.IDZ.NE.ID_ZOOMNEXT)CALL IDFSTOREZOOMEXTENT()
 RETURN
 END SUBROUTINE
 
-!==============================================================================
+!###================================================================================
 SUBROUTINE IDFSTOREZOOMEXTENT()
-!==============================================================================
+!###================================================================================
 USE MODPLOT
 IMPLICIT NONE
 INTEGER :: I,J,N
@@ -604,9 +604,9 @@ ZM%ZOOMXY(ZM%NZOOM,4)=MPW%YMAX
 
 END SUBROUTINE IDFSTOREZOOMEXTENT
 
-!==============================================================================
+!###================================================================================
 SUBROUTINE IDFADJUSTMAP(IDZ,XC1,YC1,XC2,YC2,FZ)
-!==============================================================================
+!###================================================================================
 USE RESOURCE
 USE MODPLOT
 USE IMOD
@@ -633,15 +633,15 @@ END SELECT
 RETURN
 END SUBROUTINE
 
-!====================================================================
+!###======================================================================
 SUBROUTINE IDFMENUFIELDS(ID,K,J)
-!====================================================================
+!###======================================================================
 USE WINTERACTER
 USE RESOURCE
 USE MOD_MANAGER, ONLY : MANAGERUPDATE
 USE MOD_TOPO, ONLY : TOPO1UPDATEMANAGER 
 IMPLICIT NONE
-INTEGER,PARAMETER :: MAXID=21
+INTEGER,PARAMETER :: MAXID=22
 INTEGER,INTENT(IN) :: ID,J,K
 INTEGER :: I
 INTEGER,DIMENSION(MAXID) :: ID1
@@ -650,7 +650,7 @@ DATA (ID1(I),I=1,MAXID) /ID_NEW,ID_OPEN,ID_SAVE,ID_SAVEAS,ID_COPY,         &
                       ID_ZOOMRECTANGLEMAP,ID_ZOOMFULLMAP,ID_MOVEMAP,    &
                       ID_IRDATABASE,ID_IMODINFO,ID_DISTANCE,ID_PROFILE, &
                       ID_TIMESERIES,ID_3DTOOL,ID_TOPOGRAPHY, &
-                      ID_ZOOMPREVIOUS,ID_ZOOMNEXT/
+                      ID_ZOOMPREVIOUS,ID_ZOOMNEXT,ID_REDRAW/
 
 CALL WINDOWSELECT(0)
 

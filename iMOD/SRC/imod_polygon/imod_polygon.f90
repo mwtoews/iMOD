@@ -737,10 +737,10 @@ USE MOD_SCEN_FIELDS, ONLY : SCEN1FIELDS1
  SUBROUTINE POLYGON1ADJUSTSHAPE(XC,YC,DOWNX,DOWNY)
  !###======================================================================
  IMPLICIT NONE
- REAL,INTENT(INOUT)    :: DOWNX,DOWNY
- REAL,INTENT(IN)       :: XC,YC
- REAL                  :: DX,DY
- INTEGER               :: I,SHPJ
+ REAL,INTENT(INOUT) :: DOWNX,DOWNY
+ REAL,INTENT(IN) :: XC,YC
+ REAL :: DX,DY
+ INTEGER :: I,SHPJ
 
  !## remove current line ...
  SHPJ=SHPI

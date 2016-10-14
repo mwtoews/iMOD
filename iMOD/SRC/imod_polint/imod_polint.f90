@@ -201,7 +201,7 @@ CONTAINS
  ! THEN: SPLINE COEFFICIENTS ARE COMPUTED
  !       SPLINE INTERPOLATION IS COMPUTED IN 2N-1 POINTS, 
  !       A DIFFERENCE SUM|F(U)-ISPLINE(U)| 
- !====================================================================
+ !###======================================================================
  IMPLICIT NONE
  INTEGER,INTENT(IN) :: N,M       
  REAL,DIMENSION(N),INTENT(IN) :: XB,YB
@@ -241,7 +241,7 @@ CONTAINS
  !  COMMENTS ...
  !  SPLINE.F90 PROGRAM IS BASED ON FORTRAN VERSION OF PROGRAM SPLINE.F
  !  THE ACCOMPANYING FUNCTION FSPLINE CAN BE USED FOR INTERPOLATION
- !======================================================================
+ !###========================================================================
  IMPLICIT NONE
  INTEGER,INTENT(IN) :: N
  REAL,INTENT(IN),DIMENSION(N) :: X,Y
@@ -327,7 +327,7 @@ CONTAINS
  ! N       = THE NUMBER OF DATA POINTS
  ! OUTPUT:
  ! ISPLINE = INTERPOLATED VALUE AT POINT U
- !=======================================================================
+ !###=========================================================================
  IMPLICIT NONE
  REAL,INTENT(IN) :: U
  INTEGER,INTENT(IN) :: N
