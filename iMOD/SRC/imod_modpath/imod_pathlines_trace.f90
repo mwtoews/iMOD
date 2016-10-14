@@ -1200,6 +1200,8 @@ CONTAINS
 
   DO IPART=1,SPR(IG)%NPART 
   
+  !## peer --- klc random negtief zetten en dan iedere keer er 1 bij, tot positief dan gaat hij meedoen???
+  
    !## trace selected particle, not yet discharged!
    IF(SPR(IG)%KLC(IPART).GT.0)THEN
 

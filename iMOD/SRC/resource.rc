@@ -8,7 +8,7 @@
 //
 // Winteracter resource script. 
 //
-// Modified : 14/Oct/2016 16:03:55
+// Modified : 14/Oct/2016 23:53:01
 //
 ///////////////////////////////////////////////////
 //
@@ -10954,8 +10954,8 @@ BEGIN
         MENUITEM SEPARATOR
         POPUP "&Zoom Map"
         BEGIN
-            MENUITEM "&In",                                      ID_ZOOMINMAP
-            MENUITEM "&Out",                                     ID_ZOOMOUTMAP
+            MENUITEM "&In (Shift Left Mouse Button)",            ID_ZOOMINMAP
+            MENUITEM "&Out (Ctrl Left Mouse Button)",            ID_ZOOMOUTMAP
             MENUITEM "&Rectangle",                               ID_ZOOMRECTANGLEMAP
             MENUITEM "&Full Map",                                ID_ZOOMFULLMAP
             MENUITEM "Go Back to &Previous Extent",              ID_ZOOMPREVIOUS
