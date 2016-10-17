@@ -637,14 +637,16 @@ CONTAINS
       NVALUE=NVALUE+1.0
      !## geometric mean (KD)
      CASE (3)
-      IF(IDFVAL.NE.IDF%NODATA.AND.IDFVAL.GT.0.0)THEN
-       SVALUE=SVALUE+LOG(IDFVAL) 
+      IF(IDFVAL.NE.IDF%NODATA)THEN
+       !## idfvalue greate than zero for log-function
+       IF(IDFVAL.GT.0.0)SVALUE=SVALUE+LOG(IDFVAL) 
+       !## count number of values ne nodata - including zero
        NVALUE=NVALUE+1.0
       ENDIF
      !## sum, sum inverse
      CASE (6,8)
-      IF(IDFVAL.NE.IDF%NODATA.AND.IDFVAL.NE.0.0)THEN
-       SVALUE=SVALUE+(1.0/IDFVAL)
+      IF(IDFVAL.NE.IDF%NODATA)THEN
+       IF(IDFVAL.NE.0.0)SVALUE=SVALUE+(1.0/IDFVAL)
        NVALUE=NVALUE+1.0
       ENDIF
      !## most frequent occurence,percentile
@@ -675,18 +677,27 @@ CONTAINS
   CASE (2,4)  !## arithmetic mean
    SVALUE=SVALUE/NVALUE
   CASE (3)  !## geometric
-   SVALUE=EXP(SVALUE/NVALUE)
+   IF(SVALUE.NE.0.0)THEN
+    SVALUE=EXP(SVALUE/NVALUE)
+   ELSE
+    SVALUE=0.0
+   ENDIF
   CASE (6)  !## c-waarde reciprook opgeteld, terug naar gem. dagen
-   SVALUE=1.0/(SVALUE/NVALUE)
+   IF(SVALUE.NE.0.0)THEN
+    SVALUE=1.0/(SVALUE/NVALUE)
+   ELSE
+    SVALUE=0.0
+   ENDIF
   CASE (7)
    CALL UTL_QKSORT(SIZE(FREQ),INT(NVALUE),FREQ)
    SVALUE=UTL_GETMOSTFREQ(FREQ,SIZE(FREQ),INT(NVALUE))
-!   !## add fraction to the most frequent occurence
-!   NFRAC=NVALUE/REAL(((IR2-IR1)+1)*((IC2-IC1)+1))
-!   SVALUE=SVALUE+(1.0-NFRAC)
   CASE (8)  !## PWT c-waarde reciprook opgeteld, terug naar gem. dagen * fraction
    NFRAC=NVALUE/REAL(((IR2-IR1)+1)*((IC2-IC1)+1))
-   SVALUE=1.0/((SVALUE*NFRAC)/NVALUE)
+   IF(SVALUE.NE.0.0)THEN
+    SVALUE=1.0/((SVALUE*NFRAC)/NVALUE)
+   ELSE
+    SVALUE=0.0
+   ENDIF
   CASE (9)  !## percentile
    CALL UTL_GETMED(FREQ,INT(NVALUE),IDF%NODATA,(/SFCT*100.0/),1,NAJ,XTEMP)
    SVALUE=XTEMP(1)

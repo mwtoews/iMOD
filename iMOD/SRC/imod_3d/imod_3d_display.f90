@@ -142,8 +142,6 @@ CONTAINS
    ENDIF
   END DO
 
-!  !## draw idf's - last cause antialiasing and blending not for polygons
-!  IF(NIDFLIST.GT.0)CALL IMOD3D_DISPLAY_IDF(IMODE)
   !## draw ipf-drills/points  
   CALL GLBLENDFUNC(GL_ONE,GL_ZERO) 
   IF(NIPFLIST.GT.0)CALL IMOD3D_DISPLAY_IPF(IMODE)
@@ -151,8 +149,6 @@ CONTAINS
   IF(NIFFLIST.GT.0)CALL IMOD3D_DISPLAY_IFF()
   !## draw sol's
   IF(NSOLLIST.GT.0)CALL IMOD3D_DISPLAY_SOL()
-!  !## draw gen's
-!  IF(NGENLIST.GT.0)CALL IMOD3D_DISPLAY_GEN()
   !## draw interactive flowlines
   IF(IPATHLINE_3D.GT.0)CALL IMOD3D_DISPLAY_PL()
 
@@ -451,10 +447,19 @@ CONTAINS
  IMPLICIT NONE
  INTEGER :: I,J
  INTEGER,INTENT(IN) :: IMODE
-
+ REAL(KIND=GLDOUBLE) :: TSTACK
+ 
+ TSTACK=0.0_GLDOUBLE
  DO I=1,SIZE(IDFLISTINDEX) 
   IF(IDFPLOT(I)%ISEL.NE.1.OR.IDFLISTINDEX(I).EQ.0)CYCLE
  
+  IF(IDFPLOT(I)%ISTACKED.GT.0)THEN
+   CALL GLPUSHMATRIX()  !## pushes all matrices in the current stack down one level, topmost is copied
+   TSTACK=TSTACK+(IDFPLOT(I)%ISTACKED*5.0_GLDOUBLE)
+!   SHIFTZ=REAL(J,8)*10.0_GLDOUBLE
+   CALL GLTRANSLATED(0.0_gldouble, 0.0_gldouble, -TSTACK) !SHIFTZ)
+  ENDIF
+  
   IF(IDFPLOT(I)%IFILL.EQ.1.OR.IDFPLOT(I)%IFILL.EQ.3)THEN
 
    !## blend mode 
@@ -518,6 +523,9 @@ CONTAINS
    CALL GLCALLLIST(IDFLISTINDEX(I))
 
   ENDIF
+
+  !## pops off the top matrix second-from-the top becomes the top
+  IF(IDFPLOT(I)%ISTACKED.GT.0)CALL GLPOPMATRIX()   
 
  END DO
 

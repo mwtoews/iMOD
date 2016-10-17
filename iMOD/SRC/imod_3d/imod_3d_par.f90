@@ -76,6 +76,7 @@ TYPE IDFSETTING
  INTEGER :: ICONFIG  !## configuration number
  INTEGER :: IACC    !## accuracy (=resolution) number
  INTEGER :: ITRANSPARANCY   !## transparancy
+ INTEGER :: ISTACKED   !## stacked idf-files
  CHARACTER(LEN=50) :: ALIAS,DISP_ALIAS
  CHARACTER(LEN=256) :: FNAME
  TYPE(LEGENDOBJ) :: LEG

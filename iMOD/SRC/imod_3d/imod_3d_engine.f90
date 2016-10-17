@@ -1625,7 +1625,7 @@ CONTAINS
      !## create 3D LAYER for current idf
      CALL IMOD3D_DRAWIDF_STRIP(ILST,LLST)
     ELSE
-     !## create 3D LAYER for current idf
+     !## create 3D Solid-LAYER for current idf
      CALL IMOD3D_DRAWIDF_STRIP_DUO(ILST,LLST,IDFPLOT(LLST)%LEG)
     ENDIF
     IDFPLOT(ILST)%ILIST=ILST; IDFPLOT(ILST)%ISEL=1
@@ -2215,7 +2215,7 @@ CONTAINS
  END SUBROUTINE IMOD3D_DRAWIDF_CUBE
 
  !###======================================================================
- SUBROUTINE IMOD3D_DRAWIDF_CUBE_DUO(ILST,LLST,LEG)!,MINT,MAXT)
+ SUBROUTINE IMOD3D_DRAWIDF_CUBE_DUO(ILST,LLST,LEG)
  !###======================================================================
  IMPLICIT NONE
  INTEGER,INTENT(IN) :: ILST,LLST
