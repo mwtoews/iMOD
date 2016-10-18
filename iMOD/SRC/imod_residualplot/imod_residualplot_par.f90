@@ -18,6 +18,7 @@ INTEGER :: IPLOT,IWEIGHT                               !## plot type
 INTEGER :: ITRANSIENT                                  !## transient/steadystate (lacking date)
 INTEGER,POINTER,DIMENSION(:) :: ILAYER,IIPFS,IRDATE    !## all layer numbers/IPF-files to be read
 INTEGER :: NLAYER,NIPFS,NRDATE                         !## amount of layers/IPF-files to be read
+REAL :: GOF                                            !## goodness-of-fit with linear regression
 REAL,DIMENSION(23) :: HCLASSES                         !## defined histogram classes
 REAL,DIMENSION(22) :: XCLASSES                         !## amount of points per defined histogram class for x-array
 

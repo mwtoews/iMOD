@@ -3945,24 +3945,25 @@ CONTAINS
  END SUBROUTINE PEUCKER_CALCDISTANCE
 
  !###====================================================================
- REAL FUNCTION UTL_GOODNESS_OF_FIT(GF_H,GF_O,N)
+ REAL FUNCTION UTL_GOODNESS_OF_FIT(X,Y,N)
  !###====================================================================
  IMPLICIT NONE
  INTEGER,INTENT(IN) :: N
- REAL,INTENT(IN),DIMENSION(N) :: GF_H,GF_O
- REAL :: MU_H,MU_O,X1,X2
+ REAL,INTENT(IN),DIMENSION(N) :: X,Y
+ REAL :: XN,YN,X1,X2,X3
  INTEGER :: I
  
- MU_H=SUM(GF_H)/REAL(N)
- MU_O=SUM(GF_O)/REAL(N)
+ XN=SUM(X)/REAL(N)
+ YN=SUM(Y)/REAL(N)
  
- X1=0.0; X2=0.0
+ X1=0.0; X2=0.0; X3=0.0
  DO I=1,N
-  X1=X1+(GF_H(I)-MU_H)*(GF_O(I)-MU_O)
-  X2=X2+(GF_H(I)-MU_H)**2.0*(GF_O(I)-MU_O)**2.0
+  X1=X1+(X(I)-XN)*(Y(I)-YN)
+  X2=X2+(X(I)-XN)**2.0
+  X3=X3+(Y(I)-YN)**2.0
  ENDDO
 
- UTL_GOODNESS_OF_FIT=X1/SQRT(X2)
+ IF(X2.NE.0.0.AND.X3.NE.0.0)UTL_GOODNESS_OF_FIT=X1/(SQRT(X2)*SQRT(X3))
   
  END FUNCTION UTL_GOODNESS_OF_FIT
 
