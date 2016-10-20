@@ -1444,7 +1444,7 @@ CONTAINS
  !###======================================================================
  IMPLICIT NONE
  CHARACTER(LEN=256) :: RUNFILE,PRJFILE
- INTEGER :: IMODE
+ INTEGER :: IMODE,IDEBUG
  
  IMODE=0; PBMAN%IFORMAT=0; PBMAN%TIMFNAME='' 
 
@@ -1513,6 +1513,9 @@ CONTAINS
     WRITE(*,'(/A/)') 'Export to a RUNFILE'
    CASE (2)
     WRITE(*,'(/A/)') 'Export to standard MODFLOW2005 files' 
+    !## export in arr/idf files
+    IDEBUG=0; IF(UTL_READINITFILE('IDEBUG',LINE,IU,1))READ(LINE,*) IDEBUG
+    WRITE(*,'(A,I1)') 'IDEBUG=',IDEBUG
 !    !## define quasi 3d or 3d discretisation
 !    IF(.NOT.UTL_READINITFILE('IQUASI3D',LINE,IU,0))RETURN
 !    READ(LINE,*) I
@@ -1545,11 +1548,11 @@ CONTAINS
  CALL PMANAGERINIT()
  
  IF(IMODE.EQ.1)THEN
-  IF(.NOT.PMANAGERPRJ(ID_OPEN   ,PRJFILE,1))THEN; WRITE(*,'(/A/)') 'Error reading project file '//TRIM(PRJFILE); STOP; ENDIF
-  IF(.NOT.PMANAGERRUN(ID_SAVERUN,RUNFILE,1))THEN; WRITE(*,'(/A/)') 'Error writing runfile '//TRIM(RUNFILE); STOP; ENDIF
+  IF(.NOT.PMANAGERPRJ(ID_OPEN   ,PRJFILE,1))  THEN; WRITE(*,'(/A/)') 'Error reading project file '//TRIM(PRJFILE); STOP; ENDIF
+  IF(.NOT.PMANAGERRUN(ID_SAVERUN,RUNFILE,1,IDEBUG))THEN; WRITE(*,'(/A/)') 'Error writing runfile '//TRIM(RUNFILE); STOP; ENDIF
  ELSEIF(IMODE.EQ.2)THEN
-  IF(.NOT.PMANAGERRUN(ID_OPENRUN,RUNFILE,1))THEN; WRITE(*,'(/A/)') 'Error reading runfile '//TRIM(RUNFILE); STOP; ENDIF
-  IF(.NOT.PMANAGERPRJ(ID_SAVE   ,PRJFILE,1))THEN; WRITE(*,'(/A/)') 'Error writing project file '//TRIM(PRJFILE); STOP; ENDIF
+  IF(.NOT.PMANAGERRUN(ID_OPENRUN,RUNFILE,1,IDEBUG))THEN; WRITE(*,'(/A/)') 'Error reading runfile '//TRIM(RUNFILE); STOP; ENDIF
+  IF(.NOT.PMANAGERPRJ(ID_SAVE   ,PRJFILE,1))  THEN; WRITE(*,'(/A/)') 'Error writing project file '//TRIM(PRJFILE); STOP; ENDIF
  ENDIF
  
  END SUBROUTINE IMODBATCH_RUNFILE
