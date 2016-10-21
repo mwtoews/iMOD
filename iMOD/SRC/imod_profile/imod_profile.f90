@@ -2258,6 +2258,18 @@ CONTAINS
 
  !## split window?
  
+ !## plot profile with ipf's
+    !## draw line of the profile... !##Liduin
+   CALL IGRCOLOURN(WRGB(0,0,0))
+   IF(.NOT.LPS)THEN
+    DO J=2,NXY
+     CALL IGRLINEWIDTH(LINEWIDTHPLOT)
+     CALL IGRCOLOURN(LINECOLORPLOT)
+     CALL IGRJOIN(XY(1,J-1),XY(2,J-1),XY(1,J),XY(2,J))
+     CALL PROFILE_PLOTVIEWBOX(XY(1,J-1),XY(2,J-1),XY(1,J),XY(2,J))
+    END DO
+   ENDIF
+ 
  !## plot selected idf's
  IF(NPIPET.EQ.0)RETURN 
  !## do not refresh if profile is moving
@@ -2312,7 +2324,7 @@ CONTAINS
    ENDIF
 
    !## draw line of the profile...
-!   CALL IGRCOLOURN(WRGB(0,0,0))
+   CALL IGRCOLOURN(WRGB(0,0,0))
    IF(.NOT.LPS)THEN
     DO J=2,NXY
      CALL IGRLINEWIDTH(LINEWIDTHPLOT)
