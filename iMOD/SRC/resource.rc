@@ -8,13 +8,13 @@
 //
 // Winteracter resource script. 
 //
-// Modified : 21/Oct/2016 10:15:42
+// Modified : 24/Oct/2016 14:18:23
 //
 ///////////////////////////////////////////////////
 //
 // Include files
 //
-#include "winparam.h"
+#include "..\LIB\WINTERACTER\OS_X32\include\winparam.h"
 #ifdef XLIB
 #include "..\LIB\WINTERACTER\OS_X32\include\filesel.rc"
 #include "..\LIB\WINTERACTER\OS_X32\include\colour.rc"
@@ -8329,7 +8329,7 @@ BEGIN
     CONTROL "Storage Definition:",IDF_LABEL23,"STATIC",WS_CHILD | WS_VISIBLE | WS_GROUP | SS_LEFT,   32,  244,  113,    8
     CONTROL "Specific Storage/Yield",IDF_RADIO9,"BUTTON",WS_CHILD | WS_VISIBLE | WS_GROUP | WS_TABSTOP | BS_AUTORADIOBUTTON | BS_TEXT | BS_FLAT,  155,  242,   88,   14
     CONTROL "Confining Storage Coefficients",IDF_RADIO10,"BUTTON",WS_CHILD | WS_VISIBLE | WS_TABSTOP | BS_AUTORADIOBUTTON | BS_TEXT | BS_FLAT,  265,  242,  113,   14
-    CONTROL "Continuing",IDF_RADIO11,"BUTTON",WS_CHILD | WS_VISIBLE | WS_GROUP | WS_TABSTOP | BS_AUTORADIOBUTTON | BS_TEXT | BS_FLAT,  208,  260,   45,   14
+    CONTROL "Continuing",IDF_RADIO11,"BUTTON",WS_CHILD | WS_VISIBLE | WS_GROUP | WS_TABSTOP | BS_AUTORADIOBUTTON | BS_TEXT | BS_FLAT,  208,  260,   52,   14
     CONTROL "Inheritance",IDF_RADIO12,"BUTTON",WS_CHILD | WS_VISIBLE | WS_TABSTOP | BS_AUTORADIOBUTTON | BS_TEXT | BS_FLAT,  265,  260,   51,   14
     CONTROL "Subsoil package:",IDF_LABEL20,"STATIC",WS_CHILD | WS_VISIBLE | WS_GROUP | SS_LEFT,   32,  214,   77,    8
 END
@@ -11996,4 +11996,4 @@ END
 //*WI* FILENAME    resource.f90
 //*WI* FMODNAME    RESOURCE
 //*WI* LASTTYPE        2
-//*WI* LASTRES        62
+//*WI* LASTRES       225

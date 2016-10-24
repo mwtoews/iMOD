@@ -53,15 +53,15 @@ CONTAINS
     !## read empty line and header
     READ(IU,*); READ(IU,*)  
     !## read data block, count points
-    IF(I.GE.2)N=0 !IPFR(NIPF)%NPOINTS=0
+    IF(I.GE.2)N=0 
     DO
      READ(IU,'(A256)',IOSTAT=IOS) LINE; IF(IOS.NE.0)EXIT; IF(TRIM(LINE).EQ.'')EXIT
-     IF(I.GE.2)N=N+1 !IPFR(NIPF)%NPOINTS=IPFR(NIPF)%NPOINTS+1
+     IF(I.GE.2)N=N+1 
      IF(I.EQ.3)THEN
       IF(ITRANSIENT.EQ.1)THEN
        READ(LINE,'(I10,2F15.7,I10,3F15.7)') IPFR(NIPF)%D(N),IPFR(NIPF)%X(N),IPFR(NIPF)%Y(N), &
-                                            IPFR(NIPF)%L(N),IPFR(NIPF)%O(N),IPFR(NIPF)%M(N), &
-                                            IPFR(NIPF)%W(N)
+                                            IPFR(NIPF)%L(N),IPFR(NIPF)%W(N),IPFR(NIPF)%O(N),IPFR(NIPF)%M(N)
+                                            
       ELSE
        READ(LINE,'(2F15.7,I10,6F15.7)') IPFR(NIPF)%X(N),IPFR(NIPF)%Y(N), &
                                         IPFR(NIPF)%L(N),IPFR(NIPF)%O(N),IPFR(NIPF)%M(N), &
@@ -89,7 +89,7 @@ CONTAINS
  SUBROUTINE RESIDUAL_PROC()
  !###===================================
  IMPLICIT NONE
- INTEGER :: I,J,N
+ INTEGER :: I,J,N !,IU
 
  !## okay we keep it simple - we plot everything - no selection yet
  N=SUM(IPFR%NPOINTS)
@@ -102,14 +102,18 @@ CONTAINS
   IF(.NOT.(RESIDUAL_PROC_SELIPF(I)))CYCLE
   DO J=1,IPFR(I)%NPOINTS
    IF(.NOT.((RESIDUAL_PROC_SELLAY(I,J)).AND.(RESIDUAL_PROC_SELDATE(I,J)).AND.(RESIDUAL_PROC_SELWEIGHT(I,J))))CYCLE
+   
+   !## skip weigth is zero anyhow
+   IF(IPFR(I)%W(J).LE.0)CYCLE
+   
    N=N+1
    SELECT CASE (IPLOT)
     !## scatter measurement/observation
     CASE (1)
      IF(IWEIGHT.EQ.1)THEN
-      X(N)=IPFR(I)%M(J)*IPFR(I)%W(J); Y(N)=IPFR(I)%O(J)*IPFR(I)%W(J)
+      X(N)=IPFR(I)%M(J)*IPFR(I)%W(J); Y(N)=IPFR(I)%O(J)*IPFR(I)%W(J); Z(N)=IPFR(I)%W(J)*(IPFR(I)%M(J)-IPFR(I)%O(J))**2.0
      ELSE
-      X(N)=IPFR(I)%M(J); Y(N)=IPFR(I)%O(J)
+      X(N)=IPFR(I)%M(J); Y(N)=IPFR(I)%O(J); Z(N)=(IPFR(I)%M(J)-IPFR(I)%O(J))**2.0
      ENDIF
     !## histogram
     CASE (2) 
@@ -133,6 +137,14 @@ CONTAINS
  DEALLOCATE(X,Y,Z)
  X=>X_TMP; Y=>Y_TMP; Z=>Z_TMP
  
+! !## write down results
+! IU=UTL_GETUNIT()
+! OPEN(IU,FILE='d:\IMOD-MODELS\IBRAHYM_V2.0\DBASE_DLD\IMOD_USER\MODELS\IB_V2.0.4_13\ENTIREMODEL_IPEST_V1\pest\bmp\DATA.TXT',STATUS='UNKNOWN',ACTION='WRITE')
+! DO I=1,N
+!  WRITE(IU,*) X(I),Y(I),Z(I)
+! ENDDO
+! CLOSE(IU)
+  
  !## subroutine to calculate histogram classes
  CALL RESIDUAL_PROC_HISTCLASS()
  
@@ -382,12 +394,12 @@ CONTAINS
   AVG=SUM(X)/REAL(SIZE(X))
   CALL UTL_GETMED(X,SIZE(X),HUGE(1.0),(/10.0,50.0,90.0/),3,MX,XMED)
   LINE='Statistics'                             //CHAR(13)//CHAR(10)// &
-       'Average:     '//CHAR(32)//TRIM(RTOS(AVG,'G',7))    //CHAR(13)//CHAR(10)// &
-       'Minimal:     '//CHAR(32)//TRIM(RTOS(MINX,'G',7))   //CHAR(13)//CHAR(10)// &
-       '10 Percent:  '//CHAR(32)//TRIM(RTOS(XMED(1),'G',7))//CHAR(13)//CHAR(10)// &
-       '50 Percent:  '//CHAR(32)//TRIM(RTOS(XMED(2),'G',7))//CHAR(13)//CHAR(10)// &
-       '100 Percent: '//CHAR(32)//TRIM(RTOS(XMED(3),'G',7))//CHAR(13)//CHAR(10)// &
-       'Maximal:     '//CHAR(32)//TRIM(RTOS(MAXX,'G',7)) 
+       'Average:    '//CHAR(32)//TRIM(RTOS(AVG,'G',7))    //CHAR(13)//CHAR(10)// &
+       'Minimal:    '//CHAR(32)//TRIM(RTOS(MINX,'G',7))   //CHAR(13)//CHAR(10)// &
+       '10 Percent: '//CHAR(32)//TRIM(RTOS(XMED(1),'G',7))//CHAR(13)//CHAR(10)// &
+       '50 Percent: '//CHAR(32)//TRIM(RTOS(XMED(2),'G',7))//CHAR(13)//CHAR(10)// &
+       '90 Percent: '//CHAR(32)//TRIM(RTOS(XMED(3),'G',7))//CHAR(13)//CHAR(10)// &
+       'Maximal:    '//CHAR(32)//TRIM(RTOS(MAXX,'G',7)) 
   CALL WGRTEXTORIENTATION(ALIGNLEFT,0.0,DIRHORIZ,ALIGNRIGHT)
   CALL WGRTEXTBLOCK(0.20,0.5,0.50,0.8,TRIM(LINE)) 
  ENDIF
