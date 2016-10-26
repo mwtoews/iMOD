@@ -25,7 +25,7 @@ MODULE MOD_ISG
 USE WINTERACTER
 USE RESOURCE
 
-USE IMODVAR, ONLY : GKEYPRESSED
+USE IMODVAR, ONLY : IDOWN
 USE DATEVAR
 USE MOD_COLOURS
 USE MOD_ISG_TRAPEZIUM, ONLY : ISGCOMPUTETRAPEZIUM
@@ -4094,12 +4094,14 @@ CONTAINS
 !   !## no key pressed, unselect automatically
 !   IF(GKEYPRESSED.EQ.0)ISELISG=0 !CALL ISGISPSTOP(0)
 !  ENDIF
-  
+
+write(*,*)  idown
+
   !## select new one
   LEX=ISGGETSEGMENT(X,Y,ISELISG)
 
   !## if ctrl pressed, add line to selection
-  IF(GKEYPRESSED.EQ.MODCTRL)THEN
+  IF(IDOWN.EQ.MODCTRL)THEN
    IF(LEX)ISG(ISELISG)%ILIST=1
   ELSE
    !## single line selected, remove previous one and draw this new one

@@ -44,7 +44,7 @@ REAL :: DOWNX,DOWNY
 
 INTEGER :: PLACES,DECPLACES,IFORM !## idfgetvalue variables to put on map-menu
 
-INTEGER :: IDOWN
+INTEGER :: IDOWN !## mouse button pressed
 INTEGER :: IW,IH,IBITMAP,DX,DY,PX,PY
 INTEGER :: IDIAGERROR
 INTEGER :: IBACKSLASH  !##  label trimmen achter backslash
