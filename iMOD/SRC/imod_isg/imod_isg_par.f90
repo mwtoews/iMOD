@@ -25,7 +25,7 @@ MODULE MOD_ISG_PAR
 USE MOD_IDF_PAR, ONLY : IDFOBJ
 USE MODPLOT, ONLY : LEGENDOBJ
 
-INTEGER,DIMENSION(:),ALLOCATABLE :: IACTSTREAM !## active yes/no (1/0) of stream in model domain
+INTEGER,DIMENSION(:),ALLOCATABLE :: IACTSTREAM,ISTR !## active yes/no (1/0) of stream in model domain
 
 INTEGER,PARAMETER :: IRDFLG=-1
 !If IRDFLG <= 0, input data for this stress period will be printed. If IRDFLG > 0, then input data for this stress period will not be printed.

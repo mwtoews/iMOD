@@ -377,15 +377,14 @@ CONTAINS
  END FUNCTION ISGREWRITEFILE
 
  !###======================================================================
- SUBROUTINE ISGOPENFILES(ISGFILE,LEX,CSTATUS)
+ LOGICAL FUNCTION ISGOPENFILES(ISGFILE,CSTATUS)
  !###======================================================================
  IMPLICIT NONE
- LOGICAL,INTENT(OUT) :: LEX
  CHARACTER(LEN=*),INTENT(IN) :: CSTATUS
  CHARACTER(LEN=*),INTENT(IN) :: ISGFILE
  INTEGER :: NISGFILES
  
- LEX=.FALSE.
+ ISGOPENFILES=.FALSE.
 
  NISGFILES=1
 
@@ -398,10 +397,10 @@ CONTAINS
  IF(MINVAL(ISGIU(:,1)).LE.0)THEN
   CALL ISGCLOSEFILES()
  ELSE
-  LEX=.TRUE.
+  ISGOPENFILES=.TRUE.
  ENDIF
 
- END SUBROUTINE ISGOPENFILES
+ END FUNCTION ISGOPENFILES
 
  !###======================================================================
  SUBROUTINE ISGCLOSEFILES()
@@ -1306,8 +1305,8 @@ CONTAINS
  IMPLICIT NONE
  CHARACTER(LEN=*),INTENT(INOUT) :: ISGFILE
  INTEGER,INTENT(IN) :: ISAVE
- INTEGER :: IPLOT
- LOGICAL :: LEX
+! INTEGER :: IPLOT
+! LOGICAL :: LEX
 
  IF(ISAVE.EQ.0)THEN
   CALL WMESSAGEBOX(YESNOCANCEL,QUESTIONICON,COMMONNO,'Do you want to SAVE adjustments to: '//CHAR(13)// &
@@ -1319,8 +1318,7 @@ CONTAINS
                    'Save iMOD segment-River File (*.isg)'))RETURN
  ENDIF
 
- CALL ISGOPENFILES(ISGFILE,LEX,'REPLACE')
- IF(.NOT.LEX)THEN
+ IF(.NOT.ISGOPENFILES(ISGFILE,'REPLACE'))THEN
   CALL WMESSAGEBOX(OKONLY,EXCLAMATIONICON,COMMONOK,'iMOD cannot (re)write ISG file:'//CHAR(13)//TRIM(ISGFILE),'Error')
   RETURN
  ENDIF
@@ -1346,24 +1344,26 @@ CONTAINS
  CHARACTER(LEN=256) :: LINE
 
  !## write header *.ISG file
- LINE=TRIM(ITOS(NISG))//','//TRIM(ITOS(ISFR))
- WRITE(ISGIU(1,1),'(A)') TRIM(LINE) !NISG,ISFR
+ CALL ISGSAVEHEADERS()
 
- !## write header (recordlength) in case IVF is used
- IF(ICF.EQ.1)THEN
-  WRITE(ISGIU(2,1),REC=1)  (RECLEN(2) *256)+247  !## segments
-  WRITE(ISGIU(3,1),REC=1)  (RECLEN(3) *256)+247  !## isd1
-  !## depends on type of ISG what size of database is applied
-  IF(ISFR.EQ.0)IREC= SIZE(TATTRIB1)*4
-  IF(ISFR.EQ.1)IREC=(SIZE(TATTRIB2)-1)*4+8
-  WRITE(ISGIU(4,1),REC=1)  (IREC      *256)+247  !## isd2
-  WRITE(ISGIU(5,1),REC=1)  (RECLEN(5) *256)+247  !## isc1
-  WRITE(ISGIU(6,1),REC=1)  (RECLEN(6) *256)+247  !## isc2
-  WRITE(ISGIU(7,1),REC=1)  (RECLEN(7) *256)+247  !## ist1
-  WRITE(ISGIU(8,1),REC=1)  (RECLEN(8) *256)+247  !## ist2
-  WRITE(ISGIU(9,1),REC=1)  (RECLEN(9) *256)+247  !## isq1
-  WRITE(ISGIU(10,1),REC=1) (RECLEN(10)*256)+247  !## isq2
- ENDIF
+! LINE=TRIM(ITOS(NISG))//','//TRIM(ITOS(ISFR))
+! WRITE(ISGIU(1,1),'(A)') TRIM(LINE)
+!
+! !## write header (recordlength) in case IVF is used
+! IF(ICF.EQ.1)THEN
+!  WRITE(ISGIU(2,1),REC=1)  (RECLEN(2) *256)+247  !## segments
+!  WRITE(ISGIU(3,1),REC=1)  (RECLEN(3) *256)+247  !## isd1
+!  !## depends on type of ISG what size of database is applied
+!  IF(ISFR.EQ.0)IREC= SIZE(TATTRIB1)*4
+!  IF(ISFR.EQ.1)IREC=(SIZE(TATTRIB2)-1)*4+8
+!  WRITE(ISGIU(4,1),REC=1)  (IREC      *256)+247  !## isd2
+!  WRITE(ISGIU(5,1),REC=1)  (RECLEN(5) *256)+247  !## isc1
+!  WRITE(ISGIU(6,1),REC=1)  (RECLEN(6) *256)+247  !## isc2
+!  WRITE(ISGIU(7,1),REC=1)  (RECLEN(7) *256)+247  !## ist1
+!  WRITE(ISGIU(8,1),REC=1)  (RECLEN(8) *256)+247  !## ist2
+!  WRITE(ISGIU(9,1),REC=1)  (RECLEN(9) *256)+247  !## isq1
+!  WRITE(ISGIU(10,1),REC=1) (RECLEN(10)*256)+247  !## isq2
+! ENDIF
 
  DO IS=1,NISG
 
@@ -1461,6 +1461,35 @@ CONTAINS
  DO I=1,MAXFILES; CLOSE(ISGIU(I,1)); END DO
 
  END SUBROUTINE ISGSAVEIT
+
+ !###===============================================================================
+ SUBROUTINE ISGSAVEHEADERS()
+ !###===============================================================================
+ IMPLICIT NONE
+ INTEGER :: IREC
+ CHARACTER(LEN=256) :: LINE
+
+ !## write header *.ISG file
+ LINE=TRIM(ITOS(NISG))//','//TRIM(ITOS(ISFR))
+ WRITE(ISGIU(1,1),'(A)') TRIM(LINE)
+
+ !## write header (recordlength) in case IVF is used
+ IF(ICF.EQ.1)THEN
+  WRITE(ISGIU(2,1),REC=1)  (RECLEN(2) *256)+247  !## segments
+  WRITE(ISGIU(3,1),REC=1)  (RECLEN(3) *256)+247  !## isd1
+  !## depends on type of ISG what size of database is applied
+  IF(ISFR.EQ.0)IREC= SIZE(TATTRIB1)*4
+  IF(ISFR.EQ.1)IREC=(SIZE(TATTRIB2)-1)*4+8
+  WRITE(ISGIU(4,1),REC=1)  (IREC      *256)+247  !## isd2
+  WRITE(ISGIU(5,1),REC=1)  (RECLEN(5) *256)+247  !## isc1
+  WRITE(ISGIU(6,1),REC=1)  (RECLEN(6) *256)+247  !## isc2
+  WRITE(ISGIU(7,1),REC=1)  (RECLEN(7) *256)+247  !## ist1
+  WRITE(ISGIU(8,1),REC=1)  (RECLEN(8) *256)+247  !## ist2
+  WRITE(ISGIU(9,1),REC=1)  (RECLEN(9) *256)+247  !## isq1
+  WRITE(ISGIU(10,1),REC=1) (RECLEN(10)*256)+247  !## isq2
+ ENDIF
+
+ END SUBROUTINE ISGSAVEHEADERS
 
  !###===============================================================================
  SUBROUTINE ISGMEMORYISG(DN)

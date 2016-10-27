@@ -4095,13 +4095,13 @@ CONTAINS
 !   IF(GKEYPRESSED.EQ.0)ISELISG=0 !CALL ISGISPSTOP(0)
 !  ENDIF
 
-write(*,*)  idown
+!write(*,*)  idown
 
   !## select new one
   LEX=ISGGETSEGMENT(X,Y,ISELISG)
 
   !## if ctrl pressed, add line to selection
-  IF(IDOWN.EQ.MODCTRL)THEN
+  IF(IDOWN.EQ.5)THEN !MODCTRL)THEN
    IF(LEX)ISG(ISELISG)%ILIST=1
   ELSE
    !## single line selected, remove previous one and draw this new one

@@ -801,7 +801,7 @@ CONTAINS
      I=I+1
      IF(I.GT.1)THEN
       !## intersect line
-      N=0; CALL INTERSECT_EQUI(IDF(1)%XMIN,IDF(1)%XMAX,IDF(1)%YMIN,IDF(1)%YMAX,IDF(1)%DX,IDF(1)%DY,X1,X2,Y1,Y2,N,.FALSE.,.FALSE.)
+      N=0; CALL INTERSECT_EQUI(IDF(1)%XMIN,IDF(1)%XMAX,IDF(1)%YMIN,IDF(1)%YMAX,IDF(1)%DX,IDF(1)%DY,X1,X2,Y1,Y2,N,.FALSE.) !,.FALSE.)
       DO J=1,N
        X=XA(J); Y=YA(J); CALL IDFIROWICOL(IDF(1),IROW,ICOL,X,Y)
        !## outside window
@@ -824,7 +824,7 @@ CONTAINS
    IF(ZP(I).GT.0.0)THEN
     ZP(I)=LOG(ZP(I))
    ELSE
-    ZP(I)=-5.0 !LOG(0.000)
+    ZP(I)=-5.0 
    ENDIF
   ENDDO
  ENDIF

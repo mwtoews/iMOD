@@ -37,7 +37,7 @@ CONTAINS
  SUBROUTINE CORRKD_MAIN()
  !###======================================================================
  IMPLICIT NONE
- REAL :: SUMKD,TD,X,Y,C1,C2,C3,DZ,D
+ REAL :: SUMKD,TD,X,Y,D
  INTEGER :: IR,IC,IL1,IROW,ICOL,IL2,ILAY,I
  LOGICAL :: LEX
  REAL,PARAMETER :: MINCC=5.0 !WAS 25.0
