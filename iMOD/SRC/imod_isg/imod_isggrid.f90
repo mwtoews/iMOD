@@ -1437,14 +1437,16 @@ IRLOOP: DO IR=MAX(1,IROW-1),MIN(NROW,IROW+1)
  TYPE(GRIDISGOBJ),INTENT(INOUT) :: GRIDISG
  INTEGER,INTENT(INOUT),DIMENSION(:) :: MP
  TYPE(IDFOBJ),DIMENSION(NLAY),INTENT(INOUT) :: TOP,BOT
- INTEGER :: I,J,K,II,TTIME,IROW,ICOL,N,ISEG,JSEG,NSEG,IREF,NDIM,KSEG, &
-       ICALC,OUTSEG,IUPSEG,IPRIOR,NSTRPTS,ICRS,IQHR,NREACH,NSTREAM
- REAL :: DXY,X1,X2,Y1,Y2,QFLOW,QROFF,EVT,PREC,ROUGHCH,ROUGHBK,CDPTH,FDPTH,AQDTH,BWDTH, &
+ INTEGER :: I,J,K,II,JJ,TTIME,IROW,ICOL,N,ISEG,JSEG,NSEG,IREF,NDIM,KSEG,MSEG, &
+       ICALC,OUTSEG,IUPSEG,IPRIOR,NSTRPTS,ICRS,ICLC,IQHR,NREACH,NSTREAM,KCRS,CRSREF,KCLC,CLCREF
+ REAL :: DXY,X1,X2,Y1,Y2,QFLOW,QROFF,EVT,PREC,ROUGHCH,ROUGHBK,CDPTH,FDPTH,AQDTH,BWDTH,DIST, &
        HC1FCT,THICKM1,ELEVUP,WIDTH1,DEPTH1,HC2FCT,THICKM2,ELEVDN,WIDTH2,DEPTH2,WLVLUP,WLVLDN
  REAL,ALLOCATABLE,DIMENSION(:,:) :: QSORT,RVAL
  REAL,ALLOCATABLE,DIMENSION(:) :: XNR,NDATA
  REAL,ALLOCATABLE,DIMENSION(:) :: XCRS,ZCRS,MCRS,QCRS,WCRS,DCRS
+ LOGICAL :: LEX
  CHARACTER(LEN=512) :: LINE
+ CHARACTER(LEN=MAXLEN) :: CNAME
 
  ISG2SFR=.FALSE.
 
@@ -1452,7 +1454,7 @@ IRLOOP: DO IR=MAX(1,IROW-1),MIN(NROW,IROW+1)
  IF(IPER.EQ.1)THEN
 
   !## write header *.ISG file in result-ISG
-  ISFR=0; CALL ISGSAVEHEADERS(); ISFR=1; KSEG=1
+  ISFR=0; CALL ISGSAVEHEADERS(); ISFR=1; KSEG=1; KCRS=1; CRSREF=1; KCLC=1; CLCREF=1
 
   !## variable used to stored number of reaches per segment
   IF(ALLOCATED(ISTR))DEALLOCATE(ISTR); ALLOCATE(ISTR(NISG)); ISTR=0
@@ -1481,11 +1483,12 @@ IRLOOP: DO IR=MAX(1,IROW-1),MIN(NROW,IROW+1)
     IF(CA(II).EQ.CA(K).AND.RA(II).EQ.RA(K))THEN
      LN(II)=LN(II)+LN(K); LN(K)=-999.0
     ELSE
-     II=K !II+1; CA(II)=CA(K); RA(II)=RA(K); LN(II)=LN(K) !; XA(II)=XA(K); YA(II)=YA(K)
+     II=K 
     ENDIF
    ENDDO
     
    !## fill result array
+   MSEG=0; DIST=0.0
    DO K=1,N
     ICOL=CA(K); IROW=RA(K)  
     !## within model-domain
@@ -1505,21 +1508,61 @@ IRLOOP: DO IR=MAX(1,IROW-1),MIN(NROW,IROW+1)
       WRITE(JU,'(A)') TRIM(LINE)
     
      ENDIF
-      
-     !## each reach is a segment in the isg-file
-     LINE='"'//TRIM(ISG(I)%SNAME)//'_reach'//TRIM(ITOS(ISTR(I)))//'",'//TRIM(ITOS(KSEG))//','// &
-               TRIM(ITOS(2))//',0,0,0,0,0,0,0,0'
-     WRITE(ISGIU(1,1),*) TRIM(LINE)
 
      !## write coordinate-couple in isp (use all coordinates ...)
-     KSEG=KSEG+1; WRITE(ISGIU(2,1),REC=KSEG) REAL(XA(K))  ,REAL(YA(K))
-     KSEG=KSEG+1; WRITE(ISGIU(2,1),REC=KSEG) REAL(XA(K+1)),REAL(YA(K+1))
+     KSEG=KSEG+1; MSEG=MSEG+1; WRITE(ISGIU(2,1),REC=KSEG) REAL(XA(K))  ,REAL(YA(K))
+     KSEG=KSEG+1; MSEG=MSEG+1; WRITE(ISGIU(2,1),REC=KSEG) REAL(XA(K+1)),REAL(YA(K+1))
+     
+     DIST=DIST+UTL_DIST(REAL(XA(K)),REAL(YA(K)),REAL(XA(K+1)),REAL(YA(K+1)))
+     
+     LEX=.FALSE.
+     IF(K.EQ.N)THEN
+      LEX=.TRUE.
+     ELSE
+      IF(CA(K).NE.CA(K+1).OR.RA(K).NE.RA(K+1))LEX=.TRUE.
+     ENDIF
+     IF(LEX)THEN
 
+      !## add cross-section
+      ICRS=ISG(I)%ICRS       !## position in isc that starts cross-section
+      NDIM=ABS(ISC(ICRS)%N)  !## number of cross-sectional data-points
+
+      KCRS=KCRS+1
+      WRITE(ISGIU(5,1),REC=KCRS) ISC(ICRS)%N,CRSREF,0.5*DIST,ISC(ICRS)%CNAME
+
+      !## write cross-section
+      II=ISC(ICRS)%IREF-1 ; DO JJ=1,NDIM
+       II=II+1; CRSREF=CRSREF+1; WRITE(ISGIU(6,1),REC=CRSREF) DATISC(II)%DISTANCE,DATISC(II)%BOTTOM,DATISC(II)%MRC
+      ENDDO
+
+      ICLC=ISG(I)%ICLC       !## position in isd that starts calculation node
+
+      !## add space for time-variant data - put data into it
+      DO II=1,2
+       KCLC=KCLC+1
+       IF(II.EQ.1)THEN
+        CNAME='FROM'
+        WRITE(ISGIU(3,1),REC=KCLC) NPER,CLCREF,0.0,CNAME 
+       ELSEIF(II.EQ.2)THEN
+        CNAME='TO'
+        WRITE(ISGIU(3,1),REC=KCLC) NPER,CLCREF,DIST,CNAME
+       ENDIF
+       DO JJ=1,NPER
+        CLCREF=CLCREF+1
+        WRITE(ISGIU(4,1),REC=CLCREF) 20020101,10.0,10.0,10.0
+       ENDDO
+      ENDDO
+      
+      !## each reach is a segment in the isg-file
+      LINE='"'//TRIM(ISG(I)%SNAME)//'_reach'//TRIM(ITOS(ISTR(I)))//'",'//TRIM(ITOS(KSEG-MSEG))//','// &
+                TRIM(ITOS(MSEG))  //','//TRIM(ITOS(KCLC-2))//','//TRIM(ITOS(2))//','// &
+                TRIM(ITOS(KCRS-1))  //','//TRIM(ITOS(1))//',0,0,0,0'
+      WRITE(ISGIU(1,1),*) TRIM(LINE)
+      MSEG=0; DIST=0.0
+     ENDIF
+     
     ENDIF
 
-    IF(IACTSTREAM(I).NE.N)THEN
-     WRITE(*,*) 'stream ',i,' probably partly out of the model domain'
-    ENDIF
    ENDDO
   ENDDO
  
