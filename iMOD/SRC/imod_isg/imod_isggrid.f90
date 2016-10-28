@@ -32,6 +32,7 @@ USE MOD_IDF, ONLY : IDFWRITE,IDFALLOCATEX,IDFDEALLOCATE,IDFREADDIM,IDFREAD,IDFNU
                     IDFREADSCALE,IDFGETAREA,IDF_EXTENT,IDFDEALLOCATEX
 USE MODPLOT
 USE MOD_ISG_PAR
+USE MOD_PMANAGER_PAR, ONLY : SIM
 USE MOD_UTL, ONLY : ITOS,RTOS,UTL_IDATETOJDATE,UTL_JDATETOIDATE,JDATETOGDATE,UTL_GETUNIT,UTL_WAITMESSAGE,UTL_IDFSNAPTOGRID,UTL_GETMED, &
                PEUCKER_SIMPLIFYLINE,UTL_DIST
 USE MOD_OSD, ONLY : OSD_OPEN,OSD_TIMER,ICF
@@ -39,7 +40,7 @@ USE MOD_IDFEDIT_TRACE, ONLY : IDFEDITTRACE
 USE MOD_ISG_TRAPEZIUM, ONLY : ISGCOMPUTETRAPEZIUM
 USE MOD_ISG_ADJ, ONLY : ISGADJUSTCOMPUTEXY
 USE MOD_ISG_UTL, ONLY : UTL_GETUNITSISG,ISGREAD,ISGDEAL,ISGDELISD,ISGSTUWEN_INTERSECT,ISGGETPOSID,ISGMEMORYISC,ISGMEMORYDATISC,ISGDELISC,ISGGETXY, &
-             ISGATTRIBUTESREADISCVALUE,ISGATTRIBUTES_2DCROSS_READ,ISGMEMORYDATISD,ISGSAVEHEADERS
+             ISGATTRIBUTESREADISCVALUE,ISGATTRIBUTES_2DCROSS_READ,ISGMEMORYDATISD,ISGSAVEHEADERS,ISGOPENFILES
 USE MOD_POLYGON_UTL, ONLY : POLYGON1DEALLOCATE_SELIDF
 USE MOD_POLYGON_PAR, ONLY : SELIDF
 USE MOD_IPF_PAR, ONLY : NIPF,IPF
@@ -1430,16 +1431,17 @@ IRLOOP: DO IR=MAX(1,IROW-1),MIN(NROW,IROW+1)
  END SUBROUTINE ISGGRIDINTSTREAMDATA
 
  !###====================================================================
- LOGICAL FUNCTION ISG2SFR(NROW,NCOL,NLAY,ILAY,TOP,BOT,IPER,NPER,MP,JU,GRIDISG)
+ LOGICAL FUNCTION ISG2SFR(NROW,NCOL,NLAY,ILAY,TOP,BOT,IPER,NPER,MP,JU,GRIDISG,EXFNAME)
  !###====================================================================
  IMPLICIT NONE
+ CHARACTER(LEN=*),INTENT(IN) :: EXFNAME
  INTEGER,INTENT(IN) :: NROW,NCOL,NLAY,ILAY,JU,IPER,NPER
  TYPE(GRIDISGOBJ),INTENT(INOUT) :: GRIDISG
  INTEGER,INTENT(INOUT),DIMENSION(:) :: MP
  TYPE(IDFOBJ),DIMENSION(NLAY),INTENT(INOUT) :: TOP,BOT
- INTEGER :: I,J,K,II,JJ,TTIME,IROW,ICOL,N,ISEG,JSEG,NSEG,IREF,NDIM,KSEG,MSEG, &
+ INTEGER :: I,J,K,II,JJ,KK,TTIME,IROW,ICOL,N,ISEG,JSEG,NSEG,IREF,NDIM,KSEG,MSEG,IDATE,IISG, &
        ICALC,OUTSEG,IUPSEG,IPRIOR,NSTRPTS,ICRS,ICLC,IQHR,NREACH,NSTREAM,KCRS,CRSREF,KCLC,CLCREF
- REAL :: DXY,X1,X2,Y1,Y2,QFLOW,QROFF,EVT,PREC,ROUGHCH,ROUGHBK,CDPTH,FDPTH,AQDTH,BWDTH,DIST, &
+ REAL :: DXY,X1,X2,Y1,Y2,QFLOW,QROFF,EVT,PREC,ROUGHCH,ROUGHBK,CDPTH,FDPTH,AWDTH,BWDTH,DIST, &
        HC1FCT,THICKM1,ELEVUP,WIDTH1,DEPTH1,HC2FCT,THICKM2,ELEVDN,WIDTH2,DEPTH2,WLVLUP,WLVLDN
  REAL,ALLOCATABLE,DIMENSION(:,:) :: QSORT,RVAL
  REAL,ALLOCATABLE,DIMENSION(:) :: XNR,NDATA
@@ -1453,117 +1455,146 @@ IRLOOP: DO IR=MAX(1,IROW-1),MIN(NROW,IROW+1)
  !## only specify for first stress-period - write output to regular ISG as well
  IF(IPER.EQ.1)THEN
 
-  !## write header *.ISG file in result-ISG
-  ISFR=0; CALL ISGSAVEHEADERS(); ISFR=1; KSEG=1; KCRS=1; CRSREF=1; KCLC=1; CLCREF=1
-
-  !## variable used to stored number of reaches per segment
-  IF(ALLOCATED(ISTR))DEALLOCATE(ISTR); ALLOCATE(ISTR(NISG)); ISTR=0
-
-  !## count number of streams
-  ALLOCATE(IACTSTREAM(NISG)); IACTSTREAM=0; NSTREAM=0
-
-  DO I=1,NISG
-   NSEG=ISG(I)%NSEG; ISEG=ISG(I)%ISEG; JSEG=ISEG+NSEG-1
-   !## start to intersect all segment/segmentpoints to the model-grid
-   ISTR(I)=0
-   N=0
-   !## intersect complete line
-   DO J=ISEG+1,JSEG
-    !## get coordinates of current reach in segment
-    X1 =ISP(J-1)%X; Y1=ISP(J-1)%Y; X2=ISP(J)%X; Y2=ISP(J)%Y
-    !## distance between two points with information
-    DXY=(X2-X1)**2.0+(Y2-Y1)**2.0; IF(DXY.LE.0.0)CYCLE; DXY=SQRT(DXY)
-    !## intersect line with rectangular-regular-equidistantial-grid
-    CALL INTERSECT_EQUI(GRIDISG%XMIN,GRIDISG%XMAX,GRIDISG%YMIN,GRIDISG%YMAX,GRIDISG%CS, &
-                             GRIDISG%CS,X1,X2,Y1,Y2,N,.FALSE.) !,.TRUE.)
-   ENDDO
-
-   !## aggregrate intersection
-   II=1; DO K=2,N
-    IF(CA(II).EQ.CA(K).AND.RA(II).EQ.RA(K))THEN
-     LN(II)=LN(II)+LN(K); LN(K)=-999.0
-    ELSE
-     II=K 
+  DO KK=1,2
+  
+   IF(KK.EQ.2)THEN
+    !## create copy to store results
+    ISFR=0; IF(.NOT.ISGOPENFILES(EXFNAME,'REPLACE'))THEN
+     CALL WMESSAGEBOX(OKONLY,EXCLAMATIONICON,COMMONOK,'iMOD cannot (re)write ISG file:'//CHAR(13)//TRIM(EXFNAME),'Error')
+     RETURN
     ENDIF
-   ENDDO
-    
-   !## fill result array
-   MSEG=0; DIST=0.0
-   DO K=1,N
-    ICOL=CA(K); IROW=RA(K)  
-    !## within model-domain
-    IF(ICOL.GE.1.AND.IROW.GE.1.AND.ICOL.LE.NCOL.AND.IROW.LE.NROW)THEN
 
-     IF(LN(K).GT.0.0)THEN
-      
-      !## increase number of stream reaches
-      ISTR(I)=ISTR(I)+1
-      !## increase number of streams
-      IF(ISTR(I).EQ.1)NSTREAM=NSTREAM+1
-      !## total number of reaches per segment
-      IACTSTREAM(I)=IACTSTREAM(I)+1
-      !## write into sfr package
-      LINE=TRIM(ITOS(ILAY))   //','//TRIM(ITOS(IROW))   //','//TRIM(ITOS(ICOL))//','// &
-           TRIM(ITOS(NSTREAM))//','//TRIM(ITOS(ISTR(I)))//','//TRIM(RTOS(LN(K),'F',2))
-      WRITE(JU,'(A)') TRIM(LINE)
-    
-     ENDIF
+    !## write header *.ISG file in result-ISG
+    CALL ISGSAVEHEADERS()
 
-     !## write coordinate-couple in isp (use all coordinates ...)
-     KSEG=KSEG+1; MSEG=MSEG+1; WRITE(ISGIU(2,1),REC=KSEG) REAL(XA(K))  ,REAL(YA(K))
-     KSEG=KSEG+1; MSEG=MSEG+1; WRITE(ISGIU(2,1),REC=KSEG) REAL(XA(K+1)),REAL(YA(K+1))
-     
-     DIST=DIST+UTL_DIST(REAL(XA(K)),REAL(YA(K)),REAL(XA(K+1)),REAL(YA(K+1)))
-     
-     LEX=.FALSE.
-     IF(K.EQ.N)THEN
-      LEX=.TRUE.
+    LINE=TRIM(ITOS(IISG))//','//TRIM(ITOS(ISFR))//',Date,StreamLevel,StreamDepth,StreamWidth,StreamDischarge'
+    WRITE(ISGIU(1,1),'(A)') TRIM(LINE)
+  
+    ISFR=1
+   ENDIF
+   
+   IISG=0
+  
+   KSEG=1; KCRS=1; CRSREF=1; KCLC=1; CLCREF=1
+
+   !## variable used to stored number of reaches per segment
+   IF(ALLOCATED(ISTR))DEALLOCATE(ISTR); ALLOCATE(ISTR(NISG)); ISTR=0
+
+   !## count number of streams
+   ALLOCATE(IACTSTREAM(NISG)); IACTSTREAM=0; NSTREAM=0
+
+   DO I=1,NISG
+    NSEG=ISG(I)%NSEG; ISEG=ISG(I)%ISEG; JSEG=ISEG+NSEG-1
+    !## start to intersect all segment/segmentpoints to the model-grid
+    ISTR(I)=0
+    N=0
+    !## intersect complete line
+    DO J=ISEG+1,JSEG
+     !## get coordinates of current reach in segment
+     X1 =ISP(J-1)%X; Y1=ISP(J-1)%Y; X2=ISP(J)%X; Y2=ISP(J)%Y
+     !## distance between two points with information
+     DXY=(X2-X1)**2.0+(Y2-Y1)**2.0; IF(DXY.LE.0.0)CYCLE; DXY=SQRT(DXY)
+     !## intersect line with rectangular-regular-equidistantial-grid
+     CALL INTERSECT_EQUI(GRIDISG%XMIN,GRIDISG%XMAX,GRIDISG%YMIN,GRIDISG%YMAX,GRIDISG%CS, &
+                              GRIDISG%CS,X1,X2,Y1,Y2,N,.FALSE.) !,.TRUE.)
+    ENDDO
+
+    !## aggregrate intersection
+    II=1; DO K=2,N
+     IF(CA(II).EQ.CA(K).AND.RA(II).EQ.RA(K))THEN
+      LN(II)=LN(II)+LN(K); LN(K)=-999.0
      ELSE
-      IF(CA(K).NE.CA(K+1).OR.RA(K).NE.RA(K+1))LEX=.TRUE.
+      II=K 
      ENDIF
-     IF(LEX)THEN
+    ENDDO
+    
+    !## fill result array
+    MSEG=0; DIST=0.0
+    DO K=1,N
+     ICOL=CA(K); IROW=RA(K)  
+     !## within model-domain
+     IF(ICOL.GE.1.AND.IROW.GE.1.AND.ICOL.LE.NCOL.AND.IROW.LE.NROW)THEN
 
-      !## add cross-section
-      ICRS=ISG(I)%ICRS       !## position in isc that starts cross-section
-      NDIM=ABS(ISC(ICRS)%N)  !## number of cross-sectional data-points
+      IF(LN(K).GT.0.0)THEN
 
-      KCRS=KCRS+1
-      WRITE(ISGIU(5,1),REC=KCRS) ISC(ICRS)%N,CRSREF,0.5*DIST,ISC(ICRS)%CNAME
+       !## increase number of stream reaches
+       ISTR(I)=ISTR(I)+1
+       !## increase number of streams
+       IF(ISTR(I).EQ.1)NSTREAM=NSTREAM+1
+       !## total number of reaches per segment
+       IACTSTREAM(I)=IACTSTREAM(I)+1
 
-      !## write cross-section
-      II=ISC(ICRS)%IREF-1 ; DO JJ=1,NDIM
-       II=II+1; CRSREF=CRSREF+1; WRITE(ISGIU(6,1),REC=CRSREF) DATISC(II)%DISTANCE,DATISC(II)%BOTTOM,DATISC(II)%MRC
-      ENDDO
-
-      ICLC=ISG(I)%ICLC       !## position in isd that starts calculation node
-
-      !## add space for time-variant data - put data into it
-      DO II=1,2
-       KCLC=KCLC+1
-       IF(II.EQ.1)THEN
-        CNAME='FROM'
-        WRITE(ISGIU(3,1),REC=KCLC) NPER,CLCREF,0.0,CNAME 
-       ELSEIF(II.EQ.2)THEN
-        CNAME='TO'
-        WRITE(ISGIU(3,1),REC=KCLC) NPER,CLCREF,DIST,CNAME
+       IF(KK.EQ.2)THEN
+        !## write into sfr package
+        LINE=TRIM(ITOS(ILAY))   //','//TRIM(ITOS(IROW))   //','//TRIM(ITOS(ICOL))//','// &
+             TRIM(ITOS(NSTREAM))//','//TRIM(ITOS(ISTR(I)))//','//TRIM(RTOS(LN(K),'F',2))
+        WRITE(JU,'(A)') TRIM(LINE)
        ENDIF
-       DO JJ=1,NPER
-        CLCREF=CLCREF+1
-        WRITE(ISGIU(4,1),REC=CLCREF) 20020101,10.0,10.0,10.0
-       ENDDO
-      ENDDO
-      
-      !## each reach is a segment in the isg-file
-      LINE='"'//TRIM(ISG(I)%SNAME)//'_reach'//TRIM(ITOS(ISTR(I)))//'",'//TRIM(ITOS(KSEG-MSEG))//','// &
-                TRIM(ITOS(MSEG))  //','//TRIM(ITOS(KCLC-2))//','//TRIM(ITOS(2))//','// &
-                TRIM(ITOS(KCRS-1))  //','//TRIM(ITOS(1))//',0,0,0,0'
-      WRITE(ISGIU(1,1),*) TRIM(LINE)
-      MSEG=0; DIST=0.0
-     ENDIF
-     
-    ENDIF
+       
+      ENDIF
 
+      !## write coordinate-couple in isp (use all coordinates ...)
+      IF(KK.EQ.2)THEN
+       KSEG=KSEG+1; MSEG=MSEG+1; WRITE(ISGIU(2,1),REC=KSEG) REAL(XA(K))  ,REAL(YA(K))
+       KSEG=KSEG+1; MSEG=MSEG+1; WRITE(ISGIU(2,1),REC=KSEG) REAL(XA(K+1)),REAL(YA(K+1))
+      ENDIF
+         
+      DIST=DIST+UTL_DIST(REAL(XA(K)),REAL(YA(K)),REAL(XA(K+1)),REAL(YA(K+1)))
+     
+      LEX=.FALSE.
+      IF(K.EQ.N)THEN
+       LEX=.TRUE.
+      ELSE
+       IF(CA(K).NE.CA(K+1).OR.RA(K).NE.RA(K+1))LEX=.TRUE.
+      ENDIF
+      IF(LEX)IISG=IISG+1
+      IF(KK.EQ.1)LEX=.FALSE.
+      IF(LEX)THEN
+ 
+       !## add cross-section
+       ICRS=ISG(I)%ICRS       !## position in isc that starts cross-section
+       NDIM=ABS(ISC(ICRS)%N)  !## number of cross-sectional data-points
+
+       KCRS=KCRS+1
+       WRITE(ISGIU(5,1),REC=KCRS) ISC(ICRS)%N,CRSREF,0.5*DIST,ISC(ICRS)%CNAME
+
+       !## write cross-section
+       II=ISC(ICRS)%IREF-1 ; DO JJ=1,NDIM
+        II=II+1; CRSREF=CRSREF+1; WRITE(ISGIU(6,1),REC=CRSREF) DATISC(II)%DISTANCE,DATISC(II)%BOTTOM,DATISC(II)%MRC
+       ENDDO
+
+       ICLC=ISG(I)%ICLC       !## position in isd that starts calculation node
+
+       !## add space for time-variant data - put data into it
+       DO II=1,2
+        KCLC=KCLC+1
+        IF(II.EQ.1)THEN
+         CNAME='FROM'
+         WRITE(ISGIU(3,1),REC=KCLC) NPER,CLCREF,0.0,CNAME 
+        ELSEIF(II.EQ.2)THEN
+         CNAME='TO'
+         WRITE(ISGIU(3,1),REC=KCLC) NPER,CLCREF,DIST,CNAME
+        ENDIF
+        DO JJ=1,NPER
+         CLCREF=CLCREF+1
+         IDATE=SIM(JJ)%IYR*10000+SIM(JJ)%IMH*100+SIM(JJ)%IDY
+         WRITE(ISGIU(4,1),REC=CLCREF) IDATE,10.0,10.0,10.0
+        ENDDO
+       ENDDO
+      
+       !## each reach is a segment in the isg-file
+       LINE='"'//TRIM(ISG(I)%SNAME)//'_reach'//TRIM(ITOS(ISTR(I)))//'",'//TRIM(ITOS(KSEG-MSEG))//','// &
+                 TRIM(ITOS(MSEG))  //','//TRIM(ITOS(KCLC-2))//','//TRIM(ITOS(2))//','// &
+                 TRIM(ITOS(KCRS-1))  //','//TRIM(ITOS(1))//',0,0,0,0'
+       WRITE(ISGIU(1,1),*) TRIM(LINE)
+       MSEG=0; DIST=0.0
+      ENDIF
+     
+     ENDIF
+
+    ENDDO
    ENDDO
+   IF(KK.EQ.1)DEALLOCATE(ISTR,IACTSTREAM)
   ENDDO
  
  ENDIF
@@ -1633,7 +1664,7 @@ IRLOOP: DO IR=MAX(1,IROW-1),MIN(NROW,IROW+1)
   ICALC =INT(RVAL(8,1)) !## calculation option streamdepth
   IUPSEG=INT(RVAL(6,1)) !## upstream segment
   OUTSEG=INT(RVAL(7,2)) !## downstream segment
-  IPRIOR=INT(RVAL(9,2)) !## dividing option
+  IPRIOR=INT(RVAL(9,1)) !## dividing option
   QFLOW =RVAL(10,1)     !## inflow
   QROFF =RVAL(11,1)     !## runoff flow
 
@@ -1645,6 +1676,7 @@ IRLOOP: DO IR=MAX(1,IROW-1),MIN(NROW,IROW+1)
   LINE=TRIM(ITOS(NSTREAM))//','//TRIM(ITOS(ICALC))//','//TRIM(ITOS(OUTSEG))//','//TRIM(ITOS(IUPSEG))
 
   IF(IUPSEG.GT.0)LINE=TRIM(LINE)//','//TRIM(ITOS(IPRIOR))
+  !##
   IF(ICALC.EQ.4)THEN
 
    !## get this information from the q-width/depth relationships data (only one q-width/depth relationships available)
@@ -1665,14 +1697,15 @@ IRLOOP: DO IR=MAX(1,IROW-1),MIN(NROW,IROW+1)
    ROUGHBK=MCRS(1)
    LINE=TRIM(LINE)//','//TRIM(RTOS(ROUGHBK,'F',2))
   ENDIF
+  !## function
   IF(ICALC.EQ.3)THEN
    !## not supported
    CDPTH=0.3
    FDPTH=0.35
-   AQDTH=3.8
+   AWDTH=3.8
    BWDTH=0.6
    LINE=TRIM(LINE)//','//TRIM(RTOS(CDPTH,'F',2))//','//TRIM(RTOS(FDPTH,'F',2))//','// &
-                         TRIM(RTOS(AQDTH,'F',2))//','//TRIM(RTOS(BWDTH,'F',2))
+                         TRIM(RTOS(AWDTH,'F',2))//','//TRIM(RTOS(BWDTH,'F',2))
   ENDIF
   WRITE(JU,'(A)') TRIM(LINE)
 
@@ -1711,11 +1744,11 @@ IRLOOP: DO IR=MAX(1,IROW-1),MIN(NROW,IROW+1)
     J=J+1; QCRS(K)=DATISQ(J)%Q; WCRS(K)=DATISQ(J)%W; DCRS(K)=DATISQ(J)%D
    ENDDO
 
-   LINE=TRIM(RTOS(0.0,'F',2)); DO J=1,NSTRPTS; LINE=TRIM(LINE)//','//TRIM(RTOS(QCRS(J),'F',2)); ENDDO
+   LINE=TRIM(RTOS(QCRS(1),'F',2)); DO J=2,NSTRPTS; LINE=TRIM(LINE)//','//TRIM(RTOS(QCRS(J),'F',2)); ENDDO
    WRITE(JU,'(A)') TRIM(LINE)
-   LINE=TRIM(RTOS(0.0,'F',2)); DO J=1,NSTRPTS; LINE=TRIM(LINE)//','//TRIM(RTOS(DCRS(J),'F',2)); ENDDO
+   LINE=TRIM(RTOS(DCRS(1),'F',2)); DO J=2,NSTRPTS; LINE=TRIM(LINE)//','//TRIM(RTOS(DCRS(J),'F',2)); ENDDO
    WRITE(JU,'(A)') TRIM(LINE)
-   LINE=TRIM(RTOS(0.0,'F',2)); DO J=1,NSTRPTS; LINE=TRIM(LINE)//','//TRIM(RTOS(WCRS(J),'F',2)); ENDDO
+   LINE=TRIM(RTOS(WCRS(1),'F',2)); DO J=2,NSTRPTS; LINE=TRIM(LINE)//','//TRIM(RTOS(WCRS(J),'F',2)); ENDDO
    WRITE(JU,'(A)') TRIM(LINE)
 
   ENDIF

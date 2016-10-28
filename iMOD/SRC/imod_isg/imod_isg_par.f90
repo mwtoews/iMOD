@@ -75,6 +75,7 @@ TYPE ISGOBJ
  INTEGER :: JLIST !## old selected list
 END TYPE ISGOBJ
 TYPE(ISGOBJ),ALLOCATABLE,DIMENSION(:) :: ISG,DUMISG
+CHARACTER(LEN=MAXLEN),DIMENSION(:),ALLOCATABLE :: ISDLABELS
 
 TYPE(LEGENDOBJ),ALLOCATABLE,DIMENSION(:) :: ISGLEG
 
@@ -96,9 +97,9 @@ TYPE ISDOBJ
  REAL :: WL_STW       !## influenced waterlevel
  !## isfr=0/1
  REAL :: WLVL         !## average waterlevel
+ REAL :: BTML      !## averagebottom level
  !## isfr=1
  CHARACTER(LEN=8) :: CTIME !## time in hhmmss
- REAL :: BTML      !## averagebottom level
  REAL :: WIDTH     !## average width
  REAL :: THCK      !## thickness of riverbed
  REAL :: HCND      !## permeability of riverbed
