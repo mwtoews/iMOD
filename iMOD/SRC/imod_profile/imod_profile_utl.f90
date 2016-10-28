@@ -788,126 +788,126 @@ CONTAINS
 
  END SUBROUTINE PROFILE_GETLOCATION
   
- !###======================================================================
- SUBROUTINE PROFILE_AXES(MINVAL,MAXVAL,OFFSET,NINTV)
- !###======================================================================
- IMPLICIT NONE
- INTEGER,PARAMETER :: NINTERVALS=5
- INTEGER,INTENT(INOUT) :: NINTV
- REAL,INTENT(INOUT) :: MINVAL,MAXVAL
- REAL,INTENT(IN) :: OFFSET
- REAL,DIMENSION(NINTERVALS) :: FINTERVALS
- INTEGER :: TNINTV,I,J,N
- REAL :: TMINVAL,TMAXVAL,FACT,DEL,BEG,END,D
- DATA FINTERVALS/1.0,2.0,2.5,5.0,10.0/
- REAL :: MAXIMUM,MINIMUM,RANGE,RLOG,INCR
- 
- MAXIMUM=MAXVAL-OFFSET
- MINIMUM=MINVAL-OFFSET
- RANGE=MAXIMUM-MINIMUM
- MINIMUM=MINIMUM-0.05*RANGE
- MAXIMUM=MAXIMUM+0.05*RANGE
- RANGE=MAXIMUM-MINIMUM;
- 
- IF(RANGE.EQ.0.0)RANGE=1.0
- RLOG=LOG10(RANGE)-INT(LOG10(RANGE))
- IF(RANGE.LT.1.0)RLOG=RLOG+1.0
- IF(RLOG.GT.0.6)THEN
-  INCR=1.0
- ELSEIF(RLOG.GT.0.3)THEN
-  INCR=0.5
- ELSE
-  INCR=0.2
- ENDIF
- IF(RANGE.LT.1.0)INCR=INCR/10.0
- I=INT(LOG10(RANGE))
- INCR=INCR*(10**I)
- IF(MINIMUM.LT.0.0)THEN
-  MINIMUM=(INT(MINIMUM/INCR)-1)*INCR
- ELSE 
-  MINIMUM=INT(MINIMUM/INCR)*INCR
- ENDIF
- IF(MAXIMUM.LT.0)THEN
-  MAXIMUM=(INT(MAXIMUM/INCR))*INCR
- ELSE
-  MAXIMUM=(INT(MAXIMUM/INCR)+1)*INCR
- ENDIF
-
- IF(INCR.NE.0.0)THEN
-
-  MINVAL=MINIMUM+OFFSET
-  MAXVAL=MAXIMUM+OFFSET
-  NINTV=(MAXVAL-MINVAL)/INCR
-
- ELSE
-   
-  !copy given parameters
-  TNINTV =NINTV
-  TMINVAL=MIN(MINVAL,MAXVAL)
-  TMAXVAL=MAX(MINVAL,MAXVAL)
-  !apply offset
-  TMINVAL=TMINVAL-OFFSET
-  TMAXVAL=TMAXVAL-OFFSET
-  !gues for interval size
-  DEL=(TMAXVAL-TMINVAL)/TNINTV
-  !place del between 1 and 10 by using a factor
-  FACT=INT(LOG10(DEL))
-  FACT=10.0**FACT
-  DEL =DEL/FACT
-  !apply factor to tminval and tminval too
-  TMINVAL=TMINVAL/FACT
-  TMAXVAL=TMAXVAL/FACT
-  !search for a nice value of del (choose values of fintervals) which gives
-  !the number of intervals closest to nint (>0)
-  J     =0
-  TNINTV=0
-  DO I=1,NINTERVALS
-   D  =FINTERVALS(I)
-   BEG=INT(TMINVAL/D)*D
-   END=INT(TMAXVAL/D)*D
-   IF(BEG.GT.TMINVAL)BEG=BEG-D
-   IF(END.LT.TMAXVAL)END=END+D
-   N=INT((END-BEG+0.5*D)/D)
-  !choose n closest to nintv
-   IF(N.GT.0)THEN
-    IF(TNINTV.EQ.0)THEN
-  !first result
-     TNINTV=N
-     J     =I  ! save position in fintervals array
-    ELSE
-     IF(ABS(NINTV-N).LT.ABS(NINTV-TNINTV))THEN
-  !current solution is better, save it
-      TNINTV=N
-      J     =I  ! save position in fintervals array
-     ENDIF
-    ENDIF
-   ENDIF
-  ENDDO
-
-  J=MIN(NINTERVALS,J)
-  J=MAX(1         ,J)
-
-  !calculate result
-  D  =FINTERVALS(J)
-  BEG=INT(TMINVAL/D)*D
-  END=INT(TMAXVAL/D)*D
-  IF(BEG.GT.TMINVAL)BEG=BEG-D
-  IF(END.LT.TMAXVAL)END=END+D
-  NINTV=INT((END-BEG+0.5*D)/D)
-
-  !scale values back to original magnitude
-  TMINVAL=BEG*FACT+OFFSET
-  TMAXVAL=END*FACT+OFFSET
-
-  !save result
-  NINTV =TNINTV
-  MINVAL=TMINVAL
-  MAXVAL=TMAXVAL
- 
- ENDIF
- 
- END SUBROUTINE PROFILE_AXES
-
+! !###======================================================================
+! SUBROUTINE PROFILE_AXES(MINVAL,MAXVAL,OFFSET,NINTV)
+! !###======================================================================
+! IMPLICIT NONE
+! INTEGER,PARAMETER :: NINTERVALS=5
+! INTEGER,INTENT(INOUT) :: NINTV
+! REAL,INTENT(INOUT) :: MINVAL,MAXVAL
+! REAL,INTENT(IN) :: OFFSET
+! REAL,DIMENSION(NINTERVALS) :: FINTERVALS
+! INTEGER :: TNINTV,I,J,N
+! REAL :: TMINVAL,TMAXVAL,FACT,DEL,BEG,END,D
+! DATA FINTERVALS/1.0,2.0,2.5,5.0,10.0/
+! REAL :: MAXIMUM,MINIMUM,RANGE,RLOG,INCR
+! 
+! MAXIMUM=MAXVAL-OFFSET
+! MINIMUM=MINVAL-OFFSET
+! RANGE=MAXIMUM-MINIMUM
+! MINIMUM=MINIMUM-0.05*RANGE
+! MAXIMUM=MAXIMUM+0.05*RANGE
+! RANGE=MAXIMUM-MINIMUM;
+! 
+! IF(RANGE.EQ.0.0)RANGE=1.0
+! RLOG=LOG10(RANGE)-INT(LOG10(RANGE))
+! IF(RANGE.LT.1.0)RLOG=RLOG+1.0
+! IF(RLOG.GT.0.6)THEN
+!  INCR=1.0
+! ELSEIF(RLOG.GT.0.3)THEN
+!  INCR=0.5
+! ELSE
+!  INCR=0.2
+! ENDIF
+! IF(RANGE.LT.1.0)INCR=INCR/10.0
+! I=INT(LOG10(RANGE))
+! INCR=INCR*(10**I)
+! IF(MINIMUM.LT.0.0)THEN
+!  MINIMUM=(INT(MINIMUM/INCR)-1)*INCR
+! ELSE 
+!  MINIMUM=INT(MINIMUM/INCR)*INCR
+! ENDIF
+! IF(MAXIMUM.LT.0)THEN
+!  MAXIMUM=(INT(MAXIMUM/INCR))*INCR
+! ELSE
+!  MAXIMUM=(INT(MAXIMUM/INCR)+1)*INCR
+! ENDIF
+!
+! IF(INCR.NE.0.0)THEN
+!
+!  MINVAL=MINIMUM+OFFSET
+!  MAXVAL=MAXIMUM+OFFSET
+!  NINTV=(MAXVAL-MINVAL)/INCR
+!
+! ELSE
+!   
+!  !copy given parameters
+!  TNINTV =NINTV
+!  TMINVAL=MIN(MINVAL,MAXVAL)
+!  TMAXVAL=MAX(MINVAL,MAXVAL)
+!  !apply offset
+!  TMINVAL=TMINVAL-OFFSET
+!  TMAXVAL=TMAXVAL-OFFSET
+!  !gues for interval size
+!  DEL=(TMAXVAL-TMINVAL)/TNINTV
+!  !place del between 1 and 10 by using a factor
+!  FACT=INT(LOG10(DEL))
+!  FACT=10.0**FACT
+!  DEL =DEL/FACT
+!  !apply factor to tminval and tminval too
+!  TMINVAL=TMINVAL/FACT
+!  TMAXVAL=TMAXVAL/FACT
+!  !search for a nice value of del (choose values of fintervals) which gives
+!  !the number of intervals closest to nint (>0)
+!  J     =0
+!  TNINTV=0
+!  DO I=1,NINTERVALS
+!   D  =FINTERVALS(I)
+!   BEG=INT(TMINVAL/D)*D
+!   END=INT(TMAXVAL/D)*D
+!   IF(BEG.GT.TMINVAL)BEG=BEG-D
+!   IF(END.LT.TMAXVAL)END=END+D
+!   N=INT((END-BEG+0.5*D)/D)
+!  !choose n closest to nintv
+!   IF(N.GT.0)THEN
+!    IF(TNINTV.EQ.0)THEN
+!  !first result
+!     TNINTV=N
+!     J     =I  ! save position in fintervals array
+!    ELSE
+!     IF(ABS(NINTV-N).LT.ABS(NINTV-TNINTV))THEN
+!  !current solution is better, save it
+!      TNINTV=N
+!      J     =I  ! save position in fintervals array
+!     ENDIF
+!    ENDIF
+!   ENDIF
+!  ENDDO
+!
+!  J=MIN(NINTERVALS,J)
+!  J=MAX(1         ,J)
+!
+!  !calculate result
+!  D  =FINTERVALS(J)
+!  BEG=INT(TMINVAL/D)*D
+!  END=INT(TMAXVAL/D)*D
+!  IF(BEG.GT.TMINVAL)BEG=BEG-D
+!  IF(END.LT.TMAXVAL)END=END+D
+!  NINTV=INT((END-BEG+0.5*D)/D)
+!
+!  !scale values back to original magnitude
+!  TMINVAL=BEG*FACT+OFFSET
+!  TMAXVAL=END*FACT+OFFSET
+!
+!  !save result
+!  NINTV =TNINTV
+!  MINVAL=TMINVAL
+!  MAXVAL=TMAXVAL
+! 
+! ENDIF
+! 
+! END SUBROUTINE PROFILE_AXES
+!
  !###======================================================================
  SUBROUTINE PROFILE_PLOTAXES(AXES,IWINID)
  !###======================================================================
