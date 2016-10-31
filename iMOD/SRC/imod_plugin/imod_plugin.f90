@@ -259,6 +259,8 @@ CONTAINS
  INTEGER :: NPROC
  INTEGER :: I,J
  
+ CALL WINDOWSELECT(0)
+ 
  !## number of running processes 
  NPROC=0
  IF(ASSOCIATED(PI1))THEN
