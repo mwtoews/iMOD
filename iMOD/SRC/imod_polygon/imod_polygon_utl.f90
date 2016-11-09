@@ -308,9 +308,7 @@ CONTAINS
      DO J=1,SHPNCRD(I)
       NID=NID+1; STRING=TRIM(ITOS(NID))//','//TRIM(SHPNAME(I))
       WRITE(IU,'(A)') TRIM(STRING)
-!      STRING=TRIM(RTOS(SHPXC(J,I),'F',7))//','//TRIM(RTOS(SHPYC(J,I),'F',7))
-!      WRITE(IU,'(A)') TRIM(STRING) 
-      WRITE(IU,'(2(F15.7,A1))') SHPXC(J,I),',',SHPYC(J,I)
+      WRITE(IU,'(2(G15.7,A1))') SHPXC(J,I),',',SHPYC(J,I)
       WRITE(IU,'(A)') 'END'
      END DO
     ELSEIF(SHPTYPE(I).EQ.ID_RECTANGLE)THEN
@@ -318,21 +316,11 @@ CONTAINS
      STRING=TRIM(ITOS(SHPID(I)))//','//TRIM(SHPNAME(I))
      WRITE(IU,'(A)') TRIM(STRING) 
 
-!     STRING=TRIM(RTOS(SHPXC(1,I),'F',7))//','//TRIM(RTOS(SHPYC(1,I),'F',7))
-!     WRITE(IU,'(A)') TRIM(STRING)
-     WRITE(IU,'(2(F15.7,A1))') SHPXC(1,I),',',SHPYC(1,I)
-!     STRING=TRIM(RTOS(SHPXC(1,I),'F',7))//','//TRIM(RTOS(SHPYC(2,I),'F',7))
-!     WRITE(IU,'(A)') TRIM(STRING) 
-     WRITE(IU,'(2(F15.7,A1))') SHPXC(1,I),',',SHPYC(2,I)
-!     STRING=TRIM(RTOS(SHPXC(2,I),'F',7))//','//TRIM(RTOS(SHPYC(2,I),'F',7))
-!     WRITE(IU,'(A)') TRIM(STRING) 
-     WRITE(IU,'(2(F15.7,A1))') SHPXC(2,I),',',SHPYC(2,I)
-!     STRING=TRIM(RTOS(SHPXC(2,I),'F',7))//','//TRIM(RTOS(SHPYC(1,I),'F',7))
-!     WRITE(IU,'(A)') TRIM(STRING) 
-     WRITE(IU,'(2(F15.7,A1))') SHPXC(2,I),',',SHPYC(1,I)
-!     STRING=TRIM(RTOS(SHPXC(1,I),'F',7))//','//TRIM(RTOS(SHPYC(1,I),'F',7))
-!     WRITE(IU,'(A)') TRIM(STRING) 
-     WRITE(IU,'(2(F15.7,A1))') SHPXC(1,I),',',SHPYC(1,I)
+     WRITE(IU,'(2(G15.7,A1))') SHPXC(1,I),',',SHPYC(1,I)
+     WRITE(IU,'(2(G15.7,A1))') SHPXC(1,I),',',SHPYC(2,I)
+     WRITE(IU,'(2(G15.7,A1))') SHPXC(2,I),',',SHPYC(2,I)
+     WRITE(IU,'(2(G15.7,A1))') SHPXC(2,I),',',SHPYC(1,I)
+     WRITE(IU,'(2(G15.7,A1))') SHPXC(1,I),',',SHPYC(1,I)
      WRITE(IU,'(A)') 'END'
 
     ELSE
@@ -340,15 +328,11 @@ CONTAINS
      STRING=TRIM(ITOS(SHPID(I)))//','//TRIM(SHPNAME(I))
      WRITE(IU,'(A)') TRIM(STRING) 
      DO J=1,SHPNCRD(I)
-!      STRING=TRIM(RTOS(SHPXC(J,I),'F',7))//','//TRIM(RTOS(SHPYC(J,I),'F',7))
-!      WRITE(IU,'(A)') TRIM(STRING) 
-      WRITE(IU,'(2(F15.7,A1))') SHPXC(J,I),',',SHPYC(J,I)
+      WRITE(IU,'(2(G15.7,A1))') SHPXC(J,I),',',SHPYC(J,I)
      END DO
      !## close for polygons
      IF(SHPTYPE(I).EQ.ID_POLYGON)THEN
-!      STRING=TRIM(RTOS(SHPXC(1,I),'F',7))//','//TRIM(RTOS(SHPYC(1,I),'F',7))
-!      WRITE(IU,'(A)') TRIM(STRING)
-      WRITE(IU,'(2(F15.7,A1))') SHPXC(1,I),',',SHPYC(1,I)
+      WRITE(IU,'(2(G15.7,A1))') SHPXC(1,I),',',SHPYC(1,I)
      ENDIF
      WRITE(IU,'(A)') 'END'
     ENDIF
