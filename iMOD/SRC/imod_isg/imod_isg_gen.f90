@@ -137,7 +137,7 @@ CONTAINS
 !       PNTX(NP+2)=IPF(IIPF)%XYZ(1,J+1); PNTY(NP+2)=IPF(IIPF)%XYZ(2,J+1)
      
        IP(NBRCH+1)=NP+3
-       CBID(NBRCH+1)=TRIM(IPF(IIPF)%INFO(DATCOL(3),I))//'_REACH_'//TRIM(ITOS(NBRCH+1))
+       CBID(NBRCH+1)='S_'//TRIM(IPF(IIPF)%INFO(DATCOL(3),I))//'_R_'//TRIM(ITOS(NBRCH+1))
        IDNSEG(NBRCH+1)=NBRCH+2
      
        !## left side
@@ -156,9 +156,9 @@ CONTAINS
        ENDIF
        PROF(1,NBRCH+1)%DISTANCE=-WD1
        PROF(1,NBRCH+1)%BOTTOM  = WL1
-       PROF(2,NBRCH+1)%DISTANCE=-WD1/2.0
+       PROF(2,NBRCH+1)%DISTANCE=-WD1
        PROF(2,NBRCH+1)%BOTTOM  = BL1
-       PROF(3,NBRCH+1)%DISTANCE= WD2/2.0
+       PROF(3,NBRCH+1)%DISTANCE= WD2
        PROF(3,NBRCH+1)%BOTTOM  = BL2
        PROF(4,NBRCH+1)%DISTANCE= WD2
        PROF(4,NBRCH+1)%BOTTOM  = WL2
@@ -309,11 +309,11 @@ DO IB=1,NBRCH
   CALL ISGGEN_CREATEISC1(ICRS,NCRS,IREFSC,DIST,IB,IB)
  ENDIF 
 
- LINE='"SEGMENT_'//TRIM(CBID(IB))//'",'//TRIM(ITOS(ISEG-NSEG+1))//','//TRIM(ITOS(NSEG))//','// &
-                                        TRIM(ITOS(ICLC-NCLC+1))//','//TRIM(ITOS(NCLC))//','// &
-                                        TRIM(ITOS(ICRS-NCRS+1))//','//TRIM(ITOS(NCRS))//','// &
-                                        TRIM(ITOS(0))          //','//TRIM(ITOS(0))   //','// &
-                                        TRIM(ITOS(0))          //','//TRIM(ITOS(0))
+ LINE='"'//TRIM(CBID(IB))//'",'//TRIM(ITOS(ISEG-NSEG+1))//','//TRIM(ITOS(NSEG))//','// &
+                                 TRIM(ITOS(ICLC-NCLC+1))//','//TRIM(ITOS(NCLC))//','// &
+                                 TRIM(ITOS(ICRS-NCRS+1))//','//TRIM(ITOS(NCRS))//','// &
+                                 TRIM(ITOS(0))          //','//TRIM(ITOS(0))   //','// &
+                                 TRIM(ITOS(0))          //','//TRIM(ITOS(0))
 
  WRITE(IU(ISG),'(A)') TRIM(LINE)
 
@@ -595,7 +595,7 @@ END SUBROUTINE ISGGEN_CREATEISD1
  !## bottom level
  BTML=PROF(2,IB)%BOTTOM
  !## width (rectangular)
- WD=ABS(PROF(4,IB)%DISTANCE)
+ WD=ABS(PROF(1,IB)%DISTANCE)
 
  THCK=0.10
  HCND=1.00
@@ -608,8 +608,11 @@ END SUBROUTINE ISGGEN_CREATEISD1
 
  N=1; ICLC=ICLC+1; NCLC=NCLC+1; IREFSD=IREFSD+1              
 
- BTML=PROF(3,IB)%BOTTOM
+ !## water level
  WLVL=PROF(4,IB)%BOTTOM
+ !## bottom level
+ BTML=PROF(3,IB)%BOTTOM
+ !## width (rectangular)
  WD=PROF(4,IB)%DISTANCE
 
  THCK=0.10
@@ -671,10 +674,13 @@ ELSE
  IF(ISFR.EQ.1)THEN
   PROF(1,IPROF)%DISTANCE=PROF(1,IPROF)%DISTANCE/2.0
   PROF(2,IPROF)%DISTANCE=PROF(1,IPROF)%DISTANCE
-  WDEPTH=PROF(1,IPROF)%BOTTOM-PROF(2,IPROF)%BOTTOM
+
+  WDEPTH=MAX(PROF(1,IPROF)%BOTTOM-PROF(2,IPROF)%BOTTOM, &
+             PROF(4,IPROF)%BOTTOM-PROF(3,IPROF)%BOTTOM)
+
   PROF(1,IPROF)%BOTTOM=WDEPTH
   PROF(2,IPROF)%BOTTOM=0.0
-  WDEPTH=PROF(4,IPROF)%BOTTOM-PROF(3,IPROF)%BOTTOM
+!  WDEPTH=PROF(4,IPROF)%BOTTOM-PROF(3,IPROF)%BOTTOM
   PROF(3,IPROF)%BOTTOM=0.0
   PROF(4,IPROF)%BOTTOM=WDEPTH
   PROF(3,IPROF)%DISTANCE=PROF(3,IPROF)%DISTANCE/2.0
