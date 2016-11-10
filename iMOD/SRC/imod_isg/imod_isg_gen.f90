@@ -129,12 +129,10 @@ CONTAINS
     !## duplicate coordinates, start new branch
     IF(TRIM(CS1).EQ.TRIM(CS2))THEN
      !## skip distance is zero
-     IF(UTL_DIST(X1,Y1,X2,Y2).GT.0.0)THEN !IPF(IIPF)%XYZ(1,J),IPF(IIPF)%XYZ(2,J),IPF(IIPF)%XYZ(1,J+1),IPF(IIPF)%XYZ(2,J+1)).GT.0.0)THEN
+     IF(UTL_DIST(X1,Y1,X2,Y2).GT.0.0)THEN 
       IF(I.EQ.2)THEN
        PNTX(NP+1)=X1; PNTY(NP+1)=Y1
        PNTX(NP+2)=X2; PNTY(NP+2)=Y2
-!       PNTX(NP+1)=IPF(IIPF)%XYZ(1,J);   PNTY(NP+1)=IPF(IIPF)%XYZ(2,J) 
-!       PNTX(NP+2)=IPF(IIPF)%XYZ(1,J+1); PNTY(NP+2)=IPF(IIPF)%XYZ(2,J+1)
      
        IP(NBRCH+1)=NP+3
        CBID(NBRCH+1)='S_'//TRIM(IPF(IIPF)%INFO(DATCOL(3),I))//'_R_'//TRIM(ITOS(NBRCH+1))

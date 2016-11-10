@@ -113,7 +113,7 @@ CONTAINS
  CHARACTER(LEN=*),INTENT(IN) :: IDFNAME
  INTEGER,INTENT(INOUT) :: IERROR
  REAL,INTENT(IN) :: TOP,BOT
- INTEGER :: IU,ASC_TYPE,I
+ INTEGER :: IU,ASC_TYPE,I,IX,IY,IZ
 
  IERROR=1
 
@@ -127,32 +127,71 @@ CONTAINS
   RETURN
  ENDIF
 
- !## skip header with info ... optional
- DO
-  READ(IU,'(A256)',IOSTAT=IOS(1)) LINE
-  IF(INDEX(LINE,'*').EQ.0)EXIT
- ENDDO
+ ASC_TYPE=0
+
+ READ(IU,'(A256)',IOSTAT=IOS(1)) LINE
+ !## petrel ascii file
+ IF(INDEX(LINE,'#').GT.0)THEN
+  ASC_TYPE=1; IX=0; IY=0; IZ=0
+  DO
+   LINE=UTL_CAP(LINE,'U')
+   IF(INDEX(LINE,'#').GT.0)THEN
+    IF(INDEX(LINE,'# FIELD:').GT.0)THEN
+     IF(INDEX(LINE,' X').GT.0)THEN
+      READ(LINE(9:),*) IX
+     ELSEIF(INDEX(LINE,' Y').GT.0)THEN
+      READ(LINE(9:),*) IY
+     ELSEIF(INDEX(LINE,' Z').GT.0)THEN
+      READ(LINE(9:),*) IZ
+     ENDIF
+    ENDIF
+   ELSE
+    EXIT
+   ENDIF
+   READ(IU,'(A256)',IOSTAT=IOS(1)) LINE
+  ENDDO
+ ELSE
+!# Type: scattered data
+!# Version: 6
+!# Description: No description
+!# Format: free
+!# Field: 1 x
+!# Field: 2 y
+!# Field: 3 z meters
+!# Field: 4 column
+!# Field: 5 row
+!# Projection: Local Rectangular
+!# Units: meters
+!# End:
+!# Information from grid:
+!# Grid_size: 1368 x 2460
+!# Grid_space: 0.000000,0.000000,0.000000,0.000000
+!# Scattered data: Not_available
+!# Z_field: z
+!# Vertical_faults: Not_available
+!# History: No history
+!# Z_units: meters
+
+  !## skip header in esri ascii file with info is optional
+  DO
+   READ(IU,'(A256)',IOSTAT=IOS(1)) LINE
+   IF(INDEX(LINE,'*').EQ.0)EXIT
+  ENDDO
+ 
+ ENDIF
+ 
  !## end of file read
  IF(IOS(1).LT.0)THEN
   CALL WMESSAGEBOX(OKONLY,EXCLAMATIONICON,COMMONOK,'File is probably empty!','Error')
   RETURN
  ENDIF
 
- !## find out what kind of file ... try to read at least 4 labels ...
- READ(LINE,*,IOSTAT=IOS(1)) (TXT(I),I=1,4)
-
- !## 3d-ascii-file
- IF(IOS(1).EQ.0)THEN
-  ASC_TYPE=1
- !## 2d ascii-file
- ELSE
-  ASC_TYPE=0
- ENDIF
-
+ !## ascii
  IF(ASC_TYPE.EQ.0)THEN
   IF(.NOT.ASC2IDF_IMPORTASC_TYPE1(IU,IDFNAME,TOP,BOT,IBATCH))IERROR=0
+ !## petrel
  ELSEIF(ASC_TYPE.EQ.1)THEN
-  IF(.NOT.ASC2IDF_IMPORTASC_TYPE2(IU,IDFNAME))IERROR=0
+  IF(.NOT.ASC2IDF_IMPORTASC_TYPE2(IU,IDFNAME,IX,IY,IZ))IERROR=0
  ENDIF
 
  CALL ASC2IDF_INT_CLOSE(IU)
@@ -305,135 +344,88 @@ CONTAINS
  END FUNCTION ASC2IDF_IMPORTASC_TYPE1
 
  !###======================================================================
- LOGICAL FUNCTION ASC2IDF_IMPORTASC_TYPE2(IU,IDFNAME)
+ LOGICAL FUNCTION ASC2IDF_IMPORTASC_TYPE2(IU,IDFNAME,IX,IY,IZ)
  !###======================================================================
  IMPLICIT NONE
- INTEGER,INTENT(IN) :: IU
+ INTEGER,INTENT(IN) :: IU,IX,IY,IZ
  CHARACTER(LEN=*),INTENT(IN) :: IDFNAME
  CHARACTER(LEN=256) :: LINE
- REAL,DIMENSION(0:3) :: X,Y
- REAL,DIMENSION(:),ALLOCATABLE :: Z
- REAL :: CS,A,B,C,D
- INTEGER :: NGRID,N,NODES,I,J,IROW,ICOL,JROW,JCOL
-
+ REAL :: DX,DY,CS,X1,X2,Y1,Y2,Z1,Z2
+ INTEGER :: N,M,I,J,IROW,ICOL
+ REAL,DIMENSION(:),ALLOCATABLE :: XYZ
+ 
  ASC2IDF_IMPORTASC_TYPE2=.FALSE.
 
- X(1)= 10.0E10
- Y(1)= 10.0E10
- X(2)=-10.0E10
- Y(2)=-10.0E10
+ ALLOCATE(XYZ(MAX(IX,IY,IZ)))
 
- CALL WINDOWSELECT(0)
- CALL WINDOWOUTSTATUSBAR(4,'Importing '//TRIM(IDFNAME))
+ CALL WINDOWSELECT(0); CALL WINDOWOUTSTATUSBAR(4,'Importing '//TRIM(IDFNAME))
 
  N=0
- NGRID=0
  DO
   !## read file to find out dimensions
-  READ(IU,*,IOSTAT=IOS(1)) X(0),Y(0)
+  READ(IU,*,IOSTAT=IOS(1)) (XYZ(I),I=1,SIZE(XYZ))
   IF(IOS(1).NE.0)EXIT
-  N=N+1
-  X(1)=MIN(X(0),X(1))
-  X(2)=MAX(X(0),X(2))
-  Y(1)=MIN(Y(0),Y(1))
-  Y(2)=MAX(Y(0),Y(2))
-  !## store first result
-  IF(N.EQ.1)THEN
-   X(3)=X(0)
-   Y(3)=Y(0)
+  IF(N.EQ.0)THEN
+   X1=XYZ(IX); X2=X1
+   Y1=XYZ(IY); Y2=Y1
+   Z1=XYZ(IZ); Z2=Z1
+   DX=HUGE(1.0); DY=HUGE(1.0)
+  ELSE
+   IF(X1-XYZ(IX).NE.0.0)DX=MIN(DX,ABS(X1-XYZ(IX)))
+   IF(Y1-XYZ(IY).NE.0.0)DY=MIN(DY,ABS(Y1-XYZ(IY)))
+   X1=MIN(X1,XYZ(IX)); X2=MAX(X2,XYZ(IX))
+   Y1=MIN(Y1,XYZ(IY)); Y2=MAX(Y2,XYZ(IY))
+   Z1=MIN(Z1,XYZ(IZ)); Z2=MAX(Z2,XYZ(IZ))
   ENDIF
-  IF(X(3).EQ.X(0).AND.Y(3).EQ.Y(0))NGRID=NGRID+1
+  N=N+1
  ENDDO
 
- IF(NGRID.EQ.0)THEN
+ IF(N.EQ.0)THEN
   CALL WMESSAGEBOX(OKONLY,EXCLAMATIONICON,COMMONOK,'Cannot read this ASCII file properly','Error')
-  RETURN
+  DEALLOCATE(XYZ); RETURN
+ ENDIF
+ IF(DX.NE.DY)THEN
+  CALL WMESSAGEBOX(OKONLY,EXCLAMATIONICON,COMMONOK,'Cannot read cellsizes in ASCII file properly','Error')
+  DEALLOCATE(XYZ); RETURN
  ENDIF
 
- ALLOCATE(IDF(NGRID))
- DO I=1,NGRID; CALL IDFNULLIFY(IDF(I)); ENDDO
+ ALLOCATE(IDF(1)); CALL IDFNULLIFY(IDF(1))
 
- !## number of rastercells in each grid=n/ngrid
- NODES=N/NGRID
- !## cellsize=
- A=  REAL(NODES)-1.0
- B=-(X(2)-X(1))-(Y(2)-Y(1))
- C=-(X(2)-X(1))*(Y(2)-Y(1))
- D= (B**2.0)-(4.0*A*C)
-
- IF(D.GT.0.0)THEN
-  D=SQRT(D)
-  CS=(-B+D)/(2.0*A)
-  IF(CS.LT.0.0)CS=(-B-D)/(2.0*A)
-  IF(CS.LT.0.0)THEN
-   CALL WMESSAGEBOX(OKONLY,EXCLAMATIONICON,COMMONOK,'Cannot determine cellsize','Error')
-   RETURN
-  ENDIF
- ENDIF
-
- IDF(1)%DX  =CS
- IDF(1)%DY  =CS
+ IDF(1)%DX  =DX
+ IDF(1)%DY  =DY
  IDF(1)%IEQ =0
- IDF(1)%ITB =1
+ IDF(1)%ITB =0
  IDF(1)%IXV =0
- IDF(1)%XMIN=X(1)-IDF(1)%DX
- IDF(1)%XMAX=X(2)+IDF(1)%DX
- IDF(1)%YMIN=Y(1)-IDF(1)%DY
- IDF(1)%YMAX=Y(2)+IDF(1)%DY
+ IDF(1)%XMIN=X1-IDF(1)%DX
+ IDF(1)%XMAX=X2+IDF(1)%DX
+ IDF(1)%YMIN=Y1-IDF(1)%DY
+ IDF(1)%YMAX=Y2+IDF(1)%DY
  IDF(1)%NCOL=(IDF(1)%XMAX-IDF(1)%XMIN)/IDF(1)%DX
  IDF(1)%NROW=(IDF(1)%YMAX-IDF(1)%YMIN)/IDF(1)%DY
- IDF(1)%NODATA=999.0
- IF(.NOT.IDFALLOCATEX(IDF(1)))RETURN
-
- DO I=1,NGRID; CALL IDFCOPY(IDF(1),IDF(I)); IDF(I)%NODATA=999.0; END DO
+ IDF(1)%NODATA=HUGE(1.0)
+ IF(.NOT.IDFALLOCATEX(IDF(1)))THEN
+  DEALLOCATE(XYZ); RETURN
+ ENDIF
 
  REWIND(IU)
 
  !## skip header with info ... optional
+ DO; READ(IU,'(A256)',IOSTAT=IOS(1)) LINE; IF(INDEX(LINE,'#').EQ.0)EXIT; ENDDO
+
+ IDF(1)%X=IDF(1)%NODATA
+ M=0
  DO
-  READ(IU,'(A256)',IOSTAT=IOS(1)) LINE
-  IF(INDEX(LINE,'*').EQ.0)EXIT
+  M=M+1
+  READ(IU,*,IOSTAT=IOS(1)) (XYZ(I),I=1,SIZE(XYZ))
+  CALL IDFIROWICOL(IDF(1),IROW,ICOL,XYZ(IX),XYZ(IY))
+  IDF(1)%X(ICOL,IROW)=XYZ(IZ)
+  IF(IOS(1).NE.0)EXIT
  ENDDO
 
- !## find out what kind of file ... try to read at least 4 labels ...
- READ(LINE,*,IOSTAT=IOS(1)) (TXT(I),I=1,4)
+ IF(.NOT.IDFWRITE(IDF(1),IDFNAME(:INDEX(IDFNAME,'.',.TRUE.)-1)//'.IDF',1))THEN
+ ENDIF
 
- ALLOCATE(Z(NGRID))
-
- DO ICOL=1,IDF(1)%NCOL
-  DO IROW=1,IDF(1)%NROW
-   DO I=NGRID,1,-1
-    !## read file to find out dimensions
-    READ(IU,*,IOSTAT=IOS(1)) X(0),Y(0),Z(I),A
-    CALL IDFIROWICOL(IDF(I),JROW,JCOL,X(0),Y(0))
-    IDF(I)%X(JCOL,JROW)=A
-    IF(IOS(1).NE.0)EXIT
-   ENDDO
-  ENDDO
- ENDDO
-
- DO I=1,NGRID
-  IF(I.EQ.1)THEN
-   IDF(I)%TOP= Z(I)+(Z(I)-Z(I+1))
-   IDF(I)%BOT=(Z(I+1)+Z(I))/2.0
-  ELSEIF(I.EQ.NGRID)THEN
-   IDF(I)%TOP=(Z(I-1)+Z(I))/2.0
-   IDF(I)%BOT= Z(I)-(Z(I-1)-Z(I))
-  ELSE
-   IDF(I)%TOP=(Z(I-1)+Z(I))/2.0
-   IDF(I)%BOT=(Z(I+1)+Z(I))/2.0
-  ENDIF
- END DO
-
- DEALLOCATE(Z)
-
- J=INDEX(IDFNAME,'.',.TRUE.)-1
- DO I=1,NGRID
-  IF(.NOT.IDFWRITE(IDF(I),IDFNAME(:J)//'zone'//TRIM(ITOS(I))//'.IDF',1))THEN
-   !## error occured
-   RETURN
-  ENDIF
- END DO
+ DEALLOCATE(XYZ)
 
  ASC2IDF_IMPORTASC_TYPE2=.TRUE.
 
