@@ -190,6 +190,8 @@ CONTAINS
        CALL ISGADD()
       CASE (ID_CONNECTTO,ID_CONNECTFROM)
        CALL ISGCONNECT(MESSAGE%VALUE1)
+      CASE (ID_CONNECTTOAUTO)
+       CALL ISGCONNECTTOAUTO()
       CASE(ID_ZOOMTO)
        CALL ISGZOOMTO()
       CASE (ID_FIND)
@@ -1809,11 +1811,17 @@ CONTAINS
  SUBROUTINE ISGCONNECT(ID)
  !###====================================================================
  IMPLICIT NONE
+ REAL,PARAMETER :: SCALEXY=1.0/100.0
  INTEGER,INTENT(IN) :: ID
  INTEGER :: ITYPE 
  TYPE(WIN_MESSAGE) :: MESSAGE
  INTEGER :: I,J,N,ICLC,NCLC,IISG,JJSG,IREF
+ REAL :: DX,DY,MINDIST
  LOGICAL :: LEX
+
+ DX=((MPW%XMAX-MPW%XMIN)*SCALEXY)**2.0
+ DY=((MPW%YMAX-MPW%YMIN)*SCALEXY)**2.0
+ MINDIST=SQRT(DX+DY)
  
  IF(ISFR.EQ.0)RETURN
  
@@ -1826,7 +1834,7 @@ CONTAINS
   SELECT CASE (ITYPE)
    CASE (MOUSEMOVE)
     !## highlight line
-    LEX=ISGGETSEGMENT(MESSAGE%GX,MESSAGE%GY,JJSG)
+    LEX=ISGGETSEGMENT(MESSAGE%GX,MESSAGE%GY,JJSG,0,MINDIST,0)
 
     IF(LEX)THEN
      CALL WCURSORSHAPE(ID_CURSORPIPET)
@@ -1848,7 +1856,7 @@ CONTAINS
     SELECT CASE (MESSAGE%VALUE1)
      !## upstream / downstream connection
      CASE(1)
-      !## remove all calculation points on segment
+      !## adjust all connections on segment
       ICLC=ISG(ISELISG)%ICLC-1; NCLC=ISG(ISELISG)%NCLC
       DO I=1,NCLC
        ICLC=ICLC+1; IREF=ISD(ICLC)%IREF-1; N=ISD(ICLC)%N
@@ -1862,7 +1870,8 @@ CONTAINS
       ENDDO
       CALL IDFPLOTFAST(1); IISG=0
 
-     CASE (2)
+     !## stop by pressing middle/right mouse button
+     CASE (2,3)
       EXIT
     END SELECT
     
@@ -1876,6 +1885,57 @@ CONTAINS
  CALL IDFPLOTFAST(1)
 
  END SUBROUTINE ISGCONNECT
+
+ !###====================================================================
+ SUBROUTINE ISGCONNECTTOAUTO()
+ !###====================================================================
+ IMPLICIT NONE
+ INTEGER :: I,J,K,N,ICLC,NCLC,IISG,IREF,ISEG,IOS
+ REAL :: MINDIST,X,Y
+ CHARACTER(LEN=52) :: LINE
+ LOGICAL :: LEX
+ 
+ IF(ISFR.EQ.0)RETURN
+ 
+ CALL WDIALOGSELECT(ID_DISGEDITTAB1)
+ CALL WDIALOGGETMENU(IDF_MENU1,ISG(1:NISG)%ILIST)
+ CALL WDIALOGGETSTRING(IDF_SNAPDISTANCE,LINE)
+ READ(LINE,*,IOSTAT=IOS) MINDIST
+ IF(IOS.NE.0)THEN
+  CALL WMESSAGEBOX(OKONLY,EXCLAMATIONICON,COMMONOK,'You need to enter a number to define the snapping distance for connection.','Error')
+  RETURN
+ ENDIF
+ 
+ DO I=1,NISG
+
+  !## skip non-selected segments 
+  IF(ISG(I)%ILIST.EQ.0)CYCLE
+
+  !## check what segment in reach of last point on segment
+  ISEG=ISG(I)%ISEG+ISG(I)%NSEG-1
+  X=ISP(ISEG)%X; Y=ISP(ISEG)%Y
+
+  !## get nearest segment from last point to beginning of segment
+  LEX=ISGGETSEGMENT(X,Y,IISG,I,MINDIST,1)
+  
+  !## remove existing connection
+  IF(.NOT.LEX)IISG=0
+
+  !## adjust all connections on segment
+  ICLC=ISG(I)%ICLC-1; NCLC=ISG(I)%NCLC
+  DO J=1,NCLC
+   ICLC=ICLC+1; IREF=ISD(ICLC)%IREF-1; N=ISD(ICLC)%N
+   DO K=1,N
+    IREF=IREF+1 
+    DATISD(IREF)%DWNS=IISG
+   ENDDO
+  ENDDO
+  
+ ENDDO
+
+ CALL IDFPLOTFAST(1)
+
+ END SUBROUTINE ISGCONNECTTOAUTO
 
  !###====================================================================
  SUBROUTINE ISGDEL()
@@ -2016,15 +2076,15 @@ CONTAINS
   DO I=1,TISD(J)
    IF(ISFR.EQ.0)THEN
     LINE=TRIM(ITOS(DATISD2(J,I)%IDATE))//','//TRIM(RTOS(DATISD2(J,I)%WLVL,'F',3)) //','//TRIM(RTOS(DATISD2(J,I)%BTML,'F',3))// &
-                                         ','//TRIM(RTOS(DATISD2(J,I)%RESIS,'F',2))//','//TRIM(RTOS(DATISD2(J,I)%INFF,'F',2))
+                                         ','//TRIM(RTOS(DATISD2(J,I)%RESIS,'G',7))//','//TRIM(RTOS(DATISD2(J,I)%INFF,'G',7))
    ELSE
     LINE=TRIM(ITOS(DATISD2(J,I)%IDATE))//','//          DATISD2(J,I)%CTIME       //','//TRIM(RTOS(DATISD2(J,I)%WLVL,'F',3))//  &
-                                         ','//TRIM(RTOS(DATISD2(J,I)%BTML,'F',3))//','//TRIM(RTOS(DATISD2(J,I)%WIDTH,'F',2))// &
-                                         ','//TRIM(RTOS(DATISD2(J,I)%THCK,'F',2))//  &
-                                         ','//TRIM(RTOS(DATISD2(J,I)%HCND,'F',2))//','//TRIM(ITOS(DATISD2(J,I)%UPSG))      //  &
+                                         ','//TRIM(RTOS(DATISD2(J,I)%BTML,'F',3))//','//TRIM(RTOS(DATISD2(J,I)%WIDTH,'G',7))// &
+                                         ','//TRIM(RTOS(DATISD2(J,I)%THCK,'G',7))//  &
+                                         ','//TRIM(RTOS(DATISD2(J,I)%HCND,'G',7))//','//TRIM(ITOS(DATISD2(J,I)%UPSG))      //  &
                                          ','//TRIM(ITOS(DATISD2(J,I)%DWNS))//      ','//TRIM(ITOS(DATISD2(J,I)%ICLC))      //  &
-                                         ','//TRIM(ITOS(DATISD2(J,I)%IPRI))//      ','//TRIM(RTOS(DATISD2(J,I)%QFLW,'F',2))//  &
-                                         ','//TRIM(RTOS(DATISD2(J,I)%QROF,'F',2))
+                                         ','//TRIM(ITOS(DATISD2(J,I)%IPRI))//      ','//TRIM(RTOS(DATISD2(J,I)%QFLW,'G',7))//  &
+                                         ','//TRIM(RTOS(DATISD2(J,I)%QROF,'G',7))
    ENDIF
    WRITE(IU,'(A)') TRIM(LINE)
   END DO
@@ -2143,10 +2203,10 @@ CONTAINS
   DO I=1,TISC(J)
    IF(I.GE.2)THEN
     LINE=TRIM(RTOS(DATISC2(J,I)%DISTANCE,'F',3)) //','//TRIM(RTOS(DATISC2(J,I)%BOTTOM,'F',3))// &
-         ','//TRIM(RTOS(DATISC2(J,I)%MRC,'F',2))//','//TRIM(RTOS(DATISC2(J,I)%ZP,'F',1))
+         ','//TRIM(RTOS(DATISC2(J,I)%MRC,'G',7))//','//TRIM(RTOS(DATISC2(J,I)%ZP,'F',1))
    ELSE
     LINE=TRIM(RTOS(DATISC2(J,I)%DISTANCE,'F',3)) //','//TRIM(RTOS(DATISC2(J,I)%BOTTOM,'F',3))// &
-         ','//TRIM(RTOS(DATISC2(J,I)%MRC,'F',2))
+         ','//TRIM(RTOS(DATISC2(J,I)%MRC,'G',7))
    ENDIF
    WRITE(IU,'(A)') TRIM(LINE)
   END DO
@@ -4089,10 +4149,16 @@ CONTAINS
  SUBROUTINE ISGCHECKISG(X,Y,CODE)
  !###======================================================================
  IMPLICIT NONE
+ REAL,PARAMETER :: SCALEXY=1.0/100.0
  INTEGER,INTENT(IN) :: CODE
  REAL,INTENT(IN) :: X,Y
+ REAL :: DX,DY,MINDIST
  INTEGER :: ITAB
  LOGICAL :: LEX
+
+ DX=((MPW%XMAX-MPW%XMIN)*SCALEXY)**2.0
+ DY=((MPW%YMAX-MPW%YMIN)*SCALEXY)**2.0
+ MINDIST=SQRT(DX+DY)
 
  CALL WDIALOGSELECT(ID_DISGEDIT)
  CALL WDIALOGGETTAB(IDF_TAB,ITAB)
@@ -4122,7 +4188,7 @@ CONTAINS
 !write(*,*)  idown
 
   !## select new one
-  LEX=ISGGETSEGMENT(X,Y,ISELISG)
+  LEX=ISGGETSEGMENT(X,Y,ISELISG,0,MINDIST,0)
 
   !## if ctrl pressed, add line to selection
   IF(IDOWN.EQ.5)THEN !MODCTRL)THEN
@@ -4181,29 +4247,45 @@ CONTAINS
  END SUBROUTINE ISGCHECKISG
  
  !###======================================================================
- LOGICAL FUNCTION ISGGETSEGMENT(X,Y,IISG)
+ LOGICAL FUNCTION ISGGETSEGMENT(X,Y,IISG,JJSG,MINDIST,IPOS)
  !###======================================================================
  IMPLICIT NONE
- REAL,PARAMETER :: SCALEXY=1.0/100.0
+ REAL,INTENT(IN) :: MINDIST
  REAL,INTENT(IN) :: X,Y
+ INTEGER,INTENT(IN) :: IPOS !## 0-ALL;1=BEGIN;2=END
+ INTEGER,INTENT(IN) :: JJSG
  INTEGER,INTENT(OUT) :: IISG
- REAL :: DX,DY,MINDIST,DIST
- INTEGER :: I,ISEG
+ REAL :: DX,DIST
+ INTEGER :: I,ISEG,I1,I2
   
  ISGGETSEGMENT=.FALSE.
  
- DX=((MPW%XMAX-MPW%XMIN)*SCALEXY)**2.0
- DY=((MPW%YMAX-MPW%YMIN)*SCALEXY)**2.0
- MINDIST=SQRT(DX+DY)
-
- DIST   =10.0E10
+ DIST=HUGE(1.0) 
  IISG=0
  DO I=1,NISG
-  DO ISEG=ISG(I)%ISEG,ISG(I)%ISEG+ISG(I)%NSEG-1
+  !## skip entered isg if applied
+  IF(I.EQ.JJSG)CYCLE
+  SELECT CASE (IPOS)
+   CASE (0)
+    I1=ISG(I)%ISEG
+    I2=ISG(I)%ISEG+ISG(I)%NSEG-1
+   CASE (1)
+    I1=ISG(I)%ISEG; I2=I1
+   CASE (2)
+    I2=ISG(I)%ISEG+ISG(I)%NSEG-1; I1=I2
+  END SELECT
+  DO ISEG=I1,I2 
+   !## try point itself
    DX=UTL_DIST(X,Y,ISP(ISEG)%X,ISP(ISEG)%Y)
    IF(DX.LT.DIST)THEN; DIST=MIN(DIST,DX); IISG=I; ENDIF
+   IF(ISEG.LT.I2)THEN
+    !## try point in between
+    DX=UTL_DIST(X,Y,(ISP(ISEG)%X+ISP(ISEG+1)%X)/2.0,(ISP(ISEG)%Y+ISP(ISEG+1)%Y)/2.0)
+    IF(DX.LT.DIST)THEN; DIST=MIN(DIST,DX); IISG=I; ENDIF
+   ENDIF
   ENDDO
  END DO
+ !## check whether inside given range
  IF(DIST.LE.MINDIST.AND.IISG.GT.0)ISGGETSEGMENT=.TRUE.
 
  END FUNCTION ISGGETSEGMENT
@@ -4301,6 +4383,7 @@ CONTAINS
  CALL WDIALOGPUTIMAGE(ID_DRAW,ID_ICONDRAW,1)
  CALL WDIALOGPUTIMAGE(ID_CONNECTFROM,ID_ICONEDITNODESFROM,1)
  CALL WDIALOGPUTIMAGE(ID_CONNECTTO,ID_ICONEDITNODESTO,1)
+ CALL WDIALOGPUTIMAGE(ID_CONNECTTOAUTO,ID_ICONEDITNODESTOAUTO,1)
  
  CALL POLYGON1IMAGES(ID_DISGEDITTAB2)
 
@@ -4419,7 +4502,11 @@ CONTAINS
  IF(SUM(ISG(1:NISG)%ILIST).LE.0)I=0
  CALL WDIALOGFIELDSTATE(ID_ZOOMTO,I)
  CALL WDIALOGFIELDSTATE(ID_DELETE,I)
- J=I; IF(ISFR.EQ.0)J=0; CALL WDIALOGFIELDSTATE(ID_CONNECTFROM,J); CALL WDIALOGFIELDSTATE(ID_CONNECTTO,J)
+ J=I; IF(ISFR.EQ.0)J=0
+ CALL WDIALOGFIELDSTATE(ID_CONNECTFROM,J)
+ CALL WDIALOGFIELDSTATE(ID_CONNECTTO,J)
+ CALL WDIALOGFIELDSTATE(ID_CONNECTTOAUTO,J)
+ CALL WDIALOGFIELDSTATE(IDF_SNAPDISTANCE,J)
 
  CALL WDIALOGSELECT(ID_DISGEDIT)
  CALL WDIALOGFIELDSTATE(IDF_CHECK7,I)

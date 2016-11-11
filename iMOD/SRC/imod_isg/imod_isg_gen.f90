@@ -136,7 +136,7 @@ CONTAINS
      
        IP(NBRCH+1)=NP+3
        CBID(NBRCH+1)='S_'//TRIM(IPF(IIPF)%INFO(DATCOL(3),I))//'_R_'//TRIM(ITOS(NBRCH+1))
-       IDNSEG(NBRCH+1)=NBRCH+2
+       IDNSEG(NBRCH+1)=0 !NBRCH+2
      
        !## left side
        READ(IPF(IIPF)%INFO(DATCOL(5),J),*)     WD1
@@ -578,9 +578,9 @@ END SUBROUTINE ISGGEN_CREATEISD1
  QFLW=0.0
  QROF=0.0
  UPSG=0
- DWNS=IDNSEG(IB) 
- !## rectangular profile
- ICALC=1
+ DWNS=IDNSEG(IB)
+ !## rectangular profile (becomes 1 in sfr package but second option in dropdown menu)
+ ICALC=2
  !## no diversion
  IPRI=1
  
@@ -615,7 +615,11 @@ END SUBROUTINE ISGGEN_CREATEISD1
 
  THCK=0.10
  HCND=1.00
-
+ !## calculation option not to be specified here, irrelevant
+ ICALC=1
+ !## no diversion
+ IPRI=1
+ 
  !## to
  WRITE(CNAME,'(A8,I4.4)') 'ClcTO:',IB
  WRITE(IU(ISD1),REC=ICLC+ICF) N,IREFSD,DIST,CNAME

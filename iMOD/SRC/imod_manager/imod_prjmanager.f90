@@ -1878,11 +1878,11 @@ KLOOP: DO K=1,SIZE(TOPICS(JJ)%STRESS(1)%FILES,1)
  N=0; IF(ASSOCIATED(PEST%S_PERIOD))  N=SIZE(PEST%S_PERIOD)
  M=0; IF(ASSOCIATED(PEST%B_FRACTION))M=SIZE(PEST%B_FRACTION)
  
- LINE=TRIM(ITOS(PEST%PE_MXITER))         //','//TRIM(RTOS(PEST%PE_STOP,'F',2))     //','// &
-      TRIM(RTOS(PEST%PE_SENS,'F',2))     //','//TRIM(ITOS(N))                      //','// &
-      TRIM(ITOS(M))                      //','//TRIM(RTOS(PEST%PE_TARGET(1),'F',2))//','// &
-      TRIM(RTOS(PEST%PE_TARGET(2),'F',2))//','//TRIM(ITOS(PEST%PE_SCALING-1))      //','// &
-      TRIM(RTOS(PEST%PE_PADJ,'F',2))     //','//TRIM(RTOS(PEST%PE_DRES,'F',2))     //','// &
+ LINE=TRIM(ITOS(PEST%PE_MXITER))         //','//TRIM(RTOS(PEST%PE_STOP,'G',7))     //','// &
+      TRIM(RTOS(PEST%PE_SENS,'G',7))     //','//TRIM(ITOS(N))                      //','// &
+      TRIM(ITOS(M))                      //','//TRIM(RTOS(PEST%PE_TARGET(1),'G',7))//','// &
+      TRIM(RTOS(PEST%PE_TARGET(2),'G',7))//','//TRIM(ITOS(PEST%PE_SCALING-1))      //','// &
+      TRIM(RTOS(PEST%PE_PADJ,'G',7))     //','//TRIM(RTOS(PEST%PE_DRES,'G',7))     //','// &
       TRIM(ITOS(PEST%PE_KTYPE))
  WRITE(IU,'(A)') TRIM(LINE)
  
@@ -1895,7 +1895,7 @@ KLOOP: DO K=1,SIZE(TOPICS(JJ)%STRESS(1)%FILES,1)
  
  IF(M.GT.0)THEN
   DO I=1,SIZE(PEST%B_FRACTION)
-   LINE=TRIM(RTOS(PEST%B_FRACTION(I),'F',2))//','//CHAR(39)//TRIM(PEST%B_BATCHFILE(I))//CHAR(39)//','//CHAR(39)//TRIM(PEST%B_OUTFILE(I))//CHAR(39)
+   LINE=TRIM(RTOS(PEST%B_FRACTION(I),'G',7))//','//CHAR(39)//TRIM(PEST%B_BATCHFILE(I))//CHAR(39)//','//CHAR(39)//TRIM(PEST%B_OUTFILE(I))//CHAR(39)
    WRITE(IU,'(A)') TRIM(LINE)   
   ENDDO
  ENDIF
@@ -1906,11 +1906,11 @@ KLOOP: DO K=1,SIZE(TOPICS(JJ)%STRESS(1)%FILES,1)
         TRIM(PEST%PARAM(I)%PPARAM)               //','// &
         TRIM(ITOS(PEST%PARAM(I)%PILS))           //','// &
         TRIM(ITOS(PEST%PARAM(I)%PIZONE))         //','// &    
-        TRIM(RTOS(PEST%PARAM(I)%PINI,'F',2))     //','// &
-        TRIM(RTOS(PEST%PARAM(I)%PDELTA,'F',2))   //','// &
-        TRIM(RTOS(PEST%PARAM(I)%PMIN,'F',2))     //','// &
-        TRIM(RTOS(PEST%PARAM(I)%PMAX,'F',2))     //','// &
-        TRIM(RTOS(PEST%PARAM(I)%PINCREASE,'F',2))//','// &
+        TRIM(RTOS(PEST%PARAM(I)%PINI,'G',7))     //','// &
+        TRIM(RTOS(PEST%PARAM(I)%PDELTA,'G',7))   //','// &
+        TRIM(RTOS(PEST%PARAM(I)%PMIN,'G',7))     //','// &
+        TRIM(RTOS(PEST%PARAM(I)%PMAX,'G',7))     //','// &
+        TRIM(RTOS(PEST%PARAM(I)%PINCREASE,'G',7))//','// &
         TRIM(ITOS(PEST%PARAM(I)%PIGROUP))        //','// &
         TRIM(ITOS(PEST%PARAM(I)%PLOG))
    WRITE(IU,'(A)') TRIM(LINE)   
@@ -2967,7 +2967,7 @@ KLOOP: DO K=1,SIZE(TOPICS(JJ)%STRESS(1)%FILES,1)
   IF(ITOPIC.EQ.30)THEN
    CONST=86400.0
    DLEAK=0.0001
-   LINE=TRIM(CMAXNO2)//','//TRIM(CMAXNO1)//',0,0,'//TRIM(RTOS(CONST,'F',2))//','//TRIM(RTOS(DLEAK,'E',4))//','// &
+   LINE=TRIM(CMAXNO2)//','//TRIM(CMAXNO1)//',0,0,'//TRIM(RTOS(CONST,'G',7))//','//TRIM(RTOS(DLEAK,'E',4))//','// &
         TRIM(ITOS(ICB))//','//TRIM(ITOS(ISFRCB2))//','//TRIM(CAUX)
    WRITE(IU,'(A)') TRIM(LINE)
 
@@ -3224,19 +3224,19 @@ KLOOP: DO K=1,SIZE(TOPICS(JJ)%STRESS(1)%FILES,1)
  WRITE(JU,'(A)') '*  Parameters for IDF output'
  WRITE(JU,'(A)') '*'
  WRITE(JU,'(A)') '      idf_per                =      1    ! Writing IDF files' 
- LINE='      idf_xmin                =      '//TRIM(RTOS(IDF%XMIN,'F',2))
+ LINE='      idf_xmin                =      '//TRIM(RTOS(IDF%XMIN,'G',7))
  WRITE(JU,'(A)') TRIM(LINE)
- LINE='      idf_ymin                =      '//TRIM(RTOS(IDF%YMIN,'F',2))
+ LINE='      idf_ymin                =      '//TRIM(RTOS(IDF%YMIN,'G',7))
  WRITE(JU,'(A)') TRIM(LINE)
- LINE='      idf_dx                  =      '//TRIM(RTOS(IDF%DX,'F',2))
+ LINE='      idf_dx                  =      '//TRIM(RTOS(IDF%DX,'G',7))
  WRITE(JU,'(A)') TRIM(LINE)
- LINE='      idf_dy                  =      '//TRIM(RTOS(IDF%DY,'F',2))
+ LINE='      idf_dy                  =      '//TRIM(RTOS(IDF%DY,'G',7))
  WRITE(JU,'(A)') TRIM(LINE)
  LINE='      idf_ncol                =      '//TRIM(ITOS(IDF%NCOL))
  WRITE(JU,'(A)') TRIM(LINE)
  LINE='      idf_nrow                =      '//TRIM(ITOS(IDF%NROW))
  WRITE(JU,'(A)') TRIM(LINE) 
- LINE='      idf_nodata              =      '//TRIM(RTOS(-9999.99,'F',2))
+ LINE='      idf_nodata              =      '//TRIM(RTOS(HUGE(1.0),'G',7))
  WRITE(JU,'(A)') TRIM(LINE)
 
  CLOSE(JU)
