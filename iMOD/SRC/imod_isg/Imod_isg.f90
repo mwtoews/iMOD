@@ -4348,7 +4348,7 @@ CONTAINS
  IF(NISGFILES.GT.1)CALL WINDOWOUTSTATUSBAR(4,'Reading and Merging '//TRIM(ITOS(NISGFILES))//' ISG-file(s) ...')
 
  !## to be consistent with multi-isg files to be read!
- CALL ISGREAD(ISGFILE,0)
+ IF(ISGREAD(ISGFILE,0))THEN; ENDIF
 
  !## copy legend for ISG-plotting
  ALLOCATE(ISGLEG(1)); DO I=1,SIZE(ISGLEG); ISGLEG(I)=MP(IISGPLOT)%LEG; ENDDO

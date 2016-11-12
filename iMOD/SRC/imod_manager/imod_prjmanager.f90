@@ -3000,24 +3000,28 @@ KLOOP: DO K=1,SIZE(TOPICS(JJ)%STRESS(1)%FILES,1)
    DO I=1,NPER; IF(SIM(I)%DELT.NE.0.0)EXIT; ENDDO
    !## add steady-state
    IF(I.NE.1)NBDTIM=1
-   !## get first start-date
-   JD0  =JD(SIM(I)%IYR,SIM(I)%IMH,SIM(I)%IDY)
-   ISEC0=   SIM(I)%IHR*3600+SIM(I)%IMT*60+SIM(I)%ISC
-   ISEC0=   86400-ISEC0
-   DO J=1,SIZE(TOPICS(ITOPIC)%STRESS)
-    IF(.NOT.ASSOCIATED(TOPICS(ITOPIC)%STRESS(J)%FILES))CYCLE
-    !## not transient definition
-    IF(TOPICS(ITOPIC)%STRESS(J)%IYR+TOPICS(ITOPIC)%STRESS(J)%IMH+TOPICS(ITOPIC)%STRESS(J)%IDY+ &
-       TOPICS(ITOPIC)%STRESS(J)%IHR+TOPICS(ITOPIC)%STRESS(J)%IMT+TOPICS(ITOPIC)%STRESS(J)%ISC.LE.0)CYCLE
-    !## get date for current period
-    JD1   =JD(TOPICS(ITOPIC)%STRESS(J)%IYR,TOPICS(ITOPIC)%STRESS(J)%IMH,TOPICS(ITOPIC)%STRESS(J)%IDY)
-    ISEC1 =TOPICS(ITOPIC)%STRESS(J)%IHR*3600+TOPICS(ITOPIC)%STRESS(J)%IMT*60+TOPICS(ITOPIC)%STRESS(J)%ISC
-    DDAY  =JD1-JD0
-    DSEC  =ISEC0+ISEC1
-    NBDTIM=NBDTIM+1
-    FHBNBDTIM(NBDTIM)=DDAY+REAL(DSEC)/86400.0
-   ENDDO
-   
+
+   !## transient periods still available
+   IF(I.LE.NPER)THEN
+    !## get first start-date
+    JD0  =JD(SIM(I)%IYR,SIM(I)%IMH,SIM(I)%IDY)
+    ISEC0=   SIM(I)%IHR*3600+SIM(I)%IMT*60+SIM(I)%ISC
+    ISEC0=   86400-ISEC0
+    DO J=1,SIZE(TOPICS(ITOPIC)%STRESS)
+     IF(.NOT.ASSOCIATED(TOPICS(ITOPIC)%STRESS(J)%FILES))CYCLE
+     !## not transient definition
+     IF(TOPICS(ITOPIC)%STRESS(J)%IYR+TOPICS(ITOPIC)%STRESS(J)%IMH+TOPICS(ITOPIC)%STRESS(J)%IDY+ &
+        TOPICS(ITOPIC)%STRESS(J)%IHR+TOPICS(ITOPIC)%STRESS(J)%IMT+TOPICS(ITOPIC)%STRESS(J)%ISC.LE.0)CYCLE
+     !## get date for current period
+     JD1   =JD(TOPICS(ITOPIC)%STRESS(J)%IYR,TOPICS(ITOPIC)%STRESS(J)%IMH,TOPICS(ITOPIC)%STRESS(J)%IDY)
+     ISEC1 =TOPICS(ITOPIC)%STRESS(J)%IHR*3600+TOPICS(ITOPIC)%STRESS(J)%IMT*60+TOPICS(ITOPIC)%STRESS(J)%ISC
+     DDAY  =JD1-JD0
+     DSEC  =ISEC0+ISEC1
+     NBDTIM=NBDTIM+1
+     FHBNBDTIM(NBDTIM)=DDAY+REAL(DSEC)/86400.0
+    ENDDO
+   ENDIF
+     
    IFHBSS=0; NFHBX1=0; NFHBX2=0
    LINE=TRIM(ITOS(NBDTIM))//','//TRIM(ITOS(NFLW))  //','//TRIM(ITOS(NHED))//','//TRIM(ITOS(IFHBSS))//','// &
         TRIM(ITOS(IFHBCB))//','//TRIM(ITOS(NFHBX1))//','//TRIM(ITOS(NFHBX2))
@@ -4029,7 +4033,7 @@ KLOOP: DO K=1,SIZE(TOPICS(JJ)%STRESS(1)%FILES,1)
   
  !## start- and enddate of simulation period
  IF(SIM(IPER)%DELT.EQ.0.0)THEN
-  ITIME=INT(0,8); JTIME=INT(0,8) !## mean value
+  ITIME=INT(0,8); JTIME=INT(0,8);GRIDISG%SDATE=0; GRIDISG%EDATE=0 !## mean value
  ELSE
   ITIME=SIM(IPER  )%IYR*10000000000+SIM(IPER  )%IMH*100000000+SIM(IPER  )%IDY*1000000+ & 
         SIM(IPER  )%IHR*10000      +SIM(IPER  )%IMT*100      +SIM(IPER  )%ISC
@@ -4115,29 +4119,29 @@ KLOOP: DO K=1,SIZE(TOPICS(JJ)%STRESS(1)%FILES,1)
     CASE (29) 
 
      !## read complete ISG file
-     CALL ISGREAD((/SFNAME/),IBATCH)
-
-     !## export isg to riv package
-     ILAY=PCK(1,ISYS)%ILAY
-     !## translate again to idate as it will be convered to jdate in next subroutine
-     GRIDISG%SDATE=UTL_JDATETOIDATE(GRIDISG%SDATE)
-     GRIDISG%EDATE=UTL_JDATETOIDATE(GRIDISG%EDATE)-1  !<- edate is equal to sdate if one day is meant
-     IF(.NOT.ISG2GRID(GRIDISG%POSTFIX,BND(1)%NROW,BND(1)%NCOL,NLAY,ILAY,TOP,BOT,IBATCH,MP,JU,GRIDISG))EXIT 
-     CALL ISGCLOSEFILES()
+     IF(ISGREAD((/SFNAME/),IBATCH))THEN
+      !## export isg to riv package
+      ILAY=PCK(1,ISYS)%ILAY
+      !## translate again to idate as it will be convered to jdate in next subroutine
+      GRIDISG%SDATE=UTL_JDATETOIDATE(GRIDISG%SDATE)
+      GRIDISG%EDATE=UTL_JDATETOIDATE(GRIDISG%EDATE)-1  !<- edate is equal to sdate if one day is meant
+      IF(.NOT.ISG2GRID(GRIDISG%POSTFIX,BND(1)%NROW,BND(1)%NCOL,NLAY,ILAY,TOP,BOT,IBATCH,MP,JU,GRIDISG))EXIT 
+     ENDIF
+     CALL ISGDEAL(1); CALL ISGCLOSEFILES()
      
     !## open sfr file
     CASE (30) 
 
      !## read complete ISG file
-     CALL ISGREAD((/SFNAME/),IBATCH)
-  
-     !## export isg to riv package
-     ILAY=PCK(1,ISYS)%ILAY
-     !## translate again to idate as it will be convered to jdate in next subroutine
-     GRIDISG%SDATE=UTL_JDATETOIDATE(GRIDISG%SDATE)
-     GRIDISG%EDATE=UTL_JDATETOIDATE(GRIDISG%EDATE)-1  !<- edate is equal to sdate if one day is meant
-     IF(.NOT.ISG2SFR(BND(1)%NROW,BND(1)%NCOL,NLAY,ILAY,TOP,BOT,IPER,NPER,MP,JU,GRIDISG,EXFNAME))EXIT 
-     CALL ISGCLOSEFILES()
+     IF(ISGREAD((/SFNAME/),IBATCH))THEN
+      !## export isg to riv package
+      ILAY=PCK(1,ISYS)%ILAY
+      !## translate again to idate as it will be convered to jdate in next subroutine
+      GRIDISG%SDATE=UTL_JDATETOIDATE(GRIDISG%SDATE)
+      GRIDISG%EDATE=UTL_JDATETOIDATE(GRIDISG%EDATE)-1  !<- edate is equal to sdate if one day is meant
+      IF(.NOT.ISG2SFR(BND(1)%NROW,BND(1)%NCOL,NLAY,ILAY,TOP,BOT,IPER,NPER,MP,JU,GRIDISG,EXFNAME))EXIT 
+     ENDIF
+     CALL ISGDEAL(1); CALL ISGCLOSEFILES()
     
     !## wel
     CASE (21)

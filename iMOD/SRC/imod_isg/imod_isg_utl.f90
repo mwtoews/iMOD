@@ -418,7 +418,7 @@ CONTAINS
  END SUBROUTINE ISGCLOSEFILES
 
  !###===============================================================================
- SUBROUTINE ISGREAD(FNAME,IBATCH)
+ LOGICAL FUNCTION ISGREAD(FNAME,IBATCH)
  !###===============================================================================
  IMPLICIT NONE
  INTEGER,INTENT(IN) :: IBATCH
@@ -427,6 +427,8 @@ CONTAINS
  INTEGER :: IS,I,J,ISGFILES,IREC,NISGFILES,CFN_N_ELEM,NV
  INTEGER,DIMENSION(5) :: IOS
 
+ ISGREAD=.FALSE.
+ 
  !## deallocate memory
  CALL ISGDEAL(1)
 
@@ -440,8 +442,9 @@ CONTAINS
    DO I=1,NISGFILES; DO J=1,MAXFILES
     IF(ISGIU(J,I).GT.0)CLOSE(ISGIU(J,I))
    END DO; END DO
-   IF(IBATCH.EQ.0)CALL WMESSAGEBOX(OKONLY,EXCLAMATIONICON,COMMONOK,'Cannot allocate files for reading','Error')
-   IF(IBATCH.EQ.1)WRITE(*,*) 'Cannot allocate files for reading ! '; RETURN
+   IF(IBATCH.EQ.0)CALL WMESSAGEBOX(OKONLY,EXCLAMATIONICON,COMMONOK,'Cannot find ISG files for reading','Error')
+   IF(IBATCH.EQ.1)WRITE(*,*) 'Cannot find ISG files for reading ! '
+   RETURN
   ENDIF
   IF(IBATCH.EQ.0)CALL WINDOWOUTSTATUSBAR(4,'Reading '//TRIM(FNAME(ISGFILES))//' ...')
   IF(IBATCH.EQ.1)WRITE(*,'(/1X,A/)') 'Reading '//TRIM(FNAME(ISGFILES))//' ...'
@@ -668,7 +671,9 @@ CONTAINS
   ISGFNAME=''
  ENDIF
  
- END SUBROUTINE ISGREAD
+ ISGREAD=.TRUE.
+
+ END FUNCTION ISGREAD
 
  !###===============================================================================
  SUBROUTINE ISGREADISP(IS,ISGFILES,IOFF)
