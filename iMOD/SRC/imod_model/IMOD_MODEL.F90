@@ -36,7 +36,7 @@ USE MOD_IDF_PAR, ONLY : IDFOBJ
 USE MOD_OSD, ONLY : OSD_OPEN,OSD_IOSTAT_MSG
 USE MOD_IPF_PAR, ONLY : NIPF,IPF
 USE MOD_IPF, ONLY : IPFALLOCATE,IPFREAD2,IPFWRITE
-USE MOD_PMANAGER, ONLY: PMANAGERRUN,PMANAGERSHOW
+USE MOD_PMANAGER, ONLY: PMANAGERRUN,PMANAGERSHOW,PMANAGERSTART
 USE MOD_ABOUT, ONLY : IMOD_AGREEMENT
 
 TYPE(IDFOBJ),PRIVATE :: IDF,IDFC
@@ -460,6 +460,7 @@ CONTAINS
   CALL WMESSAGEBOX(OKONLY,EXCLAMATIONICON,COMMONOK,'No Runfile given!','Error')
   RETURN
  ENDIF
+ !## selected runfile
  RUN1=TRIM(PREFVAL(1))//'\RUNFILES\'//TRIM(RUN1)
  INQUIRE(FILE=RUN1,EXIST=LEX)
  IF(.NOT.LEX)THEN
@@ -475,13 +476,13 @@ CONTAINS
  CALL WDIALOGSELECT(ID_DMDLTAB1)
  CALL WDIALOGGETCHECKBOX(IDF_CHECK1,ISCEN)
 
- IF(ISCEN.EQ.0)THEN
-  SCENDIR='MODELS'
- ELSE
-  CALL WDIALOGGETMENU(IDF_MENU2,I,SCENDIR)
-  SCENFNAME=TRIM(PREFVAL(1))//'\SCENARIOS\'//TRIM(SCENDIR)//'\'//TRIM(SCENDIR)//'.SCN'
-  SCENDIR='SCENARIOS'
- ENDIF
+! IF(ISCEN.EQ.0)THEN
+ SCENDIR='MODELS'
+! ELSE
+!  CALL WDIALOGGETMENU(IDF_MENU2,I,SCENDIR)
+!  SCENFNAME=TRIM(PREFVAL(1))//'\SCENARIOS\'//TRIM(SCENDIR)//'\'//TRIM(SCENDIR)//'.SCN'
+!  SCENDIR='SCENARIOS'
+! ENDIF
 
  !## get result-directory
  CALL WDIALOGSELECT(ID_DMDLTAB4)
@@ -501,7 +502,7 @@ CONTAINS
  ENDIF
  IF(WINFODIALOG(4).NE.1)RETURN
 
- !## open runfile to be created!
+ !## open runfile to be created
  RUN2=TRIM(PREFVAL(1))//'\'//TRIM(SCENDIR)//'\'//TRIM(RDIR)
 
  CALL WDIALOGSELECT(ID_DMDLTAB2)
@@ -541,117 +542,119 @@ CONTAINS
  CALL WDIALOGGETCHECKBOX(IDF_CHECK1,I)
 
  IF(.NOT.MODEL1WRITERUNFILE(RUN1,RUN2,0,0,''))RETURN
-
- CALL MODEL1START(RUN1,RUN2,I)
+ 
+ IF(I.EQ.1)I=-1
+ !## start runfile
+ CALL PMANAGERSTART(RUN2,I) !RUN1,RUN2,I)
 
  END SUBROUTINE MODEL1STARTMAIN
 
- !###======================================================================
- SUBROUTINE MODEL1START(RUN1,RUN2,IRUNMODE)
- !###======================================================================
- IMPLICIT NONE
- CHARACTER(LEN=*),INTENT(IN) :: RUN1,RUN2
- INTEGER,INTENT(IN) :: IRUNMODE
- CHARACTER(LEN=256) :: RUN,DIRNAME
- INTEGER :: IU,IOS,I,IFLAGS,IEXCOD,IERROR
- LOGICAL :: LEX
-
- !## simulate batch-file, inclusive pause statement.
- IU=UTL_GETUNIT()
- CALL OSD_OPEN(IU,FILE=TRIM(RUN2)//'\RUN.BAT',STATUS='REPLACE',ACTION='WRITE,DENYREAD',IOSTAT=IOS)
- IF(IOS.NE.0)THEN
-  CALL WMESSAGEBOX(OKONLY,EXCLAMATIONICON,COMMONOK,'Modflow is already running, you cannot start '//CHAR(13)// &
-   'new run while previous run is still running'//CHAR(13)//'Error creating '//CHAR(13)// &
-   TRIM(RUN2)//'\RUN.BAT','Error')
-  RETURN
- ENDIF
-
- I=INDEXNOCASE(PREFVAL(8),'\',.TRUE.)+1
- !## remove previous version of imodflow
- INQUIRE(FILE=TRIM(RUN2)//'\'//TRIM(PREFVAL(8)(I:)),EXIST=LEX)
- IF(LEX)CALL IOSDELETEFILE(TRIM(RUN2)//'\'//TRIM(PREFVAL(8)(I:)))
- !## copy imodflow executable
- CALL IOSCOPYFILE(TRIM(PREFVAL(8)),TRIM(RUN2)//'\'//TRIM(PREFVAL(8)(I:)))
- 
- INQUIRE(FILE=TRIM(EXEPATH)//'\'//TRIM(LICFILE),EXIST=LEX)
- IF(.NOT.LEX)THEN
-  IERROR=0; CALL IMOD_AGREEMENT(IERROR)
-  IF(IERROR.NE.1)THEN
-   IF(LBETA)THEN
-    CALL WMESSAGEBOX(OKONLY,COMMONOK,EXCLAMATIONICON,'Cannot start Beta-iMOD because you are not authorized in writing for Beta-iMOD','Error')
-   ELSE
-    CALL WMESSAGEBOX(OKONLY,COMMONOK,EXCLAMATIONICON,'Cannot start iMODFLOW unless you accept the iMOD Software License Agreement','Error')
-   ENDIF
-   RETURN
-  ENDIF
- ENDIF
-
- !## copy imod license text
- CALL IOSCOPYFILE(TRIM(EXEPATH)//'\'//TRIM(LICFILE),TRIM(RUN2)//'\'//TRIM(LICFILE))
- 
- !## write start script in batch file
- WRITE(IU,'(A)') 'START "Runfile:'//TRIM(RUN1(INDEX(RUN1,'\',.TRUE.):))//'" /B "'//TRIM(PREFVAL(8))//'" '//'IMODFLOW.RUN'
- CLOSE(IU)
-
- !## move iMOD to the simulation directory
- CALL IOSDIRNAME(DIRNAME)
- CALL IOSDIRCHANGE(TRIM(RUN2)//'\')
-
- !## start the batch file
- IF(IRUNMODE.EQ.0)THEN
-
-  IFLAGS=0
- !## executes on commandtool such that commands alike 'dir' etc. works
-#if (defined(WINTERACTER9))
-  IFLAGS=IFLAGS+PROCCMDPROC
-#endif 
-
-  CALL IOSCOMMAND('RUN.BAT',IFLAGS,IEXCOD=IEXCOD)
-
-  IF(ISCEN.EQ.0)THEN
-   CALL WMESSAGEBOX(OKONLY,INFORMATIONICON,COMMONOK,'Successfully STARTED the Modflow simulation using:'//CHAR(13)// &
-                  'MODFLOW: '//TRIM(PREFVAL(8))//CHAR(13)// &
-                  'RUNFILE: '//TRIM(RUN1),'Information')
-  ELSE
-   CALL WMESSAGEBOX(OKONLY,INFORMATIONICON,COMMONOK,'Successfully STARTED the Modflow simulation using:'//CHAR(13)// &
-                  'MODFLOW: '//TRIM(PREFVAL(8))//CHAR(13)// &
-                  'RUNFILE: '//TRIM(RUN1)//CHAR(13)// &
-                  'SCENARIO: '//TRIM(SCENFNAME),'Information')
-  ENDIF
-  
- ELSE
-
-  RUN='"'//TRIM(PREFVAL(8))//'" '//'IMODFLOW.RUN'
-
-  IFLAGS=PROCBLOCKED
- !## executes on commandtool such that commands alike 'dir' etc. works
-
-#if (defined(WINTERACTER9))
-  IFLAGS=IFLAGS+PROCCMDPROC
-#endif 
-  
-  CALL IOSCOMMAND(TRIM(RUN),IFLAGS,IEXCOD=IEXCOD)
-  IF(IEXCOD.EQ.0)THEN
-   IF(ISCEN.EQ.0)THEN
-    CALL WMESSAGEBOX(OKONLY,INFORMATIONICON,COMMONOK,'Successful simulation using: '//CHAR(13)// &
-                   'MODFLOW: '//TRIM(PREFVAL(8))//CHAR(13)// &
-                   'RUNFILE: '//TRIM(RUN1),'Information')
-   ELSE
-    CALL WMESSAGEBOX(OKONLY,INFORMATIONICON,COMMONOK,'Successful simulation using: '//CHAR(13)// &
-                   'MODFLOW: '//TRIM(PREFVAL(8))//CHAR(13)// &
-                   'RUNFILE: '//TRIM(RUN1)//CHAR(13)// &
-                   'SCENARIO: '//TRIM(SCENFNAME),'Information')
-   ENDIF
-  ELSE
-   CALL WMESSAGEBOX(OKONLY,EXCLAMATIONICON,COMMONOK,'An error occured in starting your simulation','Error')
-  ENDIF
-
- ENDIF
-
- CALL IOSDIRCHANGE(DIRNAME)
-
- END SUBROUTINE MODEL1START
-
+! !###======================================================================
+! SUBROUTINE MODEL1START(RUN1,RUN2,IRUNMODE)
+! !###======================================================================
+! IMPLICIT NONE
+! CHARACTER(LEN=*),INTENT(IN) :: RUN1,RUN2
+! INTEGER,INTENT(IN) :: IRUNMODE
+! CHARACTER(LEN=256) :: RUN,DIRNAME
+! INTEGER :: IU,IOS,I,IFLAGS,IEXCOD,IERROR
+! LOGICAL :: LEX
+!
+! !## simulate batch-file, inclusive pause statement.
+! IU=UTL_GETUNIT()
+! CALL OSD_OPEN(IU,FILE=TRIM(RUN2)//'\RUN.BAT',STATUS='REPLACE',ACTION='WRITE,DENYREAD',IOSTAT=IOS)
+! IF(IOS.NE.0)THEN
+!  CALL WMESSAGEBOX(OKONLY,EXCLAMATIONICON,COMMONOK,'Modflow is already running, you cannot start '//CHAR(13)// &
+!   'new run while previous run is still running'//CHAR(13)//'Error creating '//CHAR(13)// &
+!   TRIM(RUN2)//'\RUN.BAT','Error')
+!  RETURN
+! ENDIF
+!
+! I=INDEXNOCASE(PREFVAL(8),'\',.TRUE.)+1
+! !## remove previous version of imodflow
+! INQUIRE(FILE=TRIM(RUN2)//'\'//TRIM(PREFVAL(8)(I:)),EXIST=LEX)
+! IF(LEX)CALL IOSDELETEFILE(TRIM(RUN2)//'\'//TRIM(PREFVAL(8)(I:)))
+! !## copy imodflow executable
+! CALL IOSCOPYFILE(TRIM(PREFVAL(8)),TRIM(RUN2)//'\'//TRIM(PREFVAL(8)(I:)))
+! 
+! INQUIRE(FILE=TRIM(EXEPATH)//'\'//TRIM(LICFILE),EXIST=LEX)
+! IF(.NOT.LEX)THEN
+!  IERROR=0; CALL IMOD_AGREEMENT(IERROR)
+!  IF(IERROR.NE.1)THEN
+!   IF(LBETA)THEN
+!    CALL WMESSAGEBOX(OKONLY,COMMONOK,EXCLAMATIONICON,'Cannot start Beta-iMOD because you are not authorized in writing for Beta-iMOD','Error')
+!   ELSE
+!    CALL WMESSAGEBOX(OKONLY,COMMONOK,EXCLAMATIONICON,'Cannot start iMODFLOW unless you accept the iMOD Software License Agreement','Error')
+!   ENDIF
+!   RETURN
+!  ENDIF
+! ENDIF
+!
+! !## copy imod license text
+! CALL IOSCOPYFILE(TRIM(EXEPATH)//'\'//TRIM(LICFILE),TRIM(RUN2)//'\'//TRIM(LICFILE))
+! 
+! !## write start script in batch file
+! WRITE(IU,'(A)') 'START "Runfile:'//TRIM(RUN1(INDEX(RUN1,'\',.TRUE.):))//'" /B "'//TRIM(PREFVAL(8))//'" '//'IMODFLOW.RUN'
+! CLOSE(IU)
+!
+! !## move iMOD to the simulation directory
+! CALL IOSDIRNAME(DIRNAME)
+! CALL IOSDIRCHANGE(TRIM(RUN2)//'\')
+!
+! !## start the batch file
+! IF(IRUNMODE.EQ.0)THEN
+!
+!  IFLAGS=0
+! !## executes on commandtool such that commands alike 'dir' etc. works
+!#if (defined(WINTERACTER9))
+!  IFLAGS=IFLAGS+PROCCMDPROC
+!#endif 
+!
+!  CALL IOSCOMMAND('RUN.BAT',IFLAGS,IEXCOD=IEXCOD)
+!
+!  IF(ISCEN.EQ.0)THEN
+!   CALL WMESSAGEBOX(OKONLY,INFORMATIONICON,COMMONOK,'Successfully STARTED the Modflow simulation using:'//CHAR(13)// &
+!                  'MODFLOW: '//TRIM(PREFVAL(8))//CHAR(13)// &
+!                  'RUNFILE: '//TRIM(RUN1),'Information')
+!  ELSE
+!   CALL WMESSAGEBOX(OKONLY,INFORMATIONICON,COMMONOK,'Successfully STARTED the Modflow simulation using:'//CHAR(13)// &
+!                  'MODFLOW: '//TRIM(PREFVAL(8))//CHAR(13)// &
+!                  'RUNFILE: '//TRIM(RUN1)//CHAR(13)// &
+!                  'SCENARIO: '//TRIM(SCENFNAME),'Information')
+!  ENDIF
+!  
+! ELSE
+!
+!  RUN='"'//TRIM(PREFVAL(8))//'" '//'IMODFLOW.RUN'
+!
+!  IFLAGS=PROCBLOCKED
+! !## executes on commandtool such that commands alike 'dir' etc. works
+!
+!#if (defined(WINTERACTER9))
+!  IFLAGS=IFLAGS+PROCCMDPROC
+!#endif 
+!  
+!  CALL IOSCOMMAND(TRIM(RUN),IFLAGS,IEXCOD=IEXCOD)
+!  IF(IEXCOD.EQ.0)THEN
+!   IF(ISCEN.EQ.0)THEN
+!    CALL WMESSAGEBOX(OKONLY,INFORMATIONICON,COMMONOK,'Successful simulation using: '//CHAR(13)// &
+!                   'MODFLOW: '//TRIM(PREFVAL(8))//CHAR(13)// &
+!                   'RUNFILE: '//TRIM(RUN1),'Information')
+!   ELSE
+!    CALL WMESSAGEBOX(OKONLY,INFORMATIONICON,COMMONOK,'Successful simulation using: '//CHAR(13)// &
+!                   'MODFLOW: '//TRIM(PREFVAL(8))//CHAR(13)// &
+!                   'RUNFILE: '//TRIM(RUN1)//CHAR(13)// &
+!                   'SCENARIO: '//TRIM(SCENFNAME),'Information')
+!   ENDIF
+!  ELSE
+!   CALL WMESSAGEBOX(OKONLY,EXCLAMATIONICON,COMMONOK,'An error occured in starting your simulation','Error')
+!  ENDIF
+!
+! ENDIF
+!
+! CALL IOSDIRCHANGE(DIRNAME)
+!
+! END SUBROUTINE MODEL1START
+!
  !###======================================================================
  LOGICAL FUNCTION MODEL1WRITERUNFILE(RUN1,RUN2,ISUB,SIMNPER,INIDATE)
  !###======================================================================
