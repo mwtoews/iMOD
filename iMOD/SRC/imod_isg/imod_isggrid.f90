@@ -266,12 +266,12 @@ CONTAINS
  END SUBROUTINE ISG_ADDSTAGES
 
  !##=====================================================================
- SUBROUTINE ISG_ADDCROSSSECTION(ISGFILE,FNAME,WIDTHFNAME,MAXDIST,CROSS_PNTR,CROSS_BATH,CROSS_ZCHK,CROSS_CVAL,CELL_SIZE,IBATCH)
+ SUBROUTINE ISG_ADDCROSSSECTION(ISGFILE,FNAME,WIDTHFNAME,MAXDIST,CROSS_PNTR,CROSS_BATH,CROSS_ZCHK,CROSS_CVAL,CELL_SIZE,IBATCH,ICLEAN)
  !##=====================================================================
  IMPLICIT NONE
  CHARACTER(LEN=*),INTENT(IN) :: ISGFILE,FNAME,WIDTHFNAME,CROSS_PNTR,CROSS_BATH,CROSS_ZCHK,CROSS_CVAL
  REAL,INTENT(IN) :: MAXDIST,CELL_SIZE
- INTEGER,INTENT(IN) :: IBATCH
+ INTEGER,INTENT(IN) :: IBATCH,ICLEAN
  INTEGER :: IU,IOS,N,I,J,IISG,IPOS,ISEG,NSEG,ICRS,NCRS,IPNT,NPNT,IROW,ICOL,IP,ZCHK,CVAL
  INTEGER(KIND=1) :: CF
  CHARACTER(LEN=1000) :: STRING
@@ -285,36 +285,52 @@ CONTAINS
  IF(ISGREAD((/ISGFILE/),IBATCH))THEN; ENDIF
 
  IF(CROSS_PNTR.EQ.'')THEN
-  IF(.NOT.IDFREAD(IDF,WIDTHFNAME,0))STOP 'Cannot read width fname'
+
+  IF(TRIM(WIDTHFNAME).NE.'')THEN
+   IF(.NOT.IDFREAD(IDF,WIDTHFNAME,0))STOP 'Cannot read width fname'
+  ENDIF
 
   !## remove all cross-sections on segment
-  WRITE(*,'(/A/)') 'Removing all cross-sections ...'
-
-  DO ISELISG=1,NISG
-   ICRS=ISG(ISELISG)%ICRS; NCRS=ISG(ISELISG)%NCRS
-   DO I=1,NCRS; CALL ISGDELISC(ISELISG,ICRS); END DO
-  ENDDO
-  ISC%N=0; ISC%IREF=0; ISC%DIST=0.0; ISC%CNAME=''
-
+  IF(ICLEAN.EQ.1)THEN
+   WRITE(*,'(/A/)') 'Removing all cross-sections ...'
+   DO ISELISG=1,NISG
+    ICRS=ISG(ISELISG)%ICRS; NCRS=ISG(ISELISG)%NCRS
+    DO I=1,NCRS; CALL ISGDELISC(ISELISG,ICRS); END DO
+   ENDDO
+   ISC%N=0; ISC%IREF=0; ISC%DIST=0.0; ISC%CNAME=''
+  ENDIF
+ 
   WRITE(*,'(/A/)') 'Adding cross-sections from '//TRIM(FNAME)
 
   IU=UTL_GETUNIT()
   CALL OSD_OPEN(IU,FILE=FNAME,STATUS='OLD',ACTION='READ')
   DO
+  
    READ(IU,'(A1000)',IOSTAT=IOS) STRING; IF(IOS.NE.0)EXIT; IF(LEN_TRIM(STRING).EQ.0)EXIT
    N=6; DO
     READ(STRING,*,IOSTAT=IOS) XCRD,YCRD,LABEL,(X(I),I=1,N); IF(IOS.NE.0)EXIT; N=N+2
    ENDDO; N=N-2
    IF(N.LE.4)THEN
-    WRITE(*,*) XCRD,YCRD,TRIM(LABEL)
-    DO I=1,N/2; WRITE(*,*) X(I),X(I+N/2); ENDDO; STOP 'N.LE.4'
+!    WRITE(*,*) XCRD,YCRD,TRIM(LABEL)
+!    DO I=1,N/2; WRITE(*,*) X(I),X(I+N/2); ENDDO !; STOP 'N.LE.4'
+    CYCLE
    ENDIF
+
+   WRITE(*,*) XCRD,YCRD,TRIM(LABEL)
+   DO I=1,N/2; WRITE(*,*) X(I),X(I+N/2); ENDDO
 
    !## find distance of point on segment iisg that is closest
    CALL ISGSTUWEN_INTERSECT(MAXDIST,XCRD,YCRD,IISG,TDIST)
 
    !## segment found within maxdist
    IF(TDIST.GT.0.0)THEN
+
+    !## remove cross-sections if exists on current segment
+    IF(ICLEAN.EQ.2)THEN
+     ICRS=ISG(IISG)%ICRS; NCRS=ISG(IISG)%NCRS
+     DO I=1,NCRS; CALL ISGDELISC(IISG,ICRS); END DO
+    ENDIF
+
     ISELISG=IISG
 
     N=N/2
@@ -331,7 +347,7 @@ CONTAINS
     DO I=1,N
      DATISC(ISEG+I-1)%DISTANCE=X(I)
      DATISC(ISEG+I-1)%BOTTOM  =X(I+N)
-     DATISC(ISEG+I-1)%MRC      =25.0
+     DATISC(ISEG+I-1)%MRC      =0.03
     ENDDO
 
    ENDIF
@@ -339,51 +355,53 @@ CONTAINS
 
   CLOSE(IU)
 
-  WRITE(*,'(/A/)') 'Adding default cross-sections for remaining segments'
+  IF(TRIM(WIDTHFNAME).NE.'')THEN
+   WRITE(*,'(/A/)') 'Adding default cross-sections for remaining segments'
 
-  !## put cross-sections on segment that did not got a cross-section
-  DO ISELISG=1,NISG
+   !## put cross-sections on segment that did not got a cross-section
+   DO ISELISG=1,NISG
 
-   ICRS=ISG(ISELISG)%ICRS; NCRS=ISG(ISELISG)%NCRS
-   IF(NCRS.EQ.0)THEN
+    ICRS=ISG(ISELISG)%ICRS; NCRS=ISG(ISELISG)%NCRS
+    IF(NCRS.EQ.0)THEN
 
-    !## get distance of segment, put cross-section in mid
-    ISEG =ISG(ISELISG)%ISEG; NSEG =ISG(ISELISG)%NSEG
-    TDIST=0.0
-    DO I=2,NSEG
-     ISEG=ISEG+1; DIST=(ISP(ISEG)%X-ISP(ISEG-1)%X)**2.0+(ISP(ISEG)%Y-ISP(ISEG-1)%Y)**2.0
-     IF(DIST.GT.0.0)DIST=SQRT(DIST); TDIST=TDIST+DIST
-    END DO
-    TDIST=TDIST/2.0
+     !## get distance of segment, put cross-section in mid
+     ISEG =ISG(ISELISG)%ISEG; NSEG =ISG(ISELISG)%NSEG
+     TDIST=0.0
+     DO I=2,NSEG
+      ISEG=ISEG+1; DIST=(ISP(ISEG)%X-ISP(ISEG-1)%X)**2.0+(ISP(ISEG)%Y-ISP(ISEG-1)%Y)**2.0
+      IF(DIST.GT.0.0)DIST=SQRT(DIST); TDIST=TDIST+DIST
+     END DO
+     TDIST=TDIST/2.0
 
-    !## get x,y coordinates for current cross-section location
-    ISEG=ISG(ISELISG)%ISEG
-    CALL ISGGETXY(ISP(ISEG:)%X,ISP(ISEG:)%Y,NSEG,TDIST,XCRD,YCRD)
-    W=ABS(IDFGETXYVAL(IDF,XCRD,YCRD))
+     !## get x,y coordinates for current cross-section location
+     ISEG=ISG(ISELISG)%ISEG
+     CALL ISGGETXY(ISP(ISEG:)%X,ISP(ISEG:)%Y,NSEG,TDIST,XCRD,YCRD)
+     W=ABS(IDFGETXYVAL(IDF,XCRD,YCRD))
 
-    N=4
-    !## increase memory
-    CALL ISGMEMORYISC(1,ISELISG,IPOS)
-    ISC(IPOS)%N    =0
-    ISC(IPOS)%IREF =NDISC+1
-    ISC(IPOS)%DIST =TDIST
-    ISC(IPOS)%CNAME='Cross-Section '//TRIM(ITOS(ISELISG))
-    CALL ISGMEMORYDATISC(N,IPOS,ISEG)
-    DATISC(ISEG)%DISTANCE  =-W/2.0
-    DATISC(ISEG)%BOTTOM    = 5.0
-    DATISC(ISEG)%MRC        =25.0
-    DATISC(ISEG+1)%DISTANCE=-W/2.0
-    DATISC(ISEG+1)%BOTTOM  = 0.0
-    DATISC(ISEG+1)%MRC      =25.0
-    DATISC(ISEG+2)%DISTANCE= W/2.0
-    DATISC(ISEG+2)%BOTTOM  = 0.0
-    DATISC(ISEG+2)%MRC      =25.0
-    DATISC(ISEG+3)%DISTANCE= W/2.0
-    DATISC(ISEG+3)%BOTTOM  = 5.0
-    DATISC(ISEG+3)%MRC      =25.0
-   ENDIF
-  ENDDO
-
+     N=4
+     !## increase memory
+     CALL ISGMEMORYISC(1,ISELISG,IPOS)
+     ISC(IPOS)%N    =0
+     ISC(IPOS)%IREF =NDISC+1
+     ISC(IPOS)%DIST =TDIST
+     ISC(IPOS)%CNAME='Cross-Section '//TRIM(ITOS(ISELISG))
+     CALL ISGMEMORYDATISC(N,IPOS,ISEG)
+     DATISC(ISEG)%DISTANCE  =-W/2.0
+     DATISC(ISEG)%BOTTOM    = 5.0
+     DATISC(ISEG)%MRC        =0.03
+     DATISC(ISEG+1)%DISTANCE=-W/2.0
+     DATISC(ISEG+1)%BOTTOM  = 0.0
+     DATISC(ISEG+1)%MRC      =0.03
+     DATISC(ISEG+2)%DISTANCE= W/2.0
+     DATISC(ISEG+2)%BOTTOM  = 0.0
+     DATISC(ISEG+2)%MRC      =0.03
+     DATISC(ISEG+3)%DISTANCE= W/2.0
+     DATISC(ISEG+3)%BOTTOM  = 5.0
+     DATISC(ISEG+3)%MRC      =0.03
+    ENDIF
+   ENDDO
+  ENDIF
+  
  ELSE
 
   ALLOCATE(ICROSS(5)); DO I=1,SIZE(ICROSS); CALL IDFNULLIFY(ICROSS(I)); ENDDO

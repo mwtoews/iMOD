@@ -364,7 +364,7 @@ CONTAINS
  INTEGER :: I,J,K,ISTATUS
  REAL :: DX,DY,TD,D,MD,X,Y
 
- !#initialize
+ !## initialize
  ISGX  = XC
  ISGY  = YC
  ANGL  = HNODATA
@@ -380,12 +380,12 @@ CONTAINS
    K =K+1
    DX=ISP(K+1)%X-ISP(K)%X
    DY=ISP(K+1)%Y-ISP(K)%Y
-   !perform intersection
+   !## perform intersection
    CALL IGRINTERSECTLINE(ISP(K)%X,ISP(K)%Y,ISP(K+1)%X,ISP(K+1)%Y,XC,YC,XC+DY,YC-DX,X,Y,ISTATUS)
 
    IF(ISTATUS.EQ.3.OR.ISTATUS.EQ.5)THEN
     D=SQRT((X-XC)**2.0+(Y-YC)**2.0)
-    !#first time to put results, or replace it whenever new point is closer
+    !## first time to put results, or replace it whenever new point is closer
     IF(D.LT.MD)THEN
      MD    =D
      DIST  =TD+SQRT((ISP(K)%X-X)**2.0+(ISP(K)%Y-Y)**2.0)
@@ -398,7 +398,7 @@ CONTAINS
     ENDIF
    ENDIF
 
-   !#include position of nodes
+   !## include position of nodes
    D=SQRT((XC-ISP(K)%X)**2.0+(YC-ISP(K)%Y)**2.0)
    IF(D.LT.MD)THEN
     MD    =D
@@ -411,7 +411,7 @@ CONTAINS
     ANGL  =ATAN2(DY,DX)
     ANGL  =R2G*ANGL
    ENDIF
-   !#evaluate last point
+   !## evaluate last point
    IF(J.EQ.ISG(I)%NSEG-1)THEN
     D=SQRT((XC-ISP(K+1)%X)**2.0+(YC-ISP(K+1)%Y)**2.0)
     IF(D.LT.MD)THEN

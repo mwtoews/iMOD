@@ -22,11 +22,61 @@
 !!
 MODULE MOD_ISG_TRAPEZIUM
 
-USE MOD_UTL, ONLY : UTL_POLYGON1AREA
+USE MOD_UTL, ONLY : UTL_POLYGON1AREA,PEUCKER_SIMPLIFYLINE
 USE MOD_QKSORT
 
 CONTAINS
 
+ !###====================================================================
+ SUBROUTINE ISGCOMPUTEEIGHTPOINTS(X,Y,XSYM,YSYM,N,NEIGHT,AORG,AEIGHT)
+ !###====================================================================
+ IMPLICIT NONE
+ REAL,PARAMETER :: ZTOLERANCE=1.0
+ INTEGER,INTENT(IN) :: N
+ INTEGER,INTENT(OUT) :: NEIGHT
+ REAL,INTENT(OUT) :: AORG,AEIGHT
+ REAL,INTENT(INOUT),DIMENSION(N) :: X,Y
+ REAL,INTENT(OUT),DIMENSION(N) :: XSYM,YSYM
+ REAL,ALLOCATABLE,DIMENSION(:) :: GCODE
+ INTEGER :: I,J,M
+ 
+ AORG=UTL_POLYGON1AREA(X,Y,N)
+ 
+ !## check line for duplicates, may not be for peucker
+ J=1
+ DO I=2,N
+  IF(X(I).GT.X(I-1))THEN
+   J=J+1
+   IF(I.NE.J)THEN
+    X(J)=X(I)
+    Y(J)=Y(I)
+   ENDIF
+  ENDIF
+ ENDDO
+ M=J
+ 
+ ALLOCATE(GCODE(M))
+ !## process line
+ CALL PEUCKER_SIMPLIFYLINE(X,Y,GCODE,M)
+
+ !## never remove the first or last
+ GCODE(1)=ZTOLERANCE+1.0
+ GCODE(M)=ZTOLERANCE+1.0
+
+ NEIGHT=0
+ DO I=1,M
+  !## remove point from Urs-Douglas-Peucker algorithm (less then given tolerance)
+  IF(GCODE(I).GT.ZTOLERANCE)THEN
+   !## reset pointer one backwards
+   NEIGHT=NEIGHT+1
+   XSYM(NEIGHT)=X(I)
+   YSYM(NEIGHT)=Y(I)
+  ENDIF
+ ENDDO
+ DEALLOCATE(GCODE)
+ 
+ END SUBROUTINE ISGCOMPUTEEIGHTPOINTS
+ 
  !###====================================================================
  SUBROUTINE ISGCOMPUTETRAPEZIUM(X,Y,XSYM,YSYM,XTRAP,YTRAP,NTRAP,NDIM,N,AORG,ATRAP)
  !###====================================================================

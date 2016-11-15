@@ -1378,7 +1378,7 @@ CONTAINS
                                        TRIM(ITOS(ISG(IS)%ICRS))//','//TRIM(ITOS(ISG(IS)%NCRS))//','// &
                                        TRIM(ITOS(ISG(IS)%ISTW))//','//TRIM(ITOS(ISG(IS)%NSTW))//','// &
                                        TRIM(ITOS(ISG(IS)%IQHR))//','//TRIM(ITOS(ISG(IS)%NQHR))
-  WRITE(ISGIU(1,1),*) TRIM(LINE)
+  WRITE(ISGIU(1,1),'(A)') TRIM(LINE)
 
   !## write segments
   IREC=ISG(IS)%ISEG-1
