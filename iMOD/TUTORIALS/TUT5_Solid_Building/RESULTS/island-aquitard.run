@@ -1,0 +1,45 @@
+'d:\OSS\iMOD\TUTORIALS\TUT5_Solid_Building\RESULTS\MDL'
+         3          3          1          0          1          0          0          0          0          0          0          0
+         1,         0,         0,         0,         0,         0      0.00001       0.0001
+500,20,0.1000000E-03,0.1000000E-02,0.9800000E+00,1
+  99950.00,  96730.00, 103970.00, 100280.00,     10.00,      0.00
+ACTIVE MODULES
+1,1,0 (TOP) Top Elevation [DIS]
+1,1,0 (BOT) Bottom Elevation [DIS]
+1,1,0 (BND) Boundary Condition [BAS]
+1,1,0 (SHD) Starting Heads [BAS]
+1,1,0 (KHV) Horizontal Permeability [BCF/LPF]
+1,1,0 (KVV) Vertical Permeability [BCF/LPF]
+1,1,0 (WEL) Wells [WEL]
+1,1,0 (RCH) Recharge [RCH]
+'d:\OSS\iMOD\TUTORIALS\TUT5_Solid_Building\RESULTS\BOUNDARY.IDF'
+MODULES FOR EACH LAYER
+003,(TOP) Top Elevation [DIS]
+ 0001,   1.000000    ,  0.0000000    ,'d:\OSS\iMOD\TUTORIALS\TUT5_Solid_Building\RESULTS\surface_level.idf'
+ 0002,   1.000000    ,  0.0000000    ,'d:\OSS\iMOD\TUTORIALS\TUT5_Solid_Building\RESULTS\Aquitard_top.idf'
+ 0003,   1.000000    ,  0.0000000    ,'d:\OSS\iMOD\TUTORIALS\TUT5_Solid_Building\RESULTS\Aquitard_bot.idf'
+003,(BOT) Bottom Elevation [DIS]
+ 0001,   1.000000    ,   0.000000    ,'d:\OSS\iMOD\TUTORIALS\TUT5_Solid_Building\RESULTS\Aquitard_top.idf'
+ 0002,   1.000000    ,   0.000000    ,'d:\OSS\iMOD\TUTORIALS\TUT5_Solid_Building\RESULTS\Aquitard_bot.idf'
+ 0003,   1.000000    ,   0.000000    ,'d:\OSS\iMOD\TUTORIALS\TUT5_Solid_Building\RESULTS\BEDROCK.IDF'
+003,(BND) Boundary Condition [BAS]
+ 0001,   1.000000    ,   0.000000    ,'d:\OSS\iMOD\TUTORIALS\TUT5_Solid_Building\RESULTS\BOUNDARY.IDF'
+ 0002,   1.000000    ,   0.000000    ,1.000000
+ 0003,   1.000000    ,   0.000000    ,1.000000
+003,(SHD) Starting Heads [BAS]
+ 0001,   1.000000    ,   0.000000    ,0.000000
+ 0002,   1.000000    ,   0.000000    ,0.000000
+ 0003,   1.000000    ,   0.000000    ,0.000000
+003,(KHV) Horizontal Permeability [BCF/LPF]
+ 0001,   1.000000    ,   0.000000    ,25.00000
+ 0002,   1.000000    ,   0.000000    ,0.010000
+ 0003,   1.000000    ,   0.000000    ,25.00000
+002,(KVV) Vertical Permeability [BCF/LPF]
+ 0001,   1.000000    ,   0.000000    ,25.00000
+ 0002,   1.000000    ,   0.000000    ,25.00000
+PACKAGES FOR EACH LAYER AND STRESS-PERIOD 
+00001,      0.0000000,STEADY-STATE,1,1
+  1,(WEL) Wells [WEL]
+ 0003,   1.000000    ,   0.000000    ,'d:\OSS\iMOD\TUTORIALS\TUT5_Solid_Building\RESULTS\WELL.IPF'
+  1,(RCH) Recharge [RCH]
+ 0001,   1.000000    ,   0.000000    ,   1.00000    
