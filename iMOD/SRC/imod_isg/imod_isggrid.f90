@@ -34,7 +34,7 @@ USE MODPLOT
 USE MOD_ISG_PAR
 USE MOD_PMANAGER_PAR, ONLY : SIM
 USE MOD_UTL, ONLY : ITOS,RTOS,UTL_IDATETOJDATE,UTL_JDATETOIDATE,JDATETOGDATE,UTL_GETUNIT,UTL_WAITMESSAGE,UTL_IDFSNAPTOGRID,UTL_GETMED, &
-               PEUCKER_SIMPLIFYLINE,UTL_DIST
+               PEUCKER_SIMPLIFYLINE,UTL_DIST,UTL_GETCURRENTDATE
 USE MOD_OSD, ONLY : OSD_OPEN,OSD_TIMER,ICF
 USE MOD_IDFEDIT_TRACE, ONLY : IDFEDITTRACE
 USE MOD_ISG_TRAPEZIUM, ONLY : ISGCOMPUTETRAPEZIUM
@@ -1467,7 +1467,7 @@ IRLOOP: DO IR=MAX(1,IROW-1),MIN(NROW,IROW+1)
  TYPE(GRIDISGOBJ),INTENT(INOUT) :: GRIDISG
  INTEGER,INTENT(INOUT),DIMENSION(:) :: MP
  TYPE(IDFOBJ),DIMENSION(NLAY),INTENT(INOUT) :: TOP,BOT
- INTEGER :: I,J,K,II,JJ,KK,TTIME,IROW,ICOL,N,ISEG,JSEG,NSEG,IREF,NDIM,KSEG,MSEG,IDATE,IISG, &
+ INTEGER :: I,J,K,II,JJ,KK,KKK,TTIME,IROW,ICOL,N,ISEG,JSEG,NSEG,IREF,NDIM,KSEG,MSEG,IDATE,IISG, &
        ICALC,OUTSEG,IUPSEG,IPRIOR,NSTRPTS,ICRS,ICLC,IQHR,NREACH,NSTREAM,KCRS,CRSREF,KCLC,CLCREF
  REAL :: DXY,X1,X2,Y1,Y2,QFLOW,QROFF,EVT,PREC,ROUGHCH,ROUGHBK,CDPTH,FDPTH,AWDTH,BWDTH,DIST, &
        HC1FCT,THICKM1,ELEVUP,WIDTH1,DEPTH1,HC2FCT,THICKM2,ELEVDN,WIDTH2,DEPTH2,WLVLUP,WLVLDN
@@ -1488,7 +1488,7 @@ IRLOOP: DO IR=MAX(1,IROW-1),MIN(NROW,IROW+1)
    IF(KK.EQ.2)THEN
     !## create copy to store results
     ISFR=0; IF(.NOT.ISGOPENFILES(EXFNAME,'REPLACE'))THEN
-     CALL WMESSAGEBOX(OKONLY,EXCLAMATIONICON,COMMONOK,'iMOD cannot (re)write ISG file:'//CHAR(13)//TRIM(EXFNAME),'Error')
+     CALL WMESSAGEBOX(OKONLY,EXCLAMATIONICON,COMMONOK,'iMOD cannot (re)write ISG file: '//CHAR(13)//TRIM(EXFNAME),'Error')
      RETURN
     ENDIF
 
@@ -1524,61 +1524,51 @@ IRLOOP: DO IR=MAX(1,IROW-1),MIN(NROW,IROW+1)
      DXY=(X2-X1)**2.0+(Y2-Y1)**2.0; IF(DXY.LE.0.0)CYCLE; DXY=SQRT(DXY)
      !## intersect line with rectangular-regular-equidistantial-grid
      CALL INTERSECT_EQUI(GRIDISG%XMIN,GRIDISG%XMAX,GRIDISG%YMIN,GRIDISG%YMAX,GRIDISG%CS, &
-                              GRIDISG%CS,X1,X2,Y1,Y2,N,.FALSE.) !,.TRUE.)
+                         GRIDISG%CS,X1,X2,Y1,Y2,N,.FALSE.)
     ENDDO
 
-    !## aggregrate intersection
-    II=1; DO K=2,N
-     IF(CA(II).EQ.CA(K).AND.RA(II).EQ.RA(K))THEN
-      LN(II)=LN(II)+LN(K); LN(K)=-999.0
-     ELSE
-      II=K 
-     ENDIF
-    ENDDO
-    
     !## fill result array
     MSEG=0; DIST=0.0
-    DO K=1,N
-     ICOL=CA(K); IROW=RA(K)  
-     !## within model-domain
-     IF(ICOL.GE.1.AND.IROW.GE.1.AND.ICOL.LE.NCOL.AND.IROW.LE.NROW)THEN
-
-      IF(LN(K).GT.0.0)THEN
-
-       !## increase number of stream reaches
-       ISTR(I)=ISTR(I)+1
-       !## increase number of streams
-       IF(ISTR(I).EQ.1)NSTREAM=NSTREAM+1
-       !## total number of reaches per segment
-       IACTSTREAM(I)=IACTSTREAM(I)+1
-
-       IF(KK.EQ.2)THEN
-        !## write into sfr package
-        LINE=TRIM(ITOS(ILAY))   //','//TRIM(ITOS(IROW))   //','//TRIM(ITOS(ICOL))//','// &
-             TRIM(ITOS(NSTREAM))//','//TRIM(ITOS(ISTR(I)))//','//TRIM(RTOS(LN(K),'G',7))
-        WRITE(JU,'(A)') TRIM(LINE)
-       ENDIF
-       
-      ENDIF
-
-      !## write coordinate-couple in isp (use all coordinates ...)
-      IF(KK.EQ.2)THEN
-       KSEG=KSEG+1; MSEG=MSEG+1; WRITE(ISGIU(2,1),REC=KSEG) REAL(XA(K))  ,REAL(YA(K))
-       KSEG=KSEG+1; MSEG=MSEG+1; WRITE(ISGIU(2,1),REC=KSEG) REAL(XA(K+1)),REAL(YA(K+1))
-      ENDIF
-         
-      DIST=DIST+UTL_DIST(REAL(XA(K)),REAL(YA(K)),REAL(XA(K+1)),REAL(YA(K+1)))
+    K=1; DO 
      
-      LEX=.FALSE.
-      IF(K.EQ.N)THEN
-       LEX=.TRUE.
-      ELSE
-       IF(CA(K).NE.CA(K+1).OR.RA(K).NE.RA(K+1))LEX=.TRUE.
-      ENDIF
-      IF(LEX)IISG=IISG+1
-      IF(KK.EQ.1)LEX=.FALSE.
-      IF(LEX)THEN
- 
+!     K=K+1
+!     IF(K.EQ.N)EXIT
+     
+     !## skip outside model domain
+     IF(CA(K).LT.1.OR.CA(K).GT.NCOL.OR.RA(K).LT.1.OR.RA(K).GT.NROW)CYCLE
+
+     !## found segment inside model
+     IF(LN(K).GT.0.0)THEN
+
+      !## increase number of stream reaches
+      ISTR(I)=ISTR(I)+1
+      !## increase number of streams
+      IF(ISTR(I).EQ.1)NSTREAM=NSTREAM+1
+      !## total number of reaches per segment
+      IACTSTREAM(I)=IACTSTREAM(I)+1
+      !## total segments
+      IISG=IISG+1
+       
+      DIST=0.0; KKK=K; DO
+       IF(CA(KKK).NE.CA(K).OR.RA(KKK).NE.RA(K))EXIT
+       DIST=DIST+LN(KKK); KKK=KKK+1
+      ENDDO
+
+      IF(KK.EQ.2)THEN
+
+       ICOL=CA(K); IROW=RA(K)  
+      
+       !## write into sfr package
+       LINE=TRIM(ITOS(ILAY))   //','//TRIM(ITOS(IROW))   //','//TRIM(ITOS(ICOL))//','// &
+            TRIM(ITOS(NSTREAM))//','//TRIM(ITOS(ISTR(I)))//','//TRIM(RTOS(DIST,'G',7))
+       WRITE(JU,'(A)') TRIM(LINE)
+       
+       !## write coordinate-couple in isp (use all coordinates)
+       DO JJ=K,KKK-1
+        KSEG=KSEG+1; MSEG=MSEG+1; WRITE(ISGIU(2,1),REC=KSEG) REAL(XA(JJ))  ,REAL(YA(JJ))
+        KSEG=KSEG+1; MSEG=MSEG+1; WRITE(ISGIU(2,1),REC=KSEG) REAL(XA(JJ+1)),REAL(YA(JJ+1))
+       ENDDO
+
        !## add cross-section
        ICRS=ISG(I)%ICRS       !## position in isc that starts cross-section
        NDIM=ABS(ISC(ICRS)%N)  !## number of cross-sectional data-points
@@ -1597,28 +1587,37 @@ IRLOOP: DO IR=MAX(1,IROW-1),MIN(NROW,IROW+1)
        DO II=1,2
         KCLC=KCLC+1
         IF(II.EQ.1)THEN
-         CNAME='FROM'
+         CNAME='From_Node'
          WRITE(ISGIU(3,1),REC=KCLC) NPER,CLCREF,0.0,CNAME 
         ELSEIF(II.EQ.2)THEN
-         CNAME='TO'
+         CNAME='To_Node'
          WRITE(ISGIU(3,1),REC=KCLC) NPER,CLCREF,DIST,CNAME
         ENDIF
         DO JJ=1,NPER
          CLCREF=CLCREF+1
-         IDATE=SIM(JJ)%IYR*10000+SIM(JJ)%IMH*100+SIM(JJ)%IDY
+         IF(SIM(JJ)%DELT.GT.0.0)THEN
+          IDATE=SIM(JJ)%IYR*10000+SIM(JJ)%IMH*100+SIM(JJ)%IDY
+         ELSE
+          IDATE=UTL_GETCURRENTDATE()
+         ENDIF
          WRITE(ISGIU(4,1),REC=CLCREF) IDATE,10.0,10.0,10.0
         ENDDO
        ENDDO
-      
+     
        !## each reach is a segment in the isg-file
        LINE='"'//TRIM(ISG(I)%SNAME)//'_reach'//TRIM(ITOS(ISTR(I)))//'",'//TRIM(ITOS(KSEG-MSEG))//','// &
                  TRIM(ITOS(MSEG))  //','//TRIM(ITOS(KCLC-2))//','//TRIM(ITOS(2))//','// &
                  TRIM(ITOS(KCRS-1))  //','//TRIM(ITOS(1))//',0,0,0,0'
        WRITE(ISGIU(1,1),*) TRIM(LINE)
-       MSEG=0; DIST=0.0
+       MSEG=0 !; DIST=0.0
       ENDIF
      
+      K=KKK !-1
+     ELSE
+      K=K+1
      ENDIF
+
+     IF(K.GT.N)EXIT
 
     ENDDO
    ENDDO

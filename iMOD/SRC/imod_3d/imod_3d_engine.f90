@@ -1701,13 +1701,14 @@ CONTAINS
  CALL GLCOLORMATERIAL(GL_FRONT_AND_BACK,GL_AMBIENT_AND_DIFFUSE)
  CALL GLENABLE(GL_COLOR_MATERIAL)
   
+!goto 10
  DO IROW=1,IDF(1)%NROW-1    !## translate current position to view=position
   
   I=0
   DO ICOL=1,IDF(1)%NCOL-1
 
    !## skip nodata points
-   IF(IDF(1)%X(ICOL,IROW).NE.IDF(1)%NODATA.AND.     &
+   IF(IDF(1)%X(ICOL,IROW)  .NE.IDF(1)%NODATA.AND.     &
       IDF(1)%X(ICOL,IROW+1).NE.IDF(1)%NODATA)THEN
     !## get x/y-coordinate
     X(3)=IDF(1)%SX(ICOL); Y(3)=IDF(1)%SY(IROW); Z(3)=IDF(1)%X(ICOL,IROW)
@@ -1742,6 +1743,7 @@ CONTAINS
   ENDDO
   IF(I.GT.1)CALL GLEND()
  ENDDO
+!10 continue
 
  CALL GLDISABLE(GL_COLOR_MATERIAL)
 
