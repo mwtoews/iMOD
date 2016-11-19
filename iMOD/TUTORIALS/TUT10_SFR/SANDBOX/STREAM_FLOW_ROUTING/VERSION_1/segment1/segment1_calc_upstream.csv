@@ -1,0 +1,2 @@
+Date,Time,Waterlevel,Bottomleve,Streambedwidth,Thickness,HcFact,IupSeg,IdownSeg,CalcOpt,DivOpt,QFlow,Qrunoff
+19000101,00:00:00,1.000,338.000,1.00,1.00,0.80,0,0,5,1,63357.00,0.00
