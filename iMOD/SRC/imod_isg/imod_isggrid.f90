@@ -1695,7 +1695,7 @@ IRLOOP: DO IR=MAX(1,IROW-1),MIN(NROW,IROW+1)
   QROFF =RVAL(11,1)     !## runoff flow
 
   !## corrections for reding out of a menu
-  ICALC=ICALC-1; IPRIOR=IPRIOR-1
+  ICALC=ICALC-1; IPRIOR=-1*(IPRIOR-1)
 
   EVT=0.0
   PREC=0.0
