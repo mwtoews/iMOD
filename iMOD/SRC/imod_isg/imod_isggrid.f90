@@ -1530,12 +1530,11 @@ IRLOOP: DO IR=MAX(1,IROW-1),MIN(NROW,IROW+1)
     !## fill result array
     MSEG=0; DIST=0.0
     K=1; DO 
-     
-!     K=K+1
-!     IF(K.EQ.N)EXIT
-     
+  
      !## skip outside model domain
-     IF(CA(K).LT.1.OR.CA(K).GT.NCOL.OR.RA(K).LT.1.OR.RA(K).GT.NROW)CYCLE
+     IF(CA(K).LT.1.OR.CA(K).GT.NCOL.OR.RA(K).LT.1.OR.RA(K).GT.NROW)THEN
+      K=K+1; IF(K.GT.N)EXIT; CYCLE
+     ENDIF
 
      !## found segment inside model
      IF(LN(K).GT.0.0)THEN
