@@ -109,6 +109,8 @@ TYPE ISDOBJ
  INTEGER :: IPRI   !## diversion option
  REAL :: QFLW      !## streamflow entering segment
  REAL :: QROF      !## runoff 
+ REAL :: PPTSW     !## precipitation
+ REAL :: ETSW      !## evaporation
 END TYPE ISDOBJ
 TYPE(ISDOBJ),ALLOCATABLE,DIMENSION(:) :: DATISD,DUMDATISD,ISGEDITISD
 TYPE(ISDOBJ),ALLOCATABLE,DIMENSION(:,:) :: DATISD2
@@ -154,16 +156,16 @@ DATA TFORM/'FORMATTED  ','UNFORMATTED','UNFORMATTED','UNFORMATTED', &
            'UNFORMATTED','UNFORMATTED'/
 
 CHARACTER(LEN=12),DIMENSION(5) :: TATTRIB1
-CHARACTER(LEN=12),DIMENSION(13) :: TATTRIB2
+CHARACTER(LEN=12),DIMENSION(15) :: TATTRIB2
 INTEGER,DIMENSION(5) :: CTATTRIB1
-INTEGER,DIMENSION(13) :: CTATTRIB2
+INTEGER,DIMENSION(15) :: CTATTRIB2
 
 !## items for isd2-file for 1) riv approach and 2) sfr approach
 DATA TATTRIB1/'Date','Water level','Bottom level','Resistance','Inf.factor'/
 DATA TATTRIB2/'Date','Time','Water level','Bottom level','Stream Width','Bed Thickn.','Bed Perm.','Iup Seg','Idown Seg','Calc Opt', &
-              'Div Opt','Q Flow','Q Runoff'/
+              'Div Opt','Q Flow','Q Runoff','PPTSW','ETSW'/
 DATA CTATTRIB1/1,2,2,2,2/   !## 1=integer,2=real,3=menu
-DATA CTATTRIB2/1,4,2,2,2,2,2,1,1,3,3,2,2/
+DATA CTATTRIB2/1,4,2,2,2,2,2,1,1,3,3,2,2,2,2/
 
 TYPE ISGTYPE
  INTEGER :: ISOURCE,IACT

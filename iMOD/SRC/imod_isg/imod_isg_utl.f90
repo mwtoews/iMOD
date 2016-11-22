@@ -239,22 +239,22 @@ CONTAINS
     ENDIF
 
     IF(IBYTE.NE.IRECL)THEN
-     SELECT CASE (EXT(I))
-      CASE ('ISD1','ISC1','IST1','ISQ1')
-       CALL WMESSAGEBOX(YESNO,QUESTIONICON,COMMONNO,'Record length needed: '//TRIM(ITOS(IRECL))//' bytes'//CHAR(13)// &
-       'Record length read: '//TRIM(ITOS(IBYTE))//' bytes'//CHAR(13)//'Wrong record length, cannot open'//CHAR(13)// &
-       TRIM(FNAME)//CHAR(13)//CHAR(13)//'iMOD can rewrite this file to be consistent with this iMOD version.'//CHAR(13)// &
-       'A copy of the original file will be called *_old_imod_version, continue?','Question?')
-       IF(WINFODIALOG(4).NE.1)EXIT
-       !## rewrite file to be consistent with record length in this iMOD version (44 instead of 42)
-       IF(.NOT.ISGREWRITEFILE(FNAME,TFORM(I),(/IBYTE,IRECL/)))EXIT
+!     SELECT CASE (EXT(I))
+!      CASE ('ISD1','ISC1','IST1','ISQ1')
+!       CALL WMESSAGEBOX(YESNO,QUESTIONICON,COMMONNO,'Record length needed: '//TRIM(ITOS(IRECL))//' bytes'//CHAR(13)// &
+!       'Record length read: '//TRIM(ITOS(IBYTE))//' bytes'//CHAR(13)//'Wrong record length, cannot open'//CHAR(13)// &
+!       TRIM(FNAME)//CHAR(13)//CHAR(13)//'iMOD can rewrite this file to be consistent with this iMOD version.'//CHAR(13)// &
+!       'A copy of the original file will be called *_old_imod_version, continue?','Question?')
+!       IF(WINFODIALOG(4).NE.1)EXIT
+!       !## rewrite file to be consistent with record length in this iMOD version (44 instead of 42)
+!       IF(.NOT.ISGREWRITEFILE(FNAME,TFORM(I),(/IBYTE,IRECL/)))EXIT
 
-      CASE DEFAULT
-       CALL WMESSAGEBOX(OKONLY,EXCLAMATIONICON,COMMONOK,'Record length needed: '//TRIM(ITOS(IRECL))//' bytes'//CHAR(13)// &
-        'Record length read: '//TRIM(ITOS(IBYTE))//' bytes'//CHAR(13)//'Wrong record length, cannot open'//CHAR(13)//&
-        TRIM(FNAME),'Error')
-       EXIT
-     END SELECT
+!      CASE DEFAULT
+     CALL WMESSAGEBOX(OKONLY,EXCLAMATIONICON,COMMONOK,'Record length needed: '//TRIM(ITOS(IRECL))//' bytes'//CHAR(13)// &
+       'Record length read: '//TRIM(ITOS(IBYTE))//' bytes'//CHAR(13)//'Wrong record length, cannot open'//CHAR(13)//&
+       TRIM(FNAME),'Error')
+     EXIT
+!     END SELECT
     ENDIF
 
    ENDIF
@@ -717,7 +717,8 @@ CONTAINS
                                          DATISD(KREC)%BTML, DATISD(KREC)%WIDTH, &
                                          DATISD(KREC)%THCK ,DATISD(KREC)%HCND, &
                                          DATISD(KREC)%UPSG, DATISD(KREC)%DWNS, DATISD(KREC)%ICLC, &
-                                         DATISD(KREC)%IPRI ,DATISD(KREC)%QFLW, DATISD(KREC)%QROF
+                                         DATISD(KREC)%IPRI ,DATISD(KREC)%QFLW, DATISD(KREC)%QROF, &
+                                         DATISD(KREC)%PPTSW, DATISD(KREC)%ETSW
    ENDIF
   ENDDO
   ISD(JREC)%IREF=MAX(0,ISD(JREC)%IREF+IOFF)
@@ -1404,7 +1405,8 @@ CONTAINS
                                     DATISD(JREC)%BTML, DATISD(JREC)%WIDTH, &
                                     DATISD(JREC)%THCK ,DATISD(JREC)%HCND, &
                                     DATISD(JREC)%UPSG, DATISD(JREC)%DWNS ,DATISD(JREC)%ICLC, &
-                                    DATISD(JREC)%IPRI, DATISD(JREC)%QFLW ,DATISD(JREC)%QROF
+                                    DATISD(JREC)%IPRI, DATISD(JREC)%QFLW ,DATISD(JREC)%QROF, &
+                                    DATISD(JREC)%PPTSW, DATISD(JREC)%ETSW
     ENDIF
    ENDDO
   ENDDO

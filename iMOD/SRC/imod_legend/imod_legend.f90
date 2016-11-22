@@ -1326,9 +1326,9 @@ CONTAINS
  SUBROUTINE LEG_CREATEINIT(ID)
  !###======================================================================
  IMPLICIT NONE
- INTEGER,INTENT(IN)            :: ID
- INTEGER                       :: IPLOT,I,J,CLNODE,N
- REAL                          :: MINV,MAXV,DR,IR
+ INTEGER,INTENT(IN) :: ID
+ INTEGER :: IPLOT,I,J,CLNODE,N
+ REAL :: MINV,MAXV,DR,IR
  REAL,ALLOCATABLE,DIMENSION(:) :: IDFVAL
 
  DO IPLOT=1,MXMPLOT
