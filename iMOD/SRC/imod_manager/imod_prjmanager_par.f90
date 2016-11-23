@@ -25,7 +25,7 @@ MODULE MOD_PMANAGER_PAR
  USE MOD_IDF_PAR, ONLY : IDFOBJ
  
  INTEGER,PARAMETER :: MAXLEN      =52
- INTEGER,PARAMETER :: MAXTOPICS   =31
+ INTEGER,PARAMETER :: MAXTOPICS   =32
  INTEGER,PARAMETER :: MAXSUBTOPICS=24
  INTEGER,PARAMETER :: MAXPERIODS  =10
  INTEGER,PARAMETER :: MAXPARAM    =18
@@ -140,7 +140,7 @@ MODULE MOD_PMANAGER_PAR
  DATA CMOD/'CAP','TOP','BOT','BND','SHD','KDW','KHV','KVA','VCW','KVV', & ! 1-10
            'STO','SSC','PWT','ANI','HFB','IBS','SFT','CPP','CON','PST', & !11-20
            'WEL','DRN','RIV','EVT','GHB','RCH','OLF','CHD','ISG','SFR', & !21-30
-           'FHB'/                                                         !31-40
+           'FHB','LAK'/                                                   !31-40
  
  CHARACTER(LEN=3),DIMENSION(MAXPARAM) :: PARAM
  DATA PARAM/'KD','KH','KV','VC','SC','RC','RI','DC','IC','II','AH','AF','VA','HF','MS','MC','RE','EX'/
