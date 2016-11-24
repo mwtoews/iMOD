@@ -1045,7 +1045,7 @@ CONTAINS
  !## recompute current idf
  IF(.NOT.IMOD3D_REDRAWIFF())RETURN
 
- !## construct miscelaneous features
+ !## construct miscellaneous features
  CALL IMOD3D_SETUPDISPLAY_MISC(.TRUE.)
  !## reset viewing properties and draw image
  CALL IMOD3D_RESET_TO_INIT()

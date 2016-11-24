@@ -666,7 +666,7 @@ CONTAINS
   ENDIF
  ENDDO
   
- !## construct miscelaneous features
+ !## construct Miscellaneous features
  CALL IMOD3D_SETUPDISPLAY_MISC(.TRUE.)
 
  !## construct legend

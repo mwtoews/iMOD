@@ -45,25 +45,25 @@ CONTAINS
  
  ALLOCATE(X(N),Y(N)); DO I=1,N; X(I)=XIN(I); Y(I)=YIN(I); ENDDO
 
- !## check line for duplicates, may not be for peucker
- J=1
- DO I=2,N
-  IF(X(I).GT.X(I-1))THEN
-   J=J+1
-   IF(I.NE.J)THEN
-    X(J)=X(I)
-    Y(J)=Y(I)
-   ENDIF
-  ENDIF
- ENDDO
- M=J
- 
  IF(PRESENT(AORG))THEN
-  AORG=UTL_POLYGON1AREA(X,Y,M)
+  AORG=UTL_POLYGON1AREA(X,Y,N)
  ENDIF
- 
+
  IF(N.GT.NTARGET)THEN
 
+  !## check line for duplicates, may not be for peucker
+  J=1
+  DO I=2,N
+   IF(X(I).GT.X(I-1))THEN
+    J=J+1
+    IF(I.NE.J)THEN
+     X(J)=X(I)
+     Y(J)=Y(I)
+    ENDIF
+   ENDIF
+  ENDDO
+  M=J
+ 
   ALLOCATE(GCODE(M))
   !## process line
   CALL PEUCKER_SIMPLIFYLINE(X,Y,GCODE,M)
@@ -424,8 +424,7 @@ CONTAINS
 
  DEALLOCATE(XN,YN,IPOS)
 
- RETURN
- END SUBROUTINE
+ END SUBROUTINE ISGCOMPUTETRAPEZIUM
 
  !###====================================================================
  REAL FUNCTION ISGGETX(X1,Y1,X2,Y2,Y3)

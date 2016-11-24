@@ -3580,7 +3580,7 @@ CONTAINS
   !## coordinates
   CASE (ID_DSERIESPROPTAB2)
 
-  !## miscelaneous
+  !## Miscellaneous
   CASE (ID_DSERIESPROPTAB3)
    SELECT CASE (MESSAGE%VALUE2)
     CASE (IDF_CHECK1)

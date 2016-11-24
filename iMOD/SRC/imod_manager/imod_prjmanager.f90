@@ -2202,7 +2202,7 @@ KLOOP: DO K=1,SIZE(TOPICS(JJ)%STRESS(1)%FILES,1)
    CLOSE(JU)
    WRITE(IU,'(/A/)') '"'//TRIM(PREFVAL(8))//'" < MF2005.TXT'
   ELSE
-   WRITE(IU,'(/A/)') '"'//TRIM(PREFVAL(8))//'" "'//TRIM(RUNFNAME)//'"'
+   WRITE(IU,'(/A/)') '"'//TRIM(PREFVAL(8))//'" "'//TRIM(RUNFNAME(INDEX(RUNFNAME,'\',.TRUE.)+1:))//'"'
   ENDIF  
 
   !## include conversion of sfr package into isg-file
