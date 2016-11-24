@@ -25,7 +25,7 @@ MODULE MOD_ISG_STRUCTURES
 USE WINTERACTER
 USE MOD_UTL, ONLY : UTL_GETUNIT,ITOS,RTOS,JD,UTL_JDATETOIDATE,UTL_IDATETOJDATE
 USE MOD_ISG_PAR 
-USE MOD_ISG_UTL, ONLY : ISGREAD,ISGGETPOSID,ISGMEMORYIST,ISGMEMORYDATIST !UTL_GETUNITSISG
+USE MOD_ISG_UTL, ONLY : ISGREAD,ISGGETPOSID,ISGMEMORYIST,ISGMEMORYDATIST,ISGSTUWEN_INTERSECT
 USE MOD_OSD, ONLY : OSD_OPEN
 
 CHARACTER(LEN=256) :: IPFFNAME,LOGFNAME,LINE
@@ -178,9 +178,12 @@ CONTAINS
  !###===============================================================================
  IMPLICIT NONE
  CHARACTER(LEN=MAXLEN),ALLOCATABLE,DIMENSION(:) :: STRING
- INTEGER :: I,J,N,IISG,IIST,ISTW,IOKAY
+ INTEGER :: I,J,N,IISG,IIST,ISTW,IOKAY,NI
+ REAL,DIMENSION(:,:),ALLOCATABLE :: PISG
  REAL :: P,H,SP
 
+ IF(ALLOCATED(PISG))DEALLOCATE(PISG); ALLOCATE(PISG(1,3))
+ 
  !## read/write header of ipf
  CALL ISGSTUWEN_READIPF()
 
@@ -217,7 +220,12 @@ CONTAINS
     CALL ISGSTUWEN_COMPUTEXY(IISG,IIST)
    ELSE
     !## compute nearest location for current structure
-    CALL ISGSTUWEN_INTERSECT(IISG)
+    CALL ISGSTUWEN_INTERSECT(MAXDIST,XC,YC,PISG,NI) !,PISG,DISG) !INEARISG,1) !IISG)
+    !# take only first
+    IISG=INT(PISG(NI,1))
+    DIST=PISG(NI,2)
+    !## apply angle correction according to from and to node flow scheme
+    IF(IISG.NE.0)CALL ISGSTUWEN_CORANGLE(IISG)
     IIST=0
    ENDIF
 
@@ -314,6 +322,7 @@ CONTAINS
 
  !## deallocate memory
  IF(ALLOCATED(STRING))DEALLOCATE(STRING)
+ IF(ALLOCATED(PISG))DEALLOCATE(PISG)
 
  END SUBROUTINE ISGSTUWEN_ADD
 
@@ -356,86 +365,86 @@ CONTAINS
 
  END SUBROUTINE ISGSTUWEN_READIPF
 
- !###===============================================================================
- SUBROUTINE ISGSTUWEN_INTERSECT(IISG)
- !###===============================================================================
- IMPLICIT NONE
- INTEGER,INTENT(OUT) :: IISG
- INTEGER :: I,J,K,ISTATUS
- REAL :: DX,DY,TD,D,MD,X,Y
-
- !## initialize
- ISGX  = XC
- ISGY  = YC
- ANGL  = HNODATA
- DORTHO= HNODATA
- DIST  = HNODATA
-
- IISG=0
- MD  =MAXDIST
- DO I=1,NISG
-  TD=0.0
-  K =ISG(I)%ISEG-1
-  DO J=1,ISG(I)%NSEG-1
-   K =K+1
-   DX=ISP(K+1)%X-ISP(K)%X
-   DY=ISP(K+1)%Y-ISP(K)%Y
-   !## perform intersection
-   CALL IGRINTERSECTLINE(ISP(K)%X,ISP(K)%Y,ISP(K+1)%X,ISP(K+1)%Y,XC,YC,XC+DY,YC-DX,X,Y,ISTATUS)
-
-   IF(ISTATUS.EQ.3.OR.ISTATUS.EQ.5)THEN
-    D=SQRT((X-XC)**2.0+(Y-YC)**2.0)
-    !## first time to put results, or replace it whenever new point is closer
-    IF(D.LT.MD)THEN
-     MD    =D
-     DIST  =TD+SQRT((ISP(K)%X-X)**2.0+(ISP(K)%Y-Y)**2.0)
-     DORTHO=D
-     ISGX  =X
-     ISGY  =Y
-     IISG  =I
-     ANGL  =ATAN2(DY,DX)
-     ANGL  =R2G*ANGL
-    ENDIF
-   ENDIF
-
-   !## include position of nodes
-   D=SQRT((XC-ISP(K)%X)**2.0+(YC-ISP(K)%Y)**2.0)
-   IF(D.LT.MD)THEN
-    MD    =D
-    DIST=0.0
-    IF(J.GT.1)DIST=TD+SQRT(DX**2.0+DY**2.0)
-    DORTHO=D
-    ISGX  =ISP(K)%X
-    ISGY  =ISP(K)%Y
-    IISG  =I
-    ANGL  =ATAN2(DY,DX)
-    ANGL  =R2G*ANGL
-   ENDIF
-   !## evaluate last point
-   IF(J.EQ.ISG(I)%NSEG-1)THEN
-    D=SQRT((XC-ISP(K+1)%X)**2.0+(YC-ISP(K+1)%Y)**2.0)
-    IF(D.LT.MD)THEN
-     MD    =D
-     DIST  =TD+SQRT(DX**2.0+DY**2.0)
-     DORTHO=D
-     ISGX  =ISP(K+1)%X
-     ISGY  =ISP(K+1)%Y
-     IISG  =I
-     ANGL  =ATAN2(DY,DX)
-     ANGL  =R2G*ANGL
-    ENDIF
-   ENDIF
-
-   !## get total distance
-   TD=TD+SQRT(DX**2.0+DY**2.0)
-
-  ENDDO
- END DO
-
- !## apply angle correction according to from and to node flow scheme
- IF(IISG.NE.0)CALL ISGSTUWEN_CORANGLE(IISG)
-
- END SUBROUTINE ISGSTUWEN_INTERSECT
+! !###===============================================================================
+! SUBROUTINE ISGSTUWEN_INTERSECT(IISG)
+! !###===============================================================================
+! IMPLICIT NONE
+! INTEGER,INTENT(OUT) :: IISG
+! INTEGER :: I,J,K,ISTATUS
+! REAL :: DX,DY,TD,D,MD,X,Y
+!
+! !## initialize
+! ISGX  = XC
+! ISGY  = YC
+! ANGL  = HNODATA
+! DORTHO= HNODATA
+! DIST  = HNODATA
+!
+! IISG=0
+! MD  =MAXDIST
+! DO I=1,NISG
+!  TD=0.0
+!  K =ISG(I)%ISEG-1
+!  DO J=1,ISG(I)%NSEG-1
+!   K =K+1
+!   DX=ISP(K+1)%X-ISP(K)%X
+!   DY=ISP(K+1)%Y-ISP(K)%Y
+!   !## perform intersection
+!   CALL IGRINTERSECTLINE(ISP(K)%X,ISP(K)%Y,ISP(K+1)%X,ISP(K+1)%Y,XC,YC,XC+DY,YC-DX,X,Y,ISTATUS)
+!
+!   IF(ISTATUS.EQ.3.OR.ISTATUS.EQ.5)THEN
+!    D=SQRT((X-XC)**2.0+(Y-YC)**2.0)
+!    !## first time to put results, or replace it whenever new point is closer
+!    IF(D.LT.MD)THEN
+!     MD    =D
+!     DIST  =TD+SQRT((ISP(K)%X-X)**2.0+(ISP(K)%Y-Y)**2.0)
+!     DORTHO=D
+!     ISGX  =X
+!     ISGY  =Y
+!     IISG  =I
+!     ANGL  =ATAN2(DY,DX)
+!     ANGL  =R2G*ANGL
+!    ENDIF
+!   ENDIF
+!
+!   !## include position of nodes
+!   D=SQRT((XC-ISP(K)%X)**2.0+(YC-ISP(K)%Y)**2.0)
+!   IF(D.LT.MD)THEN
+!    MD    =D
+!    DIST=0.0
+!    IF(J.GT.1)DIST=TD+SQRT(DX**2.0+DY**2.0)
+!    DORTHO=D
+!    ISGX  =ISP(K)%X
+!    ISGY  =ISP(K)%Y
+!    IISG  =I
+!    ANGL  =ATAN2(DY,DX)
+!    ANGL  =R2G*ANGL
+!   ENDIF
+!   !## evaluate last point
+!   IF(J.EQ.ISG(I)%NSEG-1)THEN
+!    D=SQRT((XC-ISP(K+1)%X)**2.0+(YC-ISP(K+1)%Y)**2.0)
+!    IF(D.LT.MD)THEN
+!     MD    =D
+!     DIST  =TD+SQRT(DX**2.0+DY**2.0)
+!     DORTHO=D
+!     ISGX  =ISP(K+1)%X
+!     ISGY  =ISP(K+1)%Y
+!     IISG  =I
+!     ANGL  =ATAN2(DY,DX)
+!     ANGL  =R2G*ANGL
+!    ENDIF
+!   ENDIF
+!
+!   !## get total distance
+!   TD=TD+SQRT(DX**2.0+DY**2.0)
+!
+!  ENDDO
+! END DO
+!
+! !## apply angle correction according to from and to node flow scheme
+! IF(IISG.NE.0)CALL ISGSTUWEN_CORANGLE(IISG)
+!
+! END SUBROUTINE ISGSTUWEN_INTERSECT
 
  !###===============================================================================
  SUBROUTINE ISGSTUWEN_COMPUTEXY(IISG,IIST)

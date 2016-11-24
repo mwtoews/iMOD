@@ -126,17 +126,23 @@ CONTAINS
  END SUBROUTINE ISGGETXY
 
  !###===============================================================================
- SUBROUTINE ISGSTUWEN_INTERSECT(MAXDIST,XC,YC,IISG,DIST)
+ SUBROUTINE ISGSTUWEN_INTERSECT(MAXDIST,XC,YC,PISG,NI) !,DISG) !DIST)
  !###===============================================================================
  IMPLICIT NONE
- INTEGER,INTENT(OUT) :: IISG !## selected isg segment
+ REAL,INTENT(OUT),DIMENSION(:,:) :: PISG !## selected isg segments all within radius
+! REAL,INTENT(OUT),DIMENSION(:) :: DISG !## distance of selected isg element
  REAL,INTENT(IN) :: MAXDIST,XC,YC !## maximum distance allowed and location of cross-section
- REAL,INTENT(OUT) :: DIST !## distance on selected segment
- INTEGER :: I,J,K,ISTATUS
- REAL :: DX,DY,TD,D,MD,X,Y
-
+ INTEGER,INTENT(OUT) :: NI
+! REAL,INTENT(OUT) :: DIST !## distance on selected segment
+ INTEGER :: I,J,K,ISTATUS,ISMALL
+ REAL :: DX,DY,TD,D,MD,X,Y,DIST
+ 
  !## initialize
- ISGX=XC; ISGY=YC; DIST=-1.0; IISG=0; MD=MAXDIST
+ ISGX=XC; ISGY=YC; DIST=-1.0; PISG=0; MD=MAXDIST; NI=0
+
+ !## smallest only
+ ISMALL=0; IF(SIZE(PISG).EQ.1)ISMALL=1
+
  DO I=1,NISG
   TD=0.0; K=ISG(I)%ISEG-1
   DO J=1,ISG(I)%NSEG-1
@@ -151,23 +157,34 @@ CONTAINS
     D=SQRT((X-XC)**2.0+(Y-YC)**2.0)
     !## first time to put results, or replace it whenever new point is closer
     IF(D.LT.MD)THEN
-     MD=D; DIST=TD+SQRT((ISP(K)%X-X)**2.0+(ISP(K)%Y-Y)**2.0)
-     ISGX=X; ISGY=Y; IISG=I
+     IF(ISMALL.EQ.1)MD=D
+     DIST=TD+SQRT((ISP(K)%X-X)**2.0+(ISP(K)%Y-Y)**2.0)
+     ISGX=X; ISGY=Y !; IISG=I
+     IF(ISMALL.EQ.0)NI=NI+1
+     PISG(NI,1)=REAL(I); PISG(NI,2)=DIST; PISG(NI,3)=D
     ENDIF
    ELSE
     !## include position of nodes
     D=SQRT((XC-ISP(K)%X)**2.0+(YC-ISP(K)%Y)**2.0)
     IF(D.LT.MD)THEN
-     MD=D; DIST=0.0
+     IF(ISMALL.EQ.1)MD=D
+!     MD=D
+     DIST=0.0
      IF(J.GT.1)DIST=TD+SQRT(DX**2.0+DY**2.0)
-     ISGX=ISP(K)%X; ISGY=ISP(K)%Y; IISG=I
+     ISGX=ISP(K)%X; ISGY=ISP(K)%Y !; IISG=I
+     IF(ISMALL.EQ.0)NI=NI+1
+     PISG(NI,1)=REAL(I); PISG(NI,2)=DIST; PISG(NI,3)=D
     ENDIF
     !## evaluate last point
     IF(J.EQ.ISG(I)%NSEG-1)THEN
      D=SQRT((XC-ISP(K+1)%X)**2.0+(YC-ISP(K+1)%Y)**2.0)
      IF(D.LT.MD)THEN
-      MD=D; DIST=TD+SQRT(DX**2.0+DY**2.0)
-      ISGX=ISP(K+1)%X; ISGY=ISP(K+1)%Y; IISG=I
+      IF(ISMALL.EQ.1)MD=D
+!      MD=D
+      DIST=TD+SQRT(DX**2.0+DY**2.0)
+      ISGX=ISP(K+1)%X; ISGY=ISP(K+1)%Y !; IISG=I
+      IF(ISMALL.EQ.0)NI=NI+1
+      PISG(NI,1)=REAL(I); PISG(NI,2)=DIST; PISG(NI,3)=D
      ENDIF
     ENDIF
    ENDIF
@@ -178,6 +195,12 @@ CONTAINS
   ENDDO
  END DO
 
+ !## sort iisg() 
+ IF(ISMALL.EQ.1)RETURN
+ 
+ !## sort for nearest distance
+ CALL SORTEM(1,NI,PISG(:,3),2,PISG(:,1),PISG(:,2),(/0.0/),(/0.0/),(/0.0/),(/0.0/),(/0.0/))
+ 
  END SUBROUTINE ISGSTUWEN_INTERSECT
 
  !###======================================================================
