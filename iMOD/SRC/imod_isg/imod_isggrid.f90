@@ -1621,7 +1621,7 @@ IRLOOP: DO IR=MAX(1,IROW-1),MIN(NROW,IROW+1)
        LINE='"'//TRIM(ISG(I)%SNAME)//'_reach'//TRIM(ITOS(ISTR(I)))//'",'//TRIM(ITOS(KSEG-MSEG))//','// &
                  TRIM(ITOS(MSEG))  //','//TRIM(ITOS(KCLC-2))//','//TRIM(ITOS(2))//','// &
                  TRIM(ITOS(KCRS-1))  //','//TRIM(ITOS(1))//',0,0,0,0'
-       WRITE(ISGIU(1,1),*) TRIM(LINE)
+       WRITE(ISGIU(1,1),'(A)') TRIM(LINE)
        MSEG=0 
       ENDIF
      
@@ -1766,26 +1766,12 @@ IRLOOP: DO IR=MAX(1,IROW-1),MIN(NROW,IROW+1)
   !## eight points cross-section
   IF(ICALC.EQ.2)THEN
 
-if(i.eq.2393)then
-write(*,*)
-endif
-
    !## try to get eight-point cross-section
-!   IF(NDIM.GT.8)THEN
-    NSIM=8; CALL ISGCOMPUTEEIGHTPOINTS(XCRS,ZCRS,NDIM,EXCRS,EZCRS,NSIM) !,AORG,ASIM)
-!   ELSE
-!    EXCRS=XCRS; EZCRS=ZCRS; NSIM=8
-!    Z=MAXVAL(EZCRS(1:NDIM))
-!    DO J=NDIM+1,NTARGET; EXCRS(J)=EXCRS(J-1)+1.0; EZCRS(J)=Z; ENDDO
-!   ENDIF
+   NSIM=8; CALL ISGCOMPUTEEIGHTPOINTS(XCRS,ZCRS,NDIM,EXCRS,EZCRS,NSIM) !,AORG,ASIM)
    
    !## make excrs relative
    Z=EXCRS(1);      DO J=1,NSIM; EXCRS(J)=EXCRS(J)-Z; ENDDO
 
- IF(MINVAL(EXCRS).LT.0.0)THEN
- WRITE(*,*)
- ENDIF
- 
    !## make ezcrs relative
    Z=MINVAL(EZCRS); DO J=1,NSIM; EZCRS(J)=EZCRS(J)-Z; ENDDO
    
