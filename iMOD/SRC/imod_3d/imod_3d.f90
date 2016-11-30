@@ -37,7 +37,7 @@ USE MOD_PLINES_PAR, ONLY : IDF
 INTEGER(GLINT),DIMENSION(1) :: MAXSTDEPTH,STDEPTH !## max./current stack depth selection
 INTEGER(GLINT),DIMENSION(1) :: DUMMY
 INTEGER(GLINT),DIMENSION(1) :: MAXCPLANES
-REAL,PARAMETER :: G2R=360.0/(2.0*PI) !; OR=DEGREES; OR=DDEGREES/G2R
+REAL,PARAMETER :: G2R=360.0/(2.0*PI) 
 
 CONTAINS
 
@@ -300,7 +300,7 @@ CONTAINS
 ! BEGIN_LEFT%Y=WY
 
  END SUBROUTINE IMOD3D_RENDER
- 
+
  !###======================================================================
  SUBROUTINE IMOD3D_INIT(IACTSOLID,IACTPATHLINE)
  !###======================================================================
@@ -333,8 +333,7 @@ CONTAINS
  
  CALL WDIALOGLOAD(ID_D3DSETTINGS_RENDER)
  
-! !## initialize settings-dialog
-
+ !## initialize axes
  XYZAXES(1)=4.0_GLFLOAT; XYZAXES(2)=4.0_GLFLOAT; XYZAXES(3)=2.0_GLFLOAT
 
  IFLAGS=SYSMENUON+MINBUTTON+MAXBUTTON+STATUSBAR 
@@ -469,9 +468,9 @@ CONTAINS
  !## turn all message off
  CALL UTL_MESSAGEHANDLE(0)
 
- FOVY =10.0_GLDOUBLE 
- ZFAR =500.0_GLDOUBLE !200
- ZNEAR=0.1_GLDOUBLE
+ FOVY = 10.0_GLDOUBLE 
+ ZFAR =500.0_GLDOUBLE
+ ZNEAR=  0.1_GLDOUBLE
 
  !## get viewable area of current display
  TOP%X=-10.0E10; BOT%X= 10.0E10
