@@ -493,7 +493,7 @@ CONTAINS
  SUBROUTINE ISGPLOT_DRAWSELECTEDSEGMENTS()
  !###======================================================================
  IMPLICIT NONE
- INTEGER :: II,I,J,IREC
+ INTEGER :: II,I
  
  CALL IDFPLOT1BITMAP(); CALL IGRPLOTMODE(MODEXOR)
 
