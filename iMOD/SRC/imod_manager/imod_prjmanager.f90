@@ -5787,11 +5787,13 @@ KLOOP: DO K=1,SIZE(TOPICS(JJ)%STRESS(1)%FILES,1)
  !###======================================================================
  IMPLICIT NONE
  INTEGER :: IROW,ICOL,ILAY,JLAY,I,JROW,JCOL
- REAL :: C,C1,C2,C3,C4,D,A,Z,X1,X2,Y1,Y2,DX,DY,L
+ REAL :: C,ZT,ZB,D1,D2,A,Z,X1,X2,Y1,Y2,DX,DY,L,TIB,F
  INTEGER,DIMENSION(4) :: IR,IC
  DATA IR/-1, 0,0,1/
  DATA IC/ 0,-1,1,0/
  
+ IF(.NOT.LLAK)RETURN
+
  !## get unique number of lakes
  ALLOCATE(DULAKES(IDF%NCOL*IDF%NROW))
  I=0; DO IROW=1,IDF%NROW; DO ICOL=1,IDF%NCOL; I=I+1; DULAKES(I)=LAK(1)%X(ICOL,IROW); ENDDO; ENDDO
@@ -5801,53 +5803,44 @@ KLOOP: DO K=1,SIZE(TOPICS(JJ)%STRESS(1)%FILES,1)
   
  !## reset array lbd - boundary settings, layer becomes lakes as bathymetry of over half of cell
  DO ILAY=1,NLAY; DO IROW=1,IDF%NROW; DO ICOL=1,IDF%NCOL; LBD(ILAY)%X(ICOL,IROW)=0.0; ENDDO; ENDDO; ENDDO
-
-! !## get lake identification
-! DO IROW=1,IDF%NROW; DO ICOL=1,IDF%NCOL
-!  !## find layer underneath bathymetry of lake
-!  DO ILAY=1,NLAY
-!   Z=(TOP(ILAY)%X(ICOL,IROW)+BOT(ILAY)%X(ICOL,IROW))/2.0
-!   IF(LAK(5)%X(ICOL,IROW).LE.Z)THEN
-!    LBD(ILAY)%X(ICOL,IROW)=LAK(1)%X(ICOL,IROW)     
-!    BND(ILAY)%X(ICOL,IROW)=0.0
-!   ENDIF
-!  ENDDO
-! ENDDO; ENDDO
-
  !## reset array lcd - sum of conductance vertically/horizontally
  DO ILAY=1,NLAY; DO IROW=1,IDF%NROW; DO ICOL=1,IDF%NCOL; LCD(ILAY)%X(ICOL,IROW)=0.0; ENDDO; ENDDO; ENDDO
 
  !## get lakebed leakance - combination of resistance and model resistance of depth AROUND lake
  DO IROW=1,IDF%NROW; DO ICOL=1,IDF%NCOL
-  !## find layer underneath bathymetry of lake
+  !## skip non lake cells
+  IF(LAK(1)%X(ICOL,IROW).LE.0)CYCLE
+  !## find appropriate modellayer underneath bathymetry of lake
   DO ILAY=1,NLAY
-   Z=(TOP(ILAY)%X(ICOL,IROW)+BOT(ILAY)%X(ICOL,IROW))/2.0
-   IF(LAK(5)%X(ICOL,IROW).LE.Z)THEN
+   ZT=TOP(ILAY)%X(ICOL,IROW)
+   !## found appropriate modellayer
+   IF(ZT.GE.LAK(5)%X(ICOL,IROW))THEN
 
     LBD(ILAY)%X(ICOL,IROW)=LAK(1)%X(ICOL,IROW)     
     BND(ILAY)%X(ICOL,IROW)=0.0
 
-    !## conductance to be put in next layer
-    JLAY=ILAY+1
-
-    !## lake bed resistance
-    C1=LAK(6)%X(ICOL,IROW)
-
-    !## aquifer 1 resistance; include vertical anisotropy (inverse in modflow2005)
-    D=LAK(5)%X(ICOL,IROW)-BOT(ILAY)%X(ICOL,IROW)
-    C2=0.0; IF(D.GT.0.0)C2=D/(KHV(ILAY)%X(ICOL,IROW)/KVA(ILAY)%X(ICOL,IROW))
-
-    !## aquitard resistance of remainder/full aquitard
-    D=MIN(LAK(5)%X(ICOL,IROW),BOT(ILAY)%X(ICOL,IROW)-TOP(JLAY)%X(ICOL,IROW))
-    C3=0.0; IF(D.GT.0.0)C3=KVV(ILAY)%X(ICOL,IROW)/D
+    ZB=BOT(ILAY)%X(ICOL,IROW)
+    !## compute fraction for leakance in case lake bathymetry is higher
+    IF(ZB.LT.LAK(5)%X(ICOL,IROW))THEN
+     !## add extra resistance to leakance of part of aquifer
+     C=(LAK(5)%X(ICOL,IROW)-ZB)/(KHV(ILAY)%X(ICOL,IROW)/KVA(ILAY)%X(ICOL,IROW))
+    ELSE
+     C=0.0
+    ENDIF
     
-    !## aquifer resistance; include vertical anisotropy (inverse in modflow2005)
-    D=LAK(5)%X(ICOL,IROW)-Z
-    C4=0.0; IF(D.GT.0.0)C4=D/(KHV(JLAY)%X(ICOL,IROW)/KVA(JLAY)%X(ICOL,IROW))
+    !## total lake leakance for vertical conductances
+    LCD(ILAY)%X(ICOL,IROW)=1.0/(C+LAK(6)%X(ICOL,IROW))
 
-    !## compute conductance
-    A=IDFGETAREA(IDF,ICOL,IROW)
-    LCD(JLAY)%X(ICOL,IROW)=A/(C1+C2+C3+C4)
+    !## modify existing aquitard due to this displacement - can be removed partly by lake
+    TIB=0.0; IF(ILAY.LT.NLAY)THEN
+     !## thickness interbed
+     TIB=BOT(ILAY)%X(ICOL,IROW)-TOP(ILAY)%X(ICOL,IROW)
+    ENDIF
+    !## exists an interbed
+    IF(TIB.GT.0.0)THEN
+     !## modify bottom of modellayer, less interbed material remains in this case
+     BOT(ILAY)%X(ICOL,IROW)=LAK(5)%X(ICOL,IROW)
+    ENDIF
 
    ENDIF
   ENDDO
@@ -5857,9 +5850,12 @@ KLOOP: DO K=1,SIZE(TOPICS(JJ)%STRESS(1)%FILES,1)
  DO ILAY=1,NLAY; DO IROW=1,IDF%NROW; DO ICOL=1,IDF%NCOL
   !## found lake cell
   IF(LBD(ILAY)%X(ICOL,IROW).NE.0)THEN
+   !## thickness of current modellayer
+   D1=TOP(ILAY)%X(ICOL,IROW)-BOT(ILAY)%X(ICOL,IROW)
    !## depth of lake at that location
-   D=MAX(TOP(ILAY)%X(ICOL,IROW),LAK(5)%X(ICOL,IROW))- &
-     MIN(BOT(ILAY)%X(ICOL,IROW),LAK(5)%X(ICOL,IROW))
+   D2=MAX(TOP(ILAY)%X(ICOL,IROW),LAK(5)%X(ICOL,IROW))- &
+      MAX(BOT(ILAY)%X(ICOL,IROW),LAK(5)%X(ICOL,IROW))
+
    CALL IDFGETEDGE(IDF,IROW,ICOL,X1,Y1,X2,Y2)
    DX=X2-X1; DY=Y2-Y1
 
@@ -5868,12 +5864,16 @@ KLOOP: DO K=1,SIZE(TOPICS(JJ)%STRESS(1)%FILES,1)
     JROW=IR(I)+IROW; JCOL=IC(I)+ICOL
     IF(JROW.GT.IDF%NROW.OR.JROW.LT.1)CYCLE
     IF(JCOL.GT.IDF%NCOL.OR.JCOL.LT.1)CYCLE
+    !## not equal a lake, thus next to the lake
     IF(LBD(ILAY)%X(JCOL,JROW).EQ.0)THEN
      CALL IDFGETEDGE(IDF,JROW,JCOL,X1,Y1,X2,Y2)
      IF(JROW.EQ.IROW)THEN; A=DY; L=X2-X1 ; ENDIF
      IF(JCOL.EQ.ICOL)THEN; A=DX; L=Y2-Y1 ; ENDIF
-     C=(0.5*L)/KHV(ILAY)%X(JCOL,JROW)
-     LCD(ILAY)%X(JCOL,JROW)=LCD(ILAY)%X(JCOL,JROW)+(D*A)/C
+     !## increase resistance for depth of lake
+     F=D1/D2
+     
+     LCD(ILAY)%X(JCOL,JROW)=1.0/(F*LAK(6)%X(ICOL,IROW))
+
     ENDIF
    ENDDO
  

@@ -136,7 +136,7 @@ CONTAINS
      
        IP(NBRCH+1)=NP+3
        CBID(NBRCH+1)='S_'//TRIM(IPF(IIPF)%INFO(DATCOL(3),I))//'_R_'//TRIM(ITOS(NBRCH+1))
-       IDNSEG(NBRCH+1)=0 !NBRCH+2
+       IDNSEG(NBRCH+1)=0 
      
        !## left side
        READ(IPF(IIPF)%INFO(DATCOL(5),J),*)     WD1
@@ -149,6 +149,13 @@ CONTAINS
        READ(IPF(IIPF)%INFO(DATCOL(7),J+1),*)   WL2
        READ(IPF(IIPF)%INFO(DATCOL(8),J+1),*)   HC2
        
+       IF(BL1.LE.0.0)THEN
+        WRITE(*,*) WL1,BL1,WL1-BL1
+       ENDIF 
+       IF(BL2.LE.0.0)THEN
+        WRITE(*,*) WL2,BL2,WL2-BL2
+       ENDIF 
+
        IF(BL1.GE.WL1)THEN
         WRITE(*,*) WL1,BL1,WL1-BL1
        ENDIF
