@@ -540,8 +540,8 @@ CONTAINS
   CALL WMESSAGEBOX(YESNO,COMMONNO,QUESTIONICON,'Do you want to continue ? Action that will follow can NOT be undone!','Question')
   IF(WINFODIALOG(4).EQ.1)THEN
    IF(ISGADJUSTAPPLY(SESFNAME,TRIM(PREFVAL(1))//'\TMP\log_ses.txt',0))THEN
-    ISGFILE=ISGFNAME
-    CALL ISGSAVE(ISGFILE,1) !- saving ONLY *.ISG, *.isp, *.isd
+!    ISGFILE=ISGFNAME
+!    CALL ISGSAVE(ISGFILE,1) !- saving ONLY *.ISG, *.isp, *.isd
    ENDIF
    CALL IDFPLOTFAST(1)
   ENDIF
@@ -853,10 +853,14 @@ CONTAINS
   !## adjust/remove
   IF(LEX)THEN
 
-   IF(IBATCH.EQ.0)CALL WINDOWOUTSTATUSBAR(4,'Busy with segment '//TRIM(ISG(ISEG)%SNAME)//' within polygon '//TRIM(ITOS(IPOL)))
-   IF(IBATCH.EQ.1)WRITE(*,*) 'Busy with segment '//TRIM(ISG(ISEG)%SNAME)//' within polygon ',IPOL
-   WRITE(IULOG,'(A,I10)') 'Busy with segment '//TRIM(ISG(ISEG)%SNAME)//' within polygon ',IPOL
-
+   IF(IPOL.NE.0)THEN
+    IF(IBATCH.EQ.0)CALL WINDOWOUTSTATUSBAR(4,'Busy with segment '//TRIM(ISG(ISEG)%SNAME)//' within polygon '//TRIM(ITOS(IPOL)))
+    IF(IBATCH.EQ.1)WRITE(*,*) 'Busy with segment '//TRIM(ISG(ISEG)%SNAME)//' within polygon ',IPOL
+    WRITE(IULOG,'(A,I10)') 'Applied segment '//TRIM(ISG(ISEG)%SNAME)//' within polygon ',IPOL
+   ELSE
+    WRITE(IULOG,'(A,I10)') 'Applied segment '//TRIM(ISG(ISEG)%SNAME)
+   ENDIF
+      
    !## remove
    IF(ISELADJ.EQ.1)THEN
     SELECT CASE (ITYPE)
