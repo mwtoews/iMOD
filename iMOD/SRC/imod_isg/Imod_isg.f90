@@ -2194,9 +2194,10 @@ CONTAINS
  SUBROUTINE ISGCONNECTTOAUTO()
  !###====================================================================
  IMPLICIT NONE
- INTEGER :: II,J,K,N,ICLC,NCLC,IISG,JJSG,IREF,ISEG,IOS,NPLIST
+ INTEGER :: II,J,K,N,ICLC,NCLC,IISG,JJSG,IREF,ISEG,IOS,NPLIST,IPOT
  INTEGER,POINTER,DIMENSION(:) :: IPLIST
- REAL :: MINDIST,X,Y
+ REAL,POINTER,DIMENSION(:) :: DPLIST
+ REAL :: MINDIST,X,Y,DPOT
  CHARACTER(LEN=52) :: LINE
  LOGICAL :: LEX
  
@@ -2223,12 +2224,14 @@ CONTAINS
   X=ISP(ISEG)%X; Y=ISP(ISEG)%Y
 
   !## get all segments from last point to beginning of segment within given distance
-  LEX=ISGGETSEGMENT(X,Y,IISG,JJSG,MINDIST,1,IPLIST=IPLIST,NPLIST=NPLIST)
+  LEX=ISGGETSEGMENT(X,Y,IISG,JJSG,MINDIST,1,IPLIST=IPLIST,DPLIST=DPLIST,NPLIST=NPLIST)
 
   !## remove existing connection
   IF(.NOT.LEX)NPLIST=0; JJSG=0
 
-  !## find appropriate connection, kunnen meerdere zijn ... !!!! ook afstand meenemen
+  IPOT=0; DPOT=HUGE(1.0)
+
+  !## find appropriate connection(s)
   DO II=1,NPLIST
    
    !## isg within distance of isg
@@ -2236,8 +2239,15 @@ CONTAINS
    
    !## cannot connect to upstream node ...
    IF(.NOT.ISGCONNECTAUTO_CHECK(IISG,JJSG))CYCLE
-  
+   IF(DPLIST(II).LT.DPOT)THEN; IPOT=IPLIST(II); DPOT=DPLIST(II); ENDIF
+   
   ENDDO
+
+  IF(IPOT.EQ.0)THEN
+   JJSG=0
+  ELSE
+   JJSG=IPOT
+  ENDIF
   
   !## adjust all connections on segment
   ICLC=ISG(IISG)%ICLC-1; NCLC=ISG(IISG)%NCLC
@@ -2245,7 +2255,7 @@ CONTAINS
    ICLC=ICLC+1; IREF=ISD(ICLC)%IREF-1; N=ISD(ICLC)%N
    DO K=1,N
     IREF=IREF+1 
-    DATISD(IREF)%DWNS=IISG
+    DATISD(IREF)%DWNS=JJSG
    ENDDO
   ENDDO
   
@@ -2279,7 +2289,7 @@ CONTAINS
   !## not connect to any other segment - exit
   IF(JJSG.LE.0.OR.JJSG.GT.NISG)THEN
    !## correct connection, no circular reference found
-   ISGCONNECTAUTO_CHECK=.FALSE.
+   ISGCONNECTAUTO_CHECK=.TRUE.
    EXIT
   ENDIF
   !## circular reference, cannot connect to this segment
@@ -4647,7 +4657,7 @@ CONTAINS
  END SUBROUTINE ISGCHECKISG
  
  !###======================================================================
- LOGICAL FUNCTION ISGGETSEGMENT(X,Y,IISG,JJSG,MINDIST,IPOS,IPLIST,NPLIST)
+ LOGICAL FUNCTION ISGGETSEGMENT(X,Y,IISG,JJSG,MINDIST,IPOS,IPLIST,DPLIST,NPLIST)
  !###======================================================================
  IMPLICIT NONE
  REAL,INTENT(IN) :: MINDIST,X,Y
@@ -4655,6 +4665,7 @@ CONTAINS
  INTEGER,INTENT(IN) :: IISG  !## current segment
  INTEGER,INTENT(OUT) :: JJSG !## nearest segment
  INTEGER,POINTER,DIMENSION(:),OPTIONAL :: IPLIST
+ REAL,POINTER,DIMENSION(:),OPTIONAL :: DPLIST
  INTEGER,OPTIONAL :: NPLIST
  REAL :: DX,DIST
  INTEGER :: I,ISEG,I1,I2,ILIST
@@ -4666,7 +4677,7 @@ CONTAINS
  
  !## create a list 
  IF(PRESENT(IPLIST).AND.PRESENT(NPLIST))THEN
-  ALLOCATE(IPLIST(NISG)); IPLIST=0; ILIST=1; NPLIST=0
+  ALLOCATE(IPLIST(NISG),DPLIST(NISG)); IPLIST=0; DPLIST=0.0; ILIST=1; NPLIST=0
  ENDIF
  
  !## search nearest point
@@ -4701,7 +4712,7 @@ CONTAINS
     IF(ILIST.EQ.0)THEN
      DIST=MIN(DIST,DX); JJSG=I
     ELSE
-     NPLIST=NPLIST+1; IPLIST(NPLIST)=I
+     NPLIST=NPLIST+1; IPLIST(NPLIST)=I; DPLIST(NPLIST)=DX
     ENDIF
    ENDIF
 
@@ -4712,7 +4723,7 @@ CONTAINS
      IF(ILIST.EQ.0)THEN
       DIST=MIN(DIST,DX); JJSG=I
      ELSE
-      NPLIST=NPLIST+1; IPLIST(NPLIST)=I
+      NPLIST=NPLIST+1; IPLIST(NPLIST)=I; DPLIST(NPLIST)=DX
      ENDIF
     ENDIF
    ENDIF
