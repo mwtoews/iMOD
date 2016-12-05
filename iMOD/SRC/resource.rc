@@ -8,7 +8,7 @@
 //
 // Winteracter resource script. 
 //
-// Modified : 01/Dec/2016 15:08:39
+// Modified : 05/Dec/2016 22:05:11
 //
 ///////////////////////////////////////////////////
 //
@@ -3809,7 +3809,7 @@ BEGIN
 "  231  Calc. Points \n"
 "  239  Structures \n"
 "  233  Cross-Sections \n"
-"  234  Q-depth/width \n"
+"  234  Q-Depth-Width \n"
 ,0
 END
 
@@ -4263,7 +4263,7 @@ BEGIN
     CONTROL "*",IDF_STRING2,"EDIT",WS_CHILD | WS_VISIBLE | WS_BORDER | WS_GROUP | WS_TABSTOP | ES_LEFT | ES_AUTOHSCROLL,   96,   73,   40,   12
     CONTROL "Cross-Sections",IDF_CHECK3,"BUTTON",WS_CHILD | WS_VISIBLE | WS_GROUP | WS_TABSTOP | BS_AUTOCHECKBOX | BS_TEXT,   14,   86,   80,   12
     CONTROL "*",IDF_STRING3,"EDIT",WS_CHILD | WS_VISIBLE | WS_BORDER | WS_GROUP | WS_TABSTOP | ES_LEFT | ES_AUTOHSCROLL,   96,   86,   40,   12
-    CONTROL "Qh-Relationships",IDF_CHECK4,"BUTTON",WS_CHILD | WS_VISIBLE | WS_GROUP | WS_TABSTOP | BS_AUTOCHECKBOX | BS_TEXT,   14,   99,   80,   12
+    CONTROL "Q-Depth-Width",IDF_CHECK4,"BUTTON",WS_CHILD | WS_VISIBLE | WS_GROUP | WS_TABSTOP | BS_AUTOCHECKBOX | BS_TEXT,   14,   99,   80,   12
     CONTROL "*",IDF_STRING4,"EDIT",WS_CHILD | WS_VISIBLE | WS_BORDER | WS_GROUP | WS_TABSTOP | ES_LEFT | ES_AUTOHSCROLL,   96,   99,   40,   12
     CONTROL "Apply to:",IDF_GROUP1,"BUTTON",WS_CHILD | WS_VISIBLE | WS_GROUP | BS_GROUPBOX | BS_TEXT,    7,   39,  163,  101
     CONTROL "Action:",IDF_GROUP2,"BUTTON",WS_CHILD | WS_VISIBLE | WS_GROUP | BS_GROUPBOX | BS_TEXT,    7,    2,  163,   33
@@ -12188,4 +12188,4 @@ END
 //*WI* FILENAME    resource.f90
 //*WI* FMODNAME    RESOURCE
 //*WI* LASTTYPE        2
-//*WI* LASTRES       284
+//*WI* LASTRES        99
