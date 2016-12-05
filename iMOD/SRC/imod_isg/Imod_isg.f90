@@ -2015,7 +2015,7 @@ CONTAINS
   SELECT CASE (ITYPE)
    CASE (MOUSEMOVE)
     !## highlight line
-    LEX=ISGGETSEGMENT(MESSAGE%GX,MESSAGE%GY,JJSG,0,MINDIST,0)
+    LEX=ISGGETSEGMENT(MESSAGE%GX,MESSAGE%GY,0,JJSG,MINDIST,0)
 
     IF(LEX)THEN
      CALL WCURSORSHAPE(ID_CURSORPIPET)
@@ -2194,7 +2194,8 @@ CONTAINS
  SUBROUTINE ISGCONNECTTOAUTO()
  !###====================================================================
  IMPLICIT NONE
- INTEGER :: I,J,K,N,ICLC,NCLC,IISG,IREF,ISEG,IOS
+ INTEGER :: II,J,K,N,ICLC,NCLC,IISG,JJSG,IREF,ISEG,IOS,NPLIST
+ INTEGER,POINTER,DIMENSION(:) :: IPLIST
  REAL :: MINDIST,X,Y
  CHARACTER(LEN=52) :: LINE
  LOGICAL :: LEX
@@ -2212,23 +2213,34 @@ CONTAINS
  
  CALL UTL_MESSAGEHANDLE(0)
  
- DO I=1,NISG
+ DO IISG=1,NISG
 
   !## skip non-selected segments 
-  IF(ISG(I)%ILIST.EQ.0)CYCLE
+  IF(ISG(IISG)%ILIST.EQ.0)CYCLE
 
   !## check what segment in reach of last point on segment
-  ISEG=ISG(I)%ISEG+ISG(I)%NSEG-1
+  ISEG=ISG(IISG)%ISEG+ISG(IISG)%NSEG-1
   X=ISP(ISEG)%X; Y=ISP(ISEG)%Y
 
-  !## get nearest segment from last point to beginning of segment
-  LEX=ISGGETSEGMENT(X,Y,IISG,I,MINDIST,1)
-  
-  !## remove existing connection
-  IF(.NOT.LEX)IISG=0
+  !## get all segments from last point to beginning of segment within given distance
+  LEX=ISGGETSEGMENT(X,Y,IISG,JJSG,MINDIST,1,IPLIST=IPLIST,NPLIST=NPLIST)
 
+  !## remove existing connection
+  IF(.NOT.LEX)NPLIST=0; JJSG=0
+
+  !## find appropriate connection, kunnen meerdere zijn ... !!!! ook afstand meenemen
+  DO II=1,NPLIST
+   
+   !## isg within distance of isg
+   JJSG=IPLIST(II)
+   
+   !## cannot connect to upstream node ...
+   IF(.NOT.ISGCONNECTAUTO_CHECK(IISG,JJSG))CYCLE
+  
+  ENDDO
+  
   !## adjust all connections on segment
-  ICLC=ISG(I)%ICLC-1; NCLC=ISG(I)%NCLC
+  ICLC=ISG(IISG)%ICLC-1; NCLC=ISG(IISG)%NCLC
   DO J=1,NCLC
    ICLC=ICLC+1; IREF=ISD(ICLC)%IREF-1; N=ISD(ICLC)%N
    DO K=1,N
@@ -2236,6 +2248,8 @@ CONTAINS
     DATISD(IREF)%DWNS=IISG
    ENDDO
   ENDDO
+  
+  IF(ASSOCIATED(IPLIST))DEALLOCATE(IPLIST) 
   
  ENDDO
 
@@ -2246,12 +2260,41 @@ CONTAINS
  END SUBROUTINE ISGCONNECTTOAUTO
 
  !###====================================================================
+ LOGICAL FUNCTION ISGCONNECTAUTO_CHECK(IISG,JJSG)
+ !###====================================================================
+ IMPLICIT NONE
+ INTEGER,INTENT(IN) :: IISG
+ INTEGER,INTENT(INOUT) :: JJSG
+ INTEGER :: ICLC,IREF
+ 
+ ISGCONNECTAUTO_CHECK=.FALSE.
+ 
+ !## trace this isg-number jjsg
+ !## do until no connection found anymore
+ DO
+  !## trace selected segment, use only first reference of connection
+  ICLC=ISG(JJSG)%ICLC   !; NCLC=ISG(IISG)%NCLC
+  IREF=ISD(ICLC+1)%IREF !; N=ISD(ICLC+1)%N
+  JJSG=DATISD(IREF)%DWNS
+  !## not connect to any other segment - exit
+  IF(JJSG.LE.0.OR.JJSG.GT.NISG)THEN
+   !## correct connection, no circular reference found
+   ISGCONNECTAUTO_CHECK=.FALSE.
+   EXIT
+  ENDIF
+  !## circular reference, cannot connect to this segment
+  IF(IISG.EQ.JJSG)EXIT
+ ENDDO
+
+ END FUNCTION ISGCONNECTAUTO_CHECK
+
+ !###====================================================================
  SUBROUTINE ISGDEL()
  !###====================================================================
  IMPLICIT NONE
  INTEGER :: ICLC,NCLC,ICRS,NCRS,ISEG,NSEG,I,ISTW,NSTW,IQHR,NQHR
 
- !#remove all calculation points on segment
+ !## remove all calculation points on segment
  ICLC=ISG(ISELISG)%ICLC
  NCLC=ISG(ISELISG)%NCLC
 
@@ -2259,33 +2302,33 @@ CONTAINS
   CALL ISGDELISD(ISELISG,ICLC)
  END DO
 
- !#remove all cross-sections on segment
+ !## remove all cross-sections on segment
  ICRS=ISG(ISELISG)%ICRS
  NCRS=ISG(ISELISG)%NCRS
  DO I=1,NCRS
   CALL ISGDELISC(ISELISG,ICRS)
  END DO
 
- !#remove all weirs on segment
+ !## remove all weirs on segment
  ISTW=ISG(ISELISG)%ISTW
  NSTW=ISG(ISELISG)%NSTW
  DO I=1,NSTW
   CALL ISGDELIST(ISELISG,ISTW)
  END DO
 
- !#remove all qh relationships on segment
+ !## remove all qh relationships on segment
  IQHR=ISG(ISELISG)%IQHR
  NQHR=ISG(ISELISG)%NQHR
  DO I=1,NQHR
   CALL ISGDELISQ(ISELISG,IQHR)
  END DO
 
- !#remove segment
+ !## remove segment
  ISEG=ISG(ISELISG)%ISEG
  NSEG=ISG(ISELISG)%NSEG
  CALL ISGDELISP(ISELISG)
 
- !#remove entire segment in isg() variable
+ !## remove entire segment in isg() variable
  ISG(ISELISG:NISG-1)=ISG(ISELISG+1:NISG)
  NISG               =NISG-1
 
@@ -2306,10 +2349,10 @@ CONTAINS
  ENDIF
  CALL ISGFIELDS()
 
- !#none selected
+ !## none selected
  ISELISG=0
 
- !#remove current line
+ !## remove current line
  IF(SHPNO.GT.0)CALL POLYGON1DRAWSHAPE(SHPNO,SHPNO)
 
  SHPNO=ISGSHAPES
@@ -3841,10 +3884,6 @@ CONTAINS
  DATISC(ISEG+2)%BOTTOM  = 5.0
  DATISC(ISEG+2)%MRC      =25.0
 
- !DO I=1,NDISC
- ! WRITE(*,*) I,DATISC(I)
- !END DO
-
  CALL IDFPLOTFAST(1)
 
  END SUBROUTINE ISGCROSSSECTIONADD
@@ -4549,7 +4588,7 @@ CONTAINS
 !write(*,*)  idown
 
   !## select new one
-  LEX=ISGGETSEGMENT(X,Y,ISELISG,0,MINDIST,0)
+  LEX=ISGGETSEGMENT(X,Y,0,ISELISG,MINDIST,0)
 
   !## if ctrl pressed, add line to selection
   IF(IDOWN.EQ.5)THEN !MODCTRL)THEN
@@ -4608,24 +4647,42 @@ CONTAINS
  END SUBROUTINE ISGCHECKISG
  
  !###======================================================================
- LOGICAL FUNCTION ISGGETSEGMENT(X,Y,IISG,JJSG,MINDIST,IPOS)
+ LOGICAL FUNCTION ISGGETSEGMENT(X,Y,IISG,JJSG,MINDIST,IPOS,IPLIST,NPLIST)
  !###======================================================================
  IMPLICIT NONE
- REAL,INTENT(IN) :: MINDIST
- REAL,INTENT(IN) :: X,Y
- INTEGER,INTENT(IN) :: IPOS !## 0-ALL;1=BEGIN;2=END
- INTEGER,INTENT(IN) :: JJSG
- INTEGER,INTENT(OUT) :: IISG
+ REAL,INTENT(IN) :: MINDIST,X,Y
+ INTEGER,INTENT(IN) :: IPOS  !## 0=all;1=begin;2=end
+ INTEGER,INTENT(IN) :: IISG  !## current segment
+ INTEGER,INTENT(OUT) :: JJSG !## nearest segment
+ INTEGER,POINTER,DIMENSION(:),OPTIONAL :: IPLIST
+ INTEGER,OPTIONAL :: NPLIST
  REAL :: DX,DIST
- INTEGER :: I,ISEG,I1,I2
+ INTEGER :: I,ISEG,I1,I2,ILIST
   
  ISGGETSEGMENT=.FALSE.
+
+ !## no list needed, just get the nearest
+ ILIST=0
  
- DIST=HUGE(1.0) 
- IISG=0
+ !## create a list 
+ IF(PRESENT(IPLIST).AND.PRESENT(NPLIST))THEN
+  ALLOCATE(IPLIST(NISG)); IPLIST=0; ILIST=1; NPLIST=0
+ ENDIF
+ 
+ !## search nearest point
+ IF(ILIST.EQ.0)THEN
+  DIST=HUGE(1.0) 
+ !## get all points within "mindist" distance
+ ELSE
+  DIST=MINDIST
+ ENDIF
+ 
+ JJSG=0
  DO I=1,NISG
+
   !## skip entered isg if applied
-  IF(I.EQ.JJSG)CYCLE
+  IF(I.EQ.IISG)CYCLE
+
   SELECT CASE (IPOS)
    CASE (0)
     I1=ISG(I)%ISEG
@@ -4635,20 +4692,41 @@ CONTAINS
    CASE (2)
     I2=ISG(I)%ISEG+ISG(I)%NSEG-1; I1=I2
   END SELECT
+
   DO ISEG=I1,I2 
-   !## try point itself
+
+   !## try point iseg
    DX=UTL_DIST(X,Y,ISP(ISEG)%X,ISP(ISEG)%Y)
-   IF(DX.LT.DIST)THEN; DIST=MIN(DIST,DX); IISG=I; ENDIF
-   IF(ISEG.LT.I2)THEN
-    !## try point in between
-    DX=UTL_DIST(X,Y,(ISP(ISEG)%X+ISP(ISEG+1)%X)/2.0,(ISP(ISEG)%Y+ISP(ISEG+1)%Y)/2.0)
-    IF(DX.LT.DIST)THEN; DIST=MIN(DIST,DX); IISG=I; ENDIF
+   IF(DX.LT.DIST)THEN
+    IF(ILIST.EQ.0)THEN
+     DIST=MIN(DIST,DX); JJSG=I
+    ELSE
+     NPLIST=NPLIST+1; IPLIST(NPLIST)=I
+    ENDIF
    ENDIF
+
+   !## additional point, try point in between, only in combination with "all"-segments ipos=0
+   IF(ISEG.LT.I2)THEN
+    DX=UTL_DIST(X,Y,(ISP(ISEG)%X+ISP(ISEG+1)%X)/2.0,(ISP(ISEG)%Y+ISP(ISEG+1)%Y)/2.0)
+    IF(DX.LT.DIST)THEN
+     IF(ILIST.EQ.0)THEN
+      DIST=MIN(DIST,DX); JJSG=I
+     ELSE
+      NPLIST=NPLIST+1; IPLIST(NPLIST)=I
+     ENDIF
+    ENDIF
+   ENDIF
+
   ENDDO
  END DO
- !## check whether inside given range
- IF(DIST.LE.MINDIST.AND.IISG.GT.0)ISGGETSEGMENT=.TRUE.
-
+ 
+ IF(ILIST.EQ.0)THEN
+  !## check whether inside given range
+  IF(DIST.LE.MINDIST.AND.JJSG.GT.0)ISGGETSEGMENT=.TRUE.
+ ELSE
+  IF(NPLIST.GT.0)ISGGETSEGMENT=.TRUE.
+ ENDIF
+ 
  END FUNCTION ISGGETSEGMENT
 
  !###======================================================================

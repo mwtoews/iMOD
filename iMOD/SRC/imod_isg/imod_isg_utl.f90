@@ -126,14 +126,12 @@ CONTAINS
  END SUBROUTINE ISGGETXY
 
  !###===============================================================================
- SUBROUTINE ISGSTUWEN_INTERSECT(MAXDIST,XC,YC,PISG,NI) !,DISG) !DIST)
+ SUBROUTINE ISGSTUWEN_INTERSECT(MAXDIST,XC,YC,PISG,NI) 
  !###===============================================================================
  IMPLICIT NONE
  REAL,INTENT(OUT),DIMENSION(:,:) :: PISG !## selected isg segments all within radius
-! REAL,INTENT(OUT),DIMENSION(:) :: DISG !## distance of selected isg element
  REAL,INTENT(IN) :: MAXDIST,XC,YC !## maximum distance allowed and location of cross-section
  INTEGER,INTENT(OUT) :: NI
-! REAL,INTENT(OUT) :: DIST !## distance on selected segment
  INTEGER :: I,J,K,ISTATUS,ISMALL
  REAL :: DX,DY,TD,D,MD,X,Y,DIST
  
@@ -159,7 +157,7 @@ CONTAINS
     IF(D.LT.MD)THEN
      IF(ISMALL.EQ.1)MD=D
      DIST=TD+SQRT((ISP(K)%X-X)**2.0+(ISP(K)%Y-Y)**2.0)
-     ISGX=X; ISGY=Y !; IISG=I
+     ISGX=X; ISGY=Y 
      IF(ISMALL.EQ.0)NI=NI+1
      PISG(NI,1)=REAL(I); PISG(NI,2)=DIST; PISG(NI,3)=D
     ENDIF
@@ -168,10 +166,9 @@ CONTAINS
     D=SQRT((XC-ISP(K)%X)**2.0+(YC-ISP(K)%Y)**2.0)
     IF(D.LT.MD)THEN
      IF(ISMALL.EQ.1)MD=D
-!     MD=D
      DIST=0.0
      IF(J.GT.1)DIST=TD+SQRT(DX**2.0+DY**2.0)
-     ISGX=ISP(K)%X; ISGY=ISP(K)%Y !; IISG=I
+     ISGX=ISP(K)%X; ISGY=ISP(K)%Y 
      IF(ISMALL.EQ.0)NI=NI+1
      PISG(NI,1)=REAL(I); PISG(NI,2)=DIST; PISG(NI,3)=D
     ENDIF
@@ -180,9 +177,8 @@ CONTAINS
      D=SQRT((XC-ISP(K+1)%X)**2.0+(YC-ISP(K+1)%Y)**2.0)
      IF(D.LT.MD)THEN
       IF(ISMALL.EQ.1)MD=D
-!      MD=D
       DIST=TD+SQRT(DX**2.0+DY**2.0)
-      ISGX=ISP(K+1)%X; ISGY=ISP(K+1)%Y !; IISG=I
+      ISGX=ISP(K+1)%X; ISGY=ISP(K+1)%Y 
       IF(ISMALL.EQ.0)NI=NI+1
       PISG(NI,1)=REAL(I); PISG(NI,2)=DIST; PISG(NI,3)=D
      ENDIF
