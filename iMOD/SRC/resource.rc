@@ -8,7 +8,7 @@
 //
 // Winteracter resource script. 
 //
-// Modified : 05/Dec/2016 22:05:11
+// Modified : 06/Dec/2016 16:17:26
 //
 ///////////////////////////////////////////////////
 //
@@ -4431,10 +4431,9 @@ BEGIN
 "/ \n"
 "* \n"
 "IDF \n"
-" 1065     3     1 \n"
+" 1065     2     1 \n"
 "Up Waterlevel \n"
 "Down Waterlevel \n"
-" \n"
 " 1055     2     2 \n"
 "Up Waterlevel \n"
 "Down Waterlevel \n"
@@ -4452,9 +4451,9 @@ STYLE WS_CHILD | DS_CONTROL | DS_3DLOOK
 FONT    8, "Arial"
 BEGIN
     CONTROL "DD",ID_LOAD,"BUTTON",WS_CHILD | WS_VISIBLE | WS_GROUP | WS_TABSTOP | BS_PUSHBUTTON | BS_TEXT | BS_BITMAP | BS_FLAT,   13,   20,   16,   14
-    CONTROL "Extract from File (*.ccf):",IDF_RADIO1,"BUTTON",WS_CHILD | WS_VISIBLE | WS_GROUP | WS_TABSTOP | BS_AUTORADIOBUTTON | BS_TEXT,    4,    4,   89,   12
+    CONTROL "Extract from File (*.csv):",IDF_RADIO1,"BUTTON",WS_CHILD | WS_VISIBLE | WS_GROUP | WS_TABSTOP | BS_AUTORADIOBUTTON | BS_TEXT,    4,    4,   89,   12
     CONTROL "Assign:",IDF_RADIO2,"BUTTON",WS_CHILD | WS_VISIBLE | WS_TABSTOP | BS_AUTORADIOBUTTON | BS_TEXT,    6,   39,   69,   12
-    CONTROL "... open ccf file ...",IDF_STRING,"EDIT",WS_CHILD | WS_VISIBLE | WS_BORDER | WS_GROUP | WS_TABSTOP | ES_LEFT | ES_AUTOHSCROLL,   32,   21,  129,   12
+    CONTROL "... open csv file ...",IDF_STRING,"EDIT",WS_CHILD | WS_VISIBLE | WS_BORDER | WS_GROUP | WS_TABSTOP | ES_LEFT | ES_AUTOHSCROLL,   32,   21,  129,   12
     CONTROL "",IDF_CHECK1,"BUTTON",WS_CHILD | WS_VISIBLE | WS_GROUP | WS_TABSTOP | BS_AUTOCHECKBOX | BS_TEXT,    6,   54,    9,   10
     CONTROL "",IDF_MENU1,"COMBOBOX",WS_CHILD | WS_VISIBLE | WS_VSCROLL | WS_GROUP | WS_TABSTOP | CBS_DROPDOWNLIST | CBS_HASSTRINGS,   81,   54,   29,  100
     CONTROL "0.0000",IDF_REAL1,"REALEDIT",WS_CHILD | WS_VISIBLE | WS_BORDER | WS_GROUP | WS_TABSTOP | ES_LEFT | ES_CENTER | ES_MULTILINE,  112,   54,   49,   12
@@ -4506,17 +4505,17 @@ BEGIN
 "* \n"
 "IDF \n"
 " 1065     3     1 \n"
-"X \n"
-"Z \n"
-"MRC \n"
+"X (Width) \n"
+"Z (Depth) \n"
+"Manning's Coefficient \n"
 " 1055     3     2 \n"
-"X \n"
-"Z \n"
-"MRC \n"
+"X (Width) \n"
+"Z (Depth) \n"
+"Manning's Coefficient \n"
 " 1066     3     3 \n"
-"X \n"
-"Z \n"
-"MRC \n"
+"X (Width) \n"
+"Z (Depth) \n"
+"Manning's Coefficient \n"
 "[Ranges] \n"
 "[Lengths] \n"
 " 1147   256 \n"
@@ -4643,13 +4642,13 @@ BEGIN
     CONTROL "Search within:",IDF_GROUP2,"BUTTON",WS_CHILD | WS_VISIBLE | WS_GROUP | BS_GROUPBOX | BS_TEXT | BS_LEFT,    6,   84,  165,   63
     CONTROL "Structures",IDF_CHECK3,"BUTTON",WS_CHILD | WS_VISIBLE | WS_GROUP | WS_TABSTOP | BS_AUTOCHECKBOX | BS_TEXT,   15,  127,   69,   12
     CONTROL "Cross-Sections",IDF_CHECK4,"BUTTON",WS_CHILD | WS_VISIBLE | WS_GROUP | WS_TABSTOP | BS_AUTOCHECKBOX | BS_TEXT,   90,   97,   69,   12
-    CONTROL "Qh-Relationships",IDF_CHECK5,"BUTTON",WS_CHILD | WS_VISIBLE | WS_GROUP | WS_TABSTOP | BS_AUTOCHECKBOX | BS_TEXT,   90,  112,   69,   12
+    CONTROL "Q-Depth-Width Rel.",IDF_CHECK5,"BUTTON",WS_CHILD | WS_VISIBLE | WS_GROUP | WS_TABSTOP | BS_AUTOCHECKBOX | BS_TEXT,   90,  112,   76,   12
     CONTROL "Search For:",IDF_GROUP3,"BUTTON",WS_CHILD | WS_VISIBLE | WS_GROUP | BS_GROUPBOX | BS_TEXT,    6,    5,  165,   75
     CONTROL "Results Segments:",IDF_GROUP4,"BUTTON",WS_CHILD | WS_VISIBLE | WS_GROUP | BS_GROUPBOX | BS_TEXT,    7,  153,  165,  114
     CONTROL "",IDF_MENU1,"LISTBOX",WS_CHILD | WS_VISIBLE | WS_BORDER | WS_VSCROLL | WS_TABSTOP | LBS_NOTIFY | LBS_HASSTRINGS | LBS_USETABSTOPS | LBS_EXTENDEDSEL,   15,  193,  151,   68
     CONTROL "Get Them",ID_GETTHEM,"BUTTON",WS_CHILD | WS_VISIBLE | WS_GROUP | WS_TABSTOP | BS_PUSHBUTTON | BS_TEXT | BS_FLAT,   14,  165,   69,   14
     CONTROL "Segments",IDF_CHECK1,"BUTTON",WS_CHILD | WS_VISIBLE | WS_GROUP | WS_TABSTOP | BS_AUTOCHECKBOX | BS_TEXT,   15,   97,   69,   12
-    CONTROL "Case Sensitive",IDF_CHECK6,"BUTTON",WS_CHILD | WS_VISIBLE | WS_GROUP | WS_TABSTOP | BS_AUTOCHECKBOX | BS_TEXT,   56,   63,   60,   12
+    CONTROL "Case Sensitive",IDF_CHECK6,"BUTTON",WS_CHILD | WS_VISIBLE | WS_GROUP | WS_TABSTOP | BS_AUTOCHECKBOX | BS_TEXT,   56,   63,   64,   12
     CONTROL "Take Them",IDOK,"BUTTON",WS_CHILD | WS_VISIBLE | WS_GROUP | WS_TABSTOP | BS_PUSHBUTTON | BS_TEXT | BS_FLAT,    8,  272,   49,   14
     CONTROL "Nothing found",IDF_LABEL3,"STATIC",WS_CHILD | WS_VISIBLE | WS_GROUP | SS_LEFT,   15,  183,  100,    8
     CONTROL "Number",IDF_RADIO1,"BUTTON",WS_CHILD | WS_VISIBLE | WS_GROUP | WS_TABSTOP | BS_AUTORADIOBUTTON | BS_TEXT,   15,   18,   40,   14
@@ -9213,24 +9212,24 @@ BEGIN
 ,0
 END
 
-ID_DGEF DIALOG 0, 0,  168,  102
+ID_DGEF DIALOG 0, 0,  168,   77
 STYLE WS_POPUP | WS_BORDER | WS_DLGFRAME | WS_SYSMENU | DS_3DLOOK | DS_MODALFRAME
-FONT    8, "MS Sans Serif"
+FONT    8, "Arial"
 CAPTION "GEF-filetype choice"
 BEGIN
-    CONTROL "Choose your GEF-file format:",IDF_LABEL1,"STATIC",WS_CHILD | WS_VISIBLE | WS_GROUP | SS_CENTER,   16,   10,  128,    8
-    CONTROL "Help",IDHELP,"BUTTON",WS_CHILD | WS_VISIBLE | WS_GROUP | WS_TABSTOP | BS_PUSHBUTTON | BS_TEXT | BS_FLAT,  124,   84,   40,   14
-    CONTROL "GEF - CPT (Cone Penetration Test)",IDF_RADIO1,"BUTTON",WS_CHILD | WS_VISIBLE | WS_GROUP | WS_TABSTOP | BS_AUTORADIOBUTTON | BS_TEXT,   16,   28,  126,   14
-    CONTROL "GEF - Borehole",IDF_RADIO2,"BUTTON",WS_CHILD | WS_VISIBLE | WS_TABSTOP | BS_AUTORADIOBUTTON | BS_TEXT,   16,   52,  126,   14
-    CONTROL "OK",IDOK,"BUTTON",WS_CHILD | WS_VISIBLE | WS_GROUP | WS_TABSTOP | BS_PUSHBUTTON | BS_TEXT | BS_FLAT,   10,   84,   40,   14
-    CONTROL "Cancel",IDCANCEL,"BUTTON",WS_CHILD | WS_VISIBLE | WS_GROUP | WS_TABSTOP | BS_PUSHBUTTON | BS_TEXT | BS_FLAT,   60,   84,   40,   14
+    CONTROL "Help",IDHELP,"BUTTON",WS_CHILD | WS_VISIBLE | WS_GROUP | WS_TABSTOP | BS_PUSHBUTTON | BS_TEXT | BS_FLAT,   80,   56,   40,   14
+    CONTROL "GEF - CPT (Cone Penetration Test)",IDF_RADIO1,"BUTTON",WS_CHILD | WS_VISIBLE | WS_GROUP | WS_TABSTOP | BS_AUTORADIOBUTTON | BS_TEXT | BS_FLAT,   12,   16,  137,   14
+    CONTROL "GEF - Borehole",IDF_RADIO2,"BUTTON",WS_CHILD | WS_VISIBLE | WS_TABSTOP | BS_AUTORADIOBUTTON | BS_TEXT | BS_FLAT,   12,   32,  125,   14
+    CONTROL "OK",IDOK,"BUTTON",WS_CHILD | WS_VISIBLE | WS_GROUP | WS_TABSTOP | BS_PUSHBUTTON | BS_TEXT | BS_FLAT,    6,   56,   40,   14
+    CONTROL "Cancel",IDCANCEL,"BUTTON",WS_CHILD | WS_VISIBLE | WS_GROUP | WS_TABSTOP | BS_PUSHBUTTON | BS_TEXT | BS_FLAT,  122,   56,   40,   14
+    CONTROL "Choose your GEF-file format",IDF_GROUP1,"BUTTON",WS_CHILD | WS_VISIBLE | WS_GROUP | BS_GROUPBOX | BS_TEXT | BS_LEFT,    6,    4,  156,   48
 END
 
 ID_DGEF RCDATA
 BEGIN
 "[Checks] \n"
 " 1012 0 \n"
-" 1014 0 \n"
+" 1014 1 \n"
 ,0
 END
 
@@ -11178,10 +11177,10 @@ BEGIN
             MENUITEM "Mark Data Points",                         ID_MARKDATA, GRAYED
             POPUP "ISG Edit Settings"
             BEGIN
-                MENUITEM "Start ISG Editing",                        ID_ISGISPSTART
-                MENUITEM "Reset ISG Editing",                        ID_ISGISPRESET
-                MENUITEM "Save ISG Editing",                         ID_ISGISPSAVE
-                MENUITEM "Stop Editing",                             ID_ISGISPSTOP
+                MENUITEM "Edit Selected Segment",                    ID_ISGISPSTART
+                MENUITEM "Reset Segment Editing",                    ID_ISGISPRESET
+                MENUITEM "Store Segment Editing",                    ID_ISGISPSAVE
+                MENUITEM "Quit Segment Editing",                     ID_ISGISPSTOP
             END
             MENUITEM "Hide Background Image",                    ID_HIDEBITMAP
             MENUITEM "Fixate Background Image",                  ID_FIXBITMAP
@@ -12188,4 +12187,4 @@ END
 //*WI* FILENAME    resource.f90
 //*WI* FMODNAME    RESOURCE
 //*WI* LASTTYPE        2
-//*WI* LASTRES        99
+//*WI* LASTRES       246

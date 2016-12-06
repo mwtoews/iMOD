@@ -2709,7 +2709,7 @@ CONTAINS
  !###======================================================================
  IMPLICIT NONE
  CHARACTER(LEN=*),INTENT(IN) :: DIRNAME
- INTEGER                     :: I,J
+ INTEGER :: I,J
 
  !## create/check entire directory-structure
  I=INDEX(DIRNAME,'\')+1
