@@ -324,6 +324,14 @@ CONTAINS
     CYCLE
    ENDIF
 
+   !## check cross-section
+   DO I=2,N
+    IF(X(I).LT.X(I-1))THEN
+     WRITE(*,'(/A)') 'Wrong cross-section read'
+     WRITE(*,'(A/)') 'The x-values need to be increasing from left to right'
+     STOP
+    ENDIF
+   ENDDO
    !## try to simplify the cross-section
 !   IF(ISIMPLE.GT.0)THEN
 !    CALL ISGCOMPUTEEIGHTPOINTS(X,Y,N,XSIMPLE,YSIMPLE,NSIMPLE,AORG,ASIMPLE)
@@ -1767,10 +1775,18 @@ IRLOOP: DO IR=MAX(1,IROW-1),MIN(NROW,IROW+1)
   IF(ICALC.EQ.2)THEN
 
    !## try to get eight-point cross-section
-   NSIM=8; CALL ISGCOMPUTEEIGHTPOINTS(XCRS,ZCRS,NDIM,EXCRS,EZCRS,NSIM) !,AORG,ASIM)
+   NSIM=8; CALL ISGCOMPUTEEIGHTPOINTS(XCRS,ZCRS,NDIM,EXCRS,EZCRS,NSIM) 
    
    !## make excrs relative
    Z=EXCRS(1);      DO J=1,NSIM; EXCRS(J)=EXCRS(J)-Z; ENDDO
+
+   DO J=1,NSIM
+    IF(EXCRS(J).LT.0.0)THEN
+     CALL WMESSAGEBOX(OKONLY,EXCLAMATIONICON,COMMONOK,'Check your cross-section for segment '//TRIM(ITOS(I))//CHAR(13)// &
+      'iMOD founds that the construction of this cross-section is invalid','Error')
+      RETURN
+    ENDIF
+   ENDDO
 
    !## make ezcrs relative
    Z=MINVAL(EZCRS); DO J=1,NSIM; EZCRS(J)=EZCRS(J)-Z; ENDDO
