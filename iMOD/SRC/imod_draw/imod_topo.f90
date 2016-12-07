@@ -399,8 +399,8 @@ CONTAINS
   CLOSE(IU)
  !## initialize parameters
  ELSE
-  CALL WMESSAGEBOX(OKONLY,EXCLAMATIONICON,COMMONOK,'iMOD cannot open/read the selected file'//CHAR(13)// &
-      BMP(NBMP+1)%BMPFNAME(:I-1)//'.'//TRIM(EXT),'Error')
+  CALL WMESSAGEBOX(OKONLY,EXCLAMATIONICON,COMMONOK,'iMOD cannot open/read the selected file because '//CHAR(13)// &
+      BMP(NBMP+1)%BMPFNAME(:I-1)//'.'//TRIM(EXT)//'is missing.','Error')
   RETURN
  ENDIF
 
