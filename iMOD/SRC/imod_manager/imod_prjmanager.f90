@@ -2772,7 +2772,8 @@ KLOOP: DO K=1,SIZE(TOPICS(JJ)%STRESS(1)%FILES,1)
    CASE (21); LEX=LWEL; CPCK='WEL'; ICB=IWELCB; CMAXNO1='NaN1'; CAUX='AUXILIARY SYSTEM NOPRINT'; TEXT='_'
    CASE (22); LEX=LDRN; CPCK='DRN'; ICB=IDRNCB; CMAXNO1='NaN1'; CAUX='AUXILIARY SYSTEM NOPRINT'; TEXT='_'
    CASE (23); LEX=LRIV; CPCK='RIV'; ICB=IRIVCB; CMAXNO1='NaN1'; CAUX='AUXILIARY INFFCT AUXILIARY SYSTEM NOPRINT'; TEXT='_'
-   CASE (24); LEX=LEVT; CPCK='EVT'; ICB=IEVTCB; CMAXNO1=TRIM(ITOS(NEVTOP)); CAUX=''; TEXT=''
+   CASE (24)
+    LEX=LEVT; CPCK='EVT'; ICB=IEVTCB; CMAXNO1=TRIM(ITOS(NEVTOP)); CAUX=''; TEXT=''
    CASE (25); LEX=LGHB; CPCK='GHB'; ICB=IGHBCB; CMAXNO1='NaN1'; CAUX='AUXILIARY SYSTEM NOPRINT'; TEXT='_'
    CASE (26); LEX=LRCH; CPCK='RCH'; ICB=IRCHCB; CMAXNO1=TRIM(ITOS(NRCHOP)); CAUX=''; TEXT=''
    CASE (27); LEX=LOLF
@@ -3648,8 +3649,11 @@ KLOOP: DO K=1,SIZE(TOPICS(JJ)%STRESS(1)%FILES,1)
   CALL IDFCOPY(IDF,LAK(I))
   IF(.NOT.PMANAGER_SAVEMF2005_MOD_READ(LAK(I),ITOPIC,1,I,1,SCL_D,SCL_U,0))RETURN 
   IF(I.EQ.1)THEN
-   !## remove negative lake-numbers
-   DO IROW=1,BND(1)%NROW; DO ICOL=1,BND(1)%NCOL; IF(LAK(1)%X(ICOL,IROW).LT.0.0)LAK(1)%X(ICOL,IROW)=0.0; ENDDO; ENDDO
+   !## remove negative lake-numbers and nodata cells
+   DO IROW=1,BND(1)%NROW; DO ICOL=1,BND(1)%NCOL
+    IF(LAK(1)%X(ICOL,IROW).LT.0.0)LAK(1)%X(ICOL,IROW)=0.0
+    IF(LAK(1)%X(ICOL,IROW).EQ.LAK(1)%NODATA)LAK(1)%X(ICOL,IROW)=0.0
+   ENDDO; ENDDO
   ELSE
    !## clean rest of input
    CALL PMANAGER_SAVEMF2005_CORRECT(1,LAK,LAK(I),0,ITOPIC)
@@ -3691,14 +3695,14 @@ KLOOP: DO K=1,SIZE(TOPICS(JJ)%STRESS(1)%FILES,1)
 
   !## get initial, minimal and maximal stages per lake
   DO I=1,NLAKES
-   DO J=2,4
+   DO J=3,5
     SELECT CASE (J)
-     CASE (2); IOP=1 !## average
-     CASE (3); IOP=2 !## minimal
-     CASE (4); IOP=3 !## maximal
+     CASE (3); IOP=1 !## initial (take average value)
+     CASE (4); IOP=2 !## minimal
+     CASE (5); IOP=3 !## maximal
     END SELECT
     IF(.NOT.PMANAGER_SAVEMF2005_LAKE_GETMEANVALUE(LAK(1)%X,LAK(J)%X,ULAKES(I),LVL,IBATCH,IOP))RETURN
-    IF(J.EQ.2)THEN
+    IF(J.EQ.3)THEN
      LINE=TRIM(RTOS(LVL,'G',5))
     ELSE
      LINE=TRIM(LINE)//','//TRIM(RTOS(LVL,'G',5))
@@ -3724,10 +3728,15 @@ KLOOP: DO K=1,SIZE(TOPICS(JJ)%STRESS(1)%FILES,1)
   LINE=TRIM(ITOS(0))
   WRITE(IU,'(A)') TRIM(LINE) 
 
-  !## get average prcplk,evaplk,rnf,wthdrw
+  !## get average prcplk,evaplk sum of rnf,wthdrw
   IOP=1
   DO I=1,NLAKES
    DO J=7,10
+    SELECT CASE (J)
+     CASE (7,8); IOP=1 !## initial (take average value)
+     CASE (9);   IOP=1 !## average of runoff
+     CASE (10);  IOP=1 !## average (sum?) of withdrawall
+    END SELECT
     IF(.NOT.PMANAGER_SAVEMF2005_LAKE_GETMEANVALUE(LAK(1)%X,LAK(J)%X,ULAKES(I),LVL,IBATCH,IOP))RETURN
     IF(J.EQ.7)THEN
      LINE=TRIM(RTOS(LVL,'G',5))
@@ -3832,6 +3841,7 @@ KLOOP: DO K=1,SIZE(TOPICS(JJ)%STRESS(1)%FILES,1)
  LINE='HEAD SAVE UNIT '//TRIM(ITOS(IHEDUN)); WRITE(IU,'(A)') TRIM(LINE)
  DO IPER=1,NPER
   LINE='PERIOD '//TRIM(ITOS(IPER))//' STEP 1'; WRITE(IU,'(A)') TRIM(LINE)
+  LINE='PRINT BUDGET'; WRITE(IU,'(A)') TRIM(LINE)
   LINE='SAVE HEAD'; DO ILAY=1,NLAY; LINE=TRIM(LINE)//' '//TRIM(ITOS(ILAY)); ENDDO; WRITE(IU,'(A)') TRIM(LINE)
   LINE='SAVE BUDGET '//TRIM(ITOS(IBCFCB)); DO ILAY=1,NLAY; LINE=TRIM(LINE)//' '//TRIM(ITOS(ILAY)); ENDDO; WRITE(IU,'(A)') TRIM(LINE)
   IF(LRCH)THEN
@@ -4627,7 +4637,6 @@ KLOOP: DO K=1,SIZE(TOPICS(JJ)%STRESS(1)%FILES,1)
  LOGICAL,INTENT(IN) :: LTB
  INTEGER,DIMENSION(:),ALLOCATABLE :: IEQUAL
  INTEGER :: IPER,KPER,NBDTIM,ISYS,K,NTOP,NSYS,SCL_D,SCL_U,I,J,IROW,ICOL,NHED,NFLW
-! CHARACTER(LEN=512) :: LINE
  CHARACTER(LEN=256) :: EXFNAME
  REAL :: FCT,IMP,CNST
  INTEGER :: ILAY,IS1,ICNST,INEW
@@ -4708,10 +4717,10 @@ KLOOP: DO K=1,SIZE(TOPICS(JJ)%STRESS(1)%FILES,1)
 
      CASE (24) !## evt
       SCL_D=1
-      IF(K.EQ.1)SCL_U=4
-      IF(K.NE.1)SCL_U=2
+      IF(K.EQ.1)SCL_U=2 !4 !## sum
+      IF(K.NE.1)SCL_U=2 !## average
      CASE (26) !## rch
-      SCL_D=1; SCL_U=4
+      SCL_D=1; SCL_U=2 !4  !## sum
      !## drn,riv,ghg,olf
      CASE (22,23,25) !## drn,riv,ghb,olf
       IF(K.EQ.1)THEN; SCL_D=0; SCL_U=5; ENDIF
@@ -4882,12 +4891,13 @@ KLOOP: DO K=1,SIZE(TOPICS(JJ)%STRESS(1)%FILES,1)
  
  !## copy previous results ...
  IF(IPER.GT.1)THEN
-  ALLOCATE(X(PCK(1,0)%NCOL,PCK(1,0)%NROW,NTOP))
+  ALLOCATE(X(PCK(1,0)%NCOL,PCK(1,0)%NROW,NTOP)); X=0.0
   DO ITOP=1,NTOP; DO IROW=1,PCK(1,0)%NROW; DO ICOL=1,PCK(1,0)%NCOL
    X(ICOL,IROW,ITOP)=PCK(ITOP,0)%X(ICOL,IROW)
   ENDDO; ENDDO; ENDDO
  ENDIF
  
+ !## compute total averages values to be used for comparison
  DO IROW=1,PCK(1,0)%NROW; DO ICOL=1,PCK(1,0)%NCOL
   DO ITOP=1,NTOP
    MTOP=0.0; PCK(ITOP,0)%X(ICOL,IROW)=0.0
@@ -4897,7 +4907,7 @@ KLOOP: DO K=1,SIZE(TOPICS(JJ)%STRESS(1)%FILES,1)
      MTOP=MTOP+1.0
     ENDIF
    ENDDO
-   IF(ISUM(ITOP).EQ.2)PCK(ITOP,0)%X(ICOL,IROW)=PCK(ITOP,0)%X(ICOL,IROW)/MTOP
+   IF(ISUM(ITOP).EQ.2.AND.MTOP.GT.0.0)PCK(ITOP,0)%X(ICOL,IROW)=PCK(ITOP,0)%X(ICOL,IROW)/MTOP
   ENDDO
  ENDDO; ENDDO
 
@@ -5816,16 +5826,16 @@ KLOOP: DO K=1,SIZE(TOPICS(JJ)%STRESS(1)%FILES,1)
   DO ILAY=1,NLAY
    ZT=TOP(ILAY)%X(ICOL,IROW)
    !## found appropriate modellayer
-   IF(ZT.GE.LAK(5)%X(ICOL,IROW))THEN
+   IF(ZT.GE.LAK(2)%X(ICOL,IROW))THEN
 
     LBD(ILAY)%X(ICOL,IROW)=LAK(1)%X(ICOL,IROW)     
     BND(ILAY)%X(ICOL,IROW)=0.0
 
     ZB=BOT(ILAY)%X(ICOL,IROW)
     !## compute fraction for leakance in case lake bathymetry is higher
-    IF(ZB.LT.LAK(5)%X(ICOL,IROW))THEN
+    IF(ZB.LT.LAK(2)%X(ICOL,IROW))THEN
      !## add extra resistance to leakance of part of aquifer
-     C=(LAK(5)%X(ICOL,IROW)-ZB)/(KHV(ILAY)%X(ICOL,IROW)/KVA(ILAY)%X(ICOL,IROW))
+     C=(LAK(2)%X(ICOL,IROW)-ZB)/(KHV(ILAY)%X(ICOL,IROW)/KVA(ILAY)%X(ICOL,IROW))
     ELSE
      C=0.0
     ENDIF
@@ -5841,7 +5851,7 @@ KLOOP: DO K=1,SIZE(TOPICS(JJ)%STRESS(1)%FILES,1)
     !## exists an interbed
     IF(TIB.GT.0.0)THEN
      !## modify bottom of modellayer, less interbed material remains in this case
-     BOT(ILAY)%X(ICOL,IROW)=LAK(5)%X(ICOL,IROW)
+     BOT(ILAY)%X(ICOL,IROW)=LAK(2)%X(ICOL,IROW)
     ENDIF
 
    ENDIF
@@ -5855,8 +5865,8 @@ KLOOP: DO K=1,SIZE(TOPICS(JJ)%STRESS(1)%FILES,1)
    !## thickness of current modellayer
    D1=TOP(ILAY)%X(ICOL,IROW)-BOT(ILAY)%X(ICOL,IROW)
    !## depth of lake at that location
-   D2=MAX(TOP(ILAY)%X(ICOL,IROW),LAK(5)%X(ICOL,IROW))- &
-      MAX(BOT(ILAY)%X(ICOL,IROW),LAK(5)%X(ICOL,IROW))
+   D2=MAX(TOP(ILAY)%X(ICOL,IROW),LAK(2)%X(ICOL,IROW))- &
+      MAX(BOT(ILAY)%X(ICOL,IROW),LAK(2)%X(ICOL,IROW))
 
    CALL IDFGETEDGE(IDF,IROW,ICOL,X1,Y1,X2,Y2)
    DX=X2-X1; DY=Y2-Y1
@@ -5866,8 +5876,9 @@ KLOOP: DO K=1,SIZE(TOPICS(JJ)%STRESS(1)%FILES,1)
     JROW=IR(I)+IROW; JCOL=IC(I)+ICOL
     IF(JROW.GT.IDF%NROW.OR.JROW.LT.1)CYCLE
     IF(JCOL.GT.IDF%NCOL.OR.JCOL.LT.1)CYCLE
-    !## not equal a lake, thus next to the lake
-    IF(LBD(ILAY)%X(JCOL,JROW).EQ.0)THEN
+    !## not equal a lake, thus next to the lake and not inactive cell
+    IF(LBD(ILAY)%X(JCOL,JROW).EQ.0.AND. &
+       BND(ILAY)%X(JCOL,JROW).NE.0)THEN
      CALL IDFGETEDGE(IDF,JROW,JCOL,X1,Y1,X2,Y2)
      IF(JROW.EQ.IROW)THEN; A=DY; L=X2-X1 ; ENDIF
      IF(JCOL.EQ.ICOL)THEN; A=DX; L=Y2-Y1 ; ENDIF
@@ -5902,8 +5913,8 @@ KLOOP: DO K=1,SIZE(TOPICS(JJ)%STRESS(1)%FILES,1)
  DO IROW=1,IDF%NROW; DO ICOL=1,IDF%NCOL
   IF(INT(X(ICOL,IROW)).EQ.INT(ULAKE))THEN
    SELECT CASE (IOP)
-    !## average
-    CASE (1); LVL=LVL+Y(ICOL,IROW); ILVL=ILVL+1.0
+    !## average/sum
+    CASE (1,4); LVL=LVL+Y(ICOL,IROW); ILVL=ILVL+1.0
     !## min
     CASE (2); IF(ILVL.EQ.0)THEN; LVL=Y(ICOL,IROW); ELSE; LVL=MIN(LVL,Y(ICOL,IROW)); ENDIF; ILVL=ILVL+1.0
     !## max
@@ -8240,10 +8251,10 @@ JLOOP: DO K=1,SIZE(TOPICS)
  TOPICS(30)%SNAME(1) ='Stream Flow River (ISG)'
  TOPICS(31)%SNAME(1) ='Specified Flow/Head'
  TOPICS(32)%SNAME(1) ='Lake Identifications'
- TOPICS(32)%SNAME(2) ='Initial Lake Levels'
- TOPICS(32)%SNAME(3) ='Lake Bathymetry'
- TOPICS(32)%SNAME(4) ='Maximal Lake Levels'
- TOPICS(32)%SNAME(5) ='Lake Bathymetry'
+ TOPICS(32)%SNAME(2) ='Lake Bathymetry'
+ TOPICS(32)%SNAME(3) ='Initial Lake Levels'
+ TOPICS(32)%SNAME(4) ='Minimal Lake Levels'
+ TOPICS(32)%SNAME(5) ='Maximal Lake Levels'
  TOPICS(32)%SNAME(6) ='Lakebed Resistance'
  TOPICS(32)%SNAME(7) ='Precipitation at surface Lake'
  TOPICS(32)%SNAME(8) ='Evaporation at surface Lake'

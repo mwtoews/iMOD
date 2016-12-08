@@ -355,19 +355,19 @@ CONTAINS
   
  !###======================================================================
  LOGICAL FUNCTION IDFREADSCALE_GETX(IDFC,IDFM,SCLTYPE_UP,SCLTYPE_DOWN,PERC)
- ! IDFM = mother idf and will return values on grid defined by IDFM
- ! IDFC = child  idf and uses grid defined by IDFC to scale on IDFM
- ! SCLTYPE_UP:
- ! 1 = SPECIAAL (IBOUNDARY)
- ! 2 = REKENKUNDIG (SHEAD/VCONT/S)
- ! 3 = GEOMETRISCH (KD)
- ! 4 = SUM(Q) (RCH/EVT)
- ! 5 = SUM(COND)*RATIO (RIV/DRN/GHB CONDUCTANCE; RCH MM/DAY)
- ! 6 = INVERSE (C)
- ! 7 = MOST FREQUENT OCCURENCE
- ! 8 = SUM (1/c)*RATIO
- ! 9 = PERCENTILE 
- !10 = BLOCKVALUE
+ ! idfm = mother idf and will return values on grid defined by idfm
+ ! idfc = child  idf and uses grid defined by idfc to scale on idfm
+ ! scltype_up:
+ ! 1 = speciaal (iboundary)
+ ! 2 = rekenkundig (shead/vcont/s)
+ ! 3 = geometrisch (kd)
+ ! 4 = sum(q)
+ ! 5 = sum(cond)*ratio (riv/drn/ghb conductance/rch/evt)
+ ! 6 = inverse (c)
+ ! 7 = most frequent occurence
+ ! 8 = sum (1/c)*ratio
+ ! 9 = percentile 
+ !10 = blockvalue
  !###======================================================================
  IMPLICIT NONE
  TYPE(IDFOBJ),INTENT(INOUT) :: IDFM 

@@ -77,7 +77,7 @@ CONTAINS
   WRITE(*,'(A)') 'Error: Cannot write file: ['//TRIM(OUTNAME)//']'; RETURN
  ENDIF
  
- ALLOCATE(RES(100)); WRITE(*,*) ASSOCIATED(RES)
+ ALLOCATE(RES(100)) 
  
  DO IZ=1,NZ
  
@@ -89,15 +89,18 @@ CONTAINS
   
    ROOT=IPFFILE(II)(:INDEX(IPFFILE(II),'\',.TRUE.)-1)
    IPF(1)%FNAME=IPFFILE(II)
-   IPF(1)%XCOL =ABS(IHCOL(II)); IPF(1)%YCOL=ABS(IMCOL(II)); IPF(1)%ZCOL=IWCOL(II)
-   IPF(1)%Z2COL=ABS(ILCOL(II)); IPF(1)%QCOL=IWCOL(II)
+   IPF(1)%XCOL =IHCOL(II); IPF(1)%YCOL=IMCOL(II); IPF(1)%ZCOL=IWCOL(II)
+   IPF(1)%Z2COL=ILCOL(II); IPF(1)%QCOL=IWCOL(II)
 
    IF(.NOT.IPFREAD2(1,1,0))RETURN
    
    IF(IPF(1)%ACOL.EQ.0)THEN
     IF(.NOT.TSTATRESIDUAL_POINTER(N,IPF(1)%NROW))RETURN
     DO I=1,IPF(1)%NROW
-
+     
+     !## overrule weigh if not specified
+     IF(W_TYPE(II).EQ.0)IPF(1)%XYZ(3,I)=1.0
+     
      READ(IPF(1)%INFO(1,I),*) XC; READ(IPF(1)%INFO(2,I),*) YC
      !## check whether insize appropriate zone
      IF(NZONE.GT.0)THEN
@@ -105,7 +108,7 @@ CONTAINS
       IF(IDF%X(ICOL,IROW).NE.IZONE(IZ))CYCLE
      ENDIF   
 
-     W=IPF(1)%XYZ(3,I); IF(W.GT.0.0.AND.W_TYPE(II).EQ.1)W=1.0/SQRT(W); W=MAX(0.0,W)
+     W=IPF(1)%XYZ(3,I); IF(W.GT.0.0.AND.W_TYPE(II).EQ.2)W=1.0/SQRT(W); W=MAX(0.0,W)
      ILAY=0; IF(ILCOL(II).GT.0)ILAY=IPF(1)%XYZ(4,I)
      H=IPF(1)%XYZ(1,I)
      M=IPF(1)%XYZ(2,I)
@@ -119,10 +122,18 @@ CONTAINS
      RES(N)%ILAY=   ILAY
      RES(N)%X   =   XC
      RES(N)%Y   =   YC
+
+     WRITE(6,'(A,F10.2)') '+Progress ',REAL(I)*100.0/REAL(IPF(1)%NROW)  
+
     ENDDO
+   
    ELSE
     CALL IPFASSFILEALLOCATE(1)
     DO I=1,IPF(1)%NROW
+
+     !## overrule weigh if not specified
+     IF(W_TYPE(II).EQ.0)IPF(1)%XYZ(3,I)=1.0
+
      READ(IPF(1)%INFO(1,I),*) XC; READ(IPF(1)%INFO(2,I),*) YC
      !## check whether inside appropriate zone
      IF(NZONE.GT.0)THEN
@@ -130,7 +141,7 @@ CONTAINS
       IF(IDF%X(ICOL,IROW).NE.IZONE(IZ))CYCLE
      ENDIF   
      FNAME=TRIM(ROOT)//'\'//TRIM(IPF(1)%INFO(IPF(1)%ACOL,I))//'.'//TRIM(IPF(1)%FEXT)
-     W=IPF(1)%XYZ(3,I); IF(W.GT.0.0.AND.W_TYPE(II).EQ.1)W=1.0/SQRT(W); W=MAX(0.0,W)
+     W=IPF(1)%XYZ(3,I); IF(W.GT.0.0.AND.W_TYPE(II).EQ.2)W=1.0/SQRT(W); W=MAX(0.0,W)
      ILAY=0; IF(ILCOL(II).GT.0)ILAY=IPF(1)%XYZ(4,I)
      IF(IPFOPENASSFILE(IU,1,FNAME).AND. &
         IPFREADASSFILELABEL(IU,1,FNAME).AND.  &
@@ -175,11 +186,12 @@ CONTAINS
        ENDIF
       ENDDO
 
+      XCOR=0.0; YCOR=0.0; ZCOR=0.0
+
       IF(JJ.GT.0)THEN
        MH=MH/REAL(JJ); MM=MM/REAL(JJ)
 
        !## compute cross-correlation
-       XCOR=0.0; YCOR=0.0; ZCOR=0.0
        IF(JJ.GT.1)THEN
         DO J=1,ASSF(1)%NRASS
          M=ASSF(1)%MEASURE(1,J); H=ASSF(1)%MEASURE(2,J)   
@@ -212,12 +224,15 @@ CONTAINS
        ENDIF       
        
       ENDIF
-      WRITE(JU,'(A52,9(A1,F15.7),A1,I10)') TRIM(IPF(1)%INFO(IPF(1)%ACOL,I)),',',MH,',',MM,',',MH-MM,',',STVDH,',',DYNH,',',DYNM,',',DYNH-DYNM,',',XCOR,',',W,',',JJ
+      WRITE(JU,'(A52,9(A1,G15.7),A1,I10)') TRIM(IPF(1)%INFO(IPF(1)%ACOL,I)),',',MH,',',MM,',',MH-MM,',',STVDH,',',DYNH,',',DYNM,',',DYNH-DYNM,',',XCOR,',',W,',',JJ
       IF(ICOLLECT.EQ.1)THEN
        CALL IOSCOPYFILE(TRIM(ROOT)//'\'//TRIM(IPF(1)%INFO(IPF(1)%ACOL,I))//'.'//TRIM(IPF(1)%FEXT), &
                         OUTNAME(:INDEX(OUTNAME,'\',.TRUE.))//'timeseries\'//TRIM(IPF(1)%INFO(IPF(1)%ACOL,I))//'.'//TRIM(IPF(1)%FEXT))
       ENDIF
      ENDIF
+
+     WRITE(6,'(A,F10.2)') '+Progress ',REAL(I)*100.0/REAL(IPF(1)%NROW)  
+
     ENDDO
     CALL IPFDEALLOCATE()
     CALL IPFCLOSEASSFILE()
@@ -235,7 +250,7 @@ CONTAINS
    IF(J.EQ.3)WRITE(JU,'(/A)') 'Dynamics Difference' !Normal values'
    IF(J.EQ.4)WRITE(JU,'(/A)') 'Absolute Dynamics Difference' !values'
    IF(J.EQ.5)WRITE(JU,'(/A)') 'Correlation Coefficients'
-   WRITE(JU,'(2A10,2A15,99F15.7)') 'Layer','NPop.','Mean','Variance',(PERC(I),I=1,SIZE(PERC))
+   WRITE(JU,'(2A10,2A15,99G15.7)') 'Layer','NPop.','Mean','Variance',(PERC(I),I=1,SIZE(PERC))
    DO IL=IL1,IL2
     II=0; DO I=1,N
      IF(RES(I)%ILAY.EQ.IL)THEN
@@ -250,12 +265,10 @@ CONTAINS
     IF(II.GT.0)THEN
      CALL UTL_STDEF(X,II,10.0E10,VAR,MEAN,NPOP)
      CALL UTL_GETMED(X,II,10.0E10,PERC,SIZE(PERC),JJ,XPERC)
-!     CALL UTL_GETHIST(X,II,10.0E10,HIST,SIZE(HIST),JJ,XHIST)
     ELSE
      XPERC=0.0;MEAN=0.0; VAR=0.0; XHIST=0.0
     ENDIF
     WRITE(JU,'(2I10,99F15.7)') IL,NPOP,MEAN,VAR,(XPERC(I),I=1,SIZE(PERC))
-!    WRITE(JU,'(/A)') 'Histogram'; DO I=1,SIZE(HIST)-1; WRITE(JU,'(2(A1,F10.2),F10.1)') '>',HIST(I),'<=',HIST(I+1),XHIST(I); ENDDO
    ENDDO
   ENDDO
   WRITE(JU,'(A)')
@@ -265,7 +278,7 @@ CONTAINS
    IF(J.EQ.3)WRITE(JU,'(/A)') 'Dynamics Difference' !Normal values'
    IF(J.EQ.4)WRITE(JU,'(/A)') 'Absolute Dynamics Difference' !values'
    IF(J.EQ.5)WRITE(JU,'(/A)') 'Correlation Coefficients'
-   WRITE(JU,'(2A10,2A15,99F15.7)') 'Layer','NPop.','Mean','Variance',(PERC(I),I=1,SIZE(PERC))
+   WRITE(JU,'(2A10,2(A15,A1),99(G15.7,A1))') 'Layer','NPop.','Mean','Variance',(PERC(I),I=1,SIZE(PERC))
    IF(J.EQ.1)X(1:N)=RES(1:N)%DH
    IF(J.EQ.2)X(1:N)=ABS(RES(1:N)%DH)
    IF(J.EQ.3)X(1:N)=RES(1:N)%DHW
@@ -273,9 +286,7 @@ CONTAINS
    IF(J.EQ.5)X(1:N)=    RES(1:N)%COR
    CALL UTL_STDEF(X,N,10.0E10,VAR,MEAN,NPOP)
    CALL UTL_GETMED(X,N,10.0E10,PERC,SIZE(PERC),JJ,XPERC)
-!   CALL UTL_GETHIST(X,N,10.0E10,HIST,SIZE(HIST),JJ,XHIST)
-   WRITE(JU,'(10X,I10,99F15.7)') NPOP,MEAN,VAR,(XPERC(I),I=1,SIZE(PERC))
-!   WRITE(JU,'(/A)') 'Histogram'; DO I=1,SIZE(HIST)-1; WRITE(JU,'(2(A1,F10.2),F10.1)') '>',HIST(I),'<=',HIST(I+1),XHIST(I); ENDDO
+   WRITE(JU,'(10X,I10,99(G15.7,A1))') NPOP,MEAN,VAR,(XPERC(I),I=1,SIZE(PERC))
   ENDDO
  
   !## write ipf files
@@ -297,12 +308,14 @@ CONTAINS
    J=0; DO I=1,N
     IF(RES(I)%ILAY.EQ.IL)THEN
      J=J+1
-     IF(ICOLLECT.EQ.0)WRITE(KU,'(10(F10.3,A1))') RES(I)%X,',',RES(I)%Y,',',RES(I)%M,',',RES(I)%H,',',RES(I)%DHW,',',RES(I)%DH,',',RES(I)%MH,',',RES(I)%MM,',',RES(I)%COR,',',RES(I)%W 
-     IF(ICOLLECT.EQ.1)WRITE(KU,'(10(F10.3,A))')  RES(I)%X,',',RES(I)%Y,',"'//TRIM(RES(I)%CID)//'",',RES(I)%M,',',RES(I)%H,',',RES(I)%DHW,',',RES(I)%DH,',',RES(I)%MH,',',RES(I)%MM,',',RES(I)%COR,',',RES(I)%W 
+     IF(ICOLLECT.EQ.0)WRITE(KU,'(10(G15.7,A1))') RES(I)%X,',',RES(I)%Y,',',RES(I)%M,',',RES(I)%H,',',RES(I)%DHW,',',RES(I)%DH,',',RES(I)%MH,',',RES(I)%MM,',',RES(I)%COR,',',RES(I)%W 
+     IF(ICOLLECT.EQ.1)WRITE(KU,'(10(G15.7,A))')  RES(I)%X,',',RES(I)%Y,',"'//TRIM(RES(I)%CID)//'",',RES(I)%M,',',RES(I)%H,',',RES(I)%DHW,',',RES(I)%DH,',',RES(I)%MH,',',RES(I)%MM,',',RES(I)%COR,',',RES(I)%W 
     ENDIF
    ENDDO
    CLOSE(KU)
   ENDDO
+
+  WRITE(*,'(/A,I10/)') 'Finished processing zone ',IZ
  ENDDO
  CLOSE(JU)
 

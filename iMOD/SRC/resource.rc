@@ -8,7 +8,7 @@
 //
 // Winteracter resource script. 
 //
-// Modified : 06/Dec/2016 16:17:26
+// Modified : 08/Dec/2016 16:11:08
 //
 ///////////////////////////////////////////////////
 //
@@ -1155,6 +1155,9 @@
 #define ID_ICONDRIP                      2148
 #define ID_IDFINDICES                   40293
 #define ID_DPMANAGER_PCG                  385
+#define ID_UNITS                        40294
+#define ID_UNITSMETER                   40295
+#define ID_UNITSFEET                    40296
 
 ///////////////////////////////////////////////////
 //
@@ -9188,7 +9191,7 @@ BEGIN
 " 1267    8 Arial, 400 0 \n"
 " 1020    8 Arial, 400 0 \n"
 "[Grids] \n"
-" 1004     3   9999   200 \n"
+" 1004     5   9999   200 \n"
 "   50 \n"
 ,0
 END
@@ -9198,13 +9201,17 @@ STYLE DS_3DLOOK
 FONT    8, "Arial"
 BEGIN
     CONTROL "Date",ISS1,"EDIT",WS_CHILD | WS_VISIBLE | WS_BORDER | WS_TABSTOP | ES_LEFT,    0,    0,   85,   14
-    CONTROL "TimeStep",ISS2,"REALEDIT",WS_CHILD | WS_VISIBLE | WS_BORDER | WS_TABSTOP | ES_LEFT | ES_CENTER | ES_MULTILINE,    0,    0,   65,   14
+    CONTROL "Stress Period",ISS2,"REALEDIT",WS_CHILD | WS_VISIBLE | WS_BORDER | WS_TABSTOP | ES_LEFT | ES_CENTER | ES_MULTILINE,    0,    0,   65,   14
+    CONTROL "Timesteps",ISS4,"INTEGEREDIT",WS_CHILD | WS_VISIBLE | WS_BORDER | WS_TABSTOP | ES_LEFT,    0,    0,   40,   14
+    CONTROL "Factor",ISS5,"REALEDIT",WS_CHILD | WS_VISIBLE | WS_BORDER | WS_TABSTOP | ES_LEFT,    0,    0,   40,   14
     CONTROL "Saving",ISS3,"INTEGEREDIT",WS_CHILD | WS_VISIBLE | WS_BORDER | WS_TABSTOP | ES_LEFT,    0,    0,   40,   14
 END
 
 IDD_TEMPLATE045 RCDATA
 BEGIN
 "[Ranges] \n"
+" 1002               1             999 \n"
+" 1030      1.0000           10.000      \n"
 "[Lengths] \n"
 " 1059    52 \n"
 "[Formats] \n"
@@ -11202,6 +11209,11 @@ BEGIN
         MENUITEM SEPARATOR
         POPUP "&Layout"
         BEGIN
+            POPUP "Set Units"
+            BEGIN
+                MENUITEM "Meters",                                   ID_UNITSMETER, CHECKED
+                MENUITEM "Feet",                                     ID_UNITSFEET
+            END
             MENUITEM "&Show Scalebar",                           ID_SHOWSCALEBAR, CHECKED
             MENUITEM "Show &Axes",                               ID_SHOWAXES, CHECKED
             MENUITEM "Show North &Arrow",                        ID_SHOWNARROW
@@ -11401,6 +11413,7 @@ ID_SFIGURE,3,14,0,
 ID_ISGEDIT_SETTINGS,3,14,17,0,
 ID_ACCURACY,3,19,0,
 ID_LAYOUT,3,21,0,
+ID_UNITS,3,21,1,0,
 ID_MAP,4,0,
 ID_SORT,4,4,0,
 ID_IDFOPTIONS,4,6,0,
@@ -11597,6 +11610,9 @@ ID_ISGSFR,"Shows the stream direction\0",
 ID_ISGGEN_CREATEISGRIV,"Initiate an ISG file and add it to the ISG Edit to modify, applicable for the RIV Package\0",
 ID_ISGGEN_CREATEISGSFR,"Initiate an ISG file and add it to the ISG Edit to modify, applicable for the SFR Package\0",
 ID_IDFINDICES,"Display Column and Row Indices per Cell\0",
+ID_UNITS,"Set the Display Units\0",
+ID_UNITSMETER,"Set Units to Meters\0",
+ID_UNITSFEET,"Set Units to Feet\0",
 0
 END
 
@@ -12187,4 +12203,4 @@ END
 //*WI* FILENAME    resource.f90
 //*WI* FMODNAME    RESOURCE
 //*WI* LASTTYPE        2
-//*WI* LASTRES       246
+//*WI* LASTRES       244

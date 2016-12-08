@@ -162,6 +162,8 @@ CALL WMENUSETSTATE(ID_IMPORTSOBEK,1,ISOBEK)
 !## initiate idproc for help-manual
 IDPROC=0
 
+IMOD_IUNITS=1  !## units are meters
+
 !## initialize demo-mode
 DEMO%IDEMO=0
 
