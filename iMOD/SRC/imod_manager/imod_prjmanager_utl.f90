@@ -6,11 +6,38 @@ USE MOD_IDF, ONLY : IDFNULLIFY,IDFDEALLOCATEX,IDFCOPY
 CONTAINS
 
  !###======================================================================
+ LOGICAL FUNCTION PMANAGER_SAVEMF2005_PCK_GETMINMAX(X,NCOL,NROW,XB,MINV,MAXV)
+ !###======================================================================
+ IMPLICIT NONE
+ REAL,INTENT(IN),DIMENSION(NCOL,NROW) :: X,XB
+ INTEGER,INTENT(IN) :: NROW,NCOL
+ INTEGER :: IROW,ICOL,I
+ REAL,INTENT(OUT) :: MINV,MAXV
+
+ PMANAGER_SAVEMF2005_PCK_GETMINMAX=.FALSE.
+
+ MINV=HUGE(1.0); MAXV=-HUGE(1.0); I=0
+ DO IROW=1,IDF%NROW; DO ICOL=1,IDF%NCOL
+  !## active node
+  IF(XB(ICOL,IROW).NE.0)THEN 
+   IF(X(ICOL,IROW).NE.HNOFLOW)THEN 
+    MINV=MIN(MINV,X(ICOL,IROW))
+    MAXV=MAX(MAXV,X(ICOL,IROW))
+    I   =I+1
+   ENDIF
+  ENDIF
+ ENDDO; ENDDO
+
+ IF(I.GT.0)PMANAGER_SAVEMF2005_PCK_GETMINMAX=.TRUE.
+
+ END FUNCTION PMANAGER_SAVEMF2005_PCK_GETMINMAX
+
+ !###======================================================================
  SUBROUTINE PMANAGER_SAVEMF2005_ALLOCATEPCK(N)
  !###======================================================================
  IMPLICIT NONE
  INTEGER,INTENT(IN) :: N
- INTEGER :: I,J
+ INTEGER :: I
  
  IF(ALLOCATED(PCK))CALL PMANAGER_SAVEMF2005_DEALLOCATEPCK()
 
@@ -26,7 +53,7 @@ CONTAINS
  SUBROUTINE PMANAGER_SAVEMF2005_DEALLOCATEPCK()
  !###======================================================================
  IMPLICIT NONE
- INTEGER:: N,I,J
+ INTEGER:: N,I
  
  IF(.NOT.ALLOCATED(PCK))RETURN
  
