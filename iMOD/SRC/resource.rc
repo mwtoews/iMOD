@@ -8,7 +8,7 @@
 //
 // Winteracter resource script. 
 //
-// Modified : 08/Dec/2016 16:11:08
+// Modified : 12/Dec/2016 18:37:13
 //
 ///////////////////////////////////////////////////
 //
@@ -9202,9 +9202,9 @@ FONT    8, "Arial"
 BEGIN
     CONTROL "Date",ISS1,"EDIT",WS_CHILD | WS_VISIBLE | WS_BORDER | WS_TABSTOP | ES_LEFT,    0,    0,   85,   14
     CONTROL "Stress Period",ISS2,"REALEDIT",WS_CHILD | WS_VISIBLE | WS_BORDER | WS_TABSTOP | ES_LEFT | ES_CENTER | ES_MULTILINE,    0,    0,   65,   14
-    CONTROL "Timesteps",ISS4,"INTEGEREDIT",WS_CHILD | WS_VISIBLE | WS_BORDER | WS_TABSTOP | ES_LEFT,    0,    0,   40,   14
-    CONTROL "Factor",ISS5,"REALEDIT",WS_CHILD | WS_VISIBLE | WS_BORDER | WS_TABSTOP | ES_LEFT,    0,    0,   40,   14
     CONTROL "Saving",ISS3,"INTEGEREDIT",WS_CHILD | WS_VISIBLE | WS_BORDER | WS_TABSTOP | ES_LEFT,    0,    0,   40,   14
+    CONTROL "NTSTP",ISS4,"INTEGEREDIT",WS_CHILD | WS_VISIBLE | WS_BORDER | WS_TABSTOP | ES_LEFT,    0,    0,   40,   14
+    CONTROL "TMULT",ISS5,"REALEDIT",WS_CHILD | WS_VISIBLE | WS_BORDER | WS_TABSTOP | ES_LEFT,    0,    0,   40,   14
 END
 
 IDD_TEMPLATE045 RCDATA
