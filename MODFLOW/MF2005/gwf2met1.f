@@ -76,6 +76,9 @@ C change meta data to a different grid.
 
       runcomment   => gwfmetdat(igrid)%runcomment
       coord_descr  => gwfmetdat(igrid)%coord_descr
+
+      idate_save   => gwfmetdat(igrid)%idate_save
+
       time_syear   => gwfmetdat(igrid)%time_syear
       time_smonth  => gwfmetdat(igrid)%time_smonth
       time_sday    => gwfmetdat(igrid)%time_sday
@@ -116,6 +119,9 @@ C save meta data for a grid.
 
       gwfmetdat(igrid)%runcomment   => runcomment
       gwfmetdat(igrid)%coord_descr  => coord_descr
+
+      gwfmetdat(igrid)%idate_save   => idate_save
+
       gwfmetdat(igrid)%time_syear   => time_syear
       gwfmetdat(igrid)%time_smonth  => time_smonth
       gwfmetdat(igrid)%time_sday    => time_sday
@@ -186,6 +192,9 @@ c ------------------------------------------------------------------------------
 c nullify
       runcomment   => null()
       coord_descr  => null()
+
+      idate_save   => null()
+
       time_syear   => null()
       time_smonth  => null()
       time_sday    => null()
@@ -290,6 +299,13 @@ C2------READ A LINE; IGNORE BLANK LINES AND PRINT COMMENT LINES.
      1            allocate(save_no_buf)
                save_no_buf = .true.
             end if
+
+            if (line(istart:istop).eq.'IDATE_SAVE') then
+               if (.not.associated(idate_save))
+     1            allocate(idate_save)
+               read(line(lloc:),*) idate_save
+            end if
+
             eol = .false.
             if (line(istart:istop).eq.'STARTTIME') then
                do while(.not.eol)
@@ -538,7 +554,8 @@ c update current time
       time_ostring = time_cstring
       call cfn_mjd2datehms(time_cjd,date,hour,minute,second)
       write(time_cstring,'(i8)') date
-
+!      write(*,*) date,time_ostring,time_cstring
+!      pause
       call sgwf2met1psv(igrid)
 
 c end of program
@@ -627,10 +644,12 @@ c     clean for nodata
 
          if (type.eq.splitidf) then
             fname = met1fname(isplit,text,ilay,'idf')
+!            write(*,*) trim(fname)
             writefile = .true.
             ! check SAVE BUDGET layers
             call splitgetiuidx(ibdchn,iuidx)
             if (iuidx.gt.0) then
+!            write(*,*) fooclay(iuidx,ilay)
                if (fooclay(iuidx,ilay).eq.0) writefile = .false.
             end if
             if (writefile) then
@@ -1113,10 +1132,18 @@ c create output file name
 
       if (issflg(kper).eq.0 .and. associated(time_ostring)) then ! TR
          fmt = '(5a,'//fmt
+         write(*,*) idate_save
+         if(idate_save.eq.0)then
          write(fname,fmt) root(1:cfn_length(root)),
-     1                    prefix(1:cfn_length(prefix)),'_',
-     1                    time_ostring(1:cfn_length(time_ostring)),
-     1                    '_l', ilay, '.',ext(1:cfn_length(ext))
+     1                     prefix(1:cfn_length(prefix)),'_',
+     1                     time_ostring(1:cfn_length(time_ostring)),
+     1                     '_l', ilay, '.',ext(1:cfn_length(ext))
+         elseif(idate_save.eq.1)then
+          write(fname,fmt) root(1:cfn_length(root)),
+     1                     prefix(1:cfn_length(prefix)),'_',
+     1                     time_cstring(1:cfn_length(time_cstring)),
+     1                     '_l', ilay, '.',ext(1:cfn_length(ext))
+         endif
       else ! SS
          fmt = '(5a,'//fmt
          write(fname,fmt) root(1:cfn_length(root)),
