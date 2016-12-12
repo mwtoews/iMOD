@@ -323,30 +323,28 @@ CONTAINS
      ENDDO
     ENDIF
     
-     JCOL=0
-     IF(INDEX(UTL_CAP(TRIM(ATTRIB1(ICOL)),'U'),'%').GT.0)THEN
-      SELECT CASE (UTL_CAP(TRIM(ATTRIB2(ICOL)),'U'))
-       CASE ('LUTUMPERCENTAGE')
-        JCOL=5
-       CASE ('SILTPERCENTAGE')
-        JCOL=6
-       CASE ('ZANDPERCENTAGE')
-        JCOL=7
-       CASE ('GRINDPERCENTAGE')
-        JCOL=8
-       CASE ('ORGANISCHESTOFPERCENTAGE')
-        JCOL=9
-      END SELECT
+    JCOL=0
+    IF(INDEX(UTL_CAP(TRIM(ATTRIB1(ICOL)),'U'),'%').GT.0)THEN
+     SELECT CASE (UTL_CAP(TRIM(ATTRIB2(ICOL)),'U'))
+      CASE ('LUTUMPERCENTAGE')
+       JCOL=5
+      CASE ('SILTPERCENTAGE')
+       JCOL=6
+      CASE ('ZANDPERCENTAGE')
+       JCOL=7
+      CASE ('GRINDPERCENTAGE')
+       JCOL=8
+      CASE ('ORGANISCHESTOFPERCENTAGE')
+       JCOL=9
+     END SELECT
       
-      IF(JCOL.GT.0)THEN
-       IATTRIB(JCOL)=ICOL
-      ENDIF
+     IF(JCOL.GT.0)IATTRIB(JCOL)=ICOL
      
-     ENDIF
+    ENDIF
     
    END DO
       
-   !## write only whenever length is available
+   !## write only whenever length is unavailable
    IF(IATTRIB(1).EQ.0)THEN 
 
     IF(IBATCH.EQ.1)THEN
@@ -376,7 +374,7 @@ CONTAINS
     
     LINE=CHAR(39)//TRIM(RTOS(X,'F',2))//CHAR(39)//','//CHAR(39)//TRIM(RTOS(Y,'F',2))//CHAR(39)//','//CHAR(39)//'subset'//TRIM(ITOS(IDIR))// &
          '\'//TRIM(CID)//CHAR(39)//','//CHAR(39)//TRIM(RTOS(ZEND,'F',2))//CHAR(39)//','//CHAR(39)//TRIM(ITOS(0))//CHAR(39)
-    DO ICOL=1,(MAXVAL(NCOLLINE)+5)
+    DO ICOL=1,NCOLIPF !(MAXVAL(NCOLLINE)+5)
      IF(IATTRIB(ICOL).EQ.0)THEN
       LINE=TRIM(LINE)//','//CHAR(39)//'NotAvailable'//CHAR(39)
      ELSE
@@ -404,7 +402,7 @@ CONTAINS
      IF(ICOL.EQ.7)LINE=CHAR(39)//'%,Zand percentage'//CHAR(39)//','
      IF(ICOL.EQ.8)LINE=CHAR(39)//'%,Grind percentage'//CHAR(39)//','
      IF(ICOL.EQ.9)LINE=CHAR(39)//'%,Organisch stof percentage'//CHAR(39)//','
-     IF(ICOL.EQ.10)LINE=CHAR(39)//'[],Lithology'//CHAR(39)//','
+     IF(ICOL.EQ.10)LINE=CHAR(39)//'-,Lithology'//CHAR(39)//','
      
      IF(IATTRIB(ICOL).GT.0)THEN
       LINE=TRIM(LINE)//TRIM(RTOS(NODATA(IATTRIB(ICOL)),'*',1))
@@ -417,7 +415,7 @@ CONTAINS
     NCOLMAX=MAXVAL(NCOLLINE)
     
     DO ICOL=11,NCOLMAX
-     LINE=CHAR(39)//'[],Extra variable'//CHAR(39)//',-9999.990'
+     LINE=CHAR(39)//'-,Extra variable'//CHAR(39)//',-9999.990'
      WRITE(KU,*) TRIM(LINE)
     ENDDO
     
