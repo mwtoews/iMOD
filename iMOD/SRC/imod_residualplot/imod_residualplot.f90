@@ -5,21 +5,30 @@ USE WINTERACTER
 USE IMODVAR, ONLY : RVERSION
 USE MOD_IDF_PAR, ONLY : IDFOBJ
 USE MOD_IDF, ONLY : IDFREAD,IDFWRITE,IDFNULLIFY,IDFDEALLOCATE
+USE MOD_IPF_PAR, ONLY : IPF,NIPF,ASSF
+USE MOD_IPF, ONLY : IPFREAD2,IPFALLOCATE
+USE MOD_IPFASSFILE, ONLY : IPFOPENASSFILE,IPFREADASSFILELABEL,IPFREADASSFILE,IPFASSFILEALLOCATE
 USE MOD_UTL
 USE MOD_POLINT
 
 CONTAINS
 
  !###===================================
- SUBROUTINE RESIDUAL_MAIN()
+ SUBROUTINE RESIDUAL_MAIN(ICOL)
  !###===================================
  IMPLICIT NONE
+ INTEGER,DIMENSION(:),INTENT(IN) :: ICOL
 
  CALL WINDOWOPEN(FLAGS=HIDEWINDOW ) 
  CALL IGRCOLOURMODEL(24)
  
+ !## read in complete ipf file
+ IF(INDEX(UTL_CAP(INPUTFILE,'U'),'IPF'))THEN
+  CALL RESIDUAL_DATA_IPF(ICOL)
  !## read in complete txtfile
- CALL RESIDUAL_DATA()
+ ELSE
+  CALL RESIDUAL_DATA()
+ ENDIF
  !## process txtfile into xyz variables
  CALL RESIDUAL_PROC()
  !## plot xyz variables
@@ -29,6 +38,115 @@ CONTAINS
 
  END SUBROUTINE RESIDUAL_MAIN
 
+ !###===================================
+ SUBROUTINE RESIDUAL_DATA_IPF(ICOL)
+ !###===================================
+ IMPLICIT NONE
+ INTEGER,DIMENSION(:),INTENT(IN) :: ICOL
+ INTEGER :: I,J,K,IU,N
+ REAL :: O,M
+ CHARACTER(LEN=256) :: FNAME,DIR
+
+ NIPF=1; CALL IPFALLOCATE(); IPF(1)%FNAME=INPUTFILE
+
+ IPF(1)%XCOL=ICOL(1)
+ IPF(1)%YCOL=ICOL(2)
+ IF(ITRANSIENT.EQ.1)THEN
+  !## not used reading the ipf-file, set them to the x/y coordinates
+  IPF(1)%ZCOL=ICOL(1)
+  IPF(1)%Z2COL=ICOL(2)
+ ELSE
+  IPF(1)%ZCOL=ICOL(3)
+  IPF(1)%Z2COL=ICOL(4)
+ ENDIF
+ !## optional weight values
+ IPF(1)%QCOL=ICOL(1); IF(ICOL(5).NE.0)IPF(1)%QCOL=ICOL(5)
+ 
+ !## read entire ipf
+ IF(.NOT.IPFREAD2(1,1,1))RETURN
+
+ !## allocate memory
+ NIPF=1; ALLOCATE(IPFR(NIPF))
+
+ !## steady-state
+ IF(ITRANSIENT.EQ.0)THEN 
+  N=IPF(1)%NROW; IPFR(NIPF)%NPOINTS=N
+  ALLOCATE(IPFR(1)%X(N),IPFR(1)%Y(N),IPFR(1)%L(N),IPFR(1)%O(N), &
+           IPFR(1)%M(N),IPFR(1)%W(N))
+  DO J=1,N
+   READ(IPF(1)%INFO(ICOL(1),J),*) IPFR(1)%X(J)
+   READ(IPF(1)%INFO(ICOL(2),J),*) IPFR(1)%Y(J)
+   READ(IPF(1)%INFO(ICOL(3),J),*) IPFR(1)%O(J)
+   READ(IPF(1)%INFO(ICOL(4),J),*) IPFR(1)%M(J)
+   IF(ICOL(5).EQ.0)THEN; IPFR(1)%W(J)=1.0
+   ELSE; READ(IPF(1)%INFO(ICOL(5),J),*) IPFR(1)%W(J); ENDIF
+   IF(ICOL(6).EQ.0)THEN; IPFR(1)%L(J)=1
+   ELSE; READ(IPF(1)%INFO(ICOL(6),J),*)  IPFR(1)%L(J); ENDIF
+  ENDDO
+ ELSE
+ 
+  CALL IPFASSFILEALLOCATE(1)
+  
+  !## first to get number of points per ipf, second to read all in memory
+  DIR=INPUTFILE(:INDEX(INPUTFILE,'\',.TRUE.)-1)
+  DO I=1,2
+   N=0
+   DO J=1,IPF(1)%NROW
+
+    FNAME=TRIM(DIR)//'\'//TRIM(IPF(1)%INFO(IPF(1)%ACOL,J))//'.'//TRIM(IPF(1)%FEXT)
+    !## read dimensions of associated file
+    IF(IPFOPENASSFILE(IU,1,FNAME))THEN
+     !## time serie found
+     IF(ASSF(1)%ITOPIC.EQ.1)THEN
+      !## read associated file
+      IF(IPFREADASSFILELABEL(IU,1,FNAME).AND.IPFREADASSFILE(IU,1,FNAME))THEN
+
+       DO K=1,ASSF(1)%NRASS
+
+        O=ASSF(1)%MEASURE(ICOL(3)-1,K)
+        M=ASSF(1)%MEASURE(ICOL(4)-1,K)
+        !## both not equal to nodata
+        IF(O.NE.ASSF(1)%NODATA(ICOL(3)).AND. &
+           M.NE.ASSF(1)%NODATA(ICOL(4)))THEN
+           
+         N=N+1
+ 
+         IF(I.EQ.2)THEN
+          READ(IPF(1)%INFO(ICOL(1),J),*)  IPFR(1)%X(N)
+          READ(IPF(1)%INFO(ICOL(2),J),*)  IPFR(1)%Y(N)
+       
+          IF(ICOL(5).EQ.0)THEN; IPFR(1)%W(N)=1.0
+          ELSE; READ(IPF(1)%INFO(ICOL(5),J),*) IPFR(1)%W(N); ENDIF
+          IF(ICOL(6).EQ.0)THEN; IPFR(1)%L(N)=1
+          ELSE; READ(IPF(1)%INFO(ICOL(6),J),*)  IPFR(1)%L(N); ENDIF
+
+          IPFR(1)%O(N)=O 
+          IPFR(1)%M(N)=M
+
+          !## store date
+          IPFR(1)%D(N)=ASSF(1)%IDATE(I)
+         ENDIF
+                 
+        ENDIF  
+       ENDDO
+       
+       !## close associated text-file
+       CLOSE(IU)
+      ENDIF
+     ENDIF
+    ENDIF                                    
+   ENDDO
+   IF(I.EQ.1)THEN
+    IPFR(1)%NPOINTS=N
+    ALLOCATE(IPFR(1)%D(N),IPFR(1)%X(N),IPFR(1)%Y(N),IPFR(1)%L(N), &
+             IPFR(1)%O(N),IPFR(1)%M(N),IPFR(1)%W(N))
+   ENDIF
+  ENDDO
+ 
+ ENDIF
+
+ END SUBROUTINE RESIDUAL_DATA_IPF
+ 
  !###===================================
  SUBROUTINE RESIDUAL_DATA()
  !###===================================
