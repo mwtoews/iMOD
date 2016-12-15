@@ -1082,7 +1082,7 @@ CONTAINS
       CASE (3); DATISD(IREF+K-1)%RESIS=X2
       CASE (4); DATISD(IREF+K-1)%INFF =X2
      END SELECT
-     WRITE(IULOG,'(A,2(F15.7,A))') '  old/new value:',X1,',',X2
+     WRITE(IULOG,'(A,2(G15.7,A))') '  old/new value:',X1,',',X2
     ENDDO
    ELSEIF(ISFR.EQ.1)THEN
     DO K=1,N
@@ -1117,7 +1117,7 @@ CONTAINS
       CASE (12); DATISD(IREF+K-1)%PPTSW =X2
       CASE (13); DATISD(IREF+K-1)%ETSW   =X2
      END SELECT
-     WRITE(IULOG,'(A,2(F15.7,A))') '  old/new value:',X1,',',X2
+     WRITE(IULOG,'(A,2(G15.7,A))') '  old/new value:',X1,',',X2
     ENDDO
    ENDIF
    
@@ -1133,7 +1133,7 @@ CONTAINS
      CASE (1); DATIST(IREF+K-1)%WLVL_UP=X2
      CASE (2); DATIST(IREF+K-1)%WLVL_DOWN=X2
     END SELECT
-    WRITE(IULOG,'(A,2(F15.7,A))') '  old/new value:',X1,',',X2
+    WRITE(IULOG,'(A,2(G15.7,A))') '  old/new value:',X1,',',X2
    ENDDO
        
   !## adjust current cross-sections on segment
@@ -1150,7 +1150,7 @@ CONTAINS
      CASE (2); DATISC(IREF+K-1)%BOTTOM=X2
      CASE (3); DATISC(IREF+K-1)%MRC=X2
     END SELECT
-    WRITE(IULOG,'(A,2(F15.7,A))') '  old/new value:',X1,',',X2
+    WRITE(IULOG,'(A,2(G15.7,A))') '  old/new value:',X1,',',X2
    ENDDO
 
   !## adjust current qh relationships on segment

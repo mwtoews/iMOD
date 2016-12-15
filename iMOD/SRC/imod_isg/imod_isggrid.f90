@@ -314,13 +314,9 @@ CONTAINS
    IF(STRING(LEN(STRING):LEN(STRING)).NE.'')THEN
     WRITE(*,'(A)') 'Reduce number of cross-section definitions to be less than '//TRIM(ITOS(LEN(STRING)))//' characters'
    ENDIF
-   N=1; DO
-    READ(STRING,*,IOSTAT=IOS) XCRD,YCRD,LABEL,(X(I),I=1,N),(Y(I),I=1,N); IF(IOS.NE.0)EXIT; N=N+1
-   ENDDO; N=N-1
+   READ(STRING,*,IOSTAT=IOS) XCRD,YCRD,LABEL,N,(X(I),I=1,N),(Y(I),I=1,N) !; IF(IOS.NE.0)EXIT; N=N+1
    !## not enough points
    IF(N.LE.2)THEN
-!    WRITE(*,*) XCRD,YCRD,TRIM(LABEL)
-!    DO I=1,N/2; WRITE(*,*) X(I),X(I+N/2); ENDDO !; STOP 'N.LE.4'
     CYCLE
    ENDIF
 
@@ -329,6 +325,8 @@ CONTAINS
     IF(X(I).LT.X(I-1))THEN
      WRITE(*,'(/A)') 'Wrong cross-section read'
      WRITE(*,'(A/)') 'The x-values need to be increasing from left to right'
+     WRITE(*,*) X(I),X(I-1)
+     WRITE(*,*) TRIM(LABEL)
      STOP
     ENDIF
    ENDDO
@@ -1808,7 +1806,7 @@ IRLOOP: DO IR=MAX(1,IROW-1),MIN(NROW,IROW+1)
     ALLOCATE(QCRS(NSTRPTS),DCRS(NSTRPTS),WCRS(NSTRPTS))
    ENDIF
 
-   J=ISC(IQHR)%IREF-1 ; DO K=1,NSTRPTS
+   J=ISQ(IQHR)%IREF-1 ; DO K=1,NSTRPTS
     J=J+1; QCRS(K)=DATISQ(J)%Q; WCRS(K)=DATISQ(J)%W; DCRS(K)=DATISQ(J)%D
    ENDDO
 
@@ -1905,7 +1903,7 @@ IRLOOP: DO IR=MAX(1,IROW-1),MIN(NROW,IROW+1)
   IU=JU
  ENDIF
 
- WRITE(FRM,'(A9,I2.2,A14)') '(3(I5,1X),',4,'(F15.7,1X),I5)'
+ WRITE(FRM,'(A9,I2.2,A14)') '(3(I5,1X),',4,'(G15.7,1X),I5)'
 
  DO IROW=1,IDF(1)%NROW; DO ICOL=1,IDF(1)%NCOL
   IF(IDF(1)%X(ICOL,IROW).GT.0.0)THEN

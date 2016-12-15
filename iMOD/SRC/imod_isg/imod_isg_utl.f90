@@ -830,7 +830,6 @@ CONTAINS
 
  END SUBROUTINE ISGREADISQ
 
-
  !###====================================================================
  LOGICAL FUNCTION ISGATTRIBUTESREADISDVALUE()
  !###====================================================================
@@ -1706,6 +1705,8 @@ CONTAINS
 
  !## copy data to create appropriate space
  IQHR=MAX(1,ISG(K)%IQHR)
+! IQHR=MAX(0,ISG(K)%IQHR)
+
  IF(DN.GT.0)THEN
   IF(IQHR+DN.LT.NISQ)ISQ(IQHR+DN:NISQ)=ISQ(IQHR:NISQ-DN)
  ELSEIF(DN.LT.0)THEN
