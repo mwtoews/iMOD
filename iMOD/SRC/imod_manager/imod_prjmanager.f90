@@ -2684,7 +2684,7 @@ KLOOP: DO K=1,SIZE(TOPICS(JJ)%STRESS(1)%FILES,1)
  ISS=0; DO KPER=1,NPER; IF(SIM(KPER)%DELT.NE.0.0)ISS=1; ENDDO
 
  !## overwrite nstep/nmult in case imodbatch is used
- DO I=1,NPER; SIM(I)%TMULT=PBMAN%TMULT; SIM(I)%NSTP=PBMAN%NSTEP; ENDDO
+ DO KPER=1,NPER; SIM(KPER)%TMULT=PBMAN%NMULT; SIM(KPER)%NSTP=PBMAN%NSTEP; ENDDO
  
  !## output unit numbers
  IHEDUN =51; IBCFCB =52; IRCHCB =53; IEVTCB =54; IDRNCB =55
@@ -2725,7 +2725,7 @@ KLOOP: DO K=1,SIZE(TOPICS(JJ)%STRESS(1)%FILES,1)
  !## apply consistency checks
  CALL PMANAGER_SAVEMF2005_CONSISTENCY(LTB)
  !## get lak position and conductances
- CALL PMANAGER_SAVEMF2005_DISLAKE()
+ IF(.NOT.PMANAGER_SAVEMF2005_DISLAKE())RETURN
 
  !##================
  !## writing section
@@ -4351,6 +4351,9 @@ KLOOP: DO K=1,SIZE(TOPICS(JJ)%STRESS(1)%FILES,1)
 
   !## get initial, minimal and maximal stages per lake
   DO I=1,NLAKES
+!  IF(I.EQ.31)THEN
+!WRITE(*,*)
+!  ENDIF
    DO J=3,5
     SELECT CASE (J)
      CASE (3); IOP=1 !## initial (take average value)
@@ -4364,7 +4367,7 @@ KLOOP: DO K=1,SIZE(TOPICS(JJ)%STRESS(1)%FILES,1)
      LINE=TRIM(LINE)//','//TRIM(RTOS(LVL,'G',5))
     ENDIF
    ENDDO
-   WRITE(IULAK,'(A)') TRIM(LINE)
+   WRITE(IULAK,'(A)') TRIM(LINE)//'      LAKE: '//TRIM(RTOS(ULAKES(I),'F',1))
   ENDDO
  
   ITMP1=1; LINE='1,'//TRIM(ITOS(ITMP1))//',0'; WRITE(IULAK,'(A)') TRIM(LINE)
@@ -6475,7 +6478,7 @@ KLOOP: DO K=1,SIZE(TOPICS(JJ)%STRESS(1)%FILES,1)
  END SUBROUTINE PMANAGER_SAVEMF2005_FCTIMP
 
  !###======================================================================
- SUBROUTINE PMANAGER_SAVEMF2005_DISLAKE()
+ LOGICAL FUNCTION PMANAGER_SAVEMF2005_DISLAKE()
  !###======================================================================
  IMPLICIT NONE
  INTEGER :: IROW,ICOL,ILAY,I,JROW,JCOL
@@ -6484,15 +6487,19 @@ KLOOP: DO K=1,SIZE(TOPICS(JJ)%STRESS(1)%FILES,1)
  DATA IR/-1, 0,0,1/
  DATA IC/ 0,-1,1,0/
  
+ PMANAGER_SAVEMF2005_DISLAKE=.TRUE.
+ 
  IF(.NOT.LLAK)RETURN
 
+ PMANAGER_SAVEMF2005_DISLAKE=.FALSE.
+ 
  !## get unique number of lakes
  ALLOCATE(DULAKES(IDF%NCOL*IDF%NROW))
  I=0; DO IROW=1,IDF%NROW; DO ICOL=1,IDF%NCOL; I=I+1; DULAKES(I)=LAK(1)%X(ICOL,IROW); ENDDO; ENDDO
  CALL UTL_GETUNIQUE(DULAKES,IDF%NROW*IDF%NCOL,NLAKES,0.0)
 
  ALLOCATE(ULAKES(NLAKES)); DO I=1,NLAKES; ULAKES(I)=DULAKES(I); ENDDO; DEALLOCATE(DULAKES)
-  
+
  !## reset array lbd - boundary settings, layer becomes lakes as bathymetry of over half of cell
  DO ILAY=1,NLAY; DO IROW=1,IDF%NROW; DO ICOL=1,IDF%NCOL; LBD(ILAY)%X(ICOL,IROW)=0.0; ENDDO; ENDDO; ENDDO
  !## reset array lcd - sum of conductance vertically/horizontally
@@ -6504,9 +6511,21 @@ KLOOP: DO K=1,SIZE(TOPICS(JJ)%STRESS(1)%FILES,1)
   IF(LAK(1)%X(ICOL,IROW).LE.0)CYCLE
   !## find appropriate modellayer underneath bathymetry of lake
   DO ILAY=1,NLAY
+
+   !## apply lakes only for active cells (>0)
+   IF(BND(ILAY)%X(ICOL,IROW).LE.0)CYCLE
+
    ZT=TOP(ILAY)%X(ICOL,IROW)
    !## found appropriate modellayer
    IF(ZT.GT.LAK(2)%X(ICOL,IROW))THEN
+
+    !## cannot have a lake in the lowest model layer
+    IF(ILAY.EQ.NLAY)THEN
+!     CALL WMESSAGEBOX(OKONLY,EXCLAMATIONICON,COMMONOK,'You cannot put a lake in the lowest model layer'//CHAR(13)// &
+!         'Make sure the bathymetry is always higher than the top of'//CHAR(13)// &
+!         'your lowest model layer in order to avoid this error message.','Error')
+!     RETURN
+    ENDIF
 
     LBD(ILAY)%X(ICOL,IROW)=LAK(1)%X(ICOL,IROW)     
     BND(ILAY)%X(ICOL,IROW)=0.0
@@ -6573,7 +6592,9 @@ KLOOP: DO K=1,SIZE(TOPICS(JJ)%STRESS(1)%FILES,1)
   ENDIF
  ENDDO; ENDDO; ENDDO
 
- END SUBROUTINE PMANAGER_SAVEMF2005_DISLAKE
+ PMANAGER_SAVEMF2005_DISLAKE=.TRUE.
+
+ END FUNCTION PMANAGER_SAVEMF2005_DISLAKE
 
  !###======================================================================
  LOGICAL FUNCTION PMANAGER_SAVEMF2005_LAKE_GETMEANVALUE(X,Y,ULAKE,LVL,IBATCH,IOP)
