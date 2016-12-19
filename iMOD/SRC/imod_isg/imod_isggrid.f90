@@ -32,7 +32,7 @@ USE MOD_IDF, ONLY : IDFWRITE,IDFALLOCATEX,IDFDEALLOCATE,IDFREADDIM,IDFREAD,IDFNU
                     IDFREADSCALE,IDFGETAREA,IDF_EXTENT,IDFDEALLOCATEX
 USE MODPLOT
 USE MOD_ISG_PAR
-USE MOD_PMANAGER_PAR, ONLY : SIM
+USE MOD_PMANAGER_PAR, ONLY : SIM,ULAKES
 USE MOD_UTL, ONLY : ITOS,RTOS,UTL_IDATETOJDATE,UTL_JDATETOIDATE,JDATETOGDATE,UTL_GETUNIT,UTL_WAITMESSAGE,UTL_IDFSNAPTOGRID,UTL_GETMED, &
                PEUCKER_SIMPLIFYLINE,UTL_DIST,UTL_GETCURRENTDATE
 USE MOD_OSD, ONLY : OSD_OPEN,OSD_TIMER,ICF
@@ -1727,6 +1727,10 @@ IRLOOP: DO IR=MAX(1,IROW-1),MIN(NROW,IROW+1)
   QFLOW =RVAL(10,1)     !## inflow
   QROFF =RVAL(11,1)     !## runoff flow
 
+  !## check if lake, whether the lake number is still correct
+  CALL ISG2SFR_GETLAKENUMBER(IUPSEG,I)
+  CALL ISG2SFR_GETLAKENUMBER(OUTSEG,I)
+  
   !## corrections for reding out of a menu
   ICALC=ICALC-1; IPRIOR=-1*(IPRIOR-1)
 
@@ -1850,6 +1854,40 @@ IRLOOP: DO IR=MAX(1,IROW-1),MIN(NROW,IROW+1)
  ISG2SFR=.TRUE.
 
  END FUNCTION ISG2SFR
+
+ !###====================================================================
+ SUBROUTINE ISG2SFR_GETLAKENUMBER(ISEG,ISTR)
+ !###====================================================================
+ IMPLICIT NONE
+ INTEGER,INTENT(INOUT) :: ISEG
+ INTEGER,INTENT(IN) :: ISTR
+ INTEGER :: I
+ 
+ !## nothing to do - no lake
+ IF(ISEG.GE.0)RETURN
+ 
+ !## remove connection if no lakes available
+ IF(.NOT.ALLOCATED(ULAKES))THEN
+  !## turn off connection
+  ISEG=0; WRITE(*,'(/A)') 'Error cannot connect Stream '//TRIM(ITOS(ISTR))//' as Lake package is inactive'
+  WRITE(*,'(A/)') 'iMOD removed the connection to continue'
+  RETURN
+ ENDIF
+ 
+ !## find appropriate lake
+ DO I=1,SIZE(ULAKES)
+  IF(ULAKES(I).EQ.ABS(ISEG))THEN
+   !## get appropriate lake number - negative as it is a lake
+   ISEG=-I
+   RETURN
+  ENDIF
+ ENDDO
+   
+ WRITE(*,'(/A/)') 'Error cannot connect Stream '//TRIM(ITOS(ISTR))//' to lake '//TRIM(ITOS(ISEG))
+ WRITE(*,'(A/)') 'iMOD removed the connection to continue'
+ ISEG=0; RETURN
+ 
+ END SUBROUTINE ISG2SFR_GETLAKENUMBER
 
  !###====================================================================
  SUBROUTINE ISG2GRID_EXPORTRIVER(JU,IDF,NLAY,ILAY,TOP,BOT,MP,GRIDISG)

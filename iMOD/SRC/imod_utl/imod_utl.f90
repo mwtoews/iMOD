@@ -3825,25 +3825,44 @@ CONTAINS
  END SUBROUTINE UTL_GETUNIQUE
 
  !###====================================================
- SUBROUTINE UTL_GETUNIQUE_INT(IX,N,NU)
+ SUBROUTINE UTL_GETUNIQUE_INT(IX,N,NU,NODATA)
  !###====================================================
  IMPLICIT NONE
  INTEGER,INTENT(IN) :: N
  INTEGER,INTENT(OUT) :: NU
  INTEGER,INTENT(INOUT),DIMENSION(N) :: IX
+ INTEGER,INTENT(IN),OPTIONAL :: NODATA
  INTEGER :: I
 
  CALL SHELLSORT_INT(N,IX)
 
  !## determine number of unique classes
- NU=1
- DO I=2,N
-  IF(IX(I).NE.IX(NU))THEN
-   NU    =NU+1
-   IX(NU)=IX(I)
-  ENDIF
- END DO
-
+ IF(PRESENT(NODATA))THEN
+  NU=0
+  DO I=1,N
+   IF(NU.EQ.0)THEN
+    IF(IX(I).NE.NODATA)THEN
+     NU=NU+1
+     IX(NU)=IX(I)
+    ENDIF
+   ELSE
+    IF(IX(I).NE.IX(NU).AND.IX(I).NE.NODATA)THEN
+     NU    =NU+1
+     IX(NU)=IX(I)
+    ENDIF
+   ENDIF
+  END DO
+ ELSE 
+  !## determine number of unique classes
+  NU=1
+  DO I=2,N
+   IF(IX(I).NE.IX(NU))THEN
+    NU    =NU+1
+    IX(NU)=IX(I)
+   ENDIF
+  END DO
+ ENDIF
+ 
  END SUBROUTINE UTL_GETUNIQUE_INT
  
  !###====================================================
