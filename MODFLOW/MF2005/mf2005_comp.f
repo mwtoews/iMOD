@@ -2975,7 +2975,7 @@ c ------------------------------------------------------------------------------
       logical function mf2005_TimeserieInit(igrid)
 !...     modules
       use imod_utl, only: imod_utl_pol1locater
-      use global, only: iunit, nlay, nrow, ncol
+      use global, only: iunit, nlay, nrow, ncol, ibound
       use gwfmetmodule, only: coord_xll_nb,coord_yll_nb,coord_xur_nb,
      1                        coord_yur_nb,cdelr,cdelc,resultdir
       use m_mf2005_iu
@@ -3035,8 +3035,13 @@ c ------------------------------------------------------------------------------
               if (icol.eq.0 .or. irow.eq.0) then
                  call imod_utl_pol1locater(cdelr,ncol+1,x,icol)
                  call imod_utl_pol1locater(cdelc,nrow+1,y,irow)
-                 ts(jj)%stvalue(i)%icol = icol
-                 ts(jj)%stvalue(i)%irow = irow
+                 !## check if constant head or inactive cell - make measurment invalid
+                 if(ibound(icol,irow,ilay).le.0)then
+                  ts(jj)%stvalue(i)%valid = .false.
+                 else
+                  ts(jj)%stvalue(i)%icol = icol
+                  ts(jj)%stvalue(i)%irow = irow
+                 endif
               end if
            end if
         end do
