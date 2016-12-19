@@ -278,7 +278,8 @@ c allocate
          read(lun,'(a)') line
          read(line,*,iostat=ios) (string(icol),icol=1,nc)
          if(ios.ne.0) then
-            write(*,*) 'ERROR. Reading ipf.'
+            write(*,*) 'ERROR. Reading ipf '//trim(file)
+            write(*,'(a)') trim(line)
             call ustop(' ')
          end if
 
@@ -296,12 +297,14 @@ c allocate
             if (ilay.eq.0)then !nc.ge.5) then
                read(string(4),*,iostat=ios) tf(1)
                if(ios.ne.0) then
-                write(*,*) 'ERROR. Reading ipf.'
+                write(*,*) 'ERROR. Reading ipf '//trim(file)
+                write(*,'(a)') trim(string(4))
                 call ustop(' ')
                end if
                read(string(5),*,iostat=ios) bf(1)
                if(ios.ne.0) then
-                write(*,*) 'ERROR. Reading ipf.'
+                write(*,*) 'ERROR. Reading ipf '//trim(file)
+                write(*,'(a)') trim(string(5))
                 call ustop(' ')
                end if
             end if
