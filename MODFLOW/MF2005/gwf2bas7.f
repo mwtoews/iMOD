@@ -1087,7 +1087,7 @@ C     ------------------------------------------------------------------
      1                        CHEDFM,CDDNFM,IBDOPT,LBHDSV,LBDDSV,
      2                        IBOUUN,LBBOSV,CBOUFM,IAUXSV,IOFLG,
      3                        VBVL,VBNM,IDDREF,IDDREFNEW
-      CHARACTER*200 LINE
+      CHARACTER*1000 LINE
 C     ------------------------------------------------------------------
 C
 C1-----ALLOCATE SPACE FOR IOFLG, VBVL, AND VBNM ARRAYS.
