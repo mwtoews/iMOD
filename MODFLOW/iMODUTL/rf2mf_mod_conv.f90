@@ -1738,7 +1738,7 @@
 !...     locals
       integer :: lun, cfn_getlun, iper, ikstp, idat, ilay, n, i
       character(len=maxlen) :: nstr
-      character(len=maxlen), dimension(50) :: str
+      character(len=maxlen), dimension(:), allocatable :: str
 !.......................................................................
 
 !...     return in case package is not active
@@ -1753,6 +1753,7 @@
       open(unit=lun,file=nam%package(ioc)%fname,action='write')
 
 !...     write oc-file
+      allocate(str(nlay+1))
       if (oc%cbnlay.gt.0) then
          write(str(1),*) oc%ihedun
          write(lun,'(a,1x,a)') 'head save unit', trim(adjustl(str(1)))
@@ -1801,6 +1802,8 @@
 !...     set for name file
       if (oc%cbnlay.gt.0) nam%data(ihead)%active = .true.
 
+      deallocate(str)
+      
       return
       end subroutine WriteOc
 
