@@ -1188,7 +1188,7 @@ C     ------------------------------------------------------------------
      1                        CHEDFM,CDDNFM,IBDOPT,LBHDSV,LBDDSV,
      2                        IBOUUN,LBBOSV,CBOUFM,IAUXSV,IDDREFNEW
 C
-      CHARACTER*200 LINE
+      CHARACTER*1000 LINE
 C     ------------------------------------------------------------------
 C
 C1------ALPHABETIC OUTPUT CONTROL.  WRITE MESSAGE AND SET INITIAL VALUES
