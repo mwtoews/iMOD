@@ -68,7 +68,7 @@ MODULE MOD_PMANAGER_PAR
   CHARACTER(LEN=MAXLEN) :: ALIAS                   !## alias name of current file, could be a constant too!
   INTEGER :: ID                                    !## id in treeview field
   INTEGER :: ILAY                                  !## layer of current file
-  INTEGER :: ICNST                                 !## to be constant yes (1) or no (2)
+  INTEGER :: ICNST                                 !## to be constant (1) or an idf file (2), or a folder (3)
   REAL :: FCT                                      !## factor
   REAL :: IMP                                      !## impulse
   REAL :: CNST                                     !## constant value

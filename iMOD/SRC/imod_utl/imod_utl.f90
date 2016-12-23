@@ -698,7 +698,7 @@ CONTAINS
   ENDIF
  ENDIF
  
- !## Define "String" for changing names on push buttons and window title if "String" is available.
+ !## define "String" for changing names on push buttons and window title if "String" is available.
  IF(STRING(1).EQ.'IMODMANAGER')THEN
   CALL WDIALOGLOAD(ID_DLISTOFFILES2,ID_DLISTOFFILES2)
   CALL WDIALOGPUTIMAGE(ID_RIGHT,ID_ICONRIGHT,1)
@@ -2469,13 +2469,13 @@ CONTAINS
  END SUBROUTINE UTL_HIDESHOWDIALOG
 
  !###======================================================================
- SUBROUTINE UTL_IDFGETLAYERS(IDFNAME,N,ILAY,LDIM)
+ SUBROUTINE UTL_IDFGETLAYERS(IDFNAME,N,ILAY) !,LDIM)
  !###======================================================================
  IMPLICIT NONE
- INTEGER,INTENT(IN) :: N,LDIM
+ INTEGER,INTENT(IN) :: N !,LDIM
  CHARACTER(LEN=*),DIMENSION(N) :: IDFNAME
  INTEGER :: I,J,K,IL,IOS
- INTEGER,DIMENSION(LDIM) :: ILAY
+ INTEGER,DIMENSION(:) :: ILAY
 
  ILAY=0
  DO I=1,N
@@ -2630,8 +2630,6 @@ CONTAINS
  INTEGER,INTENT(IN) :: I
  CHARACTER(LEN=10)  :: TXT,ITOS
 
-! call IntegerToString(I,ITOS,'(I10)')
-
  WRITE(TXT,'(I10)') I
  ITOS=ADJUSTL(TXT)
 
@@ -2668,7 +2666,7 @@ CONTAINS
 
  UTL_GETUNIT=19
  DO 
-  UTL_GETUNIT=UTL_GETUNIT+1 !20,5000
+  UTL_GETUNIT=UTL_GETUNIT+1 
   INQUIRE(UNIT=UTL_GETUNIT,OPENED=LEX)
   IF(.NOT.LEX)EXIT
   IF(UTL_GETUNIT.GT.1000000)EXIT
