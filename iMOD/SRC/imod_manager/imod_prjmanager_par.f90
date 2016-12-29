@@ -68,7 +68,7 @@ MODULE MOD_PMANAGER_PAR
   CHARACTER(LEN=MAXLEN) :: ALIAS                   !## alias name of current file, could be a constant too!
   INTEGER :: ID                                    !## id in treeview field
   INTEGER :: ILAY                                  !## layer of current file
-  INTEGER :: ICNST                                 !## to be constant (1) or an idf file (2), or a folder (3)
+  INTEGER :: ICNST                                 !## to be constant (1) or an idf file (2), or inherent (0)
   REAL :: FCT                                      !## factor
   REAL :: IMP                                      !## impulse
   REAL :: CNST                                     !## constant value
@@ -167,7 +167,7 @@ MODULE MOD_PMANAGER_PAR
  CHARACTER(LEN=MAXLEN),ALLOCATABLE,DIMENSION(:) :: MENUNAMES
  
  DATA CMOD/'CAP','TOP','BOT','BND','SHD','KDW','KHV','KVA','VCW','KVV', & ! 1-10
-           'STO','SSC','PWT','ANI','HFB','IBS','SFT','UZF','MNW','PST', & !11-20
+           'STO','SPY','PWT','ANI','HFB','IBS','SFT','UZF','MNW','PST', & !11-20
            'WEL','DRN','RIV','EVT','GHB','RCH','OLF','CHD','ISG','SFR', & !21-30
            'FHB','LAK','PCG'/                                             !31-40
  
@@ -177,7 +177,7 @@ MODULE MOD_PMANAGER_PAR
  INTEGER,ALLOCATABLE,DIMENSION(:) :: IDT,LAYCON
    
  TYPE PRJOBJ
-  INTEGER :: ILAY,ICNST,IACT
+  INTEGER :: ILAY,ICNST,IACT,INHERENT
   REAL :: FCT,IMP,CNST
   CHARACTER(LEN=256) :: FNAME
  END TYPE PRJOBJ
@@ -209,11 +209,6 @@ MODULE MOD_PMANAGER_PAR
              '14/28   ','Monthly ','Yearly  ','Packages','All     '/
  
  INTEGER,ALLOCATABLE,DIMENSION(:) :: ILIST
-! TYPE FNAMEOBJ
-!  CHARACTER(LEN=256) :: FNAME
-!  INTEGER :: ILAY,ICNST
-!  REAL :: CNST,FCT,IMP
-! END TYPE FNAMEOBJ
  TYPE(PRJOBJ),POINTER,DIMENSION(:) :: FNAMES,FNAMES_BU
 
 END MODULE MOD_PMANAGER_PAR
