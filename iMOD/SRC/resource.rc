@@ -8,7 +8,7 @@
 //
 // Winteracter resource script. 
 //
-// Modified : 29/Dec/2016 16:10:44
+// Modified : 30/Dec/2016 18:44:22
 //
 ///////////////////////////////////////////////////
 //
@@ -10637,7 +10637,7 @@ BEGIN
     CONTROL "0",IDF_INTEGER1,"INTEGERSPIN",WS_CHILD | WS_VISIBLE | WS_BORDER | WS_GROUP | WS_TABSTOP | ES_LEFT | ES_CENTER | ES_MULTILINE,   97,   24,   40,   12
     CONTROL "Define Layer Types",IDF_GROUP1,"BUTTON",WS_CHILD | WS_VISIBLE | WS_GROUP | BS_GROUPBOX | BS_TEXT | BS_LEFT,    8,    8,  176,  228
     CONTROL "&Apply",ID_APPLY,"BUTTON",WS_CHILD | WS_VISIBLE | WS_GROUP | WS_TABSTOP | BS_PUSHBUTTON | BS_TEXT | BS_FLAT,  138,   23,   40,   14
-    CONTROL "&OK ...",IDOK,"BUTTON",WS_CHILD | WS_VISIBLE | WS_GROUP | WS_TABSTOP | BS_PUSHBUTTON | BS_TEXT | BS_FLAT,    8,  238,   40,   14
+    CONTROL "&OK",IDOK,"BUTTON",WS_CHILD | WS_VISIBLE | WS_GROUP | WS_TABSTOP | BS_PUSHBUTTON | BS_TEXT | BS_FLAT,    8,  238,   40,   14
     CONTROL "Number of Model Layers",IDF_LABEL2,"STATIC",WS_CHILD | WS_VISIBLE | SS_LEFT,   13,   26,   81,    7
 END
 
@@ -12338,4 +12338,4 @@ END
 //*WI* FILENAME    resource.f90
 //*WI* FMODNAME    RESOURCE
 //*WI* LASTTYPE        2
-//*WI* LASTRES       287
+//*WI* LASTRES       282
