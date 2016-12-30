@@ -4917,10 +4917,16 @@ TOPICLOOP: DO ITOPIC=1,MAXTOPICS
    SELECT CASE (ITOPIC)
     !## evt 
     CASE (24) 
-     IF(IPER.EQ.1)THEN; WRITE(IU,'(A)') '0,0,0'
+     IF(IPER.EQ.1)THEN
+      WRITE(IU,'(A)') '0,0,0'
+      DO I=1,3; WRITE(IU,'(A)') 'CONSTANT 0.0000000E-00'; ENDDO
      ELSE; WRITE(IU,'(A)') '-1,-1,-1';  ENDIF
+    !## rch
+    CASE (26) 
+     IF(IPER.EQ.1)THEN; WRITE(IU,'(I10)') 0; WRITE(IU,'(A)') 'CONSTANT 0.0000000E-00'
+     ELSE; WRITE(IU,'(I10)') -1; ENDIF
     !## wel,drn,riv,ghb,rch,chd,olf
-    CASE (21,22,23,25,26,27,28,29) 
+    CASE (21,22,23,25,27,28,29) 
      IF(IPER.EQ.1)THEN; WRITE(IU,'(I10)') 0
      ELSE; WRITE(IU,'(I10)') -1; ENDIF
     !## fhb- skip
@@ -4932,10 +4938,15 @@ TOPICLOOP: DO ITOPIC=1,MAXTOPICS
    CYCLE
   ENDIF
 
+! DATA CMOD/'CAP','TOP','BOT','BND','SHD','KDW','KHV','KVA','VCW','KVV', & ! 1-10
+!           'STO','SPY','PWT','ANI','HFB','IBS','SFT','UZF','MNW','PST', & !11-20
+!           'WEL','DRN','RIV','EVT','GHB','RCH','OLF','CHD','ISG','SFR', & !21-30
+!           'FHB','LAK','PCG'/                                             !31-40
+
   !## open external file (not for rch/evt)
   JU=0
   SELECT CASE (ITOPIC)
-   CASE (21:23,24,25,27:29) 
+   CASE (21:23,25,27:29) 
     !## create subfolders
     CALL UTL_CREATEDIR(TRIM(DIR)//'\'//CPCK//'7')
     EXFNAME=TRIM(DIR)//'\'//CPCK//'7\'//CPCK//'_T'//TRIM(ITOS(IPER))//'.ARR'
