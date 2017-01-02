@@ -2545,7 +2545,7 @@ CONTAINS
     CASE (48:57)
      !## count numbers
      N=N+1
-     !## stop if 8/14
+     !## stop if total number is 8 or 14
      IF(N.EQ.NI(II))EXIT 
      !## mark first position
      IF(N.EQ.1)J=I
