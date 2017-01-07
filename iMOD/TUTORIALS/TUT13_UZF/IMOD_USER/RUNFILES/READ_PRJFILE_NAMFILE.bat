@@ -9,9 +9,11 @@
  ECHO ITT=2 >> RUNFILE.INI
  ECHO IDT=1 >> RUNFILE.INI
  ECHO ISS=1                                                     >>  RUNFILE.INI
-
- echo isolve=1 >> runfile.ini
- echo modflow=d:\OSS\iMOD\TUTORIALS\TUT10_SFR\iMODFLOW_V3_4_X32R.exe >> runfile.ini
+ ECHO UNCONFINED=1                                                     >>  RUNFILE.INI
+ ECHO NSTEP=10 >> RUNFILE.INI
+ ECHO NMULT=1.0 >> RUNFILE.INI
+rem echo isolve=0 >> runfile.ini
+rem echo modflow=d:\OSS\iMOD\TUTORIALS\TUT10_SFR\iMODFLOW_V3_4_X32R.exe >> runfile.ini
 
  D:\OSS\IMOD\BIN\IMOD_X64_d RUNFILE.INI
 
