@@ -982,6 +982,14 @@ c parameters
       CHARACTER(LEN=16), PARAMETER :: FFFTXT = 'FLOW FRONT FACE '
       CHARACTER(LEN=16), PARAMETER :: FLFTXT = 'FLOW LOWER FACE '
 
+      CHARACTER(LEN=16), PARAMETER :: INFTXT = '    UZF INFILTR.'
+      CHARACTER(LEN=16), PARAMETER :: RCHTXT = '    UZF RECHARGE'
+      CHARACTER(LEN=16), PARAMETER :: GETTXT = '           GW ET'
+      CHARACTER(LEN=16), PARAMETER :: EXFTXT = ' SURFACE LEAKAGE'
+      CHARACTER(LEN=16), PARAMETER :: UETTXT = '          UZF ET'
+!      DATA uzinftxt/'    INFILTRATION'/
+!      DATA uzsttext/'  STORAGE CHANGE'/
+
       CHARACTER(LEN=16), PARAMETER :: IBSTXT = 'INTERBED STORAGE'
       CHARACTER(LEN=16), PARAMETER :: SUBTXT = '      SUBSIDENCE'
       CHARACTER(LEN=16), PARAMETER :: LCPTXT = 'LAYER COMPACTION'
@@ -1029,6 +1037,23 @@ c check for bcf fluxen
        if (index(text,frftxt).gt.0) isub = 3
        if (index(text,ffftxt).gt.0) isub = 4
        if (index(text,flftxt).gt.0) isub = 5
+       if (isub.gt.0 .and. .not.done) then
+          read(prefix,*)(tmp,i=1,isub)
+          prefix = tmp
+          done = .true.
+       end if
+
+      endif
+
+c check for uzf fluxen
+      if(.not.done)then
+
+       isub = 0
+       if (index(text,inftxt).gt.0) isub = 1
+       if (index(text,rchtxt).gt.0) isub = 2
+       if (index(text,gettxt).gt.0) isub = 3
+       if (index(text,exftxt).gt.0) isub = 4
+       if (index(text,uettxt).gt.0) isub = 5
        if (isub.gt.0 .and. .not.done) then
           read(prefix,*)(tmp,i=1,isub)
           prefix = tmp
@@ -1132,7 +1157,7 @@ c create output file name
 
       if (issflg(kper).eq.0 .and. associated(time_ostring)) then ! TR
          fmt = '(5a,'//fmt
-         write(*,*) idate_save
+!         write(*,*) idate_save
          if(idate_save.eq.0)then
          write(fname,fmt) root(1:cfn_length(root)),
      1                     prefix(1:cfn_length(prefix)),'_',
