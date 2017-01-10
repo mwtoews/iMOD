@@ -4170,9 +4170,11 @@ TOPICLOOP: DO ITOPIC=1,MAXTOPICS
  LOGICAL FUNCTION PMANAGER_SAVEMF2005_LPF_SAVE(DIR,DIRMNAME,IBATCH,ISS)
  !####====================================================================
  IMPLICIT NONE
+ REAL,PARAMETER :: WETDRYTHRESS=0.1 !1.0 <- converges
  CHARACTER(LEN=*),INTENT(IN) :: DIR,DIRMNAME
  INTEGER,INTENT(IN) :: IBATCH,ISS
- INTEGER :: IU,ILAY,IFBND
+ REAL :: WETFCT,T
+ INTEGER :: IU,ILAY,IFBND,IHDWET,IWETIT,IROW,ICOL
  
  PMANAGER_SAVEMF2005_LPF_SAVE=.TRUE.
  
@@ -4217,11 +4219,24 @@ TOPICLOOP: DO ITOPIC=1,MAXTOPICS
  LINE=''; DO ILAY=1,NLAY; LINE=TRIM(LINE)//'1,'
   IF(MOD(ILAY,20).EQ.0)THEN; WRITE(IU,'(A)') LINE(:LEN_TRIM(LINE)-1); LINE=''; ENDIF
  ENDDO; IF(LEN_TRIM(LINE).NE.0)WRITE(IU,'(A)') LINE(:LEN_TRIM(LINE)-1)
- !## laywet code
- LINE=''; DO ILAY=1,NLAY; LINE=TRIM(LINE)//'0,'
+
+ !## laywet code - if unconfined always use wetdry
+ LINE=''; IWETIT=0
+ DO ILAY=1,NLAY
+  !## not unconfined
+  IF(LAYCON(ILAY).NE.2)LINE=TRIM(LINE)//'0,'
+  !## unconfined
+  IF(LAYCON(ILAY).EQ.2)THEN; LINE=TRIM(LINE)//'1,'; IWETIT=1; ENDIF
   IF(MOD(ILAY,20).EQ.0)THEN; WRITE(IU,'(A)') LINE(:LEN_TRIM(LINE)-1); LINE=''; ENDIF
  ENDDO; IF(LEN_TRIM(LINE).NE.0)WRITE(IU,'(A)') LINE(:LEN_TRIM(LINE)-1)
- 
+ !## include wetdry options
+ IF(IWETIT.EQ.1)THEN
+  WETFCT=0.1 !## multiplication to determine head in dry cell 
+  IHDWET=0   !## option to compute rewetted model layers; h = BOT + WETFCT (hn - BOT) 
+  LINE=TRIM(RTOS(WETFCT,'F',2))//','//TRIM(ITOS(IWETIT))//','//TRIM(ITOS(IHDWET))
+  WRITE(IU,'(A)') TRIM(LINE)
+ ENDIF
+  
  IFBND=1
  
  DO ILAY=1,NLAY
@@ -4246,7 +4261,7 @@ TOPICLOOP: DO ITOPIC=1,MAXTOPICS
     IF(.NOT.PMANAGER_SAVEMF2005_MOD_U2DREL(TRIM(DIR)//'\LPF7\SF2_L'//TRIM(ITOS(ILAY))//'.ARR', &
         SPY(ILAY),0,IU,ILAY,IFBND))RETURN
    ENDIF
-
+   
   ENDIF
    
   !## quasi-3d scheme add vertical hydraulic conductivity of interbed
@@ -4257,6 +4272,29 @@ TOPICLOOP: DO ITOPIC=1,MAXTOPICS
        KVV(ILAY),0,IU,ILAY,IFBND))RETURN
 
   ENDIF
+
+  !## add wetdry options - lakes/inactive cells cannot be rewetted)
+  IF(LAYCON(ILAY).NE.1.AND.IWETIT.EQ.1)THEN
+   !## fill wetdry thresholds
+   IDF%X=HNOFLOW 
+   DO IROW=1,IDF%NROW; DO ICOL=1,IDF%NCOL
+    IF(BND(ILAY)%X(ICOL,IROW).GT.0)THEN
+     T=TOP(ILAY)%X(ICOL,IROW)-BOT(ILAY)%X(ICOL,IROW)
+     !## only cells below can rewet - more stable
+     IDF%X(ICOL,IROW)=-MIN(WETDRYTHRESS,T)
+    ENDIF
+   ENDDO; ENDDO
+   IF(.NOT.PMANAGER_SAVEMF2005_MOD_U2DREL(TRIM(DIR)//'\LPF7\WETDRY_L'//TRIM(ITOS(ILAY))//'.ARR', &
+       IDF,0,IU,ILAY,IFBND))RETURN
+  ENDIF
+
+!The two most important variables that affect stability are the wetting 
+!threshold and which neighboring cells are checked to determine if a cell 
+!should be wetted. Both of these are controlled through WETDRY. It is 
+!often useful to look at the output file and identify cells that convert 
+!repeatedly from wet to dry. Try raising the wetting threshold for those 
+!cells. It may also be worthwhile looking at the boundary conditions 
+!associated with dry cells. 
 
  ENDDO  
   
