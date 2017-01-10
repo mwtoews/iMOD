@@ -4351,8 +4351,12 @@ TOPICLOOP: DO ITOPIC=1,MAXTOPICS
    CDIR=SFNAME(:INDEX(SFNAME,'\',.TRUE.)-1)   
  
    KU=UTL_GETUNIT(); CALL OSD_OPEN(KU,SFNAME,STATUS='OLD',ACTION='READ',FORM='FORMATTED'); IF(KU.EQ.0)RETURN
-   READ(KU,*) NROWIPF; READ(KU,*) NCOLIPF
-   DO I=1,NCOLIPF; READ(KU,*); ENDDO; READ(KU,*) IEXT,EXT
+   READ(KU,*,IOSTAT=IOS) NROWIPF; IF(IOS.NE.0)EXIT
+   READ(KU,*,IOSTAT=IOS) NCOLIPF; IF(IOS.NE.0)EXIT
+   DO I=1,NCOLIPF
+    READ(KU,*,IOSTAT=IOS); IF(IOS.NE.0)EXIT
+   ENDDO
+   READ(KU,*,IOSTAT=IOS) IEXT,EXT; IF(IOS.NE.0)EXIT
 
    N=MAX(3,IEXT); IF(ILAY.EQ.0)N=MAX(5,IEXT); ALLOCATE(STRING(N)); STRING=''
     
@@ -4362,9 +4366,9 @@ TOPICLOOP: DO ITOPIC=1,MAXTOPICS
     ILAY=TOPICS(ITOPIC)%STRESS(KPER)%FILES(1,ISYS)%ILAY
 
     READ(KU,*,IOSTAT=IOS) (STRING(J),J=1,N); IF(IOS.NE.0)EXIT
-
-    READ(STRING(1),*,IOSTAT=IOS) X
-    READ(STRING(2),*,IOSTAT=IOS) Y
+    
+    READ(STRING(1),*,IOSTAT=IOS) X; IF(IOS.NE.0)EXIT
+    READ(STRING(2),*,IOSTAT=IOS) Y; IF(IOS.NE.0)EXIT
 
     !## get correct cell-indices
     CALL IDFIROWICOL(BND(1),IROW,ICOL,X,Y)
@@ -4373,12 +4377,11 @@ TOPICLOOP: DO ITOPIC=1,MAXTOPICS
 
     !## get discharge - always on position 3
     IF(IEXT.EQ.0)THEN
-     READ(STRING(3),*,IOSTAT=IOS) Q
+     READ(STRING(3),*,IOSTAT=IOS) Q; IF(IOS.NE.0)EXIT
     ELSE
      !## get id number - can be any column
-     READ(STRING(IEXT),*,IOSTAT=IOS) ID
+     READ(STRING(IEXT),*,IOSTAT=IOS) ID; IF(IOS.NE.0)EXIT
     ENDIF
-    IF(IOS.NE.0)EXIT
 
     !## assign to several layer
     IF(ILAY.EQ.0)THEN
@@ -4400,7 +4403,9 @@ TOPICLOOP: DO ITOPIC=1,MAXTOPICS
     ENDIF
      
     IF(IEXT.GT.0)THEN
-     IF(.NOT.UTL_PCK_READTXT(2,ITIME,JTIME,Q,TRIM(CDIR)//'\'//TRIM(ID)//'.'//TRIM(EXT)))EXIT
+     IF(.NOT.UTL_PCK_READTXT(2,ITIME,JTIME,Q,TRIM(CDIR)//'\'//TRIM(ID)//'.'//TRIM(EXT)))THEN
+      IOS=-1; EXIT
+     ENDIF
     ENDIF
          
     !## use factor/impulse
@@ -4417,16 +4422,17 @@ TOPICLOOP: DO ITOPIC=1,MAXTOPICS
      
    ENDDO
   
-   IF(IOS.NE.0)THEN
-    CALL WMESSAGEBOX(OKONLY,EXCLAMATIONICON,COMMONOK,'Error reading IPF file'//CHAR(13)//TRIM(SFNAME)//CHAR(13)// &
-       'Linenumber '//TRIM(ITOS(I)),'Error')
-    CLOSE(JU); CLOSE(KU); RETURN
-   ENDIF     
-
    DEALLOCATE(STRING); CLOSE(KU)
 
+   IF(IOS.NE.0)THEN
+    CALL WMESSAGEBOX(OKONLY,EXCLAMATIONICON,COMMONOK,'Error reading IPF file'//CHAR(13)//TRIM(SFNAME)//CHAR(13)// &
+       'Linenumber '//TRIM(ITOS(I)),'Error'); EXIT
+   ENDIF     
+   
   ENDDO
  
+  IF(IOS.NE.0)EXIT
+  
   LINE=TRIM(ITOS(NP)); WRITE(IU,'(A)') TRIM(LINE)
   
   IF(NP.GT.0)THEN
@@ -4439,10 +4445,11 @@ TOPICLOOP: DO ITOPIC=1,MAXTOPICS
  
  CLOSE(IU); DEALLOCATE(TLP,TP,BT,KH)
 
- CALL PMANAGER_SAVEMF2005_MAXNO(TRIM(DIRMNAME)//'.'//CPCK//'7_',(/NP/))
-
- PMANAGER_SAVEMF2005_WEL=.TRUE.
-  
+ IF(IOS.EQ.0)THEN
+  CALL PMANAGER_SAVEMF2005_MAXNO(TRIM(DIRMNAME)//'.'//CPCK//'7_',(/NP/))
+  PMANAGER_SAVEMF2005_WEL=.TRUE.
+ ENDIF
+ 
  END FUNCTION PMANAGER_SAVEMF2005_WEL
  
  !###======================================================================
@@ -4452,12 +4459,13 @@ TOPICLOOP: DO ITOPIC=1,MAXTOPICS
  INTEGER,INTENT(IN) :: IBATCH,ICB,ITOPIC,IPRT
  CHARACTER(LEN=*),INTENT(IN) :: DIR,DIRMNAME,CPCK
  LOGICAL,INTENT(IN) :: LEX
- REAL :: X,Y,Q,Z1,Z2,FCT,IMP,CNST
+ REAL :: X,Y,Q,Z1,Z2,FCT,IMP,CNST,RW,RSKIN,KSKIN
  CHARACTER(LEN=256) :: SFNAME,ID,CDIR
  CHARACTER(LEN=5) :: EXT
- CHARACTER(LEN=30) :: FRM
+ CHARACTER(LEN=30) :: FRM,LOSSTYPE
  CHARACTER(LEN=52),ALLOCATABLE,DIMENSION(:) :: STRING
- INTEGER :: IU,JU,KU,ILAY,IROW,ICOL,I,J,ISYS,NROWIPF,NCOLIPF,IEXT,IOS,N,KPER,IPER,NP,NSYS,ICNST
+ INTEGER :: IU,KU,ILAY,IROW,ICOL,I,J,ISYS,NROWIPF,NCOLIPF,IEXT,IOS,N,KPER,IPER,NP,NSYS,ICNST, &
+   MNWPRINT,NNODES,ILOSSTYPE,QLIMIT,PPFLAG,PUMPLOC,PUMPCAP,ILOSS
  INTEGER(KIND=8) :: ITIME,JTIME
   
  IF(.NOT.LEX)THEN; PMANAGER_SAVEMF2005_MNW=.TRUE.; RETURN; ENDIF
@@ -4471,34 +4479,33 @@ TOPICLOOP: DO ITOPIC=1,MAXTOPICS
  CALL OSD_OPEN(IU,FILE=TRIM(DIRMNAME)//'.'//CPCK//'7_',STATUS='UNKNOWN',ACTION='WRITE',FORM='FORMATTED')
  IF(IU.EQ.0)RETURN
 
+ !## maximal output information
+ MNWPRINT=2
+ 
  !## header
- LINE='NaN1,'//TRIM(ITOS(ICB))//'2,AUX ISUB DSUBSYS ISUB NOPRINT'; WRITE(IU,'(A)') TRIM(LINE)
+ LINE='NaN1,'//TRIM(ITOS(ICB))//','//TRIM(ITOS(MNWPRINT))//',NOPRINT'; WRITE(IU,'(A)') TRIM(LINE)
   
- WRITE(FRM,'(A9,I2.2,A14)') '(3(I5,1X),',1,'(G15.7,1X),I5)'
+! WRITE(FRM,'(A9,I2.2,A14)') '(3(I5,1X),',1,'(G15.7,1X),I5)'
 
 ! !## create subfolders
 ! CALL UTL_CREATEDIR(TRIM(DIR)//'\'//CPCK//'7')
-
 ! CALL PMANAGER_SAVEMF2005_ALLOCATEPCK(NLAY)
  
+ !## search for first mnw definition in time - can be one only !!!
+ DO IPER=1,NPER
+  !## get appropriate input file for first stress-period 
+  KPER=PMANAGER_GETCURRENTIPER(IPER,ITOPIC,ITIME,JTIME)
+  !## found appropriate stress-period
+  IF(KPER.GT.0)EXIT
+ ENDDO
+ !## nothing found
+ IF(IPER.GT.NPER)KPER=0
+
+ !## number of mnw wells
  NP=0
 
-! !## search for first mnw definition in time - can be one only !!!
-! DO JPER=1,NPER
-!  !## get appropriate input file for first stress-period 
- ! KPER=PMANAGER_GETCURRENTIPER(JPER,ITOPIC,ITIME,JTIME)
- ! IF(KPER.GT.0)EXIT
- !ENDDO
-! !## nothing found
-! IF(JPER.GT.NPER)KPER=0
-
-! DO IPER=1,NPER
-
-!  !## output
-!  IF(IBATCH.EQ.1)WRITE(*,'(1X,A,I10)') 'Exporting timestep ',IPER
-  
-!  !## get appropriate stress-period to store in runfile   
-!  KPER=PMANAGER_GETCURRENTIPER(IPER,ITOPIC,ITIME,JTIME)
+ !## fill static-time independent information
+ DO IPER=0,NPER
 
 !  !## reuse previous timestep
 !  IF(KPER.LE.0)THEN
@@ -4513,23 +4520,22 @@ TOPICLOOP: DO ITOPIC=1,MAXTOPICS
   
 !  !## create subfolders
 !  CALL UTL_CREATEDIR(TRIM(DIR)//'\'//CPCK//'7')
-
 !  EXFNAME=TRIM(DIR)//'\'//CPCK//'7'//'\'//CPCK//'_T'//TRIM(ITOS(IPER))//'.ARR'
 !  JU=UTL_GETUNIT(); CALL OSD_OPEN(JU,FILE=EXFNAME,STATUS='UNKNOWN',ACTION='WRITE',FORM='FORMATTED'); IF(JU.EQ.0)RETURN
 
- !## only one defined !!!
- KPER=1
  !## allocate memory for packages
 ! NTOP=SIZE(TOPICS(ITOPIC)%STRESS(KPER)%FILES,1); 
- NSYS=SIZE(TOPICS(ITOPIC)%STRESS(KPER)%FILES,2)
+!  NSYS=SIZE(TOPICS(ITOPIC)%STRESS(KPER)%FILES,2)
 
- DO IPER=1,NPER
-
-  !## output
-  WRITE(IPRT,'(1X,A,I10)') 'Exporting timestep ',IPER  
-
-  !## get appropriate stress-period to store in runfile   
-  KPER=PMANAGER_GETCURRENTIPER(IPER,ITOPIC,ITIME,JTIME)
+  IF(IPER.GT.0)THEN
+   !## output
+   WRITE(IPRT,'(1X,A,I10)') 'Exporting timestep ',IPER  
+   !## get appropriate stress-period to store in runfile   
+   KPER=PMANAGER_GETCURRENTIPER(IPER,ITOPIC,ITIME,JTIME)
+  ENDIF
+  
+  !## get number of mnw-systems
+  NSYS=SIZE(TOPICS(ITOPIC)%STRESS(KPER)%FILES,2)
 
   DO ISYS=1,NSYS
 
@@ -4540,17 +4546,23 @@ TOPICLOOP: DO ITOPIC=1,MAXTOPICS
    ILAY  =TOPICS(ITOPIC)%STRESS(KPER)%FILES(1,ISYS)%ILAY
    SFNAME=TOPICS(ITOPIC)%STRESS(KPER)%FILES(1,ISYS)%FNAME
 
-   WRITE(IPRT,'(1X,A,I3,A1,I1,A1,I4.3,3(A1,G15.7),A1,A)') TOPICS(ITOPIC)%TNAME(1:5)//',', &
+   IF(IPER.GT.0)THEN
+    WRITE(IPRT,'(1X,A,I3,A1,I1,A1,I4.3,3(A1,G15.7),A1,A)') TOPICS(ITOPIC)%TNAME(1:5)//',', &
       ISYS,',',ICNST,',',ILAY,',',FCT,',',IMP,',',CNST,',',CHAR(39)//TRIM(SFNAME)//CHAR(39)
-
+   ENDIF
+   
    CDIR=SFNAME(:INDEX(SFNAME,'\',.TRUE.)-1)   
  
    KU=UTL_GETUNIT(); CALL OSD_OPEN(KU,SFNAME,STATUS='OLD',ACTION='READ',FORM='FORMATTED'); IF(KU.EQ.0)RETURN
-   READ(KU,*) NROWIPF; READ(KU,*) NCOLIPF
-   DO I=1,NCOLIPF; READ(KU,*); ENDDO; READ(KU,*) IEXT,EXT
+   READ(KU,*,IOSTAT=IOS) NROWIPF; IF(IOS.NE.0)EXIT
+   READ(KU,*,IOSTAT=IOS) NCOLIPF; IF(IOS.NE.0)EXIT
+   DO I=1,NCOLIPF; READ(KU,*,IOSTAT=IOS); IF(IOS.NE.0)EXIT; ENDDO
+   READ(KU,*,IOSTAT=IOS) IEXT,EXT; IF(IOS.NE.0)EXIT
 
-   N=MAX(3,IEXT); IF(ILAY.EQ.0)N=MAX(5,IEXT); ALLOCATE(STRING(N)); STRING=''
-    
+   N=NCOLIPF; ALLOCATE(STRING(N)); STRING=''
+       
+   IF(ILAY.GT.0)ILOSS=4; IF(ILAY.EQ.0)ILOSS=6
+   
    DO I=1,NROWIPF
    
     !## start with current given layer number
@@ -4558,55 +4570,102 @@ TOPICLOOP: DO ITOPIC=1,MAXTOPICS
 
     READ(KU,*,IOSTAT=IOS) (STRING(J),J=1,N); IF(IOS.NE.0)EXIT
 
-    READ(STRING(1),*,IOSTAT=IOS) X
-    READ(STRING(2),*,IOSTAT=IOS) Y
-
+    READ(STRING(1),*,IOSTAT=IOS) X; IF(IOS.NE.0)EXIT
+    READ(STRING(2),*,IOSTAT=IOS) Y; IF(IOS.NE.0)EXIT
+    
     !## get correct cell-indices
     CALL IDFIROWICOL(BND(1),IROW,ICOL,X,Y)
     !## outside current model
     IF(IROW.EQ.0.OR.ICOL.EQ.0)CYCLE
 
-    !## get discharge - always on position 3
-    IF(IEXT.EQ.0)THEN
-     READ(STRING(3),*,IOSTAT=IOS) Q
-    ELSE
-     !## get id number - can be any column
-     READ(STRING(IEXT),*,IOSTAT=IOS) ID
-    ENDIF
-    IF(IOS.NE.0)EXIT
-
-    !## assign to several layer
-    IF(ILAY.EQ.0)THEN
-      
-     READ(STRING(4),*,IOSTAT=IOS) Z1; IF(IOS.NE.0)EXIT
-     READ(STRING(5),*,IOSTAT=IOS) Z2; IF(IOS.NE.0)EXIT
-
-    ENDIF
+    NP=NP+1
+    
+    !## write alphanumerical identification of well
+    IF(IPER.EQ.0)THEN
      
-    IF(IEXT.GT.0)THEN
-     IF(.NOT.UTL_PCK_READTXT(2,ITIME,JTIME,Q,TRIM(CDIR)//'\'//TRIM(ID)//'.'//TRIM(EXT)))EXIT
+     IF(ILAY.GT.0)NNODES= 1 !## single well screen layer given
+     IF(ILAY.LE.0)NNODES=-1 !## single well screen layer determined
+     LINE='WELLID_'//TRIM(ITOS(NP))//','//TRIM(ITOS(NNODES))
+     !## identification
+     WRITE(IU,'(A)') TRIM(LINE)
+     READ(STRING(ILOSS),*,IOSTAT=IOS) LOSSTYPE; IF(IOS.NE.0)EXIT
+     !## losstype
+     LOSSTYPE=UTL_CAP(LOSSTYPE,'U')
+     SELECT CASE (TRIM(LOSSTYPE))
+      CASE ('NONE');       ILOSSTYPE=0
+      CASE ('THIEM');      ILOSSTYPE=1
+      CASE ('SKIN');       ILOSSTYPE=2
+!      CASE ('GENERAL');    ILOSSTYPE=3
+!      CASE ('SPECIFYCWC'); ILOSSTYPE=4
+      CASE DEFAULT
+       CALL WMESSAGEBOX(OKONLY,EXCLAMATIONICON,COMMONOK,'Specified model ('//TRIM(LOSSTYPE)//') for well loss unknown'//CHAR(13)// &
+         'Select one of the following:'//CHAR(13)//'NONE, THIEM, SKIN','Error'); IOS=-1; EXIT
+!         'Select one of the following:'//CHAR(13)//'NONE, THIEM, SKIN, GENERAL, SPECIFYCWC','Error'); IOS=-1; EXIT
+     END SELECT
+     PUMPLOC=0 !## no location of pump intake or injection
+     QLIMIT=1  !## pumpage limited by water level (time independent)
+     IF(NNODES.EQ. 1)PPFLAG=0  !## head not adjusted for partial penetration of well
+     IF(NNODES.EQ.-1)PPFLAG=1  !## head adjusted for partial penetration of well
+     PUMPCAP=0 !## discharge not defined by head-capacity relation
+     LINE=TRIM(LOSSTYPE)//','//TRIM(ITOS(PUMPLOC))//','//TRIM(ITOS(QLIMIT))//','//TRIM(ITOS(PPFLAG))//','//TRIM(ITOS(PUMPCAP))
+     WRITE(IU,'(A)') TRIM(LINE)
+     SELECT CASE (ILOSSTYPE)
+      !## thiem
+      CASE(1)
+       READ(STRING(ILOSS+1),*,IOSTAT=IOS) RW; IF(IOS.NE.0)EXIT
+       LINE=TRIM(RTOS(RW,'F',2)); WRITE(IU,'(A)') TRIM(LINE)
+      !## skin
+      CASE(2)
+       READ(STRING(ILOSS+1),*,IOSTAT=IOS) RW;    IF(IOS.NE.0)EXIT
+       READ(STRING(ILOSS+2),*,IOSTAT=IOS) RSKIN; IF(IOS.NE.0)EXIT
+       READ(STRING(ILOSS+3),*,IOSTAT=IOS) KSKIN; IF(IOS.NE.0)EXIT
+       LINE=TRIM(RTOS(RW,'F',2))//','//TRIM(RTOS(RSKIN,'F',2))//','//TRIM(RTOS(KSKIN,'F',2)); WRITE(IU,'(A)') TRIM(LINE)
+     END SELECT
+     CYCLE
     ENDIF
-         
-    !## use factor/impulse
-    Q=Q*FCT; Q=Q+IMP  
-
-    IF(Q.NE.0.0)THEN
-     DO ILAY=1,NLAY
-      WRITE(JU,FRM) ILAY,IROW,ICOL,Q !*TLP(ILAY),ISYS
-      NP=NP+1
-     ENDDO
-    ENDIF
+    
+!    !## get discharge - always on position 3
+!    IF(IEXT.EQ.0)THEN
+!     READ(STRING(3),*,IOSTAT=IOS) Q; IF(IOS.NE.0)EXIT
+!    ELSE
+!     !## get id number - can be any column
+!     READ(STRING(IEXT),*,IOSTAT=IOS) ID; IF(IOS.NE.0)EXIT
+!    ENDIF
+!    IF(IOS.NE.0)EXIT
+!
+!    !## assign to several layer
+!    IF(ILAY.EQ.0)THEN
+!      
+!     READ(STRING(4),*,IOSTAT=IOS) Z1; IF(IOS.NE.0)EXIT
+!     READ(STRING(5),*,IOSTAT=IOS) Z2; IF(IOS.NE.0)EXIT
+!
+!    ENDIF
+!     
+!    IF(IEXT.GT.0)THEN
+!     IF(.NOT.UTL_PCK_READTXT(2,ITIME,JTIME,Q,TRIM(CDIR)//'\'//TRIM(ID)//'.'//TRIM(EXT)))THEN
+!      IOS=-1; EXIT
+!     ENDIF
+!    ENDIF
+!         
+!    !## use factor/impulse
+!    Q=Q*FCT; Q=Q+IMP  
+!
+!    IF(Q.NE.0.0)THEN
+!     DO ILAY=1,NLAY
+!      WRITE(JU,FRM) ILAY,IROW,ICOL,Q !*TLP(ILAY),ISYS
+!      NP=NP+1
+!     ENDDO
+!    ENDIF
      
    ENDDO
-  
-   IF(IOS.NE.0)THEN
-    CALL WMESSAGEBOX(OKONLY,EXCLAMATIONICON,COMMONOK,'Error reading IPF file'//CHAR(13)//TRIM(SFNAME)//CHAR(13)// &
-       'Linenumber '//TRIM(ITOS(I)),'Error')
-    CLOSE(JU); CLOSE(KU); RETURN
-   ENDIF     
 
    DEALLOCATE(STRING); CLOSE(KU)
 
+   IF(IOS.NE.0)THEN
+    CALL WMESSAGEBOX(OKONLY,EXCLAMATIONICON,COMMONOK,'Error reading IPF file'//CHAR(13)//TRIM(SFNAME)//CHAR(13)// &
+       'Linenumber '//TRIM(ITOS(I)),'Error'); EXIT
+   ENDIF     
+ 
   ENDDO
  
  LINE=TRIM(ITOS(NP)); WRITE(IU,'(A)') TRIM(LINE)
@@ -4621,9 +4680,10 @@ TOPICLOOP: DO ITOPIC=1,MAXTOPICS
  
  CLOSE(IU)
 
- CALL PMANAGER_SAVEMF2005_MAXNO(TRIM(DIRMNAME)//'.'//CPCK//'7_',(/NP/))
-
- PMANAGER_SAVEMF2005_MNW=.TRUE.
+ IF(IOS.EQ.0)THEN
+  CALL PMANAGER_SAVEMF2005_MAXNO(TRIM(DIRMNAME)//'.'//CPCK//'7_',(/NP/))
+  PMANAGER_SAVEMF2005_MNW=.TRUE.
+ ENDIF
   
  END FUNCTION PMANAGER_SAVEMF2005_MNW
  

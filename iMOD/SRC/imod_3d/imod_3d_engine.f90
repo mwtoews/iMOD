@@ -275,9 +275,7 @@ CONTAINS
   !##===============
 
   !## get classes
-  V1=(TOP%Y+BOT%Y)/2.0-(TOP%X-BOT%X)/2.0
-  V2=(TOP%Y+BOT%Y)/2.0+(TOP%X-BOT%X)/2.0
-  CALL UTL_GETAXESCALES(REAL(BOT%X),V1,REAL(TOP%X),V2)
+  CALL UTL_GETAXESCALES(REAL(BOT%X),REAL(BOT%Y),REAL(TOP%X),REAL(TOP%Y))
 
   DX=(X2-X1)/100.0; DY=(Y2-Y1)/100.0; DXY=MIN(DX,DY)
   
@@ -291,10 +289,9 @@ CONTAINS
   
   VI=VI/4.0
   
-  I=0; DO !I=1,NSX
+  I=0; DO 
    I=I+1
-!   DO J=0,1
-    DX=V1+VI*REAL(I-1) !(REAL(I-1)+(REAL(J)*0.5))
+    DX=V1+VI*REAL(I-1) 
     IF(DX.GT.X1.AND.DX.LT.X2)THEN
      IF(MOD(I-1,4).EQ.0)THEN
       CALL GLVERTEX3F(DX,Y1-DXY*2.0,Z1); CALL GLVERTEX3F(DX,Y1+DXY*2.0,Z1)
@@ -306,7 +303,6 @@ CONTAINS
       CALL GLVERTEX3F(DX,Y2-DXY,Z2); CALL GLVERTEX3F(DX,Y2+DXY,Z2)
      ENDIF
     ENDIF
-!   ENDDO
    IF(DX.GT.X2)EXIT
   END DO
 
@@ -323,10 +319,9 @@ CONTAINS
 
   VI=VI/4.0
 
-  I=0; DO !I=1,NSY 
+  I=0; DO 
    I=I+1
-!   DO J=0,1
-    DY=V1+VI*REAL(I-1) !(REAL(I-1)+(REAL(J)*0.5))
+    DY=V1+VI*REAL(I-1) 
     IF(DY.GT.Y1.AND.DY.LT.Y2)THEN
      IF(MOD(I-1,4).EQ.0)THEN
       CALL GLVERTEX3F(X1-DXY*2.0,DY,Z1); CALL GLVERTEX3F(X1+DXY*2.0,DY,Z1)
@@ -338,7 +333,6 @@ CONTAINS
       CALL GLVERTEX3F(X2-DXY,DY,Z2); CALL GLVERTEX3F(X2+DXY,DY,Z2)
      ENDIF
     ENDIF
-!   END DO
    IF(DY.GT.Y2)EXIT
   END DO
 
@@ -406,10 +400,7 @@ CONTAINS
  AXESINDEX(3)=GLGENLISTS(1)
  CALL GLNEWLIST(AXESINDEX(3),GL_COMPILE)
 
-! CALL UTL_GETAXESCALES(REAL(BOT%X),REAL(BOT%Y),REAL(TOP%X),REAL(TOP%Y))
- V1=(TOP%Y+BOT%Y)/2.0-(TOP%X-BOT%X)/2.0
- V2=(TOP%Y+BOT%Y)/2.0+(TOP%X-BOT%X)/2.0
- CALL UTL_GETAXESCALES(REAL(BOT%X),V1,REAL(TOP%X),V2)
+ CALL UTL_GETAXESCALES(REAL(BOT%X),REAL(BOT%Y),REAL(TOP%X),REAL(TOP%Y))
 
   !## ------------------------
   !## write X-axes-information
@@ -426,7 +417,7 @@ CONTAINS
 
   !## write X-axes-information
   DY=DT*2.0
-  I=0; DO !I=1,NSX
+  I=0; DO 
    I=I+1
    DX=V1+VI*REAL(I-1)
    IF(DX.GT.X2)EXIT
@@ -485,7 +476,7 @@ CONTAINS
   VI=(SYVALUE(2)-SYVALUE(1))*F
   
   DX=DT*2.0
-  I=0; DO !I=1,NSY
+  I=0; DO 
    I=I+1
    DY=V1+VI*REAL(I-1)
    IF(DY.GT.Y2)EXIT
@@ -535,8 +526,6 @@ CONTAINS
 
   CALL UTL_GETAXESCALES(REAL(BOT%X),REAL(BOT%Z),REAL(TOP%X),REAL(TOP%Z))
  
-!  DO WHILE(M.LT.N); M=MAX(1,M)*2; ENDDO
-
   V1=SYVALUE(1)
   V2=SYVALUE(NSY)
   T1= V1
@@ -1301,6 +1290,7 @@ CONTAINS
  TYPE(WIN_MESSAGE) :: MESSAGE
  CHARACTER(LEN=52),DIMENSION(6) :: CACC
  INTEGER,DIMENSION(6,2) :: IACC
+! REAL :: DX,DY
  
  CALL WDIALOGLOAD(ID_D3DIDFSETTINGS,ID_D3DIDFSETTINGS)
  
@@ -1328,17 +1318,29 @@ CONTAINS
   N=MAX(N,(IC2-IC1)+1)
   M=MAX(M,(IR2-IR1)+1)
  ENDDO
- I=N/5; J=M/5; I=MIN(100,I) ; J=MIN(100,J) ; CACC(1)='Minimal (ncol '//TRIM(ITOS(I))//' x nrow '//TRIM(ITOS(J))//')'
+ I=N/5; J=M/5; I=MIN(100,I) ; J=MIN(100,J) !; DX=(MPW%XMAX-MPW%XMIN)/REAL(I); DY=(MPW%YMAX-MPW%YMIN)/REAL(I)
+! CACC(1)='Minimal (cells '//TRIM(ITOS(I*J))//'; dx/dy '//TRIM(RTOS(DX,'F',1))//'/'//TRIM(RTOS(DY,'F',1))//')' 
+ CACC(1)='Minimal (ncol '//TRIM(ITOS(I))//' x nrow '//TRIM(ITOS(J))//')'
  IACC(1,1)=I; IACC(1,2)=J
- I=N/4; J=M/4; I=MIN(250,I) ; J=MIN(250,J) ; CACC(2)='Low (ncol '//TRIM(ITOS(I))//' x nrow '//TRIM(ITOS(J))//')'
+ I=N/4; J=M/4; I=MIN(250,I) ; J=MIN(250,J) !; DX=(MPW%XMAX-MPW%XMIN)/REAL(I); DY=(MPW%YMAX-MPW%YMIN)/REAL(I)
+! CACC(2)='Low (cells '//TRIM(ITOS(I*J))//'; dx/dy '//TRIM(RTOS(DX,'F',1))//'/'//TRIM(RTOS(DY,'F',1))//')' 
+ CACC(2)='Low (ncol '//TRIM(ITOS(I))//' x nrow '//TRIM(ITOS(J))//')'
  IACC(2,1)=I; IACC(2,2)=J
- I=N/3; J=M/3; I=MIN(500,I) ; J=MIN(500,J) ; CACC(3)='Normal (ncol '//TRIM(ITOS(I))//' x nrow '//TRIM(ITOS(J))//')'
+ I=N/3; J=M/3; I=MIN(500,I) ; J=MIN(500,J) !; DX=(MPW%XMAX-MPW%XMIN)/REAL(I); DY=(MPW%YMAX-MPW%YMIN)/REAL(I)
+! CACC(3)='Normal (cells '//TRIM(ITOS(I*J))//'; dx/dy '//TRIM(RTOS(DX,'F',1))//'/'//TRIM(RTOS(DY,'F',1))//')'  
+ CACC(3)='Normal (ncol '//TRIM(ITOS(I))//' x nrow '//TRIM(ITOS(J))//')'
  IACC(3,1)=I; IACC(3,2)=J
- I=N/2; J=M/2; I=MIN(750,I) ; J=MIN(750,J) ; CACC(4)='High (ncol '//TRIM(ITOS(I))//' x nrow '//TRIM(ITOS(J))//')'
+ I=N/2; J=M/2; I=MIN(750,I) ; J=MIN(750,J) !; DX=(MPW%XMAX-MPW%XMIN)/REAL(I); DY=(MPW%YMAX-MPW%YMIN)/REAL(I)
+! CACC(4)='High (cells '//TRIM(ITOS(I*J))//'; dx/dy '//TRIM(RTOS(DX,'F',1))//'/'//TRIM(RTOS(DY,'F',1))//')'  
+ CACC(4)='High (ncol '//TRIM(ITOS(I))//' x nrow '//TRIM(ITOS(J))//')'
  IACC(4,1)=I; IACC(4,2)=J
- I=N/1; J=M/1; I=MIN(1000,I); J=MIN(1000,J); CACC(5)='Very High (ncol '//TRIM(ITOS(I))//' x nrow '//TRIM(ITOS(J))//')'
+ I=N/1; J=M/1; I=MIN(1000,I); J=MIN(1000,J)!; DX=(MPW%XMAX-MPW%XMIN)/REAL(I); DY=(MPW%YMAX-MPW%YMIN)/REAL(I)
+! CACC(5)='Very High (cells '//TRIM(ITOS(I*J))//'; dx/dy '//TRIM(RTOS(DX,'F',1))//'/'//TRIM(RTOS(DY,'F',1))//')' 
+ CACC(5)='Very High (ncol '//TRIM(ITOS(I))//' x nrow '//TRIM(ITOS(J))//')'
  IACC(5,1)=I; IACC(5,2)=J
- I=N/1; J=M/1;                               CACC(6)='Maximal (ncol '//TRIM(ITOS(I))//' x nrow '//TRIM(ITOS(J))//')'
+ I=N/1; J=M/1;                             !; DX=(MPW%XMAX-MPW%XMIN)/REAL(I); DY=(MPW%YMAX-MPW%YMIN)/REAL(I)
+! CACC(6)='Maximal (cells '//TRIM(ITOS(I*J))//'; dx/dy '//TRIM(RTOS(DX,'F',1))//'/'//TRIM(RTOS(DY,'F',1))//')'  
+ CACC(6)='Maximal (ncol '//TRIM(ITOS(I))//' x nrow '//TRIM(ITOS(J))//')'
  IACC(6,1)=I; IACC(6,2)=J
 
  DO I=6,1,-1; IF(IACC(I,1).LE.150.AND.IACC(I,2).LE.150)EXIT; ENDDO; I=MAX(I,1)

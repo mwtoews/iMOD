@@ -355,12 +355,21 @@ CONTAINS
  
  !## check relative-pathnames
  IF(INDEX(RFNAME,':').EQ.0)THEN
-  !## rootname
-  ROOTNAME=PATH(:INDEX(PATH,'\',.TRUE.)-1)   
+  !## if file is given
+  IF(INDEX(PATH,'.').GT.0)THEN
+   ROOTNAME=PATH(:INDEX(PATH,'\',.TRUE.)-1)   
+  ELSE
+   ROOTNAME=PATH
+  ENDIF
   !## clip number of "..\" from the rootname  
   DO
-   IF(INDEX(RFNAME,'..\',.FALSE.).EQ.0)EXIT
-   RFNAME=RFNAME(INDEX(RFNAME,'..\',.FALSE.)+3:) 
+   IF(INDEX(RFNAME,'..\',.FALSE.).EQ.0)THEN
+    IF(INDEX(RFNAME,'.\',.FALSE.).EQ.0)EXIT
+    !## one point means same folder
+    RFNAME=RFNAME(INDEX(RFNAME,'.\',.FALSE.)+2:); EXIT
+   ELSE
+    RFNAME=RFNAME(INDEX(RFNAME,'..\',.FALSE.)+3:) 
+   ENDIF
    ROOTNAME=ROOTNAME(:INDEX(ROOTNAME,'\',.TRUE.)-1)   
   ENDDO
   !## construct global filename
@@ -370,6 +379,12 @@ CONTAINS
   GFNAME=RFNAME
  ENDIF
 
+ !## remove double "\\" if exist
+ DO
+  IF(INDEX(GFNAME,'\\').EQ.0)EXIT
+  GFNAME=UTL_SUBST(GFNAME,'\\','\')
+ ENDDO
+ 
  END SUBROUTINE UTL_RELPATHNAME
 
  !###====================================================================
