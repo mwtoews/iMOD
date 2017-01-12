@@ -46,6 +46,36 @@ TYPE(BPXOBJ),ALLOCATABLE,DIMENSION(:),PRIVATE :: BPX,PPX,TPX
 CONTAINS
 
  !###======================================================================
+ SUBROUTINE SOF_EXPORT(IDF,N,IFORMAT)
+ !###======================================================================
+ IMPLICIT NONE
+ INTEGER,INTENT(IN) :: N,IFORMAT
+ TYPE(IDFOBJ),INTENT(INOUT),DIMENSION(N) :: IDF
+ INTEGER :: I,IROW,ICOL
+ 
+ !## read files
+ DO I=1,4; IF(.NOT.IDFREAD(IDF(I),IDF(I)%FNAME,1))THEN; ENDIF; ENDDO
+ 
+ CALL IDFCOPY(IDF(1),IDF(5)) !## conductance
+ CALL IDFCOPY(IDF(1),IDF(6)) !## stage
+ CALL IDFCOPY(IDF(1),IDF(7)) !## bottom
+ CALL IDFCOPY(IDF(1),IDF(8)) !## inffactor
+
+!## maken van de sfr gewoon ieder lijnstukje doen - verbinding, beginnen bij cel 1,1 en dan aflopen (geldt voor alles), bijouden of je al lijnstukje gemaakt hebt in idf(9) - bottom altijd aflopen
+
+ !## start tracing
+ DO IROW=1,IDF(1)%NROW; DO ICOL=1,IDF(1)%NCOL
+  !## skip nodata
+  IF(IDF(1)%X(ICOL,IROW).EQ.IDF(1)%NODATA)CYCLE
+  
+ ENDDO; WRITE(6,'(A,F7.3,A)') '+Progress ',REAL(IROW*100)/REAL(IDF(1)%NROW),' % finished        '; ENDDO
+
+ !## save files 
+ DO I=5,8; IF(.NOT.IDFWRITE(IDF(I),IDF(I)%FNAME,1))THEN; ENDIF; ENDDO
+ 
+ END SUBROUTINE SOF_EXPORT
+ 
+ !###======================================================================
  SUBROUTINE SOF_CATCHMENTS(RESULTIDF,OUTPUTFOLDER,IDF,TQP,PTQP,ITQP,TTQP,MINQ)
  !###======================================================================
  IMPLICIT NONE
