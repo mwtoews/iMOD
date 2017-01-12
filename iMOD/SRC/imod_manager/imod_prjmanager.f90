@@ -4276,6 +4276,7 @@ TOPICLOOP: DO ITOPIC=1,MAXTOPICS
   WRITE(IU,'(A)') TRIM(LINE)
  ENDIF
   
+ !## check all on active cells, except wetdry
  IFBND=1
  
  DO ILAY=1,NLAY
@@ -4315,7 +4316,7 @@ TOPICLOOP: DO ITOPIC=1,MAXTOPICS
   !## add wetdry options - lakes/inactive cells cannot be rewetted)
   IF(LAYCON(ILAY).NE.1.AND.IWETIT.EQ.1)THEN
    !## fill wetdry thresholds
-   IDF%X=HNOFLOW 
+   IDF%X=0.0 !HNOFLOW 
    DO IROW=1,IDF%NROW; DO ICOL=1,IDF%NCOL
     IF(BND(ILAY)%X(ICOL,IROW).GT.0)THEN
      T=TOP(ILAY)%X(ICOL,IROW)-BOT(ILAY)%X(ICOL,IROW)
@@ -4324,7 +4325,7 @@ TOPICLOOP: DO ITOPIC=1,MAXTOPICS
     ENDIF
    ENDDO; ENDDO
    IF(.NOT.PMANAGER_SAVEMF2005_MOD_U2DREL(TRIM(DIR)//'\LPF7\WETDRY_L'//TRIM(ITOS(ILAY))//'.ARR', &
-       IDF,0,IU,ILAY,IFBND))RETURN
+       IDF,0,IU,ILAY,0))RETURN
   ENDIF
 
 !The two most important variables that affect stability are the wetting 
@@ -5198,11 +5199,11 @@ TOPICLOOP: DO ITOPIC=1,MAXTOPICS
      !## evt
      CASE (24)
       IF(KTOP.EQ.1)FCT=FCT*0.001
-      IF(ILAY.LT.0)NEVTOP=3
+      IF(ILAY.LE.0)NEVTOP=3
      !## rch
      CASE (26)
       IF(KTOP.EQ.1)FCT=FCT*0.001
-      IF(ILAY.LT.0)NRCHOP=3
+      IF(ILAY.LE.0)NRCHOP=3
        
     END SELECT
     
@@ -5344,7 +5345,12 @@ TOPICLOOP: DO ITOPIC=1,MAXTOPICS
 
   ENDDO
 
-  IF(ITOPIC.NE.31)LINE=TRIM(ITOS(NP)); WRITE(IU,'(A)') TRIM(LINE)
+  IF(ITOPIC.NE.31.AND. &
+     ITOPIC.NE.18.AND. &
+     ITOPIC.NE.24.AND. &
+     ITOPIC.NE.26)THEN
+   LINE=TRIM(ITOS(NP)); WRITE(IU,'(A)') TRIM(LINE)
+  ENDIF
   
   !## maximum input per simulation
   MP=MAX(MP,NP)
