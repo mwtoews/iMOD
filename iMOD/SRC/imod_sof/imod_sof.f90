@@ -46,12 +46,15 @@ TYPE(BPXOBJ),ALLOCATABLE,DIMENSION(:),PRIVATE :: BPX,PPX,TPX
 CONTAINS
 
  !###======================================================================
- SUBROUTINE SOF_EXPORT(IDF,N,IFORMAT)
+ SUBROUTINE SOF_EXPORT(IDF,N,IFORMAT,RAIN)
  !###======================================================================
  IMPLICIT NONE
  INTEGER,INTENT(IN) :: N,IFORMAT
+ REAL,INTENT(INOUT) :: RAIN
  TYPE(IDFOBJ),INTENT(INOUT),DIMENSION(N) :: IDF
- INTEGER :: I,IROW,ICOL
+ REAL,DIMENSION(2) :: LX,LY
+ INTEGER :: I,IROW,ICOL,IC,IR,JC,JR,IU
+ REAL :: SSX,SSY,NF,A,DX,DY
  
  !## read files
  DO I=1,4; IF(.NOT.IDFREAD(IDF(I),IDF(I)%FNAME,1))THEN; ENDIF; ENDDO
@@ -60,21 +63,158 @@ CONTAINS
  CALL IDFCOPY(IDF(1),IDF(6)) !## stage
  CALL IDFCOPY(IDF(1),IDF(7)) !## bottom
  CALL IDFCOPY(IDF(1),IDF(8)) !## inffactor
+ CALL IDFCOPY(IDF(1),IDF(9)) !## monitor location visited
+ 
+ !## clean files
+ DO I=5,9; IDF(I)%X=0.0; ENDDO
 
-!## maken van de sfr gewoon ieder lijnstukje doen - verbinding, beginnen bij cel 1,1 en dan aflopen (geldt voor alles), bijouden of je al lijnstukje gemaakt hebt in idf(9) - bottom altijd aflopen
+ !## clean visited locations for nodata points
+ DO IROW=1,IDF(1)%NROW; DO ICOL=1,IDF(1)%NCOL
+  IF(IDF(1)%X(ICOL,IROW).EQ.IDF(1)%NODATA)IDF(9)%X(ICOL,IROW)=1.0
+ ENDDO; ENDDO
+ 
+ !## stepsize
+ SSX=IDF(1)%DX; SSY=SSX
+
+ !## rain in m3/sec
+ RAIN=(RAIN/1000.0)*IDF(1)%DX**2.0
+ RAIN= RAIN/86400.0
+ 
+ IF(IFORMAT.EQ.2)THEN
+  IU=UTL_GETUNIT(); CALL OSD_OPEN(IU,FILE=IDF(1)%FNAME(:INDEX(IDF(1)%FNAME,'.',.TRUE.)-1)//'.GEN',STATUS='UNKNOWN')
+ ENDIF
 
  !## start tracing
  DO IROW=1,IDF(1)%NROW; DO ICOL=1,IDF(1)%NCOL
-  !## skip nodata
-  IF(IDF(1)%X(ICOL,IROW).EQ.IDF(1)%NODATA)CYCLE
+
+  !## skip visited location
+  IF(IDF(9)%X(ICOL,IROW).NE.0.0)CYCLE
+
+  !## start in the middle
+  CALL IDFGETLOC(IDF(1),IROW,ICOL,LX(1),LY(1))
+
+  IF(IFORMAT.EQ.2)THEN; WRITE(IU,*) 1; WRITE(IU,'(2(F15.3,1X))') LX(1),LY(1); ENDIF
+
+  IC=ICOL; IR=IROW; NF=0
+  !## mark current start location
+  IDF(9)%X(IC,IR)=2.0
+
+  DO
+
+   NF=NF+1; IF(NF.GT.IDF(1)%NCOL*IDF(1)%NROW)THEN
+    WRITE(*,'(A,3I10)') 'Particle wont stop (IR,IC,NF): ',IR,IC,NF; STOP
+   ENDIF
+        
+   !## aspect, new location to go
+   A=IDF(3)%X(IC,IR); DX=-COS(A)*SSX; DY=-SIN(A)*SSY; LX(2)=LX(1)+DX; LY(2)=LY(1)+DY
+     
+   !## store previous location
+   JR=IR; JC=IC
+   
+   !## get new grid location
+   CALL IDFIROWICOL(IDF(1),IR,IC,LX(2),LY(2))
+   !## outside model
+   IF(SOF_TRACE_EDGE(IR,IC,IDF(1),LX(2),LY(2)))EXIT
+   !## get new location in centre of grid
+   CALL IDFGETLOC(IDF(1),IR,IC,LX(2),LY(2))
+
+   IF(IFORMAT.EQ.2)WRITE(IU,'(2(F15.3,1X))') LX(2),LY(2)
+
+   !## fill in river
+   CALL SOF_EXPORT_FILL((/IC,JC/),(/IR,JR/),LX,LY,IDF,RAIN)
+
+   !## skip further trace, is visited location already
+   IF(IDF(9)%X(IC,IR).EQ.2.0)EXIT
+
+   !## mark current location
+   IDF(9)%X(IC,IR)=2.0
+       
+   !## copy previous location
+   LX(1)=LX(2); LY(1)=LY(2)
+   
+  ENDDO
+  
+  IF(IFORMAT.EQ.2)WRITE(IU,'(A)') 'END'
   
  ENDDO; WRITE(6,'(A,F7.3,A)') '+Progress ',REAL(IROW*100)/REAL(IDF(1)%NROW),' % finished        '; ENDDO
 
+ IDF(9)%FNAME='d:\IMOD-MODELS\AMERIKA\CALIFORNIA\DBASE\OLF\PROSSER_CREEK\CHECK.IDF'
  !## save files 
- DO I=5,8; IF(.NOT.IDFWRITE(IDF(I),IDF(I)%FNAME,1))THEN; ENDIF; ENDDO
+ IF(IFORMAT.EQ.1)THEN
+  DO I=5,9; IF(.NOT.IDFWRITE(IDF(I),IDF(I)%FNAME,1))THEN; ENDIF; ENDDO
+ ENDIF
  
  END SUBROUTINE SOF_EXPORT
  
+ !###======================================================================
+ SUBROUTINE SOF_EXPORT_FILL(IC,IR,LX,LY,IDF,RAIN)
+ !###======================================================================
+ IMPLICIT NONE
+ REAL,PARAMETER :: MRC=0.03 !## clean, straight, full stage, no rifts or deep pools
+                            !## (http://www.fsl.orst.edu/geowater/FX3/help/8_Hydraulic_Reference/Mannings_n_Tables.htm)
+ REAL,PARAMETER :: W=1.0    !## default water width
+ REAL,PARAMETER :: C=1.0    !## default water resistance
+ INTEGER,INTENT(IN),DIMENSION(:) :: IR,IC
+ REAL,INTENT(IN),DIMENSION(:) :: LX,LY
+ REAL,INTENT(IN) :: RAIN
+ TYPE(IDFOBJ),INTENT(INOUT),DIMENSION(:) :: IDF
+ REAL :: D,RCOND,RSTAGE,RBOT,RINF,Q,DH,S,Y
+ INTEGER :: I
+ 
+ !## half of the distance for each cell
+ D=0.5*UTL_DIST(LX(1),LY(1),LX(2),LY(2))
+  
+ DO I=1,2
+
+  !## total rain
+  Q     =RAIN*IDF(1)%X(IC(I),IR(I))
+
+  !## absolute terrain difference
+  DH    =ABS(IDF(2)%X(IC(I),IR(I)))
+  !## slope
+  S     =DH/(D*2.0)
+  IF(S.EQ.0.0)THEN
+   Y=0.0 !IDF(1)%DX
+  ELSE
+   !## waterdepth (assuming waterwidth of 1.0)
+   Y=((Q*MRC)/(W*SQRT(S)))**(3.0/5.0)
+  ENDIF
+   
+  RCOND =Q !(D*Y)/C
+
+  RSTAGE=IDF(4)%X(IC(I),IR(I))
+  RBOT  =IDF(4)%X(IC(I),IR(I))-Y
+  RINF  =1.0
+   
+  IDF(5)%X(IC(I),IR(I))=IDF(5)%X(IC(I),IR(I))+RCOND  !## conductance
+  IDF(6)%X(IC(I),IR(I))=RSTAGE !## stage
+  IDF(7)%X(IC(I),IR(I))=RBOT   !## bottom
+  IDF(8)%X(IC(I),IR(I))=RINF   !## inffactor
+
+ ENDDO
+ 
+ END SUBROUTINE SOF_EXPORT_FILL
+
+ !###======================================================================
+ LOGICAL FUNCTION SOF_TRACE_EDGE(IR,IC,IDF,LX,LY)
+ !###======================================================================
+ IMPLICIT NONE
+ TYPE(IDFOBJ),INTENT(INOUT) :: IDF
+ INTEGER,INTENT(INOUT) :: IR,IC
+ REAL,INTENT(IN) :: LX,LY
+   
+ SOF_TRACE_EDGE=.FALSE.
+ 
+ IF(IR.EQ.0.OR.IR.GT.IDF%NROW.OR.IC.EQ.0.OR.IC.GT.IDF%NCOL)THEN
+  IF(LX.GT.IDF%XMAX)IC=IDF%NCOL
+  IF(LX.LT.IDF%XMIN)IC=1
+  IF(LY.GT.IDF%YMAX)IR=1
+  IF(LY.LT.IDF%YMIN)IR=IDF%NROW
+  SOF_TRACE_EDGE=.TRUE.
+ ENDIF
+
+ END FUNCTION SOF_TRACE_EDGE
+
  !###======================================================================
  SUBROUTINE SOF_CATCHMENTS(RESULTIDF,OUTPUTFOLDER,IDF,TQP,PTQP,ITQP,TTQP,MINQ)
  !###======================================================================
@@ -398,13 +538,16 @@ CONTAINS
     CALL IDFIROWICOL(IDF(1),IR,IC,LX(1),LY(1))
     
     !## outside model
-    IF(IR.EQ.0.OR.IR.GT.IDF(1)%NROW.OR.IC.EQ.0.OR.IC.GT.IDF(1)%NCOL)THEN
-     IF(LX(1).GT.IDF(1)%XMAX)IC=IDF(1)%NCOL
-     IF(LX(1).LT.IDF(1)%XMIN)IC=1
-     IF(LY(1).GT.IDF(1)%YMAX)IR=1
-     IF(LY(1).LT.IDF(1)%YMIN)IR=IDF(1)%NROW
-     LSTOP=.TRUE.
-    ENDIF
+    LSTOP=SOF_TRACE_EDGE(IR,IC,IDF(1),LX(1),LY(1))
+
+!    !## outside model
+!    IF(IR.EQ.0.OR.IR.GT.IDF(1)%NROW.OR.IC.EQ.0.OR.IC.GT.IDF(1)%NCOL)THEN
+!     IF(LX(1).GT.IDF(1)%XMAX)IC=IDF(1)%NCOL
+!     IF(LX(1).LT.IDF(1)%XMIN)IC=1
+!     IF(LY(1).GT.IDF(1)%YMAX)IR=1
+!     IF(LY(1).LT.IDF(1)%YMIN)IR=IDF(1)%NROW
+!     LSTOP=.TRUE.
+!    ENDIF
     
     !## get new location in centre of grid
     CALL IDFGETLOC(IDF(1),IR,IC,LX(0),LY(0))
@@ -464,7 +607,7 @@ CONTAINS
   CLOSE(IU)
  ENDIF
  
- IF(.NOT.IDFWRITE(IDF(2),IDF(1)%FNAME(:INDEX(IDF(1)%FNAME,'.',.TRUE.)-1)//'_COUNT.IDF',1))THEN; ENDIF
+ IF(.NOT.IDFWRITE(IDF(2),IDF(2)%FNAME,1))THEN; ENDIF !IDF(1)%FNAME(:INDEX(IDF(1)%FNAME,'.',.TRUE.)-1)//'_COUNT.IDF',1))THEN; ENDIF
  IF(LWBAL)THEN
   IF(.NOT.IDFWRITE(IDF(4),IDF(1)%FNAME(:INDEX(IDF(1)%FNAME,'.',.TRUE.)-1)//'_ZONE.IDF',1))THEN; ENDIF
  ENDIF
@@ -572,11 +715,11 @@ if(irow.eq.ir.and.icol.eq.ic)f=1.0
  END FUNCTION SOF_TRACE_GET_ANGLE_MEAN
  
  !###======================================================================
- SUBROUTINE SOF_MAIN(IDF,IPNTR,IWINDOW,XMIN,YMIN,XMAX,YMAX,CELLSIZE,IGRAD)
+ SUBROUTINE SOF_MAIN(IDF,IPNTR,IWINDOW,XMIN,YMIN,XMAX,YMAX,CELLSIZE,IGRAD,PITTSIZE)
  !###======================================================================
  IMPLICIT NONE
  TYPE(IDFOBJ),INTENT(INOUT),DIMENSION(:) :: IDF
- INTEGER,INTENT(IN) :: IWINDOW,IGRAD
+ INTEGER,INTENT(IN) :: IWINDOW,IGRAD,PITTSIZE
  REAL,INTENT(IN) :: XMIN,YMIN,XMAX,YMAX,CELLSIZE
  INTEGER,INTENT(IN) :: IPNTR !## ipntr=0 no pointer to stop, 1 use pointer to stop
  INTEGER :: ITIC,ITOC,I,IROW,ICOL
@@ -628,7 +771,7 @@ if(irow.eq.ir.and.icol.eq.ic)f=1.0
  ENDIF
  
  !## fill in pitts; fill in gradients
- CALL SOF_FILL_PITT(IDF(1),IDF(2),IDF(3),IDF(4),IDF(5),IGRAD)
+ CALL SOF_FILL_PITT(IDF(1),IDF(2),IDF(3),IDF(4),IDF(5),IGRAD,PITTSIZE)
  IF(.NOT.IDFWRITE(IDF(1),IDF(3)%FNAME,1))THEN; ENDIF
 
  IF(IGRAD.EQ.1)THEN
@@ -1005,11 +1148,11 @@ if(irow.eq.ir.and.icol.eq.ic)f=1.0
  END SUBROUTINE SOF_GET_PITT
 
  !###======================================================================
- SUBROUTINE SOF_FILL_PITT(DEM,SLOPE,ASPECT,IDFP,DEMORG,IGRAD)
+ SUBROUTINE SOF_FILL_PITT(DEM,SLOPE,ASPECT,IDFP,DEMORG,IGRAD,PITTSIZE)
  !###======================================================================
  IMPLICIT NONE
  TYPE(IDFOBJ),INTENT(INOUT) :: DEM,IDFP,SLOPE,ASPECT,DEMORG
- INTEGER,INTENT(IN) :: IGRAD
+ INTEGER,INTENT(IN) :: IGRAD,PITTSIZE
  INTEGER :: I,J,ICOL,IROW,NBPX,NPPX,NTPX,ITYPE
  REAL :: F,ZMAX
  
