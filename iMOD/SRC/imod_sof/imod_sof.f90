@@ -64,15 +64,7 @@ CONTAINS
  CALL IDFCOPY(IDF(1),IDF(7)) !## bottom
  CALL IDFCOPY(IDF(1),IDF(8)) !## inffactor
  CALL IDFCOPY(IDF(1),IDF(9)) !## monitor location visited
- 
- !## clean files
- DO I=5,9; IDF(I)%X=0.0; ENDDO
-
- !## clean visited locations for nodata points
- DO IROW=1,IDF(1)%NROW; DO ICOL=1,IDF(1)%NCOL
-  IF(IDF(1)%X(ICOL,IROW).EQ.IDF(1)%NODATA)IDF(9)%X(ICOL,IROW)=1.0
- ENDDO; ENDDO
- 
+  
  !## stepsize
  SSX=IDF(1)%DX; SSY=SSX
 
@@ -83,6 +75,14 @@ CONTAINS
  IF(IFORMAT.EQ.2)THEN
   IU=UTL_GETUNIT(); CALL OSD_OPEN(IU,FILE=IDF(1)%FNAME(:INDEX(IDF(1)%FNAME,'.',.TRUE.)-1)//'.GEN',STATUS='UNKNOWN')
  ENDIF
+
+ !## clean files
+ DO I=5,9; IDF(I)%X=0.0; ENDDO
+
+ !## clean visited locations for nodata points
+ DO IROW=1,IDF(1)%NROW; DO ICOL=1,IDF(1)%NCOL
+  IF(IDF(1)%X(ICOL,IROW).EQ.IDF(1)%NODATA)IDF(9)%X(ICOL,IROW)=1.0
+ ENDDO; ENDDO
 
  !## start tracing
  DO IROW=1,IDF(1)%NROW; DO ICOL=1,IDF(1)%NCOL
@@ -98,7 +98,7 @@ CONTAINS
   IC=ICOL; IR=IROW; NF=0
   !## mark current start location
   IDF(9)%X(IC,IR)=2.0
-
+ 
   DO
 
    NF=NF+1; IF(NF.GT.IDF(1)%NCOL*IDF(1)%NROW)THEN
@@ -445,8 +445,8 @@ CONTAINS
  IMPLICIT NONE
  INTEGER,INTENT(IN) :: IWRITE,N 
  TYPE(IDFOBJ),INTENT(INOUT),DIMENSION(N) :: IDF
- INTEGER :: IROW,ICOL,IR,IC,IP,IU,I,NF,M,NFTHREAD
- REAL :: A,DX,DY,F,SSX,SSY,XWBAL
+ INTEGER :: IROW,ICOL,IR,IC,IP,IU,I,NF,M,NFTHREAD,IZ,IZ1,IZ2
+ REAL :: A,DX,DY,F,SSX,SSY,XWBAL,Z1,Z2,DZ,S !,X1,X2,Y1,Y2
  REAL,DIMENSION(0:2) :: LX,LY
  LOGICAL :: LWBAL,LSTOP
  TYPE TPOBJ
@@ -464,8 +464,14 @@ CONTAINS
  
  IF(.NOT.IDFREAD(IDF(1),IDF(1)%FNAME,1))THEN; ENDIF
  
+ IF(.NOT.IDFREAD(IDF(5),IDF(5)%FNAME,1))THEN; ENDIF !## read sof
+ IF(.NOT.IDFREAD(IDF(6),IDF(6)%FNAME,1))THEN; ENDIF !## read slope
+ 
  CALL IDFCOPY(IDF(1),IDF(2)) !## total passes of particles
  CALL IDFCOPY(IDF(1),IDF(3)) !## counts individual particles
+ CALL IDFCOPY(IDF(1),IDF(7)) !## new slopes with flat areas
+ !## copy original slope to new slopes
+ IDF(7)%X=0.0 !IDF(6)%X
 
  LWBAL=.FALSE.
  IF(IDF(4)%FNAME.NE.'')THEN
@@ -525,11 +531,10 @@ CONTAINS
    DO
     NF=NF+1
     IF(NF.GT.IDF(1)%NCOL*IDF(1)%NROW)THEN
-     WRITE(*,'(A,3I10)') 'Particle wont stop (IR,IC,NF): ',IR,IC,NF
-     STOP
+     WRITE(*,'(A,3I10)') 'Particle wont stop (IR,IC,NF): ',IR,IC,NF; STOP
     ENDIF
         
-    A=IDF(1)%X(IC,IR) !SOF_TRACE_GET_ANGLE_MEAN(IDF(1),LX(0),LY(0))
+    A=IDF(1)%X(IC,IR)
     
     DX=-COS(A)*SSX; DY=-SIN(A)*SSY
     LX(1)=LX(0)+DX; LY(1)=LY(0)+DY   
@@ -539,15 +544,6 @@ CONTAINS
     
     !## outside model
     LSTOP=SOF_TRACE_EDGE(IR,IC,IDF(1),LX(1),LY(1))
-
-!    !## outside model
-!    IF(IR.EQ.0.OR.IR.GT.IDF(1)%NROW.OR.IC.EQ.0.OR.IC.GT.IDF(1)%NCOL)THEN
-!     IF(LX(1).GT.IDF(1)%XMAX)IC=IDF(1)%NCOL
-!     IF(LX(1).LT.IDF(1)%XMIN)IC=1
-!     IF(LY(1).GT.IDF(1)%YMAX)IR=1
-!     IF(LY(1).LT.IDF(1)%YMIN)IR=IDF(1)%NROW
-!     LSTOP=.TRUE.
-!    ENDIF
     
     !## get new location in centre of grid
     CALL IDFGETLOC(IDF(1),IR,IC,LX(0),LY(0))
@@ -588,7 +584,7 @@ CONTAINS
    ENDDO
    
    IF(IWRITE.EQ.1)WRITE(IU,*) 'END'
-      
+
    !## waterbalance - trace backwards because of waterbalance-stations
    IF(LWBAL)THEN
     XWBAL=0.0
@@ -599,6 +595,24 @@ CONTAINS
     ENDDO
    ENDIF
 
+   !## adjust flat areas - get z-values final point
+   I=1; IC=TP(1)%IC(I); IR=TP(1)%IR(I); Z1=IDF(5)%X(IC,IR); IZ1=1 !; CALL IDFGETLOC(IDF(1),IR,IC,LX(0),LY(0))
+   DO I=2,TP(1)%NT
+    IC=TP(1)%IC(I); IR=TP(1)%IR(I); Z2=IDF(5)%X(IC,IR)
+    !## goes down
+    IF(Z2.LT.Z1)THEN
+     !## slope is along trace
+     IZ2=I; DZ=Z2-Z1; S=DZ/(IZ2-IZ1+1)
+     DO IZ=IZ1,IZ2
+      IC=TP(1)%IC(IZ); IR=TP(1)%IR(IZ) !; CALL IDFGETLOC(IDF(1),IR,IC,LX(1),LY(1))
+!      D=UTL_DIST(LX(0),LY(0),LX(1),LY(1))
+      !## overwrite slope
+      IDF(7)%X(IC,IR)=S !Z1+S*REAL(IZ)
+     ENDDO
+     Z1=Z2; IZ1=I !; CALL IDFGETLOC(IDF(1),IR,IC,LX(0),LY(0))
+    ENDIF
+   ENDDO
+
   ENDIF
  ENDDO; WRITE(6,'(A,F7.3,A)') '+Progress ',REAL(IROW*100)/REAL(IDF(1)%NROW),' % finished        '; ENDDO
 
@@ -607,7 +621,8 @@ CONTAINS
   CLOSE(IU)
  ENDIF
  
- IF(.NOT.IDFWRITE(IDF(2),IDF(2)%FNAME,1))THEN; ENDIF !IDF(1)%FNAME(:INDEX(IDF(1)%FNAME,'.',.TRUE.)-1)//'_COUNT.IDF',1))THEN; ENDIF
+ IF(.NOT.IDFWRITE(IDF(2),IDF(2)%FNAME,1))THEN; ENDIF 
+ IF(.NOT.IDFWRITE(IDF(7),IDF(7)%FNAME,1))THEN; ENDIF 
  IF(LWBAL)THEN
   IF(.NOT.IDFWRITE(IDF(4),IDF(1)%FNAME(:INDEX(IDF(1)%FNAME,'.',.TRUE.)-1)//'_ZONE.IDF',1))THEN; ENDIF
  ENDIF
@@ -1266,12 +1281,16 @@ if(irow.eq.ir.and.icol.eq.ic)f=1.0
   IR=PPX(I)%IROW-IR1+1
   PCG%X(IC,IR)=HINI
  ENDDO
+
  !## locate spill-location
  IC=PPX(NPPX)%ICOL-IC1+1
  IR=PPX(NPPX)%IROW-IR1+1
  PCG%X(IC,IR)=-1.0
- 
- !# if flat area --
+
+! !## spill z
+! Z=PPX(NPPX)%Z 
+
+ !## if flat area --
  CALL SOF_SOLVE(PCG)
 
  !## remove all the pits in the current-flat area, not to be processed again !!!
@@ -1282,10 +1301,12 @@ if(irow.eq.ir.and.icol.eq.ic)f=1.0
   IF(A.NE.PCG%NODATA)THEN
    ICOL=PPX(I)%ICOL
    IROW=PPX(I)%IROW
+
    SLOPE%X(ICOL,IROW) =0.0
    ASPECT%X(ICOL,IROW)=A
   ENDIF
  ENDDO
+
  !## clear outflow location
  I=NPPX
  ICOL=PPX(I)%ICOL
@@ -1483,241 +1504,241 @@ ROWLOOP: DO IROW=1,PCG%NROW
  
  END SUBROUTINE SOF_FILL_BND
 
- !###======================================================================
- SUBROUTINE SOF_FILL_FLATAREAS_OLD(DEM,DEMORG,SLOPE,ASPECT,PITS,NPPX)
- !###======================================================================
- IMPLICIT NONE
- TYPE(IDFOBJ),INTENT(INOUT) :: SLOPE,ASPECT,DEM,DEMORG,PITS
- INTEGER,INTENT(IN) :: NPPX
- TYPE(IDFOBJ) :: PCG
- INTEGER,DIMENSION(2) :: PITLOC,OUTLOC
- INTEGER :: IC1,IC2,IR1,IR2,I,ICOL,IROW,IC,IR
- REAL :: A
- REAL,PARAMETER :: HINI=0.0
-   
- CALL IDFNULLIFY(PCG)
-
- IC1=MINVAL(PPX(1:NPPX)%ICOL); IC2=MAXVAL(PPX(1:NPPX)%ICOL)
- IR1=MINVAL(PPX(1:NPPX)%IROW); IR2=MAXVAL(PPX(1:NPPX)%IROW)
-
- PCG%NCOL=IC2-IC1+1; PCG%NROW=IR2-IR1+1; PCG%DX=DEM%DX; PCG%DY=DEM%DY
- PCG%XMIN=DEM%XMIN+(IC1-1)*DEM%DX; PCG%XMAX=PCG%XMIN+PCG%NCOL*DEM%DX
- PCG%YMAX=DEM%YMAX-(IR1-1)*DEM%DY; PCG%YMIN=PCG%YMAX-PCG%NROW*DEM%DY
-
- PCG%NCOL=PCG%NCOL; PCG%NROW=PCG%NROW; PCG%DX=PCG%DX; PCG%DY=PCG%DX
-
- IF(.NOT.IDFALLOCATEX(PCG))RETURN; PCG%NODATA=SLOPE%NODATA; PCG%X=PCG%NODATA 
- 
- !## pitloc
- PITLOC(1)=PPX(1)%ICOL-IC1+1
- PITLOC(2)=PPX(1)%IROW-IR1+1
- !## outlet loc
- OUTLOC(1)=PPX(NPPX)%ICOL-IC1+1
- OUTLOC(2)=PPX(NPPX)%IROW-IR1+1
-
- !## activate mid locations, exclusive spill level
- DO I=1,NPPX 
-  IC=PPX(I)%ICOL-IC1+1
-  IR=PPX(I)%IROW-IR1+1
-  !## reset angle
-  SLOPE%X(PPX(I)%ICOL,PPX(I)%IROW)=SLOPE%NODATA
-  CALL SOF_COMPUTE_SLOPE_ASPECT_CALC(DEMORG,SLOPE,ASPECT,PPX(I)%IROW,PPX(I)%ICOL)
-!  CALL SOF_COMPUTE_SLOPE_ASPECT_CALC(DEM,SLOPE,ASPECT,PPX(I)%IROW,PPX(I)%ICOL)
-  !## if pitt, set angle to nodata
-  IF(PITS%X(PPX(I)%ICOL,PPX(I)%IROW).EQ.1.0)ASPECT%X(PPX(I)%ICOL,PPX(I)%IROW)=ASPECT%NODATA
-  PCG%X(IC,IR)=ASPECT%X(PPX(I)%ICOL,PPX(I)%IROW) 
- ENDDO
-
-! !## fill in all known aspects (so far)
-! DO ICOL=1,PCG%NCOL
-!  DO IROW=1,PCG%NROW
-!   IC=ICOL+IC1-1
-!   IR=IROW+IR1-1
-!   PCG%X(ICOL,IROW)=ASPECT%X(IC,IR)
-!  ENDDO
+! !###======================================================================
+! SUBROUTINE SOF_FILL_FLATAREAS_OLD(DEM,DEMORG,SLOPE,ASPECT,PITS,NPPX)
+! !###======================================================================
+! IMPLICIT NONE
+! TYPE(IDFOBJ),INTENT(INOUT) :: SLOPE,ASPECT,DEM,DEMORG,PITS
+! INTEGER,INTENT(IN) :: NPPX
+! TYPE(IDFOBJ) :: PCG
+! INTEGER,DIMENSION(2) :: PITLOC,OUTLOC
+! INTEGER :: IC1,IC2,IR1,IR2,I,ICOL,IROW,IC,IR
+! REAL :: A
+! REAL,PARAMETER :: HINI=0.0
+!   
+! CALL IDFNULLIFY(PCG)
+!
+! IC1=MINVAL(PPX(1:NPPX)%ICOL); IC2=MAXVAL(PPX(1:NPPX)%ICOL)
+! IR1=MINVAL(PPX(1:NPPX)%IROW); IR2=MAXVAL(PPX(1:NPPX)%IROW)
+!
+! PCG%NCOL=IC2-IC1+1; PCG%NROW=IR2-IR1+1; PCG%DX=DEM%DX; PCG%DY=DEM%DY
+! PCG%XMIN=DEM%XMIN+(IC1-1)*DEM%DX; PCG%XMAX=PCG%XMIN+PCG%NCOL*DEM%DX
+! PCG%YMAX=DEM%YMAX-(IR1-1)*DEM%DY; PCG%YMIN=PCG%YMAX-PCG%NROW*DEM%DY
+!
+! PCG%NCOL=PCG%NCOL; PCG%NROW=PCG%NROW; PCG%DX=PCG%DX; PCG%DY=PCG%DX
+!
+! IF(.NOT.IDFALLOCATEX(PCG))RETURN; PCG%NODATA=SLOPE%NODATA; PCG%X=PCG%NODATA 
+! 
+! !## pitloc
+! PITLOC(1)=PPX(1)%ICOL-IC1+1
+! PITLOC(2)=PPX(1)%IROW-IR1+1
+! !## outlet loc
+! OUTLOC(1)=PPX(NPPX)%ICOL-IC1+1
+! OUTLOC(2)=PPX(NPPX)%IROW-IR1+1
+!
+! !## activate mid locations, exclusive spill level
+! DO I=1,NPPX 
+!  IC=PPX(I)%ICOL-IC1+1
+!  IR=PPX(I)%IROW-IR1+1
+!  !## reset angle
+!  SLOPE%X(PPX(I)%ICOL,PPX(I)%IROW)=SLOPE%NODATA
+!  CALL SOF_COMPUTE_SLOPE_ASPECT_CALC(DEMORG,SLOPE,ASPECT,PPX(I)%IROW,PPX(I)%ICOL)
+!!  CALL SOF_COMPUTE_SLOPE_ASPECT_CALC(DEM,SLOPE,ASPECT,PPX(I)%IROW,PPX(I)%ICOL)
+!  !## if pitt, set angle to nodata
+!  IF(PITS%X(PPX(I)%ICOL,PPX(I)%IROW).EQ.1.0)ASPECT%X(PPX(I)%ICOL,PPX(I)%IROW)=ASPECT%NODATA
+!  PCG%X(IC,IR)=ASPECT%X(PPX(I)%ICOL,PPX(I)%IROW) 
 ! ENDDO
- 
- !# if flat area --
- CALL SOF_SOLVE_OLD(PCG,PITLOC,OUTLOC)
- !## remove all the pits in the current-flat area, not to be processed again !!!
- 
-! if(.not.idfwrite(pcg,'d:\pcg_ini'//trim(itos(1))//'X'//trim(itos(1))//'.idf',1))then; endif
-
- DO I=1,NPPX-1
-  ICOL=PPX(I)%ICOL-IC1+1
-  IROW=PPX(I)%IROW-IR1+1
-  A   =PCG%X(ICOL,IROW)
-!  IF(A.NE.PCG%NODATA)THEN
-   ICOL=PPX(I)%ICOL
-   IROW=PPX(I)%IROW
-!   SLOPE%X(ICOL,IROW) =0.0
-   ASPECT%X(ICOL,IROW)=A
-!  ENDIF
- ENDDO
- !## clear outflow location
- I=NPPX
- ICOL=PPX(I)%ICOL
- IROW=PPX(I)%IROW
- SLOPE%X(ICOL,IROW) =SLOPE%NODATA
- ASPECT%X(ICOL,IROW)=ASPECT%NODATA
- 
-! if(.not.idfwrite(pcg,'d:\pcg'//trim(itos(1))//'X'//trim(itos(1))//'.idf',1))then; endif
-
- CALL IDFDEALLOCATEX(PCG)
- 
- END SUBROUTINE SOF_FILL_FLATAREAS_OLD
-  
- !###======================================================================
- SUBROUTINE SOF_SOLVE_OLD(PCG,PITLOC,OUTLOC)
- !###======================================================================
- IMPLICIT NONE
- TYPE(IDFOBJ) :: PCG
- INTEGER,DIMENSION(2),INTENT(IN) :: PITLOC,OUTLOC
- INTEGER(KIND=1),ALLOCATABLE,DIMENSION(:,:) :: ID
- INTEGER(KIND=2),POINTER,DIMENSION(:,:,:) :: CR
- REAL,ALLOCATABLE,DIMENSION(:,:) :: A
- INTEGER :: IROW,ICOL,NCR,D,DR,DC,IL,I,IR,IC,ICR,JCR
- REAL :: XC,YC,ASPECT,DX,DY,ASPILL
- 
- ALLOCATE(A(PCG%NCOL,PCG%NROW),ID(PCG%NCOL,PCG%NROW),CR(PCG%NCOL*PCG%NROW,2,2))
- A=PCG%NODATA; ID=INT(3,1)
-  
- !## use a() to denote locations that need to remain nodata
- A=PCG%X
-
- IF(IDFWRITE(PCG,'D:\PCG1.IDF',1))THEN; ENDIF
- 
- !## trace all to pit - nodata only
- ICOL=PITLOC(1); IROW=PITLOC(2)
- !## no gradient in pit location
- A(ICOL,IROW)=PCG%NODATA
-
- !## trace all to outlet
- ICOL=OUTLOC(1); IROW=OUTLOC(2)
- !## no gradient in outlet location, save angle though
- ASPILL=A(ICOL,IROW); A(ICOL,IROW)=PCG%NODATA
-
- !## store visited locations
- PCG%X=0.0
- 
- !## trace all to pit - nodata only
- ICOL=PITLOC(1); IROW=PITLOC(2)
-
-write(*,*) 'pit',icol,irow
-
- NCR=1; ICR=1; JCR=2
- CR(NCR,1,ICR)=ICOL; CR(NCR,2,ICR)=IROW
- DO
-  
-  IL=0
-  DO I=1,NCR  
-   !## not to be visited again
-   ICOL=CR(I,1,ICR); IROW=CR(I,2,ICR); PCG%X(ICOL,IROW)=2.0
-  ENDDO
-  
-  DO I=1,NCR
-
-   ICOL=CR(I,1,ICR); IROW=CR(I,2,ICR)
-
-   DO IR=MAX(1,IROW-1),MIN(PCG%NROW,IROW+1)
-    DO IC=MAX(1,ICOL-1),MIN(PCG%NCOL,ICOL+1)
-     !## not yet visited
-     IF(PCG%X(IC,IR).EQ.0.0)THEN
-      !## if aspect filled in with nodata (flat areas), fill in new gradient towards pit
-      IF(A(IC,IR).EQ.PCG%NODATA)THEN
-       !## relative distance
-       DR=IR-IROW
-       DC=IC-ICOL
-       D=ABS(DR)+ABS(DC)
-       !## compare with distance to see if it is smaller
-       IF(D.LT.ID(IC,IR))THEN
-        ID(IC,IR)=D
-        A(IC,IR)=ATAN2(-1.0*REAL(DR),REAL(DC))
-       ENDIF
-      ENDIF
-      !## add to new list of to be analysed locations
-      IL=IL+1
-      CR(IL,1,JCR)=IC
-      CR(IL,2,JCR)=IR
-      PCG%X(IC,IR)=2.0
-     ENDIF
-    ENDDO
-   ENDDO
-
-  ENDDO
-
-  !## no new location found
-  IF(IL.EQ.0)EXIT
-  
-  !# interchange list
-  IF(ICR.EQ.1)THEN
-   ICR=2; JCR=1
-  ELSE
-   ICR=1; JCR=2
-  ENDIF
-  
-  NCR=IL
-
- ENDDO
-
-! write(*,*) 'outlet',OUTLOC(1),OUTLOC(2)
-! do irow=1,pcg%nrow
-!  write(*,'(99f10.2)') (a(icol,irow),icol=1,pcg%ncol)
-! enddo
-
-! PCG%X=ID
- IF(IDFWRITE(PCG,'D:\PCG2.IDF',1))THEN; ENDIF
-
- !## fill pcg%x with angles
- PCG%X=A
- IF(IDFWRITE(PCG,'D:\PCG3.IDF',1))THEN; ENDIF
-
- !## backtrace from the outlet towards the pit - reverse angles
- ICOL=OUTLOC(1); IROW=OUTLOC(2)
- !## start at the outlet location
- CALL IDFGETLOC(PCG,IROW,ICOL,XC,YC)
-
- DO
-  !## reverse angle
-  ASPECT=A(ICOL,IROW)
-
-  DX=-COS(ASPECT)*PCG%DX; DY=-SIN(ASPECT)*PCG%DY
-  XC=XC+DX; YC=YC+DY
-
-write(*,*) 1,aspect,icol,irow
-
-  !## get new grid location
-  CALL IDFIROWICOL(PCG,IROW,ICOL,XC,YC)
-  
-  !## point towards the coming cell
-  PCG%X(ICOL,IROW)=ASPECT-PI
-
-!write(*,*) 2,PCG%X(ICOL,IROW),icol,irow
-
-!  !## probably flat area?
-!  IF(IROW.EQ.0.OR.ICOL.EQ.0)EXIT
-
-  !## arrived at pit - exit
-  IF(ICOL.EQ.PITLOC(1).AND.IROW.EQ.PITLOC(2))EXIT
-
-  CALL IDFGETLOC(PCG,IROW,ICOL,XC,YC)
-
- ENDDO
-
+!
+!! !## fill in all known aspects (so far)
+!! DO ICOL=1,PCG%NCOL
+!!  DO IROW=1,PCG%NROW
+!!   IC=ICOL+IC1-1
+!!   IR=IROW+IR1-1
+!!   PCG%X(ICOL,IROW)=ASPECT%X(IC,IR)
+!!  ENDDO
+!! ENDDO
+! 
+! !# if flat area --
+! CALL SOF_SOLVE_OLD(PCG,PITLOC,OUTLOC)
+! !## remove all the pits in the current-flat area, not to be processed again !!!
+! 
+!! if(.not.idfwrite(pcg,'d:\pcg_ini'//trim(itos(1))//'X'//trim(itos(1))//'.idf',1))then; endif
+!
+! DO I=1,NPPX-1
+!  ICOL=PPX(I)%ICOL-IC1+1
+!  IROW=PPX(I)%IROW-IR1+1
+!  A   =PCG%X(ICOL,IROW)
+!!  IF(A.NE.PCG%NODATA)THEN
+!   ICOL=PPX(I)%ICOL
+!   IROW=PPX(I)%IROW
+!!   SLOPE%X(ICOL,IROW) =0.0
+!   ASPECT%X(ICOL,IROW)=A
+!!  ENDIF
+! ENDDO
+! !## clear outflow location
+! I=NPPX
+! ICOL=PPX(I)%ICOL
+! IROW=PPX(I)%IROW
+! SLOPE%X(ICOL,IROW) =SLOPE%NODATA
+! ASPECT%X(ICOL,IROW)=ASPECT%NODATA
+! 
+!! if(.not.idfwrite(pcg,'d:\pcg'//trim(itos(1))//'X'//trim(itos(1))//'.idf',1))then; endif
+!
+! CALL IDFDEALLOCATEX(PCG)
+! 
+! END SUBROUTINE SOF_FILL_FLATAREAS_OLD
+!  
+! !###======================================================================
+! SUBROUTINE SOF_SOLVE_OLD(PCG,PITLOC,OUTLOC)
+! !###======================================================================
+! IMPLICIT NONE
+! TYPE(IDFOBJ) :: PCG
+! INTEGER,DIMENSION(2),INTENT(IN) :: PITLOC,OUTLOC
+! INTEGER(KIND=1),ALLOCATABLE,DIMENSION(:,:) :: ID
+! INTEGER(KIND=2),POINTER,DIMENSION(:,:,:) :: CR
+! REAL,ALLOCATABLE,DIMENSION(:,:) :: A
+! INTEGER :: IROW,ICOL,NCR,D,DR,DC,IL,I,IR,IC,ICR,JCR
+! REAL :: XC,YC,ASPECT,DX,DY,ASPILL
+! 
+! ALLOCATE(A(PCG%NCOL,PCG%NROW),ID(PCG%NCOL,PCG%NROW),CR(PCG%NCOL*PCG%NROW,2,2))
+! A=PCG%NODATA; ID=INT(3,1)
+!  
+! !## use a() to denote locations that need to remain nodata
+! A=PCG%X
+!
+! IF(IDFWRITE(PCG,'D:\PCG1.IDF',1))THEN; ENDIF
+! 
+! !## trace all to pit - nodata only
+! ICOL=PITLOC(1); IROW=PITLOC(2)
+! !## no gradient in pit location
+! A(ICOL,IROW)=PCG%NODATA
+!
 ! !## trace all to outlet
 ! ICOL=OUTLOC(1); IROW=OUTLOC(2)
 ! !## no gradient in outlet location, save angle though
-! PCG%X(ICOL,IROW)=ASPILL
-
- IF(IDFWRITE(PCG,'D:\PCG4.IDF',1))THEN; ENDIF
-
-! write(*,*) 'result'
-! do irow=1,pcg%nrow
-!  write(*,'(99f10.2)') (pcg%x(icol,irow),icol=1,pcg%ncol)
-! enddo
-
- DEALLOCATE(A,ID,CR)
-  
- END SUBROUTINE SOF_SOLVE_OLD
+! ASPILL=A(ICOL,IROW); A(ICOL,IROW)=PCG%NODATA
+!
+! !## store visited locations
+! PCG%X=0.0
+! 
+! !## trace all to pit - nodata only
+! ICOL=PITLOC(1); IROW=PITLOC(2)
+!
+!write(*,*) 'pit',icol,irow
+!
+! NCR=1; ICR=1; JCR=2
+! CR(NCR,1,ICR)=ICOL; CR(NCR,2,ICR)=IROW
+! DO
+!  
+!  IL=0
+!  DO I=1,NCR  
+!   !## not to be visited again
+!   ICOL=CR(I,1,ICR); IROW=CR(I,2,ICR); PCG%X(ICOL,IROW)=2.0
+!  ENDDO
+!  
+!  DO I=1,NCR
+!
+!   ICOL=CR(I,1,ICR); IROW=CR(I,2,ICR)
+!
+!   DO IR=MAX(1,IROW-1),MIN(PCG%NROW,IROW+1)
+!    DO IC=MAX(1,ICOL-1),MIN(PCG%NCOL,ICOL+1)
+!     !## not yet visited
+!     IF(PCG%X(IC,IR).EQ.0.0)THEN
+!      !## if aspect filled in with nodata (flat areas), fill in new gradient towards pit
+!      IF(A(IC,IR).EQ.PCG%NODATA)THEN
+!       !## relative distance
+!       DR=IR-IROW
+!       DC=IC-ICOL
+!       D=ABS(DR)+ABS(DC)
+!       !## compare with distance to see if it is smaller
+!       IF(D.LT.ID(IC,IR))THEN
+!        ID(IC,IR)=D
+!        A(IC,IR)=ATAN2(-1.0*REAL(DR),REAL(DC))
+!       ENDIF
+!      ENDIF
+!      !## add to new list of to be analysed locations
+!      IL=IL+1
+!      CR(IL,1,JCR)=IC
+!      CR(IL,2,JCR)=IR
+!      PCG%X(IC,IR)=2.0
+!     ENDIF
+!    ENDDO
+!   ENDDO
+!
+!  ENDDO
+!
+!  !## no new location found
+!  IF(IL.EQ.0)EXIT
+!  
+!  !# interchange list
+!  IF(ICR.EQ.1)THEN
+!   ICR=2; JCR=1
+!  ELSE
+!   ICR=1; JCR=2
+!  ENDIF
+!  
+!  NCR=IL
+!
+! ENDDO
+!
+!! write(*,*) 'outlet',OUTLOC(1),OUTLOC(2)
+!! do irow=1,pcg%nrow
+!!  write(*,'(99f10.2)') (a(icol,irow),icol=1,pcg%ncol)
+!! enddo
+!
+!! PCG%X=ID
+! IF(IDFWRITE(PCG,'D:\PCG2.IDF',1))THEN; ENDIF
+!
+! !## fill pcg%x with angles
+! PCG%X=A
+! IF(IDFWRITE(PCG,'D:\PCG3.IDF',1))THEN; ENDIF
+!
+! !## backtrace from the outlet towards the pit - reverse angles
+! ICOL=OUTLOC(1); IROW=OUTLOC(2)
+! !## start at the outlet location
+! CALL IDFGETLOC(PCG,IROW,ICOL,XC,YC)
+!
+! DO
+!  !## reverse angle
+!  ASPECT=A(ICOL,IROW)
+!
+!  DX=-COS(ASPECT)*PCG%DX; DY=-SIN(ASPECT)*PCG%DY
+!  XC=XC+DX; YC=YC+DY
+!
+!write(*,*) 1,aspect,icol,irow
+!
+!  !## get new grid location
+!  CALL IDFIROWICOL(PCG,IROW,ICOL,XC,YC)
+!  
+!  !## point towards the coming cell
+!  PCG%X(ICOL,IROW)=ASPECT-PI
+!
+!!write(*,*) 2,PCG%X(ICOL,IROW),icol,irow
+!
+!!  !## probably flat area?
+!!  IF(IROW.EQ.0.OR.ICOL.EQ.0)EXIT
+!
+!  !## arrived at pit - exit
+!  IF(ICOL.EQ.PITLOC(1).AND.IROW.EQ.PITLOC(2))EXIT
+!
+!  CALL IDFGETLOC(PCG,IROW,ICOL,XC,YC)
+!
+! ENDDO
+!
+!! !## trace all to outlet
+!! ICOL=OUTLOC(1); IROW=OUTLOC(2)
+!! !## no gradient in outlet location, save angle though
+!! PCG%X(ICOL,IROW)=ASPILL
+!
+! IF(IDFWRITE(PCG,'D:\PCG4.IDF',1))THEN; ENDIF
+!
+!! write(*,*) 'result'
+!! do irow=1,pcg%nrow
+!!  write(*,'(99f10.2)') (pcg%x(icol,irow),icol=1,pcg%ncol)
+!! enddo
+!
+! DEALLOCATE(A,ID,CR)
+!  
+! END SUBROUTINE SOF_SOLVE_OLD
 
 END MODULE MOD_SOF    
