@@ -32,6 +32,7 @@ USE MOD_SOLID_PAR, ONLY : HCLOSE,MXITER1,MXITER2,IDAMPING,RELAX,ITIGHT,MICNVG
 USE MOD_POLINT, ONLY : POL1LOCATE
 USE MOD_IPF, ONLY : IPFALLOCATE,IPFREAD2,IPFDEALLOCATE
 USE MOD_IPF_PAR, ONLY : IPF,NIPF
+USE MOD_PMANAGER, ONLY : PMANAGER_SAVEMF2005_MAXNO
 USE IMODVAR, ONLY : PI
 
 REAL,POINTER,DIMENSION(:,:),PRIVATE :: PL,PL_BU
@@ -53,8 +54,8 @@ CONTAINS
  REAL,INTENT(INOUT) :: RAIN
  TYPE(IDFOBJ),INTENT(INOUT),DIMENSION(N) :: IDF
  REAL,DIMENSION(2) :: LX,LY
- INTEGER :: I,IROW,ICOL,IC,IR,JC,JR,IU
- REAL :: SSX,SSY,NF,A,DX,DY
+ INTEGER :: I,IROW,ICOL,IC,IR,JC,JR,IU,JU,MF,NF,NR
+ REAL :: SSX,SSY,A,DX,DY
  
  !## read files
  DO I=1,4; IF(.NOT.IDFREAD(IDF(I),IDF(I)%FNAME,1))THEN; ENDIF; ENDDO
@@ -72,8 +73,21 @@ CONTAINS
  RAIN=(RAIN/1000.0)*IDF(1)%DX**2.0
  RAIN= RAIN/86400.0
  
+ IU=0; JU=0; NR=0
  IF(IFORMAT.EQ.2)THEN
   IU=UTL_GETUNIT(); CALL OSD_OPEN(IU,FILE=IDF(1)%FNAME(:INDEX(IDF(1)%FNAME,'.',.TRUE.)-1)//'.GEN',STATUS='UNKNOWN')
+  JU=UTL_GETUNIT(); CALL OSD_OPEN(JU,FILE=IDF(1)%FNAME(:INDEX(IDF(1)%FNAME,'.',.TRUE.)-1)//'.IPF_',STATUS='UNKNOWN')
+  WRITE(JU,'(A)') 'NaN1#'
+  WRITE(JU,'(A)') '8'
+  WRITE(JU,'(A)') 'X'
+  WRITE(JU,'(A)') 'Y'
+  WRITE(JU,'(A)') ' SECTION'
+  WRITE(JU,'(A)') ' NAME'
+  WRITE(JU,'(A)') ' WIDTH'
+  WRITE(JU,'(A)') ' WATERLEVEL'
+  WRITE(JU,'(A)') ' BOTTOMLEVEL'
+  WRITE(JU,'(A)') ' PERM'
+  WRITE(JU,'(A)') ' 0,TXT'
  ENDIF
 
  !## clean files
@@ -84,6 +98,9 @@ CONTAINS
   IF(IDF(1)%X(ICOL,IROW).EQ.IDF(1)%NODATA)IDF(9)%X(ICOL,IROW)=1.0
  ENDDO; ENDDO
 
+ !## number of sections
+ MF=0
+ 
  !## start tracing
  DO IROW=1,IDF(1)%NROW; DO ICOL=1,IDF(1)%NCOL
 
@@ -95,10 +112,10 @@ CONTAINS
 
   IF(IFORMAT.EQ.2)THEN; WRITE(IU,*) 1; WRITE(IU,'(2(F15.3,1X))') LX(1),LY(1); ENDIF
 
-  IC=ICOL; IR=IROW; NF=0
+  IC=ICOL; IR=IROW; NF=0; MF=MF+1
   !## mark current start location
   IDF(9)%X(IC,IR)=2.0
- 
+
   DO
 
    NF=NF+1; IF(NF.GT.IDF(1)%NCOL*IDF(1)%NROW)THEN
@@ -121,7 +138,7 @@ CONTAINS
    IF(IFORMAT.EQ.2)WRITE(IU,'(2(F15.3,1X))') LX(2),LY(2)
 
    !## fill in river
-   CALL SOF_EXPORT_FILL((/IC,JC/),(/IR,JR/),LX,LY,IDF,RAIN)
+   CALL SOF_EXPORT_FILL((/IC,JC/),(/IR,JR/),LX,LY,IDF,RAIN,JU,MF,NR)
 
    !## skip further trace, is visited location already
    IF(IDF(9)%X(IC,IR).EQ.2.0)EXIT
@@ -138,6 +155,11 @@ CONTAINS
   
  ENDDO; WRITE(6,'(A,F7.3,A)') '+Progress ',REAL(IROW*100)/REAL(IDF(1)%NROW),' % finished        '; ENDDO
 
+ IF(IFORMAT.EQ.2)THEN
+  CLOSE(IU); CLOSE(JU) 
+  CALL PMANAGER_SAVEMF2005_MAXNO(IDF(1)%FNAME(:INDEX(IDF(1)%FNAME,'.',.TRUE.)-1)//'.IPF_',(/NR/))
+ ENDIF
+ 
  IDF(9)%FNAME='d:\IMOD-MODELS\AMERIKA\CALIFORNIA\DBASE\OLF\PROSSER_CREEK\CHECK.IDF'
  !## save files 
  IF(IFORMAT.EQ.1)THEN
@@ -147,23 +169,29 @@ CONTAINS
  END SUBROUTINE SOF_EXPORT
  
  !###======================================================================
- SUBROUTINE SOF_EXPORT_FILL(IC,IR,LX,LY,IDF,RAIN)
+ SUBROUTINE SOF_EXPORT_FILL(IC,IR,LX,LY,IDF,RAIN,JU,MF,NR)
  !###======================================================================
  IMPLICIT NONE
  REAL,PARAMETER :: MRC=0.03 !## clean, straight, full stage, no rifts or deep pools
                             !## (http://www.fsl.orst.edu/geowater/FX3/help/8_Hydraulic_Reference/Mannings_n_Tables.htm)
- REAL,PARAMETER :: W=1.0    !## default water width
- REAL,PARAMETER :: C=1.0    !## default water resistance
+ REAL,PARAMETER :: C=0.1    !## default water resistance
+ INTEGER,INTENT(INOUT) :: NR
  INTEGER,INTENT(IN),DIMENSION(:) :: IR,IC
+ INTEGER,INTENT(IN) :: JU,MF
  REAL,INTENT(IN),DIMENSION(:) :: LX,LY
  REAL,INTENT(IN) :: RAIN
  TYPE(IDFOBJ),INTENT(INOUT),DIMENSION(:) :: IDF
- REAL :: D,RCOND,RSTAGE,RBOT,RINF,Q,DH,S,Y
+ REAL :: D,RCOND,RSTAGE,RBOT,RINF,Q,DH,S,Y,W,PERM
  INTEGER :: I
  
  !## half of the distance for each cell
  D=0.5*UTL_DIST(LX(1),LY(1),LX(2),LY(2))
-  
+
+!465096.827828,5536641.342335,2398,"Schwarzbach_2398",4.000000,   91.81900,90.819000,100.000000
+!465015.767766,5536582.850230,2398,"Schwarzbach_2398",4.000000,   91.72300,   90.72300,100.000000
+!  LINE=TRIM(RTOS(LX(1),'F',2))//','//TRIM(RTOS(LY(1),'F',2))//','// &
+!        TRIM(RTOS(LX(2),'F',2))//','//TRIM(RTOS(LY(2),'F',2))//','
+
  DO I=1,2
 
   !## total rain
@@ -177,19 +205,31 @@ CONTAINS
    Y=0.0 !IDF(1)%DX
   ELSE
    !## waterdepth (assuming waterwidth of 1.0)
+   W=1.0
    Y=((Q*MRC)/(W*SQRT(S)))**(3.0/5.0)
   ENDIF
-   
-  RCOND =Q !(D*Y)/C
 
+  Y=MIN(2.5,Y)
+  !## verhouding w and d is vergelijknig y=0.5*w oid
+  W=2*Y
+ 
+  RCOND =(D*Y)/C
+  
   RSTAGE=IDF(4)%X(IC(I),IR(I))
   RBOT  =IDF(4)%X(IC(I),IR(I))-Y
-  RINF  =1.0
-   
+  
+  RINF=1.0
+  PERM=1.0
+
   IDF(5)%X(IC(I),IR(I))=IDF(5)%X(IC(I),IR(I))+RCOND  !## conductance
   IDF(6)%X(IC(I),IR(I))=RSTAGE !## stage
   IDF(7)%X(IC(I),IR(I))=RBOT   !## bottom
   IDF(8)%X(IC(I),IR(I))=RINF   !## inffactor
+
+  IF(JU.GT.0)THEN
+   NR=NR+1
+   WRITE(JU,'(6(G15.7,A))') LX(I),',',LY(I),','//TRIM(ITOS(MF))//',Segment_'//TRIM(ITOS(MF))//',',W,',',RSTAGE,',',RBOT,',',PERM
+  ENDIF
 
  ENDDO
  
