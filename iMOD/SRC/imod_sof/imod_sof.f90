@@ -55,7 +55,7 @@ CONTAINS
  TYPE(IDFOBJ),INTENT(INOUT),DIMENSION(N) :: IDF
  REAL,DIMENSION(2) :: LX,LY
  INTEGER :: I,IROW,ICOL,IC,IR,JC,JR,IU,JU,MF,NF,NR
- REAL :: SSX,SSY,A,DX,DY
+ REAL :: SSX,SSY,A,DX,DY,RCOND,RSTAGE,RBOT !,RINF
  
  !## read files
  DO I=1,4; IF(.NOT.IDFREAD(IDF(I),IDF(I)%FNAME,1))THEN; ENDIF; ENDDO
@@ -138,7 +138,8 @@ CONTAINS
    IF(IFORMAT.EQ.2)WRITE(IU,'(2(F15.3,1X))') LX(2),LY(2)
 
    !## fill in river
-   CALL SOF_EXPORT_FILL((/IC,JC/),(/IR,JR/),LX,LY,IDF,RAIN,JU,MF,NR)
+!   CALL SOF_EXPORT_FILL_OLD((/JC,IC/),(/JR,IR/),LX,LY,IDF,RAIN,JU,MF,NR)
+   CALL SOF_EXPORT_FILL((/JC,IC/),(/JR,IR/),LX,LY,IDF,RAIN,JU,MF,NR)
 
    !## skip further trace, is visited location already
    IF(IDF(9)%X(IC,IR).EQ.2.0)EXIT
@@ -155,6 +156,19 @@ CONTAINS
   
  ENDDO; WRITE(6,'(A,F7.3,A)') '+Progress ',REAL(IROW*100)/REAL(IDF(1)%NROW),' % finished        '; ENDDO
 
+ !## correct 
+ DO IROW=1,IDF(1)%NROW; DO ICOL=1,IDF(1)%NCOL
+  IF(IDF(5)%X(ICOL,IROW).LE.0.0)CYCLE
+  RCOND =IDF(5)%X(ICOL,IROW)
+  RSTAGE=IDF(6)%X(ICOL,IROW)/RCOND
+  RBOT  =IDF(7)%X(ICOL,IROW)/RCOND
+!  RINF  =IDF(8)%X(ICOL,IROW)/RCOND
+!  IF(RSTAGE-RBOT.LT.1.0)RBOT=RSTAGE-1.0
+  IDF(6)%X(ICOL,IROW)=RSTAGE !## stage
+  IDF(7)%X(ICOL,IROW)=RBOT   !## bottom
+!  IDF(8)%X(ICOL,IROW)=RINF   !## infiltration
+ ENDDO; ENDDO
+ 
  IF(IFORMAT.EQ.2)THEN
   CLOSE(IU); CLOSE(JU) 
   CALL PMANAGER_SAVEMF2005_MAXNO(IDF(1)%FNAME(:INDEX(IDF(1)%FNAME,'.',.TRUE.)-1)//'.IPF_',(/NR/))
@@ -174,6 +188,83 @@ CONTAINS
  IMPLICIT NONE
  REAL,PARAMETER :: MRC=0.03 !## clean, straight, full stage, no rifts or deep pools
                             !## (http://www.fsl.orst.edu/geowater/FX3/help/8_Hydraulic_Reference/Mannings_n_Tables.htm)
+ REAL,PARAMETER :: C=1.0    !## default water resistance
+ INTEGER,INTENT(INOUT) :: NR
+ INTEGER,INTENT(IN),DIMENSION(:) :: IR,IC
+ INTEGER,INTENT(IN) :: JU,MF
+ REAL,INTENT(IN),DIMENSION(:) :: LX,LY
+ REAL,INTENT(IN) :: RAIN
+ TYPE(IDFOBJ),INTENT(INOUT),DIMENSION(:) :: IDF
+ REAL :: D,RCOND,RSTAGE,RBOT,RINF,Q,DH,S,Y,W,PERM,WP,F
+ INTEGER :: I
+ 
+ !## half of the distance for each cell
+ D=0.5*UTL_DIST(LX(1),LY(1),LX(2),LY(2))
+
+ !## total rain - only from from-coming pixels used for dimensions
+ F=IDF(1)%X(IC(1),IR(1))
+
+ IF(F.GE.1)THEN
+
+  Q=RAIN*F
+
+  !## absolute terrain difference
+  DH    =ABS(IDF(2)%X(IC(1),IR(1)))
+  !## slope
+  S     =DH/(D*2.0)
+  IF(S.EQ.0.0)THEN
+   Y=0.0
+   W=0.0
+  ELSE
+   !## waterdepth (assuming waterwidth of 1.0)
+   W=1.0
+   Y=((Q*MRC)/(W*SQRT(S)))**(3.0/5.0)
+  ENDIF
+
+  !## limit values
+  Y=MIN(2.5,Y)
+  
+  !## wetted perimeter
+  WP=2*Y+W !Y
+  RCOND =(D*WP)/C
+  
+  RINF=1.0
+  
+  DO I=1,2
+   IDF(5)%X(IC(I),IR(I))=IDF(5)%X(IC(I),IR(I))+RCOND        !## total conductance
+   !## assign to from pixels only
+   RSTAGE=IDF(4)%X(IC(I),IR(I))
+   RBOT  =IDF(4)%X(IC(I),IR(I))-Y   
+!   RINF=1.0; IF(RSTAGE-RBOT.LT.0.10)RINF=0.0
+   IDF(6)%X(IC(I),IR(I))=IDF(6)%X(IC(I),IR(I))+RSTAGE*RCOND !## stage
+   IDF(7)%X(IC(I),IR(I))=IDF(7)%X(IC(I),IR(I))+RBOT*RCOND   !## bottom
+!   IDF(8)%X(IC(I),IR(I))=IDF(8)%X(IC(I),IR(I))+RINF*RCOND   !## inffactor
+  ENDDO
+
+  !## assign stream to ipf file
+  IF(JU.GT.0)THEN
+   DO I=1,2
+    NR=NR+1
+    !## assign to from pixels only
+    PERM  =1.0
+    RSTAGE=IDF(4)%X(IC(I),IR(I))
+    RBOT  =IDF(4)%X(IC(I),IR(I))-Y
+    !## verhouding w and d is vergelijking y=0.5*w oid
+    W     =2*Y
+    WRITE(JU,'(6(G15.7,A))') LX(I),',',LY(I),','//TRIM(ITOS(MF))//',Segment_'//TRIM(ITOS(MF))//',',W,',',RSTAGE,',',RBOT,',',PERM
+   ENDDO
+  ENDIF
+ 
+ ENDIF
+ 
+ END SUBROUTINE SOF_EXPORT_FILL
+
+ !###======================================================================
+ SUBROUTINE SOF_EXPORT_FILL_OLD(IC,IR,LX,LY,IDF,RAIN,JU,MF,NR)
+ !###======================================================================
+ IMPLICIT NONE
+ REAL,PARAMETER :: MRC=0.03 !## clean, straight, full stage, no rifts or deep pools
+                            !## (http://www.fsl.orst.edu/geowater/FX3/help/8_Hydraulic_Reference/Mannings_n_Tables.htm)
  REAL,PARAMETER :: C=0.1    !## default water resistance
  INTEGER,INTENT(INOUT) :: NR
  INTEGER,INTENT(IN),DIMENSION(:) :: IR,IC
@@ -186,11 +277,6 @@ CONTAINS
  
  !## half of the distance for each cell
  D=0.5*UTL_DIST(LX(1),LY(1),LX(2),LY(2))
-
-!465096.827828,5536641.342335,2398,"Schwarzbach_2398",4.000000,   91.81900,90.819000,100.000000
-!465015.767766,5536582.850230,2398,"Schwarzbach_2398",4.000000,   91.72300,   90.72300,100.000000
-!  LINE=TRIM(RTOS(LX(1),'F',2))//','//TRIM(RTOS(LY(1),'F',2))//','// &
-!        TRIM(RTOS(LX(2),'F',2))//','//TRIM(RTOS(LY(2),'F',2))//','
 
  DO I=1,2
 
@@ -233,7 +319,7 @@ CONTAINS
 
  ENDDO
  
- END SUBROUTINE SOF_EXPORT_FILL
+ END SUBROUTINE SOF_EXPORT_FILL_OLD
 
  !###======================================================================
  LOGICAL FUNCTION SOF_TRACE_EDGE(IR,IC,IDF,LX,LY)
@@ -252,7 +338,9 @@ CONTAINS
   IF(LY.LT.IDF%YMIN)IR=IDF%NROW
   SOF_TRACE_EDGE=.TRUE.
  ENDIF
-
+ 
+ IF(IDF%X(IC,IR).EQ.IDF%NODATA)SOF_TRACE_EDGE=.TRUE.
+ 
  END FUNCTION SOF_TRACE_EDGE
 
  !###======================================================================
@@ -546,7 +634,10 @@ CONTAINS
  !## start tracing
  DO IROW=1,IDF(1)%NROW; DO ICOL=1,IDF(1)%NCOL
   !## skip nodata
-  IF(IDF(1)%X(ICOL,IROW).EQ.IDF(1)%NODATA)CYCLE
+  IF(IDF(1)%X(ICOL,IROW).EQ.IDF(1)%NODATA)THEN
+   IDF(2)%X(ICOL,IROW)=IDF(2)%NODATA
+   CYCLE
+  ENDIF
   
    IF(.TRUE.)THEN
 !  IF(IROW.EQ.174.AND.ICOL.EQ.1441)THEN
