@@ -1087,7 +1087,8 @@ C     ------------------------------------------------------------------
      1                        CHEDFM,CDDNFM,IBDOPT,LBHDSV,LBDDSV,
      2                        IBOUUN,LBBOSV,CBOUFM,IAUXSV,IOFLG,
      3                        VBVL,VBNM,IDDREF,IDDREFNEW
-      CHARACTER*1000 LINE
+      CHARACTER*5120 LINE
+!      CHARACTER*200 LINE
 C     ------------------------------------------------------------------
 C
 C1-----ALLOCATE SPACE FOR IOFLG, VBVL, AND VBNM ARRAYS.
@@ -1188,7 +1189,8 @@ C     ------------------------------------------------------------------
      1                        CHEDFM,CDDNFM,IBDOPT,LBHDSV,LBDDSV,
      2                        IBOUUN,LBBOSV,CBOUFM,IAUXSV,IDDREFNEW
 C
-      CHARACTER*1000 LINE
+      CHARACTER*(*) LINE
+!      CHARACTER*1000 LINE
 C     ------------------------------------------------------------------
 C
 C1------ALPHABETIC OUTPUT CONTROL.  WRITE MESSAGE AND SET INITIAL VALUES
@@ -1590,7 +1592,8 @@ C     ------------------------------------------------------------------
       USE GWFBASMODULE, ONLY: IOFLG,IHDDFL,IBUDFL,ICBCFL,IPEROC,
      1                        ITSOC,IBDOPT,IDDREF,IDDREFNEW
 C
-      CHARACTER*200 LINE
+      CHARACTER*5120 LINE
+!      CHARACTER*200 LINE
 C     ------------------------------------------------------------------
 C
 C1------ERROR IF OUTPUT CONTROL TIME STEP PRECEDES CURRENT SIMULATION
@@ -1733,7 +1736,7 @@ C
 C        SPECIFICATIONS:
 C     ------------------------------------------------------------------
       DIMENSION IOFLG(NLAY,5)
-      CHARACTER*200 LINE
+      CHARACTER(LEN=*) LINE
       CHARACTER*(*) LABEL
       DIMENSION LAYER(999)
 C     ------------------------------------------------------------------

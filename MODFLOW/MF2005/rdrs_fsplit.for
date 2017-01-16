@@ -288,14 +288,14 @@ c modules
       implicit none
 
 c arguments
-      integer, intent(in)            :: ipos
-      character(len=200), intent(in) :: line
-      integer, intent(in)            :: lloc
-      integer, intent(in)            :: nlay
-      integer, intent(in)            :: iout
-      character(len=*), intent(in)   :: label
-      integer, intent(in)            :: inoc
-      integer, intent(in)            :: iact
+      integer, intent(in)          :: ipos
+      character(len=*),intent(in)  :: line
+      integer, intent(in)          :: lloc
+      integer, intent(in)          :: nlay
+      integer, intent(in)          :: iout
+      character(len=*), intent(in) :: label
+      integer, intent(in)          :: inoc
+      integer, intent(in)          :: iact
 
 c local variables
       integer :: istart, istop, l, nset, i, iiu
