@@ -1556,11 +1556,11 @@ CONTAINS
    WRITE(IULOG,*)
 
    !## read time-dependent data for particle tracking
-   IF((ISS.EQ.0.AND.ISPFNAME.EQ.1).OR.ISS.EQ.1)THEN
-    IF(.NOT.TRACEREADBUDGET(IPER,IBATCH))RETURN 
-    !## backwards tracking
-    IF(IREV.EQ.1)CALL TRACEIREV()
-   ENDIF
+!   IF((ISS.EQ.0.AND.ISPFNAME.EQ.1).OR.ISS.EQ.1)THEN
+   IF(.NOT.TRACEREADBUDGET(IPER,IBATCH))RETURN 
+   !## backwards tracking
+   IF(IREV.EQ.1)CALL TRACEIREV()
+!   ENDIF
 
    !## start particle loop
    IF(IBATCH.EQ.0)CALL WINDOWSELECT(0)

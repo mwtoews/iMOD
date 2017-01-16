@@ -27,7 +27,7 @@ USE MOD_IDF, ONLY : IDFREAD,IDFREADSCALE,IDFCOPY,IDFALLOCATEX,IDFWRITE,IDFDEALLO
         IDFDEALLOCATE
 USE MOD_IDFEDIT_TRACE, ONLY : IDFEDITTRACE 
 USE MOD_OSD, ONLY : OSD_TIMER,OSD_OPEN
-USE MOD_UTL, ONLY : UTL_IDFSNAPTOGRID,UTL_GETUNIT,UTL_DIST,ITOS,UTL_DIRINFO_POINTER,UTL_GETMED,JD,UTL_GDATE,UTL_JDATETOIDATE
+USE MOD_UTL, ONLY : UTL_IDFSNAPTOGRID,UTL_GETUNIT,UTL_DIST,ITOS,UTL_DIRINFO_POINTER,UTL_GETMED,JD,UTL_GDATE,UTL_JDATETOIDATE,UTL_EQUALS_REAL
 USE MOD_SOLID_PAR, ONLY : HCLOSE,MXITER1,MXITER2,IDAMPING,RELAX,ITIGHT,MICNVG
 USE MOD_POLINT, ONLY : POL1LOCATE
 USE MOD_IPF, ONLY : IPFALLOCATE,IPFREAD2,IPFDEALLOCATE
@@ -243,16 +243,20 @@ CONTAINS
 
   !## assign stream to ipf file
   IF(JU.GT.0)THEN
-   DO I=1,2
-    NR=NR+1
-    !## assign to from pixels only
-    PERM  =1.0
-    RSTAGE=IDF(4)%X(IC(I),IR(I))
-    RBOT  =IDF(4)%X(IC(I),IR(I))-Y
-    !## verhouding w and d is vergelijking y=0.5*w oid
-    W     =2*Y
-    WRITE(JU,'(6(G15.7,A))') LX(I),',',LY(I),','//TRIM(ITOS(MF))//',Segment_'//TRIM(ITOS(MF))//',',W,',',RSTAGE,',',RBOT,',',PERM
-   ENDDO
+   !## verhouding w and d is vergelijking y=0.5*w oid
+   W     =2*Y
+   IF(W.GT.0.0)THEN
+
+    DO I=1,2
+     NR=NR+1
+     !## assign to from pixels only
+     PERM  =1.0
+     RSTAGE=IDF(4)%X(IC(I),IR(I))
+     RBOT  =IDF(4)%X(IC(I),IR(I))-Y
+     WRITE(JU,'(6(G15.7,A),2(I4,A))') LX(I),',',LY(I),','//TRIM(ITOS(MF))//',Segment_'//TRIM(ITOS(MF))//',',W,',',RSTAGE,',', &
+          RBOT,',',PERM,',',IC(I),',',IR(I)
+    ENDDO
+   ENDIF
   ENDIF
  
  ENDIF
@@ -573,8 +577,8 @@ CONTAINS
  IMPLICIT NONE
  INTEGER,INTENT(IN) :: IWRITE,N 
  TYPE(IDFOBJ),INTENT(INOUT),DIMENSION(N) :: IDF
- INTEGER :: IROW,ICOL,IR,IC,IP,IU,I,NF,M,NFTHREAD,IZ,IZ1,IZ2
- REAL :: A,DX,DY,F,SSX,SSY,XWBAL,Z1,Z2,DZ,S !,X1,X2,Y1,Y2
+ INTEGER :: IROW,ICOL,IR,IC,IP,IU,I,J,NF,M,NFTHREAD,IZ,IZ1,IZ2
+ REAL :: A,DX,DY,F,SSX,SSY,XWBAL,Z1,Z2,DZ,S 
  REAL,DIMENSION(0:2) :: LX,LY
  LOGICAL :: LWBAL,LSTOP
  TYPE TPOBJ
@@ -597,10 +601,12 @@ CONTAINS
  
  CALL IDFCOPY(IDF(1),IDF(2)) !## total passes of particles
  CALL IDFCOPY(IDF(1),IDF(3)) !## counts individual particles
- CALL IDFCOPY(IDF(1),IDF(7)) !## new slopes with flat areas
+ CALL IDFCOPY(IDF(1),IDF(7)) !## new slopes within flat areas
+ CALL IDFCOPY(IDF(1),IDF(8)) !## new levels within flat areas
  !## copy original slope to new slopes
- IDF(7)%X=0.0 !IDF(6)%X
-
+ IDF(7)%X=IDF(6)%X !0.0
+ IDF(8)%X=IDF(5)%X !0.0
+ 
  LWBAL=.FALSE.
  IF(IDF(4)%FNAME.NE.'')THEN
   LWBAL=.TRUE.
@@ -727,22 +733,58 @@ CONTAINS
    ENDIF
 
    !## adjust flat areas - get z-values final point
-   I=1; IC=TP(1)%IC(I); IR=TP(1)%IR(I); Z1=IDF(5)%X(IC,IR); IZ1=1 !; CALL IDFGETLOC(IDF(1),IR,IC,LX(0),LY(0))
+   IC=TP(1)%IC(1); IR=TP(1)%IR(1); IZ1=0
+   Z1=IDF(8)%X(IC,IR)
+   !Z1=IDF(5)%X(IC,IR)
    DO I=2,TP(1)%NT
-    IC=TP(1)%IC(I); IR=TP(1)%IR(I); Z2=IDF(5)%X(IC,IR)
-    !## goes down
-    IF(Z2.LT.Z1)THEN
-     !## slope is along trace
-     IZ2=I; DZ=Z2-Z1; S=DZ/(IZ2-IZ1+1)
-     DO IZ=IZ1,IZ2
-      IC=TP(1)%IC(IZ); IR=TP(1)%IR(IZ) !; CALL IDFGETLOC(IDF(1),IR,IC,LX(1),LY(1))
-!      D=UTL_DIST(LX(0),LY(0),LX(1),LY(1))
-      !## overwrite slope
-      IDF(7)%X(IC,IR)=S !Z1+S*REAL(IZ)
-     ENDDO
-     Z1=Z2; IZ1=I !; CALL IDFGETLOC(IDF(1),IR,IC,LX(0),LY(0))
+    IC=TP(1)%IC(I); IR=TP(1)%IR(I)
+    Z2=IDF(8)%X(IC,IR)
+!    Z2=IDF(5)%X(IC,IR)
+
+    !## start equal levels
+    IF(UTL_EQUALS_REAL(Z1,Z2))THEN
+     !## lock previous
+     IF(IZ1.EQ.0)IZ1=I-1
+    ELSE
+     !## change values
+     IF(IZ1.NE.0)THEN
+      IZ2=I; DZ=Z2-Z1; S=DZ/(IZ2-IZ1)
+      J=0; DO IZ=IZ1+1,IZ2-1
+       J=J+1; IC=TP(1)%IC(IZ); IR=TP(1)%IR(IZ)
+       !## overwrite slope
+       IDF(7)%X(IC,IR)=S
+       IDF(8)%X(IC,IR)=Z1+S*REAL(J)
+!IF(IDF(8)%X(IC,IR).GT.IDF(5)%x(IC,IR))THEN
+!WRITE(*,*)
+!ENDIF     
+      ENDDO      
+      IZ1=0
+     ENDIF
+     Z1=Z2
     ENDIF
+
    ENDDO
+   
+!    !## goes down
+!    IF(Z2.LT.Z1.AND..NOT.UTL_EQUALS_REAL(Z1,Z2))THEN
+!     !## slope is along trace
+!     IZ2=I
+!     IF(IZ2-IZ1.GT.1)THEN
+!      J=0; DZ=Z2-Z1; S=DZ/(IZ2-IZ1+1)
+!      DO IZ=IZ1,IZ2
+!       J=J+1
+!       IC=TP(1)%IC(IZ); IR=TP(1)%IR(IZ)
+!       !## overwrite slope
+!       IDF(7)%X(IC,IR)=S
+!       IDF(8)%X(IC,IR)=Z1+S*REAL(J) !IZ)
+!IF(IDF(8)%X(IC,IR).GT.IDF(5)%x(IC,IR))THEN
+!WRITE(*,*)
+!ENDIF
+!      ENDDO
+!     ENDIF
+!     Z1=Z2; IZ1=I
+!    ENDIF
+!   ENDDO
 
   ENDIF
  ENDDO; WRITE(6,'(A,F7.3,A)') '+Progress ',REAL(IROW*100)/REAL(IDF(1)%NROW),' % finished        '; ENDDO
@@ -754,6 +796,7 @@ CONTAINS
  
  IF(.NOT.IDFWRITE(IDF(2),IDF(2)%FNAME,1))THEN; ENDIF 
  IF(.NOT.IDFWRITE(IDF(7),IDF(7)%FNAME,1))THEN; ENDIF 
+ IF(.NOT.IDFWRITE(IDF(8),IDF(8)%FNAME,1))THEN; ENDIF 
  IF(LWBAL)THEN
   IF(.NOT.IDFWRITE(IDF(4),IDF(1)%FNAME(:INDEX(IDF(1)%FNAME,'.',.TRUE.)-1)//'_ZONE.IDF',1))THEN; ENDIF
  ENDIF

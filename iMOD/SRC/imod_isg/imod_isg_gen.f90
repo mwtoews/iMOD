@@ -135,7 +135,7 @@ CONTAINS
        PNTX(NP+2)=X2; PNTY(NP+2)=Y2
      
        IP(NBRCH+1)=NP+3
-       CBID(NBRCH+1)='S_'//TRIM(IPF(IIPF)%INFO(DATCOL(3),I))//'_R_'//TRIM(ITOS(NBRCH+1))
+       CBID(NBRCH+1)='S_'//TRIM(IPF(IIPF)%INFO(DATCOL(3),J))//'_R_'//TRIM(ITOS(NBRCH+1))
        IDNSEG(NBRCH+1)=0 
      
        !## left side
@@ -149,19 +149,25 @@ CONTAINS
        READ(IPF(IIPF)%INFO(DATCOL(7),J+1),*)   WL2
        READ(IPF(IIPF)%INFO(DATCOL(8),J+1),*)   HC2
        
-       IF(BL1.LE.0.0)THEN
-        WRITE(*,*) WL1,BL1,WL1-BL1
-       ENDIF 
-       IF(BL2.LE.0.0)THEN
-        WRITE(*,*) WL2,BL2,WL2-BL2
-       ENDIF 
+!!## controles hessen
+!       IF(BL1.LE.0.0)THEN
+!        WRITE(*,*) J,WL1,BL1,WL1-BL1,TRIM(IPF(IIPF)%INFO(DATCOL(3),J))
+!       ENDIF 
+!       IF(BL2.LE.0.0)THEN
+!        WRITE(*,*) J,WL2,BL2,WL2-BL2,TRIM(IPF(IIPF)%INFO(DATCOL(3),J))
+!       ENDIF 
+!
+!       IF(BL1.GE.WL1)THEN
+!        WRITE(*,*) J,WL1,BL1,WL1-BL1,TRIM(IPF(IIPF)%INFO(DATCOL(3),J))
+!       ENDIF
+!       IF(BL2.GE.WL2)THEN
+!        WRITE(*,*) J,WL2,BL2,WL2-BL2,TRIM(IPF(IIPF)%INFO(DATCOL(3),J))
+!       ENDIF
+!!##
 
-       IF(BL1.GE.WL1)THEN
-        WRITE(*,*) WL1,BL1,WL1-BL1
-       ENDIF
-       IF(BL2.GE.WL2)THEN
-        WRITE(*,*) WL2,BL2,WL2-BL2
-       ENDIF
+       IF(BL1.LE.BL2)THEN
+        WRITE(*,*) J,BL1,BL2,BL1-BL2,TRIM(IPF(IIPF)%INFO(DATCOL(3),J))
+       ENDIF 
        
        PROF(1,NBRCH+1)%DISTANCE=-WD1
        PROF(1,NBRCH+1)%BOTTOM  = WL1
