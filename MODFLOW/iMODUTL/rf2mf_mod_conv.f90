@@ -1753,7 +1753,7 @@
       open(unit=lun,file=nam%package(ioc)%fname,action='write')
 
 !...     write oc-file
-      allocate(str(nlay+1))
+      allocate(str(nlay+2))
       if (oc%cbnlay.gt.0) then
          write(str(1),*) oc%ihedun
          write(lun,'(a,1x,a)') 'head save unit', trim(adjustl(str(1)))
