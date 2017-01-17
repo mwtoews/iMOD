@@ -1488,7 +1488,7 @@ CONTAINS
     IF(.NOT.UTL_READINITFILE('ITT',LINE,IU,0))RETURN
     READ(LINE,*) PBMAN%ITT; WRITE(*,'(A12,I14)') 'ITT=',PBMAN%ITT
     SELECT CASE (PBMAN%ITT)
-     CASE (1,2,3,5,6,7)
+     CASE (1:5,6,7)
       !## timesteps
       IF(.NOT.UTL_READINITFILE('IDT',LINE,IU,0))RETURN
       READ(LINE,*) PBMAN%IDT; WRITE(*,'(A12,I14)') 'IDT=',PBMAN%IDT
@@ -1497,17 +1497,17 @@ CONTAINS
      CASE (1)
       WRITE(*,'(A,I5,A)') 'Time step: ',PBMAN%IDT,' hours'
      CASE (2)
-      WRITE(*,'(A,I5,A)') 'Time step: ',PBMAN%IDT,' daily'
+      WRITE(*,'(A,I5,A)') 'Time step: ',PBMAN%IDT,' days'
      CASE (3)
       WRITE(*,'(A,I5,A)') 'Time step: ',PBMAN%IDT,' weeks'
      CASE (4)
-      WRITE(*,'(A)')      'Time step: decades'; PBMAN%IDT=10
+      WRITE(*,'(A,I5,A)') 'Time step: decades',PBMAN%IDT,' days'
      CASE (5)
-      WRITE(*,'(A)')      'Time step: every 14/28'; PBMAN%IDT=14
+      WRITE(*,'(A)')      'Time step: every 14/28'
      CASE (6)
-      WRITE(*,'(A,I5,A)') 'Time step: ',PBMAN%IDT,' monthly'
+      WRITE(*,'(A,I5,A)') 'Time step: ',PBMAN%IDT,' months'
      CASE (7)
-      WRITE(*,'(A,I5,A)') 'Time step: ',PBMAN%IDT,' yearly'
+      WRITE(*,'(A,I5,A)') 'Time step: ',PBMAN%IDT,' years'
      CASE (8)
       WRITE(*,'(A)')      'Time step: depending on packages'; PBMAN%IDT=1
     END SELECT

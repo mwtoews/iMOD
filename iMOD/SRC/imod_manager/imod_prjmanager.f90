@@ -6723,16 +6723,14 @@ TOPICLOOP: DO ITOPIC=1,MAXTOPICS
  DO IWRITE=0,1
 
   !## MXFB—is the maximum number of HFB barriers that will be defined using parameters.
-  IF(IWRITE.EQ.1)WRITE(IU,'(3I10,A)') NPHFB,MXFB,SUM(NHFBNP),' NOPRINT' !to be included yet HFBFCT/HFBRESIS !!!
-  
-!      if(dis%settop .and. dis%setbot) then
-!         n = n + 1
-!         write(str(n),*) 'hfbresis'
-!      else
-!         n = n + 1
-!         write(str(n),*) 'hfbfact'
-!      end if
- 
+  IF(IWRITE.EQ.1)THEN
+   IF(LLPF)THEN
+    WRITE(IU,'(3I10,A)') NPHFB,MXFB,SUM(NHFBNP),' NOPRINT HFBFACT'
+   ELSEIF(LBCF)THEN
+    WRITE(IU,'(3I10,A)') NPHFB,MXFB,SUM(NHFBNP),' NOPRINT HFBRESIS'
+   ENDIF  
+  ENDIF
+   
   !## process per system
   DO ISYS=1,SIZE(TOPICS(ITOPIC)%STRESS(1)%FILES,2)
    
