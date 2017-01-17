@@ -2871,7 +2871,7 @@ TOPICLOOP: DO ITOPIC=1,MAXTOPICS
   CALL UTL_CLOSEUNITS()
   DEALLOCATE(SIM)
   
-  IF(IRUN.EQ.1.AND.PMANAGERRUN)CALL PMANAGERSTART(FNAME,IRUN)
+  IF(IRUN.EQ.1.AND.PMANAGERRUN)CALL PMANAGERSTART(FNAME,IRUN,IBATCH)
   
   IF(IBATCH.EQ.0)CALL UTL_MESSAGEHANDLE(1)
   
@@ -2880,12 +2880,12 @@ TOPICLOOP: DO ITOPIC=1,MAXTOPICS
  END FUNCTION PMANAGERRUN
 
  !###======================================================================
- SUBROUTINE PMANAGERSTART(RUNFNAME,IRUNMODE)
+ SUBROUTINE PMANAGERSTART(RUNFNAME,IRUNMODE,IBATCH)
  !###======================================================================
  IMPLICIT NONE
  CHARACTER(LEN=*),INTENT(IN) :: RUNFNAME
- INTEGER,INTENT(IN) :: IRUNMODE
- CHARACTER(LEN=256) :: DIR,DIRNAME !,LINE
+ INTEGER,INTENT(IN) :: IRUNMODE,IBATCH
+ CHARACTER(LEN=256) :: DIR,DIRNAME
  CHARACTER(LEN=52) :: MNAME
  INTEGER :: IU,JU,IOS,I,IFLAGS,IEXCOD,IERROR,IMODE
  LOGICAL :: LEX
@@ -2898,8 +2898,12 @@ TOPICLOOP: DO ITOPIC=1,MAXTOPICS
  ELSEIF(INDEX(UTL_CAP(RUNFNAME,'U'),'.RUN',.TRUE.).GT.0)THEN
   IMODE=2
  ELSE
-  CALL WMESSAGEBOX(OKONLY,EXCLAMATIONICON,COMMONOK,'iMODFLOW cannot be started with given file:'//CHAR(13)// &
-   TRIM(RUNFNAME),'Error')
+  IF(IBATCH.EQ.0)THEN
+   CALL WMESSAGEBOX(OKONLY,EXCLAMATIONICON,COMMONOK,'iMODFLOW cannot be started with given file:'//CHAR(13)// &
+    TRIM(RUNFNAME),'Error')
+  ELSE
+   WRITE(*,'(A)') 'iMODFLOW cannot be started with given file: '//TRIM(RUNFNAME)
+  ENDIF
   RETURN
  ENDIF
 
@@ -2913,9 +2917,14 @@ TOPICLOOP: DO ITOPIC=1,MAXTOPICS
  IU=UTL_GETUNIT()
  CALL OSD_OPEN(IU,FILE=TRIM(DIR)//'\RUN.BAT',STATUS='REPLACE',ACTION='WRITE,DENYREAD',IOSTAT=IOS)
  IF(IOS.NE.0)THEN
-  CALL WMESSAGEBOX(OKONLY,EXCLAMATIONICON,COMMONOK,'iMODFLOW is already running, you cannot start '//CHAR(13)// &
-   'new run while previous run is still running'//CHAR(13)//'or'//CHAR(13)//'Run-script cannot be created'//CHAR(13)// &
-   TRIM(DIR)//'\RUN.BAT','Error')
+  IF(IBATCH.EQ.0)THEN
+   CALL WMESSAGEBOX(OKONLY,EXCLAMATIONICON,COMMONOK,'iMODFLOW is already running, you cannot start '//CHAR(13)// &
+    'new run while previous run is still running'//CHAR(13)//'or'//CHAR(13)//'Run-script cannot be created'//CHAR(13)// &
+    TRIM(DIR)//'\RUN.BAT','Error')
+  ELSE
+   WRITE(*,'(A)') 'iMODFLOW is already running, you cannot start new run while previous run is still running'// &
+       'or Run-script cannot be created '//TRIM(DIR)//'\RUN.BAT'
+  ENDIF
   RETURN
  ENDIF
 
@@ -2932,9 +2941,17 @@ TOPICLOOP: DO ITOPIC=1,MAXTOPICS
   IERROR=0; CALL IMOD_AGREEMENT(IERROR)
   IF(IERROR.NE.1)THEN
    IF(LBETA)THEN
-    CALL WMESSAGEBOX(OKONLY,COMMONOK,EXCLAMATIONICON,'Cannot start Beta-iMOD because you are not authorized in writing for Beta-iMOD','Error')
+    IF(IBATCH.EQ.0)THEN
+     CALL WMESSAGEBOX(OKONLY,COMMONOK,EXCLAMATIONICON,'Cannot start Beta-iMOD because you are not authorized in writing for Beta-iMOD','Error')
+    ELSE
+     WRITE(*,'(A)') 'Cannot start Beta-iMOD because you are not authorized in writing for Beta-iMOD'
+    ENDIF
    ELSE
-    CALL WMESSAGEBOX(OKONLY,COMMONOK,EXCLAMATIONICON,'Cannot start iMODFLOW unless you accept the iMOD Software License Agreement','Error')
+    IF(IBATCH.EQ.0)THEN
+     CALL WMESSAGEBOX(OKONLY,COMMONOK,EXCLAMATIONICON,'Cannot start iMODFLOW unless you accept the iMOD Software License Agreement','Error')
+    ELSE
+     WRITE(*,'(A)') 'Cannot start iMODFLOW unless you accept the iMOD Software License Agreement'
+    ENDIF
    ENDIF
    RETURN
   ENDIF
@@ -2998,9 +3015,15 @@ TOPICLOOP: DO ITOPIC=1,MAXTOPICS
 
   CALL IOSCOMMAND('RUN.BAT',IFLAGS,IEXCOD=IEXCOD)
 
-  CALL WMESSAGEBOX(OKONLY,INFORMATIONICON,COMMONOK,'Successfully STARTED the Modflow simulation using:'//CHAR(13)// &
-                 'MODFLOW: '//TRIM(PREFVAL(8))//CHAR(13)// &
-                 'RUNFILE: '//TRIM(RUNFNAME),'Information')
+  IF(IBATCH.EQ.0)THEN
+   CALL WMESSAGEBOX(OKONLY,INFORMATIONICON,COMMONOK,'Successfully STARTED the Modflow simulation using:'//CHAR(13)// &
+                  'MODFLOW: '//TRIM(PREFVAL(8))//CHAR(13)// &
+                  'RUNFILE: '//TRIM(RUNFNAME),'Information')
+  ELSE
+   WRITE(*,'(A)') 'Successfully STARTED the Modflow simulation using:'
+   WRITE(*,'(A)') 'MODFLOW: '//TRIM(PREFVAL(8))
+   WRITE(*,'(A)') 'RUNFILE: '//TRIM(RUNFNAME)
+  ENDIF
   
  ELSEIF(IRUNMODE.LT.0)THEN
 
@@ -3016,11 +3039,21 @@ TOPICLOOP: DO ITOPIC=1,MAXTOPICS
   CALL IOSCOMMAND(TRIM(LINE),IFLAGS,IEXCOD=IEXCOD)
   
   IF(IEXCOD.EQ.0)THEN
-   CALL WMESSAGEBOX(OKONLY,INFORMATIONICON,COMMONOK,'Successful simulation using: '//CHAR(13)// &
-                  'MODFLOW: '//TRIM(PREFVAL(8))//CHAR(13)// &
-                  'RUNFILE: '//TRIM(RUNFNAME),'Information')
+   IF(IBATCH.EQ.0)THEN
+    CALL WMESSAGEBOX(OKONLY,INFORMATIONICON,COMMONOK,'Successful simulation using: '//CHAR(13)// &
+                   'MODFLOW: '//TRIM(PREFVAL(8))//CHAR(13)// &
+                   'RUNFILE: '//TRIM(RUNFNAME),'Information')
+   ELSE
+    WRITE(*,'(A)') 'Successful simulation using:'
+    WRITE(*,'(A)') 'MODFLOW: '//TRIM(PREFVAL(8))
+    WRITE(*,'(A)') 'RUNFILE: '//TRIM(RUNFNAME)
+   ENDIF
   ELSE
-   CALL WMESSAGEBOX(OKONLY,EXCLAMATIONICON,COMMONOK,'An error occured in starting your simulation','Error')
+   IF(IBATCH.EQ.0)THEN
+    CALL WMESSAGEBOX(OKONLY,EXCLAMATIONICON,COMMONOK,'An error occured in starting your simulation','Error')
+   ELSE
+    WRITE(*,'(A)') 'An error occured in starting your simulation'
+   ENDIF
   ENDIF
 
  ENDIF
@@ -3378,7 +3411,7 @@ TOPICLOOP: DO ITOPIC=1,MAXTOPICS
  !## save rch package
  IF(.NOT.PMANAGER_SAVEMF2005_PCK(DIR,DIRMNAME,IBATCH,LRCH,26,IRCHCB,'RCH',(/1/),IPRT))RETURN
  !## save olf package
- IF(.NOT.PMANAGER_SAVEMF2005_PCK(DIR,DIRMNAME,IBATCH,LOLF,27,IDRNCB,'OLF',(/2,1/),IPRT))RETURN
+ IF(.NOT.PMANAGER_SAVEMF2005_PCK(DIR,DIRMNAME,IBATCH,LOLF,27,IDRNCB,'OLF',(/1/),IPRT))RETURN
  !## save chd package
  IF(.NOT.PMANAGER_SAVEMF2005_PCK(DIR,DIRMNAME,IBATCH,LCHD,28,ICHDCB,'CHD',(/1/),IPRT))RETURN
  !## save isg package
@@ -4410,6 +4443,14 @@ TOPICLOOP: DO ITOPIC=1,MAXTOPICS
   !## output
   WRITE(IPRT,'(1X,A,2I10,2(1X,I14))') 'Exporting timestep ',IPER,KPER,ITIME,JTIME  
   
+  !## reuse previous timestep
+  IF(KPER.LE.0)THEN
+   IF(IPER.EQ.1)THEN; WRITE(IU,'(I10)') 0
+   ELSE; WRITE(IU,'(I10)') -1; ENDIF
+   !## goto next timestep
+   CYCLE
+  ENDIF
+
   !## create subfolders
   CALL UTL_CREATEDIR(TRIM(DIR)//'\'//CPCK//'7')
 
@@ -5089,7 +5130,7 @@ TOPICLOOP: DO ITOPIC=1,MAXTOPICS
  !## fill tlp for each modellayer
  ALLOCATE(TLP(NLAY),KH(NLAY),TP(NLAY),BT(NLAY))
   
- WRITE(FRM,'(A9,I2.2,A14)') '(3(I5,1X),',1,'(G15.7,1X),I5)'
+! WRITE(FRM,'(A9,I2.2,A14)') '(3(I5,1X),',1,'(G15.7,1X),I5)'
  
  !## see whether information is equal to previous timestep - only for rch and evt
  LPER=0
@@ -5106,7 +5147,7 @@ TOPICLOOP: DO ITOPIC=1,MAXTOPICS
 
   !## output
   WRITE(IPRT,'(1X,A,2I10,2(1X,I14))') 'Exporting timestep ',IPER,KPER,ITIME,JTIME  
-  
+
   !## reuse previous timestep
   IF(KPER.LE.0)THEN
    SELECT CASE (ITOPIC)
@@ -5140,7 +5181,7 @@ TOPICLOOP: DO ITOPIC=1,MAXTOPICS
    !## goto next timestep
    CYCLE
   ENDIF
-
+    
 ! DATA CMOD/'CAP','TOP','BOT','BND','SHD','KDW','KHV','KVA','VCW','KVV', & ! 1-10
 !           'STO','SPY','PWT','ANI','HFB','IBS','SFT','UZF','MNW','PST', & !11-20
 !           'WEL','DRN','RIV','EVT','GHB','RCH','OLF','CHD','ISG','SFR', & !21-30
@@ -5149,7 +5190,7 @@ TOPICLOOP: DO ITOPIC=1,MAXTOPICS
   !## open external file (not for rch/evt)
   JU=0
   SELECT CASE (ITOPIC)
-   CASE (21:23,25,27:29) 
+   CASE (22:23,25,27:29) 
     !## create subfolders
     CALL UTL_CREATEDIR(TRIM(DIR)//'\'//CPCK//'7')
     EXFNAME=TRIM(DIR)//'\'//CPCK//'7\'//CPCK//'_T'//TRIM(ITOS(IPER))//'.ARR'
@@ -5159,8 +5200,8 @@ TOPICLOOP: DO ITOPIC=1,MAXTOPICS
   !## allocate memory for packages
   NTOP=SIZE(TOPICS(ITOPIC)%STRESS(KPER)%FILES,1); NSYS=SIZE(TOPICS(ITOPIC)%STRESS(KPER)%FILES,2)
   SELECT CASE (ITOPIC)
-   !## duplicate for chd-package
-   CASE (28);    WRITE(FRM,'(A10,I2.2,A14)') '(3(I5,1X),',NTOP+1,'(G15.7,1X),I5)'
+   !## duplicate for chd/olf package
+   CASE (27,28); WRITE(FRM,'(A10,I2.2,A14)') '(3(I5,1X),',NTOP+1,'(G15.7,1X),I5)'
    CASE DEFAULT; WRITE(FRM,'(A10,I2.2,A14)') '(3(I5,1X),',NTOP  ,'(G15.7,1X),I5)'
   END SELECT
   
@@ -5317,7 +5358,7 @@ TOPICLOOP: DO ITOPIC=1,MAXTOPICS
       
       !## check nodata in dataset
       DO I=1,NTOP; IF(PCK(JTOP(I))%X(ICOL,IROW).EQ.HNOFLOW)EXIT; ENDDO
-      !## found any nodata in dataset - skip package
+      !## found any nodata in dataset - skip data point
       IF(I.LE.NTOP)CYCLE
        
       !## check bottom if that is higher than river stage
@@ -8951,7 +8992,6 @@ JLOOP: DO K=1,SIZE(TOPICS)
  IMPLICIT NONE
  INTEGER,INTENT(IN) :: IU
  INTEGER :: I,J,IOS
-! CHARACTER(LEN=256) :: LINE
  
  PMANAGER_GETKEYS=.FALSE.
 
@@ -8969,7 +9009,21 @@ JLOOP: DO K=1,SIZE(TOPICS)
                 PEST%MEASURES(I)%IYCOL  ,PEST%MEASURES(I)%ILCOL  ,PEST%MEASURES(I)%IMCOL,PEST%MEASURES(I)%IVCOL
   ENDDO
  ENDIF
+
+ !## skip common settings
+ READ(IU,*) 
  
+ !## read pcg solvers settings
+ READ(IU,*) PCG%NOUTER,PCG%NINNER,PCG%HCLOSE,PCG%RCLOSE,PCG%RELAX
+ ALLOCATE(TOPICS(33)%STRESS(1)); ALLOCATE(TOPICS(33)%STRESS(1)%FILES(1,1))
+ 
+ TOPICS(33)%IACT=1; TOPICS(33)%IACT_MODEL=1
+ PCG%NPCOND=1
+ PCG%IPRPCG=0
+ PCG%MUTPCG=1
+ PCG%DAMPPCG=1.0
+ PCG%DAMPPCGT=1.0
+
  !## find available keys
  J=0; DO
   READ(IU,'(A256)') LINE; LINE=UTL_CAP(LINE,'U')
