@@ -764,28 +764,7 @@ CONTAINS
     ENDIF
 
    ENDDO
-   
-!    !## goes down
-!    IF(Z2.LT.Z1.AND..NOT.UTL_EQUALS_REAL(Z1,Z2))THEN
-!     !## slope is along trace
-!     IZ2=I
-!     IF(IZ2-IZ1.GT.1)THEN
-!      J=0; DZ=Z2-Z1; S=DZ/(IZ2-IZ1+1)
-!      DO IZ=IZ1,IZ2
-!       J=J+1
-!       IC=TP(1)%IC(IZ); IR=TP(1)%IR(IZ)
-!       !## overwrite slope
-!       IDF(7)%X(IC,IR)=S
-!       IDF(8)%X(IC,IR)=Z1+S*REAL(J) !IZ)
-!IF(IDF(8)%X(IC,IR).GT.IDF(5)%x(IC,IR))THEN
-!WRITE(*,*)
-!ENDIF
-!      ENDDO
-!     ENDIF
-!     Z1=Z2; IZ1=I
-!    ENDIF
-!   ENDDO
-
+  
   ENDIF
  ENDDO; WRITE(6,'(A,F7.3,A)') '+Progress ',REAL(IROW*100)/REAL(IDF(1)%NROW),' % finished        '; ENDDO
 

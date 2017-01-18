@@ -3074,7 +3074,18 @@ TOPICLOOP: DO ITOPIC=1,MAXTOPICS
  TYPE(IDFOBJ),ALLOCATABLE,DIMENSION(:) :: IDF
  
  PMANAGER_SAVERUN=.FALSE.
-  
+ 
+ DO I=1,MAXTOPICS  
+  SELECT CASE (I)
+   CASE (12,18,19,30,31,32)
+    IF(TOPICS(I)%IACT_MODEL.EQ.1)THEN
+     CALL WMESSAGEBOX(OKONLY,INFORMATIONICON,COMMONOK,'You cannot use the package '//TRIM(TOPICS(I)%TNAME)//CHAR(13)// &
+      'to save for a RUN-file. Select the option MODFLOW2005 instead','Information')
+     RETURN
+    ENDIF
+  END SELECT
+ ENDDO
+
  !## remove last timestep sinces it is the final date
  IF(NPER.GT.1)NPER=NPER-1
  
@@ -5199,6 +5210,14 @@ TOPICLOOP: DO ITOPIC=1,MAXTOPICS
    
   !## allocate memory for packages
   NTOP=SIZE(TOPICS(ITOPIC)%STRESS(KPER)%FILES,1); NSYS=SIZE(TOPICS(ITOPIC)%STRESS(KPER)%FILES,2)
+  
+  SELECT CASE (ITOPIC)
+   CASE (24,26)
+    CALL WMESSAGEBOX(OKONLY,INFORMATIONICON,COMMONOK,'You cannot apply more than a single layer to the package '//TRIM(TOPICS(I)%TNAME)//CHAR(13)//&
+     'If you want this, use the RUNFILE option instead','Information')
+     RETURN
+  END SELECT
+  
   SELECT CASE (ITOPIC)
    !## duplicate for chd/olf package
    CASE (27,28); WRITE(FRM,'(A10,I2.2,A14)') '(3(I5,1X),',NTOP+1,'(G15.7,1X),I5)'
