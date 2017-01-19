@@ -346,6 +346,12 @@ C2------READ A LINE; IGNORE BLANK LINES AND PRINT COMMENT LINES.
          end if
       end do
 
+c set default for idate_save     
+      if (.not.associated(idate_save)) then     
+          allocate(idate_save)
+          idate_save = 0
+      end if    
+            
 c determine Julian Date of starting time
       if (associated(time_syear).and.
      1    associated(time_smonth).and.
