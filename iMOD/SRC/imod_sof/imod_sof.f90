@@ -204,7 +204,7 @@ CONTAINS
  !## total rain - only from from-coming pixels used for dimensions
  F=IDF(1)%X(IC(1),IR(1))
 
- IF(F.GE.1)THEN
+ IF(F.GE.1.0)THEN
 
   Q=RAIN*F
 
@@ -245,7 +245,7 @@ CONTAINS
   IF(JU.GT.0)THEN
    !## verhouding w and d is vergelijking y=0.5*w oid
    W     =2*Y
-   IF(W.GT.0.0)THEN
+!   IF(W.GT.0.0)THEN
 
     DO I=1,2
      NR=NR+1
@@ -256,7 +256,7 @@ CONTAINS
      WRITE(JU,'(6(G15.7,A),2(I4,A))') LX(I),',',LY(I),','//TRIM(ITOS(MF))//',Segment_'//TRIM(ITOS(MF))//',',W,',',RSTAGE,',', &
           RBOT,',',PERM,',',IC(I),',',IR(I)
     ENDDO
-   ENDIF
+!   ENDIF
   ENDIF
  
  ENDIF
@@ -578,9 +578,9 @@ CONTAINS
  INTEGER,INTENT(IN) :: IWRITE,N 
  TYPE(IDFOBJ),INTENT(INOUT),DIMENSION(N) :: IDF
  INTEGER :: IROW,ICOL,IR,IC,IP,IU,I,J,NF,M,NFTHREAD,IZ,IZ1,IZ2
- REAL :: A,DX,DY,F,SSX,SSY,XWBAL,Z1,Z2,DZ,S 
+ REAL :: A,DX,DY,F,SSX,SSY,XWBAL,Z1,Z2,DZ,S,ZCRIT,MINV,MAXV
  REAL,DIMENSION(0:2) :: LX,LY
- LOGICAL :: LWBAL,LSTOP
+ LOGICAL :: LWBAL,LSTOP,LEX
  TYPE TPOBJ
   INTEGER,POINTER,DIMENSION(:) :: IC,IR,IC_BU,IR_BU
   INTEGER :: NT
@@ -594,9 +594,10 @@ CONTAINS
 
  F=1.0
  
- IF(.NOT.IDFREAD(IDF(1),IDF(1)%FNAME,1))THEN; ENDIF
+ IF(.NOT.IDFREAD(IDF(1),IDF(1)%FNAME,1))THEN; ENDIF !## read friction
  
  IF(.NOT.IDFREAD(IDF(5),IDF(5)%FNAME,1))THEN; ENDIF !## read sof
+ 
  IF(.NOT.IDFREAD(IDF(6),IDF(6)%FNAME,1))THEN; ENDIF !## read slope
  
  CALL IDFCOPY(IDF(1),IDF(2)) !## total passes of particles
@@ -604,8 +605,8 @@ CONTAINS
  CALL IDFCOPY(IDF(1),IDF(7)) !## new slopes within flat areas
  CALL IDFCOPY(IDF(1),IDF(8)) !## new levels within flat areas
  !## copy original slope to new slopes
- IDF(7)%X=IDF(6)%X !0.0
- IDF(8)%X=IDF(5)%X !0.0
+ IDF(7)%X=IDF(6)%X 
+ IDF(8)%X=IDF(5)%X 
  
  LWBAL=.FALSE.
  IF(IDF(4)%FNAME.NE.'')THEN
@@ -639,15 +640,21 @@ CONTAINS
 
  !## start tracing
  DO IROW=1,IDF(1)%NROW; DO ICOL=1,IDF(1)%NCOL
+
   !## skip nodata
   IF(IDF(1)%X(ICOL,IROW).EQ.IDF(1)%NODATA)THEN
    IDF(2)%X(ICOL,IROW)=IDF(2)%NODATA
    CYCLE
   ENDIF
   
-   IF(.TRUE.)THEN
-!  IF(IROW.EQ.174.AND.ICOL.EQ.1441)THEN
+  !## slimme start locatie kiezen - zeker weten dat er bovenstroom niet nog iets is ...
   
+  IF(.TRUE.)THEN
+
+!   IF(IROW.EQ.108.AND.ICOL.EQ.235)THEN
+!   WRITE(*,*)
+!   ENDIF
+    
    !## start in the middle
    CALL IDFGETLOC(IDF(1),IROW,ICOL,LX(0),LY(0))
 
@@ -732,31 +739,36 @@ CONTAINS
     ENDDO
    ENDIF
 
-   !## adjust flat areas - get z-values final point
-   IC=TP(1)%IC(1); IR=TP(1)%IR(1); IZ1=0
-   Z1=IDF(8)%X(IC,IR)
-   !Z1=IDF(5)%X(IC,IR)
-   DO I=2,TP(1)%NT
-    IC=TP(1)%IC(I); IR=TP(1)%IR(I)
-    Z2=IDF(8)%X(IC,IR)
-!    Z2=IDF(5)%X(IC,IR)
+   IC=TP(1)%IC(1);        IR=TP(1)%IR(1);        Z2=IDF(8)%X(IC,IR)
+   IC=TP(1)%IC(TP(1)%NT); IR=TP(1)%IR(TP(1)%NT); Z1=IDF(8)%X(IC,IR)
+   ZCRIT=Z2-Z1; ZCRIT=0.0001*ZCRIT
 
+   !## adjust flat areas - get z-values final point
+   IC=TP(1)%IC(1); IR=TP(1)%IR(1); IZ1=0; Z1=IDF(8)%X(IC,IR)
+   DO I=2,TP(1)%NT
+    IC=TP(1)%IC(I); IR=TP(1)%IR(I); Z2=IDF(8)%X(IC,IR)
+
+!    LEX=ABS(Z1-Z2).LT.ZCRIT ! UTL_EQUALS_REAL(Z1,Z2))THEN
+!    IF(I.EQ.TP(1)%NT)LEX=.FALSE.
+    
     !## start equal levels
-    IF(UTL_EQUALS_REAL(Z1,Z2))THEN
-     !## lock previous
+!    IF(LEX)THEN !ABS(Z1-Z2).LT.ZCRIT)THEN ! UTL_EQUALS_REAL(Z1,Z2))THEN
+    IF(ABS(Z1-Z2).LT.ZCRIT)THEN ! UTL_EQUALS_REAL(Z1,Z2))THEN
+     !## lock previous   Z1-Z2
      IF(IZ1.EQ.0)IZ1=I-1
     ELSE
      !## change values
      IF(IZ1.NE.0)THEN
+!IF(Z2.EQ.Z1)THEN
+!z2=z2-1.0
+!WRITE(*,*)
+!ENDIF
       IZ2=I; DZ=Z2-Z1; S=DZ/(IZ2-IZ1)
       J=0; DO IZ=IZ1+1,IZ2-1
        J=J+1; IC=TP(1)%IC(IZ); IR=TP(1)%IR(IZ)
        !## overwrite slope
        IDF(7)%X(IC,IR)=S
        IDF(8)%X(IC,IR)=Z1+S*REAL(J)
-!IF(IDF(8)%X(IC,IR).GT.IDF(5)%x(IC,IR))THEN
-!WRITE(*,*)
-!ENDIF     
       ENDDO      
       IZ1=0
      ENDIF
