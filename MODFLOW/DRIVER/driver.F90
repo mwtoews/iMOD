@@ -85,7 +85,7 @@ implicit none
  integer tsc ! debug variable
  integer :: date, hour, minute, second
 
- logical :: lrunfile, lnamfile, llpf, lipest, lpwt, lss, lrf
+ logical :: lrunfile, lnamfile, llpf, lipest, lpwt, lss, lrf, psolved
 
  integer :: isub, nsub, nnsub
  character(len=50), dimension(nsubmax) :: submstr
@@ -93,7 +93,7 @@ implicit none
  real :: hnoflo
 
 ! debug
- integer lswid, js, je, k, ilay, irow, icol, lun, cfn_getlun
+ integer lswid, js, je, k, ilay, irow, icol, lun, cfn_getlun, ncvgerr
 
 ! program section
 ! ------------------------------------------------------------------------------
@@ -580,7 +580,7 @@ implicit none
                 end if
              end if
 !####### END EXCHANGE: AfterSolveMetaSwap #####################################
-             call mf2005_performIter(retValMF2005)
+             call mf2005_performIter(retValMF2005,psolved)
              if (retValMF2005.ne.0) exitcode = -26
 
 !##### BEGIN EXCHANGE: AfterSolve #############################################
@@ -613,7 +613,7 @@ implicit none
 ! ... write results
           if (converged .and. exitcode.eq.0) then
              call osd_chdir(modwd2)
-             call mf2005_finishTimestep(retValMF2005)
+             call mf2005_finishTimestep(retValMF2005,psolved,ncvgerr)
              if (retValMF2005.ne.0) exitcode = -31
 
 !##### BEGIN EXCHANGE: AfterFinishTimeStepMODFLOW #############################
@@ -808,6 +808,11 @@ implicit none
     write(unit=*,fmt=*) 'ERROR, exit code: ',exitcode
     call exit(10)
  endif
+
+!C10-----END OF PROGRAM.
+      IF(NCVGERR.GT.0) THEN
+        WRITE(*,*) 'FAILED TO MEET SOLVER CONVERGENCE CRITERIA ',NCVGERR,' TIME(S)'
+      END IF
 
 ! next pest iteration
  if (.not.lipest) then

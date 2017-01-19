@@ -415,8 +415,8 @@ c ------------------------------------------------------------------------------
          call mf2005_staterestore(currentTime)                          ! DLT: components
       else if (dt.eq.0.d0 .and. timeStepCalculated) then                ! DLT: components
          ! calculate timestep again, restoreState needed                ! DLT: components
-         write(*,'(a,f20.5)') '  RESTORE STATE: MF2005  ',currentTime
-         call mf2005_staterestore(currentTime)                          ! DLT: components
+!         write(*,'(a,f20.5)') '  RESTORE STATE: MF2005  ',currentTime
+!         call mf2005_staterestore(currentTime)                          ! DLT: components
       else                                                              ! DLT: components
          ! save timestep (only when no restore has to be done)          ! DLT: components
          if (saveState) then                                            ! DLT: components
@@ -851,7 +851,7 @@ C
       return
       end
 c ******************************************************************************
-      subroutine mf2005_performIter(retVal)
+      subroutine mf2005_performIter(retVal,psolved)
 c 2011/06/16 renamed from mf2005_solve.
 
       use m_mf2005_main
@@ -861,7 +861,8 @@ c 2011/06/16 renamed from mf2005_solve.
 
 c arguments
       integer, intent(out) :: retVal
-
+      logical, intent(out) :: psolved
+      
 c local variables
       integer    :: ierr
       integer    :: igrid
@@ -951,7 +952,16 @@ c            IF (ICNVG.EQ.1) GOTO 33
             endif
 c  30      CONTINUE
 c          KITER = MXITER
+
+           !## could be solved based upon waterbalance error, maximum number of iterations finished
+           psolved=.false.
+           if(kiter.ge.mxiter)then
+            psolved=.true.; solverconverged=.true.
+           endif
+           
            KITER=KKITER                                                 ! DLT: instances
+          
+          
       enddo                                                             ! DLT: instances
       return
       end
@@ -999,7 +1009,7 @@ c ******************************************************************************
       end
 
 c =======
-      subroutine mf2005_finishTimestep(retVal)
+      subroutine mf2005_finishTimestep(retVal,psolved,ncvgerr)
 
       use m_mf2005_main
       use m_mf2005_iu
@@ -1007,11 +1017,13 @@ c =======
       implicit none
 c arguments
       integer, intent(out)    :: retVal
-
+      integer, intent(inout)  :: ncvgerr
+      logical, intent(in)     :: psolved
+      
 c local variables
       integer  IBDRET,ic1,ic2,ir1,ir2,il1,il2,idir
       integer    :: igrid
-
+      real :: budperc
 c init
       retVal=0
 
@@ -1138,7 +1150,7 @@ C  Observation and hydrograph simulated equivalents
      1                              CALL GWF2HYD7SFR7SE(1,IGRID)
 C
 C7C5---PRINT AND/OR SAVE DATA.
-          CALL GWF2BAS7OT(KKSTP,KKPER,ICNVG,1,IGRID)
+          CALL GWF2BAS7OT(KKSTP,KKPER,ICNVG,1,IGRID,BUDPERC)
           IF(IUNIT(IUIBS).GT.0) CALL GWF2IBS7OT(KKSTP,KKPER,
      1                            IUNIT(IUIBS),IGRID)
           IF(IUNIT(IUHUF2).GT.0)THEN
@@ -1157,7 +1169,22 @@ c SUB-Creep end
 C
 C7C6---JUMP TO END OF PROGRAM IF CONVERGENCE WAS NOT ACHIEVED.
 c          IF(ICNVG.EQ.0) GO TO 110
-C
+          !## check waterbalance whether to continue yes/no
+          if(psolved)then
+            NCVGERR=NCVGERR+1
+            WRITE(IOUT,87) BUDPERC
+   87       FORMAT(1X,'FAILURE TO MEET SOLVER CONVERGENCE CRITERIA',/
+     1       1X,'BUDGET PERCENT DISCREPANCY IS',F10.4)
+            IF(ABS(BUDPERC).GT.STOPER) THEN
+              WRITE(IOUT,*) 'STOPPING SIMULATION'
+              stop
+!              GO TO 110
+            ELSE
+              WRITE(IOUT,*) 'CONTINUING EXECUTION'
+!              ICNVG=1
+            END IF
+          END IF
+
           call splitfiles(iout,igrid)                                   ! DLT
 
 C-----END OF TIME STEP (KSTP) AND STRESS PERIOD (KPER) LOOPS
