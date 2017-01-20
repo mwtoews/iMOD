@@ -167,6 +167,7 @@ CONTAINS
        !## skip these ...?
        IF(BL1.LE.BL2)THEN
         WRITE(*,*) J,BL1,BL2,BL1-BL2,TRIM(IPF(IIPF)%INFO(DATCOL(3),J))
+        cycle
        ENDIF 
        
        PROF(1,NBRCH+1)%DISTANCE=-WD1

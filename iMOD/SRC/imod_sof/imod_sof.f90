@@ -47,10 +47,10 @@ TYPE(BPXOBJ),ALLOCATABLE,DIMENSION(:),PRIVATE :: BPX,PPX,TPX
 CONTAINS
 
  !###======================================================================
- SUBROUTINE SOF_EXPORT(IDF,N,IFORMAT,RAIN)
+ SUBROUTINE SOF_EXPORT(IDF,N,IFORMAT,RAIN,MINFRICTION)
  !###======================================================================
  IMPLICIT NONE
- INTEGER,INTENT(IN) :: N,IFORMAT
+ INTEGER,INTENT(IN) :: N,IFORMAT,MINFRICTION
  REAL,INTENT(INOUT) :: RAIN
  TYPE(IDFOBJ),INTENT(INOUT),DIMENSION(N) :: IDF
  REAL,DIMENSION(2) :: LX,LY
@@ -139,7 +139,7 @@ CONTAINS
 
    !## fill in river
 !   CALL SOF_EXPORT_FILL_OLD((/JC,IC/),(/JR,IR/),LX,LY,IDF,RAIN,JU,MF,NR)
-   CALL SOF_EXPORT_FILL((/JC,IC/),(/JR,IR/),LX,LY,IDF,RAIN,JU,MF,NR)
+   CALL SOF_EXPORT_FILL((/JC,IC/),(/JR,IR/),LX,LY,IDF,RAIN,JU,MF,NR,MINFRICTION)
 
    !## skip further trace, is visited location already
    IF(IDF(9)%X(IC,IR).EQ.2.0)EXIT
@@ -183,7 +183,7 @@ CONTAINS
  END SUBROUTINE SOF_EXPORT
  
  !###======================================================================
- SUBROUTINE SOF_EXPORT_FILL(IC,IR,LX,LY,IDF,RAIN,JU,MF,NR)
+ SUBROUTINE SOF_EXPORT_FILL(IC,IR,LX,LY,IDF,RAIN,JU,MF,NR,MINFRICTION)
  !###======================================================================
  IMPLICIT NONE
  REAL,PARAMETER :: MRC=0.03 !## clean, straight, full stage, no rifts or deep pools
@@ -191,7 +191,7 @@ CONTAINS
  REAL,PARAMETER :: C=1.0    !## default water resistance
  INTEGER,INTENT(INOUT) :: NR
  INTEGER,INTENT(IN),DIMENSION(:) :: IR,IC
- INTEGER,INTENT(IN) :: JU,MF
+ INTEGER,INTENT(IN) :: JU,MF,MINFRICTION
  REAL,INTENT(IN),DIMENSION(:) :: LX,LY
  REAL,INTENT(IN) :: RAIN
  TYPE(IDFOBJ),INTENT(INOUT),DIMENSION(:) :: IDF
@@ -204,7 +204,7 @@ CONTAINS
  !## total rain - only from from-coming pixels used for dimensions
  F=IDF(1)%X(IC(1),IR(1))
 
- IF(F.GE.1.0)THEN
+ IF(F.GE.MINFRICTION)THEN
 
   Q=RAIN*F
 
@@ -216,9 +216,13 @@ CONTAINS
    Y=0.0
    W=0.0
   ELSE
+
+!## iets beter zodat er wel een w uitkomt, die is essentieel ...
+
    !## waterdepth (assuming waterwidth of 1.0)
    W=1.0
    Y=((Q*MRC)/(W*SQRT(S)))**(3.0/5.0)
+
   ENDIF
 
   !## limit values
@@ -245,6 +249,7 @@ CONTAINS
   IF(JU.GT.0)THEN
    !## verhouding w and d is vergelijking y=0.5*w oid
    W     =2*Y
+   W=MAX(0.1,W)
 !   IF(W.GT.0.0)THEN
 
     DO I=1,2
@@ -256,6 +261,8 @@ CONTAINS
      WRITE(JU,'(6(G15.7,A),2(I4,A))') LX(I),',',LY(I),','//TRIM(ITOS(MF))//',Segment_'//TRIM(ITOS(MF))//',',W,',',RSTAGE,',', &
           RBOT,',',PERM,',',IC(I),',',IR(I)
     ENDDO
+!   ELSE
+!    WRITE(*,*) 'Width has to be larger than 0.0'
 !   ENDIF
   ENDIF
  

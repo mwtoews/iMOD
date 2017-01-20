@@ -1680,7 +1680,7 @@ IRLOOP: DO IR=MAX(1,IROW-1),MIN(NROW,IROW+1)
  IF(ALLOCATED(RVAL))DEALLOCATE(RVAL); ALLOCATE(RVAL(NDIM,2)); RVAL=0.0
 
  !## to be filled in later - number of streams
- LINE='NaN1,'//TRIM(ITOS(IRDFLG))//','//TRIM(ITOS(IPTFLG))//',0'
+ LINE='NaN1#,'//TRIM(ITOS(IRDFLG))//','//TRIM(ITOS(IPTFLG))//',0'
  WRITE(JU,'(A)') TRIM(LINE)
 
  !## write cross-sectional data
