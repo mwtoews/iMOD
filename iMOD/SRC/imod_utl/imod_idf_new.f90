@@ -374,6 +374,11 @@ CONTAINS
  ! 8 = sum (1/c)*ratio
  ! 9 = percentile 
  !10 = blockvalue
+ !11 = darcian not supported here
+ !12 = homogenization not supported here
+ !13 = global-local not supported here
+ !14 = 3-d simulation not supported here
+ !15 = zonation
  !###======================================================================
  IMPLICIT NONE
  TYPE(IDFOBJ),INTENT(INOUT) :: IDFM 
@@ -381,7 +386,7 @@ CONTAINS
  INTEGER,INTENT(IN) :: SCLTYPE_UP,SCLTYPE_DOWN
  REAL,INTENT(IN) :: PERC
  INTEGER :: IRC,IRC1,IRC2,ICC,ICC1,ICC2,IRM,ICM,MXN,MXM,N,M,I,IINT,IDOWN,IR1,IR2
- REAL,ALLOCATABLE,DIMENSION(:) :: FREQ
+ REAL,ALLOCATABLE,DIMENSION(:,:) :: FREQ
  REAL :: SVALUE,DXM,DYM,DXC,DYC
  DOUBLE PRECISION :: XD1,XD2,YD1,YD2,TINY
    
@@ -406,14 +411,20 @@ CONTAINS
 
  !## most-frequent,percentiles
  MXN=1;MXM=1
- IF(SCLTYPE_UP.EQ.7.OR.SCLTYPE_UP.EQ.9)THEN 
+ IF(SCLTYPE_UP.EQ.7.OR.SCLTYPE_UP.EQ.9.OR.SCLTYPE_UP.EQ.15)THEN 
   MXN=0; DO I=1,IDFM%NCOL; N=(IDFM%SX(I)-IDFM%SX(I-1))/IDFC%DX; MXN=MAX(MXN,N); END DO
   MXN=MXN+2
   MXM=0; DO I=1,IDFM%NROW; M=(IDFM%SY(I-1)-IDFM%SY(I))/IDFC%DY; MXM=MAX(MXM,M); END DO
   MXM=MXM+2
- ENDIF
- ALLOCATE(FREQ(MXN*MXM))
 
+  IF(SCLTYPE_UP.EQ.15)THEN
+   ALLOCATE(FREQ(MXN*MXM,2))
+  ELSE
+   ALLOCATE(FREQ(MXN*MXM,1))
+  ENDIF
+
+ ENDIF
+ 
  !## read/scale parameters
  DO IRM=1,IDFM%NROW
 
@@ -478,7 +489,8 @@ CONTAINS
 
  !## smooth only if cs.gt.dx
  IF(IDOWN.EQ.1.AND.SCLTYPE_DOWN.EQ.1)CALL IDFSMOOTH(IDFC,IDFM,IINT)
-
+ IF(ALLOCATED(FREQ))DEALLOCATE(FREQ)
+ 
  IDFREADSCALE_GETX=.TRUE.
 
  END FUNCTION IDFREADSCALE_GETX
@@ -515,18 +527,18 @@ CONTAINS
  !###====================================================================
  IMPLICIT NONE
  TYPE(IDFOBJ),INTENT(INOUT) :: IDF
- REAL,INTENT(OUT),DIMENSION(:) :: FREQ
+ REAL,INTENT(OUT),DIMENSION(:,:) :: FREQ
  REAL,INTENT(IN) :: SFCT
  INTEGER,INTENT(IN) :: IR1,IR2,IC1,IC2,SCLTYPE
  REAL,INTENT(OUT) :: SVALUE
- INTEGER :: IROW,ICOL,NAJ,IR,IC,NROW,NCOL,NLAY
- REAL :: IDFVAL,NVALUE,NFRAC
+ INTEGER :: IROW,ICOL,NAJ,IR,IC,NROW,NCOL,NLAY,I,N
+ REAL :: IDFVAL,NVALUE,NFRAC,F
  REAL,DIMENSION(1) :: XTEMP
 
  SVALUE=0.0 !## scale value
  NVALUE=0.0
  SELECT CASE (SCLTYPE)
-  CASE (7,9)
+  CASE (7,9,15)
    FREQ=IDF%NODATA
  END SELECT
 
@@ -577,10 +589,6 @@ CONTAINS
        !## count number of values ne nodata - including zero
        NVALUE=NVALUE+1.0
       ENDIF
-!      IF(IDFVAL.NE.IDF%NODATA.AND.IDFVAL.GT.0.0)THEN
-!       SVALUE=SVALUE+LOG(IDFVAL) 
-!       NVALUE=NVALUE+1.0
-!      ENDIF
      ENDDO
     ENDDO
    !## sum, sum inverse
@@ -589,10 +597,6 @@ CONTAINS
      IR=IR+1; IC=0 
      DO ICOL=IC1,IC2
       IC=IC+1; IDFVAL=IDF%X(ICOL,IROW) 
-!      IF(IDFVAL.NE.IDF%NODATA.AND.IDFVAL.NE.0.0)THEN
-!       SVALUE=SVALUE+(1.0/IDFVAL)
-!       NVALUE=NVALUE+1.0
-!      ENDIF
       IF(IDFVAL.NE.IDF%NODATA)THEN
        IF(IDFVAL.NE.0.0)SVALUE=SVALUE+(1.0/IDFVAL)
        NVALUE=NVALUE+1.0
@@ -600,14 +604,14 @@ CONTAINS
      ENDDO
     ENDDO
    !## most frequent occurence,percentile
-   CASE (7,9)
+   CASE (7,9,15)
     DO IROW=IR1,IR2
      IR=IR+1; IC=0 
      DO ICOL=IC1,IC2
       IC=IC+1; IDFVAL=IDF%X(ICOL,IROW) 
       IF(IDFVAL.NE.IDF%NODATA)THEN
        NVALUE=NVALUE+1.0
-       FREQ(INT(NVALUE))=IDFVAL
+       FREQ(INT(NVALUE),1)=IDFVAL
       ENDIF
      ENDDO
     ENDDO
@@ -666,10 +670,10 @@ CONTAINS
        NVALUE=NVALUE+1.0
       ENDIF
      !## most frequent occurence,percentile
-     CASE (7,9)
+     CASE (7,9,15)
       IF(IDFVAL.NE.IDF%NODATA)THEN
        NVALUE=NVALUE+1.0
-       FREQ(INT(NVALUE))=IDFVAL
+       FREQ(INT(NVALUE),1)=IDFVAL
       ENDIF
      CASE (10)
       SVALUE=IDFVAL
@@ -705,8 +709,9 @@ CONTAINS
     SVALUE=0.0
    ENDIF
   CASE (7)
-   CALL UTL_QKSORT(SIZE(FREQ),INT(NVALUE),FREQ)
-   SVALUE=UTL_GETMOSTFREQ(FREQ,SIZE(FREQ),INT(NVALUE))
+   N=INT(NVALUE)
+   CALL UTL_QKSORT(SIZE(FREQ,1),N,FREQ(:,1))
+   SVALUE=UTL_GETMOSTFREQ(FREQ(:,1),SIZE(FREQ,1),N,IDF%NODATA)
   CASE (8)  !## PWT c-waarde reciprook opgeteld, terug naar gem. dagen * fraction
    NFRAC=NVALUE/REAL(((IR2-IR1)+1)*((IC2-IC1)+1))
    IF(SVALUE.NE.0.0)THEN
@@ -717,6 +722,27 @@ CONTAINS
   CASE (9)  !## percentile
    CALL UTL_GETMED(FREQ,INT(NVALUE),IDF%NODATA,(/SFCT*100.0/),1,NAJ,XTEMP)
    SVALUE=XTEMP(1)
+  CASE (15)  !## zonation
+   N=INT(NVALUE)
+   IF(MAXVAL(FREQ(1:N,1)).GT.0.0)THEN
+    !## get fractions
+    DO I=1,N; F=MOD(FREQ(I,1),1.0); IF(F.EQ.0.0)F=1.0; FREQ(I,2)=F; ENDDO
+    !## remove fractions
+    DO I=1,N; FREQ(I,1)=INT(FREQ(I,1)); ENDDO
+    !## sort zones
+    CALL UTL_QKSORT(SIZE(FREQ,1),N,FREQ(:,1)) !,SIZE(FREQ,1),N)
+    !## get most available zone
+    SVALUE=UTL_GETMOSTFREQ(FREQ(:,1),SIZE(FREQ,1),N,0.0) !## exclude zone.eq.0
+    IF(SVALUE.GT.0)THEN
+     !## set fraction to zero for zones not equal to most available zone
+     DO I=1,N; IF(INT(SVALUE).NE.INT(FREQ(I,1)))FREQ(I,2)=0.0; ENDDO
+     !## get mean fraction
+     F=0; DO I=1,N; F=F+FREQ(I,2); ENDDO; F=F/REAL(N)
+     !## add fraction to most available zone
+     IF(F.LT.1.0)SVALUE=SVALUE+F
+    ENDIF     
+   ENDIF
+
  END SELECT
 
  END SUBROUTINE IDFGETBLOCKVALUE
@@ -1404,21 +1430,21 @@ CONTAINS
  END FUNCTION IDFGETXYVAL
 
  !#####=================================================================
- REAL FUNCTION IDFGETAGGREGATEDVAL(IDF,XC,YC,CS,CS1,VALS,AS,T) !NCOL1,NROW1,XMIN1,YMAX1,CS1,NODAT,T,AS,VALS)
+ REAL FUNCTION IDFGETAGGREGATEDVAL(IDF,XC,YC,CS,CS1,VALS,AS,T)
  !#####=================================================================
  IMPLICIT NONE
  TYPE(IDFOBJ),INTENT(IN) :: IDF
- INTEGER,INTENT(IN) :: AS,T !NCOL1, NROW1,T,AS
- REAL,INTENT(IN) :: XC,YC,CS,CS1 ! XMIN1, YMAX1, NODAT
+ INTEGER,INTENT(IN) :: AS,T 
+ REAL,INTENT(IN) :: XC,YC,CS,CS1 
  REAL,INTENT(INOUT),DIMENSION(AS) :: VALS
  INTEGER :: ICOL,IROW,I,INTR,J,C,NAJ
- REAL :: CSRATIO,XC2,YC2 !,IDFGETXYVAL!,GETMAJORITY
+ REAL :: CSRATIO,XC2,YC2 
  REAL,DIMENSION(1) :: VAL
 
  CSRATIO = CS/CS1
 
  IF (CSRATIO.LE.1) THEN
-  VAL(1)=IDFGETXYVAL(IDF,XC,YC) !IU,XC,YC,NCOL1,NROW1,XMIN1,YMAX1,CS1,NODAT)
+  VAL(1)=IDFGETXYVAL(IDF,XC,YC) 
  ELSE
   !## Retrieve proper xy of underlaying idf
   INTR = NINT(CSRATIO)
@@ -1429,7 +1455,7 @@ CONTAINS
    YC2 = YC-CS1
    DO J=1,INTR
     YC2 = YC2+J*1/CSRATIO*CS1
-    VAL(1) = IDFGETXYVAL(IDF,XC2,YC2) !IU,XC2,YC2,NCOL1,NROW1,XMIN1,YMAX1,CS1,NODAT)
+    VAL(1) = IDFGETXYVAL(IDF,XC2,YC2) 
     IF(VAL(1).NE.IDF%NODATA)THEN
      C=C+1; VALS(C)=VAL(1)
     ENDIF
@@ -1437,11 +1463,10 @@ CONTAINS
   ENDDO
 
   SELECT CASE(T)
-   CASE(1) !NOMINAL DATA (I.E. LANDUSE OR SOILDATA)
-   !majority values
-    VAL=UTL_GETMOSTFREQ(VALS,C,C) !AS,AS)
-   CASE(2) !ORDINAL ==> Get median value (I.E. ELEVATION, HEADS ...)
-!   VAL = UTL_GETMED(VALS,AS,NODAT,50.0,NAJ)
+   CASE(1) !## nominal data (i.e. landuse or soildata)
+    !## majority values
+    VAL=UTL_GETMOSTFREQ(VALS,C,C,IDF%NODATA)
+   CASE(2) !## ordinal ==> get median value (i.e. elevation, heads ...)
     CALL UTL_GETMED(VALS,C,IDF%NODATA,(/50.0/),1,NAJ,VAL)
   END SELECT
 
