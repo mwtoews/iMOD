@@ -3398,7 +3398,7 @@ TOPICLOOP: DO ITOPIC=1,MAXTOPICS
  !## write nam file
  IF(.NOT.PMANAGER_SAVEMF2005_NAM(FNAME,DIR,DIRMNAME,IPRT))RETURN
  !## get area of simulation / allocate arrays
- IF(.NOT.PMANAGER_SAVEMF2005_SIM(ISS))RETURN
+ IF(.NOT.PMANAGER_SAVEMF2005_SIM(ISS,IBATCH))RETURN
  !## write meta-data file
  IF(.NOT.PMANAGER_SAVEMF2005_MET(DIR,DIRMNAME))RETURN
 
@@ -3488,6 +3488,7 @@ TOPICLOOP: DO ITOPIC=1,MAXTOPICS
   IF(.NOT.PMANAGER_SAVEMF2005_LAK_READ(IPER,IPRT,KPER))RETURN
   IF(.NOT.PMANAGER_SAVEMF2005_LAK_SAVE(IULAK,IINI,IBATCH,DIR,KPER=KPER,DIRMNAME=DIRMNAME))RETURN
  ENDDO
+ CLOSE(IULAK)
   
  !## combine olf/drn and isg/riv
  IF(LOLF.AND.LDRN)THEN
@@ -3685,17 +3686,17 @@ TOPICLOOP: DO ITOPIC=1,MAXTOPICS
  END FUNCTION PMANAGER_SAVEMF2005_NAM
 
  !###======================================================================
- LOGICAL FUNCTION PMANAGER_SAVEMF2005_SIM(ISS)
+ LOGICAL FUNCTION PMANAGER_SAVEMF2005_SIM(ISS,IBATCH)
  !###======================================================================
  IMPLICIT NONE
- INTEGER,INTENT(IN) :: ISS
+ INTEGER,INTENT(IN) :: ISS,IBATCH
  INTEGER :: ILAY
  
  PMANAGER_SAVEMF2005_SIM=.FALSE.
  
  !## read idf for dimensions
  CALL IDFNULLIFY(IDF); IFULL=0
- IF(.NOT.PMANAGER_INIT_SIMAREA(IDF))RETURN
+ IF(.NOT.PMANAGER_INIT_SIMAREA(IDF,IBATCH))RETURN
 
  IF(ISUBMODEL.EQ.1)THEN
   !## include buffer to simulation window
@@ -8078,10 +8079,10 @@ STOP
 
  !## look for any boundary file (first) not equal to constant values
  ALLOCATE(IDF(1)); CALL IDFNULLIFY(IDF(1))
- IF(.NOT.PMANAGER_INIT_SIMAREA(IDF(1)))THEN
+ IF(.NOT.PMANAGER_INIT_SIMAREA(IDF(1),IBATCH))THEN
   CALL IDFDEALLOCATE(IDF,SIZE(IDF)); DEALLOCATE(IDF); RETURN
  ENDIF
- !## found any of the given IDF-files that coudl serve as simulation window
+ !## found any of the given IDF-files that could serve as simulation window
  IF(IDF(1)%DX.GT.0.0)THEN
   CALL WDIALOGPUTREAL(IDF_REAL5,IDF(1)%DX,'(G12.7)') 
  ELSE
@@ -8259,14 +8260,17 @@ STOP
  END FUNCTION PMANAGER_INITSIM
 
  !###======================================================================
- LOGICAL FUNCTION PMANAGER_INIT_SIMAREA(IDF)
+ LOGICAL FUNCTION PMANAGER_INIT_SIMAREA(IDF,IBATCH)
  !###======================================================================
  IMPLICIT NONE
  TYPE(IDFOBJ),INTENT(INOUT) :: IDF
+ INTEGER,INTENT(IN) :: IBATCH
  INTEGER :: I,J,K,II
 
  PMANAGER_INIT_SIMAREA=.FALSE.
 
+ IF(PBMAN%IWINDOW.EQ.1)THEN; PMANAGER_INIT_SIMAREA=.TRUE.; RETURN; ENDIF
+ 
 JLOOP: DO K=1,SIZE(TOPICS)
   !## skip wel,mnw,hfb,isg,sfr
   SELECT CASE (K)
@@ -8289,6 +8293,18 @@ JLOOP: DO K=1,SIZE(TOPICS)
    ENDDO
   ENDDO
  ENDDO JLOOP
+ 
+ IF(K.GT.SIZE(TOPICS))THEN
+  IF(IBATCH.EQ.0)THEN
+   CALL WMESSAGEBOX(OKONLY,EXCLAMATIONICON,COMMONOK,'iMOD cannot determine the size of the model.'//CHAR(13)// &
+     'Please specify at least ONE IDF file in the PRJ file or'//CHAR(13)// &
+     'specify a simulation window beforehand','Error')
+  ELSE
+   WRITE(*,'(/A/)') 'iMOD cannot determine the size of the model. Please specify at least ONE IDF file in the PRJ file or '// &
+     'specify a simulation window beforehand'
+  ENDIF
+  RETURN
+ ENDIF
  
  PMANAGER_INIT_SIMAREA=.TRUE.
 
