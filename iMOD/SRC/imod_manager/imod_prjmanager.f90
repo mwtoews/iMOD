@@ -6944,9 +6944,6 @@ STOP
       !## take the next no fault on this modellayer
       IF(FCT.EQ.0.0)CYCLE
      ENDIF
- 
-!     !## write line in genfile
-!     IF(IWRITE.EQ.1)CALL PMANAGER_SAVEMF2005_HFB_GENFILES(IUGEN(ILAY),IPC,IDF,NROW,NCOL,IROW,ICOL)
 
      !## reconstruct to a factor to be multiplied with the conductance, input is a resistance
      T1=KD(ILAY)%X(ICOL,IROW);  T2=KD(ILAY)%X(ICOL+1,IROW)
@@ -6961,19 +6958,22 @@ STOP
        IF(K.GT.0.0)THEN
         C = DX/K
         IF(FCT.GT.0.0)FCT=C/FCT
+        !## not to become less than original - not feasible
+        FCT=MIN(1.0,FCT)
        ELSE
-        FCT=0.0
+        !## k-value le 0.0
+        FCT=-999.0
        ENDIF
-       !## not to become less than original - not feasible
-       FCT=MIN(1.0,FCT)
       ELSE
-       FCT=0.0
+       !## skip this one, layer thickness is zero
+       FCT=-999.0
       ENDIF
      ELSE
-      FCT=0.0 
+      !## skip this one, no conductance/active cell involved
+      FCT=-999.0
      ENDIF
      !## enter fault if resistance <> 0.0
-     IF(ICOL+1.LE.NCOL)THEN
+     IF(ICOL+1.LE.NCOL.AND.(FCT.GT.0.0.AND.FCT.LT.1.0)))THEN
       NHFB(ILAY)=NHFB(ILAY)+1
       IF(IWRITE.EQ.1)THEN
        WRITE(IU,'(5(I10,1X),G12.7)') ILAY,IROW,ICOL,IROW,ICOL+1,FCT !## x-direction
@@ -7007,9 +7007,6 @@ STOP
       !## take the next no fault on this modellayer
       IF(FCT.EQ.0.0)CYCLE
      ENDIF
-   
-!     !## write line in genfile
-!     IF(IWRITE.EQ.1)CALL PMANAGER_SAVEMF2005_HFB_GENFILES(IUGEN(ILAY),IPC,IDF,NROW,NCOL,IROW,ICOL) 
 
      T1=KD(ILAY)%X(ICOL,IROW);  T2=KD(ILAY)%X(ICOL,IROW+1)
      B1=BND(ILAY)%X(ICOL,IROW); B2=BND(ILAY)%X(ICOL,IROW+1)
@@ -7023,19 +7020,22 @@ STOP
        IF(K.GT.0.0)THEN
         C = DY/K
         IF(FCT.GT.0.0)FCT=C/FCT
+        !## not to become less than original
+        FCT=MIN(1.0,FCT)
        ELSE
-        FCT=0.0
+        !## k-value le 0.0
+        FCT=-999.0
        ENDIF
-       !## not to become less than original
-       FCT=MIN(1.0,FCT)
       ELSE
-       FCT=0.0
+       !## skip this one, layer thickness is zero
+       FCT=-999.0
       ENDIF
      ELSE
-      FCT=0.0 
+      !## skip this one, no conductance/active cell involved
+      FCT=-999.0
      ENDIF
      !## enter fault if resistance <> 0.0
-     IF(IROW+1.LT.NROW)THEN
+     IF(IROW+1.LT.NROW.AND.(FCT.GT.0.0.AND.FCT.LT.1.0))THEN
       NHFB(ILAY)=NHFB(ILAY)+1
       IF(IWRITE.EQ.1)THEN
        WRITE(IU,'(5(I10,1X),G12.7)') ILAY,IROW,ICOL,IROW+1,ICOL,FCT !## y-direction
