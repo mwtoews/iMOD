@@ -415,8 +415,8 @@ c ------------------------------------------------------------------------------
          call mf2005_staterestore(currentTime)                          ! DLT: components
       else if (dt.eq.0.d0 .and. timeStepCalculated) then                ! DLT: components
          ! calculate timestep again, restoreState needed                ! DLT: components
-!         write(*,'(a,f20.5)') '  RESTORE STATE: MF2005  ',currentTime
-!         call mf2005_staterestore(currentTime)                          ! DLT: components
+         write(*,'(a,f20.5)') '  RESTORE STATE: MF2005  ',currentTime
+         call mf2005_staterestore(currentTime)                          ! DLT: components
       else                                                              ! DLT: components
          ! save timestep (only when no restore has to be done)          ! DLT: components
          if (saveState) then                                            ! DLT: components
