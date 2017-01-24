@@ -44,13 +44,14 @@
       INTEGER*4 iact
       INTEGER*4 iter
       REAL*8    dt
+      LOGICAL*4 cvg   ! output
       LOGICAL*4 ready ! output
 !
 !     Read data for setting up simulation, check that time is within meteo period
       iact = 0
       iter = 0
 #ifdef INCLUDE_METASWAP         
-      CALL SIMGRO(iact,iter,time,dt,ready)
+      CALL SIMGRO(iact,iter,time,dt,cvg,ready)
 #else
       write(*,*) 'Error: MetaSWAP_initSimulation'; stop 1
 #endif
@@ -87,14 +88,15 @@
       INTEGER*4 iact
       INTEGER*4 iter
       REAL*8    time_arg, time
-      REAL*8    dt                
+      REAL*8    dt   
+      LOGICAL*4 cvg   ! output
       LOGICAL*4 ready
 !
 !     Determine the end-time of meteo data
       iact = 10
       iter = 0
 #ifdef INCLUDE_METASWAP         
-      CALL SIMGRO(iact,iter,time,dt,ready)        
+      CALL SIMGRO(iact,iter,time,dt,cvg,ready)        
 #else
       write(*,*) 'Error: MetaSWAP_getEndofCurrentTimestep'; stop 1
 #endif
@@ -112,6 +114,7 @@
       INTEGER*4 iter
       REAL*8    time
       REAL*8    dt     ! input
+      LOGICAL*4 cvg   ! output
       LOGICAL*4 ready
 !
 !     If this is the first time step:
@@ -122,7 +125,7 @@
       iact = 1
       iter = 0      
 #ifdef INCLUDE_METASWAP
-      CALL SIMGRO(iact,iter,time,dt,ready)        
+      CALL SIMGRO(iact,iter,time,dt,cvg,ready)        
 #else
       write(*,*) 'Error: MetaSWAP_initTimestep'; stop 1
 #endif      
@@ -138,6 +141,7 @@
       INTEGER*4 iter
       REAL*8    time
       REAL*8    dt     
+      LOGICAL*4 cvg   ! output
       LOGICAL*4 ready
 !
 !     No actions needed
@@ -158,13 +162,14 @@
       INTEGER*4 iter  ! input
       REAL*8    time
       REAL*8    dt
+      LOGICAL*4 cvg   ! output
       LOGICAL*4 ready
 !
 !     Update the unsaturated zone
 !     Compute recharges and storage coefficients for MODFLOW
       iact = 2
 #ifdef INCLUDE_METASWAP      
-      CALL SIMGRO(iact,iter,time,dt,ready)   
+      CALL SIMGRO(iact,iter,time,dt,cvg,ready)   
 #else
       write(*,*) 'Error: MetaSWAP_performIter'; stop 1
 #endif
@@ -195,6 +200,7 @@
       INTEGER*4 iter  
       REAL*8    time
       REAL*8    dt
+      LOGICAL*4 cvg   ! output
       LOGICAL*4 ready  
 !
 !     Process MODFLOW heads for update of:
@@ -202,7 +208,7 @@
 !     - MetaSWAP groundwater level
       iact = 3
 #ifdef INCLUDE_METASWAP      
-      CALL SIMGRO(iact,iter,time,dt,ready)        
+      CALL SIMGRO(iact,iter,time,dt,cvg,ready)        
 #else
       write(*,*) 'Error: MetaSWAP_finishIter'; stop 1
 #endif
@@ -219,6 +225,7 @@
       INTEGER*4 iter
       REAL*8    time  ! input for synchro check
       REAL*8    dt
+      LOGICAL*4 cvg   ! output
       LOGICAL*4 ready
 !
 !     Finalize unsaturated zone
@@ -226,7 +233,7 @@
 !     Write data to file
       iact = 4
 #ifdef INCLUDE_METASWAP      
-      CALL SIMGRO(iact,iter,time,dt,ready)
+      CALL SIMGRO(iact,iter,time,dt,cvg,ready)
 #else
       write(*,*) 'Error: MetaSWAP_finishTimestep'; stop 1
 #endif
@@ -243,12 +250,13 @@
       INTEGER*4 iter
       REAL*8    time 
       REAL*8    dt
+      LOGICAL*4 cvg   ! output
       LOGICAL*4 ready
 !
 !     Finalize simulation
       iact = 5
 #ifdef INCLUDE_METASWAP      
-      CALL SIMGRO(iact,iter,time,dt,ready)
+      CALL SIMGRO(iact,iter,time,dt,cvg,ready)
 #else
       write(*,*) 'Error: MetaSWAP_finishSimulation'; stop 1
 #endif
@@ -279,12 +287,13 @@
       INTEGER*4 iter
       REAL*8    time 
       REAL*8    dt
-      LOGICAL*4 status
+      LOGICAL*4 cvg   ! output
+      LOGICAL*4 ready
 !
       iact = -1
 
 #ifdef INCLUDE_METASWAP      
-      CALL SIMGRO(iact,iter,time,dt,status)
+      CALL SIMGRO(iact,iter,time,dt,cvg,ready)
 #else
       write(*,*) 'Error: MetaSWAP_restoreState'; stop 1
 #endif

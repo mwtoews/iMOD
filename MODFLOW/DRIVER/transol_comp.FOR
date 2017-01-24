@@ -110,13 +110,14 @@
       INTEGER*4 iter_transol  ! input
       REAL*8    time
       REAL*8    dt
-      LOGICAL*4 conv
+      LOGICAL*4 cvg   ! output
+      LOGICAL*4 ready
 !
 !     Restore the SIMGRO state if this is the second iteration of TRANSOL
 #ifdef INCLUDE_METASWAP 
       IF (iter_transol .GE. 2) THEN
         iact = -1
-        CALL SIMGRO(iact,iter,time,dt,conv)        
+        CALL SIMGRO(iact,iter,time,dt,cvg,ready)        
       ENDIF
 #else
       write(*,*) 'Error: TRANSOL_prepareIter'; stop 1
@@ -147,13 +148,14 @@
       INTEGER*4 iter
       REAL*8    time
       REAL*8    dt
-      LOGICAL*4 conv
+      LOGICAL*4 cvg   ! output
+      LOGICAL*4 ready
 !
 !     Downscaled moisture profiles
 !     TRANSOL concentrations
       iact = 41
 #ifdef INCLUDE_METASWAP 
-      CALL SIMGRO(iact,iter,time,dt,conv)
+      CALL SIMGRO(iact,iter,time,dt,cvg,ready)
 #else
       write(*,*) 'Error: TRANSOL_performIter'; stop 1
 #endif
@@ -167,7 +169,7 @@
 !     - PUT salt concentrations and balance terms to MOZART     must now go online
 !
 !------------------------------------------------------------------------------
-      SUBROUTINE TRANSOL_finishIter(iter_transol,conv)
+      SUBROUTINE TRANSOL_finishIter(iter_transol,cvg)
 !
       IMPLICIT   NONE
 
@@ -176,10 +178,11 @@
       INTEGER*4 iter_transol  ! input
       REAL*8    time
       REAL*8    dt
-      LOGICAL*4 conv   
+      LOGICAL*4 cvg   ! output
+      LOGICAL*4 ready   
 !
 !     TRANSOL does not monitor convergence (at least, not yet)
-      conv = .TRUE.
+      cvg = .TRUE.
 ! 
 #ifdef EXCLUDE_TRANSOL 
       write(*,*) 'Error: TRANSOL_finishIter'; stop 1
@@ -196,12 +199,13 @@
       INTEGER*4 iter
       REAL*8    time  ! input, used for synchro check
       REAL*8    dt
-      LOGICAL*4 conv
+      LOGICAL*4 cvg   ! output
+      LOGICAL*4 ready
 !
 !     Write data to file
       iact = 42
 #ifdef INCLUDE_METASWAP 
-      CALL SIMGRO(iact,iter,time,dt,conv)        
+      CALL SIMGRO(iact,iter,time,dt,cvg,ready)        
 #else      
       write(*,*) 'Error: TRANSOL_finishTimestep'; stop 1
 #endif    
@@ -218,7 +222,8 @@
       INTEGER*4 iter
       REAL*8    time 
       REAL*8    dt
-      LOGICAL*4 conv
+      LOGICAL*4 cvg   ! output
+      LOGICAL*4 ready
 !
 !     Finalize is triggered by MetaSWAP
 !  
