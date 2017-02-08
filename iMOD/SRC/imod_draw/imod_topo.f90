@@ -422,12 +422,22 @@ CONTAINS
  INTEGER,INTENT(IN) :: NCOL,NROW
  CHARACTER(LEN=256),INTENT(IN) :: FNAME
  INTEGER :: IW,IH,I
+ LOGICAL :: LEX
+ 
+ INQUIRE(FILE=FNAME,EXIST=LEX)
+ IF(.NOT.LEX)THEN
+  CALL WMESSAGEBOX(OKONLY,EXCLAMATIONICON,COMMONOK,'iMOD cannot find image:'//CHAR(13)//TRIM(FNAME)//CHAR(13)// &
+     'It will be removed from the list to avoid more error messages.','Error'); IBITMAP=0
+  RETURN
+ ENDIF
  
  IW=NCOL !MIN(WINFOBITMAP(MPW%IBITMAP,BITMAPWIDTH) ,NCOL)
  IH=NROW !MIN(WINFOBITMAP(MPW%IBITMAP,BITMAPHEIGHT),NROW)
  CALL WBITMAPCREATE(IBITMAP,IW,IH)
  IF(IBITMAP.EQ.0)THEN
-  CALL WMESSAGEBOX(OKONLY,EXCLAMATIONICON,COMMONOK,'Cannot create memory for image:'//CHAR(13)//TRIM(FNAME),'Error')
+  CALL WMESSAGEBOX(OKONLY,EXCLAMATIONICON,COMMONOK,'Cannot create memory for image:'//CHAR(13)//TRIM(FNAME)//CHAR(13)// &
+   'Probably the image is too large.'//CHAR(13)//'Width is '//TRIM(ITOS(IW))//' and heigth is '//TRIM(ITOS(IH))//CHAR(13)// &
+   'It will be removed from the list to avoid more error messages.','Error')
   RETURN
  ENDIF
  CALL WBITMAPSTRETCHMODE(STRETCHHALFTONE)
@@ -436,7 +446,7 @@ CONTAINS
  I=WINFOERROR(1)
  IF(I.NE.0)THEN
   CALL WMESSAGEBOX(OKONLY,EXCLAMATIONICON,COMMONOK,'Cannot read/load image:'//CHAR(13)//TRIM(FNAME)//CHAR(13)// &
-     'It will be remove from the listto avoid more error messages.','Error')
+     'It will be removed from the list to avoid more error messages.','Error')
   CALL WBITMAPDESTROY(IBITMAP); IBITMAP=0; RETURN 
  ENDIF
  CALL WBITMAPSTRETCHMODE(0)
