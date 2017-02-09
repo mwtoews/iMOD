@@ -704,6 +704,9 @@ CONTAINS
   !## kriging
   CASE (-6,6)
    
+   !## blank out initial grid to use as barrier ...
+!   CALL ASC2IDF_INT_BLANKOUT()
+
    IF(MINP.EQ.0)MINP=SIZE(XP)
    !## each cell need to be interpolated
    IDF(1)%X=IDF(1)%NODATA
@@ -756,7 +759,7 @@ CONTAINS
    IDF(1)%BOT=ASSF_TOP-ASSF_DZ
 
    !## for indicator between 0.0-1.0
-   IF(ASSF_INDICATOR.EQ.1)THEN
+   IF(ASSF_INDICATOR.GT.0)THEN
     DO IROW=1,IDF(1)%NROW
      DO ICOL=1,IDF(1)%NCOL
       IDF(1)%X(ICOL,IROW)=MIN(1.0,MAX(0.0,IDF(1)%X(ICOL,IROW)))
@@ -764,35 +767,37 @@ CONTAINS
     ENDDO
    ENDIF
 
-   !## blank-out in case surface has been read in
-   IF(TRIMDEPTH_IDF(1)%FNAME.NE.'')THEN
-    DO IROW=1,IDF(1)%NROW
-     DO ICOL=1,IDF(1)%NCOL
-      CALL IDFGETLOC(IDF(1),IROW,ICOL,X,Y)
-      Z=IDFGETXYVAL(TRIMDEPTH_IDF(1),X,Y)
-      IF(Z.NE.TRIMDEPTH_IDF(1)%NODATA)THEN
-       IF((IDF(1)%TOP+IDF(1)%BOT)/2.0.GT.Z)IDF(1)%X(ICOL,IROW)=IDF(1)%NODATA
-      ELSE
-       IDF(1)%X(ICOL,IROW)=IDF(1)%NODATA
-      ENDIF
-     ENDDO
-    ENDDO
-   ENDIF
-  
-   !## blank-out in case surface has been read in
-   IF(TRIMDEPTH_IDF(2)%FNAME.NE.'')THEN
-    DO IROW=1,IDF(1)%NROW
-     DO ICOL=1,IDF(1)%NCOL
-      CALL IDFGETLOC(IDF(1),IROW,ICOL,X,Y)
-      Z=IDFGETXYVAL(TRIMDEPTH_IDF(2),X,Y)
-      IF(Z.NE.TRIMDEPTH_IDF(2)%NODATA)THEN
-       IF((IDF(1)%TOP+IDF(1)%BOT)/2.0.LT.Z)IDF(1)%X(ICOL,IROW)=IDF(1)%NODATA
-      ELSE
-       IDF(1)%X(ICOL,IROW)=IDF(1)%NODATA
-      ENDIF
-     ENDDO
-    ENDDO
-   ENDIF
+   CALL ASC2IDF_INT_BLANKOUT()
+   
+!   !## blank-out in case surface has been read in
+!   IF(TRIMDEPTH_IDF(1)%FNAME.NE.'')THEN
+!    DO IROW=1,IDF(1)%NROW
+!     DO ICOL=1,IDF(1)%NCOL
+!      CALL IDFGETLOC(IDF(1),IROW,ICOL,X,Y)
+!      Z=IDFGETXYVAL(TRIMDEPTH_IDF(1),X,Y)
+!      IF(Z.NE.TRIMDEPTH_IDF(1)%NODATA)THEN
+!       IF((IDF(1)%TOP+IDF(1)%BOT)/2.0.GT.Z)IDF(1)%X(ICOL,IROW)=IDF(1)%NODATA
+!      ELSE
+!       IDF(1)%X(ICOL,IROW)=IDF(1)%NODATA
+!      ENDIF
+!     ENDDO
+!    ENDDO
+!   ENDIF
+!  
+!   !## blank-out in case surface has been read in
+!   IF(TRIMDEPTH_IDF(2)%FNAME.NE.'')THEN
+!    DO IROW=1,IDF(1)%NROW
+!     DO ICOL=1,IDF(1)%NCOL
+!      CALL IDFGETLOC(IDF(1),IROW,ICOL,X,Y)
+!      Z=IDFGETXYVAL(TRIMDEPTH_IDF(2),X,Y)
+!      IF(Z.NE.TRIMDEPTH_IDF(2)%NODATA)THEN
+!       IF((IDF(1)%TOP+IDF(1)%BOT)/2.0.LT.Z)IDF(1)%X(ICOL,IROW)=IDF(1)%NODATA
+!      ELSE
+!       IDF(1)%X(ICOL,IROW)=IDF(1)%NODATA
+!      ENDIF
+!     ENDDO
+!    ENDDO
+!   ENDIF
 
   ENDIF
   IF(IDFWRITE(IDF(1),IDFFILE,1))ASC2IDF_INT_MAIN=.TRUE.
@@ -805,6 +810,45 @@ CONTAINS
  ASC2IDF_INT_MAIN=.TRUE.
 
  END FUNCTION ASC2IDF_INT_MAIN
+
+ !###======================================================================
+ SUBROUTINE ASC2IDF_INT_BLANKOUT()
+ !###======================================================================
+ IMPLICIT NONE
+ INTEGER :: IROW,ICOL
+ REAL :: Z,X,Y
+ 
+ !## blank-out in case surface has been read in
+ IF(TRIMDEPTH_IDF(1)%FNAME.NE.'')THEN
+  DO IROW=1,IDF(1)%NROW
+   DO ICOL=1,IDF(1)%NCOL
+    CALL IDFGETLOC(IDF(1),IROW,ICOL,X,Y)
+    Z=IDFGETXYVAL(TRIMDEPTH_IDF(1),X,Y)
+    IF(Z.NE.TRIMDEPTH_IDF(1)%NODATA)THEN
+     IF((IDF(1)%TOP+IDF(1)%BOT)/2.0.GT.Z)IDF(1)%X(ICOL,IROW)=IDF(1)%NODATA
+    ELSE
+     IDF(1)%X(ICOL,IROW)=IDF(1)%NODATA
+    ENDIF
+   ENDDO
+  ENDDO
+ ENDIF
+  
+ !## blank-out in case surface has been read in
+ IF(TRIMDEPTH_IDF(2)%FNAME.NE.'')THEN
+  DO IROW=1,IDF(1)%NROW
+   DO ICOL=1,IDF(1)%NCOL
+    CALL IDFGETLOC(IDF(1),IROW,ICOL,X,Y)
+    Z=IDFGETXYVAL(TRIMDEPTH_IDF(2),X,Y)
+    IF(Z.NE.TRIMDEPTH_IDF(2)%NODATA)THEN
+     IF((IDF(1)%TOP+IDF(1)%BOT)/2.0.LT.Z)IDF(1)%X(ICOL,IROW)=IDF(1)%NODATA
+    ELSE
+     IDF(1)%X(ICOL,IROW)=IDF(1)%NODATA
+    ENDIF
+   ENDDO
+  ENDDO
+ ENDIF
+
+ END SUBROUTINE ASC2IDF_INT_BLANKOUT
 
  !###======================================================================
  LOGICAL FUNCTION ASC2IDF_INT_GETVALUES(FNAME,ITYPE,IXCOL,IYCOL,IZCOL)
