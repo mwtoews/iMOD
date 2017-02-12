@@ -34,7 +34,7 @@ INTEGER,PRIVATE :: IHOR,IVER
 CONTAINS
 
  !###======================================================================
- SUBROUTINE INTERSECT_EQUI(XMIN,XMAX,YMIN,YMAX,CSX,CSY,XIN1,XIN2,YIN1,YIN2,N,LHFB) !,LROWCOL) 
+ SUBROUTINE INTERSECT_EQUI(XMIN,XMAX,YMIN,YMAX,CSX,CSY,XIN1,XIN2,YIN1,YIN2,N,LHFB)  
  !###======================================================================
  IMPLICIT NONE
  REAL,INTENT(IN) :: XMIN,XMAX,YMIN,YMAX,CSX,CSY
