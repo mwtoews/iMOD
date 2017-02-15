@@ -31,7 +31,7 @@ USE MOD_IDF, ONLY : IDFIROWICOL,IDFGETLOC,IDFALLOCATEX,IDFWRITE,IDFCOPY,IDFDEALL
 USE MOD_UTL, ONLY : UTL_GETUNIT,UTL_IDFSNAPTOGRID,UTL_STDEF,UTL_MESSAGEHANDLE,UTL_WAITMESSAGE,UTL_DIST,ITOS,RTOS,UTL_CAP
 USE MOD_OSD, ONLY : OSD_OPEN
 USE MOD_PROFILE_UTL, ONLY : GRAPH,PROFILE_PLOTGRAPH,PROFILE_DEALLGRAPH,PROFILE_ALLGRAPH
-USE MOD_ASC2IDF_PAR, ONLY : IDFFILE
+USE MOD_ASC2IDF_PAR, ONLY : IDFFILE,ASSF_INDICATOR
 USE MOD_INTERSECT_PAR
 USE MOD_INTERSECT, ONLY : INTERSECT_EQUI,INTERSECT_DEALLOCATE
 
@@ -93,6 +93,8 @@ CONTAINS
  ALLOCATE(SELID(ND),SELD(4,MINP),SELQID(4,MINP),A(10,10),B(10),L(10,10),U(10,10))
  CALL WINDOWOUTSTATUSBAR(1,'Press ESC to terminate')
 
+!if(idfwrite(idf,'d:\tmp.idf',1))then; endif
+
  IRAT=0; IRAT1=IRAT
  DO IROW=1,IDF%NROW
 !  CALL WMESSAGEPEEK(ITYPE,MESSAGE)
@@ -100,10 +102,13 @@ CONTAINS
   DO ICOL=1,IDF%NCOL
    !## skip locations allready filled in
    IF(IDF%X(ICOL,IROW).NE.IDF%NODATA)CYCLE 
+!IF(ICOL.EQ.586.AND.IROW.EQ.337)THEN
+!WRITE(*,*)
+!ENDIF
    CALL IDFGETLOC(IDF,IROW,ICOL,X,Y)
    CALL KRIGING_FILLSYSTEM(XD,YD,ZD,ND,MINP,X,Y,RANGE,SILL,NUGGET,KTYPE,MZ,KEST,KVAR,NR,NC,MX,PNTSEARCH,IQUADRANT,IDF,IBLANKOUT,BO_VALUE)
    IDF%X(ICOL,IROW) =KEST
-   IDFV%X(ICOL,IROW)=SQRT(KVAR) !## standard deviation
+   IDFV%X(ICOL,IROW)=IDFV%NODATA; IF(KVAR.GT.0.0)IDFV%X(ICOL,IROW)=SQRT(KVAR) !## standard deviation
   ENDDO
   IF(IBATCH.EQ.0)THEN
    IF(KTYPE.GT.0)THEN
@@ -357,9 +362,9 @@ CONTAINS
   DO ID=1,ND
    
    !## get distance between points - remove whenever intersected by faults
-   DXY=KRIGING_DIST(XD(ID),YD(ID),X,Y,0,IDF,IBLANKOUT,BO_VALUE)
-   !## otherside of fault, if exists, take next
-   IF(DXY.LT.0.0)CYCLE
+   DXY=KRIGING_DIST(XD(ID),YD(ID),X,Y,0,IDF,IBLANKOUT,BO_VALUE,USERANGE)
+   !## otherside of fault or distance too big, take next
+   IF(DXY.GT.USERANGE)CYCLE
    
    !## determine quadrant
    IQ=1; IF(IQUADRANT.EQ.1)IQ=KRIGING_QUADRANT(XD(ID),YD(ID),X,Y)
@@ -387,8 +392,6 @@ CONTAINS
 
   J=0
   DO ID=1,ND
-!    DXY=KRIGING_DIST(XD(ID),YD(ID),X,Y)
-!   IF(DXY.LT.0.0.OR.DXY.GE.USERANGE)CYCLE
    J=J+1; SELID(J)=ID
   ENDDO
   NP=J 
@@ -397,18 +400,6 @@ CONTAINS
   
  !## no points left, interpolated value equals nodata
  IF(NP.LE.0)THEN; KEST=NODATA; KVAR=0.0; RETURN; ENDIF
- 
- !## if min and max equal skip interpolation
- DO I=1,NP 
-  ID=SELID(I)
-  IF(I.EQ.1)THEN
-   Z=ZD(ID)
-  ELSE
-   IF(ZD(ID).NE.Z)EXIT
-  ENDIF
- ENDDO
- !## all points have the same value
- IF(I.GT.NP)THEN; KEST=Z; KVAR=0.0; RETURN; ENDIF
   
  !## simple kriging (ktype.gt.0) and ordinary kriging (ktype.lt.0)
  N=NP; IF(KTYPE.LT.0)N=NP+1
@@ -472,7 +463,7 @@ CONTAINS
   ID=SELID(I)
   IF(KTYPE.GT.0)THEN
    KEST=KEST+B(I)* ZD(ID)
-  ELSE
+  ELSE  
    KEST=KEST+B(I)*(ZD(ID)-MZZ)
   ENDIF
  ENDDO
@@ -518,69 +509,66 @@ CONTAINS
  END FUNCTION KRIGING_QUADRANT
 
  !###======================================================================
- REAL FUNCTION KRIGING_DIST(X1,Y1,X2,Y2,IDATA,IDF,IBLANKOUT,BO_VALUE)
+ REAL FUNCTION KRIGING_DIST(X1,Y1,X2,Y2,IDATA,IDF,IBLANKOUT,BO_VALUE,MAXDIST)
  !###======================================================================
  IMPLICIT NONE
  TYPE(IDFOBJ),INTENT(IN) :: IDF
  INTEGER,INTENT(IN) :: IDATA  !=0 FOR INSERTION IN KRIGING MATRIX  !=1 FOR AVERAGE POINT VALUES
  INTEGER,INTENT(IN) :: IBLANKOUT
- REAL,INTENT(IN) :: X1,Y1,X2,Y2,BO_VALUE
- REAL :: X3,Y3,X4,Y4,XINTER,YINTER,A,SSX,DX,DY,D
- INTEGER :: I,J,I1,I2,ISTATUS,N,IROW,ICOL
+ REAL,INTENT(IN) :: X1,Y1,X2,Y2,BO_VALUE,MAXDIST
+ REAL :: X3,Y3,X4,Y4,XINTER,YINTER,A,SSX,DX,DY,D,CA,SA
+ INTEGER :: I,J,I1,I2,ISTATUS,N,IROW,ICOL,IR,IC
  
  KRIGING_DIST=UTL_DIST(X1,Y1,X2,Y2)
- 
+
+ !## to far away
+ IF(KRIGING_DIST.GT.MAXDIST)THEN
+  RETURN
+!  !## remove point if passed by nodata
+!  IF(IDATA.EQ.0)THEN
+!   KRIGING_DIST=-999.0
+!  !## increase distance to exclude from dataset for average computation
+!  ELSEIF(IDATA.EQ.1)THEN
+!   KRIGING_DIST=KRIGING_DIST*10000.0 !## default
+!  ENDIF
+!  RETURN
+ ENDIF
+  
  !## see whether nodata-areas are crossed
  IF(IBLANKOUT.EQ.1)THEN
   !## aspect
-  DY=(Y2-Y1); DX=(X2-X1); A=ATAN2(DY,DX); SSX=IDF%DX
-  D=KRIGING_DIST !UTL_DIST(X1,Y1,X2,Y2)
+  DY=(Y2-Y1); DX=(X2-X1); A=ATAN2(DY,DX)
+  SSX=IDF%DX
+  D=KRIGING_DIST
   CALL IDFIROWICOL(IDF,IROW,ICOL,X1,Y1)
+  DX=COS(A)*SSX
+  DY=SIN(A)*SSX
+  X3=X1; Y3=Y1
   DO
-   DX=COS(A)*SSX; DY=SIN(A)*SSX
-   X3=X1+DX; Y3=Y1+DY
+!   DX=COS(A)*SSX; DY=SIN(A)*SSX
+!   DX=CA*SSX; DY=SA*SSX
+!   X3=X1+DX; Y3=Y1+DY
+   X3=X3+DX; Y3=Y3+DY
    !## get new grid location
    CALL IDFIROWICOL(IDF,IROW,ICOL,X3,Y3)
    !## outside window
    IF(IROW.NE.0.AND.ICOL.NE.0)THEN
     !## if crossed-idf value is equal nodata increase distance
     IF(IDF%X(ICOL,IROW).EQ.BO_VALUE)THEN 
-     !## remove point if passed by nodata
-     IF(IDATA.EQ.0)THEN
-      KRIGING_DIST=-999.0
-      EXIT
-     !## increase distance to exclude from dataset for average computation
-     ELSEIF(IDATA.EQ.1)THEN
-      KRIGING_DIST=KRIGING_DIST*10000.0 !## default
-      EXIT
-     ENDIF
+!     !## remove point if passed by nodata
+!     IF(IDATA.EQ.0)THEN
+!      KRIGING_DIST=-999.0 !USERANGE !-999.0
+!      EXIT
+!     !## increase distance to exclude from dataset for average computation
+!     ELSEIF(IDATA.EQ.1)THEN
+     KRIGING_DIST=MAXDIST !-999.0
+!      KRIGING_DIST=KRIGING_DIST*10000.0 !## default
+     EXIT
+!     ENDIF
     ENDIF
    ENDIF
    SSX=SSX+IDF%DX; IF(SSX.GT.D)EXIT
   ENDDO
-
-!  WRITE(*,*) SSX,D  
-!  !## intersect line
-!  N=0; CALL INTERSECT_EQUI(IDF%XMIN,IDF%XMAX,IDF%YMIN,IDF%YMAX,IDF%DX,IDF%DY,X1,X2,Y1,Y2,N,.FALSE.) 
-!  DO J=1,N
-!   X3=XA(J); Y3=YA(J)
-!   CALL IDFIROWICOL(IDF,IROW,ICOL,X3,Y3)
-!   !## outside window
-!   IF(IROW.EQ.0.OR.ICOL.EQ.0)CYCLE
-!   !## if crossed-idf value is equal nodata increase distance
-!   IF(IDF%X(ICOL,IROW).EQ.BO_VALUE)THEN 
-!    !## remove point if passed by nodata
-!    IF(IDATA.EQ.0)THEN
-!     KRIGING_DIST=-999.0
-!     EXIT
-!    !## increase distance to exclude from dataset for average computation
-!    ELSEIF(IDATA.EQ.1)THEN
-!     KRIGING_DIST=KRIGING_DIST*10000.0 !## default
-!     EXIT
-!    ENDIF
-!   ENDIF
-!  ENDDO
-!  CALL INTERSECT_DEALLOCATE()
  ENDIF
  
  !## including a fault
@@ -595,14 +583,14 @@ CONTAINS
    CALL IGRINTERSECTLINE(X1,Y1,X2,Y2,X3,Y3,X4,Y4,XINTER,YINTER,ISTATUS)
    !## if line intersect, increase distance as a penalty
    IF(ISTATUS.EQ.5)THEN
-    !## remove point if intersected by fault
-    IF(IDATA.EQ.0)THEN
-     KRIGING_DIST=-999.0
-    !## increase distance to exclude from dataset for average computation
-    ELSEIF(IDATA.EQ.1)THEN
-     KRIGING_DIST=KRIGING_DIST*10000.0 !##default
-     !KRIGING_DIST=KRIGING_DIST*1.0
-    ENDIF
+!    !## remove point if intersected by fault
+!    IF(IDATA.EQ.0)THEN
+    KRIGING_DIST=MAXDIST !-999.0
+!    !## increase distance to exclude from dataset for average computation
+!    ELSEIF(IDATA.EQ.1)THEN
+!     KRIGING_DIST=KRIGING_DIST*10000.0 !##default
+!    ENDIF
+    RETURN
    ENDIF
   ENDDO
  ENDDO
@@ -673,13 +661,30 @@ CONTAINS
    !## done allready
    IF(ZD(J).EQ.IDF%NODATA)CYCLE
    !## get distance between points - increase distance whenever points are intersected by fault
-   IF(KRIGING_DIST(XD(I),YD(I),XD(J),YD(J),1,IDF,IBLANKOUT,BO_VALUE).LE.XYCRIT)THEN
+   IF(KRIGING_DIST(XD(I),YD(I),XD(J),YD(J),1,IDF,IBLANKOUT,BO_VALUE,XYCRIT).LE.XYCRIT)THEN
     N=N+1
+
+    !## take maximal indicator value
+    IF(ASSF_INDICATOR.EQ.1)THEN
+     ZP=MAX(ZP,ZD(J))
+    !## take average value
+    ELSE
+     ZP=ZP+ZD(J)
+    ENDIF
+
     !## add point to existing point and turn location off
-    XP=XP+XD(J); YP=YP+YD(J); ZP=ZP+ZD(J); ZD(J)=IDF%NODATA
+    XP=XP+XD(J); YP=YP+YD(J); ZD(J)=IDF%NODATA
    ENDIF
   ENDDO
-  XD(I)=XP/REAL(N); YD(I)=YP/REAL(N); ZD(I)=ZP/REAL(N)
+  !## determine average spot
+  XD(I)=XP/REAL(N); YD(I)=YP/REAL(N)
+
+  IF(ASSF_INDICATOR.EQ.1)THEN
+   ZD(I)=ZP
+  ELSE
+   ZD(I)=ZP/REAL(N)
+  ENDIF
+
  END DO
   
  !## eliminate doubles

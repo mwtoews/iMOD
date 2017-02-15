@@ -5518,6 +5518,8 @@ STOP
          Z1=PCK(2)%X(ICOL,IROW); Z2=PCK(3)%X(ICOL,IROW)
         CASE (27) !## olf drainagelevel
          Z1=PCK(2)%X(ICOL,IROW); Z2=Z1
+        CASE (25) !## ghb drainagelevel
+         Z1=PCK(2)%X(ICOL,IROW); Z2=Z1
         CASE DEFAULT
          WRITE(*,*) 'Cannot come here: ERROR PMANAGER_SAVEMF2005_PCK'; PAUSE
        END SELECT
@@ -7273,7 +7275,7 @@ STOP
  !###======================================================================
  IMPLICIT NONE
  INTEGER :: IROW,ICOL,ILAY,I,JROW,JCOL
- REAL :: C,ZT,ZB,D1,D2,A,X1,X2,Y1,Y2,DX,DY,L,TIB,F
+ REAL :: C,ZT,ZB,D1,D2,A,X1,X2,Y1,Y2,DX,DY,L,TIB,F,KD1,KD2
  INTEGER,DIMENSION(4) :: IR,IC
  DATA IR/-1, 0,0,1/
  DATA IC/ 0,-1,1,0/
@@ -7330,28 +7332,53 @@ STOP
     
     BND(ILAY)%X(ICOL,IROW)=0.0
 
-    ZB=BOT(ILAY)%X(ICOL,IROW)
+    !## modify existing aquitard due to this displacement - can be removed partly by lake
+    IF(ILAY.LT.NLAY)THEN
+     !## bottom of current model layer
+     ZB=TOP(ILAY+1)%X(ICOL,IROW) 
+    ELSE
+     ZB=BOT(ILAY)%X(ICOL,IROW) 
+    ENDIF
+    !## thickness original interbed
+    TIB=BOT(ILAY)%X(ICOL,IROW)-ZB
+
+!top =10
+!lak = 4
+!bot = 2
+!zb  = 0
+!tib = 2
+
     !## compute fraction for leakance in case lake bathymetry is higher
     IF(ZB.LT.LAK(2)%X(ICOL,IROW))THEN
      !## add extra resistance to leakance of part of aquifer
-     C=(LAK(2)%X(ICOL,IROW)-ZB)/(KHV(ILAY)%X(ICOL,IROW)/KVA(ILAY)%X(ICOL,IROW))
+     IF(BOT(ILAY)%X(ICOL,IROW).LT.LAK(2)%X(ICOL,IROW))THEN
+      C=(LAK(2)%X(ICOL,IROW)-BOT(ILAY)%X(ICOL,IROW))/(KHV(ILAY)%X(ICOL,IROW)/KVA(ILAY)%X(ICOL,IROW))
+     ENDIF
+     !## adjust bot as the LAK package uses this to create the table input
+     BOT(ILAY)%X(ICOL,IROW)=LAK(2)%X(ICOL,IROW)
+     !## make sure thickness of interbed remains the same
+     IF(TIB.EQ.0.0)THEN
+      TOP(ILAY)%X(ICOL,IROW)=BOT(ILAY)%X(ICOL,IROW)
+
+      !## increase permeability in ratio in case no interbed and interface is shifted upwards
+      IF(ILAY.LE.NLAY)THEN
+       KD1=KHV(ILAY  )%X(ICOL,IROW)*(TOP(ILAY  )%X(ICOL,IROW)-BOT(ILAY  )%X(ICOL,IROW))
+       KD2=KHV(ILAY+1)%X(ICOL,IROW)*(TOP(ILAY+1)%X(ICOL,IROW)-BOT(ILAY+1)%X(ICOL,IROW))
+       KD1=KD1+KD2; F=KD1/KD2
+       KHV(ILAY+1)%X(ICOL,IROW)=KHV(ILAY+1)%X(ICOL,IROW)*F
+      ENDIF
+
+     ELSE
+      !## top remains the same but thickness can be enlarged of the interbed, correct with permeability
+      F=TIB/(TOP(ILAY)%X(ICOL,IROW)-BOT(ILAY)%X(ICOL,IROW))
+      KVV(ILAY)%X(ICOL,IROW)=KVV(ILAY)%X(ICOL,IROW)*F
+     ENDIF
     ELSE
      C=0.0
     ENDIF
     
     !## total lake leakance for vertical conductances
     LCD(ILAY)%X(ICOL,IROW)=1.0/(C+LAK(6)%X(ICOL,IROW))
-
-    !## modify existing aquitard due to this displacement - can be removed partly by lake
-    TIB=0.0; IF(ILAY.LT.NLAY)THEN
-     !## thickness interbed
-     TIB=BOT(ILAY)%X(ICOL,IROW)-TOP(ILAY)%X(ICOL,IROW)
-    ENDIF
-    !## exists an interbed
-    IF(TIB.GT.0.0)THEN
-     !## modify bottom of modellayer, less interbed material remains in this case
-     BOT(ILAY)%X(ICOL,IROW)=LAK(2)%X(ICOL,IROW)
-    ENDIF
 
    ENDIF
   ENDDO

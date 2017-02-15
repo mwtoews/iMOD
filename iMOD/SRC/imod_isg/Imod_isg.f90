@@ -851,6 +851,7 @@ CONTAINS
    I=ISG(IISG)%ICLC+1; J=ISD(I)%IREF
    !## use only first of date-list
    I=ISD(J)%IREF; IDWNS=DATISD(I)%DWNS
+   !## connected downstreams
    IF(IDWNS.GT.0)THEN
     !## to segment
     ICON(IISG,2) =IDWNS
@@ -865,6 +866,7 @@ CONTAINS
    IISG=ICON(ILAST,3); IF(IISG.GT.0)LEX=.TRUE.
   ENDIF
   IF(LEX)THEN
+   !## search the one that does not redirect to another one
    DO; JJSG=ICON(IISG,3); IF(JJSG.LE.0)EXIT; IISG=JJSG; ENDDO
    !## trace forward and fill in list
    I=0; DO; I=I+1; ICON(I,1)=IISG; JJSG=ICON(IISG,2); IF(JJSG.LE.0)EXIT; IISG=JJSG; ENDDO

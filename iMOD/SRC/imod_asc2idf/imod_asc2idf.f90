@@ -811,8 +811,9 @@ CONTAINS
       IBLANKOUT=1
       IDF(1)%X(ICOL,IROW)=BO_VALUE 
      ENDIF
+    !## do not assign nodata as blank out value
     ELSE
-     IBLANKOUT=1
+!     IBLANKOUT=1
      IDF(1)%X(ICOL,IROW)=BO_VALUE 
     ENDIF
    ENDDO
@@ -830,8 +831,9 @@ CONTAINS
       IBLANKOUT=1
       IDF(1)%X(ICOL,IROW)=BO_VALUE 
      ENDIF
+    !## do not assign nodata as blank out value
     ELSE
-     IBLANKOUT=1
+!     IBLANKOUT=1
      IDF(1)%X(ICOL,IROW)=BO_VALUE 
     ENDIF
    ENDDO
