@@ -111,6 +111,7 @@ implicit none
  nodataTime  = cfn_mjd_nodata()
 
  nsub = 0
+ NCVGERR = 0
 
 ! ... process initialisation
 ! ... init components
