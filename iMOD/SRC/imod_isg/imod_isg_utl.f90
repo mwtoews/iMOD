@@ -132,7 +132,7 @@ CONTAINS
  REAL,INTENT(OUT),DIMENSION(:,:) :: PISG !## selected isg segments all within radius
  REAL,INTENT(IN) :: MAXDIST,XC,YC !## maximum distance allowed and location of cross-section
  INTEGER,INTENT(OUT) :: NI
- INTEGER :: I,J,K,ISTATUS,ISMALL
+ INTEGER :: I,J,K,ISTATUS,ISMALL,NJ
  REAL :: DX,DY,TD,D,MD,X,Y,DIST
  
  !## initialize
@@ -142,7 +142,7 @@ CONTAINS
  ISMALL=0; IF(SIZE(PISG).EQ.1)ISMALL=1
 
  DO I=1,NISG
-  TD=0.0; K=ISG(I)%ISEG-1
+  TD=0.0; K=ISG(I)%ISEG-1; NJ=0
   DO J=1,ISG(I)%NSEG-1
 
    K=K+1; DX=ISP(K+1)%X-ISP(K)%X; DY=ISP(K+1)%Y-ISP(K)%Y
@@ -158,7 +158,7 @@ CONTAINS
      IF(ISMALL.EQ.1)MD=D
      DIST=TD+SQRT((ISP(K)%X-X)**2.0+(ISP(K)%Y-Y)**2.0)
      ISGX=X; ISGY=Y 
-     IF(ISMALL.EQ.0)NI=NI+1
+     IF(ISMALL.EQ.0.AND.NJ.EQ.0)THEN; NI=NI+1; NJ=1; ENDIF
      PISG(NI,1)=REAL(I); PISG(NI,2)=DIST; PISG(NI,3)=D
     ENDIF
    ELSE
@@ -166,10 +166,9 @@ CONTAINS
     D=SQRT((XC-ISP(K)%X)**2.0+(YC-ISP(K)%Y)**2.0)
     IF(D.LT.MD)THEN
      IF(ISMALL.EQ.1)MD=D
-     DIST=0.0
-     IF(J.GT.1)DIST=TD+SQRT(DX**2.0+DY**2.0)
-     ISGX=ISP(K)%X; ISGY=ISP(K)%Y 
-     IF(ISMALL.EQ.0)NI=NI+1
+     DIST=0.0; IF(J.GT.1)DIST=TD+SQRT(DX**2.0+DY**2.0)
+     ISGX=ISP(K)%X; ISGY=ISP(K)%Y
+     IF(ISMALL.EQ.0.AND.NJ.EQ.0)THEN; NI=NI+1; NJ=1; ENDIF
      PISG(NI,1)=REAL(I); PISG(NI,2)=DIST; PISG(NI,3)=D
     ENDIF
     !## evaluate last point
@@ -179,12 +178,15 @@ CONTAINS
       IF(ISMALL.EQ.1)MD=D
       DIST=TD+SQRT(DX**2.0+DY**2.0)
       ISGX=ISP(K+1)%X; ISGY=ISP(K+1)%Y 
-      IF(ISMALL.EQ.0)NI=NI+1
+      IF(ISMALL.EQ.0.AND.NJ.EQ.0)THEN; NI=NI+1; NJ=1; ENDIF
       PISG(NI,1)=REAL(I); PISG(NI,2)=DIST; PISG(NI,3)=D
      ENDIF
     ENDIF
    ENDIF
 
+   !## segment found - stop searching for this segment to be within range
+   IF(NJ.EQ.1)EXIT
+   
    !## get total distance
    TD=TD+SQRT(DX**2.0+DY**2.0)
 

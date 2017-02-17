@@ -62,6 +62,39 @@ INTEGER :: NSX,NSY
 CONTAINS
  
  !###======================================================================
+ SUBROUTINE UTL_WRITE_FREE(IU,X,NCOL,NROW,IINT)
+ !###======================================================================
+ IMPLICIT NONE
+ INTEGER,INTENT(IN) :: IU,NCOL,NROW,IINT
+ REAL,INTENT(IN),DIMENSION(NCOL,NROW) :: X
+ CHARACTER(LEN=52) :: LINE
+ REAL :: XC
+ INTEGER :: N,IROW,ICOL
+ 
+ DO IROW=1,NROW
+  N=0; XC=X(IROW,1)
+  DO ICOL=1,NCOL
+   IF(X(ICOL,IROW).NE.XC.OR.ICOL.EQ.NCOL)THEN
+    IF(ICOL.EQ.NCOL)N=N+1
+    IF(N.GT.1)THEN
+     IF(IINT.EQ.0)LINE=TRIM(ITOS(N))//'*'//TRIM(RTOS(XC,'*',0))
+     IF(IINT.EQ.1)LINE=TRIM(ITOS(N))//'*'//TRIM(ITOS(INT(XC)))
+     WRITE(IU,'(A)') TRIM(LINE)
+     N=1; XC=X(ICOL,IROW)
+    ELSE
+     XC=X(ICOL,IROW)
+     IF(IINT.EQ.0)WRITE(IU,*) XC
+     IF(IINT.EQ.1)WRITE(IU,*) INT(XC)
+    ENDIF
+   ELSE
+    N=N+1
+   ENDIF
+  ENDDO
+ ENDDO
+  
+ END SUBROUTINE UTL_WRITE_FREE
+
+ !###======================================================================
  SUBROUTINE UTL_MEASUREMAIN()
  !###======================================================================
  IMPLICIT NONE

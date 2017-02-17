@@ -314,7 +314,7 @@ CONTAINS
    IF(STRING(LEN(STRING):LEN(STRING)).NE.'')THEN
     WRITE(*,'(A)') 'Reduce number of cross-section definitions to be less than '//TRIM(ITOS(LEN(STRING)))//' characters'
    ENDIF
-   READ(STRING,*,IOSTAT=IOS) XCRD,YCRD,LABEL,N,(X(I),I=1,N),(Y(I),I=1,N) !; IF(IOS.NE.0)EXIT; N=N+1
+   READ(STRING,*,IOSTAT=IOS) XCRD,YCRD,LABEL,N,(X(I),I=1,N),(Y(I),I=1,N) 
    !## not enough points
    IF(N.LE.2)THEN
     CYCLE
