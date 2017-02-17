@@ -80,12 +80,13 @@ CONTAINS
      IF(IINT.EQ.0)LINE=TRIM(ITOS(N))//'*'//TRIM(RTOS(XC,'*',0))
      IF(IINT.EQ.1)LINE=TRIM(ITOS(N))//'*'//TRIM(ITOS(INT(XC)))
      WRITE(IU,'(A)') TRIM(LINE)
-     N=1; XC=X(ICOL,IROW)
+!     N=1; XC=X(ICOL,IROW)
     ELSE
-     XC=X(ICOL,IROW)
      IF(IINT.EQ.0)WRITE(IU,*) XC
      IF(IINT.EQ.1)WRITE(IU,*) INT(XC)
+!     N=1; XC=X(ICOL,IROW)
     ENDIF
+    N=1; XC=X(ICOL,IROW)
    ELSE
     N=N+1
    ENDIF
