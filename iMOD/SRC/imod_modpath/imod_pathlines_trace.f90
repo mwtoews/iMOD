@@ -465,6 +465,8 @@ CONTAINS
    !## plot size
    SP(NSPG)%SPWIDTH=3.0
    SP(NSPG)%PWIDTH=1.0
+   !## random start times
+   SP(NSPG)%IRSTRT=0
   
   ENDDO
   
@@ -760,9 +762,6 @@ CONTAINS
   CALL WDIALOGGETSTRING(IDF_STRING2,PIDF%FNAME)
   IF(ISP.EQ.2)THEN
    IF(.NOT.IDFREADSCALE(IDFPLOT(IIDF)%FNAME,PIDF,2,0,0.0,0))RETURN
-!   ILAY=IIDF/2; IF(MOD(IIDF,2).NE.0)ILAY=ILAY+1
-!   IF(MOD(IIDF,2).EQ.0)THEN; PIDF%X(:,:)=ZBOT(:,:,ILAY)
-!   ELSE; PIDF%X(:,:)=ZTOP(:,:,ILAY); ENDIF
   ELSEIF(ISP.EQ.5)THEN
    IF(.NOT.IDFREADSCALE(PIDF%FNAME,PIDF,2,0,0.0,0))RETURN
   ENDIF
@@ -952,6 +951,8 @@ CONTAINS
     SP(IG)%JLC(SP(IG)%NPART)=ICOL
     SP(IG)%TOT(SP(IG)%NPART)=0.0
     SP(IG)%MXL(SP(IG)%NPART)=0
+    !## random start number - simulation time step, if modules than start
+    CALL RANDOM_NUMBER(SP(IG)%STM(SP(IG)%NPART))
     EXIT
     
    ENDIF
@@ -986,11 +987,13 @@ CONTAINS
   SP(IG)%JLC_BU(I)=SP(IG)%JLC(I)
   SP(IG)%TOT_BU(I)=SP(IG)%TOT(I)
   SP(IG)%MXL_BU(I)=SP(IG)%MXL(I)
+  SP(IG)%STM_BU(I)=SP(IG)%STM(I)
  ENDDO
 
  DEALLOCATE(SP(IG)%XLC,SP(IG)%YLC,SP(IG)%ZLC, &
             SP(IG)%ZLL,SP(IG)%KLC,SP(IG)%ILC, &
-            SP(IG)%JLC,SP(IG)%TOT,SP(IG)%MXL)
+            SP(IG)%JLC,SP(IG)%TOT,SP(IG)%MXL, &
+            SP(IG)%STM)
 
  SP(IG)%XLC=>SP(IG)%XLC_BU
  SP(IG)%YLC=>SP(IG)%YLC_BU
@@ -1001,6 +1004,7 @@ CONTAINS
  SP(IG)%JLC=>SP(IG)%JLC_BU
  SP(IG)%TOT=>SP(IG)%TOT_BU
  SP(IG)%MXL=>SP(IG)%MXL_BU
+ SP(IG)%STM=>SP(IG)%STM_BU
 
  END SUBROUTINE TRACE_3D_STARTPOINTS_MEMORY_SP
 
@@ -1166,6 +1170,7 @@ CONTAINS
  !## maximize it for tmax
  TTMAX=MIN(TTMAX,PL%TMAX)
 
+ !## current time
  PL%TCUR=TTMAX/DYEAR; CALL WDIALOGPUTREAL(IDF_REAL7,PL%TCUR) 
 
  !## age of current drawing list
@@ -1201,7 +1206,14 @@ CONTAINS
   DO IPART=1,SPR(IG)%NPART 
   
   !## peer --- klc random negtief zetten en dan iedere keer er 1 bij, tot positief dan gaat hij meedoen???
-  
+
+   !## determine whether current particle is ready to go
+   IF(SP(IG)%IRSTRT.EQ.1)THEN
+!## IF STM NEGATIEF DAN LOOPT PARTICLE
+!## IF STM POSITIEF DAN CHECKEN OF HIJ HERSTART KAN WORDEN ALS MOD(NPER,STM*NPER).EQ.0 EN STM NEGATIEF ZETTEN
+!    IF(SPR(IG)%STM(IPART).GT.PL%NPER)SPR(IG)%KLC(IPART)=ABS(SPR(IG)%KLC(IPART))
+   ENDIF
+     
    !## trace selected particle, not yet discharged!
    IF(SPR(IG)%KLC(IPART).GT.0)THEN
 
@@ -1258,6 +1270,7 @@ CONTAINS
      SPR(IG)%ZLL(IPART)=SP(IG)%ZLL(IPART)
      SPR(IG)%TOT(IPART)=SP(IG)%TOT(IPART)
      SPR(IG)%MXL(IPART)=SP(IG)%MXL(IPART)
+     SPR(IG)%STM(IPART)=SP(IG)%STM(IPART)+PL%TDEL
 
     ENDIF
    
@@ -1288,7 +1301,6 @@ CONTAINS
      DO
       I=I+1; IF(I.GT.SPR(IG)%NPART)EXIT
       IF(SPR(IG)%KLC(I).LE.0)EXIT
-!      IF(SPR(IG)%KLC(I).EQ.0)EXIT
      ENDDO
      
      IF(I.GT.SPR(IG)%NPART)THEN
@@ -1307,6 +1319,7 @@ CONTAINS
      SPR(IG)%ZLL(I)=SP(IG)%ZLL(IPART)
      SPR(IG)%TOT(I)=SP(IG)%TOT(IPART)
      SPR(IG)%MXL(I)=SP(IG)%MXL(IPART)
+     SPR(IG)%STM(I)=SP(IG)%STM(IPART)
   
      !## add active particles
      NPACT=NPACT+1
@@ -2415,10 +2428,10 @@ IPFLOOP: DO I=1,SIZE(IPF)
 
   NULLIFY(SP(I)%XLC   ,SP(I)%YLC   ,SP(I)%ZLC   ,SP(I)%ZLL   , &
           SP(I)%ILC   ,SP(I)%JLC   ,SP(I)%KLC   ,SP(I)%TOT   , &
-          SP(I)%MXL   )
+          SP(I)%MXL   ,SP(I)%STM)
   NULLIFY(SP(I)%XLC_BU,SP(I)%YLC_BU,SP(I)%ZLC_BU,SP(I)%ZLL_BU, &
           SP(I)%ILC_BU,SP(I)%JLC_BU,SP(I)%KLC_BU,SP(I)%TOT_BU, &
-          SP(I)%MXL_BU)
+          SP(I)%MXL_BU,SP(I)%STM_BU)
 
  ENDDO
  
@@ -2438,10 +2451,10 @@ IPFLOOP: DO I=1,SIZE(IPF)
 
   NULLIFY(SPR(I)%XLC   ,SPR(I)%YLC   ,SPR(I)%ZLC   ,SPR(I)%ZLL   , &
           SPR(I)%ILC   ,SPR(I)%JLC   ,SPR(I)%KLC   ,SPR(I)%TOT   , &
-          SPR(I)%MXL   )
+          SPR(I)%MXL   ,SPR(I)%STM)
   NULLIFY(SPR(I)%XLC_BU,SPR(I)%YLC_BU,SPR(I)%ZLC_BU,SPR(I)%ZLL_BU, &
           SPR(I)%ILC_BU,SPR(I)%JLC_BU,SPR(I)%KLC_BU,SPR(I)%TOT_BU, &
-          SPR(I)%MXL_BU)
+          SPR(I)%MXL_BU,SPR(I)%STM_BU)
 
  ENDDO
  
@@ -2454,22 +2467,19 @@ IPFLOOP: DO I=1,SIZE(IPF)
  INTEGER,INTENT(IN) :: NPART,IG
  INTEGER :: I
  
-! DO I=1,NG
-
  !## reals
  ALLOCATE(SP(IG)%XLC(NPART), &
           SP(IG)%YLC(NPART), &
           SP(IG)%ZLC(NPART), &
           SP(IG)%ZLL(NPART), &
-          SP(IG)%TOT(NPART))
+          SP(IG)%TOT(NPART), &
+          SP(IG)%STM(NPART))
 
  !## integers
  ALLOCATE(SP(IG)%KLC(NPART), &
           SP(IG)%JLC(NPART), &
           SP(IG)%ILC(NPART), &
           SP(IG)%MXL(NPART))
-
-! ENDDO
  
  END SUBROUTINE TRACE_AL_SP
  
@@ -2491,7 +2501,8 @@ IPFLOOP: DO I=1,SIZE(IPF)
            SPR(I)%YLC(SP(I)%NPART), &
            SPR(I)%ZLC(SP(I)%NPART), &
            SPR(I)%ZLL(SP(I)%NPART), &
-           SPR(I)%TOT(SP(I)%NPART))
+           SPR(I)%TOT(SP(I)%NPART), &
+           SPR(I)%STM(SP(I)%NPART))
   !## integers
   ALLOCATE(SPR(I)%KLC(SP(I)%NPART), &
            SPR(I)%JLC(SP(I)%NPART), &
@@ -2510,6 +2521,7 @@ IPFLOOP: DO I=1,SIZE(IPF)
    SPR(I)%JLC(J)=SP(I)%JLC(J)
    SPR(I)%TOT(J)=SP(I)%TOT(J)
    SPR(I)%MXL(J)=SP(I)%MXL(J)
+   SPR(I)%STM(J)=SP(I)%STM(J)
   ENDDO
 
  ENDDO
@@ -2536,6 +2548,7 @@ IPFLOOP: DO I=1,SIZE(IPF)
   IF(ASSOCIATED(SP(I)%ZLL))DEALLOCATE(SP(I)%ZLL)
   IF(ASSOCIATED(SP(I)%TOT))DEALLOCATE(SP(I)%TOT)
   IF(ASSOCIATED(SP(I)%MXL))DEALLOCATE(SP(I)%MXL)
+  IF(ASSOCIATED(SP(I)%STM))DEALLOCATE(SP(I)%STM)
 
  ENDDO
 
@@ -2561,6 +2574,7 @@ IPFLOOP: DO I=1,SIZE(IPF)
   IF(ASSOCIATED(SPR(I)%ZLL))DEALLOCATE(SPR(I)%ZLL)
   IF(ASSOCIATED(SPR(I)%TOT))DEALLOCATE(SPR(I)%TOT)
   IF(ASSOCIATED(SPR(I)%MXL))DEALLOCATE(SPR(I)%MXL)
+  IF(ASSOCIATED(SPR(I)%STM))DEALLOCATE(SPR(I)%STM)
   
  ENDDO
  
