@@ -5453,10 +5453,14 @@ STOP
     !## uzf
     CASE (18)
       IF(IPER.EQ.1)THEN
-       IF(.NOT.PMANAGER_SAVEMF2005_PCK_U2DREL(TRIM(DIR)//'\'//CPCK//'7\'//CPCK//'_UZBND_T'//TRIM(ITOS(IPER))//'.ARR',PCK(1),IU,IFBND,1))RETURN
+       !## make sure value for uzbnd is zero for constant head and inactive cells
+       DO IROW=1,PCK(1)%NROW; DO ICOL=1,PCK(1)%NCOL
+        IF(BND(1)%X(ICOL,IROW).LE.0)PCK(1)%X(ICOL,IROW)=0.0
+       ENDDO; ENDDO
+       IF(.NOT.PMANAGER_SAVEMF2005_PCK_U2DREL(TRIM(DIR)//'\'//CPCK//'7\'//CPCK//'_UZBND_T'//TRIM(ITOS(IPER))//'.ARR',PCK(1),IU,    0,1))RETURN
        IF(.NOT.PMANAGER_SAVEMF2005_PCK_U2DREL(TRIM(DIR)//'\'//CPCK//'7\'//CPCK//'_EPS_T'//TRIM(ITOS(IPER))//  '.ARR',PCK(2),IU,IFBND,0))RETURN
 
-!## thr residual is computed as difference of thts and sy - dus kan niet nul zijn
+!## thr residual is computed as difference of thts and sy - dus kan niet nul zijn EN moet meer zijn dan residual watercontent
 
        IF(.NOT.PMANAGER_SAVEMF2005_PCK_U2DREL(TRIM(DIR)//'\'//CPCK//'7\'//CPCK//'_THTS_T'//TRIM(ITOS(IPER))// '.ARR',PCK(3),IU,IFBND,0))RETURN
        IF(.NOT.PMANAGER_SAVEMF2005_PCK_U2DREL(TRIM(DIR)//'\'//CPCK//'7\'//CPCK//'_THTI_T'//TRIM(ITOS(IPER))// '.ARR',PCK(4),IU,IFBND,0))RETURN
@@ -6850,7 +6854,9 @@ STOP
   SFNAME=EXFNAME; DO I=1,3; SFNAME=SFNAME(:INDEX(SFNAME,'\',.TRUE.)-1); ENDDO
   I=LEN_TRIM(SFNAME); SFNAME='.'//EXFNAME(I+1:)
  
-  WRITE(IU,'(A)') 'OPEN/CLOSE '//TRIM(SFNAME)//' 1.0 (FREE) -1'
+!  WRITE(IU,'(A)') 'OPEN/CLOSE '//TRIM(SFNAME)//' 1.0 (FREE) -1'
+  IF(IINT.EQ.0)WRITE(IU,'(A)') 'OPEN/CLOSE '//TRIM(SFNAME)//' 1.0 (FREE) -1'
+  IF(IINT.EQ.1)WRITE(IU,'(A)') 'OPEN/CLOSE '//TRIM(SFNAME)//' 1   (FREE) -1'
  
   JU=UTL_GETUNIT(); CALL OSD_OPEN(JU,FILE=EXFNAME,STATUS='UNKNOWN',ACTION='WRITE',FORM='FORMATTED'); IF(JU.EQ.0)RETURN
 
