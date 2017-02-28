@@ -5124,7 +5124,7 @@ STOP
  CHARACTER(LEN=3) :: CPCK
  CHARACTER(LEN=30) :: FRM
  INTEGER :: IU,JU,ILAY,IROW,ICOL,I,J,KTOP,KPER,IPER,NP,NTOP,SCL_D,SCL_U,ICNST,NSYS,ISYS,MP, &
-    NBDTIM,NHED,NFLW,IFBND,NRCHOP,NEVTOP,INRECH,INSURF,INEVTR,INEXDP,LPER,NUZF1,NUZF2,NUZF3,NUZF4
+    NBDTIM,NHED,NFLW,IFBND,NRCHOP,NEVTOP,NUZTOP,INRECH,INSURF,INEVTR,INEXDP,LPER,NUZF1,NUZF2,NUZF3,NUZF4
  REAL,ALLOCATABLE,DIMENSION(:) :: TLP,KH,TP,BT
  INTEGER(KIND=8) :: ITIME,JTIME
  INTEGER,PARAMETER :: ICLAY=1 !## shift to nearest aquifer
@@ -5147,10 +5147,10 @@ STOP
  !## write header of file
  SELECT CASE (ITOPIC)
   !## uzf
-  CASE (18); NUZGAG=0; IRUNFLG=0
-   LINE='1,2,'//TRIM(ITOS(IRUNFLG))//',1,'//TRIM(ITOS(-IUZFCB1))//',0,10,20,'//TRIM(ITOS(NUZGAG))//',0.5'; WRITE(IU,'(A)') TRIM(LINE)
-
 !NUZTOP=1 !## recharge specified to top cell
+  CASE (18); NUZGAG=0; IRUNFLG=0; NUZTOP=1
+   LINE='NaN1#,2,'//TRIM(ITOS(IRUNFLG))//',1,'//TRIM(ITOS(-IUZFCB1))//',0,10,20,'//TRIM(ITOS(NUZGAG))//',0.5'; WRITE(IU,'(A)') TRIM(LINE)
+
 !IUZFOPT=2 !## permeabiliy specified in lpf
 !irunflg=0 !## water discharge from top removed form the model (usage of SFR/LAK needed)
 !ietflg=1 !## et simulated
@@ -5390,6 +5390,9 @@ STOP
        CASE (7);   SCL_D=0; SCL_U=2; NUZF3=IEQUAL
        CASE (8);   SCL_D=0; SCL_U=2; NUZF4=IEQUAL
       END SELECT
+      !## skip uzf package info for coming stress-periods
+      IF(KTOP.LE.4.AND.IPER.GT.1)CYCLE
+
      !## evt
      CASE (24) 
       SCL_D=1; SCL_U=2
@@ -5431,6 +5434,7 @@ STOP
      !## uzf
      CASE (18)
       IF(KTOP.EQ.5.OR.KTOP.EQ.6)FCT=FCT*0.001
+      IF(ILAY.LE.0)NUZTOP=3
      !## evt
      CASE (24)
       IF(KTOP.EQ.1)FCT=FCT*0.001
@@ -5453,17 +5457,30 @@ STOP
     !## uzf
     CASE (18)
       IF(IPER.EQ.1)THEN
+
        !## make sure value for uzbnd is zero for constant head and inactive cells
        DO IROW=1,PCK(1)%NROW; DO ICOL=1,PCK(1)%NCOL
         IF(BND(1)%X(ICOL,IROW).LE.0)PCK(1)%X(ICOL,IROW)=0.0
        ENDDO; ENDDO
+       !## areal extent of uz flow
        IF(.NOT.PMANAGER_SAVEMF2005_PCK_U2DREL(TRIM(DIR)//'\'//CPCK//'7\'//CPCK//'_UZBND_T'//TRIM(ITOS(IPER))//'.ARR',PCK(1),IU,    0,1))RETURN
+       !## brooks-corey epsilon
        IF(.NOT.PMANAGER_SAVEMF2005_PCK_U2DREL(TRIM(DIR)//'\'//CPCK//'7\'//CPCK//'_EPS_T'//TRIM(ITOS(IPER))//  '.ARR',PCK(2),IU,IFBND,0))RETURN
 
-!## thr residual is computed as difference of thts and sy - dus kan niet nul zijn EN moet meer zijn dan residual watercontent
-
+       !## make sure thts (saturated water content) is at least larger than specific yield for the residual water content
+       DO IROW=1,PCK(1)%NROW; DO ICOL=1,PCK(1)%NCOL
+        IF(PCK(1)%X(ICOL,IROW).GT.0.0)THEN
+         PCK(3)%X(ICOL,IROW)=MAX(PCK(3)%X(ICOL,IROW),SPY(1)%X(ICOL,IROW))
+        ENDIF
+       ENDDO; ENDDO    
+       !## thts saturated water content larger than specific yield
        IF(.NOT.PMANAGER_SAVEMF2005_PCK_U2DREL(TRIM(DIR)//'\'//CPCK//'7\'//CPCK//'_THTS_T'//TRIM(ITOS(IPER))// '.ARR',PCK(3),IU,IFBND,0))RETURN
-       IF(.NOT.PMANAGER_SAVEMF2005_PCK_U2DREL(TRIM(DIR)//'\'//CPCK//'7\'//CPCK//'_THTI_T'//TRIM(ITOS(IPER))// '.ARR',PCK(4),IU,IFBND,0))RETURN
+
+       !## skip initial water content if steady-state
+       IF(SIM(IPER)%DELT.GT.0.0)THEN
+        IF(.NOT.PMANAGER_SAVEMF2005_PCK_U2DREL(TRIM(DIR)//'\'//CPCK//'7\'//CPCK//'_THTI_T'//TRIM(ITOS(IPER))// '.ARR',PCK(4),IU,IFBND,0))RETURN
+       ENDIF
+
       ENDIF
       LINE=TRIM(ITOS(NUZF1)); WRITE(IU,'(A)') TRIM(LINE)
       IF(NUZF1.EQ.1)THEN
@@ -5479,6 +5496,7 @@ STOP
       ENDIF
       LINE=TRIM(ITOS(NUZF4)); WRITE(IU,'(A)') TRIM(LINE)
       IF(NUZF4.EQ.1)THEN
+       !## make sure this is always larger than residual water content
        IF(.NOT.PMANAGER_SAVEMF2005_PCK_U2DREL(TRIM(DIR)//'\'//CPCK//'7\'//CPCK//'_EXTWC_T'//TRIM(ITOS(IPER))//'.ARR',PCK(8),IU,IFBND,0))RETURN
       ENDIF
     !## rch
@@ -5651,6 +5669,7 @@ STOP
 
  !## apply nevtop/nrchop options
  SELECT CASE(ITOPIC)
+  CASE (18); NP=NUZTOP
   CASE (24); NP=NEVTOP
   CASE (26); NP=NRCHOP
   CASE DEFAULT; NP=MP
