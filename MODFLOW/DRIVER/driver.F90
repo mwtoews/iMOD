@@ -24,10 +24,11 @@ program driver
 
 ! modules
 use driver_module
+use IMOD_UTL, only : imod_utl_capf
 use m_main_info
 use m_vcl, only: targ
 use imod_utl, only: imod_utl_closeunits, imod_utl_has_ext, imod_utl_printtext
-use mod_pest, only: pest1_meteo_metaswap, pest1alpha_metaswap, pest1appendlogfile, pestnext, pestdumpfct
+use mod_pest, only: pest1_meteo_metaswap, pest1alpha_metaswap, pest1appendlogfile, pestnext, pestdumpfct, PEST1INIT
 use PESTVAR, only : IUPESTOUT
 implicit none
 
@@ -54,7 +55,7 @@ implicit none
  logical    stsave,strestore,mozstsave
  character  del*1,cont*1,comm*1
 
- character (len=1024) :: root, wd, modwd1, modwd2, simwd1, simwd2, mozwd, infile, rfopt, wddum
+ character (len=1024) :: root, wd, modwd1, modwd2, simwd1, simwd2, mozwd, infile, rfopt, wddum, pfile
  integer, allocatable, dimension(:) :: hrivsys, wrivsys
  integer :: nhrivsys, nwrivsys
  integer :: privsys, srivsys, trivsys, bdrnsys, odrnsys
@@ -142,6 +143,7 @@ implicit none
   call imod_utl_printtext(' 3: -components <components steering file>',0)
   call exit(0)
  end if
+
  call cfn_vcl_arg(ivcl,1,infile,n)
  if (imod_utl_has_ext(infile,'nam')) lnamfile= .true.
  if (imod_utl_has_ext(infile,'run')) lrunfile= .true.
@@ -285,6 +287,16 @@ implicit none
     endif
  endif
 
+ ! check if user has specified -ipest
+ if(lnamfile)then
+  lipest = .false.
+  call cfn_vcl_fndc(ivcl,iarg,'-ipest',.true.,pfile,1)
+  if (iarg.gt.0) then
+   lipest=.true.  
+   CALL PEST1INIT(1,pfile,IUPESTOUT,modwd1) !'CODE OF HET UIT RUN- OF NAMFILE KOMT')
+  endif
+ endif
+ 
  rt = driverGetRunType(usemodflow,usemetaswap,usetransol,usemozart,usests)
  write(*,'(50(''*''),/,2(1x,a),/,50(''*''))') 'Running mode:', trim(rtdesc(rt))
 
@@ -366,7 +378,7 @@ implicit none
 
  ! append the PEST log-file
  if (lipest) then
-    call pest1appendlogfile()
+    call pest1appendlogfile(modwd1)
     call pest1log()
  end if
 
@@ -819,7 +831,7 @@ implicit none
  if (.not.lipest) then
     convergedPest=.true.
  else
-    convergedPest=pestnext()
+    convergedPest=pestnext(modwd1)
  end if
  call imod_utl_closeunits()
 

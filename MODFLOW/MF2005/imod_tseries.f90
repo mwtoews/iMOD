@@ -24,9 +24,11 @@
 REAL FUNCTION MF2005_TSERIE1HMEAN(X,Y,ICOL,IROW,ILAY)
 !###====================================================================
 USE IMOD_UTL, ONLY: IMOD_UTL_POL1INTMAIN
-USE GLOBAL, ONLY: NROW,NCOL,HNEW
-USE GWFBASMODULE, ONLY: HNOFLO
+USE GLOBAL, ONLY: NROW,NCOL,HNEW,iunit
+USE GWFBASMODULE, ONLY: HNOFLO,hdry
 use gwfmetmodule, only: cdelr, cdelc
+USE GWFLPFMODULE, ONLY: laywet
+use M_MF2005_IU, only: IULPF
 
 IMPLICIT NONE
 INTEGER,INTENT(IN) :: ICOL,IROW,ILAY
@@ -60,6 +62,15 @@ DO IR=IROW-1,IROW+1
   ZCRD(I,J)=HNEW(MIN(NCOL,MAX(1,IC)),MIN(NROW,MAX(1,IR)),ILAY)
  ENDDO
 ENDDO
+
+!## skip dry cells as well - make them nodata
+if(IUNIT(IULPF).GT.0)then
+ if(LAYWET(ilay).NE.0)then
+  do i=1,size(zcrd,1); do j=1,size(zcrd,2)
+   if(zcrd(i,j).eq.HDRY)zcrd(i,j)=hnoflo
+  enddo; enddo
+ endif
+endif
 
 CALL IMOD_UTL_POL1INTMAIN(1,1,3,3,XCRD,YCRD,ZCRD,(/X,X/),(/Y,Y/),XINT,4,HNOFLO)
 

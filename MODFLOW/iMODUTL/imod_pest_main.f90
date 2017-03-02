@@ -42,24 +42,88 @@ REAL,PRIVATE :: DAMPINGFACTOR=1.5
 CONTAINS
 
  !###====================================================================
- SUBROUTINE PEST1INIT()
+ SUBROUTINE PEST1INIT(ioption,infile,IOUT,root)
  !###====================================================================
  use rf2mf_module, only: ncol, nrow, nlay, nper
  IMPLICIT NONE
- INTEGER :: IOS,I,J,N,IZ,IROW,ICOL,JU,NIPF,MIPF,K
+ character(len=*),intent(in) :: infile,root
+ integer,intent(in) :: ioption,IOUT
+ INTEGER :: IOS,I,J,JJ,N,IZ,IROW,ICOL,JU,NIPF,MIPF,K,JS
  REAL :: NODATA,TF,F
- logical :: lop
+ logical :: lop,LEX
+ character(len=52) :: cl
+ 
+ IF(ioption.eq.1)THEN
+ 
+  if(len_trim(infile).eq.0)stop 'No ipest file given'
 
- IF(IIPF.EQ.0)CALL IMOD_UTL_PRINTTEXT('You should specify IIPF>0 in combination with PST module',2)
+  !## open file
+  IURUN=IMOD_UTL_GETUNIT()
+  OPEN(IURUN,FILE=infile,STATUS='OLD',ACTION='READ',IOSTAT=IOS)
+  IF(IOS.NE.0)THEN; WRITE(*,'(A)') 'Can not find '//TRIM(infile); STOP; ENDIF
+
+  !## skip comment
+  DO
+   READ(IURUN,'(A52)') CL
+   IF(CL(1:1).NE.'#')EXIT
+  ENDDO
+  
+  !## read steady/transient
+  READ(CL,*) IDFM%NCOL,IDFM%NROW,NPER
+  !## read dimensions
+  READ(IURUN,*) IDFM%XMIN,IDFM%YMIN,IDFM%XMAX,IDFM%YMAX,IDFM%IEQ
+  !## cellsize
+  if(idfm%ieq.EQ.0)then
+   READ(IURUN,*) IDFM%DX
+  else
+!   WRITE(IU,*) (IDFM%SX(ICOL),ICOL=1,IDFM%NCOL)
+!   WRITE(IU,*) (IDFM%SY(IROW),IROW=1,IDFM%NROW)
+  endif
+    
+  READ(IURUN,*) IIPF
+ 
+  IF(IIPF.NE.0)THEN
+   IF(ALLOCATED(TS))DEALLOCATE(TS)
+   ALLOCATE(TS(ABS(IIPF)))
+   DO JJ=1,ABS(IIPF)
+    READ(IURUN,'(A256)',IOSTAT=IOS) LINE
+    IF(IOS.NE.0)CALL IMOD_UTL_PRINTTEXT('ERROR DataSet 3 (see manual):'//TRIM(LINE),2)
+    !## swap / -> \ in case of Linux (temporary)
+    CALL IMOD_UTL_STRING(LINE); JS=OS; OS=1; CALL IMOD_UTL_SWAPSLASH(LINE)
+    READ(LINE,*,IOSTAT=IOS) TS(JJ)%IPFNAME,TS(JJ)%IPFTYPE,TS(JJ)%IXCOL,TS(JJ)%IYCOL,TS(JJ)%ILCOL,TS(JJ)%IMCOL,TS(JJ)%IVCOL
+    IF(IOS.NE.0)THEN
+     TS(JJ)%IXCOL=1; TS(JJ)%IYCOL=2; TS(JJ)%ILCOL=3; TS(JJ)%IMCOL=0; TS(JJ)%IVCOL=0
+     READ(LINE,*,IOSTAT=IOS) TS(JJ)%IPFNAME,TS(JJ)%IPFTYPE
+    ENDIF
+    IF(IOS.NE.0)THEN
+     IF(NPER.EQ.1)TS(JJ)%IPFTYPE=1; IF(NPER.GT.1)TS(JJ)%IPFTYPE=2
+     READ(LINE,*,IOSTAT=IOS) TS(JJ)%IPFNAME
+    ENDIF
+   !## swap back again
+   !OS=JS;
+    CALL IMOD_UTL_SWAPSLASH(TS(JJ)%IPFNAME)
+    IF(NPER.EQ.1.AND. TS(JJ)%IPFTYPE.GE.2)CALL IMOD_UTL_PRINTTEXT('For steady-state simulation IPFTYPE(.)=1',2)
+    IF(NPER.GT.1.AND.(TS(JJ)%IPFTYPE.LT.2.OR.TS(JJ)%IPFTYPE.GT.3))CALL IMOD_UTL_PRINTTEXT('for transient simulations IPFTYPE(.)=2 or IPFTYPE(.)=3',2)
+    INQUIRE(FILE=TS(JJ)%IPFNAME,EXIST=LEX)
+    CALL IMOD_UTL_PRINTTEXT('  - '//TRIM(TS(JJ)%IPFNAME(INDEX(TS(JJ)%IPFNAME,'\',.TRUE.)+1:)),0)
+    IF(.NOT.LEX)CALL IMOD_UTL_PRINTTEXT('IPF-file does not exist',2)
+   ENDDO
+  ENDIF
+
+ else
+ 
+  IF(IIPF.EQ.0)CALL IMOD_UTL_PRINTTEXT('You should specify IIPF>0 in combination with PST module',2)
+
+ ENDIF
 
  !## next pest run ... skip part of runfile with pest information
  IF(ALLOCATED(PARAM))RETURN
 
- CALL PESTOPENFILE(IUPESTOUT,'log_pest_','txt',PEST_ITER)
- CALL PESTOPENFILE(IUPESTPROGRESS,'log_pest_progress_','txt',PEST_ITER)
- CALL PESTOPENFILE(IUPESTEFFICIENCY,'log_pest_efficiency_','txt',PEST_ITER)
- CALL PESTOPENFILE(IUPESTSENSITIVITY,'log_pest_sensitivity_','txt',PEST_ITER)
- CALL PESTOPENFILE(IUPESTRUNFILE,'log_pest_runfile_','txt',PEST_ITER)
+ CALL PESTOPENFILE(IUPESTOUT,'log_pest_','txt',PEST_ITER,root)
+ CALL PESTOPENFILE(IUPESTPROGRESS,'log_pest_progress_','txt',PEST_ITER,root)
+ CALL PESTOPENFILE(IUPESTEFFICIENCY,'log_pest_efficiency_','txt',PEST_ITER,root)
+ CALL PESTOPENFILE(IUPESTSENSITIVITY,'log_pest_sensitivity_','txt',PEST_ITER,root)
+ CALL PESTOPENFILE(IUPESTRUNFILE,'log_pest_runfile_','txt',PEST_ITER,root)
 
  IUPESTRESIDUAL=0
 
@@ -270,101 +334,168 @@ CONTAINS
   CALL IMOD_UTL_PRINTTEXT('Busy processing module: '//TRIM(CMOD(PPST)),2)
  ENDIF
 
- !## call fosm if covariance is known and jacobians are there
-#ifdef IPEST_FOSM
- IF(.FALSE.)THEN
-  !## set igroup lt 0 for followers in group
-  DO I=1,SIZE(PARAM)
-   IF(PARAM(I)%IACT.EQ.0)CYCLE
-   DO J=1,I-1 
-    IF(PARAM(J)%IACT.EQ.0)CYCLE
-    IF(PARAM(J)%IGROUP.EQ.PARAM(I)%IGROUP)THEN
-     PARAM(I)%IGROUP=-1*PARAM(I)%IGROUP; EXIT
-    ENDIF
-   ENDDO
-  ENDDO
-
-!## ibrahym
-!  CALL IMOD_UTL_OPENASC(IUCOV,'d:\IMOD-MODELS\IBRAHYM_V2\DBASE\IMOD_USER\MODELS\ibV2_stat_fosm\totaal250\covariance_250_opt_4iter.txt','R')
-
-!## tilburg
-!  CALL IMOD_UTL_OPENASC(IUCOV,'p:\1210574-wilhelmina-kanaal\20150224_Tilburg\model2imod\output\v4_08_calib_02_peter\cov_iter0.txt','R')
-  CALL IMOD_UTL_OPENASC(IUCOV,'p:\1210574-wilhelmina-kanaal\20150224_Tilburg\model2imod\output\v4_08_calib_02_peter_optimalisatie\cov_iter5.txt','R')
-  READ(IUCOV,*) NP; ALLOCATE(COV(NP,NP),TXTCOV(NP))
-  READ(IUCOV,*); READ(IUCOV,*); READ(IUCOV,*)
-  DO I=1,NP; READ(IUCOV,*) TXTCOV(I),(COV(I,J),J=1,NP); ENDDO
-  !## deactive parameter that are not represented by txtcov()
-  J=1; DO I=1,SIZE(PARAM)
-   WRITE(LINE,'(A2,2I3.3,A1,I3.3)') PARAM(I)%PTYPE,PARAM(I)%ILS,PARAM(I)%IZONE,'-',PARAM(I)%IGROUP
-   IF(TRIM(LINE).EQ.TRIM(TXTCOV(J)))THEN
-    J=J+1; IF(J.GT.NP)J=1
-   ELSE
-    PARAM(I)%IACT=0
-   ENDIF
-  ENDDO
-  CDATE_SIM(1)='STEADY-STATE'
-  CALL PESTWRITESTATISTICS_FOSM(NP,COV)
- ENDIF 
-#endif
+! !## call fosm if covariance is known and jacobians are there
+!#ifdef IPEST_FOSM
+! IF(.FALSE.)THEN
+!  !## set igroup lt 0 for followers in group
+!  DO I=1,SIZE(PARAM)
+!   IF(PARAM(I)%IACT.EQ.0)CYCLE
+!   DO J=1,I-1 
+!    IF(PARAM(J)%IACT.EQ.0)CYCLE
+!    IF(PARAM(J)%IGROUP.EQ.PARAM(I)%IGROUP)THEN
+!     PARAM(I)%IGROUP=-1*PARAM(I)%IGROUP; EXIT
+!    ENDIF
+!   ENDDO
+!  ENDDO
+!
+!!## ibrahym
+!!  CALL IMOD_UTL_OPENASC(IUCOV,'d:\IMOD-MODELS\IBRAHYM_V2\DBASE\IMOD_USER\MODELS\ibV2_stat_fosm\totaal250\covariance_250_opt_4iter.txt','R')
+!
+!!## tilburg
+!!  CALL IMOD_UTL_OPENASC(IUCOV,'p:\1210574-wilhelmina-kanaal\20150224_Tilburg\model2imod\output\v4_08_calib_02_peter\cov_iter0.txt','R')
+!  CALL IMOD_UTL_OPENASC(IUCOV,'p:\1210574-wilhelmina-kanaal\20150224_Tilburg\model2imod\output\v4_08_calib_02_peter_optimalisatie\cov_iter5.txt','R')
+!  READ(IUCOV,*) NP; ALLOCATE(COV(NP,NP),TXTCOV(NP))
+!  READ(IUCOV,*); READ(IUCOV,*); READ(IUCOV,*)
+!  DO I=1,NP; READ(IUCOV,*) TXTCOV(I),(COV(I,J),J=1,NP); ENDDO
+!  !## deactive parameter that are not represented by txtcov()
+!  J=1; DO I=1,SIZE(PARAM)
+!   WRITE(LINE,'(A2,2I3.3,A1,I3.3)') PARAM(I)%PTYPE,PARAM(I)%ILS,PARAM(I)%IZONE,'-',PARAM(I)%IGROUP
+!   IF(TRIM(LINE).EQ.TRIM(TXTCOV(J)))THEN
+!    J=J+1; IF(J.GT.NP)J=1
+!   ELSE
+!    PARAM(I)%IACT=0
+!   ENDIF
+!  ENDDO
+!  CDATE_SIM(1)='STEADY-STATE'
+!  CALL PESTWRITESTATISTICS_FOSM(NP,COV)
+! ENDIF 
+!#endif
  
  ALLOCATE(ZONE(N))
 
- DO I=1,SIZE(ZONE)
+ if(ioption.eq.0)then
+ 
+  DO I=1,SIZE(ZONE)
 
-  NULLIFY(ZONE(I)%X,ZONE(I)%XY,ZONE(I)%IZ) 
-  READ(IURUN,*,IOSTAT=IOS) LINE
-  IF(IOS.NE.0)THEN
-   CALL IMOD_UTL_PRINTTEXT('Error reading '//TRIM(LINE),0)
-   CALL IMOD_UTL_PRINTTEXT('Busy processing module: '//TRIM(CMOD(I)),2)
-  ENDIF
+   NULLIFY(ZONE(I)%X,ZONE(I)%XY,ZONE(I)%IZ) 
+   READ(IURUN,*,IOSTAT=IOS) LINE
+   IF(IOS.NE.0)THEN
+    CALL IMOD_UTL_PRINTTEXT('Error reading '//TRIM(LINE),0)
+    CALL IMOD_UTL_PRINTTEXT('Busy processing module: '//TRIM(CMOD(I)),2)
+   ENDIF
 
-  IZ=INT(IMOD_UTL_GETREAL(LINE,IOS))
-  IF(IOS.EQ.0)THEN
-   CALL IMOD_UTL_PRINTTEXT('Read Constant Value '//TRIM(IMOD_UTL_ITOS(IZ)),0)
-   ALLOCATE(ZONE(I)%X(NCOL,NROW))
-   ZONE(I)%ZTYPE=0
-   ZONE(I)%X=REAL(IZ) 
-  ELSE
-   CALL IMOD_UTL_FILENAME(LINE)
-   CALL IMOD_UTL_PRINTTEXT('Assigned '//TRIM(LINE),0)
-   IF(INDEX(IMOD_UTL_CAPF(LINE,'U'),'.IDF').GT.0)THEN
-    if (.not.idfread(idfc,line,0)) CALL IMOD_UTL_PRINTTEXT('idfread',2)
-    call idfnullify(idfm)
-    idfm%ieq=0
-    idfm%dx=simcsize
-    idfm%dy=simcsize
-    idfm%ncol=ncol
-    idfm%nrow=nrow
-    idfm%xmin = simbox(1)
-    idfm%ymin = simbox(2)
-    idfm%xmax = simbox(3)
-    idfm%ymax = simbox(4)
-    nodata = idfc%nodata
-    idfm%nodata = nodata
-    if (.not.idfreadscale(idfc,idfm,9,0)) CALL IMOD_UTL_PRINTTEXT('idfreadscale',2)
+   IZ=INT(IMOD_UTL_GETREAL(LINE,IOS))
+   IF(IOS.EQ.0)THEN
+    CALL IMOD_UTL_PRINTTEXT('Read Constant Value '//TRIM(IMOD_UTL_ITOS(IZ)),0)
     ALLOCATE(ZONE(I)%X(NCOL,NROW))
     ZONE(I)%ZTYPE=0
-    ZONE(I)%X=IDFM%X
-    call idfdeallocatex(idfc)
-    if (idfc%iu.gt.0) then
-     inquire(unit=idfc%iu,opened=lop); if(lop)close(idfc%iu)
-    endif
+    ZONE(I)%X=REAL(IZ) 
+   ELSE
+    CALL IMOD_UTL_FILENAME(LINE)
+    CALL IMOD_UTL_PRINTTEXT('Assigned '//TRIM(LINE),0)
+    IF(INDEX(IMOD_UTL_CAPF(LINE,'U'),'.IDF').GT.0)THEN
+     if (.not.idfread(idfc,line,0)) CALL IMOD_UTL_PRINTTEXT('idfread',2)
+     call idfnullify(idfm)
+     idfm%ieq=0
+     idfm%dx=simcsize
+     idfm%dy=simcsize
+     idfm%ncol=ncol
+     idfm%nrow=nrow
+     idfm%xmin = simbox(1)
+     idfm%ymin = simbox(2)
+     idfm%xmax = simbox(3)
+     idfm%ymax = simbox(4)
+     nodata = idfc%nodata
+     idfm%nodata = nodata
+     if (.not.idfreadscale(idfc,idfm,9,0)) CALL IMOD_UTL_PRINTTEXT('idfreadscale',2)
+     ALLOCATE(ZONE(I)%X(NCOL,NROW))
+     ZONE(I)%ZTYPE=0
+     ZONE(I)%X=IDFM%X
+     call idfdeallocatex(idfc)
+     if (idfc%iu.gt.0) then
+      inquire(unit=idfc%iu,opened=lop); if(lop)close(idfc%iu)
+     endif
 #ifdef IPEST_PILOTPOINTS    
-   ELSEIF(INDEX(IMOD_UTL_CAPF(LINE,'U'),'.IPF').GT.0)THEN
-    ZONE(I)%ZTYPE=1
-    !## read in ipf and put coordinates in bufpst()
-    JU=GETUNIT(); CALL IMOD_UTL_OPENASC(JU,LINE,'R')
-    READ(JU,*) NIPF; READ(JU,*) MIPF; DO K=1,MIPF+1; READ(JU,*); ENDDO
-    ALLOCATE(ZONE(I)%XY(NIPF,2),ZONE(I)%IZ(NIPF))  
-    DO K=1,NIPF; READ(JU,*) ZONE(I)%XY(K,1),ZONE(I)%XY(K,2),ZONE(I)%IZ(K); ENDDO  
-    CLOSE(JU)
+    ELSEIF(INDEX(IMOD_UTL_CAPF(LINE,'U'),'.IPF').GT.0)THEN
+     ZONE(I)%ZTYPE=1
+     !## read in ipf and put coordinates in bufpst()
+     JU=GETUNIT(); CALL IMOD_UTL_OPENASC(JU,LINE,'R')
+     READ(JU,*) NIPF; READ(JU,*) MIPF; DO K=1,MIPF+1; READ(JU,*); ENDDO
+     ALLOCATE(ZONE(I)%XY(NIPF,2),ZONE(I)%IZ(NIPF))  
+     DO K=1,NIPF; READ(JU,*) ZONE(I)%XY(K,1),ZONE(I)%XY(K,2),ZONE(I)%IZ(K); ENDDO  
+     CLOSE(JU)
 #endif
-   ELSE 
-    CALL IMOD_UTL_PRINTTEXT('No supported file format found',2)
+    ELSE 
+     CALL IMOD_UTL_PRINTTEXT('No supported file format found',2)
+    ENDIF
    ENDIF
-  ENDIF
- ENDDO
+  ENDDO
+ 
+ else
 
+  DO I=1,SIZE(ZONE)
+
+   NULLIFY(ZONE(I)%X,ZONE(I)%XY,ZONE(I)%IZ) 
+!   READ(IURUN,*,IOSTAT=IOS) LINE
+!   IF(IOS.NE.0)THEN
+!    CALL IMOD_UTL_PRINTTEXT('Error reading '//TRIM(LINE),0)
+!    CALL IMOD_UTL_PRINTTEXT('Busy processing module: '//TRIM(CMOD(I)),2)
+!   ENDIF
+
+!## USE U2DREL
+    ALLOCATE(ZONE(I)%X(NCOL,NROW))
+    ZONE(I)%ZTYPE=0
+    CALL U2DREL(zone(i)%x, 'zone', NROW, NCOL, 0, iurun, IOUT)
+
+!   IZ=INT(IMOD_UTL_GETREAL(LINE,IOS))
+!   IF(IOS.EQ.0)THEN
+!    CALL IMOD_UTL_PRINTTEXT('Read Constant Value '//TRIM(IMOD_UTL_ITOS(IZ)),0)
+!    ALLOCATE(ZONE(I)%X(NCOL,NROW))
+!    ZONE(I)%ZTYPE=0
+!    ZONE(I)%X=REAL(IZ) 
+!   ELSE
+!    CALL IMOD_UTL_FILENAME(LINE)
+!    CALL IMOD_UTL_PRINTTEXT('Assigned '//TRIM(LINE),0)
+!    IF(INDEX(IMOD_UTL_CAPF(LINE,'U'),'.IDF').GT.0)THEN
+!     if (.not.idfread(idfc,line,0)) CALL IMOD_UTL_PRINTTEXT('idfread',2)
+!     call idfnullify(idfm)
+!     idfm%ieq=0
+!     idfm%dx=simcsize
+!     idfm%dy=simcsize
+!     idfm%ncol=ncol
+!     idfm%nrow=nrow
+!     idfm%xmin = simbox(1)
+!     idfm%ymin = simbox(2)
+!     idfm%xmax = simbox(3)
+!     idfm%ymax = simbox(4)
+!     nodata = idfc%nodata
+!     idfm%nodata = nodata
+!     if (.not.idfreadscale(idfc,idfm,9,0)) CALL IMOD_UTL_PRINTTEXT('idfreadscale',2)
+!     ALLOCATE(ZONE(I)%X(NCOL,NROW))
+!     ZONE(I)%ZTYPE=0
+!     ZONE(I)%X=IDFM%X
+!     call idfdeallocatex(idfc)
+!     if (idfc%iu.gt.0) then
+!      inquire(unit=idfc%iu,opened=lop); if(lop)close(idfc%iu)
+!     endif
+!#ifdef IPEST_PILOTPOINTS    
+!    ELSEIF(INDEX(IMOD_UTL_CAPF(LINE,'U'),'.IPF').GT.0)THEN
+!     ZONE(I)%ZTYPE=1
+!     !## read in ipf and put coordinates in bufpst()
+!     JU=GETUNIT(); CALL IMOD_UTL_OPENASC(JU,LINE,'R')
+!     READ(JU,*) NIPF; READ(JU,*) MIPF; DO K=1,MIPF+1; READ(JU,*); ENDDO
+!     ALLOCATE(ZONE(I)%XY(NIPF,2),ZONE(I)%IZ(NIPF))  
+!     DO K=1,NIPF; READ(JU,*) ZONE(I)%XY(K,1),ZONE(I)%XY(K,2),ZONE(I)%IZ(K); ENDDO  
+!     CLOSE(JU)
+!#endif
+!    ELSE 
+!     CALL IMOD_UTL_PRINTTEXT('No supported file format found',2)
+!    ENDIF
+!   ENDIF
+  ENDDO
+
+ endif
+  
  CALL IMOD_UTL_PRINTTEXT('Parameters',-1,IUPESTOUT)
  WRITE(LINE,'(A2,1X,A5,2(1X,A3),5(1X,A15),3A10)') 'AC','PTYPE','ILS','IZN','INITIAL','DELTA','MINIMUM','MAXIMUM','FADJ','IGROUP','LTRANS','NODES'
  CALL IMOD_UTL_PRINTTEXT(TRIM(LINE),-1,IUPESTOUT)
@@ -707,15 +838,16 @@ CONTAINS
  END FUNCTION PESTRUNEXT
  
  !#####=================================================================
- LOGICAL FUNCTION PESTNEXT()
+ LOGICAL FUNCTION PESTNEXT(root)
  !#####=================================================================
  IMPLICIT NONE
+ character(len=*),intent(in) :: root
  REAL :: IMPROVEMENT,F
  INTEGER :: I
 
  PESTNEXT=.FALSE.
 
- IF(PEST_IGRAD.EQ.0)CALL PESTOPENFILE(IUPESTRESIDUAL,'log_pest_residual_'//TRIM(IMOD_UTL_ITOS(PEST_ITER)),'txt',0)
+ IF(PEST_IGRAD.EQ.0)CALL PESTOPENFILE(IUPESTRESIDUAL,'log_pest_residual_'//TRIM(IMOD_UTL_ITOS(PEST_ITER)),'txt',0,root)
 
  IF(PEST_ITER.EQ.0)PEST_ITER=1
 
@@ -834,16 +966,16 @@ CONTAINS
  END FUNCTION PESTNEXT
 
  !#####=================================================================
- SUBROUTINE PESTOPENFILE(IU,FNAME,EXT,INEW)
+ SUBROUTINE PESTOPENFILE(IU,FNAME,EXT,INEW,root)
  !#####=================================================================
  IMPLICIT NONE
- CHARACTER(LEN=*),INTENT(IN) :: FNAME,EXT
+ CHARACTER(LEN=*),INTENT(IN) :: FNAME,EXT,root
  INTEGER,INTENT(IN) :: INEW
  INTEGER,INTENT(OUT) :: IU
  INTEGER :: IOS
  LOGICAL :: LEX
 
- LINE=TRIM(ROOTRES)//CHAR(92)//'pest'//CHAR(92)//TRIM(FNAME)//TRIM(CVERSION)//'.'//TRIM(EXT)
+ LINE=TRIM(ROOT)//CHAR(92)//'pest'//CHAR(92)//TRIM(FNAME)//TRIM(CVERSION)//'.'//TRIM(EXT)
  
  CALL IMOD_UTL_CREATEDIR(LINE(:INDEX(LINE,CHAR(92),.TRUE.)-1))
  CALL IMOD_UTL_FILENAME(LINE); INQUIRE(FILE=LINE,EXIST=LEX)
@@ -2673,20 +2805,21 @@ WRITE(*,*) LOG(HUGE(1.0))
  END SUBROUTINE RED1TQLI_DBL
 
  !###====================================================================
- SUBROUTINE PEST1APPENDLOGFILE()
+ SUBROUTINE PEST1APPENDLOGFILE(root)
  !###====================================================================
  IMPLICIT NONE
+ character(len=*),intent(in) :: root
 
  IF(IUPESTOUT.GT.0)CLOSE(IUPESTOUT); IUPESTOUT=0
  IF(IUPESTPROGRESS.GT.0)CLOSE(IUPESTPROGRESS); IUPESTPROGRESS=0
  IF(IUPESTEFFICIENCY.GT.0)CLOSE(IUPESTEFFICIENCY); IUPESTEFFICIENCY=0
  IF(IUPESTSENSITIVITY.GT.0)CLOSE(IUPESTSENSITIVITY); IUPESTSENSITIVITY=0
  IF(IUPESTRUNFILE.GT.0)CLOSE(IUPESTRUNFILE); IUPESTRUNFILE=0
- CALL PESTOPENFILE(IUPESTOUT,'log_pest_','txt',1)
- CALL PESTOPENFILE(IUPESTPROGRESS,'log_pest_progress_','txt',1)
- CALL PESTOPENFILE(IUPESTEFFICIENCY,'log_pest_efficiency_','txt',1)
- CALL PESTOPENFILE(IUPESTSENSITIVITY,'log_pest_sensitivity_','txt',1)
- CALL PESTOPENFILE(IUPESTRUNFILE,'log_pest_runfile_','txt',1)
+ CALL PESTOPENFILE(IUPESTOUT,'log_pest_','txt',1,root)
+ CALL PESTOPENFILE(IUPESTPROGRESS,'log_pest_progress_','txt',1,root)
+ CALL PESTOPENFILE(IUPESTEFFICIENCY,'log_pest_efficiency_','txt',1,root)
+ CALL PESTOPENFILE(IUPESTSENSITIVITY,'log_pest_sensitivity_','txt',1,root)
+ CALL PESTOPENFILE(IUPESTRUNFILE,'log_pest_runfile_','txt',1,root)
 
  END SUBROUTINE PEST1APPENDLOGFILE
 

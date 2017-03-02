@@ -285,7 +285,7 @@ DO
  CASE (PPST)
    IF(MMOD(PPST).GT.0)THEN
     lipest = .true.
-    CALL PEST1INIT()
+    CALL PEST1INIT(0,'',0,rootres)
    END IF
   CASE (PCAP)
 !   !## read/prepare simgro-files (capsim/metaswap)
