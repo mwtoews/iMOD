@@ -1487,6 +1487,8 @@ IRLOOP: DO IR=MAX(1,IROW-1),MIN(NROW,IROW+1)
  LOGICAL FUNCTION ISG2SFR(NROW,NCOL,NLAY,ILAY,TOP,BOT,IPER,NPER,MP,JU,GRIDISG,EXFNAME)
  !###====================================================================
  IMPLICIT NONE
+ REAL,PARAMETER :: MAXQFLOW=1.0E5 !## error perhaps in entering discharge
+ REAL,PARAMETER :: FAREA=0.50     !## error in area of cross-section
  CHARACTER(LEN=*),INTENT(IN) :: EXFNAME
  INTEGER,INTENT(IN) :: NROW,NCOL,NLAY,ILAY,JU,IPER,NPER
  TYPE(GRIDISGOBJ),INTENT(INOUT) :: GRIDISG
@@ -1495,17 +1497,20 @@ IRLOOP: DO IR=MAX(1,IROW-1),MIN(NROW,IROW+1)
  INTEGER :: I,J,K,II,JJ,KK,KKK,TTIME,IROW,ICOL,N,ISEG,JSEG,NSEG,IREF,NDIM,KSEG,MSEG,IDATE,IISG, &
        ICALC,OUTSEG,IUPSEG,IPRIOR,NSTRPTS,ICRS,ICLC,IQHR,NREACH,NSTREAM,KCRS,CRSREF,KCLC,CLCREF,&
        NSIM
- REAL :: DXY,X1,X2,Y1,Y2,QFLOW,QROFF,EVT,PREC,ROUGHCH,ROUGHBK,CDPTH,FDPTH,AWDTH,BWDTH,DIST, &
-       HC1FCT,THICKM1,ELEVUP,WIDTH1,DEPTH1,HC2FCT,THICKM2,ELEVDN,WIDTH2,DEPTH2,WLVLUP,WLVLDN,Z
+ REAL :: DXY,X1,X2,Y1,Y2,QFLOW,QROFF,EVT,PREC,ROUGHCH,ROUGHBK,CDPTH,FDPTH,AWDTH,BWDTH,DIST,     &
+       HC1FCT,THICKM1,ELEVUP,WIDTH1,DEPTH1,HC2FCT,THICKM2,ELEVDN,WIDTH2,DEPTH2,WLVLUP,WLVLDN,Z, &
+       AORG,ASIMPLE
  REAL,ALLOCATABLE,DIMENSION(:,:) :: QSORT,RVAL
  REAL,ALLOCATABLE,DIMENSION(:) :: XNR,NDATA
  REAL,ALLOCATABLE,DIMENSION(:) :: XCRS,ZCRS,MCRS,QCRS,WCRS,DCRS
  REAL,DIMENSION(8) :: EXCRS,EZCRS,EMCRS
- LOGICAL :: LEX
+ LOGICAL :: LEX,LWARNING1,LWARNING2
  CHARACTER(LEN=512) :: LINE
  CHARACTER(LEN=MAXLEN) :: CNAME
 
- ISG2SFR=.FALSE.
+ ISG2SFR  =.FALSE.
+ LWARNING1=.FALSE.
+ LWARNING2=.FALSE.
 
  !## only specify for first stress-period - write output to regular ISG as well
  IF(IPER.EQ.1)THEN
@@ -1522,7 +1527,7 @@ IRLOOP: DO IR=MAX(1,IROW-1),MIN(NROW,IROW+1)
     !## write header *.ISG file in result-ISG
     CALL ISGSAVEHEADERS()
 
-    LINE=TRIM(ITOS(IISG))//','//TRIM(ITOS(ISFR))//',Date,StreamLevel,StreamDepth,StreamWidth,StreamDischarge'
+    LINE=TRIM(ITOS(IISG))//','//TRIM(ITOS(ISFR))//',Date,"StreamLevel (m+MSL)","StreamDepth (m)","StreamWidth (m)","StreamDischarge (m3/s)"'
     WRITE(ISGIU(1,1),'(A)') TRIM(LINE)
   
     ISFR=1
@@ -1727,15 +1732,29 @@ IRLOOP: DO IR=MAX(1,IROW-1),MIN(NROW,IROW+1)
   QFLOW =RVAL(10,1)     !## inflow
   QROFF =RVAL(11,1)     !## runoff flow
 
+  !## check qflow bigger than maxqflow; m3/s might be entered as m3/d
+  IF(QFLOW.GT.MAXQFLOW.AND.LWARNING1)THEN
+   CALL WMESSAGEBOX(YESNO,QUESTIONICON,COMMONNO,'You might entered the external discharge in m3/d instead of m3/s.'//CHAR(13)// &
+     'iMOD found a value of '//TRIM(RTOS(QFLOW,'*',5))//CHAR(13)// &
+     'That might be wrong'//CHAR(13)//'Do you want to continue ?','Question')
+   IF(WINFODIALOG(4).NE.0)RETURN
+   LWARNING1=.FALSE.
+  ENDIF
+  
+  !## translate inflow from m3/s to m3/d - only if not a diversion
+  IF(IUPSEG.EQ.0)QFLOW=QFLOW*86400.0
+  !## translate surface runoff from m3/s to m3/d
+  QROFF=QROFF*86400.0
+    
   !## check if lake, whether the lake number is still correct
   CALL ISG2SFR_GETLAKENUMBER(IUPSEG,I)
   CALL ISG2SFR_GETLAKENUMBER(OUTSEG,I)
   
-  !## corrections for reding out of a menu
+  !## corrections for reading out of a menu
   ICALC=ICALC-1; IPRIOR=-1*(IPRIOR-1)
 
-  EVT=RVAL(12,1) 
-  PREC=RVAL(13,1) 
+  EVT =RVAL(12,1)/1000.0
+  PREC=RVAL(13,1)/1000.0
   LINE=TRIM(ITOS(NSTREAM))//','//TRIM(ITOS(ICALC))//','//TRIM(ITOS(OUTSEG))//','//TRIM(ITOS(IUPSEG))
 
   IF(IUPSEG.GT.0)LINE=TRIM(LINE)//','//TRIM(ITOS(IPRIOR))
@@ -1804,8 +1823,17 @@ IRLOOP: DO IR=MAX(1,IROW-1),MIN(NROW,IROW+1)
   IF(ICALC.EQ.2)THEN
 
    !## try to get eight-point cross-section
-   NSIM=8; CALL ISGCOMPUTEEIGHTPOINTS(XCRS,ZCRS,NDIM,EXCRS,EZCRS,NSIM) 
-   
+   NSIM=8; CALL ISGCOMPUTEEIGHTPOINTS(XCRS,ZCRS,NDIM,EXCRS,EZCRS,NSIM,AORG,ASIMPLE) 
+
+   IF(LWARNING2.AND.(ASIMPLE/AORG.LT.FAREA.OR.ASIMPLE/AORG.GT.1.0/FAREA))THEN
+    CALL WMESSAGEBOX(YESNO,QUESTIONICON,COMMONNO,'For cross-section number '//TRIM(ITOS(I))//CHAR(13)// &
+       'the area of the estimated cross-section with eight points ('// &
+       TRIM(RTOS(ASIMPLE,'*',5))//')'//CHAR(13)//'differs significantly with the area of the original'//CHAR(13)// &
+       'cross-section ('//TRIM(RTOS(AORG,'*',5))//').'//CHAR(13)//'Do you want to continue ?','Question')
+    IF(WINFODIALOG(4).NE.1)RETURN
+    LWARNING2=.FALSE.
+   ENDIF
+
    !## make excrs relative
    Z=EXCRS(1);      DO J=1,NSIM; EXCRS(J)=EXCRS(J)-Z; ENDDO
 

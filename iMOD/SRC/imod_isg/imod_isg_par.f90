@@ -161,9 +161,9 @@ INTEGER,DIMENSION(5) :: CTATTRIB1
 INTEGER,DIMENSION(15) :: CTATTRIB2
 
 !## items for isd2-file for 1) riv approach and 2) sfr approach
-DATA TATTRIB1/'Date','Water level','Bottom level','Resistance','Inf.factor'/
-DATA TATTRIB2/'Date','Time','Water level','Bottom level','Stream Width','Bed Thickn.','Bed Perm.','Iup Seg','Idown Seg','Calc Opt', &
-              'Div Opt','Q Flow','Q Runoff','PPTSW','ETSW'/
+DATA TATTRIB1/'Date','Water level (m+MSL)','Bottom level (m+MSL)','Resistance (d)','Inf.factor (-)'/
+DATA TATTRIB2/'Date','Time','Water level (m+MSL)','Bottom level (m+MSL)','Stream Width (m)','Bed Thickn. (m)','Bed Perm. (m/d)', &
+    'Iup Seg (-)','Idown Seg (-)','Calc Opt (-)','Div Opt (-)','Q Flow (m3/s)','Q Runoff (m3/s)','PPTSW (mm/d)','ETSW (mm/d)'/
 DATA CTATTRIB1/1,2,2,2,2/   !## 1=integer,2=real,3=menu
 DATA CTATTRIB2/1,4,2,2,2,2,2,1,1,3,3,2,2,2,2/
 

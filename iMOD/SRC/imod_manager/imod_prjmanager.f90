@@ -2345,7 +2345,7 @@ TOPICLOOP: DO ITOPIC=1,MAXTOPICS
   !## pst module is exception
   IF(I.EQ.20)THEN
    WRITE(IU,'(/I4.4,A,I1,A)') SIZE(PEST%PARAM),','//TOPICS(I)%TNAME(1:5)//',',TOPICS(I)%IACT_MODEL,','//TRIM(TOPICS(I)%TNAME(6:))//' []'
-   IF(.NOT.PMANAGER_SAVEPST(IU,0,''))RETURN
+   IF(.NOT.PMANAGER_SAVEPST(IU,0,'',0))RETURN
    CYCLE
   !## pcg module another exception
   ELSEIF(I.EQ.33)THEN
@@ -2628,15 +2628,31 @@ TOPICLOOP: DO ITOPIC=1,MAXTOPICS
  END SUBROUTINE PMANAGER_LOADPCG
  
  !###======================================================================
- LOGICAL FUNCTION PMANAGER_SAVEPST(IU,IOPTION,DIR)
+ LOGICAL FUNCTION PMANAGER_SAVEPST(IU,IOPTION,DIR,ISS)
  !###======================================================================
  IMPLICIT NONE
- INTEGER,INTENT(IN) :: IU,IOPTION
+ INTEGER,INTENT(IN) :: IU,IOPTION,ISS
  CHARACTER(LEN=*),INTENT(IN) :: DIR
- INTEGER :: I,N,M,SCL_UP,SCL_D,IOS
+ INTEGER :: I,N,M,SCL_UP,SCL_D,IOS,ICOL,IROW
  REAL :: Z
  
  PMANAGER_SAVEPST=.FALSE.
+ 
+ !## write model dimensions into pst file
+ IF(IOPTION.EQ.2)THEN
+  WRITE(IU,*) IDF%NCOL,IDF%NROW,NPER,ISS
+  WRITE(IU,*) IDF%XMIN,IDF%YMIN,IDF%XMAX,IDF%YMAX,IDF%IEQ
+  IF(IDF%IEQ.EQ.0)THEN
+   WRITE(IU,*) IDF%DX
+  ELSE
+   WRITE(IU,*) (IDF%SX(ICOL),ICOL=1,IDF%NCOL)
+   WRITE(IU,*) (IDF%SY(IROW),IROW=1,IDF%NROW)
+  ENDIF
+
+!## metingen toch in hob-package stoppen - wellicht sneller ... ik weet alle periode etc. nu namelijk
+!## toch niet handig, ipf structure is prettiger
+
+ ENDIF
  
  IF(IOPTION.NE.1)THEN
   IF(ASSOCIATED(PEST%MEASURES))THEN
@@ -2711,14 +2727,12 @@ TOPICLOOP: DO ITOPIC=1,MAXTOPICS
     IF(IOS.EQ.0)THEN
      IDF%X=Z
     ELSE
+     !## upscale is using number 15, zones
      IDF%FNAME=LINE; SCL_UP=15; SCL_D=0
      !## read/clip/scale idf file
-     IF(.NOT.IDFREADSCALE(IDF%FNAME,IDF,SCL_UP,SCL_D,1.0,0))THEN
-  !## nog fout-afvangen
-  RETURN 
-  
-     ENDIF
+     IF(.NOT.IDFREADSCALE(IDF%FNAME,IDF,SCL_UP,SCL_D,1.0,0))RETURN
     ENDIF
+    !## save array, do not correct for boundary condition as we not yet know for what layer the zone will apply
     IF(.NOT.PMANAGER_SAVEMF2005_MOD_U2DREL(TRIM(DIR)//'\PST1\ZONE_IZ'//TRIM(ITOS(I))//'.ARR',IDF,1,IU,1,0))RETURN
    ELSE
     LINE=TRIM(PEST%IDFFILES(I))
@@ -3008,7 +3022,7 @@ TOPICLOOP: DO ITOPIC=1,MAXTOPICS
  !## namfile
  IF(IMODE.EQ.1)THEN
 
-  WRITE(IU,'(A)') 'TITLE "NAMFILE: '//TRIM(RUNFNAME(INDEX(RUNFNAME,'\',.TRUE.):))//'"'
+  WRITE(IU,'(A)') 'TITLE "NAMFILE: '//trim(mname)//'.nam"' !//TRIM(RUNFNAME(INDEX(RUNFNAME,'\',.TRUE.):))//'"'
 
   IF(LMODFLOW2005)THEN
    JU=UTL_GETUNIT()
@@ -3017,7 +3031,12 @@ TOPICLOOP: DO ITOPIC=1,MAXTOPICS
    CLOSE(JU)
    WRITE(IU,'(/A/)') '"'//TRIM(PREFVAL(8))//'" < MF2005.TXT'
   ELSE
-   WRITE(IU,'(/A/)') '"'//TRIM(PREFVAL(8))//'" "'//TRIM(RUNFNAME(INDEX(RUNFNAME,'\',.TRUE.)+1:))//'"'
+   IF(PBMAN%IPEST.EQ.0)THEN
+    WRITE(IU,'(/A/)') '"'//TRIM(PREFVAL(8))//'" "'//trim(mname)//'.nam"' !//TRIM(RUNFNAME(INDEX(RUNFNAME,'\',.TRUE.)+1:))//'"'
+   ELSE
+    WRITE(IU,'(/A/)') '"'//TRIM(PREFVAL(8))//'" "'//trim(mname)//'.nam" -ipest ".\modelinput\'//trim(mname)//'.pst1"'
+    !//TRIM(RUNFNAME(INDEX(RUNFNAME,'\',.TRUE.)+1:))//'" -IPEST .\modelinput\'trim(mname)
+   ENDIF
   ENDIF  
 
   !## include conversion of sfr package into isg-file
@@ -3054,12 +3073,7 @@ TOPICLOOP: DO ITOPIC=1,MAXTOPICS
   IFLAGS=IFLAGS+PROCCMDPROC
 #endif 
 
-  DO
- 
-   CALL IOSCOMMAND('RUN.BAT',IFLAGS,IEXCOD=IEXCOD)
-   IF(PBMAN%IPEST.EQ.0)EXIT
-   
-  ENDDO
+  CALL IOSCOMMAND('RUN.BAT',IFLAGS,IEXCOD=IEXCOD)
   
   IF(IBATCH.EQ.0)THEN
    CALL WMESSAGEBOX(OKONLY,INFORMATIONICON,COMMONOK,'Successfully STARTED the Modflow simulation using:'//CHAR(13)// &
@@ -3216,7 +3230,7 @@ TOPICLOOP: DO ITOPIC=1,MAXTOPICS
   !## pst module is exception
   IF(I.EQ.20)THEN
    LINE=TRIM(ITOS(SIZE(PEST%PARAM)))//',(PST)'; WRITE(IU,'(A)') TRIM(LINE) 
-   IF(.NOT.PMANAGER_SAVEPST(IU,1,''))THEN; ENDIF; CYCLE
+   IF(.NOT.PMANAGER_SAVEPST(IU,1,'',0))THEN; ENDIF; CYCLE
   ENDIF
   
   IF(.NOT.ASSOCIATED(TOPICS(I)%STRESS))CYCLE
@@ -3433,7 +3447,7 @@ TOPICLOOP: DO ITOPIC=1,MAXTOPICS
  !##================
 
  !## write pst-file
- IF(.NOT.PMANAGER_SAVEMF2005_PST_READWRITE(DIR,DIRMNAME,IBATCH))RETURN
+ IF(.NOT.PMANAGER_SAVEMF2005_PST_READWRITE(DIR,DIRMNAME,IBATCH,ISS))RETURN
  !## write metaswap
  IF(.NOT.PMANAGER_SAVEMF2005_MSP(IBATCH))RETURN 
  !## save bas file
@@ -3480,7 +3494,7 @@ TOPICLOOP: DO ITOPIC=1,MAXTOPICS
  !## save sfr package
  IF(.NOT.PMANAGER_SAVEMF2005_ISG(DIR,DIRMNAME,IBATCH,LSFR,30,ISFRCB,'SFR',IPRT))RETURN
  !## save hfb package
- IF(.NOT.PMANAGER_SAVEMF2005_PCK(DIR,DIRMNAME,IBATCH,LFHB,31,IFHBCB,'FHB',(/1/),IPRT))RETURN
+ IF(.NOT.PMANAGER_SAVEMF2005_PCK(DIR,DIRMNAME,IBATCH,LFHB,31,IFHBCB,'FHB',(/1,2/),IPRT))RETURN
  !## save rest of lak package
  LPER=0; DO IPER=1,NPER
   !## get appropriate stress-period to store in runfile   
@@ -3888,17 +3902,19 @@ TOPICLOOP: DO ITOPIC=1,MAXTOPICS
  END FUNCTION PMANAGER_GETPACKAGES
 
  !####====================================================================
- LOGICAL FUNCTION PMANAGER_SAVEMF2005_PST_READWRITE(DIR,DIRMNAME,IBATCH)
+ LOGICAL FUNCTION PMANAGER_SAVEMF2005_PST_READWRITE(DIR,DIRMNAME,IBATCH,ISS)
  !####====================================================================
  IMPLICIT NONE
  CHARACTER(LEN=*),INTENT(IN) :: DIR,DIRMNAME
- INTEGER,INTENT(IN) :: IBATCH
+ INTEGER,INTENT(IN) :: IBATCH,ISS
  INTEGER :: N,IU,I
  
  PMANAGER_SAVEMF2005_PST_READWRITE=.TRUE.
  
  IF(.NOT.LPST)RETURN
- 
+ !## overrule is by imod batch
+ IF(IBATCH.EQ.1.AND.PBMAN%IPEST.EQ.0)RETURN
+
  PMANAGER_SAVEMF2005_PST_READWRITE=.FALSE.
 
  N=0; IF(ASSOCIATED(PEST%MEASURES))THEN
@@ -3917,25 +3933,11 @@ TOPICLOOP: DO ITOPIC=1,MAXTOPICS
  WRITE(IU,'(A)') '# PST1 File Generated by '//TRIM(UTL_IMODVERSION())
 
  !## pst module is exception
- IF(.NOT.PMANAGER_SAVEPST(IU,2,DIR))RETURN
-
-! DO ILAY=1,NLAY
-!  CALL IDFCOPY(IDF,BND(ILAY))
-!  IF(.NOT.PMANAGER_SAVEMF2005_MOD_READ(BND(ILAY),ITOPIC,ILAY,SCL_D,SCL_U,0,IPRT))RETURN 
-!  !## adjust boundary for submodel()
-!  CALL PMANAGER_SAVEMF2005_BND(BND(ILAY))
-! ENDDO
-
-! IFBND=0
-! DO ILAY=1,NLAY
-!  IF(.NOT.PMANAGER_SAVEMF2005_MOD_U2DREL(TRIM(DIR)//'\BAS6\IBOUND_L'//TRIM(ITOS(ILAY))//'.ARR', &
-!      BND(ILAY),1,IU,ILAY,IFBND))RETURN
-! ENDDO
+ IF(.NOT.PMANAGER_SAVEPST(IU,2,DIR,ISS))RETURN
 
  CLOSE(IU)
 
  PMANAGER_SAVEMF2005_PST_READWRITE=.TRUE.
-STOP
 
  END FUNCTION PMANAGER_SAVEMF2005_PST_READWRITE
 
@@ -4292,14 +4294,18 @@ STOP
   IF(.NOT.PMANAGER_SAVEMF2005_MOD_READ(KHV(ILAY),ITOPIC,1,SCL_D,SCL_U,IINV,IPRT))RETURN
   CALL PMANAGER_SAVEMF2005_CORRECT(ILAY,BND,KHV(ILAY),0,ITOPIC)
 
-  !## vka
-  ITOPIC=8; SCL_D=1; SCL_U=2; IINV=1
+!  IF(ILAY.NE.NLAY)THEN
 
-  ILIST=ITOPIC; IF(PMANAGER_GETFNAMES(ILAY,ILAY,0,1,0).LE.0)RETURN
+   !## vka
+   ITOPIC=8; SCL_D=1; SCL_U=2; IINV=1
 
-  IF(.NOT.PMANAGER_SAVEMF2005_MOD_READ(KVA(ILAY),ITOPIC,1,SCL_D,SCL_U,IINV,IPRT))RETURN
-  CALL PMANAGER_SAVEMF2005_CORRECT(ILAY,BND,KVA(ILAY),0,ITOPIC)
+   ILIST=ITOPIC; IF(PMANAGER_GETFNAMES(ILAY,ILAY,0,1,0).LE.0)RETURN
 
+   IF(.NOT.PMANAGER_SAVEMF2005_MOD_READ(KVA(ILAY),ITOPIC,1,SCL_D,SCL_U,IINV,IPRT))RETURN
+   CALL PMANAGER_SAVEMF2005_CORRECT(ILAY,BND,KVA(ILAY),0,ITOPIC)
+  
+!  ENDIF
+  
   !## transient simulation
   IF(ISS.EQ.1)THEN
 
@@ -5411,9 +5417,14 @@ STOP
      CASE (22,23,25) !## drn,riv,ghb,olf
       IF(KTOP.EQ.1)THEN; SCL_D=0; SCL_U=5; ENDIF
       IF(KTOP.NE.1)THEN; SCL_D=0; SCL_U=2; ENDIF
-     !## chd,olf,fhb
-     CASE (27,28,31)
+     !## chd,olf
+     CASE (27,28)
       SCL_D=1; SCL_U=2
+     !## fhb
+     CASE (31)
+      SCL_D=1
+      IF(KTOP.EQ.1)SCL_U=5 !## q - sum (divide if cell is smaller)
+      IF(KTOP.EQ.2)SCL_U=2 !## h - average
      CASE DEFAULT 
       STOP 'Cannot come here: ERROR PMANAGER_SAVEMF2005_PCK'
     END SELECT
@@ -5526,10 +5537,17 @@ STOP
        IF(BND(PCK(1)%ILAY)%X(ICOL,IROW).EQ.0.0)CYCLE
       ENDIF
       
-      !## check nodata in dataset
-      DO I=1,NTOP; IF(PCK(JTOP(I))%X(ICOL,IROW).EQ.HNOFLOW)EXIT; ENDDO
-      !## found any nodata in dataset - skip data point
-      IF(I.LE.NTOP)CYCLE
+      IF(ITOPIC.EQ.31)THEN
+       !## check whether one of the two is not equal to nodata
+       DO I=1,NTOP; IF(PCK(JTOP(I))%X(ICOL,IROW).NE.HNOFLOW)EXIT; ENDDO
+       !## found no data in either dataset - skip data point
+       IF(I.GT.NTOP)CYCLE
+      ELSE
+       !## check nodata in dataset
+       DO I=1,NTOP; IF(PCK(JTOP(I))%X(ICOL,IROW).EQ.HNOFLOW)EXIT; ENDDO
+       !## found any nodata in dataset - skip data point
+       IF(I.LE.NTOP)CYCLE
+      ENDIF
        
       !## check bottom if that is higher than river stage
       IF(ITOPIC.EQ.23)PCK(3)%X(ICOL,IROW)=MIN(PCK(2)%X(ICOL,IROW),PCK(3)%X(ICOL,IROW))
@@ -5576,7 +5594,7 @@ STOP
        !## not put into model layer
        IF(TLP(ILAY).LE.0.0)CYCLE
 
-       !## write specifi packages
+       !## write specific packages
        SELECT CASE (ITOPIC)
         !## chd 
         CASE (28)
@@ -5599,8 +5617,8 @@ STOP
          NP=NP+1
         !## fhb
         CASE (31)
-        IF(BND(ILAY)%X(ICOL,IROW).EQ.-2.0)THEN; NHED=NHED+1; FHBHED(NHED,NBDTIM)=PCK(JTOP(1))%X(ICOL,IROW); ENDIF
-        IF(BND(ILAY)%X(ICOL,IROW).EQ. 2.0)THEN; NFLW=NFLW+1; FHBFLW(NFLW,NBDTIM)=PCK(JTOP(1))%X(ICOL,IROW); ENDIF      
+         IF(BND(ILAY)%X(ICOL,IROW).EQ. 2.0)THEN; NFLW=NFLW+1; FHBFLW(NFLW,NBDTIM)=PCK(JTOP(1))%X(ICOL,IROW); ENDIF      
+         IF(BND(ILAY)%X(ICOL,IROW).EQ.-2.0)THEN; NHED=NHED+1; FHBHED(NHED,NBDTIM)=PCK(JTOP(2))%X(ICOL,IROW); ENDIF
        CASE DEFAULT
         IF(PCK(JTOP(2))%X(ICOL,IROW).GT.0.0)THEN
          IF(PBMAN%SSYSTEM.EQ.1)THEN
@@ -9876,7 +9894,7 @@ JLOOP: DO K=1,SIZE(TOPICS)
  TOPICS(28)%NSUBTOPICS=1  !CHD
  TOPICS(29)%NSUBTOPICS=1  !ISG
  TOPICS(30)%NSUBTOPICS=1  !SFR
- TOPICS(31)%NSUBTOPICS=1  !FHB
+ TOPICS(31)%NSUBTOPICS=2  !FHB
  TOPICS(32)%NSUBTOPICS=10 !LAK
  TOPICS(33)%NSUBTOPICS=1  !PCG
 
@@ -9991,7 +10009,8 @@ JLOOP: DO K=1,SIZE(TOPICS)
  TOPICS(28)%SNAME(1) ='(CHD) Constant Head (IDF)'
  TOPICS(29)%SNAME(1) ='(ISG) Segment River (ISG)'
  TOPICS(30)%SNAME(1) ='(ISG) Stream Flow River (ISG)'
- TOPICS(31)%SNAME(1) ='(FHB) Specified Flow/Head (IDF)'
+ TOPICS(31)%SNAME(1) ='(FHB) Specified Flow (IDF)'
+ TOPICS(31)%SNAME(2) ='(FHB) Specified Head (IDF)'
  TOPICS(32)%SNAME(1) ='(LID) Lake Identifications (IDF)'
  TOPICS(32)%SNAME(2) ='(LBA) Lake Bathymetry (IDF)'
  TOPICS(32)%SNAME(3) ='(INI) Initial Lake Levels (IDF)'
