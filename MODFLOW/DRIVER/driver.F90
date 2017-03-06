@@ -24,7 +24,7 @@ program driver
 
 ! modules
 use driver_module
-use global, only : iout,nper
+use global, only : iout !,nper
 use IMOD_UTL, only : imod_utl_capf
 use m_main_info
 use m_vcl, only: targ
@@ -407,7 +407,6 @@ implicit none
  ok = mf2005_PutLPFActive(mf_igrid, llpf); call driverChk(ok,'mf2005_PutLPFActive') ! get flag if BCF is used or LPF
  ok = mf2005_PutSimulationType(mf_igrid, lss); call driverChk(ok,'mf2005_PutSimulationType')  ! get flag if simulation is steady-state or transient
  ok = mf2005_PutHeadNoFlo(mf_igrid, hnoflo);  call driverChk(ok,'mf2005_PutHeadNoFlo')  ! get hnoflo
-
 
  ! append the PEST log-file
  if (lipest) then
@@ -833,7 +832,9 @@ implicit none
  if (.not.lipest) then
     convergedPest=.true.
  else
-    convergedPest=pestnext(lss,modwd1)
+  call pest1appendlogfile(modwd1)
+  convergedPest=pestnext(lss,modwd1)
+  CALL PEST1CLOSELOGFILES()
  end if
  call imod_utl_closeunits()
 

@@ -114,7 +114,8 @@ CONTAINS
   ENDIF
 
   READ(IURUN,*) NLINES
-
+  IF(NLINES.EQ.0)RETURN
+  
  else
  
   IF(IIPF.EQ.0)CALL IMOD_UTL_PRINTTEXT('You should specify IIPF>0 in combination with PST module',2)
@@ -851,11 +852,14 @@ CONTAINS
  !#####=================================================================
  LOGICAL FUNCTION PESTNEXT(LSS,root)
  !#####=================================================================
+ use rf2mf_module, only: nper
  IMPLICIT NONE
  logical,intent(in) :: LSS
  character(len=*),intent(in) :: root
  REAL :: IMPROVEMENT,F
  INTEGER :: I
+
+ IF(.NOT.ALLOCATED(PARAM))STOP
 
  PESTNEXT=.FALSE.
 
@@ -1154,7 +1158,7 @@ CONTAINS
   IF(PARAM(I)%LOG)THEN
    Z =EXP(PARAM(I)%ALPHA(2))
    Z1=TINY(1.0)
-WRITE(*,*) LOG(HUGE(1.0))
+!WRITE(*,*) LOG(HUGE(1.0))
    IF(PARAM(I)%ALPHA(2)-ZW.LT.LOG(HUGE(1.0)))THEN
     Z1=EXP(PARAM(I)%ALPHA(2)-ZW)
    ENDIF
