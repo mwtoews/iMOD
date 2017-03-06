@@ -27,7 +27,7 @@ USE PESTVAR
 USE IMOD_UTL, ONLY : IMOD_UTL_PRINTTEXT,IMOD_UTL_CAPF,IMOD_UTL_ITOS,IMOD_UTL_GETREAL,&
  IMOD_UTL_FILENAME,IMOD_UTL_RTOS,IMOD_UTL_STRING,IMOD_UTL_OPENASC,IMOD_UTL_SWAPSLASH,&
  IMOD_UTL_GETUNIT,IMOD_UTL_CREATEDIR,IMOD_UTL_GETRCL,IMOD_UTL_LUDECOMP_DBL,IMOD_UTL_LUBACKSUB_DBL
-USE MOD_RF2MF, ONLY: NLINES, CMOD, PPST, SIMBOX, SIMCSIZE, IURUN
+USE MOD_RF2MF, ONLY: CMOD, PPST, SIMBOX, SIMCSIZE, IURUN  !NLINES
 USE TSVAR, ONLY : TS,CIPFTYPE,TS,ROOTRES, IIPF, ROOTRES
 USE IDFMODULE
 
@@ -42,16 +42,19 @@ REAL,PRIVATE :: DAMPINGFACTOR=1.5
 CONTAINS
 
  !###====================================================================
- SUBROUTINE PEST1INIT(ioption,infile,IOUT,root)
+ SUBROUTINE PEST1INIT(ioption,infile,IOUT,root,nparam)
  !###====================================================================
  use rf2mf_module, only: ncol, nrow, nlay, nper
  IMPLICIT NONE
  character(len=*),intent(in) :: infile,root
  integer,intent(in) :: ioption,IOUT
- INTEGER :: IOS,I,J,JJ,N,IZ,IROW,ICOL,JU,NIPF,MIPF,K,JS
+ integer,intent(in),OPTIONAL :: nparam
+ INTEGER :: IOS,I,J,JJ,N,IZ,IROW,ICOL,JU,NIPF,MIPF,K,JS,nlines
  REAL :: NODATA,TF,F
  logical :: lop,LEX
  character(len=52) :: cl
+ 
+ if(present(nparam))nlines=nparam
  
  IF(ioption.eq.1)THEN
  
@@ -69,7 +72,7 @@ CONTAINS
   ENDDO
   
   !## read steady/transient
-  READ(CL,*) IDFM%NCOL,IDFM%NROW,NPER
+  READ(CL,*) IDFM%NCOL,IDFM%NROW,NLAY,NPER
   !## read dimensions
   READ(IURUN,*) IDFM%XMIN,IDFM%YMIN,IDFM%XMAX,IDFM%YMAX,IDFM%IEQ
   !## cellsize
@@ -109,6 +112,8 @@ CONTAINS
     IF(.NOT.LEX)CALL IMOD_UTL_PRINTTEXT('IPF-file does not exist',2)
    ENDDO
   ENDIF
+
+  READ(IURUN,*) NLINES
 
  else
  
@@ -432,7 +437,10 @@ CONTAINS
   ENDDO
  
  else
-
+  
+  ncol=idfm%ncol
+  nrow=idfm%nrow
+  
   DO I=1,SIZE(ZONE)
 
    NULLIFY(ZONE(I)%X,ZONE(I)%XY,ZONE(I)%IZ) 
@@ -496,9 +504,9 @@ CONTAINS
 
  endif
   
- CALL IMOD_UTL_PRINTTEXT('Parameters',-1,IUPESTOUT)
+ CALL IMOD_UTL_PRINTTEXT('Parameters',-1,iu=IUPESTOUT)
  WRITE(LINE,'(A2,1X,A5,2(1X,A3),5(1X,A15),3A10)') 'AC','PTYPE','ILS','IZN','INITIAL','DELTA','MINIMUM','MAXIMUM','FADJ','IGROUP','LTRANS','NODES'
- CALL IMOD_UTL_PRINTTEXT(TRIM(LINE),-1,IUPESTOUT)
+ CALL IMOD_UTL_PRINTTEXT(TRIM(LINE),-1,iu=IUPESTOUT)
 
  !## check number of zones and missing zone (if any)
  DO I=1,SIZE(PARAM)
@@ -544,8 +552,8 @@ CONTAINS
    WRITE(LINE,'(I2,1X,A5,2(1X,I3),5(1X,F15.7),I10,L10,I10)') PARAM(I)%IACT,PARAM(I)%PTYPE,PARAM(I)%ILS, &
      PARAM(I)%IZONE,PARAM(I)%INI,PARAM(I)%DELTA,PARAM(I)%MIN,PARAM(I)%MAX,PARAM(I)%FADJ,PARAM(I)%IGROUP,PARAM(I)%LOG,PARAM(I)%NODES
   ENDIF
-  CALL IMOD_UTL_PRINTTEXT(TRIM(LINE),-1)
-  IF(PARAM(I)%PTYPE.EQ.'EX')CALL IMOD_UTL_PRINTTEXT(TRIM(PARAM(I)%EXBATFILE),-1)
+  CALL IMOD_UTL_PRINTTEXT(TRIM(LINE),-1,iu=IUPESTOUT)
+  IF(PARAM(I)%PTYPE.EQ.'EX')CALL IMOD_UTL_PRINTTEXT(TRIM(PARAM(I)%EXBATFILE),-1,iu=IUPESTOUT)
   CALL PEST1CHK(I)
   PARAM(I)%ALPHA(1)=PARAM(I)%INI !## current  alpha
   PARAM(I)%ALPHA(2)=PARAM(I)%INI !## previous alpha
@@ -659,6 +667,9 @@ CONTAINS
 
 ! !## dump initial factors
 ! CALL PESTDUMPFCT(IUPESTOUT)
+
+ !## close all files ...
+ CALL PEST1CLOSELOGFILES()
 
  END SUBROUTINE PEST1INIT
 
@@ -838,9 +849,10 @@ CONTAINS
  END FUNCTION PESTRUNEXT
  
  !#####=================================================================
- LOGICAL FUNCTION PESTNEXT(root)
+ LOGICAL FUNCTION PESTNEXT(LSS,root)
  !#####=================================================================
  IMPLICIT NONE
+ logical,intent(in) :: LSS
  character(len=*),intent(in) :: root
  REAL :: IMPROVEMENT,F
  INTEGER :: I
@@ -852,7 +864,7 @@ CONTAINS
  IF(PEST_ITER.EQ.0)PEST_ITER=1
 
  !## compute objective function
- CALL PEST_GETJ()
+ CALL PEST_GETJ(LSS,root)
 
  IF(LSENS)THEN
 !  !## next parameter combination
@@ -942,7 +954,7 @@ CONTAINS
    TJOBJ=TJ
    !## replace old by new parameter values
    PARAM%ALPHA(2)=PARAM%ALPHA(1)
-   CALL PESTDUMPFCT(IUPESTOUT)
+!   CALL PESTDUMPFCT(root) !IUPESTOUT)
 
    !## next iteration
    PEST_ITER=PEST_ITER+1
@@ -979,40 +991,43 @@ CONTAINS
  
  CALL IMOD_UTL_CREATEDIR(LINE(:INDEX(LINE,CHAR(92),.TRUE.)-1))
  CALL IMOD_UTL_FILENAME(LINE); INQUIRE(FILE=LINE,EXIST=LEX)
+ IU=IMOD_UTL_GETUNIT()
  IF(INEW.EQ.0)THEN
-  CALL IMOD_UTL_OPENASC(IU,LINE,'W')
+  OPEN(IU,FILE=LINE,STATUS='UNKNOWN',ACTION='WRITE',IOSTAT=IOS)
+!  CALL IMOD_UTL_OPENASC(IU,LINE,'W')
  ELSE
-  IU=IMOD_UTL_GETUNIT()
   OPEN(IU,FILE=LINE,STATUS='OLD',ACCESS='APPEND',IOSTAT=IOS)
-  IF(IOS.NE.0)IU=0
  ENDIF
+ IF(IOS.NE.0)IU=0
  IF(IU.LE.0)CALL IMOD_UTL_PRINTTEXT('Cannot open PEST-progress file '//TRIM(LINE),2)
 
  END SUBROUTINE PESTOPENFILE
 
  !#####=================================================================
- SUBROUTINE PESTDUMPFCT(IOUT)
+ SUBROUTINE PESTDUMPFCT(root,iout)
  !#####=================================================================
+ !use global, only: NCOL,NROW
  use rf2mf_module, only: ncol, nrow, nlay, nper
- USE MOD_RF2MF, ONLY: DELR,DELC,SIMBOX
+ !USE MOD_RF2MF, ONLY: DELR,DELC,SIMBOX
  IMPLICIT NONE
+ CHARACTER(LEN=256),intent(in) :: root
  INTEGER,INTENT(IN) :: IOUT
  CHARACTER(LEN=1024) :: FNAME,DIR
  INTEGER :: I,J,IROW,ICOL
  REAL,ALLOCATABLE,DIMENSION(:,:) :: X
  logical :: lok
- REAL, DIMENSION(:), ALLOCATABLE :: DLR, DLC
+! REAL, DIMENSION(:), ALLOCATABLE :: DLR, DLC
  
- ALLOCATE(DLR(NCOL),DLC(NROW))
- DO I = 1, NCOL
-   DLR(I) = DELR(I)-DELR(I-1)    
- END DO
- DO I = 1, NROW
-   DLC(I) = DELC(I)-DELC(I-1)    
- END DO
- 
+! ALLOCATE(DLR(NCOL),DLC(NROW))
+! DO I = 1, NCOL
+!   DLR(I) = DELR(I)-DELR(I-1)    
+! END DO
+! DO I = 1, NROW
+!   DLC(I) = DELC(I)-DELC(I-1)    
+! END DO
+! 
  !## open pest factor files
- DIR=TRIM(ROOTRES)//CHAR(92)//'pest'//CHAR(92)//'factors'//TRIM(ITOS(PEST_ITER))
+ DIR=TRIM(root)//CHAR(92)//'pest'//CHAR(92)//'factors'//TRIM(ITOS(PEST_ITER))
  CALL IMOD_UTL_CREATEDIR(DIR)
 
  ALLOCATE(X(NCOL,NROW))
@@ -1037,12 +1052,13 @@ CONTAINS
     ENDDO
    ENDIF 
    
-   IF(MINVAL(DLR).EQ.MAXVAL(DLR).AND.MINVAL(DLC).EQ.MAXVAL(DLC))THEN
-    LOK=IDFWRITE_WRAPPER(NCOL,NROW,X,(/DLR(1)/),(/DLC(1)/),simbox(1),simbox(2),-999.0,'',FNAME)
-   ELSE
-    LOK=IDFWRITE_WRAPPER(NCOL,NROW,X,DLR,DLC,simbox(1),simbox(2),-999.0,'',FNAME)
-   ENDIF   
-!   CALL met1wrtidf(fname,X,ncol,nrow,-999.0,iout)
+!   IF(MINVAL(DLR).EQ.MAXVAL(DLR).AND.MINVAL(DLC).EQ.MAXVAL(DLC))THEN
+!    LOK=IDFWRITE_WRAPPER(NCOL,NROW,X,(/DLR(1)/),(/DLC(1)/),simbox(1),simbox(2),-999.0,'',FNAME)
+!   ELSE
+!    LOK=IDFWRITE_WRAPPER(NCOL,NROW,X,DLR,DLC,simbox(1),simbox(2),-999.0,'',FNAME)
+!   ENDIF   
+
+   CALL met1wrtidf(fname,X,ncol,nrow,-999.0,iout)
 
   ELSE
 #ifdef IPEST_PILOTPOINTS
@@ -1053,7 +1069,7 @@ CONTAINS
 #endif
   ENDIF
  ENDDO
- DEALLOCATE(X,DLR,DLC)
+ DEALLOCATE(X) !,DLR,DLC)
 
  END SUBROUTINE PESTDUMPFCT
 
@@ -1956,10 +1972,12 @@ WRITE(*,*) LOG(HUGE(1.0))
  END FUNCTION PESTUPGRADEVECTOR
 
  !###====================================================================
- SUBROUTINE PEST_GETJ()
+ SUBROUTINE PEST_GETJ(LSS,root)
  !###====================================================================
  use rf2mf_module, only: ncol, nrow, nlay, nper
  IMPLICIT NONE
+ LOGICAL,INTENT(IN) :: LSS
+ character(len=*),intent(in) :: root
  INTEGER :: I,II,III,J,JJ,K,KK,ILAY,NROWIPFTXT,IUIPFTXT,NCOLIPFTXT, &
      IOS,NAJ,NP
  REAL :: X,Y,Z,H,WW,MC,MM,DHH,XCOR,YCOR,ZCOR,XCROSS
@@ -1971,12 +1989,14 @@ WRITE(*,*) LOG(HUGE(1.0))
 
  DO JJ=1,ABS(IIPF)
 
-  !## read ipf
-  IF(NPER.EQ.1)THEN
-   I=INDEX(TS(JJ)%IPFNAME,CHAR(92),.TRUE.)+1; LINE=TRIM(ROOTRES)//CHAR(92)//TS(JJ)%IPFNAME(I:)
+  !## read ipf steady-state
+  IF(LSS)THEN
+   I=INDEX(TS(JJ)%IPFNAME,CHAR(92),.TRUE.)+1; LINE=TRIM(root)//CHAR(92)//TS(JJ)%IPFNAME(I:)
+!   I=INDEX(TS(JJ)%IPFNAME,CHAR(92),.TRUE.)+1; LINE=TRIM(ROOTRES)//CHAR(92)//TS(JJ)%IPFNAME(I:)
   ELSE
    I=INDEX(TS(JJ)%IPFNAME,CHAR(92),.TRUE.)+1
-   LINE=TRIM(ROOTRES)//CHAR(92)//'timeseries'//CHAR(92)//TS(JJ)%IPFNAME(I:)
+   LINE=TRIM(root)//CHAR(92)//'timeseries'//CHAR(92)//TS(JJ)%IPFNAME(I:)
+!   LINE=TRIM(ROOTRES)//CHAR(92)//'timeseries'//CHAR(92)//TS(JJ)%IPFNAME(I:)
   ENDIF
   CALL IMOD_UTL_SWAPSLASH(LINE);  CALL IMOD_UTL_OPENASC(TS(JJ)%IUIPF,LINE,'R')
   READ(TS(JJ)%IUIPF,'(A256)') LINE; CALL IMOD_UTL_STRING(LINE); READ(LINE,*) TS(JJ)%NROWIPF
@@ -2805,16 +2825,26 @@ WRITE(*,*) LOG(HUGE(1.0))
  END SUBROUTINE RED1TQLI_DBL
 
  !###====================================================================
- SUBROUTINE PEST1APPENDLOGFILE(root)
+ SUBROUTINE PEST1CLOSELOGFILES()
  !###====================================================================
  IMPLICIT NONE
- character(len=*),intent(in) :: root
 
  IF(IUPESTOUT.GT.0)CLOSE(IUPESTOUT); IUPESTOUT=0
  IF(IUPESTPROGRESS.GT.0)CLOSE(IUPESTPROGRESS); IUPESTPROGRESS=0
  IF(IUPESTEFFICIENCY.GT.0)CLOSE(IUPESTEFFICIENCY); IUPESTEFFICIENCY=0
  IF(IUPESTSENSITIVITY.GT.0)CLOSE(IUPESTSENSITIVITY); IUPESTSENSITIVITY=0
  IF(IUPESTRUNFILE.GT.0)CLOSE(IUPESTRUNFILE); IUPESTRUNFILE=0
+
+ END SUBROUTINE PEST1CLOSELOGFILES
+
+ !###====================================================================
+ SUBROUTINE PEST1APPENDLOGFILE(root)
+ !###====================================================================
+ IMPLICIT NONE
+ character(len=*),intent(in) :: root
+
+ CALL PEST1CLOSELOGFILES()
+
  CALL PESTOPENFILE(IUPESTOUT,'log_pest_','txt',1,root)
  CALL PESTOPENFILE(IUPESTPROGRESS,'log_pest_progress_','txt',1,root)
  CALL PESTOPENFILE(IUPESTEFFICIENCY,'log_pest_efficiency_','txt',1,root)

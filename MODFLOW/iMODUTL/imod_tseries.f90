@@ -175,7 +175,7 @@ RETURN
 END SUBROUTINE
 
 !###====================================================================
-SUBROUTINE TSERIE1INIT2(LPEST,LSS,MV)
+SUBROUTINE TSERIE1INIT2(LPEST,LSS,MV,root)
 !###====================================================================
 USE IMOD_UTL, ONLY : IMOD_UTL_PRINTTEXT,IMOD_UTL_STRING,IMOD_UTL_ITOS,IMOD_UTL_RTOS,IMOD_UTL_OPENASC,IMOD_UTL_CAP,IMOD_UTL_CREATEDIR,IMOD_UTL_SWAPSLASH,OS
 USE TSVAR
@@ -183,6 +183,7 @@ IMPLICIT NONE
 ! arguments
 LOGICAL, INTENT(IN) :: LPEST
 LOGICAL, INTENT(IN) :: LSS
+CHARACTER(LEN=*),intent(in) :: root
 REAL, INTENT(IN) :: MV
 ! locals
 INTEGER :: IOS,I,II,III,J,JJ,N,NVALID
@@ -197,7 +198,8 @@ IF(LPEST.EQ.1.AND.SUM(TS%NROWIPF).LE.0)CALL IMOD_UTL_PRINTTEXT('Should at least 
 IF(LSS)THEN
  DO JJ=1,ABS(IIPF)
   I=INDEX(TS(JJ)%IPFNAME,CHAR(92),.TRUE.)+1
-  LINE=TRIM(ROOTRES)//CHAR(92)//TS(JJ)%IPFNAME(I:)
+  LINE=TRIM(ROOT)//CHAR(92)//TS(JJ)%IPFNAME(I:)
+!  LINE=TRIM(ROOTRES)//CHAR(92)//TS(JJ)%IPFNAME(I:)
   CALL IMOD_UTL_SWAPSLASH(LINE)
   CALL IMOD_UTL_OPENASC(TS(JJ)%IUIPF,LINE,'W')
   ! check for valid data
@@ -220,9 +222,11 @@ IF(LSS)THEN
 !## transient
 ELSE
 
- CALL IMOD_UTL_CREATEDIR(TRIM(ROOTRES)//CHAR(92)//'timeseries')
+ CALL IMOD_UTL_CREATEDIR(TRIM(root)//CHAR(92)//'timeseries')
+! CALL IMOD_UTL_CREATEDIR(TRIM(ROOTRES)//CHAR(92)//'timeseries')
  !## open txt file to collect all timeseries
- LINE=TRIM(ROOTRES)//CHAR(92)//'timeseries'//CHAR(92)//'timeseries_collect.txt'
+! LINE=TRIM(ROOTRES)//CHAR(92)//'timeseries'//CHAR(92)//'timeseries_collect.txt'
+ LINE=TRIM(root)//CHAR(92)//'timeseries'//CHAR(92)//'timeseries_collect.txt'
  CALL IMOD_UTL_SWAPSLASH(LINE); CALL IMOD_UTL_OPENASC(IUIPFTXT,LINE,'W')
 
  II=0
@@ -233,7 +237,8 @@ ELSE
   ELSE
    I=INDEX(TS(JJ)%IPFNAME,CHAR(47),.TRUE.)+1
   ENDIF
-  LINE=TRIM(ROOTRES)//CHAR(92)//'timeseries'//CHAR(92)//TS(JJ)%IPFNAME(I:)
+  LINE=TRIM(root)//CHAR(92)//'timeseries'//CHAR(92)//TS(JJ)%IPFNAME(I:)
+!  LINE=TRIM(ROOTRES)//CHAR(92)//'timeseries'//CHAR(92)//TS(JJ)%IPFNAME(I:)
   CALL IMOD_UTL_SWAPSLASH(LINE); CALL IMOD_UTL_OPENASC(TS(JJ)%IUIPF,LINE,'W')
 
   ! check for valid data

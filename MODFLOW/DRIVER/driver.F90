@@ -24,11 +24,12 @@ program driver
 
 ! modules
 use driver_module
+use global, only : iout,nper
 use IMOD_UTL, only : imod_utl_capf
 use m_main_info
 use m_vcl, only: targ
 use imod_utl, only: imod_utl_closeunits, imod_utl_has_ext, imod_utl_printtext
-use mod_pest, only: pest1_meteo_metaswap, pest1alpha_metaswap, pest1appendlogfile, pestnext, pestdumpfct, PEST1INIT
+use mod_pest, only: pest1_meteo_metaswap, pest1alpha_metaswap, pest1appendlogfile, pestnext, pestdumpfct, PEST1INIT, PEST1CLOSELOGFILES
 use PESTVAR, only : IUPESTOUT
 implicit none
 
@@ -380,6 +381,7 @@ implicit none
  if (lipest) then
     call pest1appendlogfile(modwd1)
     call pest1log()
+    CALL PEST1CLOSELOGFILES()
  end if
 
  ! check if MODFLOW is activated
@@ -409,13 +411,13 @@ implicit none
 
  ! append the PEST log-file
  if (lipest) then
-    CALL PESTDUMPFCT(IUPESTOUT)
+    CALL PESTDUMPFCT(modwd1,iout) !IUPESTOUT)
  endif
 
  !#### TIMESERIES ####
  call tserie1init1(lipest,lss,hnoflo)
  ok = mf2005_TimeserieInit(mf_igrid); call driverChk(ok,'mf2005_TimeserieInit')
- call tserie1init2(lipest,lss,hnoflo)
+ call tserie1init2(lipest,lss,hnoflo,modwd1)
 
  if (rt.eq.rtmodsimtranmoz) then
     call osd_chdir(mozwd)
@@ -831,7 +833,7 @@ implicit none
  if (.not.lipest) then
     convergedPest=.true.
  else
-    convergedPest=pestnext(modwd1)
+    convergedPest=pestnext(lss,modwd1)
  end if
  call imod_utl_closeunits()
 
