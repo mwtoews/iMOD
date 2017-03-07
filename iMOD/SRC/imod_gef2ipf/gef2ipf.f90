@@ -268,6 +268,7 @@ CONTAINS
  CHARACTER(LEN=512) :: LINE
  INTEGER,PARAMETER :: NCOLIPF=22
  INTEGER :: NCOLMAX
+ INTEGER,DIMENSION(:),ALLOCATABLE :: store_ncolline
  
  IF(IBATCH.EQ.1)WRITE(*,'(A)') "Reading GEF-file with borehole information"
  
@@ -308,6 +309,8 @@ CONTAINS
   IF(IBATCH.EQ.1)WRITE(*,'(A)') 'Processing '//TRIM(GEFNAMES(I))//' ...'
   GEFNAMES(I)=GEFDIR(:INDEX(GEFDIR,'\',.TRUE.))//GEFNAMES(I)//'.gef'
   IF(LREADGEF_BORE(I,ESTRING))THEN
+      
+      if(.not.allocated(store_ncolline))allocate(store_ncolline(size(ncolline))); store_ncolline=ncolline
 
    IATTRIB=0
    DO ICOL=1,MAXVAL(NCOLLINE)
@@ -374,7 +377,8 @@ CONTAINS
     
     LINE=CHAR(39)//TRIM(RTOS(X,'F',2))//CHAR(39)//','//CHAR(39)//TRIM(RTOS(Y,'F',2))//CHAR(39)//','//CHAR(39)//'subset'//TRIM(ITOS(IDIR))// &
          '\'//TRIM(CID)//CHAR(39)//','//CHAR(39)//TRIM(RTOS(ZEND,'F',2))//CHAR(39)//','//CHAR(39)//TRIM(ITOS(0))//CHAR(39)
-    DO ICOL=1,NCOLIPF !(MAXVAL(NCOLLINE)+5)
+
+    DO ICOL=1,NCOLIPF-1 !(MAXVAL(NCOLLINE)+5)
      IF(IATTRIB(ICOL).EQ.0)THEN
       LINE=TRIM(LINE)//','//CHAR(39)//'NotAvailable'//CHAR(39)
      ELSE
@@ -463,7 +467,7 @@ CONTAINS
 
    LINE=CHAR(39)//TRIM(RTOS(X,'F',2))//CHAR(39)//','//CHAR(39)//TRIM(RTOS(Y,'F',2))//CHAR(39)//','//CHAR(39)// &
          TRIM(CID)//CHAR(39)//','//CHAR(39)//TRIM(RTOS(0.0,'F',1))//CHAR(39)//','//CHAR(39)//TRIM(ITOS(1))//CHAR(39)
-   DO ICOL=1,NCOLLINE(IROW); LINE=TRIM(LINE)//','//CHAR(39)//'NotAvailable'//CHAR(39); ENDDO
+   DO ICOL=1,store_ncolline(1); LINE=TRIM(LINE)//','//CHAR(39)//'NotAvailable'//CHAR(39); ENDDO
    WRITE(JU,'(A)') TRIM(LINE)
 
   ENDIF
