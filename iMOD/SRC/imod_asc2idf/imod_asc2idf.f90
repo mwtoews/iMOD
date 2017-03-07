@@ -813,7 +813,6 @@ CONTAINS
      ENDIF
     !## do not assign nodata as blank out value
     ELSE
-!     IBLANKOUT=1
      IDF(1)%X(ICOL,IROW)=BO_VALUE 
     ENDIF
    ENDDO
@@ -833,15 +832,13 @@ CONTAINS
      ENDIF
     !## do not assign nodata as blank out value
     ELSE
-!     IBLANKOUT=1
      IDF(1)%X(ICOL,IROW)=BO_VALUE 
     ENDIF
    ENDDO
   ENDDO
  ENDIF
 
- WRITE(*,*) 'IBLANKOUT',IBLANKOUT
- 
+! WRITE(*,*) 'IBLANKOUT',IBLANKOUT
 ! IBLANKOUT=0
 
  END SUBROUTINE ASC2IDF_INT_BLANKOUT

@@ -70,7 +70,7 @@ TYPE SPOBJ
  INTEGER :: ICLR   !## particle colour
  INTEGER :: IACT   !## particle active (0=no; 1=yes)
  INTEGER :: IREV   !## direction (0=forward; 1=backward)
- INTEGER :: IRSTRT !## random start 
+ INTEGER :: IRSTRT !## random start in time
  REAL :: SPWIDTH   !## plot size startpoint (0=no, 1.0,2,3,4,5.0 = size)
  REAL :: PWIDTH    !## plot size particle (0=no, 1.0,2,3,4,5.0 = size)
 END TYPE SPOBJ

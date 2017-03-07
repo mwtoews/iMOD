@@ -951,8 +951,9 @@ CONTAINS
     SP(IG)%JLC(SP(IG)%NPART)=ICOL
     SP(IG)%TOT(SP(IG)%NPART)=0.0
     SP(IG)%MXL(SP(IG)%NPART)=0
-    !## random start number - simulation time step, if modules than start
+    !## random start squence number - negative to indicate it did not start yet
     CALL RANDOM_NUMBER(SP(IG)%STM(SP(IG)%NPART))
+    SP(IG)%STM(SP(IG)%NPART)=-1.0*SP(IG)%STM(SP(IG)%NPART)
     EXIT
     
    ENDIF
@@ -975,7 +976,8 @@ CONTAINS
  
  ALLOCATE(SP(IG)%XLC_BU(N),SP(IG)%YLC_BU(N),SP(IG)%ZLC_BU(N), &
           SP(IG)%ZLL_BU(N),SP(IG)%KLC_BU(N),SP(IG)%ILC_BU(N), &
-          SP(IG)%JLC_BU(N),SP(IG)%TOT_BU(N),SP(IG)%MXL_BU(N))
+          SP(IG)%JLC_BU(N),SP(IG)%TOT_BU(N),SP(IG)%MXL_BU(N), &
+          SP(IG)%STM_BU(N))
 
  DO I=1,SP(IG)%NPART-1
   SP(IG)%XLC_BU(I)=SP(IG)%XLC(I)
@@ -1021,7 +1023,8 @@ CONTAINS
  
  ALLOCATE(SPR(IG)%XLC_BU(N),SPR(IG)%YLC_BU(N),SPR(IG)%ZLC_BU(N), &
           SPR(IG)%ZLL_BU(N),SPR(IG)%KLC_BU(N),SPR(IG)%ILC_BU(N), &
-          SPR(IG)%JLC_BU(N),SPR(IG)%TOT_BU(N),SPR(IG)%MXL_BU(N))
+          SPR(IG)%JLC_BU(N),SPR(IG)%TOT_BU(N),SPR(IG)%MXL_BU(N), &
+          SPR(IG)%STM_BU(N))
 
  !## reset layer
  SPR(IG)%KLC_BU=0
@@ -1036,11 +1039,13 @@ CONTAINS
   SPR(IG)%JLC_BU(I)=SPR(IG)%JLC(I)
   SPR(IG)%TOT_BU(I)=SPR(IG)%TOT(I)
   SPR(IG)%MXL_BU(I)=SPR(IG)%MXL(I)
+  SPR(IG)%STM_BU(I)=SPR(IG)%STM(I)
  ENDDO
 
  DEALLOCATE(SPR(IG)%XLC,SPR(IG)%YLC,SPR(IG)%ZLC, &
             SPR(IG)%ZLL,SPR(IG)%KLC,SPR(IG)%ILC, &
-            SPR(IG)%JLC,SPR(IG)%TOT,SPR(IG)%MXL)
+            SPR(IG)%JLC,SPR(IG)%TOT,SPR(IG)%MXL, &
+            SPR(IG)%STM)
 
  SPR(IG)%XLC=>SPR(IG)%XLC_BU
  SPR(IG)%YLC=>SPR(IG)%YLC_BU
@@ -1051,6 +1056,7 @@ CONTAINS
  SPR(IG)%JLC=>SPR(IG)%JLC_BU
  SPR(IG)%TOT=>SPR(IG)%TOT_BU
  SPR(IG)%MXL=>SPR(IG)%MXL_BU
+ SPR(IG)%STM=>SPR(IG)%STM_BU
     
  END SUBROUTINE TRACE_3D_STARTPOINTS_MEMORY_SPR
  
@@ -1128,7 +1134,7 @@ CONTAINS
  IMPLICIT NONE
  REAL,PARAMETER :: DYEAR=365.25
  INTEGER :: I,IPART,IDSCH,NPACT,IG,ITRAPPED,MAXILAY,NTAIL,IFREQ,ICAPT
- REAL :: TIME,TTMAX,MAXVELOCITY,XTREP
+ REAL :: TIME,TTMAX,MAXVELOCITY,XTREP,F
  
  TRACE_3D_COMPUTE=.FALSE.
 
@@ -1170,7 +1176,7 @@ CONTAINS
  !## maximize it for tmax
  TTMAX=MIN(TTMAX,PL%TMAX)
 
- !## current time
+ !## current time/years
  PL%TCUR=TTMAX/DYEAR; CALL WDIALOGPUTREAL(IDF_REAL7,PL%TCUR) 
 
  !## age of current drawing list
@@ -1203,17 +1209,30 @@ CONTAINS
   !## points
   IF(PL%ITYPE.EQ.2)CALL GLBEGIN(GL_POINTS)
 
-  DO IPART=1,SPR(IG)%NPART 
-  
-  !## peer --- klc random negtief zetten en dan iedere keer er 1 bij, tot positief dan gaat hij meedoen???
+SPR(IG)%IRSTRT=1
 
-   !## determine whether current particle is ready to go
-   IF(SP(IG)%IRSTRT.EQ.1)THEN
-!## IF STM NEGATIEF DAN LOOPT PARTICLE
-!## IF STM POSITIEF DAN CHECKEN OF HIJ HERSTART KAN WORDEN ALS MOD(NPER,STM*NPER).EQ.0 EN STM NEGATIEF ZETTEN
-!    IF(SPR(IG)%STM(IPART).GT.PL%NPER)SPR(IG)%KLC(IPART)=ABS(SPR(IG)%KLC(IPART))
-   ENDIF
+  DO IPART=1,SPR(IG)%NPART 
      
+   !## determine whether current particle is ready to go
+   IF(SPR(IG)%IRSTRT.EQ.1)THEN
+    !## particle not yet started, see whether to start
+    IF(SPR(IG)%STM(IPART).LT.0.0)THEN
+     !## turn on random particle number
+     F=ABS(SPR(IG)%STM(IPART))
+     !## particle number to turn on
+     I=INT(F*SPR(IG)%NPART)
+     !## release particle
+     IF(I.EQ.IPART)THEN
+!     !## set new random number for next time
+!     CALL RANDOM_NUMBER(SP(IG)%STM(IPART))
+      SPR(IG)%STM(IPART)=ABS(SP(IG)%STM(IPART))
+     ENDIF
+     !## this particle not yet to be released
+     IF(SPR(IG)%STM(IPART).LT.0.0)CYCLE
+    ENDIF
+ 
+   ENDIF
+   
    !## trace selected particle, not yet discharged!
    IF(SPR(IG)%KLC(IPART).GT.0)THEN
 
@@ -1270,7 +1289,7 @@ CONTAINS
      SPR(IG)%ZLL(IPART)=SP(IG)%ZLL(IPART)
      SPR(IG)%TOT(IPART)=SP(IG)%TOT(IPART)
      SPR(IG)%MXL(IPART)=SP(IG)%MXL(IPART)
-     SPR(IG)%STM(IPART)=SP(IG)%STM(IPART)+PL%TDEL
+!     SPR(IG)%STM(IPART)=SP(IG)%STM(IPART)+PL%TDEL
 
     ENDIF
    

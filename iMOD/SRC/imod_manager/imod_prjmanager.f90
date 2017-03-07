@@ -2640,7 +2640,7 @@ TOPICLOOP: DO ITOPIC=1,MAXTOPICS
  
  !## write model dimensions into pst file
  IF(IOPTION.EQ.2)THEN
-  WRITE(IU,*) IDF%NCOL,IDF%NROW,NPER,ISS
+  WRITE(IU,*) IDF%NCOL,IDF%NROW,NLAY,NPER,ISS
   WRITE(IU,*) IDF%XMIN,IDF%YMIN,IDF%XMAX,IDF%YMAX,IDF%IEQ
   IF(IDF%IEQ.EQ.0)THEN
    WRITE(IU,*) IDF%DX
@@ -2648,10 +2648,6 @@ TOPICLOOP: DO ITOPIC=1,MAXTOPICS
    WRITE(IU,*) (IDF%SX(ICOL),ICOL=1,IDF%NCOL)
    WRITE(IU,*) (IDF%SY(IROW),IROW=1,IDF%NROW)
   ENDIF
-
-!## metingen toch in hob-package stoppen - wellicht sneller ... ik weet alle periode etc. nu namelijk
-!## toch niet handig, ipf structure is prettiger
-
  ENDIF
  
  IF(IOPTION.NE.1)THEN
@@ -2675,6 +2671,10 @@ TOPICLOOP: DO ITOPIC=1,MAXTOPICS
   ENDIF
  ENDIF
   
+ IF(IOPTION.EQ.2)THEN
+  LINE=TRIM(ITOS(SIZE(PEST%PARAM))); WRITE(IU,'(A)') TRIM(LINE)
+ ENDIF
+ 
  N=0; IF(ASSOCIATED(PEST%S_PERIOD))  N=SIZE(PEST%S_PERIOD)
  M=0; IF(ASSOCIATED(PEST%B_FRACTION))M=SIZE(PEST%B_FRACTION)
  
@@ -5155,8 +5155,9 @@ TOPICLOOP: DO ITOPIC=1,MAXTOPICS
   !## uzf
 !NUZTOP=1 !## recharge specified to top cell
   CASE (18); NUZGAG=0; IRUNFLG=0; NUZTOP=1
+   WRITE(IU,'(A)') 'SPECIFYTHTR'
    LINE='NaN1#,2,'//TRIM(ITOS(IRUNFLG))//',1,'//TRIM(ITOS(-IUZFCB1))//',0,10,20,'//TRIM(ITOS(NUZGAG))//',0.5'; WRITE(IU,'(A)') TRIM(LINE)
-
+   
 !IUZFOPT=2 !## permeabiliy specified in lpf
 !irunflg=0 !## water discharge from top removed form the model (usage of SFR/LAK needed)
 !ietflg=1 !## et simulated
@@ -5390,11 +5391,11 @@ TOPICLOOP: DO ITOPIC=1,MAXTOPICS
      CASE (18)
       SELECT CASE (KTOP)
        CASE (1);   SCL_D=0; SCL_U=1 !## bnd
-       CASE (2:4); SCL_D=0; SCL_U=2 !## rest
-       CASE (5);   SCL_D=0; SCL_U=2; NUZF1=IEQUAL
-       CASE (6);   SCL_D=0; SCL_U=2; NUZF2=IEQUAL
-       CASE (7);   SCL_D=0; SCL_U=2; NUZF3=IEQUAL
-       CASE (8);   SCL_D=0; SCL_U=2; NUZF4=IEQUAL
+       CASE (2:5); SCL_D=0; SCL_U=2 !## avg
+       CASE (6);   SCL_D=0; SCL_U=2; NUZF1=IEQUAL
+       CASE (7);   SCL_D=0; SCL_U=2; NUZF2=IEQUAL
+       CASE (8);   SCL_D=0; SCL_U=2; NUZF3=IEQUAL
+       CASE (9);   SCL_D=0; SCL_U=2; NUZF4=IEQUAL
       END SELECT
       !## skip uzf package info for coming stress-periods
       IF(KTOP.LE.4.AND.IPER.GT.1)CYCLE
@@ -5478,37 +5479,48 @@ TOPICLOOP: DO ITOPIC=1,MAXTOPICS
        !## brooks-corey epsilon
        IF(.NOT.PMANAGER_SAVEMF2005_PCK_U2DREL(TRIM(DIR)//'\'//CPCK//'7\'//CPCK//'_EPS_T'//TRIM(ITOS(IPER))//  '.ARR',PCK(2),IU,IFBND,0))RETURN
 
-       !## make sure thts (saturated water content) is at least larger than specific yield for the residual water content
-       DO IROW=1,PCK(1)%NROW; DO ICOL=1,PCK(1)%NCOL
-        IF(PCK(1)%X(ICOL,IROW).GT.0.0)THEN
-         PCK(3)%X(ICOL,IROW)=MAX(PCK(3)%X(ICOL,IROW),SPY(1)%X(ICOL,IROW))
-        ENDIF
-       ENDDO; ENDDO    
-       !## thts saturated water content larger than specific yield
+!       !## thts saturated water content larger than specific yield
+!       DO IROW=1,PCK(1)%NROW; DO ICOL=1,PCK(1)%NCOL
+!        IF(PCK(1)%X(ICOL,IROW).GT.0.0)THEN
+!         PCK(3)%X(ICOL,IROW)=MAX(PCK(3)%X(ICOL,IROW),SPY(1)%X(ICOL,IROW))
+!        ENDIF
+!       ENDDO; ENDDO    
+       !## thts saturated water content
        IF(.NOT.PMANAGER_SAVEMF2005_PCK_U2DREL(TRIM(DIR)//'\'//CPCK//'7\'//CPCK//'_THTS_T'//TRIM(ITOS(IPER))// '.ARR',PCK(3),IU,IFBND,0))RETURN
+
+!       !## thtr residual water content smaller than sat. water content
+!       !## thtr residual water content bigger  than evt. water content
+!       DO IROW=1,PCK(1)%NROW; DO ICOL=1,PCK(1)%NCOL
+!        IF(PCK(1)%X(ICOL,IROW).GT.0.0)THEN
+!         PCK(4)%X(ICOL,IROW)=MIN(PCK(4)%X(ICOL,IROW),PCK(3)%X(ICOL,IROW))
+!         PCK(4)%X(ICOL,IROW)=MAX(PCK(4)%X(ICOL,IROW),PCK(9)%X(ICOL,IROW))
+!        ENDIF
+!       ENDDO; ENDDO    
+       !## thtr residual water content
+       IF(.NOT.PMANAGER_SAVEMF2005_PCK_U2DREL(TRIM(DIR)//'\'//CPCK//'7\'//CPCK//'_THTR_T'//TRIM(ITOS(IPER))// '.ARR',PCK(4),IU,IFBND,0))RETURN
 
        !## skip initial water content if steady-state
        IF(SIM(IPER)%DELT.GT.0.0)THEN
-        IF(.NOT.PMANAGER_SAVEMF2005_PCK_U2DREL(TRIM(DIR)//'\'//CPCK//'7\'//CPCK//'_THTI_T'//TRIM(ITOS(IPER))// '.ARR',PCK(4),IU,IFBND,0))RETURN
+        IF(.NOT.PMANAGER_SAVEMF2005_PCK_U2DREL(TRIM(DIR)//'\'//CPCK//'7\'//CPCK//'_THTI_T'//TRIM(ITOS(IPER))// '.ARR',PCK(5),IU,IFBND,0))RETURN
        ENDIF
 
       ENDIF
       LINE=TRIM(ITOS(NUZF1)); WRITE(IU,'(A)') TRIM(LINE)
       IF(NUZF1.EQ.1)THEN
-       IF(.NOT.PMANAGER_SAVEMF2005_PCK_U2DREL(TRIM(DIR)//'\'//CPCK//'7\'//CPCK//'_FINF_T'//TRIM(ITOS(IPER))// '.ARR',PCK(5),IU,IFBND,0))RETURN
+       IF(.NOT.PMANAGER_SAVEMF2005_PCK_U2DREL(TRIM(DIR)//'\'//CPCK//'7\'//CPCK//'_FINF_T'//TRIM(ITOS(IPER))// '.ARR',PCK(6),IU,IFBND,0))RETURN
       ENDIF
       LINE=TRIM(ITOS(NUZF2)); WRITE(IU,'(A)') TRIM(LINE)
       IF(NUZF2.EQ.1)THEN
-       IF(.NOT.PMANAGER_SAVEMF2005_PCK_U2DREL(TRIM(DIR)//'\'//CPCK//'7\'//CPCK//'_PET_T'//TRIM(ITOS(IPER))//  '.ARR',PCK(6),IU,IFBND,0))RETURN
+       IF(.NOT.PMANAGER_SAVEMF2005_PCK_U2DREL(TRIM(DIR)//'\'//CPCK//'7\'//CPCK//'_PET_T'//TRIM(ITOS(IPER))//  '.ARR',PCK(7),IU,IFBND,0))RETURN
       ENDIF
       LINE=TRIM(ITOS(NUZF3)); WRITE(IU,'(A)') TRIM(LINE)
       IF(NUZF3.EQ.1)THEN
-       IF(.NOT.PMANAGER_SAVEMF2005_PCK_U2DREL(TRIM(DIR)//'\'//CPCK//'7\'//CPCK//'_EXDP_T'//TRIM(ITOS(IPER))// '.ARR',PCK(7),IU,IFBND,0))RETURN
+       IF(.NOT.PMANAGER_SAVEMF2005_PCK_U2DREL(TRIM(DIR)//'\'//CPCK//'7\'//CPCK//'_EXDP_T'//TRIM(ITOS(IPER))// '.ARR',PCK(8),IU,IFBND,0))RETURN
       ENDIF
       LINE=TRIM(ITOS(NUZF4)); WRITE(IU,'(A)') TRIM(LINE)
       IF(NUZF4.EQ.1)THEN
        !## make sure this is always larger than residual water content
-       IF(.NOT.PMANAGER_SAVEMF2005_PCK_U2DREL(TRIM(DIR)//'\'//CPCK//'7\'//CPCK//'_EXTWC_T'//TRIM(ITOS(IPER))//'.ARR',PCK(8),IU,IFBND,0))RETURN
+       IF(.NOT.PMANAGER_SAVEMF2005_PCK_U2DREL(TRIM(DIR)//'\'//CPCK//'7\'//CPCK//'_EXTWC_T'//TRIM(ITOS(IPER))//'.ARR',PCK(9),IU,IFBND,0))RETURN
       ENDIF
     !## rch
     CASE (26)
@@ -9881,7 +9893,7 @@ JLOOP: DO K=1,SIZE(TOPICS)
  TOPICS(15)%NSUBTOPICS=1  !HFB
  TOPICS(16)%NSUBTOPICS=4  !IBS
  TOPICS(17)%NSUBTOPICS=2  !SFT
- TOPICS(18)%NSUBTOPICS=8  !UZF
+ TOPICS(18)%NSUBTOPICS=9  !UZF
  TOPICS(19)%NSUBTOPICS=1  !MNW
  TOPICS(20)%NSUBTOPICS=1  !PST
  TOPICS(21)%NSUBTOPICS=1  !WEL
@@ -9985,11 +9997,12 @@ JLOOP: DO K=1,SIZE(TOPICS)
 ! TOPICS(18)%SNAME(2) ='Saturated Vertical Conductivity (IDF)'
  TOPICS(18)%SNAME(2) ='(BCE) Brooks-Corey Epsilon (IDF)'
  TOPICS(18)%SNAME(3) ='(SWC) Saturated Water Content of Unsat. Zone (IDF)'
- TOPICS(18)%SNAME(4) ='(IWC) Initial Water Content (IDF)'
- TOPICS(18)%SNAME(5) ='(INF) Infiltration Rates at Land Surface (IDF)'
- TOPICS(18)%SNAME(6) ='(EVA) Evaporation Demands (IDF)'
- TOPICS(18)%SNAME(7) ='(EXD) Extinction Depth (IDF)'
- TOPICS(18)%SNAME(8) ='(EWC) Extinction Water Content (IDF)'
+ TOPICS(18)%SNAME(4) ='(RWC) Residual Water Content of Unsat. Zone (IDF)'
+ TOPICS(18)%SNAME(5) ='(IWC) Initial Water Content (IDF)'
+ TOPICS(18)%SNAME(6) ='(INF) Infiltration Rates at Land Surface (IDF)'
+ TOPICS(18)%SNAME(7) ='(EVA) Evaporation Demands (IDF)'
+ TOPICS(18)%SNAME(8) ='(EXD) Extinction Depth (IDF)'
+ TOPICS(18)%SNAME(9) ='(EWC) Extinction Water Content (IDF)'
  TOPICS(19)%SNAME(1) ='(WRL) Well Rate and Well Loss (IPF)'
  TOPICS(20)%SNAME(1) ='(PAR) Parameters Estimation (-)'
  TOPICS(21)%SNAME(1) ='(WRA) Well Rate (IPF)'
