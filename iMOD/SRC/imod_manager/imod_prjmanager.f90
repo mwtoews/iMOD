@@ -5155,7 +5155,7 @@ TOPICLOOP: DO ITOPIC=1,MAXTOPICS
   !## uzf
 !NUZTOP=1 !## recharge specified to top cell
   CASE (18); NUZGAG=0; IRUNFLG=0; NUZTOP=1
-   WRITE(IU,'(A)') 'SPECIFYTHTR'
+!   WRITE(IU,'(A)') 'SPECIFYTHTR'
    LINE='NaN1#,2,'//TRIM(ITOS(IRUNFLG))//',1,'//TRIM(ITOS(-IUZFCB1))//',0,10,20,'//TRIM(ITOS(NUZGAG))//',0.5'; WRITE(IU,'(A)') TRIM(LINE)
    
 !IUZFOPT=2 !## permeabiliy specified in lpf
@@ -5496,8 +5496,8 @@ TOPICLOOP: DO ITOPIC=1,MAXTOPICS
 !         PCK(4)%X(ICOL,IROW)=MAX(PCK(4)%X(ICOL,IROW),PCK(9)%X(ICOL,IROW))
 !        ENDIF
 !       ENDDO; ENDDO    
-       !## thtr residual water content
-       IF(.NOT.PMANAGER_SAVEMF2005_PCK_U2DREL(TRIM(DIR)//'\'//CPCK//'7\'//CPCK//'_THTR_T'//TRIM(ITOS(IPER))// '.ARR',PCK(4),IU,IFBND,0))RETURN
+!       !## thtr residual water content
+!       IF(.NOT.PMANAGER_SAVEMF2005_PCK_U2DREL(TRIM(DIR)//'\'//CPCK//'7\'//CPCK//'_THTR_T'//TRIM(ITOS(IPER))// '.ARR',PCK(4),IU,IFBND,0))RETURN
 
        !## skip initial water content if steady-state
        IF(SIM(IPER)%DELT.GT.0.0)THEN
@@ -9997,12 +9997,12 @@ JLOOP: DO K=1,SIZE(TOPICS)
 ! TOPICS(18)%SNAME(2) ='Saturated Vertical Conductivity (IDF)'
  TOPICS(18)%SNAME(2) ='(BCE) Brooks-Corey Epsilon (IDF)'
  TOPICS(18)%SNAME(3) ='(SWC) Saturated Water Content of Unsat. Zone (IDF)'
- TOPICS(18)%SNAME(4) ='(RWC) Residual Water Content of Unsat. Zone (IDF)'
- TOPICS(18)%SNAME(5) ='(IWC) Initial Water Content (IDF)'
- TOPICS(18)%SNAME(6) ='(INF) Infiltration Rates at Land Surface (IDF)'
- TOPICS(18)%SNAME(7) ='(EVA) Evaporation Demands (IDF)'
- TOPICS(18)%SNAME(8) ='(EXD) Extinction Depth (IDF)'
- TOPICS(18)%SNAME(9) ='(EWC) Extinction Water Content (IDF)'
+! TOPICS(18)%SNAME(4) ='(RWC) Residual Water Content of Unsat. Zone (IDF)'
+ TOPICS(18)%SNAME(4) ='(IWC) Initial Water Content (IDF)'
+ TOPICS(18)%SNAME(5) ='(INF) Infiltration Rates at Land Surface (IDF)'
+ TOPICS(18)%SNAME(6) ='(EVA) Evaporation Demands (IDF)'
+ TOPICS(18)%SNAME(7) ='(EXD) Extinction Depth (IDF)'
+ TOPICS(18)%SNAME(8) ='(EWC) Extinction Water Content (IDF)'
  TOPICS(19)%SNAME(1) ='(WRL) Well Rate and Well Loss (IPF)'
  TOPICS(20)%SNAME(1) ='(PAR) Parameters Estimation (-)'
  TOPICS(21)%SNAME(1) ='(WRA) Well Rate (IPF)'

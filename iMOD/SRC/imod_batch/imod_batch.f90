@@ -2883,7 +2883,7 @@ CONTAINS
   NV=0; NL=0
   !## reading labels
   WRITE(*,'(A)') 'Reading '//XYZFNAMES(1)(:INDEX(XYZFNAMES(1),'.',.TRUE.)-1)//'.dat ...'
-  CALL UTL_GENLABELSREAD(XYZFNAMES(1)(:INDEX(XYZFNAMES(1),'.',.TRUE.)-1)//'.dat',VAR)
+  CALL UTL_GENLABELSREAD(XYZFNAMES(1)(:INDEX(XYZFNAMES(1),'.',.TRUE.)-1)//'.dat',VAR,NL,NV)
   IF(IZCOL.GT.NV)THEN; WRITE(*,'(A)') 'Error, entered label number exceeds available label'; STOP; ENDIF
  ENDIF
 
