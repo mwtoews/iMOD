@@ -3949,6 +3949,46 @@ ENDIF
  END SUBROUTINE UTL_GETUNIQUE
 
  !###====================================================
+ SUBROUTINE UTL_GETUNIQUE_POINTER(X,N,NU,NODATA)
+ !###====================================================
+ IMPLICIT NONE
+ INTEGER,INTENT(IN) :: N
+ INTEGER,INTENT(OUT) :: NU
+ REAL,INTENT(IN),OPTIONAL :: NODATA
+ REAL,POINTER,INTENT(INOUT),DIMENSION(:) :: X
+ INTEGER :: I
+
+ CALL WSORT(X,1,N) !UTL_QKSORT(N,N,X)
+ 
+ !## determine number of unique classes
+ IF(PRESENT(NODATA))THEN
+  NU=0
+  DO I=1,N
+   IF(NU.EQ.0)THEN
+    IF(X(I).NE.NODATA)THEN
+     NU=NU+1
+     X(NU)=X(I)
+    ENDIF
+   ELSE
+    IF(X(I).NE.X(NU).AND.X(I).NE.NODATA)THEN
+     NU   =NU+1
+     X(NU)=X(I)
+    ENDIF
+   ENDIF
+  END DO
+ ELSE 
+  NU=1
+  DO I=2,N
+   IF(X(I).NE.X(NU))THEN
+    NU   =NU+1
+    X(NU)=X(I)
+   ENDIF
+  END DO
+ ENDIF
+
+ END SUBROUTINE UTL_GETUNIQUE_POINTER
+
+ !###====================================================
  SUBROUTINE UTL_GETUNIQUE_INT(IX,N,NU,NODATA)
  !###====================================================
  IMPLICIT NONE

@@ -156,6 +156,7 @@ CONTAINS
       END SELECT
      CASE (PUSHBUTTON)
       SELECT CASE (MESSAGE%VALUE1)
+       !## read in new default colours
        CASE (ID_OPEN)
         CALL PREFOPENCOLOURS('',.TRUE.) 
         DO I=1,SIZE(ID); CALL WDIALOGPUTINTEGER(ID(I),WRGB(CLR(I,1),CLR(I,2),CLR(I,3))); ENDDO
@@ -205,7 +206,6 @@ CONTAINS
  INTEGER                          :: I,IU
 
  IF(LEN(TRIM(FNAME)).EQ.0)THEN
-  !CLRFNAME=TRIM(PREFVAL(1))//'\*.CLR'
   IF(.NOT.UTL_WSELECTFILE('iMOD Preferences Colours (*.clr)|*.clr|',&
        SAVEDIALOG+PROMPTON+DIRCHANGE+APPENDEXT,CLRFNAME,'Save iMOD Preferences Colours'))RETURN
  ELSE
@@ -214,13 +214,13 @@ CONTAINS
  IU=UTL_GETUNIT()
  CALL OSD_OPEN(IU,FILE=CLRFNAME,STATUS='UNKNOWN',ACTION='WRITE,DENYREAD')
  ALLOCATE(IRGB(3))
- WRITE(IU,*) '!##NO,RED,GREEN,BLUE'
+ WRITE(IU,*) '!## no,red,green,blue'
  DO I=1,MAXCOLOUR
   CALL WRGBSPLIT(ICOLOR(I),IRGB(1),IRGB(2),IRGB(3))
   WRITE(IU,*) I,IRGB(1),IRGB(2),IRGB(3)
  END DO
  DEALLOCATE(IRGB)
- !#save default legend colors
+ !## save default legend colors
  WRITE(IU,*) '!##Default legend colours'
  DO I=1,MXCGRAD
   WRITE(IU,*) I,CLR(I,1),CLR(I,2),CLR(I,3)

@@ -36,7 +36,7 @@ USE MOD_MDF, ONLY : READMDF,MDFDEALLOCATE,MDF
 USE MOD_UTL, ONLY : UTL_GETUNIT,UTL_MESSAGEHANDLE,UTL_READARRAY,UTL_WSELECTFILE,ITOS,UTL_CAP
 USE MOD_ASC2IDF, ONLY : ASC2IDF_IMPORTASC
 USE MOD_NC2IDF, ONLY : NC2IDF_IMPORTNC,INETCDF
-USE MOD_LEGEND, ONLY : LEG_CREATECLASSES,LEG_CREATECOLORS
+USE MOD_LEGEND, ONLY : LEG_CREATE_CLASSES,LEG_CREATECOLORS
 USE MOD_LEGEND_UTL, ONLY : LEG_READ
 USE MOD_MANAGER, ONLY : MANAGERFILL,MANAGERUPDATE
 USE MOD_IFF, ONLY : UTL_GETUNITIFF
@@ -232,7 +232,7 @@ DO IDF=1,NIDF
    EXIT
  END SELECT
 
- !## open idf/ivf-file (only to test whether file exists!)
+ !## open idf-file (only to test whether file exists!)
  IF(MP(IPLOT)%IPLOT.EQ.1)THEN
   IF(.NOT.IDFREAD(MP(IPLOT)%IDF,IDFNAME,0))MP(IPLOT)%IPLOT=0
   IU(1)=MP(IPLOT)%IDF%IU
@@ -256,7 +256,7 @@ DO IDF=1,NIDF
   IF(IOS.NE.0)MP(IPLOT)%IPLOT=0
  ENDIF
 
- IF(MP(IPLOT)%IPLOT.EQ.0)EXIT !## IDFLOOP
+ IF(MP(IPLOT)%IPLOT.EQ.0)EXIT !## idfloop
 
  !## initialize plot-variables
  MPW%NACT            =MPW%NACT+1
@@ -266,19 +266,20 @@ DO IDF=1,NIDF
  I=INDEX(IDFNAME,'.')-1
  J=INDEXNOCASE(IDFNAME,'\',.TRUE.)+1
  
- LLEG=.TRUE.
- IF(PRESENT(LEGNAME))THEN
-  IF(LEGNAME.NE.'')THEN
-   CALL LEG_READ(MP(IPLOT)%LEG,LEGNAME,IOS)
-   IF(IOS.EQ.0)LLEG=.FALSE.
-  ENDIF
- ENDIF
+! LLEG=.TRUE.
+! IF(PRESENT(LEGNAME))THEN
+!  IF(LEGNAME.NE.'')THEN
+!   CALL LEG_READ(MP(IPLOT)%LEG,LEGNAME,IOS)
+!   IF(IOS.EQ.0)LLEG=.FALSE.
+!  ENDIF
+! ENDIF
 
  MP(IPLOT)%ALIAS=IDFNAME(J:)
 
  I=MOD(IPLOT,MAXCOLOUR); I=MAX(1,I)
  MP(IPLOT)%SCOLOR=ICOLOR(I)   !## color for profile
- CALL UTL_READARRAY((/1,1,0,0,0,0/),6,MP(IPLOT)%PRFTYPE) !active - drawing lines in profile on default
+ !## active - drawing lines in profile on default
+ CALL UTL_READARRAY((/1,1,0,0,0,0/),6,MP(IPLOT)%PRFTYPE) 
 
  MP(IPLOT)%IDFI =0
  MP(IPLOT)%UNITS=0   
@@ -299,12 +300,14 @@ DO IDF=1,NIDF
   !## ipf
   CASE (2)
 
-   MP(IPLOT)%PRFTYPE=1    !active/non active in profile
+   !## active/non active in profile
+   MP(IPLOT)%PRFTYPE=1    
    IF(PRESENT(ILABELS))THEN
     READ(IU(1),*); READ(IU(1),*) M
     ALLOCATE(ILIST(M)); ILIST=0; DO I=1,SIZE(ILABELS); ILIST(ILABELS(I))=1; ENDDO  
     CALL UTL_READARRAY(ILIST,M,MP(IPLOT)%IEQ); DEALLOCATE(ILIST)
-    MP(IPLOT)%IEQ=-1.0*MP(IPLOT)%IEQ    !no value plotted <--- used as binaire pointer for label plotting, white
+    !## no value plotted <--- used as binaire pointer for label plotting, white
+    MP(IPLOT)%IEQ=-1.0*MP(IPLOT)%IEQ    
    ELSE
     MP(IPLOT)%IEQ=0    !no value plotted <--- used as binaire pointer for label plotting
    ENDIF  
@@ -410,23 +413,32 @@ DO IDF=1,NIDF
  !## close idf/ivf/ipf/iff/isg/gen
  DO I=1,MAXFILES; IF(IU(I).GT.0)CLOSE(IU(I)); END DO
 
- !## generate nonlinear legend and write it
+ !## try to read in legfile
+ LLEG=.TRUE.
+ IF(PRESENT(LEGNAME))THEN
+  IF(LEGNAME.NE.'')THEN
+   CALL LEG_READ(MP(IPLOT)%LEG,LEGNAME,IOS)
+   IF(IOS.EQ.0)LLEG=.FALSE.
+  ENDIF
+ ENDIF
+
+ !## generate linear legend for entire domain and write it if not assigned to file at this stage
  IF(LLEG)THEN
   SELECT CASE (MP(IPLOT)%IPLOT)
    !## 1=idf,2=ipf,3=iff,5=mdf,6=gen
    CASE (1:3,5,6)
-    CALL LEG_CREATECLASSES(IPLOT,'LIN','ALE')
+    IF(.NOT.LEG_CREATE_CLASSES('LIN','ALE',IPLOT))THEN; MP(IPLOT)%IPLOT=0; EXIT; ENDIF
    !## isg
    CASE (4)
-    DR=1.0/REAL(MXCLR+1)
-    MP(IPLOT)%LEG%CLASS(0)=1.0
+    DR=1.0/REAL(MXCLR+1); MP(IPLOT)%LEG%CLASS(0)=1.0
     DO I=1,MXCLR; MP(IPLOT)%LEG%CLASS(I)=MP(IPLOT)%LEG%CLASS(I-1)-DR; END DO
     MP(IPLOT)%LEG%NCLR=MXCLR
   END SELECT
-  !## apply default colours
   MP(IPLOT)%LEG%LEGTXT    =''      !## default name of the legend file
   MP(IPLOT)%LEG%CGRAD     =1       !## all checkboxes selected
+  !## apply default colours
   DO I=1,MXCGRAD; MP(IPLOT)%LEG%ICLRGRAD(I)=WRGB(CLR(I,1),CLR(I,2),CLR(I,3)); ENDDO
+  !# create all colours based upon iclrgrad
   CALL LEG_CREATECOLORS(IPLOT)
  ENDIF
 

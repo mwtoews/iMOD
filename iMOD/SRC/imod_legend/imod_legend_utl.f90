@@ -127,15 +127,8 @@ CONTAINS
  WRITE(IU,'(A)') 'UPPERBND,LOWERBND,IRED,IGREEN,IBLUE,DOMAIN'
  DO I=1,LEG%NCLR
   CALL WRGBSPLIT(LEG%RGB(I),IR,IG,IB)
-!  IF(LEG%NCLR.GT.MXCLASS)THEN
-!   IF(I.EQ.1)WRITE(LINE,*) '>=',LEG%CLASS(I),' - <=',LEG%CLASS(I-1)
-!   IF(I.NE.1)WRITE(LINE,*) '>=',LEG%CLASS(I),' - <=',LEG%CLASS(I-1)
-!  ENDIF    
-  LINE=TRIM(RTOS(LEG%CLASS(I-1),'G',7))//','//TRIM(RTOS(LEG%CLASS(I-1),'G',7))//','// &
+  LINE=TRIM(RTOS(LEG%CLASS(I-1),'G',7))//','//TRIM(RTOS(LEG%CLASS(I),'G',7))//','// &
        TRIM(ITOS(IR))//','//TRIM(ITOS(IG))//','//TRIM(ITOS(IB))//',"'//TRIM(LEG%LEGTXT(I))//'"'
-!  WRITE(L1,*) LEG%CLASS(I-1),',',LEG%CLASS(I),',',IR,',',IG,',',IB,',"'//TRIM(LEG%LEGTXT(I))//'"'
-!  !## delete empty spaces outside quotes only
-!  CALL UTL_DELSPACE(L1,LINE) 
   WRITE(IU,'(A)') TRIM(LINE)
  END DO
 
