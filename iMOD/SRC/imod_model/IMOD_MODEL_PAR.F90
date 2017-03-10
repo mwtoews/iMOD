@@ -52,7 +52,9 @@ INTEGER :: NRUNFILES,NSCENFILES,NSDFFILES,NRESULTDIR,NSCENARIOS,&
            IUNCONF, &  !## unconfined
            IFVDL,   &  !## formulea of de lange
            IARMSWP, &  !## artificial recharge metaswap
-           IBNDCHK     !## boundary check
+           IBNDCHK, &  !## boundary check
+           IMERGE,  &  !## PKS-package: option idf-merge output files
+           PARTOPT     !## PKS-package: methode of subdomain partition
 REAL :: MDLBUFFER,  &  !## buffersize
         SIMCSIZE,   &  !## cellsize
         MAXSIMCSIZE,&  !## max.cellsize
@@ -70,7 +72,7 @@ INTEGER,DIMENSION(:),ALLOCATABLE :: NLMDL, & !## number of modellayers for outpu
                                     IAMDL    !## activeness of module/package
 INTEGER,DIMENSION(:,:),ALLOCATABLE :: ILMDL  !## modellayers for output
 CHARACTER(LEN=10),PARAMETER :: REPLACESTRING='$DBASE$'
-CHARACTER(LEN=256) :: SCENFNAME,BNDFNAME !## scenario filename
+CHARACTER(LEN=256) :: SCENFNAME,BNDFNAME,MRGFNAME !## scenario filename
 CHARACTER(LEN=256),DIMENSION(:),POINTER :: SDFFNAME,SDFFNAME_DUMMY !## sdf path+filename
 CHARACTER(LEN=50),DIMENSION(:),ALLOCATABLE :: SDFFNAME_SHORT !## sdf filename
 
