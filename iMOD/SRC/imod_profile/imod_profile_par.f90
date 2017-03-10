@@ -58,8 +58,8 @@ REAL,DIMENSION(4),SAVE :: AREA
 
 INTEGER,ALLOCATABLE,DIMENSION(:),SAVE :: IBITMAP     !## bitmap of the profile(s)
 INTEGER,ALLOCATABLE,DIMENSION(:),SAVE :: IWINPROFILE !## maximum three windows
-INTEGER,SAVE :: ISNAP
-
+INTEGER,SAVE :: ISNAP     ! snap to locations
+INTEGER,SAVE :: ICCOL     ! usage of colouring in cross-section
 INTEGER,SAVE :: IFADE     ! fade out iff/ipf data
 REAL,SAVE :: XSIGHT       ! sight depth
 REAL,SAVE :: XCRD,YCRD    ! coordinates

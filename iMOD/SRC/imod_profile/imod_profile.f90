@@ -89,7 +89,7 @@ CONTAINS
 
  CALL WMENUSETSTATE(ID_PROFILE,2,1)
 
- IHIDE=0; IFIX=0
+ IHIDE=0; IFIX=0; ICCOL=0
  CALL WMENUSETSTATE(ID_HIDEBITMAP,1,0)
  CALL WMENUSETSTATE(ID_FIXBITMAP,1,0)
  CALL WMENUSETSTATE(ID_REMOVEBITMAP,1,0)
@@ -2717,7 +2717,7 @@ CONTAINS
     ENDDO
    
    ELSE
-!    CALL UTL_DEBUGLEVEL(0)
+    CALL UTL_DEBUGLEVEL(0)
     DO I=1,SERIE(IIDF)%N 
      IF(SERIE(IIDF)%Y(I).NE.PROFIDF(IIDF)%IDF%NODATA)THEN
       IF(I.EQ.1)THEN
@@ -2735,7 +2735,7 @@ CONTAINS
       ENDIF
      ENDIF
     ENDDO
-!    CALL UTL_DEBUGLEVEL(1)
+    CALL UTL_DEBUGLEVEL(1)
    ENDIF
   ENDIF
   
@@ -3235,6 +3235,13 @@ CONTAINS
  !## copy info to mp() variable
  CALL PROFILE_COPYINFO()
  
+ !## see whether colouring is active
+ ICCOL=0; DO I=1,MXNIDF
+  CALL UTL_FILLARRAY(IPRF,7,PROFIDF(I)%PRFTYPE)
+  !## colouring
+  IF(IPRF(5).EQ.1)THEN; ICCOL=1; EXIT; ENDIF
+ ENDDO
+
  CALL WDIALOGSELECT(ID_DSERIESPROP)
  CALL WDIALOGHIDE()
 
@@ -4135,6 +4142,8 @@ CONTAINS
   ENDIF
  END DO
 
+ CALL PROFILE_PROFSPOTLINE_SYNC()
+ 
  !## plot sampling distance (if larger than 1)
  DO I=1,SIZE(IWINPROFILE)
   CALL WINDOWSELECT(IWINPROFILE(I))
@@ -4174,6 +4183,55 @@ CONTAINS
  END SUBROUTINE PROFILE_PROFINTERSECTLINE
 
  !###======================================================================
+ SUBROUTINE PROFILE_PROFSPOTLINE_SYNC()
+ !###======================================================================
+ IMPLICIT NONE
+ INTEGER :: I,J,K,N,I1,I2
+ REAL,ALLOCATABLE,DIMENSION(:) :: XT
+ 
+ !## no colouring active
+ IF(ICCOL.EQ.0)RETURN
+ 
+ N=SUM(SERIE%N); ALLOCATE(XT(N)); K=0
+ DO I=1,SIZE(SERIE)
+  DO J=1,SERIE(I)%N
+   K=K+1; XT(K)=SERIE(I)%X(J)
+  ENDDO
+ ENDDO
+
+ CALL UTL_GETUNIQUE(XT,K,N)
+ 
+ !## create arrays with n-length
+ DO I=1,SIZE(SERIE); ALLOCATE(SERIE(I)%COPX(N),SERIE(I)%COPY(N)); ENDDO
+
+ !## fill in data
+ DO I=1,SIZE(SERIE)
+  K=1; DO J=1,N
+ 
+   !## skip if duplicate in original dataset
+   DO
+    IF(K.GE.SERIE(I)%N)EXIT
+    IF(SERIE(I)%X(K+1).GT.SERIE(I)%X(K))EXIT
+    K=K+1
+   ENDDO
+ 
+   SERIE(I)%COPX(J)=XT(J)
+   SERIE(I)%COPY(J)=SERIE(I)%Y(K)
+!## niet meerdere keren achter lkaar
+   IF(SERIE(I)%X(K).GE.XT(J))K=K+1
+
+  ENDDO
+
+  DEALLOCATE(SERIE(I)%X,SERIE(I)%Y)
+  SERIE(I)%N=N
+  SERIE(I)%X=>SERIE(I)%COPX
+  SERIE(I)%Y=>SERIE(I)%COPY
+
+ ENDDO
+ 
+ END SUBROUTINE PROFILE_PROFSPOTLINE_SYNC
+
+ !###======================================================================
  SUBROUTINE PROFILE_PROFSPOTLINE(X1,X2,Y1,Y2,IIDF,N,MAXSTEP)
  !###======================================================================
  IMPLICIT NONE
@@ -4193,8 +4251,10 @@ CONTAINS
  !## add 4 extra for filled-polygons!
  IF(ABS(N)+4.GT.II)THEN
   ALLOCATE(SERIE(IIDF)%COPX(ABS(N)+4),SERIE(IIDF)%COPY(ABS(N)+4))
-  SERIE(IIDF)%COPX(1:II)=SERIE(IIDF)%X(1:II)
-  SERIE(IIDF)%COPY(1:II)=SERIE(IIDF)%Y(1:II)
+  DO I=1,II; SERIE(IIDF)%COPX(I)=SERIE(IIDF)%X(I); ENDDO
+  DO I=1,II; SERIE(IIDF)%COPY(I)=SERIE(IIDF)%Y(I); ENDDO
+!  SERIE(IIDF)%COPX(1:II)=SERIE(IIDF)%X(1:II)
+!  SERIE(IIDF)%COPY(1:II)=SERIE(IIDF)%Y(1:II)
   DEALLOCATE(SERIE(IIDF)%X,SERIE(IIDF)%Y)
   SERIE(IIDF)%X=>SERIE(IIDF)%COPX
   SERIE(IIDF)%Y=>SERIE(IIDF)%COPY
