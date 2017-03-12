@@ -4186,7 +4186,8 @@ CONTAINS
  SUBROUTINE PROFILE_PROFSPOTLINE_SYNC()
  !###======================================================================
  IMPLICIT NONE
- INTEGER :: I,J,K,N,I1,I2
+ INTEGER :: I,J,K,K1,K2,N,I1,I2
+ REAL :: X1,X2,F,Z
  REAL,ALLOCATABLE,DIMENSION(:) :: XT
  
  !## no colouring active
@@ -4206,21 +4207,39 @@ CONTAINS
 
  !## fill in data
  DO I=1,SIZE(SERIE)
-  K=1; DO J=1,N
+  X1=SERIE(I)%X(1); X2=SERIE(I)%X(2)
+  J=1; K=2
+  DO ! J=1,N
  
-   !## skip if duplicate in original dataset
-   DO
-    IF(K.GE.SERIE(I)%N)EXIT
-    IF(SERIE(I)%X(K+1).GT.SERIE(I)%X(K))EXIT
+   IF(X1.LE.XT(J).AND.X2.GE.XT(J+1))THEN
+    F=(XT(J)-X1)/(X2-X1)
+    Z=SERIE(I)%Y(K-1)+F*(SERIE(I)%Y(K)-SERIE(I)%Y(K-1))
+!    Z=SERIE(I)%Y(K-1)
+    SERIE(I)%COPX(J)=XT(J)
+    SERIE(I)%COPY(J)=Z
+    J=J+1
+    IF(J.EQ.N)EXIT
+   ELSE 
     K=K+1
-   ENDDO
+    X1=X2
+    X2=SERIE(I)%X(K) 
+   ENDIF
  
-   SERIE(I)%COPX(J)=XT(J)
-   SERIE(I)%COPY(J)=SERIE(I)%Y(K)
-!## niet meerdere keren achter lkaar
-   IF(SERIE(I)%X(K).GE.XT(J))K=K+1
-
   ENDDO
+ 
+!   !## skip if duplicate in original dataset
+!   DO
+!    IF(K.GE.SERIE(I)%N)EXIT
+!    IF(SERIE(I)%X(K+1).GT.SERIE(I)%X(K))EXIT
+!    K=K+1
+!   ENDDO
+! 
+!   SERIE(I)%COPX(J)=XT(J)
+!   SERIE(I)%COPY(J)=SERIE(I)%Y(K)
+!!## niet meerdere keren achter elkaar
+!   IF(SERIE(I)%X(K).GE.XT(J))K=K+1
+!
+!  ENDDO
 
   DEALLOCATE(SERIE(I)%X,SERIE(I)%Y)
   SERIE(I)%N=N
