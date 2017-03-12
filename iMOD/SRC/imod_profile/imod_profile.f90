@@ -4223,23 +4223,12 @@ CONTAINS
     K=K+1
     X1=X2
     X2=SERIE(I)%X(K) 
+
+!## kan zijn dat de oorspronkelijke serie korter is
+
    ENDIF
  
   ENDDO
- 
-!   !## skip if duplicate in original dataset
-!   DO
-!    IF(K.GE.SERIE(I)%N)EXIT
-!    IF(SERIE(I)%X(K+1).GT.SERIE(I)%X(K))EXIT
-!    K=K+1
-!   ENDDO
-! 
-!   SERIE(I)%COPX(J)=XT(J)
-!   SERIE(I)%COPY(J)=SERIE(I)%Y(K)
-!!## niet meerdere keren achter elkaar
-!   IF(SERIE(I)%X(K).GE.XT(J))K=K+1
-!
-!  ENDDO
 
   DEALLOCATE(SERIE(I)%X,SERIE(I)%Y)
   SERIE(I)%N=N
