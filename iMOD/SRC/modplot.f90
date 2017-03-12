@@ -30,7 +30,7 @@ USE MOD_IDF_PAR, ONLY : IDFOBJ
  INTEGER,PARAMETER :: MXMPLOT  =1000 !## maximum plots in mp and mdf objects
  INTEGER,PARAMETER :: MAXIAXES =50   !## maximum number of column in associates txt-files
  INTEGER,DIMENSION(MXCGRAD) :: CLRGIVEN
- DATA CLRGIVEN/1,43,85,128,169,213,255/ !## number of the 255 stretched legend for the 7 buttons
+ DATA CLRGIVEN/1,43,85,128,170,212,255/ !## number of the 255 stretched legend for the 7 buttons
 
  TYPE LEGENDOBJ
   INTEGER,DIMENSION(MXCLR) :: RGB
