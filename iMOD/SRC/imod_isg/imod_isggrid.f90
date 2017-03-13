@@ -1925,7 +1925,8 @@ IRLOOP: DO IR=MAX(1,IROW-1),MIN(NROW,IROW+1)
   ENDIF
  ENDDO
    
- WRITE(*,'(/A/)') 'Error cannot connect Stream '//TRIM(ITOS(ISTR))//' to lake '//TRIM(ITOS(ISEG))
+ WRITE(*,'(/A)') 'Error cannot connect Stream '//TRIM(ITOS(ISTR))//' to lake '//TRIM(ITOS(ISEG))
+ WRITE(*,'(A)') 'Perhaps you used an updated LAKE-ID file and did not update connection ID in SFR file?'
  WRITE(*,'(A/)') 'iMOD removed the connection to continue'
  ISEG=0; RETURN
  

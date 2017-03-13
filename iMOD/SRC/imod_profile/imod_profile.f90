@@ -266,7 +266,7 @@ CONTAINS
  SUBROUTINE PROFILE_MAIN()
  !###====================================================================
  IMPLICIT NONE
- INTEGER :: IEXIT
+ INTEGER :: IEXIT,I
  LOGICAL :: LEX
  
  !## initialisation, array (de)allocation e.g.
@@ -304,6 +304,13 @@ CONTAINS
  ICURSOR_BITMAP=0 
  ICRD_BITMAP=0
  
+ !## see whether colouring is active
+ ICCOL=0; DO I=1,MXNIDF
+  CALL UTL_FILLARRAY(IPRF,7,PROFIDF(I)%PRFTYPE)
+  !## colouring
+  IF(IPRF(5).EQ.1)THEN; ICCOL=1; EXIT; ENDIF
+ ENDDO
+
  !## draw first selected cross-section if solid tool is active
  IF(ISOLID.EQ.1)CALL SOLID_PROFILEUPDATECROSS(0,0)
  
@@ -2561,9 +2568,13 @@ CONTAINS
        J=J+1
        IF(J.GE.2)THEN
         
+        !## average top
         Z1=0.5*(SERIE(IIDF-1)%Y(I-1)+SERIE(IIDF-1)%Y(I))
+        !## average bottom
         Z2=0.5*(SERIE(IIDF+1)%Y(I-1)+SERIE(IIDF+1)%Y(I))
+        !## average value
         X= 0.5*(SERIE(IIDF)  %Y(I-1)+SERIE(IIDF)%Y(I))
+        !## devide by thickness if iprf(6).eq.1
         Y=PROFILE_BITMAPIDF_CLR_Y(Z1,X,Z2,IPRF(6))
         !## get colour of serie()%y()
         ICLR=UTL_IDFGETCLASS(PROFIDF(IIDF)%LEG,Y); CALL IGRCOLOURN(ICLR)
@@ -2579,7 +2590,7 @@ CONTAINS
      DO I=1,SERIE(IIDF)%N     
       IF(SERIE(IIDF-1)%Y(I).NE.PROFIDF(IIDF-1)%IDF%NODATA.AND.   &
          SERIE(IIDF+1)%Y(I).NE.PROFIDF(IIDF+1)%IDF%NODATA)THEN
-         
+
        Y=PROFILE_BITMAPIDF_CLR_Y(SERIE(IIDF-1)%Y(I),SERIE(IIDF)%Y(I),SERIE(IIDF+1)%Y(I),IPRF(6))
        !## get colour of serie()%y()
        ICLR=UTL_IDFGETCLASS(PROFIDF(IIDF)%LEG,Y); CALL IGRCOLOURN(ICLR)
@@ -2588,22 +2599,26 @@ CONTAINS
        IF(SERIE(IIDF-1)%Y(I).NE.SERIE(IIDF+1)%Y(I))THEN
             
         !## start rectangle
-        IF(I.EQ.1)THEN
-         X1= SERIE(IIDF-1)%X(I)
-         X2=(SERIE(IIDF+1)%X(I)+SERIE(IIDF+1)%X(I+1))/2.0
-         IF(X1.NE.X2)CALL IGRRECTANGLE(X1,SERIE(IIDF-1)%Y(I),X2,SERIE(IIDF+1)%Y(I))   
-        ELSEIF(I.EQ.SERIE(IIDF)%N)THEN 
-         X1=(SERIE(IIDF-1)%X(I)+SERIE(IIDF-1)%X(I-1))/2.0
-         X2= SERIE(IIDF+1)%X(I)
-         IF(X1.NE.X2)CALL IGRRECTANGLE(X1,SERIE(IIDF-1)%Y(I),X2,SERIE(IIDF+1)%Y(I))   
-        ELSE
-         X1=(SERIE(IIDF-1)%X(I)+SERIE(IIDF-1)%X(I-1))/2.0
-         X2=(SERIE(IIDF+1)%X(I)+SERIE(IIDF+1)%X(I+1))/2.0
-         IF(X1.NE.X2)CALL IGRRECTANGLE(X1,SERIE(IIDF-1)%Y(I),X2,SERIE(IIDF+1)%Y(I))
+        X1=SERIE(IIDF-1)%X(I)
+        IF(I.GT.1)THEN
+         IF(SERIE(IIDF-1)%Y(I-1).NE.PROFIDF(IIDF-1)%IDF%NODATA)THEN
+          X1=(SERIE(IIDF-1)%X(I-1)+SERIE(IIDF-1)%X(I))/2.0
+         ENDIF
         ENDIF
+        !## end rectangle
+        X2=SERIE(IIDF-1)%X(I)
+        IF(I.LT.SERIE(IIDF)%N)THEN   
+         IF(SERIE(IIDF-1)%Y(I+1).NE.PROFIDF(IIDF-1)%IDF%NODATA)THEN
+          X2=(SERIE(IIDF-1)%X(I)+SERIE(IIDF-1)%X(I+1))/2.0
+         ENDIF
+        ENDIF     
+
+        IF(X1.NE.X2)CALL IGRRECTANGLE(X1,SERIE(IIDF-1)%Y(I),X2,SERIE(IIDF+1)%Y(I))
        
        ENDIF
        
+      ELSE
+       J=0
       ENDIF
      ENDDO
     
@@ -2747,7 +2762,8 @@ CONTAINS
   ENDIF
 
   !## lines
-  IF(IPRF(2).EQ.1.OR.ILINEBLACK.EQ.1)THEN
+  IF(IPRF(2).EQ.1.OR.ILINEBLACK.EQ.1.AND. &
+     IPRF(5).NE.1)THEN   !## cannot be used for idf files applied as colouring
    !## lines from centre
    IF(IBLOCKLINES.EQ.0)THEN
     LEX=.TRUE.
@@ -4209,22 +4225,36 @@ CONTAINS
  DO I=1,SIZE(SERIE)
   X1=SERIE(I)%X(1); X2=SERIE(I)%X(2)
   J=1; K=2
-  DO ! J=1,N
+  DO
  
    IF(X1.LE.XT(J).AND.X2.GE.XT(J+1))THEN
-    F=(XT(J)-X1)/(X2-X1)
-    Z=SERIE(I)%Y(K-1)+F*(SERIE(I)%Y(K)-SERIE(I)%Y(K-1))
+    IF(SERIE(I)%Y(K-1).NE.PROFIDF(I)%IDF%NODATA.AND. &
+       SERIE(I)%Y(K)  .NE.PROFIDF(I)%IDF%NODATA)THEN
+     F=(XT(J)-X1)/(X2-X1)
+     Z=SERIE(I)%Y(K-1)+F*(SERIE(I)%Y(K)-SERIE(I)%Y(K-1))
 !    Z=SERIE(I)%Y(K-1)
+    ELSE
+     Z=PROFIDF(I)%IDF%NODATA
+    ENDIF
     SERIE(I)%COPX(J)=XT(J)
     SERIE(I)%COPY(J)=Z
-    J=J+1
-    IF(J.EQ.N)EXIT
-   ELSE 
-    K=K+1
-    X1=X2
-    X2=SERIE(I)%X(K) 
+    J=J+1; IF(J.GT.N)EXIT
 
-!## kan zijn dat de oorspronkelijke serie korter is
+   ELSE 
+
+    K=K+1
+    !## fill rest with nodata
+    IF(K.GT.SERIE(I)%N)THEN
+     DO
+      SERIE(I)%COPX(J)=XT(J)
+      SERIE(I)%COPY(J)=PROFIDF(I)%IDF%NODATA
+      J=J+1; IF(J.GT.N)EXIT
+     ENDDO
+     EXIT
+    ELSE
+     X1=X2
+     X2=SERIE(I)%X(K) 
+    ENDIF
 
    ENDIF
  

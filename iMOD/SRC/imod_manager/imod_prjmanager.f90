@@ -3493,16 +3493,17 @@ TOPICLOOP: DO ITOPIC=1,MAXTOPICS
  IF(.NOT.PMANAGER_SAVEMF2005_ISG(DIR,DIRMNAME,IBATCH,LISG,29,IRIVCB,'ISG',IPRT))RETURN
  !## save sfr package
  IF(.NOT.PMANAGER_SAVEMF2005_ISG(DIR,DIRMNAME,IBATCH,LSFR,30,ISFRCB,'SFR',IPRT))RETURN
- !## save hfb package
+ !## save fhb package
  IF(.NOT.PMANAGER_SAVEMF2005_PCK(DIR,DIRMNAME,IBATCH,LFHB,31,IFHBCB,'FHB',(/1,2/),IPRT))RETURN
  !## save rest of lak package
  LPER=0; DO IPER=1,NPER
   !## get appropriate stress-period to store in runfile   
   KPER=PMANAGER_GETCURRENTIPER(IPER,32,ITIME,JTIME)
   !## kper is stress period for which lakes are firstly defined
-  IF(ABS(KPER).LT.INIPER)IINI= 0
-  IF(ABS(KPER).EQ.INIPER)IINI= 1
-  IF(ABS(KPER).GT.INIPER)IINI=-1
+  IINI=0; IF(KPER.EQ.INIPER)IINI=1
+!  IF(ABS(KPER).LT.INIPER)IINI= 0
+!  IF(ABS(KPER).EQ.INIPER)IINI= 1
+!  IF(ABS(KPER).GT.INIPER)IINI=-1
   !## read in new values in case not previous one can be used
   IF(ABS(KPER).NE.LPER)THEN
    KPER=ABS(KPER)
@@ -4578,8 +4579,8 @@ TOPICLOOP: DO ITOPIC=1,MAXTOPICS
   !## get appropriate stress-period to store in runfile   
   KPER=PMANAGER_GETCURRENTIPER(IPER,ITOPIC,ITIME,JTIME)
   
-  !## always export wells per stress-period
-  KPER=ABS(KPER)
+!  !## always export wells per stress-period
+!  KPER=ABS(KPER)
   
   !## output
   WRITE(IPRT,'(1X,A,2I10,2(1X,I14))') 'Exporting timestep ',IPER,KPER,ITIME,JTIME  
@@ -7461,7 +7462,7 @@ TOPICLOOP: DO ITOPIC=1,MAXTOPICS
       TOP(ILAY)%X(ICOL,IROW)=BOT(ILAY)%X(ICOL,IROW)
 
       !## increase permeability in ratio in case no interbed and interface is shifted upwards
-      IF(ILAY.LE.NLAY)THEN
+      IF(ILAY.LT.NLAY)THEN
        KD1=KHV(ILAY  )%X(ICOL,IROW)*(TOP(ILAY  )%X(ICOL,IROW)-BOT(ILAY  )%X(ICOL,IROW))
        KD2=KHV(ILAY+1)%X(ICOL,IROW)*(TOP(ILAY+1)%X(ICOL,IROW)-BOT(ILAY+1)%X(ICOL,IROW))
        KD1=KD1+KD2; F=KD1/KD2

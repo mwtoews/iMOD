@@ -712,7 +712,7 @@ CONTAINS
                         NTIMES,TIMINDICES,SELECTEDVALUES))THEN
    IF(WATERLEVELINDICES(1).EQ.WATERLEVELINDICES(2))THEN
     !## create bottom-level from waterlevel
-    SELECTEDVALUES(2,1,:)=SELECTEDVALUES(1,1,:) !-SELECTEDVALUES(2,1,:)
+    SELECTEDVALUES(2,1,:)=SELECTEDVALUES(1,1,:) 
    ELSE
     !## create bottom-level from waterlevel and waterdepth
     SELECTEDVALUES(2,1,:)=SELECTEDVALUES(1,1,:)-SELECTEDVALUES(2,1,:)
