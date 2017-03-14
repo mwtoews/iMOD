@@ -2722,6 +2722,8 @@ TOPICLOOP: DO ITOPIC=1,MAXTOPICS
   WRITE(IU,'(A)') TRIM(LINE)    
   DO I=1,SIZE(PEST%IDFFILES)
 
+   LINE=TRIM(PEST%IDFFILES(I))
+
    IF(IOPTION.EQ.2)THEN
     Z=INT(UTL_GETREAL(LINE,IOS))
     IF(IOS.EQ.0)THEN
@@ -2735,7 +2737,6 @@ TOPICLOOP: DO ITOPIC=1,MAXTOPICS
     !## save array, do not correct for boundary condition as we not yet know for what layer the zone will apply
     IF(.NOT.PMANAGER_SAVEMF2005_MOD_U2DREL(TRIM(DIR)//'\PST1\ZONE_IZ'//TRIM(ITOS(I))//'.ARR',IDF,1,IU,1,0))RETURN
    ELSE
-    LINE=TRIM(PEST%IDFFILES(I))
     WRITE(IU,'(A)') TRIM(LINE)    
    ENDIF
    
@@ -4579,8 +4580,8 @@ TOPICLOOP: DO ITOPIC=1,MAXTOPICS
   !## get appropriate stress-period to store in runfile   
   KPER=PMANAGER_GETCURRENTIPER(IPER,ITOPIC,ITIME,JTIME)
   
-!  !## always export wells per stress-period
-!  KPER=ABS(KPER)
+  !## always export wells per stress-period
+  KPER=ABS(KPER)
   
   !## output
   WRITE(IPRT,'(1X,A,2I10,2(1X,I14))') 'Exporting timestep ',IPER,KPER,ITIME,JTIME  
