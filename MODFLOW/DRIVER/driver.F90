@@ -694,7 +694,7 @@ implicit none
 
              !#### TIMESERIES #####
              ok = mf2005_TimeserieGetHead(mf_igrid); call DriverChk(ok,'mf2005_TimeserieGetHead')
-             call tserie1write(0,lss,currentTime,hnoflo,usests)
+             call tserie1write(0,lss,currentTime,hnoflo,usests,modwd1)
              !#### TIMESERIES #####
 
           endif
@@ -807,7 +807,7 @@ implicit none
     call MetaSWAP_finishSimulation()
  end if
 !#### TIMESERIES #####
- call tserie1write(1,lss,currentTime,hnoflo,usests)
+ call tserie1write(1,lss,currentTime,hnoflo,usests,modwd1)
  call tserie1close()
 !#### TIMESERIES #####
 

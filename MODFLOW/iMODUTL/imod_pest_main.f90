@@ -114,7 +114,7 @@ CONTAINS
   ENDIF
 
   READ(IURUN,*) NLINES
-  IF(NLINES.EQ.0)RETURN
+  IF(NLINES.EQ.0)THEN; CLOSE(IURUN); RETURN; ENDIF
   
  else
  
@@ -445,48 +445,12 @@ CONTAINS
   DO I=1,SIZE(ZONE)
 
    NULLIFY(ZONE(I)%X,ZONE(I)%XY,ZONE(I)%IZ) 
-!   READ(IURUN,*,IOSTAT=IOS) LINE
-!   IF(IOS.NE.0)THEN
-!    CALL IMOD_UTL_PRINTTEXT('Error reading '//TRIM(LINE),0)
-!    CALL IMOD_UTL_PRINTTEXT('Busy processing module: '//TRIM(CMOD(I)),2)
-!   ENDIF
 
 !## USE U2DREL
     ALLOCATE(ZONE(I)%X(NCOL,NROW))
     ZONE(I)%ZTYPE=0
     CALL U2DREL(zone(i)%x, 'zone', NROW, NCOL, 0, iurun, IOUT)
 
-!   IZ=INT(IMOD_UTL_GETREAL(LINE,IOS))
-!   IF(IOS.EQ.0)THEN
-!    CALL IMOD_UTL_PRINTTEXT('Read Constant Value '//TRIM(IMOD_UTL_ITOS(IZ)),0)
-!    ALLOCATE(ZONE(I)%X(NCOL,NROW))
-!    ZONE(I)%ZTYPE=0
-!    ZONE(I)%X=REAL(IZ) 
-!   ELSE
-!    CALL IMOD_UTL_FILENAME(LINE)
-!    CALL IMOD_UTL_PRINTTEXT('Assigned '//TRIM(LINE),0)
-!    IF(INDEX(IMOD_UTL_CAPF(LINE,'U'),'.IDF').GT.0)THEN
-!     if (.not.idfread(idfc,line,0)) CALL IMOD_UTL_PRINTTEXT('idfread',2)
-!     call idfnullify(idfm)
-!     idfm%ieq=0
-!     idfm%dx=simcsize
-!     idfm%dy=simcsize
-!     idfm%ncol=ncol
-!     idfm%nrow=nrow
-!     idfm%xmin = simbox(1)
-!     idfm%ymin = simbox(2)
-!     idfm%xmax = simbox(3)
-!     idfm%ymax = simbox(4)
-!     nodata = idfc%nodata
-!     idfm%nodata = nodata
-!     if (.not.idfreadscale(idfc,idfm,9,0)) CALL IMOD_UTL_PRINTTEXT('idfreadscale',2)
-!     ALLOCATE(ZONE(I)%X(NCOL,NROW))
-!     ZONE(I)%ZTYPE=0
-!     ZONE(I)%X=IDFM%X
-!     call idfdeallocatex(idfc)
-!     if (idfc%iu.gt.0) then
-!      inquire(unit=idfc%iu,opened=lop); if(lop)close(idfc%iu)
-!     endif
 !#ifdef IPEST_PILOTPOINTS    
 !    ELSEIF(INDEX(IMOD_UTL_CAPF(LINE,'U'),'.IPF').GT.0)THEN
 !     ZONE(I)%ZTYPE=1
@@ -497,12 +461,9 @@ CONTAINS
 !     DO K=1,NIPF; READ(JU,*) ZONE(I)%XY(K,1),ZONE(I)%XY(K,2),ZONE(I)%IZ(K); ENDDO  
 !     CLOSE(JU)
 !#endif
-!    ELSE 
-!     CALL IMOD_UTL_PRINTTEXT('No supported file format found',2)
-!    ENDIF
-!   ENDIF
   ENDDO
-
+  CLOSE(IURUN)
+  
  endif
   
  CALL IMOD_UTL_PRINTTEXT('Parameters',-1,iu=IUPESTOUT)
