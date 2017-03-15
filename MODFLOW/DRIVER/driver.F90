@@ -24,7 +24,9 @@ program driver
 
 ! modules
 use driver_module
-use global, only : iout !,nper
+use global, only : iout, issflg
+use gwfmetmodule, only : time_cstring,time_ostring,idate_save
+use m_mf2005_main, only : kkper
 use IMOD_UTL, only : imod_utl_capf
 use m_main_info
 use m_vcl, only: targ
@@ -519,9 +521,13 @@ implicit none
           call cfn_mjd2datehms(currentTime,date,hour,minute,second)
 
 !what about steady-state solutions, currenttime.eq.0
-          write(*,'(5x,a,1x,i5,1x,a,1x,i8,3(a,i2.2))')&
-             'Timestep     ',tsc,':',date,' ',abs(hour),':',minute,':',second
-
+!          if(issflg(kkper).eq.1)then 
+!           write(*,'(5x,a,1x,a)')&
+!              'Timestep     :','steady-state'
+!          else
+!           write(*,'(5x,a,1x,i5,1x,a,1x,i8,3(a,i2.2))')&
+!              'Timestep     :',tsc,':',date,' ',abs(hour),':',minute,':',second
+!          endif
           ! one timestep for each cycle
 
 !##### BEGIN EXCHANGE: BeginOfTimestep ########################################
@@ -546,7 +552,7 @@ implicit none
 
          ! ... init timestep
           call mf2005_prepareTimestep(currentTime,stsave,retValMF2005)
-          call osd_chdir(modwd2)
+          call osd_chdir(modwd2) 
           call mf2005_initTimeStep(currentTime,retValMF2005)
           if (retValMF2005.ne.0) exitcode = -15
 
@@ -568,6 +574,16 @@ implicit none
                 iterMetaSwap = 0
              end if
           end if
+
+!what about steady-state solutions, currenttime.eq.0
+          if(issflg(kkper).eq.1)then 
+           write(*,'(5x,a,1x,a)')&
+              'Timestep     :','steady-state'
+          else
+           write(*,'(5x,a,1x,i5,1x,a,1x,i8,3(a,i2.2))')&
+              'Timestep     :',tsc,':',date,' ',abs(hour),':',minute,':',second
+          endif
+          ! one timestep for each cycle
 
 ! ... iteration
           converged =.false.
@@ -694,7 +710,9 @@ implicit none
 
              !#### TIMESERIES #####
              ok = mf2005_TimeserieGetHead(mf_igrid); call DriverChk(ok,'mf2005_TimeserieGetHead')
-             call tserie1write(0,lss,currentTime,hnoflo,usests,modwd1)
+
+             call tserie1write(0,lss,currentTime,hnoflo,usests,modwd1,issflg(kkper),time_cstring,time_ostring,idate_save)
+
              !#### TIMESERIES #####
 
           endif
@@ -807,7 +825,7 @@ implicit none
     call MetaSWAP_finishSimulation()
  end if
 !#### TIMESERIES #####
- call tserie1write(1,lss,currentTime,hnoflo,usests,modwd1)
+ call tserie1write(1,lss,currentTime,hnoflo,usests,modwd1,issflg(1),time_cstring,time_ostring,idate_save)
  call tserie1close()
 !#### TIMESERIES #####
 

@@ -278,14 +278,18 @@ RETURN
 END SUBROUTINE
 
 !###====================================================================
-SUBROUTINE TSERIE1WRITE(ISIM,LSS,DDATE,MV,usests,root)
+SUBROUTINE TSERIE1WRITE(ISIM,LSS,DDATE,MV,usests,root,issflg,time_cstring,time_ostring,idate_save)
 !###====================================================================
 USE IMOD_UTL, ONLY : IMOD_UTL_ITOS,IMOD_UTL_RTOS,IMOD_UTL_PRINTTEXT,IMOD_UTL_OPENASC,IMOD_UTL_SWAPSLASH,IMOD_UTL_CREATEDIR,OS,IMOD_UTL_IDATETOJDATE,IMOD_UTL_JDATETOIDATE
 USE TSVAR
+!USE GLOBAL,ONLY : ISSFLG
+!use m_mf2005_main, only : kper
 IMPLICIT NONE
 ! arguments
+character(len=*),intent(in),pointer :: time_cstring,time_ostring
 CHARACTER(LEN=*),intent(in) :: root
-INTEGER,INTENT(IN) :: ISIM
+!integer,intent(in),dimension(:) :: issflg
+INTEGER,INTENT(IN) :: ISIM,idate_save,issflg  !,kper
 LOGICAL, INTENT(IN) :: LSS
 DOUBLE PRECISION, INTENT(IN) :: DDATE
 REAL, INTENT(IN) :: MV
@@ -296,7 +300,7 @@ INTEGER :: I,II,J,JJJ,ILAY,N,IDATE,JDATE,JJ,IU,KK,IOS,JOS,IREC,MPER
 CHARACTER(LEN=52) :: CLABEL,CLDATE
 integer :: hour, minute, second
 CHARACTER(LEN=256) :: LINE
-character(len=8) :: cdate
+character(len=52) :: cdate
 !logical :: lfirst, lskip, lmatch
 !integer :: firstdate, lastdate, mrec, iidate
 !integer, dimension(:), allocatable :: ndate, mdate
@@ -345,16 +349,39 @@ ELSE
  !## simulation
  IF(ISIM.EQ.0)THEN
 
+  if (issflg.eq.0 .and. associated(time_ostring)) then ! TR
+   if(idate_save.eq.0)then
+    cdate=time_ostring
+   elseif(idate_save.eq.1)then
+    cdate=time_cstring
+   endif
+   cdate=adjustl(cdate)
+   
+   read(cdate,'(i8)',iostat=ios) idate
+   IF(IOS.EQ.0)THEN !CALL PRINTTEXT('iMOD can not create date for timeserie: '//TRIM(CDATE),2)
+    IDATE=IMOD_UTL_IDATETOJDATE(IDATE)
+   else
+  
+   ENDIF
+   WRITE(IUIPFTXT,*) IDATE
+
+  else ! SS
+  
+   cdate='steady-state'
+   WRITE(IUIPFTXT,*) CDATE
+  
+  end if
+
   NREC = NREC + 1
 
-  call cfn_mjd2datehms(ddate,idate,hour,minute,second)
-  write(cdate,'(i8)',iostat=ios) idate
-  IF(IOS.EQ.0)THEN !CALL PRINTTEXT('iMOD can not create date for timeserie: '//TRIM(CDATE),2)
-   IDATE=IMOD_UTL_IDATETOJDATE(IDATE)
-  ENDIF
+!  call cfn_mjd2datehms(ddate,idate,hour,minute,second)
+!  write(cdate,'(i8)',iostat=ios) idate
+!  IF(IOS.EQ.0)THEN !CALL PRINTTEXT('iMOD can not create date for timeserie: '//TRIM(CDATE),2)
+!   IDATE=IMOD_UTL_IDATETOJDATE(IDATE)
+!  ENDIF
 
-  IF(IOS.EQ.0)WRITE(IUIPFTXT,*) IDATE
-  IF(IOS.NE.0)WRITE(IUIPFTXT,*) CDATE
+!  IF(IOS.EQ.0)WRITE(IUIPFTXT,*) IDATE
+!  IF(IOS.NE.0)WRITE(IUIPFTXT,*) CDATE
 
   II=0
   DO JJ=1,ABS(IIPF)
@@ -375,7 +402,7 @@ ELSE
  !## clean-up
  ELSE
 
-  CALL IMOD_UTL_PRINTTEXT('',0); CALL IMOD_UTL_PRINTTEXT('Writing Timeseries to IPF file ...',0)
+  CALL IMOD_UTL_PRINTTEXT('',0); CALL IMOD_UTL_PRINTTEXT(' Writing Timeseries to IPF file ...',0)
   CLOSE(IUIPFTXT)
 
   LINE=TRIM(root)//CHAR(92)//'timeseries'//CHAR(92)//'timeseries_collect.txt'
@@ -408,7 +435,7 @@ ELSE
   II=0; JJ=0
   DO J=1,ABS(IIPF)
    DO I=1,TS(J)%NROWIPF
-    IF (.NOT.TS(J)%STVALUE(I)%VALID) CYCLE ! skip invalid data
+    IF(.NOT.TS(J)%STVALUE(I)%VALID)CYCLE ! skip invalid data
     II=II+1
 
     WRITE(LINE,'(A,I3.3,A,A4)') TRIM(ROOT)//CHAR(92)//'timeseries'//CHAR(92)//'ipf',J,'_'//TRIM(TS(J)%STVALUE(I)%ID),'.TXT'
@@ -426,8 +453,8 @@ ELSE
     
     CALL IMOD_UTL_OPENASC(IUTXT(II),LINE,'W')
     IF(IUTXT(II).LE.0)THEN
-     CALL IMOD_UTL_PRINTTEXT('Can not create file '//TRIM(LINE),0)
-     CALL IMOD_UTL_PRINTTEXT('Probably not enough free unit numbers',2)
+     CALL IMOD_UTL_PRINTTEXT(' Cannot create file '//TRIM(LINE),0)
+     CALL IMOD_UTL_PRINTTEXT(' Probably not enough free unit numbers',2)
     ENDIF
 
     WRITE(IUTXT(II),'(I10)') MPER 
@@ -475,12 +502,13 @@ ELSE
    II=0
    DO JJ=1,ABS(IIPF)
     DO I=1,TS(JJ)%NROWIPF
+     IF(.NOT.TS(J)%STVALUE(I)%VALID)CYCLE
      II=II+1
      
      !## without impulse/default
      READ(IU,*,IOSTAT=JOS) KK,J,H,W
      IF(JOS.NE.0)CYCLE
-     IF(KK.NE.JJ)CALL IMOD_UTL_PRINTTEXT('Something goes wrong in reading summary timeseries on line 367 in imodflow_tseries.f90',2)
+     IF(KK.NE.JJ)CALL IMOD_UTL_PRINTTEXT(' Something goes wrong in reading summary timeseries on line 367 in imodflow_tseries.f90',2)
      
      IF(TS(JJ)%IEXT.GT.0)THEN
       IF(TSDATE(II).EQ.IDATE)THEN
@@ -511,8 +539,8 @@ ELSE
    ENDDO
   ENDDO
   
-  II=0; DO JJ=1,ABS(IIPF)
-   DO I=1,TS(JJ)%NROWIPF; II=II+1; CLOSE(IUTXT(II)); CLOSE(JUTXT(II)); ENDDO
+  II=0; DO J=1,ABS(IIPF)
+   DO I=1,TS(J)%NROWIPF; IF(.NOT.TS(J)%STVALUE(I)%VALID)CYCLE; II=II+1; CLOSE(IUTXT(II)); CLOSE(JUTXT(II)); ENDDO
   ENDDO
   
   IF(ALLOCATED(IUTXT)) DEALLOCATE(IUTXT);  IF(ALLOCATED(JUTXT)) DEALLOCATE(JUTXT)

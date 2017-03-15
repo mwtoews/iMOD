@@ -988,11 +988,21 @@ c parameters
       CHARACTER(LEN=16), PARAMETER :: FFFTXT = 'FLOW FRONT FACE '
       CHARACTER(LEN=16), PARAMETER :: FLFTXT = 'FLOW LOWER FACE '
 
+!      DATA textinf/'    UZF INFILTR.'/
+!      DATA textinf2/'SFR-DIV. INFLTR.'/
+!      DATA textrch/'    UZF RECHARGE'/
+!      DATA textet/'           GW ET'/
+!      DATA textexfl/' SURFACE LEAKAGE'/
+!      DATA uzinftxt/'    INFILTRATION'/
+!      DATA uzsttext/'  STORAGE CHANGE'/
+!      DATA uzettext/'          UZF ET'/
+
       CHARACTER(LEN=16), PARAMETER :: INFTXT = '    UZF INFILTR.'
       CHARACTER(LEN=16), PARAMETER :: RCHTXT = '    UZF RECHARGE'
       CHARACTER(LEN=16), PARAMETER :: GETTXT = '           GW ET'
       CHARACTER(LEN=16), PARAMETER :: EXFTXT = ' SURFACE LEAKAGE'
       CHARACTER(LEN=16), PARAMETER :: UETTXT = '          UZF ET'
+      !CHARACTER(LEN=16), PARAMETER :: UETTXT = '                '
 !      DATA uzinftxt/'    INFILTRATION'/
 !      DATA uzsttext/'  STORAGE CHANGE'/
 
@@ -1060,6 +1070,7 @@ c check for uzf fluxen
        if (index(text,gettxt).gt.0) isub = 3
        if (index(text,exftxt).gt.0) isub = 4
        if (index(text,uettxt).gt.0) isub = 5
+!       if (index(text,uettxt).gt.0) isub = 6
        if (isub.gt.0 .and. .not.done) then
           read(prefix,*)(tmp,i=1,isub)
           prefix = tmp

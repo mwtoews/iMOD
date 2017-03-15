@@ -415,8 +415,8 @@ c ------------------------------------------------------------------------------
          call mf2005_staterestore(currentTime)                          ! DLT: components
       else if (dt.eq.0.d0 .and. timeStepCalculated) then                ! DLT: components
          ! calculate timestep again, restoreState needed                ! DLT: components
-         write(*,'(a,f20.5)') '  RESTORE STATE: MF2005  ',currentTime
-         call mf2005_staterestore(currentTime)                          ! DLT: components
+!         write(*,'(a,f20.5)') '  RESTORE STATE: MF2005  ',currentTime
+!         call mf2005_staterestore(currentTime)                          ! DLT: components
       else                                                              ! DLT: components
          ! save timestep (only when no restore has to be done)          ! DLT: components
          if (saveState) then                                            ! DLT: components
@@ -592,7 +592,8 @@ C----------READ USING PACKAGE READ AND PREPARE MODULES.
      2                                     IOUTS,IGRID)
         IF(IUNIT(IUHYD).GT.0 .AND. IUNIT(IUSFR).GT.0)
      1                     CALL GWF2HYD7SFR7RP(IUNIT(IUHYD),KKPER,IGRID)
-        IF(IUNIT(IUUZF).GT.0) CALL GWF2UZF1RP(IUNIT(IUUZF),KKPER,IGRID)
+        IF(IUNIT(IUUZF).GT.0) CALL GWF2UZF1RP(IUNIT(IUUZF),KKPER,
+     1                         IUNIT(IUSFR),IGRID)
         IF(IUNIT(IULAK).GT.0) CALL GWF2LAK7RP(IUNIT(IULAK),
      1                                        IUNIT(IUBCF6),
      1               IUNIT(IUGWT),IUNIT(IULPF),IUNIT(IUHUF2),
@@ -1111,7 +1112,7 @@ C7C4----CALCULATE BUDGET TERMS. SAVE CELL-BY-CELL FLOW TERMS.
           IF(IUNIT(IUETS).GT.0) CALL GWF2ETS7BD(KKSTP,KKPER,IGRID)
           IF(IUNIT(IUDRT).GT.0) CALL GWF2DRT7BD(KKSTP,KKPER,IGRID)
           IF(IUNIT(IUUZF).GT.0) CALL GWF2UZF1BD(KKSTP,KKPER,
-     1                             IUNIT(IULAK),IGRID)
+     1                             IUNIT(IULAK),IUNIT(IUSFR),IGRID)
           IF(IUNIT(IUSFR).GT.0) CALL GWF2SFR7BD(KKSTP,KKPER,
      1                        IUNIT(IUGWT),IUNIT(IULAK),IUNIT(IUGAGE),
      1                        IUNIT(IUUZF),NSOL,IGRID)
@@ -3054,7 +3055,7 @@ c ------------------------------------------------------------------------------
            valid = .true.
            if (x.le.coord_xll_nb .or. x.ge.coord_xur_nb) valid = .false.
            if (y.le.coord_yll_nb .or. y.ge.coord_yur_nb) valid = .false.
-           if (ilay.lt.0 .or. ilay.gt.nlay) valid = .false.
+           if (ilay.lt.1 .or. ilay.gt.nlay) valid = .false.
            ts(jj)%stvalue(i)%valid = valid
            if (valid) then ! store indices
               icol = ts(jj)%stvalue(i)%icol
