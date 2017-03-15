@@ -154,6 +154,43 @@ C save meta data for a grid.
       return
       end
 
+      subroutine gwf2getcurrentdate(igrid,issflg,cdate)
+      use gwfmetmodule
+      USE IMOD_UTL, ONLY : IMOD_UTL_IDATETOJDATE,imod_utl_printtext
+      implicit none
+      integer,intent(in) :: igrid,issflg
+      character(len=*),intent(out) :: cdate
+      integer :: ios,idate
+      
+c body
+      call sgwf2met1pnt(igrid)
+
+      if (issflg.eq.0 .and. associated(time_ostring)) then ! TR
+       if(idate_save.eq.0)then
+        cdate=time_ostring
+       elseif(idate_save.eq.1)then
+        cdate=time_cstring
+       endif
+       cdate=adjustl(cdate)
+   
+       read(cdate,'(i8)',iostat=ios) idate
+       IF(IOS.EQ.0)then
+        IDATE=IMOD_UTL_IDATETOJDATE(IDATE)
+       else
+        call imod_utl_printtext('Error cannot read date '//TRIM(CDATE),2
+     1)
+       endif
+       
+      else ! SS
+  
+       cdate='steady-state'
+  
+      end if
+
+      call sgwf2met1psv(igrid)
+      
+      end subroutine gwf2getcurrentdate
+      
       subroutine gwf2met1ar(inmet,igrid,iout)
 
 c description:

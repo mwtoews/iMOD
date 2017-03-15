@@ -375,6 +375,7 @@ c =======
       subroutine mf2005_prepareTimestep(currentTime,saveState,retVal)
 
       use m_mf2005_main
+      use global, only : iout, issflg
 
       implicit none
 
@@ -415,8 +416,11 @@ c ------------------------------------------------------------------------------
          call mf2005_staterestore(currentTime)                          ! DLT: components
       else if (dt.eq.0.d0 .and. timeStepCalculated) then                ! DLT: components
          ! calculate timestep again, restoreState needed                ! DLT: components
-!         write(*,'(a,f20.5)') '  RESTORE STATE: MF2005  ',currentTime
-!         call mf2005_staterestore(currentTime)                          ! DLT: components
+       !## only for transient timesteps
+       if(issflg(kkper).eq.0)then
+         write(*,'(a,f20.5)') '  RESTORE STATE: MF2005  ',currentTime
+         call mf2005_staterestore(currentTime)                          ! DLT: components
+       endif
       else                                                              ! DLT: components
          ! save timestep (only when no restore has to be done)          ! DLT: components
          if (saveState) then                                            ! DLT: components

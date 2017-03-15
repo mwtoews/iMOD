@@ -27,7 +27,7 @@ USE PESTVAR
 USE IMOD_UTL, ONLY : IMOD_UTL_PRINTTEXT,IMOD_UTL_CAPF,IMOD_UTL_ITOS,IMOD_UTL_GETREAL,&
  IMOD_UTL_FILENAME,IMOD_UTL_RTOS,IMOD_UTL_STRING,IMOD_UTL_OPENASC,IMOD_UTL_SWAPSLASH,&
  IMOD_UTL_GETUNIT,IMOD_UTL_CREATEDIR,IMOD_UTL_GETRCL,IMOD_UTL_LUDECOMP_DBL,IMOD_UTL_LUBACKSUB_DBL
-USE MOD_RF2MF, ONLY: CMOD, PPST, SIMBOX, SIMCSIZE, IURUN  !NLINES
+USE MOD_RF2MF, ONLY: CMOD, PPST, SIMBOX, SIMCSIZE, IURUN 
 USE TSVAR, ONLY : TS,CIPFTYPE,TS,ROOTRES, IIPF, ROOTRES
 USE IDFMODULE
 
@@ -893,7 +893,7 @@ CONTAINS
          EXP(PARAM(I)%MIN), &      !## minimal value
          EXP(PARAM(I)%MAX),&       !## maximal value
          PARAM(I)%FADJ,&           !## maximal adjust factor
-         PARAM(I)%IGROUP,&         !## group number
+         ABS(PARAM(I)%IGROUP),&    !## group number
          PARAM(I)%LOG              !## log transformed
     ELSE
      WRITE(IUPESTRUNFILE,'(I1,1X,A,1X,2(I3,1X),5(F10.3,1X),I3,L10)') PARAM(I)%IACT, &  !## iact
@@ -905,7 +905,7 @@ CONTAINS
          PARAM(I)%MIN, &   !## minimal value
          PARAM(I)%MAX,&    !## maximal value
          PARAM(I)%FADJ,&   !## maximal adjust factor
-         PARAM(I)%IGROUP,& !## group number
+         ABS(PARAM(I)%IGROUP),& !## group number
          PARAM(I)%LOG      !## log transformed
     ENDIF 
    ENDDO
@@ -1276,6 +1276,11 @@ CONTAINS
     ELSE
      PARAM(I)%ALPHA(1)=PARAM(I)%ALPHA(2)*PARAM(I)%DELTA
     ENDIF
+    CALL IMOD_UTL_PRINTTEXT('Adjusting Parameter '//TRIM(PARAM(I)%PTYPE)// &
+                 ';ils='//TRIM(IMOD_UTL_ITOS(PARAM(I)%ILS))// &
+                 ';izone='//TRIM(IMOD_UTL_ITOS(PARAM(I)%IZONE))// &
+                 ';igroup='//TRIM(IMOD_UTL_ITOS(PARAM(I)%IGROUP))// &
+                 ';factor='//TRIM(IMOD_UTL_RTOS(PARAM(I)%ALPHA(1),'*',1)),0)
    ENDIF
   ENDDO
  ELSE
@@ -1591,7 +1596,7 @@ CONTAINS
  
  !## construct jqj - NORMAL MATRIX/HESSIAN
  JQJ=0.0; I=0
- DO IP1=1,SIZE(PARAM)    !## row
+ DO IP1=1,SIZE(PARAM)                !## row
   IF(PARAM(IP1)%IACT.NE.1.OR.PARAM(IP1)%IGROUP.LE.0)CYCLE
   DF1=PARAM(IP1)%DELTA
   I=I+1; II=0; DO IP2=1,SIZE(PARAM)  !## column
@@ -1662,6 +1667,10 @@ CONTAINS
    ENDIF
   ENDDO
   EIGV= B  
+  IF(SUM(EIGW).LT.0.0)THEN
+   CALL IMOD_UTL_PRINTTEXT('Warning, there is NO information in parameter perturbation',0)
+   CALL IMOD_UTL_PRINTTEXT('Optimization of parameters stopped',2)
+  ENDIF
   EIGW=(EIGW*100.0)/SUM(EIGW)  
 
   !## condition number
@@ -1939,64 +1948,90 @@ CONTAINS
  !###====================================================================
  SUBROUTINE PEST_GETJ(LSS,root)
  !###====================================================================
- use rf2mf_module, only: ncol, nrow, nlay, nper
+! use rf2mf_module, only: ncol, nrow, nlay, nper
  IMPLICIT NONE
  LOGICAL,INTENT(IN) :: LSS
  character(len=*),intent(in) :: root
  INTEGER :: I,II,III,J,JJ,K,KK,ILAY,NROWIPFTXT,IUIPFTXT,NCOLIPFTXT, &
      IOS,NAJ,NP
- REAL :: X,Y,Z,H,WW,MC,MM,DHH,XCOR,YCOR,ZCOR,XCROSS
+ REAL :: X,Y,Z,H,WW,MC,MM,DHH,XCOR,YCOR,ZCOR,XCROSS,RFIT
  CHARACTER(LEN=52) :: ID
  DOUBLE PRECISION :: DHW
- REAL,ALLOCATABLE,DIMENSION(:) :: TSNODATA,M,C
+ REAL,ALLOCATABLE,DIMENSION(:) :: TSNODATA,M,C,GF_H,GF_O
  INTEGER,ALLOCATABLE,DIMENSION(:) :: IDATE
  REAL,DIMENSION(2) :: PC,PM,DYN !## percentiles computed/measured
 
- DO JJ=1,ABS(IIPF)
+ DO I=1,ABS(IIPF)
 
   !## read ipf steady-state
   IF(LSS)THEN
-   I=INDEX(TS(JJ)%IPFNAME,CHAR(92),.TRUE.)+1; LINE=TRIM(root)//CHAR(92)//TS(JJ)%IPFNAME(I:)
-!   I=INDEX(TS(JJ)%IPFNAME,CHAR(92),.TRUE.)+1; LINE=TRIM(ROOTRES)//CHAR(92)//TS(JJ)%IPFNAME(I:)
+   J=INDEX(TS(I)%IPFNAME,CHAR(92),.TRUE.)+1; LINE=TRIM(root)//CHAR(92)//TS(I)%IPFNAME(J:)
   ELSE
-   I=INDEX(TS(JJ)%IPFNAME,CHAR(92),.TRUE.)+1
-   LINE=TRIM(root)//CHAR(92)//'timeseries'//CHAR(92)//TS(JJ)%IPFNAME(I:)
-!   LINE=TRIM(ROOTRES)//CHAR(92)//'timeseries'//CHAR(92)//TS(JJ)%IPFNAME(I:)
+   J=INDEX(TS(I)%IPFNAME,CHAR(92),.TRUE.)+1
+   LINE=TRIM(root)//CHAR(92)//'timeseries'//CHAR(92)//TS(I)%IPFNAME(J:)
   ENDIF
-  CALL IMOD_UTL_SWAPSLASH(LINE);  CALL IMOD_UTL_OPENASC(TS(JJ)%IUIPF,LINE,'R')
-  READ(TS(JJ)%IUIPF,'(A256)') LINE; CALL IMOD_UTL_STRING(LINE); READ(LINE,*) TS(JJ)%NROWIPF
-  READ(TS(JJ)%IUIPF,'(A256)') LINE; CALL IMOD_UTL_STRING(LINE); READ(LINE,*) TS(JJ)%NCOLIPF
-  DO I=1,TS(JJ)%NCOLIPF; READ(TS(JJ)%IUIPF,*); ENDDO
+  CALL IMOD_UTL_SWAPSLASH(LINE);  CALL IMOD_UTL_OPENASC(TS(I)%IUIPF,LINE,'R')
+  READ(TS(I)%IUIPF,'(A256)') LINE; CALL IMOD_UTL_STRING(LINE); READ(LINE,*) TS(I)%NROWIPF
+  READ(TS(I)%IUIPF,'(A256)') LINE; CALL IMOD_UTL_STRING(LINE); READ(LINE,*) TS(I)%NCOLIPF
+  DO J=1,TS(I)%NCOLIPF; READ(TS(I)%IUIPF,*); ENDDO
   !## read iext,ext
-  READ(TS(JJ)%IUIPF,'(A256)') LINE
-  READ(LINE,*) TS(JJ)%IEXT,TS(JJ)%EXT
+  READ(TS(I)%IUIPF,'(A256)') LINE
+  READ(LINE,*) TS(I)%IEXT,TS(I)%EXT
 
  ENDDO
 
- IF(.NOT.ASSOCIATED(DH))ALLOCATE(DH(0:SIZE(PARAM),SUM(TS%NROWIPF)*NPER))
- IF(.NOT.ASSOCIATED(W ))ALLOCATE(W (SUM(TS%NROWIPF)*NPER))
+ !## only one value per measurement
+ IF(.NOT.ASSOCIATED(DH)) ALLOCATE(DH(0:SIZE(PARAM),SUM(TS%NROWIPF)))
+ IF(.NOT.ASSOCIATED(W )) ALLOCATE(W (SUM(TS%NROWIPF))) 
+ IF(.NOT.ALLOCATED(GF_H))ALLOCATE(GF_H(SUM(TS%NROWIPF)))
+ IF(.NOT.ALLOCATED(GF_O))ALLOCATE(GF_O(SUM(TS%NROWIPF)))
 
  !## initialise head-differences
- IF(PEST_IGRAD.EQ.0)DH(PEST_IGRAD,:)=0.0
- IF(PEST_IGRAD.NE.0)DH(PEST_IGRAD,:)=DH(0,:) !## zero gradient in case parameter is fixed
-
+ IF(PEST_IGRAD.EQ.0)THEN
+  DO I=1,SIZE(DH,2)
+   DH(PEST_IGRAD,I)=0.0
+  ENDDO
+ ELSE
+  DO I=1,SIZE(DH,2)
+   DH(PEST_IGRAD,I)=DH(0,I) !## zero gradient in case parameter is fixed
+  ENDDO
+ ENDIF
+ 
  W=0.0
  TJ=0.0
 
+ DO I=1,ABS(IIPF) 
+  IF(IUPESTRESIDUAL.GT.0)WRITE(IUPESTRESIDUAL,'(I10,A)') I,','//TRIM(TS(I)%IPFNAME)
+ ENDDO
+
+ !## steady-state
+ IF(LSS)THEN
+  IF(IUPESTRESIDUAL.GT.0)WRITE(IUPESTRESIDUAL,'(2A15,A10,6A15,A10)') 'X','Y','ILAY','MSR','MDL','J','WMDL','WRESIDUAL','WEIGH','IPF'
+ !## transient
+ ELSE  
+  IF(IUPESTRESIDUAL.GT.0)WRITE(IUPESTRESIDUAL,'(2A15,A10,8A15,A10)') 'X','Y','ILAY','WEIGH','MSR','MDL','MDL-MSR', &
+                                   'DYNMSR','DYNMDL','DYNMSR-DYNMDL','CROSS-COR','IPF'
+ ENDIF
+ 
  II=0
- DO JJ=1,ABS(IIPF)
+ 
+ DO I=1,ABS(IIPF)
+ 
+  IF(TS(I)%IEXT.EQ.0)THEN
 
-  IF(IUPESTRESIDUAL.GT.0)WRITE(IUPESTRESIDUAL,'(/A/)') TRIM(TS(JJ)%IPFNAME)
-
-  IF(TS(JJ)%IEXT.EQ.0)THEN
-   IF(IUPESTRESIDUAL.GT.0)WRITE(IUPESTRESIDUAL,'(2A15,A10,6A15)') 'X','Y','ILAY','MSR','MDL','J','WMDL','WRESIDUAL','WEIGH'
-   DO I=1,TS(JJ)%NROWIPF
+   DO J=1,TS(I)%NROWIPF
+   
     II=II+1
-    READ(TS(JJ)%IUIPF,*) X,Y,ILAY,Z,W(II),H    !## w(i)=variance
+    READ(TS(I)%IUIPF,*) X,Y,ILAY,Z,W(II),H    !## w(i)=variance
     !## weigh=1/sqrt(variance)
-    IF(TS(JJ)%IVCOL.GT.0)THEN
+    IF(TS(I)%IVCOL.GT.0)THEN
      IF(W(II).LE.0.0)THEN
-      W(II)=0.0
+      !## insert measurement only whenever h.gt.z
+      IF(H.GT.Z)THEN
+       W(II)=ABS(W(II))
+      ELSE
+       W(II)=0.0
+      ENDIF
      ELSE
       W(II)=1.0/SQRT(W(II))
      ENDIF
@@ -2009,45 +2044,45 @@ CONTAINS
     DH(PEST_IGRAD,II)=DHH  !## calculated - measured
     DHW              =W(II)*(DHH**2.0)
 
-    TJ               = TJ+DHW
-    IF(IUPESTRESIDUAL.GT.0)WRITE(IUPESTRESIDUAL,'(2F15.7,I10,6F15.7)') X,Y,ILAY,Z,H,DHW,W(II)*H,W(II)*(H-Z),W(II)
-   ENDDO
-  ELSE
-   IF(TS(JJ)%IPFTYPE.EQ.3)THEN
-    IF(IUPESTRESIDUAL.GT.0)WRITE(IUPESTRESIDUAL,'(2A15,3A10,6A15)') 'X','Y','ILAY','MSR','MDL','J','WEIGH','NHEAD'
-   ELSE
-    IF(IUPESTRESIDUAL.GT.0)WRITE(IUPESTRESIDUAL,'(A10,2A15,A10,7A15)') 'IDATE','X','Y','ILAY','MSR','MDL','WEIGH','J','MEAN_MSR','MEAN_MDL','CROSS-COR'
-   ENDIF
+    GF_H(II)         =W(II)*H
+    GF_O(II)         =W(II)*Z
 
-   I=0
+    TJ               = TJ+DHW
+    IF(IUPESTRESIDUAL.GT.0)WRITE(IUPESTRESIDUAL,'(2F15.7,I10,6F15.7,I10)')  &
+        X,Y,ILAY,Z,H,DHW,W(II)*H,W(II)*(H-Z),W(II),I
+
+   ENDDO
+  
+  ELSE
+    
    XCROSS=0.0
-   DO J=1,TS(JJ)%NROWIPF
-    IF(TS(JJ)%IPFTYPE.EQ.2)THEN
-     READ(TS(JJ)%IUIPF,*) X,Y,ILAY,ID,WW !,H    !## w(i)=variance
-    !## moments, itype definieert het type z, dus moment0, drainagebasis, etc.
-    ELSEIF(TS(JJ)%IPFTYPE.EQ.3)THEN
-     READ(TS(JJ)%IUIPF,*) X,Y,ILAY,ID,WW !,H    !## w(i)=variance
-    ENDIF
-    !## weigh=1/variance
-    IF(TS(JJ)%IVCOL.GT.0)THEN
+   DO J=1,TS(I)%NROWIPF
+   
+    READ(TS(I)%IUIPF,*) X,Y,ILAY,ID,WW     !## w(i)=variance
+    !## weigh=1/stdev=1/sqrt(variance)
+    IF(TS(I)%IVCOL.GT.0)THEN
      IF(WW.LE.0.0)THEN
       WW=0.0
      ELSE
       WW=1.0/SQRT(WW)
      ENDIF
     ENDIF
-    LINE=TRIM(ROOTRES)//CHAR(92)//'timeseries'//CHAR(92)//TRIM(ID)//'.'//TRIM(TS(JJ)%EXT)
-    CALL IMOD_UTL_SWAPSLASH(LINE); CALL IMOD_UTL_OPENASC(IUIPFTXT,LINE,'R')
-    READ(IUIPFTXT,*) NROWIPFTXT; READ(IUIPFTXT,*) NCOLIPFTXT
+    
+    LINE=TRIM(root)//CHAR(92)//'timeseries'//CHAR(92)//TRIM(ID)//'.'//TRIM(TS(I)%EXT)
+    IUIPFTXT=GETUNIT(); OPEN(IUIPFTXT,FILE=LINE,STATUS='OLD',ACTION='READ')
+    
+    READ(IUIPFTXT,*) NROWIPFTXT
+    READ(IUIPFTXT,*) NCOLIPFTXT
     ALLOCATE(TSNODATA(MAX(3,NCOLIPFTXT)))
     DO K=1,NCOLIPFTXT; READ(IUIPFTXT,*) ID,TSNODATA(K); ENDDO
     ALLOCATE(M(NROWIPFTXT),C(NROWIPFTXT),IDATE(NROWIPFTXT)); IDATE=0; C=0.0; M=0.0
     IF(NCOLIPFTXT.LT.3)TSNODATA(3)=TSNODATA(2)
+    
     !## get mean measure
-    KK=0; DO K=1,NROWIPFTXT
+    KK=0
+    DO K=1,NROWIPFTXT
      KK=KK+1
-     IF(TS(JJ)%IPFTYPE.EQ.2)      READ(IUIPFTXT,*,IOSTAT=IOS) IDATE(KK),M(KK),C(KK)
-     IF(TS(JJ)%IPFTYPE.EQ.3)THEN; READ(IUIPFTXT,*,IOSTAT=IOS) IDATE(KK),M(KK); C(KK)=M(KK); ENDIF
+     READ(IUIPFTXT,*,IOSTAT=IOS) IDATE(KK),M(KK),C(KK) 
      !## error reading, skip it (can be caused by steady-state periods in between)
      IF(IOS.NE.0)THEN; KK=KK-1; CYCLE; ENDIF
 
@@ -2059,73 +2094,83 @@ CONTAINS
       IF(III.GT.PEST_NPERIOD)C(KK)=TSNODATA(3)
      ENDIF
      IF(M(KK).EQ.TSNODATA(2).OR.C(KK).EQ.TSNODATA(3))KK=KK-1
-    ENDDO
+    ENDDO 
 
-    IF(TS(JJ)%IPFTYPE.EQ.3)THEN
-
-    !## ipftype.eq.1.or.ipftype.eq.2
-    ELSE
-
+    !## skip this measurement
+    IF(KK.GT.0)THEN
+    
      !## compute mean measurement in period
-     MM=-9999.99; MC=-9999.99; XCOR=-9999.99
-     IF(KK.GT.0)THEN
-      MM=SUM(M(1:KK))/REAL(KK)
-      MC=SUM(C(1:KK))/REAL(KK)
-      !## percentiles
-      CALL IMOD_UTL_GETMED(M,KK,-999.99,(/10.0,90.0/),2,NAJ,PM)
-      CALL IMOD_UTL_GETMED(C,KK,-999.99,(/10.0,90.0/),2,NAJ,PC)
-      DYN(1)=PM(2)-PM(1); DYN(2)=PC(2)-PC(1)
-      !## compute cross-correlation
-      IF(KK.GT.1)THEN
-       XCOR=0.0; YCOR=0.0; ZCOR=0.0
-       DO K=1,KK
-        XCOR=XCOR+(MM-M(K))*(MC-C(K))
-        YCOR=YCOR+(MM-M(K))**2.0
-        ZCOR=ZCOR+(MC-C(K))**2.0
-       ENDDO
-       IF(YCOR.NE.0.0.AND.ZCOR.NE.0.0)XCOR=XCOR/(SQRT(YCOR)*SQRT(ZCOR))
-       XCROSS=XCROSS+XCOR
-      ENDIF
+     XCOR=-9999.99
+
+     !## mean values
+     MM=SUM(M(1:KK))/REAL(KK) !## MEASUREMENTS
+     MC=SUM(C(1:KK))/REAL(KK) !## COMPUTED
+     !## percentiles
+     CALL IMOD_UTL_GETMED(M,KK,-999.99,(/10.0,90.0/),2,NAJ,PM)
+     CALL IMOD_UTL_GETMED(C,KK,-999.99,(/10.0,90.0/),2,NAJ,PC)
+     DYN(1)=PM(2)-PM(1) !## MEASUREMENTS
+     DYN(2)=PC(2)-PC(1) !## COMPUTED
+     !## compute cross-correlation
+     IF(KK.GT.1)THEN
+      XCOR=0.0; YCOR=0.0; ZCOR=0.0
+      DO K=1,KK
+       XCOR=XCOR+(MM-M(K))*(MC-C(K))
+       YCOR=YCOR+(MM-M(K))**2.0
+       ZCOR=ZCOR+(MC-C(K))**2.0
+      ENDDO
+      IF(YCOR.NE.0.0.AND.ZCOR.NE.0.0)XCOR=XCOR/(SQRT(YCOR)*SQRT(ZCOR))
+      XCROSS=XCROSS+XCOR
      ENDIF
 
-     DO K=1,KK
+     II =II+1
+     DHH=0.0
 
-      II =II+1
-      DHH=0.0
-      
-      !## accept residuals less than 0.1 
-      IF(ABS(C(K)-M(K)).GT.PEST_DRES)THEN
+     !## accept residuals less than 0.1 
+     IF(ABS(MC-MM).GT.PEST_DRES)THEN
        !## target is residual (calculated minus measured)
-       DHH=DHH+PEST_ITARGET(1)*(C(K)-M(K))
-      ENDIF
+      DHH=DHH+PEST_ITARGET(1)*(MC-MM)
+     ENDIF
 
-      IF(ABS(DYN(2)-DYN(1)).GT.PEST_DRES)THEN
-       !## target is dynamics (calculated minus measured)
-       DHH=DHH+PEST_ITARGET(2)*(DYN(2)-DYN(1))
-      ENDIF
+     IF(ABS(DYN(2)-DYN(1)).GT.PEST_DRES)THEN
+      !## target is dynamics (calculated minus measured)
+      DHH=DHH+PEST_ITARGET(2)*(DYN(2)-DYN(1))
+     ENDIF
 
-      DH(PEST_IGRAD,II)=DHH       !## - total sensitivity
+     DH(PEST_IGRAD,II)=DHH       !## - total sensitivity
 
-      !## weight, pest_itarget(.) should/will be summed to one
-      W(II)=WW
+     !## weight, pest_itarget(.) should/will be summed to one
+     W(II)=WW
 
-      DHW=W(II)*(DHH**2.0)
-      TJ=TJ+DHW
-      
-      IF(IUPESTRESIDUAL.GT.0)WRITE(IUPESTRESIDUAL,'(I10,2F15.7,I10,9F15.7)') IDATE(K),X,Y,ILAY,M(K),C(K),W(II),DHW,MM,MC,XCOR,DYN(1),DYN(2)
-     ENDDO
+     DHW=W(II)*(DHH**2.0)
+     TJ=TJ+DHW
+
+     GF_H(II)=W(II)*MC 
+     GF_O(II)=W(II)*MM 
+
+     IF(IUPESTRESIDUAL.GT.0)WRITE(IUPESTRESIDUAL,'(2F15.7,I10,8F15.7,I10)') &
+        X,Y,ILAY,W(II),MM,MC,MM-MC,DYN(1),DYN(2),DYN(2)-DYN(1),XCOR,I
+    
     ENDIF
+    
     DEALLOCATE(TSNODATA,C,M,IDATE)
     CLOSE(IUIPFTXT)
+
    ENDDO
   ENDIF
-  CLOSE(TS(JJ)%IUIPF)
-  IF(TS(JJ)%NROWIPF.GT.0)THEN
-   IF(NPER.GT.1.AND.TS(JJ)%IPFTYPE.NE.3)CALL IMOD_UTL_PRINTTEXT('MEAN Cross-Correlation         : '//TRIM(IMOD_UTL_RTOS(XCROSS/REAL(TS(JJ)%NROWIPF),'F',7))//' (n='//TRIM(IMOD_UTL_ITOS(TS(JJ)%NROWIPF))//')',-1,IUPESTOUT)
+
+  CLOSE(TS(I)%IUIPF)
+  IF(TS(I)%NROWIPF.GT.0)THEN
+   IF(.NOT.LSS.AND.TS(I)%IPFTYPE.NE.3)CALL IMOD_UTL_PRINTTEXT('MEAN Cross-Correlation         : '// &
+          TRIM(IMOD_UTL_RTOS(XCROSS/REAL(TS(I)%NROWIPF),'F',7))//' (n='//TRIM(ITOS(TS(I)%NROWIPF))//')',1)
   ENDIF
+
  ENDDO
  PEST_NOBS=II
-
+ 
+ if(pest_nobs.le.0)then
+  CALL IMOD_UTL_PRINTTEXT('No measurements available within current spatial/temporal space.',2)
+ endif
+ 
  !## run batch files
  CALL PEST_BATCHFILES()
 
@@ -2143,13 +2188,23 @@ CONTAINS
  CALL IMOD_UTL_PRINTTEXT('Plausibility Value : '//TRIM(IMOD_UTL_RTOS(REAL(PJ),'E',7)),-1)
  TJ=TJ+PJ
   
- CALL IMOD_UTL_PRINTTEXT('TOTAL Objective Function Value : '//TRIM(IMOD_UTL_RTOS(REAL(TJ),'E',7)),1)
- CALL IMOD_UTL_PRINTTEXT('MEAN Objective Function Value  : '//TRIM(IMOD_UTL_RTOS(REAL(TJ)/REAL(PEST_NOBS),'E',7))//' (n='//TRIM(ITOS(PEST_NOBS))//')',1)
+ CALL IMOD_UTL_PRINTTEXT('TOTAL Objective Function Value : '//TRIM(IMOD_UTL_RTOS(REAL(TJ),'E',7)),-1)
+ CALL IMOD_UTL_PRINTTEXT('MEAN Objective Function Value  : '//TRIM(IMOD_UTL_RTOS(REAL(TJ)/REAL(PEST_NOBS),'E',7))// &
+         ' (n='//TRIM(IMOD_UTL_ITOS(PEST_NOBS))//')',-1)
+
+ RFIT=PEST_GOODNESS_OF_FIT(GF_H,GF_O,PEST_NOBS)
+ CALL IMOD_UTL_PRINTTEXT('Goodness of Fit : '//TRIM(IMOD_UTL_RTOS(RFIT,'E',7))//' (n='//TRIM(IMOD_UTL_ITOS(PEST_NOBS))//')',-1)
+ CALL IMOD_UTL_PRINTTEXT('>> Provides a measure of the extent to which variability of field measurements is explained',-1)
+ CALL IMOD_UTL_PRINTTEXT('   by the calibrated model compared to that which can be constructed as purely random. <<',-1)
+
+ IF(ALLOCATED(GF_H))DEALLOCATE(GF_H)
+ IF(ALLOCATED(GF_O))DEALLOCATE(GF_O)
   
  CALL PESTPROGRESS()
 
  IF(LGRAD)THEN
   IF(PEST_IGRAD.EQ.0)THEN
+   IF(PEST_ITER.EQ.1)WRITE(IUPESTEFFICIENCY,'(3E15.7)') TJ,SQRT(TJ),TJ/REAL(PEST_NOBS)
    TJOBJ=TJ
   ELSE
    PARAM(PEST_IGRAD)%TJOBJ=TJ
@@ -2158,9 +2213,32 @@ CONTAINS
  IF(LLNSRCH)THEN
 
  ENDIF
-
+ 
  END SUBROUTINE PEST_GETJ
 
+ !###====================================================================
+ REAL FUNCTION PEST_GOODNESS_OF_FIT(X,Y,N)
+ !###====================================================================
+ IMPLICIT NONE
+ INTEGER,INTENT(IN) :: N
+ REAL,INTENT(IN),DIMENSION(N) :: X,Y
+ REAL :: XN,YN,X1,X2,X3
+ INTEGER :: I
+ 
+ XN=SUM(X)/REAL(N)
+ YN=SUM(Y)/REAL(N)
+ 
+ X1=0.0; X2=0.0; X3=0.0
+ DO I=1,N
+  X1=X1+(X(I)-XN)*(Y(I)-YN)
+  X2=X2+(X(I)-XN)**2.0
+  X3=X3+(Y(I)-YN)**2.0
+ ENDDO
+
+ IF(X2.NE.0.0.AND.X3.NE.0.0)PEST_GOODNESS_OF_FIT=X1/(SQRT(X2)*SQRT(X3))
+  
+ END FUNCTION PEST_GOODNESS_OF_FIT
+ 
  !###====================================================================
  SUBROUTINE PEST_GETQPP(NP,LPJ)
  !###====================================================================

@@ -25,7 +25,7 @@ program driver
 ! modules
 use driver_module
 use global, only : iout, issflg
-use gwfmetmodule, only : time_cstring,time_ostring,idate_save
+!use gwfmetmodule, only : time_cstring,time_ostring,idate_save
 use m_mf2005_main, only : kkper
 use IMOD_UTL, only : imod_utl_capf
 use m_main_info
@@ -65,7 +65,7 @@ implicit none
  integer, dimension(1) :: m
  character (len=1)    :: cdum
  character (len=1024) :: record, modrecord, sobrecord, mozrecord, tranrecord
- character (len=32)   :: compcls
+ character (len=32)   :: compcls,time_string
  character (len=1024) :: compfile
  logical  :: usemodflow,usemetaswap,usetransol,usemozart,usests,usestsmodflow
  logical  :: converged,convergedMF2005,convergedMetaSwap,convergedMozart,convergedPest
@@ -710,8 +710,8 @@ implicit none
 
              !#### TIMESERIES #####
              ok = mf2005_TimeserieGetHead(mf_igrid); call DriverChk(ok,'mf2005_TimeserieGetHead')
-
-             call tserie1write(0,lss,currentTime,hnoflo,usests,modwd1,issflg(kkper),time_cstring,time_ostring,idate_save)
+             call gwf2getcurrentdate(mf_igrid,issflg(kkper),time_string)
+             call tserie1write(0,lss,currentTime,hnoflo,usests,modwd1,time_string)
 
              !#### TIMESERIES #####
 
@@ -825,7 +825,7 @@ implicit none
     call MetaSWAP_finishSimulation()
  end if
 !#### TIMESERIES #####
- call tserie1write(1,lss,currentTime,hnoflo,usests,modwd1,issflg(1),time_cstring,time_ostring,idate_save)
+ call tserie1write(1,lss,currentTime,hnoflo,usests,modwd1,time_string)
  call tserie1close()
 !#### TIMESERIES #####
 

@@ -114,16 +114,12 @@ DO JJ=1,ABS(IIPF)
  CALL IMOD_UTL_PRINTTEXT('',0)
  IF(.NOT.LSS)THEN
   IF(TS(JJ)%IPFTYPE.EQ.2)THEN
-   IF(LPEST.AND.TS(JJ)%IEXT.EQ.0)THEN !NE.4)THEN
+   IF(LPEST.AND.TS(JJ)%IEXT.EQ.0)THEN
     CALL IMOD_UTL_PRINTTEXT('Error occured in IPF, syntax is at least: '//TRIM(CIPFTYPE(TS(JJ)%IPFTYPE)),0)
     CALL IMOD_UTL_PRINTTEXT('IEXT should be assigned to any column',2)
    ENDIF
-  !## moments
-  ELSEIF(TS(JJ)%IPFTYPE.EQ.3)THEN
-   IF(TS(JJ)%IEXT.GT.0)THEN
-    CALL IMOD_UTL_PRINTTEXT('Error occured in IPF, syntax is at least: '//TRIM(CIPFTYPE(TS(JJ)%IPFTYPE)),0)
-    CALL IMOD_UTL_PRINTTEXT('IEXT should be ZERO',2)
-   ENDIF
+  ELSE
+   CALL IMOD_UTL_PRINTTEXT('Error wrong ipftype given '//TRIM(IMOD_UTL_ITOS(TS(JJ)%IPFTYPE)),2)
   ENDIF
  ENDIF
 ENDDO
@@ -144,26 +140,32 @@ DO JJ=1,ABS(IIPF)
   ENDIF
   II=II+1; III=III+1
   READ(IPFSTRING(TS(JJ)%IXCOL),*,IOSTAT=IOS) TS(JJ)%STVALUE(III)%X
-  IF(IOS.NE.0)CALL IMOD_UTL_PRINTTEXT('Missing proper column expressing the X-coordinate in timeserie IPF (record:'//TRIM(IMOD_UTL_ITOS(I))//')',2)
+  IF(IOS.NE.0)CALL IMOD_UTL_PRINTTEXT('Missing proper column expressing the X-coordinate in timeserie IPF (record:'// &
+    TRIM(IMOD_UTL_ITOS(I))//')',2)
   READ(IPFSTRING(TS(JJ)%IYCOL),*,IOSTAT=IOS) TS(JJ)%STVALUE(III)%Y
-  IF(IOS.NE.0)CALL IMOD_UTL_PRINTTEXT('Missing proper column expressing the Y-coordinate in timeserie IPF (record:'//TRIM(IMOD_UTL_ITOS(I))//')',2)
+  IF(IOS.NE.0)CALL IMOD_UTL_PRINTTEXT('Missing proper column expressing the Y-coordinate in timeserie IPF (record:'// &
+    TRIM(IMOD_UTL_ITOS(I))//')',2)
   READ(IPFSTRING(TS(JJ)%ILCOL),*,IOSTAT=IOS) TS(JJ)%STVALUE(III)%ILAY
-  IF(IOS.NE.0)CALL IMOD_UTL_PRINTTEXT('Missing proper column expressing the LAYER identification in timeserie IPF (record:'//TRIM(IMOD_UTL_ITOS(I))//')',2)
+  IF(IOS.NE.0)CALL IMOD_UTL_PRINTTEXT('Missing proper column expressing the LAYER identification in timeserie IPF (record:'// &
+     TRIM(IMOD_UTL_ITOS(I))//')',2)
   !## read weighing
   TS(JJ)%STVALUE(III)%W=1.0
   IF(TS(JJ)%IVCOL.NE.0)THEN
    READ(IPFSTRING(ABS(TS(JJ)%IVCOL)),*,IOSTAT=IOS) TS(JJ)%STVALUE(III)%W
-   IF(IOS.NE.0)CALL IMOD_UTL_PRINTTEXT('Missing proper column expressing the WEIGHING in timeserie IPF (record:'//TRIM(IMOD_UTL_ITOS(I))//')',2)
+   IF(IOS.NE.0)CALL IMOD_UTL_PRINTTEXT('Missing proper column expressing the WEIGHING in timeserie IPF (record:'// &
+       TRIM(IMOD_UTL_ITOS(I))//')',2)
   ENDIF
   TS(JJ)%STVALUE(III)%M=MV
   TS(JJ)%STVALUE(III)%ID='Location_'//TRIM(IMOD_UTL_ITOS(II))
   IF(TS(JJ)%IMCOL.NE.0)THEN
    IF(TS(JJ)%IEXT.EQ.0)THEN
     READ(IPFSTRING(TS(JJ)%IMCOL),*,IOSTAT=IOS) TS(JJ)%STVALUE(III)%M
-    IF(IOS.NE.0)CALL IMOD_UTL_PRINTTEXT('Missing proper column expressing the MEASUREMENT in timeserie IPF (record:'//TRIM(IMOD_UTL_ITOS(I))//')',2)
+    IF(IOS.NE.0)CALL IMOD_UTL_PRINTTEXT('Missing proper column expressing the MEASUREMENT in timeserie IPF (record:'// &
+        TRIM(IMOD_UTL_ITOS(I))//')',2)
    ELSEIF(TS(JJ)%IEXT.GT.0)THEN
     READ(IPFSTRING(TS(JJ)%IMCOL),'(A52)',IOSTAT=IOS) TS(JJ)%STVALUE(III)%ID
-    IF(IOS.NE.0)CALL IMOD_UTL_PRINTTEXT('Missing proper column expressing the IDENTIFICATION in timeserie IPF (record:'//TRIM(IMOD_UTL_ITOS(I))//')',2)
+    IF(IOS.NE.0)CALL IMOD_UTL_PRINTTEXT('Missing proper column expressing the IDENTIFICATION in timeserie IPF (record:'// &
+       TRIM(IMOD_UTL_ITOS(I))//')',2)
    ENDIF
   ENDIF
  ENDDO
@@ -199,7 +201,6 @@ IF(LSS)THEN
  DO JJ=1,ABS(IIPF)
   I=INDEX(TS(JJ)%IPFNAME,CHAR(92),.TRUE.)+1
   LINE=TRIM(ROOT)//CHAR(92)//TS(JJ)%IPFNAME(I:)
-!  LINE=TRIM(ROOTRES)//CHAR(92)//TS(JJ)%IPFNAME(I:)
   CALL IMOD_UTL_SWAPSLASH(LINE)
   CALL IMOD_UTL_OPENASC(TS(JJ)%IUIPF,LINE,'W')
   ! check for valid data
@@ -209,23 +210,22 @@ IF(LSS)THEN
   END DO
   WRITE(TS(JJ)%IUIPF,*) NVALID
   WRITE(TS(JJ)%IUIPF,*) 8
-  WRITE(TS(JJ)%IUIPF,'(A)') 'X-COORDINATE'
-  WRITE(TS(JJ)%IUIPF,'(A)') 'Y-COORDINATE'
-  WRITE(TS(JJ)%IUIPF,'(A)') 'MODELLAYER'
-  WRITE(TS(JJ)%IUIPF,'(A)') 'OBSERVATION'
-  WRITE(TS(JJ)%IUIPF,'(A)') 'VARIANCE'
-  WRITE(TS(JJ)%IUIPF,'(A)') 'COMPUTED_HEAD'
-  WRITE(TS(JJ)%IUIPF,'(A)') 'DIFFERENCE'
-  WRITE(TS(JJ)%IUIPF,'(A)') 'WEIGHED_DIFFERENCE'
-  WRITE(TS(JJ)%IUIPF,'(A)') '0,TXT'
+  write(ts(jj)%iuipf,'(a)') 'x-coordinate'
+  write(ts(jj)%iuipf,'(a)') 'y-coordinate'
+  write(ts(jj)%iuipf,'(a)') 'modellayer'
+  write(ts(jj)%iuipf,'(a)') 'observation'
+  write(ts(jj)%iuipf,'(a)') 'variance'
+  write(ts(jj)%iuipf,'(a)') 'computed_head'
+  write(ts(jj)%iuipf,'(a)') 'difference'
+  write(ts(jj)%iuipf,'(a)') 'weighed_difference'
+  write(ts(jj)%iuipf,'(a)') '0,txt'
  ENDDO
+ 
 !## transient
 ELSE
 
  CALL IMOD_UTL_CREATEDIR(TRIM(root)//CHAR(92)//'timeseries')
-! CALL IMOD_UTL_CREATEDIR(TRIM(ROOTRES)//CHAR(92)//'timeseries')
  !## open txt file to collect all timeseries
-! LINE=TRIM(ROOTRES)//CHAR(92)//'timeseries'//CHAR(92)//'timeseries_collect.txt'
  LINE=TRIM(root)//CHAR(92)//'timeseries'//CHAR(92)//'timeseries_collect.txt'
  CALL IMOD_UTL_SWAPSLASH(LINE); CALL IMOD_UTL_OPENASC(IUIPFTXT,LINE,'W')
 
@@ -238,7 +238,6 @@ ELSE
    I=INDEX(TS(JJ)%IPFNAME,CHAR(47),.TRUE.)+1
   ENDIF
   LINE=TRIM(root)//CHAR(92)//'timeseries'//CHAR(92)//TS(JJ)%IPFNAME(I:)
-!  LINE=TRIM(ROOTRES)//CHAR(92)//'timeseries'//CHAR(92)//TS(JJ)%IPFNAME(I:)
   CALL IMOD_UTL_SWAPSLASH(LINE); CALL IMOD_UTL_OPENASC(TS(JJ)%IUIPF,LINE,'W')
 
   ! check for valid data
@@ -252,17 +251,17 @@ ELSE
   !## write entire ipf again
   WRITE(TS(JJ)%IUIPF,*) NVALID
   WRITE(TS(JJ)%IUIPF,*) 5
-  WRITE(TS(JJ)%IUIPF,'(A)') 'X-COORDINATE'
-  WRITE(TS(JJ)%IUIPF,'(A)') 'Y-COORDINATE'
-  WRITE(TS(JJ)%IUIPF,'(A)') 'MODELLAYER'
-  WRITE(TS(JJ)%IUIPF,'(A)') 'IDENTIFICATION'
-  WRITE(TS(JJ)%IUIPF,'(A)') 'VARIANCE'
-  WRITE(TS(JJ)%IUIPF,'(A)') '4,TXT'
+  WRITE(TS(JJ)%IUIPF,'(A)') 'x-coordinate'
+  write(ts(jj)%iuipf,'(a)') 'y-coordinate'
+  write(ts(jj)%iuipf,'(a)') 'modellayer'
+  write(ts(jj)%iuipf,'(a)') 'identification'
+  write(ts(jj)%iuipf,'(a)') 'variance'
+  write(ts(jj)%iuipf,'(a)') '4,txt'
 
   DO I=1,TS(JJ)%NROWIPF
    IF (.NOT.TS(JJ)%STVALUE(I)%VALID) CYCLE  ! skip invalid data
    BIGLINE=TRIM(IMOD_UTL_RTOS(TS(JJ)%STVALUE(I)%X,'F',3))//','//TRIM(IMOD_UTL_RTOS(TS(JJ)%STVALUE(I)%Y,'F',3))//','// &
-           TRIM(IMOD_UTL_ITOS(TS(JJ)%STVALUE(I)%ILAY))   //',"'//TRIM(TS(JJ)%STVALUE(I)%ID)//         '",'// &
+           TRIM(IMOD_UTL_ITOS(TS(JJ)%STVALUE(I)%ILAY))   //',"ipf'//TRIM(IMOD_UTL_ITOS(JJ))//'_'//TRIM(TS(JJ)%STVALUE(I)%ID)//'",'// &
            TRIM(IMOD_UTL_RTOS(TS(JJ)%STVALUE(I)%W,'*',2))
    WRITE(TS(JJ)%IUIPF,'(A)') TRIM(BIGLINE)
   END DO
@@ -272,24 +271,21 @@ ELSE
  ENDDO
 ENDIF
 
-CALL IMOD_UTL_PRINTTEXT('',0); CALL IMOD_UTL_PRINTTEXT('Finished IPF for saving TIMESERIES',0)
+CALL IMOD_UTL_PRINTTEXT('',0); CALL IMOD_UTL_PRINTTEXT(' Finished IPF for saving TIMESERIES',0)
 
 RETURN
 END SUBROUTINE
 
 !###====================================================================
-SUBROUTINE TSERIE1WRITE(ISIM,LSS,DDATE,MV,usests,root,issflg,time_cstring,time_ostring,idate_save)
+SUBROUTINE TSERIE1WRITE(ISIM,LSS,DDATE,MV,usests,root,cdate)
 !###====================================================================
-USE IMOD_UTL, ONLY : IMOD_UTL_ITOS,IMOD_UTL_RTOS,IMOD_UTL_PRINTTEXT,IMOD_UTL_OPENASC,IMOD_UTL_SWAPSLASH,IMOD_UTL_CREATEDIR,OS,IMOD_UTL_IDATETOJDATE,IMOD_UTL_JDATETOIDATE
+USE IMOD_UTL, ONLY : IMOD_UTL_ITOS,IMOD_UTL_RTOS,IMOD_UTL_PRINTTEXT,IMOD_UTL_OPENASC, &
+       IMOD_UTL_SWAPSLASH,IMOD_UTL_CREATEDIR,OS,IMOD_UTL_IDATETOJDATE,IMOD_UTL_JDATETOIDATE
 USE TSVAR
-!USE GLOBAL,ONLY : ISSFLG
-!use m_mf2005_main, only : kper
 IMPLICIT NONE
 ! arguments
-character(len=*),intent(in),pointer :: time_cstring,time_ostring
-CHARACTER(LEN=*),intent(in) :: root
-!integer,intent(in),dimension(:) :: issflg
-INTEGER,INTENT(IN) :: ISIM,idate_save,issflg  !,kper
+CHARACTER(LEN=*),intent(in) :: root,cdate
+INTEGER,INTENT(IN) :: ISIM
 LOGICAL, INTENT(IN) :: LSS
 DOUBLE PRECISION, INTENT(IN) :: DDATE
 REAL, INTENT(IN) :: MV
@@ -300,10 +296,6 @@ INTEGER :: I,II,J,JJJ,ILAY,N,IDATE,JDATE,JJ,IU,KK,IOS,JOS,IREC,MPER
 CHARACTER(LEN=52) :: CLABEL,CLDATE
 integer :: hour, minute, second
 CHARACTER(LEN=256) :: LINE
-character(len=52) :: cdate
-!logical :: lfirst, lskip, lmatch
-!integer :: firstdate, lastdate, mrec, iidate
-!integer, dimension(:), allocatable :: ndate, mdate
 
 IF(IIPF.EQ.0)RETURN
 
@@ -348,40 +340,10 @@ ELSE
 
  !## simulation
  IF(ISIM.EQ.0)THEN
-
-  if (issflg.eq.0 .and. associated(time_ostring)) then ! TR
-   if(idate_save.eq.0)then
-    cdate=time_ostring
-   elseif(idate_save.eq.1)then
-    cdate=time_cstring
-   endif
-   cdate=adjustl(cdate)
-   
-   read(cdate,'(i8)',iostat=ios) idate
-   IF(IOS.EQ.0)THEN !CALL PRINTTEXT('iMOD can not create date for timeserie: '//TRIM(CDATE),2)
-    IDATE=IMOD_UTL_IDATETOJDATE(IDATE)
-   else
   
-   ENDIF
-   WRITE(IUIPFTXT,*) IDATE
-
-  else ! SS
-  
-   cdate='steady-state'
-   WRITE(IUIPFTXT,*) CDATE
-  
-  end if
+  WRITE(IUIPFTXT,*) CDATE
 
   NREC = NREC + 1
-
-!  call cfn_mjd2datehms(ddate,idate,hour,minute,second)
-!  write(cdate,'(i8)',iostat=ios) idate
-!  IF(IOS.EQ.0)THEN !CALL PRINTTEXT('iMOD can not create date for timeserie: '//TRIM(CDATE),2)
-!   IDATE=IMOD_UTL_IDATETOJDATE(IDATE)
-!  ENDIF
-
-!  IF(IOS.EQ.0)WRITE(IUIPFTXT,*) IDATE
-!  IF(IOS.NE.0)WRITE(IUIPFTXT,*) CDATE
 
   II=0
   DO JJ=1,ABS(IIPF)
@@ -418,7 +380,7 @@ ELSE
 
   !## get number of stressperiods with a date
   MPER=0
-  DO irec=1,nrec !KPER=1,NPER
+  DO irec=1,nrec
    READ(IU,*,IOSTAT=JOS) IDATE
    !## skip this period since it is apparently not a date
    IF(JOS.NE.0)THEN
@@ -438,7 +400,7 @@ ELSE
     IF(.NOT.TS(J)%STVALUE(I)%VALID)CYCLE ! skip invalid data
     II=II+1
 
-    WRITE(LINE,'(A,I3.3,A,A4)') TRIM(ROOT)//CHAR(92)//'timeseries'//CHAR(92)//'ipf',J,'_'//TRIM(TS(J)%STVALUE(I)%ID),'.TXT'
+    LINE=TRIM(ROOT)//CHAR(92)//'timeseries'//CHAR(92)//'ipf'//TRIM(IMOD_UTL_ITOS(J))//'_'//TRIM(TS(J)%STVALUE(I)%ID)//'.txt'
     !## id might contain backslash, create subfolder
     CALL IMOD_UTL_SWAPSLASH(LINE)
 
@@ -475,8 +437,7 @@ ELSE
      ENDIF
 
      LINE=TS(J)%IPFNAME(:JJJ)//TRIM(TS(J)%STVALUE(I)%ID)//'.'//TRIM(TS(J)%EXT)
-     JJ=JJ+1 !; JUTXT(II)=IMOD_UTL_GETUNIT(JJ); OPEN(JUTXT(II),FILE=LINE,FORM='FORMATTED',ACTION='READ',STATUS='OLD')
-     CALL IMOD_UTL_OPENASC(JUTXT(II),LINE,'R')
+     JJ=JJ+1; CALL IMOD_UTL_OPENASC(JUTXT(II),LINE,'R')
      
      READ(JUTXT(II),*)
      READ(JUTXT(II),*) N
@@ -484,13 +445,13 @@ ELSE
      DO JJJ=2+1,N; READ(JUTXT(II),*) ; ENDDO
      WRITE(IUTXT(II),*) 'Measure,',TSNODATA(II) 
     ENDIF
-    WRITE(IUTXT(II),*) 'Computed_Head,',MV !HNOFLOW 
+    WRITE(IUTXT(II),*) 'Computed_Head,',MV 
    ENDDO
   ENDDO
     
   !## write summary into different *.txt files
   TSDATE=0
-  DO irec=1,nrec !KPER=1,NPER
+  DO irec=1,nrec
 
    READ(IU,*,IOSTAT=JOS) IDATE
    !## skip this period since it is apparently not a date
@@ -502,13 +463,13 @@ ELSE
    II=0
    DO JJ=1,ABS(IIPF)
     DO I=1,TS(JJ)%NROWIPF
-     IF(.NOT.TS(J)%STVALUE(I)%VALID)CYCLE
+     IF(.NOT.TS(JJ)%STVALUE(I)%VALID)CYCLE
      II=II+1
      
      !## without impulse/default
      READ(IU,*,IOSTAT=JOS) KK,J,H,W
      IF(JOS.NE.0)CYCLE
-     IF(KK.NE.JJ)CALL IMOD_UTL_PRINTTEXT(' Something goes wrong in reading summary timeseries on line 367 in imodflow_tseries.f90',2)
+     IF(KK.NE.JJ)CALL IMOD_UTL_PRINTTEXT(' Something goes wrong in reading summary timeseries on line 472 in imodflow_tseries.f90',2)
      
      IF(TS(JJ)%IEXT.GT.0)THEN
       IF(TSDATE(II).EQ.IDATE)THEN
@@ -549,196 +510,7 @@ ELSE
  ENDIF
  CLOSE(IU) 
 
-!! Check for double data
-!  if (usests) then
-!     lfirst = .true.
-!     firstdate = 0
-!     lastdate  = 0
-!     ! first determine the first and last date
-!     do irec=1,nrec
-!        read(iu,*,iostat=jos) idate
-!        do jj=1,abs(iipf)
-!          do i=1,ts(jj)%nrowipf
-!             if (.not.ts(jj)%stvalue(i)%valid) cycle ! skip invalid data
-!             read(iu,*)
-!           enddo
-!        enddo
-!        if (jos.eq.0) then
-!           if (lfirst) then
-!              firstdate = idate
-!              lfirst = .false.
-!           end if
-!           if (irec.eq.nrec) lastdate = idate
-!        end if
-!     end do
-!     rewind iu
-!     ! second, count the occurence of all dates
-!     if (firstdate.gt.0 .and. lastdate.gt.0) then
-!        allocate(ndate(lastdate-firstdate+1))
-!        allocate(mdate(lastdate-firstdate+1))
-!        ndate = 0; mdate = 0
-!        do irec=1,nrec
-!           read(iu,*,iostat=jos) idate
-!           do jj=1,abs(iipf)
-!             do i=1,ts(jj)%nrowipf
-!                 if (.not.ts(jj)%stvalue(i)%valid) cycle ! skip invalid data
-!                 read(iu,*)
-!              enddo
-!           enddo
-!           if (jos.eq.0) then
-!               ndate(idate-firstdate+1) = ndate(idate-firstdate+1) + 1
-!           end if
-!        end do
-!        rewind iu
-!     end if
-!  end if
-!
-!  II=0
-!  DO JJ=1,ABS(IIPF)
-!   DO I=1,TS(JJ)%NROWIPF
-!    IF (.NOT.TS(JJ)%STVALUE(I)%VALID) CYCLE ! skip invalid data
-!    II=II+1
-!    LINE=TRIM(TS(JJ)%STVALUE(I)%ID)
-!    CALL IMOD_UTL_SWAPSLASH(LINE)
-!    LINE=TRIM(ROOTRES)//CHAR(92)//'timeseries'//CHAR(92)//TRIM(LINE)//'.TXT'
-!    !## id might contain backslash, create subfolder
-!    CALL IMOD_UTL_SWAPSLASH(LINE)
-!    IF(OS.EQ.1)THEN
-!     J=INDEX(LINE,CHAR(92),.TRUE.)
-!    ELSE
-!     J=INDEX(LINE,CHAR(47),.TRUE.)
-!    ENDIF
-!
-!    IF(J.GT.0)CALL IMOD_UTL_CREATEDIR(LINE(1:J-1))
-!    CALL IMOD_UTL_OPENASC(IUTXT(II),LINE,'W')
-!    IF(IUTXT(II).LE.0)THEN
-!     CALL IMOD_UTL_PRINTTEXT('Can not create file '//TRIM(LINE),0)
-!     CALL IMOD_UTL_PRINTTEXT('Probably not enough free unit numbers',2)
-!    ENDIF
-!    LINE=TRIM(IMOD_UTL_ITOS(NREC))
-!    WRITE(IUTXT(II),'(A)') TRIM(LINE)
-!    IF(TS(JJ)%IEXT.EQ.0)LINE=TRIM(IMOD_UTL_ITOS(2)); IF(TS(JJ)%IEXT.GT.0)LINE=TRIM(IMOD_UTL_ITOS(3))
-!    WRITE(IUTXT(II),'(A)') TRIM(LINE)
-!    WRITE(IUTXT(II),'(A)') 'Date,-999'
-!
-!    IF(TS(JJ)%IEXT.GT.0)THEN
-!     !## if iext.gt.0 read textfiles with measures
-!     IF(OS.EQ.1)THEN
-!      J=INDEX(TS(JJ)%IPFNAME,CHAR(92),.TRUE.)
-!     ELSE
-!      J=INDEX(TS(JJ)%IPFNAME,CHAR(47),.TRUE.)
-!     ENDIF
-!     LINE=TS(JJ)%IPFNAME(:J)//TRIM(TS(JJ)%STVALUE(I)%ID)//'.'//TRIM(TS(JJ)%EXT)
-!     CALL IMOD_UTL_SWAPSLASH(LINE)
-!     CALL IMOD_UTL_OPENASC(JUTXT(II),LINE,'R')
-!     IF(JUTXT(II).LE.0)CALL IMOD_UTL_PRINTTEXT('Can not open file '//TRIM(LINE),2)
-!     READ(JUTXT(II),*)
-!     READ(JUTXT(II),*) N
-!!     IF(N.NE.2)CALL IMOD_UTL_PRINTTEXT('Number of columns in associated text file should be 2.',2)
-!     DO J=1,2; READ(JUTXT(II),*) CLABEL,TSNODATA(II); ENDDO
-!     DO J=2+1,N; READ(JUTXT(II),*) ; ENDDO
-!     LINE='Measure,'//TRIM(IMOD_UTL_RTOS(TSNODATA(II),'G',7)); WRITE(IUTXT(II),'(A)') TRIM(LINE)
-!    ENDIF
-!    LINE='Computed_Head,'//TRIM(IMOD_UTL_RTOS(MV,'G',7)); WRITE(IUTXT(II),'(A)') TRIM(LINE)
-!
-!   ENDDO
-!  ENDDO
-!
-!!  ## write summary into different *.txt files
-!  TSDATE=0
-!  lmatch = .true.
-!  DO IREC=1,NREC
-!
-!   READ(IU,*,IOSTAT=JOS) IDATE
-!!   ## skip this period since it is apparently not a date
-!   lskip = .false.
-!   if (jos.ne.0) lskip = .true.
-!   if (usests.and..not.lskip) then
-!      mdate(idate-firstdate+1) = mdate(idate-firstdate+1) + 1
-!      if (lmatch) then
-!         if (mdate(idate-firstdate+1).ne.ndate(idate-firstdate+1)) then
-!            lmatch = .false.
-!            iidate = idate
-!         end if
-!      else
-!         if (iidate.eq.idate .and. mdate(idate-firstdate+1).eq.ndate(idate-firstdate+1)) then
-!            lmatch = .true.
-!         end if
-!      end if
-!      if(.not.lmatch) lskip = .true.
-!   end if
-!   IF(lskip)THEN
-!    DO JJ=1,ABS(IIPF)
-!       DO I=1,TS(JJ)%NROWIPF
-!          IF (.NOT.TS(JJ)%STVALUE(I)%VALID) CYCLE ! skip invalid data
-!          READ(IU,*)
-!       ENDDO
-!    ENDDO
-!    CYCLE
-!   ENDIF
-!
-!   II=0
-!   DO JJ=1,ABS(IIPF)
-!    DO I=1,TS(JJ)%NROWIPF
-!     IF (.NOT.TS(JJ)%STVALUE(I)%VALID) CYCLE ! skip invalid data
-!     II=II+1
-!
-!!     ## without impulse/default
-!     READ(IU,'(A)') LINE
-!     READ(LINE,*,IOSTAT=JOS) JDATE,KK,J,H,W
-!     IF(JOS.NE.0) THEN
-!        READ(LINE,*,IOSTAT=JOS) KK,J,H,W
-!     END IF
-!     IF(JOS.NE.0)CYCLE
-!     IF(KK.NE.JJ)CALL IMOD_UTL_PRINTTEXT('Something goes wrong in reading summary timeseries online 340 in imod_tseries.f90',2)
-!
-!     IF(TS(JJ)%IEXT.GT.0)THEN
-!      IF(TSDATE(II).EQ.IDATE)THEN
-!       M=TSM(II)
-!!      ## try to read next date
-!      ELSEIF(TSDATE(II).LT.IDATE)THEN
-!!       ## read until current date is found
-!       DO
-!        READ(JUTXT(II),*,IOSTAT=IOS) CLDATE,TSM(II)
-!        IF(IOS.NE.0)EXIT
-!        READ(CLDATE,'(I8)',IOSTAT=IOS) TSDATE(II)
-!        IF(IOS.NE.0)EXIT
-!        TSDATE(II)=IMOD_UTL_IDATETOJDATE(TSDATE(II))
-!        IF(TSDATE(II).GE.IDATE)EXIT
-!       ENDDO
-!       M=TSM(II)
-!       IF(TSDATE(II).NE.IDATE)M=TSNODATA(II)
-!      ELSE
-!       M=TSNODATA(II)
-!      ENDIF
-!     ENDIF
-!
-!     LINE=TRIM(IMOD_UTL_ITOS(IMOD_UTL_JDATETOIDATE(IDATE)))
-!     IF(TS(JJ)%IEXT.GT.0)LINE=TRIM(LINE)//','//TRIM(IMOD_UTL_RTOS(M,'G',7))
-!     LINE=TRIM(LINE)//','//TRIM(IMOD_UTL_RTOS(H,'G',7))
-!     WRITE(IUTXT(II),'(A)') TRIM(LINE)
-!    ENDDO
-!   ENDDO
-!  ENDDO
-!  II=0
-!  DO JJ=1,ABS(IIPF)
-!   DO I=1,TS(JJ)%NROWIPF
-!     IF (.NOT.TS(JJ)%STVALUE(I)%VALID) CYCLE ! skip invalid data
-!     II=II+1
-!     CLOSE(IUTXT(II))
-!   ENDDO
-!  ENDDO
-!
-!  IF(ALLOCATED(IUTXT)) DEALLOCATE(IUTXT);  IF(ALLOCATED(JUTXT)) DEALLOCATE(JUTXT)
-!  IF(ALLOCATED(TSDATE))DEALLOCATE(TSDATE); IF(ALLOCATED(TSNODATA))DEALLOCATE(TSNODATA)
-!  IF(ALLOCATED(TSM))DEALLOCATE(TSM)
-! ENDIF
-! CLOSE(IU) !,STATUS='DELETE')
-
 ENDIF
-!
-!if (allocated(ndate)) deallocate(ndate)
-!if (allocated(mdate)) deallocate(mdate)
 
 RETURN
 END SUBROUTINE
@@ -754,10 +526,10 @@ INTEGER :: I,II,JJ
 
 IF(IIPF.EQ.0)RETURN
 
-CALL IMOD_UTL_PRINTTEXT('',0); CALL IMOD_UTL_PRINTTEXT('Cleaning data for writing timeseries...',0)
+CALL IMOD_UTL_PRINTTEXT('',0); CALL IMOD_UTL_PRINTTEXT(' Finished writing timeseries...',0)
 
 IF(ALLOCATED(IUTXT))THEN
- DO I=1,SIZE(IUTXT) !TS(JJ)%NROWIPF
+ DO I=1,SIZE(IUTXT)
   IF(IUTXT(I).GT.0)THEN
    INQUIRE(UNIT=IUTXT(I),OPENED=LEX); IF(LEX)CLOSE(IUTXT(I))
   ENDIF
