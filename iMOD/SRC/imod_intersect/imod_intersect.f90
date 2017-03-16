@@ -87,54 +87,52 @@ CONTAINS
   YMX=YMAX-CSY*(INT((YMAX-Y)/CSY)+I)
  ENDIF
  
- !## continue seach rest of intersections
- !## try intersections with x-axes firstly
- Y=YMN-CSY
- DO
-  Y=Y+CSY
-  IF(Y.GT.YMX)EXIT
+ !## not for horizontal lines
+ IF(IHOR.EQ.0)THEN
+ 
+  !## continue seach rest of intersections
+  !## try intersections with x-axes firstly
+  Y=YMN-CSY
+  DO
+   Y=Y+CSY
+   IF(Y.GT.YMX)EXIT
 
-  !## array overwritten
-  N=N+1; CALL INTERSECT_RESIZEVECTORS(N) 
-
-  IF(IVER.EQ.1)THEN
-   XA(N)=X1 !## same as xmx
-  ELSE
-   XA(N)=(Y-B)/A
-  ENDIF
-  YA(N)=Y
-
-  !## double intersections, for better estimate for hfb
-  IF(LHFB)THEN
    !## array overwritten
    N=N+1; CALL INTERSECT_RESIZEVECTORS(N) 
+
    IF(IVER.EQ.1)THEN
     XA(N)=X1 !## same as xmx
    ELSE
     XA(N)=(Y-B)/A
-   ENDIF 
+   ENDIF
    YA(N)=Y
-  ENDIF
- 
- ENDDO
- 
- !## try intersections with y-axes secondly
- X=XMN-CSX
- DO
-  X=X+CSX
-  IF(X.GT.XMX)EXIT
 
-  !## array overwritten
-  N=N+1; CALL INTERSECT_RESIZEVECTORS(N) 
-  XA(N)=X
-  IF(IHOR.EQ.1)THEN
-   YA(N)=Y1  !## same as ymx
-  ELSE
-   YA(N)=A*X+B
-  ENDIF
+   !## double intersections, for better estimate for hfb
+   IF(LHFB)THEN
+    !## array overwritten
+    N=N+1; CALL INTERSECT_RESIZEVECTORS(N) 
+    IF(IVER.EQ.1)THEN
+     XA(N)=X1 !## same as xmx
+    ELSE
+     XA(N)=(Y-B)/A
+    ENDIF 
+    YA(N)=Y
+   ENDIF
+ 
+  ENDDO
 
-  !## double intersections, for better estimate for hfb
-  IF(LHFB)THEN
+ ENDIF
+
+ !## not for vertical lines
+ IF(IVER.EQ.0)THEN 
+
+  !## try intersections with y-axes secondly
+  X=XMN-CSX
+  DO
+   X=X+CSX
+   IF(X.GT.XMX)EXIT
+
+   !## array overwritten
    N=N+1; CALL INTERSECT_RESIZEVECTORS(N) 
    XA(N)=X
    IF(IHOR.EQ.1)THEN
@@ -142,10 +140,22 @@ CONTAINS
    ELSE
     YA(N)=A*X+B
    ENDIF
-  ENDIF
- 
- ENDDO
 
+   !## double intersections, for better estimate for hfb
+   IF(LHFB)THEN
+    N=N+1; CALL INTERSECT_RESIZEVECTORS(N) 
+    XA(N)=X
+    IF(IHOR.EQ.1)THEN
+     YA(N)=Y1  !## same as ymx
+    ELSE
+     YA(N)=A*X+B
+    ENDIF
+   ENDIF
+ 
+  ENDDO
+ 
+ ENDIF
+ 
  DX=X1-X2; DY=Y2-Y1
  CALL INTERSECT_SORT(DX,DY,N_IN+1,N)
 
@@ -256,36 +266,42 @@ CONTAINS
  END DO
 
  IF(IMN.GT.0.AND.JMN.GT.0)THEN
-  CS=DELC(IMN-1)-DELC(IMN)
-  Y =YMN-CS
-  DO
-   Y=Y+CS
-   IF(Y.GT.YMX)EXIT
-   N=N+1; CALL INTERSECT_RESIZEVECTORS(N) 
-   IF(IVER.EQ.1)THEN
-    XA(N)=X1 !## same as xmx
-   ELSE
-    XA(N)=(Y-B)/A
-   ENDIF
-   YA(N)=Y
 
-   !## double intersections, for better estimate for hfb
-   IF(LHFB)THEN
-    !## array overwritten
-    N=N+1; CALL INTERSECT_RESIZEVECTORS(N)
+  !## not for horizontal lines
+  IF(IHOR.EQ.0)THEN
+
+   CS=DELC(IMN-1)-DELC(IMN)
+   Y =YMN-CS
+   DO
+    Y=Y+CS
+    IF(Y.GT.YMX)EXIT
+    N=N+1; CALL INTERSECT_RESIZEVECTORS(N) 
     IF(IVER.EQ.1)THEN
      XA(N)=X1 !## same as xmx
     ELSE
      XA(N)=(Y-B)/A
     ENDIF
     YA(N)=Y
-   ENDIF
+
+    !## double intersections, for better estimate for hfb
+    IF(LHFB)THEN
+     !## array overwritten
+     N=N+1; CALL INTERSECT_RESIZEVECTORS(N)
+     IF(IVER.EQ.1)THEN
+      XA(N)=X1 !## same as xmx
+     ELSE
+      XA(N)=(Y-B)/A
+     ENDIF
+     YA(N)=Y
+    ENDIF
   
-   IMN  =IMN-1
-   !## model is not bigger than line-segment
-   IF(IMN.LE.0)EXIT
-   CS=DELC(IMN-1)-DELC(IMN)
-  ENDDO
+    IMN  =IMN-1
+    !## model is not bigger than line-segment
+    IF(IMN.LE.0)EXIT
+    CS=DELC(IMN-1)-DELC(IMN)
+   ENDDO
+
+  ENDIF
  ENDIF
 
  !## try intersections with x-axes secondly
@@ -302,22 +318,15 @@ CONTAINS
  END DO
 
  IF(IMN.GT.0.AND.JMN.GT.0)THEN
-  CS=DELR(IMN-1)-DELR(IMN)
-  X =XMN-CS
-  DO
-   X=X+CS
-   IF(X.GT.XMX)EXIT
-   N=N+1; CALL INTERSECT_RESIZEVECTORS(N) 
-   XA(N)=X
-   IF(IHOR.EQ.1)THEN
-    YA(N)=Y1  !## same as ymx
-   ELSE
-    YA(N)=A*X+B
-   ENDIF
 
-   !## double intersections, for better estimate for hfb
-   IF(LHFB)THEN
-    !## array overwritten
+  !## not for vertical lines
+  IF(IVER.EQ.0)THEN
+
+   CS=DELR(IMN-1)-DELR(IMN)
+   X =XMN-CS
+   DO
+    X=X+CS
+    IF(X.GT.XMX)EXIT
     N=N+1; CALL INTERSECT_RESIZEVECTORS(N) 
     XA(N)=X
     IF(IHOR.EQ.1)THEN
@@ -325,13 +334,26 @@ CONTAINS
     ELSE
      YA(N)=A*X+B
     ENDIF
-   ENDIF
+
+    !## double intersections, for better estimate for hfb
+    IF(LHFB)THEN
+     !## array overwritten
+     N=N+1; CALL INTERSECT_RESIZEVECTORS(N) 
+     XA(N)=X
+     IF(IHOR.EQ.1)THEN
+      YA(N)=Y1  !## same as ymx
+     ELSE
+      YA(N)=A*X+B
+     ENDIF
+    ENDIF
   
-   IMN  =IMN+1
-   !## model is not bigger than line-segment
-   IF(IMN.GT.NCOL)EXIT
-   CS=DELR(IMN)-DELR(IMN-1)
-  ENDDO
+    IMN  =IMN+1
+    !## model is not bigger than line-segment
+    IF(IMN.GT.NCOL)EXIT
+    CS=DELR(IMN)-DELR(IMN-1)
+   ENDDO
+
+  ENDIF
  ENDIF
 
  !## sort intersections, determined by the one with the largest difference

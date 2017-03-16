@@ -34,7 +34,7 @@ USE MOD_ISG_PAR, ONLY : MAXFILES
 USE MOD_IPF, ONLY : UTL_GETUNITIPF
 USE MOD_MDF, ONLY : READMDF,MDFDEALLOCATE,MDF
 USE MOD_UTL, ONLY : UTL_GETUNIT,UTL_MESSAGEHANDLE,UTL_READARRAY,UTL_WSELECTFILE,ITOS,UTL_CAP
-USE MOD_ASC2IDF, ONLY : ASC2IDF_IMPORTASC
+USE MOD_ASC2IDF, ONLY : ASC2IDF_IMPORTASC,ASC2IDF_IMPORTASC_TYPE5
 USE MOD_NC2IDF, ONLY : NC2IDF_IMPORTNC,INETCDF
 USE MOD_LEGEND, ONLY : LEG_CREATE_CLASSES,LEG_CREATE_COLORS
 USE MOD_LEGEND_UTL, ONLY : LEG_READ
@@ -75,14 +75,15 @@ IF(.NOT.PRESENT(IDFNAMEGIVEN))THEN
  IDFNAME=''
  IF(INETCDF.EQ.0)THEN
   IF(.NOT.UTL_WSELECTFILE('All Known Files (*.idf;*.mdf;*.ipf;*.isg;*.iff;*.asc;*.shp;*.gen;*.gef;*.map)'//&
-                   '|*.idf;*.mdf;*.ipf;*.isg;*.iff;*.asc;*.shp;*.gen;*.gef;*.map|'// &
+                   '|*.idf;*.mdf;*.ipf;*.isg;*.iff;*.arr;*.asc;*.shp;*.gen;*.gef;*.map|'// &
                    'iMOD Map (*.idf)|*.idf|'               //&
                    'iMOD Multi Data File (*.mdf)|*.mdf|'   //&
                    'iMOD Pointers (*.ipf)|*.ipf|'          //&
                    'iMOD Segment-River File (*.isg)|*.isg|'//&
                    'iMOD Flowline File (*.iff)|*.iff|'     //&
+                   'iMOD Array File (*.arr)|*.arr|'        //&
                    'ESRI Raster file (*.asc)|*.asc|'       //&
-                   'ESRI Shape file (*.shp)|*.shp|'       //&
+                   'ESRI Shape file (*.shp)|*.shp|'        //&
                    'ESRI Ungenerate file (*.gen)|*.gen|'   //&
                    'GEF file (*.gef)|*.gef|'               //&
                    'PC Raster Map file (*.map)|*.map|',      &
@@ -90,12 +91,13 @@ IF(.NOT.PRESENT(IDFNAMEGIVEN))THEN
                    'Load iMOD Map (*.idf,*.mdf,*.ipf,*.isg,*.iff,*.asc,*.shp,*.gen,*.gef,*.map)'))RETURN
  ELSEIF(INETCDF.EQ.1)THEN
   IF(.NOT.UTL_WSELECTFILE('All Known Files (*.idf;*.mdf;*.ipf;*.isg;*.iff;*.nc;*.asc;*.shp;*.gen;*.gef;*.map)'//&
-                   '|*.idf;*.mdf;*.ipf;*.isg;*.iff,*.nc;*.asc;*.shp;*.gen;*.gef;*.map|'// &
+                   '|*.idf;*.mdf;*.ipf;*.isg;*.iff,*.arr;*.nc;*.asc;*.shp;*.gen;*.gef;*.map|'// &
                    'iMOD Map (*.idf)|*.idf|'               //&
                    'iMOD Multi Data File (*.mdf)|*.mdf|'   //&
                    'iMOD Pointers (*.ipf)|*.ipf|'          //&
                    'iMOD Segment-River File (*.isg)|*.isg|'//&
                    'iMOD Flowline File (*.iff)|*.iff|'     //&
+                   'iMOD Array File (*.arr)|*.arr|'        //&
                    'NetCDF File (*.nc)|*.nc|'              //&
                    'ESRI Raster file (*.asc)|*.asc|'       //&
                    'ESRI Shape file (*.shp)|*.shp|'       //&
@@ -192,13 +194,15 @@ DO IDF=1,NIDF
     ALLOCATE(GEFNAMES(NIDF)); GEFNAMES=FNAMES; CALL GEF2IPF_MAIN(0,0); DEALLOCATE(GEFNAMES)
     IDFNAME=IPFFNAME; MP(IPLOT)%IPLOT=2
    ENDIF
-  CASE ('ASC','NC ','MAP')
+  CASE ('ASC','NC ','MAP','ARR')
    IF(IDFNAME(I:I+2).EQ.'ASC')THEN
     CALL ASC2IDF_IMPORTASC(IDFNAME,0.0,0.0,I,0)
    ELSEIF(IDFNAME(I:I+2).EQ.'NC ')THEN
     CALL NC2IDF_IMPORTNC(IDFNAME,I)
    ELSEIF(IDFNAME(I:I+2).EQ.'MAP')THEN
     CALL MAP2IDF_IMPORTMAP(IDFNAME,I)
+   ELSEIF(IDFNAME(I:I+2).EQ.'ARR')THEN
+    CALL ASC2IDF_IMPORTASC_TYPE5(IDFNAME,I)
    ENDIF
    IF(I.EQ.0)THEN
     I=INDEXNOCASE(IDFNAME,'.',.TRUE.)
