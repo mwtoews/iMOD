@@ -24,9 +24,6 @@ program driver
 
 ! modules
 use driver_module
-use global, only : iout, issflg
-!use gwfmetmodule, only : time_cstring,time_ostring,idate_save
-use m_mf2005_main, only : kkper
 use IMOD_UTL, only : imod_utl_capf
 use m_main_info
 use m_vcl, only: targ
@@ -37,7 +34,7 @@ implicit none
 
 ! general
  logical :: mf_steadystate
- integer :: mf_ngrid, mf_igrid
+ integer :: mf_ngrid, mf_igrid, iout
 
 ! iPEST with MetaSWAP
  integer :: mf_nrow, mf_ncol, mf_nlay
@@ -412,6 +409,7 @@ implicit none
 
  ! append the PEST log-file
  if (lipest) then
+    call mf2005_returnIOUT(iout)
     CALL PESTDUMPFCT(modwd1,iout) !IUPESTOUT)
  endif
 
@@ -575,14 +573,8 @@ implicit none
              end if
           end if
 
-!what about steady-state solutions, currenttime.eq.0
-          if(issflg(kkper).eq.1)then 
-           write(*,'(5x,a,1x,a)')&
-              'Timestep     :','steady-state'
-          else
-           write(*,'(5x,a,1x,i5,1x,a,1x,i8,3(a,i2.2))')&
-              'Timestep     :',tsc,':',date,' ',abs(hour),':',minute,':',second
-          endif
+          call mf2005_writeTimeStep(tsc,date,hour,minute,second)
+          
           ! one timestep for each cycle
 
 ! ... iteration
@@ -710,7 +702,7 @@ implicit none
 
              !#### TIMESERIES #####
              ok = mf2005_TimeserieGetHead(mf_igrid); call DriverChk(ok,'mf2005_TimeserieGetHead')
-             call gwf2getcurrentdate(mf_igrid,issflg(kkper),time_string)
+             call gwf2getcurrentdate(mf_igrid,time_string)  !,issflg(kkper)
              call tserie1write(0,lss,currentTime,hnoflo,usests,modwd1,time_string)
 
              !#### TIMESERIES #####

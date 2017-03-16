@@ -154,18 +154,21 @@ C save meta data for a grid.
       return
       end
 
-      subroutine gwf2getcurrentdate(igrid,issflg,cdate)
+      subroutine gwf2getcurrentdate(igrid,cdate) !,issflg,cdate)
       use gwfmetmodule
+
       USE IMOD_UTL, ONLY : IMOD_UTL_IDATETOJDATE,imod_utl_printtext
+      use m_mf2005_main, only : kkper
+      use global, only : issflg
       implicit none
-      integer,intent(in) :: igrid,issflg
+      integer,intent(in) :: igrid !,issflg
       character(len=*),intent(out) :: cdate
       integer :: ios,idate
       
 c body
       call sgwf2met1pnt(igrid)
 
-      if (issflg.eq.0 .and. associated(time_ostring)) then ! TR
+      if (issflg(kkper).eq.0 .and. associated(time_ostring)) then ! TR
        if(idate_save.eq.0)then
         cdate=time_ostring
        elseif(idate_save.eq.1)then

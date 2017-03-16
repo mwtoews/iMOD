@@ -332,6 +332,34 @@ C  Observation allocate and read
 C
       return
       end
+
+c ******************************************************************************
+      subroutine mf2005_writeTimeStep(tsc,date,hour,minute,second)
+      use global, only : issflg
+      use m_mf2005_main, only : kkper
+      implicit none
+      integer,intent(in) :: date,tsc,hour,minute,second
+            
+!what about steady-state solutions, currenttime.eq.0
+          if(issflg(kkper).eq.1)then 
+           write(*,'(5x,a,1x,a)')'Timestep     :','steady-state'
+          else
+           write(*,'(5x,a,1x,i5,1x,a,1x,i8,3(a,i2.2))')
+     1'Timestep     :',tsc,':',date,' ',abs(hour),':',minute,':',second
+          endif
+
+      end subroutine mf2005_writeTimeStep
+
+c ******************************************************************************
+      subroutine mf2005_returnIOUT(jout)
+      use global, only : iout
+      implicit none
+      integer,intent(out) :: jout
+            
+      jout=iout
+      
+      end subroutine mf2005_returnIOUT
+
 c ******************************************************************************
       subroutine mf2005_prepareTimestepWrp0(deltats,endOfSimulation)
       ! wrapper routine

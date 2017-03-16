@@ -341,7 +341,8 @@ ELSE
  !## simulation
  IF(ISIM.EQ.0)THEN
   
-  WRITE(IUIPFTXT,*) CDATE
+!  read(cdate,*) idate
+  WRITE(IUIPFTXT,*) trim(adjustl(cdate)) !IMOD_UTL_IDATETOJDATE(idate),',',CDATE
 
   NREC = NREC + 1
 
@@ -458,7 +459,8 @@ ELSE
    IF(JOS.NE.0)THEN
     DO J=1,ABS(IIPF); DO I=1,TS(J)%NROWIPF; IF(.NOT.TS(J)%STVALUE(I)%VALID)CYCLE; READ(IU,*); ENDDO; ENDDO
     CYCLE
-   ENDIF
+   ENDIF 
+   idate=IMOD_UTL_IDATETOJDATE(idate)
    
    II=0
    DO JJ=1,ABS(IIPF)
