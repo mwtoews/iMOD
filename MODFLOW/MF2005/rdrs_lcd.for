@@ -383,7 +383,8 @@ c end of program
       REAL,INTENT(IN) :: FCT,NODATA
       REAL,INTENT(IN),DIMENSION(NCOL,NROW) :: TF,BF
       REAL :: DZ,TFV,BFV,TPV,BTV,C1,C2,CT,FFCT
-
+      INTEGER :: IL1,IL2
+      
       HFB1EXPORT_GETFACTOR=0.0
 
       !## determine values
@@ -402,8 +403,18 @@ c end of program
        BFV=BF(IC2,IR2)
       ENDIF
 
-      TPV=(BOTM(IC1,IR1,ILAY-1)+BOTM(IC2,IR2,ILAY-1))/2.0
-      BTV=(BOTM(IC1,IR1,ILAY)  +BOTM(IC2,IR2,ILAY))/2.0
+      IL1=(ILAY*2)-1
+      IL2=(ILAY*2)
+      
+      TPV=(BOTM(IC1,IR1,IL1)+BOTM(IC2,IR2,IL1))/2.0
+      BTV=(BOTM(IC1,IR1,IL2)+BOTM(IC2,IR2,IL2))/2.0
+
+!      TPV=(BOTM(IC1,IR1,ILAY-1)+BOTM(IC2,IR2,ILAY-1))/2.0
+!      BTV=(BOTM(IC1,IR1,ILAY)  +BOTM(IC2,IR2,ILAY))/2.0
+
+!      IF(ILAY.EQ.6)THEN  
+!      WRITE(*,*)
+!      ENDIF
 
       !## nett appearance of fault in modellayer
       DZ=MIN(TFV,TPV)-MAX(BFV,BTV)

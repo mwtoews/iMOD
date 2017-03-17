@@ -341,8 +341,7 @@ ELSE
  !## simulation
  IF(ISIM.EQ.0)THEN
   
-!  read(cdate,*) idate
-  WRITE(IUIPFTXT,*) trim(adjustl(cdate)) !IMOD_UTL_IDATETOJDATE(idate),',',CDATE
+  WRITE(IUIPFTXT,*) trim(adjustl(cdate)) 
 
   NREC = NREC + 1
 
