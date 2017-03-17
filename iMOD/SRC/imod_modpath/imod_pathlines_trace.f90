@@ -64,6 +64,7 @@ CONTAINS
  IDEF=WMENUGETSTATE(ID_INTERACTIVEPATHLINES_DEF,2)
 
  IF(TRIM(FNAME).EQ.'')THEN
+  RUNFILE=''
   IF(.NOT.UTL_WSELECTFILE('iMODPATH runfile (*.run)|*.run|', &
                    LOADDIALOG+PROMPTON+DIRCHANGE+APPENDEXT, &
                    RUNFILE,'Select iMODPATH runfile (*.run)'))RETURN
@@ -111,7 +112,6 @@ CONTAINS
  
  ALLOCATE(IVISIT(IDF%NCOL*IDF%NROW*NLAY)); IVISIT=INT(0,1)
  ALLOCATE(LVISIT(IDF%NCOL*IDF%NROW*NLAY)); LVISIT=0
-! ALLOCATE(LVISIT(IDF%NCOL*IDF%NROW*MIN(2,NLAY))); LVISIT=0
 
  IF(IDEF.EQ.1)THEN
  
@@ -270,6 +270,7 @@ CONTAINS
       CALL WGRIDGETMENU    (IDF_GRID1,4,SP%IREV ,NSPG); SP%IREV=SP%IREV-1
       CALL WGRIDGETREAL    (IDF_GRID1,5,SP%SPWIDTH,NSPG)
       CALL WGRIDGETREAL    (IDF_GRID1,6,SP%PWIDTH,NSPG)
+      CALL WGRIDGETINTEGER (IDF_GRID1,7,SP%IRSTRT,NSPG); SP%IRSTRT=MAX(SP%IRSTRT,0)
       EXIT
      CASE (IDCANCEL)
       EXIT
@@ -277,6 +278,9 @@ CONTAINS
   END SELECT
  ENDDO
  CALL WDIALOGHIDE(); CALL WDIALOGSELECT(ID_D3DSETTINGS_TAB8)
+ 
+ !## recompute start interval particles
+ CALL TRACE_3D_STARTPOINTS_STARTINTERVAL()
  
  IF(NSPG.GT.SIZE(SP))THEN
   CALL WDIALOGFIELDSTATE(ID_ADD,0)
@@ -302,6 +306,7 @@ CONTAINS
 #endif
 
  IF(NSPG.GT.0)THEN
+ 
   CALL WGRIDROWS(IDF_GRID1,NSPG)
   CALL WDIALOGFIELDSTATE(IDF_GRID1,1)
   !## fill in dialog
@@ -318,9 +323,14 @@ CONTAINS
   CALL WGRIDPUTREAL(IDF_GRID1,5,SP%SPWIDTH,NSPG)
   !## size of the particles
   CALL WGRIDPUTREAL(IDF_GRID1,6,SP%PWIDTH,NSPG)
+  !## start interval particles
+  CALL WGRIDPUTINTEGER(IDF_GRID1,7,SP%IRSTRT,NSPG)
+ 
  ELSE
+ 
   CALL WGRIDROWS(IDF_GRID1,1)
   CALL WDIALOGFIELDSTATE(IDF_GRID1,2)
+ 
  ENDIF
 
  END SUBROUTINE TRACE_3D_STARTPOINTS_GRID
@@ -337,7 +347,7 @@ CONTAINS
  IU=UTL_GETUNIT()
  
  IF(ID.EQ.ID_OPEN)THEN
-  !## all existing particels will be removed
+  !## all existing particles will be removed
   IF(PL%NPART.GT.0)THEN
    CALL WMESSAGEBOX(YESNO,QUESTIONICON,COMMONCANCEL,'Do you want to remove existing particles first?','Question')
    IF(WINFODIALOG(4).NE.1)RETURN
@@ -351,12 +361,13 @@ CONTAINS
   READ(IU,'(I10)') NSPG
 
   DO I=1,MIN(SIZE(SP),NSPG)
-   READ(IU,'(4(I10,1X),2(F10.2,1X))') SP(I)%NPART,SP(I)%IACT,SP(I)%ICLR,SP(I)%IREV,SP(I)%SPWIDTH,SP(I)%PWIDTH
+   READ(IU,'(4(I10,1X),2(F10.2,1X),I10)') SP(I)%NPART,SP(I)%IACT,SP(I)%ICLR,SP(I)%IREV,SP(I)%SPWIDTH,SP(I)%PWIDTH,SP(I)%IRSTRT
+   SP(I)%IRSTRT=MAX(SP(I)%IRSTRT,0)
    ALLOCATE(XSP(SP(I)%NPART),YSP(SP(I)%NPART),ZSP(SP(I)%NPART))
    DO J=1,SP(I)%NPART; READ(IU,*) XSP(J),YSP(J),ZSP(J); ENDDO
    !## get new location/particle - click from the 3d tool
    IG2=SP(I)%NPART
-   CALL TRACE_3D_STARTPOINTS_ASSIGN(I,1,IG2) !IG1,IG2)
+   CALL TRACE_3D_STARTPOINTS_ASSIGN(I,1,IG2)
    DEALLOCATE(XSP,YSP,ZSP)
    !## total particles for this group
    PL%NPART=PL%NPART+SP(I)%NPART
@@ -380,7 +391,7 @@ CONTAINS
   ELSE
    WRITE(IU,'(I10)') NSPG
    DO I=1,NSPG
-    WRITE(IU,'(4(I10,1X),2(F10.2,1X))') SP(I)%NPART,SP(I)%IACT,SP(I)%ICLR,SP(I)%IREV,SP(I)%SPWIDTH,SP(I)%PWIDTH
+    WRITE(IU,'(4(I10,1X),2(F10.2,1X),I10)') SP(I)%NPART,SP(I)%IACT,SP(I)%ICLR,SP(I)%IREV,SP(I)%SPWIDTH,SP(I)%PWIDTH,SP(I)%IRSTRT
     DO J=1,SP(I)%NPART
      WRITE(IU,'(2(F10.2,1X),F10.3)') IDF%XMIN+SP(I)%XLC(J),IDF%YMIN+SP(I)%YLC(J),SP(I)%ZLC(J)
     ENDDO
@@ -447,9 +458,9 @@ CONTAINS
    IF(NSPG.GT.SIZE(SP))EXIT
    
    !## get new location/particle - click from the 3d tool
-   CALL TRACE_3D_STARTPOINTS_ASSIGN(NSPG,IG1,IG2) 
+   CALL TRACE_3D_STARTPOINTS_ASSIGN(NSPG,IG1,IG2)
    !## total particles for this group
-   PL%NPART=PL%NPART+SP(NSPG)%NPART !(IG2-IG1+1)
+   PL%NPART=PL%NPART+SP(NSPG)%NPART
    !## assign current colour to group
    IF(IG.EQ.1)THEN
     SP(NSPG)%ICLR=PL%SPCOLOR
@@ -465,7 +476,7 @@ CONTAINS
    !## plot size
    SP(NSPG)%SPWIDTH=3.0
    SP(NSPG)%PWIDTH=1.0
-   !## random start times
+   !## start times directly
    SP(NSPG)%IRSTRT=0
   
   ENDDO
@@ -951,9 +962,7 @@ CONTAINS
     SP(IG)%JLC(SP(IG)%NPART)=ICOL
     SP(IG)%TOT(SP(IG)%NPART)=0.0
     SP(IG)%MXL(SP(IG)%NPART)=0
-    !## random start squence number - negative to indicate it did not start yet
-    CALL RANDOM_NUMBER(SP(IG)%STM(SP(IG)%NPART))
-    SP(IG)%STM(SP(IG)%NPART)=-1.0*SP(IG)%STM(SP(IG)%NPART)
+    SP(IG)%STM(SP(IG)%NPART)=0
     EXIT
     
    ENDIF
@@ -962,6 +971,24 @@ CONTAINS
  ENDDO
 
  END SUBROUTINE TRACE_3D_STARTPOINTS_ASSIGN
+
+ !###======================================================================
+ SUBROUTINE TRACE_3D_STARTPOINTS_STARTINTERVAL()
+ !###======================================================================
+ IMPLICIT NONE
+ INTEGER :: I,J
+ REAL :: X
+
+ DO I=1,NSPG
+  IF(SP(I)%IRSTRT.EQ.0)CYCLE
+  DO J=1,SP(I)%NPART
+   !## random start squence number - negative to indicate it did not start yet
+   CALL RANDOM_NUMBER(X)
+   SP(I)%STM(J)=X*SP(I)%IRSTRT
+  ENDDO   
+ ENDDO
+
+ END SUBROUTINE TRACE_3D_STARTPOINTS_STARTINTERVAL
 
  !###======================================================================
  SUBROUTINE TRACE_3D_STARTPOINTS_MEMORY_SP(IG)
@@ -1076,7 +1103,7 @@ CONTAINS
  CALL TRACE_DEAL_SP(); CALL TRACE_DEAL_SPR() 
 
  !## maximal number of particles to be traced
- DO I=1,SIZE(SP); CALL TRACE_AL_SP(1000,I); ENDDO !SIZE(SP))
+ DO I=1,SIZE(SP); CALL TRACE_AL_SP(1000,I); ENDDO 
 
  CALL WDIALOGSELECT(ID_D3DSETTINGS_TAB8)
  CALL WDIALOGPUTINTEGER(IDF_INTEGER5,PL%NPART)
@@ -1164,7 +1191,7 @@ CONTAINS
  !## increase number of timesteps
  PL%NPER =PL%NPER+1
  PL%NTIME=PL%NTIME+1
-
+ 
  !## shift all one position
  DO I=1,SIZE(PLLISTCLR); PLLISTCLR(I)=PLLISTCLR(I)+1; ENDDO
  
@@ -1209,28 +1236,12 @@ CONTAINS
   !## points
   IF(PL%ITYPE.EQ.2)CALL GLBEGIN(GL_POINTS)
 
-SPR(IG)%IRSTRT=1
-
   DO IPART=1,SPR(IG)%NPART 
-     
-   !## determine whether current particle is ready to go
-   IF(SPR(IG)%IRSTRT.EQ.1)THEN
-    !## particle not yet started, see whether to start
-    IF(SPR(IG)%STM(IPART).LT.0.0)THEN
-     !## turn on random particle number
-     F=ABS(SPR(IG)%STM(IPART))
-     !## particle number to turn on
-     I=INT(F*SPR(IG)%NPART)
-     !## release particle
-     IF(I.EQ.IPART)THEN
-!     !## set new random number for next time
-!     CALL RANDOM_NUMBER(SP(IG)%STM(IPART))
-      SPR(IG)%STM(IPART)=ABS(SP(IG)%STM(IPART))
-     ENDIF
-     !## this particle not yet to be released
-     IF(SPR(IG)%STM(IPART).LT.0.0)CYCLE
-    ENDIF
- 
+
+   !## particle not yet started, see whether to start
+   IF(SPR(IG)%STM(IPART).GT.0)THEN
+    !## skip this one for now
+    IF(SPR(IG)%STM(IPART).GT.PL%NTIME)CYCLE
    ENDIF
    
    !## trace selected particle, not yet discharged!
@@ -1289,7 +1300,8 @@ SPR(IG)%IRSTRT=1
      SPR(IG)%ZLL(IPART)=SP(IG)%ZLL(IPART)
      SPR(IG)%TOT(IPART)=SP(IG)%TOT(IPART)
      SPR(IG)%MXL(IPART)=SP(IG)%MXL(IPART)
-!     SPR(IG)%STM(IPART)=SP(IG)%STM(IPART)+PL%TDEL
+     SPR(IG)%STM(IPART)=SP(IG)%STM(IPART)
+     IF(SP(IG)%IRSTRT.GT.0)SPR(IG)%STM(IPART)=SPR(IG)%STM(IPART)+PL%NTIME
 
     ENDIF
    
@@ -1338,7 +1350,8 @@ SPR(IG)%IRSTRT=1
      SPR(IG)%ZLL(I)=SP(IG)%ZLL(IPART)
      SPR(IG)%TOT(I)=SP(IG)%TOT(IPART)
      SPR(IG)%MXL(I)=SP(IG)%MXL(IPART)
-     SPR(IG)%STM(I)=SP(IG)%STM(IPART)
+     SPR(IG)%STM(I)=SP(IG)%STM(IPART) !+PL%NCOMP
+     IF(SP(IG)%IRSTRT.GT.0)SPR(IG)%STM(IPART)=SPR(IG)%STM(IPART)+PL%NTIME
   
      !## add active particles
      NPACT=NPACT+1

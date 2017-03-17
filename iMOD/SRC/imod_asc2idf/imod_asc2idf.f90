@@ -583,7 +583,9 @@ CONTAINS
  
  IF(.NOT.IDFWRITE(IDF(1),IDF(1)%FNAME//'.IDF',1))THEN; ENDIF
  CALL ASC2IDF_INT_CLOSE(IU)
-
+ 
+ IERROR=0
+ 
  END SUBROUTINE ASC2IDF_IMPORTASC_TYPE5
   
  !###======================================================================
