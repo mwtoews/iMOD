@@ -159,6 +159,72 @@ CONTAINS
  IF(IU.EQ.0)STOP
  
  !## three loops, first to get number of ipf files, second to get number of points per ipf, third to read all in memory
+ NIPF=0
+ DO 
+  READ(IU,'(A256)',IOSTAT=IOS) LINE; IF(IOS.NE.0)EXIT
+  !## found ipf
+  IF(INDEX(UTL_CAP(LINE,'U'),'.IPF').GT.0)THEN
+   NIPF=NIPF+1
+  ELSE
+   EXIT
+  ENDIF
+ ENDDO
+ 
+ ALLOCATE(IPFR(NIPF)); REWIND(IU)
+ 
+ DO I=1,2
+  
+  IPFR%NPOINTS=0
+  DO J=1,SIZE(IPFR)+1; READ(IU,*); ENDDO
+  
+  DO 
+   READ(IU,'(A256)',IOSTAT=IOS) LINE; IF(IOS.NE.0)EXIT
+   IF(ITRANSIENT.EQ.1)THEN
+    READ(LINE,'(160X,I10)') NIPF
+   ELSE
+    READ(LINE,'(160X,I10)') NIPF
+   ENDIF
+   IPFR(NIPF)%NPOINTS=IPFR(NIPF)%NPOINTS+1
+   IF(I.EQ.2)THEN
+    N=IPFR(NIPF)%NPOINTS
+    IF(ITRANSIENT.EQ.1)THEN
+     READ(LINE,'(I10,2F15.7,I10,3F15.7)') IPFR(NIPF)%D(N),IPFR(NIPF)%X(N),IPFR(NIPF)%Y(N), &
+                                          IPFR(NIPF)%L(N),IPFR(NIPF)%W(N),IPFR(NIPF)%O(N),IPFR(NIPF)%M(N)
+    ELSE
+     READ(LINE,'(2F15.7,I10,6F15.7)') IPFR(NIPF)%X(N),IPFR(NIPF)%Y(N), &
+                                      IPFR(NIPF)%L(N),IPFR(NIPF)%O(N),IPFR(NIPF)%M(N), &
+                                      J,WMDL,WRES,IPFR(NIPF)%W(N)
+    ENDIF
+   ENDIF
+  ENDDO
+  
+  IF(I.EQ.1)THEN
+   DO J=1,SIZE(IPFR)
+    N=IPFR(J)%NPOINTS
+    IF(ITRANSIENT.EQ.1)ALLOCATE(IPFR(J)%D(N))
+    ALLOCATE(IPFR(J)%X(N),IPFR(J)%Y(N),IPFR(J)%L(N),IPFR(J)%O(N), &
+             IPFR(J)%M(N),IPFR(J)%W(N))
+   ENDDO
+  ENDIF
+
+  REWIND(IU)
+ ENDDO
+ CLOSE(IU)
+
+ END SUBROUTINE RESIDUAL_DATA
+
+ !###===================================
+ SUBROUTINE RESIDUAL_DATA_ORG()
+ !###===================================
+ IMPLICIT NONE
+ INTEGER :: I,IU,NIPF,IOS,N
+ REAL :: J,WMDL,WRES,MMSR,MMDL,CC,DYNMSR,DYNMLD
+ CHARACTER(LEN=256) :: LINE
+
+ IU=UTL_GETUNIT(); CALL OSD_OPEN(IU,FILE=TRIM(INPUTFILE),ACTION='READ',FORM='FORMATTED',STATUS='OLD')
+ IF(IU.EQ.0)STOP
+ 
+ !## three loops, first to get number of ipf files, second to get number of points per ipf, third to read all in memory
  DO I=1,3
   NIPF=0
   !## skip first line
@@ -201,7 +267,7 @@ CONTAINS
  ENDDO
  CLOSE(IU)
 
- END SUBROUTINE RESIDUAL_DATA
+ END SUBROUTINE RESIDUAL_DATA_ORG
 
  !###===================================
  SUBROUTINE RESIDUAL_PROC()
