@@ -3500,25 +3500,24 @@ TOPICLOOP: DO ITOPIC=1,MAXTOPICS
  IF(.NOT.PMANAGER_SAVEMF2005_ISG(DIR,DIRMNAME,IBATCH,LSFR,30,ISFRCB,'SFR',IPRT))RETURN
  !## save fhb package
  IF(.NOT.PMANAGER_SAVEMF2005_PCK(DIR,DIRMNAME,IBATCH,LFHB,31,IFHBCB,'FHB',(/1,2/),IPRT))RETURN
- !## save rest of lak package
- LPER=0; DO IPER=1,NPER
-  !## get appropriate stress-period to store in runfile   
-  KPER=PMANAGER_GETCURRENTIPER(IPER,32,ITIME,JTIME)
-  !## kper is stress period for which lakes are firstly defined
-  IINI=0; IF(KPER.EQ.INIPER)IINI=1
-!  IF(ABS(KPER).LT.INIPER)IINI= 0
-!  IF(ABS(KPER).EQ.INIPER)IINI= 1
-!  IF(ABS(KPER).GT.INIPER)IINI=-1
-  !## read in new values in case not previous one can be used
-  IF(ABS(KPER).NE.LPER)THEN
-   KPER=ABS(KPER)
-   IF(.NOT.PMANAGER_SAVEMF2005_LAK_READ(IPER,IPRT,KPER))RETURN
-  ENDIF
-  IF(.NOT.PMANAGER_SAVEMF2005_LAK_SAVE(IULAK,IINI,IBATCH,DIR,KPER=KPER,DIRMNAME=DIRMNAME))RETURN
-  !## store previous stress-period information for this timestep
-  LPER=ABS(KPER)
- ENDDO
- CLOSE(IULAK)
+ IF(LLAK)THEN
+  !## save rest of lak package
+  LPER=0; DO IPER=1,NPER
+   !## get appropriate stress-period to store in runfile   
+   KPER=PMANAGER_GETCURRENTIPER(IPER,32,ITIME,JTIME)
+   !## kper is stress period for which lakes are firstly defined
+   IINI=0; IF(KPER.EQ.INIPER)IINI=1
+   !## read in new values in case not previous one can be used
+   IF(ABS(KPER).NE.LPER)THEN
+    KPER=ABS(KPER)
+    IF(.NOT.PMANAGER_SAVEMF2005_LAK_READ(IPER,IPRT,KPER))RETURN
+   ENDIF
+   IF(.NOT.PMANAGER_SAVEMF2005_LAK_SAVE(IULAK,IINI,IBATCH,DIR,KPER=KPER,DIRMNAME=DIRMNAME))RETURN
+   !## store previous stress-period information for this timestep
+   LPER=ABS(KPER)
+  ENDDO
+  CLOSE(IULAK)
+ ENDIF
   
  !## combine olf/drn and isg/riv
  IF(LOLF.AND.LDRN)THEN
