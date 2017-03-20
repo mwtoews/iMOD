@@ -1083,6 +1083,8 @@ c ------------------------------------------------------------------------------
       do ilay=1,nlay
        do irow=1,nrow
         do icol=1,ncol
+         !## overrule angle in case factor is 1.0 - irrelevant in that case
+         if(fct(icol,irow,ilay).eq.1.0)angle(icol,irow,ilay)=0.0
          phi=((360.-angle(icol,irow,ilay))*2.0*3.14159)/360.0
          k1 =kd(icol,irow,ilay)*fct(icol,irow,ilay)
          k2 =kd(icol,irow,ilay)
@@ -1164,7 +1166,7 @@ c      double precision rhs(ncol,nrow,nlay)
        enddo
       enddo
       
-!#####cleaning for constant head cells that are only connected to other constant head cells    
+!#####cleaning for constant head cells that are only connected to other constant head/inactive cells    
       allocate(iwrk(ncol,nrow,nlay))
       iwrk = ibound
       do ilay=1,nlay
@@ -1174,12 +1176,12 @@ c      double precision rhs(ncol,nrow,nlay)
          ir1=max(irow-1,1); ir2=min(irow+1,nrow)
          il1=max(ilay-1,1); il2=min(ilay+1,nlay)
          if(iwrk(icol,irow,ilay).lt.0)then         
-          if((iwrk(icol,ir1,ilay).lt.0).and. !N
-     1       (iwrk(icol,ir2,ilay).lt.0).and. !S
-     1       (iwrk(ic1,irow,ilay).lt.0).and. !W
-     1       (iwrk(ic2,irow,ilay).lt.0).and. !E
-     1       (iwrk(icol,irow,il1).lt.0).and. !T
-     1       (iwrk(icol,irow,il2).lt.0))then !B
+          if((iwrk(icol,ir1,ilay).le.0).and. !N
+     1       (iwrk(icol,ir2,ilay).le.0).and. !S
+     1       (iwrk(ic1,irow,ilay).le.0).and. !W
+     1       (iwrk(ic2,irow,ilay).le.0).and. !E
+     1       (iwrk(icol,irow,il1).le.0).and. !T
+     1       (iwrk(icol,irow,il2).le.0))then !B
             ibound(icol,irow,ilay) = 0
             hnew(icol,irow,ilay) = hnoflo
            end if

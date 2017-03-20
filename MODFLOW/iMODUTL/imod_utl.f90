@@ -2246,7 +2246,8 @@ END SUBROUTINE IMOD_UTL_QKSORT
  IF(IEQ.EQ.0)THEN
 
   dx=xc-delr(0)
-  if(xc.gt.delr(0).and.xc.lt.delr(ncol))icol=int(dx/simcsize)+1
+  i=0; if(mod(dx,simcsize).ne.0.0)i=1
+  if(xc.gt.delr(0).and.xc.lt.delr(ncol))icol=int(dx/simcsize)+i !1
   
 !  dx=xc-delr(0)
 !  i =0
@@ -2254,7 +2255,8 @@ END SUBROUTINE IMOD_UTL_QKSORT
 !  icol=(dx/simcsize)+i
 
   dy=delc(0)-yc
-  if(yc.gt.delc(nrow).and.yc.lt.delc(0))irow=int(dy/simcsize)+1
+  i=0; if(mod(dx,simcsize).ne.0.0)i=1
+  if(yc.gt.delc(nrow).and.yc.lt.delc(0))irow=int(dy/simcsize)+i !1
 
 !  dy=delc(0)-yc
 !  i =0
