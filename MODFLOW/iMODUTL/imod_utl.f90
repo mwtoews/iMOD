@@ -2241,17 +2241,27 @@ END SUBROUTINE IMOD_UTL_QKSORT
  REAL :: DX,DY
  INTEGER :: I
 
+ ICOL=0; IROW=0
+ 
  IF(IEQ.EQ.0)THEN
 
-  DX=XC-DELR(0)
-  I =0
-  IF(MOD(DX,SIMCSIZE).NE.0.0)I=1
-  ICOL=(DX/SIMCSIZE)+I
+  dx=xc-delr(0)
+  if(xc.gt.delr(0).and.xc.lt.delr(ncol))icol=int(dx/simcsize)+1
+  
+!  dx=xc-delr(0)
+!  i =0
+!  if(mod(dx,simcsize).ne.0.0)i=1
+!  icol=(dx/simcsize)+i
 
-  DY=DELC(0)-YC
-  I =0
-  IF(MOD(DY,SIMCSIZE).NE.0.0)I=1
-  IROW=(DY/SIMCSIZE)+I
+  dy=delc(0)-yc
+  if(yc.gt.delc(nrow).and.yc.lt.delc(0))irow=int(dy/simcsize)+1
+
+!  dy=delc(0)-yc
+!  i =0
+!  if(mod(dy,simcsize).ne.0.0)i=1
+!  irow=(dy/simcsize)+i
+
+  icol=min(icol,ncol); irow=min(irow,nrow)
 
  ELSE
 

@@ -409,21 +409,23 @@ c end of program
       TPV=(BOTM(IC1,IR1,IL1)+BOTM(IC2,IR2,IL1))/2.0
       BTV=(BOTM(IC1,IR1,IL2)+BOTM(IC2,IR2,IL2))/2.0
 
-!      TPV=(BOTM(IC1,IR1,ILAY-1)+BOTM(IC2,IR2,ILAY-1))/2.0
-!      BTV=(BOTM(IC1,IR1,ILAY)  +BOTM(IC2,IR2,ILAY))/2.0
-
-!      IF(ILAY.EQ.6)THEN  
-!      WRITE(*,*)
-!      ENDIF
-
       !## nett appearance of fault in modellayer
       DZ=MIN(TFV,TPV)-MAX(BFV,BTV)
+
       !## not in current modellayer
-      IF(DZ.LE.0.0)RETURN
-      !## fraction of fault in modellayer
-      DZ=DZ/(TPV-BTV)
+      IF(DZ.LT.0.0)RETURN
+
+      IF(TPV-BTV.GT.0.0)THEN
+       !## fraction of fault in modellayer
+       DZ=DZ/(TPV-BTV)
+      ENDIF
+      
+      !## if dz.eq.0, modellayer has thickness of zero, but fault to be retained
+      IF(DZ.EQ.0.0)DZ=1.0
+      
       !## resistance of fault
       FFCT=FCT; IF(FCT.EQ.0.0)FFCT=10.0E10
+
       !## factor declines quadratically with layer occupation
       HFB1EXPORT_GETFACTOR=FFCT*DZ**4.0
 
