@@ -411,9 +411,16 @@ ELSE
     
     II=II+1
 
-    LINE=TRIM(ROOT)//CHAR(92)//'timeseries'//CHAR(92)//'ipf'//TRIM(IMOD_UTL_ITOS(J))//'_'//TRIM(TS(J)%STVALUE(I)%ID)//'.txt'
-    !## id might contain backslash, create subfolder
-    CALL IMOD_UTL_SWAPSLASH(LINE)
+    !## apply appropriate slash
+    IF(OS.EQ.1)THEN
+     LINE=TRIM(ROOT)//CHAR(92)//'timeseries'//CHAR(92)//'ipf'//TRIM(IMOD_UTL_ITOS(J))//'_'//TRIM(TS(J)%STVALUE(I)%ID)//'.txt'
+    ELSEIF(OS.EQ.2)THEN
+     LINE=TRIM(ROOT)//CHAR(47)//'timeseries'//CHAR(47)//'ipf'//TRIM(IMOD_UTL_ITOS(J))//'_'//TRIM(TS(J)%STVALUE(I)%ID)//'.txt'
+    ENDIF
+ 
+ !   LINE=TRIM(ROOT)//CHAR(92)//'timeseries'//CHAR(92)//'ipf'//TRIM(IMOD_UTL_ITOS(J))//'_'//TRIM(TS(J)%STVALUE(I)%ID)//'.txt'
+ !   !## id might contain backslash, create subfolder
+ !   CALL IMOD_UTL_SWAPSLASH(LINE)
     
     IF(II.GT.1)THEN
      IUTXT(II)=IMOD_UTL_GETUNIT(IUTXT(II-1))

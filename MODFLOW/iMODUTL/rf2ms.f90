@@ -208,8 +208,6 @@ CONTAINS
   READ(IURUN,'(A256)') LINE
   CALL IMOD_UTL_PRINTTEXT('',0); CALL IMOD_UTL_PRINTTEXT('Allocating '//TRIM(MSWP_IDFNAMES(I)),0)
   CALL RF2MF_READ_IDF(LINE,FCT(I),IMP(I),ILAY,CONSTANTE(I),FNAME(I),IOS(I),0,PCAP) !,3)
-  !CALL MODFLOW_READRUN_IDF(LINE,FCT(I),IMP(I),ILAY,CONSTANTE(I),FNAME(I),IOS(I),0,PCAP,3)
-!  write(*,*) fct(i),imp(i),constante(i),trim(fname(i)),ios(i)
  ENDDO
 
  DO II=1,NIDF-(IARMWP*1)  !SIZE(MSWP_IDFNAMES)
@@ -249,10 +247,8 @@ CONTAINS
       inquire(unit=idfc%iu,opened=lop); if(lop)close(idfc%iu)
    endif
 
-   !CALL READBLOCK_R(BUFF,NCOL,NROW,FNAME(I),NODATA(I),SCLTYPE,ISMOOTH,1,(/1/),0)
   ENDIF
   CALL IMOD_UTL_APPLYFCT_R(BUFF,NODATA(I),NROW,NCOL,FCT(I),IMP(I))
-  !IF(ISCEN.EQ.1)CALL SCEN1READSCN(ITMP,BUFF,NCOL,NROW,1,PCAP,1)
   SELECT CASE (I)
    CASE (1);  SIMGRO%IBOUND=INT(BUFF)
    CASE (2);  SIMGRO%LGN=INT(BUFF)
@@ -281,7 +277,13 @@ CONTAINS
 
  IF(MMOD(PPWT).NE.1)SIMGRO%PWT_LEVEL=NODATA(20)
 
-!## make sure that for sopp>0 there is a vxmu value, turn nopp otherwise off
+ !## make sure corner of model are incative, no connection with MetaSWAP
+ SIMGRO(1   ,1   )%IBOUND=0
+ SIMGRO(1   ,NROW)%IBOUND=0
+ SIMGRO(NCOL,1   )%IBOUND=0
+ SIMGRO(NCOL,NROW)%IBOUND=0
+ 
+ !## make sure that for sopp>0 there is a vxmu value, turn nopp otherwise off
  DO IROW=1,NROW; DO ICOL=1,NCOL
   IF(SIMGRO(ICOL,IROW)%VXMU_SOPP.EQ.NODATA(12))SIMGRO(ICOL,IROW)%SOPP=0.0
   IF(SIMGRO(ICOL,IROW)%SOPP.GT.0.0)THEN
