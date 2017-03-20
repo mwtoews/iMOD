@@ -2904,7 +2904,7 @@ TOPICLOOP: DO ITOPIC=1,MAXTOPICS
   IF(IBATCH.EQ.0)CALL UTL_MESSAGEHANDLE(0)
 
   IF(IFORMAT.EQ.1)THEN
-   IF(PMANAGER_SAVERUN(FNAME))THEN
+   IF(PMANAGER_SAVERUN(FNAME,IBATCH))THEN
     IF(IBATCH.EQ.0)THEN
      IF(IRUN.EQ.0)CALL WMESSAGEBOX(OKONLY,INFORMATIONICON,COMMONOK,'Successfully written runfile:'//CHAR(13)//TRIM(FNAME),'Information')
     ELSE
@@ -3023,7 +3023,7 @@ TOPICLOOP: DO ITOPIC=1,MAXTOPICS
  !## namfile
  IF(IMODE.EQ.1)THEN
 
-  WRITE(IU,'(A)') 'TITLE "NAMFILE: '//trim(mname)//'.nam"' !//TRIM(RUNFNAME(INDEX(RUNFNAME,'\',.TRUE.):))//'"'
+  WRITE(IU,'(A)') 'TITLE "NAMFILE: '//TRIM(MNAME)//'.nam"' 
 
   IF(LMODFLOW2005)THEN
    JU=UTL_GETUNIT()
@@ -3033,10 +3033,9 @@ TOPICLOOP: DO ITOPIC=1,MAXTOPICS
    WRITE(IU,'(/A/)') '"'//TRIM(PREFVAL(8))//'" < MF2005.TXT'
   ELSE
    IF(PBMAN%IPEST.EQ.0)THEN
-    WRITE(IU,'(/A/)') '"'//TRIM(PREFVAL(8))//'" "'//trim(mname)//'.nam"' !//TRIM(RUNFNAME(INDEX(RUNFNAME,'\',.TRUE.)+1:))//'"'
+    WRITE(IU,'(/A/)') '"'//TRIM(PREFVAL(8))//'" "'//TRIM(MNAME)//'.nam"' 
    ELSE
-    WRITE(IU,'(/A/)') '"'//TRIM(PREFVAL(8))//'" "'//trim(mname)//'.nam" -ipest ".\modelinput\'//trim(mname)//'.pst1"'
-    !//TRIM(RUNFNAME(INDEX(RUNFNAME,'\',.TRUE.)+1:))//'" -IPEST .\modelinput\'trim(mname)
+    WRITE(IU,'(/A/)') '"'//TRIM(PREFVAL(8))//'" "'//TRIM(MNAME)//'.nam" -ipest ".\modelinput\'//trim(mname)//'.pst1"'
    ENDIF
   ENDIF  
 
@@ -3056,9 +3055,13 @@ TOPICLOOP: DO ITOPIC=1,MAXTOPICS
   
  !## runfile
  ELSEIF(IMODE.EQ.2)THEN
- 
-  WRITE(IU,'(A)') 'START "RUNFILE:'//TRIM(RUNFNAME(INDEX(RUNFNAME,'\',.TRUE.):))//'" /B "'//TRIM(PREFVAL(8))//'" '//'IMODFLOW.RUN'
- 
+
+  IF(IBATCH.EQ.0)THEN
+   WRITE(IU,'(A)') 'START "RUNFILE:'//TRIM(RUNFNAME(INDEX(RUNFNAME,'\',.TRUE.):))//'" /B "'//TRIM(PREFVAL(8))//'" '//'IMODFLOW.RUN'
+  ELSE
+   WRITE(IU,'(A)') 'START "RUNFILE:'//TRIM(RUNFNAME(INDEX(RUNFNAME,'\',.TRUE.):))//'" /B "'//TRIM(PREFVAL(8))//'" '//TRIM(MNAME)//'.run"' 
+  ENDIF
+  
  ENDIF
  CLOSE(IU)
 
@@ -3124,10 +3127,11 @@ TOPICLOOP: DO ITOPIC=1,MAXTOPICS
  END SUBROUTINE PMANAGERSTART
 
  !###======================================================================
- LOGICAL FUNCTION PMANAGER_SAVERUN(FNAME)
+ LOGICAL FUNCTION PMANAGER_SAVERUN(FNAME,IBATCH)
  !###======================================================================
  IMPLICIT NONE
  CHARACTER(LEN=*),INTENT(IN) :: FNAME
+ INTEGER,INTENT(IN) :: IBATCH
  CHARACTER(LEN=52) :: CDATE1,CDATE2
  INTEGER(KIND=8) :: ITIME,JTIME
  INTEGER :: IU,I,J,K,IPER,KPER,N,IBNDCHK,IFVDL
@@ -3157,7 +3161,11 @@ TOPICLOOP: DO ITOPIC=1,MAXTOPICS
  CALL OSD_OPEN(IU,FILE=FNAME,STATUS='REPLACE',ACTION='WRITE,DENYREAD',FORM='FORMATTED')
  IF(IU.EQ.0)RETURN
 
- WRITE(IU,'(A)') CHAR(39)//TRIM(PREFVAL(1))//'\MODELS\'//TRIM(MODELNAME)//CHAR(39)
+ IF(IBATCH.EQ.1)THEN
+  WRITE(IU,'(A)') CHAR(39)//FNAME(1:INDEX(FNAME,'\',.TRUE.)-1)//'\RESULTS'//CHAR(39)
+ ELSE
+  WRITE(IU,'(A)') CHAR(39)//TRIM(PREFVAL(1))//'\MODELS\'//TRIM(MODELNAME)//CHAR(39)
+ ENDIF
  
  N=0; IF(ASSOCIATED(PEST%MEASURES))THEN
   N=SIZE(PEST%MEASURES); IF(PEST%IIPF.EQ.1)N=-1*N
@@ -3559,6 +3567,14 @@ TOPICLOOP: DO ITOPIC=1,MAXTOPICS
  IMPLICIT NONE
  LOGICAL,INTENT(IN) :: LTB
  INTEGER :: IROW,ICOL,ILAY
+ 
+ !## make sure nodata for anisotropy factors is 1.0
+ IF(LANI)THEN
+  !## apply consistency check top/bot
+  DO ILAY=1,NLAY; DO IROW=1,IDF%NROW; DO ICOL=1,IDF%NCOL
+   ANF(ILAY)%X(ICOL,IROW)=MAX(0.0,MIN(1.0,ANF(ILAY)%X(ICOL,IROW)))
+  ENDDO; ENDDO; ENDDO
+ ENDIF
  
  IF(.NOT.LTB)RETURN
  
@@ -6709,6 +6725,11 @@ TOPICLOOP: DO ITOPIC=1,MAXTOPICS
 
  IERROR=0
  
+ SIMGRO(1       ,1       )%IBOUND=0
+ SIMGRO(1       ,IDF%NROW)%IBOUND=0
+ SIMGRO(IDF%NCOL,1       )%IBOUND=0
+ SIMGRO(IDF%NCOL,IDF%NROW)%IBOUND=0
+ 
  !## make sure that for sopp>0 there is a vxmu value, turn nopp otherwise off
  DO IROW=1,IDF%NROW; DO ICOL=1,IDF%NCOL
   IF(SIMGRO(ICOL,IROW)%VXMU_SOPP.EQ.NODATA(12))SIMGRO(ICOL,IROW)%SOPP=0.0
@@ -7328,12 +7349,21 @@ TOPICLOOP: DO ITOPIC=1,MAXTOPICS
 
  !## nett appearance of fault in modellayer
  DZ=MIN(TFV,TPV)-MAX(BFV,BTV)
+
  !## not in current modellayer
  IF(DZ.LE.0.0)RETURN
- !## fraction of fault in modellayer
- DZ=DZ/(TPV-BTV)
+
+ IF(TPV-BTV.GT.0.0)THEN
+  !## fraction of fault in modellayer
+  DZ=DZ/(TPV-BTV)
+ ENDIF
+
+ !## if dz.eq.0, modellayer has thickness of zero, but fault to be retained
+ IF(DZ.EQ.0.0)DZ=1.0
+
  !## resistance of fault
  FFCT=FCT; IF(FCT.EQ.0.0)FFCT=10.0E10
+
  !## factor declines quadratically with layer occupation
  PMANAGER_SAVEMF2005_HFB_GETFACTOR=FFCT*DZ**4.0
 
@@ -7794,6 +7824,13 @@ TOPICLOOP: DO ITOPIC=1,MAXTOPICS
     IF(IDF%X(ICOL,IROW).LT.0.0)IDF%X(ICOL,IROW)=0.0 
    ENDDO; ENDDO
  END SELECT
+ 
+ !## remove input for inactive cells
+ IF(ILAY.GT.0)THEN
+  DO IROW=1,IDF%NROW; DO ICOL=1,IDF%NCOL
+   IF(BND(ILAY)%X(ICOL,IROW).EQ.0)IDF%X(ICOL,IROW)=IDF%NODATA
+  ENDDO; ENDDO
+ ENDIF
  
  !# skip fhb(31) / chd(28) package
  IF(ITOPIC.NE.31.AND.ITOPIC.NE.28)THEN

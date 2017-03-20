@@ -618,9 +618,9 @@ CONTAINS
       !## get fraction
       IF(Z1.GE.BZ.AND.Z.LT.TZ)THEN
        F=(MIN(TZ,Z1)-MAX(BZ,Z))/DZ    
-IF(F.LT.0.0)THEN
-WRITE(*,*) 'DSDS'
-ENDIF
+!IF(F.LT.0.0)THEN
+!WRITE(*,*) 'DSDS'
+!ENDIF
        QT=QT+F*Q1
        NQ=NQ+F 
       ENDIF

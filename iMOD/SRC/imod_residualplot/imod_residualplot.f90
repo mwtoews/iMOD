@@ -188,8 +188,8 @@ CONTAINS
    IF(I.EQ.2)THEN
     N=IPFR(NIPF)%NPOINTS
     IF(ITRANSIENT.EQ.1)THEN
-     READ(LINE,'(I10,2F15.7,I10,3F15.7)') IPFR(NIPF)%D(N),IPFR(NIPF)%X(N),IPFR(NIPF)%Y(N), &
-                                          IPFR(NIPF)%L(N),IPFR(NIPF)%W(N),IPFR(NIPF)%O(N),IPFR(NIPF)%M(N)
+     READ(LINE,'(2F15.7,I10,3F15.7)') IPFR(NIPF)%X(N),IPFR(NIPF)%Y(N), &
+                                      IPFR(NIPF)%L(N),IPFR(NIPF)%W(N),IPFR(NIPF)%O(N),IPFR(NIPF)%M(N)
     ELSE
      READ(LINE,'(2F15.7,I10,6F15.7)') IPFR(NIPF)%X(N),IPFR(NIPF)%Y(N), &
                                       IPFR(NIPF)%L(N),IPFR(NIPF)%O(N),IPFR(NIPF)%M(N), &
@@ -201,7 +201,6 @@ CONTAINS
   IF(I.EQ.1)THEN
    DO J=1,SIZE(IPFR)
     N=IPFR(J)%NPOINTS
-    IF(ITRANSIENT.EQ.1)ALLOCATE(IPFR(J)%D(N))
     ALLOCATE(IPFR(J)%X(N),IPFR(J)%Y(N),IPFR(J)%L(N),IPFR(J)%O(N), &
              IPFR(J)%M(N),IPFR(J)%W(N))
    ENDDO
