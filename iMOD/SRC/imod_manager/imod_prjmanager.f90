@@ -3999,7 +3999,7 @@ TOPICLOOP: DO ITOPIC=1,MAXTOPICS
   CALL PMANAGER_SAVEMF2005_BND(BND(ILAY))
  ENDDO
   
- !## cleaning for constant head cells that are only connected to other constant head cells    
+ !## cleaning for constant head cells that are only connected to other constant head/inactive cells    
  DO ILAY=1,NLAY; DO IROW=1,IDF%NROW; DO ICOL=1,IDF%NCOL
   IC1=MAX(ICOL-1,1); IC2=MIN(ICOL+1,IDF%NCOL)
   IR1=MAX(IROW-1,1); IR2=MIN(IROW+1,IDF%NROW)
