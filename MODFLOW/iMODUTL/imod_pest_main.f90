@@ -255,7 +255,8 @@ CONTAINS
     CALL IMOD_UTL_PRINTTEXT('Error reading PERIOD1,PERIOD2: '//TRIM(LINE),0)
     CALL IMOD_UTL_PRINTTEXT('Busy processing module: '//TRIM(CMOD(PPST)),2)
    ENDIF
-   CALL IMOD_UTL_PRINTTEXT(' @@@ Period '//TRIM(IMOD_UTL_ITOS(I))//': '//TRIM(IMOD_UTL_ITOS(PEST_IPERIOD(I,1)))//'-'//TRIM(IMOD_UTL_ITOS(PEST_IPERIOD(I,2))),-1,IUPESTOUT)
+   CALL IMOD_UTL_PRINTTEXT(' @@@ Period '//TRIM(IMOD_UTL_ITOS(I))//': '//TRIM(IMOD_UTL_ITOS(PEST_IPERIOD(I,1)))// &
+     '-'//TRIM(IMOD_UTL_ITOS(PEST_IPERIOD(I,2))),-1,IUPESTOUT)
   ENDDO
  ENDIF
  CALL IMOD_UTL_PRINTTEXT('',0)
@@ -538,7 +539,8 @@ CONTAINS
  !## fill array zone and set appropriate pointers in type
  DO I=1,SIZE(PARAM)
   IF(PARAM(I)%NODES.GT.0)THEN
-   CALL IMOD_UTL_PRINTTEXT('Parameter '//TRIM(ITOS(I))//' no. of zones no. '//TRIM(ITOS(PARAM(I)%NODES))//' assigned to ptype= '//TRIM(PARAM(I)%PTYPE),0)
+   CALL IMOD_UTL_PRINTTEXT('Parameter '//TRIM(ITOS(I))//' no. of locations '//TRIM(ITOS(PARAM(I)%NODES))// &
+      ' assigned to ptype= '//TRIM(PARAM(I)%PTYPE),0)
 
    IF(PARAM(I)%ZTYPE.EQ.0)THEN
     

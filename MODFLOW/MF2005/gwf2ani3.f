@@ -630,7 +630,6 @@ c ------------------------------------------------------------------------------
        do irow=1,nrow
         do icol=1,ncol
 !########perform scalings
-
           if(kxx(icol,irow,ilay).ne.0.0.and.
      1       kyy(icol,irow,ilay).ne.0.0)then
            detk=(kxx(icol,irow,ilay)*kyy(icol,irow,ilay))-
@@ -642,8 +641,8 @@ c ------------------------------------------------------------------------------
            kxy(icol,irow,ilay)=kxy(icol,irow,ilay)/detk
           endif
 
-        enddo
-       enddo
+        enddo 
+       enddo  
 
        do irow=2,nrow
         do icol=1,ncol-1
@@ -1092,7 +1091,7 @@ c ------------------------------------------------------------------------------
          kxy(icol,irow,ilay)=(k1-k2)*cos(phi)*sin(phi)
          kyy(icol,irow,ilay)=k1*sin(phi)**2.0+k2*cos(phi)**2.0
         end do
-       end do
+       end do 
       end do
 
       return

@@ -68,7 +68,7 @@ subroutine pest1alpha_grid(ptype,a,nrow,ncol,nlay,a2)
 
 ! modules
 use imod_utl, only: imod_utl_printtext,imod_utl_itos,imod_utl_rtos
-use global, only: lipest
+use global, only: lipest, ibound
 
 #ifdef IPEST
 use pestvar, only: param, pest_iter,lgrad,llnsrch,pest_igrad,iupestout
@@ -110,7 +110,7 @@ if(pest_iter.eq.0)then
 
       if (trim(param(i)%ptype).ne.trim(ptype)) cycle
 
-      ils=param(i)%ils ! layer
+      ils=param(i)%ils !## layer
 
       IF(PARAM(I)%ZTYPE.EQ.0)THEN
 
@@ -119,13 +119,18 @@ if(pest_iter.eq.0)then
        case('KD','KH','KV','VA','SC','AF')
           do j=1,param(i)%nodes
              irow=param(i)%irow(j); icol=param(i)%icol(j)
-             param(i)%x(j)=a(icol,irow,ils)*param(i)%f(j)
+             !## only modify active/constant head nodes
+             if(ibound(icol,irow,ils).ne.0)then
+              param(i)%x(j)=a(icol,irow,ils)*param(i)%f(j)
+             endif
           enddo
        case('VC')   !## vertical c values
           do j=1,param(i)%nodes
              irow=param(i)%irow(j); icol=param(i)%icol(j)
-             c = 1/(a(icol,irow,ils)+tiny)
-             param(i)%x(j)=c*param(i)%f(j)
+             if(ibound(icol,irow,ils).ne.0)then
+              c = 1/(a(icol,irow,ils)+tiny)
+              param(i)%x(j)=c*param(i)%f(j)
+             endif
           enddo
        case('AA')   !## anisotropy angle
           if (.not.present(a2)) then
@@ -133,8 +138,10 @@ if(pest_iter.eq.0)then
           end if
           do j=1,param(i)%nodes
              irow=param(i)%irow(j); icol=param(i)%icol(j)
-             if (a2(icol,irow,ils).lt.1.0) then
+             if(ibound(icol,irow,ils).ne.0)then
+              if (a2(icol,irow,ils).lt.1.0) then
                 param(i)%x(j)=a(icol,irow,ils)*param(i)%f(j)
+              endif
              endif
           enddo
        case default
@@ -154,24 +161,27 @@ do i=1,size(param)
    !## skip pilot-points
    IF(PARAM(I)%ZTYPE.EQ.1)CYCLE
 
-   fct=param(i)%alpha(1); ils=param(i)%ils ! layer
-!   fct=exp(fct) ! scaling
+   fct=param(i)%alpha(1); ils=param(i)%ils !## layer
    IF(PARAM(I)%LOG)FCT=EXP(FCT)
 
    select case (trim(ptype))
    case('KD','KH','KV','VA','SC','AF')
       do j=1,param(i)%nodes
          irow=param(i)%irow(j); icol=param(i)%icol(j)
-         ppart             =a(icol,irow,ils)-param(i)%x(j)
-         a(icol,irow,ils)=ppart+param(i)%x(j)*fct
+         if(ibound(icol,irow,ils).ne.0)then
+           ppart             =a(icol,irow,ils)-param(i)%x(j)
+           a(icol,irow,ils)=ppart+param(i)%x(j)*fct
+         endif
       enddo
    case('VC')   !## vertical c values
       do j=1,param(i)%nodes
          irow=param(i)%irow(j); icol=param(i)%icol(j)
-         c = 1/(a(icol,irow,ils)+tiny)
-         ppart = c-param(i)%x(j)
-         c = ppart + param(i)%x(j)*fct
-         a(icol,irow,ils)=1/(c+tiny)
+         if(ibound(icol,irow,ils).ne.0)then
+          c = 1/(a(icol,irow,ils)+tiny)
+          ppart = c-param(i)%x(j)
+          c = ppart + param(i)%x(j)*fct
+          a(icol,irow,ils)=1/(c+tiny)
+         endif
       enddo
    case('AA')   !## anisotropy angle
       if (.not.present(a2)) then
@@ -179,16 +189,21 @@ do i=1,size(param)
       end if
       do j=1,param(i)%nodes
          irow=param(i)%irow(j); icol=param(i)%icol(j)
-         if (a2(icol,irow,ils).lt.1.0) then
+         if(ibound(icol,irow,ils).ne.0)then
+          if (a2(icol,irow,ils).lt.1.0) then
             ppart           =a(icol,irow,ils)-param(i)%x(j)
             a(icol,irow,ils)=ppart+param(i)%x(j)*fct
+          endif
          endif
       enddo
    case default
       call imod_utl_printtext('Something went wrong for PEST, missing parameter '//trim(ptype),2)
    end select
-   line=' * '//param(i)%ptype//' adjusted ('//trim(imod_utl_itos(param(i)%nodes))//')with alpha='//trim(imod_utl_rtos(fct,'f',7))
-   call imod_utl_printtext(trim(line),-1,iupestout)
+   if(param(i)%igroup.gt.0)then
+    line=' * '//param(i)%ptype//' adjusted ('//trim(imod_utl_itos(param(i)%nodes))// &
+      ')with alpha='//trim(imod_utl_rtos(fct,'f',7))
+    call imod_utl_printtext(trim(line),-1,iupestout)
+   endif
 end do
 #endif
 
@@ -210,7 +225,8 @@ end do
 
     FCT=PARAM(I)%ALPHA(1)
     IF(K.EQ.2)THEN
-     LINE=' * Module '//PARAM(I)%PTYPE//' adjusted ('//TRIM(ITOS(SIZE(PARAM(I)%XY,1)))//') location(s) as PILOTPOINT with alpha='//TRIM(RTOS(EXP(FCT),'F',7))
+     LINE=' * Module '//PARAM(I)%PTYPE//' adjusted ('//TRIM(ITOS(SIZE(PARAM(I)%XY,1)))// &
+         ') location(s) as PILOTPOINT with alpha='//TRIM(RTOS(EXP(FCT),'F',7))
      CALL imod_utl_printtext(TRIM(LINE),1) 
     ENDIF
     
