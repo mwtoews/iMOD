@@ -55,7 +55,8 @@ INTEGER :: NRUNFILES,NSCENFILES,NSDFFILES,NRESULTDIR,NSCENARIOS,&
            IBNDCHK, &  !## boundary check
            IMERGE,  &  !## PKS-package: option idf-merge output files
            PARTOPT, &  !## PKS-package: methode of subdomain partition
-           NMAXCORES   !## amount of system cores available for parallel simulation
+           NMAXCORES, &!## amount of system cores available for parallel simulation
+           NCORES      !## amount of cores selected for model simulation 
 REAL :: MDLBUFFER,  &  !## buffersize
         SIMCSIZE,   &  !## cellsize
         MAXSIMCSIZE,&  !## max.cellsize
