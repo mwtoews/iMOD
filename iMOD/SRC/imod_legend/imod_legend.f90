@@ -1394,8 +1394,8 @@ CONTAINS
  INTEGER,PARAMETER :: SAMPFACT=2000  !## inital number of samples
  INTEGER,INTENT(IN) :: JPLOT
  CHARACTER(LEN=3),INTENT(IN) :: LEGOPTION,LEGDOMAIN
- INTEGER :: N,I,J,ICOL,IROW,NODES,NUNIQUE,SAMPLE,LNCOL,LNROW,NC1,NC2,NR1,NR2,IRAT,IRAT1,IPLOT,IP,JP,IDR,IR
- REAL :: XMIN,XMAX,YMIN,YMAX,IDFVALUE,DMIN,DMAX,DR
+ INTEGER :: N,I,J,ICOL,IROW,NODES,NUNIQUE,SAMPLE,LNCOL,LNROW,NC1,NC2,NR1,NR2,IRAT,IRAT1,IPLOT,IP,JP,IDR,IR,I1,I2
+ REAL :: XMIN,XMAX,YMIN,YMAX,IDFVALUE,DMIN,DMAX,DR,X,DH,H,DX
  REAL,POINTER,DIMENSION(:) :: IDFVAL=>NULL()
  LOGICAL :: LTOOMUCH,LEX
  CHARACTER(LEN=50) :: LEGTXT,TXT1,TXT2
@@ -1492,36 +1492,40 @@ CONTAINS
 
     !## sort vector from small to large
     CALL WSORT(IDFVAL,1,NODES)
-    !## ensure minimal and maximal value are in legend
-    IDFVAL(1)=DMIN; IDFVAL(NODES)=DMAX
-    !## sample distance
-    IDR=NODES/(MXCLR-1); IDR=IDR+1
+
+    !## remove duplicates
+    J=1; DO I=2,NODES
+     IF(UTL_EQUALS_REAL(IDFVAL(I),IDFVAL(J))CYCLE
+!     IF(IDFVAL(I).EQ.IDFVAL(J))CYCLE
+     J=J+1; IDFVAL(J)=IDFVAL(I)
+    ENDDO
+
+    !## add one artificial if only one value is found
+    IF(J.EQ.1)THEN
+     IDFVAL(1)=IDFVAL(1)-0.5
+     IDFVAL(2)=IDFVAL(1)+1.0
+     J=J+1
+    ENDIF
+
+    !## number of unique values
+    NODES=J
+    
+    !## stepsize
+    DX=REAL(NODES)/REAL(MXCLR) !-1)
 
     DO IPLOT=IP,JP 
      IF(ACTLIST(IPLOT).NE.1)CYCLE
 
-     MP(IPLOT)%LEG%CLASS(0)=IDFVAL(NODES)
-
-     N=0; IR=NODES
-     DO
-      IR=IR-IDR; IF(IR.LE.0)EXIT
-      !## add new, unique class
-      IF(IDFVAL(IR).NE.MP(IPLOT)%LEG%CLASS(N))THEN
-       N=N+1; MP(IPLOT)%LEG%CLASS(N)=IDFVAL(IR)
-      ENDIF
+     X=0.0-DX; DO I=0,MXCLR
+      X = X+DX
+      I1= MAX(1,MIN(NODES,FLOOR(X))); I2=MAX(1,MIN(NODES,CEILING(X)))
+      DH= IDFVAL(I2)-IDFVAL(I1)
+      H =IDFVAL(I1)+(X-I1)*DH
+      MP(IPLOT)%LEG%CLASS(I)=H
      END DO
-
-     !## number of classes
-     N=N+1; N=MIN(N,MXCLR); MP(IPLOT)%LEG%NCLR=N
-     !## make sure to apply the lowest value on the first class
-     MP(IPLOT)%LEG%CLASS(N)=IDFVAL(1)
      
-     IF(MP(IPLOT)%LEG%NCLR.EQ.1)THEN
-      IF(MP(IPLOT)%LEG%CLASS(0).EQ.MP(IPLOT)%LEG%CLASS(1))THEN
-       MP(IPLOT)%LEG%CLASS(0)=MP(IPLOT)%LEG%CLASS(0)+0.5
-       MP(IPLOT)%LEG%CLASS(1)=MP(IPLOT)%LEG%CLASS(1)-0.5
-      ENDIF
-     ENDIF  
+     !## number of classes
+     MP(IPLOT)%LEG%NCLR=MXCLR
 
     ENDDO
 
@@ -1573,8 +1577,6 @@ CONTAINS
     ELSE
      LTOOMUCH=.FALSE.
     ENDIF
-
-!    CALL WSORT(IDFVAL,1,NUNIQUE,1)
 
     MP(IPLOT)%LEG%NCLR=MIN(MXCLASS,NUNIQUE)
     DO I=0,NUNIQUE

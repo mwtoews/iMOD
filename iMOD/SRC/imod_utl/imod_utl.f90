@@ -618,9 +618,6 @@ CONTAINS
       !## get fraction
       IF(Z1.GE.BZ.AND.Z.LT.TZ)THEN
        F=(MIN(TZ,Z1)-MAX(BZ,Z))/DZ    
-!IF(F.LT.0.0)THEN
-!WRITE(*,*) 'DSDS'
-!ENDIF
        QT=QT+F*Q1
        NQ=NQ+F 
       ENDIF
@@ -630,7 +627,7 @@ CONTAINS
     Z1=Z
     !## apply indicator
     IF(INDICATOR.GT.0)THEN
-     Q1=0.0; IF(UTL_CAP(QD(ICOL),'U').EQ.THRESHOLD)Q1=1.0
+     Q1=0.0; IF(TRIM(UTL_CAP(QD(ICOL),'U')).EQ.TRIM(UTL_CAP(THRESHOLD,'U')))Q1=1.0
     ELSE
      READ(QD(ICOL),*) Q1
     ENDIF

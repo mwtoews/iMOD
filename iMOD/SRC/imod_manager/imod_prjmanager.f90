@@ -2735,7 +2735,7 @@ TOPICLOOP: DO ITOPIC=1,MAXTOPICS
      IF(.NOT.IDFREADSCALE(IDF%FNAME,IDF,SCL_UP,SCL_D,1.0,0))RETURN
     ENDIF
     !## save array, do not correct for boundary condition as we not yet know for what layer the zone will apply
-    IF(.NOT.PMANAGER_SAVEMF2005_MOD_U2DREL(TRIM(DIR)//'\PST1\ZONE_IZ'//TRIM(ITOS(I))//'.ARR',IDF,1,IU,1,0))RETURN
+    IF(.NOT.PMANAGER_SAVEMF2005_MOD_U2DREL(TRIM(DIR)//'\PST1\ZONE_IZ'//TRIM(ITOS(I))//'.ARR',IDF,0,IU,1,0))RETURN
    ELSE
     WRITE(IU,'(A)') TRIM(LINE)    
    ENDIF

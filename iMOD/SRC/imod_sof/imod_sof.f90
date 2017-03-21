@@ -47,15 +47,16 @@ TYPE(BPXOBJ),ALLOCATABLE,DIMENSION(:),PRIVATE :: BPX,PPX,TPX
 CONTAINS
 
  !###======================================================================
- SUBROUTINE SOF_EXPORT(IDF,N,IFORMAT,RAIN,MINFRICTION)
+ SUBROUTINE SOF_EXPORT(IDF,N,IFORMAT,RAIN,MINFRICTION,QHW)
  !###======================================================================
  IMPLICIT NONE
  INTEGER,INTENT(IN) :: N,IFORMAT,MINFRICTION
  REAL,INTENT(INOUT) :: RAIN
+ REAL,INTENT(IN),DIMENSION(:,:),POINTER :: QHW
  TYPE(IDFOBJ),INTENT(INOUT),DIMENSION(N) :: IDF
  REAL,DIMENSION(2) :: LX,LY
  INTEGER :: I,IROW,ICOL,IC,IR,JC,JR,IU,JU,MF,NF,NR
- REAL :: SSX,SSY,A,DX,DY,RCOND,RSTAGE,RBOT !,RINF
+ REAL :: SSX,SSY,A,DX,DY,RCOND,RSTAGE,RBOT
  
  !## read files
  DO I=1,4; IF(.NOT.IDFREAD(IDF(I),IDF(I)%FNAME,1))THEN; ENDIF; ENDDO
@@ -139,7 +140,7 @@ CONTAINS
 
    !## fill in river
 !   CALL SOF_EXPORT_FILL_OLD((/JC,IC/),(/JR,IR/),LX,LY,IDF,RAIN,JU,MF,NR)
-   CALL SOF_EXPORT_FILL((/JC,IC/),(/JR,IR/),LX,LY,IDF,RAIN,JU,MF,NR,MINFRICTION)
+   CALL SOF_EXPORT_FILL((/JC,IC/),(/JR,IR/),LX,LY,IDF,RAIN,JU,MF,NR,MINFRICTION,QHW)
 
    !## skip further trace, is visited location already
    IF(IDF(9)%X(IC,IR).EQ.2.0)EXIT
@@ -183,7 +184,7 @@ CONTAINS
  END SUBROUTINE SOF_EXPORT
  
  !###======================================================================
- SUBROUTINE SOF_EXPORT_FILL(IC,IR,LX,LY,IDF,RAIN,JU,MF,NR,MINFRICTION)
+ SUBROUTINE SOF_EXPORT_FILL(IC,IR,LX,LY,IDF,RAIN,JU,MF,NR,MINFRICTION,QHW)
  !###======================================================================
  IMPLICIT NONE
  REAL,PARAMETER :: MRC=0.03 !## clean, straight, full stage, no rifts or deep pools
@@ -192,10 +193,11 @@ CONTAINS
  INTEGER,INTENT(INOUT) :: NR
  INTEGER,INTENT(IN),DIMENSION(:) :: IR,IC
  INTEGER,INTENT(IN) :: JU,MF,MINFRICTION
+ REAL,INTENT(IN),DIMENSION(:,:),POINTER :: QHW
  REAL,INTENT(IN),DIMENSION(:) :: LX,LY
  REAL,INTENT(IN) :: RAIN
  TYPE(IDFOBJ),INTENT(INOUT),DIMENSION(:) :: IDF
- REAL :: D,RCOND,RSTAGE,RBOT,RINF,Q,DH,S,Y,W,PERM,WP,F
+ REAL :: D,RCOND,RSTAGE,RBOT,RINF,Q,DH,S,H,W,DW,DQ,PERM,WP,F
  INTEGER :: I
  
  !## half of the distance for each cell
@@ -208,28 +210,48 @@ CONTAINS
 
   Q=RAIN*F
 
-  !## absolute terrain difference
-  DH    =ABS(IDF(2)%X(IC(1),IR(1)))
-  !## slope
-  S     =DH/(D*2.0)
-  IF(S.EQ.0.0)THEN
-   Y=0.0
-   W=0.0
+  !## use qhw relations
+  IF(ASSOCIATED(QHW))THEN
+
+   CALL POL1LOCATE(QHW(:,1),SIZE(QHW,2),REAL(Q,8),I)
+   IF(I.GT.1.AND.I.LE.SIZE(QHW,1))THEN
+    DQ=QHW(I,1)-QHW(I-1,1)
+    F =(Q-QHW(I-1,1))/DQ
+    DH=QHW(I,2)-QHW(I-1,2)
+    H =QHW(I-1,2)+F*DH
+    DW=QHW(I,3)-QHW(I-1,3)
+    W =QHW(I-1,3)+F*DW
+    WP=W+2.0*H
+   ELSE
+    H =0.0
+    WP=0.0
+   ENDIF   
+  
   ELSE
 
-!## iets beter zodat er wel een w uitkomt, die is essentieel ...
+   !## absolute terrain difference
+   DH    =ABS(IDF(2)%X(IC(1),IR(1)))
+   !## slope
+   S     =DH/(D*2.0)
+   IF(S.EQ.0.0)THEN
+    H=0.0
+    W=0.0
+   ELSE
 
-   !## waterdepth (assuming waterwidth of 1.0)
-   W=1.0
-   Y=((Q*MRC)/(W*SQRT(S)))**(3.0/5.0)
+    !## waterdepth (assuming waterwidth of 1.0)
+    W=1.0
+    H=((Q*MRC)/(W*SQRT(S)))**(3.0/5.0)
 
-  ENDIF
+   ENDIF
 
-  !## limit values
-  Y=MIN(2.5,Y)
+   !## limit values
+   H=MIN(2.5,H)
   
-  !## wetted perimeter
-  WP=2*Y+W !Y
+   !## wetted perimeter
+   WP=2*H+W
+  
+  ENDIF
+  
   RCOND =(D*WP)/C
   
   RINF=1.0
@@ -238,7 +260,7 @@ CONTAINS
    IDF(5)%X(IC(I),IR(I))=IDF(5)%X(IC(I),IR(I))+RCOND        !## total conductance
    !## assign to from pixels only
    RSTAGE=IDF(4)%X(IC(I),IR(I))
-   RBOT  =IDF(4)%X(IC(I),IR(I))-Y   
+   RBOT  =IDF(4)%X(IC(I),IR(I))-H   
 !   RINF=1.0; IF(RSTAGE-RBOT.LT.0.10)RINF=0.0
    IDF(6)%X(IC(I),IR(I))=IDF(6)%X(IC(I),IR(I))+RSTAGE*RCOND !## stage
    IDF(7)%X(IC(I),IR(I))=IDF(7)%X(IC(I),IR(I))+RBOT*RCOND   !## bottom
@@ -247,23 +269,17 @@ CONTAINS
 
   !## assign stream to ipf file
   IF(JU.GT.0)THEN
-   !## verhouding w and d is vergelijking y=0.5*w oid
-   W     =2*Y
-   W=MAX(0.1,W)
-!   IF(W.GT.0.0)THEN
 
     DO I=1,2
      NR=NR+1
      !## assign to from pixels only
      PERM  =1.0
      RSTAGE=IDF(4)%X(IC(I),IR(I))
-     RBOT  =IDF(4)%X(IC(I),IR(I))-Y
+     RBOT  =IDF(4)%X(IC(I),IR(I))-H
      WRITE(JU,'(6(G15.7,A),2(I4,A))') LX(I),',',LY(I),','//TRIM(ITOS(MF))//',Segment_'//TRIM(ITOS(MF))//',',W,',',RSTAGE,',', &
           RBOT,',',PERM,',',IC(I),',',IR(I)
     ENDDO
-!   ELSE
-!    WRITE(*,*) 'Width has to be larger than 0.0'
-!   ENDIF
+
   ENDIF
  
  ENDIF
