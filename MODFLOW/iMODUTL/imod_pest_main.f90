@@ -44,15 +44,15 @@ CONTAINS
  !###====================================================================
  SUBROUTINE PEST1INIT(ioption,infile,IOUT,root,nparam)
  !###====================================================================
- use rf2mf_module, only: ncol, nrow, nlay, nper
+ USE RF2MF_MODULE, ONLY: NCOL, NROW, NLAY, NPER
  IMPLICIT NONE
- character(len=*),intent(in) :: infile,root
- integer,intent(in) :: ioption,IOUT
- integer,intent(in),OPTIONAL :: nparam
- INTEGER :: IOS,I,J,JJ,N,IZ,IROW,ICOL,JU,NIPF,MIPF,K,JS,nlines
+ CHARACTER(LEN=*),INTENT(IN) :: INFILE,ROOT
+ INTEGER,INTENT(IN) :: IOPTION,IOUT
+ INTEGER,INTENT(IN),OPTIONAL :: NPARAM
+ INTEGER :: IOS,I,J,JJ,N,IZ,IROW,ICOL,JU,NIPF,MIPF,K,JS,NLINES
  REAL :: NODATA,TF,F
- logical :: lop,LEX
- character(len=52) :: cl
+ LOGICAL :: LOP,LEX
+ CHARACTER(LEN=52) :: CL
  
  if(present(nparam))nlines=nparam
  
@@ -102,11 +102,10 @@ CONTAINS
      IF(NPER.EQ.1)TS(JJ)%IPFTYPE=1; IF(NPER.GT.1)TS(JJ)%IPFTYPE=2
      READ(LINE,*,IOSTAT=IOS) TS(JJ)%IPFNAME
     ENDIF
-   !## swap back again
-   !OS=JS;
+    !## swap back again
     CALL IMOD_UTL_SWAPSLASH(TS(JJ)%IPFNAME)
     IF(NPER.EQ.1.AND. TS(JJ)%IPFTYPE.GE.2)CALL IMOD_UTL_PRINTTEXT('For steady-state simulation IPFTYPE(.)=1',2)
-    IF(NPER.GT.1.AND.(TS(JJ)%IPFTYPE.LT.2.OR.TS(JJ)%IPFTYPE.GT.3))CALL IMOD_UTL_PRINTTEXT('for transient simulations IPFTYPE(.)=2 or IPFTYPE(.)=3',2)
+    IF(NPER.GT.1.AND.(TS(JJ)%IPFTYPE.LT.2))CALL IMOD_UTL_PRINTTEXT('for transient simulations IPFTYPE(.)=2',2)
     INQUIRE(FILE=TS(JJ)%IPFNAME,EXIST=LEX)
     CALL IMOD_UTL_PRINTTEXT('  - '//TRIM(TS(JJ)%IPFNAME(INDEX(TS(JJ)%IPFNAME,'\',.TRUE.)+1:)),0)
     IF(.NOT.LEX)CALL IMOD_UTL_PRINTTEXT('IPF-file does not exist',2)
@@ -628,9 +627,6 @@ CONTAINS
  ENDDO
  WRITE(IUPESTPROGRESS,'(30X,A)') TRIM(BLINE) 
  FLUSH(IUPESTPROGRESS)
-
-! !## dump initial factors
-! CALL PESTDUMPFCT(IUPESTOUT)
 
  !## close all files ...
  CALL PEST1CLOSELOGFILES()
@@ -1490,10 +1486,14 @@ CONTAINS
   IF(LSVD)THEN
 
    EIGWTHRESHOLD=0.0 !% explained variance
+   WRITE(IUPESTOUT,'(/A10,2A15)') 'NE','EIGW(NE)','EIGWTHRESHOLD'
    DO NE=1,NP
     EIGWTHRESHOLD=EIGWTHRESHOLD+EIGW(NE)
+    WRITE(IUPESTOUT,'(I10,2F15.7)') NE,EIGW(NE),EIGWTHRESHOLD
     IF(EIGWTHRESHOLD.GT.99.0)EXIT
    ENDDO
+   WRITE(IUPESTOUT,'(/A/)') 'Use selected eigenvalues to project on limited space'
+
    ALLOCATE(P(NP,NE)); P(:,1:NE)=EIGV(:,1:NE); ALLOCATE(M(NE,NE),N(NE),RU(NE),PT(NE,NP))
 
    !## compute pp=pt(jqj) on eigen-space
@@ -1534,6 +1534,7 @@ CONTAINS
    ENDDO; ENDDO
 
    DEALLOCATE(P,PT,M,N,RU,INDX,B)
+  
   ELSE
 
    !## compute inverse of (JQJ)-1 -> B
@@ -1592,8 +1593,9 @@ CONTAINS
  LOGICAL,INTENT(IN) :: LVARIANCE
  DOUBLE PRECISION,DIMENSION(NP,NP),INTENT(INOUT) :: JQJ,EIGV,COV
  DOUBLE PRECISION,DIMENSION(NP),INTENT(INOUT) :: EIGW
+ DOUBLE PRECISION :: DET
  INTEGER :: I,J,IP1,IP2,II,N,ISING
- REAL :: DF1,DF2,DJ1,DJ2,B1,TV,TEV,CB,DET,KAPPA
+ REAL :: DF1,DF2,DJ1,DJ2,B1,TV,TEV,CB,KAPPA
  DOUBLE PRECISION,ALLOCATABLE,DIMENSION(:,:) :: B
  REAL,ALLOCATABLE,DIMENSION(:,:) :: COR
  DOUBLE PRECISION,ALLOCATABLE,DIMENSION(:) :: E
@@ -1682,11 +1684,8 @@ CONTAINS
   KAPPA=SQRT(EIGW(1))/SQRT(EIGW(NP))
   WRITE(IUPESTOUT,'(/A,3F15.7/)') 'Condition Number:',SQRT(EIGW(1)),SQRT(EIGW(NP)),KAPPA
   WRITE(IUPESTOUT,'(/A,3F15.7/)') 'Condition Number (kappa):',LOG(KAPPA)
-  WRITE(IUPESTOUT,'(/A/)') '>>> Inversion is a concern due to multicollinearity (kappa > 15) <<<'
-  WRITE(IUPESTOUT,'(/A/)') '>>> Inversion is highly questionable due to multicollinearity (kappa > 30) <<<'
-
-!  !## condition number
-!  WRITE(IUPESTOUT,'(/A,3F15.7/)') 'Condition Number:',SQRT(EIGW(1)),SQRT(EIGW(NP)),SQRT(EIGW(1))/SQRT(EIGW(NP))
+  WRITE(IUPESTOUT,'(/A)') '>>> If Kappa > 15, inversion is a concern due to parameters that are highly correlated <<<'
+  WRITE(IUPESTOUT,'(A/)') '>>> If Kappa > 30, inversion is highly questionable due to parameters that are highly correlated <<<'
   
   !## compute inverse of (JQJ)-1 -> B - covariance matrix
   CALL IMOD_UTL_LUDECOMP_DBL(JQJ,INDX,NP,ISING)
@@ -1982,6 +1981,8 @@ CONTAINS
  INTEGER,ALLOCATABLE,DIMENSION(:) :: IDATE
  REAL,DIMENSION(2) :: PC,PM,DYN !## percentiles computed/measured
 
+ CALL IMOD_UTL_PRINTTEXT('',0); CALL IMOD_UTL_PRINTTEXT(' Getting residuals from IPF files ...',0)
+
  DO I=1,ABS(IIPF)
 
   !## read ipf steady-state
@@ -2235,6 +2236,8 @@ CONTAINS
 
  ENDIF
  
+ CALL IMOD_UTL_PRINTTEXT('',0); CALL IMOD_UTL_PRINTTEXT(' Finished Getting residuals from IPF files ...',0)
+
  END SUBROUTINE PEST_GETJ
 
  !###====================================================================
@@ -2436,7 +2439,7 @@ CONTAINS
  END SUBROUTINE PEST1CHK
 
  !###========================================================================
- REAL FUNCTION PEST_FIND_DET(JQJ,N)
+ DOUBLE PRECISION FUNCTION PEST_FIND_DET(JQJ,N)
  !###========================================================================
  IMPLICIT NONE
  INTEGER,INTENT(IN) :: N

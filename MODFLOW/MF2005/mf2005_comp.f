@@ -3049,7 +3049,7 @@ c ------------------------------------------------------------------------------
 !...     locals
       logical :: ok, valid
       integer :: jj, i, ilay, irow, icol
-      real :: x, y
+      real :: x, y, w
 !.......................................................................
 
       ok = .true.
@@ -3083,11 +3083,13 @@ c ------------------------------------------------------------------------------
         do i = 1, ts(jj)%nrowipf
            x = ts(jj)%stvalue(i)%x
            y = ts(jj)%stvalue(i)%y
+           w = ts(jj)%stvalue(i)%w
            ilay = ts(jj)%stvalue(i)%ilay
            valid = .true.
            if (x.le.coord_xll_nb .or. x.ge.coord_xur_nb) valid = .false.
            if (y.le.coord_yll_nb .or. y.ge.coord_yur_nb) valid = .false.
            if (ilay.lt.1 .or. ilay.gt.nlay) valid = .false.
+           if(w.eq.0.0)valid=.false.
            ts(jj)%stvalue(i)%valid = valid
            if (valid) then ! store indices
               icol = ts(jj)%stvalue(i)%icol

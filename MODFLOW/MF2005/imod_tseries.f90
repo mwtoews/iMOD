@@ -64,13 +64,13 @@ DO IR=IROW-1,IROW+1
 ENDDO
 
 !## skip dry cells as well - make them nodata
-if(IUNIT(IULPF).GT.0)then
- if(LAYWET(ilay).NE.0)then
-  do i=1,size(zcrd,1); do j=1,size(zcrd,2)
-   if(zcrd(i,j).eq.HDRY)zcrd(i,j)=hnoflo
-  enddo; enddo
- endif
-endif
+IF(IUNIT(IULPF).GT.0)THEN
+ IF(LAYWET(ILAY).NE.0)THEN
+  DO I=1,SIZE(ZCRD,1); DO J=1,SIZE(ZCRD,2)
+   IF(ZCRD(I,J).EQ.HDRY)ZCRD(I,J)=HNOFLO
+  ENDDO; ENDDO
+ ENDIF
+ENDIF
 
 CALL IMOD_UTL_POL1INTMAIN(1,1,3,3,XCRD,YCRD,ZCRD,(/X,X/),(/Y,Y/),XINT,4,HNOFLO)
 

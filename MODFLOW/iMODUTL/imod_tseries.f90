@@ -69,7 +69,6 @@ CHARACTER(LEN=1000) :: BIGLINE
 
 IF(IIPF.EQ.0)RETURN
 
-!ICYCLI=0
 NREC  =0
 
 CALL IMOD_UTL_OSSYSTEM()
@@ -240,18 +239,12 @@ ELSE
   ENDIF
   LINE=TRIM(root)//CHAR(92)//'timeseries'//CHAR(92)//TS(JJ)%IPFNAME(I:)
   CALL IMOD_UTL_SWAPSLASH(LINE)
-!  IF(JJ.GT.1)THEN
-!   TS(JJ)%IUIPF=IMOD_UTL_GETUNIT(TS(JJ-1)%IUIPF)
-!  ELSE
-!   TS(JJ)%IUIPF=IMOD_UTL_GETUNIT()
-!  ENDIF
-!  OPEN(TS(JJ)%IUIPF,FILE=LINE,FORM='FORMATTED',ACTION='WRITE',STATUS='UNKNOWN') 
   CALL IMOD_UTL_OPENASC(TS(JJ)%IUIPF,LINE,'W')
 
   ! check for valid data
-  NVALID = 0
+  NVALID=0
   DO I=1,TS(JJ)%NROWIPF
-    IF (TS(JJ)%STVALUE(I)%VALID) NVALID = NVALID + 1
+   IF(TS(JJ)%STVALUE(I)%VALID)NVALID=NVALID+1
   END DO
   CALL IMOD_UTL_PRINTTEXT('        * Assigned '//TRIM(IMOD_UTL_ITOS(NVALID))//' locations from total of '//TRIM(IMOD_UTL_ITOS(TS(JJ)%NROWIPF)),0)
   CALL IMOD_UTL_PRINTTEXT('          >>> NO locations will be used that are WITHIN the buffer-zone <<<',0)
@@ -267,7 +260,7 @@ ELSE
   write(ts(jj)%iuipf,'(a)') '4,txt'
 
   DO I=1,TS(JJ)%NROWIPF
-   IF (.NOT.TS(JJ)%STVALUE(I)%VALID) CYCLE  ! skip invalid data
+   IF(.NOT.TS(JJ)%STVALUE(I)%VALID) CYCLE  ! skip invalid data
    BIGLINE=TRIM(IMOD_UTL_RTOS(TS(JJ)%STVALUE(I)%X,'F',3))//','//TRIM(IMOD_UTL_RTOS(TS(JJ)%STVALUE(I)%Y,'F',3))//','// &
            TRIM(IMOD_UTL_ITOS(TS(JJ)%STVALUE(I)%ILAY))   //',"ipf'//TRIM(IMOD_UTL_ITOS(JJ))//'_'//TRIM(TS(JJ)%STVALUE(I)%ID)//'",'// &
            TRIM(IMOD_UTL_RTOS(TS(JJ)%STVALUE(I)%W,'*',2))
@@ -417,11 +410,7 @@ ELSE
     ELSEIF(OS.EQ.2)THEN
      LINE=TRIM(ROOT)//CHAR(47)//'timeseries'//CHAR(47)//'ipf'//TRIM(IMOD_UTL_ITOS(J))//'_'//TRIM(TS(J)%STVALUE(I)%ID)//'.txt'
     ENDIF
- 
- !   LINE=TRIM(ROOT)//CHAR(92)//'timeseries'//CHAR(92)//'ipf'//TRIM(IMOD_UTL_ITOS(J))//'_'//TRIM(TS(J)%STVALUE(I)%ID)//'.txt'
- !   !## id might contain backslash, create subfolder
- !   CALL IMOD_UTL_SWAPSLASH(LINE)
-    
+     
     IF(II.GT.1)THEN
      IUTXT(II)=IMOD_UTL_GETUNIT(IUTXT(II-1))
     ELSE
@@ -489,7 +478,7 @@ ELSE
     DO J=1,ABS(IIPF); DO I=1,TS(J)%NROWIPF; IF(.NOT.TS(J)%STVALUE(I)%VALID)CYCLE; READ(IU,*); ENDDO; ENDDO
     CYCLE
    ENDIF 
-   IDATE=IMOD_UTL_IDATETOJDATE(IDATE)
+   JDATE=IMOD_UTL_IDATETOJDATE(IDATE)
 
    II=0
    DO JJ=1,ABS(IIPF)
@@ -503,28 +492,28 @@ ELSE
      IF(KK.NE.JJ)CALL IMOD_UTL_PRINTTEXT(' Something goes wrong in reading summary timeseries on line 472 in imodflow_tseries.f90',2)
 
      IF(TS(JJ)%IEXT.GT.0)THEN
-      IF(TSDATE(II).EQ.IDATE)THEN
+      IF(TSDATE(II).EQ.JDATE)THEN
        M=TSM(II)
       !## try to read next date
-      ELSEIF(TSDATE(II).LT.IDATE)THEN
+      ELSEIF(TSDATE(II).LT.JDATE)THEN
        !## read until current date is found
        DO
         READ(JUTXT(II),*,IOSTAT=IOS) TSDATE(II),TSM(II)
         IF(IOS.NE.0)EXIT
         TSDATE(II)=IMOD_UTL_IDATETOJDATE(TSDATE(II))
-        IF(TSDATE(II).GE.IDATE)EXIT
+        IF(TSDATE(II).GE.JDATE)EXIT 
        ENDDO
        M=TSM(II)
-       IF(TSDATE(II).NE.IDATE)M=TSNODATA(II)
+       IF(TSDATE(II).NE.JDATE)M=TSNODATA(II)
       ELSE
        M=TSNODATA(II)
       ENDIF
      ENDIF
 
      IF(TS(JJ)%IEXT.GT.0)THEN
-      WRITE(IUTXT(II),*) IMOD_UTL_JDATETOIDATE(IDATE),M,H
+      WRITE(IUTXT(II),*) IDATE,M,H
      ELSE
-      WRITE(IUTXT(II),*) IMOD_UTL_JDATETOIDATE(IDATE),H
+      WRITE(IUTXT(II),*) IDATE,H
      ENDIF   
 
     ENDDO
@@ -539,6 +528,7 @@ ELSE
   IF(ALLOCATED(TSDATE))DEALLOCATE(TSDATE); IF(ALLOCATED(TSNODATA))DEALLOCATE(TSNODATA)
   IF(ALLOCATED(TSM))DEALLOCATE(TSM)
  
+  CALL IMOD_UTL_PRINTTEXT('',0); CALL IMOD_UTL_PRINTTEXT(' Finished Writing Timeseries to IPF file ...',0)
  ENDIF
  
  CLOSE(IU) 
