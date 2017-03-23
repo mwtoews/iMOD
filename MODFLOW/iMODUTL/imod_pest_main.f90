@@ -833,12 +833,12 @@ CONTAINS
 !  !## next parameter combination
 !  IF(.NOT.PESTNEXTSENS())STOP
 !  IF(.NOT.PESTNEXTGRAD())STOP
-  IF(.NOT.PESTNEXTGRAD())CALL PESTGRADIENT()
+  IF(.NOT.PESTNEXTGRAD())CALL PESTGRADIENT(root)
  ELSEIF(LGRAD)THEN
   !## what proces is going on?
   IF(.NOT.PESTNEXTGRAD())THEN
    !## get gradient
-   CALL PESTGRADIENT()
+   CALL PESTGRADIENT(root)
    LLNSRCH=.TRUE.; PEST_ILNSRCH=1; LGRAD=.FALSE.; PEST_IGRAD=0
   ENDIF
  ELSEIF(LLNSRCH)THEN
@@ -912,18 +912,20 @@ CONTAINS
 
    IF(IMPROVEMENT.LE.PEST_JSTOP)THEN
     PESTNEXT=.TRUE.  !## min. improvement reached
-    CALL IMOD_UTL_PRINTTEXT('',-1,IUPESTOUT); CALL IMOD_UTL_PRINTTEXT('Pest iteration terminated decrease objective function ('//TRIM(IMOD_UTL_RTOS(100.0*IMPROVEMENT,'G',7))// &
-     '%) > PEST_JSTOP ('//TRIM(IMOD_UTL_RTOS(100.0*PEST_JSTOP,'G',7))//'%)',-1,IUPESTOUT)
+    CALL IMOD_UTL_PRINTTEXT('',-1,IUPESTOUT); CALL IMOD_UTL_PRINTTEXT('Pest iteration terminated decrease objective function ('// &
+        TRIM(IMOD_UTL_RTOS(100.0*IMPROVEMENT,'G',7))//'%) > PEST_JSTOP ('//TRIM(IMOD_UTL_RTOS(100.0*PEST_JSTOP,'G',7))//'%)',-1,IUPESTOUT)
    ENDIF
 
    TJOBJ=TJ
    !## replace old by new parameter values
    PARAM%ALPHA(2)=PARAM%ALPHA(1)
-!   CALL PESTDUMPFCT(root) !IUPESTOUT)
 
    !## next iteration
    PEST_ITER=PEST_ITER+1
-   IF(.NOT.PESTNEXT)THEN; CALL IMOD_UTL_PRINTTEXT('',-1,IUPESTOUT); CALL IMOD_UTL_PRINTTEXT('',-1,IUPESTOUT) ; CALL IMOD_UTL_PRINTTEXT(' * Next Outer Iteration *',-1,IUPESTOUT); ENDIF
+   IF(.NOT.PESTNEXT)THEN
+    CALL IMOD_UTL_PRINTTEXT('',-1,IUPESTOUT); CALL IMOD_UTL_PRINTTEXT('',-1,IUPESTOUT)
+    CALL IMOD_UTL_PRINTTEXT(' * Next Outer Iteration *',-1,IUPESTOUT)
+   ENDIF
    LLNSRCH=.FALSE.; LGRAD=.TRUE.; PEST_IGRAD=0; PEST_ILNSRCH=0
    IF(.NOT.PESTNEXTGRAD())THEN
    ENDIF
@@ -937,8 +939,6 @@ CONTAINS
  CALL FLUSH(IUPESTOUT); CALL FLUSH(IUPESTPROGRESS); CALL FLUSH(IUPESTEFFICIENCY)
  CALL FLUSH(IUPESTSENSITIVITY); CALL FLUSH(IUPESTRUNFILE)
  IF(IUPESTRESIDUAL.GT.0)THEN; CLOSE(IUPESTRESIDUAL); IUPESTRESIDUAL=0; ENDIF
-
-! IMULT=MAX(0,IMULT-1)
 
  END FUNCTION PESTNEXT
 
@@ -959,7 +959,6 @@ CONTAINS
  IU=IMOD_UTL_GETUNIT()
  IF(INEW.EQ.0)THEN
   OPEN(IU,FILE=LINE,STATUS='UNKNOWN',ACTION='WRITE',IOSTAT=IOS)
-!  CALL IMOD_UTL_OPENASC(IU,LINE,'W')
  ELSE
   OPEN(IU,FILE=LINE,STATUS='OLD',ACCESS='APPEND',IOSTAT=IOS)
  ENDIF
@@ -971,9 +970,7 @@ CONTAINS
  !#####=================================================================
  SUBROUTINE PESTDUMPFCT(root,iout)
  !#####=================================================================
- !use global, only: NCOL,NROW
  use rf2mf_module, only: ncol, nrow, nlay, nper
- !USE MOD_RF2MF, ONLY: DELR,DELC,SIMBOX
  IMPLICIT NONE
  CHARACTER(LEN=256),intent(in) :: root
  INTEGER,INTENT(IN) :: IOUT
@@ -981,16 +978,10 @@ CONTAINS
  INTEGER :: I,J,IROW,ICOL
  REAL,ALLOCATABLE,DIMENSION(:,:) :: X
  logical :: lok
-! REAL, DIMENSION(:), ALLOCATABLE :: DLR, DLC
+
+ !## dump only at the beginning of each iteration cycle
+ IF(PEST_IGRAD.GT.1)RETURN
  
-! ALLOCATE(DLR(NCOL),DLC(NROW))
-! DO I = 1, NCOL
-!   DLR(I) = DELR(I)-DELR(I-1)    
-! END DO
-! DO I = 1, NROW
-!   DLC(I) = DELC(I)-DELC(I-1)    
-! END DO
-! 
  !## open pest factor files
  DIR=TRIM(root)//CHAR(92)//'pest'//CHAR(92)//'factors'//TRIM(ITOS(PEST_ITER))
  CALL IMOD_UTL_CREATEDIR(DIR)
@@ -1016,12 +1007,6 @@ CONTAINS
      X(ICOL,IROW)=PARAM(I)%ALPHA(2)
     ENDDO
    ENDIF 
-   
-!   IF(MINVAL(DLR).EQ.MAXVAL(DLR).AND.MINVAL(DLC).EQ.MAXVAL(DLC))THEN
-!    LOK=IDFWRITE_WRAPPER(NCOL,NROW,X,(/DLR(1)/),(/DLC(1)/),simbox(1),simbox(2),-999.0,'',FNAME)
-!   ELSE
-!    LOK=IDFWRITE_WRAPPER(NCOL,NROW,X,DLR,DLC,simbox(1),simbox(2),-999.0,'',FNAME)
-!   ENDIF   
 
    CALL met1wrtidf(fname,X,ncol,nrow,-999.0,iout)
 
@@ -1034,7 +1019,7 @@ CONTAINS
 #endif
   ENDIF
  ENDDO
- DEALLOCATE(X) !,DLR,DLC)
+ DEALLOCATE(X)
 
  END SUBROUTINE PESTDUMPFCT
 
@@ -1253,10 +1238,12 @@ CONTAINS
   IF(PEST_IGRAD.GT.SIZE(PARAM))EXIT
   !## zero gradient in case parameter is fixed
   IF(PARAM(PEST_IGRAD)%IACT.EQ.0)THEN
-   DH(PEST_IGRAD,:)=DH(0,:)
+   DO I=1,SIZE(MSR%DH,2); MSR%DH(PEST_IGRAD,I)=MSR%DH(0,I); ENDDO
+!   DH(PEST_IGRAD,:)=DH(0,:)
   !## check whether the parameters has been modified allready since it belongs to the same group
   ELSEIF(PARAM(PEST_IGRAD)%IGROUP.LT.0)THEN
-   DH(PEST_IGRAD,:)=DH(0,:)
+   DO I=1,SIZE(MSR%DH,2); MSR%DH(PEST_IGRAD,I)=MSR%DH(0,I); ENDDO
+!   DH(PEST_IGRAD,:)=DH(0,:)
   !## possible candidate found
   ELSE
    EXIT
@@ -1274,11 +1261,13 @@ CONTAINS
     ELSE
      PARAM(I)%ALPHA(1)=PARAM(I)%ALPHA(2)*PARAM(I)%DELTA
     ENDIF
-    CALL IMOD_UTL_PRINTTEXT('Adjusting Parameter '//TRIM(PARAM(I)%PTYPE)// &
-                 ';ils='//TRIM(IMOD_UTL_ITOS(PARAM(I)%ILS))// &
-                 ';izone='//TRIM(IMOD_UTL_ITOS(PARAM(I)%IZONE))// &
-                 ';igroup='//TRIM(IMOD_UTL_ITOS(PARAM(I)%IGROUP))// &
-                 ';factor='//TRIM(IMOD_UTL_RTOS(PARAM(I)%ALPHA(1),'*',1)),0)
+    IF(PARAM(I)%IGROUP.GT.0)THEN
+     CALL IMOD_UTL_PRINTTEXT('Adjusting Parameter '//TRIM(PARAM(I)%PTYPE)// &
+                  ';ils='//TRIM(IMOD_UTL_ITOS(PARAM(I)%ILS))// &
+                  ';izone='//TRIM(IMOD_UTL_ITOS(PARAM(I)%IZONE))// &
+                  ';igroup='//TRIM(IMOD_UTL_ITOS(PARAM(I)%IGROUP))// &
+                  ';factor='//TRIM(IMOD_UTL_RTOS(PARAM(I)%ALPHA(1),'*',1)),0)
+    ENDIF
    ENDIF
   ENDDO
  ELSE
@@ -1288,9 +1277,10 @@ CONTAINS
  END FUNCTION PESTNEXTGRAD
 
  !###====================================================================
- SUBROUTINE PESTGRADIENT()
+ SUBROUTINE PESTGRADIENT(root)
  !###====================================================================
  IMPLICIT NONE
+ character(len=*),intent(in) :: root
  DOUBLE PRECISION :: DJ1,DJ2
  REAL :: B1,TS,DF1,DF2,BETA,EIGWTHRESHOLD
  INTEGER :: I,II,J,K,L,NP,MP,IP1,IP2,NE,ISING
@@ -1322,7 +1312,7 @@ CONTAINS
   IF(ABS(PARAM(IP1)%IACT).NE.1.OR.PARAM(IP1)%IGROUP.LE.0)CYCLE
   DF1=PARAM(IP1)%DELTA
   DO J=1,PEST_NOBS
-   S(IP1)=S(IP1)+W(J)*((DH(IP1,J)-DH(0,J))/DF1)
+   S(IP1)=S(IP1)+MSR%W(J)*((MSR%DH(IP1,J)-MSR%DH(0,J))/DF1)
   ENDDO
  ENDDO
  DO I=1,NP; S(I)=S(I)/REAL(PEST_NOBS); ENDDO
@@ -1383,9 +1373,9 @@ CONTAINS
 
    I=I+1
    DO J=1,PEST_NOBS
-    DJ1=(DH(IP1,J)-DH(0,J))/DF1
-    DJ2= DH(0 ,J)
-    JQR(I)=JQR(I)+(DJ1*W(J)*DJ2)
+    DJ1=(MSR%DH(IP1,J)-MSR%DH(0,J))/DF1
+    DJ2= MSR%DH(0 ,J)
+    JQR(I)=JQR(I)+(DJ1*MSR%W(J)*DJ2)
    ENDDO
   ENDDO
 
@@ -1408,7 +1398,7 @@ CONTAINS
 
  !## compute hessian and covariance, correlation matrix and eigenvalues/eigenvectors
  ALLOCATE(COV(NP,NP))
- CALL PEST1JQJ(JQJ,EIGW,EIGV,COV,NP,.TRUE.)
+ CALL PEST1JQJ(JQJ,EIGW,EIGV,COV,NP,.TRUE.,root)
 
  !## multiply lateral sensitivities with sensitivities in case pest_niter=0
  CALL PESTWRITESTATISTICS_PERROR(NP,COV)
@@ -1426,7 +1416,7 @@ CONTAINS
  DO
 
   !## construct jqj - NORMAL MATRIX/HESSIAN
-  CALL PEST1JQJ(JQJ,EIGW,EIGV,COV,NP,.FALSE.)
+  CALL PEST1JQJ(JQJ,EIGW,EIGV,COV,NP,.FALSE.,root)
 
   IF(.NOT.LSCALING)THEN
 
@@ -1448,7 +1438,7 @@ CONTAINS
      IF(PARAM(IP1)%IACT.NE.1.OR.PARAM(IP1)%IGROUP.LE.0)CYCLE
      DF1=PARAM(IP1)%DELTA
      J=J+1
-     DJ1=(DH(IP1,I)-DH(0,I))/DF1
+     DJ1=(MSR%DH(IP1,I)-MSR%DH(0,I))/DF1
      JS(J,I)=JS(J,I)+DJ1*C(J,J)
     ENDDO
    ENDDO
@@ -1459,7 +1449,7 @@ CONTAINS
      DO II=1,PEST_NOBS
       DJ1=JS(I,II)
       DJ2=JS(J,II)
-      JQJ(J,I)=JQJ(J,I)+(DJ1*W(II)*DJ2)
+      JQJ(J,I)=JQJ(J,I)+(DJ1*MSR%W(II)*DJ2)
      ENDDO
     ENDDO
    ENDDO
@@ -1472,8 +1462,8 @@ CONTAINS
     I=I+1
     DO J=1,PEST_NOBS
      DJ1=JS(I,J) 
-     DJ2= DH(0 ,J)
-     JQR(I)=JQR(I)+(DJ1*W(J)*DJ2)
+     DJ2= MSR%DH(0 ,J)
+     JQR(I)=JQR(I)+(DJ1*MSR%W(J)*DJ2)
     ENDDO
    ENDDO
 
@@ -1586,20 +1576,53 @@ CONTAINS
  END SUBROUTINE PESTGRADIENT
 
  !###====================================================================
- SUBROUTINE PEST1JQJ(JQJ,EIGW,EIGV,COV,NP,LVARIANCE)
+ SUBROUTINE PEST1JQJ(JQJ,EIGW,EIGV,COV,NP,LVARIANCE,root)
  !###====================================================================
  IMPLICIT NONE
+ character(len=*),intent(in) :: root
  INTEGER,INTENT(IN) :: NP
  LOGICAL,INTENT(IN) :: LVARIANCE
  DOUBLE PRECISION,DIMENSION(NP,NP),INTENT(INOUT) :: JQJ,EIGV,COV
  DOUBLE PRECISION,DIMENSION(NP),INTENT(INOUT) :: EIGW
  DOUBLE PRECISION :: DET
- INTEGER :: I,J,IP1,IP2,II,N,ISING
+ INTEGER :: I,J,IP1,IP2,II,N,M,ISING,iu
  REAL :: DF1,DF2,DJ1,DJ2,B1,TV,TEV,CB,KAPPA
  DOUBLE PRECISION,ALLOCATABLE,DIMENSION(:,:) :: B
  REAL,ALLOCATABLE,DIMENSION(:,:) :: COR
  DOUBLE PRECISION,ALLOCATABLE,DIMENSION(:) :: E
  INTEGER,ALLOCATABLE,DIMENSION(:) :: INDX
+ 
+ !## if sensisivities need to be computed generate csv file and stop
+ IF(LSENS)THEN
+  CALL PESTOPENFILE(iu,'log_jacobian_','txt',0,root)
+  WRITE(IU,*) 'POSITIVE numbers means that an increasement of the parameter raises the head'
+  WRITE(IU,*) 'NEGATIVE numbers means that an increasement of the parameter raises the head'
+  BLINE=''; M=0
+  DO IP1=1,SIZE(PARAM)
+   IF(PARAM(IP1)%IACT.NE.1.OR.PARAM(IP1)%IGROUP.LE.0)CYCLE
+   WRITE(SLINE,'(3X,A2,2I3.3,A1,I3.3,A1)') PARAM(IP1)%PTYPE,PARAM(IP1)%ILS,PARAM(IP1)%IZONE,'-',PARAM(IP1)%IGROUP,','
+   BLINE=TRIM(BLINE)//TRIM(SLINE); M=M+1
+  ENDDO
+  WRITE(IU,'(4A11,A32,A))') 'X,','Y,','ILAY,','WEIGTH,','LABEL,',TRIM(BLINE)
+
+  JQJ=0.0
+  DO I=1,PEST_NOBS
+   N=0
+   DO IP1=1,SIZE(PARAM)               
+    IF(PARAM(IP1)%IACT.NE.1.OR.PARAM(IP1)%IGROUP.LE.0)CYCLE
+    DF1=PARAM(IP1)%DELTA
+    DJ1=(MSR%DH(IP1,I)-MSR%DH(0,I))/DF1
+    N=N+1
+    JQJ(N,1)=DJ1
+    IF(M.GT.1)JQJ(N,2)=JQJ(N,2)+ABS(JQJ(N,1))
+   ENDDO
+   WRITE(iu,'(2(F10.2,A1),I10,A1,F10.2,A,A32,999(G15.7,A1))') MSR%X(I),',',MSR%Y(I),',',MSR%L(I),',', &
+           MSR%W(I),',',TRIM(MSR%CLABEL(I))//',',(JQJ(J,1),',',J=1,N)
+  ENDDO
+  IF(M.EQ.1)THEN; WRITE(iu,'(/44X,A32,999(G15.7,A1))') 'Total,',(ABS(JQJ(J,1)),',',J=1,N)
+  ELSE; WRITE(iu,'(/44X,A32,999(G15.7,A1))') 'Total,',(JQJ(J,2),',',J=1,N); ENDIF
+  STOP
+ ENDIF
  
  !## construct jqj - NORMAL MATRIX/HESSIAN
  JQJ=0.0; I=0
@@ -1611,9 +1634,9 @@ CONTAINS
    DF2=PARAM(IP2)%DELTA
    II=II+1
    DO J=1,PEST_NOBS
-    DJ1=(DH(IP1,J)-DH(0,J))/DF1
-    DJ2=(DH(IP2,J)-DH(0,J))/DF2
-    JQJ(II,I)=JQJ(II,I)+(DJ1*W(J)*DJ2)  
+    DJ1=(MSR%DH(IP1,J)-MSR%DH(0,J))/DF1
+    DJ2=(MSR%DH(IP2,J)-MSR%DH(0,J))/DF2
+    JQJ(II,I)=JQJ(II,I)+(DJ1*MSR%W(J)*DJ2)  
    ENDDO
   ENDDO
  ENDDO
@@ -1776,19 +1799,6 @@ CONTAINS
    ENDIF  
   ENDDO
   
-!  !## convergence criteria
-!  COR=0.0
-!  DO I=1,NP
-!   DO J=1,PEST_NOBS
-!    DF1=B(J,I)
-!    DF2=DH(0,J)
-!    COR(I,1)=COR(I,1)+(DF1*DF2) 
-!   ENDDO
-!  ENDDO
-!  R1=0.0; DO I=1,NP; R1=R1+COR(I,1)**2.0; ENDDO
-!  R2=0.0; DO I=1,PEST_NOBS; R2=R2+DH(0,I)**2.0; ENDDO
-!  WRITE(*,*) R1/R2,COS(R1/R2)
-  
   IF(ALLOCATED(E   ))DEALLOCATE(E)
   IF(ALLOCATED(COR ))DEALLOCATE(COR)
   IF(ALLOCATED(INDX))DEALLOCATE(INDX)
@@ -1882,7 +1892,8 @@ CONTAINS
      F=F/G
      !## echo correction factor
      CALL IMOD_UTL_PRINTTEXT('Parameter '//TRIM(IMOD_UTL_ITOS(IP1))//' causing a',-1,IUPESTOUT)
-     CALL IMOD_UTL_PRINTTEXT('Correction factor '//TRIM(IMOD_UTL_RTOS(F,'F',3))//' of Upgrade Vector caused by Bumping on the Parameter Boundary',-1,IUPESTOUT)
+     CALL IMOD_UTL_PRINTTEXT('Correction factor '//TRIM(IMOD_UTL_RTOS(F,'F',3))// &
+       ' of Upgrade Vector caused by Bumping on the Parameter Boundary',-1,IUPESTOUT)
     ELSE
      CALL IMOD_UTL_PRINTTEXT('Parameter '//TRIM(IMOD_UTL_ITOS(IP1))//' causing a increase of the Marquardt factor',-1,IUPESTOUT)
      CALL IMOD_UTL_PRINTTEXT('Conflict on the boundary between a Steepest Descent and Gauss-Newton approach',-1,IUPESTOUT)
@@ -1968,14 +1979,13 @@ CONTAINS
  !###====================================================================
  SUBROUTINE PEST_GETJ(LSS,root)
  !###====================================================================
-! use rf2mf_module, only: ncol, nrow, nlay, nper
  IMPLICIT NONE
  LOGICAL,INTENT(IN) :: LSS
  character(len=*),intent(in) :: root
  INTEGER :: I,II,III,J,JJ,K,KK,ILAY,NROWIPFTXT,IUIPFTXT,NCOLIPFTXT, &
      IOS,NAJ,NP
  REAL :: X,Y,Z,H,WW,MC,MM,DHH,XCOR,YCOR,ZCOR,XCROSS,RFIT
- CHARACTER(LEN=52) :: ID
+ CHARACTER(LEN=52) :: ID,TXT
  DOUBLE PRECISION :: DHW
  REAL,ALLOCATABLE,DIMENSION(:) :: TSNODATA,M,C,GF_H,GF_O
  INTEGER,ALLOCATABLE,DIMENSION(:) :: IDATE
@@ -2003,23 +2013,27 @@ CONTAINS
  ENDDO
 
  !## only one value per measurement
- IF(.NOT.ASSOCIATED(DH)) ALLOCATE(DH(0:SIZE(PARAM),SUM(TS%NROWIPF)))
- IF(.NOT.ASSOCIATED(W )) ALLOCATE(W (SUM(TS%NROWIPF))) 
+ IF(.NOT.ASSOCIATED(MSR%DH)) ALLOCATE(MSR%DH(0:SIZE(PARAM),SUM(TS%NROWIPF)))
+ IF(.NOT.ASSOCIATED(MSR%W )) ALLOCATE(MSR%W (SUM(TS%NROWIPF))) 
+ IF(.NOT.ASSOCIATED(MSR%X )) ALLOCATE(MSR%X (SUM(TS%NROWIPF))) 
+ IF(.NOT.ASSOCIATED(MSR%Y )) ALLOCATE(MSR%Y (SUM(TS%NROWIPF))) 
+ IF(.NOT.ASSOCIATED(MSR%L )) ALLOCATE(MSR%L (SUM(TS%NROWIPF))) 
+ IF(.NOT.ASSOCIATED(MSR%CLABEL))ALLOCATE(MSR%CLABEL(SUM(TS%NROWIPF))) 
  IF(.NOT.ALLOCATED(GF_H))ALLOCATE(GF_H(SUM(TS%NROWIPF)))
  IF(.NOT.ALLOCATED(GF_O))ALLOCATE(GF_O(SUM(TS%NROWIPF)))
 
  !## initialise head-differences
  IF(PEST_IGRAD.EQ.0)THEN
-  DO I=1,SIZE(DH,2)
-   DH(PEST_IGRAD,I)=0.0
+  DO I=1,SIZE(MSR%DH,2)
+   MSR%DH(PEST_IGRAD,I)=0.0
   ENDDO
  ELSE
-  DO I=1,SIZE(DH,2)
-   DH(PEST_IGRAD,I)=DH(0,I) !## zero gradient in case parameter is fixed
+  DO I=1,SIZE(MSR%DH,2)
+   MSR%DH(PEST_IGRAD,I)=MSR%DH(0,I) !## zero gradient in case parameter is fixed
   ENDDO
  ENDIF
  
- W=0.0
+ MSR%W=0.0
  TJ=0.0
 
  DO I=1,ABS(IIPF) 
@@ -2028,11 +2042,11 @@ CONTAINS
 
  !## steady-state
  IF(LSS)THEN
-  IF(IUPESTRESIDUAL.GT.0)WRITE(IUPESTRESIDUAL,'(2A15,A10,6A15,A10)') 'X','Y','ILAY','MSR','MDL','J','WMDL','WRESIDUAL','WEIGH','IPF'
+  IF(IUPESTRESIDUAL.GT.0)WRITE(IUPESTRESIDUAL,'(2A15,A10,6A15,A10,A32)') 'X','Y','ILAY','MSR','MDL','J','WMDL','WRESIDUAL','WEIGH','IPF','LABEL'
  !## transient
  ELSE  
-  IF(IUPESTRESIDUAL.GT.0)WRITE(IUPESTRESIDUAL,'(2A15,A10,8A15,A10)') 'X','Y','ILAY','WEIGH','MSR','MDL','MDL-MSR', &
-                                   'DYNMSR','DYNMDL','DYNMSR-DYNMDL','CROSS-COR','IPF'
+  IF(IUPESTRESIDUAL.GT.0)WRITE(IUPESTRESIDUAL,'(2A15,A10,8A15,A10,A32)') 'X','Y','ILAY','WEIGH','MSR','MDL','MDL-MSR', &
+                                   'DYNMSR','DYNMDL','DYNMSR-DYNMDL','CROSS-COR','IPF','LABEL'
  ENDIF
  
  II=0
@@ -2044,18 +2058,18 @@ CONTAINS
    DO J=1,TS(I)%NROWIPF
    
     II=II+1
-    READ(TS(I)%IUIPF,*) X,Y,ILAY,Z,W(II),H    !## w(i)=variance
+    READ(TS(I)%IUIPF,*) X,Y,ILAY,Z,MSR%W(II),H    !## w(i)=variance
     !## weigh=1/sqrt(variance)
     IF(TS(I)%IVCOL.GT.0)THEN
-     IF(W(II).LE.0.0)THEN
+     IF(MSR%W(II).LE.0.0)THEN
       !## insert measurement only whenever h.gt.z
       IF(H.GT.Z)THEN
-       W(II)=ABS(W(II))
+       MSR%W(II)=ABS(MSR%W(II))
       ELSE
-       W(II)=0.0
+       MSR%W(II)=0.0
       ENDIF
      ELSE
-      W(II)=1.0/SQRT(W(II))
+      MSR%W(II)=1.0/SQRT(MSR%W(II))
      ENDIF
     ENDIF
 
@@ -2063,15 +2077,20 @@ CONTAINS
     IF(ABS(H-Z).GT.PEST_DRES)THEN
      DHH=H-Z
     ENDIF
-    DH(PEST_IGRAD,II)=DHH  !## calculated - measured
-    DHW              =W(II)*(DHH**2.0)
+    MSR%DH(PEST_IGRAD,II)=DHH  !## calculated - measured
+    DHW              =MSR%W(II)*(DHH**2.0)
 
-    GF_H(II)         =W(II)*H
-    GF_O(II)         =W(II)*Z
+    MSR%X(II)=X
+    MSR%Y(II)=Y
+    MSR%L(II)=ILAY
+    MSR%CLABEL(II)='Measure'//TRIM(ITOS(J))//'_ipf'//TRIM(ITOS(I))
+
+    GF_H(II)         =MSR%W(II)*H
+    GF_O(II)         =MSR%W(II)*Z
 
     TJ               = TJ+DHW
-    IF(IUPESTRESIDUAL.GT.0)WRITE(IUPESTRESIDUAL,'(2F15.7,I10,6F15.7,I10)')  &
-        X,Y,ILAY,Z,H,DHW,W(II)*H,W(II)*(H-Z),W(II),I
+    IF(IUPESTRESIDUAL.GT.0)WRITE(IUPESTRESIDUAL,'(2F15.7,I10,6F15.7,I10,A1,A32)')  &
+        X,Y,ILAY,Z,H,DHW,MSR%W(II)*H,MSR%W(II)*(H-Z),MSR%W(II),I,',',MSR%CLABEL(II)
 
    ENDDO
   
@@ -2096,7 +2115,7 @@ CONTAINS
     READ(IUIPFTXT,*) NROWIPFTXT
     READ(IUIPFTXT,*) NCOLIPFTXT
     ALLOCATE(TSNODATA(MAX(3,NCOLIPFTXT)))
-    DO K=1,NCOLIPFTXT; READ(IUIPFTXT,*) ID,TSNODATA(K); ENDDO
+    DO K=1,NCOLIPFTXT; READ(IUIPFTXT,*) TXT,TSNODATA(K); ENDDO
     ALLOCATE(M(NROWIPFTXT),C(NROWIPFTXT),IDATE(NROWIPFTXT)); IDATE=0; C=0.0; M=0.0
     IF(NCOLIPFTXT.LT.3)TSNODATA(3)=TSNODATA(2)
     
@@ -2118,20 +2137,20 @@ CONTAINS
      IF(M(KK).EQ.TSNODATA(2).OR.C(KK).EQ.TSNODATA(3))KK=KK-1
     ENDDO 
 
-    !## skip this measurement
+    !## add this measurement
     IF(KK.GT.0)THEN
     
      !## compute mean measurement in period
      XCOR=-9999.99
 
      !## mean values
-     MM=SUM(M(1:KK))/REAL(KK) !## MEASUREMENTS
-     MC=SUM(C(1:KK))/REAL(KK) !## COMPUTED
+     MM=SUM(M(1:KK))/REAL(KK) !## measurements
+     MC=SUM(C(1:KK))/REAL(KK) !## computed
      !## percentiles
      CALL IMOD_UTL_GETMED(M,KK,-999.99,(/10.0,90.0/),2,NAJ,PM)
      CALL IMOD_UTL_GETMED(C,KK,-999.99,(/10.0,90.0/),2,NAJ,PC)
-     DYN(1)=PM(2)-PM(1) !## MEASUREMENTS
-     DYN(2)=PC(2)-PC(1) !## COMPUTED
+     DYN(1)=PM(2)-PM(1) !## measurements
+     DYN(2)=PC(2)-PC(1) !## computed
      !## compute cross-correlation
      IF(KK.GT.1)THEN
       XCOR=0.0; YCOR=0.0; ZCOR=0.0
@@ -2158,19 +2177,25 @@ CONTAINS
       DHH=DHH+PEST_ITARGET(2)*(DYN(2)-DYN(1))
      ENDIF
 
-     DH(PEST_IGRAD,II)=DHH       !## - total sensitivity
+     MSR%DH(PEST_IGRAD,II)=DHH       !## - total sensitivity
+
+     MSR%X(II)=X
+     MSR%Y(II)=y
+     MSR%L(II)=ILAY
+     MSR%CLABEL(II)=TRIM(ID)
 
      !## weight, pest_itarget(.) should/will be summed to one
-     W(II)=WW
+     MSR%W(II)=WW
 
-     DHW=W(II)*(DHH**2.0)
+     !## difference
+     DHW=MSR%W(II)*(DHH**2.0)
      TJ=TJ+DHW
 
-     GF_H(II)=W(II)*MC 
-     GF_O(II)=W(II)*MM 
+     GF_H(II)=MSR%W(II)*MC 
+     GF_O(II)=MSR%W(II)*MM 
 
-     IF(IUPESTRESIDUAL.GT.0)WRITE(IUPESTRESIDUAL,'(2F15.7,I10,8F15.7,I10)') &
-        X,Y,ILAY,W(II),MM,MC,MM-MC,DYN(1),DYN(2),DYN(2)-DYN(1),XCOR,I
+     IF(IUPESTRESIDUAL.GT.0)WRITE(IUPESTRESIDUAL,'(2F15.7,I10,8F15.7,I10,A1,A32)') &
+        X,Y,ILAY,MSR%W(II),MM,MC,MM-MC,DYN(1),DYN(2),DYN(2)-DYN(1),XCOR,I,',',MSR%CLABEL(II)
     
     ENDIF
     
@@ -2360,16 +2385,33 @@ CONTAINS
   IUBAT=IMOD_UTL_GETUNIT(); OPEN(IUBAT,FILE=PEST_IBATCH(I)%OUTFILE,STATUS='OLD')
   READ(IUBAT,*) N
 
-  S1=SIZE(DH,1)-1; S2=SIZE(DH,2)
+  S1=SIZE(MSR%DH,1)-1; S2=SIZE(MSR%DH,2)
   IF(PEST_NOBS+N.GT.S2)THEN
-   ALLOCATE(DH_DUMMY(0:S1,PEST_NOBS+N))
-   DO K=0,S1; DO J=1,S2
-    DH_DUMMY(K,J)=DH(K,J)
-   ENDDO; ENDDO
-   DEALLOCATE(DH); DH=>DH_DUMMY
-   ALLOCATE(W_DUMMY(PEST_NOBS+N))
-   DO J=1,S2; W_DUMMY(J)=W(J); ENDDO
-   DEALLOCATE(W); W=>W_DUMMY
+
+   ALLOCATE(MSR%DH_DUMMY(0:S1,PEST_NOBS+N))
+   DO K=0,S1; DO J=1,S2; MSR%DH_DUMMY(K,J)=MSR%DH(K,J); ENDDO; ENDDO
+   DEALLOCATE(MSR%DH); MSR%DH=>MSR%DH_DUMMY
+
+   ALLOCATE(MSR%W_DUMMY(PEST_NOBS+N))
+   DO J=1,S2; MSR%W_DUMMY(J)=MSR%W(J); ENDDO
+   DEALLOCATE(MSR%W); MSR%W=>MSR%W_DUMMY
+
+   ALLOCATE(MSR%X_DUMMY(PEST_NOBS+N))
+   DO J=1,S2; MSR%X_DUMMY(J)=MSR%X(J); ENDDO
+   DEALLOCATE(MSR%X); MSR%X=>MSR%X_DUMMY
+
+   ALLOCATE(MSR%Y_DUMMY(PEST_NOBS+N))
+   DO J=1,S2; MSR%Y_DUMMY(J)=MSR%Y(J); ENDDO
+   DEALLOCATE(MSR%Y); MSR%Y=>MSR%Y_DUMMY
+
+   ALLOCATE(MSR%L_DUMMY(PEST_NOBS+N))
+   DO J=1,S2; MSR%L_DUMMY(J)=MSR%L(J); ENDDO
+   DEALLOCATE(MSR%L); MSR%L=>MSR%L_DUMMY
+
+   ALLOCATE(MSR%CLABEL_DUMMY(PEST_NOBS+N))
+   DO J=1,S2; MSR%CLABEL_DUMMY(J)=MSR%CLABEL(J); ENDDO
+   DEALLOCATE(MSR%CLABEL); MSR%CLABEL=>MSR%CLABEL_DUMMY
+
   ENDIF
 
   DO J=1,N
@@ -2381,8 +2423,12 @@ CONTAINS
     !## weigh=1/variance
     WW=1.0/SQRT(WW)
    ENDIF
-   DH(PEST_IGRAD,PEST_NOBS)=(H-Z) !## calculated - measured
-   W(PEST_NOBS)            = WW
+   MSR%X(PEST_NOBS)=0.0
+   MSR%Y(PEST_NOBS)=0.0
+   MSR%L(PEST_NOBS)=0
+   MSR%CLABEL(PEST_NOBS)=''
+   MSR%DH(PEST_IGRAD,PEST_NOBS)=(H-Z) !## calculated - measured
+   MSR%W(PEST_NOBS)            = WW
    DHW                     = WW*((H-Z)**2.0)
    TJ                      = TJ+DHW
    IF(IUPESTRESIDUAL.GT.0)WRITE(IUPESTRESIDUAL,'(30X,I10,6F15.7)') J,Z,H,DHW,WW*Z,WW*(H-Z),WW
