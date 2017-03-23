@@ -3312,9 +3312,52 @@ TOPICLOOP: DO ITOPIC=1,MAXTOPICS
   IF(I.EQ.20)THEN; WRITE(IU,'(A)') '1,0 '//TRIM(TOPICS(I)%TNAME); CYCLE; ENDIF
   IF(.NOT.ASSOCIATED(TOPICS(I)%STRESS))CYCLE
   IF(.NOT.ASSOCIATED(TOPICS(I)%STRESS(1)%FILES))CYCLE
-  WRITE(IU,'(A)') '1,1,0 '//TRIM(TOPICS(I)%TNAME)
+  SELECT CASE (I)
+   CASE (5)
+    CALL PMANAGER_SAVEMF2005_RUN_ISAVE(PBMAN%SAVESHD,TOPICS(I)%TNAME(1:5),IU)
+   CASE (6,7,9,10,11)
+    CALL PMANAGER_SAVEMF2005_RUN_ISAVE(PBMAN%SAVEFLX,TOPICS(I)%TNAME(1:5),IU)
+   CASE DEFAULT
+    WRITE(IU,'(A)') '1,0 '//TRIM(TOPICS(I)%TNAME)
+  END SELECT
+
+! TOPICS(1)%TNAME ='(CAP) MetaSwap'
+! TOPICS(2)%TNAME ='(TOP) Top Elevation'
+! TOPICS(3)%TNAME ='(BOT) Bottom Elevation'
+! TOPICS(4)%TNAME ='(BND) Boundary Condition'
+! TOPICS(5)%TNAME ='(SHD) Starting Heads'
+! TOPICS(6)%TNAME ='(KDW) Transmissivity'
+! TOPICS(7)%TNAME ='(KHV) Horizontal Permeability'
+! TOPICS(8)%TNAME ='(KVA) Vertical Anisotropy'
+! TOPICS(9)%TNAME ='(VCW) Vertical Resistance'
+! TOPICS(10)%TNAME='(KVV) Vertical Permeability'
+! TOPICS(11)%TNAME='(STO) Confined Storage Coefficient'
+! TOPICS(12)%TNAME='(SPY) Specific Yield'
+! TOPICS(13)%TNAME='(PWT) Perched Water Table'
+! TOPICS(14)%TNAME='(ANI) Anisotropy'
+! TOPICS(15)%TNAME='(HFB) Horizontal Flow Boundary'
+! TOPICS(16)%TNAME='(IBS) Interbed Storage'
+! TOPICS(17)%TNAME='(SFT) StreamFlow Thickness'
+! TOPICS(18)%TNAME='(UZF) Unsaturated Zone Flow Package'
+! TOPICS(19)%TNAME='(MNW) Multi Node Well Package'
+! TOPICS(20)%TNAME='(PST) Parameter Estimation'
+! TOPICS(21)%TNAME='(WEL) Wells'
+! TOPICS(22)%TNAME='(DRN) Drainage'
+! TOPICS(23)%TNAME='(RIV) Rivers'
+! TOPICS(24)%TNAME='(EVT) Evapotranspiration'
+! TOPICS(25)%TNAME='(GHB) General Head Boundary'
+! TOPICS(26)%TNAME='(RCH) Recharge'
+! TOPICS(27)%TNAME='(OLF) Overland Flow'
+! TOPICS(28)%TNAME='(CHD) Constant Head Boundary'
+! TOPICS(29)%TNAME='(ISG) iMOD Segment Rivers'
+! TOPICS(30)%TNAME='(SFR) Stream Flow Routing'
+! TOPICS(31)%TNAME='(FHB) Flow and Head Boundary'
+! TOPICS(32)%TNAME='(LAK) Lake Package'
+! TOPICS(33)%TNAME='(PCG) Precondition Conjugate-Gradient'
+
  ENDDO
  
+
  !## write bndfile
  WRITE(IU,'(A)') CHAR(39)//TRIM(TOPICS(4)%STRESS(1)%FILES(1,1)%FNAME)//CHAR(39)
 
@@ -6320,14 +6363,40 @@ TOPICLOOP: DO ITOPIC=1,MAXTOPICS
   
  IF(ASSOCIATED(ISAVE))THEN
   IF(ISAVE(1).EQ.-1)THEN
-   LINE='SAVE BUDGET '//TRIM(ITOS(ID)); DO I=1,NLAY; LINE=TRIM(LINE)//' '//TRIM(ITOS(I)); ENDDO; WRITE(IU,'(A)') TRIM(LINE)
+   LINE='SAVE BUDGET '//TRIM(ITOS(ID)); DO I=1,NLAY; LINE=TRIM(LINE)//' '//TRIM(ITOS(I)); ENDDO
   ELSE
-   LINE='SAVE BUDGET '//TRIM(ITOS(ID)); DO I=1,SIZE(ISAVE); LINE=TRIM(LINE)//' '//TRIM(ITOS(ISAVE(I))); ENDDO; WRITE(IU,'(A)') TRIM(LINE)
+   LINE='SAVE BUDGET '//TRIM(ITOS(ID)); DO I=1,SIZE(ISAVE); LINE=TRIM(LINE)//' '//TRIM(ITOS(ISAVE(I))); ENDDO
   ENDIF
+  WRITE(IU,'(A)') TRIM(LINE)
  ENDIF
 
  END SUBROUTINE PMANAGER_SAVEMF2005_OCD_ISAVE
  
+ !####====================================================================
+ SUBROUTINE PMANAGER_SAVEMF2005_RUN_ISAVE(ISAVE,CID,IU)
+ !####====================================================================
+ IMPLICIT NONE
+ INTEGER,INTENT(IN),POINTER,DIMENSION(:) :: ISAVE
+ CHARACTER(LEN=*),INTENT(IN) :: CID
+ INTEGER,INTENT(IN) :: IU
+ INTEGER :: I,N
+  
+ IF(ASSOCIATED(ISAVE))THEN
+  IF(ISAVE(1).EQ.-1)THEN
+   LINE='1,1,0'
+  ELSE
+   N=SIZE(ISAVE)
+   LINE='1,'//TRIM(ITOS(N)); DO I=1,SIZE(ISAVE); LINE=TRIM(LINE)//','//TRIM(ITOS(ISAVE(I))); ENDDO
+  ENDIF
+ ELSE
+  LINE='1,0'
+ ENDIF
+ LINE=TRIM(LINE)//' '//TRIM(CID)
+
+ WRITE(IU,'(A)') TRIM(LINE)
+ 
+ END SUBROUTINE PMANAGER_SAVEMF2005_RUN_ISAVE
+
  !####====================================================================
  LOGICAL FUNCTION PMANAGER_SAVEMF2005_PCG(DIRMNAME)
  !####====================================================================

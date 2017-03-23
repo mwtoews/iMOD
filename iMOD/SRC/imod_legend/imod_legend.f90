@@ -1212,7 +1212,7 @@ CONTAINS
     !## number of classes
     M=NSX; DI=SXVALUE(2)-SXVALUE(1)
 
-    !## increase legend to incluse all values
+    !## increase legend to include all values
     IF(SXVALUE(1)  .GT.V1)THEN; SXVALUE(1)  =SXVALUE(1)  -DI; M=M+1; ENDIF
     IF(SXVALUE(NSX).LT.V2)THEN; SXVALUE(NSX)=SXVALUE(NSX)+DI; M=M+1; ENDIF
     !## top/bottom values of legend
@@ -1267,8 +1267,7 @@ CONTAINS
    IF(V2.LT.O1)EXIT
   END DO
 
-!  !## make sure take the last colour
-!  MP(IPLOT)%LEG%RGB(I)=MP(IPLOT)%LEG%RGB(NLEG)
+  !## make sure take the last colour
   MP(IPLOT)%LEG%NCLR=MIN(MXCLASS,I)
  
  !## take over exactly
@@ -1496,7 +1495,6 @@ CONTAINS
     !## remove duplicates
     J=1; DO I=2,NODES
      IF(UTL_EQUALS_REAL(IDFVAL(I),IDFVAL(J)))CYCLE
-!     IF(IDFVAL(I).EQ.IDFVAL(J))CYCLE
      J=J+1; IDFVAL(J)=IDFVAL(I)
     ENDDO
 
@@ -1516,7 +1514,7 @@ CONTAINS
     DO IPLOT=IP,JP 
      IF(ACTLIST(IPLOT).NE.1)CYCLE
 
-     X=0.0-DX; DO I=0,MXCLR
+     X=0.0-DX; DO I=MXCLR,0,-1
       X = X+DX
       I1= MAX(1,MIN(NODES,FLOOR(X))); I2=MAX(1,MIN(NODES,CEILING(X)))
       DH= IDFVAL(I2)-IDFVAL(I1)
@@ -1613,6 +1611,7 @@ CONTAINS
      WRITE(TXT2,'('//UTL_GETFORMAT(MP(IPLOT)%LEG%CLASS(I-1))//')') MP(IPLOT)%LEG%CLASS(I-1)
      MP(IPLOT)%LEG%LEGTXT(I)=TRIM(ADJUSTL(TXT1)) 
     ENDDO
+    CALL LEG_CREATE_COLORS(IPLOT)
    ENDDO
  END SELECT
 
