@@ -65,8 +65,8 @@ REAL :: MDLBUFFER,  &  !## buffersize
         RELAX,      &  !## relaxation parameter
         MAXWBAL,    &  !## 0.01 %
         MINKD,      &  !## minimal kD
-        MINC,       &  !## minimal c-value
-        DELTCNVG
+        MINC           !## minimal c-value
+        !DELTCNVG
 REAL,DIMENSION(4) :: SIMBOX  !## chosen size of model-simulation
 REAL,DIMENSION(4) :: MODBOX  !## bigest size of model-simulation
 INTEGER :: IDRAW             !## idraw=0 after idfplot() idraw=1 remove drawn lines
