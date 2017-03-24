@@ -1593,7 +1593,7 @@ CONTAINS
    DO ILAY=1,NLAY
     STRING=TRIM(ITOS(ILAY))
     J=1; IF(ILAY.EQ.NLAY)J=0
-    DO I=1,2+J 
+    DO I=1,2+J+ISTO 
      IP=INDEX(HFFNAME(I,ILAY,IPER),'\',.TRUE.)+1
      STRING=TRIM(STRING)//','//TRIM(HFFNAME(I,ILAY,IPER)(IP:))
     END DO
@@ -2163,7 +2163,6 @@ IPFLOOP: DO I=1,SIZE(IPF)
   ISTO=0; READ(LINE,*,IOSTAT=IOS) NPER; IF(.NOT.TRACECHECKRUN(IOS,'NPER',IU))RETURN
   IF(IBATCH.EQ.1)WRITE(*,'(A10,I4)') 'NPER: ',NPER
  ELSE
-  IF(NPER.EQ.1)ISTO=0
   IF(IBATCH.EQ.1)WRITE(*,'(A10,2I4)') 'NPER,ISTO: ',NPER,ISTO
  ENDIF
 
@@ -2276,9 +2275,10 @@ IPFLOOP: DO I=1,SIZE(IPF)
    ENDIF
   END DO
  END DO
- NJ=3
- ISS=0
- IF(NPER.GT.1)ISS=1
+ !## number of input budget files (including bdgsto if isto.eq.1)
+ NJ=3+ISTO
+ !## steady-state (iss.eq.0) or transient/multiple stressperiods (iss.eq.1)
+ ISS=0; IF(NPER.GT.1)ISS=1
  !## frf,fff,flf,(sto)
  DO IPER=1,NPER
   DO ILAY=1,NLAY
@@ -2759,7 +2759,6 @@ IPFLOOP: DO I=1,SIZE(IPF)
 ! idf%x=qss(:,:,1)
 ! if(idfwrite(idf,idf%fname,1))then; endif
 
- IF(ISTO.EQ.1)DEALLOCATE(QS)
  CALL IDFDEALLOCATEX(IDFTMP)
 
  TRACEREADBUDGET=.TRUE.
