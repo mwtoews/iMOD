@@ -3141,9 +3141,16 @@ C65-----TOTAL WATER CONTENT OVER SPECIFIED DEPTH.
                     igflg = 1
                     l = 0
                     ll = 1
-                    DO WHILE ( ll.LE.IUZM .AND. igflg.EQ.1 )
+                    DO WHILE ( ll.LE.NCOL*NROW .AND. igflg.EQ.1 ) 
+!                    DO WHILE ( ll.LE.IUZM .AND. igflg.EQ.1 )
+
                       nuzr = IUZHOLD(1, ll)
-                      nuzc = IUZHOLD(2, ll)
+                      nuzc = IUZHOLD(2, ll)  
+
+                     if(nuzc.eq.52.and.nuzr.eq.34)then
+                     write(*,*)
+                     endif
+
                       IF ( IUZFBND(nuzc, nuzr).GT.0 ) l = l + 1
                       IF ( nuzr.EQ.iuzrow .AND. nuzc.EQ.iuzcol .AND.
      +                    ghdif.GT.0.0 ) THEN
