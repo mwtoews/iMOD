@@ -930,7 +930,8 @@ CRGN made il = 0 when all layers for column are inactive 2/21/08
               END IF
               land = abs(IUZFBND(ncck, nrck))
 !
-              IF ( il.GT.0 ) THEN
+              IF ( il.GT.0 .AND. land.GT.0 ) THEN
+!              IF ( il.GT.0 ) THEN
                 thick = BOTM(ncck, nrck,LBOTM(land)-1)-
      +                  BOTM(ncck, nrck,LBOTM(il))
                 IF ( ROOTDPTH(ncck, nrck).GT.0.9*thick ) THEN
