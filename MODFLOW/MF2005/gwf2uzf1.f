@@ -3148,10 +3148,6 @@ C65-----TOTAL WATER CONTENT OVER SPECIFIED DEPTH.
                       nuzr = IUZHOLD(1, ll)
                       nuzc = IUZHOLD(2, ll)  
 
-                     if(nuzc.eq.52.and.nuzr.eq.34)then
-                     write(*,*)
-                     endif
-
                       IF ( IUZFBND(nuzc, nuzr).GT.0 ) l = l + 1
                       IF ( nuzr.EQ.iuzrow .AND. nuzc.EQ.iuzcol .AND.
      +                    ghdif.GT.0.0 ) THEN
