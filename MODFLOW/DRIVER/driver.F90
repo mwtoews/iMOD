@@ -410,7 +410,7 @@ implicit none
  ! append the PEST log-file
  if (lipest) then
     call mf2005_returnIOUT(iout)
-    CALL PESTDUMPFCT(modwd1,iout) !IUPESTOUT)
+    CALL PESTDUMPFCT(modwd1,iout)
  endif
 
  !#### TIMESERIES ####
