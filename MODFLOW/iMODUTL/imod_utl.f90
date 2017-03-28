@@ -2247,21 +2247,11 @@ END SUBROUTINE IMOD_UTL_QKSORT
 
   dx=xc-delr(0)
   i=0; if(mod(dx,simcsize).ne.0.0)i=1
-  if(xc.gt.delr(0).and.xc.lt.delr(ncol))icol=int(dx/simcsize)+i !1
-  
-!  dx=xc-delr(0)
-!  i =0
-!  if(mod(dx,simcsize).ne.0.0)i=1
-!  icol=(dx/simcsize)+i
+  if(xc.gt.delr(0).and.xc.lt.delr(ncol))icol=int(dx/simcsize)+i
 
   dy=delc(0)-yc
-  i=0; if(mod(dx,simcsize).ne.0.0)i=1
-  if(yc.gt.delc(nrow).and.yc.lt.delc(0))irow=int(dy/simcsize)+i !1
-
-!  dy=delc(0)-yc
-!  i =0
-!  if(mod(dy,simcsize).ne.0.0)i=1
-!  irow=(dy/simcsize)+i
+  i=0; if(mod(dy,simcsize).ne.0.0)i=1
+  if(yc.gt.delc(nrow).and.yc.lt.delc(0))irow=int(dy/simcsize)+i
 
   icol=min(icol,ncol); irow=min(irow,nrow)
 
