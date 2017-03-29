@@ -403,8 +403,12 @@ c end of program
        BFV=BF(IC2,IR2)
       ENDIF
 
+      !## get internal layer number of vector of top/bottom information
       IL1=(ILAY*2)-1
       IL2=(ILAY*2)
+      !## array starts at 0
+      IL1=IL1-1
+      IL2=IL2-1
       
       TPV=(BOTM(IC1,IR1,IL1)+BOTM(IC2,IR2,IL1))/2.0
       BTV=(BOTM(IC1,IR1,IL2)+BOTM(IC2,IR2,IL2))/2.0
