@@ -769,17 +769,17 @@ CONTAINS
  CHARACTER(LEN=*),INTENT(IN) :: ACT
  CHARACTER(LEN=75) :: MESSAGE
  INTEGER :: IOS,OSD_OPEN2
- INTEGER :: CFN_GETLUN
+! INTEGER :: CFN_GETLUN
 
- IU=0
+! IU=0
  IF(ACT.NE.'R'.AND.ACT.NE.'r'.AND. &   !read
     ACT.NE.'W'.AND.ACT.NE.'w'.AND. &   !write
     ACT.NE.'A'.AND.ACT.NE.'a')RETURN   !append
 
  !read,denywrite -> 'unknown,formatted,readonly,shared,append'  !rest default
 
- !## number of units 10-9999 for timeseries
- IU     = CFN_GETLUN(10,9999)
+! !## number of units 10-9999 for timeseries
+ IF(IU.EQ.0)IU=GETUNIT() !CFN_GETLUN(10,9999)
  MESSAGE=''
 
  !#dos
@@ -1572,12 +1572,15 @@ END SUBROUTINE IMOD_UTL_QKSORT
  CHARACTER(LEN=8),DIMENSION(2) :: ATTRIB
  REAL,DIMENSION(2) :: NODATA
 
- QT=0.0
+ QT=0.0 
  TTIME=EDATE-SDATE
  
  !## open textfiles with pump information
  IU=IMOD_UTL_GETUNIT()
- CALL IMOD_UTL_OPENASC(IU,FNAME,'R')
+ OPEN(IU,FILE=FNAME,FORM='FORMATTED',STATUS='OLD',ACTION='READ')
+ 
+! CALL IMOD_UTL_OPENASC(IU,FNAME,'R')
+
  READ(IU,*,IOSTAT=IOS) NR
  IF(IOS.NE.0)CALL IMOD_UTL_PRINTTEXT('Can not read number of rows in '//TRIM(FNAME),2)
 

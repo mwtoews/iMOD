@@ -177,11 +177,11 @@ c local variables
       integer :: i, ret, ios, lun, nlist, icol, irow, ii, nc, iext,
      1   sdate, edate, ttime, idate
       real    :: x, y
-      real, dimension(1) :: q, tf, bf
+      real :: q, tf, bf  !, dimension(1)
       logical :: found
       character(len=3) :: ext
       character(len=50), allocatable, dimension(:) :: string
-      real, dimension(:), allocatable :: qsort
+!      real, dimension(:), allocatable :: qsort
 
 c functions
       integer   cfn_getlun,
@@ -264,7 +264,7 @@ c         sdate = time_cjd
          ttime = int(delt)
          if (iss==1) ttime = 1
          edate = sdate + ttime ! days only
-         if(.not.allocated(qsort)) allocate(qsort(ttime))
+!         if(.not.allocated(qsort)) allocate(qsort(ttime))
       end if
 
 c allocate
@@ -275,7 +275,7 @@ c allocate
 
       ii = 0
       do i = 1, nlist
-         read(lun,'(a)') line
+         read(lun,'(a300)') line
          read(line,*,iostat=ios) (string(icol),icol=1,nc)
          if(ios.ne.0) then
             write(*,*) 'ERROR. Reading ipf '//trim(file)
@@ -295,13 +295,13 @@ c allocate
 
          if (found) then
             if (ilay.eq.0)then !nc.ge.5) then
-               read(string(4),*,iostat=ios) tf(1)
+               read(string(4),*,iostat=ios) tf !(1)
                if(ios.ne.0) then
                 write(*,*) 'ERROR. Reading ipf '//trim(file)
                 write(*,'(a)') trim(string(4))
                 call ustop(' ')
                end if
-               read(string(5),*,iostat=ios) bf(1)
+               read(string(5),*,iostat=ios) bf !(1)
                if(ios.ne.0) then
                 write(*,*) 'ERROR. Reading ipf '//trim(file)
                 write(*,'(a)') trim(string(5))
@@ -309,19 +309,23 @@ c allocate
                end if
             end if
             if (iext.eq.0) then
-               read(string(3),*) q(1)
+               read(string(3),*) q !(1)
             else
                txtfile = trim(root)//trim(string(iext))//'.'//trim(ext)
-               call imod_utl_readipf(sdate,edate,q(1),txtfile,iss)
+               call imod_utl_readipf(sdate,edate,q,txtfile,iss)
+!               call imod_utl_readipf(sdate,edate,q(1),txtfile,iss)
             end if
-
+       
+       write(*,*) ii
+       
             ii = ii + 1
             ipflist(isub,icolumn)%list(1,ii) = real(irow)
             ipflist(isub,icolumn)%list(2,ii) = real(icol)
-            ipflist(isub,icolumn)%list(3,ii) = q(1)
-            if (nc.ge.5) then
-               ipflist(isub,icolumn)%list(4,ii) = tf(1)
-               ipflist(isub,icolumn)%list(5,ii) = bf(1)
+            ipflist(isub,icolumn)%list(3,ii) = q !(1)
+!            if (nc.ge.5) then
+            if (ilay.eq.0)then 
+               ipflist(isub,icolumn)%list(4,ii) = tf !(1)
+               ipflist(isub,icolumn)%list(5,ii) = bf !(1)
             end if
          end if ! found
       end do
@@ -339,7 +343,7 @@ c assign function value
       rdrs_rddata_ipf = ret
 
 c deallocate
-      if(allocated(qsort))  deallocate(qsort)
+!      if(allocated(qsort))  deallocate(qsort)
       if(allocated(string)) deallocate(string)
 
 c end of program
