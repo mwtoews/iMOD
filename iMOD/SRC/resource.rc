@@ -8,13 +8,13 @@
 //
 // Winteracter resource script. 
 //
-// Modified : 24/Mar/2017 15:31:32
+// Modified : 30/Mar/2017 16:53:47
 //
 ///////////////////////////////////////////////////
 //
 // Include files
 //
-#include "winparam.h"
+#include "..\LIB\WINTERACTER\OS_X32\include\winparam.h"
 #ifdef XLIB
 #include "..\LIB\WINTERACTER\OS_X32\include\filesel.rc"
 #include "..\LIB\WINTERACTER\OS_X32\include\colour.rc"
@@ -985,7 +985,6 @@
 #define ID_DPMANAGER_SPECIALOPEN          180
 #define ID_DRAW2                         1114
 #define ID_ICONDRAWPLUS                  2141
-#define ID_WBALMAIN                       181
 #define ID_PLUGIN                       40085
 #define ID_MANAGE_PLUGIN2               40244
 #define ID_MANAGE_PLUGIN1               40245
@@ -1166,6 +1165,7 @@
 #define IDD_DIALOG026                     388
 #define ID_DPMANAGER_AUTO_LIST            389
 #define ID_SELECTPOLYGON                 1287
+#define ID_WBAL_ANALYSE                   387
 
 ///////////////////////////////////////////////////
 //
@@ -8031,7 +8031,6 @@ BEGIN
 " 1012 1 \n"
 " 1014 0 \n"
 " 1182 0 \n"
-"[Menus] \n"
 "[Ranges] \n"
 " 1194               1      2147483647 \n"
 " 1195               1      2147483647 \n"
@@ -8926,7 +8925,7 @@ BEGIN
 ,0
 END
 
-ID_WBALMAIN DIALOG 0, 0,  251,  168
+ID_WBAL_ANALYSE DIALOG 0, 0,  251,  168
 STYLE WS_POPUP | WS_BORDER | WS_DLGFRAME | WS_SYSMENU | DS_3DLOOK | DS_MODALFRAME
 FONT    8, "Arial"
 CAPTION "Waterbalance"
@@ -8934,12 +8933,12 @@ BEGIN
     CONTROL "&Apply",IDOK,"BUTTON",WS_CHILD | WS_VISIBLE | WS_GROUP | WS_TABSTOP | BS_DEFPUSHBUTTON | BS_TEXT,   10,  140,   40,   14
     CONTROL "&Close",IDCANCEL,"BUTTON",WS_CHILD | WS_VISIBLE | WS_TABSTOP | BS_PUSHBUTTON | BS_TEXT,  208,  144,   40,   14
     CONTROL "&Help",IDHELP,"BUTTON",WS_CHILD | WS_VISIBLE | WS_GROUP | WS_TABSTOP | BS_PUSHBUTTON | BS_TEXT,  168,  144,   40,   14
-    CONTROL "",IDF_MENU1,"LISTBOX",WS_CHILD | WS_VISIBLE | WS_BORDER | WS_VSCROLL | WS_HSCROLL | WS_TABSTOP | LBS_NOTIFY | LBS_HASSTRINGS | LBS_USETABSTOPS | LBS_EXTENDEDSEL,   34,   28,  158,   88
-    CONTROL "Select Available Items for Display",IDF_LABEL1,"STATIC",WS_CHILD | WS_VISIBLE | WS_GROUP | SS_LEFT,   16,   12,  186,    8
+    CONTROL "",IDF_MENU1,"LISTBOX",WS_CHILD | WS_VISIBLE | WS_BORDER | WS_VSCROLL | WS_HSCROLL | WS_TABSTOP | LBS_NOTIFY | LBS_HASSTRINGS | LBS_USETABSTOPS | LBS_EXTENDEDSEL,   34,   28,  157,   88
+    CONTROL "Select Available Items for Display",IDF_LABEL1,"STATIC",WS_CHILD | WS_VISIBLE | WS_GROUP | SS_LEFT,   16,   12,  185,    8
     CONTROL "Check area",IDF_CHECK1,"BUTTON",WS_CHILD | WS_VISIBLE | WS_GROUP | WS_TABSTOP | BS_AUTOCHECKBOX | BS_TEXT,   94,  120,  124,   14
 END
 
-ID_WBALMAIN RCDATA
+ID_WBAL_ANALYSE RCDATA
 BEGIN
 "[Checks] \n"
 " 1182 0 \n"
@@ -12388,4 +12387,4 @@ END
 //*WI* FILENAME    resource.f90
 //*WI* FMODNAME    RESOURCE
 //*WI* LASTTYPE        2
-//*WI* LASTRES       214
+//*WI* LASTRES       236

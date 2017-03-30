@@ -1859,7 +1859,7 @@ MAINLOOP: DO
  SUBROUTINE MODEL1INIT()
  !###======================================================================
  IMPLICIT NONE
- INTEGER :: ICOPT,I
+ INTEGER :: I
  CHARACTER,ALLOCATABLE,DIMENSION(:) :: COPTS
  
  CALL WINDOWSELECT(0)

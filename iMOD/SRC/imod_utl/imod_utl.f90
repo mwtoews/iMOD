@@ -497,8 +497,7 @@ CONTAINS
  !## open textfiles with pump information
  IU=UTL_GETUNIT()
  OPEN(IU,FILE=FNAME,STATUS='OLD',ACTION='READ',FORM='FORMATTED',IOSTAT=IOS)
-! CALL OSD_OPEN(IU,FILE=FNAME,STATUS='OLD',ACTION='READ')
- IF(IOS.NE.0)RETURN !IU.LE.0)RETURN
+ IF(IOS.NE.0)RETURN
  
  READ(IU,*) NR; IF(NR.LE.0)THEN; CLOSE(IU); UTL_PCK_READTXT=.TRUE.; RETURN; ENDIF
 
@@ -537,8 +536,12 @@ CONTAINS
   DO IR=1,NR
 
    IF(IR.EQ.1)THEN
-    READ(IU,*) IDATE,(QD(I),I=2,NC)
-    READ(QD(ICOL),*) QQ !QQ=QD(ICOL)
+    IF(ICOL.GT.2)THEN
+     READ(IU,*) IDATE,(QD(I),I=2,NC)
+     READ(QD(ICOL),*) QQ
+    ELSE
+     READ(IU,*) IDATE,QQ
+    ENDIF
     !## reset to zero for nodata value
     IF(QQ.EQ.NODATA(ICOL))QQ=0.0
    ELSE
@@ -550,9 +553,12 @@ CONTAINS
    !## edate=end date of current simulation period
    NDATE=EDATE
    IF(IR.LT.NR)THEN
-    READ(IU,*) NDATE,(QD(I),I=2,NC) 
-    READ(QD(ICOL),*) Q1
-!    Q1=QD(ICOL)
+    IF(ICOL.GT.2)THEN
+     READ(IU,*) NDATE,(QD(I),I=2,NC) 
+     READ(QD(ICOL),*) Q1
+    ELSE
+     READ(IU,*) NDATE,Q1
+    ENDIF
     JDATE=NDATE
     NDATE=UTL_IDATETOJDATE(NDATE) !## fname=optional for error message
    ENDIF
@@ -590,8 +596,8 @@ CONTAINS
  !## itype=2 borehole; itype=3 seismic
  ELSEIF(ITYPE.EQ.2.OR.ITYPE.EQ.3)THEN
    
-  QQ=0.0;  !*LUNIT; IZMIN=EDATE*LUNIT; DIZ=(IZMAX-IZMIN)*LUNIT
-
+  QQ=0.0
+  
   !## get elevation in chronologic order
   IF(ICOL.EQ.1)THEN
    IZMAX=SDATE
@@ -602,13 +608,8 @@ CONTAINS
   
   !## get the average value for the choosen interval
   ELSE
-
-!   READ(IU,*) Z,(QD(I),I=2,NC)
-!   IZ=INT(Z*LUNIT); I1=IZMAX-IZ+1
-!   READ(QD(ICOL),*) Q1
-   
+  
    NQ=0.0; TZ=STIME/100.0; BZ=ETIME/100.0; DZ=TZ-BZ
-!   DO IR=2,NR
    DO IR=1,NR
        
     READ(IU,*) Z,(QD(I),I=2,NC)
@@ -635,7 +636,6 @@ CONTAINS
     ENDIF
 
     IF(Z.LT.BZ)EXIT
-!    IF(I1.GT.DIZ)EXIT
    
    ENDDO
 
