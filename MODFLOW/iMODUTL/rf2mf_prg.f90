@@ -1660,7 +1660,7 @@ logical, intent(inout) :: lipest
 
 logical :: lnamfile, lrfopt
 character(len=256) :: dxcfile, runfile, namfile, ext, cdum
-integer :: i, n, ivcl, iarg, ios, lun, osd_open2
+integer :: i, n, ivcl, iarg, ios, lun !, osd_open2
 integer, dimension(2) :: rfopt
 character(len=256) :: cwrk
 

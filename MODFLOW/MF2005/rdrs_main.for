@@ -316,8 +316,6 @@ c allocate
 !               call imod_utl_readipf(sdate,edate,q(1),txtfile,iss)
             end if
        
-       write(*,*) ii
-       
             ii = ii + 1
             ipflist(isub,icolumn)%list(1,ii) = real(irow)
             ipflist(isub,icolumn)%list(2,ii) = real(icol)

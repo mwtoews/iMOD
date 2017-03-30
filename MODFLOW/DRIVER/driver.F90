@@ -27,7 +27,7 @@ use driver_module
 use IMOD_UTL, only : imod_utl_capf
 use m_main_info
 use m_vcl, only: targ
-use imod_utl, only: imod_utl_closeunits, imod_utl_has_ext, imod_utl_printtext
+use imod_utl, only: imod_utl_closeunits, imod_utl_has_ext, imod_utl_printtext,imod_utl_getunit
 use mod_pest, only: pest1_meteo_metaswap, pest1alpha_metaswap, pest1appendlogfile, pestnext, pestdumpfct, PEST1INIT, PEST1CLOSELOGFILES
 use PESTVAR, only : IUPESTOUT
 implicit none
@@ -178,7 +178,8 @@ implicit none
  if (iarg.gt.0) then
 
     ! open file and initialise components
-    ios=osd_open2(lunc,0,compfile,'readonly')
+    !ios=osd_open2(lunc,0,compfile,'readonly')
+    lunc=imod_utl_getunit(); open(lunc,file=compfile,status='old',action='read',iostat=ios)
     if (ios.eq.0) then
 
        ! read all component information and initialise all components
