@@ -178,8 +178,7 @@ implicit none
  if (iarg.gt.0) then
 
     ! open file and initialise components
-    !ios=osd_open2(lunc,0,compfile,'readonly')
-    lunc=imod_utl_getunit(); open(lunc,file=compfile,status='old',action='read',iostat=ios)
+    ios=osd_open2(lunc,0,compfile,'readonly')
     if (ios.eq.0) then
 
        ! read all component information and initialise all components
