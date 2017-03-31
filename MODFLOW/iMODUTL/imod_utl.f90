@@ -778,7 +778,8 @@ CONTAINS
  !read,denywrite -> 'unknown,formatted,readonly,shared,append'  !rest default
 
 ! !## number of units 10-9999 for timeseries
- IF(IU.EQ.0)IU=GETUNIT() !CFN_GETLUN(10,9999)
+! IF(IU.EQ.0)
+ IU=GETUNIT() !CFN_GETLUN(10,9999)
  MESSAGE=''
 
  !#dos

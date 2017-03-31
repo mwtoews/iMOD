@@ -658,6 +658,10 @@ END SUBROUTINE
    IF(ARND.GT.0.0)THEN
     NUND=NUND+1
 
+    !## write idf_svat.inp - inside area of interest
+    IF(ICOL.GE.IC1.AND.ICOL.LE.IC2.AND. &
+       IROW.GE.IR1.AND.IROW.LE.IR2)WRITE(IIDF,'(3I10)') NUND,IROW-IR1+1,ICOL-IC1+1
+       
     !## write sel_svat_bda.inp
     WRITE(ISELSVAT,'(I10)') NUND
 

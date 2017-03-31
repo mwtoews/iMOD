@@ -839,14 +839,13 @@ implicit none
       END IF
 
 ! next pest iteration
- if (.not.lipest) then
-    convergedPest=.true.
- else
-  call pest1appendlogfile(modwd1)
-  convergedPest=pestnext(lss,modwd1)
-  CALL PEST1CLOSELOGFILES()
- end if
  call imod_utl_closeunits()
+ if (.not.lipest) then
+  convergedPest=.true.
+ else
+  convergedPest=pestnext(lss,modwd1)
+ end if
+! call imod_utl_closeunits()
 
  end do pestloop
 

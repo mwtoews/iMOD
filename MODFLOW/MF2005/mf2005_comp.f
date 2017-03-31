@@ -1213,7 +1213,7 @@ c          IF(ICNVG.EQ.0) GO TO 110
 !              GO TO 110
             ELSE
               WRITE(IOUT,*) 'CONTINUING EXECUTION'
-!              ICNVG=1
+              ICNVG=1
             END IF
           END IF
 
