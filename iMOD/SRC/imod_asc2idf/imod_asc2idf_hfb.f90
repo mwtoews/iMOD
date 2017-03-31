@@ -196,11 +196,7 @@ CONTAINS
    ENDIF
   ENDIF
  ENDIF
-
- if(ipc(6,25,1).eq.int(1,1))then
-  write(*,*)
- endif
- 
+  
  END SUBROUTINE ASC2IDF_HFB_GETFACES
   
 END MODULE MOD_ASC2IDF_HFB

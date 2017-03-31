@@ -5495,7 +5495,7 @@ TOPICLOOP: DO ITOPIC=1,MAXTOPICS
   !## ghb
   CASE (25)
 !   IF(PBMAN%SSYSTEM.EQ.1)THEN
-   LINE='NaN1#,'//TRIM(ITOS(ICB))//',AUX ISUB NOPRINT' !GSUBSYS ISUB NOPRINT'
+   LINE='NaN1#,'//TRIM(ITOS(ICB))//',NOPRINT' !GSUBSYS ISUB NOPRINT'
 !   ELSE
 !    LINE='NaN1#,'//TRIM(ITOS(ICB))//',NOPRINT'
 !   ENDIF
@@ -5516,7 +5516,7 @@ TOPICLOOP: DO ITOPIC=1,MAXTOPICS
   !## chd
   CASE (28)
 !   IF(PBMAN%SSYSTEM.EQ.1)THEN
-   LINE='NaN1#,'//TRIM(ITOS(ICB))//',AUX ISUB DSUBSYS ISUB NOPRINT'
+   LINE='NaN1#,'//TRIM(ITOS(ICB))//',NOPRINT'
 !   ELSE
 !    LINE='NaN1#,'//TRIM(ITOS(ICB))//',NOPRINT'
 !   ENDIF
@@ -7381,7 +7381,7 @@ TOPICLOOP: DO ITOPIC=1,MAXTOPICS
 
     !## enter fault if occupation > 0.0%
     IF(IROW+1.LT.NROW.AND.FDZ.GT.0.0)THEN
-     IF(BND(ILAY)%X(ICOL,IROW).NE.0.AND.BND(ILAY)%X(ICOL+1,IROW).NE.0)THEN
+     IF(BND(ILAY)%X(ICOL,IROW).NE.0.AND.BND(ILAY)%X(ICOL,IROW+1).NE.0)THEN
       WRITE(IU,'(5I10,2G12.7)') ILAY,IROW,ICOL,IROW+1,ICOL,HFBRESIS,FDZ !## y-direction
      ENDIF
     ENDIF
@@ -7402,7 +7402,7 @@ TOPICLOOP: DO ITOPIC=1,MAXTOPICS
  INTEGER,INTENT(INOUT),DIMENSION(:) :: NHFBNP
  TYPE(IDFOBJ),INTENT(INOUT) :: IDF
  INTEGER :: IROW,ICOL,ILAY,IOS,JLAY,IC1,IC2,IR1,IR2
- REAL :: NODATA,C,Z
+ REAL :: NODATA,C,C1,C2,Z
  INTEGER(KIND=1),ALLOCATABLE,DIMENSION(:,:,:) :: IPC
  REAL,ALLOCATABLE,DIMENSION(:,:) :: RES,FDZ
  
@@ -7424,54 +7424,54 @@ TOPICLOOP: DO ITOPIC=1,MAXTOPICS
    IF(IOS.NE.0)EXIT
    IF(JLAY.NE.ILAY)CYCLE
    IF(IC1.EQ.IC2)THEN
-    IPC(IC2,IR2,1)=INT(1,1)
+    IPC(IC1,IR1,2)=INT(1,1)
    ELSE
-    IPC(IC2,IR2,2)=INT(1,1)
+    IPC(IC1,IR1,1)=INT(1,1)
    ENDIF
    !## resistance, sum conductances - ignore resistance of zero days
-   IF(C.GT.0.0)RES(IC2,IR2)=RES(IC2,IR2)+(1.0/C)*Z
+   IF(C.GT.0.0)RES(IC1,IR1)=RES(IC1,IR1)+(1.0/C)*Z
    !## occupation fraction
-   FDZ(IC2,IR2)=FDZ(IC2,IR2)+Z
+   FDZ(IC1,IR1)=FDZ(IC1,IR1)+Z
   ENDDO
   
   DO IROW=1,IDF%NROW; DO ICOL=1,IDF%NCOL
 
-   !## place vertical wall
+   !## place vertical wall (block in y-direction)
    IF(IPC(ICOL,IROW,1).EQ.INT(1,1))THEN
     IF(ICOL.LT.IDF%NCOL)THEN
 
      !## transform conductances to resistance
-     C=1.0/RES(ICOL,IROW)
+     C1=1.0/RES(ICOL,IROW)
      
      !## get total resistance related to thickness of model layer
-     C=RES(ICOL,IROW)*FDZ(ICOL,IROW)**4.0
+     C2=C1*FDZ(ICOL,IROW)**4.0
      
      !## add fault
      NHFBNP(ILAY)=NHFBNP(ILAY)+1
-     WRITE(IU,'(5(I10,1X),G12.7)') ILAY,IROW,ICOL,IROW,ICOL+1,C !## x-direction
+     WRITE(IU,'(5(I10,1X),G12.7)') ILAY,IROW,ICOL,IROW,ICOL+1,C !## y-direction
      !## write line in genfile
      CALL PMANAGER_SAVEMF2005_HFB_GENFILES(IUGEN(ILAY),IUDAT(ILAY),IPC,IDF,IDF%NROW,IDF%NCOL,IROW,ICOL, &
-               NHFBNP(ILAY),C,RES(ICOL,IROW),FDZ(ICOL,IROW))
+               NHFBNP(ILAY),C1,C2,FDZ(ICOL,IROW))
      
     ENDIF 
    ENDIF
 
-   !## place horizontal wall
+   !## place horizontal wall (block in x-direction)
    IF(IPC(ICOL,IROW,2).EQ.INT(1,1))THEN
     IF(IROW.LT.IDF%NROW)THEN
 
      !## transform conductances to resistance
-     C=1.0/RES(ICOL,IROW)
+     C1=1.0/RES(ICOL,IROW)
      
      !## get total resistance related to thickness of model layer
-     C=RES(ICOL,IROW)*FDZ(ICOL,IROW)**4.0
+     C2=C1*FDZ(ICOL,IROW)**4.0
 
      !## add fault
      NHFBNP(ILAY)=NHFBNP(ILAY)+1
-     WRITE(IU,'(5(I10,1X),G12.7)') ILAY,IROW,ICOL,IROW+1,ICOL,C !## y-direction
+     WRITE(IU,'(5(I10,1X),G12.7)') ILAY,IROW,ICOL,IROW+1,ICOL,C !## x-direction
      !## write line in genfile
      CALL PMANAGER_SAVEMF2005_HFB_GENFILES(IUGEN(ILAY),IUDAT(ILAY),IPC,IDF,IDF%NROW,IDF%NCOL,IROW,ICOL, &
-               NHFBNP(ILAY),C,RES(ICOL,IROW),FDZ(ICOL,IROW)) 
+               NHFBNP(ILAY),C1,C2,FDZ(ICOL,IROW)) 
     
     ENDIF
    ENDIF

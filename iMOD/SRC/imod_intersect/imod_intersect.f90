@@ -34,14 +34,14 @@ INTEGER,PRIVATE :: IHOR,IVER
 CONTAINS
 
  !###======================================================================
- SUBROUTINE INTERSECT_EQUI(XMIN,XMAX,YMIN,YMAX,CSX,CSY,XIN1,XIN2,YIN1,YIN2,N,LHFB)  
+ SUBROUTINE INTERSECT_EQUI(XMIN,XMAX,YMIN,YMAX,CSX_IN,CSY_IN,XIN1,XIN2,YIN1,YIN2,N,LHFB)  
  !###======================================================================
  IMPLICIT NONE
- REAL,INTENT(IN) :: XMIN,XMAX,YMIN,YMAX,CSX,CSY
+ REAL,INTENT(IN) :: XMIN,XMAX,YMIN,YMAX,CSX_IN,CSY_IN
  REAL,INTENT(IN) :: XIN1,XIN2,YIN1,YIN2
  INTEGER,INTENT(OUT) :: N
  LOGICAL,INTENT(IN) :: LHFB
- REAL :: X,Y,XMN,XMX,YMN,YMX,DX,DY,LENG,TD,X1,X2,Y1,Y2
+ REAL :: X,Y,XMN,XMX,YMN,YMX,DX,DY,LENG,TD,X1,X2,Y1,Y2,CSX,CSY
  INTEGER :: I,ICOL,IROW,ID,N_IN
  
  X1=XIN1; Y1=YIN1; X2=XIN2; Y2=YIN2
@@ -50,6 +50,13 @@ CONTAINS
  IF(.NOT.ASSOCIATED(FA))ALLOCATE(FA(1000)); IF(.NOT.ASSOCIATED(LN))ALLOCATE(LN(1000))
  IF(.NOT.ASSOCIATED(CA))ALLOCATE(CA(1000)); IF(.NOT.ASSOCIATED(RA))ALLOCATE(RA(1000))
 
+ CSX=CSX_IN
+ CSY=CSY_IN
+ IF(LHFB)THEN
+  CSX=CSX/2.0
+  CSY=CSY/2.0
+ ENDIF
+ 
  N_IN=N
 
  IF(.NOT.INTERSECT_EQUATION(XMIN,XMAX,YMIN,YMAX,X1,X2,Y1,Y2,N))RETURN
@@ -107,17 +114,17 @@ CONTAINS
    ENDIF
    YA(N)=Y
 
-   !## double intersections, for better estimate for hfb
-   IF(LHFB)THEN
-    !## array overwritten
-    N=N+1; CALL INTERSECT_RESIZEVECTORS(N) 
-    IF(IVER.EQ.1)THEN
-     XA(N)=X1 !## same as xmx
-    ELSE
-     XA(N)=(Y-B)/A
-    ENDIF 
-    YA(N)=Y
-   ENDIF
+!   !## double intersections, for better estimate for hfb
+!   IF(LHFB)THEN
+!    !## array overwritten
+!    N=N+1; CALL INTERSECT_RESIZEVECTORS(N) 
+!    IF(IVER.EQ.1)THEN
+!     XA(N)=X1 !## same as xmx
+!    ELSE
+!     XA(N)=(Y-B)/A
+!    ENDIF 
+!    YA(N)=Y
+!   ENDIF
  
   ENDDO
 
@@ -141,21 +148,24 @@ CONTAINS
     YA(N)=A*X+B
    ENDIF
 
-   !## double intersections, for better estimate for hfb
-   IF(LHFB)THEN
-    N=N+1; CALL INTERSECT_RESIZEVECTORS(N) 
-    XA(N)=X
-    IF(IHOR.EQ.1)THEN
-     YA(N)=Y1  !## same as ymx
-    ELSE
-     YA(N)=A*X+B
-    ENDIF
-   ENDIF
+!   !## double intersections, for better estimate for hfb
+!   IF(LHFB)THEN
+!    N=N+1; CALL INTERSECT_RESIZEVECTORS(N) 
+!    XA(N)=X
+!    IF(IHOR.EQ.1)THEN
+!     YA(N)=Y1  !## same as ymx
+!    ELSE
+!     YA(N)=A*X+B
+!    ENDIF
+!   ENDIF
  
   ENDDO
  
  ENDIF
  
+ CSX=CSX_IN
+ CSY=CSY_IN
+
  DX=X1-X2; DY=Y2-Y1
  CALL INTERSECT_SORT(DX,DY,N_IN+1,N)
 
