@@ -456,8 +456,7 @@
 		<File RelativePath="..\..\SRC\imod_wbal\imod_wbal_analyse.f90"/>
 		<File RelativePath="..\..\..\iMOD\SRC\imod_wbal\imod_wbal_compute.f90"/>
 		<File RelativePath="..\..\SRC\imod_wbal\imod_wbal_graphics.f90">
-			<FileConfiguration Name="Release|x64" ExcludedFromBuild="true"/>
-			<FileConfiguration Name="Debug|x64" ExcludedFromBuild="true"/></File>
+			<FileConfiguration Name="Release|x64" ExcludedFromBuild="true"/></File>
 		<File RelativePath="..\..\..\iMOD\SRC\imod_wbal\imod_wbal_par.f90"/></Filter>
 		<Filter Name="programs">
 		<File RelativePath="..\..\..\iMOD\SRC\imod_main\imod_prg.f90">

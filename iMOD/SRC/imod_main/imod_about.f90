@@ -1,4 +1,4 @@
-!!  Copyright (C) Stichting Deltares, 2005-2016.
+!!  Copyright (C) Stichting Deltares, 2005-2017.
 !!
 !!  This file is part of iMOD.
 !!
@@ -178,7 +178,7 @@ CONTAINS
  
  ALLOCATE(CHARACTER(LEN=STRLEN) :: STR)
 
- STR='Copyright (C) Stichting Deltares, 2005-2016. '//NEWLINE// &
+ STR='Copyright (C) Stichting Deltares, 2005-2017. '//NEWLINE// &
 NEWLINE// &
 'This Deltares-software executable is part of iMOD. iMOD is Deltares-soft'// &
 'ware; the source code of iMOD is also available as free open source soft'// &
@@ -240,7 +240,7 @@ NEWLINE// &
  
  ALLOCATE(CHARACTER(LEN=STRLEN) :: STR)
 
- STR='Copyright (C) Stichting Deltares, 2005-2016. '//NEWLINE// &
+ STR='Copyright (C) Stichting Deltares, 2005-2017. '//NEWLINE// &
  NEWLINE// &
  'WARNING: Use of ‘Beta-iMOD’ by Licensee is only allowed under the terms and conditions '// &
  'of the “Software License Agreement iMOD-Version B plus Beta 1.5, July 2014” agreed between '// &

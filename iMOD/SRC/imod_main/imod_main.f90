@@ -1,4 +1,4 @@
-!!  Copyright (C) Stichting Deltares, 2005-2016.
+!!  Copyright (C) Stichting Deltares, 2005-2017.
 !!
 !!  This file is part of iMOD.
 !!
@@ -673,11 +673,9 @@ SELECT CASE (MESSAGE%VALUE1)
 !## import modflow model
  CASE (ID_IMPORTSOBEK)
   CALL SOBEK1MAIN()
-
-!!## start waterbalance analyse
-! CASE ()
-!  CALL WBAL_ANALYSE_INIT()
-
+!## start waterbalance analyse
+ CASE (ID_WBAL_ANALYSE)
+  CALL WBAL_ANALYSE_INIT()
 !## scenario-manager
  CASE (ID_SCENARIO)
   CALL SCEN1INIT()

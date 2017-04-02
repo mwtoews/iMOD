@@ -1,4 +1,4 @@
-!!  Copyright (C) Stichting Deltares, 2005-2014.
+!!  Copyright (C) Stichting Deltares, 2005-2017.
 !!
 !!  This file is part of iMOD.
 !!
@@ -176,7 +176,7 @@ CONTAINS
  !         IND = 0   NO BEGINNING BASIS IS PROVIDED BY THE USER
  !         IND = 1   THE ARRAY IBASIS HAS BEEN SET BY THE USER
  !     ON OUTPUT IND IS ASSIGNED ONE OF THE VALUES
- !         IND = 0   Z WAS SUCCESSFULLY MAXIMIZED
+ !         IND = 0   Z WAS SuccessfullY MAXIMIZED
  !         IND = 1   THE PROBLEM HAS NO FEASIBLE SOLUTION
  !         IND = 2   MXITER ITERATIONS WERE PERFORMED
  !         IND = 3   SUFFICIENT ACCURACY CANNOT BE MAINTAINED

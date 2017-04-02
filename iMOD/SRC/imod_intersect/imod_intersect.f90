@@ -1,4 +1,4 @@
-!!  Copyright (C) Stichting Deltares, 2005-2016.
+!!  Copyright (C) Stichting Deltares, 2005-2017.
 !!
 !!  This file is part of iMOD.
 !!
@@ -113,18 +113,6 @@ CONTAINS
     XA(N)=(Y-B)/A
    ENDIF
    YA(N)=Y
-
-!   !## double intersections, for better estimate for hfb
-!   IF(LHFB)THEN
-!    !## array overwritten
-!    N=N+1; CALL INTERSECT_RESIZEVECTORS(N) 
-!    IF(IVER.EQ.1)THEN
-!     XA(N)=X1 !## same as xmx
-!    ELSE
-!     XA(N)=(Y-B)/A
-!    ENDIF 
-!    YA(N)=Y
-!   ENDIF
  
   ENDDO
 
@@ -147,17 +135,6 @@ CONTAINS
    ELSE
     YA(N)=A*X+B
    ENDIF
-
-!   !## double intersections, for better estimate for hfb
-!   IF(LHFB)THEN
-!    N=N+1; CALL INTERSECT_RESIZEVECTORS(N) 
-!    XA(N)=X
-!    IF(IHOR.EQ.1)THEN
-!     YA(N)=Y1  !## same as ymx
-!    ELSE
-!     YA(N)=A*X+B
-!    ENDIF
-!   ENDIF
  
   ENDDO
  
@@ -234,7 +211,7 @@ CONTAINS
  END SUBROUTINE INTERSECT_NCORNER
  
  !###======================================================================
- SUBROUTINE INTERSECT_NONEQUI(DELR,DELC,NROW,NCOL,XIN1,XIN2,YIN1,YIN2,N,LHFB) !,LROWCOL)
+ SUBROUTINE INTERSECT_NONEQUI(DELR,DELC,NROW,NCOL,XIN1,XIN2,YIN1,YIN2,N,LHFB)
  !###======================================================================
  IMPLICIT NONE
  INTEGER,INTENT(IN) :: NROW,NCOL
@@ -242,7 +219,7 @@ CONTAINS
  REAL,INTENT(IN),DIMENSION(0:NROW) :: DELC
  REAL,INTENT(IN) :: XIN1,XIN2,YIN1,YIN2
  INTEGER,INTENT(OUT) :: N
- LOGICAL,INTENT(IN) :: LHFB !,LROWCOL
+ LOGICAL,INTENT(IN) :: LHFB
  REAL :: X,Y,XMN,XMX,YMN,YMX,DX,DY,LENG,XMIN,YMIN,XMAX,YMAX,X1,X2,Y1,Y2,CS,TD
  INTEGER :: I,ICOL,IROW,IMN,JMN,ID,N_IN
  
@@ -263,15 +240,10 @@ CONTAINS
  
  !## continue search rest of intersections
  !## try intersections with y-axes firstly
- IMN=0
- DO I=1,NROW 
-  IF(DELC(I).GT.MIN(Y1,Y2))THEN
-   YMN=DELC(I)
-   IMN=I
-  ENDIF
+ IMN=0; DO I=1,NROW 
+  IF(DELC(I).GT.MIN(Y1,Y2))THEN; YMN=DELC(I); IMN=I; ENDIF
  END DO
- JMN=0
- DO I=NROW,1,-1 
+ JMN=0; DO I=NROW,1,-1 
   IF(DELC(I).LT.MAX(Y1,Y2))THEN; YMX=DELC(I); JMN=I; ENDIF
  END DO
 
@@ -281,8 +253,10 @@ CONTAINS
   IF(IHOR.EQ.0)THEN
 
    CS=DELC(IMN-1)-DELC(IMN)
+   IF(LHFB)CS=CS/2.0
    Y =YMN-CS
    DO
+
     Y=Y+CS
     IF(Y.GT.YMX)EXIT
     N=N+1; CALL INTERSECT_RESIZEVECTORS(N) 
@@ -295,6 +269,7 @@ CONTAINS
 
     !## double intersections, for better estimate for hfb
     IF(LHFB)THEN
+     Y=Y+CS
      !## array overwritten
      N=N+1; CALL INTERSECT_RESIZEVECTORS(N)
      IF(IVER.EQ.1)THEN
@@ -309,21 +284,17 @@ CONTAINS
     !## model is not bigger than line-segment
     IF(IMN.LE.0)EXIT
     CS=DELC(IMN-1)-DELC(IMN)
+    IF(LHFB)CS=CS/2.0
    ENDDO
 
   ENDIF
  ENDIF
 
  !## try intersections with x-axes secondly
- IMN=0
- DO I=NCOL,1,-1 
-  IF(DELR(I).GT.X1)THEN
-   XMN=DELR(I)
-   IMN=I
-  ENDIF
+ IMN=0; DO I=NCOL,1,-1 
+  IF(DELR(I).GT.X1)THEN; XMN=DELR(I); IMN=I; ENDIF
  END DO
- JMN=0
- DO I=0,NCOL
+ JMN=0; DO I=0,NCOL
   IF(DELR(I).LT.X2)THEN; XMX=DELR(I); JMN=I; ENDIF
  END DO
 
@@ -333,8 +304,10 @@ CONTAINS
   IF(IVER.EQ.0)THEN
 
    CS=DELR(IMN-1)-DELR(IMN)
+   IF(LHFB)CS=CS/2.0
    X =XMN-CS
    DO
+   
     X=X+CS
     IF(X.GT.XMX)EXIT
     N=N+1; CALL INTERSECT_RESIZEVECTORS(N) 
@@ -347,6 +320,7 @@ CONTAINS
 
     !## double intersections, for better estimate for hfb
     IF(LHFB)THEN
+     X=X+CS
      !## array overwritten
      N=N+1; CALL INTERSECT_RESIZEVECTORS(N) 
      XA(N)=X
@@ -361,6 +335,7 @@ CONTAINS
     !## model is not bigger than line-segment
     IF(IMN.GT.NCOL)EXIT
     CS=DELR(IMN)-DELR(IMN-1)
+    IF(LHFB)CS=CS/2.0
    ENDDO
 
   ENDIF
