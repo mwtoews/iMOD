@@ -244,7 +244,7 @@ CONTAINS
  LIP=.FALSE.
  
  IG=0
- IF(IBATCH.EQ.0)THEN
+! IF(IBATCH.EQ.0)THEN
 !  !## position in graph (pos=1 initial empty location)
 !  IF(WBAL_ISTEADY.EQ.1)THEN
 !   DO I=1,SIZE(GRAPH,1)
@@ -258,7 +258,7 @@ CONTAINS
 !   ENDDO
 !   IG=1
 !  ENDIF
- ENDIF
+! ENDIF
 
  NPER=0
  DO IFILES=1,NFILES
