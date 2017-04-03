@@ -19,6 +19,7 @@
 !!  Stichting Deltares
 !!  P.O. Box 177
 !!  2600 MH Delft, The Netherlands.
+!!
 MODULE MOD_TOOLS_UTL
 
 USE WINTERACTER
@@ -34,7 +35,7 @@ INTEGER(KIND=2),ALLOCATABLE,DIMENSION(:),PRIVATE :: IPLIST
 CONTAINS
 
  !###======================================================================
- SUBROUTINE TOOLS2GETPERIODS(FN,IPERIOD,IERROR)
+ SUBROUTINE TOOLS_UTL_GETPERIODS(FN,IPERIOD,IERROR)
  !###======================================================================
  !
  !## get period for mean,wbal computation
@@ -92,16 +93,12 @@ CONTAINS
    RETURN
   ENDIF
 
-!WRITE(*,*) SIZE(IPERIOD,1)
-
   IF(N+2.GT.SIZE(IPERIOD,1))THEN
    ALLOCATE(CPERIOD(N+2,2))
    CPERIOD(1:N,:)=IPERIOD(1:N,:)
    DEALLOCATE(IPERIOD)
    IPERIOD=>CPERIOD
   ENDIF
-
-!WRITE(*,*) SIZE(IPERIOD,1),SIZE(IPERIOD,2),N
 
   N           =N+1
   IPERIOD(N,1)=ID(1)
@@ -116,10 +113,10 @@ CONTAINS
 
  IERROR=0
 
- END SUBROUTINE TOOLS2GETPERIODS
+ END SUBROUTINE TOOLS_UTL_GETPERIODS
 
  !###======================================================================
- SUBROUTINE TOOLS1GETPERIODS(FN,IPERIOD,IERROR)
+ SUBROUTINE TOOLS_UTL_GETPERIODS_GXG(FN,IPERIOD,IERROR)
  !###======================================================================
  !
  !## get period for gxg-computation 
@@ -201,10 +198,10 @@ CONTAINS
 
  IERROR=0
 
- END SUBROUTINE TOOLS1GETPERIODS
+ END SUBROUTINE TOOLS_UTL_GETPERIODS_GXG
 
  !###======================================================================
- SUBROUTINE TOOLSFILLPOINTER(ISEL,IDF,IPIDF,NIP)
+ SUBROUTINE TOOLS_UTL_FILLPOINTER(ISEL,IDF,IPIDF,NIP)
  !###======================================================================
  IMPLICIT NONE
  INTEGER,INTENT(IN) :: ISEL
@@ -322,6 +319,6 @@ CONTAINS
   ENDDO
  ENDDO
 
- END SUBROUTINE TOOLSFILLPOINTER
+ END SUBROUTINE TOOLS_UTL_FILLPOINTER
 
 END MODULE MOD_TOOLS_UTL
