@@ -8,7 +8,7 @@
 //
 // Winteracter resource script. 
 //
-// Modified : 02/Apr/2017 18:12:13
+// Modified : 03/Apr/2017 13:53:40
 //
 ///////////////////////////////////////////////////
 //
@@ -1165,7 +1165,6 @@
 #define IDD_DIALOG026                     388
 #define ID_DPMANAGER_AUTO_LIST            389
 #define ID_SELECTPOLYGON                 1287
-#define ID_WBAL_ANALYSE                   387
 #define ID_DWBAL_ANALYSE                  393
 #define ID_DWBAL_ANALYSE_TAB1             397
 #define ID_DWBAL_ANALYSE_TAB2             398
@@ -11641,7 +11640,6 @@ BEGIN
         END
         MENUITEM SEPARATOR
         MENUITEM "Compute &Water Balance ...",               ID_WBAL
-        MENUITEM "Analyse Waterbalance ...",                 ID_WBAL_ANALYSE
         MENUITEM "Compute &GxG ...",                         ID_GXG
         MENUITEM "Compute &Mean Values ...",                 ID_MEAN
         MENUITEM "Compute &Timeseries ...",                  ID_TS
@@ -12469,5 +12467,5 @@ END
 //*WI* FORTSAVE    1
 //*WI* FILENAME    resource.f90
 //*WI* FMODNAME    RESOURCE
-//*WI* LASTTYPE        2
-//*WI* LASTRES       289
+//*WI* LASTTYPE        1
+//*WI* LASTRES         7
