@@ -2269,16 +2269,16 @@ END SUBROUTINE IMOD_UTL_QKSORT
  END SUBROUTINE IMOD_UTL_GETICIR
 
 !###======================================================================
-LOGICAL FUNCTION IMOD_UTL_INTERSECT_EQUI(XMIN,XMAX,YMIN,YMAX,CS,X1,X2,Y1,Y2,MX,N,XA,YA,FA,LN,LHFB)
+LOGICAL FUNCTION IMOD_UTL_INTERSECT_EQUI(XMIN,XMAX,YMIN,YMAX,CS_IN,X1,X2,Y1,Y2,MX,N,XA,YA,FA,LN,LHFB)
 !###======================================================================
 IMPLICIT NONE
-REAL,INTENT(IN) :: XMIN,XMAX,YMIN,YMAX,CS
+REAL,INTENT(IN) :: XMIN,XMAX,YMIN,YMAX,CS_IN
 REAL,INTENT(INOUT) :: X1,X2,Y1,Y2
 INTEGER,INTENT(IN) :: MX
 INTEGER,INTENT(OUT) :: N
 REAL,INTENT(OUT),DIMENSION(MX) :: XA,YA,FA,LN !## XA=col, YA=row, FA=fraction to nearest corner, 1,2,3,4 clockwise
 LOGICAL,INTENT(IN) :: LHFB
-REAL :: X,Y,XMN,XMX,YMN,YMX,DX,DY,LENG,TD
+REAL :: X,Y,XMN,XMX,YMN,YMX,DX,DY,LENG,TD,CS
 INTEGER :: I,ICOL,IROW,ID
 REAL :: A,B,XBEGIN,YBEGIN
 
@@ -2304,6 +2304,9 @@ IF(X1.GT.X2)THEN
  X2   =X
  Y2   =Y
 ENDIF
+
+!## reduce cellsize for a better estimate of faults
+CS=CS_IN; IF(LHFB)CS=CS/2.0
 
 !## find search box - result can be negative, does not matter!
 I=1
@@ -2361,14 +2364,6 @@ DO
  XA(N)=(Y-B)/A
  YA(N)=Y
 
- !## double intersections, for better estimate for hfb
- IF(LHFB)THEN
-  !## array overwritten
-  N=N+1; IF(N.GT.MX)RETURN
-  XA(N)=(Y-B)/A
-  YA(N)=Y
- ENDIF
- 
 ENDDO
 !## try intersections with x-axes secondly
 X=XMN-CS
@@ -2380,15 +2375,11 @@ DO
  N=N+1; IF(N.GT.MX)RETURN
  XA(N)=X
  YA(N)=A*X+B
-
- !## double intersections, for better estimate for hfb
- IF(LHFB)THEN
-  N=N+1; IF(N.GT.MX)RETURN
-  XA(N)=X
-  YA(N)=A*X+B
- ENDIF
  
 ENDDO
+
+!## set original cellsize
+CS=CS_IN
 
 !## sort intersections, determined by the one with the largest difference
 IF(ABS(DX).GE.ABS(DY))THEN
@@ -2511,9 +2502,6 @@ IF(X1.GT.X2)THEN
  Y2   =Y
 ENDIF
 
-!!## adjust perfect 45/135/215,305 aanpassen
-!DX=X2-X1; DY=Y2-Y1; IF(ABS(DX).EQ.ABS(DY))X1=X1+1.0
-
 !## use always mid between point x1,y1 and x2,y2 as first position
 XA(1)= X1
 YA(1)= Y1
@@ -2534,11 +2522,6 @@ IF(DX.EQ.0.0)DX=10.0E-10
 A=DY/DX
 B=Y1-A*X1
 
-!!## shift coordinates!
-!IF(Y1.NE.A*X1+B.OR. &
-!   Y2.NE.A*X2+B)THEN
-!ENDIF
-
 !continue search rest of intersections
 !try intersections with y-axes firstly
 IMN=0
@@ -2554,6 +2537,7 @@ END DO
 
 IF(IMN.GT.0)THEN
  CS=DELC(IMN-1)-DELC(IMN)
+ IF(LHFB)CS=CS/2.0
  Y =YMN-CS
  DO
   Y=Y+CS
@@ -2563,19 +2547,12 @@ IF(IMN.GT.0)THEN
   IF(N.GT.MX)RETURN
   XA(N)=(Y-B)/A
   YA(N)=Y
-
-  !## double intersections, for better estimate for hfb
-  IF(LHFB)THEN
-   !## array overwritten
-   N=N+1; IF(N.GT.MX)RETURN
-   XA(N)=(Y-B)/A
-   YA(N)=Y
-  ENDIF
-  
+ 
   IMN  =IMN-1
   !## model is not bigger than line-segment
   IF(IMN.LE.0)EXIT
   CS=DELC(IMN-1)-DELC(IMN)
+  IF(LHFB)CS=CS/2.0
  ENDDO
 ENDIF
 
@@ -2593,6 +2570,7 @@ END DO
 
 IF(IMN.GT.0)THEN
  CS=DELC(IMN-1)-DELC(IMN)
+ IF(LHFB)CS=CS/2.0
  X =XMN-CS
  DO
   X=X+CS
@@ -2603,18 +2581,11 @@ IF(IMN.GT.0)THEN
   XA(N)=X
   YA(N)=A*X+B
 
-  !## double intersections, for better estimate for hfb
-  IF(LHFB)THEN
-   !## array overwritten
-   N=N+1; IF(N.GT.MX)RETURN
-   XA(N)=X
-   YA(N)=A*X+B
-  ENDIF
-  
   IMN  =IMN+1
   !## model is not bigger than line-segment
   IF(IMN.GT.NCOL)EXIT
   CS=DELR(IMN)-DELR(IMN-1)
+  IF(LHFB)CS=CS/2.0
  ENDDO
 ENDIF
 
