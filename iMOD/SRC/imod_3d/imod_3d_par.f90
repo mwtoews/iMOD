@@ -204,14 +204,14 @@ TYPE(CART3D), SAVE :: MIDPOS !## mid of box
 TYPE(CART3D), SAVE :: TOP  !## upper right top corner
 TYPE(CART3D), SAVE :: BOT  !## lower left  bottom corner
 
-REAL(KIND=GLFLOAT),SAVE :: VIEWDX,VIEWDY
-REAL(KIND=GLDOUBLE),SAVE :: ZLEFT,ZRIGHT,ZTOP,ZBOTTOM
+!REAL(KIND=GLFLOAT),SAVE :: VIEWDX,VIEWDY
+!REAL(KIND=GLDOUBLE),SAVE :: ZLEFT,ZRIGHT,ZTOP,ZBOTTOM
 REAL(KIND=GLDOUBLE),SAVE :: FOVY =10.0_GLDOUBLE
 REAL(KIND=GLDOUBLE),SAVE :: ZFAR =500.0_GLDOUBLE
 REAL(KIND=GLDOUBLE),SAVE :: ZNEAR=10.0_GLDOUBLE
 
 REAL(KIND=GLDOUBLE),SAVE :: RAT  !## ratio of screen
-REAL(KIND=GLFLOAT),DIMENSION(3) :: XYZAXES   !## length of scaled axes around origin
+!REAL(KIND=GLFLOAT),DIMENSION(3) :: XYZAXES   !## length of scaled axes around origin
 
 !## overloaded operators for adding and subtracting 3d co-ordinates
 INTERFACE OPERATOR(+)
