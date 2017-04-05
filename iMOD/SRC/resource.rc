@@ -8,7 +8,7 @@
 //
 // Winteracter resource script. 
 //
-// Modified : 04/Apr/2017 19:22:35
+// Modified : 05/Apr/2017 21:53:37
 //
 ///////////////////////////////////////////////////
 //
@@ -6242,7 +6242,7 @@ BEGIN
 ,0
 END
 
-ID_D3DSETTINGS_TAB4 DIALOG 0, 0,  194,  164
+ID_D3DSETTINGS_TAB4 DIALOG 0, 0,  194,  166
 STYLE WS_CHILD | DS_CONTROL | DS_3DLOOK
 FONT    8, "Arial"
 BEGIN
@@ -6258,12 +6258,15 @@ BEGIN
     CONTROL "Opaque",IDF_LABEL5,"STATIC",WS_CHILD | WS_VISIBLE | WS_GROUP | SS_LEFT,   74,  136,   29,    8
     CONTROL "50",IDF_TRACKBAR1,"MSCTLS_TRACKBAR32",WS_CHILD | WS_VISIBLE | WS_GROUP | WS_TABSTOP | TBS_NOTICKS,   70,  123,  109,   13
     CONTROL "Invisible",IDF_LABEL9,"STATIC",WS_CHILD | WS_VISIBLE | WS_GROUP | SS_LEFT,  152,  136,   29,    8
+    CONTROL "Shading",IDF_CHECK1,"BUTTON",WS_CHILD | WS_VISIBLE | WS_GROUP | WS_TABSTOP | BS_AUTOCHECKBOX | BS_TEXT,   12,  140,   40,   12
 END
 
 ID_D3DSETTINGS_TAB4 RCDATA
 BEGIN
 "[Dialog] \n"
 " 0  1192 0 \n"
+"[Checks] \n"
+" 1182 0 \n"
 "[Menus] \n"
 "[Ranges] \n"
 " 1195               1             100 \n"
@@ -12487,4 +12490,4 @@ END
 //*WI* FILENAME    resource.f90
 //*WI* FMODNAME    RESOURCE
 //*WI* LASTTYPE        2
-//*WI* LASTRES       156
+//*WI* LASTRES       159

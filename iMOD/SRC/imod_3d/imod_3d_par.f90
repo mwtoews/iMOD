@@ -86,8 +86,8 @@ TYPE IPFSETTING
  INTEGER :: ISEL     !## selected
  INTEGER :: IPLOT    !## iplot in datamanager
  INTEGER :: ISUB     !## number of subdivision
- INTEGER :: IFANCY   !## number of subdivision
- INTEGER :: ISHADE   !## number of subdivision
+ INTEGER :: IFANCY   !## fancy plot of boreholes
+ INTEGER :: ISHADE   !## shading
  INTEGER :: ASSCOL1  !## associated column # 1
  INTEGER :: ASSCOL2  !## associated column # 2
  INTEGER :: IPLOTLEGEND !## plotlegend
@@ -110,11 +110,12 @@ END TYPE IFFSETTING
 TYPE(IFFSETTING),ALLOCATABLE,DIMENSION(:) :: IFFPLOT
 TYPE GENSETTING
  CHARACTER(LEN=256) :: GENFNAME
- INTEGER :: ICOLOR       !## colornumber
- INTEGER :: ITHICKNESS   !## thickness
- INTEGER :: ISEL         !## selected
- INTEGER :: ITRANSPARANCY
- LOGICAL :: L3D          !## 3d gen
+ INTEGER :: ICOLOR        !## colornumber
+ INTEGER :: ITHICKNESS    !## thickness
+ INTEGER :: ISEL          !## selected
+ INTEGER :: ISHADE        !## shading
+ INTEGER :: ITRANSPARANCY !## transparancy
+ LOGICAL :: L3D           !## 3d gen
  CHARACTER(LEN=50) :: FNAME
 END TYPE GENSETTING
 TYPE(GENSETTING),ALLOCATABLE,DIMENSION(:) :: GENPLOT
