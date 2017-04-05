@@ -3590,11 +3590,10 @@ SOLLOOP: DO I=1,NSOLLIST
  END FUNCTION IMOD3D_GEN
 
  !###======================================================================
- SUBROUTINE IMOD3D_DRAWGEN(FNAME,L3D,NINGEN)  !DX,DY,
+ SUBROUTINE IMOD3D_DRAWGEN(FNAME,L3D,NINGEN)  
  !###======================================================================
  IMPLICIT NONE
  INTEGER,INTENT(INOUT) :: NINGEN
-! REAL(KIND=GLFLOAT),INTENT(IN) :: DX,DY
  LOGICAL,INTENT(OUT) :: L3D
  LOGICAL :: LS3D
  CHARACTER(LEN=*),INTENT(IN) :: FNAME
@@ -3625,7 +3624,7 @@ SOLLOOP: DO I=1,NSOLLIST
    READ(IU,'(A256)',IOSTAT=IOS) LINE; IF(IOS.NE.0)EXIT
    I=I+1; IF(I.GT.NX)THEN
     ALLOCATE(X_DUM(NX*2),Y_DUM(NX*2),Z_DUM(NX*2))
-    X_DUM(1:NX)=X; Y_DUM(1:NX)=Y; Z_DUM(1:NX)=Z
+    DO J=1,NX; X_DUM(J)=X(J); Y_DUM(J)=Y(J); Z_DUM(J)=Z(J); ENDDO
     DEALLOCATE(X,Y,Z); X=>X_DUM; Y=>Y_DUM; Z=>Z_DUM; NX=NX*2
    ENDIF
    !## try to read 3d info
@@ -3642,15 +3641,12 @@ SOLLOOP: DO I=1,NSOLLIST
   !## determine polygon/line
   IF(.NOT.UTL_EQUALS_REAL(X(NX),X(1)).OR..NOT.UTL_EQUALS_REAL(Y(NX),Y(1)))THEN
 
-!  !## 2d-lines
-!  IF(NX.GT.5.OR..NOT.LS3D)THEN
+   !## 2d-lines
    CALL GLBEGIN(GL_LINES)
    DO I=1,NX-1
     IF((X(I).GT.BOT%X.OR.X(I+1).GT.BOT%X).AND.(X(I).LT.TOP%X.OR.X(I+1).LT.TOP%X).AND. &
        (Y(I).GT.BOT%Y.OR.Y(I+1).GT.BOT%Y).AND.(Y(I).LT.TOP%Y.OR.Y(I+1).LT.TOP%Y))THEN
      NINGEN =NINGEN+1
-!     XCOR(1)=(X(I)  -MIDPOS%X)/DX; YCOR(1)=(Y(I)  -MIDPOS%Y)/DY
-!     XCOR(2)=(X(I+1)-MIDPOS%X)/DX; YCOR(2)=(Y(I+1)-MIDPOS%Y)/DY
      XCOR(1)=X(I) ;  YCOR(1)=Y(I) 
      XCOR(2)=X(I+1); YCOR(2)=Y(I+1)
      CALL IMOD3D_LINE(XCOR,YCOR,Z(I:))
@@ -3670,10 +3666,6 @@ SOLLOOP: DO I=1,NSOLLIST
     XCOR(2)=X(2); YCOR(2)=Y(2)
     XCOR(3)=X(4); YCOR(3)=Y(4)
     XCOR(4)=X(3); YCOR(4)=Y(3)
-!    XCOR(1)=(X(1)-MIDPOS%X)/DX; YCOR(1)=(Y(1)-MIDPOS%Y)/DY
-!    XCOR(2)=(X(2)-MIDPOS%X)/DX; YCOR(2)=(Y(2)-MIDPOS%Y)/DY
-!    XCOR(3)=(X(4)-MIDPOS%X)/DX; YCOR(3)=(Y(4)-MIDPOS%Y)/DY
-!    XCOR(4)=(X(3)-MIDPOS%X)/DX; YCOR(4)=(Y(3)-MIDPOS%Y)/DY
     !## begin OpenGL-Quads       
     CALL GLBEGIN(GL_QUADS)
     DO I=1,4; CALL GLVERTEX3F(XCOR(I),YCOR(I),Z(I)); ENDDO
