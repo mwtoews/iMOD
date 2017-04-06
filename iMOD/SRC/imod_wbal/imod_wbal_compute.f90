@@ -616,12 +616,17 @@ CONTAINS
    IF(TP(IBAL)%IACT.NE.1)CYCLE
    DO JSYS=1,TP(IBAL)%NSYS
     IF(TP(IBAL)%ISYS(JSYS).EQ.0)THEN
-     HSTRING=TRIM(HSTRING)//',"'//TRIM(TP(IBAL)%ALIAS)//'_IN ","'// &
-                                  TRIM(TP(IBAL)%ALIAS)//'_OUT"'
-     IF(IBAL.EQ.3)HSTRING=TRIM(HSTRING)//',"FLUX UPPER FACE_IN ","FLUX UPPER FACE_OUT "' 
+     HSTRING=TRIM(HSTRING)//',"'//TRIM(TP(IBAL)%ACRNM)//'_IN ","'// &
+                                  TRIM(TP(IBAL)%ACRNM)//'_OUT"'
+!     HSTRING=TRIM(HSTRING)//',"'//TRIM(TP(IBAL)%ALIAS)//'_IN ","'// &
+!                                  TRIM(TP(IBAL)%ALIAS)//'_OUT"'
+!     IF(IBAL.EQ.3)HSTRING=TRIM(HSTRING)//',"FLUX UPPER FACE_IN ","FLUX UPPER FACE_OUT "' 
+     IF(IBAL.EQ.3)HSTRING=TRIM(HSTRING)//',"BDGFTF_IN ","BDGFTF_OUT "' 
     ELSE
-     HSTRING=TRIM(HSTRING)//',"'//TRIM(TP(IBAL)%ALIAS)//'_SYS'//TRIM(ITOS(TP(IBAL)%ISYS(JSYS)))//'_IN ","'// &
-                                  TRIM(TP(IBAL)%ALIAS)//'_SYS'//TRIM(ITOS(TP(IBAL)%ISYS(JSYS)))//'_OUT"' 
+     HSTRING=TRIM(HSTRING)//',"'//TRIM(TP(IBAL)%ACRNM)//'_SYS'//TRIM(ITOS(TP(IBAL)%ISYS(JSYS)))//'_IN ","'// &
+                                  TRIM(TP(IBAL)%ACRNM)//'_SYS'//TRIM(ITOS(TP(IBAL)%ISYS(JSYS)))//'_OUT"' 
+!     HSTRING=TRIM(HSTRING)//',"'//TRIM(TP(IBAL)%ALIAS)//'_SYS'//TRIM(ITOS(TP(IBAL)%ISYS(JSYS)))//'_IN ","'// &
+!                                  TRIM(TP(IBAL)%ALIAS)//'_SYS'//TRIM(ITOS(TP(IBAL)%ISYS(JSYS)))//'_OUT"' 
     ENDIF
    ENDDO
   ENDDO
