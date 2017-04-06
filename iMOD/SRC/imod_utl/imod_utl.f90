@@ -62,16 +62,19 @@ INTEGER :: NSX,NSY
 CONTAINS
  
  !###======================================================================
- SUBROUTINE UTL_WRITE_FREE(IU,IDF,IINT)
+ SUBROUTINE UTL_WRITE_FREE(IU,IDF,IINT,CPOS)
  !###======================================================================
  IMPLICIT NONE
  INTEGER,INTENT(IN) :: IU,IINT
+ CHARACTER(LEN=1),INTENT(IN) :: CPOS
  TYPE(IDFOBJ),INTENT(IN) :: IDF
  CHARACTER(LEN=52) :: LINE
  REAL :: XC
  INTEGER :: N,IROW,ICOL
  LOGICAL :: LEX
   
+ IF(CPOS.EQ.'T'.OR.CPOS.EQ.'t')CALL UTL_WRITE_FREE_HEADER(IU,IDF)
+ 
  DO IROW=1,IDF%NROW
   N=1; XC=IDF%X(1,IROW)
   DO ICOL=1,IDF%NCOL
@@ -105,6 +108,18 @@ CONTAINS
   ENDDO
  ENDDO
   
+ IF(CPOS.EQ.'B'.OR.CPOS.EQ.'b')CALL UTL_WRITE_FREE_HEADER(IU,IDF)
+
+ END SUBROUTINE UTL_WRITE_FREE
+
+ !###======================================================================
+ SUBROUTINE UTL_WRITE_FREE_HEADER(IU,IDF)
+ !###======================================================================
+ IMPLICIT NONE
+ INTEGER,INTENT(IN) :: IU
+ TYPE(IDFOBJ),INTENT(IN) :: IDF
+ INTEGER :: ICOL,IROW
+ 
  WRITE(IU,*) 'DIMENSIONS'
  WRITE(IU,*) IDF%NCOL
  WRITE(IU,*) IDF%NROW
@@ -122,7 +137,7 @@ CONTAINS
   DO IROW=0,IDF%NROW; WRITE(IU,*) IDF%SY(IROW); ENDDO 
  ENDIF
 
- END SUBROUTINE UTL_WRITE_FREE
+ END SUBROUTINE UTL_WRITE_FREE_HEADER
 
  !###======================================================================
  SUBROUTINE UTL_MEASUREMAIN()
