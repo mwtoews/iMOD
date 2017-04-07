@@ -474,8 +474,8 @@ CONTAINS
      ENDIF
     CASE (2,3) !## ipf/iff
      J=1
-     IF(MP(I)%XMAX.GT.MP(I)%XMIN.OR. &
-        MP(I)%YMAX.GT.MP(I)%YMIN)THEN
+     IF(MP(I)%XMAX.GE.MP(I)%XMIN.OR. &
+        MP(I)%YMAX.GE.MP(I)%YMIN)THEN
       TOP%X=MAX(TOP%X,MP(I)%XMAX); TOP%Y=MAX(TOP%Y,MP(I)%YMAX)
       BOT%X=MIN(BOT%X,MP(I)%XMIN); BOT%Y=MIN(BOT%Y,MP(I)%YMIN)
      ENDIF
@@ -521,17 +521,29 @@ CONTAINS
   BOT%X=IDF%XMIN; BOT%Y=IDF%YMIN
  ENDIF
 
- !## increase window a little bit ... 2.5%
- DXY=(TOP%X-BOT%X); IF(DXY.LE.0.0)DXY=1.0; DXY=DXY*0.025
- BOT%X=BOT%X-DXY
- TOP%X=TOP%X+DXY
- DXY=(TOP%Y-BOT%Y); IF(DXY.LE.0.0)DXY=1.0; DXY=DXY*0.025
- BOT%Y=BOT%Y-DXY
- TOP%Y=TOP%Y+DXY
-
- !## set mid-location of view
- MIDPOS%X=(TOP%X+BOT%X)/2.0_GLDOUBLE
- MIDPOS%Y=(TOP%Y+BOT%Y)/2.0_GLDOUBLE
+! !## increase window a little bit ... 2.5%
+! DXY=(TOP%X-BOT%X); DXY=DXY*0.025
+! IF(DXY.EQ.0.0)DXY=10.0
+! !## make sure coordinates are distinguishable
+! DO
+!  IF(.NOT.UTL_EQUALS_REAL(REAL(BOT%X)-DXY,REAL(BOT%X)))EXIT
+!  DXY=DXY*10.0
+! ENDDO
+! BOT%X=BOT%X-DXY
+! TOP%X=TOP%X+DXY
+! DXY=(TOP%Y-BOT%Y); DXY=DXY*0.025
+! IF(DXY.EQ.0.0)DXY=10.0
+! !## make sure coordinates are distinguishable
+! DO
+!  IF(.NOT.UTL_EQUALS_REAL(REAL(BOT%X)-DXY,REAL(BOT%X)))EXIT
+!  DXY=DXY*10.0
+! ENDDO
+! BOT%Y=BOT%Y-DXY
+! TOP%Y=TOP%Y+DXY
+!
+! !## set mid-location of view
+! MIDPOS%X=(TOP%X+BOT%X)/2.0_GLDOUBLE
+! MIDPOS%Y=(TOP%Y+BOT%Y)/2.0_GLDOUBLE
 
  !## normalize normalvector after initialisation
  CALL GLENABLE(GL_NORMALIZE)
@@ -592,6 +604,30 @@ CONTAINS
   ENDIF
  ENDIF
  
+ !## increase window a little bit ... 2.5%
+ DXY=(TOP%X-BOT%X); DXY=DXY*0.025
+ IF(DXY.EQ.0.0)DXY=10.0
+ !## make sure coordinates are distinguishable
+ DO
+  IF(.NOT.UTL_EQUALS_REAL(REAL(BOT%X)-DXY,REAL(BOT%X)))EXIT
+  DXY=DXY*10.0
+ ENDDO
+ BOT%X=BOT%X-DXY
+ TOP%X=TOP%X+DXY
+ DXY=(TOP%Y-BOT%Y); DXY=DXY*0.025
+ IF(DXY.EQ.0.0)DXY=10.0
+ !## make sure coordinates are distinguishable
+ DO
+  IF(.NOT.UTL_EQUALS_REAL(REAL(BOT%X)-DXY,REAL(BOT%X)))EXIT
+  DXY=DXY*10.0
+ ENDDO
+ BOT%Y=BOT%Y-DXY
+ TOP%Y=TOP%Y+DXY
+
+ !## set mid-location of view
+ MIDPOS%X=(TOP%X+BOT%X)/2.0_GLDOUBLE
+ MIDPOS%Y=(TOP%Y+BOT%Y)/2.0_GLDOUBLE
+
  !## define top%z/bot%z, nothing found from previous data, set top%z/bot%z=0.0
  IF(TOP%Z.LT.BOT%Z)THEN
   TOP%Z =1.0; BOT%Z=-1.0

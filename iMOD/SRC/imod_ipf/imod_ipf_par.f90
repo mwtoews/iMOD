@@ -83,6 +83,9 @@ TYPE TYPE_IPF
  REAL(KIND=8),POINTER,DIMENSION(:) :: IDATE       !## time-data in timeseries
  REAL,POINTER,DIMENSION(:,:) :: MEASURE           !## data in timeseries/sonderingen
 
+ REAL,POINTER,DIMENSION(:) :: DX                  !## delta offset in x direction
+ REAL,POINTER,DIMENSION(:) :: DY                  !## delta offset in y direction
+
  REAL,POINTER,DIMENSION(:) :: Z                   !## z-coordinate in drills/sonderingen
  CHARACTER(LEN=MAXATTRIB),POINTER,DIMENSION(:,:) :: L   !## data from drills
 

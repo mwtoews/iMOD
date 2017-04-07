@@ -442,6 +442,7 @@ CONTAINS
        DO IIPF=1,NIPF; IF(IPFPLOT(IIPF)%ISEL.EQ.1)EXIT; ENDDO
        !## refresh if needed ...
        CALL IMOD3D_LABELS(IIPF,IPFPLOT(IIPF)%IPLOT)
+       CALL WDIALOGSELECT(ID_D3DSETTINGS_TAB2)
        !## fill display with drills
        IF(.NOT.IMOD3D_IPF())THEN; ENDIF
        !# refresh image and labels
