@@ -687,8 +687,8 @@ CONTAINS
  CALL GLFRONTFACE(GL_CCW)
 
  !## enables hidden-surface removeal
- CALL GLDEPTHFUNC(GL_LESS)
  CALL GLENABLE(GL_DEPTH_TEST)
+ CALL GLDEPTHFUNC(GL_LESS)
 
  !## completely enclosed surface constructed from opaque polygons with a consistent
  !## orientation, none of the back-facing polygons are ever visible

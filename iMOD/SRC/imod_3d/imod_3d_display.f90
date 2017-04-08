@@ -43,10 +43,8 @@ CONTAINS
  INTEGER,INTENT(IN) :: IMODE
  REAL(KIND=GLFLOAT) :: XR,XG,XB
  INTEGER :: I,IR,IG,IB,J
- REAL(KIND=GLDOUBLE) :: Z
  INTEGER(GLINT) :: IVIEWPORT(4)
- TYPE (SPHERE3D) :: SLOOKFROM
- LOGICAL(GLBOOLEAN) :: LRED,LGREEN,LBLUE,LALPHA
+ LOGICAL(GLBOOLEAN) :: LRED,LGREEN,LBLUE,LALPHA,LDMASK
  
  CALL IMOD3D_ERROR('IMOD3D_DISPLAY_ENTRY')
 
@@ -152,7 +150,8 @@ CONTAINS
   !## draw interactive flowlines
   IF(IPATHLINE_3D.GT.0)CALL IMOD3D_DISPLAY_PL()
   !## draw idf's - last cause antialiasing and blending not for polygons
-  IF(NIDFLIST.GT.0)CALL IMOD3D_DISPLAY_IDF(IMODE)
+  IF(NIDFLIST.GT.0)CALL IMOD3D_DISPLAY_IDF(IMODE,0)
+  
   !## draw gen's
   IF(NGENLIST.GT.0)CALL IMOD3D_DISPLAY_GEN()
   !## draw bmp
@@ -160,38 +159,20 @@ CONTAINS
   !## plot point of rotation
   CALL IMOD3D_PLOT_INDPOS()
  
+  !## put transparance last
+  IF(NIDFLIST.GT.0)THEN
+   !## freeze depthmask for transluscent plotting
+   LDMASK=.FALSE.; CALL GLDEPTHMASK(LDMASK)
+   CALL IMOD3D_DISPLAY_IDF(IMODE,1)
+   LDMASK=.TRUE.; CALL GLDEPTHMASK(LDMASK)
+  ENDIF
+
   DO I=1,NCLPLIST; CALL GLDISABLE(CLPPLANES(I)); END DO
 
  ENDDO
  
  !## draw axes,roundbox
- IF(IORIENT.EQ.1)THEN
-
-  CALL GLMATRIXMODE(GL_MODELVIEW)
-  CALL GLPOPMATRIX()   !## pops off the top matrix second-from-the top becomes the top
-  CALL GLPUSHMATRIX()  !## pushes all matrices in the current stack down one level, topmost is copied
-
-  !## lookat is the coordinate 0,0,0
-  !## lookfrom is the coordinate 10,-20,5
-  !## scale factors 1,1,1
-
-  SLOOKFROM=CART2SPHERE(LOOKFROM-LOOKAT)
-  Z        =INIT_SHIFTZ-SLOOKFROM%RHO
-
-  !## displacement in the left-corner
-  CALL GLTRANSLATED(-2.0_GLDOUBLE,-2.0_GLDOUBLE,-2.0_GLDOUBLE)
-  !## no moving and/or zooming
-  CALL GLTRANSLATED(0.0_GLDOUBLE,0.0_GLDOUBLE,Z)  !%z affected by zoom
-  CALL GLROTATED(ANGLE%X, 0.0_GLDOUBLE, 0.0_GLDOUBLE, 1.0_GLDOUBLE)
-  CALL GLROTATED(ANGLE%Y, COS(PI*ANGLE%X/180.0_GLDOUBLE), &
-                 -SIN(PI*ANGLE%X/180.0_GLDOUBLE), 0.0_GLDOUBLE)
-  CALL GLTRANSLATED(-LOOKAT%X, -LOOKAT%Y, -LOOKAT%Z)
-
-  CALL IMOD3D_SETCOLOR(OCOLOR)
-  CALL GLLINEWIDTH(1.0_GLFLOAT)
-  CALL GLCALLLIST(ORIENTINDEX)
-
- ENDIF
+ IF(IORIENT.EQ.1.AND.IMODE.EQ.1)CALL IMOD3D_DISPLAY_ORIENT()
 
  !## plot legend
  IF(IMODE.EQ.1)CALL IMOD3D_DISPLAY_LEGEND()
@@ -219,6 +200,39 @@ CONTAINS
  CALL IMOD3D_ERROR('IMOD3D_DISPLAY')
 
  END SUBROUTINE IMOD3D_DISPLAY
+ 
+ !###======================================================================
+ SUBROUTINE IMOD3D_DISPLAY_ORIENT()
+ !###======================================================================
+ IMPLICIT NONE
+ TYPE (SPHERE3D) :: SLOOKFROM
+ REAL(KIND=GLDOUBLE) :: Z
+ 
+ CALL GLMATRIXMODE(GL_MODELVIEW)
+ CALL GLPOPMATRIX()   !## pops off the top matrix second-from-the top becomes the top
+ CALL GLPUSHMATRIX()  !## pushes all matrices in the current stack down one level, topmost is copied
+
+ !## lookat is the coordinate 0,0,0
+ !## lookfrom is the coordinate 10,-20,5
+ !## scale factors 1,1,1
+
+ SLOOKFROM=CART2SPHERE(LOOKFROM-LOOKAT)
+ Z        =INIT_SHIFTZ-SLOOKFROM%RHO
+
+ !## displacement in the left-corner
+ CALL GLTRANSLATED(-2.0_GLDOUBLE,-2.0_GLDOUBLE,-2.0_GLDOUBLE)
+ !## no moving and/or zooming
+ CALL GLTRANSLATED(0.0_GLDOUBLE,0.0_GLDOUBLE,Z)  !%z affected by zoom
+ CALL GLROTATED(ANGLE%X, 0.0_GLDOUBLE, 0.0_GLDOUBLE, 1.0_GLDOUBLE)
+ CALL GLROTATED(ANGLE%Y, COS(PI*ANGLE%X/180.0_GLDOUBLE), &
+                -SIN(PI*ANGLE%X/180.0_GLDOUBLE), 0.0_GLDOUBLE)
+ CALL GLTRANSLATED(-LOOKAT%X, -LOOKAT%Y, -LOOKAT%Z)
+
+ CALL IMOD3D_SETCOLOR(OCOLOR)
+ CALL GLLINEWIDTH(1.0_GLFLOAT)
+ CALL GLCALLLIST(ORIENTINDEX)
+
+ END SUBROUTINE IMOD3D_DISPLAY_ORIENT
  
  !###======================================================================
  SUBROUTINE IMOD3D_PLOT_INDPOS()
@@ -354,7 +368,6 @@ CONTAINS
  IMPLICIT NONE
  INTEGER,INTENT(IN) :: IMODE
  INTEGER :: I,IIPF
-! REAL(KIND=GLFLOAT) :: LT !## linethickness
    
  !## associated file drawn
  DO I=1,NIPFLIST
@@ -429,16 +442,18 @@ CONTAINS
  END SUBROUTINE IMOD3D_DISPLAY_IPF
 
  !###======================================================================
- SUBROUTINE IMOD3D_DISPLAY_IDF(IMODE)
+ SUBROUTINE IMOD3D_DISPLAY_IDF(IMODE,IT)
  !###======================================================================
  IMPLICIT NONE
  INTEGER :: I,J
- INTEGER,INTENT(IN) :: IMODE
+ INTEGER,INTENT(IN) :: IMODE,IT
  REAL(KIND=GLDOUBLE) :: TSTACK
  
  TSTACK=0.0_GLDOUBLE
  DO I=1,SIZE(IDFLISTINDEX) 
   IF(IDFPLOT(I)%ISEL.NE.1.OR.IDFLISTINDEX(I).EQ.0)CYCLE
+  !## blend mode 
+  IF(IMODE.EQ.1.AND.IDFPLOT(I)%ITRANSPARANCY.LT.100.AND.IT.EQ.0)CYCLE
  
   IF(IDFPLOT(I)%ISTACKED.GT.0)THEN
    CALL GLPUSHMATRIX()  !## pushes all matrices in the current stack down one level, topmost is copied
@@ -471,15 +486,6 @@ CONTAINS
    !## turn on light if neccessary
    IF(IDFPLOT(I)%ISHADED.EQ.1)THEN
 
-    !## set material ...
-
-!    !## one single colour used
-!    IF(IDFPLOT(I)%ILEG.EQ.1)THEN
-!     !## show shaded surface
-!     CALL IMOD3D_RETURNCOLOR(IDFPLOT(I)%ICOLOR,AMBIENT)
-!     CALL GLMATERIALFV(GL_FRONT_AND_BACK,GL_AMBIENT_AND_DIFFUSE,AMBIENT)
-!    ENDIF
-
     !## flat shading
     CALL GLSHADEMODEL(GL_FLAT) !## GL_SMOOTH
     CALL GLENABLE(GL_LIGHTING)
@@ -495,9 +501,6 @@ CONTAINS
 
   !## draw mesh
   IF(IDFPLOT(I)%IFILL.EQ.2.OR.IDFPLOT(I)%IFILL.EQ.3)THEN
-
-!   !## blend mode
-!   CALL GLBLENDFUNC(GL_SRC_ALPHA,GL_ONE_MINUS_SRC_ALPHA)  !## (1) source (2) destination
 
    !## show lines to represent rectangles/triangles
    IF(IDFPLOT(I)%IFILL.EQ.2)CALL IMOD3D_SETCOLOR(IDFPLOT(I)%ICOLOR)
@@ -517,7 +520,6 @@ CONTAINS
 
  !## default
  CALL GLPOLYGONMODE(GL_BACK, GL_FILL); CALL GLPOLYGONMODE(GL_FRONT,GL_FILL)
-! CALL GLENABLE(GL_DEPTH_TEST)
 
  END SUBROUTINE IMOD3D_DISPLAY_IDF
 
