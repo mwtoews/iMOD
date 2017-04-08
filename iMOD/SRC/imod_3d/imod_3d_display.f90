@@ -151,35 +151,12 @@ CONTAINS
   IF(NSOLLIST.GT.0)CALL IMOD3D_DISPLAY_SOL()
   !## draw interactive flowlines
   IF(IPATHLINE_3D.GT.0)CALL IMOD3D_DISPLAY_PL()
-
-!  !## draw axes,roundbox
-!  IF(IMODE.EQ.1.AND.IBNDBOX.EQ.1)THEN
-!   CALL GLBLENDFUNC(GL_SRC_ALPHA,GL_ONE_MINUS_SRC_ALPHA)  !## (1) source (2) destination
-!  !## draw filled background in gl_cull_face mode
-!   CALL IMOD3D_SETCOLOR(BCOLOR,100)
-!   CALL GLLINEWIDTH(1.0_GLFLOAT)
-!   !## draw box
-!   IF(AXESINDEX(1).GT.0)CALL GLCALLLIST(AXESINDEX(1))
-!   !## draw axes
-!   IF(AXESINDEX(2).GT.0)CALL GLCALLLIST(AXESINDEX(2))
-!  ENDIF
-! 
-!  !## draw axes text,roundbox
-!  IF(IMODE.EQ.1.AND.IAXES.EQ.1)THEN
-!   CALL GLBLENDFUNC(GL_SRC_ALPHA,GL_ONE_MINUS_SRC_ALPHA)  !## (1) source (2) destination
-!   !## draw labels
-!   CALL IMOD3D_SETCOLOR(ACOLOR,100)
-!   IF(AXESINDEX(3).GT.0)CALL GLCALLLIST(AXESINDEX(3))
-!  ENDIF
-
   !## draw idf's - last cause antialiasing and blending not for polygons
   IF(NIDFLIST.GT.0)CALL IMOD3D_DISPLAY_IDF(IMODE)
   !## draw gen's
   IF(NGENLIST.GT.0)CALL IMOD3D_DISPLAY_GEN()
-  
   !## draw bmp
-  CALL IMOD3D_DISPLAY_BMP()
- 
+  CALL IMOD3D_DISPLAY_BMP() 
   !## plot point of rotation
   CALL IMOD3D_PLOT_INDPOS()
  
@@ -377,7 +354,7 @@ CONTAINS
  IMPLICIT NONE
  INTEGER,INTENT(IN) :: IMODE
  INTEGER :: I,IIPF
- REAL(KIND=GLFLOAT) :: LT !## linethickness
+! REAL(KIND=GLFLOAT) :: LT !## linethickness
    
  !## associated file drawn
  DO I=1,NIPFLIST
@@ -400,8 +377,8 @@ CONTAINS
     ENDIF
    ELSE
     !## mark whenever drill has been selected/activated to be interpolated
-    LT=2.0_GLFLOAT
-    CALL GLLINEWIDTH(LT)
+!    LT=2.0_GLFLOAT
+    CALL GLLINEWIDTH(2.0_GLFLOAT)
     CALL GLPOINTSIZE(4.0_GLFLOAT)
    ENDIF
   
