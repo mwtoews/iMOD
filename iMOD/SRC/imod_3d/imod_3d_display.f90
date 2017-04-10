@@ -149,23 +149,22 @@ CONTAINS
   IF(NSOLLIST.GT.0)CALL IMOD3D_DISPLAY_SOL()
   !## draw interactive flowlines
   IF(IPATHLINE_3D.GT.0)CALL IMOD3D_DISPLAY_PL()
-  !## draw idf's - last cause antialiasing and blending not for polygons
+  !## draw idf's
   IF(NIDFLIST.GT.0)CALL IMOD3D_DISPLAY_IDF(IMODE,0)
   
   !## draw gen's
-  IF(NGENLIST.GT.0)CALL IMOD3D_DISPLAY_GEN()
+  IF(NGENLIST.GT.0)CALL IMOD3D_DISPLAY_GEN(0)
   !## draw bmp
   CALL IMOD3D_DISPLAY_BMP() 
   !## plot point of rotation
   CALL IMOD3D_PLOT_INDPOS()
  
-  !## put transparance last
-  IF(NIDFLIST.GT.0)THEN
-   !## freeze depthmask for transluscent plotting
-   LDMASK=.FALSE.; CALL GLDEPTHMASK(LDMASK)
-   CALL IMOD3D_DISPLAY_IDF(IMODE,1)
-   LDMASK=.TRUE.; CALL GLDEPTHMASK(LDMASK)
-  ENDIF
+  !## put transparancy last - used fixed depth mask and plot all transparant images
+  !## freeze depthmask for transluscent plotting
+  LDMASK=.FALSE.; CALL GLDEPTHMASK(LDMASK)
+  IF(NIDFLIST.GT.0)CALL IMOD3D_DISPLAY_IDF(IMODE,1)
+  IF(NGENLIST.GT.0)CALL IMOD3D_DISPLAY_GEN(1)
+  LDMASK=.TRUE.; CALL GLDEPTHMASK(LDMASK)
 
   DO I=1,NCLPLIST; CALL GLDISABLE(CLPPLANES(I)); END DO
 
@@ -452,9 +451,18 @@ CONTAINS
  TSTACK=0.0_GLDOUBLE
  DO I=1,SIZE(IDFLISTINDEX) 
   IF(IDFPLOT(I)%ISEL.NE.1.OR.IDFLISTINDEX(I).EQ.0)CYCLE
+  
   !## blend mode 
-  IF(IMODE.EQ.1.AND.IDFPLOT(I)%ITRANSPARANCY.LT.100.AND.IT.EQ.0)CYCLE
- 
+  IF(IMODE.EQ.1)THEN
+   IF(IDFPLOT(I)%ITRANSPARANCY.LT.100)THEN
+    !## skip all transparant images in this cycle
+    IF(IT.EQ.0)CYCLE
+   ELSE
+    !## skip all opaque images in this cycle
+    IF(IT.EQ.1)CYCLE
+   ENDIF
+  ENDIF 
+  
   IF(IDFPLOT(I)%ISTACKED.GT.0)THEN
    CALL GLPUSHMATRIX()  !## pushes all matrices in the current stack down one level, topmost is copied
    TSTACK=TSTACK+(IDFPLOT(I)%ISTACKED*5.0_GLDOUBLE)
@@ -686,20 +694,27 @@ CONTAINS
  END SUBROUTINE IMOD3D_DISPLAY_PL
  
  !###======================================================================
- SUBROUTINE IMOD3D_DISPLAY_GEN()
+ SUBROUTINE IMOD3D_DISPLAY_GEN(IT)
  !###======================================================================
  IMPLICIT NONE
+ INTEGER,INTENT(IN) :: IT
  INTEGER :: I
  REAL(KIND=GLFLOAT) :: XW,XR,XG,XB
  INTEGER :: IR,IG,IB
 
 ! CALL GLPOLYGONMODE(GL_BACK, GL_FILL); CALL GLPOLYGONMODE(GL_FRONT,GL_FILL) 
 
-! !## blend mode
-! CALL GLBLENDFUNC(GL_SRC_ALPHA,GL_ONE_MINUS_SRC_ALPHA)  !## (1) source (2) destination
-
  DO I=1,NGENLIST
   IF(GENPLOT(I)%ISEL.NE.1.OR.GENLISTINDEX(I).EQ.0)CYCLE
+
+  !## blend mode 
+  IF(GENPLOT(I)%ITRANSPARANCY.LT.100)THEN
+   !## skip all transparant images in this cycle
+   IF(IT.EQ.0)CYCLE
+  ELSE
+   !## skip all opaque images in this cycle
+   IF(IT.EQ.1)CYCLE
+  ENDIF
 
   !## blend mode 
   IF(GENPLOT(I)%ITRANSPARANCY.LT.100)THEN
@@ -714,7 +729,6 @@ CONTAINS
 
   IF(GENPLOT(I)%L3D)THEN
    !## show shaded surface
-!   CALL IMOD3D_SETCOLOR(GENPLOT(I)%ICOLOR,GENPLOT(I)%ITRANSPARANCY)
    IF(GENPLOT(I)%ITRANSPARANCY.LT.100)THEN
     CALL IMOD3D_SETCOLOR(GENPLOT(I)%ICOLOR,GENPLOT(I)%ITRANSPARANCY) 
    ELSE
