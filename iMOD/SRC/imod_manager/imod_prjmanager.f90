@@ -7402,7 +7402,7 @@ TOPICLOOP: DO ITOPIC=1,MAXTOPICS
  INTEGER,INTENT(INOUT),DIMENSION(:) :: NHFBNP
  TYPE(IDFOBJ),INTENT(INOUT) :: IDF
  INTEGER :: IROW,ICOL,ILAY,IOS,JLAY,IC1,IC2,IR1,IR2
- REAL :: NODATA,C,C1,C2,Z
+ REAL :: NODATA,C,C1,C2,Z,ZZ
  INTEGER(KIND=1),ALLOCATABLE,DIMENSION(:,:,:) :: IPC
  REAL,ALLOCATABLE,DIMENSION(:,:) :: RES,FDZ
  
@@ -7428,10 +7428,19 @@ TOPICLOOP: DO ITOPIC=1,MAXTOPICS
    ELSE
     IPC(IC1,IR1,1)=INT(1,1)
    ENDIF
-   !## resistance, sum conductances - ignore resistance of zero days
-   IF(C.GT.0.0)RES(IC1,IR1)=RES(IC1,IR1)+(1.0/C)*Z
-   !## occupation fraction
-   FDZ(IC1,IR1)=FDZ(IC1,IR1)+Z
+   
+   !## still some space left in modellayer for an additional fault
+   IF(FDZ(IC1,IR1).LT.1.0)THEN
+    !## available space
+    ZZ=1.0-FDZ(IC1,IR1)
+    !## net available space
+    ZZ=MIN(ZZ,Z)
+    !## resistance, sum conductances - ignore resistance of zero days
+    IF(C.GT.0.0)RES(IC1,IR1)=RES(IC1,IR1)+(1.0/C)*ZZ
+    !## occupation fraction
+    FDZ(IC1,IR1)=FDZ(IC1,IR1)+Z
+   ENDIF
+   
   ENDDO
   
   DO IROW=1,IDF%NROW; DO ICOL=1,IDF%NCOL
@@ -7549,8 +7558,8 @@ TOPICLOOP: DO ITOPIC=1,MAXTOPICS
  
  !## place vertical wall
  IF(IPC(ICOL,IROW,1).EQ.INT(1,1).AND.ICOL.LT.NCOL)THEN
-  IF(JU.GT.0)WRITE(JU,'(I10,3(A1,G10.5))') N,',',C,',',RES,',',FDZ
-  IF(LTB)THEN
+  IF(JU.GT.0)WRITE(JU,'(I10,3(1X,E15.7))') N,C,RES,FDZ
+  IF(LTB)THEN   
    IF(ICOL.LT.IDF%NCOL)THEN
     !# find appropriate top/bot
     T1=TOP%X(ICOL,IROW); T2=TOP%X(ICOL+1,IROW)
@@ -7576,7 +7585,7 @@ TOPICLOOP: DO ITOPIC=1,MAXTOPICS
  ENDIF
  !## place horizontal wall
  IF(IPC(ICOL,IROW,2).EQ.INT(1,1).AND.IROW.LT.NROW)THEN
-  IF(JU.GT.0)WRITE(JU,'(I10,3(A1,G10.5))') N,',',C,',',RES,',',FDZ
+  IF(JU.GT.0)WRITE(JU,'(I10,3(1X,E15.7))') N,C,RES,FDZ
   IF(LTB)THEN
    IF(IROW.LT.IDF%NROW)THEN
     !# find appropriate top/bot
