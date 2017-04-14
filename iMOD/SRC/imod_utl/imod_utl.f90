@@ -29,7 +29,7 @@ USE MOD_PREF_PAR, ONLY : PREFVAL
 USE MODPLOT, ONLY : MP,MPW,LEGENDOBJ,MXCLR,MXCLASS
 USE MOD_IDF_PAR, ONLY : IDFOBJ
 USE MOD_POLINT, ONLY : POL1LOCATE
-USE IMODVAR, ONLY : MXTP,TP,IDPROC,BVERSION,RVERSION,LBETA,LEXPDATE,EXPDATE,SAVEDIR,ICDEBUGLEVEL
+USE IMODVAR, ONLY : MXTP,TP,IDPROC,BVERSION,RVERSION,LBETA,LEXPDATE,EXPDATE,SAVEDIR,ICDEBUGLEVEL,PI
 USE MOD_OSD, ONLY : OSD_OPEN,OSD_GETENV,OS
 USE MOD_QKSORT
 
@@ -1413,6 +1413,60 @@ CONTAINS
 
  END SUBROUTINE UTL_PRINTTEXT
 
+ !###======================================================================
+ SUBROUTINE UTL_GET_ANGLES(X,Y,Z,RX,RY,RZ)
+ !###======================================================================
+ IMPLICIT NONE
+ REAL,INTENT(IN) :: X,Y,Z
+ REAL,INTENT(OUT) :: RX,RY,RZ
+ REAL :: P,DXY,DXYZ
+ 
+ DXY =X**2.0+Y**2.0; IF(DXY.GT.0.0)DXY=SQRT(DXY)
+ DXYZ=X**2.0+Y**2.0+Z**2.0; IF(DXYZ.GT.0.0)DXYZ=SQRT(DXYZ)
+
+ !## get length of vector
+ P=0.0; IF(DXYZ.GT.0.0)P=DXYZ
+
+ RX=0.0
+ RY=0.0
+ RZ=0.0
+ 
+ IF(P.GT.0.0)THEN
+  !## get angle with x-axes
+  RX=ACOS(X/P)
+  !## get angle with x-axes
+  RY=ACOS(Y/P)
+ ENDIF
+ 
+ !## get angle with x-axes
+ IF(DXY.GT.0.0)RZ=ACOS(X/DXY)
+
+! write(*,*) RX,RY,RZ
+! write(*,*) RX*(360.0/(2.0*pi)),RY*(360.0/(2.0*pi)),RZ*(360.0/(2.0*pi))
+ 
+ END SUBROUTINE UTL_GET_ANGLES
+ 
+ !###======================================================================
+ SUBROUTINE UTL_ROTATE_XYZ(X,Y,Z,AX,AY,AZ)
+ !###======================================================================
+ IMPLICIT NONE
+ REAL,INTENT(INOUT) :: X,Y,Z
+ REAL,INTENT(IN) :: AX,AY,AZ
+
+ !## perform rotation around z-axes
+ X=COS(AZ)*X-SIN(AZ)*Y
+ Y=SIN(AZ)*X+COS(AZ)*Y
+
+ !## perform rotation around y-axes
+ X= COS(AY)*X-SIN(AY)*Z
+ Z= SIN(AY)*X+COS(AY)*Z
+
+ !## perform rotation around x-axes
+ Y=COS(AX)*Y-SIN(AX)*Z
+ Z=SIN(AX)*Y+COS(AX)*Z
+
+ END SUBROUTINE UTL_ROTATE_XYZ
+ 
  !###======================================================================
  SUBROUTINE UTL_PROFILE_GETVIEWBOX(X1,Y1,X2,Y2,XSIGHT,XYPOL,XMN,YMN,XMX,YMX)
  !###======================================================================
