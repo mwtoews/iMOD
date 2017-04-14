@@ -189,10 +189,8 @@ CONTAINS
  
   CASE (PUSHBUTTON)
    SELECT CASE (MESSAGE%VALUE1)
-    CASE (ID_GRAPHICS)
-     CALL WBAL_ANALYSE_GRAPHICS()
-    CASE (ID_PREVIEW)
-     CALL WBAL_ANALYSE_TIMESERIES()
+    CASE (ID_GRAPHICS,ID_PREVIEW)
+     CALL WBAL_ANALYSE_PLOT(MESSAGE%VALUE1)
 
    END SELECT
    
@@ -204,26 +202,6 @@ CONTAINS
  END SELECT
      
  END SUBROUTINE WBAL_ANALYSE_TAB4
-
- !###======================================================================
- SUBROUTINE WBAL_ANALYSE_TIMESERIES() 
- !###======================================================================
- IMPLICIT NONE
-
- CALL WBAL_ANAYSE_PREPARE() 
- IF(WBAL_ANALYSE_PLOTGRAPH(1,1))THEN; ENDIF
- 
-!     IY1=19630101
-!     IY2=20140101
-!     IPERIOD=1
-!     ITIME=0
-!     CALL WDIALOGGETMENU(IDF_MENU1,IBLANK)
-!     CALL WBAL_ANAYSE_PREPARE(IBLANK,ITIME,IPERIOD,IY1,IY2) 
-!     IF(WBAL_ANALYSE_PLOTGRAPH(NLAY,NZONE))THEN; ENDIF
-!     DEALLOCATE(GWBAL(2)%CDATE,GWBAL(2)%Q,GWBAL(2)%CLAY,GWBAL(2)%CZONE)
-!     CALL WDIALOGSELECT(ID_WBALMAIN)
-
- END SUBROUTINE WBAL_ANALYSE_TIMESERIES
 
  !###======================================================================
  LOGICAL FUNCTION WBAL_ANALYSE_READCSV() 
@@ -469,98 +447,40 @@ CONTAINS
  END FUNCTION  WBAL_ANALYSE_FILLGRID
 
  !###======================================================================
- SUBROUTINE WBAL_ANALYSE_GRAPHICS()
+ SUBROUTINE WBAL_ANALYSE_PLOT(ID)
  !###======================================================================
  IMPLICIT NONE
- INTEGER,PARAMETER :: NXPIX=1000, NYPIX=1200 !## resolution dx,dy
- INTEGER,PARAMETER :: NFLX=24  !## number of zones in current csv file
- REAL,PARAMETER :: CS=0.009 !## charactersize
- CHARACTER(LEN=256) :: PNGNAME
- LOGICAL :: LOCAL,PERC
- INTEGER :: IPOL,IOS,I
- REAL,DIMENSION(:,:), ALLOCATABLE :: Q,QSUBREGIO
- CHARACTER(LEN=10),DIMENSION(:),ALLOCATABLE :: QTXT
- INTEGER,DIMENSION(:),ALLOCATABLE :: IPLG
+ INTEGER,INTENT(IN) :: ID
  
-!QTXT(01)='Q-drn  '             bdgdrn  
-!QTXT(02)='Q-olf  '             bdgolf  
-!QTXT(03)='Q-riv  '             bdgriv  
-!QTXT(04)='Q-ghb  '             bdgghb  
-!QTXT(05)='Q-isg  '             bdgisg  
-!QTXT(06)='Q-wel  '             bdgwel  
-!QTXT(07)='Q-reg  '             bdgfrf en bdgfff
-!QTXT(08)='Q-cnh  '             bdgbnd
-!QTXT(09)='Q-ftf  '             bdgflf
-!QTXT(10)='Q-flf  '             bdgflf
-!QTXT(11)='Q-rch  '             bdgrch
-!QTXT(12)='Q-evt  '             bdgevt
-!QTXT(13)='Q-cap   '            bdgcap
-!QTXT(14)='Q-etact '            bdgETact  
-!QTXT(15)='Q-pm    '            bdgpm   
-!QTXT(16)='Q-pmgw  '            bdgpmgw 
-!QTXT(17)='Q-pmsw  '            bdgpmsw 
-!QTXT(18)='Q-sto   '            bdgsto
-!QTXT(19)='Q-decsto'            bdgdecStot
-!QTXT(20)='Q-spgw  '            bdgqspgw
-!QTXT(21)='Q-cor   '            msw_qsimcorrmf
-!QTXT(22)='Q-qdr   '            bdgdrn    
-!QTXT(23)='Q-qrun  '             ????   weet ik nog niet precies, bdgqrun
-!QTXT(24)='Q-modf  '            bdgqmodf  
+ !## get the appropriate selection
+ IF(.NOT.WBAL_ANAYSE_PREPARE())RETURN
 
- !!     Q(01,1)=QDRN_IN   Q(01,1)=QDRN_OUT    Q(13,1)=QCAP_IN   Q(13,1)=QCAP_OUT    
-!!     Q(02,1)=QOLF_IN   Q(02,1)=QOLF_OUT    Q(14,1)=QETACT_IN Q(14,1)=QETACT_OUT  
-!!     Q(03,1)=QRIV_IN   Q(03,1)=QRIV_OUT    Q(15,1)=QPM_IN    Q(15,1)=QPM_OUT     
-!!     Q(04,1)=QGHB_IN   Q(04,1)=QGHB_OUT    Q(16,1)=QPMGW_IN  Q(16,1)=QPMGW_OUT   
-!!     Q(05,1)=QISG_IN   Q(05,1)=QISG_OUT    Q(17,1)=QPMSW_IN  Q(17,1)=QPMSW_OUT   
-!!     Q(06,1)=QWEL_IN   Q(06,1)=QWEL_OUT    Q(18,1)=QSTO_IN   Q(18,1)=QSTO_OUT    
-!!     Q(07,1)=QREG_IN   Q(07,1)=QREG_OUT    Q(19,1)=QDECSTO_INQ(19,1)=QDECSTO_OUT 
-!!     Q(08,1)=QCNH_IN   Q(08,1)=QCNH_OUT    Q(20,1)=QQSPGW_IN Q(20,1)=QQSPGW_OUT  
-!!     Q(09,1)=QFLF1_IN  Q(09,1)=QFLF1_OUT   Q(21,1)=QQCOR_IN  Q(21,1)=QQCOR_OUT   
-!!     Q(10,1)=QFLF2_IN  Q(10,1)=QFLF2_OUT   Q(22,1)=QQDR_IN   Q(22,1)=QQDR_OUT    
-!!     Q(11,1)=QRCH_IN   Q(11,1)=QRCH_OUT    Q(23,1)=QQRUN_IN  Q(23,1)=QQRUN_OUT   
-!!     Q(12,1)=QEVT_IN   Q(12,1)=QEVT_OUT    Q(24,1)=QMODF_IN  Q(24,1)=QMODF_OUT   
-  
- !## zone numbers
- ALLOCATE(IPLG(SIZE(CIZONE))); IPLG=0
- DO I=1,SIZE(CIZONE)
-  READ(CIZONE(I),*,IOSTAT=IOS) IPLG(I)
-  IF(IOS.NE.0)THEN
-   CALL WMESSAGEBOX(OKONLY,EXCLAMATIONICON,COMMONOK,'iMOD cannot convert zone '//TRIM(CIZONE(I))//CHAR(13)// &
-    'into a integer value.','Error')
-   DEALLOCATE(IPLG); RETURN  
-  ENDIF
- ENDDO
-  
- !## selected polygon
- IPOL=1  !lizone()
-
- ALLOCATE(QSUBREGIO(SIZE(LIZONE),2),Q(NFLX,2),QTXT(NFLX))
-
- qtxt='dds'
- call random_number(q)
- qsubregio=0.
- 
- PNGNAME='D:\TEXT.PNG'
-
- !## plot local window of selected polygon ipol
- LOCAL=.false.
- 
- !## percentiles
- PERC=.FALSE.
- 
- IF(.NOT.DRAWBAL(Q,QTXT,NXPIX,NYPIX,CS,IPOL,SIZE(LIZONE),QSUBREGIO,PERC,CLRIZONE,IPLG,PNGNAME,IDFP,LOCAL,'GRAPHTITLE'))THEN
+ IF(ID.EQ.ID_GRAPHICS)THEN
+  CALL WBAL_ANALYSE_PLOTIMAGE()
+ ELSEIF(ID.EQ.ID_PREVIEW)THEN
+  IF(WBAL_ANALYSE_PLOTGRAPH(1,1))THEN; ENDIF
  ENDIF
+ 
+!     IY1=19630101
+!     IY2=20140101
+!     IPERIOD=1
+!     ITIME=0
+!     CALL WDIALOGGETMENU(IDF_MENU1,IBLANK)
+!     CALL WBAL_ANAYSE_PREPARE(IBLANK,ITIME,IPERIOD,IY1,IY2) 
+!     IF(WBAL_ANALYSE_PLOTGRAPH(NLAY,NZONE))THEN; ENDIF
+!     DEALLOCATE(GWBAL(2)%CDATE,GWBAL(2)%Q,GWBAL(2)%CLAY,GWBAL(2)%CZONE)
+!     CALL WDIALOGSELECT(ID_WBALMAIN)
 
- DEALLOCATE(QSUBREGIO,Q,QTXT,IPLG)
- 
- END SUBROUTINE WBAL_ANALYSE_GRAPHICS
- 
+ END SUBROUTINE WBAL_ANALYSE_PLOT
+
  !###======================================================================
- SUBROUTINE WBAL_ANAYSE_PREPARE() 
+ LOGICAL FUNCTION WBAL_ANAYSE_PREPARE() 
  !###======================================================================
  IMPLICIT NONE
  INTEGER :: NQ,NT,I,J,K
 ! REAL :: A
+ 
+ WBAL_ANAYSE_PREPARE=.FALSE.
  
 ! SELECT CASE (ITIME)
 !  !## as is
@@ -686,7 +606,96 @@ CONTAINS
 ! ! ENDDO
 ! !ENDDO
 ! 
- END SUBROUTINE WBAL_ANAYSE_PREPARE
+ WBAL_ANAYSE_PREPARE=.TRUE.
+
+ END FUNCTION WBAL_ANAYSE_PREPARE
+
+ !###======================================================================
+ SUBROUTINE WBAL_ANALYSE_PLOTIMAGE()
+ !###======================================================================
+ IMPLICIT NONE
+ INTEGER,PARAMETER :: NXPIX=1000, NYPIX=1200 !## resolution dx,dy
+ INTEGER,PARAMETER :: NFLX=24  !## number of zones in current csv file
+ REAL,PARAMETER :: CS=0.009 !## charactersize
+ CHARACTER(LEN=256) :: PNGNAME
+ LOGICAL :: LOCAL,PERC
+ INTEGER :: IPOL,IOS,I
+ REAL,DIMENSION(:,:), ALLOCATABLE :: Q,QSUBREGIO
+ CHARACTER(LEN=10),DIMENSION(:),ALLOCATABLE :: QTXT
+ INTEGER,DIMENSION(:),ALLOCATABLE :: IPLG
+ 
+!QTXT(01)='Q-drn  '             bdgdrn  
+!QTXT(02)='Q-olf  '             bdgolf  
+!QTXT(03)='Q-riv  '             bdgriv  
+!QTXT(04)='Q-ghb  '             bdgghb  
+!QTXT(05)='Q-isg  '             bdgisg  
+!QTXT(06)='Q-wel  '             bdgwel  
+!QTXT(07)='Q-reg  '             bdgfrf en bdgfff
+!QTXT(08)='Q-cnh  '             bdgbnd
+!QTXT(09)='Q-ftf  '             bdgflf
+!QTXT(10)='Q-flf  '             bdgflf
+!QTXT(11)='Q-rch  '             bdgrch
+!QTXT(12)='Q-evt  '             bdgevt
+!QTXT(13)='Q-cap   '            bdgcap
+!QTXT(14)='Q-etact '            bdgETact  
+!QTXT(15)='Q-pm    '            bdgpm   
+!QTXT(16)='Q-pmgw  '            bdgpmgw 
+!QTXT(17)='Q-pmsw  '            bdgpmsw 
+!QTXT(18)='Q-sto   '            bdgsto
+!QTXT(19)='Q-decsto'            bdgdecStot
+!QTXT(20)='Q-spgw  '            bdgqspgw
+!QTXT(21)='Q-cor   '            msw_qsimcorrmf
+!QTXT(22)='Q-qdr   '            bdgdrn    
+!QTXT(23)='Q-qrun  '             ????   weet ik nog niet precies, bdgqrun
+!QTXT(24)='Q-modf  '            bdgqmodf  
+
+ !!     Q(01,1)=QDRN_IN   Q(01,1)=QDRN_OUT    Q(13,1)=QCAP_IN   Q(13,1)=QCAP_OUT    
+!!     Q(02,1)=QOLF_IN   Q(02,1)=QOLF_OUT    Q(14,1)=QETACT_IN Q(14,1)=QETACT_OUT  
+!!     Q(03,1)=QRIV_IN   Q(03,1)=QRIV_OUT    Q(15,1)=QPM_IN    Q(15,1)=QPM_OUT     
+!!     Q(04,1)=QGHB_IN   Q(04,1)=QGHB_OUT    Q(16,1)=QPMGW_IN  Q(16,1)=QPMGW_OUT   
+!!     Q(05,1)=QISG_IN   Q(05,1)=QISG_OUT    Q(17,1)=QPMSW_IN  Q(17,1)=QPMSW_OUT   
+!!     Q(06,1)=QWEL_IN   Q(06,1)=QWEL_OUT    Q(18,1)=QSTO_IN   Q(18,1)=QSTO_OUT    
+!!     Q(07,1)=QREG_IN   Q(07,1)=QREG_OUT    Q(19,1)=QDECSTO_INQ(19,1)=QDECSTO_OUT 
+!!     Q(08,1)=QCNH_IN   Q(08,1)=QCNH_OUT    Q(20,1)=QQSPGW_IN Q(20,1)=QQSPGW_OUT  
+!!     Q(09,1)=QFLF1_IN  Q(09,1)=QFLF1_OUT   Q(21,1)=QQCOR_IN  Q(21,1)=QQCOR_OUT   
+!!     Q(10,1)=QFLF2_IN  Q(10,1)=QFLF2_OUT   Q(22,1)=QQDR_IN   Q(22,1)=QQDR_OUT    
+!!     Q(11,1)=QRCH_IN   Q(11,1)=QRCH_OUT    Q(23,1)=QQRUN_IN  Q(23,1)=QQRUN_OUT   
+!!     Q(12,1)=QEVT_IN   Q(12,1)=QEVT_OUT    Q(24,1)=QMODF_IN  Q(24,1)=QMODF_OUT   
+  
+ !## zone numbers
+ ALLOCATE(IPLG(SIZE(CIZONE))); IPLG=0
+ DO I=1,SIZE(CIZONE)
+  READ(CIZONE(I),*,IOSTAT=IOS) IPLG(I)
+  IF(IOS.NE.0)THEN
+   CALL WMESSAGEBOX(OKONLY,EXCLAMATIONICON,COMMONOK,'iMOD cannot convert zone '//TRIM(CIZONE(I))//CHAR(13)// &
+    'into a integer value.','Error')
+   DEALLOCATE(IPLG); RETURN  
+  ENDIF
+ ENDDO
+  
+ !## selected polygon
+ IPOL=1  !lizone()
+
+ ALLOCATE(QSUBREGIO(SIZE(LIZONE),2),Q(NFLX,2),QTXT(NFLX))
+
+ qtxt='dds'
+ call random_number(q)
+ qsubregio=0.
+ 
+ PNGNAME='D:\TEXT.PNG'
+
+ !## plot local window of selected polygon ipol
+ LOCAL=.false.
+ 
+ !## percentiles
+ PERC=.FALSE.
+ 
+ IF(.NOT.DRAWBAL(Q,QTXT,NXPIX,NYPIX,CS,IPOL,SIZE(LIZONE),QSUBREGIO,PERC,CLRIZONE,IPLG,PNGNAME,IDFP,LOCAL,'GRAPHTITLE'))THEN
+ ENDIF
+
+ DEALLOCATE(QSUBREGIO,Q,QTXT,IPLG)
+ 
+ END SUBROUTINE WBAL_ANALYSE_PLOTIMAGE
 
  !###======================================================================
  LOGICAL FUNCTION WBAL_ANALYSE_PLOTGRAPH(NL,NZ)
@@ -769,8 +778,8 @@ CONTAINS
  ENDDO; ENDDO
  
  K=0
- DO I=1,NL !AY
-  DO J=1,NZ !ONE
+ DO I=1,NL
+  DO J=1,NZ
    K=K+1
    GRAPHNAMES(K)='Layer '//TRIM(GWBAL(2)%CLAY(I))//'; Zone Number '//TRIM(GWBAL(2)%CZONE(J))
   ENDDO
@@ -791,6 +800,7 @@ CONTAINS
     II=IBAR(I,JJ); IF(II.LE.0)CYCLE
     III=III+1
     GRAPH(III,J)%NP=NL
+    !## columns (histogram)
     GRAPH(III,J)%GTYPE=1
     GRAPH(III,J)%LEGTXT=UTL_CAP(GWBAL(2)%TXT(II),'U')
 
@@ -800,7 +810,7 @@ CONTAINS
 !     IF(INDEX(GRAPH(III,J)%LEGTXT,TRIM(CFLUX(IPOS))//'_OUT').GT.0)EXIT
 !    ENDDO
 !    IF(IPOS.GT.MXFLUX)IPOS=0
-    GRAPH(III,J)%ICLR=ICOLOR(1) !IPOS)
+    GRAPH(III,J)%ICLR=COLOUR_RANDOM() !1) !IPOS)
    ENDDO
   ENDDO
  ENDDO
@@ -820,6 +830,8 @@ CONTAINS
      II=IBAR(I,JJ); IF(II.LE.0)CYCLE
      III=III+1
 
+!## doe iets met jaartallen ...
+
      !## always first column
      READ(GWBAL(2)%CDATE(KK),*,IOSTAT=IOS) IDATE
      IF(IOS.NE.0)THEN
@@ -827,7 +839,8 @@ CONTAINS
      ELSE
       GRAPH(III,J)%RX(K)=REAL(UTL_IDATETOJDATE(IDATE))
      ENDIF
-     !## get balance value
+
+     !## get balance value as summed value (stacked)
      X=GWBAL(2)%Q(II,KK)
      KKK=1; IF(X.LT.0.0)KKK=2
      XG(K,J,KKK)=XG(K,J,KKK)+X
@@ -839,6 +852,8 @@ CONTAINS
    ENDDO
   ENDDO
  ENDDO
+ 
+ DEALLOCATE(XG)
   
 !TYPE GRAPHOBJ
 ! REAL,POINTER,DIMENSION(:) :: RX,RY !## x and y values
@@ -856,8 +871,12 @@ CONTAINS
 ! CALL UTL_MESSAGEHANDLE(1)
  
  !## plot graph(s)
-! CALL PROFILE_PLOTGRAPH('Time','Volumes (mm/d)',.TRUE.)
- CALL PROFILE_PLOTGRAPH('Time','Volumes (m3/d)',.TRUE.)
+! IF()THEN
+  !## no dates
+  CALL PROFILE_PLOTGRAPH('Time','Volumes (m3/d)',.FALSE.)
+! ELSE
+!  CALL PROFILE_PLOTGRAPH('Time','Volumes (m3/d)',.TRUE.)
+! ENDIF
  
  !## clean up, deallocate
  IF(ALLOCATED(GRAPH))CALL PROFILE_DEALLGRAPH()
@@ -893,6 +912,12 @@ CONTAINS
  CALL WDIALOGPUTIMAGE(ID_OPEN1,ID_ICONOPEN,1)
  CALL WDIALOGPUTIMAGE(ID_OPEN2,ID_ICONOPEN,1)
  
+ CALL WDIALOGSELECT(ID_DWBAL_ANALYSE_TAB2)
+ CALL WDIALOGPUTIMAGE(ID_PLUS1,ID_ICONPLUS,1)
+ CALL WDIALOGPUTIMAGE(ID_PLUS2,ID_ICONPLUS,1)
+ CALL WDIALOGPUTIMAGE(ID_MIN1,ID_ICONMIN,1)
+ CALL WDIALOGPUTIMAGE(ID_MIN2,ID_ICONMIN,1)
+
  !## outgrey tabs
  CALL WDIALOGSELECT(ID_DWBAL_ANALYSE)
  CALL WDIALOGTABSTATE(IDF_TAB1,ID_DWBAL_ANALYSE_TAB2,0)

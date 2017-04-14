@@ -1019,15 +1019,12 @@ CONTAINS
  IF(IMOD3D_REDRAWIDF(0))THEN; ENDIF
  !## draw vectors
  IF(IMOD3D_REDRAWIDF(1))THEN; ENDIF
-
  !## fill display with drills
  IF(.NOT.IMOD3D_IPF())THEN; ENDIF
  !# refresh image and labels
  CALL IMOD3D_IPF_LABELS()
-
  !## recompute current idf
  IF(.NOT.IMOD3D_REDRAWIFF())RETURN
-
  !## construct miscellaneous features
  CALL IMOD3D_SETUPDISPLAY_MISC(.TRUE.)
  !## reset viewing properties and draw image

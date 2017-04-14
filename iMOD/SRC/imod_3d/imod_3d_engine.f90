@@ -2597,6 +2597,111 @@ CONTAINS
  END SUBROUTINE IMOD3D_DRAWIDF_VECTOR
 
  !###======================================================================
+ SUBROUTINE IMOD3D_TUBE(X,Y,Z,NINT,RADIUS,LBOT,LTOP)
+ !###======================================================================
+ IMPLICIT NONE
+ REAL(KIND=GLFLOAT),INTENT(IN),DIMENSION(4) :: X,Y,Z !## begin/end of the two tubes
+ REAL(KIND=GLFLOAT),INTENT(IN) :: RADIUS
+ LOGICAL,INTENT(IN) :: LTOP,LBOT
+ INTEGER,INTENT(IN) :: NINT 
+ REAL(KIND=GLFLOAT) :: DGRAD,FGRAD,X1,Y1,Z1,Z2,ZF,XGRAD,DXY,L,R,DX,DY,DZ
+ REAL(KIND=GLFLOAT),DIMENSION(:,:),ALLOCATABLE :: XPOS,YPOS,ZPOS
+ INTEGER :: J
+ 
+ DGRAD=2.0*PI/REAL(NINT) !## stepsize angle radials
+ 
+ ALLOCATE(XPOS(0:NINT,2),YPOS(0:NINT,2),ZPOS(0:NINT,2))
+ 
+ CALL GLPUSHMATRIX()
+
+ !## to ensure appropriate scaling of vector
+ CALL GLSCALED(1.0_GLDOUBLE/XSCALE_FACTOR,1.0_GLDOUBLE/YSCALE_FACTOR,1.0_GLDOUBLE/ZSCALE_FACTOR)
+
+ !## translate
+ XPOS(1,1)=X(1); YPOS(1,1)=Y(1); ZPOS(1,1)=Z(1)
+ CALL GLTRANSLATEF(XPOS(1,1),YPOS(1,1),ZPOS(1,1))
+
+ !## rotate as opengl doesnot match x- and y- axes direction
+ CALL GLROTATEF(-90.0,1.0_GLFLOAT,0.0_GLFLOAT,0.0_GLFLOAT) !## put them flat in xy plane
+ CALL GLROTATEF( 90.0,0.0_GLFLOAT,1.0_GLFLOAT,0.0_GLFLOAT) !## rotate them to east
+ 
+ DX=X(2)-X(1)
+ DY=Y(2)-Y(1)
+ DZ=Z(2)-Z(1)
+ 
+ !## rotation along y-axes
+ XGRAD=ATAN2(DY,DX)*(360.0/(2.0*PI))
+ CALL GLROTATEF(-XGRAD,0.0_GLFLOAT,1.0_GLFLOAT,0.0_GLFLOAT)!## turn vector in xy plane
+
+ !## rotation along x-axes
+ DXY=SQRT(DX**2.0+DY**2.0); XGRAD=ATAN2(DZ,DXY)*(360.0/(2.0*PI))
+ CALL GLROTATEF(XGRAD,1.0_GLFLOAT,0.0_GLFLOAT,0.0_GLFLOAT) !## z-axes
+
+ !## local coordinates before rotating and transfering
+ X1=0.0_GLFLOAT; Y1=0.0_GLFLOAT; Z1=0.0_GLFLOAT
+
+ !## bottom - compute coordinates
+ FGRAD=0.0_GLFLOAT
+ DO J=NINT,0,-1
+  XPOS(J,1)=X1+COS(FGRAD)*RADIUS
+  YPOS(J,1)=Y1+SIN(FGRAD)*RADIUS
+  ZPOS(J,1)=Z1
+  FGRAD=FGRAD+DGRAD
+ ENDDO
+ !## draw triangle fan at the bottom
+ IF(LBOT)THEN
+  CALL GLBEGIN(GL_TRIANGLE_FAN)
+  CALL GLNORMAL3F(0.0_GLFLOAT,0.0_GLFLOAT,-1.0_GLFLOAT)
+  CALL GLVERTEX3F(X1,Y1,Z1)
+  DO J=NINT,0,-1
+   CALL GLVERTEX3F(XPOS(J,1),YPOS(J,1),ZPOS(J,1))
+  ENDDO
+  CALL GLEND()
+ ENDIF
+ 
+ ZF=Z1+(Z(3)-Z(1))
+ 
+ !## top - compute coordinates
+ FGRAD=0.0_GLFLOAT
+ DO J=NINT,0,-1
+  XPOS(J,2)=X1+COS(FGRAD)*RADIUS
+  YPOS(J,2)=Y1+SIN(FGRAD)*RADIUS
+  ZPOS(J,2)=ZF
+  FGRAD=FGRAD+DGRAD
+ ENDDO
+ !## draw triangle fan at the bottom
+ IF(LTOP)THEN
+  CALL GLBEGIN(GL_TRIANGLE_FAN)
+  CALL GLNORMAL3F(0.0_GLFLOAT,0.0_GLFLOAT,-1.0_GLFLOAT)
+  CALL GLVERTEX3F(X1,Y1,ZF)
+  DO J=NINT,0,-1
+   CALL GLVERTEX3F(XPOS(J,2),YPOS(J,2),ZPOS(J,2))
+  ENDDO
+  CALL GLEND()
+ ENDIF
+
+ !## side of tube
+ CALL GLBEGIN(GL_QUAD_STRIP)
+ DO J=0,NINT
+  IF(J.EQ.NINT)THEN
+   CALL IMOD3D_SETNORMALVECTOR((/XPOS(J,1)  ,YPOS(J,1)  ,ZPOS(J,1)  /), &
+                               (/XPOS(J,2)  ,YPOS(J,2)  ,ZPOS(J,2)  /), &
+                               (/XPOS(0,2)  ,YPOS(0,2)  ,ZPOS(0,2)  /))
+  ELSE
+   CALL IMOD3D_SETNORMALVECTOR((/XPOS(J,1)  ,YPOS(J,1)  ,ZPOS(J,1)  /), &
+                               (/XPOS(J,2)  ,YPOS(J,2)  ,ZPOS(J,2)  /), &
+                               (/XPOS(J+1,2),YPOS(J+1,2),ZPOS(J+1,2)/))
+  ENDIF
+  CALL GLVERTEX3F(XPOS(J,1),YPOS(J,1),ZPOS(J,1))
+  CALL GLVERTEX3F(XPOS(J,2),YPOS(J,2),ZPOS(J,2))
+ ENDDO
+ CALL GLEND()
+
+ CALL GLPOPMATRIX()
+
+ END SUBROUTINE IMOD3D_TUBE
+
+ !###======================================================================
  SUBROUTINE IMOD3D_VECTOR(X,Y,Z,DX,DY,DZ,NINT,RADIUS,VL,LARROW)
  !###======================================================================
  IMPLICIT NONE
@@ -2610,8 +2715,6 @@ CONTAINS
  DGRAD=2.0*PI/REAL(NINT) !## stepsize angle radials
  
  CALL GLPUSHMATRIX()
-
-! WRITE(*,*) 1.0_GLDOUBLE/ZSCALE_FACTOR,ZSCALE_FACTOR
 
  !## to ensure appropriate scaling of vector
  CALL GLSCALED(1.0_GLDOUBLE/XSCALE_FACTOR,1.0_GLDOUBLE/YSCALE_FACTOR,1.0_GLDOUBLE/ZSCALE_FACTOR)
@@ -3071,7 +3174,7 @@ SOLLOOP: DO I=1,NSOLLIST
     ENDIF
 
 !    Z1=ASSF(NASSLIST)%Z(I); Z2=ASSF(NASSLIST)%Z(I+1)
-    CALL IMOD3D_IPF_FANCY((/X1,X2/),(/Y1,Y2/),(/Z1,Z2/),IPFPLOT(IIPF)%ISUB,BSIZE*FRAC,(/1,1,1,IPFPLOT(IIPF)%ISHADE/))  !## plot top/bottom/sides all
+    CALL IMOD3D_IPF_FANCY((/X1,X2/),(/Y1,Y2/),(/Z1,Z2/),IPFPLOT(IIPF)%ISUB,BSIZE*FRAC,(/1,1,1,IPFPLOT(IIPF)%ISHADE/),IPLOTTYPE)  !## plot top/bottom/sides all
  
     IF(LEX)THEN
      TOP%X=MAX(TOP%X,X1,X2); BOT%X=MIN(BOT%X,X1,X2)
@@ -3114,8 +3217,8 @@ SOLLOOP: DO I=1,NSOLLIST
    IF(IPFPLOT(IIPF)%IFANCY.EQ.0)THEN
     CALL GLBEGIN(GL_LINES); CALL GLVERTEX3F(X,Y,Z); CALL GLVERTEX3F(X,Y,Z2); CALL GLEND()
    ELSEIF(IPFPLOT(IIPF)%IFANCY.EQ.1)THEN
-    IF(IMODE.EQ.1)CALL IMOD3D_IPF_FANCY((/X,X/),(/Y,Y/),(/Z,ZZ/),IPFPLOT(IIPF)%ISUB,BSIZE,(/1,1,1,IPFPLOT(IIPF)%ISHADE/))
-    IF(IMODE.EQ.2)CALL IMOD3D_IPF_FANCY((/X,X/),(/Y,Y/),(/Z,ZZ/),IPFPLOT(IIPF)%ISUB,BSIZE,(/1,1,1,0/))
+    IF(IMODE.EQ.1)CALL IMOD3D_IPF_FANCY((/X,X/),(/Y,Y/),(/Z,ZZ/),IPFPLOT(IIPF)%ISUB,BSIZE,(/1,1,1,IPFPLOT(IIPF)%ISHADE/),IPLOTTYPE)
+    IF(IMODE.EQ.2)CALL IMOD3D_IPF_FANCY((/X,X/),(/Y,Y/),(/Z,ZZ/),IPFPLOT(IIPF)%ISUB,BSIZE,(/1,1,1,0/),IPLOTTYPE)
    ENDIF
   ENDIF
 
@@ -3161,30 +3264,22 @@ SOLLOOP: DO I=1,NSOLLIST
  END SUBROUTINE IMOD3D_IPF_CREATEBALL
  
  !###======================================================================
- SUBROUTINE IMOD3D_IPF_FANCY(XMID,YMID,ZMID,NINT,RADIUS,IPLT)
+ SUBROUTINE IMOD3D_IPF_FANCY(XMID,YMID,ZMID,NINT,RADIUS,IPLT,BTYPE)
  !###======================================================================
  IMPLICIT NONE 
  REAL(KIND=GLFLOAT),INTENT(IN),DIMENSION(2) :: XMID,YMID,ZMID
  REAL(KIND=GLFLOAT),INTENT(IN) :: RADIUS
  REAL(KIND=GLFLOAT) :: DGRAD,FGRAD,XPOS,YPOS,ZPOS,DZDX,DZDY,DZDZ
+ INTEGER,INTENT(IN) :: BTYPE
  REAL :: L
  INTEGER,INTENT(IN) :: NINT
  INTEGER,INTENT(IN),DIMENSION(4) :: IPLT
  INTEGER :: I,J
- LOGICAL :: LEX
 
  DGRAD=2.0*PI/REAL(NINT) !## stepsize angle radials
 
- !## see whether borehole is a straight line (lex=.true.)
- LEX=.TRUE.
- IF(.NOT.UTL_EQUALS_REAL(XMID(1),XMID(2)))THEN
-  LEX=.FALSE.
- ELSE
-  IF(.NOT.UTL_EQUALS_REAL(YMID(1),YMID(2)))LEX=.FALSE.
- ENDIF
-
  !## get rotated tube
- IF(.NOT.LEX)THEN
+ IF(BTYPE.EQ.4)THEN
 
 !## eventueel extra puntjes ertussen voor vloeiende overgang tussen tube-stukken
 
@@ -3253,8 +3348,7 @@ SOLLOOP: DO I=1,NSOLLIST
  IASSF=0
  DO IIPF=1,NIPF
 
-  BSIZE=IPFPLOT(IIPF)%RADIUS !XYZAXES(1)*(IPFPLOT(IIPF)%RADIUS/100.0) 
-!  BSIZE=BSIZE*1.1
+  BSIZE=IPFPLOT(IIPF)%RADIUS
   
   IPLOT=IPFPLOT(IIPF)%IPLOT
   ALLOCATE(ILIST(IPF(IIPF)%NCOL))
@@ -3276,10 +3370,6 @@ SOLLOOP: DO I=1,NSOLLIST
     X =IPF(IIPF)%XYZ(1,I)
     Y =IPF(IIPF)%XYZ(2,I)
     Z =IPF(IIPF)%XYZ(3,I)
-
-!    !## translate current position to view=postition
-!    X=(X-MIDPOS%X)/VIEWDX
-!    Y=(Y-MIDPOS%Y)/VIEWDY
 
     X=X-BSIZE
 

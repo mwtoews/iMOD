@@ -499,15 +499,15 @@ CONTAINS
 
  END FUNCTION IMOD3D_BMP_INIT
 
- !###======================================================================
- SUBROUTINE IMOD3D_SELECTOBJECT_DEAL()
- !###======================================================================
- IMPLICIT NONE
+! !###======================================================================
+! SUBROUTINE IMOD3D_SELECTOBJECT_DEAL()
+! !###======================================================================
+! IMPLICIT NONE
 
- IF(ALLOCATED(IC))DEALLOCATE(IC)
- IF(ALLOCATED(NANSTRING))DEALLOCATE(NANSTRING)
+! IF(ALLOCATED(IC))DEALLOCATE(IC)
+! IF(ALLOCATED(NANSTRING))DEALLOCATE(NANSTRING)
 
- END SUBROUTINE IMOD3D_SELECTOBJECT_DEAL
+! END SUBROUTINE IMOD3D_SELECTOBJECT_DEAL
 
  !###======================================================================
  SUBROUTINE IMOD3D_DEALLOCATE()
@@ -532,7 +532,7 @@ CONTAINS
  IF(ALLOCATED(CLPPLOT))DEALLOCATE(CLPPLOT)
  !## deallocate assf(.)
  CALL IPFCLOSEASSFILE()
- CALL IMOD3D_SELECTOBJECT_DEAL()
+! CALL IMOD3D_SELECTOBJECT_DEAL()
  
  END SUBROUTINE IMOD3D_DEALLOCATE
 
