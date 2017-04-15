@@ -1452,18 +1452,30 @@ CONTAINS
  IMPLICIT NONE
  REAL,INTENT(INOUT) :: X,Y,Z
  REAL,INTENT(IN) :: AX,AY,AZ
-
+ REAL :: X1,Y1,Z1
+ 
  !## perform rotation around z-axes
- X=COS(AZ)*X-SIN(AZ)*Y
- Y=SIN(AZ)*X+COS(AZ)*Y
+ X1= COS(AZ)*X+SIN(AZ)*Y
+ Y1=-SIN(AZ)*X+COS(AZ)*Y
+
+ X=X1
+ Y=Y1
+ 
+! RETURN
+ 
+ !## perform rotation around x-axes
+ Y1=COS(AX)*Y-SIN(AX)*Z
+ Z1=SIN(AX)*Y+COS(AX)*Z
+
+ Y=Y1
+ Z=Z1
 
  !## perform rotation around y-axes
- X= COS(AY)*X-SIN(AY)*Z
- Z= SIN(AY)*X+COS(AY)*Z
+ X1= COS(AY)*X-SIN(AY)*Z
+ Z1= SIN(AY)*X+COS(AY)*Z
 
- !## perform rotation around x-axes
- Y=COS(AX)*Y-SIN(AX)*Z
- Z=SIN(AX)*Y+COS(AX)*Z
+ X=X1
+ Z=Z1
 
  END SUBROUTINE UTL_ROTATE_XYZ
  

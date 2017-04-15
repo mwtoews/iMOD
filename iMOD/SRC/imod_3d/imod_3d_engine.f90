@@ -2605,7 +2605,7 @@ CONTAINS
  INTEGER,INTENT(IN) :: NINT,IMODE,ISHADE,IB
  REAL(KIND=GLFLOAT) :: AR,AD,AZ,AX,AY,XGRAD,DXY,DX,DY,DZ,XP,YP,ZP
  REAL(KIND=GLFLOAT),DIMENSION(:,:),ALLOCATABLE :: XPOS,YPOS,ZPOS
- INTEGER :: I,J
+ INTEGER :: I,J,II
  
  !## stepsize angle radials
  AD=2.0*PI/REAL(NINT) 
@@ -2647,8 +2647,10 @@ CONTAINS
 !
   CALL UTL_GET_ANGLES(DX,DY,DZ,AX,AY,AZ)
 
+  AX=ATAN2(DZ,DX)
+  AY=ATAN2(DY,SQRT(DX**2.0+DZ**2.0))
+  
 !OPENGL IS Y OMHOOG EN Z NAAR VOREN
-
 !  AY=ATAN2(DY,DX)
 
 !  WRITE(*,*) ATAN2(DY,DX)
@@ -2664,27 +2666,41 @@ CONTAINS
 ! CALL GLROTATEF(-90.0,1.0_GLFLOAT,0.0_GLFLOAT,0.0_GLFLOAT) !## put them flat in xy plane
   
   AZ=0.0
-! CALL GLROTATEF(XGRAD,1.0_GLFLOAT,0.0_GLFLOAT,0.0_GLFLOAT) !## x-axes
-!
-  WRITE(*,*) AX,AY,AZ
+
+!  WRITE(*,*) 1,AX,AY,AZ
   
-!## punten loodrecht op richting van de tube !!!
+!  !## perpendicular to axes rotation
+!  AX=AX+0.5*PI
 
-  !## bottom - compute coordinates
-  AR=0.0_GLFLOAT
-  DO J=NINT,0,-1
-   XPOS(J,1)=COS(AR)*RBH(I)
-   YPOS(J,1)=SIN(AR)*RBH(I)
-   ZPOS(J,1)=0.0_GLFLOAT
-   !## rotate appropriately
-   CALL UTL_ROTATE_XYZ(XPOS(J,1),YPOS(J,1),ZPOS(J,1),AX,AY,AZ)
-   !## transform
-   XPOS(J,1)=XPOS(J,1)+XBH(I)
-   YPOS(J,1)=YPOS(J,1)+YBH(I)
-   ZPOS(J,1)=ZPOS(J,1)+ZBH(I)
-   AR=AR+AD
+!  WRITE(*,*) 2,AX,AY,AZ
+
+!   AX=AX-0.5*PI
+!   AY=AY+0.5*PI
+! !## rotate 
+! CALL GLROTATEF(-90.0,1.0_GLFLOAT,0.0_GLFLOAT,0.0_GLFLOAT) !## put them flat in xy plane
+! CALL GLROTATEF( 90.0,0.0_GLFLOAT,1.0_GLFLOAT,0.0_GLFLOAT) !## rotate them to east
+
+  DO II=1,2
+
+   !## top/bottom - compute coordinates
+   AR=0.0_GLFLOAT
+   DO J=NINT,0,-1
+    XPOS(J,II)=RBH(I)      
+    YPOS(J,II)=0.0_GLFLOAT 
+    ZPOS(J,II)=0.0_GLFLOAT
+    !## rotate appropriately in 3D
+    CALL UTL_ROTATE_XYZ(XPOS(J,II),YPOS(J,II),ZPOS(J,II),AX,AY,AR)
+    CALL UTL_ROTATE_XYZ(XPOS(J,II),YPOS(J,II),ZPOS(J,II),0.0,REAL(0.5*PI),0.0)
+    CALL UTL_ROTATE_XYZ(XPOS(J,II),YPOS(J,II),ZPOS(J,II),-REAL(0.5*PI),0.0,0.0)
+    !## transform
+    XPOS(J,II)=XPOS(J,II)+XBH(I+II-1)
+    YPOS(J,II)=YPOS(J,II)+YBH(I+II-1)
+    ZPOS(J,II)=ZPOS(J,II)+ZBH(I+II-1)
+    AR=AR+AD
+   ENDDO
+  
   ENDDO
-
+  
   IF(I.GT.1)THEN
 
 ! !## side of tube
@@ -2706,27 +2722,34 @@ CONTAINS
 ! CALL GLEND()
   
   ENDIF
-
-  XP=XBH(I)
-  YP=YBH(I)
-  ZP=ZBH(I)
   
-  !## draw triangle fan
-  CALL GLBEGIN(GL_TRIANGLE_FAN) 
-   CALL IMOD3D_SETNORMALVECTOR((/XPOS(0,1),YPOS(0,1),ZPOS(0,1)/), &
-                               (/XPOS(1,2),YPOS(1,2),ZPOS(1,2)/), &
-                               (/XP       ,YP       ,ZP       /))
-   CALL GLVERTEX3F(XP,YP,ZP)
-   DO J=NINT,0,-1
-    CALL GLVERTEX3F(XPOS(J,1),YPOS(J,1),ZPOS(J,1))
-   ENDDO
-  CALL GLEND()
+  !## draw up- and bottom of current trajectory
+  DO II=1,2
 
-  DO J=NINT,0,-1
-   XPOS(J,2)=XPOS(J,1)
-   YPOS(J,2)=YPOS(J,1)
-   ZPOS(J,2)=ZPOS(J,1)
+   XP=XBH(I+II-1)
+   YP=YBH(I+II-1)
+   ZP=ZBH(I+II-1)
+
+   !## draw triangle fan
+   CALL GLBEGIN(GL_TRIANGLE_FAN) 
+    CALL IMOD3D_SETNORMALVECTOR((/XPOS(0,II),YPOS(0,II),ZPOS(0,II)/), &
+                                (/XPOS(1,II),YPOS(1,II),ZPOS(1,II)/), &
+                                (/XP        ,YP        ,ZP        /))
+    CALL GLVERTEX3F(XP,YP,ZP)
+!  WRITE(*,*) XP,YP,ZP
+    DO J=NINT,0,-1
+!  WRITE(*,*) XPOS(J,II),YPOS(J,II),ZPOS(J,II)
+     CALL GLVERTEX3F(XPOS(J,II),YPOS(J,II),ZPOS(J,II))
+    ENDDO
+   CALL GLEND()
+
   ENDDO
+  
+!  DO J=NINT,0,-1
+!   XPOS(J,2)=XPOS(J,1)
+!   YPOS(J,2)=YPOS(J,1)
+!   ZPOS(J,2)=ZPOS(J,1)
+!  ENDDO
  
  ENDDO 
 
