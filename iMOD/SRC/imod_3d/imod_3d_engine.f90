@@ -2736,9 +2736,7 @@ CONTAINS
                                 (/XPOS(1,II),YPOS(1,II),ZPOS(1,II)/), &
                                 (/XP        ,YP        ,ZP        /))
     CALL GLVERTEX3F(XP,YP,ZP)
-!  WRITE(*,*) XP,YP,ZP
     DO J=NINT,0,-1
-!  WRITE(*,*) XPOS(J,II),YPOS(J,II),ZPOS(J,II)
      CALL GLVERTEX3F(XPOS(J,II),YPOS(J,II),ZPOS(J,II))
     ENDDO
    CALL GLEND()
@@ -2746,9 +2744,9 @@ CONTAINS
   ENDDO
   
 !  DO J=NINT,0,-1
-!   XPOS(J,2)=XPOS(J,1)
-!   YPOS(J,2)=YPOS(J,1)
-!   ZPOS(J,2)=ZPOS(J,1)
+!   XPOS(J,3)=XPOS(J,1)
+!   YPOS(J,3)=YPOS(J,1)
+!   ZPOS(J,3)=ZPOS(J,1)
 !  ENDDO
  
  ENDDO 
