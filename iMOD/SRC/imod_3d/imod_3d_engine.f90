@@ -2647,7 +2647,7 @@ CONTAINS
 !
   CALL UTL_GET_ANGLES(DX,DY,DZ,AX,AY,AZ)
 
-  AX=ATAN2(DZ,DX)
+  AX=-ATAN2(DZ,DX)
   AY=ATAN2(DY,SQRT(DX**2.0+DZ**2.0))
   
 !OPENGL IS Y OMHOOG EN Z NAAR VOREN
@@ -2699,55 +2699,73 @@ CONTAINS
     AR=AR+AD
    ENDDO
   
+   !## draw top-fan of tube
+   IF(I.EQ.1)THEN !.AND.II.EQ.1)THEN
+    XP=XBH(I); YP=YBH(I); ZP=ZBH(I)
+    !## draw triangle fan
+    CALL GLBEGIN(GL_TRIANGLE_FAN) 
+     CALL IMOD3D_SETNORMALVECTOR((/XPOS(0,1),YPOS(0,1),ZPOS(0,1)/), &
+                                 (/XPOS(1,1),YPOS(1,1),ZPOS(1,1)/), &
+                                 (/XP        ,YP        ,ZP        /))
+     CALL GLVERTEX3F(XP,YP,ZP)
+     DO J=NINT,0,-1
+      CALL GLVERTEX3F(XPOS(J,1),YPOS(J,1),ZPOS(J,1))
+     ENDDO
+    CALL GLEND()
+   ENDIF
+  
+   !## draw knee-part
+   IF(I.GT.1.AND.II.EQ.1)THEN
+    CALL GLBEGIN(GL_QUAD_STRIP)
+    DO J=NINT,0,-1
+     IF(J.EQ.NINT)THEN
+      CALL IMOD3D_SETNORMALVECTOR((/XPOS(J,2)  ,YPOS(J,2)  ,ZPOS(J,2)  /), &
+                                  (/XPOS(J,1)  ,YPOS(J,1)  ,ZPOS(J,1)  /), &
+                                  (/XPOS(0,1)  ,YPOS(0,1)  ,ZPOS(0,1)  /))
+     ELSE
+      CALL IMOD3D_SETNORMALVECTOR((/XPOS(J,2)  ,YPOS(J,2)  ,ZPOS(J,2)  /), &
+                                  (/XPOS(J,1)  ,YPOS(J,1)  ,ZPOS(J,1)  /), &
+                                  (/XPOS(J+1,1),YPOS(J+1,1),ZPOS(J+1,1)/))
+     ENDIF
+     CALL GLVERTEX3F(XPOS(J,2),YPOS(J,2),ZPOS(J,2))
+     CALL GLVERTEX3F(XPOS(J,1),YPOS(J,1),ZPOS(J,1))
+    ENDDO
+    CALL GLEND()
+   ENDIF
+   
   ENDDO
+      
+  !## side of tube
+  CALL GLBEGIN(GL_QUAD_STRIP)
+  DO J=0,NINT !NINT,0,-1
+   IF(J.EQ.NINT)THEN
+    CALL IMOD3D_SETNORMALVECTOR((/XPOS(J,1)  ,YPOS(J,1)  ,ZPOS(J,1)  /), &
+                                (/XPOS(J,2)  ,YPOS(J,2)  ,ZPOS(J,2)  /), &
+                                (/XPOS(0,2)  ,YPOS(0,2)  ,ZPOS(0,2)  /))
+   ELSE
+    CALL IMOD3D_SETNORMALVECTOR((/XPOS(J,1)  ,YPOS(J,1)  ,ZPOS(J,1)  /), &
+                                (/XPOS(J,2)  ,YPOS(J,2)  ,ZPOS(J,2)  /), &
+                                (/XPOS(J+1,2),YPOS(J+1,2),ZPOS(J+1,2)/))
+   ENDIF
+   CALL GLVERTEX3F(XPOS(J,1),YPOS(J,1),ZPOS(J,1))
+   CALL GLVERTEX3F(XPOS(J,2),YPOS(J,2),ZPOS(J,2))
+  ENDDO
+  CALL GLEND()
   
-  IF(I.GT.1)THEN
-
-! !## side of tube
-! CALL GLBEGIN(GL_QUAD_STRIP)
-! DO J=0,NINT
-!!## skip negative values if available
-!  IF(J.EQ.NINT)THEN
-!   CALL IMOD3D_SETNORMALVECTOR((/XPOS(J,1)  ,YPOS(J,1)  ,ZPOS(J,1)  /), &
-!                               (/XPOS(J,2)  ,YPOS(J,2)  ,ZPOS(J,2)  /), &
-!                               (/XPOS(0,2)  ,YPOS(0,2)  ,ZPOS(0,2)  /))
-!  ELSE
-!   CALL IMOD3D_SETNORMALVECTOR((/XPOS(J,1)  ,YPOS(J,1)  ,ZPOS(J,1)  /), &
-!                               (/XPOS(J,2)  ,YPOS(J,2)  ,ZPOS(J,2)  /), &
-!                               (/XPOS(J+1,2),YPOS(J+1,2),ZPOS(J+1,2)/))
-!  ENDIF
-!  CALL GLVERTEX3F(XPOS(J,1),YPOS(J,1),ZPOS(J,1))
-!  CALL GLVERTEX3F(XPOS(J,2),YPOS(J,2),ZPOS(J,2))
-! ENDDO
-! CALL GLEND()
-  
-  ENDIF
-  
-  !## draw up- and bottom of current trajectory
-  DO II=1,2
-
-   XP=XBH(I+II-1)
-   YP=YBH(I+II-1)
-   ZP=ZBH(I+II-1)
-
+  !## draw bottom of current trajectory
+  IF(I.EQ.SIZE(XBH)-1.OR.RBH(I).NE.RBH(I+1))THEN
+   XP=XBH(I+1); YP=YBH(I+1); ZP=ZBH(I+1)
    !## draw triangle fan
    CALL GLBEGIN(GL_TRIANGLE_FAN) 
-    CALL IMOD3D_SETNORMALVECTOR((/XPOS(0,II),YPOS(0,II),ZPOS(0,II)/), &
-                                (/XPOS(1,II),YPOS(1,II),ZPOS(1,II)/), &
+    CALL IMOD3D_SETNORMALVECTOR((/XPOS(0,2),YPOS(0,2),ZPOS(0,2)/), &
+                                (/XPOS(1,2),YPOS(1,2),ZPOS(1,2)/), &
                                 (/XP        ,YP        ,ZP        /))
     CALL GLVERTEX3F(XP,YP,ZP)
     DO J=NINT,0,-1
-     CALL GLVERTEX3F(XPOS(J,II),YPOS(J,II),ZPOS(J,II))
+     CALL GLVERTEX3F(XPOS(J,2),YPOS(J,2),ZPOS(J,2))
     ENDDO
    CALL GLEND()
-
-  ENDDO
-  
-!  DO J=NINT,0,-1
-!   XPOS(J,3)=XPOS(J,1)
-!   YPOS(J,3)=YPOS(J,1)
-!   ZPOS(J,3)=ZPOS(J,1)
-!  ENDDO
+  ENDIF
  
  ENDDO 
 

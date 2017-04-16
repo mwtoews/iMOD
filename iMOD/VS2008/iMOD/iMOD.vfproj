@@ -321,8 +321,8 @@
 				<Tool Name="VFFortranCompilerTool" Preprocess="preprocessYes" PreprocessorDefinitions="WINTERACTER9"/></FileConfiguration></File>
 		<File RelativePath="..\..\..\iMOD\SRC\imod_modpath\imod_plines_par.f90"/></Filter>
 		<Filter Name="imod_movie">
-		<File RelativePath="..\..\SRC\imod_movie\mod_movie.f90"/>
-		<File RelativePath="..\..\SRC\imod_movie\mod_movie_par.f90"/></Filter>
+		<File RelativePath="..\..\SRC\imod_movie\imod_movie.f90"/>
+		<File RelativePath="..\..\SRC\imod_movie\imod_movie_par.f90"/></Filter>
 		<Filter Name="imod_nc2idf">
 		<File RelativePath="..\..\..\iMOD\SRC\imod_nc2idf\imod_nc2idf.f90">
 			<FileConfiguration Name="Release|x64" ExcludedFromBuild="true"/>
