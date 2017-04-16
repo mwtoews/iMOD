@@ -32,7 +32,7 @@ USE MOD_IDF_PAR, ONLY : IDFOBJ
 USE MOD_COLOURS, ONLY : ICOLOR
 USE MOD_UTL, ONLY : INVERSECOLOUR,UTL_CAP,UTL_GETUNIT,ITOS,RTOS,UTL_FILLARRAY,UTL_IDFGETCLASS, &
        UTL_IDFSNAPTOGRID,UTL_MESSAGEHANDLE,UTL_INSIDEPOLYGON,UTL_WAITMESSAGE,NEWLINE,UTL_LOADIMAGE, &
-       UTL_EQUALS_REAL,UTL_GETAXESCALES,SXVALUE,SYVALUE,NSX,NSY,UTL_GETFORMAT,UTL_GET_ANGLES,UTL_ROTATE_XYZ
+       UTL_EQUALS_REAL,UTL_GETAXESCALES,SXVALUE,SYVALUE,NSX,NSY,UTL_GETFORMAT,UTL_ROTATE_XYZ
 USE MOD_GENPLOT_PAR
 USE MOD_IFF, ONLY : UTL_GETUNITIFF,IFF,IFFPLOT_GETIFFVAL
 USE MOD_IPFASSFILE, ONLY : IPFOPENASSFILE,IPFREADASSFILELABEL,IPFREADASSFILE,IPFCLOSEASSFILE,IPFDRAWITOPIC2_ICLR, &
@@ -2629,56 +2629,14 @@ CONTAINS
    CALL IMOD3D_SETCOLOR(IB)
   ENDIF
 
-! !## translate to appropriate location
-! CALL GLTRANSLATEF(XPOS(1,1),YPOS(1,1),ZPOS(1,1))
-!
-! !## rotate as opengl doesnot match x- and y- axes direction
-! CALL GLROTATEF(-90.0,1.0_GLFLOAT,0.0_GLFLOAT,0.0_GLFLOAT) !## put them flat in xy plane
-! CALL GLROTATEF( 90.0,0.0_GLFLOAT,1.0_GLFLOAT,0.0_GLFLOAT) !## rotate them to east
-! 
   !## get angles of from tube
   DX=XBH(I+1)-XBH(I)
   DY=YBH(I+1)-YBH(I)
   DZ=ZBH(I+1)-ZBH(I)
-! 
-! !## rotation along y-axes
-! XGRAD=ATAN2(DY,DX)*(360.0/(2.0*PI))
-! CALL GLROTATEF(-XGRAD,0.0_GLFLOAT,1.0_GLFLOAT,0.0_GLFLOAT)!## y-axes
-!
-  CALL UTL_GET_ANGLES(DX,DY,DZ,AX,AY,AZ)
 
   AX=-ATAN2(DZ,DX)
-  AY=ATAN2(DY,SQRT(DX**2.0+DZ**2.0))
-  
-!OPENGL IS Y OMHOOG EN Z NAAR VOREN
-!  AY=ATAN2(DY,DX)
-
-!  WRITE(*,*) ATAN2(DY,DX)
-!  AY=AY+0.5*PI
-!CORRIGEER ROTATION FOR Y-AXES
-! CALL GLROTATEF( 90.0,0.0_GLFLOAT,1.0_GLFLOAT,0.0_GLFLOAT) !## rotate them to east
-!
-! !## rotation along x-axes
-! DXY=SQRT(DX**2.0+DY**2.0); XGRAD=ATAN2(DZ,DXY)*(360.0/(2.0*PI))
-!  AX=ATAN2(DZ,SQRT(DX**2.0+DY**2.0))
-!  AX=AX-0.5*PI
-!CORRIGEEER ROTATION FOR X-AXES
-! CALL GLROTATEF(-90.0,1.0_GLFLOAT,0.0_GLFLOAT,0.0_GLFLOAT) !## put them flat in xy plane
-  
+  AY=ATAN2(DY,SQRT(DX**2.0+DZ**2.0))  
   AZ=0.0
-
-!  WRITE(*,*) 1,AX,AY,AZ
-  
-!  !## perpendicular to axes rotation
-!  AX=AX+0.5*PI
-
-!  WRITE(*,*) 2,AX,AY,AZ
-
-!   AX=AX-0.5*PI
-!   AY=AY+0.5*PI
-! !## rotate 
-! CALL GLROTATEF(-90.0,1.0_GLFLOAT,0.0_GLFLOAT,0.0_GLFLOAT) !## put them flat in xy plane
-! CALL GLROTATEF( 90.0,0.0_GLFLOAT,1.0_GLFLOAT,0.0_GLFLOAT) !## rotate them to east
 
   DO II=1,2
 
@@ -2699,8 +2657,8 @@ CONTAINS
     AR=AR+AD
    ENDDO
   
-   !## draw top-fan of tube
-   IF(I.EQ.1)THEN !.AND.II.EQ.1)THEN
+   !## draw top-fan of tube only for first segment
+   IF(I.EQ.1)THEN
     XP=XBH(I); YP=YBH(I); ZP=ZBH(I)
     !## draw triangle fan
     CALL GLBEGIN(GL_TRIANGLE_FAN) 
@@ -2716,33 +2674,27 @@ CONTAINS
   
    !## draw knee-part
    IF(I.GT.1.AND.II.EQ.1)THEN
-    CALL GLBEGIN(GL_QUAD_STRIP)
-    DO J=NINT,0,-1
-     IF(J.EQ.NINT)THEN
-      CALL IMOD3D_SETNORMALVECTOR((/XPOS(J,2)  ,YPOS(J,2)  ,ZPOS(J,2)  /), &
-                                  (/XPOS(J,1)  ,YPOS(J,1)  ,ZPOS(J,1)  /), &
-                                  (/XPOS(0,1)  ,YPOS(0,1)  ,ZPOS(0,1)  /))
-     ELSE
-      CALL IMOD3D_SETNORMALVECTOR((/XPOS(J,2)  ,YPOS(J,2)  ,ZPOS(J,2)  /), &
-                                  (/XPOS(J,1)  ,YPOS(J,1)  ,ZPOS(J,1)  /), &
-                                  (/XPOS(J+1,1),YPOS(J+1,1),ZPOS(J+1,1)/))
-     ENDIF
-     CALL GLVERTEX3F(XPOS(J,2),YPOS(J,2),ZPOS(J,2))
-     CALL GLVERTEX3F(XPOS(J,1),YPOS(J,1),ZPOS(J,1))
-    ENDDO
-    CALL GLEND()
+    IF(RBH(I-1).EQ.RBH(I))THEN
+     CALL GLBEGIN(GL_QUAD_STRIP)
+     DO J=NINT,0,-1
+      IF(J.NE.NINT)THEN
+       CALL IMOD3D_SETNORMALVECTOR((/XPOS(J,1)  ,YPOS(J,1)  ,ZPOS(J,1)  /), &
+                                   (/XPOS(J,2)  ,YPOS(J,2)  ,ZPOS(J,2)  /), &
+                                   (/XPOS(J+1,1),YPOS(J+1,2),ZPOS(J+1,2)/))
+      ENDIF
+      CALL GLVERTEX3F(XPOS(J,2),YPOS(J,2),ZPOS(J,2))
+      CALL GLVERTEX3F(XPOS(J,1),YPOS(J,1),ZPOS(J,1))
+     ENDDO
+     CALL GLEND()
+    ENDIF
    ENDIF
    
   ENDDO
       
   !## side of tube
   CALL GLBEGIN(GL_QUAD_STRIP)
-  DO J=0,NINT !NINT,0,-1
-   IF(J.EQ.NINT)THEN
-    CALL IMOD3D_SETNORMALVECTOR((/XPOS(J,1)  ,YPOS(J,1)  ,ZPOS(J,1)  /), &
-                                (/XPOS(J,2)  ,YPOS(J,2)  ,ZPOS(J,2)  /), &
-                                (/XPOS(0,2)  ,YPOS(0,2)  ,ZPOS(0,2)  /))
-   ELSE
+  DO J=0,NINT
+   IF(J.NE.NINT)THEN
     CALL IMOD3D_SETNORMALVECTOR((/XPOS(J,1)  ,YPOS(J,1)  ,ZPOS(J,1)  /), &
                                 (/XPOS(J,2)  ,YPOS(J,2)  ,ZPOS(J,2)  /), &
                                 (/XPOS(J+1,2),YPOS(J+1,2),ZPOS(J+1,2)/))
@@ -3379,32 +3331,18 @@ SOLLOOP: DO I=1,NSOLLIST
  END SUBROUTINE IMOD3D_IPF_CREATEBALL
  
  !###======================================================================
- SUBROUTINE IMOD3D_IPF_FANCY(XMID,YMID,ZMID,NINT,RADIUS,IPLT) !,BTYPE)
+ SUBROUTINE IMOD3D_IPF_FANCY(XMID,YMID,ZMID,NINT,RADIUS,IPLT) 
  !###======================================================================
  IMPLICIT NONE 
  REAL(KIND=GLFLOAT),INTENT(IN),DIMENSION(2) :: XMID,YMID,ZMID
  REAL(KIND=GLFLOAT),INTENT(IN) :: RADIUS
  REAL(KIND=GLFLOAT) :: DGRAD,FGRAD,XPOS,YPOS,ZPOS,DZDX,DZDY,DZDZ
-! INTEGER,INTENT(IN) :: BTYPE
  REAL :: L
  INTEGER,INTENT(IN) :: NINT
  INTEGER,INTENT(IN),DIMENSION(4) :: IPLT
  INTEGER :: I,J
 
  DGRAD=2.0*PI/REAL(NINT) !## stepsize angle radials
-
-! !## get rotated tube
-! IF(BTYPE.EQ.4)THEN
-!  DZDX=XMID(2)-XMID(1)
-!  DZDY=YMID(2)-YMID(1)
-!  DZDZ=ZMID(2)-ZMID(1)
-!  L=DZDX**2.0+DZDY**2.0+DZDZ**2.0
-!  IF(L.NE.0.0)THEN
-!   L=SQRT(L)
-!   CALL IMOD3D_VECTOR(XMID(1),YMID(1),ZMID(1),DZDX,DZDY,DZDZ,NINT,RADIUS,L,.FALSE.)
-!  ENDIF
-!  RETURN
-! ENDIF
  
  !## generate triangle_fan for the top/bottom of current interval
  DO I=1,2
