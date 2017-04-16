@@ -460,6 +460,9 @@
 		<File RelativePath="..\..\..\iMOD\SRC\imod_wbal\imod_wbal_compute.f90"/>
 		<File RelativePath="..\..\SRC\imod_wbal\imod_wbal_graphics.f90"/>
 		<File RelativePath="..\..\..\iMOD\SRC\imod_wbal\imod_wbal_par.f90"/></Filter>
+		<Filter Name="imod_graph">
+		<File RelativePath="..\..\SRC\imod_graph\imod_graph.f90"/>
+		<File RelativePath="..\..\SRC\imod_graph\imod_graph_par.f90"/></Filter>
 		<Filter Name="programs">
 		<File RelativePath="..\..\..\iMOD\SRC\imod_main\imod_prg.f90">
 			<FileConfiguration Name="Debug|Win32">
