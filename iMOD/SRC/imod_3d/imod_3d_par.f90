@@ -44,9 +44,6 @@ DATA CLPPLANES/GL_CLIP_PLANE0,GL_CLIP_PLANE1,GL_CLIP_PLANE2,GL_CLIP_PLANE3, &
 REAL,PARAMETER :: ZEXT = 0.0 !.2 (thickness)   !## extrusion factor
 INTEGER :: IFAM1 ! = FFHelvetica!  FFCourier,FFTimes
 
-!INTEGER,DIMENSION(:),ALLOCATABLE :: IC
-!INTEGER :: MAXIC
-
 INTEGER,PARAMETER :: ROTATE = 1
 INTEGER,PARAMETER :: PAN    = 2
 INTEGER,PARAMETER :: ZOOM   = 3
@@ -60,41 +57,42 @@ INTEGER :: IMOUSEMOVE=0 !## whether mousemove need to be processed in 3d window
 INTEGER :: IWIN  !## window-number
 
 TYPE IDFSETTING
- INTEGER :: IFILL,JFILL      !## use colouring (copy for selecting mode)
- INTEGER :: ICOLOR,JCOLOR    !## colornumber (copy for selecting mode)
- INTEGER :: ILEG,JLEG        !## use legend  (copy for selecting mode)
- INTEGER :: ISHADED,JSHADED  !## use shading (copy for selecting mode)
- INTEGER :: IPLOT     !## iplot in datamanager
- INTEGER :: ICOMBINE  !## (0)=none, (1-nidf) idf
- INTEGER :: IDFLEGEND !## legend by selected idf
- INTEGER :: ISEL,DISP_ISEL      !## selected
- INTEGER :: ILIST     !## list sequence
- INTEGER :: DISP_ILIST !## list sequence
- INTEGER :: IPLOTLEGEND !## plotlegend
- REAL    :: ZMAX,ZMIN !,NODATA
- INTEGER :: ICUBE     !## (0)flat;(1)cube
- INTEGER :: ICONFIG  !## configuration number
- INTEGER :: IACC    !## accuracy (=resolution) number
+ INTEGER :: IFILL,JFILL     !## solid fill (1), wireframes (2) or combined (3)
+ INTEGER :: ICOLOR,JCOLOR   !## colornumber (copy for selecting mode)
+ INTEGER :: ILEG,JLEG       !## use legend  (copy for selecting mode)
+ INTEGER :: ISHADED,JSHADED !## use shading (copy for selecting mode)
+ INTEGER :: IPLOT           !## iplot in datamanager
+ INTEGER :: ICOMBINE        !## (0)=none, (1-nidf) idf
+ INTEGER :: IDFLEGEND       !## legend by selected idf
+ INTEGER :: ISEL,DISP_ISEL  !## selected
+ INTEGER :: ILIST           !## list sequence
+ INTEGER :: DISP_ILIST      !## list sequence
+ INTEGER :: IPLOTLEGEND     !## plotlegend
+ REAL    :: ZMAX,ZMIN       !## zmax,zmin
+ INTEGER :: ICUBE           !## (0)flat;(1)cube
+ INTEGER :: ICONFIG         !## configuration number
+ INTEGER :: IACC            !## accuracy (=resolution) number
  INTEGER :: ITRANSPARANCY   !## transparancy
- INTEGER :: ISTACKED   !## stacked idf-files
+ INTEGER :: ISTACKED        !## stacked idf-files
  CHARACTER(LEN=50) :: ALIAS,DISP_ALIAS
  CHARACTER(LEN=256) :: FNAME
  TYPE(LEGENDOBJ) :: LEG
 END TYPE IDFSETTING
 TYPE(IDFSETTING),ALLOCATABLE,DIMENSION(:) :: IDFPLOT
 TYPE IPFSETTING
- INTEGER :: ISEL     !## selected
- INTEGER :: IPLOT    !## iplot in datamanager
- INTEGER :: ISUB     !## number of subdivision
- INTEGER :: IFANCY   !## fancy plot of boreholes
- INTEGER :: ISHADE   !## shading
- INTEGER :: ASSCOL1  !## associated column # 1
- INTEGER :: ASSCOL2  !## associated column # 2
+ INTEGER :: ISEL        !## selected
+ INTEGER :: IPLOT       !## iplot in datamanager
+ INTEGER :: IFILL       !## solid fill (1), wireframes (2) or combined (3)
+ INTEGER :: ISUB        !## number of subdivision
+ INTEGER :: IFANCY      !## fancy plot of boreholes
+ INTEGER :: ISHADE      !## shading
+ INTEGER :: ASSCOL1     !## associated column # 1
+ INTEGER :: ASSCOL2     !## associated column # 2
  INTEGER :: IPLOTLEGEND !## plotlegend
  INTEGER :: IPLOTLABELS !## plot labels
- INTEGER :: ILEGDLF  !## legend dlf
- INTEGER :: ISTYLE   !## plotstyle
- REAL :: RADIUS      !## percentage
+ INTEGER :: ILEGDLF     !## legend dlf
+ INTEGER :: ISTYLE      !## plotstyle
+ REAL :: RADIUS         !## percentage
  INTEGER,DIMENSION(3) :: ISELECT
  REAL,DIMENSION(3) :: RSELECT
  CHARACTER(LEN=50) :: FNAME
@@ -104,7 +102,7 @@ TYPE IFFSETTING
  INTEGER :: ISEL         !## selected
  INTEGER :: ITHICKNESS   !## thickness
  INTEGER :: IPLOT        !## iplot in datamanager
- INTEGER :: IPLOTLEGEND !## plotlegend
+ INTEGER :: IPLOTLEGEND  !## plotlegend
  CHARACTER(LEN=50) :: FNAME
 END TYPE IFFSETTING
 TYPE(IFFSETTING),ALLOCATABLE,DIMENSION(:) :: IFFPLOT
@@ -138,9 +136,9 @@ TYPE(CLPSETTING),ALLOCATABLE,DIMENSION(:) :: CLPPLOT
 
 INTEGER,SAVE :: NIDFLIST,DISP_NIDFLIST,NIFFLIST,NGENLIST,NSOLLIST,NCLPLIST,NASSLIST
 INTEGER,SAVE :: NIPFLIST
-INTEGER,SAVE :: IACTBITMAP  !# bitmap used
-INTEGER,SAVE :: ITRANSPARANCYBITMAP !# transparancy bitmap
-INTEGER,SAVE :: IREADBMP  !# bitmap read/allocated
+INTEGER,SAVE :: IACTBITMAP          !## bitmap used
+INTEGER,SAVE :: ITRANSPARANCYBITMAP !## transparancy bitmap
+INTEGER,SAVE :: IREADBMP            !## bitmap read/allocated
 
 INTEGER,SAVE :: IWINWIDTH,IWINHEIGHT
 

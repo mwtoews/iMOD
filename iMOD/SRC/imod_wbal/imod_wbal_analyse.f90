@@ -29,13 +29,13 @@ USE IMODVAR, ONLY : IDIAGERROR,TP
 USE MOD_IDF, ONLY : IDFALLOCATEX,IDFALLOCATESXY,IDFNULLIFY,IDFDEALLOCATEX,IDFFILLSXSY
 USE MOD_WBAL_PAR
 USE MOD_WBAL_GRAPHICS, ONLY : DRAWBAL
-USE MOD_UTL, ONLY : UTL_GETUNIT,UTL_CAP,UTL_IDATETOJDATE,UTL_JDATETOIDATE,NV,NL,ITOS,IDATETOGDATE,UTL_GDATE,UTL_GETUNIQUE_CHAR, &
-            UTL_WSELECTFILE
+USE MOD_UTL, ONLY : UTL_GETUNIT,UTL_CAP,UTL_IDATETOJDATE,UTL_JDATETOIDATE,ITOS,IDATETOGDATE,UTL_GDATE,UTL_GETUNIQUE_CHAR, &
+            UTL_WSELECTFILE !,NV,NL
  !,RTOS,ITOS,JD,UTL_SUBST,,UTL_CLOSEUNITS, &
 !     UTL_INSIDEPOLYGON,UTL_CREATEDIR,UTL_DIRINFO_POINTER,JDATETOFDATE,, &
 !     NV,NL,MAXLEN,UTL_MESSAGEHANDLE,
 USE MOD_OSD, ONLY : OSD_OPEN
-USE MOD_GRAPH, ONLY : GRAPH,GRAPHNAMES,GRAPH_DEALLOCATE,GRAPH_ALLOCATE,GRAPH_PLOT
+USE MOD_GRAPH, ONLY : GRAPH,GRAPHNAMES,GRAPH_DEALLOCATE,GRAPH_ALLOCATE,GRAPH_PLOT,GRAPHDIM
 
 CONTAINS
 
@@ -211,7 +211,8 @@ CONTAINS
  CHARACTER(LEN=256) :: CSVFNAME
  CHARACTER(LEN=52) :: TXT
  INTEGER :: I,J,K,II,IU,IOS,SKIPLINES,CFN_N_ELEM,ICOL,IROW,IBAL
-
+ INTEGER :: NV,NL
+ 
  WBAL_ANALYSE_READCSV=.TRUE.
  
  CSVFNAME='d:\iMOD-Gebruikersdag\IMOD_USER\MODELS\WERKHOVEN\WBALANCE.CSV'
@@ -241,13 +242,13 @@ CONTAINS
 
  WBAL_ANALYSE_READCSV=.FALSE.
 
- NBUDGET=NV
+ NBUDGET=NV/2
  !## read labels of budgetterms
  ALLOCATE(GWBAL(1)%TXT(NV),GWBAL(2)%TXT(NV))
  READ(LINE,*) TXT,TXT,TXT,(GWBAL(1)%TXT(I),I=1,NV)
  DO I=1,NV; GWBAL(2)%TXT(I)=GWBAL(1)%TXT(I); ENDDO
  
- ALLOCATE(BUDGET(NV/2))
+ ALLOCATE(BUDGET(NBUDGET))
  J=0; K=0; DO I=1,NV,2
   J=J+1; K=K+1
   II=INDEX(GWBAL(1)%TXT(I),'_',.TRUE.)
@@ -458,18 +459,11 @@ CONTAINS
  IF(ID.EQ.ID_GRAPHICS)THEN
   CALL WBAL_ANALYSE_PLOTIMAGE()
  ELSEIF(ID.EQ.ID_PREVIEW)THEN
-  IF(WBAL_ANALYSE_PLOTGRAPH(1,1))THEN; ENDIF
+  CALL GRAPH_PLOT('Time','Volumes (m3/d)',.FALSE.)
  ENDIF
  
-!     IY1=19630101
-!     IY2=20140101
-!     IPERIOD=1
-!     ITIME=0
-!     CALL WDIALOGGETMENU(IDF_MENU1,IBLANK)
-!     CALL WBAL_ANAYSE_PREPARE(IBLANK,ITIME,IPERIOD,IY1,IY2) 
-!     IF(WBAL_ANALYSE_PLOTGRAPH(NLAY,NZONE))THEN; ENDIF
-!     DEALLOCATE(GWBAL(2)%CDATE,GWBAL(2)%Q,GWBAL(2)%CLAY,GWBAL(2)%CZONE)
-!     CALL WDIALOGSELECT(ID_WBALMAIN)
+ !## clean up, deallocate
+ IF(ALLOCATED(GRAPH))CALL GRAPH_DEALLOCATE()
 
  END SUBROUTINE WBAL_ANALYSE_PLOT
 
@@ -477,158 +471,167 @@ CONTAINS
  LOGICAL FUNCTION WBAL_ANAYSE_PREPARE() 
  !###======================================================================
  IMPLICIT NONE
- INTEGER :: NQ,NT,I,J,K,II
-! REAL :: A
- 
+! INTEGER,INTENT(OUT) :: ITIMESERIE
+ INTEGER :: I,J,K,IL,IZ,ID,IG,IQIN,IQOU,JQIN,JQOU,IQ,JQ,IOS,IDATE
+ REAL :: QIN,QOU
+  
  WBAL_ANAYSE_PREPARE=.FALSE.
  
-! SELECT CASE (ITIME)
-!  !## as is
-!  CASE (0)
-!   ALLOCATE(GWBAL(2)%CDATE(NL),GWBAL(2)%Q(NV,NL),GWBAL(2)%CLAY(NL),GWBAL(2)%CZONE(NL))
-!   DO I=1,NL; GWBAL(2)%CDATE(I)=GWBAL(1)%CDATE(I); ENDDO
-!   DO I=1,NL; GWBAL(2)%CLAY(I) =GWBAL(1)%CLAY(I); ENDDO
-!   DO I=1,NL; GWBAL(2)%CZONE(I)=GWBAL(1)%CZONE(I); ENDDO
-!   DO I=1,NL; DO J=1,NV; GWBAL(2)%Q(J,I)=GWBAL(1)%Q(J,I); ENDDO; ENDDO
-!   NLL=NL
-!  !## total per period (m3/day)
-!  CASE (1)
-!
-!   JD1=UTL_IDATETOJDATE(IY1)
-!   JD2=UTL_IDATETOJDATE(IY2)
-!   JDP=0
-!
-!   !## number of periods
-!   SELECT CASE (IPERIOD)
-!    CASE (1)  !## year
-!     CALL UTL_GDATE(JD1,IY1,IM1,ID1)
-!     CALL UTL_GDATE(JD2,IY2,IM2,ID2)
-!     NLL=IY2-IY1+1
-!    CASE (2)  !## month
-!     CALL UTL_GDATE(JD1,IY1,IM1,ID1)
-!     CALL UTL_GDATE(JD2,IY2,IM2,ID2)
-!     NLL=(IY2-IY1+1)*12
-!   END SELECT
-!
-!   NLL=NLL*NZONE*NLAY    
+ IF(ALLOCATED(GRAPH))CALL GRAPH_DEALLOCATE()
 
-!## make selection
+ lilay=1
+ lizone=1
+ lidate=1
+ 
+ !## make selection
+ MLAY=0;    DO I=1,NLAY;    IF(LILAY(I).EQ.1)      MLAY=MLAY+1;       ENDDO
+ MZONE=0;   DO I=1,NZONE;   IF(LIZONE(I).EQ.1)     MZONE=MZONE+1;     ENDDO
+ MDATE=0;   DO I=1,NDATE;   IF(LIDATE(I).EQ.1)     MDATE=MDATE+1;     ENDDO
+ MBUDGET=0; DO I=1,NBUDGET; IF(BUDGET(I)%IACT.EQ.1)MBUDGET=MBUDGET+2; ENDDO
+  
+ !## total groups in graph
+ MGROUP=MZONE*MLAY
 
-   !## number of budgets
-   NQ=SIZE(GWBAL(1)%Q,1)
-   !## number of periods
-   NT=SIZE(GWBAL(1)%Q,2)
-   
-   ALLOCATE(GWBAL(2)%CDATE(NT),GWBAL(2)%Q(NQ,NT),GWBAL(2)%CLAY(NT),GWBAL(2)%CZONE(NT), &
-     GWBAL(2)%TXT(NQ),GWBAL(2)%ICLR(NQ),GWBAL(2)%FLX(NQ))
+ IF(MGROUP.EQ.0.OR.MBUDGET.EQ.0.OR.MDATE.EQ.0)THEN
+  CALL WMESSAGEBOX(OKONLY,INFORMATIONICON,COMMONOK,'There is nothing selected to generate a water balance for'//CHAR(13)// &
+    ' Go to the tabs BUDGETTERMS and AGGREGATION to make an appropriate selection,','Information')
+  RETURN
+ ENDIF
+ 
+ !## allocate graph memory
+ CALL GRAPH_ALLOCATE(MBUDGET,MGROUP)
+ DO I=1,MBUDGET; DO J=1,MGROUP
+  ALLOCATE(GRAPH(I,J)%RX(MDATE),GRAPH(I,J)%RY(MDATE))
+ ENDDO; ENDDO
 
-!   GWBAL(2)%CDATE=0; GWBAL(2)%Q=0.0; GWBAL(2)%CLAY=0; GWBAL(2)%CZONE=0
+ !## all histograms
+ GRAPH%GTYPE =1
 
-!  CHARACTER(LEN=52) :: LABEL,FLUXTERM
-!  INTEGER :: ICLR,IACT,IGROUP
-! END TYPE WBUDGETOBJ
-! TYPE(WBUDGETOBJ),ALLOCATABLE,DIMENSION(:) :: BUDGET
+ !## assign label name for each group (= zone and layer)
+ K=0; DO I=1,NLAY; DO J=1,NZONE
+  IF(LILAY(I).EQ.0)CYCLE
+  IF(LIZONE(J).EQ.0)CYCLE
+  K=K+1; GRAPHNAMES(K)='Layer '//TRIM(CILAY(I))//'; Zone Number '//TRIM(CIZONE(J))
+ ENDDO; ENDDO
 
-   !## fill in label/color etc.
-   J=0; K=0; DO I=1,SIZE(GWBAL(1)%Q,1)
-!# NOG IETS MET GROUP DOEN
-    IF(MOD(I,2).NE.0)K=K+1
-    IF(BUDGET(K)%IACT.EQ.0)CYCLE
-    J=J+1
-    GWBAL(2)%ICLR(J)=BUDGET(K)%ICLR
-    GWBAL(2)%TXT(J) =BUDGET(K)%LABEL
-    GWBAL(2)%FLX(J) =BUDGET(K)%FLUXTERM
-   ENDDO
-   
-   J=0; DO I=1,NL
-!# correct layer/zon/date
-!LILAY(),LIZONE(),LIDATE()
-!    IF()THEN
-     J=J+1
-     GWBAL(2)%CDATE(J)=GWBAL(1)%CDATE(I)
-     II=0; DO K=1,NQ
-!      IF()THEN
-       II=II+1
-       GWBAL(2)%Q(II,J)=GWBAL(1)%Q(K,I)
-!      ENDIF
-     ENDDO
-     GWBAL(2)%CLAY(J) =GWBAL(1)%CLAY(I)
-     GWBAL(2)%CZONE(J)=GWBAL(1)%CZONE(I)
-!    ENDIF
-   ENDDO
-   
-!   I=0
-!   K=0
-!   DO 
-!    I=I+1
-!    IF(I.GT.SIZE(GWBAL(1)%CDATE))EXIT
-!     
-!    !## get year - julian dates !!!
-!    J=UTL_IDATETOJDATE(GWBAL(1)%CDATE(I))
-!
-!    IF(J.LT.JD1)CYCLE    !## searching for startdate
-!    IF(J.GT.JD2)EXIT     !## finished
-!    IF(J.GT.JDP)THEN     !## goto the next period
-!
-!     IF(JDP.GT.0)THEN
-!      JD1=JDP
-!      K=K+NLAY*NZONE
-!     ENDIF
-!      
-!     CALL IDATETOGDATE(GWBAL(1)%CDATE(I),IY1,IM1,ID1)
-!     SELECT CASE (IPERIOD)
-!      CASE (1)  !## year
-!       JDP=JD1+365; IF(WDATELEAPYEAR(IY1))JDP=JDP+1
-!      CASE (2)  !## month
-!       JDP=JD1+WDATEDAYSINMONTH(IY1,IM1)-1
-!     END SELECT
-!
-!    ENDIF
-!
-!    !## sum for all ilay/izone
-!    I=I-1
-!    DO J=1,NLAY*NZONE
-!     I=I+1
-!
-!     GWBAL(2)%CDATE(K+J)=UTL_JDATETOIDATE(JD1)
-!     GWBAL(2)%CLAY(K+J) =GWBAL(1)%CLAY(I)
-!     GWBAL(2)%CZONE(K+J)=GWBAL(1)%CZONE(I)
-!
-!     DO JJ=1,NV
-!      GWBAL(2)%Q(JJ,K+J)=GWBAL(2)%Q(JJ,K+J)+GWBAL(1)%Q(JJ,I)
-!     ENDDO
-!    ENDDO
-!     
-!   ENDDO   
-! END SELECT
-!
-! !## remove topics if needed
-! DO J=1,NV
-!  IF(IBLANK(J).EQ.0)THEN
-!   DO I=1,NLL; GWBAL(2)%Q(J,I)=0.0; ENDDO
-!  ENDIF
-!  IF(.FALSE.)THEN
-!   A=121647.0*250.0*250.0
-!   A=1000.0/A
-!  ELSE
-!   A=1.0
-!  ENDIF
-!  DO I=1,NLL; GWBAL(2)%Q(J,I)=GWBAL(2)%Q(J,I)*A; ENDDO
-! ENDDO
-!
-!! !## sum 1-4 and 5-8
-!! DO I=1,NLL
-! ! DO J=1,4
-! !  GWBAL(2)%Q(10,I)=GWBAL(2)%Q(10,I)+GWBAL(2)%Q(J,I)
-! ! ENDDO
-! ! DO J=6,8
-! !  GWBAL(2)%Q(11,I)=GWBAL(2)%Q(11,I)+GWBAL(2)%Q(J,I)
-! ! ENDDO
-! !ENDDO
-! 
+! IF(ITIMESERIE.EQ.1)THEN
+!  !## keep track of predefined axes titles
+!  GRAPHDIM%XINT=MLAY; ALLOCATE(GRAPHDIM%XTXT(INT(GRAPHDIM%XINT)))
+! ENDIF
+
+!!  CHARACTER(LEN=52) :: LABEL,FLUXTERM
+!!  INTEGER :: ICLR,IACT,IGROUP
+!! END TYPE WBUDGETOBJ
+!! TYPE(WBUDGETOBJ),ALLOCATABLE,DIMENSION(:) :: BUDGET
+
+ !## gather main information
+ JQ=0; DO IQ=1,NBUDGET
+  IF(BUDGET(IQ)%IACT.EQ.0)CYCLE
+
+  JQ=JQ+1
+  IG=0; DO I=1,NLAY; DO J=1,NZONE
+   IF(LILAY(I).EQ.0)CYCLE
+   IF(LIZONE(J).EQ.0)CYCLE
+  
+   IG=IG+1
+  
+   JQIN=(JQ-1)*2+1
+   JQOU= JQIN+1
+!   IQIN=(IQ-1)*2+1
+!   IQOU= IQIN+1
+  
+   GRAPH(JQIN,IG)%LEGTXT=TRIM(UTL_CAP(BUDGET(IQ)%LABEL,'U'))//'_in'
+   GRAPH(JQOU,IG)%LEGTXT=TRIM(UTL_CAP(BUDGET(IQ)%LABEL,'U'))//'_out'
+   GRAPH(JQIN,IG)%ICLR  =BUDGET(IQ)%ICLR
+   GRAPH(JQOU,IG)%ICLR  =BUDGET(IQ)%ICLR
+   GRAPH(JQIN,IG)%CTYPE =TRIM(UTL_CAP(BUDGET(IQ)%FLUXTERM,'U'))//'_in'
+   GRAPH(JQOU,IG)%CTYPE =TRIM(UTL_CAP(BUDGET(IQ)%FLUXTERM,'U'))//'_in'
+
+   GRAPH(JQIN,IG)%NP=MDATE
+   GRAPH(JQOU,IG)%NP=MDATE
+  
+  ENDDO; ENDDO
+ ENDDO
+
+ !## gather data
+ DO I=1,NDATE
+  
+  !## apprppriate item
+  IF(.NOT.WBAL_ANALYSE_SELECT(GWBAL(1)%CLAY(I),GWBAL(1)%CZONE(I),GWBAL(1)%CDATE(I),IL,IZ,ID))CYCLE
+
+  !## get appropriate group number
+  IG=(IZ-1)*MZONE+IL
+
+  JQIN=0; JQOU=0; DO IQ=1,NBUDGET
+   IF(BUDGET(IQ)%IACT.EQ.0)CYCLE
+
+   JQIN= JQIN+1
+   JQOU= JQOU+1
+   IQIN=(IQ-1)*2+1
+   IQOU= IQIN+1
+
+   !## get balance value as summed value (stacked)
+   QIN=GWBAL(1)%Q(IQIN,I)
+   QOU=GWBAL(1)%Q(IQOU,I)
+
+   !## add to existing fluxes
+   GRAPH(JQIN,IG)%RY(ID)=GRAPH(JQIN,IG)%RY(ID)+QIN
+   GRAPH(JQOU,IG)%RY(ID)=GRAPH(JQOU,IG)%RY(ID)+QOU
+
+  !## always first column
+   READ(GWBAL(1)%CDATE(I),*,IOSTAT=IOS) IDATE
+
+   !## apply axes titles predefined
+   IF(IOS.NE.0)THEN
+    GRAPH(JQIN,IG)%RX(ID)=REAL(ID)
+    GRAPH(JQOU,IG)%RX(ID)=REAL(ID)
+    GRAPHDIM%XTXT(ID)=GWBAL(1)%CDATE(I)
+   ELSE
+    GRAPH(JQIN,IG)%RX(ID)=REAL(UTL_IDATETOJDATE(IDATE))
+    GRAPH(JQOU,IG)%RX(ID)=REAL(UTL_IDATETOJDATE(IDATE))
+   ENDIF
+
+  ENDDO
+ ENDDO
+  
  WBAL_ANAYSE_PREPARE=.TRUE.
 
  END FUNCTION WBAL_ANAYSE_PREPARE
+
+ !###======================================================================
+ LOGICAL FUNCTION WBAL_ANALYSE_SELECT(CL,CZ,CD,IL,IZ,ID)
+ !###======================================================================
+ IMPLICIT NONE
+ CHARACTER(LEN=*),INTENT(IN) :: CL,CZ,CD
+ INTEGER,INTENT(OUT) :: IL,IZ,ID
+ INTEGER :: I,J,K
+  
+ WBAL_ANALYSE_SELECT=.TRUE.
+ 
+ ID=0; DO I=1,NDATE
+  !## not selected
+  IF(LIDATE(I).EQ.0)CYCLE
+  ID=ID+1
+  IF(TRIM(CIDATE(I)).EQ.TRIM(CD))THEN
+   IL=0; DO J=1,NLAY
+    !## not selected
+    IF(LILAY(J).EQ.0)CYCLE
+    IL=IL+1
+    IF(TRIM(CILAY(J)).EQ.TRIM(CL))THEN
+     IZ=0; DO K=1,NZONE
+      !## not selected
+      IF(LIZONE(K).EQ.0)CYCLE
+      IZ=IZ+1
+      IF(TRIM(CIZONE(K)).EQ.TRIM(CZ))RETURN
+     ENDDO
+    ENDIF
+   ENDDO
+  ENDIF
+ ENDDO
+ 
+ WBAL_ANALYSE_SELECT=.FALSE.
+ 
+ end function WBAL_ANALYSE_SELECT
 
  !###======================================================================
  SUBROUTINE WBAL_ANALYSE_PLOTIMAGE()
@@ -718,187 +721,6 @@ CONTAINS
  END SUBROUTINE WBAL_ANALYSE_PLOTIMAGE
 
  !###======================================================================
- LOGICAL FUNCTION WBAL_ANALYSE_PLOTGRAPH(NL,NZ)
- !###======================================================================
- IMPLICIT NONE
- INTEGER,INTENT(IN) :: NL,NZ !## number of layers (nl); number of zones (nz)
- INTEGER,PARAMETER :: MXFLUX=11
- INTEGER :: NQ,NB,I,J,K,II,JJ,III,KK,KKK,IDATE,IX,IPOS,ITYPE,IOS
- INTEGER,ALLOCATABLE,DIMENSION(:,:) :: IBAR
- REAL :: X
- REAL,ALLOCATABLE,DIMENSION(:,:,:) :: XG
- INTEGER,DIMENSION(0:MXFLUX) :: ICOLOR
-! CHARACTER(LEN=20),DIMENSION(MXFLUX) :: CFLUX
-! DATA CFLUX/'CONSTANT HEAD','FLUX LOWER FACE','FLUX UPPER FACE','FLUX FRONT FACE','FLUX RIGHT FACE','STORAGE', &
-!            'EVAPOTRANSPIRATION','OVERLAND FLOW','RECHARGE','SEGMENTS','WELLS'/
-
- WBAL_ANALYSE_PLOTGRAPH=.FALSE.
-
-! !## positive
-
-!CLRIZONE(I)
-
-! ICOLOR(0) =WRGB(225,225,225)! -- unknown grey
-! ICOLOR(1) =WRGB(0  ,0  ,64 ) !## constant head
-! ICOLOR(2) =WRGB(0  ,0  ,255) !## flf
-! ICOLOR(3) =WRGB(128,128,255) !## fuf
-! ICOLOR(4) =WRGB(0  ,128,64 ) !## fff
-! ICOLOR(5) =WRGB(0  ,255,0  ) !## frf
-! ICOLOR(6) =WRGB(0  ,255,255) !## sto
-! ICOLOR(7) =WRGB(128,255,128) !## evt
-! ICOLOR(8) =WRGB(255,0  ,0  ) !## olf
-! ICOLOR(9) =WRGB(255,128,64 ) !## rch
-! ICOLOR(10)=WRGB(128,0  ,0  ) !## isg
-! ICOLOR(11)=WRGB(255,255,0  ) !## wel
-! ICOLOR(12)=WRGB(255,255,128) 
-! ICOLOR(13)=WRGB(255,128,255) 
-! ICOLOR(14)=WRGB(128,0  ,255) 
-
- IF(ALLOCATED(GRAPH))CALL GRAPH_DEALLOCATE()
- 
- !## if four columns per category
- !ITYPE=2
- !## if two columns per category
- ITYPE=1
- 
- !## number of budgets
- NQ= SIZE(GWBAL(2)%Q,1)
- !## number of bars
- NB= NQ/(2*ITYPE) 
-
- !## select bars to be plotted
- ALLOCATE(IBAR(NB,2)); IBAR=0
- J=0; K=1
- DO I=1,NB
-  J=J+1
-  IBAR(J,1)=K 
-  IBAR(J,2)=IBAR(J,1)+1
-  K=K+2*ITYPE 
- ENDDO
-
- !## check whether these are all non-zero per category
- DO I=1,NB/ITYPE 
-  DO J=1,2
-   II=IBAR(I,J)
-   IX=0  
-   DO K=1,NL*NZ
-    X=GWBAL(2)%Q(II,K)
-    IF(X.NE.0.0)IX=IX+1
-   ENDDO
-   IF(IX.EQ.0)IBAR(I,J)=-IBAR(I,J)
-  ENDDO
- ENDDO
-
- IX=0; DO I=1,NB/ITYPE; DO J=1,2; IF(IBAR(I,J).GT.0)IX=IX+1; ENDDO; ENDDO; NB=IX
- 
- CALL GRAPH_ALLOCATE(NB,NZ)
-
- DO I=1,NB; DO J=1,NZ
-   ALLOCATE(GRAPH(I,J)%RX(NL),GRAPH(I,J)%RY(NL))
- ENDDO; ENDDO
- 
- K=0
- DO I=1,NL
-  DO J=1,NZ
-   K=K+1
-   GRAPHNAMES(K)='Layer '//TRIM(GWBAL(2)%CLAY(I))//'; Zone Number '//TRIM(GWBAL(2)%CZONE(J))
-  ENDDO
- ENDDO
-
- !## keep record of minimal and maximal values
- ALLOCATE(XG(NL,NZ,2)); XG=0.0
-
- !## fill in legend
- !## read each group
- DO J=1,NZ
-  III=0
-  !## read in/out volumes
-  DO JJ=1,2
-   !## read each active bar
-   DO I=1,SIZE(IBAR,1)
-    !## skip empty bars
-    II=IBAR(I,JJ); IF(II.LE.0)CYCLE
-    III=III+1
-    GRAPH(III,J)%NP=NL
-    !## columns (histogram)
-    GRAPH(III,J)%GTYPE =1
-    GRAPH(III,J)%LEGTXT=UTL_CAP(GWBAL(2)%TXT(II),'U')
-    GRAPH(III,J)%ICLR  =GWBAL(2)%ICLR(II)
-   ENDDO
-  ENDDO
- ENDDO
-
- !## read each timestep
- KK=0
- DO K=1,NL
-  !## read each group
-  DO J=1,NZ
-   III=0
-   KK=KK+1
-   !## read in/out volumes
-   DO JJ=1,2
-    !## read each active bar
-    DO I=1,SIZE(IBAR,1)
-     !## skip empty bars
-     II=IBAR(I,JJ); IF(II.LE.0)CYCLE
-     III=III+1
-
-!## doe iets met jaartallen ...
-
-     !## always first column
-     READ(GWBAL(2)%CDATE(KK),*,IOSTAT=IOS) IDATE
-     IF(IOS.NE.0)THEN
-      GRAPH(III,J)%RX(K)=0.0
-     ELSE
-      GRAPH(III,J)%RX(K)=REAL(UTL_IDATETOJDATE(IDATE))
-     ENDIF
-
-     !## get balance value as summed value (stacked)
-     X=GWBAL(2)%Q(II,KK)
-     KKK=1; IF(X.LT.0.0)KKK=2
-     XG(K,J,KKK)=XG(K,J,KKK)+X
-     X=XG(K,J,KKK)
-     GRAPH(III,J)%RY(K)=X
-
-    ENDDO
-
-   ENDDO
-  ENDDO
- ENDDO
- 
- DEALLOCATE(XG)
-  
-!TYPE GRAPHOBJ
-! REAL,POINTER,DIMENSION(:) :: RX,RY !## x and y values
-! INTEGER :: GTYPE !## graph type 1=solid 2=lines 3=histogram
-! INTEGER :: NP  !## no. points
-! CHARACTER(LEN=50) :: LEGTXT !## legend text
-! INTEGER :: ICLR
-!END TYPE GRAPHOBJ
-!TYPE(GRAPHOBJ),DIMENSION(:,:),ALLOCATABLE :: GRAPH
-
-! CALL WINDOWOPEN(FLAGS=SYSMENUON+HIDEWINDOW+STATUSBAR)
-! CALL WINDOWSTATUSBARPARTS(4,(/2000,2000,750,-1/),(/1,1,1,1/))
-! CALL IGRCOLOURMODEL(24)
-! CALL IMODINITMESSAGE()
-! CALL UTL_MESSAGEHANDLE(1)
- 
- !## plot graph(s)
-! IF()THEN
-  !## no dates
-  CALL GRAPH_PLOT('Time','Volumes (m3/d)',.FALSE.)
-! ELSE
-!  CALL GRAPH_PLOT('Time','Volumes (m3/d)',.TRUE.)
-! ENDIF
- 
- !## clean up, deallocate
- IF(ALLOCATED(GRAPH))CALL GRAPH_DEALLOCATE()
-
- WBAL_ANALYSE_PLOTGRAPH=.TRUE.
-
- END FUNCTION WBAL_ANALYSE_PLOTGRAPH
-
- !###======================================================================
  SUBROUTINE WBAL_ANALYSE_INIT() 
  !###======================================================================
  IMPLICIT NONE 
@@ -954,8 +776,8 @@ CONTAINS
    IF(ASSOCIATED(GWBAL(I)%CZONE))DEALLOCATE(GWBAL(I)%CZONE)
    IF(ASSOCIATED(GWBAL(I)%Q))    DEALLOCATE(GWBAL(I)%Q)
    IF(ASSOCIATED(GWBAL(I)%TXT))  DEALLOCATE(GWBAL(I)%TXT)
-   IF(ASSOCIATED(GWBAL(I)%FLX))  DEALLOCATE(GWBAL(I)%FLX)
-   IF(ASSOCIATED(GWBAL(I)%ICLR)) DEALLOCATE(GWBAL(I)%ICLR)
+!   IF(ASSOCIATED(GWBAL(I)%FLX))  DEALLOCATE(GWBAL(I)%FLX)
+!   IF(ASSOCIATED(GWBAL(I)%ICLR)) DEALLOCATE(GWBAL(I)%ICLR)
   ENDDO
   DEALLOCATE(GWBAL)
  ENDIF

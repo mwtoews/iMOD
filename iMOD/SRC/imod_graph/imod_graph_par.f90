@@ -11,11 +11,9 @@ TYPE AXESOBJ
  INTEGER :: IFIXY                     !ifix - fixed y-axes
  INTEGER :: IFIXY2                    !ifix - fixed y2-axes
  REAL :: XINT,YINT,Y2INT              !xint,yint - interval
-
  CHARACTER(LEN=15),POINTER,DIMENSION(:) :: XTXT=>NULL()  !## label xaxes
  CHARACTER(LEN=15),POINTER,DIMENSION(:) :: YTXT=>NULL()  !## label yaxes
  CHARACTER(LEN=15),POINTER,DIMENSION(:) :: Y2TXT=>NULL() !## label y2axes
-
  INTEGER :: ICLRRASTER                !iclrraster - colour
  INTEGER :: XOFFSET                   !offset for julian dates
  REAL :: XMIN,YMIN,XMAX,YMAX,Y2MIN,Y2MAX     !XMIN,YMIN,XMAX,YMAX = dimensions of current graph
@@ -31,9 +29,21 @@ TYPE GRAPHOBJ
  INTEGER :: GTYPE !## graph type 1=solid 2=lines 3=histogram
  INTEGER :: NP  !## no. points
  CHARACTER(LEN=50) :: LEGTXT !## legend text
+ CHARACTER(LEN=50) :: CTYPE  !## attribute type
  INTEGER :: ICLR
 END TYPE GRAPHOBJ
+TYPE GRAPHDIMOBJ
+ CHARACTER(LEN=16),POINTER,DIMENSION(:) :: XTXT=>NULL()  !## label xaxes
+ CHARACTER(LEN=16),POINTER,DIMENSION(:) :: YTXT=>NULL()  !## label yaxes
+ CHARACTER(LEN=16),POINTER,DIMENSION(:) :: Y2TXT=>NULL() !## label y2axes
+ INTEGER :: IFIXX=0                     !ifix - fixed x-axes
+ INTEGER :: IFIXY=0                     !ifix - fixed y-axes
+ INTEGER :: IFIXY2=0                    !ifix - fixed y2-axes
+ REAL :: XINT,YINT,Y2INT              !xint,yint - interval
+ REAL :: XMIN,YMIN,XMAX,YMAX,Y2MIN,Y2MAX     !XMIN,YMIN,XMAX,YMAX = dimensions of current graph
+END TYPE GRAPHDIMOBJ
 TYPE(GRAPHOBJ),DIMENSION(:,:),ALLOCATABLE :: GRAPH
+TYPE(GRAPHDIMOBJ) :: GRAPHDIM
 CHARACTER(LEN=50),DIMENSION(:),ALLOCATABLE :: GRAPHNAMES
 REAL :: PGXMIN,PGXMAX,PGYMIN,PGYMAX
 
