@@ -30,7 +30,7 @@ USE MOD_IDF, ONLY : IDFALLOCATEX,IDFALLOCATESXY,IDFNULLIFY,IDFDEALLOCATEX,IDFFIL
 USE MOD_WBAL_PAR
 USE MOD_WBAL_GRAPHICS, ONLY : DRAWBAL
 USE MOD_UTL, ONLY : UTL_GETUNIT,UTL_CAP,UTL_IDATETOJDATE,UTL_JDATETOIDATE,ITOS,IDATETOGDATE,UTL_GDATE,UTL_GETUNIQUE_CHAR, &
-            UTL_WSELECTFILE !,NV,NL
+            UTL_WSELECTFILE,RTOS
  !,RTOS,ITOS,JD,UTL_SUBST,,UTL_CLOSEUNITS, &
 !     UTL_INSIDEPOLYGON,UTL_CREATEDIR,UTL_DIRINFO_POINTER,JDATETOFDATE,, &
 !     NV,NL,MAXLEN,UTL_MESSAGEHANDLE,
@@ -453,15 +453,39 @@ CONTAINS
  !###======================================================================
  IMPLICIT NONE
  INTEGER,INTENT(IN) :: ID
+ INTEGER :: IOPT
+ CHARACTER(LEN=256) :: CSVFNAME
  
  !## get the appropriate selection
  IF(.NOT.WBAL_ANAYSE_PREPARE())RETURN
 
- IF(ID.EQ.ID_GRAPHICS)THEN
-  CALL WBAL_ANALYSE_PLOTIMAGE()
- ELSEIF(ID.EQ.ID_PREVIEW)THEN
-  CALL GRAPH_PLOT('Time','Volumes (m3/d)',.FALSE.)
- ENDIF
+ !## get option from the window to determine what to do
+ CALL WDIALOGGETRADIOBUTTON(IDF_RADIO1,IOPT)
+ SELECT CASE (IOPT)
+  !## timeseries
+  CASE (1)
+   CALL GRAPH_PLOT('Time','Volumes (m3/d)',.FALSE.)
+
+! IF(ID.EQ.ID_GRAPHICS)THEN
+! ELSEIF(ID.EQ.ID_PREVIEW)THEN
+!  CALL GRAPH_PLOT('Time','Volumes (m3/d)',.FALSE.)
+! ENDIF
+
+  !# # graph
+  CASE (2)
+   CALL WBAL_ANALYSE_PLOTIMAGE()
+
+  !## save to csv
+  CASE (3)
+   IF(WBAL_ANALYSE_EXPORTCSV(''))THEN; ENDIF
+  !## table
+  CASE (4)
+   CSVFNAME='D:\DUMMY.CSV'
+   IF(WBAL_ANALYSE_EXPORTCSV(CSVFNAME))THEN
+    IF(WBAL_ANALYSE_TABLE(CSVFNAME))THEN; ENDIF
+   ENDIF
+  CASE (5)
+ END SELECT
  
  !## clean up, deallocate
  IF(ALLOCATED(GRAPH))CALL GRAPH_DEALLOCATE()
@@ -562,7 +586,7 @@ CONTAINS
  ENDDO
 
  !## gather data
- DO I=1,NRECORDS !NDATE
+ DO I=1,NRECORDS
   
   !## apprppriate item
   IF(.NOT.WBAL_ANALYSE_SELECT(GWBAL(1)%CLAY(I),GWBAL(1)%CZONE(I),GWBAL(1)%CDATE(I),IL,IZ,ID))CYCLE
@@ -570,11 +594,11 @@ CONTAINS
   !## get appropriate group number
   IG=(IZ-1)*MZONE+IL
 
-  JQIN=0; JQOU=0; DO IQ=1,NBUDGET
+  JQIN=-1; JQOU=0; DO IQ=1,NBUDGET
    IF(BUDGET(IQ)%IACT.EQ.0)CYCLE
 
-   JQIN= JQIN+1
-   JQOU= JQOU+1
+   JQIN= JQIN+2
+   JQOU= JQOU+2
    IQIN=(IQ-1)*2+1
    IQOU= IQIN+1
 
@@ -599,7 +623,7 @@ CONTAINS
 
   ENDDO
  ENDDO
-  
+ 
  DEALLOCATE(CMDATE,CMLAY,CMZONE)
  
  WBAL_ANAYSE_PREPARE=.TRUE.
@@ -634,6 +658,155 @@ CONTAINS
  
  END FUNCTION WBAL_ANALYSE_SELECT
 
+ !###======================================================================
+ LOGICAL FUNCTION WBAL_ANALYSE_TABLE(CSVFNAME)   
+ !###======================================================================
+ IMPLICIT NONE
+ CHARACTER(LEN=*),INTENT(IN) :: CSVFNAME
+ INTEGER :: IGRIDWIN
+
+!
+!      PROGRAM GRIDWIN
+!!
+!      USE WINTERACTER
+!      USE RESID
+!!
+!      IMPLICIT NONE
+!!
+!      INTEGER            :: IGRIDWIN
+!      INTEGER            :: ITYPE
+!      TYPE (WIN_MESSAGE) :: MESSAGE
+!      CHARACTER(LEN=260) :: FILENAME = "" ! Initial filename
+!!
+!!  Intialise Winteracter and open a hidden root window. We require only the
+!!  grid window and this must be a child window.
+!!
+!      CALL WInitialise()
+!      CALL WindowOpen(HideWindow)
+!!
+!!  Check command line for a filename.
+!!
+!      CALL IOsArgument(1,FILENAME)
+!!
+!!  Open child window to be converted into a grid window.
+!!  The flags specified for this window control certain aspects of the grid,
+!!  such as the presence of a Status Bar. Opening the window initially hidden
+!!  gives a smoother effect if the window is resized to limit it to the size
+!!  of the grid when WGridEdit is called.
+!!
+!      CALL WindowOpenChild(IGRIDWIN,                            &
+!                           FLAGS=SysMenuOn+MinButton+MaxButton+ &
+!                                 StatusBar+HideWindow,          &
+!                           TITLE='Winteracter grid window')
+!!
+!!  Load dialog containing template grid used to determine column layout, etc.
+!!  of grid window.
+!!
+!      CALL WDialogLoad(IDD_DIALOG001)
+!!
+!!  Convert child window into a grid window.
+!!  Append a menu to the grid window's build in menu.
+!!  Load specified file. If FILENAME is blank then any contents from the
+!!  template grid (in this case none) are used.
+!!
+!      CALL WGridEdit(IDF_GRID1,FILENAME,Modeless,IDM_MENU1)
+!!
+!!  Dialog containing template grid can now be unloaded.
+!!
+!      CALL WDialogUnload()
+!!
+!!  Main message loop.
+!!
+!      DO
+!        CALL WMessage(ITYPE,MESSAGE)
+!        SELECT CASE(ITYPE)
+!          CASE (CloseRequest)
+!!
+!!  Close request. This is also reported if the Exit option is chosen from the
+!!  grid window's File menu. Any prompts to save or abandon changes will have
+!!  been displayed and confirmed before this message is reported,
+!!
+!            EXIT
+!          CASE (MenuSelect)
+!!
+!!  Menu selection. These report the selection of options on the grid window's
+!!  in built menu which are not reported by any other mechanism. For example the
+!!  options on the Search menu are not reported since the result of these is
+!!  already detectable via the FieldChanged message. Built in options are
+!!  reported for information only - the corresponding action has already been
+!!  performed.
+!!
+!!  Menu selections are also reported for additional options added in the
+!!  WGridEdit call. In this case we will use this mechanism to display an
+!!  About box.
+!!
+!            IF (MESSAGE%VALUE1 == ID_HELP_ABOUT) THEN
+!                CALL WDialogLoad(IDD_ABOUT)
+!                CALL WDialogShow(ITYPE=Modal)
+!                CALL WDialogUnload()
+!            END IF
+!        END SELECT
+!      END DO
+!!
+!!  Close windows and exit
+!!
+!      CALL WindowClose()
+!!
+!      STOP
+!      END PROGRAM GRIDWIN
+ 
+! CALL WINDOWOPENCHILD(IGRIDWIN,FLAGS=HIDEWINDOW, &
+!                      TITLE='EXAMPLE GRID WINDOW')
+! CALL WGRIDEDIT(CSVFNAME,IDF_GRID1,MODAL)
+
+ END FUNCTION WBAL_ANALYSE_TABLE
+
+ !###======================================================================
+ LOGICAL FUNCTION WBAL_ANALYSE_EXPORTCSV(CSVFNAME)   
+ !###======================================================================
+ IMPLICIT NONE
+ CHARACTER(LEN=*),INTENT(IN) :: CSVFNAME
+ CHARACTER(LEN=256) :: FNAME
+ CHARACTER(LEN=16) :: CDATE
+ INTEGER :: IU,IOS,IG,I,J
+  
+ WBAL_ANALYSE_EXPORTCSV=.FALSE.
+ 
+ IF(LEN_TRIM(CSVFNAME).EQ.0)THEN
+  FNAME=''
+  IF(.NOT.UTL_WSELECTFILE('Save Comma Separated File (*.csv)|*.csv|',&
+                   SAVEDIALOG+PROMPTON+DIRCHANGE+APPENDEXT,FNAME,&
+                   'Save Comma Separated File (*.csv)'))RETURN
+ ELSE
+  FNAME=CSVFNAME
+ ENDIF
+ 
+ IU=UTL_GETUNIT(); CALL OSD_OPEN(IU,FILE=FNAME,STATUS='UNKNOWN',ACTION='WRITE',IOSTAT=IOS)
+ IF(IOS.NE.0)THEN
+  CALL WMESSAGEBOX(OKONLY,EXCLAMATIONICON,COMMONOK,'iMOD cannot CREATE file called:'//CHAR(13)//&
+    TRIM(FNAME),'Error')
+  RETURN
+ ENDIF
+
+ DO IG=1,MGROUP 
+  WRITE(IU,'(A)') GRAPHNAMES(IG)
+  WRITE(IU,'(/999A14/)') 'Period',(','//TRIM(GRAPH(J,IG)%LEGTXT),J=1,MBUDGET)
+  DO I=1,MDATE
+   IF(ASSOCIATED(GRAPHDIM%XTXT))THEN
+    CDATE=GRAPHDIM%XTXT(I)
+   ELSE
+    WRITE(CDATE,*) UTL_JDATETOIDATE(INT(GRAPH(J,IG)%RX(I)))
+   ENDIF
+   WRITE(IU,'(999A14)') TRIM(CDATE),(','//TRIM(RTOS(REAL(GRAPH(J,IG)%RY(I)),'G',7)),J=1,MBUDGET)
+  ENDDO
+ ENDDO
+
+ CLOSE(IU)
+ 
+ WBAL_ANALYSE_EXPORTCSV=.TRUE.
+  
+ END FUNCTION WBAL_ANALYSE_EXPORTCSV
+ 
  !###======================================================================
  SUBROUTINE WBAL_ANALYSE_PLOTIMAGE()
  !###======================================================================
@@ -753,6 +926,9 @@ CONTAINS
  CALL WDIALOGPUTIMAGE(ID_PLUS2,ID_ICONPLUS,1)
  CALL WDIALOGPUTIMAGE(ID_MIN1,ID_ICONMIN,1)
  CALL WDIALOGPUTIMAGE(ID_MIN2,ID_ICONMIN,1)
+
+ CALL WDIALOGSELECT(ID_DWBAL_ANALYSE_TAB4)
+ CALL WDIALOGPUTIMAGE(ID_OPEN1,ID_ICONOPEN,1)
 
  !## outgrey tabs
  CALL WDIALOGSELECT(ID_DWBAL_ANALYSE)
