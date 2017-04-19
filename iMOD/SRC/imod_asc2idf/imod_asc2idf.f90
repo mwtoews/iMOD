@@ -947,10 +947,8 @@ CONTAINS
    READ(IU,*) N; READ(IU,*) M; DO I=1,M; READ(IU,*); ENDDO; READ(IU,*) IEXT,EXT
    NCOL=MAX(1,IXCOL,IYCOL,IZCOL,IEXT); ALLOCATE(STRING(NCOL))
    NP=0; DO I=1,N
+    !## do not check whether points are within grid-window, is not neccessary
     READ(IU,*) (STRING(J),J=1,NCOL); READ(STRING(IXCOL),*) X; READ(STRING(IYCOL),*) Y
-    CALL IDFIROWICOL(IDF(1),IROW,ICOL,X,Y)
-    !## outside window
-    IF(IROW.EQ.0.OR.ICOL.EQ.0)CYCLE
   
     LEX=.TRUE.
     IF(ASSF_COLUMN.EQ.0)THEN

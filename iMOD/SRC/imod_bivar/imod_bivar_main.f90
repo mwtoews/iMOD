@@ -24,6 +24,7 @@ MODULE MOD_BIVARIATE
 
 USE WINTERACTER
 USE MOD_IDF_PAR, ONLY : IDFOBJ
+USE MOD_UTL, ONLY : UTL_DIST
 
 CONTAINS
 
@@ -83,30 +84,30 @@ CONTAINS
  INTEGER,INTENT(OUT) :: ND
  REAL,INTENT(IN) :: NODATA
  REAL,INTENT(INOUT),DIMENSION(MD) :: XD,YD,ZD
- INTEGER :: I,J,IE,IS
+ INTEGER :: I,J,IE,IS,N,XP,YP,ZP
  
- !## sort x-coordinates for x, to skip double coordinates and mean values for those
- CALL SORTEM(1,MD,XD,2,YD,ZD,(/0.0/),(/0.0/),(/0.0/),(/0.0/),(/0.0/)) !,ZD,ZD,ZD,ZD,ZD)
+  !## mark doubles with nodata and compute mean for those double points
+ DO I=1,MD
+  !## done allready
+  IF(ZD(I).EQ.NODATA)CYCLE
+  N=1; XP=XD(I); YP=YD(I); ZP=ZD(I)
+  DO J=I+1,MD
+   !## done allready
+   IF(ZD(J).EQ.NODATA)CYCLE
+   !## get distance between points - increase distance whenever points are intersected by fault
+   IF(UTL_DIST(XD(I),YD(I),XD(J),YD(J)).LE.0.0)THEN
+    N=N+1
+    ZP=ZP+ZD(J)
+    !## add point to existing point and turn location off
+    XP=XP+XD(J); YP=YP+YD(J); ZD(J)=NODATA
+   ENDIF
+  ENDDO
+  !## determine average spot
+  XD(I)=XP/REAL(N); YD(I)=YP/REAL(N); ZD(I)=ZP/REAL(N)
 
- !## sort y-coordinates
- IS=1
- DO I=2,MD
-  IF(XD(I).NE.XD(I-1))THEN
-   IE=I-1
-   CALL SORTEM(IS,IE,YD,2,XD,ZD,(/0.0/),(/0.0/),(/0.0/),(/0.0/),(/0.0/)) !,ZD,ZD,ZD,ZD,ZD)
-   IS=I
-  ENDIF
- ENDDO
- !## sort last
- IE=I-1
- CALL SORTEM(IS,IE,YD,2,XD,ZD,(/0.0/),(/0.0/),(/0.0/),(/0.0/),(/0.0/)) !,ZD,ZD,ZD,ZD,ZD)
-
- J=1
- !## mark doubles with nodata
- DO I=2,MD
-  IF(XD(I).EQ.XD(I-1).AND.YD(I).EQ.YD(I-1))ZD(I)=NODATA
  END DO
-
+  
+ !## eliminate doubles
  J=0
  DO I=1,MD
   IF(ZD(I).NE.NODATA)THEN
@@ -117,6 +118,39 @@ CONTAINS
   ENDIF
  END DO
  ND=J
+ 
+! !## sort x-coordinates for x, to skip double coordinates and mean values for those
+! CALL SORTEM(1,MD,XD,2,YD,ZD,(/0.0/),(/0.0/),(/0.0/),(/0.0/),(/0.0/)) !,ZD,ZD,ZD,ZD,ZD)
+!
+! !## sort y-coordinates
+! IS=1
+! DO I=2,MD
+!  IF(XD(I).NE.XD(I-1))THEN
+!   IE=I-1
+!   CALL SORTEM(IS,IE,YD,2,XD,ZD,(/0.0/),(/0.0/),(/0.0/),(/0.0/),(/0.0/)) !,ZD,ZD,ZD,ZD,ZD)
+!   IS=I
+!  ENDIF
+! ENDDO
+! !## sort last
+! IE=I-1
+! CALL SORTEM(IS,IE,YD,2,XD,ZD,(/0.0/),(/0.0/),(/0.0/),(/0.0/),(/0.0/)) !,ZD,ZD,ZD,ZD,ZD)
+!
+! J=1
+! !## mark doubles with nodata
+! DO I=2,MD
+!  IF(XD(I).EQ.XD(I-1).AND.YD(I).EQ.YD(I-1))ZD(I)=NODATA
+! END DO
+!
+! J=0
+! DO I=1,MD
+!  IF(ZD(I).NE.NODATA)THEN
+!   J=J+1
+!   IF(J.NE.I)THEN
+!    XD(J)=XD(I); YD(J)=YD(I); ZD(J)=ZD(I)
+!   ENDIF
+!  ENDIF
+! END DO
+! ND=J
 
  END SUBROUTINE BIVARIATE_DATA
  
