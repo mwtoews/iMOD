@@ -30,7 +30,7 @@ USE MOD_IDF, ONLY : IDFALLOCATEX,IDFALLOCATESXY,IDFNULLIFY,IDFDEALLOCATEX,IDFFIL
 USE MOD_WBAL_PAR
 USE MOD_WBAL_GRAPHICS, ONLY : DRAWBAL
 USE MOD_UTL, ONLY : UTL_GETUNIT,UTL_CAP,UTL_IDATETOJDATE,UTL_JDATETOIDATE,ITOS,IDATETOGDATE,UTL_GDATE,UTL_GETUNIQUE_CHAR, &
-            UTL_WSELECTFILE,RTOS
+            UTL_WSELECTFILE,RTOS,UTL_DEBUGLEVEL
  !,RTOS,ITOS,JD,UTL_SUBST,,UTL_CLOSEUNITS, &
 !     UTL_INSIDEPOLYGON,UTL_CREATEDIR,UTL_DIRINFO_POINTER,JDATETOFDATE,, &
 !     NV,NL,MAXLEN,UTL_MESSAGEHANDLE,
@@ -182,7 +182,8 @@ CONTAINS
  IMPLICIT NONE
  INTEGER,INTENT(IN) :: ITYPE
  TYPE(WIN_MESSAGE),INTENT(IN) :: MESSAGE
-
+ INTEGER :: I,J,K
+ 
  CALL WDIALOGSELECT(MESSAGE%WIN)
  
  SELECT CASE (ITYPE)
@@ -198,10 +199,51 @@ CONTAINS
    SELECT CASE (MESSAGE%VALUE1)
    END SELECT
    SELECT CASE (MESSAGE%VALUE2)
+    CASE (IDF_RADIO1,IDF_RADIO2,IDF_RADIO3,IDF_RADIO4,IDF_RADIO5)
+     CALL WDIALOGGETRADIOBUTTON(IDF_RADIO1,I)
+     SELECT CASE (I)
+      !## timeseries/graphics
+      CASE (1,2); J=1; K=1
+      !## export csv
+      CASE (3); J=0; K=1
+      !## table
+      CASE (4); J=1; K=0
+      !## idf
+      CASE (5); J=0; K=1
+     END SELECT
+     CALL WDIALOGFIELDSTATE(ID_PREVIEW,J)
+     CALL WDIALOGFIELDSTATE(ID_GRAPHICS,K)
    END SELECT
  END SELECT
      
  END SUBROUTINE WBAL_ANALYSE_TAB4
+
+ !###======================================================================
+ SUBROUTINE WBAL_ANALYSE_TAB5(ITYPE,MESSAGE) 
+ !###======================================================================
+ IMPLICIT NONE
+ INTEGER,INTENT(IN) :: ITYPE
+ TYPE(WIN_MESSAGE),INTENT(IN) :: MESSAGE
+ INTEGER :: I,J,K
+ 
+ CALL WDIALOGSELECT(MESSAGE%WIN)
+ 
+ SELECT CASE (ITYPE)
+ 
+  CASE (PUSHBUTTON)
+   SELECT CASE (MESSAGE%VALUE1)
+   END SELECT
+   
+  CASE (FIELDCHANGED)
+   SELECT CASE (MESSAGE%VALUE1)
+   END SELECT
+   SELECT CASE (MESSAGE%VALUE2)
+    CASE (IDF_MENU1)
+     CALL WBAL_ANALYSE_TABLE_FILL()
+   END SELECT
+ END SELECT
+     
+ END SUBROUTINE WBAL_ANALYSE_TAB5
 
  !###======================================================================
  LOGICAL FUNCTION WBAL_ANALYSE_READCSV() 
@@ -473,22 +515,19 @@ CONTAINS
 
   !# # graph
   CASE (2)
-   CALL WBAL_ANALYSE_PLOTIMAGE()
+   CALL WBAL_ANALYSE_PLOTIMAGE(ID)
 
   !## save to csv
   CASE (3)
    IF(WBAL_ANALYSE_EXPORTCSV(''))THEN; ENDIF
   !## table
   CASE (4)
-   CSVFNAME='D:\DUMMY.CSV'
-   IF(WBAL_ANALYSE_EXPORTCSV(CSVFNAME))THEN
-    IF(WBAL_ANALYSE_TABLE(CSVFNAME))THEN; ENDIF
-   ENDIF
+   IF(WBAL_ANALYSE_TABLE())THEN; ENDIF
   CASE (5)
  END SELECT
  
- !## clean up, deallocate
- IF(ALLOCATED(GRAPH))CALL GRAPH_DEALLOCATE()
+! !## clean up, deallocate
+! IF(ALLOCATED(GRAPH))CALL GRAPH_DEALLOCATE()
 
  END SUBROUTINE WBAL_ANALYSE_PLOT
 
@@ -659,107 +698,75 @@ CONTAINS
  END FUNCTION WBAL_ANALYSE_SELECT
 
  !###======================================================================
- LOGICAL FUNCTION WBAL_ANALYSE_TABLE(CSVFNAME)   
+ LOGICAL FUNCTION WBAL_ANALYSE_TABLE()   
  !###======================================================================
  IMPLICIT NONE
- CHARACTER(LEN=*),INTENT(IN) :: CSVFNAME
- INTEGER :: IGRIDWIN
-
-!
-!      PROGRAM GRIDWIN
-!!
-!      USE WINTERACTER
-!      USE RESID
-!!
-!      IMPLICIT NONE
-!!
-!      INTEGER            :: IGRIDWIN
-!      INTEGER            :: ITYPE
-!      TYPE (WIN_MESSAGE) :: MESSAGE
-!      CHARACTER(LEN=260) :: FILENAME = "" ! Initial filename
-!!
-!!  Intialise Winteracter and open a hidden root window. We require only the
-!!  grid window and this must be a child window.
-!!
-!      CALL WInitialise()
-!      CALL WindowOpen(HideWindow)
-!!
-!!  Check command line for a filename.
-!!
-!      CALL IOsArgument(1,FILENAME)
-!!
-!!  Open child window to be converted into a grid window.
-!!  The flags specified for this window control certain aspects of the grid,
-!!  such as the presence of a Status Bar. Opening the window initially hidden
-!!  gives a smoother effect if the window is resized to limit it to the size
-!!  of the grid when WGridEdit is called.
-!!
-!      CALL WindowOpenChild(IGRIDWIN,                            &
-!                           FLAGS=SysMenuOn+MinButton+MaxButton+ &
-!                                 StatusBar+HideWindow,          &
-!                           TITLE='Winteracter grid window')
-!!
-!!  Load dialog containing template grid used to determine column layout, etc.
-!!  of grid window.
-!!
-!      CALL WDialogLoad(IDD_DIALOG001)
-!!
-!!  Convert child window into a grid window.
-!!  Append a menu to the grid window's build in menu.
-!!  Load specified file. If FILENAME is blank then any contents from the
-!!  template grid (in this case none) are used.
-!!
-!      CALL WGridEdit(IDF_GRID1,FILENAME,Modeless,IDM_MENU1)
-!!
-!!  Dialog containing template grid can now be unloaded.
-!!
-!      CALL WDialogUnload()
-!!
-!!  Main message loop.
-!!
-!      DO
-!        CALL WMessage(ITYPE,MESSAGE)
-!        SELECT CASE(ITYPE)
-!          CASE (CloseRequest)
-!!
-!!  Close request. This is also reported if the Exit option is chosen from the
-!!  grid window's File menu. Any prompts to save or abandon changes will have
-!!  been displayed and confirmed before this message is reported,
-!!
-!            EXIT
-!          CASE (MenuSelect)
-!!
-!!  Menu selection. These report the selection of options on the grid window's
-!!  in built menu which are not reported by any other mechanism. For example the
-!!  options on the Search menu are not reported since the result of these is
-!!  already detectable via the FieldChanged message. Built in options are
-!!  reported for information only - the corresponding action has already been
-!!  performed.
-!!
-!!  Menu selections are also reported for additional options added in the
-!!  WGridEdit call. In this case we will use this mechanism to display an
-!!  About box.
-!!
-!            IF (MESSAGE%VALUE1 == ID_HELP_ABOUT) THEN
-!                CALL WDialogLoad(IDD_ABOUT)
-!                CALL WDialogShow(ITYPE=Modal)
-!                CALL WDialogUnload()
-!            END IF
-!        END SELECT
-!      END DO
-!!
-!!  Close windows and exit
-!!
-!      CALL WindowClose()
-!!
-!      STOP
-!      END PROGRAM GRIDWIN
+ INTEGER :: I,J,NROW
+ INTEGER,ALLOCATABLE,DIMENSION(:) :: IC
+ CHARACTER(LEN=52) :: CDATE
  
-! CALL WINDOWOPENCHILD(IGRIDWIN,FLAGS=HIDEWINDOW, &
-!                      TITLE='EXAMPLE GRID WINDOW')
-! CALL WGRIDEDIT(CSVFNAME,IDF_GRID1,MODAL)
+ WBAL_ANALYSE_TABLE=.FALSE.
+ 
+ CALL WDIALOGSELECT(ID_DWBAL_ANALYSE_TAB5)
+ NROW=WINFOGRID(IDF_GRID1,GRIDROWSMAX)
+ 
+ IF(MDATE.GT.NROW)THEN
+  CALL WMESSAGEBOX(OKONLY,EXCLAMATIONICON,COMMONOK,'iMOD can display only the first '//TRIM(ITOS(NROW))//' records of'//CHAR(13)// &
+    'the current set of '//TRIM(ITOS(MDATE))//' existing records in the current selection.','Warning')
+ ENDIF
+ 
+ ALLOCATE(IC(MBUDGET)); IC=1
+ CALL WGRIDCOLUMNS(IDF_GRID1,MBUDGET,IC)
+ DEALLOCATE(IC)
+ 
+ !## set number of rows
+ CALL WGRIDROWS(IDF_GRID1,MDATE)
+  
+ !## set column labels
+ DO I=1,MBUDGET
+  CALL WGRIDLABELCOLUMN(IDF_GRID1,I,TRIM(GRAPH(I,1)%LEGTXT))
+ ENDDO
+ 
+ !## set row labels
+ DO I=1,MDATE
+  !## apply axes titles predefined
+  IF(ASSOCIATED(GRAPHDIM%XTXT))THEN
+   CDATE=GRAPHDIM%XTXT(I)
+  ELSE
+   WRITE(CDATE,*) UTL_JDATETOIDATE(INT(GRAPH(1,1)%RX(I)))
+  ENDIF
+  CALL WGRIDLABELROW(IDF_GRID1,I,TRIM(CDATE))
+ ENDDO
+ 
+ IF(MGROUP.EQ.1)THEN
+  CALL WDIALOGFIELDSTATE(IDF_MENU1,2)
+ ELSE
+  CALL WDIALOGFIELDSTATE(IDF_MENU1,1)
+ ENDIF
+ CALL WDIALOGPUTMENU(IDF_MENU1,GRAPHNAMES,MGROUP,1)
+ 
+ CALL WBAL_ANALYSE_TABLE_FILL()
+ 
+ CALL WDIALOGSELECT(ID_DWBAL_ANALYSE)
+ CALL WDIALOGTABSTATE(IDF_TAB1,ID_DWBAL_ANALYSE_TAB5,1)
 
+ WBAL_ANALYSE_TABLE=.TRUE.
+ 
  END FUNCTION WBAL_ANALYSE_TABLE
+
+ !###======================================================================
+ SUBROUTINE WBAL_ANALYSE_TABLE_FILL()
+ !###======================================================================
+ IMPLICIT NONE
+ INTEGER :: I,IG
+ 
+ CALL WDIALOGGETMENU(IDF_MENU1,IG)
+
+ DO I=1,MBUDGET
+  CALL WGRIDPUTREAL(IDF_GRID1,I,GRAPH(I,IG)%RY,MDATE,'(G15.7)')
+ ENDDO
+
+ END SUBROUTINE WBAL_ANALYSE_TABLE_FILL
 
  !###======================================================================
  LOGICAL FUNCTION WBAL_ANALYSE_EXPORTCSV(CSVFNAME)   
@@ -803,23 +810,28 @@ CONTAINS
 
  CLOSE(IU)
  
+ CALL WMESSAGEBOX(OKONLY,INFORMATIONICON,COMMONOK,'Succesfully save the current waterbalance to:'//CHAR(13)// &
+  TRIM(FNAME),'Information')
+  
  WBAL_ANALYSE_EXPORTCSV=.TRUE.
   
  END FUNCTION WBAL_ANALYSE_EXPORTCSV
  
  !###======================================================================
- SUBROUTINE WBAL_ANALYSE_PLOTIMAGE()
+ SUBROUTINE WBAL_ANALYSE_PLOTIMAGE(ID)
  !###======================================================================
  IMPLICIT NONE
+ INTEGER,INTENT(IN) :: ID
  INTEGER,PARAMETER :: NXPIX=1000, NYPIX=1200 !## resolution dx,dy
  INTEGER,PARAMETER :: NFLX=24  !## number of zones in current csv file
  REAL,PARAMETER :: CS=0.009 !## charactersize
  CHARACTER(LEN=256) :: PNGNAME
  LOGICAL :: LOCAL,PERC
- INTEGER :: IPOL,IOS,I
+ INTEGER :: IPOL,IOS,I,IBITMAP,IWINDOW,IW,IH
  REAL,DIMENSION(:,:), ALLOCATABLE :: Q,QSUBREGIO
  CHARACTER(LEN=10),DIMENSION(:),ALLOCATABLE :: QTXT
  INTEGER,DIMENSION(:),ALLOCATABLE :: IPLG
+ INTEGER,DIMENSION(6) :: INFO
  
 !QTXT(01)='Q-drn  '             bdgdrn  
 !QTXT(02)='Q-olf  '             bdgolf  
@@ -887,10 +899,37 @@ CONTAINS
  !## percentiles
  PERC=.FALSE.
  
+ CALL UTL_DEBUGLEVEL(0)
+
  IF(.NOT.DRAWBAL(Q,QTXT,NXPIX,NYPIX,CS,IPOL,SIZE(LIZONE),QSUBREGIO,PERC,CLRIZONE,IPLG,PNGNAME,IDFP,LOCAL,'GRAPHTITLE'))THEN
  ENDIF
 
+ CALL UTL_DEBUGLEVEL(1)
+
  DEALLOCATE(QSUBREGIO,Q,QTXT,IPLG)
+
+! PNGNAME='d:\drop-icon.bmp'
+ 
+ !## display image in viewer
+ IF(ID.EQ.ID_PREVIEW)THEN
+  !## read settings from bitmap
+  CALL IGRFILEINFO(PNGNAME,INFO,6)
+  IW=INFO(2); IH=INFO(3)
+!  CALL WBITMAPCREATE(IBITMAP,IW,IH)
+  CALL WBITMAPSTRETCHMODE(STRETCHDEFAULT)
+WRITE(*,*) INFOERROR(1)
+  IBITMAP=0; CALL WBITMAPLOAD(IBITMAP,PNGNAME,1)
+WRITE(*,*) INFOERROR(1)
+
+  CALL WCLIPBOARDPUTBITMAP(IBITMAP)
+
+  CALL WINDOWOPENCHILD(IWINDOW,FLAGS=SYSMENUON+FIXEDSIZEWIN+ALWAYSONTOP+HIDEWINDOW,TITLE='VIEWING: '//TRIM(PNGNAME))
+!  call WBitmapPut(IBITMAP,0,1)
+  !CALL WINDOWSELECT(IWINDOW); CALL IGRSELECT(DRAWWIN)
+  CALL WBITMAPVIEW(IBITMAP,0,0,MODAL,KEYSCROLL+DRAGSCROLL)
+  CALL WBITMAPDESTROY(IBITMAP)
+!  CALL WINDOWSELECT(0) !; CALL IGRSELECT(DRAWWIN)
+ ENDIF
  
  END SUBROUTINE WBAL_ANALYSE_PLOTIMAGE
 
@@ -927,6 +966,12 @@ CONTAINS
  CALL WDIALOGPUTIMAGE(ID_MIN1,ID_ICONMIN,1)
  CALL WDIALOGPUTIMAGE(ID_MIN2,ID_ICONMIN,1)
 
+ CALL WDIALOGSELECT(ID_DWBAL_ANALYSE_TAB3)
+ CALL WDIALOGPUTIMAGE(ID_PLUS1,ID_ICONPLUS,1)
+ CALL WDIALOGPUTIMAGE(ID_PLUS2,ID_ICONPLUS,1)
+ CALL WDIALOGPUTIMAGE(ID_MIN1,ID_ICONMIN,1)
+ CALL WDIALOGPUTIMAGE(ID_MIN2,ID_ICONMIN,1)
+
  CALL WDIALOGSELECT(ID_DWBAL_ANALYSE_TAB4)
  CALL WDIALOGPUTIMAGE(ID_OPEN1,ID_ICONOPEN,1)
 
@@ -935,6 +980,7 @@ CONTAINS
  CALL WDIALOGTABSTATE(IDF_TAB1,ID_DWBAL_ANALYSE_TAB2,0)
  CALL WDIALOGTABSTATE(IDF_TAB1,ID_DWBAL_ANALYSE_TAB3,0)
  CALL WDIALOGTABSTATE(IDF_TAB1,ID_DWBAL_ANALYSE_TAB4,0)
+ CALL WDIALOGTABSTATE(IDF_TAB1,ID_DWBAL_ANALYSE_TAB5,0)
 
  CALL WDIALOGSHOW(-1,-1,0,2)
 
@@ -953,8 +999,6 @@ CONTAINS
    IF(ASSOCIATED(GWBAL(I)%CZONE))DEALLOCATE(GWBAL(I)%CZONE)
    IF(ASSOCIATED(GWBAL(I)%Q))    DEALLOCATE(GWBAL(I)%Q)
    IF(ASSOCIATED(GWBAL(I)%TXT))  DEALLOCATE(GWBAL(I)%TXT)
-!   IF(ASSOCIATED(GWBAL(I)%FLX))  DEALLOCATE(GWBAL(I)%FLX)
-!   IF(ASSOCIATED(GWBAL(I)%ICLR)) DEALLOCATE(GWBAL(I)%ICLR)
   ENDDO
   DEALLOCATE(GWBAL)
  ENDIF
@@ -981,6 +1025,7 @@ CONTAINS
  CALL WINDOWSELECT(0)
  CALL WMENUSETSTATE(ID_WBAL_ANALYSE,2,0)
 
+ CALL GRAPH_DEALLOCATE()
  CALL WBAL_ANALYSE_DEALLOCATE()
  
  CALL WDIALOGSELECT(ID_DWBAL_ANALYSE)
