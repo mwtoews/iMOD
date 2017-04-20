@@ -3962,6 +3962,20 @@ CONTAINS
   ENDDO; ENDDO
  ENDIF
  
+ !## correct idf->top
+ DO IROW=1,MOTHER%NROW; DO ICOL=1,MOTHER%NCOL
+  DO I=2,SIZE(IDF)
+   !## adjust whenever it crosses higher idf-files
+   IF(IDF(I)%X(ICOL,IROW).EQ.IDF(I)%NODATA)CYCLE
+   DO J=I-1,1,-1
+    IF(IDF(J)%X(ICOL,IROW).NE.IDF(J)%NODATA)THEN
+     IDF(I)%X(ICOL,IROW)=MIN(IDF(I)%X(ICOL,IROW),IDF(J)%X(ICOL,IROW)); EXIT
+    ENDIF 
+   ENDDO 
+  ENDDO  
+ ENDDO; ENDDO
+ 
+ !## correct, based on given minimal thickness
  ALLOCATE(THICK1(NLAY)); THICK1=0.0
  ALLOCATE(THICK2(NLAY-1)); THICK2=0.0
   
