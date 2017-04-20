@@ -2996,7 +2996,7 @@ TOPICLOOP: DO ITOPIC=1,MAXTOPICS
   CALL UTL_CLOSEUNITS()
   DEALLOCATE(SIM)
   
-  IF(IRUN.EQ.1.AND.PMANAGERRUN)CALL PMANAGERSTART(FNAME,IRUN,IBATCH)
+  IF(ABS(IRUN).EQ.1.AND.PMANAGERRUN)CALL PMANAGERSTART(FNAME,IRUN,IBATCH)
   
   IF(IBATCH.EQ.0)CALL UTL_MESSAGEHANDLE(1)
   
@@ -3089,6 +3089,7 @@ TOPICLOOP: DO ITOPIC=1,MAXTOPICS
  WRITE(IU,'(A)') 'REM =========================='
  WRITE(IU,'(A)') 'REM Run Script iMOD '//TRIM(RVERSION)
  WRITE(IU,'(A)') 'REM =========================='
+ 
  !## namfile
  IF(IMODE.EQ.1)THEN
 
@@ -3124,6 +3125,7 @@ TOPICLOOP: DO ITOPIC=1,MAXTOPICS
   
  !## runfile
  ELSEIF(IMODE.EQ.2)THEN
+ 
   IF(IBATCH.EQ.0)THEN
    IF(NCORES.GT.1)THEN
     WRITE(IU,'(A)') ':: Set number of MPI processes'
@@ -3144,10 +3146,10 @@ TOPICLOOP: DO ITOPIC=1,MAXTOPICS
  !## move iMOD to the simulation directory
  CALL IOSDIRNAME(DIRNAME); CALL IOSDIRCHANGE(TRIM(DIR)//'\')
 
- !## start the batch file - run in the background
+ !## start the batch file - run in the foreground
  IF(IRUNMODE.GT.0)THEN
 
-  IFLAGS=0
+  IFLAGS=PROCBLOCKED 
  !## executes on commandtool such that commands alike 'dir' etc. works
 #if (defined(WINTERACTER9))
   IFLAGS=IFLAGS+PROCCMDPROC
@@ -3155,38 +3157,15 @@ TOPICLOOP: DO ITOPIC=1,MAXTOPICS
 
   CALL IOSCOMMAND('RUN.BAT',IFLAGS,IEXCOD=IEXCOD)
   
-  IF(IBATCH.EQ.0)THEN
-   CALL WMESSAGEBOX(OKONLY,INFORMATIONICON,COMMONOK,'Successfully STARTED the Modflow simulation using:'//CHAR(13)// &
-                  'MODFLOW: '//TRIM(PREFVAL(8))//CHAR(13)// &
-                  'RUNFILE: '//TRIM(RUNFNAME),'Information')
-  ELSE
-   WRITE(*,'(A)') 'Successfully STARTED the Modflow simulation using:'
-   WRITE(*,'(A)') 'MODFLOW: '//TRIM(PREFVAL(8))
-   WRITE(*,'(A)') 'RUNFILE: '//TRIM(RUNFNAME)
-  ENDIF
-  
- ELSEIF(IRUNMODE.LT.0)THEN
-
-  LINE='"'//TRIM(PREFVAL(8))//'" '//'IMODFLOW.RUN'
-
-  IFLAGS=PROCBLOCKED
- !## executes on commandtool such that commands alike 'dir' etc. works
-
-#if (defined(WINTERACTER9))
-  IFLAGS=IFLAGS+PROCCMDPROC
-#endif 
-  
-  CALL IOSCOMMAND(TRIM(LINE),IFLAGS,IEXCOD=IEXCOD)
-  
   IF(IEXCOD.EQ.0)THEN
-   IF(IBATCH.EQ.0)THEN
+   IF(IBATCH.EQ.0)THEN 
     CALL WMESSAGEBOX(OKONLY,INFORMATIONICON,COMMONOK,'Successful simulation using: '//CHAR(13)// &
-                   'MODFLOW: '//TRIM(PREFVAL(8))//CHAR(13)// &
-                   'RUNFILE: '//TRIM(RUNFNAME),'Information')
+                   'MODFLOW:         '//TRIM(PREFVAL(8))//CHAR(13)// &
+                   'RUNFILE/NAMFILE: '//TRIM(RUNFNAME),'Information')
    ELSE
-    WRITE(*,'(A)') 'Successful simulation using:'
-    WRITE(*,'(A)') 'MODFLOW: '//TRIM(PREFVAL(8))
-    WRITE(*,'(A)') 'RUNFILE: '//TRIM(RUNFNAME)
+    WRITE(*,'(A)') 'Successfully STARTED the Modflow simulation using:'
+    WRITE(*,'(A)') 'MODFLOW:         '//TRIM(PREFVAL(8))
+    WRITE(*,'(A)') 'RUNFILE/NAMFILE: '//TRIM(RUNFNAME)
    ENDIF
   ELSE
    IF(IBATCH.EQ.0)THEN
@@ -3194,6 +3173,28 @@ TOPICLOOP: DO ITOPIC=1,MAXTOPICS
    ELSE
     WRITE(*,'(A)') 'An error occured in starting your simulation'
    ENDIF
+  ENDIF
+   
+ !## start the batch file - run in the background
+ ELSEIF(IRUNMODE.LT.0)THEN
+
+  IFLAGS=0 
+ !## executes on commandtool such that commands alike 'dir' etc. works
+
+#if (defined(WINTERACTER9))
+  IFLAGS=IFLAGS+PROCCMDPROC
+#endif 
+  
+  CALL IOSCOMMAND('RUN.BAT',IFLAGS,IEXCOD=IEXCOD)
+  
+  IF(IBATCH.EQ.0)THEN
+   CALL WMESSAGEBOX(OKONLY,INFORMATIONICON,COMMONOK,'Successfully STARTED the Modflow simulation using:'//CHAR(13)// &
+                  'MODFLOW:         '//TRIM(PREFVAL(8))//CHAR(13)// &
+                  'RUNFILE/NAMFILE: '//TRIM(RUNFNAME),'Information')
+  ELSE
+   WRITE(*,'(A)') 'Successful simulation using:'
+   WRITE(*,'(A)') 'MODFLOW:         '//TRIM(PREFVAL(8))
+   WRITE(*,'(A)') 'RUNFILE/NAMFILE: '//TRIM(RUNFNAME)
   ENDIF
 
  ENDIF
@@ -4102,7 +4103,7 @@ TOPICLOOP: DO ITOPIC=1,MAXTOPICS
   ALLOCATE(PBMAN%SAVEMNW(1)); PBMAN%SAVEMNW(1)=-1
  ENDIF
  IF(LLAK)THEN
-  ALLOCATE(PBMAN%SAVELAK(1)); PBMAN%SAVELAK(1)=1
+  ALLOCATE(PBMAN%SAVELAK(1)); PBMAN%SAVELAK(1)=-1
  ENDIF
  
  PMANAGER_GETPACKAGES=.TRUE.
