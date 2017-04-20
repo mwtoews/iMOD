@@ -3015,6 +3015,22 @@ TOPICLOOP: DO ITOPIC=1,MAXTOPICS
  INTEGER :: IU,JU,IOS,I,IFLAGS,IEXCOD,IERROR,IMODE
  LOGICAL :: LEX
 
+ IF(LEN_TRIM(PREFVAL(8)).GT.0)THEN
+  INQUIRE(FILE=PREFVAL(8),EXIST=LEX)
+ ELSE
+  LEX=.FALSE.
+ ENDIF
+ IF(.NOT.LEX)THEN
+  IF(IBATCH.EQ.0)THEN
+   CALL WMESSAGEBOX(OKONLY,EXCLAMATIONICON,COMMONOK,'iMODFLOW cannot be started, iMOD cannot find the executable:'//CHAR(13)// &
+    '['//TRIM(PREFVAL(8))//']','Error')
+  ELSE
+   WRITE(*,'(A)') 'iMODFLOW cannot be started, iMOD cannot find the exectuable given'
+   WRITE(*,'(A)') '['//TRIM(PREFVAL(8))//']'
+  ENDIF
+  RETURN
+ ENDIF
+ 
  IMODE=0
 
  !## runfile or namfile
