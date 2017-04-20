@@ -1164,6 +1164,9 @@ CONTAINS
  REAL :: DC
  
  N=MP(IPLOT)%LEG%NCLR
+ !## cannot do anything
+ IF(N.LE.0)RETURN
+ 
  DC=REAL(N)/(7.0-1.0)
  DO I=1,MXCGRAD
   J=INT(REAL(I-1)*DC)+1
