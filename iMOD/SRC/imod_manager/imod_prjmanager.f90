@@ -5630,7 +5630,7 @@ TOPICLOOP: DO ITOPIC=1,MAXTOPICS
  !## see whether information is equal to previous timestep - only for rch and evt
  LPER=0
 
- !## maximum number of imput per simulation
+ !## maximum number of input per simulation
  MP=0; NBDTIM=0
  DO IPER=1,NPER
 
@@ -6063,8 +6063,8 @@ TOPICLOOP: DO ITOPIC=1,MAXTOPICS
  IF(ITOPIC.EQ.24.OR.ITOPIC.EQ.26)THEN
   IF(LLAK.AND.NP.EQ.1)THEN 
    CALL WMESSAGEBOX(OKONLY,EXCLAMATIONICON,COMMONOK,'It is compulsory to apply the '//TRIM(TOPICS(ITOPIC)%TNAME)//' package to the'//CHAR(13)// &
-        'first active modellayer in combination with the LAK paclage'//CHAR(13)// &
-        'Assign a model layer equal zero to the package','Error')
+        'first active modellayer in combination with the LAK package.'//CHAR(13)// &
+        'Assign zero (0) as a model layer for the package','Error')
    RETURN
   ENDIF
  ENDIF
@@ -8875,6 +8875,15 @@ TOPICLOOP: DO ITOPIC=1,MAXTOPICS
  IF(MESSAGE%VALUE1.EQ.IDSIMULATE)IRUN=1
  IF(I.EQ.2)IRUN=-1*IRUN 
  
+ !## final check
+ IF(ITRANSIENT.EQ.1.AND.SIZE(SIM).EQ.1)THEN
+  IF(SIM(1)%DELT.EQ.0.0)THEN
+   CALL WMESSAGEBOX(OKONLY,EXCLAMATIONICON,COMMONOK,'iMOD cannot start this model as you have defined a timestep length'//CHAR(13)// &
+     'of zero (steady-state), and all your packages are assigned'//CHAR(13)//'to a transient period.','Warning')
+   RETURN
+  ENDIF
+ ENDIF
+ 
  PMANAGER_INITSIM=.TRUE.
 
  END FUNCTION PMANAGER_INITSIM
@@ -9144,7 +9153,7 @@ JLOOP: DO K=1,SIZE(TOPICS)
  CALL WGRIDSTATE(IDF_GRID1,1,2)
  CALL WGRIDSTATE(IDF_GRID1,2,2)
 
- I=1; IF(SIM(1)%DELT.LE.0.0)I=2
+ I=1; IF(SIM(1)%DELT.LE.0.0)I=2; I=MIN(I,NPER)
  CALL WDIALOGRANGEINTEGER(IDF_INTEGER1,I,NPER)
  CALL WDIALOGRANGEINTEGER(IDF_INTEGER2,I,NPER)
  CALL WDIALOGPUTINTEGER(IDF_INTEGER1,I)

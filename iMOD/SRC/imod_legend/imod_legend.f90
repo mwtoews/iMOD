@@ -1188,8 +1188,8 @@ CONTAINS
  !###====================================================================
  IMPLICIT NONE
  INTEGER,INTENT(IN) :: IPLOT
- INTEGER :: I,J,N !,ICLR
- REAL :: DC  !XVAL
+ INTEGER :: I,J,N
+ REAL :: DC  
  
  CALL LEG_SAMPLE_STRETCHED_GETIPOS(IPLOT)
  
@@ -1198,15 +1198,11 @@ CONTAINS
  !## interpolate intermediate points linearly
  DO I=1,MXCGRAD
   CALL WDIALOGPUTCHECKBOX(ID2(I),MP(IPLOT)%LEG%CGRAD(I))
-
-!  ICLR=MP(IPLOT)%LEG%RGB(IPOS(I))
-!  MP(IPLOT)%LEG%ICLRGRAD(I)=ICLR  
-  
+ 
   !## store colour in iclrgrad
   CALL WDIALOGPUTINTEGER(ID3(I),MP(IPLOT)%LEG%ICLRGRAD(I))
   
-!  XVAL=MP(IPLOT)%LEG%CLASS(IPOS(I)-1)
-  CALL WDIALOGPUTREAL(ID1(I),MP(IPLOT)%LEG%CLASS(IPOS(I)-1)) !XVAL)
+  CALL WDIALOGPUTREAL(ID1(I),MP(IPLOT)%LEG%CLASS(IPOS(I)-1))
 
  END DO
  
@@ -1543,7 +1539,7 @@ CONTAINS
     NODES=J
     
     !## stepsize
-    DX=REAL(NODES)/REAL(MXCLR) !-1)
+    DX=REAL(NODES)/REAL(MXCLR)
 
     DO IPLOT=IP,JP 
      IF(ACTLIST(IPLOT).NE.1)CYCLE
@@ -1555,6 +1551,9 @@ CONTAINS
       H =IDFVAL(I1)+(X-I1)*DH
       MP(IPLOT)%LEG%CLASS(I)=H
      END DO
+     
+     !## overrule maximal value by maximal value of IDF
+     MP(IPLOT)%LEG%CLASS(0)=MP(IPLOT)%IDF%DMAX
      
      !## resample colours
      CALL LEG_SAMPLE_STRETCHED_GETIPOS(IPLOT)

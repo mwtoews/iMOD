@@ -2640,22 +2640,10 @@ CONTAINS
 
   DO II=1,2
 
-   !## top/bottom - compute coordinates
-   AR=0.0_GLFLOAT
-   DO J=NINT,0,-1
-    XPOS(J,II)=RBH(I)      
-    YPOS(J,II)=0.0_GLFLOAT 
-    ZPOS(J,II)=0.0_GLFLOAT
-    !## rotate appropriately in 3D
-    CALL UTL_ROTATE_XYZ(XPOS(J,II),YPOS(J,II),ZPOS(J,II),AX,AY,AR)
-    CALL UTL_ROTATE_XYZ(XPOS(J,II),YPOS(J,II),ZPOS(J,II),0.0,REAL(0.5*PI),0.0)
-    CALL UTL_ROTATE_XYZ(XPOS(J,II),YPOS(J,II),ZPOS(J,II),-REAL(0.5*PI),0.0,0.0)
-    !## transform
-    XPOS(J,II)=XPOS(J,II)+XBH(I+II-1)
-    YPOS(J,II)=YPOS(J,II)+YBH(I+II-1)
-    ZPOS(J,II)=ZPOS(J,II)+ZBH(I+II-1)
-    AR=AR+AD
-   ENDDO
+!## loopje over draaien ...
+   !## get coordinates
+   CALL IMOD3D_TUBE_COORDINATES(NINT,XPOS(0,II),YPOS(0,II),ZPOS(0,II), &
+      AX,AY,AD,XBH(I+II-1),YBH(I+II-1),ZBH(I+II-1),RBH(I))
   
    !## draw top-fan of tube only for first segment
    IF(I.EQ.1)THEN
@@ -2724,6 +2712,36 @@ CONTAINS
  CALL GLPOPMATRIX()
 
  END SUBROUTINE IMOD3D_TUBE
+
+ !###======================================================================
+ SUBROUTINE IMOD3D_TUBE_COORDINATES(NINT,XPOS,YPOS,ZPOS,AX,AY,AD,XBH,YBH,ZBH,RBH)
+ !###======================================================================
+ IMPLICIT NONE
+ INTEGER,INTENT(IN) :: NINT
+ REAL(KIND=GLFLOAT),INTENT(IN) :: AX,AY,AD
+ REAL(KIND=GLFLOAT),INTENT(OUT),DIMENSION(0:NINT) :: XPOS,YPOS,ZPOS
+ REAL(KIND=GLFLOAT) :: AR
+ REAL,INTENT(IN) :: XBH,YBH,ZBH,RBH
+ INTEGER :: J
+   
+ !## top or bottom - compute coordinates
+ AR=0.0_GLFLOAT
+ DO J=NINT,0,-1
+  XPOS(J)=RBH !(I)      
+  YPOS(J)=0.0_GLFLOAT 
+  ZPOS(J)=0.0_GLFLOAT
+  !## rotate appropriately in 3D
+  CALL UTL_ROTATE_XYZ(XPOS(J),YPOS(J),ZPOS(J),AX,AY,AR)
+  CALL UTL_ROTATE_XYZ(XPOS(J),YPOS(J),ZPOS(J),0.0,REAL(0.5*PI),0.0)
+  CALL UTL_ROTATE_XYZ(XPOS(J),YPOS(J),ZPOS(J),-REAL(0.5*PI),0.0,0.0)
+  !## transform
+  XPOS(J)=XPOS(J)+XBH !(I+II-1)
+  YPOS(J)=YPOS(J)+YBH !(I+II-1)
+  ZPOS(J)=ZPOS(J)+ZBH !(I+II-1)
+  AR=AR+AD
+ ENDDO
+
+ END SUBROUTINE IMOD3D_TUBE_COORDINATES
 
  !###======================================================================
  SUBROUTINE IMOD3D_VECTOR(X,Y,Z,DX,DY,DZ,NINT,RADIUS,VL,LARROW)
