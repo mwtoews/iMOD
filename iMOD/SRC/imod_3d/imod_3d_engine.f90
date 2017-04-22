@@ -2636,7 +2636,14 @@ CONTAINS
   DZ=ZBH(I+1)-ZBH(I)
 
   AX=-ATAN2(DZ,DX)
+  !## afhankelijk sign dx/dz sla je nu plat ...
   AY= ATAN2(DY,SQRT(DX**2.0+DZ**2.0))  
+  !## correct for direction
+  IF(DX.LT.0.0)AY=-1.0*AY
+
+!  !## correct for direction
+!  IF(DZ.LT.0.0)AZ=-1.0*AZ
+
   AZ= 0.0
 
   !## get coordinates
