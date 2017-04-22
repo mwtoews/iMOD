@@ -2600,10 +2600,11 @@ CONTAINS
  SUBROUTINE IMOD3D_TUBE(XBH,YBH,ZBH,RBH,CBH,NINT,IMODE,ISHADE,IB)
  !###======================================================================
  IMPLICIT NONE
+ INTEGER,PARAMETER :: NF=3
  REAL,INTENT(IN),DIMENSION(:) :: XBH,YBH,ZBH,RBH
  INTEGER,INTENT(IN),DIMENSION(:) :: CBH
  INTEGER,INTENT(IN) :: NINT,IMODE,ISHADE,IB
- REAL(KIND=GLFLOAT) :: AR,AD,AZ,AX,AY,XGRAD,DXY,DX,DY,DZ,XP,YP,ZP
+ REAL(KIND=GLFLOAT) :: AR,AD,AZ,AX,AY,XGRAD,DXY,DX,DY,DZ,XP,YP,ZP,AX2,AY2,AZ2
  REAL(KIND=GLFLOAT),DIMENSION(:,:),ALLOCATABLE :: XPOS,YPOS,ZPOS
  INTEGER :: I,J,II
  
@@ -2629,40 +2630,58 @@ CONTAINS
    CALL IMOD3D_SETCOLOR(IB)
   ENDIF
 
-  !## get angles of from tube
+  !## get angles from tube
   DX=XBH(I+1)-XBH(I)
   DY=YBH(I+1)-YBH(I)
   DZ=ZBH(I+1)-ZBH(I)
 
   AX=-ATAN2(DZ,DX)
-  AY=ATAN2(DY,SQRT(DX**2.0+DZ**2.0))  
-  AZ=0.0
+  AY= ATAN2(DY,SQRT(DX**2.0+DZ**2.0))  
+  AZ= 0.0
 
-  DO II=1,2
+  !## get coordinates
+  CALL IMOD3D_TUBE_COORDINATES(NINT,XPOS(0,1),YPOS(0,1),ZPOS(0,1), &
+      AX,AY,AD,XBH(I),YBH(I),ZBH(I),RBH(I))
+  
+  !## draw top-fan of tube only for first segment
+  IF(I.EQ.1)THEN
+   XP=XBH(I); YP=YBH(I); ZP=ZBH(I)
+   !## draw triangle fan
+   CALL GLBEGIN(GL_TRIANGLE_FAN) 
+    CALL IMOD3D_SETNORMALVECTOR((/XPOS(0,1),YPOS(0,1),ZPOS(0,1)/), &
+                                (/XPOS(1,1),YPOS(1,1),ZPOS(1,1)/), &
+                                (/XP        ,YP        ,ZP        /))
+    CALL GLVERTEX3F(XP,YP,ZP)
+    DO J=NINT,0,-1
+     CALL GLVERTEX3F(XPOS(J,1),YPOS(J,1),ZPOS(J,1))
+    ENDDO
+   CALL GLEND()
+  ENDIF
+  
+  !## draw knee-part
+  IF(I.GT.1)THEN
+  
+   !## draw knee-parts only whenever sequentially tubes have same dimensions
+   IF(RBH(I-1).EQ.RBH(I))THEN
+ 
+    !## get coordinates from
+    CALL IMOD3D_TUBE_COORDINATES(NINT,XPOS(0,1),YPOS(0,1),ZPOS(0,1), &
+        AX2,AY2,AD,XBH(I),YBH(I),ZBH(I),RBH(I))
+    
+    DX=(AX-AX2)/REAL(NF)
+    DY=(AY-AY2)/REAL(NF)
 
-!## loopje over draaien ...
-   !## get coordinates
-   CALL IMOD3D_TUBE_COORDINATES(NINT,XPOS(0,II),YPOS(0,II),ZPOS(0,II), &
-      AX,AY,AD,XBH(I+II-1),YBH(I+II-1),ZBH(I+II-1),RBH(I))
-  
-   !## draw top-fan of tube only for first segment
-   IF(I.EQ.1)THEN
-    XP=XBH(I); YP=YBH(I); ZP=ZBH(I)
-    !## draw triangle fan
-    CALL GLBEGIN(GL_TRIANGLE_FAN) 
-     CALL IMOD3D_SETNORMALVECTOR((/XPOS(0,1),YPOS(0,1),ZPOS(0,1)/), &
-                                 (/XPOS(1,1),YPOS(1,1),ZPOS(1,1)/), &
-                                 (/XP        ,YP        ,ZP        /))
-     CALL GLVERTEX3F(XP,YP,ZP)
-     DO J=NINT,0,-1
-      CALL GLVERTEX3F(XPOS(J,1),YPOS(J,1),ZPOS(J,1))
-     ENDDO
-    CALL GLEND()
-   ENDIF
-  
-   !## draw knee-part
-   IF(I.GT.1.AND.II.EQ.1)THEN
-    IF(RBH(I-1).EQ.RBH(I))THEN
+    DO II=1,NF
+
+     AX2=AX2+DX
+     AY2=AY2+DY
+     
+     !## get coordinates to
+     CALL IMOD3D_TUBE_COORDINATES(NINT,XPOS(0,2),YPOS(0,2),ZPOS(0,2), &
+         AX2,AY2,AD,XBH(I),YBH(I),ZBH(I),RBH(I))
+!     CALL IMOD3D_TUBE_COORDINATES(NINT,XPOS(0,2),YPOS(0,2),ZPOS(0,2), &
+!         AX ,AY ,AD,XBH(I),YBH(I),ZBH(I),RBH(I))
+
      CALL GLBEGIN(GL_QUAD_STRIP)
      DO J=NINT,0,-1
       IF(J.NE.NINT)THEN
@@ -2674,11 +2693,22 @@ CONTAINS
       CALL GLVERTEX3F(XPOS(J,1),YPOS(J,1),ZPOS(J,1))
      ENDDO
      CALL GLEND()
-    ENDIF
+     DO J=0,NINT
+      XPOS(J,1)=XPOS(J,2)
+      YPOS(J,1)=YPOS(J,2)
+      ZPOS(J,1)=ZPOS(J,2)
+     ENDDO
+    ENDDO
+
    ENDIF
-   
-  ENDDO
+  ENDIF
       
+  !## get coordinates
+  CALL IMOD3D_TUBE_COORDINATES(NINT,XPOS(0,1),YPOS(0,1),ZPOS(0,1), &
+      AX,AY,AD,XBH(I)  ,YBH(I)  ,ZBH(I)  ,RBH(I))
+  CALL IMOD3D_TUBE_COORDINATES(NINT,XPOS(0,2),YPOS(0,2),ZPOS(0,2), &
+      AX,AY,AD,XBH(I+1),YBH(I+1),ZBH(I+1),RBH(I))
+
   !## side of tube
   CALL GLBEGIN(GL_QUAD_STRIP)
   DO J=0,NINT
@@ -2706,7 +2736,11 @@ CONTAINS
     ENDDO
    CALL GLEND()
   ENDIF
- 
+  
+  AX2=AX
+  AY2=AY
+  AZ2=AZ
+  
  ENDDO 
 
  CALL GLPOPMATRIX()
