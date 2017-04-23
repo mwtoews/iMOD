@@ -105,7 +105,7 @@ CONTAINS
  !###======================================================================
  !## sets lookat to fit current view represented as a circle
  IMPLICIT NONE
- DOUBLE PRECISION :: D1,FOVYRAD
+ DOUBLE PRECISION :: D1,FOVYRAD,F
 
  INIT_SHIFTX  =0.0_GLDOUBLE
  INIT_SHIFTY  =0.0_GLDOUBLE 
@@ -118,14 +118,16 @@ CONTAINS
  FOVYRAD=FOVY/(360.0_GLDOUBLE/(2.0_GLDOUBLE*PI))
 
  !## circle to describe entire volume
- D1=SQRT((TOP%X-BOT%X)**2.0+(TOP%Y-BOT%Y)**2.0+(TOP%Z-BOT%Z)**2.0)
+ D1=SQRT((TOP%X-BOT%X)**2.0+(TOP%Y-BOT%Y)**2.0+(ZSCALE_FACTOR*(TOP%Z-BOT%Z))**2.0)
+! D1=SQRT((TOP%X-BOT%X)**2.0+(TOP%Y-BOT%Y)**2.0+ZSCALE_FACTOR*(TOP%Z-BOT%Z)**2.0)
  !## distance
  D1=(1.0_GLDOUBLE*D1)/ATAN(FOVYRAD)
 
- LOOKFROM%X=LOOKAT%X-0.5*D1
- LOOKFROM%Y=LOOKAT%Y-D1
- LOOKFROM%Z=LOOKAT%Z+0.5*D1 
-
+ F=0.7
+ LOOKFROM%X=LOOKAT%X-F*(0.5*D1)
+ LOOKFROM%Y=LOOKAT%Y-F*(D1)
+ LOOKFROM%Z=LOOKAT%Z+F*(0.5*D1) 
+ 
  ZFAR =10_GLDOUBLE*D1
  ZNEAR=0.01_GLDOUBLE*D1
 
@@ -2600,13 +2602,14 @@ CONTAINS
  SUBROUTINE IMOD3D_TUBE(XBH,YBH,ZBH,RBH,CBH,NINT,IMODE,ISHADE,IB)
  !###======================================================================
  IMPLICIT NONE
- INTEGER,PARAMETER :: NF=3
+ INTEGER,PARAMETER :: NF=10 !3
  REAL,INTENT(IN),DIMENSION(:) :: XBH,YBH,ZBH,RBH
  INTEGER,INTENT(IN),DIMENSION(:) :: CBH
  INTEGER,INTENT(IN) :: NINT,IMODE,ISHADE,IB
  REAL(KIND=GLFLOAT) :: AR,AD,AZ,AX,AY,XGRAD,DXY,DX,DY,DZ,XP,YP,ZP,AX2,AY2,AZ2
  REAL(KIND=GLFLOAT),DIMENSION(:,:),ALLOCATABLE :: XPOS,YPOS,ZPOS
  INTEGER :: I,J,II
+ 
  
  !## stepsize angle radials
  AD=2.0*PI/REAL(NINT) 
@@ -2671,12 +2674,17 @@ CONTAINS
    !## draw knee-parts only whenever sequentially tubes have same dimensions
    IF(RBH(I-1).EQ.RBH(I))THEN
  
+!    CALL SetupDisplay()
+    
     !## get coordinates from
     CALL IMOD3D_TUBE_COORDINATES(NINT,XPOS(0,1),YPOS(0,1),ZPOS(0,1), &
         AX2,AY2,AD,XBH(I),YBH(I),ZBH(I),RBH(I))
     
-    DX=(AX-AX2)/REAL(NF)
-    DY=(AY-AY2)/REAL(NF)
+!    DX=(AX-AX2)/REAL(NF)
+!    DY=(AY-AY2)/REAL(NF)
+
+    dx=(pi)/real(nf)
+    dy=0.0
 
     DO II=1,NF
 
@@ -2686,15 +2694,33 @@ CONTAINS
      !## get coordinates to
      CALL IMOD3D_TUBE_COORDINATES(NINT,XPOS(0,2),YPOS(0,2),ZPOS(0,2), &
          AX2,AY2,AD,XBH(I),YBH(I),ZBH(I),RBH(I))
-!     CALL IMOD3D_TUBE_COORDINATES(NINT,XPOS(0,2),YPOS(0,2),ZPOS(0,2), &
-!         AX ,AY ,AD,XBH(I),YBH(I),ZBH(I),RBH(I))
 
      CALL GLBEGIN(GL_QUAD_STRIP)
      DO J=NINT,0,-1
       IF(J.NE.NINT)THEN
-       CALL IMOD3D_SETNORMALVECTOR((/XPOS(J,1)  ,YPOS(J,1)  ,ZPOS(J,1)  /), &
-                                   (/XPOS(J,2)  ,YPOS(J,2)  ,ZPOS(J,2)  /), &
-                                   (/XPOS(J+1,1),YPOS(J+1,2),ZPOS(J+1,2)/))
+       IF(XPOS(J,1).EQ.XPOS(J,2).AND. &
+          YPOS(J,1).EQ.YPOS(J,2).AND. &
+          ZPOS(J,1).EQ.ZPOS(J,2))THEN
+        CALL IMOD3D_SETNORMALVECTOR((/XPOS(J+1,2),YPOS(J+1,2),ZPOS(J+1,2)/), &
+                                    (/XPOS(J+1,1),YPOS(J+1,1),ZPOS(J+1,1)/), &
+                                    (/XPOS(J,1)  ,YPOS(J,1)  ,ZPOS(J,1)  /))       
+       ELSE
+        CALL IMOD3D_SETNORMALVECTOR((/XPOS(J,1)  ,YPOS(J,1)  ,ZPOS(J,1)/), &
+                                    (/XPOS(J,2)  ,YPOS(J,2)  ,ZPOS(J,2)/), &
+                                    (/XPOS(J+1,2),YPOS(J+1,2),ZPOS(J+1,2)/))       
+       ENDIF
+      ELSE
+       IF(XPOS(J,1).EQ.XPOS(J,2).AND. &
+          YPOS(J,1).EQ.YPOS(J,2).AND. &
+          ZPOS(J,1).EQ.ZPOS(J,2))THEN
+        CALL IMOD3D_SETNORMALVECTOR((/XPOS(J,1)  ,YPOS(J,1)  ,ZPOS(J,1)  /), &
+                                    (/XPOS(0,1)  ,YPOS(0,1)  ,ZPOS(0,1)  /), &
+                                    (/XPOS(0,2)  ,YPOS(0,2)  ,ZPOS(0,2)/))
+       ELSE
+        CALL IMOD3D_SETNORMALVECTOR((/XPOS(J,1)  ,YPOS(J,1)  ,ZPOS(J,1)  /), &
+                                    (/XPOS(J,2)  ,YPOS(J,2)  ,ZPOS(J,2)  /), &
+                                    (/XPOS(0,2)  ,YPOS(0,2)  ,ZPOS(0,2)/))
+       ENDIF
       ENDIF
       CALL GLVERTEX3F(XPOS(J,2),YPOS(J,2),ZPOS(J,2))
       CALL GLVERTEX3F(XPOS(J,1),YPOS(J,1),ZPOS(J,1))
@@ -2754,6 +2780,21 @@ CONTAINS
 
  END SUBROUTINE IMOD3D_TUBE
 
+      SUBROUTINE SetupDisplay()
+!
+      IMPLICIT NONE
+      REAL(glfloat), DIMENSION(4)  :: diffuse = (/1.0, 0.0, 0.0, 1.0/)
+      REAL(glfloat), DIMENSION(4)  :: pos     = (/1.0, 1.0, 1.0, 0.0/)
+      TYPE(gluquadricobj), POINTER :: quadObj
+
+      quadObj => gluNewQuadric()
+      CALL gluQuadricDrawStyle(quadObj, GLU_FILL)
+      CALL gluQuadricNormals(quadObj, GLU_SMOOTH)
+      CALL gluSphere(quadObj, 1.0_gldouble, 20, 20)
+
+      RETURN
+      END SUBROUTINE SetupDisplay
+
  !###======================================================================
  SUBROUTINE IMOD3D_TUBE_COORDINATES(NINT,XPOS,YPOS,ZPOS,AX,AY,AD,XBH,YBH,ZBH,RBH)
  !###======================================================================
@@ -2767,7 +2808,7 @@ CONTAINS
    
  !## top or bottom - compute coordinates
  AR=0.0_GLFLOAT
- DO J=NINT,0,-1
+ DO J=0,NINT !NINT,0,-1
   XPOS(J)=RBH !(I)      
   YPOS(J)=0.0_GLFLOAT 
   ZPOS(J)=0.0_GLFLOAT
@@ -3266,7 +3307,9 @@ SOLLOOP: DO I=1,NSOLLIST
    
    !## apply scaling
    ZBH=ZBH*ZSCALE_FACTOR
-  
+   IWIDTH=SQRT((TOP%Y-BOT%Y)**2.0+(TOP%X-BOT%X)**2.0)/50.0
+   RBH=RBH*IWIDTH
+
    CALL IMOD3D_TUBE(XBH,YBH,ZBH,RBH,CBH,IPFPLOT(IIPF)%ISUB,IMODE,IPFPLOT(IIPF)%ISHADE,NASSLIST)
     
    DEALLOCATE(XBH,YBH,ZBH,RBH,CBH)
