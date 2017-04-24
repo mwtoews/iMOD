@@ -2701,6 +2701,7 @@ CONTAINS
        IF(XPOS(J,1).EQ.XPOS(J,2).AND. &
           YPOS(J,1).EQ.YPOS(J,2).AND. &
           ZPOS(J,1).EQ.ZPOS(J,2))THEN
+!## gebruik triangles ...
         CALL IMOD3D_SETNORMALVECTOR((/XPOS(J+1,2),YPOS(J+1,2),ZPOS(J+1,2)/), &
                                     (/XPOS(J+1,1),YPOS(J+1,1),ZPOS(J+1,1)/), &
                                     (/XPOS(J,1)  ,YPOS(J,1)  ,ZPOS(J,1)  /))       
@@ -2779,21 +2780,6 @@ CONTAINS
  CALL GLPOPMATRIX()
 
  END SUBROUTINE IMOD3D_TUBE
-
-      SUBROUTINE SetupDisplay()
-!
-      IMPLICIT NONE
-      REAL(glfloat), DIMENSION(4)  :: diffuse = (/1.0, 0.0, 0.0, 1.0/)
-      REAL(glfloat), DIMENSION(4)  :: pos     = (/1.0, 1.0, 1.0, 0.0/)
-      TYPE(gluquadricobj), POINTER :: quadObj
-
-      quadObj => gluNewQuadric()
-      CALL gluQuadricDrawStyle(quadObj, GLU_FILL)
-      CALL gluQuadricNormals(quadObj, GLU_SMOOTH)
-      CALL gluSphere(quadObj, 1.0_gldouble, 20, 20)
-
-      RETURN
-      END SUBROUTINE SetupDisplay
 
  !###======================================================================
  SUBROUTINE IMOD3D_TUBE_COORDINATES(NINT,XPOS,YPOS,ZPOS,AX,AY,AD,XBH,YBH,ZBH,RBH)
@@ -3368,26 +3354,34 @@ SOLLOOP: DO I=1,NSOLLIST
  INTEGER,INTENT(IN) :: ISUB,ISTYLE
  INTEGER :: I,J,NLAT,NLONG
  REAL(GLFLOAT) :: LAT,LONG,X,Y,Z,DLAT,DLONG,R
+! REAL(glfloat), DIMENSION(4)  :: diffuse = (/1.0, 0.0, 0.0, 1.0/)
+! REAL(glfloat), DIMENSION(4)  :: pos     = (/1.0, 1.0, 1.0, 0.0/)
+ TYPE(gluquadricobj), POINTER :: quadObj
 
- NLAT=ISUB  !## north south
- NLONG=ISUB !## west  east
- R=0.05 
+! NLAT=ISUB  !## north south
+! NLONG=ISUB !## west  east
+! R=0.05 
   
  !## Create the sphere display list
  IF(SPHEREINDEX.NE.0)CALL GLDELETELISTS(SPHEREINDEX,1_GLSIZEI); SPHEREINDEX=0
  SPHEREINDEX=GLGENLISTS(1)
  CALL GLNEWLIST(SPHEREINDEX,GL_COMPILE)
 
- CALL GLBEGIN(GL_POINTS)
-  LAT=0.0; DLAT=(2*PI)/REAL(NLAT); DLONG=PI/REAL(NLONG)
-  DO J=1,NLAT; LAT=LAT+DLAT; LONG=0.0; DO I=1,NLONG
-   LONG=LONG+DLONG
-   X=R*SIN(LAT)*COS(LONG)
-   Y=R*SIN(LAT)*SIN(LONG)
-   Z=R*COS(LAT)*(1.0_GLDOUBLE/ZSCALE_FACTOR)
-   CALL GLVERTEX3F(X,Y,Z)
-  ENDDO; ENDDO
- CALL GLEND()
+ QUADOBJ => GLUNEWQUADRIC()
+ CALL GLUQUADRICDRAWSTYLE(QUADOBJ, GLU_FILL)
+ CALL GLUQUADRICNORMALS(QUADOBJ, GLU_SMOOTH)
+ CALL GLUSPHERE(QUADOBJ,1.0_GLDOUBLE,ISUB,ISUB)
+
+! CALL GLBEGIN(GL_POINTS)
+!  LAT=0.0; DLAT=(2*PI)/REAL(NLAT); DLONG=PI/REAL(NLONG)
+!  DO J=1,NLAT; LAT=LAT+DLAT; LONG=0.0; DO I=1,NLONG
+!   LONG=LONG+DLONG
+!   X=R*SIN(LAT)*COS(LONG)
+!   Y=R*SIN(LAT)*SIN(LONG)
+!   Z=R*COS(LAT)*(1.0_GLDOUBLE/ZSCALE_FACTOR)
+!   CALL GLVERTEX3F(X,Y,Z)
+!  ENDDO; ENDDO
+! CALL GLEND()
  CALL GLENDLIST()
  
  END SUBROUTINE IMOD3D_IPF_CREATEBALL
@@ -4423,33 +4417,37 @@ SOLLOOP: DO I=1,NSOLLIST
   IF(I.LT.N)NCLPLIST=MAX(0,NCLPLIST-1)
  ENDIF
 
+ !## construct drawinglist for clipping planes
+ 
+!    CALL IMOD3D_VECTOR(X,Y,Z,-DZDX,DZDY,-DZDZ,6,RADIUS,F,.TRUE.)
+
 ! CALL WDIALOGSELECT(ID_D3DSETTINGS_TAB7)
 ! CALL WDIALOGPUTMENU(IDF_MENU1,CLPPLOT%FNAME,NCLPLIST,CLPPLOT%ISEL)
  
  END SUBROUTINE IMOD3D_CLP_ADD
 
- !###======================================================================
- LOGICAL FUNCTION IMOD3D_CLP()
- !###======================================================================
- IMPLICIT NONE
-
- IMOD3D_CLP=.FALSE.
-
- !## list index for
- NCLPLIST=NCLPLIST+1
- CLPLISTINDEX(NCLPLIST)=GLGENLISTS(1)
- !## start new drawing list
- CALL GLNEWLIST(CLPLISTINDEX(NCLPLIST),GL_COMPILE)
-
- CLPPLOT(NCLPLIST)%ISEL=1
- CLPPLOT(NCLPLIST)%ITHICKNESS=1
- CLPPLOT(NCLPLIST)%ICOLOR=WRGB(0,0,0)
-
- IMOD3D_CLP=.TRUE.
-
- CALL IMOD3D_ERROR('IMOD3D_CLP')
-
- END FUNCTION IMOD3D_CLP
+! !###======================================================================
+! LOGICAL FUNCTION IMOD3D_CLP()
+! !###======================================================================
+! IMPLICIT NONE
+!
+! IMOD3D_CLP=.FALSE.
+!
+! !## list index for
+! NCLPLIST=NCLPLIST+1
+! CLPLISTINDEX(NCLPLIST)=GLGENLISTS(1)
+! !## start new drawing list
+! CALL GLNEWLIST(CLPLISTINDEX(NCLPLIST),GL_COMPILE)
+!
+! CLPPLOT(NCLPLIST)%ISEL=1
+! CLPPLOT(NCLPLIST)%ITHICKNESS=1
+! CLPPLOT(NCLPLIST)%ICOLOR=WRGB(0,0,0)
+!
+! IMOD3D_CLP=.TRUE.
+!
+! CALL IMOD3D_ERROR('IMOD3D_CLP')
+!
+! END FUNCTION IMOD3D_CLP
 
  !###======================================================================
  SUBROUTINE IMOD3D_QUAD(X,Y,Z,C,ILST,LLST)
