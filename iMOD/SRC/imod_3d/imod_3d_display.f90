@@ -108,37 +108,11 @@ CONTAINS
   
   CALL GLCOLORMASK(LRED,LGREEN,LBLUE,LALPHA)
  
-   !## draw axes,roundbox
-  IF(IMODE.EQ.1.AND.IBNDBOX.EQ.1)THEN
-   CALL GLBLENDFUNC(GL_SRC_ALPHA,GL_ONE_MINUS_SRC_ALPHA)  !## (1) source (2) destination
-  !## draw filled background in gl_cull_face mode
-   CALL IMOD3D_SETCOLOR(BCOLOR)
-   CALL GLLINEWIDTH(1.0_GLFLOAT)
-   !## draw box
-   IF(AXESINDEX(1).GT.0)CALL GLCALLLIST(AXESINDEX(1))
-   !## draw axes
-   IF(AXESINDEX(2).GT.0)CALL GLCALLLIST(AXESINDEX(2))
-  ENDIF
- 
-  !## draw axes text,roundbox
-  IF(IMODE.EQ.1.AND.IAXES.EQ.1)THEN
-   CALL GLBLENDFUNC(GL_SRC_ALPHA,GL_ONE_MINUS_SRC_ALPHA)  !## (1) source (2) destination
-   !## draw labels
-   CALL IMOD3D_SETCOLOR(ACOLOR) 
-   IF(AXESINDEX(3).GT.0)CALL GLCALLLIST(AXESINDEX(3))
-  ENDIF
+  !## plot axes/orientation box
+  CALL IMOD3D_DISPLAY_AXES(IMODE)
 
-  DO I=1,NCLPLIST
-   IF(CLPPLOT(I)%ISEL.EQ.1)THEN
-    CALL GLENABLE(CLPPLANES(I))
-    CALL GLPUSHMATRIX()
-    CALL GLTRANSLATED(CLPPLOT(I)%X,CLPPLOT(I)%Y,CLPPLOT(I)%Z)
-    CALL GLCLIPPLANE(CLPPLANES(I),CLPPLOT(I)%EQN)
-    CALL GLPOPMATRIX()
-   ELSE
-    CALL GLDISABLE(CLPPLANES(I))
-   ENDIF
-  END DO
+  !## apply clipping planes
+  CALL IMOD3D_DISPLAY_CLP()
 
   !## draw ipf-drills/points  
   CALL GLBLENDFUNC(GL_ONE,GL_ZERO) 
@@ -361,6 +335,100 @@ CONTAINS
 
  END SUBROUTINE IMOD3D_RESET_TO_INIT
 
+ !###======================================================================
+ SUBROUTINE IMOD3D_DISPLAY_AXES(IMODE)
+ !###======================================================================
+ IMPLICIT NONE
+ INTEGER,INTENT(IN) :: IMODE
+
+ !## draw axes,roundbox
+ IF(IMODE.EQ.1.AND.IBNDBOX.EQ.1)THEN
+  CALL GLBLENDFUNC(GL_SRC_ALPHA,GL_ONE_MINUS_SRC_ALPHA)  !## (1) source (2) destination
+ !## draw filled background in gl_cull_face mode
+  CALL IMOD3D_SETCOLOR(BCOLOR)
+  CALL GLLINEWIDTH(1.0_GLFLOAT)
+  !## draw box
+  IF(AXESINDEX(1).GT.0)CALL GLCALLLIST(AXESINDEX(1))
+  !## draw axes
+  IF(AXESINDEX(2).GT.0)CALL GLCALLLIST(AXESINDEX(2))
+ ENDIF
+ 
+ !## draw axes text,roundbox
+ IF(IMODE.EQ.1.AND.IAXES.EQ.1)THEN
+  CALL GLBLENDFUNC(GL_SRC_ALPHA,GL_ONE_MINUS_SRC_ALPHA)  !## (1) source (2) destination
+  !## draw labels
+  CALL IMOD3D_SETCOLOR(ACOLOR) 
+  IF(AXESINDEX(3).GT.0)CALL GLCALLLIST(AXESINDEX(3))
+ ENDIF
+
+ END SUBROUTINE IMOD3D_DISPLAY_AXES
+
+ !###======================================================================
+ SUBROUTINE IMOD3D_DISPLAY_CLP()
+ !###======================================================================
+ IMPLICIT NONE
+ REAL(GLFLOAT),DIMENSION(4) :: X,Y,Z
+ REAL(GLFLOAT) :: T
+ INTEGER :: I,J
+ 
+ CALL GLPOLYGONMODE(GL_FRONT,GL_LINE); CALL GLPOLYGONMODE(GL_BACK, GL_LINE)
+  
+ !## plot clipping planes first than activate them
+ DO I=1,NCLPLIST
+  IF(CLPPLOT(I)%ISEL.EQ.0)CYCLE
+
+  !## west/east clipping plane
+  IF(ABS(CLPPLOT(I)%EQN(1)).EQ.1.0_GLDOUBLE)THEN
+   X(1)=CLPPLOT(I)%X; X(2)=X(1);  X(3)=X(1);  X(4)=X(1)
+   Y(1)=BOT%Y;        Y(2)=Y(1);  Y(3)=TOP%Y; Y(4)=Y(3)
+   Z(1)=BOT%Z;        Z(2)=TOP%Z; Z(3)=Z(2);  Z(4)=Z(1)
+  ENDIF
+  !## south/north clipping plane
+  IF(ABS(CLPPLOT(I)%EQN(2)).EQ.1.0_GLDOUBLE)THEN
+   Y(1)=CLPPLOT(I)%Y; Y(2)=Y(1);  Y(3)=Y(1);  Y(4)=Y(1)
+   X(1)=BOT%X;        X(2)=X(1);  X(3)=TOP%X; X(4)=X(3)
+   Z(1)=BOT%Z;        Z(2)=TOP%Z; Z(3)=Z(2);  Z(4)=Z(1)
+  ENDIF
+  !## top/bottom clipping plane
+  IF(ABS(CLPPLOT(I)%EQN(3)).EQ.1.0_GLDOUBLE)THEN
+   Z(1)=CLPPLOT(I)%Z; Z(2)=Z(1);  Z(3)=Z(1);  Z(4)=Z(1)
+   X(1)=BOT%X;        X(2)=X(1);  X(3)=TOP%X; X(4)=X(3)
+   Y(1)=BOT%Y;        Y(2)=TOP%Y; Y(3)=Y(2);  Y(4)=Y(1)
+  ENDIF
+
+  CALL IMOD3D_SETCOLOR(CLPPLOT(I)%ICOLOR)
+  T=REAL(CLPPLOT(I)%ITHICKNESS)
+  CALL GLLINEWIDTH(T)
+  CALL GLBEGIN(GL_QUADS)
+  DO J=1,4
+   CALL GLVERTEX3F(X(J),Y(J),Z(J))
+  ENDDO
+  CALL GLEND()
+
+ END DO
+
+ DO I=1,NCLPLIST
+  IF(CLPPLOT(I)%ISEL.EQ.1)THEN
+
+   !## turn clipping plane on
+   CALL GLENABLE(CLPPLANES(I))
+   !## move clipping plane to appropriate location
+   CALL GLPUSHMATRIX()
+   CALL GLTRANSLATED(CLPPLOT(I)%X,CLPPLOT(I)%Y,CLPPLOT(I)%Z)
+   CALL GLCLIPPLANE(CLPPLANES(I),CLPPLOT(I)%EQN)
+   CALL GLPOPMATRIX()
+
+  ELSE
+ 
+   CALL GLDISABLE(CLPPLANES(I))
+ 
+  ENDIF
+ END DO
+
+ CALL GLPOLYGONMODE(GL_BACK, GL_FILL); CALL GLPOLYGONMODE(GL_FRONT,GL_FILL)
+
+ END SUBROUTINE IMOD3D_DISPLAY_CLP
+ 
  !###======================================================================
  SUBROUTINE IMOD3D_DISPLAY_IPF(IMODE)
  !###======================================================================
@@ -655,20 +723,6 @@ CONTAINS
  CALL GLENABLE(GL_BLEND)
  
  END SUBROUTINE IMOD3D_DISPLAY_SOL
-
- !###======================================================================
- SUBROUTINE IMOD3D_DISPLAY_CLP()
- !###======================================================================
- IMPLICIT NONE
- INTEGER :: I
-
- DO I=1,NCLPLIST
-  IF(CLPPLOT(I)%ISEL.EQ.1)THEN
-   CALL GLCALLLIST(CLPLISTINDEX(I))
-  ENDIF
- END DO
-
- END SUBROUTINE IMOD3D_DISPLAY_CLP
 
  !###======================================================================
  SUBROUTINE IMOD3D_DISPLAY_PL()
