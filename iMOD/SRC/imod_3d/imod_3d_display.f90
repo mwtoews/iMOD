@@ -368,34 +368,43 @@ CONTAINS
  !###======================================================================
  IMPLICIT NONE
  REAL(GLFLOAT),DIMENSION(4) :: X,Y,Z
- REAL(GLFLOAT) :: T
+ REAL(GLFLOAT) :: T,DX,DY,DZ
+ REAL(GLDOUBLE) :: P
  INTEGER :: I,J
  
  CALL GLPOLYGONMODE(GL_FRONT,GL_LINE); CALL GLPOLYGONMODE(GL_BACK, GL_LINE)
   
  !## plot clipping planes first than activate them
  DO I=1,NCLPLIST
+  !## do not use inactive clipping planes
   IF(CLPPLOT(I)%ISEL.EQ.0)CYCLE
-
+  !## do not plot clipping planes with zero thickness
+  IF(CLPPLOT(I)%ITHICKNESS.LE.0)CYCLE
+  
   !## west/east clipping plane
   IF(ABS(CLPPLOT(I)%EQN(1)).EQ.1.0_GLDOUBLE)THEN
-   X(1)=CLPPLOT(I)%X; X(2)=X(1);  X(3)=X(1);  X(4)=X(1)
-   Y(1)=BOT%Y;        Y(2)=Y(1);  Y(3)=TOP%Y; Y(4)=Y(3)
-   Z(1)=BOT%Z;        Z(2)=TOP%Z; Z(3)=Z(2);  Z(4)=Z(1)
+   DX=(TOP%X-BOT%X)*REAL(CLPPLOT(I)%IPOS)/100.0
+   DX=CLPPLOT(I)%X+DX*CLPPLOT(I)%EQN(1)
+   X(1)=DX;    X(2)=X(1);  X(3)=X(1);  X(4)=X(1)
+   Y(1)=BOT%Y; Y(2)=Y(1);  Y(3)=TOP%Y; Y(4)=Y(3)
+   Z(1)=BOT%Z; Z(2)=TOP%Z; Z(3)=Z(2);  Z(4)=Z(1)
   ENDIF
   !## south/north clipping plane
   IF(ABS(CLPPLOT(I)%EQN(2)).EQ.1.0_GLDOUBLE)THEN
-   Y(1)=CLPPLOT(I)%Y; Y(2)=Y(1);  Y(3)=Y(1);  Y(4)=Y(1)
-   X(1)=BOT%X;        X(2)=X(1);  X(3)=TOP%X; X(4)=X(3)
-   Z(1)=BOT%Z;        Z(2)=TOP%Z; Z(3)=Z(2);  Z(4)=Z(1)
+   DY=(TOP%Y-BOT%Y)*REAL(CLPPLOT(I)%IPOS)/100.0
+   DY=CLPPLOT(I)%Y+DY*CLPPLOT(I)%EQN(2)
+   Y(1)=DY;    Y(2)=Y(1);  Y(3)=Y(1);  Y(4)=Y(1)
+   X(1)=BOT%X; X(2)=X(1);  X(3)=TOP%X; X(4)=X(3)
+   Z(1)=BOT%Z; Z(2)=TOP%Z; Z(3)=Z(2);  Z(4)=Z(1)
   ENDIF
   !## top/bottom clipping plane
   IF(ABS(CLPPLOT(I)%EQN(3)).EQ.1.0_GLDOUBLE)THEN
-   Z(1)=CLPPLOT(I)%Z; Z(2)=Z(1);  Z(3)=Z(1);  Z(4)=Z(1)
-   X(1)=BOT%X;        X(2)=X(1);  X(3)=TOP%X; X(4)=X(3)
-   Y(1)=BOT%Y;        Y(2)=TOP%Y; Y(3)=Y(2);  Y(4)=Y(1)
+   DZ=(TOP%Z-BOT%Z)*REAL(CLPPLOT(I)%IPOS)/100.0
+   DZ=CLPPLOT(I)%Z+DZ*CLPPLOT(I)%EQN(3)
+   Z(1)=DZ;    Z(2)=Z(1);  Z(3)=Z(1);  Z(4)=Z(1)
+   X(1)=BOT%X; X(2)=X(1);  X(3)=TOP%X; X(4)=X(3)
+   Y(1)=BOT%Y; Y(2)=TOP%Y; Y(3)=Y(2);  Y(4)=Y(1)
   ENDIF
-
   CALL IMOD3D_SETCOLOR(CLPPLOT(I)%ICOLOR)
   T=REAL(CLPPLOT(I)%ITHICKNESS)
   CALL GLLINEWIDTH(T)
@@ -414,7 +423,26 @@ CONTAINS
    CALL GLENABLE(CLPPLANES(I))
    !## move clipping plane to appropriate location
    CALL GLPUSHMATRIX()
-   CALL GLTRANSLATED(CLPPLOT(I)%X,CLPPLOT(I)%Y,CLPPLOT(I)%Z)
+
+   !## west/east clipping plane
+   IF(ABS(CLPPLOT(I)%EQN(1)).EQ.1.0_GLDOUBLE)THEN
+    DX=(TOP%X-BOT%X)*REAL(CLPPLOT(I)%IPOS)/100.0
+    P = CLPPLOT(I)%X+DX*CLPPLOT(I)%EQN(1)
+    CALL GLTRANSLATED(P,CLPPLOT(I)%Y,CLPPLOT(I)%Z)
+   ENDIF
+   !## south/north clipping plane
+   IF(ABS(CLPPLOT(I)%EQN(2)).EQ.1.0_GLDOUBLE)THEN
+    DY=(TOP%Y-BOT%Y)*REAL(CLPPLOT(I)%IPOS)/100.0
+    P = CLPPLOT(I)%Y+DY*CLPPLOT(I)%EQN(2)
+    CALL GLTRANSLATED(CLPPLOT(I)%X,P,CLPPLOT(I)%Z)
+   ENDIF
+   !## top/bottom clipping plane
+   IF(ABS(CLPPLOT(I)%EQN(3)).EQ.1.0_GLDOUBLE)THEN
+    DZ=(TOP%Z-BOT%Z)*REAL(CLPPLOT(I)%IPOS)/100.0
+    P = CLPPLOT(I)%Z+DZ*CLPPLOT(I)%EQN(3)
+    CALL GLTRANSLATED(CLPPLOT(I)%X,CLPPLOT(I)%Y,P)
+   ENDIF
+
    CALL GLCLIPPLANE(CLPPLANES(I),CLPPLOT(I)%EQN)
    CALL GLPOPMATRIX()
 
