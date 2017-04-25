@@ -231,23 +231,6 @@ CONTAINS
   CALL IOSDATE(IY,IM,ID)
   CALL WDATETOSTRING(CDATE,IY,IM,ID)
   WRITE(IU,'(A/)') 'Waterbalance file created at '//CDATE
-
-!  IF(WBAL_WBEX.EQ.0)THEN 
-!   IF(SUM(SHPIACT).EQ.0)THEN
-!    IF(IDF%IU.EQ.0)WRITE(IU,'(A)') 'Waterbalance for entire size of model.'
-!    IF(IDF%IU.GT.0)THEN
-!     WRITE(IU,'(A)') 'Waterbalance for values not equal to nodata value within:'
-!     WRITE(IU,'(A)') TRIM(WBAL_IDFNAME)
-!    ENDIF
-!   ELSE
-!    WRITE(IU,'(A)') 'Waterbalance for selected area given by polygon(s) read from :'
-!    WRITE(IU,'(A)') TRIM(WBAL_GENFNAME)
-!   ENDIF
-
-!   WRITE(IU,'(/A)') 'Bear in mind that disclosure of the waterbalance might be caused by absent budget '
-!   WRITE(IU,'(A/)') 'terms or different unit of the terms (m3/d or mm/d)! '
-!  ENDIF
-  
  ENDIF
 
  IF(IBATCH.EQ.0)CALL WDIALOGPUTPROGRESSBAR(IDF_PROGRESS1,1,1)
@@ -611,29 +594,24 @@ CONTAINS
  INTEGER :: IBAL,JSYS,I,IIP,JJP
  
  IF(WBAL_WBEX.EQ.0)THEN
-  HSTRING = 'Date,Layer,Zone'
+  HSTRING = 'Date,Layer,Zone,Area'
   DO IBAL=1,MXTP
    IF(TP(IBAL)%IACT.NE.1)CYCLE
    DO JSYS=1,TP(IBAL)%NSYS
     IF(TP(IBAL)%ISYS(JSYS).EQ.0)THEN
      HSTRING=TRIM(HSTRING)//',"'//TRIM(TP(IBAL)%ACRNM)//'_IN ","'// &
                                   TRIM(TP(IBAL)%ACRNM)//'_OUT"'
-!     HSTRING=TRIM(HSTRING)//',"'//TRIM(TP(IBAL)%ALIAS)//'_IN ","'// &
-!                                  TRIM(TP(IBAL)%ALIAS)//'_OUT"'
-!     IF(IBAL.EQ.3)HSTRING=TRIM(HSTRING)//',"FLUX UPPER FACE_IN ","FLUX UPPER FACE_OUT "' 
      IF(IBAL.EQ.3)HSTRING=TRIM(HSTRING)//',"BDGFTF_IN ","BDGFTF_OUT "' 
     ELSE
      HSTRING=TRIM(HSTRING)//',"'//TRIM(TP(IBAL)%ACRNM)//'_SYS'//TRIM(ITOS(TP(IBAL)%ISYS(JSYS)))//'_IN ","'// &
                                   TRIM(TP(IBAL)%ACRNM)//'_SYS'//TRIM(ITOS(TP(IBAL)%ISYS(JSYS)))//'_OUT"' 
-!     HSTRING=TRIM(HSTRING)//',"'//TRIM(TP(IBAL)%ALIAS)//'_SYS'//TRIM(ITOS(TP(IBAL)%ISYS(JSYS)))//'_IN ","'// &
-!                                  TRIM(TP(IBAL)%ALIAS)//'_SYS'//TRIM(ITOS(TP(IBAL)%ISYS(JSYS)))//'_OUT"' 
     ENDIF
    ENDDO
   ENDDO
   WRITE(IU,*)
   WRITE(IU,'(A)') TRIM(HSTRING)
 
-  HSTRING = 'yyyymmdd,,'
+  HSTRING = 'yyyymmdd,,,km2'
   DO IBAL=1,MXTP
    IF(TP(IBAL)%IACT.NE.1)CYCLE
    DO JSYS=1,TP(IBAL)%NSYS
@@ -646,6 +624,7 @@ CONTAINS
    ENDDO
   ENDDO
   WRITE(IU,'(A)') TRIM(HSTRING)
+ 
  ELSE
  
   WRITE(IU,'(/A/)') 'Interchange fluxes '
@@ -688,7 +667,9 @@ CONTAINS
     DO JSYS=1,TP(IBAL)%NSYS
      QIN =WBAL(IBAL,JSYS,JP)%QIN
      QOUT=WBAL(IBAL,JSYS,JP)%QOUT
-     QACT=WBAL(IBAL,JSYS,JP)%QACT; IF(QACT.EQ.0.0)QACT=1.0
+     QACT=WBAL(IBAL,JSYS,JP)%QACT
+     HSTRING=TRIM(HSTRING)//','//TRIM(RTOS(QACT/(1.0E6),'G',7))
+     IF(QACT.EQ.0.0)QACT=1.0
      HSTRING=TRIM(HSTRING)//','//TRIM(RTOS(QIN,'E',7))
      HSTRING=TRIM(HSTRING)//','//TRIM(RTOS(QOUT,'E',7))
      IF(IBAL.EQ.3)THEN
@@ -707,6 +688,7 @@ CONTAINS
    ENDDO
    WRITE(IU,'(A)') TRIM(HSTRING)
   ENDDO
+ 
  ELSE
 
   DO IIP=1,NIP
@@ -720,7 +702,6 @@ CONTAINS
    WRITE(HSTRING,'(A20)') ADJUSTR(CDATE)
 
    DO IIP=1,NIP-1
-!    WRITE(HSTRING,'(A,I6)') TRIM(HSTRING),IPLIST(IIP)
     DO JJP=IIP+1,NIP
      WRITE(HSTRING,'(A,E12.5)') TRIM(HSTRING)//',',TQEX(IIP,JJP)
     ENDDO
@@ -951,13 +932,16 @@ CONTAINS
  
  !## entire area
  IF(WBAL_ISEL.EQ.1)THEN
+ 
   IF(ALLOCATED(IPLIST))DEALLOCATE(IPLIST) 
   ALLOCATE(IPLIST(1))
   IPIDF%X  =1.0
   NIP      =1
   IPLIST(1)=INT(1,2)
+ 
  !## polygons
  ELSEIF(WBAL_ISEL.EQ.2)THEN
+ 
   IF(ALLOCATED(IPLIST))DEALLOCATE(IPLIST)  
   ALLOCATE(IPLIST(SHPNO))
   IPIDF%X=0.0
@@ -988,13 +972,19 @@ CONTAINS
     DO IROW=IR1,IR2
      DO ICOL=IC1,IC2
       CALL IDFGETLOC(IPIDF,IROW,ICOL,XVAL,YVAL)
-      IF(UTL_INSIDEPOLYGON(XVAL,YVAL,SHPXC(:,SHPI),SHPYC(:,SHPI),SHPNCRD(SHPI)).EQ.1)IPIDF%X(ICOL,IROW)=REAL(SHPI)
+      IF(UTL_INSIDEPOLYGON(XVAL,YVAL,SHPXC(:,SHPI),SHPYC(:,SHPI),SHPNCRD(SHPI)).EQ.1)THEN
+       IF(IPIDF%X(ICOL,IROW).EQ.0.0)THEN
+        IPIDF%X(ICOL,IROW)=REAL(SHPI)
+       ELSE
+        IPIDF%X(ICOL,IROW)=-1.0*IPIDF%X(ICOL,IROW)
+       ENDIF
+      ENDIF
      ENDDO
     ENDDO
    ENDIF
   ENDDO
 
- !## idf
+ !## idf (get absolute values)
  ELSEIF(WBAL_ISEL.EQ.3)THEN
 
   IPIDF%X=IPIDF%NODATA
@@ -1007,7 +997,7 @@ CONTAINS
     !## given idf as pointer can have different dimensions/sizes
     IF((IC1.GT.0.AND.IC1.LE.IDF%NCOL).AND.(IR1.GT.0.AND.IR1.LE.IDF%NROW))THEN
      !## get idfvalue
-     IDFVALUE=IDFGETVAL(IDF,IR1,IC1)
+     IDFVALUE=ABS(IDFGETVAL(IDF,IR1,IC1))
      IF(IDFVALUE.NE.IDF%NODATA)IPIDF%X(ICOL,IROW)=IDFVALUE
     ENDIF
    ENDDO
@@ -1053,6 +1043,13 @@ CONTAINS
  IF(.NOT.IDFWRITE(IPIDF,WBAL_OUTFNAME(:INDEX(WBAL_OUTFNAME,'.',.TRUE.)-1)//'_ZONES.IDF',1))THEN
  ENDIF
 
+ !## make sure pointers are positive again, for polygons only
+ IF(WBAL_ISEL.EQ.2)THEN
+  DO IROW=1,IPIDF%NROW; DO ICOL=1,IPIDF%NCOL
+   IPIDF%X(ICOL,IROW)=ABS(IPIDF%X(ICOL,IROW))
+  ENDDO; ENDDO 
+ ENDIF
+ 
  !## reshuffle pointer to fit iplist()
  DO IROW=1,IPIDF%NROW
   DO ICOL=1,IPIDF%NCOL
