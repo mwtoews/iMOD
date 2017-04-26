@@ -2910,6 +2910,13 @@ c
 c if GENERAL, always recalculate
          if(LOSSTYPE.eq.3.and.MNWNOD(9,INODE).GT.0.d0) irecalc=1
 c
+         TOP=0.0
+         BOT=0.0
+         ALPHA=0.0
+         COND=0.0
+         TOPSCREEN=0.0
+         BOTTOMSCREEN=0.0
+         
          if(irecalc.eq.1) then
 c-----if the cell is inactive or specified then bypass processing.
 c         if(ibound(ix,iy,iz).ne.0 ) then
