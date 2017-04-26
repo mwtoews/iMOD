@@ -28,6 +28,7 @@ USE MOD_UTL, ONLY : UTL_MESSAGEHANDLE3D,UTL_MESSAGEHANDLE,RTOS,UTL_WSELECTFILE,U
 USE MOD_IDF, ONLY : IDFDEALLOCATE
 USE MOD_3D_PAR
 USE MOD_3D_UTL, ONLY : IMOD3D_SETCOLOR,IMOD3D_RETURNCOLOR,IMOD3D_GETCOLOR
+USE MOD_3D_ENGINE, ONLY : IMOD3D_SETNORMALVECTOR
 USE MOD_IPF_PAR, ONLY : ASSF
 USE MOD_DEMO_PAR
 USE MOD_MDF 
@@ -43,7 +44,7 @@ CONTAINS
  INTEGER,INTENT(IN) :: IMODE
  REAL(KIND=GLFLOAT) :: XR,XG,XB
  INTEGER :: I,IR,IG,IB,J
- INTEGER(GLINT) :: IVIEWPORT(4)
+! INTEGER(GLINT) :: IVIEWPORT(4)
  LOGICAL(GLBOOLEAN) :: LRED,LGREEN,LBLUE,LALPHA,LDMASK
  
  CALL IMOD3D_ERROR('IMOD3D_DISPLAY_ENTRY')
@@ -260,7 +261,7 @@ CONTAINS
  SUBROUTINE IMOD3D_SETTINGSPUT_INDPOS()
  !###======================================================================
  IMPLICIT NONE
- REAL :: X,DX
+! REAL :: X,DX
  
 ! DX=TOP%X-BOT%X
 ! X=BOT%X+DX*(INDPOS%X+XYZAXES(1))/(XYZAXES(1)*2.0_GLFLOAT)
@@ -367,13 +368,10 @@ CONTAINS
  SUBROUTINE IMOD3D_DISPLAY_CLP()
  !###======================================================================
  IMPLICIT NONE
- REAL(GLFLOAT),DIMENSION(4) :: X,Y,Z
- REAL(GLFLOAT) :: T,DX,DY,DZ
+ REAL(GLFLOAT) :: DX,DY,DZ
  REAL(GLDOUBLE) :: P
- INTEGER :: I,J
- 
- CALL GLPOLYGONMODE(GL_FRONT,GL_LINE); CALL GLPOLYGONMODE(GL_BACK, GL_LINE)
-  
+ INTEGER :: I
+   
  DO I=1,NCLPLIST
   IF(CLPPLOT(I)%ISEL.EQ.1)THEN
 
@@ -413,50 +411,88 @@ CONTAINS
 
  !## plot clipping planes first than activate them
  DO I=1,NCLPLIST
-  !## do not use inactive clipping planes
-  IF(CLPPLOT(I)%ISEL.EQ.0)CYCLE
+!  !## do not use inactive clipping planes
+!  IF(CLPPLOT(I)%ISEL.EQ.0)CYCLE
   !## do not plot clipping planes with zero thickness
   IF(CLPPLOT(I)%ITHICKNESS.LE.0)CYCLE
-  
-  !## west/east clipping plane
-  IF(ABS(CLPPLOT(I)%EQN(1)).EQ.1.0_GLDOUBLE)THEN
-   DX=(TOP%X-BOT%X)*REAL(CLPPLOT(I)%IPOS)/100.0
-   DX=CLPPLOT(I)%X+DX*CLPPLOT(I)%EQN(1)
-   X(1)=DX;    X(2)=X(1);  X(3)=X(1);  X(4)=X(1)
-   Y(1)=BOT%Y; Y(2)=Y(1);  Y(3)=TOP%Y; Y(4)=Y(3)
-   Z(1)=BOT%Z; Z(2)=TOP%Z; Z(3)=Z(2);  Z(4)=Z(1)
-  ENDIF
-  !## south/north clipping plane
-  IF(ABS(CLPPLOT(I)%EQN(2)).EQ.1.0_GLDOUBLE)THEN
-   DY=(TOP%Y-BOT%Y)*REAL(CLPPLOT(I)%IPOS)/100.0
-   DY=CLPPLOT(I)%Y+DY*CLPPLOT(I)%EQN(2)
-   Y(1)=DY;    Y(2)=Y(1);  Y(3)=Y(1);  Y(4)=Y(1)
-   X(1)=BOT%X; X(2)=X(1);  X(3)=TOP%X; X(4)=X(3)
-   Z(1)=BOT%Z; Z(2)=TOP%Z; Z(3)=Z(2);  Z(4)=Z(1)
-  ENDIF
-  !## top/bottom clipping plane
-  IF(ABS(CLPPLOT(I)%EQN(3)).EQ.1.0_GLDOUBLE)THEN
-   DZ=(TOP%Z-BOT%Z)*REAL(CLPPLOT(I)%IPOS)/100.0
-   DZ=CLPPLOT(I)%Z+DZ*CLPPLOT(I)%EQN(3)
-   Z(1)=DZ;    Z(2)=Z(1);  Z(3)=Z(1);  Z(4)=Z(1)
-   X(1)=BOT%X; X(2)=X(1);  X(3)=TOP%X; X(4)=X(3)
-   Y(1)=BOT%Y; Y(2)=TOP%Y; Y(3)=Y(2);  Y(4)=Y(1)
-  ENDIF
-  CALL IMOD3D_SETCOLOR(CLPPLOT(I)%ICOLOR)
-  T=REAL(CLPPLOT(I)%ITHICKNESS)
-  CALL GLLINEWIDTH(T)
-  CALL GLBEGIN(GL_QUADS)
-  DO J=1,4
-   CALL GLVERTEX3F(X(J),Y(J),Z(J))
-  ENDDO
-  CALL GLEND()
-
+ 
+  CALL IMOD3D_DISPLAY_CLP_DRAW(I,0) !1) !0)
+ 
  END DO
 
  CALL GLPOLYGONMODE(GL_BACK, GL_FILL); CALL GLPOLYGONMODE(GL_FRONT,GL_FILL)
 
  END SUBROUTINE IMOD3D_DISPLAY_CLP
  
+ !###======================================================================
+ SUBROUTINE IMOD3D_DISPLAY_CLP_DRAW(I,ISHADE)
+ !###======================================================================
+ IMPLICIT NONE
+ INTEGER,INTENT(IN) :: I,ISHADE
+ INTEGER :: J
+ REAL(GLFLOAT),DIMENSION(4) :: X,Y,Z
+ REAL(GLFLOAT) :: T,DX,DY,DZ
+     
+ !## west/east clipping plane
+ IF(ABS(CLPPLOT(I)%EQN(1)).EQ.1.0_GLDOUBLE)THEN
+  DX=(TOP%X-BOT%X)*REAL(CLPPLOT(I)%IPOS)/100.0
+  DX=CLPPLOT(I)%X+DX*CLPPLOT(I)%EQN(1)
+  X(1)=DX;    X(2)=X(1);  X(3)=X(1);  X(4)=X(1)
+  Y(1)=BOT%Y; Y(2)=Y(1);  Y(3)=TOP%Y; Y(4)=Y(3)
+  Z(1)=BOT%Z; Z(2)=TOP%Z; Z(3)=Z(2);  Z(4)=Z(1)
+ ENDIF
+ !## south/north clipping plane
+ IF(ABS(CLPPLOT(I)%EQN(2)).EQ.1.0_GLDOUBLE)THEN
+  DY=(TOP%Y-BOT%Y)*REAL(CLPPLOT(I)%IPOS)/100.0
+  DY=CLPPLOT(I)%Y+DY*CLPPLOT(I)%EQN(2)
+  Y(1)=DY;    Y(2)=Y(1);  Y(3)=Y(1);  Y(4)=Y(1)
+  X(1)=BOT%X; X(2)=X(1);  X(3)=TOP%X; X(4)=X(3)
+  Z(1)=BOT%Z; Z(2)=TOP%Z; Z(3)=Z(2);  Z(4)=Z(1)
+ ENDIF
+ !## top/bottom clipping plane
+ IF(ABS(CLPPLOT(I)%EQN(3)).EQ.1.0_GLDOUBLE)THEN
+  DZ=(TOP%Z-BOT%Z)*REAL(CLPPLOT(I)%IPOS)/100.0
+  DZ=CLPPLOT(I)%Z+DZ*CLPPLOT(I)%EQN(3)
+  Z(1)=DZ;    Z(2)=Z(1);  Z(3)=Z(1);  Z(4)=Z(1)
+  X(1)=BOT%X; X(2)=X(1);  X(3)=TOP%X; X(4)=X(3)
+  Y(1)=BOT%Y; Y(2)=TOP%Y; Y(3)=Y(2);  Y(4)=Y(1)
+ ENDIF
+ 
+ !## outline clipping planes
+ IF(ISHADE.EQ.0)THEN
+
+  CALL GLPOLYGONMODE(GL_FRONT,GL_LINE); CALL GLPOLYGONMODE(GL_BACK, GL_LINE)
+
+  CALL IMOD3D_SETCOLOR(CLPPLOT(I)%ICOLOR)
+  T=REAL(CLPPLOT(I)%ITHICKNESS)
+  CALL GLLINEWIDTH(T)
+
+ !## solid fill of clipping planes
+ ELSE
+
+  CALL GLPOLYGONMODE(GL_BACK, GL_FILL); CALL GLPOLYGONMODE(GL_FRONT,GL_FILL)
+
+  !## show shaded surface
+  CALL GLCOLORMATERIAL(GL_FRONT_AND_BACK,GL_AMBIENT_AND_DIFFUSE)
+  CALL GLENABLE(GL_COLOR_MATERIAL)
+  CALL IMOD3D_SETCOLOR(CLPPLOT(I)%ICOLOR) !## include alpha
+  CALL IMOD3D_SETNORMALVECTOR((/X(1),Y(1),Z(1)/),(/X(2),Y(2),Z(2)/),(/X(3),Y(3),Z(3)/))
+
+ ENDIF
+ 
+ CALL GLBEGIN(GL_QUADS)
+ DO J=1,4
+  CALL GLVERTEX3F(X(J),Y(J),Z(J))
+ ENDDO
+ CALL GLEND()
+ 
+ IF(ISHADE.EQ.1)THEN
+  CALL GLDISABLE(GL_COLOR_MATERIAL)
+  CALL GLDISABLE(GL_LIGHTING)
+ ENDIF
+ 
+ END SUBROUTINE IMOD3D_DISPLAY_CLP_DRAW
+
  !###======================================================================
  SUBROUTINE IMOD3D_DISPLAY_IPF(IMODE)
  !###======================================================================
@@ -627,7 +663,7 @@ CONTAINS
 !Reset the stencil function so that it draws only where the stencil value is nonzero, and draw a large
 !polygon of the capping color across the entire screen.
 
-   IF(.TRUE.)THEN
+   IF(.FALSE.)THEN
     CALL GLENABLE(GL_STENCIL_TEST)
     !## enable cull-face plotting
     CALL GLENABLE(GL_CULL_FACE)
@@ -649,18 +685,14 @@ CONTAINS
     
     CALL GLDISABLE(GL_CULL_FACE)
     !## disable all clipping planes
-    DO J=1,NCLPLIST; CALL GDISABLE(CLPPLANES(J)); ENDDO
+    DO J=1,NCLPLIST; CALL GLDISABLE(CLPPLANES(J)); ENDDO
     !## draw only where stencil is 1
     CALL GLSTENCILFUNC(GL_EQUAL,1_GLINT,3_GLUINT)
     !## set stencil to 2
     CALL GLSTENCILOP(GL_KEEP,GL_KEEP,GL_INCR)
 
-!    !## draw cap - use the clipplane vertices
-!    CALL DRAWCAP()
-!glBegin(GL_QUADS); // rendering the plane quad. Note, it should be big 
-!                   // enough to cover all clip edge area.
-!for(int j=3; j>=0; j--) glVertex3fv(verts[j]);
-!glEnd();
+    !## draw cap - use the clipplane vertices
+    CALL IMOD3D_DISPLAY_CLP_DRAW(I,1)
         
     CALL GLDISABLE(GL_STENCIL_TEST)
     !## turn on clipping planes
@@ -855,8 +887,8 @@ CONTAINS
  IMPLICIT NONE
  INTEGER,INTENT(IN) :: IT
  INTEGER :: I
- REAL(KIND=GLFLOAT) :: XW,XR,XG,XB
- INTEGER :: IR,IG,IB
+ REAL(KIND=GLFLOAT) :: XW !,XR,XG,XB
+! INTEGER :: IR,IG,IB
 
 ! CALL GLPOLYGONMODE(GL_BACK, GL_FILL); CALL GLPOLYGONMODE(GL_FRONT,GL_FILL) 
 
@@ -950,7 +982,6 @@ CONTAINS
  SUBROUTINE IMOD3D_DISPLAY_LEGEND() 
  !###======================================================================
  IMPLICIT NONE
- INTEGER :: N,M
 
  IF(LEGENDINDEX.EQ.0)RETURN
 
