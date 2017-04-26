@@ -614,8 +614,64 @@ CONTAINS
 
    ENDIF
 
-   CALL GLCALLLIST(IDFLISTINDEX(I))
+   !## apply capping if clipping planes are active ...
 
+!Capping - Suppose you're drawing a closed convex object (or several of them, as long as they don't
+!intersect or enclose each other) made up of several polygons, and you have a clipping plane that
+!may or may not slice off a piece of it. Suppose that if the plane does intersect the object, you want
+!to cap the object with some constant-colored surface, rather than seeing the inside of it. To do this,
+!clear the stencil buffer to zeros, and begin drawing with stenciling enabled and the stencil
+!comparison function set to always accept fragments. Invert the value in the stencil planes each
+!time a fragment is accepted. After all the objects are drawn, regions of the screen where no
+!capping is required have zeros in the stencil planes, and regions requiring capping are nonzero.
+!Reset the stencil function so that it draws only where the stencil value is nonzero, and draw a large
+!polygon of the capping color across the entire screen.
+
+   IF(.TRUE.)THEN
+    CALL GLENABLE(GL_STENCIL_TEST)
+    !## enable cull-face plotting
+    CALL GLENABLE(GL_CULL_FACE)
+    !## don't change capped pixels
+    CALL GLSTENCILFUNC(GL_GEQUAL,1_GLINT,3_GLUINT)
+    !## render frontfacing only
+    CALL GLCULLFACE(GL_BACK)
+    !## clear stencil to zero
+    CALL GLSTENCILOP(GL_KEEP,GL_KEEP,GL_ZERO)
+    !## draw model
+    CALL GLCALLLIST(IDFLISTINDEX(I))
+
+    !## render backfacing only
+    CALL GLCULLFACE(GL_FRONT)
+    !## set stencil to 1 (reference value)
+    CALL GLSTENCILOP(GL_KEEP,GL_KEEP,GL_REPLACE)
+    !## draw model
+    CALL GLCALLLIST(IDFLISTINDEX(I))
+    
+    CALL GLDISABLE(GL_CULL_FACE)
+    !## disable all clipping planes
+    DO J=1,NCLPLIST; CALL GDISABLE(CLPPLANES(J)); ENDDO
+    !## draw only where stencil is 1
+    CALL GLSTENCILFUNC(GL_EQUAL,1_GLINT,3_GLUINT)
+    !## set stencil to 2
+    CALL GLSTENCILOP(GL_KEEP,GL_KEEP,GL_INCR)
+
+!    !## draw cap - use the clipplane vertices
+!    CALL DRAWCAP()
+!glBegin(GL_QUADS); // rendering the plane quad. Note, it should be big 
+!                   // enough to cover all clip edge area.
+!for(int j=3; j>=0; j--) glVertex3fv(verts[j]);
+!glEnd();
+        
+    CALL GLDISABLE(GL_STENCIL_TEST)
+    !## turn on clipping planes
+    DO J=1,NCLPLIST; IF(CLPPLOT(J)%ISEL.EQ.1)CALL GLENABLE(CLPPLANES(J)); ENDDO
+
+   ELSE
+
+    CALL GLCALLLIST(IDFLISTINDEX(I))
+
+   ENDIF
+   
    !## turn of light
    IF(IDFPLOT(I)%ISHADED.EQ.1)CALL GLDISABLE(GL_LIGHTING)
   

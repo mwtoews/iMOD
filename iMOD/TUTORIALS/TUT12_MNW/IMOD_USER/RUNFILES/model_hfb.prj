@@ -54,7 +54,7 @@
 
 0001,(HFB),1, Horizontal Flow Boundary,[HFB]
 001,001
- 1,2, 002,   1.000000    ,   1000.000    ,  -999.9900    ,'D:\OSS\iMOD\TUTORIALS\TUT12_MNW\DBASE\HFB\sheet_pile.gen'
+ 1,2, 002,   0.000000    ,   1000.000    ,  -999.9900    ,'D:\OSS\iMOD\TUTORIALS\TUT12_MNW\DBASE\HFB\sheet_pile.gen'
 
 0001,(MNW),1, Multi Node Well Package,[WRL]
 2016-12-01 00:00:00
