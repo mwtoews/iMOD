@@ -25,7 +25,7 @@
 				<Tool Name="VFPostBuildEventTool"/>
 				<Tool Name="VFManifestTool"/></Configuration>
 		<Configuration Name="Debug|x64">
-				<Tool Name="VFFortranCompilerTool" SuppressStartupBanner="true" DebugInformationFormat="debugEnabled" Optimization="optimizeDisabled" BufferedIO="true" HeapArrays="0" Preprocess="preprocessYes" AdditionalIncludeDirectories="..\..\..\imod\lib\DELFTIO\OS_X64;..\..\..\imod\lib\WINTERACTER\os_x64\INCLUDE;..\..\..\IMOD\LIB\WINTERACTER\OS_X64" Interfaces="true" OpenMP="OpenMPParallelCode" WarnDeclarations="true" WarnUnusedVariables="true" WarnIgnoreLOC="true" WarnUncalled="true" SuppressUsageMessages="true" WarnInterfaces="true" LocalSavedScalarsZero="true" FloatingPointModel="strict" Traceback="true" NullPointerCheck="true" BoundsCheck="true" UninitializedVariablesCheck="true" RuntimeLibrary="rtMultiThreadedDebug" UseWindowsLibs="true"/>
+				<Tool Name="VFFortranCompilerTool" SuppressStartupBanner="true" DebugInformationFormat="debugEnabled" Optimization="optimizeDisabled" BufferedIO="true" HeapArrays="0" Preprocess="preprocessYes" AdditionalIncludeDirectories="..\..\..\imod\lib\DELFTIO\OS_X64;..\..\..\imod\lib\WINTERACTER\os_x64\INCLUDE;..\..\..\IMOD\LIB\WINTERACTER\OS_X64" Interfaces="true" WarnDeclarations="true" WarnUnusedVariables="true" WarnIgnoreLOC="true" WarnUncalled="true" SuppressUsageMessages="true" WarnInterfaces="true" LocalSavedScalarsZero="true" FloatingPointModel="strict" Traceback="true" NullPointerCheck="true" BoundsCheck="true" UninitializedVariablesCheck="true" RuntimeLibrary="rtMultiThreadedDebug" UseWindowsLibs="true"/>
 				<Tool Name="VFLinkerTool" OutputFile="..\..\bin\$(ProjectName)_X64_D.exe" LinkIncremental="linkIncrementalNo" SuppressStartupBanner="true" AdditionalLibraryDirectories="..\..\..\imod\lib\DELFTIO\OS_X64" GenerateDebugInformation="true" SubSystem="subSystemConsole" LargeAddressAware="addrAwareLarge"/>
 				<Tool Name="VFResourceCompilerTool" AdditionalIncludeDirectories="..\..\..\imod\lib\WINTERACTER\os_x64\include" ShowProgress="true" ResourceOutputFileName="..\..\..\iMOD\SRC\resource.res"/>
 				<Tool Name="VFMidlTool" SuppressStartupBanner="true" TargetEnvironment="midlTargetAMD64"/>
@@ -145,6 +145,9 @@
 		<File RelativePath="..\..\SRC\imod_geoconnect\imod_geoconnect_par.f90"/></Filter>
 		<Filter Name="imod_googleearth">
 		<File RelativePath="..\..\SRC\imod_googleearth\imod_google.f90"/></Filter>
+		<Filter Name="imod_graph">
+		<File RelativePath="..\..\SRC\imod_graph\imod_graph.f90"/>
+		<File RelativePath="..\..\SRC\imod_graph\imod_graph_par.f90"/></Filter>
 		<Filter Name="imod_gxg">
 		<File RelativePath="..\..\..\iMOD\SRC\imod_gxg\imod_gxg_compute.f90"/>
 		<File RelativePath="..\..\..\iMOD\SRC\imod_gxg\imod_gxg_par.f90"/></Filter>
@@ -460,9 +463,6 @@
 		<File RelativePath="..\..\..\iMOD\SRC\imod_wbal\imod_wbal_compute.f90"/>
 		<File RelativePath="..\..\SRC\imod_wbal\imod_wbal_graphics.f90"/>
 		<File RelativePath="..\..\..\iMOD\SRC\imod_wbal\imod_wbal_par.f90"/></Filter>
-		<Filter Name="imod_graph">
-		<File RelativePath="..\..\SRC\imod_graph\imod_graph.f90"/>
-		<File RelativePath="..\..\SRC\imod_graph\imod_graph_par.f90"/></Filter>
 		<Filter Name="programs">
 		<File RelativePath="..\..\..\iMOD\SRC\imod_main\imod_prg.f90">
 			<FileConfiguration Name="Debug|Win32">

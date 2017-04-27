@@ -136,10 +136,10 @@ CONTAINS
  
   !## put transparancy last - used fixed depth mask and plot all transparant images
   !## freeze depthmask for transluscent plotting
-  LDMASK=.FALSE.; CALL GLDEPTHMASK(LDMASK)
-  IF(NIDFLIST.GT.0)CALL IMOD3D_DISPLAY_IDF(IMODE,1)
-  IF(NGENLIST.GT.0)CALL IMOD3D_DISPLAY_GEN(1)
-  LDMASK=.TRUE.; CALL GLDEPTHMASK(LDMASK)
+!  LDMASK=.FALSE.; CALL GLDEPTHMASK(LDMASK)
+!  IF(NIDFLIST.GT.0)CALL IMOD3D_DISPLAY_IDF(IMODE,1)
+!  IF(NGENLIST.GT.0)CALL IMOD3D_DISPLAY_GEN(1)
+!  LDMASK=.TRUE.; CALL GLDEPTHMASK(LDMASK)
 
   DO I=1,NCLPLIST; CALL GLDISABLE(CLPPLANES(I)); END DO
 
@@ -409,26 +409,24 @@ CONTAINS
   ENDIF
  END DO
 
- !## plot clipping planes first than activate them
- DO I=1,NCLPLIST
+! !## plot clipping planes first than activate them
+! DO I=1,NCLPLIST
 !  !## do not use inactive clipping planes
 !  IF(CLPPLOT(I)%ISEL.EQ.0)CYCLE
-  !## do not plot clipping planes with zero thickness
-  IF(CLPPLOT(I)%ITHICKNESS.LE.0)CYCLE
- 
-  CALL IMOD3D_DISPLAY_CLP_DRAW(I,0) !1) !0)
- 
- END DO
+!  !## do not plot clipping planes with zero thickness
+!  IF(CLPPLOT(I)%ITHICKNESS.LE.0)CYCLE
+!  CALL IMOD3D_DISPLAY_CLP_DRAW(I,0)
+! END DO
 
  CALL GLPOLYGONMODE(GL_BACK, GL_FILL); CALL GLPOLYGONMODE(GL_FRONT,GL_FILL)
 
  END SUBROUTINE IMOD3D_DISPLAY_CLP
  
  !###======================================================================
- SUBROUTINE IMOD3D_DISPLAY_CLP_DRAW(I,ISHADE)
+ SUBROUTINE IMOD3D_DISPLAY_CLP_DRAW(I,ICOLOR)
  !###======================================================================
  IMPLICIT NONE
- INTEGER,INTENT(IN) :: I,ISHADE
+ INTEGER,INTENT(IN) :: I,ICOLOR
  INTEGER :: J
  REAL(GLFLOAT),DIMENSION(4) :: X,Y,Z
  REAL(GLFLOAT) :: T,DX,DY,DZ
@@ -459,7 +457,7 @@ CONTAINS
  ENDIF
  
  !## outline clipping planes
- IF(ISHADE.EQ.0)THEN
+ IF(ICOLOR.EQ.0)THEN
 
   CALL GLPOLYGONMODE(GL_FRONT,GL_LINE); CALL GLPOLYGONMODE(GL_BACK, GL_LINE)
 
@@ -473,9 +471,10 @@ CONTAINS
   CALL GLPOLYGONMODE(GL_BACK, GL_FILL); CALL GLPOLYGONMODE(GL_FRONT,GL_FILL)
 
   !## show shaded surface
+!  CALL GLENABLE(GL_LIGHTING)
   CALL GLCOLORMATERIAL(GL_FRONT_AND_BACK,GL_AMBIENT_AND_DIFFUSE)
   CALL GLENABLE(GL_COLOR_MATERIAL)
-  CALL IMOD3D_SETCOLOR(CLPPLOT(I)%ICOLOR) !## include alpha
+  CALL IMOD3D_SETCOLOR(ICOLOR) !CLPPLOT(I)%ICOLOR) !## include alpha
   CALL IMOD3D_SETNORMALVECTOR((/X(1),Y(1),Z(1)/),(/X(2),Y(2),Z(2)/),(/X(3),Y(3),Z(3)/))
 
  ENDIF
@@ -486,9 +485,9 @@ CONTAINS
  ENDDO
  CALL GLEND()
  
- IF(ISHADE.EQ.1)THEN
+ IF(ICOLOR.EQ.1)THEN
   CALL GLDISABLE(GL_COLOR_MATERIAL)
-  CALL GLDISABLE(GL_LIGHTING)
+!  CALL GLDISABLE(GL_LIGHTING)
  ENDIF
  
  END SUBROUTINE IMOD3D_DISPLAY_CLP_DRAW
@@ -597,7 +596,8 @@ CONTAINS
  INTEGER :: I,J
  INTEGER,INTENT(IN) :: IMODE,IT
  REAL(KIND=GLDOUBLE) :: TSTACK
- 
+ INTEGER(KIND=GLBYTE) :: IJ
+
  TSTACK=0.0_GLDOUBLE
  DO I=1,SIZE(IDFLISTINDEX) 
   IF(IDFPLOT(I)%ISEL.NE.1.OR.IDFLISTINDEX(I).EQ.0)CYCLE
@@ -663,40 +663,78 @@ CONTAINS
 !Reset the stencil function so that it draws only where the stencil value is nonzero, and draw a large
 !polygon of the capping color across the entire screen.
 
-   IF(.FALSE.)THEN
+   !## capping
+   IF(.TRUE.)THEN
+   
     CALL GLENABLE(GL_STENCIL_TEST)
-    !## enable cull-face plotting
-    CALL GLENABLE(GL_CULL_FACE)
-    !## don't change capped pixels
-    CALL GLSTENCILFUNC(GL_GEQUAL,1_GLINT,3_GLUINT)
-    !## render frontfacing only
-    CALL GLCULLFACE(GL_BACK)
-    !## clear stencil to zero
-    CALL GLSTENCILOP(GL_KEEP,GL_KEEP,GL_ZERO)
-    !## draw model
-    CALL GLCALLLIST(IDFLISTINDEX(I))
-
-    !## render backfacing only
-    CALL GLCULLFACE(GL_FRONT)
-    !## set stencil to 1 (reference value)
-    CALL GLSTENCILOP(GL_KEEP,GL_KEEP,GL_REPLACE)
-    !## draw model
-    CALL GLCALLLIST(IDFLISTINDEX(I))
+!    CALL GLSTENCILMASK(1_GLUINT) !.FALSE._GLBOOLEAN)
+!    CALL GLCLEARSTENCIL(0_GLUINT)
+    CALL GLCLEAR(GL_STENCIL_BUFFER_BIT)
     
-    CALL GLDISABLE(GL_CULL_FACE)
-    !## disable all clipping planes
-    DO J=1,NCLPLIST; CALL GLDISABLE(CLPPLANES(J)); ENDDO
-    !## draw only where stencil is 1
-    CALL GLSTENCILFUNC(GL_EQUAL,1_GLINT,3_GLUINT)
-    !## set stencil to 2
-    CALL GLSTENCILOP(GL_KEEP,GL_KEEP,GL_INCR)
+!    WRITE(*,*) glIsEnabled(GL_STENCIL_TEST) - true
+    CALL IMOD3D_ERROR('STENCIL')
+    IF(.TRUE.)THEN
+    
+!    CALL GLCOLORMASK(.FALSE._GLBOOLEAN,.FALSE._GLBOOLEAN,.FALSE._GLBOOLEAN,.FALSE._GLBOOLEAN)
+!    CALL glDepthMask(.FALSE._GLBOOLEAN)
 
-    !## draw cap - use the clipplane vertices
-    CALL IMOD3D_DISPLAY_CLP_DRAW(I,1)
+!     call glStencilFunc(GL_ALWAYS, 1_GLINT, 1_GLUINT);
+!     call glStencilOp(GL_KEEP, GL_ZERO, GL_ZERO);
+!     call glStencilOp(GL_KEEP, GL_INVERT, GL_INVERT);
+     CALL GLCALLLIST(IDFLISTINDEX(I))
+     DO J=1,NCLPLIST; CALL GLDISABLE(CLPPLANES(J)); ENDDO    
+!    ** Use a stencil func/op which passes only where there is a bit set
+!    ** in the stencil buffer.  We also zero the bits as we go so that we
+!    ** don't have to explicitly clear the stencil buffer each frame.
+!     call glStencilFunc(GL_NOTEQUAL, 1_GLINT, 1_GLUINT)
+!     call glStencilFunc(GL_EQUAL, 1_GLINT, 1_GLUINT)
+!     call glStencilOp(GL_KEEP, GL_ZERO, GL_ZERO)
+
+     !CALL IMOD3D_DISPLAY_SAVE(ID_CLIPBOARD)
+     
+     !## draw cap - use the clipplane vertices
+     CALL IMOD3D_DISPLAY_CLP_DRAW(I,IDFPLOT(I)%ICOLOR)
         
-    CALL GLDISABLE(GL_STENCIL_TEST)
-    !## turn on clipping planes
-    DO J=1,NCLPLIST; IF(CLPPLOT(J)%ISEL.EQ.1)CALL GLENABLE(CLPPLANES(J)); ENDDO
+     CALL GLDISABLE(GL_STENCIL_TEST)
+     !## turn on clipping planes
+     DO J=1,NCLPLIST; IF(CLPPLOT(J)%ISEL.EQ.1)CALL GLENABLE(CLPPLANES(J)); ENDDO
+
+    else
+
+     !## enable cull-face plotting
+     CALL GLENABLE(GL_CULL_FACE)
+     !## don't change capped pixels
+     CALL GLSTENCILFUNC(GL_GEQUAL,1_GLINT,3_GLUINT)
+     !## render frontfacing only - discard backface
+     CALL GLCULLFACE(GL_BACK)
+     !## clear stencil to zero
+     CALL GLSTENCILOP(GL_KEEP,GL_KEEP,GL_ZERO)
+     !## draw model
+     CALL GLCALLLIST(IDFLISTINDEX(I))
+
+     !## render backfacing only - discard frontface
+     CALL GLCULLFACE(GL_FRONT)
+     !## set stencil to 1 (reference value)
+     CALL GLSTENCILOP(GL_KEEP,GL_KEEP,GL_REPLACE)
+     !## draw model
+     CALL GLCALLLIST(IDFLISTINDEX(I))
+    
+     CALL GLDISABLE(GL_CULL_FACE)
+     !## disable all clipping planes
+     DO J=1,NCLPLIST; CALL GLDISABLE(CLPPLANES(J)); ENDDO
+     !## draw only where stencil is 1
+     CALL GLSTENCILFUNC(GL_EQUAL,1_GLINT,3_GLUINT)
+     !## set stencil to 2
+     CALL GLSTENCILOP(GL_KEEP,GL_KEEP,GL_INCR)
+
+     !## draw cap - use the clipplane vertices
+     CALL IMOD3D_DISPLAY_CLP_DRAW(I,IDFPLOT(I)%ICOLOR)
+        
+     CALL GLDISABLE(GL_STENCIL_TEST)
+     !## turn on clipping planes
+     DO J=1,NCLPLIST; IF(CLPPLOT(J)%ISEL.EQ.1)CALL GLENABLE(CLPPLANES(J)); ENDDO
+
+    endif
 
    ELSE
 
@@ -1021,10 +1059,14 @@ CONTAINS
  INTEGER(KIND=GLSIZEI) :: NDX,NDY 
  INTEGER(GLINT) :: IVIEWPORT(4) 
  REAL(KIND=GLFLOAT),DIMENSION(:),ALLOCATABLE :: FRGB
+ INTEGER(KIND=GLFLOAT),DIMENSION(:),ALLOCATABLE :: INDX
  INTEGER,DIMENSION(:),ALLOCATABLE :: IRGB 
  INTEGER :: IHANDLE,I
  CHARACTER(LEN=256) :: FNAME
  REAL(KIND=GLFLOAT),DIMENSION(3) :: GLCOLOR
+ LOGICAL :: LEX
+ 
+ LEX=.TRUE.
  
  IF(ID.EQ.ID_SAVEAS)THEN
   IF(.NOT.UTL_WSELECTFILE('All Known Files (*.bmp;*.pcx;*.png;*.jpg)|*.bmp;*.pcx;*.png;*.jpg|BitMap (*.bmp)|*.bmp| &
@@ -1036,13 +1078,33 @@ CONTAINS
  !## capture entire screen
  CALL GLGETINTEGERV(GL_VIEWPORT,IVIEWPORT)
  NDX=IVIEWPORT(3); NDY=IVIEWPORT(4)
- ALLOCATE(FRGB(NDX*NDY*3),IRGB(NDX*NDY))
+
+ ALLOCATE(IRGB(NDX*NDY))
+
+ IF(LEX)THEN
+  ALLOCATE(FRGB(NDX*NDY*3))
+ ELSE
+  ALLOCATE(INDX(NDX*NDY))
+ ENDIF
+ 
+!Specifies the format of the pixel data. The following symbolic values are accepted: GL_STENCIL_INDEX, GL_DEPTH_COMPONENT, GL_DEPTH_STENCIL,
+!GL_RED, GL_GREEN, GL_BLUE, GL_RGB, GL_BGR, GL_RGBA, and GL_BGRA. 
  
  CALL GLREADBUFFER(GL_FRONT)
- CALL GLREADPIXELS(0_GLINT,0_GLINT,NDX,NDY,GL_RGB,GL_FLOAT,FRGB)
+ IF(LEX)THEN
+  CALL GLREADPIXELS(0_GLINT,0_GLINT,NDX,NDY,GL_RGB,GL_FLOAT,FRGB)
+ ELSE
+  CALL GLREADPIXELS(0_GLINT,0_GLINT,NDX,NDY,GL_STENCIL_INDEX,GL_FLOAT,INDX)
+ ENDIF
  
  DO I=0,(NDX*NDY)-1
-  GLCOLOR(1)=FRGB(I*3+1); GLCOLOR(2)=FRGB(I*3+2); GLCOLOR(3)=FRGB(I*3+3)
+  IF(LEX)THEN
+   GLCOLOR(1)=FRGB(I*3+1); GLCOLOR(2)=FRGB(I*3+2); GLCOLOR(3)=FRGB(I*3+3)
+  ELSE
+   GLCOLOR(1)=INDX(I+1)
+   GLCOLOR(2)=INDX(I+1)
+   GLCOLOR(3)=INDX(I+1)
+  ENDIF
   CALL IMOD3D_GETCOLOR(IRGB(I+1),GLCOLOR)
  ENDDO
  
@@ -1058,7 +1120,12 @@ CONTAINS
  ENDIF
  CALL WBITMAPDESTROY(IHANDLE)
  
- DEALLOCATE(FRGB,IRGB)
+ DEALLOCATE(IRGB)
+ IF(LEX)THEN
+  DEALLOCATE(FRGB)
+ ELSE
+  DEALLOCATE(INDX)
+ ENDIF
  CALL GLREADBUFFER(GL_BACK)
  
  IF(ID.EQ.ID_SAVEAS)THEN

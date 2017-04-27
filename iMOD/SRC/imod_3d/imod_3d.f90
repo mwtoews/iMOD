@@ -35,7 +35,7 @@ USE MOD_PLINES_PAR, ONLY : IDF
 
 INTEGER(GLINT),DIMENSION(1) :: MAXSTDEPTH,STDEPTH !## max./current stack depth selection
 INTEGER(GLINT),DIMENSION(1) :: DUMMY
-INTEGER(GLINT),DIMENSION(1) :: MAXCPLANES
+INTEGER(GLINT),DIMENSION(1) :: MAXCPLANES,MBITS
 REAL,PARAMETER :: G2R=360.0/(2.0*PI) 
 
 CONTAINS
@@ -298,11 +298,13 @@ CONTAINS
  !###======================================================================
  SUBROUTINE IMOD3D_INIT(IACTSOLID,IACTPATHLINE)
  !###======================================================================
+! USE IFOPNGL
  IMPLICIT NONE
  INTEGER,INTENT(IN) :: IACTSOLID,IACTPATHLINE
  INTEGER :: IFLAGS,I
  CHARACTER(LEN=256) :: TITLE
-
+ LOGICAL(KIND=GLBOOLEAN),DIMENSION(1) :: LEX
+ 
  CALL WINDOWSELECT(0)
  IF(WMENUGETSTATE(ID_3DTOOL,2).EQ.1)THEN
   CALL IMOD3D_CLOSE()
@@ -326,9 +328,6 @@ CONTAINS
  IRENDER_3D=-1
  
  CALL WDIALOGLOAD(ID_D3DSETTINGS_RENDER)
- 
-! !## initialize axes
-! XYZAXES(1)=4.0_GLFLOAT; XYZAXES(2)=4.0_GLFLOAT; XYZAXES(3)=2.0_GLFLOAT
 
  IFLAGS=SYSMENUON+MINBUTTON+MAXBUTTON+STATUSBAR 
  TITLE='3D Tool'
@@ -388,12 +387,32 @@ CONTAINS
  
  !## select openGL as the current driver for plotting purposes
  CALL WDIALOGSELECT(ID_D3DSETTINGS); I=WINFOERROR(1)
- CALL WGLSELECT(3,IDF_PICTURE2,WGLDOUBLEBUFFER); I=WINFOERROR(1)
+ CALL WGLSELECT(3,IDF_PICTURE2,WGLDOUBLEBUFFER); I=WINFOERROR(1)  !+wglColourIndex
  IWINWIDTH=WINFODIALOGFIELD(IDF_PICTURE2,FIELDWIDTH)
  IWINHEIGHT=WINFODIALOGFIELD(IDF_PICTURE2,FIELDHEIGHT)
  
  CALL GLGETINTEGERV(GL_MAX_NAME_STACK_DEPTH,MAXSTDEPTH)
  CALL GLGETINTEGERV(GL_MAX_CLIP_PLANES,MAXCPLANES)
+ 
+! CALL glutInitDisplayMode(GL_RGB)
+ 
+! CALL GLDISABLE(GL_DEPTH_TEST)
+! call setpixelformat()
+! 
+! call glutinit()
+ 
+ CALL GLENABLE(GL_STENCIL_TEST)
+ CALL GLGETINTEGERV(GL_STENCIL_BITS,MBITS)   !0
+ CALL GLGETINTEGERV(GL_GREEN_BITS,MBITS)
+ CALL GLGETINTEGERV(GL_RED_BITS,MBITS)
+ CALL GLGETINTEGERV(GL_BLUE_BITS,MBITS)
+ CALL GLGETINTEGERV(GL_ALPHA_BITS,MBITS)
+ CALL GLGETINTEGERV(GL_DEPTH_BITS,MBITS)
+ CALL GLGETINTEGERV(GL_STENCIL_VALUE_MASK,mbits)  !-1
+! CALL GLGETINTEGERV(GL_STENCIL_BACK_WRITEMASK,mbits)
+ CALL GLGETBOOLEANV(GL_STENCIL_TEST,LEX)  !TRUE
+ CALL GLDISABLE(GL_STENCIL_TEST)
+ CALL GLGETINTEGERV(GL_DEPTH_BITS,MBITS)
 
  !## get display-list pointers for the clipping planes
  ALLOCATE(CLPPLOT(MAXCPLANES(1))) !CLPLISTINDEX(MAXCPLANES(1))
@@ -443,6 +462,65 @@ CONTAINS
  CALL WINDOWSELECT(IWIN); CALL WINDOWRAISE(IWIN)
  
  END SUBROUTINE IMOD3D_INIT
+
+!I've an 25 years old Fortran app running nicely under Windows 7 and Classic mode and complied and linked under Visual Studio 2010. 
+!
+!Now I make a new project under Visual Studio 2015 and it compiles and links nicely under Win32 but during running the follwing happens:
+!
+!All GDI graphics appears as it should
+!All OpenGL call run without any crash and they seem to consume computer time but nothing is rendered on the screen
+!My PixelFormatDescriptor is the one I've always used under Windows 7
+!
+!      DATA pfd / T_PIXELFORMATDESCRIPTOR (
+!     %   40,           !sizeof(T_PIXELFORMATDESCRIPTOR),
+!     %   1,
+!     %   IOR(PFD_DRAW_TO_WINDOW,
+!     %    IOR(PFD_SWAP_COPY,
+!     %     IOR(PFD_SUPPORT_GDI,
+!     %      IOR(PFD_SUPPORT_OPENGL,
+!     %          PFD_DOUBLEBUFFER)))),
+!     %   PFD_TYPE_RGBA,
+!     %   24,
+!     %   0, 0, 0, 0, 0, 0,
+!     %   0, 0,
+!     %   0, 0, 0, 0, 0,
+!     %   32,
+!     %   0,
+!     %   0,
+!     %   PFD_MAIN_PLANE,
+!     %   0,
+!     %   0, 0, 0) /
+!
+! Anyone having the same problem or having a solution to it?
+
+!The next section of code describes a Pixel Format. We choose a format that supports OpenGL and
+!double buffering, along with RGBA (red, green, blue, alpha channel). We try to find a pixel format
+!that matches the bits we decided on (16bit,24bit,32bit). Finally we set up a 16bit Z-Buffer. The
+!remaining parameters are either not used or are not important (aside from the stencil buffer and the
+!(slow) accumulation buffer). 
+!static PIXELFORMATDESCRIPTOR pfd= // pfd Tells Windows How We Want Things To Be
+!{
+!sizeof(PIXELFORMATDESCRIPTOR),
+!1,
+!PFD_DRAW_TO_WINDOW |
+!PFD_SUPPORT_OPENGL |
+!PFD_DOUBLEBUFFER, // Must Support Double Buffering
+!PFD_TYPE_RGBA,
+!bits,
+!0, 0, 0, 0, 0, 0, // Color Bits Ignored
+!0,
+!0,
+!0,
+!0, 0, 0, 0,
+!16,
+!0,
+!0,
+!PFD_MAIN_PLANE,
+!0,
+!0, 0, 0
+!};!If there were no errors while creating the window, we'll attempt to get an OpenGL Device Context. If
+!we can't get a DC an error message will pop onto the screen, and the program will quit (return
+!FALSE). 
 
  !###======================================================================
  LOGICAL FUNCTION IMOD3D_SETUPDISPLAY()
