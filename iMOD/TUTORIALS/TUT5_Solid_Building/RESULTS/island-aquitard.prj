@@ -1,16 +1,16 @@
 0001,(TOP) Top Elevation [DIS],1
 001,003
- 1,2,0001,   1.000000    ,  0.5000000    ,  -999.9900    ,'D:\roelofs_fs\_projecten\imod\webinar\dbase\surface_level.idf'
- 1,2,0002,   1.000000    ,   0.000000    ,  -999.9900    ,'d:\roelofs_fs\_projecten\imod\webinar\TUTORIALS\TUT5_Solid_Building\Aquitard_top.idf'
- 1,2,0003,   1.000000    , -0.5000000    ,  -15.00000    ,'d:\roelofs_fs\_projecten\imod\webinar\TUTORIALS\TUT5_Solid_Building\Aquitard_bot.idf'
+ 1,2,0001,   1.000000    ,  0.5000000    ,  -999.9900    ,'$DBASE$\TUTORIALS\TUT4_Initial_Modeling\surface_level.idf'
+ 1,2,0002,   1.000000    ,   0.000000    ,  -999.9900    ,'$DBASE$\TUTORIALS\TUT5_Solid_Building\Aquitard_top.idf'
+ 1,2,0003,   1.000000    , -0.5000000    ,  -15.00000    ,'$DBASE$\TUTORIALS\TUT5_Solid_Building\Aquitard_bot.idf'
 0001,(BOT) Bottom Elevation [DIS],1
 001,003
- 1,2,0001,   1.000000    ,   0.000000    ,  -999.9900    ,'d:\roelofs_fs\_projecten\imod\webinar\TUTORIALS\TUT5_Solid_Building\Aquitard_top.idf'
- 1,2,0002,   1.000000    , -0.5000000    ,  -15.00000    ,'d:\roelofs_fs\_projecten\imod\webinar\TUTORIALS\TUT5_Solid_Building\Aquitard_bot.idf'
- 1,2,0003,   1.000000    ,   0.000000    ,  -20.00000    ,'d:\roelofs_fs\_projecten\imod\webinar\TUTORIALS\TUT5_Solid_Building\BEDROCK.IDF'
+ 1,2,0001,   1.000000    ,   0.000000    ,  -999.9900    ,'$DBASE$\TUTORIALS\TUT5_Solid_Building\Aquitard_top.idf'
+ 1,2,0002,   1.000000    , -0.5000000    ,  -15.00000    ,'$DBASE$\TUTORIALS\TUT5_Solid_Building\Aquitard_bot.idf'
+ 1,2,0003,   1.000000    ,   0.000000    ,  -20.00000    ,'$DBASE$\TUTORIALS\TUT5_Solid_Building\BEDROCK.IDF'
 0001,(BND) Boundary Condition [BAS],1
 001,003
- 1,2,0001,   1.000000    ,   0.000000    ,  -999.9900    ,'D:\roelofs_fs\_projecten\imod\webinar\dbase\BOUNDARY.IDF'
+ 1,2,0001,   1.000000    ,   0.000000    ,  -999.9900    ,'$DBASE$\TUTORIALS\TUT4_Initial_Modeling\BOUNDARY.IDF'
  1,1,0002,   1.000000    ,   0.000000    ,   1.000000    ,''
  1,1,0003,   1.000000    ,   0.000000    ,   1.000000    ,''
 0001,(SHD) Starting Heads [BAS],1
@@ -30,7 +30,7 @@
 0001,(WEL) Wells [WEL],1
 STEADY-STATE
 001,001
- 1,2,0003,   1.000000    ,   0.000000    ,  -999.9900    ,'D:\roelofs_fs\_projecten\imod\webinar\dbase\WELL.IPF'
+ 1,2,0003,   1.000000    ,   0.000000    ,  -999.9900    ,'$DBASE$\TUTORIALS\TUT4_Initial_Modeling\WELL.IPF'
 0001,(RCH) Recharge [RCH],1
 STEADY-STATE
 001,001
