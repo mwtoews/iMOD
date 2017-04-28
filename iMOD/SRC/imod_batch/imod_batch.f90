@@ -5221,13 +5221,13 @@ CONTAINS
  SELECT CASE (IFORMAT)
   CASE (0)
    DO I=1,SIZE(IDFNAMES); WRITE(JU,'(I5,A)') I,','//TRIM(IDFNAMES(I)); ENDDO
-   WRITE(STRING,'(A6,3(A16))') 'File,','Population,','Mean,','Variance,'
+   WRITE(STRING,'(A6,3(A16))') 'File,','Population,','Mean,','St.Dev.,'
    DO I=1,21
     IF(I.NE.21)WRITE(STRING,'(A,11X,A2,I2,A2)') TRIM(STRING),'P(',(I-1)*5,'),'
     IF(I.EQ.21)WRITE(STRING,'(A,10X,A2,I3,A1)') TRIM(STRING),'P(',(I-1)*5,')'
    ENDDO
   CASE (1)
-   WRITE(STRING,'(A20,6(A16))') 'File,','Population,','Mean,','Variance','Min,','Max,','Median'
+   WRITE(STRING,'(A20,6(A16))') 'File,','Population,','Mean,','St.Dev.,','Min,','Max,','Median'
   CASE DEFAULT
    WRITE(*,'(A)') 'Wrong format chosen'
  END SELECT

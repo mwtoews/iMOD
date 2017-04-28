@@ -250,7 +250,7 @@ CONTAINS
    IF(J.EQ.3)WRITE(JU,'(/A)') 'Dynamics Difference' !Normal values'
    IF(J.EQ.4)WRITE(JU,'(/A)') 'Absolute Dynamics Difference' !values'
    IF(J.EQ.5)WRITE(JU,'(/A)') 'Correlation Coefficients'
-   WRITE(JU,'(2A10,2A15,99G15.7)') 'Layer','NPop.','Mean','Variance',(PERC(I),I=1,SIZE(PERC))
+   WRITE(JU,'(2A10,2A15,99G15.7)') 'Layer','NPop.','Mean','St.Dev.',(PERC(I),I=1,SIZE(PERC))
    DO IL=IL1,IL2
     II=0; DO I=1,N
      IF(RES(I)%ILAY.EQ.IL)THEN
@@ -278,7 +278,7 @@ CONTAINS
    IF(J.EQ.3)WRITE(JU,'(/A)') 'Dynamics Difference' !Normal values'
    IF(J.EQ.4)WRITE(JU,'(/A)') 'Absolute Dynamics Difference' !values'
    IF(J.EQ.5)WRITE(JU,'(/A)') 'Correlation Coefficients'
-   WRITE(JU,'(2A10,2(A15,A1),99(G15.7,A1))') 'Layer','NPop.','Mean','Variance',(PERC(I),I=1,SIZE(PERC))
+   WRITE(JU,'(2A10,2(A15,A1),99(G15.7,A1))') 'Layer','NPop.','Mean','St.Dev.',(PERC(I),I=1,SIZE(PERC))
    IF(J.EQ.1)X(1:N)=RES(1:N)%DH
    IF(J.EQ.2)X(1:N)=ABS(RES(1:N)%DH)
    IF(J.EQ.3)X(1:N)=RES(1:N)%DHW

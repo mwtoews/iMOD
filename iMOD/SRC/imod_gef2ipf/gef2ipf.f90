@@ -378,7 +378,7 @@ CONTAINS
     LINE=CHAR(39)//TRIM(RTOS(X,'F',2))//CHAR(39)//','//CHAR(39)//TRIM(RTOS(Y,'F',2))//CHAR(39)//','//CHAR(39)//'subset'//TRIM(ITOS(IDIR))// &
          '\'//TRIM(CID)//CHAR(39)//','//CHAR(39)//TRIM(RTOS(ZEND,'F',2))//CHAR(39)//','//CHAR(39)//TRIM(ITOS(0))//CHAR(39)
 
-    DO ICOL=1,NCOLIPF-1 !(MAXVAL(NCOLLINE)+5)
+    DO ICOL=1,NCOLIPF-1
      IF(IATTRIB(ICOL).EQ.0)THEN
       LINE=TRIM(LINE)//','//CHAR(39)//'NotAvailable'//CHAR(39)
      ELSE
@@ -467,7 +467,7 @@ CONTAINS
 
    LINE=CHAR(39)//TRIM(RTOS(X,'F',2))//CHAR(39)//','//CHAR(39)//TRIM(RTOS(Y,'F',2))//CHAR(39)//','//CHAR(39)// &
          TRIM(CID)//CHAR(39)//','//CHAR(39)//TRIM(RTOS(0.0,'F',1))//CHAR(39)//','//CHAR(39)//TRIM(ITOS(1))//CHAR(39)
-   DO ICOL=1,store_ncolline(1); LINE=TRIM(LINE)//','//CHAR(39)//'NotAvailable'//CHAR(39); ENDDO
+   DO ICOL=1,STORE_NCOLLINE(1); LINE=TRIM(LINE)//','//CHAR(39)//'NotAvailable'//CHAR(39); ENDDO
    WRITE(JU,'(A)') TRIM(LINE)
 
   ENDIF
