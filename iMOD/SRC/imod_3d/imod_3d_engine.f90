@@ -40,6 +40,8 @@ USE MOD_IPFASSFILE, ONLY : IPFOPENASSFILE,IPFREADASSFILELABEL,IPFREADASSFILE,IPF
             IPFASSFILEALLOCATE,IPFINITASSFILE
 USE MOD_IPF_PAR, ONLY : ASSF,IPF,NIPF,MAXLITHO,BH,NLITHO
 USE MOD_IPF, ONLY : IPFINIT,IPFREAD,IPFDEALLOCATE
+USE MOD_PROFILE, ONLY : PROFILE_COMPUTEPLOT,PROFILE_DEALLOCATE
+USE MOD_PROFILE_PAR, ONLY : MXNIDF,PROFIDF
 USE MOD_3D_PAR
 USE MOD_3D_UTL, ONLY : IMOD3D_RETURNCOLOR,IMOD3D_SETCOLOR,IMOD3D_DRAWIDF_SIZE,IMOD3D_CREATE_SXY,IMOD3D_BLANKOUT,IMOD3D_BLANKOUT_XY
 USE MOD_MDF, ONLY : READMDF,READMDF_GETN,MDF,MDFDEALLOCATE
@@ -1138,7 +1140,7 @@ CONTAINS
  
  CALL WINDOWSELECT(IWIN)
   
- !## see what meat we have in the bucket
+ !## see what "meat we have in the bucket"
  ALLOCATE(IDF(1)); CALL IDFNULLIFY(IDF(1))
  DO I=1,NIDFLIST
   IF(.NOT.IDFREAD(IDF(1),IDFPLOT(I)%FNAME,0))EXIT
@@ -3943,6 +3945,51 @@ SOLLOOP: DO I=1,NSOLLIST
  END SUBROUTINE IMOD3D_DRAWGEN
 
  !###======================================================================
+ LOGICAL FUNCTION IMOD3D_SOL_ADD()
+ !###======================================================================
+ IMPLICIT NONE
+ INTEGER :: I
+ 
+ !## copy dimensions for profile-tool
+ MXNIDF=NIDFLIST
+      
+ !## all idf in new-list storing idf-configuration
+ ALLOCATE(PROFIDF(MXNIDF)); DO I=1,SIZE(PROFIDF); CALL IDFNULLIFY(PROFIDF(I)%IDF); ENDDO
+ DO I=1,NIDFLIST
+  IF(.NOT.IDFREAD(PROFIDF(1)%IDF,IDFPLOT(I)%FNAME,0))EXIT
+ ENDDO
+      
+! IF(ASSOCIATED(XY))DEALLOCATE(XY); IF(ASSOCIATED(XYLABEL))DEALLOCATE(XYLABEL)
+! ALLOCATE(XY(2,MAX(MXCRD,NXY))); XY=0.0
+! ALLOCATE(XYLABEL(MAX(MXCRD,NXY))); XYLABEL=''
+
+!
+! ALLOCATE(XY(2,MXCRD),XYLABEL(MXCRD),SERIE(MXNIDF)); XYLABEL=''
+!
+! DO I=1,MXNIDF
+!  NULLIFY(SERIE(I)%X); NULLIFY(SERIE(I)%Y); PROFIDF(I)%LEG%NCLR=0
+! END DO
+!
+! DO I=1,MXNIDF
+!  ALLOCATE(SERIE(I)%X(MXSERIE),SERIE(I)%Y(MXSERIE))
+! END DO
+
+! DO I=1,NXY
+!  XY(1,I)=SPF(ISPF)%X(I)
+!  XY(2,I)=SPF(ISPF)%Y(I)
+! END DO      
+ !## compute profile through idf in 3D
+ CALL PROFILE_COMPUTEPLOT()
+!     !## start drawing a cross-section without those extra lines
+!     ISOLID=1; CALL SOLID_PROFILEFIT(1)
+!SOLID_PROFILEFITDRILL_CALC
+!     CALL SOLID_PROFILEUPDATECROSS(1,0)
+
+ CALL PROFILE_DEALLOCATE()
+
+ END FUNCTION IMOD3D_SOL_ADD
+ 
+ !###======================================================================
  LOGICAL FUNCTION IMOD3D_SOL()
  !###======================================================================
  IMPLICIT NONE
@@ -3954,12 +4001,14 @@ SOLLOOP: DO I=1,NSOLLIST
  REAL,DIMENSION(:,:),ALLOCATABLE :: ZT
  REAL,PARAMETER :: NODATA_Z=-999.99
 
- IMOD3D_SOL=.FALSE.
+ IMOD3D_SOL=.TRUE.
 
- !## solid active, although loaded im memory (could be)
+ !## solid active, although loaded in memory (could be)
  IF(ISOLID_3D.EQ.0)RETURN
 
  IF(NSOLLIST.EQ.0)RETURN
+
+ IMOD3D_SOL=.FALSE.
 
  !## get display-list pointers
  SOLLISTINDEX=0
@@ -4022,7 +4071,6 @@ SOLLOOP: DO I=1,NSOLLIST
    ENDDO
    N=IPOS
  
-   !CALL SORTEM(1,N,XT,2,ZT(:,1),ZT(:,2),XT,XT,XT,XT,XT)
    CALL SORTEM(1,N,XT,2,ZT(:,1),ZT(:,2),(/0.0/),(/0.0/),(/0.0/),(/0.0/),(/0.0/))
    
    !## fill first and last
@@ -4119,11 +4167,6 @@ SOLLOOP: DO I=1,NSOLLIST
        XCOR(3)=X(3);    YCOR(3)=Y(3)
        XCOR(4)=XCOR(3); YCOR(4)=YCOR(3)
 
-!       XCOR(1)=(X(1)-MIDPOS%X)/VIEWDX; YCOR(1)=(Y(1)-MIDPOS%Y)/VIEWDY
-!       XCOR(2)= XCOR(1)          ; YCOR(2)= YCOR(1)
-!       XCOR(3)=(X(3)-MIDPOS%X)/VIEWDX; YCOR(3)=(Y(3)-MIDPOS%Y)/VIEWDY
-!       XCOR(4)= XCOR(3)          ; YCOR(4)= YCOR(3)
-
        !## show filled in polygons
        IF(SOLPLOT(I)%IINTERFACE.EQ.0)THEN
 
@@ -4196,7 +4239,7 @@ SOLLOOP: DO I=1,NSOLLIST
  CALL WINDOWOUTSTATUSBAR(2,'')
 
  !## read, process and stick bitmaps to cross-sections
- IMOD3D_SOL=IMOD3D_SOL_BMP() !VIEWDX,VIEWDY) 
+ IMOD3D_SOL=IMOD3D_SOL_BMP() 
  !## read background again if this has been updated
  IREADBMP=0
  

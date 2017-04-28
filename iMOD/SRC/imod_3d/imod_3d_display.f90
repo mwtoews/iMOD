@@ -136,10 +136,10 @@ CONTAINS
  
   !## put transparancy last - used fixed depth mask and plot all transparant images
   !## freeze depthmask for transluscent plotting
-!  LDMASK=.FALSE.; CALL GLDEPTHMASK(LDMASK)
-!  IF(NIDFLIST.GT.0)CALL IMOD3D_DISPLAY_IDF(IMODE,1)
-!  IF(NGENLIST.GT.0)CALL IMOD3D_DISPLAY_GEN(1)
-!  LDMASK=.TRUE.; CALL GLDEPTHMASK(LDMASK)
+  LDMASK=.FALSE.; CALL GLDEPTHMASK(LDMASK)
+  IF(NIDFLIST.GT.0)CALL IMOD3D_DISPLAY_IDF(IMODE,1)
+  IF(NGENLIST.GT.0)CALL IMOD3D_DISPLAY_GEN(1)
+  LDMASK=.TRUE.; CALL GLDEPTHMASK(LDMASK)
 
   DO I=1,NCLPLIST; CALL GLDISABLE(CLPPLANES(I)); END DO
 
@@ -409,14 +409,14 @@ CONTAINS
   ENDIF
  END DO
 
-! !## plot clipping planes first than activate them
-! DO I=1,NCLPLIST
-!  !## do not use inactive clipping planes
-!  IF(CLPPLOT(I)%ISEL.EQ.0)CYCLE
-!  !## do not plot clipping planes with zero thickness
-!  IF(CLPPLOT(I)%ITHICKNESS.LE.0)CYCLE
-!  CALL IMOD3D_DISPLAY_CLP_DRAW(I,0)
-! END DO
+ !## plot clipping planes first than activate them
+ DO I=1,NCLPLIST
+  !## do not use inactive clipping planes
+  IF(CLPPLOT(I)%ISEL.EQ.0)CYCLE
+  !## do not plot clipping planes with zero thickness
+  IF(CLPPLOT(I)%ITHICKNESS.LE.0)CYCLE
+  CALL IMOD3D_DISPLAY_CLP_DRAW(I,0)
+ END DO
 
  CALL GLPOLYGONMODE(GL_BACK, GL_FILL); CALL GLPOLYGONMODE(GL_FRONT,GL_FILL)
 
@@ -596,9 +596,11 @@ CONTAINS
  INTEGER :: I,J
  INTEGER,INTENT(IN) :: IMODE,IT
  REAL(KIND=GLDOUBLE) :: TSTACK
- INTEGER(KIND=GLBYTE) :: IJ
-
+! INTEGER(KIND=GLBYTE) :: IJ
+! LOGICAL(KIND=GLBOOLEAN) :: LDMASK
+ 
  TSTACK=0.0_GLDOUBLE
+ 
  DO I=1,SIZE(IDFLISTINDEX) 
   IF(IDFPLOT(I)%ISEL.NE.1.OR.IDFLISTINDEX(I).EQ.0)CYCLE
   
@@ -664,10 +666,11 @@ CONTAINS
 !polygon of the capping color across the entire screen.
 
    !## capping
-   IF(.TRUE.)THEN
+   IF(.FALSE.)THEN
    
     CALL GLENABLE(GL_STENCIL_TEST)
-!    CALL GLSTENCILMASK(1_GLUINT) !.FALSE._GLBOOLEAN)
+!      LDMASK=.FALSE.; CALL GLDEPTHMASK(LDMASK)
+!    LDMASK=.TRUE.; CALL GLSTENCILMASK(LDMASK) !.FALSE._GLBOOLEAN)
 !    CALL GLCLEARSTENCIL(0_GLUINT)
     CALL GLCLEAR(GL_STENCIL_BUFFER_BIT)
     
@@ -701,38 +704,38 @@ CONTAINS
 
     else
 
-     !## enable cull-face plotting
-     CALL GLENABLE(GL_CULL_FACE)
-     !## don't change capped pixels
-     CALL GLSTENCILFUNC(GL_GEQUAL,1_GLINT,3_GLUINT)
-     !## render frontfacing only - discard backface
-     CALL GLCULLFACE(GL_BACK)
-     !## clear stencil to zero
-     CALL GLSTENCILOP(GL_KEEP,GL_KEEP,GL_ZERO)
-     !## draw model
-     CALL GLCALLLIST(IDFLISTINDEX(I))
-
-     !## render backfacing only - discard frontface
-     CALL GLCULLFACE(GL_FRONT)
-     !## set stencil to 1 (reference value)
-     CALL GLSTENCILOP(GL_KEEP,GL_KEEP,GL_REPLACE)
-     !## draw model
-     CALL GLCALLLIST(IDFLISTINDEX(I))
-    
-     CALL GLDISABLE(GL_CULL_FACE)
-     !## disable all clipping planes
-     DO J=1,NCLPLIST; CALL GLDISABLE(CLPPLANES(J)); ENDDO
-     !## draw only where stencil is 1
-     CALL GLSTENCILFUNC(GL_EQUAL,1_GLINT,3_GLUINT)
-     !## set stencil to 2
-     CALL GLSTENCILOP(GL_KEEP,GL_KEEP,GL_INCR)
-
-     !## draw cap - use the clipplane vertices
-     CALL IMOD3D_DISPLAY_CLP_DRAW(I,IDFPLOT(I)%ICOLOR)
-        
-     CALL GLDISABLE(GL_STENCIL_TEST)
-     !## turn on clipping planes
-     DO J=1,NCLPLIST; IF(CLPPLOT(J)%ISEL.EQ.1)CALL GLENABLE(CLPPLANES(J)); ENDDO
+!     !## enable cull-face plotting
+!     CALL GLENABLE(GL_CULL_FACE)
+!     !## don't change capped pixels
+!     CALL GLSTENCILFUNC(GL_GEQUAL,1_GLINT,3_GLUINT)
+!     !## render frontfacing only - discard backface
+!     CALL GLCULLFACE(GL_BACK)
+!     !## clear stencil to zero
+!     CALL GLSTENCILOP(GL_KEEP,GL_KEEP,GL_ZERO)
+!     !## draw model
+!     CALL GLCALLLIST(IDFLISTINDEX(I))
+!
+!     !## render backfacing only - discard frontface
+!     CALL GLCULLFACE(GL_FRONT)
+!     !## set stencil to 1 (reference value)
+!     CALL GLSTENCILOP(GL_KEEP,GL_KEEP,GL_REPLACE)
+!     !## draw model
+!     CALL GLCALLLIST(IDFLISTINDEX(I))
+!    
+!     CALL GLDISABLE(GL_CULL_FACE)
+!     !## disable all clipping planes
+!     DO J=1,NCLPLIST; CALL GLDISABLE(CLPPLANES(J)); ENDDO
+!     !## draw only where stencil is 1
+!     CALL GLSTENCILFUNC(GL_EQUAL,1_GLINT,3_GLUINT)
+!     !## set stencil to 2
+!     CALL GLSTENCILOP(GL_KEEP,GL_KEEP,GL_INCR)
+!
+!     !## draw cap - use the clipplane vertices
+!     CALL IMOD3D_DISPLAY_CLP_DRAW(I,IDFPLOT(I)%ICOLOR)
+!        
+!     CALL GLDISABLE(GL_STENCIL_TEST)
+!     !## turn on clipping planes
+!     DO J=1,NCLPLIST; IF(CLPPLOT(J)%ISEL.EQ.1)CALL GLENABLE(CLPPLANES(J)); ENDDO
 
     endif
 
