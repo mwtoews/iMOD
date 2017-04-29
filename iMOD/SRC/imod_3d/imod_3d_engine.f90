@@ -131,11 +131,14 @@ CONTAINS
  LOOKFROM%Y=LOOKAT%Y-F*(D1)
  LOOKFROM%Z=LOOKAT%Z+F*(0.5*D1) 
  
- ZFAR =10_GLDOUBLE*D1
+ ZFAR =2_GLDOUBLE*D1
+! ZFAR =10_GLDOUBLE*D1
+ !## znear as far as you can, the depth buffer is scales non-linear, more detail in the beginning and less further
  ZNEAR=0.01_GLDOUBLE*D1
+! ZNEAR=0.01_GLDOUBLE*D1
 
- !## printen ...
- write(*,*) zfar,znear,log(2.0)*zfar/znear
+! !## printen ...
+! write(*,*) zfar,znear,log(2.0)*zfar/znear
  
  END SUBROUTINE IMOD3D_SETLOOKAT_LOOKFROM
 

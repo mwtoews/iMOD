@@ -37,7 +37,101 @@ USE MOD_PLINES_PAR, ONLY : PL
 USE MOD_PLUGIN_PAR
 
 CONTAINS
+ 
+ !###======================================================================
+ SUBROUTINE IMOD3D_GETMATRICES(MODELMATRIX,PROJMATRIX,VIEWPORT)
+ !###======================================================================
+ IMPLICIT NONE
+ REAL(KIND=GLDOUBLE),DIMENSION(16) :: MODELMATRIX,PROJMATRIX
+ INTEGER(KIND=GLINT),DIMENSION(4) :: VIEWPORT
 
+ CALL GLGETDOUBLEV(GL_MODELVIEW_MATRIX,MODELMATRIX)
+ CALL GLGETDOUBLEV(GL_PROJECTION_MATRIX,PROJMATRIX)
+ CALL GLGETINTEGERV(GL_VIEWPORT,VIEWPORT)
+
+ END SUBROUTINE IMOD3D_GETMATRICES
+ 
+ !###======================================================================
+ SUBROUTINE IMOD3D_MAPOBJTOWINDOW()
+ !###======================================================================
+ IMPLICIT NONE
+ INTEGER(KIND=GLINT) :: GP
+ REAL(KIND=GLDOUBLE) :: OBJ,OBJY,OBJZ
+ REAL(KIND=GLDOUBLE) :: WINX,WINY,WINZ
+ REAL(KIND=GLDOUBLE),DIMENSION(16) :: MODELMATRIX,PROJMATRIX
+ INTEGER(KIND=GLINT),DIMENSION(4) :: VIEWPORT
+
+ !## get model-matrices
+ CALL IMOD3D_GETMATRICES(MODELMATRIX,PROJMATRIX,VIEWPORT)
+
+ !## maps object coordinates to window coordinates
+ GP=GLUPROJECT(OBJ,OBJY,OBJZ,MODELMATRIX,PROJMATRIX,VIEWPORT,WINX,WINY,WINZ)
+
+!Maps object coordinates to window coordinates. 
+!
+!INTEGER(kind=Glint) FUNCTION gluProject(
+!  REAL(kind=GLdouble)                :: objx
+!  REAL(kind=GLdouble)                :: objy
+!  REAL(kind=GLdouble)                :: objz
+!  REAL(kind=GLdouble), DIMENSION(16) :: modelMatrix
+!  REAL(kind=GLdouble), DIMENSION(16) :: projMatrix
+!  INTEGER(kind=GLint), DIMENSION(4)  :: viewport
+!  REAL(kind=GLdouble)                :: winx
+!  REAL(kind=GLdouble)                :: winy
+!  REAL(kind=GLdouble)                :: winz
+!)
+
+ END SUBROUTINE IMOD3D_MAPOBJTOWINDOW
+
+ !###======================================================================
+ SUBROUTINE IMOD3D_MAPWINDOWTOOBJ(MESSAGE,X,Y,Z)
+ !###======================================================================
+ IMPLICIT NONE
+ TYPE(WIN_MESSAGE),INTENT(IN) :: MESSAGE
+ REAL,INTENT(OUT) :: X,Y,Z
+ INTEGER(KIND=GLINT) :: IPOSX,IPOSY
+ REAL(KIND=GLFLOAT),DIMENSION(1) :: IPOSZ
+ INTEGER(KIND=GLINT) :: GUP
+ INTEGER(KIND=GLSIZEI),PARAMETER :: NDX=1,NDY=1  !## selection window
+ REAL(KIND=GLDOUBLE) :: OBJX,OBJY,OBJZ
+ REAL(KIND=GLDOUBLE) :: WINX,WINY,WINZ,clip_z,world_z
+ REAL(KIND=GLDOUBLE),DIMENSION(16) :: MODELMATRIX,PROJMATRIX
+ INTEGER(KIND=GLINT),DIMENSION(4) :: VIEWPORT
+
+ !## get model-matrices
+ CALL IMOD3D_GETMATRICES(MODELMATRIX,PROJMATRIX,VIEWPORT)
+
+ !## get xy coordinates
+ IPOSX=MESSAGE%X
+ IPOSY=MESSAGE%Y
+
+ !## flip y-coordinate
+ IPOSY=WINFODIALOGFIELD(IDF_PICTURE2,FIELDHEIGHT)-IPOSY+1
+
+ !## get the window-Z, perpendicular to the screen, the depth-component (0-1)
+ CALL GLREADPIXELS(IPOSX,IPOSY,NDX,NDY,GL_DEPTH_COMPONENT,GL_FLOAT,IPOSZ)
+
+ WINX=IPOSX
+ WINY=IPOSY
+ WINZ=IPOSZ(1)
+
+! clip_z = (winz - 0.5) * 2.0
+! world_z = 2.0*zfar*znear/(clip_z*((zfar-znear)-(zfar+znear)))
+
+ !## maps window coordinates to object coordinates
+ GUP=GLUUNPROJECT(WINX,WINY,WINZ,MODELMATRIX,PROJMATRIX,VIEWPORT,OBJX,OBJY,OBJZ)
+
+ X=OBJX
+ Y=OBJY
+ Z=OBJZ
+ 
+! winz=znear+(zfar-znear)*winz
+! CALL WINDOWOUTSTATUSBAR(1,TRIM(ITOS(INT(IPOSX)))//','//TRIM(ITOS(INT(IPOSY)))//','//TRIM(RTOS(REAL(world_z),'F',2)))
+! WRITE(*,*) WINX,WINY,WINZ
+! WRITE(*,*) OBJX,OBJY,OBJZ
+ 
+ END SUBROUTINE IMOD3D_MAPWINDOWTOOBJ
+ 
  !###======================================================================
  LOGICAL FUNCTION IMOD3D_DRAWIDF_SIZE(IDFC,IDFM)
  !###======================================================================
