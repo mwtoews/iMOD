@@ -8,7 +8,7 @@
 //
 // Winteracter resource script. 
 //
-// Modified : 29/Apr/2017 21:24:00
+// Modified : 30/Apr/2017 13:19:52
 //
 ///////////////////////////////////////////////////
 //
@@ -1187,6 +1187,7 @@
 #define ID_MIN1                          1294
 #define IDD_TEMPLATE059                   391
 #define ID_DWBAL_ANALYSE_TAB5             392
+#define ID_SHOW3DCOORDINATES            40076
 
 ///////////////////////////////////////////////////
 //
@@ -12256,6 +12257,7 @@ BEGIN
             MENUITEM "&On",                                      ID_3DVIEW_ORIENTATION_ON
             MENUITEM "O&ff",                                     ID_3DVIEW_ORIENTATION_OFF
         END
+        MENUITEM "Show 3D Coordinates",                      ID_SHOW3DCOORDINATES
         MENUITEM SEPARATOR
         MENUITEM "Anaglyphs",                                ID_ANAGLYPHS
         MENUITEM "Orthographic Projection",                  ID_ORTHO
@@ -12287,7 +12289,7 @@ ID_3DVIEW,4,0,
 ID_3DVIEW_SHADES,4,4,0,
 ID_3DVIEW_AXES,4,10,0,
 ID_3DVIEW_ORIENTATION,4,11,0,
-ID_ZRATIOS,4,18,0,
+ID_ZRATIOS,4,19,0,
 0
 END
 
@@ -12301,6 +12303,7 @@ ID_ORTHO,"View an Orthographic Projection\0",
 ID_FLYPATH,"Fly Around/Over the Objects Automatically\0",
 ID_HELP,"Start Help Functionality\0",
 ID_3DVIEW_LEGEND,"Show Legends for IDF files\0",
+ID_SHOW3DCOORDINATES,"Show the 3D Coordinates of your mouse position\0",
 0
 END
 
@@ -12721,5 +12724,5 @@ END
 //*WI* FORTSAVE    1
 //*WI* FILENAME    resource.f90
 //*WI* FMODNAME    RESOURCE
-//*WI* LASTTYPE        2
-//*WI* LASTRES       282
+//*WI* LASTTYPE        1
+//*WI* LASTRES        10
