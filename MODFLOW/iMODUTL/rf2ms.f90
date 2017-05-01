@@ -621,10 +621,10 @@ END SUBROUTINE
 
      !## sprinkling from other than modellayer 1 or other location
      IF(TYBE.EQ.1.AND.MDND.NE.MDND2)THEN !LYBE.GT.1)THEN
-!      unid = unid+1
+      unid = unid+1
       WRITE(IGWMP,'(I10,2X,I10,I5)') MDND2,NUND,LYBE
 !      WRITE(IGWMP,'(I10,2X,I10,I5)') unid,NUND,LYBE
-!      call storedxc(dxcid,mndxc,ndxc,LYBE,jrow,jcol,unid)
+      call storedxc(dxcid,mndxc,ndxc,LYBE,jrow,jcol,MDND2) !unid)
       WRITE(IMODSIM,'(I10,2X,I10,I5)') MDND2,NUND,LYBE
 !      WRITE(IMODSIM,'(I10,2X,I10,I5)') unid,NUND,LYBE
 !     WRITE(IGWMP,'(I10,2X,I10,I5)')   MDND+(LYBE-1)*SIMGRO_NCOL*SIMGRO_NROW,NUND,LYBE
@@ -639,7 +639,7 @@ END SUBROUTINE
     unid = unid+1
     WRITE(IGWMP  ,'(I10,2X,I10,I5)')  MDND,NUND,1
 !    WRITE(IGWMP  ,'(I10,2X,I10,I5)')  unid,NUND,1
-    call storedxc(dxcid,mndxc,ndxc,1,irow,icol,unid)
+    call storedxc(dxcid,mndxc,ndxc,1,irow,icol,MDND) !unid)
     WRITE(IMODSIM,'(I10,2X,I10,I5)')  MDND,NUND,1
 !    WRITE(IMODSIM,'(I10,2X,I10,I5)')  unid,NUND,1
 
@@ -676,7 +676,7 @@ END SUBROUTINE
     unid = unid+1
     WRITE(IGWMP,'(I10,2X,I10,I5)') MDND,NUND,1
 !    WRITE(IGWMP,'(I10,2X,I10,I5)') unid,NUND,1
-    call storedxc(dxcid,mndxc,ndxc,1,irow,icol,unid)
+    call storedxc(dxcid,mndxc,ndxc,1,irow,icol,MDND) !unid)
     IF(MMOD(PPWT).EQ.0)WRITE(IUSCL,'(I10,3F8.3,8X,2I10)') NUND,SIMGRO(ICOL,IROW)%MOISTURE,SIMGRO(ICOL,IROW)%COND,1.0,ICOL,IROW
     IF(MMOD(PPWT).EQ.1)THEN
      IF(SIMGRO(ICOL,IROW)%PWT_LEVEL.NE.NODATA_PWT)THEN
