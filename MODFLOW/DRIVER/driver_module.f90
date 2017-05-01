@@ -668,6 +668,109 @@ end interface
 
 contains
 
+
+ !====================================================
+ SUBROUTINE UTL_QKSORT_INT2(ARR,BRR,NDIM,N)
+ !====================================================
+ IMPLICIT NONE
+ INTEGER,INTENT(IN) :: NDIM,N
+ INTEGER,INTENT(INOUT),DIMENSION(NDIM) :: ARR
+ INTEGER,INTENT(INOUT),DIMENSION(NDIM) :: BRR
+ INTEGER,PARAMETER :: M=7,NSTACK=50
+ INTEGER :: I,IR,J,JSTACK,K,L,ISTACK(NSTACK)
+ INTEGER :: B,BTEMP
+ INTEGER :: A,ATEMP
+
+ JSTACK=0
+ L=1
+ IR=N
+ 1 IF(IR-L.LT.M)THEN
+  DO J=L+1,IR
+   A=ARR(J)
+   B=BRR(J)
+   DO I=J-1,1,-1
+    IF(ARR(I).LE.A)GOTO 2
+    ARR(I+1)=ARR(I)
+    BRR(I+1)=BRR(I)
+   ENDDO
+   I=0
+ 2 ARR(I+1)=A
+   BRR(I+1)=B
+  ENDDO
+  IF(JSTACK.EQ.0)RETURN
+  IR=ISTACK(JSTACK)
+  L =ISTACK(JSTACK-1)
+  JSTACK=JSTACK-2
+ ELSE
+  K=(L+IR)/2
+  ATEMP   =ARR(K)
+  BTEMP   =BRR(K)
+  ARR(K)  =ARR(L+1)
+  BRR(K)  =BRR(L+1)
+  ARR(L+1)=ATEMP
+  BRR(L+1)=BTEMP
+  IF(ARR(L+1).GT.ARR(IR))THEN
+   ATEMP   =ARR(L+1)
+   BTEMP   =BRR(L+1)
+   ARR(L+1)=ARR(IR)
+   BRR(L+1)=BRR(IR)
+   ARR(IR)=ATEMP
+   BRR(IR)=BTEMP
+  ENDIF
+  IF(ARR(L).GT.ARR(IR))THEN
+   ATEMP  =ARR(L)
+   BTEMP  =BRR(L)
+   ARR(L) =ARR(IR)
+   BRR(L) =BRR(IR)
+   ARR(IR)=ATEMP
+   BRR(IR)=BTEMP
+  ENDIF
+  IF(ARR(L+1).GT.ARR(L))THEN
+   ATEMP   =ARR(L+1)
+   BTEMP   =BRR(L+1)
+   ARR(L+1)=ARR(L)
+   BRR(L+1)=BRR(L)
+   ARR(L)  =ATEMP
+   BRR(L)  =BTEMP
+  ENDIF
+  I=L+1
+  J=IR
+  A=ARR(L)
+  B=BRR(L)
+ 3  CONTINUE
+  I=I+1
+  IF(ARR(I).LT.A)GOTO 3
+ 4  CONTINUE
+  J=J-1
+  IF(ARR(J).GT.A)GOTO 4
+  IF(J.LT.I)GOTO 5
+  ATEMP =ARR(I)
+  BTEMP =BRR(I)
+  ARR(I)=ARR(J)
+  BRR(I)=BRR(J)
+  ARR(J)=ATEMP
+  BRR(J)=BTEMP
+  GOTO 3
+ 5  ARR(L)=ARR(J)
+  BRR(L)=BRR(J)
+  ARR(J)=A
+  BRR(J)=B
+  JSTACK=JSTACK+2
+  IF(JSTACK.GT.NSTACK)PAUSE 'NSTACK TOO SMALL'
+  IF(IR-I+1.GT.J-L)THEN
+   ISTACK(JSTACK)=IR
+   ISTACK(JSTACK-1)=I
+   IR=J-1
+  ELSE
+   ISTACK(JSTACK)=J-1
+   ISTACK(JSTACK-1)=L
+   L=I
+  ENDIF
+ ENDIF
+ GOTO 1
+
+ END SUBROUTINE
+
 ! ------------------------------------------------------------------------------
 recursive subroutine qsort(a,ai)
 
@@ -814,8 +917,12 @@ end do
 do i = 1, nid2
    id2si(i) = i
 end do
-call qsort(id1s,id1si)
-call qsort(id2s,id2si)
+
+call UTL_QKSORT_INT2(id1s,id1si,nid1,nid1)
+call UTL_QKSORT_INT2(id2s,id2si,nid2,nid2)
+
+!call qsort(id1s,id1si)
+!call qsort(id2s,id2si)
 
 ! store mapping indices
 n1 = 1
@@ -838,8 +945,8 @@ do while(.true.)
             do k = i2s, i2e
                mapidx(j)%iarr(k-i2s+1) = id2si(k)
             end do
-            ! sort (this is not really necessary)
-            call qsort(mapidx(j)%iarr, itmp(1:m))
+!            ! sort (this is not really necessary, why then?)
+!            call qsort(mapidx(j)%iarr, itmp(1:m))
          end if
       end do
    end if
