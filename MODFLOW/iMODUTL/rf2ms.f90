@@ -621,10 +621,10 @@ END SUBROUTINE
 
      !## sprinkling from other than modellayer 1 or other location
      IF(TYBE.EQ.1.AND.MDND.NE.MDND2)THEN !LYBE.GT.1)THEN
-      unid = unid+1
+!      unid = unid+1
       WRITE(IGWMP,'(I10,2X,I10,I5)') MDND2,NUND,LYBE
 !      WRITE(IGWMP,'(I10,2X,I10,I5)') unid,NUND,LYBE
-      call storedxc(dxcid,mndxc,ndxc,LYBE,jrow,jcol,unid)
+!      call storedxc(dxcid,mndxc,ndxc,LYBE,jrow,jcol,unid)
       WRITE(IMODSIM,'(I10,2X,I10,I5)') MDND2,NUND,LYBE
 !      WRITE(IMODSIM,'(I10,2X,I10,I5)') unid,NUND,LYBE
 !     WRITE(IGWMP,'(I10,2X,I10,I5)')   MDND+(LYBE-1)*SIMGRO_NCOL*SIMGRO_NROW,NUND,LYBE
