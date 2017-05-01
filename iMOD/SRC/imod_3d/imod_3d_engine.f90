@@ -24,6 +24,7 @@ MODULE MOD_3D_ENGINE
 
 USE WINTERACTER
 USE RESOURCE
+USE MOD_PREF_PAR, ONLY  : PREFVAL
 USE MODPLOT
 USE MOD_COLOURS, ONLY  : COLOUR_RANDOM
 USE IMODVAR, ONLY : IBACKSLASH,ILABELNAME
@@ -33,7 +34,8 @@ USE MOD_IDF_PAR, ONLY : IDFOBJ
 USE MOD_COLOURS, ONLY : ICOLOR
 USE MOD_UTL, ONLY : INVERSECOLOUR,UTL_CAP,UTL_GETUNIT,ITOS,RTOS,UTL_FILLARRAY,UTL_IDFGETCLASS, &
        UTL_IDFSNAPTOGRID,UTL_MESSAGEHANDLE,UTL_INSIDEPOLYGON,UTL_WAITMESSAGE,NEWLINE,UTL_LOADIMAGE, &
-       UTL_EQUALS_REAL,UTL_GETAXESCALES,SXVALUE,SYVALUE,NSX,NSY,UTL_GETFORMAT,UTL_ROTATE_XYZ
+       UTL_EQUALS_REAL,UTL_GETAXESCALES,SXVALUE,SYVALUE,NSX,NSY,UTL_GETFORMAT,UTL_ROTATE_XYZ, &
+       UTL_GETCURRENTDATE,UTL_GETCURRENTTIME
 USE MOD_GENPLOT_PAR
 USE MOD_IFF, ONLY : UTL_GETUNITIFF,IFF,IFFPLOT_GETIFFVAL
 USE MOD_IPFASSFILE, ONLY : IPFOPENASSFILE,IPFREADASSFILELABEL,IPFREADASSFILE,IPFCLOSEASSFILE,IPFDRAWITOPIC2_ICLR, &
@@ -46,7 +48,9 @@ USE MOD_3D_PAR
 USE MOD_3D_UTL, ONLY : IMOD3D_RETURNCOLOR,IMOD3D_SETCOLOR,IMOD3D_DRAWIDF_SIZE,IMOD3D_CREATE_SXY,IMOD3D_BLANKOUT,IMOD3D_BLANKOUT_XY
 USE MOD_MDF, ONLY : READMDF,READMDF_GETN,MDF,MDFDEALLOCATE
 USE MOD_OSD, ONLY : OSD_OPEN
-USE MOD_SOLID_PAR, ONLY : SPF,NSPF,PX,PZ,SLD
+USE MOD_SOLID_PAR, ONLY : SPF,NSPF,PX,PZ,SLD,ISEL_IDF,IACT,ICHECK,ICLEAN,IEXIST,XEXCLUDE,DTOL,NSPF,ISPF,NTBSOL
+USE MOD_SOLID_PROFILE, ONLY : SOLID_PROFILEFITDRILL_CALC,SOLID_PROFILEDELETE
+USE MOD_SOLID_UTL, ONLY : SOLIDOPENSPF
 USE MOD_SOF, ONLY : SOF_COMPUTE_GRAD,SOF_COMPUTE_GRAD_3D
 USE MOD_POLYGON_UTL, ONLY : POLYGON1SAVELOADSHAPE,POLYGON1INIT,POLYGON1CLOSE
 USE MOD_POLYGON_PAR, ONLY : SHPNCRD,SHPNO,SHPXC,SHPYC
@@ -122,7 +126,6 @@ CONTAINS
 
  !## circle to describe entire volume
  D1=SQRT((TOP%X-BOT%X)**2.0+(TOP%Y-BOT%Y)**2.0+(ZSCALE_FACTOR*(TOP%Z-BOT%Z))**2.0)
-! D1=SQRT((TOP%X-BOT%X)**2.0+(TOP%Y-BOT%Y)**2.0+ZSCALE_FACTOR*(TOP%Z-BOT%Z)**2.0)
  !## distance
  D1=(1.0_GLDOUBLE*D1)/ATAN(FOVYRAD)
 
@@ -132,10 +135,8 @@ CONTAINS
  LOOKFROM%Z=LOOKAT%Z+F*(0.5*D1) 
  
  ZFAR =2_GLDOUBLE*D1
-! ZFAR =10_GLDOUBLE*D1
  !## znear as far as you can, the depth buffer is scales non-linear, more detail in the beginning and less further
  ZNEAR=0.01_GLDOUBLE*D1
-! ZNEAR=0.01_GLDOUBLE*D1
 
 ! !## printen ...
 ! write(*,*) zfar,znear,log(2.0)*zfar/znear
@@ -3932,7 +3933,7 @@ SOLLOOP: DO I=1,NSOLLIST
    ENDDO
    CALL GLEND()
 
-  END IF
+  ENDIF
 
  ENDDO
 
@@ -3951,10 +3952,16 @@ SOLLOOP: DO I=1,NSOLLIST
  LOGICAL FUNCTION IMOD3D_SOL_ADD()
  !###======================================================================
  IMPLICIT NONE
- INTEGER :: I
+ INTEGER :: I,J
+ REAL :: XTOL
+ CHARACTER(LEN=52) :: CDATE
  
- !## maximum sample points for a fench-diagram
+ !## vertical tolerance (from menu)
+ XTOL=10.0
+ 
+ !## maximum sample points for a fench-diagram (from menu)
  MXSAMPLING=200
+
  !## not synchronizing of fench-diagram necessary
  ICCOL=0
  
@@ -3970,8 +3977,7 @@ SOLLOOP: DO I=1,NSOLLIST
   PROFIDF(I)%PRFTYPE=1
  ENDDO
       
- IF(ASSOCIATED(XY))DEALLOCATE(XY)
- ALLOCATE(XY(2,NXY)); XY=0.0
+ IF(ASSOCIATED(XY))DEALLOCATE(XY); ALLOCATE(XY(2,NXY)); XY=0.0
 
  ALLOCATE(SERIE(MXNIDF))
  DO I=1,MXNIDF
@@ -3987,28 +3993,121 @@ SOLLOOP: DO I=1,NSOLLIST
 
  !## compute profile through idf in 3D
  CALL PROFILE_COMPUTEPLOT()
-!     !## start drawing a cross-section without those extra lines
-!     ISOLID=1; CALL SOLID_PROFILEFIT(1)
-!SOLID_PROFILEFITDRILL_CALC
-!     CALL SOLID_PROFILEUPDATECROSS(1,0)
 
+! !## add memory for cross-section
+! CALL SOLID_PROFILEADD()
+ 
+ !## start drawing a cross-section without those extra lines
+ ALLOCATE(IEXIST(MXNIDF),ICLEAN(MXNIDF),IACT(MXNIDF),XEXCLUDE(MXNIDF),ISEL_IDF(MXNIDF),DTOL(MXNIDF))
+ 
+ !## common settings
+ DTOL=XTOL; IEXIST=1; IACT=1; ICLEAN=1
+ DO I=1,MXNIDF; XEXCLUDE(I)=PROFIDF(I)%IDF%NODATA; ENDDO
+ DO I=1,MXNIDF; ISEL_IDF(I)=I; ENDDO
+ 
+ ISPF=NSOLLIST+1
+ NTBSOL=MXNIDF
+ CALL SOLID_PROFILEFITDRILL_CALC()
+
+ NSPF=ISPF
+! !## remove drawing list if available
+! DO J=1,2
+!  IF(SOLLISTINDEX(ISPF,J).NE.0)THEN
+!   IF(GLISLIST(SOLLISTINDEX(ISPF,J)))CALL GLDELETELISTS(SOLLISTINDEX(ISPF,J),1_GLSIZEI)
+!  ENDIF
+! ENDDO
+
+ !## create drawing list
+ NSOLLIST=ISPF; CALL IMOD3D_SOL_DRAWINGLIST(NSOLLIST)
+ 
  CALL PROFILE_DEALLOCATE()
+ DEALLOCATE(ISEL_IDF,IACT,DTOL,ICLEAN,XEXCLUDE,IEXIST)
+
+ !## add cross-section name
+ WRITE(CDATE,'(I8,A)') UTL_GETCURRENTDATE(),'_'//TRIM(UTL_GETCURRENTTIME())
+ SPF(ISPF)%FNAME='Cross-Section_'//TRIM(CDATE)
+  
+ !## add to the existing menu
+ CALL WDIALOGSELECT(ID_D3DSETTINGS_TAB6)
+ CALL WDIALOGPUTMENU(IDF_MENU1,SPF%FNAME,NSPF,SOLPLOT%ISEL)
+
+ IF(NSPF.GE.SIZE(SOLPLOT))THEN
+  CALL WDIALOGFIELDSTATE(ID_NEW,2)
+  CALL WDIALOGFIELDSTATE(ID_LOAD,2)
+ ENDIF
 
  IMOD3D_SOL_ADD=.TRUE.
 
  END FUNCTION IMOD3D_SOL_ADD
  
  !###======================================================================
+ LOGICAL FUNCTION IMOD3D_SOL_DELETE()
+ !###======================================================================
+ IMPLICIT NONE
+ INTEGER :: I,J
+ 
+ IMOD3D_SOL_DELETE=.FALSE.
+
+ CALL SOLID_PROFILEDELETE(ID_D3DSETTINGS_TAB6)
+
+ !## shift drawing list indices
+ DO I=1,SIZE(SOLPLOT)
+  IF(.NOT.SOLPLOT(I)%ISEL)CYCLE
+
+  !## remove drawing list if available
+  DO J=1,2
+   IF(SOLLISTINDEX(I,J).NE.0)THEN
+    IF(GLISLIST(SOLLISTINDEX(I,J)))CALL GLDELETELISTS(SOLLISTINDEX(I,J),1_GLSIZEI)
+    SOLLISTINDEX(I,J)=0_GLUINT
+   ENDIF
+  ENDDO
+ 
+ ENDDO
+
+ !## reshuffle drawinglists
+ NSOLLIST=0; DO I=1,SIZE(SOLPLOT)
+  IF(.NOT.SOLPLOT(I)%ISEL)CYCLE
+  NSOLLIST=NSOLLIST+1
+  DO J=1,2; SOLLISTINDEX(NSOLLIST,J)=SOLLISTINDEX(I,J); ENDDO
+  SOLPLOT(NSOLLIST)=SOLPLOT(I)
+ ENDDO
+ NSPF=NSOLLIST
+  
+ IF(NSPF.LT.SIZE(SOLPLOT))THEN
+  CALL WDIALOGFIELDSTATE(ID_NEW,1)
+  CALL WDIALOGFIELDSTATE(ID_LOAD,1)
+ ENDIF
+
+ !## add to the existing menu
+ CALL WDIALOGSELECT(ID_D3DSETTINGS_TAB6)
+ CALL WDIALOGPUTMENU(IDF_MENU1,SPF%FNAME,NSPF,SOLPLOT%ISEL)
+
+ IMOD3D_SOL_DELETE=.TRUE.
+
+ END FUNCTION IMOD3D_SOL_DELETE
+ 
+ !###======================================================================
+ SUBROUTINE IMOD3D_SOL_SAVE()
+ !###======================================================================
+ IMPLICIT NONE
+ INTEGER :: I
+ CHARACTER(LEN=256) :: DIR
+ 
+ DIR=TRIM(PREFVAL(1))//'\TMP\'
+
+ DO I=1,SIZE(SOLPLOT)
+  IF(SOLPLOT(I)%ISEL)THEN
+   IF(.NOT.SOLIDOPENSPF(I,'W',DIR))RETURN
+  ENDIF
+ ENDDO
+ 
+ END SUBROUTINE IMOD3D_SOL_SAVE
+
+ !###======================================================================
  LOGICAL FUNCTION IMOD3D_SOL()
  !###======================================================================
  IMPLICIT NONE
- REAL(KIND=GLFLOAT) :: DXX,DYY,GX,GY,GZ,DXY 
- INTEGER :: I,J,K,II,JJ,IPROF,IPOS,N,I1,I2,IICLR
- REAL(KIND=GLFLOAT),DIMENSION(4) :: X,Y,XCOR,YCOR,Z
- REAL(KIND=GLFLOAT),DIMENSION(2) :: TX
- REAL,DIMENSION(:),ALLOCATABLE :: XT
- REAL,DIMENSION(:,:),ALLOCATABLE :: ZT
- REAL,PARAMETER :: NODATA_Z=-999.99
+ INTEGER :: I
 
  IMOD3D_SOL=.TRUE.
 
@@ -4026,229 +4125,13 @@ SOLLOOP: DO I=1,NSOLLIST
  NSOLLIST=0
  DO I=1,NSPF
   NSOLLIST=NSOLLIST+1
-
-  !## list index for
-  SOLLISTINDEX(NSOLLIST,1)=GLGENLISTS(1)
-  !## start new drawing list
-  CALL GLNEWLIST(SOLLISTINDEX(NSOLLIST,1),GL_COMPILE)
-
-  !## process each cross-section (nidf) --- two-by-two
-  DO IPROF=1,SIZE(SPF(I)%PROF)-1  
-   
-   IF(SPF(I)%PROF(IPROF)%NPOS  .LE.0)CYCLE
-   IF(SPF(I)%PROF(IPROF+1)%NPOS.LE.0)CYCLE      
-   
-   !## make sure xt has a small offset (except for xt=0.0)
-   TX(1)=0.0
-   DO J=2,SPF(I)%NXY
-    DXX=SPF(I)%X(J)-SPF(I)%X(J-1); DYY=SPF(I)%Y(J)-SPF(I)%Y(J-1); DXY=DXX**2.0+DYY**2.0
-    IF(DXY.GT.0.0)DXY=SQRT(DXY)
-    TX(1)=TX(1)+DXY
-   ENDDO
-   !## minimal offset = fraction of total distance
-   DXX=TX(1)/1000.0
-      
-   N=SPF(I)%PROF(IPROF)%NPOS+SPF(I)%PROF(IPROF+1)%NPOS+SPF(I)%NXY-2
-   ALLOCATE(XT(N),ZT(N,2))
-   XT=0.0
-   ZT=NODATA_Z
-   IPOS=0
-   II  =0
-   DO K=IPROF,IPROF+1
-    II=II+1
-    !## create table with distances and z-values for top/bot of current iprof-layer
-    DO J=1,SPF(I)%PROF(K)%NPOS
-     IPOS=IPOS+1
-     IF(J.EQ.1)THEN
-      XT(IPOS)=SPF(I)%PROF(K)%PX(J)
-     ELSE
-      XT(IPOS)=MAX(XT(IPOS-1)+DXX,SPF(I)%PROF(K)%PX(J))
-     ENDIF
-     ZT(IPOS,II)=SPF(I)%PROF(K)%PZ(J)
-    ENDDO
-   END DO
-   !## include knickpoints
-   TX(1)=0.0
-   DO J=2,SPF(I)%NXY-1
-    DXX=SPF(I)%X(J)-SPF(I)%X(J-1); DYY=SPF(I)%Y(J)-SPF(I)%Y(J-1); DXY=0.0
-    IF(DXX.NE.0.0.OR.DYY.NE.0.0)DXY=SQRT(DXX**2.0+DYY**2.0)
-    TX(1)     =TX(1)+DXY
-    IPOS      =IPOS+1
-    XT(IPOS)  =TX(1)
-    ZT(IPOS,1)=NODATA_Z !## to be filled in later
-    ZT(IPOS,2)=NODATA_Z !## to be filled in later
-   ENDDO
-   N=IPOS
- 
-   CALL SORTEM(1,N,XT,2,ZT(:,1),ZT(:,2),(/0.0/),(/0.0/),(/0.0/),(/0.0/),(/0.0/))
-   
-   !## fill first and last
-   DO K=1,2
-    IF(ZT(1,K).EQ.NODATA_Z)THEN
-     DO J=2,N
-      IF(ZT(J,K).NE.NODATA_Z)THEN
-       ZT(1,K)=ZT(J,K)
-       EXIT
-      ENDIF
-     ENDDO
-    ENDIF
-    IF(ZT(N,K).EQ.NODATA_Z)THEN
-     DO J=N-1,1,-1
-      IF(ZT(J,K).NE.NODATA_Z)THEN
-       ZT(N,K)=ZT(J,K)
-       EXIT
-      ENDIF
-     ENDDO
-    ENDIF
-   ENDDO
-   
-   !## interpolate unknown values
-   DO J=1,N
-    DO K=1,2
-     IF(ZT(J,K).EQ.NODATA_Z)THEN
-      DO I1=J-1,1,-1; IF(ZT(I1,K).NE.NODATA_Z)EXIT; ENDDO
-      DO I2=J+1,N;    IF(ZT(I2,K).NE.NODATA_Z)EXIT; ENDDO
-      GZ=0.0
-      IF(XT(I2)-XT(I1).NE.0.0)GZ=(ZT(I2,K)-ZT(I1,K))/(XT(I2)-XT(I1))
-      ZT(J,K)=ZT(I1,K)+GZ*(XT(J)-XT(I1))
-     ENDIF
-    END DO
-   ENDDO
-
-   !## remove doubles
-   K=1
-   DO J=2,N
-    IF(XT(K).NE.XT(J))THEN
-     K=K+1
-     IF(K.NE.J)THEN
-      XT(K)  =XT(J)
-      ZT(K,1)=ZT(J,1)
-      ZT(K,2)=ZT(J,2)
-     ENDIF
-    ENDIF
-   END DO
-   !## number of unique points in table
-   N=K
-
-   !## make sure last point is equal to %tx   
-   XT(N)=SPF(I)%TX
-
-   !## llc
-   X(1)=SPF(I)%X(1)
-   Y(1)=SPF(I)%Y(1)
-   Z(1)=ZT(1,2)
-   !## ulc
-   X(2)=X(1)
-   Y(2)=Y(1)
-   Z(2)=ZT(1,1)
-
-   !## for each (interpolated) coordinate
-   DO IPOS=2,N
-
-    !## assign coordinate and z-values to knickpoints
-    TX=0.0
-    DO J=2,SPF(I)%NXY 
-     DXX=SPF(I)%X(J)-SPF(I)%X(J-1); DYY=SPF(I)%Y(J)-SPF(I)%Y(J-1); DXY=0.0
-     IF(DXX.NE.0.0.OR.DYY.NE.0.0)DXY=SQRT(DXX**2.0+DYY**2.0)
-     GX=0.0; GY=0.0
-     IF(DXY.GT.0.0)THEN; GX=DXX/DXY; GY=DYY/DXY; ENDIF
-     TX(2)=TX(1)+DXY
-
-     !## between interval or in last interval
-     IF(XT(IPOS).GE.TX(1).AND.XT(IPOS).LT.TX(2).OR. &
-        J.EQ.SPF(I)%NXY)THEN
-
-      !## urc
-      X(3)=SPF(I)%X(J-1)+GX*(XT(IPOS)-TX(1))
-      Y(3)=SPF(I)%Y(J-1)+GY*(XT(IPOS)-TX(1))
-      Z(3)=ZT(IPOS,1)
-      !## lrc
-      X(4)=X(3)
-      Y(4)=Y(3)
-      Z(4)=ZT(IPOS,2)
-
-      !## if inside current viewable domain, add to OpenGL-statement
-      IF((X(1).GT.BOT%X.OR.X(3).GT.BOT%X).AND.(X(1).LT.TOP%X.OR.X(3).LT.TOP%X).AND. &
-         (Y(1).GT.BOT%Y.OR.Y(3).GT.BOT%Y).AND.(Y(1).LT.TOP%Y.OR.Y(3).LT.TOP%Y))THEN
-       !## correct x/y for current viewable ratios
-       XCOR(1)=X(1);    YCOR(1)=Y(1)
-       XCOR(2)=XCOR(1); YCOR(2)=YCOR(1)
-       XCOR(3)=X(3);    YCOR(3)=Y(3)
-       XCOR(4)=XCOR(3); YCOR(4)=YCOR(3)
-
-       !## show filled in polygons
-       IF(SOLPLOT(I)%IINTERFACE.EQ.0)THEN
-
-        !## get color for z-mean between two segments
-        IICLR=SLD(1)%INTCLR(IPROF)
-        CALL IMOD3D_SETCOLOR(IICLR) !## include alpha
-        !## show shaded surface
-        CALL IMOD3D_RETURNCOLOR(IICLR,AMBIENT)
-
-        CALL GLMATERIALFV(GL_FRONT_AND_BACK,GL_AMBIENT_AND_DIFFUSE,AMBIENT)
-              
-        !## begin OpenGL-Quads       
-        CALL GLBEGIN(GL_QUADS)
-         CALL IMOD3D_SETNORMALVECTOR((/XCOR(1),YCOR(1),Z(1)/),(/XCOR(2),YCOR(2),Z(2)/),(/XCOR(3),YCOR(3),Z(3)/))
-         DO JJ=1,4; CALL GLVERTEX3F(XCOR(JJ),YCOR(JJ),Z(JJ)); ENDDO
-         !## end OpenGL-Quads
-        CALL GLEND()
-        CALL IMOD3D_SETCOLOR(WRGB(10,10,10))
-       
-       ENDIF
-       
-       !## show interfaces
-       IF(SOLPLOT(I)%IINTERFACE.EQ.1)THEN
-        IICLR=SPF(I)%PROF(IPROF)%ICLR
-        CALL IMOD3D_SETCOLOR(IICLR) 
-       ENDIF   
-
-       !## begin OpenGL-LINES
-       CALL GLLINEWIDTH(1.0_GLFLOAT)
-       CALL GLBEGIN(GL_LINES)
-        CALL GLVERTEX3F(XCOR(2),YCOR(2),Z(2))
-        CALL GLVERTEX3F(XCOR(3),YCOR(3),Z(3))
-       CALL GLEND()
-
-       !## draw bottom (only for the last)
-       IF(IPROF.EQ.SIZE(SPF(I)%PROF)-1)THEN
-
-        !## show interfaces
-        IF(SOLPLOT(I)%IINTERFACE.EQ.1)THEN
-         IICLR=SPF(I)%PROF(IPROF+1)%ICLR
-         CALL IMOD3D_SETCOLOR(IICLR)
-        ENDIF   
-
-        CALL GLBEGIN(GL_LINES)
-        CALL GLVERTEX3F(XCOR(1),YCOR(1),Z(1))
-        CALL GLVERTEX3F(XCOR(4),YCOR(4),Z(4))
-        CALL GLEND()
-       ENDIF
-                  
-      ENDIF
-      !## copy current position to previous position
-      X(1)=X(4); Y(1)=Y(4); Z(1)=Z(4)
-      X(2)=X(3); Y(2)=Y(3); Z(2)=Z(3)
-      EXIT
-     ENDIF
-     TX(1)=TX(2)
-    ENDDO
-   ENDDO     
-
-   DEALLOCATE(XT,ZT)
-   NULLIFY(PX,PZ)
-
-  ENDDO
-  
-  !## OpenGL-drawing list
-  CALL GLENDLIST()
-
+  CALL IMOD3D_SOL_DRAWINGLIST(NSOLLIST)
  ENDDO
 
  CALL WINDOWOUTSTATUSBAR(2,'')
 
  !## read, process and stick bitmaps to cross-sections
- IMOD3D_SOL=IMOD3D_SOL_BMP() 
+ IMOD3D_SOL=IMOD3D_SOL_BMP()
  !## read background again if this has been updated
  IREADBMP=0
  
@@ -4257,10 +4140,240 @@ SOLLOOP: DO I=1,NSOLLIST
  END FUNCTION IMOD3D_SOL
 
  !###======================================================================
- LOGICAL FUNCTION IMOD3D_SOL_BMP() !DX,DY)
+ SUBROUTINE IMOD3D_SOL_DRAWINGLIST(ISOL) !NSOLLIST)
  !###======================================================================
  IMPLICIT NONE
-! REAL(KIND=GLFLOAT),INTENT(IN) :: DX,DY
+ INTEGER,INTENT(IN) :: ISOL
+ REAL(KIND=GLFLOAT) :: DXX,DYY,GX,GY,GZ,DXY 
+ INTEGER :: I,J,K,II,JJ,IPROF,IPOS,N,I1,I2,IICLR
+ REAL(KIND=GLFLOAT),DIMENSION(4) :: X,Y,XCOR,YCOR,Z
+ REAL(KIND=GLFLOAT),DIMENSION(2) :: TX
+ REAL,DIMENSION(:),ALLOCATABLE :: XT
+ REAL,DIMENSION(:,:),ALLOCATABLE :: ZT
+ REAL,PARAMETER :: NODATA_Z=-999.99
+ 
+ !## list index for
+ SOLLISTINDEX(ISOL,1)=GLGENLISTS(1)
+ !## start new drawing list
+ CALL GLNEWLIST(SOLLISTINDEX(ISOL,1),GL_COMPILE)
+
+ !## process each cross-section (nidf) --- two-by-two
+ DO IPROF=1,SIZE(SPF(I)%PROF)-1  
+   
+  IF(SPF(I)%PROF(IPROF)%NPOS  .LE.0)CYCLE
+  IF(SPF(I)%PROF(IPROF+1)%NPOS.LE.0)CYCLE      
+   
+  !## make sure xt has a small offset (except for xt=0.0)
+  TX(1)=0.0
+  DO J=2,SPF(I)%NXY
+   DXX=SPF(I)%X(J)-SPF(I)%X(J-1); DYY=SPF(I)%Y(J)-SPF(I)%Y(J-1); DXY=DXX**2.0+DYY**2.0
+   IF(DXY.GT.0.0)DXY=SQRT(DXY)
+   TX(1)=TX(1)+DXY
+  ENDDO
+  !## minimal offset = fraction of total distance
+  DXX=TX(1)/1000.0
+      
+  N=SPF(I)%PROF(IPROF)%NPOS+SPF(I)%PROF(IPROF+1)%NPOS+SPF(I)%NXY-2
+  ALLOCATE(XT(N),ZT(N,2))
+  XT=0.0
+  ZT=NODATA_Z
+  IPOS=0
+  II  =0
+  DO K=IPROF,IPROF+1
+   II=II+1
+   !## create table with distances and z-values for top/bot of current iprof-layer
+   DO J=1,SPF(I)%PROF(K)%NPOS
+    IPOS=IPOS+1
+    IF(J.EQ.1)THEN
+     XT(IPOS)=SPF(I)%PROF(K)%PX(J)
+    ELSE
+     XT(IPOS)=MAX(XT(IPOS-1)+DXX,SPF(I)%PROF(K)%PX(J))
+    ENDIF
+    ZT(IPOS,II)=SPF(I)%PROF(K)%PZ(J)
+   ENDDO
+  END DO
+  !## include knickpoints
+  TX(1)=0.0
+  DO J=2,SPF(I)%NXY-1
+   DXX=SPF(I)%X(J)-SPF(I)%X(J-1); DYY=SPF(I)%Y(J)-SPF(I)%Y(J-1); DXY=0.0
+   IF(DXX.NE.0.0.OR.DYY.NE.0.0)DXY=SQRT(DXX**2.0+DYY**2.0)
+   TX(1)     =TX(1)+DXY
+   IPOS      =IPOS+1
+   XT(IPOS)  =TX(1)
+   ZT(IPOS,1)=NODATA_Z !## to be filled in later
+   ZT(IPOS,2)=NODATA_Z !## to be filled in later
+  ENDDO
+  N=IPOS
+ 
+  CALL SORTEM(1,N,XT,2,ZT(:,1),ZT(:,2),(/0.0/),(/0.0/),(/0.0/),(/0.0/),(/0.0/))
+   
+  !## fill first and last
+  DO K=1,2
+   IF(ZT(1,K).EQ.NODATA_Z)THEN
+    DO J=2,N
+     IF(ZT(J,K).NE.NODATA_Z)THEN
+      ZT(1,K)=ZT(J,K)
+      EXIT
+     ENDIF
+    ENDDO
+   ENDIF
+   IF(ZT(N,K).EQ.NODATA_Z)THEN
+    DO J=N-1,1,-1
+     IF(ZT(J,K).NE.NODATA_Z)THEN
+      ZT(N,K)=ZT(J,K)
+      EXIT
+     ENDIF
+    ENDDO
+   ENDIF
+  ENDDO
+   
+  !## interpolate unknown values
+  DO J=1,N
+   DO K=1,2
+    IF(ZT(J,K).EQ.NODATA_Z)THEN
+     DO I1=J-1,1,-1; IF(ZT(I1,K).NE.NODATA_Z)EXIT; ENDDO
+     DO I2=J+1,N;    IF(ZT(I2,K).NE.NODATA_Z)EXIT; ENDDO
+     GZ=0.0
+     IF(XT(I2)-XT(I1).NE.0.0)GZ=(ZT(I2,K)-ZT(I1,K))/(XT(I2)-XT(I1))
+     ZT(J,K)=ZT(I1,K)+GZ*(XT(J)-XT(I1))
+    ENDIF
+   END DO
+  ENDDO
+
+  !## remove doubles
+  K=1
+  DO J=2,N
+   IF(XT(K).NE.XT(J))THEN
+    K=K+1
+    IF(K.NE.J)THEN
+     XT(K)  =XT(J)
+     ZT(K,1)=ZT(J,1)
+     ZT(K,2)=ZT(J,2)
+    ENDIF
+   ENDIF
+  END DO
+  !## number of unique points in table
+  N=K
+
+  !## make sure last point is equal to %tx   
+  XT(N)=SPF(I)%TX
+
+  !## llc
+  X(1)=SPF(I)%X(1)
+  Y(1)=SPF(I)%Y(1)
+  Z(1)=ZT(1,2)
+  !## ulc
+  X(2)=X(1)
+  Y(2)=Y(1)
+  Z(2)=ZT(1,1)
+
+  !## for each (interpolated) coordinate
+  DO IPOS=2,N
+
+   !## assign coordinate and z-values to knickpoints
+   TX=0.0
+   DO J=2,SPF(I)%NXY 
+    DXX=SPF(I)%X(J)-SPF(I)%X(J-1); DYY=SPF(I)%Y(J)-SPF(I)%Y(J-1); DXY=0.0
+    IF(DXX.NE.0.0.OR.DYY.NE.0.0)DXY=SQRT(DXX**2.0+DYY**2.0)
+    GX=0.0; GY=0.0
+    IF(DXY.GT.0.0)THEN; GX=DXX/DXY; GY=DYY/DXY; ENDIF
+    TX(2)=TX(1)+DXY
+
+    !## between interval or in last interval
+    IF(XT(IPOS).GE.TX(1).AND.XT(IPOS).LT.TX(2).OR. &
+       J.EQ.SPF(I)%NXY)THEN
+
+     !## urc
+     X(3)=SPF(I)%X(J-1)+GX*(XT(IPOS)-TX(1))
+     Y(3)=SPF(I)%Y(J-1)+GY*(XT(IPOS)-TX(1))
+     Z(3)=ZT(IPOS,1)
+     !## lrc
+     X(4)=X(3)
+     Y(4)=Y(3)
+     Z(4)=ZT(IPOS,2)
+
+     !## if inside current viewable domain, add to OpenGL-statement
+     IF((X(1).GT.BOT%X.OR.X(3).GT.BOT%X).AND.(X(1).LT.TOP%X.OR.X(3).LT.TOP%X).AND. &
+        (Y(1).GT.BOT%Y.OR.Y(3).GT.BOT%Y).AND.(Y(1).LT.TOP%Y.OR.Y(3).LT.TOP%Y))THEN
+      !## correct x/y for current viewable ratios
+      XCOR(1)=X(1);    YCOR(1)=Y(1)
+      XCOR(2)=XCOR(1); YCOR(2)=YCOR(1)
+      XCOR(3)=X(3);    YCOR(3)=Y(3)
+      XCOR(4)=XCOR(3); YCOR(4)=YCOR(3)
+
+      !## show filled in polygons
+      IF(SOLPLOT(I)%IINTERFACE.EQ.0)THEN
+
+       !## get color for z-mean between two segments
+       IICLR=SLD(1)%INTCLR(IPROF)
+       CALL IMOD3D_SETCOLOR(IICLR) !## include alpha
+       !## show shaded surface
+       CALL IMOD3D_RETURNCOLOR(IICLR,AMBIENT)
+
+       CALL GLMATERIALFV(GL_FRONT_AND_BACK,GL_AMBIENT_AND_DIFFUSE,AMBIENT)
+              
+       !## begin OpenGL-Quads       
+       CALL GLBEGIN(GL_QUADS)
+        CALL IMOD3D_SETNORMALVECTOR((/XCOR(1),YCOR(1),Z(1)/),(/XCOR(2),YCOR(2),Z(2)/),(/XCOR(3),YCOR(3),Z(3)/))
+        DO JJ=1,4; CALL GLVERTEX3F(XCOR(JJ),YCOR(JJ),Z(JJ)); ENDDO
+        !## end OpenGL-Quads
+       CALL GLEND()
+       CALL IMOD3D_SETCOLOR(WRGB(10,10,10))
+       
+      ENDIF
+       
+      !## show interfaces
+      IF(SOLPLOT(I)%IINTERFACE.EQ.1)THEN
+       IICLR=SPF(I)%PROF(IPROF)%ICLR
+       CALL IMOD3D_SETCOLOR(IICLR) 
+      ENDIF   
+
+      !## begin OpenGL-LINES
+      CALL GLLINEWIDTH(1.0_GLFLOAT)
+      CALL GLBEGIN(GL_LINES)
+       CALL GLVERTEX3F(XCOR(2),YCOR(2),Z(2))
+       CALL GLVERTEX3F(XCOR(3),YCOR(3),Z(3))
+      CALL GLEND()
+
+      !## draw bottom (only for the last)
+      IF(IPROF.EQ.SIZE(SPF(I)%PROF)-1)THEN
+
+       !## show interfaces
+       IF(SOLPLOT(I)%IINTERFACE.EQ.1)THEN
+        IICLR=SPF(I)%PROF(IPROF+1)%ICLR
+        CALL IMOD3D_SETCOLOR(IICLR)
+       ENDIF   
+
+       CALL GLBEGIN(GL_LINES)
+       CALL GLVERTEX3F(XCOR(1),YCOR(1),Z(1))
+       CALL GLVERTEX3F(XCOR(4),YCOR(4),Z(4))
+       CALL GLEND()
+      ENDIF
+                  
+     ENDIF
+     !## copy current position to previous position
+     X(1)=X(4); Y(1)=Y(4); Z(1)=Z(4)
+     X(2)=X(3); Y(2)=Y(3); Z(2)=Z(3)
+     EXIT
+    ENDIF
+    TX(1)=TX(2)
+   ENDDO
+  ENDDO     
+
+  DEALLOCATE(XT,ZT)
+  NULLIFY(PX,PZ)
+
+ ENDDO
+  
+ !## OpenGL-drawing list
+ CALL GLENDLIST()
+
+ END SUBROUTINE IMOD3D_SOL_DRAWINGLIST 
+ 
+ !###======================================================================
+ LOGICAL FUNCTION IMOD3D_SOL_BMP() 
+ !###======================================================================
+ IMPLICIT NONE
  REAL(KIND=GLFLOAT) :: X1,X2,Y1,Y2,XT1,XT2,YT1,YT2,BZ1,BZ2,BX1,BX2,BDX,DXX,DYY,DXY,TDX
  INTEGER :: I,J
  
@@ -4314,11 +4427,6 @@ SOLLOOP: DO I=1,NSOLLIST
    X2=SPF(I)%X(J)  
    Y1=SPF(I)%Y(J-1)
    Y2=SPF(I)%Y(J)
-
-!   X1=(SPF(I)%X(J-1)-MIDPOS%X)/DX
-!   X2=(SPF(I)%X(J)  -MIDPOS%X)/DX
-!   Y1=(SPF(I)%Y(J-1)-MIDPOS%Y)/DY
-!   Y2=(SPF(I)%Y(J)  -MIDPOS%Y)/DY
 
    !## compute texture fractions
    XT1=(TDX-BX1)/BDX

@@ -556,22 +556,32 @@ CONTAINS
  END FUNCTION SOLID_PROFILEDISTANCE
 
  !###======================================================================
- SUBROUTINE SOLID_PROFILEDELETE()
+ SUBROUTINE SOLID_PROFILEDELETE(ID) !IOPTION)
  !###======================================================================
  IMPLICIT NONE
+ INTEGER,INTENT(IN) :: ID !OPTION
  INTEGER :: I,J,K
  
- CALL WDIALOGSELECT(ID_DSERIESTAB2)
+ CALL WDIALOGSELECT(ID) !ID_DSERIESTAB2)
  CALL WDIALOGGETMENU(IDF_MENU1,J)
 
- CALL WMESSAGEBOX(YESNO,QUESTIONICON,COMMONNO,'You are about to remove the selected Cross-Section: ['// &
-   TRIM(SPF(J)%FNAME)//'] from the Solid.'//CHAR(13)// &
-  'Be aware that the Cross-Section will be removed from the list and NOT from the Solid folder.'//CHAR(13)// &
-  'Any recovery can take place, manually by editing the *.sol file.'//CHAR(13)//CHAR(13)// &
-  'Are you sure to continue?','Question')
+ IF(ID.EQ.ID_DSERIESTAB2)THEN !IOPTION.EQ.1)THEN
+  CALL WMESSAGEBOX(YESNO,QUESTIONICON,COMMONNO,'You are about to remove the selected Cross-Section: ['// &
+    TRIM(SPF(J)%FNAME)//'] from the Solid.'//CHAR(13)// &
+   'Be aware that the Cross-Section will be removed from the list and NOT from the Solid folder.'//CHAR(13)// &
+   'Any recovery can take place, manually by editing the *.sol file.'//CHAR(13)//CHAR(13)// &
+   'Are you sure to continue?','Question')
+ ELSEIF(ID.EQ.ID_D3DSETTINGS_TAB6)THEN
+  CALL WMESSAGEBOX(YESNO,QUESTIONICON,COMMONNO,'You are about to remove the selected Cross-Section: ['// &
+    TRIM(SPF(J)%FNAME)//'] from the List.'//CHAR(13)// &
+   'Be aware that the removed Cross-Section cannot be restored.'//CHAR(13)// &
+   'COnsider to save the \cross-section prior to deletion.'//CHAR(13)//CHAR(13)// &
+   'Are you sure to continue?','Question')
+ ENDIF
+ 
  IF(WINFODIALOG(4).NE.1)RETURN
 
- CALL SOLID_PROFILEFIELDS()
+ IF(ID.EQ.ID_DSERIESTAB2)CALL SOLID_PROFILEFIELDS()
 
  !## shift data ...
  DO I=J,NSPF-1 
@@ -624,10 +634,11 @@ CONTAINS
  SPF(I)%PBITMAP%IACT=0
  NSPF=NSPF-1
  
- CALL WDIALOGSELECT(ID_DSERIESTAB2)
+ CALL WDIALOGSELECT(ID) !ID_DSERIESTAB2)
  CALL WDIALOGPUTMENU(IDF_MENU1,SPF%FNAME,NSPF,NSPF)
- CALL SOLID_PROFILEFIELDS()
 
+ IF(ID.EQ.ID_DSERIESTAB2)CALL SOLID_PROFILEFIELDS()
+ 
  END SUBROUTINE SOLID_PROFILEDELETE
 
  !###======================================================================

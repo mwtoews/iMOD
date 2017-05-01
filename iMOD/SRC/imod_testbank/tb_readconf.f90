@@ -175,58 +175,57 @@ CONTAINS
  DO I=1,SIZE(IDF); CALL IDFNULLIFY(IDF(I)); ENDDO
  
  DO IEXE=1,NEXE
-!  IF(EXE(IEXE)%IACT.EQ.1)THEN
-   DO JEXE=IEXE+1,NEXE
-    IF(IEXE.NE.JEXE)THEN !.AND.EXE(JEXE)%IACT.EQ.1)THEN
+  DO JEXE=IEXE+1,NEXE
+   IF(IEXE.NE.JEXE)THEN
 
-     !## open new result folder
-     RES=TRIM(OUTMAP)//'\'//TRIM(RESDIR)//'\'//TRIM(EXE(IEXE)%ALIAS)//'-'//TRIM(EXE(JEXE)%ALIAS)
-     !## create folder
-     CALL UTL_CREATEDIR(RES)
+    !## open new result folder
+    RES=TRIM(OUTMAP)//'\'//TRIM(RESDIR)//'\'//TRIM(EXE(IEXE)%ALIAS)//'-'//TRIM(EXE(JEXE)%ALIAS)
+    !## create folder
+    CALL UTL_CREATEDIR(RES)
 
-     WRITE(IUOUT,'(/131A1)') ('-',I=1,131)
-     WRITE(IUOUTG,'(/131A1)') ('-',I=1,131)
-     WRITE(IUOUT,'(A)') 'Results for:'//TRIM(RES)
-     WRITE(IUOUTG,'(A)') 'Results for:'//TRIM(RES)
-     WRITE(IUOUT,'(131A1)') ('-',I=1,131)
-     WRITE(IUOUTG,'(131A1)') ('-',I=1,131)
-     WRITE(IUOUT,'(A35,5(F15.1,A1))') 'Result',(PERC(I),'%',I=1,SIZE(PERC)) !,'ABS_MEAN_DIFF'
-     WRITE(IUOUTG,'(A35,5(F15.1,A1))') 'Result',(PERC(I),'%',I=1,SIZE(PERC)) !,'ABS_MEAN_DIFF'
+    WRITE(IUOUT,'(/131A1)') ('-',I=1,131)
+    WRITE(IUOUTG,'(/131A1)') ('-',I=1,131)
+    WRITE(IUOUT,'(A)') 'Results for:'//TRIM(RES)
+    WRITE(IUOUTG,'(A)') 'Results for:'//TRIM(RES)
+    WRITE(IUOUT,'(131A1)') ('-',I=1,131)
+    WRITE(IUOUTG,'(131A1)') ('-',I=1,131)
+    WRITE(IUOUT,'(A35,5(F15.1,A1))') 'Result',(PERC(I),'%',I=1,SIZE(PERC)) !,'ABS_MEAN_DIFF'
+    WRITE(IUOUTG,'(A35,5(F15.1,A1))') 'Result',(PERC(I),'%',I=1,SIZE(PERC)) !,'ABS_MEAN_DIFF'
      
-     !## see whether error occured
-     RES=TRIM(OUTMAP)//'\'//TRIM(RESDIR)//'\'//TRIM(EXE(IEXE)%ALIAS)
-     INQUIRE(FILE=TRIM(RES)//'\error.txt',EXIST=LEX1)
-     RES=TRIM(OUTMAP)//'\'//TRIM(RESDIR)//'\'//TRIM(EXE(JEXE)%ALIAS)
-     INQUIRE(FILE=TRIM(RES)//'\error.txt',EXIST=LEX2)
-     IF(.NOT.LEX1.AND..NOT.LEX2)THEN
+    !## see whether error occured
+    RES=TRIM(OUTMAP)//'\'//TRIM(RESDIR)//'\'//TRIM(EXE(IEXE)%ALIAS)
+    INQUIRE(FILE=TRIM(RES)//'\error.txt',EXIST=LEX1)
+    RES=TRIM(OUTMAP)//'\'//TRIM(RESDIR)//'\'//TRIM(EXE(JEXE)%ALIAS)
+    INQUIRE(FILE=TRIM(RES)//'\error.txt',EXIST=LEX2)
+    IF(.NOT.LEX1.AND..NOT.LEX2)THEN
  
-      DO IMAP=1,SIZE(CMAP)
-       !## get list of idf's
-       IF(EXE(IEXE)%IMAP.EQ.0)THEN
-        RES=TRIM(OUTMAP)//'\'//TRIM(RESDIR)//'\'//TRIM(EXE(IEXE)%ALIAS)//'\'//TRIM(CMAP(IMAP))
-       ELSE
-        RES=TRIM(OUTMAP)//'\'//TRIM(RESDIR)//'\'//TRIM(EXE(IEXE)%ALIAS)//'\MODFLOW\'//TRIM(CMAP(IMAP))
-       ENDIF
-       IF(UTL_DIRINFO_POINTER(RES,TRIM(CMAP(IMAP))//'*l*.idf',LISTNAME,'F'))THEN
+     DO IMAP=1,SIZE(CMAP)
+      !## get list of idf's
+      IF(EXE(IEXE)%IMAP.EQ.0)THEN
+       RES=TRIM(OUTMAP)//'\'//TRIM(RESDIR)//'\'//TRIM(EXE(IEXE)%ALIAS)//'\'//TRIM(CMAP(IMAP))
+      ELSE
+       RES=TRIM(OUTMAP)//'\'//TRIM(RESDIR)//'\'//TRIM(EXE(IEXE)%ALIAS)//'\MODFLOW\'//TRIM(CMAP(IMAP))
+      ENDIF
+      IF(UTL_DIRINFO_POINTER(RES,TRIM(CMAP(IMAP))//'*l*.idf',LISTNAME,'F'))THEN
      
-        DO I=1,SIZE(LISTNAME)
+       DO I=1,SIZE(LISTNAME)
 
-         !## read idf - exe 1
-         IF(EXE(IEXE)%IMAP.EQ.0)THEN
-          FNAME=TRIM(OUTMAP)//'\'//TRIM(RESDIR)//'\'//TRIM(EXE(IEXE)%ALIAS)//'\'//TRIM(CMAP(IMAP))//'\'//TRIM(LISTNAME(I))
+        !## read idf - exe 1
+        IF(EXE(IEXE)%IMAP.EQ.0)THEN
+         FNAME=TRIM(OUTMAP)//'\'//TRIM(RESDIR)//'\'//TRIM(EXE(IEXE)%ALIAS)//'\'//TRIM(CMAP(IMAP))//'\'//TRIM(LISTNAME(I))
+        ELSE
+         FNAME=TRIM(OUTMAP)//'\'//TRIM(RESDIR)//'\'//TRIM(EXE(IEXE)%ALIAS)//'\MODFLOW\'//TRIM(CMAP(IMAP))//'\'//TRIM(LISTNAME(I))
+        ENDIF
+        IF(IDFREAD(IDF(1),FNAME,1,IQ=1))THEN
+
+         !## read idf - exe 2
+         IF(EXE(JEXE)%IMAP.EQ.0)THEN
+          FNAME=TRIM(OUTMAP)//'\'//TRIM(RESDIR)//'\'//TRIM(EXE(JEXE)%ALIAS)//'\'//TRIM(CMAP(IMAP))//'\'//TRIM(LISTNAME(I))
          ELSE
-          FNAME=TRIM(OUTMAP)//'\'//TRIM(RESDIR)//'\'//TRIM(EXE(IEXE)%ALIAS)//'\MODFLOW\'//TRIM(CMAP(IMAP))//'\'//TRIM(LISTNAME(I))
+          FNAME=TRIM(OUTMAP)//'\'//TRIM(RESDIR)//'\'//TRIM(EXE(JEXE)%ALIAS)//'\'//TRIM(CMAP(IMAP))//'\MODFLOW\'//TRIM(LISTNAME(I))
          ENDIF
-         IF(IDFREAD(IDF(1),FNAME,1,IQ=1))THEN
+         IF(IDFREAD(IDF(2),FNAME,1,IQ=1))THEN
 
-          !## read idf - exe 2
-          IF(EXE(JEXE)%IMAP.EQ.0)THEN
-           FNAME=TRIM(OUTMAP)//'\'//TRIM(RESDIR)//'\'//TRIM(EXE(JEXE)%ALIAS)//'\'//TRIM(CMAP(IMAP))//'\'//TRIM(LISTNAME(I))
-          ELSE
-           FNAME=TRIM(OUTMAP)//'\'//TRIM(RESDIR)//'\'//TRIM(EXE(JEXE)%ALIAS)//'\'//TRIM(CMAP(IMAP))//'\MODFLOW\'//TRIM(LISTNAME(I))
-          ENDIF
-
-          IF(IDFREAD(IDF(2),FNAME,1,IQ=1))THEN
            !## diff
            
            !## define threshold for fluxes (higher threshold is required fluxes than for heads)
@@ -237,68 +236,73 @@ CONTAINS
 !            THDX=THRESHOLD*IDF(1)%DX
 !           ENDIF
        
+          DO IROW=1,IDF(1)%NROW; DO ICOL=1,IDF(1)%NCOL
+           !## both not equal to nodata - compute difference
+           IF(IDF(1)%X(ICOL,IROW).NE.IDF(1)%NODATA.AND. &
+              IDF(2)%X(ICOL,IROW).NE.IDF(2)%NODATA)THEN
+            IDF(1)%X(ICOL,IROW)=IDF(1)%X(ICOL,IROW)-IDF(2)%X(ICOL,IROW)
+           !## both equal to nodata difference is zero
+           ELSEIF(IDF(1)%X(ICOL,IROW).EQ.IDF(1)%NODATA.AND. &
+                IDF(2)%X(ICOL,IROW).EQ.IDF(2)%NODATA)THEN
+            IDF(1)%X(ICOL,IROW)=0.0
+           !## one of them equal no nodata, difference is nodata
+           ELSE
+            IDF(1)%X(ICOL,IROW)=IDF(1)%NODATA
+           ENDIF
+          ENDDO; ENDDO
+          
+          IF(MAXVAL(ABS(IDF(1)%X)).GE.THRESHOLD)THEN
+           FNAME=TRIM(OUTMAP)//'\'//TRIM(RESDIR)//'\'//TRIM(EXE(IEXE)%ALIAS)//'-'//TRIM(EXE(JEXE)%ALIAS)// &
+                 '\diff_'//TRIM(LISTNAME(I))
+           IF(.NOT.IDFWRITE(IDF(1),FNAME,1))CALL UTL_PRINTTEXT('Cannot write '//TRIM(IDF(2)%FNAME),2)
+           !## get statistics
+           CALL UTL_GETMED(IDF(1)%X,IDF(1)%NCOL*IDF(1)%NROW,IDF(1)%NODATA,PERC,SIZE(PERC),NNODATA,XMED)
+           !## get mean absolute difference, skip nodata
+           XMABS=0.0; N=0
            DO IROW=1,IDF(1)%NROW; DO ICOL=1,IDF(1)%NCOL
-            IF(IDF(1)%X(ICOL,IROW).NE.IDF(1)%NODATA.AND. &
-               IDF(2)%X(ICOL,IROW).NE.IDF(2)%NODATA)THEN
-             IDF(1)%X(ICOL,IROW)=IDF(1)%X(ICOL,IROW)-IDF(2)%X(ICOL,IROW)
-            ELSE
-             IDF(1)%X(ICOL,IROW)=IDF(1)%NODATA
+            IF(IDF(1)%X(ICOL,IROW).NE.IDF(1)%NODATA)THEN
+             XMABS=XMABS+ABS(IDF(1)%X(ICOL,IROW)); N=N+1
             ENDIF
            ENDDO; ENDDO
-           
-           IF(MAXVAL(ABS(IDF(1)%X)).GE.THRESHOLD)THEN
-            FNAME=TRIM(OUTMAP)//'\'//TRIM(RESDIR)//'\'//TRIM(EXE(IEXE)%ALIAS)//'-'//TRIM(EXE(JEXE)%ALIAS)// &
-                  '\diff_'//TRIM(LISTNAME(I))
-            IF(.NOT.IDFWRITE(IDF(1),FNAME,1))CALL UTL_PRINTTEXT('Cannot write '//TRIM(IDF(2)%FNAME),2)
-            !## get statistics
-            CALL UTL_GETMED(IDF(1)%X,IDF(1)%NCOL*IDF(1)%NROW,IDF(1)%NODATA,PERC,SIZE(PERC),NNODATA,XMED)
-            !## get mean absolute difference, skip nodata
-            XMABS=0.0; N=0
-            DO IROW=1,IDF(1)%NROW; DO ICOL=1,IDF(1)%NCOL
-             IF(IDF(1)%X(ICOL,IROW).NE.IDF(1)%NODATA)THEN
-              XMABS=XMABS+ABS(IDF(1)%X(ICOL,IROW)); N=N+1
-             ENDIF
-            ENDDO; ENDDO
-            IF(N.GT.0)XMABS=XMABS/REAL(N)
-           ELSE
-            XMED=0.0
-           ENDIF       
-           WRITE(IUOUT,'(A35,5(F15.7,1X))') TRIM(LISTNAME(I)),(XMED(J),J=1,SIZE(PERC)) !,XMABS
-           WRITE(IUOUTG,'(A35,5(F15.7,1X))') TRIM(LISTNAME(I)),(XMED(J),J=1,SIZE(PERC)) !,XMABS
-          ENDIF
-          CALL IDFDEALLOCATE(IDF,SIZE(IDF))
-          
+           IF(N.GT.0)XMABS=XMABS/REAL(N)
+          ELSE
+           XMED=0.0
+          ENDIF       
+          WRITE(IUOUT, '(A35,5(1X,F15.7))') TRIM(LISTNAME(I)),(XMED(J),J=1,SIZE(PERC))
+          WRITE(IUOUTG,'(A35,5(1X,F15.7))') TRIM(LISTNAME(I)),(XMED(J),J=1,SIZE(PERC))
          ENDIF
-        ENDDO
+         CALL IDFDEALLOCATE(IDF,SIZE(IDF))
+         
+        ENDIF
+       ENDDO
       
-       ENDIF
-      ENDDO
-     ELSE
+      ENDIF
+     ENDDO
+    ELSE
 
-      !## see what error occured
-      IF(LEX1)THEN
-       IU=UTL_GETUNIT()
-       RES=TRIM(OUTMAP)//'\'//TRIM(RESDIR)//'\'//TRIM(EXE(IEXE)%ALIAS)      
-       OPEN(IU,FILE=TRIM(RES)//'\error.txt',STATUS='OLD',ACTION='READ',IOSTAT=IOS)
-       CCODE='NaN'
-       IF(IOS.EQ.0)THEN; READ(IU,*) CCODE; CLOSE(IU); ENDIF
-       WRITE(IUOUT,'(2X,A)') TRIM(RES)//' did NOT run Successfully, EXITCODE= '//TRIM(CCODE)
-       WRITE(IUOUTG,'(2X,A)') TRIM(RES)//' did NOT run Successfully, EXITCODE= '//TRIM(CCODE)
-      ENDIF
-      IF(LEX2)THEN
-       IU=UTL_GETUNIT()
-       RES=TRIM(OUTMAP)//'\'//TRIM(RESDIR)//'\'//TRIM(EXE(JEXE)%ALIAS)      
-       OPEN(IU,FILE=TRIM(RES)//'\error.txt',STATUS='OLD',ACTION='READ',IOSTAT=IOS)
-       CCODE='NaN'
-       IF(IOS.EQ.0)THEN; READ(IU,*) CCODE; CLOSE(IU); ENDIF
-       WRITE(IUOUT,'(2X,A)') TRIM(RES)//' did NOT run Successfully, EXITCODE= '//TRIM(CCODE)
-       WRITE(IUOUTG,'(2X,A)') TRIM(RES)//' did NOT run Successfully, EXITCODE= '//TRIM(CCODE)
-      ENDIF
-     
+     !## see what error occured
+     IF(LEX1)THEN
+      IU=UTL_GETUNIT()
+      RES=TRIM(OUTMAP)//'\'//TRIM(RESDIR)//'\'//TRIM(EXE(IEXE)%ALIAS)      
+      OPEN(IU,FILE=TRIM(RES)//'\error.txt',STATUS='OLD',ACTION='READ',IOSTAT=IOS)
+      CCODE='NaN'
+      IF(IOS.EQ.0)THEN; READ(IU,*) CCODE; CLOSE(IU); ENDIF
+      WRITE(IUOUT,'(2X,A)') TRIM(RES)//' did NOT run Successfully, EXITCODE= '//TRIM(CCODE)
+      WRITE(IUOUTG,'(2X,A)') TRIM(RES)//' did NOT run Successfully, EXITCODE= '//TRIM(CCODE)
      ENDIF
+     IF(LEX2)THEN
+      IU=UTL_GETUNIT()
+      RES=TRIM(OUTMAP)//'\'//TRIM(RESDIR)//'\'//TRIM(EXE(JEXE)%ALIAS)      
+      OPEN(IU,FILE=TRIM(RES)//'\error.txt',STATUS='OLD',ACTION='READ',IOSTAT=IOS)
+      CCODE='NaN'
+      IF(IOS.EQ.0)THEN; READ(IU,*) CCODE; CLOSE(IU); ENDIF
+      WRITE(IUOUT,'(2X,A)') TRIM(RES)//' did NOT run Successfully, EXITCODE= '//TRIM(CCODE)
+      WRITE(IUOUTG,'(2X,A)') TRIM(RES)//' did NOT run Successfully, EXITCODE= '//TRIM(CCODE)
+     ENDIF
+     
     ENDIF
-   ENDDO
-!  ENDIF
+   ENDIF
+  ENDDO
  ENDDO
  
  IF(ASSOCIATED(LISTNAME))DEALLOCATE(LISTNAME)
