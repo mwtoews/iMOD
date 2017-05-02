@@ -202,7 +202,7 @@ C3B-----GET OPTIONS.
          IMINC=1                                                        ! DLT
          CALL URWORD(LINE,LLOC,ISTART,ISTOP,1,I,R,IOUT,IN)              ! DLT
          READ(LINE(ISTART:ISTOP),*) MINC                                ! DLT
-         WRITE(IOUT,*) 'MINC ACTIVE, VALUE ',MINDC
+         WRITE(IOUT,*) 'MINC ACTIVE, VALUE ',MINC
       ENDIF
       IF(LLOC.LT.200) GO TO 20
 C
