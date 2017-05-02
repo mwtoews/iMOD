@@ -197,10 +197,12 @@ C3B-----GET OPTIONS.
          IMINKD=1                                                       ! DLT
          CALL URWORD(LINE,LLOC,ISTART,ISTOP,1,I,R,IOUT,IN)              ! DLT
          READ(LINE(ISTART:ISTOP),*) MINKD                               ! DLT
+         WRITE(IOUT,*) 'MINKD ACTIVE, VALUE ',MINKD
       ELSE IF(LINE(ISTART:ISTOP).EQ.'MINC') THEN                        ! DLT
          IMINC=1                                                        ! DLT
          CALL URWORD(LINE,LLOC,ISTART,ISTOP,1,I,R,IOUT,IN)              ! DLT
          READ(LINE(ISTART:ISTOP),*) MINC                                ! DLT
+         WRITE(IOUT,*) 'MINC ACTIVE, VALUE ',MINDC
       ENDIF
       IF(LLOC.LT.200) GO TO 20
 C
@@ -509,7 +511,7 @@ C7G-----(LAYWET NOT 0).
      1            IOUT)
       END IF
   200 CONTINUE
-C
+C   hk(120,100,1)
       call pest1alpha_grid('KH',hk,nrow,ncol,nlay)                      ! IPEST
       call pest1alpha_grid('KV',vka,nrow,ncol,nlay)                     ! IPEST
       call pest1alpha_grid('VA',vkcb,nrow,ncol,nlay)                    ! IPEST

@@ -132,10 +132,12 @@ C read options
          IMINKD=1                                                       ! DLT
          CALL URWORD(LINE,LLOC,ISTART,ISTOP,1,I,R,IOUT,IN)              ! DLT
          READ(LINE(ISTART:ISTOP),*) MINKD                               ! DLT
+         WRITE(IOUT,*) 'MINKD ACTIVE, VALUE ',MINKD
       ELSE IF(LINE(ISTART:ISTOP).EQ.'MINC') THEN                        ! DLT
          IMINC=1                                                        ! DLT
          CALL URWORD(LINE,LLOC,ISTART,ISTOP,1,I,R,IOUT,IN)              ! DLT
          READ(LINE(ISTART:ISTOP),*) MINC                                ! DLT
+         WRITE(IOUT,*) 'MINC ACTIVE, VALUE ',MINC
       ENDIF
       IF(LLOC.LT.200) GO TO 20
 
