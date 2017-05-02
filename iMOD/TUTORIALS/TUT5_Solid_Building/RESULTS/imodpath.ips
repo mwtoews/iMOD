@@ -1,18 +1,18 @@
 3 !## Nlay
 IB_L !## Key ibound
 "D:\IMOD-GEBRUIKERSDAG\MODEL_SIMULATION\boundary_condition" !## Boundary Map
-"d:\OSS\iMOD\TUTORIALS\TUT5_Solid_Building\RESULTS\BOUNDARY.IDF"
+"d:\OSS\iMOD\TUTORIALS\TUT_Solid_Building\RESULTS\BOUNDARY.IDF"
 "1"
 "1"
 TOP_L !## Key top
 TOP_L !## Key bot
 "D:\IMOD-GEBRUIKERSDAG\MODEL_SIMULATION\geohydrology" !## Top/Bot Map
-"d:\OSS\iMOD\TUTORIALS\TUT5_Solid_Building\RESULTS\surface_level.idf"
-"d:\OSS\iMOD\TUTORIALS\TUT5_Solid_Building\RESULTS\Aquitard_top.idf"
-"d:\OSS\iMOD\TUTORIALS\TUT5_Solid_Building\RESULTS\Aquitard_top.idf"
-"d:\OSS\iMOD\TUTORIALS\TUT5_Solid_Building\RESULTS\Aquitard_BOT.idf"
-"d:\OSS\iMOD\TUTORIALS\TUT5_Solid_Building\RESULTS\Aquitard_BOT.idf"
-"d:\OSS\iMOD\TUTORIALS\TUT5_Solid_Building\RESULTS\BEDROCK.IDF"
+"d:\OSS\iMOD\TUTORIALS\TUT_Solid_Building\RESULTS\surface_level.idf"
+"d:\OSS\iMOD\TUTORIALS\TUT_Solid_Building\RESULTS\Aquitard_top.idf"
+"d:\OSS\iMOD\TUTORIALS\TUT_Solid_Building\RESULTS\Aquitard_top.idf"
+"d:\OSS\iMOD\TUTORIALS\TUT_Solid_Building\RESULTS\Aquitard_BOT.idf"
+"d:\OSS\iMOD\TUTORIALS\TUT_Solid_Building\RESULTS\Aquitard_BOT.idf"
+"d:\OSS\iMOD\TUTORIALS\TUT_Solid_Building\RESULTS\BEDROCK.IDF"
 POR_AQF_L !## Key por aqf
 POR_AQF_L !## Key por aqt
 "D:\IMOD-GEBRUIKERSDAG\MODEL_SIMULATION\porosity" !## Por Map

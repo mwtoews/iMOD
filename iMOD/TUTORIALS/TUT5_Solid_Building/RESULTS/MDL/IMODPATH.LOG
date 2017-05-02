@@ -4,5 +4,5 @@
 3,BDGFRF_STEADY-STATE_L3.IDF,BDGFFF_STEADY-STATE_L3.IDF
  
 
-Completed particle tracking. Results are stored within: d:\OSS\iMOD\TUTORIALS\TUT5_Solid_Building\RESULTS\MDL\TUTORIAL5.IFFd:\OSS\iMOD\TUTORIALS\TUT5_Solid_Building\RESULTS\MDL\TUTORIAL5.IPFand added to the iMOD-manager.30556 particles were released out of 30556. Unreleased particles occured due to inactive/constant head boundary conditionsand/or particles positioned above/beneath given thresshold.0 inconsequences were removed from top/bottom information!IMPORTANT: Maximum velocity that occured: 0.1966E+02 m/day
+Completed particle tracking. Results are stored within: d:\OSS\iMOD\TUTORIALS\TUT_Solid_Building\RESULTS\MDL\TUTORIAL5.IFFd:\OSS\iMOD\TUTORIALS\TUT_Solid_Building\RESULTS\MDL\TUTORIAL5.IPFand added to the iMOD-manager.30556 particles were released out of 30556. Unreleased particles occured due to inactive/constant head boundary conditionsand/or particles positioned above/beneath given thresshold.0 inconsequences were removed from top/bottom information!IMPORTANT: Maximum velocity that occured: 0.1966E+02 m/day
 
