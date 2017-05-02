@@ -572,6 +572,12 @@ END SUBROUTINE
     !## write infi_svat.inp, infiltratiecapaciteit per cel, de rest -9999.
     WRITE(IINFI,'(I10,F8.3,4F8.1)') NUND,SIMGRO(ICOL,IROW)%QINFBASIC_ROPP,-9999.0,-9999.0,-9999.0,-9999.0
 
+    !## add couple location modflow
+    unid=unid+1; call storedxc(dxcid,mndxc,ndxc,1,irow,icol,unid)
+    !## write coupling table
+    WRITE(IGWMP  ,'(I10,2X,I10,I5)')  unid,NUND,1
+    WRITE(IMODSIM,'(I10,2X,I10,I5)')  unid,NUND,1
+
     !## BEGIN scap_svat.inp - grondwater + ow
 
     IF(IARMWP.EQ.0)THEN
@@ -597,18 +603,11 @@ END SUBROUTINE
 
     IF(JROW.NE.0.AND.JCOL.NE.0)THEN
 
-!   1 onverhard
-!   2 verhard-gerioleerd
-!   3 oppervlaktewater
-!   4 glastuinbouw
-!   5 verhard, afgekoppeld oppw
-!   6 verhard, afgekoppeld gw
-!   7 ondergrond glastuinbouw (automatische toekenning in geval van 4
      FLBE=0.0
      IF(TYBE.EQ.1)THEN
-      FLBE=QBER !25.0 !## maximum groundwater   abstraction mm/day fmmxabgw
+      FLBE=QBER  !## maximum groundwater   abstraction mm/day fmmxabgw
      ELSEIF(TYBE.EQ.2)THEN
-      FLBE=QBER !10.0 !## maximum surface water abstraction mm/day fmmxabsw
+      FLBE=QBER  !## maximum surface water abstraction mm/day fmmxabsw
      ENDIF
 
      IF(FLBE.GT.0.0)THEN
@@ -620,28 +619,17 @@ END SUBROUTINE
      ENDIF
 
      !## sprinkling from other than modellayer 1 or other location
-     IF(TYBE.EQ.1.AND.MDND.NE.MDND2)THEN !LYBE.GT.1)THEN
-      unid = unid+1
-      WRITE(IGWMP,'(I10,2X,I10,I5)') MDND2,NUND,LYBE
-!      WRITE(IGWMP,'(I10,2X,I10,I5)') unid,NUND,LYBE
-      call storedxc(dxcid,mndxc,ndxc,LYBE,jrow,jcol,MDND2) !unid)
-      WRITE(IMODSIM,'(I10,2X,I10,I5)') MDND2,NUND,LYBE
-!      WRITE(IMODSIM,'(I10,2X,I10,I5)') unid,NUND,LYBE
-!     WRITE(IGWMP,'(I10,2X,I10,I5)')   MDND+(LYBE-1)*SIMGRO_NCOL*SIMGRO_NROW,NUND,LYBE
-!     WRITE(IMODSIM,'(I10,2X,I10,I5)') MDND+(LYBE-1)*SIMGRO_NCOL*SIMGRO_NROW,NUND,LYBE
+     IF(TYBE.EQ.1.AND.LYBE.GT.1)THEN
+
+      !## add couple location modflow
+      unid=unid+1; call storedxc(dxcid,mndxc,ndxc,lybe,jrow,jcol,unid)
+      !## write coupling table
+      WRITE(IGWMP  ,'(I10,2X,I10,I5)') unid,NUND,LYBE
+      WRITE(IMODSIM,'(I10,2X,I10,I5)') unid,NUND,LYBE
+
      ENDIF
 
     ENDIF
-    !## END scap_svat.inp - grondwater + ow
-
-    !## BEGIN mod2svat.inp; NB: als opp. water of glas dan laag = 0
-
-    unid = unid+1
-    WRITE(IGWMP  ,'(I10,2X,I10,I5)')  MDND,NUND,1
-!    WRITE(IGWMP  ,'(I10,2X,I10,I5)')  unid,NUND,1
-    call storedxc(dxcid,mndxc,ndxc,1,irow,icol,MDND) !unid)
-    WRITE(IMODSIM,'(I10,2X,I10,I5)')  MDND,NUND,1
-!    WRITE(IMODSIM,'(I10,2X,I10,I5)')  unid,NUND,1
 
     IF(MMOD(PPWT).EQ.0)WRITE(IUSCL,'(I10,3F8.3,8X,2I10)')   NUND,SIMGRO(ICOL,IROW)%MOISTURE,SIMGRO(ICOL,IROW)%COND,1.0,ICOL,IROW
     IF(MMOD(PPWT).EQ.1)THEN
@@ -652,7 +640,6 @@ END SUBROUTINE
       WRITE(IUSCL,'(I10,3F8.3,8X,2I10)') NUND,SIMGRO(ICOL,IROW)%MOISTURE,SIMGRO(ICOL,IROW)%COND,1.0,ICOL,IROW
      ENDIF
     ENDIF
-    !## END mod2svat.inp; NB: als opp. water of glas dan laag = 0
 
    ENDIF
 
@@ -673,10 +660,13 @@ END SUBROUTINE
       NUND,ARND,SIMGRO(ICOL,IROW)%MV+MSWPMV,SIMGRO(ICOL,IROW)%BODEM,18,0.1,SIMGRO(ICOL,IROW)%METEO,1.0,1.0
 
     WRITE(INDSB,'(2I10,F8.3,2F8.1)') NUND,0,SIMGRO(ICOL,IROW)%VXMU_SOPP,SIMGRO(ICOL,IROW)%CRUNOFF_SOPP,SIMGRO(ICOL,IROW)%CRUNON_SOPP !1.0,1.0
-    unid = unid+1
-    WRITE(IGWMP,'(I10,2X,I10,I5)') MDND,NUND,1
-!    WRITE(IGWMP,'(I10,2X,I10,I5)') unid,NUND,1
-    call storedxc(dxcid,mndxc,ndxc,1,irow,icol,MDND) !unid)
+
+    !## add couple location modflow
+    unid=unid+1; call storedxc(dxcid,mndxc,ndxc,1,irow,icol,unid)
+    !## write coupling table
+    WRITE(IGWMP  ,'(I10,2X,I10,I5)') unid,NUND,1
+    WRITE(IMODSIM,'(I10,2X,I10,I5)') unid,NUND,1
+
     IF(MMOD(PPWT).EQ.0)WRITE(IUSCL,'(I10,3F8.3,8X,2I10)') NUND,SIMGRO(ICOL,IROW)%MOISTURE,SIMGRO(ICOL,IROW)%COND,1.0,ICOL,IROW
     IF(MMOD(PPWT).EQ.1)THEN
      IF(SIMGRO(ICOL,IROW)%PWT_LEVEL.NE.NODATA_PWT)THEN
@@ -686,8 +676,6 @@ END SUBROUTINE
       WRITE(IUSCL,'(I10,3F8.3,8X,2I10)')   NUND,SIMGRO(ICOL,IROW)%MOISTURE,SIMGRO(ICOL,IROW)%COND,1.0,ICOL,IROW
      ENDIF
     ENDIF
-    WRITE(IMODSIM,'(I10,2X,I10,I5)') MDND,NUND,1
-!    WRITE(IMODSIM,'(I10,2X,I10,I5)') unid,NUND,1
 
     !## write infi_svat.inp, infiltratiecapaciteit per cel, de rest -9999.
     WRITE(IINFI,'(I10,F8.3,4F8.1)') NUND,SIMGRO(ICOL,IROW)%QINFBASIC_SOPP,-9999.0,-9999.0,-9999.0,-9999.0
@@ -696,7 +684,7 @@ END SUBROUTINE
 
   ENDDO
  ENDDO
-
+ 
  call writedxc(idxc,dxcid,mndxc,ndxc)
  deallocate(dxcid)
 

@@ -918,11 +918,11 @@ do i = 1, nid2
    id2si(i) = i
 end do
 
-call UTL_QKSORT_INT2(id1s,id1si,nid1,nid1)
-call UTL_QKSORT_INT2(id2s,id2si,nid2,nid2)
+!call UTL_QKSORT_INT2(id1s,id1si,nid1,nid1)
+!call UTL_QKSORT_INT2(id2s,id2si,nid2,nid2)
 
-!call qsort(id1s,id1si)
-!call qsort(id2s,id2si)
+call qsort(id1s,id1si)
+call qsort(id2s,id2si)
 
 ! store mapping indices
 n1 = 1
@@ -945,8 +945,8 @@ do while(.true.)
             do k = i2s, i2e
                mapidx(j)%iarr(k-i2s+1) = id2si(k)
             end do
-!            ! sort (this is not really necessary, why then?)
-!            call qsort(mapidx(j)%iarr, itmp(1:m))
+            ! sort (this is not really necessary, why then?)
+            call qsort(mapidx(j)%iarr, itmp(1:m))
          end if
       end do
    end if
