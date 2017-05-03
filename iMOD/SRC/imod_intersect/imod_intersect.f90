@@ -454,7 +454,7 @@ CONTAINS
  XBEGIN=X1; YBEGIN=Y1
 
  !## arrange x1,x2,y1,y2 such that x1<x2
- IF(X1.GT.X2)THEN
+ IF(X1.GT.X2)THEN               
   X =X1; Y =Y1
   X1=X2; Y1=Y2
   X2=X;  Y2=Y

@@ -563,8 +563,9 @@ CONTAINS
  IMPLICIT NONE
  INTEGER,INTENT(IN) :: ID
  INTEGER,DIMENSION(:),INTENT(IN) :: ISEL
- INTEGER :: I,II,J,JJ,K
+ INTEGER :: I,II,J,JJ,K,KK
  CHARACTER(LEN=256) :: LINE
+ INTEGER,DIMENSION(:),ALLOCATABLE :: JSEL
  
  SOLID_PROFILEDELETE=.FALSE.
  
@@ -586,15 +587,22 @@ CONTAINS
 !  CALL WDIALOGGETMENU(IDF_MENU1,J)
 !  J=ISEL(1)
   LINE='['
-  DO I=1,SIZE(ISEL)
-   IF(ISEL(I).EQ.1)LINE=TRIM(LINE)//CHAR(13)//TRIM(SPF(I)%FNAME)
+  K=0; DO I=1,SIZE(ISEL)
+   IF(ISEL(I).EQ.1)THEN
+    IF(K.EQ.0)THEN
+     LINE=TRIM(LINE)//TRIM(SPF(I)%FNAME); K=K+1
+    ELSE
+     LINE=TRIM(LINE)//CHAR(13)//TRIM(SPF(I)%FNAME)
+    ENDIF
+   ENDIF
   ENDDO
   LINE=TRIM(LINE)//']'
   
-  CALL WMESSAGEBOX(YESNO,QUESTIONICON,COMMONNO,'You are about to remove the selected Cross-Section(s):'//CHAR(13)//TRIM(LINE)//CHAR(13)// &
-   'from the List.'//CHAR(13)// &
-   'Be aware that the removed Cross-Section cannot be restored.'//CHAR(13)// &
-   'Consider to save the \cross-section prior to deletion.'//CHAR(13)//CHAR(13)// &
+  CALL WMESSAGEBOX(YESNO,QUESTIONICON,COMMONNO,'You are about to remove the selected Cross-Section(s):' &
+       //CHAR(13)//CHAR(13)//TRIM(LINE)//CHAR(13)//CHAR(13)// &
+   'from the list. Be aware that the removed Cross-Section'//CHAR(13)// &
+   'cannot be restored. Consider to save the'//CHAR(13)// &
+   'cross-section prior to deletion.'//CHAR(13)//CHAR(13)// &
    'Are you sure to continue?','Question')
 
  ENDIF
@@ -603,14 +611,27 @@ CONTAINS
 
  IF(ID.EQ.ID_DSERIESTAB2)CALL SOLID_PROFILEFIELDS()
 
+ ALLOCATE(JSEL(SIZE(ISEL))); JSEL=ISEL
+ 
  !## loop over selected cross-sections
- DO II=1,SIZE(ISEL)
+ II=0; DO
+  II=II+1
   
-  J=ISEL(II)-(II-1)
+  !## stop at end of list
+  IF(II.GT.SIZE(JSEL))EXIT
+
+  !## leave current cross-section intact 
+  IF(JSEL(II).EQ.0)CYCLE
+  
+  !## remove current one
+  J=II
+
+  !## shift selection
+  DO I=J,NSPF; JSEL(I)=JSEL(I+1); ENDDO
   
   !## shift data ...
   DO I=J,NSPF-1 
-
+      
    !## deallocate memory
    IF(ASSOCIATED(SPF(I)%X))DEALLOCATE(SPF(I)%X)
    IF(ASSOCIATED(SPF(I)%Y))DEALLOCATE(SPF(I)%Y)
@@ -662,13 +683,23 @@ CONTAINS
   SPF(I)%TX=0.0
   SPF(I)%PBITMAP%IACT=0
   NSPF=NSPF-1
- 
+  
+  II=II-1
+  
  ENDDO
  
  CALL WDIALOGSELECT(ID)
- CALL WDIALOGPUTMENU(IDF_MENU1,SPF%FNAME,NSPF,NSPF)
-
- IF(ID.EQ.ID_DSERIESTAB2)CALL SOLID_PROFILEFIELDS()
+ 
+ IF(ID.EQ.ID_DSERIESTAB2)THEN
+  IF(NSPF.EQ.0)THEN
+   CALL WDIALOGCLEARFIELD(IDF_MENU1)
+  ELSE
+   CALL WDIALOGPUTMENU(IDF_MENU1,SPF%FNAME,NSPF,NSPF)
+  ENDIF
+  CALL SOLID_PROFILEFIELDS()
+ ENDIF
+ 
+ DEALLOCATE(JSEL)
  
  SOLID_PROFILEDELETE=.TRUE.
 
