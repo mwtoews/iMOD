@@ -635,7 +635,7 @@ c ------------------------------------------------------------------------------
 
           kxx(icol,irow,ilay)=1.0
           kyy(icol,irow,ilay)=1.0
-          kxy(icol,irow,ilay)=1.0
+          kxy(icol,irow,ilay)=0.0
 
          else
 
