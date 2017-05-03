@@ -461,8 +461,8 @@ CONTAINS
  ENDIF
 
  !## adjust perfect 45/135/215,305 aanpassen
- DX=X2-X1; DY=Y2-Y1
- IF(ABS(DX).EQ.ABS(DY))X1=X1+1.0
+! DX=X2-X1; DY=Y2-Y1
+! IF(ABS(DX).EQ.ABS(DY))X1=X1+1.0
 
  !## use always mid between point x1,y1 and x2,y2 as first position
  N=N+1; CALL INTERSECT_RESIZEVECTORS(N) 

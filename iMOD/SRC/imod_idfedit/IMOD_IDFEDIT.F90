@@ -1367,7 +1367,7 @@ CONTAINS
  CALL WDIALOGSELECT(ID_DIDFEDITCALC)
  CALL WDIALOGGETINTEGER(IDF_INTEGER1,IACTION)
  IF(IACTION.NE.0)THEN
-  CALL WMESSAGEBOX(YESNO,QUESTIONICON,COMMONOK,'Changes cannot be restored after you left this editing mode'//CHAR(13)//CHAR(13)//&
+  CALL WMESSAGEBOX(YESNO,QUESTIONICON,COMMONOK,'Changes cannot be undone after you leave this Editing Mode.'//CHAR(13)//CHAR(13)//&
    'Are you sure to leave this Editing Mode?','Question')
   IF(WINFODIALOG(4).NE.1)RETURN
  ENDIF

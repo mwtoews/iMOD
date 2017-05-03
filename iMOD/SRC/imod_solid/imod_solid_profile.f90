@@ -295,6 +295,7 @@ CONTAINS
    ENDDO
    
   ELSE
+
    IF(ICLEAN(I+1).EQ.1)THEN
     !## mean vertical depth as first guess!
     DZ=(GRAPHUNITS(4,1)-GRAPHUNITS(2,1))/REAL(NTBSOL)
@@ -304,6 +305,7 @@ CONTAINS
     SPF(ISPF)%PROF(I)%PZ(1)=GRAPHUNITS(4,1)-DZ*REAL(I-1)
     SPF(ISPF)%PROF(I)%PZ(2)=SPF(ISPF)%PROF(I)%PZ(1)
    ENDIF
+
   ENDIF
  ENDDO
   
@@ -556,23 +558,32 @@ CONTAINS
  END FUNCTION SOLID_PROFILEDISTANCE
 
  !###======================================================================
- SUBROUTINE SOLID_PROFILEDELETE(ID) !IOPTION)
+ SUBROUTINE SOLID_PROFILEDELETE(ID,ISEL)
  !###======================================================================
  IMPLICIT NONE
- INTEGER,INTENT(IN) :: ID !OPTION
+ INTEGER,INTENT(IN) :: ID
+ INTEGER,DIMENSION(:),INTENT(IN) :: ISEL
  INTEGER :: I,J,K
  
- CALL WDIALOGSELECT(ID) !ID_DSERIESTAB2)
- CALL WDIALOGGETMENU(IDF_MENU1,J)
+! CALL WDIALOGSELECT(ID)
 
- IF(ID.EQ.ID_DSERIESTAB2)THEN !IOPTION.EQ.1)THEN
+ IF(ID.EQ.ID_DSERIESTAB2)THEN 
+  
+  J=ISEL(1)
+!  CALL WDIALOGGETMENU(IDF_MENU1,J)
+
   CALL WMESSAGEBOX(YESNO,QUESTIONICON,COMMONNO,'You are about to remove the selected Cross-Section: ['// &
     TRIM(SPF(J)%FNAME)//'] from the Solid.'//CHAR(13)// &
    'Be aware that the Cross-Section will be removed from the list and NOT from the Solid folder.'//CHAR(13)// &
    'Any recovery can take place, manually by editing the *.sol file.'//CHAR(13)//CHAR(13)// &
    'Are you sure to continue?','Question')
+
  ELSEIF(ID.EQ.ID_D3DSETTINGS_TAB6)THEN
-  CALL WMESSAGEBOX(YESNO,QUESTIONICON,COMMONNO,'You are about to remove the selected Cross-Section: ['// &
+
+!  CALL WDIALOGGETMENU(IDF_MENU1,J)
+  J=ISEL(1)
+  
+  CALL WMESSAGEBOX(YESNO,QUESTIONICON,COMMONNO,'You are about to remove the selected Cross-Section(s): ['// &
     TRIM(SPF(J)%FNAME)//'] from the List.'//CHAR(13)// &
    'Be aware that the removed Cross-Section cannot be restored.'//CHAR(13)// &
    'COnsider to save the \cross-section prior to deletion.'//CHAR(13)//CHAR(13)// &
@@ -582,6 +593,8 @@ CONTAINS
  IF(WINFODIALOG(4).NE.1)RETURN
 
  IF(ID.EQ.ID_DSERIESTAB2)CALL SOLID_PROFILEFIELDS()
+
+!## loop over selected cross-sections
 
  !## shift data ...
  DO I=J,NSPF-1 
@@ -672,6 +685,50 @@ CONTAINS
   ENDIF
  END DO
 
+ CALL SOLID_PROFILEADD_SPFMEMORY(GRAPHUNITS(4,1),GRAPHUNITS(2,1))
+ 
+ CALL WDIALOGSELECT(ID_DSERIESTAB2)
+ CALL WDIALOGPUTMENU(IDF_MENU1,SPF%FNAME,NSPF,NSPF)
+ CALL SOLID_PROFILEFIELDS()
+
+! DZ=(GRAPHUNITS(4,1)-GRAPHUNITS(2,1))/REAL(NTBSOL)
+! DO I=1,SIZE(SPF(NSPF)%PROF) 
+!  SPF(NSPF)%PROF(I)%NPOS=0
+!  ALLOCATE(SPF(NSPF)%PROF(I)%PX(MXPX))
+!  ALLOCATE(SPF(NSPF)%PROF(I)%PZ(MXPX))
+!  IF(IEXIST(I+1).EQ.1)THEN
+!   SPF(NSPF)%PROF(I)%NPOS=2
+!   SPF(NSPF)%PROF(I)%PX(1)=0.0    
+!   SPF(NSPF)%PROF(I)%PX(2)=TX
+!   !## mean vertical depth as first guess!
+!   SPF(NSPF)%PROF(I)%PZ(1)=GRAPHUNITS(4,1)-DZ*REAL(I-1) 
+!   SPF(NSPF)%PROF(I)%PZ(2)=SPF(NSPF)%PROF(I)%PZ(1)
+!  ENDIF
+!  IF(MOD(I,2).NE.0)SPF(NSPF)%PROF(I)%ICLR  =WRGB(255,0,0)
+!  IF(MOD(I,2).EQ.0)SPF(NSPF)%PROF(I)%ICLR  =WRGB(0,0,255)
+!  SPF(NSPF)%PROF(I)%IWIDTH=2
+!  SPF(NSPF)%PROF(I)%LNAME=SLD(1)%INTNAME(I)(INDEX(SLD(1)%INTNAME(I),'\',.TRUE.)+1:INDEX(SLD(1)%INTNAME(I),'.',.TRUE.)-1)
+!  SPF(NSPF)%PROF(I)%IACTIVE=1
+! ENDDO
+ 
+ ISPF=NSPF
+ !## turn off a bitmap for this new cross-section
+ PBITMAP%IACT=0; 
+
+ IF(DID.NE.0)CALL WDIALOGSELECT(DID)
+
+ SOLID_PROFILEADD=.TRUE.
+ 
+ END FUNCTION SOLID_PROFILEADD
+
+ !###======================================================================
+ SUBROUTINE SOLID_PROFILEADD_SPFMEMORY(Z2,Z1)
+ !###======================================================================
+ IMPLICIT NONE
+ REAL,INTENT(IN) :: Z1,Z2
+ INTEGER :: I
+ REAL :: DX,DY,DZ,TX
+ 
  !## copy current coordinates of profile ...
  SPF(NSPF)%NXY=NXY
  ALLOCATE(SPF(NSPF)%X(NXY),SPF(NSPF)%Y(NXY))
@@ -691,11 +748,8 @@ CONTAINS
  !## allocate number of elevation (max. NTBSOL)
  ALLOCATE(SPF(NSPF)%PROF(NTBSOL))
 
- CALL WDIALOGSELECT(ID_DSERIESTAB2)
- CALL WDIALOGPUTMENU(IDF_MENU1,SPF%FNAME,NSPF,NSPF)
- CALL SOLID_PROFILEFIELDS()
-
- DZ=(GRAPHUNITS(4,1)-GRAPHUNITS(2,1))/REAL(NTBSOL)
+ DZ=(Z2-Z1)/REAL(NTBSOL)
+! DZ=(GRAPHUNITS(4,1)-GRAPHUNITS(2,1))/REAL(NTBSOL)
  DO I=1,SIZE(SPF(NSPF)%PROF) 
   SPF(NSPF)%PROF(I)%NPOS=0
   ALLOCATE(SPF(NSPF)%PROF(I)%PX(MXPX))
@@ -705,25 +759,22 @@ CONTAINS
    SPF(NSPF)%PROF(I)%PX(1)=0.0    
    SPF(NSPF)%PROF(I)%PX(2)=TX
    !## mean vertical depth as first guess!
-   SPF(NSPF)%PROF(I)%PZ(1)=GRAPHUNITS(4,1)-DZ*REAL(I-1) 
+   SPF(NSPF)%PROF(I)%PZ(1)=Z2-DZ*REAL(I-1) 
+!   SPF(NSPF)%PROF(I)%PZ(1)=GRAPHUNITS(4,1)-DZ*REAL(I-1) 
    SPF(NSPF)%PROF(I)%PZ(2)=SPF(NSPF)%PROF(I)%PZ(1)
   ENDIF
   IF(MOD(I,2).NE.0)SPF(NSPF)%PROF(I)%ICLR  =WRGB(255,0,0)
   IF(MOD(I,2).EQ.0)SPF(NSPF)%PROF(I)%ICLR  =WRGB(0,0,255)
   SPF(NSPF)%PROF(I)%IWIDTH=2
-  SPF(NSPF)%PROF(I)%LNAME=SLD(1)%INTNAME(I)(INDEX(SLD(1)%INTNAME(I),'\',.TRUE.)+1:INDEX(SLD(1)%INTNAME(I),'.',.TRUE.)-1)
+  IF(ALLOCATED(SLD))THEN
+   SPF(NSPF)%PROF(I)%LNAME=SLD(1)%INTNAME(I)(INDEX(SLD(1)%INTNAME(I),'\',.TRUE.)+1:INDEX(SLD(1)%INTNAME(I),'.',.TRUE.)-1)
+  ELSE
+   SPF(NSPF)%PROF(I)%LNAME='TEST'
+  ENDIF
   SPF(NSPF)%PROF(I)%IACTIVE=1
  ENDDO
- 
- ISPF=NSPF
- !## turn off a bitmap for this new cross-section
- PBITMAP%IACT=0; 
 
- IF(DID.NE.0)CALL WDIALOGSELECT(DID)
-
- SOLID_PROFILEADD=.TRUE.
- 
- END FUNCTION SOLID_PROFILEADD
+ END SUBROUTINE SOLID_PROFILEADD_SPFMEMORY
 
  !###======================================================================
  SUBROUTINE SOLID_PROFILEDRAW(IS1,IS2,ICRD,ICURSOR,IWINID)

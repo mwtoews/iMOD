@@ -69,7 +69,7 @@ CONTAINS
  CHARACTER(LEN=1),INTENT(IN) :: CPOS
  TYPE(IDFOBJ),INTENT(IN) :: IDF
  CHARACTER(LEN=52) :: LINE
- REAL :: XC
+ REAL :: XC,PC
  INTEGER :: N,IROW,ICOL
  LOGICAL :: LEX
   
@@ -87,14 +87,19 @@ CONTAINS
 
    IF(LEX)THEN
 
+    !## replace by replace-value in case of nodata-value
+    PC=XC; IF(IDF%NODATA.EQ.PC)PC=0.0
+    
+    !## write values   
     IF(N.GT.1)THEN
-     IF(IINT.EQ.0)LINE=TRIM(ITOS(N))//'*'//TRIM(RTOS(XC,'*',0))
-     IF(IINT.EQ.1)LINE=TRIM(ITOS(N))//'*'//TRIM(ITOS(INT(XC)))
+     IF(IINT.EQ.0)LINE=TRIM(ITOS(N))//'*'//TRIM(RTOS(PC,'*',0))
+     IF(IINT.EQ.1)LINE=TRIM(ITOS(N))//'*'//TRIM(ITOS(INT(PC)))
      WRITE(IU,'(A)') TRIM(LINE)
     ELSE
-     IF(IINT.EQ.0)WRITE(IU,*) XC
-     IF(IINT.EQ.1)WRITE(IU,*) INT(XC)
+     IF(IINT.EQ.0)WRITE(IU,*) PC
+     IF(IINT.EQ.1)WRITE(IU,*) INT(PC)
     ENDIF
+    
     IF(ICOL.LT.IDF%NCOL)THEN
      N=1; XC=IDF%X(ICOL+1,IROW)
     ENDIF

@@ -121,7 +121,7 @@ CONTAINS
   !## draw iff's
   IF(NIFFLIST.GT.0)CALL IMOD3D_DISPLAY_IFF()
   !## draw sol's
-  IF(NSOLLIST.GT.0)CALL IMOD3D_DISPLAY_SOL()
+  IF(NSOLLIST.GT.0)CALL IMOD3D_DISPLAY_SOL(IMODE,0)
   !## draw interactive flowlines
   IF(IPATHLINE_3D.GT.0)CALL IMOD3D_DISPLAY_PL()
   !## draw idf's
@@ -131,13 +131,14 @@ CONTAINS
   IF(NGENLIST.GT.0)CALL IMOD3D_DISPLAY_GEN(0)
   !## draw bmp
   CALL IMOD3D_DISPLAY_BMP() 
-  !## plot point of rotation
+  !## plot point of mouse
   CALL IMOD3D_PLOT_INDPOS()
  
   !## put transparancy last - used fixed depth mask and plot all transparant images
   !## freeze depthmask for transluscent plotting
   LDMASK=.FALSE.; CALL GLDEPTHMASK(LDMASK)
   IF(NIDFLIST.GT.0)CALL IMOD3D_DISPLAY_IDF(IMODE,1)
+!  IF(NSOLLIST.GT.0)CALL IMOD3D_DISPLAY_SOL(1)
   IF(NGENLIST.GT.0)CALL IMOD3D_DISPLAY_GEN(1)
   LDMASK=.TRUE.; CALL GLDEPTHMASK(LDMASK)
 
@@ -779,33 +780,14 @@ CONTAINS
  END SUBROUTINE IMOD3D_DISPLAY_IFF
 
  !###======================================================================
- SUBROUTINE IMOD3D_DISPLAY_SOL()
+ SUBROUTINE IMOD3D_DISPLAY_SOL(IMODE,IT)
  !###======================================================================
  IMPLICIT NONE
+ INTEGER,INTENT(IN) :: IMODE,IT
  INTEGER :: I
-
- !## opaque mode
- !CALL GLBLENDFUNC(GL_ONE,GL_ZERO)  !## (1) source (2) destination
 
  CALL GLENABLE(GL_LIGHTING)
  CALL GLSHADEMODEL(GL_FLAT) !## heeft te maken met invullen kleuren
-
-!It depends on the effect you're trying to achieve.
-!
-!If you want blending to occur after the texture has been applied, then use the OpenGL blending feature. Try this:
-!
-!glEnable (GL_BLEND);
-!glBlendFunc (GL_ONE, GL_ONE);
-!You might want to use the alpha values that result from texture mapping in the blend function. If so,
-!(GL_SRC_ALPHA,GL_ONE_MINUS_SRC_ALPHA) is always a good function to start with.
-!
-!However, if you want blending to occur when the primitive is texture mapped (i.e., you want parts of the
-!texture map to allow the underlying color of the primitive to show through), then don't use OpenGL blending.
-!Instead, you'd use glTexEnv(), and set the texture environment mode to GL_BLEND. In this case, you'd want to leave
-!the texture environment color to its default value of (0,0,0,0).
-!
-!Column Header
-! CALL GLENABLE(GL_BLEND)
 
  !## plot filled in cross-sections
  DO I=1,NSOLLIST
@@ -814,36 +796,43 @@ CONTAINS
   IF(SOLPLOT(I)%IBITMAP.EQ.1)CYCLE
   IF(SOLLISTINDEX(I,1).EQ.0)CYCLE
   
-!  !## blend mode 
-!  IF(SOLPLOT(I)%IBLEND.LT.100)THEN
-   !## draw furthers first
-!   CALL GLBLENDFUNC(GL_SRC_ALPHA,GL_SRC_ALPHA) !GL_ONE_MINUS_SRC_ALPHA)  !## (1) source (2) destination
-!  ELSE
-!   !## opaque mode
-!   CALL GLBLENDFUNC(GL_ONE,GL_ZERO)  !## (1) source (2) destination
-!  ENDIF
+  !## blend mode
+  IF(IMODE.EQ.1)THEN
+   IF(SOLPLOT(I)%ITRANSPARANCY.LT.100)THEN
+    !## skip all transparant images in this cycle
+    IF(IT.EQ.0)CYCLE
+   ELSE
+    !## skip all opaque images in this cycle
+    IF(IT.EQ.1)CYCLE
+   ENDIF
+  ENDIF 
 
   !## not showing interfaces
   IF(SOLPLOT(I)%IINTERFACE.EQ.0)THEN 
    CALL GLENABLE(GL_LIGHTING)
-!   IF(SOLPLOT(I)%IBLEND.EQ.1)THEN
+
+    !## blend mode 
+    IF(SOLPLOT(I)%ITRANSPARANCY.LT.100)THEN
+     !## draw furthers first
+     CALL GLBLENDFUNC(GL_SRC_ALPHA,GL_ONE_MINUS_SRC_ALPHA)  !## (1) source (2) destination
+    ELSE
+     !## opaque mode
+     CALL GLBLENDFUNC(GL_ONE,GL_ZERO)  !## (1) source (2) destination
+    ENDIF
+
+!   IF(SOLPLOT(I)%ITRANSPARANCY.EQ.1)THEN
 !    CALL GLBLENDFUNC(GL_SRC_ALPHA,GL_ONE_MINUS_SRC_ALPHA)  !## (1) source (2) destination
 !   ENDIF
   ELSE
    CALL GLDISABLE(GL_LIGHTING)
   ENDIF
+
+  !## draw cross-section
   CALL GLCALLLIST(SOLLISTINDEX(I,1))
- END DO
 
- CALL GLDISABLE(GL_LIGHTING)
-
- CALL GLCOLOR4F(1.0_GLFLOAT,1.0_GLFLOAT,1.0_GLFLOAT,0.0_GLFLOAT)
-
- !## plot bitmaps/interfaces
- DO I=1,NSOLLIST
-  IF(SOLPLOT(I)%ISEL.EQ.0)CYCLE
   IF(SOLPLOT(I)%IBITMAP.EQ.0)CYCLE
   IF(SOLLISTINDEX(I,2).EQ.0)CYCLE
+
   !## interface
   IF(SOLPLOT(I)%IINTERFACE.EQ.1)THEN
    CALL GLPOLYGONMODE(GL_FRONT,GL_LINE); CALL GLPOLYGONMODE(GL_BACK, GL_LINE)
@@ -854,10 +843,32 @@ CONTAINS
 !   CALL GLPOLYGONMODE(GL_BACK, GL_FILL); CALL GLPOLYGONMODE(GL_FRONT,GL_FILL)
   ENDIF
   CALL GLCALLLIST(SOLLISTINDEX(I,2))
-!  CALL GLDISABLE(GL_ALPHA_TEST)
- ENDDO
+
+ END DO
+
+ CALL GLDISABLE(GL_LIGHTING)
+
+ CALL GLCOLOR4F(1.0_GLFLOAT,1.0_GLFLOAT,1.0_GLFLOAT,0.0_GLFLOAT)
+
+! !## plot bitmaps/interfaces
+! DO I=1,NSOLLIST
+!  IF(SOLPLOT(I)%ISEL.EQ.0)CYCLE
+!  IF(SOLPLOT(I)%IBITMAP.EQ.0)CYCLE
+!  IF(SOLLISTINDEX(I,2).EQ.0)CYCLE
+!  !## interface
+!  IF(SOLPLOT(I)%IINTERFACE.EQ.1)THEN
+!   CALL GLPOLYGONMODE(GL_FRONT,GL_LINE); CALL GLPOLYGONMODE(GL_BACK, GL_LINE)
+!  !## bitmaps
+!!  ELSE
+!!   CALL GLENABLE(GL_ALPHA_TEST)
+!!   CALL GLALPHAFUNC(GL_GREATER,0.0_GLFLOAT)
+!!   CALL GLPOLYGONMODE(GL_BACK, GL_FILL); CALL GLPOLYGONMODE(GL_FRONT,GL_FILL)
+!  ENDIF
+!  CALL GLCALLLIST(SOLLISTINDEX(I,2))
+!!  CALL GLDISABLE(GL_ALPHA_TEST)
+! ENDDO
  
- CALL GLENABLE(GL_BLEND)
+! CALL GLENABLE(GL_BLEND)
  
  END SUBROUTINE IMOD3D_DISPLAY_SOL
 

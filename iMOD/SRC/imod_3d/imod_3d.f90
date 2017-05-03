@@ -31,6 +31,7 @@ USE MOD_3D_DISPLAY, ONLY : IMOD3D_DISPLAY,IMOD3D_DISPLAY_IPF,IMOD3D_RESET_TO_INI
 USE MOD_3D_UTL, ONLY : IMOD3D_CLOSE,IMOD3D_RETURNCOLOR,IMOD3D_SETCOLOR
 USE MOD_3D_ENGINE
 USE MOD_3D_PROCESS
+USE MOD_SOLID_UTL, ONLY : SOLID_INITSPF
 USE MOD_PLINES_PAR, ONLY : IDF
 
 INTEGER(GLINT),DIMENSION(1) :: MAXSTDEPTH,STDEPTH !## max./current stack depth selection
@@ -468,66 +469,10 @@ CONTAINS
  
  INDPOS%X=LOOKAT%X; INDPOS%Y=LOOKAT%Y; INDPOS%Z=LOOKAT%Z !ZSCALE_FACTOR
 
+ !## allocate memory for cross-sections: maximum = 200
+ CALL SOLID_INITSPF(MAXSOL)
+
  END SUBROUTINE IMOD3D_INIT
-
-!I've an 25 years old Fortran app running nicely under Windows 7 and Classic mode and complied and linked under Visual Studio 2010. 
-!
-!Now I make a new project under Visual Studio 2015 and it compiles and links nicely under Win32 but during running the follwing happens:
-!
-!All GDI graphics appears as it should
-!All OpenGL call run without any crash and they seem to consume computer time but nothing is rendered on the screen
-!My PixelFormatDescriptor is the one I've always used under Windows 7
-!
-!      DATA pfd / T_PIXELFORMATDESCRIPTOR (
-!     %   40,           !sizeof(T_PIXELFORMATDESCRIPTOR),
-!     %   1,
-!     %   IOR(PFD_DRAW_TO_WINDOW,
-!     %    IOR(PFD_SWAP_COPY,
-!     %     IOR(PFD_SUPPORT_GDI,
-!     %      IOR(PFD_SUPPORT_OPENGL,
-!     %          PFD_DOUBLEBUFFER)))),
-!     %   PFD_TYPE_RGBA,
-!     %   24,
-!     %   0, 0, 0, 0, 0, 0,
-!     %   0, 0,
-!     %   0, 0, 0, 0, 0,
-!     %   32,
-!     %   0,
-!     %   0,
-!     %   PFD_MAIN_PLANE,
-!     %   0,
-!     %   0, 0, 0) /
-!
-! Anyone having the same problem or having a solution to it?
-
-!The next section of code describes a Pixel Format. We choose a format that supports OpenGL and
-!double buffering, along with RGBA (red, green, blue, alpha channel). We try to find a pixel format
-!that matches the bits we decided on (16bit,24bit,32bit). Finally we set up a 16bit Z-Buffer. The
-!remaining parameters are either not used or are not important (aside from the stencil buffer and the
-!(slow) accumulation buffer). 
-!static PIXELFORMATDESCRIPTOR pfd= // pfd Tells Windows How We Want Things To Be
-!{
-!sizeof(PIXELFORMATDESCRIPTOR),
-!1,
-!PFD_DRAW_TO_WINDOW |
-!PFD_SUPPORT_OPENGL |
-!PFD_DOUBLEBUFFER, // Must Support Double Buffering
-!PFD_TYPE_RGBA,
-!bits,
-!0, 0, 0, 0, 0, 0, // Color Bits Ignored
-!0,
-!0,
-!0,
-!0, 0, 0, 0,
-!16,
-!0,
-!0,
-!PFD_MAIN_PLANE,
-!0,
-!0, 0, 0
-!};!If there were no errors while creating the window, we'll attempt to get an OpenGL Device Context. If
-!we can't get a DC an error message will pop onto the screen, and the program will quit (return
-!FALSE). 
 
  !###======================================================================
  LOGICAL FUNCTION IMOD3D_SETUPDISPLAY()
@@ -608,30 +553,6 @@ CONTAINS
   BOT%X=IDF%XMIN; BOT%Y=IDF%YMIN
  ENDIF
 
-! !## increase window a little bit ... 2.5%
-! DXY=(TOP%X-BOT%X); DXY=DXY*0.025
-! IF(DXY.EQ.0.0)DXY=10.0
-! !## make sure coordinates are distinguishable
-! DO
-!  IF(.NOT.UTL_EQUALS_REAL(REAL(BOT%X)-DXY,REAL(BOT%X)))EXIT
-!  DXY=DXY*10.0
-! ENDDO
-! BOT%X=BOT%X-DXY
-! TOP%X=TOP%X+DXY
-! DXY=(TOP%Y-BOT%Y); DXY=DXY*0.025
-! IF(DXY.EQ.0.0)DXY=10.0
-! !## make sure coordinates are distinguishable
-! DO
-!  IF(.NOT.UTL_EQUALS_REAL(REAL(BOT%X)-DXY,REAL(BOT%X)))EXIT
-!  DXY=DXY*10.0
-! ENDDO
-! BOT%Y=BOT%Y-DXY
-! TOP%Y=TOP%Y+DXY
-!
-! !## set mid-location of view
-! MIDPOS%X=(TOP%X+BOT%X)/2.0_GLDOUBLE
-! MIDPOS%Y=(TOP%Y+BOT%Y)/2.0_GLDOUBLE
-
  !## normalize normalvector after initialisation
  CALL GLENABLE(GL_NORMALIZE)
 
@@ -676,7 +597,7 @@ CONTAINS
  IF(ISOLID_3D.NE.0)THEN
   NSOLLIST=NSPF
  ELSE
-  NSOLLIST=50
+  NSOLLIST=MAXSOL
  ENDIF
 
  ALLOCATE(SOLPLOT(NSOLLIST))
@@ -684,7 +605,7 @@ CONTAINS
  ALLOCATE(SOLLISTINDEX(NSOLLIST,2))
 
  SOLPLOT%ISEL=0; IF(ISOLID_3D.NE.0)SOLPLOT%ISEL=1       !## activate cross-section
- SOLPLOT%IBLEND=100   !## opaque
+ SOLPLOT%ITRANSPARANCY=100   !## opaque
  SOLPLOT%IINTERFACE=0 !## filled polygon drawn
  SOLPLOT%IBITMAP=0    !## don't show bitmap, but if available, show them
  !## fill display with solids
