@@ -326,7 +326,7 @@ C4------READ ANISOTROPY-FACTOR EN -HOEK
      1opic conditions'
       endif
 
-      call translatekxx(ncol,nrow,nlay,kdsv,anifactor,
+      call translatekxx(ncol,nrow,nlay,ibound,kdsv,anifactor,
      1                  aniangle,kxx,kyy,kxy)
 
       call scl1ten(dcu,dcd,dcc,
@@ -629,6 +629,16 @@ c ------------------------------------------------------------------------------
 !######apply weigthing
        do irow=1,nrow
         do icol=1,ncol
+
+         !## set dummy values for inactive cells
+         if(ibound(icol,irow,ilay).eq.0)then
+
+          kxx(icol,irow,ilay)=1.0
+          kyy(icol,irow,ilay)=1.0
+          kxy(icol,irow,ilay)=1.0
+
+         else
+
 !########perform scalings
           if(kxx(icol,irow,ilay).ne.0.0.and.
      1       kyy(icol,irow,ilay).ne.0.0)then
@@ -640,7 +650,8 @@ c ------------------------------------------------------------------------------
      1           (delr(icol)/delc(irow))/detk
            kxy(icol,irow,ilay)=kxy(icol,irow,ilay)/detk
           endif
-
+         
+         endif
         enddo 
        enddo  
 
@@ -1070,11 +1081,12 @@ c ------------------------------------------------------------------------------
       return
       end subroutine
 
-      subroutine translatekxx(ncol,nrow,nlay,kd,fct,angle,
+      subroutine translatekxx(ncol,nrow,nlay,ibound,kd,fct,angle,
      %    kxx,kyy,kxy)
 
       implicit none
       integer ncol,nrow,nlay,ilay,irow,icol
+      integer ibound(ncol,nrow,nlay)
       real kd(ncol,nrow,nlay),fct(ncol,nrow,nlay), angle(ncol,nrow,nlay)
       real  k1,k2,kxx(ncol,nrow,nlay),kyy(ncol,nrow,nlay),
      %      kxy(ncol,nrow,nlay),phi
@@ -1082,14 +1094,21 @@ c ------------------------------------------------------------------------------
       do ilay=1,nlay
        do irow=1,nrow
         do icol=1,ncol
-         !## overrule angle in case factor is 1.0 - irrelevant in that case
-         if(fct(icol,irow,ilay).eq.1.0)angle(icol,irow,ilay)=0.0
-         phi=((360.-angle(icol,irow,ilay))*2.0*3.14159)/360.0
-         k1 =kd(icol,irow,ilay)*fct(icol,irow,ilay)
-         k2 =kd(icol,irow,ilay)
-         kxx(icol,irow,ilay)=k1*cos(phi)**2.0+k2*sin(phi)**2.0
-         kxy(icol,irow,ilay)=(k1-k2)*cos(phi)*sin(phi)
-         kyy(icol,irow,ilay)=k1*sin(phi)**2.0+k2*cos(phi)**2.0
+         !## set dummy values for inactive cells - isotropic
+         if(ibound(icol,irow,ilay).eq.0)then
+          kxx(icol,irow,ilay)=1.0
+          kyy(icol,irow,ilay)=1.0
+          kxy(icol,irow,ilay)=0.0
+         else
+          !## overrule angle in case factor is 1.0 - irrelevant in that case
+          if(fct(icol,irow,ilay).eq.1.0)angle(icol,irow,ilay)=0.0
+          phi=((360.-angle(icol,irow,ilay))*2.0*3.14159)/360.0
+          k1 =kd(icol,irow,ilay)*fct(icol,irow,ilay)
+          k2 =kd(icol,irow,ilay)
+          kxx(icol,irow,ilay)=k1*cos(phi)**2.0+k2*sin(phi)**2.0
+          kxy(icol,irow,ilay)=(k1-k2)*cos(phi)*sin(phi)
+          kyy(icol,irow,ilay)=k1*sin(phi)**2.0+k2*cos(phi)**2.0
+         endif
         end do
        end do 
       end do
