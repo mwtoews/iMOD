@@ -558,18 +558,21 @@ CONTAINS
  END FUNCTION SOLID_PROFILEDISTANCE
 
  !###======================================================================
- SUBROUTINE SOLID_PROFILEDELETE(ID,ISEL)
+ LOGICAL FUNCTION SOLID_PROFILEDELETE(ID,ISEL)
  !###======================================================================
  IMPLICIT NONE
  INTEGER,INTENT(IN) :: ID
  INTEGER,DIMENSION(:),INTENT(IN) :: ISEL
- INTEGER :: I,J,K
+ INTEGER :: I,II,J,JJ,K
+ CHARACTER(LEN=256) :: LINE
+ 
+ SOLID_PROFILEDELETE=.FALSE.
  
 ! CALL WDIALOGSELECT(ID)
 
  IF(ID.EQ.ID_DSERIESTAB2)THEN 
   
-  J=ISEL(1)
+!  J=ISEL(1)
 !  CALL WDIALOGGETMENU(IDF_MENU1,J)
 
   CALL WMESSAGEBOX(YESNO,QUESTIONICON,COMMONNO,'You are about to remove the selected Cross-Section: ['// &
@@ -581,78 +584,95 @@ CONTAINS
  ELSEIF(ID.EQ.ID_D3DSETTINGS_TAB6)THEN
 
 !  CALL WDIALOGGETMENU(IDF_MENU1,J)
-  J=ISEL(1)
+!  J=ISEL(1)
+  LINE='['
+  DO I=1,SIZE(ISEL)
+   IF(ISEL(I).EQ.1)LINE=TRIM(LINE)//CHAR(13)//TRIM(SPF(I)%FNAME)
+  ENDDO
+  LINE=TRIM(LINE)//']'
   
-  CALL WMESSAGEBOX(YESNO,QUESTIONICON,COMMONNO,'You are about to remove the selected Cross-Section(s): ['// &
-    TRIM(SPF(J)%FNAME)//'] from the List.'//CHAR(13)// &
+  CALL WMESSAGEBOX(YESNO,QUESTIONICON,COMMONNO,'You are about to remove the selected Cross-Section(s):'//CHAR(13)//TRIM(LINE)//CHAR(13)// &
+   'from the List.'//CHAR(13)// &
    'Be aware that the removed Cross-Section cannot be restored.'//CHAR(13)// &
-   'COnsider to save the \cross-section prior to deletion.'//CHAR(13)//CHAR(13)// &
+   'Consider to save the \cross-section prior to deletion.'//CHAR(13)//CHAR(13)// &
    'Are you sure to continue?','Question')
+
  ENDIF
  
  IF(WINFODIALOG(4).NE.1)RETURN
 
  IF(ID.EQ.ID_DSERIESTAB2)CALL SOLID_PROFILEFIELDS()
 
-!## loop over selected cross-sections
+ !## loop over selected cross-sections
+ DO II=1,SIZE(ISEL)
+  
+  J=ISEL(II)-(II-1)
+  
+  !## shift data ...
+  DO I=J,NSPF-1 
 
- !## shift data ...
- DO I=J,NSPF-1 
+   !## deallocate memory
+   IF(ASSOCIATED(SPF(I)%X))DEALLOCATE(SPF(I)%X)
+   IF(ASSOCIATED(SPF(I)%Y))DEALLOCATE(SPF(I)%Y)
+   SPF(I)%NXY=SPF(I+1)%NXY
+   ALLOCATE(SPF(I)%X(SPF(I)%NXY),SPF(I)%Y(SPF(I)%NXY))
+   !## copy coordinates
+   DO JJ=1,SPF(I)%NXY
+    SPF(I)%X(JJ)=SPF(I+1)%X(JJ)
+    SPF(I)%Y(JJ)=SPF(I+1)%Y(JJ)
+   ENDDO
+   SPF(I)%FNAME=SPF(I+1)%FNAME
+   SPF(I)%TX=SPF(I+1)%TX
+   !## copy bitmap settings
+   SPF(I)%PBITMAP=SPF(I+1)%PBITMAP
 
-  !## deallocate memory
-  IF(ASSOCIATED(SPF(I)%X))DEALLOCATE(SPF(I)%X)
-  IF(ASSOCIATED(SPF(I)%Y))DEALLOCATE(SPF(I)%Y)
-  SPF(I)%NXY=SPF(I+1)%NXY
-  ALLOCATE(SPF(I)%X(SPF(I)%NXY),SPF(I)%Y(SPF(I)%NXY))
-  !## copy coordinates
-  SPF(I)%X=SPF(I+1)%X
-  SPF(I)%Y=SPF(I+1)%Y
-  SPF(I)%FNAME=SPF(I+1)%FNAME
-  SPF(I)%TX=SPF(I+1)%TX
-  !## copy bitmap settings
-  SPF(I)%PBITMAP=SPF(I+1)%PBITMAP
+   !## copy information for cross-sections
+   DO K=1,SIZE(SPF(I)%PROF)
+    !## deallocate memory for cross-sections (not really neccessary since they all have the same dimension (for now))
+    IF(SPF(I)%PROF(K)%NPOS.GT.0)THEN
+     IF(ASSOCIATED(SPF(I)%PROF(K)%PX))DEALLOCATE(SPF(I)%PROF(K)%PX)
+     IF(ASSOCIATED(SPF(I)%PROF(K)%PZ))DEALLOCATE(SPF(I)%PROF(K)%PZ)
+    ENDIF
+    SPF(I)%PROF(K)%NPOS  =SPF(I+1)%PROF(K)%NPOS
+    ALLOCATE(SPF(I)%PROF(K)%PX(MXPX)) 
+    ALLOCATE(SPF(I)%PROF(K)%PZ(MXPX)) 
+    DO JJ=1,MXPX
+     SPF(I)%PROF(K)%PX(JJ)=SPF(I+1)%PROF(K)%PX(JJ)
+     SPF(I)%PROF(K)%PZ(JJ)=SPF(I+1)%PROF(K)%PZ(JJ)
+    ENDDO
+    SPF(I)%PROF(K)%ICLR  =SPF(I+1)%PROF(K)%ICLR
+    SPF(I)%PROF(K)%IWIDTH=SPF(I+1)%PROF(K)%IWIDTH
+   ENDDO
 
-  !## copy information for cross-sections
-  DO K=1,SIZE(SPF(I)%PROF)
-   !## deallocate memory for cross-sections (not really neccessary since they all have the same dimension (for now))
-   IF(SPF(I)%PROF(K)%NPOS.GT.0)THEN
-    IF(ASSOCIATED(SPF(I)%PROF(K)%PX))DEALLOCATE(SPF(I)%PROF(K)%PX)
-    IF(ASSOCIATED(SPF(I)%PROF(K)%PZ))DEALLOCATE(SPF(I)%PROF(K)%PZ)
-   ENDIF
-   SPF(I)%PROF(K)%NPOS  =SPF(I+1)%PROF(K)%NPOS
-   ALLOCATE(SPF(I)%PROF(K)%PX(MXPX)) 
-   ALLOCATE(SPF(I)%PROF(K)%PZ(MXPX)) 
-   SPF(I)%PROF(K)%PX    =SPF(I+1)%PROF(K)%PX
-   SPF(I)%PROF(K)%PZ    =SPF(I+1)%PROF(K)%PZ
-   SPF(I)%PROF(K)%ICLR  =SPF(I+1)%PROF(K)%ICLR
-   SPF(I)%PROF(K)%IWIDTH=SPF(I+1)%PROF(K)%IWIDTH
   ENDDO
 
- ENDDO
-
- !## free memory resource
- I=NSPF
- IF(ASSOCIATED(SPF(I)%X))DEALLOCATE(SPF(I)%X)
- IF(ASSOCIATED(SPF(I)%Y))DEALLOCATE(SPF(I)%Y)
- DO J=1,SIZE(SPF(I)%PROF)
-  IF(SPF(I)%PROF(J)%NPOS.GT.0)THEN
-   IF(ASSOCIATED(SPF(I)%PROF(J)%PX))DEALLOCATE(SPF(I)%PROF(J)%PX)
-   IF(ASSOCIATED(SPF(I)%PROF(J)%PZ))DEALLOCATE(SPF(I)%PROF(J)%PZ)
-  ENDIF
- ENDDO
- IF(ASSOCIATED(SPF(I)%PROF))DEALLOCATE(SPF(I)%PROF)
- SPF(I)%NXY=0
- SPF(I)%FNAME=''
- SPF(I)%TX=0.0
- SPF(I)%PBITMAP%IACT=0
- NSPF=NSPF-1
+  !## free memory resource
+  I=NSPF
+  IF(ASSOCIATED(SPF(I)%X))DEALLOCATE(SPF(I)%X)
+  IF(ASSOCIATED(SPF(I)%Y))DEALLOCATE(SPF(I)%Y)
+  DO J=1,SIZE(SPF(I)%PROF)
+   IF(SPF(I)%PROF(J)%NPOS.GT.0)THEN
+    IF(ASSOCIATED(SPF(I)%PROF(J)%PX))DEALLOCATE(SPF(I)%PROF(J)%PX)
+    IF(ASSOCIATED(SPF(I)%PROF(J)%PZ))DEALLOCATE(SPF(I)%PROF(J)%PZ)
+   ENDIF
+  ENDDO
+  IF(ASSOCIATED(SPF(I)%PROF))DEALLOCATE(SPF(I)%PROF)
+  SPF(I)%NXY=0
+  SPF(I)%FNAME=''
+  SPF(I)%TX=0.0
+  SPF(I)%PBITMAP%IACT=0
+  NSPF=NSPF-1
  
- CALL WDIALOGSELECT(ID) !ID_DSERIESTAB2)
+ ENDDO
+ 
+ CALL WDIALOGSELECT(ID)
  CALL WDIALOGPUTMENU(IDF_MENU1,SPF%FNAME,NSPF,NSPF)
 
  IF(ID.EQ.ID_DSERIESTAB2)CALL SOLID_PROFILEFIELDS()
  
- END SUBROUTINE SOLID_PROFILEDELETE
+ SOLID_PROFILEDELETE=.TRUE.
+
+ END FUNCTION SOLID_PROFILEDELETE
 
  !###======================================================================
  LOGICAL FUNCTION SOLID_PROFILEADD()
