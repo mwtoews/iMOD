@@ -2606,17 +2606,179 @@ CONTAINS
  END SUBROUTINE IMOD3D_DRAWIDF_VECTOR
 
  !###======================================================================
+ SUBROUTINE IMOD3D_TUBE2(XBH,YBH,ZBH,RBH,CBH,NINT,IMODE,ISHADE,IB)
+ !###======================================================================
+ IMPLICIT NONE
+ REAL,INTENT(IN),DIMENSION(:) :: XBH,YBH,ZBH,RBH
+ INTEGER,INTENT(IN),DIMENSION(:) :: CBH
+ INTEGER,INTENT(IN) :: NINT,IMODE,ISHADE,IB
+ REAL(KIND=GLFLOAT) :: AR,AD,AX,AY,XGRAD,DXY,DX,DY,DZ,XP,YP,ZP,AX2,AY2,IWIDTH,TL
+ REAL(KIND=GLFLOAT),DIMENSION(:,:),ALLOCATABLE :: XPOS,YPOS,ZPOS
+ INTEGER :: I,J,II,NFX,NFY,NF,N
+! REAL(KIND=GLFLOAT),DIMENSION(:),ALLOCATABLE :: XKP,YKP,ZKP
+ TYPE KPOBJ
+  REAL(KIND=GLFLOAT) :: X,Y,Z,W,AX,AY
+  INTEGER :: C
+ END TYPE KPOBJ
+ TYPE(KPOBJ),ALLOCATABLE,DIMENSION(:) :: KP
+  
+ !## stepsize angle radials
+ AD=2.0*PI/REAL(NINT) 
+
+ !## width scaling
+ IWIDTH=SQRT((TOP%Y-BOT%Y)**2.0+(TOP%X-BOT%X)**2.0)/50.0
+
+ !## allocate memory for storage of points on previous- and next cicle
+ ALLOCATE(XPOS(0:NINT,2),YPOS(0:NINT,2),ZPOS(0:NINT,2))
+
+ CALL GLPUSHMATRIX()
+
+ !## to ensure appropriate scaling of vector
+ CALL GLSCALED(1.0_GLDOUBLE/XSCALE_FACTOR,1.0_GLDOUBLE/YSCALE_FACTOR,1.0_GLDOUBLE/ZSCALE_FACTOR)
+ 
+ !## allocate all points
+ ALLOCATE(KP(2*SIZE(XBH)))
+ 
+ !## correct points (except first and last) and add knickpoints
+ N=0; DO I=1,SIZE(XBH)
+  
+  IF(I.LT.SIZE(XBH))THEN
+  
+   !## get angles from tube
+   DX=XBH(I+1)-XBH(I)
+   DY=YBH(I+1)-YBH(I)
+   DZ=ZBH(I+1)-ZBH(I)
+
+   AX=-ATAN2(DZ,DX)
+   !## depending on sign
+   AY= ATAN2(DY,SQRT(DX**2.0+DZ**2.0))  
+   !## correct for direction
+   IF(DX.LT.0.0)AY=-1.0*AY
+
+   !## tube length
+   TL=SQRT(DX**2.0+DY**2.0+DZ**2.0)
+  
+  ENDIF
+ 
+  !## add previous point (alleen bij volgende grote hoek verandering)
+  IF(I.GT.1)THEN
+   N=N+1
+   KP(N)%X =XBH(I)
+   KP(N)%Y =YBH(I)
+   KP(N)%Z =ZBH(I)
+   KP(N)%W =KP(N-1)%W
+   KP(N)%AX=KP(N-1)%AX
+   KP(N)%AY=KP(N-1)%AY
+   KP(N)%C =KP(N-1)%C
+  ENDIF
+  
+  !## add next point
+  IF(I.LT.SIZE(XBH))THEN
+   N=N+1
+   KP(N)%X =XBH(I)
+   KP(N)%Y =YBH(I)
+   KP(N)%Z =ZBH(I)
+   KP(N)%W =RBH(I)*IWIDTH
+   KP(N)%AX=AX
+   KP(N)%AY=AY
+   KP(N)%C =CBH(I)
+  ENDIF
+  
+  !## van dik naar dun extra punt toevoegen
+  !## extra punten tussen voegen waar knik zit 
+  !## locatie cirkels verplaatsen op basis dikte tube
+  !## mate van verplaatsing hangt af van de hoek tussen de tubes
+  !## 
+  
+!   !## add additional point if width of tube changes
+!   IF(I.LT.SIZE(XBH))THEN
+!    IF(RBH(I).NE.RBH(I+1))THEN
+!    N=N+1
+!     KP(N)%X =XBH(I)
+!     KP(N)%Y =YBH(I)
+!     KP(N)%Z =ZBH(I)
+!     KP(N)%W =RBH(I+1)*IWIDTH
+!     KP(N)%AX=AX
+!     KP(N)%AY=AY
+!     KP(N)%C =CBH(I)
+!    ENDIF
+!   ENDIF
+       
+ ENDDO
+ 
+ DO I=1,N
+ 
+  IF(IMODE.EQ.1)THEN
+   CALL IMOD3D_SETCOLOR(KP(I)%C) 
+   !## show shaded surface
+   IF(ISHADE.EQ.1)THEN     
+    CALL IMOD3D_RETURNCOLOR(KP(I)%C,AMBIENT) 
+    CALL GLMATERIALFV(GL_FRONT_AND_BACK,GL_AMBIENT_AND_DIFFUSE,AMBIENT) 
+   ENDIF
+  ELSEIF(IMODE.EQ.2)THEN
+   CALL IMOD3D_SETCOLOR(IB)
+  ENDIF
+  
+  !## get coordinates - on circle and projected for ax,ay,ad
+  CALL IMOD3D_TUBE_COORDINATES(NINT,XPOS(0,1),YPOS(0,1),ZPOS(0,1), &
+      KP(I)%AX,KP(I)%AY,AD,KP(I)%X,KP(I)%Y,KP(I)%Z,KP(I)%W)
+
+  !## draw fan of tube on first/last segment - or if width are different
+  IF(I.EQ.1.OR.I.EQ.N)THEN
+
+   !## draw triangle fan
+   CALL GLBEGIN(GL_TRIANGLE_FAN) 
+    CALL IMOD3D_SETNORMALVECTOR((/XPOS(0,1),YPOS(0,1),ZPOS(0,1)/), &
+                                (/XPOS(1,1),YPOS(1,1),ZPOS(1,1)/), &
+                                (/KP(I)%X  ,KP(I)%Y  ,KP(I)%Z /))
+    CALL GLVERTEX3F(KP(I)%X,KP(I)%Y,KP(I)%Z)
+    DO J=NINT,0,-1
+     CALL GLVERTEX3F(XPOS(J,1),YPOS(J,1),ZPOS(J,1))
+    ENDDO
+   CALL GLEND()
+
+  ENDIF
+
+  IF(I.GT.1)THEN
+
+   !## side of tube
+   CALL GLBEGIN(GL_QUAD_STRIP)
+   DO J=0,NINT 
+    IF(J.NE.NINT)THEN
+     CALL IMOD3D_SETNORMALVECTOR((/XPOS(J,1)  ,YPOS(J,1)  ,ZPOS(J,1)  /), &
+                                 (/XPOS(J,2)  ,YPOS(J,2)  ,ZPOS(J,2)  /), &
+                                 (/XPOS(J+1,2),YPOS(J+1,2),ZPOS(J+1,2)/))
+    ENDIF
+    CALL GLVERTEX3F(XPOS(J,1),YPOS(J,1),ZPOS(J,1))
+    CALL GLVERTEX3F(XPOS(J,2),YPOS(J,2),ZPOS(J,2))
+   ENDDO
+   CALL GLEND()
+  
+  ENDIF
+  
+  DO J=0,NINT
+   XPOS(J,2)=XPOS(J,1)
+   YPOS(J,2)=YPOS(J,1)
+   ZPOS(J,2)=ZPOS(J,1)
+  ENDDO
+
+ ENDDO 
+
+ CALL GLPOPMATRIX()
+ DEALLOCATE(KP)
+ 
+ END SUBROUTINE IMOD3D_TUBE2
+
+ !###======================================================================
  SUBROUTINE IMOD3D_TUBE(XBH,YBH,ZBH,RBH,CBH,NINT,IMODE,ISHADE,IB)
  !###======================================================================
  IMPLICIT NONE
-! INTEGER,PARAMETER :: MAT=3 !maximal intervals 
  REAL,INTENT(IN),DIMENSION(:) :: XBH,YBH,ZBH,RBH
  INTEGER,INTENT(IN),DIMENSION(:) :: CBH
  INTEGER,INTENT(IN) :: NINT,IMODE,ISHADE,IB
  REAL(KIND=GLFLOAT) :: AR,AD,AZ,AX,AY,XGRAD,DXY,DX,DY,DZ,XP,YP,ZP,AX2,AY2,AZ2
  REAL(KIND=GLFLOAT),DIMENSION(:,:),ALLOCATABLE :: XPOS,YPOS,ZPOS
  INTEGER :: I,J,II,NFX,NFY,NF
- 
  
  !## stepsize angle radials
  AD=2.0*PI/REAL(NINT) 
@@ -2794,7 +2956,7 @@ CONTAINS
  CALL GLPOPMATRIX()
 
  END SUBROUTINE IMOD3D_TUBE
-
+ 
  !###======================================================================
  SUBROUTINE IMOD3D_TUBE_COORDINATES(NINT,XPOS,YPOS,ZPOS,AX,AY,AD,XBH,YBH,ZBH,RBH)
  !###======================================================================
@@ -2808,8 +2970,8 @@ CONTAINS
    
  !## top or bottom - compute coordinates
  AR=0.0_GLFLOAT
- DO J=0,NINT !NINT,0,-1
-  XPOS(J)=RBH !(I)      
+ DO J=0,NINT
+  XPOS(J)=RBH
   YPOS(J)=0.0_GLFLOAT 
   ZPOS(J)=0.0_GLFLOAT
   !## rotate appropriately in 3D
@@ -2817,9 +2979,9 @@ CONTAINS
   CALL UTL_ROTATE_XYZ(XPOS(J),YPOS(J),ZPOS(J),0.0,REAL(0.5*PI),0.0)
   CALL UTL_ROTATE_XYZ(XPOS(J),YPOS(J),ZPOS(J),-REAL(0.5*PI),0.0,0.0)
   !## transform
-  XPOS(J)=XPOS(J)+XBH !(I+II-1)
-  YPOS(J)=YPOS(J)+YBH !(I+II-1)
-  ZPOS(J)=ZPOS(J)+ZBH !(I+II-1)
+  XPOS(J)=XPOS(J)+XBH 
+  YPOS(J)=YPOS(J)+YBH 
+  ZPOS(J)=ZPOS(J)+ZBH 
   AR=AR+AD
  ENDDO
 
@@ -3307,10 +3469,10 @@ SOLLOOP: DO I=1,NSOLLIST
    
    !## apply scaling
    ZBH=ZBH*ZSCALE_FACTOR
-   IWIDTH=SQRT((TOP%Y-BOT%Y)**2.0+(TOP%X-BOT%X)**2.0)/50.0
-   RBH=RBH*IWIDTH
+!   IWIDTH=SQRT((TOP%Y-BOT%Y)**2.0+(TOP%X-BOT%X)**2.0)/50.0
+!   RBH=RBH*IWIDTH
 
-   CALL IMOD3D_TUBE(XBH,YBH,ZBH,RBH,CBH,IPFPLOT(IIPF)%ISUB,IMODE,IPFPLOT(IIPF)%ISHADE,NASSLIST)
+   CALL IMOD3D_TUBE2(XBH,YBH,ZBH,RBH,CBH,IPFPLOT(IIPF)%ISUB,IMODE,IPFPLOT(IIPF)%ISHADE,NASSLIST)
     
    DEALLOCATE(XBH,YBH,ZBH,RBH,CBH)
     
