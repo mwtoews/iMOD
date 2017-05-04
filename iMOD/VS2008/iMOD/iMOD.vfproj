@@ -119,6 +119,7 @@
 		<Filter Name="imod_dino">
 		<File RelativePath="..\..\..\iMOD\SRC\imod_gef2ipf\gef2ipf.f90"/>
 		<File RelativePath="..\..\..\iMOD\SRC\imod_gef2ipf\gef2ipf_par.f90"/>
+		<File RelativePath="..\..\SRC\imod_dino\imod_devwel.f90"/>
 		<File RelativePath="..\..\..\iMOD\SRC\imod_dino\imod_dino_ipf.f90"/>
 		<File RelativePath="..\..\..\iMOD\SRC\imod_dino\imod_dino_par.f90"/></Filter>
 		<Filter Name="imod_draw">
