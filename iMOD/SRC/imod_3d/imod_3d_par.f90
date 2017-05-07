@@ -94,7 +94,7 @@ TYPE IPFSETTING
  INTEGER :: IPLOTLABELS !## plot labels
  INTEGER :: ILEGDLF     !## legend dlf
  INTEGER :: ISTYLE      !## plotstyle
- REAL :: RADIUS         !## percentage
+ REAL :: RADIUS         !## size of borehole
  INTEGER,DIMENSION(3) :: ISELECT
  REAL,DIMENSION(3) :: RSELECT
  CHARACTER(LEN=50) :: FNAME
