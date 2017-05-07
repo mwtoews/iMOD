@@ -800,7 +800,11 @@ CONTAINS
  !## unknown/initial colour ... white/grey
  ICLR  =WRGB(250,250,250)
  IWIDTH=1
- ICOLUMN=ASSF(IASSF)%ASSCOL1-1 !## minus one since the first column is read by other parameter
+ IF(ASSF(IASSF)%ITOPIC.EQ.4)THEN
+  ICOLUMN=ASSF(IASSF)%ASSCOL1-3 !## minus one since the first column is read by other parameter
+ ELSE
+  ICOLUMN=ASSF(IASSF)%ASSCOL1-1 !## minus one since the first column is read by other parameter
+ ENDIF
  IF(ICOLUMN.LE.0.OR.ICOLUMN.GT.SIZE(ASSF(IASSF)%L,1))RETURN
  
  ILEG=ASSF(IASSF)%ILEGDLF

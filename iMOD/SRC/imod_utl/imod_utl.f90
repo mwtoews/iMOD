@@ -1460,28 +1460,29 @@ CONTAINS
  REAL :: X1,Y1,Z1
  
  !## perform rotation around z-axes
- X1= COS(AZ)*X+SIN(AZ)*Y
- Y1=-SIN(AZ)*X+COS(AZ)*Y
-
- X=X1
- Y=Y1
- 
-! RETURN
+ IF(AZ.NE.0.0)THEN
+  X1= COS(AZ)*X+SIN(AZ)*Y
+  Y1=-SIN(AZ)*X+COS(AZ)*Y
+  X=X1
+  Y=Y1
+ ENDIF
  
  !## perform rotation around x-axes
- Y1=COS(AX)*Y-SIN(AX)*Z
- Z1=SIN(AX)*Y+COS(AX)*Z
-
- Y=Y1
- Z=Z1
-
+ IF(AX.NE.0.0)THEN
+  Y1=COS(AX)*Y-SIN(AX)*Z
+  Z1=SIN(AX)*Y+COS(AX)*Z
+  Y=Y1
+  Z=Z1
+ ENDIF
+ 
  !## perform rotation around y-axes
- X1= COS(AY)*X-SIN(AY)*Z
- Z1= SIN(AY)*X+COS(AY)*Z
-
- X=X1
- Z=Z1
-
+ IF(AY.NE.0.0)THEN
+  X1= COS(AY)*X-SIN(AY)*Z
+  Z1= SIN(AY)*X+COS(AY)*Z
+  X=X1
+  Z=Z1
+ ENDIF
+ 
  END SUBROUTINE UTL_ROTATE_XYZ
  
  !###======================================================================
