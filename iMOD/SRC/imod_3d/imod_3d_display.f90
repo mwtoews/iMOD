@@ -44,7 +44,6 @@ CONTAINS
  INTEGER,INTENT(IN) :: IMODE
  REAL(KIND=GLFLOAT) :: XR,XG,XB
  INTEGER :: I,IR,IG,IB,J
-! INTEGER(GLINT) :: IVIEWPORT(4)
  LOGICAL(GLBOOLEAN) :: LRED,LGREEN,LBLUE,LALPHA,LDMASK
  
  CALL IMOD3D_ERROR('IMOD3D_DISPLAY_ENTRY')
@@ -121,7 +120,7 @@ CONTAINS
   !## draw iff's
   IF(NIFFLIST.GT.0)CALL IMOD3D_DISPLAY_IFF()
   !## draw sol's
-  IF(NSOLLIST.GT.0)CALL IMOD3D_DISPLAY_SOL() !IMODE,0)
+  IF(NSOLLIST.GT.0)CALL IMOD3D_DISPLAY_SOL()
   !## draw interactive flowlines
   IF(IPATHLINE_3D.GT.0)CALL IMOD3D_DISPLAY_PL()
   !## draw idf's
@@ -136,7 +135,6 @@ CONTAINS
   !## freeze depthmask for transluscent plotting
   LDMASK=.FALSE.; CALL GLDEPTHMASK(LDMASK)
   IF(NIDFLIST.GT.0)CALL IMOD3D_DISPLAY_IDF(IMODE,1)
-!  IF(NSOLLIST.GT.0)CALL IMOD3D_DISPLAY_SOL(IMODE,1)
   IF(NGENLIST.GT.0)CALL IMOD3D_DISPLAY_GEN(1)
   LDMASK=.TRUE.; CALL GLDEPTHMASK(LDMASK)
 
@@ -490,13 +488,14 @@ CONTAINS
  INTEGER,INTENT(IN) :: I,ICOLOR
  INTEGER :: J
  REAL(GLFLOAT),DIMENSION(4) :: X,Y,Z
- REAL(GLFLOAT) :: T,DX,DY,DZ
+ REAL(GLFLOAT) :: T,DX,DY,DZ,OX,OY,OZ
      
  !## west/east clipping plane
  IF(ABS(CLPPLOT(I)%EQN(1)).EQ.1.0_GLDOUBLE)THEN
   DX=(TOP%X-BOT%X)*REAL(CLPPLOT(I)%IPOS)/100.0
   DX=CLPPLOT(I)%X+DX*CLPPLOT(I)%EQN(1)
-  X(1)=DX;    X(2)=X(1);  X(3)=X(1);  X(4)=X(1)
+  OX=(TOP%X-BOT%X)/200.0*CLPPLOT(I)%EQN(1)
+  X(1)=DX+OX; X(2)=X(1);  X(3)=X(1);  X(4)=X(1)
   Y(1)=BOT%Y; Y(2)=Y(1);  Y(3)=TOP%Y; Y(4)=Y(3)
   Z(1)=BOT%Z; Z(2)=TOP%Z; Z(3)=Z(2);  Z(4)=Z(1)
  ENDIF
@@ -504,7 +503,8 @@ CONTAINS
  IF(ABS(CLPPLOT(I)%EQN(2)).EQ.1.0_GLDOUBLE)THEN
   DY=(TOP%Y-BOT%Y)*REAL(CLPPLOT(I)%IPOS)/100.0
   DY=CLPPLOT(I)%Y+DY*CLPPLOT(I)%EQN(2)
-  Y(1)=DY;    Y(2)=Y(1);  Y(3)=Y(1);  Y(4)=Y(1)
+  OY=(TOP%Y-BOT%Y)/200.0*CLPPLOT(I)%EQN(2)
+  Y(1)=DY+OY; Y(2)=Y(1);  Y(3)=Y(1);  Y(4)=Y(1)
   X(1)=BOT%X; X(2)=X(1);  X(3)=TOP%X; X(4)=X(3)
   Z(1)=BOT%Z; Z(2)=TOP%Z; Z(3)=Z(2);  Z(4)=Z(1)
  ENDIF
@@ -512,7 +512,8 @@ CONTAINS
  IF(ABS(CLPPLOT(I)%EQN(3)).EQ.1.0_GLDOUBLE)THEN
   DZ=(TOP%Z-BOT%Z)*REAL(CLPPLOT(I)%IPOS)/100.0
   DZ=CLPPLOT(I)%Z+DZ*CLPPLOT(I)%EQN(3)
-  Z(1)=DZ;    Z(2)=Z(1);  Z(3)=Z(1);  Z(4)=Z(1)
+  OZ=(TOP%Z-BOT%Z)/200.0*CLPPLOT(I)%EQN(3)
+  Z(1)=DZ+OZ; Z(2)=Z(1);  Z(3)=Z(1);  Z(4)=Z(1)
   X(1)=BOT%X; X(2)=X(1);  X(3)=TOP%X; X(4)=X(3)
   Y(1)=BOT%Y; Y(2)=TOP%Y; Y(3)=Y(2);  Y(4)=Y(1)
  ENDIF
@@ -532,10 +533,9 @@ CONTAINS
   CALL GLPOLYGONMODE(GL_BACK, GL_FILL); CALL GLPOLYGONMODE(GL_FRONT,GL_FILL)
 
   !## show shaded surface
-!  CALL GLENABLE(GL_LIGHTING)
   CALL GLCOLORMATERIAL(GL_FRONT_AND_BACK,GL_AMBIENT_AND_DIFFUSE)
   CALL GLENABLE(GL_COLOR_MATERIAL)
-  CALL IMOD3D_SETCOLOR(ICOLOR) !CLPPLOT(I)%ICOLOR) !## include alpha
+  CALL IMOD3D_SETCOLOR(ICOLOR)
   CALL IMOD3D_SETNORMALVECTOR((/X(1),Y(1),Z(1)/),(/X(2),Y(2),Z(2)/),(/X(3),Y(3),Z(3)/))
 
  ENDIF
@@ -546,10 +546,7 @@ CONTAINS
  ENDDO
  CALL GLEND()
  
- IF(ICOLOR.EQ.1)THEN
-  CALL GLDISABLE(GL_COLOR_MATERIAL)
-!  CALL GLDISABLE(GL_LIGHTING)
- ENDIF
+ IF(ICOLOR.EQ.1)CALL GLDISABLE(GL_COLOR_MATERIAL)
  
  END SUBROUTINE IMOD3D_DISPLAY_CLP_DRAW
 
@@ -558,7 +555,7 @@ CONTAINS
  !###======================================================================
  IMPLICIT NONE
  INTEGER,INTENT(IN) :: IMODE
- INTEGER :: I,IIPF
+ INTEGER :: I,J,IIPF
    
  !## associated file drawn
  DO I=1,NIPFLIST
@@ -569,6 +566,11 @@ CONTAINS
   !## selected in menu-field
   IF(IPFPLOT(IIPF)%ISEL.NE.1.OR.IPFLISTINDEX(I,IMODE).EQ.0)CYCLE
    
+  !## turn off clipping as it is not effected by this selected IPF file
+  IF(IPFPLOT(I)%ICLIP.EQ.0)THEN
+   DO J=1,NCLPLIST; CALL GLDISABLE(CLPPLANES(J)); END DO
+  ENDIF
+
   IF(IMODE.EQ.1)then
    !## line width
    IF(ISELECTED.EQ.I)THEN
@@ -623,6 +625,11 @@ CONTAINS
 
   ENDIF
 
+  !## turn on clipping as it was not effected by this selected IPF file
+  IF(IPFPLOT(I)%ICLIP.EQ.0)THEN
+   DO J=1,NCLPLIST; IF(CLPPLOT(J)%ISEL.EQ.1)CALL GLENABLE(CLPPLANES(J)); END DO
+  ENDIF
+
  END DO
 
  !## draw ipf labels
@@ -657,8 +664,6 @@ CONTAINS
  INTEGER :: I,J
  INTEGER,INTENT(IN) :: IMODE,IT
  REAL(KIND=GLDOUBLE) :: TSTACK
-! INTEGER(KIND=GLBYTE) :: IJ
-! LOGICAL(KIND=GLBOOLEAN) :: LDMASK
  
  TSTACK=0.0_GLDOUBLE
  
@@ -675,6 +680,11 @@ CONTAINS
     IF(IT.EQ.1)CYCLE
    ENDIF
   ENDIF 
+  
+  !## turn off clipping as it is not effected by this selected IDF file
+  IF(IDFPLOT(I)%ICLIP.EQ.0)THEN
+   DO J=1,NCLPLIST; CALL GLDISABLE(CLPPLANES(J)); END DO
+  ENDIF
   
   IF(IDFPLOT(I)%ISTACKED.GT.0)THEN
    CALL GLPUSHMATRIX()  !## pushes all matrices in the current stack down one level, topmost is copied
@@ -825,6 +835,11 @@ CONTAINS
 
   ENDIF
 
+  !## turn on clipping as it was not effected by this selected IDF file
+  IF(IDFPLOT(I)%ICLIP.EQ.0)THEN
+   DO J=1,NCLPLIST; IF(CLPPLOT(J)%ISEL.EQ.1)CALL GLENABLE(CLPPLANES(J)); END DO
+  ENDIF
+
   !## pops off the top matrix second-from-the top becomes the top
   IF(IDFPLOT(I)%ISTACKED.GT.0)CALL GLPOPMATRIX()   
 
@@ -839,7 +854,7 @@ CONTAINS
  SUBROUTINE IMOD3D_DISPLAY_IFF()
  !###======================================================================
  IMPLICIT NONE
- INTEGER :: I
+ INTEGER :: I,J
  REAL(KIND=GLFLOAT) :: XW
 
  !## opaque mode
@@ -848,6 +863,11 @@ CONTAINS
  DO I=1,NIFFLIST
   IF(IFFPLOT(I)%ISEL.NE.1.OR.IFFLISTINDEX(I).EQ.0)CYCLE
 
+  !## turn off clipping as it is not effected by this selected IFF file
+  IF(IFFPLOT(I)%ICLIP.EQ.0)THEN
+   DO J=1,NCLPLIST; CALL GLDISABLE(CLPPLANES(J)); END DO
+  ENDIF
+
   IF(MP(IFFPLOT(I)%IPLOT)%ILEG.EQ.0)THEN
    CALL IMOD3D_SETCOLOR(MP(IFFPLOT(I)%IPLOT)%SCOLOR)
   ENDIF
@@ -855,16 +875,20 @@ CONTAINS
   CALL GLLINEWIDTH(XW)
   CALL GLCALLLIST(IFFLISTINDEX(I))
 
+  !## turn on clipping as it was not effected by this selected IFF file
+  IF(IFFPLOT(I)%ICLIP.EQ.0)THEN
+   DO J=1,NCLPLIST; IF(CLPPLOT(J)%ISEL.EQ.1)CALL GLENABLE(CLPPLANES(J)); END DO
+  ENDIF
+
  END DO
 
  END SUBROUTINE IMOD3D_DISPLAY_IFF
 
  !###======================================================================
- SUBROUTINE IMOD3D_DISPLAY_SOL() !IMODE,IT)
+ SUBROUTINE IMOD3D_DISPLAY_SOL() 
  !###======================================================================
  IMPLICIT NONE
-! INTEGER,INTENT(IN) :: IMODE,IT
- INTEGER :: I
+ INTEGER :: I,J
 
  CALL GLENABLE(GL_LIGHTING)
  CALL GLSHADEMODEL(GL_FLAT) !## heeft te maken met invullen kleuren
@@ -876,33 +900,16 @@ CONTAINS
   IF(SOLPLOT(I)%IBITMAP.EQ.1)CYCLE
   IF(SOLLISTINDEX(I,1).EQ.0)CYCLE
   
-!  !## blend mode
-!  IF(IMODE.EQ.1)THEN
-!   IF(SOLPLOT(I)%ITRANSPARANCY.LT.100)THEN
-!    !## skip all transparant images in this cycle
-!    IF(IT.EQ.0)CYCLE
-!   ELSE
-!    !## skip all opaque images in this cycle
-!    IF(IT.EQ.1)CYCLE
-!   ENDIF
-!  ENDIF 
+  !## turn off clipping as it is not effected by this selected SOL file
+  IF(SOLPLOT(I)%ICLIP.EQ.0)THEN
+   DO J=1,NCLPLIST; CALL GLDISABLE(CLPPLANES(J)); END DO
+  ENDIF
 
   !## not showing interfaces (lines)
   IF(SOLPLOT(I)%IINTERFACE.EQ.0)THEN 
    CALL GLENABLE(GL_LIGHTING)
-
-!    !## blend mode 
-!    IF(SOLPLOT(I)%ITRANSPARANCY.LT.100)THEN
-!     !## draw furthers first
-!     CALL GLBLENDFUNC(GL_SRC_ALPHA,GL_ONE_MINUS_SRC_ALPHA)  !## (1) source (2) destination
-!    ELSE
-     !## opaque mode
-     CALL GLBLENDFUNC(GL_ONE,GL_ZERO)  !## (1) source (2) destination
-!    ENDIF
-
-!   IF(SOLPLOT(I)%ITRANSPARANCY.EQ.1)THEN
-!    CALL GLBLENDFUNC(GL_SRC_ALPHA,GL_ONE_MINUS_SRC_ALPHA)  !## (1) source (2) destination
-!   ENDIF
+   !## opaque mode
+   CALL GLBLENDFUNC(GL_ONE,GL_ZERO)  !## (1) source (2) destination
   ELSE
    CALL GLDISABLE(GL_LIGHTING)
   ENDIF
@@ -923,6 +930,11 @@ CONTAINS
 !   CALL GLPOLYGONMODE(GL_BACK, GL_FILL); CALL GLPOLYGONMODE(GL_FRONT,GL_FILL)
   ENDIF
   CALL GLCALLLIST(SOLLISTINDEX(I,2))
+
+  !## turn on clipping as it was not effected by this selected SOL file
+  IF(SOLPLOT(I)%ICLIP.EQ.0)THEN
+   DO J=1,NCLPLIST; IF(CLPPLOT(J)%ISEL.EQ.1)CALL GLENABLE(CLPPLANES(J)); END DO
+  ENDIF
 
  END DO
 
@@ -998,11 +1010,8 @@ CONTAINS
  !###======================================================================
  IMPLICIT NONE
  INTEGER,INTENT(IN) :: IT
- INTEGER :: I
- REAL(KIND=GLFLOAT) :: XW !,XR,XG,XB
-! INTEGER :: IR,IG,IB
-
-! CALL GLPOLYGONMODE(GL_BACK, GL_FILL); CALL GLPOLYGONMODE(GL_FRONT,GL_FILL) 
+ INTEGER :: I,J
+ REAL(KIND=GLFLOAT) :: XW
 
  DO I=1,NGENLIST
   IF(GENPLOT(I)%ISEL.NE.1.OR.GENLISTINDEX(I).EQ.0)CYCLE
@@ -1014,6 +1023,11 @@ CONTAINS
   ELSE
    !## skip all opaque images in this cycle
    IF(IT.EQ.1)CYCLE
+  ENDIF
+
+  !## turn off clipping as it is not effected by this selected GEN file
+  IF(GENPLOT(I)%ICLIP.EQ.0)THEN
+   DO J=1,NCLPLIST; CALL GLDISABLE(CLPPLANES(J)); END DO
   ENDIF
 
   !## blend mode 
@@ -1049,6 +1063,11 @@ CONTAINS
 
   CALL GLCALLLIST(GENLISTINDEX(I))
 
+  !## turn on clipping as it was not effected by this selected GEN file
+  IF(GENPLOT(I)%ICLIP.EQ.0)THEN
+   DO J=1,NCLPLIST; IF(CLPPLOT(J)%ISEL.EQ.1)CALL GLENABLE(CLPPLANES(J)); END DO
+  ENDIF
+
  END DO
 
  !## turn of light
@@ -1069,8 +1088,6 @@ CONTAINS
  CALL WDIALOGSELECT(ID_D3DSETTINGS_TAB5)
  CALL WDIALOGGETTRACKBAR(IDF_TRACKBAR6,ITRANSPARANCYBITMAP)
  
-! CALL GLBLENDFUNC(GL_SRC_ALPHA,GL_ONE_MINUS_SRC_ALPHA)
-
  !## blend mode 
  IF(ITRANSPARANCYBITMAP.LT.100)THEN
   !## draw furthers first

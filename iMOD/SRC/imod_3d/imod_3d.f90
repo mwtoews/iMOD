@@ -606,9 +606,9 @@ CONTAINS
  ALLOCATE(SOLLISTINDEX(NSOLLIST,3)) !2))
 
  SOLPLOT%ISEL=0; IF(ISOLID_3D.NE.0)SOLPLOT%ISEL=1       !## activate cross-section
-! SOLPLOT%ITRANSPARANCY=100   !## opaque
  SOLPLOT%IINTERFACE=0 !## filled polygon drawn
  SOLPLOT%IBITMAP=0    !## don't show bitmap, but if available, show them
+ SOLPLOT%ICLIP=1    !## all effected by clipplanes
  !## fill display with solids
  IF(.NOT.IMOD3D_SOL())RETURN
  
