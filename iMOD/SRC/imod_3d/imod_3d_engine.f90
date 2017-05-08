@@ -1100,6 +1100,7 @@ CONTAINS
       IDFPLOT(NIDFLIST)%IFILL  =1  !## coloured (2=fishnet)
       IDFPLOT(NIDFLIST)%ISHADED=1  !## shaded
       IDFPLOT(NIDFLIST)%ISEL   =1  !## activated
+      IDFPLOT(NIDFLIST)%ICLIP  =1  !## clipped
       IDFPLOT(NIDFLIST)%ILIST  =NIDFLIST  !## list sequence
       IDFPLOT(NIDFLIST)%ALIAS  =MDF(I)%ALIAS
       IDFPLOT(NIDFLIST)%FNAME  =MDF(I)%FNAME
@@ -1125,6 +1126,7 @@ CONTAINS
     IDFPLOT(NIDFLIST)%IFILL  =1  !## coloured (2=fishnet)
     IDFPLOT(NIDFLIST)%ISHADED=1  !## shaded
     IDFPLOT(NIDFLIST)%ISEL   =1  !## activated
+    IDFPLOT(NIDFLIST)%ICLIP  =1  !## clipped
     IDFPLOT(NIDFLIST)%ILIST  =NIDFLIST  !## list sequence
     IDFPLOT(NIDFLIST)%FNAME  =MP(IPLOT)%IDFNAME
     IDFPLOT(NIDFLIST)%IPLOT  =IPLOT
@@ -4138,8 +4140,7 @@ SOLLOOP: DO I=1,NSOLLIST
  LOGICAL FUNCTION IMOD3D_SOL_ADD()
  !###======================================================================
  IMPLICIT NONE
-! TYPE(WIN_MESSAGE) :: MESSAGE
- INTEGER :: I,J !,ITYPE
+ INTEGER :: I,J
  REAL :: XTOL,X,Y,Z
  CHARACTER(LEN=52) :: CDATE
  
@@ -4182,12 +4183,6 @@ SOLLOOP: DO I=1,NSOLLIST
   XY(1,I)=XYZCROSS(I)%X
   XY(2,I)=XYZCROSS(I)%Y
  ENDDO
-  
-! !## diagonal
-! XY(1,1)=BOT%X
-! XY(1,2)=TOP%X
-! XY(2,1)=BOT%Y
-! XY(2,2)=TOP%Y
 
  !## compute profile through idf in 3D
  CALL PROFILE_COMPUTEPLOT()

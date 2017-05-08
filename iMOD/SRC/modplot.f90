@@ -120,7 +120,6 @@ USE MOD_IDF_PAR, ONLY : IDFOBJ
  CHARACTER(LEN=50),DIMENSION(MXCLR)     :: CLEGTXT  !## COPY purposes
  CHARACTER(LEN=150)                     :: CHEDTXT  !## COPY purposes
  INTEGER,DIMENSION(MXCGRAD)             :: CCGRAD   !## selected color for gradient
-! INTEGER,DIMENSION(MXCGRAD)             :: CLRGIVEN !## given color in mxclr mode
  CHARACTER(LEN=256)                     :: PLOTNAME !##configuration name
 
  TYPE CONTOBJ

@@ -127,7 +127,7 @@ CONTAINS
  SUBROUTINE POLYGON1DRAWYSEL()
  !###======================================================================
  IMPLICIT NONE
- INTEGER,PARAMETER :: MYSEL=1000
+ INTEGER,PARAMETER :: MYSEL=10000
  INTEGER :: I
 
  IF(.NOT.ALLOCATED(SELIDF))RETURN
@@ -136,7 +136,7 @@ CONTAINS
  IF(SELIDF(1)%NTHREAD.GT.MYSEL)THEN
   CALL WMESSAGEBOX(YESNO,QUESTIONICON,COMMONNO,'Are you sure to draw '//TRIM(ITOS(SELIDF(1)%NTHREAD))//' selected cell?'//CHAR(13)// &
       'Click No to skip drawing these cells, click YES to draw them.'//CHAR(13)//'Be aware in that case, it can take a while.','Question')
-  IF(WINFODIALOG(4).NE.1)RETURN
+  IF(WINFODIALOG(4).NE.1)THEN; LPLOTYSEL=.FALSE.; RETURN; ENDIF
  ENDIF
  
  CALL IDFPLOT1BITMAP()

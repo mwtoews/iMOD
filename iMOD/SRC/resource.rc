@@ -8,7 +8,7 @@
 //
 // Winteracter resource script. 
 //
-// Modified : 08/May/2017 04:25:32
+// Modified : 08/May/2017 23:20:02
 //
 ///////////////////////////////////////////////////
 //
@@ -7563,7 +7563,7 @@ BEGIN
 ,0
 END
 
-ID_D3DSETTINGS_TAB7 DIALOG 0, 0,  194,  299
+ID_D3DSETTINGS_TAB7 DIALOG 0, 0,  194,  337
 STYLE WS_CHILD | DS_CONTROL | DS_3DLOOK
 FONT    8, "Arial"
 BEGIN
@@ -7599,10 +7599,14 @@ BEGIN
     CONTROL "North",IDF_LABEL20,"STATIC",WS_CHILD | WS_VISIBLE | WS_GROUP | SS_LEFT,   14,  278,   29,    8
     CONTROL "South",IDF_LABEL21,"STATIC",WS_CHILD | WS_VISIBLE | WS_GROUP | SS_RIGHT,  146,  278,   29,    8
     CONTROL "North",IDF_LABEL22,"STATIC",WS_CHILD | WS_VISIBLE | WS_GROUP | SS_CENTER,   76,  251,   40,    8
+    CONTROL "Option",IDF_GROUP5,"BUTTON",WS_CHILD | WS_VISIBLE | WS_GROUP | BS_GROUPBOX | BS_TEXT | BS_LEFT,    6,  295,  180,   35
+    CONTROL "Enable Capping",IDF_CHECK1,"BUTTON",WS_CHILD | WS_VISIBLE | WS_GROUP | WS_TABSTOP | BS_AUTOCHECKBOX | BS_TEXT,   12,  309,   72,   14
 END
 
 ID_D3DSETTINGS_TAB7 RCDATA
 BEGIN
+"[Checks] \n"
+" 1182 0 \n"
 "[Menus] \n"
 " 1192     6     1 \n"
 "1 \n"
@@ -12729,4 +12733,4 @@ END
 //*WI* FILENAME    resource.f90
 //*WI* FMODNAME    RESOURCE
 //*WI* LASTTYPE        2
-//*WI* LASTRES       225
+//*WI* LASTRES       198
