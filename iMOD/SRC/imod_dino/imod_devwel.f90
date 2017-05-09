@@ -87,10 +87,12 @@ CONTAINS
   WRITE(JU,'(A)') '4,4'
   WRITE(JU,'(A)') 'DX,-999.99'
   WRITE(JU,'(A)') 'DY,-999.99'
-  WRITE(JU,'(A)') 'DZ,-999.99'
+  WRITE(JU,'(A)') 'Z ,-999.99'
   WRITE(JU,'(A)') 'LABEL,-999.99'
   !## process current borehole
-  X1=0.0; Y1=0.0; Z1=0.0; TL1=0.0
+  X1=0.0; Y1=0.0; TL1=0.0
+  !## read z value
+  READ(VAR(ICOLS(4),I1),*) Z1
   DO II=I1,I2
 
    !## read total length through well
