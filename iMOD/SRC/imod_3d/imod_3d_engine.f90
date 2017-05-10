@@ -1167,6 +1167,9 @@ CONTAINS
  !## draw vectors
  IF(IMOD3D_REDRAWIDF(1))THEN; ENDIF
 
+ IF(ALLOCATED(NANSTRING))DEALLOCATE(NANSTRING)
+ ALLOCATE(NANSTRING(NIDFLIST)); NANSTRING='NaN'
+
  CALL WINDOWOUTSTATUSBAR(2,'')
 
  IMOD3D_IDF_INIT=.TRUE.
@@ -2683,7 +2686,7 @@ CONTAINS
    KP(N)%AY=AY
    KP(N)%C =CBH(I)
   ENDIF
-  
+
   !## van dik naar dun extra punt toevoegen
   !## extra punten tussen voegen waar knik zit 
   !## locatie cirkels verplaatsen op basis dikte tube
@@ -2707,7 +2710,9 @@ CONTAINS
  ENDDO
  
  DO I=1,N
- 
+  
+  write(*,*) i,kp(i)%ax,kp(i)%ay
+  
   IF(IMODE.EQ.1)THEN
    CALL IMOD3D_SETCOLOR(KP(I)%C) 
    !## show shaded surface
@@ -3110,6 +3115,7 @@ CONTAINS
    IPFPLOT(IIPF)%IFILL  =1  !## coloured 
    IPFPLOT(IIPF)%ISEL   =1
    IPFPLOT(IIPF)%ICLIP  =1
+   !## initially use the fancy mode - this will be changed if more than 250 boreholes are considered
    IPFPLOT(IIPF)%IFANCY =1
    IPFPLOT(IIPF)%ISHADE =1
    IPFPLOT(IIPF)%RADIUS =5.0 !meter thickness
@@ -3125,17 +3131,18 @@ CONTAINS
   ENDIF
  ENDDO
  
- IF(.NOT.IMOD3D_IPF(0))RETURN
+ IF(.NOT.IMOD3D_IPF(0,1))RETURN
  
  IMOD3D_IPF_INIT=.TRUE.
  
  END FUNCTION IMOD3D_IPF_INIT
  
  !###======================================================================
- LOGICAL FUNCTION IMOD3D_IPF(IGL)
+ LOGICAL FUNCTION IMOD3D_IPF(IGL,IOVERRULE)
  !###======================================================================
  IMPLICIT NONE
  INTEGER,INTENT(IN) :: IGL !## igl=0 do not include drawing lists for OpenGL
+ INTEGER,INTENT(IN) :: IOVERRULE
  INTEGER :: IIPF,I,II,J,IPLOT,IU,IRAT,IRAT1
  REAL(KIND=GLFLOAT) :: X,Y,Z,Z2
  CHARACTER(LEN=256) :: FNAME,DIR
@@ -3196,7 +3203,11 @@ CONTAINS
     
    ENDIF
   ENDDO
+ 
  ENDDO
+
+ !## change to non-fancy mode in case many boreholes are considered in active window
+ IF(NASSLIST.GT.MXROWFORFANCY.AND.IOVERRULE.EQ.1)THEN; DO IIPF=1,NIPF; IPFPLOT(IIPF)%IFANCY=0; ENDDO; ENDIF
 
  !## get display-list pointers
  IF(ALLOCATED(IPFLISTINDEX))THEN
@@ -3379,13 +3390,10 @@ SOLLOOP: DO I=1,NSOLLIST
  REAL(KIND=GLFLOAT) :: X1,X2,X3,X4,Y1,Y2,Y3,Y4,Z1,Z2,Z3,Z4,BSIZE,FRAC,MXW
  INTEGER :: I,JCLR,N,NINT
  REAL :: IWIDTH,R,S
- LOGICAL :: LEX
+! LOGICAL :: LEX
  REAL,DIMENSION(:),ALLOCATABLE :: XBH,YBH,ZBH,RBH
  INTEGER,DIMENSION(:), ALLOCATABLE :: CBH
  
- !## no idf available, determine axes
- LEX=NIDFLIST.EQ.0
-
  BSIZE=IPFPLOT(IIPF)%RADIUS 
  MXW  =MAXVAL(BH%LITHOWIDTH)
   
@@ -3409,7 +3417,6 @@ SOLLOOP: DO I=1,NSOLLIST
    X1=X; Y1=Y; Z1=ASSF(NASSLIST)%Z(1)
   ELSEIF(IPLOTTYPE.EQ.4)THEN
    X1=X+ASSF(NASSLIST)%DX(1); Y1=Y+ASSF(NASSLIST)%DY(1); Z1=ASSF(NASSLIST)%Z(1)
-   Z1=Z1*ZSCALE_FACTOR
   ENDIF
 
   !## simple lines
@@ -3432,8 +3439,9 @@ SOLLOOP: DO I=1,NSOLLIST
      X2=X+ASSF(NASSLIST)%DX(I+1); Y2=Y+ASSF(NASSLIST)%DY(I+1); Z2=ASSF(NASSLIST)%Z(I+1)
     ENDIF
     !## to location
-    IF(IGL.EQ.1)CALL GLVERTEX3F(X2,Y2,Z2)
-    IF(LEX)THEN
+    IF(IGL.EQ.1)THEN
+     CALL GLVERTEX3F(X2,Y2,Z2)
+    ELSE
      TOP%X=MAX(TOP%X,X1,X2); BOT%X=MIN(BOT%X,X1,X2)
      TOP%Y=MAX(TOP%Y,Y1,Y2); BOT%Y=MIN(BOT%Y,Y1,Y2)
      TOP%Z=MAX(TOP%Z,Z1,Z2); BOT%Z=MIN(BOT%Z,Z1,Z2)
@@ -3470,12 +3478,12 @@ SOLLOOP: DO I=1,NSOLLIST
     
    ENDDO
 
-   IF(LEX)THEN
+   IF(IGL.EQ.0)THEN
     TOP%X=MAX(TOP%X,MAXVAL(XBH)); BOT%X=MIN(BOT%X,MINVAL(XBH))
     TOP%Y=MAX(TOP%Y,MAXVAL(YBH)); BOT%Y=MIN(BOT%Y,MINVAL(YBH))
     TOP%Z=MAX(TOP%Z,MAXVAL(ZBH)); BOT%Z=MIN(BOT%Z,MINVAL(ZBH))
    ENDIF
-   
+     
    !## apply scaling
    ZBH=ZBH*ZSCALE_FACTOR
 
@@ -3524,7 +3532,7 @@ SOLLOOP: DO I=1,NSOLLIST
   
   ENDIF
   
-  IF(LEX)THEN; TOP%Z=MAX(TOP%Z,Z,ZZ); BOT%Z=MIN(BOT%Z,Z,ZZ); ENDIF
+  TOP%Z=MAX(TOP%Z,Z,ZZ); BOT%Z=MIN(BOT%Z,Z,ZZ)
 
  ENDIF
 

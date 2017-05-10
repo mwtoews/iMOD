@@ -631,16 +631,6 @@ CONTAINS
 
  END FUNCTION IMOD3D_BMP_INIT
 
-! !###======================================================================
-! SUBROUTINE IMOD3D_SELECTOBJECT_DEAL()
-! !###======================================================================
-! IMPLICIT NONE
-
-! IF(ALLOCATED(IC))DEALLOCATE(IC)
-! IF(ALLOCATED(NANSTRING))DEALLOCATE(NANSTRING)
-
-! END SUBROUTINE IMOD3D_SELECTOBJECT_DEAL
-
  !###======================================================================
  SUBROUTINE IMOD3D_DEALLOCATE()
  !###======================================================================
