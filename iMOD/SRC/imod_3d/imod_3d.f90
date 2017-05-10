@@ -358,7 +358,7 @@ CONTAINS
  CALL IGRUNITS(0.0,0.0,1.0,1.0)
 
  !## initialize number of ipf/idf/iff/gen
- NIPFLIST=0 !## number of ipf files
+ NIPFLIST=0 !## number of individual ipf points
  NASSLIST=0 !## number of associated files
  NIDFLIST=0 !## number of idf files
  NIFFLIST=0 !## number of iff files

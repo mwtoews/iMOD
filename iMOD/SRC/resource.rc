@@ -6027,7 +6027,7 @@ BEGIN
 "  349  Pathlines \n"
 "  163  IPF's \n"
 "  164  IFF's \n"
-"  311  Fench Diagrams \n"
+"  311  Fence Diagrams \n"
 "  172  GEN's \n"
 "  312  Clipplanes \n"
 "  273  Miscellaneous \n"
@@ -11616,7 +11616,7 @@ BEGIN
         END
         POPUP "Import"
         BEGIN
-            MENUITEM "Import Devitated Wells ...",               ID_IMPORT_DEVWELLS
+            MENUITEM "Import Deviated Wells ...",               ID_IMPORT_DEVWELLS
         END
         MENUITEM SEPARATOR
         MENUITEM "P&references ...",                         ID_PREFERENCES
