@@ -8,7 +8,7 @@
 //
 // Winteracter resource script. 
 //
-// Modified : 11/May/2017 01:44:31
+// Modified : 11/May/2017 04:00:08
 //
 ///////////////////////////////////////////////////
 //
@@ -1191,6 +1191,8 @@
 #define ID_IMPORT                       40310
 #define ID_IMPORT_DEVWELLS              40311
 #define ID_RESET                         1295
+#define ID_MOVIE_CREATE                 40312
+#define ID_MOVIE_PLAY                   40313
 
 ///////////////////////////////////////////////////
 //
@@ -6567,27 +6569,30 @@ BEGIN
 ,0
 END
 
-ID_DTIMESERIESDATES DIALOG 0, 0,  226,  133
+ID_DTIMESERIESDATES DIALOG 0, 0,  226,  172
 STYLE WS_POPUP | WS_BORDER | WS_DLGFRAME | WS_SYSMENU | WS_MINIMIZEBOX | DS_3DLOOK | DS_MODALFRAME
 FONT    8, "Arial"
-CAPTION "Available Dates"
+CAPTION "Available Dates for the Time Series"
 BEGIN
     CONTROL "",IDF_MENU1,"COMBOBOX",WS_CHILD | WS_VISIBLE | WS_DISABLED | WS_VSCROLL | WS_GROUP | WS_TABSTOP | CBS_DROPDOWNLIST | CBS_HASSTRINGS,  100,   49,   65,  150
     CONTROL "0",IDF_INTEGER1,"INTEGERSPIN",WS_CHILD | WS_VISIBLE | WS_DISABLED | WS_BORDER | WS_GROUP | WS_TABSTOP | ES_LEFT | ES_CENTER | ES_MULTILINE,   57,   49,   40,   12
     CONTROL "0",IDF_INTEGER2,"INTEGERSPIN",WS_CHILD | WS_VISIBLE | WS_DISABLED | WS_BORDER | WS_TABSTOP | ES_LEFT | ES_CENTER | ES_MULTILINE,  167,   49,   40,   12
     CONTROL "From:",IDF_LABEL1,"STATIC",WS_CHILD | WS_VISIBLE | WS_DISABLED | WS_GROUP | SS_LEFT,   31,   51,   20,    8
-    CONTROL "Specify part of date to be processed",IDF_GROUP1,"BUTTON",WS_CHILD | WS_VISIBLE | WS_GROUP | BS_GROUPBOX | BS_TEXT,    6,    4,  209,  100
+    CONTROL "Specify begin- and end date for the input time-serie",IDF_GROUP1,"BUTTON",WS_CHILD | WS_VISIBLE | WS_GROUP | BS_GROUPBOX | BS_TEXT | BS_LEFT,    6,    4,  209,  100
     CONTROL "",IDF_MENU2,"COMBOBOX",WS_CHILD | WS_VISIBLE | WS_DISABLED | WS_VSCROLL | WS_GROUP | WS_TABSTOP | CBS_DROPDOWNLIST | CBS_HASSTRINGS,  100,   67,   65,  150
     CONTROL "0",IDF_INTEGER3,"INTEGERSPIN",WS_CHILD | WS_VISIBLE | WS_DISABLED | WS_BORDER | WS_GROUP | WS_TABSTOP | ES_LEFT | ES_CENTER | ES_MULTILINE,   57,   67,   40,   12
     CONTROL "0",IDF_INTEGER4,"INTEGERSPIN",WS_CHILD | WS_VISIBLE | WS_DISABLED | WS_BORDER | WS_TABSTOP | ES_LEFT | ES_CENTER | ES_MULTILINE,  167,   67,   40,   12
     CONTROL "To:",IDF_LABEL2,"STATIC",WS_CHILD | WS_VISIBLE | WS_DISABLED | WS_GROUP | SS_LEFT,   31,   69,   20,    8
-    CONTROL "&OK",IDOK,"BUTTON",WS_CHILD | WS_VISIBLE | WS_GROUP | WS_TABSTOP | BS_PUSHBUTTON | BS_TEXT | BS_FLAT,    6,  113,   40,   14
-    CONTROL "&Cancel",IDCANCEL,"BUTTON",WS_CHILD | WS_VISIBLE | WS_TABSTOP | BS_PUSHBUTTON | BS_TEXT | BS_FLAT,  177,  113,   40,   14
-    CONTROL "&Help ...",IDHELP,"BUTTON",WS_CHILD | WS_VISIBLE | WS_TABSTOP | BS_PUSHBUTTON | BS_TEXT | BS_FLAT,  134,  113,   40,   14
+    CONTROL "&OK",IDOK,"BUTTON",WS_CHILD | WS_VISIBLE | WS_GROUP | WS_TABSTOP | BS_PUSHBUTTON | BS_TEXT | BS_FLAT,    6,  151,   40,   14
+    CONTROL "&Cancel",IDCANCEL,"BUTTON",WS_CHILD | WS_VISIBLE | WS_TABSTOP | BS_PUSHBUTTON | BS_TEXT | BS_FLAT,  177,  151,   40,   14
+    CONTROL "&Help ...",IDHELP,"BUTTON",WS_CHILD | WS_VISIBLE | WS_TABSTOP | BS_PUSHBUTTON | BS_TEXT | BS_FLAT,  134,  151,   40,   14
     CONTROL "Use ALL available dates (####-files)",IDF_RADIO1,"BUTTON",WS_CHILD | WS_VISIBLE | WS_GROUP | WS_TABSTOP | BS_AUTORADIOBUTTON | BS_TEXT,   16,   17,  149,   12
     CONTROL "Select PART of all available dates",IDF_RADIO2,"BUTTON",WS_CHILD | WS_VISIBLE | WS_TABSTOP | BS_AUTORADIOBUTTON | BS_TEXT,   16,   33,  189,   11
-    CONTROL "Skip number of files",IDF_CHECK1,"BUTTON",WS_CHILD | WS_VISIBLE | WS_GROUP | WS_TABSTOP | BS_AUTOCHECKBOX | BS_TEXT,   16,   86,   84,   12
+    CONTROL "Frequency of input used for time-series",IDF_CHECK1,"BUTTON",WS_CHILD | WS_VISIBLE | WS_GROUP | WS_TABSTOP | BS_AUTOCHECKBOX | BS_TEXT,   16,   84,  144,   12
     CONTROL "2",IDF_INTEGER5,"INTEGERSPIN",WS_CHILD | WS_VISIBLE | WS_DISABLED | WS_BORDER | WS_TABSTOP | ES_LEFT | ES_CENTER | ES_MULTILINE,  167,   84,   40,   12
+    CONTROL "Additional Options",IDF_GROUP2,"BUTTON",WS_CHILD | WS_VISIBLE | WS_GROUP | BS_GROUPBOX | BS_TEXT | BS_LEFT,    6,  108,  209,   39
+    CONTROL "Duration (seconds):",IDF_LABEL3,"STATIC",WS_CHILD | WS_VISIBLE | WS_GROUP | SS_LEFT,   16,  124,   68,    8
+    CONTROL "0",IDF_INTEGER6,"INTEGERSPIN",WS_CHILD | WS_VISIBLE | WS_BORDER | WS_GROUP | WS_TABSTOP | ES_LEFT | ES_CENTER | ES_MULTILINE,  100,  123,   40,   12
 END
 
 ID_DTIMESERIESDATES RCDATA
@@ -11852,7 +11857,11 @@ BEGIN
         MENUITEM "&TimeSerie Tool ...",                      ID_TIMESERIES
         MENUITEM "&3D Tool ...",                             ID_3DTOOL
         MENUITEM "&Solid Tool ...",                          ID_SOLIDS
-        MENUITEM "&Movie Tool ...",                          ID_MOVIE
+        POPUP "&Movie Tool ..."
+        BEGIN
+            MENUITEM "Create a New Movie ...",                   ID_MOVIE_CREATE
+            MENUITEM "Play an Existing Movie ...",               ID_MOVIE_PLAY
+        END
         MENUITEM "&GeoConnect Tool ...",                     ID_GEOCONNECT, GRAYED
         MENUITEM SEPARATOR
         POPUP "Plug-In"
@@ -11963,6 +11972,7 @@ ID_LEGENDCOLUMNS,4,12,2,0,
 ID_LEGCD,4,13,0,
 ID_LEGED,4,14,0,
 ID_TOOLBOX,5,0,
+ID_MOVIE,5,5,0,
 ID_PLUGIN,5,8,0,
 ID_PLUGIN_TIMECHECK,5,8,1,0,
 ID_MODELIMPORT,5,10,0,
@@ -12152,6 +12162,8 @@ ID_WBAL_GENERATE,"Compute the sum of budget quantities for the entire model exte
 ,"Start the Movie Tool\0",
 ID_MOVIE,"Use this tool to generate an Movie (AVI) of time variant results\0",
 ID_IMPORT_DEVWELLS,"Import Deviated Wells from a CSV file to an IPF file\0",
+ID_MOVIE_CREATE,"Select this option to generate a New Movie\0",
+ID_MOVIE_PLAY,"Select this option to Play an Existing Movie\0",
 0
 END
 
@@ -12746,5 +12758,5 @@ END
 //*WI* FORTSAVE    1
 //*WI* FILENAME    resource.f90
 //*WI* FMODNAME    RESOURCE
-//*WI* LASTTYPE        2
-//*WI* LASTRES       186
+//*WI* LASTTYPE        1
+//*WI* LASTRES         7
