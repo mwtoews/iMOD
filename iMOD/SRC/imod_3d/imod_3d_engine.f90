@@ -29,7 +29,7 @@ USE MODPLOT
 USE MOD_COLOURS, ONLY  : COLOUR_RANDOM
 USE IMODVAR, ONLY : IBACKSLASH,ILABELNAME
 USE MOD_IDF, ONLY : IDFREAD,IDFDEALLOCATE,IDFGETVAL,IDFREADPART,IDFDEALLOCATEX,IDFNULLIFY,IDFEQUAL,&
-          IDFREADSCALE_GETX,IDFCOPY,IDF_EXTENT,IDFALLOCATEX,IDFGETLOC,IDFIROWICOL
+          IDFREADSCALE_GETX,IDFCOPY,IDF_EXTENT,IDFALLOCATEX,IDFGETLOC,IDFIROWICOL,IDFREADSCALE
 USE MOD_IDF_PAR, ONLY : IDFOBJ
 USE MOD_COLOURS, ONLY : ICOLOR
 USE MOD_UTL, ONLY : INVERSECOLOUR,UTL_CAP,UTL_GETUNIT,ITOS,RTOS,UTL_FILLARRAY,UTL_IDFGETCLASS, &
@@ -1573,12 +1573,14 @@ CONTAINS
     IF(.NOT.IDFREAD(IDF(5),IDFPLOT(ID_IDF(II))%FNAME,0))EXIT
     !## template idf will become idf(1) based upon original idf(4)
     IF(IMOD3D_DRAWIDF_SIZE(IDF(5),IDF(1)))THEN
-     IF(.NOT.IDFREADSCALE_GETX(IDF(5),IDF(1),IDFDATA(3),1,0.0))EXIT   !## child,mother,blockvalue,percentile
+!     IF(.NOT.IDFREADSCALE_GETX(IDF(5),IDF(1),IDFDATA(3),1,0.0))EXIT   !## child,mother,blockvalue,percentile
+     IF(.NOT.IDFREADSCALE(IDF(5)%FNAME,IDF(1),IDFDATA(3),1,0.0,0))EXIT
     ELSE
      !## copy idf(5) to idf(1) to become the original
      CALL IDFCOPY(IDF(5),IDF(1)); IDF(1)%IU=IDF(5)%IU
      !## read part of idf(1)
-     IF(.NOT.IDFREADPART(IDF(1),REAL(BOT%X),REAL(BOT%Y),REAL(TOP%X),REAL(TOP%Y)))EXIT
+     IF(.NOT.IDFREADSCALE(IDF(5)%FNAME,IDF(1),IDFDATA(3),1,0.0,0))EXIT
+!     IF(.NOT.IDFREADPART(IDF(1),REAL(BOT%X),REAL(BOT%Y),REAL(TOP%X),REAL(TOP%Y)))EXIT
      IF(IDF(1)%IVF.EQ.0)THEN
       IF(MAXVAL(IDF(1)%X).EQ.IDF(1)%NODATA.AND.&
          MINVAL(IDF(1)%X).EQ.IDF(1)%NODATA)ND_IDF(1)=0
@@ -1587,13 +1589,15 @@ CONTAINS
    !## second follows template of first, is obliged to make nice cubes
    ELSEIF(II.EQ.2)THEN
     CALL IDFCOPY(IDF(1),IDF(4))
-    IF(.NOT.IDFREADSCALE_GETX(IDF(2),IDF(4),IDFDATA(3),1,0.0))EXIT   !## child,mother,arithmetic mean,percentile
+!    IF(.NOT.IDFREADSCALE_GETX(IDF(2),IDF(4),IDFDATA(3),1,0.0))EXIT   !## child,mother,arithmetic mean,percentile
+    IF(.NOT.IDFREADSCALE(IDF(2)%FNAME,IDF(4),IDFDATA(3),1,0.0,0))EXIT
     IF(MAXVAL(IDF(4)%X).EQ.IDF(4)%NODATA.AND. &
        MINVAL(IDF(4)%X).EQ.IDF(4)%NODATA)ND_IDF(2)=0
    !## third follows template of first
    ELSEIF(II.EQ.3)THEN
     CALL IDFCOPY(IDF(1),IDF(5)); IDF(5)%IXV=IDF(3)%IXV
-    IF(.NOT.IDFREADSCALE_GETX(IDF(3),IDF(5),IDFDATA(3),1,0.0))EXIT   !## child,mother,arithmetic mean,percentile
+!    IF(.NOT.IDFREADSCALE_GETX(IDF(3),IDF(5),IDFDATA(3),1,0.0))EXIT   !## child,mother,arithmetic mean,percentile
+    IF(.NOT.IDFREADSCALE(IDF(3)%FNAME,IDF(5),IDFDATA(3),1,0.0,0))EXIT
     IF(MAXVAL(IDF(5)%X).EQ.IDF(5)%NODATA.AND. &
        MINVAL(IDF(5)%X).EQ.IDF(5)%NODATA)ND_IDF(3)=0
    ENDIF
@@ -2616,7 +2620,6 @@ CONTAINS
  SUBROUTINE IMOD3D_TUBE2(XBH,YBH,ZBH,RBH,CBH,NINT,IMODE,ISHADE,IB,ZTOLERANCE)
  !###======================================================================
  IMPLICIT NONE
-! REAL,PARAMETER :: ZTOLERANCE=1.0
  REAL,INTENT(INOUT),DIMENSION(:) :: XBH,YBH,ZBH,RBH
  REAL,INTENT(IN) :: ZTOLERANCE
  INTEGER,INTENT(INOUT),DIMENSION(:) :: CBH
@@ -2625,6 +2628,7 @@ CONTAINS
  REAL(KIND=GLFLOAT),DIMENSION(:,:),ALLOCATABLE :: XPOS,YPOS,ZPOS
  REAL,ALLOCATABLE,DIMENSION(:) :: ZDIST,XDIST
  REAL,ALLOCATABLE,DIMENSION(:,:) :: GCODE
+ REAL :: ZTOL
  INTEGER :: I,J,II,NFX,NFY,NF,N,NP,ICLR
  TYPE KPOBJ
   REAL(KIND=GLFLOAT) :: X,Y,Z,W,AX,AY
@@ -2653,14 +2657,23 @@ CONTAINS
   !## process line
   CALL PEUCKER_SIMPLIFYLINE(XDIST,ZDIST,GCODE(:,I),SIZE(XBH))
  ENDDO
+
+ !## set simplification tolerance
+ ZTOL=ZTOLERANCE
+ 
  !## see what point is in and what point is out
  GCODE(1        ,4)=1.0
  GCODE(SIZE(XBH),4)=1.0
- DO I=2,SIZE(XBH)-1
+ DO I=2,SIZE(XBH)-1 
+ 
+!  !## increase tolerance of width is more (meters)
+!  ZTOL=MAX(RBH(I),ZTOLERANCE)
+!  WRITE(*,*) ZTOL,ZTOLERANCE,RBH(I)
+  
   N=0
-  IF(GCODE(I,1).GT.ZTOLERANCE)N=N+1
-  IF(GCODE(I,2).GT.ZTOLERANCE)N=N+1
-  IF(GCODE(I,3).GT.ZTOLERANCE)N=N+1
+  IF(GCODE(I,1).GT.ZTOL)N=N+1
+  IF(GCODE(I,2).GT.ZTOL)N=N+1
+  IF(GCODE(I,3).GT.ZTOL)N=N+1
   !## if other class, always keep point
   IF(CBH(I).NE.CBH(I-1))N=N+2
   !## point need to be kept
@@ -2676,16 +2689,14 @@ CONTAINS
    CBH(NP)=CBH(I)
   ENDIF
  ENDDO 
-   
-!   gcode(:,4)
+
  !## allocate all points
- ALLOCATE(KP(2*NP)) !SIZE(XBH)))
- 
+ ALLOCATE(KP(2*NP))
+
  !## correct points (except first and last) and add knickpoints
- N=0; DO I=1,NP !SIZE(XBH)
-  
+ N=0; DO I=1,NP 
+
   IF(I.LT.NP)THEN
-!  IF(I.LT.SIZE(XBH))THEN
   
    !## get angles from tube
    DX=XBH(I+1)-XBH(I)
@@ -2698,12 +2709,16 @@ CONTAINS
    !## correct for direction
    IF(DX.LT.0.0)AY=-1.0*AY
 
-   !## tube length
-   TL=SQRT(DX**2.0+DY**2.0+DZ**2.0)
-  
+!   !## tube length
+!   TL=SQRT(DX**2.0+DY**2.0+DZ**2.0)
+!   !## move
+!   IF(TL.GT.RBH(I))THEN
+!    F=RBH(I)/TL
+!   ENDIF 
+    
   ENDIF
  
-  !## add previous point (alleen bij volgende grote hoek verandering)
+  !## add previous point, always as dimensions changes
   IF(I.GT.1)THEN
    N=N+1
    KP(N)%X =XBH(I)
@@ -2716,7 +2731,7 @@ CONTAINS
   ENDIF
   
   !## add next point
-  IF(I.LT.NP)THEN !SIZE(XBH))THEN
+  IF(I.LT.NP)THEN
    N=N+1
    KP(N)%X =XBH(I)
    KP(N)%Y =YBH(I)
@@ -2748,7 +2763,7 @@ CONTAINS
 !   ENDIF
        
  ENDDO
- 
+  
  DO I=1,N
   
 !  write(*,*) i,kp(i)%ax,kp(i)%ay
@@ -2759,10 +2774,10 @@ CONTAINS
    IF(I.GT.1)THEN
     IF(KP(I-1)%W.GT.KP(I)%W)ICLR=KP(I-1)%C
    ENDIF
-   CALL IMOD3D_SETCOLOR(ICLR) !KP(I)%C) 
+   CALL IMOD3D_SETCOLOR(ICLR) 
    !## show shaded surface
    IF(ISHADE.EQ.1)THEN     
-    CALL IMOD3D_RETURNCOLOR(ICLR,AMBIENT) !KP(I)%C,AMBIENT) 
+    CALL IMOD3D_RETURNCOLOR(ICLR,AMBIENT) 
     CALL GLMATERIALFV(GL_FRONT_AND_BACK,GL_AMBIENT_AND_DIFFUSE,AMBIENT) 
    ENDIF
   ELSEIF(IMODE.EQ.2)THEN
@@ -2814,7 +2829,8 @@ CONTAINS
 
  ENDDO 
 
- CALL GLPOPMATRIX()
+ CALL GLPOPMATRIX() 
+ 
  !## deallocate memory
  DEALLOCATE(KP,XPOS,YPOS,ZPOS,ZDIST,XDIST,GCODE)
  
@@ -2833,6 +2849,7 @@ CONTAINS
  
  !## stepsize angle radials
  AD=2.0*PI/REAL(NINT) 
+ 
  !## allocate memory for storage of points on previous- and next cicle
  ALLOCATE(XPOS(0:NINT,2),YPOS(0:NINT,2),ZPOS(0:NINT,2))
 
@@ -3164,7 +3181,8 @@ CONTAINS
    !## initially use the fancy mode - this will be changed if more than 250 boreholes are considered
    IPFPLOT(IIPF)%IFANCY =1
    IPFPLOT(IIPF)%ISHADE =1
-   IPFPLOT(IIPF)%RADIUS =5.0 !meter thickness
+   IPFPLOT(IIPF)%RADIUS =1.0  !scale
+   IPFPLOT(IIPF)%SIMPLIFY=1.0 !simplification (meter)
    IPFPLOT(IIPF)%ISUB   =12
    IPFPLOT(IIPF)%ISTYLE =4
    IPFPLOT(IIPF)%ASSCOL1=MP(IPLOT)%ASSCOL1
@@ -3190,14 +3208,18 @@ CONTAINS
  INTEGER,INTENT(IN) :: IGL !## igl=0 do not include drawing lists for OpenGL
  INTEGER,INTENT(IN) :: IOVERRULE
  INTEGER :: IIPF,I,II,J,IPLOT,IU,IRAT,IRAT1
- REAL(KIND=GLFLOAT) :: X,Y,Z,Z2
+ REAL(KIND=GLFLOAT) :: X,Y,Z,Z2,MXW
  CHARACTER(LEN=256) :: FNAME,DIR
  LOGICAL :: LEX
  TYPE(WIN_MESSAGE) :: MESSAGE
- INTEGER :: ITYPE,ICLR,ACOL
- REAL :: XVAL
+ INTEGER :: ITYPE,ICLR,ACOL,IPLUS
+ REAL :: XVAL,S
 
  IMOD3D_IPF=.FALSE.
+
+ !## width scaling
+ S  =SQRT((TOP%Y-BOT%Y)**2.0+(TOP%X-BOT%X)**2.0)/500.0
+ MXW=MAXVAL(BH%LITHOWIDTH)
 
  !## allocate memory for ipf-plotting, they will be read in memory and drawn from that
  CALL IPFINIT()
@@ -3229,7 +3251,10 @@ CONTAINS
  ENDDO
 
  !## get number of points inside current view-frame
- NIPFLIST=0; NASSLIST=0
+ !## number of drawing lists
+ NIPFLIST=0
+ !## number of picking lists
+ NASSLIST=0
  
  DO IIPF=1,NIPF
 
@@ -3237,14 +3262,30 @@ CONTAINS
 
   !## initialise ipos
   IPF(IIPF)%IPOS=INT(0,1)
+
+  ACOL=IPF(IIPF)%ACOL; IF(ACOL.LT.0.OR.ACOL.GT.IPF(IIPF)%NCOL)ACOL=0
+  
+  IF(IOVERRULE.EQ.1)THEN
+   IF(ACOL.EQ.0)IPFPLOT(IIPF)%RADIUS=5.0
+   IF(ACOL.NE.0)IPFPLOT(IIPF)%RADIUS=2.0
+  ENDIF
+  
+  !## create separate drawinglists for boreholes not for non-connected points
+  IPLUS=0; IF(ACOL.NE.0)IPLUS=1
+  !## create new drawinglist position
+  IF(IPLUS.EQ.0)NIPFLIST=NIPFLIST+1
+    
   DO I=1,IPF(IIPF)%NROW
    X=IPF(IIPF)%XYZ(1,I); Y=IPF(IIPF)%XYZ(2,I)
    IF(X.GE.BOT%X   .AND.X.LE.TOP%X   .AND.Y.GE.BOT%Y   .AND.Y.LE.TOP%Y)THEN
 
     IF(IMOD3D_BLANKOUT_XY(X,Y))THEN  
      IPF(IIPF)%IPOS(I)=INT(1,1)
-     NIPFLIST=NIPFLIST+1
-     IF(IPF(IIPF)%ACOL.NE.0.AND.IPF(IIPF)%ACOL.LE.IPF(IIPF)%NCOL)NASSLIST=NASSLIST+1
+     IF(IPLUS.NE.0)THEN 
+      NIPFLIST=NIPFLIST+IPLUS !1
+      NASSLIST=NASSLIST+IPLUS !1
+     ENDIF
+
     ENDIF
     
    ENDIF
@@ -3253,16 +3294,17 @@ CONTAINS
  ENDDO
 
  !## change to non-fancy mode in case many boreholes are considered in active window
- IF(NASSLIST.GT.MXROWFORFANCY.AND.IOVERRULE.EQ.1)THEN; DO IIPF=1,NIPF; IPFPLOT(IIPF)%IFANCY=0; ENDDO; ENDIF
+ IF(NIPFLIST.GT.MXROWFORFANCY.AND.IOVERRULE.EQ.1)THEN; DO IIPF=1,NIPF; IPFPLOT(IIPF)%IFANCY=0; ENDDO; ENDIF
 
  !## get display-list pointers
  IF(ALLOCATED(IPFLISTINDEX))THEN
-  CALL WINDOWOUTSTATUSBAR(2,'Cleaning memory ...')
+  CALL WINDOWOUTSTATUSBAR(2,'Releasing Memory ...')
   DO I=1,SIZE(IPFLISTINDEX,1); DO J=1,SIZE(IPFLISTINDEX,2)
    IF(IPFLISTINDEX(I,J).NE.0)CALL GLDELETELISTS(IPFLISTINDEX(I,J),1_GLSIZEI)
   ENDDO; ENDDO
   DEALLOCATE(IPFLISTINDEX)
  ENDIF
+ !# allocate memory for drawinglists
  ALLOCATE(IPFLISTINDEX(NIPFLIST,3)); IPFLISTINDEX=0
 
  !## storage of ipf specific information used for selection purposes
@@ -3277,17 +3319,31 @@ CONTAINS
  NIPFLIST=0; NASSLIST=0; IRAT=0; IRAT1=IRAT
  DO IIPF=1,NIPF
 
-  !## create sphere-object
-  IF(IPFPLOT(IIPF)%IFANCY.EQ.1)CALL IMOD3D_IPF_CREATEBALL(IPFPLOT(IIPF)%ISUB,IPFPLOT(IIPF)%ISTYLE)
+  !## reset acol since it can be altered
+  ACOL=IPF(IIPF)%ACOL; IF(ACOL.LT.0.OR.ACOL.GT.IPF(IIPF)%NCOL)ACOL=0
+  
+  !## create separate drawinglists for boreholes not for non-connected points
+  IPLUS=0; IF(ACOL.NE.0)IPLUS=1
+  !## create new drawinglist position
+  IF(IPLUS.EQ.0)NIPFLIST=NIPFLIST+1
+  
+  !## all point in a single drawing list
+  IF(ACOL.EQ.0.AND.IGL.EQ.1)THEN
+
+   !## create sphere-object
+   IF(IPFPLOT(IIPF)%IFANCY.EQ.1)CALL IMOD3D_IPF_CREATEBALL(IPFPLOT(IIPF)%ISUB,IPFPLOT(IIPF)%ISTYLE,S*IPFPLOT(IIPF)%RADIUS)
+
+   IPFLISTINDEX(NIPFLIST,1)=GLGENLISTS(1)
+   !## start new drawing list for current object
+   CALL GLNEWLIST(IPFLISTINDEX(NIPFLIST,1),GL_COMPILE)
+
+  ENDIF
 
   IPLOT=IPFPLOT(IIPF)%IPLOT
 
   I  =INDEX(IPF(IIPF)%FNAME,'\',.TRUE.)
   DIR=IPF(IIPF)%FNAME(1:I-1)
   DO I=1,IPF(IIPF)%NROW
-
-   !## reset acol since it can be altered
-   ACOL=IPF(IIPF)%ACOL
 
    !## cancel operation
    CALL WMESSAGEPEEK(ITYPE,MESSAGE)
@@ -3296,14 +3352,13 @@ CONTAINS
    IF(IPF(IIPF)%IPOS(I).EQ.INT(1,1))THEN
     X =IPF(IIPF)%XYZ(1,I); Y=IPF(IIPF)%XYZ(2,I); Z=IPF(IIPF)%XYZ(3,I); Z2=IPF(IIPF)%XYZ(4,I)
 
-    II=NIPFLIST
-    II=II+1
-    NIPFLIST=II 
-!    NIPFLIST=NIPFLIST+1
+    !## add another drawing list for this entry
+    IF(IPLUS.NE.0)NIPFLIST=NIPFLIST+IPLUS    
 
     LEX=.FALSE.  
     
-    IF(ACOL.NE.0.AND.IPF(IIPF)%ACOL.LE.IPF(IIPF)%NCOL)THEN
+    IF(ACOL.NE.0)THEN
+    
      FNAME=TRIM(DIR)//'\'//TRIM(IPF(IIPF)%INFO(IPF(IIPF)%ACOL,I))//'.'//TRIM(ADJUSTL(IPF(IIPF)%FEXT))
      NASSLIST=NASSLIST+1
      !## read dimensions of associated file
@@ -3320,61 +3375,71 @@ CONTAINS
         ASSF(NASSLIST)%ASSCOL1=IPFPLOT(IIPF)%ASSCOL1 !## column used with dlf
         ASSF(NASSLIST)%ASSCOL2=IPFPLOT(IIPF)%ASSCOL2 !## on default not used --- border rings
         ASSF(NASSLIST)%ILEGDLF=IPFPLOT(IIPF)%ILEGDLF !## legend for colouring
-        CALL IMOD3D_DRAWIPF(X,Y,Z,Z2,ASSF(NASSLIST)%ITOPIC,1,ICLR,IIPF,IGL) !## actual drills
-        CALL IMOD3D_DRAWIPF(X,Y,Z,Z2,ASSF(NASSLIST)%ITOPIC,2,ICLR,IIPF,IGL) !## selection numbers drills
+        CALL IMOD3D_DRAWIPF(X,Y,Z,Z2,ASSF(NASSLIST)%ITOPIC,1,ICLR,IIPF,IGL,S,MXW) !## actual drills
+        CALL IMOD3D_DRAWIPF(X,Y,Z,Z2,ASSF(NASSLIST)%ITOPIC,2,ICLR,IIPF,IGL,S,MXW) !## selection numbers drills
         !## put label in centre
         IPF(IIPF)%XYZ(3,I)=ASSF(NASSLIST)%Z(ASSF(NASSLIST)%NRASS) !## forces label on bottom
         LEX=.TRUE.
        ELSE
-        CALL WMESSAGEBOX(YESNO,QUESTIONICON,COMMONYES,'There might be an error in the following file:'//CHAR(13)// &
-          TRIM(FNAME)//CHAR(13)//'Do you want to continue (yes) or quit reading the file (no)','Error')
+        CALL WMESSAGEBOX(YESNO,QUESTIONICON,COMMONYES,'There might be an error in the following file:'// &
+             CHAR(13)//TRIM(FNAME)//CHAR(13)// &
+             'Do you want to continue (yes) or quit reading the file (no)','Error')
         IF(WINFODIALOG(4).NE.1)THEN; CLOSE(IU); EXIT; ENDIF
        ENDIF
-      ELSE
-       !## overrule if not a borehole (2) - plot dot
-       ACOL=0; LEX=.TRUE.; NASSLIST=MAX(0,NASSLIST-1)
       ENDIF
       CLOSE(IU)
-     ELSE
-      !## file not found - plot dot
-      ACOL=0; LEX=.TRUE.; NASSLIST=MAX(0,NASSLIST-1)
      ENDIF
      IF(.NOT.LEX)THEN; NASSLIST=MAX(0,NASSLIST-1); NIPFLIST=MAX(0,NIPFLIST-1); ENDIF
-    ENDIF
-    
-    !## no associated additional files
-    IF(ACOL.EQ.0)THEN
 
-     !## write message on window
-     CALL UTL_WAITMESSAGE(IRAT,IRAT1,I,IPF(IIPF)%NROW,'Get points for '//TRIM(IPF(IIPF)%FNAME),IBOX=2)
-
-     !## current ipf single-coloured?
-     IF(MP(IPLOT)%ILEG.EQ.0)THEN
-      ICLR=MP(IPLOT)%SCOLOR
-     ELSEIF(MP(IPLOT)%ILEG.EQ.1)THEN
-      J=INFOERROR(1)
-      CALL ISTRINGTOREAL(IPF(IIPF)%INFO(MP(IPLOT)%IATTRIB,I),XVAL)
-      ICLR=WRGB(200,200,200)
-      IF(INFOERROR(1).EQ.0)THEN; ICLR=UTL_IDFGETCLASS(MP(IPLOT)%LEG,XVAL); ENDIF
+     IF(NIPFLIST.GT.0)THEN
+      !## store information for selection purposes
+      IPFDLIST(1,NIPFLIST)=IIPF  !## number of ipf
+      IPFDLIST(2,NIPFLIST)=I     !## number of row in ipf
+      IPFDLIST(3,NIPFLIST)=INT(IPF(IIPF)%XYZ(1,I)) !## xpos
+      IPFDLIST(4,NIPFLIST)=INT(IPF(IIPF)%XYZ(2,I)) !## ypos  
+      IPFDLIST(5,NIPFLIST)=1
      ENDIF
-     !## draw position only - no drill found
-     CALL IMOD3D_DRAWIPF(X,Y,Z,Z2,0,1,ICLR,IIPF,IGL)  !## actual drills  (NIPFLIST)
-     CALL IMOD3D_DRAWIPF(X,Y,Z,Z2,0,2,ICLR,IIPF,IGL)  !## selection numbers drills (NIPFLIST)
-    ENDIF
 
-    IF(NIPFLIST.GT.0)THEN
-     !## store information for selection purposes
-     IPFDLIST(1,NIPFLIST)=IIPF  !## number of ipf
-     IPFDLIST(2,NIPFLIST)=I     !## number of row in ipf
-     IPFDLIST(3,NIPFLIST)=INT(IPF(IIPF)%XYZ(1,I)) !## xpos
-     IPFDLIST(4,NIPFLIST)=INT(IPF(IIPF)%XYZ(2,I)) !## ypos  
-     IPFDLIST(5,NIPFLIST)=1
+    !## no associated additional files
+    ELSE
+
+     IF(IGL.EQ.1)THEN
+      !## write message on window
+      CALL UTL_WAITMESSAGE(IRAT,IRAT1,I,IPF(IIPF)%NROW,'Get points for '//TRIM(IPF(IIPF)%FNAME),IBOX=2)
+
+      !## current ipf single-coloured?
+      IF(MP(IPLOT)%ILEG.EQ.0)THEN
+       ICLR=MP(IPLOT)%SCOLOR
+      ELSEIF(MP(IPLOT)%ILEG.EQ.1)THEN
+       J=INFOERROR(1)
+       CALL ISTRINGTOREAL(IPF(IIPF)%INFO(MP(IPLOT)%IATTRIB,I),XVAL)
+       ICLR=WRGB(200,200,200)
+       IF(INFOERROR(1).EQ.0)THEN; ICLR=UTL_IDFGETCLASS(MP(IPLOT)%LEG,XVAL); ENDIF
+      ENDIF
+     ENDIF
+
+     !## draw position only - no drill found
+     CALL IMOD3D_DRAWIPF(X,Y,Z,Z2,0,1,ICLR,IIPF,IGL,S,MXW)  !## actual drills
+
     ENDIF
     
    ENDIF
   ENDDO
+
+  IF(ACOL.EQ.0.AND.NIPFLIST.GT.0)THEN
+   !## store information for selection purposes
+   IPFDLIST(1,NIPFLIST)=IIPF  !## number of ipf
+   IPFDLIST(2,NIPFLIST)=0 !I     !## number of row in ipf
+   IPFDLIST(3,NIPFLIST)=0.0 !INT(IPF(IIPF)%XYZ(1,I)) !## xpos
+   IPFDLIST(4,NIPFLIST)=0.0 !INT(IPF(IIPF)%XYZ(2,I)) !## ypos  
+   IPFDLIST(5,NIPFLIST)=1
+  ENDIF
+  
  ENDDO
 
+ !## all point in a single drawing list
+ IF(ACOL.EQ.0.AND.IGL.EQ.1)CALL GLENDLIST()
+  
  !## nothing found to be plotted
  IF(NIPFLIST.EQ.0)NIPF=0
 
@@ -3428,35 +3493,32 @@ SOLLOOP: DO I=1,NSOLLIST
  END SUBROUTINE IMOD3D_IPF_SELECTION
 
  !###======================================================================
- SUBROUTINE IMOD3D_DRAWIPF(X,Y,Z,ZZ,IPLOTTYPE,IMODE,ICLR,IIPF,IGL) 
+ SUBROUTINE IMOD3D_DRAWIPF(X,Y,Z,ZZ,IPLOTTYPE,IMODE,ICLR,IIPF,IGL,S,MXW) 
  !###======================================================================
  IMPLICIT NONE
  INTEGER,INTENT(IN) :: IPLOTTYPE,IMODE,ICLR,IIPF,IGL
- REAL(KIND=GLFLOAT),INTENT(IN) :: X,Y,Z,ZZ
- REAL(KIND=GLFLOAT) :: X1,X2,X3,X4,Y1,Y2,Y3,Y4,Z1,Z2,Z3,Z4,BSIZE,FRAC,MXW
+ REAL,INTENT(IN) :: S
+ REAL(KIND=GLFLOAT),INTENT(IN) :: X,Y,Z,ZZ,MXW
+ REAL(KIND=GLFLOAT) :: X1,X2,X3,X4,Y1,Y2,Y3,Y4,Z1,Z2,Z3,Z4,BSIZE,FRAC
  INTEGER :: I,JCLR,N,NINT
- REAL :: IWIDTH,R,S
+ REAL :: IWIDTH,R
  REAL,DIMENSION(:),ALLOCATABLE :: XBH,YBH,ZBH,RBH
  INTEGER,DIMENSION(:), ALLOCATABLE :: CBH
  
  BSIZE=IPFPLOT(IIPF)%RADIUS 
- MXW  =MAXVAL(BH%LITHOWIDTH)
-  
- !## width scaling
- S=SQRT((TOP%Y-BOT%Y)**2.0+(TOP%X-BOT%X)**2.0)/500.0
 
  !## imode=1: drawing list
  !## imode=2: selection drawing list to be drawn in background only
-
- IF(IGL.EQ.1)THEN
-  IPFLISTINDEX(NIPFLIST,IMODE)=GLGENLISTS(1)
-  !## start new drawing list for current object
-  CALL GLNEWLIST(IPFLISTINDEX(NIPFLIST,IMODE),GL_COMPILE)
- ENDIF
  
  !## draw 1D (=2) or 3D (=4) borehole
  IF(IPLOTTYPE.EQ.2.OR.IPLOTTYPE.EQ.4)THEN
   
+  IF(IGL.EQ.1)THEN
+   IPFLISTINDEX(NIPFLIST,IMODE)=GLGENLISTS(1)
+   !## start new drawing list for current object
+   CALL GLNEWLIST(IPFLISTINDEX(NIPFLIST,IMODE),GL_COMPILE)
+  ENDIF
+
   !## 1D borehole
   IF(IPLOTTYPE.EQ.2)THEN
    X1=X; Y1=Y; Z1=ASSF(NASSLIST)%Z(1)
@@ -3532,47 +3594,55 @@ SOLLOOP: DO I=1,NSOLLIST
    !## apply scaling
    ZBH=ZBH*ZSCALE_FACTOR
 
-   IF(IGL.EQ.1)CALL IMOD3D_TUBE2(XBH,YBH,ZBH,RBH,CBH,IPFPLOT(IIPF)%ISUB,IMODE,IPFPLOT(IIPF)%ISHADE,NASSLIST,IPFPLOT(IIPF)%SIMPLIFY)
+   IF(IGL.EQ.1)CALL IMOD3D_TUBE2(XBH,YBH,ZBH,RBH,CBH,IPFPLOT(IIPF)%ISUB,IMODE,IPFPLOT(IIPF)%ISHADE, &
+                                 NASSLIST,IPFPLOT(IIPF)%SIMPLIFY)
     
    DEALLOCATE(XBH,YBH,ZBH,RBH,CBH)
   
   ENDIF
+
+  IF(IGL.EQ.1)CALL GLENDLIST()
 
  !## points only
  ELSEIF(IPLOTTYPE.EQ.0)THEN
       
   IF(IGL.EQ.1)THEN
 
-   IF(IMODE.EQ.1)THEN
-    CALL IMOD3D_SETCOLOR(ICLR)
-    IF(IPFPLOT(IIPF)%IFANCY.EQ.1)THEN
-     CALL IMOD3D_RETURNCOLOR(ICLR,AMBIENT) 
-     CALL GLMATERIALFV(GL_FRONT_AND_BACK,GL_AMBIENT_AND_DIFFUSE,AMBIENT) 
-    ENDIF
-   ELSEIF(IMODE.EQ.2)THEN
-    CALL IMOD3D_SETCOLOR(NASSLIST)
+   CALL IMOD3D_SETCOLOR(ICLR)
+   IF(IPFPLOT(IIPF)%IFANCY.EQ.1)THEN
+    CALL IMOD3D_RETURNCOLOR(ICLR,AMBIENT) 
+    CALL GLMATERIALFV(GL_FRONT_AND_BACK,GL_AMBIENT_AND_DIFFUSE,AMBIENT) 
    ENDIF
 
    !## draw point if z equals z2
    IF(Z.EQ.ZZ)THEN
  
-!   IF(IPFPLOT(IIPF)%IFANCY.EQ.1)THEN
-!    CALL GLPUSHMATRIX()
-!    CALL GLTRANSLATEF(X,Y,Z) 
-!    CALL GLCALLLIST(SPHEREINDEX)  ! RENDER SPHERE DISPLAY LIST
-!    CALL GLPOPMATRIX()
-!   ELSE
-    !## draw point of drill/ipf
+    IF(IPFPLOT(IIPF)%IFANCY.EQ.1)THEN
+     CALL GLPUSHMATRIX()
+     CALL GLTRANSLATEF(X,Y,Z) 
+     CALL GLCALLLIST(SPHEREINDEX)  ! RENDER SPHERE DISPLAY LIST
+     CALL GLPOPMATRIX()
+    ELSE
+     !## draw point of drill/ipf
      CALL GLBEGIN(GL_POINTS); CALL GLVERTEX3F(X,Y,Z); CALL GLEND()
-!   ENDIF
+    ENDIF
+   
    !## draw line between top and bottom
    ELSE
+   
     IF(IPFPLOT(IIPF)%IFANCY.EQ.0)THEN
+
      CALL GLBEGIN(GL_LINES); CALL GLVERTEX3F(X,Y,Z); CALL GLVERTEX3F(X,Y,Z2); CALL GLEND()
+
     ELSEIF(IPFPLOT(IIPF)%IFANCY.EQ.1)THEN
-     IF(IMODE.EQ.1)CALL IMOD3D_IPF_FANCY((/X,X/),(/Y,Y/),(/Z,ZZ/),IPFPLOT(IIPF)%ISUB,BSIZE,(/1,1,1,IPFPLOT(IIPF)%ISHADE/)) !,IPLOTTYPE)
-     IF(IMODE.EQ.2)CALL IMOD3D_IPF_FANCY((/X,X/),(/Y,Y/),(/Z,ZZ/),IPFPLOT(IIPF)%ISUB,BSIZE,(/1,1,1,0/)) !,IPLOTTYPE)
+
+!     IF(IMODE.EQ.1)
+     CALL IMOD3D_IPF_FANCY((/X,X/),(/Y,Y/),(/Z,ZZ/),IPFPLOT(IIPF)%ISUB,BSIZE,(/1,1,1,IPFPLOT(IIPF)%ISHADE/))
+!     IF(IMODE.EQ.2)CALL IMOD3D_IPF_FANCY((/X,X/),(/Y,Y/),(/Z,ZZ/),IPFPLOT(IIPF)%ISUB,BSIZE, &
+!                    (/1,1,1,0/))
+
     ENDIF
+   
    ENDIF
   
   ENDIF
@@ -3581,31 +3651,28 @@ SOLLOOP: DO I=1,NSOLLIST
 
  ENDIF
 
- IF(IGL.EQ.1)CALL GLENDLIST()
-
  CALL IMOD3D_ERROR('IMOD3D_DRAWIPF')
 
  END SUBROUTINE IMOD3D_DRAWIPF
 
  !###======================================================================
- SUBROUTINE IMOD3D_IPF_CREATEBALL(ISUB,ISTYLE)
+ SUBROUTINE IMOD3D_IPF_CREATEBALL(ISUB,ISTYLE,R)
  !###======================================================================
  IMPLICIT NONE
  INTEGER,INTENT(IN) :: ISUB,ISTYLE
- INTEGER :: I,J,NLAT,NLONG
- REAL(GLFLOAT) :: LAT,LONG,X,Y,Z,DLAT,DLONG,R
-! REAL(glfloat), DIMENSION(4)  :: diffuse = (/1.0, 0.0, 0.0, 1.0/)
-! REAL(glfloat), DIMENSION(4)  :: pos     = (/1.0, 1.0, 1.0, 0.0/)
- TYPE(gluquadricobj), POINTER :: quadObj
-
-! NLAT=ISUB  !## north south
-! NLONG=ISUB !## west  east
-! R=0.05 
+ REAL,INTENT(IN) :: R
+ REAL(GLDOUBLE) :: RD
+ TYPE(GLUQUADRICOBJ), POINTER :: QUADOBJ
   
  !## Create the sphere display list
  IF(SPHEREINDEX.NE.0)CALL GLDELETELISTS(SPHEREINDEX,1_GLSIZEI); SPHEREINDEX=0
  SPHEREINDEX=GLGENLISTS(1)
  CALL GLNEWLIST(SPHEREINDEX,GL_COMPILE)
+
+ CALL GLPUSHMATRIX()
+
+ !## to ensure appropriate scaling of vector
+ CALL GLSCALED(1.0_GLDOUBLE/XSCALE_FACTOR,1.0_GLDOUBLE/YSCALE_FACTOR,1.0_GLDOUBLE/ZSCALE_FACTOR)
 
  QUADOBJ => GLUNEWQUADRIC()
  SELECT CASE (ISTYLE)
@@ -3614,20 +3681,12 @@ SOLLOOP: DO I=1,NSOLLIST
   CASE (3); CALL GLUQUADRICDRAWSTYLE(QUADOBJ, GLU_SILHOUETTE)
   CASE (4); CALL GLUQUADRICDRAWSTYLE(QUADOBJ, GLU_POINT)
  END SELECT
-! CALL GLUQUADRICDRAWSTYLE(QUADOBJ, GLU_FILL)
  CALL GLUQUADRICNORMALS(QUADOBJ, GLU_SMOOTH)
- CALL GLUSPHERE(QUADOBJ,1.0_GLDOUBLE,ISUB,ISUB)
+ RD=R !100.0_GLDOUBLE
+ CALL GLUSPHERE(QUADOBJ,RD,ISUB,ISUB)
 
-! CALL GLBEGIN(GL_POINTS)
-!  LAT=0.0; DLAT=(2*PI)/REAL(NLAT); DLONG=PI/REAL(NLONG)
-!  DO J=1,NLAT; LAT=LAT+DLAT; LONG=0.0; DO I=1,NLONG
-!   LONG=LONG+DLONG
-!   X=R*SIN(LAT)*COS(LONG)
-!   Y=R*SIN(LAT)*SIN(LONG)
-!   Z=R*COS(LAT)*(1.0_GLDOUBLE/ZSCALE_FACTOR)
-!   CALL GLVERTEX3F(X,Y,Z)
-!  ENDDO; ENDDO
-! CALL GLEND()
+ CALL GLPOPMATRIX()
+
  CALL GLENDLIST()
  
  END SUBROUTINE IMOD3D_IPF_CREATEBALL
@@ -3687,7 +3746,7 @@ SOLLOOP: DO I=1,NSOLLIST
  SUBROUTINE IMOD3D_IPF_LABELS()
  !###======================================================================
  IMPLICIT NONE
- INTEGER :: IIPF,I,J,K,IPLOT,IASSF
+ INTEGER :: IIPF,I,J,K,IPLOT,N,ACOL
  REAL(KIND=GLFLOAT) :: X,Y,Z,BSIZE
  CHARACTER(LEN=256) :: LINE,TLINE
  INTEGER,ALLOCATABLE,DIMENSION(:) :: ILIST
@@ -3697,7 +3756,7 @@ SOLLOOP: DO I=1,NSOLLIST
  IF(NIPF.EQ.0)RETURN
 
  !## get labels
- IASSF=0
+ N=0
  DO IIPF=1,NIPF
 
   BSIZE=IPFPLOT(IIPF)%RADIUS
@@ -3708,15 +3767,19 @@ SOLLOOP: DO I=1,NSOLLIST
   CALL UTL_FILLARRAY(ILIST,IPF(IIPF)%NCOL,ABS(MP(IPLOT)%IEQ))
 
   TSIZE=TS*MP(IPLOT)%TSIZE
+  ACOL=IPF(IIPF)%ACOL; IF(ACOL.LT.0.OR.ACOL.GT.IPF(IIPF)%NCOL)ACOL=0
+  IF(ACOL.EQ.0)N=N+1
+    
   DO I=1,IPF(IIPF)%NROW
    
    IF(IPF(IIPF)%IPOS(I).EQ.INT(1,1))THEN
 
     !## label-drawing list
-    IASSF=IASSF+1
-    IPFLISTINDEX(IASSF,3)=GLGENLISTS(1)
+    IF(ACOL.NE.0)N=N+1
+    IPFLISTINDEX(N,3)=GLGENLISTS(1)
+
     !## start new drawing list for current object
-    CALL GLNEWLIST(IPFLISTINDEX(IASSF,3),GL_COMPILE)
+    CALL GLNEWLIST(IPFLISTINDEX(N,3),GL_COMPILE)
     CALL WGLTEXTORIENTATION(ALIGNLEFT) 
   
     X =IPF(IIPF)%XYZ(1,I)
@@ -4583,32 +4646,24 @@ SOLLOOP: DO I=1,NSOLLIST
       XCOR(3)=X(3);    YCOR(3)=Y(3)
       XCOR(4)=XCOR(3); YCOR(4)=YCOR(3)
 
-      !## show filled in polygons
-      IF(SOLPLOT(I)%IINTERFACE.EQ.0)THEN
+!      !## show filled in polygons
+!      IF(SOLPLOT(I)%IINTERFACE.EQ.0)THEN
 
-       !## get color for z-mean between two segments
-       IICLR=SLD(1)%INTCLR(IPROF)
-       CALL IMOD3D_SETCOLOR(IICLR) !## include alpha
-       !## show shaded surface
-       CALL IMOD3D_RETURNCOLOR(IICLR,AMBIENT)
+      !## get color for z-mean between two segments
+      IICLR=SLD(1)%INTCLR(IPROF)
+      CALL IMOD3D_SETCOLOR(IICLR) !## include alpha
+      !## show shaded surface
+      CALL IMOD3D_RETURNCOLOR(IICLR,AMBIENT)
 
-       CALL GLMATERIALFV(GL_FRONT_AND_BACK,GL_AMBIENT_AND_DIFFUSE,AMBIENT)
+      CALL GLMATERIALFV(GL_FRONT_AND_BACK,GL_AMBIENT_AND_DIFFUSE,AMBIENT)
               
-       !## begin OpenGL-Quads       
-       CALL GLBEGIN(GL_QUADS)
-        CALL IMOD3D_SETNORMALVECTOR((/XCOR(1),YCOR(1),Z(1)/),(/XCOR(2),YCOR(2),Z(2)/),(/XCOR(3),YCOR(3),Z(3)/))
-        DO JJ=1,4; CALL GLVERTEX3F(XCOR(JJ),YCOR(JJ),Z(JJ)); ENDDO
-        !## end OpenGL-Quads
-       CALL GLEND()
-       CALL IMOD3D_SETCOLOR(WRGB(10,10,10))
-       
-      ENDIF
-       
-      !## show interfaces
-      IF(SOLPLOT(I)%IINTERFACE.EQ.1)THEN
-       IICLR=SPF(I)%PROF(IPROF)%ICLR
-       CALL IMOD3D_SETCOLOR(IICLR) 
-      ENDIF   
+      !## begin OpenGL-Quads       
+      CALL GLBEGIN(GL_QUADS)
+       CALL IMOD3D_SETNORMALVECTOR((/XCOR(1),YCOR(1),Z(1)/),(/XCOR(2),YCOR(2),Z(2)/),(/XCOR(3),YCOR(3),Z(3)/))
+       DO JJ=1,4; CALL GLVERTEX3F(XCOR(JJ),YCOR(JJ),Z(JJ)); ENDDO
+       !## end OpenGL-Quads
+      CALL GLEND()
+      CALL IMOD3D_SETCOLOR(WRGB(10,10,10))
 
       !## begin OpenGL-LINES
       CALL GLLINEWIDTH(1.0_GLFLOAT)
@@ -4621,10 +4676,8 @@ SOLLOOP: DO I=1,NSOLLIST
       IF(IPROF.EQ.SIZE(SPF(I)%PROF)-1)THEN
 
        !## show interfaces
-       IF(SOLPLOT(I)%IINTERFACE.EQ.1)THEN
-        IICLR=SPF(I)%PROF(IPROF+1)%ICLR
-        CALL IMOD3D_SETCOLOR(IICLR)
-       ENDIF   
+       IICLR=SPF(I)%PROF(IPROF+1)%ICLR
+       CALL IMOD3D_SETCOLOR(IICLR)
 
        CALL GLBEGIN(GL_LINES)
        CALL GLVERTEX3F(XCOR(1),YCOR(1),Z(1))
@@ -4670,8 +4723,8 @@ SOLLOOP: DO I=1,NSOLLIST
   SOLLISTINDEX(NSOLLIST,3)=0
   IF(SPF(I)%PBITMAP%IACT.EQ.0)CYCLE
   
-  !## skip whenever interfaces need to be drawn
-  IF(SOLPLOT(NSOLLIST)%IINTERFACE.EQ.1)THEN; SOLPLOT(NSOLLIST)%IBITMAP=0; CYCLE; ENDIF
+!  !## skip whenever interfaces need to be drawn
+!  IF(SOLPLOT(NSOLLIST)%IINTERFACE.EQ.1)THEN; SOLPLOT(NSOLLIST)%IBITMAP=0; CYCLE; ENDIF
   
   !## list index for
 !  SOLLISTINDEX(NSOLLIST,2)=GLGENLISTS(1)
