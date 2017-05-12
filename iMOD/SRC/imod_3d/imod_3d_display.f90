@@ -907,13 +907,12 @@ CONTAINS
    DO J=1,NCLPLIST; CALL GLDISABLE(CLPPLANES(J)); END DO
   ENDIF
 
-  !## not showing interfaces (lines)
+  !## showing surfaces (polygons)
   IF(SOLPLOT(I)%IINTERFACE.EQ.0)THEN 
+
    CALL GLENABLE(GL_LIGHTING)
    !## opaque mode
    CALL GLBLENDFUNC(GL_ONE,GL_ZERO)  !## (1) source (2) destination
-!  ELSE
-!   CALL GLDISABLE(GL_LIGHTING)
 
    !## draw cross-section
    CALL GLCALLLIST(SOLLISTINDEX(I,1))
@@ -939,10 +938,10 @@ CONTAINS
   
   !## show lines to represent rectangles/triangles
   IF(SOLPLOT(I)%IINTERFACE.EQ.1)THEN
-   CALL IMOD3D_SETCOLOR(WRGB(255,0,0)) !SOLPLOT(I)%ICOLOR)
    CALL GLLINEWIDTH(1.0_GLFLOAT)
    !## outline (showing rectangles)
    CALL GLPOLYGONMODE(GL_FRONT,GL_LINE); CALL GLPOLYGONMODE(GL_BACK, GL_LINE)
+   CALL GLDISABLE(GL_LIGHTING)
    CALL GLCALLLIST(SOLLISTINDEX(I,1))
   ENDIF
    
@@ -1076,7 +1075,18 @@ CONTAINS
    CALL GLENABLE(GL_LIGHTING)
   ENDIF
 
+  !## vertical shift the polygon
+  IF(.NOT.GENPLOT(I)%L3D)THEN
+   CALL GLPUSHMATRIX()
+!   TSTACK=TSTACK+(IDFPLOT(I)%ISTACKED*5.0_GLDOUBLE)
+   CALL GLTRANSLATED(0.0_GLDOUBLE, 0.0_GLDOUBLE, TOP%Z)
+  ENDIF
+  
   CALL GLCALLLIST(GENLISTINDEX(I))
+
+  IF(.NOT.GENPLOT(I)%L3D)THEN
+   CALL GLPOPMATRIX()
+  ENDIF
 
   !## turn on clipping as it was not effected by this selected GEN file
   IF(GENPLOT(I)%ICLIP.EQ.0)THEN

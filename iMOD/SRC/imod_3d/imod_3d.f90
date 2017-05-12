@@ -612,6 +612,9 @@ CONTAINS
  !## fill display with solids
  IF(.NOT.IMOD3D_SOL())RETURN
  
+ !## fill display with background
+ IF(.NOT.IMOD3D_GEN())THEN; ENDIF
+
  !## increase window a little bit ... 2.5%
  DXY=(TOP%X-BOT%X); DXY=DXY*0.025
  IF(DXY.EQ.0.0)DXY=10.0

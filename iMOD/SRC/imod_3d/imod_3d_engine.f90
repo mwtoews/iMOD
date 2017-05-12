@@ -74,8 +74,8 @@ CONTAINS
  !## nothing changed
  IF(.NOT.LADJTB)RETURN
  
- !## fill display with background
- IF(.NOT.IMOD3D_GEN())THEN; ENDIF
+! !## fill display with background
+! IF(.NOT.IMOD3D_GEN())THEN; ENDIF
  
  IZR=0
  CALL WINDOWSELECT(IWIN)
@@ -1571,16 +1571,18 @@ CONTAINS
    IF(II.EQ.1)THEN
     !## create mother if number of columns/rows to large
     IF(.NOT.IDFREAD(IDF(5),IDFPLOT(ID_IDF(II))%FNAME,0))EXIT
-    !## template idf will become idf(1) based upon original idf(4)
+    !## template idf will become idf(1) based upon original idf(5)
     IF(IMOD3D_DRAWIDF_SIZE(IDF(5),IDF(1)))THEN
-!     IF(.NOT.IDFREADSCALE_GETX(IDF(5),IDF(1),IDFDATA(3),1,0.0))EXIT   !## child,mother,blockvalue,percentile
-     IF(.NOT.IDFREADSCALE(IDF(5)%FNAME,IDF(1),IDFDATA(3),1,0.0,0))EXIT
+     IF(.NOT.IDFREADSCALE_GETX(IDF(5),IDF(1),IDFDATA(3),1,0.0))EXIT   !## child,mother,blockvalue,percentile
+!     IF(.NOT.IDFREADSCALE(IDF(5)%FNAME,IDF(1),IDFDATA(3),1,0.0,0))EXIT
     ELSE
      !## copy idf(5) to idf(1) to become the original
      CALL IDFCOPY(IDF(5),IDF(1)); IDF(1)%IU=IDF(5)%IU
      !## read part of idf(1)
-     IF(.NOT.IDFREADSCALE(IDF(5)%FNAME,IDF(1),IDFDATA(3),1,0.0,0))EXIT
-!     IF(.NOT.IDFREADPART(IDF(1),REAL(BOT%X),REAL(BOT%Y),REAL(TOP%X),REAL(TOP%Y)))EXIT
+!     IDF(1)%XMIN=BOT%X; IDF(1)%XMAX=TOP%X
+!     IDF(1)%YMIN=BOT%Y; IDF(1)%YMAX=TOP%Y
+!     IF(.NOT.IDFREADSCALE(IDF(5)%FNAME,IDF(1),IDFDATA(3),1,0.0,0))EXIT
+     IF(.NOT.IDFREADPART(IDF(1),REAL(BOT%X),REAL(BOT%Y),REAL(TOP%X),REAL(TOP%Y)))EXIT
      IF(IDF(1)%IVF.EQ.0)THEN
       IF(MAXVAL(IDF(1)%X).EQ.IDF(1)%NODATA.AND.&
          MINVAL(IDF(1)%X).EQ.IDF(1)%NODATA)ND_IDF(1)=0
@@ -1589,15 +1591,15 @@ CONTAINS
    !## second follows template of first, is obliged to make nice cubes
    ELSEIF(II.EQ.2)THEN
     CALL IDFCOPY(IDF(1),IDF(4))
-!    IF(.NOT.IDFREADSCALE_GETX(IDF(2),IDF(4),IDFDATA(3),1,0.0))EXIT   !## child,mother,arithmetic mean,percentile
-    IF(.NOT.IDFREADSCALE(IDF(2)%FNAME,IDF(4),IDFDATA(3),1,0.0,0))EXIT
+    IF(.NOT.IDFREADSCALE_GETX(IDF(2),IDF(4),IDFDATA(3),1,0.0))EXIT   !## child,mother,arithmetic mean,percentile
+!    IF(.NOT.IDFREADSCALE(IDF(2)%FNAME,IDF(4),IDFDATA(3),1,0.0,0))EXIT
     IF(MAXVAL(IDF(4)%X).EQ.IDF(4)%NODATA.AND. &
        MINVAL(IDF(4)%X).EQ.IDF(4)%NODATA)ND_IDF(2)=0
    !## third follows template of first
    ELSEIF(II.EQ.3)THEN
     CALL IDFCOPY(IDF(1),IDF(5)); IDF(5)%IXV=IDF(3)%IXV
-!    IF(.NOT.IDFREADSCALE_GETX(IDF(3),IDF(5),IDFDATA(3),1,0.0))EXIT   !## child,mother,arithmetic mean,percentile
-    IF(.NOT.IDFREADSCALE(IDF(3)%FNAME,IDF(5),IDFDATA(3),1,0.0,0))EXIT
+    IF(.NOT.IDFREADSCALE_GETX(IDF(3),IDF(5),IDFDATA(3),1,0.0))EXIT   !## child,mother,arithmetic mean,percentile
+!    IF(.NOT.IDFREADSCALE(IDF(3)%FNAME,IDF(5),IDFDATA(3),1,0.0,0))EXIT
     IF(MAXVAL(IDF(5)%X).EQ.IDF(5)%NODATA.AND. &
        MINVAL(IDF(5)%X).EQ.IDF(5)%NODATA)ND_IDF(3)=0
    ENDIF
@@ -3207,7 +3209,7 @@ CONTAINS
  IMPLICIT NONE
  INTEGER,INTENT(IN) :: IGL !## igl=0 do not include drawing lists for OpenGL
  INTEGER,INTENT(IN) :: IOVERRULE
- INTEGER :: IIPF,I,II,J,IPLOT,IU,IRAT,IRAT1
+ INTEGER :: IIPF,I,II,J,IPLOT,IU,IRAT,IRAT1,N
  REAL(KIND=GLFLOAT) :: X,Y,Z,Z2,MXW
  CHARACTER(LEN=256) :: FNAME,DIR
  LOGICAL :: LEX
@@ -3275,26 +3277,28 @@ CONTAINS
   !## create new drawinglist position
   IF(IPLUS.EQ.0)NIPFLIST=NIPFLIST+1
     
+  N=0
   DO I=1,IPF(IIPF)%NROW
    X=IPF(IIPF)%XYZ(1,I); Y=IPF(IIPF)%XYZ(2,I)
    IF(X.GE.BOT%X   .AND.X.LE.TOP%X   .AND.Y.GE.BOT%Y   .AND.Y.LE.TOP%Y)THEN
 
     IF(IMOD3D_BLANKOUT_XY(X,Y))THEN  
      IPF(IIPF)%IPOS(I)=INT(1,1)
-     IF(IPLUS.NE.0)THEN 
+     IF(IPLUS.NE.0)THEN
       NIPFLIST=NIPFLIST+IPLUS !1
       NASSLIST=NASSLIST+IPLUS !1
      ENDIF
-
+     N=N+1
+     
     ENDIF
     
    ENDIF
   ENDDO
+
+  !## change to non-fancy mode in case many boreholes are considered in active window
+  IF(N.GT.MXROWFORFANCY.AND.IOVERRULE.EQ.1)IPFPLOT(IIPF)%IFANCY=0
  
  ENDDO
-
- !## change to non-fancy mode in case many boreholes are considered in active window
- IF(NIPFLIST.GT.MXROWFORFANCY.AND.IOVERRULE.EQ.1)THEN; DO IIPF=1,NIPF; IPFPLOT(IIPF)%IFANCY=0; ENDDO; ENDIF
 
  !## get display-list pointers
  IF(ALLOCATED(IPFLISTINDEX))THEN
@@ -3403,9 +3407,10 @@ CONTAINS
     !## no associated additional files
     ELSE
 
+     !## write message on window
+     CALL UTL_WAITMESSAGE(IRAT,IRAT1,I,IPF(IIPF)%NROW,'Get points for '//TRIM(IPF(IIPF)%FNAME),IBOX=2)
+
      IF(IGL.EQ.1)THEN
-      !## write message on window
-      CALL UTL_WAITMESSAGE(IRAT,IRAT1,I,IPF(IIPF)%NROW,'Get points for '//TRIM(IPF(IIPF)%FNAME),IBOX=2)
 
       !## current ipf single-coloured?
       IF(MP(IPLOT)%ILEG.EQ.0)THEN
@@ -3416,6 +3421,7 @@ CONTAINS
        ICLR=WRGB(200,200,200)
        IF(INFOERROR(1).EQ.0)THEN; ICLR=UTL_IDFGETCLASS(MP(IPLOT)%LEG,XVAL); ENDIF
       ENDIF
+
      ENDIF
 
      !## draw position only - no drill found
@@ -4090,13 +4096,13 @@ SOLLOOP: DO I=1,NSOLLIST
  INTEGER :: I,J,K,NINGEN
  LOGICAL :: LEX
 
- IF(ALLOCATED(GENLISTINDEX))THEN
-  K=NGENLIST; NGENLIST=0
-  DO I=1,K
-   NINGEN=0; NGENLIST=NGENLIST+1; CALL IMOD3D_DRAWGEN(GENPLOT(I)%GENFNAME,GENPLOT(I)%L3D,NINGEN) 
-  ENDDO
-  IMOD3D_GEN=.TRUE.; RETURN
- ENDIF
+! IF(ALLOCATED(GENLISTINDEX))THEN
+!  K=NGENLIST; NGENLIST=0
+!  DO I=1,K
+!   NINGEN=0; NGENLIST=NGENLIST+1; CALL IMOD3D_DRAWGEN(GENPLOT(I)%GENFNAME,GENPLOT(I)%L3D,NINGEN) 
+!  ENDDO
+!  IMOD3D_GEN=.TRUE.; RETURN
+! ENDIF
  
  IMOD3D_GEN=.FALSE.
 
@@ -4160,8 +4166,8 @@ SOLLOOP: DO I=1,NSOLLIST
  REAL(KIND=GLFLOAT),DIMENSION(:),POINTER :: X,Y,Z,X_DUM,Y_DUM,Z_DUM
  REAL(KIND=GLFLOAT),DIMENSION(4) :: XCOR,YCOR
 
- !## no need to reread 3d-gen file
- IF(L3D)RETURN
+! !## no need to reread 3d-gen file
+! IF(L3D)RETURN
  
  CALL WINDOWSELECT(IWIN); CALL WINDOWOUTSTATUSBAR(2,'Reading '//TRIM(FNAME)//'...')
 
@@ -4194,7 +4200,7 @@ SOLLOOP: DO I=1,NSOLLIST
    IF(IOS.NE.0)THEN
     !## read 2d info
     READ(LINE,*,IOSTAT=IOS) X(I),Y(I); IF(IOS.NE.0)EXIT 
-    L3D=.FALSE.; LS3D=.FALSE.; Z(I)=TOP%Z 
+    L3D=.FALSE.; LS3D=.FALSE. !; Z(I)=TOP%Z 
    ENDIF
   ENDDO
   
@@ -4207,8 +4213,8 @@ SOLLOOP: DO I=1,NSOLLIST
      UTL_EQUALS_REAL(Z(NX),Z(1)))THEN
 
    IF((X(1).GT.BOT%X.OR.X(2).GT.BOT%X).AND.(X(1).LT.TOP%X.OR.X(2).LT.TOP%X).AND. &
-      (Y(1).GT.BOT%Y.OR.Y(2).GT.BOT%Y).AND.(Y(1).LT.TOP%Y.OR.Y(2).LT.TOP%Y).AND. &
-      (Z(1).GT.BOT%Z.OR.Z(2).GT.BOT%Z).AND.(Z(1).LT.TOP%Z.OR.Z(2).LT.TOP%Z))THEN
+      (Y(1).GT.BOT%Y.OR.Y(2).GT.BOT%Y).AND.(Y(1).LT.TOP%Y.OR.Y(2).LT.TOP%Y))THEN !.AND. &
+!      (Z(1).GT.BOT%Z.OR.Z(2).GT.BOT%Z).AND.(Z(1).LT.TOP%Z.OR.Z(2).LT.TOP%Z))THEN
     NINGEN =NINGEN+1
 
     !## top
@@ -4220,6 +4226,9 @@ SOLLOOP: DO I=1,NSOLLIST
      CALL GLVERTEX3F(X(4),Y(4),Z(4))  
     CALL GLEND()
 
+    TOP%Z=MAX(TOP%Z,Z(1),Z(3)) !MAXVAL(Z))
+    BOT%Z=MIN(BOT%Z,Z(1),Z(3)) !,MINVAL(Z))
+    
    ENDIF
    
   ELSE
@@ -4232,7 +4241,7 @@ SOLLOOP: DO I=1,NSOLLIST
      NINGEN =NINGEN+1
      XCOR(1)=X(I) ;  YCOR(1)=Y(I) 
      XCOR(2)=X(I+1); YCOR(2)=Y(I+1)
-     CALL IMOD3D_LINE(XCOR,YCOR,Z(I:))
+     CALL IMOD3D_LINE(XCOR,YCOR,(/0.0_GLFLOAT,0.0_GLFLOAT/)) !Z(I:))
     ENDIF
    ENDDO
    CALL GLEND()
