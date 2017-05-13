@@ -4502,7 +4502,7 @@ SOLLOOP: DO I=1,NSOLLIST
  INTEGER,INTENT(IN) :: ISOL,I
  INTEGER,INTENT(IN),DIMENSION(:) :: ICOMBINE
  REAL(KIND=GLFLOAT) :: DXX,DYY,GX,GY,GZ,DXY 
- INTEGER :: J,K,II,JJ,JPROF,IPOS,N,I1,I2,IICLR,ICLR
+ INTEGER :: J,K,II,JJ,KK,JPROF,IPOS,N,I1,I2,IICLR,ICLR
  INTEGER,DIMENSION(3) :: IPROF
  REAL(KIND=GLFLOAT),DIMENSION(4) :: X,Y,XCOR,YCOR,Z
  REAL(KIND=GLFLOAT),DIMENSION(2) :: TX
@@ -4545,13 +4545,20 @@ SOLLOOP: DO I=1,NSOLLIST
       
   N=SPF(I)%PROF(IPROF(1))%NPOS+SPF(I)%PROF(IPROF(2))%NPOS+SPF(I)%NXY-2
 !  N=SPF(I)%PROF(IPROF)%NPOS+SPF(I)%PROF(IPROF+1)%NPOS+SPF(I)%NXY-2
-  ALLOCATE(XT(N),ZT(N,2))
+  IF(IPROF(3).EQ.0)THEN
+   ALLOCATE(XT(N),ZT(N,2))
+  ELSE
+   ALLOCATE(XT(N),ZT(N,3))
+  ENDIF
+  
   XT=0.0
   ZT=NODATA_Z
   IPOS=0
   II  =0
 !  DO K=IPROF,IPROF+1
-  DO K=IPROF(1),IPROF(2)
+!  DO K=IPROF(1),IPROF(2)
+  DO KK=1,3
+   K=IPROF(KK); IF(K.EQ.0)CYCLE
    II=II+1
    !## create table with distances and z-values for top/bot of current iprof-layer
    DO J=1,SPF(I)%PROF(K)%NPOS
@@ -4575,13 +4582,20 @@ SOLLOOP: DO I=1,NSOLLIST
    XT(IPOS)  =TX(1)
    ZT(IPOS,1)=NODATA_Z !## to be filled in later
    ZT(IPOS,2)=NODATA_Z !## to be filled in later
+   IF(IPROF(3).GT.0)ZT(IPOS,3)=NODATA_Z !## to be filled in later
   ENDDO
   N=IPOS
  
-  CALL SORTEM(1,N,XT,2,ZT(:,1),ZT(:,2),(/0.0/),(/0.0/),(/0.0/),(/0.0/),(/0.0/))
-   
+  IF(IPROF(3).EQ.0)THEN
+   CALL SORTEM(1,N,XT,2,ZT(:,1),ZT(:,2),(/0.0/),(/0.0/),(/0.0/),(/0.0/),(/0.0/))
+  ELSE
+   CALL SORTEM(1,N,XT,3,ZT(:,1),ZT(:,2),ZT(:,3),(/0.0/),(/0.0/),(/0.0/),(/0.0/))
+  ENDIF
+  
   !## fill first and last
-  DO K=1,2
+  KK=2; IF(IPROF(3).GT.0)KK=3
+
+  DO K=1,KK !2
    IF(ZT(1,K).EQ.NODATA_Z)THEN
     DO J=2,N
      IF(ZT(J,K).NE.NODATA_Z)THEN
@@ -4602,7 +4616,7 @@ SOLLOOP: DO I=1,NSOLLIST
    
   !## interpolate unknown values
   DO J=1,N
-   DO K=1,2
+   DO K=1,KK !2
     IF(ZT(J,K).EQ.NODATA_Z)THEN
      DO I1=J-1,1,-1; IF(ZT(I1,K).NE.NODATA_Z)EXIT; ENDDO
      DO I2=J+1,N;    IF(ZT(I2,K).NE.NODATA_Z)EXIT; ENDDO
@@ -4622,6 +4636,7 @@ SOLLOOP: DO I=1,NSOLLIST
      XT(K)  =XT(J)
      ZT(K,1)=ZT(J,1)
      ZT(K,2)=ZT(J,2)
+     IF(IPROF(3).GT.0)ZT(K,3)=ZT(J,3)
     ENDIF
    ENDIF
   END DO
