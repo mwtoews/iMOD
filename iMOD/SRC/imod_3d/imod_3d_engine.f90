@@ -4264,7 +4264,8 @@ SOLLOOP: DO I=1,NSOLLIST
  INTEGER :: I,J
  REAL :: XTOL,X,Y,Z
  CHARACTER(LEN=52) :: CDATE
- 
+ INTEGER,DIMENSION(:),ALLOCATABLE :: ICOMBINE
+
  !## vertical tolerance (from menu)
  CALL WDIALOGSELECT(ID_D3DSETTINGS_TAB6)
  CALL WDIALOGGETREAL(IDF_REAL1,XTOL)
@@ -4333,8 +4334,11 @@ SOLLOOP: DO I=1,NSOLLIST
   SLD(I)%INTCLR(J)=IDFPLOT(J)%ICOLOR
  ENDDO; ENDDO
  
+ !## true voxels gewoon in profielen lijst laten opnemen als negatieve kleuren maar top/bot moet ook ergens komen maar dat zijn constante getallen
+ 
  !## create drawing list
- NSOLLIST=ISPF; CALL IMOD3D_SOL_DRAWINGLIST(ISPF,NSOLLIST)
+ ALLOCATE(ICOMBINE(NTBSOL)); ICOMBINE=0; DO J=1,NTBSOL-1 ;ICOMBINE(J)=J+1 ;ENDDO
+ NSOLLIST=ISPF; CALL IMOD3D_SOL_DRAWINGLIST(ISPF,NSOLLIST,ICOMBINE)
  
  !## deallocate memory needed to compute profile
  CALL PROFILE_DEALLOCATE(); DEALLOCATE(ISEL_IDF,IACT,DTOL,ICLEAN,XEXCLUDE,IEXIST)
@@ -4457,8 +4461,9 @@ SOLLOOP: DO I=1,NSOLLIST
  LOGICAL FUNCTION IMOD3D_SOL()
  !###======================================================================
  IMPLICIT NONE
- INTEGER :: I
-
+ INTEGER :: I,J,N
+ INTEGER,DIMENSION(:),ALLOCATABLE :: ICOMBINE
+ 
  IMOD3D_SOL=.TRUE.
 
  !## solid active, although loaded in memory (could be)
@@ -4475,7 +4480,8 @@ SOLLOOP: DO I=1,NSOLLIST
  NSOLLIST=0
  DO I=1,NSPF
   NSOLLIST=NSOLLIST+1
-  CALL IMOD3D_SOL_DRAWINGLIST(I,NSOLLIST)
+  N=SIZE(SPF(I)%PROF); ALLOCATE(ICOMBINE(N)); ICOMBINE=0; DO J=1,N-1 ;ICOMBINE(J)=J+1 ;ENDDO
+  CALL IMOD3D_SOL_DRAWINGLIST(I,NSOLLIST,ICOMBINE)
  ENDDO
 
  CALL WINDOWOUTSTATUSBAR(2,'')
@@ -4490,12 +4496,13 @@ SOLLOOP: DO I=1,NSOLLIST
  END FUNCTION IMOD3D_SOL
 
  !###======================================================================
- SUBROUTINE IMOD3D_SOL_DRAWINGLIST(I,ISOL)
+ SUBROUTINE IMOD3D_SOL_DRAWINGLIST(I,ISOL,ICOMBINE)
  !###======================================================================
  IMPLICIT NONE
  INTEGER,INTENT(IN) :: ISOL,I
+ INTEGER,INTENT(IN),DIMENSION(:) :: ICOMBINE
  REAL(KIND=GLFLOAT) :: DXX,DYY,GX,GY,GZ,DXY 
- INTEGER :: J,K,II,JJ,IPROF,IPOS,N,I1,I2,IICLR
+ INTEGER :: J,K,II,JJ,JPROF,IPROF1,IPROF2,IPOS,N,I1,I2,IICLR,ICLR !IPROF
  REAL(KIND=GLFLOAT),DIMENSION(4) :: X,Y,XCOR,YCOR,Z
  REAL(KIND=GLFLOAT),DIMENSION(2) :: TX
  REAL,DIMENSION(:),ALLOCATABLE :: XT
@@ -4508,10 +4515,22 @@ SOLLOOP: DO I=1,NSOLLIST
  CALL GLNEWLIST(SOLLISTINDEX(ISOL,1),GL_COMPILE)
 
  !## process each cross-section (nidf) --- two-by-two
- DO IPROF=1,SIZE(SPF(I)%PROF)-1  
+ DO JPROF=1,SIZE(SPF(I)%PROF)-1  
    
-  IF(SPF(I)%PROF(IPROF)%NPOS  .LE.0)CYCLE
-  IF(SPF(I)%PROF(IPROF+1)%NPOS.LE.0)CYCLE      
+  !## first interval
+  IPROF1=JPROF
+  !## second interval
+  IPROF2=ICOMBINE(JPROF)
+  !## colouring in intermediate profile
+  ICLR=-1; IF(ICOMBINE(IPROF1+1).LT.0)ICLR=ABS(ICOMBINE(IPROF1+1))
+
+  !## skip this one, probably a colour
+  IF(IPROF2.LT.0)CYCLE
+    
+  IF(SPF(I)%PROF(IPROF1)%NPOS.LE.0)CYCLE
+  IF(SPF(I)%PROF(IPROF2)%NPOS.LE.0)CYCLE      
+!  IF(SPF(I)%PROF(IPROF)%NPOS  .LE.0)CYCLE
+!  IF(SPF(I)%PROF(IPROF+1)%NPOS.LE.0)CYCLE      
    
   !## make sure xt has a small offset (except for xt=0.0)
   TX(1)=0.0
@@ -4523,13 +4542,15 @@ SOLLOOP: DO I=1,NSOLLIST
   !## minimal offset = fraction of total distance
   DXX=TX(1)/1000.0
       
-  N=SPF(I)%PROF(IPROF)%NPOS+SPF(I)%PROF(IPROF+1)%NPOS+SPF(I)%NXY-2
+  N=SPF(I)%PROF(IPROF1)%NPOS+SPF(I)%PROF(IPROF2)%NPOS+SPF(I)%NXY-2
+!  N=SPF(I)%PROF(IPROF)%NPOS+SPF(I)%PROF(IPROF+1)%NPOS+SPF(I)%NXY-2
   ALLOCATE(XT(N),ZT(N,2))
   XT=0.0
   ZT=NODATA_Z
   IPOS=0
   II  =0
-  DO K=IPROF,IPROF+1
+!  DO K=IPROF,IPROF+1
+  DO K=IPROF1,IPROF2
    II=II+1
    !## create table with distances and z-values for top/bot of current iprof-layer
    DO J=1,SPF(I)%PROF(K)%NPOS
@@ -4542,6 +4563,7 @@ SOLLOOP: DO I=1,NSOLLIST
     ZT(IPOS,II)=SPF(I)%PROF(K)%PZ(J)
    ENDDO
   END DO
+  
   !## include knickpoints
   TX(1)=0.0
   DO J=2,SPF(I)%NXY-1
@@ -4651,8 +4673,13 @@ SOLLOOP: DO I=1,NSOLLIST
       XCOR(3)=X(3);    YCOR(3)=Y(3)
       XCOR(4)=XCOR(3); YCOR(4)=YCOR(3)
 
-      !## get color for z-mean between two segments
-      IICLR=SLD(1)%INTCLR(IPROF)
+      IF(ICLR.GE.0)THEN
+       IICLR=ICLR
+      ELSE
+       !## get color for z-mean between two segments
+       IICLR=SLD(1)%INTCLR(IPROF1)
+!      IICLR=SLD(1)%INTCLR(IPROF)
+      ENDIF
       CALL IMOD3D_SETCOLOR(IICLR) !## include alpha
       !## show shaded surface
       CALL IMOD3D_RETURNCOLOR(IICLR,AMBIENT)
@@ -4665,9 +4692,9 @@ SOLLOOP: DO I=1,NSOLLIST
        DO JJ=1,4; CALL GLVERTEX3F(XCOR(JJ),YCOR(JJ),Z(JJ)); ENDDO
        !## end OpenGL-Quads
       CALL GLEND()
-      CALL IMOD3D_SETCOLOR(WRGB(10,10,10))
 
       !## begin OpenGL-LINES
+      CALL IMOD3D_SETCOLOR(WRGB(10,10,10))
       CALL GLLINEWIDTH(1.0_GLFLOAT)
       CALL GLBEGIN(GL_LINES)
        CALL GLVERTEX3F(XCOR(2),YCOR(2),Z(2))
@@ -4675,10 +4702,12 @@ SOLLOOP: DO I=1,NSOLLIST
       CALL GLEND()
 
       !## draw bottom (only for the last)
-      IF(IPROF.EQ.SIZE(SPF(I)%PROF)-1)THEN
+      IF(JPROF.EQ.SIZE(SPF(I)%PROF)-1)THEN
+!      IF(IPROF.EQ.SIZE(SPF(I)%PROF)-1)THEN
 
        !## show interfaces
-       IICLR=SPF(I)%PROF(IPROF+1)%ICLR
+       IICLR=SPF(I)%PROF(IPROF2)%ICLR
+!       IICLR=SPF(I)%PROF(IPROF+1)%ICLR
        CALL IMOD3D_SETCOLOR(IICLR)
 
        CALL GLBEGIN(GL_LINES)
