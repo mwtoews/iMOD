@@ -1238,6 +1238,10 @@ CONTAINS
 
   DO IPART=1,SPR(IG)%NPART 
 
+   IF(IPART.EQ.647)THEN
+    WRITE(*,*)
+   ENDIF
+   
    !## particle not yet started, see whether to start
    IF(SPR(IG)%STM(IPART).GT.0)THEN
     !## skip this one for now
@@ -1265,7 +1269,11 @@ CONTAINS
                 IBOUND,ZBOT,ZTOP,LDELR,LDELC,QX,QY,QZ,QSS,POR,NCON,IDF%NCOL,IDF%NROW,NLAY,  &
                 NLPOR,IDF%NCOL*IDF%NROW*NLAY,NCP1,NRP1,NLP1,ISNK,IREV,FRAC,IMODE(1),   &
                 ISS,MAXVELOCITY,DELX,DELY,SPR(IG)%MXL(IPART),IVISIT,LVISIT,NVISIT) 
-
+    
+    IF(SPR(IG)%XLC(IPART).NE.SPR(IG)%XLC(IPART))THEN
+    WRITE(*,*)
+    ENDIF
+    
     !## lines
     IF(PL%ITYPE.EQ.1)CALL GLEND()
 
@@ -1350,7 +1358,7 @@ CONTAINS
      SPR(IG)%ZLL(I)=SP(IG)%ZLL(IPART)
      SPR(IG)%TOT(I)=SP(IG)%TOT(IPART)
      SPR(IG)%MXL(I)=SP(IG)%MXL(IPART)
-     SPR(IG)%STM(I)=SP(IG)%STM(IPART) !+PL%NCOMP
+     SPR(IG)%STM(I)=SP(IG)%STM(IPART)
      IF(SP(IG)%IRSTRT.GT.0)SPR(IG)%STM(IPART)=SPR(IG)%STM(IPART)+PL%NTIME
   
      !## add active particles
@@ -2896,6 +2904,15 @@ IPFLOOP: DO I=1,SIZE(IPF)
    !## adjust boundary whenever por
    DO IROW=1,IDF%NROW; DO ICOL=1,IDF%NCOL
     IF(POR(ICOL,IROW,ILAY).EQ.IDF%NODATA)IBOUND(ICOL,IROW,ILAY)=0
+    IF(IBOUND(ICOL,IROW,ILAY).NE.0)THEN
+     IF(POR(ICOL,IROW,ILAY).GE.1.0.OR.POR(ICOL,IROW,ILAY).LE.0.0)THEN
+      IF(IBATCH.EQ.0)CALL WMESSAGEBOX(OKONLY,EXCLAMATIONICON,COMMONOK,'You cannot specify a porosity of '//TRIM(RTOS(POR(ICOL,IROW,ILAY),'F',3))//CHAR(13)// &
+         'It need to be always 0.0 > porosity < 1.0','Error')
+      IF(IBATCH.EQ.1)THEN; WRITE(*,'(A)') 'You cannot specify a porosity of '//TRIM(RTOS(POR(ICOL,IROW,ILAY),'F',3))
+                     WRITE(*,'(A)') 'It need to be always 0.0 > porosity < 1.0'; ENDIF
+      RETURN
+     ENDIF
+    ENDIF
    ENDDO; ENDDO
   ENDIF
   IF(IBATCH.EQ.1)WRITE(*,'(A)') TRIM(STRING)

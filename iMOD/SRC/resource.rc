@@ -8,7 +8,7 @@
 //
 // Winteracter resource script. 
 //
-// Modified : 14/May/2017 05:42:39
+// Modified : 15/May/2017 21:36:16
 //
 ///////////////////////////////////////////////////
 //
@@ -11902,7 +11902,7 @@ BEGIN
             BEGIN
                 MENUITEM "Start IPS ...",                            ID_INTERACTIVEPATHLINES
                 MENUITEM SEPARATOR
-                MENUITEM "Default Display",                          ID_INTERACTIVEPATHLINES_DEF
+                MENUITEM "Default Display",                          ID_INTERACTIVEPATHLINES_DEF, CHECKED
                 MENUITEM "User Defined Display",                     ID_INTERACTIVEPATHLINES_MANUAL
             END
         END
@@ -12760,5 +12760,5 @@ END
 //*WI* FORTSAVE    1
 //*WI* FILENAME    resource.f90
 //*WI* FMODNAME    RESOURCE
-//*WI* LASTTYPE        2
-//*WI* LASTRES       211
+//*WI* LASTTYPE        1
+//*WI* LASTRES         7

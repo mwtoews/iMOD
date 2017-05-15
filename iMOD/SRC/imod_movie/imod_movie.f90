@@ -50,8 +50,10 @@ CONTAINS
  ALLOCATE(NFILES(N)); NFILES=0
  
  !## get number of dates - start the dialog
- IF(.NOT.IDFTIMESERIE_DATES())RETURN
-
+ IF(.NOT.IDFTIMESERIE_DATES())THEN
+  CALL MOVIE_CREATE_CLOSE(); RETURN
+ ENDIF
+ 
 ! IDFNAMES()
 
 ! !## get them all and read properties!
@@ -98,9 +100,19 @@ CONTAINS
 !  ENDIF
 ! ENDDO
  
- DEALLOCATE(NFILES)
+ CALL MOVIE_CREATE_CLOSE()
  
  END SUBROUTINE MOVIE_CREATE_INIT
+ 
+ !###======================================================================
+ SUBROUTINE MOVIE_CREATE_CLOSE()
+ !###======================================================================
+ IMPLICIT NONE
+
+ IF(ALLOCATED(NFILES))DEALLOCATE(NFILES)
+ IF(ASSOCIATED(IDFNAMES))DEALLOCATE(IDFNAMES)
+ 
+ END SUBROUTINE MOVIE_CREATE_CLOSE
  
  !###======================================================================
  SUBROUTINE MOVIE_PLAY_INIT()
