@@ -8,7 +8,7 @@
 //
 // Winteracter resource script. 
 //
-// Modified : 13/May/2017 00:42:44
+// Modified : 14/May/2017 05:42:39
 //
 ///////////////////////////////////////////////////
 //
@@ -1195,6 +1195,7 @@
 #define ID_MOVIE_PLAY                   40313
 #define ID_IMPORTKEYPILLARS             40314
 #define ID_ZRATIO_N                     40315
+#define ID_ZRATIO6                      40316
 
 ///////////////////////////////////////////////////
 //
@@ -8007,13 +8008,13 @@ BEGIN
     CONTROL "",IDF_GRID1,"ISSGRID",WS_CHILD | WS_VISIBLE | WS_VSCROLL | WS_HSCROLL | WS_GROUP | WS_TABSTOP | GS_DEFROWLABELS | GS_COLUMNLABELS | GS_RESIZECOLUMNS,   12,   36,  428,  115
     CONTROL "Display Configuration",IDF_GROUP1,"BUTTON",WS_CHILD | WS_VISIBLE | WS_GROUP | BS_GROUPBOX | BS_TEXT,    6,    4,  441,  200
     CONTROL "Accuracy:",IDF_LABEL1,"STATIC",WS_CHILD | WS_VISIBLE | WS_GROUP | SS_LEFT,   13,  173,   40,    8
-    CONTROL "",IDF_MENU1,"COMBOBOX",WS_CHILD | WS_VISIBLE | WS_VSCROLL | WS_TABSTOP | CBS_DROPDOWNLIST | CBS_HASSTRINGS,   61,  171,  149,   70
+    CONTROL "",IDF_MENU1,"COMBOBOX",WS_CHILD | WS_VISIBLE | WS_VSCROLL | WS_TABSTOP | CBS_DROPDOWNLIST | CBS_HASSTRINGS,   61,  171,  149,  100
     CONTROL "Sampling:",IDF_LABEL2,"STATIC",WS_CHILD | WS_VISIBLE | WS_GROUP | SS_LEFT,   13,  187,   40,    8
     CONTROL "",IDF_MENU2,"COMBOBOX",WS_CHILD | WS_VISIBLE | WS_VSCROLL | WS_GROUP | WS_TABSTOP | CBS_DROPDOWNLIST | CBS_HASSTRINGS,   61,  185,  149,  100
     CONTROL "Set All Types to:",IDF_LABEL3,"STATIC",WS_CHILD | WS_VISIBLE | WS_GROUP | SS_LEFT,   12,   21,   92,    8
     CONTROL "",IDF_MENU3,"COMBOBOX",WS_CHILD | WS_VISIBLE | WS_VSCROLL | WS_GROUP | WS_TABSTOP | CBS_DROPDOWNLIST | CBS_HASSTRINGS,  112,   19,   40,  100
     CONTROL "Configuration:",IDF_LABEL4,"STATIC",WS_CHILD | WS_VISIBLE | WS_GROUP | SS_LEFT,   13,  159,   45,    8
-    CONTROL "",IDF_MENU4,"COMBOBOX",WS_CHILD | WS_VISIBLE | WS_VSCROLL | WS_TABSTOP | CBS_DROPDOWNLIST | CBS_HASSTRINGS,   61,  157,  149,   70
+    CONTROL "",IDF_MENU4,"COMBOBOX",WS_CHILD | WS_VISIBLE | WS_VSCROLL | WS_TABSTOP | CBS_DROPDOWNLIST | CBS_HASSTRINGS,   61,  157,  149,  100
     CONTROL "Configuration:",IDF_LABEL5,"STATIC",WS_CHILD | WS_VISIBLE | WS_GROUP | SS_LEFT,  218,  156,  221,   40
 END
 
@@ -12301,7 +12302,9 @@ BEGIN
             MENUITEM "1:1000",                                   ID_ZRATIO3, CHECKED
             MENUITEM "1:10000",                                  ID_ZRATIO4
             MENUITEM "1:100000",                                 ID_ZRATIO5
+            MENUITEM SEPARATOR
             MENUITEM "Specify ...",                              ID_ZRATIO_N
+            MENUITEM "1:n",                                      ID_ZRATIO6, GRAYED
         END
     END
     MENUITEM "Help ...",                                 ID_HELP
@@ -12336,6 +12339,7 @@ ID_HELP,"Start Help Functionality\0",
 ID_3DVIEW_LEGEND,"Show Legends for IDF files\0",
 ID_SHOW3DCOORDINATES,"Show the 3D Coordinates of your mouse position\0",
 ID_ZRATIO_N,"Select this Option to Specify the Vertical Ratio\0",
+ID_ZRATIO6,"Apply a User Specified Ratio\0",
 0
 END
 
@@ -12756,5 +12760,5 @@ END
 //*WI* FORTSAVE    1
 //*WI* FILENAME    resource.f90
 //*WI* FMODNAME    RESOURCE
-//*WI* LASTTYPE        1
-//*WI* LASTRES        10
+//*WI* LASTTYPE        2
+//*WI* LASTRES       211
