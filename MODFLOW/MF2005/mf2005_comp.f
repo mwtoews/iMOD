@@ -2011,7 +2011,9 @@ c ------------------------------------------------------------------------------
       js = 1
       do i = 1, nid
          je = xchOff(i)
-         if (je-js.gt.0) write(*,*) 'Warning: cell received > 1 uszflux'
+         if (je-js.gt.0) then
+            !write(*,*) 'Warning: cell received > 1 uszflux'
+         end if   
          do j = js, je
             k = xchIdx(j)
             if (k.le.0) then
@@ -2071,7 +2073,9 @@ c ------------------------------------------------------------------------------
          irow = dxcir(i)
          icol = dxcic(i)
          je = xchOff(i)
-         if (je-js.gt.0) write(*,*) 'Warning: cell received > 1 sf1'
+         if (je-js.gt.0) then 
+            !write(*,*) 'Warning: cell received > 1 sf1'
+         end if   
          s = mv
          do j = js, je
             k = xchIdx(j)
@@ -2132,7 +2136,9 @@ c ------------------------------------------------------------------------------
          irow = dxcir(i)
          icol = dxcic(i)
          je = xchOff(i)
-         if (je-js.gt.0) write(*,*) 'Warning: cell received > 1 sf1'
+         if (je-js.gt.0) then
+            !write(*,*) 'Warning: cell received > 1 sf1'
+         end if   
          s = mv
          do j = js, je
             k = xchIdx(j)

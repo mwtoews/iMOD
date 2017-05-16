@@ -531,7 +531,7 @@ implicit none
 !##### BEGIN EXCHANGE: BeginOfTimestep ########################################
           if (rt.eq.rtmodsim .or. rt.eq.rtmodsimtranmoz) then
              ok = mf2005_PutHeads(mf_igrid,XchModSimModCells,XchModSimModNID,XchModSimModHeads,mv); call DriverChk(ok,'mf2005_PutHeads') ! Put groundwater heads
-             ok = metaswap_GetHeads(XchModSimModHeads,XchModSimModNID,XchMod2SimIdx,XchMod2SimOff,mv); call DriverChk(ok,'metaswap_GetHeads') ! Get groundwater heads
+             ok = metaswap_GetHeads(XchModSimModHeads,XchModSimSimNID,XchMod2SimIdx,XchMod2SimOff,mv); call DriverChk(ok,'metaswap_GetHeads') ! Get groundwater heads
              XchModSimModHeads = mv
           end if
 !####### END EXCHANGE: BeginOfTimestep ########################################
