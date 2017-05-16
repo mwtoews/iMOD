@@ -609,7 +609,7 @@ implicit none
              if (exitcode.eq.0) then
                 if (rt.eq.rtmodsim .or. rt.eq.rtmodsimtranmoz) then
                    ok = mf2005_PutHeads(mf_igrid,XchModSimModCells,XchModSimModNID,XchModSimModHeads,mv); call DriverChk(ok,'mf2005_PutHeads') ! MODFLOW put groundwater heads
-                   ok = metaswap_GetHeads(XchModSimModHeads,XchModSimModNID,XchMod2SimIdx,XchMod2SimOff,mv); call DriverChk(ok,'metaswap_GetHeads') ! MetaSWAP gets the groundwater heads
+                   ok = metaswap_GetHeads(XchModSimModHeads,XchModSimSimNID,XchMod2SimIdx,XchMod2SimOff,mv); call DriverChk(ok,'metaswap_GetHeads') ! MetaSWAP gets the groundwater heads
                    XchModSimModHeads = mv
                 end if
              end if
