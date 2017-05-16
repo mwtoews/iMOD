@@ -20,7 +20,7 @@ CONTAINS
   
 ! LINE='d:\IMOD-MODELS\ALBERTA\ALBERTA\IMOD_DEMO\FAULTS\test_fault_model.asc'
  IF(.NOT.UTL_WSELECTFILE('Load ASC File (*.asc)|*.asc|',&
-                  LOADDIALOG+PROMPTON+DIRCHANGE+APPENDEXT,LINE,&
+                  LOADDIALOG+PROMPTON+DIRCHANGE+APPENDEXT,FNAME,&
                   'Load ASC File (*.asc)'))RETURN
 
  !## process data 
