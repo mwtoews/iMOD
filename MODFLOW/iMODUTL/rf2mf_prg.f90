@@ -371,13 +371,15 @@ SUBROUTINE RF2MF_PERIODDEFINITION()
 !###====================================================================
 IMPLICIT NONE
 INTEGER :: I,IPER,IOS
+CHARACTER(LEN=256) :: LINE
 
 !## because not all packages are needed, read until correct time-info is found!
 DO
- READ(IURUN,*,IOSTAT=IOS) IPER,DELT,CDATE,ISAVE,isumbudget
+ READ(IURUN,'(A256)') LINE
+ READ(LINE,*,IOSTAT=IOS) IPER,DELT,CDATE,ISAVE,isumbudget
  if(ios.ne.0)then
   isumbudget=0
-  READ(IURUN,*,IOSTAT=IOS) IPER,DELT,CDATE,ISAVE
+  READ(LINE,*,IOSTAT=IOS) IPER,DELT,CDATE,ISAVE
  endif
  IF(IOS.LT.0)CALL IMOD_UTL_PRINTTEXT('Error reading/finding time heading stressperiod '//TRIM(IMOD_UTL_ITOS(KPER)),2)
  IF(IOS.EQ.0)EXIT
