@@ -52,7 +52,7 @@ CONTAINS
  INTEGER,DIMENSION(5) :: ITP
  CHARACTER(LEN=256) :: FNAME
  DATA ITP/1,2,3,4,5/
- integer :: scltype, ismooth
+ integer :: scltype, ismooth,isys
 
  IF(IMODPCK.EQ.0)NTOPICS=MDIM(IPCK)
  IF(IMODPCK.EQ.1)THEN
@@ -235,10 +235,12 @@ CONTAINS
      END SELECT
     ELSEIF(IMODPCK.EQ.1)THEN
      nsys=nsys+1
+
      SELECT CASE (IPCK)
       CASE (PWEL)     !## (PWEL) well
        wel%sp(kper)%reuse = .false.
-       wel%sp(kper)%gcd%nsubsys = nsys
+       isys=nsys; if(isumbudget.eq.0)isys=1
+       wel%sp(kper)%gcd%nsubsys = isys !nsys
        if (.not.associated(wel%sp(kper)%gcd%subsys)) allocate(wel%sp(kper)%gcd%subsys(maxsubsys))
        wel%sp(kper)%gcd%subsys(nsys)%ilay = ilay
 !       wel%sp(kper)%gcd%subsys(nsys)%factor = fct
@@ -248,7 +250,8 @@ CONTAINS
       CASE (PDRN)     !## (PDRN) drainage
        drn%sp(kper)%ldrn  = .true.
        drn%sp(kper)%reuse = .false.
-       drn%sp(kper)%gcd%nsubsys = nsys
+       isys=nsys; if(isumbudget.eq.0)isys=1
+       drn%sp(kper)%gcd%nsubsys = isys !nsys
        if (.not. associated(drn%sp(kper)%gcd%subsys)) allocate(drn%sp(kper)%gcd%subsys(maxsubsys))
        drn%sp(kper)%gcd%subsys(nsys)%ilay = ilay
 !       drn%sp(kper)%gcd%subsys(nsys)%factor = fct
@@ -269,7 +272,8 @@ CONTAINS
       CASE (PRIV)     !## (PRIV) rivers
        riv%sp(kper)%lriv  = .true.
        riv%sp(kper)%reuse = .false.
-       riv%sp(kper)%gcd%nsubsys = nsys
+       isys=nsys; if(isumbudget.eq.0)isys=1
+       riv%sp(kper)%gcd%nsubsys = isys !nsys
        if (.not.associated(riv%sp(kper)%gcd%subsys)) allocate(riv%sp(kper)%gcd%subsys(maxsubsys))
        riv%sp(kper)%gcd%subsys(nsys)%ilay = ilay
 !       riv%sp(kper)%gcd%subsys(nsys)%factor = fct
@@ -294,7 +298,8 @@ CONTAINS
        if (it.eq.3) call RF2MF_READ1MAIN_system(evt%sp(kper)%exdp,ios,ilay,fct,imp,constante,iarr,fname,iusclarith,idsclnointp)
       CASE (PGHB)     !## (PGHB) general head boundary
        ghb%sp(kper)%reuse = .false.
-       ghb%sp(kper)%gcd%nsubsys = nsys
+       isys=nsys; if(isumbudget.eq.0)isys=1
+       ghb%sp(kper)%gcd%nsubsys = isys !nsys
        if (.not.associated(ghb%sp(kper)%gcd%subsys)) allocate(ghb%sp(kper)%gcd%subsys(maxsubsys))
        ghb%sp(kper)%gcd%subsys(isub)%ilay = ilay
 !       ghb%sp(kper)%gcd%subsys(nsys)%factor = fct
@@ -318,7 +323,8 @@ CONTAINS
        drn%sp(kper)%lolf  = .true.
        drn%sp(kper)%reuse = .false.
        msys = drn%sp(kper)%gcd%nsubsys+nsys
-       drn%sp(kper)%gcd%nsubsys = msys
+       isys=msys; if(isumbudget.eq.0)isys=1
+       drn%sp(kper)%gcd%nsubsys = isys !msys
        drn%sp(kper)%gcd%subsys(msys)%lolf = .true.
        if (.not.associated(drn%sp(kper)%gcd%subsys)) allocate(drn%sp(kper)%gcd%subsys(maxsubsys))
        drn%sp(kper)%gcd%subsys(msys)%ilay =  ilay
@@ -333,7 +339,7 @@ CONTAINS
        end if
       CASE (PCHD)     !## (PCHD) constant head
        chd%sp(kper)%reuse = .false.
-       chd%sp(kper)%gcd%nsubsys = nsys
+       chd%sp(kper)%gcd%nsubsys = isys !nsys
        if (.not.associated(chd%sp(kper)%gcd%subsys)) allocate(chd%sp(kper)%gcd%subsys(maxsubsys))
        chd%sp(kper)%gcd%subsys(nsys)%ilay = ilay
        chd%sp(kper)%gcd%subsys(nsys)%isub = isub
@@ -345,7 +351,8 @@ CONTAINS
        fct = 1.; imp = 0.
        riv%sp(kper)%reuse = .false.
        msys = riv%sp(kper)%gcd%nsubsys+1
-       riv%sp(kper)%gcd%nsubsys = msys
+       isys=msys; if(isumbudget.eq.0)isys=1
+       riv%sp(kper)%gcd%nsubsys = isys !msys
        if (.not.associated(riv%sp(kper)%gcd%subsys)) allocate(riv%sp(kper)%gcd%subsys(maxsubsys))
        riv%sp(kper)%gcd%subsys(msys)%ilay =  ilay
        riv%sp(kper)%gcd%subsys(msys)%isub = -isub

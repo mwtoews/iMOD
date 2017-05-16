@@ -160,6 +160,7 @@
          integer :: ilay   = -1
          integer :: isub   = -1
          real    :: factor = -1.
+         real    :: imp    = -1.
          logical :: lisg   = .false.
          logical :: lolf   = .false.
          logical :: lriv   = .false.
@@ -2268,14 +2269,14 @@
       write(str(n),*) hfb%nhfbnp
       if (debugflag.eq.0) then
          n = n + 1
-         write(str(n),*) 'noprint'
+         write(str(n),*) 'NOPRINT'
       end if
       if(dis%settop .and. dis%setbot) then
          n = n + 1
-         write(str(n),*) 'hfbresis'
+         write(str(n),*) 'HFBRESIS'
       else
          n = n + 1
-         write(str(n),*) 'hfbfact'
+         write(str(n),*) 'HFBFACT'
       end if
 
       write(nstr,*) n
@@ -2790,7 +2791,7 @@
 
 !...     locals
       integer :: igen, icol, i
-      character(len=maxlen), dimension(5) :: str
+      character(len=maxlen), dimension(2) :: str
 !.......................................................................
 
       write(str(1),*) lcd%ngen

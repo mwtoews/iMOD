@@ -35,7 +35,7 @@
 				<Tool Name="VFPostBuildEventTool"/>
 				<Tool Name="VFManifestTool" SuppressStartupBanner="true"/></Configuration>
 		<Configuration Name="Release|x64">
-				<Tool Name="VFFortranCompilerTool" SuppressStartupBanner="true" BufferedIO="true" Preprocess="preprocessYes" AdditionalIncludeDirectories="..\iMOD\$(PlatformName)\$(ConfigurationName);..\mf2005\$(PlatformName)\$(ConfigurationName)" PreprocessorDefinitions="IFORT"/>
+				<Tool Name="VFFortranCompilerTool" SuppressStartupBanner="true" BufferedIO="true" HeapArrays="0" Preprocess="preprocessYes" AdditionalIncludeDirectories="..\iMOD\$(PlatformName)\$(ConfigurationName);..\mf2005\$(PlatformName)\$(ConfigurationName)" PreprocessorDefinitions="IFORT"/>
 				<Tool Name="VFLinkerTool" OutputFile="..\..\BIN\MODFLOW_x64_BR.exe" LinkIncremental="linkIncrementalNo" SuppressStartupBanner="true" SubSystem="subSystemConsole"/>
 				<Tool Name="VFResourceCompilerTool"/>
 				<Tool Name="VFMidlTool" SuppressStartupBanner="true" TargetEnvironment="midlTargetAMD64"/>

@@ -496,7 +496,7 @@ END SUBROUTINE
   REAL :: X,Y,CAP
  END TYPE IPFOBJ
  TYPE(IPFOBJ),ALLOCATABLE,DIMENSION(:) :: IPF
-
+ logical :: lurban
  integer :: mndxc, ndxc, unid
  integer, dimension(:,:), allocatable :: dxcid
 
@@ -538,6 +538,8 @@ END SUBROUTINE
  NUND=0; unid = 0
  DO IROW=1,SIMGRO_NROW
   DO ICOL=1,SIMGRO_NCOL
+   
+   lurban=.false.
    IF(SIMGRO(ICOL,IROW)%IBOUND.LE.0)CYCLE
    MDND=(IROW-1)*SIMGRO_NCOL+ICOL
 
@@ -551,6 +553,8 @@ END SUBROUTINE
 
    !## rural area > 0
    IF(ARND.GT.0.0)THEN
+
+    lurban=.true.
     NUND=NUND+1
 
     !## write idf_svat.inp - inside area of interest
@@ -661,8 +665,11 @@ END SUBROUTINE
 
     WRITE(INDSB,'(2I10,F8.3,2F8.1)') NUND,0,SIMGRO(ICOL,IROW)%VXMU_SOPP,SIMGRO(ICOL,IROW)%CRUNOFF_SOPP,SIMGRO(ICOL,IROW)%CRUNON_SOPP !1.0,1.0
 
-    !## add couple location modflow
-    unid=unid+1; call storedxc(dxcid,mndxc,ndxc,1,irow,icol,unid)
+    !## add couple location modflow - only if not yet urban location added
+    if(.not.lurban)then
+     unid=unid+1; call storedxc(dxcid,mndxc,ndxc,1,irow,icol,unid)
+    endif
+
     !## write coupling table
     WRITE(IGWMP  ,'(I10,2X,I10,I5)') unid,NUND,1
     WRITE(IMODSIM,'(I10,2X,I10,I5)') unid,NUND,1
