@@ -427,19 +427,24 @@ ELSE
      IUTXT(II)=IMOD_UTL_GETUNIT()
     ENDIF
 
-    IF(OS.EQ.1)THEN
-     JJJ=INDEX(LINE,CHAR(92),.TRUE.)
-    ELSE
-     JJJ=INDEX(LINE,CHAR(47),.TRUE.)
-    ENDIF
-    IF(JJJ.GT.0)CALL IMOD_UTL_CREATEDIR(LINE(1:JJJ-1))
-
     OPEN(IUTXT(II),FILE=LINE,FORM='FORMATTED',ACTION='WRITE',STATUS='UNKNOWN',IOSTAT=IOS) 
     IF(IOS.NE.0)THEN 
-     CALL IMOD_UTL_PRINTTEXT(' Cannot create file '//TRIM(LINE),0)
-     CALL IMOD_UTL_PRINTTEXT(' Probably not enough free unit numbers '//TRIM(IMOD_UTL_ITOS(IUTXT(II))),0)
-     CALL IMOD_UTL_PRINTTEXT(' or duplicate file name and file is allready opened',0)
-     CALL IMOD_UTL_PRINTTEXT('Stopped',2)
+     !## maybe the directory doesn't exist - create it and try again
+     
+     IF(OS.EQ.1)THEN
+      JJJ=INDEX(LINE,CHAR(92),.TRUE.)
+     ELSE
+      JJJ=INDEX(LINE,CHAR(47),.TRUE.)
+     ENDIF
+     IF(JJJ.GT.0)CALL IMOD_UTL_CREATEDIR(LINE(1:JJJ-1))
+
+     OPEN(IUTXT(II),FILE=LINE,FORM='FORMATTED',ACTION='WRITE',STATUS='UNKNOWN',IOSTAT=IOS) 
+     IF(IOS.NE.0)THEN
+      CALL IMOD_UTL_PRINTTEXT(' Cannot create file '//TRIM(LINE),0)
+      CALL IMOD_UTL_PRINTTEXT(' Probably not enough free unit numbers '//TRIM(IMOD_UTL_ITOS(IUTXT(II))),0)
+      CALL IMOD_UTL_PRINTTEXT(' or duplicate file name and file is allready opened',0)
+      CALL IMOD_UTL_PRINTTEXT('Stopped',2)
+     ENDIF
     ENDIF
 
     !## write header and labels of txt file
