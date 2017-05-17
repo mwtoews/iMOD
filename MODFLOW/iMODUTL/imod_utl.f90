@@ -31,7 +31,8 @@ MODULE IMOD_UTL
  INTEGER,PARAMETER :: ICF = 1 ! Intel compiler: ICF = 1
  INTEGER,SAVE :: IUOUT
  INTEGER,DIMENSION(2),SAVE :: IFLAG
- REAL,PARAMETER :: MSWPMV=10.0       !##   add meter to surface level urban area
+! REAL,PARAMETER :: MSWPMV=10.0       !##   add meter to surface level urban area
+ REAL,PARAMETER :: MSWPMV=0.0
 
 character(len=1024), parameter :: licfile = 'I_accepted_v3_6.txt' 
 integer, parameter :: nlic = 33
