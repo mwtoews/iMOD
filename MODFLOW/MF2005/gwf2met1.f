@@ -1068,6 +1068,8 @@ c funtions
 c program section
 c ------------------------------------------------------------------------------
 
+      call sgwf2met1pnt(1) !igrid)
+
 c convert TEXT
       txt = TEXT
       call cfn_s_trim(txt)
