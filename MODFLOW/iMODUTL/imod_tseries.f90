@@ -393,7 +393,7 @@ ELSE
 
   !## get number of stressperiods with a date
   MPER=0
-  DO irec=1,nrec
+  DO IREC=1,NREC
    READ(IU,*,IOSTAT=JOS) IDATE
    !## skip this period since it is apparently not a date
    IF(JOS.NE.0)THEN
@@ -427,19 +427,19 @@ ELSE
      IUTXT(II)=IMOD_UTL_GETUNIT()
     ENDIF
 
-    IF(II.EQ.1)THEN
-     IF(OS.EQ.1)THEN
-      JJJ=INDEX(LINE,CHAR(92),.TRUE.)
-     ELSE
-      JJJ=INDEX(LINE,CHAR(47),.TRUE.)
-     ENDIF
-     IF(JJJ.GT.0)CALL IMOD_UTL_CREATEDIR(LINE(1:JJJ-1))
+    IF(OS.EQ.1)THEN
+     JJJ=INDEX(LINE,CHAR(92),.TRUE.)
+    ELSE
+     JJJ=INDEX(LINE,CHAR(47),.TRUE.)
     ENDIF
+    IF(JJJ.GT.0)CALL IMOD_UTL_CREATEDIR(LINE(1:JJJ-1))
 
     OPEN(IUTXT(II),FILE=LINE,FORM='FORMATTED',ACTION='WRITE',STATUS='UNKNOWN',IOSTAT=IOS) 
     IF(IOS.NE.0)THEN 
      CALL IMOD_UTL_PRINTTEXT(' Cannot create file '//TRIM(LINE),0)
-     CALL IMOD_UTL_PRINTTEXT(' Probably not enough free unit numbers',2)
+     CALL IMOD_UTL_PRINTTEXT(' Probably not enough free unit numbers '//TRIM(IMOD_UTL_ITOS(IUTXT(II))),0)
+     CALL IMOD_UTL_PRINTTEXT(' or duplicate file name and file is allready opened',0)
+     CALL IMOD_UTL_PRINTTEXT('Stopped',2)
     ENDIF
 
     !## write header and labels of txt file
