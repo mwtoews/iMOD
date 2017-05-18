@@ -26,7 +26,7 @@ subroutine imod_tstat_calc(infile1,infile2,coldate,colval,options,mv,     & ! in
                            lag,dlag,                                      & ! correlations
                            ibegdat,ienddat,slen,wfc,xstep,                & ! period
                            gbegdat,genddat,gnpy,                          & ! GxG
-                           perc1,perc2, &                                 & ! percentile
+                           perc1,perc2,                                   & ! percentile
                            exitcode)
 
 
