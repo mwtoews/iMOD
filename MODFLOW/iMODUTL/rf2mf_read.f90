@@ -239,23 +239,23 @@ CONTAINS
      SELECT CASE (IPCK)
       CASE (PWEL)     !## (PWEL) well
        wel%sp(kper)%reuse = .false.
-       isys=nsys; if(isumbudget.eq.1)isys=1
-       wel%sp(kper)%gcd%nsubsys = isys !nsys
+       wel%sp(kper)%gcd%nsubsys = nsys
        if (.not.associated(wel%sp(kper)%gcd%subsys)) allocate(wel%sp(kper)%gcd%subsys(maxsubsys))
        wel%sp(kper)%gcd%subsys(nsys)%ilay = ilay
 !       wel%sp(kper)%gcd%subsys(nsys)%factor = fct
-       wel%sp(kper)%gcd%subsys(nsys)%isub = isub
+       isys=isub; if(isumbudget.eq.1)isys=1
+       wel%sp(kper)%gcd%subsys(nsys)%isub = isys
        if (.not.associated(wel%sp(kper)%gcd%subsys(nsys)%data)) allocate(wel%sp(kper)%gcd%subsys(nsys)%data(1))
        call RF2MF_READ1MAIN_system(wel%sp(kper)%gcd%subsys(nsys)%data(it),ios,ilay,fct,imp,constante,iarr,fname,iusclnodata,idsclnodata)
       CASE (PDRN)     !## (PDRN) drainage
        drn%sp(kper)%ldrn  = .true.
        drn%sp(kper)%reuse = .false.
-       isys=nsys; if(isumbudget.eq.1)isys=1
-       drn%sp(kper)%gcd%nsubsys = isys !nsys
+       drn%sp(kper)%gcd%nsubsys = nsys
        if (.not. associated(drn%sp(kper)%gcd%subsys)) allocate(drn%sp(kper)%gcd%subsys(maxsubsys))
        drn%sp(kper)%gcd%subsys(nsys)%ilay = ilay
 !       drn%sp(kper)%gcd%subsys(nsys)%factor = fct
-       drn%sp(kper)%gcd%subsys(nsys)%isub = isub
+       isys=isub; if(isumbudget.eq.1)isys=1
+       drn%sp(kper)%gcd%subsys(nsys)%isub = isys
        drn%sp(kper)%gcd%subsys(nsys)%ldrn = .true.
        if (.not.associated(drn%sp(kper)%gcd%subsys(nsys)%data)) allocate(drn%sp(kper)%gcd%subsys(nsys)%data(3))
        if (itp(it).eq.1) then
@@ -272,12 +272,12 @@ CONTAINS
       CASE (PRIV)     !## (PRIV) rivers
        riv%sp(kper)%lriv  = .true.
        riv%sp(kper)%reuse = .false.
-       isys=nsys; if(isumbudget.eq.1)isys=1
-       riv%sp(kper)%gcd%nsubsys = isys !nsys
+       riv%sp(kper)%gcd%nsubsys = nsys
        if (.not.associated(riv%sp(kper)%gcd%subsys)) allocate(riv%sp(kper)%gcd%subsys(maxsubsys))
        riv%sp(kper)%gcd%subsys(nsys)%ilay = ilay
 !       riv%sp(kper)%gcd%subsys(nsys)%factor = fct
-       riv%sp(kper)%gcd%subsys(nsys)%isub = isub
+       isys=isub; if(isumbudget.eq.1)isys=1
+       riv%sp(kper)%gcd%subsys(nsys)%isub = isys
        riv%sp(kper)%gcd%subsys(nsys)%lriv = .true.
        if (.not.associated(riv%sp(kper)%gcd%subsys(nsys)%data)) allocate(riv%sp(kper)%gcd%subsys(nsys)%data(5))
        if (itp(it).eq.1) then
@@ -298,12 +298,12 @@ CONTAINS
        if (it.eq.3) call RF2MF_READ1MAIN_system(evt%sp(kper)%exdp,ios,ilay,fct,imp,constante,iarr,fname,iusclarith,idsclnointp)
       CASE (PGHB)     !## (PGHB) general head boundary
        ghb%sp(kper)%reuse = .false.
-       isys=nsys; if(isumbudget.eq.1)isys=1
-       ghb%sp(kper)%gcd%nsubsys = isys !nsys
+       ghb%sp(kper)%gcd%nsubsys = nsys
        if (.not.associated(ghb%sp(kper)%gcd%subsys)) allocate(ghb%sp(kper)%gcd%subsys(maxsubsys))
        ghb%sp(kper)%gcd%subsys(isub)%ilay = ilay
 !       ghb%sp(kper)%gcd%subsys(nsys)%factor = fct
-       ghb%sp(kper)%gcd%subsys(isub)%isub = isub
+       isys=isub; if(isumbudget.eq.1)isys=1
+       ghb%sp(kper)%gcd%subsys(isub)%isub = isys
        if (.not.associated(ghb%sp(kper)%gcd%subsys(nsys)%data)) allocate(ghb%sp(kper)%gcd%subsys(nsys)%data(3))
        if (itp(it).eq.1) then
         scltype=iusclsumcdr
@@ -323,12 +323,12 @@ CONTAINS
        drn%sp(kper)%lolf  = .true.
        drn%sp(kper)%reuse = .false.
        msys = drn%sp(kper)%gcd%nsubsys+nsys
-       isys=msys; if(isumbudget.eq.1)isys=1
-       drn%sp(kper)%gcd%nsubsys = isys !msys
+       drn%sp(kper)%gcd%nsubsys = msys
        drn%sp(kper)%gcd%subsys(msys)%lolf = .true.
        if (.not.associated(drn%sp(kper)%gcd%subsys)) allocate(drn%sp(kper)%gcd%subsys(maxsubsys))
        drn%sp(kper)%gcd%subsys(msys)%ilay =  ilay
-       drn%sp(kper)%gcd%subsys(msys)%isub = -isub !drn%sp(kper)%gcd%subsys(nsys)%isub + 1
+       isys=isub; if(isumbudget.eq.1)isys=1
+       drn%sp(kper)%gcd%subsys(msys)%isub = -isys !drn%sp(kper)%gcd%subsys(nsys)%isub + 1
        if (.not.associated(drn%sp(kper)%gcd%subsys(msys)%data)) allocate(drn%sp(kper)%gcd%subsys(msys)%data(3))
        call RF2MF_READ1MAIN_system(drn%sp(kper)%gcd%subsys(msys)%data(2),ios,ilay,fct,imp,constante,iarr,fname,iusclarith,idsclintp)
        drn%sp(kper)%gcd%subsys(msys)%data(1)%keyword = 'constant'
@@ -339,11 +339,11 @@ CONTAINS
        end if
       CASE (PCHD)     !## (PCHD) constant head
        chd%sp(kper)%reuse = .false.
-       isys=nsys; if(isumbudget.eq.1)isys=1
-       chd%sp(kper)%gcd%nsubsys = isys !nsys
+       chd%sp(kper)%gcd%nsubsys = nsys
        if (.not.associated(chd%sp(kper)%gcd%subsys)) allocate(chd%sp(kper)%gcd%subsys(maxsubsys))
        chd%sp(kper)%gcd%subsys(nsys)%ilay = ilay
-       chd%sp(kper)%gcd%subsys(nsys)%isub = isub
+       isys=isub; if(isumbudget.eq.1)isys=1
+       chd%sp(kper)%gcd%subsys(nsys)%isub = isys
        if (.not.associated(chd%sp(kper)%gcd%subsys(nsys)%data)) allocate(chd%sp(kper)%gcd%subsys(nsys)%data(3))
        call RF2MF_READ1MAIN_system(chd%sp(kper)%gcd%subsys(nsys)%data(1),ios,ilay,fct,imp,constante,iarr,fname,iusclarith,idsclintp)
        call RF2MF_READ1MAIN_system(chd%sp(kper)%gcd%subsys(nsys)%data(2),ios,ilay,fct,imp,constante,iarr,fname,iusclarith,idsclintp)
@@ -352,11 +352,11 @@ CONTAINS
        fct = 1.; imp = 0.
        riv%sp(kper)%reuse = .false.
        msys = riv%sp(kper)%gcd%nsubsys+1
-       isys=msys; if(isumbudget.eq.1)isys=1
-       riv%sp(kper)%gcd%nsubsys = isys !msys
+       riv%sp(kper)%gcd%nsubsys = msys
        if (.not.associated(riv%sp(kper)%gcd%subsys)) allocate(riv%sp(kper)%gcd%subsys(maxsubsys))
        riv%sp(kper)%gcd%subsys(msys)%ilay =  ilay
-       riv%sp(kper)%gcd%subsys(msys)%isub = -isub
+       isys=isub; if(isumbudget.eq.1)isys=1
+       riv%sp(kper)%gcd%subsys(msys)%isub = -isys
        riv%sp(kper)%gcd%subsys(msys)%lisg = .true.
        if (.not.associated(riv%sp(kper)%gcd%subsys(msys)%data)) allocate(riv%sp(kper)%gcd%subsys(msys)%data(4))
        call RF2MF_READ1MAIN_system(riv%sp(kper)%gcd%subsys(msys)%data(itp(it)),ios,ilay,fct,imp,constante,iarr,fname,iusclnodata,idsclnodata)
