@@ -521,9 +521,8 @@ CONTAINS
        
  ELSE
  
-  !## translate current position to view=position
-  X= XP+IDF%XMIN;        Y= YP+IDF%YMIN; Z=ZP 
-!  X=(X-MIDPOS%X)/VIEWDX; Y=(Y-MIDPOS%Y)/VIEWDY
+  !## translate current local position to global position
+  X= XP+IDF%XMIN; Y= YP+IDF%YMIN; Z=ZP 
   !## current position 
   CALL GLVERTEX3F(X,Y,Z)
  

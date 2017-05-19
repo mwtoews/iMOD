@@ -53,7 +53,7 @@ INTEGER :: IDIAGERROR
 INTEGER :: IBACKSLASH  !##  label trimmen achter backslash
 INTEGER :: ILABELNAME  !##  plot of labels optional
 
-INTEGER,PARAMETER :: MXTP=36  !## no of TYPE
+INTEGER,PARAMETER :: MXTP=38  !## no of TYPE
 INTEGER,PARAMETER :: MXSYS=10
 TYPE TPOBJ
  CHARACTER(LEN=15) :: ACRNM  !## acronym waterbalance budget
@@ -71,7 +71,7 @@ DATA TP%ACRNM/'HEAD','BDGBND','BDGFLF','BDGFRF','BDGFFF',&
               'PWTHEAD','GWL','BDGETACT','BDGPSGW','MSW_EBSPOT',&
               'MSW_EIC','MSW_EPD','MSW_ESP','MSW_TPOT','BDGQSPGW',&
               'MSW_EBS','MSW_QMODFBOT','MSW_QMR','BDGDECSTOT','BDGPSSW',&
-              'MSW_TACT'/
+              'MSW_TACT','BDGQMODF'/
 
 DATA TP%UNIT/ '    m',' m3/d',' m3/d',' m3/d',' m3/d',&
               ' m3/d',' m3/d',' m3/d',' m3/d',' m3/d',&
@@ -80,7 +80,7 @@ DATA TP%UNIT/ '    m',' m3/d',' m3/d',' m3/d',' m3/d',&
               '    m','    m','m3/m2','m3/m2','m3/m2',&
               'm3/m2','m3/m2','m3/m2','m3/m2','m3/m2',&
               'm3/m2','m3/m2','m3/m2','m3/m2','m3/m2',&
-              'm3/m2'/
+              'm3/m2','m3/m2'/
 
 DATA TP%ALIAS/'GROUNDWATERHEAD','CONSTANT_HEAD','FLUX_LOWER_FACE','FLUX_RIGHT_FACE','FLUX_FRONT_FACE',&
               'STORAGE','WELLS','DRAINAGE','RIVERS','EVAPOTRANSPIRATION',&
@@ -92,7 +92,7 @@ DATA TP%ALIAS/'GROUNDWATERHEAD','CONSTANT_HEAD','FLUX_LOWER_FACE','FLUX_RIGHT_FA
               'GROUNDWATER_EXTRACTION_FOR_SPRINKLING',&
               'EVAPORATION_BARE_SOIL','UPWARD_SEEPAGE_OF_MODFLOW_CELL','FLOW_THROUGH_BOTTOM_OF_BOX1_ROOT_ZONE','DECREASE_STORAGE', &
               'SPRINKLING_PRECIPITATION_FROM_SURFACEWATER',&
-              'ACTUAL_TRANSPIRATION_VEGETATION'/
+              'ACTUAL_TRANSPIRATION_VEGETATION','CORRECTION TERM OF REALIGNMENT OF IMODFLOW'/
 
 END MODULE IMODVAR
 
