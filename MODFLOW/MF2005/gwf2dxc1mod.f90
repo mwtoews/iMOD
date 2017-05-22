@@ -37,6 +37,7 @@
 
     ! data exchange elements projected to the local 3D modflow grid
     integer, pointer, save :: mxdxc             !> maximum number of data exchange elements stored
+    integer, pointer, save :: IdxcCB
     integer, pointer, save :: ndxc              !> number of data exchange elements stored
     integer, pointer, save :: dxcid(:)          !> element identification number
     integer, pointer, save :: dxcic(:)          !> local grid column number
@@ -46,8 +47,6 @@
     real   , pointer, save :: dxchead(:)        !> head           data to be exchanged: GWMHeads
     real   , pointer, save :: dxcuzflux(:)      !> UnsatZoneFlux  data to be exchanged: UnsaturatedZoneFlux
     real   , pointer, save :: dxcsf(:)          !> storage factor data to be exchanged: StorageFactor
-
-    character (len=nsid), pointer, save :: schemIDdxc !> schematisation ID
 
     ! mozart
     integer, pointer, save :: maxlsw
@@ -69,6 +68,7 @@
 
     type gwfdxctype
        integer, pointer :: mxdxc
+       integer, pointer :: IdxcCB 
        integer, pointer :: ndxc
        integer, pointer :: dxcid(:)
        integer, pointer :: dxcic(:)
@@ -78,8 +78,6 @@
        real   , pointer :: dxchead(:)
        real   , pointer :: dxcuzflux(:)
        real   , pointer :: dxcsf(:)
-
-       character (len=nsid), pointer :: schemIDdxc
 
        ! mozart
        integer, pointer :: maxlsw

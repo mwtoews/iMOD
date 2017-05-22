@@ -65,7 +65,7 @@ subroutine gwf2dxc1ar(in,igrid)
                    ', 29 june 2011 INPUT READ FROM UNIT',in
 
 ! allocate scalars
- allocate(mxdxc,ndxc,schemIDdxc)
+ allocate(mxdxc,ndxc,idxccb)
 
 ! read maximum number of data exchange elements and the Schematisation ID
  read(in,'(a)') line
@@ -73,12 +73,7 @@ subroutine gwf2dxc1ar(in,igrid)
  ! get maximum number of data exchange elements
  call urword(line,lloc,istart,istop,2,mxdxc,r,iout,in)
  ! get schematisation id
- call urword(line,lloc,istart,istop,1,i,r,iout,in)
- schemIDdxc=line(istart:istop)
- i=istop-istart+1
- write(iout,'(a,i12)') ' Maximum number of data exchange elements: ',mxdxc
- write(iout,'(a,a)'  ) ' Schematisation identification used      : ',schemIDdxc(1:i)
-
+ call urword(line,lloc,istart,istop,2,idxccb,r,iout,in)
 
 ! allocate arrays
  allocate(dxcid(mxdxc),dxcic(mxdxc),dxcir(mxdxc),dxcil(mxdxc))
@@ -350,7 +345,6 @@ subroutine gwf2dxc1bd(KSTP,KPER,igrid)
 
 ! local variables
  integer   i,icol,irow,ilay
- integer   :: IdxcCB=0           !!!!!!!!!!!!!!!!!!!!!!! nog aanpassen !!!!!!!!!!!!!!!!!!!!!1
  real      rin,rout,q,zero
 
  integer   ibd,ibdlbl
@@ -451,6 +445,7 @@ subroutine sgwf2dxc1psv(igrid)
 ! ------------------------------------------------------------------------------
 
  gwfdxcdat(igrid)%mxdxc     => mxdxc
+ gwfdxcdat(igrid)%idxccb    => idxccb
  gwfdxcdat(igrid)%ndxc      => ndxc
  gwfdxcdat(igrid)%dxcid     => dxcid
  gwfdxcdat(igrid)%dxcic     => dxcic
@@ -459,7 +454,6 @@ subroutine sgwf2dxc1psv(igrid)
  gwfdxcdat(igrid)%dxchead   => dxchead
  gwfdxcdat(igrid)%dxcuzflux => dxcuzflux
  gwfdxcdat(igrid)%dxcsf     => dxcsf
- gwfdxcdat(igrid)%schemIDdxc=> schemIDdxc
 
  gwfdxcdat(igrid)%maxlsw    => maxlsw
  gwfdxcdat(igrid)%ndxclsw   => ndxclsw
@@ -502,6 +496,7 @@ subroutine sgwf2dxc1pnt(igrid)
 ! ------------------------------------------------------------------------------
 
  mxdxc     => gwfdxcdat(igrid)%mxdxc
+ idxccb    => gwfdxcdat(igrid)%idxccb
  ndxc      => gwfdxcdat(igrid)%ndxc
  dxcid     => gwfdxcdat(igrid)%dxcid
  dxcic     => gwfdxcdat(igrid)%dxcic
@@ -510,7 +505,6 @@ subroutine sgwf2dxc1pnt(igrid)
  dxchead   => gwfdxcdat(igrid)%dxchead
  dxcuzflux => gwfdxcdat(igrid)%dxcuzflux
  dxcsf     => gwfdxcdat(igrid)%dxcsf
- schemIDdxc=> gwfdxcdat(igrid)%schemIDdxc
 
  maxlsw    => gwfdxcdat(igrid)%maxlsw
  ndxclsw   => gwfdxcdat(igrid)%ndxclsw
@@ -554,6 +548,7 @@ subroutine sgwf2dxc1da(igrid)
 
  call sgwf2dxc1pnt(igrid)
  deallocate(mxdxc)
+ deallocate(idxccb)
  deallocate(ndxc)
  deallocate(dxcid)
  deallocate(dxcic)
@@ -562,7 +557,6 @@ subroutine sgwf2dxc1da(igrid)
  deallocate(dxchead)
  deallocate(dxcuzflux)
  deallocate(dxcsf)
- deallocate(schemIDdxc)
 
  deallocate(maxlsw)
  deallocate(ndxclsw)

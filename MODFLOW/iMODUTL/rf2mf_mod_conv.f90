@@ -48,8 +48,9 @@
       integer, parameter :: ievt = 16
       integer, parameter :: iscr = 17
       integer, parameter :: ipwt = 18
+      integer, parameter :: idxc = 19
 
-      integer, parameter :: npck = ipwt
+      integer, parameter :: npck = idxc
 
       character(len=4), dimension(npck) :: pckftype
       data pckftype/&
@@ -70,7 +71,8 @@
       'chd ',&
       'evt ',&
       'scr ',&
-      'pwt '/
+      'pwt ',&
+      'dxc '/
 
       integer, parameter :: ihead    = 1
       integer, parameter :: ibcfflux = 2
@@ -81,11 +83,13 @@
       integer, parameter :: irchflux = 7
       integer, parameter :: ievtflux = 8
       integer, parameter :: iscrflux = 9
+      integer, parameter, public :: idxcflux = 10
 
-      integer, parameter :: ndat = iscrflux
+      integer, parameter :: ndat = idxcflux
 
       character(len=15), dimension(ndat) :: datftype
       data datftype/&
+      'data(binaryidf)',&
       'data(binaryidf)',&
       'data(binaryidf)',&
       'data(binaryidf)',&
@@ -210,7 +214,7 @@
          type(tPackage), dimension(npck) :: package
          type(tPackage), dimension(ndat) :: data
       end type tNam
-      type(tNam), save :: nam
+      type(tNam), public, save :: nam
 
 !.......................................................................
       type tSp
@@ -533,11 +537,20 @@
       end type tEvt
       type(tEvt), public, save :: evt
 
+!.......................................................................
+      type tDxc
+         character(len=maxlen) :: text = 'DXC Package file'
+         character(len=maxlen)          :: fname = ''
+         integer                        :: cbnlay = 0
+         integer, dimension(:), pointer :: cblay => null()
+      end type tDxc
+      type(tDxc), public, save :: dxc    
+      
       character(len=8), public, save :: starttime
       integer, public, save :: debugflag = 0
 
       public :: AllocNam,AllocDis,AllocBas,AllocBcf,AllocMet,AllocOc, &
-                AllocRiv,AllocDrn,AllocGhb,AllocWel,AllocAni,AllocHfb,AllocRch,AllocEvt,AllocChd,AllocPcg,AllocScr,AllocPwt
+                AllocRiv,AllocDrn,AllocGhb,AllocWel,AllocAni,AllocHfb,AllocRch,AllocEvt,AllocChd,AllocPcg,AllocDxc,AllocScr,AllocPwt
       public :: WriteDis,WriteBas,WriteBcf,WriteMet,WriteOc,WriteRiv,&
                 WriteDrn,WriteGhb,WriteWel,WriteAni,WriteHfb,WriteRch,WriteEvt,WriteChd,WritePcg,WriteNam,WriteScr,WritePwt
 
@@ -1072,6 +1085,26 @@
       return
       end subroutine AllocPcg
 
+     !> Allocate DXC package.
+      subroutine AllocDxc(iact)
+
+      implicit none
+
+!...     arguments
+      integer, intent(in) :: iact
+!.......................................................................
+
+      if (iact == ialloc) then
+         nam%package(idxc)%active = .true.
+         allocate(dxc%cblay(nlay))
+         dxc%cblay = 0         
+      else
+         if (associated(dxc%cblay)) deallocate(dxc%cblay)
+      end if
+
+      return
+      end subroutine AllocDxc
+
       !> Allocate Recharge package.
       subroutine AllocRch(iact)
 
@@ -1164,20 +1197,14 @@
              write(str(1),*) trim(nam%package(ipck)%ftype)
              write(str(2),*) nam%package(ipck)%nunit
              call osd_s_filename(nam%package(ipck)%fnamenoroot)
-             write(str(3),*) "'"//trim(nam%package(ipck)%fnamenoroot)//"'"
+             if(ipck.ne.idxc)then
+                write(str(3),*) "'"//trim(nam%package(ipck)%fnamenoroot)//"'"
+             else
+                write(str(3),*) "'"//trim(dxc%fname)//"'"
+             end if                
              write(lun,'(3(a,1x))')(trim(adjustl(str(i))), i = 1, 3) ! ftype nunit fname
          end if
       end do
-      !... data exchange file
-      if (len_trim(dxcfile).gt.0) then
-          write(str(1),*) 'DXC'
-          write(str(2),*) dxciu
-          outstr = dxcfile
-          call imod_utl_dir_level_up(outstr)
-          call osd_s_filename(outstr)
-          write(str(3),*) "'"//trim(outstr)//"'"
-          write(lun,'(3(a,1x))')(trim(adjustl(str(i))), i = 1, 3) ! ftype nunit fname
-      end if
       write(lun,'(a)') '# data:'
       do idat = 1, ndat
          if (nam%data(idat)%active == .true.) then

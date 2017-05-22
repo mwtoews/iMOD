@@ -895,6 +895,7 @@ if (mpck(pevt).eq.1) call AllocEvt(ialloc)
 if (mpck(pchd).eq.1) call AllocChd(ialloc)
 if (mmod(pscr).eq.1) call AllocScr(ialloc)
 if (mmod(ppwt).eq.1) call AllocPwt(ialloc)
+if (mmod(pcap).eq.1) call AllocDxc(ialloc)
 call AllocPcg(ialloc)
 
 ! set buget output with modsave
@@ -919,6 +920,13 @@ do ikey = 1, size(mmod)
      case (pscr)
          scr%cbnlay = modsave(ikey,0)
          scr%cblay(1:modsave(ikey,0)) = modsave(ikey,1:modsave(ikey,0))
+     case (pcap)
+         do ilay = 1, nlay
+            if (dxc%cblay(ilay).eq.0 .and. modsave(ikey,ilay).gt.0) then
+                dxc%cbnlay = dxc%cbnlay + 1
+                dxc%cblay(ilay) = ilay
+            end if
+         end do
    end select
 end do
 ! set budget output with modsave

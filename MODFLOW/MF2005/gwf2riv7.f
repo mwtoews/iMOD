@@ -501,7 +501,7 @@ C3------CLEAR THE BUFFER.
          lend=rivsubsidx(isub)                                          ! rsubsys
 
          ! create text
-         if (irivsubsys.gt.0) then                                      ! rsubsys
+         if (irivsubsys.gt.0.and.nrivsubsys.gt.1) then                  ! rsubsys
             ! add number of subsystem to text
             write(htxt(14:16),'(i3)') int(rivr(irivsubsys,lbeg))        ! rsubsys
          else                                                           ! rsubsys

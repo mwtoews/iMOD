@@ -32,7 +32,7 @@ USE IMOD_UTL, ONLY : IMOD_UTL_POL1LOCATER
 USE MOD_RF2MF, ONLY : IIDEBUG,IURUN,IACT,RESULTDIR,SIMBOX,SIMCSIZE,PCAP,MDIM,IDFTINY,IARMWP, &
                    ISAVE,CDATE,MMOD,PCAP,PPWT,LINE,NLINES,ISCEN,SIMCSIZE,USEBOX,IFULL
 USE MOD_RF2MF_READ, ONLY: RF2MF_READ_IDF
-USE RF2MF_MODULE, ONLY: NLAY,NROW,NCOL,ROOT
+USE rf2mf_module, ONLY: NLAY,NROW,NCOL,root, dxc, nam, idxcflux
 USE MOD_RF2MF, ONLY: DELR,DELC
 USE IDFMODULE
 USE IMOD_IDF, ONLY: IDFWRITE_WRAPPER
@@ -154,6 +154,7 @@ CONTAINS
 
  write(dxcfile,'(3a)') trim(modwd), trim(root%modelname), '.dxc'
  call imod_utl_s_cap(dxcfile,'l')
+ dxc%fname = dxcfile
 
  NIDF=22 !; IF(IARMWP.EQ.1)NIDF=21
  IF(NLINES.LT.NIDF)CALL IMOD_UTL_PRINTTEXT('MetaSwap needs '//TRIM(IMOD_UTL_ITOS(NIDF))//' files, now reading is '//TRIM(IMOD_UTL_ITOS(NLINES)),2)
@@ -1002,11 +1003,24 @@ END SUBROUTINE
 
  character(len=256) :: str
  character(len=256), dimension(4) :: strarr
- integer :: i, j
+ integer :: i, j, luncb
 
- write(str,*) ndxc
- write(idxc,'(a)') trim(adjustl(str))
- write(idxc,'(a)') trim(adjustl(str))
+ nam%data(idxcflux)%fname  = 'bdgcap'
+ nam%data(idxcflux)%cbnlay = dxc%cbnlay
+ nam%data(idxcflux)%cblay  = dxc%cblay
+
+ if (dxc%cbnlay.gt.0) then
+    nam%data(idxcflux)%active = .true.
+    luncb = nam%data(idxcflux)%nunit
+ else
+    luncb = 0
+ end if
+      
+ write(strarr(1),*) ndxc
+ write(strarr(2),*) luncb
+ write(str,'(2(a,1x))') (trim(adjustl(strarr(j))),j=1,2)
+ write(idxc,'(a)') trim(str)
+ write(idxc,'(a)') trim(adjustl(strarr(1)))
 
  do i = 1, ndxc
     write(strarr(1),*) dxcid(i,1)
