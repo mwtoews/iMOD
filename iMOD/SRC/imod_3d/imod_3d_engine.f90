@@ -4534,10 +4534,29 @@ SOLLOOP: DO I=1,NSOLLIST
  
   !## first interval
   IPROF(1)=ICOMBINE(JPROF,1)
+  IF(IPROF(1).NE.0)THEN
+   IF(SPF(I)%PROF(IPROF(1))%NPOS.LE.0)IPROF(1)=0
+  ENDIF
+  
   !## second interval
   IPROF(2)=ICOMBINE(JPROF,2)
+  IF(IPROF(2).NE.0)THEN
+   IF(SPF(I)%PROF(IPROF(2))%NPOS.LE.0)IPROF(2)=0
+  ENDIF
+  
+  !## use other interface if one of the two is not defined
+  IF(IPROF(1).EQ.0)IPROF(1)=IPROF(2)
+  IF(IPROF(2).EQ.0)IPROF(2)=IPROF(1)
+    
+!  !## no interface defined
+!  IF(IPROF(1)+IPROF(2).EQ.0)CYCLE
+  
   !## colouring in intermediate profile
   IPROF(3)=ICOMBINE(JPROF,3)
+  IF(IPROF(3).NE.0)THEN
+   IF(SPF(I)%PROF(IPROF(3))%NPOS.LE.0)IPROF(3)=0
+  ENDIF
+  
   !## skip this one
   IF(SUM(IPROF).LE.0)CYCLE
 
@@ -4562,13 +4581,11 @@ SOLLOOP: DO I=1,NSOLLIST
   IF(IPROF(2).GT.0)N=N+SPF(I)%PROF(IPROF(2))%NPOS
   IF(IPROF(3).GT.0)N=N+SPF(I)%PROF(IPROF(3))%NPOS
   N=N+SPF(I)%NXY-2
- 
-!  IF(IPROF(3).EQ.0)THEN
-  ALLOCATE(XT(N),ZT(N,3)) !2))
-!  ELSE
-!   N=N+SPF(I)%PROF(IPROF(3))%NPOS
-!   ALLOCATE(XT(N),ZT(N,3))
-!  ENDIF
+
+  !## allocate enough memory to add intermediate places
+  N=N*2
+  
+  ALLOCATE(XT(N),ZT(N,3))
   
   XT=0.0
   ZT=NODATA_Z
@@ -4673,7 +4690,7 @@ SOLLOOP: DO I=1,NSOLLIST
   X(1)=SPF(I)%X(1)
   Y(1)=SPF(I)%Y(1)
   IF(IPROF(1).NE.0)THEN
-   Z(2)=ZT(1,2)
+   Z(2)=ZT(I,1) !ZT(1,2)
   ELSE
    Z(2)=IDFPLOT(IPROF(3))%ZMAX
   ENDIF
@@ -4681,7 +4698,7 @@ SOLLOOP: DO I=1,NSOLLIST
   X(2)=X(1)
   Y(2)=Y(1)
   IF(IPROF(2).NE.0)THEN
-   Z(1)=ZT(1,1)
+   Z(1)=ZT(I,2) !ZT(1,1)
   ELSE
    Z(1)=IDFPLOT(IPROF(3))%ZMIN
   ENDIF

@@ -18,10 +18,10 @@ CONTAINS
  CHARACTER(LEN=256) :: LINE,FNAME
  DOUBLE PRECISION,DIMENSION(:,:),ALLOCATABLE :: X,Y,Z
   
-! LINE='d:\IMOD-MODELS\ALBERTA\ALBERTA\IMOD_DEMO\FAULTS\test_fault_model.asc'
- IF(.NOT.UTL_WSELECTFILE('Load ASC File (*.asc)|*.asc|',&
-                  LOADDIALOG+PROMPTON+DIRCHANGE+APPENDEXT,FNAME,&
-                  'Load ASC File (*.asc)'))RETURN
+ FNAME='d:\IMOD-MODELS\ALBERTA\ALBERTA\IMOD_DEMO\FAULTS\test_fault_model.asc'
+! IF(.NOT.UTL_WSELECTFILE('Load ASC File (*.asc)|*.asc|',&
+!                  LOADDIALOG+PROMPTON+DIRCHANGE+APPENDEXT,FNAME,&
+!                  'Load ASC File (*.asc)'))RETURN
 
  !## process data 
  IU=UTL_GETUNIT(); OPEN(IU,FILE=FNAME,STATUS='OLD'    ,ACTION='READ' )
@@ -38,13 +38,15 @@ CONTAINS
 
  ALLOCATE(X(NP,2),Y(NP,2),Z(NP,2))
  
+ READ(IU,'(A5)',IOSTAT=IOS) LINE
+
  !## start processing the lines
  M=0; DO
-  READ(IU,'(A5)',IOSTAT=IOS) LINE
+!  READ(IU,'(A5)',IOSTAT=IOS) LINE
   IF(IOS.NE.0)EXIT
 
   !## start new fault
-  IF(TRIM(UTL_CAP(LINE,'U')).EQ.'FAULT')THEN
+  IF(TRIM(UTL_CAP(LINE(1:5),'U')).EQ.'FAULT')THEN
    READ(IU,'(A256)') LINE
    J=0; DO
     J=J+1
