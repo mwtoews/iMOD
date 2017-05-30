@@ -196,8 +196,10 @@ do i=1,size(param)
           endif
          endif
       enddo
+
    case default
       call imod_utl_printtext('Something went wrong for PEST, missing parameter '//trim(ptype),2)
+
    end select
    if(param(i)%igroup.gt.0)then
     line=' * '//param(i)%ptype//' adjusted ('//trim(imod_utl_itos(param(i)%nodes))// &
@@ -344,7 +346,7 @@ do i=1,size(param)
          irow=rlist(1,j); icol=rlist(2,j)
          if (int(ils).eq.int(rlist(irivsubsys,j))) buff(icol,irow,1) = real(j)
       end do
-      idat = 4
+      idat = 5 !4
    case('RI','II') ! river/isg infiltration factors
       errmsg = 'Cannot apply PEST scaling factor for river/isg infiltration factor'
       if (.not.present(iopt1)) call imod_utl_printtext(trim(errmsg),2)
@@ -367,7 +369,7 @@ do i=1,size(param)
          irow=rlist(1,j); icol=rlist(2,j)
          if (int(ils).eq.int(rlist(idrnsubsys,j))) buff(icol,irow,1) = real(j)
       end do
-      idat = 4
+      idat = 5 !2 !4
    end select
 end do
 
@@ -414,10 +416,10 @@ do i=1,size(param)
       errmsg = 'Cannot apply PEST scaling factor for horizontal flow barrier'
       if (.not.present(iopt1)) call imod_utl_printtext(trim(errmsg),2)
       ihfbfact = iopt1
-      if (idrnsubsys.ne.1) call imod_utl_printtext(trim(errmsg),2)
-      fct = param(i)%alpha(1); fct = exp(fct)
+      if (ihfbfact.ne.1) call imod_utl_printtext(trim(errmsg),2)
+!      fct = param(i)%alpha(1) !; fct = exp(fct)
       do j = 1, nlist
-         if (int(rlist(1,j)).eq.ils) then
+         if (int(rlist(7,j)).eq.ils) then
             nadj = nadj + 1
             rlist(6,j) = rlist(6,j)*fct
          end if

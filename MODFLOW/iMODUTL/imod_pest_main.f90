@@ -473,7 +473,8 @@ CONTAINS
  !## check number of zones and missing zone (if any)
  DO I=1,SIZE(PARAM)
   !## parameter active and main of group
-  IF(PARAM(I)%IACT.EQ.1.AND.PARAM(I)%IGROUP.GT.0)THEN
+!  IF(PARAM(I)%IACT.EQ.1.AND.PARAM(I)%IGROUP.GT.0)THEN
+  IF(PARAM(I)%IGROUP.GT.0)THEN
    DO IROW=1,NROW; DO ICOL=1,NCOL; DO J=1,SIZE(ZONE) 
     IF(ZONE(J)%ZTYPE.EQ.0)THEN
      !## check whether it's integer value is equal to param(i)%izone, if so use fraction from idf-file
@@ -815,7 +816,7 @@ CONTAINS
  logical,intent(in) :: LSS
  character(len=*),intent(in) :: root
  REAL :: IMPROVEMENT,F
- INTEGER :: I
+ INTEGER :: I,ILOG
 
  IF(.NOT.ALLOCATED(PARAM))STOP
 
@@ -884,8 +885,9 @@ CONTAINS
 
    WRITE(IUPESTRUNFILE,'(/A,I10/)') 'Copy in the runfile, iteration ',PEST_ITER
    DO I=1,SIZE(PARAM)
+    ILOG=0; IF(PARAM(I)%LOG)ILOG=1
     IF(PARAM(I)%LOG)THEN
-     WRITE(IUPESTRUNFILE,'(I1,1X,A,1X,2(I3,1X),5(F10.3,1X),I3,L10)') PARAM(I)%IACT, &  !## iact
+     WRITE(IUPESTRUNFILE,'(I2,1X,A,1X,2(I4,1X),5(F10.3,1X),I4,1X,I2)') PARAM(I)%IACT, &  !## iact
          PARAM(I)%PTYPE, &         !## ptype
          PARAM(I)%ILS, &           !## ilayer/system
          PARAM(I)%IZONE, &         !## zone number
@@ -895,9 +897,9 @@ CONTAINS
          EXP(PARAM(I)%MAX),&       !## maximal value
          PARAM(I)%FADJ,&           !## maximal adjust factor
          ABS(PARAM(I)%IGROUP),&    !## group number
-         PARAM(I)%LOG              !## log transformed
+         ILOG !PARAM(I)%LOG              !## log transformed
     ELSE
-     WRITE(IUPESTRUNFILE,'(I1,1X,A,1X,2(I3,1X),5(F10.3,1X),I3,L10)') PARAM(I)%IACT, &  !## iact
+     WRITE(IUPESTRUNFILE,'(I2,1X,A,1X,2(I4,1X),5(F10.3,1X),I4,1X,I2)') PARAM(I)%IACT, &  !## iact
          PARAM(I)%PTYPE, & !## ptype
          PARAM(I)%ILS, &   !## ilayer/system
          PARAM(I)%IZONE, & !## zone number
@@ -907,7 +909,7 @@ CONTAINS
          PARAM(I)%MAX,&    !## maximal value
          PARAM(I)%FADJ,&   !## maximal adjust factor
          ABS(PARAM(I)%IGROUP),& !## group number
-         PARAM(I)%LOG      !## log transformed
+         ILOG !PARAM(I)%LOG      !## log transformed
     ENDIF 
    ENDDO
 
@@ -1827,7 +1829,7 @@ CONTAINS
   !## find gradient for group
   ELSEIF(PARAM(IP1)%IGROUP.LE.0)THEN
    J=0; DO IP2=1,SIZE(PARAM)
-    IF(PARAM(IP2)%IACT.EQ.1.AND.PARAM(IP2)%IGROUP.GT.0)THEN
+    IF(ABS(PARAM(IP2)%IACT).EQ.1.AND.PARAM(IP2)%IGROUP.GT.0)THEN
      J=J+1
      IF(ABS(PARAM(IP1)%IGROUP).EQ.PARAM(IP1)%IGROUP)THEN
       G=U(J); EXIT
@@ -1894,7 +1896,7 @@ CONTAINS
      CALL IMOD_UTL_PRINTTEXT('Correction factor '//TRIM(IMOD_UTL_RTOS(F,'F',3))// &
        ' of Upgrade Vector caused by Bumping on the Parameter Boundary',-1,IUPESTOUT)
     ELSE
-     CALL IMOD_UTL_PRINTTEXT('Parameter '//TRIM(IMOD_UTL_ITOS(IP1))//' causing a increase of the Marquardt factor',-1,IUPESTOUT)
+     CALL IMOD_UTL_PRINTTEXT('Parameter '//TRIM(IMOD_UTL_ITOS(IP1))//' causing an increase of the Marquardt factor',-1,IUPESTOUT)
      CALL IMOD_UTL_PRINTTEXT('Conflict on the boundary between a Steepest Descent and Gauss-Newton approach',-1,IUPESTOUT)
      !## get another values for the marquardt such that this will not happen
      RETURN
@@ -1914,56 +1916,59 @@ CONTAINS
  PESTUPGRADEVECTOR=.TRUE.
 
  CALL IMOD_UTL_PRINTTEXT('',-1,IUPESTOUT); CALL IMOD_UTL_PRINTTEXT('Upgrade Vector Parameter:',-1,IUPESTOUT)
- WRITE(LINE,'(A5,1X,A2,1X,2A15,A4)') 'NO','PT','NEW.FACTOR','PREV.FACTOR','BND'
+ WRITE(LINE,'(2X,4A15)') 'Parameter','New Factor','Prev.Factor','Boundary'
  CALL IMOD_UTL_PRINTTEXT(TRIM(LINE),-1,IUPESTOUT)
 
  PARAM%IBND=0
  DO IP1=1,SIZE(PARAM)
 
-  IF(PARAM(IP1)%IACT.EQ.1.AND.PARAM(IP1)%IGROUP.GT.0)THEN
+  !## parameter is at the boundary whenever less than 1% away
+  IF(ABS(PARAM(IP1)%ALPHA(1)-PARAM(IP1)%MIN).LT.XPBND)PARAM(IP1)%IBND=-1 !## min
+  IF(ABS(PARAM(IP1)%MAX)-PARAM(IP1)%ALPHA(1).LT.XPBND)PARAM(IP1)%IBND= 1 !## max
 
-   !## parameter is at the boundary whenever less than 1% away
-   IF(ABS(PARAM(IP1)%ALPHA(1)-PARAM(IP1)%MIN).LT.XPBND)PARAM(IP1)%IBND=-1 !## min
-   IF(ABS(PARAM(IP1)%MAX)-PARAM(IP1)%ALPHA(1).LT.XPBND)PARAM(IP1)%IBND= 1 !## max
-
-   IF(PARAM(IP1)%LOG)THEN
-    WRITE(LINE,'(I5,1X,A2,1X,2F15.7,I4)') IP1,PARAM(IP1)%PTYPE,EXP(PARAM(IP1)%ALPHA(1)),EXP(PARAM(IP1)%ALPHA(2)),PARAM(IP1)%IBND
-    PARAM(IP1)%ALPHA_HISTORY(PEST_ITER)=EXP(PARAM(IP1)%ALPHA(1))
-   ELSE
-    WRITE(LINE,'(I5,1X,A2,1X,2F15.7,I4)') IP1,PARAM(IP1)%PTYPE,    PARAM(IP1)%ALPHA(1),     PARAM(IP1)%ALPHA(2), PARAM(IP1)%IBND
-    PARAM(IP1)%ALPHA_HISTORY(PEST_ITER)=PARAM(IP1)%ALPHA(1)
-   ENDIF
-   CALL IMOD_UTL_PRINTTEXT(TRIM(LINE),-1,IUPESTOUT)
-  
+  IF(PARAM(IP1)%LOG)THEN
+   WRITE(LINE,'(2F15.7,I15)') EXP(PARAM(IP1)%ALPHA(1)),EXP(PARAM(IP1)%ALPHA(2)),PARAM(IP1)%IBND
+   PARAM(IP1)%ALPHA_HISTORY(PEST_ITER)=EXP(PARAM(IP1)%ALPHA(1))
+  ELSE
+   WRITE(LINE,'(2F15.7,I15)') PARAM(IP1)%ALPHA(1),     PARAM(IP1)%ALPHA(2), PARAM(IP1)%IBND
+   PARAM(IP1)%ALPHA_HISTORY(PEST_ITER)=PARAM(IP1)%ALPHA(1)
   ENDIF
+
+  IF(ABS(PARAM(IP1)%IACT).EQ.1.AND.PARAM(IP1)%IGROUP.GT.0)THEN
+   WRITE(IUPESTOUT,'(3X,A2,2I4.4,A1,I3.3,A)') PARAM(IP1)%PTYPE,PARAM(IP1)%ILS,PARAM(IP1)%IZONE,'-',ABS(PARAM(IP1)%IGROUP),TRIM(LINE)
+  ENDIF
+   
  ENDDO
 
  CALL IMOD_UTL_PRINTTEXT('',-1,IUPESTOUT); CALL IMOD_UTL_PRINTTEXT('Upgrade Vector Parameter History:',-1,IUPESTOUT)
- WRITE(BLINE,'(A5,1X,A2,1X,99(A7,I3.3))') 'NO','PT',('   ITER',I,I=PEST_ITER,0,-1)
+ WRITE(BLINE,'(A17,99(A7,I3.3))') 'Parameter',('   ITER',I,I=PEST_ITER,0,-1)
  CALL IMOD_UTL_PRINTTEXT(TRIM(BLINE),-1,IUPESTOUT)
  ALLOCATE(GRADUPDATE(PEST_ITER)); GRADUPDATE=0.0
  N=0
  DO IP1=1,SIZE(PARAM)
 
-  IF(PARAM(IP1)%IACT.EQ.1.AND.PARAM(IP1)%IGROUP.GT.0)THEN
-
-   WRITE(BLINE,'(I5,1X,A2,1X,99(F10.3))') IP1,PARAM(IP1)%PTYPE,(PARAM(IP1)%ALPHA_HISTORY(I),I=PEST_ITER,0,-1)
-   CALL IMOD_UTL_PRINTTEXT(TRIM(BLINE),-1,IUPESTOUT)
-   IF(PARAM(IP1)%IGROUP.NE.0)THEN
-    N=N+1
-    DO I=1,PEST_ITER
-     GRADUPDATE(I)=GRADUPDATE(I)+(PARAM(IP1)%ALPHA_HISTORY(I)-PARAM(IP1)%ALPHA_HISTORY(I-1))**2.0
-    ENDDO
-   ENDIF
+  WRITE(BLINE,'(99(F10.3))') (PARAM(IP1)%ALPHA_HISTORY(I),I=PEST_ITER,0,-1)
   
+  IF(ABS(PARAM(IP1)%IACT).EQ.1.AND.PARAM(IP1)%IGROUP.GT.0)THEN
+   WRITE(IUPESTOUT,'(3X,A2,2I4.4,A1,I3.3,A)') PARAM(IP1)%PTYPE,PARAM(IP1)%ILS,PARAM(IP1)%IZONE,'-',ABS(PARAM(IP1)%IGROUP),TRIM(BLINE)
   ENDIF
+  
+  IF(PARAM(IP1)%IGROUP.NE.0)THEN
+   N=N+1
+   DO I=1,PEST_ITER
+    GRADUPDATE(I)=GRADUPDATE(I)+(PARAM(IP1)%ALPHA_HISTORY(I)-PARAM(IP1)%ALPHA_HISTORY(I-1))**2.0
+   ENDDO
+  ENDIF
+
  ENDDO
+ 
  GRADUPDATE=SQRT(GRADUPDATE)
- WRITE(BLINE,'(9X,99F10.3)') (GRADUPDATE(I),I=PEST_ITER,1,-1)
+ WRITE(BLINE,'(17X,99F10.3)') (GRADUPDATE(I),I=PEST_ITER,1,-1)
  CALL IMOD_UTL_PRINTTEXT(TRIM(BLINE),-1,IUPESTOUT)
 
  IF(GRADUPDATE(PEST_ITER).LT.PEST_PADJ)THEN
-  CALL IMOD_UTL_PRINTTEXT('Proces stopped, less than '//TRIM(IMOD_UTL_RTOS(PEST_PADJ,'F',3))//' of vector length',2)
+  CALL IMOD_UTL_PRINTTEXT('Proces stopped, less than '//TRIM(IMOD_UTL_RTOS(PEST_PADJ,'F',3))//' of vector length',-1)
+  STOP
  ENDIF
 
  DEALLOCATE(GRADUPDATE)
@@ -2242,7 +2247,8 @@ CONTAINS
          ' (n='//TRIM(IMOD_UTL_ITOS(PEST_NOBS))//')',-1)
 
  RFIT=PEST_GOODNESS_OF_FIT(GF_H,GF_O,PEST_NOBS)
- CALL IMOD_UTL_PRINTTEXT('Goodness of Fit : '//TRIM(IMOD_UTL_RTOS(RFIT,'E',7))//' (n='//TRIM(IMOD_UTL_ITOS(PEST_NOBS))//')',-1)
+ CALL IMOD_UTL_PRINTTEXT('Goodness of Fit (sample correlation coefficient): '// &
+     TRIM(IMOD_UTL_RTOS(RFIT,'E',7))//' (n='//TRIM(IMOD_UTL_ITOS(PEST_NOBS))//')',-1)
  CALL IMOD_UTL_PRINTTEXT('>> Provides a measure of the extent to which variability of field measurements is explained',-1)
  CALL IMOD_UTL_PRINTTEXT('   by the calibrated model compared to that which can be constructed as purely random. <<',-1)
 
@@ -2276,6 +2282,8 @@ CONTAINS
  REAL :: XN,YN,X1,X2,X3
  INTEGER :: I
  
+ PEST_GOODNESS_OF_FIT=0.0
+ 
  XN=SUM(X)/REAL(N)
  YN=SUM(Y)/REAL(N)
  
@@ -2286,7 +2294,7 @@ CONTAINS
   X3=X3+(Y(I)-YN)**2.0
  ENDDO
 
- IF(X2.NE.0.0.AND.X3.NE.0.0)PEST_GOODNESS_OF_FIT=X1/(SQRT(X2)*SQRT(X3))
+ IF(X2.NE.0.0.AND.X3.NE.0.0)PEST_GOODNESS_OF_FIT=X1/SQRT(X2*X3)
   
  END FUNCTION PEST_GOODNESS_OF_FIT
  
