@@ -469,7 +469,7 @@ C3------CLEAR THE BUFFER.
          lend=drnsubsidx(isub)                                          ! dsubsys
 
          ! create text
-         if (idrnsubsys.gt.0.and.ndrnsubsys.gt.1) then                  ! dsubsys
+         if (idrnsubsys.gt.0) then                                      ! dsubsys
             ! add number of subsystem to text
             write(htxt(15:16),'(i2)') int(drai(idrnsubsys,lbeg))        ! dsubsys
          else                                                           ! dsubsys

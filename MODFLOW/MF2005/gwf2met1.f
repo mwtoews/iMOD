@@ -996,6 +996,8 @@ c modules
 
       USE GLOBAL,ONLY : ISSFLG
       use m_mf2005_main, only : kper
+      use gwfrivmodule, only: nrivsubsys
+      use gwfdrnmodule, only: ndrnsubsys
 
       implicit none
 
@@ -1180,11 +1182,12 @@ c check for subsystem
          if(ldrn) drnflg = .true.
         end if
        end if
-       if (isub.lt.10) then
-        fmt = '(2a,i1)'
-       else
-        fmt = '(2a,i2)'
-       end if
+       if(lriv.and.nrivsubsys.eq.1)then
+        isub = 0
+       end if   
+       if(ldrn.and.ndrnsubsys.eq.1)then
+        isub = 0
+       end if      
        ! for isg, riv --> isg
        if (isgflg) then
         i = index(prefix,'riv')
@@ -1202,7 +1205,14 @@ c assemble root
      1             '\'//prefix(1:cfn_length(prefix)) //'\'
         call osd_s_filename(root)
        end if
-       write(prefix,fmt) prefix(1:cfn_length(prefix)),'_sys', isub
+       if(isub.gt.0)then
+        if (isub.lt.10) then
+         fmt = '(2a,i1)'
+        else
+         fmt = '(2a,i2)'
+        end if
+        write(prefix,fmt) prefix(1:cfn_length(prefix)),'_sys', isub
+       end if
       end if
 
 c create output file name
