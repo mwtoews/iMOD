@@ -154,7 +154,6 @@ CONTAINS
 
  write(dxcfile,'(3a)') trim(modwd), trim(root%modelname), '.dxc'
  call imod_utl_s_cap(dxcfile,'l')
- dxc%fname = dxcfile
 
  NIDF=22 !; IF(IARMWP.EQ.1)NIDF=21
  IF(NLINES.LT.NIDF)CALL IMOD_UTL_PRINTTEXT('MetaSwap needs '//TRIM(IMOD_UTL_ITOS(NIDF))//' files, now reading is '//TRIM(IMOD_UTL_ITOS(NLINES)),2)

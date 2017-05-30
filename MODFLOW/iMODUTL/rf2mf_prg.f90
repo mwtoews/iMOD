@@ -173,7 +173,7 @@ IF(IACT.NE.0)THEN
  !## read empty string - header ACTIVE MODULES
  READ(IURUN,*)
  !## read active packages and save-settings
- CALL RF2MF_DATASET7()
+ CALL RF2MF_DATASET7(DXCFILE)
  !## check run-file if necessary
  CALL RF2MF_CHECKRUN()
  !## determine size of SIMBOX and adjust ncol/nrow
@@ -224,6 +224,7 @@ if (mpck(pevt).eq.1) call AllocEvt(idealloc)
 if (mpck(pchd).eq.1) call AllocChd(idealloc)
 if (mmod(pscr).eq.1) call AllocScr(idealloc)
 if (mmod(ppwt).eq.1) call AllocPwt(idealloc)
+if (mmod(pcap).eq.1.or.len_trim(dxcfile).gt.0) call AllocDxc(idealloc)
 call AllocPcg(idealloc)
 
 !## close all units
@@ -302,6 +303,7 @@ DO
  ENDIF
 ENDDO
 RFMOD=ABS(RFMOD)
+dxc%fname = dxcfile
 
 !#read empty string from runfile
 READ(IURUN,*)
@@ -838,9 +840,10 @@ WRITE(IUOUT,'(A)') '  '//TRIM(SCENFNAME)
 END SUBROUTINE RF2MF_DATASET6
 
 !#####=================================================================
-SUBROUTINE RF2MF_DATASET7()
+SUBROUTINE RF2MF_DATASET7(DXCFILE)
 !#####=================================================================
 IMPLICIT NONE
+CHARACTER(LEN=*), INTENT(INOUT) :: DXCFILE
 INTEGER :: I,J,IKEY,ilay,IOS
 CHARACTER(LEN=1000) :: BIGLINE
 
@@ -895,7 +898,7 @@ if (mpck(pevt).eq.1) call AllocEvt(ialloc)
 if (mpck(pchd).eq.1) call AllocChd(ialloc)
 if (mmod(pscr).eq.1) call AllocScr(ialloc)
 if (mmod(ppwt).eq.1) call AllocPwt(ialloc)
-if (mmod(pcap).eq.1) call AllocDxc(ialloc)
+if (mmod(pcap).eq.1.or.len_trim(dxcfile).gt.0) call AllocDxc(ialloc)
 call AllocPcg(ialloc)
 
 ! set buget output with modsave
