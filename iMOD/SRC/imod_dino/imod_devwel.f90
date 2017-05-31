@@ -18,10 +18,10 @@ CONTAINS
  CHARACTER(LEN=256) :: LINE,FNAME
  DOUBLE PRECISION,DIMENSION(:,:),ALLOCATABLE :: X,Y,Z
   
- FNAME='d:\IMOD-MODELS\ALBERTA\ALBERTA\IMOD_DEMO\FAULTS\test_fault_model.asc'
-! IF(.NOT.UTL_WSELECTFILE('Load ASC File (*.asc)|*.asc|',&
-!                  LOADDIALOG+PROMPTON+DIRCHANGE+APPENDEXT,FNAME,&
-!                  'Load ASC File (*.asc)'))RETURN
+! FNAME='d:\IMOD-MODELS\ALBERTA\ALBERTA\IMOD_DEMO\FAULTS\test_fault_model.asc'
+ IF(.NOT.UTL_WSELECTFILE('Load ASC File (*.asc)|*.asc|',&
+                  LOADDIALOG+PROMPTON+DIRCHANGE+APPENDEXT,FNAME,&
+                  'Load ASC File (*.asc)'))RETURN
 
  !## process data 
  IU=UTL_GETUNIT(); OPEN(IU,FILE=FNAME,STATUS='OLD'    ,ACTION='READ' )

@@ -1622,9 +1622,14 @@ CONTAINS
      
      !## resample colours
      CALL LEG_SAMPLE_STRETCHED_GETIPOS(IPLOT)
-
+     
+     !## resort big to small
+     CALL WSORT(IDFVAL,1,NUNIQUE,IFLAGS=SORTDESCEND)
+     
      MP(IPLOT)%LEG%NCLR=MIN(MXCLASS,NUNIQUE)
+     j=0
      DO I=0,NUNIQUE
+      j=j+1
       IF(I.LT.NUNIQUE)THEN
        MP(IPLOT)%LEG%CLASS(I)=IDFVAL(I+1)
        IF(LTOOMUCH)THEN

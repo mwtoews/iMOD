@@ -3676,7 +3676,8 @@ TOPICLOOP: DO ITOPIC=1,MAXTOPICS
     KPER=ABS(KPER)
     IF(.NOT.PMANAGER_SAVEMF2005_LAK_READ(IPER,IPRT,KPER))RETURN
    ENDIF
-   IF(.NOT.PMANAGER_SAVEMF2005_LAK_SAVE(IULAK,IINI,IBATCH,DIR,KPER=KPER,DIRMNAME=DIRMNAME))RETURN
+   IF(.NOT.PMANAGER_SAVEMF2005_LAK_SAVE(IULAK,IINI,IBATCH,DIR,KPER=IPER,DIRMNAME=DIRMNAME))RETURN
+!   IF(.NOT.PMANAGER_SAVEMF2005_LAK_SAVE(IULAK,IINI,IBATCH,DIR,KPER=KPER,DIRMNAME=DIRMNAME))RETURN
    !## store previous stress-period information for this timestep
    LPER=ABS(KPER)
   ENDDO
@@ -7873,7 +7874,7 @@ TOPICLOOP: DO ITOPIC=1,MAXTOPICS
  !###======================================================================
  IMPLICIT NONE
  INTEGER :: IROW,ICOL,ILAY,I,JROW,JCOL
- REAL :: C,ZT,ZB,D1,D2,A,X1,X2,Y1,Y2,DX,DY,L,TIB,F,KD1,KD2
+ REAL :: C,ZT,ZB,D1,D2,A,X1,X2,Y1,Y2,DX,DY,L,TIB,F,KD1,KD2,OT1,OT2
  INTEGER,DIMENSION(4) :: IR,IC
  DATA IR/-1, 0,0,1/
  DATA IC/ 0,-1,1,0/
@@ -7952,23 +7953,29 @@ TOPICLOOP: DO ITOPIC=1,MAXTOPICS
      IF(BOT(ILAY)%X(ICOL,IROW).LT.LAK(2)%X(ICOL,IROW))THEN
       C=(LAK(2)%X(ICOL,IROW)-BOT(ILAY)%X(ICOL,IROW))/(KHV(ILAY)%X(ICOL,IROW)/KVA(ILAY)%X(ICOL,IROW))
      ENDIF
+
+     OT1=BOT(ILAY  )%X(ICOL,IROW)-TOP(ILAY+1)%X(ICOL,IROW)
+     OT2=TOP(ILAY+1)%X(ICOL,IROW)-BOT(ILAY+1)%X(ICOL,IROW)
+
      !## adjust bot as the LAK package uses this to create the table input
      BOT(ILAY)%X(ICOL,IROW)=LAK(2)%X(ICOL,IROW)
+
      !## make sure thickness of interbed remains the same
      IF(TIB.EQ.0.0)THEN
-      TOP(ILAY)%X(ICOL,IROW)=BOT(ILAY)%X(ICOL,IROW)
+
+      TOP(ILAY+1)%X(ICOL,IROW)=BOT(ILAY)%X(ICOL,IROW)
 
       !## increase permeability in ratio in case no interbed and interface is shifted upwards
       IF(ILAY.LT.NLAY)THEN
-       KD1=KHV(ILAY  )%X(ICOL,IROW)*(TOP(ILAY  )%X(ICOL,IROW)-BOT(ILAY  )%X(ICOL,IROW))
-       KD2=KHV(ILAY+1)%X(ICOL,IROW)*(TOP(ILAY+1)%X(ICOL,IROW)-BOT(ILAY+1)%X(ICOL,IROW))
-       KD1=KD1+KD2; F=KD1/KD2
-       KHV(ILAY+1)%X(ICOL,IROW)=KHV(ILAY+1)%X(ICOL,IROW)*F
+       KD1=KHV(ILAY  )%X(ICOL,IROW)*OT1 !(TOP(ILAY  )%X(ICOL,IROW)-BOT(ILAY  )%X(ICOL,IROW))
+       KD2=KHV(ILAY+1)%X(ICOL,IROW)*OT2 !(TOP(ILAY+1)%X(ICOL,IROW)-BOT(ILAY+1)%X(ICOL,IROW))
+       KD1=KD1+KD2; KD2=KD1/OT2 !F=KD1/KD2
+       KHV(ILAY+1)%X(ICOL,IROW)=KHV(ILAY+1)%X(ICOL,IROW)*KD2 !F
       ENDIF
 
      ELSE
       !## top remains the same but thickness can be enlarged of the interbed, correct with permeability
-      F=TIB/(TOP(ILAY)%X(ICOL,IROW)-BOT(ILAY)%X(ICOL,IROW))
+      F=(BOT(ILAY)%X(ICOL,IROW)-TOP(ILAY+1)%X(ICOL,IROW))/TIB
       KVV(ILAY)%X(ICOL,IROW)=KVV(ILAY)%X(ICOL,IROW)*F
      ENDIF
     ELSE
@@ -7986,14 +7993,14 @@ TOPICLOOP: DO ITOPIC=1,MAXTOPICS
  DO ILAY=1,NLAY; DO IROW=1,IDF%NROW; DO ICOL=1,IDF%NCOL
   !## found lake cell
   IF(LBD(ILAY)%X(ICOL,IROW).NE.0)THEN
-   !## thickness of current modellayer
-   D1=TOP(ILAY)%X(ICOL,IROW)-BOT(ILAY)%X(ICOL,IROW)
-   !## depth of lake at that location
-   D2=MAX(TOP(ILAY)%X(ICOL,IROW),LAK(2)%X(ICOL,IROW))- &
-      MAX(BOT(ILAY)%X(ICOL,IROW),LAK(2)%X(ICOL,IROW))
+!   !## thickness of current modellayer
+!   D1=TOP(ILAY)%X(ICOL,IROW)-BOT(ILAY)%X(ICOL,IROW)
+!   !## depth of lake at that location
+!   D2=MAX(TOP(ILAY)%X(ICOL,IROW),LAK(2)%X(ICOL,IROW))- &
+!      MAX(BOT(ILAY)%X(ICOL,IROW),LAK(2)%X(ICOL,IROW))
 
-   CALL IDFGETEDGE(IDF,IROW,ICOL,X1,Y1,X2,Y2)
-   DX=X2-X1; DY=Y2-Y1
+!   CALL IDFGETEDGE(IDF,IROW,ICOL,X1,Y1,X2,Y2)
+!   DX=X2-X1; DY=Y2-Y1
 
    !## compute lateral leakances
    DO I=1,SIZE(IC)
@@ -8006,10 +8013,14 @@ TOPICLOOP: DO ITOPIC=1,MAXTOPICS
      CALL IDFGETEDGE(IDF,JROW,JCOL,X1,Y1,X2,Y2)
      IF(JROW.EQ.IROW)THEN; A=DY; L=X2-X1 ; ENDIF
      IF(JCOL.EQ.ICOL)THEN; A=DX; L=Y2-Y1 ; ENDIF
-     !## increase resistance for depth of lake
-     F=D1/D2
-     
-     LCD(ILAY)%X(JCOL,JROW)=1.0/(F*LAK(6)%X(ICOL,IROW))
+!     !## resistance along lake
+     C=L/KHV(ILAY)%X(ICOL,IROW)
+
+!     IF(ILAY.GT.1)THEN
+!WRITE(*,*)
+!     ENDIF
+
+     LCD(ILAY)%X(JCOL,JROW)=1.0/(C+LAK(6)%X(ICOL,IROW))
 
     ENDIF
    ENDDO

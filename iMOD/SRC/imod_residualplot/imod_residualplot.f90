@@ -158,43 +158,44 @@ CONTAINS
  IU=UTL_GETUNIT(); CALL OSD_OPEN(IU,FILE=TRIM(INPUTFILE),ACTION='READ',FORM='FORMATTED',STATUS='OLD')
  IF(IU.EQ.0)STOP
  
- !## three loops, first to get number of ipf files, second to get number of points per ipf, third to read all in memory
- NIPF=0
- DO 
-  READ(IU,'(A256)',IOSTAT=IOS) LINE; IF(IOS.NE.0)EXIT
-  !## found ipf
-  IF(INDEX(UTL_CAP(LINE,'U'),'.IPF').GT.0)THEN
-   NIPF=NIPF+1
-  ELSE
-   EXIT
-  ENDIF
- ENDDO
- 
- ALLOCATE(IPFR(NIPF)); REWIND(IU)
- 
  DO I=1,2
-  
+
+  !## three loops, first to get number of ipf files, second to get number of points per ipf, third to read all in memory
+  NIPF=0
+  DO 
+   READ(IU,'(A256)',IOSTAT=IOS) LINE; IF(IOS.NE.0)EXIT
+   !## found ipf
+   IF(INDEX(UTL_CAP(LINE,'U'),'.IPF').GT.0)THEN
+    NIPF=NIPF+1
+   ELSE
+    EXIT
+   ENDIF
+  ENDDO
+ 
+  IF(I.EQ.1)ALLOCATE(IPFR(NIPF)) !; REWIND(IU)
+
   IPFR%NPOINTS=0
-  DO J=1,SIZE(IPFR)+1; READ(IU,*); ENDDO
+!  DO J=1,SIZE(IPFR)+1; READ(IU,*); ENDDO
   
   DO 
    READ(IU,'(A256)',IOSTAT=IOS) LINE; IF(IOS.NE.0)EXIT
-   IF(ITRANSIENT.EQ.1)THEN
-    READ(LINE,'(160X,I10)') NIPF
-   ELSE
-    READ(LINE,'(160X,I10)') NIPF
-   ENDIF
+   READ(LINE,'(171X,I10)') NIPF
    IPFR(NIPF)%NPOINTS=IPFR(NIPF)%NPOINTS+1
    IF(I.EQ.2)THEN
     N=IPFR(NIPF)%NPOINTS
     IF(ITRANSIENT.EQ.1)THEN
-     READ(LINE,'(2F15.7,I10,3F15.7)') IPFR(NIPF)%X(N),IPFR(NIPF)%Y(N), &
+
+!     IF(IUPESTRESIDUAL.GT.0)WRITE(IUPESTRESIDUAL,'(2(F15.7,1X),I10,1X,8(F15.7,1X),I10,1X,A32)') &
+!        X,Y,ILAY,MSR%W(II),MM,MC,MM-MC,DYN(1),DYN(2),DYN(2)-DYN(1),XCOR,I,MSR%CLABEL(II)
+
+    READ(LINE,'(2(F15.7,1X),I10,1X,3(F15.7,1X))') IPFR(NIPF)%X(N),IPFR(NIPF)%Y(N), &
                                       IPFR(NIPF)%L(N),IPFR(NIPF)%W(N),IPFR(NIPF)%O(N),IPFR(NIPF)%M(N)
     ELSE
-     READ(LINE,'(2F15.7,I10,6F15.7)') IPFR(NIPF)%X(N),IPFR(NIPF)%Y(N), &
+     READ(LINE,'(2(F15.7,1X),I10,1X,6(F15.7,1X))') IPFR(NIPF)%X(N),IPFR(NIPF)%Y(N), &
                                       IPFR(NIPF)%L(N),IPFR(NIPF)%O(N),IPFR(NIPF)%M(N), &
                                       J,WMDL,WRES,IPFR(NIPF)%W(N)
     ENDIF
+
    ENDIF
   ENDDO
   
@@ -207,6 +208,7 @@ CONTAINS
   ENDIF
 
   REWIND(IU)
+ 
  ENDDO
  CLOSE(IU)
 
