@@ -7955,7 +7955,7 @@ TOPICLOOP: DO ITOPIC=1,MAXTOPICS
      ENDIF
 
      OT1=BOT(ILAY  )%X(ICOL,IROW)-TOP(ILAY+1)%X(ICOL,IROW)
-     OT2=TOP(ILAY+1)%X(ICOL,IROW)-BOT(ILAY+1)%X(ICOL,IROW)
+     OT2=0.0; IF(ILAY.LT.NLAY)OT2=TOP(ILAY+1)%X(ICOL,IROW)-BOT(ILAY+1)%X(ICOL,IROW)
 
      !## adjust bot as the LAK package uses this to create the table input
      BOT(ILAY)%X(ICOL,IROW)=LAK(2)%X(ICOL,IROW)
@@ -7982,8 +7982,8 @@ TOPICLOOP: DO ITOPIC=1,MAXTOPICS
      C=0.0
     ENDIF
     
-    !## total lake leakance for vertical conductances
-    LCD(ILAY)%X(ICOL,IROW)=1.0/(C+LAK(6)%X(ICOL,IROW))
+    !## lake leakance for vertical conductances - excl. the effect of vertical shift, this is taken care of by MF2005
+    LCD(ILAY)%X(ICOL,IROW)=1.0/LAK(6)%X(ICOL,IROW) !(C+LAK(6)%X(ICOL,IROW))
 
    ENDIF
   ENDDO
@@ -7993,14 +7993,6 @@ TOPICLOOP: DO ITOPIC=1,MAXTOPICS
  DO ILAY=1,NLAY; DO IROW=1,IDF%NROW; DO ICOL=1,IDF%NCOL
   !## found lake cell
   IF(LBD(ILAY)%X(ICOL,IROW).NE.0)THEN
-!   !## thickness of current modellayer
-!   D1=TOP(ILAY)%X(ICOL,IROW)-BOT(ILAY)%X(ICOL,IROW)
-!   !## depth of lake at that location
-!   D2=MAX(TOP(ILAY)%X(ICOL,IROW),LAK(2)%X(ICOL,IROW))- &
-!      MAX(BOT(ILAY)%X(ICOL,IROW),LAK(2)%X(ICOL,IROW))
-
-!   CALL IDFGETEDGE(IDF,IROW,ICOL,X1,Y1,X2,Y2)
-!   DX=X2-X1; DY=Y2-Y1
 
    !## compute lateral leakances
    DO I=1,SIZE(IC)
@@ -8013,14 +8005,12 @@ TOPICLOOP: DO ITOPIC=1,MAXTOPICS
      CALL IDFGETEDGE(IDF,JROW,JCOL,X1,Y1,X2,Y2)
      IF(JROW.EQ.IROW)THEN; A=DY; L=X2-X1 ; ENDIF
      IF(JCOL.EQ.ICOL)THEN; A=DX; L=Y2-Y1 ; ENDIF
-!     !## resistance along lake
+     !## resistance along lake
      C=L/KHV(ILAY)%X(ICOL,IROW)
 
-!     IF(ILAY.GT.1)THEN
-!WRITE(*,*)
-!     ENDIF
-
-     LCD(ILAY)%X(JCOL,JROW)=1.0/(C+LAK(6)%X(ICOL,IROW))
+!     LCD(ILAY)%X(JCOL,JROW)=1.0/(C+LAK(6)%X(ICOL,IROW))
+     !## lake leakance for vertical conductances - excl. the effect of vertical shift, this is taken care of by MF2005
+     LCD(ILAY)%X(JCOL,JROW)=1.0/LAK(6)%X(ICOL,IROW)
 
     ENDIF
    ENDDO
