@@ -194,6 +194,35 @@ CONTAINS
  END SUBROUTINE POL1LOCATE
 
  !###==================================================================
+ SUBROUTINE POL1LOCATEINT(XX,N,X,J)
+ !###==================================================================
+ IMPLICIT NONE
+ INTEGER,INTENT(OUT) :: J
+ INTEGER,INTENT(IN) :: N
+ INTEGER,INTENT(IN) :: X
+ INTEGER,INTENT(IN),DIMENSION(N) :: XX
+ INTEGER :: JL,JM,JU
+
+ JL=0
+ JU=N+1
+ DO
+  IF(JU-JL.GT.1)THEN
+   JM=(JU+JL)/2
+   IF((XX(N).GT.XX(1)).EQV.(X.GT.XX(JM)))THEN
+    JL=JM
+   ELSE
+    JU=JM
+   ENDIF
+  ELSE
+   EXIT
+  ENDIF
+ ENDDO
+
+ J=JL
+
+ END SUBROUTINE POL1LOCATEINT
+
+ !###==================================================================
  SUBROUTINE SPLINE_MAIN(XB,YB,N,XI,ZI,M)
  !###==================================================================
  ! SPLINE INTERPOLATION
