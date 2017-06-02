@@ -222,7 +222,6 @@ CONTAINS
  IMPLICIT NONE
  INTEGER,INTENT(IN) :: ITYPE
  TYPE(WIN_MESSAGE),INTENT(IN) :: MESSAGE
- INTEGER :: I,J,K
  
  CALL WDIALOGSELECT(MESSAGE%WIN)
  
@@ -251,7 +250,7 @@ CONTAINS
  CHARACTER(LEN=512) :: LINE
  CHARACTER(LEN=256) :: CSVFNAME
  CHARACTER(LEN=52) :: TXT
- INTEGER :: I,J,K,II,IU,IOS,SKIPLINES,CFN_N_ELEM,ICOL,IROW,IBAL
+ INTEGER :: I,J,K,II,IU,IOS,SKIPLINES,CFN_N_ELEM,IBAL
  INTEGER :: NV,NL
  
  WBAL_ANALYSE_READCSV=.TRUE.
@@ -422,7 +421,6 @@ CONTAINS
  IMPLICIT NONE
  CHARACTER(LEN=*),INTENT(IN) :: FLUXTERM
  CHARACTER(LEN=52) :: FTERM
- INTEGER :: I
   
  WBAL_ANALYSE_GETQCATEGORY=0
   
@@ -519,7 +517,6 @@ CONTAINS
  IMPLICIT NONE
  INTEGER,INTENT(IN) :: ID
  INTEGER :: IOPT
- CHARACTER(LEN=256) :: CSVFNAME
  
  !## get the appropriate selection
  IF(.NOT.WBAL_ANAYSE_PREPARE())RETURN
@@ -564,7 +561,10 @@ CONTAINS
  LOGICAL FUNCTION WBAL_ANAYSE_PREPARE() 
  !###======================================================================
  IMPLICIT NONE
- INTEGER :: I,J,K,IL,IZ,ID,IG,IQIN,IQOU,JQIN,JQOU,IQ,JQ,IOS,IDATE,ITTYPE
+ INTEGER :: I,J,K,IL,IZ,ID,IG,IQIN,IQOU,JQIN,JQOU,IQ,JQ,IOS,IDATE,ITTYPE,IHIT, &
+     IAG,NXG,IY1,IM1,ID1,IY2,IM2,ID2,IPOS,SDATE
+ REAL,POINTER,DIMENSION(:) :: DT
+! REAL,POINTER,DIMENSION(:) :: DT
  REAL :: QIN,QOU
   
  WBAL_ANAYSE_PREPARE=.FALSE.
@@ -580,6 +580,8 @@ CONTAINS
  !## get selected dates
  CALL WDIALOGSELECT(ID_DWBAL_ANALYSE_TAB2)
  CALL WDIALOGGETMENU(IDF_MENU1,LIDATE)
+
+ CALL WDIALOGGETRADIOBUTTON(IDF_RADIO5,IAG)
 
  !lilay=1
  !lizone=1
@@ -600,16 +602,7 @@ CONTAINS
   RETURN
  ENDIF
  
- !## allocate graph memory
- CALL GRAPH_ALLOCATE(MBUDGET,MGROUP)
- DO I=1,MBUDGET; DO J=1,MGROUP
-  ALLOCATE(GRAPH(I,J)%RX(MDATE),GRAPH(I,J)%RY(MDATE))
-  GRAPH(I,J)%RX=0.0; GRAPH(I,J)%RY=0.0; GRAPH(I,J)%NP=MDATE
- ENDDO; ENDDO
-
- !## all histograms
- GRAPH%GTYPE =1
-
+ !## allocate memory for selected items
  ALLOCATE(CMDATE(MDATE),CMLAY(MLAY),CMZONE(MZONE)); CMDATE=''; CMLAY=''; CMZONE=''
 
  J=0; DO I=1,NLAY; IF(LILAY(I).EQ.1)THEN
@@ -627,10 +620,52 @@ CONTAINS
    ENDIF
  ENDIF; ENDDO
 
+ !## get number of years, months, decades (mindate/maxdate)
+ IF(ITTYPE.EQ.1)THEN
+  READ(CMDATE(1),*)            IDATE; CALL IDATETOGDATE(IDATE,IY1,IM1,ID1)
+  READ(CMDATE(SIZE(CMDATE)),*) IDATE; CALL IDATETOGDATE(IDATE,IY2,IM2,ID2)
+  
+  !## define nxg for aggregration
+  SELECT CASE (IAG)
+   !## all
+   CASE (1); NXG=1
+   !## year
+   CASE (2); NXG=(IY2-IY1)+1
+   !## months
+   CASE (3); NXG=WBAL_ANAYSE_PREPARE_GETMONTHS(IY1,IM1,IY2,IM2,SDATE,DT)
+   !## hydrologic seasons
+!   CASE (4); NXG=WBAL_ANAYSE_PREPARE_GETHSEASON(IY1,IM1,IY2,IM2,SDATE,DT)
+   !## decade
+   CASE (5); NXG=WBAL_ANAYSE_PREPARE_GETDECADES(IY1,IM1,ID1,IY2,IM2,ID2,SDATE,DT)
+   !## hydrological year
+!   CASE (6); NXG=WBAL_ANAYSE_PREPARE_GETHYEAR(IY1,IM1,IY2,IM2,SDATE,DT)
+   !## quarters
+   CASE (7); NXG=WBAL_ANAYSE_PREPARE_GETQUARTERS(IY1,IM1,IY2,IM2,SDATE,DT)
+   !## none
+   CASE (8); NXG=MDATE
+  END SELECT
+
+ ELSE
+  !## steady-state
+  NXG=1
+ ENDIF
+  
+!### use dt om array met datums te krijgen
+
+ !## allocate graph memory
+ CALL GRAPH_ALLOCATE(MBUDGET,MGROUP)
+ DO I=1,MBUDGET; DO J=1,MGROUP
+  ALLOCATE(GRAPH(I,J)%RX(NXG),GRAPH(I,J)%RY(NXG))
+  GRAPH(I,J)%RX=0.0; GRAPH(I,J)%RY=0.0; GRAPH(I,J)%NP=NXG
+ ENDDO; ENDDO
+
+ !## all histograms
+ GRAPH%GTYPE =1
+
  !## add custom predefined axes titles
  IF(ITTYPE.EQ.1)THEN
-  ALLOCATE(GRAPHDIM%XTXT(MDATE)); GRAPHDIM%XTXT=''; GRAPHDIM%IFIXX=1
-  GRAPHDIM%XINT=1.0; GRAPHDIM%XMIN=0.0; GRAPHDIM%XMAX=REAL(MDATE)+1.0
+  ALLOCATE(GRAPHDIM%XTXT(NXG)); GRAPHDIM%XTXT=''; GRAPHDIM%IFIXX=1
+  GRAPHDIM%XINT=1.0; GRAPHDIM%XMIN=0.0; GRAPHDIM%XMAX=REAL(NXG)+1.0
  ENDIF
  
  !## assign label name for each group (= zone and layer)
@@ -665,17 +700,24 @@ CONTAINS
  ENDDO
 
  !## gather data
- DO I=1,NRECORDS
+ IHIT=0; DO I=1,NRECORDS
   
   !## appropriate item
-  IF(.NOT.WBAL_ANALYSE_SELECT(GWBAL(1)%CLAY(I),GWBAL(1)%CZONE(I),GWBAL(1)%CDATE(I),IL,IZ,ID))CYCLE
+  IF(.NOT.WBAL_ANALYSE_SELECT(GWBAL(1)%CLAY(I),GWBAL(1)%CZONE(I),GWBAL(1)%CDATE(I),IL,IZ,ID,IAG,IPOS))CYCLE
 
+!  !## if sum overwrite ID to be one all the times
+!  IF()THEN
+!   ID=1
+!  ENDIF
+  
   !## get appropriate group number
   IG=(IZ-1)*MLAY+IL 
 
   JQIN=-1; JQOU=0; DO IQ=1,NBUDGET
    IF(BUDGET(IQ)%IACT.EQ.0)CYCLE
 
+   IHIT=IHIT+1
+   
    JQIN= JQIN+2
    JQOU= JQOU+2
    IQIN=(IQ-1)*2+1
@@ -685,7 +727,7 @@ CONTAINS
    QIN=GWBAL(1)%Q(IQIN,I)
    QOU=GWBAL(1)%Q(IQOU,I)
 
-   !## add to existing fluxes
+   !## add to existing fluxes - ID is timestep
    GRAPH(JQIN,IG)%RY(ID)=GRAPH(JQIN,IG)%RY(ID)+QIN
    GRAPH(JQOU,IG)%RY(ID)=GRAPH(JQOU,IG)%RY(ID)+QOU
 
@@ -697,7 +739,8 @@ CONTAINS
    ELSE
     GRAPH(JQIN,IG)%RX(ID)=REAL(ID)
     GRAPH(JQOU,IG)%RX(ID)=REAL(ID)
-    GRAPHDIM%XTXT(ID)=GWBAL(1)%CDATE(I)
+    !## x-axes txt ...
+    IF(IAG.EQ.7)GRAPHDIM%XTXT(ID)=GWBAL(1)%CDATE(I)
    ENDIF
 
   ENDDO
@@ -705,28 +748,183 @@ CONTAINS
  
  DEALLOCATE(CMDATE,CMLAY,CMZONE)
  
+ IF(IHIT.EQ.0)THEN
+  CALL WMESSAGEBOX(OKONLY,INFORMATIONICON,COMMONOK,'There remains nothing to generate a water balance for.'//CHAR(13)// &
+    'Go to the tabs BUDGET TERMS and AGGREGATION to make an appropriate selection.','Information')
+  RETURN
+ ENDIF
+ 
  WBAL_ANAYSE_PREPARE=.TRUE.
 
  END FUNCTION WBAL_ANAYSE_PREPARE
 
  !###======================================================================
- LOGICAL FUNCTION WBAL_ANALYSE_SELECT(CL,CZ,CD,IL,IZ,ID)
+ INTEGER FUNCTION WBAL_ANAYSE_PREPARE_GETQUARTERS(IY1,IM1,IY2,IM2,SDATE,DT)
+ !###======================================================================
+ IMPLICIT NONE
+ INTEGER,INTENT(IN) :: IY1,IM1,IY2,IM2
+ INTEGER,INTENT(OUT) :: SDATE
+ REAL,INTENT(OUT),DIMENSION(:),POINTER :: DT
+ INTEGER :: I,ND,IY,IM,ID,IDATE,EDATE
+ 
+! !## get an approprate start date
+! IF(ID1.LT.10)THEN; ID=1
+! ELSEIF(ID1.LT.20)THEN; ID=11
+! ELSE; ID=21; ENDIF
+ 
+! !## set start date
+! SDATE=IY1*10000+IM1*100+ID
+! !## set end date
+! EDATE=IY2*10000+IM2*100+ID2
+ 
+ DO I=1,2
+
+  ND=0
+  DO
+   ND=ND+1
+   ID=ID+10
+   IF(I.EQ.2)DT(ND)=10.0
+   IF(ID.GT.20)THEN
+    IF(I.EQ.2)DT(ND)=WDATEDAYSINMONTH(IY,IM)-20
+    ID=1; IM=IM+1; IF(IM.GT.12)THEN; IM=1; IY=IY+1; ENDIF
+   ENDIF        
+
+   !## current date
+   IDATE=IY*10000+IM*100+ID
+   
+   !## stop
+   IF(IDATE.GT.EDATE)EXIT
+  ENDDO
+
+  !## define dt pointer
+  IF(I.EQ.1)THEN; ALLOCATE(DT(ND)); DT=0.0; ENDIF
+ 
+ ENDDO
+ 
+ WBAL_ANAYSE_PREPARE_GETQUARTERS=ND
+ 
+ END FUNCTION WBAL_ANAYSE_PREPARE_GETQUARTERS
+
+ !###======================================================================
+ INTEGER FUNCTION WBAL_ANAYSE_PREPARE_GETDECADES(IY1,IM1,ID1,IY2,IM2,ID2,SDATE,DT)
+ !###======================================================================
+ IMPLICIT NONE
+ INTEGER,INTENT(IN) :: IY1,IM1,ID1,IY2,IM2,ID2
+ INTEGER,INTENT(OUT) :: SDATE
+ REAL,INTENT(OUT),DIMENSION(:),POINTER :: DT
+ INTEGER :: I,ND,IY,IM,ID,IDATE,EDATE
+ 
+ !## get an approprate start date
+ IF(ID1.LT.10)THEN; ID=1
+ ELSEIF(ID1.LT.20)THEN; ID=11
+ ELSE; ID=21; ENDIF
+ 
+ !## set start date
+ SDATE=IY1*10000+IM1*100+ID
+ !## set end date
+ EDATE=IY2*10000+IM2*100+ID2
+ 
+ DO I=1,2
+
+  ND=0
+  DO
+   ND=ND+1
+   ID=ID+10
+   IF(I.EQ.2)DT(ND)=10.0
+   IF(ID.GT.20)THEN
+    IF(I.EQ.2)DT(ND)=WDATEDAYSINMONTH(IY,IM)-20
+    ID=1; IM=IM+1; IF(IM.GT.12)THEN; IM=1; IY=IY+1; ENDIF
+   ENDIF        
+
+   !## current date
+   IDATE=IY*10000+IM*100+ID
+   
+   !## stop
+   IF(IDATE.GT.EDATE)EXIT
+  ENDDO
+
+  !## define dt pointer
+  IF(I.EQ.1)THEN; ALLOCATE(DT(ND)); DT=0.0; ENDIF
+ 
+ ENDDO
+ 
+ WBAL_ANAYSE_PREPARE_GETDECADES=ND
+ 
+ END FUNCTION WBAL_ANAYSE_PREPARE_GETDECADES
+
+ !###======================================================================
+ INTEGER FUNCTION WBAL_ANAYSE_PREPARE_GETMONTHS(IY1,IM1,IY2,IM2,SDATE,DT)
+ !###======================================================================
+ IMPLICIT NONE
+ INTEGER,INTENT(IN) :: IY1,IM1,IY2,IM2
+ INTEGER,INTENT(OUT) :: SDATE
+ REAL,INTENT(OUT),DIMENSION(:),POINTER :: DT
+ INTEGER :: NM,IM,IY,I
+ 
+ !## get number of months
+ IF(IY1.EQ.IY2)THEN
+  NM=(IM2-IM1)+1
+ ELSE
+  NM=(12-IM1)+1; NM=NM+IM2
+ ENDIF
+ 
+ !## set start date of time-series
+ SDATE=IY1*10000+IM1*100+1
+
+ !## define dt pointer
+ ALLOCATE(DT(NM)); DT=0.0
+ IM=IM1; IY=IY1
+ DO I=1,NM
+  IM=IM+1; IF(IM.GT.12)IM=1
+  DT(I)=WDATEDAYSINMONTH(IY,IM)
+ ENDDO
+  
+ WBAL_ANAYSE_PREPARE_GETMONTHS=NM
+ 
+ END FUNCTION WBAL_ANAYSE_PREPARE_GETMONTHS
+
+ !###======================================================================
+ LOGICAL FUNCTION WBAL_ANALYSE_SELECT(CL,CZ,CD,IL,IZ,ID,IAG,IPOS)
  !###======================================================================
  IMPLICIT NONE
  CHARACTER(LEN=*),INTENT(IN) :: CL,CZ,CD
- INTEGER,INTENT(OUT) :: IL,IZ,ID
+ INTEGER,INTENT(IN) :: IAG
+ INTEGER,INTENT(OUT) :: IL,IZ,ID,IPOS
   
  WBAL_ANALYSE_SELECT=.TRUE.
  
- DO ID=1,SIZE(CMDATE) !MDATE
+ DO ID=1,SIZE(CMDATE)
   !## date selected
   IF(TRIM(CMDATE(ID)).EQ.TRIM(CD))THEN
-   DO IL=1,SIZE(CMLAY) !NLAY
+   DO IL=1,SIZE(CMLAY)
     !## layer selected
     IF(TRIM(CMLAY(IL)).EQ.TRIM(CL))THEN
-     DO IZ=1,SIZE(CMZONE) !NZONE
+     DO IZ=1,SIZE(CMZONE)
       !## zone selected
-      IF(TRIM(CMZONE(IZ)).EQ.TRIM(CZ))RETURN
+      IF(TRIM(CMZONE(IZ)).EQ.TRIM(CZ))THEN
+       SELECT CASE (IAG)
+        !## all
+        CASE (1); IPOS=1; RETURN
+        !## year
+        CASE (2)
+!         !## get year
+!         IPOS=1-12
+        !## month
+        CASE (3)
+         !## get months
+!         1-12
+        !## hydrologic seasons
+        CASE (4)
+        !## decade
+        CASE (5)
+        !## hydrological year
+        CASE (6)
+        !## quarters
+        CASE (7)
+        !## none
+        CASE (8); IPOS=ID; RETURN
+       END SELECT
+      ENDIF
      ENDDO
     ENDIF
    ENDDO
@@ -741,7 +939,7 @@ CONTAINS
  LOGICAL FUNCTION WBAL_ANALYSE_TABLE()   
  !###======================================================================
  IMPLICIT NONE
- INTEGER :: I,J,NROW
+ INTEGER :: I,NROW
  INTEGER,ALLOCATABLE,DIMENSION(:) :: IC
  CHARACTER(LEN=52) :: CDATE
  
@@ -867,11 +1065,11 @@ CONTAINS
  REAL,PARAMETER :: CS=0.009 !## charactersize
  CHARACTER(LEN=256) :: PNGNAME
  LOGICAL :: LOCAL,PERC
- INTEGER :: IPOL,IOS,I,J,IBITMAP,IWINDOW,IW,IH,I1,I2,IG
+ INTEGER :: IPOL,IOS,I,J,IBITMAP,IWINDOW,I1,I2,IG
  REAL,DIMENSION(:,:), ALLOCATABLE :: Q,QSUBREGIO
  CHARACTER(LEN=10),DIMENSION(:),ALLOCATABLE :: QTXT
  INTEGER,DIMENSION(:),ALLOCATABLE :: IPLG
- INTEGER,DIMENSION(6) :: INFO
+! INTEGER,DIMENSION(6) :: INFO
  
 ! DO I=1,MBUDGET
 !  CALL WGRIDPUTREAL(IDF_GRID1,I,GRAPH(I,IG)%RY,MDATE,'(G15.7)')
