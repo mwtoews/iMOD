@@ -37,6 +37,9 @@ TYPE GRAPHDIMOBJ
  CHARACTER(LEN=16),POINTER,DIMENSION(:) :: XTXT=>NULL()  !## label xaxes
  CHARACTER(LEN=16),POINTER,DIMENSION(:) :: YTXT=>NULL()  !## label yaxes
  CHARACTER(LEN=16),POINTER,DIMENSION(:) :: Y2TXT=>NULL() !## label y2axes
+ REAL,POINTER,DIMENSION(:) :: XPOS=>NULL()  !## position for labeling
+ REAL,POINTER,DIMENSION(:) :: YPOS=>NULL()  !## position for labeling
+ REAL,POINTER,DIMENSION(:) :: Y2POS=>NULL() !## position for labeling
  INTEGER :: IFIXX=0                     !ifix - fixed x-axes
  INTEGER :: IFIXY=0                     !ifix - fixed y-axes
  INTEGER :: IFIXY2=0                    !ifix - fixed y2-axes
