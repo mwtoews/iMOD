@@ -14,6 +14,9 @@ TYPE AXESOBJ
  CHARACTER(LEN=15),POINTER,DIMENSION(:) :: XTXT=>NULL()  !## label xaxes
  CHARACTER(LEN=15),POINTER,DIMENSION(:) :: YTXT=>NULL()  !## label yaxes
  CHARACTER(LEN=15),POINTER,DIMENSION(:) :: Y2TXT=>NULL() !## label y2axes
+ REAL,POINTER,DIMENSION(:) :: XPOS=>NULL()  !## position for labeling
+ REAL,POINTER,DIMENSION(:) :: YPOS=>NULL()  !## position for labeling
+ REAL,POINTER,DIMENSION(:) :: Y2POS=>NULL() !## position for labeling
  INTEGER :: ICLRRASTER                !iclrraster - colour
  INTEGER :: XOFFSET                   !offset for julian dates
  REAL :: XMIN,YMIN,XMAX,YMAX,Y2MIN,Y2MAX     !XMIN,YMIN,XMAX,YMAX = dimensions of current graph
