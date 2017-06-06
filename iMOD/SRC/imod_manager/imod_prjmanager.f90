@@ -5347,7 +5347,8 @@ TOPICLOOP: DO ITOPIC=1,MAXTOPICS
  LOGICAL FUNCTION PMANAGER_SAVEMF2005_ISG(DIR,DIRMNAME,IBATCH,LEX,ITOPIC,ICB,CPCK,IPRT)
  !###======================================================================
  IMPLICIT NONE
- REAL,PARAMETER :: CONST=86400.0,DLEAK=0.0001
+ REAL,PARAMETER :: CONST=86400.0 !## conversion to m3/day
+ REAL,PARAMETER :: DLEAK=0.0001
  INTEGER,INTENT(IN) :: IBATCH,ICB,ITOPIC,IPRT
  CHARACTER(LEN=*),INTENT(IN) :: DIR,DIRMNAME,CPCK
  LOGICAL,INTENT(IN) :: LEX
@@ -7954,23 +7955,26 @@ TOPICLOOP: DO ITOPIC=1,MAXTOPICS
       C=(LAK(2)%X(ICOL,IROW)-BOT(ILAY)%X(ICOL,IROW))/(KHV(ILAY)%X(ICOL,IROW)/KVA(ILAY)%X(ICOL,IROW))
      ENDIF
 
-     OT1=BOT(ILAY  )%X(ICOL,IROW)-TOP(ILAY+1)%X(ICOL,IROW)
-     OT2=0.0; IF(ILAY.LT.NLAY)OT2=TOP(ILAY+1)%X(ICOL,IROW)-BOT(ILAY+1)%X(ICOL,IROW)
-
+     OT1=0.0; OT2=0.0
+     IF(ILAY.LT.NLAY)THEN
+      OT1=BOT(ILAY  )%X(ICOL,IROW)-TOP(ILAY+1)%X(ICOL,IROW)
+      OT2=TOP(ILAY+1)%X(ICOL,IROW)-BOT(ILAY+1)%X(ICOL,IROW)
+     ENDIF
+     
      !## adjust bot as the LAK package uses this to create the table input
      BOT(ILAY)%X(ICOL,IROW)=LAK(2)%X(ICOL,IROW)
 
      !## make sure thickness of interbed remains the same
      IF(TIB.EQ.0.0)THEN
 
-      TOP(ILAY+1)%X(ICOL,IROW)=BOT(ILAY)%X(ICOL,IROW)
-
       !## increase permeability in ratio in case no interbed and interface is shifted upwards
       IF(ILAY.LT.NLAY)THEN
-       KD1=KHV(ILAY  )%X(ICOL,IROW)*OT1 !(TOP(ILAY  )%X(ICOL,IROW)-BOT(ILAY  )%X(ICOL,IROW))
-       KD2=KHV(ILAY+1)%X(ICOL,IROW)*OT2 !(TOP(ILAY+1)%X(ICOL,IROW)-BOT(ILAY+1)%X(ICOL,IROW))
-       KD1=KD1+KD2; KD2=KD1/OT2 !F=KD1/KD2
-       KHV(ILAY+1)%X(ICOL,IROW)=KHV(ILAY+1)%X(ICOL,IROW)*KD2 !F
+       TOP(ILAY+1)%X(ICOL,IROW)=BOT(ILAY)%X(ICOL,IROW)
+
+       KD1=KHV(ILAY  )%X(ICOL,IROW)*OT1 
+       KD2=KHV(ILAY+1)%X(ICOL,IROW)*OT2 
+       KD1=KD1+KD2; KD2=KD1/OT2 
+       KHV(ILAY+1)%X(ICOL,IROW)=KHV(ILAY+1)%X(ICOL,IROW)*KD2
       ENDIF
 
      ELSE
@@ -7983,7 +7987,7 @@ TOPICLOOP: DO ITOPIC=1,MAXTOPICS
     ENDIF
     
     !## lake leakance for vertical conductances - excl. the effect of vertical shift, this is taken care of by MF2005
-    LCD(ILAY)%X(ICOL,IROW)=1.0/LAK(6)%X(ICOL,IROW) !(C+LAK(6)%X(ICOL,IROW))
+    LCD(ILAY)%X(ICOL,IROW)=1.0/LAK(6)%X(ICOL,IROW) 
 
    ENDIF
   ENDDO
@@ -8008,7 +8012,6 @@ TOPICLOOP: DO ITOPIC=1,MAXTOPICS
      !## resistance along lake
      C=L/KHV(ILAY)%X(ICOL,IROW)
 
-!     LCD(ILAY)%X(JCOL,JROW)=1.0/(C+LAK(6)%X(ICOL,IROW))
      !## lake leakance for vertical conductances - excl. the effect of vertical shift, this is taken care of by MF2005
      LCD(ILAY)%X(JCOL,JROW)=1.0/LAK(6)%X(ICOL,IROW)
 
