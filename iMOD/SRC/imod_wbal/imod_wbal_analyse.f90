@@ -462,7 +462,7 @@ CONTAINS
         'BDGFFF');    WBAL_ANALYSE_GETQCATEGORY= 7
   CASE ('BDGBND');    WBAL_ANALYSE_GETQCATEGORY= 8
   CASE ('BDGFLF');    WBAL_ANALYSE_GETQCATEGORY= 9
-  CASE ('BDGFUF');    WBAL_ANALYSE_GETQCATEGORY=10
+  CASE ('BDGFTF');    WBAL_ANALYSE_GETQCATEGORY=10
   CASE ('BDGRCH');    WBAL_ANALYSE_GETQCATEGORY=11
   CASE ('BDGEVT');    WBAL_ANALYSE_GETQCATEGORY=12
   CASE ('BDGCAP');    WBAL_ANALYSE_GETQCATEGORY=13
@@ -541,15 +541,16 @@ CONTAINS
  !###======================================================================
  IMPLICIT NONE
  INTEGER,INTENT(IN) :: ID
- INTEGER :: IOPT
+ INTEGER :: IOPT,IG
  LOGICAL :: LDATE
  
- !## get the appropriate selection
- IF(.NOT.WBAL_ANAYSE_PREPARE(LDATE))RETURN
-
  !## get option from the window to determine what to do
  CALL WDIALOGSELECT(ID_DWBAL_ANALYSE_TAB4)
  CALL WDIALOGGETRADIOBUTTON(IDF_RADIO1,IOPT)
+
+ !## get the appropriate selection
+ IF(.NOT.WBAL_ANAYSE_PREPARE(LDATE,IOPT))RETURN
+
  SELECT CASE (IOPT)
   !## timeseries
   CASE (1)
@@ -563,8 +564,9 @@ CONTAINS
 
   !## graph
   CASE (2)
-   CALL WBAL_ANALYSE_PLOTIMAGE(ID)
-
+   DO IG=1,SIZE(GRAPHNAMES)
+    CALL WBAL_ANALYSE_PLOTIMAGE(ID,IG)
+   ENDDO
   !## table
   CASE (3)
    IF(WBAL_ANALYSE_TABLE())THEN
@@ -585,10 +587,11 @@ CONTAINS
  END SUBROUTINE WBAL_ANALYSE_PLOT
 
  !###======================================================================
- LOGICAL FUNCTION WBAL_ANAYSE_PREPARE(LDATE) 
+ LOGICAL FUNCTION WBAL_ANAYSE_PREPARE(LDATE,IOPT) 
  !###======================================================================
  IMPLICIT NONE
  LOGICAL,INTENT(OUT) :: LDATE
+ INTEGER,INTENT(IN) :: IOPT
  INTEGER :: I,J,K,IL,IZ,ID,IG,IQIN,IQOU,JQIN,JQOU,IQ,IIQ,JQ,IOS,IDATE,ITTYPE,IHIT, &
      IAG,NXG,IY1,IM1,ID1,IY2,IM2,ID2,IPOS,SDATE,IB
  REAL,POINTER,DIMENSION(:) :: DT
@@ -807,15 +810,20 @@ CONTAINS
  
  DEALLOCATE(CMDATE,CMLAY,CMZONE,IDATES,SQ)
  
- !## make stacked-histogramms
- DO ID=1,NXG
-  DO IG=1,MGROUP; DO IB=3,MBUDGET,2
-   !## in
-   GRAPH(IB  ,IG)%RY(ID)=GRAPH(IB  ,IG)%RY(ID)+GRAPH(IB-2,IG)%RY(ID)
-   !## out
-   GRAPH(IB+1,IG)%RY(ID)=GRAPH(IB+1,IG)%RY(ID)-GRAPH(IB-1,IG)%RY(ID)
-  ENDDO; ENDDO
- ENDDO
+ IF(IOPT.EQ.1)THEN
+  !## make stacked-histograms
+  DO ID=1,NXG
+   DO IG=1,MGROUP; DO IB=3,MBUDGET,2
+
+!## something to do with groups
+
+    !## in
+    GRAPH(IB  ,IG)%RY(ID)=GRAPH(IB  ,IG)%RY(ID)+GRAPH(IB-2,IG)%RY(ID)
+    !## out
+    GRAPH(IB+1,IG)%RY(ID)=GRAPH(IB+1,IG)%RY(ID)-GRAPH(IB-1,IG)%RY(ID)
+   ENDDO; ENDDO
+  ENDDO
+ ENDIF
  
  IF(IHIT.EQ.0)THEN
   CALL WMESSAGEBOX(OKONLY,INFORMATIONICON,COMMONOK,'There remains nothing to generate a water balance for.'//CHAR(13)// &
@@ -1339,18 +1347,19 @@ CONTAINS
  END FUNCTION WBAL_ANALYSE_EXPORTCSV
  
  !###======================================================================
- SUBROUTINE WBAL_ANALYSE_PLOTIMAGE(ID)
+ SUBROUTINE WBAL_ANALYSE_PLOTIMAGE(ID,IG)
  !###======================================================================
  IMPLICIT NONE
- INTEGER,INTENT(IN) :: ID
+ INTEGER,INTENT(IN) :: ID,IG
  INTEGER,PARAMETER :: NXPIX=1000, NYPIX=1200 !## resolution dx,dy
  INTEGER,PARAMETER :: NFLX=24  !## number of zones in current csv file
+ REAL,DIMENSION(NFLX,2) :: Q
+ CHARACTER(LEN=10),DIMENSION(NFLX) :: QTXT
  REAL,PARAMETER :: CS=0.009 !## charactersize
  CHARACTER(LEN=256) :: PNGNAME
  LOGICAL :: LOCAL,PERC
- INTEGER :: IPOL,IOS,I,J,IBITMAP,IWINDOW,I1,I2,IG
- REAL,DIMENSION(:,:), ALLOCATABLE :: Q,QSUBREGIO
- CHARACTER(LEN=10),DIMENSION(:),ALLOCATABLE :: QTXT
+ INTEGER :: IPOL,IOS,I,J,IBITMAP,IWINDOW,I1,I2,IB
+ REAL,DIMENSION(:,:), ALLOCATABLE :: QSUBREGIO 
  INTEGER,DIMENSION(:),ALLOCATABLE :: IPLG
 ! INTEGER,DIMENSION(6) :: INFO
  
@@ -1360,12 +1369,12 @@ CONTAINS
 
  !ICPL()
  I1=-1; I2=0
- DO IG=1,MBUDGET
+ DO IB=1,MBUDGET,2
   
   I1=I1+2
   I2=I2+2
   !## get appropriate balancenumber
-  J=WBAL_ANALYSE_GETQCATEGORY(BUDGET(J)%FLUXTERM)
+  J=WBAL_ANALYSE_GETQCATEGORY(BUDGET(IB)%FLUXTERM)
   IF(J.EQ.0)THEN
   !## cannot get right number
   ENDIF
@@ -1380,30 +1389,30 @@ CONTAINS
   ENDDO
  ENDDO
 
-!QTXT(01)='Q-drn  '             bdgdrn  
-!QTXT(02)='Q-olf  '             bdgolf  
-!QTXT(03)='Q-riv  '             bdgriv  
-!QTXT(04)='Q-ghb  '             bdgghb  
-!QTXT(05)='Q-isg  '             bdgisg  
-!QTXT(06)='Q-wel  '             bdgwel  
-!QTXT(07)='Q-reg  '             bdgfrf en bdgfff
-!QTXT(08)='Q-cnh  '             bdgbnd
-!QTXT(09)='Q-ftf  '             bdgflf
-!QTXT(10)='Q-flf  '             bdgflf
-!QTXT(11)='Q-rch  '             bdgrch
-!QTXT(12)='Q-evt  '             bdgevt
-!QTXT(13)='Q-cap   '            bdgcap
-!QTXT(14)='Q-etact '            bdgETact  
-!QTXT(15)='Q-pm    '            bdgpm   
-!QTXT(16)='Q-pmgw  '            bdgpmgw 
-!QTXT(17)='Q-pmsw  '            bdgpmsw 
-!QTXT(18)='Q-sto   '            bdgsto
-!QTXT(19)='Q-decsto'            bdgdecStot
-!QTXT(20)='Q-spgw  '            bdgqspgw
-!QTXT(21)='Q-cor   '            msw_qsimcorrmf
-!QTXT(22)='Q-qdr   '            bdgdrn    
-!QTXT(23)='Q-qrun  '             ????   weet ik nog niet precies, bdgqrun
-!QTXT(24)='Q-modf  '            bdgqmodf  
+QTXT(01)='Q-drn  '           !  bdgdrn  
+QTXT(02)='Q-olf  '           !  bdgolf  
+QTXT(03)='Q-riv  '           !  bdgriv  
+QTXT(04)='Q-ghb  '           !  bdgghb  
+QTXT(05)='Q-isg  '           !  bdgisg  
+QTXT(06)='Q-wel  '           !  bdgwel  
+QTXT(07)='Q-reg  '           !  bdgfrf en bdgfff
+QTXT(08)='Q-cnh  '           !  bdgbnd
+QTXT(09)='Q-ftf  '           !  bdgftf
+QTXT(10)='Q-flf  '           !  bdgflf
+QTXT(11)='Q-rch  '           !  bdgrch
+QTXT(12)='Q-evt  '           !  bdgevt
+QTXT(13)='Q-cap   '          !  bdgcap
+QTXT(14)='Q-etact '          !  bdgETact  
+QTXT(15)='Q-pm    '          !  bdgpm   
+QTXT(16)='Q-pmgw  '          !  bdgpmgw 
+QTXT(17)='Q-pmsw  '          !  bdgpmsw 
+QTXT(18)='Q-sto   '          !  bdgsto
+QTXT(19)='Q-decsto'          !  bdgdecStot
+QTXT(20)='Q-spgw  '          !  bdgqspgw
+QTXT(21)='Q-cor   '          !  msw_qsimcorrmf
+QTXT(22)='Q-qdr   '          !  bdgdrn    
+QTXT(23)='Q-qrun  '          !   ????   weet ik nog niet precies, bdgqrun
+QTXT(24)='Q-modf  '          !  bdgqmodf  
 
  !!     Q(01,1)=QDRN_IN   Q(01,1)=QDRN_OUT    Q(13,1)=QCAP_IN   Q(13,1)=QCAP_OUT    
 !!     Q(02,1)=QOLF_IN   Q(02,1)=QOLF_OUT    Q(14,1)=QETACT_IN Q(14,1)=QETACT_OUT  
@@ -1432,10 +1441,10 @@ CONTAINS
  !## selected polygon
  IPOL=1  !lizone()
 
- ALLOCATE(QSUBREGIO(SIZE(LIZONE),2),Q(NFLX,2),QTXT(NFLX))
+ ALLOCATE(QSUBREGIO(SIZE(LIZONE),2))
 
- qtxt='dds'
- call random_number(q)
+! qtxt='dds'
+! call random_number(q)
  qsubregio=0.
  
  PNGNAME='.\TEXT.PNG'
@@ -1451,7 +1460,7 @@ CONTAINS
  ENDIF
  CALL UTL_DEBUGLEVEL(1)
 
- DEALLOCATE(QSUBREGIO,Q,QTXT,IPLG)
+ DEALLOCATE(QSUBREGIO,IPLG) !,Q,QTXT
 
  !## display image in viewer
  IF(ID.EQ.ID_PREVIEW)THEN
