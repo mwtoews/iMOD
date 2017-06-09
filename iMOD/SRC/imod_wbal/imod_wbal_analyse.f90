@@ -218,7 +218,7 @@ CONTAINS
  IMPLICIT NONE
  INTEGER,INTENT(IN) :: ITYPE
  TYPE(WIN_MESSAGE),INTENT(IN) :: MESSAGE
- INTEGER :: I,J,K
+ INTEGER :: I,J,K,L
  
  CALL WDIALOGSELECT(MESSAGE%WIN)
  
@@ -238,17 +238,21 @@ CONTAINS
     CASE (IDF_RADIO1,IDF_RADIO2,IDF_RADIO3,IDF_RADIO4,IDF_RADIO5)
      CALL WDIALOGGETRADIOBUTTON(IDF_RADIO1,I)
      SELECT CASE (I)
-      !## timeseries/graphics
-      CASE (1,2); J=1; K=1
+      !## timeseries
+      CASE (1); J=1; K=1; L=0
+      !## graphics
+      CASE (2); J=1; K=1; L=1
       !## table
-      CASE (3); J=1; K=0
+      CASE (3); J=1; K=0; L=0
       !## export csv
-      CASE (4); J=0; K=1
+      CASE (4); J=0; K=1; L=0
       !## idf
-      CASE (5); J=0; K=1
+      CASE (5); J=0; K=1; L=0
      END SELECT
      CALL WDIALOGFIELDSTATE(ID_PREVIEW,J)
      CALL WDIALOGFIELDSTATE(ID_GRAPHICS,K)
+     CALL WDIALOGFIELDSTATE(IDF_CHECK1,L)
+     CALL WDIALOGFIELDSTATE(IDF_CHECK2,L)
    END SELECT
  END SELECT
      
@@ -442,12 +446,14 @@ CONTAINS
  !###======================================================================
  IMPLICIT NONE
  CHARACTER(LEN=*),INTENT(IN) :: TXT
- INTEGER :: I
+ INTEGER :: I,J
   
  WBAL_ANALYSE_GETBALANCETERM=0
   
+ J=INDEX(TXT,'_SYS'); IF(J.EQ.0)J=LEN_TRIM(TXT)+1; J=J-1
+ 
  DO I=1,SIZE(TP)
-  IF(TRIM(UTL_CAP(TXT,'U')).EQ.TRIM(UTL_CAP(TP(I)%ACRNM,'U')))EXIT
+  IF(TRIM(UTL_CAP(TXT(1:J),'U')).EQ.TRIM(UTL_CAP(TP(I)%ACRNM,'U')))EXIT
  ENDDO
  IF(I.LE.SIZE(TP))WBAL_ANALYSE_GETBALANCETERM=I
 
@@ -459,12 +465,16 @@ CONTAINS
  IMPLICIT NONE
  CHARACTER(LEN=*),INTENT(IN) :: FLUXTERM
  CHARACTER(LEN=52) :: FTERM
+ INTEGER :: J
   
  WBAL_ANALYSE_GETQCATEGORY=0
   
  FTERM=UTL_CAP(FLUXTERM,'U')
-
- SELECT CASE (TRIM(FTERM))
+ J=INDEX(FTERM,'_SYS'); IF(J.EQ.0)J=LEN_TRIM(FTERM)+1; J=J-1
+ !## overrule for connected flows
+ IF(INDEX(FTERM,'BDGFCF').GT.0)J=6
+ 
+ SELECT CASE (FTERM(1:J))
   CASE ('BDGDRN');    WBAL_ANALYSE_GETQCATEGORY= 1
   CASE ('BDGOLF');    WBAL_ANALYSE_GETQCATEGORY= 2
   CASE ('BDGRIV');    WBAL_ANALYSE_GETQCATEGORY= 3
@@ -490,6 +500,8 @@ CONTAINS
   CASE ('BDGQDR');    WBAL_ANALYSE_GETQCATEGORY=22
   CASE ('BDGQRUN');   WBAL_ANALYSE_GETQCATEGORY=23
   CASE ('BDGQMODF');  WBAL_ANALYSE_GETQCATEGORY=24
+  CASE ('BDGFCF');    WBAL_ANALYSE_GETQCATEGORY=-1
+
  END SELECT
 
 ! DATA ICPL   /08, & !## 01 drn
@@ -554,7 +566,7 @@ CONTAINS
  !###======================================================================
  IMPLICIT NONE
  INTEGER,INTENT(IN) :: ID
- INTEGER :: IOPT,IG
+ INTEGER :: IOPT,IG,I1,I2
 ! LOGICAL :: LDATE
  
  !## get option from the window to determine what to do
@@ -578,8 +590,11 @@ CONTAINS
 
   !## graph
   CASE (2)
+   CALL WDIALOGSELECT(ID_DWBAL_ANALYSE_TAB4)
+   CALL WDIALOGGETCHECKBOX(IDF_CHECK1,I1)
+   CALL WDIALOGGETCHECKBOX(IDF_CHECK2,I2)
    DO IG=1,SIZE(GRAPHNAMES)
-    CALL WBAL_ANALYSE_PLOTIMAGE(ID,IG)
+    CALL WBAL_ANALYSE_PLOTIMAGE(ID,IG,I1,I2)
    ENDDO
   !## table
   CASE (3)
@@ -1460,74 +1475,98 @@ CONTAINS
  END FUNCTION WBAL_ANALYSE_EXPORTCSV
  
  !###======================================================================
- SUBROUTINE WBAL_ANALYSE_PLOTIMAGE(ID,IG)
+ SUBROUTINE WBAL_ANALYSE_PLOTIMAGE(ID,IG,IP1,IP2)
  !###======================================================================
  IMPLICIT NONE
- INTEGER,INTENT(IN) :: ID,IG
+ INTEGER,INTENT(IN) :: ID,IG,IP1,IP2
  INTEGER,PARAMETER :: NXPIX=1000, NYPIX=1200 !## resolution dx,dy
  INTEGER,PARAMETER :: NFLX=24  !## number of zones in current csv file
  REAL,DIMENSION(NFLX,2) :: Q
  CHARACTER(LEN=10),DIMENSION(NFLX) :: QTXT
  REAL,PARAMETER :: CS=0.009 !## charactersize
  CHARACTER(LEN=256) :: PNGNAME
- LOGICAL :: LOCAL,PERC
- INTEGER :: IPOL,IOS,I,J,IBITMAP,IWINDOW,I1,I2,IB
+ LOGICAL :: LOCAL,LPERC
+ INTEGER :: IOS,I,II,J,IBITMAP,IWINDOW,I1,I2,IB,IT,NCF
  REAL,DIMENSION(:,:), ALLOCATABLE :: QSUBREGIO 
- INTEGER,DIMENSION(:),ALLOCATABLE :: IPLG
-! INTEGER,DIMENSION(6) :: INFO
+ INTEGER,DIMENSION(:),ALLOCATABLE :: IPLG,IPOL
+ DATA QTXT/'Q-drn   ','Q-olf   ','Q-riv   ','Q-ghb   ','Q-isg   ', &
+           'Q-wel   ','Q-reg   ','Q-cnh   ','Q-ftf   ','Q-flf   ', &
+           'Q-rch   ','Q-evt   ','Q-cap   ','Q-etact ','Q-pm    ', &
+           'Q-pmgw  ','Q-pmsw  ','Q-sto   ','Q-decsto','Q-spgw  ', &
+           'Q-cor   ','Q-qdr   ','Q-qrun  ','Q-modf  '/
  
-! DO I=1,MBUDGET
-!  CALL WGRIDPUTREAL(IDF_GRID1,I,GRAPH(I,IG)%RY,MDATE,'(G15.7)')
-! ENDDO
-
- !ICPL()
- I1=-1; I2=0
- DO IB=1,MBUDGET,2
-  
-  I1=I1+2
-  I2=I2+2
-  !## get appropriate balancenumber
-  J=WBAL_ANALYSE_GETQCATEGORY(BUDGET(IB)%FLUXTERM)
-  IF(J.EQ.0)THEN
-  !## cannot get right number
+ !## zone numbers
+ ALLOCATE(IPLG(SIZE(CIZONE))); IPLG=0
+ DO I=1,SIZE(CIZONE)
+  READ(CIZONE(I),*,IOSTAT=IOS) IPLG(I)
+  IF(IOS.NE.0)THEN
+   CALL WMESSAGEBOX(OKONLY,EXCLAMATIONICON,COMMONOK,'iMOD cannot convert zone '//TRIM(CIZONE(I))//CHAR(13)// &
+    'into a integer value.','Error')
+   DEALLOCATE(IPLG); RETURN  
   ENDIF
-
-!   IF(GRAPH(I1,IG)%IBAL.EQ.ICPL(J))EXIT
-  IF(J.GT.SIZE(ICPL))THEN
-!## no appropriate balancenumber found, quit
-  ENDIF
-  DO I=1,SIZE(GRAPH(I1,IG)%RY)
-   Q(J,1)=Q(J,1)+GRAPH(I1,IG)%RY(I)
-   Q(J,2)=Q(J,2)+GRAPH(I2,IG)%RY(I)
-  ENDDO
  ENDDO
 
-QTXT(01)='Q-drn  '           !  bdgdrn  
-QTXT(02)='Q-olf  '           !  bdgolf  
-QTXT(03)='Q-riv  '           !  bdgriv  
-QTXT(04)='Q-ghb  '           !  bdgghb  
-QTXT(05)='Q-isg  '           !  bdgisg  
-QTXT(06)='Q-wel  '           !  bdgwel  
-QTXT(07)='Q-reg  '           !  bdgfrf en bdgfff
-QTXT(08)='Q-cnh  '           !  bdgbnd
-QTXT(09)='Q-ftf  '           !  bdgftf
-QTXT(10)='Q-flf  '           !  bdgflf
-QTXT(11)='Q-rch  '           !  bdgrch
-QTXT(12)='Q-evt  '           !  bdgevt
-QTXT(13)='Q-cap   '          !  bdgcap
-QTXT(14)='Q-etact '          !  bdgETact  
-QTXT(15)='Q-pm    '          !  bdgpm   
-QTXT(16)='Q-pmgw  '          !  bdgpmgw 
-QTXT(17)='Q-pmsw  '          !  bdgpmsw 
-QTXT(18)='Q-sto   '          !  bdgsto
-QTXT(19)='Q-decsto'          !  bdgdecStot
-QTXT(20)='Q-spgw  '          !  bdgqspgw
-QTXT(21)='Q-cor   '          !  msw_qsimcorrmf
-QTXT(22)='Q-qdr   '          !  bdgdrn    
-QTXT(23)='Q-qrun  '          !   ????   weet ik nog niet precies, bdgqrun
-QTXT(24)='Q-modf  '          !  bdgqmodf  
+ DO II=1,2
+  NCF=0; DO IB=1,MBUDGET,2
+   !## get appropriate polygon numbers that are currently selected
+   J=WBAL_ANALYSE_GETQCATEGORY(BUDGET(IB)%FLUXTERM)
+   IF(J.NE.-1)CYCLE; I=INDEX(BUDGET(IB)%FLUXTERM,'_')
+   NCF=NCF+1; IF(II.EQ.2)READ(BUDGET(IB)%FLUXTERM(7:I),*,IOSTAT=IOS) IPOL(NCF)
+   IF(IOS.NE.0)THEN
+    CALL WMESSAGEBOX(OKONLY,EXCLAMATIONICON,COMMONOK,'iMOD cannot convert zone from '//TRIM(BUDGET(IB)%FLUXTERM)//CHAR(13)// &
+     'into a integer value.','Error')
+    DEALLOCATE(IPLG); RETURN  
+   ENDIF
+  ENDDO
+  !## get number of active zones (non-zero budget term) 
+  IF(II.EQ.1)THEN 
+   ALLOCATE(IPOL(NCF)); IPOL=0
+  ENDIF
+ ENDDO
 
- !!     Q(01,1)=QDRN_IN   Q(01,1)=QDRN_OUT    Q(13,1)=QCAP_IN   Q(13,1)=QCAP_OUT    
+ ALLOCATE(QSUBREGIO(NCF,2))
+
+ !## generate image for all timeseries (if available)
+ DO IT=1,SIZE(GRAPH(1,1)%RY)
+
+  NCF=0; I1=-1; I2=0
+  DO IB=1,MBUDGET,2
+
+   I1=I1+2; I2=I2+2
+   !## get appropriate balancenumber
+   J=WBAL_ANALYSE_GETQCATEGORY(BUDGET(IB)%FLUXTERM)
+   !## connected flow - need to saved further
+   IF(J.EQ.-1)THEN
+    !## count for number of connected flow
+    NCF=NCF+1
+    CYCLE
+   ENDIF
+   
+   !## cannot get right number
+   IF(J.EQ.0)THEN
+    CALL WMESSAGEBOX(OKONLY,EXCLAMATIONICON,COMMONOK,'iMOD cannot find category for '//TRIM(BUDGET(IB)%FLUXTERM),'Error')
+    CYCLE
+   ENDIF
+
+   !## sum volumes positive/negative separately
+   Q(J,1)=Q(J,1)+GRAPH(I1,IG)%RY(IT)
+   Q(J,2)=Q(J,2)+GRAPH(I2,IG)%RY(IT)
+
+  ENDDO
+
+  !## get regio fluxes
+  QSUBREGIO=0.0; NCF=0; I1=-1; I2=0
+  DO IB=1,MBUDGET,2
+   I1=I1+2; I2=I2+2
+   !## get appropriate polygon numbers that are currently selected
+   J=WBAL_ANALYSE_GETQCATEGORY(BUDGET(IB)%FLUXTERM)
+   IF(J.NE.-1)CYCLE
+   NCF=NCF+1
+   QSUBREGIO(NCF,1)=GRAPH(I1,IG)%RY(IT)
+   QSUBREGIO(NCF,2)=GRAPH(I2,IG)%RY(IT)
+  ENDDO
+  
+!!     Q(01,1)=QDRN_IN   Q(01,1)=QDRN_OUT    Q(13,1)=QCAP_IN   Q(13,1)=QCAP_OUT    
 !!     Q(02,1)=QOLF_IN   Q(02,1)=QOLF_OUT    Q(14,1)=QETACT_IN Q(14,1)=QETACT_OUT  
 !!     Q(03,1)=QRIV_IN   Q(03,1)=QRIV_OUT    Q(15,1)=QPM_IN    Q(15,1)=QPM_OUT     
 !!     Q(04,1)=QGHB_IN   Q(04,1)=QGHB_OUT    Q(16,1)=QPMGW_IN  Q(16,1)=QPMGW_OUT   
@@ -1539,44 +1578,21 @@ QTXT(24)='Q-modf  '          !  bdgqmodf
 !!     Q(10,1)=QFLF2_IN  Q(10,1)=QFLF2_OUT   Q(22,1)=QQDR_IN   Q(22,1)=QQDR_OUT    
 !!     Q(11,1)=QRCH_IN   Q(11,1)=QRCH_OUT    Q(23,1)=QQRUN_IN  Q(23,1)=QQRUN_OUT   
 !!     Q(12,1)=QEVT_IN   Q(12,1)=QEVT_OUT    Q(24,1)=QMODF_IN  Q(24,1)=QMODF_OUT   
-  
- !## zone numbers
- ALLOCATE(IPLG(SIZE(CIZONE))); IPLG=0
- DO I=1,SIZE(CIZONE)
-  READ(CIZONE(I),*,IOSTAT=IOS) IPLG(I)
-  IF(IOS.NE.0)THEN
-   CALL WMESSAGEBOX(OKONLY,EXCLAMATIONICON,COMMONOK,'iMOD cannot convert zone '//TRIM(CIZONE(I))//CHAR(13)// &
-    'into a integer value.','Error')
-   DEALLOCATE(IPLG); RETURN  
+ 
+  PNGNAME='.\TEXT.PNG'
+
+  !## plot local window of selected polygon ipol
+  LOCAL=.FALSE.; IF(IP1.EQ.1)LOCAL=.TRUE.
+   !## percentiles
+  LPERC=.FALSE.; IF(IP2.EQ.1)LPERC=.TRUE.
+ 
+  CALL UTL_DEBUGLEVEL(0)
+  IF(.NOT.DRAWBAL(Q,QTXT,NXPIX,NYPIX,CS,IPOL(1),SIZE(LIZONE),QSUBREGIO,LPERC,CLRIZONE,IPLG,IDFP,LOCAL,'GRAPHTITLE',IBITMAP))THEN
   ENDIF
- ENDDO
-  
- !## selected polygon
- IPOL=1  !lizone()
+  CALL UTL_DEBUGLEVEL(1)
 
- ALLOCATE(QSUBREGIO(SIZE(LIZONE),2))
-
-! qtxt='dds'
-! call random_number(q)
- qsubregio=0.
- 
- PNGNAME='.\TEXT.PNG'
-
- !## plot local window of selected polygon ipol
- LOCAL=.false.
- 
- !## percentiles
- PERC=.FALSE.
- 
- CALL UTL_DEBUGLEVEL(0)
- IF(.NOT.DRAWBAL(Q,QTXT,NXPIX,NYPIX,CS,IPOL,SIZE(LIZONE),QSUBREGIO,PERC,CLRIZONE,IPLG,IDFP,LOCAL,'GRAPHTITLE',IBITMAP))THEN
- ENDIF
- CALL UTL_DEBUGLEVEL(1)
-
- DEALLOCATE(QSUBREGIO,IPLG) !,Q,QTXT
-
- !## display image in viewer
- IF(ID.EQ.ID_PREVIEW)THEN
+  !## display image in viewer
+  IF(ID.EQ.ID_PREVIEW)THEN
 
 !  !## read settings from bitmap
 !  CALL IGRFILEINFO(PNGNAME,INFO,6)
@@ -1584,25 +1600,29 @@ QTXT(24)='Q-modf  '          !  bdgqmodf
 !  CALL WBITMAPSTRETCHMODE(STRETCHDEFAULT)
 !  IBITMAP=0; CALL WBITMAPLOAD(IBITMAP,PNGNAME,1)
 
-  CALL WINDOWOPENCHILD(IWINDOW,FLAGS=SYSMENUON+FIXEDSIZEWIN+ALWAYSONTOP+HIDEWINDOW,TITLE='VIEWING: '//TRIM(PNGNAME))
-  CALL IGRSELECT(DRAWWIN)
-  CALL WBITMAPVIEW(IBITMAP,0,0,MODAL,KEYSCROLL+DRAGSCROLL)
-  CALL WBITMAPDESTROY(IBITMAP)
+   CALL WINDOWOPENCHILD(IWINDOW,FLAGS=SYSMENUON+FIXEDSIZEWIN+ALWAYSONTOP+HIDEWINDOW,TITLE='VIEWING: '//TRIM(PNGNAME))
+   CALL IGRSELECT(DRAWWIN)
+   CALL WBITMAPVIEW(IBITMAP,0,0,MODAL,KEYSCROLL+DRAGSCROLL)
+   CALL WBITMAPDESTROY(IBITMAP)
 
- ELSE
-
-  I=INFOERROR(1)
-  CALL WBITMAPSAVE(IBITMAP,PNGNAME)
-  I=INFOERROR(1)
-  IF(I.NE.0)THEN 
-   CALL WMESSAGEBOX(OKONLY,EXCLAMATIONICON,COMMONOK,'iMOD cannot SAVE the requested bitmap file called:'//CHAR(13)//&
-    TRIM(PNGNAME),'Error')
   ELSE
-   CALL WMESSAGEBOX(OKONLY,INFORMATIONICON,COMMONOK,'iMOD SAVED the requested bitmap file called:'//CHAR(13)//&
-    TRIM(PNGNAME)//CHAR(13)//'successfully.','Information')
+
+   I=INFOERROR(1)
+   CALL WBITMAPSAVE(IBITMAP,PNGNAME)
+   I=INFOERROR(1)
+   IF(I.NE.0)THEN 
+    CALL WMESSAGEBOX(OKONLY,EXCLAMATIONICON,COMMONOK,'iMOD cannot SAVE the requested bitmap file called:'//CHAR(13)//&
+     TRIM(PNGNAME),'Error')
+   ELSE
+    CALL WMESSAGEBOX(OKONLY,INFORMATIONICON,COMMONOK,'iMOD SAVED the requested bitmap file called:'//CHAR(13)//&
+     TRIM(PNGNAME)//CHAR(13)//'successfully.','Information')
+   ENDIF
   ENDIF
- ENDIF
  
+ ENDDO
+ 
+ DEALLOCATE(IPOL,QSUBREGIO,IPLG)
+
  END SUBROUTINE WBAL_ANALYSE_PLOTIMAGE
 
  !###======================================================================

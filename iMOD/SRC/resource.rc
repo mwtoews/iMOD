@@ -8,7 +8,7 @@
 //
 // Winteracter resource script. 
 //
-// Modified : 08/Jun/2017 19:06:38
+// Modified : 09/Jun/2017 14:11:42
 //
 ///////////////////////////////////////////////////
 //
@@ -11179,13 +11179,15 @@ BEGIN
     CONTROL "Generate Preview ...",ID_PREVIEW,"BUTTON",WS_CHILD | WS_VISIBLE | WS_GROUP | WS_TABSTOP | BS_DEFPUSHBUTTON | BS_TEXT | BS_FLAT,  233,  188,   80,   14
     CONTROL "Time Series: select this option to display the selected water balance items in a graph.",IDF_RADIO1,"BUTTON",WS_CHILD | WS_VISIBLE | WS_GROUP | WS_TABSTOP | BS_AUTORADIOBUTTON | BS_TEXT | BS_FLAT,   20,   61,  368,   12
     CONTROL "Graphical Representation: select this option to present the water balance items in a illustrative image.",IDF_RADIO2,"BUTTON",WS_CHILD | WS_VISIBLE | WS_TABSTOP | BS_AUTORADIOBUTTON | BS_TEXT | BS_FLAT,   20,   76,  368,   12
-    CONTROL "Preview Table: select this option to display each value for the water balance items in a table.",IDF_RADIO4,"BUTTON",WS_CHILD | WS_VISIBLE | WS_TABSTOP | BS_AUTORADIOBUTTON | BS_TEXT | BS_FLAT,   20,   92,  368,   12
-    CONTROL "Export to CSV: select this option to export all water balance items into an CSV file.",IDF_RADIO3,"BUTTON",WS_CHILD | WS_VISIBLE | WS_TABSTOP | BS_AUTORADIOBUTTON | BS_TEXT | BS_FLAT,   20,  108,  368,   12
-    CONTROL "IDF per Layer: select this option to export all water balance items into separate IDF files.",IDF_RADIO5,"BUTTON",WS_CHILD | WS_VISIBLE | WS_TABSTOP | BS_AUTORADIOBUTTON | BS_TEXT | BS_FLAT,   20,  124,  368,   12
+    CONTROL "Preview Table: select this option to display each value for the water balance items in a table.",IDF_RADIO4,"BUTTON",WS_CHILD | WS_VISIBLE | WS_TABSTOP | BS_AUTORADIOBUTTON | BS_TEXT | BS_FLAT,   20,  119,  368,   12
+    CONTROL "Export to CSV: select this option to export all water balance items into an CSV file.",IDF_RADIO3,"BUTTON",WS_CHILD | WS_VISIBLE | WS_TABSTOP | BS_AUTORADIOBUTTON | BS_TEXT | BS_FLAT,   20,  135,  368,   12
+    CONTROL "IDF per Layer: select this option to export all water balance items into separate IDF files.",IDF_RADIO5,"BUTTON",WS_CHILD | WS_VISIBLE | WS_TABSTOP | BS_AUTORADIOBUTTON | BS_TEXT | BS_FLAT,   20,  151,  368,   12
     CONTROL "DD",ID_OPEN1,"BUTTON",WS_CHILD | WS_VISIBLE | WS_GROUP | WS_TABSTOP | BS_PUSHBUTTON | BS_TEXT | BS_BITMAP | BS_FLAT,  377,   20,   16,   14
     CONTROL "Specify the Output Folder",IDF_LABEL1,"STATIC",WS_CHILD | WS_VISIBLE | WS_GROUP | SS_LEFT,   10,    8,   93,    8
     CONTROL "<specify output foldername>",IDF_STRING1,"EDIT",WS_CHILD | WS_VISIBLE | WS_BORDER | WS_GROUP | WS_TABSTOP | ES_LEFT | ES_MULTILINE,   10,   20,  361,   20
     CONTROL "Output Type:",IDF_GROUP4,"BUTTON",WS_CHILD | WS_VISIBLE | WS_GROUP | BS_GROUPBOX | BS_TEXT | BS_LEFT,   10,   48,  384,  136
+    CONTROL "Zoom to selected polygon(s)",IDF_CHECK1,"BUTTON",WS_CHILD | WS_VISIBLE | WS_DISABLED | WS_GROUP | WS_TABSTOP | BS_AUTOCHECKBOX | BS_TEXT | BS_FLAT,   30,   89,  128,   14
+    CONTROL "Apply percentages for Volumes",IDF_CHECK2,"BUTTON",WS_CHILD | WS_VISIBLE | WS_DISABLED | WS_GROUP | WS_TABSTOP | BS_AUTOCHECKBOX | BS_TEXT | BS_FLAT,   30,  102,  128,   14
 END
 
 ID_DWBAL_ANALYSE_TAB4 RCDATA
@@ -11196,6 +11198,8 @@ BEGIN
 " 1016 0 \n"
 " 1015 0 \n"
 " 1017 0 \n"
+" 1182 1 \n"
+" 1183 0 \n"
 "[Lengths] \n"
 " 1078   256 \n"
 ,0
@@ -12775,4 +12779,4 @@ END
 //*WI* FILENAME    resource.f90
 //*WI* FMODNAME    RESOURCE
 //*WI* LASTTYPE        2
-//*WI* LASTRES       290
+//*WI* LASTRES       292
