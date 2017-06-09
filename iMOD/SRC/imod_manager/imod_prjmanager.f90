@@ -6163,7 +6163,7 @@ TOPICLOOP: DO ITOPIC=1,MAXTOPICS
  INTEGER,INTENT(IN) :: IBATCH,IINI
  INTEGER,INTENT(INOUT) :: IULAK
  INTEGER :: NSSITR,I,J,IOP,ILAY,ITMP1,IFBND
- REAL :: THETA,SSCNCR,LVL,FCT
+ REAL :: THETA,SSCNCR,LVL,FCT,SURFDEPTH
 
  PMANAGER_SAVEMF2005_LAK_SAVE=.TRUE.
 
@@ -6177,7 +6177,14 @@ TOPICLOOP: DO ITOPIC=1,MAXTOPICS
   !## a THETA is automatically set to a value of 1.0 for all steady-state stress periods
   !## a THETA of 0.5 represents the average lake stage during a time step.
   !## a THETA of 1.0 represents the lake stage at the end of the time step.
-  THETA=1.0; SSCNCR=0.001; NSSITR=100
+  !## a negative THETA of applies for a SURFDEPTH decreases the lakebed conductance for vertical flow across a horizontal lakebed
+  !## caused both by a groundwater head that is between the lakebed and the lakebed plus SURFDEPTH and a lake stage that is also
+  !## between the lakebed and the lakebed plus SURFDEPTH. This method provides a smooth transition from a condition of no groundwater
+  !## discharge to a lake, when groundwater head is below the lakebed, to a condition of increasing groundwater discharge to a lake as
+  !## groundwater head becomes greater than the elevation of the dry lakebed. The method also allows for the transition of seepage from
+  !## a lake to groundwater when the lake stage decreases to the lakebed elevation. Values of SURFDEPTH ranging from 0.01 to 0.5 have
+  !## been used successfully in test simulations. SURFDEP is read only if THETA is specified as a negative value.
+  THETA=-1.0; SSCNCR=0.001; NSSITR=100; SURFDEPTH=0.25
 
   !## read lake package (also adjust ibound for lakes)
   IULAK=UTL_GETUNIT(); CALL OSD_OPEN(IULAK,FILE=TRIM(DIRMNAME)//'.LAK7',STATUS='UNKNOWN',ACTION='WRITE',FORM='FORMATTED'); IF(IULAK.EQ.0)RETURN
@@ -6187,7 +6194,7 @@ TOPICLOOP: DO ITOPIC=1,MAXTOPICS
   WRITE(IULAK,'(A)') TRIM(LINE)
 
   !## set global settings
-  LINE=TRIM(RTOS(THETA,'G',5))//','//TRIM(ITOS(NSSITR))//','//TRIM(RTOS(SSCNCR,'G',5))
+  LINE=TRIM(RTOS(THETA,'G',5))//','//TRIM(ITOS(NSSITR))//','//TRIM(RTOS(SSCNCR,'G',5))//','//TRIM(RTOS(SURFDEPTH,'G',5))
   WRITE(IULAK,'(A)') TRIM(LINE)
  
  ENDIF

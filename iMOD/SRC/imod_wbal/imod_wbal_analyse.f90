@@ -702,7 +702,7 @@ CONTAINS
    !## quarters
    CASE (7); NXG=WBAL_ANAYSE_PREPARE_GETQUARTERS(IY1,IM1,IY2,IM2,SDATE,DT,XTXT)
    !## none - true dates in the result array
-   CASE (8); NXG=WBAL_ANAYSE_PREPARE_GETSELDATES(CMDATE,SDATE,DT,XTXT) !; LDATE=.TRUE.
+   CASE (8); NXG=WBAL_ANAYSE_PREPARE_GETSELDATES(CMDATE,SDATE,DT,XTXT) 
   END SELECT
   
 !  NXG=NXG+1
@@ -722,7 +722,7 @@ CONTAINS
  !## if layers need to be summed, overrule number of layers
  J=MLAY; IF(LSUM.EQ.1)J=1
  !## total groups in graph
- MGROUP=I*J !MZONE*MLAY
+ MGROUP=I*J 
 
  !## allocate graph memory
  CALL GRAPH_ALLOCATE(MBUDGET,MGROUP)
@@ -771,7 +771,6 @@ CONTAINS
  !## get appropriate sort
  ALLOCATE(SQ(NBUDGET))
  CALL WSORT(BUDGET%IGROUP,1,NBUDGET,IORDER=SQ)
-! DO I=1,NBUDGET; SQ(I)=I; ENDDO
  
  !## gather main information
  JQ=0; DO IIQ=1,NBUDGET
@@ -870,7 +869,7 @@ CONTAINS
     !## in
     GRAPH(IB  ,IG)%RY(ID)=GRAPH(IB  ,IG)%RY(ID)+GRAPH(IB-2,IG)%RY(ID)
     !## out
-    GRAPH(IB+1,IG)%RY(ID)=GRAPH(IB+1,IG)%RY(ID)-GRAPH(IB-1,IG)%RY(ID)
+    GRAPH(IB+1,IG)%RY(ID)=GRAPH(IB+1,IG)%RY(ID)+GRAPH(IB-1,IG)%RY(ID)
    ENDDO; ENDDO
   ENDDO
  ENDIF
