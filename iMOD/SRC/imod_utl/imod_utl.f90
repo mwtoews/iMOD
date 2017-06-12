@@ -2462,12 +2462,12 @@ CONTAINS
  END SUBROUTINE UTL_SETTEXTSIZE
 
  !###======================================================================
- SUBROUTINE UTL_IMODFILLMENU(ID,DIRNAME,WC,F,N,IMENUTYPE,ISTORE,SETNAME)
+ SUBROUTINE UTL_IMODFILLMENU(ID,DIRNAME,WC,F,N,IMENUTYPE,ISTORE,SETNAME,CORDER)
  !###======================================================================
  IMPLICIT NONE
  INTEGER,INTENT(OUT) :: N
  INTEGER,INTENT(IN) :: ID,IMENUTYPE,ISTORE
- CHARACTER(LEN=*),INTENT(IN),OPTIONAL :: SETNAME
+ CHARACTER(LEN=*),INTENT(IN),OPTIONAL :: SETNAME,CORDER
  CHARACTER(LEN=*),INTENT(IN) :: DIRNAME,WC,F
  INTEGER :: I
 
@@ -2495,9 +2495,13 @@ CONTAINS
   ENDIF
  ELSE
   ALLOCATE(LISTNAME(N))
-  CALL UTL_DIRINFO(DIRNAME,WC,LISTNAME,N,F)
-  DO I=1,N; LISTNAME(I)=UTL_CAP(LISTNAME(I),'U'); END DO
+  IF(PRESENT(CORDER))THEN
+   CALL UTL_DIRINFO(DIRNAME,WC,LISTNAME,N,F,CORDER)
+  ELSE
+   CALL UTL_DIRINFO(DIRNAME,WC,LISTNAME,N,F)
+  ENDIF
   IF(N.GT.0.AND.ID.NE.0)THEN
+   DO I=1,N; LISTNAME(I)=UTL_CAP(LISTNAME(I),'U'); END DO   
    CALL WDIALOGFIELDSTATE(ID,1)
    IF(IMENUTYPE.EQ.0)THEN
     IF(PRESENT(SETNAME))THEN
@@ -2511,8 +2515,7 @@ CONTAINS
      CALL WDIALOGPUTMENU(ID,LISTNAME,N,1)
     ENDIF
    ELSEIF(IMENUTYPE.EQ.1)THEN
-    ALLOCATE(ILIST(N))
-    ILIST=0
+    ALLOCATE(ILIST(N)); ILIST=0
     CALL WDIALOGPUTMENU(ID,LISTNAME,N,ILIST)
    ENDIF
   ELSE
@@ -3466,12 +3469,13 @@ CONTAINS
  END FUNCTION UTL_CAP_BIG
 
  !###======================================================================
- SUBROUTINE UTL_DIRINFO(DIR,WC,LISTNAME,N,FT)
+ SUBROUTINE UTL_DIRINFO(DIR,WC,LISTNAME,N,FT,CORDER)
  !###======================================================================
  IMPLICIT NONE
  INTEGER,INTENT(INOUT) :: N
  CHARACTER(LEN=*),INTENT(IN) :: DIR,WC,FT
  CHARACTER(LEN=*),INTENT(OUT),DIMENSION(:) :: LISTNAME
+ CHARACTER(LEN=*),INTENT(IN),OPTIONAL :: CORDER
  CHARACTER(LEN=512) :: LINE,BATFILE,TXTFILE
  INTEGER :: IU,I,J,IOS
  LOGICAL :: LEX
@@ -3497,11 +3501,21 @@ CONTAINS
   ENDIF
  ENDIF
 
- IF(FT.EQ.'F'.OR.FT.EQ.'f') &
-    LINE='dir /b /o "'    //TRIM(DIR)//'\'//TRIM(WC)//'" > "'//TRIM(TXTFILE)//'"'
- IF(FT.EQ.'D'.OR.FT.EQ.'d') &
-    LINE='dir /ad /b /o "'//TRIM(DIR)//'\'//TRIM(WC)//'" > "'//TRIM(TXTFILE)//'"'
-
+ IF(FT.EQ.'F'.OR.FT.EQ.'f')THEN
+  !## corder
+  IF(PRESENT(CORDER))THEN
+   LINE='dir /b /o'//TRIM(CORDER)//' "'//TRIM(DIR)//'\'//TRIM(WC)//'" > "'//TRIM(TXTFILE)//'"'
+  ELSE
+   LINE='dir /b /o "'                  //TRIM(DIR)//'\'//TRIM(WC)//'" > "'//TRIM(TXTFILE)//'"'
+  ENDIF
+ ELSEIF(FT.EQ.'D'.OR.FT.EQ.'d')THEN
+  IF(PRESENT(CORDER))THEN
+   LINE='dir /ad /b /o'//TRIM(CORDER)//' "'//TRIM(DIR)//'\'//TRIM(WC)//'" > "'//TRIM(TXTFILE)//'"'
+  ELSE
+   LINE='dir /ad /b /o "'                  //TRIM(DIR)//'\'//TRIM(WC)//'" > "'//TRIM(TXTFILE)//'"'
+  ENDIF
+ ENDIF
+ 
  !## remove \\
  DO
   I=INDEX(LINE,'\\')
@@ -3548,11 +3562,12 @@ CONTAINS
  END SUBROUTINE UTL_DIRINFO
  
  !###======================================================================
- LOGICAL FUNCTION UTL_DIRINFO_POINTER(DIR,WC,LISTNAME,FT)
+ LOGICAL FUNCTION UTL_DIRINFO_POINTER(DIR,WC,LISTNAME,FT,CORDER)
  !###======================================================================
  IMPLICIT NONE
  CHARACTER(LEN=*),INTENT(IN) :: DIR,WC,FT
  CHARACTER(LEN=*),INTENT(OUT),DIMENSION(:),POINTER :: LISTNAME
+ CHARACTER(LEN=*),INTENT(IN),OPTIONAL :: CORDER
  CHARACTER(LEN=256),DIMENSION(:),POINTER :: C_LISTNAME
  CHARACTER(LEN=512) :: LINE,BATFILE,TXTFILE
  INTEGER :: IU,I,J,N,IOS
@@ -3583,11 +3598,20 @@ CONTAINS
   ENDIF
  ENDIF
 
- IF(FT.EQ.'F'.OR.FT.EQ.'f') &
-    LINE='dir /b /o "'    //TRIM(DIR)//'\'//TRIM(WC)//'" > "'//TRIM(TXTFILE)//'"'
- IF(FT.EQ.'D'.OR.FT.EQ.'d') &
-    LINE='dir /ad /b /o "'//TRIM(DIR)//'\'//TRIM(WC)//'" > "'//TRIM(TXTFILE)//'"'
-
+ IF(FT.EQ.'F'.OR.FT.EQ.'f')THEN
+  IF(PRESENT(CORDER))THEN
+   LINE='dir /b /o'//TRIM(CORDER)//' "'//TRIM(DIR)//'\'//TRIM(WC)//'" > "'//TRIM(TXTFILE)//'"'
+  ELSE
+   LINE='dir /b /o "'                  //TRIM(DIR)//'\'//TRIM(WC)//'" > "'//TRIM(TXTFILE)//'"'
+  ENDIF
+ ELSEIF(FT.EQ.'D'.OR.FT.EQ.'d')THEN
+  IF(PRESENT(CORDER))THEN
+   LINE='dir /ad /b /o'//TRIM(CORDER)//' "'//TRIM(DIR)//'\'//TRIM(WC)//'" > "'//TRIM(TXTFILE)//'"'
+  ELSE
+   LINE='dir /ad /b /o "'                  //TRIM(DIR)//'\'//TRIM(WC)//'" > "'//TRIM(TXTFILE)//'"'
+  ENDIF
+ ENDIF
+ 
  !## remove \\
  DO
   I=INDEX(LINE,'\\')
