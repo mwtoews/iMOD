@@ -660,13 +660,14 @@ CONTAINS
  IAG=0; IF(WINFODIALOGFIELD(IDF_RADIO5,FIELDSTATE).EQ.1)CALL WDIALOGGETRADIOBUTTON(IDF_RADIO5,IAG)
  !## apply net fluxes
  CALL WDIALOGGETCHECKBOX(IDF_CHECK1,INET)
+! !## net balance terms if selected = inet=0 otherwise inet=1
+! INET=ABS(INET-1)
  
  !## make selection
  MLAY=0;    DO I=1,NLAY;    IF(LILAY(I).EQ.1)      MLAY=MLAY+1;       ENDDO
  MZONE=0;   DO I=1,NZONE;   IF(LIZONE(I).EQ.1)     MZONE=MZONE+1;     ENDDO
  MDATE=0;   DO I=1,NDATE;   IF(LIDATE(I).EQ.1)     MDATE=MDATE+1;     ENDDO
  MBUDGET=0; DO I=1,NBUDGET; IF(BUDGET(I)%IACT.EQ.1)MBUDGET=MBUDGET+1; ENDDO
-! MBUDGET=0; DO I=1,NBUDGET; IF(BUDGET(I)%IACT.EQ.1)MBUDGET=MBUDGET+2; ENDDO
  
  !## get appropriate sort
  ALLOCATE(SQ(MBUDGET),UQ(MBUDGET),OSQ(MBUDGET))
@@ -698,8 +699,13 @@ CONTAINS
  CALL WSORT(SQ,1,NBUDGET,IORDER=OSQ)
 
  !## number of budget in the graphs (unique groups times 2 - in- and outflow)
- MBUDGET=NUQ*2
-
+ IF(INET.EQ.0)THEN
+  MBUDGET=NUQ*2
+ ELSE
+  !## net fluxes
+  MBUDGET=NUQ
+ ENDIF
+ 
  !## total groups in potential
  MGROUP=MZONE*MLAY
 
@@ -832,21 +838,27 @@ CONTAINS
   
    IG=IG+1
   
-   JQIN=(JQ-1)*2+1
-   JQOU= JQIN+1
-  
-   !## plot legend one-by-one
-   GRAPH(JQIN,IG)%LEGTXT=TRIM(UTL_CAP(BUDGET(IQ)%LABEL,'U'))
-   GRAPH(JQOU,IG)%LEGTXT='' 
-
-   GRAPH(JQIN,IG)%ICLR  =BUDGET(IQ)%ICLR
-   GRAPH(JQOU,IG)%ICLR  =BUDGET(IQ)%ICLR
-   IF(TRIM(GRAPH(JQIN,IG)%CTYPE).EQ.'')THEN
-    GRAPH(JQIN,IG)%CTYPE =TRIM(UTL_CAP(BUDGET(IQ)%FLUXTERM,'U'))//'_in'
-    GRAPH(JQOU,IG)%CTYPE =TRIM(UTL_CAP(BUDGET(IQ)%FLUXTERM,'U'))//'_in'
+   IF(INET.EQ.0)THEN
+    JQIN=(JQ-1)*2+1
+    JQOU= JQIN+1
    ELSE
-    GRAPH(JQIN,IG)%CTYPE ='group flux'
-    GRAPH(JQOU,IG)%CTYPE ='group flux'
+    JQIN=(JQ-1)+1   
+    JQOU= JQIN
+   ENDIF
+   
+   !## plot legend one-by-one
+   GRAPH(JQOU,IG)%LEGTXT='' 
+   GRAPH(JQIN,IG)%LEGTXT=TRIM(UTL_CAP(BUDGET(IQ)%LABEL,'U'))
+
+   GRAPH(JQOU,IG)%ICLR  =BUDGET(IQ)%ICLR
+   GRAPH(JQIN,IG)%ICLR  =BUDGET(IQ)%ICLR
+
+   IF(TRIM(GRAPH(JQIN,IG)%CTYPE).EQ.'')THEN
+    GRAPH(JQOU,IG)%CTYPE =TRIM(UTL_CAP(BUDGET(IQ)%FLUXTERM,'U'))//'_out'
+    GRAPH(JQIN,IG)%CTYPE =TRIM(UTL_CAP(BUDGET(IQ)%FLUXTERM,'U'))//'_in'
+   ELSE
+    GRAPH(JQOU,IG)%CTYPE ='group flux out'
+    GRAPH(JQIN,IG)%CTYPE ='group flux in'
    ENDIF
      
   ENDDO; ENDDO
@@ -894,18 +906,21 @@ CONTAINS
 
    IHIT=IHIT+1
    
-   JQIN=(JQ-1)*2+1
-   JQOU= JQIN+1
+   IF(INET.EQ.0)THEN
+    JQIN=(JQ-1)*2+1
+    JQOU= JQIN+1
+   ELSE
+    JQIN=(JQ-1)+1
+    JQOU= JQIN
+   ENDIF
 
-!   JQIN= JQIN+2
-!   JQOU= JQOU+2
    IQIN=(IQ-1)*2+1
    IQOU= IQIN+1
-
+   
    !## get balance value as summed value (stacked)
    QIN=GWBAL(1)%Q(IQIN,I)
    QOU=GWBAL(1)%Q(IQOU,I)
-
+  
    !## add to existing fluxes - ID is timestep
    GRAPH(JQIN,IG)%RY(IPOS)=GRAPH(JQIN,IG)%RY(IPOS)+QIN
    GRAPH(JQOU,IG)%RY(IPOS)=GRAPH(JQOU,IG)%RY(IPOS)+QOU
@@ -919,9 +934,6 @@ CONTAINS
   !## make stacked-histograms
   DO ID=1,NXG
    DO IG=1,MGROUP; DO IB=3,MBUDGET,2
-
-!## something to do with groups
-
     !## in
     GRAPH(IB  ,IG)%RY(ID)=GRAPH(IB  ,IG)%RY(ID)+GRAPH(IB-2,IG)%RY(ID)
     !## out
