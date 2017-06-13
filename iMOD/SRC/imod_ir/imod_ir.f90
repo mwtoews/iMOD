@@ -285,13 +285,14 @@ CONTAINS
 !WRITE(*,*) DIRNAME
     !## dirname exists ...
     IF(IOSDIREXISTS(DIRNAME))THEN
-     CALL UTL_DEL1TREE(DIRNAME)
-     !## dirname still exists ... user terminated the process
-     IF(.NOT.IOSDIREXISTS(DIRNAME))THEN
+     IF(UTL_DEL1TREE(DIRNAME))THEN
+      !## dirname still exists ... user terminated the process
+      IF(.NOT.IOSDIREXISTS(DIRNAME))THEN
       !## delete tree-item ...
 !     WRITE(*,*) '1:JFIELD,N=',JFIELD,N,RTREE(JFIELD)%RESULT_ID,ID,ID1
-      IF(JFIELD.LE.N)CALL IR1TREEFIELD_REMOVE(JFIELD,ID1)!FIELD,ID1)
-      IR1CHECKCNAME=.TRUE.
+       IF(JFIELD.LE.N)CALL IR1TREEFIELD_REMOVE(JFIELD,ID1)!FIELD,ID1)
+       IR1CHECKCNAME=.TRUE.
+      ENDIF
      ENDIF
     ELSE
 !     WRITE(*,*) '2:JFIELD,N=',JFIELD,N,RTREE(JFIELD)%RESULT_ID,ID,ID1

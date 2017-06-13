@@ -2881,12 +2881,14 @@ CONTAINS
  END SUBROUTINE UTL_CREATEDIR
 
  !###======================================================================
- SUBROUTINE UTL_DEL1TREE(DIR)
+ LOGICAL FUNCTION UTL_DEL1TREE(DIR)
  !###======================================================================
  IMPLICIT NONE
  CHARACTER(LEN=*),INTENT(IN) :: DIR
  INTEGER :: I,IERROR
  CHARACTER(LEN=256) :: CURDIR,DELDIR
+
+ UTL_DEL1TREE=.FALSE.
 
  CALL IOSDIRNAME(CURDIR)
  I=INDEXNOCASE(DIR,'\',.TRUE.)
@@ -2908,7 +2910,9 @@ CONTAINS
  CALL UTL_DEL2TREE(DELDIR)
  CALL IOSDIRCHANGE(CURDIR)
 
- END SUBROUTINE UTL_DEL1TREE
+ UTL_DEL1TREE=.TRUE.
+
+ END FUNCTION UTL_DEL1TREE
 
  !###======================================================================
  RECURSIVE SUBROUTINE UTL_DEL2TREE(DIR)
@@ -2921,19 +2925,19 @@ CONTAINS
 
  CALL WINDOWOUTSTATUSBAR(4,'Delete directory '//TRIM(DIR)//'...')
 
- !#clear existing error?
+ !## clear existing error?
  IERROR=INFOERROR(1)
- !##go one level down
+ !## go one level down
  CALL IOSDIRCHANGE(DIR)
  IERROR=INFOERROR(1)
- !#dirchange error?
+ !## dirchange error?
  IF(IERROR.NE.0)THEN
   CALL WMESSAGEBOX(OKONLY,EXCLAMATIONICON,COMMONOK,'Could not change towards directory:'//CHAR(13)// &
                TRIM(DIR),'iMOD: Error')
   RETURN
  ENDIF
 
- !##how many subdirectories exist?
+ !## how many subdirectories exist?
  NDIR=MXDIR
  CALL IOSDIRENTRYTYPE('D')
  CALL IOSDIRINFO(' ',' ',RESDIR,NDIR)
@@ -2944,9 +2948,9 @@ CONTAINS
  DO I=3,NDIR
   CALL UTL_DEL2TREE(RESDIR(I))
  END DO
- !##delete all files in directory
+ !## delete all files in directory
  CALL IOSDELETEFILE('*.*')
- !##return one level up
+ !## return one level up
  CALL IOSDIRCHANGE('..')
  CALL IOSDIRDELETE(DIR)
 
