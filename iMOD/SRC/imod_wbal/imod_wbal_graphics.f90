@@ -223,7 +223,7 @@ USE MOD_IDF_PAR, ONLY : IDFOBJ
 
 CONTAINS
 !###====================================================================
-      LOGICAL FUNCTION DRAWBAL(Q,QTXT,NXPIX,NYPIX,CS,IPOL,NPOL,QSUBREGIO,PERC,ICOLPLG,IPLG,IDF,LOCAL,GRAPHTITLE,IPLOT)    
+      LOGICAL FUNCTION DRAWBAL(Q,QTXT,NXPIX,NYPIX,CS,IIPOL,NPOL,QSUBREGIO,PERC,ICOLPLG,IPLG,IDF,LOCAL,GRAPHTITLE,IPLOT)    
 !###====================================================================
 !     THIS LOGICAL FUNCTION GENERATES A PNG FILE CONTAINING A PICTURE OF AN AVERAGE WATERBALANCE
 !     THE FOLLOWING TERMS ARE USED
@@ -243,15 +243,16 @@ CONTAINS
       IMPLICIT NONE
       INTEGER,DIMENSION(NPOL), INTENT(IN) ::  ICOLPLG,IPLG
       REAL,DIMENSION(NPOL,2),INTENT(INOUT) :: QSUBREGIO
-      REAL,DIMENSION(4) :: XR,YR
       REAL,DIMENSION(24,2),INTENT(INOUT) :: Q
       CHARACTER(LEN=*),DIMENSION(24),INTENT(INOUT) :: QTXT
       CHARACTER(LEN=*),INTENT(IN) :: GRAPHTITLE
+      INTEGER, INTENT(IN) :: NPOL
+      INTEGER, INTENT(IN),DIMENSION(:) :: IIPOL
+      REAL,DIMENSION(4) :: XR,YR
       CHARACTER(LEN=15) STR
       CHARACTER(LEN=10) STRDUM
       CHARACTER(LEN=8) FMT
-      INTEGER, INTENT(IN) :: IPOL,NPOL
-      INTEGER :: NXPIX,NYPIX,IPLOT,IUNSATURATED,ISATURATED,IBL1,IGR1,IRD1,IBL2,IGR2,IRD2,II,JJ,JPOL,I,J,K,IW,IWMAX,JW,JWMAX
+      INTEGER :: NXPIX,NYPIX,IPLOT,IUNSATURATED,ISATURATED,IBL1,IGR1,IRD1,IBL2,IGR2,IRD2,II,JJ,JPOL,I,J,K,IW,IWMAX,JW,JWMAX,IPOL
       REAL :: SUMIN,SUMOUT,AREA,CS,B,H
       REAL :: DW,DH,DY,DX,XLENII,XLENJJ
       LOGICAL :: LOCAL,PERC
@@ -358,6 +359,8 @@ CONTAINS
       IWMAX=0;JWMAX=0
       XLENII=0.0;XLENJJ=0.0
       DO JPOL=1,NPOL
+        DO J=1,SIZE(IIPOL)
+         IPOL=IIPOL(J)
          IF(JPOL.NE.IPOL) THEN
            CALL PLOTSUBREGIO(II,JJ,QSUBREGIO(JPOL,1),QSUBREGIO(JPOL,2),IPOL,JPOL,NPOL,ICOLPLG,IPLG,DH,B,H)
            FMT=MAKEFMT(QSUBREGIO(JPOL,1)); WRITE(STRDUM,FMT) QSUBREGIO(JPOL,1)
@@ -371,6 +374,7 @@ CONTAINS
            WRITE(STR(1:15),'(I7.7,A,I7.7)') IPLG(JPOL),'-',IPLG(IPOL)
            XLENJJ=AMAX1(XLENJJ,WGRTEXTLENGTH(STR(1:15)//'='//STRDUM)*infographics(3))
          ENDIF
+        ENDDO
       ENDDO
       CALL IGRLINETYPE(2)
       CALL IGRCOLOURN(WRGB(0,0,0))
@@ -410,16 +414,20 @@ CONTAINS
       CALL PLOTDRAIN(Q(20,1),Q(20,2), 0.25,0.50,0.01,QTXT(20),B,H)           ! PLOT METASWPA QSPGW
       CALL VTERM2(Q(24,1),Q(24,2),0.48,0.50,0.00,    QTXT(24),B,H,0,0)       ! PLOT METASWAP QMODF
 
-      CALL PLOTIDF(IPOL,NPOL,IPLG,ICOLPLG,IPLOT,LOCAL,AREA,IDF)
+      CALL PLOTIDF(IIPOL,NPOL,IPLG,ICOLPLG,IPLOT,LOCAL,AREA,IDF)
 
       CALL IGRAREA(0.0,0.0,1.0,1.0)
       CALL IGRUNITS(0.0,0.0,1.0,1.0)
       CALL WGRTEXTORIENTATION(0, 0.0,0)
-      WRITE(STR,'(I4.4)') IPOL
+      
+      WRITE(STR,'(99(I4.4,A1))') (IIPOL(J),',',J=1,SIZE(IIPOL))
+!      WRITE(STR,'(I4.4)') IPOL
+      
       CALL IGRCOLOURN(WRGB(0,0,0))
       CALL CSIZE(CS,DW,DH,IPLOT)
       CALL WGRTEXTFONT(101,1,DW,DH)
-      WRITE(STR(1:7),'(I7.7)') IPLG(IPOL)
+!      WRITE(STR(1:7),'(I7.7)') IPLG(IPOL)
+      WRITE(STR(1:7),'(99(I7.7,A1))') (IPLG(IIPOL(J)),',',J=1,SIZE(IIPOL))
       CALL WGRTEXTSTRING(0.15,0.03+4.5*DH,'WATERBALANCE REGION    '//STR(1:7))
       CALL OUTVALUE(0.15,0.03+3.5*DH,AREA/10000.0,          'AREA             HA   ')
       IF(PERC) THEN
@@ -455,11 +463,13 @@ CONTAINS
       REAL,INTENT(IN) :: X0,Y0,X1,Y1,XTXT,YTXT,ANGLE,Q
       INTEGER,INTENT(IN) :: IJUSTIFY,ICOLOR
       CHARACTER(LEN=*),INTENT(INOUT) :: QTXT
+      
       CALL IGRFILLPATTERN(4,4,4)
       CALL IGRCOLOURN(ICOLOR)
       CALL IGRARROWJOIN(X0,Y0,X1,Y1,2)
       CALL WGRTEXTORIENTATION(IJUSTIFY,ANGLE,0)
       CALL OUTVALUE(XTXT,YTXT,Q,QTXT)
+      
       END SUBROUTINE ARROWTEXT
       
 !###====================================================================
@@ -470,6 +480,7 @@ CONTAINS
       REAL,INTENT(IN) :: B,H,FX,FY,P,QIN,QUIT
       REAL :: XDRN,YDRN
       INTEGER :: IPLOT,ILEN
+      
       CALL IGRLINEWIDTH(1)
       CALL IGRFILLPATTERN(0,0,0)
       XDRN=FX*B
@@ -496,6 +507,7 @@ CONTAINS
                         XDRN,YDRN+0.1*H,&
                         0,90.0,WRGB(0,0,255),ABS(QIN+QUIT),QTXT(1:LEN_TRIM(QTXT)))
       ENDIF                                     
+      
       END SUBROUTINE PLOTDRAIN
 
 !###====================================================================
@@ -503,9 +515,10 @@ CONTAINS
 !###====================================================================
       IMPLICIT NONE
       REAL,INTENT(IN) :: QIN,QUIT,B,H,F
+      CHARACTER(LEN=*),INTENT(INOUT) :: QTXT
       REAL :: X,Y
       INTEGER :: IPLOT,ILEN
-      CHARACTER(LEN=*),INTENT(INOUT) :: QTXT
+      
       IF(QIN.NE.0.OR.QUIT.NE.0) THEN
       	 X=0.33*B
       	 Y=F*H
@@ -522,18 +535,19 @@ CONTAINS
          CALL WGRTEXTORIENTATION(0,0.0,0)
          CALL OUTVALUE(X,Y+0.025*H,ABS(QIN+QUIT),QTXT(1:LEN_TRIM(QTXT)))
       ENDIF
+      
       END SUBROUTINE DVOLUME
 
 !###====================================================================
       SUBROUTINE PLOTRIV(QIN,QUIT,F,ICOL,QTXT,B,H)                                                                     
 !###====================================================================
-
       IMPLICIT NONE
       REAL,INTENT(IN) :: QIN,QUIT,B,H,F
-      REAL :: XTRAP1,YTRAP1,XTRAP2,YTRAP2,XL1,XL2
       INTEGER,INTENT(IN) :: ICOL
-      INTEGER :: IPLOT
       CHARACTER(LEN=*),INTENT(INOUT) :: QTXT                                                                                    
+      REAL :: XTRAP1,YTRAP1,XTRAP2,YTRAP2,XL1,XL2
+      INTEGER :: IPLOT
+
       IF(QIN.NE.0.OR.QUIT.NE.0) THEN                                                                        
 !        PLOT RIVER                                                                                         
          XTRAP1=F*B; YTRAP1=0.75*H                                                                                       
@@ -557,6 +571,7 @@ CONTAINS
                            0,90.0,WRGB(0,0,255),QIN,QTXT(1:LEN_TRIM(QTXT)))
          ENDIF                                                                                              
       ENDIF                                                                                                 
+
       END SUBROUTINE PLOTRIV
       
 !###====================================================================
@@ -564,9 +579,10 @@ CONTAINS
 !###====================================================================
       IMPLICIT NONE
       REAL,INTENT(IN) :: QIN,QUIT,B,H,F
+      CHARACTER(LEN=*),INTENT(INOUT) :: QTXT
       REAL :: XWEL
       INTEGER :: IPLOT
-      CHARACTER(LEN=*) QTXT
+
       IF(QIN.NE.0.OR.QUIT.NE.0) THEN
 !        PLOT WEL
          XWEL=F*B
@@ -589,6 +605,7 @@ CONTAINS
                            2,90.0,WRGB(0,0,255),QIN,QTXT(1:LEN_TRIM(QTXT)))
          ENDIF
       ENDIF
+      
       END SUBROUTINE PLOTWEL
 
 !###====================================================================
@@ -596,8 +613,9 @@ CONTAINS
 !###====================================================================
       IMPLICIT NONE
       REAL,INTENT(IN) :: QIN,QUIT,B,H,F
-      CHARACTER(LEN=*) QTXT
+      CHARACTER(LEN=*),INTENT(INOUT) :: QTXT
       INTEGER :: IPLOT
+      
       IF(QIN.NE.0)  CALL ARROWTEXT(0.1*B,F*H,0.2*B,F*H,&
                                    0.1*B,(F+0.025)*H,&
                                    0,0.0,WRGB(0,0,255),QIN,QTXT(1:LEN_TRIM(QTXT)))
@@ -605,17 +623,18 @@ CONTAINS
       IF(QUIT.NE.0) CALL ARROWTEXT(0.8*B,F*H,0.9*B,F*H,&
                                    0.8*B,(F+0.025)*H,&
                                    0,0.0,WRGB(255,0,0),ABS(QUIT),QTXT(1:LEN_TRIM(QTXT)))
-      END SUBROUTINE PLOTREG
 
+      END SUBROUTINE PLOTREG
 
 !###====================================================================
       SUBROUTINE VTERM2(QIN,QUIT,FX1,FX2,FY,QTXT,B,H,IPOS,ITOP)             
 !###====================================================================
       IMPLICIT NONE                                              
       REAL,INTENT(IN) :: QIN,QUIT,B,H,FX1,FX2,FY
-      CHARACTER(LEN=*) QTXT                                          
+      CHARACTER(LEN=*),INTENT(INOUT) ::  QTXT                                          
       INTEGER,INTENT(IN) :: IPOS,ITOP
       INTEGER :: IPLOT
+      
       IF(ITOP.EQ.1) THEN
          IF(IPOS.EQ.2) THEN
             IF(QIN.NE.0) CALL ARROWTEXT(FX1*B,(FY+0.1)*H,FX1*B,FY*H,&
@@ -649,17 +668,19 @@ CONTAINS
                                         IPOS,90.0,WRGB(255,0,0),ABS(QUIT),QTXT(1:LEN_TRIM(QTXT)))
          ENDIF
       ENDIF
+      
       END SUBROUTINE VTERM2
-
 
 !###====================================================================
       SUBROUTINE OUTVALUE(X,Y,VALUE,ITEM)
 !###====================================================================
       IMPLICIT NONE
       REAL,INTENT(IN) :: X,Y,VALUE
+      CHARACTER(LEN=*),INTENT(IN) :: ITEM
       INTEGER :: ILAST
-      CHARACTER(LEN=8) FMT,STR*10
-      CHARACTER(LEN=*) ITEM
+      CHARACTER(LEN=8) :: FMT
+      CHARACTER(LEN=10) :: STR
+
       FMT=MAKEFMT(VALUE)
       CALL IGRCOLOURN(WRGB(0,0,0))
       IF(INDEX(FMT,'I10').GT.0) THEN
@@ -671,23 +692,24 @@ CONTAINS
          CALL LASTCHAR(STR,' ',ILAST); ILAST=MAX0(ILAST,1)
          CALL WGRTEXTSTRING(X,Y,ITEM//'='//STR(ILAST:10))
       ENDIF
-      END SUBROUTINE OUTVALUE
 
+      END SUBROUTINE OUTVALUE
 
 !###====================================================================
       SUBROUTINE CSIZE(CS,CW,CH,IPLOT)
 !###====================================================================
       IMPLICIT NONE
       REAL,INTENT(INOUT) :: CW,CH
+      INTEGER,INTENT(IN) :: IPLOT
       REAL,INTENT(IN) :: CS
       REAL :: DX,DY
-      INTEGER :: IPLOT
 
 !     CALCULATE PART OF GRAPHICS AREA IN XAND Y IRECTION
       DX=INFOGRAPHICS(9)-INFOGRAPHICS(7)
       DY=INFOGRAPHICS(10)-INFOGRAPHICS(8)
       CH=2.5*CS*REAL(WINFOBITMAP(IPLOT,1))/(DY*REAL(WINFOBITMAP(IPLOT,2)))
       CW=CS/DX
+
       END SUBROUTINE CSIZE
 
 !###====================================================================
@@ -738,6 +760,7 @@ CONTAINS
          DX=(IRANDOMNUMBER(1)-0.5)*2*R0*0.5
          CALL IGRJOIN(X,Y,X-DX,Y-IRANDOMNUMBER(1)*R0)
       ENDDO
+
       END SUBROUTINE PLOTTREE
 
 !###====================================================================
@@ -746,8 +769,9 @@ CONTAINS
       IMPLICIT NONE
       INTEGER :: IL,I
       INTEGER,INTENT(INOUT) :: ILAST                 
-      CHARACTER(LEN=*) :: STR                
+      CHARACTER(LEN=*) :: STR
       CHARACTER(LEN=1),INTENT(IN) :: CH                   
+
       IL=LEN_TRIM(STR)                   
       ILAST=0                          
       DO I=IL,1,-1                     
@@ -756,14 +780,17 @@ CONTAINS
             RETURN              
          ENDIF                         
       ENDDO                            
+
       END SUBROUTINE LASTCHAR
 
 !###====================================================================
       SUBROUTINE PLOTSUBREGIO(II,JJ,QIN,QUIT,IPOL,JPOL,NPOL,ICOLPLG,IPLG,DH,B,H)
 !###====================================================================
       IMPLICIT NONE
-      REAL :: QIN,QUIT,B,H,DH,DX,DY
-      INTEGER,INTENT(IN) :: ICOLPLG(NPOL),IPLG(NPOL),JPOL,IPOL,NPOL
+      INTEGER,INTENT(IN),DIMENSION(NPOL) :: ICOLPLG,IPLG
+      INTEGER,INTENT(IN) :: JPOL,IPOL,NPOL
+      REAL,INTENT(IN) :: QIN,QUIT,B,H,DH
+      REAL :: DX,DY
       INTEGER :: II,JJ
       CHARACTER(LEN=15) STR
 
@@ -796,21 +823,23 @@ CONTAINS
          CALL IGRCIRCLE(0.84*B,0.65*H-JJ*DH,0.006*B)
          CALL IGRCIRCLE(0.77*B,0.65*H-JJ*DH,0.006*B)
       ENDIF
+      
       END SUBROUTINE PLOTSUBREGIO
 
-
 !###====================================================================
-      SUBROUTINE PLOTIDF(IPOL,NPOL,IPLG,ICOLPLG,IPLOT,LOCAL,AREA,IDF)
+      SUBROUTINE PLOTIDF(IIPOL,NPOL,IPLG,ICOLPLG,IPLOT,LOCAL,AREA,IDF)
 !###====================================================================
       IMPLICIT NONE
-      INTEGER :: IREGULAR,IREC,I,J,IPOL,NCOL,NROW,NPOL,IPLOT,K
+      INTEGER,INTENT(IN),DIMENSION(:) :: IIPOL
+      REAL,INTENT(OUT) :: AREA
+      INTEGER,DIMENSION(NPOL),INTENT(IN) :: IPLG,ICOLPLG
+      INTEGER,INTENT(IN) :: IPLOT
+      TYPE (IDFOBJ),INTENT(IN) :: IDF
+      INTEGER :: IREGULAR,IREC,I,J,IPOL,NCOL,NROW,NPOL,K,II
       INTEGER :: IR,IG,IB
       REAL :: X1PLOT,X0PLOT,Y1PLOT,Y0PLOT,X,Y,VALUE,VALUEBUUR,X0,X1,Y0,Y1
-      REAL, INTENT(OUT) :: AREA
       REAL :: FAREAX1,FAREAX2,FAREAY1,FAREAY2,DX,DY,DXWIN,DYWIN
-      INTEGER,DIMENSION(NPOL),INTENT(IN) :: IPLG,ICOLPLG
       LOGICAL :: LOCAL 
-      TYPE (IDFOBJ) :: IDF
 
 !     PLOT REGIONS
       FAREAX1=0.68
@@ -840,12 +869,15 @@ CONTAINS
          X0PLOT=IDF%XMAX; X1PLOT=IDF%XMIN 
          Y0PLOT=IDF%YMAX; Y1PLOT=IDF%YMIN 
          DO J=1,IDF%NROW
-            DO I=1,IDF%NCOL
-              IF(ABS(NINT(IDF%X(I,J))).EQ.IPLG(IPOL)) THEN
+          DO I=1,IDF%NCOL
+           DO II=1,SIZE(IIPOL)
+            IPOL=IIPOL(II)
+            IF(ABS(NINT(IDF%X(I,J))).EQ.IPLG(IPOL)) THEN
                  X0PLOT=AMIN1(X0PLOT,IDF%SX(I-1)); X1PLOT=AMAX1(X1PLOT,IDF%SX(I)) 
                  Y0PLOT=AMIN1(Y0PLOT,IDF%SY(J-1)); Y1PLOT=AMAX1(Y1PLOT,IDF%SY(J)) 
-              ENDIF
-         ENDDO
+            ENDIF
+           ENDDO
+          ENDDO
          ENDDO
          CALL MAKESQUAREWINDOW(X0PLOT,Y0PLOT,X1PLOT,Y1PLOT)
       ELSE
@@ -867,26 +899,29 @@ CONTAINS
       CALL IGRFILLPATTERN(4,4,4)
 !     PLOT THE DIFFERENT REGIONS IN DIFFERENT COLORS
       DO J=1,IDF%NROW
-         DO I=1,IDF%NCOL
-            IF(ABS(NINT(IDF%X(I,J))).EQ.IPLG(IPOL)) THEN
+       DO I=1,IDF%NCOL
+        DO II=1,SIZE(IIPOL)
+         IPOL=IIPOL(II)
+         IF(ABS(NINT(IDF%X(I,J))).EQ.IPLG(IPOL)) THEN
                AREA=AREA+(IDF%SX(I)-IDF%SX(I-1))*(IDF%SY(J-1)-IDF%SY(J))
-            ENDIF
-            DO K=1,NPOL
-               IF(ABS(NINT(IDF%X(I,J))).EQ.IPLG(IPOL)) THEN
-                  CALL IGRCOLOURN(ICOLPLG(IPOL))
-                  CALL IGRRECTANGLE(IDF%SX(I-1),IDF%SY(J-1),IDF%SX(I),IDF%SY(J))
-               ENDIF
+         ENDIF
+         DO K=1,NPOL
+          IF(ABS(NINT(IDF%X(I,J))).EQ.IPLG(IPOL)) THEN
+           CALL IGRCOLOURN(ICOLPLG(IPOL))
+           CALL IGRRECTANGLE(IDF%SX(I-1),IDF%SY(J-1),IDF%SX(I),IDF%SY(J))
+          ENDIF
 !              MAKE COLORS "NEIGHBOR-REGIONS" LESS INTENSE
-               IF(ABS(NINT(IDF%X(I,J))).NE.IPLG(IPOL).AND.ABS(NINT(IDF%X(I,J))).EQ.IPLG(K)) THEN
-               	  CALL WRGBSPLIT(ICOLPLG(K),IR,IG,IB)
-               	  IR=IR+(255-IR)*0.5
-               	  IG=IG+(255-IG)*0.5
-               	  IB=IB+(255-IB)*0.5
-                  CALL IGRCOLOURN(WRGB(IR,IG,IB))
-                  CALL IGRRECTANGLE(IDF%SX(I-1),IDF%SY(J-1),IDF%SX(I),IDF%SY(J))
-               ENDIF
-            ENDDO
+          IF(ABS(NINT(IDF%X(I,J))).NE.IPLG(IPOL).AND.ABS(NINT(IDF%X(I,J))).EQ.IPLG(K)) THEN
+           CALL WRGBSPLIT(ICOLPLG(K),IR,IG,IB)
+           IR=IR+(255-IR)*0.5
+           IG=IG+(255-IG)*0.5
+           IB=IB+(255-IB)*0.5
+           CALL IGRCOLOURN(WRGB(IR,IG,IB))
+           CALL IGRRECTANGLE(IDF%SX(I-1),IDF%SY(J-1),IDF%SX(I),IDF%SY(J))
+          ENDIF
          ENDDO
+        ENDDO
+       ENDDO
       ENDDO
       CALL IGRCOLOURN(WRGB(0,0,0))
 
@@ -915,27 +950,30 @@ CONTAINS
       FUNCTION MAKEFMT(VALUE)
 !###====================================================================
       IMPLICIT NONE
-      CHARACTER(LEN=8) MAKEFMT
       REAL,INTENT(IN) :: VALUE
+      CHARACTER(LEN=8) :: MAKEFMT
+
       MAKEFMT='(F10.1) '
       IF(ABS(VALUE).GT.100000)                       MAKEFMT='(G10.4) '
       IF(ABS(VALUE).GT.10  .AND.ABS(VALUE).LE.100000)MAKEFMT='(F10.0) '
       IF(ABS(VALUE).GT.1   .AND.ABS(VALUE).LE.10   ) MAKEFMT='(F10.1) '
       IF(ABS(VALUE).GT.0.01.AND.ABS(VALUE).LE.1)     MAKEFMT='(F10.2) '
       IF(ABS(VALUE).GT.0   .AND.ABS(VALUE).LE.0.01)  MAKEFMT='(G10.4) '
-      END FUNCTION  MAKEFMT
 
+      END FUNCTION  MAKEFMT
 
 !###====================================================================
       INTEGER FUNCTION NNOSPACE(STR)
 !###====================================================================
       IMPLICIT NONE
-      CHARACTER(LEN=*) STR
+      CHARACTER(LEN=*),INTENT(IN) :: STR
       INTEGER :: I
+
       NNOSPACE=0
       DO I=1,LEN_TRIM(STR)
          IF(STR(I:I).NE.' ') NNOSPACE=NNOSPACE+1
       ENDDO
+
       END FUNCTION NNOSPACE
 
 !###====================================================================
@@ -943,6 +981,7 @@ CONTAINS
 !###====================================================================
       REAL, INTENT(INOUT) :: X0PLOT,Y0PLOT,X1PLOT,Y1PLOT
       REAL :: DXWIN,DYWIN
+
       DXWIN=X1PLOT-X0PLOT
       DYWIN=Y1PLOT-Y0PLOT
       IF(DXWIN/DYWIN.LT.1) THEN
@@ -955,10 +994,9 @@ CONTAINS
       DYWIN=Y1PLOT-Y0PLOT
       X0PLOT=X0PLOT-0.05*DXWIN; X1PLOT=X1PLOT+0.05*DXWIN;      
       Y0PLOT=Y0PLOT-0.05*DYWIN; Y1PLOT=Y1PLOT+0.05*DYWIN;      
+
       END SUBROUTINE MAKESQUAREWINDOW
       
-
-
 END MODULE MOD_WBAL_GRAPHICS
 
 
