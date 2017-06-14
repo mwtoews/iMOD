@@ -1,7 +1,0 @@
-# Basic Package file
-free
-open/close 'P:\1206764-IMOD\IMOD30\TESTBANK\RUNS\TEST_ALL\BOUNDARY\IMODFLOW_IBOUND1.IDF' 1 (free) -1 scaling 1 0
-constant 1
- -999.9900
-constant 2.500000
-constant 2.500000
