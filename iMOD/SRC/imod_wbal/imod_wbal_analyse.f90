@@ -626,7 +626,7 @@ CONTAINS
  CHARACTER(LEN=16),POINTER,DIMENSION(:) :: XTXT=>NULL()
  CHARACTER(LEN=16) :: TXTL,TXTZ
  INTEGER,ALLOCATABLE,DIMENSION(:) :: IDATES,SQ,UQ,OSQ,CLILAY,CLIZONE
- REAL :: QIN,QOU
+ REAL :: QIN,QOU,Q
   
  WBAL_ANAYSE_PREPARE=.FALSE.
  
@@ -660,8 +660,6 @@ CONTAINS
  IAG=0; IF(WINFODIALOGFIELD(IDF_RADIO5,FIELDSTATE).EQ.1)CALL WDIALOGGETRADIOBUTTON(IDF_RADIO5,IAG)
  !## apply net fluxes
  CALL WDIALOGGETCHECKBOX(IDF_CHECK1,INET)
-! !## net balance terms if selected = inet=0 otherwise inet=1
-! INET=ABS(INET-1)
  
  !## make selection
  MLAY=0;    DO I=1,NLAY;    IF(LILAY(I).EQ.1)      MLAY=MLAY+1;       ENDDO
@@ -699,12 +697,12 @@ CONTAINS
  CALL WSORT(SQ,1,NBUDGET,IORDER=OSQ)
 
  !## number of budget in the graphs (unique groups times 2 - in- and outflow)
- IF(INET.EQ.0)THEN
-  MBUDGET=NUQ*2
- ELSE
-  !## net fluxes
-  MBUDGET=NUQ
- ENDIF
+! IF(INET.EQ.0)THEN
+ MBUDGET=NUQ*2
+! ELSE
+!  !## net fluxes
+!  MBUDGET=NUQ
+! ENDIF
  
  !## total groups in potential
  MGROUP=MZONE*MLAY
@@ -820,7 +818,7 @@ CONTAINS
  ENDDO; ENDDO
  
  !## gather main information
- JQ=0; DO IIQ=1,SIZE(OSQ) !MBUDGET !NBUDGET
+ JQ=0; DO IIQ=1,SIZE(OSQ) 
  
   !## function of group number and therefore defines sort-order
   IQ=OSQ(IIQ) !; IF(BUDGET(IQ)%IACT.EQ.0)CYCLE
@@ -838,13 +836,14 @@ CONTAINS
   
    IG=IG+1
   
-   IF(INET.EQ.0)THEN
-    JQIN=(JQ-1)*2+1
-    JQOU= JQIN+1
-   ELSE
-    JQIN=(JQ-1)+1   
-    JQOU= JQIN
-   ENDIF
+!   IF(INET.EQ.0)THEN
+   JQIN=(JQ-1)*2+1
+   JQOU= JQIN+1
+!   !## apply net fluxes
+!   ELSE
+!    JQIN=(JQ-1)+1   
+!    JQOU= JQIN
+!   ENDIF
    
    !## plot legend one-by-one
    GRAPH(JQOU,IG)%LEGTXT='' 
@@ -877,11 +876,6 @@ CONTAINS
   
   !## appropriate item
   IF(.NOT.WBAL_ANALYSE_SELECT(GWBAL(1)%CLAY(I),GWBAL(1)%CZONE(I),GWBAL(1)%CDATE(I),IL,IZ,ID,IAG,IPOS,IDATES))CYCLE
-
-!  !## if sum overwrite ID to be one all the times
-!  IF()THEN
-!   ID=1
-!  ENDIF
   
   !## sum for layers
   N=MLAY; IF(LSUM.EQ.1)IL=1; N=1
@@ -892,7 +886,7 @@ CONTAINS
   IG=(IZ-1)*N+IL
 
   JQIN=-1; JQOU=0; JQ=0
-  DO IIQ=1,SIZE(OSQ) !MBUDGET !NBUDGET
+  DO IIQ=1,SIZE(OSQ) 
 
    !## function of group number and therefore defines sort-order
    IQ=OSQ(IIQ) !; IF(BUDGET(IQ)%IACT.EQ.0)CYCLE
@@ -906,13 +900,14 @@ CONTAINS
 
    IHIT=IHIT+1
    
-   IF(INET.EQ.0)THEN
-    JQIN=(JQ-1)*2+1
-    JQOU= JQIN+1
-   ELSE
-    JQIN=(JQ-1)+1
-    JQOU= JQIN
-   ENDIF
+!   IF(INET.EQ.0)THEN
+   JQIN=(JQ-1)*2+1
+   JQOU= JQIN+1
+!   !## apply net fluxes
+!   ELSE
+!    JQIN=(JQ-1)+1
+!    JQOU= JQIN
+!   ENDIF
 
    IQIN=(IQ-1)*2+1
    IQOU= IQIN+1
@@ -933,12 +928,24 @@ CONTAINS
  IF(IOPT.EQ.1)THEN
   !## make stacked-histograms
   DO ID=1,NXG
-   DO IG=1,MGROUP; DO IB=3,MBUDGET,2
-    !## in
-    GRAPH(IB  ,IG)%RY(ID)=GRAPH(IB  ,IG)%RY(ID)+GRAPH(IB-2,IG)%RY(ID)
-    !## out
-    GRAPH(IB+1,IG)%RY(ID)=GRAPH(IB+1,IG)%RY(ID)+GRAPH(IB-1,IG)%RY(ID)
-   ENDDO; ENDDO
+   DO IG=1,MGROUP
+    !## compute net fluxes    
+    IF(INET.EQ.1)THEN
+     DO IB=1,MBUDGET,2
+      Q=GRAPH(IB  ,IG)%RY(ID)+GRAPH(IB+1,IG)%RY(ID)
+      GRAPH(IB  ,IG)%RY(ID)=0.0
+      GRAPH(IB+1,IG)%RY(ID)=0.0
+      IF(Q.GT.0.0)GRAPH(IB  ,IG)%RY(ID)=Q
+      IF(Q.LT.0.0)GRAPH(IB+1,IG)%RY(ID)=Q
+     ENDDO
+    ENDIF
+    DO IB=3,MBUDGET,2
+     !## in
+     GRAPH(IB  ,IG)%RY(ID)=GRAPH(IB  ,IG)%RY(ID)+GRAPH(IB-2,IG)%RY(ID)
+     !## out
+     GRAPH(IB+1,IG)%RY(ID)=GRAPH(IB+1,IG)%RY(ID)+GRAPH(IB-1,IG)%RY(ID)
+    ENDDO
+   ENDDO
   ENDDO
  ENDIF
  

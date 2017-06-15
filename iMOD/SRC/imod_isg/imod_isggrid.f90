@@ -948,7 +948,6 @@ CONTAINS
   ELSE
    TTIME=GRIDISG%EDATE-GRIDISG%SDATE
   ENDIF
-!  TTIME=GRIDISG%EDATE-GRIDISG%SDATE
  ELSEIF(GRIDISG%ISTEADY.EQ.1)THEN
   TTIME=1
  ENDIF
@@ -1141,8 +1140,7 @@ CONTAINS
        ENDIF
 
        IF(LN(J).GT.0.0)THEN
-        ICOL=CA(J); IROW=RA(J) !INT(XA(J)); IROW=INT(YA(J))
-!        ICOL=INT(XA(J)); IROW=INT(YA(J))
+        ICOL=CA(J); IROW=RA(J)
 
         !## within model-domain
         IF(ICOL.GE.1.AND.IROW.GE.1.AND. &
@@ -1191,22 +1189,6 @@ CONTAINS
            TC=TC+(LN(J)*WETPER)/C    !conductance(m2/dag)
           ENDDO
           NETTRAP=ITRAP-1; WRITE(IUSIMGRO,'(I10)') NETTRAP
-
-!          TC=0.0
-!          DO ITRAP=1,NTRAP
-!           !## compute nett waterdepth for current part of trapezium
-!           IF(ITRAP.LT.NTRAP)THEN
-!            NETWD=YTRAP(3,ITRAP+1)-YTRAP(3,ITRAP)
-!           ELSE
-!            NETWD=WDEPTH-YTRAP(3,ITRAP)
-!           ENDIF
-!           !## still water left ...
-!           IF(NETWD.GT.0.0)THEN
-!            !## compute wetted perimeter,bottomwidth,cotanges
-!            CALL ISG2GRIDPERIMETERTRAPEZIUM(XTRAP(:,ITRAP),YTRAP(:,ITRAP),WETPER,CT,BW,NETWD)
-!            TC=TC+(LN(J)*WETPER)/C    !conductance(m2/dag)
-!           ENDIF
-!          ENDDO
 
           !## correction factor
           TC=ISGVALUE(1,1)/TC
@@ -1385,8 +1367,7 @@ IRLOOP: DO IR=MAX(1,IROW-1),MIN(NROW,IROW+1)
   IF(.NOT.IDFWRITE(IDF(10),TRIM(GRIDISG%ROOT)//'\'//TRIM(FNAME(10))//TRIM(PPOSTFIX)//'.IDF',1))THEN; RETURN; ENDIF
   IF(.NOT.IDFWRITE(IDF(11),TRIM(GRIDISG%ROOT)//'\'//TRIM(FNAME(11))//TRIM(PPOSTFIX)//'.IDF',1))THEN; RETURN; ENDIF
   CALL ISG2GRIDCOMPUTESTUWEN(TRIM(TMPFNAME),TRIM(GRIDISG%ROOT)//'\'//TRIM(FNAME(10))//TRIM(PPOSTFIX)//'.IDF',  & !## effect
-                                            TRIM(GRIDISG%ROOT)//'\'//TRIM(FNAME(11))//TRIM(PPOSTFIX)//'.IDF') ! & !## current_id
-!                                            TRIM(GRIDISG%ROOT)//'\'//TRIM(FNAME(12))//TRIM(PPOSTFIX)//'.IDF')    !## next_id
+                                            TRIM(GRIDISG%ROOT)//'\'//TRIM(FNAME(11))//TRIM(PPOSTFIX)//'.IDF')    !## current_id
  ENDIF
 
  !## extent grids based upon their width
@@ -2062,8 +2043,8 @@ IRLOOP: DO IR=MAX(1,IROW-1),MIN(NROW,IROW+1)
    IF(WL.LE.ICROSS%X(ICOL,IROW))CYCLE
    !## if inundation-criterion applied, only inundate if zchk criterion is met
    IF(PCROSS%X(ICOL,IROW).LT.0.0.AND.WL.LE.ZCHK)CYCLE
-   !## manipulate resistance
-   CR=C*ABS(PCROSS%X(ICOL,IROW))
+   !## manipulate resistance for ...
+   CR=C; IF(PCROSS%X(ICOL,IROW).GT.0.0)CR=CR*ABS(PCROSS%X(ICOL,IROW))
    CALL IDFGETLOC(ICROSS  ,IROW,ICOL,XC,YC)
    CALL IDFIROWICOL(IDF(1),JROW,JCOL,XC,YC)
    IF(JROW.NE.0.AND.JCOL.NE.0)THEN
@@ -2096,18 +2077,17 @@ IRLOOP: DO IR=MAX(1,IROW-1),MIN(NROW,IROW+1)
     IF(WL.LE.ICROSS%X(JCOL,JROW))CYCLE
     !## if inundation-criterion applied, only inundate if zchk criterion is met
     IF(PCROSS%X(JCOL,JROW).LT.0.0.AND.WL.LE.ZCHK) CYCLE
-    !## manipulate resistance
-    CR=C*ABS(PCROSS%X(JCOL,JROW))
+    !## manipulate resistance for ...
+    CR=C; IF(PCROSS%X(JCOL,JROW).GT.0.0)CR=CR*ABS(PCROSS%X(JCOL,JROW))
     IF(IDF(9)%X(ICOL,IROW).EQ.0.0)THEN
      IDF(1)%X(ICOL,IROW)=IDFGETAREA(ICROSS,ICOL,IROW)/CR
     ELSE
      IDF(1)%X(ICOL,IROW)=IDF(1)%X(JCOL,JROW)+IDFGETAREA(ICROSS,ICOL,IROW)/CR
     ENDIF
-!    IDF(1)%X(ICOL,IROW)=IDFGETAREA(ICROSS,ICOL,IROW)/CR
+    IDF(9)%X(ICOL,IROW)=IDF(9)%X(ICOL,IROW)+1.0    !## counter how many times it passes
     IDF(2)%X(ICOL,IROW)=WL
     IDF(3)%X(ICOL,IROW)=ICROSS%X(JCOL,JROW)
     IDF(4)%X(ICOL,IROW)=INFF
-    IDF(9)%X(ICOL,IROW)=IDF(9)%X(ICOL,IROW)+1.0    !## counter how many times it passes
    ENDIF
   ENDDO; ENDDO
  ENDIF
@@ -2152,7 +2132,7 @@ IRLOOP: DO IR=MAX(1,IROW-1),MIN(NROW,IROW+1)
  IRAT=0; IRAT1=0
  DO IROW=1,IDF(1)%NROW
   DO ICOL=1,IDF(1)%NCOL
-   !## already process by bathymetry
+   !## already processed by bathymetry
    IF(IDF(9)%X(ICOL,IROW).LE.0.0)CYCLE
    !## river available
    IF(IDF(1)%X(ICOL,IROW).NE.IDF(I)%NODATA)THEN
@@ -2187,8 +2167,12 @@ IRLOOP: DO IR=MAX(1,IROW-1),MIN(NROW,IROW+1)
        !## count for doublicates (assumption)
        F=F**2.0
 
+       !## skip already filled in bathymetry
+       IF(IDF(9)%X(ICC,IRR).LE.0.0)CYCLE
+
        IDF(9)%X(ICC,IRR)=IDF(9)%X(ICC,IRR)+F*MM(IR,IC)
        DO I=1,4; IDF(I)%X(ICC,IRR)=IDF(I)%X(ICC,IRR)+V(I)*F*MM(IR,IC); ENDDO
+       
        ICC=ICC+1
       ENDDO; IRR=IRR+1; ENDDO
      ELSE
@@ -2210,8 +2194,12 @@ IRLOOP: DO IR=MAX(1,IROW-1),MIN(NROW,IROW+1)
         !## count for doublicates (assumption)
         F=F**2.0
 
+        !## skip already filled in bathymetry
+        IF(IDF(9)%X(ICC,IRR).LE.0.0)CYCLE
+
         IDF(9)%X(ICC,IRR)=IDF(9)%X(ICC,IRR)+F*MM(IR,IC)
         DO I=1,4; IDF(I)%X(ICC,IRR)=IDF(I)%X(ICC,IRR)+V(I)*F*MM(IR,IC); ENDDO
+  
        ENDIF
        ICC=ICC+1
       ENDDO; IRR=IRR+1; ENDDO
@@ -2667,18 +2655,6 @@ IRLOOP: DO IR=MAX(1,IROW-1),MIN(NROW,IROW+1)
   !## arithmetic mean (weighted)
   IF(IAVERAGE.EQ.1)THEN
    DO I=1,NITEMS
-!    XNR(I)=0.0; RVAL(I)=0.0
-!    DO J=1,TTIME
-!     IF(QSORT(J,I).NE.NDATA(I))THEN
-!      RVAL(I)=RVAL(I)+QSORT(J,I)
-!      XNR(I) =XNR(I)+1.0
-!     ENDIF
-!    ENDDO
-!    IF(XNR(I).GT.0.0)THEN
-!     RVAL(I)=RVAL(I)/XNR(I)
-!    ELSE
-!     RVAL(I)=NDATA(I)
-!    ENDIF
     IF(XNR(I).GT.0.0)THEN
      RVAL(I)=QSORT(1,I)/XNR(I)
     ELSE
@@ -2688,7 +2664,8 @@ IRLOOP: DO IR=MAX(1,IROW-1),MIN(NROW,IROW+1)
   !## median - exclude nodata
   ELSEIF(IAVERAGE.EQ.2)THEN
    DO I=1,NITEMS
-    CALL UTL_GETMED(QSORT(:,I),TTIME,NDATA(I),(/50.0/),1,NAJ,RVAL(I))
+    CALL UTL_GETMED(QSORT(:,I),TTIME,NDATA(I),(/50.0/),1,NAJ,RVAL(I:)) !XRES)
+!    RVAL(I)=XRES(1)
    ENDDO
   ENDIF
  ENDIF

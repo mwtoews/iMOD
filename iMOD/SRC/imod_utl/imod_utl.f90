@@ -3816,12 +3816,12 @@ CONTAINS
  SUBROUTINE UTL_GETHIST(X,NX,NODATA,HIST,NHIST,MX,XHIST)
  !###====================================================
  IMPLICIT NONE
- INTEGER,INTENT(IN) :: NX,NHIST            !## size array,number of percentiles to be comp.
- INTEGER,INTENT(OUT) :: MX                 !## number of values ne nodata
- REAL,INTENT(IN),DIMENSION(NHIST) :: HIST  !## percentile 0-100%
- REAL,INTENT(OUT),DIMENSION(NHIST) :: XHIST !## yielding percentile(s)
- REAL,INTENT(IN) :: NODATA                 !## nodata value !,PERC
- REAL,DIMENSION(NX),INTENT(INOUT) :: X     !## array
+ INTEGER,INTENT(IN) :: NX,NHIST         !## size array,number of percentiles to be comp.
+ INTEGER,INTENT(OUT) :: MX              !## number of values ne nodata
+ REAL,INTENT(IN),DIMENSION(:) :: HIST   !## percentile 0-100%
+ REAL,INTENT(OUT),DIMENSION(:) :: XHIST !## yielding percentile(s)
+ REAL,INTENT(IN) :: NODATA              !## nodata value !,PERC
+ REAL,DIMENSION(NX),INTENT(INOUT) :: X  !## array
  INTEGER :: I,J
 
  XHIST=0.0; MX=0; IF(NX.LE.0)RETURN
@@ -3843,12 +3843,12 @@ CONTAINS
  SUBROUTINE UTL_GETMED(X,NX,NODATA,PERC,NPERC,MX,XMED)
  !###====================================================
  IMPLICIT NONE
- INTEGER,INTENT(IN) :: NX,NPERC            !## size array,number of percentiles to be comp.
- INTEGER,INTENT(OUT) :: MX                 !## number of values ne nodata
- REAL,INTENT(IN),DIMENSION(NPERC) :: PERC  !## percentile 0-100%
- REAL,INTENT(OUT),DIMENSION(NPERC) :: XMED !## yielding percentile(s)
- REAL,INTENT(IN) :: NODATA                 !## nodata value !,PERC
- REAL,DIMENSION(NX),INTENT(INOUT) :: X     !## array
+ INTEGER,INTENT(IN) :: NX,NPERC        !## size array,number of percentiles to be comp.
+ INTEGER,INTENT(OUT) :: MX             !## number of values ne nodata
+ REAL,INTENT(IN),DIMENSION(:) :: PERC  !## percentile 0-100%
+ REAL,INTENT(OUT),DIMENSION(:) :: XMED !## yielding percentile(s)
+ REAL,INTENT(IN) :: NODATA             !## nodata value !,PERC
+ REAL,DIMENSION(NX),INTENT(INOUT) :: X !## array
  INTEGER :: I,J,IP
  REAL :: FRAC
 
@@ -3908,12 +3908,12 @@ CONTAINS
  SUBROUTINE UTL_GETMED_INVERSE(X,NX,NODATA,PERC,NPERC,MX,XMED)
  !###====================================================
  IMPLICIT NONE
- INTEGER,INTENT(IN) :: NX,NPERC            !## size array,number of percentiles to be comp.
- INTEGER,INTENT(OUT) :: MX                 !## number of values ne nodata
- REAL,INTENT(IN),DIMENSION(NPERC) :: PERC  !## percentile 0-100%
- REAL,INTENT(OUT),DIMENSION(NPERC) :: XMED !## yielding percentile(s)
- REAL,INTENT(IN) :: NODATA                 !## nodata value 
- REAL,DIMENSION(NX),INTENT(INOUT) :: X     !## array
+ INTEGER,INTENT(IN) :: NX,NPERC        !## size array,number of percentiles to be comp.
+ INTEGER,INTENT(OUT) :: MX             !## number of values ne nodata
+ REAL,INTENT(IN),DIMENSION(:) :: PERC  !## percentile 0-100%
+ REAL,INTENT(OUT),DIMENSION(:) :: XMED !## yielding percentile(s)
+ REAL,INTENT(IN) :: NODATA             !## nodata value 
+ REAL,DIMENSION(NX),INTENT(INOUT) :: X !## array
  INTEGER :: I,IP
  REAL :: FRAC
 
