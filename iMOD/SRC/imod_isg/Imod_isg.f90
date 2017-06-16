@@ -4848,7 +4848,7 @@ CONTAINS
  IF(NISGFILES.GT.1)CALL WINDOWOUTSTATUSBAR(4,'Reading and Merging '//TRIM(ITOS(NISGFILES))//' ISG-file(s) ...')
 
  !## to be consistent with multi-isg files to be read!
- IF(ISGREAD(ISGFILE,0))THEN; ENDIF
+ IF(.NOT.ISGREAD(ISGFILE,0))THEN; CALL ISGEDITCLOSE(0); RETURN; ENDIF
 
  !## copy legend for ISG-plotting - number of legend is equal to number of variables in isd2-file
  IF(ISFR.EQ.0)N=SIZE(TATTRIB1)
