@@ -192,7 +192,7 @@ CONTAINS
         IF(ISEC.LE.0)THEN
          CALL WMESSAGEBOX(OKONLY,EXCLAMATIONICON,COMMONOK,'You need to specify the length of the movie to be more than 0 seconds.','Error')
         ELSE
-         CALL WDIALOGGETRADIOBUTTON(IDF_MENU4,IEXT)
+         CALL WDIALOGGETMENU(IDF_MENU4,IEXT)
          EXIT
         ENDIF
        ENDIF

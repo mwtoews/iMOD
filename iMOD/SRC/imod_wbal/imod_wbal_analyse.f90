@@ -126,21 +126,24 @@ CONTAINS
 
  WRITE(IU,'(A,99(I1  ,A1))') 'BDGIACT=',(BUDGET(I)%IACT,','  ,I=1,SIZE(BUDGET))
  WRITE(IU,'(A,99(I2.2,A1))') 'BDGIGRP=',(BUDGET(I)%IGROUP,',',I=1,SIZE(BUDGET))
- WRITE(IU,'(A,99(I7.7,A1))') 'BDGICLR=',(BUDGET(I)%ICLR  ,',',I=1,SIZE(BUDGET))
+ WRITE(IU,'(A,99(I8.8,A1))') 'BDGICLR=',(BUDGET(I)%ICLR  ,',',I=1,SIZE(BUDGET))
 
  WRITE(IU,'(A,I1)') 'AVG    =',IAG
  WRITE(IU,'(A,I1)') 'NETFLUX=',INET
  WRITE(IU,'(A,I1)') 'LSUM   =',LSUM
  WRITE(IU,'(A,I1)') 'ZSUM   =',ZSUM
  
- LINE=''; DO I=1,NZONE; IF(LIZONE(I).EQ.1)LINE=TRIM(LINE)//','; ENDDO
- IF(LINE.NE.'')WRITE(IU,'(A)') 'ZONES=',LINE(:LEN_TRIM(LINE)-1)
- LINE=''; DO I=1,NLAY; IF(LILAY(I).EQ.1)LINE=TRIM(LINE)//','; ENDDO
- IF(LINE.NE.'')WRITE(IU,'(A)') 'LAYERS=',LINE(:LEN_TRIM(LINE)-1)
- LINE=''; DO I=1,NDATE; IF(LIDATE(I).EQ.1)LINE=TRIM(LINE)//','; ENDDO
- IF(LINE.NE.'')WRITE(IU,'(A)') 'DATES=',LINE(:LEN_TRIM(LINE)-1)
+ LINE=''; DO I=1,NZONE; IF(LIZONE(I).EQ.1)LINE=TRIM(LINE)//TRIM(CIZONE(I))//','; ENDDO
+ IF(LINE.NE.'')WRITE(IU,'(A)') 'ZONES='//LINE(:LEN_TRIM(LINE)-1)
+ LINE=''; DO I=1,NLAY; IF(LILAY(I).EQ.1)LINE=TRIM(LINE)//TRIM(CILAY(I))//','; ENDDO
+ IF(LINE.NE.'')WRITE(IU,'(A)') 'LAYERS='//LINE(:LEN_TRIM(LINE)-1)
+ LINE=''; DO I=1,NDATE; IF(LIDATE(I).EQ.1)LINE=TRIM(LINE)//TRIM(CIDATE(I))//','; ENDDO
+ IF(LINE.NE.'')WRITE(IU,'(A)') 'DATES='//LINE(:LEN_TRIM(LINE)-1)
 
  CLOSE(IU)
+
+ CALL WMESSAGEBOX(OKONLY,INFORMATIONICON,COMMONOK,'Succesfully saved the current configuration to:'//CHAR(13)// &
+  TRIM(FNAME),'Information')
  
  WBAL_ANALYSE_SAVECONFIG=.FALSE.
  
@@ -312,12 +315,12 @@ CONTAINS
    SELECT CASE (MESSAGE%VALUE1)
    END SELECT
    SELECT CASE (MESSAGE%VALUE2)
-    CASE (IDF_CHECK1)
-     CALL WDIALOGGETCHECKBOX(IDF_CHECK1,I)
-     I=ABS(I-1)
-     !## inactivate graphical representation for net-fluxes
-     CALL WDIALOGSELECT(ID_DWBAL_ANALYSE_TAB4)
-     CALL WDIALOGFIELDSTATE(IDF_RADIO2,I)
+!    CASE (IDF_CHECK1)
+!     CALL WDIALOGGETCHECKBOX(IDF_CHECK1,I)
+!     I=ABS(I-1)
+!     !## inactivate graphical representation for net-fluxes
+!     CALL WDIALOGSELECT(ID_DWBAL_ANALYSE_TAB4)
+!     CALL WDIALOGFIELDSTATE(IDF_RADIO2,I)
    END SELECT
  END SELECT
      
@@ -937,6 +940,8 @@ CONTAINS
  GRAPH%GTYPE =3
 
  !## copy selected layers/zones for summing purposes
+ IF(ALLOCATED(CLILAY))DEALLOCATE(CLILAY)
+ IF(ALLOCATED(CLIZONE))DEALLOCATE(CLIZONE)
  ALLOCATE(CLILAY(NLAY));   DO I=1,NLAY;  CLILAY(I) =LILAY(I);  ENDDO
  ALLOCATE(CLIZONE(NZONE)); DO I=1,NZONE; CLIZONE(I)=LIZONE(I); ENDDO
  !## turn layers/zones and active only one for summing purposes
@@ -1547,7 +1552,7 @@ CONTAINS
  LOGICAL FUNCTION WBAL_ANALYSE_TABLE()   
  !###======================================================================
  IMPLICIT NONE
- INTEGER :: I,NROW
+ INTEGER :: I,NROW,N,M
  INTEGER,ALLOCATABLE,DIMENSION(:) :: IC
  CHARACTER(LEN=52) :: CDATE
  
@@ -1556,7 +1561,11 @@ CONTAINS
  CALL WDIALOGSELECT(ID_DWBAL_ANALYSE_TAB5)
  NROW=WINFOGRID(IDF_GRID1,GRIDROWSMAX)
  
- IF(MDATE.GT.NROW)THEN
+ !## set number of rows
+ N=SIZE(GRAPH(1,1)%RX)
+
+! IF(MDATE.GT.NROW)THEN
+ IF(N.GT.NROW)THEN
   CALL WMESSAGEBOX(OKONLY,EXCLAMATIONICON,COMMONOK,'iMOD can display only the first '//TRIM(ITOS(NROW))//' records of'//CHAR(13)// &
     'the current set of '//TRIM(ITOS(MDATE))//' existing records in the current selection.','Warning')
  ENDIF
@@ -1565,8 +1574,7 @@ CONTAINS
  CALL WGRIDCOLUMNS(IDF_GRID1,MBUDGET,IC)
  DEALLOCATE(IC)
  
- !## set number of rows
- CALL WGRIDROWS(IDF_GRID1,MDATE)
+ CALL WGRIDROWS(IDF_GRID1,N) !MDATE)
   
  !## set column labels
  DO I=1,MBUDGET
@@ -1772,22 +1780,21 @@ CONTAINS
   ENDIF
  ENDDO
 
+ !## polygon selected
  DO II=1,2
-  NCF=0; DO IB=1,NBUDGET
-   !## get appropriate polygon numbers that are currently selected
-   J=WBAL_ANALYSE_GETQCATEGORY(BUDGET(IB)%FLUXTERM)
-   IF(J.NE.-1)CYCLE
-   NCF=NCF+1; IF(II.EQ.2)READ(BUDGET(IB)%FLUXTERM(7:),*,IOSTAT=IOS) IPOL(NCF)
-   IF(IOS.NE.0)THEN
-    CALL WMESSAGEBOX(OKONLY,EXCLAMATIONICON,COMMONOK,'iMOD cannot convert zone from '//TRIM(BUDGET(IB)%FLUXTERM)//CHAR(13)// &
-     'into a integer value.','Error')
-    DEALLOCATE(IPLG); RETURN  
+  NCF=0; DO I=1,NZONE
+   IF(LIZONE(I).EQ.1)THEN
+    NCF=NCF+1; IF(II.EQ.2)IPOL(NCF)=I !READ(CIZONE(I),*) IPOL(NCF)
    ENDIF
   ENDDO
-  !## get number of active zones (non-zero budget term) 
-  IF(II.EQ.1)THEN 
-   ALLOCATE(IPOL(NCF)); IPOL=0
-  ENDIF
+  IF(II.EQ.1)ALLOCATE(IPOL(NCF))
+ ENDDO
+   
+ NCF=0; DO IB=1,NBUDGET
+  !## get appropriate polygon numbers that are currently selected
+  J=WBAL_ANALYSE_GETQCATEGORY(BUDGET(IB)%FLUXTERM)
+  IF(J.NE.-1)CYCLE
+  NCF=NCF+1
  ENDDO
 
  ALLOCATE(QSUBREGIO(NCF,2))
@@ -1795,18 +1802,14 @@ CONTAINS
  !## generate image for all timeseries (if available)
  DO IT=1,SIZE(GRAPH(1,1)%RY)
 
-  NCF=0; I1=-1; I2=0; I=0
+  I1=-1; I2=0; I=0
   DO IB=1,MBUDGET,2
    I=I+1
    I1=I1+2; I2=I2+2
    !## get appropriate balancenumber
    J=WBAL_ANALYSE_GETQCATEGORY(BUDGET(I)%FLUXTERM)
    !## connected flow - need to saved further
-   IF(J.EQ.-1)THEN
-    !## count for number of connected flow
-    NCF=NCF+1
-    CYCLE
-   ENDIF
+   IF(J.EQ.-1)CYCLE
    
    !## cannot get right number
    IF(J.EQ.0)THEN
