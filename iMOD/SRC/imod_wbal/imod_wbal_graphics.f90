@@ -359,9 +359,11 @@ CONTAINS
       DH=1.2*DH*H
       IWMAX=0;JWMAX=0
       XLENII=0.0;XLENJJ=0.0
+
       DO JPOL=1,NPOL
         DO J=1,SIZE(IIPOL)
          IPOL=IIPOL(J)
+!         write(1200,*) ipol,iplg(ipol)
          IF(JPOL.NE.IPOL) THEN
            CALL PLOTSUBREGIO(II,JJ,QSUBREGIO(JPOL,1),QSUBREGIO(JPOL,2),IPOL,JPOL,NPOL,ICOLPLG,IPLG,DH,B,H)
            FMT=MAKEFMT(QSUBREGIO(JPOL,1)); WRITE(STRDUM,FMT) QSUBREGIO(JPOL,1)
@@ -377,6 +379,7 @@ CONTAINS
          ENDIF
         ENDDO
       ENDDO
+
       CALL IGRLINETYPE(2)
       CALL IGRCOLOURN(WRGB(0,0,0))
       CALL IGRFILLPATTERN(0,0,0)
@@ -393,8 +396,8 @@ CONTAINS
       CALL VTERM2(Q(11,1),Q(11,2),0.56, 0.58, 0.8, QTXT(11),B,H,2,1)         ! PLOT RCH FLOW
       CALL VTERM2(Q(12,1),Q(12,2),0.62, 0.64, 0.8, QTXT(12),B,H,2,1)         ! PLOT EVT FLOW
       CALL VTERM2(Q(13,1),Q(13,2),0.68, 0.70, 0.8, QTXT(13),B,H,2,1)         ! PLOT CAP FLOW
-      CALL VTERM2(Q(9,1), Q(9,2), 0.74, 0.76, 0.8, QTXT(9),B,H,2,1)          ! PLOT FLF FLOW (FLOW TOP FACE)
-      CALL VTERM2(Q(10,1),Q(10,2),0.49, 0.51, 0.2, QTXT(10),B,H,2,0)         ! PLOT FLF FLOW (FLOW LOWER FACE)
+      CALL VTERM2(Q(10,1), Q(10,2), 0.74, 0.76, 0.8, QTXT(9),B,H,2,1)        ! PLOT FLF FLOW (FLOW TOP FACE)
+      CALL VTERM2(Q(9,1),Q(9,2),0.49, 0.51, 0.2, QTXT(10),B,H,2,0)           ! PLOT FLF FLOW (FLOW LOWER FACE)
 
 !     *********************UNSATURATED*********************
       CALL IGRAREA(0.0,0.50+dy,1.0,0.95+dy)
@@ -455,6 +458,7 @@ CONTAINS
       !ENDIF
       !CALL WBITMAPDESTROY(IPLOT)
       DRAWBAL=.TRUE.
+!      call igrsaveimage('illustratieve_plot.png')
       END FUNCTION DRAWBAL
 
 !###====================================================================
@@ -927,6 +931,8 @@ CONTAINS
       CALL IGRCOLOURN(WRGB(0,0,0))
 
 !     PLOT A BLACK BORDER AROUND THE SELECTED REGION
+      DO II=1,SIZE(IIPOL)
+      IPOL=IIPOL(II)
       DO J=1,IDF%NROW
          DO I=1,IDF%NCOL
             IF(I.GT.1.AND.I.LT.IDF%NCOL.AND.ABS(NINT(IDF%X(I,J))).EQ.IPLG(IPOL)) THEN
@@ -941,6 +947,7 @@ CONTAINS
             IF(I.EQ.IDF%NCOL.AND.ABS(NINT(IDF%X(I,J))).EQ.IPLG(IPOL)) CALL IGRJOIN(IDF%SX(I),  IDF%SY(J-1),IDF%SX(I),  IDF%SY(J))
             IF(J.EQ.1.AND.ABS(NINT(IDF%X(I,J))).EQ.IPLG(IPOL)) CALL IGRJOIN(IDF%SX(I-1),IDF%SY(J-1),IDF%SX(I),  IDF%SY(J-1))
             IF(J.EQ.IDF%NROW.AND.ABS(NINT(IDF%X(I,J))).EQ.IPLG(IPOL)) CALL IGRJOIN(IDF%SX(I-1),IDF%SY(J),  IDF%SX(I),  IDF%SY(J))
+      ENDDO
       ENDDO
       ENDDO
       CALL IGRFILLPATTERN(0,0,0)

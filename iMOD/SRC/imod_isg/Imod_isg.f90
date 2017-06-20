@@ -5807,8 +5807,10 @@ CONTAINS
   CALL WGRIDCOLUMNS(IDF_GRID1,SIZE(ISDLABELS),CTATTRIB2) 
   DO I=1,SIZE(ISDLABELS); CALL WGRIDLABELCOLUMN(IDF_GRID1,I,ISDLABELS(I)); ENDDO
   ALLOCATE(IOPTIONS(ISDMAXROW)); IOPTIONS=1
-  CALL WGRIDPUTMENU(IDF_GRID1,10,(/'0 Static', '1 Rectangular', '2 Eight Point', '3 Power (not supported)', '4 Relationship'/),5,IOPTIONS,ISDMAXROW)
-  CALL WGRIDPUTMENU(IDF_GRID1,11,(/'0 Maximal','-1 Minimal','-2 Fraction','-3 Flooding'/),4,IOPTIONS,ISDMAXROW)
+  CALL WGRIDPUTMENU(IDF_GRID1,10,(/'Static', 'Rectangular', 'Eight Point', 'Power (not supported)', 'Relationship'/),5,IOPTIONS,ISDMAXROW)
+  CALL WGRIDPUTMENU(IDF_GRID1,11,(/'Maximal','Minimal','Fraction','Flooding'/),4,IOPTIONS,ISDMAXROW)
+!  CALL WGRIDPUTMENU(IDF_GRID1,10,(/'0 Static', '1 Rectangular', '2 Eight Point', '3 Power (not supported)', '4 Relationship'/),5,IOPTIONS,ISDMAXROW)
+!  CALL WGRIDPUTMENU(IDF_GRID1,11,(/'0 Maximal','-1 Minimal','-2 Fraction','-3 Flooding'/),4,IOPTIONS,ISDMAXROW)
   DEALLOCATE(IOPTIONS)
   !## fill menu fields
  ENDIF
