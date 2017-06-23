@@ -2874,7 +2874,7 @@ CONTAINS
  
  !## only create folder, is there is a subfolder left
  IF(INDEX(DIRNAME,'\').NE.0)THEN
-  !## last remaining of string (peter)
+  !## last remaining of string
   IF(.NOT.IOSDIREXISTS(TRIM(DIRNAME)))CALL IOSDIRMAKE(TRIM(DIRNAME))
  ENDIF
  

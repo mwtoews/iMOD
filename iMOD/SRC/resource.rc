@@ -8,7 +8,7 @@
 //
 // Winteracter resource script. 
 //
-// Modified : 17/Jun/2017 20:06:00
+// Modified : 21/Jun/2017 17:56:27
 //
 ///////////////////////////////////////////////////
 //
@@ -11191,9 +11191,9 @@ BEGIN
     CONTROL "Preview Table: select this option to display each value for the water balance items in a table.",IDF_RADIO4,"BUTTON",WS_CHILD | WS_VISIBLE | WS_TABSTOP | BS_AUTORADIOBUTTON | BS_TEXT | BS_FLAT,   20,  119,  368,   12
     CONTROL "Export to CSV: select this option to export all water balance items into an CSV file.",IDF_RADIO3,"BUTTON",WS_CHILD | WS_VISIBLE | WS_TABSTOP | BS_AUTORADIOBUTTON | BS_TEXT | BS_FLAT,   20,  135,  368,   12
     CONTROL "IDF per Layer: select this option to export all water balance items into separate IDF files.",IDF_RADIO5,"BUTTON",WS_CHILD | WS_VISIBLE | WS_TABSTOP | BS_AUTORADIOBUTTON | BS_TEXT | BS_FLAT,   20,  151,  368,   12
-    CONTROL "DD",ID_OPEN1,"BUTTON",WS_CHILD | WS_VISIBLE | WS_GROUP | WS_TABSTOP | BS_PUSHBUTTON | BS_TEXT | BS_BITMAP | BS_FLAT,  377,   20,   16,   14
+    CONTROL "DD",ID_OPEN1,"BUTTON",WS_CHILD | WS_VISIBLE | WS_GROUP | WS_TABSTOP | BS_PUSHBUTTON | BS_TEXT | BS_BITMAP | BS_FLAT,  377,   19,   16,   14
     CONTROL "Specify the Output Folder",IDF_LABEL1,"STATIC",WS_CHILD | WS_VISIBLE | WS_GROUP | SS_LEFT,   10,    8,   93,    8
-    CONTROL "<specify output foldername>",IDF_STRING1,"EDIT",WS_CHILD | WS_VISIBLE | WS_BORDER | WS_GROUP | WS_TABSTOP | ES_LEFT | ES_MULTILINE,   10,   20,  361,   20
+    CONTROL "",IDF_STRING1,"EDIT",WS_CHILD | WS_VISIBLE | WS_BORDER | WS_GROUP | WS_TABSTOP | ES_LEFT | ES_AUTOHSCROLL | ES_READONLY,   10,   20,  361,   12
     CONTROL "Output Type:",IDF_GROUP4,"BUTTON",WS_CHILD | WS_VISIBLE | WS_GROUP | BS_GROUPBOX | BS_TEXT | BS_LEFT,   10,   48,  384,  136
     CONTROL "Zoom to selected polygon(s)",IDF_CHECK1,"BUTTON",WS_CHILD | WS_VISIBLE | WS_DISABLED | WS_GROUP | WS_TABSTOP | BS_AUTOCHECKBOX | BS_TEXT | BS_FLAT,   30,   89,  128,   14
     CONTROL "Apply percentages for Volumes",IDF_CHECK2,"BUTTON",WS_CHILD | WS_VISIBLE | WS_DISABLED | WS_GROUP | WS_TABSTOP | BS_AUTOCHECKBOX | BS_TEXT | BS_FLAT,   30,  102,  128,   14
@@ -11201,6 +11201,8 @@ END
 
 ID_DWBAL_ANALYSE_TAB4 RCDATA
 BEGIN
+"[Dialog] \n"
+" 0  1078 0 \n"
 "[Checks] \n"
 " 1012 1 \n"
 " 1014 0 \n"
@@ -12825,4 +12827,4 @@ END
 //*WI* FILENAME    resource.f90
 //*WI* FMODNAME    RESOURCE
 //*WI* LASTTYPE        2
-//*WI* LASTRES       290
+//*WI* LASTRES       294
