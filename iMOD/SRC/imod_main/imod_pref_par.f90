@@ -22,7 +22,7 @@
 !!
 MODULE MOD_PREF_PAR
 
-INTEGER,PARAMETER :: MAXPREF =28     !## max. preferences
+INTEGER,PARAMETER :: MAXPREF =31     !## max. preferences
 CHARACTER(LEN=256) :: PREFDIR
 CHARACTER(LEN=256),DIMENSION(MAXPREF) :: PREFVAL
 CHARACTER(LEN=25),DIMENSION(MAXPREF) :: PREF
@@ -53,7 +53,10 @@ DATA PREF/'USER', &          ! 1
           '7ZIP', &          !25
           'SUBSURFEXDBASE', &!26
           'PLUGIN1', &       !27
-          'PLUGIN2'/         !28
+          'PLUGIN2', &       !28
+          'FFMPEG', &        !29 used to create the movie (and to play if not other available)
+          'FFMPLAY', &       !30 used to play the movie
+          'VLCPLAYER'/       !31
 
 END MODULE MOD_PREF_PAR
 

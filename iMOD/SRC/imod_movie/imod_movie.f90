@@ -22,10 +22,23 @@ CONTAINS
  IMPLICIT NONE
  INTEGER :: N,IPLOT,I,J,K,NPER,NF,NP,NS,I1,I2,ISEC,IEXT,IW,IH
  REAL :: RAT,THEIGHT,TWIDTH
- LOGICAL :: L1,L2
+ LOGICAL :: L1,L2,L3
  CHARACTER(LEN=52) :: BGTEXT
  CHARACTER(LEN=256) :: DIR
  CHARACTER(LEN=256),ALLOCATABLE,DIMENSION(:) :: BMPOUTNAME
+
+ !## check whether there is ffmeg available
+ L3=.FALSE.; IF(LEN_TRIM(PREFVAL(29)).NE.'')THEN
+  INQUIRE(FILE=PREFVAL(29),EXIST=L3)
+ ENDIF 
+ IF(.NOT.L3)THEN
+  CALL WMESSAGEBOX(YESNO,QUESTIONICON,COMMONNO,'iMOD cannot find the following executable'//CHAR(13)//TRIM(PREFVAL(29))// &
+    'This is necessary to create a movie file out of the generated images.'//CHAR(13)// &
+    'Do you want to overwrite the entire content ?','Question')
+  IF(WINFODIALOG(4).NE.1)THEN
+   CALL MOVIE_CREATE_CLOSE(); RETURN
+  ENDIF
+ ENDIF
 
  N=0; DO IPLOT=1,SIZE(MP)
   IF(MP(IPLOT)%ISEL.AND.MP(IPLOT)%IPLOT.EQ.1)N=N+1
@@ -187,9 +200,9 @@ CONTAINS
  CALL WDIALOGSELECT(ID_DIRPROGRESS)
  CALL WDIALOGUNLOAD()
 
-! !## create the mpeg
-! CALL MOVIE_CREATE_MPEG(BMPOUTNAME,DIR,ISEC)
-
+ !## create the mpeg
+ IF(L3)THEN; IF(.NOT.MOVIE_CREATE_MPEG(BMPOUTNAME,DIR,ISEC))K=0; ENDIF
+ 
  CALL MOVIE_CREATE_CLOSE()
  
  IF(K.GT.NPER)THEN
@@ -201,25 +214,39 @@ CONTAINS
  END SUBROUTINE MOVIE_CREATE_INIT
  
  !###======================================================================
- SUBROUTINE MOVIE_CREATE_MPEG(BMPOUTNAME,DIR,ISEC)
+ LOGICAL FUNCTION MOVIE_CREATE_MPEG(BMPOUTNAME,DIR,ISEC)
  !###======================================================================
  IMPLICIT NONE
  CHARACTER(LEN=*),INTENT(IN) :: DIR
  INTEGER,INTENT(IN) :: ISEC
  CHARACTER(LEN=*),DIMENSION(:),INTENT(IN) :: BMPOUTNAME
  INTEGER :: I
+ CHARACTER(LEN=256) :: EXESTRING,CURDIR
 
+!d:\OSS\THIRD_PARTY_SOFTWARE\ffmpeg-3.3.1-win64-static\bin\ffmpeg.exe -start_number 1 -i "image%%03d.png" -crf 25 test.avi
+ MOVIE_CREATE_MPEG=.FALSE.
 !## padding
 !ffmpeg -i vid.mp4 -framerate 1 img_%03d.png -filter_complex overlay output.mp4
 
-!## no padding
-!ffmpeg -i vid.mp4 -framerate 1 img_%d.png -filter_complex overlay output.mp4
+ !## define executable string
+ CALL IOSDIRNAME(CURDIR); CALL IOSDIRCHANGE(DIR)
+ EXESTRING=TRIM(PREFVAL(29))//' -start_number 1 -i "image%%03d.png" -crf 25 imod.avi'
+ I=WINFOERROR(1)
+ CALL IOSCOMMAND(TRIM(EXESTRING)) !## no padding
+ I=WINFOERROR(1)
+ IF(I.NE.0)THEN
+  CALL WINFOERRORMESSAGE(I,EXESTRING)
+  CALL WMESSAGEBOX(OKONLY,EXCLAMATIONICON,COMMONOK,'Error creating the movie file:'//CHAR(13)// &
+     TRIM(DIR)//'\imod.avi'//CHAR(13)//'Error message:'//CHAR(13)//TRIM(EXESTRING),'Error')
+ ENDIF
  
- DO I=1,SIZE(BMPOUTNAME)
+ CALL IOSDIRCHANGE(CURDIR)
 
- ENDDO
- 
- END SUBROUTINE MOVIE_CREATE_MPEG
+!ffmpeg -i vid.mp4 -framerate 1 img_%d.png -filter_complex overlay output.mp4
+
+ MOVIE_CREATE_MPEG=.TRUE.
+  
+ END FUNCTION MOVIE_CREATE_MPEG
 
  !###======================================================================
  SUBROUTINE MOVIE_CREATE_CLOSE()
@@ -287,6 +314,7 @@ CONTAINS
 
  !## fill in dialog
  CALL WDIALOGLOAD(ID_DMOVIE,ID_DMOVIE)
+
  !## fill in available extents
  CALL WDIALOGPUTMENU(IDF_MENU4,EXT,SIZE(EXT),1)
  !## create folder if not yet existing
@@ -316,8 +344,9 @@ CONTAINS
  !###======================================================================
  IMPLICIT NONE
  CHARACTER(LEN=52) :: FNAME
- INTEGER :: I,J,N
- 
+ INTEGER :: I,J,K,N
+ LOGICAL :: LEX
+
  !## get selected dirname
  CALL WDIALOGGETMENU(IDF_MENU1,I,FNAME)
  !## get tye of file to be displayed
@@ -326,11 +355,20 @@ CONTAINS
  CALL UTL_IMODFILLMENU(IDF_MENU2,TRIM(PREFVAL(1))//'\MOVIES\'//TRIM(FNAME),'*.'//TRIM(EXT(I)),'F',N,0,0,CORDER='D')
  !## outgrey
  SELECT CASE (I)
+  !## bmp,jpg,png,pcx
   CASE (1:4); J=0
-  CASE (5:6); J=1
+  !## avi/mpeg
+  CASE (5:6)
+   !## check whether a movie-player is associated to an avi
+   J=0
+   DO K=30,31
+    IF(LEN_TRIM(PREFVAL(K)).NE.'')THEN
+     INQUIRE(FILE=PREFVAL(K),EXIST=LEX); IF(LEX)J=1
+    ENDIF
+   ENDDO
  END SELECT
  CALL WDIALOGFIELDSTATE(ID_PLAY,J)
- 
+
  END SUBROUTINE MOVIE_PLAY_ITEMS
 
  !###======================================================================
@@ -351,11 +389,12 @@ CONTAINS
  !###======================================================================
  IMPLICIT NONE
  INTEGER,INTENT(IN) :: IFC
- INTEGER :: ISTART,IEND,IFLAGS,DTYPE,DID,DD,IOPT,I,IHANDLE,N,IW,IH
+ INTEGER :: ISTART,IEND,IFLAGS,DTYPE,DID,DD,IOPT,I,J,K,IHANDLE,N,IW,IH
  CHARACTER(LEN=256) :: MOVIEFILE,STRING1,STRING2
  CHARACTER(LEN=52) :: DIR,FNAME
  INTEGER,DIMENSION(3) :: INFO
-
+ LOGICAL :: LEX
+ 
  DTYPE=WINFODRAWABLE(DRAWABLETYPE)
  DID  =WINFODRAWABLE(DRAWABLEID)
  DD   =WINFODRAWABLE(DRAWABLEDIALOG)
@@ -384,6 +423,7 @@ CONTAINS
   MOVIEFILE=TRIM(PREFVAL(1))//'\MOVIES\'//TRIM(DIR)//'\'//TRIM(FNAME)
 
   SELECT CASE (IOPT)
+   !## display bitmaps
    CASE (1:4)
 
     IF(WINFOBITMAP(0,BITMAPFREE).GT.0)THEN
@@ -416,29 +456,50 @@ CONTAINS
    
     ENDIF
    
+   !## display movies
    CASE (5,6)
 
-    CALL IGRSELECT(DRAWFIELD,IDF_PICTURE1)
-    IFLAGS=MOVIEDRAWABLE+MOVIEASYNC
-    !## clear error
-    I=WINFOERROR(LASTERROR); CALL UTL_DEBUGLEVEL(0)
-    CALL WPLAYMOVIE(MOVIEFILE,IFLAGS) !,ISTART,IEND)
-    CALL UTL_DEBUGLEVEL(0)
-    !## get error
-    I=WINFOERROR(LASTERROR)
-    !## operating system error
-    IF(I.EQ.ERROSCOMMAND)THEN
-     CALL WINFOERRORMESSAGE(I,STRING1,MSGTYPEWINT)
-     I=WINFOERROR(OSERRORCODE)
-     IF(I.NE.0)THEN
-      CALL WINFOERRORMESSAGE(I,STRING2,MSGTYPEOS)
-      CALL WMESSAGEBOX(OKONLY,EXCLAMATIONICON,COMMONOK,'Error occured, error message received is:'//CHAR(13)//TRIM(STRING1)//CHAR(13)//TRIM(STRING2),'Error')
+    !## get the player - last overrules first
+    !## firs is ffmpeg
+    !## last is vlcplayer
+    K=0; DO J=30,31
+     IF(LEN_TRIM(PREFVAL(J)).NE.'')THEN
+      INQUIRE(FILE=PREFVAL(J),EXIST=LEX); IF(LEX)K=J
      ENDIF
-    ELSEIF(I.NE.0)THEN
-     CALL WINFOERRORMESSAGE(I,STRING1,MSGTYPEWINT)
-     CALL WMESSAGEBOX(OKONLY,EXCLAMATIONICON,COMMONOK,'Error occured, error message received is:'//CHAR(13)//TRIM(STRING1),'Error')
-    ENDIF
- 
+    ENDDO
+
+    !## create string
+    SELECT CASE (K)
+     !## ffplay
+     CASE (30)
+      STRING1=PREFVAL(K)//' '//TRIM(MOVIEFILE) !test.avi
+     !## vlcplayer
+     CASE (31)
+      STRING1=PREFVAL(K)//' '//TRIM(MOVIEFILE) !test.avi
+!      STRING1=REM "c:\Program Files (x86)\VideoLAN\VLC\vlc.exe" test.avi
+    END SELECT
+    
+!    CALL IGRSELECT(DRAWFIELD,IDF_PICTURE1)
+!    IFLAGS=MOVIEDRAWABLE+MOVIEASYNC
+!    !## clear error
+!    I=WINFOERROR(LASTERROR); CALL UTL_DEBUGLEVEL(0)
+!    CALL WPLAYMOVIE(MOVIEFILE,IFLAGS) !,ISTART,IEND)
+!    CALL UTL_DEBUGLEVEL(0)
+!    !## get error
+!    I=WINFOERROR(LASTERROR)
+!    !## operating system error
+!    IF(I.EQ.ERROSCOMMAND)THEN
+!     CALL WINFOERRORMESSAGE(I,STRING1,MSGTYPEWINT)
+!     I=WINFOERROR(OSERRORCODE)
+!     IF(I.NE.0)THEN
+!      CALL WINFOERRORMESSAGE(I,STRING2,MSGTYPEOS)
+!      CALL WMESSAGEBOX(OKONLY,EXCLAMATIONICON,COMMONOK,'Error occured, error message received is:'//CHAR(13)//TRIM(STRING1)//CHAR(13)//TRIM(STRING2),'Error')
+!     ENDIF
+!    ELSEIF(I.NE.0)THEN
+!     CALL WINFOERRORMESSAGE(I,STRING1,MSGTYPEWINT)
+!     CALL WMESSAGEBOX(OKONLY,EXCLAMATIONICON,COMMONOK,'Error occured, error message received is:'//CHAR(13)//TRIM(STRING1),'Error')
+!    ENDIF
+! 
   END SELECT
  
  ENDIF
