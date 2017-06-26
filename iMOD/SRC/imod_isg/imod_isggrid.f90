@@ -1370,6 +1370,8 @@ IRLOOP: DO IR=MAX(1,IROW-1),MIN(NROW,IROW+1)
                                             TRIM(GRIDISG%ROOT)//'\'//TRIM(FNAME(11))//TRIM(PPOSTFIX)//'.IDF')    !## current_id
  ENDIF
 
+! IF(.NOT.IDFWRITE(IDF(9),TRIM(GRIDISG%ROOT)//'\'//TRIM(FNAME(9))//TRIM(PPOSTFIX)//'.IDF',1))THEN; endif
+
  !## extent grids based upon their width
  CALL ISG2GRID_EXTENT_WITH_WIDTH(SIZE(IDF),IDF,IBATCH,GRIDISG%MAXWIDTH)
 
@@ -2168,7 +2170,7 @@ IRLOOP: DO IR=MAX(1,IROW-1),MIN(NROW,IROW+1)
        F=F**2.0
 
        !## skip already filled in bathymetry
-       IF(IDF(9)%X(ICC,IRR).LE.0.0)CYCLE
+       IF(IDF(9)%X(ICC,IRR).LT.0.0)CYCLE
 
        IDF(9)%X(ICC,IRR)=IDF(9)%X(ICC,IRR)+F*MM(IR,IC)
        DO I=1,4; IDF(I)%X(ICC,IRR)=IDF(I)%X(ICC,IRR)+V(I)*F*MM(IR,IC); ENDDO
@@ -2195,7 +2197,7 @@ IRLOOP: DO IR=MAX(1,IROW-1),MIN(NROW,IROW+1)
         F=F**2.0
 
         !## skip already filled in bathymetry
-        IF(IDF(9)%X(ICC,IRR).LE.0.0)CYCLE
+        IF(IDF(9)%X(ICC,IRR).LT.0.0)CYCLE
 
         IDF(9)%X(ICC,IRR)=IDF(9)%X(ICC,IRR)+F*MM(IR,IC)
         DO I=1,4; IDF(I)%X(ICC,IRR)=IDF(I)%X(ICC,IRR)+V(I)*F*MM(IR,IC); ENDDO
