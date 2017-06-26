@@ -158,25 +158,25 @@ CONTAINS
   WRITE(*,'(A,I10)') 'Number of records',NL
   WRITE(*,'(A,I10)') 'Number of columns',NV
  
-  DO I=1,NV
+  DO J=1,SIZE(ICOLS)
    CT=''
-   DO J=1,SIZE(ICOLS)
+   DO I=1,NV
     IF(ICOLS(J).EQ.I)THEN
      SELECT CASE (J)
-      CASE (1);  CT='NAME'
-      CASE (2);  CT='XCRD'
-      CASE (3);  CT='YCRD'
-      CASE (4);  CT='ZCRD'
-      CASE (5);  CT='DEPT'
-      CASE (6);  CT='INCL'
-      CASE (7);  CT='AZIM'
-      CASE (8:); CT='LABL'//TRIM(ITOS(J-7))
+      CASE (1);  CT='NAME'; EXIT
+      CASE (2);  CT='XCRD'; EXIT
+      CASE (3);  CT='YCRD'; EXIT
+      CASE (4);  CT='ZCRD'; EXIT
+      CASE (5);  CT='DEPT'; EXIT
+      CASE (6);  CT='INCL'; EXIT
+      CASE (7);  CT='AZIM'; EXIT
+      CASE (8:); CT='LABL'//TRIM(ITOS(J-7)); EXIT
      END SELECT
     ENDIF
    ENDDO
-   IF(LEN_TRIM(CT).EQ.0)THEN
-    WRITE(*,'(6X,A9,2X,A)') 'COLUMN'//TRIM(ITOS(I)),VAR(I,0)
-   ELSE
+   IF(LEN_TRIM(CT).NE.0)THEN
+!    WRITE(*,'(6X,A9,2X,A)') 'COLUMN'//TRIM(ITOS(I)),'' !VAR(I,0)
+!   ELSE
     WRITE(*,'(A6,A9,2X,A)') CT,' COLUMN'//TRIM(ITOS(I)),VAR(I,0)
    ENDIF  
   ENDDO
@@ -216,18 +216,26 @@ CONTAINS
     
   JU=UTL_GETUNIT(); OPEN(JU,FILE=TRIM(DIR)//'\'//TRIM(CL1)//'.TXT',STATUS='UNKNOWN',ACTION='WRITE')
   WRITE(JU,'(I4.4)') I2-I1+1
-  WRITE(JU,'(I3,A)') 3+NLC,',4'
+  WRITE(JU,'(I3,A)') 3+MAX(1,NLC),',4'
   WRITE(JU,'(A)') 'DX,-999.99'
   WRITE(JU,'(A)') 'DY,-999.99'
   WRITE(JU,'(A)') 'Z ,-999.99'
-  DO I=1,NLC
-   WRITE(JU,'(A,F7.2)') TRIM(VAR(ICOLS(7+I),0))//',',-999.99
-  ENDDO
+  IF(NLC.EQ.0)THEN
+   WRITE(JU,'(A,F7.2)') 'LITHOLOGY,',-999.99
+  ELSE
+   DO I=1,NLC
+    WRITE(JU,'(A,F7.2)') TRIM(VAR(ICOLS(7+I),0))//',',-999.99
+   ENDDO
+  ENDIF
   !## process current borehole
   X1=0.0; Y1=0.0; TL1=0.0
-  !## read z value
-  READ(VAR(ICOLS(4),I1),*,IOSTAT=IOS) Z1
-  IF(IOS.NE.0)THEN; WRITE(*,'(/1X,A/)') 'Error reading elevation from '//TRIM(VAR(ICOLS(4),I1)); STOP; ENDIF
+  IF(ICOLS(4).LE.0)THEN
+   Z1=0.0
+  ELSE
+   !## read z value
+   READ(VAR(ICOLS(4),I1),*,IOSTAT=IOS) Z1
+   IF(IOS.NE.0)THEN; WRITE(*,'(/1X,A/)') 'Error reading elevation from '//TRIM(VAR(ICOLS(4),I1)); STOP; ENDIF
+  ENDIF
   DO II=I1,I2
 
    !## read total length through well
@@ -243,7 +251,10 @@ CONTAINS
    !## convert to radians
    AX=AX/G2R; AY=AY/G2R; AZ=AZ/G2R
    AY=AY-0.5*PI
-   
+
+   !## correction to be sure north is 0.0 and east is 90 degrees   
+   AZ=AZ-0.5*PI
+
    !## length
    L=TL2-TL1
    
@@ -262,15 +273,19 @@ CONTAINS
    
    !## add labels
    LINE=TRIM(RTOS(X1,'F',2))//','//TRIM(RTOS(Y1,'F',2))//','//TRIM(RTOS(Z1,'F',2))
-   DO I=1,NLC
-    !## add dummy label if missing
-    IF(ICOLS(7+I).LE.0)THEN
-     CL='S'
-    ELSE
-     READ(VAR(ICOLS(7+I),II),*) CL
-    ENDIF
-    LINE=TRIM(LINE)//',"'//TRIM(CL)//'"'
-   ENDDO
+   IF(NLC.GT.0)THEN
+    DO I=1,NLC
+     !## add dummy label if missing
+     IF(ICOLS(7+I).LE.0)THEN
+      CL='S'
+     ELSE
+      READ(VAR(ICOLS(7+I),II),*) CL
+     ENDIF
+     LINE=TRIM(LINE)//',"'//TRIM(CL)//'"'
+    ENDDO
+   ELSE
+    LINE=TRIM(LINE)//',S'
+   ENDIF
    WRITE(JU,'(A)') TRIM(LINE)
    
    TL1=TL2
@@ -282,11 +297,18 @@ CONTAINS
   N=N+1
 
   !## write information to ipf: x,y,name,id
-  WRITE(IU,'(A)') TRIM(VAR(ICOLS(2),I1))//',' // &
-                  TRIM(VAR(ICOLS(3),I1))//',' // &
-                  TRIM(VAR(ICOLS(4),I1))//',"'// &
-                  TRIM(VAR(ICOLS(1),I1))//'",'//TRIM(CL1)
-
+  IF(ICOLS(4).LE.0)THEN
+   WRITE(IU,'(A)') TRIM(VAR(ICOLS(2),I1))//',' // &
+                   TRIM(VAR(ICOLS(3),I1))//',' // &
+                   TRIM(RTOS(0.0,'F',1))//',"'// &
+                   TRIM(VAR(ICOLS(1),I1))//'",'//TRIM(CL1)
+  ELSE
+   WRITE(IU,'(A)') TRIM(VAR(ICOLS(2),I1))//',' // &
+                   TRIM(VAR(ICOLS(3),I1))//',' // &
+                   TRIM(VAR(ICOLS(4),I1))//',"'// &
+                   TRIM(VAR(ICOLS(1),I1))//'",'//TRIM(CL1)
+  ENDIF
+  
   !## continue with rest
   I1=I2
   !## stop - finished
