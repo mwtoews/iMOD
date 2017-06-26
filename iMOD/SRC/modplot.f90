@@ -121,6 +121,8 @@ USE MOD_IDF_PAR, ONLY : IDFOBJ
  CHARACTER(LEN=150)                     :: CHEDTXT  !## COPY purposes
  INTEGER,DIMENSION(MXCGRAD)             :: CCGRAD   !## selected color for gradient
  CHARACTER(LEN=256)                     :: PLOTNAME !##configuration name
+ REAL,DIMENSION(MXMPLOT,4)              :: POLAREAXY !## saves extent of each idf (xmin,ymin,xmax,ymax)
+ INTEGER,DIMENSION(MXMPLOT)             :: IPOLACT=0 !## saves whether an idf raster is drawn or not (iact=1 --> idf is drawn)
 
  TYPE CONTOBJ
   REAL :: ALAB,VLAB,XLAB,YLAB 
