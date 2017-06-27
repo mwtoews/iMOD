@@ -360,7 +360,8 @@ c modules
       use idfmodule
       use global, only: delr, delc, ncol, nrow
       use gwfmetmodule
-
+      use pksmpi_mod, only: nrproc, myrank
+      
       implicit none
 
 c arguments
@@ -377,9 +378,11 @@ c function declaration
 
 c local variables
       logical :: lop
-      integer :: icol, irow
+      integer :: icol, irow, i
       real :: xmin, ymin, xmax, ymax, val
-
+      character(len=1000) :: fname
+      logical :: lnodata
+ 
 c program section
 c ------------------------------------------------------------------------------
 
@@ -435,12 +438,16 @@ c deallocate child idf and close
       endif
 
 c set array
+      lnodata = .false.
       do irow = 1, nrow
          do icol = 1, ncol
             val = idfm%x(icol,irow)
 c change data in case nodata value is used
-!            if (val.eq.idfm%nodata) val = nodata
-            if (val.eq.idfc%nodata) val = nodata
+c            if (val.eq.idfm%nodata) val = nodata
+            if (val.eq.idfc%nodata) then
+               val = nodata
+               lnodata = .true.
+            end if   
             if (type.eq.'i') then
                iarray(icol,irow) = int(val)
             else
@@ -449,6 +456,28 @@ c change data in case nodata value is used
          end do
       end do
 
+c check for nodata
+      if (nrproc.gt.1) then
+         if (lnodata) then
+            write(*,*) 'Warning, nodata found in ',trim(file), myrank
+         end if    
+      end if   
+
+c debug
+      if(associated(write_debug_idf))then
+         fname = trim(file)
+         i = index(fname,'.',back=.true.)
+         fname = fname(1:i-1)//'_debug'
+         i = len_trim(fname)
+         call pks7mpifname(fname,i)
+         fname = trim(fname)//'.idf'
+         write(*,'(1x,a,1x,a,1x,a)') 'Writing',trim(fname),'...'
+         if (.not.idfwrite(idfm,fname,0)) then
+            imod_idfread = 1
+            return
+         end if          
+      end if
+      
 c deallocate mother idf
       call idfdeallocatex(idfm)
 
@@ -470,7 +499,6 @@ c ------------------------------------------------------------------------------
       use lcdmodule
       use imod_utl, only: imod_utl_intersect_equi,
      1                    imod_utl_intersect_nonequi
-      use gwfmetmodule, only: cdelr, cdelc
       implicit none
 
 c function declaration
@@ -531,7 +559,7 @@ c open file
       end if
 
 c init
-      mx=ncol*nrow
+      mx=lncol*lnrow
       if(allocated(xa))deallocate(xa)
       if(allocated(ya))deallocate(ya)
       if(allocated(ln))deallocate(ln)
@@ -581,8 +609,8 @@ c read file
                   ok = imod_utl_intersect_equi(xmin,xmax,ymin,ymax,
      1                    simcsize,x1,x2,y1,y2,mx,n,xa,ya,fa,ln,.true.)
                else
-                  ok = imod_utl_intersect_nonequi(cdelr,cdelc,nrow,ncol,
-     1                    x1,x2,y1,y2,mx,n,xa,ya,fa,ln,.true.)
+                  ok = imod_utl_intersect_nonequi(lcdelr,lcdelc,
+     1                  lnrow,lncol,x1,x2,y1,y2,mx,n,xa,ya,fa,ln,.true.)
                endif
                if(.not.ok) then
                   ret=-16
@@ -606,7 +634,7 @@ c read file
                   irow=int(ya(l))
 
                   if(icol.ge.1.and.irow.ge.1.and.
-     1                icol.le.ncol.and.irow.le.nrow) then
+     1                icol.le.lncol.and.irow.le.lnrow) then
                      m = m + 1; nn = nn + 1
                      if (iact.eq.2) then
                         genpos(m,1) = icol

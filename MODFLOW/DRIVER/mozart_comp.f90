@@ -44,7 +44,7 @@
 
       double precision :: beginOfCurrentTimeStep, endOfCurrentTimeStep
 
-      integer, parameter :: mv = -1234.0 !< general missing value
+      real, parameter :: mv = -1234.0 !< general missing value
 
       integer, parameter :: maxlswid = 1000000 !< maximum ID of the LSWs
       integer, save :: nlsw !< number of LSWs
@@ -66,7 +66,7 @@
          real :: cuunszflux
       end type tLSW
       type (tLSW), dimension(:), allocatable, save :: lswdat !< Local Surface Water array
-      integer, dimension(:), allocatable :: lsw
+      integer, dimension(:), allocatable, save :: lsw
 
       integer, parameter :: maxpvid = 1000000 !< maximum ID of the LSWs
       integer, save :: npv !< number of LSWs
@@ -79,6 +79,11 @@
 
       real, parameter :: concrch = 20.
 
+      real, dimension(:), allocatable :: lswsbuf, lswrbuf
+      
+      integer, parameter :: minlun = 10
+      integer, parameter :: maxlun = 9999
+      
       end module
 
 ! =============================================================================
@@ -137,11 +142,15 @@
       implicit none
 !.......................................................................
 
+      call timing_tic('MOZART','initSimulation')
+      
 !...     read file with LSW's
       call read_lsw()
 
 !...     read file with PV
       call read_pv()
+
+      call timing_toc('MOZART','initSimulation')
 
       end subroutine
 
@@ -164,10 +173,10 @@
       write(*,*) 'mz: reading LSW file (',trim(lsw_file),')'
 
 !...     Open mftolsw.csv
-      lun = cfn_getlun(10,99)
+      lun = cfn_getlun(minlun,maxlun)
       inquire(file=lsw_file,exist=lex)
       if (lex) then
-         open(unit=lun,file=lsw_file,status='old',form='formatted')
+         open(unit=lun,file=lsw_file,status='old',form='formatted',share='denynone')
       else
          write(*,*) 'mz: error, file ',trim(lsw_file),' does not exist'
          call exit(1)
@@ -222,10 +231,10 @@
       write(*,*) 'mz: reading PV file (',trim(pv_file),')'
 
 !...     Open mftolsw.csv
-      lun = cfn_getlun(10,99)
+      lun = cfn_getlun(minlun,maxlun)
       inquire(file=pv_file,exist=lex)
       if (lex) then
-         open(unit=lun,file=pv_file,status='old',form='formatted')
+         open(unit=lun,file=pv_file,status='old',form='formatted',share='denynone')
       else
          write(*,*) 'mz: error, file ',trim(pv_file),' does not exist'
          call exit(1)
@@ -266,6 +275,7 @@
 ! =============================================================================
 !...     modules
       use mozartmod
+      use pksmpi_mod, only: myrank
 
       implicit none
 
@@ -285,6 +295,8 @@
       double precision :: dt
 !.......................................................................
 
+      call timing_tic('MOZART','prepareTimeStep')
+
 !...     wait until the MOZART signal file is found
       write(*,*) 'mz: waiting for signal from mozart ',mzsignal(1:len_trim(mzsignal)), ' or ',&
                                 mzexitsignal(1:len_trim(mzexitsignal)),' to be found ...'
@@ -300,19 +312,20 @@
          write(*,*) 'mz: found ',mzexitsignal(1:len_trim(mzexitsignal))
          write(*,*) 'mz: mozart finished simulation'
          endOfSimulation = .true.
+         call timing_toc('MOZART','prepareTimeStep')
          return
       end if
 
  !...     open the MOZART signal file, read, and delete file
       write(*,*) 'mz: found ',mzsignal(1:len_trim(mzsignal)),' and reading'
-      lun = cfn_getlun(10,99)
-      open(unit=lun,file=mzsignal,status='old',form='formatted',iostat=ios)
+      lun = cfn_getlun(minlun,maxlun)
+      open(unit=lun,file=mzsignal,status='old',form='formatted',iostat=ios,share='denynone')
       if (ios.ne.0) then
          itry = 0
          do while(itry.le.ntry)
             write(*,*) 'Error opening file, retrying...'
             call sleep(tsleep)   
-            open(unit=lun,file=mzsignal,status='old',form='formatted',iostat=ios)
+            open(unit=lun,file=mzsignal,status='old',form='formatted',iostat=ios,share='denynone')
             if (ios.eq.0) then
                exit
             else   
@@ -322,14 +335,20 @@
       end if            
       if (ios.ne.0) then
          write(*,*) 'Error opening file'; stop 1
-      end if             
+      end if
 
 !...     read MOZART signal file
       read(lun,*) dora, time, dt
       write(*,*) 'mz: read from signal file: ', dora, time, dt
 
 !...     delete signal file
-      close(lun,status='delete')
+      if (myrank.ne.0) then ! PKS
+         close(lun)
+      end if ! PKS                                       
+      call pks7mpibarrier() ! PKS
+      if (myrank.eq.0) then ! PKS
+         close(lun,status='delete')
+      end if ! PKS                                       
 
 !...     read time information
       read(time,'(i4,2i2)') year, month, day
@@ -349,6 +368,8 @@
          convergedMozart = .false.
          first = .false.
       end if
+      
+      call timing_toc('MOZART','prepareTimeStep')
 
       end subroutine
 
@@ -363,6 +384,8 @@
       integer, intent(in) :: iter
 !.......................................................................
 
+      call timing_tic('MOZART','initTimeStep')
+      
 !...     initalize the arrays
       call mozart_init_lsw()
 
@@ -379,12 +402,14 @@
 !...     read MOZART salt file
       call mozart_read_salt()
 
+      call timing_toc('MOZART','initTimeStep')
+      
       end subroutine
 
        !> Read MOZART levels.
       subroutine mozart_read_levels()
 
-      use mozartmod, only: mzlevels_file, lswdat, pvdat, maxlswid, maxpvid, mv
+      use mozartmod, only: mzlevels_file, lswdat, pvdat, maxlswid, maxpvid, mv, minlun, maxlun
 
       implicit none
 
@@ -398,8 +423,8 @@
 
       write(*,*) 'mz: reading mozart levels (',trim(mzlevels_file),')'
 
-      lun = cfn_getlun(10,99)
-      open(unit=lun,file=mzlevels_file,status='old',form='formatted')
+      lun = cfn_getlun(minlun,maxlun)
+      open(unit=lun,file=mzlevels_file,status='old',form='formatted',share='denynone')
 
       lswdat(:)%lev = mv
       pvdat(:)%lev = mv
@@ -429,7 +454,7 @@
       !> Read MOZART fractions.
       subroutine mozart_read_fractions()
 
-      use mozartmod, only: mzfractions_file, lswdat, maxlswid, mv
+      use mozartmod, only: mzfractions_file, lswdat, maxlswid, mv, minlun, maxlun
 
       implicit none
 
@@ -443,8 +468,8 @@
 
       write(*,*) 'mz: reading mozart levels (',trim(mzfractions_file),')'
 
-      lun = cfn_getlun(10,99)
-      open(unit=lun,file=mzfractions_file,status='old',form='formatted')
+      lun = cfn_getlun(minlun,maxlun)
+      open(unit=lun,file=mzfractions_file,status='old',form='formatted',share='denynone')
 
       ! read fractions
       lswdat(:)%frc = mv
@@ -464,7 +489,7 @@
        !> Read Salt.
       subroutine mozart_read_salt()
 
-      use mozartmod, only: mzsalt_file, lswdat, maxlswid, mv
+      use mozartmod, only: mzsalt_file, lswdat, maxlswid, mv, minlun, maxlun
 
       implicit none
 
@@ -478,8 +503,8 @@
 
       write(*,*) 'mz: reading mozart salt (',trim(mzsalt_file),')'
 
-      lun = cfn_getlun(10,99)
-      open(unit=lun,file=mzsalt_file,status='old',form='formatted')
+      lun = cfn_getlun(minlun,maxlun)
+      open(unit=lun,file=mzsalt_file,status='old',form='formatted',share='denynone')
 
       ! read fractions
       lswdat(:)%salt = mv
@@ -523,6 +548,7 @@
       subroutine mozart_finishTimeStep(iter,dt,usetransol)
 ! =============================================================================
 !...     modules
+      use pksmpi_mod, only: myrank
 
       implicit none
 
@@ -532,18 +558,25 @@
       logical, intent(in) :: usetransol
 !.......................................................................
 
-      if (iter.eq.1) then ! demand phase
-         call mozart_write_mms(dt,'d',usetransol)
-      else if (iter.eq.2) then ! allocation phase
-         call mozart_write_mms(dt,'a',usetransol)
-      else
-          write(*,*) 'Error mozart_finishTimeStep'
-          call exit(1)
+      call timing_tic('MOZART','finishTimeStep')
+      
+      call mozart_reduce_lsw()
+      if (myrank.eq.0) then
+         if (iter.eq.1) then ! demand phase
+            call mozart_write_mms(dt,'d',usetransol)
+         else if (iter.eq.2) then ! allocation phase
+            call mozart_write_mms(dt,'a',usetransol)
+         else
+             write(*,*) 'Error mozart_finishTimeStep'
+             call exit(1)
+         end if
+         ! write the signal file
+         call mozart_write_sig()
       end if
-
-      ! write the signal file
-      call mozart_write_sig()
-
+      call pks7mpibarrier() ! PKS
+  
+      call timing_toc('MOZART','finishTimeStep')
+     
       end subroutine
 
       !> Write MOZART signal file.
@@ -564,7 +597,7 @@
 !...     write (empty) MODFLOW-MetaSWAP file
       write(*,*) 'mz: writing signal file for mozart (',trim(mfmssignal),')'
 
-      lun = cfn_getlun(10,99)
+      lun = cfn_getlun(minlun,maxlun)
       write(tmpfile,'(2a)') mfmssignal(1:len_trim(mfmssignal)), 'tmp'
       open(unit=lun,file=tmpfile,status='new',form='formatted',share='denyrd')
       close(lun)
@@ -576,7 +609,7 @@
       !> Write MOZART file the demand phase.
       subroutine mozart_write_mms(dt,phase,usetransol)
 
-      use mozartmod, only: mms_dmnds_file, mms_alloc_file, nlsw, lsw, lswdat, mv, concrch
+      use mozartmod, only: mms_dmnds_file, mms_alloc_file, nlsw, lsw, lswdat, mv, concrch, minlun, maxlun
 
       implicit none
 
@@ -609,7 +642,7 @@
       write(*,*) 'mz: phase ',dora
       write(*,*) 'mz: writing mozart file (',trim(outfile),')'
 
-      lun = cfn_getlun(10,99)
+      lun = cfn_getlun(minlun,maxlun)
       open(unit=lun,file=outfile,status='unknown',form='formatted')
 
 !...     write header
@@ -1199,3 +1232,136 @@
       t = endOfCurrentTimeStep
 
       end subroutine
+      
+! =============================================================================
+      subroutine mozart_reduce_lsw()
+! =============================================================================
+      
+      use mozartmod, only: nlsw, lsw, lswdat, mv, lswsbuf, lswrbuf
+      use pksmpi_mod, only: myrank, mpptyp, mppser, mppini1
+      
+      implicit none
+
+!...     locals
+      integer, parameter :: nlswitem = 10
+      integer :: n, i, j, jj, k, lswid
+!.......................................................................
+      
+      if (mpptyp.eq.mppser .or. mpptyp.eq.mppini1) return
+      
+      n = 2*nlsw*nlswitem
+      if (.not.allocated(lswsbuf)) then
+         allocate(lswsbuf(n))
+      end if
+      if (.not.allocated(lswrbuf)) then
+         allocate(lswrbuf(n))
+      end if
+      lswsbuf = 0. 
+      lswrbuf = 0. 
+      
+      ! pack phase 1: label missing value
+      j = 0
+      do i = 1, nlsw
+         lswid = lsw(i)
+         if (lswdat(lswid)%lswid.le.0) cycle
+         call mozart_reduce_lsw_pck_mv(lswsbuf,j,mv,lswdat(lswid)%cufldr)      !01
+         call mozart_reduce_lsw_pck_mv(lswsbuf,j,mv,lswdat(lswid)%cufldrwells) !02
+         call mozart_reduce_lsw_pck_mv(lswsbuf,j,mv,lswdat(lswid)%cuflif)      !03
+         call mozart_reduce_lsw_pck_mv(lswsbuf,j,mv,lswdat(lswid)%cuflifwells) !04
+         call mozart_reduce_lsw_pck_mv(lswsbuf,j,mv,lswdat(lswid)%cuflroff)    !05
+         call mozart_reduce_lsw_pck_mv(lswsbuf,j,mv,lswdat(lswid)%cuflsp)      !06
+         call mozart_reduce_lsw_pck_mv(lswsbuf,j,mv,lswdat(lswid)%cusalt)      !07
+         call mozart_reduce_lsw_pck_mv(lswsbuf,j,mv,lswdat(lswid)%cusaltwells) !08
+         call mozart_reduce_lsw_pck_mv(lswsbuf,j,mv,lswdat(lswid)%cuseep)      !09
+         call mozart_reduce_lsw_pck_mv(lswsbuf,j,mv,lswdat(lswid)%cuunszflux)  !10
+      end do      
+      jj = j
+      ! pack phase 2: data
+      do i = 1, nlsw
+         lswid = lsw(i)
+         if (lswdat(lswid)%lswid.le.0) cycle
+         j = j + 1; lswsbuf(j) = lswdat(lswid)%cufldr      !01  
+         j = j + 1; lswsbuf(j) = lswdat(lswid)%cufldrwells !02
+         j = j + 1; lswsbuf(j) = lswdat(lswid)%cuflif      !03
+         j = j + 1; lswsbuf(j) = lswdat(lswid)%cuflifwells !04
+         j = j + 1; lswsbuf(j) = lswdat(lswid)%cuflroff    !05 
+         j = j + 1; lswsbuf(j) = lswdat(lswid)%cuflsp      !06
+         j = j + 1; lswsbuf(j) = lswdat(lswid)%cusalt      !07
+         j = j + 1; lswsbuf(j) = lswdat(lswid)%cusaltwells !08
+         j = j + 1; lswsbuf(j) = lswdat(lswid)%cuseep      !09
+         j = j + 1; lswsbuf(j) = lswdat(lswid)%cuunszflux  !10
+      end do
+      n = j
+      ! mv --> 0
+      do j = jj + 1, n
+         if (lswsbuf(j).eq.mv) lswsbuf(j) = 0.    
+      end do
+
+      ! Master process collects 
+      call pks7mpiwrpreducersum( lswsbuf, lswrbuf, n, 0)
+      
+      ! Master process unpacks
+      if (myrank.eq.0) then
+         j = 0
+         do i = 1, nlsw
+            lswid = lsw(i)
+            if (lswdat(lswid)%lswid.le.0) cycle
+            call mozart_reduce_lsw_upck(lswrbuf,j,jj,mv,lswdat(lswid)%cufldr     ) !01
+            call mozart_reduce_lsw_upck(lswrbuf,j,jj,mv,lswdat(lswid)%cufldrwells) !02
+            call mozart_reduce_lsw_upck(lswrbuf,j,jj,mv,lswdat(lswid)%cuflif     ) !03
+            call mozart_reduce_lsw_upck(lswrbuf,j,jj,mv,lswdat(lswid)%cuflifwells) !04
+            call mozart_reduce_lsw_upck(lswrbuf,j,jj,mv,lswdat(lswid)%cuflroff   ) !05
+            call mozart_reduce_lsw_upck(lswrbuf,j,jj,mv,lswdat(lswid)%cuflsp     ) !06
+            call mozart_reduce_lsw_upck(lswrbuf,j,jj,mv,lswdat(lswid)%cusalt     ) !07
+            call mozart_reduce_lsw_upck(lswrbuf,j,jj,mv,lswdat(lswid)%cusaltwells) !08
+            call mozart_reduce_lsw_upck(lswrbuf,j,jj,mv,lswdat(lswid)%cuseep     ) !09
+            call mozart_reduce_lsw_upck(lswrbuf,j,jj,mv,lswdat(lswid)%cuunszflux ) !10
+         end do
+      end if
+         
+      end subroutine   
+      
+! =============================================================================
+      subroutine mozart_reduce_lsw_pck_mv(buf,j,mv,rval)
+! =============================================================================
+      
+      implicit none
+
+!...     arguments
+      integer, intent(inout) :: j
+      real, dimension(*), intent(inout) :: buf
+      real, intent(in) :: mv
+      real, intent(in) :: rval
+!.......................................................................
+          
+      j = j + 1
+      if(rval.eq.mv)then
+         buf(j) = 0.
+      else   
+         buf(j) = 1.
+      end if       
+      
+      end subroutine
+ 
+! =============================================================================
+      subroutine mozart_reduce_lsw_upck(buf,j,jj,mv,rval)
+! =============================================================================
+      
+      implicit none
+
+!...     arguments
+      integer, intent(inout) :: j, jj
+      real, dimension(*), intent(in) :: buf
+      real, intent(in) :: mv
+      real, intent(out) :: rval
+!.......................................................................
+          
+      j  = j + 1
+      jj = jj + 1
+      if (buf(j).gt.0) then
+         rval = buf(jj)    
+      else
+         rval = mv 
+      end if
+      
+      end subroutine      

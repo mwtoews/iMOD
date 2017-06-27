@@ -46,6 +46,7 @@ C1------USE package modules.
       USE GWFLAKMODULE, ONLY:NLAKESAR,THETA,STGOLD,STGNEW,VOL
       USE GWFUZFMODULE, ONLY: IUZFBND, FINF, VKS
       USE PCGMODULE
+      USE PKSMODULE                                                     ! PKS
 c      USE LMGMODULE
       USE SIPMODULE
       USE DE4MODULE
@@ -74,7 +75,7 @@ C
      &           'HYD ', 'SFR ', '    ', 'GAGE', 'LVDA', '    ', 'LMT6',  ! 49
      &           'MNW2', 'MNWI', 'MNW1', 'KDEP', 'SUB ', 'UZF ', 'gwm ',  ! 56
      &           'SWT ', 'cfp ', 'PWT ', '    ', '    ', 'SCR ', 'nrs ',  ! 63  ! DLT: SUB-Creep (62) added
-     &           'DXC ', 'ANI ', '    ', '    ', 'MET ',
+     &           'DXC ', 'ANI ', 'PKS  ', '    ', 'MET ',                  ! 70
      &           32*'    '/        ! 64: Data eXChange
 
 
@@ -129,21 +130,24 @@ c arguments
                                                   !           will be used instead
       integer          , intent(out)  :: retVal   ! return value: 0=OK
 
+c functions
+      logical :: pks7mpimasterwrite
+      
 c local variables
       integer    :: maxunit,nc,i
       integer    :: igrid
       logical    :: lfname
 
 c init
+      call timing_tic('MODFLOW','INIT')                                 ! DLT
       retVal = 0
-
       !## write banner in commandtool
       do i = 1, size(hdr)
-       write(*,'(a)') trim(hdr(i))
+       if (pks7mpimasterwrite()) write(*,'(a)') trim(hdr(i))
       end do
 
 C2------WRITE BANNER TO SCREEN AND DEFINE CONSTANTS.
-      WRITE (*,1) MFVNAM,VERSION
+      if (pks7mpimasterwrite()) WRITE (*,1) MFVNAM,VERSION
     1 FORMAT (/,34X,'MODFLOW',A,/,
      &4X,'U.S. GEOLOGICAL SURVEY MODULAR FINITE-DIFFERENCE',
      &' GROUND-WATER FLOW MODEL',/,29X,'Version ',A/)
@@ -161,14 +165,21 @@ C3------GET THE NAME OF THE NAME FILE
       MAXUNIT= INUNIT
 C
 C4------OPEN NAME FILE.
+#ifdef __INTEL_COMPILER
+      OPEN (UNIT=INUNIT,FILE=FNAME,STATUS='OLD',ACTION=ACTION(1),
+     & SHARE='DENYNONE')                                                ! PKS
+#else
       OPEN (UNIT=INUNIT,FILE=FNAME,STATUS='OLD',ACTION=ACTION(1))
+#endif       
       NC=INDEX(FNAME,' ')
-      WRITE(*,490)' Using NAME file: ',FNAME(1:NC)
+      if (pks7mpimasterwrite()) 
+     &  WRITE(*,490)' Using NAME file: ',FNAME(1:NC)
   490 FORMAT(A,A)
 C
 C5------Get current date and time, assign to IBDT, and write to screen
       CALL DATE_AND_TIME(VALUES=IBDT)
-      WRITE(*,2) (IBDT(I),I=1,3),(IBDT(I),I=5,7)
+      if (pks7mpimasterwrite())
+     &  WRITE(*,2) (IBDT(I),I=1,3),(IBDT(I),I=5,7)
     2 FORMAT(1X,'Run start date and time (yyyy/mm/dd hh:mm:ss): ',
      &I4,'/',I2.2,'/',I2.2,1X,I2,':',I2.2,':',I2.2,/)
 C
@@ -189,6 +200,7 @@ c-------process argument record for setting time                        ! DLT
 
 C  -----SAVE POINTERS TO DATA AND RETURN.
 c      CALL SGWF2INS1PSV(IGRID)                                           ! DLT: instances
+      call timing_toc('MODFLOW','INIT')                                 ! DLT
       return
       end
 c ******************************************************************************
@@ -225,7 +237,8 @@ c local variable
 c functions
       double precision  :: cfn_mjd_delta
 
-
+      call timing_tic('MODFLOW','AR')                                   ! DLT
+      
 c init
       retVal=0
 
@@ -285,7 +298,11 @@ c read hfb before ani for corrections of ani
       IF(IUNIT(IUDE4).GT.0) CALL DE47AR(IUNIT(IUDE4),MXITER,IGRID)
       IF(IUNIT(IUPCG).GT.0) CALL PCG7AR(IUNIT(IUPCG),MXITER,IGRID)
 c      IF(IUNIT(IULMG).GT.0) CALL LMG7AR(IUNIT(IULMG),MXITER,IGRID)
-      IF(IUNIT(42).GT.0) CALL GMG7AR(IUNIT(42),MXITER,IGRID)
+c      IF(IUNIT(42).GT.0) CALL GMG7AR(IUNIT(42),MXITER,IGRID)
+      IF(IUNIT(IUPKS).GT.0) THEN
+        CALL PKS7AR(IUNIT(IUPKS),MXITER,IGRID)                          !PKS - JDH
+        CALL PKS7MPIAR(IOUT,IBOUND,NODES)                               !JV
+      ENDIF         
       IF(IUNIT(IUMNW2).GT.0) CALL GWF2MNW27AR(IUNIT(IUMNW2),IGRID)
       IF(IUNIT(IUMNWI).GT.0) CALL GWF2MNW2I7AR(IUNIT(IUMNWI),
      1                     IUNIT(IUMNW2),IGRID)
@@ -330,6 +347,8 @@ C  Observation allocate and read
 
       enddo                                                             ! DLT: instances
 C
+      call timing_toc('MODFLOW','AR')
+
       return
       end
 
@@ -569,6 +588,8 @@ c local variable
 c ------------------------------------------------------------------------------
 
 c init
+      call timing_tic('MODFLOW','RP')                                   ! DLT
+
       retVal = 0
 
 
@@ -692,6 +713,8 @@ C7C1----CALCULATE TIME STEP LENGTH. SET HOLD=HNEW.
 
       enddo                                                                     ! DLT: instances
 C
+      call timing_toc('MODFLOW','RP')                                   ! DLT
+
       return
       end
 
@@ -790,12 +813,16 @@ c =====
 c arguments
       integer         , intent(out) :: retVal
 
-
+c functions
+      logical :: pks7mpimasterwrite
+      
 c local variable
       integer    :: igrid
 
 
 c init
+      call timing_tic('MODFLOW','FM')                                   ! DLT
+
       retVal = 0
 
 
@@ -805,7 +832,7 @@ c init
 
 C---------INDICATE IN PRINTOUT THAT SOLUTION IS FOR HEADS
           CALL UMESPR('SOLVING FOR HEAD',' ',IOUT)
-          WRITE(*,25)KPER,KSTP
+          if (pks7mpimasterwrite()) WRITE(*,25)KPER,KSTP
    25     FORMAT(' Solving:  Stress period: ',i5,4x,
      &       'Time step: ',i5,4x,'Ground-Water Flow Eqn.')
 C
@@ -880,6 +907,8 @@ c SUB-Creep
 
       enddo                                                             ! DLT: instances
 C
+      call timing_toc('MODFLOW','FM')                                   ! DLT
+
       return
       end
 c ******************************************************************************
@@ -923,6 +952,8 @@ c     Moved from prepare iter (2 lines)
       end if 
       call mf2005_initIter(retVal)
 c
+      call timing_tic('MODFLOW','SOL')                                  ! DLT
+
       do igrid=1,ninstance                                                      ! DLT: instances
       call sgwf2ins1pnt(igrid)                                                  ! DLT: instances
       call SGWF2BAS7PNT(IGRID)                                                  ! DLT: instances
@@ -972,6 +1003,38 @@ c            END IF
      5                         IUNITMHC,DUP,DLOW,CHGLIMIT,
      6                         BIGHEADCHG,HNEWLAST)
             ENDIF
+           IF (IUNIT(IUPKS).GT.0) THEN
+                   CALL PKS7PNT(IGRID)                
+                   CALL PKS7AP(
+     &                 HNEW,      IBOUND,      IACTCELL,  CR,           !004
+     &                 CC,        CV,          HCOF,      RHS,          !008
+     &                 ICNVG,     NSTP(KKPER), KKSTP,     KKPER,        !012
+     &                 MXITER,    KKITER,      NCOL,      NROW,         !016
+     &                 NLAY,      NODES,       HNOFLO,    IOUT,         !020
+     &                 ISOLVER,   NPC,         NCORESM,   NCORESV,      !024
+     &                 ICNVGOPT,  IEPFACT,     NRPROC,    INNERIT,      !028
+     &                 NITERC,    NNZC,        NIAC,      NIABCGS,      !032
+     &                 NGMRES,    NREST,       NIAPC,     NJAPC,        !036
+     &                 NNZAPC,    NIAPCM,      NJAPCM,    NIWC,         !040
+     &                 NWC,       HCLOSEPKS,   RCLOSEPKS, ISSFLG(KKPER),!044
+     &                 NDAMPPKS,  DAMPPKS,     DAMPTPKS,  HPKS,         !048
+     &                 NRESUP,    RELAXPKS,    IFILL,     NLEVELS,      !052
+     &                 DROPTOL,   IPKSO,       IPKSI,     PKST,         !056
+     &                 PKSPCU,    PKSPCA,      IPRPKS,    MUTPKS,       !060
+     &                 IUNITPKS,  PKSCLEN,     PKSIT,     PKSHMXLOC,    !064
+     &                 PKSHMX,    PKSRMXLOC,   PKSRMX,    PKSL2NORM,    !068
+     &                 PKSRL2NORM,NODEC,       BC,        XC,           !072
+     &                 AC,        IAC,         JAC,       IXMAP,        !076
+     &                 IORD,      NIARO,       NNZRO,     LORDER,       !080
+     &                 IORDER,    IARO,        JARO,      ARO,          !084
+     &                 APC,       IAPC,        JAPC,      IAPCM,        !088
+     &                 JAPCM,     IWC,         WC,        DC,           !092
+     &                 ZC,        PC,          QC,        VC,           !096
+     &                 DTILC,     PHATC,       DHATC,     CSG,          !100
+     &                 SNG,       SG,          YG,        HG,           !104
+     &                 VG,        ISCL,        SCL,       SCLI,         !108
+     &                 A0,        IA0,         JA0,       EXPLINSYS)    !112
+            END IF          
             IF(IERR.EQ.1) CALL USTOP(' ')
 
 C
@@ -992,9 +1055,8 @@ c          KITER = MXITER
            endif
            
            KITER=KKITER                                                 ! DLT: instances
-          
-          
       enddo                                                             ! DLT: instances
+      call timing_toc('MODFLOW','SOL')                                  ! DLT
       return
       end
 c ******************************************************************************
@@ -1057,6 +1119,8 @@ c local variables
       integer    :: igrid
       real :: budperc
 c init
+      call timing_tic('MODFLOW','OTBD')                                 ! DLT
+
       retVal=0
 
       do igrid=1,ninstance                                              ! DLT: instances
@@ -1223,6 +1287,8 @@ C-----END OF TIME STEP (KSTP) AND STRESS PERIOD (KPER) LOOPS
 c   90   CONTINUE
 c  100 CONTINUE
       enddo                                                                     ! DLT: instances
+      call timing_toc('MODFLOW','OTBD')                                 ! DLT
+      
       return
       end
 c ******************************************************************************
@@ -1249,7 +1315,9 @@ c =======
 c arguments
       integer, intent(out)    :: retVal
 
-
+c functions
+      logical :: pks7mpimasterwrite 
+      
 c local variable
       integer    :: igrid
 
@@ -1291,6 +1359,7 @@ C9------LAST BECAUSE IT DEALLOCATES IUNIT.
       IF(IUNIT(IUSIP).GT.0) CALL SIP7DA(IGRID)
       IF(IUNIT(IUDE4).GT.0) CALL DE47DA(IGRID)
       IF(IUNIT(IUPCG).GT.0) CALL PCG7DA(IGRID)
+      IF(IUNIT(IUPKS).GT.0) CALL PKS7DA(IGRID)                          !PKS
 c      IF(IUNIT(IULMG).GT.0) CALL LMG7DA(IGRID)
       IF(IUNIT(IUFHB).GT.0) CALL GWF2FHB7DA(IGRID)
       IF(IUNIT(IURES).GT.0) CALL GWF2RES7DA(IGRID)
@@ -1328,10 +1397,12 @@ c      IF(IUNIT(IULMG).GT.0) CALL LMG7DA(IGRID)
 C
 C10-----END OF PROGRAM.
       IF(ICNVG.EQ.0) THEN
-        WRITE(*,*) 'FAILED TO MEET SOLVER CONVERGENCE CRITERIA'
+        if (pks7mpimasterwrite())
+     &    WRITE(*,*) 'FAILED TO MEET SOLVER CONVERGENCE CRITERIA'
         retVal = -1
       ELSE
-        WRITE(*,*) ' Normal termination of simulation'
+        if (pks7mpimasterwrite())
+     &    WRITE(*,*) ' Normal termination of simulation'
       END IF
 
       call sgwf2ins1da(igrid)
@@ -1401,11 +1472,13 @@ C     ------------------------------------------------------------------
       INTEGER IBDT(8), IEDT(8), IDPM(12)
       DATA IDPM/31,28,31,30,31,30,31,31,30,31,30,31/ ! Days per month
       DATA NSPD/86400/  ! Seconds per day
+      logical :: pks7mpimasterwrite                                     ! PKS
 C     ------------------------------------------------------------------
 C
 C     Get current date and time, assign to IEDT, and write.
       CALL DATE_AND_TIME(VALUES=IEDT)
-      WRITE(*,1000) (IEDT(I),I=1,3),(IEDT(I),I=5,7)
+      if (pks7mpimasterwrite()) 
+     &WRITE(*,1000) (IEDT(I),I=1,3),(IEDT(I),I=5,7)
  1000 FORMAT(1X,'Run end date and time (yyyy/mm/dd hh:mm:ss): ',
      &I4,'/',I2.2,'/',I2.2,1X,I2,':',I2.2,':',I2.2)
       IF(IPRTIM.GT.0) THEN
@@ -1467,19 +1540,20 @@ C     CONVERT SECONDS TO DAYS, HOURS, MINUTES, AND SECONDS
 C
 C     Write elapsed time to screen
         IF (NDAYS.GT.0) THEN
-          WRITE(*,1010) NDAYS,NHOURS,NMINS,NRSECS
+          if (pks7mpimasterwrite()) 
+     &      WRITE(*,1010) NDAYS,NHOURS,NMINS,NRSECS
  1010     FORMAT(1X,'Elapsed run time: ',I3,' Days, ',I2,' Hours, ',I2,
      &      ' Minutes, ',I2,' Seconds',/)
         ELSEIF (NHOURS.GT.0) THEN
-          WRITE(*,1020) NHOURS,NMINS,NRSECS
+          if (pks7mpimasterwrite()) WRITE(*,1020) NHOURS,NMINS,NRSECS
  1020     FORMAT(1X,'Elapsed run time: ',I2,' Hours, ',I2,
      &      ' Minutes, ',I2,' Seconds',/)
         ELSEIF (NMINS.GT.0) THEN
-          WRITE(*,1030) NMINS,NSECS,MSECS
+          if (pks7mpimasterwrite()) WRITE(*,1030) NMINS,NSECS,MSECS
  1030     FORMAT(1X,'Elapsed run time: ',I2,' Minutes, ',
      &      I2,'.',I3.3,' Seconds',/)
         ELSE
-          WRITE(*,1040) NSECS,MSECS
+          if (pks7mpimasterwrite()) WRITE(*,1040) NSECS,MSECS
  1040     FORMAT(1X,'Elapsed run time: ',I2,'.',I3.3,' Seconds',/)
         ENDIF
 C
@@ -1675,14 +1749,17 @@ c ------------------------------------------------------------------------------
       end function
 
       !> Return number of exchange items (IDs).
-      logical function mf2005_PutModSimNumberOfIDs(igrid, nxch)
+      logical function mf2005_PutModSimNumberOfIDs(igrid,mini,
+     1   maxi,nxch)
 !...     modules
-      use gwfdxcmodule, only: ndxc
+      use gwfdxcmodule, only: minid, maxid, ndxc
 
       implicit none
 
 !...     arguments
       integer, intent(in) :: igrid
+      integer, intent(out) :: mini
+      integer, intent(out) :: maxi
       integer, intent(out) :: nxch
 
 !...     locals
@@ -1699,9 +1776,11 @@ c ------------------------------------------------------------------------------
          mf2005_PutModSimNumberOfIDs = ok
          return
       end if
+      mini = minid
+      maxi = maxid
       nxch = ndxc
 
-      if (nxch.le.0) ok = .false.
+      !if (nxch.le.0) ok = .false.
       mf2005_PutModSimNumberOfIDs = ok
 
       end function
@@ -1958,9 +2037,9 @@ c ------------------------------------------------------------------------------
 
 !...     arguments
       integer, intent(in) :: igrid, n
-      integer, dimension(3,n), intent(in) :: iliric
+      integer, dimension(3,*), intent(in) :: iliric
       real, intent(in) :: mv
-      real, dimension(n), intent(out) :: head
+      real, dimension(*), intent(out) :: head
 
 !...     locals
       integer :: i, icol, irow, ilay
@@ -1970,6 +2049,10 @@ c ------------------------------------------------------------------------------
 
       do i = 1, n
          ilay = iliric(1,i)
+         if(ilay.eq.0) then
+            head(i) = mv
+            cycle
+         end if   
          irow = iliric(2,i)
          icol = iliric(3,i)
          if (ibound(icol,irow,ilay).ne.0) then
@@ -1987,6 +2070,7 @@ c ------------------------------------------------------------------------------
 !...     modules
       use gwfbasmodule, only: delt
       use gwfdxcmodule, only: dxcuzflux
+      use pks_imod_utl, only: pks_imod_utl_iarmwp_xch
 
       implicit none
 
@@ -1995,7 +2079,7 @@ c ------------------------------------------------------------------------------
       integer, intent(in)                    :: nid
       real, dimension(*), intent(inout)      :: unsflux
       integer, dimension(*), intent(in)      :: xchIdx
-      integer, dimension(nid), intent(in)    :: xchOff
+      integer, dimension(*), intent(in)      :: xchOff
       real, intent(in)                       :: mv
 
 !...     locals
@@ -2009,7 +2093,7 @@ c ------------------------------------------------------------------------------
 
       dxcuzflux = 0.0
       js = 1
-      do i = 1, nid
+      do i = 1, nid         
          je = xchOff(i)
          if (je-js.gt.0) then
             !write(*,*) 'Warning: cell received > 1 uszflux'
@@ -2032,6 +2116,8 @@ c ------------------------------------------------------------------------------
          js = je + 1
       end do
 
+      call pks_imod_utl_iarmwp_xch(dxcuzflux,'q')   
+         
       ! save pointers
       call sgwf2dxc1psv(igrid)
 
@@ -2053,7 +2139,7 @@ c ------------------------------------------------------------------------------
       integer, intent(in)                 :: nid
       real, dimension(*), intent(inout)   :: strfct
       integer, dimension(*), intent(in)   :: xchIdx
-      integer, dimension(nid), intent(in) :: xchOff
+      integer, dimension(*), intent(in)   :: xchOff
       real, intent(in)                    :: mv
 
 !...     locals
@@ -2070,6 +2156,7 @@ c ------------------------------------------------------------------------------
       js = 1
       do i = 1, nid
          ilay = dxcil(i)
+         if(ilay.eq.0) cycle
          irow = dxcir(i)
          icol = dxcic(i)
          je = xchOff(i)
@@ -2116,7 +2203,7 @@ c ------------------------------------------------------------------------------
       integer, intent(in)                 :: nid
       real, dimension(*), intent(inout)   :: strfct
       integer, dimension(*), intent(in)   :: xchIdx
-      integer, dimension(nid), intent(in) :: xchOff
+      integer, dimension(*), intent(in)   :: xchOff
       real, intent(in)                    :: mv
 
 !...     locals
@@ -2133,6 +2220,7 @@ c ------------------------------------------------------------------------------
       js = 1
       do i = 1, nid
          ilay = dxcil(i)
+         if(ilay.eq.0) cycle ! PKS
          irow = dxcir(i)
          icol = dxcic(i)
          je = xchOff(i)
@@ -2293,6 +2381,7 @@ c ------------------------------------------------------------------------------
       logical :: ok, add
       integer :: i, j, n, irow, icol, ilay, isys
       real :: flux, conc, area
+      double precision :: mask                                          ! PKS
 !.......................................................................
 
 !...     get pointers
@@ -2314,6 +2403,8 @@ c ------------------------------------------------------------------------------
          irow = rivr(2,i)
          icol = rivr(3,i)
          flux = rivr(nrivvl,i)
+         call pks7mpimask( mask, icol, irow, ilay )                     ! PKS
+         if (mask.lt.0.5d0) flux = 0.                                   ! PKS
          conc = rivr(irivrconc,i)
          isys = rivr(irivsubsys,i)
          ! skip subsystem H
@@ -2523,6 +2614,7 @@ c ------------------------------------------------------------------------------
       logical :: ok, add
       integer :: i, j, n, irow, icol, ilay
       real :: flux, conc, saltflux, area
+      double precision :: mask                                          ! PKS
 !.......................................................................
 
 !...     get pointers
@@ -2549,6 +2641,8 @@ c ------------------------------------------------------------------------------
          irow = rivr(2,i)
          icol = rivr(3,i)
          flux = rivr(nrivvl,i)
+         call pks7mpimask( mask, icol, irow, ilay )                     ! PKS
+         if (mask.lt.0.5d0) flux = 0.                                   ! PKS
          conc = rivr(irivrconc,i)
          saltflux = mv
          if (conc.gt.0.0) then ! work-around, to be changed for proper missing value
@@ -2645,6 +2739,7 @@ c ------------------------------------------------------------------------------
       logical :: ok, add
       integer :: i, n, irow, icol, ilay
       real :: flux, area
+      double precision :: mask                                          ! PKS
 !.......................................................................
        
 !...     get pointers
@@ -2666,6 +2761,8 @@ c ------------------------------------------------------------------------------
          irow = drai(2,i)
          icol = drai(3,i)
          flux = drai(ndrnvl,i)
+         call pks7mpimask( mask, icol, irow, ilay )                     ! PKS
+         if (mask.lt.0.5d0) flux = 0.                                   ! PKS
          if (add) then
             if (buff(icol,irow,1).eq.mv) buff(icol,irow,1) = 0.0
             buff(icol,irow,1) = buff(icol,irow,1) + flux
@@ -2861,7 +2958,7 @@ c ------------------------------------------------------------------------------
       end if
       nxch = ndxcpv
 
-      if (nxch.le.0) ok = .false.
+c     if (nxch.le.0) ok = .false.
       mf2005_PutModMozPVNumberOfIDs = ok
 
       end function
@@ -3106,8 +3203,8 @@ c ------------------------------------------------------------------------------
                  if(ibound(icol,irow,ilay).le.0)then
                   ts(jj)%stvalue(i)%valid = .false.
                  else
-                  ts(jj)%stvalue(i)%icol = icol
-                  ts(jj)%stvalue(i)%irow = irow
+                 ts(jj)%stvalue(i)%icol = icol
+                 ts(jj)%stvalue(i)%irow = irow
                  endif
               end if
            end if
@@ -3186,5 +3283,26 @@ c ------------------------------------------------------------------------------
 
       lipest = flag
       mf2005_GetPestFlag = .true.
+
+      end function
+      
+      !> Set the run-file root for DXC package
+      logical function mf2005_GetDxcRoot(rfroot)
+
+!...     modules
+      use gwfdxcmodule, only: dxcroot
+
+      implicit none
+
+!...    arguments
+      character(len=*), intent(in) :: rfroot
+
+!...     locals
+      logical :: ok
+!.......................................................................
+
+      ok = .true.
+      dxcroot = trim(rfroot)
+      mf2005_GetDxcRoot = ok
 
       end function

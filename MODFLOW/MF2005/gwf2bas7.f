@@ -105,7 +105,8 @@ C     ------------------------------------------------------------------
      3                     LAYHDS,PERLEN,NSTP,TSMULT,ISSFLG,DELR,DELC,
      4                     BOTM,HOLD,IBOUND,CR,CC,CV,HCOF,RHS,BUFF,STRT,
      5                     DDREF,
-     7                     kdsv                                         ! ANIPWT
+     7                     kdsv,                                         ! ANIPWT
+     8                     IACTCELL                                      ! PKS   
       USE PARAMMODULE,ONLY:MXPAR,MXCLST,MXINST,ICLSUM,IPSUM,
      1                     INAMLOC,NMLTAR,NZONAR,NPVAL,
      2                     B,IACTIVE,IPLOC,IPCLST,PARNAM,PARTYP,
@@ -115,7 +116,7 @@ C     ------------------------------------------------------------------
      2                      IAUXSV,IBDOPT,IPRTIM,IPEROC,ITSOC,ICHFLG,
      3                      IDDREF,IDDREFNEW,DELT,PERTIM,TOTIM,HNOFLO,
      4                      HDRY,STOPER,CHEDFM,CDDNFM,CBOUFM,VBVL,VBNM
-      use m_mf2005_iu, only: iuani, iumet, iupwt
+      use m_mf2005_iu, only: iuani, iumet, iupwt, iusfr, iulak
 C
       CHARACTER*4 CUNIT(NIUNIT)
       CHARACTER*(*) VERSION
@@ -159,6 +160,10 @@ C2------Open all files in name file.
      &                 VERSION,INBAS,MAXUNIT,MFVNAM)
       call fsplitpsv(igrid)                                             ! DLT
 C
+C-------Check for not-supported packages
+      IF(IUNIT(IUSFR).GT.0) CALL PKS7MPINOTSUPPORTED('SFR package')     ! PKS
+      IF(IUNIT(IULAK).GT.0) CALL PKS7MPINOTSUPPORTED('LAK package')     ! PKS
+C
 C3------PRINT A MESSAGE IDENTIFYING THE BASIC PACKAGE.
       WRITE(IOUT,1)INBAS
     1 FORMAT(1X,/1X,'BAS -- BASIC PACKAGE, VERSION 7, 5/2/2005',
@@ -185,6 +190,7 @@ C6------Allocate space for global arrays except discretization data.
       ALLOCATE (HNEW(NCOL,NROW,NLAY))
       ALLOCATE (HOLD(NCOL,NROW,NLAY))
       ALLOCATE (IBOUND(NCOL,NROW,NLAY))
+      ALLOCATE (IACTCELL(NCOL,NROW,NLAY))                               ! PKS
       ALLOCATE (CR(NCOL,NROW,NLAY)); CR = 0.
       ALLOCATE (CC(NCOL,NROW,NLAY)); CC = 0.
       if (IUNIT(IUANI).gt.0.or.IUNIT(IUPWT).gt.0) then                  ! ANIPWT
@@ -275,6 +281,19 @@ C8E-----READ BOUNDARY ARRAY(IBOUND).
       if(IUNIT(IUMET).gt.0)
      1   call gwf2met1ibound(ibound,ncol,nrow,nlay,igrid)               ! MET
 C
+C-------SET IACTCELL
+      DO K=1,NLAY                                                       ! PKS
+        DO I=1,NROW                                                     ! PKS
+          DO J=1,NCOL                                                   ! PKS
+            IF (IBOUND(J,I,K).GT.0) THEN                                ! PKS
+              IACTCELL(J,I,K) = 1                                       ! PKS
+            ELSE                                                        ! PKS
+              IACTCELL(J,I,K) = 0                                       ! PKS
+            END IF                                                      ! PKS
+          END DO                                                        ! PKS
+        END DO                                                          ! PKS
+      END DO                                                            ! PKS
+C      
 C8F-----READ AND PRINT HEAD VALUE TO BE PRINTED FOR NO-FLOW CELLS.
       IF(IFREFM.EQ.0) THEN
          READ(INBAS,'(F10.0)') HNOFLO
@@ -611,7 +630,7 @@ C     ------------------------------------------------------------------
       USE GLOBAL,     ONLY:NCOL,NROW,NLAY,NPER,NBOTM,NCNFBD,ITMUNI,
      1                     LENUNI,IUNIT,LBOTM,LAYCBD,ITRSS,
      3                     PERLEN,NSTP,TSMULT,ISSFLG,DELR,DELC,BOTM
-      use m_mf2005_iu, only: iumet
+      use m_mf2005_iu, only: iumet, iupks
 C
       CHARACTER*200 LINE
       CHARACTER*24 ANAME(5)
@@ -646,6 +665,10 @@ C3------ITMUNI, and LENUNI from the line.
       CALL URWORD(LINE,LLOC,ISTART,ISTOP,2,NPER,R,IOUT,INDIS)
       CALL URWORD(LINE,LLOC,ISTART,ISTOP,2,ITMUNI,R,IOUT,INDIS)
       CALL URWORD(LINE,LLOC,ISTART,ISTOP,2,LENUNI,R,IOUT,INDIS)
+C      
+      CALL PKS7MPIPART(NCOL, NROW, NLAY, IUNIT(IUPKS), IOUT)            ! PKS
+      CALL GWF2MET1PKS(IGRID,NLAY,NROW,NCOL)                            ! PKS
+      CALL PKS7MPILXCHINI()                                             ! PKS
 C
 C read options
       LTBCHECK = .FALSE.                                                ! DLT
@@ -731,9 +754,14 @@ C10-----because BOTM(J,I,0) contains the top elevation of layer 1.
       ALLOCATE (PERLEN(NPER),NSTP(NPER),TSMULT(NPER),ISSFLG(NPER))
 C
 C11-----Read the DELR and DELC arrays.
-      CALL U1DREL(DELR,ANAME(1),NCOL,INDIS,IOUT)
-      CALL U1DREL(DELC,ANAME(2),NROW,INDIS,IOUT)
-
+      CALL PKS7MPIGETNRPROC(NRPROC)                                     ! PKS
+      IF (NRPROC.GT.1)THEN                                              ! PKS
+         CALL PKS7MPISETDELRDELC(DELR,DELC,NCOL,NROW,INDIS)             ! PKS
+      ELSE                                                              ! PKS
+         CALL U1DREL(DELR,ANAME(1),NCOL,INDIS,IOUT)
+         CALL U1DREL(DELC,ANAME(2),NROW,INDIS,IOUT)
+      END IF                                                            ! PKS
+         
       if(IUNIT(IUMET).gt.0)
      1   call gwf2met1extent(igrid,ncol,nrow,delr,delc)
 C
@@ -1880,6 +1908,7 @@ C6------SPECIAL CHECK FOR 1ST FILE.
      1                     accarg,filstat,filact,maxfs,'size')          ! DLT
           end if                                                        ! DLT
           IOUT=IU
+          CALL PKS7MPIFNAME(filename,IFLEN)                             ! PKS
           OPEN(UNIT=IU,FILE=filename,STATUS='REPLACE',
      1          FORM='FORMATTED',ACCESS='SEQUENTIAL')
           call sts2subscribe(IU)                                        ! DLT: subscribe unit number for save/restore
@@ -1975,10 +2004,17 @@ C13-----WRITE THE FILE NAME AND OPEN IT.
 50    FORMAT(1X,/1X,'OPENING ',A,/
      &  1X,'FILE TYPE:',A,'   UNIT ',I4,3X,'STATUS:',A,/
      &  1X,'FORMAT:',A,3X,'ACCESS:',A)
+#ifdef __INTEL_COMPILER
+      OPEN(UNIT=IU,FILE=filename,FORM=FMTARG,                           ! PKS
+     1      ACCESS=ACCARG,STATUS=FILSTAT,ACTION=FILACT,                 ! PKS
+     2      SHARE='DENYNONE',ERR=2000)                                  ! PKS
+#else
       OPEN(UNIT=IU,FILE=filename,FORM=FMTARG,
      1      ACCESS=ACCARG,STATUS=FILSTAT,ACTION=FILACT,ERR=2000)
+#endif      
           call sts2subscribe(IU)                                        ! DLT: subscribe unit number for save/restore
       NFILE=NFILE+1
+      IF (FILTYP.EQ.'PKS') CALL PKS7MPIINI2( IU, IOUT )                 ! PKS
       GO TO 10
 C
 C14-----END OF NAME FILE.  RETURN PROVIDED THAT LISTING FILE AND BAS
@@ -2408,6 +2444,8 @@ C
         DEALLOCATE(GLOBALDAT(IGRID)%STRT)
         IF(.NOT.ASSOCIATED(DDREF,STRT))
      1           DEALLOCATE(GLOBALDAT(IGRID)%DDREF)
+        IF(.NOT.ASSOCIATED(IACTCELL))                                   ! PKS
+     1           DEALLOCATE(GLOBALDAT(IGRID)%IACTCELL)                  ! PKS
 C
         DEALLOCATE(ICLSUM,IPSUM,INAMLOC,NMLTAR,NZONAR,NPVAL)
         DEALLOCATE (PARAMDAT(IGRID)%B)
@@ -2504,6 +2542,7 @@ C
         BUFF=>GLOBALDAT(IGRID)%BUFF
         STRT=>GLOBALDAT(IGRID)%STRT
         DDREF=>GLOBALDAT(IGRID)%DDREF
+        IACTCELL=>GLOBALDAT(IGRID)%IACTCELL
 C
         ICLSUM=>PARAMDAT(IGRID)%ICLSUM
         IPSUM=>PARAMDAT(IGRID)%IPSUM
@@ -2606,6 +2645,7 @@ C
         GLOBALDAT(IGRID)%BUFF=>BUFF
         GLOBALDAT(IGRID)%STRT=>STRT
         GLOBALDAT(IGRID)%DDREF=>DDREF
+        GLOBALDAT(IGRID)%IACTCELL=>IACTCELL
 C
         PARAMDAT(IGRID)%ICLSUM=>ICLSUM
         PARAMDAT(IGRID)%IPSUM=>IPSUM

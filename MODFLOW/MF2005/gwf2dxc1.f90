@@ -28,8 +28,9 @@ subroutine gwf2dxc1ar(in,igrid)
 ! ------------------------------------------------------------------------------
  USE GLOBAL,      ONLY:IOUT,NCOL,NROW
  use gwfdxcmodule
- use imod_utl, only: imod_utl_dir_level_up
-
+ use imod_utl, only: imod_utl_rel_to_abs, imod_utl_qksort3
+ use pks_iarmwp, only: liarmwp, nrxp, xp
+ 
  implicit none
 
 
@@ -54,6 +55,10 @@ subroutine gwf2dxc1ar(in,igrid)
  logical :: mozartcoupling
  integer :: lun, cfn_getlun, ios, lswid, pvid
  real :: owc
+ logical :: lused, lfirst
+ double precision :: mask ! PKS
+ integer :: ixp, ok, j, ndum, iact, cfn_idx_get_i ! PKS
+ integer, dimension(:), allocatable :: iwrk1, iwrk2
 
 ! program section
 ! ------------------------------------------------------------------------------
@@ -65,7 +70,7 @@ subroutine gwf2dxc1ar(in,igrid)
                    ', 29 june 2011 INPUT READ FROM UNIT',in
 
 ! allocate scalars
- allocate(mxdxc,ndxc,idxccb)
+ allocate(mxdxc,ndxc,minid,maxid,idxccb)
 
 ! read maximum number of data exchange elements and the Schematisation ID
  read(in,'(a)') line
@@ -76,14 +81,37 @@ subroutine gwf2dxc1ar(in,igrid)
  call urword(line,lloc,istart,istop,2,idxccb,r,iout,in)
 
 ! allocate arrays
+
+! Add dummy ID's for iarmwp = 1: count
+ if (liarmwp) then ! PKS
+    ndum = 0  ! PKS 
+    do ixp = 1, nrxp ! PKS
+       ndum = ndum + xp(ixp)%nid ! PKS
+    end do ! PKS
+    mxdxc = mxdxc + ndum ! PKS
+ end if ! PKS
+ 
  allocate(dxcid(mxdxc),dxcic(mxdxc),dxcir(mxdxc),dxcil(mxdxc))
 
 ! read data
  read(in,*) ndxc
+
  n=0
+ lfirst = .true.
  do i=1,ndxc
     ! read one line and convert indices to local grid when necessary
     read(in,*) ilay,irow,icol,id
+    if (lfirst) then
+       minid = id
+       maxid = id
+       lfirst = .false.       
+    end if
+    minid = min(minid,id)
+    maxid = max(maxid,id) 
+    call pks7mpitrn(icol,irow,ilay,lused) ! PKS
+    if(.not.lused) cycle ! PKS
+    call pks7mpimask( mask, icol, irow, ilay ) ! PKS
+    if (mask.lt.0.5d0) id = -id ! PKS
     if (n.lt.mxdxc) then
        n=n+1
        dxcic(n)=icol
@@ -95,8 +123,37 @@ subroutine gwf2dxc1ar(in,igrid)
        call exit(11)
     endif
  enddo
-! store number of read elements
+
+ ! store number of read elements
  ndxc=n
+ 
+! Add dummy ID's for iarmwp = 1: add
+ if (liarmwp) then ! PKS
+    allocate(iwrk1(max(1,ndxc)),iwrk2(max(1,ndxc)))
+    do i = 1, ndxc
+       iwrk1(i) = abs(dxcid(i))
+       iwrk2(i) = i
+    end do
+    call imod_utl_qksort3(iwrk1,iwrk2)
+    do ixp = 1, nrxp ! PKS
+       do i = 1, xp(ixp)%nid ! PKS    
+          id = xp(ixp)%id(i) ! PKS
+          ok = cfn_idx_get_i(id,iwrk1,ndxc,j) ! PKS
+          if(ok.ne.0) then ! index found -- do nothing
+             xp(ixp)%idx(i) = -iwrk2(j) 
+          else
+             n = n + 1 ! PKS
+             dxcic(n)=0 ! PKS
+             dxcir(n)=0 ! PKS
+             dxcil(n)=0 ! PKS
+             dxcid(n)=id ! PKS
+             xp(ixp)%idx(i) = n 
+          end if ! PKS
+       end do ! PKS 
+    end do ! PKS
+    ndxc=n
+    deallocate(iwrk1,iwrk2)
+ end if !PKS
 
 ! allocate arrays for parameter values
 ! at least 1 element
@@ -131,13 +188,15 @@ subroutine gwf2dxc1ar(in,igrid)
 
  if (mozartcoupling) then
     read(in,'(a)') fname
-    call imod_utl_dir_level_up(fname) ! keep it backward campatible
+    call imod_utl_rel_to_abs(dxcroot,fname)
     lun = cfn_getlun(10,99)
     open(unit=lun,file=fname)
     read(lun,'(a)') line
     do while(.true.)
        read(unit=lun,fmt=*,iostat=ios) icol, irow, lswid, pvid, owc
        if (ios.ne.0) exit
+       call pks7mpitrn(icol,irow,1,lused) ! PKS
+       if(.not.lused) cycle ! PKS      
        ndxclsw = ndxclsw + 1
        dxciclsw(ndxclsw) = icol
        dxcirlsw(ndxclsw) = irow
@@ -304,6 +363,7 @@ subroutine gwf2dxc1fm(igrid)
     icol=dxcic(i)
     irow=dxcir(i)
     ilay=dxcil(i)
+    if(ilay.eq.0) cycle ! PKS
     q   =dxcuzflux(i)
     if (q.ne.dxcmv) then
        ! not a missing value
@@ -386,6 +446,7 @@ subroutine gwf2dxc1bd(KSTP,KPER,igrid)
     icol=dxcic(i)
     irow=dxcir(i)
     ilay=dxcil(i)
+    if (ilay.eq.0) cycle ! PKS
     q   =dxcuzflux(i)
     if (q.ne.dxcmv) then
        ! not a missing value
@@ -451,6 +512,8 @@ subroutine sgwf2dxc1psv(igrid)
  gwfdxcdat(igrid)%dxcic     => dxcic
  gwfdxcdat(igrid)%dxcir     => dxcir
  gwfdxcdat(igrid)%dxcil     => dxcil
+ gwfdxcdat(igrid)%minid     => minid
+ gwfdxcdat(igrid)%maxid     => maxid
  gwfdxcdat(igrid)%dxchead   => dxchead
  gwfdxcdat(igrid)%dxcuzflux => dxcuzflux
  gwfdxcdat(igrid)%dxcsf     => dxcsf
@@ -502,6 +565,8 @@ subroutine sgwf2dxc1pnt(igrid)
  dxcic     => gwfdxcdat(igrid)%dxcic
  dxcir     => gwfdxcdat(igrid)%dxcir
  dxcil     => gwfdxcdat(igrid)%dxcil
+ minid     => gwfdxcdat(igrid)%minid
+ maxid     => gwfdxcdat(igrid)%maxid
  dxchead   => gwfdxcdat(igrid)%dxchead
  dxcuzflux => gwfdxcdat(igrid)%dxcuzflux
  dxcsf     => gwfdxcdat(igrid)%dxcsf
@@ -554,6 +619,8 @@ subroutine sgwf2dxc1da(igrid)
  deallocate(dxcic)
  deallocate(dxcir)
  deallocate(dxcil)
+ deallocate(minid)
+ deallocate(maxid)
  deallocate(dxchead)
  deallocate(dxcuzflux)
  deallocate(dxcsf)

@@ -578,8 +578,8 @@ C
         DEALLOCATE(DRAI)
         if (associated(drnlev)) deallocate(drnlev)                      ! NHI
         deallocate(idrnsubsys)                                          ! dsubsys
-        deallocate(ndrnsubsys)                                          ! dsubsys
-        deallocate(drnsubsidx)                                          ! dsubsys
+        if (associated(ndrnsubsys)) deallocate(ndrnsubsys)              ! dsubsys
+        if (associated(drnsubsidx)) deallocate(drnsubsidx)              ! dsubsys
         deallocate(iiconchk)                                            ! iconchk
         deallocate(wiconchk)                                            ! iconchk
         deallocate(w2iconchk)                                           ! iconchk

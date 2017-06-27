@@ -22,7 +22,6 @@ c   2600 MH Delft, The Netherlands.
 
       module lcdmodule
 
-      use global, only: ncol, nrow
 
       implicit none
 
@@ -33,6 +32,11 @@ c   2600 MH Delft, The Netherlands.
       integer, dimension(:), allocatable, save :: genip
       integer, dimension(:,:), allocatable, save :: genpos
 
+      real, dimension(:), allocatable, save :: lcdelr
+      real, dimension(:), allocatable, save :: lcdelc   
+      
+      integer, save :: lncol, lnrow
+      
       end module lcdmodule
 
       module rdlcd_interface
@@ -77,8 +81,7 @@ c
 c declaration section
 c ------------------------------------------------------------------------------
       use imod_utl, only: imod_utl_openasc
-      use gwfmetmodule, only: cdelr,cdelc
-      use lcdmodule, only: genip, genpos
+      use lcdmodule, only: genip, genpos, lncol, lnrow, lcdelr,lcdelc
 
       implicit none
 
@@ -108,6 +111,7 @@ c local variables
       character(len=1024) :: fname
       integer,dimension(:),allocatable :: lun,nlun
       character(len=1024) :: str
+      integer :: iflen                                                  ! PKS
 
 c parameters
       character(len=24) :: aname(1)
@@ -126,18 +130,21 @@ c read number of hfb layers
       read(in,*) ngen
 
 c allocate ipc
-      allocate(tmp(ncol,nrow))
+      allocate(tmp(lncol,lnrow))
       
       !allocate(ipc(0:ncol+2,0:nrow+2,0:2))
-      IF(ALLOCATED(IPC))DEALLOCATE(IPC); ALLOCATE(IPC(NCOL,NROW,2))
+      IF(ALLOCATED(IPC))DEALLOCATE(IPC); ALLOCATE(IPC(LNCOL,LNROW,2))
       IF(ALLOCATED(TF))DEALLOCATE(TF); IF(ALLOCATED(BF))DEALLOCATE(BF)
-      ALLOCATE(TF(NCOL,NROW),BF(NCOL,NROW))
+      ALLOCATE(TF(LNCOL,LNROW),BF(LNCOL,LNROW))
 
       allocate(writegen(max(1,ngen))); writegen = .false.
       allocate(lun(nlay),nlun(nlay)); lun=0; nlun=0
 
       do ilay=1,nlay
-       write(fname,'(a,i2.2,a)') 'hfb_l',ilay,'.gen'
+       write(fname,'(a,i2.2)') 'hfb_l',ilay
+       iflen = len_trim(fname)
+       call pks7mpifname(fname,iflen)   
+       fname = trim(fname)//'.gen'   
        call imod_utl_openasc(lun(ilay),fname,'w')
       enddo
       
@@ -159,10 +166,10 @@ c count number of hfb and fill
          end if
          ii = lstbeg-1
          do igen = 1, ngen
-            read(in,*) ilay, factor 
+            read(in,*) ilay, factor
             kk = ilay
             call u2drel(tmp,aname(1),
-     1                  nrow,ncol,kk,in,iout) ! fill genpos list
+     1                  lnrow,lncol,kk,in,iout) ! fill genpos list
 
             nline = size(genip)-1
 
@@ -229,15 +236,15 @@ c count number of hfb and fill
 !                 IF(genpos(il+1,2).LT.IR2)IR2=IR2+1
 !                ENDIF
 !               ENDIF
-               CALL HFBGETFACES(IC1,IC2,IR1,IR2,IP1,IP2,IPC,NROW,NCOL)
+               CALL HFBGETFACES(IC1,IC2,IR1,IR2,IP1,IP2,IPC,LNROW,LNCOL)
               ENDIF
               
               IF(ILINE.NE.JLINE.OR.IL.EQ.IE)THEN
                       
-               do irow = 1, nrow
-                do icol = 1, ncol
+               do irow = 1, lnrow
+                do icol = 1, lncol
                  !## place horizontal wall
-                 if (irow.lt.nrow) then
+                 if (irow.lt.lnrow) then
                   if(ipc(icol,irow,2).eq.int(1,1)) then
 
                    !## determine what layer(s)
@@ -254,7 +261,7 @@ c count number of hfb and fill
 
                     IF(ilay.EQ.0)THEN
                      FCT=HFB1EXPORT_GETFACTOR(factor,TF,BF,ICOL,IROW,ICO
-     1L+1,IROW,NODATA,jLAY,NCOL,NROW) 
+     1L+1,IROW,NODATA,jLAY,LNCOL,LNROW) 
                      !## take the next no fault on this modellayer
                      IF(FCT.EQ.0.0)CYCLE
                     ENDIF
@@ -273,10 +280,10 @@ c count number of hfb and fill
                       nlun(jlay)=nlun(jlay)+1
                       write(lun(jlay),'(2i10,1x,e15.7)') nlun(jlay),igen
      1,FCT
-                      write(lun(jlay),'(2(f10.2,a1))') cdelr(icol-1),','
-     1,cdelc(irow)
-                      write(lun(jlay),'(2(f10.2,a1))') cdelr(icol),',',
-     1 cdelc(irow)
+                      write(lun(jlay),'(2(f10.2,a1))')lcdelr(icol-1),','
+     1,lcdelc(irow)
+                      write(lun(jlay),'(2(f10.2,a1))')lcdelr(icol),',',
+     1 lcdelc(irow)
                       write(lun(jlay),'(a)') 'end'
                      end if
                     endif
@@ -285,7 +292,7 @@ c count number of hfb and fill
                  end if
                  
                  !## place vertical wall
-                 if (icol.lt.ncol) then
+                 if (icol.lt.lncol) then
                   if(ipc(icol,irow,1).eq.int(1,1)) then
                    !## determine what layer(s)
                    IF(ilay.EQ.0)THEN
@@ -301,7 +308,7 @@ c count number of hfb and fill
 
                     IF(ilay.EQ.0)THEN
                      FCT=HFB1EXPORT_GETFACTOR(factor,TF,BF,ICOL,IROW,ICO
-     1L+1,IROW,NODATA,JLAY,NCOL,NROW) 
+     1L+1,IROW,NODATA,JLAY,LNCOL,LNROW) 
                      !## take the next no fault on this modellayer
                      IF(FCT.EQ.0.0)CYCLE
                     ENDIF
@@ -319,10 +326,10 @@ c count number of hfb and fill
                       nlun(jlay)=nlun(jlay)+1
                       write(lun(jlay),'(2i10,1x,e15.7)') nlun(jlay),igen
      1,FCT
-                      write(lun(jlay),'(2(f10.2,a1))') cdelr(icol),',',
-     1 cdelc(irow-1)
-                      write(lun(jlay),'(2(f10.2,a1))') cdelr(icol),',',
-     1 cdelc(irow)
+                      write(lun(jlay),'(2(f10.2,a1))') lcdelr(icol),',',
+     1 lcdelc(irow-1)
+                      write(lun(jlay),'(2(f10.2,a1))') lcdelr(icol),',',
+     1 lcdelc(irow)
                       write(lun(jlay),'(a)') 'end'
                      end if
                     end if
@@ -384,6 +391,8 @@ c end of program
       REAL,INTENT(IN),DIMENSION(NCOL,NROW) :: TF,BF
       REAL :: DZ,TFV,BFV,TPV,BTV,C1,C2,CT,FFCT
       INTEGER :: IL1,IL2
+      integer :: jc1,jr1,jc2,jr2,k                                      ! PKS
+      logical :: lused1, lused2                                         ! PKS
       
       HFB1EXPORT_GETFACTOR=0.0
 
@@ -403,6 +412,11 @@ c end of program
        BFV=BF(IC2,IR2)
       ENDIF
 
+      jc1 = ic1; jr1 = ir1; jc2 = ic2; jr2 = ir2; k = ilay              ! PKS
+      call pks7mpitrn(jc1,jr1,k,lused1)                                 ! PKS
+      call pks7mpitrn(jc2,jr2,k,lused2)                                 ! PKS
+      if(.not.lused1.or..not.lused2) return                             ! PKS
+      
       !## get internal layer number of vector of top/bottom information
       IL1=(ILAY*2)-1
       IL2=(ILAY*2)
@@ -410,8 +424,8 @@ c end of program
       IL1=IL1-1
       IL2=IL2-1
       
-      TPV=(BOTM(IC1,IR1,IL1)+BOTM(IC2,IR2,IL1))/2.0
-      BTV=(BOTM(IC1,IR1,IL2)+BOTM(IC2,IR2,IL2))/2.0
+      TPV=(BOTM(JC1,JR1,IL1)+BOTM(JC2,JR2,IL1))/2.0
+      BTV=(BOTM(JC1,JR1,IL2)+BOTM(JC2,JR2,IL2))/2.0
 
       !## nett appearance of fault in modellayer
       DZ=MIN(TFV,TPV)-MAX(BFV,BTV)
@@ -420,8 +434,8 @@ c end of program
       IF(DZ.LT.0.0)RETURN
 
       IF(TPV-BTV.GT.0.0)THEN
-       !## fraction of fault in modellayer
-       DZ=DZ/(TPV-BTV)
+      !## fraction of fault in modellayer
+      DZ=DZ/(TPV-BTV)
       ENDIF
       
       !## if dz.eq.0, modellayer has thickness of zero, but fault to be retained
@@ -520,10 +534,14 @@ c
 c declaration section
 c ------------------------------------------------------------------------------
       use lcdmodule
-      use global, only: iunit, delc, delr
+      use global, only: iunit, delc, delr, ncol, nrow
       use gwfmetmodule
       use m_mf2005_iu, only: iumet
+      use pksmpi_mod,only: nrproc, gdelr, gdelc,
+     1                     gncol, gnrow     
 
+      implicit none
+      
 c arguments
 
 c local variables
@@ -551,21 +569,53 @@ c check if metadata package is activated
       end if
 
 c check if grid is uniform
-      lqd = .true.
-      if ((maxval(delr).ne.minval(delr)).or.
-     &    (maxval(delc).ne.minval(delc))) lqd = .false.
-      if (lqd) then
-         simcsize = delr(1)
-      else
+      if (ieq.ne.0) then
          write(*,*) 'Error: non-uniform grids not yet supported.'
          call ustop(' ')
       end if
 
+      simcsize = delr(1)
+      
+      if (nrproc.gt.1) then 
+         lncol = gncol
+         lnrow = gnrow
+      else
+         lncol = ncol
+         lnrow = nrow
+      end if   
+      
+      if(.not.allocated(lcdelr)) then
+         allocate(lcdelr(0:lncol)) 
+      end if    
+      if(.not.allocated(lcdelc)) then
+         allocate(lcdelc(0:lnrow)) 
+      end if    
+          
+      if (nrproc.gt.1) then     
+         lcdelr(0) = gcoord_xll
+         do icol = 1, lncol
+            lcdelr(icol) = gcoord_xll + real(icol)*simcsize
+         end do
+         lcdelc(0) = gcoord_yur
+         do irow = 1, lnrow
+            lcdelc(irow) = gcoord_yur - real(irow)*simcsize
+         end do
+      else
+         lcdelc = cdelc    
+         lcdelr = cdelr    
+      end if
+      
+      if (ieq.eq.0) then
+         lqd = .true.
+      else
+         lqd = .false.
+      end if   
+      
       if (lqd) then
-         xmin=cdelr(0)
-         ymax=cdelc(0)
-         xmax=xmin+(simcsize*ncol)
-         ymin=ymax-(simcsize*nrow)
+         xmin=lcdelr(0)
+         ymax=lcdelc(0)
+         xmax=xmin+(simcsize*lncol)
+         ymin=ymax-(simcsize*lnrow)
       endif
 
 c end of program

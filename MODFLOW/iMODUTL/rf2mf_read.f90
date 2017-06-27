@@ -130,8 +130,8 @@ CONTAINS
   DO IT=1,3
    READ(IURUN,'(A256)',IOSTAT=IOS) LINE
    IF(IOS.NE.0)THEN
-    CALL IMOD_UTL_PRINTTEXT('Error reading '//TRIM(LINE),0,IUOUT)
-    CALL IMOD_UTL_PRINTTEXT('Busy processing module: '//TRIM(CMOD(IPCK)),2,IUOUT)
+    CALL IMOD_UTL_PRINTTEXT('Error reading '//TRIM(LINE),3,IUOUT)
+    CALL IMOD_UTL_PRINTTEXT('Busy processing module: '//TRIM(CMOD(IPCK)),-3,IUOUT)
    ENDIF
    CALL RF2MF_READ_IDF(LINE,FCT,IMP,ILAY,CONSTANTE,FNAME,IOS,IMODPCK,PCAP) !,IPCK) --- because i need no layer (is trick)
    IF(IT.EQ.1)call RF2MF_READ1MAIN_system(scr%gl0(1),ios,ilay,fct,imp,simcsize,iarr,fname,iusclarith,idsclintp)
@@ -147,9 +147,9 @@ CONTAINS
 
    READ(IURUN,'(A256)',IOSTAT=IOS) LINE
    IF(IOS.NE.0)THEN
-    CALL IMOD_UTL_PRINTTEXT('Error reading '//TRIM(LINE),0,IUOUT)
-    IF(IMODPCK.EQ.0)CALL IMOD_UTL_PRINTTEXT('Busy processing module: '//TRIM(CMOD(IPCK)),2,IUOUT)
-    IF(IMODPCK.EQ.1)CALL IMOD_UTL_PRINTTEXT('Busy processing package: '//TRIM(CPCK(IPCK)),2,IUOUT)
+    CALL IMOD_UTL_PRINTTEXT('Error reading '//TRIM(LINE),3,IUOUT)
+    IF(IMODPCK.EQ.0)CALL IMOD_UTL_PRINTTEXT('Busy processing module: '//TRIM(CMOD(IPCK)),-3,IUOUT)
+    IF(IMODPCK.EQ.1)CALL IMOD_UTL_PRINTTEXT('Busy processing package: '//TRIM(CPCK(IPCK)),-3,IUOUT)
    ENDIF
 
    LLAY=.FALSE.
@@ -159,7 +159,7 @@ CONTAINS
     IF(IPCK.EQ.PHFB)THEN
      IF(ILAY.GE.0.AND.ILAY.LT.NLAY)LLAY=.TRUE.
     ELSE
-     IF(ILAY.GE.1.AND.ILAY.LT.NLAY)LLAY=.TRUE.
+    IF(ILAY.GE.1.AND.ILAY.LT.NLAY)LLAY=.TRUE.
     ENDIF
     IF((IPCK.NE.PVCW.OR.IPCK.NE.PKVV).AND.ILAY.EQ.NLAY)LLAY=.TRUE.
     IF((IPCK.EQ.PVCW.OR.IPCK.EQ.PKVV).AND.ILAY.EQ.NLAY)LLAY=.FALSE.
@@ -316,7 +316,7 @@ CONTAINS
       CASE (PRCH)     !## (PRCH) recharge
        rch%sp(kper)%reuse = .false.
        rch%sp(kper)%inrech = rch%sp(kper)%inrech + 1
-       if (rch%sp(kper)%inrech.gt.mxrech) call imod_utl_printtext('Error, increase mxrech',2)
+       if (rch%sp(kper)%inrech.gt.mxrech) call imod_utl_printtext('Error, increase mxrech',-3)
        call RF2MF_READ1MAIN_system(rch%sp(kper)%rech(isub),ios,ilay,fct,imp,constante,iarr,fname,iusclarith,idsclintp)
        rch%sp(kper)%rech(isub)%fct = rch%sp(kper)%rech(isub)%fct * 0.001
       CASE (POLF)     !## (POLF) overlandflow
@@ -326,7 +326,7 @@ CONTAINS
        drn%sp(kper)%gcd%nsubsys = msys
        drn%sp(kper)%gcd%subsys(msys)%lolf = .true.
        if (.not.associated(drn%sp(kper)%gcd%subsys)) allocate(drn%sp(kper)%gcd%subsys(maxsubsys))
-       drn%sp(kper)%gcd%subsys(msys)%ilay =  ilay
+       drn%sp(kper)%gcd%subsys(msys)%ilay = ilay
        isys=isub; if(isumbudget.eq.1)isys=1
        drn%sp(kper)%gcd%subsys(msys)%isub = -isys !drn%sp(kper)%gcd%subsys(nsys)%isub + 1
        if (.not.associated(drn%sp(kper)%gcd%subsys(msys)%data)) allocate(drn%sp(kper)%gcd%subsys(msys)%data(3))
@@ -354,7 +354,7 @@ CONTAINS
        msys = riv%sp(kper)%gcd%nsubsys+1
        riv%sp(kper)%gcd%nsubsys = msys
        if (.not.associated(riv%sp(kper)%gcd%subsys)) allocate(riv%sp(kper)%gcd%subsys(maxsubsys))
-       riv%sp(kper)%gcd%subsys(msys)%ilay =  ilay
+       riv%sp(kper)%gcd%subsys(msys)%ilay = ilay
        isys=isub; if(isumbudget.eq.1)isys=1
        riv%sp(kper)%gcd%subsys(msys)%isub = -isys
        riv%sp(kper)%gcd%subsys(msys)%lisg = .true.
@@ -372,8 +372,8 @@ CONTAINS
   DO IT=1,NLAY
    READ(IURUN,'(A256)',IOSTAT=IOS) LINE
    IF(IOS.NE.0)THEN
-    CALL IMOD_UTL_PRINTTEXT('Error reading '//TRIM(LINE),0,IUOUT)
-    CALL IMOD_UTL_PRINTTEXT('Busy processing module: '//TRIM(CMOD(IPCK)),2,IUOUT)
+    CALL IMOD_UTL_PRINTTEXT('Error reading '//TRIM(LINE),3,IUOUT)
+    CALL IMOD_UTL_PRINTTEXT('Busy processing module: '//TRIM(CMOD(IPCK)),-3,IUOUT)
    ENDIF
    CALL RF2MF_READ_IDF(LINE,FCT,IMP,ILAY,CONSTANTE,FNAME,IOS,IMODPCK,IPCK)
    if(scr%istpc.ne.0)then
@@ -436,10 +436,10 @@ CONTAINS
   READ(LINE,*,IOSTAT=IOS) ILAY,FCT,IMP
  ENDIF
  IF(IOS.NE.0)THEN
-     CALL IMOD_UTL_PRINTTEXT('Expected to read more on line: ['//TRIM(LINE)//']',2,IUOUT)
+     CALL IMOD_UTL_PRINTTEXT('Expected to read more on line: ['//TRIM(LINE)//']',-3,IUOUT)
  END IF
  IF(ILAY.GT.MXNLAY)CALL IMOD_UTL_PRINTTEXT('Error reading ILAY='//TRIM(IMOD_UTL_ITOS(ILAY))// &
-        ' that is larger than MXNLAY ('//TRIM(IMOD_UTL_ITOS(MXNLAY))//')',2,IUOUT)
+        ' that is larger than MXNLAY ('//TRIM(IMOD_UTL_ITOS(MXNLAY))//')',-3,IUOUT)
 
  FNAME=IMOD_UTL_GETFNAME(LINE)
 
@@ -455,7 +455,7 @@ CONTAINS
  IF(IMODPCK.EQ.0)THEN
   IF(ILAY.GE.1.AND.ILAY.LE.NLAY)LEX=.TRUE.
   IF(IPCK.EQ.PHFB.AND.ILAY.EQ.0)LEX=.TRUE.
-  IF(ILAY.EQ.NLAY.AND.(IPCK.EQ.PVCW.OR.IPCK.EQ.PKVV))LEX=.FALSE.
+ IF(ILAY.EQ.NLAY.AND.(IPCK.EQ.PVCW.OR.IPCK.EQ.PKVV))LEX=.FALSE.
  ELSEIF(IMODPCK.EQ.1)THEN
   IF(ILAY.GE.-1.AND.ILAY.LE.NLAY)LEX=.TRUE.
  ENDIF
@@ -463,52 +463,52 @@ CONTAINS
  CONSTANTE=IMOD_UTL_GETREAL(FNAME,IOS)
  IF(IOS.EQ.0)THEN
   IF(LEX)THEN
-   CALL IMOD_UTL_PRINTTEXT('Read Constant Value '//TRIM(IMOD_UTL_RTOS(CONSTANTE,'G',4)),0,IUOUT)
+   CALL IMOD_UTL_PRINTTEXT('Read Constant Value '//TRIM(IMOD_UTL_RTOS(CONSTANTE,'G',4)),3,IUOUT)
    CALL IMOD_UTL_PRINTTEXT(CHAR(9)//'* Modellayer: '//TRIM(IMOD_UTL_ITOS(ILAY))// &
                            '; Mult. Factor: '//TRIM(IMOD_UTL_RTOS(FCT,'G',4))// &
-                           '; Addition: '//TRIM(IMOD_UTL_RTOS(IMP,'G',4)),0,IUOUT)
+                           '; Addition: '//TRIM(IMOD_UTL_RTOS(IMP,'G',4)),3,IUOUT)
    CONSTANTE=CONSTANTE*FCT+IMP
-   CALL IMOD_UTL_PRINTTEXT(CHAR(9)//'Constant Value becomes '//TRIM(IMOD_UTL_RTOS(CONSTANTE,'G',4)),0,IUOUT)
+   CALL IMOD_UTL_PRINTTEXT(CHAR(9)//'Constant Value becomes '//TRIM(IMOD_UTL_RTOS(CONSTANTE,'G',4)),3,IUOUT)
   ENDIF
  ELSE
   CALL IMOD_UTL_FILENAME(FNAME)
   IF(LEX)THEN
-   CALL IMOD_UTL_PRINTTEXT('Assigned '//TRIM(FNAME),0,IUOUT)
+   CALL IMOD_UTL_PRINTTEXT('Assigned '//TRIM(FNAME),3,IUOUT)
    CALL IMOD_UTL_PRINTTEXT(CHAR(9)//'* Modellayer: '//TRIM(IMOD_UTL_ITOS(ILAY))// &
                           '; Mult. Factor: '//TRIM(IMOD_UTL_RTOS(FCT,'G',4))// &
-                           '; Addition: '//TRIM(IMOD_UTL_RTOS(IMP,'G',4)),0,IUOUT)
+                           '; Addition: '//TRIM(IMOD_UTL_RTOS(IMP,'G',4)),3,IUOUT)
   ENDIF
  ENDIF
 
  !## check combination khv/kvv and top/bot
  IF(IMODPCK.EQ.0)THEN
   IF(MMOD(PKHV).EQ.1)THEN
-   IF(MMOD(PTOP).NE.1.OR.MMOD(PBOT).NE.1)CALL IMOD_UTL_PRINTTEXT('Horizontal K value needs usage TOP and BOT!',2,IUOUT)
+   IF(MMOD(PTOP).NE.1.OR.MMOD(PBOT).NE.1)CALL IMOD_UTL_PRINTTEXT('Horizontal K value needs usage TOP and BOT!',-3,IUOUT)
   ENDIF
   IF(MMOD(PKVV).EQ.1)THEN
-   IF(MMOD(PTOP).NE.1.OR.MMOD(PBOT).NE.1)CALL IMOD_UTL_PRINTTEXT('Vertical K value needs usage TOP and BOT!',2,IUOUT)
+   IF(MMOD(PTOP).NE.1.OR.MMOD(PBOT).NE.1)CALL IMOD_UTL_PRINTTEXT('Vertical K value needs usage TOP and BOT!',-3,IUOUT)
   ENDIF
  ENDIF
 
  IF(ILAY.LE.0)THEN
   IF(IMODPCK.EQ.0)THEN
-   IF(IPCK.NE.PHFB)CALL IMOD_UTL_PRINTTEXT(TRIM(TXTMOD(IPCK))//' ilay less or equal zero!',2,IUOUT)
+   IF(IPCK.NE.PHFB)CALL IMOD_UTL_PRINTTEXT(TRIM(TXTMOD(IPCK))//' ilay less or equal zero!',-3,IUOUT)
   ELSE
    SELECT CASE (IPCK)
     CASE (PRCH)
-     IF(ILAY.EQ.0)CALL IMOD_UTL_PRINTTEXT('Modellayer number equal to zero for '//TRIM(TXTPCK(IPCK))//' package!',2,IUOUT)
+     IF(ILAY.EQ.0)CALL IMOD_UTL_PRINTTEXT('Modellayer number equal to zero for '//TRIM(TXTPCK(IPCK))//' package!',-3,IUOUT)
     CASE DEFAULT
      IF(ILAY.EQ.0)THEN
       IF(MMOD(PTOP).NE.1.OR.MMOD(PBOT).NE.1)THEN
-       CALL IMOD_UTL_PRINTTEXT('Usage of modellayers equal to zero only sustained in combination with both TOP and BOT!',2,IUOUT)
+       CALL IMOD_UTL_PRINTTEXT('Usage of modellayers equal to zero only sustained in combination with both TOP and BOT!',-3,IUOUT)
       ENDIF
      ENDIF
    END SELECT
   ENDIF
  ENDIF
 
- IF(ILAY.LT.0)CALL IMOD_UTL_PRINTTEXT(CHAR(9)//'# Will be assigned to first active model layer',0,IUOUT)
- IF(ILAY.EQ.0)CALL IMOD_UTL_PRINTTEXT(CHAR(9)//'# Layer will be computed by TOP and BOT data',0,IUOUT)
+ IF(ILAY.LT.0)CALL IMOD_UTL_PRINTTEXT(CHAR(9)//'# Will be assigned to first active model layer',3,IUOUT)
+ IF(ILAY.EQ.0)CALL IMOD_UTL_PRINTTEXT(CHAR(9)//'# Layer will be computed by TOP and BOT data',3,IUOUT)
 
  END SUBROUTINE RF2MF_READ_IDF
 

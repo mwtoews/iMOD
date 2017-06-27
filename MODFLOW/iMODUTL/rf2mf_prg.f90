@@ -46,7 +46,7 @@ PUBLIC :: RF2MF
 CONTAINS
 
 !#####=================================================================
-SUBROUTINE RF2MF(RUNFNAME,DXCFNAME,submstr,nsub,nsubmax,lipest,I1,I2)
+SUBROUTINE RF2MF(RUNFNAME,DXCFNAME,submstr,nsub,nsubmax,lipest,lidfmerge,rfroot,I1,I2)
 !#####=================================================================
 IMPLICIT NONE
 CHARACTER(LEN=*),INTENT(IN) :: RUNFNAME
@@ -54,6 +54,9 @@ CHARACTER(LEN=*),INTENT(INOUT) :: DXCFNAME
 integer, intent(in) :: nsubmax
 integer, intent(inout) :: nsub
 logical, intent(inout) :: lipest
+logical, intent(inout) :: lidfmerge
+character(len=*),intent(out) :: rfroot
+
 character(len=50), dimension(nsubmax), intent(out) :: submstr
 
 INTEGER,OPTIONAL,INTENT(IN) :: I1,I2
@@ -69,37 +72,37 @@ CALL IMOD_UTL_OSSYSTEM()
 !!## store current directory
 !CALL OSD_GETCWD(ROOTMAIN)
 
-CALL IMOD_UTL_PRINTTEXT('====================================================================',0)
-CALL IMOD_UTL_PRINTTEXT('',0)
-CALL IMOD_UTL_PRINTTEXT('        '//'iMODFLOW 2005 '//TRIM(RVERSION)//' ('//TRIM(OSN(OS))//')',0)
-CALL IMOD_UTL_PRINTTEXT('',0)
-CALL IMOD_UTL_PRINTTEXT('====================================================================',0)
-CALL IMOD_UTL_PRINTTEXT('',0)
-CALL IMOD_UTL_PRINTTEXT('Syntax: imodflow.exe arg1 arg2 arg3',0)
-CALL IMOD_UTL_PRINTTEXT('',0)
-CALL IMOD_UTL_PRINTTEXT('  arg1: runfile',0)
-CALL IMOD_UTL_PRINTTEXT('  arg2: (optional) pause (0) or continue (1) after errors',0)
-CALL IMOD_UTL_PRINTTEXT('  arg3: (optional) surpress IACT and simulate submodel NUMBER only',0)
-CALL IMOD_UTL_PRINTTEXT('',0)
-CALL IMOD_UTL_PRINTTEXT('  e.g.: imodflow.exe test.run',0)
-CALL IMOD_UTL_PRINTTEXT('  e.g.: imodflow.exe test.run 1',0)
-CALL IMOD_UTL_PRINTTEXT('  e.g.: imodflow.exe test.run 0 23',0)
-CALL IMOD_UTL_PRINTTEXT('',0)
-CALL IMOD_UTL_PRINTTEXT('  Note: testmodels will be created after supplying a non-existing ',0)
-CALL IMOD_UTL_PRINTTEXT('        runfile called IMODFLOW.RUN',0)
-CALL IMOD_UTL_PRINTTEXT('',0)
-CALL IMOD_UTL_PRINTTEXT('====================================================================',0)
-CALL IMOD_UTL_PRINTTEXT('',0)
+CALL IMOD_UTL_PRINTTEXT('====================================================================',3)
+CALL IMOD_UTL_PRINTTEXT('',3)
+CALL IMOD_UTL_PRINTTEXT('        '//'iMODFLOW 2005 '//TRIM(RVERSION)//' ('//TRIM(OSN(OS))//')',3)
+CALL IMOD_UTL_PRINTTEXT('',3)
+CALL IMOD_UTL_PRINTTEXT('====================================================================',3)
+CALL IMOD_UTL_PRINTTEXT('',3)
+CALL IMOD_UTL_PRINTTEXT('Syntax: imodflow.exe arg1 arg2 arg3',3)
+CALL IMOD_UTL_PRINTTEXT('',3)
+CALL IMOD_UTL_PRINTTEXT('  arg1: runfile',3)
+CALL IMOD_UTL_PRINTTEXT('  arg2: (optional) pause (0) or continue (1) after errors',3)
+CALL IMOD_UTL_PRINTTEXT('  arg3: (optional) surpress IACT and simulate submodel NUMBER only',3)
+CALL IMOD_UTL_PRINTTEXT('',3)
+CALL IMOD_UTL_PRINTTEXT('  e.g.: imodflow.exe test.run',3)
+CALL IMOD_UTL_PRINTTEXT('  e.g.: imodflow.exe test.run 1',3)
+CALL IMOD_UTL_PRINTTEXT('  e.g.: imodflow.exe test.run 0 23',3)
+CALL IMOD_UTL_PRINTTEXT('',3)
+CALL IMOD_UTL_PRINTTEXT('  Note: testmodels will be created after supplying a non-existing ',3)
+CALL IMOD_UTL_PRINTTEXT('        runfile called IMODFLOW.RUN',3)
+CALL IMOD_UTL_PRINTTEXT('',3)
+CALL IMOD_UTL_PRINTTEXT('====================================================================',3)
+CALL IMOD_UTL_PRINTTEXT('',3)
 
 CALL IMOD_UTL_STRING(FNAME)
 CALL IMOD_UTL_FILENAME(FNAME)
 
-IF(LEN_TRIM(FNAME).EQ.0)CALL IMOD_UTL_PRINTTEXT('Start code with *.exe *.run flags',2)
+IF(LEN_TRIM(FNAME).EQ.0)CALL IMOD_UTL_PRINTTEXT('Start code with *.exe *.run flags',-3)
 
 IFLAG=0
 IF(PRESENT(I1))THEN
  IF (I1.EQ.0) THEN
-  CALL IMOD_UTL_PRINTTEXT('arg2 option pause (0) is not supported!',2)
+  CALL IMOD_UTL_PRINTTEXT('arg2 option pause (0) is not supported!',-3)
  END IF
  IFLAG(1)=I1 !## get second argument - pause
 END IF
@@ -107,15 +110,15 @@ IF(PRESENT(I2))IFLAG(2)=I2 !## get third argument - submodel
 
 INQUIRE(FILE=FNAME,EXIST=LEX)
 IF(LEX)THEN
- CALL RF2MF_MODFLOW(FNAME,DXCFNAME,submstr,nsub,nsubmax,lipest)
+ CALL RF2MF_MODFLOW(FNAME,DXCFNAME,submstr,nsub,nsubmax,lipest,lidfmerge,rfroot)
 ELSE
- CALL IMOD_UTL_PRINTTEXT('RUN-FILE '//TRIM(FNAME)//' does not exists!',2)
+ CALL IMOD_UTL_PRINTTEXT('RUN-FILE '//TRIM(FNAME)//' does not exists!',-3)
 ENDIF
 
 END SUBROUTINE RF2MF
 
 !#####=================================================================
-SUBROUTINE RF2MF_MODFLOW(CL,DXCFILE,submstr,nsub,nsubmax,lipest)
+SUBROUTINE RF2MF_MODFLOW(CL,DXCFILE,submstr,nsub,nsubmax,lipest,lidfmerge,rfroot)
 !#####=================================================================
 IMPLICIT NONE
 CHARACTER(LEN=*),INTENT(INOUT) :: CL
@@ -124,9 +127,13 @@ integer, intent(in) :: nsubmax
 integer, intent(inout) :: nsub
 character(len=50), dimension(nsubmax), intent(out) :: submstr
 logical, intent(inout) :: lipest
+logical, intent(inout) :: lidfmerge
+character(len=*),intent(out) :: rfroot
 
 LOGICAL :: LSTOP
-integer :: iper, nsys, isys, ilay, ios
+integer :: i, iper, nsys, isys, ilay, ios, myrank
+character(len=1) :: slash
+character(len=1024) :: tmpdir
 
 !#close all units
 CALL IMOD_UTL_CLOSEUNITS()
@@ -134,7 +141,19 @@ CALL IMOD_UTL_CLOSEUNITS()
 !!#change directory to start position
 !  CALL OSD_CHDIR(ROOTMAIN)
 
-root%modelname=CL(index(cl,'\',.true.)+1:INDEX(CL,'.',.TRUE.)-1)
+call imod_utl_getslash(slash)
+i = index(cl,slash,.true.)
+root%modelname=CL(i+1:INDEX(CL,'.',.TRUE.)-1)
+
+!## get root for run-file
+call osd_getcwd(root%runfileroot)
+if (i.gt.0) then
+   call osd_getcwd(tmpdir)
+   call osd_chdir(cl(1:i))
+   call osd_getcwd(root%runfileroot)
+   call osd_chdir(tmpdir)
+end if
+rfroot = trim(root%runfileroot)
 
 IMULT=0
 nsub=0
@@ -143,11 +162,12 @@ MULTLOOP: DO
 
 !## open runfile
 IURUN=IMOD_UTL_GETUNIT()
-OPEN(IURUN,FILE=CL,STATUS='OLD',ACTION='READ',IOSTAT=IOS)
+OPEN(IURUN,FILE=CL,STATUS='OLD',ACTION='READ',SHARE='DENYNONE',IOSTAT=IOS)
 IF(IOS.NE.0)THEN
  WRITE(*,'(A)') 'Can not find '//TRIM(CL)
  STOP
 ENDIF
+
 
 !## read result-root
 CALL RF2MF_DATASET1()
@@ -157,8 +177,14 @@ CALL RF2MF_DATASET2()
 CALL RF2MF_INIT_ALLOCATE()
 !#read settings (nmult,idebug,imodflow etc.)
 CALL RF2MF_DATASET3()
-!#read pcg settings
-CALL RF2MF_DATASET4()
+!#read solver settings
+CALL RF2MF_DATASET4(lidfmerge)
+!### PKS inititalization
+call InitPks()
+call pks7mpigetmyrank(myrank)
+IF(.NOT.IMOD_UTL_DIREXIST(RESULTDIR))THEN
+   IF(MYRANK.EQ.0)CALL IMOD_UTL_CREATEDIR(RESULTDIR)
+END IF    
 !#read box (imult)
 CALL RF2MF_DATASET5()
 IF(IMULT.GT.NMULT)EXIT
@@ -178,6 +204,8 @@ IF(IACT.NE.0)THEN
  CALL RF2MF_CHECKRUN()
  !## determine size of SIMBOX and adjust ncol/nrow
  CALL RF2MF_EXTENT()
+ !### PKS partitioning
+ call PartPks()
  !## read empty string - header MODULES FOR EACH LAYER
  READ(IURUN,*) LINE
  !## solve current model - lstop=.true.: quit ; lstop=.false. whenever effect 'bounds' to boundary!
@@ -188,24 +216,28 @@ ELSE
 END IF
 
 !...     write package input files
-call WriteDis()
-call WriteBas()
-call WriteBcf()
-call WritePwt()
-call WriteScr()
-call WriteMet()
-call WriteRiv()
-call WriteDrn()
-call WriteGhb()
-call WriteWel()
-call WriteAni()
-call WriteHfb()
-call WritePcg()
-call WriteRch()
-call WriteEvt()
-call WriteOc()
-call WriteChd()
-call WriteNam(dxcfile)
+if (myrank.eq.0) then ! master only
+ call WriteDis()
+ call WriteBas()
+ call WriteBcf()
+ call WritePwt()
+ call WriteScr()
+ call WriteMet()
+ call WriteRiv()
+ call WriteDrn()
+ call WriteGhb()
+ call WriteWel()
+ call WriteAni()
+ call WriteHfb()
+ call WritePcg()
+ call WritePks()
+ call WriteRch()
+ call WriteEvt()
+ call WriteOc()
+ call WriteChd()
+ call WriteNam(dxcfile)
+end if
+call pks7mpibarrier() ! PKS
 
 call AllocNam(idealloc)
 call AllocDis(idealloc)
@@ -225,7 +257,6 @@ if (mpck(pchd).eq.1) call AllocChd(idealloc)
 if (mmod(pscr).eq.1) call AllocScr(idealloc)
 if (mmod(ppwt).eq.1) call AllocPwt(idealloc)
 if (mmod(pcap).eq.1.or.len_trim(dxcfile).gt.0) call AllocDxc(idealloc)
-call AllocPcg(idealloc)
 
 !## close all units
 CALL imod_utl_closeunits()
@@ -248,12 +279,14 @@ END SUBROUTINE RF2MF_MODFLOW
 !###====================================================================
 SUBROUTINE RF2MF_MAIN(DXCFILE,lipest)
 !###====================================================================
+use pks_imod_utl, only: pks_imod_utl_iarmwp_xch_disable ! PKS
 IMPLICIT NONE
 
 CHARACTER(LEN=*), INTENT(INOUT) :: DXCFILE
 logical, intent(inout) :: lipest
 
-INTEGER :: IPCK,I
+INTEGER :: IPCK,I, myrank
+logical :: lcap
 
 !...     fill: met package
 met%kws(imet_coord_xll)%type = imetr
@@ -277,6 +310,7 @@ met%kws(imet_starttime)%time%month = 1
 met%kws(imet_starttime)%time%day   = 1
 
 !## read modules ...
+lcap = .false.
 DO
  !## determine whether to stop, if all active modules have been passed!
  IF(.NOT.RF2MF_UTL_READNLINES(0,IPCK))EXIT
@@ -286,11 +320,15 @@ DO
  CASE (PPST)
    IF(MMOD(PPST).GT.0)THEN
     lipest = .true.
+    call pks7mpinotsupported('iPEST') ! PKS
     CALL PEST1INIT(0,'',0,rootres,nparam=NLINES)
    END IF
   CASE (PCAP)
 !   !## read/prepare simgro-files (capsim/metaswap)
+   lcap = .true.
+   call pks7mpigetmyrank(myrank)
    CALL RF2MF_METASWAP(DXCFILE)
+   call pks7mpibarrier()
   CASE DEFAULT
    !## read/scale BASIC packages (ibound,shead,kd,c,s,top,bot)
    CALL RF2MF_READ1MAIN(IPCK,0)
@@ -304,6 +342,7 @@ DO
 ENDDO
 RFMOD=ABS(RFMOD)
 dxc%fname = dxcfile
+if(.not.lcap) call pks_imod_utl_iarmwp_xch_disable() ! PKS
 
 !#read empty string from runfile
 READ(IURUN,*)
@@ -356,12 +395,12 @@ if (.not.savebuf.and.savenobuf) then
    met%kws(imet_save_no_buf)%type = imetc
 end if
 
-CALL IMOD_UTL_PRINTTEXT('',0)
-CALL IMOD_UTL_PRINTTEXT('---------------------------------------------',0)
-CALL IMOD_UTL_PRINTTEXT('',0)
-CALL IMOD_UTL_PRINTTEXT('   Succesfully TRANSLATED iMODFLOW '//TRIM(RVERSION),0)
-CALL IMOD_UTL_PRINTTEXT('',0)
-CALL IMOD_UTL_PRINTTEXT('---------------------------------------------',0)
+CALL IMOD_UTL_PRINTTEXT('',3)
+CALL IMOD_UTL_PRINTTEXT('---------------------------------------------',3)
+CALL IMOD_UTL_PRINTTEXT('',3)
+CALL IMOD_UTL_PRINTTEXT('   Succesfully TRANSLATED iMODFLOW '//TRIM(RVERSION),3)
+CALL IMOD_UTL_PRINTTEXT('',3)
+CALL IMOD_UTL_PRINTTEXT('---------------------------------------------',3)
 
 !## close all files ...
 CALL IMOD_UTL_CLOSEUNITS()
@@ -383,9 +422,10 @@ DO
   isumbudget=0
   READ(LINE,*,IOSTAT=IOS) IPER,DELT,CDATE,ISAVE
  endif
- IF(IOS.LT.0)CALL IMOD_UTL_PRINTTEXT('Error reading/finding time heading stressperiod '//TRIM(IMOD_UTL_ITOS(KPER)),2)
+ IF(IOS.LT.0)CALL IMOD_UTL_PRINTTEXT('Error reading/finding time heading stressperiod '//TRIM(IMOD_UTL_ITOS(KPER)),-3)
  IF(IOS.EQ.0)EXIT
 ENDDO
+!if(pks%active) isave = -abs(isave)
 dis%sp(kper)%perlen=delt
 dis%sp(kper)%nstp=1
 dis%sp(kper)%tsmult=1.0
@@ -411,24 +451,24 @@ IF(NSCL .GE.3)ISAVE=ABS(ISAVE)
 IF(IIDEBUG.EQ.1)ISAVE=1
 
 !## switch between steady-state and transient during simulation
-IF(DELT.LT.0.0)CALL IMOD_UTL_PRINTTEXT('Error, delt.lt.0.0 for timestep '//TRIM(IMOD_UTL_ITOS(KPER)),2)
+IF(DELT.LT.0.0)CALL IMOD_UTL_PRINTTEXT('Error, delt.lt.0.0 for timestep '//TRIM(IMOD_UTL_ITOS(KPER)),-3)
 IF(DELT.EQ.0.0)ISS=1
 IF(DELT.GT.0.0)ISS=2
 
 IF(ISS.EQ.2.AND.MMOD(PSTO).EQ.0)THEN
- CALL IMOD_UTL_PRINTTEXT('',0)
- CALL IMOD_UTL_PRINTTEXT('No storage loaded, therefore no transient simulation allowed.',0)
- CALL IMOD_UTL_PRINTTEXT('You should not specify delt='//TRIM(IMOD_UTL_RTOS(DELT,'F',2))//' for timestep '//TRIM(IMOD_UTL_ITOS(KPER)),0)
- CALL IMOD_UTL_PRINTTEXT('For steady-state simulation specify delt=0.0',0)
- CALL IMOD_UTL_PRINTTEXT('',2)
+ CALL IMOD_UTL_PRINTTEXT('',3)
+ CALL IMOD_UTL_PRINTTEXT('No storage loaded, therefore no transient simulation allowed.',3)
+ CALL IMOD_UTL_PRINTTEXT('You should not specify delt='//TRIM(IMOD_UTL_RTOS(DELT,'F',2))//' for timestep '//TRIM(IMOD_UTL_ITOS(KPER)),3)
+ CALL IMOD_UTL_PRINTTEXT('For steady-state simulation specify delt=0.0',3)
+ CALL IMOD_UTL_PRINTTEXT('',-3)
 ENDIF
 
-IF(ISS.NE.2.AND.MMOD(PCAP).EQ.1)CALL IMOD_UTL_PRINTTEXT('SIMGRO: CAPSIM/MetaSwap not suitable for steady-state simulations!',2)
-IF(ISS.NE.2.AND.MMOD(PPWT).EQ.1)CALL IMOD_UTL_PRINTTEXT('PWT PACKAGE not suitable for steady-state simulations!',2)
+IF(ISS.NE.2.AND.MMOD(PCAP).EQ.1)CALL IMOD_UTL_PRINTTEXT('SIMGRO: CAPSIM/MetaSwap not suitable for steady-state simulations!',-3)
+IF(ISS.NE.2.AND.MMOD(PPWT).EQ.1)CALL IMOD_UTL_PRINTTEXT('PWT PACKAGE not suitable for steady-state simulations!',-3)
 
 IF(SDATE.GT.0)THEN
  I=IMOD_UTL_IDATETOJDATE(SDATE)
- IF(I.LE.0)CALL IMOD_UTL_PRINTTEXT('Error, SDATE is out of real date notation for timestep '//TRIM(IMOD_UTL_ITOS(KPER)),2)
+ IF(I.LE.0)CALL IMOD_UTL_PRINTTEXT('Error, SDATE is out of real date notation for timestep '//TRIM(IMOD_UTL_ITOS(KPER)),-3)
  !## julian date, add current time-step length
  SDATE=I+INT(DELT)
  SDATE=IMOD_UTL_JDATETOIDATE(SDATE)
@@ -436,13 +476,13 @@ IF(SDATE.GT.0)THEN
 ENDIF
 
 CALL IMOD_UTL_S_CAP(CDATE,'U')
-IF(IPER.NE.KPER)CALL IMOD_UTL_PRINTTEXT('Something probably wrong iper.ne.kper',0)
+IF(IPER.NE.KPER)CALL IMOD_UTL_PRINTTEXT('Something probably wrong iper.ne.kper',3)
 
 IF(ISS.EQ.1.AND.TRIM(CDATE).NE.'STEADY-STATE')THEN
- CALL IMOD_UTL_PRINTTEXT('',0)
- CALL IMOD_UTL_PRINTTEXT('For reasons of compatibility with iMOD it is adviseable to use the',0)
- CALL IMOD_UTL_PRINTTEXT('name STEADY-STATE as result name for steady-state simulations',0)
- CALL IMOD_UTL_PRINTTEXT('',0)
+ CALL IMOD_UTL_PRINTTEXT('',3)
+ CALL IMOD_UTL_PRINTTEXT('For reasons of compatibility with iMOD it is adviseable to use the',3)
+ CALL IMOD_UTL_PRINTTEXT('name STEADY-STATE as result name for steady-state simulations',3)
+ CALL IMOD_UTL_PRINTTEXT('',3)
 ENDIF
 
 !## which box-size to be saved
@@ -450,23 +490,23 @@ SAVEBOX=SIMBOX
 IF(ISAVE.EQ.-1)SAVEBOX=USEBOX
 
 !## write current simulation period
-CALL IMOD_UTL_PRINTTEXT('',0)
+CALL IMOD_UTL_PRINTTEXT('',3)
 WRITE(LINE,'(52A1)') ('=',I=1,52)
-CALL IMOD_UTL_PRINTTEXT(TRIM(LINE),0)
+CALL IMOD_UTL_PRINTTEXT(TRIM(LINE),3)
 IF(ISS.EQ.1)THEN
- CALL IMOD_UTL_PRINTTEXT('Start steady-state period',0)
+ CALL IMOD_UTL_PRINTTEXT('Start steady-state period',3)
 ELSEIF(ISS.EQ.2)THEN
  READ(CDATE,*,IOSTAT=IOS) I
  IF(IOS.EQ.0)THEN
   I=IMOD_UTL_IDATETOJDATE(I)+INT(DELT)
   I=IMOD_UTL_JDATETOIDATE(I)
-  CALL IMOD_UTL_PRINTTEXT('Starting Transient simulation for: '//TRIM(CDATE)//'-'//TRIM(IMOD_UTL_ITOS(I)),0)
+  CALL IMOD_UTL_PRINTTEXT('Starting Transient simulation for: '//TRIM(CDATE)//'-'//TRIM(IMOD_UTL_ITOS(I)),3)
  ELSE
-  CALL IMOD_UTL_PRINTTEXT('Starting Transient simulation for: '//TRIM(CDATE),0)
+  CALL IMOD_UTL_PRINTTEXT('Starting Transient simulation for: '//TRIM(CDATE),3)
  ENDIF
 ENDIF
 WRITE(LINE,'(52A1)') ('=',I=1,52)
-CALL IMOD_UTL_PRINTTEXT(TRIM(LINE),0)
+CALL IMOD_UTL_PRINTTEXT(TRIM(LINE),3)
 
 END SUBROUTINE RF2MF_PERIODDEFINITION
 
@@ -478,20 +518,23 @@ IMPLICIT NONE
 INTEGER :: IOS
 
 READ(IURUN,'(A256)',IOSTAT=IOS) RESULTDIR
+RESULTDIR = ADJUSTL(RESULTDIR)
 
-CALL IMOD_UTL_STRING(RESULTDIR)
-IF(IOS.NE.0)CALL IMOD_UTL_PRINTTEXT('ERROR line 1:'//TRIM(RESULTDIR),2)
-CALL IMOD_UTL_FILENAME(RESULTDIR)
 !## read without quotes
-READ(RESULTDIR,*,IOSTAT=IOS) RESULTDIR
-!CALL IMOD_UTL_CHECKPATH(RESULTDIR)
-IF(.NOT.IMOD_UTL_DIREXIST(RESULTDIR))CALL IMOD_UTL_CREATEDIR(RESULTDIR)
+IF(RESULTDIR(1:1).EQ.CHAR(34).OR.RESULTDIR(1:1).EQ.CHAR(39))THEN ! double quote: CHAR(34); single quote: CHAR(39)
+ READ(RESULTDIR,*,IOSTAT=IOS) RESULTDIR
+ENDIF 
+CALL IMOD_UTL_STRING(RESULTDIR)
+CALL IMOD_UTL_ABS_PATH(RESULTDIR)
+IF(IOS.NE.0)CALL IMOD_UTL_PRINTTEXT('ERROR line 1:'//TRIM(RESULTDIR),-3)
+CALL IMOD_UTL_FILENAME(RESULTDIR)
 
 END SUBROUTINE RF2MF_DATASET1
 
 !#####=================================================================
 SUBROUTINE RF2MF_DATASET2()
 !#####=================================================================
+use pks_imod_utl, only: pks_imod_utl_iarmwp_xch_init ! PKS
 IMPLICIT NONE
 INTEGER :: JJ,JS,IOS
 character(len=8) :: date
@@ -510,6 +553,8 @@ IF(IOS.NE.0)THEN
  ENDIF
 ENDIF
 
+call pks_imod_utl_iarmwp_xch_init(iarmwp) ! PKS
+
 if (ifvdl.ne.0) then
     riv%ifvdl=.true.
 end if
@@ -521,15 +566,15 @@ if (sdate.gt.0) then
    read(date(5:6),*) met%kws(imet_starttime)%time%month
    read(date(7:8),*) met%kws(imet_starttime)%time%day
 end if
-IF(IOS.NE.0)CALL IMOD_UTL_PRINTTEXT('ERROR line 2:'//TRIM(LINE),2)
-IF(NPER.EQ.0)CALL IMOD_UTL_PRINTTEXT('NPER.EQ.0',2)
-IF(NLAY.EQ.0.OR.NLAY.GT.MXNLAY)CALL IMOD_UTL_PRINTTEXT('NLAY.EQ.0.OR.NLAY.GT.MXNLAY',2)
-IF(SDATE.LT.0)CALL IMOD_UTL_PRINTTEXT('SDATE.LT.0',2)
+IF(IOS.NE.0)CALL IMOD_UTL_PRINTTEXT('ERROR line 2:'//TRIM(LINE),-3)
+IF(NPER.EQ.0)CALL IMOD_UTL_PRINTTEXT('NPER.EQ.0',-3)
+IF(NLAY.EQ.0.OR.NLAY.GT.MXNLAY)CALL IMOD_UTL_PRINTTEXT('NLAY.EQ.0.OR.NLAY.GT.MXNLAY',-3)
+IF(SDATE.LT.0)CALL IMOD_UTL_PRINTTEXT('SDATE.LT.0',-3)
 IF(SDATE.GT.0)THEN
- IF(IMOD_UTL_IDATETOJDATE(SDATE).EQ.0)CALL IMOD_UTL_PRINTTEXT('SDATE ['//TRIM(IMOD_UTL_ITOS(SDATE))//'] not valid/existing date',2)
+ IF(IMOD_UTL_IDATETOJDATE(SDATE).EQ.0)CALL IMOD_UTL_PRINTTEXT('SDATE ['//TRIM(IMOD_UTL_ITOS(SDATE))//'] not valid/existing date',-3)
 ENDIF
 
-IF(NSCL.LT.0.OR.NSCL.GT.4)CALL IMOD_UTL_PRINTTEXT('NSCL.LT.0.OR.NSCL.GT.4',2)
+IF(NSCL.LT.0.OR.NSCL.GT.4)CALL IMOD_UTL_PRINTTEXT('NSCL.LT.0.OR.NSCL.GT.4',-3)
 
 LQD=.TRUE.
 IF(NSCL.EQ.0.OR.NSCL.EQ.2.OR.NSCL.EQ.4)LQD=.FALSE.
@@ -539,7 +584,7 @@ IF(IIPF.NE.0)THEN
  ALLOCATE(TS(ABS(IIPF)))
  DO JJ=1,ABS(IIPF)
   READ(IURUN,'(A256)',IOSTAT=IOS) LINE
-  IF(IOS.NE.0)CALL IMOD_UTL_PRINTTEXT('ERROR DataSet 3 (see manual):'//TRIM(LINE),2)
+  IF(IOS.NE.0)CALL IMOD_UTL_PRINTTEXT('ERROR DataSet 3 (see manual):'//TRIM(LINE),-3)
   !## swap / -> \ in case of Linux (temporary)
   CALL IMOD_UTL_STRING(LINE); JS=OS; OS=1; CALL IMOD_UTL_SWAPSLASH(LINE)
   READ(LINE,*,IOSTAT=IOS) TS(JJ)%IPFNAME,TS(JJ)%IPFTYPE,TS(JJ)%IXCOL,TS(JJ)%IYCOL,TS(JJ)%ILCOL,TS(JJ)%IMCOL,TS(JJ)%IVCOL
@@ -554,16 +599,16 @@ IF(IIPF.NE.0)THEN
   !## swap back again
   !OS=JS;
   CALL IMOD_UTL_SWAPSLASH(TS(JJ)%IPFNAME)
-  IF(NPER.EQ.1.AND. TS(JJ)%IPFTYPE.GE.2)CALL IMOD_UTL_PRINTTEXT('For steady-state simulation IPFTYPE(.)=1',2)
-  IF(NPER.GT.1.AND.(TS(JJ)%IPFTYPE.LT.2.OR.TS(JJ)%IPFTYPE.GT.3))CALL IMOD_UTL_PRINTTEXT('for transient simulations IPFTYPE(.)=2 or IPFTYPE(.)=3',2)
+  IF(NPER.EQ.1.AND. TS(JJ)%IPFTYPE.GE.2)CALL IMOD_UTL_PRINTTEXT('For steady-state simulation IPFTYPE(.)=1',-3)
+  IF(NPER.GT.1.AND.(TS(JJ)%IPFTYPE.LT.2.OR.TS(JJ)%IPFTYPE.GT.3))CALL IMOD_UTL_PRINTTEXT('for transient simulations IPFTYPE(.)=2 or IPFTYPE(.)=3',-3)
   INQUIRE(FILE=TS(JJ)%IPFNAME,EXIST=LEX)
-  CALL IMOD_UTL_PRINTTEXT('  - '//TRIM(TS(JJ)%IPFNAME(INDEX(TS(JJ)%IPFNAME,'\',.TRUE.)+1:)),0)
-  IF(.NOT.LEX)CALL IMOD_UTL_PRINTTEXT('IPF-file does not exist',2)
+  CALL IMOD_UTL_PRINTTEXT('  - '//TRIM(TS(JJ)%IPFNAME(INDEX(TS(JJ)%IPFNAME,'\',.TRUE.)+1:)),3)
+  IF(.NOT.LEX)CALL IMOD_UTL_PRINTTEXT('IPF-file does not exist',-3)
  ENDDO
 ELSE
    DO JJ=1,ABS(IIPF)
      READ(IURUN,'(A256)',IOSTAT=IOS) LINE
-    IF(IOS.NE.0)CALL IMOD_UTL_PRINTTEXT('ERROR DataSet 3 (see manual):'//TRIM(LINE),2)
+    IF(IOS.NE.0)CALL IMOD_UTL_PRINTTEXT('ERROR DataSet 3 (see manual):'//TRIM(LINE),-3)
    END DO
 END IF
 
@@ -599,22 +644,25 @@ IF(IOS.NE.0)THEN
   ENDIF
  ENDIF
 ENDIF
-IF(IOS.NE.0)CALL IMOD_UTL_PRINTTEXT('ERROR DataSet 4 (see manual):'//TRIM(LINE),2)
+IF(IOS.NE.0)CALL IMOD_UTL_PRINTTEXT('ERROR DataSet 4 (see manual):'//TRIM(LINE),-3)
 
 bcf%minkd = MAX(0.0001,bcf%minkd)
 bcf%minc  = MAX(0.0001,bcf%minc)
 
 !#overrule submodel whenever iflag(2)=active
 IF(IFLAG(2).GT.0)THEN
- IF(IFLAG(2).GT.NMULT)CALL IMOD_UTL_PRINTTEXT('IFLAG(2).GT.NMULT',2)
+ IF(IFLAG(2).GT.NMULT)CALL IMOD_UTL_PRINTTEXT('IFLAG(2).GT.NMULT',-3)
 ENDIF
 
 IF(IEXPORT.EQ.1.OR.IEXPORT.EQ.2)IIDEBUG=0
 debugflag = iidebug
+if(abs(debugflag)==1)then
+   met%kws(imet_write_debug_idf)%type = imetc   
+end if
 
-IF(IEXPORT.EQ.1.AND..NOT.LQD)   CALL IMOD_UTL_PRINTTEXT('MODFLOW export #1 not sustained in comination with non-equidistantial networks',2)
-IF(IEXPORT.LT.0.OR.IEXPORT.GT.5)CALL IMOD_UTL_PRINTTEXT('IEXPORT should be 1 <= IEXPORT <= 5',2)
-IF(NMULT.GE.1.AND.NSCL.EQ.0)    CALL IMOD_UTL_PRINTTEXT('You can not combine nmult.ge.1. with given raster definition (nscl.eq.0)',2)
+IF(IEXPORT.EQ.1.AND..NOT.LQD)   CALL IMOD_UTL_PRINTTEXT('MODFLOW export #1 not sustained in comination with non-equidistantial networks',-3)
+IF(IEXPORT.LT.0.OR.IEXPORT.GT.5)CALL IMOD_UTL_PRINTTEXT('IEXPORT should be 1 <= IEXPORT <= 5',-3)
+IF(NMULT.GE.1.AND.NSCL.EQ.0)    CALL IMOD_UTL_PRINTTEXT('You can not combine nmult.ge.1. with given raster definition (nscl.eq.0)',-3)
 
 !memory of submodels yet done!
 IF(ALLOCATED(JACT))DEALLOCATE(JACT)
@@ -624,61 +672,121 @@ JACT=0
 END SUBROUTINE RF2MF_DATASET3
 
 !#####=================================================================
-SUBROUTINE RF2MF_DATASET4()
+SUBROUTINE RF2MF_DATASET4(lidfmerge)
 !#####=================================================================
 IMPLICIT NONE
+
+logical, intent(inout) :: lidfmerge
 
 INTEGER :: IOS
 
 ! options to skip
-INTEGER :: MXCNVG,IDELTCNVG,IDAMPING
+INTEGER :: MXCNVG,IDELTCNVG,IDAMPING,I
 REAL :: MAXWBALERROR
+
+! options PKS
+LOGICAL :: WRITESTO
+INTEGER :: MXITER, NRPROC, idfmerge
 
 READ(IURUN,'(A256)') LINE
 CALL IMOD_UTL_STRING(LINE)
-READ(LINE,*,IOSTAT=IOS) pcg%MXITER,pcg%ITER1,pcg%HCLOSE,pcg%RCLOSE,pcg%RELAX,pcg%NPCOND,MAXWBALERROR,MXCNVG,IDELTCNVG,IDAMPING
-IF(IOS.NE.0)THEN
- IDAMPING=0
- READ(LINE,*,IOSTAT=IOS) pcg%MXITER,pcg%ITER1,pcg%HCLOSE,pcg%RCLOSE,pcg%RELAX,pcg%NPCOND,MAXWBALERROR,MXCNVG,IDELTCNVG
- IF(IOS.NE.0)THEN
-  IDELTCNVG=0
-  READ(LINE,*,IOSTAT=IOS) pcg%MXITER,pcg%ITER1,pcg%HCLOSE,pcg%RCLOSE,pcg%RELAX,pcg%NPCOND,MAXWBALERROR,MXCNVG
+READ(LINE,*,IOSTAT=IOS) MXITER
+
+IF(MXITER.LT.0) THEN ! PKS SOLVER OPTIONS
+  idfmerge = 0   
+  call AllocPks(ialloc)  
+  READ(LINE,*,IOSTAT=IOS) pks%MXITER,pks%INNERIT,pks%HCLOSEPKS,pks%RCLOSEPKS,pks%RELAXPKS,pks%partopt,idfmerge,pks%pressakey
   IF(IOS.NE.0)THEN
-   MXCNVG=pcg%MXITER*pcg%ITER1
-   READ(LINE,*,IOSTAT=IOS) pcg%MXITER,pcg%ITER1,pcg%HCLOSE,pcg%RCLOSE,pcg%RELAX,pcg%NPCOND,MAXWBALERROR
-   IF(IOS.NE.0)THEN
-    MAXWBALERROR=0.01
-    READ(LINE,*,IOSTAT=IOS) pcg%MXITER,pcg%ITER1,pcg%HCLOSE,pcg%RCLOSE,pcg%RELAX,pcg%NPCOND
+    READ(LINE,*,IOSTAT=IOS) pks%MXITER,pks%INNERIT,pks%HCLOSEPKS,pks%RCLOSEPKS,pks%RELAXPKS,pks%partopt
     IF(IOS.NE.0)THEN
-     pcg%NPCOND=1
-     READ(LINE,*,IOSTAT=IOS) pcg%MXITER,pcg%ITER1,pcg%HCLOSE,pcg%RCLOSE,pcg%RELAX
-    ENDIF
+      READ(LINE,*,IOSTAT=IOS) pks%MXITER,pks%INNERIT,pks%HCLOSEPKS,pks%RCLOSEPKS,pks%RELAXPKS,pks%partopt
+      IF(IOS.NE.0)THEN
+        READ(LINE,*,IOSTAT=IOS) pks%MXITER,pks%INNERIT,pks%HCLOSEPKS,pks%RCLOSEPKS,pks%RELAXPKS
+      END IF 
+    END IF
+  END IF
+  pks%MXITER = abs(pks%MXITER)
+  if (idfmerge.eq.1) lidfmerge = .true.
+  IF(pks%partopt.ne.0 .and. pks%partopt.ne.1 .and. pks%partopt.ne.2)THEN
+    CALL IMOD_UTL_PRINTTEXT('Dataset 5: PARTOPT must be 0, 1, or 2',-3)          
+  ENDIF    
+  if (pks%partopt.eq.1.or.pks%partopt.eq.2) then ! RCB load file
+    if (pks%partopt.eq.1) then
+       CALL IMOD_UTL_PRINTTEXT('Dataset 5: PARTOPT = 1 (RCB) activated',3)  
+    else
+       CALL IMOD_UTL_PRINTTEXT('Dataset 5: PARTOPT = 2 (RCB) activated',3)  
+    end if        
+    READ(IURUN,'(A256)') LINE; CALL IMOD_UTL_STRING(LINE)
+    READ(LINE,'(A)',IOSTAT=IOS) pks%loadfile
+    CALL IMOD_UTL_FILENAME(pks%loadfile)
+    if (pks%partopt.eq.1) then
+       IF(IOS.NE.0)CALL IMOD_UTL_PRINTTEXT('Dataset 5: PARTOPT = 1 (RCB)',-3)
+    else
+       IF(IOS.NE.0)CALL IMOD_UTL_PRINTTEXT('Dataset 5: PARTOPT = 2 (RCB)',-3)
+    end if        
+  end if
+  if (pks%partopt.eq.3) then ! read partitions - NOT YET SUPPORTED!
+    CALL IMOD_UTL_PRINTTEXT('Dataset 5: PARTOPT = 2 activated',3)  
+    READ(IURUN,'(A256)') LINE; CALL IMOD_UTL_STRING(LINE)
+    READ(LINE,*,IOSTAT=IOS) pks%nrproc 
+    IF(IOS.NE.0)CALL IMOD_UTL_PRINTTEXT('Dataset 5b: PARTOPT = 2 , could not read NRPROC',-3)
+    IF(pks%nrproc.LE.0)CALL IMOD_UTL_PRINTTEXT('Dataset 5b: PARTOPT = 2 , invalid NRPROC',-3)
+    allocate(pks%partminmax(pks%nrproc,4))
+    DO i = 1, pks%nrproc  
+      READ(IURUN,'(A256)') LINE; CALL IMOD_UTL_STRING(LINE)
+      READ(LINE,*,IOSTAT=IOS) pks%partminmax(i,1), pks%partminmax(i,2),& 
+                              pks%partminmax(i,3), pks%partminmax(i,4)  
+      IF(IOS.NE.0)CALL IMOD_UTL_PRINTTEXT('Dataset 5b: PARTOPT = 2, could not read partition bounds',-3)
+    END DO      
+  end if    
+ELSE ! PCG SOLVER
+  CALL PKS7MPIGETNRPROC(NRPROC)
+  IF(NRPROC.GT.1)CALL IMOD_UTL_PRINTTEXT('Dataset 5: only PKS is supported in parallel mode',-3)
+  call AllocPcg(ialloc)
+  READ(LINE,*,IOSTAT=IOS) pcg%MXITER,pcg%ITER1,pcg%HCLOSE,pcg%RCLOSE,pcg%RELAX,pcg%NPCOND,MAXWBALERROR,MXCNVG,IDELTCNVG,IDAMPING
+  IF(IOS.NE.0)THEN
+   IDAMPING=0
+   READ(LINE,*,IOSTAT=IOS) pcg%MXITER,pcg%ITER1,pcg%HCLOSE,pcg%RCLOSE,pcg%RELAX,pcg%NPCOND,MAXWBALERROR,MXCNVG,IDELTCNVG
+   IF(IOS.NE.0)THEN
+    IDELTCNVG=0
+    READ(LINE,*,IOSTAT=IOS) pcg%MXITER,pcg%ITER1,pcg%HCLOSE,pcg%RCLOSE,pcg%RELAX,pcg%NPCOND,MAXWBALERROR,MXCNVG
+    IF(IOS.NE.0)THEN
+     MXCNVG=pcg%MXITER*pcg%ITER1
+     READ(LINE,*,IOSTAT=IOS) pcg%MXITER,pcg%ITER1,pcg%HCLOSE,pcg%RCLOSE,pcg%RELAX,pcg%NPCOND,MAXWBALERROR
+     IF(IOS.NE.0)THEN
+      MAXWBALERROR=0.01
+      READ(LINE,*,IOSTAT=IOS) pcg%MXITER,pcg%ITER1,pcg%HCLOSE,pcg%RCLOSE,pcg%RELAX,pcg%NPCOND
+      IF(IOS.NE.0)THEN
+       pcg%NPCOND=1
+       READ(LINE,*,IOSTAT=IOS) pcg%MXITER,pcg%ITER1,pcg%HCLOSE,pcg%RCLOSE,pcg%RELAX
+      ENDIF
+     ELSE
+      CALL IMOD_UTL_PRINTTEXT('Dataset 5: ***warning*** option MAXWBALERROR is not supported and will be ignored!',3)
+     END IF
+    ELSE
+     CALL IMOD_UTL_PRINTTEXT('Dataset 5: ***warning*** option MAXWBALERROR is not supported and will be ignored!',3)
+     CALL IMOD_UTL_PRINTTEXT('Dataset 5: ***warning*** option MXCNVG is not supported and will be ignored!',3)
+    END IF
    ELSE
-    CALL IMOD_UTL_PRINTTEXT('Dataset 5: ***warning*** option MAXWBALERROR is not supported and will be ignored!',0)
+    CALL IMOD_UTL_PRINTTEXT('Dataset 5: ***warning*** option MAXWBALERROR is not supported and will be ignored!',3)
+    CALL IMOD_UTL_PRINTTEXT('Dataset 5: ***warning*** option MXCNVG is not supported and will be ignored!',3)
+    CALL IMOD_UTL_PRINTTEXT('Dataset 5: ***warning*** option IDELTCNVG is not supported and will be ignored!',3)
    END IF
   ELSE
-   CALL IMOD_UTL_PRINTTEXT('Dataset 5: ***warning*** option MAXWBALERROR is not supported and will be ignored!',0)
-   CALL IMOD_UTL_PRINTTEXT('Dataset 5: ***warning*** option MXCNVG is not supported and will be ignored!',0)
+   CALL IMOD_UTL_PRINTTEXT('Dataset 5: ***warning*** option MAXWBALERROR is not supported and will be ignored!',3)
+   CALL IMOD_UTL_PRINTTEXT('Dataset 5: ***warning*** option MXCNVG is not supported and will be ignored!',3)
+   CALL IMOD_UTL_PRINTTEXT('Dataset 5: ***warning*** option IDELTCNVG is not supported and will be ignored!',3)
+   CALL IMOD_UTL_PRINTTEXT('Dataset 5: ***warning*** option IDAMPING is not supported and will be ignored!',3)
   END IF
- ELSE
-  CALL IMOD_UTL_PRINTTEXT('Dataset 5: ***warning*** option MAXWBALERROR is not supported and will be ignored!',0)
-  CALL IMOD_UTL_PRINTTEXT('Dataset 5: ***warning*** option MXCNVG is not supported and will be ignored!',0)
-  CALL IMOD_UTL_PRINTTEXT('Dataset 5: ***warning*** option IDELTCNVG is not supported and will be ignored!',0)
- END IF
-ELSE
- CALL IMOD_UTL_PRINTTEXT('Dataset 5: ***warning*** option MAXWBALERROR is not supported and will be ignored!',0)
- CALL IMOD_UTL_PRINTTEXT('Dataset 5: ***warning*** option MXCNVG is not supported and will be ignored!',0)
- CALL IMOD_UTL_PRINTTEXT('Dataset 5: ***warning*** option IDELTCNVG is not supported and will be ignored!',0)
- CALL IMOD_UTL_PRINTTEXT('Dataset 5: ***warning*** option IDAMPING is not supported and will be ignored!',0)
+  
+  if (pcg%npcond.ne.1 .and.pcg%npcond.ne.2) then
+   CALL IMOD_UTL_PRINTTEXT('Dataset 5: NPCOND must be 1 or 2',-3)
+  end if
+  
+  pcg%NBPOL=1;IF(pcg%NPCOND.EQ.2)pcg%NBPOL=2
 END IF
 
-if (pcg%npcond.ne.1 .and.pcg%npcond.ne.2) then
- CALL IMOD_UTL_PRINTTEXT('Dataset 5: NPCOND must be 1 or 2',2)
-end if
-
-pcg%NBPOL=1;IF(pcg%NPCOND.EQ.2)pcg%NBPOL=2
-
-IF(IOS.NE.0)CALL IMOD_UTL_PRINTTEXT('ERROR line 4:'//TRIM(LINE),2)
+IF(IOS.NE.0)CALL IMOD_UTL_PRINTTEXT('ERROR line 4:'//TRIM(LINE),-3)
 
 END SUBROUTINE RF2MF_DATASET4
 
@@ -689,6 +797,7 @@ IMPLICIT NONE
 INTEGER :: I,IOS,n
 REAL :: INCREASE
 CHARACTER(LEN=50) :: CSUBMODEL
+CHARACTER(LEN=1) :: SLASH
 
 IF(NMULT.GT.1)THEN
 
@@ -718,7 +827,7 @@ IF(NMULT.GT.1)THEN
   ELSE
    CSUBMODEL=TRIM(CSUBMODEL)
   ENDIF
-  IF(IOS.NE.0)CALL IMOD_UTL_PRINTTEXT('ERROR line '//TRIM(IMOD_UTL_ITOS(5+IMULT))//': '//TRIM(LINE),2)
+  IF(IOS.NE.0)CALL IMOD_UTL_PRINTTEXT('ERROR line '//TRIM(IMOD_UTL_ITOS(5+IMULT))//': '//TRIM(LINE),-3)
   RESULTRESDIR=TRIM(RESULTDIR)//CHAR(92)//TRIM(CSUBMODEL)
   CALL IMOD_UTL_FILENAME(RESULTRESDIR)
 
@@ -763,7 +872,7 @@ ELSE
    ENDIF
   ENDIF
 
-  IF(IOS.NE.0)CALL IMOD_UTL_PRINTTEXT('ERROR line 5:'//TRIM(LINE),2)
+  IF(IOS.NE.0)CALL IMOD_UTL_PRINTTEXT('ERROR line 5:'//TRIM(LINE),-3)
   IMULT    =1
  ELSEIF(NMULT.EQ.0)THEN
   IMULT    =0
@@ -774,7 +883,7 @@ ELSE
 
 ENDIF
 
-IF(NSCL.NE.0.AND.SIMCSIZE.LE.0.0)CALL IMOD_UTL_PRINTTEXT('ERROR Grid Size le 0.0',2)
+IF(NSCL.NE.0.AND.SIMCSIZE.LE.0.0)CALL IMOD_UTL_PRINTTEXT('ERROR Grid Size le 0.0',-3)
 
 DO I=2,4; LAMBDA(I)=LAMBDA(1); ENDDO
 
@@ -787,29 +896,34 @@ IF(NMULT.GT.1)THEN
 ENDIF
 IF(NMULT.GT.1)JACT(IMULT)=IACT
 
+N = LEN_TRIM(RESULTDIR)
+IF (RESULTDIR(N:N).EQ.'/'.OR.RESULTDIR(N:N).EQ.'\') THEN
+ SLASH =''
+ELSE   
+ CALL IMOD_UTL_GETSLASH(SLASH)
+END IF
 IF(TRIM(CSUBMODEL).EQ.'')THEN
- LINE=TRIM(RESULTDIR)//CHAR(92)//'log_'//TRIM(RVERSION)//'.txt'
+ LINE=TRIM(RESULTDIR)//TRIM(SLASH)//'log_'//TRIM(RVERSION)//'.txt'
 ELSE
- LINE=TRIM(RESULTDIR)//CHAR(92)//'log_'//TRIM(CSUBMODEL)//'_'//TRIM(RVERSION)//'.txt'
+ LINE=TRIM(RESULTDIR)//TRIM(SLASH)//'log_'//TRIM(CSUBMODEL)//'_'//TRIM(RVERSION)//'.txt'
 ENDIF
-
+n = len_trim(line) ! PKS
+call pks7mpifname( line, n ) ! PKS
 CALL IMOD_UTL_FILENAME(LINE)
 IUOUT=IMOD_UTL_GETUNIT()
 OPEN(IUOUT,FILE=LINE,STATUS='UNKNOWN',ACTION='WRITE')
-IF(IUOUT.LE.0)CALL IMOD_UTL_PRINTTEXT('Cannot open output file '//TRIM(LINE),2)
+IF(IUOUT.LE.0)CALL IMOD_UTL_PRINTTEXT('Cannot open output file '//TRIM(LINE),-3)
 WRITE(IUOUT,'(A)') 'MODEL SIMULATION - SUMMARY'
 WRITE(IUOUT,*)
 
 root%submodel = csubmodel
 root%resultdir = trim(resultdir)
 rootres=resultdir
-call imod_utl_abs_path(root%resultdir)
 ! strip last slash
 n = len_trim(root%resultdir)
 if (root%resultdir(n:n).eq.'/'.or.root%resultdir(n:n).eq.'\') then
    root%resultdir = root%resultdir(1:n-1)
 end if
-!call imod_utl_dir_level_up(root%resultdir)
 met%kws(imet_resultdir)%type = imetc
 if (len_trim(csubmodel).gt.0) then
    met%kws(imet_resultdir)%cval = trim(root%resultdir)//'\'//trim(csubmodel)
@@ -832,7 +946,7 @@ CALL IMOD_UTL_STRING(LINE)
 CALL IMOD_UTL_FILENAME(LINE)
 READ(LINE,'(A256)') SCENFNAME
 INQUIRE(FILE=SCENFNAME,EXIST=LEX)
-IF(.NOT.LEX)CALL IMOD_UTL_PRINTTEXT('Cannot find '//TRIM(SCENFNAME),2)
+IF(.NOT.LEX)CALL IMOD_UTL_PRINTTEXT('Cannot find '//TRIM(SCENFNAME),-3)
 WRITE(IUOUT,'(A)')
 WRITE(IUOUT,'(A)') 'Using Scenario File: '
 WRITE(IUOUT,'(A)') '  '//TRIM(SCENFNAME)
@@ -858,7 +972,7 @@ PCKSAVE=0
 !## read header of activated modules/packages
 DO
  READ(IURUN,'(A1000)',IOSTAT=IOS) BIGLINE
- IF(IOS.NE.0)CALL IMOD_UTL_PRINTTEXT('ERROR line '//TRIM(BIGLINE),2)
+ IF(IOS.NE.0)CALL IMOD_UTL_PRINTTEXT('ERROR line '//TRIM(BIGLINE),-3)
  CALL IMOD_UTL_STRING(BIGLINE)
  !## still within header-section containing module and package information
  IF(INDEX(BIGLINE,'(').EQ.0.OR.INDEX(BIGLINE,')').EQ.0)THEN
@@ -878,7 +992,7 @@ DO
    RFPCK(IKEY)=RFPCK(IKEY)+1
    READ(BIGLINE,*,IOSTAT=IOS) MPCK(IKEY),PCKSAVE(IKEY,0),(PCKSAVE(IKEY,J),J=1,PCKSAVE(IKEY,0))
   ENDIF
-  IF(IOS.NE.0)CALL IMOD_UTL_PRINTTEXT('ERROR line '//TRIM(BIGLINE),2)
+  IF(IOS.NE.0)CALL IMOD_UTL_PRINTTEXT('ERROR line '//TRIM(BIGLINE),-3)
  ENDIF
 END DO
 
@@ -899,7 +1013,6 @@ if (mpck(pchd).eq.1) call AllocChd(ialloc)
 if (mmod(pscr).eq.1) call AllocScr(ialloc)
 if (mmod(ppwt).eq.1) call AllocPwt(ialloc)
 if (mmod(pcap).eq.1.or.len_trim(dxcfile).gt.0) call AllocDxc(ialloc)
-call AllocPcg(ialloc)
 
 ! set buget output with modsave
 do ikey = 1, size(mmod)
@@ -958,22 +1071,22 @@ do ikey = 1, size(mpck)
    end select
 end do
 
-IF(SUM(MMOD).EQ.0) CALL IMOD_UTL_PRINTTEXT('Define KEYWORD between brackets, e.g. (bnd) otherwise iMODFLOW can not find them!',2)
-IF(MMOD(PBND).EQ.0)CALL IMOD_UTL_PRINTTEXT('Boundaries (bnd) are not defined in the module header',2)
-IF(MMOD(PSHD).EQ.0)CALL IMOD_UTL_PRINTTEXT('Starting Heads (shd) are not defined in the module header',2)
+IF(SUM(MMOD).EQ.0) CALL IMOD_UTL_PRINTTEXT('Define KEYWORD between brackets, e.g. (bnd) otherwise iMODFLOW can not find them!',-3)
+IF(MMOD(PBND).EQ.0)CALL IMOD_UTL_PRINTTEXT('Boundaries (bnd) are not defined in the module header',-3)
+IF(MMOD(PSHD).EQ.0)CALL IMOD_UTL_PRINTTEXT('Starting Heads (shd) are not defined in the module header',-3)
 IF(MMOD(PKHV).EQ.0.AND.MMOD(PKDW).EQ.0) &
-   CALL IMOD_UTL_PRINTTEXT('Transmissivities (kds) or Horizontal Permeabilities (khv) are not defined in the module header',2)
+   CALL IMOD_UTL_PRINTTEXT('Transmissivities (kds) or Horizontal Permeabilities (khv) are not defined in the module header',-3)
 IF(NLAY.GT.1.AND.(MMOD(PKVV).EQ.0.AND.MMOD(PVCW).EQ.0)) &
-   CALL IMOD_UTL_PRINTTEXT('Vertical Resistance (vcw) or Vertical Permeabilities (kvv) are not defined in the module header',2)
-IF(MMOD(PTOP)+MMOD(PBOT).EQ.1)CALL IMOD_UTL_PRINTTEXT('Top (top) and Bottom (bot) need to be defined both',2)
+   CALL IMOD_UTL_PRINTTEXT('Vertical Resistance (vcw) or Vertical Permeabilities (kvv) are not defined in the module header',-3)
+IF(MMOD(PTOP)+MMOD(PBOT).EQ.1)CALL IMOD_UTL_PRINTTEXT('Top (top) and Bottom (bot) need to be defined both',-3)
 IF(MMOD(PKHV).EQ.1.AND.MMOD(PTOP).EQ.0) &
- CALL IMOD_UTL_PRINTTEXT('Top (top) and Bottom (bot) needed for usage of Horizontal Permeabilities (khv)',2)
+ CALL IMOD_UTL_PRINTTEXT('Top (top) and Bottom (bot) needed for usage of Horizontal Permeabilities (khv)',-3)
 IF(MMOD(PKVV).EQ.1.AND.MMOD(PTOP).EQ.0) &
- CALL IMOD_UTL_PRINTTEXT('Top (top) and Bottom (bot) needed for usage of Vertical Permeabilities (kvv)',2)
+ CALL IMOD_UTL_PRINTTEXT('Top (top) and Bottom (bot) needed for usage of Vertical Permeabilities (kvv)',-3)
 IF(MMOD(PCAP).EQ.1.AND.MMOD(PSTO).EQ.0) &
- CALL IMOD_UTL_PRINTTEXT('You should specify/use the STORAGE module in combination with CapSim/MetaSwap',2)
-IF(NLAY.LE.1.AND.MMOD(PPWT).EQ.1)CALL IMOD_UTL_PRINTTEXT('PWT package not suitable for one layered model!',2)
-!IF(NLAY.EQ.1.AND.MMOD(PIBS).EQ.1)CALL IMOD_UTL_PRINTTEXT('IBS PACKAGE not suitable for one-layered model!',2)
+ CALL IMOD_UTL_PRINTTEXT('You should specify/use the STORAGE module in combination with CapSim/MetaSwap',-3)
+IF(NLAY.LE.1.AND.MMOD(PPWT).EQ.1)CALL IMOD_UTL_PRINTTEXT('PWT package not suitable for one layered model!',-3)
+!IF(NLAY.EQ.1.AND.MMOD(PIBS).EQ.1)CALL IMOD_UTL_PRINTTEXT('IBS PACKAGE not suitable for one-layered model!',-3)
 
 !## pwt activated? turn on switched output for pwt - option 3! and deactivate it whenever nscl=3/4 (ir)
 IF(MMOD(PPWT).EQ.1)THEN
@@ -992,10 +1105,10 @@ IF(MMOD(PPWT).EQ.1)THEN
  END DO
 ENDIF
 
-CALL IMOD_UTL_PRINTTEXT('',0)
-CALL IMOD_UTL_PRINTTEXT(' ACTIVE MODULES/PACKAGES',0)
-CALL IMOD_UTL_PRINTTEXT('',0)
-CALL IMOD_UTL_PRINTTEXT(' ===================================================================',0)
+CALL IMOD_UTL_PRINTTEXT('',3)
+CALL IMOD_UTL_PRINTTEXT(' ACTIVE MODULES/PACKAGES',3)
+CALL IMOD_UTL_PRINTTEXT('',3)
+CALL IMOD_UTL_PRINTTEXT(' ===================================================================',3)
 DO I=1,MXMOD
  IF(RFMOD(I).EQ.1)THEN
   IF(MMOD(I).EQ.1)WRITE(BIGLINE,'(1X,A8,I2,A13,A10,A)') 'Module  ',I,'   present ','  active  ',TRIM(TXTMOD(I))
@@ -1003,7 +1116,7 @@ DO I=1,MXMOD
  ELSE
   WRITE(BIGLINE,'(1X,A8,I2,A13,10X,A)') 'Module  ',I,' not present ',TRIM(TXTMOD(I))
  ENDIF
- CALL IMOD_UTL_PRINTTEXT(TRIM(BIGLINE),0)
+ CALL IMOD_UTL_PRINTTEXT(TRIM(BIGLINE),3)
 END DO
 DO I=1,MXPCK
  IF(RFPCK(I).EQ.1)THEN
@@ -1012,9 +1125,9 @@ DO I=1,MXPCK
  ELSE
   WRITE(BIGLINE,'(1X,A8,I2,A13,10X,A)') 'Package ',I,' not present ',TRIM(TXTPCK(I))
  ENDIF
- CALL IMOD_UTL_PRINTTEXT(TRIM(BIGLINE),0)
+ CALL IMOD_UTL_PRINTTEXT(TRIM(BIGLINE),3)
 END DO
-CALL IMOD_UTL_PRINTTEXT(' ===================================================================',0)
+CALL IMOD_UTL_PRINTTEXT(' ===================================================================',3)
 
 END SUBROUTINE RF2MF_DATASET7
 
@@ -1205,10 +1318,10 @@ CHARACTER(LEN=256) :: FNAME
 
 IF(IFTEST.EQ.0)RETURN
 
-CALL IMOD_UTL_PRINTTEXT('',0)
-CALL IMOD_UTL_PRINTTEXT('Checking Run-file ...',0)
-CALL IMOD_UTL_PRINTTEXT('Results written in RF2MF_'//TRIM(RVERSION)//'.log',0)
-CALL IMOD_UTL_PRINTTEXT('',0)
+CALL IMOD_UTL_PRINTTEXT('',3)
+CALL IMOD_UTL_PRINTTEXT('Checking Run-file ...',3)
+CALL IMOD_UTL_PRINTTEXT('Results written in RF2MF_'//TRIM(RVERSION)//'.log',3)
+CALL IMOD_UTL_PRINTTEXT('',3)
 
 LU=IMOD_UTL_GETUNIT()
 OPEN(LU,FILE='RF2MF_'//TRIM(RVERSION)//'.log',STATUS='UNKNOWN',ACTION='WRITE')
@@ -1246,8 +1359,8 @@ ENDDO
 CLOSE(IURUN)
 CLOSE(LU)
 
-CALL IMOD_UTL_PRINTTEXT('',0)
-CALL IMOD_UTL_PRINTTEXT('Finished checking Run-file ...',0)
+CALL IMOD_UTL_PRINTTEXT('',3)
+CALL IMOD_UTL_PRINTTEXT('Finished checking Run-file ...',3)
 CALL EXIT(1)
 
 END SUBROUTINE RF2MF_CHECKRUN
@@ -1271,8 +1384,8 @@ IF(IMODPCK.EQ.0.AND.(IPCK.EQ.PCAP.OR.IPCK.EQ.PPWT))THEN
 ELSE
  READ(LINE,*,IOSTAT=IOS) ILAY,FCT,IMP
 ENDIF
-IF(IOS.NE.0)CALL IMOD_UTL_PRINTTEXT('Error reading: ['//TRIM(LINE)//']',2)
-IF(ILAY.GT.MXNLAY)CALL IMOD_UTL_PRINTTEXT('Error reading ILAY='//TRIM(IMOD_UTL_ITOS(ILAY))//' that is larger than MXNLAY ('//TRIM(IMOD_UTL_ITOS(MXNLAY))//')',2)
+IF(IOS.NE.0)CALL IMOD_UTL_PRINTTEXT('Error reading: ['//TRIM(LINE)//']',-3)
+IF(ILAY.GT.MXNLAY)CALL IMOD_UTL_PRINTTEXT('Error reading ILAY='//TRIM(IMOD_UTL_ITOS(ILAY))//' that is larger than MXNLAY ('//TRIM(IMOD_UTL_ITOS(MXNLAY))//')',-3)
 
 FNAME=IMOD_UTL_GETFNAME(LINE)
 
@@ -1291,50 +1404,50 @@ IF(ILAY.EQ.NLAY.AND.(IPCK.EQ.PVCW.OR.IPCK.EQ.PKVV))LEX=.FALSE.
 CONSTANTE=IMOD_UTL_GETREAL(FNAME,IOS)
 IF(IOS.EQ.0)THEN
  IF(LEX)THEN
-  CALL IMOD_UTL_PRINTTEXT('Read Constant Value '//TRIM(IMOD_UTL_RTOS(CONSTANTE,'G',4)),0)
+  CALL IMOD_UTL_PRINTTEXT('Read Constant Value '//TRIM(IMOD_UTL_RTOS(CONSTANTE,'G',4)),3)
   CALL IMOD_UTL_PRINTTEXT(CHAR(9)//'* Modellayer: '//TRIM(IMOD_UTL_ITOS(ILAY))//'; Mult. Factor: '//TRIM(IMOD_UTL_RTOS(FCT,'G',4))// &
-                          '; Addition: '//TRIM(IMOD_UTL_RTOS(IMP,'G',4)),0)
+                          '; Addition: '//TRIM(IMOD_UTL_RTOS(IMP,'G',4)),3)
   CONSTANTE=CONSTANTE*FCT+IMP
-  CALL IMOD_UTL_PRINTTEXT(CHAR(9)//'Constant Value becomes '//TRIM(IMOD_UTL_RTOS(CONSTANTE,'G',4)),0)
+  CALL IMOD_UTL_PRINTTEXT(CHAR(9)//'Constant Value becomes '//TRIM(IMOD_UTL_RTOS(CONSTANTE,'G',4)),3)
  ENDIF
 ELSE
  CALL IMOD_UTL_FILENAME(FNAME)
  IF(LEX)THEN
-  CALL IMOD_UTL_PRINTTEXT('Assigned '//TRIM(FNAME),0)
+  CALL IMOD_UTL_PRINTTEXT('Assigned '//TRIM(FNAME),3)
   CALL IMOD_UTL_PRINTTEXT(CHAR(9)//'* Modellayer: '//TRIM(IMOD_UTL_ITOS(ILAY))//'; Mult. Factor: '//TRIM(IMOD_UTL_RTOS(FCT,'G',4))// &
-                          '; Addition: '//TRIM(IMOD_UTL_RTOS(IMP,'G',4)),0)
+                          '; Addition: '//TRIM(IMOD_UTL_RTOS(IMP,'G',4)),3)
  ENDIF
 ENDIF
 
 !## check combination khv/kvv and top/bot
 IF(IMODPCK.EQ.0)THEN
  IF(MMOD(PKHV).EQ.1)THEN
-  IF(MMOD(PTOP).NE.1.OR.MMOD(PBOT).NE.1)CALL IMOD_UTL_PRINTTEXT('Horizontal K value needs usage TOP and BOT!',2)
+  IF(MMOD(PTOP).NE.1.OR.MMOD(PBOT).NE.1)CALL IMOD_UTL_PRINTTEXT('Horizontal K value needs usage TOP and BOT!',-3)
  ENDIF
  IF(MMOD(PKVV).EQ.1)THEN
-  IF(MMOD(PTOP).NE.1.OR.MMOD(PBOT).NE.1)CALL IMOD_UTL_PRINTTEXT('Vertical K value needs usage TOP and BOT!',2)
+  IF(MMOD(PTOP).NE.1.OR.MMOD(PBOT).NE.1)CALL IMOD_UTL_PRINTTEXT('Vertical K value needs usage TOP and BOT!',-3)
  ENDIF
 ENDIF
 
 IF(ILAY.LE.0)THEN
  IF(IMODPCK.EQ.0)THEN
-  CALL IMOD_UTL_PRINTTEXT(TRIM(TXTMOD(IPCK))//' ilay less or equal zero!',2)
+  CALL IMOD_UTL_PRINTTEXT(TRIM(TXTMOD(IPCK))//' ilay less or equal zero!',-3)
  ELSE
   SELECT CASE (IPCK)
    CASE (PRCH)
-    IF(ILAY.EQ.0)CALL IMOD_UTL_PRINTTEXT('Modellayer number equal to zero for '//TRIM(TXTPCK(IPCK))//' package!',2)
+    IF(ILAY.EQ.0)CALL IMOD_UTL_PRINTTEXT('Modellayer number equal to zero for '//TRIM(TXTPCK(IPCK))//' package!',-3)
    CASE DEFAULT
     IF(ILAY.EQ.0)THEN
      IF(MMOD(PTOP).NE.1.OR.MMOD(PBOT).NE.1)THEN
-      CALL IMOD_UTL_PRINTTEXT('Usage of modellayers equal to zero only sustained in combination with both TOP and BOT!',2)
+      CALL IMOD_UTL_PRINTTEXT('Usage of modellayers equal to zero only sustained in combination with both TOP and BOT!',-3)
      ENDIF
     ENDIF
   END SELECT
  ENDIF
 ENDIF
 
-IF(ILAY.LT.0)CALL IMOD_UTL_PRINTTEXT(CHAR(9)//'# Will be assigned to first active model layer',0)
-IF(ILAY.EQ.0)CALL IMOD_UTL_PRINTTEXT(CHAR(9)//'# Layer will be computed by TOP and BOT data',0)
+IF(ILAY.LT.0)CALL IMOD_UTL_PRINTTEXT(CHAR(9)//'# Will be assigned to first active model layer',3)
+IF(ILAY.EQ.0)CALL IMOD_UTL_PRINTTEXT(CHAR(9)//'# Layer will be computed by TOP and BOT data',3)
 
 END SUBROUTINE MODFLOW_IDF
 
@@ -1344,22 +1457,22 @@ SUBROUTINE RF2MF_WRITEBOX()
 IMPLICIT NONE
 REAL :: AREA
 
-CALL IMOD_UTL_PRINTTEXT('Given window of interest:' ,0)
+CALL IMOD_UTL_PRINTTEXT('Given window of interest:' ,3)
 WRITE(LINE,'(A,3(F15.2,A1))') ' Xmin - Xmax - Delta X (m):',USEBOX(1),' - ',USEBOX(3),' - ',USEBOX(3)-USEBOX(1)
-CALL IMOD_UTL_PRINTTEXT(TRIM(LINE),0)
+CALL IMOD_UTL_PRINTTEXT(TRIM(LINE),3)
 WRITE(LINE,'(A,3(F15.2,A1))') ' Ymin - Ymax - Delta Y (m):',USEBOX(2),' - ',USEBOX(4),' - ',USEBOX(4)-USEBOX(2)
-CALL IMOD_UTL_PRINTTEXT(TRIM(LINE),0)
+CALL IMOD_UTL_PRINTTEXT(TRIM(LINE),3)
 IF(NSCL.LE.2)WRITE(LINE,'(A,2(F15.2,A1))') ' Cellsize - Buffer (m)    :',SIMCSIZE,' - ',LAMBDA(1)
 IF(NSCL.GE.3)WRITE(LINE,'(A,F10.2,A1,4F10.2)') ' Cellsize - Four Buffers (m)    :',SIMCSIZE,' - ',LAMBDA(1:4)
-CALL IMOD_UTL_PRINTTEXT('Computed window of simulation:' ,0)
-CALL IMOD_UTL_PRINTTEXT(TRIM(LINE),0)
+CALL IMOD_UTL_PRINTTEXT('Computed window of simulation:' ,3)
+CALL IMOD_UTL_PRINTTEXT(TRIM(LINE),3)
 WRITE(LINE,'(A,3(F15.2,A1))') ' Xmin - Xmax - Delta X (m):',SIMBOX(1),' - ',SIMBOX(3),' - ',SIMBOX(3)-SIMBOX(1)
-CALL IMOD_UTL_PRINTTEXT(TRIM(LINE),0)
+CALL IMOD_UTL_PRINTTEXT(TRIM(LINE),3)
 WRITE(LINE,'(A,3(F15.2,A1))') ' Ymin - Ymax - Delta Y (m):',SIMBOX(2),' - ',SIMBOX(4),' - ',SIMBOX(4)-SIMBOX(2)
-CALL IMOD_UTL_PRINTTEXT(TRIM(LINE),0)
+CALL IMOD_UTL_PRINTTEXT(TRIM(LINE),3)
 AREA=(SIMBOX(3)-SIMBOX(1))*(SIMBOX(4)-SIMBOX(2))
 WRITE(LINE,'(A,F15.2,A1)')    ' Total Area (km2)         :',AREA/1.0E6
-CALL IMOD_UTL_PRINTTEXT(TRIM(LINE),0)
+CALL IMOD_UTL_PRINTTEXT(TRIM(LINE),3)
 
 END SUBROUTINE RF2MF_WRITEBOX
 
@@ -1373,24 +1486,31 @@ CHARACTER(LEN=256) :: FNAME
 
 INTEGER :: JU,IEQ,IOS,ITB
 REAL :: XMAX,YMIN,XMIN,YMAX,CS,NODATA
+LOGICAL :: LEX
 
-READ(IURUN,'(A256)') FNAME; CALL IMOD_UTL_STRING(FNAME)
-!## try to read extent
-READ(FNAME,*,IOSTAT=IOS) XMIN,YMIN,XMAX,YMAX
-
-JU=0; IF(IOS.NE.0)THEN
+READ(IURUN,'(A256)') FNAME
+FNAME = ADJUSTL(FNAME)
+CALL IMOD_UTL_STRING(FNAME)
+!## check if string corresponds to file
+CALL IMOD_UTL_FILENAME(FNAME)
+!## read without quotes
+IF(FNAME(1:1).EQ.CHAR(34).OR.FNAME(1:1).EQ.CHAR(39))THEN ! double quote: CHAR(34); single quote: CHAR(39)
+ READ(FNAME,*) FNAME
+ENDIF
+INQUIRE(FILE=FNAME,EXIST=LEX)
+JU=0; IF(LEX)THEN
  !## read without quotes
- CALL IMOD_UTL_FILENAME(FNAME); READ(FNAME,*) FNAME
  CALL IMOD_UTL_READOPENFILE(JU,NROW,NCOL,FNAME,NODATA,XMIN,YMIN,XMAX,YMAX,CS,IEQ,ITB)
 ELSE
- CALL IMOD_UTL_PRINTTEXT('',0); CALL IMOD_UTL_PRINTTEXT('Using XMIN,YMIN,XMAX,YMAX as entered',0)
+ READ(FNAME,*,IOSTAT=IOS) XMIN,YMIN,XMAX,YMAX
+ CALL IMOD_UTL_PRINTTEXT('',0); CALL IMOD_UTL_PRINTTEXT('Using XMIN,YMIN,XMAX,YMAX as entered',3)
  CALL IMOD_UTL_PRINTTEXT(' '//TRIM(FNAME),0)
 ENDIF
 
 !## take dimensions of idf
 IF(NSCL.EQ.0)THEN
 
- CALL IMOD_UTL_PRINTTEXT('',0); CALL IMOD_UTL_PRINTTEXT('Using grid dimensions read from:',0)
+ CALL IMOD_UTL_PRINTTEXT('',0); CALL IMOD_UTL_PRINTTEXT('Using grid dimensions read from:',3)
  CALL IMOD_UTL_PRINTTEXT(' '//TRIM(FNAME),0)
 
  USEBOX(1)=XMIN;   USEBOX(2)=YMIN
@@ -1404,17 +1524,17 @@ ELSE
  !## evaluate simulationbox first
  IF(XMIN.GT.USEBOX(1).OR.XMAX.LT.USEBOX(3).OR. &
     YMIN.GT.USEBOX(2).OR.YMAX.LT.USEBOX(4))THEN
-  CALL IMOD_UTL_PRINTTEXT('',0)
-  CALL IMOD_UTL_PRINTTEXT('Simulation window:',0)
-  CALL IMOD_UTL_PRINTTEXT('',0)
-  CALL IMOD_UTL_PRINTTEXT('xmin/xmax: '//TRIM(IMOD_UTL_RTOS(USEBOX(1),'F',2))//','//TRIM(IMOD_UTL_RTOS(USEBOX(3),'F',2)),0)
-  CALL IMOD_UTL_PRINTTEXT('ymin/ymax: '//TRIM(IMOD_UTL_RTOS(USEBOX(2),'F',2))//','//TRIM(IMOD_UTL_RTOS(USEBOX(4),'F',2)),0)
-  CALL IMOD_UTL_PRINTTEXT('',0)
-  CALL IMOD_UTL_PRINTTEXT('is outside model domain!',0)
-  CALL IMOD_UTL_PRINTTEXT('',0)
-  CALL IMOD_UTL_PRINTTEXT('xmin/xmax: '//TRIM(IMOD_UTL_RTOS(XMIN,'F',2))//','//TRIM(IMOD_UTL_RTOS(XMAX,'F',2)),0)
-  CALL IMOD_UTL_PRINTTEXT('ymin/ymax: '//TRIM(IMOD_UTL_RTOS(YMIN,'F',2))//','//TRIM(IMOD_UTL_RTOS(YMAX,'F',2)),0)
-  CALL IMOD_UTL_PRINTTEXT('',2)
+  CALL IMOD_UTL_PRINTTEXT('',3)
+  CALL IMOD_UTL_PRINTTEXT('Simulation window:',3)
+  CALL IMOD_UTL_PRINTTEXT('',3)
+  CALL IMOD_UTL_PRINTTEXT('xmin/xmax: '//TRIM(IMOD_UTL_RTOS(USEBOX(1),'F',2))//','//TRIM(IMOD_UTL_RTOS(USEBOX(3),'F',2)),3)
+  CALL IMOD_UTL_PRINTTEXT('ymin/ymax: '//TRIM(IMOD_UTL_RTOS(USEBOX(2),'F',2))//','//TRIM(IMOD_UTL_RTOS(USEBOX(4),'F',2)),3)
+  CALL IMOD_UTL_PRINTTEXT('',3)
+  CALL IMOD_UTL_PRINTTEXT('is outside model domain!',3)
+  CALL IMOD_UTL_PRINTTEXT('',3)
+  CALL IMOD_UTL_PRINTTEXT('xmin/xmax: '//TRIM(IMOD_UTL_RTOS(XMIN,'F',2))//','//TRIM(IMOD_UTL_RTOS(XMAX,'F',2)),3)
+  CALL IMOD_UTL_PRINTTEXT('ymin/ymax: '//TRIM(IMOD_UTL_RTOS(YMIN,'F',2))//','//TRIM(IMOD_UTL_RTOS(YMAX,'F',2)),3)
+  CALL IMOD_UTL_PRINTTEXT('',-3)
  ENDIF
 
  !## correct use box first!
@@ -1446,10 +1566,10 @@ if (ifull(4).eq.0) met%kws(imet_ibound_fixed_north)%type = imetc
 !## determine cellsizes delr/delc (in upscale mode)
 CALL RF2MF_SCALE1DELRC(IDF)
 
-CALL IMOD_UTL_PRINTTEXT('',0)
+CALL IMOD_UTL_PRINTTEXT('',3)
 CALL IMOD_UTL_PRINTTEXT('Solving system (ncol x nrow x nlay): '// &
-       TRIM(IMOD_UTL_ITOS(NCOL))//' x '//TRIM(IMOD_UTL_ITOS(NROW))//' x '//TRIM(IMOD_UTL_ITOS(NLAY)),0)
-CALL IMOD_UTL_PRINTTEXT('',0)
+       TRIM(IMOD_UTL_ITOS(NCOL))//' x '//TRIM(IMOD_UTL_ITOS(NROW))//' x '//TRIM(IMOD_UTL_ITOS(NLAY)),3)
+CALL IMOD_UTL_PRINTTEXT('',3)
 CALL RF2MF_WRITEBOX()
 IF(NSCL.GE.3)THEN
  CALL IMOD_UTL_PRINTTEXT('',-1)
@@ -1585,14 +1705,14 @@ ELSE
   dis%ncol = NCOL
   call AllocDis(ialloc)
 
-  CALL IMOD_UTL_PRINTTEXT('',0)
-  CALL IMOD_UTL_PRINTTEXT('Scaling Results along COLUMN-direction:',0)
-  CALL IMOD_UTL_PRINTTEXT('',0)
+  CALL IMOD_UTL_PRINTTEXT('',3)
+  CALL IMOD_UTL_PRINTTEXT('Scaling Results along COLUMN-direction:',3)
+  CALL IMOD_UTL_PRINTTEXT('',3)
   CALL RF2MF_SCALE1RESULTS(PDELR,dis%delr,NCOL,ORGNCOL)
 
-  CALL IMOD_UTL_PRINTTEXT('',0)
-  CALL IMOD_UTL_PRINTTEXT('Scaling Results along ROW-direction:',0)
-  CALL IMOD_UTL_PRINTTEXT('',0)
+  CALL IMOD_UTL_PRINTTEXT('',3)
+  CALL IMOD_UTL_PRINTTEXT('Scaling Results along ROW-direction:',3)
+  CALL IMOD_UTL_PRINTTEXT('',3)
   CALL RF2MF_SCALE1RESULTS(PDELC,dis%delc,NROW,ORGNROW)
 
  ENDIF
@@ -1627,14 +1747,14 @@ I=1
 DO K=2,NX
  IF(DX(K).NE.DX(K-1))THEN
   WRITE(LINE,'(I5,2(A3,F10.2))') I,' x ',DX(K-1),' = ',REAL(I)*DX(K-1)
-  CALL IMOD_UTL_PRINTTEXT(' Cellsizes: '//TRIM(LINE),0)
+  CALL IMOD_UTL_PRINTTEXT(' Cellsizes: '//TRIM(LINE),3)
   I=1
  ELSE
   I=I+1
  ENDIF
 ENDDO
 WRITE(LINE,'(I5,2(A3,F10.2))') I,' x ',DX(K-1),' = ',REAL(I)*DX(K-1)
-CALL IMOD_UTL_PRINTTEXT(' Cellsizes: '//TRIM(LINE),0)
+CALL IMOD_UTL_PRINTTEXT(' Cellsizes: '//TRIM(LINE),3)
 
 END SUBROUTINE RF2MF_SCALE1RESULTS
 
@@ -1656,13 +1776,14 @@ END SUBROUTINE RF2MF_SIMGRO
 END MODULE  MOD_RF2MF_MAIN
 
 !#####=================================================================
-subroutine rf2mf_prg(lrunfile,lipest,record,usemetaswap,submstr,nsub,nsubmax,wd)
+subroutine rf2mf_prg(lrunfile,lipest,lidfmerge,record,usemetaswap,submstr,nsub,nsubmax,wd,imodusebox,rfroot)
 !#####=================================================================
 
 ! modules
 use mod_rf2mf_main, only: rf2mf
 use rf2mf_module, only: root, starttime, lmfroot, mfroot
 USE imod_utl, only: imod_utl_s_cap, imod_utl_closeunits
+use mod_rf2mf, only: usebox
 
 implicit none
 
@@ -1674,12 +1795,19 @@ character(len=50), dimension(nsubmax), intent(out) :: submstr
 logical, intent(out) :: usemetaswap
 character(len=*), intent(out) :: wd
 logical, intent(inout) :: lipest
+logical, intent(inout) :: lidfmerge
+real, dimension(4), intent(out) :: imodusebox
+character(len=*), intent(out) :: rfroot 
 
 logical :: lnamfile, lrfopt
 character(len=256) :: dxcfile, runfile, namfile, ext, cdum
-integer :: i, n, ivcl, iarg, ios, lun !, osd_open2
+integer :: i, n, ivcl, iarg, ios, lun, osd_open2
 integer, dimension(2) :: rfopt
 character(len=256) :: cwrk
+logical :: pks7mpimasterwrite ! PKS
+character(len=1) :: c1
+
+call timing_tic('MODFLOW','RF')
 
 lipest = .false.
 lmfroot = .false.
@@ -1704,11 +1832,12 @@ call cfn_vcl_fndc(ivcl,iarg,'-wd',.true.,root%modeldir,1)
 call cfn_vcl_fndc(ivcl,iarg,'-run*file',.true.,runfile,1)
 if (iarg.gt.0) then
    lrunfile = .true.
-   if (runfile(1:1).eq.'"') then
+   c1 = runfile(1:1)
+   if (c1.eq.char(34).or.c1.eq.char(39)) then
       cwrk = record 
       i = index(cwrk,trim(runfile))
       cwrk = cwrk(i+1:)
-      i = index(cwrk,'"')
+      i = index(cwrk,c1)
       write(runfile,'(a)') cwrk(1:i-1)
    end if   
 end if
@@ -1722,11 +1851,12 @@ if (iarg.gt.0) lrfopt = .true.
 call cfn_vcl_fndc(ivcl,iarg,'-nam*file',.true.,namfile,1)
 if (iarg.gt.0) then
    lnamfile = .true.
-   if (namfile(1:1).eq.'"') then
+   c1 = namfile(1:1) 
+   if (c1.eq.char(34).or.c1.eq.char(39)) then
       cwrk = record 
       i = index(cwrk,trim(namfile))
       cwrk = cwrk(i+1:)
-      i = index(cwrk,'"')
+      i = index(cwrk,c1)
       write(namfile,'(a)') cwrk(1:i-1)
    end if   
 end if
@@ -1745,11 +1875,11 @@ if (lnamfile) then
    end if
    return
 else
-   write(*,*) 'running with imod run-file.'
+   if (pks7mpimasterwrite()) write(*,*) 'running with imod run-file.'
    if (lrfopt) then
-      call rf2mf(trim(runfile),dxcfile,submstr,nsub,nsubmax,lipest,rfopt(1),rfopt(2))
+      call rf2mf(trim(runfile),dxcfile,submstr,nsub,nsubmax,lipest,lidfmerge,rfroot,rfopt(1),rfopt(2))
    else
-      call rf2mf(trim(runfile),dxcfile,submstr,nsub,nsubmax,lipest)
+      call rf2mf(trim(runfile),dxcfile,submstr,nsub,nsubmax,lipest,lidfmerge,rfroot)
    end if
    if(.not.lmfroot) wd = root%resultdir
    usemetaswap = .false.
@@ -1767,6 +1897,10 @@ else
     ! close all units
    call imod_utl_closeunits()
 endif
+
+imodusebox = usebox
+
+call timing_toc('MODFLOW','RF')
 
 end subroutine rf2mf_prg
 

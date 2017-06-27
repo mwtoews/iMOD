@@ -81,21 +81,31 @@ END MODULE MOD_BASVAR
          call ustop(' ')
       end if
 
-      call isginit1()
+      call isginit1(nrow,ncol)
       call isginit2(iss,cdate,delt,simcsize,simbox,delr,delc,nrow,ncol,lqd)
 
 ! end of program
       return
       end subroutine
 
-
-      subroutine isginit1()
+      subroutine isginit1(im_nrow, im_ncol)
       use global, only: ncol, nrow
       use mod_basvar, only: delr, delc
+      use pksmpi_mod,only: nrproc, gncol, gnrow     
+                           
       implicit none
+      integer, intent(out) :: im_nrow, im_ncol
+      
+      if(nrproc.gt.1) then
+         im_ncol = gncol
+         im_nrow = gnrow
+      else
+         im_ncol = ncol
+         im_nrow = nrow
+      end if   
 
-      if(.not.allocated(delr)) allocate(delr(0:ncol))
-      if(.not.allocated(delc)) allocate(delc(0:nrow))
+      if(.not.allocated(delr)) allocate(delr(0:im_ncol))
+      if(.not.allocated(delc)) allocate(delc(0:im_nrow))
 
 ! end of program
       return
@@ -104,9 +114,12 @@ END MODULE MOD_BASVAR
       subroutine isginit2(im_iss,im_cdate,im_delt,im_simcsize,im_simbox,im_delr,im_delc,im_nrow,im_ncol,lqd)
 
       use global, only: ncol, nrow, delr, delc, iunit, issflg, nper
-      use gwfmetmodule, only: coord_xll, coord_yll, coord_xur, coord_yur, time_cstring, iss, ieq, cdelr, cdelc, ieq
+      use gwfmetmodule, only: coord_xll, coord_yll, coord_xur, coord_yur,&
+                              gcoord_xll, gcoord_yll, gcoord_xur, gcoord_yur,&
+                              time_cstring, iss, ieq, cdelr, cdelc, ieq
       use m_mf2005_main, only: timesteptime, kper
       use gwfbasmodule, only: delt
+      use pksmpi_mod,only: nrproc, gncol, gnrow 
 
       implicit none
 
@@ -115,8 +128,8 @@ END MODULE MOD_BASVAR
       integer, intent(inout) :: im_iss
       character(len=20), intent(inout) :: im_cdate
       real, dimension(4), intent(inout) :: im_simbox
-      real, dimension(0:ncol), intent(inout) :: im_delr
-      real, dimension(0:nrow), intent(inout) :: im_delc
+      real, dimension(0:im_ncol), intent(inout) :: im_delr
+      real, dimension(0:im_nrow), intent(inout) :: im_delc
       integer, intent(inout) :: im_ncol, im_nrow
       logical, intent(inout) :: lqd
 
@@ -159,18 +172,33 @@ END MODULE MOD_BASVAR
          write(*,*) 'Error, initialization ISG'
          call ustop(' ')
       else
-         im_delr(0:ncol) = cdelr(0:ncol)
-         im_delc(0:nrow) = cdelc(0:nrow)
+         if (nrproc.eq.1) then 
+            im_delr(0:im_ncol) = cdelr(0:ncol)
+            im_delc(0:im_nrow) = cdelc(0:nrow)
+         else    
+            im_delr(0) = gcoord_xll
+            do icol = 1, im_ncol
+               im_delr(icol) = gcoord_xll + real(icol)*im_simcsize
+            end do
+            im_delc(0) = gcoord_yur
+            do irow = 1, im_nrow
+               im_delc(irow) = gcoord_yur - real(irow)*im_simcsize
+            end do
+         end if      
       end if
 
-      im_ncol = ncol
-      im_nrow = nrow
-
-      im_simbox(1) = coord_xll
-      im_simbox(2) = coord_yll
-      im_simbox(3) = coord_xur
-      im_simbox(4) = coord_yur
-
+      if (nrproc.eq.1) then 
+         im_simbox(1) = coord_xll
+         im_simbox(2) = coord_yll
+         im_simbox(3) = coord_xur
+         im_simbox(4) = coord_yur
+      else
+         im_simbox(1) = gcoord_xll
+         im_simbox(2) = gcoord_yll
+         im_simbox(3) = gcoord_xur
+         im_simbox(4) = gcoord_yur
+      end if          
+      
       t = timesteptime
       call cfn_mjd2datehms(t,date,hour,minute,second)
       write(im_cdate,'(i8)') date
@@ -619,7 +647,7 @@ IF(iact.gt.0)THEN
     DO ICROS=1,ABS(DWP(J)%NCROS)
      JREC=JREC+1
      IF(ICROS.EQ.1.OR.ICSTYPE.EQ.0)THEN
-      READ(ISGIU(6),REC=JREC+ICF) CROS(J,ICROS)%DIST,CROS(J,ICROS)%BOTTOM,CROS(J,ICROS)%KM
+     READ(ISGIU(6),REC=JREC+ICF) CROS(J,ICROS)%DIST,CROS(J,ICROS)%BOTTOM,CROS(J,ICROS)%KM
       !## read bathemetry with thressholds
       IF(CROS(J,ICROS)%DIST.LT.0.AND.CROS(J,ICROS)%BOTTOM.LT.0.0)ICSTYPE=1
       CROS(J,ICROS)%ZP=0.0
@@ -866,14 +894,14 @@ DO ICROS=1,DWP(JCRS)%NCROS-1
   DISTW  = CROS(JCRS,ICROS)%BOTTOM-WPCOR
   
   IF(DISTB.NE.0.0)THEN
-   FACTOR = DISTW/DISTB
-   X1     = FACTOR*(CROS(JCRS,ICROS+1)%DIST-CROS(JCRS,ICROS)%DIST)
-   X1     = CROS(JCRS,ICROS)%DIST+X1
+  FACTOR = DISTW/DISTB
+  X1     = FACTOR*(CROS(JCRS,ICROS+1)%DIST-CROS(JCRS,ICROS)%DIST)
+  X1     = CROS(JCRS,ICROS)%DIST+X1
 
-   !## wetted perimeter
-   FACTOR  =(X1-CROS(JCRS,ICROS+1)%DIST)**2.0+(WPCOR-CROS(JCRS,ICROS+1)%BOTTOM)**2.0
-   IF(FACTOR.NE.0.0)FACTOR=SQRT(FACTOR)
-   WETPER=WETPER+FACTOR
+  !## wetted perimeter
+  FACTOR  =(X1-CROS(JCRS,ICROS+1)%DIST)**2.0+(WPCOR-CROS(JCRS,ICROS+1)%BOTTOM)**2.0
+  IF(FACTOR.NE.0.0)FACTOR=SQRT(FACTOR)
+  WETPER=WETPER+FACTOR
   ENDIF
   
  ENDIF
@@ -888,14 +916,14 @@ DO ICROS=DWP(JCRS)%NCROS-1,1,-1
   DISTW  = CROS(JCRS,ICROS+1)%BOTTOM-WPCOR
 
   IF(DISTB.NE.0.0)THEN
-   FACTOR = DISTW/DISTB
-   X2     = FACTOR*(CROS(JCRS,ICROS+1)%DIST-CROS(JCRS,ICROS)%DIST)
-   X2     = CROS(JCRS,ICROS+1)%DIST-X2
+  FACTOR = DISTW/DISTB
+  X2     = FACTOR*(CROS(JCRS,ICROS+1)%DIST-CROS(JCRS,ICROS)%DIST)
+  X2     = CROS(JCRS,ICROS+1)%DIST-X2
 
-   !## wetted perimeter
-   FACTOR =(X2-CROS(JCRS,ICROS)%DIST)**2.0+(WPCOR-CROS(JCRS,ICROS)%BOTTOM)**2.0
-   IF(FACTOR.NE.0.0)FACTOR=SQRT(FACTOR)
-   WETPER=WETPER+FACTOR
+  !## wetted perimeter
+  FACTOR =(X2-CROS(JCRS,ICROS)%DIST)**2.0+(WPCOR-CROS(JCRS,ICROS)%BOTTOM)**2.0
+  IF(FACTOR.NE.0.0)FACTOR=SQRT(FACTOR)
+  WETPER=WETPER+FACTOR
   ENDIF
   
  ENDIF
@@ -1081,6 +1109,7 @@ REAL :: LEKCONDUCTANCE_Y
 INTEGER :: I, ILAY, IROW, ICOL
 REAL :: DXY,LI,BIN,C0,C1,KH,KV,COND_IN,FCT,D
 REAL, PARAMETER :: TINY=1.0E-20
+LOGICAL :: LUSED ! PKS
 
 IF (IFVDL.EQ.0) RETURN
 
@@ -1089,6 +1118,8 @@ DO I = 1, NISG
  IROW = ISGLIST(I,2)
  ICOL = ISGLIST(I,3)
  DXY=(DELR(ICOL)-DELR(ICOL-1))*(DELC(IROW-1)-DELC(IROW))
+ CALL PKS7MPITRN(ICOL,IROW,ILAY,LUSED) ! PKS
+ IF (LUSED) THEN ! PKS
  FCT=ISGLIST(I,7)   !## infiltration factor
  LI =ISGLIST(I,8)   !## length of river segment
  BIN=ISGLIST(I,9)   !## wetted perimeter
@@ -1125,7 +1156,7 @@ DO I = 1, NISG
  ELSE
   ISGLIST(I,5)=0.0
  ENDIF
-
+ ENDIF !PKS
 END DO
 
 RETURN

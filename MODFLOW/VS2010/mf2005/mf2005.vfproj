@@ -93,7 +93,7 @@
 		<File RelativePath="..\..\mf2005\imod_isg.f90"/>
 		<File RelativePath="..\..\mf2005\imod_isg_ifvdl.f90"/>
 		<File RelativePath="..\..\mf2005\imod_pest.F90"/>
-		<File RelativePath="..\..\mf2005\imod_tseries.f90"/>
+		<File RelativePath="..\..\MF2005\imod_tseries_mf.f90"/>
 		<File RelativePath="..\..\mf2005\lmt7.f"/>
 		<File RelativePath="..\..\mf2005\mf2005_args.f90"/>
 		<File RelativePath="..\..\mf2005\mf2005_comp.f"/>
@@ -109,6 +109,10 @@
 		<File RelativePath="..\..\mf2005\obs2str7.f"/>
 		<File RelativePath="..\..\mf2005\parutl7.f"/>
 		<File RelativePath="..\..\mf2005\pcg7.f"/>
+		<File RelativePath="..\..\MF2005\pcgupksutl7.f"/>
+		<File RelativePath="..\..\MF2005\pks7.f"/>
+		<File RelativePath="..\..\MF2005\pks7mod.f"/>
+		<File RelativePath="..\..\MF2005\pksutl7.f"/>
 		<File RelativePath="..\..\mf2005\rdrs_fsplit.for"/>
 		<File RelativePath="..\..\mf2005\rdrs_gcd.for"/>
 		<File RelativePath="..\..\mf2005\rdrs_lcd.for"/>
@@ -116,5 +120,6 @@
 		<File RelativePath="..\..\mf2005\rdrs_mod.for"/>
 		<File RelativePath="..\..\mf2005\sip7.f"/>
 		<File RelativePath="..\..\mf2005\sts2.for"/>
-		<File RelativePath="..\..\mf2005\utl7.f"/></Filter></Files>
+		<File RelativePath="..\..\mf2005\utl7.f"/>
+		<File RelativePath="..\..\MF2005\xmdlib_2.f"/></Filter></Files>
 	<Globals/></VisualStudioProject>

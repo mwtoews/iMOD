@@ -76,7 +76,8 @@ C     ------------------------------------------------------------------
       USE GLOBAL,      ONLY:IOUT,NCOL,NROW,NLAY,ITRSS,LAYHDT,LAYHDS,
      1                      CC,CV,IFREFM,
      1                      iunit,                                      ! ANIPWT
-     1                      kdsv                                        ! ANIPWT
+     1                      kdsv,                                       ! ANIPWT
+     1                      IACTCELL                                    ! PKS
       USE GWFBASMODULE,ONLY:HDRY
       USE GWFBCFMODULE,ONLY:IBCFCB,IWDFLG,IWETIT,IHDWET,WETFCT,
      1                      LAYCON,LAYAVG,HY,SC1,SC2,WETDRY,CVWD,TRPY,
@@ -316,8 +317,14 @@ C8H-----CAPABILITY HAS BEEN INVOKED (IWDFLG NOT 0).
   130 IF(LAYCON(K).NE.3.AND.LAYCON(K).NE.1)GO TO 200
       IF(IWDFLG.EQ.0)GO TO 200
       CALL U2DREL(WETDRY(:,:,KB),ANAME(7),NROW,NCOL,KK,IN,IOUT)
-  200 CONTINUE
-C
+      DO I=1,NROW                                                       ! PKS
+        DO J=1,NCOL                                                     ! PKS
+          IF (WETDRY(J,I,KB).NE.0.0) THEN                               ! PKS
+            IACTCELL(J,I,K) = 1                                         ! PKS
+          END IF                                                        ! PKS
+        END DO                                                          ! PKS
+      END DO                                                            ! PKS
+  200 CONTINUE      
       call pest1alpha_grid('KD',cc,nrow,ncol,nlay)                      ! IPEST
       call pest1alpha_grid('VC',cv,nrow,ncol,nlay-1)                    ! IPEST
       if (iss.eq.0) call pest1alpha_grid('SC',sc1,nrow,ncol,nlay)       ! IPEST
@@ -833,7 +840,7 @@ C13-----STORE SUM IN BUFFER.
       if(iunit(iuani).gt.0)then
        BUFF(J,I,K)=buff(j,i,k)+RATE
       else     
-       BUFF(J,I,K)=RATE
+      BUFF(J,I,K)=RATE
       endif
 C
 C14-----PRINT THE FLOW FOR THE CELL IF REQUESTED.
@@ -1323,7 +1330,8 @@ C
 C        SPECIFICATIONS:
 C     ------------------------------------------------------------------
       USE GLOBAL,      ONLY:NCOL,NROW,NLAY,IBOUND,HNEW,LAYCBD,CC,CR,CV,
-     1                      DELR,DELC,IOUT
+     1                      DELR,DELC,IOUT,
+     2                      IACTCELL                                    ! PKS
       USE GWFBASMODULE,ONLY:HNOFLO
       USE GWFBCFMODULE,ONLY:IWDFLG,WETDRY,HY,CVWD,LAYCON,LAYAVG,SC1,SC2,
      1                      IMINC,MINC                                  ! DLT
@@ -1387,6 +1395,7 @@ C4A-----WHEN LAYER TYPE IS 0 OR 2, TRANSMISSIVITY OR CV MUST BE NONZERO.
    41 IF(K.EQ.1) GO TO 42
       IF(CV(J,I,K-1).NE.ZERO) GO TO 45
    42 IBOUND(J,I,K)=0
+      IACTCELL(J,I,K) = 0                                               ! PKS
       HNEW(J,I,K)=HCNV
       WRITE(IOUT,43) K,I,J
    43 FORMAT(1X,'NODE (LAYER,ROW,COL)',3I4,

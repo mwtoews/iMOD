@@ -23,7 +23,7 @@
 MODULE IMOD_UTL
 
  INTEGER,PARAMETER :: NOS=3
- INTEGER, SAVE :: OS = 1                      !## operating system 1=dos,2=linux,3=unix
+ INTEGER, SAVE :: OS = 1                     !## operating system 1=dos,2=linux,3=unix
  CHARACTER(LEN=20),DIMENSION(NOS),SAVE :: OSN
 
  LOGICAL,PARAMETER :: LPWT=.TRUE.    !##   FALSE=USE OLD PWT PACKAGE, TRUE=USE NEW ONE
@@ -31,10 +31,9 @@ MODULE IMOD_UTL
  INTEGER,PARAMETER :: ICF = 1 ! Intel compiler: ICF = 1
  INTEGER,SAVE :: IUOUT
  INTEGER,DIMENSION(2),SAVE :: IFLAG
-! REAL,PARAMETER :: MSWPMV=10.0       !##   add meter to surface level urban area
- REAL,PARAMETER :: MSWPMV=0.0
+ REAL,PARAMETER :: MSWPMV=0.0       !##   add meter to surface level urban area
 
-character(len=1024), parameter :: licfile = 'I_accepted_v3_6.txt' 
+character(len=1024), parameter :: licfile = 'I_accepted_v4_0.txt' 
 integer, parameter :: nlic = 33
 character(len=79), dimension(nlic) :: lic
 integer, parameter :: nhdr = 40
@@ -42,7 +41,7 @@ character(len=79), dimension(nhdr) :: hdr
 
 !         1234567890123456789012345678901234567890123456789012345678901234567890123456789
 data hdr/'===============================================================================',&!01
-         'iMODFLOW Version 3_6, April 2017                                               ',&!02
+         'iMODFLOW Version 4_0, April 2017                                               ',&!02
          '                                                                               ',&!03
          'Copyright (C) Stichting Deltares, 2005-2017.                                   ',&!04
          '                                                                               ',&!05
@@ -57,7 +56,7 @@ data hdr/'======================================================================
          'Please go to the PDF-file of the iMOD License, read it and decide whether you  ',&!04 
          'want or do not want to accept the iMOD License.                                ',&!05 
          '                                                                               ',&!06
-         'According to the file "I_accepted_v3_6.txt" on your computer you accepted the  ',&!07
+         'According to the file "I_accepted_v4_0.txt" on your computer you accepted the  ',&!07
          'terms and conditions of the iMOD license; WARNING: IF IT WAS NOT YOU OR THE    ',&!08
          'LEGAL ENTITY ON WHOSE BEHALF YOU INTENT TO USE THE IMOD-EXECUTABLE, THAT       ',&!09 
          'ACCEPTED THE TERMS AND CONDITIONS OF THE iMOD LICENSE YOU ARE NOT ENTITLED TO  ',&!10
@@ -69,7 +68,7 @@ data hdr/'======================================================================
          'accepted by the legal entity on whose behalf you intent to use the             ',&!06 
          'iMOD-executable byre-invoking the "I accept"-procedure; to re-invoke the       ',&!07
          '"I accept"-procedure abort the use of this Deltares-executable of iMOD, delete ',&!08
-         'the file "I_accepted_v3_6.txt", and invoke this Deltares-executable of iMOD    ',&!09
+         'the file "I_accepted_v4_0.txt", and invoke this Deltares-executable of iMOD    ',&!09
          'again.                                                                         ',&!10
          '                                                                               ',&!01
          'The iMOD software is distributed in the hope that it will be useful, but       ',&!02
@@ -404,12 +403,17 @@ CONTAINS
  !###======================================================================
  IMPLICIT NONE
  CHARACTER(LEN=*),INTENT(IN) :: DIRNAME
- INTEGER :: IU, IOS
+ INTEGER :: IU, IOS, N
+ CHARACTER(LEN=256) :: FNAME
 
  IMOD_UTL_DIREXIST=.FALSE.
  !## try to create a file in folder
  IU=IMOD_UTL_GETUNIT()
- OPEN(IU,FILE=TRIM(DIRNAME)//'\tmp.tmp#0#1#2',STATUS='UNKNOWN',IOSTAT=IOS)
+ 
+ FNAME = TRIM(DIRNAME)//'\tmp.tmp#0#1#2'
+ N = LEN_TRIM(FNAME)
+ CALL PKS7MPIFNAME(FNAME,N)
+ OPEN(IU,FILE=FNAME,STATUS='UNKNOWN',IOSTAT=IOS)
  IF(IOS.EQ.0)THEN
   IMOD_UTL_DIREXIST=.TRUE.
   CLOSE(IU,STATUS='DELETE')
@@ -787,15 +791,15 @@ CONTAINS
  SELECT CASE (ACT)
   CASE ('W','w')
 !   OPEN(IU,FILE=FNAME,STATUS='UNKNOWN',FORM='FORMATTED',ACTION='WRITE',IOSTAT=IOS)
-   MESSAGE='WRITE,UNKNOWN,FORMATTED'
+  MESSAGE='WRITE,UNKNOWN,FORMATTED'
   CASE ('R','r')
-   CALL IMOD_UTL_MODEL1CHECKFNAME(FNAME,0)
+  CALL IMOD_UTL_MODEL1CHECKFNAME(FNAME,0)
 !   OPEN(IU,FILE=FNAME,STATUS='OLD',FORM='FORMATTED',ACTION='READ',IOSTAT=IOS)
-   MESSAGE='READONLY,SHARED,OLD,FORMATTED'
+  MESSAGE='READONLY,SHARED,OLD,FORMATTED'
   CASE ('A','a')
-   CALL IMOD_UTL_MODEL1CHECKFNAME(FNAME,0)
+  CALL IMOD_UTL_MODEL1CHECKFNAME(FNAME,0)
    OPEN(IU,FILE=FNAME,STATUS='OLD',FORM='FORMATTED',ACCESS='APPEND',IOSTAT=IOS)
-   MESSAGE='OLD,FORMATTED,APPEND'
+  MESSAGE='OLD,FORMATTED,APPEND'
   CASE DEFAULT
    CALL IMOD_UTL_PRINTTEXT('Wrong open statement, cannot open sequential file: ['//TRIM(FNAME)//']',2)
  END SELECT
@@ -1056,6 +1060,61 @@ END SUBROUTINE IMOD_UTL_QKSORT
  END SUBROUTINE IMOD_UTL_QKSORT2
 
  !###====================================================
+ RECURSIVE SUBROUTINE IMOD_UTL_QKSORT3(A,AI)
+ !###====================================================
+ IMPLICIT NONE
+ INTEGER, INTENT(IN OUT) :: A(:), AI(:)
+ INTEGER :: SPLIT
+
+ IF(SIZE(A) > 1) THEN
+    CALL IMOD_UTL_PARTITION(A, AI, SPLIT)
+    CALL IMOD_UTL_QKSORT3(A(:SPLIT-1),AI(:SPLIT-1))
+    CALL IMOD_UTL_QKSORT3(A(SPLIT:),AI(SPLIT:))
+ END IF
+
+ END SUBROUTINE IMOD_UTL_QKSORT3
+
+ !###====================================================
+ SUBROUTINE IMOD_UTL_PARTITION(A,AI,MARKER)
+ !###====================================================
+ IMPLICIT NONE
+ INTEGER, INTENT(IN OUT) :: A(:), AI(:)
+ INTEGER, INTENT(OUT) :: MARKER
+ INTEGER :: LEFT, RIGHT, PIVOT, TEMP
+
+ PIVOT = (A(1) + A(SIZE(A))) / 2  ! AVERAGE OF FIRST AND LAST ELEMENTS TO PREVENT QUADRATIC
+ LEFT = 0                         ! BEHAVIOR WITH SORTED OR REVERSE SORTED DATA
+ RIGHT = SIZE(A) + 1
+
+ DO WHILE (LEFT < RIGHT)
+    RIGHT = RIGHT - 1
+    DO WHILE (A(RIGHT) > PIVOT)
+       RIGHT = RIGHT-1
+    END DO
+    LEFT = LEFT + 1
+    DO WHILE (A(LEFT) < PIVOT)
+       LEFT = LEFT + 1
+    END DO
+    IF (LEFT < RIGHT) THEN
+       TEMP = A(LEFT)
+       A(LEFT) = A(RIGHT)
+       A(RIGHT) = TEMP
+
+       TEMP = AI(LEFT)
+       AI(LEFT) = AI(RIGHT)
+       AI(RIGHT) = TEMP
+    END IF
+ END DO
+
+ IF (LEFT == RIGHT) THEN
+    MARKER = LEFT + 1
+ ELSE
+    MARKER = LEFT
+ END IF
+
+ END SUBROUTINE IMOD_UTL_PARTITION
+
+ !###====================================================
  SUBROUTINE IMOD_UTL_SHELLSORT(N,A)
  !###====================================================
  IMPLICIT NONE
@@ -1112,10 +1171,12 @@ END SUBROUTINE IMOD_UTL_QKSORT
  !loop over all points!
  DO IROW=1,NROW
   DO ICOL=1,NCOL
-   X1=(DELR(ICOL-1)+DELR(ICOL))/2.0
-   X2=(DELC(IROW-1)+DELC(IROW))/2.0
-   CALL IMOD_UTL_POL2DINT(XCRD,YCRD,ZCRD,C,D,NMAX,YMTMP,YNTMP,NPC,NPR,X1,X2,Y,DY,IINT,NODATA)
+   IF(X(ICOL,IROW).NE.NODATA)THEN      
+    X1=(DELR(ICOL-1)+DELR(ICOL))/2.0
+    X2=(DELC(IROW-1)+DELC(IROW))/2.0
+    CALL IMOD_UTL_POL2DINT(XCRD,YCRD,ZCRD,C,D,NMAX,YMTMP,YNTMP,NPC,NPR,X1,X2,Y,DY,IINT,NODATA)
     X(ICOL,IROW)=Y
+   ENDIF 
   ENDDO
  ENDDO
 
@@ -1306,13 +1367,11 @@ END SUBROUTINE IMOD_UTL_QKSORT
 ! !#capsim/metaswap/none active?
 
 !#get operating system
- VOS=OSD_GET_OS()
- OS =0
- IF(VOS.EQ.3)OS=1
- IF(VOS.EQ.2)OS=2
- IF(VOS.EQ.4)OS=2
-
- OS=1
+! VOS=OSD_GET_OS()
+! OS =0
+! IF(VOS.EQ.3)OS=1
+! IF(VOS.EQ.2)OS=2
+! IF(VOS.EQ.4)OS=2
 
  SELECT CASE (OS)
   !## dos
@@ -1335,6 +1394,7 @@ END SUBROUTINE IMOD_UTL_QKSORT
  CHARACTER(LEN=*),INTENT(IN) :: TXT
  INTEGER,INTENT(IN) :: TXTTYPE
  INTEGER,INTENT(IN),OPTIONAL :: IU
+ logical :: pks7mpimasterwrite
 
  LOGICAL :: LEX
 
@@ -1353,6 +1413,15 @@ END SUBROUTINE IMOD_UTL_QKSORT
    WRITE(*,'(A)') 'Error occured!'
    WRITE(*,'(A)') TRIM(TXT)
    IF(IFLAG(1).EQ.1)PAUSE
+  CASE (3) 
+   if (pks7mpimasterwrite()) WRITE(*,'(A)') TRIM(TXT) 
+  CASE (-3)
+   if (pks7mpimasterwrite()) then   
+    WRITE(*,'(A)')
+    WRITE(*,'(A)') 'Error occured!'
+    WRITE(*,'(A)') TRIM(TXT) 
+    IF(IFLAG(1).EQ.1)PAUSE
+   end if
   CASE DEFAULT
    WRITE(*,'(A)') TRIM(TXT)
    !IF(IFLAG(1).EQ.1)PAUSE
@@ -1368,7 +1437,7 @@ END SUBROUTINE IMOD_UTL_QKSORT
   END IF
  END IF
 
- IF(TXTTYPE.EQ.2)THEN
+ IF(TXTTYPE.EQ.2.OR.TXTTYPE.EQ.-3)THEN
    CALL EXIT(1)
  ENDIF
 
@@ -1579,7 +1648,7 @@ END SUBROUTINE IMOD_UTL_QKSORT
  
  !## open textfiles with pump information
  IU=IMOD_UTL_GETUNIT()
- OPEN(IU,FILE=FNAME,FORM='FORMATTED',STATUS='OLD',ACTION='READ')
+ OPEN(IU,FILE=FNAME,FORM='FORMATTED',STATUS='OLD',ACTION='READ',SHARE='DENYNONE')
  
 ! CALL IMOD_UTL_OPENASC(IU,FNAME,'R')
 
@@ -2084,10 +2153,10 @@ END SUBROUTINE IMOD_UTL_QKSORT
   ENDDO
   !## not assigned to any layer
   IF(K.NE.0)THEN
-   ZT=TLP(K)
-   TLP=0.0; TLP(K)=1.0
-   IF(ZT.LT.0.0)TLP(K)=-1.0*TLP(K)
-  ENDIF
+  ZT=TLP(K)
+  TLP=0.0; TLP(K)=1.0
+  IF(ZT.LT.0.0)TLP(K)=-1.0*TLP(K)
+ ENDIF
  ENDIF
 
  DEALLOCATE(L,TL,IL)
@@ -2118,39 +2187,76 @@ END SUBROUTINE IMOD_UTL_QKSORT
 
  END FUNCTION IMOD_UTL_HAS_EXT
 
- !###======================================================================
- SUBROUTINE IMOD_UTL_DIR_LEVEL_UP(FNAME)
+!###======================================================================
+ SUBROUTINE IMOD_UTL_REL_TO_ABS(ROOT,FNAME)
  !###======================================================================
  
  IMPLICIT NONE
 
+ CHARACTER(LEN=*), INTENT(INOUT) :: ROOT
  CHARACTER(LEN=*), INTENT(INOUT) :: FNAME
- INTEGER :: N
-
+ INTEGER :: M, N, IL, I
+ CHARACTER(LEN=1) :: SLASH
+ LOGICAL :: LREL  
+ 
  N = LEN_TRIM(FNAME)
-
  IF (N==0) RETURN
-
- IF (FNAME(1:1)=='.')THEN
-  WRITE(FNAME,'(2A)') '..\',TRIM(FNAME)
- END IF
-
  CALL IMOD_UTL_SWAPSLASH(FNAME)
-
- END SUBROUTINE IMOD_UTL_DIR_LEVEL_UP
-
+ CALL IMOD_UTL_GETSLASH(SLASH)
+ FNAME = ADJUSTL(FNAME)
+ N = LEN_TRIM(FNAME)
+ 
+ CALL IMOD_UTL_SWAPSLASH(ROOT)
+ M = LEN_TRIM(ROOT)
+ IF(ROOT(M:M).EQ.SLASH) THEN
+    ROOT = ROOT(1:M-1)  
+    M = M - 1
+ END IF
+ IL = M + 1
+ 
+ LREL = .FALSE.
+ DO WHILE(.TRUE.)
+    IF(FNAME(1:1).NE.'.')EXIT 
+    IF(FNAME(1:2).EQ.'.'//SLASH)THEN
+       LREL = .TRUE. 
+       FNAME = FNAME(3:N)
+       N = LEN_TRIM(FNAME)
+    END IF
+    IF(FNAME(1:3).EQ.'..'//SLASH)THEN
+       LREL = .TRUE. 
+       FNAME = FNAME(4:N)
+       N = LEN_TRIM(FNAME)
+       IL = INDEX(ROOT(1:IL-1),SLASH,BACK=.TRUE.)
+    END IF
+ END DO
+ IF(LREL) THEN
+    FNAME = ROOT(1:IL-1)//SLASH//TRIM(FNAME)
+ END IF
+ 
+ END SUBROUTINE IMOD_UTL_REL_TO_ABS
+ 
  !###====================================================================== 
  SUBROUTINE IMOD_UTL_ABS_PATH(PATH)
  !###======================================================================
  
  IMPLICIT NONE
  CHARACTER(LEN=*), INTENT(INOUT) :: PATH
- INTEGER :: LUN, I
+ INTEGER :: LUN, I, N
  CHARACTER(LEN=1024) :: ABSPATH
 
  CALL IMOD_UTL_CREATEDIR(PATH)
- ABSPATH = TRIM(PATH)//'\TEST.TXT'
+ N = LEN_TRIM(PATH)
+ IF(PATH(N:N).EQ.'\'.OR.PATH(N:N).EQ.'/')THEN
+    ABSPATH = TRIM(PATH)//'TEST.TXT'
+ ELSE    
+    ABSPATH = TRIM(PATH)//'\TEST.TXT'
+ END IF
+ N = LEN_TRIM(ABSPATH)
+ CALL PKS7MPIFNAME(ABSPATH,N)
  CALL IMOD_UTL_SWAPSLASH(ABSPATH)
+ IF(ABSPATH(1:2).EQ.'./')THEN
+    ABSPATH = ABSPATH(3:LEN_TRIM(ABSPATH))
+ END IF   
  LUN = IMOD_UTL_GETUNIT()
  OPEN(UNIT=LUN,FILE=ABSPATH)
  INQUIRE(UNIT=LUN,NAME=ABSPATH)
@@ -2250,11 +2356,11 @@ END SUBROUTINE IMOD_UTL_QKSORT
  
  IF(IEQ.EQ.0)THEN
 
-  dx=xc-delr(0)
+  DX=XC-DELR(0)
   i=0; if(mod(dx,simcsize).ne.0.0)i=1
   if(xc.gt.delr(0).and.xc.lt.delr(ncol))icol=int(dx/simcsize)+i
 
-  dy=delc(0)-yc
+  DY=DELC(0)-YC
   i=0; if(mod(dy,simcsize).ne.0.0)i=1
   if(yc.gt.delc(nrow).and.yc.lt.delc(0))irow=int(dy/simcsize)+i
 
@@ -2910,4 +3016,23 @@ END FUNCTION IMOD_UTL_INTERSECT_NONEQUI
  RETURN
  END SUBROUTINE IMOD_UTL_LUBACKSUB_DBL
  
+ !###====================================================================
+ SUBROUTINE IMOD_UTL_DELETE_BY_UNIT(IU)
+ !###====================================================================
+ IMPLICIT NONE
+ INTEGER, INTENT(IN) :: IU
+ CHARACTER(LEN=256) :: FNAME
+ LOGICAL :: LOP
+ INTEGER :: JU
+ 
+ INQUIRE(UNIT=IU,OPENED=LOP,NAME=FNAME)
+ IF(.NOT.LOP)RETURN
+ CLOSE(IU)
+ JU = GETUNIT()
+ OPEN(UNIT=JU,FILE=FNAME,STATUS='UNKNOWN')
+ CLOSE(JU,STATUS='DELETE')
+
+ RETURN
+ END SUBROUTINE IMOD_UTL_DELETE_BY_UNIT
+
 END MODULE IMOD_UTL

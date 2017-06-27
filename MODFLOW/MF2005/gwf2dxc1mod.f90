@@ -35,6 +35,8 @@
 
     integer, parameter :: maxnhrivsys = 100
 
+    character(len=1024), save :: dxcroot = '' ! root in case of MOZART coupling 
+    
     ! data exchange elements projected to the local 3D modflow grid
     integer, pointer, save :: mxdxc             !> maximum number of data exchange elements stored
     integer, pointer, save :: IdxcCB
@@ -43,6 +45,8 @@
     integer, pointer, save :: dxcic(:)          !> local grid column number
     integer, pointer, save :: dxcir(:)          !> local grid row    number
     integer, pointer, save :: dxcil(:)          !> local grid layer  number
+    integer, pointer, save :: minid             !> minimum ID
+    integer, pointer, save :: maxid             !> maximum ID
 
     real   , pointer, save :: dxchead(:)        !> head           data to be exchanged: GWMHeads
     real   , pointer, save :: dxcuzflux(:)      !> UnsatZoneFlux  data to be exchanged: UnsaturatedZoneFlux
@@ -74,6 +78,8 @@
        integer, pointer :: dxcic(:)
        integer, pointer :: dxcir(:)
        integer, pointer :: dxcil(:)
+       integer, pointer :: minid
+       integer, pointer :: maxid
 
        real   , pointer :: dxchead(:)
        real   , pointer :: dxcuzflux(:)

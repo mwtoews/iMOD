@@ -54,7 +54,7 @@ c   If not, see <http://water.usgs.gov/software/help/notice/>.
       INTEGER, PARAMETER :: IUUZF  = 55, IUGWM  = 56, IUSWT  = 57
       INTEGER, PARAMETER :: IUCFP  = 58, IUPWT  = 59
       INTEGER, PARAMETER ::              IUSCR  = 62, IUNRS  = 63
-      INTEGER, PARAMETER :: IUDXC  = 64, IUANI  = 65
+      INTEGER, PARAMETER :: IUDXC  = 64, IUANI  = 65, IUPKS  = 66
       INTEGER, PARAMETER ::              IUMET  = 68
 
       END MODULE M_MF2005_IU
@@ -89,6 +89,7 @@ c   If not, see <http://water.usgs.gov/software/help/notice/>.
         REAL,    SAVE,    DIMENSION(:,:,:), POINTER ::BUFF
         REAL,    SAVE,    DIMENSION(:,:,:), POINTER ::STRT
         REAL,    SAVE,    DIMENSION(:,:,:), POINTER ::DDREF
+        INTEGER, SAVE,    DIMENSION(:,:,:), POINTER ::IACTCELL          ! PKS
       TYPE GLOBALTYPE
         INTEGER,POINTER    :: NCOL,NROW,NLAY,NPER,NBOTM,NCNFBD
         INTEGER,POINTER    :: ITMUNI,LENUNI,IXSEC,ITRSS,INBAS
@@ -117,6 +118,7 @@ c   If not, see <http://water.usgs.gov/software/help/notice/>.
         REAL,       DIMENSION(:,:,:), POINTER ::BUFF
         REAL,       DIMENSION(:,:,:), POINTER ::STRT
         REAL,       DIMENSION(:,:,:), POINTER ::DDREF
+        INTEGER,    DIMENSION(:,:,:), POINTER ::IACTCELL                ! PKS
       END TYPE GLOBALTYPE
       TYPE(GLOBALTYPE),SAVE ::GLOBALDAT(10)
       END MODULE GLOBAL

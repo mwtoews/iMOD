@@ -45,6 +45,7 @@ MODULE TSVAR
   CHARACTER(LEN=5) :: EXT
   CHARACTER(LEN=256) :: IPFNAME
   TYPE(STOBJ),POINTER,DIMENSION(:) :: STVALUE => NULL()
+  LOGICAL :: DEL = .FALSE. ! PKS
  END TYPE TSOBJ
  TYPE(TSOBJ),ALLOCATABLE,DIMENSION(:),SAVE :: TS
  
@@ -53,7 +54,7 @@ END MODULE
 !###====================================================================
 SUBROUTINE TSERIE1INIT1(LPEST,LSS,MV)
 !###====================================================================
-USE IMOD_UTL, ONLY : IMOD_UTL_PRINTTEXT,IMOD_UTL_STRING,IMOD_UTL_ITOS,IMOD_UTL_RTOS,IMOD_UTL_OPENASC,IMOD_UTL_CAP,IMOD_UTL_CREATEDIR,IMOD_UTL_SWAPSLASH,IMOD_UTL_OSSYSTEM,OS
+USE IMOD_UTL, ONLY : IMOD_UTL_PRINTTEXT,IMOD_UTL_STRING,IMOD_UTL_ITOS,IMOD_UTL_RTOS,IMOD_UTL_OPENASC,IMOD_UTL_CAP,IMOD_UTL_CREATEDIR,IMOD_UTL_SWAPSLASH,IMOD_UTL_OSSYSTEM,OS,IMOD_UTL_DELETE_BY_UNIT
 USE TSVAR
 IMPLICIT NONE
 ! arguments
@@ -160,12 +161,12 @@ DO JJ=1,ABS(IIPF)
    IF(TS(JJ)%IEXT.EQ.0)THEN
     !## steady-state
     IF(TS(JJ)%IPFTYPE.EQ.1)THEN
-     READ(IPFSTRING(TS(JJ)%IMCOL),*,IOSTAT=IOS) TS(JJ)%STVALUE(III)%M
+    READ(IPFSTRING(TS(JJ)%IMCOL),*,IOSTAT=IOS) TS(JJ)%STVALUE(III)%M
      IF(IOS.NE.0)CALL IMOD_UTL_PRINTTEXT('Missing proper column expressing the MEASUREMENT in timeserie IPF (record:'// &
          TRIM(IMOD_UTL_ITOS(I))//')',2)
     !## transient
     ELSEIF(TS(JJ)%IPFTYPE.EQ.2)THEN
-     READ(IPFSTRING(TS(JJ)%IMCOL),'(A52)',IOSTAT=IOS) TS(JJ)%STVALUE(III)%ID
+    READ(IPFSTRING(TS(JJ)%IMCOL),'(A52)',IOSTAT=IOS) TS(JJ)%STVALUE(III)%ID
      IF(IOS.NE.0)CALL IMOD_UTL_PRINTTEXT('Missing proper column expressing the IDENTIFICATION in timeserie IPF (record:'// &
         TRIM(IMOD_UTL_ITOS(I))//')',2)
     ENDIF
@@ -177,7 +178,12 @@ DO JJ=1,ABS(IIPF)
   ENDIF
  ENDDO
  TS(JJ)%NROWIPF=III
- CLOSE(TS(JJ)%IUIPF); DEALLOCATE(IPFSTRING)
+ IF(TS(JJ)%DEL)THEN ! PKS
+  CALL IMOD_UTL_DELETE_BY_UNIT(TS(JJ)%IUIPF) ! PKS
+ ELSE  ! PKS
+  CLOSE(TS(JJ)%IUIPF);
+ ENDIF
+ DEALLOCATE(IPFSTRING)
 END DO
 
 RETURN
@@ -186,7 +192,7 @@ END SUBROUTINE
 !###====================================================================
 SUBROUTINE TSERIE1INIT2(LPEST,LSS,MV,root)
 !###====================================================================
-USE IMOD_UTL, ONLY : IMOD_UTL_PRINTTEXT,IMOD_UTL_STRING,IMOD_UTL_ITOS,IMOD_UTL_RTOS,IMOD_UTL_OPENASC,IMOD_UTL_CAP,IMOD_UTL_CREATEDIR,IMOD_UTL_SWAPSLASH,OS,IMOD_UTL_GETUNIT
+USE IMOD_UTL, ONLY : IMOD_UTL_PRINTTEXT,IMOD_UTL_STRING,IMOD_UTL_ITOS,IMOD_UTL_RTOS,IMOD_UTL_OPENASC,IMOD_UTL_CAP,IMOD_UTL_CREATEDIR,IMOD_UTL_SWAPSLASH,OS,IMOD_UTL_GETUNIT,IMOD_UTL_DELETE_BY_UNIT
 USE TSVAR
 IMPLICIT NONE
 ! arguments
@@ -195,19 +201,26 @@ LOGICAL, INTENT(IN) :: LSS
 CHARACTER(LEN=*),intent(in) :: root
 REAL, INTENT(IN) :: MV
 ! locals
-INTEGER :: IOS,I,II,III,J,JJ,N,NVALID
+INTEGER :: IOS,I,II,III,J,JJ,N,NVALID,K
 CHARACTER(LEN=52),DIMENSION(:),ALLOCATABLE :: IPFSTRING
 CHARACTER(LEN=256) :: LINE
 CHARACTER(LEN=1000) :: BIGLINE
+LOGICAL :: LPKS ! PKS
+CHARACTER(LEN=100) :: PS ! PKS
 
 IF(IIPF.EQ.0)RETURN
 
 IF(LPEST.EQ.1.AND.SUM(TS%NROWIPF).LE.0)CALL IMOD_UTL_PRINTTEXT('Should at least be some measurement points in area of interest!',2)
+
+CALL PKS7MPIACTIVE(LPKS) ! PKS
+CALL PKS7MPIPARTSTR(PS) ! PKS
+
 !## steady-state
 IF(LSS)THEN
  DO JJ=1,ABS(IIPF)
   I=INDEX(TS(JJ)%IPFNAME,CHAR(92),.TRUE.)+1
-  LINE=TRIM(ROOT)//CHAR(92)//TS(JJ)%IPFNAME(I:)
+  K = INDEX(TS(JJ)%IPFNAME,'.',.TRUE.)-1 ! PKS
+  LINE=TRIM(ROOT)//CHAR(92)//TS(JJ)%IPFNAME(I:K)//TRIM(PS)//'.ipf'
   CALL IMOD_UTL_SWAPSLASH(LINE)
   CALL IMOD_UTL_OPENASC(TS(JJ)%IUIPF,LINE,'W')
   ! check for valid data
@@ -215,17 +228,18 @@ IF(LSS)THEN
   DO I=1,TS(JJ)%NROWIPF
     IF (TS(JJ)%STVALUE(I)%VALID) NVALID = NVALID + 1
   END DO
+  IF(LPKS.AND.NVALID.EQ.0) TS(JJ)%DEL = .TRUE. ! PKS
   WRITE(TS(JJ)%IUIPF,*) NVALID
   WRITE(TS(JJ)%IUIPF,*) 8
-  write(ts(jj)%iuipf,'(a)') 'x-coordinate'
-  write(ts(jj)%iuipf,'(a)') 'y-coordinate'
-  write(ts(jj)%iuipf,'(a)') 'modellayer'
-  write(ts(jj)%iuipf,'(a)') 'observation'
-  write(ts(jj)%iuipf,'(a)') 'variance'
-  write(ts(jj)%iuipf,'(a)') 'computed_head'
-  write(ts(jj)%iuipf,'(a)') 'difference'
-  write(ts(jj)%iuipf,'(a)') 'weighed_difference'
-  write(ts(jj)%iuipf,'(a)') '0,txt'
+  WRITE(TS(JJ)%IUIPF,'(A)') 'X-COORDINATE'
+  WRITE(TS(JJ)%IUIPF,'(A)') 'Y-COORDINATE'
+  WRITE(TS(JJ)%IUIPF,'(A)') 'MODELLAYER'
+  WRITE(TS(JJ)%IUIPF,'(A)') 'OBSERVATION'
+  WRITE(TS(JJ)%IUIPF,'(A)') 'VARIANCE'
+  WRITE(TS(JJ)%IUIPF,'(A)') 'COMPUTED_HEAD'
+  WRITE(TS(JJ)%IUIPF,'(A)') 'DIFFERENCE'
+  WRITE(TS(JJ)%IUIPF,'(A)') 'WEIGHED_DIFFERENCE'
+  WRITE(TS(JJ)%IUIPF,'(A)') '0,TXT'
  ENDDO
  
 !## transient
@@ -233,7 +247,7 @@ ELSE
 
  CALL IMOD_UTL_CREATEDIR(TRIM(root)//CHAR(92)//'timeseries')
  !## open txt file to collect all timeseries
- LINE=TRIM(root)//CHAR(92)//'timeseries'//CHAR(92)//'timeseries_collect.txt'
+ LINE=TRIM(root)//CHAR(92)//'timeseries'//CHAR(92)//'timeseries_collect'//TRIM(PS)//'.txt'
  CALL IMOD_UTL_SWAPSLASH(LINE)
  IUIPFTXT=IMOD_UTL_GETUNIT()
  CALL IMOD_UTL_OPENASC(IUIPFTXT,LINE,'W')
@@ -247,7 +261,9 @@ ELSE
   ELSE
    I=INDEX(TS(JJ)%IPFNAME,CHAR(47),.TRUE.)+1
   ENDIF
-  LINE=TRIM(root)//CHAR(92)//'timeseries'//CHAR(92)//TS(JJ)%IPFNAME(I:)
+  CALL PKS7MPIPARTSTR(PS) ! PKS
+  K = INDEX(TS(JJ)%IPFNAME,'.',.TRUE.)-1 ! PKS
+  LINE=TRIM(root)//CHAR(92)//'timeseries'//CHAR(92)//TS(JJ)%IPFNAME(I:K)//TRIM(PS)//'.ipf'
   CALL IMOD_UTL_SWAPSLASH(LINE)
   TS(JJ)%IUIPF=IMOD_UTL_GETUNIT(); CALL IMOD_UTL_OPENASC(TS(JJ)%IUIPF,LINE,'W')
 
@@ -256,18 +272,19 @@ ELSE
   DO I=1,TS(JJ)%NROWIPF
    IF(TS(JJ)%STVALUE(I)%VALID)NVALID=NVALID+1
   END DO
+  IF(LPKS.AND.NVALID.EQ.0) TS(JJ)%DEL = .TRUE. ! PKS
   CALL IMOD_UTL_PRINTTEXT('        * Assigned '//TRIM(IMOD_UTL_ITOS(NVALID))//' locations from total of '//TRIM(IMOD_UTL_ITOS(TS(JJ)%NROWIPF)),0)
   CALL IMOD_UTL_PRINTTEXT('          >>> NO locations will be used that are WITHIN the buffer-zone <<<',0)
 
   !## write entire ipf again
   WRITE(TS(JJ)%IUIPF,*) NVALID
   WRITE(TS(JJ)%IUIPF,*) 5
-  WRITE(TS(JJ)%IUIPF,'(A)') 'x-coordinate'
-  write(ts(jj)%iuipf,'(a)') 'y-coordinate'
-  write(ts(jj)%iuipf,'(a)') 'modellayer'
-  write(ts(jj)%iuipf,'(a)') 'identification'
-  write(ts(jj)%iuipf,'(a)') 'variance'
-  write(ts(jj)%iuipf,'(a)') '4,txt'
+  WRITE(TS(JJ)%IUIPF,'(A)') 'X-COORDINATE'
+  WRITE(TS(JJ)%IUIPF,'(A)') 'Y-COORDINATE'
+  WRITE(TS(JJ)%IUIPF,'(A)') 'MODELLAYER'
+  WRITE(TS(JJ)%IUIPF,'(A)') 'IDENTIFICATION'
+  WRITE(TS(JJ)%IUIPF,'(A)') 'VARIANCE'
+  WRITE(TS(JJ)%IUIPF,'(A)') '4,TXT'
 
   DO I=1,TS(JJ)%NROWIPF
    IF(.NOT.TS(JJ)%STVALUE(I)%VALID) CYCLE  ! skip invalid data
@@ -277,8 +294,11 @@ ELSE
    WRITE(TS(JJ)%IUIPF,'(A)') TRIM(BIGLINE)
   END DO
 
-  CLOSE(TS(JJ)%IUIPF)
-
+  IF(TS(JJ)%DEL)THEN ! PKS
+   CALL IMOD_UTL_DELETE_BY_UNIT(TS(JJ)%IUIPF) ! PKS
+  ELSE  ! PKS
+   CLOSE(TS(JJ)%IUIPF)
+  ENDIF 
  ENDDO
 ENDIF
 
@@ -292,7 +312,7 @@ SUBROUTINE TSERIE1WRITE(ISIM,LSS,DDATE,MV,usests,root,cdate)
 !###====================================================================
 USE IMOD_UTL, ONLY : IMOD_UTL_ITOS,IMOD_UTL_RTOS,IMOD_UTL_PRINTTEXT,IMOD_UTL_OPENASC, &
        IMOD_UTL_SWAPSLASH,IMOD_UTL_CREATEDIR,OS,IMOD_UTL_IDATETOJDATE,IMOD_UTL_JDATETOIDATE, &
-       IMOD_UTL_GETUNIT
+       IMOD_UTL_GETUNIT,IMOD_UTL_DELETE_BY_UNIT
 USE TSVAR
 IMPLICIT NONE
 ! arguments
@@ -309,6 +329,7 @@ INTEGER :: I,II,J,JJJ,ILAY,N,IDATE,JDATE,JJ,IU,KK,IOS,JOS,IREC,MPER
 CHARACTER(LEN=52) :: CLABEL,CLDATE
 integer :: hour, minute, second
 CHARACTER(LEN=256) :: LINE
+CHARACTER(LEN=100) :: PS
 
 IF(IIPF.EQ.0)RETURN
 
@@ -319,7 +340,7 @@ IF(LSS)THEN
 
   NREC = NREC + 1
 
-  CALL IMOD_UTL_PRINTTEXT('',0); CALL IMOD_UTL_PRINTTEXT('Writing Computing Heads to IPF file ...',0)
+  CALL IMOD_UTL_PRINTTEXT('',0); CALL IMOD_UTL_PRINTTEXT('Writing Computed Heads to IPF file ...',0)
 
   DO JJ=1,ABS(IIPF)
    DO I=1,TS(JJ)%NROWIPF
@@ -344,7 +365,11 @@ IF(LSS)THEN
          TRIM(IMOD_UTL_RTOS(DH1,'G',7))          //','//TRIM(IMOD_UTL_RTOS(DH2,'G',7))
     WRITE(TS(JJ)%IUIPF,'(A)') TRIM(LINE)
    ENDDO
-   CLOSE(TS(JJ)%IUIPF)
+   IF(TS(JJ)%DEL)THEN ! PKS
+    CALL IMOD_UTL_DELETE_BY_UNIT(TS(JJ)%IUIPF) ! PKS
+   ELSE  ! PKS
+    CLOSE(TS(JJ)%IUIPF)
+   ENDIF
   ENDDO
  ENDIF
 
@@ -379,8 +404,8 @@ ELSE
   
   CALL IMOD_UTL_PRINTTEXT('',0); CALL IMOD_UTL_PRINTTEXT(' Writing Timeseries to IPF file ...',0)
   CLOSE(IUIPFTXT)
-
-  LINE=TRIM(root)//CHAR(92)//'timeseries'//CHAR(92)//'timeseries_collect.txt'
+  CALL PKS7MPIPARTSTR(PS) ! PKS
+  LINE=TRIM(root)//CHAR(92)//'timeseries'//CHAR(92)//'timeseries_collect'//TRIM(PS)//'.txt'
   CALL IMOD_UTL_SWAPSLASH(LINE)
   IU=IMOD_UTL_GETUNIT(); CALL IMOD_UTL_OPENASC(IU,LINE,'R')
 
@@ -438,9 +463,9 @@ ELSE
      ENDIF
      IF(JJJ.GT.0)CALL IMOD_UTL_CREATEDIR(LINE(1:JJJ-1))
 
-     OPEN(IUTXT(II),FILE=LINE,FORM='FORMATTED',ACTION='WRITE',STATUS='UNKNOWN',IOSTAT=IOS) 
+    OPEN(IUTXT(II),FILE=LINE,FORM='FORMATTED',ACTION='WRITE',STATUS='UNKNOWN',IOSTAT=IOS) 
      IF(IOS.NE.0)THEN
-      CALL IMOD_UTL_PRINTTEXT(' Cannot create file '//TRIM(LINE),0)
+     CALL IMOD_UTL_PRINTTEXT(' Cannot create file '//TRIM(LINE),0)
       CALL IMOD_UTL_PRINTTEXT(' Probably not enough free unit numbers '//TRIM(IMOD_UTL_ITOS(IUTXT(II))),0)
       CALL IMOD_UTL_PRINTTEXT(' or duplicate file name and file is allready opened',0)
       CALL IMOD_UTL_PRINTTEXT('Stopped',2)
@@ -504,7 +529,7 @@ ELSE
      !## without impulse/default
      READ(IU,*,IOSTAT=JOS) KK,J,H,W
      IF(JOS.NE.0)CYCLE
-     IF(KK.NE.JJ)CALL IMOD_UTL_PRINTTEXT(' Something goes wrong in reading summary timeseries on line 472 in imodflow_tseries.f90',2)
+     IF(KK.NE.JJ)CALL IMOD_UTL_PRINTTEXT(' Something goes wrong in reading summary timeseries on line 507 in imodflow_tseries.f90',2)
 
      IF(TS(JJ)%IEXT.GT.0)THEN
       IF(TSDATE(II).EQ.JDATE)THEN
@@ -531,7 +556,7 @@ ELSE
       WRITE(IUTXT(II),*) IDATE,H
      ENDIF   
 
-    ENDDO
+  ENDDO
    ENDDO
   ENDDO
   
@@ -543,8 +568,8 @@ ELSE
   IF(ALLOCATED(TSDATE))DEALLOCATE(TSDATE); IF(ALLOCATED(TSNODATA))DEALLOCATE(TSNODATA)
   IF(ALLOCATED(TSM))DEALLOCATE(TSM)
  
-  CALL IMOD_UTL_PRINTTEXT('',0); CALL IMOD_UTL_PRINTTEXT(' Finished Writing Timeseries to IPF file ...',0)
- ENDIF
+  CALL IMOD_UTL_PRINTTEXT('',3); CALL IMOD_UTL_PRINTTEXT(' Finished Writing Timeseries to IPF file ...',0)
+  ENDIF
  
  CLOSE(IU) 
  

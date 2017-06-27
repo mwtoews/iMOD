@@ -519,7 +519,8 @@ C     ------------------------------------------------------------------
       CHARACTER*1 DASH(120)
       real, dimension(:,:), pointer :: hfbtmp                           ! DLT
       logical :: lcd                                                    ! DLT
-      logical used1, used2                                              ! OSC3
+      logical lused1, lused2                                            ! PKS
+      integer jj                                                        ! PKS
       DATA DASH/120*'-'/
       DATA NUNOPN/99/
       INCLUDE 'openspec.inc'
@@ -589,9 +590,11 @@ C3------Loop through the number of cells to read.
       N = NLIST+LSTBEG-1
 
       II=LSTBEG-1                                                        ! OSC3
+      JJ = 0                                                            ! PKS
 cOSC3      DO 250 II=LSTBEG,N
       DO 250 kk=LSTBEG,N                                                 ! OSC3
          II=II+1                                                         ! OSC3
+         JJ=JJ+1                                                        ! PKS
 C
 C4------Read a line into the buffer.  (The first line has already been read
 C4------in order to scan for EXTERNAL and SFAC records.)
@@ -607,13 +610,16 @@ C5------Read the non-optional values from a line.
       CALL URWORD(LINE,LLOC,ISTART,ISTOP,2,J2,R,IOUT,IN)
       CALL URWORD(LINE,LLOC,ISTART,ISTOP,3,IDUM,FACTOR,IOUT,IN)
       else
-         k      = int(hfbtmp(1,ii))                                     ! LCD
-         i1     = int(hfbtmp(2,ii))                                     ! LCD
-         j1     = int(hfbtmp(3,ii))                                     ! LCD
-         i2     = int(hfbtmp(4,ii))                                     ! LCD
-         j2     = int(hfbtmp(5,ii))                                     ! LCD
-         factor = hfbtmp(6,ii)                                          ! LCD
+         k      = int(hfbtmp(1,jj))                                     ! LCD
+         i1     = int(hfbtmp(2,jj))                                     ! LCD
+         j1     = int(hfbtmp(3,jj))                                     ! LCD
+         i2     = int(hfbtmp(4,jj))                                     ! LCD
+         j2     = int(hfbtmp(5,jj))                                     ! LCD
+         factor = hfbtmp(6,jj)                                          ! LCD
       end if
+      call pks7mpitrn(j1,i1,k,lused1)                                   ! PKS
+      call pks7mpitrn(j2,i2,k,lused2)                                   ! PKS
+      if(lused1.and.lused2) then                                        ! PKS
       HFB(1,II) = K
       HFB(2,II) = I1
       HFB(3,II) = J1
@@ -640,7 +646,11 @@ C7------Check for illegal grid location.
          WRITE(IOUT,*) ' Column number in list is outside of the grid'
          CALL USTOP(' ')
       END IF
+      else                                                              ! PKS
+         ii=ii-1                                                        ! PKS
+      end if                                                            ! PKS
   250 CONTINUE
+      NLIST = II-LSTBEG+1                                               ! PKS
       IF(ICLOSE.NE.0) CLOSE(UNIT=IN)
 
       if (lcd) deallocate(hfbtmp)                                       ! LCD

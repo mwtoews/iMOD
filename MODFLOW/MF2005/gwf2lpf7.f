@@ -85,7 +85,8 @@ C     ------------------------------------------------------------------
      1                      NCNFBD,IBOUND,BUFF,BOTM,NBOTM,DELR,DELC,IOUT
      2                      ,cc,cv,iunit,                               ! ANIPWT
      3                      lbotm,                                      ! DLT
-     4                      kdsv                                        ! ANIPWT
+     4                      kdsv,                                       ! ANIPWT
+     5                      IACTCELL                                    ! PKS
       USE GWFBASMODULE,ONLY:HDRY
       USE GWFLPFMODULE,ONLY:ILPFCB,IWDFLG,IWETIT,IHDWET,
      1                      ISFAC,ICONCV,ITHFLG,NOCVCO,NOVFC,WETFCT,
@@ -509,9 +510,16 @@ C7G-----(LAYWET NOT 0).
       IF(LAYWET(K).NE.0) THEN
          CALL U2DREL(WETDRY(:,:,LAYWET(K)),ANAME(8),NROW,NCOL,KK,IN,
      1            IOUT)
+         DO I=1,NROW                                                    ! PKS
+           DO J=1,NCOL                                                  ! PKS
+             IF (WETDRY(J,I,LAYWET(K)).NE.0.0) THEN                     ! PKS
+               IACTCELL(J,I,K) = 1                                      ! PKS
+             END IF                                                     ! PKS
+           END DO                                                       ! PKS
+         END DO                                                         ! PKS
       END IF
   200 CONTINUE
-C   hk(120,100,1)
+C
       call pest1alpha_grid('KH',hk,nrow,ncol,nlay)                      ! IPEST
       call pest1alpha_grid('KV',vka,nrow,ncol,nlay)                     ! IPEST
       call pest1alpha_grid('VA',vkcb,nrow,ncol,nlay)                    ! IPEST
@@ -751,7 +759,8 @@ C
 C        SPECIFICATIONS:
 C     ------------------------------------------------------------------
       USE GLOBAL,      ONLY:NCOL,NROW,NLAY,IBOUND,HNEW,LAYCBD,CV,
-     1                      BOTM,NBOTM,DELR,DELC,IOUT
+     1                      BOTM,NBOTM,DELR,DELC,IOUT,
+     2                      IACTCELL                                     ! PKS
       USE GWFBASMODULE,ONLY:HNOFLO
       USE GWFLPFMODULE,ONLY:LAYWET,WETDRY,HK,VKCB,LAYTYP,VKA
 C     ------------------------------------------------------------------
@@ -844,6 +853,7 @@ C4B-----VERTICAL HYDRAULIC CONDUCTIVITY.
 C
 C4C-----ALL TRANSMISSIVE TERMS ARE 0, SO CONVERT CELL TO NO FLOW.
          IBOUND(J,I,K)=0
+         IACTCELL(J,I,K) = 0                                            ! PKS
          HNEW(J,I,K)=HCNV
          WRITE(IOUT,43) K,I,J
    43    FORMAT(1X,'NODE (LAYER,ROW,COL) ',I3,2(1X,I5),
@@ -1371,7 +1381,7 @@ C13-----STORE SUM IN BUFFER.
       if(iunit(iuani).gt.0)then
        BUFF(J,I,K)=buff(j,i,k)+RATE
       else     
-       BUFF(J,I,K)=RATE
+      BUFF(J,I,K)=RATE
       endif
 
 C
@@ -1725,7 +1735,7 @@ C3A-----BRANCH CONDUCTANCE IN THE ROW DIRECTION (CR) TO THE RIGHT.
                   T2 = MAX(T2,MINKD)                                    ! DLT
                END IF                                                   ! DLT
                IF(T1+T2.GT.0.0)THEN                                     ! DLT
-                CR(J,I,K)=TWO*T2*T1*DELC(I)/(T1*DELR(J+1)+T2*DELR(J))
+               CR(J,I,K)=TWO*T2*T1*DELC(I)/(T1*DELR(J+1)+T2*DELR(J))
                ELSE                                                     ! DLT
                 CR(J,I,K)=ZERO                                          ! DLT
                ENDIF                                                    ! DLT
@@ -1755,7 +1765,7 @@ C3C-----BRANCH CONDUCTANCE IN THE COLUMN DIRECTION (CC) TO THE FRONT.
                   T2 = MAX(T2,MINKD)                                    ! DLT
                END IF                                                   ! DLT
                IF(T1+T2.GT.0.0)THEN                                     ! DLT
-                CC(J,I,K)=TWO*T2*T1*DELR(J)/(T1*DELC(I+1)+T2*DELC(I))
+               CC(J,I,K)=TWO*T2*T1*DELR(J)/(T1*DELC(I+1)+T2*DELC(I))
                ELSE                                                     ! DLT
                 CC(J,I,K)=ZERO                                          ! DLT
                ENDIF                                                    ! DLT

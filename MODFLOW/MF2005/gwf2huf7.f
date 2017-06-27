@@ -66,7 +66,8 @@ C
 C        SPECIFICATIONS:
 C     ------------------------------------------------------------------
       USE GLOBAL,      ONLY:NCOL,NROW,NLAY,BOTM,ITRSS,LAYHDT,LAYHDS,
-     1                      IOUT,ISSFLG,NPER,IBOUND,LBOTM
+     1                      IOUT,ISSFLG,NPER,IBOUND,LBOTM,
+     2                      IACTCELL                                    ! PKS
       USE GWFBASMODULE,ONLY:HDRY
       USE GWFHUFMODULE,ONLY:IHUFCB,NHUF,NPHUF,IWETIT,IHDWET,IOHUFHDS,
      1                      IOHUFFLWS,WETFCT,HGUNAM,LTHUF,LAYWT,
@@ -307,9 +308,15 @@ C2H-----(LAYWT NOT 0).
       IF(LAYWT(K).NE.0) THEN
          CALL U2DREL(WETDRY(:,:,LAYWT(K)),ANAME(8),NROW,NCOL,K,IN,
      &            IOUT)
-      END IF
+        DO I=1,NROW                                                     ! PKS
+          DO J=1,NCOL                                                   ! PKS
+            IF (WETDRY(J,I,LAYWT(K)).NE.0.0) THEN                       ! PKS
+              IACTCELL(J,I,K) = 1                                       ! PKS
+            END IF                                                      ! PKS
+          END DO                                                        ! PKS
+        END DO                                                          ! PKS
+      END IF                                                            ! PKS
   300 CONTINUE
-
       WRITE(IOUT,147)
   147 FORMAT(
      & //1X,'HUF7 -- HYDROGEOLOGIC-UNIT FLOW PACKAGE',

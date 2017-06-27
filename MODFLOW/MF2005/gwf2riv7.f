@@ -629,8 +629,8 @@ C
         DEALLOCATE(RIVR)
         DEALLOCATE(IRIVRFACT)                                           ! RFACT
         deallocate(irivsubsys)                                          ! rsubsys
-        deallocate(nrivsubsys)                                          ! rsubsys
-        deallocate(rivsubsidx)                                          ! rsubsys
+        if (associated(nrivsubsys)) deallocate(nrivsubsys)              ! rsubsys
+        if (associated(rivsubsidx)) deallocate(rivsubsidx)              ! rsubsys
         deallocate(irivrconc)                                           ! rconc
         deallocate(lreuse)
         deallocate(ifvdl)                                               ! ifvdl

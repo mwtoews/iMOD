@@ -41,8 +41,12 @@ c   2600 MH Delft, The Netherlands.
          character(len=300), save, pointer :: time_ostring
          real, save, pointer :: coord_xll
          real, save, pointer :: coord_yll
+         real, save, pointer :: gcoord_xll
+         real, save, pointer :: gcoord_yll
          real, save, pointer :: coord_xur
          real, save, pointer :: coord_yur
+         real, save, pointer :: gcoord_xur
+         real, save, pointer :: gcoord_yur
          real, save, pointer :: coord_xll_nb
          real, save, pointer :: coord_yll_nb
          real, save, pointer :: coord_xur_nb
@@ -57,6 +61,7 @@ c   2600 MH Delft, The Netherlands.
          real, dimension(:), save, pointer :: cdelr
          real, dimension(:), save, pointer :: cdelc
          logical, save, pointer :: save_no_buf
+         logical, save, pointer :: write_debug_idf
          type gwfmettype
             character(len=300), pointer :: runcomment
             character(len=300), pointer :: coord_descr
@@ -77,6 +82,10 @@ c   2600 MH Delft, The Netherlands.
             real, pointer :: coord_yll
             real, pointer :: coord_xur
             real, pointer :: coord_yur
+            real, pointer :: gcoord_xll
+            real, pointer :: gcoord_yll
+            real, pointer :: gcoord_xur
+            real, pointer :: gcoord_yur
             real, pointer :: coord_xll_nb
             real, pointer :: coord_yll_nb
             real, pointer :: coord_xur_nb
@@ -91,6 +100,7 @@ c   2600 MH Delft, The Netherlands.
             real, dimension(:), pointer :: cdelr
             real, dimension(:), pointer :: cdelc
             logical, pointer :: save_no_buf
+            logical, pointer :: write_debug_idf
          end type
 
          type(gwfmettype), save :: gwfmetdat(10)

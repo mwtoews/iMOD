@@ -47,6 +47,8 @@
       LOGICAL*4 cvg   ! output
       LOGICAL*4 ready ! output
 !
+      call timing_tic('METASWAP','initSimulation')
+      
 !     Read data for setting up simulation, check that time is within meteo period
       iact = 0
       iter = 0
@@ -55,7 +57,9 @@
 #else
       write(*,*) 'Error: MetaSWAP_initSimulation'; stop 1
 #endif
-!       
+!
+      call timing_toc('METASWAP','initSimulation')
+
       END
 !
 !
@@ -73,7 +77,7 @@
       INTEGER*4 iact
       INTEGER*4 iter
       REAL*8    time
-      REAL*8    dt                
+      REAL*8    dt 
       LOGICAL*4 ready
 !
 !     No actions
@@ -88,7 +92,7 @@
       INTEGER*4 iact
       INTEGER*4 iter
       REAL*8    time_arg, time
-      REAL*8    dt   
+      REAL*8    dt 
       LOGICAL*4 cvg   ! output
       LOGICAL*4 ready
 !
@@ -122,6 +126,9 @@
 !     - save the initial SIMGRO state
 !
 !     Do the simulation for the fast processes: evapotranspiration, runoff
+
+      call timing_tic('METASWAP','initTimestep')
+
       iact = 1
       iter = 0      
 #ifdef INCLUDE_METASWAP
@@ -130,6 +137,8 @@
       write(*,*) 'Error: MetaSWAP_initTimestep'; stop 1
 #endif      
 !       
+      call timing_toc('METASWAP','initTimestep')
+      
       END
 !
 !------------------------------------------------------------------------------
@@ -140,7 +149,7 @@
       INTEGER*4 iact
       INTEGER*4 iter
       REAL*8    time
-      REAL*8    dt     
+      REAL*8    dt
       LOGICAL*4 cvg   ! output
       LOGICAL*4 ready
 !
@@ -167,6 +176,8 @@
 !
 !     Update the unsaturated zone
 !     Compute recharges and storage coefficients for MODFLOW
+      call timing_tic('METASWAP','performIter')
+
       iact = 2
 #ifdef INCLUDE_METASWAP      
       CALL SIMGRO(iact,iter,time,dt,cvg,ready)   
@@ -174,6 +185,8 @@
       write(*,*) 'Error: MetaSWAP_performIter'; stop 1
 #endif
 !       
+      call timing_toc('METASWAP','performIter')
+
       RETURN
       END
 !
@@ -206,6 +219,8 @@
 !     Process MODFLOW heads for update of:
 !     - MODFLOW net flux as seen by MetaSWAP
 !     - MetaSWAP groundwater level
+      call timing_tic('METASWAP','finishIter')
+
       iact = 3
 #ifdef INCLUDE_METASWAP      
       CALL SIMGRO(iact,iter,time,dt,cvg,ready)        
@@ -213,6 +228,7 @@
       write(*,*) 'Error: MetaSWAP_finishIter'; stop 1
 #endif
 !       
+      call timing_toc('METASWAP','finishIter')
       RETURN
       END
 !
@@ -231,6 +247,7 @@
 !     Finalize unsaturated zone
 !     Budget calculations
 !     Write data to file
+      call timing_tic('METASWAP','finishTimestep')
       iact = 4
 #ifdef INCLUDE_METASWAP      
       CALL SIMGRO(iact,iter,time,dt,cvg,ready)
@@ -238,6 +255,7 @@
       write(*,*) 'Error: MetaSWAP_finishTimestep'; stop 1
 #endif
 !       
+      call timing_toc('METASWAP','finishTimestep')
       RETURN
       END
 !
@@ -254,6 +272,7 @@
       LOGICAL*4 ready
 !
 !     Finalize simulation
+      call timing_tic('METASWAP','finishSimulation')
       iact = 5
 #ifdef INCLUDE_METASWAP      
       CALL SIMGRO(iact,iter,time,dt,cvg,ready)
@@ -261,6 +280,7 @@
       write(*,*) 'Error: MetaSWAP_finishSimulation'; stop 1
 #endif
 !       
+      call timing_toc('METASWAP','finishSimulation')
       RETURN
       END
 !
@@ -268,7 +288,7 @@
       SUBROUTINE MetaSWAP_saveState()
 !
       IMPLICIT     NONE
-
+       
 #ifdef INCLUDE_METASWAP      
       CALL SIMGRO_save
 #else
@@ -314,6 +334,7 @@
 !      REAL*8    dt
 !      LOGICAL*4 status
 !
+      call timing_tic('METASWAP','saveRestore')
 #ifdef INCLUDE_METASWAP      
        if (strestore) then
           write(*,*) ' RESTORE STATE: MetaSwap'
@@ -326,6 +347,7 @@
       write(*,*) 'Error: MetaSWAP_saveRestore'; stop 1
 #endif
 !
+      call timing_toc('METASWAP','saveRestore')
       RETURN
       END
 
@@ -349,11 +371,11 @@
       write(*,*) 'Error: metaswap_PutModSimNumberOfIDs'; stop 1
       nxch=0
 #endif
-      if (nxch.le.0) then
-         retval = .false.      
-      else
+      !if (nxch.le.0) then
+      !  retval = .false.      
+      !else
          retval = .true.
-      end if
+      !end if
       metaswap_PutModSimNumberOfIDs = retval
       
       end function
@@ -393,14 +415,15 @@
 !...     modules  
 #ifdef INCLUDE_METASWAP      
       use simvar, only: hgwmod, mfi
+      use pks_imod_utl, only: pks_imod_utl_iarmwp_xch ! PKS
 #endif
       implicit none
 
 !...     arguments    
       integer, intent(in)                 :: nid
-      real, dimension(*), intent(in)      :: gwheads
+      real, dimension(*), intent(inout)   :: gwheads
       integer, dimension(*), intent(in)   :: xchIdx
-      integer, dimension(nid), intent(in) :: xchOff
+      integer, dimension(*), intent(in)   :: xchOff
       real, intent(in)                    :: mv
       
 !...     locals
@@ -415,11 +438,14 @@
       else
          ok = .true.
       end if
+      call pks_imod_utl_iarmwp_xch(gwheads,'h')                         ! PKS
       js = 1
       do i = 1, nid
          ! get index in receive array
          je = xchOff(i)
-         if (je-js.gt.0) write(*,*) 'Warning: svat received >1 heads'
+         if (je-js.gt.0) then
+            write(*,*) 'Warning: svat received >1 heads'
+         end if   
          do j = js, je
             k = xchIdx(j)
             if (k.le.0) then
@@ -442,7 +468,8 @@
       logical function metaswap_PutModSimUnsaturatedZoneFlux(uszflux,mv)
 !...     modules    
 #ifdef INCLUDE_METASWAP      
-      use simvar, only: vsim, mfi
+      use pksmpi_mod,only:myrank
+      use simvar, only: vsim, mfi, ki
 #endif
       implicit none
 
@@ -453,6 +480,7 @@
 !...     locals 
       logical ok     
       integer :: i, n
+      real :: rmask ! PKS
 !.......................................................................
 
 #ifdef INCLUDE_METASWAP      
@@ -464,7 +492,9 @@
 !...      copy unsaturated zone flux            
       do i = 1, size(mfi)
          uszflux(i) = vsim(i)
-      end do        
+         call pks7mpimsiarmwpmask(mfi(i),ki(i),rmask) ! PKS 
+         uszflux(i) = rmask*uszflux(i) ! PKS
+      end do
 #else
       write(*,*) 'Error: metaswap_PutModSimUnsaturatedZoneFlux'; stop 1
       uszflux(1)=1

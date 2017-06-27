@@ -87,6 +87,7 @@ c ------------------------------------------------------------------------------
       use gcdmodule
       use idfmodule
       use rdrsmodule, only: nodata
+      use pksmpi_mod,only: nrproc, gncol, gnrow                  
 
       implicit none
 
@@ -126,6 +127,7 @@ c local variables
       character(len=200) :: line
       character(len=256) :: str, fname, tmplabel
       integer, dimension(10) :: jjj
+      logical :: lused                                                  ! PKS
 
 c program section
 c ------------------------------------------------------------------------------
@@ -222,7 +224,11 @@ c                  check if file is of type isg
                   call pck1rpisg(isglist(isub)%list,nalloc,
      1               isglist(isub)%nlist,fname,ilay(isub),0)
                   deallocate(isglist(isub)%list)
-                  nalloc = 2*isglist(isub)%nlist+nrow*ncol
+                  if (nrproc.gt.1) then                                 ! PKS
+                     nalloc = 2*isglist(isub)%nlist+gnrow*gncol         ! PKS
+                  else                                                  ! PKS
+                     nalloc = 2*isglist(isub)%nlist+nrow*ncol           ! PKS
+                  end if                                                ! PKS
                   allocate(isglist(isub)%list(nalloc,11))
                   call pck1rpisg(isglist(isub)%list,nalloc,
      1               isglist(isub)%nlist,fname,ilay(isub),1)
@@ -361,31 +367,47 @@ c              check if subsystem is of type ISG
                      do kk = 1, isglist(isub)%nlist
                         irow = int(isglist(isub)%list(kk,2))
                         icol = int(isglist(isub)%list(kk,3))
-                        z1   = isglist(isub)%list(kk,4)
-                        q    = isglist(isub)%list(kk,5)
-                        z2   = isglist(isub)%list(kk,6)
-                        if (z1.eq.z2) then
-                           z1 = z1 + 0.05
-                           z2 = z2 - 0.05
-                        end if
-                        call assign_layer(tlp,irow,icol,z1,z2)
-                        do il = 1, nlay
-                           if (tlp(il).gt.0.) then
-                              nisg = nisg + 1
-                              if (jact.eq.2) then
-                                 do jj = 1, 10
-                                    isglist2(nisg,jj) =
-     1                                 isglist(isub)%list(kk,jj)
-                                 end do
-                                 isglist2(nisg,1) = il
-                                 isglist2(nisg,5) = q*tlp(il)
-                              end if
+                        call pks7mpitrn(icol,irow,1,lused)              ! PKS
+                        if (lused) then                                 ! PKS
+                           z1   = isglist(isub)%list(kk,4)
+                           q    = isglist(isub)%list(kk,5)
+                           z2   = isglist(isub)%list(kk,6)
+                           if (z1.eq.z2) then
+                              z1 = z1 + 0.05
+                              z2 = z2 - 0.05
                            end if
-                        end do
-                      end do
-                   else
-                      nisg = isglist(isub)%nlist
-                      if (jact.eq.2) isglist2 = isglist(isub)%list
+                           call assign_layer(tlp,irow,icol,z1,z2)
+                           do il = 1, nlay
+                              if (tlp(il).gt.0.) then
+                                 nisg = nisg + 1
+                                 if (jact.eq.2) then
+                                    do jj = 1, 10
+                                       isglist2(nisg,jj) =
+     1                                    isglist(isub)%list(kk,jj)
+                                    end do
+                                    isglist2(nisg,1) = il
+                                    isglist2(nisg,5) = q*tlp(il)
+                                 end if
+                              end if
+                           end do
+                        end if                                          ! PKS
+                     end do
+                  else
+                      nisg = 0                                          ! PKS
+                      do kk = 1, isglist(isub)%nlist                    ! PKS
+                         irow = int(isglist(isub)%list(kk,2))           ! PKS
+                         icol = int(isglist(isub)%list(kk,3))           ! PKS
+                         call pks7mpitrn(icol,irow,1,lused)             ! PKS
+                         if (lused) then                                ! PKS
+                            nisg = nisg + 1                             ! PKS
+                            if (jact.eq.2) then                         ! PKS
+                               do jj = 1, 11                            ! PKS
+                                  isglist2(nisg,jj) =                   ! PKS
+     1                               isglist(isub)%list(kk,jj)          ! PKS
+                               end do                                   ! PKS
+                            end if                                      ! PKS
+                         end if                                         ! PKS
+                      end do                                            ! PKS
                    end if
                    if (jact.eq.1) then
                       if (allocated(isglist2)) deallocate(isglist2)
@@ -396,11 +418,18 @@ c              check if subsystem is of type ISG
                call pck3rpisg(isglist2,nisg)
 
                if (iact.eq.1) then
-                  ii = ii + nisg
+                  ii = ii + nisg 
                else
                   do jj = 1, nisg
+                     kk   = isglist2(jj,1)                              ! PKS
+                     irow = isglist2(jj,2)                              ! PKS
+                     icol = isglist2(jj,3)                              ! PKS
+                     call pks7mpitrn(icol,irow,kk,lused)                ! PKS
                      ii = ii + 1
-                     do kk = 1, 7
+                     rlisttmp(1,ii) = kk
+                     rlisttmp(2,ii) = irow
+                     rlisttmp(3,ii) = icol
+                     do kk = 4, 7
                         rlisttmp(kk,ii) = isglist2(jj,kk)
                      end do
                      if (storeisub) then

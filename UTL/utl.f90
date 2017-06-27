@@ -1,4 +1,26 @@
-            function cfn_cla_fnd(arg)
+!!  Copyright (C) Stichting Deltares, 2005-2017.
+!!
+!!  This file is part of iMOD.
+!!
+!!  This program is free software: you can redistribute it and/or modify
+!!  it under the terms of the GNU General Public License as published by
+!!  the Free Software Foundation, either version 3 of the License, or
+!!  (at your option) any later version.
+!!
+!!  This program is distributed in the hope that it will be useful,
+!!  but WITHOUT ANY WARRANTY; without even the implied warranty of
+!!  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+!!  GNU General Public License for more details.
+!!
+!!  You should have received a copy of the GNU General Public License
+!!  along with this program.  If not, see <http://www.gnu.org/licenses/>.
+!!
+!!  Contact: imod.support@deltares.nl
+!!  Stichting Deltares
+!!  P.O. Box 177
+!!  2600 MH Delft, The Netherlands.
+    
+      function cfn_cla_fnd(arg)
 ! description:
 ! ------------------------------------------------------------------------------
 ! search for the position of a Command Line Argument
@@ -2746,7 +2768,7 @@ end
 
 
 ! local variables
-      integer   lstring
+      integer   lstring,i
 
 
 ! functions
@@ -10385,7 +10407,7 @@ end
       osd_get_os=4                  ! LINUX
 
 #else
-      ERROR, cannot compile routine OSD_GTOS, compiler directives unknown
+      ERROR, can not compile routine OSD_GTOS, compiler directives unknown
       osd_get_os=-1
       write(*,*) ' ERROR in compilation of routine OSD_GTOS.'
       call exit(1)
@@ -10733,16 +10755,16 @@ end
                             !     separated by a space ' ' or comma ','
 
 ! local variables
-      integer   l,ls,lf,la,lc,lp,recl,ios
+      integer   l,ls,lf,la,lc,lp,recl,ios,iflen
 
       character upopts*256,&
                 option*16,status*16,form*16,access*16,position*16,&
                 carriagecontrol*16,&
                 del*1
 
-      logical   readonly,shared,replace,&
+      logical   readonly,shared,replace,mpifile,&
                 exist
-
+      character(len=1024) :: fname
 
 ! functions
       integer   cfn_length
@@ -10766,6 +10788,7 @@ end
 !      write(*,'(2a)') ' ***** osd_open2 ',file(1:cfn_length(file))
 
 ! default values
+      fname = file
       status          = 'UNKNOWN'
       form            = 'FORMATTED'
       access          = 'SEQUENTIAL'
@@ -10774,7 +10797,6 @@ end
       carriagecontrol = ' '
       readonly        = .false.
       shared          = .false.
-
 
 ! find options
       upopts=opts
@@ -10834,7 +10856,37 @@ end
 
       enddo
 
+! check whether to append the file name with the MPI process number of not
+      mpifile=.false.
+      if (status(1:cfn_length(status)).eq.'NEW') mpifile = .true.
+      if (replace) mpifile = .true.
+      upopts=opts
+      call cfn_s_upcase(upopts)
+      do while (cfn_length(upopts).gt.0)
+         call cfn_par_ext(option,upopts,' ,',2,del)
+         l=cfn_length(option)
+         if (option(1:l).eq.'NOMPI') then
+            mpifile=.false. 
+            exit
+         end if
+         if (option(1:l).eq.'MPI') then
+            mpifile=.true.
+            exit
+         end if
+      enddo   
+      l =cfn_length(fname)
+      ls=cfn_length(status)
+      lf=cfn_length(form)
+      la=cfn_length(access)
+      lp=cfn_length(position)
+      lc=cfn_length(carriagecontrol)
 
+#ifdef PKSMPI      
+      if (mpifile) then
+         call pks7mpifname(fname,l)
+      end if
+#endif   
+      
 ! check for replace option
 !    for compilers which do not know the REPLACE status the file will be deleted
 !    first if it exists
@@ -10846,24 +10898,15 @@ end
 
 #else
 
-      inquire(file=file,exist=exist)
+      inquire(file=fname,exist=exist)
       if (exist) then
-         open(unit=lun,file=file,status='UNKNOWN')
+         open(unit=lun,file=fname,status='UNKNOWN')
          close(lun,status='DELETE')
       endif
 
 #endif
 
       endif
-
-
-      l =cfn_length(file)
-      ls=cfn_length(status)
-      lf=cfn_length(form)
-      la=cfn_length(access)
-      lp=cfn_length(position)
-      lc=cfn_length(carriagecontrol)
-
 
 ! check for APPEND in case of PGF compiler
 #if   (defined(OSD_CMP_PGF))
@@ -10906,7 +10949,7 @@ end
 
                ! READONLY,SHARED,RECL
 
-               open(unit=lun,file=file(1:l),iostat=ios,&
+               open(unit=lun,file=fname(1:l),iostat=ios,&
                    status=status(1:ls),&
                    form=form(1:lf),&
                    access=access(1:la),&
@@ -10930,7 +10973,7 @@ end
 
                ! READONLY,RECL
 
-               open(unit=lun,file=file(1:l),iostat=ios,&
+               open(unit=lun,file=fname(1:l),iostat=ios,&
                    status=status(1:ls),&
                    form=form(1:lf),&
                    access=access(1:la),&
@@ -10956,7 +10999,7 @@ end
 
                ! SHARED,RECL
 
-               open(unit=lun,file=file(1:l),iostat=ios,&
+               open(unit=lun,file=fname(1:l),iostat=ios,&
                    status=status(1:ls),&
                    form=form(1:lf),&
                    access=access(1:la),&
@@ -10979,7 +11022,7 @@ end
 
                ! RECL
 
-               open(unit=lun,file=file(1:l),iostat=ios,&
+               open(unit=lun,file=fname(1:l),iostat=ios,&
                    status=status(1:ls),&
                    form=form(1:lf),&
                    access=access(1:la),&
@@ -11005,13 +11048,14 @@ end
 
                ! READONLY,SHARED
 
-               open(unit=lun,file=file(1:l),iostat=ios,&
+               open(unit=lun,file=fname(1:l),iostat=ios,&
                    status=status(1:ls),&
                    form=form(1:lf),&
                    access=access(1:la) &
 #if   (defined(OSD_CMP_IFORT) || defined(OSD_CMP_CVF))
                    ,carriagecontrol=carriagecontrol(1:lc) &
-                   ,READONLY,SHARED &
+                   ,READONLY,SHARED,&
+                   share='denynone'& ! PKS                                               
 #elif (defined(OSD_CMP_PGF))
                    ,READONLY &
 !     1             ,position=position(1:lp)
@@ -11028,7 +11072,7 @@ end
 
                ! READONLY
 
-               open(unit=lun,file=file(1:l),iostat=ios,&
+               open(unit=lun,file=fname(1:l),iostat=ios,&
                    status=status(1:ls),&
                    form=form(1:lf),&
                    access=access(1:la) &
@@ -11053,13 +11097,14 @@ end
 
                ! SHARED
 
-               open(unit=lun,file=file(1:l),iostat=ios,&
+               open(unit=lun,file=fname(1:l),iostat=ios,&
                    status=status(1:ls),&
                    form=form(1:lf),&
                    access=access(1:la) &
 #if   (defined(OSD_CMP_IFORT) || defined(OSD_CMP_CVF))
                    ,carriagecontrol=carriagecontrol(1:lc) &
-                   ,SHARED &
+                   ,SHARED,&
+                   share='denynone'& ! PKS                                               
 #elif (defined(OSD_CMP_PGF))
 !     1             ,position=position(1:lp)
 #elif (defined(OSD_CMP_IFC))
@@ -11075,12 +11120,13 @@ end
 
                !
 
-               open(unit=lun,file=file(1:l),iostat=ios,&
+               open(unit=lun,file=fname(1:l),iostat=ios,&
                    status=status(1:ls),&
                    form=form(1:lf),&
                    access=access(1:la) &
 #if   (defined(OSD_CMP_IFORT) || defined(OSD_CMP_CVF))
-                   ,carriagecontrol=carriagecontrol(1:lc) &
+                   ,carriagecontrol=carriagecontrol(1:lc),&
+                   share='denynone'& ! PKS                                               
 #elif (defined(OSD_CMP_PGF))
 !     1             ,position=position(1:lp)
 #elif (defined(OSD_CMP_IFC))

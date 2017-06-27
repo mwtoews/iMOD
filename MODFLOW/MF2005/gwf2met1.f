@@ -44,6 +44,10 @@ c deallocate MET memory
       if (associated(time_ostring))       deallocate(time_ostring)
       if (associated(coord_xll))          deallocate(coord_xll)
       if (associated(coord_yll))          deallocate(coord_yll)
+      if (associated(gcoord_xll))         deallocate(gcoord_xll)
+      if (associated(gcoord_yll))         deallocate(gcoord_yll)
+      if (associated(gcoord_xur))         deallocate(gcoord_xur)
+      if (associated(gcoord_yur))         deallocate(gcoord_yur)
       if (associated(coord_xur))          deallocate(coord_xur)
       if (associated(coord_yur))          deallocate(coord_yur)
       if (associated(coord_xll_nb))       deallocate(coord_xll_nb)
@@ -60,6 +64,7 @@ c deallocate MET memory
       if (associated(cdelr))              deallocate(cdelr)
       if (associated(cdelc))              deallocate(cdelc)
       if (associated(save_no_buf))        deallocate(save_no_buf)
+      if (associated(write_debug_idf))    deallocate(write_debug_idf)
 
       if (igrid.eq.1) then
          if (allocated(xmask)) deallocate(xmask)
@@ -93,6 +98,10 @@ C change meta data to a different grid.
       coord_yll    => gwfmetdat(igrid)%coord_yll
       coord_xur    => gwfmetdat(igrid)%coord_xur
       coord_yur    => gwfmetdat(igrid)%coord_yur
+      gcoord_xll   => gwfmetdat(igrid)%gcoord_xll
+      gcoord_yll   => gwfmetdat(igrid)%gcoord_yll
+      gcoord_xur   => gwfmetdat(igrid)%gcoord_xur
+      gcoord_yur   => gwfmetdat(igrid)%gcoord_yur
       coord_xll_nb => gwfmetdat(igrid)%coord_xll_nb
       coord_yll_nb => gwfmetdat(igrid)%coord_yll_nb
       coord_xur_nb => gwfmetdat(igrid)%coord_xur_nb
@@ -107,6 +116,7 @@ C change meta data to a different grid.
       cdelr => gwfmetdat(igrid)%cdelr
       cdelc => gwfmetdat(igrid)%cdelc
       save_no_buf => gwfmetdat(igrid)%save_no_buf
+      write_debug_idf => gwfmetdat(igrid)%write_debug_idf
 
       return
       end
@@ -136,6 +146,10 @@ C save meta data for a grid.
       gwfmetdat(igrid)%coord_yll    => coord_yll
       gwfmetdat(igrid)%coord_xur    => coord_xur
       gwfmetdat(igrid)%coord_yur    => coord_yur
+      gwfmetdat(igrid)%gcoord_xll   => gcoord_xll
+      gwfmetdat(igrid)%gcoord_yll   => gcoord_yll
+      gwfmetdat(igrid)%gcoord_xur   => gcoord_xur
+      gwfmetdat(igrid)%gcoord_yur   => gcoord_yur
       gwfmetdat(igrid)%coord_xll_nb => coord_xll_nb
       gwfmetdat(igrid)%coord_yll_nb => coord_yll_nb
       gwfmetdat(igrid)%coord_xur_nb => coord_xur_nb
@@ -150,6 +164,7 @@ C save meta data for a grid.
       gwfmetdat(igrid)%cdelr => cdelr
       gwfmetdat(igrid)%cdelc => cdelc
       gwfmetdat(igrid)%save_no_buf => save_no_buf
+      gwfmetdat(igrid)%write_debug_idf => write_debug_idf
 
       return
       end
@@ -245,13 +260,17 @@ c nullify
       coord_yll    => null()
       coord_xur    => null()
       coord_yur    => null()
+      gcoord_xll   => null()
+      gcoord_yll   => null()
+      gcoord_xur   => null()
+      gcoord_yur   => null()
       coord_xll_nb => null()
       coord_yll_nb => null()
       coord_xur_nb => null()
       coord_yur_nb => null()
       resultdir    => null()
       iss          => null()
-      ieq          => null()
+      allocate(ieq)
       ibound_fixed_west  => null()
       ibound_fixed_east  => null()
       ibound_fixed_north => null()
@@ -259,6 +278,7 @@ c nullify
       cdelr => null()
       cdelc => null()
       save_no_buf => null()
+      write_debug_idf => null()
 
 c read options
 C2------READ A LINE; IGNORE BLANK LINES AND PRINT COMMENT LINES.
@@ -276,18 +296,22 @@ C2------READ A LINE; IGNORE BLANK LINES AND PRINT COMMENT LINES.
             end if
             if (line(istart:istop).eq.'COORD_XLL') then
                if (.not.associated(coord_xll)) allocate(coord_xll)
+               if (.not.associated(gcoord_xll)) allocate(gcoord_xll)
                read(line(lloc:),*) coord_xll
             end if
             if (line(istart:istop).eq.'COORD_YLL') then
                if (.not.associated(coord_yll)) allocate(coord_yll)
+               if (.not.associated(gcoord_yll)) allocate(gcoord_yll)
                read(line(lloc:),*) coord_yll
             end if
             if (line(istart:istop).eq.'COORD_XUR') then
                if (.not.associated(coord_xur)) allocate(coord_xur)
+               if (.not.associated(gcoord_xur)) allocate(gcoord_xur)
                read(line(lloc:),*) coord_xur
             end if
             if (line(istart:istop).eq.'COORD_YUR') then
                if (.not.associated(coord_yur)) allocate(coord_yur)
+               if (.not.associated(gcoord_yur)) allocate(gcoord_yur)
                read(line(lloc:),*) coord_yur
             end if
            if (line(istart:istop).eq.'COORD_XLL_NB') then
@@ -334,7 +358,7 @@ C2------READ A LINE; IGNORE BLANK LINES AND PRINT COMMENT LINES.
      1            allocate(ibound_fixed_south)
                ibound_fixed_south = .true.
             end if
-           if (line(istart:istop).eq.'SAVE_NO_BUF') then
+            if (line(istart:istop).eq.'SAVE_NO_BUF') then
                if (.not.associated(save_no_buf))
      1            allocate(save_no_buf)
                save_no_buf = .true.
@@ -346,6 +370,11 @@ C2------READ A LINE; IGNORE BLANK LINES AND PRINT COMMENT LINES.
                read(line(lloc:),*) idate_save
             end if
 
+            if (line(istart:istop).eq.'WRITE_DEBUG_IDF') then
+               if (.not.associated(write_debug_idf))
+     1            allocate(write_debug_idf)
+               write_debug_idf = .true.
+            end if
             eol = .false.
             if (line(istart:istop).eq.'STARTTIME') then
                do while(.not.eol)
@@ -490,35 +519,42 @@ c program section
 c ------------------------------------------------------------------------------
       call sgwf2met1pnt(igrid)
 
-      if (.not.associated(coord_xur)) allocate(coord_xur)
-      if (.not.associated(coord_yur)) allocate(coord_yur)
+      if (.not.associated(coord_xur))  allocate(coord_xur)
+      if (.not.associated(coord_yur))  allocate(coord_yur)
       if (.not.associated(ieq)) allocate(ieq)
 
-      ieq = 0 ! default equidistant
-
+c check for equidistant grid
+      if ((maxval(delr).eq.minval(delr)).and.
+     1    (maxval(delc).eq.minval(delc))) then
+         ieq = 0 ! default equidistant
+      else
+         ieq = 1
+      end if   
+    
 c determine coord_xur
-      coord_xur = coord_xll
-      do icol = 1, ncol
-         coord_xur = coord_xur + delr(icol)
-         if (icol.gt.1) then
-            if (delr(icol).ne.delr(icol-1)) ieq = 1
-         end if
-      end do
-
+      if (ieq.eq.0) then
+         coord_xur = coord_xll + ncol*delr(1)
+      else   
+         coord_xur = coord_xll
+         do icol = 1, ncol
+            coord_xur = coord_xur + delr(icol)
+         end do
+      end if
+         
 c determine coord_yur
-      coord_yur = coord_yll
-      do irow = 1, nrow
-         coord_yur = coord_yur + delc(irow)
-         if (irow.gt.1) then
-            if (delc(irow).ne.delc(irow-1)) ieq = 1
-         end if
-      end do
+      if (ieq.eq.0) then
+         coord_yur = coord_yll + nrow*delc(1) 
+      else   
+         coord_yur = coord_yll
+         do irow = nrow, 1, -1
+            coord_yur = coord_yur + delc(irow)
+         end do
+      end if   
 
 c determine cumulative delr and delc
       if (associated(coord_xll).and.associated(coord_yur)) then
          allocate(cdelr(0:ncol),cdelc(0:nrow))
-         if ((maxval(delr).eq.minval(delr)).and.
-     1       (maxval(delc).eq.minval(delc))) then
+         if (ieq.eq.0) then
             cs = maxval(delr)
             cdelr(0) = coord_xll
             do icol = 1, ncol
@@ -685,7 +721,7 @@ c loop over the layers
 
 c     clean for nodata
       DO I=1,NROW; DO J=1,NCOL
-       IF(IBOUND(J,I,ilay).EQ.0) buff(J,I,ilay)=hnoflo
+       IF(IBOUND(J,I,ilay).EQ.0) buff(J,I,ilay)=0. ! CHECK WITH PETER
       enddo; enddo
 
          if (type.eq.splitidf) then
@@ -1019,6 +1055,7 @@ c local variables
       character(len=1024) :: fname
       character(len=300) :: root
       integer :: isub
+      character(len=10) :: partstr
 
 c parameters
       CHARACTER(LEN=16), PARAMETER :: RIVTXT = 'RIV LEAKAGE     '
@@ -1171,12 +1208,12 @@ c check for subsystem
       endif
       
       if(lriv.or.ldrn)then
-       if (cfn_length(text(14:)).gt.0) then
-        read(text(14:),*) isub
+         if (cfn_length(text(14:)).gt.0) then
+            read(text(14:),*) isub
         if (isub.lt.0)then
          if(lriv) isgflg = .true.
          if(ldrn) olfflg = .true.
-         isub = abs(isub)
+            isub = abs(isub)
         else
          if(lriv) rivflg = .true.
          if(ldrn) drnflg = .true.
@@ -1188,10 +1225,10 @@ c check for subsystem
        if(ldrn.and.ndrnsubsys.eq.1)then
         isub = 0
        end if      
-       ! for isg, riv --> isg
+         ! for isg, riv --> isg
        if (isgflg) then
-        i = index(prefix,'riv')
-        if (i.gt.0) prefix(i:i+2) = 'isg'
+             i = index(prefix,'riv')
+             if (i.gt.0) prefix(i:i+2) = 'isg'
        end if
        ! for olf, drn --> olf
        if (olfflg) then
@@ -1199,51 +1236,56 @@ c check for subsystem
         if (i.gt.0) prefix(i:i+2) = 'olf'
        end if
 c assemble root
-       root = ''
-       if (associated(resultdir)) then
-        root = resultdir(1:cfn_length(resultdir))//
+             root = ''
+             if (associated(resultdir)) then
+                root = resultdir(1:cfn_length(resultdir))//
      1             '\'//prefix(1:cfn_length(prefix)) //'\'
-        call osd_s_filename(root)
-       end if
+                call osd_s_filename(root)
+             end if
        if(isub.gt.0)then
         if (isub.lt.10) then
          fmt = '(2a,i1)'
         else
          fmt = '(2a,i2)'
         end if
-        write(prefix,fmt) prefix(1:cfn_length(prefix)),'_sys', isub
-       end if
+         write(prefix,fmt) prefix(1:cfn_length(prefix)),'_sys', isub
+      end if
       end if
 
 c create output file name
       if (ilay.lt.10) then
-         fmt = 'i1,2a)'
+         fmt = 'i1,3a)'
       else if (ilay.lt.100) then
-         fmt = 'i2,2a)'
+         fmt = 'i2,3a)'
       else
-         fmt = 'i3,2a)'
+         fmt = 'i3,3a)'
       end if
+    
+      call pks7mpipartstr(partstr) 
 
       if (issflg(kper).eq.0 .and. associated(time_ostring)) then ! TR
          fmt = '(5a,'//fmt
 !         write(*,*) idate_save
          if(idate_save.eq.0)then
-         write(fname,fmt) root(1:cfn_length(root)),
-     1                     prefix(1:cfn_length(prefix)),'_',
-     1                     time_ostring(1:cfn_length(time_ostring)),
-     1                     '_l', ilay, '.',ext(1:cfn_length(ext))
+            write(fname,fmt) root(1:cfn_length(root)),
+     1                       prefix(1:cfn_length(prefix)),'_',
+     1                       time_ostring(1:cfn_length(time_ostring)),
+     1                       '_l', ilay, partstr(1:cfn_length(partstr)),
+     1                       '.',ext(1:cfn_length(ext))
          elseif(idate_save.eq.1)then
-          write(fname,fmt) root(1:cfn_length(root)),
-     1                     prefix(1:cfn_length(prefix)),'_',
-     1                     time_cstring(1:cfn_length(time_cstring)),
-     1                     '_l', ilay, '.',ext(1:cfn_length(ext))
+            write(fname,fmt) root(1:cfn_length(root)),
+     1                       prefix(1:cfn_length(prefix)),'_',
+     1                       time_cstring(1:cfn_length(time_cstring)),
+     1                      '_l', ilay, partstr(1:cfn_length(partstr)),
+     1                      '.',ext(1:cfn_length(ext))
          endif
       else ! SS
          fmt = '(5a,'//fmt
          write(fname,fmt) root(1:cfn_length(root)),
      1                    prefix(1:cfn_length(prefix)),'_',
      1                    'steady-state',
-     1                    '_l', ilay, '.',ext(1:cfn_length(ext))
+     1                    '_l', ilay, partstr(1:cfn_length(partstr)),
+     1                    '.',ext(1:cfn_length(ext))
       end if
 
 c assign result
@@ -1264,7 +1306,8 @@ c declaration section
 c ------------------------------------------------------------------------------
 c modules
       use gwfmetmodule
-
+      use pksmpi_mod, only: nrproc, myrank
+      
 c implicit none statement
       implicit none
 
@@ -1274,7 +1317,9 @@ c arguments
 
 c local variables
       integer :: icol, irow, ilay
-
+      double precision :: mask
+      logical :: ln, ls, le, lw
+      
 c functions
 
 c include files
@@ -1284,56 +1329,262 @@ c ------------------------------------------------------------------------------
       call sgwf2met1pnt(igrid)
 
 c west
+      lw = .false.
       if (associated(ibound_fixed_west)) then
          if (ibound_fixed_west) then
             icol = 1
             do ilay = 1, nlay
                do irow = 1, nrow
-                 if (ibound(icol,irow,ilay).gt.0)
-     1              ibound(icol,irow,ilay) = -1
+                 if (ibound(icol,irow,ilay).gt.0) then
+                    call pks7mpimaskbound( mask,icol,irow,ilay,         ! PKS
+     1                 ncol,nrow,nlay )                                 ! PKS
+                    if (mask.gt.-0.5d0) then ! skip band nodes
+                       ibound(icol,irow,ilay) = -1
+                       lw = .true.
+                    end if   
+                 end if   
                end do
             end do
          end if
       end if
 
 c east
+      le = .false.
       if (associated(ibound_fixed_east)) then
          if (ibound_fixed_east) then
             icol = ncol
             do ilay = 1, nlay
                do irow = 1, nrow
-                 if (ibound(icol,irow,ilay).gt.0)
-     1              ibound(icol,irow,ilay) = -1
+                 if (ibound(icol,irow,ilay).gt.0) then
+                    call pks7mpimaskbound( mask,icol,irow,ilay,         ! PKS
+     1                 ncol,nrow,nlay )                                 ! PKS
+                    if (mask.gt.-0.5d0) then ! skip band nodes
+                       ibound(icol,irow,ilay) = -1
+                       le = .true.       
+                    end if   
+                 end if   
                end do
             end do
          end if
       end if
 
 c north
+      ln = .false.
       if (associated(ibound_fixed_north)) then
          if (ibound_fixed_north) then
             irow = 1
             do ilay = 1, nlay
                do icol = 1, ncol
-                 if (ibound(icol,irow,ilay).gt.0)
-     1              ibound(icol,irow,ilay) = -1
+                 if (ibound(icol,irow,ilay).gt.0) then
+                    call pks7mpimaskbound( mask,icol,irow,ilay,         ! PKS
+     1                 ncol,nrow,nlay )                                 ! PKS
+                    if (mask.gt.-0.5d0) then ! skip band nodes
+                       ibound(icol,irow,ilay) = -1
+                       ln = .true.
+                    end if   
+                 end if   
                end do
             end do
          end if
       end if
 
 c south
+      ls = .false.
       if (associated(ibound_fixed_south)) then
          if (ibound_fixed_south) then
             irow = nrow
             do ilay = 1, nlay
                do icol = 1, ncol
-                 if (ibound(icol,irow,ilay).gt.0)
-     1              ibound(icol,irow,ilay) = -1
+                 if (ibound(icol,irow,ilay).gt.0) then
+                    call pks7mpimaskbound( mask,icol,irow,ilay,         ! PKS
+     1                 ncol,nrow,nlay )                                 ! PKS
+                    if (mask.gt.-0.5d0) then ! skip band nodes
+                       ibound(icol,irow,ilay) = -1
+                       ls = .true.
+                    end if   
+                 end if   
                end do
             end do
          end if
       end if
 
+      if (nrproc.gt.1) then
+         if (ln) then
+            write(*,*) 'Setting ibound=-1 for NORTH boundary',myrank
+         end if   
+         if (ls) then
+            write(*,*) 'Setting ibound=-1 for SOUTH boundary',myrank
+         end if   
+         if (le) then
+            write(*,*) 'Setting ibound=-1 for EAST boundary',myrank
+         end if   
+         if (lw) then
+            write(*,*) 'Setting ibound=-1 for WEST boundary',myrank
+         end if   
+      end if
+      
       return
       end
+      
+      subroutine gwf2met1pks(igrid,nlay,nrow,ncol)
+c modules
+      use gwfmetmodule, only: coord_xll, coord_yll,
+     1                        coord_xur, coord_yur,     
+     1                        gcoord_xll, gcoord_yll,
+     1                        gcoord_xur, gcoord_yur,
+     1                        coord_xll_nb, coord_yll_nb,
+     1                        coord_xur_nb, coord_yur_nb, ieq
+      
+      use pksmpi_mod, only: myproc, mpptyp, mppser, mppini1,
+     1                      iovl, inovl, gnrow, gncol, gdelr, gdelc, 
+     2                      proc_ncol, proc_nrow,
+     3                      proc_icolmin, proc_icolmax,
+     4                      proc_irowmin, proc_irowmax
+      
+c implicit none statement
+      implicit none
+ 
+c arguments
+      integer,intent(in) :: igrid
+      integer,intent(inout) :: nlay, nrow, ncol
+
+c local variables
+      logical :: leq
+      integer :: ic1, ic2, ir1, ir2, ic, ir
+      real :: xll, yll, xur, yur
+
+c program section
+c ------------------------------------------------------------------------------
+      
+      if (mpptyp.eq.mppser .or. mpptyp.eq.mppini1) return
+
+c checks
+      if (gnrow.eq.0 .or. gncol.eq.0) then
+         write(*,*) 'Program error 1 initializing PKS package for MPI' 
+         call pks7mpiwrpfinalize()
+         call ustop(' ')
+      end if
+      if (gnrow.ne.nrow .or. gncol.ne.ncol) then
+         write(*,*) 'Program error 2 initializing PKS package for MPI' 
+         call pks7mpiwrpfinalize()
+         call ustop(' ')
+      end if   
+      !write(*,*) 'gdelr gdelc=',gdelr,gdelc
+      if (.not.allocated(gdelr) .or. .not.allocated(gdelc)) then
+         write(*,*) 'Program error 3 initializing PKS package for MPI' 
+         call pks7mpiwrpfinalize()
+         call ustop(' ')
+      end if
+      
+c set pointer      
+      call sgwf2met1pnt(igrid)
+      
+c set grid      
+      ncol = proc_ncol(myproc,iovl)
+      nrow = proc_nrow(myproc,iovl)
+
+c check equidistant grid      
+      leq = .true.
+      if (minval(gdelr).ne.maxval(gdelr)) leq = .false.
+      if (minval(gdelc).ne.maxval(gdelc)) leq = .false.
+      ieq = 0
+      if(.not.leq) ieq = 1
+      
+c save     
+      gcoord_xll = coord_xll      
+      gcoord_yll = coord_yll   
+      
+c coordinates overlapping
+      ic1=proc_icolmin(myproc,iovl)
+      ic2=proc_icolmax(myproc,iovl)
+      ir1=proc_irowmin(myproc,iovl)
+      ir2=proc_irowmax(myproc,iovl)
+            
+c...     local xll overlapping   
+      coord_xll = gcoord_xll
+      if (leq) then
+         coord_xll = coord_xll + (ic1-1)*gdelr(1)    
+      else
+         do ic=1,ic1-1
+            coord_xll = coord_xll + gdelr(ic)     
+         end do    
+      end if    
+c...     local yll overlapping   
+      coord_yll = gcoord_yll
+      if (leq) then
+         coord_yll = coord_yll + (gnrow-ir2)*gdelc(1)    
+      else
+         do ir=gnrow,ir2+1,-1
+            coord_yll = coord_yll + gdelc(ir)     
+         end do    
+      end if    
+      
+c coordinates non-overlapping     
+      ic1=proc_icolmin(myproc,inovl)
+      ic2=proc_icolmax(myproc,inovl)
+      ir1=proc_irowmin(myproc,inovl)
+      ir2=proc_irowmax(myproc,inovl)
+
+c...     local xll non-overlapping   
+      xll = gcoord_xll
+      if (leq) then
+         xll = xll + (ic1-1)*gdelr(1)    
+      else
+         do ic=1,ic1-1
+            xll = xll + gdelr(ic)     
+         end do    
+      end if    
+c...     local yll non-overlapping   
+      yll = gcoord_yll
+      if (leq) then
+         yll = yll + (gnrow-ir2)*gdelc(1)    
+      else
+         do ir=gnrow,ir2+1,-1
+            yll = yll + gdelc(ir)     
+         end do    
+      end if                
+c...     local xur non-overlapping
+      xur = xll
+      if (.not.associated(gcoord_xur)) allocate(gcoord_xur)
+      gcoord_xur = gcoord_xll 
+      if (leq) then
+         xur = xur + proc_ncol(myproc,inovl)*gdelc(1)    
+         gcoord_xur = gcoord_xur + gncol*gdelc(1)
+      else
+         do ic=ic1,ic2
+            xur = xur + gdelr(ic)
+         end do
+         do ic=1,gnrow
+            gcoord_xur = gcoord_xur + gdelr(ic)
+         end do
+      end if
+c...     local yur non-overlapping
+      yur = yll
+      if (.not.associated(gcoord_yur)) allocate(gcoord_yur)
+      gcoord_yur = gcoord_yll
+      if (leq) then
+         yur = yur + proc_nrow(myproc,inovl)*gdelc(1)    
+         gcoord_yur = gcoord_yur + gnrow*gdelc(1)     
+      else
+         do ir=ir2,ir2,-1
+            yur = yur + gdelc(ir)     
+         end do
+         do ir=gnrow,1,-1
+            gcoord_yur = gcoord_yur + gdelc(ir)     
+         end do
+      end if   
+      
+      if (associated(coord_xll_nb)) coord_xll_nb = max(xll,coord_xll_nb)
+      if (associated(coord_yll_nb)) coord_yll_nb = max(yll,coord_yll_nb)
+      if (associated(coord_xur_nb)) coord_xur_nb = min(xur,coord_xur_nb)
+      if (associated(coord_yur_nb)) coord_yur_nb = min(yur,coord_yur_nb)
+      
+c save data
+      call sgwf2met1psv(igrid)
+
+c      write(*,*) '==>myrank',myrank,ncol,nrow,nlay,coord_xll,coord_yll
+c      call pks7mpiwrpfinalize()
+c      call ustop(' ')
+      
+      end subroutine
+      

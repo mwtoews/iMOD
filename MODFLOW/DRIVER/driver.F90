@@ -27,14 +27,16 @@ use driver_module
 use IMOD_UTL, only : imod_utl_capf
 use m_main_info
 use m_vcl, only: targ
-use imod_utl, only: imod_utl_closeunits, imod_utl_has_ext, imod_utl_printtext,imod_utl_getunit
+use imod_utl, only: imod_utl_closeunits, imod_utl_has_ext, imod_utl_printtext,imod_utl_getunit, imod_utl_getslash
+use pks_imod_utl, only: pks_imod_utl_idfmerge_init, pks_imod_utl_write_idfmergefile, pks_imod_utl_idfmerge ! PKS
 use mod_pest, only: pest1_meteo_metaswap, pest1alpha_metaswap, pest1appendlogfile, pestnext, pestdumpfct, PEST1INIT, PEST1CLOSELOGFILES
 use PESTVAR, only : IUPESTOUT
+use pks_imod_utl, only: pks_imod_utl_iarmwp_xch_read
 implicit none
 
 ! general
  logical :: mf_steadystate
- integer :: mf_ngrid, mf_igrid, iout
+ integer :: mf_ngrid, mf_igrid, iout, mf_minid, mf_maxid
 
 ! iPEST with MetaSWAP
  integer :: mf_nrow, mf_ncol, mf_nlay
@@ -46,6 +48,7 @@ implicit none
  integer   osd_open2,cfn_length
  integer   cfn_idx_get_i
  double precision cfn_mjd_nodata
+ logical pks7mpimasterwrite
 
 ! local variables
  integer   deltats,ios,iteration,lunc,lunsts,lc,xchinit,exitcode,ivcl,jvcl,iarg,jarg,itermozart,narg
@@ -55,7 +58,7 @@ implicit none
  logical    stsave,strestore,mozstsave
  character  del*1,cont*1,comm*1
 
- character (len=1024) :: root, wd, modwd1, modwd2, simwd1, simwd2, mozwd, infile, rfopt, wddum, pfile
+ character (len=1024) :: root, wd, modwd1, modwd2, simwd1, simwd2, mozwd, infile, rfopt, wddum, pfile, rfroot
  integer, allocatable, dimension(:) :: hrivsys, wrivsys
  integer :: nhrivsys, nwrivsys
  integer :: privsys, srivsys, trivsys, bdrnsys, odrnsys
@@ -87,20 +90,32 @@ implicit none
  integer :: date, hour, minute, second
 
  logical :: lrunfile, lnamfile, llpf, lipest, lpwt, lss, lrf, psolved
-
+ 
+ logical :: lwstdo, lpks, lidfmerge
+ character(len=1024) :: idfmergefile
+ 
  integer :: isub, nsub, nnsub
  character(len=50), dimension(nsubmax) :: submstr
 
  real :: hnoflo
 
+ character(len=1024) :: str
+ 
+ real, dimension(4) :: imodusebox
+ 
+ character(len=1) :: slash
+ 
 ! debug
  integer lswid, js, je, k, ilay, irow, icol, lun, cfn_getlun, ncvgerr
 
 ! program section
 ! ------------------------------------------------------------------------------
 
+call pks7mpiini1(lwstdo) ! PKS
+call pks7mpiactive(lpks) ! PKS
+
 ! Evaluate iMOD license
- call imod_license()
+if(pks7mpimasterwrite()) call imod_license()
 
 ! ... init
  exitcode    = 0            ! when 0: ok
@@ -121,19 +136,23 @@ implicit none
 !        <-1: ERROR
  ! define virtual commandline
  call cfn_vcl_set(' ',ivcl)
-
+ 
  ! get the root name
  call osd_getcwd(root)
  modwd1  = root
  simwd1  = root
  mozwd   = root
 
+ ! get slash
+ call imod_utl_getslash(slash) 
+ 
  ! run-file
- lrunfile = .false.
- lnamfile = .false.
- usemodflow    = .false.
- usemetaswap   = .false.
- lipest = .false.
+ lrunfile    = .false.
+ lnamfile    = .false.
+ usemodflow  = .false.
+ usemetaswap = .false.
+ lipest      = .false.
+ lidfmerge   = .false. 
  call cfn_vcl_narg(ivcl,narg)
  if (narg.eq.0) then
   call imod_utl_printtext(' ',0)
@@ -141,9 +160,17 @@ implicit none
   call imod_utl_printtext(' 1: <iMOD run-file> <optional subdomain number>',0)
   call imod_utl_printtext(' 2: <MODFLOW-2005 nam-file>',0)
   call imod_utl_printtext(' 3: -components <components steering file>',0)
+  call imod_utl_printtext(' 4: -pksmergeidf <PKS merge IDF file>',0)
   call exit(0)
  end if
-
+ 
+ ! option for merging PKS output IDF files
+ call cfn_vcl_fndc(ivcl,iarg,'-pksmergeidf',.true.,idfmergefile,1)
+ if (iarg.gt.0) then
+    call pks_imod_utl_idfmerge(idfmergefile) 
+    stop   
+ end if
+ 
  call cfn_vcl_arg(ivcl,1,infile,n)
  if (imod_utl_has_ext(infile,'nam')) lnamfile= .true.
  if (imod_utl_has_ext(infile,'run')) lrunfile= .true.
@@ -161,13 +188,16 @@ implicit none
        end if
     end if
     wd = ''
-    call rf2mf_prg(lrunfile,lipest,modrecord,usemetaswap,submstr,nsub,nsubmax,wd)
+    call rf2mf_prg(lrunfile,lipest,lidfmerge,modrecord,usemetaswap,submstr,nsub,nsubmax,wd,imodusebox,rfroot)
     modwd1 = trim(wd)
     call osd_s_filename(modwd1)
     if (usemetaswap) then
       simwd1 = trim(wd)
     end if
  end if
+
+ ! PKS IARMWP option
+ call pks_imod_utl_iarmwp_xch_read()
 
  usests        = .false.
  usestsmodflow = .false.
@@ -178,7 +208,7 @@ implicit none
  if (iarg.gt.0) then
 
     ! open file and initialise components
-    ios=osd_open2(lunc,0,compfile,'readonly')
+    ios=osd_open2(lunc,0,compfile,'readonly,shared')
     if (ios.eq.0) then
 
        ! read all component information and initialise all components
@@ -209,9 +239,9 @@ implicit none
 !                   call sts2init(usestsmodflow,lunsts)
                 end if
                 ! convert iMOD run-file to MODFLOW
-                call rf2mf_prg(lrf,lipest,modrecord,usemetaswap,submstr,nsub,nsubmax,modwd1)
+                call rf2mf_prg(lrf,lipest,lidfmerge,modrecord,usemetaswap,submstr,nsub,nsubmax,modwd1,imodusebox,rfroot)
                 if (lrf) then
-                   modwd1 = trim(modwd1)//'\mf2005_tmp'
+                   modwd1 = trim(modwd1)//slash//'mf2005_tmp'
                    call osd_s_filename(modwd1)
                 end if
 #ifdef INCLUDE_METASWAP
@@ -298,8 +328,11 @@ implicit none
  endif
  
  rt = driverGetRunType(usemodflow,usemetaswap,usetransol,usemozart,usests)
- write(*,'(50(''*''),/,2(1x,a),/,50(''*''))') 'Running mode:', trim(rtdesc(rt))
-
+ 
+ str = 'Running mode: '//trim(rtdesc(rt))
+ if(lpks) str = trim(str)//' (parallel computing activated)'
+ if (pks7mpimasterwrite()) write(*,'(79(''*''),/,(1x,a),/,79(''*''))') trim(str)
+ 
 ! check state-save options
  if (usests.and..not.usestsmodflow) call driverChk(.false.,'MODFLOW state-save not activated.')
  if (.not.usests.and.usestsmodflow) call driverChk(.false.,'MODFLOW state-save activated.')
@@ -309,20 +342,21 @@ implicit none
 ! ######################################### SUBMODEL LOOP #########################################
  submodelloop: do isub = 1,nnsub
 ! ######################################### PEST LOOP #########################################
+ call pks_imod_utl_idfmerge_init() ! PKS
  convergedPest = .false.
  pestloop: do while (.not.convergedPest)
 
  if (lrunfile) then
     if (nsub.gt.0) then
-       write(modwd2,'(4a)') trim(modwd1),'\',trim(submstr(isub)),'\mf2005_tmp'
+       write(modwd2,'(5a)') trim(modwd1),slash,trim(submstr(isub)),slash,'mf2005_tmp'
        if (usemetaswap) then
-          write(simwd2,'(4a)') trim(simwd1),'\',trim(submstr(isub)),'\metaswap'
+          write(simwd2,'(5a)') trim(simwd1),slash,trim(submstr(isub)),slash,'metaswap'
        end if
        write(*,'(50(''+''),/,1x,a,1x,a,1x,a,i3.3,a,i3.3,a,/,50(''+''))') 'Computing for submodel:',trim(submstr(isub)),'(',isub,'/',nsub,')'
     else
-       write(modwd2,'(2a)') trim(modwd1),'\mf2005_tmp'
+       write(modwd2,'(3a)') trim(modwd1),slash,'mf2005_tmp'
        if (usemetaswap) then
-          write(simwd2,'(2a)') trim(simwd1),'\metaswap'
+          write(simwd2,'(3a)') trim(simwd1),slash,'metaswap'
        end if
     end if
  else
@@ -374,6 +408,7 @@ implicit none
  if (usemozart) then
     call osd_chdir(mozwd)
     call mozart_initComponent(mozrecord)
+    ok = mf2005_GetDxcRoot(rfroot)
  end if
 
  ! append the PEST log-file
@@ -394,13 +429,19 @@ implicit none
  if (usestsmodflow) call sts2start(currentTime)
 
 ! read data for entire simulation
- if (rt.eq.rtmodsim .or. rt.eq.rtmodsimtranmoz) then
-    call osd_chdir(simwd2)
-    call metaswap_initSimulation(currentTime)
- end if
  call osd_chdir(modwd2)
  call mf2005_initSimulation(currentTime,retValMF2005)
  if (retValMF2005.ne.0) exitcode = -12
+ ! Coupling MODFLOW-MetaSWAP phase 1
+ if (rt.eq.rtmodsim .or. rt.eq.rtmodsimtranmoz) then
+    ok = mf2005_PutModSimNumberOfIDs(mf_igrid, mf_minid, mf_maxid, XchModSimModNID); call driverChk(ok,'mf2005_PutModSimNumberOfIDs') ! MODFLOW puts the number of MOD-SIM IDs
+    call driverXchInitModSim1() ! allocate and init
+    ok = mf2005_PutModSimIDs(mf_igrid,XchModSimModIds); call driverChk(ok,'mf2005_PutModSimIDs')       ! MODFLOW puts the MOD-SIM exchange IDs
+    ok = mf2005_PutModSimCells(mf_igrid,XchModSimModCells); call driverChk(ok,'mf2005_PutModSimCells') ! MODFLOW puts the MOD-SIM cells
+    call pks7mpimssetids(XchModSimModIds,XchModSimModNID,mf_minid, mf_maxid) ! PKS
+    call osd_chdir(simwd2)
+    call metaswap_initSimulation(currentTime)
+ end if
 ! #### BEGIN EXCHANGE: BeforeInitSimulationMozart #############################
 
  ok = mf2005_PutLPFActive(mf_igrid, llpf); call driverChk(ok,'mf2005_PutLPFActive') ! get flag if BCF is used or LPF
@@ -414,6 +455,7 @@ implicit none
  endif
 
  !#### TIMESERIES ####
+ call osd_chdir(root)
  call tserie1init1(lipest,lss,hnoflo)
  ok = mf2005_TimeserieInit(mf_igrid); call driverChk(ok,'mf2005_TimeserieInit')
  call tserie1init2(lipest,lss,hnoflo,modwd1)
@@ -431,14 +473,10 @@ implicit none
     ok = mf2005_PutSimulationType(mf_igrid, mf_steadystate); call driverChk(ok,'mf2005_PutSimulationType') ! MODFLOW puts the simulation type (transient/steady-state)
     if (mf_steadystate) call driverChk(ok,'MODFLOW may not be steady-state')
  end if
- ! Coupling MODFLOW-MetaSWAP
+ ! Coupling MODFLOW-MetaSWAP phase 2
  if (rt.eq.rtmodsim .or. rt.eq.rtmodsimtranmoz) then
-    ok = mf2005_PutModSimNumberOfIDs(mf_igrid, XchModSimModNID); call driverChk(ok,'mf2005_PutModSimNumberOfIDs') ! MODFLOW puts the number of MOD-SIM IDs
     ok = metaswap_PutModSimNumberOfIDs(XchModSimSimNID); call driverChk(ok,'metaswap_PutModSimNumberOfIDs')       ! MetaSWAP puts the number of MOD-SIM IDs
-    call driverXchInitModSim() ! allocate and init
-
-    ok = mf2005_PutModSimIDs(mf_igrid,XchModSimModIds); call driverChk(ok,'mf2005_PutModSimIDs')       ! MODFLOW puts the MOD-SIM exchange IDs
-    ok = mf2005_PutModSimCells(mf_igrid,XchModSimModCells); call driverChk(ok,'mf2005_PutModSimCells') ! MODFLOW puts the MOD-SIM cells
+    call driverXchInitModSim2() ! allocate and init
     ok = metaswap_PutModSimIDs(XchModSimSimIds); call driverChk(ok,'metaswap_PutModSimIDs')            ! get exchange id's
  end if
  ! Coupling MODFLOW-MOZART/LSW, MODFLOW-MOZART/PV, MetaSWAP-MOZART/LSW
@@ -550,7 +588,7 @@ implicit none
 
          ! ... init timestep
           call mf2005_prepareTimestep(currentTime,stsave,retValMF2005)
-          call osd_chdir(modwd2) 
+          call osd_chdir(modwd2)
           call mf2005_initTimeStep(currentTime,retValMF2005)
           if (retValMF2005.ne.0) exitcode = -15
 
@@ -573,7 +611,7 @@ implicit none
              end if
           end if
 
-          call mf2005_writeTimeStep(tsc,date,hour,minute,second)
+          if (pks7mpimasterwrite()) call mf2005_writeTimeStep(tsc,date,hour,minute,second)
           
           ! one timestep for each cycle
 
@@ -619,8 +657,9 @@ implicit none
              if (rt.eq.rtmodsim .or. rt.eq.rtmodsimtranmoz)&
              call MetaSwap_finishIter(iterMetaSwap,convergedMetaSwap)
              call mf2005_finishIter(convergedMF2005,retValMF2005)
-             if (rt.eq.rtmodsim .or. rt.eq.rtmodsimtranmoz)&
-                write(*,*) ' convergence MODFLOW - MetaSWAP: ',convergedMF2005, convergedMetaSwap
+             if (rt.eq.rtmodsim .or. rt.eq.rtmodsimtranmoz) then
+                if (pks7mpimasterwrite()) write(*,*) ' convergence MODFLOW - MetaSWAP: ',convergedMF2005, convergedMetaSwap
+             end if   
 
              ! get next iteration information
              converged = .true.
@@ -630,7 +669,9 @@ implicit none
 
              if (retValMF2005.ne.0    ) exitcode = -261
           enddo
-          if (.not.converged) write(*,*) ' Model did not converge!',exitcode
+          if (.not.converged) then
+             if (pks7mpimasterwrite()) write(*,*) ' Model did not converge!',exitcode
+          end if   
 
 ! ... write results
           if (converged .and. exitcode.eq.0) then
@@ -701,6 +742,7 @@ implicit none
              end if
 
              !#### TIMESERIES #####
+             call osd_chdir(root)  
              ok = mf2005_TimeserieGetHead(mf_igrid); call DriverChk(ok,'mf2005_TimeserieGetHead')
              call gwf2getcurrentdate(mf_igrid,time_string)  !,issflg(kkper)
              call tserie1write(0,lss,currentTime,hnoflo,usests,modwd1,time_string)
@@ -817,6 +859,7 @@ implicit none
     call MetaSWAP_finishSimulation()
  end if
 !#### TIMESERIES #####
+ call osd_chdir(root)
  call tserie1write(1,lss,currentTime,hnoflo,usests,modwd1,time_string)
  call tserie1close()
 !#### TIMESERIES #####
@@ -841,7 +884,7 @@ implicit none
 ! next pest iteration
  call imod_utl_closeunits()
  if (.not.lipest) then
-  convergedPest=.true.
+    convergedPest=.true.
  else
   convergedPest=pestnext(lss,modwd1)
  end if
@@ -849,7 +892,18 @@ implicit none
 
  end do pestloop
 
+! PKS IDF merge
+ call osd_chdir(root)
+ call pks_imod_utl_write_idfmergefile(isub,nnsub,idfmergefile)
+ if (lidfmerge.and.lpks) call pks_imod_utl_idfmerge(idfmergefile)
+
  end do submodelloop
 
+! timing output
+call osd_chdir(root)
+call timing_stat() 
+ 
+call pks7mpifinalize()! PKS 
+ 
 end program
 

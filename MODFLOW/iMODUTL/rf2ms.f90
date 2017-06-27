@@ -80,7 +80,8 @@ INTEGER :: IUSCL                                              !unit number for u
 PUBLIC :: RF2MF_METASWAP
 PUBLIC :: METASWAP_EXPORT4
 PUBLIC :: METASWAP_PARASIM
-PUBLIC :: METASWAP_METEGRID
+PUBLIC :: METASWAP_METEGRID1
+PUBLIC :: METASWAP_METEGRID2
 PUBLIC :: METASWAP_METEGRID_INP
 PUBLIC :: METASWAP_CHECK
 PUBLIC :: storedxc
@@ -91,6 +92,8 @@ CONTAINS
  !####====================================================================
  SUBROUTINE RF2MF_METASWAP(DXCFILE)
  !####====================================================================
+ use pksmpi_mod, only: myrank
+ 
  IMPLICIT NONE
 
  CHARACTER(LEN=*),INTENT(INOUT) :: DXCFILE
@@ -153,7 +156,9 @@ CONTAINS
  call imod_utl_createdir(simwd)
 
  write(dxcfile,'(3a)') trim(modwd), trim(root%modelname), '.dxc'
- call imod_utl_s_cap(dxcfile,'l')
+ !call imod_utl_s_cap(dxcfile,'l')
+ 
+ if(myrank.ne.0) return ! PKS 
 
  NIDF=22 !; IF(IARMWP.EQ.1)NIDF=21
  IF(NLINES.LT.NIDF)CALL IMOD_UTL_PRINTTEXT('MetaSwap needs '//TRIM(IMOD_UTL_ITOS(NIDF))//' files, now reading is '//TRIM(IMOD_UTL_ITOS(NLINES)),2)
@@ -206,7 +211,7 @@ CONTAINS
   !## correct for artificial recharge from ipf file
   I=II; IF(IARMWP.EQ.1.AND.II.GT.8)I=II+1
   READ(IURUN,'(A256)') LINE
-  CALL IMOD_UTL_PRINTTEXT('',0); CALL IMOD_UTL_PRINTTEXT('Allocating '//TRIM(MSWP_IDFNAMES(I)),0)
+  CALL IMOD_UTL_PRINTTEXT('',3); CALL IMOD_UTL_PRINTTEXT('Allocating '//TRIM(MSWP_IDFNAMES(I)),0)
   CALL RF2MF_READ_IDF(LINE,FCT(I),IMP(I),ILAY,CONSTANTE(I),FNAME(I),IOS(I),0,PCAP) !,3)
  ENDDO
 
@@ -283,7 +288,7 @@ CONTAINS
  SIMGRO(NCOL,1   )%IBOUND=0
  SIMGRO(NCOL,NROW)%IBOUND=0
  
- !## make sure that for sopp>0 there is a vxmu value, turn nopp otherwise off
+!## make sure that for sopp>0 there is a vxmu value, turn nopp otherwise off
  DO IROW=1,NROW; DO ICOL=1,NCOL
   IF(SIMGRO(ICOL,IROW)%VXMU_SOPP.EQ.NODATA(12))SIMGRO(ICOL,IROW)%SOPP=0.0
   IF(SIMGRO(ICOL,IROW)%SOPP.GT.0.0)THEN
@@ -411,7 +416,7 @@ CONTAINS
  IF(IGWMP.GT.0)CLOSE(IGWMP)
  IF(IMODSIM.GT.0)CLOSE(IMODSIM)
  IF(IINFI.GT.0)CLOSE(IINFI)
- IF(IIDF.GT.0) CLOSE(IIDF)
+ IF(IIDF.GT.0) CLOSE(IIDF,status='delete') !DEBUG !
  IF(IUSCL.GT.0)CLOSE(IUSCL)
 
  CALL IMOD_UTL_PRINTTEXT('Copying input files metaswap ...',0)
@@ -423,7 +428,9 @@ CONTAINS
   CALL IMOD_UTL_MODEL1CHECKFNAME(FNAME(1),0)
   FNAME(2)=FNAME(1)
   CALL IMOD_UTL_CAP(FNAME(2),'U')
-  IF(INDEX(FNAME(2),'PARA_SIM.INP').GT.0)THEN
+  IF(INDEX(FNAME(2),'METE_GRID.INP').GT.0)THEN
+   CALL METASWAP_METEGRID1(FNAME(1),trim(simwd)//'mete_grid.inp')     
+  ELSEIF(INDEX(FNAME(2),'PARA_SIM.INP').GT.0)THEN
    CALL METASWAP_PARASIM(FNAME(1),trim(simwd)//'para_sim.inp')
   ELSE
    CALL IMOD_UTL_PRINTTEXT('Copying file "'//TRIM(FNAME(1))//'" ...',0)
@@ -440,15 +447,15 @@ CONTAINS
   ENDIF
  END DO
 
- CALL METASWAP_METEGRID(trim(simwd))
+ CALL METASWAP_METEGRID2(trim(simwd))
 
  DEALLOCATE(FNAME,SIMGRO,BUFF,ITMP,FCT,IMP,CONSTANTE,NODATA,IERROR)
 
- CALL IMOD_UTL_PRINTTEXT('Finished processing MetaSwap ...',0)
+ CALL IMOD_UTL_PRINTTEXT('Finished processing MetaSwap ...',3)
 
  END SUBROUTINE RF2MF_METASWAP
 
-!###====================================================================
+ !###====================================================================
 SUBROUTINE METASWAP_IBND(IBOUND,NROW,NCOL,IFULL)
 !###====================================================================
 !USE MODFLOW
@@ -485,6 +492,8 @@ END SUBROUTINE
  !###====================================================================
  SUBROUTINE METASWAP_EXPORT4(NODATA_PWT,IPFFILE)
  !###====================================================================
+ use pks_imod_utl, only: pks_imod_utl_iarmwp_xch_store,&
+                         pks_imod_utl_iarmwp_xch_write
  IMPLICIT NONE
  REAL,INTENT(IN) :: NODATA_PWT
  CHARACTER(LEN=*),INTENT(IN) :: IPFFILE
@@ -497,12 +506,12 @@ END SUBROUTINE
  END TYPE IPFOBJ
  TYPE(IPFOBJ),ALLOCATABLE,DIMENSION(:) :: IPF
  logical :: lurban
- integer :: mndxc, ndxc, unid
- integer, dimension(:,:), allocatable :: dxcid
+ integer :: ndxc, unid, iact
+ integer, dimension(:,:,:), allocatable :: dxcid
 
  if (allocated(dxcid)) deallocate(dxcid)
- mndxc = nrow*ncol*nlay
- allocate(dxcid(mndxc,4))
+ allocate(dxcid(ncol,nrow,nlay))
+ dxcid = 0
  ndxc = 0
 
  !## check input parameters
@@ -535,10 +544,11 @@ END SUBROUTINE
  IC1=MAX(1,IC1); IC2=MIN(IC2,NCOL)
  IR1=MAX(1,IR1); IR2=MIN(IR2,NROW)
 
+ 
+ DO IACT=1,2
  NUND=0; unid = 0
  DO IROW=1,SIMGRO_NROW
   DO ICOL=1,SIMGRO_NCOL
-   
    lurban=.false.
    IF(SIMGRO(ICOL,IROW)%IBOUND.LE.0)CYCLE
    MDND=(IROW-1)*SIMGRO_NCOL+ICOL
@@ -559,27 +569,36 @@ END SUBROUTINE
 
     !## write idf_svat.inp - inside area of interest
     IF(ICOL.GE.IC1.AND.ICOL.LE.IC2.AND. &
-       IROW.GE.IR1.AND.IROW.LE.IR2)WRITE(IIDF,'(3I10)') NUND,IROW-IR1+1,ICOL-IC1+1
-
+       IROW.GE.IR1.AND.IROW.LE.IR2) THEN
+     IF(IACT.EQ.2) &
+     WRITE(IIDF,'(3I10)') NUND,IROW-IR1+1,ICOL-IC1+1
+    ENDIF
+    
     !## write sel_svat_bda.inp
+    IF(IACT.EQ.2) &
     WRITE(ISELSVAT,'(I10)') NUND
 
     !## write area_svat.inp
+    IF(IACT.EQ.2) &
     WRITE(IAREA,'(I10,F10.1,F8.3,8X,I6,8X,8X,I6,F8.3,I10,2F8.3)') NUND,ARND,SIMGRO(ICOL,IROW)%MV, &
           SIMGRO(ICOL,IROW)%BODEM,SIMGRO(ICOL,IROW)%LGN,SIMGRO(ICOL,IROW)%RZ/100.0,               &
           SIMGRO(ICOL,IROW)%METEO,1.0,1.0
 
     !## write svat2swnr_roff.inp ------------------
+    IF(IACT.EQ.2) &
     WRITE(INDSB,'(I10,I10,F8.3,2F8.1)') NUND,AEND,SIMGRO(ICOL,IROW)%VXMU_ROPP,SIMGRO(ICOL,IROW)%CRUNOFF_ROPP, &
                                         SIMGRO(ICOL,IROW)%CRUNON_ROPP !, 1.0,1.0
 
     !## write infi_svat.inp, infiltratiecapaciteit per cel, de rest -9999.
+    IF(IACT.EQ.2) &
     WRITE(IINFI,'(I10,F8.3,4F8.1)') NUND,SIMGRO(ICOL,IROW)%QINFBASIC_ROPP,-9999.0,-9999.0,-9999.0,-9999.0
 
     !## add couple location modflow
-    unid=unid+1; call storedxc(dxcid,mndxc,ndxc,1,irow,icol,unid)
+    call storedxc(dxcid,ncol,nrow,nlay,1,irow,icol,unid,iact)
     !## write coupling table
+    IF(IACT.EQ.2) &
     WRITE(IGWMP  ,'(I10,2X,I10,I5)')  unid,NUND,1
+    IF(IACT.EQ.2) &
     WRITE(IMODSIM,'(I10,2X,I10,I5)')  unid,NUND,1
 
     !## BEGIN scap_svat.inp - grondwater + ow
@@ -616,8 +635,10 @@ END SUBROUTINE
 
      IF(FLBE.GT.0.0)THEN
       IF(TYBE.EQ.1)THEN
+       IF(IACT.EQ.2) &
        WRITE(ISCAP,'(I10,F8.2,24X,I10,I6)') NUND,FLBE,NUND,LYBE
       ELSEIF(TYBE.EQ.2)THEN
+       IF(IACT.EQ.2) &
        WRITE(ISCAP,'(I10,8X,F8.2,32X,I10)') NUND,FLBE,AEND
       ENDIF
      ENDIF
@@ -626,21 +647,31 @@ END SUBROUTINE
      IF(TYBE.EQ.1.AND.LYBE.GT.1)THEN
 
       !## add couple location modflow
-      unid=unid+1; call storedxc(dxcid,mndxc,ndxc,lybe,jrow,jcol,unid)
+      call storedxc(dxcid,ncol,nrow,nlay,lybe,jrow,jcol,unid,iact)
+      if(iarmwp.eq.1) then
+         call pks_imod_utl_iarmwp_xch_store(irow,icol,lybe,jrow,jcol,dxcid,ncol,nrow,nlay,iact)    
+      end if      
       !## write coupling table
+      IF(IACT.EQ.2) &
       WRITE(IGWMP  ,'(I10,2X,I10,I5)') unid,NUND,LYBE
+      IF(IACT.EQ.2) &
       WRITE(IMODSIM,'(I10,2X,I10,I5)') unid,NUND,LYBE
 
      ENDIF
 
     ENDIF
 
-    IF(MMOD(PPWT).EQ.0)WRITE(IUSCL,'(I10,3F8.3,8X,2I10)')   NUND,SIMGRO(ICOL,IROW)%MOISTURE,SIMGRO(ICOL,IROW)%COND,1.0,ICOL,IROW
+    IF(MMOD(PPWT).EQ.0)THEN    
+     IF(IACT.EQ.2) &
+     WRITE(IUSCL,'(I10,3F8.3,8X,2I10)')   NUND,SIMGRO(ICOL,IROW)%MOISTURE,SIMGRO(ICOL,IROW)%COND,1.0,ICOL,IROW
+    ENDIF    
     IF(MMOD(PPWT).EQ.1)THEN
      IF(SIMGRO(ICOL,IROW)%PWT_LEVEL.NE.NODATA_PWT)THEN
+      IF(IACT.EQ.2) &
       WRITE(IUSCL,'(I10,4F8.3,2I10)')    NUND,SIMGRO(ICOL,IROW)%MOISTURE,SIMGRO(ICOL,IROW)%COND,1.0, &
                                          SIMGRO(ICOL,IROW)%MV-SIMGRO(ICOL,IROW)%PWT_LEVEL,ICOL,IROW
      ELSE
+      IF(IACT.EQ.2) &
       WRITE(IUSCL,'(I10,3F8.3,8X,2I10)') NUND,SIMGRO(ICOL,IROW)%MOISTURE,SIMGRO(ICOL,IROW)%COND,1.0,ICOL,IROW
      ENDIF
     ENDIF
@@ -655,44 +686,63 @@ END SUBROUTINE
 
     !## write idf_svat.inp - inside area of interest
     IF(ICOL.GE.IC1.AND.ICOL.LE.IC2.AND. &
-       IROW.GE.IR1.AND.IROW.LE.IR2)WRITE(IIDF,'(3I10)') NUND,IROW-IR1+1,ICOL-IC1+1
-       
+       IROW.GE.IR1.AND.IROW.LE.IR2) THEN
+     IF(IACT.EQ.2) &
+     WRITE(IIDF,'(3I10)') NUND,IROW-IR1+1,ICOL-IC1+1
+    ENDIF       
     !## write sel_svat_bda.inp
+    IF(IACT.EQ.2) &
     WRITE(ISELSVAT,'(I10)') NUND
 
+    IF(IACT.EQ.2) &
     WRITE(IAREA,'(I10,F10.1,F8.3,8X,I6,16X,I6,F8.3,I10,2F8.2)') &  !
       NUND,ARND,SIMGRO(ICOL,IROW)%MV+MSWPMV,SIMGRO(ICOL,IROW)%BODEM,18,0.1,SIMGRO(ICOL,IROW)%METEO,1.0,1.0
 
+    IF(IACT.EQ.2) &
     WRITE(INDSB,'(2I10,F8.3,2F8.1)') NUND,0,SIMGRO(ICOL,IROW)%VXMU_SOPP,SIMGRO(ICOL,IROW)%CRUNOFF_SOPP,SIMGRO(ICOL,IROW)%CRUNON_SOPP !1.0,1.0
 
     !## add couple location modflow - only if not yet urban location added
-    if(.not.lurban)then
-     unid=unid+1; call storedxc(dxcid,mndxc,ndxc,1,irow,icol,unid)
-    endif
+!    if(.not.lurban)then
+    call storedxc(dxcid,ncol,nrow,nlay,1,irow,icol,unid,iact)
+!    endif
 
     !## write coupling table
+    IF(IACT.EQ.2) &
     WRITE(IGWMP  ,'(I10,2X,I10,I5)') unid,NUND,1
+    IF(IACT.EQ.2) &
     WRITE(IMODSIM,'(I10,2X,I10,I5)') unid,NUND,1
 
-    IF(MMOD(PPWT).EQ.0)WRITE(IUSCL,'(I10,3F8.3,8X,2I10)') NUND,SIMGRO(ICOL,IROW)%MOISTURE,SIMGRO(ICOL,IROW)%COND,1.0,ICOL,IROW
+    IF(MMOD(PPWT).EQ.0)THEN
+     IF(IACT.EQ.2) &
+     WRITE(IUSCL,'(I10,3F8.3,8X,2I10)') NUND,SIMGRO(ICOL,IROW)%MOISTURE,SIMGRO(ICOL,IROW)%COND,1.0,ICOL,IROW
+    ENDIF
     IF(MMOD(PPWT).EQ.1)THEN
      IF(SIMGRO(ICOL,IROW)%PWT_LEVEL.NE.NODATA_PWT)THEN
+      IF(IACT.EQ.2) &
       WRITE(IUSCL,'(I10,4F8.3,2I10)')   NUND,SIMGRO(ICOL,IROW)%MOISTURE,SIMGRO(ICOL,IROW)%COND,1.0, &
                                         SIMGRO(ICOL,IROW)%MV-SIMGRO(ICOL,IROW)%PWT_LEVEL,ICOL,IROW
      ELSE
+      IF(IACT.EQ.2) &
       WRITE(IUSCL,'(I10,3F8.3,8X,2I10)')   NUND,SIMGRO(ICOL,IROW)%MOISTURE,SIMGRO(ICOL,IROW)%COND,1.0,ICOL,IROW
      ENDIF
     ENDIF
 
     !## write infi_svat.inp, infiltratiecapaciteit per cel, de rest -9999.
+    IF(IACT.EQ.2) &
     WRITE(IINFI,'(I10,F8.3,4F8.1)') NUND,SIMGRO(ICOL,IROW)%QINFBASIC_SOPP,-9999.0,-9999.0,-9999.0,-9999.0
 
    ENDIF
 
   ENDDO
  ENDDO
+ if(iact.eq.1) call geniddxc(dxcid,ncol,nrow,nlay,ndxc)
+ ENDDO ! IACT
+
+ if(iarmwp.eq.1) then
+    call pks_imod_utl_iarmwp_xch_write(dxcid,ncol,nrow,nlay,ndxc)    
+ end if    
  
- call writedxc(idxc,dxcid,mndxc,ndxc)
+ call writedxc(idxc,dxcid,ncol,nrow,nlay,ndxc)
  deallocate(dxcid)
 
  IF(IARMWP.EQ.1)DEALLOCATE(IPF)
@@ -709,6 +759,8 @@ END SUBROUTINE
  CHARACTER(LEN=*),INTENT(IN) :: FNAME2
  INTEGER :: IU,JU,I,IOS,IC1,IC2,IR1,IR2,SNROW,SNCOL
 
+ CHARACTER(LEN=256) :: S, S1, S2
+ 
  I=INDEX(FNAME,'\',.TRUE.)
 
  IU=GETUNIT(); OPEN(IU,FILE=FNAME,STATUS='OLD',ACTION='READ')
@@ -716,6 +768,15 @@ END SUBROUTINE
  DO
   READ(IU,'(A256)',IOSTAT=IOS) LINE
   IF(IOS.NE.0)EXIT
+  S = TRIM(ADJUSTL(LINE))
+  CALL IMOD_UTL_S_CAP(S,'L')
+  IF (S(1:14).EQ.'unsa_svat_path') THEN
+    I=INDEX(LINE,'=')
+    S1 = ADJUSTL(LINE(I+1:LEN_TRIM(LINE)))
+    READ(S1,*) S2
+    CALL IMOD_UTL_REL_TO_ABS(ROOT%RUNFILEROOT,S2) 
+    LINE = LINE(1:I)//' "'//TRIM(S2)//'"'
+  END IF
   WRITE(JU,'(A)') TRIM(LINE)
  ENDDO
 
@@ -789,6 +850,7 @@ END SUBROUTINE
  IR1  = MAX(1,IR1); IR2  = MIN(IR2,NROW)
  SNCOL=(IC2-IC1)+1; SNROW=(IR2-IR1)+1
 
+ if(.false.)then ! DEBUG
  WRITE(JU,'(A)') '*'
  WRITE(JU,'(A)') '*  Parameters for IDF output'
  WRITE(JU,'(A)') '*'
@@ -807,13 +869,48 @@ END SUBROUTINE
  WRITE(JU,'(A)') TRIM(LINE)
  LINE='      idf_nodata              =      '//TRIM(IMOD_UTL_RTOS(-9999.99,'F',2))
  WRITE(JU,'(A)') TRIM(LINE)
-
+end if ! DEBUG
  CLOSE(JU)
 
  END SUBROUTINE METASWAP_PARASIM
 
  !###====================================================================
- SUBROUTINE METASWAP_METEGRID(simwd)
+ SUBROUTINE METASWAP_METEGRID1(FNAME,FNAME2)
+ !###====================================================================
+ IMPLICIT NONE
+
+ CHARACTER(LEN=1024) :: S
+ CHARACTER(LEN=*),INTENT(IN) :: FNAME
+ CHARACTER(LEN=*),INTENT(IN) :: FNAME2
+ INTEGER :: IU,JU,I,IOS,IC1,IC2,IR1,IR2,SNROW,SNCOL
+
+ CHARACTER(LEN=256), DIMENSION(7) :: SA
+ 
+ IU=GETUNIT(); OPEN(IU,FILE=FNAME,STATUS='OLD',ACTION='READ')
+ JU=GETUNIT(); OPEN(JU,FILE=FNAME2,STATUS='REPLACE',ACTION='WRITE')
+ DO
+  READ(IU,'(A)',IOSTAT=IOS) S
+  IF(IOS.NE.0)EXIT
+  IF(LEN_TRIM(S).EQ.0) CYCLE
+  READ(S,*)(SA(I),I=1,7)
+  CALL IMOD_UTL_REL_TO_ABS(ROOT%RUNFILEROOT,SA(3)) 
+  CALL IMOD_UTL_REL_TO_ABS(ROOT%RUNFILEROOT,SA(4))
+  DO I = 3, 7
+     SA(I) = '"'//TRIM(ADJUSTL(SA(I)))//'"'
+  END DO
+  DO I = 1, 6
+     SA(I) = TRIM(SA(I))//','
+  END DO
+  WRITE(S,'(7A)')(TRIM(SA(I)),I=1,7)
+  WRITE(JU,'(A)') TRIM(S)
+ ENDDO
+ CLOSE(IU)
+ CLOSE(JU)
+ 
+ END SUBROUTINE 
+ 
+ !###====================================================================
+ SUBROUTINE METASWAP_METEGRID2(simwd)
  !###====================================================================
  IMPLICIT NONE
 
@@ -962,7 +1059,7 @@ END SUBROUTINE
   ENDDO
  ENDDO
 
- IF(IARMWP.EQ.0)THEN
+ IF(abs(IARMWP).EQ.0)THEN
 
   !## turn off beregening whenever layer is nul!
   DO IROW=1,SIMGRO_NROW
@@ -977,32 +1074,57 @@ END SUBROUTINE
  END SUBROUTINE METASWAP_CHECK
 
 
- subroutine storedxc(dxcid,mndxc,ndxc,ilay,irow,icol,id)
+ subroutine storedxc(dxcid,ncol,nrow,nlay,ilay,irow,icol,id,iact)
  implicit none
 
- integer, intent(inout) :: ndxc, mndxc
- integer, intent(inout), dimension(mndxc,4) :: dxcid
+ integer, intent(in) :: ncol, nrow, nlay
+ integer, intent(inout) :: id
+ integer, intent(in) :: iact
+ integer, intent(inout), dimension(ncol,nrow,nlay) :: dxcid
+ integer, intent(in) :: ilay, irow, icol
 
- integer, intent(in) :: ilay,irow,icol,id
-
- ndxc = ndxc + 1
- dxcid(ndxc,1) = ilay
- dxcid(ndxc,2) = irow
- dxcid(ndxc,3) = icol
- dxcid(ndxc,4) = id
-
+ if (iact.eq.2) then
+    id = dxcid(icol,irow,ilay)
+    return
+ end if
+ 
+ if (dxcid(icol,irow,ilay).eq.0) then
+    dxcid(icol,irow,ilay) = 1
+ end if
+ 
  end subroutine storedxc
 
-
- subroutine writedxc(idxc,dxcid,mndxc,ndxc)
+ subroutine geniddxc(dxcid,ncol,nrow,nlay,id)
+ implicit none
+ integer, intent(in) :: ncol, nrow, nlay
+ integer, intent(out) :: id
+ integer, intent(inout), dimension(ncol,nrow,nlay) :: dxcid
+ 
+ integer :: ilay, icol, irow
+ 
+ id = 0
+ do ilay = 1, nlay
+    do irow = 1, nrow 
+       do icol = 1, ncol
+          if (dxcid(icol,irow,ilay).ne.0) then
+             id = id + 1
+             dxcid(icol,irow,ilay) = id
+          end if
+       end do
+    end do
+ end do
+ 
+ end subroutine
+ 
+ subroutine writedxc(idxc,dxcid,ncol,nrow,nlay,ndxc)
  implicit none
 
- integer, intent(in) :: idxc, ndxc, mndxc
- integer, intent(in), dimension(mndxc,4) :: dxcid
+ integer, intent(in) :: idxc, ncol, nrow, nlay, ndxc 
+ integer, intent(in), dimension(ncol,nrow,nlay) :: dxcid
 
  character(len=256) :: str
  character(len=256), dimension(4) :: strarr
- integer :: i, j, luncb
+ integer :: i, j, luncb, icol, irow, ilay, id
 
  nam%data(idxcflux)%fname  = 'bdgcap'
  nam%data(idxcflux)%cbnlay = dxc%cbnlay
@@ -1014,20 +1136,31 @@ END SUBROUTINE
  else
     luncb = 0
  end if
-      
+               
  write(strarr(1),*) ndxc
  write(strarr(2),*) luncb
  write(str,'(2(a,1x))') (trim(adjustl(strarr(j))),j=1,2)
  write(idxc,'(a)') trim(str)
  write(idxc,'(a)') trim(adjustl(strarr(1)))
-
- do i = 1, ndxc
-    write(strarr(1),*) dxcid(i,1)
-    write(strarr(2),*) dxcid(i,2)
-    write(strarr(3),*) dxcid(i,3)
-    write(strarr(4),*) dxcid(i,4)
-    write(str,'(4(a,1x))') (trim(adjustl(strarr(j))),j=1,4)
-    write(idxc,'(a)') trim(str)
+ 
+ do ilay = 1, nlay
+    do irow = 1, nrow
+       do icol = 1, ncol
+          id = dxcid(icol,irow,ilay)
+          if (id.ne.0) then        
+             if (id.lt.0) then 
+                write(strarr(1),*) -ilay
+             else
+                write(strarr(1),*) ilay
+             end if    
+             write(strarr(2),*) irow
+             write(strarr(3),*) icol
+             write(strarr(4),*) abs(dxcid(icol,irow,ilay))
+             write(str,'(4(a,1x))') (trim(adjustl(strarr(j))),j=1,4)
+             write(idxc,'(a)') trim(str)
+          end if   
+       end do      
+    end do      
  end do
 
  close(idxc)

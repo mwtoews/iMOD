@@ -59,11 +59,19 @@
 				<Tool Name="VFFortranCompilerTool" Preprocess="preprocessYes"/></FileConfiguration>
 			<FileConfiguration Name="Release|Win32">
 				<Tool Name="VFFortranCompilerTool" Preprocess="preprocessYes"/></FileConfiguration></File>
+		<File RelativePath="..\..\iMODUTL\pks7mpi.f"/>
+		<File RelativePath="..\..\iMODUTL\pks7mpimod.f"/>
+		<File RelativePath="..\..\iMODUTL\pks7mpimodms.f"/>
+		<File RelativePath="..\..\iMODUTL\pks7mpims.f"/>
+		<File RelativePath="..\..\iMODUTL\pks7mpiutl.f"/>
+		<File RelativePath="..\..\iMODUTL\pks7mpiwrp.f"/>
+		<File RelativePath="..\..\iMODUTL\pks_imod_utl.f90"/>
 		<File RelativePath="..\..\imodutl\rf2mf_mod.f90"/>
 		<File RelativePath="..\..\imodutl\rf2mf_mod_conv.f90"/>
 		<File RelativePath="..\..\imodutl\rf2mf_prg.f90"/>
 		<File RelativePath="..\..\imodutl\rf2mf_read.f90"/>
 		<File RelativePath="..\..\imodutl\rf2mf_utl.f90"/>
 		<File RelativePath="..\..\imodutl\rf2ms.f90"/>
+		<File RelativePath="..\..\iMODUTL\timing.f90"/>
 		<File RelativePath="..\..\..\utl\utl.f90"/></Filter></Files>
 	<Globals/></VisualStudioProject>

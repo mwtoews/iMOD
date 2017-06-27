@@ -34,7 +34,7 @@ end
 
 
 module driver_module
-
+use imod_utl, only: imod_utl_qksort3
 implicit none
 
 real, parameter :: mv = -99999.
@@ -70,6 +70,7 @@ real, parameter :: mv = -99999.
 !            mf2005_PutModMozCells         ! mod-moz
 !            mf2005_GetLSWLevels           ! mod-moz
 !            mf2005_PutModMozRiversToSkip  ! mod-moz
+!            mf2005_GetDxcRoot             ! mod-moz
 !            mf2005_PutModMozPVNumberOfIDs ! mod-mozpv
 !            mf2005_PutModMozPVIDs         ! mod-mozpv
 !            mf2005_GetPVLevels            ! mod-mozpv
@@ -88,8 +89,10 @@ interface
    end function
 end interface
 interface
-   logical function mf2005_PutModSimNumberOfIDs(igrid, nxch)
+   logical function mf2005_PutModSimNumberOfIDs(igrid, mini, maxi, nxch)
       integer, intent(in) :: igrid
+      integer, intent(out) :: mini
+      integer, intent(out) :: maxi
       integer, intent(out) :: nxch
    end function
 end interface
@@ -284,6 +287,11 @@ interface
       integer, intent(in) :: igrid
       integer, intent(in) :: nhriv
       integer, dimension(nhriv), intent(in) :: hriv
+   end function
+end interface
+interface
+   logical function mf2005_GetDxcRoot(rfroot)
+      character(len=*), intent(in) :: rfroot
    end function
 end interface
 interface
@@ -668,162 +676,6 @@ end interface
 
 contains
 
-
- !====================================================
- SUBROUTINE UTL_QKSORT_INT2(ARR,BRR,NDIM,N)
- !====================================================
- IMPLICIT NONE
- INTEGER,INTENT(IN) :: NDIM,N
- INTEGER,INTENT(INOUT),DIMENSION(NDIM) :: ARR
- INTEGER,INTENT(INOUT),DIMENSION(NDIM) :: BRR
- INTEGER,PARAMETER :: M=7,NSTACK=50
- INTEGER :: I,IR,J,JSTACK,K,L,ISTACK(NSTACK)
- INTEGER :: B,BTEMP
- INTEGER :: A,ATEMP
-
- JSTACK=0
- L=1
- IR=N
- 1 IF(IR-L.LT.M)THEN
-  DO J=L+1,IR
-   A=ARR(J)
-   B=BRR(J)
-   DO I=J-1,1,-1
-    IF(ARR(I).LE.A)GOTO 2
-    ARR(I+1)=ARR(I)
-    BRR(I+1)=BRR(I)
-   ENDDO
-   I=0
- 2 ARR(I+1)=A
-   BRR(I+1)=B
-  ENDDO
-  IF(JSTACK.EQ.0)RETURN
-  IR=ISTACK(JSTACK)
-  L =ISTACK(JSTACK-1)
-  JSTACK=JSTACK-2
- ELSE
-  K=(L+IR)/2
-  ATEMP   =ARR(K)
-  BTEMP   =BRR(K)
-  ARR(K)  =ARR(L+1)
-  BRR(K)  =BRR(L+1)
-  ARR(L+1)=ATEMP
-  BRR(L+1)=BTEMP
-  IF(ARR(L+1).GT.ARR(IR))THEN
-   ATEMP   =ARR(L+1)
-   BTEMP   =BRR(L+1)
-   ARR(L+1)=ARR(IR)
-   BRR(L+1)=BRR(IR)
-   ARR(IR)=ATEMP
-   BRR(IR)=BTEMP
-  ENDIF
-  IF(ARR(L).GT.ARR(IR))THEN
-   ATEMP  =ARR(L)
-   BTEMP  =BRR(L)
-   ARR(L) =ARR(IR)
-   BRR(L) =BRR(IR)
-   ARR(IR)=ATEMP
-   BRR(IR)=BTEMP
-  ENDIF
-  IF(ARR(L+1).GT.ARR(L))THEN
-   ATEMP   =ARR(L+1)
-   BTEMP   =BRR(L+1)
-   ARR(L+1)=ARR(L)
-   BRR(L+1)=BRR(L)
-   ARR(L)  =ATEMP
-   BRR(L)  =BTEMP
-  ENDIF
-  I=L+1
-  J=IR
-  A=ARR(L)
-  B=BRR(L)
- 3  CONTINUE
-  I=I+1
-  IF(ARR(I).LT.A)GOTO 3
- 4  CONTINUE
-  J=J-1
-  IF(ARR(J).GT.A)GOTO 4
-  IF(J.LT.I)GOTO 5
-  ATEMP =ARR(I)
-  BTEMP =BRR(I)
-  ARR(I)=ARR(J)
-  BRR(I)=BRR(J)
-  ARR(J)=ATEMP
-  BRR(J)=BTEMP
-  GOTO 3
- 5  ARR(L)=ARR(J)
-  BRR(L)=BRR(J)
-  ARR(J)=A
-  BRR(J)=B
-  JSTACK=JSTACK+2
-  IF(JSTACK.GT.NSTACK)PAUSE 'NSTACK TOO SMALL'
-  IF(IR-I+1.GT.J-L)THEN
-   ISTACK(JSTACK)=IR
-   ISTACK(JSTACK-1)=I
-   IR=J-1
-  ELSE
-   ISTACK(JSTACK)=J-1
-   ISTACK(JSTACK-1)=L
-   L=I
-  ENDIF
- ENDIF
- GOTO 1
-
- END SUBROUTINE
-
-! ------------------------------------------------------------------------------
-recursive subroutine qsort(a,ai)
-
-  integer, intent(in out) :: a(:), ai(:)
-  integer :: split
-
-  if(size(a) > 1) then
-     call partition(a, ai, split)
-     call qsort(a(:split-1),ai(:split-1))
-     call qsort(a(split:),ai(split:))
-  end if
-
-end subroutine qsort
-
-! ------------------------------------------------------------------------------
-subroutine partition(a, ai, marker)
-
-  integer, intent(in out) :: a(:), ai(:)
-  integer, intent(out) :: marker
-  integer :: left, right, pivot, temp
-
-  pivot = (a(1) + a(size(a))) / 2  ! average of first and last elements to prevent quadratic
-  left = 0                         ! behavior with sorted or reverse sorted data
-  right = size(a) + 1
-
-  do while (left < right)
-     right = right - 1
-     do while (a(right) > pivot)
-        right = right-1
-     end do
-     left = left + 1
-     do while (a(left) < pivot)
-        left = left + 1
-     end do
-     if (left < right) then
-        temp = a(left)
-        a(left) = a(right)
-        a(right) = temp
-
-        temp = ai(left)
-        ai(left) = ai(right)
-        ai(right) = temp
-     end if
-  end do
-
-  if (left == right) then
-     marker = left + 1
-  else
-     marker = left
-  end if
-
-end subroutine partition
-
 ! ------------------------------------------------------------------------------
 subroutine findid(ids,nid,idval,i,i1,i2)
 
@@ -885,13 +737,13 @@ end subroutine
 subroutine mapIds(idx1,nidx1,off1,id1,nid1,id2,nid2)
 
 ! arguments
-integer, intent(in)                    :: nid1 ! number of indices
-integer, intent(in)                    :: nid2 ! number of indices
-integer, intent(in)                    :: nidx1 ! length of idx1
-integer, dimension(nid1),  intent(in)  :: id1 ! indices
-integer, dimension(nid2),  intent(in)  :: id2 ! indices
-integer, dimension(nidx1), intent(out) :: idx1 ! idexes
-integer, dimension(nid1),  intent(out) :: off1 ! off-sets
+integer, intent(in)                :: nid1 ! number of indices
+integer, intent(in)                :: nid2 ! number of indices
+integer, intent(in)                :: nidx1 ! length of idx1
+integer, dimension(*), intent(in)  :: id1 ! indices
+integer, dimension(*), intent(in)  :: id2 ! indices
+integer, dimension(*), intent(out) :: idx1 ! idexes
+integer, dimension(*), intent(out) :: off1 ! off-sets
 
 ! locals
 type tMap
@@ -901,28 +753,32 @@ type tMap
 end type tMap
 type(tMap), dimension(:), allocatable :: mapidx
 integer :: i, j, k, n, m, n1, n2, idval, i1s, i1e, i2s, i2e
+integer :: nb1, nb2, nb3, nb4, nb5, nb6
 integer, dimension(:), allocatable :: id1s, id2s, id1si, id2si, itmp
 !.......................................................................
 
 ! allocate temporary data
-allocate(id1s(nid1), id2s(nid2), id1si(nid1), id2si(nid2))
-allocate(mapidx(nid1), itmp(nid2))
+n = max(nid1,1)
+m = max(nid2,1)
+nb1 = n; nb2 = m; nb3 = n; nb4 = m; nb5 = n; nb6 = m
+allocate(id1s(n), id2s(m), id1si(n), id2si(m))
+allocate(mapidx(n), itmp(m))
 
 ! sort the indices (quick sort)
-id1s = id1
-id2s = id2
+do i = 1, nid1
+   id1s(i) = id1(i)
+end do
+do i = 1, nid2
+   id2s(i) = id2(i)
+end do
 do i = 1, nid1
    id1si(i) = i
 end do
 do i = 1, nid2
    id2si(i) = i
 end do
-
-!call UTL_QKSORT_INT2(id1s,id1si,nid1,nid1)
-!call UTL_QKSORT_INT2(id2s,id2si,nid2,nid2)
-
-call qsort(id1s,id1si)
-call qsort(id2s,id2si)
+call imod_utl_qksort3(id1s,id1si)
+call imod_utl_qksort3(id2s,id2si)
 
 ! store mapping indices
 n1 = 1
@@ -930,6 +786,7 @@ n2 = 1
 itmp = 0
 do while(.true.)
    if (n1.gt.nid1 .or. n2.gt.nid2) exit
+   call checkbound(n1,nb1,'1')
    idval = id1s(n1)
    call findid(id1s,nid1,idval,n1,i1s,i1e)
    call findid(id2s,nid2,idval,n2,i2s,i2e)
@@ -937,32 +794,42 @@ do while(.true.)
       do i = i1s, i1e
          j = id1si(i)
          m = i2e-i2s+1
+         call checkbound(j,nb5,'2')
          mapidx(j)%n = m
          if (m.eq.1) then
+            call checkbound(i2s,nb4,'3')
             mapidx(j)%i = id2si(i2s)
          else
             allocate(mapidx(j)%iarr(m))
             do k = i2s, i2e
+               call checkbound(k,nb4,'4')
                mapidx(j)%iarr(k-i2s+1) = id2si(k)
             end do
-            ! sort (this is not really necessary, why then?)
-            call qsort(mapidx(j)%iarr, itmp(1:m))
+            ! sort (this is not really necessary)
+            call checkbound(m,nb6,'5')
+            call imod_utl_qksort3(mapidx(j)%iarr, itmp(1:m))
          end if
       end do
    end if
 end do
 
 ! create index array and offset array
+do i = 1, nid1
+   off1(i) = 0
+end do   
 k = 0
-off1 = 0
 do i = 1, nid1
    m = mapidx(i)%n
    if (m.eq.1) then
       k = k + 1
+      call checkbound(k,nidx1,'6')
+      call checkbound(i,nb3,'7')
       idx1(k) = mapidx(i)%i
    else if (m.gt.1) then
       do j = 1, m
          k = k + 1
+         call checkbound(k,nidx1,'8')
+         call checkbound(i,nb3,'9') 
          idx1(k) = mapidx(i)%iarr(j)
       end do
    end if
@@ -975,32 +842,64 @@ end do
 
 ! deallocate
 do i = 1, nid1
+   call checkbound(i,nb3,'10') 
    m = mapidx(i)%n
    if (m.gt.1) deallocate(mapidx(i)%iarr)
 end do
 deallocate(mapidx)
-deallocate(id1s, id2s, id1si, id2si, itmp)
+deallocate(id1s)
+deallocate(id2s)
+deallocate(id1si)
+deallocate(id2si)
+deallocate(itmp)
 
 end subroutine mapIds
 
+subroutine checkbound(i,ib,msg)
+implicit none
+integer, intent(in) :: i,ib
+character(len=*), intent(in) :: msg
+
+if(i.gt.ib.or.i.le.0)then
+   write(*,*) 'Program error: '//trim(msg), i, ib 
+   call ustop(' ')
+end if   
+
+end subroutine
+
 ! ------------------------------------------------------------------------------
 
-subroutine driverXchInitModSim()
+subroutine driverXchInitModSim1()
+  
+   integer :: n
 
+   n = max(XchModSimModNID,1)
+   
    ! allocate the MOD-SIM exchange arrays
-   allocate(XchModSimModIds(XchModSimModNID))
-   allocate(XchModSimModHeads(XchModSimModNID))
+   allocate(XchModSimModIds(n))
+   allocate(XchModSimModCells(3,n))
+
+end subroutine driverXchInitModSim1
+
+subroutine driverXchInitModSim2()
+
+   integer :: n, m
+
+   n = max(XchModSimModNID,1)
+   m = max(XchModSimSimNID,1)
+   
+   ! allocate the MOD-SIM exchange arrays
+   allocate(XchModSimModHeads(n))
    XchModSimModHeads = mv
-   allocate(XchModSimModCells(3,XchModSimModNID))
 
    ! allocate exchange arrays
-   allocate(XchModSimSimIds(XchModSimSimNID),&
-            XchModSimSimUnsZFlux(XchModSimSimNID),&
-            XchModSimSimStrFct(XchModSimSimNID))
+   allocate(XchModSimSimIds(m),&
+            XchModSimSimUnsZFlux(m),&
+            XchModSimSimStrFct(m))
    XchModSimSimUnsZFlux = mv
    XchModSimSimStrFct = mv
 
-end subroutine driverXchInitModSim
+end subroutine driverXchInitModSim2
 
 subroutine driverXchInitModSimTranMoz()
 
@@ -1008,7 +907,7 @@ subroutine driverXchInitModSimTranMoz()
    allocate(XchMozIds(XchMozNID))
    allocate(XchMozPVIds(XchMozPVNID))
    allocate(XchModMozModIds(XchModMozModNID))
-   allocate(XchModMozPVModIds(XchModMozPVModNID))
+   allocate(XchModMozPVModIds(max(XchModMozPVModNID,1)))
    allocate(XchSimMozSimIds(XchSimMozSimNID))
    allocate(XchModMozModCells(3,XchModMozModNID))
 
@@ -1052,38 +951,75 @@ subroutine driverXchInitModSimTranMoz()
 end subroutine driverXchInitModSimTranMoz
 
 subroutine driverXchIniMapModSim()
+   use pksmpi_mod,only:myrank
+   integer :: n, n1, n2, i
+   logical :: pks7mpimasterwrite
 
-   integer :: n
-
+   !if(myrank.eq.0)then
+   !   write(*,*) 'myrank=0:' 
+   !   write(*,*) '# modflow ID=',XchModSimModNID
+   !   do i = 1, XchModSimModNID
+   !      write(*,*)i,'-->',XchModSimModIds(i)
+   !   end do
+   !   write(*,*) '# metaswap ID=',XchModSimSimNID
+   !   do i = 1, XchModSimSimNID
+   !      write(*,*)i,'-->',XchModSimSimIds(i)
+   !   end do
+   !end if
+   !call pks7mpibarrier()
+   !if(myrank.eq.1)then
+   !   write(*,*) 'myrank=1:' 
+   !   write(*,*) '# modflow ID=',XchModSimModNID
+   !   do i = 1, XchModSimModNID
+   !      write(*,*)i,'-->',XchModSimModIds(i)
+   !   end do
+   !   write(*,*) '# metaswap ID=',XchModSimSimNID
+   !   do i = 1, XchModSimSimNID
+   !      write(*,*)i,'-->',XchModSimSimIds(i)
+   !   end do
+   !end if   
+   
    ! allocate arrays to map MetaSWAP to MODFLOW IDs
-   n = max(XchModSimSimNID,XchModSimModNID)
-   allocate(XchSim2ModIdx(n), XchSim2ModOff(XchModSimModNID))
-   allocate(XchMod2SimIdx(n), XchMod2SimOff(XchModSimSimNID))
+   n1 = max(XchModSimModNID,1)
+   n2 = max(XchModSimSimNID,1)
+   n = max(n1,n2)
+   n = max(n,1)
+!   allocate(XchSim2ModIdx(n), XchSim2ModOff(n1))
+!   allocate(XchMod2SimIdx(n), XchMod2SimOff(n2))
+   allocate(XchSim2ModIdx(n), XchSim2ModOff(n))
+   allocate(XchMod2SimIdx(n), XchMod2SimOff(n))
+   
    ! get mapping MODFLOW -> MetaSWAP IDs
-   write(*,*) 'Constructing coupling tables: MODFLOW      --> MetaSWAP'
+   if (pks7mpimasterwrite()) write(*,*) 'Constructing coupling tables: MODFLOW      --> MetaSWAP'
    call mapIds(XchMod2SimIdx,n,XchMod2SimOff,XchModSimSimIds,XchModSimSimNID,&
                                            XchModSimModIds,XchModSimModNID)
    ! get mapping MetaSWAP -> MODFLOW IDs
-   write(*,*) 'Constructing coupling tables: MetaSWAP     --> MODFLOW'
+   if (pks7mpimasterwrite()) write(*,*) 'Constructing coupling tables: MetaSWAP     --> MODFLOW'
    call mapIds(XchSim2ModIdx,n,XchSim2ModOff,XchModSimModIds,XchModSimModNID,&
                                            XchModSimSimIds,XchModSimSimNID)
-
+ 
+   !call pks7mpibarrier()
+   !call pks7mpiwrpfinalize()
+   !write(*,*),'@@@@@@@ stopping!'
+   !stop
+   
 end subroutine driverXchIniMapModSim
 
 subroutine driverXchIniMapModMoz()
 
    integer :: n
+   logical :: pks7mpimasterwrite
 
    ! MODFLOW - MOZART coupling (LSW)
    n = max(XchMozNID,XchModMozModNID)
    allocate(XchMoz2ModIdx(n), XchMoz2ModOff(XchModMozModNID))
    allocate(XchMod2MozIdx(n), XchMod2MozOff(XchMozNID))
    ! mapping MODFLOW --> MOZART (LSW)
-   write(*,*) 'Constructing coupling tables: MODFLOW      --> MOZART (LSW)'
+   if (pks7mpimasterwrite()) write(*,*) 'Constructing coupling tables: MODFLOW      --> MOZART (LSW)'
    call mapIds(XchMod2MozIdx,n,XchMod2MozOff,XchMozIds,      XchMozNID,&
                                                XchModMozModIds,XchModMozModNID)
    ! mapping MOZART (LSW) --> MODFLOW
-   write(*,*) 'Constructing coupling tables: MOZART (LSW) --> MODFLOW'
+   if (pks7mpimasterwrite()) write(*,*) 'Constructing coupling tables: MOZART (LSW) --> MODFLOW'
    call mapIds(XchMoz2ModIdx,n,XchMoz2ModOff,XchModMozModIds,XchModMozModNID,&
                                                XchMozIds,      XchMozNID)
 end subroutine driverXchIniMapModMoz
@@ -1091,17 +1027,18 @@ end subroutine driverXchIniMapModMoz
 subroutine driverXchIniMapModMozPV()
 
    integer :: n
+   logical :: pks7mpimasterwrite
 
    ! MODFLOW - MOZART coupling (PV)
-   n = max(XchMozPVNID,XchModMozPVModNID)
+   n = max(XchMozPVNID,XchModMozPVModNID); n = max(n,1)
    allocate(XchMozPV2ModIdx(n), XchMozPV2ModOff(XchModMozPVModNID))
    allocate(XchMod2MozPVIdx(n), XchMod2MozPVOff(XchMozPVNID))
    ! mapping MODFLOW --> MOZART (PV)
-   write(*,*) 'Constructing coupling tables: MODFLOW      --> MOZART (PV)'
+   if (pks7mpimasterwrite()) write(*,*) 'Constructing coupling tables: MODFLOW      --> MOZART (PV)'
    call mapIds(XchMod2MozPVIdx,n,XchMod2MozPVOff,XchMozPVIds,      XchMozPVNID,&
                                                  XchModMozPVModIds,XchModMozPVModNID)
    ! mapping MOZART (PV) --> MODFLOW
-   write(*,*) 'Constructing coupling tables: MOZART (PV)  --> MODFLOW'
+   if (pks7mpimasterwrite()) write(*,*) 'Constructing coupling tables: MOZART (PV)  --> MODFLOW'
    call mapIds(XchMozPV2ModIdx,n,XchMozPV2ModOff,XchModMozPVModIds,XchModMozPVModNID,&
                                                   XchMozPVIds,      XchMozPVNID)
 end subroutine driverXchIniMapModMozPV
@@ -1109,17 +1046,18 @@ end subroutine driverXchIniMapModMozPV
 subroutine driverXchIniMapSimMoz()
 
    integer :: n
+   logical :: pks7mpimasterwrite
 
    ! MetaSwap - MOZART coupling
    n = max(XchMozNID,XchSimMozSimNID)
    allocate(XchMoz2SimIdx(n), XchMoz2SimOff(XchSimMozSimNID))
    allocate(XchSim2MozIdx(n), XchSim2MozOff(XchMozNID))
    ! mapping MetaSWAP --> MOZART
-   write(*,*) 'Constructing coupling tables: MetaSWAP     --> MOZART'
+   if (pks7mpimasterwrite()) write(*,*) 'Constructing coupling tables: MetaSWAP     --> MOZART'
    call mapIds(XchSim2MozIdx,n,XchSim2MozOff,XchMozIds,      XchMozNID,&
                                                XchSimMozSimIds,XchSimMozSimNID)
    ! mapping MOZART  --> MetaSWAP
-   write(*,*) 'Constructing coupling tables: MOZART       --> MetaSWAP'
+   if (pks7mpimasterwrite()) write(*,*) 'Constructing coupling tables: MOZART       --> MetaSWAP'
    call mapIds(XchMoz2SimIdx,n,XchMoz2SimOff,XchSimMozSimIds,XchSimMozSimNID,&
                                                XchMozIds,      XchMozNID)
 end subroutine driverXchIniMapSimMoz
@@ -1241,6 +1179,7 @@ logical, intent(in) :: usests
 
 integer :: rt
 
+rt = 0
 if (usemodflow .and. .not.usemetaswap .and. .not.usetransol .and.&
   .not.usemozart) rt = rtmod
 if (usemodflow .and.      usemetaswap .and. .not.usetransol .and.&
@@ -1280,7 +1219,7 @@ if (.not.lex) then
       call imod_utl_printtext(trim(lic(i)),0)
    end do
    call imod_utl_printtext('',0) 
-   call imod_utl_printtext('I accept the iMOD License (please enter "Y" or "N" and hit the Enter-key):',0)    
+   call imod_utl_printtext('I accept the iMOD License (please enter "Y" or "N" and hit the Enter-key):',0)
    do while(.true.)
       read(*,*) key     
       call imod_utl_s_cap(key,'l')

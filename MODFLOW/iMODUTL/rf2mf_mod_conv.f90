@@ -23,7 +23,7 @@
       !> Module to convert runfile --> modflow 2005
       module rf2mf_module
 
-      use imod_utl, only: imod_utl_dir_level_up
+      use imod_utl, only: imod_utl_rel_to_abs
 
       implicit none
 
@@ -43,12 +43,13 @@
       integer, parameter :: iani = 11
       integer, parameter :: ihfb = 12
       integer, parameter :: ipcg = 13
-      integer, parameter :: irch = 14
-      integer, parameter :: ichd = 15
-      integer, parameter :: ievt = 16
-      integer, parameter :: iscr = 17
-      integer, parameter :: ipwt = 18
-      integer, parameter :: idxc = 19
+      integer, parameter :: ipks = 14
+      integer, parameter :: irch = 15
+      integer, parameter :: ichd = 16
+      integer, parameter :: ievt = 17
+      integer, parameter :: iscr = 18
+      integer, parameter :: ipwt = 19
+      integer, parameter :: idxc = 20
 
       integer, parameter :: npck = idxc
 
@@ -67,6 +68,7 @@
       'ani ',&
       'hfb6',&
       'pcg ',&
+      'pks ',&
       'rch ',&
       'chd ',&
       'evt ',&
@@ -141,6 +143,7 @@
          character(len=maxlen) :: modeldir  = '..\modflow2005\'
          character(len=maxlen) :: modelname = 'modelname'
          character(len=maxlen) :: resultdir = '' ! filled by wrapper
+         character(len=maxlen) :: runfileroot = '' ! filled by wrapper
       end type tRoot
       type(tRoot), public, save :: root
 
@@ -316,8 +319,9 @@
       integer, public, parameter :: imet_ibound_fixed_north = 11
       integer, public, parameter :: imet_ibound_fixed_south = 12
       integer, public, parameter :: imet_save_no_buf        = 13
+      integer, public, parameter :: imet_write_debug_idf    = 14
 
-      integer, parameter :: nmetkws = imet_save_no_buf
+      integer, parameter :: nmetkws = imet_write_debug_idf
 
       character(len=18), dimension(nmetkws) :: metkws
 !...   12345678901234567890123
@@ -334,7 +338,8 @@
       'ibound_fixed_east ',&
       'ibound_fixed_north',&
       'ibound_fixed_south',&
-      'save_no_buf       '/
+      'save_no_buf       ',&
+      'write_debug_idf   '/
 
       integer, public, parameter :: imetu = 1
       integer, public, parameter :: imeti = 2
@@ -497,7 +502,28 @@
          reaL    :: damp  = 1.    ! damping factor
       end type tPcg
       type(tPcg), public, save :: pcg
-
+!.......................................................................
+      type tPks
+         logical :: active = .false. 
+         character(len=maxlen) :: text = 'Parallel Krylov Solver Package'
+         integer :: mxiter = 100     ! maximum number of outer iterations
+         integer :: innerit = 20     ! maximum number of inner iterations
+         integer :: isolver = 1      ! 1: PCG; 2: BiCGSTAB; 3: GMRES
+         integer :: npc = 2          ! 2: incomplete LU
+         real    :: hclosepks = 1e-3 ! head change criterion
+         real    :: rclosepks = 100. ! residual criteron
+         real    :: relaxpks  = 0.98 ! relaxation parameter
+         integer :: iprpks = 1       ! printout flag
+         integer :: mutpks = 0       ! print flag
+         reaL    :: damp  = 1.       ! damping factor
+         ! PKSMPI part
+         integer :: nrproc = 0       ! 0 = serial; > 0 = parallel
+         integer :: partopt = 0      ! 0 = uniform; 1 = RCB
+         integer, dimension(:,:), allocatable :: partminmax ! ! ic1, ic2, ir1, ir2
+         character(len=maxlen)                :: loadfile ! ! loadptr
+         integer :: pressakey = 0 ! flag required for debugging with Visual Studio
+      end type tPks
+      type(tPks), public, save :: pks
 !.......................................................................
       integer, parameter, public :: mxrech = 10
       type tSpRch
@@ -550,9 +576,9 @@
       integer, public, save :: debugflag = 0
 
       public :: AllocNam,AllocDis,AllocBas,AllocBcf,AllocMet,AllocOc, &
-                AllocRiv,AllocDrn,AllocGhb,AllocWel,AllocAni,AllocHfb,AllocRch,AllocEvt,AllocChd,AllocPcg,AllocDxc,AllocScr,AllocPwt
+                AllocRiv,AllocDrn,AllocGhb,AllocWel,AllocAni,AllocHfb,AllocRch,AllocEvt,AllocChd,AllocPcg,AllocPks,AllocDxc,InitPks,PartPks,AllocScr,AllocPwt
       public :: WriteDis,WriteBas,WriteBcf,WriteMet,WriteOc,WriteRiv,&
-                WriteDrn,WriteGhb,WriteWel,WriteAni,WriteHfb,WriteRch,WriteEvt,WriteChd,WritePcg,WriteNam,WriteScr,WritePwt
+                WriteDrn,WriteGhb,WriteWel,WriteAni,WriteHfb,WriteRch,WriteEvt,WriteChd,WritePcg,WritePks,WriteNam,WriteScr,WritePwt
 
       contains
 
@@ -1085,6 +1111,23 @@
       return
       end subroutine AllocPcg
 
+      !> Allocate PKS package.
+      subroutine AllocPks(iact)
+
+      implicit none
+
+!...     arguments
+      integer, intent(in) :: iact
+!.......................................................................
+
+      if (iact == ialloc) then
+         nam%package(ipks)%active = .true.
+         pks%active = .true.
+      end if         
+
+      return
+      end subroutine AllocPks
+
      !> Allocate DXC package.
       subroutine AllocDxc(iact)
 
@@ -1104,7 +1147,163 @@
 
       return
       end subroutine AllocDxc
+      
+     !> Initialization for he PKS package
+      subroutine InitPks()
 
+      implicit none
+!.......................................................................
+      
+      if(.not.pks%active)return 
+      
+      call pks7mpigetnrproc(pks%nrproc)
+      
+      end subroutine InitPks
+      
+      !> Partitioning for he PKS package
+      subroutine PartPks()
+      
+      use idfmodule
+      use imod_idf, only: idfread, idfreadscale
+      use mod_rf2mf, only: simcsize, simbox
+      
+      use pksmpi_mod, only: gncol,myrank
+
+      implicit none
+
+!...     locals      
+      logical :: writesto, le, lw, ls, ln
+      integer :: nrproc, icol, irow, ic, ir
+      real, dimension(:,:), allocatable :: loadptr
+      real :: chdadd
+!.......................................................................
+      
+      if(.not.pks%active)return 
+      
+      call pks7mpigetnrproc(nrproc)
+      if(nrproc.le.1)return
+      
+      call pks7mpisetgnodes( ncol, nrow, nlay )
+            
+      if (pks%partopt.eq.0) then ! uniform
+         pks%nrproc = nrproc
+         allocate(pks%partminmax(pks%nrproc,4)) 
+         call pks7mpipartdef( pks%partminmax(:,1), pks%partminmax(:,2),& 
+                              pks%partminmax(:,3), pks%partminmax(:,4) )
+      elseif(pks%partopt.eq.1.or.pks%partopt.eq.2) then ! RCB
+         ! read and scale the loadpointer 
+         pks%nrproc = nrproc
+         allocate(pks%partminmax(pks%nrproc,4))
+         if (.not.idfread(idfc,pks%loadfile,0)) CALL IMOD_UTL_PRINTTEXT('Data Set 5a: could not read LOADFILE',2)
+         call idfnullify(idfm)
+         idfm%ieq=0
+         idfm%dx=simcsize
+         idfm%dy=simcsize
+         idfm%ncol=ncol
+         idfm%nrow=nrow
+         idfm%xmin = simbox(1)
+         idfm%ymin = simbox(2)
+         idfm%xmax = simbox(3)
+         idfm%ymax = simbox(4)
+         idfm%nodata = 0.
+         if (.not.idfreadscale(idfc,idfm,4,idsclnointp)) CALL IMOD_UTL_PRINTTEXT('Data Set 5a: could not read LOADFILE',2)
+         allocate(loadptr(ncol,nrow))
+         loadptr = idfm%x
+         ! assume ibound in case of partopt = 2
+         if (pks%partopt.eq.2) then
+            ! step 1: set load = 1 for active cells
+            do irow = 1, nrow
+               do icol = 1, ncol    
+                  loadptr(icol,irow) = min(loadptr(icol,irow), 1.) 
+               end do
+            end do
+            ! step 2: modify for constant head cells              
+            chdadd = minval(loadptr)    
+            if (chdadd.lt.0.) then ! constant head cells detected
+               chdadd = chdadd - 1. ! set value that should be added (border)
+               do irow = 1, nrow
+                  do icol = 1, ncol                   
+                     if (loadptr(icol,irow).ge.1.) then
+                        if (icol.lt.ncol) then ! E
+                           ic = icol + 1
+                           ir = irow
+                           if (loadptr(ic,ir).lt.0.) then
+                              loadptr(ic,ir) = chdadd    
+                           end if
+                           if (irow.gt.1) then ! NE
+                              ir = irow-1
+                              if (loadptr(ic,ir).lt.0.) then
+                                 loadptr(ic,ir) = chdadd    
+                              end if
+                           end if       
+                           if (irow.lt.nrow) then ! SE
+                              ir = irow+1
+                              if (loadptr(ic,ir).lt.0.) then
+                                 loadptr(ic,ir) = chdadd    
+                              end if
+                           end if       
+                        end if    
+                         
+                        if (icol.gt.1) then ! W
+                           ic = icol - 1
+                           ir = irow
+                           if (loadptr(ic,ir).lt.0.) then
+                              loadptr(ic,ir) = chdadd    
+                           end if
+                           if (irow.gt.1) then ! NW
+                              ir = irow-1
+                              if (loadptr(ic,ir).lt.0.) then
+                                 loadptr(ic,ir) = chdadd    
+                              end if
+                           end if       
+                           if (irow.lt.nrow) then ! SW
+                              ir = irow+1
+                              if (loadptr(ic,ir).lt.0.) then
+                                 loadptr(ic,ir) = chdadd    
+                              end if
+                           end if       
+                        end if    
+                         
+                        if (irow.gt.1) then ! N
+                           ic = icol
+                           ir = irow-1
+                           if (loadptr(ic,ir).lt.0.) then
+                              loadptr(ic,ir) = chdadd    
+                           end if
+                        end if
+                        
+                        if (irow.lt.nrow) then ! S
+                           ic = icol
+                           ir = irow+1
+                           if (loadptr(ic,ir).lt.0.) then
+                              loadptr(ic,ir) = chdadd    
+                           end if
+                        end if
+                     end if
+                   end do
+               end do
+               ! remove constant head cells   
+               do irow = 1, nrow
+                  do icol = 1, ncol                   
+                     if (loadptr(icol,irow).lt.0. .and. loadptr(icol,irow).gt.chdadd) then
+                        loadptr(icol,irow) = 0.
+                     end if 
+                  end do      
+               end do            
+            end if
+         end if
+         call idfdeallocatex(idfc)
+         call pks7mpipartrcb( pks%partminmax(:,1), pks%partminmax(:,2),& 
+                              pks%partminmax(:,3), pks%partminmax(:,4),& 
+                              ncol, nrow, loadptr, 0.)
+         deallocate(loadptr)         
+      end if    
+      
+      ! check number of processes
+      if(nrproc.ne.pks%nrproc) call imod_utl_printtext('Data Set 5: non-matching number of processes',2) 
+      
+      end subroutine PartPks
+      
       !> Allocate Recharge package.
       subroutine AllocRch(iact)
 
@@ -1888,7 +2087,7 @@
       end if
       n = n + 1
       write(str(n),*) luncb
-      if (debugflag.eq.0) then
+      if (debugflag.le.0) then
          n = n + 1
          write(str(n),*) 'noprint'
       end if
@@ -2051,7 +2250,7 @@
       end if
       n = n + 1
       write(str(n),*) luncb
-      if (debugflag.eq.0) then
+      if (debugflag.le.0) then
          n = n + 1
          write(str(n),*) 'noprint'
       end if
@@ -2191,7 +2390,7 @@
       end if
       n = n + 1
       write(str(n),*) luncb
-      if (debugflag.eq.0) then
+      if (debugflag.le.0) then
          n = n + 1
          write(str(n),*) 'noprint'
       end if
@@ -2247,7 +2446,7 @@
       end if
       n = n + 1
       write(str(n),*) luncb
-      if (debugflag.eq.0) then
+      if (debugflag.le.0) then
          n = n + 1
          write(str(n),*) 'noprint'
       end if
@@ -2294,16 +2493,16 @@
       write(str(n),*) hfb%mxfb
       n = n + 1
       write(str(n),*) hfb%nhfbnp
-      if (debugflag.eq.0) then
+      if (debugflag.le.0) then
          n = n + 1
-         write(str(n),*) 'NOPRINT'
+         write(str(n),*) 'noprint'
       end if
       if(dis%settop .and. dis%setbot) then
          n = n + 1
-         write(str(n),*) 'HFBRESIS'
+         write(str(n),*) 'hfbresis'
       else
          n = n + 1
-         write(str(n),*) 'HFBFACT'
+         write(str(n),*) 'hfbfact'
       end if
 
       write(nstr,*) n
@@ -2361,6 +2560,101 @@
       return
       end subroutine WritePcg
 
+      !> Write Parallel Krylov Solver package.
+      subroutine WritePks()
+
+      implicit none
+
+!...     locals
+      integer :: cfn_getlun, lun, i, iproc
+      character(len=maxlen), dimension(:), allocatable :: str
+      character(len=maxlen) :: nstr
+!.......................................................................
+
+!...     return in case package is not active
+      if (.not.nam%package(ipks)%active) return
+
+      allocate(str(4))
+      
+!...     set slashes
+      call osd_s_filename(nam%package(ipks)%fname)
+
+!...     open pks-file
+      call CreateDir(nam%package(ipks)%fname)
+      lun = cfn_getlun(10,99)
+      open(unit=lun,file=nam%package(ipks)%fname,action='write')
+
+!...     write pks file
+      write(lun,'(a,1x,a)') '#', trim(pks%text)
+      write(str(1),'(a)') 'isolver'; write(str(2),*) pks%isolver 
+      write(lun,'(a,1x,a)')(trim(adjustl(str(i))),i=1,2) 
+      write(str(1),'(a)') 'npc';     write(str(2),*) pks%npc
+      write(lun,'(a,1x,a)')(trim(adjustl(str(i))),i=1,2) 
+      write(str(1),'(a)') 'hclosepks'; write(str(2),*) pks%hclosepks 
+      write(lun,'(a,1x,a)')(trim(adjustl(str(i))),i=1,2) 
+      write(str(1),'(a)') 'rclosepks'; write(str(2),*) pks%rclosepks 
+      write(lun,'(a,1x,a)')(trim(adjustl(str(i))),i=1,2) 
+      write(str(1),'(a)') 'mxiter'; write(str(2),*) pks%mxiter
+      write(lun,'(a,1x,a)')(trim(adjustl(str(i))),i=1,2) 
+      write(str(1),'(a)') 'innerit'; write(str(2),*) pks%innerit
+      write(lun,'(a,1x,a)')(trim(adjustl(str(i))),i=1,2) 
+      write(str(1),'(a)') 'relax'; write(str(2),*) pks%relaxpks 
+      write(lun,'(a,1x,a)')(trim(adjustl(str(i))),i=1,2) 
+      if (pks%nrproc > 1) then
+         write(str(1),'(a)') 'partopt'; write(str(2),*) 3 
+         write(lun,'(a,1x,a)')(trim(adjustl(str(i))),i=1,2)
+         write(lun,'(a)') 'partdata'
+         write(str(1),*) pks%nrproc
+         write(lun,'(a)') trim(adjustl(str(1)))
+         do iproc = 1, pks%nrproc
+            write(str(1),*) pks%partminmax(iproc,1)  
+            write(str(2),*) pks%partminmax(iproc,2)  
+            write(str(3),*) pks%partminmax(iproc,3)  
+            write(str(4),*) pks%partminmax(iproc,4)  
+            write(lun,'(3(a,1x),1x,a)')(trim(adjustl(str(i))),i=1,4) 
+         end do
+         write(str(1),*) dis%nrow
+         write(lun,'(a,1x,a)') 'gnrow', trim(adjustl(str(1)))    
+         write(str(1),*) dis%ncol
+         write(lun,'(a,1x,a)') 'gncol', trim(adjustl(str(1)))  
+         write(lun,'(a)') 'gdelr' 
+         if (minval(dis%delr) == maxval(dis%delr)) then
+             write(str(1),*) dis%delr(1)
+             write(lun,'(a)') trim(adjustl(str(1)))  
+         else
+             deallocate(str)
+             allocate(str(dis%ncol))
+             do i = 1, dis%ncol
+                write(str(i),*) dis%delr(i)    
+             end do
+             write(nstr,*) dis%ncol
+             write(lun,'('//trim(nstr)//'(a,1x))')(trim(adjustl(str(i))), i = 1, dis%ncol)
+         end if
+         write(lun,'(a)') 'gdelc' 
+         if (minval(dis%delc) == maxval(dis%delc)) then
+             write(str(1),*) dis%delc(1)
+             write(lun,'(a)') trim(adjustl(str(1)))  
+         else
+             deallocate(str)
+             allocate(str(dis%nrow))
+             do i = 1, dis%nrow
+                write(str(i),*) dis%delc(i)    
+             end do
+             write(nstr,*) dis%nrow
+             write(lun,'('//trim(nstr)//'(a,1x))')(trim(adjustl(str(i))), i = 1, dis%nrow)
+         end if
+      end if      
+      if (pks%pressakey.eq.1) then
+         write(lun,'(a)') 'pressakey'
+      end if       
+      write(lun,'(a)') 'end'
+
+!...     close pks file
+      close(lun)
+
+      return
+      end subroutine WritePks
+      
        !> Write Recharge package.
       subroutine WriteRch()
 
@@ -2487,15 +2781,15 @@
             write(str(3),*) evt%sp(iper)%inexdp
             write(lun,'(3(a,1x))')(trim(adjustl(str(i))), i = 1, 3)
             if(evt%sp(iper)%insurf.ne.0.and.evt%sp(iper)%inevtr.ne.0.and.evt%sp(iper)%inexdp.ne.0)then
-             if (evt%sp(iper)%insurf >= 0) then
+            if (evt%sp(iper)%insurf >= 0) then
                call WriteArrayRead(evt%sp(iper)%surf,lun)
-             end if
-             if (evt%sp(iper)%inevtr >= 0) then
+            end if
+            if (evt%sp(iper)%inevtr >= 0) then
                call WriteArrayRead(evt%sp(iper)%evtr,lun)
-             end if
-             if (evt%sp(iper)%inexdp >= 0) then
+            end if
+            if (evt%sp(iper)%inexdp >= 0) then
                call WriteArrayRead(evt%sp(iper)%exdp,lun)
-             end if
+            end if
             else
              write(str(1),*) 'constant'
              write(str(2),*) 0.0
@@ -2586,7 +2880,7 @@
 !...     write mxactc
       n = 1
       write(str(n),*) chd%mxactc
-      if (debugflag.eq.0) then
+      if (debugflag.le.0) then
          n = n + 1
          write(str(n),*) 'noprint'
       end if   
@@ -2637,10 +2931,10 @@
          else
             if (sp(iper)%usegcd) then
                if(sp(iper)%gcd%nsubsys.gt.0)then
-                write(str,*) sp(iper)%np
-                write(lun,'(a)') trim(adjustl(str))
-                write(lun,'(a,1x,i5.5)') 'gcd',iper
-                call WriteGcd(sp(iper)%gcd, lun)
+               write(str,*) sp(iper)%np
+               write(lun,'(a)') trim(adjustl(str))
+               write(lun,'(a,1x,i5.5)') 'gcd',iper
+               call WriteGcd(sp(iper)%gcd, lun)
                else
                 write(lun,'(a)') '0'
                endif
@@ -2656,8 +2950,6 @@
 
       !> Write array file.
       subroutine WriteArrayRead(arr, lun)
-
-      use imod_utl, only: imod_utl_dir_level_up
 
       implicit none
 
@@ -2708,7 +3000,7 @@
             end if
             !cnstnt = trim(cnstnt)//trim(arr%oper)
             ! replace relative dot for one level deeper
-            call imod_utl_dir_level_up(fstr)
+            call imod_utl_rel_to_abs(root%runfileroot,fstr)
             ! write string
             write(str(1),*) trim(keyword)
             write(str(2),*) "'"//trim(fstr)//"'"

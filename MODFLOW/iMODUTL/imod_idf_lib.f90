@@ -28,6 +28,11 @@ USE IMOD_IDF_PAR
 CHARACTER(LEN=2),PARAMETER :: NEWLINE=CHAR(13)//CHAR(10)
 REAL,PARAMETER,PRIVATE :: TINY=0.1
 
+logical, save :: lidfout = .false.
+integer, save :: nidfout = 0
+integer, parameter :: mxidfout = 1000000
+character(len=1024), dimension(:), allocatable, save :: idfout
+
 CONTAINS
 
  !###======================================================================
@@ -39,9 +44,19 @@ CONTAINS
  INTEGER,INTENT(IN),OPTIONAL :: RDDATA
  CHARACTER(LEN=2) :: TXT
  INTEGER :: IOPEN,IDATA
-
- IF(PRESENT(RDDATA))IDATA=RDDATA
-
+ LOGICAL :: IDFDEL
+ 
+ IDATA = 0
+ IDFDEL=.FALSE.
+ 
+ IF(PRESENT(RDDATA))THEN
+  IDATA=RDDATA
+  IF (IDATA.EQ.2)THEN
+   IDFDEL=.TRUE.
+   IDATA=1
+  ENDIF 
+ ENDIF
+       
  IDFREAD=.FALSE.
 
  TXT='RO'                   !## read only
@@ -62,7 +77,7 @@ CONTAINS
   CALL IDFNULLIFY(IDF)
   IF(IDFREADDIM(IOPEN,IDF))THEN
    IDF%FNAME=IDFNAME
-   IF(IDFREADDATA(IOPEN,IDF))THEN
+   IF(IDFREADDATA(IOPEN,IDF,IDFDEL))THEN
     !## get gregorian-date if possible
     IDF%JD=UTL_IDFGETDATE(IDFNAME)
     !## get julian-date if possible
@@ -81,8 +96,10 @@ CONTAINS
  ENDIF
 
  !## if stream access, close file
- IF(IOPEN.EQ.1)CLOSE(IDF%IU)
-
+ IF(IOPEN.EQ.1.AND..NOT.IDFDEL)THEN
+  CLOSE(IDF%IU)
+ ENDIF
+   
  END FUNCTION IDFREAD
 
  !###======================================================================
@@ -207,6 +224,8 @@ CONTAINS
  DOUBLE PRECISION :: XD1,XD2,YD1,YD2,TINY
  CHARACTER(LEN=256) :: IDFNAME
 
+ call timing_tic('IO','IDFREADSCALE')
+ 
  !## check extent
  IF (IDFC%XMIN.GT.IDFM%XMIN.OR.IDFC%XMAX.LT.IDFM%XMAX.OR.IDFC%YMIN.GT.IDFM%YMIN.OR.IDFC%YMAX.LT.IDFM%YMAX) THEN
   INQUIRE(UNIT=IDFC%IU,NAME=IDFNAME)
@@ -348,6 +367,8 @@ CONTAINS
 
  IDFREADSCALE=.TRUE.
 
+ call timing_toc('IO','IDFREADSCALE')
+ 
  END FUNCTION IDFREADSCALE
 
  !###====================================================================
@@ -492,6 +513,7 @@ CONTAINS
  REAL :: XC,XX,Y,YY,YC,XCIDF,YCIDF,XMID,YMID
  REAL,ALLOCATABLE,DIMENSION(:) :: X1A,X2A
  REAL,ALLOCATABLE,DIMENSION(:,:) :: Y2A !,XCOPY
+ REAL :: IDFVAL
 
  IF(ALLOCATED(X1A)) DEALLOCATE(X1A)
  IF(ALLOCATED(X2A)) DEALLOCATE(X2A)
@@ -503,19 +525,27 @@ CONTAINS
  CALL IMOD_UTL_POL1LOCATED(IDFC%SY,IDFC%NROW+1,DBLE(IDFM%SY(0))-DTINY,IR1)
  CALL IMOD_UTL_POL1LOCATED(IDFC%SY,IDFC%NROW+1,DBLE(IDFM%SY(IDFM%NROW))+DTINY,IR2)
 
+ !## add extra for boundary (north/west/east/south)
+ IC1=MAX(1,IC1-1)
+ IC2=MIN(IDFC%NCOL,IC2+1)
+ IR1=MAX(1,IR1-1)
+ IR2=MIN(IDFC%NROW,IR2+1)
+
  !## number of distinguished coordinates from child idf (coarser)
  NPC=(IC2-IC1)+1
  NPR=(IR2-IR1)+1
  !## add extra for boundary (north/west/east/south)
- NPR=NPR+2
- NPC=NPC+2
+ !!NPR=NPR+2
+ !!NPC=NPC+2
 
  !## assign one extra row/column for boundary
  ALLOCATE(X1A(NPC),X2A(NPR),Y2A(NPC,NPR)) !,XCOPY(IDFM%NCOL,IDFM%NROW))
 
- NPR=1
+ !!NPR=1
+ NPR=0
  DO IR=IR1,IR2  !## loop over row in coarser child
-  NPC=1
+  !!NPC=1
+  NPC=0
   NPR=NPR+1
   YMID=(IDFC%SY(IR-1)+IDFC%SY(IR))/2.0
   X2A(NPR)=YMID
@@ -525,28 +555,34 @@ CONTAINS
    X1A(NPC)=XMID
    !## read value from idfm%x()
    CALL IDFIROWICOL(IDFM,IROW,ICOL,X1A(NPC),X2A(NPR))
+   IF(ICOL.EQ.0.OR.IROW.EQ.0)THEN
+    IDFVAL=IDFGETVAL(IDFC,IR,IC)
+    IF(IDFVAL.EQ.IDFC%NODATA) IDFVAL=IDFM%NODATA
+   ELSE 
+    IDFVAL=IDFM%X(ICOL,IROW)  
+   ENDIF
+   Y2A(NPC,NPR)=IDFVAL
+   !ICOL=MIN(IDFM%NCOL,ICOL)
+   !ICOL=MAX(1,ICOL)
+   !IROW=MIN(IDFM%NROW,IROW)
+   !IROW=MAX(1,IROW)
 
-   ICOL=MIN(IDFM%NCOL,ICOL)
-   ICOL=MAX(1,ICOL)
-   IROW=MIN(IDFM%NROW,IROW)
-   IROW=MAX(1,IROW)
-
-   Y2A(NPC,NPR)=IDFM%X(ICOL,IROW)
+   !Y2A(NPC,NPR)=IDFM%X(ICOL,IROW)
   ENDDO
  ENDDO
 
- NPC=NPC+1
- NPR=NPR+1
+ !!NPC=NPC+1
+ !!NPR=NPR+1
 
- X1A(1)  =IDFC%SX(IC1-1)
- X1A(NPC)=IDFC%SX(IC2)
- X2A(1)  =IDFC%SY(IR1-1)
- X2A(NPR)=IDFC%SY(IR2)
+ !!X1A(1)  =IDFC%SX(IC1-1)
+ !!X1A(NPC)=IDFC%SX(IC2)
+ !!X2A(1)  =IDFC%SY(IR1-1)
+ !!X2A(NPR)=IDFC%SY(IR2)
 
- Y2A(1,:)  =Y2A(2,:)
- Y2A(NPC,:)=Y2A(NPC-1,:)
- Y2A(:,1)  =Y2A(:,2)
- Y2A(:,NPR)=Y2A(:,NPR-1)
+ !!Y2A(1,:)  =Y2A(2,:)
+ !!Y2A(NPC,:)=Y2A(NPC-1,:)
+ !!Y2A(:,1)  =Y2A(:,2)
+ !!Y2A(:,NPR)=Y2A(:,NPR-1)
 
 ! !## change value of temp.grid if values in neighborhood
 ! !## in this way all points have a real/false value
@@ -788,6 +824,8 @@ CONTAINS
  INTEGER :: I
  LOGICAL :: LEX
 
+ call timing_tic('IO','IDFWRITE')
+ 
  IDFWRITE_WRAPPER=.FALSE.
 
  CALL IDFNULLIFY(IDF)
@@ -835,6 +873,8 @@ CONTAINS
   INQUIRE(UNIT=IDF%IU,OPENED=LEX); IF(LEX)CLOSE(IDF%IU)
  ENDIF
 
+ call timing_toc('IO','IDFWRITE')
+
  END FUNCTION IDFWRITE_WRAPPER
 
  !###======================================================================
@@ -846,7 +886,16 @@ CONTAINS
  CHARACTER(LEN=*),INTENT(IN) :: IDFNAME
  INTEGER :: IDATA
  CHARACTER(LEN=2) :: TXT
-
+ logical :: lpks, pks7mpimasterwrite ! PKS
+ 
+! store file name of output IDFs
+ if (lidfout) then
+    if (.not.allocated(idfout)) allocate(idfout(mxidfout))
+    nidfout = nidfout + 1
+    if (nidfout.gt.mxidfout) call imod_utl_printtext('Error storing IDF file name: increase MXIDFOUT!',-3)
+    idfout(nidfout) = trim(idfname)
+ end if
+ 
  IDFWRITE=.FALSE.
 
  IDATA=1
@@ -937,11 +986,12 @@ CONTAINS
  END FUNCTION IDFWRITE_EQUI
 
  !###======================================================================
- LOGICAL FUNCTION IDFREADDATA(IDATA,IDF)
+ LOGICAL FUNCTION IDFREADDATA(IDATA,IDF,IDFDEL)
  !###======================================================================
  IMPLICIT NONE
  INTEGER,INTENT(IN)  :: IDATA
  TYPE(IDFOBJ),INTENT(INOUT) :: IDF
+ LOGICAL,INTENT(IN) :: IDFDEL
  INTEGER :: IROW,ICOL,I,IOS
 
  IDFREADDATA=.FALSE.
@@ -951,14 +1001,24 @@ CONTAINS
  IF(IDATA.EQ.1)THEN
   IF(.NOT.IDFALLOCATEX(IDF))RETURN
   IF(IDF%IXV.EQ.0)THEN
-   DO IROW=1,IDF%NROW
-    DO ICOL=1,IDF%NCOL
-     READ(IDF%IU,IOSTAT=IOS) IDF%X(ICOL,IROW)
-     IF(IOS.NE.0)RETURN
-     !## apply transformation
-     IDF%X(ICOL,IROW)=IDFTRANSFORM_F(IDF,IDF%X(ICOL,IROW),ICOL,IROW)
+   !DO IROW=1,IDF%NROW
+   ! DO ICOL=1,IDF%NCOL
+   !  READ(IDF%IU,IOSTAT=IOS) IDF%X(ICOL,IROW)
+   !  IF(IOS.NE.0)RETURN
+   !  !## apply transformation
+   !  IDF%X(ICOL,IROW)=IDFTRANSFORM_F(IDF,IDF%X(ICOL,IROW),ICOL,IROW)
+   ! END DO
+   !END DO
+   READ(IDF%IU,IOSTAT=IOS) ((IDF%X(ICOL,IROW),ICOL=1,IDF%NCOL),IROW=1,IDF%NROW)
+   IF(IOS.NE.0)RETURN
+   !  !## apply transformation
+   IF(IDF%UNITS.NE.0)THEN 
+    DO IROW=1,IDF%NROW
+     DO ICOL=1,IDF%NCOL
+      IDF%X(ICOL,IROW)=IDFTRANSFORM_F(IDF,IDF%X(ICOL,IROW),ICOL,IROW)
+     END DO
     END DO
-   END DO
+   ENDIF
   ELSEIF(IDF%IXV.EQ.1)THEN
    I=0
    DO IROW=1,IDF%NROW
@@ -971,7 +1031,11 @@ CONTAINS
     END DO
    ENDDO
   ENDIF
-  CLOSE(IDF%IU)
+  IF(IDFDEL)THEN
+   CLOSE(IDF%IU,STATUS='DELETE')
+  ELSE 
+   CLOSE(IDF%IU)
+  ENDIF  
  ENDIF
 
  IDFREADDATA=.TRUE.
@@ -1360,7 +1424,7 @@ CONTAINS
  !###======================================================================
  IMPLICIT NONE
  INTEGER,INTENT(IN)  :: IDATA
- TYPE(IDFOBJ),INTENT(INOUT) :: IDF
+ TYPE(IDFOBJ),INTENT(OUT) :: IDF
  INTEGER :: I,IREC,IOS
  INTEGER(KIND=1) :: I1,I2,I3,I4
 
@@ -1979,7 +2043,7 @@ CONTAINS
  IF(TSTAT(1:1).EQ.'R')THEN  !## read
   INQUIRE(FILE=IDFNAME,EXIST=LEX)
   IF(.NOT.LEX)THEN
-   WRITE(*,*) 'Can not find '//TRIM(IDFNAME)
+   WRITE(*,*) 'Cannot find '//TRIM(IDFNAME)
    RETURN
   ENDIF
  ELSEIF(TSTAT(1:1).EQ.'W')THEN !## write
