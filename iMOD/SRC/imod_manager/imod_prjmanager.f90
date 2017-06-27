@@ -7469,17 +7469,16 @@ TOPICLOOP: DO ITOPIC=1,MAXTOPICS
   IF(IPC(ICOL,IROW,1).EQ.INT(1,1))THEN
    IF(ICOL.LT.NCOL)THEN
  
+    !## fraction is minus 1 for given layers
     FDZ=-1.0
     IF(ITB.EQ.0)FDZ=PMANAGER_SAVEMF2005_HFB_GETFDZ(TOP,BOT,TIDF%X,BIDF%X,ICOL,IROW,ICOL+1,IROW,NODATA,ILAY)
  
     !## enter fault if occupation > 0.0%
-!    IF(ICOL+1.GT.NCOL)CYCLE
     IF(ITB.EQ.0.AND.FDZ.LE.0.0)CYCLE
     
     IF(BND(ILAY)%X(ICOL,IROW).NE.0.AND.BND(ILAY)%X(ICOL+1,IROW).NE.0)THEN
      WRITE(IU,'(5I10,G12.7,F10.2,I10)') ILAY,IROW,ICOL,IROW,ICOL+1,HFBRESIS,FDZ,ISYS !## x-direction
     ENDIF
-!    ENDIF
     
    ENDIF
   ENDIF
@@ -7488,17 +7487,16 @@ TOPICLOOP: DO ITOPIC=1,MAXTOPICS
   IF(IPC(ICOL,IROW,2).EQ.INT(1,1))THEN
    IF(IROW.LT.NROW)THEN
    
+    !## fraction is minus 1 for given layers
     FDZ=-1.0
     IF(ITB.EQ.0)FDZ=PMANAGER_SAVEMF2005_HFB_GETFDZ(TOP,BOT,TIDF%X,BIDF%X,ICOL,IROW,ICOL,IROW+1,NODATA,ILAY)
 
     !## enter fault if occupation > 0.0%
-!    IF(IROW+1.LT.NROW.AND
     IF(ITB.EQ.0.AND.FDZ.LE.0.0)CYCLE
 
     IF(BND(ILAY)%X(ICOL,IROW).NE.0.AND.BND(ILAY)%X(ICOL,IROW+1).NE.0)THEN
      WRITE(IU,'(5I10,G12.7,F10.2,I10)') ILAY,IROW,ICOL,IROW+1,ICOL,HFBRESIS,FDZ,ISYS !## y-direction
     ENDIF
-!    ENDIF
 
    ENDIF
   ENDIF
@@ -7539,6 +7537,7 @@ TOPICLOOP: DO ITOPIC=1,MAXTOPICS
   
   READ(JU,*)
   DO
+   !## z=fraction (-1=confined system), c=resistance
    READ(JU,'(5I10,G12.7,F10.2,I10)',IOSTAT=IOS) JLAY,IR1,IC1,IR2,IC2,C,Z,ISYS
    IF(IOS.NE.0)EXIT
    IF(JLAY.NE.ILAY)CYCLE
@@ -7643,6 +7642,8 @@ TOPICLOOP: DO ITOPIC=1,MAXTOPICS
   REWIND(JU)
  ENDDO
  
+ DEALLOCATE(IPC,RES,FDZ,SYS)
+ 
  END SUBROUTINE PMANAGER_SAVEMF2005_HFB_EXPORT
  
  !###====================================================================
@@ -7680,11 +7681,14 @@ TOPICLOOP: DO ITOPIC=1,MAXTOPICS
  FDZ=MIN(TFV,TPV)-MAX(BFV,BTV)
 
  !## not in current modellayer
- IF(FDZ.LE.0.0)RETURN
+ IF(FDZ.LT.0.0)RETURN
 
  IF(TPV-BTV.GT.0.0)THEN
   !## fraction of fault in modellayer
   FDZ=FDZ/(TPV-BTV)
+ ELSE
+  !## completely filled in model layer with thickness of zero
+  FDZ=1.0
  ENDIF
 
  !## fraction of layer occupation

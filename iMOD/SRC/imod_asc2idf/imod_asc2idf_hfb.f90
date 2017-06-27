@@ -52,7 +52,7 @@ CONTAINS
  !## automatic layer assignment
  IF(ITB.EQ.0)THEN; TOP%X=NODATA; BOT%X=NODATA; ENDIF
 
- !## use blnfile
+ !## use genfile
  NP=0; ILINE=0
  DO
   READ(IU,*,IOSTAT=IOS) CID; IF(IOS.NE.0)EXIT

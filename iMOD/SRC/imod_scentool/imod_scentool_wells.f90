@@ -911,7 +911,7 @@ CONTAINS
     LINE=TRIM(LINE)//',"'//TRIM(IPF(1)%INFO(IPF(1)%ACOL,I))//'","'//TRIM(RTOS(ABS(TLP(ILAY)),'F',4))//'"'
    ENDIF
    LINE=TRIM(LINE)//',"'//TRIM(ITOS(ILAY))//'","'//TRIM(RTOS(TOP(ILAY),'F',2))//'","'// &
-                          TRIM(RTOS(BOT(ILAY),'F',2))//'","'//TRIM(RTOS(KD(ILAY),'F',2))//'"'
+                          TRIM(RTOS(BOT(ILAY),'F',2))//'","'//TRIM(RTOS(KD(ILAY),'G',5))//'"'
    IF(SUM(TLP).EQ.0.0)THEN
     LINE=TRIM(LINE)//',"#"'
    ELSEIF(SUM(TLP).LT.0.0)THEN
