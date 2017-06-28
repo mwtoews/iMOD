@@ -673,7 +673,7 @@ CONTAINS
  REAL,INTENT(IN) :: SFCT
  INTEGER,INTENT(IN) :: IR1,IR2,IC1,IC2,SCLTYPE
  REAL,INTENT(OUT) :: SVALUE
- INTEGER :: IROW,ICOL,NAJ,I,N  !,IR,IC
+ INTEGER :: IROW,ICOL,NAJ,I,N 
  REAL :: IDFVAL,NVALUE,NFRAC,F
  REAL,DIMENSION(1) :: XTEMP
 
@@ -798,7 +798,7 @@ CONTAINS
        SVALUE=SVALUE+(1.0/IDFVAL)
        NVALUE=NVALUE+1.0
       ENDIF
-     !## most frequent occurence,percentile
+     !## most frequent occurence, percentile
      CASE (7,9,15)
       IF(IDFVAL.NE.IDF%NODATA)THEN
        NVALUE=NVALUE+1.0
@@ -859,7 +859,7 @@ CONTAINS
     !## remove fractions
     DO I=1,N; FREQ(I,1)=INT(FREQ(I,1)); ENDDO
     !## sort zones
-    CALL UTL_QKSORT(SIZE(FREQ,1),N,FREQ(:,1)) !,SIZE(FREQ,1),N)
+    CALL UTL_QKSORT(SIZE(FREQ,1),N,FREQ(:,1))
     !## get most available zone
     SVALUE=UTL_GETMOSTFREQ(FREQ(:,1),SIZE(FREQ,1),N,0.0) !## exclude zone.eq.0
     IF(SVALUE.GT.0)THEN
