@@ -673,7 +673,7 @@ CONTAINS
  REAL,INTENT(IN) :: SFCT
  INTEGER,INTENT(IN) :: IR1,IR2,IC1,IC2,SCLTYPE
  REAL,INTENT(OUT) :: SVALUE
- INTEGER :: IROW,ICOL,NAJ,IR,IC,I,N
+ INTEGER :: IROW,ICOL,NAJ,I,N  !,IR,IC
  REAL :: IDFVAL,NVALUE,NFRAC,F
  REAL,DIMENSION(1) :: XTEMP
 
@@ -685,14 +685,12 @@ CONTAINS
  END SELECT
 
  IF(ASSOCIATED(IDF%X))THEN
-  IR=0 
   SELECT CASE (SCLTYPE)
    !## special for boundary purposes
    CASE (1)
     DO IROW=IR1,IR2
-     IR=IR+1; IC=0 
      DO ICOL=IC1,IC2
-      IC=IC+1; IDFVAL=IDF%X(ICOL,IROW) 
+      IDFVAL=IDF%X(ICOL,IROW) 
       IF(IDFVAL.LT.0)SVALUE=IDFVAL
       IF(SVALUE.EQ.0.AND.IDFVAL.GT.0)SVALUE=IDFVAL
       NVALUE=NVALUE+1.0
@@ -701,9 +699,8 @@ CONTAINS
    !## arithmetic mean (HEAD/SC); sum
    CASE (2,5)
     DO IROW=IR1,IR2
-     IR=IR+1; IC=0 
      DO ICOL=IC1,IC2
-      IC=IC+1; IDFVAL=IDF%X(ICOL,IROW) 
+      IDFVAL=IDF%X(ICOL,IROW) 
       IF(IDFVAL.NE.IDF%NODATA)THEN
        SVALUE=SVALUE+IDFVAL 
        NVALUE=NVALUE+1.0
@@ -712,9 +709,8 @@ CONTAINS
     ENDDO
    CASE (4) !## rch/evt
     DO IROW=IR1,IR2
-     IR=IR+1; IC=0 
      DO ICOL=IC1,IC2
-      IC=IC+1; IDFVAL=IDF%X(ICOL,IROW) 
+      IDFVAL=IDF%X(ICOL,IROW) 
       IF(IDFVAL.NE.IDF%NODATA)SVALUE=SVALUE+IDFVAL 
       NVALUE=NVALUE+1.0
      ENDDO
@@ -722,13 +718,11 @@ CONTAINS
    !## geometric mean (KD)
    CASE (3)
     DO IROW=IR1,IR2
-     IR=IR+1; IC=0 
      DO ICOL=IC1,IC2
-      IC=IC+1; IDFVAL=IDF%X(ICOL,IROW) 
-      IF(IDFVAL.NE.IDF%NODATA)THEN
-       !## idfvalue greate than zero for log-function
-       IF(IDFVAL.GT.0.0)SVALUE=SVALUE+LOG(IDFVAL) 
-       !## count number of values ne nodata - including zero
+      IDFVAL=IDF%X(ICOL,IROW) 
+      !## idfvalue greater than zero for log-function
+      IF(IDFVAL.NE.IDF%NODATA.AND.IDFVAL.GT.0.0)THEN
+       SVALUE=SVALUE+LOG(IDFVAL) 
        NVALUE=NVALUE+1.0
       ENDIF
      ENDDO
@@ -736,11 +730,10 @@ CONTAINS
    !## sum, sum inverse
    CASE (6,8)
     DO IROW=IR1,IR2
-     IR=IR+1; IC=0 
      DO ICOL=IC1,IC2
-      IC=IC+1; IDFVAL=IDF%X(ICOL,IROW) 
-      IF(IDFVAL.NE.IDF%NODATA)THEN
-       IF(IDFVAL.NE.0.0)SVALUE=SVALUE+(1.0/IDFVAL)
+      IDFVAL=IDF%X(ICOL,IROW) 
+      IF(IDFVAL.NE.IDF%NODATA.AND.IDFVAL.NE.0.0)THEN
+       SVALUE=SVALUE+(1.0/IDFVAL)
        NVALUE=NVALUE+1.0
       ENDIF
      ENDDO
@@ -748,9 +741,8 @@ CONTAINS
    !## most frequent occurence,percentile
    CASE (7,9,15)
     DO IROW=IR1,IR2
-     IR=IR+1; IC=0 
      DO ICOL=IC1,IC2
-      IC=IC+1; IDFVAL=IDF%X(ICOL,IROW) 
+      IDFVAL=IDF%X(ICOL,IROW) 
       IF(IDFVAL.NE.IDF%NODATA)THEN
        NVALUE=NVALUE+1.0
        FREQ(INT(NVALUE),1)=IDFVAL
@@ -759,9 +751,8 @@ CONTAINS
     ENDDO
    CASE (10)
     DO IROW=IR1,IR2
-     IR=IR+1; IC=0 
      DO ICOL=IC1,IC2
-      IC=IC+1; IDFVAL=IDF%X(ICOL,IROW) 
+      IDFVAL=IDF%X(ICOL,IROW) 
       SVALUE=IDFVAL
       NVALUE=NVALUE+1.0
      ENDDO
@@ -772,12 +763,8 @@ CONTAINS
  
  ELSE
 
-  IR=0 
   DO IROW=IR1,IR2
-   IR=IR+1
-   IC=0 
    DO ICOL=IC1,IC2
-    IC=IC+1
 
     IDFVAL=IDFGETVAL(IDF,IROW,ICOL)
    
@@ -799,16 +786,16 @@ CONTAINS
       NVALUE=NVALUE+1.0
      !## geometric mean (KD)
      CASE (3)
-      IF(IDFVAL.NE.IDF%NODATA)THEN
-       !## idfvalue greate than zero for log-function
-       IF(IDFVAL.GT.0.0)SVALUE=SVALUE+LOG(IDFVAL) 
+      !## idfvalue greater than zero for log-function
+      IF(IDFVAL.NE.IDF%NODATA.AND.IDFVAL.GT.0.0)THEN
+       SVALUE=SVALUE+LOG(IDFVAL) 
        !## count number of values ne nodata - including zero
        NVALUE=NVALUE+1.0
       ENDIF
      !## sum, sum inverse
      CASE (6,8)
-      IF(IDFVAL.NE.IDF%NODATA)THEN
-       IF(IDFVAL.NE.0.0)SVALUE=SVALUE+(1.0/IDFVAL)
+      IF(IDFVAL.NE.IDF%NODATA.AND.IDFVAL.NE.0.0)THEN
+       SVALUE=SVALUE+(1.0/IDFVAL)
        NVALUE=NVALUE+1.0
       ENDIF
      !## most frequent occurence,percentile

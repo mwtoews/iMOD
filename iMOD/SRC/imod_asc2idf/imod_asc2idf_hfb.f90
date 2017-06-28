@@ -72,8 +72,12 @@ CONTAINS
 
     IF(ITB.EQ.0)THEN
      !## skip, probably a perfect-vertical segment
-     IF(SUM(LN(1:N)).LE.0.0)N=0
-     TL=0.0; DZ=(Z2-Z1)/SUM(LN(1:N))
+     TL=0.0; DZ=0.0
+     IF(SUM(LN(1:N)).LE.0.0)THEN
+      N=0
+     ELSE
+      DZ=(Z2-Z1)/SUM(LN(1:N))
+     ENDIF
     ENDIF
       
     DO J=1,N
@@ -81,11 +85,14 @@ CONTAINS
      IF(ICOL.GE.1.AND.IROW.GE.1.AND. &
         ICOL.LE.IDF%NCOL.AND.IROW.LE.IDF%NROW)THEN
       NP=NP+1; CALL ASC2IDF_INT_RESIZEVECTORS(NP,100)
-      XP(NP)=REAL(ICOL); YP(NP)=REAL(IROW); FP(NP)=FA(J); WP(NP)=REAL(ILINE)
+      XP(NP)=REAL(ICOL); YP(NP)=REAL(IROW); FP(NP)=INT(FA(J)); WP(NP)=REAL(ILINE)
 
       IF(ITB.EQ.0)THEN
-       IF(J.EQ.1)THEN; TL=0.5*LN(J)
-       ELSE; TL=TL+0.5*LN(J-1)+0.5*LN(J); ENDIF
+       IF(J.EQ.1)THEN
+        TL=0.5*LN(J)
+       ELSE
+        TL=TL+0.5*LN(J-1)+0.5*LN(J)
+       ENDIF
        ZL=Z1+(TL*DZ); ZP(NP)=ZL*100.0
       ENDIF
 
