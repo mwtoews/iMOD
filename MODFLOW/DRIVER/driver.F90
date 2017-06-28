@@ -301,7 +301,7 @@ if(pks7mpimasterwrite()) call imod_license()
 #endif
              case default
                 ! ERROR, component unknown
-                write(*,*) ' Warning: component ',compcls(1:cfn_length(compcls)),' unknown.'
+                if (pks7mpimasterwrite()) write(*,*) ' Warning: component ',compcls(1:cfn_length(compcls)),' unknown.'
 
           end select
 
@@ -878,7 +878,7 @@ if(pks7mpimasterwrite()) call imod_license()
 
 !C10-----END OF PROGRAM.
       IF(NCVGERR.GT.0) THEN
-        WRITE(*,*) 'FAILED TO MEET SOLVER CONVERGENCE CRITERIA ',NCVGERR,' TIME(S)'
+        if (pks7mpimasterwrite()) WRITE(*,*) 'FAILED TO MEET SOLVER CONVERGENCE CRITERIA ',NCVGERR,' TIME(S)'
       END IF
 
 ! next pest iteration

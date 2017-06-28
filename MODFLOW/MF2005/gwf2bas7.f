@@ -116,7 +116,8 @@ C     ------------------------------------------------------------------
      2                      IAUXSV,IBDOPT,IPRTIM,IPEROC,ITSOC,ICHFLG,
      3                      IDDREF,IDDREFNEW,DELT,PERTIM,TOTIM,HNOFLO,
      4                      HDRY,STOPER,CHEDFM,CDDNFM,CBOUFM,VBVL,VBNM
-      use m_mf2005_iu, only: iuani, iumet, iupwt, iusfr, iulak
+      use m_mf2005_iu, only: iuani, iumet, iupwt, iusfr, iulak, 
+     1                      IUMNW1, IUMNW2, IUMNWI                      ! PKS
 C
       CHARACTER*4 CUNIT(NIUNIT)
       CHARACTER*(*) VERSION
