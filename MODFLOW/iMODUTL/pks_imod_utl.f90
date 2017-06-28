@@ -262,6 +262,8 @@ contains
  ! cleanup
  call idfdeallocatex(gidf)
  
+ call imod_utl_printtext('Done merging PKS output IDF files',0)
+
  return
  end subroutine pks_imod_utl_idfmerge 
  
