@@ -1,4 +1,4 @@
-c   Copyright (C) Stichting Deltares, 2005-2014.
+c   Copyright (C) Stichting Deltares, 2005-2017.
 c
 c   This file is part of iMOD.
 c
@@ -163,6 +163,9 @@ C
 C-------Check for not-supported packages
       IF(IUNIT(IUSFR).GT.0) CALL PKS7MPINOTSUPPORTED('SFR package')     ! PKS
       IF(IUNIT(IULAK).GT.0) CALL PKS7MPINOTSUPPORTED('LAK package')     ! PKS
+      IF(IUNIT(IUMNW1).GT.0) CALL PKS7MPINOTSUPPORTED('MNW1 package')   ! PKS
+      IF(IUNIT(IUMNW2).GT.0) CALL PKS7MPINOTSUPPORTED('MNW2 package')   ! PKS
+      IF(IUNIT(IUMNWI).GT.0) CALL PKS7MPINOTSUPPORTED('MNWI package')   ! PKS
 C
 C3------PRINT A MESSAGE IDENTIFYING THE BASIC PACKAGE.
       WRITE(IOUT,1)INBAS

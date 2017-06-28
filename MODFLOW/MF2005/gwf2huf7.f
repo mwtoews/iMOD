@@ -1282,7 +1282,8 @@ C     ******************************************************************
 C
 C        SPECIFICATIONS:
 C     ------------------------------------------------------------------
-      USE GLOBAL,      ONLY:LBOTM
+      USE GLOBAL,      ONLY:LBOTM,
+     1                      IACTCELL                                    ! PKS
       USE GWFBASMODULE,ONLY:HNOFLO
       USE GWFHUFMODULE,ONLY:LAYWT
 C
@@ -1357,6 +1358,7 @@ C
 C3C-----ALL TRANSMISSIVE TERMS ARE 0, SO CONVERT CELL TO NO FLOW.
          IZFLG=1
          IBOUND(J,I,K)=0
+         IACTCELL(J,I,K) = 0                                            ! PKS
          HNEW(J,I,K)=HCNV
          WRITE(IOUT,43) K,I,J
    43    FORMAT(1X,'NODE (LAYER,ROW,COL)',3I4,
