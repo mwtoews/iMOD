@@ -139,130 +139,132 @@ contains
  !......................................................................
 
  call pks7mpibarrier()
- if (.not.pks7mpimasterwrite()) return
- call imod_utl_printtext('Start merging PKS output IDF files',0)
- 
- inquire(file=fname,exist=lex)
- if(.not.lex) call imod_utl_printtext('File '//trim(fname)//' does not exist',2)
- 
- iu = getunit()
- open(unit=iu,file=fname,status='unknown')
- read(iu,*,iostat=ios) nrproc
- if(ios.ne.0) call imod_utl_printtext('Error reading '//trim(fname),2)
-
- call idfdeallocatex(gidf)
- call idfdeallocatex(lidf)
- 
- ! determine xmin, ymin, xmax, ymax
- xmin = huge(xmin); ymin = huge(ymin); xmax = -huge(xmax); ymax = -huge(ymax)  
- do while(.true.) 
-    read(iu,'(a)',iostat=ios) s  
-    if (ios.ne.0) exit
-    if(len_trim(s).eq.0) continue
-    if(s(1:1).eq.'#') continue
-    fp0 = s
-    ip0 = index(fp0,'_p000',back=.true.)
-    if(ip0.le.0) call imod_utl_printtext('Error reading '//trim(fp0),2)
+ if (pks7mpimasterwrite()) then
+    call imod_utl_printtext('Start merging PKS output IDF files',0)
     
-    do iproc = 1, nrproc
-       f = fp0
-       write(s,'(a,i3.3)') '_p',iproc-1
-       f(ip0:ip0+len_trim(s)-1) = trim(s)
-       ! check is file exist
-       inquire(file=f,exist=lex)
-       if (.not.lex) then
-          call imod_utl_printtext(' Warning, could not find '//trim(f),0)
-          cycle
-       end if     
-       ! read the IDF and delete when done
-       close(lidf%iu); call idfdeallocatex(lidf)    
-       if (.not.idfread(lidf,f,0)) call imod_utl_printtext('Error reading '//trim(f),2) 
-       xmin = min(xmin,lidf%xmin); ymin = min(ymin,lidf%ymin); xmax = max(xmax,lidf%xmax); ymax = max(ymax,lidf%ymax)
+    inquire(file=fname,exist=lex)
+    if(.not.lex) call imod_utl_printtext('File '//trim(fname)//' does not exist',2)
+    
+    iu = getunit()
+    open(unit=iu,file=fname,status='unknown')
+    read(iu,*,iostat=ios) nrproc
+    if(ios.ne.0) call imod_utl_printtext('Error reading '//trim(fname),2)
+    
+    call idfdeallocatex(gidf)
+    call idfdeallocatex(lidf)
+    
+    ! determine xmin, ymin, xmax, ymax
+    xmin = huge(xmin); ymin = huge(ymin); xmax = -huge(xmax); ymax = -huge(ymax)  
+    do while(.true.) 
+       read(iu,'(a)',iostat=ios) s  
+       if (ios.ne.0) exit
+       if(len_trim(s).eq.0) continue
+       if(s(1:1).eq.'#') continue
+       fp0 = s
+       ip0 = index(fp0,'_p000',back=.true.)
+       if(ip0.le.0) call imod_utl_printtext('Error reading '//trim(fp0),2)
+       
+       do iproc = 1, nrproc
+          f = fp0
+          write(s,'(a,i3.3)') '_p',iproc-1
+          f(ip0:ip0+len_trim(s)-1) = trim(s)
+          ! check is file exist
+          inquire(file=f,exist=lex)
+          if (.not.lex) then
+             call imod_utl_printtext(' Warning, could not find '//trim(f),0)
+             cycle
+          end if     
+          ! read the IDF and delete when done
+          close(lidf%iu); call idfdeallocatex(lidf)    
+          if (.not.idfread(lidf,f,0)) call imod_utl_printtext('Error reading '//trim(f),2) 
+          xmin = min(xmin,lidf%xmin); ymin = min(ymin,lidf%ymin); xmax = max(xmax,lidf%xmax); ymax = max(ymax,lidf%ymax)
+       end do   
     end do   
- end do   
- rewind(iu); read(iu,*) nrproc 
- 
- do while(.true.) 
-    read(iu,'(a)',iostat=ios) s  
-    if (ios.ne.0) exit
-    if(len_trim(s).eq.0) continue
-    if(s(1:1).eq.'#') continue
-    fp0 = s
-    ip0 = index(fp0,'_p000',back=.true.)
-    if(ip0.le.0) call imod_utl_printtext('Error reading '//trim(fp0),2)
+    rewind(iu); read(iu,*) nrproc 
     
-    ! read the idf for p000 and delete when done
-    close(lidf%iu); call idfdeallocatex(lidf)    
-    if (.not.idfread(lidf,fp0,0)) call imod_utl_printtext('Error reading '//trim(fp0),2)
-    ! checks
-    if (lidf%ieq.ne.0) call imod_utl_printtext('Merging non-equidistant IDFs is not supported '//trim(fp0),2)
-    dx = lidf%dx; dy = lidf%dy
-    ! initialize global idf
-    gidf%dx      = dx
-    gidf%dy      = dy
-    gidf%nodata  = lidf%nodata    
-    gidf%comment = lidf%comment 
-    gncol = (xmax-xmin)/dx; gnrow = (ymax-ymin)/dy
-    gidf%ncol    = gncol
-    gidf%nrow    = gnrow
-    gidf%xmin    = xmin
-    gidf%xmax    = xmax 
-    gidf%ymin    = ymin
-    gidf%ymax    = ymax
-    if(.not.associated(gidf%x)) allocate(gidf%x(gncol,gnrow))
-    ! assign nodata
-    nodata = gidf%nodata
-    j = index(fp0,'bdg',back=.true.)
-    if (j.le.0) j = index(fp0,'BDG',back=.true.)
-    if (j.gt.0) then ! found the key bdg
-       call imod_utl_getslash(slash)
-       i = index(fp0,slash,back=.true.)
-       if (i.gt.0) then ! slash in name
-          if (i.le.j) nodata = 0.    
-       else ! no slash in name
-          nodata = 0.
-       end if
-    end if   
-    gidf%x = nodata
-    
-    ! fill data
-    do iproc = 1, nrproc
-       f = fp0
-       write(s,'(a,i3.3)') '_p',iproc-1
-       f(ip0:ip0+len_trim(s)-1) = trim(s)
-       ! check is file exist
-       inquire(file=f,exist=lex)
-       if (.not.lex) then
-          call imod_utl_printtext(' Warning, could not find '//trim(f),0)
-          cycle
-       end if     
-       ! read the IDF and delete when done
+    do while(.true.) 
+       read(iu,'(a)',iostat=ios) s  
+       if (ios.ne.0) exit
+       if(len_trim(s).eq.0) continue
+       if(s(1:1).eq.'#') continue
+       fp0 = s
+       ip0 = index(fp0,'_p000',back=.true.)
+       if(ip0.le.0) call imod_utl_printtext('Error reading '//trim(fp0),2)
+       
+       ! read the idf for p000 and delete when done
        close(lidf%iu); call idfdeallocatex(lidf)    
-       if (.not.idfread(lidf,f,2)) call imod_utl_printtext('Error reading '//trim(f),2)   
+       if (.not.idfread(lidf,fp0,0)) call imod_utl_printtext('Error reading '//trim(fp0),2)
        ! checks
-       if (lidf%ieq.ne.0) call imod_utl_printtext('Merging non-equidistant IDFs is not supported '//trim(f),2)
-       if (lidf%dx.ne.dx.or.lidf%dy.ne.dy) call imod_utl_printtext('Merging IDFs with different cell size is not supported '//trim(f),2)
-       ! fill
-       ic1 = (lidf%xmin-xmin)/dx+1; ir1 = (ymax-lidf%ymax)/dy+1
-       ic2 = ic1+lidf%ncol-1; ir2 = ir1+lidf%nrow-1 
-       gidf%x(ic1:ic2,ir1:ir2) = lidf%x
-    end do    
-    close(lidf%iu); call idfdeallocatex(lidf)
+       if (lidf%ieq.ne.0) call imod_utl_printtext('Merging non-equidistant IDFs is not supported '//trim(fp0),2)
+       dx = lidf%dx; dy = lidf%dy
+       ! initialize global idf
+       gidf%dx      = dx
+       gidf%dy      = dy
+       gidf%nodata  = lidf%nodata    
+       gidf%comment = lidf%comment 
+       gncol = (xmax-xmin)/dx; gnrow = (ymax-ymin)/dy
+       gidf%ncol    = gncol
+       gidf%nrow    = gnrow
+       gidf%xmin    = xmin
+       gidf%xmax    = xmax 
+       gidf%ymin    = ymin
+       gidf%ymax    = ymax
+       if(.not.associated(gidf%x)) allocate(gidf%x(gncol,gnrow))
+       ! assign nodata
+       nodata = gidf%nodata
+       j = index(fp0,'bdg',back=.true.)
+       if (j.le.0) j = index(fp0,'BDG',back=.true.)
+       if (j.gt.0) then ! found the key bdg
+          call imod_utl_getslash(slash)
+          i = index(fp0,slash,back=.true.)
+          if (i.gt.0) then ! slash in name
+             if (i.le.j) nodata = 0.    
+          else ! no slash in name
+             nodata = 0.
+          end if
+       end if   
+       gidf%x = nodata
+       
+       ! fill data
+       do iproc = 1, nrproc
+          f = fp0
+          write(s,'(a,i3.3)') '_p',iproc-1
+          f(ip0:ip0+len_trim(s)-1) = trim(s)
+          ! check is file exist
+          inquire(file=f,exist=lex)
+          if (.not.lex) then
+             call imod_utl_printtext(' Warning, could not find '//trim(f),0)
+             cycle
+          end if     
+          ! read the IDF and delete when done
+          close(lidf%iu); call idfdeallocatex(lidf)    
+          if (.not.idfread(lidf,f,2)) call imod_utl_printtext('Error reading '//trim(f),2)   
+          ! checks
+          if (lidf%ieq.ne.0) call imod_utl_printtext('Merging non-equidistant IDFs is not supported '//trim(f),2)
+          if (lidf%dx.ne.dx.or.lidf%dy.ne.dy) call imod_utl_printtext('Merging IDFs with different cell size is not supported '//trim(f),2)
+          ! fill
+          ic1 = (lidf%xmin-xmin)/dx+1; ir1 = (ymax-lidf%ymax)/dy+1
+          ic2 = ic1+lidf%ncol-1; ir2 = ir1+lidf%nrow-1 
+          gidf%x(ic1:ic2,ir1:ir2) = lidf%x
+       end do    
+       close(lidf%iu); call idfdeallocatex(lidf)
+       
+       ! write the global IDF
+       f = fp0(1:ip0-1)//'.idf'
+       call imod_utl_printtext('Writing '//trim(f)//'...',0)
+       if (.not.idfwrite(gidf,f,0)) call imod_utl_printtext('Could not write '//trim(f),2)
+    end do
     
-    ! write the global IDF
-    f = fp0(1:ip0-1)//'.idf'
-    call imod_utl_printtext('Writing '//trim(f)//'...',0)
-    if (.not.idfwrite(gidf,f,0)) call imod_utl_printtext('Could not write '//trim(f),2)
- end do
-
- ! close file
- close(gidf%iu); call idfdeallocatex(gidf)
- close(iu,status='delete')
-
- ! cleanup
- call idfdeallocatex(gidf)
- 
- call imod_utl_printtext('Done merging PKS output IDF files',0)
+    ! close file
+    close(gidf%iu); call idfdeallocatex(gidf)
+    close(iu,status='delete')
+    
+    ! cleanup
+    call idfdeallocatex(gidf)
+    
+    call imod_utl_printtext('Done merging PKS output IDF files',0)
+ end if
+ call pks7mpibarrier() 
 
  return
  end subroutine pks_imod_utl_idfmerge 
