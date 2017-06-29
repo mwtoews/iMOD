@@ -642,6 +642,12 @@ CONTAINS
  !## normalize tlp() again
  IF(SUM(TLP).GT.0.0)TLP=(1.0/SUM(TLP))*TLP
  
+ !## remove small percentages
+ DO ILAY=1,N; IF(TLP(ILAY).LT.MINP)TLP(ILAY)=0.0; ENDDO
+
+ !## normalize tlp() again
+ IF(SUM(TLP).GT.0.0)TLP=(1.0/SUM(TLP))*TLP
+
  !## remove small permeabilities
  IF(MINKH.GT.0.0)THEN
   ZT=SUM(TLP) 
@@ -653,25 +659,25 @@ CONTAINS
   IF(SUM(TLP).GT.0.0)TLP=(1.0/SUM(TLP))*TLP
  ENDIF
 
- IF(MINP.GT.0.0)THEN
-  !## remove small percentages
-  DO ILAY=1,N; IF(TLP(ILAY).LT.MINP)TLP(ILAY)=0.0; ENDDO
-  !## normalize tlp() again
-  IF(SUM(TLP).GT.0.0)TLP=(1.0/SUM(TLP))*TLP
- ENDIF
+! IF(MINP.GT.0.0)THEN
+!  !## remove small percentages
+!  DO ILAY=1,N; IF(TLP(ILAY).LT.MINP)TLP(ILAY)=0.0; ENDDO
+!  !## normalize tlp() again
+!  IF(SUM(TLP).GT.0.0)TLP=(1.0/SUM(TLP))*TLP
+! ENDIF
 
- !## if no layers has been used for the assignment, try to allocate it to the nearest 
- IF(ICLAY.EQ.1.AND.SUM(TLP).EQ.0.0)THEN
-  ZM=(Z1+Z2)/2.0; DZ=99999.0; JLAY=0
-  DO ILAY=1,N
-   ZT=TOP(ILAY); ZB=BOT(ILAY)
-   IF(ABS(ZT-ZM).LT.DZ.OR.ABS(ZB-ZM).LT.DZ)THEN
-    DZ  =MIN(ABS(ZT-ZM),ABS(ZB-ZM))
-    JLAY=ILAY
-   ENDIF
-  ENDDO
-  IF(JLAY.NE.0)TLP(JLAY)=-1.0
- ENDIF
+! !## if no layers has been used for the assignment, try to allocate it to the nearest 
+! IF(ICLAY.EQ.1.AND.SUM(TLP).EQ.0.0)THEN
+!  ZM=(Z1+Z2)/2.0; DZ=99999.0; JLAY=0
+!  DO ILAY=1,N
+!   ZT=TOP(ILAY); ZB=BOT(ILAY)
+!   IF(ABS(ZT-ZM).LT.DZ.OR.ABS(ZB-ZM).LT.DZ)THEN
+!    DZ  =MIN(ABS(ZT-ZM),ABS(ZB-ZM))
+!    JLAY=ILAY
+!   ENDIF
+!  ENDDO
+!  IF(JLAY.NE.0)TLP(JLAY)=-1.0
+! ENDIF
  
  !## make sure only one layer is assigned whenever z1.eq.z2
  IF(IDIFF.EQ.1)THEN
@@ -698,6 +704,14 @@ CONTAINS
     IF(TOP(ILAY)-BOT(ILAY).GT.0.0.AND.KH(ILAY).GT.MINKH)THEN; TLP(ILAY)=1.0; EXIT; ENDIF
    ENDDO
   ENDIF
+ ENDIF
+
+ !## if no layers has been used for the assignment, try to allocate it to aquifer of this interbed
+ IF(SUM(TLP).LE.0)THEN
+  TLP=0
+  DO ILAY=1,N-1
+   IF(BOT(ILAY).GE.Z1.AND.TOP(ILAY+1).LE.Z2)THEN; TLP(ILAY)=1.0; EXIT; ENDIF
+  ENDDO
  ENDIF
 
  DEALLOCATE(L,TL,IL)
