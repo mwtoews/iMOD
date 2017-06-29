@@ -3415,7 +3415,7 @@ c.......................................................................
       call timing_tic('MPI','GLOBAL-pks7mpigxchtime')                   ! PKS
       
       dval(1) = dble(dtrans(1))
-      call pks7mpiwrpallminr( dval, 1 )
+      call pks7mpiwrpallmind( dval, 1 )
       dtrans(1) = real(dval(1))
 
       call timing_toc('MPI','GLOBAL-pks7mpigxchtime')                   ! PKS

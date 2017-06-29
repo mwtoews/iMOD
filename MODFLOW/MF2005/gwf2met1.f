@@ -1416,10 +1416,10 @@ c south
             write(*,*) 'Setting ibound=-1 for SOUTH boundary',myrank
          end if   
          if (le) then
-            write(*,*) 'Setting ibound=-1 for EAST boundary',myrank
+            write(*,*) 'Setting ibound=-1 for  EAST boundary',myrank
          end if   
          if (lw) then
-            write(*,*) 'Setting ibound=-1 for WEST boundary',myrank
+            write(*,*) 'Setting ibound=-1 for  WEST boundary',myrank
          end if   
       end if
       

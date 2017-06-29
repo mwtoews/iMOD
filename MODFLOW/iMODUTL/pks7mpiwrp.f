@@ -554,7 +554,7 @@ c
       !> Communicates and minimizes double value(s) across all processes.
       !! To minimize a scalar value, simply use gsbuf with size 1.
       !! For arrays, each index is minimized separately (across processes).
-      subroutine pks7mpiwrpallminr( gsbuf, n )
+      subroutine pks7mpiwrpallmind( gsbuf, n )
 
       use pksmpiwrp_mod
 
@@ -590,7 +590,7 @@ c      gsbuf = grbuf
 c
 #endif
       return
-      end subroutine pks7mpiwrpallminr
+      end subroutine pks7mpiwrpallmind
 
       !> Communicates and maximizes real value(s) across all processes.
       !! To minimize a scalar value, simply use gsbuf with size 1.

@@ -127,7 +127,7 @@ c local variables
       character(len=200) :: line
       character(len=256) :: str, fname, tmplabel
       integer, dimension(10) :: jjj
-      logical :: lused                                                  ! PKS
+      logical :: lused, pks7mpimasterwrite                              ! PKS
 
 c program section
 c ------------------------------------------------------------------------------
@@ -218,7 +218,9 @@ c                  check if file is of type isg
                      write(*,*) 'ERROR. ISG only to be used for river.'
                      call ustop(' ')
                   end if
-                  write(*,*) 'reading ',trim(fname)
+                  if (pks7mpimasterwrite()) then                        ! PKS
+                     write(*,*) 'reading ',trim(fname)
+                  end if                                                ! PKS
                   nalloc = 1
                   allocate(isglist(isub)%list(nalloc,11))
                   call pck1rpisg(isglist(isub)%list,nalloc,

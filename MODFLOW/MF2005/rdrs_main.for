@@ -459,7 +459,7 @@ c            if (val.eq.idfm%nodata) val = nodata
 c check for nodata
       if (nrproc.gt.1) then
          if (lnodata) then
-            write(*,*) 'Warning, nodata found in ',trim(file), myrank
+c            write(*,*) 'Warning, nodata found in ',trim(file), myrank
          end if    
       end if   
 

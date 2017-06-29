@@ -718,7 +718,7 @@ IRLOOP: DO IR=MAX(1,IROW-1),MIN(NROW,IROW+1)
  ENDDO; ENDDO
 
  CALL IDFDEALLOCATE(IDF,SIZE(IDF))
- CALL IMOD_UTL_PRINTTEXT('Finished gridding 2d cross-sections, no. of isg elements '//TRIM(IMOD_UTL_ITOS(NISG)),0)
+ CALL IMOD_UTL_PRINTTEXT('Finished gridding 2d cross-sections, no. of isg elements '//TRIM(IMOD_UTL_ITOS(NISG)),3)
 
 ENDIF
 
@@ -1357,6 +1357,7 @@ END SUBROUTINE
  REAL :: W,L,X,Y,X1,Y1,F
  REAL,ALLOCATABLE,DIMENSION(:,:) :: MM
  REAL,DIMENSION(4) :: V
+ logical :: pks7mpimasterwrite ! PKS
  
  W=0; DO IROW=1,IDF(1)%NROW; DO ICOL=1,IDF(1)%NCOL
   W=MAX(W,IDF(7)%X(ICOL,IROW))
@@ -1375,7 +1376,7 @@ END SUBROUTINE
   ENDIF
  ENDDO; ENDDO
  
- WRITE(*,'(A)') 'Start computing erosion matrix' 
+ if (pks7mpimasterwrite()) WRITE(*,'(A)') 'Start computing erosion matrix' 
  DO IROW=1,IDF(1)%NROW
   DO ICOL=1,IDF(1)%NCOL
    !## river available
@@ -1446,7 +1447,7 @@ END SUBROUTINE
    ENDIF
   ENDDO
  ENDDO
- WRITE(*,'(A)') 'Finished computing erosion matrix' 
+ if (pks7mpimasterwrite()) WRITE(*,'(A)') 'Finished computing erosion matrix' 
 
  DO IROW=1,IDF(1)%NROW; DO ICOL=1,IDF(1)%NCOL
   DO I=1,4
