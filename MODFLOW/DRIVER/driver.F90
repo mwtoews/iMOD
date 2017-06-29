@@ -894,7 +894,7 @@ if(pks7mpimasterwrite()) call imod_license()
 
 ! PKS IDF merge
  call osd_chdir(root)
- call pks_imod_utl_write_idfmergefile(isub,nnsub,idfmergefile)
+ call pks_imod_utl_write_idfmergefile(modwd2,idfmergefile)
  if (lidfmerge.and.lpks) call pks_imod_utl_idfmerge(idfmergefile)
 
  end do submodelloop

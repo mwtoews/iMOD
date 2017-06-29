@@ -76,12 +76,12 @@ contains
  end subroutine pks_imod_utl_idfmerge_init
  
 !###====================================================================
- subroutine pks_imod_utl_write_idfmergefile(isub,nsub,fname)
+ subroutine pks_imod_utl_write_idfmergefile(wd,fname)
 !###====================================================================
  ! modules
  use pksmpi_mod
  ! arguments
- integer, intent(in) :: isub, nsub 
+ character(len=*), intent(in) :: wd
  character(len=*), intent(out) :: fname
  ! locals
  logical :: lpks
@@ -94,11 +94,8 @@ contains
  if (.not.lpks) return
  if (.not.lidfout) return 
  
- if (nsub.eq.1) then
-    fname = 'pksidfout.txt'    
- else
-    write(fname,'(a,i3.3,a)') 'pksidfout_',isub,'.txt' 
- end if
+ write(fname,'(2a)') trim(wd), '\pksidfout.txt' 
+ call osd_s_filename(fname)
  
  iu = 0
  call imod_utl_openasc(iu,fname,'w')
@@ -560,10 +557,6 @@ contains
  
  lenb = max(n,1)
  allocate(sb(lenb),rb(lenb))
- 
-! write(*,*) '@@@@stopping'
-! call pks7mpiwrpfinalize()
-! stop
  
  return   
  end subroutine pks_imod_utl_iarmwp_xch_read 
