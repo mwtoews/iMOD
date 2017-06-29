@@ -213,10 +213,10 @@ CONTAINS
       CASE (PCON)     !## (PCON) con
       CASE (PKHV)     !## (PKHV) horizontal.k.value
        bcf%llpf = .true. ! lpf needed
-       call RF2MF_READ1MAIN_system(bcf%hhy(ilay),ios,ilay,fct,imp,constante,iarr,fname,iusclarith,idsclintp)
+       call RF2MF_READ1MAIN_system(bcf%hhy(ilay),ios,ilay,fct,imp,constante,iarr,fname,iusclgeom,idsclintp)
       CASE (PKVV)     !## (PKVV) vertical.k.value
        bcf%llpf = .true. ! lpf needed
-       call RF2MF_READ1MAIN_system(bcf%vhy(ilay),ios,ilay,fct,imp,constante,iarr,fname,iusclarith,idsclintp)
+       call RF2MF_READ1MAIN_system(bcf%vhy(ilay),ios,ilay,fct,imp,constante,iarr,fname,iusclgeom,idsclintp)
       CASE (PKVA)     !## (PKVA) horizontal vertical anisotropy (3d model)
        bcf%llpf = .true. ! lpf needed
        call RF2MF_READ1MAIN_system(bcf%kva(ilay),ios,ilay,fct,imp,constante,iarr,fname,iusclarith,idsclintp)
