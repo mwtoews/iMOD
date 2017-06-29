@@ -6009,9 +6009,9 @@ TOPICLOOP: DO ITOPIC=1,MAXTOPICS
          WRITE(*,*) 'Cannot come here: ERROR PMANAGER_SAVEMF2005_PCK'; PAUSE
        END SELECT
 
-       IF(ICOL.EQ.5.AND.IROW.EQ.47)THEN
-        WRITE(*,*)
-       ENDIF
+!       IF(ICOL.EQ.5.AND.IROW.EQ.47)THEN
+!        WRITE(*,*)
+!       ENDIF
 
        !## get fraction per model layer
        CALL UTL_PCK_GETTLP(NLAY,TLP,KH,TP,BT,Z1,Z2,MINKH,ICLAY) 
@@ -6425,7 +6425,7 @@ TOPICLOOP: DO ITOPIC=1,MAXTOPICS
   IUDAT(ILAY)=UTL_GETUNIT(); CALL OSD_OPEN(IUDAT(ILAY),FILE=TRIM(DIRMNAME)//'_HFB_L'//TRIM(ITOS(ILAY))//'.DAT', &
     STATUS='UNKNOWN',ACTION='WRITE',FORM='FORMATTED')
   IF(IUDAT(ILAY).EQ.0)RETURN
-  WRITE(IUDAT(ILAY),'(A)') 'NO,NET_RESIS,TOT_RESIS,FRACTION,SYSTEM'
+  WRITE(IUDAT(ILAY),'(A)') 'NO,CONFINED_RESIS,UNCONFINED_RESIS,FRACTION,SYSTEM'
  ENDDO
 
  !## collect all faults
@@ -7513,7 +7513,7 @@ TOPICLOOP: DO ITOPIC=1,MAXTOPICS
     IF(ITB.EQ.0.AND.FDZ.LE.0.0)CYCLE
     
     !## write fault always, as it becomes confused 
-    WRITE(IU,'(5I10,G12.7,F10.2,I10)') ILAY,IROW,ICOL,IROW,ICOL+1,HFBRESIS,FDZ,ISYS !## x-direction
+    WRITE(IU,'(5I10,2G12.7,I10)') ILAY,IROW,ICOL,IROW,ICOL+1,HFBRESIS,FDZ,ISYS !## x-direction
     
    ENDIF
   ENDIF
@@ -7530,7 +7530,7 @@ TOPICLOOP: DO ITOPIC=1,MAXTOPICS
     IF(ITB.EQ.0.AND.FDZ.LE.0.0)CYCLE
 
     !## write fault always, as it becomes confused 
-    WRITE(IU,'(5I10,G12.7,F10.2,I10)') ILAY,IROW,ICOL,IROW+1,ICOL,HFBRESIS,FDZ,ISYS !## y-direction
+    WRITE(IU,'(5I10,2G12.7,I10)') ILAY,IROW,ICOL,IROW+1,ICOL,HFBRESIS,FDZ,ISYS !## y-direction
 
    ENDIF
   ENDIF
@@ -7572,7 +7572,7 @@ TOPICLOOP: DO ITOPIC=1,MAXTOPICS
   READ(JU,*)
   DO
    !## z=fraction (-1=confined system), c=resistance
-   READ(JU,'(5I10,G12.7,F10.2,I10)',IOSTAT=IOS) JLAY,IR1,IC1,IR2,IC2,C,Z,ISYS
+   READ(JU,'(5I10,2G12.7,I10)',IOSTAT=IOS) JLAY,IR1,IC1,IR2,IC2,C,Z,ISYS
    IF(IOS.NE.0)EXIT
    IF(JLAY.NE.ILAY)CYCLE
 
@@ -7596,9 +7596,10 @@ TOPICLOOP: DO ITOPIC=1,MAXTOPICS
     !## take system number of largest contribution to c
     IF(RES(IC1,IR1).GT.0.0)THEN
      IF(Z.GT.0.0)THEN
-      IF(C.GT.1.0/RES(IC1,IR1))SYS(IC1,IR1)=INT(ISYS,1)
+      C2=1.0/RES(IC1,IR1)*FDZ(ICOL,IROW)
+      IF(C.GT.C2)SYS(IC1,IR1)=INT(ISYS,1)
      ELSE
-      IF(C.GT.RES(IC1,IR1))    SYS(IC1,IR1)=INT(ISYS,1)
+      IF(C.GT.RES(IC1,IR1))SYS(IC1,IR1)=INT(ISYS,1)
      ENDIF
     ELSE
      SYS(IC1,IR1)=INT(ISYS,1)
@@ -7622,13 +7623,13 @@ TOPICLOOP: DO ITOPIC=1,MAXTOPICS
    IF(IPC(ICOL,IROW,1).EQ.INT(1,1))THEN
     IF(ICOL.LT.IDF%NCOL)THEN
 
-     !## transform conductances to resistance
+     !## transform conductances to resistance - take into account the occupation fraction
      IF(LINV)THEN
-      C1=1.0/RES(ICOL,IROW)
+      C1=1.0/RES(ICOL,IROW)*FDZ(ICOL,IROW)
      ELSE
       C1=RES(ICOL,IROW)
      ENDIF
-      
+
      !## get total resistance related to thickness of model layer
      C2=C1*FDZ(ICOL,IROW)**4.0
      
@@ -7651,7 +7652,7 @@ TOPICLOOP: DO ITOPIC=1,MAXTOPICS
 
      !## transform conductances to resistance
      IF(LINV)THEN
-      C1=1.0/RES(ICOL,IROW)
+      C1=1.0/RES(ICOL,IROW)*FDZ(ICOL,IROW)
      ELSE
       C1=RES(ICOL,IROW)
      ENDIF
