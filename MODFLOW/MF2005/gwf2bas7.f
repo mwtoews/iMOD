@@ -798,8 +798,10 @@ C
                end do                                                   ! DLT
             end do                                                      ! DLT
          end do                                                         ! DLT
-         write(*,*) 'Top/bot consistency check applied:',n,             ! DLT
-     1      'cells adjusted'                                            ! DLT
+         if (n.gt.0) then                                               ! DLT
+            write(*,*) 'Top/bot consistency check applied:',n,          ! DLT
+     1         'cells adjusted'                                         ! DLT
+         end if                                                         ! DLT
       end if                                                            ! DLT
 
 C14-----READ AND WRITE LENGTH OF STRESS PERIOD, NUMBER OF TIME STEPS,
