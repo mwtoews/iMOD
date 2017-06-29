@@ -416,7 +416,7 @@ contains
  end subroutine pks_imod_utl_iarmwp_xch_store
 
 !###====================================================================
- subroutine pks_imod_utl_iarmwp_xch_write(dxcid,ncol,nrow,nlay,ndxc)
+ subroutine pks_imod_utl_iarmwp_xch_write(dxcid,ncol,nrow,nlay,ndxc,modwd)
 !###====================================================================
  ! modules
  use pks_iarmwp
@@ -425,10 +425,11 @@ contains
  ! arguments
  integer, intent(in) :: ncol, nrow, nlay, ndxc
  integer, dimension(ncol,nrow,nlay), intent(in) :: dxcid
+ character(len=*), intent(in) :: modwd
  ! locals
  logical :: lpks
  integer :: iproc, jproc, id, n, i, j, lun, ilay, irow, icol
- character(len=100) :: fname, s
+ character(len=1000) :: fname, s
  character(len=100), dimension(4) :: sa
  integer, dimension(:,:), allocatable :: iwrk
  ! functions
@@ -475,7 +476,8 @@ contains
     end do
     
     lun = 0
-    write(fname,'(a,i3.3)') 'pks_xch_iarmwp.p', iproc-1 
+    write(fname,'(2a,i3.3)') trim(modwd),'pks_xch_iarmwp.p', iproc-1 
+    call osd_s_filename(fname)
     write(*,'(a,1x,2a)') 'Writing',trim(fname),'...'
     call imod_utl_openasc(lun,fname,'w')
     write(s,*) xpa(iproc)%nrxp
@@ -513,13 +515,15 @@ contains
  end subroutine pks_imod_utl_iarmwp_xch_write
   
 !###====================================================================
- subroutine pks_imod_utl_iarmwp_xch_read()
+ subroutine pks_imod_utl_iarmwp_xch_read(modwd)
 !###====================================================================
  ! modules
  use pks_iarmwp
  use pksmpi_mod, only: myrank
+ ! arguments
+ character(len=*), intent(in) :: modwd
  ! locals
- character(len=100) :: fname
+ character(len=1000) :: fname
  logical :: lpks
  integer :: lun, ixp, i, xprnk, nid, id, il, ir, ic, n
 !......................................................................
@@ -528,7 +532,8 @@ contains
  if (.not.liarmwp) return
  
  lun = 0
- write(fname,'(a,i3.3)') 'pks_xch_iarmwp.p', myrank 
+ write(fname,'(2a,i3.3)') trim(modwd),'\pks_xch_iarmwp.p', myrank 
+ call osd_s_filename(fname)
  write(*,'(a,1x,2a)') 'Reading',trim(fname),'...'
  call imod_utl_openasc(lun,fname,'r')
  

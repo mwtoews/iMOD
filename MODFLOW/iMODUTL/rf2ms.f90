@@ -381,7 +381,7 @@ CONTAINS
  CALL METASWAP_IBND(SIMGRO%IBOUND,NROW,NCOL,IFULL)
 
  !## construct metaswap files
- CALL METASWAP_EXPORT4(NODATA(20),FNAME(8))
+ CALL METASWAP_EXPORT4(NODATA(20),FNAME(8),modwd)
 
  IF (.FALSE.) THEN
   DX=DELR(1)-DELR(0); DY=DELC(0)-DELC(1)
@@ -490,13 +490,14 @@ RETURN
 END SUBROUTINE
 
  !###====================================================================
- SUBROUTINE METASWAP_EXPORT4(NODATA_PWT,IPFFILE)
+ SUBROUTINE METASWAP_EXPORT4(NODATA_PWT,IPFFILE,modwd)
  !###====================================================================
  use pks_imod_utl, only: pks_imod_utl_iarmwp_xch_store,&
                          pks_imod_utl_iarmwp_xch_write
  IMPLICIT NONE
  REAL,INTENT(IN) :: NODATA_PWT
  CHARACTER(LEN=*),INTENT(IN) :: IPFFILE
+ character(len=*), intent(in) :: modwd
  INTEGER,PARAMETER :: AEND=0 !## afwateringseenheid --- hebben we niet
  INTEGER :: NUND,MDND,MDND2,IROW,ICOL,LYBE,TYBE,IC1,IC2,IR1,IR2,BEREGENID,JROW,JCOL,N,M,I,JU
  REAL :: ARND,XC,YC,DX,DY,FLBE,QBER
@@ -739,7 +740,7 @@ END SUBROUTINE
  ENDDO ! IACT
 
  if(iarmwp.eq.1) then
-    call pks_imod_utl_iarmwp_xch_write(dxcid,ncol,nrow,nlay,ndxc)    
+    call pks_imod_utl_iarmwp_xch_write(dxcid,ncol,nrow,nlay,ndxc,modwd)    
  end if    
  
  call writedxc(idxc,dxcid,ncol,nrow,nlay,ndxc)

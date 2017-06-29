@@ -196,9 +196,6 @@ if(pks7mpimasterwrite()) call imod_license()
     end if
  end if
 
- ! PKS IARMWP option
- call pks_imod_utl_iarmwp_xch_read()
-
  usests        = .false.
  usestsmodflow = .false.
  usetransol    = .false.
@@ -363,6 +360,9 @@ if(pks7mpimasterwrite()) call imod_license()
     modwd2 = modwd1
     simwd2 = simwd1
  end if
+
+ ! PKS IARMWP option
+ call pks_imod_utl_iarmwp_xch_read(modwd2)
 
  timestep    = 1
  stsave      = .false.
