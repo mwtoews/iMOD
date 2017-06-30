@@ -472,12 +472,21 @@ CONTAINS
     SELECT CASE (K)
      !## ffplay
      CASE (30)
-      STRING1=PREFVAL(K)//' '//TRIM(MOVIEFILE) !test.avi
+      STRING1=TRIM(PREFVAL(K))//' '//TRIM(MOVIEFILE) !test.avi
      !## vlcplayer
      CASE (31)
-      STRING1=PREFVAL(K)//' '//TRIM(MOVIEFILE) !test.avi
+      STRING1=TRIM(PREFVAL(K))//' '//TRIM(MOVIEFILE) !test.avi
 !      STRING1=REM "c:\Program Files (x86)\VideoLAN\VLC\vlc.exe" test.avi
     END SELECT
+    
+    IFLAGS=0
+    !## hidden window
+    IFLAGS=IFLAGS+PROCSILENT
+    !## I=0: show execution window
+    !## I=1: hide execution window
+    IFLAGS=IFLAGS+PROCBLOCKED
+
+    CALL IOSCOMMAND(STRING1,IFLAGS) !,0) !,PID)
     
 !    CALL IGRSELECT(DRAWFIELD,IDF_PICTURE1)
 !    IFLAGS=MOVIEDRAWABLE+MOVIEASYNC
