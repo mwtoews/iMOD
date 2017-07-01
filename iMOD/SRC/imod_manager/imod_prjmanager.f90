@@ -2908,7 +2908,8 @@ TOPICLOOP: DO ITOPIC=1,MAXTOPICS
    ENDIF
   
    SELECT CASE (PEST%PARAM(I)%PPARAM)
-    CASE ('RC','AH')
+    !## recharge/anisotropy angle non log transformed
+    CASE ('RE','AH')
      PEST%PARAM(I)%PLOG=0
     CASE DEFAULT
      PEST%PARAM(I)%PLOG=1
