@@ -446,7 +446,7 @@ CONTAINS
  !###======================================================================
  IMPLICIT NONE
  CHARACTER(LEN=*),INTENT(IN) :: FNAME
- CHARACTER(LEN=512) :: LINE
+ CHARACTER(LEN=1500) :: LINE
  CHARACTER(LEN=52) :: TXT
  INTEGER :: I,J,K,II,IU,IOS,SKIPLINES,CFN_N_ELEM,IBAL
  INTEGER :: NV,NL
@@ -473,9 +473,16 @@ CONTAINS
 
  !## define size of header
  SKIPLINES=0; DO 
-  READ(IU,'(A512)') LINE; IF(UTL_CAP(LINE(1:4),'U').EQ.'DATE')EXIT; SKIPLINES=SKIPLINES+1
+  READ(IU,'(A1500)') LINE; IF(UTL_CAP(LINE(1:4),'U').EQ.'DATE')EXIT; SKIPLINES=SKIPLINES+1
  ENDDO
 
+ !## check whether the string line was truly long enough
+ IF(LINE(1500:1500).NE.'')THEN
+  CALL WMESSAGEBOX(OKONLY,EXCLAMATIONICON,COMMONOK,'iMOD cannot read all the available columns in the CSV file'//CHAR(13)// &
+   'There is a maximum of 1500 character on a single line','Error')
+  RETURN
+ ENDIF
+ 
  !## number of budgetterms
  NV=CFN_N_ELEM(',;',2,LINE); NV=NV-4
  
