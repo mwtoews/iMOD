@@ -298,23 +298,22 @@ CONTAINS
      
       FNAME=TRIM(WBAL_RESDIR)//'\'//TRIM(TP(IBAL)%ACRNM)//'\'//TRIM(TP(IBAL)%ACRNM)
 
+      !## add system name
+      IF(TP(IBAL)%ISYS(JSYS).GT.0)THEN
+       FNAME=TRIM(FNAME)//'_SYS'//TRIM(ITOS(TP(IBAL)%ISYS(JSYS)))
+      ENDIF
+
       !## contruct filename
       IF(WBAL_ISTEADY.EQ.1)THEN
        FNAME=TRIM(FNAME)//'_STEADY-STATE'
       ELSE
        FNAME=TRIM(FNAME)//'_'//TRIM(CDATE)
       ENDIF
-     
-      IF(TP(IBAL)%ISYS(JSYS).GT.0)THEN
-       FNAME=TRIM(FNAME)//'_SYS'//TRIM(ITOS(TP(IBAL)%ISYS(JSYS)))
-      ENDIF
 
       FNAME=TRIM(FNAME)//'_L'//TRIM(ITOS(ILAY-IBDG))//'.IDF'
       
       INQUIRE(FILE=FNAME,EXIST=LEX)
-      IF(.NOT.LEX)THEN
-       CYCLE
-      ENDIF
+      IF(.NOT.LEX)CYCLE
      
       IF(.NOT.IDFREAD(WBALIDF,TRIM(FNAME),0))RETURN
       IF(IBATCH.EQ.0)CALL WINDOWOUTSTATUSBAR(4,'Reading '//TRIM(FNAME)//'...')
