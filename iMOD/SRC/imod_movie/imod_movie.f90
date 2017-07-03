@@ -35,7 +35,7 @@ CONTAINS
  IF(.NOT.L3)THEN
   CALL WMESSAGEBOX(YESNO,QUESTIONICON,COMMONNO,'iMOD cannot find the following executable'//CHAR(13)//TRIM(PREFVAL(29))// &
     'This is necessary to create a movie file out of the generated images.'//CHAR(13)// &
-    'Do you want to overwrite the entire content ?','Question')
+    'Do you want to continue nevertherless, only images will be created.','Question')
   IF(WINFODIALOG(4).NE.1)THEN
    CALL MOVIE_CREATE_CLOSE(); RETURN
   ENDIF
@@ -55,21 +55,18 @@ CONTAINS
  DIR=TRIM(PREFVAL(1))//'\MOVIES\'//TRIM(DIR)
 
  !## allready exists folder - empty it
-! IF(IOSDIREXISTS(TRIM(PREFVAL(1))//'\MOVIES\'//TRIM(DIR)))THEN
  IF(IOSDIREXISTS(TRIM(DIR)))THEN
   CALL WMESSAGEBOX(YESNO,QUESTIONICON,COMMONNO,'Output folder [.\MOVIES\'//TRIM(DIR)//'] allready exist, do you want to overwrite the entire content ?','Question')
   IF(WINFODIALOG(4).NE.1)THEN
    CALL MOVIE_CREATE_CLOSE(); RETURN
   ENDIF
   IF(.NOT.UTL_DEL1TREE(TRIM(DIR)))THEN
-!  IF(.NOT.UTL_DEL1TREE(TRIM(PREFVAL(1))//'\MOVIES\'//TRIM(DIR)))THEN
    CALL MOVIE_CREATE_CLOSE(); RETURN
   ENDIF
  ENDIF
  
  !## create output folder
  CALL UTL_CREATEDIR(TRIM(DIR)) 
-! CALL UTL_CREATEDIR(TRIM(PREFVAL(1))//'\MOVIES\'//TRIM(DIR)) 
 
  !## message/question
  CALL WMESSAGEBOX(YESNO,QUESTIONICON,COMMONNO,'Are you sure to continue to process '//TRIM(ITOS(MAXVAL(NFILES)))//' images ?','Question')
