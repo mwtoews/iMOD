@@ -47,22 +47,22 @@ CONTAINS
   IF(IOS.NE.0)THEN
    !## terminate for modules
    IF(IMODPCK.EQ.0)THEN
-    CALL IMOD_UTL_PRINTTEXT('',0)
+    CALL IMOD_UTL_PRINTTEXT('',3)
     DO I=1,MXMOD
-     IF(RFMOD(I).LT.0)CALL IMOD_UTL_PRINTTEXT(' ('//CMOD(I)//') : present and found ['//TRIM(TXTMOD(I))//']',0,IUOUT)
-     IF(RFMOD(I).EQ.0)CALL IMOD_UTL_PRINTTEXT(' ('//CMOD(I)//') : absent ['//TRIM(TXTMOD(I))//']',0,IUOUT)
-     IF(RFMOD(I).GT.0)CALL IMOD_UTL_PRINTTEXT(' ('//CMOD(I)//') : present but NOT found! ['//TRIM(TXTMOD(I))//']',0,IUOUT)
+     IF(RFMOD(I).LT.0)CALL IMOD_UTL_PRINTTEXT(' ('//CMOD(I)//') : present and found ['//TRIM(TXTMOD(I))//']',3,IUOUT)
+     IF(RFMOD(I).EQ.0)CALL IMOD_UTL_PRINTTEXT(' ('//CMOD(I)//') : absent ['//TRIM(TXTMOD(I))//']',3,IUOUT)
+     IF(RFMOD(I).GT.0)CALL IMOD_UTL_PRINTTEXT(' ('//CMOD(I)//') : present but NOT found! ['//TRIM(TXTMOD(I))//']',3,IUOUT)
     ENDDO
-    CALL IMOD_UTL_PRINTTEXT(' Missing data in Module-block',2)
+    CALL IMOD_UTL_PRINTTEXT(' Missing data in Module-block',-3)
    !## terminate for packages
    ELSEIF(IMODPCK.EQ.1)THEN
-    CALL IMOD_UTL_PRINTTEXT('',0)
+    CALL IMOD_UTL_PRINTTEXT('',3)
     DO I=1,MXPCK
-     IF(RFPCK(I).LT.0)CALL IMOD_UTL_PRINTTEXT(' ('//CPCK(I)//') : present and found ['//TRIM(TXTPCK(I))//']',0,IUOUT)
-     IF(RFPCK(I).EQ.0)CALL IMOD_UTL_PRINTTEXT(' ('//CPCK(I)//') : absent ['//TRIM(TXTPCK(I))//']',0,IUOUT)
-     IF(RFPCK(I).GT.0)CALL IMOD_UTL_PRINTTEXT(' ('//CPCK(I)//') : present but NOT found! ['//TRIM(TXTPCK(I))//']',0,IUOUT)
+     IF(RFPCK(I).LT.0)CALL IMOD_UTL_PRINTTEXT(' ('//CPCK(I)//') : present and found ['//TRIM(TXTPCK(I))//']',3,IUOUT)
+     IF(RFPCK(I).EQ.0)CALL IMOD_UTL_PRINTTEXT(' ('//CPCK(I)//') : absent ['//TRIM(TXTPCK(I))//']',3,IUOUT)
+     IF(RFPCK(I).GT.0)CALL IMOD_UTL_PRINTTEXT(' ('//CPCK(I)//') : present but NOT found! ['//TRIM(TXTPCK(I))//']',3,IUOUT)
     ENDDO
-    CALL IMOD_UTL_PRINTTEXT(' Missing data in Package-block',2,IUOUT)
+    CALL IMOD_UTL_PRINTTEXT(' Missing data in Package-block',-3,IUOUT)
    ENDIF
    !## continue for packages --- EOF could be correct
    IF(IMODPCK.EQ.1)RETURN
@@ -90,14 +90,14 @@ CONTAINS
  IF(IMODPCK.EQ.0)THEN
   !## print error is no data files are found
   IF(MMOD(IPCK).EQ.1.AND.NLINES.EQ.0) &
-    CALL IMOD_UTL_PRINTTEXT('Module '//TRIM(TXTMOD(IPCK))//' activated in header, but NO data files found!',2,IUOUT)
+    CALL IMOD_UTL_PRINTTEXT('Module '//TRIM(TXTMOD(IPCK))//' activated in header, but NO data files found!',-3,IUOUT)
  ELSEIF(IMODPCK.EQ.1)THEN
   !## print warning if no data files are found
   IF(MPCK(IPCK).EQ.1.AND.NLINES.EQ.0)THEN
-   CALL IMOD_UTL_PRINTTEXT('',0,IUOUT)
-   CALL IMOD_UTL_PRINTTEXT('*** WARNING ***',0,IUOUT)
-   CALL IMOD_UTL_PRINTTEXT('Package '//TRIM(TXTPCK(IPCK))//' activated in header, but NO data files found!',0,IUOUT)
-   CALL IMOD_UTL_PRINTTEXT('',0,IUOUT)
+   CALL IMOD_UTL_PRINTTEXT('',3,IUOUT)
+   CALL IMOD_UTL_PRINTTEXT('*** WARNING ***',3,IUOUT)
+   CALL IMOD_UTL_PRINTTEXT('Package '//TRIM(TXTPCK(IPCK))//' activated in header, but NO data files found!',3,IUOUT)
+   CALL IMOD_UTL_PRINTTEXT('',3,IUOUT)
   ENDIF
  ENDIF
 
@@ -110,7 +110,7 @@ CONTAINS
   ENDIF
   IF(IMODPCK.EQ.1)THEN
    IF(MPCK(IPCK).EQ.1)THEN
-    CALL IMOD_UTL_PRINTTEXT('',0,IUOUT)
+    CALL IMOD_UTL_PRINTTEXT('',3,IUOUT)
     CALL IMOD_UTL_PRINTTEXT('Processing '//TRIM(TXTPCK(IPCK))//' package',3,IUOUT)
    ENDIF
   ENDIF

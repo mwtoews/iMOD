@@ -116,6 +116,7 @@ call pks7mpiactive(lpks) ! PKS
 
 ! Evaluate iMOD license
 if(pks7mpimasterwrite()) call imod_license()
+call pks7mpibarrier() ! PKS
 
 ! ... init
  exitcode    = 0            ! when 0: ok
@@ -155,12 +156,13 @@ if(pks7mpimasterwrite()) call imod_license()
  lidfmerge   = .false. 
  call cfn_vcl_narg(ivcl,narg)
  if (narg.eq.0) then
-  call imod_utl_printtext(' ',0)
-  call imod_utl_printtext('Driver program valid arguments:',0)
-  call imod_utl_printtext(' 1: <iMOD run-file> <optional subdomain number>',0)
-  call imod_utl_printtext(' 2: <MODFLOW-2005 nam-file>',0)
-  call imod_utl_printtext(' 3: -components <components steering file>',0)
-  call imod_utl_printtext(' 4: -pksmergeidf <PKS merge IDF file>',0)
+  call imod_utl_printtext(' ',3)
+  call imod_utl_printtext('Driver program valid arguments:',3)
+  call imod_utl_printtext(' 1: <iMOD run-file> <optional subdomain number>',3)
+  call imod_utl_printtext(' 2: <MODFLOW-2005 nam-file>',3)
+  call imod_utl_printtext(' 3: -components <components steering file>',3)
+  call imod_utl_printtext(' 4: -pksmergeidf <PKS merge IDF file>',3)
+  call pks7mpifinalize()! PKS
   call exit(0)
  end if
  
@@ -310,6 +312,7 @@ if(pks7mpimasterwrite()) call imod_license()
        close(lunc)
     else
        call driverChk(.false.,'Could not open component description file '//compfile(1:cfn_length(compfile)))
+       call pks7mpifinalize()! PKS
        call exit(1)
     endif
  endif
@@ -327,7 +330,7 @@ if(pks7mpimasterwrite()) call imod_license()
  rt = driverGetRunType(usemodflow,usemetaswap,usetransol,usemozart,usests)
  
  str = 'Running mode: '//trim(rtdesc(rt))
- if(lpks) str = trim(str)//' (parallel computing activated)'
+ if(lpks) str = trim(str)//' (Parallel Krylov Solver activated)'
  if (pks7mpimasterwrite()) write(*,'(79(''*''),/,(1x,a),/,79(''*''))') trim(str)
  
 ! check state-save options
@@ -872,7 +875,8 @@ if(pks7mpimasterwrite()) call imod_license()
 
 ! exit
  if (exitcode.ne.0) then
-    write(unit=*,fmt=*) 'ERROR, exit code: ',exitcode
+    if (pks7mpimasterwrite()) write(unit=*,fmt=*) 'ERROR, exit code: ',exitcode
+    call pks7mpifinalize()! PKS 
     call exit(10)
  endif
 
