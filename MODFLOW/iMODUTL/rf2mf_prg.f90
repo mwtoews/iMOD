@@ -958,7 +958,7 @@ SUBROUTINE RF2MF_DATASET7(DXCFILE)
 !#####=================================================================
 IMPLICIT NONE
 CHARACTER(LEN=*), INTENT(INOUT) :: DXCFILE
-INTEGER :: I,J,IKEY,ilay,IOS
+INTEGER :: I,J,IKEY,ilay,jlay,IOS
 CHARACTER(LEN=1000) :: BIGLINE
 
 !## initialise modules/packages
@@ -1027,22 +1027,21 @@ do ikey = 1, size(mmod)
          oc%cblay(1:modsave(ikey,0)) = modsave(ikey,1:modsave(ikey,0))
       case (psto, pbnd, pkdw, pvcw)
          if (ikey.eq.psto) trflag = .true.
-         do ilay = 1, nlay
-            if (bcf%cblay(ilay).eq.0 .and. modsave(ikey,ilay).gt.0) then
-                bcf%cbnlay = bcf%cbnlay + 1
-                bcf%cblay(ilay) = ilay
+         do jlay = 1, modsave(ikey,0)
+            ilay = modsave(ikey,jlay)
+            if (ilay.gt.0) then
+               if (bcf%cblay(ilay).eq.0) then
+                   bcf%cbnlay = bcf%cbnlay + 1
+                   bcf%cblay(bcf%cbnlay) = ilay
+               end if
             end if
          end do
      case (pscr)
          scr%cbnlay = modsave(ikey,0)
          scr%cblay(1:modsave(ikey,0)) = modsave(ikey,1:modsave(ikey,0))
      case (pcap)
-         do ilay = 1, nlay
-            if (dxc%cblay(ilay).eq.0 .and. modsave(ikey,ilay).gt.0) then
-                dxc%cbnlay = dxc%cbnlay + 1
-                dxc%cblay(ilay) = ilay
-            end if
-         end do
+         dxc%cbnlay = modsave(ikey,0)
+         dxc%cblay(1:modsave(ikey,0)) = modsave(ikey,1:modsave(ikey,0))
    end select
 end do
 ! set budget output with modsave
