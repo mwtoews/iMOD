@@ -451,7 +451,7 @@ CONTAINS
 
   SELECT CASE (TRIM(EXT(IOPT)))
    !## display bitmaps
-   CASE ('BMP','JPG','PCX')
+   CASE ('BMP','PNG','JPG','PCX')
 
     IF(WINFOBITMAP(0,BITMAPFREE).GT.0)THEN
 
