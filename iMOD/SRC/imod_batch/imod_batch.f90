@@ -3344,9 +3344,14 @@ CONTAINS
 
     !## fill in final voxel - take majority value per voxel
     DO IROW=1,VOXEL(ASSF_NTHRESHOLD+1)%NROW; DO ICOL=1,VOXEL(ASSF_NTHRESHOLD+1)%NCOL
+
+     !## main lithology
      VOXEL(ASSF_NTHRESHOLD+1)%X(ICOL,IROW)=VOXEL(ASSF_NTHRESHOLD+1)%NODATA
+     !## permeability
      VOXEL(ASSF_NTHRESHOLD+2)%X(ICOL,IROW)=0.0
+     !## vertical anisotropy
      VOXEL(ASSF_NTHRESHOLD+3)%X(ICOL,IROW)=0.0
+     !## fraction
      VOXEL(ASSF_NTHRESHOLD+4)%X(ICOL,IROW)=0.0
 
      !## normalize fraction to be 1.0
@@ -3355,7 +3360,7 @@ CONTAINS
       IF(VOXEL(I)%X(ICOL,IROW).NE.VOXEL(I)%NODATA)THEN
        !## total fraction
        MF=MF+VOXEL(I)%X(ICOL,IROW)
-       VOXEL(ASSF_NTHRESHOLD+4)%X(ICOL,IROW)=VOXEL(ASSF_NTHRESHOLD+4)%X(ICOL,IROW)+MF
+       VOXEL(ASSF_NTHRESHOLD+4)%X(ICOL,IROW)=MF
       ENDIF
      ENDDO
      MF=1.0/MF
