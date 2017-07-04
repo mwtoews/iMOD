@@ -54,7 +54,7 @@ INTEGER :: IBACKSLASH  !##  label trimmen achter backslash
 INTEGER :: ILABELNAME  !##  plot of labels optional
 
 INTEGER,PARAMETER :: MXBG=24
-INTEGER,PARAMETER :: MXTP=37  !## no of TYPE
+INTEGER,PARAMETER :: MXTP=38
 INTEGER,PARAMETER :: MXSYS=10
 INTEGER,DIMENSION(MXBG) :: ICPL
 TYPE TPOBJ
@@ -63,6 +63,7 @@ TYPE TPOBJ
  CHARACTER(LEN=5) :: UNIT   !## unit of the budget element
  INTEGER :: IACT
 ! INTEGER :: ICPL
+ INTEGER :: MODFLOWMETASWAP !## code whether part of modflow or part of metaswap
  INTEGER,DIMENSION(:),POINTER :: ISYS  !## system numbers  *_sys{i}.idf
  INTEGER :: NSYS !## number of systems in waterbalance
 END TYPE TPOBJ
@@ -76,7 +77,7 @@ TYPE(TPOBJ),DIMENSION(MXTP)   :: TP
 !              'MSW_EBS','MSW_QMODFBOT','MSW_QMR','BDGDECSTOT','BDGPSSW',&
 !              'MSW_TACT','BDGQMODF'/
 
-DATA TP%UNIT/ '    m',' m3/d',' m3/d',' m3/d',' m3/d',&
+DATA TP%UNIT/ '    m',' m3/d',' m3/d',' m3/d',' m3/d',' m3/d',&
               ' m3/d',' m3/d',' m3/d',' m3/d',' m3/d',&
               ' m3/d',' m3/d',' m3/d',' m3/d',' m3/d',&
               ' m3/d','  m/d',' m3/d',' m3/d','  m/d',&
@@ -85,7 +86,7 @@ DATA TP%UNIT/ '    m',' m3/d',' m3/d',' m3/d',' m3/d',&
               'm3/m2','m3/m2','m3/m2','m3/m2','m3/m2',&
               'm3/m2','m3/m2'/
 
-DATA TP%ALIAS/'GROUNDWATERHEAD','CONSTANT_HEAD','FLUX_LOWER_FACE','FLUX_RIGHT_FACE','FLUX_FRONT_FACE',&
+DATA TP%ALIAS/'GROUNDWATERHEAD','CONSTANT_HEAD','FLUX_LOWER_FACE','FLUX_UPPER_FACE','FLUX_RIGHT_FACE','FLUX_FRONT_FACE',&
               'STORAGE','WELLS','DRAINAGE','RIVERS','EVAPOTRANSPIRATION',&
               'GENERAL_HEAD_BOUNDARY','OVERLAND_FLOW','RECHARGE','SEGMENTS','CAPSIM',&
               'DECREASE_WATER_ST_ROOTZONE','MEASURED_PRECIPITATION','SPRINKLING_PRECIPITATION','NET_EVAPORATION_WATER','RUNOFF',&
@@ -97,7 +98,7 @@ DATA TP%ALIAS/'GROUNDWATERHEAD','CONSTANT_HEAD','FLUX_LOWER_FACE','FLUX_RIGHT_FA
               'SPRINKLING_PRECIPITATION_FROM_SURFACEWATER',&
               'ACTUAL_TRANSPIRATION_VEGETATION','CORRECTION TERM OF REALIGNMENT OF IMODFLOW'/
 
-DATA TP%ACRNM/'HEAD'  , 'BDGBND'       ,'BDGFLF'  ,'BDGFRF'    ,'BDGFFF',    &     !01-05
+DATA TP%ACRNM/'HEAD'  , 'BDGBND'       ,'BDGFLF'  ,'BDGFTF'    ,'BDGFRF'    ,'BDGFFF',    &     !01-05
               'BDGSTO', 'BDGWEL'       ,'BDGDRN'  ,'BDGRIV'    ,'BDGEVT',    &     !06-10
               'BDGGHB', 'BDGOLF'       ,'BDGRCH'  ,'BDGISG'    ,'BDGCAP',    &     !11-15
               'BDGDS' , 'BDGPM'        ,'BDGPS'   ,'BDGEVA'    ,'BDGQRUN',   &     !16-20
@@ -105,6 +106,26 @@ DATA TP%ACRNM/'HEAD'  , 'BDGBND'       ,'BDGFLF'  ,'BDGFRF'    ,'BDGFFF',    &  
               'MSW_EIC' ,'MSW_EPD'     ,'MSW_ESP' ,'MSW_TPOT'  ,'BDGQSPGW',  &     !26-30
               'MSW_EBS' ,'MSW_QMODFBOT','MSW_QMR' ,'BDGDECSTOT','BDGPSSW',   &     !31-35
               'MSW_TACT','BDGQMODF'/                                               !36-37
+
+DATA TP%MODFLOWMETASWAP/0,1,1,1,1,1, &
+                        1,1,1,1,1, &
+                        1,1,1,1,0, &
+                        0,2,0,0,2, &
+                        0,0,2,2,0, &
+                        0,0,0,0,2, &
+                        0,2,2,2,0, &
+                        0,2/ 
+
+!ETACT x BDGETACT
+!PM x BDGPM
+!PMGW x BDGPSGW
+!PMSW x BDGPSSW
+!DECSTO x BDGDECSTOT
+!QSPGW x BDGQSPGW
+!QCOR x BDGQMODF
+!QDR x MSW_QMR
+!QRUN x BDGQRUN
+!QMODF x BDGQMODF
 
 ! !## couple table for graph function in waterbalance analyse
 ! DATA ICPL   /08, & !## 01 drn
