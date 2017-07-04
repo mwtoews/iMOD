@@ -820,6 +820,7 @@ call pks7mpibarrier() ! PKS
 !####### END EXCHANGE: BeforeTRANSOLIteration #################################
 
        if (rt.eq.rtmodsimtranmoz .and. exitcode.eq.0) then
+          call osd_chdir(simwd2)
           call TRANSOL_performIter()
        end if
 !##### BEGIN EXCHANGE: AfterMozartIteration ###################################
@@ -839,6 +840,7 @@ call pks7mpibarrier() ! PKS
 !####### END EXCHANGE: AfterMozartIteration ###################################
 
        if (rt.eq.rtmodsimtranmoz .and. exitcode.eq.0) then
+          call osd_chdir(simwd2)
           call TRANSOL_finishTimeStep(currentTime)
           dtMozart = endOfCurrentTimeStepMozart - currentTimeMozart
           call osd_chdir(mozwd)
