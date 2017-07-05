@@ -5764,8 +5764,8 @@ TOPICLOOP: DO ITOPIC=1,MAXTOPICS
    
   !## allocate memory for packages
   NTOP=SIZE(TOPICS(ITOPIC)%STRESS(KPER)%FILES,1); NSYS=SIZE(TOPICS(ITOPIC)%STRESS(KPER)%FILES,2)
-  !## used for writing and inculding the tlp-vector
-  ALLOCATE(XTMP(NTOP)); XTMP=0.0
+  !## used for writing and including the tlp-vector
+  IF(ALLOCATED(XTMP))DEALLOCATE(XTMP); ALLOCATE(XTMP(NTOP)); XTMP=0.0
   
   SELECT CASE (ITOPIC)
    CASE (24,26)

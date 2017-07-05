@@ -943,11 +943,8 @@ CONTAINS
    GRAPH(JQIN,IG)%ICLR  =BUDGET(IQ)%ICLR
 
    IF(TRIM(GRAPH(JQIN,IG)%CTYPE).EQ.'')THEN
-    GRAPH(JQOU,IG)%CTYPE =TRIM(UTL_CAP(BUDGET(IQ)%FLUXTERM,'U')) !//'_out'
-    GRAPH(JQIN,IG)%CTYPE =TRIM(UTL_CAP(BUDGET(IQ)%FLUXTERM,'U')) !//'_in'
-!   ELSE
-!    GRAPH(JQOU,IG)%CTYPE ='group flux out'
-!    GRAPH(JQIN,IG)%CTYPE ='group flux in'
+    GRAPH(JQOU,IG)%CTYPE =TRIM(UTL_CAP(BUDGET(IQ)%FLUXTERM,'U')) 
+    GRAPH(JQIN,IG)%CTYPE =TRIM(UTL_CAP(BUDGET(IQ)%FLUXTERM,'U')) 
    ENDIF
      
   ENDDO; ENDDO
@@ -1481,15 +1478,15 @@ CONTAINS
   
  WBAL_ANALYSE_SELECT=.TRUE.
  
- DO ID=1,SIZE(CMDATE)
-  !## date selected
-  IF(TRIM(CMDATE(ID)).EQ.TRIM(CD))THEN
-   DO IL=1,SIZE(CMLAY)
-    !## layer selected
-    IF(TRIM(CMLAY(IL)).EQ.TRIM(CL))THEN
-     DO IZ=1,SIZE(CMZONE)
-      !## zone selected
-      IF(TRIM(CMZONE(IZ)).EQ.TRIM(CZ))THEN
+ DO IL=1,SIZE(CMLAY)
+  !## layer selected
+  IF(TRIM(CMLAY(IL)).EQ.TRIM(CL))THEN
+   DO IZ=1,SIZE(CMZONE)
+    !## zone selected
+    IF(TRIM(CMZONE(IZ)).EQ.TRIM(CZ))THEN
+     DO ID=1,SIZE(CMDATE)
+      !## date selected
+      IF(TRIM(CMDATE(ID)).EQ.TRIM(CD))THEN
        SELECT CASE (IAG)
         !## all
         CASE (1:7)
