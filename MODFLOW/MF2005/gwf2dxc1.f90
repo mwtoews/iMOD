@@ -57,8 +57,9 @@ subroutine gwf2dxc1ar(in,igrid)
  real :: owc
  logical :: lused, lfirst
  double precision :: mask ! PKS
- integer :: ixp, ok, j, ndum, iact, cfn_idx_get_i ! PKS
- integer, dimension(:), allocatable :: iwrk1, iwrk2
+ integer :: ixp, ok1, ok2, j, nn, nid, ndum, iact ! PKS
+ integer :: cfn_unique_i, cfn_idx_get_i ! PKS
+ integer, dimension(:), allocatable :: iwrk1, iwrk2, iwrk3, iwrk4
 
 ! program section
 ! ------------------------------------------------------------------------------
@@ -127,7 +128,7 @@ subroutine gwf2dxc1ar(in,igrid)
  ! store number of read elements
  ndxc=n
  
-! Add dummy ID's for iarmwp = 1: add
+! PKS: Add dummy ID's for iarmwp = 1: add
  if (liarmwp) then ! PKS
     allocate(iwrk1(max(1,ndxc)),iwrk2(max(1,ndxc)))
     do i = 1, ndxc
@@ -135,24 +136,47 @@ subroutine gwf2dxc1ar(in,igrid)
        iwrk2(i) = i
     end do
     call imod_utl_qksort3(iwrk1,iwrk2)
-    do ixp = 1, nrxp ! PKS
-       do i = 1, xp(ixp)%nid ! PKS    
-          id = xp(ixp)%id(i) ! PKS
-          ok = cfn_idx_get_i(id,iwrk1,ndxc,j) ! PKS
-          if(ok.ne.0) then ! index found -- do nothing
-             xp(ixp)%idx(i) = -iwrk2(j) 
+    ! count interface nodes 
+    nn = 0 
+    do ixp = 1, nrxp
+       nn = nn + xp(ixp)%nid
+    end do
+    allocate(iwrk3(max(1,nn)),iwrk4(max(1,nn)))
+    ! fill with interface nodes
+    do ixp = 1, nrxp
+       do i = 1, xp(ixp)%nid
+          id = xp(ixp)%id(i)
+          nn = nn + 1
+          iwrk3(nn) = id
+          iwrk4(nn) = nn
+       end do
+    end do
+    ! get unique interface nodes
+    call imod_utl_qksort3(iwrk3,iwrk4)
+    nid = cfn_unique_i(iwrk3,nn)
+    iwrk4 = 0
+    do ixp = 1, nrxp
+       do i = 1, xp(ixp)%nid
+          id = xp(ixp)%id(i)
+          ok1 = cfn_idx_get_i(id,iwrk1,ndxc,j)
+          if(ok1.ne.0) then ! index found -- do nothing
+             xp(ixp)%idx(i) = -iwrk2(j)
           else
-             n = n + 1 ! PKS
-             dxcic(n)=0 ! PKS
-             dxcir(n)=0 ! PKS
-             dxcil(n)=0 ! PKS
-             dxcid(n)=id ! PKS
-             xp(ixp)%idx(i) = n 
-          end if ! PKS
-       end do ! PKS 
-    end do ! PKS
+             ok2 = cfn_idx_get_i(id,iwrk3,nid,j)
+             if (iwrk4(j).eq.0) then ! first unique index, so add 
+                n = n + 1
+                dxcic(n)=0
+                dxcir(n)=0
+                dxcil(n)=0
+                dxcid(n)=id
+             end if
+             iwrk4(j) = 1
+             xp(ixp)%idx(i) = n
+          end if
+       end do 
+    end do
     ndxc=n
-    deallocate(iwrk1,iwrk2)
+    deallocate(iwrk1,iwrk2,iwrk3,iwrk4)
  end if !PKS
 
 ! allocate arrays for parameter values
