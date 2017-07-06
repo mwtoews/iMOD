@@ -696,12 +696,12 @@ CONTAINS
  END FUNCTION UTL_PCK_READTXT
 
  !###======================================================================
- SUBROUTINE UTL_PCK_GETTLP(N,TLP,KH,TOP,BOT,Z1,Z2,MINKH,ICLAY)
+ SUBROUTINE UTL_PCK_GETTLP(N,TLP,KH,TOP,BOT,Z1,Z2,MINKHT,ICLAY)
  !###======================================================================
  IMPLICIT NONE
  REAL,PARAMETER :: MINP=0.05
  INTEGER,INTENT(IN) :: N,ICLAY
- REAL,INTENT(IN) :: MINKH
+ REAL,INTENT(IN) :: MINKHT
  REAL,INTENT(INOUT) :: Z1,Z2
  REAL,INTENT(IN),DIMENSION(N) :: KH,TOP,BOT
  REAL,INTENT(INOUT),DIMENSION(N) :: TLP
@@ -751,36 +751,19 @@ CONTAINS
  !## normalize tlp() again
  IF(SUM(TLP).GT.0.0)TLP=(1.0/SUM(TLP))*TLP
 
- !## remove small permeabilities
- IF(MINKH.GT.0.0)THEN
+ !## remove small transmissivities
+ IF(MINKHT.GT.0.0)THEN
   ZT=SUM(TLP) 
-  DO ILAY=1,N; IF(KH(ILAY).LT.MINKH)TLP(ILAY)=0.0; ENDDO
+  DO ILAY=1,N
+   DZ= TOP(ILAY)-BOT(ILAY)
+   IF(KH(ILAY)*DZ.LT.MINKHT)TLP(ILAY)=0.0
+  ENDDO
   IF(SUM(TLP).GT.0.0)THEN
    ZT=ZT/SUM(TLP); TLP=ZT*TLP
   ENDIF
   !## normalize tlp() again
   IF(SUM(TLP).GT.0.0)TLP=(1.0/SUM(TLP))*TLP
  ENDIF
-
-! IF(MINP.GT.0.0)THEN
-!  !## remove small percentages
-!  DO ILAY=1,N; IF(TLP(ILAY).LT.MINP)TLP(ILAY)=0.0; ENDDO
-!  !## normalize tlp() again
-!  IF(SUM(TLP).GT.0.0)TLP=(1.0/SUM(TLP))*TLP
-! ENDIF
-
-! !## if no layers has been used for the assignment, try to allocate it to the nearest 
-! IF(ICLAY.EQ.1.AND.SUM(TLP).EQ.0.0)THEN
-!  ZM=(Z1+Z2)/2.0; DZ=99999.0; JLAY=0
-!  DO ILAY=1,N
-!   ZT=TOP(ILAY); ZB=BOT(ILAY)
-!   IF(ABS(ZT-ZM).LT.DZ.OR.ABS(ZB-ZM).LT.DZ)THEN
-!    DZ  =MIN(ABS(ZT-ZM),ABS(ZB-ZM))
-!    JLAY=ILAY
-!   ENDIF
-!  ENDDO
-!  IF(JLAY.NE.0)TLP(JLAY)=-1.0
-! ENDIF
  
  !## make sure only one layer is assigned whenever z1.eq.z2
  IF(IDIFF.EQ.1)THEN
@@ -804,7 +787,8 @@ CONTAINS
  IF(SUM(TLP).EQ.0.0)THEN
   IF(Z1.GE.TOP(1))THEN
    DO ILAY=1,N
-    IF(TOP(ILAY)-BOT(ILAY).GT.0.0.AND.KH(ILAY).GT.MINKH)THEN; TLP(ILAY)=1.0; EXIT; ENDIF
+    DZ=TOP(ILAY)-BOT(ILAY)
+    IF(DZ.GT.0.0.AND.KH(ILAY)*DZ.GT.MINKHT)THEN; TLP(ILAY)=1.0; EXIT; ENDIF
    ENDDO
   ENDIF
  ENDIF
