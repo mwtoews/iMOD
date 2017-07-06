@@ -2547,7 +2547,7 @@ CONTAINS
        !## make sure IPRI is within defined limits (1-4)
        IF(DATISD2(J,I)%IPRI.LE.0.OR.DATISD2(J,I)%IPRI.GT.4)THEN
         CALL WMESSAGEBOX(OKONLY,EXCLAMATIONICON,COMMONOK,'Diversion option need to be between 1-4'//CHAR(13)// &
-          'Current value is '//TRIM(ITOS(DATISD2(J,I)%ICLC))//'; iMOD changed it into 1','Warning')
+          'Current value is '//TRIM(ITOS(DATISD2(J,I)%IPRI))//'; iMOD changed it into 1','Warning')
         DATISD2(J,I)%IPRI=1
        ENDIF
       ENDIF

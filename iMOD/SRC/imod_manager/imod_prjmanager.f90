@@ -3739,7 +3739,7 @@ TOPICLOOP: DO ITOPIC=1,MAXTOPICS
  !###======================================================================
  IMPLICIT NONE
  LOGICAL,INTENT(IN) :: LTB
- INTEGER :: IROW,ICOL,ILAY,JLAY
+ INTEGER :: IROW,ICOL,ILAY,JLAY,IC1,IC2,IR1,IR2,IL1,IL2
  REAL :: XBOT
  
  !## make sure nodata for anisotropy factors is 1.0
@@ -3829,6 +3829,23 @@ TOPICLOOP: DO ITOPIC=1,MAXTOPICS
    SHD(ILAY)%X(ICOL,IROW)=SHD(ILAY+1)%X(ICOL,IROW)
   ENDIF
  ENDDO; ENDDO; ENDDO 
+
+ !## cleaning for constant head cells that are only connected to other constant head/inactive cells    
+ DO ILAY=1,NLAY; DO IROW=1,IDF%NROW; DO ICOL=1,IDF%NCOL
+  IC1=MAX(ICOL-1,1); IC2=MIN(ICOL+1,IDF%NCOL)
+  IR1=MAX(IROW-1,1); IR2=MIN(IROW+1,IDF%NROW)
+  IL1=MAX(ILAY-1,1); IL2=MIN(ILAY+1,NLAY)
+  IF(BND(ILAY)%X(ICOL,IROW).LT.0)THEN
+   IF((BND(ILAY)%X(ICOL,IR1 ).LE.0).AND. & !N
+      (BND(ILAY)%X(ICOL,IR2 ).LE.0).AND. & !S
+      (BND(ILAY)%X(IC1,IROW ).LE.0).AND. & !W
+      (BND(ILAY)%X(IC2,IROW ).LE.0).AND. & !E
+      (BND(IL1 )%X(ICOL,IROW).LE.0).AND. & !T
+      (BND(IL2 )%X(ICOL,IROW).LE.0))THEN !B
+    BND(ILAY)%X(ICOL,IROW)=0
+   END IF
+  END IF
+ ENDDO; ENDDO; ENDDO
 
  END SUBROUTINE PMANAGER_SAVEMF2005_CONSISTENCY
  
@@ -4250,22 +4267,22 @@ TOPICLOOP: DO ITOPIC=1,MAXTOPICS
   CALL PMANAGER_SAVEMF2005_BND(BND(ILAY))
  ENDDO
 
- !## cleaning for constant head cells that are only connected to other constant head/inactive cells    
- DO ILAY=1,NLAY; DO IROW=1,IDF%NROW; DO ICOL=1,IDF%NCOL
-  IC1=MAX(ICOL-1,1); IC2=MIN(ICOL+1,IDF%NCOL)
-  IR1=MAX(IROW-1,1); IR2=MIN(IROW+1,IDF%NROW)
-  IL1=MAX(ILAY-1,1); IL2=MIN(ILAY+1,NLAY)
-  IF(BND(ILAY)%X(ICOL,IROW).LT.0)THEN
-   IF((BND(ILAY)%X(ICOL,IR1 ).LE.0).AND. & !N
-      (BND(ILAY)%X(ICOL,IR2 ).LE.0).AND. & !S
-      (BND(ILAY)%X(IC1,IROW ).LE.0).AND. & !W
-      (BND(ILAY)%X(IC2,IROW ).LE.0).AND. & !E
-      (BND(IL1 )%X(ICOL,IROW).LE.0).AND. & !T
-      (BND(IL2 )%X(ICOL,IROW).LE.0))THEN !B
-    BND(ILAY)%X(ICOL,IROW)=0
-   END IF
-  END IF
- ENDDO; ENDDO; ENDDO
+! !## cleaning for constant head cells that are only connected to other constant head/inactive cells    
+! DO ILAY=1,NLAY; DO IROW=1,IDF%NROW; DO ICOL=1,IDF%NCOL
+!  IC1=MAX(ICOL-1,1); IC2=MIN(ICOL+1,IDF%NCOL)
+!  IR1=MAX(IROW-1,1); IR2=MIN(IROW+1,IDF%NROW)
+!  IL1=MAX(ILAY-1,1); IL2=MIN(ILAY+1,NLAY)
+!  IF(BND(ILAY)%X(ICOL,IROW).LT.0)THEN
+!   IF((BND(ILAY)%X(ICOL,IR1 ).LE.0).AND. & !N
+!      (BND(ILAY)%X(ICOL,IR2 ).LE.0).AND. & !S
+!      (BND(ILAY)%X(IC1,IROW ).LE.0).AND. & !W
+!      (BND(ILAY)%X(IC2,IROW ).LE.0).AND. & !E
+!      (BND(IL1 )%X(ICOL,IROW).LE.0).AND. & !T
+!      (BND(IL2 )%X(ICOL,IROW).LE.0))THEN !B
+!    BND(ILAY)%X(ICOL,IROW)=0
+!   END IF
+!  END IF
+! ENDDO; ENDDO; ENDDO
  
  !## shd settings
  ITOPIC=5; SCL_D=1; SCL_U=2; ILIST=ITOPIC; IF(PMANAGER_GETFNAMES(1,NLAY,0,1,0).LE.0)RETURN
