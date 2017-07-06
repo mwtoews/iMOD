@@ -143,6 +143,7 @@ subroutine gwf2dxc1ar(in,igrid)
     end do
     allocate(iwrk3(max(1,nn)),iwrk4(max(1,nn)))
     ! fill with interface nodes
+    nn = 0
     do ixp = 1, nrxp
        do i = 1, xp(ixp)%nid
           id = xp(ixp)%id(i)
@@ -152,8 +153,10 @@ subroutine gwf2dxc1ar(in,igrid)
        end do
     end do
     ! get unique interface nodes
-    call imod_utl_qksort3(iwrk3,iwrk4)
-    nid = cfn_unique_i(iwrk3,nn)
+    if (nn.gt.0) then 
+       call imod_utl_qksort3(iwrk3,iwrk4)
+       nid = cfn_unique_i(iwrk3,nn)
+    end if
     iwrk4 = 0
     do ixp = 1, nrxp
        do i = 1, xp(ixp)%nid
