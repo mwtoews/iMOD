@@ -79,7 +79,7 @@ CONTAINS
         CALL IDFPLOTFAST(1)
        ENDIF
       CASE (IDCANCEL)
-       CALL SOLIDCLOSE()
+       CALL SOLID_CLOSE()
       CASE (IDHELP)
        CALL IMODGETHELP('5.4','TMO.SolTool')               
      END SELECT
@@ -771,7 +771,7 @@ ILLOOP: DO
 
  CALL WINDOWSELECT(0)
  IF(WMENUGETSTATE(ID_SOLIDS,2).EQ.1)THEN
-  CALL SOLIDCLOSE()
+  CALL SOLID_CLOSE()
   RETURN
  ENDIF
 
@@ -880,7 +880,7 @@ ILLOOP: DO
  END SUBROUTINE SOLID_READSOL
 
  !###======================================================================
- SUBROUTINE SOLIDCLOSE()
+ SUBROUTINE SOLID_CLOSE()
  !###======================================================================
  IMPLICIT NONE
 
@@ -894,7 +894,7 @@ ILLOOP: DO
 
  IDIAGERROR=0
 
- END SUBROUTINE SOLIDCLOSE
+ END SUBROUTINE SOLID_CLOSE
 
  !###======================================================================
  SUBROUTINE SOLID_FIELDS(FNAME)

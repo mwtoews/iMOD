@@ -218,7 +218,7 @@ CONTAINS
  SUBROUTINE SOLID_PROFILEFITDRILL_CALC()
  !###======================================================================
  IMPLICIT NONE
- INTEGER :: I,J,IE,IS,IIDF,N
+ INTEGER :: I,J,IE,IS,IIDF,N,II
  REAL :: DZ
  
  DO I=1,NTBSOL
@@ -243,7 +243,7 @@ CONTAINS
    IIDF=ISEL_IDF(I+1)
    
    !## process each line segment in between nodata points (if they exist)  
-   IS=0
+   IS=0; II=0
    DO 
     IS=IS+1
     !## found start of connected piece of the line without nodata
@@ -259,31 +259,57 @@ CONTAINS
        IF(IE.LT.SERIE(IIDF)%N)IE=IE-1
        
        N=IE-IS+1
+       
        ALLOCATE(GCODE(N))
        !## process line       
        CALL PEUCKER_SIMPLIFYLINE(SERIE(IIDF)%X(IS:),SERIE(IIDF)%Y(IS:),GCODE,N)
+       !## never remove the first or last
+       GCODE(1)=DTOL(I+1)+1.0
+       GCODE(N)=DTOL(I+1)+1.0
+       
+       IF(ICLEAN(I+1).EQ.1)THEN
+        !## add intermediate point, take into account maximum array-size
+        DO J=1,N !MIN(N,SIZE(SPF(ISPF)%PROF(I)%PX))
+         !## use point from Urs-Douglas-Peucker algorithm (greater then given tolerance)
+         IF(GCODE(J).GT.DTOL(I+1))THEN
+          !## put connection of current drill to 
+          II=II+1
+          !## maximize the size of the vector - overwrite values
+          II=MIN(II,SIZE(SPF(ISPF)%PROF(I)%PX))
+          SPF(ISPF)%PROF(I)%PX(II)=SERIE(IIDF)%X(J)
+          SPF(ISPF)%PROF(I)%PZ(II)=SERIE(IIDF)%Y(J)
+          SPF(ISPF)%PROF(I)%NPOS=SPF(ISPF)%PROF(I)%NPOS+1
+         ENDIF
+        ENDDO
 
-       IF(SPF(ISPF)%PROF(I)%NPOS.EQ.0)THEN
-        !## reformulate begin
-        SPF(ISPF)%PROF(I)%PX(1)=SERIE(IIDF)%X(IS)
-        SPF(ISPF)%PROF(I)%PZ(1)=SERIE(IIDF)%Y(IS)
-        !## reformulate end point
-        SPF(ISPF)%PROF(I)%PX(2)=SERIE(IIDF)%X(IE)
-        SPF(ISPF)%PROF(I)%PZ(2)=SERIE(IIDF)%Y(IE)
-        SPF(ISPF)%PROF(I)%NPOS=2
        ELSE
-        CALL SOLID_PROFILEPUTINTERSECTION(SERIE(IIDF)%X(IS),SERIE(IIDF)%Y(IS),I)
-        CALL SOLID_PROFILEPUTINTERSECTION(SERIE(IIDF)%X(IE),SERIE(IIDF)%Y(IE),I)
-       ENDIF
-
-       !## add intermediate point, take into account maximum array-size
-       DO J=2,MIN(N-1,SIZE(SPF(ISPF)%PROF(I)%PX))
-        !## use point from Urs-Douglas-Peucker algorithm (greater then given tolerance)
-        IF(GCODE(J).GT.DTOL(I+1))THEN
-         !## put connection of current dril to 
-         CALL SOLID_PROFILEPUTINTERSECTION(SERIE(IIDF)%X(IS+J-1),SERIE(IIDF)%Y(IS+J-1),I)
+       
+        IF(SPF(ISPF)%PROF(I)%NPOS.EQ.0)THEN
+         !## reformulate begin
+         SPF(ISPF)%PROF(I)%PX(1)=SERIE(IIDF)%X(IS)
+         SPF(ISPF)%PROF(I)%PZ(1)=SERIE(IIDF)%Y(IS)
+         !## reformulate end point
+         SPF(ISPF)%PROF(I)%PX(2)=SERIE(IIDF)%X(IE)
+         SPF(ISPF)%PROF(I)%PZ(2)=SERIE(IIDF)%Y(IE)
+         SPF(ISPF)%PROF(I)%NPOS=2
+        ELSE
+         CALL SOLID_PROFILEPUTINTERSECTION(SERIE(IIDF)%X(IS),SERIE(IIDF)%Y(IS),I)
+         CALL SOLID_PROFILEPUTINTERSECTION(SERIE(IIDF)%X(IE),SERIE(IIDF)%Y(IE),I)
         ENDIF
-       ENDDO
+
+        !## add intermediate point, take into account maximum array-size
+        DO J=2,n !MIN(N-1,SIZE(SPF(ISPF)%PROF(I)%PX))
+         !## use point from Urs-Douglas-Peucker algorithm (greater then given tolerance)
+         IF(GCODE(J).GT.DTOL(I+1))THEN
+          !## cannot add more points          
+          IF(SPF(ISPF)%PROF(I)%NPOS.GE.SIZE(SPF(ISPF)%PROF(I)%PX))EXIT
+          !## put connection of current drill to 
+          CALL SOLID_PROFILEPUTINTERSECTION(SERIE(IIDF)%X(IS+J-1),SERIE(IIDF)%Y(IS+J-1),I)
+         ENDIF
+        ENDDO
+       
+       ENDIF
+       
        DEALLOCATE(GCODE)
 
        IS=IE
@@ -462,7 +488,7 @@ CONTAINS
  ENDIF
 
  !## add point at the end or beginning of the line
- IF(LEX)THEN !X.GT.SPF(ISPF)%PROF(IL)%PX(N))THEN
+ IF(LEX)THEN 
   N=N+1
   IF(N.EQ.1)THEN
    SPF(ISPF)%PROF(IL)%PX(N)=X
@@ -1145,7 +1171,7 @@ CONTAINS
  END SUBROUTINE SOLID_PROFILEDRAW_POLYGON
 
  !###======================================================================
- SUBROUTINE SOLIDPLOTLOCATIONCROSSSECTIONS()
+ SUBROUTINE SOLID_PLOTLOCATION_CROSSSECTIONS()
  !###======================================================================
  IMPLICIT NONE
  REAL,PARAMETER :: RAD=360.0/(2.0*3.1415)
@@ -1157,7 +1183,7 @@ CONTAINS
  CALL WDIALOGGETCHECKBOX(IDF_CHECK1,ILABEL)
  CALL WDIALOGGETREAL(IDF_REAL1,SLABEL)
 
- CALL UTL_SETTEXTSIZE(TW,TH,SLABEL*0.015) !0.03) !0.015)
+ CALL UTL_SETTEXTSIZE(TW,TH,SLABEL*0.015) 
  
  CALL IGRFILLPATTERN(SOLIDLINE)
 
@@ -1189,14 +1215,13 @@ CONTAINS
     CALL IGRCOLOURN(WRGB(0,0,0))
     FNAME=SPF(I)%FNAME(:INDEX(SPF(I)%FNAME,'.',.TRUE.)-1)
     CALL IPFPLOTLABEL(DX,DY,(/TRIM(FNAME)/),(/1/),1,TW,TH,(/''/),.FALSE.,-1,GANGLE=GANGLE)
-!   CALL IPFPLOTLABEL(PX(1),PY(1),(/TRIM(FNAME)/),(/1/),1,TW,TH,(/''/),.FALSE.,-1,GANGLE=GANGLE)
    ENDIF
    
   ENDIF
   NULLIFY(PX,PY)
  ENDDO
  
- END SUBROUTINE SOLIDPLOTLOCATIONCROSSSECTIONS
+ END SUBROUTINE SOLID_PLOTLOCATION_CROSSSECTIONS
  
  !###======================================================================
  SUBROUTINE SOLID_PROFILEMINMAX(IFIXX,IFIXY)

@@ -578,8 +578,6 @@ CONTAINS
       CASE (ID_NEW)
        !## start drawing a cross-section
        IDRAWCROSS=1; NXYZCROSS=1; IVALIDCROSS=0
-!       IF(IMOD3D_SOL_ADD())THEN
-!       ENDIF
       !## delete fench-diagram
       CASE (ID_DELETE)
        IF(IMOD3D_SOL_DELETE())THEN

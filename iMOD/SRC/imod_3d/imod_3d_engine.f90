@@ -4260,10 +4260,12 @@ SOLLOOP: DO I=1,NSOLLIST
  LOGICAL FUNCTION IMOD3D_SOL_ADD()
  !###======================================================================
  IMPLICIT NONE
- INTEGER :: I,J
+ INTEGER :: I,J,IIDF
  REAL :: XTOL
  CHARACTER(LEN=52) :: CDATE
  INTEGER,DIMENSION(:,:),ALLOCATABLE :: ICOMBINE
+
+ IMOD3D_SOL_ADD=.FALSE.
 
  !## vertical tolerance (from menu)
  CALL WDIALOGSELECT(ID_D3DSETTINGS_TAB6)
@@ -4296,7 +4298,7 @@ SOLLOOP: DO I=1,NSOLLIST
  END DO
 
  !## number of coordinates
- NXY=NXYZCROSS !2
+ NXY=NXYZCROSS 
  IF(ASSOCIATED(XY))DEALLOCATE(XY); ALLOCATE(XY(2,NXY)); XY=0.0
 
  !## set coordinates of cross-section
@@ -4323,7 +4325,7 @@ SOLLOOP: DO I=1,NSOLLIST
 
  !## add memory for cross-section
  CALL SOLID_PROFILEADD_SPFMEMORY(1.0,-1.0)
- !## fill in cross-section
+ !## fill in cross-section - including nodata
  CALL SOLID_PROFILEFITDRILL_CALC()
 
  !## set colour - equal to the colour assigned to the IDF files ...
@@ -4507,6 +4509,7 @@ SOLLOOP: DO I=1,NSOLLIST
    ICOMBINE(J,3)=0
   ENDDO
   CALL IMOD3D_SOL_DRAWINGLIST(I,NSOLLIST,ICOMBINE)
+  DEALLOCATE(ICOMBINE)
  ENDDO
 
  CALL WINDOWOUTSTATUSBAR(2,'')
@@ -4541,7 +4544,7 @@ SOLLOOP: DO I=1,NSOLLIST
  CALL GLNEWLIST(SOLLISTINDEX(ISOL,1),GL_COMPILE)
 
  !## process each cross-section (nidf) --- two-by-two
- DO JPROF=1,SIZE(SPF(I)%PROF) !-1
+ DO JPROF=1,SIZE(SPF(I)%PROF) 
  
   !## first interval
   IPROF(1)=ICOMBINE(JPROF,1)
@@ -4558,10 +4561,7 @@ SOLLOOP: DO I=1,NSOLLIST
   !## use other interface if one of the two is not defined
   IF(IPROF(1).EQ.0)IPROF(1)=IPROF(2)
   IF(IPROF(2).EQ.0)IPROF(2)=IPROF(1)
-    
-!  !## no interface defined
-!  IF(IPROF(1)+IPROF(2).EQ.0)CYCLE
-  
+
   !## colouring in intermediate profile
   IPROF(3)=ICOMBINE(JPROF,3)
   IF(IPROF(3).NE.0)THEN
@@ -4570,12 +4570,6 @@ SOLLOOP: DO I=1,NSOLLIST
   
   !## skip this one
   IF(SUM(IPROF).LE.0)CYCLE
-
-!  !## skip this one, probably a colour
-!  IF(IPROF(1).LT.0)CYCLE
-    
-!  IF(SPF(I)%PROF(IPROF(1))%NPOS.LE.0)CYCLE
-!  IF(SPF(I)%PROF(IPROF(2))%NPOS.LE.0)CYCLE      
 
   !## make sure xt has a small offset (except for xt=0.0)
   TX(1)=0.0
@@ -4616,7 +4610,7 @@ SOLLOOP: DO I=1,NSOLLIST
     ZT(IPOS,II)=SPF(I)%PROF(K)%PZ(J)
    ENDDO
   END DO
-  
+
   !## include knickpoints
   TX(1)=0.0
   DO J=2,SPF(I)%NXY-1
@@ -4631,16 +4625,10 @@ SOLLOOP: DO I=1,NSOLLIST
   ENDDO
   N=IPOS
  
-!  IF(IPROF(3).EQ.0)THEN
-!   CALL SORTEM(1,N,XT,2,ZT(:,1),ZT(:,2),(/0.0/),(/0.0/),(/0.0/),(/0.0/),(/0.0/))
-!  ELSE
   CALL SORTEM(1,N,XT,3,ZT(:,1),ZT(:,2),ZT(:,3),(/0.0/),(/0.0/),(/0.0/),(/0.0/))
-!  ENDIF
   
-!  !## fill first and last
-!  KK=2; IF(IPROF(3).GT.0)KK=3
-
-  DO K=1,3 !KK !2
+  !## fill first and last
+  DO K=1,3 
    !## skip missing interfaces
    IF(IPROF(K).EQ.0)CYCLE
    IF(ZT(1,K).EQ.NODATA_Z)THEN
@@ -4663,7 +4651,7 @@ SOLLOOP: DO I=1,NSOLLIST
    
   !## interpolate unknown values
   DO J=1,N
-   DO K=1,3 !KK !2
+   DO K=1,3
    !## skip missing interfaces
     IF(IPROF(K).EQ.0)CYCLE
 
@@ -4701,7 +4689,7 @@ SOLLOOP: DO I=1,NSOLLIST
   X(1)=SPF(I)%X(1)
   Y(1)=SPF(I)%Y(1)
   IF(IPROF(1).NE.0)THEN
-   Z(2)=ZT(I,1) !ZT(1,2)
+   Z(2)=ZT(I,1) 
   ELSE
    Z(2)=IDFPLOT(IPROF(3))%ZMAX
   ENDIF
@@ -4709,7 +4697,7 @@ SOLLOOP: DO I=1,NSOLLIST
   X(2)=X(1)
   Y(2)=Y(1)
   IF(IPROF(2).NE.0)THEN
-   Z(1)=ZT(I,2) !ZT(1,1)
+   Z(1)=ZT(I,2)
   ELSE
    Z(1)=IDFPLOT(IPROF(3))%ZMIN
   ENDIF
@@ -4757,33 +4745,39 @@ SOLLOOP: DO I=1,NSOLLIST
       XCOR(4)=XCOR(3); YCOR(4)=YCOR(3)
 
       !## colour by voxel value
-      IF(IPROF(3).GT.0)THEN
+      IF(IPROF(3).GT.0)THEN  
        IICLR=UTL_IDFGETCLASS(IDFPLOT(IPROF(3))%LEG,ZT(IPOS,3))
       ELSE
        !## get color for z-mean between two segments
        IICLR=SLD(1)%INTCLR(IPROF(1))
       ENDIF
-      CALL IMOD3D_SETCOLOR(IICLR) !## include alpha
-      !## show shaded surface
-      CALL IMOD3D_RETURNCOLOR(IICLR,AMBIENT)
 
-      CALL GLMATERIALFV(GL_FRONT_AND_BACK,GL_AMBIENT_AND_DIFFUSE,AMBIENT)
+      !## skip white ...
+      IF(IICLR.NE.WRGB(255,255,255))THEN
+      
+       CALL IMOD3D_SETCOLOR(IICLR) !## include alpha
+       !## show shaded surface
+       CALL IMOD3D_RETURNCOLOR(IICLR,AMBIENT)
+
+       CALL GLMATERIALFV(GL_FRONT_AND_BACK,GL_AMBIENT_AND_DIFFUSE,AMBIENT)
               
-      !## begin OpenGL-Quads       
-      CALL GLBEGIN(GL_QUADS)
-       CALL IMOD3D_SETNORMALVECTOR((/XCOR(1),YCOR(1),Z(1)/),(/XCOR(2),YCOR(2),Z(2)/),(/XCOR(3),YCOR(3),Z(3)/))
-       DO JJ=1,4; CALL GLVERTEX3F(XCOR(JJ),YCOR(JJ),Z(JJ)); ENDDO
-       !## end OpenGL-Quads
-      CALL GLEND()
+       !## begin OpenGL-Quads       
+       CALL GLBEGIN(GL_QUADS)
+        CALL IMOD3D_SETNORMALVECTOR((/XCOR(1),YCOR(1),Z(1)/),(/XCOR(2),YCOR(2),Z(2)/),(/XCOR(3),YCOR(3),Z(3)/))
+        DO JJ=1,4; CALL GLVERTEX3F(XCOR(JJ),YCOR(JJ),Z(JJ)); ENDDO
+        !## end OpenGL-Quads
+       CALL GLEND()
 
-      !## begin OpenGL-LINES
-      CALL IMOD3D_SETCOLOR(WRGB(10,10,10))
-      CALL GLLINEWIDTH(1.0_GLFLOAT)
-      CALL GLBEGIN(GL_LINES)
-       CALL GLVERTEX3F(XCOR(2),YCOR(2),Z(2))
-       CALL GLVERTEX3F(XCOR(3),YCOR(3),Z(3))
-      CALL GLEND()
-
+       !## begin OpenGL-LINES
+       CALL IMOD3D_SETCOLOR(WRGB(10,10,10))
+       CALL GLLINEWIDTH(1.0_GLFLOAT)
+       CALL GLBEGIN(GL_LINES)
+        CALL GLVERTEX3F(XCOR(2),YCOR(2),Z(2))
+        CALL GLVERTEX3F(XCOR(3),YCOR(3),Z(3))
+       CALL GLEND()
+      
+      ENDIF
+      
       !## draw bottom (only for the last)
       IF(JPROF.EQ.SIZE(SPF(I)%PROF)-1)THEN
 
@@ -4793,14 +4787,20 @@ SOLLOOP: DO I=1,NSOLLIST
        ELSE
         IICLR=SPF(I)%PROF(IPROF(2))%ICLR
        ENDIF
-       CALL IMOD3D_SETCOLOR(IICLR)
 
-       CALL GLBEGIN(GL_LINES)
-       CALL GLVERTEX3F(XCOR(1),YCOR(1),Z(1))
-       CALL GLVERTEX3F(XCOR(4),YCOR(4),Z(4))
-       CALL GLEND()
+       !## skip white ...
+       IF(IICLR.NE.WRGB(255,255,255))THEN
+
+        CALL IMOD3D_SETCOLOR(IICLR)
+
+        CALL GLBEGIN(GL_LINES)
+        CALL GLVERTEX3F(XCOR(1),YCOR(1),Z(1))
+        CALL GLVERTEX3F(XCOR(4),YCOR(4),Z(4))
+        CALL GLEND()
+       ENDIF
+      
       ENDIF
-                  
+                    
      ENDIF
      !## copy current position to previous position
      X(1)=X(4); Y(1)=Y(4); Z(1)=Z(4)

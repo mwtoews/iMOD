@@ -5909,13 +5909,13 @@ TOPICLOOP: DO ITOPIC=1,MAXTOPICS
       IF(KTOP.EQ.1)FCT=FCT*0.001
       IF(ILAY.LE.0)NEVTOP=3
       !## checking for inactive cells
-      ICHECK=0; IF(ILAY.GT.0)ICHECK=1
+      ICHECK=1; IF(ILAY.GT.0)ICHECK=0
      !## rch
      CASE (26)
       IF(KTOP.EQ.1)FCT=FCT*0.001
       IF(ILAY.LE.0)NRCHOP=3
       !## checking for inactive cells
-      ICHECK=0; IF(ILAY.GT.0)ICHECK=1
+      ICHECK=1; IF(ILAY.GT.0)ICHECK=0
     END SELECT
     
     CALL PMANAGER_SAVEMF2005_FCTIMP(0,ICNST,PCK(KTOP),FCT,IMP,SCL_D)
