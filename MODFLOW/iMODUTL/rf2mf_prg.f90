@@ -718,7 +718,12 @@ IF(MXITER.LT.0) THEN ! PKS SOLVER OPTIONS
     end if        
     READ(IURUN,'(A256)') LINE; CALL IMOD_UTL_STRING(LINE)
     READ(LINE,'(A)',IOSTAT=IOS) pks%loadfile
+    pks%loadfile = adjustl(pks%loadfile)
     CALL IMOD_UTL_FILENAME(pks%loadfile)
+    !## read without quotes
+    IF(pks%loadfile(1:1).EQ.CHAR(34).OR.pks%loadfile(1:1).EQ.CHAR(39))THEN ! double quote: CHAR(34); single quote: CHAR(39)
+       READ(pks%loadfile,*) pks%loadfile
+    ENDIF
     if (pks%partopt.eq.1) then
        IF(IOS.NE.0)CALL IMOD_UTL_PRINTTEXT('Dataset 5: PARTOPT = 1 (RCB)',-3)
     else
