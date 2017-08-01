@@ -549,10 +549,12 @@ CONTAINS
  CHARACTER(LEN=256) :: DIRNAME,LINE,MENU,BACK,FNAME,HELP
  CHARACTER(LEN=256),DIMENSION(6) :: STRING
  CHARACTER(LEN=1256) :: TEXT
- INTEGER :: IU,I,J,BACTION
+ INTEGER :: IU,I,J,BACTION,YN
  LOGICAL :: LEX
  
  PLUGIN_EXE_READ_INI=.FALSE.
+ 
+ YN=0
  
  !## sets directory+filename and initialize plugin-type
  IF(IPI.EQ.27)THEN
@@ -625,13 +627,16 @@ CONTAINS
  
  !## include files in exe-window from selected place based upon predefined List-name
  IF(TRIM(UTL_CAP(STRING(1),'U')).EQ.'IMODMANAGER')THEN  !#feeds from iMOD Manager
-  !## make sure it is capitals from now on - esier to evaluate in later subroutines
+  !## make sure it is capitals from now on - easier to evaluate in later subroutines
   STRING(1)='IMODMANAGER'
   J=0; DO I=1,SIZE(MP); IF(MP(I)%IACT)J=J+1; ENDDO
   !## no files found in the imod manager
   IF(J.EQ.0)THEN
-   CALL WMESSAGEBOX(OKONLY,EXCLAMATIONICON,COMMONOK,'Menu window cannot be started: there are no files available in the iMOD Manager. '// &
-     'Inspect your plugin settings.','Warning'); RETURN
+   CALL WMESSAGEBOX(YESNO,QUESTIONICON,COMMONYES,'You are about to start the plugin, but there are no files available in the iMOD Manager. '// &
+     'Would you like to start the plugin anyway?','Question')
+     IF(WINFODIALOG(4).NE.1)THEN
+      YN=0; RETURN; ELSE; YN=1
+     ENDIF
   ENDIF
   ALLOCATE(FLIST(J))
   DO I=1,J
@@ -646,7 +651,11 @@ CONTAINS
  !## handling of files
  CALL UTL_READTXTFILE(TRIM(DIRNAME)//'\'//TRIM(STRING(6)),TEXT)
  !## get selected files
- CALL UTL_LISTOFFILES(FLIST,STRING,BACTION,TEXT,HELP)
+ IF(YN.NE.1)THEN
+  CALL UTL_LISTOFFILES(FLIST,STRING,BACTION,TEXT,HELP)
+ ELSE
+  BACTION=1
+ ENDIF
  
  !## selected the OK button
  IF(BACTION.EQ.1)THEN
