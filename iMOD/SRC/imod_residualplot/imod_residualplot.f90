@@ -177,9 +177,14 @@ CONTAINS
   IPFR%NPOINTS=0
 !  DO J=1,SIZE(IPFR)+1; READ(IU,*); ENDDO
   
+!    IF(IUPESTRESIDUAL.GT.0)WRITE(IUPESTRESIDUAL,'(2(G15.7,1X),I10,1X,6(G15.7,1X),I10,1X,A32)') &
+!        X,Y,ILAY,Z,H,DHW,MSR%W(II)*H,MSR%W(II)*(H-Z),MSR%W(II),I,MSR%CLABEL(II)
+
   DO 
    READ(IU,'(A256)',IOSTAT=IOS) LINE; IF(IOS.NE.0)EXIT
-   READ(LINE,'(171X,I10)') NIPF
+   !## steadystate
+   IF(ITRANSIENT.EQ.0)READ(LINE,'(139X,I10)') NIPF
+   IF(ITRANSIENT.EQ.1)READ(LINE,'(171X,I10)') NIPF
    IPFR(NIPF)%NPOINTS=IPFR(NIPF)%NPOINTS+1
    IF(I.EQ.2)THEN
     N=IPFR(NIPF)%NPOINTS
@@ -214,61 +219,61 @@ CONTAINS
 
  END SUBROUTINE RESIDUAL_DATA
 
- !###===================================
- SUBROUTINE RESIDUAL_DATA_ORG()
- !###===================================
- IMPLICIT NONE
- INTEGER :: I,IU,NIPF,IOS,N
- REAL :: J,WMDL,WRES,MMSR,MMDL,CC,DYNMSR,DYNMLD
- CHARACTER(LEN=256) :: LINE
-
- IU=UTL_GETUNIT(); CALL OSD_OPEN(IU,FILE=TRIM(INPUTFILE),ACTION='READ',FORM='FORMATTED',STATUS='OLD')
- IF(IU.EQ.0)STOP
- 
- !## three loops, first to get number of ipf files, second to get number of points per ipf, third to read all in memory
- DO I=1,3
-  NIPF=0
-  !## skip first line
-  READ(IU,*)
-  DO 
-   READ(IU,'(A256)',IOSTAT=IOS) LINE; IF(IOS.NE.0)EXIT
-   !## found ipf
-   IF(INDEX(UTL_CAP(LINE,'U'),'.IPF').GT.0)THEN
-    NIPF=NIPF+1
-    !## read empty line and header
-    READ(IU,*); READ(IU,*)  
-    !## read data block, count points
-    IF(I.GE.2)N=0 
-    DO
-     READ(IU,'(A256)',IOSTAT=IOS) LINE; IF(IOS.NE.0)EXIT; IF(TRIM(LINE).EQ.'')EXIT
-     IF(I.GE.2)N=N+1 
-     IF(I.EQ.3)THEN
-      IF(ITRANSIENT.EQ.1)THEN
-       READ(LINE,'(I10,2F15.7,I10,3F15.7)') IPFR(NIPF)%D(N),IPFR(NIPF)%X(N),IPFR(NIPF)%Y(N), &
-                                            IPFR(NIPF)%L(N),IPFR(NIPF)%W(N),IPFR(NIPF)%O(N),IPFR(NIPF)%M(N)
-                                            
-      ELSE
-       READ(LINE,'(2F15.7,I10,6F15.7)') IPFR(NIPF)%X(N),IPFR(NIPF)%Y(N), &
-                                        IPFR(NIPF)%L(N),IPFR(NIPF)%O(N),IPFR(NIPF)%M(N), &
-                                        J,WMDL,WRES,IPFR(NIPF)%W(N)
-      ENDIF
-     ENDIF
-    ENDDO
-   ENDIF
-   IF(I.EQ.2)THEN
-    IPFR(NIPF)%NPOINTS=N
-    IF(ITRANSIENT.EQ.1)ALLOCATE(IPFR(NIPF)%D(N))
-    ALLOCATE(IPFR(NIPF)%X(N),IPFR(NIPF)%Y(N),IPFR(NIPF)%L(N),IPFR(NIPF)%O(N), &
-             IPFR(NIPF)%M(N),IPFR(NIPF)%W(N))
-   ENDIF
-  ENDDO
-  IF(I.EQ.1)ALLOCATE(IPFR(NIPF))
-  !## position back to first position of txtfile
-  REWIND(IU)
- ENDDO
- CLOSE(IU)
-
- END SUBROUTINE RESIDUAL_DATA_ORG
+! !###===================================
+! SUBROUTINE RESIDUAL_DATA_ORG()
+! !###===================================
+! IMPLICIT NONE
+! INTEGER :: I,IU,NIPF,IOS,N
+! REAL :: J,WMDL,WRES,MMSR,MMDL,CC,DYNMSR,DYNMLD
+! CHARACTER(LEN=256) :: LINE
+!
+! IU=UTL_GETUNIT(); CALL OSD_OPEN(IU,FILE=TRIM(INPUTFILE),ACTION='READ',FORM='FORMATTED',STATUS='OLD')
+! IF(IU.EQ.0)STOP
+! 
+! !## three loops, first to get number of ipf files, second to get number of points per ipf, third to read all in memory
+! DO I=1,3
+!  NIPF=0
+!  !## skip first line
+!  READ(IU,*)
+!  DO 
+!   READ(IU,'(A256)',IOSTAT=IOS) LINE; IF(IOS.NE.0)EXIT
+!   !## found ipf
+!   IF(INDEX(UTL_CAP(LINE,'U'),'.IPF').GT.0)THEN
+!    NIPF=NIPF+1
+!    !## read empty line and header
+!    READ(IU,*); READ(IU,*)  
+!    !## read data block, count points
+!    IF(I.GE.2)N=0 
+!    DO
+!     READ(IU,'(A256)',IOSTAT=IOS) LINE; IF(IOS.NE.0)EXIT; IF(TRIM(LINE).EQ.'')EXIT
+!     IF(I.GE.2)N=N+1 
+!     IF(I.EQ.3)THEN
+!      IF(ITRANSIENT.EQ.1)THEN
+!       READ(LINE,'(I10,2F15.7,I10,3F15.7)') IPFR(NIPF)%D(N),IPFR(NIPF)%X(N),IPFR(NIPF)%Y(N), &
+!                                            IPFR(NIPF)%L(N),IPFR(NIPF)%W(N),IPFR(NIPF)%O(N),IPFR(NIPF)%M(N)
+!                                            
+!      ELSE
+!       READ(LINE,'(2F15.7,I10,6F15.7)') IPFR(NIPF)%X(N),IPFR(NIPF)%Y(N), &
+!                                        IPFR(NIPF)%L(N),IPFR(NIPF)%O(N),IPFR(NIPF)%M(N), &
+!                                        J,WMDL,WRES,IPFR(NIPF)%W(N)
+!      ENDIF
+!     ENDIF
+!    ENDDO
+!   ENDIF
+!   IF(I.EQ.2)THEN
+!    IPFR(NIPF)%NPOINTS=N
+!    IF(ITRANSIENT.EQ.1)ALLOCATE(IPFR(NIPF)%D(N))
+!    ALLOCATE(IPFR(NIPF)%X(N),IPFR(NIPF)%Y(N),IPFR(NIPF)%L(N),IPFR(NIPF)%O(N), &
+!             IPFR(NIPF)%M(N),IPFR(NIPF)%W(N))
+!   ENDIF
+!  ENDDO
+!  IF(I.EQ.1)ALLOCATE(IPFR(NIPF))
+!  !## position back to first position of txtfile
+!  REWIND(IU)
+! ENDDO
+! CLOSE(IU)
+!
+! END SUBROUTINE RESIDUAL_DATA_ORG
 
  !###===================================
  SUBROUTINE RESIDUAL_PROC()
@@ -286,7 +291,9 @@ CONTAINS
  DO I=1,SIZE(IPFR)
   IF(.NOT.(RESIDUAL_PROC_SELIPF(I)))CYCLE
   DO J=1,IPFR(I)%NPOINTS
-   IF(.NOT.((RESIDUAL_PROC_SELLAY(I,J)).AND.(RESIDUAL_PROC_SELDATE(I,J)).AND.(RESIDUAL_PROC_SELWEIGHT(I,J))))CYCLE
+   IF(.NOT.((RESIDUAL_PROC_SELLAY(I,J)).AND. &
+            (RESIDUAL_PROC_SELDATE(I,J)).AND. &
+            (RESIDUAL_PROC_SELWEIGHT(I,J))))CYCLE
    
    !## skip weigth is zero anyhow
    IF(IPFR(I)%W(J).LE.0)CYCLE
@@ -344,19 +351,22 @@ CONTAINS
  IMPLICIT NONE
  INTEGER :: I,J
  
- !## define histogram classes
- HCLASSES(1)=-10.0E10
- HCLASSES(2)=-5.0
- DO I=3,SIZE(HCLASSES)-1
-  HCLASSES(I)=HCLASSES(I-1)+0.5
- ENDDO
- HCLASSES(SIZE(HCLASSES))=10.0E10
- 
+ !## define histogram classes (default whenever none given)
+ IF(HCLASSES(1).EQ.HCLASSES(2))THEN
+  HCLASSES(1)=-10.0E10
+  HCLASSES(2)=-5.0
+  DO I=3,SIZE(HCLASSES)-1
+   HCLASSES(I)=HCLASSES(I-1)+0.5
+  ENDDO
+  HCLASSES(SIZE(HCLASSES))=10.0E10
+ ENDIF
+  
  !## count amount of points per class
  XCLASSES=0.0
  DO J=1,SIZE(X) 
   CALL POL1LOCATE(HCLASSES,SIZE(HCLASSES),REAL(X(J),8),I)
-  XCLASSES(I)=XCLASSES(I)+1
+  !## add to the histogram class
+  IF(I.GT.0.AND.I.LE.SIZE(XCLASSES))XCLASSES(I)=XCLASSES(I)+1
  ENDDO
  
  END SUBROUTINE RESIDUAL_PROC_HISTCLASS
@@ -400,14 +410,16 @@ CONTAINS
  !###===================================
  IMPLICIT NONE
  INTEGER,INTENT(IN) :: I,J 
- 
-! RESIDUAL_PROC_SELWEIGHT=.TRUE.
- 
-! IF(IWEIGHT.EQ.1)THEN
+ LOGICAL :: L1,L2
+  
  !## always skip weight of zero
  RESIDUAL_PROC_SELWEIGHT=IPFR(I)%W(J).NE.0.0
- IF(RESIDUAL_PROC_SELWEIGHT)RETURN
-! ENDIF
+ IF(RESIDUAL_PROC_SELWEIGHT)THEN
+  L1=.TRUE.; IF(WC1.NE.0.0)L1=IPFR(I)%W(J).GE.WC1
+  L2=.TRUE.; IF(WC2.NE.0.0)L2=IPFR(I)%W(J).LE.WC2
+  RESIDUAL_PROC_SELWEIGHT=L1.AND.L2
+  RETURN
+ ENDIF
  
  END FUNCTION RESIDUAL_PROC_SELWEIGHT
 
@@ -432,13 +444,29 @@ CONTAINS
  SUBROUTINE RESIDUAL_PLOT()
  !###===================================
  IMPLICIT NONE
- INTEGER :: I,NSETS,IPLOTBMP,IPLOTBMP2,NCLR,MX
+ INTEGER :: I,NSETS,IPLOTBMP,IPLOTBMP2,NCLR,MX,NBAR
  REAL :: MINX,MINY,MAXX,MAXY,X1,X2,Y1,Y2,DY,AVG
- CHARACTER(LEN=4),DIMENSION(22) :: XLABELS=(/'<-5','-5','-4.5','-4','-3.5','-3','-2.5','-2','-1.5','-1','-0.5','0.5','1','1.5','2','2.5','3','3.5','4','4.5','5','>5'/)
+! CHARACTER(LEN=4),DIMENSION(22) :: XLABELS=(/'<-5','-5','-4.5','-4','-3.5','-3','-2.5','-2','-1.5','-1','-0.5','0.5','1','1.5','2','2.5','3','3.5','4','4.5','5','>5'/)
+ CHARACTER(LEN=12),DIMENSION(:),ALLOCATABLE :: XLABELS
  INTEGER,ALLOCATABLE,DIMENSION(:) :: IBARS
  CHARACTER(LEN=256) :: LINE
  REAL,DIMENSION(3) :: XMED
  
+ NBAR=SIZE(XCLASSES)
+ ALLOCATE(XLABELS(NBAR))
+ DO I=1,NBAR
+  IF(I.EQ.1)THEN
+   WRITE(XLABELS(I),UTL_GETFORMAT(HCLASSES(I+1))) HCLASSES(I+1)
+   XLABELS(I)='<'//ADJUSTL(XLABELS(I))
+  ELSEIF(I.EQ.NBAR)THEN
+   WRITE(XLABELS(I),UTL_GETFORMAT(HCLASSES(I-1))) HCLASSES(I-1)
+   XLABELS(I)='>'//ADJUSTL(XLABELS(I))
+  ELSE
+   WRITE(XLABELS(I),UTL_GETFORMAT(HCLASSES(I))) HCLASSES(I)
+   XLABELS(I)=ADJUSTL(XLABELS(I))
+  ENDIF
+ ENDDO
+   
  !## get minimum and maximum x and y values for plotting area scatter plot
  MINX=X(1); MAXX=X(1)
  DO I=2,SIZE(X); MINX=MIN(MINX,X(I)); MAXX=MAX(MAXX,X(I)); ENDDO
@@ -473,7 +501,7 @@ CONTAINS
   !## minimum x-value, minimum y-value, maximum x-value, maximum y-value
   !## to be computed ourselves beforehand in subroutine "RESIDUAL_PROC_HISTCLASS"
 !  CALL IPGUNITS(HCLASSES(2)-1,MINVAL(XCLASSES),HCLASSES(SIZE(HCLASSES)-1)+1,MAXVAL(XCLASSES)) !## in principe wil ik deze regel gebruiken, maar...
-  X1=0.0; X2=22.0; Y1=MINVAL(XCLASSES); Y2=MAXVAL(XCLASSES); DY=(Y2-Y1)/50.0; Y2=Y2+DY
+  X1=0.0; X2=REAL(NBAR); Y1=MINVAL(XCLASSES); Y2=MAXVAL(XCLASSES); DY=(Y2-Y1)/50.0; Y2=Y2+DY
   CALL IPGUNITS(X1,Y1,X2,Y2)  !## ... deze regel is voor het testen en dat levert dezelfde resultaten op.
  ENDIF
 
@@ -529,11 +557,11 @@ CONTAINS
   !## numbering and tick outside
   CALL IPGXSCALE('NT')
  ELSEIF(IPLOT.EQ.2)THEN
-  ALLOCATE(IBARS(22)); DO I=1,22; IBARS(I)=I; ENDDO
-  CALL IPGXUSERSCALEHIST(IBARS,22)
+  ALLOCATE(IBARS(NBAR)); DO I=1,NBAR; IBARS(I)=I; ENDDO
+  CALL IPGXUSERSCALEHIST(IBARS,NBAR)
   DEALLOCATE(IBARS)
 !  CALL IPGXSCALE('T')
-  CALL IPGXTEXT(XLABELS,22) 
+  CALL IPGXTEXT(XLABELS,NBAR)
  ENDIF
 
  !## adjust tick position for left Y Axis

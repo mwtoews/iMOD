@@ -19,7 +19,8 @@ INTEGER :: ITRANSIENT                                  !## transient/steadystate
 INTEGER,POINTER,DIMENSION(:) :: ILAYER,IIPFS,IRDATE    !## all layer numbers/IPF-files to be read
 INTEGER :: NLAYER,NIPFS,NRDATE                         !## amount of layers/IPF-files to be read
 REAL :: GOF                                            !## goodness-of-fit with linear regression
-REAL,DIMENSION(23) :: HCLASSES                         !## defined histogram classes
-REAL,DIMENSION(22) :: XCLASSES                         !## amount of points per defined histogram class for x-array
+REAL :: WC1,WC2                                        !## weight lower and upper class
+REAL,DIMENSION(:),POINTER :: HCLASSES                  !## (user) defined histogram classes
+REAL,DIMENSION(:),POINTER :: XCLASSES                  !## amount of points per defined histogram class for x-array
 
 END MODULE MOD_RESIDUALPLOT_PAR
