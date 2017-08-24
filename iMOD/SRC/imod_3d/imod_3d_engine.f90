@@ -4474,7 +4474,7 @@ SOLLOOP: DO I=1,NSOLLIST
   ENDIF
  ENDDO
  
- CALL WMESSAGEBOX(OKONLY,INFORMATIONICON,COMMONOK,'The fence diagrams are save in the folder:'//CHAR(13)// &
+ CALL WMESSAGEBOX(OKONLY,INFORMATIONICON,COMMONOK,'The fence diagrams are saved in the folder:'//CHAR(13)// &
   TRIM(DIR),'Information')
  
  END SUBROUTINE IMOD3D_SOL_SAVE

@@ -8,21 +8,21 @@
 //
 // Winteracter resource script. 
 //
-// Modified : 04/Jul/2017 10:32:41
+// Modified : 24/Aug/2017 15:39:33
 //
 ///////////////////////////////////////////////////
 //
 // Include files
 //
-#include "winparam.h"
+#include "..\LIB\WINTERACTER\OS_X64\include\winparam.h"
 #ifdef XLIB
-#include "..\LIB\WINTERACTER\OS_X32\include\filesel.rc"
-#include "..\LIB\WINTERACTER\OS_X32\include\colour.rc"
+#include "..\LIB\WINTERACTER\OS_X64\include\filesel.rc"
+#include "..\LIB\WINTERACTER\OS_X64\include\colour.rc"
 #endif
-#include "..\LIB\WINTERACTER\OS_X32\include\dirsel.rc"
-#include "..\LIB\WINTERACTER\OS_X32\include\editor.rc"
-#include "..\LIB\WINTERACTER\OS_X32\include\pagesetup.rc"
-#include "..\LIB\WINTERACTER\OS_X32\include\hardcopy.rc"
+#include "..\LIB\WINTERACTER\OS_X64\include\dirsel.rc"
+#include "..\LIB\WINTERACTER\OS_X64\include\editor.rc"
+#include "..\LIB\WINTERACTER\OS_X64\include\pagesetup.rc"
+#include "..\LIB\WINTERACTER\OS_X64\include\hardcopy.rc"
  
 ///////////////////////////////////////////////////
 //
@@ -3391,7 +3391,7 @@ BEGIN
     CONTROL "Symbol",IDF_LABEL2,"STATIC",WS_CHILD | WS_VISIBLE | WS_GROUP | SS_LEFT,   11,   36,   40,    8
     CONTROL "Colour ...",ID_COLOR,"BUTTON",WS_CHILD | WS_VISIBLE | WS_GROUP | WS_TABSTOP | BS_PUSHBUTTON | BS_TEXT | BS_FLAT,    9,   63,   40,   14
     CONTROL "Thickness",IDF_LABEL3,"STATIC",WS_CHILD | WS_VISIBLE | WS_GROUP | SS_LEFT,   10,   84,   40,    8
-    CONTROL "0",IDF_INTEGER1,"INTEGERSPIN",WS_CHILD | WS_VISIBLE | WS_BORDER | WS_GROUP | WS_TABSTOP | ES_LEFT | ES_CENTER | ES_MULTILINE,   53,   81,   40,   12
+    CONTROL "1",IDF_INTEGER1,"INTEGERSPIN",WS_CHILD | WS_VISIBLE | WS_BORDER | WS_GROUP | WS_TABSTOP | ES_LEFT | ES_CENTER | ES_MULTILINE,   53,   81,   40,   12
     CONTROL "Fill Polygons",IDF_CHECK1,"BUTTON",WS_CHILD | WS_VISIBLE | WS_GROUP | WS_TABSTOP | BS_AUTOCHECKBOX | BS_LEFTTEXT | BS_TEXT | BS_FLAT,   10,   98,   52,   12
     CONTROL "Legend ...",ID_LEGEND,"BUTTON",WS_CHILD | WS_VISIBLE | WS_GROUP | WS_TABSTOP | BS_PUSHBUTTON | BS_TEXT | BS_FLAT,    9,   48,   40,   14
 END
@@ -3402,7 +3402,7 @@ BEGIN
 " 1182 0 \n"
 "[Menus] \n"
 "[Ranges] \n"
-" 1194               0             100 \n"
+" 1194               1             100 \n"
 ,0
 END
 
@@ -12674,7 +12674,7 @@ ID_ICONPROPERTIES_AUTO          BITMAP DISCARDABLE "..\\BMP\\properties_AUTO.bmp
 //
 // Icons
 //
-ICON1                           ICON   DISCARDABLE "..\\ICO\\imod_logo_32x32.ICO"
+ICON1                           ICON DISCARDABLE "..\\ICO\\imod_logo_32x32.ICO"
 
 ///////////////////////////////////////////////////
 //
@@ -12830,4 +12830,4 @@ END
 //*WI* FILENAME    resource.f90
 //*WI* FMODNAME    RESOURCE
 //*WI* LASTTYPE        2
-//*WI* LASTRES        41
+//*WI* LASTRES        71
