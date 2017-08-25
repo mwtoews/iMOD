@@ -252,7 +252,7 @@ CONTAINS
  IFRAMERATE=MAX(1,IFRAMERATE)
 
  !## define executable string
- EXESTRING=TRIM(PREFVAL(29))//' -start_number 1 -framerate '//TRIM(ITOS(IFRAMERATE))//' -i "image%%03d.'//TRIM(EXT)//'" imod.avi'
+ EXESTRING='"'//TRIM(PREFVAL(29))//'" -start_number 1 -framerate '//TRIM(ITOS(IFRAMERATE))//' -i "image%%03d.'//TRIM(EXT)//'" imod.avi'
  WRITE(IU,'(A)') TRIM(EXESTRING)
  CLOSE(IU)
  

@@ -103,10 +103,10 @@ CONTAINS
  END FUNCTION WBAL_ANALYSE_SAVECONFIG
 
  !###======================================================================
- LOGICAL FUNCTION WBAL_ANALYSE_READCONFIG(IU)
+ LOGICAL FUNCTION WBAL_ANALYSE_READCONFIG(IU,IBATCH)
  !###======================================================================
  IMPLICIT NONE
- INTEGER,INTENT(IN) :: IU
+ INTEGER,INTENT(IN) :: IU,IBATCH
  INTEGER :: I,J,K,N,SY,EY,NBAL,IAG,INET,LSUM,ZSUM,IUNIT,IOPT
  CHARACTER(LEN=256) :: FNAME,DIR
  INTEGER,POINTER,DIMENSION(:) :: ITMP
@@ -125,26 +125,33 @@ CONTAINS
  DO I=1,N; BUDGET(I)%ICLR=ITMP(I); ENDDO
 
  IAG=0; IF(UTL_READINITFILE('IAG',LINE,IU,1))READ(LINE,*) IAG
- WRITE(*,'(A)') 'IAG='//TRIM(ITOS(IAG))
+ IF(IBATCH.EQ.1)WRITE(*,'(A)') 'IAG='//TRIM(ITOS(IAG))
  INET=0; IF(UTL_READINITFILE('INET',LINE,IU,1))READ(LINE,*) INET
- WRITE(*,'(A)') 'INET='//TRIM(ITOS(INET))
+ IF(IBATCH.EQ.1)WRITE(*,'(A)') 'INET='//TRIM(ITOS(INET))
  LSUM=0; IF(UTL_READINITFILE('LSUM',LINE,IU,1))READ(LINE,*) LSUM
- WRITE(*,'(A)') 'LSUM='//TRIM(ITOS(LSUM))
+ IF(IBATCH.EQ.1)WRITE(*,'(A)') 'LSUM='//TRIM(ITOS(LSUM))
  ZSUM=0; IF(UTL_READINITFILE('ZSUM',LINE,IU,1))READ(LINE,*) ZSUM
- WRITE(*,'(A)') 'ZSUM='//TRIM(ITOS(ZSUM))
+ IF(IBATCH.EQ.1)WRITE(*,'(A)') 'ZSUM='//TRIM(ITOS(ZSUM))
  IUNIT=0; IF(UTL_READINITFILE('IUNIT',LINE,IU,1))READ(LINE,*) IUNIT
- WRITE(*,'(A)') 'IUNIT='//TRIM(ITOS(IUNIT))
+ IF(IBATCH.EQ.1)WRITE(*,'(A)') 'IUNIT='//TRIM(ITOS(IUNIT))
  IOPT=0; IF(UTL_READINITFILE('IOPT',LINE,IU,1))READ(LINE,*) IOPT
- WRITE(*,'(A)') 'IOPT='//TRIM(ITOS(IOPT))
+ IF(IBATCH.EQ.1)WRITE(*,'(A)') 'IOPT='//TRIM(ITOS(IOPT))
 
  IF(.NOT.UTL_READINITFILE('DIR',LINE,IU,0))RETURN
- READ(LINE,*) DIR; WRITE(*,'(A)') 'DIR='//TRIM(DIR)
+ READ(LINE,*) DIR; IF(IBATCH.EQ.1)WRITE(*,'(A)') 'DIR='//TRIM(DIR)
 
  !## read selected zones - default none selected
  LIZONE=0; N=0; IF(.NOT.UTL_READPOINTER(IU,N,ITMP,'ZONES',1))RETURN
  DO I=1,N; 
   DO J=1,NZONE; READ(CIZONE(J),*) K; IF(K.EQ.ITMP(I))EXIT; ENDDO
-  IF(J.GT.NZONE)THEN; WRITE(*,'(A,I10,A)') 'iMOD cannot find zone ',K,' in given csv file'; STOP; ENDIF
+  IF(J.GT.NZONE)THEN
+   IF(IBATCH.EQ.0)THEN
+     WRITE(*,'(A,I10,A)') 'iMOD cannot find zone ',K,' in given csv file'
+   ELSE
+    CALL WMESSAGEBOX(OKONLY,EXCLAMATIONICON,COMMONOK,'iMOD cannot find zone '//TRIM(ITOS(K))//' in given csv file','Error')
+   ENDIF
+   RETURN
+  ENDIF
   !## turn current zone active
   LIZONE(J)=1
  ENDDO
@@ -153,7 +160,14 @@ CONTAINS
  LILAY=0; N=0; IF(.NOT.UTL_READPOINTER(IU,N,ITMP,'ZONES',1))RETURN
  DO I=1,N; 
   DO J=1,NLAY; READ(CIZONE(J),*) K; IF(K.EQ.ITMP(I))EXIT; ENDDO
-  IF(J.GT.NLAY)THEN; WRITE(*,'(A,I10,A)') 'iMOD cannot find layer ',K,' in given csv file'; STOP; ENDIF
+  IF(J.GT.NLAY)THEN
+   IF(IBATCH.EQ.0)THEN
+    WRITE(*,'(A,I10,A)') 'iMOD cannot find layer ',K,' in given csv file'
+   ELSE
+    CALL WMESSAGEBOX(OKONLY,EXCLAMATIONICON,COMMONOK,'iMOD cannot find layer '//TRIM(ITOS(K))//' in given csv file','Error')
+   ENDIF
+   RETURN
+  ENDIF
   !## turn current zone active
   LILAY(J)=1
  ENDDO
@@ -162,7 +176,14 @@ CONTAINS
  LIDATE=0; N=0; IF(.NOT.UTL_READPOINTER(IU,N,ITMP,'ZONES',1))RETURN
  DO I=1,N; 
   DO J=1,NDATE; READ(CIZONE(J),*) K; IF(K.EQ.ITMP(I))EXIT; ENDDO
-  IF(J.GT.NDATE)THEN; WRITE(*,'(A,I10,A)') 'iMOD cannot find date ',K,' in given csv file'; STOP; ENDIF
+  IF(J.GT.NDATE)THEN
+   IF(IBATCH.EQ.0)THEN
+    WRITE(*,'(A,I10,A)') 'iMOD cannot find date ',K,' in given csv file'
+   ELSE
+    CALL WMESSAGEBOX(OKONLY,EXCLAMATIONICON,COMMONOK,'iMOD cannot find date '//TRIM(ITOS(K))//' in given csv file','Error')
+   ENDIF
+   RETURN
+  ENDIF
   !## turn current zone active
   LIDATE(J)=1
  ENDDO

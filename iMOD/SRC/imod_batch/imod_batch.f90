@@ -5237,7 +5237,7 @@ CONTAINS
   !## read the file - stop if there is a problem - fill in the dialog (in the back)
   CALL WBAL_ANALYSE_INIT(FNAME,1)
  
-  IF(WBAL_ANALYSE_READCONFIG(IU))THEN
+  IF(WBAL_ANALYSE_READCONFIG(IU,1))THEN
    CALL UTL_CREATEDIR(DIR)
    CALL WBAL_ANALYSE_PLOT(ID_GRAPHICS)
   ENDIF

@@ -94,7 +94,10 @@ CONTAINS
         TRIM(FNAME),'Error')
       RETURN
      ENDIF
-     IF(WBAL_ANALYSE_READCONFIG(IU))THEN; ENDIF
+     IF(WBAL_ANALYSE_READCONFIG(IU,0))THEN
+      CALL WMESSAGEBOX(OKONLY,EXCLAMATIONICON,COMMONOK,'iMOD cannot READ the file called:'//CHAR(13)//&
+        TRIM(FNAME)//CHAR(13)//'correctly','Error')
+     ENDIF
      CLOSE(IU)
      
     !## open csv
