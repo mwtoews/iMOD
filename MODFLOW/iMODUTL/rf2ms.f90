@@ -416,7 +416,6 @@ CONTAINS
  IF(IGWMP.GT.0)CLOSE(IGWMP)
  IF(IMODSIM.GT.0)CLOSE(IMODSIM)
  IF(IINFI.GT.0)CLOSE(IINFI)
- IF(IIDF.GT.0) CLOSE(IIDF,status='delete') !DEBUG !
  IF(IUSCL.GT.0)CLOSE(IUSCL)
 
  CALL IMOD_UTL_PRINTTEXT('Copying input files metaswap ...',0)
@@ -851,7 +850,6 @@ END SUBROUTINE
  IR1  = MAX(1,IR1); IR2  = MIN(IR2,NROW)
  SNCOL=(IC2-IC1)+1; SNROW=(IR2-IR1)+1
 
- if(.false.)then ! DEBUG
  WRITE(JU,'(A)') '*'
  WRITE(JU,'(A)') '*  Parameters for IDF output'
  WRITE(JU,'(A)') '*'
@@ -870,7 +868,6 @@ END SUBROUTINE
  WRITE(JU,'(A)') TRIM(LINE)
  LINE='      idf_nodata              =      '//TRIM(IMOD_UTL_RTOS(-9999.99,'F',2))
  WRITE(JU,'(A)') TRIM(LINE)
-end if ! DEBUG
  CLOSE(JU)
 
  END SUBROUTINE METASWAP_PARASIM
