@@ -680,22 +680,24 @@ CONTAINS
  !###======================================================================
  IMPLICIT NONE
  INTEGER,INTENT(IN) :: ID
- INTEGER :: IOPT,IG,I1,I2,N
+ INTEGER :: IOPT,IG,I1,I2,N,IUNIT
  CHARACTER(LEN=256) :: DIR
-
+ LOGICAL :: LSUM
+ 
  !## get option from the window to determine what to do
  CALL WDIALOGSELECT(ID_DWBAL_ANALYSE_TAB4)
  !## output type
  CALL WDIALOGGETRADIOBUTTON(IDF_RADIO1,IOPT)
 
  !## get the appropriate selection
- IF(.NOT.WBAL_ANAYSE_PREPARE(IOPT))RETURN
+ IF(.NOT.WBAL_ANAYSE_PREPARE(IOPT,IUNIT,LSUM))RETURN
 
  SELECT CASE (IOPT)
   !## timeseries
   CASE (1)
    !## in graph plot optie maken om de bmp te saven en terug te keren - loopn of graphnames() met name
-   CALL GRAPH_PLOT('Time','Volumes (m3/d)',.FALSE.)
+   IF(IUNIT.EQ.1)CALL GRAPH_PLOT('Time','Volumes (m3/d)',.FALSE.)
+   IF(IUNIT.EQ.2)CALL GRAPH_PLOT('Time','Quantity (mm/d)',.FALSE.)
 
   !## graph
   CASE (2)
@@ -712,7 +714,7 @@ CONTAINS
    CALL WDIALOGGETCHECKBOX(IDF_CHECK2,I2)
    DO IG=1,SIZE(GRAPHNAMES)
     !## id is for preview or save
-    CALL WBAL_ANALYSE_PLOTIMAGE(ID,IG,I1,I2,DIR)
+    CALL WBAL_ANALYSE_PLOTIMAGE(ID,IG,I1,I2,DIR,IUNIT,LSUM)
    ENDDO
   !## table
   CASE (3)
@@ -736,12 +738,14 @@ CONTAINS
  END SUBROUTINE WBAL_ANALYSE_PLOT
 
  !###======================================================================
- LOGICAL FUNCTION WBAL_ANAYSE_PREPARE(IOPT) 
+ LOGICAL FUNCTION WBAL_ANAYSE_PREPARE(IOPT,IUNIT,LLSUM) 
  !###======================================================================
  IMPLICIT NONE
  INTEGER,INTENT(IN) :: IOPT
+ INTEGER,INTENT(OUT) :: IUNIT
+ LOGICAL,INTENT(OUT) :: LLSUM
  INTEGER :: I,J,K,IL,IZ,ID,IG,IQIN,IQOU,JQIN,JQOU,IQ,IIQ,JQ,IOS,IDATE,ITTYPE,IHIT, &
-     IAG,NXG,IY1,IM1,ID1,IY2,IM2,ID2,IPOS,SDATE,IB,LSUM,ZSUM,N,INET,IUNIT,NUQ,PQ
+     IAG,NXG,IY1,IM1,ID1,IY2,IM2,ID2,IPOS,SDATE,IB,LSUM,ZSUM,N,INET,NUQ,PQ
  REAL,POINTER,DIMENSION(:) :: DT
  CHARACTER(LEN=16),POINTER,DIMENSION(:) :: XTXT=>NULL()
  CHARACTER(LEN=16) :: TXTL,TXTZ
@@ -776,6 +780,8 @@ CONTAINS
  CALL WDIALOGGETMENU(IDF_MENU2,LIZONE)
  !## sum zones
  CALL WDIALOGGETRADIOBUTTON(IDF_RADIO1,ZSUM); ZSUM=ZSUM-1
+ !## zones are summed
+ LLSUM=.FALSE.; IF(ZSUM.EQ.1)LLSUM=.TRUE.
  !## check whether selectable
  IAG=0; IF(WINFODIALOGFIELD(IDF_RADIO5,FIELDSTATE).EQ.1)CALL WDIALOGGETRADIOBUTTON(IDF_RADIO5,IAG)
  !## apply net fluxes
@@ -1600,7 +1606,7 @@ CONTAINS
  SUBROUTINE WBAL_ANALYSE_TABLE_FILL()
  !###======================================================================
  IMPLICIT NONE
- INTEGER :: I,J,IG,N
+ INTEGER :: I,IG,N
  
  CALL WDIALOGSELECT(ID_DWBAL_ANALYSE_TAB5)
  CALL WDIALOGGETMENU(IDF_MENU1,IG)
@@ -1746,19 +1752,24 @@ CONTAINS
  END FUNCTION WBAL_ANALYSE_EXPORTIDF
   
  !###======================================================================
- SUBROUTINE WBAL_ANALYSE_PLOTIMAGE(ID,IG,IP1,IP2,DIR)
+ SUBROUTINE WBAL_ANALYSE_PLOTIMAGE(ID,IG,IP1,IP2,DIR,IUNIT,LSUM)
  !###======================================================================
  IMPLICIT NONE
  INTEGER,PARAMETER :: NXPIX=1000, NYPIX=1200 !## resolution dx,dy
  INTEGER,PARAMETER :: NFLX=24  !## number of zones in current csv file
  CHARACTER(LEN=*),INTENT(IN) :: DIR
- INTEGER,INTENT(IN) :: ID,IG,IP1,IP2
+ INTEGER,INTENT(IN) :: ID,IG,IP1,IP2,IUNIT
+ LOGICAL,INTENT(IN) :: LSUM
  REAL,DIMENSION(NFLX,2) :: Q
  CHARACTER(LEN=10),DIMENSION(NFLX) :: QTXT
  REAL,PARAMETER :: CS=0.009 !## charactersize
  CHARACTER(LEN=256) :: PNGNAME
  LOGICAL :: LOCAL,LPERC
  INTEGER :: IOS,I,II,J,IBITMAP,IWINDOW,I1,I2,IB,IT,NCF,IZ
+
+ CHARACTER(LEN=4) :: STRUNIT
+ INTEGER :: SUMNR
+
  DATA QTXT/'Q-drn   ','Q-olf   ','Q-riv   ','Q-ghb   ','Q-isg   ', &
            'Q-wel   ','Q-reg   ','Q-cnh   ','Q-ftf   ','Q-flf   ', &
            'Q-rch   ','Q-evt   ','Q-cap   ','Q-etact ','Q-pm    ', &
@@ -1858,10 +1869,26 @@ CONTAINS
   LOCAL=.FALSE.; IF(IP1.EQ.1)LOCAL=.TRUE.
    !## percentiles
   LPERC=.FALSE.; IF(IP2.EQ.1)LPERC=.TRUE.
- 
-  IF(.NOT.DRAWBAL(Q,QTXT,NXPIX,NYPIX,CS,IPOL,SIZE(LIZONE),QSUBREGIO,LPERC,CLRIZONE,IPLG,IDFP,LOCAL,'GRAPHTITLE',IBITMAP))THEN
+  
+  IF(LPERC)THEN
+   STRUNIT='%   '
+  ELSE
+   IF(IUNIT.EQ.1)THEN
+    STRUNIT='m3/d'
+   ELSE
+    STRUNIT='mm/d'
+   ENDIF
+  ENDIF
+  !## polygon number
+  SUMNR=IPLG(IPOL(IG))
+  
+  IF(.NOT.DRAWBAL(Q,QTXT,NXPIX,NYPIX,CS,IPOL,SIZE(LIZONE),QSUBREGIO,LPERC,CLRIZONE,IPLG,IDFP,LOCAL,'GRAPHTITLE',IBITMAP,LSUM,STRUNIT,SUMNR))THEN
    CALL WBAL_ANALYSE_PLOTIMAGE_CLOSE(); RETURN
   ENDIF
+
+!Bv logal sum=. True.     En SUMNR=0 dan tel ik alles op (0 is de wildcard voor alle nummers)
+!Bv logal sum=. False.   En SUMNR=i, is het feitelijke polygoonnummer (1,2,3,4 maar kan ook 0 zijn)
+!Ik kan dan het juiste polygoon kleuren en het oppervl; berekenen
 
   !## display image in viewer
   IF(ID.EQ.ID_PREVIEW)THEN
