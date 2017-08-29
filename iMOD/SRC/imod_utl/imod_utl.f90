@@ -2711,10 +2711,10 @@ CONTAINS
  END SUBROUTINE UTL_HIDESHOWDIALOG
 
  !###======================================================================
- SUBROUTINE UTL_IDFGETLAYERS(IDFNAME,N,ILAY) !,LDIM)
+ SUBROUTINE UTL_IDFGETLAYERS(IDFNAME,N,ILAY) 
  !###======================================================================
  IMPLICIT NONE
- INTEGER,INTENT(IN) :: N !,LDIM
+ INTEGER,INTENT(IN) :: N
  CHARACTER(LEN=*),DIMENSION(N) :: IDFNAME
  INTEGER :: I,J,K,IL,IOS
  INTEGER,DIMENSION(:) :: ILAY
