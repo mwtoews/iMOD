@@ -761,10 +761,11 @@ CONTAINS
   IF(SUM(TLP).GT.0.0)THEN
    ZT=ZT/SUM(TLP); TLP=ZT*TLP
   ENDIF
-  !## normalize tlp() again
-  IF(SUM(TLP).GT.0.0)TLP=(1.0/SUM(TLP))*TLP
  ENDIF
  
+ !## normalize tlp() again
+ IF(SUM(TLP).GT.0.0)TLP=(1.0/SUM(TLP))*TLP
+  
  !## make sure only one layer is assigned whenever z1.eq.z2
  IF(IDIFF.EQ.1)THEN
   K=0; ZT=0.0; DO ILAY=1,N
@@ -778,11 +779,7 @@ CONTAINS
    IF(ZT.LT.0.0)TLP(K)=-1.0*TLP(K)
   ENDIF
  ENDIF
- 
- IF(SUM(TLP).NE.SUM(TLP))THEN
- WRITE(*,*)
- ENDIF
- 
+  
  !## nothing in model, whenever system on top of model, put them in first modellayer with thickness
  IF(SUM(TLP).EQ.0.0)THEN
   IF(Z1.GE.TOP(1))THEN

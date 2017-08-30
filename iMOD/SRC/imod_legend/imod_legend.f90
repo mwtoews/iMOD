@@ -641,7 +641,7 @@ CONTAINS
  GRAPH(1,1)%LEGTXT='Frequency'
  GRAPH(1,1)%ICLR=WRGB(56,180,176)
  !## display graph
- CALL GRAPH_PLOT('Class','Frequency (%)',.FALSE.)
+ CALL GRAPH_PLOT('Class','Frequency (%)',.FALSE.,.FALSE.)
  
  CALL GRAPH_DEALLOCATE()
 

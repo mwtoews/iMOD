@@ -344,7 +344,7 @@ CONTAINS
      CASE (ID_GRAPH)
       CALL INFOSTAT_PERC(IU,LINE,0)
       !## display graph
-      CALL GRAPH_PLOT('Percentile','Values (-)',.FALSE.)
+      CALL GRAPH_PLOT('Percentile','Values (-)',.FALSE.,.FALSE.)
      CASE (IDHELP)
        CALL IMODGETHELP('3.4.3','MMO.MapInfo')
      CASE (IDCANCEL)
