@@ -155,8 +155,8 @@ contains
     do while(.true.) 
        read(iu,'(a)',iostat=ios) s  
        if (ios.ne.0) exit
-       if(len_trim(s).eq.0) continue
-       if(s(1:1).eq.'#') continue
+       if(len_trim(s).eq.0) cycle
+       if(s(1:1).eq.'#') cycle
        fp0 = s
        ip0 = index(fp0,'_p000',back=.true.)
        if(ip0.le.0) call imod_utl_printtext('Error reading '//trim(fp0),2)
@@ -182,9 +182,14 @@ contains
     do while(.true.) 
        read(iu,'(a)',iostat=ios) s  
        if (ios.ne.0) exit
-       if(len_trim(s).eq.0) continue
-       if(s(1:1).eq.'#') continue
+       if(len_trim(s).eq.0) cycle
+       if(s(1:1).eq.'#') cycle
        fp0 = s
+       inquire(file=fp0,exist=lex)
+       if (.not.lex) then
+          call imod_utl_printtext(' Warning, could not find '//trim(fp0),0)
+          cycle
+       end if
        ip0 = index(fp0,'_p000',back=.true.)
        if(ip0.le.0) call imod_utl_printtext('Error reading '//trim(fp0),2)
        
