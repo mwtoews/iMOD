@@ -38,6 +38,81 @@ INTEGER,PRIVATE :: NPER,ISS
 CONTAINS
 
  !###====================================================================
+ SUBROUTINE IMPORT_MF2005_MAIN(MFFNAME,METFNAME)
+ !###====================================================================
+ IMPLICIT NONE
+ CHARACTER(LEN=*),INTENT(IN) :: MFFNAME,METFNAME
+ CHARACTER(LEN=3) :: EXT
+ INTEGER :: IU,IOS,I
+ 
+! IU=UTL_GETUNIT()
+! CALL OSD_OPEN(IU,FILE=METFNAME,STATUS='OLD',ACTION='READ',IOSTAT=IOS)
+! IF(IOS.NE.0)THEN; WRITE(*,'(/A)') 'iMOD cannot open file:'//TRIM(METFNAME); STOP; ENDIF
+ 
+! READ(IU,*) LINE
+! LINE=UTL_CAP
+! coord_xll 120000.0
+!coord_yll 298000.0
+
+! CLOSE(IU)
+ 
+ IU=UTL_GETUNIT()
+ CALL OSD_OPEN(IU,FILE=MFFNAME,STATUS='OLD',ACTION='READ',IOSTAT=IOS)
+ IF(IOS.NE.0)THEN; WRITE(*,'(/A)') 'iMOD cannot open file:'//TRIM(MFFNAME); STOP; ENDIF
+ 
+ !## get type of file
+ I=INDEX(MFFNAME,'.',.TRUE.); READ(MFFNAME(I+1:),*) EXT; EXT=UTL_CAP(EXT,'U')
+ SELECT CASE (EXT)
+  CASE ('WEL') 
+   CALL IMPORT_MF2005_WEL(IU)
+ END SELECT
+ 
+ END SUBROUTINE IMPORT_MF2005_MAIN
+ 
+ !###====================================================================
+ SUBROUTINE IMPORT_MF2005_WEL(IU)
+ !###====================================================================
+ IMPLICIT NONE
+ INTEGER,INTENT(IN) :: IU
+ INTEGER :: I,J,IL,IR,IC,IS,MS,N,IT,JU,IOS
+ REAL :: QQ
+ REAL,ALLOCATABLE,DIMENSION(:,:) :: Q
+ CHARACTER(LEN=256) :: LINE,FNAME
+ 
+ DO I=1,2
+  MS=0; IT=0; READ(IU,*) N
+  DO
+   READ(IU,*,IOSTAT=IOS) N
+   IF(IOS.NE.0)EXIT
+   IT=IT+1
+   READ(IU,'(A256)') LINE; LINE=UTL_CAP(LINE,'U')
+   JU=IU
+   IF(INDEX(LINE,'OPEN/CLOSE').GT.0)THEN
+    READ(LINE(11:),*) FNAME
+    JU=UTL_GETUNIT()
+    CALL OSD_OPEN(JU,FILE=FNAME,STATUS='OLD',ACTION='READ',IOSTAT=IOS)
+    IF(IOS.NE.0)THEN; WRITE(*,'(/A)') 'iMOD cannot open file:'//TRIM(FNAME); STOP; ENDIF
+   ENDIF
+   DO J=1,N
+    READ(JU,*) IL,IR,IC,QQ,IS
+    IF(I.EQ.1)MS=MAX(MS,IS)
+    IF(I.EQ.2)Q(IS,IT)=Q(IS,IT)+QQ
+   ENDDO
+   IF(JU.NE.IU)CLOSE(JU)
+  ENDDO
+  IF(I.EQ.1)THEN; ALLOCATE(Q(MS,IT)); Q=0.0; REWIND(IU); ENDIF 
+ ENDDO
+ 
+ DO I=1,IT
+  WRITE(*,'(I10,99F17.5)') I,(Q(J,I),J=1,MS)
+ ENDDO
+ WRITE(*,'(10X,99F17.5)') (SUM(Q(J,1:IT)),J=1,MS)
+
+ DEALLOCATE(Q)
+ 
+ END SUBROUTINE IMPORT_MF2005_WEL
+
+ !###====================================================================
  LOGICAL FUNCTION IMPORT_CALC()
  !###====================================================================
  IMPLICIT NONE
