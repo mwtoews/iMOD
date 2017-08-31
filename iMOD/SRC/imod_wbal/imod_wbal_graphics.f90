@@ -32,22 +32,22 @@ CONTAINS
       REAL,DIMENSION(24,2),INTENT(INOUT) :: Q
       CHARACTER(LEN=*),DIMENSION(24),INTENT(INOUT) :: QTXT
       CHARACTER(LEN=*),INTENT(IN) :: GRAPHTITLE
-      INTEGER,INTENT(IN) :: NPOL
-      INTEGER,INTENT(IN),DIMENSION(:) :: IIPOL
-      CHARACTER(LEN=*),INTENT(IN) :: STRUNIT
-      INTEGER,INTENT(IN) :: SUMNR
-      LOGICAL,INTENT(IN) :: LSUM
-
+      INTEGER, INTENT(IN) :: NPOL,SUMNR
+      INTEGER, INTENT(IN),DIMENSION(:) :: IIPOL
       REAL,DIMENSION(4) :: XR,YR
-      CHARACTER(LEN=256) :: REGNAME
+      CHARACTER(LEN=256) :: STR,REGNAME
       CHARACTER(LEN=10) :: STRDUM
+      CHARACTER(LEN=8) :: FMT
       INTEGER :: NXPIX,NYPIX,IPLOT,IUNSATURATED,ISATURATED,IBL1,IGR1,IRD1,IBL2,IGR2,IRD2,&
-                 II,JJ,JPOL,I,J,IPOL,JDUM,IPOS,IFIT,JFIT,IXPIX,IYPIX
+                 II,JJ,JPOL,I,J,K,IW,IWMAX,JW,JWMAX,IPOL,JDUM,IPOS,IFIT,JFIT,IXPIX,IYPIX
       REAL :: XPOS1,XPOS2,YPOS,XPIX,YPIX
       REAL :: SUMIN,SUMOUT,AREA,CS,B,H
       REAL :: DW,DH,DY,DX
-      LOGICAL :: LOCAL,PERC
+      LOGICAL :: LOCAL,LSUM,PERC
+      CHARACTER(LEN=*),INTENT(IN) :: STRUNIT
+       
       TYPE (IDFOBJ),INTENT(IN) :: IDF
+
 
       DRAWBAL=.FALSE.
       B=10000
@@ -57,7 +57,7 @@ CONTAINS
       DY=0.05
       SUMIN  =SUM(Q(1:24,1))
       SUMOUT =SUM(Q(1:24,2))
-      IF(PERC) THEN
+      IF(INDEX(STRUNIT,'%').NE.0) THEN
 !        CALCULATE RELATIVE FLOWS IN %
          Q(:,1)=Q(:,1)/SUMIN*100      	
          Q(:,2)=Q(:,2)/SUMIN*100      	
@@ -120,7 +120,6 @@ CONTAINS
             CALL IGRFILLPATTERN(0,0,0)
             CALL IGRCOLOURN(WRGB(  0,155,  0))
             CALL IGRRECTANGLE((0.2-dx)*B,0.78*H,(0.8+dx)*B,0.82*H)
-            WRITE(2000,*) 'SDL TOP'
          ENDIF
          IF(Q(10,1).NE.0.OR.Q(10,2).NE.0) THEN
             CALL IGRFILLPATTERN(4,4,4)
@@ -129,7 +128,6 @@ CONTAINS
             CALL IGRFILLPATTERN(0,0,0)
             CALL IGRCOLOURN(WRGB(  0,155,  0))
             CALL IGRRECTANGLE((0.2-dx)*B,0.18*H,(0.8+dx)*B,0.22*H)
-            WRITE(2000,*) 'SDL BOT'
          ENDIF
       ENDIF
       CALL CSIZE(CS,DW,DH,IPLOT)
@@ -150,15 +148,24 @@ CONTAINS
 
 !     DETERMINE THE NAME OF THE SINGLE OR SUMMED REGIO(S)
       II=0; REGNAME=' '
-      DO J=1,SIZE(IIPOL)
-         WRITE(STRDUM(1:7),'(I7)') IPLG(IIPOL(J))
+      IF(LSUM) THEN
+         DO J=1,SIZE(IIPOL)
+            WRITE(STRDUM(1:7),'(I7)') IPLG(IIPOL(J))
+            DO JJ=1,7
+               IF(STRDUM(JJ:JJ).EQ.' ') IPOS=JJ+1
+            ENDDO
+            WRITE(REGNAME(II+1:II+7-IPOS+2),'(A,A))') STRDUM(IPOS:7),','
+            II=II+7-IPOS+2
+         ENDDO
+         II=LEN_TRIM(REGNAME); REGNAME(II:II)=' '
+      ELSE
+         WRITE(STRDUM(1:7),'(I7)') SUMNR
          DO JJ=1,7
             IF(STRDUM(JJ:JJ).EQ.' ') IPOS=JJ+1
          ENDDO
-         WRITE(REGNAME(II+1:II+7-IPOS+2),'(A)') STRDUM(IPOS:7)//','
-         II=II+7-IPOS+2
-      ENDDO
-      II=LEN_TRIM(REGNAME); REGNAME(II:II)=' '
+         WRITE(REGNAME(II+1:II+7-IPOS+2),'(A,A))') STRDUM(IPOS:7),','
+         II=LEN_TRIM(REGNAME); REGNAME(II:II)=' '
+      ENDIF
 
 
       II=0; JJ=0
@@ -177,7 +184,7 @@ CONTAINS
            ENDDO                                             
 
 !          plotting subregio text.....
-           CALL PLOTSUBREGIO(II,JJ,-QSUBREGIO(JPOL,2),-QSUBREGIO(JPOL,1),REGNAME,JPOL,NPOL,ICOLPLG,IPLG,DH,B,H,IFIT)
+           CALL PLOTSUBREGIO(II,JJ,-QSUBREGIO(JPOL,2),-QSUBREGIO(JPOL,1),REGNAME,IPOL,JPOL,NPOL,ICOLPLG,IPLG,DH,B,H,IFIT)
 
 !          TESTING.....CALCULATE WIDTH of PLOTTED TEXT STARTING AT POSITION X=0.13*B, Y=0.65*H-(II-0.5)*DH, UNTIL THE CENTRE....NXPIX/2
 !          left side of plot, calculating width of box
@@ -237,7 +244,7 @@ CONTAINS
       CALL PLOTDRAIN(Q(20,1),Q(20,2), 0.25,0.50,0.01,QTXT(20),B,H)           ! PLOT METASWPA QSPGW
       CALL VTERM2(Q(24,1),Q(24,2),0.48,0.50,0.00,    QTXT(24),B,H,0,0)       ! PLOT METASWAP QMODF
 
-      CALL PLOTIDF(IIPOL,NPOL,IPLG,ICOLPLG,IPLOT,LOCAL,AREA,IDF)
+      CALL PLOTIDF(IIPOL,NPOL,IPLG,ICOLPLG,IPLOT,LOCAL,AREA,IDF,LSUM,SUMNR)
 
       CALL IGRAREA(0.0,0.0,1.0,1.0)
       CALL IGRUNITS(0.0,0.0,1.0,1.0)
@@ -249,15 +256,9 @@ CONTAINS
      
       CALL WGRTEXTSTRING(0.15,0.03+4.5*DH,'WATERBALANCE REGION    '//TRIM(REGNAME)) 
       CALL OUTVALUE(0.15,0.03+3.5*DH,AREA/10000.0,          'AREA             HA   ')
-      IF(PERC) THEN
-         CALL OUTVALUE(0.15,0.03+2.5*DH,SUMIN ,        'TOTAL SUM IN     %    ')
-         CALL OUTVALUE(0.15,0.03+1.5*DH,SUMOUT,        'TOTAL SUM OUT    %    ')
-         CALL OUTVALUE(0.15,0.03+0.5*DH,SUMOUT+SUMIN,  'TOTAL SUM OUT+IN %    ')
-      ELSE
-         CALL OUTVALUE(0.15,0.03+2.5*DH,SUMIN ,        'TOTAL SUM IN     M3/D ')
-         CALL OUTVALUE(0.15,0.03+1.5*DH,SUMOUT,        'TOTAL SUM OUT    M3/D ')
-         CALL OUTVALUE(0.15,0.03+0.5*DH,SUMOUT+SUMIN,  'TOTAL SUM OUT+IN M3/D ')
-      ENDIF
+      CALL OUTVALUE(0.15,0.03+2.5*DH,SUMIN ,        'TOTAL SUM IN     '//STRUNIT)
+      CALL OUTVALUE(0.15,0.03+1.5*DH,SUMOUT,        'TOTAL SUM OUT    '//STRUNIT)
+      CALL OUTVALUE(0.15,0.03+0.5*DH,SUMOUT+SUMIN,  'TOTAL SUM OUT+IN '//STRUNIT)
       CALL CSIZE(1.5*CS,DW,DH,IPLOT)
       CALL WGRTEXTFONT(102,1,DW,DH)
       CALL WGRTEXTORIENTATION(1,0.0,0)
@@ -273,7 +274,10 @@ CONTAINS
       !ENDIF
       !CALL WBITMAPDESTROY(IPLOT)
       DRAWBAL=.TRUE.
-      call igrsaveimage('illustratieve_plot.png')
+
+!      WRITE(STR(1:3),'(I3.3)') SUMNR
+!      call igrsaveimage('\illustratieve_plot'//STR(1:3)//'.png')
+
       END FUNCTION DRAWBAL
 
 !###====================================================================
@@ -299,6 +303,7 @@ CONTAINS
       CHARACTER(LEN=*),INTENT(INOUT) :: QTXT
       REAL,INTENT(IN) :: B,H,FX,FY,P,QIN,QUIT
       REAL :: XDRN,YDRN
+      INTEGER :: IPLOT,ILEN
       
       CALL IGRLINEWIDTH(1)
       CALL IGRFILLPATTERN(0,0,0)
@@ -336,6 +341,7 @@ CONTAINS
       REAL,INTENT(IN) :: QIN,QUIT,B,H,F
       CHARACTER(LEN=*),INTENT(INOUT) :: QTXT
       REAL :: X,Y
+      INTEGER :: IPLOT,ILEN
       
       IF(QIN.NE.0.OR.QUIT.NE.0) THEN
       	 X=0.33*B
@@ -364,6 +370,7 @@ CONTAINS
       INTEGER,INTENT(IN) :: ICOL
       CHARACTER(LEN=*),INTENT(INOUT) :: QTXT                                                                                    
       REAL :: XTRAP1,YTRAP1,XTRAP2,YTRAP2,XL1,XL2
+      INTEGER :: IPLOT
 
       IF(QIN.NE.0.OR.QUIT.NE.0) THEN                                                                        
 !        PLOT RIVER                                                                                         
@@ -398,6 +405,7 @@ CONTAINS
       REAL,INTENT(IN) :: QIN,QUIT,B,H,F
       CHARACTER(LEN=*),INTENT(INOUT) :: QTXT
       REAL :: XWEL
+      INTEGER :: IPLOT
 
       IF(QIN.NE.0.OR.QUIT.NE.0) THEN
 !        PLOT WEL
@@ -430,6 +438,7 @@ CONTAINS
       IMPLICIT NONE
       REAL,INTENT(IN) :: QIN,QUIT,B,H,F
       CHARACTER(LEN=*),INTENT(INOUT) :: QTXT
+      INTEGER :: IPLOT
       
       IF(QIN.NE.0)  CALL ARROWTEXT(0.1*B,F*H,0.2*B,F*H,&
                                    0.1*B,(F+0.025)*H,&
@@ -448,6 +457,7 @@ CONTAINS
       REAL,INTENT(IN) :: QIN,QUIT,B,H,FX1,FX2,FY
       CHARACTER(LEN=*),INTENT(INOUT) ::  QTXT                                          
       INTEGER,INTENT(IN) :: IPOS,ITOP
+      INTEGER :: IPLOT
       
       IF(ITOP.EQ.1) THEN
          IF(IPOS.EQ.2) THEN
@@ -606,15 +616,17 @@ CONTAINS
       END SUBROUTINE LASTCHAR
 
 !###====================================================================
-      SUBROUTINE PLOTSUBREGIO(II,JJ,QIN,QUIT,REGNAME,JPOL,NPOL,ICOLPLG,IPLG,DH,B,H,IFIT)
+      SUBROUTINE PLOTSUBREGIO(II,JJ,QIN,QUIT,REGNAME,IPOL,JPOL,NPOL,ICOLPLG,IPLG,DH,B,H,ifit)
 !###====================================================================
       IMPLICIT NONE
       INTEGER,INTENT(IN),DIMENSION(NPOL) :: ICOLPLG,IPLG
-      INTEGER,INTENT(IN) :: JPOL,NPOL
+      INTEGER,INTENT(IN) :: JPOL,IPOL,NPOL
       REAL,INTENT(IN) :: QIN,QUIT,B,H,DH
-      INTEGER :: J,II,JJ,IPOS,ILEN,IFIT
+      REAL :: DX,DY
+      INTEGER :: I,J,II,JJ,IPOS,ILEN,IFIT
       CHARACTER(LEN=256) STR
       CHARACTER(LEN=10) STRDUM
+      CHARACTER(LEN=8) :: FMT
       CHARACTER(LEN=256) :: REGNAME
 
       STR=' '; STRDUM=' '; IPOS=1; WRITE(STRDUM(1:7),'(I7)') IPLG(JPOL)
@@ -675,18 +687,19 @@ CONTAINS
       END SUBROUTINE PLOTSUBREGIO
 
 !###====================================================================
-      SUBROUTINE PLOTIDF(IIPOL,NPOL,IPLG,ICOLPLG,IPLOT,LOCAL,AREA,IDF)
+      SUBROUTINE PLOTIDF(IIPOL,NPOL,IPLG,ICOLPLG,IPLOT,LOCAL,AREA,IDF,LSUM,SUMNR)
 !###====================================================================
       IMPLICIT NONE
       INTEGER,INTENT(IN),DIMENSION(:) :: IIPOL
       REAL,INTENT(OUT) :: AREA
       INTEGER,DIMENSION(NPOL),INTENT(IN) :: IPLG,ICOLPLG
-      INTEGER,INTENT(IN) :: IPLOT
+      INTEGER,INTENT(IN) :: IPLOT,SUMNR
       TYPE (IDFOBJ),INTENT(IN) :: IDF
-      INTEGER :: I,J,IPOL,KPOL,NPOL,K,II,ISEL
-      REAL :: X1PLOT,X0PLOT,Y1PLOT,Y0PLOT
-      REAL :: FAREAX1,FAREAX2,FAREAY1,FAREAY2
-      LOGICAL :: LOCAL 
+      INTEGER :: IREGULAR,IREC,I,J,IPOL,KPOL,NCOL,NROW,NPOL,K,II,ISEL
+      INTEGER :: IR,IG,IB
+      REAL :: X1PLOT,X0PLOT,Y1PLOT,Y0PLOT,X,Y,VALUE,VALUEBUUR,X0,X1,Y0,Y1
+      REAL :: FAREAX1,FAREAX2,FAREAY1,FAREAY2,DX,DY,DXWIN,DYWIN
+      LOGICAL :: LOCAL,LSUM
 
 !     PLOT REGIONS
       FAREAX1=0.68
@@ -750,19 +763,31 @@ CONTAINS
 !     PLOT THE DIFFERENT REGIONS IN DIFFERENT COLORS
       DO J=1,IDF%NROW
        DO I=1,IDF%NCOL
-          DO II=1,SIZE(IIPOL)
-             IPOL=IIPOL(II)
-             IF(ABS(NINT(IDF%X(I,J))).EQ.IPLG(IPOL)) THEN
+          IF(LSUM) THEN
+            DO II=1,SIZE(IIPOL)
+               IPOL=IIPOL(II)
+               IF(ABS(NINT(IDF%X(I,J))).EQ.IPLG(IPOL)) THEN
+                  AREA=AREA+(IDF%SX(I)-IDF%SX(I-1))*(IDF%SY(J-1)-IDF%SY(J))
+               ENDIF
+            ENDDO
+          ELSE
+             IF(ABS(NINT(IDF%X(I,J))).EQ.SUMNR) THEN
                 AREA=AREA+(IDF%SX(I)-IDF%SX(I-1))*(IDF%SY(J-1)-IDF%SY(J))
              ENDIF
-          ENDDO
+          ENDIF
           ISEL=0
-          DO K=1,SIZE(IIPOL)
-              KPOL=IIPOL(K)
-              IF(ABS(NINT(IDF%X(I,J))).EQ.IPLG(KPOL)) THEN
-              	ISEL=1
-              ENDIF
-          ENDDO
+          IF(LSUM) THEN
+             DO K=1,SIZE(IIPOL)
+                 KPOL=IIPOL(K)
+                 IF(ABS(NINT(IDF%X(I,J))).EQ.IPLG(KPOL)) THEN
+                 	ISEL=1
+                 ENDIF
+             ENDDO
+          ELSE
+             IF(ABS(NINT(IDF%X(I,J))).EQ.SUMNR) THEN
+             	ISEL=1
+             ENDIF
+          ENDIF
 
           IF(ISEL.EQ.1) THEN
              CALL IGRCOLOURN(WRGB(255,125,0))
