@@ -79,6 +79,7 @@ CONTAINS
      END SELECT
     CASE (RESIZE,EXPOSE)
      !## refresh graph
+     NG=1; IF(SIZE(GRAPHNAMES).GT.1)CALL WDIALOGGETMENU(IDF_MENU1,NG)
      CALL GRAPH_DRAW(IBITMAP,NG,NG,XTXT,YTXT,LDATE,.FALSE.,LEXPORT)
    END SELECT
   END DO
@@ -312,7 +313,7 @@ CONTAINS
  
  DO I=SIZE(GRAPH,1),1,-1
 
-  !## draw histogram / filled per pare (stackhistogram)
+  !## draw histogram / filled per pare (stack histograms)
   IF(GRAPH(I,NG)%GTYPE.EQ.1.OR.GRAPH(I,NG)%GTYPE.EQ.3)THEN
    DO J=1,GRAPH(I,NG)%NP
 

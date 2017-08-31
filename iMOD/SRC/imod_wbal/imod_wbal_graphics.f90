@@ -13,18 +13,18 @@ CONTAINS
 !###====================================================================
 !     THIS LOGICAL FUNCTION GENERATES A PNG FILE CONTAINING A PICTURE OF AN AVERAGE WATERBALANCE
 !     THE FOLLOWING TERMS ARE USED
-!     Q(01,1)=QDRN_IN   Q(01,2)=QDRN_OUT    Q(13,1)=QCAP_IN   Q(13,1)=QCAP_OUT    
-!     Q(02,1)=QOLF_IN   Q(02,2)=QOLF_OUT    Q(14,1)=QETACT_IN Q(14,1)=QETACT_OUT  
-!     Q(03,1)=QRIV_IN   Q(03,2)=QRIV_OUT    Q(15,1)=QPM_IN    Q(15,1)=QPM_OUT     
-!     Q(04,1)=QGHB_IN   Q(04,2)=QGHB_OUT    Q(16,1)=QPMGW_IN  Q(16,1)=QPMGW_OUT   
-!     Q(05,1)=QISG_IN   Q(05,2)=QISG_OUT    Q(17,1)=QPMSW_IN  Q(17,1)=QPMSW_OUT   
-!     Q(06,1)=QWEL_IN   Q(06,2)=QWEL_OUT    Q(18,1)=QSTO_IN   Q(18,1)=QSTO_OUT    
-!     Q(07,1)=QREG_IN   Q(07,2)=QREG_OUT    Q(19,1)=QDECSTO_INQ(19,1)=QDECSTO_OUT 
-!     Q(08,1)=QCNH_IN   Q(08,2)=QCNH_OUT    Q(20,1)=QQSPGW_IN Q(20,1)=QQSPGW_OUT  
-!     Q(09,1)=QFLF1_IN  Q(09,2)=QFLF1_OUT   Q(21,1)=QQCOR_IN  Q(21,1)=QQCOR_OUT   
-!     Q(10,1)=QFLF2_IN  Q(10,2)=QFLF2_OUT   Q(22,1)=QQDR_IN   Q(22,1)=QQDR_OUT    
-!     Q(11,1)=QRCH_IN   Q(11,2)=QRCH_OUT    Q(23,1)=QQRUN_IN  Q(23,1)=QQRUN_OUT   
-!     Q(12,1)=QEVT_IN   Q(12,2)=QEVT_OUT    Q(24,1)=QMODF_IN  Q(24,1)=QMODF_OUT   
+!     Q(01,1)=QDRN_IN   Q(01,2)=QDRN_OUT    Q(13,1)=QCAP_IN     Q(13,1)=QCAP_OUT    
+!     Q(02,1)=QOLF_IN   Q(02,2)=QOLF_OUT    Q(14,1)=QETACT_IN   Q(14,1)=QETACT_OUT  
+!     Q(03,1)=QRIV_IN   Q(03,2)=QRIV_OUT    Q(15,1)=QPM_IN      Q(15,1)=QPM_OUT     
+!     Q(04,1)=QGHB_IN   Q(04,2)=QGHB_OUT    Q(16,1)=QPMGW_IN    Q(16,1)=QPMGW_OUT   
+!     Q(05,1)=QISG_IN   Q(05,2)=QISG_OUT    Q(17,1)=QPMSW_IN    Q(17,1)=QPMSW_OUT   
+!     Q(06,1)=QWEL_IN   Q(06,2)=QWEL_OUT    Q(18,1)=QSTO_IN     Q(18,1)=QSTO_OUT    
+!     Q(07,1)=QREG_IN   Q(07,2)=QREG_OUT    Q(19,1)=QDECSTO_IN  Q(19,1)=QDECSTO_OUT 
+!     Q(08,1)=QCNH_IN   Q(08,2)=QCNH_OUT    Q(20,1)=QQSPGW_IN   Q(20,1)=QQSPGW_OUT  
+!     Q(09,1)=QFLF1_IN  Q(09,2)=QFLF1_OUT   Q(21,1)=QQCOR_IN    Q(21,1)=QQCOR_OUT   
+!     Q(10,1)=QFLF2_IN  Q(10,2)=QFLF2_OUT   Q(22,1)=QQDR_IN     Q(22,1)=QQDR_OUT    
+!     Q(11,1)=QRCH_IN   Q(11,2)=QRCH_OUT    Q(23,1)=QQRUN_IN    Q(23,1)=QQRUN_OUT   
+!     Q(12,1)=QEVT_IN   Q(12,2)=QEVT_OUT    Q(24,1)=QMODF_IN    Q(24,1)=QMODF_OUT   
 
       IMPLICIT NONE
       INTEGER,DIMENSION(NPOL), INTENT(IN) ::  ICOLPLG,IPLG
@@ -35,11 +35,10 @@ CONTAINS
       INTEGER, INTENT(IN) :: NPOL,SUMNR
       INTEGER, INTENT(IN),DIMENSION(:) :: IIPOL
       REAL,DIMENSION(4) :: XR,YR
-      CHARACTER(LEN=256) :: STR,REGNAME
+      CHARACTER(LEN=256) :: REGNAME
       CHARACTER(LEN=10) :: STRDUM
-      CHARACTER(LEN=8) :: FMT
       INTEGER :: NXPIX,NYPIX,IPLOT,IUNSATURATED,ISATURATED,IBL1,IGR1,IRD1,IBL2,IGR2,IRD2,&
-                 II,JJ,JPOL,I,J,K,IW,IWMAX,JW,JWMAX,IPOL,JDUM,IPOS,IFIT,JFIT,IXPIX,IYPIX
+                 II,JJ,JPOL,I,J,IPOL,JDUM,IPOS,IFIT,JFIT,IXPIX,IYPIX
       REAL :: XPOS1,XPOS2,YPOS,XPIX,YPIX
       REAL :: SUMIN,SUMOUT,AREA,CS,B,H
       REAL :: DW,DH,DY,DX
@@ -75,9 +74,10 @@ CONTAINS
       CALL IGRFILLPATTERN(4,4,4)
       CALL IGRCOLOURN(WRGB(255,255,100))
 
-!     CHECK SATURATED UNSATURATED OR BOTH
+!     check saturated unsaturated zone or both
       IUNSATURATED=0; IF(SUM(Q(14:24,1)).NE.0.OR.SUM(Q(14:24,2)).NE.0) IUNSATURATED=1
       ISATURATED  =0; IF(SUM(Q(1 :13,1)).NE.0.OR.SUM(Q(1 :13,2)).NE.0) ISATURATED=1
+!     plotting of unsaturated/satuarted zone is always
       IUNSATURATED=1
       ISATURATED  =1
 
@@ -89,11 +89,11 @@ CONTAINS
       ENDIF
       CALL IGRAREA(0.2-dx,0.48+dy ,0.8+dx,0.7+dy)
       CALL IGRUNITS(0.0,0.0,B,H)
-!     CAPILLAIRE ZONE MET KLEURVERLOOP
+!     Unsaturated zone with gradient fill
       IF(IUNSATURATED.EQ.1) THEN
          IRD1=190; IGR1=215;  IBL1=240
          IRD2=255; IGR2=255;  IBL2=100
-!        ONVERZADIGDE ZONE VAN GEEL NAAR BLAUW.......
+!        unsaturated zone from yellow to blue.....
          CALL IGRCOLOURN(WRGB(IRD1,IGR1,IBL1))
          CALL IGRCOLOURN(WRGB(IRD2,IGR2,IBL2))
          XR(1)=0.0; YR(1)=0.0
@@ -106,14 +106,14 @@ CONTAINS
       CALL IGRAREA(0.0,0.0+dy,1.0,0.7+dy)
       CALL IGRUNITS(0.0,0.0,B,1.1*H)
 
-!     PLOT SCHEIDENDE LAGEN         
+!     PLOT separating layers
       IF(ISATURATED.EQ.1) THEN
          CALL IGRFILLPATTERN(4,4,4)
          CALL IGRCOLOURN(WRGB(190,215,240))
          CALL IGRRECTANGLE((0.2-dx)*B,0.18*H,(0.8+dx)*B,0.82*H)
          CALL IGRFILLPATTERN(0,0,0)
          CALL IGRLINEWIDTH(3)
-         IF(Q(9,1).NE.0.OR.Q(9,2).NE.0) THEN
+         IF(Q(9,1).NE.0.0.OR.Q(9,2).NE.0.0) THEN
             CALL IGRFILLPATTERN(4,4,4)
             CALL IGRCOLOURN(WRGB(195,225,180))
             CALL IGRRECTANGLE((0.2-dx)*B,0.78*H,(0.8+dx)*B,0.82*H)
@@ -121,7 +121,7 @@ CONTAINS
             CALL IGRCOLOURN(WRGB(  0,155,  0))
             CALL IGRRECTANGLE((0.2-dx)*B,0.78*H,(0.8+dx)*B,0.82*H)
          ENDIF
-         IF(Q(10,1).NE.0.OR.Q(10,2).NE.0) THEN
+         IF(Q(10,1).NE.0.0.OR.Q(10,2).NE.0.0) THEN
             CALL IGRFILLPATTERN(4,4,4)
             CALL IGRCOLOURN(WRGB(195,225,180))
             CALL IGRRECTANGLE((0.2-dx)*B,0.18*H,(0.8+dx)*B,0.22*H)
@@ -143,10 +143,10 @@ CONTAINS
       CALL PLOTREG(Q(7,1),Q(7,2),0.66,QTXT(7),B,H)                                             ! PLOT REGIO FLOW
       CALL PLOTREG(Q(8,1),Q(8,2),0.25,QTXT(8),B,H)                                             ! PLOT CONSTANT HEAD FLOW
 
-!     REGIONAL FLOWS FROM NPOL OTHER REGIONS TO CHOSEN IPOL REGIONAND
-!     REGIONAL FLOWS FROM CHOSEN IPOL REGION TO NPOL OTHER REGIONS
+!     regional flows from npol other regions to chosen ipol region and
+!     regional flows from chosen ipol region to npol other regions
 
-!     DETERMINE THE NAME OF THE SINGLE OR SUMMED REGIO(S)
+!     determine the name of the single or summed regio(s)
       II=0; REGNAME=' '
       IF(LSUM) THEN
          DO J=1,SIZE(IIPOL)
@@ -177,7 +177,7 @@ CONTAINS
         DO J=1,SIZE(IIPOL)
          IPOL=IIPOL(J)
          IF(JPOL.NE.IPOL.AND.JPOL.NE.JDUM) THEN
-!          DETERMINE INTERREGIONAL FLUXES, THESE ARE FLUXE BETWEEN INTERCONNECTING SUMMED REGIONS
+!          determine interregional fluxes, these are fluxe between interconnecting summed regions
            IFIT=0                                           
            DO JFIT=1,SIZE(IIPOL)                             
               IF(IPLG(JPOL).EQ.IPLG(IIPOL(JFIT))) IFIT=1    ! INTERREGIONALE FLUXEN
@@ -186,7 +186,7 @@ CONTAINS
 !          plotting subregio text.....
            CALL PLOTSUBREGIO(II,JJ,-QSUBREGIO(JPOL,2),-QSUBREGIO(JPOL,1),REGNAME,IPOL,JPOL,NPOL,ICOLPLG,IPLG,DH,B,H,IFIT)
 
-!          TESTING.....CALCULATE WIDTH of PLOTTED TEXT STARTING AT POSITION X=0.13*B, Y=0.65*H-(II-0.5)*DH, UNTIL THE CENTRE....NXPIX/2
+!          testing.....calculate width of plotted text starting at position x=0.13*b, y=0.65*h-(ii-0.5)*dh, until the centre....nxpix/2
 !          left side of plot, calculating width of box
            CALL IGRUNITSTOPIXELS(0.13*B,0.65*H-(II-0.5)*DH,IXPIX,IYPIX)
            DO I=IXPIX,NXPIX/2
@@ -276,7 +276,7 @@ CONTAINS
       DRAWBAL=.TRUE.
 
 !      WRITE(STR(1:3),'(I3.3)') SUMNR
-!      call igrsaveimage('\illustratieve_plot'//STR(1:3)//'.png')
+!      CALL IGRSAVEIMAGE('\ILLUSTRATIEVE_PLOT'//STR(1:3)//'.PNG')
 
       END FUNCTION DRAWBAL
 
@@ -303,7 +303,6 @@ CONTAINS
       CHARACTER(LEN=*),INTENT(INOUT) :: QTXT
       REAL,INTENT(IN) :: B,H,FX,FY,P,QIN,QUIT
       REAL :: XDRN,YDRN
-      INTEGER :: IPLOT,ILEN
       
       CALL IGRLINEWIDTH(1)
       CALL IGRFILLPATTERN(0,0,0)
@@ -341,7 +340,6 @@ CONTAINS
       REAL,INTENT(IN) :: QIN,QUIT,B,H,F
       CHARACTER(LEN=*),INTENT(INOUT) :: QTXT
       REAL :: X,Y
-      INTEGER :: IPLOT,ILEN
       
       IF(QIN.NE.0.OR.QUIT.NE.0) THEN
       	 X=0.33*B
@@ -370,7 +368,6 @@ CONTAINS
       INTEGER,INTENT(IN) :: ICOL
       CHARACTER(LEN=*),INTENT(INOUT) :: QTXT                                                                                    
       REAL :: XTRAP1,YTRAP1,XTRAP2,YTRAP2,XL1,XL2
-      INTEGER :: IPLOT
 
       IF(QIN.NE.0.OR.QUIT.NE.0) THEN                                                                        
 !        PLOT RIVER                                                                                         
@@ -405,7 +402,6 @@ CONTAINS
       REAL,INTENT(IN) :: QIN,QUIT,B,H,F
       CHARACTER(LEN=*),INTENT(INOUT) :: QTXT
       REAL :: XWEL
-      INTEGER :: IPLOT
 
       IF(QIN.NE.0.OR.QUIT.NE.0) THEN
 !        PLOT WEL
@@ -438,7 +434,6 @@ CONTAINS
       IMPLICIT NONE
       REAL,INTENT(IN) :: QIN,QUIT,B,H,F
       CHARACTER(LEN=*),INTENT(INOUT) :: QTXT
-      INTEGER :: IPLOT
       
       IF(QIN.NE.0)  CALL ARROWTEXT(0.1*B,F*H,0.2*B,F*H,&
                                    0.1*B,(F+0.025)*H,&
@@ -457,7 +452,6 @@ CONTAINS
       REAL,INTENT(IN) :: QIN,QUIT,B,H,FX1,FX2,FY
       CHARACTER(LEN=*),INTENT(INOUT) ::  QTXT                                          
       INTEGER,INTENT(IN) :: IPOS,ITOP
-      INTEGER :: IPLOT
       
       IF(ITOP.EQ.1) THEN
          IF(IPOS.EQ.2) THEN
@@ -622,11 +616,9 @@ CONTAINS
       INTEGER,INTENT(IN),DIMENSION(NPOL) :: ICOLPLG,IPLG
       INTEGER,INTENT(IN) :: JPOL,IPOL,NPOL
       REAL,INTENT(IN) :: QIN,QUIT,B,H,DH
-      REAL :: DX,DY
-      INTEGER :: I,J,II,JJ,IPOS,ILEN,IFIT
+      INTEGER :: J,II,JJ,IPOS,ILEN,IFIT
       CHARACTER(LEN=256) STR
       CHARACTER(LEN=10) STRDUM
-      CHARACTER(LEN=8) :: FMT
       CHARACTER(LEN=256) :: REGNAME
 
       STR=' '; STRDUM=' '; IPOS=1; WRITE(STRDUM(1:7),'(I7)') IPLG(JPOL)
@@ -695,10 +687,9 @@ CONTAINS
       INTEGER,DIMENSION(NPOL),INTENT(IN) :: IPLG,ICOLPLG
       INTEGER,INTENT(IN) :: IPLOT,SUMNR
       TYPE (IDFOBJ),INTENT(IN) :: IDF
-      INTEGER :: IREGULAR,IREC,I,J,IPOL,KPOL,NCOL,NROW,NPOL,K,II,ISEL
-      INTEGER :: IR,IG,IB
-      REAL :: X1PLOT,X0PLOT,Y1PLOT,Y0PLOT,X,Y,VALUE,VALUEBUUR,X0,X1,Y0,Y1
-      REAL :: FAREAX1,FAREAX2,FAREAY1,FAREAY2,DX,DY,DXWIN,DYWIN
+      INTEGER :: I,J,IPOL,KPOL,NPOL,K,II,ISEL
+      REAL :: X1PLOT,X0PLOT,Y1PLOT,Y0PLOT
+      REAL :: FAREAX1,FAREAX2,FAREAY1,FAREAY2
       LOGICAL :: LOCAL,LSUM
 
 !     PLOT REGIONS
@@ -733,13 +724,20 @@ CONTAINS
          Y0PLOT=IDF%YMAX; Y1PLOT=IDF%YMIN 
          DO J=1,IDF%NROW
           DO I=1,IDF%NCOL
-           DO II=1,SIZE(IIPOL)
-            IPOL=IIPOL(II)
-            IF(ABS(NINT(IDF%X(I,J))).EQ.IPLG(IPOL)) THEN
+           IF(LSUM) THEN
+              DO II=1,SIZE(IIPOL)
+               IPOL=IIPOL(II)
+               IF(ABS(NINT(IDF%X(I,J))).EQ.IPLG(IPOL)) THEN
+                  X0PLOT=AMIN1(X0PLOT,IDF%SX(I-1)); X1PLOT=AMAX1(X1PLOT,IDF%SX(I)) 
+                  Y0PLOT=AMIN1(Y0PLOT,IDF%SY(J-1)); Y1PLOT=AMAX1(Y1PLOT,IDF%SY(J)) 
+               ENDIF
+              ENDDO
+           ELSE
+               IF(ABS(NINT(IDF%X(I,J))).EQ.SUMNR) THEN
                  X0PLOT=AMIN1(X0PLOT,IDF%SX(I-1)); X1PLOT=AMAX1(X1PLOT,IDF%SX(I)) 
                  Y0PLOT=AMIN1(Y0PLOT,IDF%SY(J-1)); Y1PLOT=AMAX1(Y1PLOT,IDF%SY(J)) 
-            ENDIF
-           ENDDO
+               ENDIF
+           ENDIF
           ENDDO
          ENDDO
          CALL MAKESQUAREWINDOW(X0PLOT,Y0PLOT,X1PLOT,Y1PLOT)
@@ -780,7 +778,7 @@ CONTAINS
              DO K=1,SIZE(IIPOL)
                  KPOL=IIPOL(K)
                  IF(ABS(NINT(IDF%X(I,J))).EQ.IPLG(KPOL)) THEN
-                 	ISEL=1
+                    ISEL=1
                  ENDIF
              ENDDO
           ELSE
@@ -797,34 +795,64 @@ CONTAINS
                 IF(ABS(NINT(IDF%X(I,J))).EQ.IPLG(K)) CALL PASTEL(ICOLPLG(K),0.6)
              ENDDO
           ENDIF
-          CALL IGRRECTANGLE(IDF%SX(I-1),IDF%SY(J-1),IDF%SX(I),IDF%SY(J))
+          if(IDF%X(I,J).ne.idf%nodata) CALL IGRRECTANGLE(IDF%SX(I-1),IDF%SY(J-1),IDF%SX(I),IDF%SY(J))
        ENDDO
       ENDDO
 
       CALL IGRCOLOURN(WRGB(0,0,0))
-!     PLOT A RED BORDER AROUND THE SELECTED REGION
-      DO II=1,SIZE(IIPOL)
-      IPOL=IIPOL(II)
+!     plot a black border around the selected region, summed (lsum=.true. or unique lsum=.false. and sumnr is region
       DO J=1,IDF%NROW
          DO I=1,IDF%NCOL
-            IF(I.GT.1.AND.I.LT.IDF%NCOL.AND.ABS(NINT(IDF%X(I,J))).EQ.IPLG(IPOL)) THEN
-                IF(ABS(NINT(IDF%X(I-1,J))).NE.ABS(NINT(IDF%X(I,J)))) CALL IGRJOIN(IDF%SX(I-1),IDF%SY(J-1),IDF%SX(I-1),IDF%SY(J))
-                IF(ABS(NINT(IDF%X(I+1,J))).NE.ABS(NINT(IDF%X(I,J)))) CALL IGRJOIN(IDF%SX(I),  IDF%SY(J-1),IDF%SX(I),  IDF%SY(J))
-            ENDIF                  
-            IF(J.GT.1.AND.J.LT.IDF%NROW.AND.ABS(NINT(IDF%X(I,J))).EQ.IPLG(IPOL)) THEN
-                IF(ABS(NINT(IDF%X(I,J-1))).NE.ABS(NINT(IDF%X(I,J)))) CALL IGRJOIN(IDF%SX(I-1),IDF%SY(J-1),IDF%SX(I),IDF%SY(J-1))
-                IF(ABS(NINT(IDF%X(I,J+1))).NE.ABS(NINT(IDF%X(I,J)))) CALL IGRJOIN(IDF%SX(I-1),IDF%SY(J),  IDF%SX(I),IDF%SY(J))
+            IF(LSUM) THEN
+                DO II=1,SIZE(IIPOL)
+                   IPOL=IIPOL(II)
+                   IF(I.GT.1.AND.I.LT.IDF%NCOL.AND.ABS(NINT(IDF%X(I,J))).EQ.IPLG(IPOL)) THEN
+                       IF(ABS(NINT(IDF%X(I-1,J))).NE.ABS(NINT(IDF%X(I,J)))) CALL IGRJOIN(IDF%SX(I-1),IDF%SY(J-1),IDF%SX(I-1),IDF%SY(J))
+                       IF(ABS(NINT(IDF%X(I+1,J))).NE.ABS(NINT(IDF%X(I,J)))) CALL IGRJOIN(IDF%SX(I),  IDF%SY(J-1),IDF%SX(I),  IDF%SY(J))
+                   ENDIF                  
+                   IF(J.GT.1.AND.J.LT.IDF%NROW.AND.ABS(NINT(IDF%X(I,J))).EQ.IPLG(IPOL)) THEN
+                       IF(ABS(NINT(IDF%X(I,J-1))).NE.ABS(NINT(IDF%X(I,J)))) CALL IGRJOIN(IDF%SX(I-1),IDF%SY(J-1),IDF%SX(I),IDF%SY(J-1))
+                       IF(ABS(NINT(IDF%X(I,J+1))).NE.ABS(NINT(IDF%X(I,J)))) CALL IGRJOIN(IDF%SX(I-1),IDF%SY(J),  IDF%SX(I),IDF%SY(J))
+                   ENDIF
+                   IF(I.EQ.1.AND.ABS(NINT(IDF%X(I,J))).EQ.IPLG(IPOL)) CALL IGRJOIN(IDF%SX(I-1),IDF%SY(J-1),IDF%SX(I-1),IDF%SY(J))
+                   IF(I.EQ.IDF%NCOL.AND.ABS(NINT(IDF%X(I,J))).EQ.IPLG(IPOL)) CALL IGRJOIN(IDF%SX(I),  IDF%SY(J-1),IDF%SX(I),  IDF%SY(J))
+                   IF(J.EQ.1.AND.ABS(NINT(IDF%X(I,J))).EQ.IPLG(IPOL)) CALL IGRJOIN(IDF%SX(I-1),IDF%SY(J-1),IDF%SX(I),  IDF%SY(J-1))
+                   IF(J.EQ.IDF%NROW.AND.ABS(NINT(IDF%X(I,J))).EQ.IPLG(IPOL)) CALL IGRJOIN(IDF%SX(I-1),IDF%SY(J),  IDF%SX(I),  IDF%SY(J))
+                ENDDO
+            ELSE
+                IF(I.GT.1.AND.I.LT.IDF%NCOL.AND.ABS(NINT(IDF%X(I,J))).EQ.SUMNR) THEN
+                    IF(ABS(NINT(IDF%X(I-1,J))).NE.ABS(NINT(IDF%X(I,J)))) CALL IGRJOIN(IDF%SX(I-1),IDF%SY(J-1),IDF%SX(I-1),IDF%SY(J))
+                    IF(ABS(NINT(IDF%X(I+1,J))).NE.ABS(NINT(IDF%X(I,J)))) CALL IGRJOIN(IDF%SX(I),  IDF%SY(J-1),IDF%SX(I),  IDF%SY(J))
+                ENDIF                  
+                IF(J.GT.1.AND.J.LT.IDF%NROW.AND.ABS(NINT(IDF%X(I,J))).EQ.SUMNR) THEN
+                    IF(ABS(NINT(IDF%X(I,J-1))).NE.ABS(NINT(IDF%X(I,J)))) CALL IGRJOIN(IDF%SX(I-1),IDF%SY(J-1),IDF%SX(I),IDF%SY(J-1))
+                    IF(ABS(NINT(IDF%X(I,J+1))).NE.ABS(NINT(IDF%X(I,J)))) CALL IGRJOIN(IDF%SX(I-1),IDF%SY(J),  IDF%SX(I),IDF%SY(J))
+                ENDIF
+                IF(I.EQ.1.AND.ABS(NINT(IDF%X(I,J))).EQ.SUMNR) CALL IGRJOIN(IDF%SX(I-1),IDF%SY(J-1),IDF%SX(I-1),IDF%SY(J))
+                IF(I.EQ.IDF%NCOL.AND.ABS(NINT(IDF%X(I,J))).EQ.SUMNR) CALL IGRJOIN(IDF%SX(I),  IDF%SY(J-1),IDF%SX(I),  IDF%SY(J))
+                IF(J.EQ.1.AND.ABS(NINT(IDF%X(I,J))).EQ.SUMNR) CALL IGRJOIN(IDF%SX(I-1),IDF%SY(J-1),IDF%SX(I),  IDF%SY(J-1))
+                IF(J.EQ.IDF%NROW.AND.ABS(NINT(IDF%X(I,J))).EQ.SUMNR) CALL IGRJOIN(IDF%SX(I-1),IDF%SY(J),  IDF%SX(I),  IDF%SY(J))
             ENDIF
-            IF(I.EQ.1.AND.ABS(NINT(IDF%X(I,J))).EQ.IPLG(IPOL)) CALL IGRJOIN(IDF%SX(I-1),IDF%SY(J-1),IDF%SX(I-1),IDF%SY(J))
-            IF(I.EQ.IDF%NCOL.AND.ABS(NINT(IDF%X(I,J))).EQ.IPLG(IPOL)) CALL IGRJOIN(IDF%SX(I),  IDF%SY(J-1),IDF%SX(I),  IDF%SY(J))
-            IF(J.EQ.1.AND.ABS(NINT(IDF%X(I,J))).EQ.IPLG(IPOL)) CALL IGRJOIN(IDF%SX(I-1),IDF%SY(J-1),IDF%SX(I),  IDF%SY(J-1))
-            IF(J.EQ.IDF%NROW.AND.ABS(NINT(IDF%X(I,J))).EQ.IPLG(IPOL)) CALL IGRJOIN(IDF%SX(I-1),IDF%SY(J),  IDF%SX(I),  IDF%SY(J))
+         ENDDO
       ENDDO
-      ENDDO
-      ENDDO
+
       CALL IGRCOLOURN(WRGB(0,0,0))
       CALL IGRFILLPATTERN(0,0,0)
       CALL IGRRECTANGLE(X0PLOT,Y0PLOT,X1PLOT,Y1PLOT)
+      
+      !check..... write idf als code.asc
+      !OPEN(UNIT=3000,FILE='CODE.ASC')
+      !WRITE(3000,*) 'NCOL',IDF%NCOL
+      !WRITE(3000,*) 'NROW',IDF%NROW
+      !WRITE(3000,*) 'XLL',IDF%YMAX
+      !WRITE(3000,*) 'YLL',IDF%YMIN
+      !WRITE(3000,*) 'DXY',IDF%SX(2)-IDF%SX(1)
+      !WRITE(3000,*) 'XNODATA',9999.0
+      !DO J=1,IDF%NROW
+      !   WRITE(3000,'(10F10.2)') (IDF%X(I,J),I=1,IDF%NCOL)
+      !ENDDO
+      !CLOSE(3000)
+      
       END SUBROUTINE PLOTIDF
 
 
