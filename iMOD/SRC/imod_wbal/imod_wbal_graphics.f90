@@ -35,10 +35,11 @@ CONTAINS
       INTEGER, INTENT(IN) :: NPOL,SUMNR
       INTEGER, INTENT(IN),DIMENSION(:) :: IIPOL
       REAL,DIMENSION(4) :: XR,YR
-      CHARACTER(LEN=256) :: REGNAME
+      CHARACTER(LEN=256) :: STR,REGNAME
       CHARACTER(LEN=10) :: STRDUM
+      CHARACTER(LEN=8) :: FMT
       INTEGER :: NXPIX,NYPIX,IPLOT,IUNSATURATED,ISATURATED,IBL1,IGR1,IRD1,IBL2,IGR2,IRD2,&
-                 II,JJ,JPOL,I,J,IPOL,JDUM,IPOS,IFIT,JFIT,IXPIX,IYPIX
+                 II,JJ,JPOL,I,J,K,IW,IWMAX,JW,JWMAX,IPOL,JDUM,IPOS,IFIT,JFIT,IXPIX,IYPIX
       REAL :: XPOS1,XPOS2,YPOS,XPIX,YPIX
       REAL :: SUMIN,SUMOUT,AREA,CS,B,H
       REAL :: DW,DH,DY,DX
@@ -178,10 +179,16 @@ CONTAINS
          IPOL=IIPOL(J)
          IF(JPOL.NE.IPOL.AND.JPOL.NE.JDUM) THEN
 !          determine interregional fluxes, these are fluxe between interconnecting summed regions
-           IFIT=0                                           
-           DO JFIT=1,SIZE(IIPOL)                             
-              IF(IPLG(JPOL).EQ.IPLG(IIPOL(JFIT))) IFIT=1    ! INTERREGIONALE FLUXEN
-           ENDDO                                             
+           IFIT=0
+           IF(LSUM) THEN                                           
+              DO JFIT=1,SIZE(IIPOL)                             
+                 IF(IPLG(JPOL).EQ.IPLG(IIPOL(JFIT))) IFIT=1    ! INTERREGIONALE FLUXEN
+              ENDDO        
+           ELSE
+              DO JFIT=1,SIZE(IIPOL)                             
+                 IF(IPLG(JPOL).EQ.SUMNR) IFIT=1                
+              ENDDO        
+           ENDIF                                     
 
 !          plotting subregio text.....
            CALL PLOTSUBREGIO(II,JJ,-QSUBREGIO(JPOL,2),-QSUBREGIO(JPOL,1),REGNAME,IPOL,JPOL,NPOL,ICOLPLG,IPLG,DH,B,H,IFIT)
@@ -303,6 +310,7 @@ CONTAINS
       CHARACTER(LEN=*),INTENT(INOUT) :: QTXT
       REAL,INTENT(IN) :: B,H,FX,FY,P,QIN,QUIT
       REAL :: XDRN,YDRN
+      INTEGER :: IPLOT,ILEN
       
       CALL IGRLINEWIDTH(1)
       CALL IGRFILLPATTERN(0,0,0)
@@ -340,6 +348,7 @@ CONTAINS
       REAL,INTENT(IN) :: QIN,QUIT,B,H,F
       CHARACTER(LEN=*),INTENT(INOUT) :: QTXT
       REAL :: X,Y
+      INTEGER :: IPLOT,ILEN
       
       IF(QIN.NE.0.OR.QUIT.NE.0) THEN
       	 X=0.33*B
@@ -368,6 +377,7 @@ CONTAINS
       INTEGER,INTENT(IN) :: ICOL
       CHARACTER(LEN=*),INTENT(INOUT) :: QTXT                                                                                    
       REAL :: XTRAP1,YTRAP1,XTRAP2,YTRAP2,XL1,XL2
+      INTEGER :: IPLOT
 
       IF(QIN.NE.0.OR.QUIT.NE.0) THEN                                                                        
 !        PLOT RIVER                                                                                         
@@ -402,6 +412,7 @@ CONTAINS
       REAL,INTENT(IN) :: QIN,QUIT,B,H,F
       CHARACTER(LEN=*),INTENT(INOUT) :: QTXT
       REAL :: XWEL
+      INTEGER :: IPLOT
 
       IF(QIN.NE.0.OR.QUIT.NE.0) THEN
 !        PLOT WEL
@@ -434,6 +445,7 @@ CONTAINS
       IMPLICIT NONE
       REAL,INTENT(IN) :: QIN,QUIT,B,H,F
       CHARACTER(LEN=*),INTENT(INOUT) :: QTXT
+      INTEGER :: IPLOT
       
       IF(QIN.NE.0)  CALL ARROWTEXT(0.1*B,F*H,0.2*B,F*H,&
                                    0.1*B,(F+0.025)*H,&
@@ -452,6 +464,7 @@ CONTAINS
       REAL,INTENT(IN) :: QIN,QUIT,B,H,FX1,FX2,FY
       CHARACTER(LEN=*),INTENT(INOUT) ::  QTXT                                          
       INTEGER,INTENT(IN) :: IPOS,ITOP
+      INTEGER :: IPLOT
       
       IF(ITOP.EQ.1) THEN
          IF(IPOS.EQ.2) THEN
@@ -616,9 +629,11 @@ CONTAINS
       INTEGER,INTENT(IN),DIMENSION(NPOL) :: ICOLPLG,IPLG
       INTEGER,INTENT(IN) :: JPOL,IPOL,NPOL
       REAL,INTENT(IN) :: QIN,QUIT,B,H,DH
-      INTEGER :: J,II,JJ,IPOS,ILEN,IFIT
+      REAL :: DX,DY
+      INTEGER :: I,J,II,JJ,IPOS,ILEN,IFIT
       CHARACTER(LEN=256) STR
       CHARACTER(LEN=10) STRDUM
+      CHARACTER(LEN=8) :: FMT
       CHARACTER(LEN=256) :: REGNAME
 
       STR=' '; STRDUM=' '; IPOS=1; WRITE(STRDUM(1:7),'(I7)') IPLG(JPOL)
@@ -687,9 +702,10 @@ CONTAINS
       INTEGER,DIMENSION(NPOL),INTENT(IN) :: IPLG,ICOLPLG
       INTEGER,INTENT(IN) :: IPLOT,SUMNR
       TYPE (IDFOBJ),INTENT(IN) :: IDF
-      INTEGER :: I,J,IPOL,KPOL,NPOL,K,II,ISEL
-      REAL :: X1PLOT,X0PLOT,Y1PLOT,Y0PLOT
-      REAL :: FAREAX1,FAREAX2,FAREAY1,FAREAY2
+      INTEGER :: IREGULAR,IREC,I,J,IPOL,KPOL,NCOL,NROW,NPOL,K,II,ISEL
+      INTEGER :: IR,IG,IB
+      REAL :: X1PLOT,X0PLOT,Y1PLOT,Y0PLOT,X,Y,VALUE,VALUEBUUR,X0,X1,Y0,Y1
+      REAL :: FAREAX1,FAREAX2,FAREAY1,FAREAY2,DX,DY,DXWIN,DYWIN
       LOGICAL :: LOCAL,LSUM
 
 !     PLOT REGIONS

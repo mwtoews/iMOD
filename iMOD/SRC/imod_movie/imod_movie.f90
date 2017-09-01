@@ -270,7 +270,7 @@ CONTAINS
  ENDIF
  
  !## define executable string
- EXESTRING='"'//TRIM(PREFVAL(29))//'" -start_number 1 -framerate '//TRIM(ITOS(IFRAMERATE))//' -i "image%%03d.'//TRIM(EXT)//'" imod.avi'
+ EXESTRING='"'//TRIM(PREFVAL(29))//'" -start_number 1 -framerate '//TRIM(ITOS(IFRAMERATE))//' -i "image%%03d.'//TRIM(EXT)//'" -vb 20M imod.avi'
  WRITE(IU,'(A)') TRIM(EXESTRING)
  CLOSE(IU)
  
