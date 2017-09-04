@@ -2678,7 +2678,7 @@ TOPICLOOP: DO ITOPIC=1,MAXTOPICS
   LINE=TRIM(RTOS(PCG%HCLOSE,'G',5))   //','// &
        TRIM(RTOS(PCG%RCLOSE,'G',5))   //','// &
        TRIM(RTOS(PCG%RELAX ,'G',5))   //','// &
-       TRIM(ITOS(0))                  //','// &
+       TRIM(RTOS(1.0,'G',5))          //','// &
        TRIM(ITOS(PCG%IPRPCG))         //','// &
        TRIM(ITOS(PCG%MUTPCG))         //','// &
        TRIM(RTOS(PCG%DAMPPCG ,'G',5)) //','// &
@@ -10017,8 +10017,8 @@ JLOOP: DO K=1,SIZE(TOPICS)
  
  TOPICS(33)%IACT=1; TOPICS(33)%IACT_MODEL=1
  PCG%NPCOND=1
- PCG%IPRPCG=0
- PCG%MUTPCG=1
+ PCG%IPRPCG=1
+ PCG%MUTPCG=0
  PCG%DAMPPCG=1.0
  PCG%DAMPPCGT=1.0
  !PCG%IMERGE=0

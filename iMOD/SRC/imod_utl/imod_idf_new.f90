@@ -354,8 +354,9 @@ CONTAINS
  INTEGER,INTENT(IN) :: IDATA 
  INTEGER,INTENT(IN),OPTIONAL :: IQ !## 0=questioning 1=no questioning
  CHARACTER(LEN=2) :: TXT
- INTEGER :: IOPEN,IQUEST
-
+ INTEGER :: IOPEN,IQUEST,IOS
+ REAL :: X
+ 
  IDFREAD=.FALSE.
 
  TXT='RO'                   !## read only
@@ -372,6 +373,14 @@ CONTAINS
 
  IQUEST=0; IF(PRESENT(IQ))IQUEST=IQ
   
+ !## check whether it is a constant in filename
+ READ(IDFNAME,*,IOSTAT=IOS) X
+ IF(IOS.EQ.0)THEN
+  IF(ASSOCIATED(IDF%X))THEN
+   IDF%X=X; IDFREAD=.TRUE.; RETURN
+  ENDIF
+ ENDIF
+
  !## open idf
  IF(IDFOPEN(IDF%IU,IDFNAME,TXT,IOPEN,IQUESTION=IQUEST))THEN
 !  IF(IDATA.NE.1)IDF%IXV=0  !## initialize %ixv in case no data is read from idf
