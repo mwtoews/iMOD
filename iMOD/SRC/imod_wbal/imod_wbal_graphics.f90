@@ -109,6 +109,7 @@ CONTAINS
 
 !     PLOT separating layers
       IF(ISATURATED.EQ.1) THEN
+!         write(9999,*) q(9,1),q(9,2)
          CALL IGRFILLPATTERN(4,4,4)
          CALL IGRCOLOURN(WRGB(190,215,240))
          CALL IGRRECTANGLE((0.2-dx)*B,0.18*H,(0.8+dx)*B,0.82*H)
@@ -117,20 +118,21 @@ CONTAINS
          IF(Q(9,1).NE.0.0.OR.Q(9,2).NE.0.0) THEN
             CALL IGRFILLPATTERN(4,4,4)
             CALL IGRCOLOURN(WRGB(195,225,180))
-            CALL IGRRECTANGLE((0.2-dx)*B,0.78*H,(0.8+dx)*B,0.82*H)
+            CALL IGRRECTANGLE((0.2-dx)*B,0.18*H,(0.8+dx)*B,0.22*H)
             CALL IGRFILLPATTERN(0,0,0)
             CALL IGRCOLOURN(WRGB(  0,155,  0))
-            CALL IGRRECTANGLE((0.2-dx)*B,0.78*H,(0.8+dx)*B,0.82*H)
+            CALL IGRRECTANGLE((0.2-dx)*B,0.18*H,(0.8+dx)*B,0.22*H)
          ENDIF
          IF(Q(10,1).NE.0.0.OR.Q(10,2).NE.0.0) THEN
             CALL IGRFILLPATTERN(4,4,4)
             CALL IGRCOLOURN(WRGB(195,225,180))
-            CALL IGRRECTANGLE((0.2-dx)*B,0.18*H,(0.8+dx)*B,0.22*H)
+            CALL IGRRECTANGLE((0.2-dx)*B,0.78*H,(0.8+dx)*B,0.82*H)
             CALL IGRFILLPATTERN(0,0,0)
             CALL IGRCOLOURN(WRGB(  0,155,  0))
-            CALL IGRRECTANGLE((0.2-dx)*B,0.18*H,(0.8+dx)*B,0.22*H)
+            CALL IGRRECTANGLE((0.2-dx)*B,0.78*H,(0.8+dx)*B,0.82*H)
          ENDIF
       ENDIF
+
       CALL CSIZE(CS,DW,DH,IPLOT)
       CALL WGRTEXTFONT(102,1,DW,DH)
       CALL PLOTDRAIN(Q(1,1),Q(1,2),0.22,0.75,0.015,QTXT(1),B,H)                                ! PLOT DRN+OLF FLOW
