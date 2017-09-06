@@ -563,7 +563,7 @@ CALL UTL_MESSAGEHANDLE(0)
 !CALL WINDOWSELECT(MPW%IWIN)
 !CALL IGRSELECT(DRAWWIN,MPW%IWIN)
 
-write(*,*) winfobitmap(0,BitmapFree)
+!write(*,*) winfobitmap(0,BitmapFree)
 
 IIBITMAP=WINFOBITMAP(MPW%IWIN,BITMAPHANDLE)
 !IIBITMAP=MPW%IBITMAP
@@ -776,7 +776,7 @@ CALL LEGPLOT_PLOTUPDATE(.FALSE.)
 
 CALL UTL_MESSAGEHANDLE(1)
 
- write(*,*) 'end',winfobitmap(0,BitmapFree)
+! write(*,*) 'end',winfobitmap(0,BitmapFree)
 
 RETURN
 END SUBROUTINE

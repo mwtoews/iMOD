@@ -376,11 +376,15 @@ CONTAINS
  !## check whether it is a constant in filename
  READ(IDFNAME,*,IOSTAT=IOS) X
  IF(IOS.EQ.0)THEN
-  IF(ASSOCIATED(IDF%X))THEN
-   IDF%X=X; IDFREAD=.TRUE.; RETURN
+  IF(IDATA.EQ.1)THEN
+   IF(ASSOCIATED(IDF%X))THEN
+    IDF%X=X; IDFREAD=.TRUE.; RETURN
+   ENDIF
+  ELSE
+   CALL WMESSAGEBOX(OKONLY,EXCLAMATIONICON,COMMONOK,'Cannot read from a constant value without allocating data block.','Error'); RETURN
   ENDIF
  ENDIF
-
+ 
  !## open idf
  IF(IDFOPEN(IDF%IU,IDFNAME,TXT,IOPEN,IQUESTION=IQUEST))THEN
 !  IF(IDATA.NE.1)IDF%IXV=0  !## initialize %ixv in case no data is read from idf
@@ -489,9 +493,20 @@ CONTAINS
  INTEGER,INTENT(IN) :: IOPTIONAL 
  TYPE(IDFOBJ),ALLOCATABLE,DIMENSION(:) :: IDF
  LOGICAL :: LEX
+ INTEGER :: IOS
+ REAL :: X
  
  IDFREADSCALE=.FALSE.
  
+ READ(FNAME,*,IOSTAT=IOS) X
+ IF(IOS.EQ.0)THEN
+  IF(ASSOCIATED(IDFM%X))THEN
+    IDFM%X=X; IDFREADSCALE=.TRUE.; RETURN
+  ELSE
+   CALL WMESSAGEBOX(OKONLY,EXCLAMATIONICON,COMMONOK,'Cannot read from a constant value without allocating data block.','Error'); RETURN
+  ENDIF
+ ENDIF
+
  ALLOCATE(IDF(1)); CALL IDFNULLIFY(IDF(1))
  !## try to allocate idf(1) and read the entire idf
  LEX=IDFREAD(IDF(1),FNAME,1,IQ=IOPTIONAL)
@@ -515,8 +530,8 @@ CONTAINS
  ! idfm = mother idf and will return values on grid defined by idfm
  ! idfc = child  idf and uses grid defined by idfc to scale on idfm
  ! scltype_up:
- ! 1 = speciaal (iboundary)
- ! 2 = rekenkundig (shead/vcont/s)
+ ! 1 = special (iboundary)
+ ! 2 = arithmetic (shead/vcont/s)
  ! 3 = geometrisch (kd)
  ! 4 = sum(q)
  ! 5 = sum(cond)*ratio (riv/drn/ghb conductance/rch/evt)
@@ -545,10 +560,7 @@ CONTAINS
 
  IINT=4
  IDOWN=0
- 
-! DXM=IDFM%DX; DYM=IDFM%DY; DXC=IDFC%DX; DYC=IDFC%DY
-! IDOWN=0; IF(DXC*DYC.GT.DXM*DYM)IDOWN=1
- 
+
  !## check whether CHILD array is allocated, otherwise allocate it
  IF(.NOT.IDFALLOCATEX(IDFM))RETURN
   
