@@ -521,7 +521,8 @@ CONTAINS
  CALL WDIALOGPUTINTEGER(IDF_INTEGER4,NZONE)    !## unique zones
  NRECORDS=NL; CALL WDIALOGPUTINTEGER(IDF_INTEGER5,NRECORDS) !## unique zones
  CALL WDIALOGPUTSTRING(IDF_STRING1,CSVFNAME)   !## name of the csv
- 
+ CALL WDIALOGFIELDSTATE(IDF_BUTTON3,1)
+  
  !## allocate menufield list indices
  ALLOCATE(LIDATE(NDATE),LIZONE(NZONE),CLRIZONE(NZONE),LILAY(NLAY))
  !## none selected
@@ -709,7 +710,7 @@ CONTAINS
   CASE (1)
    !## in graph plot optie maken om de bmp te saven en terug te keren - loopn of graphnames() met name
    LEXPORT=.FALSE.; IF(ID.EQ.ID_GRAPHICS)LEXPORT=.TRUE.
-   IF(IUNIT.EQ.1)CALL GRAPH_PLOT('Time','Volumes (m3/d)',.FALSE.,LEXPORT,DIR=DIR)
+   IF(IUNIT.EQ.1)CALL GRAPH_PLOT('Time','Volumes (m3/d)' ,.FALSE.,LEXPORT,DIR=DIR)
    IF(IUNIT.EQ.2)CALL GRAPH_PLOT('Time','Quantity (mm/d)',.FALSE.,LEXPORT,DIR=DIR)
 
   !## graph
@@ -1666,9 +1667,9 @@ CONTAINS
   WRITE(IU,'(/A)') GRAPHNAMES(IG)
   WRITE(IU,'(999A)') 'Period',(','//TRIM(GRAPH(J,IG)%LEGTXT)//','//TRIM(GRAPH(J,IG)%LEGTXT),J=1,MBUDGET,2)
   IF(INET.EQ.0)THEN
-   WRITE(IU,'(999A)') 'yyyymmdd,',('in,out',J=1,MBUDGET/2)
+   WRITE(IU,'(999A)') 'yyyymmdd',(',in,out',J=1,MBUDGET/2)
   ELSE
-   WRITE(IU,'(999A)') 'yyyymmdd,',('net_in,net_out',J=1,MBUDGET/2)
+   WRITE(IU,'(999A)') 'yyyymmdd',(',net_in,net_out',J=1,MBUDGET/2)
   ENDIF
   DO I=1,SIZE(GRAPHDIM%XTXT),INET+1
    CDATE=GRAPHDIM%XTXT(I)
