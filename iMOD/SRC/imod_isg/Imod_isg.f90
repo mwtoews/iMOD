@@ -6164,7 +6164,7 @@ CONTAINS
      IF(ZVAL.NE.ICROSS(2)%NODATA)THEN
       I=I+1
       IF(I.GT.ISCMAXROW)THEN
-       CALL WMESSAGEBOX(OKONLY,EXCLAMATIONICON,COMMONOK,'Maximum number of records to be read is '//TRIM(ITOS(ISCMAXROW))//CHAR(13)// &
+       CALL WMESSAGEBOX(OKONLY,EXCLAMATIONICON,COMMONOK,'Maximum number of records is '//TRIM(ITOS(ISCMAXROW))//CHAR(13)// &
                        'Current bathemetry exceeds these number of records, rest will be left out!','Error')
         RETURN
       ENDIF

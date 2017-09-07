@@ -283,17 +283,18 @@ CONTAINS
 
  !##=====================================================================
  SUBROUTINE ISG_ADDCROSSSECTION(ISGFILE,FNAME,WIDTHFNAME,MAXDIST,CROSS_PNTR, &
-                                CROSS_BATH,CROSS_ZCHK,CROSS_CVAL,CELL_SIZE,IBATCH,ICLEAN)
+                                CROSS_BATH,CROSS_ZCHK,CROSS_CVAL,IBATCH,ICLEAN) 
  !##=====================================================================
  IMPLICIT NONE
  CHARACTER(LEN=*),INTENT(IN) :: ISGFILE,FNAME,WIDTHFNAME,CROSS_PNTR,CROSS_BATH,CROSS_ZCHK,CROSS_CVAL
- REAL,INTENT(IN) :: MAXDIST,CELL_SIZE
+ REAL,INTENT(IN) :: MAXDIST 
  INTEGER,INTENT(IN) :: IBATCH,ICLEAN
  INTEGER :: IU,IOS,N,I,J,IISG,IPOS,ISEG,NSEG,ICRS,NCRS,IPNT,NPNT,IROW,ICOL,IP,ZCHK,CVAL,NI,IN,ICLC,IREF,IT,NT
+ integer :: ii,iii,iiii
  INTEGER(KIND=1) :: CF
  CHARACTER(LEN=7500) :: STRING
  REAL,DIMENSION(1000) :: X,Y
- REAL :: XCRD,YCRD,TDIST,DIST,W,TD,XC,YC
+ REAL :: XCRD,YCRD,TDIST,DIST,W,TD,XC,YC,TH
  CHARACTER(LEN=MAXLEN) :: LABEL
  TYPE(IDFOBJ) :: IDF
  TYPE(IDFOBJ),ALLOCATABLE,DIMENSION(:) :: ICROSS
@@ -319,7 +320,7 @@ CONTAINS
    ENDDO
    ISC%N=0; ISC%IREF=0; ISC%DIST=0.0; ISC%CNAME=''
   ENDIF
- 
+
   IU=UTL_GETUNIT()
   CALL OSD_OPEN(IU,FILE=FNAME,STATUS='OLD',ACTION='READ')
 
@@ -447,45 +448,27 @@ CONTAINS
   
  ELSE
 
-  ALLOCATE(ICROSS(5)); DO I=1,SIZE(ICROSS); CALL IDFNULLIFY(ICROSS(I)); ENDDO
-
-  !## select finest resolution
-  IF(.NOT.IDFREAD(ICROSS(1),CROSS_PNTR,0))RETURN
-  IF(.NOT.IDFREAD(ICROSS(2),CROSS_BATH,0))RETURN
-  CLOSE(ICROSS(1)%IU); CLOSE(ICROSS(2)%IU)
+  ALLOCATE(ICROSS(4)); DO I=1,SIZE(ICROSS); CALL IDFNULLIFY(ICROSS(I)); ENDDO
 
   !## read additional reference heights
-  ZCHK=0; IF(TRIM(CROSS_ZCHK).NE.'')THEN
-   ZCHK=1; IF(.NOT.IDFREAD(ICROSS(3),CROSS_ZCHK,0))RETURN
-   CLOSE(ICROSS(3)%IU)
-  ENDIF
+  ZCHK=0; IF(TRIM(CROSS_ZCHK).NE.'')ZCHK=1 
   !## read additional resistances
-  CVAL=0; IF(TRIM(CROSS_CVAL).NE.'')THEN
-   CVAL=1; IF(.NOT.IDFREAD(ICROSS(4),CROSS_CVAL,0))RETURN
-   CLOSE(ICROSS(4)%IU)
-  ENDIF
+  CVAL=0; IF(TRIM(CROSS_CVAL).NE.'')CVAL=1
 
-  IF(.NOT.IDF_EXTENT(2+ZCHK+CVAL,ICROSS,ICROSS(5),2))RETURN
-
-  IF(CELL_SIZE.NE.0.0)THEN
-   ICROSS(5)%DX=CELL_SIZE; ICROSS(5)%DY=ICROSS(5)%DX
-   CALL UTL_IDFSNAPTOGRID(ICROSS(5)%XMIN,ICROSS(5)%XMAX,ICROSS(5)%YMIN,ICROSS(5)%YMAX,ICROSS(5)%DX,ICROSS(5)%NCOL,ICROSS(5)%NROW)
-  ENDIF
+  IF(.NOT.IDFREAD(ICROSS(1),CROSS_PNTR,1))RETURN
 
   !## read pointer
-  CALL IDFCOPY(ICROSS(5),ICROSS(1))
-  IF(.NOT.IDFREADSCALE(CROSS_PNTR,ICROSS(1),7,0,0.0,0))RETURN !## most frequent occurence
   !## read zval at pointer scale
-  CALL IDFCOPY(ICROSS(5),ICROSS(2))
+  CALL IDFCOPY(ICROSS(1),ICROSS(2))
   IF(.NOT.IDFREADSCALE(CROSS_BATH,ICROSS(2),2,1,0.0,0))RETURN !## average value
   IF(ZCHK.EQ.1)THEN
    !## read zchk values
-   CALL IDFCOPY(ICROSS(5),ICROSS(3))
+   CALL IDFCOPY(ICROSS(1),ICROSS(3))
    IF(.NOT.IDFREADSCALE(CROSS_ZCHK,ICROSS(3),2,1,0.0,0))RETURN !## average value
   ENDIF
   IF(CVAL.EQ.1)THEN
    !## read cval values
-   CALL IDFCOPY(ICROSS(5),ICROSS(4))
+   CALL IDFCOPY(ICROSS(1),ICROSS(4))
    IF(.NOT.IDFREADSCALE(CROSS_CVAL,ICROSS(4),2,1,0.0,0))RETURN !## average value
   ENDIF
 
@@ -498,7 +481,11 @@ CONTAINS
    WRITE(6,'(2(A,I10),A)') '+Busy with segment ',ISELISG,' adding ',NCRS,' cross-sections'
 
    DO J=1,NCRS
-
+    
+    IF(J.EQ.NCRS)THEN
+     WRITE(*,*) 'DSDS'
+    ENDIF
+    
     DIST=ISC(ICRS+J-1)%DIST
     !## compute correct x/y coordinate of current cross-section
     CALL ISGADJUSTCOMPUTEXY(IPNT,NPNT,DIST,TD)
@@ -507,6 +494,8 @@ CONTAINS
     IF(IROW.NE.0.AND.ICOL.NE.0)THEN
      IP=ICROSS(1)%X(ICOL,IROW)
      IF(IP.NE.ICROSS(1)%NODATA.AND.ABS(IP).GT.0)THEN
+
+      TH=ICROSS(3)%X(ICOL,IROW)
 
       !## get number of cross-section locations
       N=0; DO IROW=1,ICROSS(1)%NROW; DO ICOL=1,ICROSS(1)%NCOL
@@ -519,16 +508,26 @@ CONTAINS
       !## add extra record to store dx,dy
       N=N+1
 
-!      !## increase memory location cross-section
-!      CALL ISGMEMORYISC(1,ISELISG,IPOS)
-
       !## get location of cross-sections
       IPOS=ISG(ISELISG)%ICRS-1+J
       !## increase/decrease memory data cross-section
       N=N-ABS(ISC(IPOS)%N)
+      if(n.ne.0)then
+      write(*,*) j,n
+      endif
+      
       CALL ISGMEMORYDATISC(N,IPOS,ISEG)
       ISC(IPOS)%N=-1.0*ABS(ISC(IPOS)%N)
 
+    !## check references
+    do ii=1,ncrs
+     iii=isg(iselisg)%icrs-1+ii
+     iiii=isc(iii)%iref
+     if(datisc(iiii)%distance.gt.0.0)then
+     write(*,*) 'wrong'
+     endif
+    enddo
+    
       IF(ZCHK.EQ.0)THEN
        DATISC(ISEG)%DISTANCE= ICROSS(1)%DX
        DATISC(ISEG)%BOTTOM  = ICROSS(1)%DY
@@ -536,10 +535,10 @@ CONTAINS
       ELSE
        DATISC(ISEG)%DISTANCE=-ICROSS(1)%DX
        DATISC(ISEG)%BOTTOM  =-ICROSS(1)%DY
+       DATISC(ISEG)%MRC     = TH !## threshold
       ENDIF
-
-      N=0
-      DO IROW=1,ICROSS(1)%NROW; DO ICOL=1,ICROSS(1)%NCOL
+      
+      N=0; DO IROW=1,ICROSS(1)%NROW; DO ICOL=1,ICROSS(1)%NCOL
        !## location of gridcell equal to pointer value at location of cross-section
        IF(ABS(ICROSS(1)%X(ICOL,IROW)).EQ.ABS(IP))THEN
         IF(ICROSS(2)%X(ICOL,IROW).NE.ICROSS(2)%NODATA)THEN
@@ -547,10 +546,8 @@ CONTAINS
          CALL IDFGETLOC(ICROSS(1),IROW,ICOL,XC,YC)
          DATISC(ISEG+N)%DISTANCE=XC
          DATISC(ISEG+N)%BOTTOM  =YC
-         DATISC(ISEG+N)%MRC      =ICROSS(2)%X(ICOL,IROW)
+         DATISC(ISEG+N)%MRC     =ICROSS(2)%X(ICOL,IROW)
          IF(ZCHK.EQ.1)THEN
-          !## store z-threshold
-          IF(N.EQ.1)DATISC(ISEG)%MRC=ICROSS(3)%X(ICOL,IROW) !## threshold
           CF=INT(1,1)
           IF(CVAL.EQ.1)THEN
            IF(INT(ICROSS(4)%X(ICOL,IROW)).LE.HUGE(CF))CF=INT(ICROSS(4)%X(ICOL,IROW))

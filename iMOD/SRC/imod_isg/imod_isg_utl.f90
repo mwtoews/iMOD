@@ -866,8 +866,9 @@ CONTAINS
   K=K+1
 
   IF(ISDMAXROW.LT.ISD(K)%N)THEN
-   CALL WMESSAGEBOX(OKONLY,EXCLAMATIONICON,COMMONOK,'Maximum number of records to be read is '//TRIM(ITOS(ISDMAXROW))//CHAR(13)// &
-                   'iMOD is now reading '//TRIM(ITOS(ISD(K)%N))//' records, rest will be left out!','Error')
+   CALL WMESSAGEBOX(OKONLY,EXCLAMATIONICON,COMMONOK,'Maximum number of records for Waterlevels '//TRIM(ISD(K)%CNAME)//' is '//TRIM(ITOS(ISDMAXROW))//CHAR(13)// &
+                   'iMOD is now reading '//TRIM(ITOS(ISD(K)%N))//' records, rest will be left out!.'//CHAR(13)// &
+                    'Be aware that once you save the properties, the rest will be ignored','Warning')
   ENDIF
 
   TISD(I)=0
@@ -923,8 +924,9 @@ CONTAINS
 
   IF(IDIALOG.GT.0)THEN
    IF(ISCMAXROW.LT.ABS(ISC(K)%N))THEN
-    CALL WMESSAGEBOX(OKONLY,EXCLAMATIONICON,COMMONOK,'Maximum number of records to be read is '//TRIM(ITOS(ISCMAXROW))//CHAR(13)// &
-                    'iMOD is now reading '//TRIM(ITOS(ABS(ISC(K)%N)))//' records, rest will be left out!','Error')
+    CALL WMESSAGEBOX(OKONLY,EXCLAMATIONICON,COMMONOK,'Maximum number of records for Cross-Sections '//TRIM(ISC(K)%CNAME)//' is '//TRIM(ITOS(ISCMAXROW))//CHAR(13)// &
+                    'iMOD is now reading '//TRIM(ITOS(ABS(ISC(K)%N)))//' records, rest will be left out.'//CHAR(13)// &
+                    'Be aware that once you save the properties, the rest will be ignored','Warning')
    ENDIF
   ENDIF
   
@@ -980,8 +982,9 @@ CONTAINS
   K=K+1
 
   IF(ISTMAXROW.LT.IST(K)%N)THEN
-   CALL WMESSAGEBOX(OKONLY,EXCLAMATIONICON,COMMONOK,'Maximum number of records to be read is '//TRIM(ITOS(ISTMAXROW))//CHAR(13)// &
-                   'iMOD is now reading '//TRIM(ITOS(IST(K)%N))//' records, rest will be left out!','Error')
+   CALL WMESSAGEBOX(OKONLY,EXCLAMATIONICON,COMMONOK,'Maximum number of records for Structures '//TRIM(IST(K)%CNAME)//' is '//TRIM(ITOS(ISTMAXROW))//CHAR(13)// &
+                   'iMOD is now reading '//TRIM(ITOS(IST(K)%N))//' records, rest will be left out!'//CHAR(13)// &
+                    'Be aware that once you save the properties, the rest will be ignored','Warning')
   ENDIF
 
   TIST(I)=0
@@ -1035,8 +1038,9 @@ CONTAINS
   K=K+1
 
   IF(ISQMAXROW.LT.ISQ(K)%N)THEN
-   CALL WMESSAGEBOX(OKONLY,EXCLAMATIONICON,COMMONOK,'Maximum number of records to be read is '//TRIM(ITOS(ISQMAXROW))//CHAR(13)// &
-                   'iMOD is now reading '//TRIM(ITOS(ISQ(K)%N))//' records, rest will be left out!','Error')
+   CALL WMESSAGEBOX(OKONLY,EXCLAMATIONICON,COMMONOK,'Maximum number of records for Relationships '//TRIM(ISQ(K)%CNAME)//' is '//TRIM(ITOS(ISQMAXROW))//CHAR(13)// &
+                   'iMOD is now reading '//TRIM(ITOS(ISQ(K)%N))//' records, rest will be left out!'//CHAR(13)// &
+                    'Be aware that once you save the properties, the rest will be ignored','Warning')
   ENDIF
 
   TISQ(I)=0
@@ -1070,9 +1074,9 @@ CONTAINS
  NSEG=ISG(ISELISG)%NSEG
 
  IF(ISPMAXROW.LT.NSEG)THEN
-  CALL WMESSAGEBOX(OKONLY,EXCLAMATIONICON,COMMONOK,'Maximum number of records to be read is '//TRIM(ITOS(ISPMAXROW))//CHAR(13)// &
+  CALL WMESSAGEBOX(OKONLY,EXCLAMATIONICON,COMMONOK,'Maximum number of records for Segment Points is '//TRIM(ITOS(ISPMAXROW))//CHAR(13)// &
                   'iMOD wants to read '//TRIM(ITOS(NSEG))//' records, rest will be left out!'//CHAR(13)// &
-                  'If you continue and save you will be loose data!','Error')
+                  'Be aware that once you save the properties, the rest will be ignored','Warning')
  ENDIF
 
  ISEG=ISG(ISELISG)%ISEG-1
@@ -1140,7 +1144,10 @@ CONTAINS
  N               =ABS(ISC(IPOS)%N)
 
  !## adjust isc variable
- ISC(IPOS:NISC-1)=ISC(IPOS+1:NISC)
+ DO I=IPOS,NISC-1
+  ISC(I)=ISC(I+1)
+ ENDDO
+! ISC(IPOS:NISC-1)=ISC(IPOS+1:NISC)
  NISC            =NISC-1
  ISG(IISG)%NCRS  =ISG(IISG)%NCRS-1
 
@@ -1158,7 +1165,10 @@ CONTAINS
 
  !## remove from iscdat = only whenever no other refers to cross-section
  IF(J.GT.NISC.AND.N.GT.0)THEN
-  DATISC(IREF:NDISC-N)=DATISC(IREF+N:NDISC)
+  DO I=IREF,NDISC-N
+   DATISC(I)=DATISC(I+N)
+  ENDDO
+!  DATISC(IREF:NDISC-N)=DATISC(IREF+N:NDISC)
   NDISC               =NDISC-N
   !## adjust other references to selected cross-section definition
   DO I=1,NISC
@@ -1531,7 +1541,8 @@ CONTAINS
  !###===============================================================================
  IMPLICIT NONE
  INTEGER,INTENT(IN) :: DN
-
+ INTEGER :: I
+ 
  NISG=NISG+DN
 
  IF(NISG.GT.DIMISG)THEN
@@ -1542,7 +1553,10 @@ CONTAINS
 
   IF(ALLOCATED(ISG))DEALLOCATE(ISG)
   ALLOCATE(ISG(NISG))
-  ISG(1:DIMISG)=DUMISG(1:DIMISG)
+  DO I=1,DIMISG
+   ISG(I)=DUMISG(I)
+  ENDDO
+!  ISG(1:DIMISG)=DUMISG(1:DIMISG)
   IF(ALLOCATED(DUMISG))DEALLOCATE(DUMISG)
 
   DIMISG=NISG
@@ -1557,7 +1571,7 @@ CONTAINS
  IMPLICIT NONE
  INTEGER,INTENT(IN) :: DN,K
  INTEGER,INTENT(OUT) :: ICLC
- INTEGER :: I,N
+ INTEGER :: I,N,IREF
 
  NISD=NISD+DN
 
@@ -1569,7 +1583,10 @@ CONTAINS
 
   IF(ALLOCATED(ISD))DEALLOCATE(ISD)
   ALLOCATE(ISD(NISD))
-  ISD(1:DIMISD)=DUMISD(1:DIMISD)
+  DO I=1,DIMISD
+   ISD(I)=DUMISD(I)
+  ENDDO
+!  ISD(1:DIMISD)=DUMISD(1:DIMISD)
   IF(ALLOCATED(DUMISD))DEALLOCATE(DUMISD)
 
   DIMISD=NISD
@@ -1577,13 +1594,31 @@ CONTAINS
  ENDIF
 
  !## copy data to create appropriate space
- ICLC=MAX(1,ISG(K)%ICLC)
- IF(DN.GT.0)THEN
-  IF(ICLC+DN.LE.NISD)ISD(ICLC+DN:NISD)=ISD(ICLC:NISD-DN)
- ELSEIF(DN.LT.0)THEN
-  N=ISG(K)%NCLC
-  ISD(ICLC+N+DN:NISD+DN)=ISD(ICLC+N:NISD)
+ IREF=MAX(1,ISG(K)%ICLC)
+
+ !## copy data to create appropriate space
+ IF(IREF.GT.0)THEN
+  !## current space
+  N=ABS(ISG(K)%NCLC)
+  !## add space
+  IF(DN.GT.0)THEN
+   DO I=NISD,IREF+N,-1
+    ISD(I)=ISD(I-DN)
+   ENDDO
+  !## remove space
+  ELSEIF(DN.LT.0)THEN
+   DO I=IREF+N+DN,NISD
+    ISD(I)=ISD(I-DN)
+   ENDDO
+  ENDIF
  ENDIF
+
+! IF(DN.GT.0)THEN
+!  IF(ICLC+DN.LE.NISD)ISD(ICLC+DN:NISD)=ISD(ICLC:NISD-DN)
+! ELSEIF(DN.LT.0)THEN
+!  N=ISG(K)%NCLC
+!  ISD(ICLC+N+DN:NISD+DN)=ISD(ICLC+N:NISD)
+! ENDIF
 
  ISG(K)%NCLC=ISG(K)%NCLC+DN
 
@@ -1604,7 +1639,7 @@ CONTAINS
  IMPLICIT NONE
  INTEGER,INTENT(IN) :: DN,K
  INTEGER,INTENT(OUT) :: ICRS
- INTEGER :: I,N
+ INTEGER :: I,N,IREF
 
  NISC=NISC+DN
 
@@ -1616,7 +1651,10 @@ CONTAINS
 
   IF(ALLOCATED(ISC))DEALLOCATE(ISC)
   ALLOCATE(ISC(NISC))
-  ISC(1:DIMISC)=DUMISC(1:DIMISC)
+  DO I=1,DIMISC
+   ISC(I)=DUMISC(I)
+  ENDDO
+!  ISC(1:DIMISC)=DUMISC(1:DIMISC)
   IF(ALLOCATED(DUMISC))DEALLOCATE(DUMISC)
 
   DIMISC=NISC
@@ -1624,20 +1662,38 @@ CONTAINS
  ENDIF  
 
  !## copy data to create appropriate space
- ICRS=MAX(1,ISG(K)%ICRS)
- IF(DN.GT.0)THEN
-  IF(ICRS+DN.LE.NISC)ISC(ICRS+DN:NISC)=ISC(ICRS:NISC-DN)
- ELSEIF(DN.LT.0)THEN
-  N=ISG(K)%NCRS
-  ISC(ICRS+N+DN:NISC+DN)=ISC(ICRS+N:NISC)
+ IREF=MAX(1,ISG(K)%ICRS)
+
+ !## copy data to create appropriate space
+ IF(IREF.GT.0)THEN
+  !## current space
+  N=ABS(ISG(K)%NCRS)
+  !## add space
+  IF(DN.GT.0)THEN
+   DO I=NISG,IREF+N,-1
+    ISG(I)=ISG(I-DN)
+   ENDDO
+  !## remove space
+  ELSEIF(DN.LT.0)THEN
+   DO I=IREF+N+DN,NISG
+    ISG(I)=ISG(I-DN)
+   ENDDO
+  ENDIF
  ENDIF
+
+! IF(DN.GT.0)THEN
+!  IF(ICRS+DN.LE.NISC)ISC(ICRS+DN:NISC)=ISC(ICRS:NISC-DN)
+! ELSEIF(DN.LT.0)THEN
+!  N=ISG(K)%NCRS
+!  ISC(ICRS+N+DN:NISC+DN)=ISC(ICRS+N:NISC)
+! ENDIF
  
  ISG(K)%NCRS=ISG(K)%NCRS+DN
 
  !## change all citations greater than isd(iseg)%iref
  ICRS=ISG(K)%ICRS
  DO I=1,NISG
-  IF(ISG(I)%ICRS.GT.ICRS)ISG(I)%ICRS=ISG(I)%ICRS+DN
+  IF(ISG(I)%ICRS.GT.IREF)ISG(I)%ICRS=ISG(I)%ICRS+DN
  END DO
 
  ISG(K)%ICRS=MAX(1,ISG(K)%ICRS)
@@ -1651,7 +1707,7 @@ CONTAINS
  IMPLICIT NONE
  INTEGER,INTENT(IN) :: DN,K
  INTEGER,INTENT(OUT) :: ISTW
- INTEGER :: I,N
+ INTEGER :: I,N,IREF
 
  NIST=NIST+DN
 
@@ -1663,7 +1719,10 @@ CONTAINS
 
   IF(ALLOCATED(IST))DEALLOCATE(IST)
   ALLOCATE(IST(NIST))
-  IST(1:DIMIST)=DUMIST(1:DIMIST)
+  DO I=1,DIMIST
+   IST(I)=DUMIST(I)
+  ENDDO
+!  IST(1:DIMIST)=DUMIST(1:DIMIST)
   IF(ALLOCATED(DUMIST))DEALLOCATE(DUMIST)
 
   DIMIST=NIST
@@ -1671,20 +1730,38 @@ CONTAINS
  ENDIF
 
  !## copy data to create appropriate space
- ISTW=MAX(1,ISG(K)%ISTW)
- IF(DN.GT.0)THEN
-  IF(ISTW+DN.LE.NIST)IST(ISTW+DN:NIST)=IST(ISTW:NIST-DN)
- ELSEIF(DN.LT.0)THEN
-  N=ISG(K)%NSTW
-  IST(ISTW+N+DN:NIST+DN)=IST(ISTW+N:NIST)
+ IREF=MAX(1,ISG(K)%ISTW)
+
+ !## copy data to create appropriate space
+ IF(IREF.GT.0)THEN
+  !## current space
+  N=ABS(ISG(K)%NSTW)
+  !## add space
+  IF(DN.GT.0)THEN
+   DO I=NIST,IREF+N,-1
+    IST(I)=IST(I-DN)
+   ENDDO
+  !## remove space
+  ELSEIF(DN.LT.0)THEN
+   DO I=IREF+N+DN,NIST
+    IST(I)=IST(I-DN)
+   ENDDO
+  ENDIF
  ENDIF
+
+! IF(DN.GT.0)THEN
+!  IF(ISTW+DN.LE.NIST)IST(ISTW+DN:NIST)=IST(ISTW:NIST-DN)
+! ELSEIF(DN.LT.0)THEN
+!  N=ISG(K)%NSTW
+!  IST(ISTW+N+DN:NIST+DN)=IST(ISTW+N:NIST)
+! ENDIF
 
  ISG(K)%NSTW=ISG(K)%NSTW+DN
 
  !## change all citations greater than isd(iseg)%iref
  ISTW=ISG(K)%ISTW
  DO I=1,NISG
-  IF(ISG(I)%ISTW.GT.ISTW)ISG(I)%ISTW=ISG(I)%ISTW+DN
+  IF(ISG(I)%ISTW.GT.IREF)ISG(I)%ISTW=ISG(I)%ISTW+DN
  END DO
 
  ISG(K)%ISTW=MAX(1,ISG(K)%ISTW)
@@ -1698,7 +1775,7 @@ CONTAINS
  IMPLICIT NONE
  INTEGER,INTENT(IN) :: DN,K
  INTEGER,INTENT(OUT) :: IQHR
- INTEGER :: I,N
+ INTEGER :: I,N,IREF
 
  NISQ=NISQ+DN
 
@@ -1710,7 +1787,10 @@ CONTAINS
 
   IF(ALLOCATED(ISQ))DEALLOCATE(ISQ)
   ALLOCATE(ISQ(NISQ))
-  ISQ(1:DIMISQ)=DUMISQ(1:DIMISQ)
+  DO I=1,DIMISQ
+   ISQ(I)=DUMISQ(I)
+  ENDDO
+!  ISQ(1:DIMISQ)=DUMISQ(1:DIMISQ)
   IF(ALLOCATED(DUMISQ))DEALLOCATE(DUMISQ)
 
   DIMISQ=NISQ
@@ -1718,22 +1798,38 @@ CONTAINS
  ENDIF
 
  !## copy data to create appropriate space
- IQHR=MAX(1,ISG(K)%IQHR)
-! IQHR=MAX(0,ISG(K)%IQHR)
+ IREF=MAX(1,ISG(K)%IQHR)
 
- IF(DN.GT.0)THEN
-  IF(IQHR+DN.LT.NISQ)ISQ(IQHR+DN:NISQ)=ISQ(IQHR:NISQ-DN)
- ELSEIF(DN.LT.0)THEN
-  N=ISG(K)%NQHR
-  ISQ(IQHR+N+DN:NISQ+DN)=ISQ(IQHR+N:NISQ)
+ !## copy data to create appropriate space
+ IF(IREF.GT.0)THEN
+  !## current space
+  N=ABS(ISG(K)%NQHR)
+  !## add space
+  IF(DN.GT.0)THEN
+   DO I=NISQ,IREF+N,-1
+    ISQ(I)=ISQ(I-DN)
+   ENDDO
+  !## remove space
+  ELSEIF(DN.LT.0)THEN
+   DO I=IREF+N+DN,NISQ
+    ISQ(I)=ISQ(I-DN)
+   ENDDO
+  ENDIF
  ENDIF
+ 
+! IF(DN.GT.0)THEN
+!  IF(IQHR+DN.LT.NISQ)ISQ(IQHR+DN:NISQ)=ISQ(IQHR:NISQ-DN)
+! ELSEIF(DN.LT.0)THEN
+!  N=ISG(K)%NQHR
+!  ISQ(IQHR+N+DN:NISQ+DN)=ISQ(IQHR+N:NISQ)
+! ENDIF
 
  ISG(K)%NQHR=ISG(K)%NQHR+DN
 
  !## change all citations greater than isd(iseg)%iref
  IQHR=ISG(K)%IQHR
  DO I=1,NISG
-  IF(ISG(I)%IQHR.GT.IQHR)ISG(I)%IQHR=ISG(I)%IQHR+DN
+  IF(ISG(I)%IQHR.GT.IREF)ISG(I)%IQHR=ISG(I)%IQHR+DN
  END DO
 
  ISG(K)%IQHR=MAX(1,ISG(K)%IQHR)
@@ -1747,7 +1843,7 @@ CONTAINS
  IMPLICIT NONE
  INTEGER,INTENT(OUT) :: ISEG
  INTEGER,INTENT(IN) :: DN,K
- INTEGER :: I,N
+ INTEGER :: I,N,IREF
 
  NISP=NISP+DN
 
@@ -1759,7 +1855,10 @@ CONTAINS
 
   IF(ALLOCATED(ISP))DEALLOCATE(ISP)
   ALLOCATE(ISP(NISP))
-  ISP(1:DIMISP)=DUMISP(1:DIMISP)
+  DO I=1,DIMISP
+   ISP(I)=DUMISP(I)
+  ENDDO
+!  ISP(1:DIMISP)=DUMISP(1:DIMISP)
   IF(ALLOCATED(DUMISP))DEALLOCATE(DUMISP)
 
   DIMISP=NISP
@@ -1767,20 +1866,38 @@ CONTAINS
  ENDIF
 
  !## copy data to create appropriate space
- ISEG=MAX(1,ISG(K)%ISEG)
- IF(DN.GT.0)THEN
-  IF(ISEG+DN.LE.NISP)ISP(ISEG+DN:NISP)=ISP(ISEG:NISP-DN)
- ELSEIF(DN.LT.0)THEN
-  N=ISG(K)%NSEG
-  ISP(ISEG+N+DN:NISP+DN)=ISP(ISEG+N:NISP)
+ IREF=MAX(1,ISG(K)%ISEG)
+
+ !## copy data to create appropriate space
+ IF(IREF.GT.0)THEN
+  !## current space
+  N=ABS(ISG(K)%NSEG)
+  !## add space
+  IF(DN.GT.0)THEN
+   DO I=NISP,IREF+N,-1
+    ISP(I)=ISP(I-DN)
+   ENDDO
+  !## remove space
+  ELSEIF(DN.LT.0)THEN
+   DO I=IREF+N+DN,NISP
+    ISP(I)=ISP(I-DN)
+   ENDDO
+  ENDIF
  ENDIF
+
+! IF(DN.GT.0)THEN
+!  IF(ISEG+DN.LE.NISP)ISP(ISEG+DN:NISP)=ISP(ISEG:NISP-DN)
+! ELSEIF(DN.LT.0)THEN
+!  N=ISG(K)%NSEG
+!  ISP(ISEG+N+DN:NISP+DN)=ISP(ISEG+N:NISP)
+! ENDIF
 
  ISG(K)%NSEG=ISG(K)%NSEG+DN
 
  !## change all citations greater than isg(k)%iseg
- ISEG=ISG(K)%ISEG
+! ISEG=ISG(K)%ISEG
  DO I=1,NISG
-  IF(ISG(I)%ISEG.GT.ISEG)ISG(I)%ISEG=ISG(I)%ISEG+DN
+  IF(ISG(I)%ISEG.GT.IREF)ISG(I)%ISEG=ISG(I)%ISEG+DN
  END DO
 
  ISG(K)%ISEG=MAX(1,ISG(K)%ISEG)
@@ -1794,7 +1911,7 @@ CONTAINS
  IMPLICIT NONE
  INTEGER,INTENT(IN) :: DN,K
  INTEGER,INTENT(OUT) :: ICLC
- INTEGER :: I,N
+ INTEGER :: I,N,IREF
 
  NDISD=NDISD+DN
 
@@ -1806,7 +1923,10 @@ CONTAINS
 
   IF(ALLOCATED(DATISD))DEALLOCATE(DATISD)
   ALLOCATE(DATISD(NDISD))
-  DATISD(1:DIMDATISD)=DUMDATISD(1:DIMDATISD)
+  DO I=1,DIMDATISD
+   DATISD(I)=DUMDATISD(I)
+  ENDDO
+!  DATISD(1:DIMDATISD)=DUMDATISD(1:DIMDATISD)
   IF(ALLOCATED(DUMDATISD))DEALLOCATE(DUMDATISD)
 
   DIMDATISD=NDISD
@@ -1814,22 +1934,39 @@ CONTAINS
  ENDIF
 
  !## copy data to create appropriate space
- ICLC =ISD(K)%IREF
+ IREF =ISD(K)%IREF
 
- IF(ICLC.GT.0)THEN
+ !## copy data to create appropriate space
+ IF(IREF.GT.0)THEN
+  !## current space
+  N=ABS(ISD(K)%N)
+  !## add space
   IF(DN.GT.0)THEN
-   IF(ICLC+DN.LE.NDISD)DATISD(ICLC+DN:NDISD)=DATISD(ICLC:NDISD-DN)
+   DO I=NDISD,IREF+N,-1
+    DATISD(I)=DATISD(I-DN)
+   ENDDO
+  !## remove space
   ELSEIF(DN.LT.0)THEN
-   N=ISD(K)%N
-   DATISD(ICLC+N+DN:NDISD+DN)=DATISD(ICLC+N:NDISD)
+   DO I=IREF+N+DN,NDISD
+    DATISD(I)=DATISD(I-DN)
+   ENDDO
   ENDIF
  ENDIF
+ 
+! IF(ICLC.GT.0)THEN
+!  IF(DN.GT.0)THEN
+!   IF(ICLC+DN.LE.NDISD)DATISD(ICLC+DN:NDISD)=DATISD(ICLC:NDISD-DN)
+!  ELSEIF(DN.LT.0)THEN
+!   N=ISD(K)%N
+!   DATISD(ICLC+N+DN:NDISD+DN)=DATISD(ICLC+N:NDISD)
+!  ENDIF
+! ENDIF
 
  ISD(K)%N=ISD(K)%N+DN
 
  !## change all citations greater than isd(k)%iref
  DO I=1,NISD
-  IF(ISD(I)%IREF.GT.ICLC)ISD(I)%IREF=ISD(I)%IREF+DN
+  IF(ISD(I)%IREF.GT.IREF)ISD(I)%IREF=ISD(I)%IREF+DN
  END DO
 
  ISD(K)%IREF=MAX(1,ISD(K)%IREF)
@@ -1843,10 +1980,9 @@ CONTAINS
  IMPLICIT NONE
  INTEGER,INTENT(IN) :: DN,K
  INTEGER,INTENT(OUT) :: ICRS
- INTEGER :: I,N,J
+ INTEGER :: I,N,J,IREF
 
  NDISC=NDISC+DN
- ICRS =ISC(K)%IREF
 
  IF(NDISC.GT.DIMDATISC)THEN
 
@@ -1856,7 +1992,9 @@ CONTAINS
 
   IF(ALLOCATED(DATISC))DEALLOCATE(DATISC)
   ALLOCATE(DATISC(NDISC))
-  DATISC(1:DIMDATISC)=DUMDATISC(1:DIMDATISC)
+  DO I=1,DIMDATISC
+   DATISC(I)=DUMDATISC(I)
+  ENDDO
   IF(ALLOCATED(DUMDATISC))DEALLOCATE(DUMDATISC)
 
   DIMDATISC=NDISC
@@ -1864,12 +2002,22 @@ CONTAINS
  ENDIF
 
  !## copy data to create appropriate space
- IF(ICRS.GT.0)THEN
+ IREF =ISC(K)%IREF
+
+ !## copy data to create appropriate space
+ IF(IREF.GT.0)THEN
+  !## current space
+  N=ABS(ISC(K)%N)
+  !## add space
   IF(DN.GT.0)THEN
-   IF(ICRS+DN.LE.NDISC)DATISC(ICRS+DN:NDISC)=DATISC(ICRS:NDISC-DN)
+   DO I=NDISC,IREF+N,-1
+    DATISC(I)=DATISC(I-DN)
+   ENDDO
+  !## remove space
   ELSEIF(DN.LT.0)THEN
-   N=ABS(ISC(K)%N)
-   DATISC(ICRS+N+DN:NDISC+DN)=DATISC(ICRS+N:NDISC)
+   DO I=IREF+N+DN,NDISC
+    DATISC(I)=DATISC(I-DN)
+   ENDDO
   ENDIF
  ENDIF
 
@@ -1878,7 +2026,7 @@ CONTAINS
  
  !## change all citations greater than isc(k)%iref
  DO I=1,NISC
-  IF(ISC(I)%IREF.GT.ICRS)ISC(I)%IREF=ISC(I)%IREF+DN
+  IF(ISC(I)%IREF.GT.IREF)ISC(I)%IREF=ISC(I)%IREF+DN
  END DO
 
  ISC(K)%IREF=MAX(1,ISC(K)%IREF)
@@ -1892,10 +2040,9 @@ CONTAINS
  IMPLICIT NONE
  INTEGER,INTENT(IN) :: DN,K
  INTEGER,INTENT(OUT) :: ISTW
- INTEGER :: I,N
+ INTEGER :: I,N,IREF
 
  NDIST=NDIST+DN
- ISTW =IST(K)%IREF
 
  IF(NDIST.GT.DIMDATIST)THEN
 
@@ -1905,28 +2052,50 @@ CONTAINS
 
   IF(ALLOCATED(DATIST))DEALLOCATE(DATIST)
   ALLOCATE(DATIST(NDIST))
-  DATIST(1:DIMDATIST)=DUMDATIST(1:DIMDATIST)
+  DO I=1,DIMDATIST
+   DATIST(I)=DUMDATIST(I)
+  ENDDO
+   DATIST(1:DIMDATIST)=DUMDATIST(1:DIMDATIST)
   IF(ALLOCATED(DUMDATIST))DEALLOCATE(DUMDATIST)
 
   DIMDATIST=NDIST
 
  ENDIF
 
+ IREF =IST(K)%IREF
+
  !## copy data to create appropriate space
- IF(ISTW.GT.0)THEN
+ IF(IREF.GT.0)THEN
+  !## current space
+  N=ABS(IST(K)%N)
+  !## add space
   IF(DN.GT.0)THEN
-   IF(ISTW+DN.LE.NDIST)DATIST(ISTW+DN:NDIST)=DATIST(ISTW:NDIST-DN)
+   DO I=NDIST,IREF+N,-1
+    DATIST(I)=DATIST(I-DN)
+   ENDDO
+  !## remove space
   ELSEIF(DN.LT.0)THEN
-   N=IST(K)%N
-   DATIST(ISTW+N+DN:NDIST+DN)=DATIST(ISTW+N:NDIST)
+   DO I=IREF+N+DN,NDIST
+    DATIST(I)=DATIST(I-DN)
+   ENDDO
   ENDIF
  ENDIF
+
+! !## copy data to create appropriate space
+! IF(ISTW.GT.0)THEN
+!  IF(DN.GT.0)THEN
+!   IF(ISTW+DN.LE.NDIST)DATIST(ISTW+DN:NDIST)=DATIST(ISTW:NDIST-DN)
+!  ELSEIF(DN.LT.0)THEN
+!   N=IST(K)%N
+!   DATIST(ISTW+N+DN:NDIST+DN)=DATIST(ISTW+N:NDIST)
+!  ENDIF
+! ENDIF
 
  IST(K)%N=IST(K)%N+DN
 
  !## change all citations greater than ist(k)%iref
  DO I=1,NIST
-  IF(IST(I)%IREF.GT.ISTW)IST(I)%IREF=IST(I)%IREF+DN
+  IF(IST(I)%IREF.GT.IREF)IST(I)%IREF=IST(I)%IREF+DN
  END DO
 
  IST(K)%IREF=MAX(1,IST(K)%IREF)
@@ -1940,10 +2109,9 @@ CONTAINS
  IMPLICIT NONE
  INTEGER,INTENT(IN) :: DN,K
  INTEGER,INTENT(OUT) :: IQHR
- INTEGER :: I,N
+ INTEGER :: I,N,IREF
 
  NDISQ=NDISQ+DN
- IQHR =ISQ(K)%IREF
 
  IF(NDISQ.GT.DIMDATISQ)THEN
 
@@ -1953,28 +2121,50 @@ CONTAINS
 
   IF(ALLOCATED(DATISQ))DEALLOCATE(DATISQ)
   ALLOCATE(DATISQ(NDISQ))
-  DATISQ(1:DIMDATISQ)=DUMDATISQ(1:DIMDATISQ)
+  DO I=1,DIMDATISQ
+   DATISQ(I)=DUMDATISQ(I)
+  ENDDO
+!  DATISQ(1:DIMDATISQ)=DUMDATISQ(1:DIMDATISQ)
   IF(ALLOCATED(DUMDATISQ))DEALLOCATE(DUMDATISQ)
 
   DIMDATISQ=NDISQ
 
  ENDIF
 
+ IREF =ISQ(K)%IREF
+
  !## copy data to create appropriate space
- IF(IQHR.GT.0)THEN
+ IF(IREF.GT.0)THEN
+  !## current space
+  N=ABS(ISQ(K)%N)
+  !## add space
   IF(DN.GT.0)THEN
-   IF(IQHR+DN.LE.NDISQ)DATISQ(IQHR+DN:NDISQ)=DATISQ(IQHR:NDISQ-DN)
+   DO I=NDISQ,IREF+N,-1
+    DATISQ(I)=DATISQ(I-DN)
+   ENDDO
+  !## remove space
   ELSEIF(DN.LT.0)THEN
-   N=ISQ(K)%N
-   DATISQ(IQHR+N+DN:NDISQ+DN)=DATISQ(IQHR+N:NDISQ)
+   DO I=IREF+N+DN,NDISQ
+    DATISQ(I)=DATISQ(I-DN)
+   ENDDO
   ENDIF
  ENDIF
+
+! !## copy data to create appropriate space
+! IF(IQHR.GT.0)THEN
+!  IF(DN.GT.0)THEN
+!   IF(IQHR+DN.LE.NDISQ)DATISQ(IQHR+DN:NDISQ)=DATISQ(IQHR:NDISQ-DN)
+!  ELSEIF(DN.LT.0)THEN
+!   N=ISQ(K)%N
+!   DATISQ(IQHR+N+DN:NDISQ+DN)=DATISQ(IQHR+N:NDISQ)
+!  ENDIF
+! ENDIF
 
  ISQ(K)%N=ISQ(K)%N+DN
 
  !## change all citations greater than ist(k)%iref
  DO I=1,NISQ
-  IF(ISQ(I)%IREF.GT.IQHR)ISQ(I)%IREF=ISQ(I)%IREF+DN
+  IF(ISQ(I)%IREF.GT.IREF)ISQ(I)%IREF=ISQ(I)%IREF+DN
  END DO
 
  ISQ(K)%IREF=MAX(1,ISQ(K)%IREF)
