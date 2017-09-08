@@ -416,7 +416,13 @@ CONTAINS
 
  !## define size of header
  SKIPLINES=0; DO 
-  READ(IU,'(A5000)') LINE; IF(UTL_CAP(LINE(1:4),'U').EQ.'DATE')EXIT; SKIPLINES=SKIPLINES+1
+  READ(IU,'(A5000)',IOSTAT=IOS) LINE
+  IF(IOS.NE.0)THEN
+   CALL WMESSAGEBOX(OKONLY,EXCLAMATIONICON,COMMONOK,'iMOD cannot READ the file called:'//CHAR(13)//&
+     TRIM(CSVFNAME)//CHAR(13)//' correctly. Probably this file is corrupt.','Error')
+   RETURN
+  ENDIF
+  IF(UTL_CAP(LINE(1:4),'U').EQ.'DATE')EXIT; SKIPLINES=SKIPLINES+1
  ENDDO
 
  !## check whether the string line was truly long enough
