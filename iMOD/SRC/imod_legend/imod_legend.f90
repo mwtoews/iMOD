@@ -58,8 +58,8 @@ CONTAINS
  IMPLICIT NONE
  INTEGER,INTENT(IN) :: CODE
  TYPE(WIN_MESSAGE) :: MESSAGE
- INTEGER :: ITYPE,IPLOT,IROW,ICOL,IRGB,IOS,N,IOPTION,NLEG,LTYPE
- REAL :: XINT
+ INTEGER :: ITYPE,IPLOT,IROW,ICOL,IRGB,IOS,N,IOPTION,NLEG,LTYPE,I
+ REAL :: XINT,DX,X1,X2,X3,X4
  CHARACTER(LEN=256) :: IDFNAME
  INTEGER,DIMENSION(4) :: IP
   
@@ -131,8 +131,22 @@ CONTAINS
         ENDIF
        !## goto stretched
        CASE (ID_DLEGTAB2)
+        !## put classes to be used later for legend in leg_get()
+        CALL LEG_SAMPLE_STRETCHED_GETIPOS(IPLOT,1)
+        X4=MP(IPLOT)%LEG%CLASS(0)
+        X3=MP(IPLOT)%LEG%CLASS(MP(IPLOT)%LEG%NCLR)
+        DX=(X4-X3)/REAL(MXCGRAD-1)
+        MP(IPLOT)%LEG%CGRAD=1; X2=X4
+        DO I=2,MXCGRAD-1
+         IF(IPOS(I).EQ.IPOS(I-1))MP(IPLOT)%LEG%CGRAD(I)=0
+         X1=X2-DX*REAL(I-1)
+         MP(IPLOT)%LEG%CLASS(IPOS(I)-1)=X1
+        ENDDO
+        MP(IPLOT)%LEG%CLASS(0)=X4
+        MP(IPLOT)%LEG%CLASS(MP(IPLOT)%LEG%NCLR)=X3
         !## generate legend
-        CALL LEG_SAMPLE_STRETCHED(IPLOT)
+        IPOS(MXCGRAD)=MP(IPLOT)%LEG%NCLR+1
+        CALL LEG_SAMPLE_STRETCHED(IPLOT,0)
         MP(IPLOT)%LEG%NCLR=MXCLR
         CALL LEG_GET(IPLOT); CALL LEG_PUT(IPLOT) 
       END SELECT
@@ -1065,7 +1079,6 @@ CONTAINS
   CALL WDIALOGSETTAB(ID_DLEGTAB,ID_DLEGTAB2)
   CALL WDIALOGSELECT(ID_DLEGTAB2)
   CALL WDIALOGPUTSTRING(IDF_STRING1,TRIM(MP(IPLOT)%LEG%HEDTXT))
-!  CALL WDIALOGGETCHECKBOX(IDF_CHECK8,I)
 
   !## give min/max values
   DO I=1,MXCGRAD
@@ -1135,7 +1148,6 @@ CONTAINS
   I1=1
   DO I=1,MXCGRAD
    CALL WDIALOGGETCHECKBOX(ID2(I),MP(IPLOT)%LEG%CGRAD(I))
-!write(*,*) i,MP(IPLOT)%LEG%ICLRGRAD(I)
    MP(IPLOT)%LEG%ICLRGRAD(I)=0
    IF(MP(IPLOT)%LEG%CGRAD(I).EQ.0)CYCLE
 
@@ -1163,10 +1175,10 @@ CONTAINS
  END SUBROUTINE LEG_GET
 
  !###====================================================================
- SUBROUTINE LEG_SAMPLE_STRETCHED_GETIPOS(IPLOT)
+ SUBROUTINE LEG_SAMPLE_STRETCHED_GETIPOS(IPLOT,ION)
  !###====================================================================
  IMPLICIT NONE
- INTEGER,INTENT(IN) :: IPLOT
+ INTEGER,INTENT(IN) :: IPLOT,ION
  INTEGER :: I,J,N
  REAL :: DC
  
@@ -1174,16 +1186,20 @@ CONTAINS
  !## cannot do anything
  IF(N.LE.0)RETURN
  
- DC=REAL(N)/(7.0-1.0)
- DO I=1,MXCGRAD
-  J=INT(REAL(I-1)*DC)+1
-  IPOS(I)=J
- ENDDO
- IPOS(MXCGRAD)=MP(IPLOT)%LEG%NCLR
+ IF(ION.EQ.1)THEN
  
- !## put them all on
- MP(IPLOT)%LEG%CGRAD=1
-
+  DC=REAL(N)/(7.0-1.0)
+  DO I=1,MXCGRAD
+   J=INT(REAL(I-1)*DC)+1
+   IPOS(I)=J
+  ENDDO
+  IPOS(MXCGRAD)=MP(IPLOT)%LEG%NCLR
+ 
+  !## put them all on
+  MP(IPLOT)%LEG%CGRAD=1
+ 
+ ENDIF
+ 
  DO I=1,MXCGRAD
   MP(IPLOT)%LEG%ICLRGRAD(I)=MP(IPLOT)%LEG%RGB(IPOS(I))
  ENDDO
@@ -1191,13 +1207,13 @@ CONTAINS
  END SUBROUTINE LEG_SAMPLE_STRETCHED_GETIPOS
  
  !###====================================================================
- SUBROUTINE LEG_SAMPLE_STRETCHED(IPLOT)
+ SUBROUTINE LEG_SAMPLE_STRETCHED(IPLOT,ION)
  !###====================================================================
  IMPLICIT NONE
- INTEGER,INTENT(IN) :: IPLOT
+ INTEGER,INTENT(IN) :: IPLOT,ION
  INTEGER :: I
  
- CALL LEG_SAMPLE_STRETCHED_GETIPOS(IPLOT)
+ CALL LEG_SAMPLE_STRETCHED_GETIPOS(IPLOT,ION)
  
  CALL WDIALOGSELECT(ID_DLEGTAB2)
 
@@ -1221,7 +1237,7 @@ CONTAINS
  INTEGER,INTENT(IN) :: IPLOT,IOPTION,NLEG,LTYPE
  REAL,INTENT(IN) :: XINT
  INTEGER :: I,J,K,M,N
- REAL :: DI,V1,V2,O1,O2,DC
+ REAL :: DI,V1,V2,O1,O2,DC,DSI,DV
  CHARACTER(LEN=50) :: TXT
 
  !## create smooth interval
@@ -1247,22 +1263,24 @@ CONTAINS
     !## top/bottom values of legend
     V1=SXVALUE(1); V2=SXVALUE(NSX)
 
-    !## check i
+    !## look for best interval that suits classes
+    DSI=DI
     IF(M.GT.N)THEN
-     DO WHILE(M.GT.N); M=M/2; DI=DI*2.0; ENDDO     
+     DO
+      DV=V2-V1; M=DV/DI; IF(MOD(DV,DI).NE.0)M=M+1
+      IF(M.LE.N)EXIT; DI=DI+DSI
+     ENDDO
+     IF(M.NE.N)DI=DI-DSI
     ELSEIF(M.LT.N.AND.M.GT.0)THEN
-     DO WHILE(M.LT.N); IF(M*2.GT.N)EXIT; M=M*2; DI=DI/2.0; ENDDO
+     DO
+      DV=V2-V1; M=DV/DI; IF(MOD(DV,DI).NE.0)M=M+1
+      IF(M.GE.N)EXIT; DSI=DSI/2.0; DI=DSI
+     ENDDO
+     IF(M.NE.N)DI=DI*2.0
     !## error occured, probably step too large
-    ELSE
-     CALL WMESSAGEBOX(OKONLY,EXCLAMATIONICON,COMMONOK,'iMOD cannot translate this legend into proper classes'//CHAR(13)// &
-       'A reason for this might be the enormous legend range.','Error')
-     M=MP(IPLOT)%LEG%NCLR 
-     V1=MP(IPLOT)%LEG%CLASS(NLEG) !## min
-     V2=MP(IPLOT)%LEG%CLASS(0)    !## max
-     !## interval
-     DI=(V2-V1)/REAL(M)
     ENDIF
    ELSE
+    V2=V1+0.5; V1=V1-0.5
     !## interval
     M=1; DI=(V2-V1)/REAL(M)
    ENDIF
@@ -1271,7 +1289,9 @@ CONTAINS
    IF(V1-V2.NE.0.0)THEN
     M=(V2-V1)/XINT; DI=XINT
    ELSE
-    M=1
+    V2=V1+0.5; V1=V1-0.5
+    !## interval
+    M=1; DI=(V2-V1)/REAL(M)
    ENDIF   
   ENDIF
 
@@ -1562,7 +1582,7 @@ CONTAINS
      MP(IPLOT)%LEG%CLASS(0)=MP(IPLOT)%IDF%DMAX
      
      !## resample colours
-     CALL LEG_SAMPLE_STRETCHED_GETIPOS(IPLOT)
+     CALL LEG_SAMPLE_STRETCHED_GETIPOS(IPLOT,1)
 
      !## number of classes
      MP(IPLOT)%LEG%NCLR=MXCLR
@@ -1591,7 +1611,7 @@ CONTAINS
     MP(IPLOT)%LEG%CLASS(0)=DMAX
     DO I=1,MXCLR; MP(IPLOT)%LEG%CLASS(I)=MP(IPLOT)%LEG%CLASS(I-1)-DR; ENDDO
     !## resample colours
-    CALL LEG_SAMPLE_STRETCHED_GETIPOS(IPLOT)
+    CALL LEG_SAMPLE_STRETCHED_GETIPOS(IPLOT,1)
     MP(IPLOT)%LEG%NCLR=MXCLR
    ENDDO
    
@@ -1624,7 +1644,7 @@ CONTAINS
      IF(ACTLIST(IPLOT).NE.1)CYCLE
      
      !## resample colours
-     CALL LEG_SAMPLE_STRETCHED_GETIPOS(IPLOT)
+     CALL LEG_SAMPLE_STRETCHED_GETIPOS(IPLOT,1)
      
      !## resort big to small
      CALL WSORT(IDFVAL,1,NUNIQUE,IFLAGS=SORTDESCEND)
