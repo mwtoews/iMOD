@@ -62,6 +62,61 @@ INTEGER :: NSX,NSY
 CONTAINS
  
  !###======================================================================
+ SUBROUTINE UTL_DRAWELLIPSE(X,Y,DX,DY,A)
+ !###======================================================================
+ IMPLICIT NONE
+ REAL,INTENT(IN) :: X,Y,DX,DY,A
+ REAL :: THETA,DTHETA
+ REAL :: XP,YP,AR,XR,YR,FY
+ 
+ AR=A/(360.0/(2.0*PI))
+ FY=DY/DX
+
+ THETA=0.0; DTHETA=PI/50.0
+ DO
+  XP=    DX*COS(THETA); XR=XP
+  YP=-FY*DX*SIN(THETA); YR=YP
+  IF(AR.NE.0.0)THEN
+   XR= COS(AR)*XP+SIN(AR)*YP
+   YR=-SIN(AR)*XP+COS(AR)*YP
+  ENDIF
+  XP=X+XR
+  YP=Y+YR
+  IF(THETA.EQ.0.0)THEN
+   CALL IGRMOVETO(XP,YP)
+  ELSE
+   CALL IGRLINETO(XP,YP)
+  ENDIF
+  THETA=THETA+DTHETA
+  IF(THETA.GT.2.0*PI)EXIT
+ ENDDO
+ 
+ END SUBROUTINE UTL_DRAWELLIPSE
+ 
+ !###======================================================================
+ LOGICAL FUNCTION UTL_INSIDEELLIPSE(X0,Y0,DX,DY,A,XP,YP)
+ !###======================================================================
+ !https://stackoverflow.com/questions/7946187/point-and-ellipse-rotated-position-test-algorithm
+ IMPLICIT NONE
+ REAL,INTENT(IN) :: XP,YP,X0,Y0,DX,DY,A
+ REAL :: X1,X2,X3,A2,B2,AR
+ 
+ UTL_INSIDEELLIPSE=.FALSE.
+ 
+ AR=A/(360.0/(2.0*PI))
+ 
+ X1=(COS(AR)*(XP-X0)+SIN(AR)*(YP-Y0))**2.0 
+ X2=(SIN(AR)*(XP-X0)+COS(AR)*(YP-Y0))**2.0 
+ A2= DY**2.0
+ B2= DX**2.0
+ 
+ X3=X1/A2+X2/B2
+ 
+ UTL_INSIDEELLIPSE=X3.LE.1.0
+ 
+ END FUNCTION UTL_INSIDEELLIPSE
+ 
+ !###======================================================================
  LOGICAL FUNCTION UTL_READPOINTER(IU,NPOINTER,IPOINTER,TXT,IOPT,EXCLVALUE)
  !###======================================================================
  IMPLICIT NONE
