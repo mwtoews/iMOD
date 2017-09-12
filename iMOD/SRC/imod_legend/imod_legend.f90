@@ -1578,8 +1578,8 @@ CONTAINS
       MP(IPLOT)%LEG%CLASS(I)=H
      END DO
      
-     !## overrule maximal value by maximal value of IDF
-     MP(IPLOT)%LEG%CLASS(0)=MP(IPLOT)%IDF%DMAX
+     !## overrule maximal value by maximal value of IDF - only for entire extent
+     IF(LEGDOMAIN.EQ.'ALE')MP(IPLOT)%LEG%CLASS(0)=MP(IPLOT)%IDF%DMAX
      
      !## resample colours
      CALL LEG_SAMPLE_STRETCHED_GETIPOS(IPLOT,1)

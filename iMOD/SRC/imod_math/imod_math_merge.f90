@@ -38,7 +38,7 @@ CONTAINS
  !###======================================================================
  IMPLICIT NONE
  INTEGER,INTENT(IN) :: IBATCH
- INTEGER :: IROW,ICOL,IR,IC,I,JMASK,IRAT,IRAT1,NIDF
+ INTEGER :: IROW,ICOL,IR,IC,I,M,JMASK,IRAT,IRAT1,NIDF
  REAL :: IDFVAL,TW,TD,MD,X,Y
 
  MATH1MERGE=.FALSE.
@@ -51,22 +51,29 @@ CONTAINS
  !## use/read Mask-IDF
  IF(IMASK.EQ.1)THEN
   IF(.NOT.IDFREAD(MATH(0),MSKNAME,0))THEN
-   IF(IBATCH.EQ.0)CALL WMESSAGEBOX(OKONLY,EXCLAMATIONICON,COMMONOK,'Cannot read Mask IDF '//CHAR(13)// &
-     TRIM(MSKNAME),'Error')
-   IF(IBATCH.EQ.1)WRITE(*,'(A)') 'Cannot read Mask IDF '//TRIM(MSKNAME)
+   IF(IBATCH.EQ.0)CALL WMESSAGEBOX(OKONLY,EXCLAMATIONICON,COMMONOK,'Cannot read/find Mask IDF '//CHAR(13)// &
+     TRIM(MSKNAME)//'.','Error')
+   IF(IBATCH.EQ.1)WRITE(*,'(A)') 'Cannot read Mask IDF '//TRIM(MSKNAME)//'.'
    RETURN
   ENDIF
  ENDIF
 
- DO I=1,NIDF !## nidf is output filename
+ M=0; DO I=1,NIDF !## nidf is output filename
   IF(.NOT.IDFREAD(MATH(I),IDFNAMES(I),0,1))THEN
-   IF(IBATCH.EQ.0)CALL WMESSAGEBOX(OKONLY,EXCLAMATIONICON,COMMONOK,'Cannot read IDF '//CHAR(13)// &
-     TRIM(IDFNAMES(I)),'Error')
-   IF(IBATCH.EQ.1)WRITE(*,'(A)') 'Cannot read IDF '//TRIM(IDFNAMES(I))
+   IF(IBATCH.EQ.0)CALL WMESSAGEBOX(OKONLY,EXCLAMATIONICON,COMMONOK,'Cannot read/find IDF '//CHAR(13)// &
+     TRIM(IDFNAMES(I))//'.','Error')
+   IF(IBATCH.EQ.1)WRITE(*,'(A)') 'Cannot read IDF '//TRIM(IDFNAMES(I))//'.'
    MATH(I)%IU=0
+  ELSE
+   M=M+1
   ENDIF
  ENDDO
-
+ IF(M.LE.0)THEN
+  IF(IBATCH.EQ.0)CALL WMESSAGEBOX(OKONLY,EXCLAMATIONICON,COMMONOK,'No IDF files available.','Error')
+  IF(IBATCH.EQ.1)WRITE(*,'(A)') 'No IDF files available.'
+  RETURN
+ ENDIF
+  
  DO I=1,NIDF
   IF(MATH(I)%IU.GT.0)THEN
    MATH(NIDF+1)%DX  =MATH(I)%DX
@@ -85,7 +92,7 @@ CONTAINS
  
  !## it is not allowed to merge non-equidistant IDF files
  IF(MATH(NIDF+1)%IEQ.EQ.1)THEN
-  CALL WMESSAGEBOX(OKONLY,EXCLAMATIONICON,COMMONOK,'You cannot merge non-equidistantial IDF files','Warning')
+  CALL WMESSAGEBOX(OKONLY,EXCLAMATIONICON,COMMONOK,'You cannot merge non-equidistantial IDF files.','Warning')
   RETURN
  ENDIF
  
@@ -127,7 +134,7 @@ CONTAINS
  
  MATH(NIDF+1)%DMIN= 10.0E10
  MATH(NIDF+1)%DMAX=-10.0E10
- 
+
  !## get merged values for constructed idf math(nidf)%idf
  IRAT1=0
  DO IROW=1,MATH(NIDF+1)%NROW
