@@ -388,6 +388,8 @@ CONTAINS
     IEFUNC=4
    CASE ('SGN')
     IEFUNC=5
+!   CASE ('RAD')
+!    IEFUNC=6
    CASE DEFAULT
     IF(IBATCH.EQ.-1)CALL WDIALOGPUTSTRING(IDF_LABEL5,'Cannot recognize External Function')
     IF(IBATCH.EQ.0)CALL WMESSAGEBOX(OKONLY,EXCLAMATIONICON,COMMONOK,'External Function not well defined!'//CHAR(13)// &
@@ -605,6 +607,13 @@ CONTAINS
       CASE (4)  !## gt
 !       IDFRESULT=EXP(IDFRESULT)
       CASE (5)  !## sgn
+!      CASE (6)  !## rad
+
+!       CALL SOF_COMPUTE_GRAD(MATH(3),ICOL,IROW,DZDX,DZDY)
+!  IF(IDF%IVF.EQ.0)CALL SOF_COMPUTE_GRAD_STEEPEST(IDF,ICOL,IROW,DZDX,DZDY)
+
+!  !## radians  
+!  A=ATAN2(-1.0*DZDY,DZDX)
 
      END SELECT
     ENDIF
