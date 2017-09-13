@@ -74,14 +74,7 @@ CONTAINS
 
  THETA=0.0; DTHETA=PI/50.0
  DO
-  XP=    DX*COS(THETA); XR=XP
-  YP=-FY*DX*SIN(THETA); YR=YP
-  IF(AR.NE.0.0)THEN
-   XR= COS(AR)*XP+SIN(AR)*YP
-   YR=-SIN(AR)*XP+COS(AR)*YP
-  ENDIF
-  XP=X+XR
-  YP=Y+YR
+  CALL UTL_POINTELLIPSE(X,Y,THETA,FY,DX,AR,XP,YP)
   IF(THETA.EQ.0.0)THEN
    CALL IGRMOVETO(XP,YP)
   ELSE
@@ -94,6 +87,25 @@ CONTAINS
  END SUBROUTINE UTL_DRAWELLIPSE
  
  !###======================================================================
+ SUBROUTINE UTL_POINTELLIPSE(X,Y,THETA,FY,DX,AR,XP,YP)
+ !###======================================================================
+ IMPLICIT NONE
+ REAL,INTENT(IN) :: FY,THETA,DX,AR,X,Y
+ REAL,INTENT(OUT) :: XP,YP
+ REAL :: XR,YR
+ 
+ XP=    DX*COS(THETA); XR=XP
+ YP=-FY*DX*SIN(THETA); YR=YP
+ IF(AR.NE.0.0)THEN
+  XR= COS(AR)*XP+SIN(AR)*YP
+  YR=-SIN(AR)*XP+COS(AR)*YP
+ ENDIF
+ XP=X+XR
+ YP=Y+YR
+  
+ END SUBROUTINE UTL_POINTELLIPSE
+
+ !###======================================================================
  LOGICAL FUNCTION UTL_INSIDEELLIPSE(X0,Y0,DX,DY,A,XP,YP)
  !###======================================================================
  !https://stackoverflow.com/questions/7946187/point-and-ellipse-rotated-position-test-algorithm
@@ -104,13 +116,15 @@ CONTAINS
  UTL_INSIDEELLIPSE=.FALSE.
  
  AR=A/(360.0/(2.0*PI))
+ AR=-1.0*AR
  
- X1=(COS(AR)*(XP-X0)+SIN(AR)*(YP-Y0))**2.0 
- X2=(SIN(AR)*(XP-X0)+COS(AR)*(YP-Y0))**2.0 
- A2= DY**2.0
- B2= DX**2.0
+ X1=( (XP-X0)*COS(AR)+(YP-Y0)*SIN(AR) ) **2.0 
+ X2=( (XP-X0)*SIN(AR)-(YP-Y0)*COS(AR) ) **2.0 
+ A2= DX**2.0
+ B2= DY**2.0
  
  X3=X1/A2+X2/B2
+! X3=X1+X2
  
  UTL_INSIDEELLIPSE=X3.LE.1.0
  
