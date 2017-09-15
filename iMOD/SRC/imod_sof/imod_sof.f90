@@ -238,14 +238,14 @@ CONTAINS
     W=0.0
    ELSE
 
-    !## waterdepth (assuming waterwidth of 1.0)
-    W=1.0
-    H=((Q*MRC)/(W*SQRT(S)))**(3.0/5.0)
+    !## waterdepth (assuming waterwidth of log(10) of count
+    W=LOG10(F) !1.0
+    H=0.0; IF(W.GT.0.0)H=((Q*MRC)/(W*SQRT(S)))**(3.0/5.0)
 
    ENDIF
 
-   !## limit values
-   H=MIN(2.5,H)
+!   !## limit values
+!   H=MIN(2.5,H)
   
    !## wetted perimeter
    WP=2*H+W
