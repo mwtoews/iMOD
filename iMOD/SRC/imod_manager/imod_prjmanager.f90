@@ -3793,42 +3793,17 @@ TOPICLOOP: DO ITOPIC=1,MAXTOPICS
   DO ILAY=1,NLAY  ; TP(ILAY)=TOP(ILAY)%X(ICOL,IROW); ENDDO
   DO ILAY=1,NLAY  ; BT(ILAY)=BOT(ILAY)%X(ICOL,IROW); ENDDO
   DO ILAY=1,NLAY  ; HK(ILAY)=KHV(ILAY)%X(ICOL,IROW); ENDDO
-  DO ILAY=1,NLAY-1; VK(ILAY)=KVA(ILAY)%X(ICOL,IROW); ENDDO
-  DO ILAY=1,NLAY  ; VA(ILAY)=KVV(ILAY)%X(ICOL,IROW); ENDDO
+  DO ILAY=1,NLAY  ; VA(ILAY)=KVA(ILAY)%X(ICOL,IROW); ENDDO
+  DO ILAY=1,NLAY-1; VK(ILAY)=KVV(ILAY)%X(ICOL,IROW); ENDDO
   CALL UTL_MINTHICKNESS(TP,BT,TP_BU,BT_BU,HK,VK,VA,IB,TH,MINTHICKNESS)
+!  DO ILAY=1,NLAY  ; IB(ILAY)=BND(ILAY)%X(ICOL,IROW); ENDDO
+  DO ILAY=1,NLAY  ; TOP(ILAY)%X(ICOL,IROW)=TP(ILAY); ENDDO
+  DO ILAY=1,NLAY  ; BOT(ILAY)%X(ICOL,IROW)=BT(ILAY); ENDDO
+  DO ILAY=1,NLAY  ; KHV(ILAY)%X(ICOL,IROW)=HK(ILAY); ENDDO
+  DO ILAY=1,NLAY  ; KVA(ILAY)%X(ICOL,IROW)=VA(ILAY); ENDDO
+  DO ILAY=1,NLAY-1; KVV(ILAY)%X(ICOL,IROW)=VK(ILAY); ENDDO
  ENDDO; ENDDO
  DEALLOCATE(TP,BT,HK,VK,VA,IB,TH,TP_BU,BT_BU)
-  
-!## figure out how to come up with something to correct permeability later for minimal thicknesses
-!  DO ILAY=1,NLAY
-!   IF(BND(ILAY)%X(ICOL,IROW).EQ.0)CYCLE
-!   !## minimal aquifer thickness
-!   D=TOP(ILAY)%X(ICOL,IROW)-BOT(ILAY)%X(ICOL,IROW)
-!   !## correct whenever minimal thickness requirement is not met
-!   IF(D.LT.MINTHICKNESS)THEN
-!    !## get current available transmissivity
-!    KD=KHV(ICOL,IROW,ILAY)*D
-!    KV=KVA(ICOL,IROW,ILAY)*D
-!    !## assign new bottom
-!    D=MINTHICKNESS; BOT(ICOL,IROW,ILAY)=TOP(ICOL,IROW,ILAY)-D
-!    !## correct rest of interval that are within current adjusted interval and compute renewed permeability
-!    DO JLAY=ILAY+1,NLAY
-!    
-!     T1=MAX(TOP(ICOL,IROW,JLAY),BOT(ICOL,IROW,ILAY))
-!     B1=MAX(BOT(ICOL,IROW,JLAY),BOT(ICOL,IROW,ILAY))
-!    
-!     !## add available thickness of underlying modellayer, if positive
-!     D=T1-B1
-!         
-!     KD=KD+KHV(ICOL,IROW,JLAY)*D
-!     KV=KV+KVA(ICOL,IROW,JLAY)*D
-!     TOP(ICOL,IROW,JLAY)=MIN(TOP(ICOL,IROW,JLAY),BOT(ICOL,IROW,ILAY))
-!     BOT(ICOL,IROW,JLAY)=MIN(BOT(ICOL,IROW,JLAY),BOT(ICOL,IROW,ILAY))
-!    ENDDO
-!    KHV(ICOL,IROW,ILAY)=KD/MINTHICKNESS
-!    KVA(ICOL,IROW,ILAY)=KV/MINTHICKNESS
-!   ENDIF
-!  ENDDO
 
  !## apply consistency check constant head and top/bot
  DO IROW=1,IDF%NROW; DO ICOL=1,IDF%NCOL; DO ILAY=1,NLAY
@@ -3885,7 +3860,7 @@ TOPICLOOP: DO ITOPIC=1,MAXTOPICS
       (BND(ILAY)%X(IC1,IROW ).LE.0).AND. & !W
       (BND(ILAY)%X(IC2,IROW ).LE.0).AND. & !E
       (BND(IL1 )%X(ICOL,IROW).LE.0).AND. & !T
-      (BND(IL2 )%X(ICOL,IROW).LE.0))THEN !B
+      (BND(IL2 )%X(ICOL,IROW).LE.0))THEN   !B
     BND(ILAY)%X(ICOL,IROW)=0
    END IF
   END IF

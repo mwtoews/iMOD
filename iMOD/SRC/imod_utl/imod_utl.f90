@@ -145,10 +145,13 @@ CONTAINS
    T1=TOP_BU(IL)
    B1=BOT_BU(IL)
    D=MIN(T,T1)-MAX(B,B1)
+   !## part of aquifer
    IF(D.GT.0.0)THEN
     KD=KD+HK(IL)*D
-    VC=VC+D/VK(IL)+D/(HK(IL)*VA(IL))
+    VC=VC+D/(HK(IL)*VA(IL))
    ENDIF
+   !## part of aquitard
+!   D/VK(IL)+
   ENDDO 
   !## new parameters
   HK(ILAY)=KD/(T-B)
