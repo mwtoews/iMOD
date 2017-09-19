@@ -62,6 +62,104 @@ INTEGER :: NSX,NSY
 CONTAINS
  
  !###======================================================================
+ SUBROUTINE UTL_MINTHICKNESS(TOP,BOT,TOP_BU,BOT_BU,HK,VK,VA,BND,TH,MINTHICKNESS)
+ !###======================================================================
+ IMPLICIT NONE
+ INTEGER,INTENT(IN),DIMENSION(:) :: BND
+ REAL,INTENT(INOUT),DIMENSION(:) :: TOP,BOT,HK,VK,VA,TH,TOP_BU,BOT_BU
+ REAL,INTENT(IN) :: MINTHICKNESS 
+ INTEGER :: NLAY,ILAY,I,IL,IL1,IL2,M,N,ILL,ILL1,ILL2
+ REAL :: K,TT,T,B,MT,T1,B1,MP,D,KD,VC
+ 
+ NLAY=SIZE(BND)
+
+! TH=0.0; 
+ !## make backup
+ DO ILAY=1,NLAY-1; TOP_BU(ILAY)=TOP(ILAY); BOT_BU(ILAY)=BOT(ILAY); ENDDO
+!  IF(BND(ILAY).NE.0.AND.BND(ILAY+1).NE.0)TH(ILAY)=BOT(ILAY)-TOP(ILAY+1)
+
+ IL2=0; IL1=1
+ DO
+  IL2=IL2+1
+  
+  !## found maximum vertical space to redistribute layers
+  IF(TH(IL2).GT.0.0.OR.IL2.EQ.NLAY)THEN
+  
+   !## thickness of available space
+   T=TOP(IL1)-BOT(IL2)
+   
+   !## search for thin aquifers in this "space"
+   MT=0.0; TT=0.0; ILL2=0; ILL1=0
+   DO IL=IL1,IL2
+    ILL2=ILL2+1
+    !# set total thickness necessary at least since last correction
+    IF((TOP(IL)-BOT(IL)).LT.MINTHICKNESS)THEN
+     TT=TT+MINTHICKNESS; IF(ILL1.EQ.0)ILL1=IL
+     MT=MT+MINTHICKNESS
+    ELSE
+     IF(MT.GT.0.0)THEN
+      !## enough space to correct layers
+      IF(TOP(ILL1)-BOT(IL).GE.MT)THEN
+       !## define potential mid
+       MP=(TOP(ILL1)+BOT(ILL2-1))/2.0
+       T1=MP+0.5*MT
+       B1=MP-0.5*MT
+       IF(T1.GT.TOP(IL1))THEN
+        D=T1-TOP(IL1)
+        T1=T1-D
+        B1=B1-D
+       ELSEIF(B1.LT.BOT(IL2))THEN
+        D=BOT(IL2)-B1
+        T1=T1+D
+        B1=B1+D
+       ENDIF
+       BOT(ILL1-1)=T1
+       DO ILL=ILL1,ILL2 !-1
+        TOP(ILL)=BOT(ILL-1)
+        IF(ILL.NE.ILL2)BOT(ILL)=TOP(ILL)-MINTHICKNESS
+       ENDDO
+       TT =0.0; MT =0.0; ILL1=ILL2+1
+      ELSE
+       MT=MT+MINTHICKNESS
+      ENDIF
+     ENDIF
+    ENDIF    
+   ENDDO
+
+   IL1=IL2+1
+  ENDIF
+  !## finished
+  IF(IL2.EQ.NLAY)EXIT
+ ENDDO
+ 
+ !## get thickness of aquifers
+ TH=0.0; DO ILAY=1,NLAY; IF(BND(ILAY).NE.0)TH(ILAY)=TOP(ILAY)-BOT(ILAY); ENDDO
+
+ !## correct permeabilities for aquifers
+ DO ILAY=1,NLAY
+  !## current corrected layer
+  T =TOP(ILAY)
+  B =BOT(ILAY)
+  KD=0.0; VC=0.0
+  DO IL=1,NLAY
+   T1=TOP_BU(IL)
+   B1=BOT_BU(IL)
+   D=MIN(T,T1)-MAX(B,B1)
+   IF(D.GT.0.0)THEN
+    KD=KD+HK(IL)*D
+    VC=VC+D/VK(IL)+D/(HK(IL)*VA(IL))
+   ENDIF
+  ENDDO 
+  !## new parameters
+  HK(ILAY)=KD/(T-B)
+  K=(T-B)/VC
+  IF(ILAY.LT.NLAY)VK(ILAY)=K
+  VA(ILAY)=K/HK(ILAY)
+ ENDDO
+
+ END SUBROUTINE UTL_MINTHICKNESS
+
+ !###======================================================================
  SUBROUTINE UTL_DRAWELLIPSE(X,Y,DX,DY,A)
  !###======================================================================
  IMPLICIT NONE
