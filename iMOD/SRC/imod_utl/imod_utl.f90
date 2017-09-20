@@ -62,21 +62,26 @@ INTEGER :: NSX,NSY
 CONTAINS
  
  !###======================================================================
- SUBROUTINE UTL_MINTHICKNESS(TOP,BOT,TOP_BU,BOT_BU,HK,VK,VA,BND,TH,MINTHICKNESS)
+ SUBROUTINE UTL_MINTHICKNESS(TOP,BOT,HK,VK,VA, &
+           TOP_BU,BOT_BU,HK_BU,VK_BU,VA_BU,BND,TH,MINTHICKNESS)
  !###======================================================================
  IMPLICIT NONE
  INTEGER,INTENT(IN),DIMENSION(:) :: BND
- REAL,INTENT(INOUT),DIMENSION(:) :: TOP,BOT,HK,VK,VA,TH,TOP_BU,BOT_BU
+ REAL,INTENT(INOUT),DIMENSION(:) :: TOP,BOT,HK,VK,VA,TH,TOP_BU,BOT_BU,HK_BU,VK_BU,VA_BU
  REAL,INTENT(IN) :: MINTHICKNESS 
  INTEGER :: NLAY,ILAY,I,IL,IL1,IL2,M,N,ILL,ILL1,ILL2
  REAL :: K,TT,T,B,MT,T1,B1,MP,D,KD,VC
  
  NLAY=SIZE(BND)
 
-! TH=0.0; 
  !## make backup
- DO ILAY=1,NLAY-1; TOP_BU(ILAY)=TOP(ILAY); BOT_BU(ILAY)=BOT(ILAY); ENDDO
-!  IF(BND(ILAY).NE.0.AND.BND(ILAY+1).NE.0)TH(ILAY)=BOT(ILAY)-TOP(ILAY+1)
+ DO ILAY=1,NLAY
+  TOP_BU(ILAY)=TOP(ILAY)
+  BOT_BU(ILAY)=BOT(ILAY)
+  HK_BU(ILAY) =HK(ILAY)
+  VA_BU(ILAY) =VA(ILAY)
+  IF(ILAY.LT.NLAY)VK_BU(ILAY) =VK(ILAY)
+ ENDDO
 
  IL2=0; IL1=1
  DO
@@ -137,9 +142,11 @@ CONTAINS
 
  !## correct permeabilities for aquifers
  DO ILAY=1,NLAY
+
   !## current corrected layer
   T =TOP(ILAY)
   B =BOT(ILAY)
+  
   KD=0.0; VC=0.0
   DO IL=1,NLAY
    T1=TOP_BU(IL)
@@ -147,11 +154,19 @@ CONTAINS
    D=MIN(T,T1)-MAX(B,B1)
    !## part of aquifer
    IF(D.GT.0.0)THEN
-    KD=KD+HK(IL)*D
-    VC=VC+D/(HK(IL)*VA(IL))
+    KD=KD+HK_BU(IL)*D
+    VC=VC+D/(HK_BU(IL)*VA_BU(IL))
    ENDIF
-   !## part of aquitard
-!   D/VK(IL)+
+   IF(IL.LT.NLAY)THEN
+    T1=BOT_BU(IL)
+    B1=TOP_BU(IL+1)
+    D=MIN(T,T1)-MAX(B,B1)
+    !## part of aquitard
+    IF(D.GT.0.0)THEN
+     KD=KD+VK_BU(IL)*D
+     VC=VC+D/(VK_BU(IL))
+    ENDIF
+   ENDIF
   ENDDO 
   !## new parameters
   HK(ILAY)=KD/(T-B)

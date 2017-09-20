@@ -825,6 +825,7 @@ CONTAINS
  !## create boundary/fixed heads
  DO I=1,ND
   ICOL=INT(XD(I)); IROW=INT(YD(I))
+  IF(ICOL.LE.0.OR.IROW.LE.0)CYCLE
   !### skip inactive
   IF(PCG(1)%IB(ICOL,IROW).EQ.0)CYCLE
   PCG(1)%HOLD(ICOL,IROW)=PCG(1)%HOLD(ICOL,IROW)+ZD(I)

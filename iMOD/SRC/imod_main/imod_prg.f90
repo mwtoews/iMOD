@@ -82,7 +82,7 @@ INTEGER :: ITYPE,IERROR,I,NARG
 CHARACTER(LEN=256) :: ARGSTRING,LEGNAME
 INTEGER :: IY,IM,ID
 !REAL :: RX,RY,RZ
- real,dimension(4) :: top,bot,hk,vk,va,th,TP_BU,BT_BU
+ real,dimension(4) :: top,bot,hk,vk,va,th,TP_BU,BT_BU,kh_bu,vk_bu,va_bu
  integer,dimension(4) :: ib
 ! data top/10.0,9.5,9.0/
 ! data bot/9.5,9.0,-20.0/
@@ -95,7 +95,8 @@ INTEGER :: IY,IM,ID
  data va/1.0,1.0,1.0,1.0/
  data ib/1,1,1,1/
 
- call UTL_MINTHICKNESS(top,bot,tp_bu,bt_bu,hk,vk,va,ib,TH,1.0)
+! call UTL_MINTHICKNESS(top,bot,hk,vk,va,TP_BU,BT_BU,kh_bu,vk_bu,va_bu,ib,TH,1.0)
+
 !WRITE(*,*) UTL_GET_ANGLE((/0.0,0.0, 1.0/),(/0.0,1.0,1.0/))
 !WRITE(*,*) UTL_GET_ANGLE((/0.0,0.0,-1.0/),(/0.0,1.0,1.0/))
 !CALL UTL_GET_ANGLES(1.0,0.0,0.0,RX,RY,RZ); write(*,*) RX,RY,RZ
