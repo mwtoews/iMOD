@@ -86,6 +86,10 @@ CONTAINS
  IL2=0; IL1=1
  DO
   IL2=IL2+1
+  IF(IL2.GT.NLAY)EXIT
+  
+  !## skip inactive cells
+  IF(BND(IL2).EQ.0)CYCLE
   
   !## found maximum vertical space to redistribute layers
   IF(TH(IL2).GT.0.0.OR.IL2.EQ.NLAY)THEN
@@ -884,7 +888,7 @@ CONTAINS
  SUBROUTINE UTL_PCK_GETTLP(N,TLP,KH,TOP,BOT,Z1,Z2,MINKHT,ICLAY)
  !###======================================================================
  IMPLICIT NONE
- REAL,PARAMETER :: MINP=0.05
+ REAL,PARAMETER :: MINP=0.0 !5
  INTEGER,INTENT(IN) :: N,ICLAY
  REAL,INTENT(IN) :: MINKHT
  REAL,INTENT(INOUT) :: Z1,Z2
@@ -930,11 +934,11 @@ CONTAINS
  !## normalize tlp() again
  IF(SUM(TLP).GT.0.0)TLP=(1.0/SUM(TLP))*TLP
  
- !## remove small percentages
- DO ILAY=1,N; IF(TLP(ILAY).LT.MINP)TLP(ILAY)=0.0; ENDDO
+! !## remove small percentages
+! DO ILAY=1,N; IF(TLP(ILAY).LT.MINP)TLP(ILAY)=0.0; ENDDO
 
- !## normalize tlp() again
- IF(SUM(TLP).GT.0.0)TLP=(1.0/SUM(TLP))*TLP
+! !## normalize tlp() again
+! IF(SUM(TLP).GT.0.0)TLP=(1.0/SUM(TLP))*TLP
 
  !## remove small transmissivities
  IF(MINKHT.GT.0.0)THEN
@@ -968,10 +972,11 @@ CONTAINS
  !## nothing in model, whenever system on top of model, put them in first modellayer with thickness
  IF(SUM(TLP).EQ.0.0)THEN
   IF(Z1.GE.TOP(1))THEN
-   DO ILAY=1,N
-    DZ=TOP(ILAY)-BOT(ILAY)
-    IF(DZ.GT.0.0.AND.KH(ILAY)*DZ.GT.MINKHT)THEN; TLP(ILAY)=1.0; EXIT; ENDIF
-   ENDDO
+   TLP(1)=1.0
+!   DO ILAY=1,N
+!    DZ=TOP(ILAY)-BOT(ILAY)
+!    IF(DZ.GT.0.0.AND.KH(ILAY)*DZ.GT.MINKHT)THEN; TLP(ILAY)=1.0; EXIT; ENDIF
+!   ENDDO
   ENDIF
  ENDIF
 
