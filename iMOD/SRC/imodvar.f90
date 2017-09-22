@@ -28,7 +28,7 @@ REAL,PARAMETER :: PI=ATAN(1.0)*4.0  !## value pi
 
 LOGICAL :: LBETA=.FALSE.       !## if TRUE: Show question whether it is allowed to use Beta-version or not
 LOGICAL :: LEXPDATE=.TRUE.     !## if TRUE: activate expire date
-INTEGER :: EXPDATE=20171015    !## expire data, after this date the iMOD-beta version cannot be used.
+INTEGER :: EXPDATE=20171101    !## expire data, after this date the iMOD-beta version cannot be used.
 INTEGER,SAVE :: ICDEBUGLEVEL   !## applied current debuglevel
 
 INTEGER,SAVE :: GKEYPRESSED    !## keypressed (cntr/shift)

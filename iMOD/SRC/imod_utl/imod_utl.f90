@@ -70,7 +70,7 @@ CONTAINS
  REAL,INTENT(INOUT),DIMENSION(:) :: TOP,BOT,HK,VK,VA,TH,TOP_BU,BOT_BU,HK_BU,VK_BU,VA_BU
  REAL,INTENT(IN) :: MINTHICKNESS 
  INTEGER :: NLAY,ILAY,I,IL,IL1,IL2,M,N,ILL,ILL1,ILL2
- REAL :: K,TT,T,B,MT,T1,B1,MP,D,KD,VC
+ REAL :: K,TT,T,B,MT,T1,T2,K1,K2,B1,MP,D,KD,VC
  
  NLAY=SIZE(BND)
 
@@ -83,6 +83,9 @@ CONTAINS
   IF(ILAY.LT.NLAY)VK_BU(ILAY) =VK(ILAY)
  ENDDO
 
+ !## get thickness of aquitards
+ TH=0.0; DO ILAY=1,NLAY-1; IF(BND(ILAY).NE.0.AND.BND(ILAY+1).NE.0)TH(ILAY)=BOT(ILAY)-TOP(ILAY+1); ENDDO
+ 
  IL2=0; IL1=1
  DO
   IL2=IL2+1
@@ -91,7 +94,7 @@ CONTAINS
   !## skip inactive cells
   IF(BND(IL2).EQ.0)CYCLE
   
-  !## found maximum vertical space to redistribute layers
+  !## found maximum vertical space in aquitards to redistribute layers
   IF(TH(IL2).GT.0.0.OR.IL2.EQ.NLAY)THEN
   
    !## thickness of available space
@@ -122,12 +125,17 @@ CONTAINS
         T1=T1+D
         B1=B1+D
        ENDIF
-       BOT(ILL1-1)=T1
-       DO ILL=ILL1,ILL2 !-1
+       !## special case if top layer is less than thickness
+       IF(ILL1.EQ.1)THEN
+        TOP(ILL1)=T1; BOT(ILL1)=TOP(ILL1)-MINTHICKNESS; ILL1=ILL1+1
+       ELSE
+        BOT(ILL1-1)=T1
+       ENDIF
+       DO ILL=ILL1,ILL2
         TOP(ILL)=BOT(ILL-1)
         IF(ILL.NE.ILL2)BOT(ILL)=TOP(ILL)-MINTHICKNESS
        ENDDO
-       TT =0.0; MT =0.0; ILL1=ILL2+1
+       TT =0.0; MT =0.0; ILL1=0 !ILL2+1
       ELSE
        MT=MT+MINTHICKNESS
       ENDIF
@@ -141,8 +149,8 @@ CONTAINS
   IF(IL2.EQ.NLAY)EXIT
  ENDDO
  
- !## get thickness of aquifers
- TH=0.0; DO ILAY=1,NLAY; IF(BND(ILAY).NE.0)TH(ILAY)=TOP(ILAY)-BOT(ILAY); ENDDO
+! !## get thickness of aquifers
+! TH=0.0; DO ILAY=1,NLAY; IF(BND(ILAY).NE.0)TH(ILAY)=TOP(ILAY)-BOT(ILAY); ENDDO
 
  !## correct permeabilities for aquifers
  DO ILAY=1,NLAY
@@ -179,6 +187,25 @@ CONTAINS
   VA(ILAY)=K/HK(ILAY)
  ENDDO
 
+ !## check before and after
+ 
+ !## get thickness of aquifers
+ TH=0.0; DO ILAY=1,NLAY; IF(BND(ILAY).NE.0)TH(ILAY)=TOP_BU(ILAY)-BOT_BU(ILAY); ENDDO; T1=SUM(TH)
+ DO ILAY=1,NLAY; TH(ILAY)=TH(ILAY)*HK_BU(ILAY); ENDDO; K1=SUM(TH)
+ 
+ !## get thickness of aquifers
+ TH=0.0; DO ILAY=1,NLAY; IF(BND(ILAY).NE.0)TH(ILAY)=TOP(ILAY)-BOT(ILAY); ENDDO; T2=SUM(TH)
+ DO ILAY=1,NLAY; TH(ILAY)=TH(ILAY)*HK(ILAY); ENDDO; K2=SUM(TH)
+ 
+ IF(.NOT.UTL_EQUALS_REAL(T2,T1).OR..NOT.UTL_EQUALS_REAL(K2,K1))THEN
+  !## get thickness of aquifers
+  DO ILAY=1,NLAY
+   WRITE(*,'(I3,8F10.2)') ILAY,TOP(ILAY)   ,BOT(ILAY)   ,TOP(ILAY)   -BOT(ILAY)   ,TOP(ILAY)   -BOT(ILAY)   *HK(ILAY), &
+                               TOP_BU(ILAY),BOT_BU(ILAY),TOP_BU(ILAY)-BOT_BU(ILAY),TOP_BU(ILAY)-BOT_BU(ILAY)*HK_BU(ILAY)
+  ENDDO
+  WRITE(*,*) T1,T2,T2-T1,K1,K2,K2-K1
+ ENDIF
+ 
  END SUBROUTINE UTL_MINTHICKNESS
 
  !###======================================================================

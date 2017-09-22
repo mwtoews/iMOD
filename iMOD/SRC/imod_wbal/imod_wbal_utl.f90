@@ -84,13 +84,22 @@ CONTAINS
  WRITE(IU,'(A,I1)') 'ZSUM='   ,ZSUM
  WRITE(IU,'(A,I1)') 'IUNIT='  ,IUNIT
  
- LINE=''; DO I=1,NZONE; IF(LIZONE(I).EQ.1)LINE=TRIM(LINE)//TRIM(CIZONE(I))//','; ENDDO
- IF(LINE.NE.'')WRITE(IU,'(A)') 'ZONES='//LINE(:LEN_TRIM(LINE)-1)
- LINE=''; DO I=1,NLAY; IF(LILAY(I).EQ.1)LINE=TRIM(LINE)//TRIM(CILAY(I))//','; ENDDO
- IF(LINE.NE.'')WRITE(IU,'(A)') 'LAYERS='//LINE(:LEN_TRIM(LINE)-1)
- LINE=''; DO I=1,NDATE; IF(LIDATE(I).EQ.1)LINE=TRIM(LINE)//TRIM(CIDATE(I))//','; ENDDO
- IF(LINE.NE.'')WRITE(IU,'(A)') 'DATES='//LINE(:LEN_TRIM(LINE)-1)
-
+ !## skip if all selected
+ IF(SUM(LIZONE).LT.SIZE(LIZONE))THEN
+  LINE=''; DO I=1,NZONE; IF(LIZONE(I).EQ.1)LINE=TRIM(LINE)//TRIM(CIZONE(I))//','; ENDDO
+  IF(LINE.NE.'')WRITE(IU,'(A)') 'ZONES='//LINE(:LEN_TRIM(LINE)-1)
+ ENDIF
+ !## skip if all selected
+ IF(SUM(LILAY).LT.SIZE(LILAY))THEN
+  LINE=''; DO I=1,NLAY; IF(LILAY(I).EQ.1)LINE=TRIM(LINE)//TRIM(CILAY(I))//','; ENDDO
+  IF(LINE.NE.'')WRITE(IU,'(A)') 'LAYERS='//LINE(:LEN_TRIM(LINE)-1)
+ ENDIF
+ !## skip if all selected
+ IF(SUM(LIDATE).LT.SIZE(LIDATE))THEN
+  LINE=''; DO I=1,NDATE; IF(LIDATE(I).EQ.1)LINE=TRIM(LINE)//TRIM(CIDATE(I))//','; ENDDO
+  IF(LINE.NE.'')WRITE(IU,'(A)') 'DATES='//LINE(:LEN_TRIM(LINE)-1)
+ ENDIF
+ 
  WRITE(IU,'(A)') 'DIR='//TRIM(DIR)
  WRITE(IU,'(A,I1)') 'IOPT=',IOPT
 
@@ -142,52 +151,64 @@ CONTAINS
 
  !## read selected zones - default none selected
  LIZONE=0; N=0; IF(.NOT.UTL_READPOINTER(IU,N,ITMP,'ZONES',1))RETURN
- DO I=1,N; 
-  DO J=1,NZONE; READ(CIZONE(J),*) K; IF(K.EQ.ITMP(I))EXIT; ENDDO
-  IF(J.GT.NZONE)THEN
-   IF(IBATCH.EQ.0)THEN
-     WRITE(*,'(A,I10,A)') 'iMOD cannot find zone ',K,' in given csv file'
-   ELSE
-    CALL WMESSAGEBOX(OKONLY,EXCLAMATIONICON,COMMONOK,'iMOD cannot find zone '//TRIM(ITOS(K))//' in given csv file','Error')
+ IF(N.EQ.0)THEN
+  LIZONE=1
+ ELSE
+  DO I=1,N; 
+   DO J=1,NZONE; READ(CIZONE(J),*) K; IF(K.EQ.ITMP(I))EXIT; ENDDO
+   IF(J.GT.NZONE)THEN
+    IF(IBATCH.EQ.0)THEN
+      WRITE(*,'(A,I10,A)') 'iMOD cannot find zone ',K,' in given csv file'
+    ELSE
+     CALL WMESSAGEBOX(OKONLY,EXCLAMATIONICON,COMMONOK,'iMOD cannot find zone '//TRIM(ITOS(K))//' in given csv file','Error')
+    ENDIF
+    RETURN
    ENDIF
-   RETURN
-  ENDIF
-  !## turn current zone active
-  LIZONE(J)=1
- ENDDO
-
+   !## turn current zone active
+   LIZONE(J)=1
+  ENDDO
+ ENDIF
+ 
  !## read selected layers - default none selected
  LILAY=0; N=0; IF(.NOT.UTL_READPOINTER(IU,N,ITMP,'LAYERS',1))RETURN
- DO I=1,N; 
-  DO J=1,NLAY; READ(CILAY(J),*) K; IF(K.EQ.ITMP(I))EXIT; ENDDO
-  IF(J.GT.NLAY)THEN
-   IF(IBATCH.EQ.0)THEN
-    WRITE(*,'(A,I10,A)') 'iMOD cannot find layer ',K,' in given csv file'
-   ELSE
-    CALL WMESSAGEBOX(OKONLY,EXCLAMATIONICON,COMMONOK,'iMOD cannot find layer '//TRIM(ITOS(K))//' in given csv file','Error')
+ IF(N.EQ.0)THEN
+  LILAY=1
+ ELSE
+  DO I=1,N; 
+   DO J=1,NLAY; READ(CILAY(J),*) K; IF(K.EQ.ITMP(I))EXIT; ENDDO
+   IF(J.GT.NLAY)THEN
+    IF(IBATCH.EQ.0)THEN
+     WRITE(*,'(A,I10,A)') 'iMOD cannot find layer ',K,' in given csv file'
+    ELSE
+     CALL WMESSAGEBOX(OKONLY,EXCLAMATIONICON,COMMONOK,'iMOD cannot find layer '//TRIM(ITOS(K))//' in given csv file','Error')
+    ENDIF
+    RETURN
    ENDIF
-   RETURN
-  ENDIF
-  !## turn current zone active
-  LILAY(J)=1
- ENDDO
-
+   !## turn current zone active
+   LILAY(J)=1
+  ENDDO
+ ENDIF
+ 
  !## read selected periods - default none selected
  LIDATE=0; N=0; IF(.NOT.UTL_READPOINTER(IU,N,ITMP,'DATES',1))RETURN
- DO I=1,N; 
-  DO J=1,NDATE; READ(CIDATE(J),*) K; IF(K.EQ.ITMP(I))EXIT; ENDDO
-  IF(J.GT.NDATE)THEN
-   IF(IBATCH.EQ.0)THEN
-    WRITE(*,'(A,I10,A)') 'iMOD cannot find date ',K,' in given csv file'
-   ELSE
-    CALL WMESSAGEBOX(OKONLY,EXCLAMATIONICON,COMMONOK,'iMOD cannot find date '//TRIM(ITOS(K))//' in given csv file','Error')
+ IF(N.EQ.0)THEN
+  LIDATE=1
+ ELSE
+  DO I=1,N; 
+   DO J=1,NDATE; READ(CIDATE(J),*) K; IF(K.EQ.ITMP(I))EXIT; ENDDO
+   IF(J.GT.NDATE)THEN
+    IF(IBATCH.EQ.0)THEN
+     WRITE(*,'(A,I10,A)') 'iMOD cannot find date ',K,' in given csv file'
+    ELSE
+     CALL WMESSAGEBOX(OKONLY,EXCLAMATIONICON,COMMONOK,'iMOD cannot find date '//TRIM(ITOS(K))//' in given csv file','Error')
+    ENDIF
+    RETURN
    ENDIF
-   RETURN
-  ENDIF
-  !## turn current zone active
-  LIDATE(J)=1
- ENDDO
-
+   !## turn current zone active
+   LIDATE(J)=1
+  ENDDO
+ ENDIF
+ 
  DEALLOCATE(ITMP)
 
  !## fill number of dates
