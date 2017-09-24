@@ -2933,6 +2933,16 @@ CONTAINS
   ENDIF
  ENDDO
 
+ !## correct bnd if top/bot nodata turn into inactive
+ DO IROW=1,BND(1)%NROW; DO ICOL=1,BND(1)%NCOL
+  DO ILAY=1,NLAY
+   IF(TOP(ILAY)%X(ICOL,IROW).EQ.TOP(ILAY)%NODATA)THEN
+    DO I=1,NLAY; BND(I)%X(ICOL,IROW)=0.0; ENDDO
+    EXIT
+   ENDIF
+  ENDDO
+ ENDDO; ENDDO
+ 
  !## correct top/bot
  DO IROW=1,BND(1)%NROW; DO ICOL=1,BND(1)%NCOL
   DO ILAY=1,NLAY

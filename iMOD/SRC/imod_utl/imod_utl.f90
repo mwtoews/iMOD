@@ -110,18 +110,19 @@ CONTAINS
      MT=MT+MINTHICKNESS
     ELSE
      IF(MT.GT.0.0)THEN
+      MT=MT+MINTHICKNESS
       !## enough space to correct layers
       IF(TOP(ILL1)-BOT(IL).GE.MT)THEN
        !## define potential mid
        MP=(TOP(ILL1)+BOT(ILL2-1))/2.0
        T1=MP+0.5*MT
        B1=MP-0.5*MT
-       IF(T1.GT.TOP(IL1))THEN
-        D=T1-TOP(IL1)
+       IF(T1.GT.TOP(ILL1))THEN
+        D=T1-TOP(ILL1)
         T1=T1-D
         B1=B1-D
-       ELSEIF(B1.LT.BOT(IL2))THEN
-        D=BOT(IL2)-B1
+       ELSEIF(B1.LT.BOT(IL))THEN
+        D=BOT(IL)-B1
         T1=T1+D
         B1=B1+D
        ENDIF
@@ -136,8 +137,8 @@ CONTAINS
         IF(ILL.NE.ILL2)BOT(ILL)=TOP(ILL)-MINTHICKNESS
        ENDDO
        TT =0.0; MT =0.0; ILL1=0 !ILL2+1
-      ELSE
-       MT=MT+MINTHICKNESS
+!      ELSE
+!       MT=MT+MINTHICKNESS
       ENDIF
      ENDIF
     ENDIF    
@@ -197,7 +198,8 @@ CONTAINS
  TH=0.0; DO ILAY=1,NLAY; IF(BND(ILAY).NE.0)TH(ILAY)=TOP(ILAY)-BOT(ILAY); ENDDO; T2=SUM(TH)
  DO ILAY=1,NLAY; TH(ILAY)=TH(ILAY)*HK(ILAY); ENDDO; K2=SUM(TH)
  
- IF(.NOT.UTL_EQUALS_REAL(T2,T1).OR..NOT.UTL_EQUALS_REAL(K2,K1))THEN
+ IF((.NOT.UTL_EQUALS_REAL(T2,T1).OR..NOT.UTL_EQUALS_REAL(K2,K1)).AND. &
+   (ABS(T2-T1).GT.1.0.OR.ABS(K2-K1).GT.1.0))THEN
   !## get thickness of aquifers
   DO ILAY=1,NLAY
    WRITE(*,'(I3,8F10.2)') ILAY,TOP(ILAY)   ,BOT(ILAY)   ,TOP(ILAY)   -BOT(ILAY)   ,TOP(ILAY)   -BOT(ILAY)   *HK(ILAY), &
