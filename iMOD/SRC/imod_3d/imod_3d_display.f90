@@ -771,8 +771,8 @@ CONTAINS
     
     CALL GLENABLE(GL_STENCIL_TEST)
 
-!    CALL GLGETINTEGERV(GL_STENCIL_BITS,MBITS)   !0    
-!    WRITE(*,*) GLISENABLED(GL_STENCIL_TEST),MBITS
+    CALL GLGETINTEGERV(GL_STENCIL_BITS,MBITS)   !0    
+    WRITE(*,*) GLISENABLED(GL_STENCIL_TEST),MBITS
     !## enabling writing the mask
 !    CALL GLSTENCILMASK(1_GLUINT)
 
@@ -826,7 +826,7 @@ CONTAINS
       !## turn on clipping plane again
       CALL GLENABLE(CLPPLANES(J))
      
-     ELSE
+     ELSEIF(.TRUE.)THEN
 
 !      !## draw model
 !      CALL GLCALLLIST(IDFLISTINDEX(I))
@@ -871,6 +871,52 @@ CONTAINS
        ENDDO
 
 !      ENDDO
+
+     ELSE
+
+      !## process each clipping plane
+      DO JJ=1,NCLPLIST
+
+       IF(CLPPLOT(JJ)%ISEL.EQ.0)CYCLE
+       !## not to be capped
+       IF(CLPPLOT(JJ)%ICAP.EQ.0)CYCLE
+!       !## turn off all clipping planes
+!       DO J=1,NCLPLIST; IF(CLPPLOT(J)%ISEL.EQ.1)CALL GLDISABLE(CLPPLANES(J)); ENDDO
+       !## turn current on
+       CALL GLENABLE(CLPPLANES(JJ))
+
+       CALL GLCLEARSTENCIL(0_GLINT)
+       CALL GLCLEAR(GL_STENCIL_BUFFER_BIT)
+       CALL GLDISABLE(GL_DEPTH_TEST)
+       CALL GLENABLE(GL_CULL_FACE)
+!       CALL GLCOLORMASK(.FALSE._GLBOOLEAN,.FALSE._GLBOOLEAN,.FALSE._GLBOOLEAN,.FALSE._GLBOOLEAN)
+
+       !## first pass: increment stencil buffer value on back faces
+       CALL GLSTENCILFUNC(GL_ALWAYS,0_GLINT,3_GLUINT)
+       CALL GLSTENCILOP(GL_KEEP,GL_KEEP,GL_INCR)
+       CALL GLCULLFACE(GL_FRONT)
+       CALL GLCALLLIST(IDFLISTINDEX(I))
+
+!       !## second pass: decrement of stencil buffer value on front faces
+!       CALL GLSTENCILOP(GL_KEEP,GL_KEEP,GL_DECR)
+!       CALL GLCULLFACE(GL_BACK)
+!       CALL GLCALLLIST(IDFLISTINDEX(I))
+
+!       CALL GLCOLORMASK(.TRUE._GLBOOLEAN,.TRUE._GLBOOLEAN,.TRUE._GLBOOLEAN,.TRUE._GLBOOLEAN)
+!       CALL GLENABLE(GL_DEPTH_TEST)
+!       CALL GLDISABLE(GL_CULL_FACE)
+!       CALL GLSTENCILFUNC(GL_NOTEQUAL,0_GLINT,3_GLUINT)
+
+!       !## draw cap - use the clipplane vertices
+!       CALL GLDISABLE(CLPPLANES(JJ))
+!       CALL IMOD3D_DISPLAY_CLP_DRAW(JJ,IDFPLOT(I)%ICOLOR)
+!       CALL GLENABLE(CLPPLANES(JJ))
+
+!       !## draw image
+!       CALL GLCALLLIST(IDFLISTINDEX(I))
+      
+      ENDDO
+
      ENDIF      
     
 !    ENDDO
