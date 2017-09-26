@@ -255,6 +255,7 @@ CONTAINS
   CALL UTL_SETTEXTSIZE(CHW,CHH,TSIZE)
   !## number of boxes in vertical
   NY=(Y2-Y1)/TSIZE
+  TDY=TSIZE
  !## define textsize as number of columns are defined
  ELSE
   !## number of boxes in vertical

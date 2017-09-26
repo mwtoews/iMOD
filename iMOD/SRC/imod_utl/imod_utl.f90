@@ -60,7 +60,7 @@ REAL,DIMENSION(13) :: SXVALUE,SYVALUE
 INTEGER :: NSX,NSY
 
 CONTAINS
- 
+
  !###======================================================================
  SUBROUTINE UTL_MINTHICKNESS(TOP,BOT,HK,VK,VA, &
            TOP_BU,BOT_BU,HK_BU,VK_BU,VA_BU,BND,TH,MINTHICKNESS)

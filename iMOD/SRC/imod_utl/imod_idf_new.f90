@@ -36,11 +36,12 @@ INTEGER(KIND=8),PRIVATE :: IREC
 CONTAINS
 
  !###======================================================================
- SUBROUTINE UTL_WRITE_FREE(IU,IDF,IINT,CPOS)
+ SUBROUTINE UTL_WRITE_FREE(IU,IDF,IINT,CPOS,TSEP)
  !###======================================================================
  IMPLICIT NONE
  INTEGER,INTENT(IN) :: IU,IINT
  CHARACTER(LEN=1),INTENT(IN) :: CPOS
+ CHARACTER(LEN=*),INTENT(IN) :: TSEP
  TYPE(IDFOBJ),INTENT(IN) :: IDF
  CHARACTER(LEN=52) :: LINE
  REAL :: XC,PC
@@ -50,47 +51,66 @@ CONTAINS
  IF(CPOS.EQ.'T'.OR.CPOS.EQ.'t')CALL UTL_WRITE_FREE_HEADER(IU,IDF)
  
  DO IROW=1,IDF%NROW
-  N=1; XC=IDF%X(1,IROW)
-  DO ICOL=1,IDF%NCOL
-
-   LEX=.FALSE.
-   IF(ICOL.LT.IDF%NCOL)THEN
-    IF(IDF%X(ICOL+1,IROW).NE.XC)LEX=.TRUE.
-   ENDIF 
-   IF(ICOL.EQ.IDF%NCOL)LEX=.TRUE.
-
-   IF(LEX)THEN
-
-    !## replace by replace-value in case of nodata-value
-    PC=XC; IF(IDF%NODATA.EQ.PC)PC=0.0
-    
-    !## write values   
-    IF(N.GT.1)THEN
-     IF(IINT.EQ.0)LINE=TRIM(ITOS(N))//'*'//TRIM(RTOS(PC,'*',0))
-     IF(IINT.EQ.1)LINE=TRIM(ITOS(N))//'*'//TRIM(ITOS(INT(PC)))
-     WRITE(IU,'(A)') TRIM(LINE)
-    ELSE
-     IF(IINT.EQ.0)WRITE(IU,*) PC
-     IF(IINT.EQ.1)WRITE(IU,*) INT(PC)
-    ENDIF
-    
-    IF(ICOL.LT.IDF%NCOL)THEN
-     N=1; XC=IDF%X(ICOL+1,IROW)
-    ENDIF
-
-   ELSE
-
-    N=N+1
-
-   ENDIF
-
-  ENDDO
+  
+  CALL UTL_WRITE_FREE_ROW(IU,IDF%X(:,IROW),IDF%NCOL,IDF%NODATA,IINT,TSEP)
+  
  ENDDO
   
  IF(CPOS.EQ.'B'.OR.CPOS.EQ.'b')CALL UTL_WRITE_FREE_HEADER(IU,IDF)
 
  END SUBROUTINE UTL_WRITE_FREE
 
+ !###======================================================================
+ SUBROUTINE UTL_WRITE_FREE_ROW(IU,X,NCOL,NODATA,IINT,TSEP)
+ !###======================================================================
+ IMPLICIT NONE
+ INTEGER,INTENT(IN) :: IU,NCOL,IINT
+ REAL,INTENT(IN),DIMENSION(NCOL) :: X
+ CHARACTER(LEN=*),INTENT(IN) :: TSEP
+ REAL,INTENT(IN) :: NODATA
+ INTEGER :: ICOL,N
+ REAL :: XC,PC
+ LOGICAL :: LEX
+ CHARACTER(LEN=52) :: LINE
+  
+ N=1; XC=X(1)
+ DO ICOL=1,NCOL
+
+  LEX=.FALSE.
+  IF(ICOL.LT.NCOL)THEN
+   IF(X(ICOL+1).NE.XC)LEX=.TRUE.
+  ENDIF 
+  IF(ICOL.EQ.NCOL)LEX=.TRUE.
+
+  IF(LEX)THEN
+
+   !## replace by replace-value in case of nodata-value
+   PC=XC; IF(NODATA.EQ.PC)PC=0.0
+    
+   !## write values   
+   IF(N.GT.1)THEN
+    IF(IINT.EQ.0)LINE=TRIM(ITOS(N))//TRIM(TSEP)//TRIM(RTOS(PC,'*',0))
+    IF(IINT.EQ.1)LINE=TRIM(ITOS(N))//TRIM(TSEP)//TRIM(ITOS(INT(PC)))
+    WRITE(IU,'(A)') TRIM(LINE)
+   ELSE
+    IF(IINT.EQ.0)WRITE(IU,*) PC
+    IF(IINT.EQ.1)WRITE(IU,*) INT(PC)
+   ENDIF
+    
+   IF(ICOL.LT.NCOL)THEN
+    N=1; XC=X(ICOL+1)
+   ENDIF
+
+  ELSE
+
+   N=N+1
+
+  ENDIF
+
+ ENDDO
+
+ END SUBROUTINE UTL_WRITE_FREE_ROW
+ 
  !###======================================================================
  LOGICAL FUNCTION UTL_READ_FREE(IU,IDF,CPOS)
  !###======================================================================
@@ -177,7 +197,7 @@ CONTAINS
  UTL_READ_FREE_HEADER=.TRUE.
  
  END FUNCTION UTL_READ_FREE_HEADER
-
+ 
  !###======================================================================
  LOGICAL FUNCTION IDF_EXTENT(N,IDF1,IDF2,IOPTION)
  !###======================================================================
