@@ -227,7 +227,6 @@ CONTAINS
  INTEGER :: I,IFRAMERATE,IU,IOS
  CHARACTER(LEN=256) :: EXESTRING,CURDIR
 
-!d:\OSS\THIRD_PARTY_SOFTWARE\ffmpeg-3.3.1-win64-static\bin\ffmpeg.exe  -start_number 1 -framerate 12 -i "image%%03d.png" -crf 25 test.avi
  MOVIE_CREATE_MPEG=.FALSE.
 
  !## simulate batch-file, inclusive pause statement.
@@ -238,9 +237,6 @@ CONTAINS
    TRIM(DIR)//'\FFMPEG.BAT'//CHAR(13)//'This file is needed to create the movie file','Error')
   RETURN
  ENDIF
-
-!## padding
-!ffmpeg -i vid.mp4 -framerate 1 img_%03d.png -filter_complex overlay output.mp4
 
  IF(IFRAME.EQ.0)THEN
   IFRAMERATE=SIZE(BMPOUTNAME)/ISEC
@@ -266,8 +262,6 @@ CONTAINS
  ENDIF
  
  CALL IOSDIRCHANGE(CURDIR)
-
-!ffmpeg -i vid.mp4 -framerate 1 img_%d.png -filter_complex overlay output.mp4
 
  MOVIE_CREATE_MPEG=.TRUE.
   
@@ -391,10 +385,10 @@ CONTAINS
  CALL UTL_IMODFILLMENU(IDF_MENU2,TRIM(PREFVAL(1))//'\MOVIES\'//TRIM(FNAME),'*.'//TRIM(EXT(I)),'F',N,0,0,CORDER='D')
  !## outgrey
  SELECT CASE (I)
-  !## bmp,jpg,pcx
-  CASE (1:3); J=0
+  !## bmp,png,jpg,pcx
+  CASE (1:4); J=0
   !## avi
-  CASE (4)
+  CASE (5)
    !## check whether a movie-player is associated to an avi
    J=0
    DO K=30,31
@@ -463,12 +457,12 @@ CONTAINS
    CASE ('BMP','PNG','JPG','PCX')
 
     IF(WINFOBITMAP(0,BITMAPFREE).GT.0)THEN
-     CALL IFILECLOSE(0)
+!     CALL IFILECLOSE(0)
      
      I=WINFOERROR(1)
      IHANDLE=0; CALL WBITMAPLOAD(IHANDLE,TRIM(MOVIEFILE))
      I=WINFOERROR(1)
-     CALL IFILECLOSE(0)
+!     CALL IFILECLOSE(0)
      IF(I.NE.0)THEN
       CALL WMESSAGEBOX(OKONLY,EXCLAMATIONICON,COMMONOK,'Cannot read/load image:'//CHAR(13)//TRIM(MOVIEFILE)//CHAR(13)// &
        'ERROR code = '//TRIM(ITOS(I)),'Error')
