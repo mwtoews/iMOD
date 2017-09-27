@@ -411,8 +411,10 @@ CONTAINS
  IU=IMOD_UTL_GETUNIT()
  
  FNAME = TRIM(DIRNAME)//'\tmp.tmp#0#1#2'
+#ifdef PKSMPI 
  N = LEN_TRIM(FNAME)
  CALL PKS7MPIFNAME(FNAME,N)
+#endif 
  OPEN(IU,FILE=FNAME,STATUS='UNKNOWN',IOSTAT=IOS)
  IF(IOS.EQ.0)THEN
   IMOD_UTL_DIREXIST=.TRUE.
@@ -1394,10 +1396,16 @@ END SUBROUTINE IMOD_UTL_QKSORT
  CHARACTER(LEN=*),INTENT(IN) :: TXT
  INTEGER,INTENT(IN) :: TXTTYPE
  INTEGER,INTENT(IN),OPTIONAL :: IU
- logical :: pks7mpimasterwrite
+ logical :: pks7mpimasterwrite, lwrite
 
  LOGICAL :: LEX
-
+ 
+#ifdef PKSMPI 
+ lwrite = pks7mpimasterwrite()
+#else
+ lwrite = .true.
+#endif
+ 
   SELECT CASE (TXTTYPE)
   !## file
   CASE (0)
@@ -1414,9 +1422,9 @@ END SUBROUTINE IMOD_UTL_QKSORT
    WRITE(*,'(A)') TRIM(TXT)
    IF(IFLAG(1).EQ.1)PAUSE
   CASE (3) 
-   if (pks7mpimasterwrite()) WRITE(*,'(A)') TRIM(TXT) 
+   if (lwrite) WRITE(*,'(A)') TRIM(TXT) 
   CASE (-3)
-   if (pks7mpimasterwrite()) then   
+   if (lwrite) then   
     WRITE(*,'(A)')
     WRITE(*,'(A)') 'Error occured!'
     WRITE(*,'(A)') TRIM(TXT) 
@@ -2252,7 +2260,9 @@ END SUBROUTINE IMOD_UTL_QKSORT
     ABSPATH = TRIM(PATH)//'\TEST.TXT'
  END IF
  N = LEN_TRIM(ABSPATH)
+#ifdef PKSMPI
  CALL PKS7MPIFNAME(ABSPATH,N)
+#endif 
  CALL IMOD_UTL_SWAPSLASH(ABSPATH)
  IF(ABSPATH(1:2).EQ.'./')THEN
     ABSPATH = ABSPATH(3:LEN_TRIM(ABSPATH))

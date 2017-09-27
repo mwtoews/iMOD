@@ -224,8 +224,9 @@ CONTAINS
  DOUBLE PRECISION :: XD1,XD2,YD1,YD2,TINY
  CHARACTER(LEN=256) :: IDFNAME
 
+#ifdef PKSMPI 
  call timing_tic('IO','IDFREADSCALE')
- 
+#endif 
  !## check extent
  IF (IDFC%XMIN.GT.IDFM%XMIN.OR.IDFC%XMAX.LT.IDFM%XMAX.OR.IDFC%YMIN.GT.IDFM%YMIN.OR.IDFC%YMAX.LT.IDFM%YMAX) THEN
   INQUIRE(UNIT=IDFC%IU,NAME=IDFNAME)
@@ -372,9 +373,9 @@ CONTAINS
 
 
  IDFREADSCALE=.TRUE.
-
+#ifdef PKSMPI 
  call timing_toc('IO','IDFREADSCALE')
- 
+#endif 
  END FUNCTION IDFREADSCALE
 
  !###====================================================================
@@ -836,9 +837,9 @@ CONTAINS
  TYPE(IDFOBJ) :: IDF
  INTEGER :: I
  LOGICAL :: LEX
-
+#ifdef PKSMPI 
  call timing_tic('IO','IDFWRITE')
- 
+#endif 
  IDFWRITE_WRAPPER=.FALSE.
 
  CALL IDFNULLIFY(IDF)
@@ -885,9 +886,9 @@ CONTAINS
  IF(IDF%IU.GT.0)THEN
   INQUIRE(UNIT=IDF%IU,OPENED=LEX); IF(LEX)CLOSE(IDF%IU)
  ENDIF
-
+#ifdef PKSMPI 
  call timing_toc('IO','IDFWRITE')
-
+#endif
  END FUNCTION IDFWRITE_WRAPPER
 
  !###======================================================================
