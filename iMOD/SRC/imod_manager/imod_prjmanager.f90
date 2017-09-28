@@ -3189,7 +3189,7 @@ TOPICLOOP: DO ITOPIC=1,MAXTOPICS
 
   IFLAGS=PROCBLOCKED 
  !## executes on commandtool such that commands alike 'dir' etc. works
-#if (defined(WINTERACTER9))
+#if (defined(WINTERACTER11))
   IFLAGS=IFLAGS+PROCCMDPROC
 #endif 
 
@@ -3219,7 +3219,7 @@ TOPICLOOP: DO ITOPIC=1,MAXTOPICS
   IFLAGS=0 
  !## executes on commandtool such that commands alike 'dir' etc. works
 
-#if (defined(WINTERACTER9))
+#if (defined(WINTERACTER11))
   IFLAGS=IFLAGS+PROCCMDPROC
 #endif 
   
@@ -10388,7 +10388,7 @@ JLOOP: DO K=1,SIZE(TOPICS)
  CALL PMANAGER_ALLOCATE()
  
  CALL WDIALOGSELECT(ID_DPMANAGER); CALL WDIALOGCLEARFIELD(ID_TREEVIEW1)
-#if (defined(WINTERACTER9))
+#if (defined(WINTERACTER11))
   CALL WDIALOGTREEVIEWCHECK(0)
 #endif
  
@@ -10520,7 +10520,7 @@ JLOOP: DO K=1,SIZE(TOPICS)
    ENDDO
   ENDIF
  END DO
-#if (defined(WINTERACTER9))
+#if (defined(WINTERACTER11))
   CALL WDIALOGTREEVIEWCHECK(1)
 #endif
   

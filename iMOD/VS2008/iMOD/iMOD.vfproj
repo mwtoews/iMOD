@@ -71,7 +71,11 @@
 		<File RelativePath="..\..\..\UTL\utl1.inc"/>
 		<File RelativePath="..\..\..\UTL\utl2.inc"/></Filter>
 		<Filter Name="imod_3d">
-		<File RelativePath="..\..\..\iMOD\SRC\imod_3d\imod_3d.f90"/>
+		<File RelativePath="..\..\..\iMOD\SRC\imod_3d\imod_3d.f90">
+			<FileConfiguration Name="Release|x64">
+				<Tool Name="VFFortranCompilerTool" Preprocess="preprocessYes" PreprocessorDefinitions="WINTERACTER11"/></FileConfiguration>
+			<FileConfiguration Name="Debug|x64">
+				<Tool Name="VFFortranCompilerTool" Preprocess="preprocessYes" PreprocessorDefinitions="WINTERACTER11"/></FileConfiguration></File>
 		<File RelativePath="..\..\..\iMOD\SRC\imod_3d\imod_3d_display.f90"/>
 		<File RelativePath="..\..\..\iMOD\SRC\imod_3d\imod_3d_engine.f90"/>
 		<File RelativePath="..\..\..\iMOD\SRC\imod_3d\imod_3d_par.f90"/>
@@ -93,11 +97,11 @@
 		<File RelativePath="..\..\..\iMOD\SRC\imod_bivar\imod_kriging.f90"/></Filter>
 		<File RelativePath="..\..\SRC\imod_batch\imod_batch.f90">
 			<FileConfiguration Name="Debug|Win32">
-				<Tool Name="VFFortranCompilerTool" Preprocess="preprocessYes" PreprocessorDefinitions="WINTERACTER9"/></FileConfiguration>
+				<Tool Name="VFFortranCompilerTool" Preprocess="preprocessYes" PreprocessorDefinitions="WINTERACTER11"/></FileConfiguration>
 			<FileConfiguration Name="Release|x64">
-				<Tool Name="VFFortranCompilerTool" Preprocess="preprocessYes" PreprocessorDefinitions="WINTERACTER9"/></FileConfiguration>
+				<Tool Name="VFFortranCompilerTool" Preprocess="preprocessYes" PreprocessorDefinitions="WINTERACTER11"/></FileConfiguration>
 			<FileConfiguration Name="Debug|x64">
-				<Tool Name="VFFortranCompilerTool" Preprocess="preprocessYes" PreprocessorDefinitions="WINTERACTER9"/></FileConfiguration></File>
+				<Tool Name="VFFortranCompilerTool" Preprocess="preprocessYes" PreprocessorDefinitions="WINTERACTER11"/></FileConfiguration></File>
 		<File RelativePath="..\..\SRC\imod_batch\imod_batch_flumy.f90"/>
 		<File RelativePath="..\..\SRC\imod_batch\imod_batch_par.f90"/>
 		<File RelativePath="..\..\..\iMOD\SRC\imod_batch\imod_createizone.f90"/>
@@ -138,11 +142,11 @@
 		<Filter Name="imod_geoconnect">
 		<File RelativePath="..\..\SRC\imod_geoconnect\imod_geoconnect.f90">
 			<FileConfiguration Name="Debug|Win32">
-				<Tool Name="VFFortranCompilerTool" Preprocess="preprocessYes" PreprocessorDefinitions="WINTERACTER9"/></FileConfiguration>
+				<Tool Name="VFFortranCompilerTool" Preprocess="preprocessYes" PreprocessorDefinitions="WINTERACTER11"/></FileConfiguration>
 			<FileConfiguration Name="Release|x64">
-				<Tool Name="VFFortranCompilerTool" Preprocess="preprocessYes" PreprocessorDefinitions="WINTERACTER9"/></FileConfiguration>
+				<Tool Name="VFFortranCompilerTool" Preprocess="preprocessYes" PreprocessorDefinitions="WINTERACTER11"/></FileConfiguration>
 			<FileConfiguration Name="Debug|x64">
-				<Tool Name="VFFortranCompilerTool" Preprocess="preprocessYes" PreprocessorDefinitions="WINTERACTER9"/></FileConfiguration></File>
+				<Tool Name="VFFortranCompilerTool" Preprocess="preprocessYes" PreprocessorDefinitions="WINTERACTER11"/></FileConfiguration></File>
 		<File RelativePath="..\..\SRC\imod_geoconnect\imod_geoconnect_par.f90"/></Filter>
 		<Filter Name="imod_googleearth">
 		<File RelativePath="..\..\SRC\imod_googleearth\imod_google.f90"/></Filter>
@@ -156,13 +160,13 @@
 		<File RelativePath="..\..\..\iMOD\SRC\imod_idfedit\IMOD_IDFEDIT.F90"/>
 		<File RelativePath="..\..\..\iMOD\SRC\imod_idfedit\imod_idfedit_table.f90">
 			<FileConfiguration Name="Debug|Win32">
-				<Tool Name="VFFortranCompilerTool" Preprocess="preprocessYes" PreprocessorDefinitions="WINTERACTER9"/></FileConfiguration>
+				<Tool Name="VFFortranCompilerTool" Preprocess="preprocessYes" PreprocessorDefinitions="WINTERACTER11"/></FileConfiguration>
 			<FileConfiguration Name="Release|x64">
-				<Tool Name="VFFortranCompilerTool" Preprocess="preprocessYes" PreprocessorDefinitions="WINTERACTER9"/></FileConfiguration>
+				<Tool Name="VFFortranCompilerTool" Preprocess="preprocessYes" PreprocessorDefinitions="WINTERACTER11"/></FileConfiguration>
 			<FileConfiguration Name="Debug|x64">
-				<Tool Name="VFFortranCompilerTool" Preprocess="preprocessYes" PreprocessorDefinitions="WINTERACTER9"/></FileConfiguration>
+				<Tool Name="VFFortranCompilerTool" Preprocess="preprocessYes" PreprocessorDefinitions="WINTERACTER11"/></FileConfiguration>
 			<FileConfiguration Name="Release|Win32">
-				<Tool Name="VFFortranCompilerTool" Preprocess="preprocessYes" PreprocessorDefinitions="WINTERACTER9"/></FileConfiguration></File>
+				<Tool Name="VFFortranCompilerTool" Preprocess="preprocessYes" PreprocessorDefinitions="WINTERACTER11"/></FileConfiguration></File>
 		<File RelativePath="..\..\..\iMOD\SRC\imod_idfedit\imod_idfedit_trace.f90"/></Filter>
 		<Filter Name="imod_idfgetvalue">
 		<File RelativePath="..\..\..\iMOD\SRC\imod_idfgetvalue\imod_idfgetvalue.f90"/></Filter>
@@ -188,25 +192,25 @@
 		<Filter Name="imod_ipf">
 		<File RelativePath="..\..\..\iMOD\SRC\imod_ipf\imod_extractipf.f90">
 			<FileConfiguration Name="Debug|Win32">
-				<Tool Name="VFFortranCompilerTool" Preprocess="preprocessYes" PreprocessorDefinitions="WINTERACTER9"/></FileConfiguration>
+				<Tool Name="VFFortranCompilerTool" Preprocess="preprocessYes" PreprocessorDefinitions="WINTERACTER11"/></FileConfiguration>
 			<FileConfiguration Name="Release|x64">
-				<Tool Name="VFFortranCompilerTool" Preprocess="preprocessYes" PreprocessorDefinitions="WINTERACTER9"/></FileConfiguration>
+				<Tool Name="VFFortranCompilerTool" Preprocess="preprocessYes" PreprocessorDefinitions="WINTERACTER11"/></FileConfiguration>
 			<FileConfiguration Name="Debug|x64">
-				<Tool Name="VFFortranCompilerTool" Preprocess="preprocessYes" PreprocessorDefinitions="WINTERACTER9"/></FileConfiguration>
+				<Tool Name="VFFortranCompilerTool" Preprocess="preprocessYes" PreprocessorDefinitions="WINTERACTER11"/></FileConfiguration>
 			<FileConfiguration Name="Release|Win32">
-				<Tool Name="VFFortranCompilerTool" Preprocess="preprocessYes" PreprocessorDefinitions="WINTERACTER9"/></FileConfiguration></File>
+				<Tool Name="VFFortranCompilerTool" Preprocess="preprocessYes" PreprocessorDefinitions="WINTERACTER11"/></FileConfiguration></File>
 		<File RelativePath="..\..\..\iMOD\SRC\imod_ipf\Imod_ipf.f90"/>
 		<File RelativePath="..\..\..\iMOD\SRC\imod_ipf\imod_ipf_labels.f90"/>
 		<File RelativePath="..\..\..\iMOD\SRC\imod_ipf\imod_ipf_par.f90"/>
 		<File RelativePath="..\..\..\iMOD\SRC\imod_ipf\imod_ipfanalyse.f90">
 			<FileConfiguration Name="Debug|Win32">
-				<Tool Name="VFFortranCompilerTool" Preprocess="preprocessYes" PreprocessorDefinitions="WINTERACTER9"/></FileConfiguration>
+				<Tool Name="VFFortranCompilerTool" Preprocess="preprocessYes" PreprocessorDefinitions="WINTERACTER11"/></FileConfiguration>
 			<FileConfiguration Name="Release|x64">
-				<Tool Name="VFFortranCompilerTool" Preprocess="preprocessYes" PreprocessorDefinitions="WINTERACTER9"/></FileConfiguration>
+				<Tool Name="VFFortranCompilerTool" Preprocess="preprocessYes" PreprocessorDefinitions="WINTERACTER11"/></FileConfiguration>
 			<FileConfiguration Name="Debug|x64">
-				<Tool Name="VFFortranCompilerTool" Preprocess="preprocessYes" PreprocessorDefinitions="WINTERACTER9"/></FileConfiguration>
+				<Tool Name="VFFortranCompilerTool" Preprocess="preprocessYes" PreprocessorDefinitions="WINTERACTER11"/></FileConfiguration>
 			<FileConfiguration Name="Release|Win32">
-				<Tool Name="VFFortranCompilerTool" Preprocess="preprocessYes" PreprocessorDefinitions="WINTERACTER9"/></FileConfiguration></File>
+				<Tool Name="VFFortranCompilerTool" Preprocess="preprocessYes" PreprocessorDefinitions="WINTERACTER11"/></FileConfiguration></File>
 		<File RelativePath="..\..\..\iMOD\SRC\imod_ipf\imod_ipfassfiles.f90"/>
 		<File RelativePath="..\..\..\iMOD\SRC\imod_ipf\imod_ipfgetvalue.f90"/>
 		<File RelativePath="..\..\..\iMOD\SRC\imod_ipf\imod_ipfgetvalue_colours.f90"/></Filter>
@@ -246,13 +250,13 @@
 		<File RelativePath="..\..\..\iMOD\SRC\imod_main\imod_about.f90"/>
 		<File RelativePath="..\..\..\iMOD\SRC\imod_main\imod_main.f90">
 			<FileConfiguration Name="Debug|Win32">
-				<Tool Name="VFFortranCompilerTool" Preprocess="preprocessYes" PreprocessorDefinitions="WINTERACTER9"/></FileConfiguration>
+				<Tool Name="VFFortranCompilerTool" Preprocess="preprocessYes" PreprocessorDefinitions="WINTERACTER11"/></FileConfiguration>
 			<FileConfiguration Name="Release|x64">
-				<Tool Name="VFFortranCompilerTool" Preprocess="preprocessYes" PreprocessorDefinitions="WINTERACTER9"/></FileConfiguration>
+				<Tool Name="VFFortranCompilerTool" Preprocess="preprocessYes" PreprocessorDefinitions="WINTERACTER11"/></FileConfiguration>
 			<FileConfiguration Name="Debug|x64">
-				<Tool Name="VFFortranCompilerTool" Preprocess="preprocessYes" PreprocessorDefinitions="WINTERACTER9"/></FileConfiguration>
+				<Tool Name="VFFortranCompilerTool" Preprocess="preprocessYes" PreprocessorDefinitions="WINTERACTER11"/></FileConfiguration>
 			<FileConfiguration Name="Release|Win32">
-				<Tool Name="VFFortranCompilerTool" Preprocess="preprocessYes" PreprocessorDefinitions="WINTERACTER9"/></FileConfiguration></File>
+				<Tool Name="VFFortranCompilerTool" Preprocess="preprocessYes" PreprocessorDefinitions="WINTERACTER11"/></FileConfiguration></File>
 		<File RelativePath="..\..\..\iMOD\SRC\imod_main\imod_pref.f90"/>
 		<File RelativePath="..\..\..\iMOD\SRC\imod_main\imod_pref_par.f90"/>
 		<File RelativePath="..\..\..\iMOD\SRC\imodconfig_x32d.f90">
@@ -275,13 +279,13 @@
 		<File RelativePath="..\..\..\iMOD\SRC\imod_manager\imod_manager.f90"/>
 		<File RelativePath="..\..\..\iMOD\SRC\imod_manager\imod_prjmanager.f90">
 			<FileConfiguration Name="Debug|Win32">
-				<Tool Name="VFFortranCompilerTool" Preprocess="preprocessYes" PreprocessorDefinitions="WINTERACTER9"/></FileConfiguration>
+				<Tool Name="VFFortranCompilerTool" Preprocess="preprocessYes" PreprocessorDefinitions="WINTERACTER11"/></FileConfiguration>
 			<FileConfiguration Name="Release|x64">
-				<Tool Name="VFFortranCompilerTool" Preprocess="preprocessYes" PreprocessorDefinitions="WINTERACTER9"/></FileConfiguration>
+				<Tool Name="VFFortranCompilerTool" Preprocess="preprocessYes" PreprocessorDefinitions="WINTERACTER11"/></FileConfiguration>
 			<FileConfiguration Name="Debug|x64">
-				<Tool Name="VFFortranCompilerTool" Preprocess="preprocessYes" PreprocessorDefinitions="WINTERACTER9"/></FileConfiguration>
+				<Tool Name="VFFortranCompilerTool" Preprocess="preprocessYes" PreprocessorDefinitions="WINTERACTER11"/></FileConfiguration>
 			<FileConfiguration Name="Release|Win32">
-				<Tool Name="VFFortranCompilerTool" Preprocess="preprocessYes" PreprocessorDefinitions="WINTERACTER9"/></FileConfiguration></File>
+				<Tool Name="VFFortranCompilerTool" Preprocess="preprocessYes" PreprocessorDefinitions="WINTERACTER11"/></FileConfiguration></File>
 		<File RelativePath="..\..\..\iMOD\SRC\imod_manager\imod_prjmanager_par.f90"/>
 		<File RelativePath="..\..\SRC\imod_manager\imod_prjmanager_utl.f90"/>
 		<File RelativePath="..\..\..\iMOD\SRC\imod_manager\imod_tagman.F90"/></Filter>
@@ -304,13 +308,13 @@
 		<Filter Name="imod_model">
 		<File RelativePath="..\..\..\iMOD\SRC\imod_model\IMOD_MODEL.F90">
 			<FileConfiguration Name="Debug|Win32">
-				<Tool Name="VFFortranCompilerTool" Preprocess="preprocessYes" PreprocessorDefinitions="WINTERACTER9"/></FileConfiguration>
+				<Tool Name="VFFortranCompilerTool" Preprocess="preprocessYes" PreprocessorDefinitions="WINTERACTER11"/></FileConfiguration>
 			<FileConfiguration Name="Release|x64">
-				<Tool Name="VFFortranCompilerTool" Preprocess="preprocessYes" PreprocessorDefinitions="WINTERACTER9"/></FileConfiguration>
+				<Tool Name="VFFortranCompilerTool" Preprocess="preprocessYes" PreprocessorDefinitions="WINTERACTER11"/></FileConfiguration>
 			<FileConfiguration Name="Debug|x64">
-				<Tool Name="VFFortranCompilerTool" Preprocess="preprocessYes" PreprocessorDefinitions="WINTERACTER9"/></FileConfiguration>
+				<Tool Name="VFFortranCompilerTool" Preprocess="preprocessYes" PreprocessorDefinitions="WINTERACTER11"/></FileConfiguration>
 			<FileConfiguration Name="Release|Win32">
-				<Tool Name="VFFortranCompilerTool" Preprocess="preprocessYes" PreprocessorDefinitions="WINTERACTER9"/></FileConfiguration></File>
+				<Tool Name="VFFortranCompilerTool" Preprocess="preprocessYes" PreprocessorDefinitions="WINTERACTER11"/></FileConfiguration></File>
 		<File RelativePath="..\..\..\iMOD\SRC\imod_model\IMOD_MODEL_PAR.F90"/></Filter>
 		<Filter Name="imod_modpath">
 		<File RelativePath="..\..\..\iMOD\SRC\imod_modpath\imod_pathlines.f90"/>
@@ -318,11 +322,11 @@
 		<File RelativePath="..\..\..\iMOD\SRC\imod_modpath\imod_pathlines_sp.f90"/>
 		<File RelativePath="..\..\..\iMOD\SRC\imod_modpath\imod_pathlines_trace.f90">
 			<FileConfiguration Name="Debug|Win32">
-				<Tool Name="VFFortranCompilerTool" Preprocess="preprocessYes" PreprocessorDefinitions="WINTERACTER9"/></FileConfiguration>
+				<Tool Name="VFFortranCompilerTool" Preprocess="preprocessYes" PreprocessorDefinitions="WINTERACTER11"/></FileConfiguration>
 			<FileConfiguration Name="Release|x64">
-				<Tool Name="VFFortranCompilerTool" Preprocess="preprocessYes" PreprocessorDefinitions="WINTERACTER9"/></FileConfiguration>
+				<Tool Name="VFFortranCompilerTool" Preprocess="preprocessYes" PreprocessorDefinitions="WINTERACTER11"/></FileConfiguration>
 			<FileConfiguration Name="Debug|x64">
-				<Tool Name="VFFortranCompilerTool" Preprocess="preprocessYes" PreprocessorDefinitions="WINTERACTER9"/></FileConfiguration></File>
+				<Tool Name="VFFortranCompilerTool" Preprocess="preprocessYes" PreprocessorDefinitions="WINTERACTER11"/></FileConfiguration></File>
 		<File RelativePath="..\..\..\iMOD\SRC\imod_modpath\imod_plines_par.f90"/></Filter>
 		<Filter Name="imod_movie">
 		<File RelativePath="..\..\SRC\imod_movie\imod_movie.f90"/>
@@ -341,11 +345,11 @@
 		<Filter Name="imod_plugin">
 		<File RelativePath="..\..\SRC\imod_plugin\imod_plugin.f90">
 			<FileConfiguration Name="Debug|Win32">
-				<Tool Name="VFFortranCompilerTool" Preprocess="preprocessYes" PreprocessorDefinitions="WINTERACTER9"/></FileConfiguration>
+				<Tool Name="VFFortranCompilerTool" Preprocess="preprocessYes" PreprocessorDefinitions="WINTERACTER11"/></FileConfiguration>
 			<FileConfiguration Name="Release|x64">
-				<Tool Name="VFFortranCompilerTool" Preprocess="preprocessYes" PreprocessorDefinitions="WINTERACTER9"/></FileConfiguration>
+				<Tool Name="VFFortranCompilerTool" Preprocess="preprocessYes" PreprocessorDefinitions="WINTERACTER11"/></FileConfiguration>
 			<FileConfiguration Name="Debug|x64">
-				<Tool Name="VFFortranCompilerTool" Preprocess="preprocessYes" PreprocessorDefinitions="WINTERACTER9"/></FileConfiguration></File>
+				<Tool Name="VFFortranCompilerTool" Preprocess="preprocessYes" PreprocessorDefinitions="WINTERACTER11"/></FileConfiguration></File>
 		<File RelativePath="..\..\SRC\imod_plugin\imod_plugin_par.f90"/></Filter>
 		<Filter Name="imod_polint">
 		<File RelativePath="..\..\..\iMOD\SRC\imod_polint\imod_polint.f90"/></Filter>
@@ -357,13 +361,13 @@
 		<Filter Name="imod_profile">
 		<File RelativePath="..\..\..\iMOD\SRC\imod_profile\imod_profile.f90">
 			<FileConfiguration Name="Debug|Win32">
-				<Tool Name="VFFortranCompilerTool" Preprocess="preprocessYes" PreprocessorDefinitions="WINTERACTER9"/></FileConfiguration>
+				<Tool Name="VFFortranCompilerTool" Preprocess="preprocessYes" PreprocessorDefinitions="WINTERACTER11"/></FileConfiguration>
 			<FileConfiguration Name="Release|x64">
-				<Tool Name="VFFortranCompilerTool" Preprocess="preprocessYes" PreprocessorDefinitions="WINTERACTER9"/></FileConfiguration>
+				<Tool Name="VFFortranCompilerTool" Preprocess="preprocessYes" PreprocessorDefinitions="WINTERACTER11"/></FileConfiguration>
 			<FileConfiguration Name="Debug|x64">
-				<Tool Name="VFFortranCompilerTool" Preprocess="preprocessYes" PreprocessorDefinitions="WINTERACTER9"/></FileConfiguration>
+				<Tool Name="VFFortranCompilerTool" Preprocess="preprocessYes" PreprocessorDefinitions="WINTERACTER11"/></FileConfiguration>
 			<FileConfiguration Name="Release|Win32">
-				<Tool Name="VFFortranCompilerTool" Preprocess="preprocessYes" PreprocessorDefinitions="WINTERACTER9"/></FileConfiguration></File>
+				<Tool Name="VFFortranCompilerTool" Preprocess="preprocessYes" PreprocessorDefinitions="WINTERACTER11"/></FileConfiguration></File>
 		<File RelativePath="..\..\..\iMOD\SRC\imod_profile\imod_profile_par.f90"/>
 		<File RelativePath="..\..\..\iMOD\SRC\imod_profile\imod_profile_utl.f90"/></Filter>
 		<Filter Name="imod_residualplot">
@@ -411,6 +415,9 @@
 		<File RelativePath="..\..\..\iMOD\SRC\imod_spoints\imod_spoints_par.f90"/></Filter>
 		<Filter Name="imod_start">
 		<File RelativePath="..\..\..\iMOD\SRC\imod_start\imod_start.f90"/></Filter>
+		<Filter Name="imod_stomp">
+		<File RelativePath="..\..\SRC\imod_stomp\imod_stomp.f90"/>
+		<File RelativePath="..\..\SRC\imod_stomp\imod_stomp_par.f90"/></Filter>
 		<Filter Name="imod_subsurfex">
 		<File RelativePath="..\..\SRC\imod_subsurfex\imod_subsurfex.f90"/>
 		<File RelativePath="..\..\SRC\imod_subsurfex\imod_subsurfex_par.f90"/></Filter>
@@ -449,13 +456,13 @@
 				<Tool Name="VFFortranCompilerTool" WarnDeclarations="true" WarnUnusedVariables="true"/></FileConfiguration></File>
 		<File RelativePath="..\..\..\iMOD\SRC\imod_utl\imod_utl.f90">
 			<FileConfiguration Name="Debug|Win32">
-				<Tool Name="VFFortranCompilerTool" Preprocess="preprocessYes" PreprocessorDefinitions="WINTERACTER9"/></FileConfiguration>
+				<Tool Name="VFFortranCompilerTool" Preprocess="preprocessYes" PreprocessorDefinitions="WINTERACTER11"/></FileConfiguration>
 			<FileConfiguration Name="Release|x64">
-				<Tool Name="VFFortranCompilerTool" Preprocess="preprocessYes" PreprocessorDefinitions="WINTERACTER9"/></FileConfiguration>
+				<Tool Name="VFFortranCompilerTool" Preprocess="preprocessYes" PreprocessorDefinitions="WINTERACTER11"/></FileConfiguration>
 			<FileConfiguration Name="Debug|x64">
-				<Tool Name="VFFortranCompilerTool" Preprocess="preprocessYes" PreprocessorDefinitions="WINTERACTER9"/></FileConfiguration>
+				<Tool Name="VFFortranCompilerTool" Preprocess="preprocessYes" PreprocessorDefinitions="WINTERACTER11"/></FileConfiguration>
 			<FileConfiguration Name="Release|Win32">
-				<Tool Name="VFFortranCompilerTool" Preprocess="preprocessYes" PreprocessorDefinitions="WINTERACTER9"/></FileConfiguration></File></Filter>
+				<Tool Name="VFFortranCompilerTool" Preprocess="preprocessYes" PreprocessorDefinitions="WINTERACTER11"/></FileConfiguration></File></Filter>
 		<Filter Name="imod_utm">
 		<File RelativePath="..\..\..\iMOD\SRC\imod_utm\imod_utm.f90"/>
 		<File RelativePath="..\..\..\iMOD\SRC\imod_utm\imod_utm_par.f90"/></Filter>
@@ -465,17 +472,14 @@
 		<File RelativePath="..\..\SRC\imod_wbal\imod_wbal_graphics.f90"/>
 		<File RelativePath="..\..\..\iMOD\SRC\imod_wbal\imod_wbal_par.f90"/>
 		<File RelativePath="..\..\SRC\imod_wbal\imod_wbal_utl.f90"/></Filter>
-		<Filter Name="imod_stomp">
-		<File RelativePath="..\..\SRC\imod_stomp\imod_stomp.f90"/>
-		<File RelativePath="..\..\SRC\imod_stomp\imod_stomp_par.f90"/></Filter>
 		<Filter Name="programs">
 		<File RelativePath="..\..\..\iMOD\SRC\imod_main\imod_prg.f90">
 			<FileConfiguration Name="Debug|Win32">
 				<Tool Name="VFFortranCompilerTool" Preprocess="preprocessYes" PreprocessorDefinitions="DEBUG"/></FileConfiguration>
 			<FileConfiguration Name="Release|x64">
-				<Tool Name="VFFortranCompilerTool" Preprocess="preprocessYes" PreprocessorDefinitions="X64"/></FileConfiguration>
+				<Tool Name="VFFortranCompilerTool" Preprocess="preprocessYes" PreprocessorDefinitions="X64,WINTERACTER11"/></FileConfiguration>
 			<FileConfiguration Name="Debug|x64">
-				<Tool Name="VFFortranCompilerTool" Preprocess="preprocessYes" PreprocessorDefinitions="DEBUG"/></FileConfiguration>
+				<Tool Name="VFFortranCompilerTool" Preprocess="preprocessYes" PreprocessorDefinitions="DEBUG,WINTERACTER11"/></FileConfiguration>
 			<FileConfiguration Name="Release|Win32">
 				<Tool Name="VFFortranCompilerTool" Preprocess="preprocessYes" PreprocessorDefinitions=""/></FileConfiguration></File></Filter>
 		<File RelativePath="..\..\..\iMOD\SRC\bmpvar.f90"/>

@@ -513,21 +513,21 @@ CONTAINS
       IPOS=ISG(ISELISG)%ICRS-1+J
       !## increase/decrease memory data cross-section
       N=N-ABS(ISC(IPOS)%N)
-      if(n.ne.0)then
-      write(*,*) j,n
-      endif
+!      if(n.ne.0)then
+!      write(*,*) j,n
+!      endif
       
       CALL ISGMEMORYDATISC(N,IPOS,ISEG)
       ISC(IPOS)%N=-1.0*ABS(ISC(IPOS)%N)
 
-    !## check references
-    do ii=1,ncrs
-     iii=isg(iselisg)%icrs-1+ii
-     iiii=isc(iii)%iref
-     if(datisc(iiii)%distance.gt.0.0)then
-     write(*,*) 'wrong'
-     endif
-    enddo
+!    !## check references
+!    do ii=1,ncrs
+!     iii=isg(iselisg)%icrs-1+ii
+!     iiii=isc(iii)%iref
+!     if(datisc(iiii)%distance.gt.0.0)then
+!     write(*,*) 'wrong'
+!     endif
+!    enddo
     
       IF(ZCHK.EQ.0)THEN
        DATISC(ISEG)%DISTANCE= ICROSS(1)%DX

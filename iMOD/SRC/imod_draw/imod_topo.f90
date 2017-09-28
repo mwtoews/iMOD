@@ -432,10 +432,12 @@ CONTAINS
  ENDIF
  
  IW=NCOL; IH=NROW
+ I=INFOERROR(1)
  CALL WBITMAPCREATE(IBITMAP,IW,IH)
+ I=INFOERROR(1)
  IF(IBITMAP.EQ.0)THEN
   CALL WMESSAGEBOX(OKONLY,EXCLAMATIONICON,COMMONOK,'Cannot create memory for image:'//CHAR(13)//TRIM(FNAME)//CHAR(13)// &
-   'Probably the image is too large.'//CHAR(13)//'Width is '//TRIM(ITOS(IW))//' and heigth is '//TRIM(ITOS(IH))//CHAR(13)// &
+   'Probably the image is too large (error code ='//TRIM(ITOS(I))//').'//CHAR(13)//'Width is '//TRIM(ITOS(IW))//' and heigth is '//TRIM(ITOS(IH))//CHAR(13)// &
    'It will be removed from the list to avoid more error messages.','Error')
   RETURN
  ENDIF
@@ -444,8 +446,8 @@ CONTAINS
  CALL WBITMAPLOAD(IBITMAP,FNAME,1)
  I=WINFOERROR(1)
  IF(I.NE.0)THEN
-  CALL WMESSAGEBOX(OKONLY,EXCLAMATIONICON,COMMONOK,'Cannot read/load image:'//CHAR(13)//TRIM(FNAME)//CHAR(13)// &
-     'It will be removed from the list to avoid more error messages.','Error')
+  CALL WMESSAGEBOX(OKONLY,EXCLAMATIONICON,COMMONOK,'Cannot create memory for image:'//CHAR(13)//TRIM(FNAME)//CHAR(13)// &
+   'Error code ='//TRIM(ITOS(I))//'.','Error')
   CALL WBITMAPDESTROY(IBITMAP); IBITMAP=0; RETURN 
  ENDIF
  CALL WBITMAPSTRETCHMODE(0)

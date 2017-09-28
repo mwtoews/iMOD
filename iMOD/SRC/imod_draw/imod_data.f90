@@ -270,13 +270,15 @@ DO IDF=1,NIDF
  I=INDEX(IDFNAME,'.')-1
  J=INDEXNOCASE(IDFNAME,'\',.TRUE.)+1
  
-! LLEG=.TRUE.
-! IF(PRESENT(LEGNAME))THEN
-!  IF(LEGNAME.NE.'')THEN
+ LLEG=.TRUE.
+ IF(PRESENT(LEGNAME))THEN
+  !## do not generate a legend
+  IF(LEGNAME.NE.'')LLEG=.FALSE. !THEN
+!   INQUIRE(FILE=LEGNAME,EXIST=LLEG)
 !   CALL LEG_READ(MP(IPLOT)%LEG,LEGNAME,IOS)
 !   IF(IOS.EQ.0)LLEG=.FALSE.
 !  ENDIF
-! ENDIF
+ ENDIF
 
  MP(IPLOT)%ALIAS=IDFNAME(J:)
 
@@ -316,17 +318,23 @@ DO IDF=1,NIDF
     MP(IPLOT)%IEQ=0    !no value plotted <--- used as binaire pointer for label plotting
    ENDIF  
    IF(PRESENT(ISTYLE))THEN
-    MP(IPLOT)%ILEG   =ISTYLE    !no legend used for plotting, use colour in %scolor
-    IF(ISTYLE.EQ.1)THEN
-     IF(PRESENT(IPFICOL))THEN
-      MP(IPLOT)%IATTRIB=IPFICOL(3)
-     ELSE
-      MP(IPLOT)%IATTRIB=3    !initial first label for colouring
+    IF(.NOT.LLEG)THEN !PRESENT(LEGNAME))THEN
+     MP(IPLOT)%ILEG   =ISTYLE    !legend used for plotting
+     IF(ISTYLE.EQ.1)THEN
+      IF(PRESENT(IPFICOL))THEN
+       MP(IPLOT)%IATTRIB=IPFICOL(3)
+      ELSE
+       MP(IPLOT)%IATTRIB=3    !initial first label for colouring
+      ENDIF
      ENDIF
+    ELSE
+     MP(IPLOT)%ILEG   =0    !no legend used for plotting, use colour in %scolor
+     MP(IPLOT)%ILEGDLF=1    
+     MP(IPLOT)%IATTRIB=1    !initial first label for colouring
     ENDIF
    ELSE
     MP(IPLOT)%ILEG   =0    !no legend used for plotting, use colour in %scolor
-    MP(IPLOT)%ILEGDLF=1    !no legend used for plotting, use colour in %scolor
+    MP(IPLOT)%ILEGDLF=1    
     MP(IPLOT)%IATTRIB=1    !initial first label for colouring
    ENDIF
    !## plot associated files
@@ -418,12 +426,15 @@ DO IDF=1,NIDF
  DO I=1,MAXFILES; IF(IU(I).GT.0)CLOSE(IU(I)); END DO
 
  !## try to read in legfile
- LLEG=.TRUE.
- IF(PRESENT(LEGNAME))THEN
-  IF(LEGNAME.NE.'')THEN
-   CALL LEG_READ(MP(IPLOT)%LEG,LEGNAME,IOS)
-   IF(IOS.EQ.0)LLEG=.FALSE.
-  ENDIF
+ IF(.NOT.LLEG)THEN
+! LLEG=.TRUE.
+! IF(PRESENT(LEGNAME))THEN
+!  IF(LEGNAME.NE.'')THEN
+  CALL LEG_READ(MP(IPLOT)%LEG,LEGNAME,IOS)
+  !## error occured, generate a internal legend
+  IF(IOS.NE.0)LLEG=.TRUE.
+!  IF(IOS.EQ.0)LLEG=.FALSE.
+!  ENDIF
  ENDIF
 
  !## generate linear legend for entire domain and write it if not assigned to file at this stage
@@ -560,7 +571,11 @@ CALL WINDOWSELECT(0)
 
 CALL UTL_MESSAGEHANDLE(0)
 
-IIBITMAP=WINFOBITMAP(MPW%IWIN,BITMAPHANDLE)
+IF(MPW%IWIN.GT.0)THEN
+ IIBITMAP=WINFOBITMAP(MPW%IWIN,BITMAPHANDLE)
+ELSE
+ IIBITMAP=MPW%IBITMAP
+ENDIF
 
 !## create 'mother' bitmap for current coordinates
 CALL WBITMAPCREATE(MPW%IBITMAP,MPW%DIX,MPW%DIY)
@@ -1879,9 +1894,7 @@ IF(IP(1).EQ.1.AND.LPLOT)THEN
  CALL WBITMAPPUT(JBITMAP,2,1)
 
  CALL WBITMAPPLOTMODE(MODECOPY)
-! write(*,*) winfobitmap(0,BitmapFree)
  CALL WBITMAPDESTROY(JBITMAP)
-! write(*,*) winfobitmap(0,BitmapFree)
  LEX=.TRUE.
  
 ENDIF

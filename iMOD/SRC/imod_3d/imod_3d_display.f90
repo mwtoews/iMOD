@@ -769,10 +769,10 @@ CONTAINS
 !    !## draw image
 !    CALL GLCALLLIST(IDFLISTINDEX(I))
     
-    CALL GLENABLE(GL_STENCIL_TEST)
+!    CALL GLENABLE(GL_STENCIL_TEST)
 
-    CALL GLGETINTEGERV(GL_STENCIL_BITS,MBITS)   !0    
-    WRITE(*,*) GLISENABLED(GL_STENCIL_TEST),MBITS
+!    CALL GLGETINTEGERV(GL_STENCIL_BITS,MBITS)   !0    
+!    WRITE(*,*) GLISENABLED(GL_STENCIL_TEST),MBITS
     !## enabling writing the mask
 !    CALL GLSTENCILMASK(1_GLUINT)
 
@@ -792,130 +792,145 @@ CONTAINS
 
      IF(.FALSE.)THEN
 
-      CALL GLCLEARSTENCIL(0_GLINT)
-      CALL GLCLEAR(GL_STENCIL_BUFFER_BIT)
-
-      !## enable cull-face plotting
-      CALL GLENABLE(GL_CULL_FACE)
-      !## don't change capped pixels - function current pixel in stencil equal to ref in stencil (1)
-      CALL GLSTENCILFUNC(GL_GEQUAL,1_GLINT,3_GLUINT)
-      !## render frontfacing only - discard (culling) backface
-      CALL GLCULLFACE(GL_FRONT) !GL_BACK)
-      !## clear stencil to zero - if stencil/zdepth passes set zero - so cull-face image is zero
-      CALL GLSTENCILOP(GL_KEEP,GL_KEEP,GL_ZERO)
-      !## draw model
-      CALL GLCALLLIST(IDFLISTINDEX(I))
-
-      !## render backfacing only - discard frontface
-      CALL GLCULLFACE(GL_BACK) !GL_FRONT)
-      !## set stencil to 1 (reference value)
-      CALL GLSTENCILOP(GL_KEEP,GL_KEEP,GL_REPLACE)
-      !## draw model
-      CALL GLCALLLIST(IDFLISTINDEX(I))
-    
-      CALL GLDISABLE(GL_CULL_FACE)
-      !## disable current clipping planes
-      CALL GLDISABLE(CLPPLANES(J))
-      !## draw only where stencil is 1
-      CALL GLSTENCILFUNC(GL_EQUAL,1_GLINT,3_GLUINT)
-      !## set stencil to 2
-      CALL GLSTENCILOP(GL_KEEP,GL_KEEP,GL_INCR)
-     
-      !## draw cap - use the clipplane vertices
-      CALL IMOD3D_DISPLAY_CLP_DRAW(J,IDFPLOT(I)%ICOLOR)
-      !## turn on clipping plane again
-      CALL GLENABLE(CLPPLANES(J))
+!      CALL GLCLEARSTENCIL(0_GLINT)
+!      CALL GLCLEAR(GL_STENCIL_BUFFER_BIT)
+!
+!      !## enable cull-face plotting
+!      CALL GLENABLE(GL_CULL_FACE)
+!      !## don't change capped pixels - function current pixel in stencil equal to ref in stencil (1)
+!      CALL GLSTENCILFUNC(GL_GEQUAL,1_GLINT,3_GLUINT)
+!      !## render frontfacing only - discard (culling) backface
+!      CALL GLCULLFACE(GL_FRONT) !GL_BACK)
+!      !## clear stencil to zero - if stencil/zdepth passes set zero - so cull-face image is zero
+!      CALL GLSTENCILOP(GL_KEEP,GL_KEEP,GL_ZERO)
+!      !## draw model
+!      CALL GLCALLLIST(IDFLISTINDEX(I))
+!
+!      !## render backfacing only - discard frontface
+!      CALL GLCULLFACE(GL_BACK) !GL_FRONT)
+!      !## set stencil to 1 (reference value)
+!      CALL GLSTENCILOP(GL_KEEP,GL_KEEP,GL_REPLACE)
+!      !## draw model
+!      CALL GLCALLLIST(IDFLISTINDEX(I))
+!    
+!      CALL GLDISABLE(GL_CULL_FACE)
+!      !## disable current clipping planes
+!      CALL GLDISABLE(CLPPLANES(J))
+!      !## draw only where stencil is 1
+!      CALL GLSTENCILFUNC(GL_EQUAL,1_GLINT,3_GLUINT)
+!      !## set stencil to 2
+!      CALL GLSTENCILOP(GL_KEEP,GL_KEEP,GL_INCR)
+!     
+!      !## draw cap - use the clipplane vertices
+!      CALL IMOD3D_DISPLAY_CLP_DRAW(J,IDFPLOT(I)%ICOLOR)
+!      !## turn on clipping plane again
+!      CALL GLENABLE(CLPPLANES(J))
      
      ELSEIF(.TRUE.)THEN
 
 !      !## draw model
 !      CALL GLCALLLIST(IDFLISTINDEX(I))
 
-      CALL GLCLEARSTENCIL(0_GLINT)
-      CALL GLCLEAR(GL_STENCIL_BUFFER_BIT)
+      !## process each clipping plane
+      DO JJ=1,NCLPLIST
+       IF(CLPPLOT(JJ)%ISEL.EQ.0)CYCLE
+ 
+       !## not to be capped
+       IF(CLPPLOT(JJ)%ICAP.EQ.0)THEN
+        !## draw model
+        CALL GLCALLLIST(IDFLISTINDEX(I))
+       ELSE
+       
+!    CALL GLENABLE(GL_STENCIL_TEST)
+!    CALL GLGETINTEGERV(GL_STENCIL_BITS,MBITS)   !0    
+!    WRITE(*,*) GLISENABLED(GL_STENCIL_TEST),MBITS
 
-      !## always except
-      CALL GLSTENCILFUNC(GL_ALWAYS,1_GLINT,3_GLUINT)
-      !## invert value each time
-      CALL GLSTENCILOP(GL_KEEP,GL_INVERT,GL_INVERT)
-!      CALL GLSTENCILOP(GL_KEEP,GL_INVERT,GL_INVERT)
+        CALL GLCLEARSTENCIL(0_GLINT)
+        CALL GLCLEAR(GL_STENCIL_BUFFER_BIT)
 
-!      !## process each clipping plane
-!      DO JJ=1,NCLPLIST
-!       IF(CLPPLOT(JJ)%ISEL.EQ.0)CYCLE
-!       !## not to be capped
-!       IF(CLPPLOT(JJ)%ICAP.EQ.0)CYCLE
+        !## always except
+        CALL GLSTENCILFUNC(GL_ALWAYS,1_GLINT,3_GLUINT)
+        !## invert value each time
+        CALL GLSTENCILOP(GL_KEEP,GL_INVERT,GL_INVERT)
+
 !       !## turn off all clipping planes
 !       DO J=1,NCLPLIST; IF(CLPPLOT(J)%ISEL.EQ.1)CALL GLDISABLE(CLPPLANES(J)); ENDDO
 !       !## turn current on
 !       CALL GLENABLE(CLPPLANES(JJ))
 
 !       CALL GLCOLORMASK(.FALSE._GLBOOLEAN,.FALSE._GLBOOLEAN,.FALSE._GLBOOLEAN,.FALSE._GLBOOLEAN)
-       !## draw model
-       CALL GLCALLLIST(IDFLISTINDEX(I))
+        !## draw model
+        CALL GLCALLLIST(IDFLISTINDEX(I))
 !       CALL GLCOLORMASK(.TRUE._GLBOOLEAN,.TRUE._GLBOOLEAN,.TRUE._GLBOOLEAN,.TRUE._GLBOOLEAN)
 
        !## draw the actual "cap"s
-       DO J=1,NCLPLIST; IF(CLPPLOT(J)%ISEL.EQ.1)CALL GLDISABLE(CLPPLANES(J)); ENDDO
+!       DO J=1,NCLPLIST; IF(CLPPLOT(J)%ISEL.EQ.1)CALL GLDISABLE(CLPPLANES(J)); ENDDO
+        CALL GLDISABLE(CLPPLANES(JJ))
+
        !## draw only where stencil is 1
-       CALL GLSTENCILFUNC(GL_NOTEQUAL,0_GLINT,3_GLUINT)
+        CALL GLSTENCILFUNC(GL_NOTEQUAL,0_GLINT,3_GLUINT)
 !       CALL GLSTENCILOP(GL_KEEP,GL_INVERT,GL_INVERT)
 
        !## draw cap - use the clipplane vertices
        !DO J=1,NCLPLIST; CALL IMOD3D_DISPLAY_CLP_DRAW(J,IDFPLOT(I)%ICOLOR) !; ENDDO
-       !## turn on clipping plane again
-       DO J=1,NCLPLIST
-        IF(CLPPLOT(J)%ISEL.EQ.0)CYCLE
-        CALL IMOD3D_DISPLAY_CLP_DRAW(J,IDFPLOT(I)%ICOLOR)
-        CALL GLENABLE(CLPPLANES(J))
-       ENDDO
+       
+        CALL IMOD3D_DISPLAY_CLP_DRAW(JJ,IDFPLOT(I)%ICOLOR)
+        CALL GLENABLE(CLPPLANES(JJ))
 
-!      ENDDO
+!       !## turn on clipping plane again
+!       DO J=1,NCLPLIST
+!        IF(CLPPLOT(J)%ISEL.EQ.0)CYCLE
+!        CALL IMOD3D_DISPLAY_CLP_DRAW(J,IDFPLOT(I)%ICOLOR)
+!        CALL GLENABLE(CLPPLANES(J))
+!       ENDDO
+
+       ENDIF
+      ENDDO
 
      ELSE
 
-      !## process each clipping plane
-      DO JJ=1,NCLPLIST
-
-       IF(CLPPLOT(JJ)%ISEL.EQ.0)CYCLE
-       !## not to be capped
-       IF(CLPPLOT(JJ)%ICAP.EQ.0)CYCLE
-!       !## turn off all clipping planes
-!       DO J=1,NCLPLIST; IF(CLPPLOT(J)%ISEL.EQ.1)CALL GLDISABLE(CLPPLANES(J)); ENDDO
-       !## turn current on
-       CALL GLENABLE(CLPPLANES(JJ))
-
-       CALL GLCLEARSTENCIL(0_GLINT)
-       CALL GLCLEAR(GL_STENCIL_BUFFER_BIT)
-       CALL GLDISABLE(GL_DEPTH_TEST)
-       CALL GLENABLE(GL_CULL_FACE)
-!       CALL GLCOLORMASK(.FALSE._GLBOOLEAN,.FALSE._GLBOOLEAN,.FALSE._GLBOOLEAN,.FALSE._GLBOOLEAN)
-
-       !## first pass: increment stencil buffer value on back faces
-       CALL GLSTENCILFUNC(GL_ALWAYS,0_GLINT,3_GLUINT)
-       CALL GLSTENCILOP(GL_KEEP,GL_KEEP,GL_INCR)
-       CALL GLCULLFACE(GL_FRONT)
-       CALL GLCALLLIST(IDFLISTINDEX(I))
-
-!       !## second pass: decrement of stencil buffer value on front faces
-!       CALL GLSTENCILOP(GL_KEEP,GL_KEEP,GL_DECR)
-!       CALL GLCULLFACE(GL_BACK)
-!       CALL GLCALLLIST(IDFLISTINDEX(I))
-
-!       CALL GLCOLORMASK(.TRUE._GLBOOLEAN,.TRUE._GLBOOLEAN,.TRUE._GLBOOLEAN,.TRUE._GLBOOLEAN)
-!       CALL GLENABLE(GL_DEPTH_TEST)
-!       CALL GLDISABLE(GL_CULL_FACE)
-!       CALL GLSTENCILFUNC(GL_NOTEQUAL,0_GLINT,3_GLUINT)
-
-!       !## draw cap - use the clipplane vertices
-!       CALL GLDISABLE(CLPPLANES(JJ))
-!       CALL IMOD3D_DISPLAY_CLP_DRAW(JJ,IDFPLOT(I)%ICOLOR)
+!      !## process each clipping plane
+!      DO JJ=1,NCLPLIST
+!
+!       IF(CLPPLOT(JJ)%ISEL.EQ.0)CYCLE
+!       !## not to be capped
+!       IF(CLPPLOT(JJ)%ICAP.EQ.0)CYCLE
+!!       !## turn off all clipping planes
+!!       DO J=1,NCLPLIST; IF(CLPPLOT(J)%ISEL.EQ.1)CALL GLDISABLE(CLPPLANES(J)); ENDDO
+!       !## turn current on
 !       CALL GLENABLE(CLPPLANES(JJ))
-
-!       !## draw image
+!
+!       CALL GLCLEARSTENCIL(0_GLINT)
+!       CALL GLCLEAR(GL_STENCIL_BUFFER_BIT)
+!       CALL GLDISABLE(GL_DEPTH_TEST)
+!       CALL GLENABLE(GL_CULL_FACE)
+!!       CALL GLCOLORMASK(.FALSE._GLBOOLEAN,.FALSE._GLBOOLEAN,.FALSE._GLBOOLEAN,.FALSE._GLBOOLEAN)
+!
+!       !## first pass: increment stencil buffer value on back faces
+!       CALL GLSTENCILFUNC(GL_ALWAYS,0_GLINT,3_GLUINT)
+!       CALL GLSTENCILOP(GL_KEEP,GL_KEEP,GL_INCR)
+!       CALL GLCULLFACE(GL_FRONT)
 !       CALL GLCALLLIST(IDFLISTINDEX(I))
-      
-      ENDDO
+!
+!!       !## second pass: decrement of stencil buffer value on front faces
+!!       CALL GLSTENCILOP(GL_KEEP,GL_KEEP,GL_DECR)
+!!       CALL GLCULLFACE(GL_BACK)
+!!       CALL GLCALLLIST(IDFLISTINDEX(I))
+!
+!!       CALL GLCOLORMASK(.TRUE._GLBOOLEAN,.TRUE._GLBOOLEAN,.TRUE._GLBOOLEAN,.TRUE._GLBOOLEAN)
+!!       CALL GLENABLE(GL_DEPTH_TEST)
+!!       CALL GLDISABLE(GL_CULL_FACE)
+!!       CALL GLSTENCILFUNC(GL_NOTEQUAL,0_GLINT,3_GLUINT)
+!
+!!       !## draw cap - use the clipplane vertices
+!!       CALL GLDISABLE(CLPPLANES(JJ))
+!!       CALL IMOD3D_DISPLAY_CLP_DRAW(JJ,IDFPLOT(I)%ICOLOR)
+!!       CALL GLENABLE(CLPPLANES(JJ))
+!
+!!       !## draw image
+!!       CALL GLCALLLIST(IDFLISTINDEX(I))
+!      
+!      ENDDO
 
      ENDIF      
     
