@@ -38,9 +38,6 @@ c   If not, see <http://water.usgs.gov/software/help/notice/>.
         integer,save,pointer  ::idrnsubsys,ndrnsubsys                   ! dsubsys
         integer,save,dimension(:),pointer :: drnsubsidx                 ! dsubsys
         integer, save, pointer :: iiconchk                              ! iconchk
-        real, save, dimension(:,:,:), pointer :: wiconchk               ! iconchk
-        integer, save, dimension(:,:,:), pointer :: w2iconchk           ! iconchk
-        real, parameter :: iconchknodata = -9999.                       ! iconchk
       TYPE GWFDRNTYPE
         INTEGER,POINTER  ::NDRAIN,MXDRN,NDRNVL,IDRNCB,IPRDRN
         INTEGER,POINTER  ::NPDRN,IDRNPB,NNPDRN
@@ -50,8 +47,6 @@ c   If not, see <http://water.usgs.gov/software/help/notice/>.
         integer,pointer  ::idrnsubsys,ndrnsubsys                        ! dsubsys
         integer,dimension(:),pointer :: drnsubsidx                      ! dsubsys
         integer,pointer :: iiconchk                                     ! iconchk
-        real, dimension(:,:,:), pointer :: wiconchk                     ! iconchk
-        integer,dimension(:,:,:), pointer :: w2iconchk                  ! iconchk
       END TYPE
       TYPE(GWFDRNTYPE), SAVE:: GWFDRNDAT(10)
       END MODULE GWFDRNMODULE
@@ -71,7 +66,7 @@ C     ------------------------------------------------------------------
      1                       IDRNPB,NNPDRN,DRNAUX,DRAI
      1                      ,idrnsubsys,                                ! dsubsys
      1                       drnlev,                                    ! NHI
-     1                       iiconchk,wiconchk,w2iconchk,iconchknodata  ! iconchk
+     1                       iiconchk                                   ! iconchk
       CHARACTER*200 LINE
       character     drnsubsys*16                                        ! dsubsys
       character     drniconchk*16                                       ! iconchk
@@ -103,7 +98,7 @@ C2------CELL-BY-CELL FLOW TERMS.
          CALL URWORD(LINE,LLOC,ISTART,ISTOP,2,IDRNCB,R,IOUT,IN)
       END IF
       WRITE(IOUT,3) MXACTD
-    3 FORMAT(1X,'MAXIMUM OF ',I6,' ACTIVE DRAINS AT ONE TIME')
+    3 FORMAT(1X,'MAXIMUM OF ',I8,' ACTIVE DRAINS AT ONE TIME')
       IF(IDRNCB.LT.0) WRITE(IOUT,7)
     7 FORMAT(1X,'CELL-BY-CELL FLOWS WILL BE PRINTED WHEN ICBCFL NOT 0')
          IF(IDRNCB.GT.0) WRITE(IOUT,8) IDRNCB
@@ -137,7 +132,8 @@ C3------READ AUXILIARY VARIABLES AND CBC ALLOCATION OPTION.
       else if(line(istart:istop).eq.'ICONCHK') then                     ! iconchk
          call urword(line,lloc,istart,istop,1,n,r,iout,in)              ! iconchk
          drniconchk=line(istart:istop)                                  ! iconchk
-         iiconchk=999                                                   ! iconchk
+         iiconchk=1                                                     ! iconchk
+         WRITE(IOUT,*) 'ICONCHK ACTIVE'
          go to 10                                                       ! iconchk
       END IF
 
@@ -163,21 +159,6 @@ c check or DSUBSYS has been defined and AUX variabel exist              ! dsubsy
             idrnsubsys=idrnsubsys+5                                     ! dsubsys
          endif                                                          ! dsubsys
       endif                                                             ! dsubsys
-C
-      if (iiconchk.gt.0) then                                           ! iconchk
-         do i=1,naux                                                    ! iconchk
-            if (drniconchk.eq.drnaux(i)) then                           ! iconchk
-               iiconchk=i+5                                             ! iconchk
-            endif                                                       ! iconchk
-         enddo                                                          ! iconchk
-         allocate(wiconchk(ncol,nrow,nlay))                             ! iconchk
-         allocate(w2iconchk(ncol,nrow,nlay))                            ! iconchk
-         wiconchk = iconchknodata                                       ! iconchk
-         w2iconchk = 1                                                  ! iconchk
-      else                                                              ! iconchk
-         allocate(wiconchk(1,1,1))                                      ! iconchk
-         allocate(w2iconchk(1,1,1))                                     ! iconchk
-      end if
 C
 C3A-----THERE ARE FIVE INPUT DATA VALUES PLUS ONE LOCATION FOR
 C3A-----CELL-BY-CELL FLOW.
@@ -230,13 +211,13 @@ C
 C     SPECIFICATIONS:
 C     ------------------------------------------------------------------
       use ulstrd_inferface                                              ! GCD
-      USE GLOBAL,       ONLY:IOUT,NCOL,NROW,NLAY,IFREFM
+      USE GLOBAL,       ONLY:IOUT,NCOL,NROW,NLAY,IFREFM,RHS
       USE GWFDRNMODULE, ONLY:NDRAIN,MXDRN,NDRNVL,IPRDRN,NPDRN,
      1                       IDRNPB,NNPDRN,DRNAUX,DRAI
      1                       ,idrnsubsys,ndrnsubsys,drnsubsidx,         ! dsubsys
      1                       drnlev,                                    ! NHI
-     1                       iiconchk,wiconchk,w2iconchk,iconchknodata  ! iconchk
-      USE GWFRIVMODULE, ONLY: lreuse, NRIVER, RIVR                      ! iconchk
+     1                       iiconchk                                   ! iconchk
+      USE GWFRIVMODULE, ONLY: NRIVER, RIVR                              ! iconchk
 C     ------------------------------------------------------------------
       CALL SGWF2DRN7PNT(IGRID)
 C
@@ -315,7 +296,7 @@ C
 
 C3------PRINT NUMBER OF DRAINS IN CURRENT STRESS PERIOD.
       WRITE (IOUT,101) NDRAIN
-  101 FORMAT(1X,/1X,I6,' DRAINS')
+  101 FORMAT(1X,/1X,I8,' DRAINS')
 C
       ! create subsystem index
       if (associated(ndrnsubsys)) deallocate(ndrnsubsys)                ! dsubsys
@@ -328,35 +309,31 @@ C
 
       if (iiconchk.gt.0) then                                           ! iconchk
          if (inriv.gt.0) then                                           ! iconchk
-            CALL SGWF2RIV7PNT(IGRID)                                    ! iconchk
-            if (.not.lreuse.or.itmp.gt.0) then                          ! iconchk
-               wiconchk = iconchknodata                                 ! iconchk
-               do l = 1, nriver                                         ! iconchk
+           CALL SGWF2RIV7PNT(IGRID)                                     ! iconchk
+           rhs=-999.99
+           do l = 1, nriver                                             ! iconchk
                   IL=RIVR(1,L)                                          ! iconchk
                   IR=RIVR(2,L)                                          ! iconchk
                   IC=RIVR(3,L)                                          ! iconchk
-                  if (wiconchk(ic,ir,il).eq.iconchknodata) then         ! iconchk
-                     wiconchk(ic,ir,il) = rivr(4,l)                     ! iconchk
-                  else                                                  ! iconchk
-                    wiconchk(ic,ir,il) =                                ! iconchk
-     1                  max(wiconchk(ic,ir,il),rivr(4,l))               ! iconchk
-                  end if                                                ! iconchk
-               end do                                                   ! iconchk
-            end if                                                      ! iconchk
-         end if                                                         ! iconchk
-         if (itmp.gt.0) then                                            ! iconchk
-            w2iconchk = 1                                               ! iconchk
-            do l = 1, ndrain                                            ! iconchk
+                  if(riv(4,l).gt.rhs(ic,ir,1))rhs(ic,ir,1)=rivr(4,l)    ! iconchk
+           end do                                                       ! iconchk
+           ncor=0
+           do l = 1, ndrain                                             ! iconchk
                il = drai(1,l)                                           ! iconchk
                ir = drai(2,l)                                           ! iconchk
                ic = drai(3,l)                                           ! iconchk
-               if (wiconchk(ic,ir,il).ne.iconchknodata) then            ! iconchk
-                  if (drai(4,l).lt.wiconchk(ic,ir,il)) ! river stage above maximum drain level
-     1               w2iconchk(ic,ir,il)=0                              ! iconchk
-               end if                                                   ! iconchk
-            end do                                                      ! iconchk
-         end if                                                         ! iconchk
-
+               !## reset drain conductance
+               drai(5,l)=abs(drai(5,l))
+               if(drai(4,l).lt.rhs(ic,ir,1))then
+                !## set drain conductance to negative values to skip
+                drai(5,l)=-1.0*drai(5,l)
+                ncor=ncor+1
+               end if                                                  ! iconchk
+            end do
+            write(*,'(a)') 'Corrections caused by higher waterlevel in R
+     1IV package'                                                     ! iconchk
+            write(*,'(a,i8)') 'No. of corrections ',ncor
+         endif
       end if                                                            ! iconchk
 
 C7------SAVE POINTERS TO DATA AND RETURN.
@@ -374,8 +351,7 @@ C        SPECIFICATIONS:
 C     ------------------------------------------------------------------
       USE GLOBAL,       ONLY:IBOUND,HNEW,RHS,HCOF
       USE GWFDRNMODULE, ONLY:NDRAIN,DRAI,
-     1                       iiconchk, wiconchk,                        ! iconchk
-     1                       w2iconchk, iconchknodata                   ! iconchk
+     1                       iiconchk
       USE GWFRIVMODULE, ONLY:NRIVER,RIVR
 C
       DOUBLE PRECISION EEL
@@ -394,9 +370,7 @@ C3------GET COLUMN, ROW AND LAYER OF CELL CONTAINING DRAIN.
       IC=DRAI(3,L)
 C
       if (iiconchk.gt.0) then                                           ! iconchk
-         if (w2iconchk(ic,ir,il).eq.0.and.drai(iiconchk,l).gt.0.) then  ! iconchk
-            goto 100                                                    ! iconchk
-         end if                                                         ! iconchk
+       if(drai(5,l).le.0.0)goto 100 
       end if                                                            ! iconchk
 C
 C4-------IF THE CELL IS EXTERNAL SKIP IT.
@@ -430,7 +404,7 @@ C     ------------------------------------------------------------------
      1                      VBVL,VBNM
       USE GWFDRNMODULE,ONLY:NDRAIN,IDRNCB,DRAI,NDRNVL,DRNAUX
      1                      ,ndrnsubsys,drnsubsidx,idrnsubsys,          ! dsubsys
-     1                       iiconchk, w2iconchk                        ! iconchk
+     1                       iiconchk
 C
       CHARACTER*16 TEXT
       character*16 htxt                                                 ! dsubsys
@@ -495,9 +469,7 @@ C5A-----GET LAYER, ROW & COLUMN OF CELL CONTAINING REACH.
       IC=DRAI(3,L)
 C
       if (iiconchk.gt.0) then                                           ! iconchk
-         if (w2iconchk(ic,ir,il).eq.0.and.drai(iiconchk,l).gt.0.) then  ! iconchk
-            goto 100                                                    ! iconchk
-         end if                                                         ! iconchk
+         if(drai(5,l).le.0.0)goto 100
       end if                                                            ! iconchk
 C
       Q=ZERO
@@ -581,8 +553,6 @@ C
         if (associated(ndrnsubsys)) deallocate(ndrnsubsys)              ! dsubsys
         if (associated(drnsubsidx)) deallocate(drnsubsidx)              ! dsubsys
         deallocate(iiconchk)                                            ! iconchk
-        deallocate(wiconchk)                                            ! iconchk
-        deallocate(w2iconchk)                                           ! iconchk
 C
       RETURN
       END
@@ -605,8 +575,6 @@ C
         ndrnsubsys=>gwfdrndat(igrid)%ndrnsubsys                         ! dsubsys
         drnsubsidx=>gwfdrndat(igrid)%drnsubsidx                         ! dsubsys
         iiconchk=>gwfdrndat(igrid)%iiconchk                             ! iconchk
-        wiconchk=>gwfdrndat(igrid)%wiconchk                             ! iconchk
-        w2iconchk=>gwfdrndat(igrid)%w2iconchk                           ! iconchk
 C
       RETURN
       END
@@ -629,8 +597,6 @@ C
         gwfdrndat(igrid)%ndrnsubsys=>ndrnsubsys                         ! dsubsys
         gwfdrndat(igrid)%drnsubsidx=>drnsubsidx                         ! dsubsys
         gwfdrndat(igrid)%iiconchk=>iiconchk                             ! iconchk
-        gwfdrndat(igrid)%wiconchk=>wiconchk                             ! iconchk
-        gwfdrndat(igrid)%w2iconchk=>w2iconchk                           ! iconchk
 C
       RETURN
       END

@@ -129,7 +129,7 @@ character(len=50), dimension(nsubmax), intent(out) :: submstr
 logical, intent(inout) :: lipest
 logical, intent(inout) :: lidfmerge
 character(len=*),intent(out) :: rfroot
-
+type(idfobj) :: idf
 LOGICAL :: LSTOP
 integer :: i, iper, nsys, isys, ilay, ios, myrank
 character(len=1) :: slash
@@ -203,13 +203,13 @@ IF(IACT.NE.0)THEN
  !## check run-file if necessary
  CALL RF2MF_CHECKRUN()
  !## determine size of SIMBOX and adjust ncol/nrow
- CALL RF2MF_EXTENT()
+ CALL RF2MF_EXTENT(idf)
  !### PKS partitioning
  call PartPks()
  !## read empty string - header MODULES FOR EACH LAYER
  READ(IURUN,*) LINE
  !## solve current model - lstop=.true.: quit ; lstop=.false. whenever effect 'bounds' to boundary!
- CALL RF2MF_MAIN(DXCFILE,lipest)
+ CALL RF2MF_MAIN(DXCFILE,lipest,idf)
 ELSE
  CLOSE(IURUN)
  CLOSE(IUOUT)
@@ -256,6 +256,7 @@ if (mpck(pevt).eq.1) call AllocEvt(idealloc)
 if (mpck(pchd).eq.1) call AllocChd(idealloc)
 if (mmod(pscr).eq.1) call AllocScr(idealloc)
 if (mmod(ppwt).eq.1) call AllocPwt(idealloc)
+
 if (mmod(pcap).eq.1.or.len_trim(dxcfile).gt.0) call AllocDxc(idealloc)
 
 !## close all units
@@ -277,11 +278,11 @@ IUPESTRUNFILE=0
 END SUBROUTINE RF2MF_MODFLOW
 
 !###====================================================================
-SUBROUTINE RF2MF_MAIN(DXCFILE,lipest)
+SUBROUTINE RF2MF_MAIN(DXCFILE,lipest,idf)
 !###====================================================================
 use pks_imod_utl, only: pks_imod_utl_iarmwp_xch_disable ! PKS
 IMPLICIT NONE
-
+type(idfobj),intent(in) :: idf
 CHARACTER(LEN=*), INTENT(INOUT) :: DXCFILE
 logical, intent(inout) :: lipest
 
@@ -321,7 +322,7 @@ DO
    IF(MMOD(PPST).GT.0)THEN
     lipest = .true.
     call pks7mpinotsupported('iPEST') ! PKS
-    CALL PEST1INIT(0,'',0,rootres,nparam=NLINES)
+    CALL PEST1INIT(0,'',0,rootres,idf=idf,nparam=NLINES)
    END IF
   CASE (PCAP)
 !   !## read/prepare simgro-files (capsim/metaswap)
@@ -395,6 +396,9 @@ if (.not.savebuf.and.savenobuf) then
    met%kws(imet_save_no_buf)%type = imetc
 end if
 
+met%kws(imet_idate_save)%type = imeti
+met%kws(imet_idate_save)%ival = 0
+
 CALL IMOD_UTL_PRINTTEXT('  ',3)
 CALL IMOD_UTL_PRINTTEXT('---------------------------------------------',3)
 CALL IMOD_UTL_PRINTTEXT('  ',3)
@@ -416,15 +420,21 @@ CHARACTER(LEN=256) :: LINE
 
 !## because not all packages are needed, read until correct time-info is found!
 DO
- READ(IURUN,'(A256)') LINE
+ READ(IURUN,'(A256)',IOSTAT=IOS) LINE
+ IF(IOS.LT.0)CALL IMOD_UTL_PRINTTEXT('Error reading/finding time heading stressperiod '//TRIM(IMOD_UTL_ITOS(KPER)),-3)
  READ(LINE,*,IOSTAT=IOS) IPER,DELT,CDATE,ISAVE,isumbudget
  if(ios.ne.0)then
   isumbudget=0
   READ(LINE,*,IOSTAT=IOS) IPER,DELT,CDATE,ISAVE
  endif
- IF(IOS.LT.0)CALL IMOD_UTL_PRINTTEXT('Error reading/finding time heading stressperiod '//TRIM(IMOD_UTL_ITOS(KPER)),-3)
- IF(IOS.EQ.0)EXIT
+! IF(IOS.LT.0)CALL IMOD_UTL_PRINTTEXT('Error reading/finding time heading stressperiod '//TRIM(IMOD_UTL_ITOS(KPER)),-3)
+ IF(IOS.EQ.0)THEN !EXIT
+  !## check appropriate stress-definition, CDATE must be character or integer
+  IF(INDEX(CDATE,'.').EQ.0)EXIT
+ ENDIF
 ENDDO
+
+
 !if(pks%active) isave = -abs(isave)
 dis%sp(kper)%perlen=delt
 dis%sp(kper)%nstp=1
@@ -433,7 +443,9 @@ dis%sp(kper)%writeoc=.true.
 dis%sp(kper)%sstr='SS'   !## steady
 if (delt.gt.0.0) then
    dis%sp(kper)%sstr='TR'  !## transient
-   if (kper.eq.1) then
+   !## take first transient period - first can be steady-state
+   if (kper.eq.1.or. &
+      (kper.eq.2.and.dis%sp(1)%sstr.eq.'SS'))then
       starttime = cdate(1:8)
       read(cdate(1:4),*) met%kws(imet_starttime)%time%year
       read(cdate(5:6),*) met%kws(imet_starttime)%time%month
@@ -759,7 +771,7 @@ ELSE ! PCG SOLVER
      MXCNVG=pcg%MXITER*pcg%ITER1
      READ(LINE,*,IOSTAT=IOS) pcg%MXITER,pcg%ITER1,pcg%HCLOSE,pcg%RCLOSE,pcg%RELAX,pcg%NPCOND,MAXWBALERROR
      IF(IOS.NE.0)THEN
-      MAXWBALERROR=0.01
+      MAXWBALERROR=0.0
       READ(LINE,*,IOSTAT=IOS) pcg%MXITER,pcg%ITER1,pcg%HCLOSE,pcg%RCLOSE,pcg%RELAX,pcg%NPCOND
       IF(IOS.NE.0)THEN
        pcg%NPCOND=1
@@ -787,6 +799,9 @@ ELSE ! PCG SOLVER
   if (pcg%npcond.ne.1 .and.pcg%npcond.ne.2) then
    CALL IMOD_UTL_PRINTTEXT('Dataset 5: NPCOND must be 1 or 2',-3)
   end if
+if(MAXWBALERROR.gt.0.0)then
+ bas%options=trim(bas%options)//' STOPERROR '//TRIM(IMOD_UTL_RTOS(MAXWBALERROR,'G',5))
+endif
   
   pcg%NBPOL=1;IF(pcg%NPCOND.EQ.2)pcg%NBPOL=2
 END IF
@@ -924,6 +939,7 @@ WRITE(IUOUT,*)
 root%submodel = csubmodel
 root%resultdir = trim(resultdir)
 rootres=resultdir
+call imod_utl_abs_path(root%resultdir)
 ! strip last slash
 n = len_trim(root%resultdir)
 if (root%resultdir(n:n).eq.'/'.or.root%resultdir(n:n).eq.'\') then
@@ -1032,13 +1048,10 @@ do ikey = 1, size(mmod)
          oc%cblay(1:modsave(ikey,0)) = modsave(ikey,1:modsave(ikey,0))
       case (psto, pbnd, pkdw, pvcw)
          if (ikey.eq.psto) trflag = .true.
-         do jlay = 1, modsave(ikey,0)
-            ilay = modsave(ikey,jlay)
-            if (ilay.gt.0) then
-               if (bcf%cblay(ilay).eq.0) then
-                   bcf%cbnlay = bcf%cbnlay + 1
-                   bcf%cblay(bcf%cbnlay) = ilay
-               end if
+        do ilay = 1, nlay
+            if (bcf%cblay(ilay).eq.0 .and. modsave(ikey,ilay).gt.0) then
+                bcf%cbnlay = bcf%cbnlay + 1
+                bcf%cblay(ilay) = ilay
             end if
          end do
      case (pscr)
@@ -1481,15 +1494,15 @@ CALL IMOD_UTL_PRINTTEXT(TRIM(LINE),3)
 END SUBROUTINE RF2MF_WRITEBOX
 
 !#####=================================================================
-SUBROUTINE RF2MF_EXTENT()
+SUBROUTINE RF2MF_EXTENT(idf)
 !#####=================================================================
 IMPLICIT NONE
 !INTEGER :: IEQ
-TYPE(IDFOBJ) :: IDF
+TYPE(IDFOBJ),intent(inout) :: IDF
 CHARACTER(LEN=256) :: FNAME
 
-INTEGER :: JU,IEQ,IOS,ITB
-REAL :: XMAX,YMIN,XMIN,YMAX,CS,NODATA
+INTEGER :: ios !JU,IEQ,IOS,ITB
+REAL :: XMAX,YMIN,XMIN,YMAX !,CS,NODATA
 LOGICAL :: LEX
 
 READ(IURUN,'(A256)') FNAME
@@ -1504,7 +1517,9 @@ ENDIF
 INQUIRE(FILE=FNAME,EXIST=LEX)
 JU=0; IF(LEX)THEN
  !## read without quotes
- CALL IMOD_UTL_READOPENFILE(JU,NROW,NCOL,FNAME,NODATA,XMIN,YMIN,XMAX,YMAX,CS,IEQ,ITB)
+ IF(.NOT.IDFREAD(IDF,FNAME,0))CALL IMOD_UTL_PRINTTEXT('iMOD cannot read the file',3)
+ XMIN=IDF%XMIN; XMAX=IDF%XMAX
+ YMIN=IDF%YMIN; YMAX=IDF%YMAX
 ELSE
  READ(FNAME,*,IOSTAT=IOS) XMIN,YMIN,XMAX,YMAX
  CALL IMOD_UTL_PRINTTEXT('',3); CALL IMOD_UTL_PRINTTEXT('Using XMIN,YMIN,XMAX,YMAX as entered',3)
@@ -1517,11 +1532,15 @@ IF(NSCL.EQ.0)THEN
  CALL IMOD_UTL_PRINTTEXT('',3); CALL IMOD_UTL_PRINTTEXT('Using grid dimensions read from:',3)
  CALL IMOD_UTL_PRINTTEXT(' '//TRIM(FNAME),0)
 
- USEBOX(1)=XMIN;   USEBOX(2)=YMIN
- USEBOX(3)=XMAX;   USEBOX(4)=YMAX
- SIMBOX   =USEBOX; SIMCSIZE =CS
+ USEBOX(1)=idf%XMIN;   USEBOX(2)=idf%YMIN
+ USEBOX(3)=idf%XMAX;   USEBOX(4)=idf%YMAX
+ SIMBOX   =USEBOX; SIMCSIZE =idf%dx !CS
  !## change to nscl=1 for equidistantial cells
- IF(IEQ.EQ.0)THEN; NSCL=1; LQD=.TRUE.; ENDIF
+ IF(idf%IEQ.EQ.0)THEN; NSCL=1; LQD=.TRUE.; ENDIF
+ XMIN=IDF%XMIN
+ XMAX=IDF%XMAX
+ YMIN=IDF%YMIN
+ YMAX=IDF%YMAX
 
 ELSE
 
@@ -1659,25 +1678,49 @@ ELSE
  !## take dimensions of idf
  IF(NSCL.EQ.0)THEN
 
+  NCOL=IDF%NCOL
+  NROW=IDF%NROW
+  
+  dis%nrow = NROW
+  dis%ncol = NCOL
+  call AllocDis(ialloc)
+
   !--- for metaswap ---
   ALLOCATE(DELR(0:NCOL),DELC(0:NROW))
 
-  DELR(0)=SIMBOX(1)  !##xmin
-  IREC=10
-  DO I=1,NCOL
-   IREC=IREC+1
-   READ(IU,REC=IREC+ICF) DELR(I)
-   DELR(I)=DELR(I-1)+DELR(I)
-  END DO
-  DELR(NCOL)=SIMBOX(3)
-
-  DELC(0)=SIMBOX(4)  !## ymax
-  DO I=1,NROW
-   IREC=IREC+1
-   READ(IU,REC=IREC+ICF) DELC(I)
-   DELC(I)=DELC(I-1)-DELC(I)
-  END DO
-  DELC(NROW)=SIMBOX(2)
+  IF(IDF%IEQ.EQ.0)THEN
+   DELR(0)=IDF%XMIN
+   DO I=1,NCOL
+    DELR(I)=DELR(I-1)+IDF%DX
+   ENDDO
+   DELC(0)=IDF%YMAX
+   DO I=1,NROW
+    DELC(I)=DELC(I-1)-IDF%DY
+   ENDDO
+   
+  ELSE
+  
+   DO I=0,NCOL; DELR(I)=IDF%SX(I); ENDDO
+   DO I=0,NROW; DELC(I)=IDF%SY(I); ENDDO
+  
+  ENDIF
+  
+!  DELR(0)=SIMBOX(1)  !## xmin
+!  IREC=10
+!  DO I=1,NCOL
+!   IREC=IREC+1
+!   READ(IDF%IU,REC=IREC+ICF) DELR(I)
+!   DELR(I)=DELR(I-1)+DELR(I)
+!  END DO
+!  DELR(NCOL)=SIMBOX(3)
+!
+!  DELC(0)=SIMBOX(4)  !## ymax
+!  DO I=1,NROW
+!   IREC=IREC+1
+!   READ(IDF%IU,REC=IREC+ICF) DELC(I)
+!   DELC(I)=DELC(I-1)-DELC(I)
+!  END DO
+!  DELC(NROW)=SIMBOX(2)
   !--- for metaswap ---
 
   IF(IDF%IEQ.eq.0)THEN

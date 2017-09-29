@@ -81,6 +81,7 @@ c
 c declaration section
 c ------------------------------------------------------------------------------
       use imod_utl, only: imod_utl_openasc
+      use gwfmetmodule, only: cdelr,cdelc
       use lcdmodule, only: genip, genpos, lncol, lnrow, lcdelr,lcdelc
 
       implicit none
@@ -101,15 +102,16 @@ c arguments
 
 c local variables
       integer :: icol, irow, jcol, jrow, igen, iact, ngen, ii, kk,
-     1           ip1, ip2,ic1, ic2, ir1, ir2, j
+     1           ip1, ip2,ic1, ic2, ir1, ir2, j, jj, nlist
       integer ::  il, is, ie, iline, jline, nline
-      integer :: ilay,il1,il2,jlay
-      real :: factor,fct,hfb1export_getfactor
-      real, dimension(:,:), allocatable :: tmp,tf,bf
+      integer :: ilay,il1,il2,jlay,isys
+      real :: fct,HFB1EXPORT_GETDZ,c,z,c1,c2,zz
+      real, dimension(:,:), allocatable :: tmp,tf,bf,res,fdz
+      integer(kind=1),allocatable,dimension(:,:) :: sys
       integer(kind=1), dimension(:,:,:), allocatable :: ipc
       logical, dimension(:), allocatable :: writegen
       character(len=1024) :: fname
-      integer,dimension(:),allocatable :: lun,nlun
+      integer,dimension(:),allocatable :: lun,dun,nlun
       character(len=1024) :: str
       integer :: iflen                                                  ! PKS
 
@@ -118,6 +120,7 @@ c parameters
       data aname(1) /'                     LCD'/
       integer,parameter :: ineighbours=2
       REAL :: ZF,NODATA
+      LOGICAL :: LINV
 
 c program section
 c ------------------------------------------------------------------------------
@@ -138,7 +141,7 @@ c allocate ipc
       ALLOCATE(TF(LNCOL,LNROW),BF(LNCOL,LNROW))
 
       allocate(writegen(max(1,ngen))); writegen = .false.
-      allocate(lun(nlay),nlun(nlay)); lun=0; nlun=0
+      allocate(lun(nlay),dun(lay),nlun(nlay)); lun=0; dun=0; nlun=0
 
       do ilay=1,nlay
        write(fname,'(a,i2.2)') 'hfb_l',ilay
@@ -146,6 +149,10 @@ c allocate ipc
        call pks7mpifname(fname,iflen)   
        fname = trim(fname)//'.gen'   
        call imod_utl_openasc(lun(ilay),fname,'w')
+      write(fname,'(a,i3.3,a)') 'hfb_l',ilay,'.dat'
+       call imod_utl_openasc(dun(ilay),fname,'w')
+       WRITE(dun(ilay),'(A)') 'no,confined_resis,unconfined_resis,fracti
+     1on,system'
       enddo
       
 c count number of hfb and fill
@@ -165,39 +172,41 @@ c count number of hfb and fill
             read(in,*) ngen
          end if
          ii = lstbeg-1
+         !## process each genfile
          do igen = 1, ngen
-            read(in,*) ilay, factor
+            read(in,*) ilay, fct
             kk = ilay
             call u2drel(tmp,aname(1),
      1                  lnrow,lncol,kk,in,iout) ! fill genpos list
 
             nline = size(genip)-1
 
-            do j = 1, nline 
-               
              ipc = int(0,1)
+            IF(ilay.EQ.0)THEN; TF=NODATA; BF=NODATA; ENDIF
+
+            do j = 1, nline 
+             
+
              is = genip(j-1)+1; ie = genip(j)
 
              !## line not in current model dimensions
              if(ie.eq.0)cycle
              if(is.gt.size(genpos,1).or.ie.gt.size(genpos,1))cycle
              
-             IF(ilay.EQ.0)THEN; TF=NODATA; BF=NODATA; ENDIF
- 
-             jcol = genpos(is,1); jrow = genpos(is,2);
-
-             !## startpoint
-             JLINE=GENPOS(is,3)
- 
-             !## get top/bottom elevations on grid
-             IF(ilay.EQ.0)THEN
               !## process line
               do il = is+1, ie
-               ILINE=GENPOS(il,3)
-               IF(ILINE.EQ.JLINE)THEN
+              JLINE=GENPOS(IL-1,3)
+              ILINE=GENPOS(il,3)
+              !## similar line
+              IF(ILINE.NE.JLINE)CYCLE
                 IC1=GENPOS(il-1,1); IC2=GENPOS(il  ,1)
                 IR1=GENPOS(il-1,2); IR2=GENPOS(il  ,2)
                 IP1=GENPOS(il-1,4); IP2=GENPOS(il  ,4)
+
+              CALL HFBGETFACES(IC1,IC2,IR1,IR2,IP1,IP2,IPC,NROW,NCOL)
+
+              !## get top/bottom elevations on grid
+              IF(ilay.EQ.0)THEN
                 !## fill in z-coordinates
                 ZF=(genpos(IL-1,5)+genpos(IL,5))/2.0
                 DO IROW=IR1,IR2; DO ICOL=IC1,IC2
@@ -210,181 +219,315 @@ c count number of hfb and fill
                  ENDIF
                 ENDDO; ENDDO
                ENDIF
-               IF(ILINE.NE.JLINE.OR.il.EQ.ie)JLINE=GENPOS(J,3)
-              ENDDO
-             ENDIF
+             ENDDO
 
-             jcol = genpos(is,1); jrow = genpos(is,2);
+            ENDDO
 
-             !## startpoint
-             JLINE=GENPOS(is,3)
+            !## determine what layer(s)
+            IF(ilay.EQ.0)THEN
+             IL1=1; IL2=NLAY
+            ELSE
+             IL1=ilay; IL2=IL1
+            ENDIF
 
-             do il = is+1, ie
-              writegen(igen) = .true.
-
-              ILINE=GENPOS(il,3)
-              IF(ILINE.EQ.JLINE)THEN
-               IC1=GENPOS(il-1,1); IC2=GENPOS(il  ,1)
-               IR1=GENPOS(il-1,2); IR2=GENPOS(il  ,2)
-               IP1=GENPOS(il-1,4); IP2=GENPOS(il  ,4)
-!               IF(IC1.EQ.IC2.AND.IR1.EQ.IR2)THEN
-!                !## look for next
-!                IF(il.LT.ie)THEN
-!                 !## column direction
-!                 IF(genpos(il+1,1).LT.IC1)IC2=IC2+1
-!                 !## row direction
-!                 IF(genpos(il+1,2).LT.IR2)IR2=IR2+1
-!                ENDIF
-!               ENDIF
-               CALL HFBGETFACES(IC1,IC2,IR1,IR2,IP1,IP2,IPC,LNROW,LNCOL)
-              ENDIF
-              
-              IF(ILINE.NE.JLINE.OR.IL.EQ.IE)THEN
-                      
-               do irow = 1, lnrow
-                do icol = 1, lncol
-                 !## place horizontal wall
-                 if (irow.lt.lnrow) then
-                  if(ipc(icol,irow,2).eq.int(1,1)) then
-
-                   !## determine what layer(s)
-                   IF(ilay.EQ.0)THEN
-                    IL1=1; IL2=NLAY
-                   ELSE
-                    IL1=ilay; IL2=IL1
-                   ENDIF
+            do irow = 1, nrow
+             do icol = 1, ncol
+              !## place horizontal wall
+              if (irow.lt.nrow) then
+               if(ipc(icol,irow,2).eq.int(1,1)) then
                    
-                   !## x-direction
-                   DO jLAY=IL1,IL2
- 
-                    FCT=factor
+                !## x-direction
+                DO jLAY=IL1,IL2
+                 Z=-1.0
+                 IF(ilay.EQ.0)THEN   
+                  Z=HFB1EXPORT_GETDZ(TF,BF,ICOL,IROW,ICOL,IROW+1,NODA
+     1TA,jLAY,NCOL,NROW)                  
+                 ENDIF
 
-                    IF(ilay.EQ.0)THEN
-                     FCT=HFB1EXPORT_GETFACTOR(factor,TF,BF,ICOL,IROW,ICO
-     1L+1,IROW,NODATA,jLAY,LNCOL,LNROW) 
-                     !## take the next no fault on this modellayer
-                     IF(FCT.EQ.0.0)CYCLE
-                    ENDIF
+                 !## skip fault on side of model or less than 0.0 fraction
+                 IF(Z.LE.0.0.AND.ILAY.EQ.0)CYCLE
+
+                 ii = ii + 1
+                 !## store into memory second cycli
+                 if (iact.eq.2) then
+
+                  rlisttmp(1,ii) = jlay
+                  rlisttmp(2,ii) = irow
+                  rlisttmp(3,ii) = icol
+                  rlisttmp(4,ii) = irow+1
+                  rlisttmp(5,ii) = icol                  
+                  rlisttmp(6,ii) = FCT
+                  rlisttmp(7,ii) = Z
+                  !## store system number
+                  rlisttmp(8,ii) = igen
                     
-                    ii = ii + 1
-                    if (iact.eq.2) then
-
-                     rlisttmp(1,ii) = jlay
-                     rlisttmp(2,ii) = irow
-                     rlisttmp(3,ii) = icol
-                     rlisttmp(4,ii) = irow+1
-                     rlisttmp(5,ii) = icol                  
-                     rlisttmp(6,ii) = FCT
-                     rlisttmp(7,ii) = 0.0
-                     if (writegen(igen)) then
-                      nlun(jlay)=nlun(jlay)+1
-                      write(lun(jlay),'(2i10,1x,e15.7)') nlun(jlay),igen
-     1,FCT
-                      write(lun(jlay),'(2(f10.2,a1))')lcdelr(icol-1),','
-     1,lcdelc(irow)
-                      write(lun(jlay),'(2(f10.2,a1))')lcdelr(icol),',',
-     1 lcdelc(irow)
-                      write(lun(jlay),'(a)') 'end'
-                     end if
-                    endif
-                   enddo
-                  end if
-                 end if
+                 endif
+                enddo
+               end if
+              end if
                  
-                 !## place vertical wall
-                 if (icol.lt.lncol) then
-                  if(ipc(icol,irow,1).eq.int(1,1)) then
-                   !## determine what layer(s)
-                   IF(ilay.EQ.0)THEN
-                    IL1=1; IL2=NLAY
-                   ELSE
-                    IL1=ilay; IL2=IL1
-                   ENDIF
+              !## place vertical wall
+              if (icol.lt.ncol) then
+               if(ipc(icol,irow,1).eq.int(1,1)) then
                    
-                   !## x-direction
-                   DO jLAY=IL1,IL2
+                !## y-direction
+                DO jLAY=IL1,IL2
  
-                    FCT=factor
+                 Z=-1.0
+                 IF(ilay.EQ.0)THEN  
+                  Z=HFB1EXPORT_GETDZ(TF,BF,ICOL,IROW,ICOL+1,IROW,NODA
+     1TA,jLAY,NCOL,NROW)                  
+                 ENDIF
 
-                    IF(ilay.EQ.0)THEN
-                     FCT=HFB1EXPORT_GETFACTOR(factor,TF,BF,ICOL,IROW,ICO
-     1L+1,IROW,NODATA,JLAY,LNCOL,LNROW) 
-                     !## take the next no fault on this modellayer
-                     IF(FCT.EQ.0.0)CYCLE
-                    ENDIF
+                 !## skip fault on side of model or less than 0.0 fraction
+                 IF(Z.LE.0.0.AND.ILAY.EQ.0)CYCLE
 
-                    ii = ii + 1
-                    if (iact.eq.2) then
-                     rlisttmp(1,ii) = jlay
-                     rlisttmp(2,ii) = irow
-                     rlisttmp(3,ii) = icol
-                     rlisttmp(4,ii) = irow
-                     rlisttmp(5,ii) = icol+1
-                     rlisttmp(6,ii) = FCT
-                     rlisttmp(7,ii) = 0.0
-                     if (writegen(igen)) then
-                      nlun(jlay)=nlun(jlay)+1
-                      write(lun(jlay),'(2i10,1x,e15.7)') nlun(jlay),igen
-     1,FCT
-                      write(lun(jlay),'(2(f10.2,a1))') lcdelr(icol),',',
-     1 lcdelc(irow-1)
-                      write(lun(jlay),'(2(f10.2,a1))') lcdelr(icol),',',
-     1 lcdelc(irow)
-                      write(lun(jlay),'(a)') 'end'
-                     end if
-                    end if
-                   enddo
-                  end if
+                 ii = ii + 1
+                 if (iact.eq.2) then
+                  rlisttmp(1,ii) = jlay
+                  rlisttmp(2,ii) = irow
+                  rlisttmp(3,ii) = icol
+                  rlisttmp(4,ii) = irow
+                  rlisttmp(5,ii) = icol+1
+                  rlisttmp(6,ii) = FCT
+                  rlisttmp(7,ii) = Z
+                  !## store system number
+                  rlisttmp(8,ii) = igen
+                     
                  end if
-                end do ! icol
-               end do ! irow
-
-               !## reset for the next line   
-               IPC=INT(0,1); JLINE=GENPOS(is,3)            
-
-              endif  !if(iline.eq.jline)then
-             end do ! do il = is, ie
-            
-            end do !  iline = 1, nline ! iline
-
-!            if (writegen(igen).and.iact.eq.2) close(lun)
+                enddo
+               end if
+              end if
+             end do ! icol
+            end do ! irow
 
          end do ! igen
 
          nlist = ii-lstbeg+1
          if (iact.eq.1) then
             if (.not.associated(rlisttmp)) then
-               allocate(rlisttmp(ldim,2*nlist))
-            end if
-            if (nlist.gt.mxlist) then
-               mxlist = 2*nlist
-               deallocate(rlist)
-               allocate(rlist(ldim,mxlist))
+               !## allocate addition column to store system number
+               allocate(rlisttmp(ldim+1,nlist))
             end if
          end if ! iact = 1
       end do ! iact
 
+!    construct final fault list per model layer
+      allocate(fdz(ncol,nrow),res(ncol,nrow))
+      allocate(sys(ncol,nrow))
+
+      do iact=1,2      
+       
+       !## number of adjusted hfb-elements
+       jj=0
+       
+       !## process each layer
+       DO ILAY=1,NLAY
+  
+        IPC=INT(0,1)
+        RES=0.0
+        FDZ=0.0
+        SYS=INT(0,1)
+        LINV=.FALSE.
+
+        DO ii=1,nlist
+         jlay=int(rlisttmp(1,ii))
+         !# not current modellayer
+         if(jlay.ne.ilay)cycle
+         ir1= int(rlisttmp(2,ii))
+         ic1= int(rlisttmp(3,ii))
+         ir2= int(rlisttmp(4,ii))
+         ic2= int(rlisttmp(5,ii))
+         c=       rlisttmp(6,ii)
+         z=       rlisttmp(7,ii)
+         isys=int(rlisttmp(8,ii))
+         
+         !## skip c.lt.zero
+         IF(C.LT.0.0)CYCLE
+
+         IF(IC1.EQ.IC2)THEN
+          IPC(IC1,IR1,2)=INT(1,1)
+         ELSE
+          IPC(IC1,IR1,1)=INT(1,1)
+         ENDIF
+      
+         IF(Z.GT.0.0)LINV=.TRUE.
+         
+         !## still some space left in modellayer for an additional fault
+         IF(Z.LT.0.0.OR.FDZ(IC1,IR1).LT.1.0)THEN
+          !## available space
+          ZZ=1.0-FDZ(IC1,IR1)
+          !## net available space
+          ZZ=MIN(ZZ,Z)
+          !## confined system
+          IF(Z.LT.0.0)ZZ=1.0
+          !## take system number of largest contribution to c
+          IF(RES(IC1,IR1).GT.0.0)THEN
+           IF(Z.GT.0.0)THEN
+            C2=1.0/RES(IC1,IR1)*FDZ(ICOL,IROW)
+            IF(C.GT.C2)SYS(IC1,IR1)=INT(ISYS,1)
+           ELSE
+            IF(C.GT.RES(IC1,IR1))SYS(IC1,IR1)=INT(ISYS,1)
+           ENDIF
+          ELSE
+           SYS(IC1,IR1)=INT(ISYS,1)
+          ENDIF
+          !## resistance, sum conductances - ignore resistance of zero days
+          IF(Z.GT.0.0)THEN
+           RES(IC1,IR1)=RES(IC1,IR1)+(1.0/C)*ZZ
+          ELSE
+           !## get largest resistance
+           RES(IC1,IR1)=MAX(RES(IC1,IR1),C)
+          ENDIF
+          !## occupation fraction
+          FDZ(IC1,IR1)=MIN(1.0,FDZ(IC1,IR1)+ABS(Z))
+         ENDIF
+         
+        ENDDO
+      
+        DO IROW=1,NROW; DO ICOL=1,NCOL
+
+         !## place vertical wall (block in y-direction)
+         IF(IPC(ICOL,IROW,1).EQ.INT(1,1))THEN
+          IF(ICOL.LT.NCOL)THEN
+
+           !## transform conductances to resistance
+           IF(LINV)THEN
+            C1=1.0/RES(ICOL,IROW)*FDZ(ICOL,IROW)
+           ELSE
+            C1=RES(ICOL,IROW)
+           ENDIF
+        
+           !## get total resistance related to thickness of model layer
+           C2=C1*FDZ(ICOL,IROW)**4.0
+           
+           !## get systemnumber
+           ISYS=SYS(ICOL,IROW)
+
+           jj=jj+1
+           if(iact.eq.2)then
+
+            !## write fault to gen- and datfile
+            call HFB1EXPORT_WRITEGEN(2,lun(ilay),dun(ilay),nlun(ilay),ic
+     1ol,irow,C1,C2,FDZ(ICOL,IROW),ISYS)
+
+            rlist(1,jj)=ilay
+            rlist(2,jj)=irow
+            rlist(3,jj)=icol
+            rlist(4,jj)=irow
+            rlist(5,jj)=icol+1
+            rlist(6,jj)=c2
+            !## system number
+            rlist(7,jj)=isys 
+           endif
+           
+          ENDIF 
+         ENDIF
+
+         !## place horizontal wall (block in x-direction)
+         IF(IPC(ICOL,IROW,2).EQ.INT(1,1))THEN
+          IF(IROW.LT.NROW)THEN
+
+           !## transform conductances to resistance
+           IF(LINV)THEN
+            C1=1.0/RES(ICOL,IROW)*FDZ(ICOL,IROW)
+           ELSE
+            C1=RES(ICOL,IROW)
+           ENDIF
+        
+           !## get total resistance related to thickness of model layer
+           C2=C1*FDZ(ICOL,IROW)**4.0
+        
+           !## get systemnumber
+           ISYS=SYS(ICOL,IROW)
+
+           jj=jj+1
+           if(iact.eq.2)then
+
+            !## write fault to gen- and datfile
+            call HFB1EXPORT_WRITEGEN(1,lun(ilay),dun(ilay),nlun(ilay),ic
+     1ol,irow,C1,C2,FDZ(ICOL,IROW),ISYS)
+
+            rlist(1,jj)=ilay
+            rlist(2,jj)=irow
+            rlist(3,jj)=icol
+            rlist(4,jj)=irow+1
+            rlist(5,jj)=icol
+            rlist(6,jj)=c2
+            !## system number
+            rlist(7,jj)=isys
+           endif
+           
+          ENDIF
+         ENDIF
+     
+        ENDDO; ENDDO
+       ENDDO
+      
+       if(iact.eq.1)then
+        mxlist=jj
+        deallocate(rlist); allocate(rlist(ldim,mxlist))
+       endif
+       
+      enddo
+    
       !## close files
       do ilay=1,nlay
-       if(nlun(ilay).eq.0)close(lun(ilay),status='delete')
-       if(nlun(ilay).gt.0)close(lun(ilay))
+       if(nlun(ilay).eq.0)then
+        close(lun(ilay),status='delete')
+        close(dun(ilay),status='delete')
+       else
+        write(lun(ilay),'(a)') 'end'; close(lun(ilay)); close(dun(ilay))
+       endif
       enddo
       
-c deallocate ipc
+c deallocate arrays
+      deallocate(rlisttmp)
       if (allocated(ipc)) deallocate(ipc)
       if (allocated(tmp)) deallocate(tmp)
-      if (allocated(writegen)) deallocate(writegen)
       IF(ALLOCATED(TF))DEALLOCATE(TF); IF(ALLOCATED(BF))DEALLOCATE(BF)
+      deallocate(lun,dun,nlun)
+      deallocate(res,fdz,sys)
 
 c end of program
       return
       end
 
       !###====================================================================
-      REAL FUNCTION HFB1EXPORT_GETFACTOR(FCT,TF,BF,IC1,IR1,IC2,IR2,NODAT
-     1A,ILAY,NCOL,NROW)
+      subroutine HFB1EXPORT_WRITEGEN(it,iu,ju,n,icol,irow,C,RES,FDZ,
+     1ISYS)
       !###====================================================================
-      USE GLOBAL,ONLY : BOTM
+      use gwfmetmodule, only: cdelr,cdelc
+      implicit none
+      real,intent(in) :: C,RES,FDZ
+      integer,intent(IN) :: IT,iu,ju,icol,irow,isys
+      integer,intent(INOUT) :: n
+      
+      if(it.eq.1)THEN
+       n=n+1
+       write(ju,'(i10,3(1x,e15.7),i10)') n,c,res,fdz,isys
+       write(iu,'(i10,1x,e15.7)') n
+       write(iu,'(2(f10.2,a1))') cdelr(icol-1),',',cdelc(irow)
+       write(iu,'(2(f10.2,a1))') cdelr(icol),',',cdelc(irow)
+       write(iu,'(a)') 'end'
+      endif
+
+      if(it.eq.2)then
+       n=n+1
+       write(ju,'(i10,3(1x,e15.7),i10)') n,c,res,fdz,isys
+       write(iu,'(i10,1x,e15.7)') n
+       write(iu,'(2(f10.2,a1))') cdelr(icol),',',cdelc(irow-1)
+       write(iu,'(2(f10.2,a1))') cdelr(icol),',',cdelc(irow)
+       write(iu,'(a)') 'end'
+      end if
+
+      end subroutine HFB1EXPORT_WRITEGEN
+
+      !###====================================================================
+      REAL FUNCTION HFB1EXPORT_GETDZ(TF,BF,IC1,IR1,IC2
+     1,IR2,NODATA,ILAY,NCOL,NROW)
+      !###====================================================================
+      USE GLOBAL,ONLY : BOTM,lbotm
       IMPLICIT NONE     
       INTEGER,INTENT(IN) :: IC1,IR1,IC2,IR2,ILAY,NCOL,NROW
       REAL,INTENT(IN) :: FCT,NODATA
@@ -424,8 +567,11 @@ c end of program
       IL1=IL1-1
       IL2=IL2-1
       
-      TPV=(BOTM(JC1,JR1,IL1)+BOTM(JC2,JR2,IL1))/2.0
-      BTV=(BOTM(JC1,JR1,IL2)+BOTM(JC2,JR2,IL2))/2.0
+!      il1=lbotm(ilay)-1
+!      il2=lbotm(ilay)
+
+      TPV=(BOTM(IC1,IR1,IL1)+BOTM(IC2,IR2,IL1))/2.0
+      BTV=(BOTM(IC1,IR1,IL2)+BOTM(IC2,IR2,IL2))/2.0
 
       !## nett appearance of fault in modellayer
       DZ=MIN(TFV,TPV)-MAX(BFV,BTV)
@@ -436,6 +582,64 @@ c end of program
       IF(TPV-BTV.GT.0.0)THEN
       !## fraction of fault in modellayer
       DZ=DZ/(TPV-BTV)
+      ELSE
+       !## completely filled in model layer with thickness of zero
+       DZ=1.0
+      ENDIF
+          
+      HFB1EXPORT_GETDZ=DZ
+
+      END FUNCTION HFB1EXPORT_GETDZ
+
+      !###====================================================================
+      REAL FUNCTION HFB1EXPORT_GETFACTOR(FCT,TF,BF,IC1,IR1,IC2,IR2,NODAT
+     1A,ILAY,NCOL,NROW)
+      !###====================================================================
+      USE GLOBAL,ONLY : BOTM
+      IMPLICIT NONE     
+      INTEGER,INTENT(IN) :: IC1,IR1,IC2,IR2,ILAY,NCOL,NROW
+      REAL,INTENT(IN) :: FCT,NODATA
+      REAL,INTENT(IN),DIMENSION(NCOL,NROW) :: TF,BF
+      REAL :: DZ,TFV,BFV,TPV,BTV,C1,C2,CT,FFCT
+      INTEGER :: IL1,IL2
+      
+      HFB1EXPORT_GETFACTOR=0.0
+
+      !## determine values
+      IF(TF(IC1,IR1).NE.NODATA.AND.TF(IC2,IR2).NE.NODATA)THEN
+       TFV=(TF(IC1,IR1)+TF(IC2,IR2))/2.0
+      ELSEIF(TF(IC1,IR1).NE.NODATA)THEN
+       TFV=TF(IC1,IR1)
+      ELSE
+       TFV=TF(IC2,IR2)
+      ENDIF
+      IF(BF(IC1,IR1).NE.NODATA.AND.BF(IC2,IR2).NE.NODATA)THEN
+       BFV=(BF(IC1,IR1)+BF(IC2,IR2))/2.0
+      ELSEIF(BF(IC1,IR1).NE.NODATA)THEN
+       BFV=BF(IC1,IR1)
+      ELSE
+       BFV=BF(IC2,IR2)
+      ENDIF
+
+      !## get internal layer number of vector of top/bottom information
+      IL1=(ILAY*2)-1
+      IL2=(ILAY*2)
+      !## array starts at 0
+      IL1=IL1-1
+      IL2=IL2-1
+      
+      TPV=(BOTM(IC1,IR1,IL1)+BOTM(IC2,IR2,IL1))/2.0
+      BTV=(BOTM(IC1,IR1,IL2)+BOTM(IC2,IR2,IL2))/2.0
+
+      !## nett appearance of fault in modellayer
+      DZ=MIN(TFV,TPV)-MAX(BFV,BTV)
+
+      !## not in current modellayer
+      IF(DZ.LT.0.0)RETURN
+
+      IF(TPV-BTV.GT.0.0)THEN
+       !## fraction of fault in modellayer
+       DZ=DZ/(TPV-BTV)
       ENDIF
       
       !## if dz.eq.0, modellayer has thickness of zero, but fault to be retained
@@ -473,9 +677,6 @@ c end of program
       !## do nothing, is similar point
       IF(JPR(1).EQ.JPR(2).AND.JPC(1).EQ.JPC(2))RETURN 
 
-!      !## do nothing whenever jpc.eq.0 or jpr.eq.0
-!      IF(JPC(1).EQ.0.AND.JPC(2).EQ.0)RETURN
-!      IF(JPR(1).EQ.0.AND.JPR(2).EQ.0)RETURN
       !## do nothing whenever jpc.eq.0 or jpr.eq.0
       IF(JPC(1).EQ.0.OR.JPC(2).EQ.0)RETURN
       IF(JPR(1).EQ.0.OR.JPR(2).EQ.0)RETURN
@@ -569,7 +770,12 @@ c check if metadata package is activated
       end if
 
 c check if grid is uniform
-      if (ieq.ne.0) then
+      lqd = .true.
+      if ((maxval(delr).ne.minval(delr)).or.
+     &    (maxval(delc).ne.minval(delc))) lqd = .false.
+      if (lqd) then
+         simcsize = delr(1)
+      else
          write(*,*) 'Error: non-uniform grids not yet supported.'
          call ustop(' ')
       end if

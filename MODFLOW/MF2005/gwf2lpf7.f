@@ -520,11 +520,29 @@ C7G-----(LAYWET NOT 0).
       END IF
   200 CONTINUE
 C
-      call pest1alpha_grid('KH',hk,nrow,ncol,nlay)                      ! IPEST
-      call pest1alpha_grid('KV',vka,nrow,ncol,nlay)                     ! IPEST
-      call pest1alpha_grid('VA',vkcb,nrow,ncol,nlay)                    ! IPEST
-      if(itrss.ne.0) call pest1alpha_grid('SC',sc1,nrow,ncol,nlay)      ! IPEST
+      call pest1alpha_grid('KH',hk,nrow,ncol,nlay,iout)                 ! IPEST
+      call pest1alpha_grid('VA',vka,nrow,ncol,nlay,iout)                ! IPEST
+      call pest1alpha_grid('KV',vkcb,nrow,ncol,nlay,iout)               ! IPEST
+      if(itrss.ne.0) call pest1alpha_grid('SC',sc1,nrow,ncol,nlay,iout) ! IPEST
 
+      !## clean from bottom to top inactive layers with zero conductance
+      do irow=1,nrow; do icol=1,ncol
+       do ilay=nlay,1,-1
+        t =botm(icol,irow,lbotm(ilay)-1)                     ! DLT
+        b =botm(icol,irow,lbotm(ilay))                       ! DLT
+        kd=hk(icol,irow,ilay)*(t-b) 
+        if(kd.le.0.0)then 
+         IF(LAYCBD(ilay).NE.0) THEN
+          if(ilay.gt.1)vkcb(icol,irow,ilay-1)=0.0
+         endif
+         hk(icol,irow,ilay)=0.0   
+         IBOUND(icol,irow,ilay)=0 
+        else
+         !## stop search for this location
+         exit
+        endif
+       enddo
+      enddo; enddo
       if (iminkd.eq.1) then                                             ! DLT
          do ilay=1,nlay                                                 ! DLT
             do irow=1,nrow                                              ! DLT
@@ -1973,7 +1991,7 @@ C     ------------------------------------------------------------------
 C
       DOUBLE PRECISION BBOT,TTOP,HHD
       REAL :: SUMVAL, MAXC, TINY                                        ! DLT
-      PARAMETER( MAXC = 1.0E6,TINY=1.0E-20)                             ! DLT
+      PARAMETER( MAXC = 1.0E8,TINY=1.0E-20)                             ! DLT
 C     ------------------------------------------------------------------
 C
       IF(K.EQ.NLAY) RETURN

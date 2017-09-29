@@ -1641,6 +1641,68 @@ c end of program
       return
       end
 
+c ******************************************************************************
+
+      function sutl_getLengthTotalStressPeriod(igrid)
+
+c description:
+c ------------------------------------------------------------------------------
+c get the timesteplength in days of the current timestep of model igrid
+c
+
+c declaration section
+c ------------------------------------------------------------------------------
+      use m_mf2005_main, only: GWFBASDAT,GLOBALDAT,mi
+
+      implicit none
+
+c function declaration
+      double precision     :: sutl_getLengthTotalStressPeriod   ! return value: >0: time step length in days
+                                                       !              <=0: no more timesteps left
+
+c arguments
+      integer, intent(in)  :: igrid             !> grid number of modflow
+
+c local variables
+      double precision     :: dfact
+!      logical              :: lastStep
+      integer              :: lkper !,lkstp,gnper,gnstp,tkper
+
+c program section
+c ------------------------------------------------------------------------------
+
+!      ! check or any timesteps are left
+!      lastStep=.false.
+      lkper=mi(igrid)%kper
+!      lkstp=mi(igrid)%kstp
+!      gnper=GLOBALDAT(igrid)%nper
+!      tkper=min(max(1,lkper),gnper)   ! to be sure stressperiod number in interval [1,nper]
+!      gnstp=GLOBALDAT(igrid)%nstp(tkper)
+
+         ! get conversion factor from model time to days
+         select case( GLOBALDAT(igrid)%itmuni )
+            case (1)      ! seconds
+               dfact=1.0d0/86400.d0
+            case (2)      ! minutes
+               dfact=1.0d0/1440.d0
+            case (3)      ! hours
+               dfact=1.0d0/24.d0
+            case (4)      ! days
+               dfact=1.0d0
+            case (5)      ! years
+               dfact=365.d0
+            case default  ! unknown
+               dfact=1.0d0
+         end select
+
+         ! assign functionvalue
+      sutl_getLengthTotalStressPeriod = 
+     1    dfact*GLOBALDAT(igrid)%PERLEN(lkper)
+
+c end of program
+      return
+      end
+
       logical function mf2005_lastTimeStep(igrid)
 c description:
 c ------------------------------------------------------------------------------

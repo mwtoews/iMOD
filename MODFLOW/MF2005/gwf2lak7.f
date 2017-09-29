@@ -3455,17 +3455,31 @@ c   skip if zero vk
         IF(VK.LE.0.0) GO TO 350
         BBOT=BOTM(I,J,LBOTM(K))
         TTOP=BOTM(I,J,LBOTM(K)-1)
-        CAQ=VK*DELR(I)*DELC(J)/((TTOP-BBOT)*0.5)
+!        CAQ=VK*DELR(I)*DELC(J)/((TTOP-BBOT)*0.5)
+        CAQ=0.0
+        IF(TTOP-BBOT.GT.0.0)CAQ=VK*DELR(I)*DELC(J)/((TTOP-BBOT)*0.5)
         IF(LAYCBD(K-1).GT.0) THEN
 c   skip if zero vkcb
-          IF(VKCB(I,J,LAYCBD(K)).LE.0.0) GO TO 350
+          IF(VKCB(I,J,LAYCBD(K-1)).LE.0.0) GO TO 350
           BBOT=BOTM(I,J,LBOTM(K)-1)
           TTOP=BOTM(I,J,LBOTM(K-1))
-          CCB=VKCB(I,J,LAYCBD(K-1))*DELR(I)*DELC(J)/(TTOP-BBOT)
-          !include VKCB
-          CAQ = 1.0/(1.0/CAQ + 1.0/CCB)
+          CCB=0.0
+          IF(TTOP-BBOT.GT.0.0)THEN
+           CCB=VKCB(I,J,LAYCBD(K-1))*DELR(I)*DELC(J)/(TTOP-BBOT)
+          ENDIF
+          !include VKCB         
+          IF(CAQ.NE.0.0)CAQ=1.0/CAQ
+          IF(CCB.NE.0.0)CCB=1.0/CCB
+          CAQ=CAQ+CCB
+          IF(CAQ.NE.0.0)CAQ=1.0/CAQ
+!          CAQ = 1.0/(1.0/CAQ + 1.0/CCB)
+          
         END IF
-        CNDFCT(II) = 1.0/(1.0/CAQ+1.0/CNDFC1)
+        IF(CAQ.NE.0.0)CAQ=1.0/CAQ
+        CAQ=CAQ+1.0/CNDFC1
+
+!        CNDFCT(II) = 1.0/(1.0/CAQ+1.0/CNDFC1)
+        CNDFCT(II) = 1.0/(1.0/CAQ)
   315   WRITE(IOUT,7325) (ILAKE(I1,II),I1=1,5),DELC(J),DELR(I),
      1             BEDLAK(II),CNDFC1,CAQ,CNDFCT(II)
       ELSE

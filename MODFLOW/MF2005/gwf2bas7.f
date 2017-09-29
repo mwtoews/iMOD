@@ -318,6 +318,48 @@ C8G-----READ INITIAL HEADS.
       ELSE
          CALL U2DREL(STRT(:,:,1),ANAME(2),NLAY,NCOL,-1,INBAS,IOUT)
       END IF
+      !## apply consistency check constant head and top/bot
+      do i=1,nrow; do j=1,ncol; do k=1,nlay
+       if(ibound(j,i,k).lt.0)then
+
+        !## in current model layer
+        kkk=k*2-1
+        if(strt(j,i,k).gt.botm(j,i,kkk))cycle
+
+        !## constant head cell dry - becomes active node - shift to an appropriate model layer where the head is in
+        do kk=k,nlay
+         kkk=kk*2-1
+         if(strt(j,i,k).le.botm(j,i,kkk))then
+          ibound(j,i,kk)=1
+          strt(j,i,kk)=strt(j,i,k)
+         else
+          ibound(j,i,kk)=-99
+          strt(j,i,kk)=strt(j,i,k)
+          exit
+         endif
+        enddo
+       endif
+      enddo; enddo; enddo
+
+      !## cleaning for constant head cells that are only connected to other constant head/inactive cells    
+      do k=1,nlay; do i=1,nrow; do j=1,ncol
+       ic1=max(j-1,1); ic2=min(j+1,ncol)
+       ir1=max(i-1,1); ir2=min(i+1,nrow)
+       il1=max(k-1,1); il2=min(k+1,nlay)
+       if(ibound(j,i,k).lt.0)then 
+        if(ibound(j,ir1,k).le.0.and.ibound(j,ir2,k).le.0.and.
+     1     ibound(ic1,i,k).le.0.and.ibound(ic2,i,k).le.0.and.
+     1     ibound(j,i,il1).le.0.and.ibound(j,i,il2).le.0)then 
+         ibound(j,i,k)=0
+        end if
+       end if
+      enddo; enddo; enddo
+
+      !## clean corners
+      do k=1,nlay; ibound(1   ,1   ,k)=0; enddo
+      do k=1,nlay; ibound(ncol,1   ,k)=0; enddo
+      do k=1,nlay; ibound(1   ,nrow,k)=0; enddo
+      do k=1,nlay; ibound(ncol,nrow,k)=0; enddo
 C
 C9------COPY INITIAL HEADS FROM STRT TO HNEW.
       DO 400 K=1,NLAY

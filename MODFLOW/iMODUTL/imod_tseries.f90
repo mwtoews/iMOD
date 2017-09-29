@@ -25,6 +25,7 @@ MODULE TSVAR
 !####============================================================
  INTEGER, SAVE :: NREC = 0
  INTEGER, SAVE :: IIPF = 0
+ REAL, SAVE :: FWIIPF = 1.0 !## multiplication for weigths
  CHARACTER(LEN=256), SAVE :: ROOTRES = ''
  INTEGER :: NST,IUIPFTXT
  REAL,ALLOCATABLE,DIMENSION(:) :: TSNODATA,TSM
@@ -379,7 +380,12 @@ ELSE
  !## simulation
  IF(ISIM.EQ.0)THEN
   
-  WRITE(IUIPFTXT,*) trim(adjustl(cdate)) 
+  CLDATE=ADJUSTL(CDATE)
+  IF(CLDATE(9:14).EQ.'000000')THEN
+   WRITE(IUIPFTXT,*) CLDATE(1:8)
+  ELSE
+   WRITE(IUIPFTXT,*) TRIM(CLDATE)
+  ENDIF
 
   NREC = NREC + 1
 
@@ -529,7 +535,7 @@ ELSE
      !## without impulse/default
      READ(IU,*,IOSTAT=JOS) KK,J,H,W
      IF(JOS.NE.0)CYCLE
-     IF(KK.NE.JJ)CALL IMOD_UTL_PRINTTEXT(' Something goes wrong in reading summary timeseries on line 507 in imodflow_tseries.f90',2)
+     IF(KK.NE.JJ)CALL IMOD_UTL_PRINTTEXT(' Something goes wrong in reading summary timeseries on line 532 in imodflow_tseries.f90',2)
 
      IF(TS(JJ)%IEXT.GT.0)THEN
       IF(TSDATE(II).EQ.JDATE)THEN

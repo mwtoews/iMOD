@@ -65,6 +65,7 @@ c deallocate MET memory
       if (associated(cdelc))              deallocate(cdelc)
       if (associated(save_no_buf))        deallocate(save_no_buf)
       if (associated(write_debug_idf))    deallocate(write_debug_idf)
+      if (associated(idate_save))         deallocate(idate_save)
 
       if (igrid.eq.1) then
          if (allocated(xmask)) deallocate(xmask)
@@ -117,6 +118,7 @@ C change meta data to a different grid.
       cdelc => gwfmetdat(igrid)%cdelc
       save_no_buf => gwfmetdat(igrid)%save_no_buf
       write_debug_idf => gwfmetdat(igrid)%write_debug_idf
+      idate_save => gwfmetdat(igrid)%isave_date
 
       return
       end
@@ -279,6 +281,7 @@ c nullify
       cdelc => null()
       save_no_buf => null()
       write_debug_idf => null()
+      idate_save => null()
 
 c read options
 C2------READ A LINE; IGNORE BLANK LINES AND PRINT COMMENT LINES.
@@ -632,10 +635,12 @@ c ------------------------------------------------------------------------------
 
 c update current time
       call sgwf2ins1pnt(igrid)
-      time_cjd = timesteptime+sutl_getTimeStepLength(igrid)      
+      time_cjd = timesteptime+sutl_getLengthTotalStressPeriod(igrid)
+!      time_cjd = timesteptime+sutl_getTimeStepLength(igrid)      
       time_ostring = time_cstring
       call cfn_mjd2datehms(time_cjd,date,hour,minute,second)
-      write(time_cstring,'(i8)') date
+!      write(time_cstring,'(i8)') date
+      write(time_cstring,'(i8,3i2.2)') date,hour,minute,second
 !      write(*,*) date,time_ostring,time_cstring
 !      pause
       call sgwf2met1psv(igrid)
@@ -721,7 +726,7 @@ c loop over the layers
 
 c     clean for nodata
       DO I=1,NROW; DO J=1,NCOL
-       IF(IBOUND(J,I,ilay).EQ.0) buff(J,I,ilay)=0. ! CHECK WITH PETER
+       IF(IBOUND(J,I,ilay).EQ.0) buff(J,I,ilay)=hnoflo !0. ! CHECK WITH PETER
       enddo; enddo
 
          if (type.eq.splitidf) then
@@ -807,7 +812,10 @@ c check if MET package is activated
 c check SAVE BUDGET layers
       call splitgetiuidx(ichn,iuidx)
       if (iuidx.gt.0) then
-         if (fooclay(iuidx,ilay).eq.0) return
+         if (fooclay(iuidx,ilay).eq.0)then
+           retflag = .true.
+           return
+         endif
       end if
 
 c loop over the layers
@@ -886,7 +894,7 @@ c modules
       implicit none
 
 c arguments
-      character(len=1024), intent(in) :: fname
+      character(len=*), intent(in) :: fname
       integer, intent(in)             :: ncol, nrow
       real, dimension(ncol,nrow)      :: buff
       real, intent(in)                :: nodata

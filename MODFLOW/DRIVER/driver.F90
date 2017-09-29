@@ -162,6 +162,7 @@ call pks7mpibarrier() ! PKS
   call imod_utl_printtext(' 2: <MODFLOW-2005 nam-file>',3)
   call imod_utl_printtext(' 3: -components <components steering file>',3)
   call imod_utl_printtext(' 4: -pksmergeidf <PKS merge IDF file>',3)
+  call imod_utl_printtext(' 5: <MODFLOW-2005 nam-file> -ipest <MODFLOW-2005 pst-file>',3)
   call pks7mpifinalize()! PKS
   call exit(0)
  end if

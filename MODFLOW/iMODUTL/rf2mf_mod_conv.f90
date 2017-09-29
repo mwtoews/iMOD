@@ -320,8 +320,10 @@
       integer, public, parameter :: imet_ibound_fixed_south = 12
       integer, public, parameter :: imet_save_no_buf        = 13
       integer, public, parameter :: imet_write_debug_idf    = 14
+      integer, public, parameter :: imet_idate_save         = 15
 
-      integer, parameter :: nmetkws = imet_write_debug_idf
+!      integer, parameter :: nmetkws = imet_write_debug_idf
+      integer, parameter :: nmetkws = imet_idate_save
 
       character(len=18), dimension(nmetkws) :: metkws
 !...   12345678901234567890123
@@ -339,6 +341,7 @@
       'ibound_fixed_north',&
       'ibound_fixed_south',&
       'save_no_buf       ',&
+      'idate_save        ',&
       'write_debug_idf   '/
 
       integer, public, parameter :: imetu = 1
@@ -496,7 +499,7 @@
          real    :: hclose = 1e-3 ! head change criterion
          real    :: rclose = 100. ! residual criteron
          real    :: relax  = 0.98 ! relaxation parameter
-         real    :: nbpol  = 1.   ! upperbound maximum eigen value
+         real    :: nbpol  = 1.0  ! upperbound maximum eigen value
          integer :: iprpcg = 1    ! printout flag
          integer :: mutpcg = 0    ! print flag
          reaL    :: damp  = 1.    ! damping factor
@@ -916,11 +919,13 @@
       if (iact == ialloc) then
          nam%package(idrn)%active = .true.
          allocate(drn%sp(nper))
+         drn%iconchk = .false.
+         drn%sp(1:nper)%gcd%ncolumns = 2
          if (iconchk.eq.1) then
             drn%iconchk = .true.
-            drn%sp(1:nper)%gcd%ncolumns = 3
-         else
-            drn%sp(1:nper)%gcd%ncolumns = 2
+!            drn%sp(1:nper)%gcd%ncolumns = 3
+!         else
+!            drn%sp(1:nper)%gcd%ncolumns = 2
          end if
          allocate(drn%cblay(nlay))
       else
@@ -1506,6 +1511,7 @@
          write(strdelrc(2),*) dis%delr(1)
          write(lun,'(2(a,1x))')(trim(adjustl(strdelrc(i))), i = 1, 2) ! delr
       else
+         write(lun,'(A)') 'INTERNAL,1.0,(FREE),-1'
          do icol = 1, ncol
             write(strdelrc(icol),*) dis%delr(icol)
          end do
@@ -1517,6 +1523,7 @@
          write(strdelrc(2),*) dis%delc(1)
          write(lun,'(2(a,1x))')(trim(adjustl(strdelrc(i))), i = 1, 2) ! delr
       else
+         write(lun,'(A)') 'INTERNAL,1.0,(FREE),-1'
          do irow = 1, nrow
             write(strdelrc(irow),*) dis%delc(irow)
          end do
@@ -1621,6 +1628,11 @@
       lun = cfn_getlun(10,99)
       open(unit=lun,file=nam%package(ibcf)%fname,action='write')
 
+!...   determine whether transient simulation using storage
+      trflag=.false.
+      do i=1,nper
+       if(dis%sp(i)%SsTr.eq.'TR')trflag=.true.
+      enddo
 !...     write bcf/lpf file
       if (bcf%cbnlay.gt.0) then
          nam%data(ibcfflux)%active = .true.
@@ -2258,17 +2270,17 @@
          n = n + 1
          write(str(n),*) 'aux isub'
       end if
-      if (drn%iconchk) then
-         n = n + 1
-         write(str(n),*) 'aux ic'
-      end if
+!      if (drn%iconchk) then
+!         n = n + 1
+!         write(str(n),*) 'aux ic'
+!      end if
       if (drn%dsubsys) then
          n = n + 1
          write(str(n),*) 'dsubsys isub'
       end if
       if (drn%iconchk) then
          n = n + 1
-         write(str(n),*) 'iconchk ic'
+         write(str(n),*) 'iconchk' ! ic'
       end if
 
       write(nstr,*) n

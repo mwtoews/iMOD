@@ -90,12 +90,11 @@ PUBLIC :: writedxc
 CONTAINS
 
  !####====================================================================
- SUBROUTINE RF2MF_METASWAP(DXCFILE)
+ SUBROUTINE RF2MF_METASWAP(DXCFILE,idf)
  !####====================================================================
  use pksmpi_mod, only: myrank
- 
  IMPLICIT NONE
-
+ type(idfobj),intent(in) ::idf
  CHARACTER(LEN=*),INTENT(INOUT) :: DXCFILE
 
  !## dummy variables
@@ -211,7 +210,7 @@ CONTAINS
   !## correct for artificial recharge from ipf file
   I=II; IF(IARMWP.EQ.1.AND.II.GT.8)I=II+1
   READ(IURUN,'(A256)') LINE
-  CALL IMOD_UTL_PRINTTEXT('',3); CALL IMOD_UTL_PRINTTEXT('Allocating '//TRIM(MSWP_IDFNAMES(I)),0)
+  CALL IMOD_UTL_PRINTTEXT('',3); CALL IMOD_UTL_PRINTTEXT('Allocating '//TRIM(MSWP_IDFNAMES(I)),3)
   CALL RF2MF_READ_IDF(LINE,FCT(I),IMP(I),ILAY,CONSTANTE(I),FNAME(I),IOS(I),0,PCAP) !,3)
  ENDDO
 
@@ -233,21 +232,17 @@ CONTAINS
   IF(IOS(I).EQ.0)THEN
    BUFF=CONSTANTE(I); ! NODATA(I)=0.0
   ELSE
-   if (.not.idfread(idfc,fname(i),0)) CALL IMOD_UTL_PRINTTEXT('idfread',2)
+   if (.not.idfread(idfc,fname(i),1)) CALL IMOD_UTL_PRINTTEXT('idfread',2)
    call idfnullify(idfm)
-   idfm%ieq=0
-   idfm%dx=simcsize
-   idfm%dy=simcsize
-   idfm%ncol=ncol
-   idfm%nrow=nrow
-   idfm%xmin = simbox(1)
-   idfm%ymin = simbox(2)
-   idfm%xmax = simbox(3)
-   idfm%ymax = simbox(4)
+   !#3 copy modelnetwork
+   call idfcopy(idf,idfm)
+
    idfm%nodata = nodata(i)
    if (.not.idfreadscale(idfc,idfm,scltype,ismooth)) CALL IMOD_UTL_PRINTTEXT('idfreadscale',2)
    buff = idfm%x
    call idfdeallocatex(idfc)
+   call idfdeallocatex(idfm)
+
    if (idfc%iu.gt.0) then
       inquire(unit=idfc%iu,opened=lop); if(lop)close(idfc%iu)
    endif
@@ -450,7 +445,7 @@ CONTAINS
 
  DEALLOCATE(FNAME,SIMGRO,BUFF,ITMP,FCT,IMP,CONSTANTE,NODATA,IERROR)
 
- CALL IMOD_UTL_PRINTTEXT('Finished processing MetaSwap ...',3)
+ CALL IMOD_UTL_PRINTTEXT('Finished processing MetaSwap ...',0)
 
  END SUBROUTINE RF2MF_METASWAP
 

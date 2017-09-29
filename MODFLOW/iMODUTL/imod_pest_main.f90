@@ -1,4 +1,4 @@
-!!  Copyright (C) Stichting Deltares, 2005-2017.
+!!  Copyright (C) Stichting Deltares, 2005-2014.
 !!
 !!  This file is part of iMOD.
 !!
@@ -28,7 +28,7 @@ USE IMOD_UTL, ONLY : IMOD_UTL_PRINTTEXT,IMOD_UTL_CAPF,IMOD_UTL_ITOS,IMOD_UTL_GET
  IMOD_UTL_FILENAME,IMOD_UTL_RTOS,IMOD_UTL_STRING,IMOD_UTL_OPENASC,IMOD_UTL_SWAPSLASH,&
  IMOD_UTL_GETUNIT,IMOD_UTL_CREATEDIR,IMOD_UTL_GETRCL,IMOD_UTL_LUDECOMP_DBL,IMOD_UTL_LUBACKSUB_DBL
 USE MOD_RF2MF, ONLY: CMOD, PPST, SIMBOX, SIMCSIZE, IURUN 
-USE TSVAR, ONLY : TS,CIPFTYPE,TS,ROOTRES, IIPF, ROOTRES
+USE TSVAR, ONLY : TS,CIPFTYPE,TS,ROOTRES, IIPF, ROOTRES, FWIIPF
 USE IDFMODULE
 
 CHARACTER(LEN=256),PRIVATE :: LINE
@@ -42,10 +42,11 @@ REAL,PRIVATE :: DAMPINGFACTOR=1.5
 CONTAINS
 
  !###====================================================================
- SUBROUTINE PEST1INIT(ioption,infile,IOUT,root,nparam)
+ SUBROUTINE PEST1INIT(ioption,infile,IOUT,root,idf,nparam)
  !###====================================================================
  USE RF2MF_MODULE, ONLY: NCOL, NROW, NLAY, NPER
  IMPLICIT NONE
+ type(idfobj),intent(in),optional :: idf
  CHARACTER(LEN=*),INTENT(IN) :: INFILE,ROOT
  INTEGER,INTENT(IN) :: IOPTION,IOUT
  INTEGER,INTENT(IN),OPTIONAL :: NPARAM
@@ -83,8 +84,12 @@ CONTAINS
 !   WRITE(IU,*) (IDFM%SY(IROW),IROW=1,IDFM%NROW)
   endif
     
-  READ(IURUN,*) IIPF
- 
+  READ(IURUN,'(A256)') LINE
+  READ(LINE,*,IOSTAT=IOS) IIPF,FWIIPF
+  IF(IOS.NE.0)THEN
+   FWIIPF=1.0; READ(LINE,*) IIPF
+  ENDIF
+  
   IF(IIPF.NE.0)THEN
    IF(ALLOCATED(TS))DEALLOCATE(TS)
    ALLOCATE(TS(ABS(IIPF)))
@@ -135,6 +140,7 @@ CONTAINS
  WRITE(IUPESTEFFICIENCY,'(6A15)') 'TJ','SQRT(TJ)','MEAN(TJ)','MEAN(SQRT(TJ))','ADJUSTMENTS','EFFICIENCY'
  WRITE(IUPESTEFFICIENCY,'(6A15)') '(L2)','(L)','MEAN(L2)','MEAN(L)','(%)','-'
  WRITE(IUPESTSENSITIVITY,'(A)')   'Sensitivity (%):'
+ WRITE(IUPESTRUNFILE,'(A)')       'To be copied in the runfile:'
 
  WRITE(IUPESTOUT,'(A)') 'PEST-LOG'
  DO I=1,ABS(IIPF)
@@ -186,28 +192,30 @@ CONTAINS
  IF(PEST_KTYPE.EQ.1)PEST_KTYPE= 2
 
  CALL IMOD_UTL_PRINTTEXT('',0); CALL IMOD_UTL_PRINTTEXT(' Pest-Settings',-1)
- CALL IMOD_UTL_PRINTTEXT(' @@@ Number of Pest Iterations: '//TRIM(ITOS(PEST_NITER)),-1)
- CALL IMOD_UTL_PRINTTEXT(' @@@ Stop Criterium Objective Function Value: '//TRIM(IMOD_UTL_RTOS(PEST_JSTOP,'F',3)),-1)
- CALL IMOD_UTL_PRINTTEXT(' @@@ Sensitivity to Exclude Parameter (temporarily): '//TRIM(IMOD_UTL_RTOS(PEST_SENSITIVITY,'F',3)),-1)
+ CALL IMOD_UTL_PRINTTEXT(' @@@ Internal Multiplication Factor for Weights: '//TRIM(IMOD_UTL_RTOS(FWIIPF,'G',5)),-1,IUPESTOUT)
+ CALL IMOD_UTL_PRINTTEXT(' @@@ Number of Pest Iterations: '//TRIM(ITOS(PEST_NITER)),-1,IUPESTOUT)
+ IF(PEST_NITER.EQ.0)CALL IMOD_UTL_PRINTTEXT(' @@@ Sensitivity Analyses Started',-1,IUPESTOUT)
+ CALL IMOD_UTL_PRINTTEXT(' @@@ Stop Criterium Objective Function Value: '//TRIM(IMOD_UTL_RTOS(PEST_JSTOP,'F',3)),-1,IUPESTOUT)
+ CALL IMOD_UTL_PRINTTEXT(' @@@ Sensitivity to Exclude Parameter (temporarily): '//TRIM(IMOD_UTL_RTOS(PEST_SENSITIVITY,'F',3)),-1,IUPESTOUT)
  SELECT CASE (PEST_ISCALING)
   CASE (0)
-   CALL IMOD_UTL_PRINTTEXT(' @@@ No  Scaling, No  SVD',-1)
+   CALL IMOD_UTL_PRINTTEXT(' @@@ No  Scaling, No  SVD',-1,IUPESTOUT)
   CASE (1)
-   CALL IMOD_UTL_PRINTTEXT(' @@@ Yes Scaling, No  SVD',-1)
+   CALL IMOD_UTL_PRINTTEXT(' @@@ Yes Scaling, No  SVD',-1,IUPESTOUT)
   CASE (2)
-   CALL IMOD_UTL_PRINTTEXT(' @@@ Yes Scaling, Yes SVD',-1)
+   CALL IMOD_UTL_PRINTTEXT(' @@@ Yes Scaling, Yes SVD',-1,IUPESTOUT)
   CASE (3)
-   CALL IMOD_UTL_PRINTTEXT(' @@@ No  Scaling, Yes SVD',-1)
+   CALL IMOD_UTL_PRINTTEXT(' @@@ No  Scaling, Yes SVD',-1,IUPESTOUT)
  END SELECT
  SELECT CASE (PEST_KTYPE)
   CASE ( 2)
-   CALL IMOD_UTL_PRINTTEXT(' @@@ Simple Kriging is used (if neccessary)',-1)
+   CALL IMOD_UTL_PRINTTEXT(' @@@ Simple Kriging is used (if neccessary)',-1,IUPESTOUT)
   CASE (-2)
-   CALL IMOD_UTL_PRINTTEXT(' @@@ Ordinary Kriging is used (if neccessary)',-1)
+   CALL IMOD_UTL_PRINTTEXT(' @@@ Ordinary Kriging is used (if neccessary)',-1,IUPESTOUT)
   CASE DEFAULT
    CALL IMOD_UTL_PRINTTEXT(' Select 1 or 2 for Kriging Type',2)
  END SELECT
- CALL IMOD_UTL_PRINTTEXT(' @@@ Termination Criterion for Parameter Adjustments (vectorlength): '//TRIM(IMOD_UTL_RTOS(PEST_PADJ,'F',3)),-1)
+ CALL IMOD_UTL_PRINTTEXT(' @@@ Termination Criterion for Parameter Adjustments (vectorlength): '//TRIM(IMOD_UTL_RTOS(PEST_PADJ,'F',3)),-1,IUPESTOUT)
   
  DO I=1,SIZE(PEST_ITARGET)
   IF(PEST_ITARGET(I).LT.0.0)CALL IMOD_UTL_PRINTTEXT('Error PEST_ITARGET('//TRIM(ITOS(I))//') < 0.0',2)
@@ -215,7 +223,7 @@ CONTAINS
  
  TF=SUM(PEST_ITARGET)
 
- CALL IMOD_UTL_PRINTTEXT(' @@@ Number of BatchFiles Used: '//TRIM(ITOS(PEST_NBATCH)),-1)
+ CALL IMOD_UTL_PRINTTEXT(' @@@ Number of BatchFiles Used: '//TRIM(ITOS(PEST_NBATCH)),-1,IUPESTOUT)
  IF(PEST_NBATCH.GT.0)THEN
   ALLOCATE(PEST_IBATCH(PEST_NBATCH))
   DO I=1,PEST_NBATCH
@@ -402,15 +410,38 @@ CONTAINS
     IF(INDEX(IMOD_UTL_CAPF(LINE,'U'),'.IDF').GT.0)THEN
      if (.not.idfread(idfc,line,0)) CALL IMOD_UTL_PRINTTEXT('idfread',2)
      call idfnullify(idfm)
-     idfm%ieq=0
-     idfm%dx=simcsize
-     idfm%dy=simcsize
-     idfm%ncol=ncol
-     idfm%nrow=nrow
-     idfm%xmin = simbox(1)
-     idfm%ymin = simbox(2)
-     idfm%xmax = simbox(3)
-     idfm%ymax = simbox(4)
+     call idfcopy(idf,idfm)
+!      ieqd=0
+!      do i=2,ncol; if(delr(i).ne.delr(i-1))exit; enddo
+!      if(i.le.ncol)ieqd=1
+!      if(ieqd.eq.0)then
+!       idfm%dx=delr(1)
+!       idfm%dy=delc(1)
+!       idfm%ncol=ncol
+!       idfm%nrow=nrow
+!       idfm%ieq=int(0,1)
+!      else
+!       idfm%ncol=ncol; idfm%nrow=nrow; idfm%ieq=int(1,1)
+!       IF(.NOT.IDFALLOCATESXY(IDFM))
+!     1    stop 'cannot allocate memory for sx and sy vectors'
+!       idfm%sx(0)=coord_xll
+!       do i=1,ncol
+!        idfm%sx(i)=idfm%sx(i-1)+delr(i)
+!       enddo
+!       idfm%sy(0)=coord_yur
+!       do i=1,nrow
+!        idfm%sy(i)=idfm%sy(i-1)-delc(i)
+!       enddo
+!      endif
+!     idfm%ieq=0
+!     idfm%dx=simcsize
+!     idfm%dy=simcsize
+!     idfm%ncol=ncol
+!     idfm%nrow=nrow
+!     idfm%xmin = simbox(1)
+!     idfm%ymin = simbox(2)
+!     idfm%xmax = simbox(3)
+!     idfm%ymax = simbox(4)
      nodata = idfc%nodata
      idfm%nodata = nodata
      if (.not.idfreadscale(idfc,idfm,9,0)) CALL IMOD_UTL_PRINTTEXT('idfreadscale',2)
@@ -816,7 +847,7 @@ CONTAINS
  logical,intent(in) :: LSS
  character(len=*),intent(in) :: root
  REAL :: IMPROVEMENT,F
- INTEGER :: I,ILOG
+ INTEGER :: I,J,ILOG
 
  IF(.NOT.ALLOCATED(PARAM))STOP
 
@@ -829,7 +860,7 @@ CONTAINS
  IF(PEST_ITER.EQ.0)PEST_ITER=1
 
  !## compute objective function
- CALL PEST_GETJ(LSS,root)
+ CALL PEST_GETJ(LSS,ROOT)
 
  IF(LSENS)THEN
 !  !## next parameter combination
@@ -840,7 +871,7 @@ CONTAINS
   !## what proces is going on?
   IF(.NOT.PESTNEXTGRAD())THEN
    !## get gradient
-   CALL PESTGRADIENT(root)
+   CALL PESTGRADIENT(ROOT)
    LLNSRCH=.TRUE.; PEST_ILNSRCH=1; LGRAD=.FALSE.; PEST_IGRAD=0
   ENDIF
  ELSEIF(LLNSRCH)THEN
@@ -848,7 +879,7 @@ CONTAINS
   IF(TJ.GT.TJOBJ)THEN
 !   DAMPINGFACTOR=DAMPINGFACTOR*NDAMPING
 !   NDAMPING=1.0 !## do it onces only
-   IF(.NOT.PESTUPGRADEVECTOR(0.5,.TRUE.))THEN !,.TRUE.))THEN
+   IF(.NOT.PESTUPGRADEVECTOR(0.5,.TRUE.))THEN
     STOP 'ERROR PESTUPGRADEVECTOR IN LINESEARCH'
    ENDIF !# half of current search-gradient
    !## start next line-search
@@ -869,6 +900,15 @@ CONTAINS
        TRIM(IMOD_UTL_RTOS(REAL(TJ),'G',7))//')',-1,IUPESTOUT)
    ENDIF
 
+   !## update alpha for parameters in same group
+   DO I=1,SIZE(PARAM)
+    IF(PARAM(I)%IGROUP.GT.0)THEN
+     DO J=1,SIZE(PARAM)
+      IF(PARAM(I)%IGROUP.EQ.ABS(PARAM(J)%IGROUP))PARAM(J)%ALPHA(1)=PARAM(I)%ALPHA(1)
+     ENDDO
+    ENDIF
+   ENDDO
+   
    IMPROVEMENT=0; DO I=1,SIZE(PARAM)
     IF(PARAM(I)%LOG)THEN
      F=(EXP(PARAM(I)%ALPHA(1))/EXP(PARAM(I)%ALPHA(2)))*100.0
@@ -887,7 +927,7 @@ CONTAINS
    DO I=1,SIZE(PARAM)
     ILOG=0; IF(PARAM(I)%LOG)ILOG=1
     IF(PARAM(I)%LOG)THEN
-     WRITE(IUPESTRUNFILE,'(I2,1X,A,1X,2(I4,1X),5(F10.3,1X),I4,1X,I2)') PARAM(I)%IACT, &  !## iact
+     WRITE(IUPESTRUNFILE,'(I2,1X,A,1X,2(I4,1X),5(F10.3,1X),I4,1X,I2)') ABS(PARAM(I)%IACT), &  !## iact
          PARAM(I)%PTYPE, &         !## ptype
          PARAM(I)%ILS, &           !## ilayer/system
          PARAM(I)%IZONE, &         !## zone number
@@ -899,7 +939,7 @@ CONTAINS
          ABS(PARAM(I)%IGROUP),&    !## group number
          ILOG !PARAM(I)%LOG              !## log transformed
     ELSE
-     WRITE(IUPESTRUNFILE,'(I2,1X,A,1X,2(I4,1X),5(F10.3,1X),I4,1X,I2)') PARAM(I)%IACT, &  !## iact
+     WRITE(IUPESTRUNFILE,'(I2,1X,A,1X,2(I4,1X),5(F10.3,1X),I4,1X,I2)') ABS(PARAM(I)%IACT), &  !## iact
          PARAM(I)%PTYPE, & !## ptype
          PARAM(I)%ILS, &   !## ilayer/system
          PARAM(I)%IZONE, & !## zone number
@@ -1041,7 +1081,7 @@ CONTAINS
   ENDIF
  ENDDO
 
- WRITE(BLINE,'(3I5,E15.7)') PEST_ITER,PEST_IGRAD,PEST_ILNSRCH,TJ
+ WRITE(BLINE,'(3I5,G15.7)') PEST_ITER,PEST_IGRAD,PEST_ILNSRCH,TJ
  DO I=1,SIZE(PARAM)
   IF(ABS(PARAM(I)%IACT).EQ.1.AND.PARAM(I)%IGROUP.GT.0)THEN
    WRITE(SLINE,'(F10.3)') X(I)
@@ -1060,7 +1100,7 @@ CONTAINS
  IMPLICIT NONE
  INTEGER,INTENT(IN) :: NP
  DOUBLE PRECISION,INTENT(IN),DIMENSION(NP,NP) :: COV
- INTEGER :: I,J,K,IP1
+ INTEGER :: I,J,K,IP1,IERROR
  REAL :: Z1,Z2,Z,ZW
 
  !## The asymptotic standard parameter error is a measure of how unexplained variability in the
@@ -1073,7 +1113,7 @@ CONTAINS
  WRITE(BLINE,'(A15,99(A7,I3.3))') 'PARAMETER',('   ITER',I,I=PEST_ITER,1,-1)
  WRITE(IUPESTOUT,'(A/)') TRIM(BLINE)
     
- J=0
+ J=0; IERROR=0
  DO I=1,SIZE(PARAM)
   IF(PARAM(I)%IACT.EQ.1.AND.PARAM(I)%IGROUP.GT.0)THEN
    J=J+1
@@ -1082,8 +1122,9 @@ CONTAINS
    ELSE
     !## error value - should not happen
     PARAM(I)%ALPHA_ERROR_VARIANCE(PEST_ITER)=-999.99 
+    IERROR=IERROR+1
    ENDIF
-   !##check whether current other parameters belong to this group
+   !## check whether current other parameters belong to this group
    DO IP1=1,SIZE(PARAM)
     !## active and follower of group
     IF(PARAM(IP1)%IACT.EQ.1.AND.PARAM(IP1)%IGROUP.LT.0)THEN
@@ -1098,7 +1139,11 @@ CONTAINS
    PARAM(I)%ALPHA_ERROR_VARIANCE(PEST_ITER)=0.0
   ENDIF
  ENDDO
-
+ IF(IERROR.GT.0)THEN
+  WRITE(IUPESTOUT,*); WRITE(IUPESTOUT,*) 'Errors ('//TRIM(IMOD_UTL_ITOS(IERROR))//') found in the Covariance Matrix:'; WRITE(IUPESTOUT,*)
+  CALL IMOD_UTL_PRINTTEXT('Errors found in the computation of the Covariance Matrix',2)
+ ENDIF
+ 
  WRITE(IUPESTOUT,*); WRITE(IUPESTOUT,*) 'Confidence Limits (96%):'; WRITE(IUPESTOUT,*)
  DO I=1,SIZE(PARAM)
   IF(PARAM(I)%IACT.EQ.1.AND.PARAM(I)%IGROUP.GT.0)THEN
@@ -1120,6 +1165,11 @@ CONTAINS
    ENDIF 
    WRITE(BLINE,'(3G15.7)') Z1,Z,Z2
    WRITE(IUPESTOUT,'(3X,A2,2I3.3,A1,I3.3,A)') PARAM(I)%PTYPE,PARAM(I)%ILS,PARAM(I)%IZONE,'-',ABS(PARAM(I)%IGROUP),TRIM(BLINE)
+  ELSE
+   IF(PARAM(I)%IACT.EQ.-1)THEN
+    WRITE(BLINE,'(3A15)') 'Insens.','Insens.','Insens.'
+    WRITE(IUPESTOUT,'(3X,A2,2I3.3,A1,I3.3,A)') PARAM(I)%PTYPE,PARAM(I)%ILS,PARAM(I)%IZONE,'-',ABS(PARAM(I)%IGROUP),TRIM(BLINE)
+   ENDIF
   ENDIF
  ENDDO
 
@@ -1287,7 +1337,7 @@ CONTAINS
  INTEGER :: I,II,J,K,L,NP,MP,IP1,IP2,NE,ISING
  INTEGER,ALLOCATABLE,DIMENSION(:) :: INDX,ICOR
  REAL,ALLOCATABLE,DIMENSION(:,:) :: TDJ,C,JS,P,PT
- REAL,ALLOCATABLE,DIMENSION(:) :: S,GAMMA,N,RU !,DJ
+ REAL,ALLOCATABLE,DIMENSION(:) :: S,GAMMA,N,RU 
  CHARACTER(LEN=8),ALLOCATABLE,DIMENSION(:) :: TXT
  DOUBLE PRECISION,ALLOCATABLE,DIMENSION(:,:) :: EIGV,COV,B,M
  DOUBLE PRECISION,ALLOCATABLE,DIMENSION(:) :: EIGW
@@ -1423,7 +1473,7 @@ CONTAINS
 
 !  !## levenberg
 !   DO I=1,NP; JQJ(I,I)=JQJ(I,I)+MARQUARDT; ENDDO
-   !## marquardt
+   !## levenberg-marquardt
    DO I=1,NP; JQJ(I,I)=JQJ(I,I)+MARQUARDT*COV(I,I); ENDDO
 
    !## apply scaling
@@ -1468,7 +1518,7 @@ CONTAINS
     ENDDO
    ENDDO
 
-   !## add levenberg/marquardt
+   !## add levenberg-marquardt
    DO I=1,NP; JQJ(I,I)=JQJ(I,I)+MARQUARDT*C(I,I)**2.0; ENDDO
 
   ENDIF
@@ -1477,13 +1527,10 @@ CONTAINS
   IF(LSVD)THEN
 
    EIGWTHRESHOLD=0.0 !% explained variance
-   WRITE(IUPESTOUT,'(/A10,2A15)') 'NE','EIGW(NE)','EIGWTHRESHOLD'
    DO NE=1,NP
     EIGWTHRESHOLD=EIGWTHRESHOLD+EIGW(NE)
-    WRITE(IUPESTOUT,'(I10,2F15.7)') NE,EIGW(NE),EIGWTHRESHOLD
     IF(EIGWTHRESHOLD.GT.99.0)EXIT
    ENDDO
-   WRITE(IUPESTOUT,'(/A/)') 'Use selected eigenvalues to project on limited space'
 
    ALLOCATE(P(NP,NE)); P(:,1:NE)=EIGV(:,1:NE); ALLOCATE(M(NE,NE),N(NE),RU(NE),PT(NE,NP))
 
@@ -1564,6 +1611,20 @@ CONTAINS
 
  ENDDO !## marquardt-loop
 
+ EIGWTHRESHOLD=0.0 !% explained variance
+ WRITE(IUPESTOUT,'(/A10,2A15)') 'NE','EIGW(NE)','EIGWTHRESHOLD'
+ DO NE=1,NP
+  EIGWTHRESHOLD=EIGWTHRESHOLD+EIGW(NE)
+  WRITE(IUPESTOUT,'(I10,2F15.7)') NE,EIGW(NE),EIGWTHRESHOLD
+  IF(LSVD.AND.EIGWTHRESHOLD.GT.99.0)EXIT
+ ENDDO
+ IF(LSVD)THEN
+  WRITE(IUPESTOUT,'(/A,I5,A/)') 'Used ',NE,' Eigenvalues to project on limited number of basisfunctions'
+ ELSE
+  WRITE(IUPESTOUT,'(/A)') 'Consider using the SVD-option to ignore tiny eigenvalues to'
+  WRITE(IUPESTOUT,'(A/)') 'make the optimization more robuust, numerically'
+ ENDIF
+ 
  WRITE(IUPESTPROGRESS,*) 'Lambda/Damping Marquardt Factor = ',MARQUARDT
  WRITE(IUPESTPROGRESS,*) 'Marquardt Factor small: Gradient-Descent (near optimum)'
  WRITE(IUPESTPROGRESS,*) 'Marquardt Factor large: Gauss-Newton (far away optimum)'
@@ -1587,7 +1648,7 @@ CONTAINS
  DOUBLE PRECISION,DIMENSION(NP),INTENT(INOUT) :: EIGW
  DOUBLE PRECISION :: DET
  INTEGER :: I,J,IP1,IP2,II,N,M,ISING,iu
- REAL :: DF1,DF2,DJ1,DJ2,B1,TV,TEV,CB,KAPPA
+ DOUBLE PRECISION :: DF1,DF2,DJ1,DJ2,B1,TV,TEV,CB,KAPPA,W
  DOUBLE PRECISION,ALLOCATABLE,DIMENSION(:,:) :: B
  REAL,ALLOCATABLE,DIMENSION(:,:) :: COR
  DOUBLE PRECISION,ALLOCATABLE,DIMENSION(:) :: E
@@ -1637,7 +1698,9 @@ CONTAINS
    DO J=1,PEST_NOBS
     DJ1=(MSR%DH(IP1,J)-MSR%DH(0,J))/DF1
     DJ2=(MSR%DH(IP2,J)-MSR%DH(0,J))/DF2
-    JQJ(II,I)=JQJ(II,I)+(DJ1*MSR%W(J)*DJ2)  
+    W=REAL(MSR%W(J),8)
+    JQJ(II,I)=JQJ(II,I)+(DJ1*W*DJ2)  
+!    JQJ(II,I)=JQJ(II,I)+(DJ1*MSR%W(J)*DJ2)  
    ENDDO
   ENDDO
  ENDDO
@@ -1677,7 +1740,8 @@ CONTAINS
 
   !## compute determinant of JQJ
   DET=PEST_FIND_DET(JQJ,NP)
-  WRITE(IUPESTOUT,'(/A15,E15.7/)') 'Determinant JQJ = ',DET
+  WRITE(IUPESTOUT,'(/A15,E15.7)') 'Determinant JQJ = ',DET
+  WRITE(IUPESTOUT,'(A/)') 'A small value for the Determinant indicates Singularity of the Matrix'
 
   !## copy data
   B=JQJ
@@ -1842,7 +1906,7 @@ CONTAINS
 
   PARAM(IP1)%ALPHA(1)=PARAM(IP1)%ALPHA(2)+G*FCT !## update parameters
 
-  !## adjustment too large
+  !## adjustment too large -causes to get another lambda
   IF(LCHECK)THEN
    IF(PARAM(IP1)%LOG)THEN
     F=EXP(PARAM(IP1)%ALPHA(1))/EXP(PARAM(IP1)%ALPHA(2))
@@ -1880,6 +1944,7 @@ CONTAINS
    MINP=MAX(MINP,MINAP)
    MAXP=MIN(MAXP,MAXAP)
    
+   !## parameter adjustment hit the parameter boundary - adjust all
    IF(PARAM(IP1)%ALPHA(1).LT.MINP.OR. &
       PARAM(IP1)%ALPHA(1).GT.MAXP)THEN
 
@@ -1888,25 +1953,34 @@ CONTAINS
     IF(PARAM(IP1)%ALPHA(1).LT.MINP)F=MINP-PARAM(IP1)%ALPHA(2)
     IF(PARAM(IP1)%ALPHA(1).GT.MAXP)F=MAXP-PARAM(IP1)%ALPHA(2)
 
+    !## not yet influenced by its parameter boundary
     IF(PARAM(IP1)%IBND.EQ.0)THEN
-     !## correct all gradients with this factor
+     !## corrects all gradients with this factor
      F=F/G
      !## echo correction factor
-     CALL IMOD_UTL_PRINTTEXT('Parameter '//TRIM(IMOD_UTL_ITOS(IP1))//' causing a',-1,IUPESTOUT)
-     CALL IMOD_UTL_PRINTTEXT('Correction factor '//TRIM(IMOD_UTL_RTOS(F,'F',3))// &
-       ' of Upgrade Vector caused by Bumping on the Parameter Boundary',-1,IUPESTOUT)
+     CALL IMOD_UTL_PRINTTEXT('Parameter '//TRIM(IMOD_UTL_ITOS(IP1))//' causes a',-1,IUPESTOUT)
+     CALL IMOD_UTL_PRINTTEXT('correction factor of '//TRIM(IMOD_UTL_RTOS(F,'F',3))// &
+       ' for the Upgrade Vector caused by Hitting its Parameter Boundary',-1,IUPESTOUT)
+
+     !## adjust all parameters
+     DO IP2=1,SIZE(PARAM) !IP1 
+      G=PARAM(IP2)%ALPHA(1)-PARAM(IP2)%ALPHA(2)
+      G=G*F
+      PARAM(IP2)%ALPHA(1)=PARAM(IP2)%ALPHA(2)+G !## update parameters
+     ENDDO
+
     ELSE
-     CALL IMOD_UTL_PRINTTEXT('Parameter '//TRIM(IMOD_UTL_ITOS(IP1))//' causing an increase of the Marquardt factor',-1,IUPESTOUT)
-     CALL IMOD_UTL_PRINTTEXT('Conflict on the boundary between a Steepest Descent and Gauss-Newton approach',-1,IUPESTOUT)
-     !## get another values for the marquardt such that this will not happen
-     RETURN
+
+     CALL IMOD_UTL_PRINTTEXT('Parameter '//TRIM(IMOD_UTL_ITOS(IP1))//' causes a conflict on the parameter boundary.',-1,IUPESTOUT)
+     CALL IMOD_UTL_PRINTTEXT('The Steepest Descent approach wants to move the parameter back in parameter space, the Gauss-Newton approach',-1,IUPESTOUT)
+     CALL IMOD_UTL_PRINTTEXT('wants to move the parameter further outside the parameter space.',-1,IUPESTOUT)
+     CALL IMOD_UTL_PRINTTEXT('iMOD excludes this parameter in this iteration cycle, nevertheless.',-1,IUPESTOUT)
+     PARAM(IP1)%ALPHA(1)=PARAM(IP1)%ALPHA(2)
+!     CALL IMOD_UTL_PRINTTEXT('iMOD tries to solve this by picking a smaller value for the Marquardt.',-1,IUPESTOUT)
+!     RETURN
+
     ENDIF
 
-    DO IP2=1,SIZE(PARAM)
-     G=PARAM(IP2)%ALPHA(1)-PARAM(IP2)%ALPHA(2)
-     G=G*F
-     PARAM(IP2)%ALPHA(1)=PARAM(IP2)%ALPHA(2)+G !## update parameters
-    ENDDO
    ENDIF
 
   ENDDO
@@ -2078,7 +2152,10 @@ CONTAINS
       MSR%W(II)=1.0/SQRT(MSR%W(II))
      ENDIF
     ENDIF
-
+    
+    !## apply general multiplication for weight values
+    MSR%W(II)=FWIIPF*MSR%W(II)
+    
     DHH=0.0
     IF(ABS(H-Z).GT.PEST_DRES)THEN
      DHH=H-Z
@@ -2095,7 +2172,7 @@ CONTAINS
     GF_O(II)         =MSR%W(II)*Z
 
     TJ               = TJ+DHW
-    IF(IUPESTRESIDUAL.GT.0)WRITE(IUPESTRESIDUAL,'(2(F15.7,1X),I10,1X,6(F15.7,1X),I10,1X,A32)') &
+    IF(IUPESTRESIDUAL.GT.0)WRITE(IUPESTRESIDUAL,'(2(G15.7,1X),I10,1X,6(G15.7,1X),I10,1X,A32)') &
         X,Y,ILAY,Z,H,DHW,MSR%W(II)*H,MSR%W(II)*(H-Z),MSR%W(II),I,MSR%CLABEL(II)
 
    ENDDO
@@ -2115,6 +2192,9 @@ CONTAINS
      ENDIF
     ENDIF
     
+    !## apply general multiplication for weight values
+    WW=FWIIPF*WW
+
     LINE=TRIM(ROOT)//CHAR(92)//'timeseries'//CHAR(92)//TRIM(ID)//'.'//TRIM(TS(I)%EXT)
     IUIPFTXT=GETUNIT(); OPEN(IUIPFTXT,FILE=LINE,STATUS='OLD',ACTION='READ')
     
@@ -2200,7 +2280,7 @@ CONTAINS
      GF_H(II)=MSR%W(II)*MC 
      GF_O(II)=MSR%W(II)*MM 
 
-     IF(IUPESTRESIDUAL.GT.0)WRITE(IUPESTRESIDUAL,'(2(F15.7,1X),I10,1X,8(F15.7,1X),I10,1X,A32)') &
+     IF(IUPESTRESIDUAL.GT.0)WRITE(IUPESTRESIDUAL,'(2(G15.7,1X),I10,1X,8(G15.7,1X),I10,1X,A32)') &
         X,Y,ILAY,MSR%W(II),MM,MC,MM-MC,DYN(1),DYN(2),DYN(2)-DYN(1),XCOR,I,MSR%CLABEL(II)
     
     ENDIF
@@ -2238,17 +2318,17 @@ CONTAINS
  PJ=0.0D0
  IF(PEST_IREGULARISATION.EQ.1)CALL PEST_GETQPP(NP,.TRUE.)
   
- CALL IMOD_UTL_PRINTTEXT('Best Match Value   : '//TRIM(IMOD_UTL_RTOS(REAL(TJ),'E',7)),-1)
- CALL IMOD_UTL_PRINTTEXT('Plausibility Value : '//TRIM(IMOD_UTL_RTOS(REAL(PJ),'E',7)),-1)
+ CALL IMOD_UTL_PRINTTEXT('Best Match Value   : '//TRIM(IMOD_UTL_RTOS(REAL(TJ),'G',7)),-1)
+ CALL IMOD_UTL_PRINTTEXT('Plausibility Value : '//TRIM(IMOD_UTL_RTOS(REAL(PJ),'G',7)),-1)
  TJ=TJ+PJ
   
- CALL IMOD_UTL_PRINTTEXT('TOTAL Objective Function Value : '//TRIM(IMOD_UTL_RTOS(REAL(TJ),'E',7)),-1)
- CALL IMOD_UTL_PRINTTEXT('MEAN Objective Function Value  : '//TRIM(IMOD_UTL_RTOS(REAL(TJ)/REAL(PEST_NOBS),'E',7))// &
+ CALL IMOD_UTL_PRINTTEXT('TOTAL Objective Function Value : '//TRIM(IMOD_UTL_RTOS(REAL(TJ),'G',7)),-1)
+ CALL IMOD_UTL_PRINTTEXT('MEAN Objective Function Value  : '//TRIM(IMOD_UTL_RTOS(REAL(TJ)/REAL(PEST_NOBS),'G',7))// &
          ' (n='//TRIM(IMOD_UTL_ITOS(PEST_NOBS))//')',-1)
 
  RFIT=PEST_GOODNESS_OF_FIT(GF_H,GF_O,PEST_NOBS)
  CALL IMOD_UTL_PRINTTEXT('Goodness of Fit (sample correlation coefficient): '// &
-     TRIM(IMOD_UTL_RTOS(RFIT,'E',7))//' (n='//TRIM(IMOD_UTL_ITOS(PEST_NOBS))//')',-1)
+     TRIM(IMOD_UTL_RTOS(RFIT,'G',7))//' (n='//TRIM(IMOD_UTL_ITOS(PEST_NOBS))//')',-1)
  CALL IMOD_UTL_PRINTTEXT('>> Provides a measure of the extent to which variability of field measurements is explained',-1)
  CALL IMOD_UTL_PRINTTEXT('   by the calibrated model compared to that which can be constructed as purely random. <<',-1)
 

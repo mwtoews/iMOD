@@ -40,7 +40,6 @@ c   If not, see <http://water.usgs.gov/software/help/notice/>.
         integer,save,pointer  ::irivsubsys,nrivsubsys                   ! rsubsys
         integer,save,pointer  ::irivrconc                               ! rconc
         integer,save,dimension(:),pointer :: rivsubsidx                 ! rsubsys
-        logical,save,pointer :: lreuse                                  ! iconchk
       TYPE GWFRIVTYPE
         INTEGER,POINTER  ::NRIVER,MXRIVR,NRIVVL,IRIVCB,IPRRIV
         INTEGER,POINTER  ::NPRIV,IRIVPB,NNPRIV
@@ -52,7 +51,6 @@ c   If not, see <http://water.usgs.gov/software/help/notice/>.
         integer,pointer  ::irivsubsys,nrivsubsys                        ! rsubsys
         integer,pointer  ::irivrconc                                    ! rconc
         integer,dimension(:),pointer :: rivsubsidx                      ! rsubsys
-        logical,pointer :: lreuse                                       ! iconchk
       END TYPE
       TYPE(GWFRIVTYPE), SAVE:: GWFRIVDAT(10)
       END MODULE GWFRIVMODULE
@@ -72,7 +70,6 @@ C     ------------------------------------------------------------------
      1                      ,IRIVRFACT                                  ! RFACT
      1                      ,irivsubsys                                 ! rsubsys
      1                      ,irivrconc                                  ! rconc
-     1                      ,lreuse                                     ! iconchk
      1                      ,ifvdl,isft,sft                             ! ifvdl
 C
       CHARACTER*200 LINE
@@ -87,7 +84,6 @@ C1------grids to be defined.
       allocate(IRIVRFACT)                                               ! RFACT
       allocate(irivsubsys)                                              ! rsubsys
       allocate(irivrconc)                                               ! rconc
-      allocate(lreuse)                                                  ! iconchk
       allocate(ifvdl)                                                   ! ifvdl
       allocate(isft)                                                    ! ifvdl
 C
@@ -101,7 +97,6 @@ C2------IDENTIFY PACKAGE AND INITIALIZE NRIVER AND NNPRIV.
       IRIVRFACT=0                                                       ! RFACT
       irivsubsys=0                                                      ! rsubsys
       irivrconc=0                                                       ! rconc
-      lreuse=.false.                                                    ! iconchk
       ifvdl=0                                                           ! ifvdl
       isft=0                                                            ! ifvdl
 C
@@ -301,7 +296,6 @@ C     ------------------------------------------------------------------
       USE GWFRIVMODULE, ONLY:NRIVER,MXRIVR,NRIVVL,IPRRIV,NPRIV,
      1                       IRIVPB,NNPRIV,RIVAUX,RIVR,
      1                       irivsubsys,nrivsubsys,rivsubsidx,          ! rsubsys
-     1                       lreuse,                                    ! iconchk
      1                       irivrfact                                  ! DLT
 C     ------------------------------------------------------------------
       CALL SGWF2RIV7PNT(IGRID)
@@ -341,9 +335,9 @@ C2------DETERMINE THE NUMBER OF NON-PARAMETER REACHES.
 C
 C3------IF THERE ARE NEW NON-PARAMETER REACHES, READ THEM.
       MXACTR=IRIVPB-1
-      lreuse = .true.                                                   ! iconchk
+
       IF(ITMP.GT.0) THEN
-         lreuse = .false.                                               ! iconchk
+
          IF(NNPRIV.GT.MXACTR) THEN
             WRITE(IOUT,99) NNPRIV,MXACTR
    99       FORMAT(1X,/1X,'THE NUMBER OF ACTIVE REACHES (',I6,
@@ -632,7 +626,6 @@ C
         if (associated(nrivsubsys)) deallocate(nrivsubsys)              ! rsubsys
         if (associated(rivsubsidx)) deallocate(rivsubsidx)              ! rsubsys
         deallocate(irivrconc)                                           ! rconc
-        deallocate(lreuse)
         deallocate(ifvdl)                                               ! ifvdl
         deallocate(isft)                                                ! ifvdl
         deallocate(sft)                                                 ! ifvdl
@@ -658,7 +651,6 @@ C
         nrivsubsys=>gwfrivdat(igrid)%nrivsubsys                         ! rsubsys
         rivsubsidx=>gwfrivdat(igrid)%rivsubsidx                         ! rsubsys
         irivrconc=>gwfrivdat(igrid)%irivrconc                           ! rconc
-        lreuse=>gwfrivdat(igrid)%lreuse                                 ! iconchk
         ifvdl=>gwfrivdat(igrid)%ifvdl                                   ! ifvdl
         isft=>gwfrivdat(igrid)%isft                                     ! ifvdl
         sft=>gwfrivdat(igrid)%sft                                       ! ifvdl
@@ -684,7 +676,6 @@ C
         gwfrivdat(igrid)%nrivsubsys=>nrivsubsys                         ! rsubsys
         gwfrivdat(igrid)%rivsubsidx=>rivsubsidx                         ! rsubsys
         gwfrivdat(igrid)%irivrconc=>irivrconc                           ! rconc
-        gwfrivdat(igrid)%lreuse=>lreuse                                 ! iconchk
         gwfrivdat(igrid)%ifvdl=>ifvdl                                   ! ifvdl
         gwfrivdat(igrid)%isft=>isft                                     ! ifvdl
         gwfrivdat(igrid)%sft=>sft                                       ! ifvdl

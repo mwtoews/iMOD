@@ -238,8 +238,9 @@ c read data
       end do
       read(lun,*) iext, ext
 
-c overrule iext when steady-state simulation is active
-      if(iss.eq.1)iext=0
+c overrule iext when current timestep is steady-state
+!      if(iss.eq.1)iext=0
+      if(delt.eq.0.0)iext=0
 
 c determine root and date
       if (iext.ne.0) then
@@ -378,7 +379,7 @@ c function declaration
 
 c local variables
       logical :: lop
-      integer :: icol, irow, i
+      integer :: icol, irow, ieqd, i
       real :: xmin, ymin, xmax, ymax, val
       character(len=1000) :: fname
       logical :: lnodata
@@ -403,17 +404,37 @@ c read idf header
 
 c map on cell centroids
       call idfnullify(idfm)
+      ieqd=0
+      do i=2,ncol; if(delr(i).ne.delr(i-1))exit; enddo
+      if(i.le.ncol)ieqd=1
+      if(ieqd.eq.0)then
       idfm%dx=delr(1)
       idfm%dy=delc(1)
       idfm%ncol=ncol
       idfm%nrow=nrow
+       idfm%ieq=int(0,1)
+      else
+       idfm%ncol=ncol; idfm%nrow=nrow; idfm%ieq=int(1,1)
+       IF(.NOT.IDFALLOCATESXY(IDFM))
+     1    stop 'cannot allocate memory for sx and sy vectors'
+       idfm%sx(0)=coord_xll
+       do i=1,ncol
+        idfm%sx(i)=idfm%sx(i-1)+delr(i)
+       enddo
+       idfm%sy(0)=coord_yur
+       do i=1,nrow
+        idfm%sy(i)=idfm%sy(i-1)-delc(i)
+       enddo
+      endif
       idfm%xmin = coord_xll
       idfm%xmax = coord_xur
       idfm%ymin = coord_yll
       idfm%ymax = coord_yur
       idfm%nodata = nodata
       if (usexmask) then
-         allocate(idfm%x(ncol,nrow))
+        IF(.NOT.IDFALLOCATEX(IDFM))
+     1   stop 'cannote allocate memory for x array' 
+        !  !allocate(idfm%x(ncol,nrow))
          idfm%x = xmask
          do irow = 1, nrow
             do icol = 1, ncol
@@ -498,7 +519,9 @@ c declaration section
 c ------------------------------------------------------------------------------
       use lcdmodule
       use imod_utl, only: imod_utl_intersect_equi,
-     1                    imod_utl_intersect_nonequi
+     1                    imod_utl_intersect_nonequi,
+     1                    xa,ya,fa,ln,ca,ra,intersect_deallocate
+      use gwfmetmodule, only: cdelr, cdelc
       implicit none
 
 c function declaration
@@ -514,8 +537,8 @@ c local variables
       integer :: ret, lun, ios, mx, id, nid,
      1           i, ii, n, nn, m, l, icol, irow, iact
       real    :: x1, y1, x2, y2, xx1, yy1, xx2, yy2, tl, zl, z1, z2, 
-     1           zz1, zz2, dz
-      real, allocatable, dimension(:) :: xa, ya, ln, fa
+     1           dz !zz1, zz2
+
 
 c functions
       integer   cfn_getlun,
@@ -604,18 +627,14 @@ c read file
                y1 = yy1
                x2 = xx2
                y2 = yy2
-               IF(ilay.EQ.0)THEN; ZZ1=Z1; ZZ2=Z2; ENDIF
+!               IF(ilay.EQ.0)THEN; ZZ1=Z1; ZZ2=Z2; ENDIF
                if(lqd)then
-                  ok = imod_utl_intersect_equi(xmin,xmax,ymin,ymax,
-     1                    simcsize,x1,x2,y1,y2,mx,n,xa,ya,fa,ln,.true.)
+                call imod_utl_intersect_equi(xmin,xmax,ymin,ymax,
+     1                    simcsize,simcsize,x1,x2,y1,y2,n,.true.)
                else
-                  ok = imod_utl_intersect_nonequi(lcdelr,lcdelc,
-     1                  lnrow,lncol,x1,x2,y1,y2,mx,n,xa,ya,fa,ln,.true.)
+                call imod_utl_intersect_nonequi(cdelr,cdelc,nrow,ncol,
+     1                    x1,x2,y1,y2,n,.true.)
                endif
-               if(.not.ok) then
-                  ret=-16
-                  exit
-               end if
 
                IF(ilay.EQ.0)THEN
                 !## skip, probably a perfect-vertical segment
@@ -630,11 +649,11 @@ c read file
 !######fill result array
                nn = 0
                do l = 1, n
-                  icol=int(xa(l))
-                  irow=int(ya(l))
+                  icol=int(ca(l))
+                  irow=int(ra(l))
 
                   if(icol.ge.1.and.irow.ge.1.and.
-     1                icol.le.lncol.and.irow.le.lnrow) then
+     1                icol.le.ncol.and.irow.le.nrow) then
                      m = m + 1; nn = nn + 1
                      if (iact.eq.2) then
                         genpos(m,1) = icol
@@ -686,11 +705,7 @@ c close file
       close(lun)
 
 c clear memory
-      if(allocated(xa))deallocate(xa)
-      if(allocated(ya))deallocate(ya)
-      if(allocated(ln))deallocate(ln)
-      if(allocated(fa))deallocate(fa)
-
+      call intersect_deallocate()
 c assign function value
       rdrs_rddata_gen = ret
 
@@ -700,7 +715,8 @@ c end of program
 
       subroutine assign_layer(tlp,irow,icol,z1,z2)
 c modules
-      use global, only: nlay, nrow, ncol, delr, delc, cv, hcof, cc, cr
+      use global, only: nlay, nrow, ncol, delr, delc, cv, hcof, cc, cr,
+     1 kdsv
       use global, only: ibound, botm, lbotm
       use gwfmetmodule, only: coord_xll, coord_yll, time_cstring, ieq
       use imod_utl, only: IMOD_UTL_ST1CREATEIPF_GETTLP
@@ -727,11 +743,13 @@ c init
 c init
        kh = 0.; c = 0.; tp = 0.; bt = 0.
        do ilay = 1, nlay
+          tp(ilay) = botm(icol,irow,lbotm(ilay)-1)
+          bt(ilay) = botm(icol,irow,lbotm(ilay))
           if (ibound(icol,irow,ilay).gt.0) then
              if (ilay.lt.nlay) then
-                c(ilay) =
-     1          1./(delr(icol)*delc(irow))/(cv(icol,irow,ilay)+tiny)
+              c(ilay)=1.0/(cv(icol,irow,ilay)/(delr(icol)*delc(irow)))
              end if
+             kh(ilay)=kdsv(icol,irow,ilay)
              kh(ilay)=(cc(icol,irow,ilay)+cr(icol,irow,ilay))/2.0
              tp(ilay) = botm(icol,irow,lbotm(ilay)-1)
              bt(ilay) = botm(icol,irow,lbotm(ilay))

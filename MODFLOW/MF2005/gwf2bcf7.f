@@ -325,9 +325,9 @@ C8H-----CAPABILITY HAS BEEN INVOKED (IWDFLG NOT 0).
         END DO                                                          ! PKS
       END DO                                                            ! PKS
   200 CONTINUE      
-      call pest1alpha_grid('KD',cc,nrow,ncol,nlay)                      ! IPEST
-      call pest1alpha_grid('VC',cv,nrow,ncol,nlay-1)                    ! IPEST
-      if (iss.eq.0) call pest1alpha_grid('SC',sc1,nrow,ncol,nlay)       ! IPEST
+      call pest1alpha_grid('KD',cc,nrow,ncol,nlay,iout)                 ! IPEST
+      call pest1alpha_grid('VC',cv,nrow,ncol,nlay-1,iout)               ! IPEST
+      if (iss.eq.0) call pest1alpha_grid('SC',sc1,nrow,ncol,nlay,iout)  ! IPEST
 C
 C9------PREPARE AND CHECK BCF DATA.
       CALL SGWF2BCF7N(ISS)
@@ -1338,7 +1338,7 @@ C     ------------------------------------------------------------------
 C
       DOUBLE PRECISION HCNV
       REAL :: C, MAXC, TINY, MAXVCOND                                   ! DLT
-      PARAMETER( MAXC = 1.0E6,TINY=1.0E-20,MAXVCOND=1.0E6)              ! DLT
+      PARAMETER( MAXC = 1.0E8,TINY=1.0E-20,MAXVCOND=1.0E6)              ! DLT
 C     ------------------------------------------------------------------
 C
 C1------MULTIPLY VERTICAL LEAKANCE BY AREA TO MAKE CONDUCTANCE.

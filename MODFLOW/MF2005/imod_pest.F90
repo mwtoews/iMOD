@@ -1,4 +1,4 @@
-!!  Copyright (C) Stichting Deltares, 2005-2017.
+!!  Copyright (C) Stichting Deltares, 2005-2014.
 !!
 !!  This file is part of iMOD.
 !!
@@ -63,11 +63,10 @@ endif
 end subroutine pest1log
 
 !###====================================================================
-subroutine pest1alpha_grid(ptype,a,nrow,ncol,nlay,a2)
+subroutine pest1alpha_grid(ptype,a,nrow,ncol,nlay,iout,a2)
 !###====================================================================
 
-! modules
-use imod_utl, only: imod_utl_printtext,imod_utl_itos,imod_utl_rtos
+use imod_utl, only: imod_utl_printtext,imod_utl_itos,imod_utl_rtos,imod_utl_createdir
 use global, only: lipest, ibound
 
 #ifdef IPEST
@@ -77,10 +76,11 @@ use pestvar, only: param, pest_iter,lgrad,llnsrch,pest_igrad,iupestout
 implicit none
 
 ! arguments
-integer, intent(in) :: nrow, ncol, nlay
+integer, intent(in) :: nrow, ncol, nlay, iout
 real, dimension(ncol,nrow,nlay), intent(inout) :: a
 real, dimension(ncol,nrow,nlay), intent(in), optional :: a2
 character(len=2), intent(in) :: ptype
+CHARACTER(LEN=1024) :: FNAME,DIR
 
 ! parameters
 real, parameter :: tiny=1.0e-20
@@ -169,7 +169,7 @@ do i=1,size(param)
       do j=1,param(i)%nodes
          irow=param(i)%irow(j); icol=param(i)%icol(j)
          if(ibound(icol,irow,ils).ne.0)then
-           ppart             =a(icol,irow,ils)-param(i)%x(j)
+           ppart           =a(icol,irow,ils)-param(i)%x(j)
            a(icol,irow,ils)=ppart+param(i)%x(j)*fct
          endif
       enddo
@@ -275,6 +275,22 @@ end do
  ENDDO; ENDDO
 #endif 
 
+#ifdef IPEST
+ !## export only initially
+ if(PEST_IGRAD.eq.0)then
+  do i=1,size(param)
+   if (trim(param(i)%ptype).ne.trim(ptype)) cycle
+
+   DIR='.\pest\pest_parameters_c'//trim(imod_utl_itos(pest_iter))
+   CALL IMOD_UTL_CREATEDIR(DIR)
+   do ils=1,nlay
+    fname=trim(dir)//'\'//trim(ptype)//'_l'//trim(imod_utl_itos(ils))//'.idf'
+    CALL met1wrtidf(fname,a(:,:,ils),ncol,nrow,-999.0,iout)
+   enddo
+  enddo
+ endif
+#endif
+ 
 end subroutine
 
 #ifdef IPEST_PILOTPOINTS
@@ -427,11 +443,11 @@ do i=1,size(param)
    end select
 
    line=' * '//param(i)%ptype//' adjusted ('//trim(imod_utl_itos(nadj))//') with alpha='//trim(imod_utl_rtos(fct,'f',7))
-   if(kper.eq.1)then
+!   if(kper.eq.1)then
       call imod_utl_printtext(trim(line),-1,iupestout)
-   else
-      call imod_utl_printtext(trim(line),1)
-   endif
+!   else
+!      call imod_utl_printtext(trim(line),1)
+!   endif
 
 end do
 

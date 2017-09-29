@@ -231,8 +231,8 @@ C4------READ ANISOTROPY-FACTOR EN -HOEK
   300 CONTINUE
       nodata = -9999.
 
-      call pest1alpha_grid('AF',anifactor,nrow,ncol,nlay)               ! IPEST
-      call pest1alpha_grid('AA',aniangle,nrow,ncol,nlay,anifactor)      ! IPEST
+      call pest1alpha_grid('AF',anifactor,nrow,ncol,nlay,iout)               ! IPEST
+      call pest1alpha_grid('AA',aniangle,nrow,ncol,nlay,iout,anifactor)      ! IPEST
 
 ! removed anisotrophy in case for perched water table cells
       if (inpwt.gt.0) then
@@ -1101,14 +1101,20 @@ c ------------------------------------------------------------------------------
           kxy(icol,irow,ilay)=0.0
          else
           !## overrule angle in case factor is 1.0 - irrelevant in that case
-          if(fct(icol,irow,ilay).eq.1.0)angle(icol,irow,ilay)=0.0
-          phi=((360.-angle(icol,irow,ilay))*2.0*3.14159)/360.0
-          k1 =kd(icol,irow,ilay)*fct(icol,irow,ilay)
-          k2 =kd(icol,irow,ilay)
-          kxx(icol,irow,ilay)=k1*cos(phi)**2.0+k2*sin(phi)**2.0
-          kxy(icol,irow,ilay)=(k1-k2)*cos(phi)*sin(phi)
-          kyy(icol,irow,ilay)=k1*sin(phi)**2.0+k2*cos(phi)**2.0
+          if(fct(icol,irow,ilay).eq.1.0)then !eq.1.0)then
+!           angle(icol,irow,ilay)=0.0
+           kxx(icol,irow,ilay)=kd(icol,irow,ilay) !0.0
+           kyy(icol,irow,ilay)=kd(icol,irow,ilay) !0.0
+           kxy(icol,irow,ilay)=0.0          
+          else
+           phi=((360.-angle(icol,irow,ilay))*2.0*3.14159)/360.0
+           k1 =kd(icol,irow,ilay)*fct(icol,irow,ilay)
+           k2 =kd(icol,irow,ilay)
+           kxx(icol,irow,ilay)=k1*cos(phi)**2.0+k2*sin(phi)**2.0
+           kxy(icol,irow,ilay)=(k1-k2)*cos(phi)*sin(phi)
+           kyy(icol,irow,ilay)=k1*sin(phi)**2.0+k2*cos(phi)**2.0
          endif
+        endif
         end do
        end do 
       end do

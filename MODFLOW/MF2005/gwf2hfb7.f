@@ -54,11 +54,13 @@ c   If not, see <http://water.usgs.gov/software/help/notice/>.
         REAL,    SAVE, DIMENSION(:,:), POINTER   ::HFB
         LOGICAL, SAVE, POINTER  ::LHFBFACT                              ! DLT
         LOGICAL, SAVE, POINTER  ::LHFBRESIS                             ! DLT
+        LOGICAL, SAVE, POINTER  ::LHFBSYSTEM                            ! DLT
       TYPE GWFHFBTYPE
         INTEGER, POINTER  ::MXHFB,NHFB,IPRHFB,NHFBNP,NPHFB,IHFBPB
         REAL,    DIMENSION(:,:), POINTER   ::HFB
         LOGICAL, POINTER  ::LHFBFACT                                    ! DLT
         LOGICAL, POINTER  ::LHFBRESIS                                   ! DLT
+        LOGICAL, POINTER  ::LHFBSYSTEM                                  ! DLT
       END TYPE
       TYPE(GWFHFBTYPE), SAVE    ::GWFHFBDAT(10)
       END MODULE GWFHFBMODULE
@@ -76,7 +78,7 @@ C     ------------------------------------------------------------------
       USE GLOBAL,      ONLY:NCOL,NROW,NLAY,LAYHDT,CR,CC,BOTM,LBOTM,
      1                      DELR,DELC,IOUT
       USE GWFHFBMODULE,ONLY:MXHFB,NHFB,IPRHFB,NHFBNP,NPHFB,IHFBPB,HFB,
-     1                      LHFBFACT,LHFBRESIS                          ! DLT
+     1                      LHFBFACT,LHFBRESIS,LHFBSYSTEM               ! DLT
 C
       INTEGER INHFB, MXACTFB
       CHARACTER*16 AUX(1)
@@ -88,6 +90,7 @@ C1------Allocate scalar data.
       ALLOCATE(MXHFB,NHFB,IPRHFB,NHFBNP,NPHFB,IHFBPB)
       ALLOCATE(LHFBFACT)                                                ! DLT
       ALLOCATE(LHFBRESIS)                                               ! DLT
+      ALLOCATE(LHFBSYSTEM)                                              ! DLT
 C
 C2------IDENTIFY PACKAGE.
       WRITE(IOUT,1) INHFB
@@ -111,6 +114,7 @@ C4------LOOK FOR NOPRINT OPTION.
       IPRHFB = 1
       LHFBFACT  = .FALSE.                                               ! DLT
       LHFBRESIS = .FALSE.                                               ! DLT
+      LHFBSYSTEM = .FALSE.                                              ! DLT
    10 CALL URWORD(LINE,LLOC,ISTART,ISTOP,1,N,R,IOUT,INHFB)
       IF(LINE(ISTART:ISTOP).EQ.'NOPRINT') THEN
         WRITE(IOUT,3)
@@ -127,6 +131,10 @@ C4------LOOK FOR NOPRINT OPTION.
         LHFBRESIS = .TRUE.                                              ! DLT
         WRITE(IOUT,'(10x,a,1x,a)') 'Applying resistance instead of',    ! DLT
      1        'hydraulic characteristic'                                ! DLT
+        GO TO 10                                                        ! DLT
+      ELSE IF(LINE(ISTART:ISTOP).EQ.'SYSTEM') THEN                      ! DLT
+        LHFBSYSTEM = .TRUE.                                             ! DLT
+        WRITE(IOUT,'(10x,a,1x,a)') 'Reading System Number'              ! DLT
         GO TO 10                                                        ! DLT
       END IF                                                            ! DLT
 C
@@ -166,9 +174,9 @@ C7------READ PARAMETER DEFINITIONS (ITEMS 2 AND 3)
      &         NCOL,NROW,NLAY,IPRHFB)
           CALL SGWF2HFB7CK(LSTBEG,LSTSUM-1)
    20   CONTINUE
-        ihfbfact = 0
-        if (lhfbfact) ihfbfact = 1
-        call pest1alpha_list('HF',nlst,hfb,7,mxhfb,ihfbfact)            ! IPEST
+!        ihfbfact = 0
+!        if (lhfbfact) ihfbfact = 1
+!        call pest1alpha_list('HF',nlst,hfb,7,mxhfb,ihfbfact)            ! IPEST
       ENDIF
 C
 C8------READ BARRIERS NOT DEFINED BY PARAMETERS (ITEM 4)
@@ -203,6 +211,8 @@ C11-----READ AND ACTIVATE AN HFB PARAMETER (ITEM 6)
   650     CONTINUE
         ENDIF
       ENDIF
+        ihfbfact=1  
+        call pest1alpha_list('HF',MXHFB,hfb,7,mxhfb,ihfbfact)            ! IPEST
 C
 C12-----MODIFY HORIZONTAL BRANCH CONDUCTANCES FOR CONSTANT T LAYERS.
       CALL SGWF2HFB7MC()
@@ -228,7 +238,7 @@ C     ------------------------------------------------------------------
       USE GLOBAL,      ONLY:NCOL,NROW,HNEW,LAYHDT,CR,CC,BOTM,LBOTM,
      1                      DELR,DELC
       USE GWFHFBMODULE,ONLY:NHFB,HFB,
-     1                      LHFBFACT                                    ! DLT
+     1                      LHFBFACT,LHFBRESIS                          ! DLT
 C     ------------------------------------------------------------------
 C
 C1------Set pointers to the specified grid.
@@ -292,9 +302,18 @@ C10-----MODIFY CR(J1,I1,K) TO ACCOUNT FOR BARRIER.
                 IF(HCDW.EQ.0.0)THEN                                     ! DLT
                   CR(J1,I1,K)=0.0                                       ! DLT
                 ELSE                                                    ! DLT
-                  THKAVG = MAX(0.,THKAVG)                               ! DLT
-                  !## not to become more than original                  ! DLT
-                  CR(J1,I1,K)=MIN(CR(J1,I1,K),DELC(I1)*THKAVG/HCDW)     ! DLT
+                  THKAVG = MAX(0.0,THKAVG)                              ! DLT
+                  !## current resistance
+                  C=THKAVG*(DELC(I1)/CR(J1,I1,K))
+!                  !## check whether fault is unconfined - reduce otherwise
+!                  THKFRAC=THKAQF/THKAVG
+!                  IF(THKFRAC.LT.1.0)HCDW=1.0/(1.0/HCDW*THKFRAC**4.0)
+                  !## add fault resistance to current resistance
+                  C=C+HCDW
+                  !## compute new conductance
+                  CR(J1,I1,K)=DELC(I1)*THKAVG/C
+!                  !## not to become more than original                  ! DLT
+!                  CR(J1,I1,K)=MIN(CR(J1,I1,K),DELC(I1)*THKAVG/HCDW)     ! DLT
                 ENDIF                                                   ! DLT
               END IF                                                    ! DLT
             ENDIF
@@ -334,9 +353,18 @@ C15-----MODIFY CC(J1,I1,K) TO ACCOUNT FOR BARRIER.
                 IF(HCDW.EQ.0.0)THEN                                     ! DLT
                   CC(J1,I1,K)=0.0                                       ! DLT
                 ELSE                                                    ! DLT
-                  THKAVG = MAX(0.,THKAVG)                               ! DLT
-                  !## not to become more than original                  ! DLT
-                  CC(J1,I1,K)=MIN(CC(J1,I1,K),DELR(J1)*THKAVG/HCDW)     ! DLT
+                  THKAVG = MAX(0.0,THKAVG)                              ! DLT
+                  !## current resistance
+                  C=THKAVG*(DELR(J1)/CC(J1,I1,K))
+!                  !## check whether fault is unconfined - reduce otherwise
+!                  THKFRAC=THKAQF/THKAVG
+!                  IF(THKFRAC.LT.1.0)HCDW=1.0/(1.0/HCDW*THKFRAC**4.0)
+                  !## add fault resistance to current resistance
+                  C=C+HCDW
+                  !## compute new conductance
+                  CC(J1,I1,K)=DELR(J1)*THKAVG/C
+!                  !## not to become more than original                  ! DLT
+!                  CC(J1,I1,K)=MIN(CC(J1,I1,K),DELR(J1)*THKAVG/HCDW)     ! DLT
                 ENDIF                                                   ! DLT
               END IF                                                    ! DLT
 
@@ -401,17 +429,25 @@ C7------IF CR(J1,I1,K) NOT 0, BOTH CELLS ARE ACTIVE.
 C
 C8------MODIFY CR(J1,I1,K) TO ACCOUNT FOR BARRIER.
                 IF (.NOT.LHFBFACT .AND. .NOT.LHFBRESIS) THEN            ! DLT
+                  IF(TDW.LT.0.0)STOP 'TDW.LT.0.0'
                   CR(J1,I1,K) = TDW*CR(J1,I1,K)*DELC(I1)/
      &                          (TDW*DELC(I1)+CR(J1,I1,K))
                 ELSE IF (LHFBFACT) THEN                                 ! DLT
+                 IF(TDW.LT.0.0)STOP 'TDW.LT.0.0'
                   CR(J1,I1,K) = TDW*CR(J1,I1,K)                         ! DLT
                 ELSEIF (LHFBRESIS) THEN                                 ! DLT
                   IF(TDW.EQ.0.0)THEN                                    ! DLT
                     CR(J1,I1,K)=0.0                                     ! DLT
                   ELSE                                                  ! DLT
-                    THKAVG = MAX(0.,THKAVG)                             ! DLT
-                    !## not to become more than original                ! DLT
-                    CR(J1,I1,K)=MIN(CR(J1,I1,K),DELC(I1)*THKAVG/TDW)    ! DLT
+                    THKAVG = MAX(0.0,THKAVG)                            ! DLT
+                    !## add current resistance only positive values
+                    C=0.0; IF(TDW.GT.0.0)C=THKAVG*(DELC(I1)/CR(J1,I1,K))
+                    !## add fault resistance to current resistance
+                    C=C+ABS(TDW)
+                    !## compute new conductance
+                    CR(J1,I1,K)=DELC(I1)*THKAVG/C
+!                    !## not to become more than original                ! DLT
+!                    CR(J1,I1,K)=MIN(CR(J1,I1,K),DELC(I1)*THKAVG/TDW)    ! DLT
                   ENDIF                                                 ! DLT
                 END IF
               ENDIF
@@ -435,17 +471,25 @@ C12-----IF CC(J1,I1,K) NOT 0, BOTH CELLS ARE ACTIVE.
 C
 C13-----MODIFY CC(J1,I1,K) TO ACCOUNT FOR BARRIER.
                 IF (.NOT.LHFBFACT .AND. .NOT.LHFBRESIS) THEN            ! DLT
+                  IF(TDW.LT.0.0)STOP 'TDW.LT.0.0'
                   CC(J1,I1,K) = TDW*CC(J1,I1,K)*DELR(J1)/
      &                          (TDW*DELR(J1)+CC(J1,I1,K))
                 ELSE IF (LHFBFACT) THEN                                 ! DLT
+                  IF(TDW.LT.0.0)STOP 'TDW.LT.0.0'
                   CC(J1,I1,K) = TDW*CC(J1,I1,K)                         ! DLT
                 ELSEIF (LHFBRESIS) THEN                                 ! DLT
                   IF(TDW.EQ.0.0)THEN                                    ! DLT
                     CC(J1,I1,K)=0.0                                     ! DLT
                   ELSE                                                  ! DLT
-                    THKAVG = MAX(0.,THKAVG)                             ! DLT
-                    !## not to become more than original                ! DLT
-                    CC(J1,I1,K)=MIN(CC(J1,I1,K),DELR(J1)*THKAVG/TDW)    ! DLT
+                    THKAVG = MAX(0.0,THKAVG)                            ! DLT
+                    !## add current resistance only positive values
+                    C=0.0; IF(TDW.GT.0.0)C=THKAVG*(DELR(J1)/CC(J1,I1,K))
+                    !## add fault resistance to current resistance
+                    C=C+ABS(TDW)
+                    !## compute new conductance
+                    CC(J1,I1,K)=DELR(J1)*THKAVG/C
+!                    !## not to become more than original                ! DLT
+!                    CC(J1,I1,K)=MIN(CC(J1,I1,K),DELR(J1)*THKAVG/TDW)    ! DLT
                   ENDIF                                                 ! DLT
                 END IF                                                  ! DLT
               ENDIF
@@ -515,6 +559,7 @@ C     ------------------------------------------------------------------
 
       CHARACTER*(*) LABEL
       real, dimension(:,:), pointer :: hfb                              ! DLT
+      integer :: iz
       CHARACTER*200 LINE,FNAME
       CHARACTER*1 DASH(120)
       real, dimension(:,:), pointer :: hfbtmp                           ! DLT
@@ -609,6 +654,14 @@ C5------Read the non-optional values from a line.
       CALL URWORD(LINE,LLOC,ISTART,ISTOP,2,I2,R,IOUT,IN)
       CALL URWORD(LINE,LLOC,ISTART,ISTOP,2,J2,R,IOUT,IN)
       CALL URWORD(LINE,LLOC,ISTART,ISTOP,3,IDUM,FACTOR,IOUT,IN)
+       call urword(line,lloc,istart,istop,2,IZ,R,iout,in)
+       HFB(1,II) = K
+       HFB(2,II) = I1
+       HFB(3,II) = J1
+       HFB(4,II) = I2
+       HFB(5,II) = J2
+       HFB(6,II) = FACTOR*SFAC
+       HFB(7,II) = REAL(IZ) !0.0
       else
          k      = int(hfbtmp(1,jj))                                     ! LCD
          i1     = int(hfbtmp(2,jj))                                     ! LCD
@@ -783,6 +836,7 @@ C
         DEALLOCATE(GWFHFBDAT(IGRID)%HFB)
         DEALLOCATE(GWFHFBDAT(IGRID)%LHFBFACT)                           ! DLT
         DEALLOCATE(GWFHFBDAT(IGRID)%LHFBRESIS)                          ! DLT
+        DEALLOCATE(GWFHFBDAT(IGRID)%LHFBSYSTEM)                         ! DLT
 C
       RETURN
       END
@@ -799,6 +853,7 @@ C
         HFB=>GWFHFBDAT(IGRID)%HFB
         LHFBFACT=>GWFHFBDAT(IGRID)%LHFBFACT                             ! DLT
         LHFBRESIS=>GWFHFBDAT(IGRID)%LHFBRESIS                           ! DLT
+        LHFBSYSTEM=>GWFHFBDAT(IGRID)%LHFBSYSTEM                         ! DLT
 C
       RETURN
       END
@@ -815,6 +870,6 @@ C
         GWFHFBDAT(IGRID)%HFB=>HFB
         GWFHFBDAT(IGRID)%LHFBFACT=>LHFBFACT                             ! DLT
         GWFHFBDAT(IGRID)%LHFBRESIS=>LHFBRESIS                           ! DLT
-C
+        GWFHFBDAT(IGRID)%LHFBSYSTEM=>LHFBSYSTEM                         ! DLT
       RETURN
       END
