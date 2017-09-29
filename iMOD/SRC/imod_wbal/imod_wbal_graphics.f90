@@ -5,6 +5,7 @@ MODULE MOD_WBAL_GRAPHICS
 !     programma voor de visuallisatie van een waterbalans (een zogenaamde illustratieve plot)
 
 USE WINTERACTER
+USE MOD_UTL, ONLY : UTL_GETFORMAT
 USE MOD_IDF_PAR, ONLY : IDFOBJ
 
 CONTAINS
@@ -57,6 +58,7 @@ CONTAINS
       DY=0.05
       SUMIN  =SUM(Q(1:24,1))
       SUMOUT =SUM(Q(1:24,2))
+
       IF(INDEX(STRUNIT,'%').NE.0) THEN
 !        CALCULATE RELATIVE FLOWS IN %
          Q(:,1)=Q(:,1)/SUMIN*100      	
@@ -109,7 +111,7 @@ CONTAINS
 
 !     PLOT separating layers
       IF(ISATURATED.EQ.1) THEN
-!         write(9999,*) q(9,1),q(9,2)
+
          CALL IGRFILLPATTERN(4,4,4)
          CALL IGRCOLOURN(WRGB(190,215,240))
          CALL IGRRECTANGLE((0.2-dx)*B,0.18*H,(0.8+dx)*B,0.82*H)
@@ -132,7 +134,6 @@ CONTAINS
             CALL IGRRECTANGLE((0.2-dx)*B,0.78*H,(0.8+dx)*B,0.82*H)
          ENDIF
       ENDIF
-
       CALL CSIZE(CS,DW,DH,IPLOT)
       CALL WGRTEXTFONT(102,1,DW,DH)
       CALL PLOTDRAIN(Q(1,1),Q(1,2),0.22,0.75,0.015,QTXT(1),B,H)                                ! PLOT DRN+OLF FLOW
@@ -157,7 +158,7 @@ CONTAINS
             DO JJ=1,7
                IF(STRDUM(JJ:JJ).EQ.' ') IPOS=JJ+1
             ENDDO
-            WRITE(REGNAME(II+1:II+7-IPOS+2),'(A,A))') STRDUM(IPOS:7),','
+            WRITE(REGNAME(II+1:II+7-IPOS+2),'(A,A)') STRDUM(IPOS:7),','
             II=II+7-IPOS+2
          ENDDO
          II=LEN_TRIM(REGNAME); REGNAME(II:II)=' '
@@ -166,7 +167,7 @@ CONTAINS
          DO JJ=1,7
             IF(STRDUM(JJ:JJ).EQ.' ') IPOS=JJ+1
          ENDDO
-         WRITE(REGNAME(II+1:II+7-IPOS+2),'(A,A))') STRDUM(IPOS:7),','
+         WRITE(REGNAME(II+1:II+7-IPOS+2),'(A,A)') STRDUM(IPOS:7),','
          II=LEN_TRIM(REGNAME); REGNAME(II:II)=' '
       ENDIF
 
@@ -232,7 +233,7 @@ CONTAINS
       CALL VTERM2(Q(12,1),Q(12,2),0.62, 0.64, 0.8,   QTXT(12),B,H,2,1)       ! PLOT EVT FLOW
       CALL VTERM2(Q(13,1),Q(13,2),0.68, 0.70, 0.8,   QTXT(13),B,H,2,1)       ! PLOT CAP FLOW
       CALL VTERM2(Q(10,1), Q(10,2), 0.74, 0.76, 0.8, QTXT(9), B,H,2,1)       ! PLOT FLF FLOW (FLOW TOP FACE)
-      CALL VTERM2(Q(9,1),Q(9,2),0.49, 0.51, 0.22,     QTXT(10),B,H,3,0)       ! PLOT FLF FLOW (FLOW LOWER FACE)
+      CALL VTERM2(Q(9,1),Q(9,2),0.49, 0.51, 0.22,    QTXT(10),B,H,3,0)      ! PLOT FLF FLOW (FLOW LOWER FACE)
 
 !     *********************UNSATURATED*********************
       CALL IGRAREA(0.0,0.50+dy,1.0,0.95+dy)
@@ -519,10 +520,12 @@ CONTAINS
       REAL,INTENT(IN) :: X,Y,VALUE
       CHARACTER(LEN=*),INTENT(IN) :: ITEM
       INTEGER :: ILAST
-      CHARACTER(LEN=8) :: FMT
+      CHARACTER(LEN=15) :: FMT
       CHARACTER(LEN=10) :: STR
-
-      FMT=MAKEFMT(VALUE)
+    
+!      FMT=MAKEFMT(VALUE)//'       '
+      FMT=UTL_GETFORMAT(VALUE)
+      
       CALL IGRCOLOURN(WRGB(0,0,0))
       IF(INDEX(FMT,'I10').GT.0) THEN
          WRITE(STR,FMT) INT(VALUE)
@@ -939,7 +942,6 @@ CONTAINS
 
       END SUBROUTINE MAKESQUAREWINDOW
 
-     
 END MODULE MOD_WBAL_GRAPHICS
 
 

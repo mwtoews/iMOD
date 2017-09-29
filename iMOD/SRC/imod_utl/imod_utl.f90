@@ -136,9 +136,7 @@ CONTAINS
         TOP(ILL)=BOT(ILL-1)
         IF(ILL.NE.ILL2)BOT(ILL)=TOP(ILL)-MINTHICKNESS
        ENDDO
-       TT =0.0; MT =0.0; ILL1=0 !ILL2+1
-!      ELSE
-!       MT=MT+MINTHICKNESS
+       TT =0.0; MT =0.0; ILL1=0
       ENDIF
      ENDIF
     ENDIF    
@@ -149,9 +147,6 @@ CONTAINS
   !## finished
   IF(IL2.EQ.NLAY)EXIT
  ENDDO
- 
-! !## get thickness of aquifers
-! TH=0.0; DO ILAY=1,NLAY; IF(BND(ILAY).NE.0)TH(ILAY)=TOP(ILAY)-BOT(ILAY); ENDDO
 
  !## correct permeabilities for aquifers
  DO ILAY=1,NLAY

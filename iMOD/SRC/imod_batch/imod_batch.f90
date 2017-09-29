@@ -2980,7 +2980,7 @@ CONTAINS
    DO ILAY=1,NLAY  ; VA(ILAY)=KVA(ILAY)%X(ICOL,IROW); ENDDO
    DO ILAY=1,NLAY-1; VK(ILAY)=KVV(ILAY)%X(ICOL,IROW); ENDDO
 !   if(irow.eq.15.and.icol.eq.317)then
-   if(irow.eq.4.and.icol.eq.519)then
+   if(irow.eq.503.and.icol.eq.185)then
    write(*,*)
    endif
    CALL UTL_MINTHICKNESS(TP,BT,HK,VK,VA,TP_BU,BT_BU,HK_BU,VK_BU,VA_BU,IB,TH,MINTHICKNESS)
