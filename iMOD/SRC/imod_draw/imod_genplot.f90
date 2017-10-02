@@ -801,7 +801,7 @@ CONTAINS
  !###======================================================================
  IMPLICIT NONE
  INTEGER,INTENT(IN) :: IPLOT,IPOLYGON
- INTEGER :: IOS,MAXP,N,ID,JL,IU,NV,NL
+ INTEGER :: IOS,MAXP,N,ID,JL,IU,NV,NL,I
  LOGICAL :: LEX
  CHARACTER(LEN=52) :: CID 
  REAL :: TWIDTH,THEIGHT,XP,YP,RADIUS
@@ -858,7 +858,11 @@ CONTAINS
   READ(IU,'(A)',IOSTAT=IOS) CID
   IF(IOS.NE.0)EXIT
   CID=ADJUSTL(CID)
-
+  I=INDEX(CID,',')
+  IF(I.NE.0)THEN
+   CID=CID(:I-1)
+  ENDIF
+  
 !  READ(STRING,'(A)',IOSTAT=IOS) CID !,XP,YP
   
   IOS=-1 !## nooit point 
@@ -930,8 +934,16 @@ CONTAINS
 
    !## if at least one point of a polygon is inside the map, then draw the polygon
    IF(LEX)THEN
+    IF(CID.EQ.'8')THEN
+    WRITE(*,*)
+    ENDIF
+
     !## get proper label for id
-    CALL UTL_GENLABELSGET(CID,JL,VAR)
+    CALL UTL_GENLABELSGET(TRIM(CID),JL,VAR)
+    IF(JL.GT.NL)THEN
+     WRITE(*,*)
+     JL=0
+    ENDIF
     !## get colour of polygon (e.g. grey or based upon selected attribute)
     CALL IGRCOLOURN(GENLABELGETCOLOR(JL,IPLOT,VAR))
 

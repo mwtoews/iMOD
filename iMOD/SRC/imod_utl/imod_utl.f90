@@ -2024,8 +2024,8 @@ CONTAINS
  SC=1  !## search column
 
  !## evaluate the first
- DO JL=1,M
-  STRING=VARIABLE(SC,JL-1)
+ DO JL=1,M-1
+  STRING=VARIABLE(SC,JL) !-1)
   !## math found
   J=INDEX(TRIM(UTL_CAP(CID,'U')),',')
   IF(J.GT.0)THEN

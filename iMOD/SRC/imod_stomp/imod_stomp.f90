@@ -25,6 +25,7 @@ MODULE MOD_STOMP
 USE MOD_STOMP_PAR
 USE MOD_IDF, ONLY : IDFDEALLOCATE,IDFCOPY,IDFREADSCALE,IDFREAD,IDFNULLIFY,UTL_WRITE_FREE_ROW,IDFFILLSXSY
 USE MOD_UTL, ONLY : UTL_IDFSNAPTOGRID_LLC,UTL_READINITFILE,ITOS,UTL_GETUNIT,UTL_CREATEDIR,RTOS,ITOS
+USE MOD_OSD, ONLY : OSD_GETENV,OSD_DATE_AND_TIME
 CHARACTER(LEN=256),PRIVATE :: LINE
 
 CONTAINS
@@ -39,8 +40,13 @@ CONTAINS
  
  IU=UTL_GETUNIT(); OPEN(IU,FILE=TRIM(OUTPUTFILE)//'\input',STATUS='UNKNOWN')
  
+ CALL STOMP_WRITE_SIM_TITLE(IU)
+ CALL STOMP_WRITE_SOL_CNTRL(IU)
  CALL STOMP_WRITE_GRID(IU)
  CALL STOMP_WRITE_INACTIVE(IU)
+ CALL STOMP_WRITE_SAT_FUNC(IU)
+ CALL STOMP_WRITE_AQ_RE_PERM(IU)
+ CALL STOMP_WRITE_GAS_REL_PERM(IU)
  
  CLOSE(IU)
  
@@ -49,12 +55,99 @@ CONTAINS
  END FUNCTION STOMP_SAVEINPUT
 
  !###======================================================================
+ SUBROUTINE STOMP_WRITE_SIM_TITLE(IU)
+ !###======================================================================
+ IMPLICIT NONE
+ INTEGER,INTENT(IN) :: IU 
+ CHARACTER(LEN=52) :: DATESTRING
+ 
+ WRITE(IU,'(A)') ''
+ WRITE(IU,'(A)') '#-------------------------------------------------------'
+ WRITE(IU,'(A)') '~Simulation Title Card'
+ WRITE(IU,'(A)') '#-------------------------------------------------------'
+ WRITE(IU,'(A)') '1,'                              !## version number
+ WRITE(IU,'(A)') 'kISMET Well Temperatures,'       !## simulation title
+ WRITE(IU,'(A)') TRIM(OSD_GETENV('USERNAME'))//',' !## username
+ WRITE(IU,'(A)') 'DELTARES,'                       !## company name
+ CALL OSD_DATE_AND_TIME(DATEANDTIME=DATESTRING) 
+ WRITE(IU,'(A)') DATESTRING(:11)//','              !## input creation date
+ WRITE(IU,'(A)') DATESTRING(13:20)//','            !## input creation time
+ WRITE(IU,'(A)') '0,'                              !## number of simulation note lines
+! WRITE(IU,'(A)') 'Model of the kISMET Well Temperatures' !## simulation note
+
+ END SUBROUTINE STOMP_WRITE_SIM_TITLE
+
+ !###======================================================================
+ SUBROUTINE STOMP_WRITE_SOL_CNTRL(IU)
+ !###======================================================================
+ IMPLICIT NONE
+ INTEGER,INTENT(IN) :: IU 
+
+ WRITE(IU,'(A)') ''
+ WRITE(IU,'(A)') '#-------------------------------------------------------'
+ WRITE(IU,'(A)') '~Solution Control Card'
+ WRITE(IU,'(A)') '#-------------------------------------------------------'
+ WRITE(IU,'(A)') 'Normal,'
+ WRITE(IU,'(A)') 'STOMP-GT,'
+ WRITE(IU,'(A)') '1,'
+ WRITE(IU,'(A)') '0.0,day,20.0,yr,0.01,sec,50,day,1.25,16,1.e-06,'
+ WRITE(IU,'(A)') '10000,'
+ WRITE(IU,'(A)') 'Variable Aqueous Diffusion,'
+ WRITE(IU,'(A)') 'Variable Gas Diffusion,'
+ WRITE(IU,'(A)') '0,'
+
+ END SUBROUTINE STOMP_WRITE_SOL_CNTRL
+
+ !###======================================================================
+ SUBROUTINE STOMP_WRITE_SAT_FUNC(IU)
+ !###======================================================================
+ IMPLICIT NONE
+ INTEGER,INTENT(IN) :: IU 
+
+ WRITE(IU,'(A)') ''
+ WRITE(IU,'(A)') '#-------------------------------------------------------'
+ WRITE(IU,'(A)') '~Saturation Function Card'
+ WRITE(IU,'(A)') '#-------------------------------------------------------'
+ WRITE(IU,'(A)') 'Poorman,van Genuchten w/Webb,0.186,1/m,1.529,0.06,0.346,,'
+ 
+ END SUBROUTINE STOMP_WRITE_SAT_FUNC
+ 
+ !###======================================================================
+ SUBROUTINE STOMP_WRITE_AQ_RE_PERM(IU)
+ !###======================================================================
+ IMPLICIT NONE
+ INTEGER,INTENT(IN) :: IU 
+
+ WRITE(IU,'(A)') ''
+ WRITE(IU,'(A)') '#-------------------------------------------------------'
+ WRITE(IU,'(A)') '~Aqueous Relative Permeability Card'
+ WRITE(IU,'(A)') '#-------------------------------------------------------'
+ WRITE(IU,'(A)') 'Poorman,Mualem,,'
+
+ END SUBROUTINE STOMP_WRITE_AQ_RE_PERM
+
+ !###======================================================================
+ SUBROUTINE STOMP_WRITE_GAS_REL_PERM(IU)
+ !###======================================================================
+ IMPLICIT NONE
+ INTEGER,INTENT(IN) :: IU 
+
+ WRITE(IU,'(A)') ''
+ WRITE(IU,'(A)') '#-------------------------------------------------------'
+ WRITE(IU,'(A)') '~Gas Relative Permeability Card'
+ WRITE(IU,'(A)') '#-------------------------------------------------------'
+ WRITE(IU,'(A)') 'Poorman,Mualem,,'
+ 
+ END SUBROUTINE STOMP_WRITE_GAS_REL_PERM
+
+ !###======================================================================
  SUBROUTINE STOMP_WRITE_INACTIVE(IU)
  !###======================================================================
  IMPLICIT NONE
  INTEGER,INTENT(IN) :: IU 
  INTEGER :: JU,IROW,ICOL,ILAY
  
+ WRITE(IU,'(A)') ''
  WRITE(IU,'(A)') '#-------------------------------------------------------'
  WRITE(IU,'(A)') '~Inactive Nodes Card'
  WRITE(IU,'(A)') '#-------------------------------------------------------'
@@ -83,6 +176,7 @@ CONTAINS
  DATA IY/2,2,1,1,2,2,1,1/
  DATA IZ/1,1,1,1,2,2,2,2/
   
+ WRITE(IU,'(A)') ''
  WRITE(IU,'(A)') '#-------------------------------------------------------'
  WRITE(IU,'(A)') '~Grid Card'
  WRITE(IU,'(A)') '#-------------------------------------------------------'

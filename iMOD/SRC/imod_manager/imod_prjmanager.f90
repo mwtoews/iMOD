@@ -5476,9 +5476,12 @@ TOPICLOOP: DO ITOPIC=1,MAXTOPICS
  CALL UTL_CREATEDIR(TRIM(DIR)//'\'//CPCK//'7')
 
  CALL PMANAGER_SAVEMF2005_ALLOCATEPCK(NLAY)
+
+ NP=0
  
  DO IPER=1,NPER
-  NP=0
+  !## reset only for isg to riv conversion
+  IF(ITOPIC.EQ.29)NP=0
 
   !## get appropriate stress-period to store in runfile   
   KPER=PMANAGER_GETCURRENTIPER(IPER,ITOPIC,ITIME,JTIME)
