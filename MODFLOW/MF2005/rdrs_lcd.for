@@ -81,7 +81,6 @@ c
 c declaration section
 c ------------------------------------------------------------------------------
       use imod_utl, only: imod_utl_openasc
-      use gwfmetmodule, only: cdelr,cdelc
       use lcdmodule, only: genip, genpos, lncol, lnrow, lcdelr,lcdelc
 
       implicit none
@@ -149,7 +148,10 @@ c allocate ipc
        call pks7mpifname(fname,iflen)   
        fname = trim(fname)//'.gen'   
        call imod_utl_openasc(lun(ilay),fname,'w')
-      write(fname,'(a,i3.3,a)') 'hfb_l',ilay,'.dat'
+       write(fname,'(a,i2.2)') 'hfb_l',ilay
+       iflen = len_trim(fname)
+       call pks7mpifname(fname,iflen)   
+       fname = trim(fname)//'.dat'   
        call imod_utl_openasc(dun(ilay),fname,'w')
        WRITE(dun(ilay),'(A)') 'no,confined_resis,unconfined_resis,fracti
      1on,system'
@@ -203,7 +205,7 @@ c count number of hfb and fill
                 IR1=GENPOS(il-1,2); IR2=GENPOS(il  ,2)
                 IP1=GENPOS(il-1,4); IP2=GENPOS(il  ,4)
 
-              CALL HFBGETFACES(IC1,IC2,IR1,IR2,IP1,IP2,IPC,NROW,NCOL)
+              CALL HFBGETFACES(IC1,IC2,IR1,IR2,IP1,IP2,IPC,LNROW,LNCOL)
 
               !## get top/bottom elevations on grid
               IF(ilay.EQ.0)THEN
@@ -230,10 +232,10 @@ c count number of hfb and fill
              IL1=ilay; IL2=IL1
             ENDIF
 
-            do irow = 1, nrow
-             do icol = 1, ncol
+            do irow = 1, lnrow
+             do icol = 1, lncol
               !## place horizontal wall
-              if (irow.lt.nrow) then
+              if (irow.lt.lnrow) then
                if(ipc(icol,irow,2).eq.int(1,1)) then
                    
                 !## x-direction
@@ -241,7 +243,7 @@ c count number of hfb and fill
                  Z=-1.0
                  IF(ilay.EQ.0)THEN   
                   Z=HFB1EXPORT_GETDZ(TF,BF,ICOL,IROW,ICOL,IROW+1,NODA
-     1TA,jLAY,NCOL,NROW)                  
+     1TA,jLAY,LNCOL,LNROW)                  
                  ENDIF
 
                  !## skip fault on side of model or less than 0.0 fraction
@@ -267,7 +269,7 @@ c count number of hfb and fill
               end if
                  
               !## place vertical wall
-              if (icol.lt.ncol) then
+              if (icol.lt.lncol) then
                if(ipc(icol,irow,1).eq.int(1,1)) then
                    
                 !## y-direction
@@ -276,7 +278,7 @@ c count number of hfb and fill
                  Z=-1.0
                  IF(ilay.EQ.0)THEN  
                   Z=HFB1EXPORT_GETDZ(TF,BF,ICOL,IROW,ICOL+1,IROW,NODA
-     1TA,jLAY,NCOL,NROW)                  
+     1TA,jLAY,LNCOL,LNROW)                  
                  ENDIF
 
                  !## skip fault on side of model or less than 0.0 fraction
@@ -313,8 +315,8 @@ c count number of hfb and fill
       end do ! iact
 
 !    construct final fault list per model layer
-      allocate(fdz(ncol,nrow),res(ncol,nrow))
-      allocate(sys(ncol,nrow))
+      allocate(fdz(lncol,lnrow),res(lncol,lnrow))
+      allocate(sys(lncol,lnrow))
 
       do iact=1,2      
        
@@ -385,11 +387,11 @@ c count number of hfb and fill
          
         ENDDO
       
-        DO IROW=1,NROW; DO ICOL=1,NCOL
+        DO IROW=1,LNROW; DO ICOL=1,LNCOL
 
          !## place vertical wall (block in y-direction)
          IF(IPC(ICOL,IROW,1).EQ.INT(1,1))THEN
-          IF(ICOL.LT.NCOL)THEN
+          IF(ICOL.LT.LNCOL)THEN
 
            !## transform conductances to resistance
            IF(LINV)THEN
@@ -426,7 +428,7 @@ c count number of hfb and fill
 
          !## place horizontal wall (block in x-direction)
          IF(IPC(ICOL,IROW,2).EQ.INT(1,1))THEN
-          IF(IROW.LT.NROW)THEN
+          IF(IROW.LT.LNROW)THEN
 
            !## transform conductances to resistance
            IF(LINV)THEN
@@ -497,7 +499,7 @@ c end of program
       subroutine HFB1EXPORT_WRITEGEN(it,iu,ju,n,icol,irow,C,RES,FDZ,
      1ISYS)
       !###====================================================================
-      use gwfmetmodule, only: cdelr,cdelc
+      use lcdmodule, only: lcdelr,lcdelc
       implicit none
       real,intent(in) :: C,RES,FDZ
       integer,intent(IN) :: IT,iu,ju,icol,irow,isys
@@ -507,8 +509,8 @@ c end of program
        n=n+1
        write(ju,'(i10,3(1x,e15.7),i10)') n,c,res,fdz,isys
        write(iu,'(i10,1x,e15.7)') n
-       write(iu,'(2(f10.2,a1))') cdelr(icol-1),',',cdelc(irow)
-       write(iu,'(2(f10.2,a1))') cdelr(icol),',',cdelc(irow)
+       write(iu,'(2(f10.2,a1))') lcdelr(icol-1),',',lcdelc(irow)
+       write(iu,'(2(f10.2,a1))') lcdelr(icol),',',lcdelc(irow)
        write(iu,'(a)') 'end'
       endif
 
@@ -516,8 +518,8 @@ c end of program
        n=n+1
        write(ju,'(i10,3(1x,e15.7),i10)') n,c,res,fdz,isys
        write(iu,'(i10,1x,e15.7)') n
-       write(iu,'(2(f10.2,a1))') cdelr(icol),',',cdelc(irow-1)
-       write(iu,'(2(f10.2,a1))') cdelr(icol),',',cdelc(irow)
+       write(iu,'(2(f10.2,a1))') lcdelr(icol),',',lcdelc(irow-1)
+       write(iu,'(2(f10.2,a1))') lcdelr(icol),',',lcdelc(irow)
        write(iu,'(a)') 'end'
       end if
 

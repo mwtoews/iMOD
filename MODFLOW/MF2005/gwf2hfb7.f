@@ -654,14 +654,7 @@ C5------Read the non-optional values from a line.
       CALL URWORD(LINE,LLOC,ISTART,ISTOP,2,I2,R,IOUT,IN)
       CALL URWORD(LINE,LLOC,ISTART,ISTOP,2,J2,R,IOUT,IN)
       CALL URWORD(LINE,LLOC,ISTART,ISTOP,3,IDUM,FACTOR,IOUT,IN)
-       call urword(line,lloc,istart,istop,2,IZ,R,iout,in)
-       HFB(1,II) = K
-       HFB(2,II) = I1
-       HFB(3,II) = J1
-       HFB(4,II) = I2
-       HFB(5,II) = J2
-       HFB(6,II) = FACTOR*SFAC
-       HFB(7,II) = REAL(IZ) !0.0
+      call urword(line,lloc,istart,istop,2,IZ,R,iout,in)
       else
          k      = int(hfbtmp(1,jj))                                     ! LCD
          i1     = int(hfbtmp(2,jj))                                     ! LCD
@@ -669,6 +662,7 @@ C5------Read the non-optional values from a line.
          i2     = int(hfbtmp(4,jj))                                     ! LCD
          j2     = int(hfbtmp(5,jj))                                     ! LCD
          factor = hfbtmp(6,jj)                                          ! LCD
+         iz     = int(hfbtmp(7,jj))                                     ! LCD
       end if
       call pks7mpitrn(j1,i1,k,lused1)                                   ! PKS
       call pks7mpitrn(j2,i2,k,lused2)                                   ! PKS
@@ -679,8 +673,7 @@ C5------Read the non-optional values from a line.
       HFB(4,II) = I2
       HFB(5,II) = J2
       HFB(6,II) = FACTOR*SFAC
-      HFB(7,II) = 0.0
-
+      HFB(7,II) = REAL(IZ) !0.0
 C6------Write the values that were read.
       NN = II-LSTBEG+1
       IF (IPRFLG.EQ.1) WRITE(IOUT,205) NN,K,I1,J1,I2,J2,HFB(6,II)
