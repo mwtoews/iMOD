@@ -102,7 +102,7 @@ c arguments
 
 c local variables
       integer :: icol, irow, jcol, jrow, igen, iact, ngen, ii, kk,
-     1           ip1, ip2,ic1, ic2, ir1, ir2, j, jj, nlist
+     1           ip1, ip2,ic1, ic2, ir1, ir2, j, jj !, nlist
       integer ::  il, is, ie, iline, jline, nline
       integer :: ilay,il1,il2,jlay,isys
       real :: fct,HFB1EXPORT_GETDZ,c,z,c1,c2,zz
@@ -141,7 +141,7 @@ c allocate ipc
       ALLOCATE(TF(LNCOL,LNROW),BF(LNCOL,LNROW))
 
       allocate(writegen(max(1,ngen))); writegen = .false.
-      allocate(lun(nlay),dun(lay),nlun(nlay)); lun=0; dun=0; nlun=0
+      allocate(lun(nlay),dun(nlay),nlun(nlay)); lun=0; dun=0; nlun=0
 
       do ilay=1,nlay
        write(fname,'(a,i2.2)') 'hfb_l',ilay
@@ -530,14 +530,14 @@ c end of program
       USE GLOBAL,ONLY : BOTM,lbotm
       IMPLICIT NONE     
       INTEGER,INTENT(IN) :: IC1,IR1,IC2,IR2,ILAY,NCOL,NROW
-      REAL,INTENT(IN) :: FCT,NODATA
+      REAL,INTENT(IN) :: NODATA
       REAL,INTENT(IN),DIMENSION(NCOL,NROW) :: TF,BF
       REAL :: DZ,TFV,BFV,TPV,BTV,C1,C2,CT,FFCT
       INTEGER :: IL1,IL2
       integer :: jc1,jr1,jc2,jr2,k                                      ! PKS
       logical :: lused1, lused2                                         ! PKS
       
-      HFB1EXPORT_GETFACTOR=0.0
+      HFB1EXPORT_GETDZ=0.0
 
       !## determine values
       IF(TF(IC1,IR1).NE.NODATA.AND.TF(IC2,IR2).NE.NODATA)THEN

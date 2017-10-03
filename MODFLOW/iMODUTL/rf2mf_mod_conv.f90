@@ -1177,7 +1177,7 @@
       implicit none
 
 !...     locals      
-      logical :: writesto, le, lw, ls, ln
+      logical :: writesto !,le, lw, ls, ln
       integer :: nrproc, icol, irow, ic, ir
       real, dimension(:,:), allocatable :: loadptr
       real :: chdadd

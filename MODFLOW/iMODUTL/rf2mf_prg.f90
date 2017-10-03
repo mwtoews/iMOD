@@ -328,7 +328,7 @@ DO
 !   !## read/prepare simgro-files (capsim/metaswap)
    lcap = .true.
    call pks7mpigetmyrank(myrank)
-   CALL RF2MF_METASWAP(DXCFILE)
+   CALL RF2MF_METASWAP(DXCFILE,idf)
    call pks7mpibarrier()
   CASE DEFAULT
    !## read/scale BASIC packages (ibound,shead,kd,c,s,top,bot)
@@ -1515,7 +1515,8 @@ IF(FNAME(1:1).EQ.CHAR(34).OR.FNAME(1:1).EQ.CHAR(39))THEN ! double quote: CHAR(34
  READ(FNAME,*) FNAME
 ENDIF
 INQUIRE(FILE=FNAME,EXIST=LEX)
-JU=0; IF(LEX)THEN
+!JU=0; 
+IF(LEX)THEN
  !## read without quotes
  IF(.NOT.IDFREAD(IDF,FNAME,0))CALL IMOD_UTL_PRINTTEXT('iMOD cannot read the file',3)
  XMIN=IDF%XMIN; XMAX=IDF%XMAX

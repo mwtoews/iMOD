@@ -118,7 +118,7 @@ C change meta data to a different grid.
       cdelc => gwfmetdat(igrid)%cdelc
       save_no_buf => gwfmetdat(igrid)%save_no_buf
       write_debug_idf => gwfmetdat(igrid)%write_debug_idf
-      idate_save => gwfmetdat(igrid)%isave_date
+      idate_save => gwfmetdat(igrid)%idate_save
 
       return
       end
@@ -613,7 +613,7 @@ c local variables
       double precision :: factor
 
 c functions
-      double precision :: sutl_getTimeStepLength      
+      double precision :: sutl_getLengthTotalStressPeriod !sutl_getTimeStepLength      
 
 c include files
 
@@ -636,13 +636,9 @@ c ------------------------------------------------------------------------------
 c update current time
       call sgwf2ins1pnt(igrid)
       time_cjd = timesteptime+sutl_getLengthTotalStressPeriod(igrid)
-!      time_cjd = timesteptime+sutl_getTimeStepLength(igrid)      
       time_ostring = time_cstring
       call cfn_mjd2datehms(time_cjd,date,hour,minute,second)
-!      write(time_cstring,'(i8)') date
       write(time_cstring,'(i8,3i2.2)') date,hour,minute,second
-!      write(*,*) date,time_ostring,time_cstring
-!      pause
       call sgwf2met1psv(igrid)
 
 c end of program

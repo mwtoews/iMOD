@@ -315,7 +315,7 @@ C
                   IL=RIVR(1,L)                                          ! iconchk
                   IR=RIVR(2,L)                                          ! iconchk
                   IC=RIVR(3,L)                                          ! iconchk
-                  if(riv(4,l).gt.rhs(ic,ir,1))rhs(ic,ir,1)=rivr(4,l)    ! iconchk
+                  if(rivr(4,l).gt.rhs(ic,ir,1))rhs(ic,ir,1)=rivr(4,l)   ! iconchk
            end do                                                       ! iconchk
            ncor=0
            do l = 1, ndrain                                             ! iconchk

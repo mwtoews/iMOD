@@ -397,6 +397,8 @@ c check if coordinates are specified
 
 c read idf header
       if (.not.idfread(idfc,file,0)) then
+c read the entire IDF
+!      if (.not.idfread(idfc,file,1)) then
          if (idfc%iu.gt.0) close(idfc%iu)
          imod_idfread = 1
          return
@@ -583,11 +585,11 @@ c open file
 
 c init
       mx=lncol*lnrow
-      if(allocated(xa))deallocate(xa)
-      if(allocated(ya))deallocate(ya)
-      if(allocated(ln))deallocate(ln)
-      if(allocated(fa))deallocate(fa)
-      allocate(xa(mx),ya(mx),ln(mx),fa(mx))
+!      if(allocated(xa))deallocate(xa)
+!      if(allocated(ya))deallocate(ya)
+!      if(allocated(ln))deallocate(ln)
+!      if(allocated(fa))deallocate(fa)
+!      allocate(xa(mx),ya(mx),ln(mx),fa(mx))
       if (allocated(genpos))deallocate(genpos)
       if (allocated(genip))deallocate(genip)
 
@@ -632,7 +634,7 @@ c read file
                 call imod_utl_intersect_equi(xmin,xmax,ymin,ymax,
      1                    simcsize,simcsize,x1,x2,y1,y2,n,.true.)
                else
-                call imod_utl_intersect_nonequi(cdelr,cdelc,nrow,ncol,
+                call imod_utl_intersect_nonequi(cdelr,cdelc,lnrow,lncol,
      1                    x1,x2,y1,y2,n,.true.)
                endif
 
@@ -653,7 +655,7 @@ c read file
                   irow=int(ra(l))
 
                   if(icol.ge.1.and.irow.ge.1.and.
-     1                icol.le.ncol.and.irow.le.nrow) then
+     1                icol.le.lncol.and.irow.le.lnrow) then
                      m = m + 1; nn = nn + 1
                      if (iact.eq.2) then
                         genpos(m,1) = icol

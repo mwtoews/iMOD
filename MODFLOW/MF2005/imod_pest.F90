@@ -116,7 +116,7 @@ if(pest_iter.eq.0)then
 
        if(.not.associated(param(i)%x))allocate(param(i)%x(param(i)%nodes))
        select case (trim(ptype))
-       case('KD','KH','KV','VA','SC','AF')
+       case('KD','KH','KV','VA','SC','AF','EP')
           do j=1,param(i)%nodes
              irow=param(i)%irow(j); icol=param(i)%icol(j)
              !## only modify active/constant head nodes
@@ -165,7 +165,7 @@ do i=1,size(param)
    IF(PARAM(I)%LOG)FCT=EXP(FCT)
 
    select case (trim(ptype))
-   case('KD','KH','KV','VA','SC','AF')
+   case('KD','KH','KV','VA','SC','AF','EP')
       do j=1,param(i)%nodes
          irow=param(i)%irow(j); icol=param(i)%icol(j)
          if(ibound(icol,irow,ils).ne.0)then
@@ -287,6 +287,7 @@ end do
     fname=trim(dir)//'\'//trim(ptype)//'_l'//trim(imod_utl_itos(ils))//'.idf'
     CALL met1wrtidf(fname,a(:,:,ils),ncol,nrow,-999.0,iout)
    enddo
+   exit
   enddo
  endif
 #endif
