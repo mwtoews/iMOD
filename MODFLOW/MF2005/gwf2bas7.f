@@ -284,19 +284,6 @@ C8E-----READ BOUNDARY ARRAY(IBOUND).
       END IF
       if(IUNIT(IUMET).gt.0)
      1   call gwf2met1ibound(ibound,ncol,nrow,nlay,igrid)               ! MET
-C
-C-------SET IACTCELL
-      DO K=1,NLAY                                                       ! PKS
-        DO I=1,NROW                                                     ! PKS
-          DO J=1,NCOL                                                   ! PKS
-            IF (IBOUND(J,I,K).GT.0) THEN                                ! PKS
-              IACTCELL(J,I,K) = 1                                       ! PKS
-            ELSE                                                        ! PKS
-              IACTCELL(J,I,K) = 0                                       ! PKS
-            END IF                                                      ! PKS
-          END DO                                                        ! PKS
-        END DO                                                          ! PKS
-      END DO                                                            ! PKS
 C      
 C8F-----READ AND PRINT HEAD VALUE TO BE PRINTED FOR NO-FLOW CELLS.
       IF(IFREFM.EQ.0) THEN
@@ -318,6 +305,21 @@ C8G-----READ INITIAL HEADS.
       ELSE
          CALL U2DREL(STRT(:,:,1),ANAME(2),NLAY,NCOL,-1,INBAS,IOUT)
       END IF
+C      
+      !## cleaning for constant head cells that are only connected to other constant head/inactive cells    
+      do k=1,nlay; do i=1,nrow; do j=1,ncol
+       ic1=max(j-1,1); ic2=min(j+1,ncol)
+       ir1=max(i-1,1); ir2=min(i+1,nrow)
+       il1=max(k-1,1); il2=min(k+1,nlay)
+       if(ibound(j,i,k).lt.0)then 
+        if(ibound(j,ir1,k).le.0.and.ibound(j,ir2,k).le.0.and.
+     1     ibound(ic1,i,k).le.0.and.ibound(ic2,i,k).le.0.and.
+     1     ibound(j,i,il1).le.0.and.ibound(j,i,il2).le.0)then 
+         ibound(j,i,k)=0
+        end if
+       end if
+      enddo; enddo; enddo
+C      
       !## apply consistency check constant head and top/bot
       do i=1,nrow; do j=1,ncol; do k=1,nlay
        if(ibound(j,i,k).lt.0)then
@@ -340,26 +342,25 @@ C8G-----READ INITIAL HEADS.
         enddo
        endif
       enddo; enddo; enddo
-
-      !## cleaning for constant head cells that are only connected to other constant head/inactive cells    
-      do k=1,nlay; do i=1,nrow; do j=1,ncol
-       ic1=max(j-1,1); ic2=min(j+1,ncol)
-       ir1=max(i-1,1); ir2=min(i+1,nrow)
-       il1=max(k-1,1); il2=min(k+1,nlay)
-       if(ibound(j,i,k).lt.0)then 
-        if(ibound(j,ir1,k).le.0.and.ibound(j,ir2,k).le.0.and.
-     1     ibound(ic1,i,k).le.0.and.ibound(ic2,i,k).le.0.and.
-     1     ibound(j,i,il1).le.0.and.ibound(j,i,il2).le.0)then 
-         ibound(j,i,k)=0
-        end if
-       end if
-      enddo; enddo; enddo
-
+C
+C-------SET IACTCELL
+      DO K=1,NLAY                                                       ! PKS
+        DO I=1,NROW                                                     ! PKS
+          DO J=1,NCOL                                                   ! PKS
+            IF (IBOUND(J,I,K).GT.0) THEN                                ! PKS
+              IACTCELL(J,I,K) = 1                                       ! PKS
+            ELSE                                                        ! PKS
+              IACTCELL(J,I,K) = 0                                       ! PKS
+            END IF                                                      ! PKS
+          END DO                                                        ! PKS
+        END DO                                                          ! PKS
+      END DO                                                            ! PKS
+C 
       !## clean corners
-      do k=1,nlay; ibound(1   ,1   ,k)=0; enddo
-      do k=1,nlay; ibound(ncol,1   ,k)=0; enddo
-      do k=1,nlay; ibound(1   ,nrow,k)=0; enddo
-      do k=1,nlay; ibound(ncol,nrow,k)=0; enddo
+C      do k=1,nlay; ibound(1   ,1   ,k)=0; enddo
+C      do k=1,nlay; ibound(ncol,1   ,k)=0; enddo
+C      do k=1,nlay; ibound(1   ,nrow,k)=0; enddo
+C      do k=1,nlay; ibound(ncol,nrow,k)=0; enddo
 C
 C9------COPY INITIAL HEADS FROM STRT TO HNEW.
       DO 400 K=1,NLAY

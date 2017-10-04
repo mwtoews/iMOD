@@ -543,6 +543,20 @@ C
         endif
        enddo
       enddo; enddo
+C      
+C-------SET IACTCELL
+      DO K=1,NLAY                                                       ! PKS
+        DO I=1,NROW                                                     ! PKS
+          DO J=1,NCOL                                                   ! PKS
+            IF (IBOUND(J,I,K).GT.0) THEN                                ! PKS
+              IACTCELL(J,I,K) = 1                                       ! PKS
+            ELSE                                                        ! PKS
+              IACTCELL(J,I,K) = 0                                       ! PKS
+            END IF                                                      ! PKS
+          END DO                                                        ! PKS
+        END DO                                                          ! PKS
+      END DO                                                            ! PKS
+C      
       if (iminkd.eq.1) then                                             ! DLT
          do ilay=1,nlay                                                 ! DLT
             do irow=1,nrow                                              ! DLT
