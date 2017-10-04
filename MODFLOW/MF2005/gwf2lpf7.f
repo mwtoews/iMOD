@@ -559,6 +559,7 @@ C-------SET IACTCELL
       END DO                                                            ! PKS
 C      
       if (iminkd.eq.1) then                                             ! DLT
+         ncor=0
          do ilay=1,nlay                                                 ! DLT
             do irow=1,nrow                                              ! DLT
                do icol=1,ncol                                           ! DLT

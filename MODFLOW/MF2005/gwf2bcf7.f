@@ -288,6 +288,7 @@ C
 C8C-----READ TRANSMISSIVITY INTO ARRAY CC IF LAYER TYPE IS 0 OR 2.
       IF(LAYCON(K).EQ.3 .OR. LAYCON(K).EQ.1) GO TO 105
       CALL U2DREL(CC(:,:,K),ANAME(2),NROW,NCOL,KK,IN,IOUT)
+      ncor=0
       do irow = 1, nrow                                               ! ILAY_ZERO
           do icol = 1, ncol                                           ! ILAY_ZERO
              kdsv(icol,irow,k) = cc(icol,irow,k)                      ! ILAY_ZERO
