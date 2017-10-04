@@ -379,10 +379,11 @@ c function declaration
 
 c local variables
       logical :: lop
-      integer :: icol, irow, ieqd, i
+      integer :: icol, irow, ieqd, i, j
       real :: xmin, ymin, xmax, ymax, val
       character(len=1000) :: fname
-      logical :: lnodata
+      logical :: lnodata, lex
+      character(len=10) :: partstr
  
 c program section
 c ------------------------------------------------------------------------------
@@ -488,12 +489,20 @@ c            write(*,*) 'Warning, nodata found in ',trim(file), myrank
 
 c debug
       if(associated(write_debug_idf))then
-         fname = trim(file)
-         i = index(fname,'.',back=.true.)
-         fname = fname(1:i-1)//'_debug'
-         i = len_trim(fname)
-         call pks7mpifname(fname,i)
-         fname = trim(fname)//'.idf'
+         i = index(file,'/',back=.true.)
+         if (i.le.0) then
+           i = index(file,'\',back=.true.)
+         end if
+         i = max(i,1)
+         j = index(file,'.',back=.true.)
+         fname = trim(debugdir)//file(i:j-1)
+         call pks7mpipartstr(partstr)
+         fname = trim(fname)//trim(partstr)//'.idf'
+         inquire(file=fname,exist=lex)
+         if (lex) then
+            write(*,'(1x,a,1x,a,1x,a)') 'Warning: ',trim(fname),
+     1       ' already exists!'
+         end if 
          write(*,'(1x,a,1x,a,1x,a)') 'Writing',trim(fname),'...'
          if (.not.idfwrite(idfm,fname,0)) then
             imod_idfread = 1

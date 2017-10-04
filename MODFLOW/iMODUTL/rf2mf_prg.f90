@@ -631,7 +631,8 @@ SUBROUTINE RF2MF_DATASET3()
 !#####=================================================================
 IMPLICIT NONE
 
-INTEGER :: IOS
+INTEGER :: IOS, N, MYRANK
+CHARACTER(LEN=1) :: SLASH
 
 READ(IURUN,'(A256)') LINE
 CALL IMOD_UTL_STRING(LINE)
@@ -669,7 +670,18 @@ ENDIF
 IF(IEXPORT.EQ.1.OR.IEXPORT.EQ.2)IIDEBUG=0
 debugflag = iidebug
 if(abs(debugflag)==1)then
+   N = LEN_TRIM(RESULTDIR)
+   IF (RESULTDIR(N:N).EQ.'/'.OR.RESULTDIR(N:N).EQ.'\') THEN
+      SLASH =''
+   ELSE
+      CALL IMOD_UTL_GETSLASH(SLASH)
+   END IF
    met%kws(imet_write_debug_idf)%type = imetc   
+   MET%KWS(IMET_WRITE_DEBUG_IDF)%CVAL = TRIM(RESULTDIR)//SLASH//'debug'
+   CALL PKS7MPIGETMYRANK(MYRANK)
+   IF(.NOT.IMOD_UTL_DIREXIST(MET%KWS(IMET_WRITE_DEBUG_IDF)%CVAL))THEN
+      IF(MYRANK.EQ.0)CALL IMOD_UTL_CREATEDIR(MET%KWS(IMET_WRITE_DEBUG_IDF)%CVAL)
+   END IF
 end if
 
 IF(IEXPORT.EQ.1.AND..NOT.LQD)   CALL IMOD_UTL_PRINTTEXT('MODFLOW export #1 not sustained in comination with non-equidistantial networks',-3)

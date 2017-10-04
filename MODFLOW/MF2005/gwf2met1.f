@@ -57,6 +57,7 @@ c deallocate MET memory
       if (associated(iss))                deallocate(iss)
       if (associated(ieq))                deallocate(ieq)
       if (associated(resultdir))          deallocate(resultdir)
+      if (associated(debugdir))           deallocate(debugdir)
       if (associated(ibound_fixed_west))  deallocate(ibound_fixed_west)
       if (associated(ibound_fixed_east))  deallocate(ibound_fixed_east)
       if (associated(ibound_fixed_north)) deallocate(ibound_fixed_north)
@@ -110,6 +111,7 @@ C change meta data to a different grid.
       iss          => gwfmetdat(igrid)%iss
       ieq          => gwfmetdat(igrid)%ieq
       resultdir    => gwfmetdat(igrid)%resultdir
+      debugdir     => gwfmetdat(igrid)%debugdir
       ibound_fixed_west  => gwfmetdat(igrid)%ibound_fixed_west
       ibound_fixed_east  => gwfmetdat(igrid)%ibound_fixed_east
       ibound_fixed_north => gwfmetdat(igrid)%ibound_fixed_north
@@ -159,6 +161,7 @@ C save meta data for a grid.
       gwfmetdat(igrid)%iss          => iss
       gwfmetdat(igrid)%ieq          => ieq
       gwfmetdat(igrid)%resultdir    => resultdir
+      gwfmetdat(igrid)%debugdir     => debugdir
       gwfmetdat(igrid)%ibound_fixed_west  => ibound_fixed_west
       gwfmetdat(igrid)%ibound_fixed_east  => ibound_fixed_east
       gwfmetdat(igrid)%ibound_fixed_north => ibound_fixed_north
@@ -271,6 +274,7 @@ c nullify
       coord_xur_nb => null()
       coord_yur_nb => null()
       resultdir    => null()
+      debugdir     => null()
       iss          => null()
       allocate(ieq)
       ibound_fixed_west  => null()
@@ -376,7 +380,9 @@ C2------READ A LINE; IGNORE BLANK LINES AND PRINT COMMENT LINES.
             if (line(istart:istop).eq.'WRITE_DEBUG_IDF') then
                if (.not.associated(write_debug_idf))
      1            allocate(write_debug_idf)
+               if (.not.associated(debugdir)) allocate(debugdir)
                write_debug_idf = .true.
+               read(line(lloc:),*) debugdir
             end if
             eol = .false.
             if (line(istart:istop).eq.'STARTTIME') then

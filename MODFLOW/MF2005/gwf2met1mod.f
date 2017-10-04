@@ -54,6 +54,7 @@ c   2600 MH Delft, The Netherlands.
          integer, save, pointer :: iss
          integer, save, pointer :: ieq
          character(len=300), save, pointer :: resultdir
+         character(len=300), save, pointer :: debugdir
          logical, save, pointer :: ibound_fixed_west
          logical, save, pointer :: ibound_fixed_east
          logical, save, pointer :: ibound_fixed_north
@@ -93,6 +94,7 @@ c   2600 MH Delft, The Netherlands.
             integer, pointer :: iss
             integer, pointer :: ieq
             character(len=300), pointer :: resultdir
+            character(len=300), pointer :: debugdir
             logical, pointer :: ibound_fixed_west
             logical, pointer :: ibound_fixed_east
             logical, pointer :: ibound_fixed_north
