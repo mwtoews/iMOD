@@ -155,7 +155,7 @@ subroutine gwf2dxc1ar(in,igrid)
     ! get unique interface nodes
     if (nn.gt.0) then 
        call imod_utl_qksort3(iwrk3,iwrk4)
-       nid = cfn_unique_i(iwrk3,nn)
+       nid = cfn_unique_i(iwrk3,nn,0)
     end if
     iwrk4 = 0
     do ixp = 1, nrxp
