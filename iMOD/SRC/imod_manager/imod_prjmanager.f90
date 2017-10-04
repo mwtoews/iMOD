@@ -6058,10 +6058,6 @@ TOPICLOOP: DO ITOPIC=1,MAXTOPICS
 
       !## assign to several layer based upon top/bot
       IF(PCK(1)%ILAY.EQ.0)THEN
-    
-                            IF(ICOL.EQ.80.AND.IROW.EQ.21)THEN
-                             WRITE(*,*)
-                            ENDIF
 
        !## get filter fractions
        CALL PMANAGER_SAVEMF2005_PCK_ULSTRD_PARAM(NLAY,ICOL,IROW,BND,TOP,BOT,KDW,TP,BT,KH)
@@ -6077,11 +6073,7 @@ TOPICLOOP: DO ITOPIC=1,MAXTOPICS
         CASE DEFAULT
          WRITE(*,*) 'Cannot come here: ERROR PMANAGER_SAVEMF2005_PCK'; PAUSE
        END SELECT
-
-!       IF(ICOL.EQ.5.AND.IROW.EQ.47)THEN
-!        WRITE(*,*)
-!       ENDIF
-
+ 
        !## get fraction per model layer
        CALL UTL_PCK_GETTLP(NLAY,TLP,KH,TP,BT,Z1,Z2,MINKHT,ICLAY) 
 

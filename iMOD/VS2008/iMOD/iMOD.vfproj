@@ -131,7 +131,15 @@
 		<File RelativePath="..\..\..\iMOD\SRC\imod_dino\imod_dino_ipf.f90"/>
 		<File RelativePath="..\..\..\iMOD\SRC\imod_dino\imod_dino_par.f90"/></Filter>
 		<Filter Name="imod_draw">
-		<File RelativePath="..\..\..\iMOD\SRC\imod_draw\imod_data.f90"/>
+		<File RelativePath="..\..\..\iMOD\SRC\imod_draw\imod_data.f90">
+			<FileConfiguration Name="Debug|Win32">
+				<Tool Name="VFFortranCompilerTool" Preprocess="preprocessYes" PreprocessorDefinitions="WINTERACTER11"/></FileConfiguration>
+			<FileConfiguration Name="Release|x64">
+				<Tool Name="VFFortranCompilerTool" Preprocess="preprocessYes" PreprocessorDefinitions="WINTERACTER11"/></FileConfiguration>
+			<FileConfiguration Name="Debug|x64">
+				<Tool Name="VFFortranCompilerTool" Preprocess="preprocessYes" PreprocessorDefinitions="WINTERACTER11"/></FileConfiguration>
+			<FileConfiguration Name="Release|Win32">
+				<Tool Name="VFFortranCompilerTool" Preprocess="preprocessYes" PreprocessorDefinitions="WINTERACTER11"/></FileConfiguration></File>
 		<File RelativePath="..\..\..\iMOD\SRC\imod_draw\imod_genplot.f90"/>
 		<File RelativePath="..\..\..\iMOD\SRC\imod_draw\imod_genplot_par.F90"/>
 		<File RelativePath="..\..\..\iMOD\SRC\imod_draw\imod_plot.f90"/>
@@ -155,7 +163,15 @@
 		<Filter Name="imod_googleearth">
 		<File RelativePath="..\..\SRC\imod_googleearth\imod_google.f90"/></Filter>
 		<Filter Name="imod_graph">
-		<File RelativePath="..\..\SRC\imod_graph\imod_graph.f90"/>
+		<File RelativePath="..\..\SRC\imod_graph\imod_graph.f90">
+			<FileConfiguration Name="Debug|Win32">
+				<Tool Name="VFFortranCompilerTool" Preprocess="preprocessYes" PreprocessorDefinitions="WINTERACTER11"/></FileConfiguration>
+			<FileConfiguration Name="Release|x64">
+				<Tool Name="VFFortranCompilerTool" Preprocess="preprocessYes" PreprocessorDefinitions="WINTERACTER11"/></FileConfiguration>
+			<FileConfiguration Name="Debug|x64">
+				<Tool Name="VFFortranCompilerTool" Preprocess="preprocessYes" PreprocessorDefinitions="WINTERACTER11"/></FileConfiguration>
+			<FileConfiguration Name="Release|Win32">
+				<Tool Name="VFFortranCompilerTool" Preprocess="preprocessYes" PreprocessorDefinitions="WINTERACTER11"/></FileConfiguration></File>
 		<File RelativePath="..\..\SRC\imod_graph\imod_graph_par.f90"/></Filter>
 		<Filter Name="imod_gxg">
 		<File RelativePath="..\..\..\iMOD\SRC\imod_gxg\imod_gxg_compute.f90"/>

@@ -2051,7 +2051,7 @@ IRLOOP: DO IR=MAX(1,IROW-1),MIN(NROW,IROW+1)
    !## if inundation-criterion applied, only inundate if zchk criterion is met
    IF(PCROSS%X(ICOL,IROW).LT.0.0.AND.WL.LE.ZCHK)CYCLE
    !## manipulate resistance for ...
-   CR=C; IF(PCROSS%X(ICOL,IROW).GT.0.0)CR=CR*ABS(PCROSS%X(ICOL,IROW))
+   CR=C; CR=CR*ABS(PCROSS%X(ICOL,IROW))
    CALL IDFGETLOC(ICROSS  ,IROW,ICOL,XC,YC)
    CALL IDFIROWICOL(IDF(1),JROW,JCOL,XC,YC)
    IF(JROW.NE.0.AND.JCOL.NE.0)THEN
@@ -2085,7 +2085,7 @@ IRLOOP: DO IR=MAX(1,IROW-1),MIN(NROW,IROW+1)
     !## if inundation-criterion applied, only inundate if zchk criterion is met
     IF(PCROSS%X(JCOL,JROW).LT.0.0.AND.WL.LE.ZCHK) CYCLE
     !## manipulate resistance for ...
-    CR=C; IF(PCROSS%X(JCOL,JROW).GT.0.0)CR=CR*ABS(PCROSS%X(JCOL,JROW))
+    CR=C; CR=CR*ABS(PCROSS%X(JCOL,JROW))
     IF(IDF(9)%X(ICOL,IROW).EQ.0.0)THEN
      IDF(1)%X(ICOL,IROW)=IDFGETAREA(ICROSS,ICOL,IROW)/CR
     ELSE
