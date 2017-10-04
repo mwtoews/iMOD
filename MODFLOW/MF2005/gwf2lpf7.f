@@ -83,9 +83,9 @@ C        SPECIFICATIONS:
 C     ------------------------------------------------------------------
       USE GLOBAL,      ONLY:NCOL,NROW,NLAY,ITRSS,LAYHDT,LAYHDS,LAYCBD,
      1                      NCNFBD,IBOUND,BUFF,BOTM,NBOTM,DELR,DELC,IOUT
-     2                      ,cc,cv,iunit,                               ! ANIPWT
+     2                      ,cc,cv,iunit,                               ! ILAY_ZERO
      3                      lbotm,                                      ! DLT
-     4                      kdsv,                                       ! ANIPWT
+     4                      kdsv,                                       ! ILAY_ZERO
      5                      IACTCELL                                    ! PKS
       USE GWFBASMODULE,ONLY:HDRY
       USE GWFLPFMODULE,ONLY:ILPFCB,IWDFLG,IWETIT,IHDWET,
@@ -117,6 +117,7 @@ C
       DATA ANAME(9) /'     STORAGE COEFFICIENT'/
 
       real :: t, b, d, kd                                               ! DLT
+      integer :: ncor                                            ! DLT
 
 C     ------------------------------------------------------------------
 C1------Allocate scalar data.
@@ -522,7 +523,7 @@ C7G-----(LAYWET NOT 0).
 C
       call pest1alpha_grid('KH',hk,nrow,ncol,nlay,iout)                 ! IPEST
       call pest1alpha_grid('VA',vka,nrow,ncol,nlay,iout)                ! IPEST
-      call pest1alpha_grid('KV',vkcb,nrow,ncol,nlay,iout)               ! IPEST
+      call pest1alpha_grid('KV',vkcb,nrow,ncol,nlay-1,iout)             ! IPEST
       if(itrss.ne.0) call pest1alpha_grid('SC',sc1,nrow,ncol,nlay,iout) ! IPEST
 
       !## clean from bottom to top inactive layers with zero conductance
@@ -566,33 +567,22 @@ C
                   !## minimal thickness is zero                         ! DLT
                   d=max(0.0,t-b)                                        ! DLT
                   !## adjust kh such that minkd will be satisfied       ! DLT
-                  kd=max(minkd,d*hk(icol,irow,ilay))                    ! DLT
-                  if(d.gt.0.0)hk(icol,irow,ilay)=kd/d                   ! DLT
+                  if(d*hk(icol,irow,ilay).lt.minkd)then
+                   kd=minkd 
+                   if(d.gt.0.0)hk(icol,irow,ilay)=kd/d                   ! DLT
+                   ncor=ncor+1
+                  endif
+                  kdsv(icol,irow,ilay) = max(minkd,hk(icol,irow,ilay)*d) ! ILAY_ZERO
                end do                                                   ! DLT
             end do                                                      ! DLT
          end do                                                         ! DLT
+       if(ncor.gt.0)then
+        write(IOUT,'(a)') 'Corrections caused by minimal Transmissivity'
+        write(IOUT,'(a,i8)') 'No. of corrections ',ncor
+       endif
       end if                                                            ! DLT
 C
-      if (IUNIT(IUANI).gt.0.or.IUNIT(IUPWT).gt.0) then                  ! ANIPWT
-         do ilay=1,nlay                                                 ! ANIPWT
-            do irow=1,nrow                                              ! ANIPWT
-               do icol=1,ncol                                           ! ANIPWT
-                  t = botm(icol,irow,lbotm(ilay)-1)                     ! ANIPWT
-                  b = botm(icol,irow,lbotm(ilay))                       ! ANIPWT
-                  !## minimal thickness is zero                         ! ANIPWT
-                  d=max(0.0,t-b)                                        ! ANIPWT
-                  !prevent transmissivity to be zero                    ! ANIPWT
-                  kdsv(icol,irow,ilay) = hk(icol,irow,ilay)*d           ! ANIPWT
-                  if (iminkd.eq.1) then                                 ! ANIPWT
-                      kdsv(icol,irow,ilay)=                             ! ANIPWT
-     1                   max(minkd,kdsv(icol,irow,ilay))                ! ANIPWT
-                  end if                                                ! ANIPWT
-                  kdsv(icol,irow,ilay)=max(0.0,kdsv(icol,irow,ilay))    ! ANIPWT
-!                  kdsv(icol,irow,ilay)=max(1.0e-12,kdsv(icol,irow,ilay))! ANIPWT
-               end do                                                   ! ANIPWT
-            end do                                                      ! ANIPWT
-         end do                                                         ! ANIPWT
-      end if                                                            ! ANIPWT
+
 C
 C8------PREPARE AND CHECK LPF DATA.
       CALL SGWF2LPF7N()

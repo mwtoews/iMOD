@@ -592,67 +592,67 @@ c end of program
 
       END FUNCTION HFB1EXPORT_GETDZ
 
-      !###====================================================================
-      REAL FUNCTION HFB1EXPORT_GETFACTOR(FCT,TF,BF,IC1,IR1,IC2,IR2,NODAT
-     1A,ILAY,NCOL,NROW)
-      !###====================================================================
-      USE GLOBAL,ONLY : BOTM
-      IMPLICIT NONE     
-      INTEGER,INTENT(IN) :: IC1,IR1,IC2,IR2,ILAY,NCOL,NROW
-      REAL,INTENT(IN) :: FCT,NODATA
-      REAL,INTENT(IN),DIMENSION(NCOL,NROW) :: TF,BF
-      REAL :: DZ,TFV,BFV,TPV,BTV,C1,C2,CT,FFCT
-      INTEGER :: IL1,IL2
-      
-      HFB1EXPORT_GETFACTOR=0.0
-
-      !## determine values
-      IF(TF(IC1,IR1).NE.NODATA.AND.TF(IC2,IR2).NE.NODATA)THEN
-       TFV=(TF(IC1,IR1)+TF(IC2,IR2))/2.0
-      ELSEIF(TF(IC1,IR1).NE.NODATA)THEN
-       TFV=TF(IC1,IR1)
-      ELSE
-       TFV=TF(IC2,IR2)
-      ENDIF
-      IF(BF(IC1,IR1).NE.NODATA.AND.BF(IC2,IR2).NE.NODATA)THEN
-       BFV=(BF(IC1,IR1)+BF(IC2,IR2))/2.0
-      ELSEIF(BF(IC1,IR1).NE.NODATA)THEN
-       BFV=BF(IC1,IR1)
-      ELSE
-       BFV=BF(IC2,IR2)
-      ENDIF
-
-      !## get internal layer number of vector of top/bottom information
-      IL1=(ILAY*2)-1
-      IL2=(ILAY*2)
-      !## array starts at 0
-      IL1=IL1-1
-      IL2=IL2-1
-      
-      TPV=(BOTM(IC1,IR1,IL1)+BOTM(IC2,IR2,IL1))/2.0
-      BTV=(BOTM(IC1,IR1,IL2)+BOTM(IC2,IR2,IL2))/2.0
-
-      !## nett appearance of fault in modellayer
-      DZ=MIN(TFV,TPV)-MAX(BFV,BTV)
-
-      !## not in current modellayer
-      IF(DZ.LT.0.0)RETURN
-
-      IF(TPV-BTV.GT.0.0)THEN
-       !## fraction of fault in modellayer
-       DZ=DZ/(TPV-BTV)
-      ENDIF
-      
-      !## if dz.eq.0, modellayer has thickness of zero, but fault to be retained
-      IF(DZ.EQ.0.0)DZ=1.0
-      
-      !## resistance of fault
-      FFCT=FCT; IF(FCT.EQ.0.0)FFCT=10.0E10
-
-      !## factor declines quadratically with layer occupation
-      HFB1EXPORT_GETFACTOR=FFCT*DZ**4.0
-
-      END FUNCTION HFB1EXPORT_GETFACTOR
+!      !###====================================================================
+!      REAL FUNCTION HFB1EXPORT_GETFACTOR(FCT,TF,BF,IC1,IR1,IC2,IR2,NODAT
+!     1A,ILAY,NCOL,NROW)
+!      !###====================================================================
+!      USE GLOBAL,ONLY : BOTM
+!      IMPLICIT NONE     
+!      INTEGER,INTENT(IN) :: IC1,IR1,IC2,IR2,ILAY,NCOL,NROW
+!      REAL,INTENT(IN) :: FCT,NODATA
+!      REAL,INTENT(IN),DIMENSION(NCOL,NROW) :: TF,BF
+!      REAL :: DZ,TFV,BFV,TPV,BTV,C1,C2,CT,FFCT
+!      INTEGER :: IL1,IL2
+!      
+!      HFB1EXPORT_GETFACTOR=0.0
+!
+!      !## determine values
+!      IF(TF(IC1,IR1).NE.NODATA.AND.TF(IC2,IR2).NE.NODATA)THEN
+!       TFV=(TF(IC1,IR1)+TF(IC2,IR2))/2.0
+!      ELSEIF(TF(IC1,IR1).NE.NODATA)THEN
+!       TFV=TF(IC1,IR1)
+!      ELSE
+!       TFV=TF(IC2,IR2)
+!      ENDIF
+!      IF(BF(IC1,IR1).NE.NODATA.AND.BF(IC2,IR2).NE.NODATA)THEN
+!       BFV=(BF(IC1,IR1)+BF(IC2,IR2))/2.0
+!      ELSEIF(BF(IC1,IR1).NE.NODATA)THEN
+!       BFV=BF(IC1,IR1)
+!      ELSE
+!       BFV=BF(IC2,IR2)
+!      ENDIF
+!
+!      !## get internal layer number of vector of top/bottom information
+!      IL1=(ILAY*2)-1
+!      IL2=(ILAY*2)
+!      !## array starts at 0
+!      IL1=IL1-1
+!      IL2=IL2-1
+!      
+!      TPV=(BOTM(IC1,IR1,IL1)+BOTM(IC2,IR2,IL1))/2.0
+!      BTV=(BOTM(IC1,IR1,IL2)+BOTM(IC2,IR2,IL2))/2.0
+!
+!      !## nett appearance of fault in modellayer
+!      DZ=MIN(TFV,TPV)-MAX(BFV,BTV)
+!
+!      !## not in current modellayer
+!      IF(DZ.LT.0.0)RETURN
+!
+!      IF(TPV-BTV.GT.0.0)THEN
+!       !## fraction of fault in modellayer
+!       DZ=DZ/(TPV-BTV)
+!      ENDIF
+!      
+!      !## if dz.eq.0, modellayer has thickness of zero, but fault to be retained
+!      IF(DZ.EQ.0.0)DZ=1.0
+!      
+!      !## resistance of fault
+!      FFCT=FCT; IF(FCT.EQ.0.0)FFCT=10.0E10
+!
+!      !## factor declines quadratically with layer occupation
+!      HFB1EXPORT_GETFACTOR=FFCT*DZ**4.0
+!
+!      END FUNCTION HFB1EXPORT_GETFACTOR
 
       !###====================================================================
       SUBROUTINE HFBGETFACES(IC1,IC2,IR1,IR2,IP1,IP2,IPC,NROW,NCOL)

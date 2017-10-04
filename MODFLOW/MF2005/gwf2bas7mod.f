@@ -82,7 +82,7 @@ c   If not, see <http://water.usgs.gov/software/help/notice/>.
         INTEGER, SAVE,    DIMENSION(:,:,:), POINTER ::IBOUND
         REAL,    SAVE,    DIMENSION(:,:,:), POINTER ::CR
         REAL,    SAVE,    DIMENSION(:,:,:), POINTER ::CC
-        real,    save,    dimension(:,:,:), pointer ::kdsv              ! ANIPWT
+        real,    save,    dimension(:,:,:), pointer ::kdsv              ! ILAY_ZERO
         REAL,    SAVE,    DIMENSION(:,:,:), POINTER ::CV
         REAL,    SAVE,    DIMENSION(:,:,:), POINTER ::HCOF
         REAL,    SAVE,    DIMENSION(:,:,:), POINTER ::RHS

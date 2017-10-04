@@ -105,7 +105,7 @@ C     ------------------------------------------------------------------
      3                     LAYHDS,PERLEN,NSTP,TSMULT,ISSFLG,DELR,DELC,
      4                     BOTM,HOLD,IBOUND,CR,CC,CV,HCOF,RHS,BUFF,STRT,
      5                     DDREF,
-     7                     kdsv,                                         ! ANIPWT
+     7                     kdsv,                                        ! ILAY_ZERO
      8                     IACTCELL                                      ! PKS   
       USE PARAMMODULE,ONLY:MXPAR,MXCLST,MXINST,ICLSUM,IPSUM,
      1                     INAMLOC,NMLTAR,NZONAR,NPVAL,
@@ -116,7 +116,7 @@ C     ------------------------------------------------------------------
      2                      IAUXSV,IBDOPT,IPRTIM,IPEROC,ITSOC,ICHFLG,
      3                      IDDREF,IDDREFNEW,DELT,PERTIM,TOTIM,HNOFLO,
      4                      HDRY,STOPER,CHEDFM,CDDNFM,CBOUFM,VBVL,VBNM
-      use m_mf2005_iu, only: iuani, iumet, iupwt, iusfr, iulak, 
+      use m_mf2005_iu, only: iuani, iumet, iupwt, iusfr, iulak, iulpf,
      1                      IUMNW1, IUMNW2, IUMNWI                      ! PKS
 C
       CHARACTER*4 CUNIT(NIUNIT)
@@ -197,11 +197,12 @@ C6------Allocate space for global arrays except discretization data.
       ALLOCATE (IACTCELL(NCOL,NROW,NLAY))                               ! PKS
       ALLOCATE (CR(NCOL,NROW,NLAY)); CR = 0.
       ALLOCATE (CC(NCOL,NROW,NLAY)); CC = 0.
-      if (IUNIT(IUANI).gt.0.or.IUNIT(IUPWT).gt.0) then                  ! ANIPWT
-         allocate(kdsv(ncol,nrow,nlay))                                 ! ANIPWT
-      else                                                              ! ANIPWT
-         allocate(kdsv(1,1,1))                                          ! ANIPWT
-      end if                                                            ! ANIPWT
+!      if (IUNIT(IUANI).gt.0.or.IUNIT(IUPWT).gt.0) then                  ! ILAY_ZERO
+      !## always allocate storage for transmissivity in case wells/drains need to be assigned to layers
+      allocate(kdsv(ncol,nrow,nlay))                                 ! ILAY_ZERO
+!      else                                                              ! ILAY_ZERO
+!         allocate(kdsv(1,1,1))                                          ! ILAY_ZERO
+!      end if                                                            ! ILAY_ZERO
       ALLOCATE (CV(NCOL,NROW,NLAY)); CV = 0.
       ALLOCATE (HCOF(NCOL,NROW,NLAY)); HCOF = 0.
       ALLOCATE (RHS(NCOL,NROW,NLAY)); RHS = 0.      
@@ -321,27 +322,29 @@ C
       enddo; enddo; enddo
 C      
       !## apply consistency check constant head and top/bot
-      do i=1,nrow; do j=1,ncol; do k=1,nlay
-       if(ibound(j,i,k).lt.0)then
+      if(iunit(iulpf).gt.0)then
+       do i=1,nrow; do j=1,ncol; do k=1,nlay
+        if(ibound(j,i,k).lt.0)then
 
-        !## in current model layer
-        kkk=k*2-1
-        if(strt(j,i,k).gt.botm(j,i,kkk))cycle
+         !## in current model layer
+         kkk=k*2-1
+         if(strt(j,i,k).gt.botm(j,i,kkk))cycle
 
-        !## constant head cell dry - becomes active node - shift to an appropriate model layer where the head is in
-        do kk=k,nlay
-         kkk=kk*2-1
-         if(strt(j,i,k).le.botm(j,i,kkk))then
-          ibound(j,i,kk)=1
-          strt(j,i,kk)=strt(j,i,k)
-         else
-          ibound(j,i,kk)=-99
-          strt(j,i,kk)=strt(j,i,k)
-          exit
-         endif
-        enddo
-       endif
-      enddo; enddo; enddo
+         !## constant head cell dry - becomes active node - shift to an appropriate model layer where the head is in
+         do kk=k,nlay
+          kkk=kk*2-1
+          if(strt(j,i,k).le.botm(j,i,kkk))then
+           ibound(j,i,kk)=1
+           strt(j,i,kk)=strt(j,i,k)
+          else
+           ibound(j,i,kk)=-99
+           strt(j,i,kk)=strt(j,i,k)
+           exit
+          endif
+         enddo
+        endif
+       enddo; enddo; enddo 
+      endif
 C
 C-------SET IACTCELL
       DO K=1,NLAY                                                       ! PKS
@@ -2485,7 +2488,7 @@ C
         DEALLOCATE(GLOBALDAT(IGRID)%IBOUND)
         DEALLOCATE(GLOBALDAT(IGRID)%CR)
         DEALLOCATE(GLOBALDAT(IGRID)%CC)
-        deallocate(globaldat(igrid)%kdsv)                               ! ANIPWT
+        deallocate(globaldat(igrid)%kdsv)                               ! ILAY_ZERO
         DEALLOCATE(GLOBALDAT(IGRID)%CV)
         DEALLOCATE(GLOBALDAT(IGRID)%HCOF)
         DEALLOCATE(GLOBALDAT(IGRID)%RHS)
@@ -2584,7 +2587,7 @@ C
         IBOUND=>GLOBALDAT(IGRID)%IBOUND
         CR=>GLOBALDAT(IGRID)%CR
         CC=>GLOBALDAT(IGRID)%CC
-        kdsv=>globaldat(igrid)%kdsv                                     ! ANIPWT
+        kdsv=>globaldat(igrid)%kdsv                                     ! ILAY_ZERO
         CV=>GLOBALDAT(IGRID)%CV
         HCOF=>GLOBALDAT(IGRID)%HCOF
         RHS=>GLOBALDAT(IGRID)%RHS
@@ -2687,7 +2690,7 @@ C
         GLOBALDAT(IGRID)%IBOUND=>IBOUND
         GLOBALDAT(IGRID)%CR=>CR
         GLOBALDAT(IGRID)%CC=>CC
-        globaldat(igrid)%kdsv=>kdsv                                     ! ANIPWT
+        globaldat(igrid)%kdsv=>kdsv                                     ! ILAY_ZERO
         GLOBALDAT(IGRID)%CV=>CV
         GLOBALDAT(IGRID)%HCOF=>HCOF
         GLOBALDAT(IGRID)%RHS=>RHS

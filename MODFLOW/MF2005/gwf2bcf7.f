@@ -75,8 +75,8 @@ C        SPECIFICATIONS:
 C     ------------------------------------------------------------------
       USE GLOBAL,      ONLY:IOUT,NCOL,NROW,NLAY,ITRSS,LAYHDT,LAYHDS,
      1                      CC,CV,IFREFM,
-     1                      iunit,                                      ! ANIPWT
-     1                      kdsv,                                       ! ANIPWT
+     1                      iunit,                                      ! ILAY_ZERO
+     1                      kdsv,                                       ! ILAY_ZERO
      1                      IACTCELL                                    ! PKS
       USE GWFBASMODULE,ONLY:HDRY
       USE GWFBCFMODULE,ONLY:IBCFCB,IWDFLG,IWETIT,IHDWET,WETFCT,
@@ -85,7 +85,7 @@ C     ------------------------------------------------------------------
      1                      iminkd, iminc, minkd, minc                  ! DLT
       USE M_MF2005_IU, only: iuani, iupwt
 C
-      integer icol, irow                                                ! DLT
+      integer icol, irow, ncor                                          ! DLT
       CHARACTER*24 ANAME(7)
       CHARACTER*12 AVGNAM(4)
       CHARACTER*200 LINE                                                ! DLT
@@ -288,15 +288,21 @@ C
 C8C-----READ TRANSMISSIVITY INTO ARRAY CC IF LAYER TYPE IS 0 OR 2.
       IF(LAYCON(K).EQ.3 .OR. LAYCON(K).EQ.1) GO TO 105
       CALL U2DREL(CC(:,:,K),ANAME(2),NROW,NCOL,KK,IN,IOUT)
-      if (IUNIT(IUANI).gt.0.or.IUNIT(IUPWT).gt.0) then                  ! ANIPWT
-         do irow = 1, nrow                                              ! ANIPWT
-            do icol = 1, ncol                                           ! ANIPWT
-               kdsv(icol,irow,k) = cc(icol,irow,k)                      ! ANIPWT
-               if (iminkd.eq.1)                                         ! ANIPWT
-     1            kdsv(icol,irow,k) = max(minkd,kdsv(icol,irow,k))      ! ANIPWT
-            end do                                                      ! ANIPWT
-         end do                                                         ! ANIPWT
-      end if                                                            ! ANIPWT
+      do irow = 1, nrow                                               ! ILAY_ZERO
+          do icol = 1, ncol                                           ! ILAY_ZERO
+             kdsv(icol,irow,k) = cc(icol,irow,k)                      ! ILAY_ZERO
+             if (iminkd.eq.1)then
+              if(kdsv(icol,irow,k).lt.minkd)then                      ! ILAY_ZERO
+               kdsv(icol,irow,k) = minkd
+               ncor=ncor+1
+              endif
+             endif
+          end do                                                      ! ILAY_ZERO
+      end do                                                          ! ILAY_ZERO
+      if(ncor.gt.0)then
+       write(IOUT,'(a)') 'Corrections caused by minimal Transmissivity'
+       write(IOUT,'(a,i8)') 'No. of corrections ',ncor
+      endif
       GO TO 110
 C
 C8D-----READ HYDRAULIC CONDUCTIVITY(HY) IF LAYER TYPE IS 1 OR 3.

@@ -331,6 +331,11 @@ DO I=1,NISGH
  READ(ISGIU(1),*) CISGH,ISEG,NSEG,ICLC,NCLC,ICRS,NCRS,ISTW,NSTW
  !## skip elements with le 1 segment
  IF(NSEG.LT.2)CYCLE; IF(NCLC.LT.2)CYCLE
+ !## cannot process weirs the way iMOD does it
+ IF(NSTW.GT.0)THEN
+  CALL IMOD_UTL_PRINTTEXT('Segment '//TRIM(IMOD_UTL_ITOS(I))//' called ['//TRIM(CISGH)//'] with weirs will be skipped',0)
+  CYCLE
+ ENDIF
 
  !## increase memory for segments (including points from calculation-nodes!)
  IF(NSEG+NCLC+2*NSTW.GT.NXY)THEN
@@ -411,16 +416,20 @@ DO I=1,NISGH
     IF(J.GT.NSEG)EXIT
     !## structure found
     IF(IPOS(J).LT.0)THEN
-     Z          =RVAL(1,J)
-     RVAL(1,J)  =RVAL(1,J+1)
-     RVAL(1,J+1)=Z
+     IF(H2.GT.H1)THEN
+      Z          =RVAL(1,J)
+      RVAL(1,J)  =RVAL(1,J+1)
+      RVAL(1,J+1)=Z
+     ELSE
+      Z          =RVAL(1,J)
+     ENDIF
      J          =J+1
     ENDIF
    ENDDO
 
    !## interpolate waterlevel,waterbottom,inf.factor,c-value - do not interupt it by structures!
    DO JJ=1,4
-    DO J=1,NSEG-1
+   DO J=1,NSEG !-1
      IF(IPOS(J).GT.0.AND.RVAL(JJ,J).NE.NODATA)THEN
       DO II=J+1,NSEG
        IF(IPOS(II).GT.0.AND.RVAL(JJ,II).NE.NODATA)EXIT
@@ -436,7 +445,7 @@ DO I=1,NISGH
 
    !## interpolate with structures
    IF(NSTW.GT.0)THEN
-    DO J=1,NSEG-1
+    DO J=1,NSEG !-1
      IF(IPOS(J).NE.0.AND.RVAL(1,J).NE.NODATA)THEN
       D=0.0
       DO II=J+1,NSEG
@@ -1023,7 +1032,7 @@ INTEGER,INTENT(INOUT) :: NSEG
 REAL,INTENT(INOUT),DIMENSION(NXY) :: X,Y
 REAL,INTENT(INOUT),DIMENSION(NXY) :: DIST
 INTEGER,INTENT(OUT),DIMENSION(NXY) :: IPOS
-INTEGER :: IREC,ISEG,IREF,I,J
+INTEGER :: IREC,ISEG,IREF,I,J,II
 REAL :: DXY,D1,D2,F,XC,YC
 
 !#include calculation nodes as segments!
@@ -1040,43 +1049,64 @@ DO I=1,NTYP
   IF(DXY.GE.DIST(ISEG-1).AND.DXY.LE.DIST(ISEG))EXIT
  END DO
 
+ !## caused by inaccuracy of comparison of dxy and dist()
+ ISEG=MIN(ISEG,NSEG)
 !#distance current segment
  D1= DIST(ISEG)-DIST(ISEG-1)
  D2= DXY-DIST(ISEG-1)
  !## segment itself is zero
- IF(D1.LE.0.0)THEN
-  F=1.0
- ELSE
-  F=D2/D1
- ENDIF
- 
-!#put in extra coordinate
- IF(F.LE.0.01)THEN
+ F =0.0
+ IF(D1.NE.0.0)F=D2/D1
+! IF(D1.LE.0.0)THEN
+!  F=1.0
+! ELSE
+!  F=D2/D1
+! ENDIF
+
+ !## put in extra coordinate
+ IF(F.LE.0.0.AND.ITYPE.EQ.1)THEN
+! IF(F.LE.0.01)THEN
   IPOS(ISEG-1)=IREC*ITYPE  !##put data to current node
- ELSEIF(F.GE.0.99)THEN
+ ELSEIF(F.GE.1.0.AND.ITYPE.EQ.1)THEN
+! ELSEIF(F.GE.0.99)THEN
   IPOS(ISEG)=IREC*ITYPE    !##put data to current node
  ELSE
   XC=X(ISEG-1)+((X(ISEG)-X(ISEG-1))*F)
   YC=Y(ISEG-1)+((Y(ISEG)-Y(ISEG-1))*F)
-!##position coordinates in between
-  X(ISEG+1:NSEG+1)   =X(ISEG:NSEG)
-  Y(ISEG+1:NSEG+1)   =Y(ISEG:NSEG)
-  IPOS(ISEG+1:NSEG+1)=IPOS(ISEG:NSEG)
+  !## position coordinates in between
+  DO II=NSEG+1,ISEG+1,-1
+   X(II)   =X(II-1)
+   Y(II)   =Y(II-1)
+   IPOS(II)=IPOS(II-1)
+  ENDDO
+!  X(ISEG+1:NSEG+1)   =X(ISEG:NSEG)
+!  Y(ISEG+1:NSEG+1)   =Y(ISEG:NSEG)
+!  IPOS(ISEG+1:NSEG+1)=IPOS(ISEG:NSEG)
   X(ISEG)            =XC
   Y(ISEG)            =YC
-  NSEG               =NSEG+1      !##increase number of segments
-  IPOS(ISEG)         =IREC*ITYPE         !##put data to current node
+  !## increase number of segments
+  NSEG               =NSEG+1     
+  !##put data to current node
+  IPOS(ISEG)         =IREC*ITYPE 
  ENDIF
 
 !## duplicate point in case of structure
  IF(ITYPE.EQ.-1)THEN
-  X(ISEG+1:NSEG+1)   =X(ISEG:NSEG)
-  Y(ISEG+1:NSEG+1)   =Y(ISEG:NSEG)
-  IPOS(ISEG+1:NSEG+1)=IPOS(ISEG:NSEG)
+  !## position coordinates in between
+  DO II=NSEG+1,ISEG+1,-1
+   X(II)   =X(II-1)
+   Y(II)   =Y(II-1)
+   IPOS(II)=IPOS(II-1)
+  ENDDO 
+!  X(ISEG+1:NSEG+1)   =X(ISEG:NSEG)
+!  Y(ISEG+1:NSEG+1)   =Y(ISEG:NSEG)
+!  IPOS(ISEG+1:NSEG+1)=IPOS(ISEG:NSEG)
   X(ISEG)            =XC
   Y(ISEG)            =YC
-  NSEG               =NSEG+1     !##increase number of segments
-  IPOS(ISEG)         =I*ITYPE    !##put data to current node
+  !## increase number of segments
+  NSEG               =NSEG+1     
+  !## put data to current node
+  IPOS(ISEG)         =I*ITYPE   
  ENDIF
 
 END DO

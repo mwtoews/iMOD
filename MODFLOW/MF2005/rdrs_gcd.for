@@ -383,7 +383,7 @@ c              check if subsystem is of type ISG
                               if (tlp(il).gt.0.) then
                                  nisg = nisg + 1
                                  if (jact.eq.2) then
-                                    do jj = 1, 10
+                                do jj = 1, size(isglist2,2) !10
                                        isglist2(nisg,jj) =
      1                                    isglist(isub)%list(kk,jj)
                                     end do

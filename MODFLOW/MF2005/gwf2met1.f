@@ -285,7 +285,7 @@ c nullify
       cdelc => null()
       save_no_buf => null()
       write_debug_idf => null()
-      idate_save => null()
+
 
 c read options
 C2------READ A LINE; IGNORE BLANK LINES AND PRINT COMMENT LINES.

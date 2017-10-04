@@ -325,15 +325,15 @@ C
                !## reset drain conductance
                drai(5,l)=abs(drai(5,l))
                if(drai(4,l).lt.rhs(ic,ir,1))then
-                !## set drain conductance to negative values to skip
+         !## set drain conductance to negative values in order to skip them
                 drai(5,l)=-1.0*drai(5,l)
                 ncor=ncor+1
                end if                                                  ! iconchk
             end do
-            write(*,'(a)') 'Corrections caused by higher waterlevel in R
-     1IV package'                                                     ! iconchk
-            write(*,'(a,i8)') 'No. of corrections ',ncor
-         endif
+        write(IOUT,'(a)') 'Corrections caused by higher waterlevel in RI
+     1V package'                                                           ! iconchk
+        write(IOUT,'(a,i8)') 'No. of corrections ',ncor
+       endif
       end if                                                            ! iconchk
 
 C7------SAVE POINTERS TO DATA AND RETURN.
