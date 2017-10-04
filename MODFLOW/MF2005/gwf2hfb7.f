@@ -562,7 +562,6 @@ C     ------------------------------------------------------------------
       integer :: iz
       CHARACTER*200 LINE,FNAME
       CHARACTER*1 DASH(120)
-      real, dimension(:,:), pointer :: hfbtmp                           ! DLT
       logical :: lcd                                                    ! DLT
       logical lused1, lused2                                            ! PKS
       integer jj                                                        ! PKS
@@ -607,8 +606,7 @@ C1------Check for and decode EXTERNAL and SFAC records.
       lcd = .false.                                                     ! lcd
       if(line(istart:istop).eq.'LCD') then                              ! lcd
          write(iout,*) ' DATA IDENTIFIED AS LCD'                        ! lcd
-         nullify(hfbtmp)                                                ! lcd
-         call rdlcd(nlist,hfb,hfbtmp,lstbeg,7,mxhfb,in,iout,            ! lcd
+         call rdlcd(nlist,hfb,lstbeg,7,mxhfb,in,iout,                   ! lcd
      1              label,ncol,nrow,nlay)                               ! lcd
          lcd = .true.                                                   ! lcd
       end if                                                            ! lcd
@@ -656,13 +654,13 @@ C5------Read the non-optional values from a line.
       CALL URWORD(LINE,LLOC,ISTART,ISTOP,3,IDUM,FACTOR,IOUT,IN)
       call urword(line,lloc,istart,istop,2,IZ,R,iout,in)
       else
-         k      = int(hfbtmp(1,jj))                                     ! LCD
-         i1     = int(hfbtmp(2,jj))                                     ! LCD
-         j1     = int(hfbtmp(3,jj))                                     ! LCD
-         i2     = int(hfbtmp(4,jj))                                     ! LCD
-         j2     = int(hfbtmp(5,jj))                                     ! LCD
-         factor = hfbtmp(6,jj)                                          ! LCD
-         iz     = int(hfbtmp(7,jj))                                     ! LCD
+         k      = int(hfb(1,jj))                                        ! LCD
+         i1     = int(hfb(2,jj))                                        ! LCD
+         j1     = int(hfb(3,jj))                                        ! LCD
+         i2     = int(hfb(4,jj))                                        ! LCD
+         j2     = int(hfb(5,jj))                                        ! LCD
+         factor = hfb(6,jj)                                             ! LCD
+         iz     = int(hfb(7,jj))                                        ! LCD
       end if
       call pks7mpitrn(j1,i1,k,lused1)                                   ! PKS
       call pks7mpitrn(j2,i2,k,lused2)                                   ! PKS
@@ -698,8 +696,6 @@ C7------Check for illegal grid location.
   250 CONTINUE
       NLIST = II-LSTBEG+1                                               ! PKS
       IF(ICLOSE.NE.0) CLOSE(UNIT=IN)
-
-      if (lcd) deallocate(hfbtmp)                                       ! LCD
 C
 C8------Return.
       RETURN

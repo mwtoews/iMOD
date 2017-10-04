@@ -45,7 +45,7 @@ c   2600 MH Delft, The Netherlands.
 
       interface
 
-      subroutine rdlcd(nlist,rlist,rlisttmp,lstbeg,ldim,mxlist,in,
+      subroutine rdlcd(nlist,rlist,lstbeg,ldim,mxlist,in,
      1                 iout,label,ncol,nrow,nlay)
 
       implicit none
@@ -55,7 +55,6 @@ c arguments
       integer, intent(in) :: ldim
       integer, intent(inout) :: mxlist
       real, dimension(:,:), pointer :: rlist
-      real, dimension(:,:), pointer :: rlisttmp
       integer, intent(in) :: lstbeg
       integer, intent(in) :: in
       integer, intent(in) :: iout
@@ -70,7 +69,7 @@ c arguments
 
       end module rdlcd_interface
 
-      subroutine rdlcd(nlist,rlist,rlisttmp,lstbeg,ldim,mxlist,in,
+      subroutine rdlcd(nlist,rlist,lstbeg,ldim,mxlist,in,
      1                 iout,label,ncol,nrow,nlay)
 
 c description:
@@ -90,7 +89,6 @@ c arguments
       integer, intent(in) :: ldim
       integer, intent(inout) :: mxlist
       real, dimension(:,:), pointer :: rlist
-      real, dimension(:,:), pointer :: rlisttmp
       integer, intent(in) :: lstbeg
       integer, intent(in) :: in
       integer, intent(in) :: iout
@@ -100,6 +98,7 @@ c arguments
       integer, intent(in) :: nlay
 
 c local variables
+      real, dimension(:,:), allocatable :: rlisttmp                     ! DLT
       integer :: icol, irow, jcol, jrow, igen, iact, ngen, ii, kk,
      1           ip1, ip2,ic1, ic2, ir1, ir2, j, jj !, nlist
       integer ::  il, is, ie, iline, jline, nline
@@ -307,7 +306,7 @@ c count number of hfb and fill
 
          nlist = ii-lstbeg+1
          if (iact.eq.1) then
-            if (.not.associated(rlisttmp)) then
+            if (.not.allocated(rlisttmp)) then
                !## allocate addition column to store system number
                allocate(rlisttmp(ldim+1,nlist))
             end if
@@ -484,7 +483,7 @@ c count number of hfb and fill
       enddo
       
 c deallocate arrays
-      deallocate(rlisttmp)
+      if (allocated(rlisttmp)) deallocate(rlisttmp)
       if (allocated(ipc)) deallocate(ipc)
       if (allocated(tmp)) deallocate(tmp)
       IF(ALLOCATED(TF))DEALLOCATE(TF); IF(ALLOCATED(BF))DEALLOCATE(BF)
