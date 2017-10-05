@@ -259,8 +259,6 @@ INTEGER :: IOS
 
 IF(ALLOCATED(QSORT))DEALLOCATE(QSORT)
 call INTERSECT_DEALLOCATE()
-!IF(ASSOCIATED(XA))DEALLOCATE(XA); IF(ASSOCIATED(YA))DEALLOCATE(YA)
-!IF(ASSOCIATED(LN))DEALLOCATE(LN); IF(ASSOCIATED(FA))DEALLOCATE(FA)
 MX=1000; ALLOCATE(XA(MX),YA(MX),FA(MX),LN(MX))
 
 !## translate cdate in to julian date - for transient simulations only!
@@ -494,16 +492,12 @@ DO I=1,NISGH
      ENDDO
 !     RVAL(:,0)=(RVAL(:,ISEG)-RVAL(:,ISEG-1))/DXY
 
-!     DO
      IF(LQD)THEN
       !## intersect line with rectangular-regular-equidistantial-grid
       CALL IMOD_UTL_INTERSECT_EQUI(DELR(0),DELR(NCOL),DELC(NROW),DELC(0),SIMCSIZE,SIMCSIZE,X1,X2,Y1,Y2,N,.FALSE.)
      ELSE
       CALL IMOD_UTL_INTERSECT_NONEQUI(DELR,DELC,NROW,NCOL,X1,X2,Y1,Y2,N,.FALSE.)
      ENDIF
- !     DEALLOCATE(XA,YA,FA,LN); MX=2*MX
- !     ALLOCATE(XA(MX),YA(MX),LN(MX),FA(MX))
- !    ENDDO
 
      !## fill result array
      DXY=0.0
@@ -514,8 +508,8 @@ DO I=1,NISGH
       CALL PCK6RPISG(JCRS,NCRS,ISGLEN)
 
       IF(LN(J).GT.0.0)THEN
-       ICOL=ca(j) !INT(XA(J))
-       IROW=ra(j) !INT(YA(J))
+       ICOL=cA(J)
+       IROW=rA(J)
        !## within model-domain
        IF(ICOL.GE.1.AND.IROW.GE.1.AND. &
           ICOL.LE.NCOL.AND.IROW.LE.NROW)THEN
@@ -1400,10 +1394,15 @@ END SUBROUTINE
  
  IDF(8)%X=0.0
  DO IROW=1,IDF(1)%NROW; DO ICOL=1,IDF(1)%NCOL
+  !## already visited by bathymetry routine - so skip it
+  IF(IDF(6)%X(ICOL,IROW).NE.0.0)THEN
+   IDF(6)%X(ICOL,IROW)=-1.0*IDF(6)%X(ICOL,IROW)
+   CYCLE
+  ENDIF
   IF(IDF(1)%X(ICOL,IROW).NE.0.0)IDF(8)%X(ICOL,IROW)=1.0
   DO I=1,4; IF(IDF(I)%X(ICOL,IROW).EQ.IDF(I)%NODATA)IDF(I)%X(ICOL,IROW)=0.0; ENDDO
-  W=IDF(7)%X(ICOL,IROW)
-  L=IDF(5)%X(ICOL,IROW)
+  W=IDF(7)%X(ICOL,IROW)  !## width
+  L=IDF(9)%X(ICOL,IROW)  !## total length
   !## conductance assume to be cell-filled; f=dx/length-segment*dx/width
   IF(W.GT.FDX*IDF(1)%DX)THEN
    IDF(1)%X(ICOL,IROW)=IDF(1)%X(ICOL,IROW)*IDF(5)%DX/L*IDF(5)%DX/W
@@ -1447,6 +1446,9 @@ END SUBROUTINE
        !## count for doublicates (assumption)
        F=F**2.0
        
+       !## skip already filled in bathymetry
+       IF(IDF(6)%X(ICC,IRR).LT.0.0)CYCLE
+
        IDF(8)%X(ICC,IRR)=IDF(8)%X(ICC,IRR)+F*MM(IR,IC)
        DO I=1,4; IDF(I)%X(ICC,IRR)=IDF(I)%X(ICC,IRR)+V(I)*F*MM(IR,IC); ENDDO
        ICC=ICC+1
@@ -1470,6 +1472,8 @@ END SUBROUTINE
         !## count for doublicates (assumption)
         F=F**2.0
 
+        !## skip already filled in bathymetry
+        IF(IDF(6)%X(ICC,IRR).LT.0.0)CYCLE
         IDF(8)%X(ICC,IRR)=IDF(8)%X(ICC,IRR)+F*MM(IR,IC)
         DO I=1,4; IDF(I)%X(ICC,IRR)=IDF(I)%X(ICC,IRR)+V(I)*F*MM(IR,IC); ENDDO
        ENDIF
@@ -1492,8 +1496,12 @@ END SUBROUTINE
 
  !## correct to be sure multiplication matrix does not exceed factor 1.0 and multiply conductance with erosion matrix
  DO IROW=1,IDF(1)%NROW; DO ICOL=1,IDF(1)%NCOL
-  IF(IDF(8)%X(ICOL,IROW).GT.1.0)IDF(8)%X(ICOL,IROW)=1.0
-  IDF(1)%X(ICOL,IROW)=IDF(1)%X(ICOL,IROW)*IDF(8)%X(ICOL,IROW)
+  IF(IDF(8)%X(ICOL,IROW).GT.1.0)THEN
+   IDF(8)%X(ICOL,IROW)=1.0
+  ELSE
+   IDF(8)%X(ICOL,IROW)=-1.0*IDF(8)%X(ICOL,IROW)
+  ENDIF
+!  IDF(1)%X(ICOL,IROW)=IDF(1)%X(ICOL,IROW)*IDF(8)%X(ICOL,IROW)
  ENDDO; ENDDO
 
  !## clean for conductances le zero
