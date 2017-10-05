@@ -1104,7 +1104,10 @@ CONTAINS
  N               =ISD(IPOS)%N
 
  !## adjust isd variable
- ISD(IPOS:NISD-1)=ISD(IPOS+1:NISD)
+ DO I=IPOS,NISD-1
+  ISD(I)=ISD(I+1)
+ ENDDO
+! ISD(IPOS:NISD-1)=ISD(IPOS+1:NISD)
  NISD            =NISD-1
  ISG(IISG)%NCLC  =ISG(IISG)%NCLC-1
 
@@ -1122,7 +1125,10 @@ CONTAINS
 
  !## remove from iscdat = only whenever no other refers to calc.pnt
  IF(J.GT.NISD.AND.N.GT.0)THEN
-  DATISD(IREF:NDISD-N)=DATISD(IREF+N:NDISD)
+  DO I=IREF,NDISD-N
+   DATISD(I)=DATISD(I+N)
+  ENDDO
+!  DATISD(IREF:NDISD-N)=DATISD(IREF+N:NDISD)
   NDISD               =NDISD-N
   !## adjust other references to selected calc.pnt definition
   DO I=1,NISD
@@ -1189,8 +1195,11 @@ CONTAINS
  IREF            =IST(IPOS)%IREF
  N               =IST(IPOS)%N
 
- !## adjust isd variable
- IST(IPOS:NIST-1)=IST(IPOS+1:NIST)
+ !## adjust ist variable
+ DO I=IPOS,NIST-1
+  IST(I)=IST(I+1)
+ ENDDO
+! IST(IPOS:NIST-1)=IST(IPOS+1:NIST)
  NIST            =NIST-1
  ISG(IISG)%NSTW  =ISG(IISG)%NSTW-1
 
@@ -1208,7 +1217,10 @@ CONTAINS
 
  !## remove from iscdat = only whenever no other refers to cross-section
  IF(J.GT.NIST.AND.N.GT.0)THEN
-  DATIST(IREF:NDIST-N)=DATIST(IREF+N:NDIST)
+  DO I=IREF,NDIST-N
+   DATIST(I)=DATIST(I+N)
+  ENDDO
+!  DATIST(IREF:NDIST-N)=DATIST(IREF+N:NDIST)
   NDIST               =NDIST-N
  !## adjust other references to selected cross-section definition
   DO I=1,NIST
@@ -1230,7 +1242,10 @@ CONTAINS
  N               =ISQ(IPOS)%N
 
  !## adjust isq variable
- ISQ(IPOS:NISQ-1)=ISQ(IPOS+1:NISQ)
+ DO I=IPOS,NISQ-1
+  ISQ(I)=ISQ(I+1)
+ ENDDO
+! ISQ(IPOS:NISQ-1)=ISQ(IPOS+1:NISQ)
  NISQ            =NISQ-1
  ISG(IISG)%NQHR  =ISG(IISG)%NQHR-1
 
@@ -1248,7 +1263,10 @@ CONTAINS
 
  !## remove from iscdat = only whenever no other refers to cross-section
  IF(J.GT.NISQ.AND.N.GT.0)THEN
-  DATISQ(IREF:NDISQ-N)=DATISQ(IREF+N:NDISQ)
+  DO I=IREF,NDISQ-N
+   DATISQ(I)=DATISQ(I+N)
+  ENDDO
+!  DATISQ(IREF:NDISQ-N)=DATISQ(IREF+N:NDISQ)
   NDISQ               =NDISQ-N
  !## adjust other references to selected cross-section definition
   DO I=1,NISQ
@@ -1269,7 +1287,10 @@ CONTAINS
  NSEG=ISG(IISG)%NSEG
 
  !##adjust isp variable
- ISP(ISEG:NISP-NSEG)=ISP(ISEG+NSEG:NISP)
+ DO I=ISEG,NISP-NSEG
+  ISP(I)=ISP(I+NSEG)
+ ENDDO
+! ISP(ISEG:NISP-NSEG)=ISP(ISEG+NSEG:NISP)
  NISP               =NISP-NSEG
  ISG(IISG)%NSEG     =ISG(IISG)%NSEG-NSEG
 
@@ -1602,22 +1623,22 @@ CONTAINS
   N=ABS(ISG(K)%NCLC)
   !## add space
   IF(DN.GT.0)THEN
-   DO I=NISD,IREF+N,-1
-    ISD(I)=ISD(I-DN)
+   DO I=NISD,IREF+DN,-1
+    IF(I-DN.GT.0)ISD(I)=ISD(I-DN)
    ENDDO
   !## remove space
   ELSEIF(DN.LT.0)THEN
    DO I=IREF+N+DN,NISD
-    ISD(I)=ISD(I-DN)
+    IF(I-DN.GT.0)ISD(I)=ISD(I-DN)
    ENDDO
   ENDIF
  ENDIF
 
 ! IF(DN.GT.0)THEN
-!  IF(ICLC+DN.LE.NISD)ISD(ICLC+DN:NISD)=ISD(ICLC:NISD-DN)
+!  IF(IREF+DN.LE.NISD)ISD(IREF+DN:NISD)=ISD(IREF:NISD-DN)
 ! ELSEIF(DN.LT.0)THEN
 !  N=ISG(K)%NCLC
-!  ISD(ICLC+N+DN:NISD+DN)=ISD(ICLC+N:NISD)
+!  ISD(IREF+N+DN:NISD+DN)=ISD(IREF+N:NISD)
 ! ENDIF
 
  ISG(K)%NCLC=ISG(K)%NCLC+DN
@@ -1670,13 +1691,13 @@ CONTAINS
   N=ABS(ISG(K)%NCRS)
   !## add space
   IF(DN.GT.0)THEN
-   DO I=NISG,IREF+N,-1
-    ISG(I)=ISG(I-DN)
+   DO I=NISC,IREF+DN,-1
+    IF(I-DN.GT.0)ISC(I)=ISC(I-DN)
    ENDDO
   !## remove space
   ELSEIF(DN.LT.0)THEN
-   DO I=IREF+N+DN,NISG
-    ISG(I)=ISG(I-DN)
+   DO I=IREF+N+DN,NISC
+    IF(I-DN.GT.0)ISC(I)=ISC(I-DN)
    ENDDO
   ENDIF
  ENDIF
@@ -1690,7 +1711,7 @@ CONTAINS
  
  ISG(K)%NCRS=ISG(K)%NCRS+DN
 
- !## change all citations greater than isd(iseg)%iref
+ !## change all citations greater than iref
  ICRS=ISG(K)%ICRS
  DO I=1,NISG
   IF(ISG(I)%ICRS.GT.IREF)ISG(I)%ICRS=ISG(I)%ICRS+DN
@@ -1738,13 +1759,13 @@ CONTAINS
   N=ABS(ISG(K)%NSTW)
   !## add space
   IF(DN.GT.0)THEN
-   DO I=NIST,IREF+N,-1
-    IST(I)=IST(I-DN)
+   DO I=NIST,IREF+DN,-1
+    IF(I-DN.GT.0)IST(I)=IST(I-DN)
    ENDDO
   !## remove space
   ELSEIF(DN.LT.0)THEN
    DO I=IREF+N+DN,NIST
-    IST(I)=IST(I-DN)
+    IF(I-DN.GT.0)IST(I)=IST(I-DN)
    ENDDO
   ENDIF
  ENDIF
@@ -1806,13 +1827,13 @@ CONTAINS
   N=ABS(ISG(K)%NQHR)
   !## add space
   IF(DN.GT.0)THEN
-   DO I=NISQ,IREF+N,-1
-    ISQ(I)=ISQ(I-DN)
+   DO I=NISQ,IREF+DN,-1
+    IF(I-DN.GT.0)ISQ(I)=ISQ(I-DN)
    ENDDO
   !## remove space
   ELSEIF(DN.LT.0)THEN
    DO I=IREF+N+DN,NISQ
-    ISQ(I)=ISQ(I-DN)
+    IF(I-DN.GT.0)ISQ(I)=ISQ(I-DN)
    ENDDO
   ENDIF
  ENDIF
@@ -1874,13 +1895,13 @@ CONTAINS
   N=ABS(ISG(K)%NSEG)
   !## add space
   IF(DN.GT.0)THEN
-   DO I=NISP,IREF+N,-1
-    ISP(I)=ISP(I-DN)
+   DO I=NISP,IREF+DN,-1
+    IF(I-DN.GT.0)ISP(I)=ISP(I-DN)
    ENDDO
   !## remove space
   ELSEIF(DN.LT.0)THEN
    DO I=IREF+N+DN,NISP
-    ISP(I)=ISP(I-DN)
+    IF(I-DN.GT.0)ISP(I)=ISP(I-DN)
    ENDDO
   ENDIF
  ENDIF
@@ -1942,13 +1963,13 @@ CONTAINS
   N=ABS(ISD(K)%N)
   !## add space
   IF(DN.GT.0)THEN
-   DO I=NDISD,IREF+N,-1
-    DATISD(I)=DATISD(I-DN)
+   DO I=NDISD,IREF+DN,-1
+    IF(I-DN.GT.0)DATISD(I)=DATISD(I-DN)
    ENDDO
   !## remove space
   ELSEIF(DN.LT.0)THEN
    DO I=IREF+N+DN,NDISD
-    DATISD(I)=DATISD(I-DN)
+    IF(I-DN.GT.0)DATISD(I)=DATISD(I-DN)
    ENDDO
   ENDIF
  ENDIF
@@ -2010,16 +2031,26 @@ CONTAINS
   N=ABS(ISC(K)%N)
   !## add space
   IF(DN.GT.0)THEN
-   DO I=NDISC,IREF+N,-1
-    DATISC(I)=DATISC(I-DN)
+   DO I=NDISC,IREF+DN,-1
+    IF(I-DN.GT.0)DATISC(I)=DATISC(I-DN)
    ENDDO
   !## remove space
   ELSEIF(DN.LT.0)THEN
    DO I=IREF+N+DN,NDISC
-    DATISC(I)=DATISC(I-DN)
+    IF(I-DN.GT.0)DATISC(I)=DATISC(I-DN)
    ENDDO
   ENDIF
  ENDIF
+
+! IF(ICLC.GT.0)THEN
+!  IF(DN.GT.0)THEN
+!   IF(ICLC+DN.LE.NDISD)DATISD(ICLC+DN:NDISD)=DATISD(ICLC:NDISD-DN)
+!  ELSEIF(DN.LT.0)THEN
+!   N=ISD(K)%N
+!   DATISD(ICLC+N+DN:NDISD+DN)=DATISD(ICLC+N:NDISD)
+!  ENDIF
+! ENDIF
+
 
  J=1; IF(ISC(K)%N.LT.0)J=-1
  ISC(K)%N=J*(ABS(ISC(K)%N)+DN)
@@ -2070,13 +2101,13 @@ CONTAINS
   N=ABS(IST(K)%N)
   !## add space
   IF(DN.GT.0)THEN
-   DO I=NDIST,IREF+N,-1
-    DATIST(I)=DATIST(I-DN)
+   DO I=NDIST,IREF+DN,-1
+    IF(I-DN.GT.0)DATIST(I)=DATIST(I-DN)
    ENDDO
   !## remove space
   ELSEIF(DN.LT.0)THEN
    DO I=IREF+N+DN,NDIST
-    DATIST(I)=DATIST(I-DN)
+    IF(I-DN.GT.0)DATIST(I)=DATIST(I-DN)
    ENDDO
   ENDIF
  ENDIF
@@ -2139,13 +2170,13 @@ CONTAINS
   N=ABS(ISQ(K)%N)
   !## add space
   IF(DN.GT.0)THEN
-   DO I=NDISQ,IREF+N,-1
-    DATISQ(I)=DATISQ(I-DN)
+   DO I=NDISQ,IREF+DN,-1
+    IF(I-DN.GT.0)DATISQ(I)=DATISQ(I-DN)
    ENDDO
   !## remove space
   ELSEIF(DN.LT.0)THEN
    DO I=IREF+N+DN,NDISQ
-    DATISQ(I)=DATISQ(I-DN)
+    IF(I-DN.GT.0)DATISQ(I)=DATISQ(I-DN)
    ENDDO
   ENDIF
  ENDIF

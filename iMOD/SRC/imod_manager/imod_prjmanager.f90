@@ -3448,7 +3448,7 @@ TOPICLOOP: DO ITOPIC=1,MAXTOPICS
                                   TOPICS(I)%STRESS(1)%FILES(K,J)%FCT ,',', &
                                   TOPICS(I)%STRESS(1)%FILES(K,J)%IMP ,','
      ELSE
-      WRITE(LINE,'(1X,I4.4,2(A1,G15.7),A1)') &
+      WRITE(LINE,'(1X,I5,2(A1,G15.7),A1)') &
                                   TOPICS(I)%STRESS(1)%FILES(K,J)%ILAY,',', &
                                   TOPICS(I)%STRESS(1)%FILES(K,J)%FCT ,',', &
                                   TOPICS(I)%STRESS(1)%FILES(K,J)%IMP ,','
@@ -3538,13 +3538,13 @@ TOPICLOOP: DO ITOPIC=1,MAXTOPICS
        !## skip temporary deactivated packages
        IF(TOPICS(I)%STRESS(IPER)%FILES(K,J)%IACT.EQ.0)CYCLE
        IF(TOPICS(I)%STRESS(IPER)%FILES(K,J)%ICNST.EQ.1)THEN
-        WRITE(IU,'(1X,I4.4,3(A1,G15.7))') &
+        WRITE(IU,'(1X,I5,3(A1,G15.7))') &
                                     TOPICS(I)%STRESS(IPER)%FILES(K,J)%ILAY,',', &
                                     TOPICS(I)%STRESS(IPER)%FILES(K,J)%FCT ,',', &
                                     TOPICS(I)%STRESS(IPER)%FILES(K,J)%IMP ,',', &
                                     TOPICS(I)%STRESS(IPER)%FILES(K,J)%CNST
        ELSEIF(TOPICS(I)%STRESS(IPER)%FILES(K,J)%ICNST.EQ.2)THEN
-        WRITE(IU,'(1X,I4.4,2(A1,G15.7),A1,A)') &
+        WRITE(IU,'(1X,I5,2(A1,G15.7),A1,A)') &
                                     TOPICS(I)%STRESS(IPER)%FILES(K,J)%ILAY,',', &
                                     TOPICS(I)%STRESS(IPER)%FILES(K,J)%FCT ,',', &
                                     TOPICS(I)%STRESS(IPER)%FILES(K,J)%IMP ,',', &
@@ -5830,13 +5830,7 @@ TOPICLOOP: DO ITOPIC=1,MAXTOPICS
    CASE DEFAULT; N=NTOP
   END SELECT
   
-!  SELECT CASE (ITOPIC)
-!   !## duplicate for chd/olf package
-!   CASE (22,27)
-    WRITE(FRM,'(A10,I2.2,A14)') '(3(I5,1X),',N,'(G15.7,1X),I5)'
-!   CASE DEFAULT
-!    WRITE(FRM,'(A10,I2.2,A14)') '(3(I5,1X),',N,'(G15.7,1X),I5)'
-!  END SELECT
+  WRITE(FRM,'(A10,I2.2,A14)') '(3(I5,1X),',N,'(G15.7,1X),I5)'
   
   CALL PMANAGER_SAVEMF2005_ALLOCATEPCK(NTOP)
   
@@ -5854,6 +5848,14 @@ TOPICLOOP: DO ITOPIC=1,MAXTOPICS
     IMP   =TOPICS(ITOPIC)%STRESS(KPER)%FILES(KTOP,ISYS)%IMP   
     ILAY  =TOPICS(ITOPIC)%STRESS(KPER)%FILES(KTOP,ISYS)%ILAY  
     SFNAME=TOPICS(ITOPIC)%STRESS(KPER)%FILES(KTOP,ISYS)%FNAME 
+
+    !## ilay equal zero not possible for rch and evt
+    IF(ITOPIC.EQ.24.OR.ITOPIC.EQ.26)THEN
+     IF(ILAY.EQ.0)THEN
+      CALL WMESSAGEBOX(OKONLY,INFORMATIONICON,COMMONOK,'You cannot apply a layer code of zero for RCH or EVT','Error')
+      RETURN
+     ENDIF
+    ENDIF
 
     !## check to see whether equal to previous timestep
     IEQUAL=1
@@ -5940,13 +5942,13 @@ TOPICLOOP: DO ITOPIC=1,MAXTOPICS
      !## evt
      CASE (24)
       IF(KTOP.EQ.1)FCT=FCT*0.001
-      IF(ILAY.LE.0)NEVTOP=3
+      IF(ILAY.LT.0)NEVTOP=3
       !## checking for inactive cells
       ICHECK=1; IF(ILAY.GT.0)ICHECK=0
      !## rch
      CASE (26)
       IF(KTOP.EQ.1)FCT=FCT*0.001
-      IF(ILAY.LE.0)NRCHOP=3
+      IF(ILAY.LT.0)NRCHOP=3
       !## checking for inactive cells
       ICHECK=1; IF(ILAY.GT.0)ICHECK=0
     END SELECT
@@ -6064,7 +6066,7 @@ TOPICLOOP: DO ITOPIC=1,MAXTOPICS
         CASE (23) !## riv - waterlevel and bottom
          Z1=PCK(2)%X(ICOL,IROW); Z2=PCK(3)%X(ICOL,IROW)
         CASE (27) !## olf drainagelevel
-         Z1=PCK(2)%X(ICOL,IROW); Z2=Z1
+         Z1=PCK(1)%X(ICOL,IROW); Z2=Z1
         CASE (25) !## ghb drainagelevel
          Z1=PCK(2)%X(ICOL,IROW); Z2=Z1
         CASE DEFAULT
