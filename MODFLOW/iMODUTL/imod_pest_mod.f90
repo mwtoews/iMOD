@@ -1,4 +1,4 @@
-!!  Copyright (C) Stichting Deltares, 2005-2017.
+!!  Copyright (C) Stichting Deltares, 2005-2014.
 !!
 !!  This file is part of iMOD.
 !!
@@ -23,7 +23,7 @@
 !###====================================================================
 MODULE PESTVAR
 !###====================================================================
-INTEGER,PARAMETER :: MXPTYPE=18
+INTEGER,PARAMETER :: MXPTYPE=19
 REAL,PARAMETER :: XPBND=0.01 !## boundary percentage
 CHARACTER(LEN=2),DIMENSION(MXPTYPE) :: PTYPE
 INTEGER :: PEST_NITER,PEST_ITER,PEST_ILNSRCH,PEST_IGRAD,PEST_NOBS,PEST_NPERIOD,PEST_NBATCH,PEST_ISCALING, &
@@ -100,7 +100,8 @@ DATA PTYPE/'KD',& ! 1 transmissivity
            'MS',& !15 metaswap theta (soil moisture)
            'MC',& !16 metaswap conductivity
            'RE',& !17 recharge
-           'EX'/  !18 external distribution
+           'EX',& !18 external distribution
+           'EP'/  !19 
 
 END MODULE PESTVAR
 

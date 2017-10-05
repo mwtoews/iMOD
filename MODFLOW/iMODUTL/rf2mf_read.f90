@@ -289,11 +289,19 @@ CONTAINS
        end if
        call RF2MF_READ1MAIN_system(riv%sp(kper)%gcd%subsys(nsys)%data(itp(it)),ios,ilay,fct,imp,constante,iarr,fname,scltype,ismooth)
       CASE (PEVT)     !## (PEVT) evapotranspiration
+       !## ilay equal zero not possible for evt
+       if(ilay.eq.0)then
+        CALL IMOD_UTL_PRINTTEXT('You cannot apply a layer code of zero for EVT',2,IUOUT)
+        return
+       endif
        evt%sp(kper)%reuse = .false.
        evt%sp(kper)%insurf = 1
        evt%sp(kper)%inevtr = 1
        evt%sp(kper)%inexdp = 1
-       if (it.eq.1) call RF2MF_READ1MAIN_system(evt%sp(kper)%evtr,ios,ilay,fct,imp,0.001*constante,iarr,fname,iusclarith,idsclintp)
+       if (it.eq.1)then
+        call RF2MF_READ1MAIN_system(evt%sp(kper)%evtr,ios,ilay,fct,imp,constante,iarr,fname,iusclarith,idsclintp)
+        evt%sp(kper)%evtr%fct = evt%sp(kper)%evtr%fct * 0.001
+       endif
        if (it.eq.2) call RF2MF_READ1MAIN_system(evt%sp(kper)%surf,ios,ilay,fct,imp,constante,iarr,fname,iusclarith,idsclnointp)
        if (it.eq.3) call RF2MF_READ1MAIN_system(evt%sp(kper)%exdp,ios,ilay,fct,imp,constante,iarr,fname,iusclarith,idsclnointp)
       CASE (PGHB)     !## (PGHB) general head boundary
@@ -314,6 +322,11 @@ CONTAINS
        end if
        call RF2MF_READ1MAIN_system(ghb%sp(kper)%gcd%subsys(nsys)%data(itp(it)),ios,ilay,fct,imp,constante,iarr,fname,scltype,ismooth)
       CASE (PRCH)     !## (PRCH) recharge
+       !## ilay equal zero not possible for rch
+       if(ilay.eq.0)then
+        CALL IMOD_UTL_PRINTTEXT('You cannot apply a layer code of zero for RCH',2,IUOUT)
+        return
+       endif
        rch%sp(kper)%reuse = .false.
        rch%sp(kper)%inrech = rch%sp(kper)%inrech + 1
        if (rch%sp(kper)%inrech.gt.mxrech) call imod_utl_printtext('Error, increase mxrech',-3)

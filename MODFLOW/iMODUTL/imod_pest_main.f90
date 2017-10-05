@@ -300,7 +300,7 @@ CONTAINS
         PARAM(I)%IGROUP   !## group number
    !## overrule default settings for log normal
    SELECT CASE (PARAM(I)%PTYPE)
-    CASE ('KD','KH','KV','VC','SC','RC','RI','IC','II','DC','AF','MS','MC','VA','HF','EX')
+    CASE ('KD','KH','KV','VC','SC','RC','RI','IC','II','DC','AF','MS','MC','VA','HF','EX','EP')
      PARAM(I)%LOG=.TRUE.
     CASE DEFAULT
      PARAM(I)%LOG=.FALSE.    
@@ -480,6 +480,7 @@ CONTAINS
 !## USE U2DREL
     ALLOCATE(ZONE(I)%X(NCOL,NROW))
     ZONE(I)%ZTYPE=0
+    
     CALL U2DREL(zone(i)%x, 'zone', NROW, NCOL, 0, iurun, IOUT)
 
 !#ifdef IPEST_PILOTPOINTS    
@@ -653,7 +654,7 @@ CONTAINS
  BLINE=''
  DO J=1,SIZE(PARAM)
   IF(ABS(PARAM(J)%IACT).EQ.1.AND.PARAM(J)%IGROUP.GT.0)THEN
-   WRITE(SLINE,'(7X,I3.3)') PARAM(J)%IGROUP
+   WRITE(SLINE,'(11X,I3.3)') PARAM(J)%IGROUP
    BLINE=TRIM(BLINE)//TRIM(SLINE)
   ENDIF
  ENDDO
@@ -2560,6 +2561,9 @@ CONTAINS
   CASE ('VC','KV')
    IF(PARAM(IP)%ILS.LE.0.OR.PARAM(IP)%ILS.GT.NLAY-1) &
     CALL IMOD_UTL_PRINTTEXT('Parameter '//TRIM(IMOD_UTL_ITOS(IP))//': ILS exceeds NLAY-1',2)
+  CASE ('EP')
+   IF(PARAM(IP)%ILS.NE.1) &
+    CALL IMOD_UTL_PRINTTEXT('Parameter '//TRIM(IMOD_UTL_ITOS(IP))//': ILS need to be equal to 1',2)
  END SELECT
 
  !## scaling
