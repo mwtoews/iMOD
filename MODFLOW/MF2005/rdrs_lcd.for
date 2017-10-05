@@ -111,7 +111,7 @@ c local variables
       character(len=1024) :: fname
       integer,dimension(:),allocatable :: lun,dun,nlun
       character(len=1024) :: str
-      integer :: iflen                                                  ! PKS
+      integer :: iflen, myrank                                          ! PKS
 
 c parameters
       character(len=24) :: aname(1)
@@ -470,18 +470,33 @@ c count number of hfb and fill
         deallocate(rlist); allocate(rlist(ldim,mxlist))
        endif
        
-      enddo
+       enddo
     
-      !## close files
-      do ilay=1,nlay
-       if(nlun(ilay).eq.0)then
-        close(lun(ilay),status='delete')
-        close(dun(ilay),status='delete')
-       else
-        write(lun(ilay),'(a)') 'end'; close(lun(ilay)); close(dun(ilay))
-       endif
-      enddo
-      
+      call pks7mpigetmyrank(myrank)                                     ! PKS
+      if (myrank.ne.0) then                                             ! PKS
+       !## close files
+       do ilay=1,nlay
+        if(nlun(ilay).ne.0)then
+         write(lun(ilay),'(a)') 'end'
+        endif
+        close(lun(ilay))
+        close(dun(ilay))
+       enddo
+      end if                                                            ! PKS
+      call pks7mpibarrier()                                             ! PKS
+      if (myrank.eq.0) then                                             ! PKS
+       !## close files
+       do ilay=1,nlay
+        if(nlun(ilay).eq.0)then
+         close(lun(ilay),status='delete')
+         close(dun(ilay),status='delete')
+        else
+         write(lun(ilay),'(a)') 'end'
+         close(lun(ilay))
+         close(dun(ilay))
+        endif
+       enddo
+      end if                                                            ! PKS
 c deallocate arrays
       if (allocated(rlisttmp)) deallocate(rlisttmp)
       if (allocated(ipc)) deallocate(ipc)
