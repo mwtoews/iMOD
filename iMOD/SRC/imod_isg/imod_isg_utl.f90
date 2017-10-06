@@ -34,6 +34,136 @@ USE IMOD, ONLY : IDFINIT
 
 CONTAINS
 
+ !###====================================================================
+ REAL FUNCTION ISG_UTL_LEAKAGE(CD,DXY,INFF,TD,WETPER,C0,C1,D,KH)
+ !###====================================================================
+ IMPLICIT NONE
+ REAL,INTENT(INOUT) :: INFF
+ REAL,INTENT(IN) :: DXY,TD,WETPER,C0,C1,D,KH,CD
+ REAL :: KV,COND_INF,COND_DRN
+ 
+ !## no adjustments
+ ISG_UTL_LEAKAGE=1.0
+
+ !## no resistance
+ IF(C1.LE.0.0)THEN; ISG_UTL_LEAKAGE=0.0; RETURN; ENDIF
+ 
+ KV =KH/10.0                                   !## vertical permeability 
+
+ !## process formulae van de Lange - infiltratie weerstand
+ COND_INF=0.0; IF(INFF.GT.0.0.AND.INFF.LE.1.0)COND_INF=ISG_UTL_LEAKAGE_Y(DXY,D,KV,KH,C1,TD,WETPER,C0/INFF)
+
+ !## process formulae van de Lange - drainage weerstand
+ COND_DRN=ISG_UTL_LEAKAGE_Y(DXY,D,KV,KH,C1,TD,WETPER,C0)
+
+ !## infiltration factor
+ IF(COND_DRN.GT.0.0)INFF=COND_INF/COND_DRN
+ 
+ ISG_UTL_LEAKAGE=COND_DRN/CD
+ 
+!  IF(C1.GT.0.0)THEN
+!   C1 =DXY/C1                                    !## resistance of aquitard (1/day -> day)
+!   IF(ISFT.EQ.1)THEN
+!    D  =SFT(ICOL,IROW,1)                         !## thickness of aquifer
+!    KH =SFT(ICOL,IROW,2)                         !## permeability
+!   ELSE
+!    D = BOTM(ICOL,IROW,LBOTM(ILAY)-1)-BOTM(ICOL,IROW,LBOTM(ILAY)) !## thickness of aquifer
+!    KH =KDSV(ICOL,IROW,ILAY)/(D+TINY)              !## permeability
+!   KH =CC(ICOL,IROW,ILAY)/(D+TINY)              !## permeability
+!   ENDIF
+!   KV =KH/10.0                                   !## vertical permeability 
+
+!   IF(KH.LE.0.0)CALL IMOD_UTL_PRINTTEXT('Error KH='//TRIM(IMOD_UTL_RTOS(KH,'F',7)),0)
+!   IF(D .LE.0.0)CALL IMOD_UTL_PRINTTEXT('Error D ='//TRIM(IMOD_UTL_RTOS(D ,'F',7)),0)
+
+!   !## process formulae van de Lange - infiltratie weerstand
+!   COND_IN=0.0; IF(FCT.GT.0.0.AND.FCT.LE.1.0)COND_IN=ISG_UTL_LEAKAGE_Y(DXY,D,KV,KH,C1,LI,BIN,C0/FCT)
+!   !## process formulae van de Lange - drainage weerstand
+!   ISGLIST(I,5)=ISG_UTL_LEAKAGE_Y(DXY,D,KV,KH,C1,LI,BIN,C0)
+!   !## infiltration factor
+!   ISGLIST(I,7)=FCT; IF(ISGLIST(I,5).GT.0.0)ISGLIST(I,7)=COND_IN/ISGLIST(I,5)
+
+!   IF(ISGLIST(I,7).GT.1.0.OR.ISGLIST(I,7).LT.0.0)THEN
+!    CALL IMOD_UTL_PRINTTEXT('Error C0/FCT    ='//TRIM(IMOD_UTL_RTOS(C0/FCT,'F',7)),0)
+!    CALL IMOD_UTL_PRINTTEXT('Error COND_INF  ='//TRIM(IMOD_UTL_RTOS(COND_IN,'F',7)),0)
+!    CALL IMOD_UTL_PRINTTEXT('Error C0        ='//TRIM(IMOD_UTL_RTOS(C0,'F',7)),0)
+!    CALL IMOD_UTL_PRINTTEXT('Error COND_DRN  ='//TRIM(IMOD_UTL_RTOS(ISGLIST(NISG,5),'F',7)),0)
+!    CALL IMOD_UTL_PRINTTEXT('Error Inf.Factor='//TRIM(IMOD_UTL_RTOS(ISGLIST(NISG,7),'F',7)),0)
+!   ENDIF
+!  ELSE
+!   ISGLIST(I,5)=0.0
+!  ENDIF
+
+! END DO
+
+ END FUNCTION ISG_UTL_LEAKAGE
+
+ !###==================================================================== 
+ REAL FUNCTION ISG_UTL_LEAKAGE_Y(A,H0,KV,KH,C1,LI,BIN,C0)
+ !###====================================================================
+ !-----------------------------------------------------------------------
+ !* DESCRIPTION:
+ !*    Calculates de lekconductance according to De Lange
+ !*    A = celoppervlak (m2)
+ !*    H0 = doorstroomde dikte (m)
+ !*    kv = verticale doorlatendheid (m/d)
+ !*    kh = horizontale doorlatendheid (m/d)
+ !*    c1 = deklaagweerstand (d)
+ !*    li = lengte van de waterlopen (m)
+ !*    Bin = Bodembreedte (m)
+ !*    c0 = slootbodemweerstand (d)
+ !*    Uitkomst: Lekconductance (m2/d)
+ !*
+ !*    Conductances are easier to handle than resistances
+ !*    NB: L may not exceed SQRT(A), Lrad may because it is fair to assume that the total radial resistance is concentrated within A
+ !*
+ !-----------------------------------------------------------------------
+ !
+ IMPLICIT NONE
+ REAL,INTENT(IN) :: A,H0,KV,KH,C1,LI,BIN,C0
+ REAL :: L,BCOR,LABDAL,FL,LABDAB,FB,CL,CB,CRAD,WP,ACOR,PSL
+ REAL :: X,Y,PI,CTNH
+
+ PI = 4.0 * ATAN(1.0)
+ ISG_UTL_LEAKAGE_Y=0.0
+
+ IF(LI.GT.0.001.AND.BIN.GT.0.001.AND.A.GT.0.001)THEN
+  ACOR  = A
+  BCOR  = MAX(BIN,0.001)
+  L     = A/LI-BCOR
+  Y     = C1+H0/KV
+  LABDAL= SQRT(Y*KH*H0)
+  X     = 0.5*L/LABDAL
+  FL    = X*ISG_UTL_LEAKAGE_CTNH(X)
+  LABDAB= SQRT(Y*KH*H0*C0/(Y+C0))
+  X     = 0.5*BCOR/LABDAB
+  FB    = X*ISG_UTL_LEAKAGE_CTNH(X)
+  CL    =(C0+Y)*FL+(C0*L/BCOR)*FB
+  CB    =(C1+C0+H0/KV)/(CL-C0*L/BCOR)*CL
+  CRAD  = MAX(0.,L/(PI*SQRT(KV*KH))*LOG(4*H0/(PI*BCOR)))
+  PSL   = BCOR*LI/A
+  WP    = 1.0/((1.0-PSL)/CL+PSL/CB)+CRAD-Y
+  ISG_UTL_LEAKAGE_Y = A/WP
+ ENDIF
+
+ END FUNCTION ISG_UTL_LEAKAGE_Y
+
+ !###====================================================================
+ REAL FUNCTION ISG_UTL_LEAKAGE_CTNH(X)
+ !###====================================================================
+ IMPLICIT NONE
+ REAL,INTENT(IN) :: X
+
+ IF(X.LT.-4.0)THEN
+  ISG_UTL_LEAKAGE_CTNH=-1.0
+ ELSEIF(X.GT.4.0)THEN
+  ISG_UTL_LEAKAGE_CTNH=1.0
+ ELSE
+  ISG_UTL_LEAKAGE_CTNH=(EXP(X)+EXP(-1.0*X))/(EXP(X)-EXP(-1.0*X))
+ ENDIF
+
+ END FUNCTION ISG_UTL_LEAKAGE_CTNH
+ 
  !###======================================================================
  LOGICAL FUNCTION ISGATTRIBUTES_2DCROSS_READ(J,IDF,PIDF,ZCHK)
  !###======================================================================

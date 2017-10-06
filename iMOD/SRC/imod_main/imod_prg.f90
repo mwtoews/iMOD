@@ -83,18 +83,18 @@ INTEGER :: ITYPE,IERROR,I,NARG
 CHARACTER(LEN=256) :: ARGSTRING,LEGNAME
 INTEGER :: IY,IM,ID
 !REAL :: RX,RY,RZ
- real,dimension(4) :: top,bot,hk,vk,va,th,TP_BU,BT_BU,kh_bu,vk_bu,va_bu
- integer,dimension(4) :: ib
-! data top/10.0,9.5,9.0/
-! data bot/9.5,9.0,-20.0/
- data top/10.0,0.0,-0.5,-1.0/
- data bot/0.0,-0.5,-1.0,-20.0/
-! data top/10.0,0.0,-10.0/
-! data bot/0.0,-10.0,-20.0/
- data hk/1.0,1.0,1.0,1.0/
- data vk/1.0,1.0,1.0,1.0/
- data va/1.0,1.0,1.0,1.0/
- data ib/1,1,1,1/
+! real,dimension(4) :: top,bot,hk,vk,va,th,TP_BU,BT_BU,kh_bu,vk_bu,va_bu
+! integer,dimension(4) :: ib
+!! data top/10.0,9.5,9.0/
+!! data bot/9.5,9.0,-20.0/
+! data top/10.0,0.0,-0.5,-1.0/
+! data bot/0.0,-0.5,-1.0,-20.0/
+!! data top/10.0,0.0,-10.0/
+!! data bot/0.0,-10.0,-20.0/
+! data hk/1.0,1.0,1.0,1.0/
+! data vk/1.0,1.0,1.0,1.0/
+! data va/1.0,1.0,1.0,1.0/
+! data ib/1,1,1,1/
 
 ! call UTL_MINTHICKNESS(top,bot,hk,vk,va,TP_BU,BT_BU,kh_bu,vk_bu,va_bu,ib,TH,1.0)
 
