@@ -374,10 +374,7 @@ c              check if subsystem is of type ISG
                            z1   = isglist(isub)%list(kk,4)
                            q    = isglist(isub)%list(kk,5)
                            z2   = isglist(isub)%list(kk,6)
-                           if (z1.eq.z2) then
-                              z1 = z1 + 0.05
-                              z2 = z2 - 0.05
-                           end if
+
                            call assign_layer(tlp,irow,icol,z1,z2)
                            do il = 1, nlay
                               if (tlp(il).gt.0.) then
@@ -459,10 +456,7 @@ c              check if subsystem is of type ISG
                            else
                               z2 = z1
                            end if
-                           if (z1.eq.z2) then
-                              z1 = z1 + 0.05
-                              z2 = z2 - 0.05
-                           end if
+
                            call assign_layer(tlp,irow,icol,z1,z2)
                            do il = 1, nlay
                               if (tlp(il).gt.0.) then

@@ -558,30 +558,32 @@ C-------SET IACTCELL
         END DO                                                          ! PKS
       END DO                                                            ! PKS
 C      
-      if (iminkd.eq.1) then                                             ! DLT
-         ncor=0
-         do ilay=1,nlay                                                 ! DLT
-            do irow=1,nrow                                              ! DLT
-               do icol=1,ncol                                           ! DLT
-                  t = botm(icol,irow,lbotm(ilay)-1)                     ! DLT
-                  b = botm(icol,irow,lbotm(ilay))                       ! DLT
-                  !## minimal thickness is zero                         ! DLT
-                  d=max(0.0,t-b)                                        ! DLT
-                  !## adjust kh such that minkd will be satisfied       ! DLT
-                  if(d*hk(icol,irow,ilay).lt.minkd)then
-                   kd=minkd 
-                   if(d.gt.0.0)hk(icol,irow,ilay)=kd/d                   ! DLT
-                   ncor=ncor+1
-                  endif
-                  kdsv(icol,irow,ilay) = max(minkd,hk(icol,irow,ilay)*d) ! ILAY_ZERO
-               end do                                                   ! DLT
-            end do                                                      ! DLT
-         end do                                                         ! DLT
-       if(ncor.gt.0)then
-        write(IOUT,'(a)') 'Corrections caused by minimal Transmissivity'
-        write(IOUT,'(a,i8)') 'No. of corrections ',ncor
-       endif
-      end if                                                            ! DLT
+ !     if (iminkd.eq.1) then                                             ! DLT
+      ncor=0
+      do ilay=1,nlay                                           ! DLT
+       do irow=1,nrow                                          ! DLT
+        do icol=1,ncol                                         ! DLT
+         t = botm(icol,irow,lbotm(ilay)-1)                     ! DLT
+         b = botm(icol,irow,lbotm(ilay))                       ! DLT
+         !## minimal thickness is zero                         ! DLT
+         d=max(0.0,t-b)                                        ! DLT
+         !## adjust kh such that minkd will be satisfied       ! DLT
+         if (iminkd.eq.1)then                                  ! DLT
+          if(d*hk(icol,irow,ilay).lt.minkd)then
+           kd=minkd 
+           if(d.gt.0.0)hk(icol,irow,ilay)=kd/d                 ! DLT
+           ncor=ncor+1
+          endif
+         endif
+         kdsv(icol,irow,ilay) = max(minkd,hk(icol,irow,ilay)*d)
+        end do                                                 ! DLT
+       end do                                                  ! DLT
+      end do                                                   ! DLT
+      if(ncor.gt.0)then
+       write(IOUT,'(a)') 'Corrections caused by minimal Transmissivity'
+       write(IOUT,'(a,i8)') 'No. of corrections ',ncor
+      endif
+ !     end if                                                            ! DLT
 C
 
 C

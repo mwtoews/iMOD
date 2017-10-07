@@ -683,7 +683,7 @@ IRLOOP: DO IR=MAX(1,IROW-1),MIN(NROW,IROW+1)
         !## waterlevel at cross-section
         WL=IDF(2)%X(IC,IR)   
         !## resistance
-        C=IDF(8)%X(IC,IR)
+        C=IDF(5)%X(IC,IR)
         IF(C.NE.0.0)EXIT IRLOOP
        ENDDO
       ENDDO IRLOOP
@@ -1123,7 +1123,7 @@ SUBROUTINE PCK3RPISG(ISGLIST,NISG)
 !###====================================================================
 USE IMOD_UTL, ONLY : IMOD_UTL_PRINTTEXT,IMOD_UTL_RTOS
 USE MOD_BASVAR, ONLY : DELR,DELC
-USE GLOBAL, ONLY: CC, CV, BOTM, LBOTM
+USE GLOBAL, ONLY: CC, CV, BOTM, LBOTM, KDSV
 USE GWFRIVMODULE, ONLY: IFVDL,ISFT,SFT
 
 IMPLICIT NONE
@@ -1159,12 +1159,13 @@ DO I = 1, NISG
    KH =SFT(ICOL,IROW,2)                         !## permeability
   ELSE
    D = BOTM(ICOL,IROW,LBOTM(ILAY)-1)-BOTM(ICOL,IROW,LBOTM(ILAY)) !## thickness of aquifer
-   KH =CC(ICOL,IROW,ILAY)/(D+TINY)              !## permeability
+   KH =KDSV(ICOL,IROW,ILAY)/(D+TINY)              !## permeability
+!   KH =CC(ICOL,IROW,ILAY)/(D+TINY)              !## permeability
   ENDIF
   KV =KH/10.0                                   !## vertical permeability
 
-  IF(KH.LE.0.0)CALL IMOD_UTL_PRINTTEXT('Error KH='//TRIM(IMOD_UTL_RTOS(KH,'F',7)),0)
-  IF(D .LE.0.0)CALL IMOD_UTL_PRINTTEXT('Error D ='//TRIM(IMOD_UTL_RTOS(D ,'F',7)),0)
+  IF(KH.LE.0.0)CALL IMOD_UTL_PRINTTEXT('Error KH='//TRIM(IMOD_UTL_RTOS(KH,'F',7)),2)
+  IF(D .LE.0.0)CALL IMOD_UTL_PRINTTEXT('Error D ='//TRIM(IMOD_UTL_RTOS(D ,'F',7)),2)
 
   !## process formulae van de Lange - infiltratie weerstand
   COND_IN=0.0; IF(FCT.GT.0.0.AND.FCT.LE.1.0)COND_IN=LEKCONDUCTANCE_Y(DXY,D,KV,KH,C1,LI,BIN,C0/FCT)
@@ -1324,7 +1325,7 @@ END SUBROUTINE
    CALL IDFIROWICOL(IDF(1),JROW,JCOL,XC,YC)
    IF(JROW.NE.0.AND.JCOL.NE.0)THEN
     !## manipulate resistance 
-    CR=C; CR=CR*ABS(PCROSS%X(ICOL,IROW))
+    CR=C; IF(PCROSS%X(ICOL,IROW).NE.0.0)CR=CR*ABS(PCROSS%X(ICOL,IROW))
     IF(IDF(6)%X(JCOL,JROW).EQ.0.0)THEN
      IDF(1)%X(JCOL,JROW)=IDFGETAREA(ICROSS,ICOL,IROW)/CR
     ELSE
@@ -1355,7 +1356,7 @@ END SUBROUTINE
     !## if inundation-criterion applied, only inundate if zchk criterion is met
     IF(PCROSS%X(JCOL,JROW).LT.0.0.AND.WL.LE.ZCHK) CYCLE
     !## manipulate resistance
-    CR=C; CR=CR*ABS(PCROSS%X(JCOL,JROW))
+    CR=C; IF(PCROSS%X(JCOL,JROW).NE.0.0)CR=CR*ABS(PCROSS%X(JCOL,JROW))
     IF(IDF(6)%X(ICOL,IROW).EQ.0.0)THEN
      IDF(1)%X(ICOL,IROW)=IDFGETAREA(IDF(1),ICOL,IROW)/CR
     ELSE
@@ -1394,12 +1395,13 @@ END SUBROUTINE
  
  IDF(8)%X=0.0
  DO IROW=1,IDF(1)%NROW; DO ICOL=1,IDF(1)%NCOL
+  IF(IDF(1)%X(ICOL,IROW).NE.0.0)IDF(8)%X(ICOL,IROW)=1.0
   !## already visited by bathymetry routine - so skip it
   IF(IDF(6)%X(ICOL,IROW).NE.0.0)THEN
    IDF(6)%X(ICOL,IROW)=-1.0*IDF(6)%X(ICOL,IROW)
    CYCLE
   ENDIF
-  IF(IDF(1)%X(ICOL,IROW).NE.0.0)IDF(8)%X(ICOL,IROW)=1.0
+
   DO I=1,4; IF(IDF(I)%X(ICOL,IROW).EQ.IDF(I)%NODATA)IDF(I)%X(ICOL,IROW)=0.0; ENDDO
   W=IDF(7)%X(ICOL,IROW)  !## width
   L=IDF(9)%X(ICOL,IROW)  !## total length

@@ -165,7 +165,12 @@ CONTAINS
     IF((IPCK.EQ.PVCW.OR.IPCK.EQ.PKVV).AND.ILAY.EQ.NLAY)LLAY=.FALSE.
     IF(MMOD(IPCK).EQ.0)LLAY=.FALSE.    !## not active in header
    ELSEIF(IMODPCK.EQ.1)THEN
-    IF(ILAY.GE.0.AND.ILAY.LE.NLAY)LLAY=.TRUE.
+    IF(ILAY.LE.NLAY)THEN
+     SELECT CASE (IPCK)
+      CASE (PRCH,PEVT) ; IF(ILAY.NE.0)LLAY=.TRUE.
+      CASE DEFAULT; IF(ILAY.GE.0)LLAY=.TRUE.
+     END SELECT
+    ENDIF
     IF(MPCK(IPCK).EQ.0)LLAY=.FALSE.    !## not active in header
    ENDIF
 
@@ -222,16 +227,16 @@ CONTAINS
        call RF2MF_READ1MAIN_system(bcf%kva(ilay),ios,ilay,fct,imp,constante,iarr,fname,iusclarith,idsclintp)
       CASE (PIBS)     !## (PIBS) interbed storage
       CASE (PSCR)     !## (PSCR) subsidence with creep (MBakr)
-       if(it.eq.1)call RF2MF_READ1MAIN_system(scr%thick(ilay),ios,ilay,fct,imp,simcsize,iarr,fname,iusclarith,idsclintp)
-       if(it.eq.2)call RF2MF_READ1MAIN_system(scr%rrisoa(ilay),ios,ilay,fct,imp,simcsize,iarr,fname,iusclarith,idsclintp)
-       if(it.eq.3)call RF2MF_READ1MAIN_system(scr%rrisob(ilay),ios,ilay,fct,imp,simcsize,iarr,fname,iusclarith,idsclintp)
-       if(it.eq.4)call RF2MF_READ1MAIN_system(scr%caisoc(ilay),ios,ilay,fct,imp,simcsize,iarr,fname,iusclarith,idsclintp)
-       if(it.eq.5)call RF2MF_READ1MAIN_system(scr%void(ilay),ios,ilay,fct,imp,simcsize,iarr,fname,iusclarith,idsclintp)
-       if(it.eq.6)call RF2MF_READ1MAIN_system(scr%sub(ilay),ios,ilay,fct,imp,simcsize,iarr,fname,iusclmostfr,idsclintp)
+       if(it.eq.1)call RF2MF_READ1MAIN_system(scr%thick(ilay),ios,ilay,fct,imp,constante,iarr,fname,iusclarith,idsclintp)
+       if(it.eq.2)call RF2MF_READ1MAIN_system(scr%rrisoa(ilay),ios,ilay,fct,imp,constante,iarr,fname,iusclarith,idsclintp)
+       if(it.eq.3)call RF2MF_READ1MAIN_system(scr%rrisob(ilay),ios,ilay,fct,imp,constante,iarr,fname,iusclarith,idsclintp)
+       if(it.eq.4)call RF2MF_READ1MAIN_system(scr%caisoc(ilay),ios,ilay,fct,imp,constante,iarr,fname,iusclarith,idsclintp)
+       if(it.eq.5)call RF2MF_READ1MAIN_system(scr%void(ilay),ios,ilay,fct,imp,constante,iarr,fname,iusclarith,idsclintp)
+       if(it.eq.6)call RF2MF_READ1MAIN_system(scr%sub(ilay),ios,ilay,fct,imp,constante,iarr,fname,iusclmostfr,idsclintp)
       CASE (PSFT)
        riv%sft=.true.
-       if(isub.eq.1) call RF2MF_READ1MAIN_system(riv%sft1,ios,ilay,fct,imp,simcsize,iarr,fname,iusclarith,idsclintp)
-       if(isub.eq.2) call RF2MF_READ1MAIN_system(riv%sft2,ios,ilay,fct,imp,simcsize,iarr,fname,iusclarith,idsclintp)
+       if(it.eq.1) call RF2MF_READ1MAIN_system(riv%sft1,ios,ilay,fct,imp,constante,iarr,fname,iusclarith,idsclintp)
+       if(it.eq.2) call RF2MF_READ1MAIN_system(riv%sft2,ios,ilay,fct,imp,constante,iarr,fname,iusclarith,idsclintp)
      END SELECT
     ELSEIF(IMODPCK.EQ.1)THEN
      nsys=nsys+1
@@ -293,6 +298,9 @@ CONTAINS
        if(ilay.eq.0)then
         CALL IMOD_UTL_PRINTTEXT('You cannot apply a layer code of zero for EVT',2,IUOUT)
         return
+       elseif(ilay.lt.0)then
+        evt%nevtop=3
+        ilay=1
        endif
        evt%sp(kper)%reuse = .false.
        evt%sp(kper)%insurf = 1
@@ -326,6 +334,9 @@ CONTAINS
        if(ilay.eq.0)then
         CALL IMOD_UTL_PRINTTEXT('You cannot apply a layer code of zero for RCH',2,IUOUT)
         return
+       elseif(ilay.lt.0)then
+        rch%nrchop=3
+        ilay=1
        endif
        rch%sp(kper)%reuse = .false.
        rch%sp(kper)%inrech = rch%sp(kper)%inrech + 1
@@ -390,9 +401,9 @@ CONTAINS
    ENDIF
    CALL RF2MF_READ_IDF(LINE,FCT,IMP,ILAY,CONSTANTE,FNAME,IOS,IMODPCK,IPCK)
    if(scr%istpc.ne.0)then
-    call RF2MF_READ1MAIN_system(scr%PCSOFF(ilay),ios,ilay,fct,imp,simcsize,iarr,fname,iusclarith,idsclintp)
+    call RF2MF_READ1MAIN_system(scr%PCSOFF(ilay),ios,ilay,fct,imp,constante,iarr,fname,iusclarith,idsclintp)
    else
-    call RF2MF_READ1MAIN_system(scr%PCS(ilay),ios,ilay,fct,imp,simcsize,iarr,fname,iusclarith,idsclintp)
+    call RF2MF_READ1MAIN_system(scr%PCS(ilay),ios,ilay,fct,imp,constante,iarr,fname,iusclarith,idsclintp)
    endif
   ENDDO
  ENDIF
@@ -480,8 +491,8 @@ CONTAINS
    CALL IMOD_UTL_PRINTTEXT(CHAR(9)//'* Modellayer: '//TRIM(IMOD_UTL_ITOS(ILAY))// &
                            '; Mult. Factor: '//TRIM(IMOD_UTL_RTOS(FCT,'G',4))// &
                            '; Addition: '//TRIM(IMOD_UTL_RTOS(IMP,'G',4)),3,IUOUT)
-   CONSTANTE=CONSTANTE*FCT+IMP
-   CALL IMOD_UTL_PRINTTEXT(CHAR(9)//'Constant Value becomes '//TRIM(IMOD_UTL_RTOS(CONSTANTE,'G',4)),3,IUOUT)
+!   CONSTANTE=CONSTANTE*FCT+IMP
+   CALL IMOD_UTL_PRINTTEXT(CHAR(9)//'Constant Value becomes '//TRIM(IMOD_UTL_RTOS(CONSTANTE*FCT+IMP,'G',4)),3,IUOUT)
   ENDIF
  ELSE
   CALL IMOD_UTL_FILENAME(FNAME)

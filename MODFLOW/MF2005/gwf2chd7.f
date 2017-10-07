@@ -114,6 +114,7 @@ C3------READ AUXILIARY VARIABLES AND PRINT OPTION
          GO TO 10
       else if(line(istart:istop).eq.'NEGBND') then                      ! DLT
          inegbnd=1                                                      ! DLT
+         WRITE(IOUT,*) 'NEGBND IS ACTIVE'
          goto 10                                                        ! DLT
       else if(line(istart:istop).eq.'INTERP') then                      ! DLT
          iinterp=1                                                      ! DLT

@@ -245,7 +245,7 @@ call AllocBas(idealloc)
 call AllocBcf(idealloc)
 call AllocMet(idealloc)
 call AllocOc (idealloc)
-if (mpck(priv).eq.1 .or. mpck(pisg).eq.1) call AllocRiv(idealloc)
+if (mpck(priv).eq.1 .or. mpck(pisg).eq.1) call AllocRiv(idealloc,mmod(psft))
 if (mpck(pdrn).eq.1 .or. mpck(polf).eq.1) call AllocDrn(idealloc,iconchk)
 if (mpck(pghb).eq.1) call AllocGhb(idealloc)
 if (mpck(pwel).eq.1) call AllocWel(idealloc)
@@ -659,8 +659,8 @@ IF(IOS.NE.0)THEN
 ENDIF
 IF(IOS.NE.0)CALL IMOD_UTL_PRINTTEXT('ERROR DataSet 4 (see manual):'//TRIM(LINE),-3)
 
-bcf%minkd = MAX(0.0001,bcf%minkd)
-bcf%minc  = MAX(0.0001,bcf%minc)
+!bcf%minkd = MAX(0.0001,bcf%minkd)
+!bcf%minc  = MAX(0.0001,bcf%minc)
 
 !#overrule submodel whenever iflag(2)=active
 IF(IFLAG(2).GT.0)THEN
@@ -789,20 +789,20 @@ ELSE ! PCG SOLVER
        pcg%NPCOND=1
        READ(LINE,*,IOSTAT=IOS) pcg%MXITER,pcg%ITER1,pcg%HCLOSE,pcg%RCLOSE,pcg%RELAX
       ENDIF
-     ELSE
-      CALL IMOD_UTL_PRINTTEXT('Dataset 5: ***warning*** option MAXWBALERROR is not supported and will be ignored!',3)
+!   ELSE
+!    CALL IMOD_UTL_PRINTTEXT('Dataset 5: ***warning*** option MAXWBALERROR is not supported and will be ignored!',0)
      END IF
     ELSE
-     CALL IMOD_UTL_PRINTTEXT('Dataset 5: ***warning*** option MAXWBALERROR is not supported and will be ignored!',3)
+!   CALL IMOD_UTL_PRINTTEXT('Dataset 5: ***warning*** option MAXWBALERROR is not supported and will be ignored!',0)
      CALL IMOD_UTL_PRINTTEXT('Dataset 5: ***warning*** option MXCNVG is not supported and will be ignored!',3)
     END IF
    ELSE
-    CALL IMOD_UTL_PRINTTEXT('Dataset 5: ***warning*** option MAXWBALERROR is not supported and will be ignored!',3)
+!  CALL IMOD_UTL_PRINTTEXT('Dataset 5: ***warning*** option MAXWBALERROR is not supported and will be ignored!',0)
     CALL IMOD_UTL_PRINTTEXT('Dataset 5: ***warning*** option MXCNVG is not supported and will be ignored!',3)
     CALL IMOD_UTL_PRINTTEXT('Dataset 5: ***warning*** option IDELTCNVG is not supported and will be ignored!',3)
    END IF
   ELSE
-   CALL IMOD_UTL_PRINTTEXT('Dataset 5: ***warning*** option MAXWBALERROR is not supported and will be ignored!',3)
+! CALL IMOD_UTL_PRINTTEXT('Dataset 5: ***warning*** option MAXWBALERROR is not supported and will be ignored!',0)
    CALL IMOD_UTL_PRINTTEXT('Dataset 5: ***warning*** option MXCNVG is not supported and will be ignored!',3)
    CALL IMOD_UTL_PRINTTEXT('Dataset 5: ***warning*** option IDELTCNVG is not supported and will be ignored!',3)
    CALL IMOD_UTL_PRINTTEXT('Dataset 5: ***warning*** option IDAMPING is not supported and will be ignored!',3)
@@ -1034,7 +1034,7 @@ call AllocBas(ialloc)
 call AllocBcf(ialloc)
 call AllocMet(ialloc)
 call AllocOc (ialloc)
-if (mpck(priv).eq.1 .or. mpck(pisg).eq.1) call AllocRiv(ialloc)
+if (mpck(priv).eq.1 .or. mpck(pisg).eq.1) call AllocRiv(ialloc,mmod(psft))
 if (mpck(pdrn).eq.1 .or. mpck(polf).eq.1) call AllocDrn(ialloc,iconchk)
 if (mpck(pghb).eq.1) call AllocGhb(ialloc)
 if (mpck(pwel).eq.1) call AllocWel(ialloc)
@@ -1319,7 +1319,7 @@ MDIM(PKVV)=1   !KVV (K-VERTINCAL)
 MDIM(PIBS)=4   !HC,SCE,SCV,SUB
 MDIM(PPST)=1   !1 zone per parameter gezet in
 MDIM(PKVA)=1   !KVA (K VERTICAL ANISOTROPY)
-MDIM(PSFT)=1   !idf for streamflow thickness
+MDIM(PSFT)=2   !idf for streamflow thickness and streamthickness permeability
 MDIM(PCPP)=1   !IDF FOR POINTER
 MDIM(PSSC)=1   !IDF FOR SC1 (UNCONFINED) EN SC2 (CONFINED)
 MDIM(PSCR)=7   !IDF (GL0, SGM, SGS) THICKNESS, RRISOA, RRISOB, CAISOC, VOID, SUB, QLAYER, (PCSOFF)

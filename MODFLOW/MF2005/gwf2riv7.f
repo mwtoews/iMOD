@@ -156,9 +156,11 @@ C4------READ AUXILIARY VARIABLES AND PRINT OPTION.
          go to 10                                                       ! rconc
       ELSE IF(LINE(ISTART:ISTOP).EQ.'IFVDL') THEN                       ! ifvdl
          ifvdl=1                                                        ! ifvdl
+         WRITE(IOUT,*) 'IFVDL ACTIVE'
          go to 10                                                       ! ifvdl
       ELSE IF(LINE(ISTART:ISTOP).EQ.'SFT') THEN                         ! ifvdl
          isft=1                                                         ! ifvdl
+         WRITE(IOUT,*) 'SFT ACTIVE'
          go to 10                                                       ! ifvdl
       END IF                                                            ! ifvdl
 c                                                                       ! RFACT

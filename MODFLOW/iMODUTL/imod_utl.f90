@@ -240,13 +240,15 @@ CONTAINS
  
  I=20; IF(PRESENT(INI))I=INI
  
- DO IMOD_UTL_GETUNIT=I,MAXFILES
+ IMOD_UTL_GETUNIT=I
+ DO ! I,MAXFILES
   INQUIRE(UNIT=IMOD_UTL_GETUNIT,OPENED=LEX)
   IF(.NOT.LEX)RETURN
+  IMOD_UTL_GETUNIT=IMOD_UTL_GETUNIT+1
  ENDDO
 
- CALL IMOD_UTL_PRINTTEXT('INCREASE IMOD_UTL_GETUNIT, MAX. FILES TO BE OPENED = '// &
-      TRIM(IMOD_UTL_ITOS(MAXFILES))//'!',2)
+! CALL IMOD_UTL_PRINTTEXT('INCREASE IMOD_UTL_GETUNIT, MAX. FILES TO BE OPENED = '// &
+!      TRIM(IMOD_UTL_ITOS(MAXFILES))//'!',2)
 
  END FUNCTION IMOD_UTL_GETUNIT
 
@@ -2052,7 +2054,7 @@ END SUBROUTINE IMOD_UTL_QKSORT
  SUBROUTINE IMOD_UTL_ST1CREATEIPF_GETTLP(N,TLP,KH,C,TOP,BOT,ZZ1,ZZ2,MAXC,MINKH,ICLAY,CTXTFILE)
  !###======================================================================
  IMPLICIT NONE
- REAL,PARAMETER :: MINP=0.05
+ REAL,PARAMETER :: MINP=0.0 ! 5
  INTEGER,INTENT(IN) :: N,ICLAY
  CHARACTER(LEN=*),INTENT(IN) :: CTXTFILE
  REAL,INTENT(IN) :: ZZ1,ZZ2
@@ -2365,28 +2367,34 @@ END SUBROUTINE IMOD_UTL_QKSORT
  REAL, INTENT(IN) :: SIMCSIZE
  INTEGER, INTENT(IN) :: IEQ
 
+ DOUBLE PRECISION,PARAMETER :: TINY=0.001D0
+ DOUBLE PRECISION :: XD, YD
+
  REAL :: DX,DY
  INTEGER :: I
 
  ICOL=0; IROW=0
- 
+ XD = DBLE(XC); YD = DBLE(YC)
+  
  IF(IEQ.EQ.0)THEN
 
-  DX=XC-DELR(0)
-  i=0; if(mod(dx,simcsize).ne.0.0)i=1
-  if(xc.gt.delr(0).and.xc.lt.delr(ncol))icol=int(dx/simcsize)+i
+  dx=xc-delr(0)
+!  i=0; if(mod(dx,simcsize).ne.0.0)i=1
+  if(xc+TINY.gt.delr(0).and.xc-TINY.lt.delr(ncol))icol=int(dx/simcsize)+1 !i
 
-  DY=DELC(0)-YC
-  i=0; if(mod(dy,simcsize).ne.0.0)i=1
-  if(yc.gt.delc(nrow).and.yc.lt.delc(0))irow=int(dy/simcsize)+i
+  dy=delc(0)-yc
+!  i=0; if(mod(dy,simcsize).ne.0.0)i=1
+  if(yc+TINY.gt.delc(nrow).and.yc-TINY.lt.delc(0))irow=int(dy/simcsize)+1 !i
 
   icol=min(icol,ncol); irow=min(irow,nrow)
 
  ELSE
 
-  CALL IMOD_UTL_POL1LOCATER(DELR,NCOL+1,XC,ICOL)
-  CALL IMOD_UTL_POL1LOCATER(DELC,NROW+1,YC,IROW)
-
+  CALL IMOD_UTL_POL1LOCATED(DELR,NCOL+1,XD,ICOL)
+  CALL IMOD_UTL_POL1LOCATED(DELC,NROW+1,YD,IROW)
+  IF(ICOL.LT.0.OR.ICOL.GT.NCOL) ICOL=0
+  IF(IROW.LT.0.OR.IROW.GT.NROW) IROW=0
+  
  ENDIF
 
  END SUBROUTINE IMOD_UTL_GETICIR

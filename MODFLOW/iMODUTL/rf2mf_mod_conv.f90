@@ -882,19 +882,20 @@
       end subroutine AllocOc
 
       !> Allocate River package.
-      subroutine AllocRiv(iact)
+      subroutine AllocRiv(iact,isft)
 
       implicit none
 
 !...     arguments
-      integer, intent(in) :: iact
+      integer, intent(in) :: iact,isft
 !.......................................................................
       if (iact == ialloc) then
          nam%package(iriv)%active = .true.
          allocate(riv%sp(nper))
          riv%sp(1:nper)%gcd%ncolumns = 4
          allocate(riv%cblay(nlay))
-         if (riv%ifvdl) then
+!         if (riv%ifvdl) then
+         if (isft.eq.1) then
              allocate(riv%sft1,riv%sft2)
          end if
      else
