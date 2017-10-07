@@ -911,9 +911,6 @@ CONTAINS
   ENDDO
  ENDIF
 
-! WRITE(*,*) 'IBLANKOUT',IBLANKOUT
-! IBLANKOUT=0
-
  END SUBROUTINE ASC2IDF_INT_BLANKOUT
 
  !###======================================================================
