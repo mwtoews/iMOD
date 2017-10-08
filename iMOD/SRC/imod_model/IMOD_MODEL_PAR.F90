@@ -52,7 +52,6 @@ INTEGER :: NRUNFILES,NSCENFILES,NSDFFILES,NRESULTDIR,NSCENARIOS,&
            IUNCONF, &  !## unconfined
            IFVDL,   &  !## formulea of de lange
            IARMSWP, &  !## artificial recharge metaswap
-           IBNDCHK, &  !## boundary check
            IMERGE,  &  !## PKS-package: option idf-merge output files
            PARTOPT, &  !## PKS-package: methode of subdomain partition
            NMAXCORES, &!## amount of system cores available for parallel simulation
