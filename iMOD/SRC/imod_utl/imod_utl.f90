@@ -780,8 +780,10 @@ CONTAINS
  INTEGER(KIND=8),INTENT(IN) :: STIME,ETIME
  CHARACTER(LEN=*),INTENT(IN) :: FNAME,THRESHOLD
  REAL,INTENT(OUT) :: QT
- INTEGER :: IR,I,I1,I2,IU,NR,NC,IDATE,JDATE,NDATE,N,IOS,TTIME,ITYPE,IZMAX,SDATE,EDATE
- REAL :: Q1,QQ,Z,TZ,BZ,DZ,F,Z1,NQ
+ INTEGER :: IR,I,I1,I2,IU,NR,NC,IDATE,JDATE,NDATE,N,IOS,ITYPE,IZMAX,SDATE,EDATE, &
+  IYR1,IMH1,IDY1,IHR1,IMT1,ISC1,IYR2,IMH2,IDY2,IHR2,IMT2,ISC2
+ REAL :: Q1,QQ,Z,TZ,BZ,DZ,F,Z1,NQ,RTIME,TTIME
+ INTEGER(KIND=8) :: DBL_SDATE,DBL_EDATE
  CHARACTER(LEN=8) :: ATTRIB
  CHARACTER(LEN=256) :: LINE
  REAL,DIMENSION(:),ALLOCATABLE :: NODATA
@@ -812,18 +814,17 @@ CONTAINS
  SELECT CASE (ITYPE)
   !## timeseries
   CASE (1)
-   !## sdate=yyyymmddmmhhss; edate=yyyymmddmmhhss
-   SDATE=STIME/1000000; EDATE=ETIME/1000000
-   SDATE=UTL_IDATETOJDATE(SDATE); EDATE=UTL_IDATETOJDATE(EDATE)
-   TTIME=EDATE-SDATE
-   IF(TTIME.LE.0)THEN
-    CLOSE(IU); CALL WMESSAGEBOX(OKONLY,EXCLAMATIONICON,COMMONOK,'Timestep size to extract data is '//TRIM(ITOS(TTIME)),'Error')
+   !## duration in days
+   TTIME=DIFFTIME(STIME,ETIME)
+!   SDATE=STIME/1000000; EDATE=ETIME/1000000
+!   SDATE=UTL_IDATETOJDATE(SDATE); EDATE=UTL_IDATETOJDATE(EDATE)
+!   TTIME=EDATE-SDATE
+   IF(TTIME.LE.0.0)THEN
+    CLOSE(IU); CALL WMESSAGEBOX(OKONLY,EXCLAMATIONICON,COMMONOK,'Timestep size to extract data is '//TRIM(RTOS(TTIME,'E',7)),'Error')
     RETURN
    ENDIF
   !## boreholes/seismic
   CASE (2,3)
-!   SDATE=STIME; EDATE=ETIME
-!   TTIME=ABS((EDATE*LUNIT)-(SDATE*LUNIT))
 
  END SELECT
 
@@ -834,65 +835,90 @@ CONTAINS
  !## timeseries
  IF(ITYPE.EQ.1)THEN  
 
-  I1=1
+  DBL_SDATE=STIME
   DO IR=1,NR
-
-   IF(IR.EQ.1)THEN
-    IF(ICOL.GT.2)THEN
-     READ(IU,*) IDATE,(QD(I),I=2,NC)
-     READ(QD(ICOL),*) QQ
-    ELSE
-     READ(IU,*) IDATE,QQ
-    ENDIF
-    !## reset to zero for nodata value
+   READ(IU,*) DBL_EDATE,(QD(I),I=2,NC)
+   !## make double if needed
+   IF(DBL_EDATE.LT.100000000)DBL_EDATE=DBL_EDATE*1000000
+   IF(DBL_EDATE.GT.STIME)THEN
+    DBL_SDATE=MAX(DBL_SDATE,STIME)
+    DBL_EDATE=MIN(DBL_EDATE,ETIME)
+    RTIME=DIFFTIME(DBL_SDATE,DBL_EDATE)
+    QT=QT+RTIME*QQ
+   ENDIF
+   IF(DBL_EDATE.LE.ETIME)THEN
+    !## get volume
+    READ(QD(ICOL),*) QQ
     IF(QQ.EQ.NODATA(ICOL))QQ=0.0
-   ELSE
-    !## use only whenever not equal to nodata
-    IF(Q1.NE.NODATA(ICOL))QQ=Q1
-    IDATE=JDATE
    ENDIF
-
-   !## edate=end date of current simulation period
-   NDATE=EDATE
-   IF(IR.LT.NR)THEN
-    IF(ICOL.GT.2)THEN
-     READ(IU,*) NDATE,(QD(I),I=2,NC) 
-     READ(QD(ICOL),*) Q1
-    ELSE
-     READ(IU,*) NDATE,Q1
-    ENDIF
-    JDATE=NDATE
-    NDATE=UTL_IDATETOJDATE(NDATE) !## fname=optional for error message
-   ENDIF
-
-   !## ndate is min of end date in txt file or simulation period
-   NDATE=MIN(NDATE,EDATE)
-
-   !## is begin date read from txt file
-   IDATE=UTL_IDATETOJDATE(IDATE)  !## fname=optional for error message
-
-   !## stop searching for data, outside modeling window!
-   IF(IDATE.GT.EDATE)EXIT
-
-   !## within modeling window
-   IF(NDATE.GT.SDATE)THEN
-
-    !### definitions ($ time window current stressperiod)
-    !  $        |---------|         $ 
-    !sdate    idate     ndate     edate
-    
-    N=NDATE-SDATE
-    !## if startingdate (read from txt file) greater than start date of current stressperiod
-    IF(IDATE.GT.SDATE)N=N-(IDATE-SDATE)
-    I2=I1+N-1
-    
-    IF(I2.GE.I1)QT=QT+REAL(I2-I1+1)*QQ 
-
-    I1=I2+1
-
-   ENDIF
-  END DO
-  QT=QT/REAL(TTIME)
+   DBL_SDATE=DBL_EDATE 
+   !## stop
+   IF(DBL_EDATE.GE.ETIME)EXIT
+  ENDDO
+  QT=QT/TTIME
+  
+!  I1=1
+!  DO IR=1,NR
+!
+!   IF(IR.EQ.1)THEN
+!    IF(ICOL.GT.2)THEN
+!     READ(IU,*) IDATE,(QD(I),I=2,NC)
+!     READ(QD(ICOL),*) QQ
+!    ELSE
+!     READ(IU,*) IDATE,QQ
+!    ENDIF
+!    !## reset to zero for nodata value
+!    IF(QQ.EQ.NODATA(ICOL))QQ=0.0
+!   ELSE
+!    !## use only whenever not equal to nodata
+!    IF(Q1.NE.NODATA(ICOL))QQ=Q1
+!    IDATE=JDATE
+!   ENDIF
+!
+!   !## edate=end date of current simulation period
+!   NDATE=EDATE
+!   IF(IR.LT.NR)THEN
+!    IF(ICOL.GT.2)THEN
+!     READ(IU,*) NDATE,(QD(I),I=2,NC) 
+!     READ(QD(ICOL),*) Q1
+!    ELSE
+!     READ(IU,*) NDATE,Q1
+!    ENDIF
+!    JDATE=NDATE
+!    NDATE=UTL_IDATETOJDATE(NDATE) !## fname=optional for error message
+!   ENDIF
+!
+!   !## ndate is min of end date in txt file or simulation period
+!   NDATE=MIN(NDATE,EDATE)
+!
+!   !## is begin date read from txt file
+!   IDATE=UTL_IDATETOJDATE(IDATE)  !## fname=optional for error message
+!
+!   !## stop searching for data, outside modeling window!
+!   IF(IDATE.GT.EDATE)EXIT
+!
+!   !## within modeling window
+!   IF(NDATE.GT.SDATE)THEN
+!
+!    !### definitions ($ time window current stressperiod)
+!    !  $        |---------|         $ 
+!    !sdate    idate     ndate     edate
+!    
+!!    !## difference
+!!    TTIME=DIFFTIME(STIME,ETIME)
+!
+!    N=NDATE-SDATE
+!    !## if startingdate (read from txt file) greater than start date of current stressperiod
+!    IF(IDATE.GT.SDATE)N=N-(IDATE-SDATE)
+!    I2=I1+N-1
+!    
+!    IF(I2.GE.I1)QT=QT+REAL(I2-I1+1)*QQ 
+!
+!    I1=I2+1
+!
+!   ENDIF
+!  END DO
+!  QT=QT/REAL(TTIME)
   UTL_PCK_READTXT=.TRUE. 
 
  !## itype=2 borehole; itype=3 seismic
@@ -3509,7 +3535,7 @@ CONTAINS
  INTEGER,INTENT(IN) :: IDATE
  INTEGER,INTENT(OUT) :: IY,IM,ID
 
- IY = IDATE / 10000
+ IY =      IDATE          / 10000
  IM = MOD( IDATE, 10000 ) / 100
  ID = MOD( IDATE, 100 ) 
 
@@ -3562,7 +3588,7 @@ CONTAINS
  INTEGER,INTENT(IN) :: ITIME !## hhmmss notation
  INTEGER :: IH,IM,IS
 
- IH = ITIME / 10000
+ IH =      ITIME          / 10000
  IM = MOD( ITIME, 10000 ) / 100
  IS = MOD( ITIME, 100 ) 
 
@@ -3610,6 +3636,33 @@ CONTAINS
  END SUBROUTINE ITIMETOGDATE
 
  !###====================================================================
+ REAL FUNCTION DIFFTIME(SDATE,EDATE)
+ !###====================================================================
+ IMPLICIT NONE
+ INTEGER(KIND=8),INTENT(IN) :: SDATE,EDATE
+ INTEGER :: IYR1,IMH1,IDY1,IHR1,IMT1,ISC1, &
+            IYR2,IMH2,IDY2,IHR2,IMT2,ISC2
+ INTEGER :: SD,ED,DD
+ REAL :: F1,F2
+ 
+ SD=SDATE/1000000; ED=EDATE/1000000
+! SD=SD+1; ED=ED-1
+ SD=UTL_IDATETOJDATE(SD); ED=UTL_IDATETOJDATE(ED)
+ DD=ED-SD
+
+ CALL ITIMETOGDATE(SDATE,IYR1,IMH1,IDY1,IHR1,IMT1,ISC1)
+ F1=(REAL(IHR1)*3600.0+REAL(IMT1)*60.0+REAL(ISC1))/SDAY
+ IF(ED.GT.SD)THEN; F1=1.0-F1; DD=DD-1; ENDIF
+
+ CALL ITIMETOGDATE(EDATE,IYR2,IMH2,IDY2,IHR2,IMT2,ISC2)
+ F2=(REAL(IHR2)*3600.0+REAL(IMT2)*60.0+REAL(ISC2))/SDAY
+! IF(ED.EQ.SD)THEN; F1=F2-F1; F2=0.0; ENDIF
+ 
+ DIFFTIME=DD+(F1+F2)
+ 
+ END FUNCTION DIFFTIME
+ 
+ !###====================================================================
  REAL FUNCTION CTIMETOFTIME(CTIME)
  !###====================================================================
  IMPLICIT NONE
@@ -3643,7 +3696,7 @@ CONTAINS
  INTEGER,INTENT(IN) :: ITIME !## time seconds
  INTEGER,INTENT(OUT) :: IH,IM,IS
 
- IH = ITIME / 3600
+ IH =      ITIME         / 3600
  IM = MOD( ITIME, 3600 ) / 60
  IS = MOD( ITIME, 60 ) 
 
