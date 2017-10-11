@@ -103,6 +103,147 @@ CONTAINS
  END SUBROUTINE ASC2IDF_IMPORTASC_MAIN
  
  !###======================================================================
+ LOGICAL FUNCTION ASC2IDF_IMPORTXYZ_VOXEL(XYZFNAME,OUTPUTDIR)
+ !###======================================================================
+ IMPLICIT NONE
+ CHARACTER(LEN=*),INTENT(IN) :: XYZFNAME,OUTPUTDIR
+ REAL :: X,Y,Z,P,X1,X2,Y1,Y2,Z1,Z2,P1,P2,DZ
+ INTEGER :: IOS,I,J,N,IU,II,III,J1,J2,IROW,ICOL
+ REAL,DIMENSION(:,:),ALLOCATABLE :: XYZP
+ REAL,DIMENSION(:),ALLOCATABLE :: D
+ REAL,DIMENSION(:),POINTER :: DX,DX_TMP
+ TYPE(IDFOBJ) :: IDF
+ 
+ ASC2IDF_IMPORTXYZ_VOXEL=.FALSE.
+
+ IU=UTL_GETUNIT()
+ CALL OSD_OPEN(IU,FILE=XYZFNAME,STATUS='OLD',FORM='FORMATTED',ACTION='READ',IOSTAT=IOS)
+
+ DO I=1,2
+
+  IF(I.EQ.1)WRITE(*,'(A)') 'Reading ...'
+  IF(I.EQ.2)WRITE(*,'(A,I10,A)') 'Allocating ',N,' points ...'
+
+  DO J=1,4; READ(IU,*,IOSTAT=IOS); ENDDO
+
+  N=0
+
+  DO
+   !## read file to find out dimensions
+   READ(IU,*,IOSTAT=IOS) X,Y,Z,P
+   IF(IOS.NE.0)EXIT
+   N=N+1
+   IF(I.EQ.2)THEN
+    XYZP(N,1)=X; XYZP(N,2)=Y; XYZP(N,3)=Z; XYZP(N,4)=P
+   ENDIF
+  ENDDO
+  IF(I.EQ.1)ALLOCATE(XYZP(N,4)) 
+  REWIND(IU)
+ ENDDO
+ 
+ CLOSE(IU)
+ 
+ WRITE(*,'(A)') 'Statistics ...'
+
+ CALL IDFNULLIFY(IDF)
+
+ IDF%XMIN=MINVAL(XYZP(:,1))
+ IDF%XMAX=MAXVAL(XYZP(:,1))
+ WRITE(*,'(A,F10.2)') 'X        Minvalue= ',X1
+ WRITE(*,'(A,F10.2)') 'X        Maxvalue= ',X2
+ IDF%YMIN=MINVAL(XYZP(:,2))
+ IDF%YMAX=MAXVAL(XYZP(:,2))
+ WRITE(*,'(A,F10.2)') 'Y        Minvalue= ',Y1
+ WRITE(*,'(A,F10.2)') 'Y        Maxvalue= ',Y2
+ Z1      =MINVAL(XYZP(:,3))
+ Z2      =MAXVAL(XYZP(:,3))
+ WRITE(*,'(A,F10.2)') 'Z        Minvalue= ',Z1
+ WRITE(*,'(A,F10.2)') 'Z        Maxvalue= ',Z2
+ P1      =MINVAL(XYZP(:,4))
+ P2      =MAXVAL(XYZP(:,4))
+ WRITE(*,'(A,F10.2)') 'Property Minvalue= ',P1
+ WRITE(*,'(A,F10.2)') 'Property Maxvalue= ',P2
+
+ IDF%IEQ =0
+
+ !## sorting
+ WRITE(*,'(A)') 'Sorting ...'
+
+ ALLOCATE(D(N),DX(1000))
+ DO J=1,3
+  DO I=1,N; D(I)=XYZP(I,J); ENDDO
+  CALL WSORT(D,1,N)
+  II=0
+  DO I=2,N
+   IF(D(I).GT.D(I-1))THEN
+    II=II+1
+    IF(II.GT.SIZE(DX))THEN
+     ALLOCATE(DX_TMP(SIZE(DX)+1000))
+     DO III=1,II-1; DX_TMP(III)=DX(III); ENDDO
+     DEALLOCATE(DX); DX=>DX_TMP
+    ENDIF
+    DX(II)=D(I)-D(I-1)
+   ENDIF
+  ENDDO
+  IF(MINVAL(DX(1:II)).NE.MAXVAL(DX(1:II)))THEN
+   WRITE(*,'(A,F10.2)') 'Minvalue= ',MINVAL(DX(1:II))
+   WRITE(*,'(A,F10.2)') 'Maxvalue= ',MAXVAL(DX(1:II))
+   IF(J.EQ.1)THEN 
+    IDF%IEQ=1
+    ALLOCATE(IDF%SX(0:II)); IDF%NCOL=II
+    IDF%SX(0)=IDF%XMIN-0.5*DX(1)
+    DO III=1,II; IDF%SX(III)=IDF%SX(III-1)+DX(III); ENDDO
+   ELSEIF(J.EQ.2)THEN
+    IDF%IEQ=1
+    ALLOCATE(IDF%SY(0:II)); IDF%NROW=II
+    IDF%SY(0)=IDF%XMAX+0.5*DX(1)
+    DO III=1,II; IDF%SX(III)=IDF%SX(III-1)-DX(III); ENDDO
+   ENDIF
+  ELSE
+   IF(J.EQ.1)THEN; IDF%DX=DX(1); WRITE(*,'(A,F10.2)') 'Delta X=',DX(1); ENDIF
+   IF(J.EQ.2)THEN; IDF%DY=DX(1); WRITE(*,'(A,F10.2)') 'Delta Y=',DX(1); ENDIF
+   IF(J.EQ.3)THEN; DZ    =DX(1); WRITE(*,'(A,F10.2)') 'Delta Z=',DX(1); ENDIF
+  ENDIF
+ ENDDO
+ DEALLOCATE(D,DX)
+
+ IF(IDF%IEQ.EQ.0)CALL UTL_IDFSNAPTOGRID_LLC(IDF%XMIN,IDF%XMAX,IDF%YMIN,IDF%YMAX,IDF%DX,IDF%NCOL,IDF%NROW,.TRUE.)
+
+ !## voxel model
+ IDF%ITB=1
+ IDF%IXV=0
+ IDF%NODATA=HUGE(1.0)
+ IF(.NOT.IDFALLOCATEX(IDF))RETURN
+
+ DZ=2.0
+ 
+ DO
+  !## write current voxel
+  IDF%TOP=Z2 
+  IDF%BOT=Z2-DZ
+  IDF%X=IDF%NODATA
+  DO I=1,N
+   IF(XYZP(I,3).LT.Z2.AND. &
+      XYZP(I,3).GE.Z2-DZ)THEN
+    X=XYZP(I,1); Y=XYZP(I,2); P=XYZP(I,4)
+    CALL IDFIROWICOL(IDF,IROW,ICOL,X,Y) 
+    IDF%X(ICOL,IROW)=P
+   ENDIF
+  ENDDO
+  IDF%FNAME=TRIM(OUTPUTDIR)//'\PROP_'//TRIM(RTOS(Z2,'F',2))//'_'//TRIM(RTOS(Z2-DZ,'F',2))//'.IDF'
+  WRITE(*,'(A)') 'Writing '//TRIM(IDF%FNAME)//' ...'
+  IF(.NOT.IDFWRITE(IDF,IDF%FNAME,1))RETURN
+  Z2=Z2-DZ
+  IF(Z2.LE.Z1)EXIT
+ ENDDO
+
+ DEALLOCATE(XYZP)
+
+ ASC2IDF_IMPORTXYZ_VOXEL=.TRUE.
+
+ END FUNCTION ASC2IDF_IMPORTXYZ_VOXEL
+
+ !###======================================================================
  SUBROUTINE ASC2IDF_IMPORTASC(IDFNAME,TOP,BOT,IERROR,IBATCH)
  !###======================================================================
  IMPLICIT NONE
