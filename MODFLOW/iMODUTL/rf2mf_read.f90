@@ -140,6 +140,9 @@ CONTAINS
   ENDDO
  ENDIF
 
+ !## sft adjustment to be backward compatible 
+ if(imodpck.eq.0.and.ipck.eq.psft)nlines=1
+
  DO IT=1,NTOPICS
   nsys=0
 

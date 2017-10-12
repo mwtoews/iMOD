@@ -25,6 +25,7 @@ program driver
 ! modules
 use driver_module
 use IMOD_UTL, only : imod_utl_capf
+use imod_idf_par, only : idfobj
 use m_main_info
 use m_vcl, only: targ
 use imod_utl, only: imod_utl_closeunits, imod_utl_has_ext, imod_utl_printtext,imod_utl_getunit, imod_utl_getslash
@@ -98,6 +99,7 @@ implicit none
  character(len=50), dimension(nsubmax) :: submstr
 
  real :: hnoflo
+ type(idfobj) :: idf
 
  character(len=1024) :: str
  
@@ -324,7 +326,7 @@ call pks7mpibarrier() ! PKS
   call cfn_vcl_fndc(ivcl,iarg,'-ipest',.true.,pfile,1)
   if (iarg.gt.0) then
    lipest=.true.  
-   CALL PEST1INIT(1,pfile,IUPESTOUT,modwd1) !'CODE OF HET UIT RUN- OF NAMFILE KOMT')
+   CALL PEST1INIT(1,pfile,IUPESTOUT,modwd1,idf,0) !'CODE OF HET UIT RUN- OF NAMFILE KOMT')
   endif
  endif
  

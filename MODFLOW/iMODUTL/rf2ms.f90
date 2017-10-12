@@ -239,6 +239,7 @@ CONTAINS
 
    idfm%nodata = nodata(i)
    if (.not.idfreadscale(idfc,idfm,scltype,ismooth)) CALL IMOD_UTL_PRINTTEXT('idfreadscale',2)
+   nodata(i)=idfm%nodata   
    buff = idfm%x
    call idfdeallocatex(idfc)
    call idfdeallocatex(idfm)

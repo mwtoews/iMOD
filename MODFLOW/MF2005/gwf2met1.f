@@ -1064,6 +1064,7 @@ c local variables
       character(len=300) :: tmp
       character(len=1024) :: fname
       character(len=300) :: root
+      character(len=52) :: cdate_string
       integer :: isub
       character(len=10) :: partstr
 
@@ -1112,7 +1113,7 @@ c parameters
 
 c funtions
       logical :: done, rivflg, isgflg, olfflg, drnflg, ldrn, lriv
-      integer :: cfn_length
+      integer :: cfn_length,ios,ihms
 
 c program section
 c ------------------------------------------------------------------------------
@@ -1277,11 +1278,21 @@ c create output file name
          fmt = '(5a,'//fmt
 !         write(*,*) idate_save
          if(idate_save.eq.0)then
-            write(fname,fmt) root(1:cfn_length(root)),
-     1                       prefix(1:cfn_length(prefix)),'_',
-     1                       time_ostring(1:cfn_length(time_ostring)),
-     1                       '_l', ilay, partstr(1:cfn_length(partstr)),
-     1                       '.',ext(1:cfn_length(ext))
+          cdate_string=time_ostring
+          !## trim last zero is all zero
+          read(time_ostring(9:14),*,iostat=ios) ihms
+          if(ios.eq.0)then
+           if(ihms.eq.0)cdate_string=time_ostring(1:8)
+          endif
+          write(fname,fmt) root(1:cfn_length(root)),
+     1                     prefix(1:cfn_length(prefix)),'_',
+     1                     cdate_string(1:cfn_length(cdate_string)),    !time_ostring(1:cfn_length(time_ostring)),
+     1                     '_l', ilay, '.',ext(1:cfn_length(ext))
+!            write(fname,fmt) root(1:cfn_length(root)),
+!     1                       prefix(1:cfn_length(prefix)),'_',
+!     1                       time_ostring(1:cfn_length(time_ostring)),
+!     1                       '_l', ilay, partstr(1:cfn_length(partstr)),
+!     1                       '.',ext(1:cfn_length(ext))
          elseif(idate_save.eq.1)then
             write(fname,fmt) root(1:cfn_length(root)),
      1                       prefix(1:cfn_length(prefix)),'_',

@@ -117,7 +117,7 @@ C     ------------------------------------------------------------------
      3                      IDDREF,IDDREFNEW,DELT,PERTIM,TOTIM,HNOFLO,
      4                      HDRY,STOPER,CHEDFM,CDDNFM,CBOUFM,VBVL,VBNM
       use m_mf2005_iu, only: iuani, iumet, iupwt, iusfr, iulak, iulpf,
-     1                      IUMNW1, IUMNW2, IUMNWI                      ! PKS
+     1                      IUMNW1, IUMNW2, IUMNWI, IUCHD                ! PKS
 C
       CHARACTER*4 CUNIT(NIUNIT)
       CHARACTER*(*) VERSION
@@ -321,8 +321,8 @@ C
        end if
       enddo; enddo; enddo
 C      
-      !## apply consistency check constant head and top/bot
-      if(iunit(iulpf).gt.0)then
+      !## apply consistency check constant head and top/bot, not in combination with CHD
+      if(iunit(iulpf).gt.0.and.iunit(iuchd).eq.0)then
        do i=1,nrow; do j=1,ncol; do k=1,nlay
         if(ibound(j,i,k).lt.0)then
 
