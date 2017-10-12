@@ -351,12 +351,12 @@ DO IDF=1,NIDF
     MP(IPLOT)%XCOL  =IPFICOL(1)    !column used for X-COORDINATE
     MP(IPLOT)%YCOL  =IPFICOL(2)    !column used for Y-COORDINATE
     MP(IPLOT)%HCOL  =IPFICOL(4)    !column used for HIGHLIGHTING
-    MP(IPLOT)%HCOL_METHOD=IPFICOL(5)    !column used for HIGHLIGHTING
+    MP(IPLOT)%HCOL_METHOD=IPFICOL(5)    !method for scaling
    ELSE
     MP(IPLOT)%XCOL  =1    !column used for X-COORDINATE
     MP(IPLOT)%YCOL  =2    !column used for Y-COORDINATE
     MP(IPLOT)%HCOL  =0    !no column used for highlighting
-    MP(IPLOT)%HCOL_METHOD=0    !no column used for highlighting
+    MP(IPLOT)%HCOL_METHOD=1    !method for scaling
    ENDIF
    MP(IPLOT)%ZCOL   =1    !column used for Z-COORDINATE, default x-coordinate
    MP(IPLOT)%IAXES  =1    !all columns to be plotted on the first axes

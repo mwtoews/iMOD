@@ -8,7 +8,7 @@
 //
 // Winteracter resource script. 
 //
-// Modified : 10/Oct/2017 21:53:15
+// Modified : 12/Oct/2017 12:31:38
 //
 ///////////////////////////////////////////////////
 //
@@ -6614,9 +6614,9 @@ BEGIN
     CONTROL "",IDF_MENU4,"COMBOBOX",WS_CHILD | WS_VISIBLE | WS_VSCROLL | WS_GROUP | WS_TABSTOP | CBS_DROPDOWNLIST | CBS_HASSTRINGS,  100,  171,  107,  100
     CONTROL "Framerate",IDF_RADIO3,"BUTTON",WS_CHILD | WS_VISIBLE | WS_GROUP | WS_TABSTOP | BS_AUTORADIOBUTTON | BS_TEXT,   18,  137,   68,   14
     CONTROL "Duration",IDF_RADIO4,"BUTTON",WS_CHILD | WS_VISIBLE | WS_TABSTOP | BS_AUTORADIOBUTTON | BS_TEXT,   18,  152,   68,   14
-    CONTROL "24",IDF_INTEGER7,"INTEGERSPIN",WS_CHILD | WS_VISIBLE | WS_BORDER | WS_GROUP | WS_TABSTOP | ES_LEFT | ES_CENTER | ES_MULTILINE,  100,  139,   40,   12
     CONTROL "seconds",IDF_LABEL6,"STATIC",WS_CHILD | WS_VISIBLE | WS_DISABLED | WS_GROUP | SS_LEFT,  145,  155,   40,    8
     CONTROL "images per second",IDF_LABEL7,"STATIC",WS_CHILD | WS_VISIBLE | WS_GROUP | SS_LEFT,  145,  141,   63,    8
+    CONTROL "1.00",IDF_REAL1,"REALSPIN",WS_CHILD | WS_VISIBLE | WS_BORDER | WS_GROUP | WS_TABSTOP | ES_LEFT | ES_RIGHT | ES_MULTILINE,  100,  138,   40,   12
 END
 
 ID_DTIMESERIESDATES RCDATA
@@ -6636,7 +6636,9 @@ BEGIN
 "[Ranges] \n"
 " 1196               1            1000 \n"
 " 1197               1           10000 \n"
-" 1198               1              48 \n"
+" 1130     0.10000E-001      10000.      \n"
+"[Formats] \n"
+" 1130 (F10.2) \n"
 ,0
 END
 
@@ -12851,4 +12853,4 @@ END
 //*WI* FILENAME    resource.f90
 //*WI* FMODNAME    RESOURCE
 //*WI* LASTTYPE        2
-//*WI* LASTRES        74
+//*WI* LASTRES       171
