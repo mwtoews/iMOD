@@ -3022,13 +3022,15 @@ CONTAINS
  !###======================================================================
  IMPLICIT NONE
  INTEGER,INTENT(IN) :: N,ID
- INTEGER,INTENT(OUT) :: MINDATE,MAXDATE,M,O
+ INTEGER(KIND=8),INTENT(OUT) :: MINDATE,MAXDATE
+ INTEGER,INTENT(OUT) :: M,O
  CHARACTER(LEN=*),DIMENSION(N) :: IDFNAME
  INTEGER :: I,IDATE,IYR,IMH,IDY,IHR,IMT,ISC
+ INTEGER(KIND=8) :: DIDATE
  REAL :: DAYFRACTION
  
- MINDATE=21000101
- MAXDATE=19000101
+ MINDATE=21000101000000
+ MAXDATE=19000101000000
  M      =0
  O      =0
  DO I=1,N
@@ -3036,8 +3038,10 @@ CONTAINS
 !  IDATE=UTL_IDFGETDATE(IDFNAME(I))
   IF(IDATE.NE.0)THEN
    O=O+1
-   MINDATE=MIN(MINDATE,IDATE)
-   MAXDATE=MAX(MAXDATE,IDATE)
+!   didate=idate
+   DIDATE=YMDHMSTOITIME(IYR,IMH,IDY,IHR,IMT,ISC)
+   MINDATE=MIN(MINDATE,DIDATE)
+   MAXDATE=MAX(MAXDATE,DIDATE)
   ELSE
    IF(INDEX(UTL_CAP(IDFNAME(I),'U'),'_STEADY-STATE_').NE.0)M=M+1
   ENDIF
@@ -3584,16 +3588,30 @@ CONTAINS
  END SUBROUTINE FTIMETOCTIME
 
  !###====================================================================
+ SUBROUTINE ITIMETOCDATE(IDATE,CDATE)
+ !###====================================================================
+ IMPLICIT NONE
+ INTEGER(KIND=8),INTENT(IN) :: IDATE
+ CHARACTER(LEN=52) :: CDATE
+ INTEGER :: IYR,IMH,IDY,IHR,IMT,ISC
+ 
+ CALL ITIMETOGDATE(IDATE,IYR,IMH,IDY,IHR,IMT,ISC)
+ IF(IHR.EQ.0.AND.IMT.EQ.0.AND.ISC.EQ.0)THEN
+  WRITE(CDATE,'(I4.4,2(A1,I2.2))') IYR,'/',IMH,'/',IDY
+ ELSE
+  WRITE(CDATE,'(I4.4,5(A1,I2.2))') IYR,'/',IMH,'/',IDY,' ',IHR,':',IMT,':',ISC
+ ENDIF
+ 
+ END SUBROUTINE ITIMETOCDATE
+ 
+ !###====================================================================
  REAL FUNCTION ITIMETOFTIME(ITIME)
  !###====================================================================
  IMPLICIT NONE
  INTEGER,INTENT(IN) :: ITIME !## hhmmss notation
  INTEGER :: IH,IM,IS
 
- IH =      ITIME          / 10000
- IM = MOD( ITIME, 10000 ) / 100
- IS = MOD( ITIME, 100 ) 
-
+ CALL ITIMETOHMS(ITIME,IH,IM,IS)
  ITIMETOFTIME=(REAL(IH)*3600.0+REAL(IM)*60.0+REAL(IS))/SDAY
 
  END FUNCTION ITIMETOFTIME
@@ -3605,7 +3623,7 @@ CONTAINS
  INTEGER,INTENT(IN) :: ITIME !## hhmmss notation
  INTEGER,INTENT(OUT) :: IH,IM,IS
 
- IH = ITIME / 10000
+ IH =      ITIME          / 10000
  IM = MOD( ITIME, 10000 ) / 100
  IS = MOD( ITIME, 100 ) 
 
@@ -3621,6 +3639,28 @@ CONTAINS
 
  END FUNCTION HMSTOITIME
 
+ !###====================================================================
+ INTEGER(KIND=8) FUNCTION YMDHMSTOITIME(IY,IM,ID,IH,IT,IS)
+ !###====================================================================
+ IMPLICIT NONE
+ INTEGER,INTENT(IN) :: IY,IM,ID,IH,IT,IS
+ INTEGER(KIND=8) :: IYD,IMD,IDD,IHD,ITD,ISD
+ 
+ IYD=IY
+ IMD=IM
+ IDD=ID
+ IHD=IH
+ ITD=IT
+ ISD=IS
+ YMDHMSTOITIME=IYD*10000000000+ &
+               IMD*100000000+   &
+               IDD*1000000+     &
+               IHD*10000+       &
+               ITD*100+         &
+               ISD
+
+ END FUNCTION YMDHMSTOITIME
+ 
  !###====================================================================
  SUBROUTINE ITIMETOGDATE(IDATE,IYR,IMH,IDY,IHR,IMT,ISC)
  !###====================================================================
@@ -4451,7 +4491,7 @@ CONTAINS
  REAL,POINTER,INTENT(INOUT),DIMENSION(:) :: X
  INTEGER :: I
 
- CALL WSORT(X,1,N) !UTL_QKSORT(N,N,X)
+ CALL WSORT(X,1,N)
  
  !## determine number of unique classes
  IF(PRESENT(NODATA))THEN
@@ -4521,6 +4561,47 @@ CONTAINS
  ENDIF
  
  END SUBROUTINE UTL_GETUNIQUE_INT
+ 
+  !###====================================================
+ SUBROUTINE UTL_GETUNIQUE_DINT(IX,N,NU,NODATA)
+ !###====================================================
+ IMPLICIT NONE
+ INTEGER,INTENT(IN) :: N
+ INTEGER,INTENT(OUT) :: NU
+ INTEGER(KIND=8),INTENT(INOUT),DIMENSION(N) :: IX
+ INTEGER(KIND=8),INTENT(IN),OPTIONAL :: NODATA
+ INTEGER :: I
+
+ CALL SHELLSORT_DINT(N,IX)
+
+ !## determine number of unique classes
+ IF(PRESENT(NODATA))THEN
+  NU=0
+  DO I=1,N
+   IF(NU.EQ.0)THEN
+    IF(IX(I).NE.NODATA)THEN
+     NU=NU+1
+     IX(NU)=IX(I)
+    ENDIF
+   ELSE
+    IF(IX(I).NE.IX(NU).AND.IX(I).NE.NODATA)THEN
+     NU    =NU+1
+     IX(NU)=IX(I)
+    ENDIF
+   ENDIF
+  END DO
+ ELSE 
+  !## determine number of unique classes
+  NU=1
+  DO I=2,N
+   IF(IX(I).NE.IX(NU))THEN
+    NU    =NU+1
+    IX(NU)=IX(I)
+   ENDIF
+  END DO
+ ENDIF
+ 
+ END SUBROUTINE UTL_GETUNIQUE_DINT
  
  !###====================================================
  SUBROUTINE UTL_GETUNIQUE_CHAR(CH,N,NU)

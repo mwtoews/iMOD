@@ -667,4 +667,34 @@ CONTAINS
  RETURN
  END SUBROUTINE
 
+ !###====================================================
+ SUBROUTINE SHELLSORT_DINT(N,A)
+ !###====================================================
+ IMPLICIT NONE
+ INTEGER,INTENT(IN) :: N
+ INTEGER(KIND=8),DIMENSION(N) :: A
+ INTEGER(KIND=8) :: I,J,INC
+ INTEGER(KIND=8) :: V
+
+ INC=1
+ 1 INC=3*INC+1
+ IF(INC.LE.N)GOTO 1
+  2 CONTINUE
+  INC=INC/3
+  DO I=INC+1,N
+   V=A(I)
+   J=I
+   3 IF(A(J-INC).GT.V)THEN
+    A(J)=A(J-INC)
+    J=J-INC
+   IF(J.LE.INC)GOTO 4
+    GOTO 3
+   ENDIF
+   4  A(J)=V
+ END DO
+ IF(INC.GT.1)GOTO 2
+
+ RETURN
+ END SUBROUTINE SHELLSORT_DINT
+ 
 END MODULE MOD_QKSORT
