@@ -5863,24 +5863,27 @@ TOPICLOOP: DO ITOPIC=1,MAXTOPICS
    !## drn,riv,ghb,chd,olf
    CASE (22,23,25,27,28)
 
-    ALLOCATE(JEQUAL(NSYS,NTOP)); JEQUAL=0
+    ALLOCATE(JEQUAL(NSYS,NTOP))
 
-    !## number of systems
-    DO ISYS=1,NSYS
-     !## number of subtopics
-     DO KTOP=1,NTOP
-      ICNST =TOPICS(ITOPIC)%STRESS(KPER)%FILES(KTOP,ISYS)%ICNST 
-      CNST  =TOPICS(ITOPIC)%STRESS(KPER)%FILES(KTOP,ISYS)%CNST  
-      FCT   =TOPICS(ITOPIC)%STRESS(KPER)%FILES(KTOP,ISYS)%FCT   
-      IMP   =TOPICS(ITOPIC)%STRESS(KPER)%FILES(KTOP,ISYS)%IMP   
-      ILAY  =TOPICS(ITOPIC)%STRESS(KPER)%FILES(KTOP,ISYS)%ILAY  
-      SFNAME=TOPICS(ITOPIC)%STRESS(KPER)%FILES(KTOP,ISYS)%FNAME 
+    !## search previous entries
+    DO IIPER=1,IPER-1
 
-      !## search previous entries
-      DO IIPER=1,IPER-1
-       !## get appropriate stress-period to store in runfile   
-       KKPER=PMANAGER_GETCURRENTIPER(IIPER,ITOPIC,ITIME,JTIME)
-       IF(KKPER.LE.0)CYCLE
+     JEQUAL=0
+
+     !## get appropriate stress-period to store in runfile   
+     KKPER=PMANAGER_GETCURRENTIPER(IIPER,ITOPIC,ITIME,JTIME)
+     IF(KKPER.LE.0)CYCLE
+     
+     !## number of systems
+     DO ISYS=1,NSYS
+      !## number of subtopics
+      DO KTOP=1,NTOP
+       ICNST =TOPICS(ITOPIC)%STRESS(KPER)%FILES(KTOP,ISYS)%ICNST 
+       CNST  =TOPICS(ITOPIC)%STRESS(KPER)%FILES(KTOP,ISYS)%CNST  
+       FCT   =TOPICS(ITOPIC)%STRESS(KPER)%FILES(KTOP,ISYS)%FCT   
+       IMP   =TOPICS(ITOPIC)%STRESS(KPER)%FILES(KTOP,ISYS)%IMP   
+       ILAY  =TOPICS(ITOPIC)%STRESS(KPER)%FILES(KTOP,ISYS)%ILAY  
+       SFNAME=TOPICS(ITOPIC)%STRESS(KPER)%FILES(KTOP,ISYS)%FNAME 
        
        !# only whenever number of systems are equal
        IF(NSYS.EQ.SIZE(TOPICS(ITOPIC)%STRESS(KKPER)%FILES,2))THEN
@@ -5891,31 +5894,32 @@ TOPICLOOP: DO ITOPIC=1,MAXTOPICS
            ILAY.EQ.  TOPICS(ITOPIC)%STRESS(KKPER)%FILES(KTOP,ISYS)%ILAY.AND.  &
            SFNAME.EQ.TOPICS(ITOPIC)%STRESS(KKPER)%FILES(KTOP,ISYS)%FNAME)THEN
          JEQUAL(ISYS,KTOP)=IIPER
-         EXIT
         ENDIF
        ENDIF
       ENDDO
-   
      ENDDO
-    ENDDO
-    
-    !## there is a previous definition of this package exported allready and can be reused
-    IF(MINVAL(JEQUAL).EQ.MAXVAL(JEQUAL).AND.MINVAL(JEQUAL).NE.0)THEN
-     IIPER=MINVAL(JEQUAL)
-     IF(NP_IPER(IIPER).GT.0)THEN
-      EXFNAME=TRIM(DIR)//'\'//CPCK//'7\'//CPCK//'_T'//TRIM(ITOS(IIPER))//'.ARR'
-      SFNAME=EXFNAME; DO I=1,3; SFNAME=SFNAME(:INDEX(SFNAME,'\',.TRUE.)-1); ENDDO
-      I=LEN_TRIM(SFNAME); SFNAME='.'//EXFNAME(I+1:)
-      LINE=TRIM(ITOS(NP_IPER(IIPER))); WRITE(IU,'(A)') TRIM(LINE)
-      WRITE(IU,'(A)') 'OPEN/CLOSE '//TRIM(SFNAME)//' 1.0 (FREE) -1'
+     
+     !## there is a previous definition of this package exported allready and can be reused
+     IF(MINVAL(JEQUAL).EQ.MAXVAL(JEQUAL).AND.MINVAL(JEQUAL).NE.0)THEN
+      IF(NP_IPER(IIPER).GT.0)THEN
+       EXFNAME=TRIM(DIR)//'\'//CPCK//'7\'//CPCK//'_T'//TRIM(ITOS(IIPER))//'.ARR'
+       SFNAME=EXFNAME; DO I=1,3; SFNAME=SFNAME(:INDEX(SFNAME,'\',.TRUE.)-1); ENDDO
+       I=LEN_TRIM(SFNAME); SFNAME='.'//EXFNAME(I+1:)
+       LINE=TRIM(ITOS(NP_IPER(IIPER))); WRITE(IU,'(A)') TRIM(LINE)
+       WRITE(IU,'(A)') 'OPEN/CLOSE '//TRIM(SFNAME)//' 1.0 (FREE) -1'
+       NP_IPER(IPER)=NP_IPER(IIPER)       
+      ENDIF
+      EXIT
      ENDIF
-     DEALLOCATE(JEQUAL); CYCLE
-    ENDIF
 
-    DEALLOCATE(JEQUAL)
+    ENDDO
+    IF(ALLOCATED(JEQUAL))DEALLOCATE(JEQUAL)
 
   END SELECT
-
+  
+  !## next timestep
+  IF(NP_IPER(IPER).GT.0)CYCLE
+  
   !## open external file (not for rch/evt)
   JU=0
   SELECT CASE (ITOPIC)
