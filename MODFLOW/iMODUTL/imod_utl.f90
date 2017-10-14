@@ -348,7 +348,7 @@ CONTAINS
 
  END FUNCTION ITOS
 
- !###======================================================================
+!###======================================================================
  CHARACTER(LEN=10) FUNCTION IMOD_UTL_ITOS(I)
  !###======================================================================
  IMPLICIT NONE
@@ -367,6 +367,26 @@ CONTAINS
  IMOD_UTL_ITOS(K+1:)=''
 
  END FUNCTION
+
+ !###======================================================================
+ CHARACTER(LEN=20) FUNCTION IMOD_UTL_DBL_ITOS(I)
+ !###======================================================================
+ IMPLICIT NONE
+ INTEGER(KIND=8),INTENT(IN) :: I
+ CHARACTER(LEN=20)  :: TXT
+ CHARACTER(LEN=1),DIMENSION(20) :: A
+ INTEGER :: J,K
+
+ WRITE(TXT,'(I20)') I
+ READ(TXT,'(20A1)') A(1:20)
+ DO J=1,20
+  IF(A(J).NE.' ')EXIT
+ END DO
+ K=20-J+1
+ WRITE(IMOD_UTL_DBL_ITOS(1:K),'(20A1)') A(J:20)
+ IMOD_UTL_DBL_ITOS(K+1:)=''
+
+ END FUNCTION IMOD_UTL_DBL_ITOS
 
  !###======================================================================
  FUNCTION IMOD_UTL_RTOS(X,F,NDEC)
@@ -2379,12 +2399,12 @@ END SUBROUTINE IMOD_UTL_QKSORT
  IF(IEQ.EQ.0)THEN
 
   dx=xc-delr(0)
-!  i=0; if(mod(dx,simcsize).ne.0.0)i=1
-  if(xc+TINY.gt.delr(0).and.xc-TINY.lt.delr(ncol))icol=int(dx/simcsize)+1 !i
+  i=0; if(mod(dx,simcsize).ne.0.0)i=1
+  if(xc+TINY.gt.delr(0).and.xc-TINY.lt.delr(ncol))icol=int(dx/simcsize)+i
 
   dy=delc(0)-yc
-!  i=0; if(mod(dy,simcsize).ne.0.0)i=1
-  if(yc+TINY.gt.delc(nrow).and.yc-TINY.lt.delc(0))irow=int(dy/simcsize)+1 !i
+  i=0; if(mod(dy,simcsize).ne.0.0)i=1
+  if(yc+TINY.gt.delc(nrow).and.yc-TINY.lt.delc(0))irow=int(dy/simcsize)+i
 
   icol=min(icol,ncol); irow=min(irow,nrow)
 

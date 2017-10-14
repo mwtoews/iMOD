@@ -346,11 +346,14 @@ CONTAINS
       DXC=DXC/REAL(ICC2-ICC1+1)
     
       CALL IDFGETBLOCKVALUE(IDFC,SCLTYPE,IRC1,IRC2,ICC1,ICC2,FREQ,SFCT,SVALUE,idown)
-      
+
+!      write(*,*) 'icm,irm,value=',icm,irm,svalue
+
       !## up- or downscaling?
-      IF(SCLTYPE.EQ.5)THEN
-       IF(DXC*DYC.GT.DXM*DYM)THEN
-        IDOWN=1; IF(SVALUE.NE.IDFC%NODATA)SVALUE=SVALUE*((DXM*DYM)/(DXC*DYC))
+      IF(DXC*DYC.GT.DXM*DYM)THEN
+       IDOWN=1
+       IF(SCLTYPE.EQ.5)THEN
+        IF(SVALUE.NE.IDFC%NODATA)SVALUE=SVALUE*((DXM*DYM)/(DXC*DYC))
        ENDIF
       ENDIF
 

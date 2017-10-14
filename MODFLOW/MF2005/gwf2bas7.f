@@ -321,30 +321,30 @@ C
        end if
       enddo; enddo; enddo
 C      
-      !## apply consistency check constant head and top/bot, not in combination with CHD
-      if(iunit(iulpf).gt.0.and.iunit(iuchd).eq.0)then
-       do i=1,nrow; do j=1,ncol; do k=1,nlay
-        if(ibound(j,i,k).lt.0)then
-
-         !## in current model layer
-         kkk=k*2-1
-         if(strt(j,i,k).gt.botm(j,i,kkk))cycle
-
-         !## constant head cell dry - becomes active node - shift to an appropriate model layer where the head is in
-         do kk=k,nlay
-          kkk=kk*2-1
-          if(strt(j,i,k).le.botm(j,i,kkk))then
-           ibound(j,i,kk)=1
-           strt(j,i,kk)=strt(j,i,k)
-          else
-           ibound(j,i,kk)=-99
-           strt(j,i,kk)=strt(j,i,k)
-           exit
-          endif
-         enddo
-        endif
-       enddo; enddo; enddo 
-      endif
+      !!## apply consistency check constant head and top/bot, not in combination with CHD
+      !if(iunit(iulpf).gt.0.and.iunit(iuchd).eq.0)then
+      ! do i=1,nrow; do j=1,ncol; do k=1,nlay
+      !  if(ibound(j,i,k).lt.0)then
+      !
+      !   !## in current model layer
+      !   kkk=k*2-1
+      !   if(strt(j,i,k).gt.botm(j,i,kkk))cycle
+      !
+      !   !## constant head cell dry - becomes active node - shift to an appropriate model layer where the head is in
+      !   do kk=k,nlay
+      !    kkk=kk*2-1
+      !    if(strt(j,i,k).le.botm(j,i,kkk))then
+      !     ibound(j,i,kk)=1
+      !     strt(j,i,kk)=strt(j,i,k)
+      !    else
+      !     ibound(j,i,kk)=-99
+      !     strt(j,i,kk)=strt(j,i,k)
+      !     exit
+      !    endif
+      !   enddo
+      !  endif
+      ! enddo; enddo; enddo 
+      !endif
 C
 C-------SET IACTCELL
       DO K=1,NLAY                                                       ! PKS

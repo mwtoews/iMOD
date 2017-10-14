@@ -331,9 +331,9 @@ DO I=1,NISGH
  IF(NSEG.LT.2)CYCLE; IF(NCLC.LT.2)CYCLE
  !## cannot process weirs the way iMOD does it
  IF(NSTW.GT.0)THEN
-  CALL IMOD_UTL_PRINTTEXT('Segment '//TRIM(IMOD_UTL_ITOS(I))//' called ['//TRIM(CISGH)//'] with weirs will be skipped',0)
-  CYCLE
- ENDIF
+  CALL IMOD_UTL_PRINTTEXT('Segment '//TRIM(IMOD_UTL_ITOS(I))//' ['//TRIM(CISGH)//'] has weirs, effect of this is computed to nearest calc. node.',0)
+!  NSTW=0 
+ENDIF
 
  !## increase memory for segments (including points from calculation-nodes!)
  IF(NSEG+NCLC+2*NSTW.GT.NXY)THEN
@@ -427,7 +427,7 @@ DO I=1,NISGH
 
    !## interpolate waterlevel,waterbottom,inf.factor,c-value - do not interupt it by structures!
    DO JJ=1,4
-   DO J=1,NSEG !-1
+    DO J=1,NSEG-1
      IF(IPOS(J).GT.0.AND.RVAL(JJ,J).NE.NODATA)THEN
       DO II=J+1,NSEG
        IF(IPOS(II).GT.0.AND.RVAL(JJ,II).NE.NODATA)EXIT
@@ -443,7 +443,7 @@ DO I=1,NISGH
 
    !## interpolate with structures
    IF(NSTW.GT.0)THEN
-    DO J=1,NSEG !-1
+    DO J=1,NSEG-1
      IF(IPOS(J).NE.0.AND.RVAL(1,J).NE.NODATA)THEN
       D=0.0
       DO II=J+1,NSEG
