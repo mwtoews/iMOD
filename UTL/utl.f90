@@ -2445,9 +2445,10 @@ subroutine cfn_jd2datehms(jd,date,hour,minute,seconds)
 ! local variables
  integer  :: year,month,day,j,g,dg,c,dc,b,db,a,da,y,m,d !,s
 
- double precision            :: fjd                     ! fraction jd+0.5
+ double precision            :: fjd,dday                     ! fraction jd+0.5
  double precision, parameter :: jdnodata=-9.9998D307
  integer         , parameter :: datenodata=-2147483646
+ integer(kind=8) :: nseconds
 
 ! program section
 ! ------------------------------------------------------------------------------
@@ -2473,18 +2474,24 @@ subroutine cfn_jd2datehms(jd,date,hour,minute,seconds)
 
     date = year*10000 + month*100 + day
 
+    !## number of seconds timestep
+    dday=int(jd-0.5d0)
+    !## remaining seconds
+    nseconds=(jd-0.5d0-real(dday))*86400.0
+    !## how many hours/minutes/seconds
+    call cfn_ITIMETOGDATE(nseconds,hour, minute, seconds)
 
    ! hour,minute,seconds
-    fjd     = jd+0.5d0
-    fjd     = fjd - dnint(fjd)   ! fractional day
-    fjd     = fjd*24.d0          ! day -> hours
-    hour    = int(fjd)
-    fjd     = fjd - hour
-    fjd     = fjd*60.d0          ! hours -> minutes
-    minute  = int(fjd)
-    fjd     = fjd - minute
-    fjd     = fjd*60.d0          ! minutes -> seconds
-    seconds = nint(fjd)
+   ! fjd     = jd+0.5d0
+   ! fjd     = fjd - dnint(fjd)   ! fractional day
+   ! fjd     = fjd*24.d0          ! day -> hours
+   ! hour    = int(fjd)
+   ! fjd     = fjd - hour
+   ! fjd     = fjd*60.d0          ! hours -> minutes
+   ! minute  = int(fjd)
+   ! fjd     = fjd - minute
+   ! fjd     = fjd*60.d0          ! minutes -> seconds
+   ! seconds = nint(fjd)
  else
     ! missing values
     date    = datenodata
@@ -2496,8 +2503,23 @@ subroutine cfn_jd2datehms(jd,date,hour,minute,seconds)
 
 ! end of program
  return
-end
+    end
 
+    !###====================================================================
+    SUBROUTINE cfn_ITIMETOGDATE(ITIME,IH,IM,IS)
+    !###====================================================================
+     IMPLICIT NONE
+     INTEGER(KIND=8),INTENT(IN) :: ITIME
+     INTEGeR,INTENT(OUT) :: IH,IM,IS
+    
+    IH =      ITIME         / 3600
+    IM = MOD( ITIME, 3600 ) / 60
+    IS = MOD( ITIME, 60 ) 
+    
+     END SUBROUTINE cfn_ITIMETOGDATE
+      
+
+    
 ! ******************************************************************************
 
 !> calculate Modified Julian Date from yyyymmdd:HH:MM:SS

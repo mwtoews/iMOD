@@ -668,9 +668,7 @@ C----------READ USING PACKAGE READ AND PREPARE MODULES.
         IF(IUNIT(IUDXC).GT.0) CALL gwf2dxc1rp(igrid)                       ! DLT: Data eXChance package
 
       endif  ! next stress period
-
-
-
+      
 c next time step
       if (inittime) then
 

@@ -1679,7 +1679,7 @@ END SUBROUTINE IMOD_UTL_QKSORT
  CHARACTER(LEN=8),DIMENSION(:),ALLOCATABLE :: ATTRIB
  REAL,DIMENSION(:),ALLOCATABLE :: NODATA
  INTEGER(KIND=8) :: DBL_EDATE,DBL_SDATE !,STIME,ETIME
- REAL,DIMENSION(:),ALLOCATABLE :: QD
+ CHARACTER(LEN=52),DIMENSION(:),ALLOCATABLE :: QD
 
 ! STIME=SDATE
 ! ETIME=EDATE
@@ -1733,7 +1733,7 @@ END SUBROUTINE IMOD_UTL_QKSORT
    ENDIF
   ENDDO
   IF(ISS.EQ.1)THEN
-   QT=QT/REAL(NR)
+   IF(NR.GT.0)QT=QT/REAL(NR)
   ELSE
    QT=QT/TTIME
   ENDIF
@@ -1792,14 +1792,13 @@ END SUBROUTINE IMOD_UTL_QKSORT
   ! ENDIF
   !END DO
 
-  !## determine for each period appropriate attribute term
-  IF(ISS.EQ.1)THEN
-   QT=QT/REAL(NR)
-
-  !## determine for each period appropriate q-median term
-  ELSEIF(ISS.EQ.2)THEN
-   QT=QT/TTIME
-  ENDIF
+!  !## determine for each period appropriate attribute term
+!  IF(ISS.EQ.1)THEN
+!   QT=QT/REAL(NR)
+!  !## determine for each period appropriate q-median term
+!  ELSEIF(ISS.EQ.2)THEN
+!   QT=QT/TTIME
+!  ENDIF
   DEALLOCATE(ATTRIB,NODATA,QD)
 
  ENDIF
@@ -1825,6 +1824,19 @@ END SUBROUTINE IMOD_UTL_QKSORT
 
  END SUBROUTINE imod_utl_ITIMETOGDATE
 
+  !###====================================================================
+ SUBROUTINE imod_utl_ITIMETOGTIME(ITIME,IH,IM,IS)
+ !###====================================================================
+ IMPLICIT NONE
+ INTEGER,INTENT(IN) :: ITIME !## time seconds
+ INTEGER,INTENT(OUT) :: IH,IM,IS
+
+ IH =      ITIME         / 3600
+ IM = MOD( ITIME, 3600 ) / 60
+ IS = MOD( ITIME, 60 ) 
+
+ END SUBROUTINE imod_utl_ITIMETOGTIME
+ 
  !###====================================================================
  REAL FUNCTION UTL_DIFFTIME(SDATE,EDATE)
  !###====================================================================

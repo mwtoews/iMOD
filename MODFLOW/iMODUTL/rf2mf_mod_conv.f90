@@ -1540,10 +1540,10 @@
             write(*,*) 'Error: incorrect stress period writing for DIS file'
             stop 1
          end if
-         write(str(1),*) dis%sp(iper)%perlen
-         write(str(2),*) dis%sp(iper)%nstp
-         write(str(3),*) dis%sp(iper)%tsmult
-         write(str(4),*) dis%sp(iper)%SsTr
+         write(str(1),'(G15.7)') dis%sp(iper)%perlen
+         write(str(2),'(I10)') dis%sp(iper)%nstp
+         write(str(3),'(G15.7)') dis%sp(iper)%tsmult
+         write(str(4),'(A)') dis%sp(iper)%SsTr
          write(lun,'(4(a,1x))')(trim(adjustl(str(i))), i = 1, 4) ! perlen nstp tsmult SS/Tr
       end do
 

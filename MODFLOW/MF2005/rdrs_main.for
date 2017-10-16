@@ -164,7 +164,7 @@ c ------------------------------------------------------------------------------
       implicit none
 
 c function declaration
-      integer   rdrs_rddata_ipf   ! return value: ios
+      integer   rdrs_rddata_ipf,HR,MN,SC   ! return value: ios
       
 c arguments
       character file*(*)      ! (I)
@@ -175,7 +175,7 @@ c local variables
       character(len=8) :: cdate
       character(len=300) :: line, txtfile, root, name
       integer :: i, ret, ios, lun, nlist, icol, irow, ii, nc, iext,
-     1   sdate, edate, ttime, idate
+     1   sdate, edate, ttime, idate, TSC
       integer(kind=8) :: stime, etime
       real    :: x, y
       real :: q, tf, bf  !, dimension(1)
@@ -267,10 +267,12 @@ c         sdate = time_cjd
          if (iss==1) ttime = 1
          edate = sdate + ttime ! days only
 
-         stime=sdate
-         etime=edate
-         IF(STIME.LT.100000000)STIME=STIME*1000000
-         IF(ETIME.LT.100000000)ETIME=ETIME*1000000
+         STIME=IMOD_UTL_JDATETOIDATE(SDATE)
+         read(time_ostring(9:14),'(3i2)') hr,mn,sc
+         stime=stime*1000000+hr*10000+mn*100+sc
+         TSC=DELT*86400
+         CALL imod_utl_ITIMETOGTIME(TSC,HR,MN,SC)
+         ETIME=STIME+HR*10000+MN*100+SC
 
        end if
 
@@ -764,7 +766,9 @@ c init
           bt(ilay) = botm(icol,irow,lbotm(ilay))
           if (ibound(icol,irow,ilay).gt.0) then
              if (ilay.lt.nlay) then
-              c(ilay)=1.0/(cv(icol,irow,ilay)/(delr(icol)*delc(irow)))
+              if (ibound(icol,irow,ilay+1).gt.0) then
+               c(ilay)=1.0/(cv(icol,irow,ilay)/(delr(icol)*delc(irow)))
+              endif
              end if
              kh(ilay)=kdsv(icol,irow,ilay)
              kh(ilay)=(cc(icol,irow,ilay)+cr(icol,irow,ilay))/2.0

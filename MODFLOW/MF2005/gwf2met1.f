@@ -641,6 +641,7 @@ c ------------------------------------------------------------------------------
 
 c update current time
       call sgwf2ins1pnt(igrid)
+      
       time_cjd = timesteptime+sutl_getLengthTotalStressPeriod(igrid)
       time_ostring = time_cstring
       call cfn_mjd2datehms(time_cjd,date,hour,minute,second)
@@ -651,6 +652,19 @@ c end of program
       return
       end
 
+      !!###====================================================================
+      !SUBROUTINE met1_ITIMETOGDATE(ITIME,IH,IM,IS)
+      !!###====================================================================
+      ! IMPLICIT NONE
+      ! INTEGER(KIND=8),INTENT(IN) :: ITIME
+      ! INTEGeR,INTENT(OUT) :: IH,IM,IS
+      !
+      !IH =      ITIME         / 3600
+      !IM = MOD( ITIME, 3600 ) / 60
+      !IS = MOD( ITIME, 60 ) 
+      !
+      ! END SUBROUTINE met1_ITIMETOGDATE
+      
       subroutine met1ubudsv(text,ibdchn,buff,ncol,nrow,
      1                      nlay,iout,retflag)
 
