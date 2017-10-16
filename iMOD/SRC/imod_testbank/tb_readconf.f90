@@ -243,7 +243,7 @@ CONTAINS
             IDF(1)%X(ICOL,IROW)=IDF(1)%X(ICOL,IROW)-IDF(2)%X(ICOL,IROW)
            !## both equal to nodata difference is zero
            ELSEIF(IDF(1)%X(ICOL,IROW).EQ.IDF(1)%NODATA.AND. &
-                IDF(2)%X(ICOL,IROW).EQ.IDF(2)%NODATA)THEN
+                  IDF(2)%X(ICOL,IROW).EQ.IDF(2)%NODATA)THEN
             IDF(1)%X(ICOL,IROW)=0.0
            !## one of them equal no nodata, difference is nodata
            ELSE
