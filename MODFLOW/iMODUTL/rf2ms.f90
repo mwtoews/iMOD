@@ -232,7 +232,7 @@ CONTAINS
   IF(IOS(I).EQ.0)THEN
    BUFF=CONSTANTE(I); ! NODATA(I)=0.0
   ELSE
-   if (.not.idfread(idfc,fname(i),1)) CALL IMOD_UTL_PRINTTEXT('idfread',2)
+   if (.not.idfread(idfc,fname(i),0)) CALL IMOD_UTL_PRINTTEXT('idfread',2)
    call idfnullify(idfm)
    !#3 copy modelnetwork
    call idfcopy(idf,idfm)

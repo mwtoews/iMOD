@@ -418,7 +418,12 @@ CONTAINS
  REAL,DIMENSION(1) :: XTEMP
 
  IF (IDOWN.EQ.1.AND.IR1.EQ.IR2.AND.IC1.EQ.IC2) THEN
-  IDFVAL=IDFGETVAL(IDF,IR1,IC1)
+  if(associated(idf%x))then
+   idfval=idf%x(ic1,ir1)
+  else
+   IDFVAL=IDFGETVAL(IDF,IR1,IC1)
+  endif
+!  IDFVAL=IDFGETVAL(IDF,IR1,IC1)
   SVALUE = IDFVAL
   RETURN  
  END IF
@@ -577,7 +582,11 @@ CONTAINS
    !## read value from idfm%x()
    CALL IDFIROWICOL(IDFM,IROW,ICOL,X1A(NPC),X2A(NPR))
    IF(ICOL.EQ.0.OR.IROW.EQ.0)THEN
-    IDFVAL=IDFGETVAL(IDFC,IR,IC)
+    if(associated(idfc%x))then
+     idfval=idfc%x(ic,ir)
+    else
+     IDFVAL=IDFGETVAL(IDFC,IR,IC)
+    endif
     IF(IDFVAL.EQ.IDFC%NODATA) IDFVAL=IDFM%NODATA
    ELSE 
     IDFVAL=IDFM%X(ICOL,IROW)  

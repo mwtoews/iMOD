@@ -176,6 +176,7 @@ c local variables
       character(len=300) :: line, txtfile, root, name
       integer :: i, ret, ios, lun, nlist, icol, irow, ii, nc, iext,
      1   sdate, edate, ttime, idate
+      integer(kind=8) :: stime, etime
       real    :: x, y
       real :: q, tf, bf  !, dimension(1)
       logical :: found
@@ -265,8 +266,13 @@ c         sdate = time_cjd
          ttime = int(delt)
          if (iss==1) ttime = 1
          edate = sdate + ttime ! days only
-!         if(.not.allocated(qsort)) allocate(qsort(ttime))
-      end if
+
+         stime=sdate
+         etime=edate
+         IF(STIME.LT.100000000)STIME=STIME*1000000
+         IF(ETIME.LT.100000000)ETIME=ETIME*1000000
+
+       end if
 
 c allocate
       if(allocated(string)) deallocate(string)
@@ -313,8 +319,8 @@ c allocate
                read(string(3),*) q !(1)
             else
                txtfile = trim(root)//trim(string(iext))//'.'//trim(ext)
-               call imod_utl_readipf(sdate,edate,q,txtfile,iss)
-!               call imod_utl_readipf(sdate,edate,q(1),txtfile,iss)
+               call imod_utl_readipf(stime,etime,q,txtfile,iss)
+!               call imod_utl_readipf(sdate,edate,q,txtfile,iss)
             end if
        
             ii = ii + 1

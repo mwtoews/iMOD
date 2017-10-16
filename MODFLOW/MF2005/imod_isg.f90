@@ -1403,8 +1403,9 @@ END SUBROUTINE
   ENDIF
 
   DO I=1,4; IF(IDF(I)%X(ICOL,IROW).EQ.IDF(I)%NODATA)IDF(I)%X(ICOL,IROW)=0.0; ENDDO
+
   W=IDF(7)%X(ICOL,IROW)  !## width
-  L=IDF(9)%X(ICOL,IROW)  !## total length
+  L=IDF(9)%X(ICOL,IROW)  !## length
   !## conductance assume to be cell-filled; f=dx/length-segment*dx/width
   IF(W.GT.FDX*IDF(1)%DX)THEN
    IDF(1)%X(ICOL,IROW)=IDF(1)%X(ICOL,IROW)*IDF(5)%DX/L*IDF(5)%DX/W

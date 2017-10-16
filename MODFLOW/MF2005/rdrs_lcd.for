@@ -187,7 +187,6 @@ c count number of hfb and fill
 
             do j = 1, nline 
              
-
              is = genip(j-1)+1; ie = genip(j)
 
              !## line not in current model dimensions
@@ -470,8 +469,11 @@ c count number of hfb and fill
         deallocate(rlist); allocate(rlist(ldim,mxlist))
        endif
        
-       enddo
-    
+      enddo
+
+      !## get final number of elements
+      nlist=mxlist
+
       call pks7mpigetmyrank(myrank)                                     ! PKS
       if (myrank.ne.0) then                                             ! PKS
        !## close files

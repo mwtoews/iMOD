@@ -1667,26 +1667,30 @@ END SUBROUTINE IMOD_UTL_QKSORT
  END FUNCTION IMOD_UTL_SUBST
 
  !###====================================================================
- SUBROUTINE IMOD_UTL_READIPF(SDATE,EDATE,QT,FNAME,ISS)
+ SUBROUTINE IMOD_UTL_READIPF(STIME,ETIME,QT,FNAME,ISS)
  !###====================================================================
  IMPLICIT NONE
- INTEGER,INTENT(IN) :: SDATE,EDATE
+ INTEGER(KIND=8),INTENT(IN) :: stime,etime !SDATE,EDATE
  CHARACTER(LEN=*),INTENT(IN) :: FNAME
  REAL,INTENT(OUT) :: QT
  INTEGER, INTENT(IN) :: ISS
- INTEGER :: IR,I,I1,I2,IU,NR,NC,IDATE,JDATE,NDATE,NAJ,N,IOS,TTIME
- REAL :: QQ,FRAC,Q1
+ INTEGER :: IR,I,I1,I2,IU,NR,NC,IDATE,JDATE,NDATE,NAJ,N,IOS !,TTIME
+ REAL :: QQ,FRAC,Q1,RTIME,TTIME 
  CHARACTER(LEN=8),DIMENSION(:),ALLOCATABLE :: ATTRIB
  REAL,DIMENSION(:),ALLOCATABLE :: NODATA
+ INTEGER(KIND=8) :: DBL_EDATE,DBL_SDATE !,STIME,ETIME
+ REAL,DIMENSION(:),ALLOCATABLE :: QD
+
+! STIME=SDATE
+! ETIME=EDATE
 
  QT=0.0 
- TTIME=EDATE-SDATE
+ TTIME=UTL_DIFFTIME(stime,etime) !EDATE-SDATE
  
  !## open textfiles with pump information
  IU=IMOD_UTL_GETUNIT()
  OPEN(IU,FILE=FNAME,FORM='FORMATTED',STATUS='OLD',ACTION='READ',SHARE='DENYNONE')
  
-
  READ(IU,*,IOSTAT=IOS) NR
  IF(IOS.NE.0)CALL IMOD_UTL_PRINTTEXT('Can not read number of rows in '//TRIM(FNAME),2)
 
@@ -1694,7 +1698,7 @@ END SUBROUTINE IMOD_UTL_QKSORT
   READ(IU,*,IOSTAT=IOS) NC
   IF(IOS.NE.0)CALL IMOD_UTL_PRINTTEXT('Can not read number of columns in '//TRIM(FNAME),2)
 
-  ALLOCATE(ATTRIB(NC),NODATA(NC))
+  ALLOCATE(ATTRIB(NC),NODATA(NC),QD(NC))
 
   DO I=1,NC
    READ(IU,*,IOSTAT=IOS) ATTRIB(I),NODATA(I)
@@ -1703,59 +1707,90 @@ END SUBROUTINE IMOD_UTL_QKSORT
 
   I1=1
 
+  DBL_SDATE=STIME
   DO IR=1,NR
-
-   IF(IR.EQ.1.OR.ISS.EQ.1)THEN
-    READ(IU,*) IDATE,QQ
-    !## first nodata q set to zero
-    IF(QQ.EQ.NODATA(2))QQ=0.0
-   ELSE
-    !## use previous q, if not equal to nodata(2) - otherwise reuse latest one
-    IF(Q1.NE.NODATA(2))QQ=Q1
-    IDATE=JDATE
-   ENDIF
-
-   !## don't bother for steady-state, take the mean!
+   READ(IU,*) DBL_EDATE,(QD(I),I=2,NC)
    IF(ISS.EQ.1)THEN
-    QT=QT+QQ
+    !## get volume
+    READ(QD(2),*) QQ; IF(QQ.EQ.NODATA(2))QQ=0.0
+    QT=QT+QQ       
    ELSE
-
-    !## edate=end date of current simulation period
-    NDATE=EDATE
-    IF(IR.LT.NR)THEN
-     READ(IU,*) NDATE,Q1
-     JDATE=NDATE
-     NDATE=IMOD_UTL_IDATETOJDATE(NDATE,TRIM(FNAME)) !## fname=optional for error message
+    !## make double if needed
+    IF(DBL_EDATE.LT.100000000)DBL_EDATE=DBL_EDATE*1000000
+    IF(DBL_EDATE.GT.STIME)THEN
+     DBL_SDATE=MAX(DBL_SDATE,STIME)
+     DBL_EDATE=MIN(DBL_EDATE,ETIME)
+     RTIME=UTL_DIFFTIME(DBL_SDATE,DBL_EDATE)
+     QT=QT+RTIME*QQ
     ENDIF
-    !## ndate is min of end date in txt file or simulation period
-    NDATE=MIN(NDATE,EDATE)
-
-    !## is begin date read from txt file
-    IDATE=IMOD_UTL_IDATETOJDATE(IDATE,TRIM(FNAME))  !## fname=optional for error message
-
-    !## stop searchin for data, outside modeling window!
-    IF(IDATE.GT.EDATE)EXIT
-
-    !## within modeling window
-    IF(NDATE.GT.SDATE)THEN 
-
-     !### defintions ($ time window current stressperiod)
-     !  $        |---------|         $
-     !sdate    idate     ndate     edate
-
-     N=NDATE-SDATE
-     !## if startingdate (read from txt file) greater than start date of current stressperiod
-     IF(IDATE.GT.SDATE)N=N-(IDATE-SDATE)
-     I2=I1+N-1
-     
-     IF(I2.GE.I1)QT=QT+REAL(I2-I1+1)*QQ
-
-     I1=I2+1
-
+    IF(DBL_EDATE.LE.ETIME)THEN
+     !## get volume
+     READ(QD(2),*) QQ; IF(QQ.EQ.NODATA(2))QQ=0.0
     ENDIF
-
+    DBL_SDATE=DBL_EDATE 
+    !## stop
+    IF(DBL_EDATE.GE.ETIME)EXIT
    ENDIF
-  END DO
+  ENDDO
+  IF(ISS.EQ.1)THEN
+   QT=QT/REAL(NR)
+  ELSE
+   QT=QT/TTIME
+  ENDIF
+
+  !DO IR=1,NR
+  !
+  ! IF(IR.EQ.1.OR.ISS.EQ.1)THEN
+  !  READ(IU,*) IDATE,QQ
+  !  !## first nodata q set to zero
+  !  IF(QQ.EQ.NODATA(2))QQ=0.0
+  ! ELSE
+  !  !## use previous q, if not equal to nodata(2) - otherwise reuse latest one
+  !  IF(Q1.NE.NODATA(2))QQ=Q1
+  !  IDATE=JDATE
+  ! ENDIF
+  !
+  ! !## don't bother for steady-state, take the mean!
+  ! IF(ISS.EQ.1)THEN
+  !  QT=QT+QQ
+  ! ELSE
+  !
+  !  !## edate=end date of current simulation period
+  !  NDATE=EDATE
+  !  IF(IR.LT.NR)THEN
+  !   READ(IU,*) NDATE,Q1
+  !   JDATE=NDATE
+  !   NDATE=IMOD_UTL_IDATETOJDATE(NDATE,TRIM(FNAME)) !## fname=optional for error message
+  !  ENDIF
+  !  !## ndate is min of end date in txt file or simulation period
+  !  NDATE=MIN(NDATE,EDATE)
+  !
+  !  !## is begin date read from txt file
+  !  IDATE=IMOD_UTL_IDATETOJDATE(IDATE,TRIM(FNAME))  !## fname=optional for error message
+  !
+  !  !## stop searchin for data, outside modeling window!
+  !  IF(IDATE.GT.EDATE)EXIT
+  !
+  !  !## within modeling window
+  !  IF(NDATE.GT.SDATE)THEN 
+  !
+  !   !### defintions ($ time window current stressperiod)
+  !   !  $        |---------|         $
+  !   !sdate    idate     ndate     edate
+  !
+  !   N=NDATE-SDATE
+  !   !## if startingdate (read from txt file) greater than start date of current stressperiod
+  !   IF(IDATE.GT.SDATE)N=N-(IDATE-SDATE)
+  !   I2=I1+N-1
+  !   
+  !   IF(I2.GE.I1)QT=QT+REAL(I2-I1+1)*QQ
+  !
+  !   I1=I2+1
+  !
+  !  ENDIF
+  !
+  ! ENDIF
+  !END DO
 
   !## determine for each period appropriate attribute term
   IF(ISS.EQ.1)THEN
@@ -1763,9 +1798,9 @@ END SUBROUTINE IMOD_UTL_QKSORT
 
   !## determine for each period appropriate q-median term
   ELSEIF(ISS.EQ.2)THEN
-   QT=QT/REAL(TTIME)
+   QT=QT/TTIME
   ENDIF
- DEALLOCATE(ATTRIB,NODATA)
+  DEALLOCATE(ATTRIB,NODATA,QD)
 
  ENDIF
 
@@ -1773,6 +1808,55 @@ END SUBROUTINE IMOD_UTL_QKSORT
 
  RETURN
  END SUBROUTINE IMOD_UTL_READIPF
+
+  !###====================================================================
+ SUBROUTINE imod_utl_ITIMETOGDATE(IDATE,IYR,IMH,IDY,IHR,IMT,ISC)
+ !###====================================================================
+ IMPLICIT NONE
+ INTEGER(KIND=8),INTENT(IN) :: IDATE
+ INTEGER,INTENT(OUT) :: IYR,IMH,IDY,IHR,IMT,ISC
+
+ IYR =      IDATE                / 10000000000
+ IMH = MOD( IDATE, 10000000000 ) / 100000000
+ IDY = MOD( IDATE, 100000000 )   / 1000000
+ IHR = MOD( IDATE, 1000000 )     / 10000
+ IMT = MOD( IDATE, 10000 )       / 100
+ ISC = MOD( IDATE, 100 )
+
+ END SUBROUTINE imod_utl_ITIMETOGDATE
+
+ !###====================================================================
+ REAL FUNCTION UTL_DIFFTIME(SDATE,EDATE)
+ !###====================================================================
+ IMPLICIT NONE
+ INTEGER(KIND=8),INTENT(IN) :: SDATE,EDATE
+ INTEGER :: IYR1,IMH1,IDY1,IHR1,IMT1,ISC1, &
+            IYR2,IMH2,IDY2,IHR2,IMT2,ISC2
+ INTEGER :: SD,ED,DD,IHR,IMT,ISC
+ REAL :: F1,F2,F
+ 
+ SD=SDATE/1000000; ED=EDATE/1000000
+ SD=IMOD_UTL_IDATETOJDATE(SD); ED=IMOD_UTL_IDATETOJDATE(ED)
+ DD=ED-SD
+
+ !## start time
+ CALL IMOD_UTL_ITIMETOGDATE(SDATE,IYR1,IMH1,IDY1,IHR1,IMT1,ISC1)
+ F1=(REAL(IHR1)*3600.0+REAL(IMT1)*60.0+REAL(ISC1))/86400
+
+ !## end   time
+ CALL IMOD_UTL_ITIMETOGDATE(EDATE,IYR2,IMH2,IDY2,IHR2,IMT2,ISC2)
+ F2=(REAL(IHR2)*3600.0+REAL(IMT2)*60.0+REAL(ISC2))/86400
+  
+ !## same day
+ IF(SD.EQ.ED)THEN
+  F=F2-F1
+ ELSE
+  F=1.0-F1+F2+(DD-1)
+ ENDIF
+
+ UTL_DIFFTIME=F 
+ 
+ END FUNCTION UTL_DIFFTIME
 
  !###======================================================================
  LOGICAL FUNCTION IMOD_UTL_DIRINFO(DIR,WC,LISTNAME,FT)
