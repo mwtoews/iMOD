@@ -81,7 +81,9 @@ c declaration section
 c ------------------------------------------------------------------------------
       use imod_utl, only: imod_utl_openasc
       use lcdmodule, only: genip, genpos, lncol, lnrow, lcdelr,lcdelc
-
+      USE GLOBAL,      ONLY: IUNIT
+      USE M_MF2005_IU, ONLY : IULPF
+      
       implicit none
 
 c arguments
@@ -98,12 +100,13 @@ c arguments
       integer, intent(in) :: nlay
 
 c local variables
+      real,parameter :: thickness=0.5
       real, dimension(:,:), allocatable :: rlisttmp                     ! DLT
       integer :: icol, irow, jcol, jrow, igen, iact, ngen, ii, kk,
      1           ip1, ip2,ic1, ic2, ir1, ir2, j, jj !, nlist
       integer ::  il, is, ie, iline, jline, nline
       integer :: ilay,il1,il2,jlay,isys
-      real :: fct,HFB1EXPORT_GETDZ,c,z,c1,c2,zz
+      real :: fct,HFB1EXPORT_GETDZ,c,z,c1,c2,zz,TFV,bfv,tpv,btv
       real, dimension(:,:), allocatable :: tmp,tf,bf,res,fdz
       integer(kind=1),allocatable,dimension(:,:) :: sys
       integer(kind=1), dimension(:,:,:), allocatable :: ipc
@@ -118,7 +121,7 @@ c parameters
       data aname(1) /'                     LCD'/
       integer,parameter :: ineighbours=2
       REAL :: ZF,NODATA
-      LOGICAL :: LINV
+      LOGICAL :: LINV,ltb
 
 c program section
 c ------------------------------------------------------------------------------
@@ -127,6 +130,8 @@ c init
 
       NODATA=HUGE(1.0)
 
+      ltb=.false.; if(iunit(iulpf).gt.0)ltb=.true.
+      
 c read number of hfb layers
       read(in,*) ngen
 
@@ -152,8 +157,12 @@ c allocate ipc
        call pks7mpifname(fname,iflen)   
        fname = trim(fname)//'.dat'   
        call imod_utl_openasc(dun(ilay),fname,'w')
-       WRITE(dun(ilay),'(A)') 'no,confined_resis,unconfined_resis,fracti
-     1on,system'
+       if(ltb)then
+        WRITE(dun(ilay),'(A)') 'no,confined_resis,unconfined_resis,fract
+     1ion,system'
+       else
+        WRITE(dun(ilay),'(A)') 'no,fraction,system'
+       endif
       enddo
       
 c count number of hfb and fill
@@ -241,7 +250,7 @@ c count number of hfb and fill
                  Z=-1.0
                  IF(ilay.EQ.0)THEN   
                   Z=HFB1EXPORT_GETDZ(TF,BF,ICOL,IROW,ICOL,IROW+1,NODA
-     1TA,jLAY,LNCOL,LNROW)                  
+     1TA,jLAY,LNCOL,LNROW,TPV,BTV,TFV,BFV)                  
                  ENDIF
 
                  !## skip fault on side of model or less than 0.0 fraction
@@ -251,15 +260,19 @@ c count number of hfb and fill
                  !## store into memory second cycli
                  if (iact.eq.2) then
 
-                  rlisttmp(1,ii) = jlay
-                  rlisttmp(2,ii) = irow
-                  rlisttmp(3,ii) = icol
-                  rlisttmp(4,ii) = irow+1
-                  rlisttmp(5,ii) = icol                  
-                  rlisttmp(6,ii) = FCT
-                  rlisttmp(7,ii) = Z
+                  rlisttmp(1 ,ii) = jlay
+                  rlisttmp(2 ,ii) = irow
+                  rlisttmp(3 ,ii) = icol
+                  rlisttmp(4 ,ii) = irow+1
+                  rlisttmp(5 ,ii) = icol                  
+                  rlisttmp(6 ,ii) = FCT
+                  rlisttmp(7 ,ii) = Z
                   !## store system number
-                  rlisttmp(8,ii) = igen
+                  rlisttmp(8 ,ii) = igen
+                  rlisttmp(9 ,ii) = tpv
+                  rlisttmp(10,ii) = btv
+                  rlisttmp(11,ii) = tfv
+                  rlisttmp(12,ii) = bfv
                     
                  endif
                 enddo
@@ -276,7 +289,7 @@ c count number of hfb and fill
                  Z=-1.0
                  IF(ilay.EQ.0)THEN  
                   Z=HFB1EXPORT_GETDZ(TF,BF,ICOL,IROW,ICOL+1,IROW,NODA
-     1TA,jLAY,LNCOL,LNROW)                  
+     1TA,jLAY,LNCOL,LNROW,TPV,BTV,TFV,BFV)                  
                  ENDIF
 
                  !## skip fault on side of model or less than 0.0 fraction
@@ -284,15 +297,19 @@ c count number of hfb and fill
 
                  ii = ii + 1
                  if (iact.eq.2) then
-                  rlisttmp(1,ii) = jlay
-                  rlisttmp(2,ii) = irow
-                  rlisttmp(3,ii) = icol
-                  rlisttmp(4,ii) = irow
-                  rlisttmp(5,ii) = icol+1
-                  rlisttmp(6,ii) = FCT
-                  rlisttmp(7,ii) = Z
+                  rlisttmp(1 ,ii) = jlay
+                  rlisttmp(2 ,ii) = irow
+                  rlisttmp(3 ,ii) = icol
+                  rlisttmp(4 ,ii) = irow
+                  rlisttmp(5 ,ii) = icol+1
+                  rlisttmp(6 ,ii) = FCT
+                  rlisttmp(7 ,ii) = Z
                   !## store system number
-                  rlisttmp(8,ii) = igen
+                  rlisttmp(8 ,ii) = igen
+                  rlisttmp(9 ,ii) = tpv
+                  rlisttmp(10,ii) = btv
+                  rlisttmp(11,ii) = tfv
+                  rlisttmp(12,ii) = bfv
                      
                  end if
                 enddo
@@ -306,8 +323,8 @@ c count number of hfb and fill
          nlist = ii-lstbeg+1
          if (iact.eq.1) then
             if (.not.allocated(rlisttmp)) then
-               !## allocate addition column to store system number
-               allocate(rlisttmp(ldim+1,nlist))
+               !## allocate addition column to store system number and dimensions of fault
+               allocate(rlisttmp(ldim+5,nlist))
             end if
          end if ! iact = 1
       end do ! iact
@@ -329,18 +346,24 @@ c count number of hfb and fill
         FDZ=0.0
         SYS=INT(0,1)
         LINV=.FALSE.
-
+        TF=-10.0E10
+        BF= 10.0E10
+ 
         DO ii=1,nlist
-         jlay=int(rlisttmp(1,ii))
+         jlay=int(rlisttmp(1 ,ii))
          !# not current modellayer
          if(jlay.ne.ilay)cycle
-         ir1= int(rlisttmp(2,ii))
-         ic1= int(rlisttmp(3,ii))
-         ir2= int(rlisttmp(4,ii))
-         ic2= int(rlisttmp(5,ii))
-         c=       rlisttmp(6,ii)
-         z=       rlisttmp(7,ii)
-         isys=int(rlisttmp(8,ii))
+         ir1= int(rlisttmp(2 ,ii))
+         ic1= int(rlisttmp(3 ,ii))
+         ir2= int(rlisttmp(4 ,ii))
+         ic2= int(rlisttmp(5 ,ii))
+         c=       rlisttmp(6 ,ii)
+         z=       rlisttmp(7 ,ii)
+         isys=int(rlisttmp(8 ,ii))
+         tpv=     rlisttmp(9 ,ii)
+         btv=     rlisttmp(10,ii)
+         tfv=     rlisttmp(11,ii)
+         bfv=     rlisttmp(12,ii)
          
          !## skip c.lt.zero
          IF(C.LT.0.0)CYCLE
@@ -364,7 +387,7 @@ c count number of hfb and fill
           !## take system number of largest contribution to c
           IF(RES(IC1,IR1).GT.0.0)THEN
            IF(Z.GT.0.0)THEN
-            C2=1.0/RES(IC1,IR1)*FDZ(ICOL,IROW)
+            C2=1.0/RES(IC1,IR1)*FDZ(IC1,IR1)
             IF(C.GT.C2)SYS(IC1,IR1)=INT(ISYS,1)
            ELSE
             IF(C.GT.RES(IC1,IR1))SYS(IC1,IR1)=INT(ISYS,1)
@@ -374,13 +397,27 @@ c count number of hfb and fill
           ENDIF
           !## resistance, sum conductances - ignore resistance of zero days
           IF(Z.GT.0.0)THEN
-           RES(IC1,IR1)=RES(IC1,IR1)+(1.0/C)*ZZ
+           IF(TPV-BTV.LE.THICKNESS)THEN
+            C1=0.0
+            IF(RES(IC1,IR1).GT.0.0)C1=1.0/RES(IC1,IR1)*FDZ(IC1,IR2)
+            C2=C*ZZ
+            RES(IC1,IR1)=1.0/((C1+C2)/(ZZ+FDZ(IC1,IR2)))
+           !## add large fault using harmonic mean
+           ELSE
+            RES(IC1,IR1)=RES(IC1,IR1)+(1.0/C)*ZZ
+           ENDIF
           ELSE
            !## get largest resistance
            RES(IC1,IR1)=MAX(RES(IC1,IR1),C)
           ENDIF
           !## occupation fraction
           FDZ(IC1,IR1)=MIN(1.0,FDZ(IC1,IR1)+ABS(Z))
+         
+          !## maximum top fault for display
+          TF(IC1,IR1)=MAX(TF(IC1,IR1),TFV)
+          !## minimum bot fault for display
+          BF(IC1,IR1)=MIN(BF(IC1,IR1),BFV)
+        
          ENDIF
          
         ENDDO
@@ -403,13 +440,17 @@ c count number of hfb and fill
            
            !## get systemnumber
            ISYS=SYS(ICOL,IROW)
-
+           !## top fault for display purposes
+           TFV=TF(ICOL,IROW)
+           !## bottom fault for display purposes
+           BFV=BF(ICOL,IROW)
+           
            jj=jj+1
            if(iact.eq.2)then
 
             !## write fault to gen- and datfile
             call HFB1EXPORT_WRITEGEN(2,lun(ilay),dun(ilay),nlun(ilay),ic
-     1ol,irow,C1,C2,FDZ(ICOL,IROW),ISYS)
+     1ol,irow,C1,C2,FDZ(ICOL,IROW),ISYS,tfv,bfv,ltb)
 
             rlist(1,jj)=ilay
             rlist(2,jj)=irow
@@ -440,13 +481,17 @@ c count number of hfb and fill
         
            !## get systemnumber
            ISYS=SYS(ICOL,IROW)
+           !## top fault for display purposes
+           TFV=TF(ICOL,IROW)
+           !## bottom fault for display purposes
+           BFV=BF(ICOL,IROW)
 
            jj=jj+1
            if(iact.eq.2)then
 
             !## write fault to gen- and datfile
             call HFB1EXPORT_WRITEGEN(1,lun(ilay),dun(ilay),nlun(ilay),ic
-     1ol,irow,C1,C2,FDZ(ICOL,IROW),ISYS)
+     1ol,irow,C1,C2,FDZ(ICOL,IROW),ISYS,tfv,bfv,ltb)
 
             rlist(1,jj)=ilay
             rlist(2,jj)=irow
@@ -513,44 +558,79 @@ c end of program
 
       !###====================================================================
       subroutine HFB1EXPORT_WRITEGEN(it,iu,ju,n,icol,irow,C,RES,FDZ,
-     1ISYS)
+     1ISYS,tfv,bfv,ltb)
       !###====================================================================
       use lcdmodule, only: lcdelr,lcdelc
       implicit none
-      real,intent(in) :: C,RES,FDZ
+      real,intent(in) :: C,RES,FDZ,tfv,bfv
       integer,intent(IN) :: IT,iu,ju,icol,irow,isys
       integer,intent(INOUT) :: n
+      logical,intent(in) :: ltb
+      real :: t1,b1
       
       if(it.eq.1)THEN
        n=n+1
-       write(ju,'(i10,3(1x,e15.7),i10)') n,c,res,fdz,isys
-       write(iu,'(i10,1x,e15.7)') n
-       write(iu,'(2(f10.2,a1))') lcdelr(icol-1),',',lcdelc(irow)
-       write(iu,'(2(f10.2,a1))') lcdelr(icol),',',lcdelc(irow)
-       write(iu,'(a)') 'end'
+       if(ltb)then
+        write(ju,'(i10,3(1x,e15.7),i10)') n,c,res,fdz,isys
+       else
+        write(ju,'(i10,1x  ,e15.7 ,i10)') n,c,isys
+       endif
+       if(ltb.and.tfv.gt.bfv)then
+        t1=tfv
+        b1=bfv
+        write(iu,'(i10,1x,e15.7)') n
+        write(iu,'(3(g15.7,a1))') lcdelr(icol),',',lcdelc(irow-1),',',t1
+        write(iu,'(3(g15.7,a1))') lcdelr(icol),',',lcdelc(irow  ),',',t1
+        write(iu,'(3(g15.7,a1))') lcdelr(icol),',',lcdelc(irow  ),',',b1
+        write(iu,'(3(g15.7,a1))') lcdelr(icol),',',lcdelc(irow-1),',',b1
+        write(iu,'(3(g15.7,a1))') lcdelr(icol),',',lcdelc(irow-1),',',t1
+        write(iu,'(a)') 'end'       
+       else
+        write(iu,'(i10,1x,e15.7)') n
+        write(iu,'(2(g15.7,a1))') lcdelr(icol-1),',',lcdelc(irow)
+        write(iu,'(2(g15.7,a1))') lcdelr(icol),',',lcdelc(irow)
+        write(iu,'(a)') 'end'
+       endif
       endif
 
       if(it.eq.2)then
        n=n+1
-       write(ju,'(i10,3(1x,e15.7),i10)') n,c,res,fdz,isys
-       write(iu,'(i10,1x,e15.7)') n
-       write(iu,'(2(f10.2,a1))') lcdelr(icol),',',lcdelc(irow-1)
-       write(iu,'(2(f10.2,a1))') lcdelr(icol),',',lcdelc(irow)
-       write(iu,'(a)') 'end'
+       if(ltb)then
+        write(ju,'(i10,3(1x,e15.7),i10)') n,c,res,fdz,isys
+       else
+        write(ju,'(i10,1x  ,e15.7 ,i10)') n,c,isys
+       endif
+       if(ltb.and.tfv.gt.bfv)then
+        t1=tfv
+        b1=bfv
+        write(iu,'(i10,1x,e15.7)') n
+        write(iu,'(3(g15.7,a1))') lcdelr(icol-1),',',lcdelc(irow),',',t1
+        write(iu,'(3(g15.7,a1))') lcdelr(icol  ),',',lcdelc(irow),',',t1
+        write(iu,'(3(g15.7,a1))') lcdelr(icol  ),',',lcdelc(irow),',',b1
+        write(iu,'(3(g15.7,a1))') lcdelr(icol-1),',',lcdelc(irow),',',b1
+        write(iu,'(3(g15.7,a1))') lcdelr(icol-1),',',lcdelc(irow),',',t1
+        write(iu,'(a)') 'end'       
+       else
+        write(iu,'(i10,1x,e15.7)') n
+        write(iu,'(2(f10.2,a1))') lcdelr(icol),',',lcdelc(irow-1)
+        write(iu,'(2(f10.2,a1))') lcdelr(icol),',',lcdelc(irow)
+        write(iu,'(a)') 'end'
+       endif
       end if
 
       end subroutine HFB1EXPORT_WRITEGEN
 
       !###====================================================================
       REAL FUNCTION HFB1EXPORT_GETDZ(TF,BF,IC1,IR1,IC2
-     1,IR2,NODATA,ILAY,NCOL,NROW)
+     1,IR2,NODATA,ILAY,NCOL,NROW,TPV,BTV,TFV,BFV)
       !###====================================================================
       USE GLOBAL,ONLY : BOTM,lbotm
       IMPLICIT NONE     
       INTEGER,INTENT(IN) :: IC1,IR1,IC2,IR2,ILAY,NCOL,NROW
+      real,intent(out) :: TPV,BTV,TFV,BFV
       REAL,INTENT(IN) :: NODATA
       REAL,INTENT(IN),DIMENSION(NCOL,NROW) :: TF,BF
-      REAL :: DZ,TFV,BFV,TPV,BTV,C1,C2,CT,FFCT
+      REAL :: DZ,C1,C2,CT,FFCT
       INTEGER :: IL1,IL2
       integer :: jc1,jr1,jc2,jr2,k                                      ! PKS
       logical :: lused1, lused2                                         ! PKS

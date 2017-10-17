@@ -240,8 +240,14 @@ c read data
       read(lun,*) iext, ext
 
 c overrule iext when current timestep is steady-state
-!      if(iss.eq.1)iext=0
-      if(delt.eq.0.0)iext=0
+      iss = 0
+      if (issflg(kper).eq.1) then ! steady-state
+         iss = 1
+      else if (issflg(kper).eq.0) then ! transient
+         iss = 2
+      end if
+
+      if(iss.eq.1)iext=0
 
 c determine root and date
       if (iext.ne.0) then
@@ -250,12 +256,6 @@ c determine root and date
          if (ios.ne.0) then
             write(*,*) 'ERROR. File splitting ipf.'
             call ustop(' ')
-         end if
-         iss = 0
-         if (issflg(kper).eq.1) then ! steady-state
-            iss = 1
-         else if (issflg(kper).eq.0) then ! transient
-            iss = 2
          end if
 
 c ### work-around Julian date ###
@@ -266,14 +266,22 @@ c         sdate = time_cjd
          ttime = int(delt)
          if (iss==1) ttime = 1
          edate = sdate + ttime ! days only
-
+         
+         !## ipf use stime/etime
          STIME=IMOD_UTL_JDATETOIDATE(SDATE)
          read(time_ostring(9:14),'(3i2)') hr,mn,sc
          stime=stime*1000000+hr*10000+mn*100+sc
-         TSC=DELT*86400
-         CALL imod_utl_ITIMETOGTIME(TSC,HR,MN,SC)
-         ETIME=STIME+HR*10000+MN*100+SC
+         call imod_utl_stimetoetime(stime,delt,etime)
 
+!         TSC=DELT*86400
+!         CALL imod_utl_ITIMETOGTIME(TSC,HR,MN,SC)
+!         !## add a day
+!         if(hr.ge.24)then
+!          etime=stime+1000000
+!         else
+!          ETIME=STIME+HR*10000+MN*100+SC
+!         endif
+         
        end if
 
 c allocate

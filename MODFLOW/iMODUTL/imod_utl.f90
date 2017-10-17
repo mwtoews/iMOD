@@ -1670,22 +1670,23 @@ END SUBROUTINE IMOD_UTL_QKSORT
  SUBROUTINE IMOD_UTL_READIPF(STIME,ETIME,QT,FNAME,ISS)
  !###====================================================================
  IMPLICIT NONE
- INTEGER(KIND=8),INTENT(IN) :: stime,etime !SDATE,EDATE
+ INTEGER(KIND=8),INTENT(IN) :: stime,etime 
  CHARACTER(LEN=*),INTENT(IN) :: FNAME
  REAL,INTENT(OUT) :: QT
  INTEGER, INTENT(IN) :: ISS
- INTEGER :: IR,I,I1,I2,IU,NR,NC,IDATE,JDATE,NDATE,NAJ,N,IOS !,TTIME
+ INTEGER :: IR,I,I1,I2,IU,NR,NC,IDATE,JDATE,NDATE,NAJ,N,IOS 
  REAL :: QQ,FRAC,Q1,RTIME,TTIME 
  CHARACTER(LEN=8),DIMENSION(:),ALLOCATABLE :: ATTRIB
  REAL,DIMENSION(:),ALLOCATABLE :: NODATA
- INTEGER(KIND=8) :: DBL_EDATE,DBL_SDATE !,STIME,ETIME
+ INTEGER(KIND=8) :: DBL_EDATE,DBL_SDATE 
  CHARACTER(LEN=52),DIMENSION(:),ALLOCATABLE :: QD
 
 ! STIME=SDATE
 ! ETIME=EDATE
 
  QT=0.0 
- TTIME=UTL_DIFFTIME(stime,etime) !EDATE-SDATE
+ !## transient
+ IF(ISS.EQ.2)TTIME=UTL_DIFFTIME(stime,etime) !EDATE-SDATE
  
  !## open textfiles with pump information
  IU=IMOD_UTL_GETUNIT()
@@ -1706,10 +1707,12 @@ END SUBROUTINE IMOD_UTL_QKSORT
   END DO
 
   I1=1
-
+  QQ=0.0
+  
   DBL_SDATE=STIME
   DO IR=1,NR
    READ(IU,*) DBL_EDATE,(QD(I),I=2,NC)
+   !##steady-state
    IF(ISS.EQ.1)THEN
     !## get volume
     READ(QD(2),*) QQ; IF(QQ.EQ.NODATA(2))QQ=0.0
@@ -1732,73 +1735,13 @@ END SUBROUTINE IMOD_UTL_QKSORT
     IF(DBL_EDATE.GE.ETIME)EXIT
    ENDIF
   ENDDO
+  !## steady-state
   IF(ISS.EQ.1)THEN
    IF(NR.GT.0)QT=QT/REAL(NR)
   ELSE
    QT=QT/TTIME
   ENDIF
 
-  !DO IR=1,NR
-  !
-  ! IF(IR.EQ.1.OR.ISS.EQ.1)THEN
-  !  READ(IU,*) IDATE,QQ
-  !  !## first nodata q set to zero
-  !  IF(QQ.EQ.NODATA(2))QQ=0.0
-  ! ELSE
-  !  !## use previous q, if not equal to nodata(2) - otherwise reuse latest one
-  !  IF(Q1.NE.NODATA(2))QQ=Q1
-  !  IDATE=JDATE
-  ! ENDIF
-  !
-  ! !## don't bother for steady-state, take the mean!
-  ! IF(ISS.EQ.1)THEN
-  !  QT=QT+QQ
-  ! ELSE
-  !
-  !  !## edate=end date of current simulation period
-  !  NDATE=EDATE
-  !  IF(IR.LT.NR)THEN
-  !   READ(IU,*) NDATE,Q1
-  !   JDATE=NDATE
-  !   NDATE=IMOD_UTL_IDATETOJDATE(NDATE,TRIM(FNAME)) !## fname=optional for error message
-  !  ENDIF
-  !  !## ndate is min of end date in txt file or simulation period
-  !  NDATE=MIN(NDATE,EDATE)
-  !
-  !  !## is begin date read from txt file
-  !  IDATE=IMOD_UTL_IDATETOJDATE(IDATE,TRIM(FNAME))  !## fname=optional for error message
-  !
-  !  !## stop searchin for data, outside modeling window!
-  !  IF(IDATE.GT.EDATE)EXIT
-  !
-  !  !## within modeling window
-  !  IF(NDATE.GT.SDATE)THEN 
-  !
-  !   !### defintions ($ time window current stressperiod)
-  !   !  $        |---------|         $
-  !   !sdate    idate     ndate     edate
-  !
-  !   N=NDATE-SDATE
-  !   !## if startingdate (read from txt file) greater than start date of current stressperiod
-  !   IF(IDATE.GT.SDATE)N=N-(IDATE-SDATE)
-  !   I2=I1+N-1
-  !   
-  !   IF(I2.GE.I1)QT=QT+REAL(I2-I1+1)*QQ
-  !
-  !   I1=I2+1
-  !
-  !  ENDIF
-  !
-  ! ENDIF
-  !END DO
-
-!  !## determine for each period appropriate attribute term
-!  IF(ISS.EQ.1)THEN
-!   QT=QT/REAL(NR)
-!  !## determine for each period appropriate q-median term
-!  ELSEIF(ISS.EQ.2)THEN
-!   QT=QT/TTIME
-!  ENDIF
   DEALLOCATE(ATTRIB,NODATA,QD)
 
  ENDIF
@@ -1836,6 +1779,52 @@ END SUBROUTINE IMOD_UTL_QKSORT
  IS = MOD( ITIME, 60 ) 
 
  END SUBROUTINE imod_utl_ITIMETOGTIME
+ 
+ !###====================================================================
+ SUBROUTINE IMOD_UTL_STIMETOETIME(STIME,DELT,ETIME)
+ !###====================================================================
+ IMPLICIT NONE
+ INTEGER(KIND=8),INTENT(IN) :: STIME
+ INTEGER(KIND=8),INTENT(OUT) :: ETIME
+ REAL,INTENT(IN) :: DELT
+ REAL :: NSR
+ INTEGER :: NDAY,NS,NS1,NS2,IYR,IMH,IDY,IHR,IMT,ISC,SD
+
+ !## get julian date
+ SD=STIME/1000000
+ SD=IMOD_UTL_IDATETOJDATE(SD)
+ 
+ CALL IMOD_UTL_ITIMETOGDATE(STIME,IYR,IMH,IDY,IHR,IMT,ISC)
+ !## number of seconds in that day
+ NS1=REAL(IHR)*3600.0+REAL(IMT)*60.0+REAL(ISC)
+
+ !## number of days in timestep
+ NDAY= INT(DELT)
+
+ !## increase julian date
+ SD=SD+NDAY
+
+ !## remaining timesteps in seconds
+ NS2=INT(DELT-NDAY)*86400D0
+ 
+ !## add to seconds in current timestep
+ NS=NS1+NS2
+ !## fraction in days
+ NSR=REAL(NS)/86400.0
+ 
+ NDAY=INT(NSR)
+ !## net seconds in new timestep
+ NSR=NSR-REAL(NDAY)
+ 
+ !## get number of hours/minutes/seconds
+ NS1=NSR*86400
+ CALL imod_utl_ITIMETOGTIME(NS1,IHR,IMT,ISC)
+ 
+ !## increase julian date
+ ETIME=INT(IMOD_UTL_JDATETOIDATE(SD),8)
+ ETIME=ETIME*1000000+IHR*10000+IMT*100+ISC
+ 
+ END SUBROUTINE IMOD_UTL_STIMETOETIME
  
  !###====================================================================
  REAL FUNCTION UTL_DIFFTIME(SDATE,EDATE)

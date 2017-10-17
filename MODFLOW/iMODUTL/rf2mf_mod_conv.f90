@@ -1540,7 +1540,12 @@
             write(*,*) 'Error: incorrect stress period writing for DIS file'
             stop 1
          end if
-         write(str(1),'(G15.7)') dis%sp(iper)%perlen
+         !## set perlen eq 1.0 for steady-state, otherwise crash in UZF package
+         if(dis%sp(iper)%SsTr.eq.'SS')then
+          write(str(1),'(G15.7)') 1.0 !dis%sp(iper)%perlen         
+         else
+          write(str(1),'(G15.7)') dis%sp(iper)%perlen
+         endif
          write(str(2),'(I10)') dis%sp(iper)%nstp
          write(str(3),'(G15.7)') dis%sp(iper)%tsmult
          write(str(4),'(A)') dis%sp(iper)%SsTr
