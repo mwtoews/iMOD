@@ -30,6 +30,9 @@ CONTAINS
  CHARACTER(LEN=256) :: DIR
  CHARACTER(LEN=256),ALLOCATABLE,DIMENSION(:) :: BMPOUTNAME
 
+ CALL WMESSAGEBOX(OKONLY,INFORMATIONICON,COMMONOK,'This functionality is not part of the current official iMOD version.','Information')
+ RETURN
+
  !## check whether there is ffmeg available
  L3=.FALSE.; IF(LEN_TRIM(PREFVAL(29)).NE.'')THEN
   INQUIRE(FILE=PREFVAL(29),EXIST=L3)
@@ -336,6 +339,9 @@ CONTAINS
  IMPLICIT NONE
  INTEGER :: N
  
+ CALL WMESSAGEBOX(OKONLY,INFORMATIONICON,COMMONOK,'This functionality is not part of the current official iMOD version.','Information')
+ RETURN
+
  CALL WINDOWSELECT(0)
  IF(WMENUGETSTATE(ID_MOVIE_PLAY,2).EQ.1)THEN
   CALL MOVIE_PLAY_CLOSE(); RETURN

@@ -22,6 +22,7 @@
 !!
 MODULE MOD_MDL_PAR
 
+USE MOD_IDF_PAR, ONLY : IDFOBJ
 CHARACTER(LEN=256) :: RUNFILE,RESDIR,CLIPDIR
 
 INTEGER,PARAMETER :: MXMDL=26 
@@ -93,6 +94,8 @@ DATA MDLKEYWS/'CAP','BND','SHD','KDW','VCW','STO', &     !  1- 6
               'KHV','KVV','KVA','WEL','DRN','RIV', &     ! 13-18
               'EVT','GHB','RCH','OLF','CHD','ISG', &     ! 19-24
               'IBS','PST'/                               ! 15-26
+
+TYPE(IDFOBJ) :: IDF,IDFC
 
 END MODULE MOD_MDL_PAR
 

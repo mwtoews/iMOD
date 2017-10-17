@@ -307,7 +307,11 @@
 			<FileConfiguration Name="Release|Win32">
 				<Tool Name="VFFortranCompilerTool" Preprocess="preprocessYes" PreprocessorDefinitions="WINTERACTER11"/></FileConfiguration></File>
 		<File RelativePath="..\..\..\iMOD\SRC\imod_manager\imod_prjmanager_par.f90"/>
-		<File RelativePath="..\..\SRC\imod_manager\imod_prjmanager_utl.f90"/>
+		<File RelativePath="..\..\SRC\imod_manager\imod_prjmanager_utl.f90">
+			<FileConfiguration Name="Release|x64">
+				<Tool Name="VFFortranCompilerTool" Preprocess="preprocessYes" PreprocessorDefinitions="WINTERACTER11"/></FileConfiguration>
+			<FileConfiguration Name="Debug|x64">
+				<Tool Name="VFFortranCompilerTool" Preprocess="preprocessYes" PreprocessorDefinitions="WINTERACTER11"/></FileConfiguration></File>
 		<File RelativePath="..\..\..\iMOD\SRC\imod_manager\imod_tagman.F90"/></Filter>
 		<Filter Name="imod_map2idf">
 		<File RelativePath="..\..\SRC\imod_map2idf\imod_map2idf.f90"/>
