@@ -6,6 +6,94 @@ USE MOD_IDF, ONLY : IDFNULLIFY,IDFDEALLOCATEX,IDFCOPY
 
 CONTAINS
 
+ !###====================================================================
+ SUBROUTINE PMANAGER_SAVEMF2005_COARSEGRID(IDF,BUFFER,BUFFERCS)
+ !###====================================================================
+ IMPLICIT NONE
+ TYPE(IDFOBJ),INTENT(INOUT) :: IDF
+ REAL,INTENT(IN) :: BUFFER,BUFFERCS
+ REAL,PARAMETER :: INC=1.0                    !## minimal scaling in interest
+ DOUBLE PRECISION,PARAMETER :: FINCR=0.02D0
+ REAL,PARAMETER :: POWR     =0.3     !     
+ INTEGER :: NOMAXCELL                         !## maximal # cells in the end
+ INTEGER,PARAMETER :: NOMINCELL=1             !## minimal # cells in the centre
+ LOGICAL,PARAMETER :: LCLIP    =.TRUE.        !## along edge small cells
+ INTEGER :: IC1,IC2,IR1,IR2
+ INTEGER,ALLOCATABLE,DIMENSION(:) :: PDELR,PDELC
+ 
+ NOMAXCELL=INT(BUFFERCS/IDF%DX)
+
+! !## find mid icol
+! IC1=INT((USEBOX(1)-SIMBOX(1))/SIMCSIZE)+1
+! IC2=INT((USEBOX(3)-SIMBOX(1))/SIMCSIZE)+1
+! IR1=INT((SIMBOX(4)-USEBOX(4))/SIMCSIZE)+1
+! IR2=INT((SIMBOX(4)-USEBOX(2))/SIMCSIZE)+1
+!
+! ORGNCOL=NCOL
+! ORGNROW=NROW
+!
+! ALLOCATE(PDELR(NCOL),PDELC(NROW))
+! CALL MODELLHS1(PDELR,ORGNCOL,NCOL,IC1,IC2,OC1,OC2,INC,FINCR,POWR,NOMINCELL,NOMAXCELL,LCLIP)
+! CALL MODELLHS1(PDELC,ORGNROW,NROW,IR1,IR2,OR1,OR2,INC,FINCR,POWR,NOMINCELL,NOMAXCELL,LCLIP)
+!
+!! dis%nrow = NROW
+!! dis%ncol = NCOL
+!! call AllocDis(ialloc)
+!
+!!  CALL IMOD_UTL_PRINTTEXT('',0)
+!!  CALL IMOD_UTL_PRINTTEXT('Scaling Results along COLUMN-direction:',0)
+!!  CALL IMOD_UTL_PRINTTEXT('',0)
+!  CALL PMANAGER_SAVEMF2005_COARSEGRID_RESULT(PDELR,dis%delr,NCOL,ORGNCOL,IDF%DX)
+!
+!!  CALL IMOD_UTL_PRINTTEXT('',0)
+!!  CALL IMOD_UTL_PRINTTEXT('Scaling Results along ROW-direction:',0)
+!!  CALL IMOD_UTL_PRINTTEXT('',0)
+!  CALL PMANAGER_SAVEMF2005_COARSEGRID_RESULT(PDELC,dis%delc,NROW,ORGNROW,IDF%DY)
+!
+!! ENDIF
+!
+! ENDIF
+
+ END SUBROUTINE PMANAGER_SAVEMF2005_COARSEGRID
+
+ !###====================================================================
+ SUBROUTINE PMANAGER_SAVEMF2005_COARSEGRID_RESULT(IX,DX,NX,NXORG,SIMCSIZE)
+ !###====================================================================
+ IMPLICIT NONE
+ INTEGER,INTENT(IN) :: NX,NXORG
+ REAL,INTENT(IN) :: SIMCSIZE
+ REAL,INTENT(OUT),DIMENSION(0:NX) :: DX
+ INTEGER,INTENT(IN),DIMENSION(NXORG) :: IX
+ INTEGER :: I,J,K
+
+ J=1
+ K=1
+ DO I=2,NXORG
+  IF(IX(I).NE.IX(I-1))THEN
+   DX(K)=SIMCSIZE*REAL(J)
+   K=K+1
+   J=1
+  ELSE
+   J=J+1
+  ENDIF
+ END DO
+ DX(K)=SIMCSIZE*REAL(J)
+
+! I=1
+! DO K=2,NX
+!  IF(DX(K).NE.DX(K-1))THEN
+!   WRITE(LINE,'(I5,2(A3,F10.2))') I,' x ',DX(K-1),' = ',REAL(I)*DX(K-1)
+!   CALL IMOD_UTL_PRINTTEXT(' Cellsizes: '//TRIM(LINE),0)
+!   I=1
+!  ELSE
+!   I=I+1
+!  ENDIF
+! ENDDO
+! WRITE(LINE,'(I5,2(A3,F10.2))') I,' x ',DX(K-1),' = ',REAL(I)*DX(K-1)
+! CALL IMOD_UTL_PRINTTEXT(' Cellsizes: '//TRIM(LINE),0)
+
+ END SUBROUTINE PMANAGER_SAVEMF2005_COARSEGRID_RESULT
+
  !###======================================================================
  LOGICAL FUNCTION PMANAGER_SAVEMF2005_PCK_GETMINMAX(X,NCOL,NROW,XB,MINV,MAXV,IFBND,EXFNAME)
  !###======================================================================
