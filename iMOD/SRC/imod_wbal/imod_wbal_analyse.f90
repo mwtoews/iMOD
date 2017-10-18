@@ -2019,6 +2019,7 @@ CONTAINS
  INTEGER,INTENT(IN) :: IBATCH
  CHARACTER(LEN=*),INTENT(IN) :: FNAME
 
+ !##v41
  CALL WMESSAGEBOX(OKONLY,INFORMATIONICON,COMMONOK,'This functionality is not part of the current official iMOD version.','Information')
  RETURN
  

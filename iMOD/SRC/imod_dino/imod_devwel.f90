@@ -18,7 +18,10 @@ CONTAINS
  CHARACTER(LEN=256) :: LINE,FNAME
  DOUBLE PRECISION,DIMENSION(:,:),ALLOCATABLE :: X,Y,Z
   
-! FNAME='d:\IMOD-MODELS\ALBERTA\ALBERTA\IMOD_DEMO\FAULTS\test_fault_model.asc'
+ !##v41
+ CALL WMESSAGEBOX(OKONLY,INFORMATIONICON,COMMONOK,'This functionality is not part of the current official iMOD version.','Information')
+ RETURN
+
  IF(.NOT.UTL_WSELECTFILE('Load ASC File (*.asc)|*.asc|',&
                   LOADDIALOG+PROMPTON+DIRCHANGE+APPENDEXT,FNAME,&
                   'Load ASC File (*.asc)'))RETURN
@@ -42,7 +45,6 @@ CONTAINS
 
  !## start processing the lines
  M=0; DO
-!  READ(IU,'(A5)',IOSTAT=IOS) LINE
   IF(IOS.NE.0)EXIT
 
   !## start new fault
@@ -57,8 +59,6 @@ CONTAINS
     DO I=1,3; READ(IU,*); ENDDO
 
     READ(IU,'(A256)',IOSTAT=IOS) LINE
-!    !## stop reading pillars
-!    IF(TRIM(UTL_CAP(LINE(1:6),'U')).NE.'PILLAR')EXIT
 
     !## write GEN-file
     IF(J.GT.1)THEN
@@ -125,6 +125,10 @@ CONTAINS
  REAL :: X,Y,AX,AY,AZ,X1,Y1,Z1,L,DX,DY,DZ,TL1,TL2
  INTEGER :: I,II,J,I1,I2,N,IU,JU,NLC,IOS
  CHARACTER(LEN=MAXLEN) :: CL1,CL2,CL
+
+ !##v41
+ CALL WMESSAGEBOX(OKONLY,INFORMATIONICON,COMMONOK,'This functionality is not part of the current official iMOD version.','Information')
+ RETURN
 
  IF(IBATCH.EQ.0)THEN     
   IF(.NOT.UTL_DATA_CSV((/'Name        ','X Coordinate','Y Coordinate', &

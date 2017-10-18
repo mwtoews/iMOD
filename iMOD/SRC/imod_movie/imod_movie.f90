@@ -30,6 +30,7 @@ CONTAINS
  CHARACTER(LEN=256) :: DIR
  CHARACTER(LEN=256),ALLOCATABLE,DIMENSION(:) :: BMPOUTNAME
 
+ !##v41
  CALL WMESSAGEBOX(OKONLY,INFORMATIONICON,COMMONOK,'This functionality is not part of the current official iMOD version.','Information')
  RETURN
 
@@ -339,6 +340,7 @@ CONTAINS
  IMPLICIT NONE
  INTEGER :: N
  
+ !##v41
  CALL WMESSAGEBOX(OKONLY,INFORMATIONICON,COMMONOK,'This functionality is not part of the current official iMOD version.','Information')
  RETURN
 
