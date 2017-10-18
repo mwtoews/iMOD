@@ -2093,7 +2093,7 @@ CONTAINS
  CHARACTER(LEN=52) :: ID,TXT
  DOUBLE PRECISION :: DHW
  REAL,ALLOCATABLE,DIMENSION(:) :: TSNODATA,M,C,GF_H,GF_O
- INTEGER,ALLOCATABLE,DIMENSION(:) :: IDATE
+ INTEGER(KIND=8),ALLOCATABLE,DIMENSION(:) :: IDATE
  REAL,DIMENSION(2) :: PC,PM,DYN !## percentiles computed/measured
  logical :: lex
  
@@ -2237,6 +2237,10 @@ CONTAINS
     DO K=1,NROWIPFTXT
      KK=KK+1
      READ(IUIPFTXT,*,IOSTAT=IOS) IDATE(KK),M(KK),C(KK) 
+
+     !## make double precision dates - if needed
+     IF(IDATE(KK).LT.100000000)IDATE(KK)=IDATE(KK)*1000000
+
      !## error reading, skip it (can be caused by steady-state periods in between)
      IF(IOS.NE.0)THEN; KK=KK-1; CYCLE; ENDIF
 

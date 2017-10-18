@@ -191,7 +191,7 @@ RETURN
 END SUBROUTINE
 
 !###====================================================================
-SUBROUTINE TSERIE1INIT2(LPEST,LSS,MV,root)
+SUBROUTINE TSERIE1INIT2(LPEST,LSS,MV,root,subm)
 !###====================================================================
 USE IMOD_UTL, ONLY : IMOD_UTL_PRINTTEXT,IMOD_UTL_STRING,IMOD_UTL_ITOS,IMOD_UTL_RTOS,IMOD_UTL_OPENASC,IMOD_UTL_CAP,IMOD_UTL_CREATEDIR,IMOD_UTL_SWAPSLASH,OS,IMOD_UTL_GETUNIT,IMOD_UTL_DELETE_BY_UNIT
 USE TSVAR
@@ -199,10 +199,10 @@ IMPLICIT NONE
 ! arguments
 LOGICAL, INTENT(IN) :: LPEST
 LOGICAL, INTENT(IN) :: LSS
-CHARACTER(LEN=*),intent(in) :: root
+CHARACTER(LEN=*),intent(in) :: root,subm
 REAL, INTENT(IN) :: MV
 ! locals
-INTEGER :: IOS,I,II,III,J,JJ,N,NVALID,K
+INTEGER :: IOS,I,II,III,J,JJ,N,NVALID,K,ichr
 CHARACTER(LEN=52),DIMENSION(:),ALLOCATABLE :: IPFSTRING
 CHARACTER(LEN=256) :: LINE
 CHARACTER(LEN=1000) :: BIGLINE
@@ -216,12 +216,18 @@ IF(LPEST.EQ.1.AND.SUM(TS%NROWIPF).LE.0)CALL IMOD_UTL_PRINTTEXT('Should at least 
 CALL PKS7MPIACTIVE(LPKS) ! PKS
 CALL PKS7MPIPARTSTR(PS) ! PKS
 
+ichr=92; if(OS.eq.2)ichr=47
+
 !## steady-state
 IF(LSS)THEN
  DO JJ=1,ABS(IIPF)
   I=INDEX(TS(JJ)%IPFNAME,CHAR(92),.TRUE.)+1
   K = INDEX(TS(JJ)%IPFNAME,'.',.TRUE.)-1 ! PKS
-  LINE=TRIM(ROOT)//CHAR(92)//TS(JJ)%IPFNAME(I:K)//TRIM(PS)//'.ipf'
+  if(trim(subm).eq.'')then
+   LINE=TRIM(ROOT)//CHAR(ichr)//TS(JJ)%IPFNAME(I:K)//TRIM(PS)//'.ipf'
+  else
+   LINE=TRIM(ROOT)//CHAR(ichr)//trim(subm)//char(ichr)//TS(JJ)%IPFNAME(I:K)//TRIM(PS)//'.ipf'
+  endif
   CALL IMOD_UTL_SWAPSLASH(LINE)
   CALL IMOD_UTL_OPENASC(TS(JJ)%IUIPF,LINE,'W')
   ! check for valid data
@@ -246,9 +252,14 @@ IF(LSS)THEN
 !## transient
 ELSE
 
- CALL IMOD_UTL_CREATEDIR(TRIM(root)//CHAR(92)//'timeseries')
+ if(trim(subm).eq.'')then
+  CALL IMOD_UTL_CREATEDIR(TRIM(root)//CHAR(ichr)//'timeseries')
+  LINE=TRIM(root)//CHAR(ichr)//'timeseries'//CHAR(ichr)//'timeseries_collect'//TRIM(PS)//'.txt'
+ else
+  CALL IMOD_UTL_CREATEDIR(TRIM(root)//CHAR(ichr)//trim(subm)//char(ichr)//'timeseries')
+  LINE=TRIM(root)//CHAR(ichr)//trim(subm)//char(ichr)//'timeseries'//CHAR(ichr)//'timeseries_collect'//TRIM(PS)//'.txt'
+ endif
  !## open txt file to collect all timeseries
- LINE=TRIM(root)//CHAR(92)//'timeseries'//CHAR(92)//'timeseries_collect'//TRIM(PS)//'.txt'
  CALL IMOD_UTL_SWAPSLASH(LINE)
  IUIPFTXT=IMOD_UTL_GETUNIT()
  CALL IMOD_UTL_OPENASC(IUIPFTXT,LINE,'W')
@@ -264,7 +275,11 @@ ELSE
   ENDIF
   CALL PKS7MPIPARTSTR(PS) ! PKS
   K = INDEX(TS(JJ)%IPFNAME,'.',.TRUE.)-1 ! PKS
-  LINE=TRIM(root)//CHAR(92)//'timeseries'//CHAR(92)//TS(JJ)%IPFNAME(I:K)//TRIM(PS)//'.ipf'
+  if(trim(subm).eq.'')then
+   LINE=TRIM(root)//CHAR(ichr)//'timeseries'//CHAR(ichr)//TS(JJ)%IPFNAME(I:K)//TRIM(PS)//'.ipf'
+  else
+   LINE=TRIM(root)//CHAR(ichr)//trim(subm)//char(ichr)//'timeseries'//CHAR(ichr)//TS(JJ)%IPFNAME(I:K)//TRIM(PS)//'.ipf'
+  endif
   CALL IMOD_UTL_SWAPSLASH(LINE)
   TS(JJ)%IUIPF=IMOD_UTL_GETUNIT(); CALL IMOD_UTL_OPENASC(TS(JJ)%IUIPF,LINE,'W')
 
@@ -309,7 +324,7 @@ RETURN
 END SUBROUTINE
 
 !###====================================================================
-SUBROUTINE TSERIE1WRITE(ISIM,LSS,DDATE,MV,usests,root,cdate)
+SUBROUTINE TSERIE1WRITE(ISIM,LSS,DDATE,MV,usests,root,subm,cdate)
 !###====================================================================
 USE IMOD_UTL, ONLY : IMOD_UTL_ITOS,IMOD_UTL_RTOS,IMOD_UTL_PRINTTEXT,IMOD_UTL_OPENASC, &
        IMOD_UTL_SWAPSLASH,IMOD_UTL_CREATEDIR,OS,IMOD_UTL_IDATETOJDATE,IMOD_UTL_JDATETOIDATE, &
@@ -317,18 +332,20 @@ USE IMOD_UTL, ONLY : IMOD_UTL_ITOS,IMOD_UTL_RTOS,IMOD_UTL_PRINTTEXT,IMOD_UTL_OPE
 USE TSVAR
 IMPLICIT NONE
 ! arguments
-CHARACTER(LEN=*),intent(in) :: root,cdate
+CHARACTER(LEN=*),intent(in) :: root,cdate,subm
 INTEGER,INTENT(IN) :: ISIM
 LOGICAL, INTENT(IN) :: LSS
 DOUBLE PRECISION, INTENT(IN) :: DDATE
 REAL, INTENT(IN) :: MV
 LOGICAL, INTENT(IN) :: USESTS
 ! locals
-INTEGER,ALLOCATABLE,DIMENSION(:) :: IUTXT,JUTXT,TSDATE
+INTEGER,ALLOCATABLE,DIMENSION(:) :: IUTXT,JUTXT
+INTEGER(KIND=8),ALLOCATABLE, DIMENSION(:) :: TSDATE
 REAL :: DH1,DH2,H,X,Y,W,Z,M,HH,WW
 INTEGER :: I,II,J,JJJ,ILAY,N,IDATE,JDATE,JJ,IU,KK,IOS,JOS,IREC,MPER
 CHARACTER(LEN=52) :: CLABEL,CLDATE
-integer :: hour, minute, second
+integer :: hour, minute, second,ichr
+INTEGER(KIND=8) :: DBLDATE
 CHARACTER(LEN=256) :: LINE
 CHARACTER(LEN=100) :: PS
 
@@ -411,7 +428,12 @@ ELSE
   CALL IMOD_UTL_PRINTTEXT('',0); CALL IMOD_UTL_PRINTTEXT(' Writing Timeseries to IPF file ...',0)
   CLOSE(IUIPFTXT)
   CALL PKS7MPIPARTSTR(PS) ! PKS
-  LINE=TRIM(root)//CHAR(92)//'timeseries'//CHAR(92)//'timeseries_collect'//TRIM(PS)//'.txt'
+  ichr=92; if(OS.eq.2)ichr=47
+  if(trim(subm).eq.'')then
+   LINE=TRIM(root)//CHAR(ichr)//'timeseries'//CHAR(ichr)//'timeseries_collect'//TRIM(PS)//'.txt'
+  else
+   LINE=TRIM(root)//CHAR(ichr)//trim(subm)//char(ichr)//'timeseries'//CHAR(ichr)//'timeseries_collect'//TRIM(PS)//'.txt'
+  endif
   CALL IMOD_UTL_SWAPSLASH(LINE)
   IU=IMOD_UTL_GETUNIT(); CALL IMOD_UTL_OPENASC(IU,LINE,'R')
 
@@ -425,15 +447,16 @@ ELSE
   !## get number of stressperiods with a date
   MPER=0
   DO IREC=1,NREC
-   READ(IU,*,IOSTAT=JOS) IDATE
+   READ(IU,*,IOSTAT=JOS) DBLDATE !IDATE
    !## skip this period since it is apparently not a date
-   IF(JOS.NE.0)THEN
-    DO J=1,ABS(IIPF); DO I=1,TS(J)%NROWIPF
-     IF(.NOT.TS(J)%STVALUE(I)%VALID)CYCLE; READ(IU,*)
-    ENDDO; ENDDO
-   ELSE
-    MPER=MPER+1
-   ENDIF
+   IF(JOS.EQ.0)MPER=MPER+1
+!   IF(JOS.NE.0)THEN
+   DO J=1,ABS(IIPF); DO I=1,TS(J)%NROWIPF
+    IF(.NOT.TS(J)%STVALUE(I)%VALID)CYCLE; READ(IU,*)
+   ENDDO; ENDDO
+!   ELSE
+!    MPER=MPER+1
+!   ENDIF
   ENDDO
   REWIND(IU)
 
@@ -446,10 +469,11 @@ ELSE
     II=II+1
 
     !## apply appropriate slash
-    IF(OS.EQ.1)THEN
-     LINE=TRIM(ROOT)//CHAR(92)//'timeseries'//CHAR(92)//'ipf'//TRIM(IMOD_UTL_ITOS(J))//'_'//TRIM(TS(J)%STVALUE(I)%ID)//'.txt'
-    ELSEIF(OS.EQ.2)THEN
-     LINE=TRIM(ROOT)//CHAR(47)//'timeseries'//CHAR(47)//'ipf'//TRIM(IMOD_UTL_ITOS(J))//'_'//TRIM(TS(J)%STVALUE(I)%ID)//'.txt'
+!    ichr=92; if(OS.eq.2)ichr=47
+    IF(trim(subm).eq.'')THEN 
+     LINE=TRIM(ROOT)//CHAR(ichr)//'timeseries'//CHAR(ichr)//'ipf'//TRIM(IMOD_UTL_ITOS(J))//'_'//TRIM(TS(J)%STVALUE(I)%ID)//'.txt'
+    ELSE
+     LINE=TRIM(ROOT)//CHAR(ichr)//trim(subm)//char(ichr)//'timeseries'//CHAR(ichr)//'ipf'//TRIM(IMOD_UTL_ITOS(J))//'_'//TRIM(TS(J)%STVALUE(I)%ID)//'.txt'
     ENDIF
      
     IF(II.GT.1)THEN
@@ -462,11 +486,7 @@ ELSE
     IF(IOS.NE.0)THEN 
      !## maybe the directory doesn't exist - create it and try again
      
-     IF(OS.EQ.1)THEN
-      JJJ=INDEX(LINE,CHAR(92),.TRUE.)
-     ELSE
-      JJJ=INDEX(LINE,CHAR(47),.TRUE.)
-     ENDIF
+     JJJ=INDEX(LINE,CHAR(ichr),.TRUE.)
      IF(JJJ.GT.0)CALL IMOD_UTL_CREATEDIR(LINE(1:JJJ-1))
 
     OPEN(IUTXT(II),FILE=LINE,FORM='FORMATTED',ACTION='WRITE',STATUS='UNKNOWN',IOSTAT=IOS) 
@@ -489,11 +509,7 @@ ELSE
 
     IF(TS(J)%IEXT.GT.0)THEN
      !## if iext.gt.0 read textfiles with measures
-     IF(OS.EQ.1)THEN
-      JJJ=INDEX(TS(J)%IPFNAME,CHAR(92),.TRUE.)
-     ELSE
-      JJJ=INDEX(TS(J)%IPFNAME,CHAR(47),.TRUE.)
-     ENDIF
+     JJJ=INDEX(TS(J)%IPFNAME,CHAR(ichr),.TRUE.)
 
      LINE=TS(J)%IPFNAME(:JJJ)//TRIM(TS(J)%STVALUE(I)%ID)//'.'//TRIM(TS(J)%EXT)
      JJ=JJ+1
@@ -515,16 +531,19 @@ ELSE
   ENDDO
 
   !## write summary into different *.txt files
-  TSDATE=0
+  TSDATE=0D0
   DO IREC=1,NREC
 
-   READ(IU,*,IOSTAT=JOS) IDATE
+   READ(IU,*,IOSTAT=JOS) DBLDATE !IDATE
    !## skip this period since it is apparently not a date
    IF(JOS.NE.0)THEN
     DO J=1,ABS(IIPF); DO I=1,TS(J)%NROWIPF; IF(.NOT.TS(J)%STVALUE(I)%VALID)CYCLE; READ(IU,*); ENDDO; ENDDO
     CYCLE
    ENDIF 
-   JDATE=IMOD_UTL_IDATETOJDATE(IDATE)
+   !## make double precision dates
+   IF(DBLDATE.LT.100000000)DBLDATE=DBLDATE*1000000
+
+!   JDATE=IMOD_UTL_IDATETOJDATE(IDATE)
 
    II=0
    DO JJ=1,ABS(IIPF)
@@ -538,28 +557,28 @@ ELSE
      IF(KK.NE.JJ)CALL IMOD_UTL_PRINTTEXT(' Something goes wrong in reading summary timeseries on line 532 in imodflow_tseries.f90',2)
 
      IF(TS(JJ)%IEXT.GT.0)THEN
-      IF(TSDATE(II).EQ.JDATE)THEN
+      IF(TSDATE(II).EQ.DBLDATE)THEN !JDATE)THEN
        M=TSM(II)
       !## try to read next date
-      ELSEIF(TSDATE(II).LT.JDATE)THEN
+      ELSEIF(TSDATE(II).LT.DBLDATE)THEN !JDATE)THEN
        !## read until current date is found
        DO
         READ(JUTXT(II),*,IOSTAT=IOS) TSDATE(II),TSM(II)
         IF(IOS.NE.0)EXIT
-        TSDATE(II)=IMOD_UTL_IDATETOJDATE(TSDATE(II))
-        IF(TSDATE(II).GE.JDATE)EXIT 
+!        TSDATE(II)=IMOD_UTL_IDATETOJDATE(TSDATE(II))
+        IF(TSDATE(II).GE.DBLDATE)EXIT !JDATE)EXIT 
        ENDDO
        M=TSM(II)
-       IF(TSDATE(II).NE.JDATE)M=TSNODATA(II)
+       IF(TSDATE(II).NE.DBLDATE)M=TSNODATA(II) !JDATE)M=TSNODATA(II)
       ELSE
        M=TSNODATA(II)
       ENDIF
      ENDIF
 
      IF(TS(JJ)%IEXT.GT.0)THEN
-      WRITE(IUTXT(II),*) IDATE,M,H
+      WRITE(IUTXT(II),*) DBLDATE,M,H !IDATE,M,H
      ELSE
-      WRITE(IUTXT(II),*) IDATE,H
+      WRITE(IUTXT(II),*) DBLDATE,H   !IDATE,H
      ENDIF   
 
   ENDDO

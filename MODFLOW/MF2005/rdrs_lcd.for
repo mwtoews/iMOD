@@ -446,7 +446,13 @@ c count number of hfb and fill
            ENDIF
         
            !## get total resistance related to thickness of model layer
-           C2=C1*FDZ(ICOL,IROW)**4.0
+           IF(FDZ(ICOL,IROW).LT.1.0)THEN
+            !## take harmonic mean in case of unsaturated thickness of fault 
+            C2=1.0/((1.0/C1*FDZ(ICOL,IROW))+(1.0-FDZ(ICOL,IROW)))
+!            C2=C1*FDZ(ICOL,IROW)**4.0
+           ELSE
+            C2=C1
+           ENDIF
            
            !## get systemnumber
            ISYS=SYS(ICOL,IROW)
@@ -487,7 +493,16 @@ c count number of hfb and fill
            ENDIF
         
            !## get total resistance related to thickness of model layer
-           C2=C1*FDZ(ICOL,IROW)**4.0
+           IF(FDZ(ICOL,IROW).LT.1.0)THEN
+            !## take harmonic mean in case of unsaturated thickness of fault 
+            C2=1.0/((1.0/C1*FDZ(ICOL,IROW))+(1.0-FDZ(ICOL,IROW)))
+!            C2=C1*FDZ(ICOL,IROW)**4.0
+           ELSE
+            C2=C1
+           ENDIF
+
+!           !## get total resistance related to thickness of model layer
+!           C2=C1*FDZ(ICOL,IROW)**4.0
         
            !## get systemnumber
            ISYS=SYS(ICOL,IROW)

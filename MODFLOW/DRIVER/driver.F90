@@ -96,7 +96,7 @@ implicit none
  character(len=1024) :: idfmergefile
  
  integer :: isub, nsub, nnsub
- character(len=50), dimension(nsubmax) :: submstr
+ character(len=50), dimension(nsubmax) :: submstr=''
 
  real :: hnoflo
  type(idfobj) :: idf
@@ -464,7 +464,7 @@ call pks7mpibarrier() ! PKS
  call osd_chdir(root)
  call tserie1init1(lipest,lss,hnoflo)
  ok = mf2005_TimeserieInit(mf_igrid); call driverChk(ok,'mf2005_TimeserieInit')
- call tserie1init2(lipest,lss,hnoflo,modwd1)
+ call tserie1init2(lipest,lss,hnoflo,modwd1,submstr(isub))
 
  if (rt.eq.rtmodsimtranmoz) then
     call osd_chdir(mozwd)
@@ -751,7 +751,7 @@ call pks7mpibarrier() ! PKS
              call osd_chdir(root)  
              ok = mf2005_TimeserieGetHead(mf_igrid); call DriverChk(ok,'mf2005_TimeserieGetHead')
              call gwf2getcurrentdate(mf_igrid,time_string)  !,issflg(kkper)
-             call tserie1write(0,lss,currentTime,hnoflo,usests,modwd1,time_string)
+             call tserie1write(0,lss,currentTime,hnoflo,usests,modwd1,submstr(isub),time_string)
 
              !#### TIMESERIES #####
 
@@ -868,7 +868,7 @@ call pks7mpibarrier() ! PKS
  end if
 !#### TIMESERIES #####
  call osd_chdir(root)
- call tserie1write(1,lss,currentTime,hnoflo,usests,modwd1,time_string)
+ call tserie1write(1,lss,currentTime,hnoflo,usests,modwd1,submstr(isub),time_string)
  call tserie1close()
 !#### TIMESERIES #####
 
