@@ -251,6 +251,11 @@ c count number of hfb and fill
                  IF(ilay.EQ.0)THEN   
                   Z=HFB1EXPORT_GETDZ(TF,BF,ICOL,IROW,ICOL,IROW+1,NODA
      1TA,jLAY,LNCOL,LNROW,TPV,BTV,TFV,BFV)                  
+                 ELSE
+                  TPV=0.0
+                  BTV=0.0
+                  TFV=0.0
+                  BFV=0.0
                  ENDIF
 
                  !## skip fault on side of model or less than 0.0 fraction
@@ -290,6 +295,11 @@ c count number of hfb and fill
                  IF(ilay.EQ.0)THEN  
                   Z=HFB1EXPORT_GETDZ(TF,BF,ICOL,IROW,ICOL+1,IROW,NODA
      1TA,jLAY,LNCOL,LNROW,TPV,BTV,TFV,BFV)                  
+                 ELSE
+                  TPV=0.0
+                  BTV=0.0
+                  TFV=0.0
+                  BFV=0.0
                  ENDIF
 
                  !## skip fault on side of model or less than 0.0 fraction
