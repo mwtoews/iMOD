@@ -1499,7 +1499,7 @@ CONTAINS
     IF(LNCOL.GT.0.AND.LNROW.GT.0)THEN
     
      !## sample factor depends on number of cells (min. value =1)
-     SAMPLE=NINT(SQRT(REAL(LNCOL*LNROW)/REAL(SAMPFACT))); SAMPLE=MAX(1,SAMPLE)
+     SAMPLE=1; IF(LEGOPTION.EQ.'NON')SAMPLE=NINT(SQRT(REAL(LNCOL*LNROW)/REAL(SAMPFACT))); SAMPLE=MAX(1,SAMPLE)
 
      !## initialize idfval2-array to max extent
      N=(LNCOL*LNROW)/SAMPLE**2
