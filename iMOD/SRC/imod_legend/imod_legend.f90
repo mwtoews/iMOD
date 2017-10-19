@@ -1592,13 +1592,16 @@ CONTAINS
 
    ELSE
 
-    MP(IPLOT)%LEG%CLASS(0)=MP(IPLOT)%IDF%DMAX
-    MP(IPLOT)%LEG%CLASS(1)=MP(IPLOT)%IDF%DMIN
-    MP(IPLOT)%LEG%NCLR=1
-    MP(IPLOT)%LEG%RGB(1)=WRGB(25,25,25)
+    DO IPLOT=IP,JP 
+     IF(ACTLIST(IPLOT).NE.1)CYCLE
+     MP(IPLOT)%LEG%CLASS(0)=MP(IPLOT)%IDF%DMAX
+     MP(IPLOT)%LEG%CLASS(1)=MP(IPLOT)%IDF%DMIN
+     MP(IPLOT)%LEG%NCLR=1
+     MP(IPLOT)%LEG%RGB(1)=WRGB(25,25,25)
+    ENDDO
+
     CALL WMESSAGEBOX(OKONLY,INFORMATIONICON,COMMONOK,'iMOD found no values for percentiles!'//CHAR(13)// &
-     'iMOD will set single class to minimal and maximal values ('//TRIM(RTOS(MP(IPLOT)%IDF%DMIN,'*',0))//'-'// &
-      TRIM(RTOS(MP(IPLOT)%IDF%DMAX,'*',0))//')'//CHAR(13)//'according header in IDF','Information')
+     'iMOD will set single class to minimal and maximal values for all selected IDF files.','Information')
 
    ENDIF
  
