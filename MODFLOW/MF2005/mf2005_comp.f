@@ -617,7 +617,7 @@ c next stress period
 C7------SIMULATE EACH STRESS PERIOD.
 c      DO 100 KPER = 1, NPER
         CALL GWF2BAS7ST(KKPER,IGRID)
-        if(IUNIT(IUMET).gt.0) call gwf2met1st(igrid)                    ! MET
+        if(IUNIT(IUMET).gt.0) call gwf2met1st(kkper,igrid)                    ! MET
         IF(IUNIT(IUIBS).GT.0) CALL GWF2IBS7ST(KKPER,IGRID)
         IF(IUNIT(IUSUB).GT.0) CALL GWF2SUB7ST(KKPER,IGRID)
         IF(IUNIT(IUSWT).GT.0) CALL GWF2SWT7ST(KKPER,IGRID)
@@ -1583,6 +1583,7 @@ c
 c declaration section
 c ------------------------------------------------------------------------------
       use m_mf2005_main, only: GWFBASDAT,GLOBALDAT,mi
+      use GLOBAL, only : ISSFLG
 
       implicit none
 
@@ -1631,6 +1632,9 @@ c ------------------------------------------------------------------------------
                dfact=1.0d0
          end select
 
+         !## make sure delt is zero for steady-state
+         if(ISSFLG(lkper).ne.0)dfact=0.0
+         
          ! assign functionvalue
          sutl_getTimeStepLength = dfact*GWFBASDAT(igrid)%DELT
       endif

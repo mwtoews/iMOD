@@ -592,7 +592,7 @@ c save data
       return
       end
 
-      subroutine gwf2met1st(igrid)
+      subroutine gwf2met1st(kkper,igrid)
 
 c description:
 c ------------------------------------------------------------------------------
@@ -602,7 +602,7 @@ c
 c declaration section
 c ------------------------------------------------------------------------------
 c modules
-      use global, only: itmuni, iout
+      use global, only: itmuni, iout, ISSFLG
       use gwfbasmodule, only: delt
       use gwfmetmodule
       use m_mf2005_main, only: timesteptime ! workaround
@@ -611,7 +611,7 @@ c implicit none statement
       implicit none
 
 c arguments
-      integer, intent(in) :: igrid            ! grid number
+      integer, intent(in) :: igrid,kkper            ! grid number
 
 
 c local variables
@@ -641,11 +641,12 @@ c ------------------------------------------------------------------------------
 
 c update current time
       call sgwf2ins1pnt(igrid)
-      
-      time_cjd = timesteptime+sutl_getLengthTotalStressPeriod(igrid)
-      time_ostring = time_cstring
-      call cfn_mjd2datehms(time_cjd,date,hour,minute,second)
-      write(time_cstring,'(i8,3i2.2)') date,hour,minute,second
+      if(issflg(kkper).eq.0)then
+       time_cjd = timesteptime+sutl_getLengthTotalStressPeriod(igrid)
+       time_ostring = time_cstring
+       call cfn_mjd2datehms(time_cjd,date,hour,minute,second)
+       write(time_cstring,'(i8,3i2.2)') date,hour,minute,second
+      endif
       call sgwf2met1psv(igrid)
 
 c end of program

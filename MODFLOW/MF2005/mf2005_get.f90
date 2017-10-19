@@ -95,7 +95,6 @@ subroutine mf2005_getEndOfCurrentTimeStep(timeValue,retVal)
  igrid=1
  timeValue = mi(igrid)%timesteptime + sutl_getTimeStepLength(igrid)
 
-
 ! end of program
  return
 end
