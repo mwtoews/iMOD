@@ -19,7 +19,7 @@ CONTAINS
  DOUBLE PRECISION,DIMENSION(:,:),ALLOCATABLE :: X,Y,Z
   
  !##v41
- CALL WMESSAGEBOX(OKONLY,INFORMATIONICON,COMMONOK,'This functionality is not part of the current official iMOD version.','Information')
+ CALL WMESSAGEBOX(OKONLY,INFORMATIONICON,COMMONOK,'Oops, this functionality is not part of the current official iMOD version.','Information')
  RETURN
 
  IF(.NOT.UTL_WSELECTFILE('Load ASC File (*.asc)|*.asc|',&
@@ -127,7 +127,7 @@ CONTAINS
  CHARACTER(LEN=MAXLEN) :: CL1,CL2,CL
 
  !##v41
- CALL WMESSAGEBOX(OKONLY,INFORMATIONICON,COMMONOK,'This functionality is not part of the current official iMOD version.','Information')
+ CALL WMESSAGEBOX(OKONLY,INFORMATIONICON,COMMONOK,'Oops, this functionality is not part of the current official iMOD version.','Information')
  RETURN
 
  IF(IBATCH.EQ.0)THEN     
