@@ -1813,6 +1813,8 @@ END SUBROUTINE IMOD_UTL_QKSORT
  NSR=REAL(NS)/86400.0
  
  NDAY=INT(NSR)
+ SD=SD+NDAY
+ 
  !## net seconds in new timestep
  NSR=NSR-REAL(NDAY)
  
