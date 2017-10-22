@@ -7826,8 +7826,15 @@ TOPICLOOP: DO ITOPIC=1,MAXTOPICS
     TPV=(TOP(ILAY)%X(ICOL,IROW)+TOP(ILAY)%X(ICOL+1,IROW))/2.0
     BTV=(BOT(ILAY)%X(ICOL,IROW)+BOT(ILAY)%X(ICOL+1,IROW))/2.0 
 
+    IF(ITB.NE.0)THEN
+     TPV=0.0
+     BTV=0.0
+     TFV=0.0
+     BFV=0.0
+    ENDIF
+ 
     !## write fault always, as it becomes confused 
-     WRITE(IU,'(5I10,2G15.7,I10,4G15.7)') ILAY,IROW,ICOL,IROW,ICOL+1,HFBRESIS,FDZ,ISYS,TPV,BTV,TFV,BFV !## x-direction
+    WRITE(IU,'(5I10,2G15.7,I10,4G15.7)') ILAY,IROW,ICOL,IROW,ICOL+1,HFBRESIS,FDZ,ISYS,TPV,BTV,TFV,BFV !## x-direction
     
    ENDIF
   ENDIF
@@ -7845,6 +7852,13 @@ TOPICLOOP: DO ITOPIC=1,MAXTOPICS
 
     TPV=(TOP(ILAY)%X(ICOL,IROW)+TOP(ILAY)%X(ICOL,IROW+1))/2.0
     BTV=(BOT(ILAY)%X(ICOL,IROW)+BOT(ILAY)%X(ICOL,IROW+1))/2.0 
+
+    IF(ITB.NE.0)THEN
+     TPV=0.0
+     BTV=0.0
+     TFV=0.0
+     BFV=0.0
+    ENDIF
 
     !## write fault always, as it becomes confused 
     WRITE(IU,'(5I10,2G15.7,I10,4G15.7)') ILAY,IROW,ICOL,IROW+1,ICOL,HFBRESIS,FDZ,ISYS,TPV,BTV,TFV,BFV !## y-direction
@@ -7970,9 +7984,18 @@ TOPICLOOP: DO ITOPIC=1,MAXTOPICS
       C1=RES(ICOL,IROW)
      ENDIF
 
-     !## get total resistance related to thickness of model layer
-     C2=C1*FDZ(ICOL,IROW)**4.0
+!     !## get total resistance related to thickness of model layer
+!     C2=C1*FDZ(ICOL,IROW)**4.0
      
+     !## get total resistance related to thickness of model layer
+     IF(FDZ(ICOL,IROW).LT.1.0)THEN
+      !## take harmonic mean in case of unsaturated thickness of fault 
+      C2=1.0/((1.0/C1*FDZ(ICOL,IROW))+(1.0-FDZ(ICOL,IROW)))
+!            C2=C1*FDZ(ICOL,IROW)**4.0
+     ELSE
+      C2=C1
+     ENDIF
+
      !## get systemnumber
      ISYS=SYS(ICOL,IROW)
      !## top fault for display purposes
@@ -8001,9 +8024,18 @@ TOPICLOOP: DO ITOPIC=1,MAXTOPICS
       C1=RES(ICOL,IROW)
      ENDIF
      
-     !## get total resistance related to thickness of model layer
-     C2=C1*FDZ(ICOL,IROW)**4.0
+!     !## get total resistance related to thickness of model layer
+!     C2=C1*FDZ(ICOL,IROW)**4.0
 
+     !## get total resistance related to thickness of model layer
+     IF(FDZ(ICOL,IROW).LT.1.0)THEN
+      !## take harmonic mean in case of unsaturated thickness of fault 
+      C2=1.0/((1.0/C1*FDZ(ICOL,IROW))+(1.0-FDZ(ICOL,IROW)))
+!         C2=C1*FDZ(ICOL,IROW)**4.0
+     ELSE
+      C2=C1
+     ENDIF
+           
      !## get systemnumber
      ISYS=SYS(ICOL,IROW)
 
@@ -8104,25 +8136,23 @@ TOPICLOOP: DO ITOPIC=1,MAXTOPICS
      WRITE(JU,'(I10,1X  ,E15.7 ,I10)') N,C,ISYS
     ENDIF
    ENDIF
-   IF(LTB)THEN   
-    IF(ICOL.LT.IDF%NCOL)THEN
-     IF(TFV.GT.BFV)THEN
-      T1=TFV
-      B1=BFV
-      WRITE(IU,'(I10)') N 
-      WRITE(IU,'(3(G15.7,A1))') IDF%SX(ICOL),',',IDF%SY(IROW-1),',',T1
-      WRITE(IU,'(3(G15.7,A1))') IDF%SX(ICOL),',',IDF%SY(IROW)  ,',',T1
-      WRITE(IU,'(3(G15.7,A1))') IDF%SX(ICOL),',',IDF%SY(IROW)  ,',',B1
-      WRITE(IU,'(3(G15.7,A1))') IDF%SX(ICOL),',',IDF%SY(IROW-1),',',B1
-      WRITE(IU,'(3(G15.7,A1))') IDF%SX(ICOL),',',IDF%SY(IROW-1),',',T1
-      WRITE(IU,'(A)') 'END'
-     ENDIF
+   IF(ICOL.LT.IDF%NCOL)THEN
+    IF(LTB.AND.TFV.GT.BFV)THEN
+     T1=TFV
+     B1=BFV
+     WRITE(IU,'(I10)') N 
+     WRITE(IU,'(3(G15.7,A1))') IDF%SX(ICOL),',',IDF%SY(IROW-1),',',T1
+     WRITE(IU,'(3(G15.7,A1))') IDF%SX(ICOL),',',IDF%SY(IROW)  ,',',T1
+     WRITE(IU,'(3(G15.7,A1))') IDF%SX(ICOL),',',IDF%SY(IROW)  ,',',B1
+     WRITE(IU,'(3(G15.7,A1))') IDF%SX(ICOL),',',IDF%SY(IROW-1),',',B1
+     WRITE(IU,'(3(G15.7,A1))') IDF%SX(ICOL),',',IDF%SY(IROW-1),',',T1
+     WRITE(IU,'(A)') 'END'
+    ELSE
+     WRITE(IU,'(I10)') N 
+     WRITE(IU,'(2(G15.7,A1))') IDF%SX(ICOL),',',IDF%SY(IROW-1)
+     WRITE(IU,'(2(G15.7,A1))') IDF%SX(ICOL),',',IDF%SY(IROW)
+     WRITE(IU,'(A)') 'END'
     ENDIF
-   ELSE
-    WRITE(IU,'(I10)') N 
-    WRITE(IU,'(2(G15.7,A1))') IDF%SX(ICOL),',',IDF%SY(IROW-1)
-    WRITE(IU,'(2(G15.7,A1))') IDF%SX(ICOL),',',IDF%SY(IROW)
-    WRITE(IU,'(A)') 'END'
    ENDIF
   ENDIF
  ENDIF
@@ -8137,25 +8167,23 @@ TOPICLOOP: DO ITOPIC=1,MAXTOPICS
      WRITE(JU,'(I10,1X  ,E15.7 ,I10)') N,C,ISYS
     ENDIF
    ENDIF
-   IF(LTB)THEN
-    IF(IROW.LT.IDF%NROW)THEN
-     IF(TFV.GT.BFV)THEN
-      T1=TFV
-      B1=BFV
-      WRITE(IU,'(I10)') N  
-      WRITE(IU,'(3(G15.7,A1))') IDF%SX(ICOL-1),',',IDF%SY(IROW),',',T1
-      WRITE(IU,'(3(G15.7,A1))') IDF%SX(ICOL  ),',',IDF%SY(IROW),',',T1
-      WRITE(IU,'(3(G15.7,A1))') IDF%SX(ICOL  ),',',IDF%SY(IROW),',',B1
-      WRITE(IU,'(3(G15.7,A1))') IDF%SX(ICOL-1),',',IDF%SY(IROW),',',B1
-      WRITE(IU,'(3(G15.7,A1))') IDF%SX(ICOL-1),',',IDF%SY(IROW),',',T1
-      WRITE(IU,'(A)') 'END'
-     ENDIF
+   IF(IROW.LT.IDF%NROW)THEN
+    IF(LTB.AND.TFV.GT.BFV)THEN
+     T1=TFV
+     B1=BFV
+     WRITE(IU,'(I10)') N  
+     WRITE(IU,'(3(G15.7,A1))') IDF%SX(ICOL-1),',',IDF%SY(IROW),',',T1
+     WRITE(IU,'(3(G15.7,A1))') IDF%SX(ICOL  ),',',IDF%SY(IROW),',',T1
+     WRITE(IU,'(3(G15.7,A1))') IDF%SX(ICOL  ),',',IDF%SY(IROW),',',B1
+     WRITE(IU,'(3(G15.7,A1))') IDF%SX(ICOL-1),',',IDF%SY(IROW),',',B1
+     WRITE(IU,'(3(G15.7,A1))') IDF%SX(ICOL-1),',',IDF%SY(IROW),',',T1
+     WRITE(IU,'(A)') 'END'
+    ELSE
+     WRITE(IU,'(I10)') N  
+     WRITE(IU,'(2(G15.7,A1))') IDF%SX(ICOL-1),',',IDF%SY(IROW)
+     WRITE(IU,'(2(G15.7,A1))') IDF%SX(ICOL  ),',',IDF%SY(IROW)
+     WRITE(IU,'(A)') 'END'
     ENDIF
-   ELSE
-    WRITE(IU,'(I10)') N  
-    WRITE(IU,'(2(G15.7,A1))') IDF%SX(ICOL-1),',',IDF%SY(IROW)
-    WRITE(IU,'(2(G15.7,A1))') IDF%SX(ICOL  ),',',IDF%SY(IROW)
-    WRITE(IU,'(A)') 'END'
    ENDIF
   ENDIF
  ENDIF
@@ -10372,7 +10400,7 @@ JLOOP: DO K=1,SIZE(TOPICS)
  TOPICS(33)%IACT=1; TOPICS(33)%IACT_MODEL=1
  PCG%NPCOND=1
  PCG%IPRPCG=1
- PCG%MUTPCG=1
+ PCG%MUTPCG=0
  PCG%DAMPPCG=1.0
  PCG%DAMPPCGT=1.0
  !PCG%IMERGE=0

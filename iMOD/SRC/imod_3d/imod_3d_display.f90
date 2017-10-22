@@ -692,7 +692,7 @@ CONTAINS
    NT=NT+1.0
   ENDDO
   !## fraction of the transparancy for each IDF-file (100% fraction)
-  FT=1.0/NT
+  FT=1.0; IF(NT.GT.0.0)FT=1.0/NT
  ENDIF
  
  DO I=1,SIZE(IDFLISTINDEX) 
