@@ -604,16 +604,16 @@ c end of program
         t1=tfv
         b1=bfv
         write(iu,'(i10,1x,e15.7)') n
-        write(iu,'(3(g15.7,a1))') lcdelr(icol),',',lcdelc(irow-1),',',t1
-        write(iu,'(3(g15.7,a1))') lcdelr(icol),',',lcdelc(irow  ),',',t1
-        write(iu,'(3(g15.7,a1))') lcdelr(icol),',',lcdelc(irow  ),',',b1
-        write(iu,'(3(g15.7,a1))') lcdelr(icol),',',lcdelc(irow-1),',',b1
-        write(iu,'(3(g15.7,a1))') lcdelr(icol),',',lcdelc(irow-1),',',t1
+        write(iu,'(3(g15.7,a1))') lcdelr(icol-1),',',lcdelc(irow),',',t1
+        write(iu,'(3(g15.7,a1))') lcdelr(icol  ),',',lcdelc(irow),',',t1
+        write(iu,'(3(g15.7,a1))') lcdelr(icol  ),',',lcdelc(irow),',',b1
+        write(iu,'(3(g15.7,a1))') lcdelr(icol-1),',',lcdelc(irow),',',b1
+        write(iu,'(3(g15.7,a1))') lcdelr(icol-1),',',lcdelc(irow),',',t1
         write(iu,'(a)') 'end'       
        else
         write(iu,'(i10,1x,e15.7)') n
         write(iu,'(2(g15.7,a1))') lcdelr(icol-1),',',lcdelc(irow)
-        write(iu,'(2(g15.7,a1))') lcdelr(icol),',',lcdelc(irow)
+        write(iu,'(2(g15.7,a1))') lcdelr(icol)  ,',',lcdelc(irow)
         write(iu,'(a)') 'end'
        endif
       endif
@@ -629,16 +629,16 @@ c end of program
         t1=tfv
         b1=bfv
         write(iu,'(i10,1x,e15.7)') n
-        write(iu,'(3(g15.7,a1))') lcdelr(icol-1),',',lcdelc(irow),',',t1
-        write(iu,'(3(g15.7,a1))') lcdelr(icol  ),',',lcdelc(irow),',',t1
-        write(iu,'(3(g15.7,a1))') lcdelr(icol  ),',',lcdelc(irow),',',b1
-        write(iu,'(3(g15.7,a1))') lcdelr(icol-1),',',lcdelc(irow),',',b1
-        write(iu,'(3(g15.7,a1))') lcdelr(icol-1),',',lcdelc(irow),',',t1
+        write(iu,'(3(g15.7,a1))') lcdelr(icol),',',lcdelc(irow-1),',',t1
+        write(iu,'(3(g15.7,a1))') lcdelr(icol),',',lcdelc(irow)  ,',',t1
+        write(iu,'(3(g15.7,a1))') lcdelr(icol),',',lcdelc(irow)  ,',',b1
+        write(iu,'(3(g15.7,a1))') lcdelr(icol),',',lcdelc(irow-1),',',b1
+        write(iu,'(3(g15.7,a1))') lcdelr(icol),',',lcdelc(irow-1),',',t1
         write(iu,'(a)') 'end'       
        else
         write(iu,'(i10,1x,e15.7)') n
         write(iu,'(2(f10.2,a1))') lcdelr(icol),',',lcdelc(irow-1)
-        write(iu,'(2(f10.2,a1))') lcdelr(icol),',',lcdelc(irow)
+        write(iu,'(2(f10.2,a1))') lcdelr(icol),',',lcdelc(irow  )
         write(iu,'(a)') 'end'
        endif
       end if
