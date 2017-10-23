@@ -1300,14 +1300,10 @@ c create output file name
            if(ihms.eq.0)cdate_string=time_ostring(1:8)
           endif
           write(fname,fmt) root(1:cfn_length(root)),
-     1                     prefix(1:cfn_length(prefix)),'_',
-     1                     cdate_string(1:cfn_length(cdate_string)),    !time_ostring(1:cfn_length(time_ostring)),
-     1                     '_l', ilay, '.',ext(1:cfn_length(ext))
-!            write(fname,fmt) root(1:cfn_length(root)),
-!     1                       prefix(1:cfn_length(prefix)),'_',
-!     1                       time_ostring(1:cfn_length(time_ostring)),
-!     1                       '_l', ilay, partstr(1:cfn_length(partstr)),
-!     1                       '.',ext(1:cfn_length(ext))
+     1                       prefix(1:cfn_length(prefix)),'_',
+     1                       cdate_string(1:cfn_length(cdate_string)),
+     1                       '_l', ilay, partstr(1:cfn_length(partstr)),
+     1                       '.',ext(1:cfn_length(ext))
          elseif(idate_save.eq.1)then
             write(fname,fmt) root(1:cfn_length(root)),
      1                       prefix(1:cfn_length(prefix)),'_',
