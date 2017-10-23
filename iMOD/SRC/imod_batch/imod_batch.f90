@@ -5644,6 +5644,11 @@ CONTAINS
  
  !## check whether the function need to be used for plotting purposes
  IF(UTL_READINITFILE('CSVFNAME',LINE,IU,1))THEN
+  
+  !#v41
+  WRITE(*,'(/A/)') 'Oops, this functionality is not supported in this version!.'
+  STOP
+
   READ(LINE,*) FNAME; WRITE(*,'(A)') 'CSVFNAME='//TRIM(FNAME)
   !## imod need to read the csv first to continue
   WRITE(*,'(A)') 'Reading the CSV file ...'
