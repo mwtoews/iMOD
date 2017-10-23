@@ -117,7 +117,7 @@ C     ------------------------------------------------------------------
      3                      IDDREF,IDDREFNEW,DELT,PERTIM,TOTIM,HNOFLO,
      4                      HDRY,STOPER,CHEDFM,CDDNFM,CBOUFM,VBVL,VBNM
       use m_mf2005_iu, only: iuani, iumet, iupwt, iusfr, iulak, iulpf,
-     1                      IUMNW1, IUMNW2, IUMNWI, IUCHD                ! PKS
+     1                      IUMNW1, IUMNW2, IUMNWI, IUCHD, IUUZF, IUFHB ! PKS
 C
       CHARACTER*4 CUNIT(NIUNIT)
       CHARACTER*(*) VERSION
@@ -167,6 +167,8 @@ C-------Check for not-supported packages
       IF(IUNIT(IUMNW1).GT.0) CALL PKS7MPINOTSUPPORTED('MNW1 package')   ! PKS
       IF(IUNIT(IUMNW2).GT.0) CALL PKS7MPINOTSUPPORTED('MNW2 package')   ! PKS
       IF(IUNIT(IUMNWI).GT.0) CALL PKS7MPINOTSUPPORTED('MNWI package')   ! PKS
+      IF(IUNIT(IUUZF).GT.0) CALL PKS7MPINOTSUPPORTED('UZF package')     ! PKS
+      IF(IUNIT(IUFHB).GT.0) CALL PKS7MPINOTSUPPORTED('FHB package')     ! PKS
 C
 C3------PRINT A MESSAGE IDENTIFYING THE BASIC PACKAGE.
       WRITE(IOUT,1)INBAS

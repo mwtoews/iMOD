@@ -569,6 +569,10 @@ IF(IOS.NE.0)THEN
  ENDIF
 ENDIF
 
+if (nscl.ne.1) then
+ call pks7mpinotsupported('Non-uniform grid')
+end if
+
 call pks_imod_utl_iarmwp_xch_init(iarmwp) ! PKS
 
 if (ifvdl.ne.0) then
