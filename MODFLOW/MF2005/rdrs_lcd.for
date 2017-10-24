@@ -693,8 +693,8 @@ c end of program
 !      il1=lbotm(ilay)-1
 !      il2=lbotm(ilay)
 
-      TPV=(BOTM(IC1,IR1,IL1)+BOTM(IC2,IR2,IL1))/2.0
-      BTV=(BOTM(IC1,IR1,IL2)+BOTM(IC2,IR2,IL2))/2.0
+      TPV=(BOTM(JC1,JR1,IL1)+BOTM(JC2,JR2,IL1))/2.0
+      BTV=(BOTM(JC1,JR1,IL2)+BOTM(JC2,JR2,IL2))/2.0
 
       !## nett appearance of fault in modellayer
       DZ=MIN(TFV,TPV)-MAX(BFV,BTV)
