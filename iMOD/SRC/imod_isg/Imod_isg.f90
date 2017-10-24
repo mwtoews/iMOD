@@ -1412,7 +1412,7 @@ CONTAINS
  SUBROUTINE ISGLEGENDFILLLEGEND()
  !###====================================================================
  IMPLICIT NONE
- INTEGER :: I,J
+ INTEGER :: I,J,N
  REAL :: DR
  REAL,ALLOCATABLE,DIMENSION(:) :: DMAX,DMIN
  
@@ -1463,7 +1463,10 @@ CONTAINS
   ENDIF
  ENDDO
  
- DO I=1,SIZE(DMIN)
+ !## skip date/time columns
+ IF(ISFR.EQ.0)N=SIZE(DMIN)-1
+ IF(ISFR.EQ.1)N=SIZE(DMIN)-2
+ DO I=1,N !SIZE(DMIN)
   IF(DMIN(I).EQ.DMAX(I))THEN; DMIN(I)=DMIN(I)-1.0; DMAX(I)=DMAX(I)+1.0; ENDIF
 
   DR=(DMAX(I)-DMIN(I))/REAL(MXCLR+1)

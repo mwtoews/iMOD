@@ -13,7 +13,7 @@ END TYPE IPFRESOBJ
 TYPE(IPFRESOBJ),DIMENSION(:),ALLOCATABLE :: IPFR       !## stores original values from txtfile per ipf
 REAL,DIMENSION(:),POINTER :: X,Y,Z                     !## values to be plotted
 REAL,DIMENSION(:),POINTER :: X_TMP,Y_TMP,Z_TMP         !## values to be plotted
-CHARACTER(LEN=256) :: INPUTFILE,BMPNAME                !## name of txtfile
+CHARACTER(LEN=256) :: INPUTFILE,BMPNAME,IPFNAME        !## name of txtfile
 INTEGER :: IPLOT,IWEIGHT                               !## plot type
 INTEGER :: ITRANSIENT                                  !## transient/steadystate (lacking date)
 INTEGER,POINTER,DIMENSION(:) :: ILAYER,IIPFS,IRDATE    !## all layer numbers/IPF-files to be read

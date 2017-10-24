@@ -8,6 +8,7 @@ USE MOD_IDF, ONLY : IDFREAD,IDFWRITE,IDFNULLIFY,IDFDEALLOCATE
 USE MOD_IPF_PAR, ONLY : IPF,NIPF,ASSF
 USE MOD_IPF, ONLY : IPFREAD2,IPFALLOCATE
 USE MOD_IPFASSFILE, ONLY : IPFOPENASSFILE,IPFREADASSFILELABEL,IPFREADASSFILE,IPFASSFILEALLOCATE
+USE MOD_PMANAGER, ONLY : PMANAGER_SAVEMF2005_MAXNO
 USE MOD_UTL
 USE MOD_POLINT
 
@@ -32,7 +33,7 @@ CONTAINS
  !## process txtfile into xyz variables
  CALL RESIDUAL_PROC()
  !## plot xyz variables
- CALL RESIDUAL_PLOT()
+ IF(IPLOT.NE.3)CALL RESIDUAL_PLOT()
  !## clean
  CALL RESIDUAL_CLEAN()
 
@@ -172,13 +173,9 @@ CONTAINS
    ENDIF
   ENDDO
  
-  IF(I.EQ.1)ALLOCATE(IPFR(NIPF)) !; REWIND(IU)
+  IF(I.EQ.1)ALLOCATE(IPFR(NIPF)) 
 
   IPFR%NPOINTS=0
-!  DO J=1,SIZE(IPFR)+1; READ(IU,*); ENDDO
-  
-!    IF(IUPESTRESIDUAL.GT.0)WRITE(IUPESTRESIDUAL,'(2(G15.7,1X),I10,1X,6(G15.7,1X),I10,1X,A32)') &
-!        X,Y,ILAY,Z,H,DHW,MSR%W(II)*H,MSR%W(II)*(H-Z),MSR%W(II),I,MSR%CLABEL(II)
 
   DO 
    READ(IU,'(A256)',IOSTAT=IOS) LINE; IF(IOS.NE.0)EXIT
@@ -189,11 +186,7 @@ CONTAINS
    IF(I.EQ.2)THEN
     N=IPFR(NIPF)%NPOINTS
     IF(ITRANSIENT.EQ.1)THEN
-
-!     IF(IUPESTRESIDUAL.GT.0)WRITE(IUPESTRESIDUAL,'(2(F15.7,1X),I10,1X,8(F15.7,1X),I10,1X,A32)') &
-!        X,Y,ILAY,MSR%W(II),MM,MC,MM-MC,DYN(1),DYN(2),DYN(2)-DYN(1),XCOR,I,MSR%CLABEL(II)
-
-    READ(LINE,'(2(F15.7,1X),I10,1X,3(F15.7,1X))') IPFR(NIPF)%X(N),IPFR(NIPF)%Y(N), &
+     READ(LINE,'(2(F15.7,1X),I10,1X,3(F15.7,1X))') IPFR(NIPF)%X(N),IPFR(NIPF)%Y(N), &
                                       IPFR(NIPF)%L(N),IPFR(NIPF)%W(N),IPFR(NIPF)%O(N),IPFR(NIPF)%M(N)
     ELSE
      READ(LINE,'(2(F15.7,1X),I10,1X,6(F15.7,1X))') IPFR(NIPF)%X(N),IPFR(NIPF)%Y(N), &
@@ -219,67 +212,26 @@ CONTAINS
 
  END SUBROUTINE RESIDUAL_DATA
 
-! !###===================================
-! SUBROUTINE RESIDUAL_DATA_ORG()
-! !###===================================
-! IMPLICIT NONE
-! INTEGER :: I,IU,NIPF,IOS,N
-! REAL :: J,WMDL,WRES,MMSR,MMDL,CC,DYNMSR,DYNMLD
-! CHARACTER(LEN=256) :: LINE
-!
-! IU=UTL_GETUNIT(); CALL OSD_OPEN(IU,FILE=TRIM(INPUTFILE),ACTION='READ',FORM='FORMATTED',STATUS='OLD')
-! IF(IU.EQ.0)STOP
-! 
-! !## three loops, first to get number of ipf files, second to get number of points per ipf, third to read all in memory
-! DO I=1,3
-!  NIPF=0
-!  !## skip first line
-!  READ(IU,*)
-!  DO 
-!   READ(IU,'(A256)',IOSTAT=IOS) LINE; IF(IOS.NE.0)EXIT
-!   !## found ipf
-!   IF(INDEX(UTL_CAP(LINE,'U'),'.IPF').GT.0)THEN
-!    NIPF=NIPF+1
-!    !## read empty line and header
-!    READ(IU,*); READ(IU,*)  
-!    !## read data block, count points
-!    IF(I.GE.2)N=0 
-!    DO
-!     READ(IU,'(A256)',IOSTAT=IOS) LINE; IF(IOS.NE.0)EXIT; IF(TRIM(LINE).EQ.'')EXIT
-!     IF(I.GE.2)N=N+1 
-!     IF(I.EQ.3)THEN
-!      IF(ITRANSIENT.EQ.1)THEN
-!       READ(LINE,'(I10,2F15.7,I10,3F15.7)') IPFR(NIPF)%D(N),IPFR(NIPF)%X(N),IPFR(NIPF)%Y(N), &
-!                                            IPFR(NIPF)%L(N),IPFR(NIPF)%W(N),IPFR(NIPF)%O(N),IPFR(NIPF)%M(N)
-!                                            
-!      ELSE
-!       READ(LINE,'(2F15.7,I10,6F15.7)') IPFR(NIPF)%X(N),IPFR(NIPF)%Y(N), &
-!                                        IPFR(NIPF)%L(N),IPFR(NIPF)%O(N),IPFR(NIPF)%M(N), &
-!                                        J,WMDL,WRES,IPFR(NIPF)%W(N)
-!      ENDIF
-!     ENDIF
-!    ENDDO
-!   ENDIF
-!   IF(I.EQ.2)THEN
-!    IPFR(NIPF)%NPOINTS=N
-!    IF(ITRANSIENT.EQ.1)ALLOCATE(IPFR(NIPF)%D(N))
-!    ALLOCATE(IPFR(NIPF)%X(N),IPFR(NIPF)%Y(N),IPFR(NIPF)%L(N),IPFR(NIPF)%O(N), &
-!             IPFR(NIPF)%M(N),IPFR(NIPF)%W(N))
-!   ENDIF
-!  ENDDO
-!  IF(I.EQ.1)ALLOCATE(IPFR(NIPF))
-!  !## position back to first position of txtfile
-!  REWIND(IU)
-! ENDDO
-! CLOSE(IU)
-!
-! END SUBROUTINE RESIDUAL_DATA_ORG
-
  !###===================================
  SUBROUTINE RESIDUAL_PROC()
  !###===================================
  IMPLICIT NONE
- INTEGER :: I,J,N !,IU
+ INTEGER :: I,J,N,IU
+
+ IF(IPLOT.EQ.3)THEN
+  !## write down results
+  IU=UTL_GETUNIT()
+  OPEN(IU,FILE=TRIM(IPFNAME)//'_',STATUS='UNKNOWN',ACTION='WRITE')
+  WRITE(IU,'(A3)') 'NaN1#'
+  WRITE(IU,'(A1)') '6'
+  WRITE(IU,'(A2)') 'XC'
+  WRITE(IU,'(A2)') 'YC'
+  WRITE(IU,'(A2)') 'OBS'
+  WRITE(IU,'(A2)') 'MDL'
+  WRITE(IU,'(A2)') 'WEIGHT'
+  WRITE(IU,'(A2)') 'MDL-OBS'
+  WRITE(IU,'(A2)') '0,TXT'
+ ENDIF
 
  !## okay we keep it simple - we plot everything - no selection yet
  N=SUM(IPFR%NPOINTS)
@@ -314,12 +266,20 @@ CONTAINS
      ELSE
       X(N)=IPFR(I)%M(J)-IPFR(I)%O(J)
      ENDIF
+    CASE(3)
+     WRITE(IU,'(6(F15.7,A1))') IPFR(I)%X(J),',',IPFR(I)%Y(J),',',IPFR(I)%O(J),',',IPFR(I)%M(J),',',IPFR(I)%W(J),',',IPFR(I)%M(J)-IPFR(I)%O(J)
    END SELECT
   ENDDO
  ENDDO
  
+ IF(IPLOT)THEN
+  CLOSE(IU)
+  CALL PMANAGER_SAVEMF2005_MAXNO(TRIM(IPFNAME)//'_',(/N/))
+  RETURN
+ ENDIF
+ 
  IF(N.EQ.0)THEN
-  WRITE(*,*) "No data points are found, check your initial settings if you selected the right layers, dates or ipf's"
+  WRITE(*,*) 'No data points are found, check your initial settings if you selected the right layers, dates or ipfs'
   STOP
  ENDIF
  
@@ -328,14 +288,6 @@ CONTAINS
  DO I=1,N; X_TMP(I)=X(I); Y_TMP(I)=Y(I); Z_TMP(I)=Z(I); ENDDO
  DEALLOCATE(X,Y,Z)
  X=>X_TMP; Y=>Y_TMP; Z=>Z_TMP
- 
-! !## write down results
-! IU=UTL_GETUNIT()
-! OPEN(IU,FILE='d:\IMOD-MODELS\IBRAHYM_V2.0\DBASE_DLD\IMOD_USER\MODELS\IB_V2.0.4_13\ENTIREMODEL_IPEST_V1\pest\bmp\DATA.TXT',STATUS='UNKNOWN',ACTION='WRITE')
-! DO I=1,N
-!  WRITE(IU,*) X(I),Y(I),Z(I)
-! ENDDO
-! CLOSE(IU)
   
  !## subroutine to calculate histogram classes
  CALL RESIDUAL_PROC_HISTCLASS()
@@ -446,7 +398,6 @@ CONTAINS
  IMPLICIT NONE
  INTEGER :: I,NSETS,IPLOTBMP,IPLOTBMP2,NCLR,MX,NBAR
  REAL :: MINX,MINY,MAXX,MAXY,X1,X2,Y1,Y2,DY,AVG
-! CHARACTER(LEN=4),DIMENSION(22) :: XLABELS=(/'<-5','-5','-4.5','-4','-3.5','-3','-2.5','-2','-1.5','-1','-0.5','0.5','1','1.5','2','2.5','3','3.5','4','4.5','5','>5'/)
  CHARACTER(LEN=12),DIMENSION(:),ALLOCATABLE :: XLABELS
  INTEGER,ALLOCATABLE,DIMENSION(:) :: IBARS
  CHARACTER(LEN=256) :: LINE
@@ -625,7 +576,7 @@ CONTAINS
  CALL WBITMAPDESTROY(IPLOTBMP)
 
  END SUBROUTINE RESIDUAL_PLOT
-
+ 
  !###===================================
  SUBROUTINE RESIDUAL_CLEAN()
  !###===================================
