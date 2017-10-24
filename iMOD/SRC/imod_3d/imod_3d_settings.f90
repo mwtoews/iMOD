@@ -619,7 +619,7 @@ CONTAINS
        CALL IMOD3D_DISPLAY(1)
       CASE (IDF_TRACKBAR1,IDF_TRACKBAR2,IDF_TRACKBAR3,IDF_TRACKBAR4,IDF_TRACKBAR5,IDF_TRACKBAR6)
        !##v41
-       CALL WMESSAGEBOX(OKONLY,INFORMATIONICON,COMMONOK,'Oops, this functionality is not part of the current official iMOD version.','Information')
+       CALL WMESSAGEBOX(OKONLY,INFORMATIONICON,COMMONOK,'Oops, this functionality is under construction and not yet available in this release.','Information')
 !       CALL IMOD3D_SETTINGSGET(ID_D3DSETTINGS_TAB7,MESSAGE%VALUE1)
 !       CALL IMOD3D_DISPLAY(1)
      END SELECT

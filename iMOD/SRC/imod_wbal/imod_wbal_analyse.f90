@@ -2020,7 +2020,7 @@ CONTAINS
  CHARACTER(LEN=*),INTENT(IN) :: FNAME
 
  !##v41
- CALL WMESSAGEBOX(OKONLY,INFORMATIONICON,COMMONOK,'Oops, this functionality is not part of the current official iMOD version.','Information')
+ CALL WMESSAGEBOX(OKONLY,INFORMATIONICON,COMMONOK,'Oops, this functionality is under construction and not yet available in this release.','Information')
  RETURN
  
  IF(IBATCH.EQ.0)THEN

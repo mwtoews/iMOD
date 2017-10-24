@@ -31,7 +31,7 @@ CONTAINS
  CHARACTER(LEN=256),ALLOCATABLE,DIMENSION(:) :: BMPOUTNAME
 
  !##v41
- CALL WMESSAGEBOX(OKONLY,INFORMATIONICON,COMMONOK,'Oops, this functionality is not part of the current official iMOD version.','Information')
+ CALL WMESSAGEBOX(OKONLY,INFORMATIONICON,COMMONOK,'Oops, this functionality is under construction and not yet available in this release.','Information')
  RETURN
 
  !## check whether there is ffmeg available
@@ -341,7 +341,7 @@ CONTAINS
  INTEGER :: N
  
  !##v41
- CALL WMESSAGEBOX(OKONLY,INFORMATIONICON,COMMONOK,'Oops, this functionality is not part of the current official iMOD version.','Information')
+ CALL WMESSAGEBOX(OKONLY,INFORMATIONICON,COMMONOK,'Oops, this functionality is under construction and not yet available in this release.','Information')
  RETURN
 
  CALL WINDOWSELECT(0)

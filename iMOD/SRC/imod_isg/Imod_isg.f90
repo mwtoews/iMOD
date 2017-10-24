@@ -5760,7 +5760,7 @@ CONTAINS
  CALL WDIALOGSELECT(ID_DISGEDITTAB1)
  CALL WDIALOGGETMENU(IDF_MENU1,ISG(1:NISG)%ILIST)
  IF(SUM(ISG(1:NISG)%ILIST).NE.1)THEN
-  CALL WMESSAGEBOX(OKONLY,EXCLAMATIONICON,COMMONOK,'You need to select just 1 Segment before entering the attributes-dialog','Oops!')
+  CALL WMESSAGEBOX(OKONLY,EXCLAMATIONICON,COMMONOK,'You need to select just 1 Segment before entering the attributes-dialog','Information')
   RETURN
  ENDIF
 

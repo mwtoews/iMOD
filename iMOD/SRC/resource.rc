@@ -8,7 +8,7 @@
 //
 // Winteracter resource script. 
 //
-// Modified : 19/Oct/2017 16:30:56
+// Modified : 23/Oct/2017 21:32:00
 //
 ///////////////////////////////////////////////////
 //
@@ -11373,7 +11373,7 @@ BEGIN
     CONTROL "Case Sensitive",IDF_CHECK1,"BUTTON",WS_CHILD | WS_VISIBLE | WS_GROUP | WS_TABSTOP | BS_AUTOCHECKBOX | BS_LEFTTEXT | BS_TEXT,   12,   44,   60,   12
     CONTROL "Search",IDOK,"BUTTON",WS_CHILD | WS_VISIBLE | WS_GROUP | WS_TABSTOP | BS_PUSHBUTTON | BS_TEXT | BS_FLAT,    7,   89,   40,   14
     CONTROL "Search Settings",IDF_GROUP1,"BUTTON",WS_CHILD | WS_VISIBLE | WS_GROUP | BS_GROUPBOX | BS_TEXT | BS_LEFT,    6,    4,  188,   76
-    CONTROL "Alias Serach",IDF_CHECK2,"BUTTON",WS_CHILD | WS_VISIBLE | WS_GROUP | WS_TABSTOP | BS_AUTOCHECKBOX | BS_LEFTTEXT | BS_TEXT,   12,   60,   60,   12
+    CONTROL "Alias Search",IDF_CHECK2,"BUTTON",WS_CHILD | WS_VISIBLE | WS_GROUP | WS_TABSTOP | BS_AUTOCHECKBOX | BS_LEFTTEXT | BS_TEXT,   12,   60,   60,   12
 END
 
 ID_DMANAGERFIND RCDATA
@@ -12905,4 +12905,4 @@ END
 //*WI* FILENAME    resource.f90
 //*WI* FMODNAME    RESOURCE
 //*WI* LASTTYPE        2
-//*WI* LASTRES        11
+//*WI* LASTRES       297

@@ -7823,14 +7823,14 @@ TOPICLOOP: DO ITOPIC=1,MAXTOPICS
     !## enter fault if occupation > 0.0%
     IF(ITB.EQ.0.AND.FDZ.LE.0.0)CYCLE
     
-    TPV=(TOP(ILAY)%X(ICOL,IROW)+TOP(ILAY)%X(ICOL+1,IROW))/2.0
-    BTV=(BOT(ILAY)%X(ICOL,IROW)+BOT(ILAY)%X(ICOL+1,IROW))/2.0 
-
     IF(ITB.NE.0)THEN
      TPV=0.0
      BTV=0.0
      TFV=0.0
      BFV=0.0
+    ELSE
+     TPV=(TOP(ILAY)%X(ICOL,IROW)+TOP(ILAY)%X(ICOL+1,IROW))/2.0
+     BTV=(BOT(ILAY)%X(ICOL,IROW)+BOT(ILAY)%X(ICOL+1,IROW))/2.0 
     ENDIF
  
     !## write fault always, as it becomes confused 
@@ -7850,14 +7850,14 @@ TOPICLOOP: DO ITOPIC=1,MAXTOPICS
     !## enter fault if occupation > 0.0%
     IF(ITB.EQ.0.AND.FDZ.LE.0.0)CYCLE
 
-    TPV=(TOP(ILAY)%X(ICOL,IROW)+TOP(ILAY)%X(ICOL,IROW+1))/2.0
-    BTV=(BOT(ILAY)%X(ICOL,IROW)+BOT(ILAY)%X(ICOL,IROW+1))/2.0 
-
     IF(ITB.NE.0)THEN
      TPV=0.0
      BTV=0.0
      TFV=0.0
      BFV=0.0
+    ELSE
+     TPV=(TOP(ILAY)%X(ICOL,IROW)+TOP(ILAY)%X(ICOL,IROW+1))/2.0
+     BTV=(BOT(ILAY)%X(ICOL,IROW)+BOT(ILAY)%X(ICOL,IROW+1))/2.0 
     ENDIF
 
     !## write fault always, as it becomes confused 

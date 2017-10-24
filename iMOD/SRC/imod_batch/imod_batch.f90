@@ -5646,7 +5646,7 @@ CONTAINS
  IF(UTL_READINITFILE('CSVFNAME',LINE,IU,1))THEN
   
   !#v41
-  WRITE(*,'(/A/)') 'Oops, this functionality is not supported in this version!.'
+  WRITE(*,'(/A/)') 'Oops, this functionality is under construction and not yet available in this release.'
   STOP
 
   READ(LINE,*) FNAME; WRITE(*,'(A)') 'CSVFNAME='//TRIM(FNAME)
