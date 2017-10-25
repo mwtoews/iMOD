@@ -595,35 +595,28 @@ CONTAINS
  
  SOLID_PROFILEDELETE=.FALSE.
  
-! CALL WDIALOGSELECT(ID)
+ LINE='['
+ K=0; DO I=1,SIZE(ISEL)
+  IF(ISEL(I).EQ.1)THEN
+   IF(K.EQ.0)THEN
+    LINE=TRIM(LINE)//TRIM(SPF(I)%FNAME); K=K+1
+   ELSE
+    LINE=TRIM(LINE)//CHAR(13)//TRIM(SPF(I)%FNAME)
+   ENDIF
+  ENDIF
+ ENDDO
+ LINE=TRIM(LINE)//']'
 
  IF(ID.EQ.ID_DSERIESTAB2)THEN 
   
-!  J=ISEL(1)
-!  CALL WDIALOGGETMENU(IDF_MENU1,J)
-
-  CALL WMESSAGEBOX(YESNO,QUESTIONICON,COMMONNO,'You are about to remove the selected Cross-Section: ['// &
-    TRIM(SPF(J)%FNAME)//'] from the Solid.'//CHAR(13)// &
+  CALL WMESSAGEBOX(YESNO,QUESTIONICON,COMMONNO,'You are about to remove the selected Cross-Section:' &
+      //CHAR(13)//CHAR(13)//TRIM(LINE)//CHAR(13)//CHAR(13)//'from the Solid.'//CHAR(13)// &
    'Be aware that the Cross-Section will be removed from the list and NOT from the Solid folder.'//CHAR(13)// &
    'Any recovery can take place, manually by editing the *.sol file.'//CHAR(13)//CHAR(13)// &
    'Are you sure to continue?','Question')
 
  ELSEIF(ID.EQ.ID_D3DSETTINGS_TAB6)THEN
 
-!  CALL WDIALOGGETMENU(IDF_MENU1,J)
-!  J=ISEL(1)
-  LINE='['
-  K=0; DO I=1,SIZE(ISEL)
-   IF(ISEL(I).EQ.1)THEN
-    IF(K.EQ.0)THEN
-     LINE=TRIM(LINE)//TRIM(SPF(I)%FNAME); K=K+1
-    ELSE
-     LINE=TRIM(LINE)//CHAR(13)//TRIM(SPF(I)%FNAME)
-    ENDIF
-   ENDIF
-  ENDDO
-  LINE=TRIM(LINE)//']'
-  
   CALL WMESSAGEBOX(YESNO,QUESTIONICON,COMMONNO,'You are about to remove the selected Cross-Section(s):' &
        //CHAR(13)//CHAR(13)//TRIM(LINE)//CHAR(13)//CHAR(13)// &
    'from the list. Be aware that the removed Cross-Section'//CHAR(13)// &
@@ -653,7 +646,11 @@ CONTAINS
   J=II
 
   !## shift selection
-  DO I=J,NSPF; JSEL(I)=JSEL(I+1); ENDDO
+  IF(NSPF.GT.1)THEN
+   DO I=J,NSPF-1; JSEL(I)=JSEL(I+1); ENDDO
+  ELSE
+   JSEL(1)=0
+  ENDIF
   
   !## shift data ...
   DO I=J,NSPF-1 
@@ -708,7 +705,10 @@ CONTAINS
   SPF(I)%FNAME=''
   SPF(I)%TX=0.0
   SPF(I)%PBITMAP%IACT=0
-  NSPF=NSPF-1
+  
+  J=NSPF
+  J=J-1
+  NSPF=J !NSPF-1
   
   II=II-1
   
