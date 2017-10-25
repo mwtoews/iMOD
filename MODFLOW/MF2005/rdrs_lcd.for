@@ -649,7 +649,7 @@ c end of program
       REAL FUNCTION HFB1EXPORT_GETDZ(TF,BF,IC1,IR1,IC2
      1,IR2,NODATA,ILAY,NCOL,NROW,TPV,BTV,TFV,BFV)
       !###====================================================================
-      USE GLOBAL,ONLY : BOTM,lbotm
+      USE GLOBAL,ONLY : BOTM,lbotm,ibound
       IMPLICIT NONE     
       INTEGER,INTENT(IN) :: IC1,IR1,IC2,IR2,ILAY,NCOL,NROW
       real,intent(out) :: TPV,BTV,TFV,BFV
@@ -693,6 +693,9 @@ c end of program
 !      il1=lbotm(ilay)-1
 !      il2=lbotm(ilay)
 
+      !## skip faults that passes inactive cells
+      if(ibound(jc1,jr1,ilay).eq.0.or.ibound(jc2,jr2,ilay).eq.0)return
+      
       TPV=(BOTM(JC1,JR1,IL1)+BOTM(JC2,JR2,IL1))/2.0
       BTV=(BOTM(JC1,JR1,IL2)+BOTM(JC2,JR2,IL2))/2.0
 
