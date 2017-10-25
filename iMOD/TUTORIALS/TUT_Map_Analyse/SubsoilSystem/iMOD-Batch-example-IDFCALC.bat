@@ -12,7 +12,7 @@ FOR /L %%A IN (1,1,6) DO (
   ECHO ABC1=TOP_SDL%%A_M.IDF BOT_SDL%%A_M.IDF T_AQUIFER%%A.IDF >> IDFCALC.INI
 
   REM execute the iMOD Batch file using the iMOD executable
-  ..\..\..\IMOD_V3_6_X64R.EXE IDFCALC.INI
+  ..\..\..\IMOD_V4_1_X64R.EXE IDFCALC.INI
 )
 
 rem Some DOS explanation
