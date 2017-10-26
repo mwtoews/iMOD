@@ -3286,18 +3286,18 @@ CONTAINS
 
    CALL WINDOWSELECT(IWIN)
 
-   !## check whether information for current ipf is already in memory
-   IF(UTL_CAP(IPF(IIPF)%FNAME,'U').EQ.UTL_CAP(MP(IPLOT)%IDFNAME,'U'))THEN
-    CALL WINDOWOUTSTATUSBAR(2,'RF Memory ...'//TRIM(MP(IPLOT)%IDFNAME))
-   ELSE
-    !## read always from disc
-    CALL WINDOWOUTSTATUSBAR(2,'RF Disc ...'//TRIM(MP(IPLOT)%IDFNAME))
-    IF(.NOT.IPFREAD(IPLOT,IIPF))THEN
-     CALL IPFDEALLOCATE()
-     CALL WINDOWOUTSTATUSBAR(2,'')
-     RETURN
-    ENDIF
+!   !## check whether information for current ipf is already in memory
+!   IF(UTL_CAP(IPF(IIPF)%FNAME,'U').EQ.UTL_CAP(MP(IPLOT)%IDFNAME,'U'))THEN
+!    CALL WINDOWOUTSTATUSBAR(2,'RF Memory ...'//TRIM(MP(IPLOT)%IDFNAME))
+!   ELSE
+   !## read always from disc
+   CALL WINDOWOUTSTATUSBAR(2,'RF Disc ...'//TRIM(MP(IPLOT)%IDFNAME))
+   IF(.NOT.IPFREAD(IPLOT,IIPF))THEN
+    CALL IPFDEALLOCATE()
+    CALL WINDOWOUTSTATUSBAR(2,'')
+    RETURN
    ENDIF
+!   ENDIF
   ENDIF
  ENDDO
 
@@ -3334,8 +3334,8 @@ CONTAINS
     IF(IMOD3D_BLANKOUT_XY(X,Y))THEN  
      IPF(IIPF)%IPOS(I)=INT(1,1)
      IF(IPLUS.NE.0)THEN
-      NIPFLIST=NIPFLIST+IPLUS !1
-      NASSLIST=NASSLIST+IPLUS !1
+      NIPFLIST=NIPFLIST+IPLUS 
+      NASSLIST=NASSLIST+IPLUS 
      ENDIF
      N=N+1
      
@@ -3492,11 +3492,11 @@ CONTAINS
    IPFDLIST(5,NIPFLIST)=1
   ENDIF
   
+  !## all point in a single drawing list
+  IF(ACOL.EQ.0.AND.IGL.EQ.1)CALL GLENDLIST()
+
  ENDDO
 
- !## all point in a single drawing list
- IF(ACOL.EQ.0.AND.IGL.EQ.1)CALL GLENDLIST()
-  
  !## nothing found to be plotted
  IF(NIPFLIST.EQ.0)NIPF=0
 

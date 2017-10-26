@@ -922,11 +922,14 @@ CONTAINS
     SVALUE=UTL_GETMOSTFREQ(FREQ(:,1),SIZE(FREQ,1),N,0.0) !## exclude zone.eq.0
     IF(SVALUE.GT.0)THEN
      !## set fraction to zero for zones not equal to most available zone
-     DO I=1,N; IF(INT(SVALUE).NE.INT(FREQ(I,1)))FREQ(I,2)=0.0; ENDDO
-     !## get mean fraction
-     F=0; DO I=1,N; F=F+FREQ(I,2); ENDDO; F=F/REAL(N)
-     !## add fraction to most available zone
-     IF(F.LT.1.0)SVALUE=SVALUE+F
+     !## only whenever fraction are existing priorly
+     IF(INT(SUM(FREQ(:,2))).NE.N)THEN
+      DO I=1,N; IF(INT(SVALUE).NE.INT(FREQ(I,1)))FREQ(I,2)=0.0; ENDDO
+      !## get mean fraction
+      F=0; DO I=1,N; F=F+FREQ(I,2); ENDDO; F=F/REAL(N)
+      !## add fraction to most available zone
+      IF(F.LT.1.0)SVALUE=SVALUE+F
+     ENDIF
     ENDIF     
    ENDIF
 
@@ -1621,7 +1624,6 @@ CONTAINS
  INTEGER,INTENT(OUT) :: ICOL,IROW
  REAL :: DX,DY
  INTEGER :: I
- 
  DOUBLE PRECISION,PARAMETER :: TINY=0.001D0
  DOUBLE PRECISION :: XD, YD
 
@@ -1634,11 +1636,11 @@ CONTAINS
 
   DX=X-IDF%XMIN
   I=0; IF(MOD(DX,IDF%DX).NE.0.0)I=1
-  IF(XD+TINY.GT.IDF%XMIN.AND.XD-TINY.LT.IDF%XMAX)ICOL=INT((X-IDF%XMIN)/IDF%DX)+I
+  IF(XD+TINY.GT.REAL(IDF%XMIN,8).AND.XD-TINY.LT.REAL(IDF%XMAX,8))ICOL=INT((X-IDF%XMIN)/IDF%DX)+I
 
   DY=IDF%YMAX-Y
   I=0; IF(MOD(DY,IDF%DY).NE.0.0)I=1
-  IF(YD+TINY.GT.IDF%YMIN.AND.YD-TINY.LT.IDF%YMAX)IROW=INT((IDF%YMAX-Y)/IDF%DY)+I
+  IF(YD+TINY.GT.REAL(IDF%YMIN,8).AND.YD-TINY.LT.REAL(IDF%YMAX,8))IROW=INT((IDF%YMAX-Y)/IDF%DY)+I
   
   ICOL=MIN(ICOL,IDF%NCOL)
   IROW=MIN(IROW,IDF%NROW)

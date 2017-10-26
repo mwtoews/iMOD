@@ -79,7 +79,7 @@
 			<FileConfiguration Name="Debug|x64">
 				<Tool Name="VFFortranCompilerTool" Preprocess="preprocessYes" PreprocessorDefinitions="WINTERACTER11C"/></FileConfiguration>
 			<FileConfiguration Name="Release|Win32">
-				<Tool Name="VFFortranCompilerTool" Preprocess="preprocessYes" PreprocessorDefinitions="WINTERACTER11C"/></FileConfiguration></File>
+				<Tool Name="VFFortranCompilerTool" Preprocess="preprocessYes" PreprocessorDefinitions=""/></FileConfiguration></File>
 		<File RelativePath="..\..\..\iMOD\SRC\imod_3d\imod_3d_display.f90"/>
 		<File RelativePath="..\..\..\iMOD\SRC\imod_3d\imod_3d_engine.f90"/>
 		<File RelativePath="..\..\..\iMOD\SRC\imod_3d\imod_3d_par.f90"/>
@@ -105,7 +105,9 @@
 			<FileConfiguration Name="Release|x64">
 				<Tool Name="VFFortranCompilerTool" Preprocess="preprocessYes" PreprocessorDefinitions="WINTERACTER11"/></FileConfiguration>
 			<FileConfiguration Name="Debug|x64">
-				<Tool Name="VFFortranCompilerTool" Preprocess="preprocessYes" PreprocessorDefinitions="WINTERACTER11"/></FileConfiguration></File>
+				<Tool Name="VFFortranCompilerTool" Preprocess="preprocessYes" PreprocessorDefinitions="WINTERACTER11"/></FileConfiguration>
+			<FileConfiguration Name="Release|Win32">
+				<Tool Name="VFFortranCompilerTool" Preprocess="preprocessYes"/></FileConfiguration></File>
 		<File RelativePath="..\..\SRC\imod_batch\imod_batch_flumy.f90"/>
 		<File RelativePath="..\..\SRC\imod_batch\imod_batch_par.f90"/>
 		<File RelativePath="..\..\..\iMOD\SRC\imod_batch\imod_createizone.f90"/>
@@ -505,7 +507,7 @@
 			<FileConfiguration Name="Debug|x64">
 				<Tool Name="VFFortranCompilerTool" Preprocess="preprocessYes" PreprocessorDefinitions="DEBUG,WINTERACTER11C"/></FileConfiguration>
 			<FileConfiguration Name="Release|Win32">
-				<Tool Name="VFFortranCompilerTool" Preprocess="preprocessYes" PreprocessorDefinitions="WINTERACTER11C"/></FileConfiguration></File></Filter>
+				<Tool Name="VFFortranCompilerTool" Preprocess="preprocessYes" PreprocessorDefinitions=""/></FileConfiguration></File></Filter>
 		<File RelativePath="..\..\..\iMOD\SRC\bmpvar.f90"/>
 		<File RelativePath="..\..\..\iMOD\SRC\colours.f90"/>
 		<File RelativePath="..\..\..\iMOD\SRC\datevar.f90"/>
