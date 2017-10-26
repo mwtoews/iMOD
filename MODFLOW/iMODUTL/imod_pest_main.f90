@@ -417,40 +417,9 @@ CONTAINS
      if (.not.idfread(idfc,line,0)) CALL IMOD_UTL_PRINTTEXT('idfread',2)
      call idfnullify(idfm)
      call idfcopy(idf,idfm)
-!      ieqd=0
-!      do i=2,ncol; if(delr(i).ne.delr(i-1))exit; enddo
-!      if(i.le.ncol)ieqd=1
-!      if(ieqd.eq.0)then
-!       idfm%dx=delr(1)
-!       idfm%dy=delc(1)
-!       idfm%ncol=ncol
-!       idfm%nrow=nrow
-!       idfm%ieq=int(0,1)
-!      else
-!       idfm%ncol=ncol; idfm%nrow=nrow; idfm%ieq=int(1,1)
-!       IF(.NOT.IDFALLOCATESXY(IDFM))
-!     1    stop 'cannot allocate memory for sx and sy vectors'
-!       idfm%sx(0)=coord_xll
-!       do i=1,ncol
-!        idfm%sx(i)=idfm%sx(i-1)+delr(i)
-!       enddo
-!       idfm%sy(0)=coord_yur
-!       do i=1,nrow
-!        idfm%sy(i)=idfm%sy(i-1)-delc(i)
-!       enddo
-!      endif
-!     idfm%ieq=0
-!     idfm%dx=simcsize
-!     idfm%dy=simcsize
-!     idfm%ncol=ncol
-!     idfm%nrow=nrow
-!     idfm%xmin = simbox(1)
-!     idfm%ymin = simbox(2)
-!     idfm%xmax = simbox(3)
-!     idfm%ymax = simbox(4)
      nodata = idfc%nodata
      idfm%nodata = nodata
-     if (.not.idfreadscale(idfc,idfm,9,0)) CALL IMOD_UTL_PRINTTEXT('idfreadscale',2)
+     if (.not.idfreadscale(idfc,idfm,10,0)) CALL IMOD_UTL_PRINTTEXT('idfreadscale',2)
      ALLOCATE(ZONE(I)%X(NCOL,NROW))
      ZONE(I)%ZTYPE=0
      ZONE(I)%X=IDFM%X
@@ -646,25 +615,16 @@ CONTAINS
  !## sensitivity - if pest_niter=0
  LSENS=.FALSE.; IF(PEST_NITER.EQ.0)LSENS=.TRUE. 
 
-! WRITE(BLINE,'(3A5,A15)') 'IT','GD','LS','TOT_J'
-! DO J=1,SIZE(PARAM)
-!  IF(ABS(PARAM(J)%IACT).EQ.1.AND.PARAM(J)%IGROUP.GT.0)THEN
-!   WRITE(SLINE,'(2X,A2,2I5.5)') PARAM(J)%PTYPE,PARAM(J)%ILS,PARAM(J)%IZONE
-!   BLINE=TRIM(BLINE)//TRIM(SLINE)
-!  ENDIF
-! ENDDO
+ WRITE(BLINE,'(3A5,A15)') 'IT','GD','LS','TOT_J'
+ DO J=1,SIZE(PARAM)
+  IF(ABS(PARAM(J)%IACT).EQ.1.AND.PARAM(J)%IGROUP.GT.0)THEN
+   WRITE(SLINE,'(2X,A2,2I5.5)') PARAM(J)%PTYPE,PARAM(J)%ILS,PARAM(J)%IZONE
+   BLINE=TRIM(BLINE)//TRIM(SLINE)
+  ENDIF
+ ENDDO
 
- WRITE(IUPESTPROGRESS,'(A)') 
  WRITE(IUPESTSENSITIVITY,'(A10,A)') 'Iteration',TRIM(BLINE(31:)) 
-
-! BLINE=''
-! DO J=1,SIZE(PARAM)
-!  IF(ABS(PARAM(J)%IACT).EQ.1.AND.PARAM(J)%IGROUP.GT.0)THEN
-!   WRITE(SLINE,'(11X,I3.3)') PARAM(J)%IGROUP
-!   BLINE=TRIM(BLINE)//TRIM(SLINE)
-!  ENDIF
-! ENDDO
-! WRITE(IUPESTPROGRESS,'(30X,A)') TRIM(BLINE) 
+ WRITE(IUPESTPROGRESS,'(A)') 
 
  !## close all files ...
  CALL PEST1CLOSELOGFILES()
@@ -741,7 +701,7 @@ CONTAINS
     CYCLE
   END SELECT
   LINE=' * '//PARAM(I)%PTYPE//' adjusted ('//TRIM(IMOD_UTL_ITOS(PARAM(I)%NODES))//') with alpha='//TRIM(IMOD_UTL_RTOS(FCT,'F',7))
-  CALL IMOD_UTL_PRINTTEXT(TRIM(LINE),-1,IUPESTOUT) !; CALL IMOD_UTL_PRINTTEXT(TRIM(LINE),1)
+  CALL IMOD_UTL_PRINTTEXT(TRIM(LINE),-1,IUPESTOUT)
  ENDDO
 
  CALL IMOD_UTL_OPENASC(IUSCL,'uscl_svat.inp','W')
@@ -1684,8 +1644,8 @@ CONTAINS
  !## if sensisivities need to be computed generate csv file and stop
  IF(LSENS)THEN
   CALL PESTOPENFILE(iu,'log_jacobian_','txt',0,root)
-  WRITE(IU,*) 'POSITIVE numbers means that an increasement of the parameter raises the head'
-  WRITE(IU,*) 'NEGATIVE numbers means that an increasement of the parameter raises the head'
+  WRITE(IU,*) 'POSITIVE numbers means that an INcreasement of the parameter raises the head'
+  WRITE(IU,*) 'NEGATIVE numbers means that an DEcreasement of the parameter raises the head'
   BLINE=''; M=0
   DO IP1=1,SIZE(PARAM)
    IF(PARAM(IP1)%IACT.NE.1.OR.PARAM(IP1)%IGROUP.LE.0)CYCLE
@@ -1727,7 +1687,6 @@ CONTAINS
     DJ2=(MSR%DH(IP2,J)-MSR%DH(0,J))/DF2
     W=REAL(MSR%W(J),8)
     JQJ(II,I)=JQJ(II,I)+(DJ1*W*DJ2)  
-!    JQJ(II,I)=JQJ(II,I)+(DJ1*MSR%W(J)*DJ2)  
    ENDDO
   ENDDO
  ENDDO
@@ -2591,7 +2550,7 @@ CONTAINS
   CASE ('VC','KV')
    IF(PARAM(IP)%ILS.LE.0.OR.PARAM(IP)%ILS.GT.NLAY-1) &
     CALL IMOD_UTL_PRINTTEXT('Parameter '//TRIM(IMOD_UTL_ITOS(IP))//': ILS exceeds NLAY-1',2)
-  CASE ('EP')
+  CASE ('EP','RE')
    IF(PARAM(IP)%ILS.NE.1) &
     CALL IMOD_UTL_PRINTTEXT('Parameter '//TRIM(IMOD_UTL_ITOS(IP))//': ILS need to be equal to 1',2)
  END SELECT

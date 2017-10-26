@@ -218,7 +218,7 @@ CONTAINS
  INTEGER,INTENT(IN) :: ISMOOTH
  REAL,INTENT(IN),OPTIONAL :: PERC
  INTEGER :: IRC,IRC1,IRC2,ICC,ICC1,ICC2,IRM,ICM,MXN,MXM,N,M,I,IINT,IDOWN
- REAL,ALLOCATABLE,DIMENSION(:) :: FREQ
+ REAL,ALLOCATABLE,DIMENSION(:,:) :: FREQ
  REAL :: SVALUE,SFCT,DXM,DYM,DXC,DYC
  logical :: flag1, flag2
  DOUBLE PRECISION :: XD1,XD2,YD1,YD2,TINY
@@ -252,7 +252,7 @@ CONTAINS
 
  !## check for valid scaling options
  SELECT CASE(SCLTYPE)
-  CASE(1,2,3,4,5,6,7,8,9)
+  CASE(1,2,3,4,5,6,7,8,9,10)
   CASE DEFAULT
    CALL IMOD_UTL_PRINTTEXT('Error!',0)
    CALL IMOD_UTL_PRINTTEXT('File: '//TRIM(IDFNAME),0)
@@ -293,13 +293,22 @@ CONTAINS
 
  !## most-frequent,percentiles
  MXN=1;MXM=1
- IF(SCLTYPE.EQ.7.OR.SCLTYPE.EQ.9)THEN
-  MXN=0; DO I=1,IDFM%NCOL; N=(IDFM%SX(I)-IDFM%SX(I-1))/IDFC%DX; MXN=MAX(MXN,N); END DO
-  MXN=MXN+2
-  MXM=0; DO I=1,IDFM%NROW; M=(IDFM%SY(I-1)-IDFM%SY(I))/IDFC%DY; MXM=MAX(MXM,M); END DO
-  MXM=MXM+2
+ select case (scltype)
+  case (7,9,10)
+! IF(SCLTYPE.EQ.7.OR.SCLTYPE.EQ.9.or.)THEN
+   MXN=0; DO I=1,IDFM%NCOL; N=(IDFM%SX(I)-IDFM%SX(I-1))/IDFC%DX; MXN=MAX(MXN,N); END DO
+   MXN=MXN+2
+   MXM=0; DO I=1,IDFM%NROW; M=(IDFM%SY(I-1)-IDFM%SY(I))/IDFC%DY; MXM=MAX(MXM,M); END DO
+   MXM=MXM+2
+ ENDselect !IF
+
+ !## scaling of zones
+ IF(scltype.EQ.10)THEN
+  ALLOCATE(FREQ(MXN*MXM,2))
+ ELSE
+  ALLOCATE(FREQ(MXN*MXM,1))
  ENDIF
- ALLOCATE(FREQ(MXN*MXM))
+! ALLOCATE(FREQ(MXN*MXM))
 
  !## read/scale parameters
  DO IRM=1,IDFM%NROW
@@ -408,13 +417,13 @@ CONTAINS
  !###====================================================================
  IMPLICIT NONE
  TYPE(IDFOBJ),INTENT(INOUT) :: IDF
- REAL,INTENT(OUT),DIMENSION(:) :: FREQ
+ REAL,INTENT(OUT),DIMENSION(:,:) :: FREQ
  REAL,INTENT(IN) :: SFCT
  INTEGER,INTENT(IN) :: IR1,IR2,IC1,IC2,SCLTYPE
  REAL,INTENT(OUT) :: SVALUE
  INTEGER, INTENT(IN) :: IDOWN
- INTEGER :: I,IROW,ICOL,NAJ,IR,IC,NROW,NCOL,NLAY
- REAL :: IDFVAL,NVALUE,NFRAC
+ INTEGER :: I,IROW,ICOL,NAJ,IR,IC,NROW,NCOL,NLAY,N
+ REAL :: IDFVAL,NVALUE,NFRAC,F
  REAL,DIMENSION(1) :: XTEMP
 
  IF (IDOWN.EQ.1.AND.IR1.EQ.IR2.AND.IC1.EQ.IC2) THEN
@@ -472,10 +481,10 @@ CONTAINS
       NVALUE=NVALUE+1.0
      ENDIF
     !## most frequent occurence,percentile
-    CASE (7,9)
+    CASE (7,9,10)
      IF(IDFVAL.NE.IDF%NODATA)THEN
       NVALUE=NVALUE+1.0
-      FREQ(INT(NVALUE))=IDFVAL
+      FREQ(INT(NVALUE),1)=IDFVAL
      ENDIF
     CASE DEFAULT
      WRITE(*,'(//A//)') 'Scaling not known for: '//TRIM(IDF%FNAME)
@@ -498,8 +507,8 @@ CONTAINS
   CASE (6)  !## c-waarde reciprook opgeteld, terug naar gem. dagen
    SVALUE=1.0/(SVALUE/NVALUE)
   CASE (7)
-   CALL IMOD_UTL_QKSORT(SIZE(FREQ),INT(NVALUE),FREQ)
-   SVALUE=IMOD_UTL_GETMOSTFREQ(FREQ,SIZE(FREQ),INT(NVALUE))
+   CALL IMOD_UTL_QKSORT(SIZE(FREQ,1),INT(NVALUE),FREQ(:,1))
+   SVALUE=IMOD_UTL_GETMOSTFREQ(FREQ(:,1),SIZE(FREQ,1),INT(NVALUE),IDF%NODATA)
    !## add fraction to the most frequent occurence
    NFRAC=NVALUE/REAL(((IR2-IR1)+1)*((IC2-IC1)+1))
    SVALUE=SVALUE+(1.0-NFRAC)
@@ -507,9 +516,33 @@ CONTAINS
    NFRAC=NVALUE/REAL(((IR2-IR1)+1)*((IC2-IC1)+1))
    SVALUE=1.0/((SVALUE*NFRAC)/NVALUE)
   CASE (9)  !## percentile
-   CALL IMOD_UTL_GETMED(FREQ,SIZE(FREQ),IDF%NODATA,(/SFCT*100.0/),1,NAJ,XTEMP)
+   CALL IMOD_UTL_GETMED(FREQ(1,:),SIZE(FREQ,1),IDF%NODATA,(/SFCT*100.0/),1,NAJ,XTEMP)
    SVALUE=XTEMP(1)
- END SELECT
+  CASE (10)  !## zonation
+   N=INT(NVALUE)
+   IF(MAXVAL(FREQ(1:N,1)).GT.0.0)THEN
+    !## get fractions
+    DO I=1,N; F=MOD(FREQ(I,1),1.0); IF(F.EQ.0.0)F=1.0; FREQ(I,2)=F; ENDDO
+    !## remove fractions
+    DO I=1,N; FREQ(I,1)=INT(FREQ(I,1)); ENDDO
+    !## sort zones
+    CALL IMOD_UTL_QKSORT(SIZE(FREQ,1),N,FREQ(:,1))
+    !## get most available zone
+    SVALUE=IMOD_UTL_GETMOSTFREQ(FREQ(:,1),SIZE(FREQ,1),N,0.0) !## exclude zone.eq.0
+    IF(SVALUE.GT.0)THEN
+     !## set fraction to zero for zones not equal to most available zone
+     !## only whenever fraction are existing priorly
+     IF(INT(SUM(FREQ(:,2))).NE.N)THEN
+      DO I=1,N; IF(INT(SVALUE).NE.INT(FREQ(I,1)))FREQ(I,2)=0.0; ENDDO
+      !## get mean fraction
+      F=0; DO I=1,N; F=F+FREQ(I,2); ENDDO; F=F/REAL(N)
+      !## add fraction to most available zone
+      IF(F.LT.1.0)SVALUE=SVALUE+F
+     ENDIF
+    ENDIF     
+   ENDIF
+   
+  END SELECT
 
  ! 1 = SPECIAAL (IBOUNDARY)
  ! 2 = REKENKUNDIG (SHEAD/VCONT/S)

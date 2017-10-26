@@ -1479,19 +1479,58 @@ END SUBROUTINE IMOD_UTL_QKSORT
 
  END SUBROUTINE IMOD_UTL_PRINTTEXT
 
- !###====================================================================
- REAL FUNCTION IMOD_UTL_GETMOSTFREQ(FREQ,MFREQ,NFREQ)
+ !!###====================================================================
+ !REAL FUNCTION IMOD_UTL_GETMOSTFREQ(FREQ,MFREQ,NFREQ,NODATA)
+ !!###====================================================================
+ !IMPLICIT NONE
+ !INTEGER,INTENT(IN) :: MFREQ,NFREQ
+ !REAL,DIMENSION(MFREQ),INTENT(IN) :: FREQ
+ !INTEGER :: I,MI,NI
+ !
+ !NI=1  !number of unique
+ !MI=NI !max. number of unique
+ !IMOD_UTL_GETMOSTFREQ=FREQ(NI)
+ !
+ !DO I=2,NFREQ
+ ! IF(FREQ(I).NE.FREQ(I-1))THEN
+ !  IF(NI.GT.MI)THEN
+ !   IMOD_UTL_GETMOSTFREQ=FREQ(I-1)
+ !   MI=NI
+ !  ENDIF
+ !  NI=1
+ ! ELSE
+ !  NI=NI+1
+ ! ENDIF
+ !END DO
+ !!test final
+ !IF(NI.GT.MI) IMOD_UTL_GETMOSTFREQ=FREQ(NFREQ)
+ !
+ !END FUNCTION IMOD_UTL_GETMOSTFREQ
+
+  !###====================================================================
+ REAL FUNCTION IMOD_UTL_GETMOSTFREQ(FREQ,MFREQ,NFREQ,NODATA)
  !###====================================================================
  IMPLICIT NONE
  INTEGER,INTENT(IN) :: MFREQ,NFREQ
+ REAL,INTENT(IN) :: NODATA
  REAL,DIMENSION(MFREQ),INTENT(IN) :: FREQ
- INTEGER :: I,MI,NI
+ INTEGER :: I,IS,MI,NI
 
- NI=1  !number of unique
- MI=NI !max. number of unique
- IMOD_UTL_GETMOSTFREQ=FREQ(NI)
-
- DO I=2,NFREQ
+ IMOD_UTL_GETMOSTFREQ=NODATA
+ 
+ IS=0
+ DO
+  IS=IS+1  
+  IF(FREQ(IS).NE.NODATA)EXIT
+  IF(IS.GE.NFREQ)RETURN !## nothing found ne nodata
+ ENDDO
+ IMOD_UTL_GETMOSTFREQ=FREQ(IS)
+ MI=1 !NI !max. number of unique
+ 
+ NI=1
+ IS=IS+1
+ DO I=IS,NFREQ
+  IF(FREQ(I).EQ.NODATA)CYCLE
   IF(FREQ(I).NE.FREQ(I-1))THEN
    IF(NI.GT.MI)THEN
     IMOD_UTL_GETMOSTFREQ=FREQ(I-1)
@@ -1502,11 +1541,11 @@ END SUBROUTINE IMOD_UTL_QKSORT
    NI=NI+1
   ENDIF
  END DO
- !test final
- IF(NI.GT.MI) IMOD_UTL_GETMOSTFREQ=FREQ(NFREQ)
+ !## test final
+ IF(NI.GT.MI)IMOD_UTL_GETMOSTFREQ=FREQ(NFREQ)
 
  END FUNCTION IMOD_UTL_GETMOSTFREQ
-
+ 
  !###======================================================================
  INTEGER FUNCTION GETUNIT()
  !###======================================================================
