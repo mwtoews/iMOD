@@ -417,9 +417,15 @@ CONTAINS
      if (.not.idfread(idfc,line,0)) CALL IMOD_UTL_PRINTTEXT('idfread',2)
      call idfnullify(idfm)
      call idfcopy(idf,idfm)
+     IF(ASSOCIATED(IDFM%X))DEALLOCATE(IDFM%X)
      nodata = idfc%nodata
      idfm%nodata = nodata
      if (.not.idfreadscale(idfc,idfm,10,0)) CALL IMOD_UTL_PRINTTEXT('idfreadscale',2)
+     
+!     do irow=1,idfm%nrow; do icol=1,idfm%ncol
+!      if(idfm%x(icol,irow).ne.0.0)write(*,*) icol,irow,idfm%x(icol,irow)
+!     enddo; enddo
+     
      ALLOCATE(ZONE(I)%X(NCOL,NROW))
      ZONE(I)%ZTYPE=0
      ZONE(I)%X=IDFM%X
