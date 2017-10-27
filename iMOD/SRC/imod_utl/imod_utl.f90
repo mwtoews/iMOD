@@ -4155,58 +4155,19 @@ CONTAINS
  
  END SUBROUTINE UTL_IDFSNAPTOGRID_LLC
 
-! !###====================================================================
-! REAL FUNCTION UTL_GETMOSTFREQ(FREQ,MFREQ,NFREQ)
-! !###====================================================================
-! IMPLICIT NONE
-! INTEGER,INTENT(IN) :: MFREQ,NFREQ
-! REAL,DIMENSION(MFREQ),INTENT(IN) :: FREQ
-! INTEGER :: I,MI,NI
-!
-! NI=1  !number of unique
-! MI=NI !max. number of unique
-! UTL_GETMOSTFREQ=FREQ(NI)
-!
-! DO I=2,NFREQ
-!  IF(FREQ(I).NE.FREQ(I-1))THEN
-!   IF(NI.GT.MI)THEN
-!    UTL_GETMOSTFREQ=FREQ(I-1)
-!    MI=NI
-!   ENDIF
-!   NI=1
-!  ELSE
-!   NI=NI+1
-!  ENDIF
-! END DO
-! !test final
-! IF(NI.GT.MI) UTL_GETMOSTFREQ=FREQ(NFREQ)
-!
-! END FUNCTION UTL_GETMOSTFREQ
-!
  !###====================================================================
- REAL FUNCTION UTL_GETMOSTFREQ(FREQ,MFREQ,NFREQ,NODATA)
+ REAL FUNCTION UTL_GETMOSTFREQ(FREQ,MFREQ,NFREQ)
  !###====================================================================
  IMPLICIT NONE
  INTEGER,INTENT(IN) :: MFREQ,NFREQ
- REAL,INTENT(IN) :: NODATA
  REAL,DIMENSION(MFREQ),INTENT(IN) :: FREQ
- INTEGER :: I,IS,MI,NI
+ INTEGER :: I,MI,NI
 
- UTL_GETMOSTFREQ=NODATA
- 
- IS=0
- DO
-  IS=IS+1  
-  IF(FREQ(IS).NE.NODATA)EXIT
-  IF(IS.GE.NFREQ)RETURN !## nothing found ne nodata
- ENDDO
- UTL_GETMOSTFREQ=FREQ(IS)
- MI=1 !NI !max. number of unique
- 
- NI=1
- IS=IS+1
- DO I=IS,NFREQ
-  IF(FREQ(I).EQ.NODATA)CYCLE
+ NI=1  !number of unique
+ MI=NI !max. number of unique
+ UTL_GETMOSTFREQ=FREQ(NI)
+
+ DO I=2,NFREQ
   IF(FREQ(I).NE.FREQ(I-1))THEN
    IF(NI.GT.MI)THEN
     UTL_GETMOSTFREQ=FREQ(I-1)
@@ -4217,10 +4178,49 @@ CONTAINS
    NI=NI+1
   ENDIF
  END DO
- !## test final
- IF(NI.GT.MI)UTL_GETMOSTFREQ=FREQ(NFREQ)
+ !test final
+ IF(NI.GT.MI) UTL_GETMOSTFREQ=FREQ(NFREQ)
 
  END FUNCTION UTL_GETMOSTFREQ
+
+! !###====================================================================
+! REAL FUNCTION UTL_GETMOSTFREQ(FREQ,MFREQ,NFREQ,NODATA)
+! !###====================================================================
+! IMPLICIT NONE
+! INTEGER,INTENT(IN) :: MFREQ,NFREQ
+! REAL,INTENT(IN) :: NODATA
+! REAL,DIMENSION(MFREQ),INTENT(IN) :: FREQ
+! INTEGER :: I,IS,MI,NI
+!
+! UTL_GETMOSTFREQ=NODATA
+! 
+! IS=0
+! DO
+!  IS=IS+1  
+!  IF(FREQ(IS).NE.NODATA)EXIT
+!  IF(IS.GE.NFREQ)RETURN !## nothing found ne nodata
+! ENDDO
+! UTL_GETMOSTFREQ=FREQ(IS)
+! MI=1 !NI !max. number of unique
+! 
+! NI=1
+! IS=IS+1
+! DO I=IS,NFREQ
+!  IF(FREQ(I).EQ.NODATA)CYCLE
+!  IF(FREQ(I).NE.FREQ(I-1))THEN
+!   IF(NI.GT.MI)THEN
+!    UTL_GETMOSTFREQ=FREQ(I-1)
+!    MI=NI
+!   ENDIF
+!   NI=1
+!  ELSE
+!   NI=NI+1
+!  ENDIF
+! END DO
+! !## test final
+! IF(NI.GT.MI)UTL_GETMOSTFREQ=FREQ(NFREQ)
+!
+! END FUNCTION UTL_GETMOSTFREQ
 
  !###====================================================
  SUBROUTINE UTL_GETHIST(X,NX,NODATA,HIST,NHIST,MX,XHIST)

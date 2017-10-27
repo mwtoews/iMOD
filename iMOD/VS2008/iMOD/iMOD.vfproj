@@ -95,10 +95,6 @@
 		<File RelativePath="..\..\..\iMOD\SRC\imod_asc2idf\imod_asc2idf_hfb.f90"/>
 		<File RelativePath="..\..\..\iMOD\SRC\imod_asc2idf\imod_asc2idf_par.f90"/></Filter>
 		<Filter Name="imod_batch">
-		<Filter Name="imod_bivar">
-		<File RelativePath="..\..\..\iMOD\SRC\imod_bivar\imod_bivar.f90"/>
-		<File RelativePath="..\..\..\iMOD\SRC\imod_bivar\imod_bivar_main.f90"/>
-		<File RelativePath="..\..\..\iMOD\SRC\imod_bivar\imod_kriging.f90"/></Filter>
 		<File RelativePath="..\..\SRC\imod_batch\imod_batch.f90">
 			<FileConfiguration Name="Debug|Win32">
 				<Tool Name="VFFortranCompilerTool" Preprocess="preprocessYes" PreprocessorDefinitions="WINTERACTER11"/></FileConfiguration>
@@ -112,6 +108,10 @@
 		<File RelativePath="..\..\SRC\imod_batch\imod_batch_par.f90"/>
 		<File RelativePath="..\..\..\iMOD\SRC\imod_batch\imod_createizone.f90"/>
 		<File RelativePath="..\..\..\iMOD\SRC\imod_batch\imod_drainsurface.f90"/></Filter>
+		<Filter Name="imod_bivar">
+		<File RelativePath="..\..\..\iMOD\SRC\imod_bivar\imod_bivar.f90"/>
+		<File RelativePath="..\..\..\iMOD\SRC\imod_bivar\imod_bivar_main.f90"/>
+		<File RelativePath="..\..\..\iMOD\SRC\imod_bivar\imod_kriging.f90"/></Filter>
 		<Filter Name="imod_corrkd">
 		<File RelativePath="..\..\..\iMOD\SRC\imod_corrkd\imod_corrkd.f90"/>
 		<File RelativePath="..\..\..\iMOD\SRC\imod_corrkd\imod_corrkd_par.f90"/></Filter>

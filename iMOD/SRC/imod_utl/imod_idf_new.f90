@@ -898,7 +898,7 @@ CONTAINS
   CASE (7)
    N=INT(NVALUE)
    CALL UTL_QKSORT(SIZE(FREQ,1),N,FREQ(:,1))
-   SVALUE=UTL_GETMOSTFREQ(FREQ(:,1),SIZE(FREQ,1),N,IDF%NODATA)
+   SVALUE=UTL_GETMOSTFREQ(FREQ(:,1),SIZE(FREQ,1),N) !,IDF%NODATA)
   CASE (8)  !## PWT c-waarde reciprook opgeteld, terug naar gem. dagen * fraction
    NFRAC=NVALUE/REAL(((IR2-IR1)+1)*((IC2-IC1)+1))
    IF(SVALUE.NE.0.0)THEN
@@ -919,11 +919,11 @@ CONTAINS
     !## sort zones
     CALL UTL_QKSORT(SIZE(FREQ,1),N,FREQ(:,1))
     !## get most available zone
-    SVALUE=UTL_GETMOSTFREQ(FREQ(:,1),SIZE(FREQ,1),N,0.0) !## exclude zone.eq.0
+    SVALUE=UTL_GETMOSTFREQ(FREQ(:,1),SIZE(FREQ,1),N) !,0.0) !## exclude zone.eq.0
     IF(SVALUE.GT.0)THEN
      !## set fraction to zero for zones not equal to most available zone
      !## only whenever fraction are existing priorly
-     IF(INT(SUM(FREQ(:,2))).NE.N)THEN
+     IF(INT(SUM(FREQ(1:N,2))).NE.N)THEN
       DO I=1,N; IF(INT(SVALUE).NE.INT(FREQ(I,1)))FREQ(I,2)=0.0; ENDDO
       !## get mean fraction
       F=0; DO I=1,N; F=F+FREQ(I,2); ENDDO; F=F/REAL(N)
@@ -1709,7 +1709,7 @@ CONTAINS
   SELECT CASE(T)
    CASE(1) !## nominal data (i.e. landuse or soildata)
     !## majority values
-    VAL=UTL_GETMOSTFREQ(VALS,C,C,IDF%NODATA)
+    VAL=UTL_GETMOSTFREQ(VALS,C,C) !,IDF%NODATA)
    CASE(2) !## ordinal ==> get median value (i.e. elevation, heads ...)
     CALL UTL_GETMED(VALS,C,IDF%NODATA,(/50.0/),1,NAJ,VAL)
   END SELECT

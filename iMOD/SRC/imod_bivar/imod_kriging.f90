@@ -597,6 +597,12 @@ CONTAINS
   ELSE
    !## adjust distance for perfect circle
    DY=(Y0-Y1); DX=(X0-X1); A=ATAN2(DY,DX)
+
+!   x1=         cos(a)*dx+        sin(a)*dy
+!   y1=-1.0/rat*sin(a)*dx+1.0/rat*cos(a)*dy
+!   x1=x0+x1
+!   y1=y0+y1
+   
    !## get point on ellips for current aspect
    CALL UTL_POINTELLIPSE(X0,Y0,A,RAT,MAXDIST,ANI,X3,Y3)
    D=UTL_DIST(X0,Y0,X3,Y3)
@@ -605,7 +611,7 @@ CONTAINS
    !## set temporary new location
    X1=X0+KRIGING_DIST*COS(A)
    Y1=Y0-KRIGING_DIST*SIN(A)
-!   WRITE(*,*) UTL_DIST(X1,Y1,X0,Y0)
+
   ENDIF
  ENDIF
   

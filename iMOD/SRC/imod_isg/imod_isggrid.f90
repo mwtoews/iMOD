@@ -2172,7 +2172,7 @@ IRLOOP: DO IR=MAX(1,IROW-1),MIN(NROW,IROW+1)
   IF(IDF(1)%X(ICOL,IROW).NE.IDF(1)%NODATA)IDF(9)%X(ICOL,IROW)=1.0
   DO I=1,4; IF(IDF(I)%X(ICOL,IROW).EQ.IDF(I)%NODATA)IDF(I)%X(ICOL,IROW)=0.0; ENDDO
   W=IDF(7)%X(ICOL,IROW)
-  W=MIN(W,MAXWIDTH)
+!  W=MIN(W,MAXWIDTH)
   L=IDF(5)%X(ICOL,IROW)
   !## conductance assume to be cell-filled; f=dx/length-segment*dx/width
   !## take into account the fact that the line could be diagonal
