@@ -1148,7 +1148,11 @@ CONTAINS
  ELSE
   !## use the absolute value to scale
   IF(IMETHOD.EQ.3)Z=ABS(Z)
-  LZ=4.0*((Z-MNHV)/(MXHV-MNHV))
+  IF(MXHV-MNHV.EQ.0.0)THEN
+   LZ=0.0
+  ELSE
+   LZ=4.0*((Z-MNHV)/(MXHV-MNHV))
+  ENDIF
   LZ=LZ+1.0
  ENDIF
  

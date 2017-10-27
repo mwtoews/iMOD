@@ -180,16 +180,19 @@ CONTAINS
   DO 
    READ(IU,'(A256)',IOSTAT=IOS) LINE; IF(IOS.NE.0)EXIT
    !## steadystate
-   IF(ITRANSIENT.EQ.0)READ(LINE,'(139X,I10)') NIPF
-   IF(ITRANSIENT.EQ.1)READ(LINE,'(171X,I10)') NIPF
+   IF(ITRANSIENT.EQ.0)READ(LINE,'(139X,I10)',IOSTAT=IOS) NIPF
+   IF(ITRANSIENT.EQ.1)READ(LINE,'(171X,I10)',IOSTAT=IOS) NIPF
+   IF(IOS.NE.0)THEN
+    WRITE(*,'(A)') 'Error reading TXT file, are you sure you select the correct ITRANSIENT keyword ?'; STOP
+   ENDIF
    IPFR(NIPF)%NPOINTS=IPFR(NIPF)%NPOINTS+1
    IF(I.EQ.2)THEN
     N=IPFR(NIPF)%NPOINTS
     IF(ITRANSIENT.EQ.1)THEN
-     READ(LINE,'(2(F15.7,1X),I10,1X,3(F15.7,1X))') IPFR(NIPF)%X(N),IPFR(NIPF)%Y(N), &
+     READ(LINE,'(2(G15.7,1X),I10,1X,3(G15.7,1X))') IPFR(NIPF)%X(N),IPFR(NIPF)%Y(N), &
                                       IPFR(NIPF)%L(N),IPFR(NIPF)%W(N),IPFR(NIPF)%O(N),IPFR(NIPF)%M(N)
     ELSE
-     READ(LINE,'(2(F15.7,1X),I10,1X,6(F15.7,1X))') IPFR(NIPF)%X(N),IPFR(NIPF)%Y(N), &
+     READ(LINE,'(2(G15.7,1X),I10,1X,6(G15.7,1X))') IPFR(NIPF)%X(N),IPFR(NIPF)%Y(N), &
                                       IPFR(NIPF)%L(N),IPFR(NIPF)%O(N),IPFR(NIPF)%M(N), &
                                       J,WMDL,WRES,IPFR(NIPF)%W(N)
     ENDIF
@@ -222,15 +225,15 @@ CONTAINS
   !## write down results
   IU=UTL_GETUNIT()
   OPEN(IU,FILE=TRIM(IPFNAME)//'_',STATUS='UNKNOWN',ACTION='WRITE')
-  WRITE(IU,'(A3)') 'NaN1#'
-  WRITE(IU,'(A1)') '6'
-  WRITE(IU,'(A2)') 'XC'
-  WRITE(IU,'(A2)') 'YC'
-  WRITE(IU,'(A2)') 'OBS'
-  WRITE(IU,'(A2)') 'MDL'
-  WRITE(IU,'(A2)') 'WEIGHT'
-  WRITE(IU,'(A2)') 'MDL-OBS'
-  WRITE(IU,'(A2)') '0,TXT'
+  WRITE(IU,'(A)') 'NaN1#'
+  WRITE(IU,'(A)') '6'
+  WRITE(IU,'(A)') 'XC'
+  WRITE(IU,'(A)') 'YC'
+  WRITE(IU,'(A)') 'OBS'
+  WRITE(IU,'(A)') 'MDL'
+  WRITE(IU,'(A)') 'WEIGHT'
+  WRITE(IU,'(A)') 'MDL-OBS'
+  WRITE(IU,'(A)') '0,TXT'
  ENDIF
 
  !## okay we keep it simple - we plot everything - no selection yet
@@ -272,7 +275,7 @@ CONTAINS
   ENDDO
  ENDDO
  
- IF(IPLOT)THEN
+ IF(IPLOT.EQ.3)THEN
   CLOSE(IU)
   CALL PMANAGER_SAVEMF2005_MAXNO(TRIM(IPFNAME)//'_',(/N/))
   RETURN
