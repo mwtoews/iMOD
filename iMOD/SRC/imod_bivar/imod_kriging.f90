@@ -88,7 +88,7 @@ CONTAINS
 
  !## compute mean and substract values from mean - simple kriging
  IF(KTYPE.GT.0)THEN
-  MZ=0.0; DO I=1,ND; MZ=MZ+ZD(I); ENDDO; MZ=MZ/REAL(ND)
+  MZ=0.0; DO I=1,ND; MZ=MZ+ZD(I); ENDDO; IF(ND.GT.0.0)MZ=MZ/REAL(ND)
   DO I=1,ND; ZD(I)=ZD(I)-MZ; ENDDO
  ENDIF
 
@@ -105,22 +105,18 @@ CONTAINS
  DO IROW=1,IDF%NROW
   DO ICOL=1,IDF%NCOL
 
-! DO IROW=41,41
-!  DO ICOL=118,118
+! DO IROW=41,41 !66,66 !313,313
+!  DO ICOL=221,221 !285,285
 
    !## skip locations allready filled in
    IF(IDF%X(ICOL,IROW).NE.IDF%NODATA)CYCLE 
-   if(icol.eq.258.and.irow.eq.116)then
-    write(*,*)
-   endif
    CALL IDFGETLOC(IDF,IROW,ICOL,X,Y)
    !## isotropic
    ANI=0.0; RAT=1.0
    IF(PRESENT(ELLIPS))THEN
-    ANI=IDFGETXYVAL(ELLIPS(1),X,Y) !; ANI=ANI-90.0 !## facing upnorth
+    ANI=IDFGETXYVAL(ELLIPS(1),X,Y) 
     RAT=IDFGETXYVAL(ELLIPS(2),X,Y)
     R  =IDFGETXYVAL(ELLIPS(3),X,Y)
-!   RAT=1.0
    ELSE
     R=RANGE
    ENDIF
@@ -387,7 +383,7 @@ CONTAINS
   DO ID=1,ND
    
    !## get distance between points - remove whenever intersected by faults
-   DXY=KRIGING_DIST(XCD(ID),YCD(ID),X,Y,0,IDF,IBLANKOUT,BO_VALUE,USERANGE,RAT,ANI)
+   DXY=KRIGING_DIST(2,XCD(ID),YCD(ID),X,Y,0,IDF,IBLANKOUT,BO_VALUE,USERANGE,RAT,ANI)
 !   DXY=KRIGING_DIST(XD(ID),YD(ID),X,Y,0,IDF,IBLANKOUT,BO_VALUE,USERANGE,RAT,ANI)
    !## otherside of fault or distance too big, take next
    IF(DXY.GT.USERANGE)CYCLE
@@ -428,6 +424,23 @@ CONTAINS
  !## no points left, interpolated value equals nodata
  IF(NP.LE.0)THEN; KEST=NODATA; KVAR=0.0; RETURN; ENDIF
   
+! !## save points
+! IU=UTL_GETUNIT()
+! CALL OSD_OPEN(IU,FILE='d:\iMOD-TEST\IMODBATCH_KRIGING\pospunt.ipf',STATUS='UNKNOWN',ACTION='WRITE')
+! WRITE(IU,'(A)') 'X,Y,Z,id'; WRITE(IU,*) X,Y,0.0,0
+! DO I=1,NP
+!  ID=SELID(I)
+!  WRITE(IU,*) XCD(ID),YcD(ID),ZD(ID),id
+! ENDDO
+! CLOSE(IU)
+! CALL OSD_OPEN(IU,FILE='d:\iMOD-TEST\IMODBATCH_KRIGING\orgpunt.ipf',STATUS='UNKNOWN',ACTION='WRITE')
+! WRITE(IU,'(A)') 'X,Y,Z,id'; WRITE(IU,*) X,Y,0.0,0
+! DO I=1,NP
+!  ID=SELID(I)
+!  WRITE(IU,*) XD(ID),YD(ID),ZD(ID),id
+! ENDDO
+! CLOSE(IU)
+
  !## simple kriging (ktype.gt.0) and ordinary kriging (ktype.lt.0)
  N=NP; IF(KTYPE.LT.0)N=NP+1
  
@@ -510,18 +523,7 @@ CONTAINS
   KVAR=KVAR+B(I)*(SILL-GAMMA) 
  ENDDO
  KVAR=SILL-KVAR
- 
- !## save points
-! IU=UTL_GETUNIT()
-! CALL OSD_OPEN(IU,FILE='d:\iMOD-TEST\IMODBATCH_KRIGING\pospunt.ipf',STATUS='UNKNOWN',ACTION='WRITE')
-! WRITE(IU,'(A)') 'X,Y,Z,GAMMA,id'; WRITE(IU,*) X,Y,KEST,0.0,0
-! DO I=1,NP
-!  ID=SELID(I)
-!  GAMMA=KRIGING_GETGAMMA(XCD(ID),YcD(ID),X,Y,USERANGE,C1,C0,KTYPE)
-!  WRITE(IU,*) XCD(ID),YcD(ID),ZD(ID),GAMMA,id
-! ENDDO
-! CLOSE(IU)
-  
+   
  END SUBROUTINE KRIGING_FILLSYSTEM
 
  !###======================================================================
@@ -539,12 +541,13 @@ CONTAINS
  END FUNCTION KRIGING_QUADRANT
 
  !###======================================================================
- REAL FUNCTION KRIGING_DIST(X1,Y1,X0,Y0,IDATA,IDF,IBLANKOUT,BO_VALUE,MAXDIST,RAT,ANI)
+ REAL FUNCTION KRIGING_DIST(IMODE,X1,Y1,X0,Y0,IDATA,IDF,IBLANKOUT,BO_VALUE,MAXDIST,RAT,ANI)
  !###======================================================================
  IMPLICIT NONE
  TYPE(IDFOBJ),INTENT(IN) :: IDF
  INTEGER,INTENT(IN) :: IDATA  !=0 FOR INSERTION IN KRIGING MATRIX  !=1 FOR AVERAGE POINT VALUES
  INTEGER,INTENT(IN) :: IBLANKOUT
+ INTEGER,INTENT(IN) :: IMODE !## 1=init 2=interpolate
  REAL,INTENT(INOUT) :: X1,Y1
  REAL,INTENT(IN) :: X0,Y0,BO_VALUE,MAXDIST,RAT,ANI
  REAL :: X3,Y3,X4,Y4,XINTER,YINTER,A,SSX,DX,DY,D,CA,SA,F
@@ -553,8 +556,16 @@ CONTAINS
  KRIGING_DIST=UTL_DIST(X1,Y1,X0,Y0)
 
  !## to far away (include 1.0*maxdist on edge - for smooth edges)
- IF(KRIGING_DIST.GT.MAXDIST)RETURN
-
+ IF(KRIGING_DIST.GE.MAXDIST)RETURN !THEN
+ IF(KRIGING_DIST.LE.0.0)THEN
+!  IF(IMODE.EQ.1)RETURN
+! if(imode.eq.2)then
+!write(*,*)
+! endif
+  RETURN
+!  WRITE(*,'(/A/)') ' Distance equal to zero, not possible !'; STOP
+ ENDIF
+  
  !## see whether nodata-areas are crossed
  IF(IBLANKOUT.EQ.1)THEN
   !## aspect
@@ -601,19 +612,18 @@ CONTAINS
  
  !## in case of an ellips see if it is inside the current ellips
  IF(RAT.NE.1.0)THEN
-  IF(.NOT.UTL_INSIDEELLIPSE(X0,Y0,MAXDIST,RAT*MAXDIST,ANI-90.0,X1,Y1))THEN
+  IF(.NOT.UTL_INSIDEELLIPSE(X0,Y0,MAXDIST/2.0,RAT*MAXDIST/2.0,ANI-90.0,X1,Y1))THEN
    KRIGING_DIST=MAXDIST+1.0
   ELSE
    !## adjust distance for perfect circle
-   DY=(Y0-Y1); DX=(X0-X1) !; A=ATAN2(DY,DX)
-!   DY=(Y1-Y0); DX=(X1-X0) !; A=ATAN2(DY,DX)
+   DY=(Y0-Y1); DX=(X0-X1); A=ATAN2(DY,DX)
 
    A=-(ANI+90.0)/(360.0/(2.0*PI))
-
-   x1=         cos(a)*dx+        sin(a)*dy
-   y1=-1.0/rat*sin(a)*dx+1.0/rat*cos(a)*dy
-   x1=x0+x1
-   y1=y0+y1
+   X1=         COS(A)*DX+        SIN(A)*DY
+!   Y1=-1.0/1.0*SIN(A)*DX+1.0/1.0*COS(A)*DY
+   Y1=-1.0/RAT*SIN(A)*DX+1.0/RAT*COS(A)*DY
+   X1=X0+X1
+   Y1=Y0+Y1
    
 !   !## get point on ellips for current aspect
 !   CALL UTL_POINTELLIPSE(X0,Y0,A,RAT,MAXDIST,ANI,X3,Y3)
@@ -624,7 +634,7 @@ CONTAINS
 !   X1=X0+KRIGING_DIST*COS(A)
 !   Y1=Y0-KRIGING_DIST*SIN(A)
   
-!   KRIGING_DIST=UTL_DIST(X1,Y1,X0,Y0)
+   KRIGING_DIST=UTL_DIST(X1,Y1,X0,Y0)
   
   ENDIF
  ENDIF
@@ -644,7 +654,7 @@ CONTAINS
 ! DX=(X1-X2)**2.0; DY=(Y1-Y2)**2.0; DXY=DX+DY
 ! IF(DXY.GT.0.0)DXY=SQRT(DXY)
  
- IF(DXY.GT.RANGE)THEN
+ IF(DXY.GE.RANGE)THEN
   H=0.999 
  ELSE
 
@@ -689,6 +699,9 @@ CONTAINS
  
  !## mark doubles with nodata and compute mean for those double points
  DO I=1,MD
+!  if(i.eq.96)then
+!write(*,*) 
+!  endif
   !## done allready
   IF(ZD(I).EQ.IDF%NODATA)CYCLE
   N=1; XP=XD(I); YP=YD(I); ZP=ZD(I)
@@ -696,7 +709,7 @@ CONTAINS
    !## done allready
    IF(ZD(J).EQ.IDF%NODATA)CYCLE
    !## get distance between points - increase distance whenever points are intersected by fault
-   IF(KRIGING_DIST(XD(I),YD(I),XD(J),YD(J),1,IDF,IBLANKOUT,BO_VALUE,XYCRIT,1.0,0.0).LE.XYCRIT)THEN
+   IF(KRIGING_DIST(1,XD(I),YD(I),XD(J),YD(J),1,IDF,IBLANKOUT,BO_VALUE,XYCRIT,1.0,0.0).LE.XYCRIT)THEN
     N=N+1
 
     !## take maximal indicator value

@@ -544,7 +544,7 @@ USE IMODVAR
 USE MOD_POLYGON_DRAW, ONLY : POLYGON1DRAWSHAPE,POLYGON1DRAWYSEL
 USE MOD_IPF, ONLY : IPFDRAW,IPFINIT
 USE MOD_IPF_PAR, ONLY : NIPF
-USE MOD_IDF, ONLY : IDFREAD,IDFDEALLOCATEX,IDFGETLOC
+USE MOD_IDF, ONLY : IDFREAD,IDFDEALLOCATEX,IDFGETLOC,IDFGETXYVAL
 USE MOD_GENPLOT, ONLY : TOPOGENDRAW,GENDRAW
 USE MOD_IR_PAR, ONLY : IRWIN
 USE MOD_IR_FIELDS, ONLY : IR1DRAWSHAPES
@@ -569,9 +569,9 @@ INTEGER,DIMENSION(4) :: IP
 LOGICAL :: LPLOT,LEX
 CHARACTER(LEN=256) :: FNAME
 
-!INTEGER :: irow,icol
-REAL :: dxe,dye,rat
-!TYPE(IDFOBJ),DIMENSION(3) :: E
+INTEGER :: iu,ios,nn,mm,irow,icol
+REAL :: dxe,dye,rat,x,y
+TYPE(IDFOBJ),DIMENSION(3) :: E
 
 CALL WINDOWSELECT(0)
 
@@ -681,30 +681,38 @@ IF(IPLOTFAST.EQ.1)THEN
  CALL IDFPLOT1BITMAP()
  CALL TOPOGENDRAW(0)
 
-dxe=2000.0; dye=dxe*0.25; rat=-45.0-90.0
-CALL UTL_DRAWELLIPSE(-1928.36,2517.28,dxe,dye,rat)
-CALL UTL_DRAWELLIPSE(-226.23,1368.17,dxe,dye,rat)
-CALL UTL_DRAWELLIPSE(1432.81,-25.14,dxe,dye,rat)
-CALL UTL_DRAWELLIPSE(-4075.77,2416.74,dxe,dye,rat)
-CALL UTL_DRAWELLIPSE(-2309.01,1030.61,dxe,dye,rat)
-CALL UTL_DRAWELLIPSE(-477.60,-211.87,dxe,dye,rat)
-CALL UTL_DRAWELLIPSE(1497.44,-2021.73,dxe,dye,rat)
-CALL UTL_DRAWELLIPSE(-563.79,-2402.37,dxe,dye,rat)
-CALL UTL_DRAWELLIPSE(-2797.38,-563.79,dxe,dye,rat)
-CALL UTL_DRAWELLIPSE(-4312.78,1037.80,dxe,dye,rat)
+ if(.not.idfread(e(1),'d:\IMOD-MODELS\SWISS\DBASE_VISP_II\ANI\VERSION_2\ELLIPS_RAT.IDF',1))then; endif
+ if(.not.idfread(e(2),'d:\IMOD-MODELS\SWISS\DBASE_VISP_II\ANI\VERSION_2\ELLIPS_ANI.IDF',1))then; endif
+ if(.not.idfread(e(3),'d:\IMOD-MODELS\SWISS\DBASE_VISP_II\ANI\VERSION_2\ELLIPS_LEN.IDF',1))then; endif
+ call igrlinewidth(1)
+ call igrlinetype(0)
+ do irow=1,e(1)%nrow,25; do icol=1,e(1)%ncol,25
+  call idfgetloc(e(1),irow,icol,x,y)
+  if(e(1)%x(icol,irow).eq.e(1)%nodata)cycle
+  dxe=e(3)%x(icol,irow)/2.0
+  dye=dxe*e(1)%x(icol,irow)
+  rat=e(2)%x(icol,irow)
+!  CALL UTL_DRAWELLIPSE(x,y,dxe,dye,rat) !e(2)%x(icol,irow)-90.0)
+  !## 90 for ellips drawing
+  CALL UTL_DRAWELLIPSE(x,y,dxe,dye,rat-90.0) !e(2)%x(icol,irow)-90.0)
+ enddo; enddo
 
-! if(.not.idfread(e(1),'d:\IMOD-MODELS\SWISS\DBASE_VISP_II\ANI\VERSION_2\ELLIPS_RAT.IDF',1))then; endif
-! if(.not.idfread(e(2),'d:\IMOD-MODELS\SWISS\DBASE_VISP_II\ANI\VERSION_2\ELLIPS_ANI.IDF',1))then; endif
-! if(.not.idfread(e(3),'d:\IMOD-MODELS\SWISS\DBASE_VISP_II\ANI\VERSION_2\ELLIPS_LEN.IDF',1))then; endif
-! call igrlinewidth(1)
-! call igrlinetype(0)
-! do irow=1,e(1)%nrow,25; do icol=1,e(1)%ncol,25
-!  call idfgetloc(e(1),irow,icol,x,y)
-!  if(e(1)%x(icol,irow).eq.e(1)%nodata)cycle
-!  dxe=e(3)%x(icol,irow)/2.0
-!  dye=dxe*e(1)%x(icol,irow)
-!  CALL UTL_DRAWELLIPSE(x,y,dxe,dye,e(2)%x(icol,irow)-90.0)
-! enddo; enddo
+! if(.not.idfread(e(1),'d:\iMOD-TEST\IMODBATCH_KRIGING\rat.IDF',0))then; endif
+! if(.not.idfread(e(2),'d:\iMOD-TEST\IMODBATCH_KRIGING\ANI.IDF',0))then; endif
+! if(.not.idfread(e(3),'d:\iMOD-TEST\IMODBATCH_KRIGING\LEN.IDF',0))then; endif
+! iu=utl_getunit(); open(iu,file='d:\iMOD-TEST\IMODBATCH_KRIGING\TEST.ipf',status='old',action='read')
+! read(iu,*) nn
+! read(iu,*) mm
+! do i=1,mm+1; read(iu,*) ; enddo
+! do i=1,nn
+!  read(iu,*,iostat=ios) x,y
+!  if(ios.ne.0)exit
+!  rat=IDFGETXYVAL(e(2),x,y) !-1928.36,2517.28)
+!  dxe=IDFGETXYVAL(e(3),x,y) !-1928.36,2517.28)
+!  dye=dxe*IDFGETXYVAL(e(1),x,y) !-1928.36,2517.28)
+!  CALL UTL_DRAWELLIPSE(x,y,dxe,dye,rat-90.0) !e(2)%x(icol,irow)-90.0)
+! enddo
+! close(iu)
  
  !## imod isg plotting!!!
  CALL IGRPLOTMODE(MODECOPY)
