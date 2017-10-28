@@ -26,6 +26,7 @@ MODULE MOD_KRIGING
 !## ordinary kriging assumes that the mean is constant in the neighborhoud of the estimated point
 USE WINTERACTER
 USE RESOURCE
+USE IMODVAR, ONLY : PI
 USE MOD_IDF_PAR, ONLY : IDFOBJ
 USE MOD_IDF, ONLY : IDFIROWICOL,IDFGETLOC,IDFALLOCATEX,IDFWRITE,IDFCOPY,IDFDEALLOCATEX,IDFGETXYVAL
 USE MOD_UTL, ONLY : UTL_GETUNIT,UTL_IDFSNAPTOGRID,UTL_STDEF,UTL_MESSAGEHANDLE,UTL_WAITMESSAGE,UTL_DIST,ITOS,RTOS, &
@@ -103,15 +104,23 @@ CONTAINS
  IRAT=0; IRAT1=IRAT
  DO IROW=1,IDF%NROW
   DO ICOL=1,IDF%NCOL
+
+! DO IROW=41,41
+!  DO ICOL=118,118
+
    !## skip locations allready filled in
    IF(IDF%X(ICOL,IROW).NE.IDF%NODATA)CYCLE 
+   if(icol.eq.258.and.irow.eq.116)then
+    write(*,*)
+   endif
    CALL IDFGETLOC(IDF,IROW,ICOL,X,Y)
    !## isotropic
    ANI=0.0; RAT=1.0
    IF(PRESENT(ELLIPS))THEN
-    ANI=IDFGETXYVAL(ELLIPS(1),X,Y); ANI=ANI-90.0 !## facing upnorth
+    ANI=IDFGETXYVAL(ELLIPS(1),X,Y) !; ANI=ANI-90.0 !## facing upnorth
     RAT=IDFGETXYVAL(ELLIPS(2),X,Y)
     R  =IDFGETXYVAL(ELLIPS(3),X,Y)
+!   RAT=1.0
    ELSE
     R=RANGE
    ENDIF
@@ -502,14 +511,14 @@ CONTAINS
  ENDDO
  KVAR=SILL-KVAR
  
-! !## save points
+ !## save points
 ! IU=UTL_GETUNIT()
-! CALL OSD_OPEN(IU,FILE='d:\IMOD-MODELS\JURONGISLAND_PHASE_II\DBASE\BOREHOLES\boreholes_v2_extended\PNT.IPF',STATUS='UNKNOWN',ACTION='WRITE')
-! WRITE(IU,'(A)') 'X,Y,Z,GAMMA'; WRITE(IU,*) X,Y,KEST,0.0
+! CALL OSD_OPEN(IU,FILE='d:\iMOD-TEST\IMODBATCH_KRIGING\pospunt.ipf',STATUS='UNKNOWN',ACTION='WRITE')
+! WRITE(IU,'(A)') 'X,Y,Z,GAMMA,id'; WRITE(IU,*) X,Y,KEST,0.0,0
 ! DO I=1,NP
 !  ID=SELID(I)
-!  GAMMA=KRIGING_GETGAMMA(XD(ID),YD(ID),X,Y,USERANGE,C1,C0,KTYPE)
-!  WRITE(IU,*) XD(ID),YD(ID),ZD(ID),GAMMA
+!  GAMMA=KRIGING_GETGAMMA(XCD(ID),YcD(ID),X,Y,USERANGE,C1,C0,KTYPE)
+!  WRITE(IU,*) XCD(ID),YcD(ID),ZD(ID),GAMMA,id
 ! ENDDO
 ! CLOSE(IU)
   
@@ -543,8 +552,8 @@ CONTAINS
  
  KRIGING_DIST=UTL_DIST(X1,Y1,X0,Y0)
 
- !## to far away
- IF(KRIGING_DIST.GE.MAXDIST)RETURN
+ !## to far away (include 1.0*maxdist on edge - for smooth edges)
+ IF(KRIGING_DIST.GT.MAXDIST)RETURN
 
  !## see whether nodata-areas are crossed
  IF(IBLANKOUT.EQ.1)THEN
@@ -564,7 +573,7 @@ CONTAINS
    IF(IROW.NE.0.AND.ICOL.NE.0)THEN
     !## if crossed-idf value is equal nodata increase distance
     IF(IDF%X(ICOL,IROW).EQ.BO_VALUE)THEN 
-     KRIGING_DIST=MAXDIST 
+     KRIGING_DIST=MAXDIST+1.0
      EXIT
     ENDIF
    ENDIF
@@ -573,45 +582,50 @@ CONTAINS
  ENDIF
  
  !## including a fault
- IF(.NOT.ASSOCIATED(IXY))RETURN 
-
- DO J=1,SIZE(IXY) 
-  !## see whether point intersect a fault
-  I1=1; IF(J.GT.1)I1=IXY(J-1); I2=IXY(J)
-  DO I=I1+1,I2
-   X3=XY(I-1,1); Y3=XY(I-1,2)
-   X4=XY(I  ,1); Y4=XY(I  ,2)
-   CALL IGRINTERSECTLINE(X1,Y1,X0,Y0,X3,Y3,X4,Y4,XINTER,YINTER,ISTATUS)
-   !## if line intersect, increase distance as a penalty
-   IF(ISTATUS.EQ.5)THEN
-    KRIGING_DIST=MAXDIST
-    RETURN
-   ENDIF
+ IF(ASSOCIATED(IXY))THEN
+  DO J=1,SIZE(IXY) 
+   !## see whether point intersect a fault
+   I1=1; IF(J.GT.1)I1=IXY(J-1); I2=IXY(J)
+   DO I=I1+1,I2
+    X3=XY(I-1,1); Y3=XY(I-1,2)
+    X4=XY(I  ,1); Y4=XY(I  ,2)
+    CALL IGRINTERSECTLINE(X1,Y1,X0,Y0,X3,Y3,X4,Y4,XINTER,YINTER,ISTATUS)
+    !## if line intersect, increase distance as a penalty
+    IF(ISTATUS.EQ.5)THEN
+     KRIGING_DIST=MAXDIST+1.0
+     RETURN
+    ENDIF
+   ENDDO
   ENDDO
- ENDDO
-
+ ENDIF
+ 
  !## in case of an ellips see if it is inside the current ellips
  IF(RAT.NE.1.0)THEN
-  IF(.NOT.UTL_INSIDEELLIPSE(X0,Y0,MAXDIST,RAT*MAXDIST,ANI,X1,Y1))THEN
-   KRIGING_DIST=MAXDIST
+  IF(.NOT.UTL_INSIDEELLIPSE(X0,Y0,MAXDIST,RAT*MAXDIST,ANI-90.0,X1,Y1))THEN
+   KRIGING_DIST=MAXDIST+1.0
   ELSE
    !## adjust distance for perfect circle
-   DY=(Y0-Y1); DX=(X0-X1); A=ATAN2(DY,DX)
+   DY=(Y0-Y1); DX=(X0-X1) !; A=ATAN2(DY,DX)
+!   DY=(Y1-Y0); DX=(X1-X0) !; A=ATAN2(DY,DX)
 
-!   x1=         cos(a)*dx+        sin(a)*dy
-!   y1=-1.0/rat*sin(a)*dx+1.0/rat*cos(a)*dy
-!   x1=x0+x1
-!   y1=y0+y1
+   A=-(ANI+90.0)/(360.0/(2.0*PI))
+
+   x1=         cos(a)*dx+        sin(a)*dy
+   y1=-1.0/rat*sin(a)*dx+1.0/rat*cos(a)*dy
+   x1=x0+x1
+   y1=y0+y1
    
-   !## get point on ellips for current aspect
-   CALL UTL_POINTELLIPSE(X0,Y0,A,RAT,MAXDIST,ANI,X3,Y3)
-   D=UTL_DIST(X0,Y0,X3,Y3)
-   F=MAXDIST/D
-   KRIGING_DIST=KRIGING_DIST*F
-   !## set temporary new location
-   X1=X0+KRIGING_DIST*COS(A)
-   Y1=Y0-KRIGING_DIST*SIN(A)
-
+!   !## get point on ellips for current aspect
+!   CALL UTL_POINTELLIPSE(X0,Y0,A,RAT,MAXDIST,ANI,X3,Y3)
+!   D=UTL_DIST(X0,Y0,X3,Y3)
+!   F=MAXDIST/D
+!   KRIGING_DIST=KRIGING_DIST*F
+!   !## set temporary new location
+!   X1=X0+KRIGING_DIST*COS(A)
+!   Y1=Y0-KRIGING_DIST*SIN(A)
+  
+!   KRIGING_DIST=UTL_DIST(X1,Y1,X0,Y0)
+  
   ENDIF
  ENDIF
   
