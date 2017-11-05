@@ -1018,7 +1018,7 @@ CONTAINS
  ENDDO
  CALL WDIALOGUNLOAD(); IF(MESSAGE%VALUE1.EQ.IDCANCEL)RETURN
  
- CALL PROFILE_GETLOCATION(X,Y,XPOS,ISEG) 
+ IF(PROFILE_GETLOCATION(X,Y,XPOS,ISEG))THEN; ENDIF
 
  !## check double points, can happen, change label and return
  DO I=1,NXY
@@ -1950,7 +1950,7 @@ CONTAINS
  REAL :: XC,YC,DZ,MINZ,ST
 
  !## transform profile coordinates into xy coordinates
- CALL PROFILE_GETLOCATION(XC,YC,GX)
+ IF(PROFILE_GETLOCATION(XC,YC,GX))THEN; ENDIF
 
  CALL WDIALOGSELECT(ID_DIDFINFO)
  CALL WDIALOGPUTSTRING(IDF_GROUP1,'Current Loc. X='//TRIM(ITOS(INT(XC)))// &
@@ -4709,9 +4709,10 @@ CONTAINS
      WRITE(IU,'(4(A15,A1))')  '   (meter)',CHAR(IDELIM),'   (meter)',CHAR(IDELIM),'   (meter)', &
                                            CHAR(IDELIM),'     (???)'
      DO I=1,SERIE(IIDF)%N
-      CALL PROFILE_GETLOCATION(XC,YC,SERIE(IIDF)%X(I))
-      WRITE(IU,'(3(F15.3,A1),G15.7)') XC,CHAR(IDELIM),YC,CHAR(IDELIM),SERIE(IIDF)%X(I),&
-                                         CHAR(IDELIM),SERIE(IIDF)%Y(I)
+      IF(PROFILE_GETLOCATION(XC,YC,SERIE(IIDF)%X(I)))THEN
+       WRITE(IU,'(3(F15.3,A1),G15.7)') XC,CHAR(IDELIM),YC,CHAR(IDELIM),SERIE(IIDF)%X(I),&
+                                          CHAR(IDELIM),SERIE(IIDF)%Y(I)
+      ENDIF
      ENDDO
     ENDIF
    ENDDO

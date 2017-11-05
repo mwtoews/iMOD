@@ -569,9 +569,9 @@ INTEGER,DIMENSION(4) :: IP
 LOGICAL :: LPLOT,LEX
 CHARACTER(LEN=256) :: FNAME
 
-INTEGER :: iu,ios,nn,mm,irow,icol
-REAL :: dxe,dye,rat,x,y
-TYPE(IDFOBJ),DIMENSION(3) :: E
+!INTEGER :: iu,ios,nn,mm,irow,icol
+!REAL :: dxe,dye,rat,x,y
+!TYPE(IDFOBJ),DIMENSION(3) :: E
 
 CALL WINDOWSELECT(0)
 
@@ -681,22 +681,21 @@ IF(IPLOTFAST.EQ.1)THEN
  CALL IDFPLOT1BITMAP()
  CALL TOPOGENDRAW(0)
 
- if(.not.idfread(e(1),'d:\IMOD-MODELS\SWISS\DBASE_VISP_II\ANI\VERSION_2\ELLIPS_RAT.IDF',1))then; endif
- if(.not.idfread(e(2),'d:\IMOD-MODELS\SWISS\DBASE_VISP_II\ANI\VERSION_2\ELLIPS_ANI.IDF',1))then; endif
- if(.not.idfread(e(3),'d:\IMOD-MODELS\SWISS\DBASE_VISP_II\ANI\VERSION_2\ELLIPS_LEN.IDF',1))then; endif
- call igrlinewidth(1)
- call igrlinetype(0)
- do irow=1,e(1)%nrow,25; do icol=1,e(1)%ncol,25
-  call idfgetloc(e(1),irow,icol,x,y)
-  if(e(1)%x(icol,irow).eq.e(1)%nodata)cycle
-  dxe=e(3)%x(icol,irow)/2.0
-  dye=dxe*e(1)%x(icol,irow)
-  rat=e(2)%x(icol,irow)
-!  CALL UTL_DRAWELLIPSE(x,y,dxe,dye,rat) !e(2)%x(icol,irow)-90.0)
-  !## 90 for ellips drawing
-  CALL UTL_DRAWELLIPSE(x,y,dxe,dye,rat-90.0) !e(2)%x(icol,irow)-90.0)
- enddo; enddo
-
+! if(.not.idfread(e(1),'d:\IMOD-MODELS\SWISS\DBASE_VISP_II\ANI\VERSION_2\ELLIPS_RAT.IDF',1))then; endif
+! if(.not.idfread(e(2),'d:\IMOD-MODELS\SWISS\DBASE_VISP_II\ANI\VERSION_2\ELLIPS_ANI.IDF',1))then; endif
+! if(.not.idfread(e(3),'d:\IMOD-MODELS\SWISS\DBASE_VISP_II\ANI\VERSION_2\ELLIPS_LEN.IDF',1))then; endif
+! call igrlinewidth(1)
+! call igrlinetype(0)
+! do irow=1,e(1)%nrow,25; do icol=1,e(1)%ncol,25
+!  call idfgetloc(e(1),irow,icol,x,y)
+!  if(e(1)%x(icol,irow).eq.e(1)%nodata)cycle
+!  dxe=e(3)%x(icol,irow)/2.0
+!  dye=dxe*e(1)%x(icol,irow)
+!  rat=e(2)%x(icol,irow)
+!  !## 90 for ellips drawing
+!  CALL UTL_DRAWELLIPSE(x,y,dxe,dye,rat-90.0) !e(2)%x(icol,irow)-90.0)
+! enddo; enddo
+!
 ! if(.not.idfread(e(1),'d:\iMOD-TEST\IMODBATCH_KRIGING\rat.IDF',0))then; endif
 ! if(.not.idfread(e(2),'d:\iMOD-TEST\IMODBATCH_KRIGING\ANI.IDF',0))then; endif
 ! if(.not.idfread(e(3),'d:\iMOD-TEST\IMODBATCH_KRIGING\LEN.IDF',0))then; endif
@@ -1949,10 +1948,7 @@ IF(IP(2).NE.0.OR.IP(3).NE.0.OR.IP(4).NE.0)THEN
   ENDIF
  ENDDO; ENDDO
 
-! CALL IGRSELECT(DRAWBITMAP,MPW%IBITMAP)
  CALL IGRPLOTMODE(MODECOPY)
-! CALL IGRAREA(0.0,0.0,1.0,1.0)
-! CALL IGRUNITS(MPW%XMIN,MPW%YMIN,MPW%XMAX,MPW%YMAX)
  CALL IDFPLOT1BITMAP()
  CALL IGRLINEWIDTH(THICKNESS)
 

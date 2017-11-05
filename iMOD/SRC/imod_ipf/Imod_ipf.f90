@@ -469,6 +469,7 @@ CONTAINS
    !## check whether information for current ipf is already in memory
    IF(UTL_CAP(IPF(IIPF)%FNAME,'U').EQ.UTL_CAP(MP(IPLOT)%IDFNAME,'U'))THEN
     CALL WINDOWOUTSTATUSBAR(3,'RF Memory ...')
+!    write(*,*)
    ELSE
     CALL WINDOWOUTSTATUSBAR(3,'RF Disc ...')
     IF(.NOT.IPFREAD(IPLOT,IIPF))THEN
@@ -523,52 +524,36 @@ CONTAINS
  !###======================================================================
  IMPLICIT NONE
  INTEGER :: I
- LOGICAL :: LEX
+ 
+ IF(ALLOCATED(IPF))THEN
+  !## deallocate if not equal
+  IF(SIZE(IPF).NE.NIPF)THEN
+   !## copy nipf since it is set to zero in ipfdeallocate
+   I=NIPF
+   !## deallocate memory
+   IF(ALLOCATED(IPF))CALL IPFDEALLOCATE()
+   NIPF=I
+  ENDIF
+ ENDIF
  
  !## nothing selected to draw, release memory (if available)
- IF(NIPF.LE.0)THEN
-  IF(ALLOCATED(IPF))CALL IPFDEALLOCATE()
- ELSE
-  LEX=.FALSE.
-  IF(ALLOCATED(IPF))THEN
-   IF(SIZE(IPF).LT.NIPF)THEN
-    !## copy nipf since it is set to zero in ipfdeallocate
-    I=NIPF
-    CALL IPFDEALLOCATE()
-    NIPF=I
-    ALLOCATE(IPF(NIPF))
-    !## clean names, for security that the file will be read again!
-    IPF%FNAME=''
-    LEX=.TRUE.
-   ELSE
-    !## release extra memory
-    DO I=NIPF+1,SIZE(IPF)
-     CALL IPFDEALLOCATEIIPF(I)
-     IF(IPF(I)%IU.GT.0)THEN
-      INQUIRE(UNIT=IPF(I)%IU,OPENED=LEX)
-      IF(LEX)CLOSE(IPF(I)%IU)
-     ENDIF
-     IPF(I)%IU=0
-    END DO
-   ENDIF
-  ELSE
-   ALLOCATE(IPF(NIPF))
-   LEX=.TRUE.
-  ENDIF
-  
-  IF(LEX)THEN
-   DO I=1,NIPF
-    NULLIFY(IPF(I)%ATTRIB)
-    NULLIFY(IPF(I)%IP)
-    NULLIFY(IPF(I)%INFO)
-    NULLIFY(IPF(I)%XYZ)
-    NULLIFY(IPF(I)%XYPOS)
-    NULLIFY(IPF(I)%IPOS)
-   ENDDO
-  ENDIF
-  
- ENDIF
+ IF(NIPF.LE.0)RETURN 
+ 
+ IF(.NOT.ALLOCATED(IPF))THEN
+  ALLOCATE(IPF(NIPF))
+  !## clean names, for security that the file will be read again!
+  IPF%FNAME=''
 
+  DO I=1,NIPF
+   NULLIFY(IPF(I)%ATTRIB)
+   NULLIFY(IPF(I)%IP)
+   NULLIFY(IPF(I)%INFO)
+   NULLIFY(IPF(I)%XYZ)
+   NULLIFY(IPF(I)%XYPOS)
+   NULLIFY(IPF(I)%IPOS)
+  ENDDO
+ ENDIF
+ 
  END SUBROUTINE IPFALLOCATE
 
  !###======================================================================
@@ -1452,7 +1437,9 @@ CONTAINS
  ENDIF
 
  IPF(IIPF)%INFO=''
- 
+ IPF(IIPF)%IPOS=INT(0,1)
+ IPF(IIPF)%IP  =INT(0,1)
+  
  IX(1)=IPF(IIPF)%XCOL
  IX(2)=IPF(IIPF)%YCOL
  IX(3)=IPF(IIPF)%ZCOL

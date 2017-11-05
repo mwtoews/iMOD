@@ -30,9 +30,9 @@ CONTAINS
  CHARACTER(LEN=256) :: DIR
  CHARACTER(LEN=256),ALLOCATABLE,DIMENSION(:) :: BMPOUTNAME
 
- !##v41
- CALL WMESSAGEBOX(OKONLY,INFORMATIONICON,COMMONOK,'Oops, this functionality is under construction and not yet available in this release.','Information')
- RETURN
+! !##v41
+! CALL WMESSAGEBOX(OKONLY,INFORMATIONICON,COMMONOK,'Oops, this functionality is under construction and not yet available in this release.','Information')
+! RETURN
 
  !## check whether there is ffmeg available
  L3=.FALSE.; IF(LEN_TRIM(PREFVAL(29)).NE.'')THEN
@@ -340,9 +340,9 @@ CONTAINS
  IMPLICIT NONE
  INTEGER :: N
  
- !##v41
- CALL WMESSAGEBOX(OKONLY,INFORMATIONICON,COMMONOK,'Oops, this functionality is under construction and not yet available in this release.','Information')
- RETURN
+! !##v41
+! CALL WMESSAGEBOX(OKONLY,INFORMATIONICON,COMMONOK,'Oops, this functionality is under construction and not yet available in this release.','Information')
+! RETURN
 
  CALL WINDOWSELECT(0)
  IF(WMENUGETSTATE(ID_MOVIE_PLAY,2).EQ.1)THEN

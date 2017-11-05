@@ -136,7 +136,7 @@ CONTAINS
         TOP(ILL)=BOT(ILL-1)
         IF(ILL.NE.ILL2)BOT(ILL)=TOP(ILL)-MINTHICKNESS
        ENDDO
-       TT =0.0; MT =0.0; ILL1=0
+       TT=0.0; MT=0.0; ILL1=0
       ENDIF
      ENDIF
     ENDIF    
@@ -148,41 +148,61 @@ CONTAINS
   IF(IL2.EQ.NLAY)EXIT
  ENDDO
 
+! DO ILAY=1,NLAY
+!  WRITE(*,'(I3,6F12.4)') ILAY,TOP_BU(ILAY),BOT_BU(ILAY),TOP_BU(ILAY)-BOT_BU(ILAY),TOP(ILAY),BOT(ILAY),TOP(ILAY)-BOT(ILAY)
+! ENDDO
+ 
  !## correct permeabilities for aquifers
  DO ILAY=1,NLAY
 
-  !## current corrected layer
-  T =TOP(ILAY)
-  B =BOT(ILAY)
-  
-  KD=0.0; VC=0.0
-  DO IL=1,NLAY
-   T1=TOP_BU(IL)
-   B1=BOT_BU(IL)
-   D=MIN(T,T1)-MAX(B,B1)
-   !## part of aquifer
-   IF(D.GT.0.0)THEN
-    KD=KD+HK_BU(IL)*D
-    VC=VC+D/(HK_BU(IL)*VA_BU(IL))
-   ENDIF
-   IF(IL.LT.NLAY)THEN
-    T1=BOT_BU(IL)
-    B1=TOP_BU(IL+1)
-    D=MIN(T,T1)-MAX(B,B1)
-    !## part of aquitard
-    IF(D.GT.0.0)THEN
-     KD=KD+VK_BU(IL)*D
-     VC=VC+D/(VK_BU(IL))
-    ENDIF
-   ENDIF
-  ENDDO 
-  !## new parameters
-  HK(ILAY)=KD/(T-B)
-  K=(T-B)/VC
-  IF(ILAY.LT.NLAY)VK(ILAY)=K
-  VA(ILAY)=K/HK(ILAY)
- ENDDO
+!IF(ILAY.EQ.93)THEN
+!WRITE(*,*)
+!ENDIF
 
+  !## current corrected layer
+  T=TOP(ILAY)
+  B=BOT(ILAY)
+  
+  !## if layer thickness, leave it - could be possible most lower layer(s)
+  IF(T-B.LE.0.0)THEN
+
+   HK(ILAY)=0.0
+   VA(ILAY)=0.0
+   IF(ILAY.LT.NLAY)VK(ILAY)=0.0
+
+  ELSE
+    
+   KD=0.0; VC=0.0
+   DO IL=1,NLAY
+    T1=TOP_BU(IL)
+    B1=BOT_BU(IL)
+    D=MIN(T,T1)-MAX(B,B1)
+    !## part of aquifer
+    IF(D.GT.0.0)THEN
+     KD=KD+HK_BU(IL)*D
+     VC=VC+D/(HK_BU(IL)*VA_BU(IL))
+    ENDIF
+    IF(IL.LT.NLAY)THEN
+     T1=BOT_BU(IL)
+     B1=TOP_BU(IL+1)
+     D=MIN(T,T1)-MAX(B,B1)
+     !## part of aquitard
+     IF(D.GT.0.0)THEN
+      KD=KD+VK_BU(IL)*D
+      VC=VC+D/(VK_BU(IL))
+     ENDIF
+    ENDIF
+   ENDDO 
+   !## new parameters
+   HK(ILAY)=KD/(T-B)
+   K=(T-B)/VC
+   IF(ILAY.LT.NLAY)VK(ILAY)=K
+   VA(ILAY)=K/HK(ILAY)
+  
+  ENDIF
+
+ ENDDO
+ 
  !## check before and after
  
  !## get thickness of aquifers
@@ -862,6 +882,13 @@ CONTAINS
     IF(DBL_EDATE.GE.ETIME)EXIT
    ENDIF
   ENDDO
+
+  !## last record probably read, extent extraction up to end of stress-period
+  IF(QQ.NE.0.0.AND.IR.GT.NR)THEN
+   RTIME=DIFFTIME(DBL_SDATE,ETIME)
+   QT=QT+MIN(TTIME,RTIME)*QQ
+  ENDIF
+  
   !## steady-state
   IF(ISS.EQ.1)THEN
    IF(NR.GT.0)QT=QT/REAL(NR)

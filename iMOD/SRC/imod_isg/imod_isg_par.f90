@@ -88,6 +88,13 @@ END TYPE DATOBJ1
 TYPE(DATOBJ1),ALLOCATABLE,DIMENSION(:) :: ISD,ISC,IST,ISQ,DUMISD,DUMISC,DUMIST,DUMISQ
 
 !## type for calculation points
+TYPE ISDOBJSEG
+INTEGER :: ISEG !## segment number
+INTEGER :: ICLC !## calc number
+END TYPE ISDOBJSEG
+TYPE(ISDOBJSEG),DIMENSION(:),ALLOCATABLE :: ISGEDITISD_SEG
+
+!## type for calculation points
 TYPE ISDOBJ
  !## isfr=0
  INTEGER :: IDATE  !## date in yyyymmdd

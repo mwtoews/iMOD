@@ -103,12 +103,13 @@ CONTAINS
  END SUBROUTINE ASC2IDF_IMPORTASC_MAIN
  
  !###======================================================================
- LOGICAL FUNCTION ASC2IDF_IMPORTXYZ_VOXEL(XYZFNAME,OUTPUTDIR,IWINDOW,XC1,YC1,XC2,YC2,CELLSIZE,DZV,TOP,BOT)
+ LOGICAL FUNCTION ASC2IDF_IMPORTXYZ_VOXEL(XYZFNAME,OUTPUTDIR,IWINDOW,XC1,YC1, &
+     XC2,YC2,CELLSIZE,DZV,TOP,BOT,MULT)
  !###======================================================================
  IMPLICIT NONE
  CHARACTER(LEN=*),INTENT(IN) :: XYZFNAME,OUTPUTDIR
  INTEGER,INTENT(IN) :: IWINDOW
- REAL,INTENT(IN) :: XC1,XC2,YC1,YC2,CELLSIZE,DZV
+ REAL,INTENT(IN) :: XC1,XC2,YC1,YC2,CELLSIZE,DZV,MULT
  TYPE(IDFOBJ),INTENT(INOUT) :: TOP,BOT
  REAL :: X,Y,Z,P,X1,X2,Y1,Y2,Z1,Z2,P1,P2,DZ,ZCOR,MZ,FZ,MDZ
  INTEGER :: IOS,I,J,N,IU,II,III,J1,J2,IROW,ICOL,IL,M,NN,ILOOP,JL,MN
@@ -274,9 +275,13 @@ CONTAINS
    !## write current voxel - given depth is bottom
    IDF%X=IDF%NODATA; IDFC%X=IDFC%NODATA; M=0
    DO I=1,N
-    X=XYZP(I,1); Y=XYZP(I,2); P=XYZP(I,4)
+    X=XYZP(I,1); Y=XYZP(I,2); P=XYZP(I,4)*MULT
     CALL IDFIROWICOL(IDF,IROW,ICOL,X,Y) 
-   
+
+    if(icol.eq.62.and.irow.eq.11)then
+    write(*,*)
+    endif
+    
     !## vertical offset computed from bottom
     Z2=BOT%X(ICOL,IROW)
     Z2=Z2+(IL-1)*DZ
@@ -1229,8 +1234,10 @@ CONTAINS
      !## uniform thickness
      ELSEIF(ASSF_IDEPTH.EQ.1)THEN
       !## depth in centimeters
-      STIME=ASSF_TOP*100 
-      ETIME=ASSF_BOT*100 
+!       STIME=ASSF_TOP*100 
+!       ETIME=ASSF_BOT*100 
+      STIME=(ASSF_TOP+ASSF_ZPLUS)*100
+      ETIME=(ASSF_BOT+ASSF_ZPLUS)*100 
       LT=.TRUE.; LB=.TRUE.
      !## spatial thickness
      ELSEIF(ASSF_IDEPTH.EQ.2)THEN
