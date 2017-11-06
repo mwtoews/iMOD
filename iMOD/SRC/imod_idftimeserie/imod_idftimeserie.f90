@@ -2061,30 +2061,43 @@ CONTAINS
  LOGICAL,INTENT(IN) :: LRESET
  LOGICAL :: LEX
  INTEGER :: I
+ REAL :: X2
  
  !## continuous
  IF(ISTYLE.EQ.1)THEN
-  LEX=.FALSE.
+  LEX=.FALSE.; X2=-HUGE(1.0)
   DO I=1,N
    IF(Y(I).NE.NODATA)THEN
-    IF(.NOT.LEX)CALL IGRMOVETO(X(I),Y(I))
-    IF(LEX)CALL IGRLINETO(X(I),Y(I))
-    LEX=.TRUE.
+    IF(X(I).GT.X2)THEN
+     IF(.NOT.LEX)CALL IGRMOVETO(X(I),Y(I))
+     IF(LEX)CALL IGRLINETO(X(I),Y(I))
+     LEX=.TRUE.
+    ELSE
+     !## stop if times are not sequentially
+     EXIT
+    ENDIF
    ELSE
     IF(LRESET)LEX=.FALSE.
    ENDIF
+   X2=X(I)
   END DO
  !## blockline
  ELSEIF(ISTYLE.EQ.2)THEN
-  LEX=.FALSE.
+  LEX=.FALSE.; X2=-HUGE(1.0)
   DO I=1,N
    IF(Y(I).NE.NODATA)THEN
-    IF(.NOT.LEX)CALL IGRMOVETO(X(I),Y(I))
-    IF(LEX)THEN; CALL IGRLINETO(X(I),Y(I-1)); CALL IGRLINETO(X(I),Y(I)); ENDIF
-    LEX=.TRUE.
+    IF(X(I).GT.X2)THEN
+     IF(.NOT.LEX)CALL IGRMOVETO(X(I),Y(I))
+     IF(LEX)THEN; CALL IGRLINETO(X(I),Y(I-1)); CALL IGRLINETO(X(I),Y(I)); ENDIF
+     LEX=.TRUE.
+    ELSE
+     !## stop if times are not sequentially
+     EXIT
+    ENDIF
    ELSE
     IF(LRESET)LEX=.FALSE.
    ENDIF
+   X2=X(I)
   ENDDO
  ENDIF
  
