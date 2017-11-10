@@ -2395,7 +2395,9 @@ CONTAINS
 
  !## default=wit!
  UTL_IDFGETCLASS=WRGB(255,255,255)
-
+ !## NaN
+ IF(GRD.NE.GRD)RETURN
+ 
  CALL POL1LOCATE(LEG%CLASS,LEG%NCLR,REAL(GRD,8),I)
  !## correct if equal to top-class boundary
  IF(I.GT.0.AND.I.LE.MXCLR)THEN
