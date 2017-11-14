@@ -1735,6 +1735,13 @@ END SUBROUTINE IMOD_UTL_QKSORT
     IF(DBL_EDATE.GE.ETIME)EXIT
    ENDIF
   ENDDO
+
+  !## last record probably read, extent extraction up to end of stress-period
+  IF(QQ.NE.0.0.AND.IR.GT.NR)THEN
+   RTIME=UTL_DIFFTIME(DBL_SDATE,ETIME)
+   QT=QT+MIN(TTIME,RTIME)*QQ
+  ENDIF
+  
   !## steady-state
   IF(ISS.EQ.1)THEN
    IF(NR.GT.0)QT=QT/REAL(NR)

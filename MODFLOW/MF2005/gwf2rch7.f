@@ -226,9 +226,10 @@ C4------MULTIPLY RECHARGE RATE BY CELL AREA TO GET VOLUMETRIC RATE.
         DO 50 IC=1,NCOL
         RECH(IC,IR)=RECH(IC,IR)*DELR(IC)*DELC(IR)
    50   CONTINUE
-      END IF
 
-      call pest1alpha_grid('RE',rech,nrow,ncol,1,iout)                 ! IPEST
+        call pest1alpha_grid('RE',rech,nrow,ncol,1,iout)                 ! IPEST
+
+      END IF
 
 C
 C5------IF NRCHOP=2 THEN A LAYER INDICATOR ARRAY IS NEEDED.  TEST INIRCH

@@ -1563,7 +1563,9 @@ IF(NSCL.EQ.0)THEN
  XMAX=IDF%XMAX
  YMIN=IDF%YMIN
  YMAX=IDF%YMAX
-
+ NCOL=IDF%NCOL
+ NROW=IDF%NROW
+ 
 ELSE
 
  !## evaluate simulationbox first
