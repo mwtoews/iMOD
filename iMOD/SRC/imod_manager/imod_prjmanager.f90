@@ -3854,29 +3854,29 @@ TOPICLOOP: DO ITOPIC=1,MAXTOPICS
  
  ENDIF
  
- !## apply consistency check constant head and top/bot - only whenever CHD is not active
- IF(.NOT.LCHD)THEN
-  DO IROW=1,IDF%NROW; DO ICOL=1,IDF%NCOL; DO ILAY=1,NLAY
-   IF(BND(ILAY)%X(ICOL,IROW).LT.0)THEN
-
-    !## head is in within current layer
-    IF(SHD(ILAY)%X(ICOL,IROW).GT.BOT(ILAY)%X(ICOL,IROW))CYCLE
-
-    !## constant head cell dry - becomes active node - shift to an appropriate model layer where the head is actually in
-    DO JLAY=ILAY,NLAY
-     IF(SHD(ILAY)%X(ICOL,IROW).LE.BOT(JLAY)%X(ICOL,IROW))THEN
-      BND(JLAY)%X(ICOL,IROW)=1
-      SHD(JLAY)%X(ICOL,IROW)=SHD(ILAY)%X(ICOL,IROW)
-     ELSE
-      BND(JLAY)%X(ICOL,IROW)=-99
-      SHD(JLAY)%X(ICOL,IROW)=SHD(ILAY)%X(ICOL,IROW)
-      !## exit
-      EXIT
-     ENDIF
-    ENDDO
-   ENDIF
-  ENDDO; ENDDO; ENDDO
- ENDIF
+! !## apply consistency check constant head and top/bot - only whenever CHD is not active
+! IF(.NOT.LCHD)THEN
+!  DO IROW=1,IDF%NROW; DO ICOL=1,IDF%NCOL; DO ILAY=1,NLAY
+!   IF(BND(ILAY)%X(ICOL,IROW).LT.0)THEN
+!
+!    !## head is in within current layer
+!    IF(SHD(ILAY)%X(ICOL,IROW).GT.BOT(ILAY)%X(ICOL,IROW))CYCLE
+!
+!    !## constant head cell dry - becomes active node - shift to an appropriate model layer where the head is actually in
+!    DO JLAY=ILAY,NLAY
+!     IF(SHD(ILAY)%X(ICOL,IROW).LE.BOT(JLAY)%X(ICOL,IROW))THEN
+!      BND(JLAY)%X(ICOL,IROW)=1
+!      SHD(JLAY)%X(ICOL,IROW)=SHD(ILAY)%X(ICOL,IROW)
+!     ELSE
+!      BND(JLAY)%X(ICOL,IROW)=-99
+!      SHD(JLAY)%X(ICOL,IROW)=SHD(ILAY)%X(ICOL,IROW)
+!      !## exit
+!      EXIT
+!     ENDIF
+!    ENDDO
+!   ENDIF
+!  ENDDO; ENDDO; ENDDO
+! ENDIF
  
  !## if unconfined modify (nodata) head for dry cells, check from bottom to top
  DO IROW=1,IDF%NROW; DO ICOL=1,IDF%NCOL; DO ILAY=NLAY-1,1,-1
@@ -3916,12 +3916,6 @@ TOPICLOOP: DO ITOPIC=1,MAXTOPICS
    END IF
   END IF
  ENDDO; ENDDO; ENDDO
- 
-! !## clean corners
-! DO ILAY=1,NLAY; BND(ILAY)%X(1       ,1       )=0; ENDDO
-! DO ILAY=1,NLAY; BND(ILAY)%X(IDF%NCOL,1       )=0; ENDDO
-! DO ILAY=1,NLAY; BND(ILAY)%X(1       ,IDF%NROW)=0; ENDDO
-! DO ILAY=1,NLAY; BND(ILAY)%X(IDF%NCOL,IDF%NROW)=0; ENDDO
 
  END SUBROUTINE PMANAGER_SAVEMF2005_CONSISTENCY
  
