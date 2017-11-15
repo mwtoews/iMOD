@@ -754,11 +754,10 @@ END SUBROUTINE
  CHARACTER(LEN=*),INTENT(IN) :: FNAME
  CHARACTER(LEN=*),INTENT(IN) :: FNAME2
  INTEGER :: IU,JU,I,IOS,IC1,IC2,IR1,IR2,SNROW,SNCOL
-
  CHARACTER(LEN=256) :: S, S1, S2
  
  I=INDEX(FNAME,'\',.TRUE.)
-
+ 
  IU=GETUNIT(); OPEN(IU,FILE=FNAME,STATUS='OLD',ACTION='READ')
  JU=GETUNIT(); OPEN(JU,FILE=FNAME2,STATUS='REPLACE',ACTION='WRITE')
  DO
@@ -773,7 +772,10 @@ END SUBROUTINE
     CALL IMOD_UTL_REL_TO_ABS(ROOT%RUNFILEROOT,S2) 
     LINE = LINE(1:I)//' "'//TRIM(S2)//'"'
   END IF
-  WRITE(JU,'(A)') TRIM(LINE)
+  !## do not copy simgro_opt settings if existing
+  IF(INDEX(TRIM(S),'simgro_opt').EQ.0)THEN
+   WRITE(JU,'(A)') TRIM(LINE)
+  ENDIF
  ENDDO
 
 ! CLOSE(IU); CLOSE(JU)
@@ -849,6 +851,7 @@ END SUBROUTINE
  WRITE(JU,'(A)') '*'
  WRITE(JU,'(A)') '*  Parameters for IDF output'
  WRITE(JU,'(A)') '*'
+ WRITE(JU,'(A)') '      simgro_opt             =      1    ! simgro output file'
  WRITE(JU,'(A)') '      idf_per                =      1    ! Writing IDF files'
  LINE='      idf_xmin                =      '//TRIM(IMOD_UTL_RTOS(USEBOX(1),'F',2))
  WRITE(JU,'(A)') TRIM(LINE)
