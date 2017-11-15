@@ -18,9 +18,9 @@ CONTAINS
  CHARACTER(LEN=256) :: LINE,FNAME
  DOUBLE PRECISION,DIMENSION(:,:),ALLOCATABLE :: X,Y,Z
   
-! !##v41
-! CALL WMESSAGEBOX(OKONLY,INFORMATIONICON,COMMONOK,'Oops, this functionality is under construction and not yet available in this release.','Information')
-! RETURN
+ !##v41
+ CALL WMESSAGEBOX(OKONLY,INFORMATIONICON,COMMONOK,'Oops, this functionality is under construction and not yet available in this release.','Information')
+ RETURN
 
  IF(.NOT.UTL_WSELECTFILE('Load ASC File (*.asc)|*.asc|',&
                   LOADDIALOG+PROMPTON+DIRCHANGE+APPENDEXT,FNAME,&
@@ -126,9 +126,9 @@ CONTAINS
  INTEGER :: I,II,J,I1,I2,N,IU,JU,NLC,IOS
  CHARACTER(LEN=MAXLEN) :: CL1,CL2,CL
 
-! !##v41
-! CALL WMESSAGEBOX(OKONLY,INFORMATIONICON,COMMONOK,'Oops, this functionality is under construction and not yet available in this release.','Information')
-! RETURN
+ !##v41
+ CALL WMESSAGEBOX(OKONLY,INFORMATIONICON,COMMONOK,'Oops, this functionality is under construction and not yet available in this release.','Information')
+ RETURN
 
  IF(IBATCH.EQ.0)THEN     
   IF(.NOT.UTL_DATA_CSV((/'Name        ','X Coordinate','Y Coordinate', &

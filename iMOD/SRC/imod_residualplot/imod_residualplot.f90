@@ -550,7 +550,7 @@ CONTAINS
  
  !## put textblock on plotting area
  CALL WGRTEXTFONT(FFHELVETICA,ISTYLE=0,WIDTH=0.01,HEIGHT=0.03)
- CALL WGRTEXTBLOCK(0.75,0.0,1.0,0.05,'(c) Powered by iMOD '//TRIM(RVERSION)//', 2017')
+ CALL WGRTEXTBLOCK(0.75,0.0,1.0,0.05,'(c) Powered by iMOD '//TRIM(RVERSION_EXE)//', 2017')
   
  !## scatterplot
  IF(IPLOT.EQ.1)THEN

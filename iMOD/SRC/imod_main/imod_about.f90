@@ -454,8 +454,8 @@ NEWLINE// &
 'This iMOD Software License Agreement contains the following executables (<xx>: bugfix-versionnumber):'// &
 NEWLINE// &
 NEWLINE// &
-'- The iMOD Graphical User Interface (iMOD-GUI): iMOD_'//TRIM(RVERSION)//'_X32R.exe and i'// &
-'MOD_'//TRIM(RVERSION)//'_X64R.exe:'//NEWLINE// &
+'- The iMOD Graphical User Interface (iMOD-GUI): iMOD_'//TRIM(RVERSION_EXE)//'_X32R.exe and i'// &
+'MOD_'//TRIM(RVERSION_EXE)//'_X64R.exe:'//NEWLINE// &
 'A computer program to perform a variety of graphical visualizations of M'// &
 'odel Configurations and/or (in)directly related geographical information'// &
 '. The iMOD GUI itself if fully written in Fortran9x and compiled by the '// &
@@ -463,8 +463,8 @@ NEWLINE// &
 ' Winteracter 10 (Interactive Software Services Ltd (ISS)).'//NEWLINE// &
 NEWLINE// &
 '- The MODFLOW computational core (iMODFLOW):'//NEWLINE// &
-'iMODFLOW_'//TRIM(RVERSION)//'_X32R.exe and'//NEWLINE// &
-'iMODFLOW_'//TRIM(RVERSION)//'_METASWAP_SVN1047_X64R.exe:'//NEWLINE// &
+'iMODFLOW_'//TRIM(RVERSION_EXE)//'_X32R.exe and'//NEWLINE// &
+'iMODFLOW_'//TRIM(RVERSION_EXE)//'_METASWAP_SVN1233_X64R.exe:'//NEWLINE// &
 NEWLINE// &
 'iMODFLOW is partly based on the USGS MODFLOW2005 s'// &
 'ource code; for iMOD the USGS MODFLOW2005 source code has been expanded '// &

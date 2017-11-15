@@ -5680,9 +5680,9 @@ CONTAINS
  !## check whether the function need to be used for plotting purposes
  IF(UTL_READINITFILE('CSVFNAME',LINE,IU,1))THEN
   
-!  !#v41
-!  WRITE(*,'(/A/)') 'Oops, this functionality is under construction and not yet available in this release.'
-!  STOP
+  !#v41
+  WRITE(*,'(/A/)') 'Oops, this functionality is under construction and not yet available in this release.'
+  STOP
 
   READ(LINE,*) FNAME; WRITE(*,'(A)') 'CSVFNAME='//TRIM(FNAME)
   !## imod need to read the csv first to continue
@@ -6126,11 +6126,11 @@ CONTAINS
  !## upscaling
  IF(SCLTYPE_UP.GT.0)THEN
   SELECT CASE (SCLTYPE_UP)
-   CASE (8)
+   CASE (9)
     IF(.NOT.UTL_READINITFILE('PERCENTILE',LINE,IU,0))RETURN
     READ(LINE,*) SFCT  !## <>1.0
     WRITE(*,'(A,F10.2)') 'SFCT=',SFCT
-   CASE (1,3,4,5,6,9)
+   CASE (1,3,4,5,6,8)
     IF(UTL_READINITFILE('WEIGHFACTOR',LINE,IU,1))READ(LINE,*) SFCT  !## <>1.0
     WRITE(*,'(A,F10.2)') 'SFCT=',SFCT
    CASE (14)

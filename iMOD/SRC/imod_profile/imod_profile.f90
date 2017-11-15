@@ -2533,7 +2533,7 @@ CONTAINS
  INTEGER,INTENT(IN) :: IWINID
  INTEGER :: IIDF,I,J,ICLR
  LOGICAL :: LEX
- REAL :: RADX,X,Y,Z1,Z2,X1,X2
+ REAL :: RADX,X,Y,Z,Z1,Z2,X1,X2,X3,X4,Y1,Y2,Y3,Y4,XX1,XX2,YY1,YY2
 
  IF(MXNIDF.LE.0)RETURN
 
@@ -2565,26 +2565,67 @@ CONTAINS
     !## lines
     IF(IBLOCKFILLS.EQ.0)THEN
 
-     J=0
-     DO I=1,SERIE(IIDF)%N 
-      IF(SERIE(IIDF)%Y(I).EQ.PROFIDF(IIDF)%IDF%NODATA)J=0
-      IF(SERIE(IIDF)%Y(I).NE.PROFIDF(IIDF)%IDF%NODATA)THEN
-       J=J+1
-       IF(J.GE.2)THEN
-        
-        !## average top
-        Z1=0.5*(SERIE(IIDF-1)%Y(I-1)+SERIE(IIDF-1)%Y(I))
-        !## average bottom
-        Z2=0.5*(SERIE(IIDF+1)%Y(I-1)+SERIE(IIDF+1)%Y(I))
-        !## average value
-        X= 0.5*(SERIE(IIDF)  %Y(I-1)+SERIE(IIDF)%Y(I))
-        !## devide by thickness if iprf(6).eq.1
-        Y=PROFILE_BITMAPIDF_CLR_Y(Z1,X,Z2,IPRF(6))
-        !## get colour of serie()%y()
-        ICLR=UTL_IDFGETCLASS(PROFIDF(IIDF)%LEG,Y); CALL IGRCOLOURN(ICLR)
-        CALL IGRPOLYGONCOMPLEX((/SERIE(IIDF-1)%X(I-1),SERIE(IIDF-1)%X(I),SERIE(IIDF+1)%X(I),SERIE(IIDF+1)%X(I-1)/), &
-                               (/SERIE(IIDF-1)%Y(I-1),SERIE(IIDF-1)%Y(I),SERIE(IIDF+1)%Y(I),SERIE(IIDF+1)%Y(I-1)/),4)
+     DO I=2,SERIE(IIDF)%N 
+
+      IF(SERIE(IIDF-1)%Y(I-1).NE.PROFIDF(IIDF-1)%IDF%NODATA.AND. &
+         SERIE(IIDF-1)%Y(I)  .NE.PROFIDF(IIDF-1)%IDF%NODATA.AND. &
+         SERIE(IIDF+1)%Y(I-1).NE.PROFIDF(IIDF+1)%IDF%NODATA.AND. &
+         SERIE(IIDF+1)%Y(I)  .NE.PROFIDF(IIDF+1)%IDF%NODATA.AND. &
+        (SERIE(IIDF  )%Y(I-1).NE.PROFIDF(IIDF)%IDF%NODATA.OR. &
+         SERIE(IIDF  )%Y(I)  .NE.PROFIDF(IIDF)%IDF%NODATA))THEN
+
+       X1=SERIE(IIDF-1)%X(I-1)
+       X2=SERIE(IIDF-1)%X(I  )
+       X3=SERIE(IIDF+1)%X(I  )
+       X4=SERIE(IIDF+1)%X(I-1)
+
+       Y1=SERIE(IIDF-1)%Y(I-1)
+       Y2=SERIE(IIDF-1)%Y(I  )
+       Y3=SERIE(IIDF+1)%Y(I  )
+       Y4=SERIE(IIDF+1)%Y(I-1)
+
+       Z1=SERIE(IIDF)%Y(I-1)
+       Z2=SERIE(IIDF)%Y(I  )
+
+       IF(Z1.NE.PROFIDF(IIDF)%IDF%NODATA.AND.Z2.NE.PROFIDF(IIDF)%IDF%NODATA)THEN
+        !## split
+        IF(Z1.NE.Z2)THEN
+         YY1=0.5*(Y1+Y2)
+         YY2=0.5*(Y3+Y4)
+         XX1=0.5*(X1+X2)
+         XX2=0.5*(X3+X4)
+         !## devide by thickness if iprf(6).eq.1
+         Z=Z1
+         Y=PROFILE_BITMAPIDF_CLR_Y(Z1,Z,Z2,IPRF(6))
+         !## get colour of serie()%y()
+         ICLR=UTL_IDFGETCLASS(PROFIDF(IIDF)%LEG,Y); CALL IGRCOLOURN(ICLR)
+         CALL IGRPOLYGONCOMPLEX((/X1,XX2,XX2,X4/),(/Y1,YY1,YY2,Y4/),4)
+         Z =Z2
+         X1=XX1
+         X4=XX1
+         Y1=YY1
+         Y4=YY2
+        ELSE
+         Z =Z1
+        ENDIF               
+       ELSEIF(Z1.EQ.PROFIDF(IIDF)%IDF%NODATA)THEN
+        X1=X1+(X2-X1)/2.0
+        X4=X4+(X4-X3)/2.0
+        Z =Z2
+       ELSE
+        X2=X2-(X2-X1)/2.0
+        X3=X3-(X3-X4)/2.0
+        Z =Z1
        ENDIF
+
+       !## devide by thickness if iprf(6).eq.1
+       Y=PROFILE_BITMAPIDF_CLR_Y(Z1,Z,Z2,IPRF(6))
+       !## get colour of serie()%y()
+       ICLR=UTL_IDFGETCLASS(PROFIDF(IIDF)%LEG,Y); CALL IGRCOLOURN(ICLR)
+       CALL IGRPOLYGONCOMPLEX((/X1,X2,X3,X4/),(/Y1,Y2,Y3,Y4/),4)
+!        CALL IGRPOLYGONCOMPLEX((/SERIE(IIDF-1)%X(I-1),SERIE(IIDF-1)%X(I),SERIE(IIDF+1)%X(I),SERIE(IIDF+1)%X(I-1)/), &
+!                               (/SERIE(IIDF-1)%Y(I-1),SERIE(IIDF-1)%Y(I),SERIE(IIDF+1)%Y(I),SERIE(IIDF+1)%Y(I-1)/),4)
+
       ENDIF
      ENDDO
     
@@ -2592,8 +2633,9 @@ CONTAINS
     ELSE
 
      DO I=1,SERIE(IIDF)%N     
-      IF(SERIE(IIDF-1)%Y(I).NE.PROFIDF(IIDF-1)%IDF%NODATA.AND.   &
-         SERIE(IIDF+1)%Y(I).NE.PROFIDF(IIDF+1)%IDF%NODATA)THEN
+      IF(SERIE(IIDF-1)%Y(I).NE.PROFIDF(IIDF-1)%IDF%NODATA.AND. &
+         SERIE(IIDF+1)%Y(I).NE.PROFIDF(IIDF+1)%IDF%NODATA.AND. &
+         SERIE(IIDF  )%Y(I).NE.PROFIDF(IIDF)%IDF%NODATA)THEN
 
        Y=PROFILE_BITMAPIDF_CLR_Y(SERIE(IIDF-1)%Y(I),SERIE(IIDF)%Y(I),SERIE(IIDF+1)%Y(I),IPRF(6))
        !## get colour of serie()%y()
@@ -4228,6 +4270,9 @@ CONTAINS
 
  !## fill in data
  DO I=1,SIZE(SERIE)
+
+  CALL UTL_FILLARRAY(IPRF,7,PROFIDF(I)%PRFTYPE)
+
   X1=SERIE(I)%X(1); X2=SERIE(I)%X(2)
   J=1; K=2
   DO
@@ -4235,8 +4280,15 @@ CONTAINS
    IF(X1.LE.XT(J).AND.X2.GE.XT(J+1))THEN
     IF(SERIE(I)%Y(K-1).NE.PROFIDF(I)%IDF%NODATA.AND. &
        SERIE(I)%Y(K)  .NE.PROFIDF(I)%IDF%NODATA)THEN
-     F=(XT(J)-X1)/(X2-X1)
-     Z=SERIE(I)%Y(K-1)+F*(SERIE(I)%Y(K)-SERIE(I)%Y(K-1))
+     !## get value for colouring
+     IF(IPRF(5).EQ.1)THEN
+!      F=(XT(J)-X1)/(X2-X1)
+      Z=SERIE(I)%Y(K-1) !+F*(SERIE(I)%Y(K)-SERIE(I)%Y(K-1))
+     !## interpolate top/bot
+     ELSE
+      F=(XT(J)-X1)/(X2-X1)
+      Z=SERIE(I)%Y(K-1)+F*(SERIE(I)%Y(K)-SERIE(I)%Y(K-1))
+     ENDIF
     ELSE
      Z=PROFIDF(I)%IDF%NODATA
     ENDIF
