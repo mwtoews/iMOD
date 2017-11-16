@@ -851,7 +851,7 @@ END SUBROUTINE
  WRITE(JU,'(A)') '*'
  WRITE(JU,'(A)') '*  Parameters for IDF output'
  WRITE(JU,'(A)') '*'
- WRITE(JU,'(A)') '      simgro_opt             =      1    ! simgro output file'
+ WRITE(JU,'(A)') '      simgro_opt             =     -1    ! simgro output file'
  WRITE(JU,'(A)') '      idf_per                =      1    ! Writing IDF files'
  LINE='      idf_xmin                =      '//TRIM(IMOD_UTL_RTOS(USEBOX(1),'F',2))
  WRITE(JU,'(A)') TRIM(LINE)
