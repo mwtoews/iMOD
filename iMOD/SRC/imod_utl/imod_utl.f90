@@ -62,6 +62,58 @@ INTEGER :: NSX,NSY
 CONTAINS
 
  !###======================================================================
+ SUBROUTINE UTL_TIMING(IBDT,IEDT,ELSEC)
+ !###======================================================================
+ IMPLICIT NONE
+ INTEGER, DIMENSION(8), INTENT(IN) :: IBDT,IEDT
+ REAL, INTENT(OUT) :: ELSEC
+ INTEGER, PARAMETER :: NSPD = 86400  
+ INTEGER, DIMENSION(12) :: IDPM(12)
+ DATA IDPM/31,28,31,30,31,30,31,31,30,31,30,31/ ! DAYS PER MONTH  
+ INTEGER :: NDAYS, LEAP, IBD, IED, MB, ME, MM, MC, M, NM
+  
+ !## calculate elapsed time in days and seconds
+ NDAYS=0
+ LEAP=0
+ IF (MOD(IEDT(1),4).EQ.0) LEAP = 1
+ IBD = IBDT(3)            ! begin day
+ IED = IEDT(3)            ! end day
+!   find days
+ IF (IBDT(2).NE.IEDT(2)) THEN
+!     months differ
+  MB = IBDT(2)             ! begin month
+  ME = IEDT(2)             ! end month
+  NM = ME-MB+1             ! number of months to look at
+  IF (MB.GT.ME) NM = NM+12
+   MC=MB-1
+   DO 10 M=1,NM
+    MC=MC+1                ! MC IS CURRENT MONTH
+    IF (MC.EQ.13) MC = 1
+    IF (MC.EQ.MB) THEN
+     NDAYS = NDAYS+IDPM(MC)-IBD
+     IF (MC.EQ.2) NDAYS = NDAYS + LEAP
+    ELSEIF (MC.EQ.ME) THEN
+     NDAYS = NDAYS+IED
+    ELSE
+     NDAYS = NDAYS+IDPM(MC)
+     IF (MC.EQ.2) NDAYS = NDAYS + LEAP
+    ENDIF
+10   CONTINUE
+  ELSEIF (IBD.LT.IED) THEN
+!     start and end in same month, only account for days
+   NDAYS = IED-IBD
+  ENDIF
+   ELSEC=NDAYS*NSPD
+!
+  !## add or subtract seconds
+  ELSEC = ELSEC+(IEDT(5)-IBDT(5))*3600.0
+  ELSEC = ELSEC+(IEDT(6)-IBDT(6))*60.0
+  ELSEC = ELSEC+(IEDT(7)-IBDT(7))
+  ELSEC = ELSEC+(IEDT(8)-IBDT(8))*0.001      
+
+  END SUBROUTINE UTL_TIMING
+  
+ !###======================================================================
  SUBROUTINE UTL_MINTHICKNESS(TOP,BOT,HK,VK,VA, &
            TOP_BU,BOT_BU,HK_BU,VK_BU,VA_BU,BND,TH,MINTHICKNESS)
  !###======================================================================

@@ -60,41 +60,6 @@ CONTAINS
  IF(COND_DRN.GT.0.0)INFF=COND_INF/COND_DRN
  
  ISG_UTL_LEAKAGE=COND_DRN/CD
- 
-!  IF(C1.GT.0.0)THEN
-!   C1 =DXY/C1                                    !## resistance of aquitard (1/day -> day)
-!   IF(ISFT.EQ.1)THEN
-!    D  =SFT(ICOL,IROW,1)                         !## thickness of aquifer
-!    KH =SFT(ICOL,IROW,2)                         !## permeability
-!   ELSE
-!    D = BOTM(ICOL,IROW,LBOTM(ILAY)-1)-BOTM(ICOL,IROW,LBOTM(ILAY)) !## thickness of aquifer
-!    KH =KDSV(ICOL,IROW,ILAY)/(D+TINY)              !## permeability
-!   KH =CC(ICOL,IROW,ILAY)/(D+TINY)              !## permeability
-!   ENDIF
-!   KV =KH/10.0                                   !## vertical permeability 
-
-!   IF(KH.LE.0.0)CALL IMOD_UTL_PRINTTEXT('Error KH='//TRIM(IMOD_UTL_RTOS(KH,'F',7)),0)
-!   IF(D .LE.0.0)CALL IMOD_UTL_PRINTTEXT('Error D ='//TRIM(IMOD_UTL_RTOS(D ,'F',7)),0)
-
-!   !## process formulae van de Lange - infiltratie weerstand
-!   COND_IN=0.0; IF(FCT.GT.0.0.AND.FCT.LE.1.0)COND_IN=ISG_UTL_LEAKAGE_Y(DXY,D,KV,KH,C1,LI,BIN,C0/FCT)
-!   !## process formulae van de Lange - drainage weerstand
-!   ISGLIST(I,5)=ISG_UTL_LEAKAGE_Y(DXY,D,KV,KH,C1,LI,BIN,C0)
-!   !## infiltration factor
-!   ISGLIST(I,7)=FCT; IF(ISGLIST(I,5).GT.0.0)ISGLIST(I,7)=COND_IN/ISGLIST(I,5)
-
-!   IF(ISGLIST(I,7).GT.1.0.OR.ISGLIST(I,7).LT.0.0)THEN
-!    CALL IMOD_UTL_PRINTTEXT('Error C0/FCT    ='//TRIM(IMOD_UTL_RTOS(C0/FCT,'F',7)),0)
-!    CALL IMOD_UTL_PRINTTEXT('Error COND_INF  ='//TRIM(IMOD_UTL_RTOS(COND_IN,'F',7)),0)
-!    CALL IMOD_UTL_PRINTTEXT('Error C0        ='//TRIM(IMOD_UTL_RTOS(C0,'F',7)),0)
-!    CALL IMOD_UTL_PRINTTEXT('Error COND_DRN  ='//TRIM(IMOD_UTL_RTOS(ISGLIST(NISG,5),'F',7)),0)
-!    CALL IMOD_UTL_PRINTTEXT('Error Inf.Factor='//TRIM(IMOD_UTL_RTOS(ISGLIST(NISG,7),'F',7)),0)
-!   ENDIF
-!  ELSE
-!   ISGLIST(I,5)=0.0
-!  ENDIF
-
-! END DO
 
  END FUNCTION ISG_UTL_LEAKAGE
 

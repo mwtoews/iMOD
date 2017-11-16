@@ -498,6 +498,12 @@
 		<File RelativePath="..\..\SRC\imod_wbal\imod_wbal_graphics.f90"/>
 		<File RelativePath="..\..\..\iMOD\SRC\imod_wbal\imod_wbal_par.f90"/>
 		<File RelativePath="..\..\SRC\imod_wbal\imod_wbal_utl.f90"/></Filter>
+		<Filter Name="imod_udf">
+		<File RelativePath="..\..\SRC\imod_udf\imod_udf_bench.f90"/>
+		<File RelativePath="..\..\SRC\imod_udf\imod_udf_geometry.f90"/>
+		<File RelativePath="..\..\SRC\imod_udf\imod_udf_gmshio.f90"/>
+		<File RelativePath="..\..\SRC\imod_udf\imod_udf_kdtree2.f90"/>
+		<File RelativePath="..\..\SRC\imod_udf\imod_udf_utl.f90"/></Filter>
 		<Filter Name="programs">
 		<File RelativePath="..\..\..\iMOD\SRC\imod_main\imod_prg.f90">
 			<FileConfiguration Name="Debug|Win32">

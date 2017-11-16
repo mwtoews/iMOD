@@ -87,19 +87,6 @@ CONTAINS
  END DO
  DX(K)=SIMCSIZE*REAL(J)
 
-! I=1
-! DO K=2,NX
-!  IF(DX(K).NE.DX(K-1))THEN
-!   WRITE(LINE,'(I5,2(A3,F10.2))') I,' x ',DX(K-1),' = ',REAL(I)*DX(K-1)
-!   CALL IMOD_UTL_PRINTTEXT(' Cellsizes: '//TRIM(LINE),0)
-!   I=1
-!  ELSE
-!   I=I+1
-!  ENDIF
-! ENDDO
-! WRITE(LINE,'(I5,2(A3,F10.2))') I,' x ',DX(K-1),' = ',REAL(I)*DX(K-1)
-! CALL IMOD_UTL_PRINTTEXT(' Cellsizes: '//TRIM(LINE),0)
-
  END SUBROUTINE PMANAGER_SAVEMF2005_COARSEGRID_RESULT
 
  !###======================================================================

@@ -52,7 +52,7 @@ USE MOD_IDF_PAR, ONLY : IDFOBJ
  TYPE MPLOTOBJ
   LOGICAL                  :: IACT                      !## plot active
   LOGICAL                  :: ISEL                      !## plot selected
-  INTEGER                  :: IPLOT                     !## plot type,1=idf,2=ipf,3=iff,4=isg,5=mdf,6=gen
+  INTEGER                  :: IPLOT                     !## plot type,1=idf,2=ipf,3=iff,4=isg,5=mdf,6=gen,7=udf
 
   TYPE(IDFOBJ)             :: IDF                       !## idf-structure
 

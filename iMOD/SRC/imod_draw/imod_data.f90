@@ -46,6 +46,7 @@ USE MOD_MAP2IDF, ONLY : MAP2IDF_IMPORTMAP
 USE MOD_GEF2IPF, ONLY : GEF2IPF_MAIN
 USE MOD_GEF2IPF_PAR, ONLY : GEFNAMES,IPFFNAME
 USE MOD_GENPLOT, ONLY : TOPOSHPTOGEN
+USE MOD_UDF_UTL, ONLY : UDF_DEALLOCATEMESH,UDF_OPEN
 IMPLICIT NONE
 CHARACTER(LEN=*),INTENT(IN),OPTIONAL :: IDFNAMEGIVEN
 CHARACTER(LEN=*),INTENT(IN),OPTIONAL :: LEGNAME
@@ -74,9 +75,10 @@ IF(PRESENT(LPLOT))LPLOTTING=LPLOT
 IF(.NOT.PRESENT(IDFNAMEGIVEN))THEN
  IDFNAME=''
  IF(INETCDF.EQ.0)THEN
-  IF(.NOT.UTL_WSELECTFILE('All Known Files (*.idf;*.mdf;*.ipf;*.isg;*.iff;*.asc;*.shp;*.gen;*.gef;*.map)'//&
-                   '|*.idf;*.mdf;*.ipf;*.isg;*.iff;*.arr;*.asc;*.shp;*.gen;*.gef;*.map|'// &
+  IF(.NOT.UTL_WSELECTFILE('All Known Files (*.idf;*.udf;*.mdf;*.ipf;*.isg;*.iff;*.asc;*.shp;*.gen;*.gef;*.map)'//&
+                   '|*.idf;*.udf;*.mdf;*.ipf;*.isg;*.iff;*.arr;*.asc;*.shp;*.gen;*.gef;*.map|'// &
                    'iMOD Map (*.idf)|*.idf|'               //&
+                   'iMOD Unstructered Data File (*.udf)|*.udf|'   //&
                    'iMOD Multi Data File (*.mdf)|*.mdf|'   //&
                    'iMOD Pointers (*.ipf)|*.ipf|'          //&
                    'iMOD Segment-River File (*.isg)|*.isg|'//&
@@ -90,9 +92,10 @@ IF(.NOT.PRESENT(IDFNAMEGIVEN))THEN
                    LOADDIALOG+MUSTEXIST+PROMPTON+DIRCHANGE+MULTIFILE,IDFNAME,&
                    'Load iMOD Map (*.idf,*.mdf,*.ipf,*.isg,*.iff,*.asc,*.shp,*.gen,*.gef,*.map)'))RETURN
  ELSEIF(INETCDF.EQ.1)THEN
-  IF(.NOT.UTL_WSELECTFILE('All Known Files (*.idf;*.mdf;*.ipf;*.isg;*.iff;*.nc;*.asc;*.shp;*.gen;*.gef;*.map)'//&
-                   '|*.idf;*.mdf;*.ipf;*.isg;*.iff,*.arr;*.nc;*.asc;*.shp;*.gen;*.gef;*.map|'// &
+  IF(.NOT.UTL_WSELECTFILE('All Known Files (*.idf;*.udf;*.mdf;*.ipf;*.isg;*.iff;*.nc;*.asc;*.shp;*.gen;*.gef;*.map)'//&
+                   '|*.idf;*.udf;*.mdf;*.ipf;*.isg;*.iff,*.arr;*.nc;*.asc;*.shp;*.gen;*.gef;*.map|'// &
                    'iMOD Map (*.idf)|*.idf|'               //&
+                   'iMOD Unstructered Data File (*.udf)|*.udf|'   //&
                    'iMOD Multi Data File (*.mdf)|*.mdf|'   //&
                    'iMOD Pointers (*.ipf)|*.ipf|'          //&
                    'iMOD Segment-River File (*.isg)|*.isg|'//&
@@ -231,6 +234,8 @@ DO IDF=1,NIDF
    ELSE
     MP(IPLOT)%IPLOT=6; IDFNAME=IDFNAME(:INDEX(IDFNAME,'.',.TRUE.)-1)//'.GEN'
    ENDIF
+  CASE ('UDF')
+   MP(IPLOT)%IPLOT=7
   CASE DEFAULT
    CALL WMESSAGEBOX(OKONLY,EXCLAMATIONICON,COMMONOK,'iMOD cannot recognize current extension in'//CHAR(13)//TRIM(IDFNAME),'Error')
    EXIT
@@ -258,6 +263,11 @@ DO IDF=1,NIDF
   IU(1)=UTL_GETUNIT()
   CALL OSD_OPEN(IU(1),FILE=IDFNAME,STATUS='OLD',FORM='FORMATTED',ACTION='READ,DENYWRITE',ACCESS='SEQUENTIAL',IOSTAT=IOS)
   IF(IOS.NE.0)MP(IPLOT)%IPLOT=0
+ !## open udf-file
+ ELSEIF(MP(IPLOT)%IPLOT.EQ.7)THEN
+  IF(.NOT.UDF_OPEN(MP(IPLOT)%IDF,IDFNAME,0,IU(1)))THEN;
+   CALL UDF_DEALLOCATEMESH(); MP(IPLOT)%IPLOT=0
+  ENDIF
  ENDIF
 
  IF(MP(IPLOT)%IPLOT.EQ.0)EXIT !## idfloop
@@ -273,11 +283,7 @@ DO IDF=1,NIDF
  LLEG=.TRUE.
  IF(PRESENT(LEGNAME))THEN
   !## do not generate a legend
-  IF(LEGNAME.NE.'')LLEG=.FALSE. !THEN
-!   INQUIRE(FILE=LEGNAME,EXIST=LLEG)
-!   CALL LEG_READ(MP(IPLOT)%LEG,LEGNAME,IOS)
-!   IF(IOS.EQ.0)LLEG=.FALSE.
-!  ENDIF
+  IF(LEGNAME.NE.'')LLEG=.FALSE.
  ENDIF
 
  MP(IPLOT)%ALIAS=IDFNAME(J:)
@@ -291,8 +297,10 @@ DO IDF=1,NIDF
  MP(IPLOT)%UNITS=0   
 
  SELECT CASE (MP(IPLOT)%IPLOT)
+
   !## idf
   CASE (1)
+
    MP(IPLOT)%THICKNESS=1  !## contour width
    IF(PRESENT(ISTYLE))THEN
     MP(IPLOT)%IDFKIND=ISTYLE
@@ -303,6 +311,7 @@ DO IDF=1,NIDF
      CALL UTL_READARRAY((/0,0,1/),3,MP(IPLOT)%IDFKIND)
     ENDIF
    ENDIF
+
   !## ipf
   CASE (2)
 
@@ -370,6 +379,7 @@ DO IDF=1,NIDF
 
   !## iff
   CASE (3)
+
    MP(IPLOT)%PRFTYPE=1    !active/non active in profile
    MP(IPLOT)%IDFI   =250  !sight (m)
    MP(IPLOT)%SCOLOR =WRGB(100,100,100)! single - colour    !no colouring, attribute colouring
@@ -401,6 +411,7 @@ DO IDF=1,NIDF
 
   !## mdf
   CASE (5)
+  
    IF(READMDF(IDFNAME,N))THEN
     MP(IPLOT)%LEG%NCLR  =MDF(MP(IPLOT)%NLIDF)%LEG%NCLR
     MP(IPLOT)%LEG%CLASS =MDF(MP(IPLOT)%NLIDF)%LEG%CLASS
@@ -410,8 +421,10 @@ DO IDF=1,NIDF
     MP(IPLOT)%THICKNESS=1  !contour width
     CALL UTL_READARRAY((/1,0,0/),3,MP(IPLOT)%IDFKIND)
    ENDIF
+
   !## gen
   CASE (6)
+
    MP(IPLOT)%IEQ    =0    !no value plotted <--- used as binaire pointer for label plotting
    MP(IPLOT)%ILEG   =0    !no legend used for plotting, use colour in %scolor
    MP(IPLOT)%IATTRIB=1    !initial first label for colouring
@@ -429,20 +442,15 @@ DO IDF=1,NIDF
 
  !## try to read in legfile
  IF(.NOT.LLEG)THEN
-! LLEG=.TRUE.
-! IF(PRESENT(LEGNAME))THEN
-!  IF(LEGNAME.NE.'')THEN
   CALL LEG_READ(MP(IPLOT)%LEG,LEGNAME,IOS)
   !## error occured, generate a internal legend
   IF(IOS.NE.0)LLEG=.TRUE.
-!  IF(IOS.EQ.0)LLEG=.FALSE.
-!  ENDIF
  ENDIF
 
  !## generate linear legend for entire domain and write it if not assigned to file at this stage
  IF(LLEG)THEN
   SELECT CASE (MP(IPLOT)%IPLOT)
-   !## 1=idf,2=ipf,3=iff,5=mdf,6=gen
+   !## 1=idf,2=ipf,3=iff,5=mdf,6=gen,7=udf
    CASE (1:3,5,6)
     IF(.NOT.LEG_CREATE_CLASSES('LIN','ALE',IPLOT))THEN; MP(IPLOT)%IPLOT=0; EXIT; ENDIF
    !## isg
