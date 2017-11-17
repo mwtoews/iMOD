@@ -3239,6 +3239,7 @@ CONTAINS
    IPFPLOT(IIPF)%ISTYLE =4
    IPFPLOT(IIPF)%ASSCOL1=MP(IPLOT)%ASSCOL1
    IPFPLOT(IIPF)%ASSCOL2=MP(IPLOT)%ASSCOL2
+   IPFPLOT(IIPF)%IPLOTACOL=0
    IPFPLOT(IIPF)%ISELECT=0
    IPFPLOT(IIPF)%RSELECT=0
    IPFPLOT(IIPF)%IPLOTLABELS=0
@@ -3375,6 +3376,9 @@ CONTAINS
   !## reset acol since it can be altered
   ACOL=IPF(IIPF)%ACOL; IF(ACOL.LT.0.OR.ACOL.GT.IPF(IIPF)%NCOL)ACOL=0
   
+  !## overrula acol from the dialog
+  IF(IPFPLOT(IIPF)%IPLOTACOL.EQ.1)ACOL=0
+   
   !## create separate drawinglists for boreholes not for non-connected points
   IPLUS=0; IF(ACOL.NE.0)IPLUS=1
   !## create new drawinglist position
@@ -3497,8 +3501,8 @@ CONTAINS
 
  ENDDO
 
- !## nothing found to be plotted
- IF(NIPFLIST.EQ.0)NIPF=0
+! !## nothing found to be plotted
+! IF(NIPFLIST.EQ.0)NIPF=0
 
  CALL WINDOWOUTSTATUSBAR(1,''); CALL WINDOWOUTSTATUSBAR(2,'')
 

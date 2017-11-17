@@ -93,6 +93,7 @@ TYPE IPFSETTING
  INTEGER :: ISHADE      !## shading
  INTEGER :: ASSCOL1     !## associated column # 1
  INTEGER :: ASSCOL2     !## associated column # 2
+ INTEGER :: IPLOTACOL   !## overrule temporary acol
  INTEGER :: IPLOTLEGEND !## plotlegend
  INTEGER :: IPLOTLABELS !## plot labels
  INTEGER :: ILEGDLF     !## legend dlf
