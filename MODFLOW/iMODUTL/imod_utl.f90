@@ -1327,6 +1327,36 @@ END SUBROUTINE IMOD_UTL_QKSORT
 
  END SUBROUTINE IMOD_UTL_POL1DINT
 
+  !###==================================================================
+ SUBROUTINE IMOD_UTL_POL1LOCATEI(XX,N,X,J)
+ !###==================================================================
+ !return position such that x is within xx(j) and xx(j+1)
+ IMPLICIT NONE
+ INTEGER,INTENT(OUT) :: J
+ INTEGER,INTENT(IN) :: N
+ INTEGER,INTENT(IN) :: X
+ INTEGER,INTENT(IN),DIMENSION(N) :: XX
+ INTEGER :: JL,JM,JU
+
+ JL=0
+ JU=N+1
+ DO
+  IF(JU-JL.GT.1)THEN
+   JM=(JU+JL)/2
+   IF((XX(N).GT.XX(1)).EQV.(X.GT.XX(JM)))THEN
+    JL=JM
+   ELSE
+    JU=JM
+   ENDIF
+  ELSE
+   EXIT
+  ENDIF
+ ENDDO
+
+ J=JL
+
+ END SUBROUTINE IMOD_UTL_POL1LOCATEI
+ 
  !###==================================================================
  SUBROUTINE IMOD_UTL_POL1LOCATER(XX,N,X,J)
  !###==================================================================
@@ -1507,6 +1537,77 @@ END SUBROUTINE IMOD_UTL_QKSORT
  
  END FUNCTION IMOD_UTL_GETMOSTFREQ
 
+  !###====================================================
+ SUBROUTINE UTL_GETUNIQUE_INT(IX,N,NU,NODATA)
+ !###====================================================
+ IMPLICIT NONE
+ INTEGER,INTENT(IN) :: N
+ INTEGER,INTENT(OUT) :: NU
+ INTEGER,INTENT(INOUT),DIMENSION(N) :: IX
+ INTEGER,INTENT(IN),OPTIONAL :: NODATA
+ INTEGER :: I
+
+ CALL SHELLSORT_INT(N,IX)
+
+ !## determine number of unique classes
+ IF(PRESENT(NODATA))THEN
+  NU=0
+  DO I=1,N
+   IF(NU.EQ.0)THEN
+    IF(IX(I).NE.NODATA)THEN
+     NU=NU+1
+     IX(NU)=IX(I)
+    ENDIF
+   ELSE
+    IF(IX(I).NE.IX(NU).AND.IX(I).NE.NODATA)THEN
+     NU    =NU+1
+     IX(NU)=IX(I)
+    ENDIF
+   ENDIF
+  END DO
+ ELSE 
+  !## determine number of unique classes
+  NU=1
+  DO I=2,N
+   IF(IX(I).NE.IX(NU))THEN
+    NU    =NU+1
+    IX(NU)=IX(I)
+   ENDIF
+  END DO
+ ENDIF
+ 
+ END SUBROUTINE UTL_GETUNIQUE_INT
+
+ !###====================================================
+ SUBROUTINE SHELLSORT_INT(N,A)
+ !###====================================================
+ IMPLICIT NONE
+ INTEGER,INTENT(IN) :: N
+ INTEGER,DIMENSION(N) :: A
+ INTEGER :: I,J,INC
+ INTEGER :: V
+
+ INC=1
+ 1 INC=3*INC+1
+ IF(INC.LE.N)GOTO 1
+  2 CONTINUE
+  INC=INC/3
+  DO I=INC+1,N
+   V=A(I)
+   J=I
+   3 IF(A(J-INC).GT.V)THEN
+    A(J)=A(J-INC)
+    J=J-INC
+   IF(J.LE.INC)GOTO 4
+    GOTO 3
+   ENDIF
+   4  A(J)=V
+ END DO
+ IF(INC.GT.1)GOTO 2
+
+ RETURN
+ END SUBROUTINE
+ 
  !###======================================================================
  INTEGER FUNCTION GETUNIT()
  !###======================================================================
