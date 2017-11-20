@@ -3639,7 +3639,7 @@ SOLLOOP: DO I=1,NSOLLIST
      XBH(I)=X
      YBH(I)=Y
     ELSEIF(IPLOTTYPE.EQ.4)THEN
-!     !##v41
+     !##v41
      XBH(I)=X !+ASSF(NASSLIST)%DX(I)
      YBH(I)=Y !+ASSF(NASSLIST)%DY(I)
     ENDIF

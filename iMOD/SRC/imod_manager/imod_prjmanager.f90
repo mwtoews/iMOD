@@ -291,10 +291,17 @@ CONTAINS
   CALL WDIALOGFIELDSTATE(IDF_MENU2,0)
   CALL WDIALOGFIELDSTATE(IDF_MENU3,0)
   CALL WDIALOGFIELDSTATE(ID_PROPERTIES,0)
-  CALL WDIALOGPUTSTRING(IDF_LABEL1,'Assign parameter to modellayer. Use >0 to enter modellayer number')
+  CALL WDIALOGPUTSTRING(IDF_LABEL1,'Assign parameter to modellayer. Use >0 to enter modellayer number.')
+  CALL WDIALOGRANGEINTEGER(IDF_INTEGER1,1,999)
  ELSE
-  CALL WDIALOGPUTSTRING(IDF_LABEL1,'Assign parameter to modellayer. Use >0 to enter modellayer number; use -1 to assign to uppermost active '// &
-             'modellayer and use =0 to assign to modellayers automatically')
+  CALL WDIALOGRANGEINTEGER(IDF_INTEGER1,-1,999)
+  SELECT CASE (ITOPIC)
+   CASE (24,26,30,31)
+    CALL WDIALOGPUTSTRING(IDF_LABEL1,'Assign parameter to modellayer. Use >0 to enter modellayer number; use -1 to assign to uppermost active modellayer.')
+   CASE DEFAULT
+    CALL WDIALOGPUTSTRING(IDF_LABEL1,'Assign parameter to modellayer. Use >0 to enter modellayer number; use -1 to assign to uppermost active '// &
+              'modellayer and use 0 to assign to modellayers automatically based on elevations.')
+  END SELECT
  ENDIF
  
  CALL WDIALOGPUTMENU(IDF_MENU2,CDATE,12,MAX(1,IMH))
@@ -405,6 +412,15 @@ CONTAINS
       ENDIF
       IF(LEX)THEN
        CALL WDIALOGGETINTEGER(IDF_INTEGER1,PRJ(1)%ILAY)
+       SELECT CASE (ITOPIC)
+        CASE (24,26,30,31)
+         IF(PRJ(1)%ILAY.EQ.0)THEN
+          CALL WMESSAGEBOX(OKONLY,INFORMATIONICON,COMMONOK,'You can not specify a layer number of zero for this package','Error')
+          LEX=.FALSE.
+         ENDIF
+       END SELECT
+      ENDIF
+      IF(LEX)THEN       
        CALL WDIALOGGETCHECKBOX(IDF_CHECK1 ,PRJ(1)%IACT)
        PRJ(1:SIZE(PRJ))%ILAY=PRJ(1)%ILAY
        PRJ(1:SIZE(PRJ))%IACT=PRJ(1)%IACT
