@@ -1744,6 +1744,13 @@ IRLOOP: DO IR=MAX(1,IROW-1),MIN(NROW,IROW+1)
   QFLOW =RVAL(10,1)     !## inflow
   QROFF =RVAL(11,1)     !## runoff flow
 
+  !## bottom level up always larger than bottom level down
+  IF(ELEVUP.LE.ELEVDN)THEN
+   CALL WMESSAGEBOX(YESNO,QUESTIONICON,COMMONNO,'You entered an upstream bottom elevation ('//TRIM(RTOS(ELEVUP,'G',7))//') for segment '//trim(itos(I))//CHAR(13)// &
+     'which is lower/equal to the bottom elevation ('//TRIM(RTOS(ELEVDN,'G',7))//') downstream.'//CHAR(13)//'The SFR package does not allow this at any time','Error')
+   RETURN
+  ENDIF
+    
   !## check qflow bigger than maxqflow; m3/s might be entered as m3/d
   IF(QFLOW.GT.MAXQFLOW.AND.LWARNING1)THEN
    CALL WMESSAGEBOX(YESNO,QUESTIONICON,COMMONNO,'You might entered the external discharge in m3/d instead of m3/s.'//CHAR(13)// &
