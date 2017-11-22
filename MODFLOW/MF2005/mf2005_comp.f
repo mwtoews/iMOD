@@ -3370,3 +3370,66 @@ c     if (nxch.le.0) ok = .false.
       mf2005_GetDxcRoot = ok
 
       end function
+ 
+      logical function mf2005_PutHeadsForLayer(head,ncol,nrow,
+     1                                         ilay,igrid)
+!...     modules
+      use global, only: hnew
+
+      implicit none
+
+!...     arguments
+      integer, intent(in) :: ncol,nrow,ilay,igrid
+      double precision, dimension(ncol,nrow), intent(out) :: head
+
+!...     locals
+
+      ! get pointers
+      call sgwf2bas7pnt(igrid)
+
+      head = hnew(:,:,ilay)
+
+      mf2005_PutHeadsForLayer = .true.
+      end function mf2005_PutHeadsForLayer
+            
+      logical function mf2005_GetRecharge(recharge,ncol,nrow,igrid)
+!...     modules
+      use global, only: iunit,delr,delc
+      use m_mf2005_iu, only: iurch
+      use gwfrchmodule, only: rechbuff
+
+!...     arguments
+      integer, intent(in) :: ncol,nrow,igrid
+      real, dimension(ncol,nrow), intent(in) :: recharge
+      
+!...     locals
+!.......................................................................
+ 
+      ! check if package is active
+      if (iunit(iurch).le.0) then
+          mf2005_GetRecharge = .false.
+          return
+      end if    
+      
+      ! get pointers
+      call sgwf2rch7pnt(igrid)
+      
+      ! allocate for the first time
+      if (.not.associated(rechbuff)) then
+          allocate(rechbuff(ncol,nrow))
+      end if
+      
+      ! set and multipy with cell area
+      do irow=1,nrow
+         do icol=1,ncol
+            rechbuff(icol,irow)=
+     1         recharge(icol,irow)*delr(icol)*delc(irow)
+         end do    
+      end do       
+      
+      ! set pointers 
+      call sgwf2rch7psv(igrid)
+            
+      mf2005_GetRecharge = .true.
+      end function mf2005_GetRecharge
+

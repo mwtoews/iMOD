@@ -34,12 +34,14 @@ c   If not, see <http://water.usgs.gov/software/help/notice/>.
         INTEGER, SAVE, POINTER                 ::NPRCH,IRCHPF
         INTEGER, SAVE, POINTER                 ::IADDRECH               ! DLT
         REAL,    SAVE,   DIMENSION(:,:),  POINTER      ::RECH
+        real,    save,   dimension(:,:),  pointer :: rechbuff => null() ! DLT
         INTEGER, SAVE,   DIMENSION(:,:),  POINTER      ::IRCH
       TYPE GWFRCHTYPE
         INTEGER,  POINTER                 ::NRCHOP,IRCHCB
         INTEGER,  POINTER                 ::NPRCH,IRCHPF
         INTEGER,  POINTER                 ::IADDRECH                    ! DLT
         REAL,       DIMENSION(:,:),  POINTER      ::RECH
+        real,       dimension(:,:),  pointer      :: rechbuff => null() ! DLT
         INTEGER,    DIMENSION(:,:),  POINTER      ::IRCH
       END TYPE
       TYPE(GWFRCHTYPE), SAVE ::GWFRCHDAT(10)
@@ -146,7 +148,8 @@ C     ------------------------------------------------------------------
       USE GLOBAL,      ONLY:IOUT,NCOL,NROW,NLAY,IFREFM,DELR,DELC,
      1                      BUFF                                        ! DLT
       USE GWFRCHMODULE,ONLY:NRCHOP,NPRCH,IRCHPF,RECH,IRCH,
-     1                      IADDRECH                                    ! DLT
+     1                      IADDRECH,                                   ! DLT
+     1                      rechbuff                                    ! DLT 
       use rdrsmodule, only: nodata                                      ! DLT
 C
       CHARACTER*24 ANAME(2)
@@ -232,6 +235,11 @@ C4------MULTIPLY RECHARGE RATE BY CELL AREA TO GET VOLUMETRIC RATE.
       END IF
 
 C
+      ! overrule rech with buffer 
+      if (associated(rechbuff))then
+        rech = rechbuff
+      end if  
+
 C5------IF NRCHOP=2 THEN A LAYER INDICATOR ARRAY IS NEEDED.  TEST INIRCH
 C5------TO SEE HOW TO DEFINE IRCH.
       IF(NRCHOP.EQ.2) THEN
@@ -480,6 +488,8 @@ C
         DEALLOCATE(GWFRCHDAT(IGRID)%NPRCH)
         DEALLOCATE(GWFRCHDAT(IGRID)%IRCHPF)
         DEALLOCATE(GWFRCHDAT(IGRID)%RECH)
+        if(associated(gwfrchdat(igrid)%rechbuff))                       ! DLT
+     1     deallocate(gwfrchdat(igrid)%rechbuff)                        ! DLT
         DEALLOCATE(GWFRCHDAT(IGRID)%IRCH)
         DEALLOCATE(GWFRCHDAT(IGRID)%IADDRECH)                           ! DLT
 C
@@ -494,6 +504,7 @@ C
         NPRCH=>GWFRCHDAT(IGRID)%NPRCH
         IRCHPF=>GWFRCHDAT(IGRID)%IRCHPF
         RECH=>GWFRCHDAT(IGRID)%RECH
+        RECHBUFF=>GWFRCHDAT(IGRID)%RECHBUFF                             ! DLT
         IRCH=>GWFRCHDAT(IGRID)%IRCH
         IADDRECH=>GWFRCHDAT(IGRID)%IADDRECH                             ! DLT
 C
@@ -508,6 +519,7 @@ C
         GWFRCHDAT(IGRID)%NPRCH=>NPRCH
         GWFRCHDAT(IGRID)%IRCHPF=>IRCHPF
         GWFRCHDAT(IGRID)%RECH=>RECH
+        GWFRCHDAT(IGRID)%RECHBUFF=>RECHBUFF                             ! DLT
         GWFRCHDAT(IGRID)%IRCH=>IRCH
         GWFRCHDAT(IGRID)%IADDRECH=>IADDRECH                             ! DLT
 C
