@@ -50,6 +50,7 @@
 		<Filter Name="Source Files" Filter="f90;for;f;fpp;ftn;def;odl;idl">
 		<File RelativePath="..\..\DRIVER_BMI\driver_bmi.F90"/>
 		<File RelativePath="..\..\DRIVER_BMI\driver_bmi_module.f90"/>
+		<File RelativePath="..\..\DRIVER\driver_module.f90"/>
 		<File RelativePath="..\..\DRIVER\metaswap_comp.FOR"/>
 		<File RelativePath="..\..\DRIVER\mozart_comp.f90"/>
 		<File RelativePath="..\..\DRIVER\transol_comp.FOR"/></Filter></Files>
