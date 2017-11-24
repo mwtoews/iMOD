@@ -1010,7 +1010,7 @@ CONTAINS
     CALL IMOD_UTL_PRINTTEXT('',-1,IUPESTOUT); CALL IMOD_UTL_PRINTTEXT('Pest iteration terminated: PEST_ITER ('// &
         TRIM(IMOD_UTL_ITOS(PEST_ITER))//') = PEST_NITER ('//TRIM(IMOD_UTL_ITOS(PEST_NITER))//')',-1,IUPESTOUT)
    ENDIF
-   IF(TJ.LE.0.0)THEN
+   IF(TJ.LE.0.0D0)THEN
     PESTNEXT=.TRUE.
     CALL IMOD_UTL_PRINTTEXT('',-1,IUPESTOUT); CALL IMOD_UTL_PRINTTEXT('Objective Function <= 0.0 ('// &
        TRIM(IMOD_UTL_RTOS(REAL(TJ),'G',7))//')',-1,IUPESTOUT)
@@ -1053,7 +1053,7 @@ CONTAINS
          EXP(PARAM(I)%MAX),&       !## maximal value
          PARAM(I)%FADJ,&           !## maximal adjust factor
          ABS(PARAM(I)%IGROUP),&    !## group number
-         ILOG !PARAM(I)%LOG              !## log transformed
+         ILOG                      !## log transformed
     ELSE
      WRITE(IUPESTRUNFILE,'(I2,1X,A,1X,2(I4,1X),5(F10.3,1X),I4,1X,I2)') ABS(PARAM(I)%IACT), &  !## iact
          PARAM(I)%PTYPE, & !## ptype
@@ -1065,7 +1065,7 @@ CONTAINS
          PARAM(I)%MAX,&    !## maximal value
          PARAM(I)%FADJ,&   !## maximal adjust factor
          ABS(PARAM(I)%IGROUP),& !## group number
-         ILOG !PARAM(I)%LOG      !## log transformed
+         ILOG              !## log transformed
     ENDIF 
    ENDDO
 
@@ -1234,7 +1234,7 @@ CONTAINS
  !#####=================================================================
  IMPLICIT NONE
  INTEGER,INTENT(IN) :: NP
- DOUBLE PRECISION,INTENT(IN),DIMENSION(NP,NP) :: COV
+ REAL(KIND=8),INTENT(IN),DIMENSION(NP,NP) :: COV
  INTEGER :: I,J,K,IP1,IERROR
  REAL :: Z1,Z2,Z,ZW
 
@@ -1518,7 +1518,7 @@ CONTAINS
 
  TS=SUM(ABS(S)); DO IP1=1,NP
   IF(ABS(PARAM(IP1)%IACT).NE.1.OR.PARAM(IP1)%IGROUP.LE.0)CYCLE
-  IF(TS.NE.0.0)S(IP1)=S(IP1)/TS
+  IF(TS.NE.0.0D0)S(IP1)=S(IP1)/TS
  ENDDO
  S=ABS(S)*100.0D0
 
@@ -2203,7 +2203,7 @@ CONTAINS
  CALL IMOD_UTL_PRINTTEXT(TRIM(BLINE),-1,IUPESTOUT)
 
  IF(GRADUPDATE(PEST_ITER).LT.PEST_PADJ)THEN
-  CALL IMOD_UTL_PRINTTEXT('Proces stopped, less than '//TRIM(IMOD_UTL_RTOS(PEST_PADJ,'F',3))//' of vector length',-1)
+  CALL IMOD_UTL_PRINTTEXT('Proces stopped, less than '//TRIM(IMOD_UTL_RTOS(PEST_PADJ,'F',3))//' of vector length',-1,IUPESTOUT)
   STOP
  ENDIF
 
@@ -2224,7 +2224,7 @@ CONTAINS
  character(len=*),intent(in) :: root
  INTEGER :: I,II,III,J,JJ,K,KK,ILAY,NROWIPFTXT,IUIPFTXT,NCOLIPFTXT, &
      IOS,NAJ,NP
- REAL :: X,Y,Z,H,WW,MC,MM,DHH,XCOR,YCOR,ZCOR,XCROSS,RFIT
+ REAL(KIND=8) :: X,Y,Z,H,WW,MC,MM,DHH,XCOR,YCOR,ZCOR,XCROSS,RFIT
  CHARACTER(LEN=52) :: ID,TXT
  DOUBLE PRECISION :: DHW
  REAL,ALLOCATABLE,DIMENSION(:) :: TSNODATA,M,C,GF_H,GF_O
@@ -2275,7 +2275,7 @@ CONTAINS
  ENDIF
  
  MSR%W=0.0
- TJ=0.0
+ TJ=0.0D0
 
  DO I=1,ABS(IIPF) 
   IF(IUPESTRESIDUAL.GT.0)WRITE(IUPESTRESIDUAL,'(I10,A)') I,','//TRIM(TS(I)%IPFNAME)
@@ -2318,7 +2318,7 @@ CONTAINS
     !## apply general multiplication for weight values
     MSR%W(II)=FWIIPF*MSR%W(II)
     
-    DHH=0.0
+    DHH=0.0D0
     IF(ABS(H-Z).GT.PEST_DRES)THEN
      DHH=H-Z
     ENDIF
@@ -2347,8 +2347,8 @@ CONTAINS
     READ(TS(I)%IUIPF,*) X,Y,ILAY,ID,WW     !## w(i)=variance
     !## weigh=1/stdev=1/sqrt(variance)
     IF(TS(I)%IVCOL.GT.0)THEN
-     IF(WW.LE.0.0)THEN
-      WW=0.0
+     IF(WW.LE.0.0D0)THEN
+      WW=0.0D0
      ELSE
       WW=1.0/SQRT(WW)
      ENDIF
@@ -2416,7 +2416,7 @@ CONTAINS
      ENDIF
 
      II =II+1
-     DHH=0.0
+     DHH=0.0D0
 
      !## accept residuals less than 0.1 
      IF(ABS(MC-MM).GT.PEST_DRES)THEN
@@ -2461,7 +2461,7 @@ CONTAINS
 
   IF(TS(I)%NROWIPF.GT.0)THEN
    IF(.NOT.LSS)CALL IMOD_UTL_PRINTTEXT('MEAN Cross-Correlation         : '// &
-          TRIM(IMOD_UTL_RTOS(XCROSS/REAL(TS(I)%NROWIPF),'F',7))//' (n='//TRIM(ITOS(TS(I)%NROWIPF))//')',1)
+          TRIM(IMOD_UTL_RTOS(REAL(XCROSS)/REAL(TS(I)%NROWIPF),'F',7))//' (n='//TRIM(ITOS(TS(I)%NROWIPF))//')',1)
   ENDIF
 
  ENDDO
@@ -2484,19 +2484,19 @@ CONTAINS
  PJ=0.0D0
  IF(PEST_IREGULARISATION.EQ.1)CALL PEST_GETQPP(NP,.TRUE.)
   
- CALL IMOD_UTL_PRINTTEXT('Best Match Value   : '//TRIM(IMOD_UTL_RTOS(REAL(TJ),'G',7)),-1)
- CALL IMOD_UTL_PRINTTEXT('Plausibility Value : '//TRIM(IMOD_UTL_RTOS(REAL(PJ),'G',7)),-1)
+ CALL IMOD_UTL_PRINTTEXT('Best Match Value   : '//TRIM(IMOD_UTL_RTOS(REAL(TJ),'G',7)),-1,IUPESTOUT)
+ CALL IMOD_UTL_PRINTTEXT('Plausibility Value : '//TRIM(IMOD_UTL_RTOS(REAL(PJ),'G',7)),-1,IUPESTOUT)
  TJ=TJ+PJ
   
- CALL IMOD_UTL_PRINTTEXT('TOTAL Objective Function Value : '//TRIM(IMOD_UTL_RTOS(REAL(TJ),'G',7)),-1)
+ CALL IMOD_UTL_PRINTTEXT('TOTAL Objective Function Value : '//TRIM(IMOD_UTL_RTOS(REAL(TJ),'G',7)),-1,IUPESTOUT)
  CALL IMOD_UTL_PRINTTEXT('MEAN Objective Function Value  : '//TRIM(IMOD_UTL_RTOS(REAL(TJ)/REAL(PEST_NOBS),'G',7))// &
-         ' (n='//TRIM(IMOD_UTL_ITOS(PEST_NOBS))//')',-1)
+         ' (n='//TRIM(IMOD_UTL_ITOS(PEST_NOBS))//')',-1,IUPESTOUT)
 
  RFIT=PEST_GOODNESS_OF_FIT(GF_H,GF_O,PEST_NOBS)
  CALL IMOD_UTL_PRINTTEXT('Goodness of Fit (sample correlation coefficient): '// &
-     TRIM(IMOD_UTL_RTOS(RFIT,'G',7))//' (n='//TRIM(IMOD_UTL_ITOS(PEST_NOBS))//')',-1)
- CALL IMOD_UTL_PRINTTEXT('>> Provides a measure of the extent to which variability of field measurements is explained',-1)
- CALL IMOD_UTL_PRINTTEXT('   by the calibrated model compared to that which can be constructed as purely random. <<',-1)
+     TRIM(IMOD_UTL_RTOS(REAL(RFIT),'G',7))//' (n='//TRIM(IMOD_UTL_ITOS(PEST_NOBS))//')',-1,IUPESTOUT)
+ CALL IMOD_UTL_PRINTTEXT('>> Provides a measure of the extent to which variability of field measurements is explained',-1,IUPESTOUT)
+ CALL IMOD_UTL_PRINTTEXT('   by the calibrated model compared to that which can be constructed as purely random. <<',-1,IUPESTOUT)
 
  IF(ALLOCATED(GF_H))DEALLOCATE(GF_H)
  IF(ALLOCATED(GF_O))DEALLOCATE(GF_O)
