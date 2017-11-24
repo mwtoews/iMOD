@@ -44,6 +44,9 @@ CONTAINS
  CALL STOMP_WRITE_SOL_CNTRL(IU)
  CALL STOMP_WRITE_GRID(IU)
  CALL STOMP_WRITE_INACTIVE(IU)
+ CALL STOMP_WRITE_SOILZONATION(IU)
+ CALL STOMP_WRITE_MECHANICAL(IU)
+ CALL STOMP_WRITE_HYDRAULICPROPERTIES(IU)
  CALL STOMP_WRITE_SAT_FUNC(IU)
  CALL STOMP_WRITE_AQ_RE_PERM(IU)
  CALL STOMP_WRITE_GAS_REL_PERM(IU)
@@ -164,6 +167,85 @@ CONTAINS
  END SUBROUTINE STOMP_WRITE_INACTIVE
  
  !###======================================================================
+ SUBROUTINE STOMP_WRITE_SOILZONATION(IU)
+ !###======================================================================
+ IMPLICIT NONE
+ INTEGER,INTENT(IN) :: IU 
+ INTEGER :: JU,IROW,ICOL,ILAY
+ 
+ WRITE(IU,'(A)') ''
+ WRITE(IU,'(A)') '#-------------------------------------------------------'
+ WRITE(IU,'(A)') '~Rock/Soil Zonation Card'
+ WRITE(IU,'(A)') '#-------------------------------------------------------'
+ WRITE(IU,'(A)') 'IJK Indexing,'
+ 
+ END SUBROUTINE STOMP_WRITE_SOILZONATION
+ 
+ !###======================================================================
+ SUBROUTINE STOMP_WRITE_MECHANICAL(IU)
+ !###======================================================================
+ IMPLICIT NONE
+ INTEGER,INTENT(IN) :: IU 
+ INTEGER :: JU,IROW,ICOL,ILAY
+ 
+ WRITE(IU,'(A)') ''
+ WRITE(IU,'(A)') '#-------------------------------------------------------'
+ WRITE(IU,'(A)') '~Mechanical Properties Card'
+ WRITE(IU,'(A)') '#-------------------------------------------------------'
+ WRITE(IU,'(A)') 'IJK Indexing,2690,kg/m^3,file:por.dat,file:por.dat,,1/m,Millington and Quirk,'
+ 
+! JU=UTL_GETUNIT(); OPEN(JU,FILE=TRIM(OUTPUTFILE)//'\inactive.dat',STATUS='UNKNOWN')
+! DO ILAY=1,NLAY; DO IROW=1,NROW; DO ICOL=1,NCOL
+!  IF(BND(ILAY)%X(ICOL,IROW).EQ.0)THEN
+!   WRITE(JU,'(3I10)') ICOL,IROW,ILAY
+!  ENDIF
+! ENDDO; ENDDO; ENDDO
+! CLOSE(JU)
+
+ END SUBROUTINE STOMP_WRITE_MECHANICAL
+ 
+ !###======================================================================
+ SUBROUTINE STOMP_WRITE_HYDRAULICPROPERTIES(IU)
+ !###======================================================================
+ IMPLICIT NONE
+ INTEGER,INTENT(IN) :: IU 
+ INTEGER :: JU,IROW,ICOL,ILAY
+ REAL :: K1,K2,K3,K4
+ 
+ WRITE(IU,'(A)') ''
+ WRITE(IU,'(A)') '#-------------------------------------------------------'
+ WRITE(IU,'(A)') '~Hydraulic Properties Card'
+ WRITE(IU,'(A)') '#-------------------------------------------------------'
+ WRITE(IU,'(A)') 'IJK Indexing, file:ksx.dat,m^2/d, file:ksy.dat,m^2/d, file:ksz.dat,m^2/d,'
+ 
+ JU=UTL_GETUNIT(); OPEN(JU,FILE=TRIM(OUTPUTFILE)//'\ksx.dat',STATUS='UNKNOWN')
+ DO ILAY=1,NLAY; DO IROW=1,NROW; DO ICOL=1,NCOL
+  IF(BND(ILAY)%X(ICOL,IROW).EQ.0)CYCLE
+  WRITE(JU,'(3I10,G15.7)') ICOL,IROW,ILAY,KHV(ILAY,1)%X(ICOL,IROW)
+ ENDDO; ENDDO; ENDDO
+ CLOSE(JU)
+ 
+ JU=UTL_GETUNIT(); OPEN(JU,FILE=TRIM(OUTPUTFILE)//'\ksy.dat',STATUS='UNKNOWN')
+ DO ILAY=1,NLAY; DO IROW=1,NROW; DO ICOL=1,NCOL
+  IF(BND(ILAY)%X(ICOL,IROW).EQ.0)CYCLE
+  WRITE(JU,'(3I10,G15.7)') ICOL,IROW,ILAY,KHV(ILAY,2)%X(ICOL,IROW)
+ ENDDO; ENDDO; ENDDO
+ CLOSE(JU)
+
+ JU=UTL_GETUNIT(); OPEN(JU,FILE=TRIM(OUTPUTFILE)//'\ksz.dat',STATUS='UNKNOWN')
+ DO ILAY=1,NLAY; DO IROW=1,NROW; DO ICOL=1,NCOL
+  IF(BND(ILAY)%X(ICOL,IROW).EQ.0)CYCLE
+  K1=LOG(KHV(ILAY,1)%X(ICOL,IROW))
+  K2=LOG(KHV(ILAY,2)%X(ICOL,IROW))
+  K3=EXP((K1+K2)/2.0)
+  K4=K3*KHV(ILAY,3)%X(ICOL,IROW)
+  WRITE(JU,'(3I10,G15.7)') ICOL,IROW,ILAY,K4
+ ENDDO; ENDDO; ENDDO
+ CLOSE(JU)
+
+ END SUBROUTINE STOMP_WRITE_HYDRAULICPROPERTIES
+ 
+ !###======================================================================
  SUBROUTINE STOMP_WRITE_GRID(IU)
  !###======================================================================
  IMPLICIT NONE
@@ -181,6 +263,14 @@ CONTAINS
  WRITE(IU,'(A)') '~Grid Card'
  WRITE(IU,'(A)') '#-------------------------------------------------------'
  WRITE(IU,'(A)') 'Element and Vertices,'
+
+! !## get number of nodes
+! I=0; DO ILAY=1,NLAY; DO IROW=1,NROW; DO ICOL=1,NCOL
+!  !## skip inactive nodes
+!  IF(BND(ILAY)%X(ICOL,IROW).EQ.0)CYCLE
+!  I=I+1
+! ENDDO; ENDDO; ENDDO
+ 
  !## ncol,nrow,nlay
  LINE=TRIM(ITOS(NCOL))//','//TRIM(ITOS(NROW))//','//TRIM(ITOS(NLAY))//','; WRITE(IU,'(A)') TRIM(LINE)
  LINE='vertices.dat,'//TRIM(ITOS(NCOL*NROW*NLAY))//','; WRITE(IU,'(A)') TRIM(LINE)
@@ -196,13 +286,20 @@ CONTAINS
  !## 1 2 4 3 - bottom
  !## 5 6 8 7 - top
  I=0; DO ILAY=1,NLAY; DO IROW=1,NROW; DO ICOL=1,NCOL
+
+!  !## skip inactive nodes
+!  IF(BND(ILAY)%X(ICOL,IROW).EQ.0)CYCLE
+
   X(1)=BND(1)%SX(ICOL-1)
   X(2)=BND(1)%SX(ICOL  )
   Y(1)=BND(1)%SY(IROW-1)
   Y(2)=BND(1)%SY(IROW  )
   Z(2)=TB(ILAY,1)%X(ICOL,IROW) !## top
   Z(1)=TB(ILAY,2)%X(ICOL,IROW) !## bot
-
+  
+  IF(Z(2).EQ.TB(ILAY,1)%NODATA)Z(2)=-999.99
+  IF(Z(1).EQ.TB(ILAY,2)%NODATA)Z(1)=-999.99
+  
   WRITE(KU,'(8I10)') (K,K=I+1,I+8)
 
   DO J=1,8
@@ -243,9 +340,9 @@ CONTAINS
  ENDDO
  
  DO I=1,NLAY
-  DO J=1,6
+  DO J=1,SIZE(KHV,2)
    IF(.NOT.UTL_READINITFILE(TRIM(TXT(J))//'_L'//TRIM(ITOS(I)),LINE,IU,0))RETURN
-   READ(LINE,*) K(I,J)%FNAME; LINE=TRIM(TXT(J))//'_L'//TRIM(ITOS(I))//'='//TRIM(K(I,J)%FNAME); WRITE(*,'(A)') TRIM(LINE)
+   READ(LINE,*) KHV(I,J)%FNAME; LINE=TRIM(TXT(J))//'_L'//TRIM(ITOS(I))//'='//TRIM(KHV(I,J)%FNAME); WRITE(*,'(A)') TRIM(LINE)
   ENDDO
  ENDDO
  DO I=1,NLAY
@@ -269,7 +366,7 @@ CONTAINS
   !## reading top/bot as average values
   DO J=1,SIZE(TB,2); CALL IDFCOPY(BND(I),TB(I,J)); IF(.NOT.IDFREADSCALE(TB(I,J)%FNAME,TB(I,J),2,1,0.0,0))RETURN; ENDDO
   !## reading permeability as geometric means
-  DO J=1,SIZE(K,2);  CALL IDFCOPY(BND(I),K(I,J));  IF(.NOT.IDFREADSCALE(K(I,J)%FNAME,K(I,J)  ,3,1,0.0,0))RETURN; ENDDO
+  DO J=1,SIZE(KHV,2);  CALL IDFCOPY(BND(I),KHV(I,J));  IF(.NOT.IDFREADSCALE(KHV(I,J)%FNAME,KHV(I,J)  ,3,1,0.0,0))RETURN; ENDDO
  ENDDO 
 
  NROW=IDF%NROW; NCOL=IDF%NCOL
@@ -290,8 +387,8 @@ CONTAINS
  IF(ALLOCATED(TB))THEN
   DO I=1,SIZE(TB,2); CALL IDFDEALLOCATE(TB(:,I),SIZE(TB,1)); ENDDO; DEALLOCATE(TB)
  ENDIF
- IF(ALLOCATED(K))THEN
-  DO I=1,SIZE(K,2); CALL IDFDEALLOCATE(K(:,I),SIZE(K,1)); ENDDO; DEALLOCATE(K)
+ IF(ALLOCATED(KHV))THEN
+  DO I=1,SIZE(KHV,2); CALL IDFDEALLOCATE(KHV(:,I),SIZE(KHV,1)); ENDDO; DEALLOCATE(KHV)
  ENDIF
   
  END SUBROUTINE STOMP_CLOSE
@@ -303,10 +400,10 @@ CONTAINS
  INTEGER,INTENT(IN) :: NLAY
  INTEGER :: I,J
  
- ALLOCATE(TB(NLAY,2),K(NLAY,6),BND(NLAY))
- DO I=1,NLAY                   ; CALL IDFNULLIFY(BND(I)) ; ENDDO
- DO I=1,NLAY; DO J=1,SIZE(TB,2); CALL IDFNULLIFY(TB(I,J)); ENDDO; ENDDO
- DO I=1,NLAY; DO J=1,SIZE(K,2) ; CALL IDFNULLIFY(K(I,J)) ; ENDDO; ENDDO
+ ALLOCATE(TB(NLAY,2),KHV(NLAY,3),BND(NLAY))
+ DO I=1,NLAY                    ; CALL IDFNULLIFY(BND(I)) ; ENDDO
+ DO I=1,NLAY; DO J=1,SIZE(TB,2) ; CALL IDFNULLIFY(TB(I,J)); ENDDO; ENDDO
+ DO I=1,NLAY; DO J=1,SIZE(KHV,2); CALL IDFNULLIFY(KHV(I,J)) ; ENDDO; ENDDO
 
  END SUBROUTINE STOMP_INIT
 
