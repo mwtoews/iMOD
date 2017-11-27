@@ -21,106 +21,175 @@
 !!  2600 MH Delft, The Netherlands.
 
 program driver
-
 ! modules
 use driver_module
-use IMOD_UTL, only : imod_utl_capf
-use imod_idf_par, only : idfobj
-use m_main_info
-use m_vcl, only: targ
-use imod_utl, only: imod_utl_closeunits, imod_utl_has_ext, imod_utl_printtext,imod_utl_getunit, imod_utl_getslash
-use pks_imod_utl, only: pks_imod_utl_idfmerge_init, pks_imod_utl_write_idfmergefile, pks_imod_utl_idfmerge ! PKS
-use mod_pest, only: pest1_meteo_metaswap, pest1alpha_metaswap, pest1appendlogfile, pestnext, pestdumpfct, PEST1INIT, PEST1CLOSELOGFILES
-use PESTVAR, only : IUPESTOUT
-use pks_imod_utl, only: pks_imod_utl_iarmwp_xch_read
+use driver_module_par
+!!use IMOD_UTL, only : imod_utl_capf
+!!use imod_idf_par, only : idfobj
+!!use m_main_info
+!!use m_vcl, only: targ
+!!use imod_utl, only: imod_utl_closeunits, imod_utl_has_ext, imod_utl_printtext,imod_utl_getunit, imod_utl_getslash
+!!use pks_imod_utl, only: pks_imod_utl_idfmerge_init, pks_imod_utl_write_idfmergefile, pks_imod_utl_idfmerge ! PKS
+!!use mod_pest, only: pest1_meteo_metaswap, pest1alpha_metaswap, pest1appendlogfile, pestnext, pestdumpfct, PEST1INIT, PEST1CLOSELOGFILES
+!!use PESTVAR, only : IUPESTOUT
+!!use pks_imod_utl, only: pks_imod_utl_iarmwp_xch_read
 implicit none
-
-! general
- logical :: mf_steadystate
- integer :: mf_ngrid, mf_igrid, iout, mf_minid, mf_maxid
-
-! iPEST with MetaSWAP
- integer :: mf_nrow, mf_ncol, mf_nlay
-
-! parameters
- integer, parameter :: nsubmax = 1000
-
-! functions
- integer   osd_open2,cfn_length
- integer   cfn_idx_get_i
- double precision cfn_mjd_nodata
- logical pks7mpimasterwrite
-
-! local variables
- integer   deltats,ios,iteration,lunc,lunsts,lc,xchinit,exitcode,ivcl,jvcl,iarg,jarg,itermozart,narg
-
- logical :: ok
- logical    endOfSimulation
- logical    stsave,strestore,mozstsave
- character  del*1,cont*1,comm*1
-
- character (len=1024) :: root, wd, modwd1, modwd2, simwd1, simwd2, mozwd, infile, rfopt, wddum, pfile, rfroot
- integer, allocatable, dimension(:) :: hrivsys, wrivsys
- integer :: nhrivsys, nwrivsys
- integer :: privsys, srivsys, trivsys, bdrnsys, odrnsys
- integer, dimension(1) :: m
- character (len=1)    :: cdum
- character (len=1024) :: record, modrecord, sobrecord, mozrecord, tranrecord
- character (len=32)   :: compcls,time_string
- character (len=1024) :: compfile
- logical  :: usemodflow,usemetaswap,usetransol,usemozart,usests,usestsmodflow
- logical  :: converged,convergedMF2005,convergedMetaSwap,convergedMozart,convergedPest
- logical :: doTimeLoop
- integer  :: retValMF2005
-
- double precision :: currentTime,currentTimeMF2005,currentTimeMozart, &
-                     endOfCurrentTimeStep,endOfCurrentTimeStepMF2005, &
-                     nodataTime,BeginOfNextTimeStepMF2005,&
-                     endOfCurrentTimeStepMozart
- double precision :: dtMetaSwap            ! variable for metaswap
- double precision :: dtMozart
- integer          :: iterMetaSwap          ! variable for metaswap
- double precision :: stsTestTime
-
- integer                         :: stsFtest,stsBtest,stsItest,i,j,n
- double precision, allocatable   :: stsTtest(:)
-
- character tekens(1)*1
-
- integer tsc ! debug variable
- integer :: date, hour, minute, second
-
- logical :: lrunfile, lnamfile, llpf, lipest, lpwt, lss, lrf, psolved
- 
- logical :: lwstdo, lpks, lidfmerge
- character(len=1024) :: idfmergefile
- 
- integer :: isub, nsub, nnsub
- character(len=50), dimension(nsubmax) :: submstr=''
-
- real :: hnoflo
- type(idfobj) :: idf
-
- character(len=1024) :: str
- 
- real, dimension(4) :: imodusebox
- 
- character(len=1) :: slash
- 
-! debug
- integer lswid, js, je, k, ilay, irow, icol, lun, cfn_getlun, ncvgerr
+logical stssaveOverRule
+!!
+!!! general
+!! logical :: mf_steadystate
+!! integer :: mf_ngrid, mf_igrid, iout, mf_minid, mf_maxid
+!!
+!!! iPEST with MetaSWAP
+!! integer :: mf_nrow, mf_ncol, mf_nlay
+!!
+!!! parameters
+!! integer, parameter :: nsubmax = 1000
+!!
+!!! functions
+!! integer   osd_open2,cfn_length
+!! integer   cfn_idx_get_i
+!! double precision cfn_mjd_nodata
+!! logical pks7mpimasterwrite
+!!
+!!! local variables
+!! integer   deltats,ios,iteration,lunc,lunsts,lc,xchinit,exitcode,ivcl,jvcl,iarg,jarg,itermozart,narg
+!!
+!! logical :: ok
+!! logical    endOfSimulation
+!! logical    stsave,strestore,mozstsave
+!! !character  del*1,cont*1,comm*1
+!! character  del*1,comm*1
+!!
+!! character (len=1024) :: root, wd, modwd1, modwd2, simwd1, simwd2, mozwd, infile, rfopt, wddum, pfile, rfroot
+!! integer, allocatable, dimension(:) :: hrivsys, wrivsys
+!! integer :: nhrivsys, nwrivsys
+!! integer :: privsys, srivsys, trivsys, bdrnsys, odrnsys
+!! integer, dimension(1) :: m
+!! character (len=1)    :: cdum
+!! character (len=1024) :: record, modrecord, sobrecord, mozrecord, tranrecord
+!! character (len=32)   :: compcls,time_string
+!! character (len=1024) :: compfile
+!! logical  :: usemodflow,usemetaswap,usetransol,usemozart,usests,usestsmodflow
+!! logical  :: converged,convergedMF2005,convergedMetaSwap,convergedMozart,convergedPest
+!! logical :: doTimeLoop
+!! integer  :: retValMF2005
+!!
+!! double precision :: currentTime,currentTimeMF2005,currentTimeMozart, &
+!!                     endOfCurrentTimeStep,endOfCurrentTimeStepMF2005, &
+!!                     nodataTime,BeginOfNextTimeStepMF2005,&
+!!                     endOfCurrentTimeStepMozart
+!! double precision :: dtMetaSwap            ! variable for metaswap
+!! double precision :: dtMozart
+!! integer          :: iterMetaSwap          ! variable for metaswap
+!! double precision :: stsTestTime
+!!
+!! integer                         :: stsFtest,stsBtest,stsItest,i,j,n
+!! double precision, allocatable   :: stsTtest(:)
+!!
+!! character tekens(1)*1
+!!
+!! integer tsc ! debug variable
+!! integer :: date, hour, minute, second
+!!
+!! logical :: lrunfile, lnamfile, llpf, lipest, lpwt, lss, lrf, psolved
+!! 
+!! logical :: lwstdo, lpks, lidfmerge
+!! character(len=1024) :: idfmergefile
+!! 
+!! integer :: isub, nsub, nnsub
+!! character(len=50), dimension(nsubmax) :: submstr=''
+!!
+!! real :: hnoflo
+!! type(idfobj) :: idf
+!!
+!! character(len=1024) :: str
+!! 
+!! real, dimension(4) :: imodusebox
+!! 
+!! character(len=1) :: slash
+!! 
+!!! debug
+!! integer lswid, js, je, k, ilay, irow, icol, lun, cfn_getlun, ncvgerr
 
 ! program section
-! ------------------------------------------------------------------------------
 
-call pks7mpiini1(lwstdo) ! PKS
-call pks7mpiactive(lpks) ! PKS
+ ! ######################################### initialize model #########################################
+ call driver_init(infile,nsub)
+
+ ! ######################################### SUBMODEL LOOP #########################################
+ submodelloop: do isub = 1,nsub
+ ! ######################################### PEST LOOP #########################################
+ call pks_imod_utl_idfmerge_init() ! PKS
+ convergedPest = .false.
+ pestloop: do while (.not.convergedPest)
+ 
+ ! Initialize simulation
+ call driver_init_simulation(endOfSimulation,convergedMozart) !,start_time)
+
+ do while (.not.endOfSimulation .and. exitcode.eq.0) ! MOZART-loop
+    call driver_init_mozart()
+    
+    do while ((.not.endOfSimulation .and. exitcode.eq.0) .and. .not.convergedMozart)
+        call driver_init_timestep()
+
+        doTimeLoop = .true.
+        do while(doTimeLoop .and. exitcode.eq.0)
+            call driver_init_iter(stssaveOverRule)
+            ! ... iteration
+            converged =.false.
+            do while (.not. converged .and. exitcode.eq.0)
+                call driver_iter(converged)
+            end do
+            call driver_finish_timestep(converged,endOfSimulation,doTimeLoop)
+        end do
+    
+        call driver_finish_simulation(endOfSimulation,convergedMozart)
+
+    end do ! Mozart loop
+ end do
+ 
+ call driver_finish_pest(convergedPest)
+
+ end do pestloop
+
+! PKS IDF merge
+ call osd_chdir(root)
+ call pks_imod_utl_write_idfmergefile(modwd2,idfmergefile)
+ if (lidfmerge.and.lpks) call pks_imod_utl_idfmerge(idfmergefile)
+
+ end do submodelloop
+
+! timing output
+ call osd_chdir(root)
+ call timing_stat() 
+ 
+ call pks7mpifinalize()! PKS
+ 
+end program driver
+
+! ------------------------------------------------------------------------------
+subroutine driver_init(config_file,nnsub)
+ use driver_module
+ use driver_module_par
+ implicit none
+! arguments
+ character(len=*), intent(in) :: config_file ! nam-file, components-file or run file
+ integer, intent(out) :: nnsub
+ 
+ !naar mijn idee zouden onderstaande functies gewoon in driver_module_par.f90 moeten blijven staan?
+ integer   osd_open2,cfn_length 
+ double precision cfn_mjd_nodata 
+ logical pks7mpimasterwrite
+
+ call pks7mpiini1(lwstdo) ! PKS
+ call pks7mpiactive(lpks) ! PKS
 
 ! Evaluate iMOD license
-if(pks7mpimasterwrite()) call imod_license()
-call pks7mpibarrier() ! PKS
-
-! ... init
+ if(pks7mpimasterwrite()) call imod_license()
+ call pks7mpibarrier() ! PKS
+ 
+!... init
  exitcode    = 0            ! when 0: ok
  lunc        = 9            ! unit number for components file
  lunsts      = 8            ! <=0: sts2init() will assign a free unit number
@@ -140,7 +209,7 @@ call pks7mpibarrier() ! PKS
  ! define virtual commandline
  call cfn_vcl_set(' ',ivcl)
  
- ! get the root name
+! get the root name
  call osd_getcwd(root)
  modwd1  = root
  simwd1  = root
@@ -168,7 +237,7 @@ call pks7mpibarrier() ! PKS
   call pks7mpifinalize()! PKS
   call exit(0)
  end if
- 
+  
  ! option for merging PKS output IDF files
  call cfn_vcl_fndc(ivcl,iarg,'-pksmergeidf',.true.,idfmergefile,1)
  if (iarg.gt.0) then
@@ -176,15 +245,16 @@ call pks7mpibarrier() ! PKS
     stop   
  end if
  
- call cfn_vcl_arg(ivcl,1,infile,n)
- if (imod_utl_has_ext(infile,'nam')) lnamfile= .true.
- if (imod_utl_has_ext(infile,'run')) lrunfile= .true.
+ call cfn_vcl_arg(ivcl,1,config_file,n)
+ if (imod_utl_has_ext(config_file,'nam')) lnamfile= .true.
+ if (imod_utl_has_ext(config_file,'run')) lrunfile= .true.
+
  if (lrunfile .or. lnamfile) then ! run-file or nam-file
     usemodflow=.true.
     modrecord=''
-    if (lnamfile) write(modrecord,'(a,1x,3a)') '-namfile','"',trim(infile),'"'
+    if (lnamfile) write(modrecord,'(a,1x,3a)') '-namfile','"',trim(config_file),'"'
     if (lrunfile) then
-       write(modrecord,'(a,1x,3a)') '-runfile','"',trim(infile),'"'
+       write(modrecord,'(a,1x,3a)') '-runfile','"',trim(config_file),'"'
        if (narg.eq.3) then ! runfile options
           call cfn_vcl_arg(ivcl,2,rfopt,n)
           write(modrecord,'(a,1x,a,1x,a)') trim(modrecord),'-rfopt',trim(rfopt)
@@ -207,6 +277,7 @@ call pks7mpibarrier() ! PKS
  usemozart     = .false.
  ! get explicit arguments
  call cfn_vcl_fndc(ivcl,iarg,'-components',.true.,compfile,1)
+
  if (iarg.gt.0) then
 
     ! open file and initialise components
@@ -342,12 +413,17 @@ call pks7mpibarrier() ! PKS
 
  nnsub = max(1,nsub)
 
-! ######################################### SUBMODEL LOOP #########################################
- submodelloop: do isub = 1,nnsub
-! ######################################### PEST LOOP #########################################
- call pks_imod_utl_idfmerge_init() ! PKS
- convergedPest = .false.
- pestloop: do while (.not.convergedPest)
+end subroutine driver_init
+
+subroutine driver_init_simulation(eOS,cMZ) !,start_time)
+ !DEC$ ATTRIBUTES DLLEXPORT :: mf_init_simulation
+ use driver_module
+ use driver_module_par
+ use mod_pest, only: pest1_meteo_metaswap, pest1alpha_metaswap, pest1appendlogfile
+ implicit none
+ 
+ logical, intent(inout) :: eOS,cMZ
+ !double precision, intent(in) :: start_time
 
  if (lrunfile) then
     if (nsub.gt.0) then
@@ -384,8 +460,8 @@ call pks7mpibarrier() ! PKS
  ! convergence
  convergedMF2005   = .true.
  convergedMetaSwap = .true.
- convergedMozart   = .true.
- endOfSimulation   = .false.
+ cMZ   = .true.
+ eOS   = .false.
 
  ! init all components TODO!!!!!!!
  if (usemodflow) then
@@ -469,9 +545,9 @@ call pks7mpibarrier() ! PKS
  if (rt.eq.rtmodsimtranmoz) then
     call osd_chdir(mozwd)
     call mozart_initSimulation()
-    convergedMozart = .false.
-    endOfSimulation = .false.
-    call mozart_prepareTimeStep(endOfSimulation,convergedMozart,currentTime) ! read signal file
+    cMZ = .false.
+    eOS = .false.
+    call mozart_prepareTimeStep(eOS,cMZ,currentTime) ! read signal file
  end if
 
 ! #### BEGIN EXCHANGE: BeforeTimestep #########################################
@@ -525,338 +601,398 @@ call pks7mpibarrier() ! PKS
  stsave    = .false.
  mozstsave = .false.
  strestore = .false.
+ 
+end subroutine driver_init_simulation
 
- do while (.not.endOfSimulation .and. exitcode.eq.0) ! MOZART-loop
+subroutine driver_init_mozart
+ !DEC$ ATTRIBUTES DLLEXPORT :: driver_init_mozart
+ use driver_module
+ use driver_module_par
+ implicit none
+ iterMozart = 0; convergedMozart = .false.
+end subroutine driver_init_mozart
 
-    iterMozart = 0; convergedMozart = .false.
-    do while ((.not.endOfSimulation .and. exitcode.eq.0) .and. .not.convergedMozart)
-       if (rt.eq.rtmodsimtranmoz) then
-          iterMozart = iterMozart + 1
-          if (iterMozart.eq.1) mozstsave = .true.
-          call mozart_getCurrentTime(currentTimeMozart) ! get the current time
-          currentTime = currentTimeMozart
-          call mozart_getEndOfCurrentTimeStep(endOfCurrentTimeStepMozart) ! get the end of the currentMozart time step
-          call osd_chdir(mozwd)
-          call mozart_initTimeStep(iterMozart)  ! initialize time step
+subroutine driver_init_timestep
+ !DEC$ ATTRIBUTES DLLEXPORT :: driver_init_timestep
+ use driver_module
+ use driver_module_par
+ implicit none
+
+ if (rt.eq.rtmodsimtranmoz) then
+    iterMozart = iterMozart + 1
+    if (iterMozart.eq.1) mozstsave = .true.
+    call mozart_getCurrentTime(currentTimeMozart) ! get the current time
+    currentTime = currentTimeMozart
+    call mozart_getEndOfCurrentTimeStep(endOfCurrentTimeStepMozart) ! get the end of the currentMozart time step
+    call osd_chdir(mozwd)
+    call mozart_initTimeStep(iterMozart)  ! initialize time step
 
 !##### BEGIN EXCHANGE: BeginOfMozartTimestep ##################################
 
-          ok = mozart_PutLSWLevels(XchModMozMozLevels,mv); call DriverChk(ok,'mozart_PutLSWLevels') ! MOZART puts the LSW levels
-          ok = mozart_PutPVLevels(XchModMozPVMozPVLevels,mv); call DriverChk(ok,'mozart_PutPVLevels') ! MOZART puts the PV levels
-          ok = mozart_PutLSWFractions(XchSimMozMozFractions,mv); call DriverChk(ok,'mozart_PutLSWFractions') ! MOZART puts the LSW fractions
-          ok = mf2005_GetLSWLevels(mf_igrid,XchModMozMozLevels,&
-                                   XchModMozModNID,XchMoz2ModIdx,XchMoz2ModOff,mv); call DriverChk(ok,'mf2005_GetLSWLevels') ! MODFLOW gets LSW levels
-          XchModMozMozLevels = mv
-          ok = mf2005_GetPVLevels(mf_igrid,XchModMozPVMozPVLevels,&
-                                  XchModMozPVModNID,XchMozPV2ModIdx,XchMozPV2ModOff,mv); call DriverChk(ok,'mf2005_GetPVLevels') ! MODFLOW gets PV levels
-          XchModMozPVMozPVLevels = mv
-          ok = metaswap_GetFractions(XchSimMozMozFractions,XchSimMozSimNID,XchMoz2SimIdx,XchMoz2ModOff,mv); call DriverChk(ok,'metaswap_GetFractions') ! MetaSWAP gets the LSW fractions
-          XchSimMozMozFractions = mv
+    ok = mozart_PutLSWLevels(XchModMozMozLevels,mv); call DriverChk(ok,'mozart_PutLSWLevels') ! MOZART puts the LSW levels
+    ok = mozart_PutPVLevels(XchModMozPVMozPVLevels,mv); call DriverChk(ok,'mozart_PutPVLevels') ! MOZART puts the PV levels
+    ok = mozart_PutLSWFractions(XchSimMozMozFractions,mv); call DriverChk(ok,'mozart_PutLSWFractions') ! MOZART puts the LSW fractions
+    ok = mf2005_GetLSWLevels(mf_igrid,XchModMozMozLevels,&
+                              XchModMozModNID,XchMoz2ModIdx,XchMoz2ModOff,mv); call DriverChk(ok,'mf2005_GetLSWLevels') ! MODFLOW gets LSW levels
+    XchModMozMozLevels = mv
+    ok = mf2005_GetPVLevels(mf_igrid,XchModMozPVMozPVLevels,&
+                           XchModMozPVModNID,XchMozPV2ModIdx,XchMozPV2ModOff,mv); call DriverChk(ok,'mf2005_GetPVLevels') ! MODFLOW gets PV levels
+    XchModMozPVMozPVLevels = mv
+    ok = metaswap_GetFractions(XchSimMozMozFractions,XchSimMozSimNID,XchMoz2SimIdx,XchMoz2ModOff,mv); call DriverChk(ok,'metaswap_GetFractions') ! MetaSWAP gets the LSW fractions
+    XchSimMozMozFractions = mv
 !####### END EXCHANGE: BeginOfMozartTimestep ##################################
-       end if
+  end if
+ 
+end subroutine driver_init_timestep
 
-       doTimeLoop = .true.
-       do while(doTimeLoop .and. exitcode.eq.0)
-          tsc=tsc+1
-          timestep = timestep + 1
+subroutine driver_init_iter(stssaveOverRule)
+!DEC$ ATTRIBUTES DLLEXPORT :: mf_init_iter
+ use driver_module
+ use driver_module_par
+ implicit none
+ 
+ logical, intent(in) :: stssaveOverRule
+ logical pks7mpimasterwrite !## zou in theorie hier niet hoeven te staan, maar compileren lukt anders niet...
+       
+ tsc=tsc+1
+ timestep = timestep + 1
 
-          call cfn_mjd2datehms(currentTime,date,hour,minute,second)
+ call cfn_mjd2datehms(currentTime,date,hour,minute,second)
 
 !what about steady-state solutions, currenttime.eq.0
-!          if(issflg(kkper).eq.1)then 
-!           write(*,'(5x,a,1x,a)')&
-!              'Timestep     :','steady-state'
-!          else
-!           write(*,'(5x,a,1x,i5,1x,a,1x,i8,3(a,i2.2))')&
-!              'Timestep     :',tsc,':',date,' ',abs(hour),':',minute,':',second
-!          endif
-          ! one timestep for each cycle
+! if(issflg(kkper).eq.1)then 
+!   write(*,'(5x,a,1x,a)')&
+!        'Timestep     :','steady-state'
+! else
+!   write(*,'(5x,a,1x,i5,1x,a,1x,i8,3(a,i2.2))')&
+!       'Timestep     :',tsc,':',date,' ',abs(hour),':',minute,':',second
+! endif
+! one timestep for each cycle
 
 !##### BEGIN EXCHANGE: BeginOfTimestep ########################################
-          if (rt.eq.rtmodsim .or. rt.eq.rtmodsimtranmoz) then
-             ok = mf2005_PutHeads(mf_igrid,XchModSimModCells,XchModSimModNID,XchModSimModHeads,mv); call DriverChk(ok,'mf2005_PutHeads') ! Put groundwater heads
-             ok = metaswap_GetHeads(XchModSimModHeads,XchModSimSimNID,XchMod2SimIdx,XchMod2SimOff,mv); call DriverChk(ok,'metaswap_GetHeads') ! Get groundwater heads
-             XchModSimModHeads = mv
-          end if
+ if (rt.eq.rtmodsim .or. rt.eq.rtmodsimtranmoz) then
+    ok = mf2005_PutHeads(mf_igrid,XchModSimModCells,XchModSimModNID,XchModSimModHeads,mv); call DriverChk(ok,'mf2005_PutHeads') ! Put groundwater heads
+    ok = metaswap_GetHeads(XchModSimModHeads,XchModSimSimNID,XchMod2SimIdx,XchMod2SimOff,mv); call DriverChk(ok,'metaswap_GetHeads') ! Get groundwater heads
+    XchModSimModHeads = mv
+ end if
 !####### END EXCHANGE: BeginOfTimestep ########################################
 
-          ! perform state save, phase 1 (before reading and writing data)
-          if (usests) then
-             if (mozstsave) stsave = .true.
-             call osd_chdir(modwd2)
-             if (usestsmodflow) call sts2saverestore(currentTime,stsave,strestore,1)
-             if (rt.eq.rtmodsim .or. rt.eq.rtmodsimtranmoz) then
-                call osd_chdir(simwd2)
-                call MetaSWAP_saveRestore(stsave,strestore)
-                !call TRANSOL_saveRestore(stsave,strestore)
-             end if
-          end if
+ ! perform state save, phase 1 (before reading and writing data)
+ if (usests) then
+    if (mozstsave) stsave = .true.
+    call osd_chdir(modwd2)
+    if (usestsmodflow) call sts2saverestore(currentTime,stsave,strestore,1)
+    if (rt.eq.rtmodsim .or. rt.eq.rtmodsimtranmoz) then
+       call osd_chdir(simwd2)
+       call MetaSWAP_saveRestore(stsave,strestore)
+       !call TRANSOL_saveRestore(stsave,strestore)
+    end if
+ end if
 
-         ! ... init timestep
-          call mf2005_prepareTimestep(currentTime,stsave,retValMF2005)
-          call osd_chdir(modwd2)
-          call mf2005_initTimeStep(currentTime,retValMF2005)
-          if (retValMF2005.ne.0) exitcode = -15
+ !... init timestep
+ call mf2005_prepareTimestep(currentTime,stsave,retValMF2005)
+ call osd_chdir(modwd2)
+ call mf2005_initTimeStep(currentTime,retValMF2005)
+ if (retValMF2005.ne.0) exitcode = -15
 
-          ! get end of current timestep
-          !!!!!!!!!!!!!!!! Only modflow information is used !!!!!!!!!!!!!!!!!!!!!!!
-          call mf2005_getEndOfCurrentTimeStep(endOfCurrentTimeStepMF2005,retValMF2005)
-          if (retValMF2005.ne.0) exitcode = -17
-          endOfCurrentTimeStep = endOfCurrentTimeStepMF2005
+ ! get end of current timestep
+ !!!!!!!!!!!!!!!! Only modflow information is used !!!!!!!!!!!!!!!!!!!!!!!
+ call mf2005_getEndOfCurrentTimeStep(endOfCurrentTimeStepMF2005,retValMF2005)
+ if (retValMF2005.ne.0) exitcode = -17
+ endOfCurrentTimeStep = endOfCurrentTimeStepMF2005
 
-          ! extra check
-          if (endOfCurrentTimeStep.eq.nodataTime) call driverChk(.false.,'endOfCurrentTimeStep = nodataTime')
+ ! extra check
+ if (endOfCurrentTimeStep.eq.nodataTime) call driverChk(.false.,'endOfCurrentTimeStep = nodataTime')
 
-          ! read timestep data
-          if (exitcode.eq.0) then
-             if (rt.eq.rtmodsim .or. rt.eq.rtmodsimtranmoz) then
-                dtMetaSwap = endOfCurrentTimeStep - currentTime
-                call osd_chdir(simwd2)
-                call MetaSwap_initTimestep(dtMetaSwap)
-                iterMetaSwap = 0
-             end if
-          end if
+ ! read timestep data
+ if (exitcode.eq.0) then
+    if (rt.eq.rtmodsim .or. rt.eq.rtmodsimtranmoz) then
+       dtMetaSwap = endOfCurrentTimeStep - currentTime
+       call osd_chdir(simwd2)
+       call MetaSwap_initTimestep(dtMetaSwap)
+       iterMetaSwap = 0
+    end if
+ end if
 
-          if (pks7mpimasterwrite()) call mf2005_writeTimeStep(tsc,date,hour,minute,second)
-          
-          ! one timestep for each cycle
+ if (pks7mpimasterwrite()) call mf2005_writeTimeStep(tsc,date,hour,minute,second)
+ 
+ ! one timestep for each cycle
 
-! ... iteration
-          converged =.false.
-          do while (.not. converged .and. exitcode.eq.0)
 
-             if (rt.eq.rtmodsim .or. rt.eq.rtmodsimtranmoz) then
-                call MetaSwap_prepareIter(iterMetaSwap)  ! only action: iter=iter+1
-                call MetaSwap_performIter(iterMetaSwap)
+end subroutine driver_init_iter
+
+subroutine driver_iter(convergedin)
+!DEC$ ATTRIBUTES DLLEXPORT :: mf_iter
+ use driver_module
+ use driver_module_par
+ implicit none
+ logical, intent(inout) :: convergedin
+ logical pks7mpimasterwrite !## zou in theorie hier niet hoeven te staan, maar compileren lukt anders niet...
+
+ if (rt.eq.rtmodsim .or. rt.eq.rtmodsimtranmoz) then
+    call MetaSwap_prepareIter(iterMetaSwap)  ! only action: iter=iter+1
+    call MetaSwap_performIter(iterMetaSwap)
 !##### BEGIN EXCHANGE: AfterSolveMetaSwap #####################################
-                ok = metaswap_PutModSimUnsaturatedZoneFlux(XchModSimSimUnsZFlux,mv); call DriverChk(ok,'metaswap_PutUnsaturatedZoneFlux') ! Put unsaturated zone flux
-                ok = mf2005_GetUnsaturatedZoneFlux(mf_igrid,&
-                        XchModSimModNID,XchModSimSimUnsZFlux,XchSim2ModIdx,XchSim2ModOff,mv); call DriverChk(ok,'mf2005_GetUnsaturatedZoneFlux') ! Get unsaturated zone flux
-                XchModSimSimUnsZFlux = mv
-                if (.not.mf_steadystate) then
-                   ok = metaswap_PutStorageFactor(XchModSimSimStrFct,mv); call DriverChk(ok,'metaswap_PutStorageFactor') ! Put storage factor
-                   if (.not.llpf) then ! BCF
-                      ok = mf2005_GetStorageFactor(mf_igrid,XchModSimSimStrFct,&
-                                                  XchModSimModNID,XchSim2ModIdx,XchSim2ModOff,mv); call DriverChk(ok,'mf2005_GetStorageFactor') ! Get storage factor
-                   else ! LPF
-                      ok = mf2005_GetStorageFactorLPF(mf_igrid,XchModSimSimStrFct,&
-                                                  XchModSimModNID,XchSim2ModIdx,XchSim2ModOff,mv); call DriverChk(ok,'mf2005_GetStorageFactorLPF') ! Get storage factor
-                   end if
-                   XchModSimSimStrFct = mv
-                end if
-             end if
+    ok = metaswap_PutModSimUnsaturatedZoneFlux(XchModSimSimUnsZFlux,mv); call DriverChk(ok,'metaswap_PutUnsaturatedZoneFlux') ! Put unsaturated zone flux
+    ok = mf2005_GetUnsaturatedZoneFlux(mf_igrid,&
+                XchModSimModNID,XchModSimSimUnsZFlux,XchSim2ModIdx,XchSim2ModOff,mv); call DriverChk(ok,'mf2005_GetUnsaturatedZoneFlux') ! Get unsaturated zone flux
+    XchModSimSimUnsZFlux = mv
+    if (.not.mf_steadystate) then
+        ok = metaswap_PutStorageFactor(XchModSimSimStrFct,mv); call DriverChk(ok,'metaswap_PutStorageFactor') ! Put storage factor
+        if (.not.llpf) then ! BCF
+            ok = mf2005_GetStorageFactor(mf_igrid,XchModSimSimStrFct,&
+                                    XchModSimModNID,XchSim2ModIdx,XchSim2ModOff,mv); call DriverChk(ok,'mf2005_GetStorageFactor') ! Get storage factor
+        else ! LPF
+            ok = mf2005_GetStorageFactorLPF(mf_igrid,XchModSimSimStrFct,&
+                                    XchModSimModNID,XchSim2ModIdx,XchSim2ModOff,mv); call DriverChk(ok,'mf2005_GetStorageFactorLPF') ! Get storage factor
+        end if
+        XchModSimSimStrFct = mv
+    end if
+ end if
 !####### END EXCHANGE: AfterSolveMetaSwap #####################################
-             call mf2005_performIter(retValMF2005,psolved)
-             if (retValMF2005.ne.0) exitcode = -26
+ call mf2005_performIter(retValMF2005,psolved)
+ if (retValMF2005.ne.0) exitcode = -26
 
 !##### BEGIN EXCHANGE: AfterSolve #############################################
-             if (exitcode.eq.0) then
-                if (rt.eq.rtmodsim .or. rt.eq.rtmodsimtranmoz) then
-                   ok = mf2005_PutHeads(mf_igrid,XchModSimModCells,XchModSimModNID,XchModSimModHeads,mv); call DriverChk(ok,'mf2005_PutHeads') ! MODFLOW put groundwater heads
-                   ok = metaswap_GetHeads(XchModSimModHeads,XchModSimSimNID,XchMod2SimIdx,XchMod2SimOff,mv); call DriverChk(ok,'metaswap_GetHeads') ! MetaSWAP gets the groundwater heads
-                   XchModSimModHeads = mv
-                end if
-             end if
+ if (exitcode.eq.0) then
+    if (rt.eq.rtmodsim .or. rt.eq.rtmodsimtranmoz) then
+        ok = mf2005_PutHeads(mf_igrid,XchModSimModCells,XchModSimModNID,XchModSimModHeads,mv); call DriverChk(ok,'mf2005_PutHeads') ! MODFLOW put groundwater heads
+        ok = metaswap_GetHeads(XchModSimModHeads,XchModSimSimNID,XchMod2SimIdx,XchMod2SimOff,mv); call DriverChk(ok,'metaswap_GetHeads') ! MetaSWAP gets the groundwater heads
+        XchModSimModHeads = mv
+    end if
+ end if
 !####### END EXCHANGE: AfterSolve #############################################
 
-             ! finish iteration
-             if (rt.eq.rtmodsim .or. rt.eq.rtmodsimtranmoz)&
-             call MetaSwap_finishIter(iterMetaSwap,convergedMetaSwap)
-             call mf2005_finishIter(convergedMF2005,retValMF2005)
-             if (rt.eq.rtmodsim .or. rt.eq.rtmodsimtranmoz) then
-                if (pks7mpimasterwrite()) write(*,*) ' convergence MODFLOW - MetaSWAP: ',convergedMF2005, convergedMetaSwap
-             end if   
+! finish iteration
+    if (rt.eq.rtmodsim .or. rt.eq.rtmodsimtranmoz)&
+    call MetaSwap_finishIter(iterMetaSwap,convergedMetaSwap)
+    call mf2005_finishIter(convergedMF2005,retValMF2005)
+    if (rt.eq.rtmodsim .or. rt.eq.rtmodsimtranmoz) then
+        if (pks7mpimasterwrite()) write(*,*) ' convergence MODFLOW - MetaSWAP: ',convergedMF2005, convergedMetaSwap
+    end if   
 
-             ! get next iteration information
-             converged = .true.
-             converged = converged .and. convergedMF2005
-             if (rt.eq.rtmodsim .or. rt.eq.rtmodsimtranmoz)&
-                converged = converged .and. convergedMetaSwap
+    ! get next iteration information
+    convergedin = .true.
+    convergedin = convergedin .and. convergedMF2005
+    if (rt.eq.rtmodsim .or. rt.eq.rtmodsimtranmoz)&
+        convergedin = convergedin .and. convergedMetaSwap
 
-             if (retValMF2005.ne.0    ) exitcode = -261
-          enddo
-          if (.not.converged) then
-             if (pks7mpimasterwrite()) write(*,*) ' Model did not converge!',exitcode
-          end if   
+    if (retValMF2005.ne.0) exitcode = -261
+ 
+end subroutine driver_iter
+
+subroutine driver_finish_timestep(convergedin,eOS,dTL)
+!DEC$ ATTRIBUTES DLLEXPORT :: driver_finish_timestep
+ use driver_module
+ use driver_module_par
+ implicit none
+ 
+ logical, intent(in) :: convergedin
+ logical, intent(inout) :: eOS,dTL
+ logical pks7mpimasterwrite !## zou in theorie hier niet hoeven te staan, maar compileren lukt anders niet...
+ 
+ if (.not.convergedin) then
+    if (pks7mpimasterwrite()) write(*,*) ' Model did not converge!',exitcode
+ end if   
 
 ! ... write results
-          if (converged .and. exitcode.eq.0) then
-             call osd_chdir(modwd2)
-             call mf2005_finishTimestep(retValMF2005,psolved,ncvgerr)
-             if (retValMF2005.ne.0) exitcode = -31
+ if (convergedin .and. exitcode.eq.0) then
+    call osd_chdir(modwd2)
+    call mf2005_finishTimestep(retValMF2005,psolved,ncvgerr)
+    if (retValMF2005.ne.0) exitcode = -31
 
 !##### BEGIN EXCHANGE: AfterFinishTimeStepMODFLOW #############################
-             if (rt.eq.rtmodsimtranmoz) then
-                !##### MODFLOW-TRANSOL interface !#####
+    if (rt.eq.rtmodsimtranmoz) then
+    !##### MODFLOW-TRANSOL interface !#####
                 
-                ! River stages P, S, T (privsys, srivsys, trivsys)
-                ok = mf2005_PutRiverStageSubsys(mf_igrid,XchModTranModRiverStage,XchModTranModCells,XchModTranModNID,mv,privsys); call DriverChk(ok,'mf2005_PutRiverStageSubsys') ! MODFLOW puts the river stage for TRANSOL [m]: P
-                ok = TRANSOL_GetSeepageRiverDrain(XchModTranModRiverStage,XchModTranModNID,XchMod2TranIdx,XchMod2TranOff,mv,'srivp'); call DriverChk(ok,'TRANSOL_GetSeepageRiverDrain') ! TRANSOL gets the river Stage: P
-                XchModTranModRiverStage = mv
-                ok = mf2005_PutRiverStageSubsys(mf_igrid,XchModTranModRiverStage,XchModTranModCells,XchModTranModNID,mv,srivsys); call DriverChk(ok,'mf2005_PutRiverStageSubsys') ! MODFLOW puts the river stage for TRANSOL [m]: S
-                ok = TRANSOL_GetSeepageRiverDrain(XchModTranModRiverStage,XchModTranModNID,XchMod2TranIdx,XchMod2TranOff,mv,'srivs'); call DriverChk(ok,'TRANSOL_GetSeepageRiverDrain') ! TRANSOL gets the river Stage: S
-                XchModTranModRiverStage = mv
-                ok = mf2005_PutRiverStageSubsys(mf_igrid,XchModTranModRiverStage,XchModTranModCells,XchModTranModNID,mv,trivsys); call DriverChk(ok,'mf2005_PutRiverStageSubsys') ! MODFLOW puts the river stage for TRANSOL [m]: T
-                ok = TRANSOL_GetSeepageRiverDrain(XchModTranModRiverStage,XchModTranModNID,XchMod2TranIdx,XchMod2TranOff,mv,'srivt'); call DriverChk(ok,'TRANSOL_GetSeepageRiverDrain') ! TRANSOL gets the river Stage: T
-                XchModTranModRiverStage = mv                
-                
-                ! Seepage flux
-                ok = mf2005_PutSeepageFlux(mf_igrid,XchModTranModSeepageFlux,XchModTranModCells,XchModTranModNID,mv,.true.); call DriverChk(ok,'mf2005_PutSeepageFlux') ! MODFLOW puts the seepage flux for TRANSOL
-                ok = TRANSOL_GetSeepageRiverDrain(XchModTranModSeepageFlux,XchModTranModNID,XchMod2TranIdx,XchMod2TranOff,mv,'qseep'); call DriverChk(ok,'TRANSOL_GetSeepageRiverDrain') ! TRANSOL gets the seepage flux
-                XchModTranModSeepageFlux = mv
-                
-                ! River fluxes P, S, T (privsys, srivsys, trivsys)
-                ok = mf2005_PutRiverFluxSubsys(mf_igrid,XchModTranModRiverFlux,XchModTranModCells,XchModTranModNID,mv,.true.,privsys); call DriverChk(ok,'mf2005_PutRiverFluxSubsys') ! MODFLOW puts the river flux for TRANSOL [m]: P
-                ok = TRANSOL_GetSeepageRiverDrain(XchModTranModRiverFlux,XchModTranModNID,XchMod2TranIdx,XchMod2TranOff,mv,'qrivp'); call DriverChk(ok,'TRANSOL_GetSeepageRiverDrain') ! TRANSOL gets the river flux: P
-                XchModTranModRiverFlux = mv
-                ok = mf2005_PutRiverFluxSubsys(mf_igrid,XchModTranModRiverFlux,XchModTranModCells,XchModTranModNID,mv,.true.,srivsys); call DriverChk(ok,'mf2005_PutRiverFluxSubsys') ! MODFLOW puts the river flux for TRANSOL [m]: S
-                ok = TRANSOL_GetSeepageRiverDrain(XchModTranModRiverFlux,XchModTranModNID,XchMod2TranIdx,XchMod2TranOff,mv,'qrivs'); call DriverChk(ok,'TRANSOL_GetSeepageRiverDrain') ! TRANSOL gets the river flux: S
-                XchModTranModRiverFlux = mv
-                ok = mf2005_PutRiverFluxSubsys(mf_igrid,XchModTranModRiverFlux,XchModTranModCells,XchModTranModNID,mv,.true.,trivsys); call DriverChk(ok,'mf2005_PutRiverFluxSubsys') ! MODFLOW puts the river flux for TRANSOL [m]: T
-                ok = TRANSOL_GetSeepageRiverDrain(XchModTranModRiverFlux,XchModTranModNID,XchMod2TranIdx,XchMod2TranOff,mv,'qrivt'); call DriverChk(ok,'TRANSOL_GetSeepageRiverDrain') ! TRANSOL gets the river flux: T
-                XchModTranModRiverFlux = mv
-                
-                ! Drain fluxes B(uis) and O(overland flow) (bdrnsys, odrnsys)
-                ok = mf2005_PutDrainFluxSubsys(mf_igrid,XchModTranModDrainFlux,XchModTranModCells,XchModTranModNID,mv,.true.,bdrnsys); call DriverChk(ok,'mf2005_PutDrainFluxSubsys') ! MODFLOW puts the drain flux for TRANSOL [m]: b
-                ok = TRANSOL_GetSeepageRiverDrain(XchModTranModDrainFlux,XchModTranModNID,XchMod2TranIdx,XchMod2TranOff,mv,'qdrnb'); call DriverChk(ok,'TRANSOL_GetSeepageRiverDrain') ! TRANSOL gets the drain flux
-                XchModTranModDrainFlux = mv
-                ok = mf2005_PutDrainFluxSubsys(mf_igrid,XchModTranModDrainFlux,XchModTranModCells,XchModTranModNID,mv,.true.,odrnsys); call DriverChk(ok,'mf2005_PutDrainFluxSubsys') ! MODFLOW puts the drain flux for TRANSOL [m]: b
-                ok = TRANSOL_GetSeepageRiverDrain(XchModTranModDrainFlux,XchModTranModNID,XchMod2TranIdx,XchMod2TranOff,mv,'qdrno'); call DriverChk(ok,'TRANSOL_GetSeepageRiverDrain') ! TRANSOL gets the drain flux
-                XchModTranModDrainFlux = mv
-                
-                ! !##### MODFLOW-MOZART interface !#####
-                ok = mf2005_PutRiverFlux(mf_igrid,XchModMozModRiverFlux,XchModMozModCells,XchModMozModNID,mv,&
-                                         nhrivsys,hrivsys,nwrivsys,wrivsys,.false.,.false.); call DriverChk(ok,'mf2005_PutRiverFlux') ! MODFLOW puts the river flux for MOZART: skip H and W [m3]
-                ok = mf2005_PutRiverFlux(mf_igrid,XchModMozModRiverFluxWells,XchModMozModCells,XchModMozModNID,mv,&
-                                         nhrivsys,hrivsys,nwrivsys,wrivsys,.false.,.true.); call DriverChk(ok,'mf2005_PutRiverFlux') ! MODFLOW puts the river flux for MOZART ("wellen"): skip H; only W; [m3]
-                ok = mf2005_PutDrainFlux(mf_igrid,XchModMozModDrainFlux,XchModMozModCells,XchModMozModNID,mv,.false.); call DriverChk(ok,'mf2005_PutDrainFlux') ! MODFLOW puts the drain flux for MOZART; don't skip; all layers; [m3]
-                ok = mf2005_PutSaltFlux(mf_igrid,XchModMozModSalt,XchModMozModCells,XchModMozModNID,mv,nwrivsys,wrivsys); call DriverChk(ok,'mf2005_PutSaltFlux') ! MODFLOW puts the salt flux for MOZART
-                ok = MOZART_GetRiverDrainFlux(XchModMozModRiverFlux,XchMozNID,XchMod2MozIdx,XchMod2MozOff,mv,1); call DriverChk(ok,'MOZART_GetRiverDrainFlux') ! MOZART gets the river flux
-                XchModMozModRiverFlux = mv
-                ok = MOZART_GetRiverDrainFlux(XchModMozModRiverFluxWells,XchMozNID,XchMod2MozIdx,XchMod2MozOff,mv,2); call DriverChk(ok,'MOZART_GetRiverDrainFlux') ! MOZART gets the river flux (wells)
-                XchModMozModRiverFluxWells = mv
-                ok = MOZART_GetRiverDrainFlux(XchModMozModDrainFlux,XchMozNID,XchMod2MozIdx,XchMod2MozOff,mv,1); call DriverChk(ok,'MOZART_GetRiverDrainFlux') ! MOZART gets the drain flux
-                XchModMozModDrainFlux = mv
-                ok = MOZART_GetSalt(XchModMozModSalt,XchMozNID,XchMod2MozIdx,XchMod2MozOff,mv,2); call DriverChk(ok,'MOZART_GetSalt') ! MOZART get the salt flux
-                XchModMozModSalt = mv
-             end if
+    ! River stages P, S, T (privsys, srivsys, trivsys)
+       ok = mf2005_PutRiverStageSubsys(mf_igrid,XchModTranModRiverStage,XchModTranModCells,XchModTranModNID,mv,privsys); call DriverChk(ok,'mf2005_PutRiverStageSubsys') ! MODFLOW puts the river stage for TRANSOL [m]: P
+       ok = TRANSOL_GetSeepageRiverDrain(XchModTranModRiverStage,XchModTranModNID,XchMod2TranIdx,XchMod2TranOff,mv,'srivp'); call DriverChk(ok,'TRANSOL_GetSeepageRiverDrain') ! TRANSOL gets the river Stage: P
+       XchModTranModRiverStage = mv
+       ok = mf2005_PutRiverStageSubsys(mf_igrid,XchModTranModRiverStage,XchModTranModCells,XchModTranModNID,mv,srivsys); call DriverChk(ok,'mf2005_PutRiverStageSubsys') ! MODFLOW puts the river stage for TRANSOL [m]: S
+       ok = TRANSOL_GetSeepageRiverDrain(XchModTranModRiverStage,XchModTranModNID,XchMod2TranIdx,XchMod2TranOff,mv,'srivs'); call DriverChk(ok,'TRANSOL_GetSeepageRiverDrain') ! TRANSOL gets the river Stage: S
+       XchModTranModRiverStage = mv
+       ok = mf2005_PutRiverStageSubsys(mf_igrid,XchModTranModRiverStage,XchModTranModCells,XchModTranModNID,mv,trivsys); call DriverChk(ok,'mf2005_PutRiverStageSubsys') ! MODFLOW puts the river stage for TRANSOL [m]: T
+       ok = TRANSOL_GetSeepageRiverDrain(XchModTranModRiverStage,XchModTranModNID,XchMod2TranIdx,XchMod2TranOff,mv,'srivt'); call DriverChk(ok,'TRANSOL_GetSeepageRiverDrain') ! TRANSOL gets the river Stage: T
+       XchModTranModRiverStage = mv                
+       
+       ! Seepage flux
+       ok = mf2005_PutSeepageFlux(mf_igrid,XchModTranModSeepageFlux,XchModTranModCells,XchModTranModNID,mv,.true.); call DriverChk(ok,'mf2005_PutSeepageFlux') ! MODFLOW puts the seepage flux for TRANSOL
+       ok = TRANSOL_GetSeepageRiverDrain(XchModTranModSeepageFlux,XchModTranModNID,XchMod2TranIdx,XchMod2TranOff,mv,'qseep'); call DriverChk(ok,'TRANSOL_GetSeepageRiverDrain') ! TRANSOL gets the seepage flux
+       XchModTranModSeepageFlux = mv
+       
+       ! River fluxes P, S, T (privsys, srivsys, trivsys)
+       ok = mf2005_PutRiverFluxSubsys(mf_igrid,XchModTranModRiverFlux,XchModTranModCells,XchModTranModNID,mv,.true.,privsys); call DriverChk(ok,'mf2005_PutRiverFluxSubsys') ! MODFLOW puts the river flux for TRANSOL [m]: P
+       ok = TRANSOL_GetSeepageRiverDrain(XchModTranModRiverFlux,XchModTranModNID,XchMod2TranIdx,XchMod2TranOff,mv,'qrivp'); call DriverChk(ok,'TRANSOL_GetSeepageRiverDrain') ! TRANSOL gets the river flux: P
+       XchModTranModRiverFlux = mv
+       ok = mf2005_PutRiverFluxSubsys(mf_igrid,XchModTranModRiverFlux,XchModTranModCells,XchModTranModNID,mv,.true.,srivsys); call DriverChk(ok,'mf2005_PutRiverFluxSubsys') ! MODFLOW puts the river flux for TRANSOL [m]: S
+       ok = TRANSOL_GetSeepageRiverDrain(XchModTranModRiverFlux,XchModTranModNID,XchMod2TranIdx,XchMod2TranOff,mv,'qrivs'); call DriverChk(ok,'TRANSOL_GetSeepageRiverDrain') ! TRANSOL gets the river flux: S
+       XchModTranModRiverFlux = mv
+       ok = mf2005_PutRiverFluxSubsys(mf_igrid,XchModTranModRiverFlux,XchModTranModCells,XchModTranModNID,mv,.true.,trivsys); call DriverChk(ok,'mf2005_PutRiverFluxSubsys') ! MODFLOW puts the river flux for TRANSOL [m]: T
+       ok = TRANSOL_GetSeepageRiverDrain(XchModTranModRiverFlux,XchModTranModNID,XchMod2TranIdx,XchMod2TranOff,mv,'qrivt'); call DriverChk(ok,'TRANSOL_GetSeepageRiverDrain') ! TRANSOL gets the river flux: T
+       XchModTranModRiverFlux = mv
+       
+       ! Drain fluxes B(uis) and O(overland flow) (bdrnsys, odrnsys)
+       ok = mf2005_PutDrainFluxSubsys(mf_igrid,XchModTranModDrainFlux,XchModTranModCells,XchModTranModNID,mv,.true.,bdrnsys); call DriverChk(ok,'mf2005_PutDrainFluxSubsys') ! MODFLOW puts the drain flux for TRANSOL [m]: b
+       ok = TRANSOL_GetSeepageRiverDrain(XchModTranModDrainFlux,XchModTranModNID,XchMod2TranIdx,XchMod2TranOff,mv,'qdrnb'); call DriverChk(ok,'TRANSOL_GetSeepageRiverDrain') ! TRANSOL gets the drain flux
+       XchModTranModDrainFlux = mv
+       ok = mf2005_PutDrainFluxSubsys(mf_igrid,XchModTranModDrainFlux,XchModTranModCells,XchModTranModNID,mv,.true.,odrnsys); call DriverChk(ok,'mf2005_PutDrainFluxSubsys') ! MODFLOW puts the drain flux for TRANSOL [m]: b
+       ok = TRANSOL_GetSeepageRiverDrain(XchModTranModDrainFlux,XchModTranModNID,XchMod2TranIdx,XchMod2TranOff,mv,'qdrno'); call DriverChk(ok,'TRANSOL_GetSeepageRiverDrain') ! TRANSOL gets the drain flux
+       XchModTranModDrainFlux = mv
+       
+       ! !##### MODFLOW-MOZART interface !#####
+       ok = mf2005_PutRiverFlux(mf_igrid,XchModMozModRiverFlux,XchModMozModCells,XchModMozModNID,mv,&
+                                nhrivsys,hrivsys,nwrivsys,wrivsys,.false.,.false.); call DriverChk(ok,'mf2005_PutRiverFlux') ! MODFLOW puts the river flux for MOZART: skip H and W [m3]
+       ok = mf2005_PutRiverFlux(mf_igrid,XchModMozModRiverFluxWells,XchModMozModCells,XchModMozModNID,mv,&
+                                nhrivsys,hrivsys,nwrivsys,wrivsys,.false.,.true.); call DriverChk(ok,'mf2005_PutRiverFlux') ! MODFLOW puts the river flux for MOZART ("wellen"): skip H; only W; [m3]
+       ok = mf2005_PutDrainFlux(mf_igrid,XchModMozModDrainFlux,XchModMozModCells,XchModMozModNID,mv,.false.); call DriverChk(ok,'mf2005_PutDrainFlux') ! MODFLOW puts the drain flux for MOZART; don't skip; all layers; [m3]
+       ok = mf2005_PutSaltFlux(mf_igrid,XchModMozModSalt,XchModMozModCells,XchModMozModNID,mv,nwrivsys,wrivsys); call DriverChk(ok,'mf2005_PutSaltFlux') ! MODFLOW puts the salt flux for MOZART
+       ok = MOZART_GetRiverDrainFlux(XchModMozModRiverFlux,XchMozNID,XchMod2MozIdx,XchMod2MozOff,mv,1); call DriverChk(ok,'MOZART_GetRiverDrainFlux') ! MOZART gets the river flux
+       XchModMozModRiverFlux = mv
+       ok = MOZART_GetRiverDrainFlux(XchModMozModRiverFluxWells,XchMozNID,XchMod2MozIdx,XchMod2MozOff,mv,2); call DriverChk(ok,'MOZART_GetRiverDrainFlux') ! MOZART gets the river flux (wells)
+       XchModMozModRiverFluxWells = mv
+       ok = MOZART_GetRiverDrainFlux(XchModMozModDrainFlux,XchMozNID,XchMod2MozIdx,XchMod2MozOff,mv,1); call DriverChk(ok,'MOZART_GetRiverDrainFlux') ! MOZART gets the drain flux
+       XchModMozModDrainFlux = mv
+       ok = MOZART_GetSalt(XchModMozModSalt,XchMozNID,XchMod2MozIdx,XchMod2MozOff,mv,2); call DriverChk(ok,'MOZART_GetSalt') ! MOZART get the salt flux
+       XchModMozModSalt = mv
+    end if
 !##### BEGIN EXCHANGE: AfterFinishTimeStepMODFLOW #############################
 
-             if (rt.eq.rtmodsim .or. rt.eq.rtmodsimtranmoz) then
-                call osd_chdir(simwd2)
-                call MetaSwap_finishTimestep(currentTime)
-             end if
+    if (rt.eq.rtmodsim .or. rt.eq.rtmodsimtranmoz) then
+        call osd_chdir(simwd2)
+        call MetaSwap_finishTimestep(currentTime)
+    end if
 
-             !#### TIMESERIES #####
-             call osd_chdir(root)  
-             ok = mf2005_TimeserieGetHead(mf_igrid); call DriverChk(ok,'mf2005_TimeserieGetHead')
-             call gwf2getcurrentdate(mf_igrid,time_string)  !,issflg(kkper)
-             call tserie1write(0,lss,currentTime,hnoflo,usests,modwd1,submstr(isub),time_string)
+    !#### TIMESERIES #####
+    call osd_chdir(root)  
+    ok = mf2005_TimeserieGetHead(mf_igrid); call DriverChk(ok,'mf2005_TimeserieGetHead')
+    call gwf2getcurrentdate(mf_igrid,time_string)  !,issflg(kkper)
+    call tserie1write(0,lss,currentTime,hnoflo,usests,modwd1,submstr(isub),time_string)
 
-             !#### TIMESERIES #####
-
-          endif
-
-          if (exitcode.eq.0) then
-             ! perform state save, phase 2 (after reading and writing data)
-             if (usestsmodflow) call sts2saverestore(currentTime,stsave,strestore,2)
-             if (mozstsave) then
-                stsave    = .false.
-                strestore = .false.
-                mozstsave = .false.
-             end if
-          endif
+    !#### TIMESERIES #####
+ endif
+ if (exitcode.eq.0) then
+    ! perform state save, phase 2 (after reading and writing data)
+    if (usestsmodflow) call sts2saverestore(currentTime,stsave,strestore,2)
+    if (mozstsave) then
+        stsave    = .false.
+        strestore = .false.
+        mozstsave = .false.
+    end if
+ endif
 
 ! ... next timestep
-          if (exitcode.ne.0) then
-             ! ERROR, do not continue
-             endOfSimulation=.true.
-          else
+ if (exitcode.ne.0) then
+    ! ERROR, do not continue
+    eOS=.true.
+ else
+    ! get new time information
+    ! Let Modflow be leading. don't ask the other components
+    call mf2005_getBeginOfNextTimeStep(BeginOfNextTimeStepMF2005,retValMF2005)
+    ! find errors
+    if (retValMF2005.eq.-1) then
+    ! end of simulation for Modflow
+        eOS=.true.
+        retValMF2005   =0
+    endif
+    if (retValMF2005.ne.0) exitcode = -31
+    if (exitcode.ne.0)     eOS=.true.
+    ! find start time of next timestep
+    !   this may be a time in the 'future', the 'past' or the 'current' time
+    ! nodata value of time-value means: this was the last timestep for this component
+    if (exitcode.eq.0) then
 
-             ! get new time information
-             ! Let Modflow be leading. don't ask the other components
-             call mf2005_getBeginOfNextTimeStep(BeginOfNextTimeStepMF2005,retValMF2005)
-             ! find errors
-             if (retValMF2005.eq.-1) then
-                ! end of simulation for Modflow
-                endOfSimulation=.true.
-                retValMF2005   =0
-             endif
-             if (retValMF2005.ne.0) exitcode = -31
-             if (exitcode.ne.0)     endOfSimulation=.true.
-             ! find start time of next timestep
-             !   this may be a time in the 'future', the 'past' or the 'current' time
-             ! nodata value of time-value means: this was the last timestep for this component
-             if (exitcode.eq.0) then
+        currentTime=nodataTime
 
-                currentTime=nodataTime
+        ! check for each component (ok, only modflow available now)
+        if (BeginOfNextTimeStepMF2005.ne.nodataTime) then
+            if (currentTime.eq.nodataTime) then
+                currentTime=BeginOfNextTimeStepMF2005
+            else
+                currentTime=min(currentTime,BeginOfNextTimeStepMF2005)
+            endif
+        endif
 
-                ! check for each component (ok, only modflow available now)
-                if (BeginOfNextTimeStepMF2005.ne.nodataTime) then
-                   if (currentTime.eq.nodataTime) then
-                      currentTime=BeginOfNextTimeStepMF2005
-                   else
-                      currentTime=min(currentTime,BeginOfNextTimeStepMF2005)
-                   endif
-                endif
+        if (currentTime.eq.nodataTime.and.rt.ne.rtmod) eOS=.true.
+!           if (currentTime.eq.nodataTime) eOS=.true.
+    endif
 
-                if (currentTime.eq.nodataTime.and.rt.ne.rtmod) endOfSimulation=.true.
-!                if (currentTime.eq.nodataTime) endOfSimulation=.true.
-             endif
-          endif
+    if (rt.eq.rtmodsimtranmoz) then
+        dTL = currenttime.lt.endOfCurrentTimeStepMozart .and. .not.eOS
+    else
+        dTL = .not.eOS
+    endif
 
-          if (rt.eq.rtmodsimtranmoz) then
-             doTimeLoop = currenttime.lt.endOfCurrentTimeStepMozart .and. .not.endOfSimulation
-          else
-             doTimeLoop = .not.endOfSimulation
-          end if
-       enddo ! time loop
+ endif
+
+ if (exitcode.ne.0) dTL = .false.
+
+ end subroutine driver_finish_timestep
+
+subroutine driver_finish_simulation(eOS,cMz)
+ !DEC$ ATTRIBUTES DLLEXPORT :: driver_finish_simulation
+ use driver_module
+ use driver_module_par
+ implicit none
+ logical, intent(out) :: eOS,cMz
 
 !##### BEGIN EXCHANGE: BeforeTRANSOLIteration #################################
-       if (rt.eq.rtmodsimtranmoz .and. exitcode.eq.0) then
-          ok = mozart_PutLSWSalt(XchTranMozMozSalt,mv); call DriverChk(ok,'Error mozart_PutLSWSalt') ! MOZART puts the LSW salt concentrations
-          ok = TRANSOL_GetSalt(XchTranMozMozSalt,&
-                               XchSimMozSimNID,XchMoz2SimIdx,XchMoz2ModOff,mv); call DriverChk(ok,'Error TRANSOL_GetSalt') ! TRANSOL gets the LSW salt concentrations
-          XchTranMozMozSalt = mv
-       end if
+ if (rt.eq.rtmodsimtranmoz .and. exitcode.eq.0) then
+    ok = mozart_PutLSWSalt(XchTranMozMozSalt,mv); call DriverChk(ok,'Error mozart_PutLSWSalt') ! MOZART puts the LSW salt concentrations
+    ok = TRANSOL_GetSalt(XchTranMozMozSalt,&
+                        XchSimMozSimNID,XchMoz2SimIdx,XchMoz2ModOff,mv); call DriverChk(ok,'Error TRANSOL_GetSalt') ! TRANSOL gets the LSW salt concentrations
+    XchTranMozMozSalt = mv
+ end if
 
 !####### END EXCHANGE: BeforeTRANSOLIteration #################################
 
-       if (rt.eq.rtmodsimtranmoz .and. exitcode.eq.0) then
-          call osd_chdir(simwd2)
-          call TRANSOL_performIter()
-       end if
+ if (rt.eq.rtmodsimtranmoz .and. exitcode.eq.0) then
+    call osd_chdir(simwd2)
+    call TRANSOL_performIter()
+ end if
 !##### BEGIN EXCHANGE: AfterMozartIteration ###################################
-       if (rt.eq.rtmodsimtranmoz .and. exitcode.eq.0) then
-          ok = MetaSWAP_PutCumSWSprinklingDemandFluxes(XchSimMozSimCuSWSprinklingFlux,mv); call DriverChk(ok,'MetaSWAP_PutCumSWSprinklingDemandFluxes') ! MetaSWAP puts the cumulative surface water sprinkling demand fluxes
-          ok = MetaSWAP_PutCumRunonFluxes(XchSimMozSimCuRunonFlux,mv); call DriverChk(ok,'MetaSWAP_PutCumRunonFluxes') ! MetaSWAP puts the cumulative runon fluxes
-          ok = TRANSOL_PutSalt(XchTranMozTranSalt,mv); call DriverChk(ok,'TRANSOL_PutSalt') ! TRANSOL puts the concentrations
-          ok = MOZART_GetCumSWSprinklingDemandFluxes(XchSimMozSimCuSWSprinklingFlux,&
+ if (rt.eq.rtmodsimtranmoz .and. exitcode.eq.0) then
+    ok = MetaSWAP_PutCumSWSprinklingDemandFluxes(XchSimMozSimCuSWSprinklingFlux,mv); call DriverChk(ok,'MetaSWAP_PutCumSWSprinklingDemandFluxes') ! MetaSWAP puts the cumulative surface water sprinkling demand fluxes
+    ok = MetaSWAP_PutCumRunonFluxes(XchSimMozSimCuRunonFlux,mv); call DriverChk(ok,'MetaSWAP_PutCumRunonFluxes') ! MetaSWAP puts the cumulative runon fluxes
+    ok = TRANSOL_PutSalt(XchTranMozTranSalt,mv); call DriverChk(ok,'TRANSOL_PutSalt') ! TRANSOL puts the concentrations
+    ok = MOZART_GetCumSWSprinklingDemandFluxes(XchSimMozSimCuSWSprinklingFlux,&
                                                   XchMozNID,XchSim2MozIdx,XchSim2MozOff,mv); call DriverChk(ok,'MOZART_GetCumSWSprinklingDemandFluxes') ! MOZART gets the surface water sprinkling demand fluxes
-          XchSimMozSimCuSWSprinklingFlux = mv
-          ok = MOZART_GetCumRunonFluxes(XchSimMozSimCuRunonFlux,&
-                                        XchMozNID,XchSim2MozIdx,XchSim2MozOff,mv); call DriverChk(ok,'MOZART_GetCumRunonFluxes') ! MOZART gets the cumulative runon fluxes
-          ok = MOZART_GetSalt(XchTranMozTranSalt,&
-                              XchMozNID,XchTran2MozIdx,XchTran2MozOff,mv,1); call DriverChk(ok,'MOZART_GetSalt') ! MOZART gets the concentrations
-          XchTranMozTranSalt = mv
-       end if
+    XchSimMozSimCuSWSprinklingFlux = mv
+    ok = MOZART_GetCumRunonFluxes(XchSimMozSimCuRunonFlux,&
+                                XchMozNID,XchSim2MozIdx,XchSim2MozOff,mv); call DriverChk(ok,'MOZART_GetCumRunonFluxes') ! MOZART gets the cumulative runon fluxes
+    ok = MOZART_GetSalt(XchTranMozTranSalt,&
+                        XchMozNID,XchTran2MozIdx,XchTran2MozOff,mv,1); call DriverChk(ok,'MOZART_GetSalt') ! MOZART gets the concentrations
+    XchTranMozTranSalt = mv
+ end if
 !####### END EXCHANGE: AfterMozartIteration ###################################
 
-       if (rt.eq.rtmodsimtranmoz .and. exitcode.eq.0) then
-          call osd_chdir(simwd2)
-          call TRANSOL_finishTimeStep(currentTime)
-          dtMozart = endOfCurrentTimeStepMozart - currentTimeMozart
-          call osd_chdir(mozwd)
-          call mozart_finishTimeStep(iterMozart,dtMozart,usetransol)
-          call mozart_prepareTimeStep(endOfSimulation,convergedMozart,currentTime) ! read signal file
-       end if
+ if (rt.eq.rtmodsimtranmoz .and. exitcode.eq.0) then
+    call osd_chdir(simwd2)
+    call TRANSOL_finishTimeStep(currentTime)
+    dtMozart = endOfCurrentTimeStepMozart - currentTimeMozart
+    call osd_chdir(mozwd)
+    call mozart_finishTimeStep(iterMozart,dtMozart,usetransol)
+    call mozart_prepareTimeStep(eOS,cMZ,currentTime) ! read signal file
+ end if
 
-       ! make sure MODFLOW-MetaSWAP terminates normally
-       if (rt.eq.rtmodsim) then
-          convergedMozart = .true.
-       end if
-    end do ! Mozart loop
- end do
+ ! make sure MODFLOW-MetaSWAP terminates normally
+ if (rt.eq.rtmodsim) then
+    cMZ = .true.
+ end if
+  
+ if (exitcode.ne.0) eOS = .True.
+
+end subroutine driver_finish_simulation
+
+subroutine driver_finish_pest(cPst)
+ !DEC$ ATTRIBUTES DLLEXPORT :: driver_finish_pest
+ use driver_module
+ use driver_module_par
+ use imod_utl, only: imod_utl_closeunits
+ use mod_pest, only: pestnext
+ implicit none
+ logical, intent(inout) :: cPst
+ logical pks7mpimasterwrite !## zou in theorie hier niet hoeven te staan, maar compileren lukt anders niet...
 
 ! ... end
  call osd_chdir(modwd2)
@@ -893,26 +1029,10 @@ call pks7mpibarrier() ! PKS
 ! next pest iteration
  call imod_utl_closeunits()
  if (.not.lipest) then
-    convergedPest=.true.
+    cPst=.true.
  else
-  convergedPest=pestnext(lss,modwd1)
+  cPst=pestnext(lss,modwd1)
  end if
 ! call imod_utl_closeunits()
 
- end do pestloop
-
-! PKS IDF merge
- call osd_chdir(root)
- call pks_imod_utl_write_idfmergefile(modwd2,idfmergefile)
- if (lidfmerge.and.lpks) call pks_imod_utl_idfmerge(idfmergefile)
-
- end do submodelloop
-
-! timing output
-call osd_chdir(root)
-call timing_stat() 
- 
-call pks7mpifinalize()! PKS 
- 
-end program
-
+end subroutine driver_finish_pest
