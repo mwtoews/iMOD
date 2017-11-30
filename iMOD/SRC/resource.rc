@@ -8,13 +8,13 @@
 //
 // Winteracter resource script. 
 //
-// Modified : 17/Nov/2017 16:39:37
+// Modified : 30/Nov/2017 13:46:12
 //
 ///////////////////////////////////////////////////
 //
 // Include files
 //
-#include "..\LIB\WINTERACTER\OS_X64\include\winparam.h"
+#include "winparam.h"
 #ifdef XLIB
 #include "..\LIB\WINTERACTER\OS_X64\include\filesel.rc"
 #include "..\LIB\WINTERACTER\OS_X64\include\colour.rc"
@@ -6104,7 +6104,7 @@ BEGIN
     CONTROL "Clipping",IDF_CHECK4,"BUTTON",WS_CHILD | WS_VISIBLE | WS_GROUP | WS_TABSTOP | BS_AUTOCHECKBOX | BS_TEXT,   51,  190,   47,   12
     CONTROL "Implode",IDF_LABEL7,"STATIC",WS_CHILD | WS_VISIBLE | WS_GROUP | SS_LEFT,   74,  222,   29,    8
     CONTROL "Explode",IDF_LABEL10,"STATIC",WS_CHILD | WS_VISIBLE | WS_GROUP | SS_LEFT,  152,  222,   29,    8
-    CONTROL "Transparency",IDF_CHECK5,"BUTTON",WS_CHILD | WS_VISIBLE | WS_GROUP | WS_TABSTOP | BS_AUTOCHECKBOX | BS_TEXT,  106,  188,   73,   12
+    CONTROL "Transparency",IDF_CHECK5,"BUTTON",WS_CHILD | WS_VISIBLE | WS_GROUP | WS_TABSTOP | BS_AUTOCHECKBOX | BS_TEXT,  106,  190,   73,   12
 END
 
 ID_D3DSETTINGS_TAB1 RCDATA
@@ -12451,7 +12451,7 @@ BEGIN
         END
         MENUITEM "Show 3D Coordinates",                      ID_SHOW3DCOORDINATES
         MENUITEM SEPARATOR
-        MENUITEM "Anaglyphs",                                ID_ANAGLYPHS
+        MENUITEM "Anaglyph",                                 ID_ANAGLYPHS
         MENUITEM "Orthographic Projection",                  ID_ORTHO
         MENUITEM SEPARATOR
         MENUITEM "&Reset View Angle",                        ID_3DVIEW_RESET
@@ -12922,4 +12922,4 @@ END
 //*WI* FILENAME    resource.f90
 //*WI* FMODNAME    RESOURCE
 //*WI* LASTTYPE        2
-//*WI* LASTRES       157
+//*WI* LASTRES       155

@@ -2975,12 +2975,31 @@ CONTAINS
 
  !## correct bnd if top/bot nodata turn into inactive
  DO IROW=1,BND(1)%NROW; DO ICOL=1,BND(1)%NCOL
+
+  !## make nodata equal zero for boundary conditions
   DO ILAY=1,NLAY
-   IF(TOP(ILAY)%X(ICOL,IROW).EQ.TOP(ILAY)%NODATA)THEN
-    DO I=1,NLAY; BND(I)%X(ICOL,IROW)=0.0; ENDDO
-    EXIT
-   ENDIF
+   IF(BND(ILAY)%X(ICOL,IROW).EQ.BND(ILAY)%NODATA)BND(ILAY)%X(ICOL,IROW)=0.0
   ENDDO
+  
+  !## if top/base is inactive, deactivate all
+  IF(TOP(1   )%X(ICOL,IROW).EQ.TOP(1   )%NODATA.OR. &
+     TOP(NLAY)%X(ICOL,IROW).EQ.TOP(NLAY)%NODATA)THEN
+   DO ILAY=1,NLAY; BND(ILAY)%X(ICOL,IROW)=0.0; ENDDO
+  !## check/correct in between layers
+  ELSE
+   DO ILAY=1,NLAY
+    
+    IF(BOT(ILAY)%X(ICOL,IROW).EQ.BOT(ILAY)%NODATA)THEN
+     BOT(ILAY)%X(ICOL,IROW)=TOP(ILAY)%X(ICOL,IROW)
+    ENDIF
+    IF(ILAY.GT.1)THEN
+     IF(TOP(ILAY)%X(ICOL,IROW).EQ.TOP(ILAY)%NODATA)THEN
+      TOP(ILAY)%X(ICOL,IROW)=BOT(ILAY-1)%X(ICOL,IROW)
+     ENDIF
+    ENDIF
+    
+   ENDDO
+  ENDIF
  ENDDO; ENDDO
  
  !## correct top/bot
@@ -5682,9 +5701,9 @@ CONTAINS
  !## check whether the function need to be used for plotting purposes
  IF(UTL_READINITFILE('CSVFNAME',LINE,IU,1))THEN
   
-  !##v41
-  WRITE(*,'(/A/)') 'Oops, this functionality is under construction and not yet available in this release.'
-  STOP
+!  !##v41
+!  WRITE(*,'(/A/)') 'Oops, this functionality is under construction and not yet available in this release.'
+!  STOP
 
   READ(LINE,*) FNAME; WRITE(*,'(A)') 'CSVFNAME='//TRIM(FNAME)
   !## imod need to read the csv first to continue
