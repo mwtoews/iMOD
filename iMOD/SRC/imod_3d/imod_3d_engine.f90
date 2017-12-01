@@ -4337,13 +4337,13 @@ SOLLOOP: DO I=1,NSOLLIST
  END DO
 
  !## number of coordinates
- NXY=NXYZCROSS 
+ NXY=NXYZCROSS(1)
  IF(ASSOCIATED(XY))DEALLOCATE(XY); ALLOCATE(XY(2,NXY)); XY=0.0
 
  !## set coordinates of cross-section
- DO I=1,NXYZCROSS
-  XY(1,I)=XYZCROSS(I)%X
-  XY(2,I)=XYZCROSS(I)%Y
+ DO I=1,NXYZCROSS(1)
+  XY(1,I)=XYZCROSS(I,1)%X
+  XY(2,I)=XYZCROSS(I,1)%Y
  ENDDO
 
  !## compute profile through idf in 3D

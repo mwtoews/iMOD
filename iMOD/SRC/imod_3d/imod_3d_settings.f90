@@ -598,7 +598,11 @@ CONTAINS
       !## add new fench-diagram
       CASE (ID_NEW)
        !## start drawing a cross-section
-       IDRAWCROSS=1; NXYZCROSS=1; IVALIDCROSS=0
+       IDRAWCROSS=1; NXYZCROSS=0; NXYZCROSS(1)=1; IVALIDCROSS=0
+      CASE (ID_NEWAUTO)
+       !## initiate window
+       CALL IMOD3D_FENCEINIT()
+       CALL IMOD3D_FENCECOMPUTE()
       !## delete fench-diagram
       CASE (ID_DELETE)
        IF(IMOD3D_SOL_DELETE())THEN
@@ -878,6 +882,21 @@ CONTAINS
      SELECT CASE (MESSAGE%VALUE1)    
       CASE (ID_SELECT)
        CALL IMOD3D_SELECTOBJECT()
+     END SELECT
+   END SELECT
+   
+  !## identify-dialog
+  CASE (ID_D3DSETTINGS_FENCES)
+   SELECT CASE (ITYPE)
+    CASE (FIELDCHANGED)
+     CALL IMOD3D_FENCECOMPUTE()
+    CASE (PUSHBUTTON)
+     SELECT CASE (MESSAGE%VALUE1)
+      CASE (IDOK)
+
+      CASE (IDHELP)
+      CASE (IDCANCEL)
+       CALL IMOD3D_FENCECLOSE()
      END SELECT
    END SELECT
    

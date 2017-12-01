@@ -32,6 +32,54 @@ USE MOD_3D_ENGINE, ONLY : IMOD3D_SETUPAXES_LABELS,IMOD3D_LEGEND_MAIN,IMOD3D_IPF_
 CONTAINS
 
  !###======================================================================
+ SUBROUTINE IMOD3D_FENCEINIT()
+ !###======================================================================
+ IMPLICIT NONE
+ 
+ CALL WDIALOGLOAD(ID_D3DSETTINGS_FENCES,ID_D3DSETTINGS_FENCES)
+ CALL WDIALOGSHOW(-1,-1,0,2)
+
+ CALL WDIALOGFIELDOPTIONS(IDF_REAL1,3,1)
+ CALL WDIALOGFIELDOPTIONS(IDF_REAL2,3,1)
+ CALL WDIALOGFIELDOPTIONS(IDF_REAL3,3,1)
+
+ IDRAWCROSS=-1; NXYZCROSS=0 !; NXYZCROSS(1)=1 !; IVALIDCROSS=0       
+
+ END SUBROUTINE IMOD3D_FENCEINIT
+  
+ !###======================================================================
+ SUBROUTINE IMOD3D_FENCECOMPUTE()
+ !###======================================================================
+ IMPLICIT NONE
+ REAL :: NX,NY,A
+ 
+ CALL WDIALOGSELECT(ID_D3DSETTINGS_FENCES)
+ CALL WDIALOGGETREAL(IDF_REAL1,NX)
+ CALL WDIALOGGETREAL(IDF_REAL2,NY)
+ CALL WDIALOGGETREAL(IDF_REAL3,A )
+  
+!     IF(IDRAWCROSS.EQ.1.AND.IVALIDCROSS.EQ.1)THEN
+!      !## add current point to list of points
+!      NXYZCROSS(1)=NXYZCROSS(1)+1
+!      XYZCROSS(NXYZCROSS,1)%X=INDPOS%X
+!      XYZCROSS(NXYZCROSS,1)%Y=INDPOS%Y
+!     ELSE
+ END SUBROUTINE IMOD3D_FENCECOMPUTE
+
+ !###======================================================================
+ SUBROUTINE IMOD3D_FENCECLOSE()
+ !###======================================================================
+ IMPLICIT NONE
+ 
+ CALL WDIALOGSELECT(ID_D3DSETTINGS_FENCES)
+ CALL WDIALOGUNLOAD()
+ CALL WDIALOGSELECT(ID_D3DSETTINGS)
+ 
+ IDRAWCROSS=0; IDRAWCROSS=0; NXYZCROSS=0
+ 
+ END SUBROUTINE IMOD3D_FENCECLOSE
+ 
+ !###======================================================================
  SUBROUTINE IMOD3D_PROCESSKEYS(IKEY)
  !###======================================================================
  IMPLICIT NONE
@@ -199,9 +247,9 @@ CONTAINS
     CASE (LEFTBUTTON)
      IF(IDRAWCROSS.EQ.1.AND.IVALIDCROSS.EQ.1)THEN
       !## add current point to list of points
-      NXYZCROSS=NXYZCROSS+1
-      XYZCROSS(NXYZCROSS)%X=INDPOS%X
-      XYZCROSS(NXYZCROSS)%Y=INDPOS%Y
+      NXYZCROSS(1)=NXYZCROSS(1)+1
+      XYZCROSS(NXYZCROSS(1),1)%X=INDPOS%X
+      XYZCROSS(NXYZCROSS(1),1)%Y=INDPOS%Y
      ELSE
       MOVING_LEFT  = .TRUE.
       BEGIN_LEFT   = CART2D(X,Y)
