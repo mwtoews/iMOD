@@ -733,7 +733,9 @@ CONTAINS
 
  !## reset IPF as its appearance depends on zscale and that parameter is know by now
  CALL UTL_MESSAGEHANDLE(0); IF(.NOT.IMOD3D_IPF(1,0))THEN; ENDIF; CALL UTL_MESSAGEHANDLE(1)
-! DO IIPF=1,NIPF; IF(IPFPLOT(IIPF)%ISEL.EQ.1)EXIT; ENDDO; CALL IMOD3D_IPF_SELECTION(IIPF)
+
+ !## make labels for ipfs
+ CALL IMOD3D_IPF_LABELS()
 
  !## construct legend
  CALL IMOD3D_LEGEND_MAIN()

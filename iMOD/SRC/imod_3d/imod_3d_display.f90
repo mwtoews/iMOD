@@ -656,7 +656,7 @@ CONTAINS
    IIPF=IPFDLIST(1,I) 
    !## cycle if not selected to plot labels
    IF(IPFPLOT(IIPF)%IPLOTLABELS.EQ.0)CYCLE
-   !## selected in menu-field
+   !## selected in menu-field IPFLISTINDEX(:,3)
    IF(IPFPLOT(IIPF)%ISEL.EQ.0.OR.IPFLISTINDEX(I,3).EQ.0)CYCLE
    IF(ISELECTED.EQ.I)THEN
     CALL IMOD3D_SETCOLOR(WRGB(255,0,0))

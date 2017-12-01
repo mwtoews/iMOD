@@ -30,7 +30,7 @@ USE MODPLOT, ONLY : LEGENDOBJ
 
 LOGICAL :: LCAP
 INTEGER,SAVE :: IORTHO
-INTEGER,PARAMETER :: MXROWFORFANCY=500 !## maximum number of rows to change to non-fancy
+INTEGER,PARAMETER :: MXROWFORFANCY=1000 !## maximum number of rows to change to non-fancy
 
 CHARACTER(LEN=3),DIMENSION(:),ALLOCATABLE :: NANSTRING
 
