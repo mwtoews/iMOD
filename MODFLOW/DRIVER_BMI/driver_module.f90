@@ -1357,7 +1357,7 @@ subroutine driver_init(config_file,nnsub)
  character(len=*), intent(in) :: config_file ! nam-file, components-file or run file
  integer, intent(out) :: nnsub
  
- !naar mijn idee zouden onderstaande functies gewoon bovenaan deze module moeten blijven staan?
+ !naar mijn idee zouden onderstaande functies gewoon bovenaan deze module moeten blijven staan? Liduin
  integer   osd_open2,cfn_length 
  double precision cfn_mjd_nodata 
  logical pks7mpimasterwrite
@@ -1824,7 +1824,7 @@ subroutine driver_init_iter(stssaveOverRule)
  implicit none
  
  logical, intent(in) :: stssaveOverRule
- logical pks7mpimasterwrite !## zou in theorie hier niet hoeven te staan, maar compileren lukt anders niet...
+ logical pks7mpimasterwrite !## zou in theorie hier niet hoeven te staan, maar compileren lukt anders niet... Liduin
        
  tsc=tsc+1
  timestep = timestep + 1
@@ -1897,7 +1897,7 @@ subroutine driver_iter(convergedin)
 !DEC$ ATTRIBUTES DLLEXPORT :: driver_iter
  implicit none
  logical, intent(inout) :: convergedin
- logical pks7mpimasterwrite !## zou in theorie hier niet hoeven te staan, maar compileren lukt anders niet...
+ logical pks7mpimasterwrite !## zou in theorie hier niet hoeven te staan, maar compileren lukt anders niet... Liduin
 
  if (rt.eq.rtmodsim .or. rt.eq.rtmodsimtranmoz) then
     call MetaSwap_prepareIter(iterMetaSwap)  ! only action: iter=iter+1
@@ -1957,7 +1957,7 @@ subroutine driver_finish_timestep(convergedin,eOS,dTL)
  
  logical, intent(in) :: convergedin
  logical, intent(inout) :: eOS,dTL
- logical pks7mpimasterwrite !## zou in theorie hier niet hoeven te staan, maar compileren lukt anders niet...
+ logical pks7mpimasterwrite !## zou in theorie hier niet hoeven te staan, maar compileren lukt anders niet...Liduin
  
  if (.not.convergedin) then
     if (pks7mpimasterwrite()) write(*,*) ' Model did not converge!',exitcode
@@ -2156,7 +2156,7 @@ subroutine driver_finish_pest(cPst)
  use mod_pest, only: pestnext
  implicit none
  logical, intent(inout) :: cPst
- logical pks7mpimasterwrite !## zou in theorie hier niet hoeven te staan, maar compileren lukt anders niet...
+ logical pks7mpimasterwrite !## zou in theorie hier niet hoeven te staan, maar compileren lukt anders niet...Liduin
 
 ! ... end
  call osd_chdir(modwd2)
