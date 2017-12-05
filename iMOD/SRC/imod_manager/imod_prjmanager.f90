@@ -5720,7 +5720,7 @@ TOPICLOOP: DO ITOPIC=1,MAXTOPICS
 !NUZTOP=1 !## recharge specified to top cell
   CASE (18); NUZGAG=0; IRUNFLG=0; NUZTOP=1
 !   WRITE(IU,'(A)') 'SPECIFYTHTR'
-   LINE='NaN1#,2,'//TRIM(ITOS(IRUNFLG))//',1,'//TRIM(ITOS(-IUZFCB1))//',0,10,30,'//TRIM(ITOS(NUZGAG))//',0.5'; WRITE(IU,'(A)') TRIM(LINE)
+   LINE='NaN1#,2,'//TRIM(ITOS(IRUNFLG))//',1,'//TRIM(ITOS(-IUZFCB1))//',0,20,50,'//TRIM(ITOS(NUZGAG))//',0.5'; WRITE(IU,'(A)') TRIM(LINE)
    
 !IUZFOPT=2 !## permeabiliy specified in lpf
 !irunflg=0 !## water discharge from top removed form the model (usage of SFR/LAK needed)

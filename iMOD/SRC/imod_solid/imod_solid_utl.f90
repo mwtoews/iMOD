@@ -417,22 +417,22 @@ CONTAINS
   LINE=LINE(:I-1)//'.SPF'
  ENDIF
 
+ IF(LEN_TRIM(DIR).GT.0)LINE=TRIM(DIR)//'\'//TRIM(LINE)
+ 
  !## read spf-file, put in object spf()%
  IU=UTL_GETUNIT()
  IF(RW.EQ.'R'.OR.RW.EQ.'r')THEN
-  CALL OSD_OPEN(IU,FILE=TRIM(DIR)//'\'//TRIM(LINE),ACTION='READ', &
-       FORM='FORMATTED',IOSTAT=IOS,STATUS='OLD')
+  CALL OSD_OPEN(IU,FILE=TRIM(LINE),ACTION='READ',FORM='FORMATTED',IOSTAT=IOS,STATUS='OLD')
  ELSEIF(RW.EQ.'W'.OR.RW.EQ.'w')THEN
-  CALL OSD_OPEN(IU,FILE=TRIM(DIR)//'\'//TRIM(LINE),ACTION='WRITE', &
-       FORM='FORMATTED',IOSTAT=IOS,STATUS='UNKNOWN')
+  CALL OSD_OPEN(IU,FILE=TRIM(LINE),ACTION='WRITE',FORM='FORMATTED',IOSTAT=IOS,STATUS='UNKNOWN')
  ENDIF
  IF(IOS.NE.0)THEN
   IF(RW.EQ.'R'.OR.RW.EQ.'r')THEN
    CALL WMESSAGEBOX(OKONLY,EXCLAMATIONICON,COMMONOK,'Cannot open Solid Cross-Section File (*.spf) for reading.'//CHAR(13)// &
-    '['//TRIM(DIR)//'\'//TRIM(LINE)//']','Warning')
+    '['//TRIM(LINE)//']','Warning')
   ELSEIF(RW.EQ.'W'.OR.RW.EQ.'w')THEN
    CALL WMESSAGEBOX(OKONLY,EXCLAMATIONICON,COMMONOK,'Cannot open Solid Cross-Section File (*.spf) for writing.'//CHAR(13)// &
-    '['//TRIM(DIR)//'\'//TRIM(LINE)//']','Warning')
+    '['//TRIM(LINE)//']','Warning')
   ENDIF
   RETURN
  ENDIF
@@ -442,7 +442,7 @@ CONTAINS
  IF(RW.EQ.'R'.OR.RW.EQ.'r')THEN
 
   !## number of coordinates
-  READ(IU,*) SPF(ISPF)%NXY
+  READ(IU,*) SPF(ISPF)%NXY,NTBSOL ! //','//TRIM(ITOS(SIZE(SPF(ISPF)%PROF)))
   ALLOCATE(SPF(ISPF)%X(SPF(ISPF)%NXY),SPF(ISPF)%Y(SPF(ISPF)%NXY))
   !## read coordinates
   DO I=1,SPF(ISPF)%NXY; READ(IU,*) SPF(ISPF)%X(I),SPF(ISPF)%Y(I); ENDDO
@@ -464,7 +464,11 @@ CONTAINS
    !## default linewidth=1
    SPF(ISPF)%PROF(IL)%IWIDTH=1
    !## default labelname
-   SPF(ISPF)%PROF(IL)%LNAME=SLD(1)%INTNAME(IL)(INDEX(SLD(1)%INTNAME(IL),'\',.TRUE.)+1:INDEX(SLD(1)%INTNAME(IL),'.',.TRUE.)-1)
+   IF(ALLOCATED(SLD))THEN
+    SPF(ISPF)%PROF(IL)%LNAME=SLD(1)%INTNAME(IL)(INDEX(SLD(1)%INTNAME(IL),'\',.TRUE.)+1:INDEX(SLD(1)%INTNAME(IL),'.',.TRUE.)-1)
+   ELSE
+    SPF(ISPF)%PROF(IL)%LNAME='Interface_'//TRIM(ITOS(IL))
+   ENDIF
    !## default lines are active
    SPF(ISPF)%PROF(IL)%IACTIVE=1
    !## read number of position/ilay for il-th elevation
@@ -510,7 +514,7 @@ CONTAINS
  ELSEIF(RW.EQ.'W'.OR.RW.EQ.'w')THEN
 
   !## number of coordinates
-  LINE=TRIM(ITOS(SPF(ISPF)%NXY))
+  LINE=TRIM(ITOS(SPF(ISPF)%NXY))//','//TRIM(ITOS(SIZE(SPF(ISPF)%PROF)))
   WRITE(IU,'(A)',IOSTAT=IOS) TRIM(LINE)
   !## read coordinates
   DO I=1,SPF(ISPF)%NXY

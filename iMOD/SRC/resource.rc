@@ -8,7 +8,7 @@
 //
 // Winteracter resource script. 
 //
-// Modified : 01/Dec/2017 20:21:49
+// Modified : 04/Dec/2017 16:26:47
 //
 ///////////////////////////////////////////////////
 //
@@ -11810,7 +11810,7 @@ BEGIN
         POPUP "Import"
         BEGIN
             MENUITEM "Import Deviated Wells ...",                ID_IMPORT_DEVWELLS
-            MENUITEM "KeyPillars Petrel ASCII format ...",       ID_IMPORTKEYPILLARS
+            MENUITEM "Import KeyPillars Petrel ASCII format...", ID_IMPORTKEYPILLARS
         END
         MENUITEM SEPARATOR
         MENUITEM "P&references ...",                         ID_PREFERENCES
@@ -12948,5 +12948,5 @@ END
 //*WI* FORTSAVE    1
 //*WI* FILENAME    resource.f90
 //*WI* FMODNAME    RESOURCE
-//*WI* LASTTYPE        2
-//*WI* LASTRES       298
+//*WI* LASTTYPE        1
+//*WI* LASTRES         7

@@ -268,17 +268,22 @@ CONTAINS
        GCODE(N)=DTOL(I+1)+1.0
        
        IF(ICLEAN(I+1).EQ.1)THEN
+       
         !## add intermediate point, take into account maximum array-size
         DO J=1,N !MIN(N,SIZE(SPF(ISPF)%PROF(I)%PX))
          !## use point from Urs-Douglas-Peucker algorithm (greater then given tolerance)
          IF(GCODE(J).GT.DTOL(I+1))THEN
+
           !## put connection of current drill to 
           II=II+1
           !## maximize the size of the vector - overwrite values
           II=MIN(II,SIZE(SPF(ISPF)%PROF(I)%PX))
-          SPF(ISPF)%PROF(I)%PX(II)=SERIE(IIDF)%X(J)
-          SPF(ISPF)%PROF(I)%PZ(II)=SERIE(IIDF)%Y(J)
+          SPF(ISPF)%PROF(I)%PX(II)=SERIE(IIDF)%X(IS) !J)
+          SPF(ISPF)%PROF(I)%PZ(II)=SERIE(IIDF)%Y(IS) !J)
           SPF(ISPF)%PROF(I)%NPOS=SPF(ISPF)%PROF(I)%NPOS+1
+
+          IS=IS+1
+
          ENDIF
         ENDDO
 
@@ -298,7 +303,7 @@ CONTAINS
         ENDIF
 
         !## add intermediate point, take into account maximum array-size
-        DO J=2,n !MIN(N-1,SIZE(SPF(ISPF)%PROF(I)%PX))
+        DO J=2,N !MIN(N-1,SIZE(SPF(ISPF)%PROF(I)%PX))
          !## use point from Urs-Douglas-Peucker algorithm (greater then given tolerance)
          IF(GCODE(J).GT.DTOL(I+1))THEN
           !## cannot add more points          
@@ -647,7 +652,7 @@ CONTAINS
 
   !## shift selection
   IF(NSPF.GT.1)THEN
-   DO I=J,NSPF-1; JSEL(I)=JSEL(I+1); ENDDO
+   DO I=J,NSPF-1; JSEL(I)=JSEL(I+1); ENDDO; JSEL(NSPF)=0
   ELSE
    JSEL(1)=0
   ENDIF
@@ -826,7 +831,6 @@ CONTAINS
  ALLOCATE(SPF(NSPF)%PROF(NTBSOL))
 
  DZ=(Z2-Z1)/REAL(NTBSOL)
-! DZ=(GRAPHUNITS(4,1)-GRAPHUNITS(2,1))/REAL(NTBSOL)
  DO I=1,SIZE(SPF(NSPF)%PROF) 
   SPF(NSPF)%PROF(I)%NPOS=0
   ALLOCATE(SPF(NSPF)%PROF(I)%PX(MXPX))
@@ -837,7 +841,6 @@ CONTAINS
    SPF(NSPF)%PROF(I)%PX(2)=TX
    !## mean vertical depth as first guess!
    SPF(NSPF)%PROF(I)%PZ(1)=Z2-DZ*REAL(I-1) 
-!   SPF(NSPF)%PROF(I)%PZ(1)=GRAPHUNITS(4,1)-DZ*REAL(I-1) 
    SPF(NSPF)%PROF(I)%PZ(2)=SPF(NSPF)%PROF(I)%PZ(1)
   ENDIF
   IF(MOD(I,2).NE.0)SPF(NSPF)%PROF(I)%ICLR  =WRGB(255,0,0)
