@@ -281,10 +281,10 @@ CONTAINS
           SPF(ISPF)%PROF(I)%PX(II)=SERIE(IIDF)%X(IS) !J)
           SPF(ISPF)%PROF(I)%PZ(II)=SERIE(IIDF)%Y(IS) !J)
           SPF(ISPF)%PROF(I)%NPOS=SPF(ISPF)%PROF(I)%NPOS+1
-
-          IS=IS+1
+!          IS=IS+1
 
          ENDIF
+         IS=IS+1
         ENDDO
 
        ELSE

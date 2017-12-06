@@ -8,7 +8,7 @@
 //
 // Winteracter resource script. 
 //
-// Modified : 04/Dec/2017 16:26:47
+// Modified : 06/Dec/2017 17:07:30
 //
 ///////////////////////////////////////////////////
 //
@@ -6127,7 +6127,7 @@ BEGIN
 "[Ranges] \n"
 " 1204               0             100 \n"
 "[Trackbars] \n"
-" 1204              10               5              10               0               0 \n"
+" 1204              10               1              10               0               0 \n"
 "[Fonts] \n"
 " 1084    6 Arial, 400 0 \n"
 " 1140    6 Arial, 400 0 \n"
@@ -11415,12 +11415,12 @@ BEGIN
     CONTROL "&Cancel",IDCANCEL,"BUTTON",WS_CHILD | WS_VISIBLE | WS_TABSTOP | BS_PUSHBUTTON | BS_TEXT | BS_FLAT,  196,  108,   40,   14
     CONTROL "&Apply",IDOK,"BUTTON",WS_CHILD | WS_VISIBLE | WS_GROUP | WS_TABSTOP | BS_PUSHBUTTON | BS_TEXT | BS_FLAT,   24,  112,   40,   14
     CONTROL "Group",IDF_GROUP1,"BUTTON",WS_CHILD | WS_VISIBLE | WS_GROUP | BS_GROUPBOX | BS_TEXT,   18,   12,  216,   88
-    CONTROL "10.000",IDF_REAL1,"REALSPIN",WS_CHILD | WS_VISIBLE | WS_BORDER | WS_GROUP | WS_TABSTOP | ES_LEFT | ES_RIGHT | ES_MULTILINE,   92,   32,   50,   12
     CONTROL "NUmber Nx",IDF_LABEL1,"STATIC",WS_CHILD | WS_VISIBLE | WS_GROUP | SS_LEFT,   26,   36,   40,    8
     CONTROL "NUmber Ny",IDF_LABEL2,"STATIC",WS_CHILD | WS_VISIBLE | WS_GROUP | SS_LEFT,   24,   60,   40,    8
-    CONTROL "10.000",IDF_REAL2,"REALSPIN",WS_CHILD | WS_VISIBLE | WS_BORDER | WS_GROUP | WS_TABSTOP | ES_LEFT | ES_RIGHT | ES_MULTILINE,   90,   56,   50,   12
     CONTROL "Angle",IDF_LABEL3,"STATIC",WS_CHILD | WS_VISIBLE | WS_GROUP | SS_LEFT,   28,   76,   40,    8
     CONTROL "0.0000",IDF_REAL3,"REALSPIN",WS_CHILD | WS_VISIBLE | WS_BORDER | WS_GROUP | WS_TABSTOP | ES_LEFT | ES_RIGHT | ES_MULTILINE,   94,   72,   50,   12
+    CONTROL "0",IDF_INTEGER1,"INTEGERSPIN",WS_CHILD | WS_VISIBLE | WS_BORDER | WS_GROUP | WS_TABSTOP | ES_LEFT | ES_RIGHT | ES_MULTILINE,  104,   32,   50,   12
+    CONTROL "0",IDF_INTEGER2,"INTEGERSPIN",WS_CHILD | WS_VISIBLE | WS_BORDER | WS_TABSTOP | ES_LEFT | ES_RIGHT | ES_MULTILINE,  102,   52,   50,   12
 END
 
 ID_D3DSETTINGS_FENCES RCDATA
@@ -12948,5 +12948,5 @@ END
 //*WI* FORTSAVE    1
 //*WI* FILENAME    resource.f90
 //*WI* FMODNAME    RESOURCE
-//*WI* LASTTYPE        1
-//*WI* LASTRES         7
+//*WI* LASTTYPE        2
+//*WI* LASTRES       298

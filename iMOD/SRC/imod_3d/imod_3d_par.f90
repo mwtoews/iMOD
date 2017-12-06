@@ -76,7 +76,8 @@ TYPE IDFSETTING
  INTEGER :: ICONFIG         !## configuration number
  INTEGER :: IACC            !## accuracy (=resolution) number
  INTEGER :: ITRANSPARANCY   !## transparancy
- INTEGER :: ISTACKED        !## stacked idf-files
+ INTEGER :: ISTACKED        !## stacked idf-files (0-100)
+ REAL :: FSTACKED        !## stacked idf-files (computed offset)
  INTEGER :: ICLIP           !## effected by clipping
  CHARACTER(LEN=50) :: ALIAS,DISP_ALIAS
  CHARACTER(LEN=256) :: FNAME
