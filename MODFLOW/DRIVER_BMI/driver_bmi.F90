@@ -1088,6 +1088,7 @@ end module mf_bmi_module
     if (itmuni.eq.3) factor = 1/24.d0    ! hours    
     
     allocate(mf_delt(dis%nper))
+    allocate(dis%sp(dis%nper))
     one=1.
     mf_end_time = tstart  
     mf_nper = dis%nper
@@ -1100,8 +1101,8 @@ end module mf_bmi_module
           mf_delt(kper)=perln*(one-tsmlt)/(one-tsmlt)**nsp
        end if    
        mf_end_time = mf_end_time+mf_delt(kper)*factor ! [d]    
-    end do     
-    
+    end do
+
   end function initialize
 
   subroutine get_start_time(t) bind(C, name="get_start_time")
