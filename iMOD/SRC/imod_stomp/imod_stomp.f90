@@ -59,6 +59,7 @@ CONTAINS
  CALL STOMP_WRITE_AQ_RE_PERM(IU)
  CALL STOMP_WRITE_GAS_REL_PERM(IU)
  CALL STOMP_WRITE_INITIAL_CONDITIONS(IU)
+ CALL STOMP_WRITE_THERMAL_PROPERTY(IU)
  CALL STOMP_WRITE_OUTPUT(IU)
 
  CLOSE(IU)
@@ -101,19 +102,13 @@ CONTAINS
  WRITE(IU,'(A)') '~Solution Control Card'
  WRITE(IU,'(A)') '#-------------------------------------------------------'
  WRITE(IU,'(A)') 'Normal,'
- WRITE(IU,'(A)') 'STOMP-W,'
+ WRITE(IU,'(A)') 'STOMP-GT,'
  WRITE(IU,'(A)') '1,'
  WRITE(IU,'(A)') '0.0,day,20.0,yr,0.01,sec,50,day,1.25,16,1.e-06,'
  WRITE(IU,'(A)') '10000,'   !## maximum number of timesteps
-! WRITE(IU,'(A)') 'Variable Aqueous Diffusion,'
-! WRITE(IU,'(A)') 'Variable Gas Diffusion,'
+ WRITE(IU,'(A)') 'Variable Aqueous Diffusion,'
+ WRITE(IU,'(A)') 'Variable Gas Diffusion,'
  WRITE(IU,'(A)') '0,'
-
-!Aqueous Phase Diffusion Option,
-!Aqueous Diffusion Gradient Option,
-!Vapor Diffusion Option,
-!Gas Diffusion Gradient Option,
-!Number of Interfacial Average Lines,0,
 
  END SUBROUTINE STOMP_WRITE_SOL_CNTRL
 
@@ -133,11 +128,10 @@ CONTAINS
 
  JU=UTL_GETUNIT(); OPEN(JU,FILE=TRIM(OUTPUTFILE)//'\alpha.dat',STATUS='UNKNOWN')
  DO ILAY=1,NLAY; DO IROW=1,NROW; DO ICOL=1,NCOL
-  IF(BND(ILAY)%X(ICOL,IROW).EQ.0)CYCLE
   K=KHV(ILAY,1)%X(ICOL,IROW)
   P=STOMP_GETPOROSITY(K)
   A=REF_A/SQRT(K/P)
-  WRITE(JU,'(3I10,G15.7)') ICOL,IROW,ILAY,A
+  WRITE(JU,'(G15.7)') A
  ENDDO; ENDDO; ENDDO
  CLOSE(JU)
 
@@ -146,8 +140,7 @@ CONTAINS
  
  JU=UTL_GETUNIT(); OPEN(JU,FILE=TRIM(OUTPUTFILE)//'\n.dat',STATUS='UNKNOWN')
  DO ILAY=1,NLAY; DO IROW=1,NROW; DO ICOL=1,NCOL
-  IF(BND(ILAY)%X(ICOL,IROW).EQ.0)CYCLE
-  WRITE(JU,'(3I10,G15.7)') ICOL,IROW,ILAY,N
+  WRITE(JU,'(G15.7)') N
  ENDDO; ENDDO; ENDDO
  CLOSE(JU)
 
@@ -236,10 +229,9 @@ CONTAINS
 
  JU=UTL_GETUNIT(); OPEN(JU,FILE=TRIM(OUTPUTFILE)//'\por.dat',STATUS='UNKNOWN')
  DO ILAY=1,NLAY; DO IROW=1,NROW; DO ICOL=1,NCOL
-  IF(BND(ILAY)%X(ICOL,IROW).EQ.0)CYCLE
   K=KHV(ILAY,1)%X(ICOL,IROW)
   P=STOMP_GETPOROSITY(K)
-  WRITE(JU,'(3I10,G15.7)') ICOL,IROW,ILAY,P
+  WRITE(JU,'(G15.7)') P
  ENDDO; ENDDO; ENDDO
  CLOSE(JU)
 
@@ -257,30 +249,27 @@ CONTAINS
  WRITE(IU,'(A)') '#-------------------------------------------------------'
  WRITE(IU,'(A)') '~Hydraulic Properties Card'
  WRITE(IU,'(A)') '#-------------------------------------------------------'
- WRITE(IU,'(A)') 'IJK Indexing, file:ksx.dat,m^2/d, file:ksy.dat,m^2/d, file:ksz.dat,m^2/d,'
+ WRITE(IU,'(A)') 'IJK Indexing, file:ksx.dat,m^2, file:ksy.dat,m^2, file:ksz.dat,m^2,'
 
  JU=UTL_GETUNIT(); OPEN(JU,FILE=TRIM(OUTPUTFILE)//'\ksx.dat',STATUS='UNKNOWN')
  DO ILAY=1,NLAY; DO IROW=1,NROW; DO ICOL=1,NCOL
-  IF(BND(ILAY)%X(ICOL,IROW).EQ.0)CYCLE
-  WRITE(JU,'(3I10,G15.7)') ICOL,IROW,ILAY,KHV(ILAY,1)%X(ICOL,IROW)
+  WRITE(JU,'(G15.7)') KHV(ILAY,1)%X(ICOL,IROW)
  ENDDO; ENDDO; ENDDO
  CLOSE(JU)
 
  JU=UTL_GETUNIT(); OPEN(JU,FILE=TRIM(OUTPUTFILE)//'\ksy.dat',STATUS='UNKNOWN')
  DO ILAY=1,NLAY; DO IROW=1,NROW; DO ICOL=1,NCOL
-  IF(BND(ILAY)%X(ICOL,IROW).EQ.0)CYCLE
-  WRITE(JU,'(3I10,G15.7)') ICOL,IROW,ILAY,KHV(ILAY,2)%X(ICOL,IROW)
+  WRITE(JU,'(G15.7)') KHV(ILAY,2)%X(ICOL,IROW)
  ENDDO; ENDDO; ENDDO
  CLOSE(JU)
 
  JU=UTL_GETUNIT(); OPEN(JU,FILE=TRIM(OUTPUTFILE)//'\ksz.dat',STATUS='UNKNOWN')
  DO ILAY=1,NLAY; DO IROW=1,NROW; DO ICOL=1,NCOL
-  IF(BND(ILAY)%X(ICOL,IROW).EQ.0)CYCLE
   K1=LOG(KHV(ILAY,1)%X(ICOL,IROW))
   K2=LOG(KHV(ILAY,2)%X(ICOL,IROW))
   K3=EXP((K1+K2)/2.0)
   K4=K3*KHV(ILAY,3)%X(ICOL,IROW)
-  WRITE(JU,'(3I10,G15.7)') ICOL,IROW,ILAY,K4
+  WRITE(JU,'(G15.7)') K4
  ENDDO; ENDDO; ENDDO
  CLOSE(JU)
 
@@ -300,13 +289,12 @@ CONTAINS
  WRITE(IU,'(A)') '#-------------------------------------------------------'
  WRITE(IU,'(A)') 'Aqueous Pressure,Gas Pressure,'
  WRITE(IU,'(A)') '2,'
- WRITE(IU,'(A)') 'Aqueous Pressure File,,(Pa),file:ini_aqueous.dat,'
- WRITE(IU,'(A)') 'Gas Pressure File,,(Pa),file:ini_gas.dat,'
+ WRITE(IU,'(A)') 'Aqueous Pressure File,,Pa,ini_aqueous.dat,'
+ WRITE(IU,'(A)') 'Gas Pressure File,,Pa,ini_gas.dat,'
 
  !## relation with depth
  JU=UTL_GETUNIT(); OPEN(JU,FILE=TRIM(OUTPUTFILE)//'\ini_aqueous.dat',STATUS='UNKNOWN')
  DO ILAY=1,NLAY; DO IROW=1,NROW; DO ICOL=1,NCOL
-  IF(BND(ILAY)%X(ICOL,IROW).EQ.0)CYCLE
   HB=TB(ILAY,2)%X(ICOL,IROW)
   WP=RHO*G*HB+PAIR
   WRITE(JU,'(3I10,G15.7)') ICOL,IROW,ILAY,WP
@@ -315,12 +303,38 @@ CONTAINS
   
  JU=UTL_GETUNIT(); OPEN(JU,FILE=TRIM(OUTPUTFILE)//'\ini_gas.dat',STATUS='UNKNOWN')
  DO ILAY=1,NLAY; DO IROW=1,NROW; DO ICOL=1,NCOL
-  IF(BND(ILAY)%X(ICOL,IROW).EQ.0)CYCLE
-  WRITE(JU,'(3I10,G15.7)') ICOL,IROW,ILAY,-999.0
+  WRITE(JU,'(3I10,G15.7)') ICOL,IROW,ILAY,101325.0+1.0E-9 !-999.0
  ENDDO; ENDDO; ENDDO
  CLOSE(JU)
 
  END SUBROUTINE STOMP_WRITE_INITIAL_CONDITIONS
+
+ !###======================================================================
+ SUBROUTINE STOMP_WRITE_THERMAL_PROPERTY(IU)
+ !###======================================================================
+ IMPLICIT NONE
+ INTEGER,INTENT(IN) :: IU
+ INTEGER :: JU,IROW,ICOL,ILAY
+
+ WRITE(IU,'(A)') ''
+ WRITE(IU,'(A)') '#-------------------------------------------------------'
+ WRITE(IU,'(A)') '~Thermal Properties Card'
+ WRITE(IU,'(A)') '#-------------------------------------------------------'
+ WRITE(IU,'(A)') 'IJK Indexing, Somerton,file:gtc.dat,W/m K,file:gtc.dat,W/m K,file:gtc.dat,W/m K,'// &
+                 'file:gtc.dat,W/m K,file:gtc.dat,W/m K,file:gtc.dat,W/m K,file:gsh.dat,J/kg K,'
+
+ JU=UTL_GETUNIT(); OPEN(JU,FILE=TRIM(OUTPUTFILE)//'\gtc.dat',STATUS='UNKNOWN')
+ DO ILAY=1,NLAY; DO IROW=1,NROW; DO ICOL=1,NCOL
+  WRITE(JU,'(G15.7)') 5.0
+ ENDDO; ENDDO; ENDDO
+ CLOSE(JU)
+ JU=UTL_GETUNIT(); OPEN(JU,FILE=TRIM(OUTPUTFILE)//'\gsh.dat',STATUS='UNKNOWN')
+ DO ILAY=1,NLAY; DO IROW=1,NROW; DO ICOL=1,NCOL
+  WRITE(JU,'(G15.7)') 775.0
+ ENDDO; ENDDO; ENDDO
+ CLOSE(JU)
+
+ END SUBROUTINE STOMP_WRITE_THERMAL_PROPERTY
 
  !###======================================================================
  SUBROUTINE STOMP_WRITE_OUTPUT(IU)
@@ -336,15 +350,16 @@ CONTAINS
  WRITE(IU,'(A)') '1,1,hr,cm,6,6,6,' !## output screen intervals
  WRITE(IU,'(A)') '0,'  !## number of reference variables (echo on screen)
  WRITE(IU,'(A)') '2,'         !## number of plot files
- WRITE(IU,'(A)') '1,years,'   !## number of plot files
- WRITE(IU,'(A)') '10,years,'  !## number of plot files
- WRITE(IU,'(A)') '5,'         !## number of output variables
+ WRITE(IU,'(A)') '1,year,'   !## number of plot files
+ WRITE(IU,'(A)') '10,year,'  !## number of plot files
+ WRITE(IU,'(A)') '4,'         !## number of output variables
  WRITE(IU,'(A)') 'aqueous saturation,,'        
  WRITE(IU,'(A)') 'gas saturation,,'            
- WRITE(IU,'(A)') 'trapped gas sat,,'  !## trapped gas saturation,'
  WRITE(IU,'(A)') 'gas pressure,Pa,'
  WRITE(IU,'(A)') 'aqueous relative perm,,' !## aqueous relative permeability
  
+ WRITE(IU,'(A)') 'trapped gas sat,,'  !## trapped gas saturation,'
+
  END SUBROUTINE STOMP_WRITE_OUTPUT
  
  !###======================================================================
