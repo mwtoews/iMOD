@@ -144,9 +144,6 @@ CONTAINS
  ENDDO; ENDDO; ENDDO
  CLOSE(JU)
 
-! Ik heb even naar de Van genuchten parameters gekeken. Voor nu lijkt het me handig om de volgende waarden te gebruiken:
-!Rock/Soil Name ,Entrapment van Genuchten ,alpha Parameter  0.03795,Units  (1/m),n Parameter  2.4001,Minimum Saturation 0.001,!Optional m Parameter ,Effective Gas Residual Saturation 0.15 ,Critical Trapping Number 2.e-5
-
  END SUBROUTINE STOMP_WRITE_SAT_FUNC
 
  !###======================================================================

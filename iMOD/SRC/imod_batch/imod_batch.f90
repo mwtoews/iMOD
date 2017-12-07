@@ -1700,7 +1700,6 @@ CONTAINS
 
   !## compute angle of line
   DX=X2-X1; DY=Y2-Y1; IF(DY.EQ.0.0)TNG=0.0; IF(ABS(DY).GT.0.0)TNG=ATAN2(DY,DX)
-!  TNG=TNG-0.5*PI
   TNG=DIPDIRECTION 
   
   !## compute bottom equivalents

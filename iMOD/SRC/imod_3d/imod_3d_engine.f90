@@ -4299,7 +4299,7 @@ SOLLOOP: DO I=1,NSOLLIST
  LOGICAL FUNCTION IMOD3D_SOL_ADD()
  !###======================================================================
  IMPLICIT NONE
- INTEGER :: I,J
+ INTEGER :: I,J,II
  REAL :: XTOL
  CHARACTER(LEN=52) :: CDATE
  INTEGER,DIMENSION(:,:),ALLOCATABLE :: ICOMBINE
@@ -4336,19 +4336,6 @@ SOLLOOP: DO I=1,NSOLLIST
   ALLOCATE(SERIE(I)%X(MXSERIE),SERIE(I)%Y(MXSERIE))
  END DO
 
- !## number of coordinates
- NXY=NXYZCROSS(1)
- IF(ASSOCIATED(XY))DEALLOCATE(XY); ALLOCATE(XY(2,NXY)); XY=0.0
-
- !## set coordinates of cross-section
- DO I=1,NXYZCROSS(1)
-  XY(1,I)=XYZCROSS(I,1)%X
-  XY(2,I)=XYZCROSS(I,1)%Y
- ENDDO
-
- !## compute profile through idf in 3D
- CALL PROFILE_COMPUTEPLOT()
-
  !## start drawing a cross-section without those extra lines
  ALLOCATE(IEXIST(MXNIDF+1)  ,ICLEAN(MXNIDF+1)  ,IACT(MXNIDF+1), &
           XEXCLUDE(MXNIDF+1),ISEL_IDF(MXNIDF+1),DTOL(MXNIDF+1))
@@ -4357,15 +4344,6 @@ SOLLOOP: DO I=1,NSOLLIST
  DTOL=XTOL; IEXIST=1; IACT=1; ICLEAN=1
  DO I=1,MXNIDF; XEXCLUDE(I+1)=PROFIDF(I)%IDF%NODATA; ENDDO
  DO I=1,MXNIDF; ISEL_IDF(I+1)=I; ENDDO
- 
- ISPF=NSOLLIST+1
- NTBSOL=MXNIDF
- NSPF=ISPF
-
- !## add memory for cross-section
- CALL SOLID_PROFILEADD_SPFMEMORY(1.0,-1.0)
- !## fill in cross-section - including nodata
- CALL SOLID_PROFILEFITDRILL_CALC()
 
  !## set colour - equal to the colour assigned to the IDF files ...
  CALL SOLID_INITSLD(1)
@@ -4375,6 +4353,7 @@ SOLLOOP: DO I=1,NSOLLIST
  ENDDO; ENDDO
  
  !## create drawing list
+ NTBSOL=MXNIDF
  ALLOCATE(ICOMBINE(NTBSOL,3)); ICOMBINE=0
  DO J=1,NTBSOL !-1
   !## not to be processed
@@ -4388,29 +4367,89 @@ SOLLOOP: DO I=1,NSOLLIST
    IF(IDFPLOT(J)%IDFLEGEND.NE.J)ICOMBINE(J,3)=IDFPLOT(J)%IDFLEGEND
   ENDIF
  ENDDO
- NSOLLIST=ISPF; CALL IMOD3D_SOL_DRAWINGLIST(ISPF,NSOLLIST,ICOMBINE)
+
+ DO II=1,SIZE(NXYZCROSS)
+
+  IF(NXYZCROSS(II).LE.0)CYCLE
+
+  !## number of coordinates
+  NXY=NXYZCROSS(II)
+  IF(ASSOCIATED(XY))DEALLOCATE(XY); ALLOCATE(XY(2,NXY)); XY=0.0
+
+  !## set coordinates of cross-section
+  DO I=1,NXYZCROSS(II)
+   XY(1,I)=XYZCROSS(I,II)%X
+   XY(2,I)=XYZCROSS(I,II)%Y
+  ENDDO
+
+  !## compute profile through idf in 3D
+  CALL PROFILE_COMPUTEPLOT()
+
+!  !## start drawing a cross-section without those extra lines
+!  ALLOCATE(IEXIST(MXNIDF+1)  ,ICLEAN(MXNIDF+1)  ,IACT(MXNIDF+1), &
+!           XEXCLUDE(MXNIDF+1),ISEL_IDF(MXNIDF+1),DTOL(MXNIDF+1))
+ 
+!  !## common settings
+!  DTOL=XTOL; IEXIST=1; IACT=1; ICLEAN=1
+!  DO I=1,MXNIDF; XEXCLUDE(I+1)=PROFIDF(I)%IDF%NODATA; ENDDO
+!  DO I=1,MXNIDF; ISEL_IDF(I+1)=I; ENDDO
+ 
+  ISPF=NSOLLIST+1
+ ! NTBSOL=MXNIDF
+  NSPF=ISPF
+
+  !## add memory for cross-section
+  CALL SOLID_PROFILEADD_SPFMEMORY(1.0,-1.0)
+  !## fill in cross-section - including nodata
+  CALL SOLID_PROFILEFITDRILL_CALC()
+
+!  !## set colour - equal to the colour assigned to the IDF files ...
+!  CALL SOLID_INITSLD(1)
+!  CALL SOLID_INITSLDPOINTER(1,MXNIDF)
+!  DO I=1,SIZE(SLD); DO J=1,MXNIDF
+!   SLD(I)%INTCLR(J)=IDFPLOT(J)%ICOLOR
+!  ENDDO; ENDDO
+ 
+!  !## create drawing list
+!  ALLOCATE(ICOMBINE(NTBSOL,3)); ICOMBINE=0
+!  DO J=1,NTBSOL !-1
+!   !## not to be processed
+!   IF(IDFPLOT(J)%ICUBE.EQ.5)CYCLE
+!   !## voxel, use colouring only
+!   IF(IDFPLOT(J)%ICUBE.EQ.3)THEN
+!    ICOMBINE(J,3)=J
+!   ELSE
+!    ICOMBINE(J,1)=J
+!    ICOMBINE(J,2)=IDFPLOT(J)%ICOMBINE
+!    IF(IDFPLOT(J)%IDFLEGEND.NE.J)ICOMBINE(J,3)=IDFPLOT(J)%IDFLEGEND
+!   ENDIF
+!  ENDDO
+  NSOLLIST=ISPF; CALL IMOD3D_SOL_DRAWINGLIST(ISPF,NSOLLIST,ICOMBINE)
+
+  !## add cross-section name
+  WRITE(CDATE,'(I8,A)') UTL_GETCURRENTDATE(),'_'//TRIM(UTL_GETCURRENTTIME())
+  SPF(ISPF)%FNAME='Cross-Section_'//TRIM(CDATE)
+  !## replace ":"-signs
+  DO
+   IF(INDEX(SPF(ISPF)%FNAME,':').GT.0)THEN
+    SPF(ISPF)%FNAME=UTL_SUBST(SPF(ISPF)%FNAME,':','_')
+   ELSE
+    EXIT
+   ENDIF
+  ENDDO
+
+  !## activate last created
+  SOLPLOT(NSPF)%ISEL=1
+  SOLPLOT(NSPF)%ICLIP=1
+
+ ENDDO
 
  !## deallocate memory needed to compute profile
  CALL PROFILE_DEALLOCATE(); DEALLOCATE(ISEL_IDF,IACT,DTOL,ICLEAN,XEXCLUDE,IEXIST)
  CALL SOLIDDEALLOCATESLD()
-
- !## add cross-section name
- WRITE(CDATE,'(I8,A)') UTL_GETCURRENTDATE(),'_'//TRIM(UTL_GETCURRENTTIME())
- SPF(ISPF)%FNAME='Cross-Section_'//TRIM(CDATE)
- !## replace ":"-signs
- DO
-  IF(INDEX(SPF(ISPF)%FNAME,':').GT.0)THEN
-   SPF(ISPF)%FNAME=UTL_SUBST(SPF(ISPF)%FNAME,':','_')
-  ELSE
-   EXIT
-  ENDIF
- ENDDO
-   
+    
  !## add to the existing menu
  CALL WDIALOGSELECT(ID_D3DSETTINGS_TAB6)
- !## activate last created
- SOLPLOT(NSPF)%ISEL=1
- SOLPLOT(NSPF)%ICLIP=1
  CALL WDIALOGPUTMENU(IDF_MENU1,SPF%FNAME,NSPF,SOLPLOT%ISEL)
  CALL WDIALOGPUTCHECKBOX(IDF_CHECK4,SOLPLOT(NSPF)%ICLIP)
  
