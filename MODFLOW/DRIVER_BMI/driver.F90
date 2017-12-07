@@ -34,7 +34,7 @@ use driver_module
 !!use PESTVAR, only : IUPESTOUT
 !!use pks_imod_utl, only: pks_imod_utl_iarmwp_xch_read
 implicit none
-logical stssaveOverRule
+logical stssaveOverRule, rcmd_line
 !!
 !!! general
 !! logical :: mf_steadystate
@@ -111,11 +111,12 @@ logical stssaveOverRule
 !! 
 !!! debug
 !! integer lswid, js, je, k, ilay, irow, icol, lun, cfn_getlun, ncvgerr
-
+  
 ! program section
 
  ! ######################################### initialize model #########################################
- call driver_init(infile,nsub)
+ rcmd_line = .true.
+ call driver_init(infile,nsub,rcmd_line)
 
  ! ######################################### SUBMODEL LOOP #########################################
  submodelloop: do isub = 1,nsub
@@ -125,7 +126,7 @@ logical stssaveOverRule
  pestloop: do while (.not.convergedPest)
  
  ! Initialize simulation
- call driver_init_simulation(endOfSimulation,convergedMozart) !,start_time)
+ call driver_init_simulation(endOfSimulation,convergedMozart)
 
  do while (.not.endOfSimulation .and. exitcode.eq.0) ! MOZART-loop
     call driver_init_mozart()
@@ -423,7 +424,7 @@ end program driver
 ! implicit none
 ! 
 ! logical, intent(inout) :: eOS,cMZ
-! !double precision, intent(in) :: start_time
+! double precision, intent(in) :: start_time
 !
 ! if (lrunfile) then
 !    if (nsub.gt.0) then

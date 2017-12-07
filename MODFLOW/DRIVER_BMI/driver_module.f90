@@ -364,6 +364,18 @@ interface
       logical, intent(in) :: flag
    end function
 end interface 
+interface
+  logical function mf2005_GetRecharge(recharge,ncol,nrow,igrid)
+      integer, intent(in) :: ncol,nrow,igrid
+      real, dimension(ncol,nrow), intent(in) :: recharge
+   end function
+end interface
+interface
+  logical function mf2005_PutHeadsForLayer(head,ncol,nrow,ilay,igrid)
+      integer, intent(in) :: ncol,nrow,ilay,igrid
+      double precision, dimension(ncol,nrow), intent(out) :: head
+   end function
+end interface
  
  ! general
 integer, dimension(:,:), allocatable :: XchModSimModCells, XchModMozModCells, XchModTranModCells
@@ -1350,18 +1362,20 @@ end do
 end subroutine imod_license
 
 ! ------------------------------------------------------------------------------
-subroutine driver_init(config_file,nnsub)
+subroutine driver_init(config_file,nnsub,rcmd_line,stsOverRule)
 !DEC$ ATTRIBUTES DLLEXPORT :: driver_init
  implicit none
 ! arguments
  character(len=*), intent(in) :: config_file ! nam-file, components-file or run file
  integer, intent(out) :: nnsub
+ logical, intent(in), optional :: stsOverRule
+ logical, intent(in) :: rcmd_line
  
  !naar mijn idee zouden onderstaande functies gewoon bovenaan deze module moeten blijven staan? Liduin
  integer   osd_open2,cfn_length 
  double precision cfn_mjd_nodata 
  logical pks7mpimasterwrite
-
+ 
  call pks7mpiini1(lwstdo) ! PKS
  call pks7mpiactive(lpks) ! PKS
 
@@ -1417,18 +1431,20 @@ subroutine driver_init(config_file,nnsub)
   call pks7mpifinalize()! PKS
   call exit(0)
  end if
-  
+
  ! option for merging PKS output IDF files
  call cfn_vcl_fndc(ivcl,iarg,'-pksmergeidf',.true.,idfmergefile,1)
  if (iarg.gt.0) then
     call pks_imod_utl_idfmerge(idfmergefile) 
     stop   
  end if
- 
- call cfn_vcl_arg(ivcl,1,config_file,n)
+
+ if (rcmd_line) then
+  call cfn_vcl_arg(ivcl,1,config_file,n)
+ end if
+
  if (imod_utl_has_ext(config_file,'nam')) lnamfile= .true.
  if (imod_utl_has_ext(config_file,'run')) lrunfile= .true.
-
  if (lrunfile .or. lnamfile) then ! run-file or nam-file
     usemodflow=.true.
     modrecord=''
@@ -1595,13 +1611,13 @@ subroutine driver_init(config_file,nnsub)
 
 end subroutine driver_init
 
-subroutine driver_init_simulation(eOS,cMZ) !,start_time)
+subroutine driver_init_simulation(eOS,cMZ,start_time)
  !DEC$ ATTRIBUTES DLLEXPORT :: driver_init_simulation
  use mod_pest, only: pest1_meteo_metaswap, pest1alpha_metaswap, pest1appendlogfile
  implicit none
  
  logical, intent(inout) :: eOS,cMZ
- !double precision, intent(in) :: start_time
+ double precision, intent(in),optional :: start_time
 
  if (lrunfile) then
     if (nsub.gt.0) then
