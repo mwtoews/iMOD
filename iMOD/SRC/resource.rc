@@ -8,7 +8,7 @@
 //
 // Winteracter resource script. 
 //
-// Modified : 08/Dec/2017 13:40:54
+// Modified : 08/Dec/2017 16:47:28
 //
 ///////////////////////////////////////////////////
 //
@@ -1213,6 +1213,7 @@
 #define ID_LOAD2                         1148
 #define ID_NEWAUTO                       1308
 #define ID_D3DSETTINGS_FENCES             395
+#define ID_ACKNOWLEDGEMENT              40317
 
 ///////////////////////////////////////////////////
 //
@@ -12109,6 +12110,7 @@ BEGIN
     POPUP "&Help ..."
     BEGIN
         MENUITEM "&About iMOD ...",                          ID_ABOUT
+        MENUITEM "Acknowledgements ...",                     ID_ACKNOWLEDGEMENT
         MENUITEM "&User Agreement ...",                      ID_UAGREEMENT
         MENUITEM "&Contents ...\aF1",                        ID_HELP
         MENUITEM SEPARATOR
@@ -12164,7 +12166,7 @@ ID_PARTICLETRACKING,5,17,0,
 ID_IPS,5,17,3,0,
 ID_WBAL_ALL,5,19,0,
 ID_HELPMAIN,6,0,
-ID_ACTIVEDEBUG,6,5,0,
+ID_ACTIVEDEBUG,6,6,0,
 0
 END
 
@@ -12349,6 +12351,7 @@ ID_IMPORT_DEVWELLS,"Import Deviated Wells from a CSV file to an IPF file\0",
 ID_MOVIE_CREATE,"Select this option to generate a New Movie\0",
 ID_MOVIE_PLAY,"Select this option to Play an Existing Movie\0",
 ID_IMPORTKEYPILLARS,"Select this Option to Import KeyPillars from Petrel\0",
+ID_ACKNOWLEDGEMENT,"Displays a list of current Collaborations and Acknowledgements\0",
 0
 END
 
@@ -12948,5 +12951,5 @@ END
 //*WI* FORTSAVE    1
 //*WI* FILENAME    resource.f90
 //*WI* FMODNAME    RESOURCE
-//*WI* LASTTYPE        2
-//*WI* LASTRES       298
+//*WI* LASTTYPE        1
+//*WI* LASTRES         7

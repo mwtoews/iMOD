@@ -34,6 +34,31 @@ CHARACTER(LEN=:),ALLOCATABLE :: STR
 CONTAINS
 
  !###====================================================================
+ SUBROUTINE IMOD_ACKNOWLEDGEMENT()
+ !###====================================================================
+ IMPLICIT NONE
+
+ CALL WDIALOGLOAD(ID_DABOUT)
+ CALL WDIALOGPUTSTRING(IDF_STRING1,'Collaborations and Acknowledgements'//NEWLINE//NEWLINE// &
+'MetaSWAP:'//NEWLINE// &
+'iMOD includes the unsaturated zone MetaSWAP-module. MetaSWAP covers the plant - atmosphere interactions and soil water. The "metamodel" MetaSWAP is based on a quasi steady-state '// &
+'solution of the Richards equation. MetaSWAP is developed by Wageningen Environmental Research (Alterra). For references to the separate MetaSWAP-documentation see Appendix A '// &
+'in the iMOD User Manual.'//NEWLINE//NEWLINE// &
+'MODFLOW-MetaSWAP coupling:'//NEWLINE// &
+'The coupling of MODFLOW and MetaSWAP was created in a collaboration between Deltares and Wageningen Environmental Research (Alterra) and was (among others) financed by The '// &
+'Netherlands Hydrological Instrument project.'//NEWLINE//NEWLINE// &
+'Extension of the water balance tool:'//NEWLINE// &
+'The extension of the water balance tool (released in iMOD 4.2) was created in a collaboration between Deltares and Tauw and was financed by the Dutch iMOD-CGO group; it '// &
+'allows visualization (interactive stack-bars time series plots and schematic vertical cross-sectional overviews) of water balances for sub-regions and contains several '// &
+'time-aggregation possibilities (e.g. averages per year, month and season).')
+ CALL WDIALOGTITLE('Collaborations and Acknowledgements '//TRIM(UTL_IMODVERSION()))
+ CALL WDIALOGPUTSTRING(IDOK,'OK')
+ CALL WDIALOGSETFIELD(IDOK)
+ CALL WDIALOGSHOW(-1,-1,0,1)
+
+ END SUBROUTINE IMOD_ACKNOWLEDGEMENT
+
+ !###====================================================================
  SUBROUTINE IMOD_ABOUT()
  !###====================================================================
  IMPLICIT NONE
