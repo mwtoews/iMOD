@@ -44,7 +44,7 @@ CONTAINS
  !###===================================
  IMPLICIT NONE
  INTEGER,DIMENSION(:),INTENT(IN) :: ICOL
- INTEGER :: I,J,K,IU,N
+ INTEGER :: I,J,K,IU,N,NM
  REAL :: O,M
  CHARACTER(LEN=256) :: FNAME,DIR
 
@@ -54,10 +54,10 @@ CONTAINS
  IPF(1)%YCOL=ICOL(2)
  IF(ITRANSIENT.EQ.1)THEN
   !## not used reading the ipf-file, set them to the x/y coordinates
-  IPF(1)%ZCOL=ICOL(1)
+  IPF(1)%ZCOL =ICOL(1)
   IPF(1)%Z2COL=ICOL(2)
  ELSE
-  IPF(1)%ZCOL=ICOL(3)
+  IPF(1)%ZCOL =ICOL(3)
   IPF(1)%Z2COL=ICOL(4)
  ENDIF
  !## optional weight values
@@ -71,6 +71,7 @@ CONTAINS
 
  !## steady-state
  IF(ITRANSIENT.EQ.0)THEN 
+
   N=IPF(1)%NROW; IPFR(NIPF)%NPOINTS=N
   ALLOCATE(IPFR(1)%X(N),IPFR(1)%Y(N),IPFR(1)%L(N),IPFR(1)%O(N), &
            IPFR(1)%M(N),IPFR(1)%W(N))
@@ -84,6 +85,7 @@ CONTAINS
    IF(ICOL(6).EQ.0)THEN; IPFR(1)%L(J)=1
    ELSE; READ(IPF(1)%INFO(ICOL(6),J),*)  IPFR(1)%L(J); ENDIF
   ENDDO
+
  ELSE
  
   CALL IPFASSFILEALLOCATE(1)
@@ -102,15 +104,23 @@ CONTAINS
       !## read associated file
       IF(IPFREADASSFILELABEL(IU,1,FNAME).AND.IPFREADASSFILE(IU,1,FNAME))THEN
 
+       N=N+1
+       IF(I.EQ.2)THEN
+        IPFR(1)%O(N)=0.0
+        IPFR(1)%M(N)=0.0
+       ENDIF
+       
+       NM=0
        DO K=1,ASSF(1)%NRASS
+
+        !## store date - for first entered data line
+        IF(K.EQ.1.AND.I.EQ.2)IPFR(1)%D(N)=ASSF(1)%IDATE(I)
 
         O=ASSF(1)%MEASURE(ICOL(3)-1,K)
         M=ASSF(1)%MEASURE(ICOL(4)-1,K)
         !## both not equal to nodata
         IF(O.NE.ASSF(1)%NODATA(ICOL(3)).AND. &
            M.NE.ASSF(1)%NODATA(ICOL(4)))THEN
-           
-         N=N+1
  
          IF(I.EQ.2)THEN
           READ(IPF(1)%INFO(ICOL(1),J),*)  IPFR(1)%X(N)
@@ -121,15 +131,19 @@ CONTAINS
           IF(ICOL(6).EQ.0)THEN; IPFR(1)%L(N)=1
           ELSE; READ(IPF(1)%INFO(ICOL(6),J),*)  IPFR(1)%L(N); ENDIF
 
-          IPFR(1)%O(N)=O 
-          IPFR(1)%M(N)=M
-
-          !## store date
-          IPFR(1)%D(N)=ASSF(1)%IDATE(I)
+          IPFR(1)%O(N)=IPFR(1)%O(N)+O 
+          IPFR(1)%M(N)=IPFR(1)%M(N)+M
+          NM=NM+1
+          
          ENDIF
                  
         ENDIF  
        ENDDO
+
+       IF(I.EQ.2.AND.NM.GT.0)THEN
+        IPFR(1)%O(N)=IPFR(1)%O(N)/REAL(NM)
+        IPFR(1)%M(N)=IPFR(1)%M(N)/REAL(NM)
+       ENDIF
        
        !## close associated text-file
        CLOSE(IU)
@@ -247,7 +261,7 @@ CONTAINS
   IF(.NOT.(RESIDUAL_PROC_SELIPF(I)))CYCLE
   DO J=1,IPFR(I)%NPOINTS
    IF(.NOT.((RESIDUAL_PROC_SELLAY(I,J)).AND. &
-            (RESIDUAL_PROC_SELDATE(I,J)).AND. &
+!            (RESIDUAL_PROC_SELDATE(I,J)).AND. &
             (RESIDUAL_PROC_SELWEIGHT(I,J))))CYCLE
    
    !## skip weigth is zero anyhow
@@ -342,23 +356,23 @@ CONTAINS
  
  END FUNCTION RESIDUAL_PROC_SELLAY
  
- !###===================================
- LOGICAL FUNCTION RESIDUAL_PROC_SELDATE(I,J)
- !###===================================
- IMPLICIT NONE
- INTEGER,INTENT(IN) :: I,J
- INTEGER :: K 
+! !###===================================
+! LOGICAL FUNCTION RESIDUAL_PROC_SELDATE(I,J)
+! !###===================================
+! IMPLICIT NONE
+! INTEGER,INTENT(IN) :: I,J
+! INTEGER :: K 
  
- RESIDUAL_PROC_SELDATE=.TRUE.
+! RESIDUAL_PROC_SELDATE=.TRUE.
  
- IF(ITRANSIENT.EQ.1)THEN
-  DO K=1,NRDATE
-   RESIDUAL_PROC_SELDATE=IPFR(I)%D(J).EQ.IRDATE(K)
-   IF(RESIDUAL_PROC_SELDATE)RETURN
-  ENDDO 
- ENDIF
+! IF(ITRANSIENT.EQ.1)THEN
+!  DO K=1,NRDATE
+!   RESIDUAL_PROC_SELDATE=IPFR(I)%D(J).EQ.IRDATE(K)
+!   IF(RESIDUAL_PROC_SELDATE)RETURN
+!  ENDDO 
+! ENDIF
  
- END FUNCTION RESIDUAL_PROC_SELDATE
+! END FUNCTION RESIDUAL_PROC_SELDATE
 
  !###===================================
  LOGICAL FUNCTION RESIDUAL_PROC_SELWEIGHT(I,J)

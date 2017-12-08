@@ -4617,6 +4617,7 @@ CONTAINS
  !###======================================================================
  IMPLICIT NONE
  INTEGER,INTENT(IN) :: CODE
+ CHARACTER(LEN=256) :: ISGFILE
 
  !## stop isg-segment editing
  CALL ISGISP_MENUFIELDS(0)
@@ -4628,8 +4629,15 @@ CONTAINS
  IDIAGERROR=1
 
  IF(CODE.EQ.1)THEN
-  CALL WMESSAGEBOX(YESNO,QUESTIONICON,COMMONNO,'Are you sure to leave the editing mode ?','Question')
-  IF(WINFODIALOG(4).NE.1)RETURN
+  CALL WMESSAGEBOX(YESNOCANCEL,QUESTIONICON,COMMONCANCEL,'Would you like to SAVE to file before leaving choose [Yes]'//CHAR(13)// &
+      'Leave without saving choose [No]','Question')
+  !## cancel
+  IF(WINFODIALOG(4).EQ.0)RETURN
+  !## save first before leaving
+  IF(WINFODIALOG(4).EQ.1)THEN
+   ISGFILE=ISGFNAME; CALL ISGSAVE(ISGFILE,2)
+  ENDIF
+
  ENDIF
 
 ! !## none selected
