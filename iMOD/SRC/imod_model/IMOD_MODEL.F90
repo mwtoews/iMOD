@@ -1371,7 +1371,8 @@ MAINLOOP: DO
  WRITE(JU,'(A)') 'Check-result for:'
  WRITE(JU,'(A)') TRIM(RUNFNAME)
  WRITE(JU,'(/A/)') 'Non-existing files:'
- WRITE(JU,'(A10,1X,A)') 'Line','File'
+ WRITE(JU,'(A10,1X,A)') 'Line No.','Filename'
+ WRITE(JU,'(50A1)') ('-',I=1,50)
  
  K=0; NF=0
  DO
