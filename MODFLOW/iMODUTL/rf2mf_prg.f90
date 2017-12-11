@@ -40,7 +40,6 @@ PRIVATE
 logical, save :: savebuf = .false.
 logical, save :: savenobuf = .false.
 
-!REAL,ALLOCATABLE,DIMENSION(:),SAVE :: DELR,DELC
 PUBLIC :: RF2MF
 
 CONTAINS
@@ -168,7 +167,6 @@ IF(IOS.NE.0)THEN
  STOP
 ENDIF
 
-
 !## read result-root
 CALL RF2MF_DATASET1()
 !## read main settings
@@ -265,9 +263,6 @@ CALL imod_utl_closeunits()
 IF(NMULT.LE.1)EXIT
 
 ENDDO MULTLOOP
-
-!IF(ALLOCATED(DELR))DEALLOCATE(DELR)
-!IF(ALLOCATED(DELC))DEALLOCATE(DELC)
 
 IUPESTOUT=0
 IUPESTPROGRESS=0
@@ -667,9 +662,6 @@ IF(IOS.NE.0)THEN
 ENDIF
 IF(IOS.NE.0)CALL IMOD_UTL_PRINTTEXT('ERROR DataSet 4 (see manual):'//TRIM(LINE),-3)
 
-!bcf%minkd = MAX(0.0001,bcf%minkd)
-!bcf%minc  = MAX(0.0001,bcf%minc)
-
 !#overrule submodel whenever iflag(2)=active
 IF(IFLAG(2).GT.0)THEN
  IF(IFLAG(2).GT.NMULT)CALL IMOD_UTL_PRINTTEXT('IFLAG(2).GT.NMULT',-3)
@@ -797,20 +789,15 @@ ELSE ! PCG SOLVER
        pcg%NPCOND=1
        READ(LINE,*,IOSTAT=IOS) pcg%MXITER,pcg%ITER1,pcg%HCLOSE,pcg%RCLOSE,pcg%RELAX
       ENDIF
-!   ELSE
-!    CALL IMOD_UTL_PRINTTEXT('Dataset 5: ***warning*** option MAXWBALERROR is not supported and will be ignored!',0)
      END IF
     ELSE
-!   CALL IMOD_UTL_PRINTTEXT('Dataset 5: ***warning*** option MAXWBALERROR is not supported and will be ignored!',0)
      CALL IMOD_UTL_PRINTTEXT('Dataset 5: ***warning*** option MXCNVG is not supported and will be ignored!',3)
     END IF
    ELSE
-!  CALL IMOD_UTL_PRINTTEXT('Dataset 5: ***warning*** option MAXWBALERROR is not supported and will be ignored!',0)
     CALL IMOD_UTL_PRINTTEXT('Dataset 5: ***warning*** option MXCNVG is not supported and will be ignored!',3)
     CALL IMOD_UTL_PRINTTEXT('Dataset 5: ***warning*** option IDELTCNVG is not supported and will be ignored!',3)
    END IF
   ELSE
-! CALL IMOD_UTL_PRINTTEXT('Dataset 5: ***warning*** option MAXWBALERROR is not supported and will be ignored!',0)
    CALL IMOD_UTL_PRINTTEXT('Dataset 5: ***warning*** option MXCNVG is not supported and will be ignored!',3)
    CALL IMOD_UTL_PRINTTEXT('Dataset 5: ***warning*** option IDELTCNVG is not supported and will be ignored!',3)
    CALL IMOD_UTL_PRINTTEXT('Dataset 5: ***warning*** option IDAMPING is not supported and will be ignored!',3)
@@ -1599,10 +1586,7 @@ ELSE
 
  CALL RF2MF_SNAPTOGRID(SIMBOX(1),SIMBOX(3),SIMBOX(2),SIMBOX(4),SIMCSIZE,NCOL,NROW)
 
-!ENDIF
-
-!!## no IDF with raster definition
-!IF (.NOT.LEX) THEN
+ !## no IDF with raster definition
  IDF%IEQ=0
  IDF%DX=SIMCSIZE
  IDF%DY=SIMCSIZE
@@ -1689,7 +1673,6 @@ IF(ALLOCATED(DELC))DEALLOCATE(DELC)
 
 IF(NSCL.EQ.1.OR.NSCL.EQ.3)THEN
 
-
 !--- for metaswap ---
  ALLOCATE(DELR(0:NCOL),DELC(0:NROW))
 
@@ -1697,13 +1680,10 @@ IF(NSCL.EQ.1.OR.NSCL.EQ.3)THEN
  DELC(0)=SIMBOX(4)
  DO I=1,NCOL
   DELR(I)=SIMBOX(1)+REAL(I)*SIMCSIZE
-!  DELR(I)=DELR(I-1)+SIMCSIZE
  ENDDO
  DO I=1,NROW
   DELC(I)=SIMBOX(4)-REAL(I)*SIMCSIZE
-!  DELC(I)=DELC(I-1)-SIMCSIZE
  ENDDO
-!--- for metaswap ---
 
  dis%nrow = NROW
  dis%ncol = NCOL
@@ -1727,6 +1707,7 @@ ELSE
   ALLOCATE(DELR(0:NCOL),DELC(0:NROW))
 
   IF(IDF%IEQ.EQ.0)THEN
+      
    DELR(0)=IDF%XMIN
    DO I=1,NCOL
     DELR(I)=DELR(I-1)+IDF%DX
@@ -1743,22 +1724,6 @@ ELSE
   
   ENDIF
   
-!  DELR(0)=SIMBOX(1)  !## xmin
-!  IREC=10
-!  DO I=1,NCOL
-!   IREC=IREC+1
-!   READ(IDF%IU,REC=IREC+ICF) DELR(I)
-!   DELR(I)=DELR(I-1)+DELR(I)
-!  END DO
-!  DELR(NCOL)=SIMBOX(3)
-!
-!  DELC(0)=SIMBOX(4)  !## ymax
-!  DO I=1,NROW
-!   IREC=IREC+1
-!   READ(IDF%IU,REC=IREC+ICF) DELC(I)
-!   DELC(I)=DELC(I-1)-DELC(I)
-!  END DO
-!  DELC(NROW)=SIMBOX(2)
   !--- for metaswap ---
 
   IF(IDF%IEQ.eq.0)THEN
@@ -1773,7 +1738,7 @@ ELSE
 
   NOMAXCELL=INT(MAXSIMCSIZE/SIMCSIZE)
 
-  !##find mid icol
+  !## find mid icol
   IC1=INT((USEBOX(1)-SIMBOX(1))/SIMCSIZE)+1
   IC2=INT((USEBOX(3)-SIMBOX(1))/SIMCSIZE)+1
   IR1=INT((SIMBOX(4)-USEBOX(4))/SIMCSIZE)+1
@@ -1799,6 +1764,18 @@ ELSE
   CALL IMOD_UTL_PRINTTEXT('Scaling Results along ROW-direction:',3)
   CALL IMOD_UTL_PRINTTEXT('',3)
   CALL RF2MF_SCALE1RESULTS(PDELC,dis%delc,NROW,ORGNROW)
+
+  !--- for metaswap ---
+  ALLOCATE(DELR(0:NCOL),DELC(0:NROW))
+
+  DELR(0)=IDF%XMIN
+  DO I=1,NCOL
+   DELR(I)=DELR(I-1)+dis%delr(i)
+  ENDDO
+  DELC(0)=IDF%YMAX
+  DO I=1,NROW
+   DELC(I)=DELC(I-1)-dis%delc(i)
+  ENDDO
 
  ENDIF
 

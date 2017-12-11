@@ -232,9 +232,10 @@ CONTAINS
   IF(IOS(I).EQ.0)THEN
    BUFF=CONSTANTE(I); ! NODATA(I)=0.0
   ELSE
+      write(*,*) trim(fname(i))
    if (.not.idfread(idfc,fname(i),0)) CALL IMOD_UTL_PRINTTEXT('idfread',2)
    call idfnullify(idfm)
-   !#3 copy modelnetwork
+   !## copy modelnetwork
    call idfcopy(idf,idfm)
 
    idfm%nodata = nodata(i)
@@ -294,15 +295,16 @@ CONTAINS
    IF(SIMGRO(ICOL,IROW)%QINFBASIC_SOPP.EQ.NODATA(18))SIMGRO(ICOL,IROW)%SOPP=0.0
   ENDIF
   !##
+!  ARND=IDFGETAREA(IDFC,ICOL,IROW)
   DX=DELR(ICOL)-DELR(ICOL-1); DY=DELC(IROW-1)-DELC(IROW); ARND=DX*DY
-  IF(SIMGRO(ICOL,IROW)%VXMU_ROPP.EQ.NODATA(13))SIMGRO(ICOL,IROW)%NOPP=DX*DY !## surface water, no metaswap
+  IF(SIMGRO(ICOL,IROW)%VXMU_ROPP.EQ.NODATA(13))SIMGRO(ICOL,IROW)%NOPP=ARND !DX*DY !## surface water, no metaswap
   ARND=ARND-SIMGRO(ICOL,IROW)%NOPP-SIMGRO(ICOL,IROW)%SOPP
   !## rural area
   IF(ARND.GT.0.0)THEN
-   IF(SIMGRO(ICOL,IROW)%VXMU_ROPP     .EQ.NODATA(13))SIMGRO(ICOL,IROW)%NOPP=DX*DY !## surface water, no metaswap
-   IF(SIMGRO(ICOL,IROW)%CRUNOFF_ROPP  .EQ.NODATA(15))SIMGRO(ICOL,IROW)%NOPP=DX*DY !## surface water, no metaswap
-   IF(SIMGRO(ICOL,IROW)%CRUNON_ROPP   .EQ.NODATA(17))SIMGRO(ICOL,IROW)%NOPP=DX*DY !## surface water, no metaswap
-   IF(SIMGRO(ICOL,IROW)%QINFBASIC_ROPP.EQ.NODATA(19))SIMGRO(ICOL,IROW)%NOPP=DX*DY !## surface water, no metaswap
+   IF(SIMGRO(ICOL,IROW)%VXMU_ROPP     .EQ.NODATA(13))SIMGRO(ICOL,IROW)%NOPP=ARND !DX*DY !## surface water, no metaswap
+   IF(SIMGRO(ICOL,IROW)%CRUNOFF_ROPP  .EQ.NODATA(15))SIMGRO(ICOL,IROW)%NOPP=ARND !DX*DY !## surface water, no metaswap
+   IF(SIMGRO(ICOL,IROW)%CRUNON_ROPP   .EQ.NODATA(17))SIMGRO(ICOL,IROW)%NOPP=ARND !DX*DY !## surface water, no metaswap
+   IF(SIMGRO(ICOL,IROW)%QINFBASIC_ROPP.EQ.NODATA(19))SIMGRO(ICOL,IROW)%NOPP=ARND !DX*DY !## surface water, no metaswap
   ENDIF
  ENDDO; ENDDO
 

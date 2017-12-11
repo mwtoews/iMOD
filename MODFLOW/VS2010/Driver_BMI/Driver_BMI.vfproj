@@ -48,10 +48,16 @@
 		<Filter Name="Header Files" Filter="fi;fd;h;inc"/>
 		<Filter Name="Resource Files" Filter="rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe"/>
 		<Filter Name="Source Files" Filter="f90;for;f;fpp;ftn;def;odl;idl">
-		<File RelativePath="..\..\DRIVER_BMI\driver_bmi.F90"/>
-		<File RelativePath="..\..\DRIVER_BMI\driver_bmi_module.f90"/>
-		<File RelativePath="..\..\DRIVER\driver_module.f90"/>
-		<File RelativePath="..\..\DRIVER\metaswap_comp.FOR"/>
-		<File RelativePath="..\..\DRIVER\mozart_comp.f90"/>
-		<File RelativePath="..\..\DRIVER\transol_comp.FOR"/></Filter></Files>
+		<File RelativePath="..\..\DRIVER_BMI\driver_bmi.F90">
+			<FileConfiguration Name="Release|Win32" ExcludedFromBuild="true"/></File>
+		<File RelativePath="..\..\DRIVER_BMI\driver_bmi_module.f90">
+			<FileConfiguration Name="Release|Win32" ExcludedFromBuild="true"/></File>
+		<File RelativePath="..\..\DRIVER\driver_module.f90">
+			<FileConfiguration Name="Release|Win32" ExcludedFromBuild="true"/></File>
+		<File RelativePath="..\..\DRIVER\metaswap_comp.FOR">
+			<FileConfiguration Name="Release|Win32" ExcludedFromBuild="true"/></File>
+		<File RelativePath="..\..\DRIVER\mozart_comp.f90">
+			<FileConfiguration Name="Release|Win32" ExcludedFromBuild="true"/></File>
+		<File RelativePath="..\..\DRIVER\transol_comp.FOR">
+			<FileConfiguration Name="Release|Win32" ExcludedFromBuild="true"/></File></Filter></Files>
 	<Globals/></VisualStudioProject>
