@@ -1583,39 +1583,6 @@ CONTAINS
 
  END SUBROUTINE IDFGETEDGE
  
-! !###======================================================================
-! SUBROUTINE IDFIROWICOL(IDF,IROW,ICOL,X,Y)
-! !###======================================================================
-! IMPLICIT NONE
-! TYPE(IDFOBJ),INTENT(IN) :: IDF
-! REAL,INTENT(IN) :: X,Y
-! INTEGER,INTENT(OUT) :: ICOL,IROW
-! REAL :: DX,DY
-! INTEGER :: I
-!
-! ICOL=0; IROW=0
-!
-! IF(IDF%IEQ.EQ.0)THEN
-!
-!  DX=X-IDF%XMIN; I=0; IF(MOD(DX,IDF%DX).NE.0.0)I=1
-!  IF(X.GT.IDF%XMIN.AND.X.LT.IDF%XMAX)ICOL=INT(DX/IDF%DX)+I !1
-!  
-!  DY=IDF%YMAX-Y; I=0; IF(MOD(DY,IDF%DY).NE.0.0)I=1
-!  IF(Y.GT.IDF%YMIN.AND.Y.LT.IDF%YMAX)IROW=INT(DY/IDF%DY)+I !1
-!
-!  ICOL=MIN(ICOL,IDF%NCOL); IROW=MIN(IROW,IDF%NROW)
-
-! ELSEIF(IDF%IEQ.EQ.1)THEN
-!
-!  CALL POL1LOCATE(IDF%SX,IDF%NCOL+1,REAL(X,8),ICOL)
-!  CALL POL1LOCATE(IDF%SY,IDF%NROW+1,REAL(Y,8),IROW)
-!  IF(ICOL.LT.0.OR.ICOL.GT.IDF%NCOL)ICOL=0
-!  IF(IROW.LT.0.OR.IROW.GT.IDF%NROW)IROW=0
-!
-! ENDIF
-!
-! END SUBROUTINE IDFIROWICOL
-!
  !###======================================================================
  SUBROUTINE IDFIROWICOL(IDF,IROW,ICOL,X,Y)
  !###======================================================================

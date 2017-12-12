@@ -194,6 +194,8 @@ INTEGER,DIMENSION(4) :: NRECORDS
 
 TYPE GRIDISGOBJ
  REAL :: XMIN,YMIN,XMAX,YMAX          !## area to be gridded (x1,y1,x2,y2)'
+ REAL,POINTER,DIMENSION(:) :: DELR=>NULL(),DELC=>NULL()  !## cellsizes
+ INTEGER :: NCOL,NROW                 !## number of columns/row for griddin non-equidistantial
  INTEGER :: ISTEADY                   !## (1) mean over all periods, (2) mean over given period'
  INTEGER :: SDATE,EDATE,DDATE         !## startdate,enddate,ddate (yyyymmdd,yyyymmdd,dd)'
  INTEGER(KIND=8) :: STIME,ETIME,DTIME !## starttime,endtime (yyyymmddmmhhss,yyyymmddmmhhss)'

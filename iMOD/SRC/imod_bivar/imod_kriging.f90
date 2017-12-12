@@ -77,14 +77,18 @@ CONTAINS
 ! write(*,*) omp_get_max_threads()
 ! write(*,*) omp_get_num_threads()
  
-! IF(ASSOCIATED(IXY))PNTSEARCH=1
+! IF(IBLANKOUT.EQ.1.OR.ASSOCIATED(IXY))THEN
+!  IF(PNTSEARCH.EQ.0)MINP=ND
+!  PNTSEARCH=1
+! ENDIF
+ 
+ !## clean points for duplicates and get mean for simple kriging
+ CALL KRIGING_INIT(MD,XD,YD,ZD,ND,IDF,KTYPE,COINCIDENT,COINCIDENTDIST,IBLANKOUT,BO_VALUE,IBLNTYPE) 
+
  IF(IBLANKOUT.EQ.1.OR.ASSOCIATED(IXY))THEN
   IF(PNTSEARCH.EQ.0)MINP=ND
   PNTSEARCH=1
  ENDIF
- 
- !## clean points for duplicates and get mean for simple kriging
- CALL KRIGING_INIT(MD,XD,YD,ZD,ND,IDF,KTYPE,COINCIDENT,COINCIDENTDIST,IBLANKOUT,BO_VALUE,IBLNTYPE) 
 
  !## compute mean and substract values from mean - simple kriging
  IF(KTYPE.GT.0)THEN
