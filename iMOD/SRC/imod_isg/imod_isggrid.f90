@@ -2201,7 +2201,7 @@ IRLOOP: DO IR=MAX(1,IROW-1),MIN(NROW,IROW+1)
    IDF(1)%X(ICOL,IROW)=A*IDF(1)%X(ICOL,IROW)
   ENDIF
  ENDDO; ENDDO
- IF(.NOT.IDFWRITE(IDF(1),'D:\TEST.IDF',0))THEN; ENDIF
+! IF(.NOT.IDFWRITE(IDF(1),'D:\TEST.IDF',1))THEN; ENDIF
  
  IRAT=0; IRAT1=0
  DO IROW=1,IDF(1)%NROW; DO ICOL=1,IDF(1)%NCOL
@@ -2209,8 +2209,8 @@ IRLOOP: DO IR=MAX(1,IROW-1),MIN(NROW,IROW+1)
 ! icol=40
 ! irow=38
 
-  !## already processed by bathymetry
-  IF(IDF(9)%X(ICOL,IROW).LT.0.0)CYCLE
+!  !## already processed by bathymetry
+!  IF(IDF(9)%X(ICOL,IROW).LT.0.0)CYCLE
   !## river available
   IF(IDF(1)%X(ICOL,IROW).NE.IDF(1)%NODATA)THEN
 
@@ -2266,8 +2266,9 @@ IRLOOP: DO IR=MAX(1,IROW-1),MIN(NROW,IROW+1)
  TYPE(IDFOBJ),INTENT(INOUT),DIMENSION(NIDF) :: IDF
  REAL,INTENT(IN) :: W,A
  INTEGER :: I,J,K,IC,IR,IC1,IC2,IR1,IR2
- REAL :: X,Y,X1,X2,Y1,Y2,TRAD,C
- 
+ REAL :: X,Y,X1,X2,Y1,Y2,TRAD,C,F,DX,DY
+ REAL,DIMENSION(4) :: XP,YP
+  
  !## half of the river width
  TRAD=W/2.0
 
@@ -2284,19 +2285,40 @@ IRLOOP: DO IR=MAX(1,IROW-1),MIN(NROW,IROW+1)
   DO IC=IC1,IC2
 
    !## skip already filled in bathymetry/or previous wide profile
-   IF(IDF(9)%X(IC,IR).NE.0.0)CYCLE !LT.0.0)CYCLE
+   IF(IDF(9)%X(IC,IR).LT.0.0.OR.IDF(9)%X(IC,IR).GE.1.0)CYCLE
 
-   !## get mid location
-   CALL IDFGETLOC(IDF(1),IR,IC,X1,Y1)
+!   !## get mid location
+!   CALL IDFGETLOC(IDF(1),IR,IC,X1,Y1)
 
-   !## within range
-   IF(SQRT((X1-X)**2.0+(Y1-Y)**2.0).LT.TRAD)THEN
+   CALL IDFGETEDGE(IDF(1),IR,IC,X1,Y1,X2,Y2)
+   XP(1)= X1;         YP(1)=(Y1+Y2)/2.0
+   XP(2)=(X1+X2)/2.0; YP(2)= Y1
+   XP(3)= X2;         YP(3)= YP(1)
+   XP(4)=XP(2)      ; YP(4)= Y2
   
+   K=0
+   DO I=1,4
+    DX=(XP(I)-X)**2.0
+    DY=(YP(I)-Y)**2.0
+    IF(SQRT(DX+DY).LT.TRAD)K=K+1
+   ENDDO 
+
+   IF(K.GT.0)THEN
+    F=REAL(K)/4.0
+!    f=f/4.0
+
+!   !## within range
+!   IF(SQRT((X1-X)**2.0+(Y1-Y)**2.0).LT.TRAD)THEN
+
     !## occupied
-    IDF(9)%X(IC,IR)=1.0
+    F=MIN(1.0-IDF(9)%X(IC,IR),F)
+    IDF(9)%X(IC,IR)=IDF(9)%X(IC,IR)+F !1.0
+
+!    IDF(9)%X(IC,IR)=1.0
 
     !## multiply conductance for area
-    IDF(1)%X(IC,IR)=C*IDFGETAREA(IDF(1),IC,IR)
+!    IDF(1)%X(IC,IR)=C*IDFGETAREA(IDF(1),IC,IR)
+    IDF(1)%X(IC,IR)=IDF(1)%X(IC,IR)+C*F*IDFGETAREA(IDF(1),IC,IR)
     !## copy then all
     DO I=2,4; IDF(I)%X(IC,IR)=IDF(I)%X(ICOL,IROW); ENDDO
    ENDIF
