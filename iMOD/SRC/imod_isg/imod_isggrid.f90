@@ -915,19 +915,7 @@ CONTAINS
  DO I=1,NITEMS
   CALL IDFNULLIFY(IDF(I))
   CALL IDFCOPY(BND(1),IDF(I))
-!  IDF(I)%NROW=  NROW
-!  IDF(I)%NCOL  =NCOL
-!  IDF(I)%IEQ   =0
-!  IDF(I)%ITB   =0
-!  IDF(I)%DX    =GRIDISG%CS
-!  IDF(I)%DY    =GRIDISG%CS
-!  IDF(I)%XMIN  =GRIDISG%XMIN
-!  IDF(I)%XMAX  =GRIDISG%XMAX
-!  IDF(I)%YMIN  =GRIDISG%YMIN
-!  IDF(I)%YMAX  =GRIDISG%YMAX
   IDF(I)%NODATA=NODATAIDF
-!  IDF(I)%IXV   =0
-!  CALL IDFNULLIFY(IDF(I))
   IF(.NOT.IDFALLOCATEX(IDF(I)))THEN
    IF(IBATCH.EQ.0)THEN
     CALL WMESSAGEBOX(OKONLY,EXCLAMATIONICON,COMMONOK,'Cannot allocate memory for IDF '//TRIM(FNAME(I))//TRIM(PPOSTFIX)//'.IDF'//CHAR(13)// &
@@ -1312,7 +1300,7 @@ CONTAINS
     !## infiltration factor at location of cross-section
     INFF=IDF(4)%X(ICOL,IROW)
     C =IDF(8)%X(ICOL,IROW)                                    !## resistance at location of cross-section
-    !## intersection migth miss the cell
+    !## intersection might miss the cell
     IF(C.LE.0.0)THEN
      !## look around
 IRLOOP: DO IR=MAX(1,IROW-1),MIN(NROW,IROW+1)
@@ -1392,9 +1380,9 @@ IRLOOP: DO IR=MAX(1,IROW-1),MIN(NROW,IROW+1)
  ENDDO; ENDDO
  IDF%NODATA=-9999.00
  
- GRIDISG%IEXPORT=0
- GRIDISG%ISAVE=1
- GRIDISG%ROOT='D:\'
+! GRIDISG%IEXPORT=0
+! GRIDISG%ISAVE=1
+! GRIDISG%ROOT='D:\'
  IF(GRIDISG%IEXPORT.EQ.0)THEN
   DO I=1,9
    IF(GRIDISG%ISAVE(I).EQ.0)CYCLE
@@ -2092,7 +2080,7 @@ IRLOOP: DO IR=MAX(1,IROW-1),MIN(NROW,IROW+1)
 
  END SUBROUTINE ISG2GRID_EXPORTRIVER
 
-  !###====================================================================
+ !###====================================================================
  SUBROUTINE ISG2GRID_BATHEMETRY(IDF,NIDF,ICROSS,PCROSS,ZCHK,WL,C,INFF)
  !###====================================================================
  IMPLICIT NONE
@@ -2103,64 +2091,34 @@ IRLOOP: DO IR=MAX(1,IROW-1),MIN(NROW,IROW+1)
  INTEGER :: IR1,IR2,IC1,IC2,IROW,ICOL,JROW,JCOL
  REAL :: XC,YC,CR
 
- !## defined cross-sections are finer than model network
- IF(ICROSS%DX.LE.IDF(1)%DX)THEN
-  !## spotify cross-section (actual bathemetry of current 2d cross-section) in mother idf
-  DO IROW=1,ICROSS%NROW; DO ICOL=1,ICROSS%NCOL
-   !## nodata found for waterlevel
-   IF(ICROSS%X(ICOL,IROW).EQ.ICROSS%NODATA)CYCLE
-   !## waterlevel equal or less than riverbot
-   IF(WL.LE.ICROSS%X(ICOL,IROW))CYCLE
-   !## if inundation-criterion applied, only inundate if zchk criterion is met
-   IF(PCROSS%X(ICOL,IROW).LT.0.0.AND.WL.LE.ZCHK)CYCLE
-   !## manipulate resistance for ...
-   CR=C; IF(PCROSS%X(ICOL,IROW).NE.0.0)CR=CR*ABS(PCROSS%X(ICOL,IROW))
-   CALL IDFGETLOC(ICROSS  ,IROW,ICOL,XC,YC)
-   CALL IDFIROWICOL(IDF(1),JROW,JCOL,XC,YC)
-   IF(JROW.NE.0.AND.JCOL.NE.0)THEN
-    IF(IDF(9)%X(JCOL,JROW).EQ.0.0)THEN
-     IDF(1)%X(JCOL,JROW)=IDFGETAREA(ICROSS,ICOL,IROW)/CR
-    ELSE
-     IDF(1)%X(JCOL,JROW)=IDF(1)%X(JCOL,JROW)+IDFGETAREA(ICROSS,ICOL,IROW)/CR
-    ENDIF
-    IDF(9)%X(JCOL,JROW)=IDF(9)%X(JCOL,JROW)+1.0 !## counter how many times it passes
-    IDF(2)%X(JCOL,JROW)=WL                      !## waterlevel
-    IDF(3)%X(JCOL,JROW)=ICROSS%X(ICOL,IROW)     !## bottomlevel
-    IDF(4)%X(JCOL,JROW)=INFF                    !## infiltration factor
-   ENDIF
-  ENDDO; ENDDO
- !## defined cross-sections are coarser than model network
- ELSE
-  CALL IDFIROWICOL(IDF(1),IR2,IC1,ICROSS%XMIN,ICROSS%YMIN)
-  CALL IDFIROWICOL(IDF(1),IR1,IC2,ICROSS%XMAX,ICROSS%YMAX)
-  IF(IC2.EQ.0)IC2=IDF(1)%NCOL; IF(IR2.EQ.0)IR2=IDF(1)%NROW
-  IC1=MAX(1,IC1); IC2=MIN(IC2,IDF(1)%NCOL)
-  IR1=MAX(1,IR1); IR2=MIN(IR2,IDF(1)%NROW)
-  !## spottify cross-section (actual bathemetry of current 2d cross-section) in mother idf
-  DO IROW=IR1,IR2; DO ICOL=IC1,IC2
-   CALL IDFGETLOC(IDF(1)  ,IROW,ICOL,XC,YC)
-   CALL IDFIROWICOL(ICROSS,JROW,JCOL,XC,YC)
-   IF(JROW.NE.0.AND.JCOL.NE.0)THEN
-    !## nodata found for waterlevel
-    IF(ICROSS%X(JCOL,JROW).EQ.ICROSS%NODATA)CYCLE
-    !## waterlevel equal or less than riverbot
-    IF(WL.LE.ICROSS%X(JCOL,JROW))CYCLE
-    !## if inundation-criterion applied, only inundate if zchk criterion is met
-    IF(PCROSS%X(JCOL,JROW).LT.0.0.AND.WL.LE.ZCHK) CYCLE
-    !## manipulate resistance for ...
-    CR=C; IF(PCROSS%X(ICOL,IROW).NE.0.0)CR=CR*ABS(PCROSS%X(JCOL,JROW))
-    IF(IDF(9)%X(ICOL,IROW).EQ.0.0)THEN
-     IDF(1)%X(ICOL,IROW)=IDFGETAREA(ICROSS,ICOL,IROW)/CR
-    ELSE
-     IDF(1)%X(ICOL,IROW)=IDF(1)%X(JCOL,JROW)+IDFGETAREA(ICROSS,ICOL,IROW)/CR
-    ENDIF
-    IDF(9)%X(ICOL,IROW)=IDF(9)%X(ICOL,IROW)+1.0    !## counter how many times it passes
-    IDF(2)%X(ICOL,IROW)=WL
-    IDF(3)%X(ICOL,IROW)=ICROSS%X(JCOL,JROW)
-    IDF(4)%X(ICOL,IROW)=INFF
-   ENDIF
-  ENDDO; ENDDO
- ENDIF
+ !## fill in 3d-cross-section into model-network
+ DO IROW=1,ICROSS%NROW; DO ICOL=1,ICROSS%NCOL
+
+  !## nodata found for waterlevel
+  IF(ICROSS%X(ICOL,IROW).EQ.ICROSS%NODATA)CYCLE
+  !## waterlevel equal or less than riverbot
+  IF(WL.LE.ICROSS%X(ICOL,IROW))CYCLE
+  !## if inundation-criterion applied, only inundate if zchk criterion is met
+  IF(PCROSS%X(ICOL,IROW).LT.0.0.AND.WL.LE.ZCHK)CYCLE
+
+  !## all okay - continue
+  CALL IDFGETLOC(ICROSS,IROW,ICOL,XC,YC)
+  CALL IDFIROWICOL(IDF(1),JROW,JCOL,XC,YC)
+  !## outside current model
+  IF(JROW.EQ.0.OR.JCOL.EQ.0)CYCLE
+
+  !## manipulate resistance for ...
+  CR=C; IF(PCROSS%X(ICOL,IROW).NE.0.0)CR=CR*ABS(PCROSS%X(ICOL,IROW))
+  IF(IDF(9)%X(JCOL,JROW).EQ.0.0)THEN
+   IDF(1)%X(JCOL,JROW)=IDFGETAREA(ICROSS,ICOL,IROW)/CR
+  ELSE
+   IDF(1)%X(JCOL,JROW)=IDF(1)%X(JCOL,JROW)+IDFGETAREA(ICROSS,ICOL,IROW)/CR
+  ENDIF
+  IDF(9)%X(JCOL,JROW)=IDF(9)%X(JCOL,JROW)+1.0 !## counter how many times it passes
+  IDF(2)%X(JCOL,JROW)=WL                      !## waterlevel
+  IDF(3)%X(JCOL,JROW)=ICROSS%X(ICOL,IROW)     !## bottomlevel
+  IDF(4)%X(JCOL,JROW)=INFF                    !## infiltration factor
+ ENDDO; ENDDO
 
  END SUBROUTINE ISG2GRID_BATHEMETRY
 
@@ -2184,10 +2142,7 @@ IRLOOP: DO IR=MAX(1,IROW-1),MIN(NROW,IROW+1)
 
   !## get aggregation (erosion-matrix) pointer to one for all initially
   IF(IDF(1)%X(ICOL,IROW).NE.IDF(1)%NODATA)IDF(9)%X(ICOL,IROW)=1.0
-
-!  !## clean data if one of the entries is nodata
-!  DO I=1,4; IF(IDF(I)%X(ICOL,IROW).EQ.IDF(I)%NODATA)IDF(I)%X(ICOL,IROW)=0.0; ENDDO
-  
+ 
   !## conductance assume to be cell-filled; f=dx/length-segment*dx/width
   A=IDFGETAREA(IDF(1),ICOL,IROW)  
   W=IDF(7)%X(ICOL,IROW)
@@ -2201,16 +2156,12 @@ IRLOOP: DO IR=MAX(1,IROW-1),MIN(NROW,IROW+1)
    IDF(1)%X(ICOL,IROW)=A*IDF(1)%X(ICOL,IROW)
   ENDIF
  ENDDO; ENDDO
-! IF(.NOT.IDFWRITE(IDF(1),'D:\TEST.IDF',1))THEN; ENDIF
  
  IRAT=0; IRAT1=0
  DO IROW=1,IDF(1)%NROW; DO ICOL=1,IDF(1)%NCOL
 
-! icol=40
-! irow=38
-
-!  !## already processed by bathymetry
-!  IF(IDF(9)%X(ICOL,IROW).LT.0.0)CYCLE
+  !## already processed by bathymetry
+  IF(IDF(9)%X(ICOL,IROW).LT.0.0)CYCLE
   !## river available
   IF(IDF(1)%X(ICOL,IROW).NE.IDF(1)%NODATA)THEN
 
@@ -2230,25 +2181,6 @@ IRLOOP: DO IR=MAX(1,IROW-1),MIN(NROW,IROW+1)
  
  IF(IBATCH.EQ.1)WRITE(*,'(A)') 'Finished computing erosion matrix'
 
-! DO IROW=1,IDF(1)%NROW; DO ICOL=1,IDF(1)%NCOL
-!  !## correct all except conductance
-!  DO I=2,4 !1,4
-!   IF(IDF(9)%X(ICOL,IROW).GT.0.0)then
-!    IDF(I)%X(ICOL,IROW)=IDF(I)%X(ICOL,IROW)/IDF(9)%X(ICOL,IROW)
-!   endif
-!   IF(IDF(9)%X(ICOL,IROW).EQ.0.0)IDF(I)%X(ICOL,IROW)=IDF(I)%NODATA
-!  ENDDO
-! ENDDO; ENDDO
-
-! !## correct to be sure multiplication matrix does not exceed factor 1.0 and multiply conductance with erosion matrix
-! DO IROW=1,IDF(1)%NROW; DO ICOL=1,IDF(1)%NCOL
-!  IF(IDF(9)%X(ICOL,IROW).GT.1.0)THEN
-!   IDF(9)%X(ICOL,IROW)=1.0
-!  ELSE
-!   IDF(9)%X(ICOL,IROW)=-1.0*IDF(9)%X(ICOL,IROW)
-!  ENDIF
-! ENDDO; ENDDO
-
  !## clean for conductances le zero
  DO IROW=1,IDF(1)%NROW; DO ICOL=1,IDF(1)%NCOL
   IF(IDF(1)%X(ICOL,IROW).LE.0.0)THEN
@@ -2267,7 +2199,7 @@ IRLOOP: DO IR=MAX(1,IROW-1),MIN(NROW,IROW+1)
  REAL,INTENT(IN) :: W,A
  INTEGER :: I,J,K,IC,IR,IC1,IC2,IR1,IR2
  REAL :: X,Y,X1,X2,Y1,Y2,TRAD,C,F,DX,DY
- REAL,DIMENSION(4) :: XP,YP
+ REAL,DIMENSION(9) :: XP,YP
   
  !## half of the river width
  TRAD=W/2.0
@@ -2287,40 +2219,38 @@ IRLOOP: DO IR=MAX(1,IROW-1),MIN(NROW,IROW+1)
    !## skip already filled in bathymetry/or previous wide profile
    IF(IDF(9)%X(IC,IR).LT.0.0.OR.IDF(9)%X(IC,IR).GE.1.0)CYCLE
 
-!   !## get mid location
-!   CALL IDFGETLOC(IDF(1),IR,IC,X1,Y1)
-
    CALL IDFGETEDGE(IDF(1),IR,IC,X1,Y1,X2,Y2)
-   XP(1)= X1;         YP(1)=(Y1+Y2)/2.0
+   XP(1)= X1        ; YP(1)=(Y1+Y2)/2.0
    XP(2)=(X1+X2)/2.0; YP(2)= Y1
-   XP(3)= X2;         YP(3)= YP(1)
-   XP(4)=XP(2)      ; YP(4)= Y2
-  
+   XP(3)= X2        ; YP(3)= YP(1)
+   XP(4)= XP(2)     ; YP(4)= Y2
+   XP(5)= X1        ; YP(5)= Y1  
+   XP(6)= X1        ; YP(6)= Y2  
+   XP(7)= X2        ; YP(7)= Y2  
+   XP(8)= X2        ; YP(8)= Y1  
+   XP(9)= XP(2)     ; YP(9)= YP(1)  
+
    K=0
-   DO I=1,4
+   DO I=1,9
     DX=(XP(I)-X)**2.0
     DY=(YP(I)-Y)**2.0
     IF(SQRT(DX+DY).LT.TRAD)K=K+1
    ENDDO 
 
    IF(K.GT.0)THEN
-    F=REAL(K)/4.0
-!    f=f/4.0
+    F=REAL(K)/9.0
 
-!   !## within range
-!   IF(SQRT((X1-X)**2.0+(Y1-Y)**2.0).LT.TRAD)THEN
+    !## only overrule if fully covered or f larger than existing value
+    IF(F.EQ.1.0.OR.F.GT.IDF(9)%X(IC,IR))THEN
+     IDF(9)%X(IC,IR)=F
 
-    !## occupied
-    F=MIN(1.0-IDF(9)%X(IC,IR),F)
-    IDF(9)%X(IC,IR)=IDF(9)%X(IC,IR)+F !1.0
+     !## multiply conductance for area
+     IDF(1)%X(IC,IR)=C*F*IDFGETAREA(IDF(1),IC,IR)
+     !## copy then all
+     DO I=2,4; IDF(I)%X(IC,IR)=IDF(I)%X(ICOL,IROW); ENDDO
 
-!    IDF(9)%X(IC,IR)=1.0
+    ENDIF   
 
-    !## multiply conductance for area
-!    IDF(1)%X(IC,IR)=C*IDFGETAREA(IDF(1),IC,IR)
-    IDF(1)%X(IC,IR)=IDF(1)%X(IC,IR)+C*F*IDFGETAREA(IDF(1),IC,IR)
-    !## copy then all
-    DO I=2,4; IDF(I)%X(IC,IR)=IDF(I)%X(ICOL,IROW); ENDDO
    ENDIF
 
   ENDDO
@@ -2679,7 +2609,6 @@ IRLOOP: DO IR=MAX(1,IROW-1),MIN(NROW,IROW+1)
         QSORT(II,I)=RVAL(I)
        ENDDO
       ENDIF
-!      QSORT(MAX(1,I1):I2,I)=RVAL(I)
      END DO
     ENDIF
 
@@ -2946,9 +2875,6 @@ IRLOOP: DO IR=MAX(1,IROW-1),MIN(NROW,IROW+1)
     Y(II)   =Y(II-1)
     IPOS(II)=IPOS(II-1)
    ENDDO
-!   X(ISEG+1:NSEG+1)   =X(ISEG:NSEG)
-!   Y(ISEG+1:NSEG+1)   =Y(ISEG:NSEG)
-!   IPOS(ISEG+1:NSEG+1)=IPOS(ISEG:NSEG)
    X(ISEG)            =XC
    Y(ISEG)            =YC
    !## increase number of segments
@@ -2965,9 +2891,6 @@ IRLOOP: DO IR=MAX(1,IROW-1),MIN(NROW,IROW+1)
     Y(II)   =Y(II-1)
     IPOS(II)=IPOS(II-1)
    ENDDO
-!   X(ISEG+1:NSEG+1)   =X(ISEG:NSEG)
-!   Y(ISEG+1:NSEG+1)   =Y(ISEG:NSEG)
-!   IPOS(ISEG+1:NSEG+1)=IPOS(ISEG:NSEG)
    X(ISEG)            =XC
    Y(ISEG)            =YC
    !## increase number of segments

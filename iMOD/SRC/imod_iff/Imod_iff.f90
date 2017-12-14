@@ -52,12 +52,8 @@ CONTAINS
    IU=UTL_GETUNITIFF(MP(IPLOT)%IDFNAME,'OLD')
    IF(IU.GT.0)THEN
 
-!    CALL WINDOWSELECT(0)
-!    CALL IGRAREA(0.0,0.0,1.0,1.0)
-!    CALL IGRUNITS(MPW%XMIN,MPW%YMIN,MPW%XMAX,MPW%YMAX)
     CALL IFFPLOT(IU,MPW%XMIN,MPW%XMAX,MPW%YMIN,MPW%YMAX,IPLOT,(/0.0,0.0,0.0,0.0/),0.0)
-!    CALL IFFPLOT(IU,MPW%XMIN,MPW%XMAX,MPW%YMIN,MPW%YMAX, &
-!                 ZMIN,ZMAX,IPLOT,(/0.0,0.0,0.0,0.0/),0.0)
+
     CLOSE(IU)
     DRWLIST(IPLOT)=1
    ENDIF
@@ -150,8 +146,6 @@ CONTAINS
      !## length line is zero
      IF((IFF(1)%X-IFF(2)%X).NE.0.0.OR.(IFF(1)%Y-IFF(2)%Y).NE.0.0)THEN
       !## correct for sight-depth
- !      IF((XYZT(3,1)+XYZT(3,2))/2.0.GE.YDIS)THEN
- !     IF(MP(IPLOT)%FADEOUT.EQ.1)CALL UTL_FADEOUTCOLOUR(ICLR,0.5*(IFF(1)%Z+IFF(2)%Z)/YDIS)
       CALL IGRCOLOURN(ICLR)   
       CALL IGRJOIN(IFF(1)%X,IFF(1)%Y,IFF(2)%X,IFF(2)%Y)
      ENDIF
@@ -172,8 +166,6 @@ CONTAINS
       !## rotated coordinates become ...
       X1=XS1* COS(RAD)+YS1*SIN(RAD)       !x1'
       X2=XS2* COS(RAD)+YS2*SIN(RAD)       !x2'
-!      Y1=YS1*(-1.0*SIN(RAD))+YS1*COS(RAD) !y1'
-!      Y2=YS2*(-1.0*SIN(RAD))+YS2*COS(RAD) !y2'
 
       IF(MP(IPLOT)%FADEOUT.EQ.1)THEN
        XS1=(IFF(1)%X+IFF(2)%X)/2.0
