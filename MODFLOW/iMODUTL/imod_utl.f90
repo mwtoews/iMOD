@@ -46,7 +46,7 @@ character(len=79), dimension(nhdr) :: hdr
 
 !         1234567890123456789012345678901234567890123456789012345678901234567890123456789
 data hdr/'===============================================================================',&!01
-         'iMODFLOW Version 4_1, October 2017                                         ',&!02
+         'iMODFLOW Version 4_2, October 2017                                             ',&!02
          '                                                                               ',&!03
          'Copyright (C) Stichting Deltares, 2005-2017.                                   ',&!04
          '                                                                               ',&!05
@@ -2620,7 +2620,7 @@ END SUBROUTINE IMOD_UTL_QKSORT
  IMPLICIT NONE
  REAL,INTENT(IN) :: XMIN,XMAX,YMIN,YMAX,CSX_IN,CSY_IN
  REAL,INTENT(IN) :: XIN1,XIN2,YIN1,YIN2
- INTEGER,INTENT(OUT) :: N
+ INTEGER,INTENT(INOUT) :: N
  LOGICAL,INTENT(IN) :: LHFB
  REAL :: X,Y,XMN,XMX,YMN,YMX,DX,DY,LENG,TD,X1,X2,Y1,Y2,CSX,CSY
  INTEGER :: I,ICOL,IROW,ID,N_IN
@@ -2799,9 +2799,9 @@ END SUBROUTINE IMOD_UTL_INTERSECT_NCORNER
  REAL,INTENT(IN),DIMENSION(0:NCOL) :: DELR
  REAL,INTENT(IN),DIMENSION(0:NROW) :: DELC
  REAL,INTENT(IN) :: XIN1,XIN2,YIN1,YIN2
- INTEGER,INTENT(OUT) :: N
+ INTEGER,INTENT(INOUT) :: N
  LOGICAL,INTENT(IN) :: LHFB
- REAL :: X,Y,XMN,XMX,YMN,YMX,DX,DY,LENG,XMIN,YMIN,XMAX,YMAX,X1,X2,Y1,Y2,CS,TD
+ REAL :: X,Y,XMN,XMX,YMN,YMX,DX,DY,LENG,XMIN,YMIN,XMAX,YMAX,X1,X2,Y1,Y2,CS,TD,CSX,CSY
  INTEGER :: I,ICOL,IROW,IMN,JMN,ID,N_IN
  
  X1=XIN1; Y1=YIN1; X2=XIN2; Y2=YIN2
@@ -2864,7 +2864,7 @@ END SUBROUTINE IMOD_UTL_INTERSECT_NCORNER
     IMN  =IMN-1
     !## model is not bigger than line-segment
     IF(IMN.LE.0)EXIT
-    CS=DELC(IMN-1)-DELC(IMN)
+    CS=DELC(IMN)-DELC(IMN+1)
     IF(LHFB)CS=CS/2.0
    ENDDO
 
@@ -2936,9 +2936,13 @@ END SUBROUTINE IMOD_UTL_INTERSECT_NCORNER
   CALL IMOD_UTL_POL1LOCATED(DELR,NCOL+1,REAL(X,8),ICOL)
   CALL IMOD_UTL_POL1LOCATED(DELC,NROW+1,REAL(Y,8),IROW)
   
-  TD=CS*2.0; ID=0 !## fraction
+  ID=0 !## fraction
+
   IF(ICOL.GE.1.AND.ICOL.LE.NCOL.AND. &
      IROW.GE.1.AND.IROW.LE.NROW)THEN
+   CSX=DELR(ICOL)-DELR(ICOL-1)
+   CSY=DELC(IROW-1)-DELC(IROW)
+   TD=CSX*CSY     
    CALL IMOD_UTL_INTERSECT_NCORNER(ID,TD,DELR(ICOL-1),DELC(IROW-1),X,Y,1)
    CALL IMOD_UTL_INTERSECT_NCORNER(ID,TD,DELR(ICOL)  ,DELC(IROW-1),X,Y,2)
    CALL IMOD_UTL_INTERSECT_NCORNER(ID,TD,DELR(ICOL)  ,DELC(IROW)  ,X,Y,3)

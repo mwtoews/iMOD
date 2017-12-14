@@ -793,6 +793,7 @@ CONTAINS
   IDF%XMAX=IDF%XMIN+REAL(IDF%NCOL)*DX(1)
   IDF%YMAX=IDF%YMIN+REAL(IDF%NROW)*DY(1)
  ELSE
+  write(*,*) size(dx),idf%ncol,size(dy),idf%nrow
   WRITE(*,*) 'ERROR, check array dx(.) and dy(.) to be consistent with ncol and nrow'
   RETURN
  ENDIF
@@ -1149,11 +1150,35 @@ CONTAINS
 
  END FUNCTION IDFWRITEDATA
 
+  !###======================================================================
+ SUBROUTINE IDFGETEDGE(IDF,IROW,ICOL,X1,Y1,X2,Y2)
+ !###======================================================================
+ IMPLICIT NONE
+ TYPE(IDFOBJ),INTENT(IN) :: IDF
+ INTEGER,INTENT(IN) :: IROW,ICOL
+ REAL,INTENT(OUT) :: X1,Y1,X2,Y2
+
+ IF(IDF%IEQ.EQ.0)THEN
+
+  X1=IDF%XMIN+((ICOL-1)*IDF%DX); X2=X1+IDF%DX
+  Y1=IDF%YMAX-((IROW  )*IDF%DY); Y2=Y1+IDF%DY
+
+ ELSEIF(IDF%IEQ.EQ.1)THEN
+
+  X1=IDF%SX(ICOL-1)
+  X2=IDF%SX(ICOL  )
+  Y1=IDF%SY(IROW  )
+  Y2=IDF%SY(IROW-1)
+
+ ENDIF
+
+ END SUBROUTINE IDFGETEDGE
+
  !###======================================================================
  SUBROUTINE IDFGETLOC(IDF,IROW,ICOL,X,Y)
  !###======================================================================
  IMPLICIT NONE
- TYPE(IDFOBJ),INTENT(INOUT) :: IDF
+ TYPE(IDFOBJ),INTENT(IN) :: IDF
  INTEGER,INTENT(IN) :: IROW,ICOL
  REAL,INTENT(OUT) :: X,Y
 
@@ -1322,8 +1347,8 @@ CONTAINS
  IF(IDF%IEQ.EQ.0)THEN
   IDFGETAREA=IDF%DX*IDF%DY
  ELSE
-  IDFGETAREA=IDF%SY(IROW-1)-IDF%SY(IROW)* &
-             IDF%SX(ICOL)  -IDF%SX(ICOL-1)
+  IDFGETAREA=(IDF%SY(IROW-1)-IDF%SY(IROW))* &
+             (IDF%SX(ICOL)  -IDF%SX(ICOL-1))
  ENDIF
 
  END FUNCTION IDFGETAREA

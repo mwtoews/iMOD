@@ -976,7 +976,7 @@ c     1                  lcorner,nodata,1.)
      1                            nodata,'',fname)
          else
             lok = idfwrite_wrapper(sncol,snrow,buff(ic1:ic2,ir1:ir2),
-     1                            delr(ic1:),delc(ir1:),
+     1                            delr(ic1:ic2),delc(ir1:ic2),
      1                            coord_xll_nb,coord_yll_nb,
      1                            nodata,'',fname)
          end if

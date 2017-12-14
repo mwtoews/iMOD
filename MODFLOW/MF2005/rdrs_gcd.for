@@ -88,7 +88,8 @@ c ------------------------------------------------------------------------------
       use idfmodule
       use rdrsmodule, only: nodata
       use pksmpi_mod,only: nrproc, gncol, gnrow                  
-
+      USE MOD_ISGVAR, ONLY : isgdata
+      
       implicit none
 
 c arguments
@@ -122,13 +123,15 @@ c local variables
       real :: rval
       real :: tlp(nlay)
       logical :: isgfile
-      integer :: lloc, istart, istop, i, n, nisg, il
+      integer :: lloc, istart, istop, i, j, n, nisg, il
       real :: r, q, z1, z2, c
       character(len=200) :: line
       character(len=256) :: str, fname, tmplabel
       integer, dimension(10) :: jjj
       logical :: lused, pks7mpimasterwrite                              ! PKS
-
+      
+!      real,dimension(:,:),pointer :: isgdata !=>null()
+      
 c program section
 c ------------------------------------------------------------------------------
 c
@@ -221,19 +224,28 @@ c                  check if file is of type isg
                   if (pks7mpimasterwrite()) then                        ! PKS
                      write(*,*) 'reading ',trim(fname)
                   end if                                                ! PKS
-                  nalloc = 1
-                  allocate(isglist(isub)%list(nalloc,11))
-                  call pck1rpisg(isglist(isub)%list,nalloc,
-     1               isglist(isub)%nlist,fname,ilay(isub),0)
-                  deallocate(isglist(isub)%list)
+!                  nalloc = 1
+!                  allocate(isglist(isub)%list(nalloc,11))
+!                  allocate(isgdata(nrow*ncol,11)); nalloc=0
+!                  call pck1rpisg(isglist(isub)%list,nalloc,
+!                  nalloc = 1
+!                  allocate(isglist(isub)%list(nalloc,11))
+!     1               isglist(isub)%nlist,fname,ilay(isub),0,nrproc)
+!     !                  deallocate(isglist(isub)%list)
+                  call pck1rpisg(nalloc,fname,ilay(isub))
+                  isglist(isub)%nlist=nalloc
                   if (nrproc.gt.1) then                                 ! PKS
                      nalloc = 2*isglist(isub)%nlist+gnrow*gncol         ! PKS
                   else                                                  ! PKS
                      nalloc = 2*isglist(isub)%nlist+nrow*ncol           ! PKS
-                  end if                                                ! PKS
+                  end if 
                   allocate(isglist(isub)%list(nalloc,11))
-                  call pck1rpisg(isglist(isub)%list,nalloc,
-     1               isglist(isub)%nlist,fname,ilay(isub),1)
+                  do i=1,isglist(isub)%nlist; do j=1,11
+                   isglist(isub)%list(i,j)=isgdata(i,j)
+                  enddo; enddo
+                  deallocate(isgdata)
+!                  call pck1rpisg(isglist(isub)%list,nalloc,
+!     1               isglist(isub)%nlist,fname,ilay(isub),1)
                   read(in,'(a)') line
                else
 c                    read basic fields
