@@ -28,11 +28,6 @@ USE MOD_UTL, ONLY : UTL_IDFSNAPTOGRID_LLC,UTL_READINITFILE,ITOS,UTL_GETUNIT,UTL_
 USE MOD_OSD, ONLY : OSD_GETENV,OSD_DATE_AND_TIME
 CHARACTER(LEN=256),PRIVATE :: LINE
 
-REAL,PARAMETER :: C1=0.018
-REAL,PARAMETER :: C2=0.2958
-REAL,PARAMETER :: RHO=1000.0
-REAL,PARAMETER :: G=9.8
-REAL,PARAMETER :: PAIR=101325.0
 REAL,PARAMETER :: REF_A=0.1*SQRT(0.70635/0.13)
 !REAL,PARAMETER :: REF_A=0.05*SQRT(0.36564/0.132)
 
@@ -132,6 +127,12 @@ CONTAINS
   K=KHV(ILAY,1)%X(ICOL,IROW)
   P=STOMP_GETPOROSITY(K)
   A=REF_A/SQRT(K/P)
+!  A=MIN(A,15.0)
+!  A=0.13
+!if(a.gt.10.0)then
+! write(*,*) a
+!endif
+
   WRITE(JU,'(G15.7)') A
  ENDDO; ENDDO; ENDDO
  CLOSE(JU)
@@ -263,11 +264,7 @@ CONTAINS
 
  JU=UTL_GETUNIT(); OPEN(JU,FILE=TRIM(OUTPUTFILE)//'\ksz.dat',STATUS='UNKNOWN')
  DO ILAY=1,NLAY; DO IROW=1,NROW; DO ICOL=1,NCOL
-  K1=LOG(KHV(ILAY,1)%X(ICOL,IROW))
-  K2=LOG(KHV(ILAY,2)%X(ICOL,IROW))
-  K3=EXP((K1+K2)/2.0)
-  K4=K3*KHV(ILAY,3)%X(ICOL,IROW)
-  WRITE(JU,'(G15.7)') K4
+  WRITE(JU,'(G15.7)') KHV(ILAY,3)%X(ICOL,IROW)
  ENDDO; ENDDO; ENDDO
  CLOSE(JU)
 
@@ -277,6 +274,9 @@ CONTAINS
  SUBROUTINE STOMP_WRITE_INITIAL_CONDITIONS(IU)
  !###======================================================================
  IMPLICIT NONE
+ REAL,PARAMETER :: RHO=1000.0
+ REAL,PARAMETER :: G=9.8
+ REAL,PARAMETER :: PAIR=101325.0
  INTEGER,INTENT(IN) :: IU
  INTEGER :: JU,IROW,ICOL,ILAY
  REAL :: HB,WP
@@ -293,7 +293,7 @@ CONTAINS
  !## relation with depth
  JU=UTL_GETUNIT(); OPEN(JU,FILE=TRIM(OUTPUTFILE)//'\ini_aqueous.dat',STATUS='UNKNOWN')
  DO ILAY=1,NLAY; DO IROW=1,NROW; DO ICOL=1,NCOL
-  HB=TB(ILAY,2)%X(ICOL,IROW)
+  HB=TB(1,1)%X(ICOL,IROW)-TB(ILAY,2)%X(ICOL,IROW)
   WP=RHO*G*HB+PAIR
   WRITE(JU,'(3I10,G15.7)') ICOL,IROW,ILAY,WP
  ENDDO; ENDDO; ENDDO
@@ -301,7 +301,7 @@ CONTAINS
   
  JU=UTL_GETUNIT(); OPEN(JU,FILE=TRIM(OUTPUTFILE)//'\ini_gas.dat',STATUS='UNKNOWN')
  DO ILAY=1,NLAY; DO IROW=1,NROW; DO ICOL=1,NCOL
-  WRITE(JU,'(3I10,G15.7)') ICOL,IROW,ILAY,101325.0+1.0E-9 !-999.0
+  WRITE(JU,'(3I10,G15.7)') ICOL,IROW,ILAY,101325.0+1.0E-9
  ENDDO; ENDDO; ENDDO
  CLOSE(JU)
 
@@ -350,12 +350,11 @@ CONTAINS
  WRITE(IU,'(A)') '2,'         !## number of plot files
  WRITE(IU,'(A)') '1,year,'   !## number of plot files
  WRITE(IU,'(A)') '10,year,'  !## number of plot files
- WRITE(IU,'(A)') '4,'         !## number of output variables
+ WRITE(IU,'(A)') '5,'         !## number of output variables
  WRITE(IU,'(A)') 'aqueous saturation,,'        
  WRITE(IU,'(A)') 'gas saturation,,'            
  WRITE(IU,'(A)') 'gas pressure,Pa,'
  WRITE(IU,'(A)') 'aqueous relative perm,,' !## aqueous relative permeability
- 
  WRITE(IU,'(A)') 'trapped gas sat,,'  !## trapped gas saturation,'
 
  END SUBROUTINE STOMP_WRITE_OUTPUT
@@ -431,7 +430,8 @@ CONTAINS
  IMPLICIT NONE
  TYPE(IDFOBJ),INTENT(INOUT) :: IDF
  INTEGER,INTENT(IN) :: IWINDOW,IU
- INTEGER :: I,J
+ INTEGER :: I,J,II,ILAY,IROW,ICOL
+ REAL :: K1,K2,K3,K4,T,B,D
  CHARACTER(LEN=256) :: LINE
 
  STOMP_READ=.FALSE.
@@ -477,6 +477,57 @@ CONTAINS
 
  NROW=IDF%NROW; NCOL=IDF%NCOL
 
+ !## convert vertical anisotropy into k-vertical
+ DO ILAY=1,NLAY; DO IROW=1,NROW; DO ICOL=1,NCOL
+  K1=LOG(KHV(ILAY,1)%X(ICOL,IROW))
+  K2=LOG(KHV(ILAY,2)%X(ICOL,IROW))
+  !## log average permeability
+  K3=EXP((K1+K2)/2.0)
+  !## vertical permeability
+  K4=K3*KHV(ILAY,3)%X(ICOL,IROW)
+  !## overwrite vertical anisotropy with vertical permeability
+  KHV(ILAY,3)%X(ICOL,IROW)=K4
+ ENDDO; ENDDO; ENDDO
+ 
+ !## check zero thicknesses
+ DO ILAY=1,NLAY; DO IROW=1,NROW; DO ICOL=1,NCOL
+  T=TB(ILAY,1)%X(ICOL,IROW)
+  B=TB(ILAY,2)%X(ICOL,IROW)
+  D=T-B
+  IF(D.LE.0.0)THEN
+   WRITE(*,'(A,3I5,A)') 'Zero thickness modellayer ',ICOL,IROW,ILAY,' not possible'; STOP
+  ENDIF
+ ENDDO; ENDDO; ENDDO
+ 
+ !## check whether isolated cells appear (no connection with conductance)
+ II=0; DO ILAY=1,NLAY; DO IROW=1,NROW; DO ICOL=1,NCOL
+
+  !## skip nodata location
+  IF(BND(ILAY)%X(ICOL,IROW).EQ.0)CYCLE
+
+  II=II+1
+!  IF(II.EQ.135874)THEN
+!   WRITE(*,*) KHV(K-1,3)%X(I,J)
+!   WRITE(*,*) KHV(K  ,3)%X(I,J)
+!   WRITE(*,*) KHV(K  ,2)%X(I,J-1)
+!   WRITE(*,*) KHV(K  ,2)%X(I,J)
+!   WRITE(*,*) KHV(K  ,1)%X(I-1,J)
+!   WRITE(*,*) KHV(K  ,1)%X(I,J)
+!  ENDIF
+
+  T=0.0
+  IF(ILAY.GT.1   )T=T+KHV(ILAY-1,3)%X(ICOL  ,IROW  )
+  IF(ILAY.LT.NLAY)T=T+KHV(ILAY  ,3)%X(ICOL  ,IROW  )
+  IF(IROW.GT.1   )T=T+KHV(ILAY  ,2)%X(ICOL  ,IROW-1)    
+  IF(IROW.LT.NROW)T=T+KHV(ILAY  ,2)%X(ICOL  ,IROW  )    
+  IF(ICOL.GT.1   )T=T+KHV(ILAY  ,1)%X(ICOL-1,IROW  )    
+  IF(ICOL.LT.NCOL)T=T+KHV(ILAY  ,1)%X(ICOL  ,IROW  )    
+  IF(T.EQ.0.0)THEN
+   WRITE(*,'(A,3I5,A)') 'Current cell ',ICOL,IROW,ILAY,' not connected to any other'; STOP
+  ENDIF
+  
+ ENDDO; ENDDO; ENDDO
+ 
  STOMP_READ=.TRUE.
 
  END FUNCTION STOMP_READ
@@ -513,11 +564,12 @@ CONTAINS
 
  END SUBROUTINE STOMP_INIT
 
-
  !###======================================================================
  REAL FUNCTION STOMP_GETPOROSITY(K)
  !###======================================================================
  IMPLICIT NONE
+ REAL,PARAMETER :: C1=0.018
+ REAL,PARAMETER :: C2=0.2958
  REAL,INTENT(INOUT) :: K
  REAL :: P
  
