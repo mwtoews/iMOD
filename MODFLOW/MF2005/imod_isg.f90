@@ -538,8 +538,9 @@ DO I=1,NISGH
          NISG = NISG+1
 
          IF(NISG.GT.SIZE(isgdata,1))THEN
+          !## increase memory
           NA=SIZE(isgdata,1); MA=SIZE(isgdata,2)
-          ALLOCATE(isgdata(NA,MA)); isgdata_BU=0.0
+          ALLOCATE(isgdata_bu(NA+1000,MA)); isgdata_BU=0.0
           DO II=1,NA; DO JJ=1,MA; isgdata_BU(II,JJ)=isgdata(II,JJ); ENDDO; ENDDO
           DEALLOCATE(isgdata); isgdata=>isgdata_BU
          ENDIF
