@@ -93,8 +93,9 @@ CONTAINS
  SUBROUTINE RF2MF_METASWAP(DXCFILE,idf)
  !####====================================================================
  use pksmpi_mod, only: myrank
+ USE rf2mf_module
  IMPLICIT NONE
- type(idfobj),intent(in) ::idf
+ type(idfobj),intent(inout) ::idf
  CHARACTER(LEN=*),INTENT(INOUT) :: DXCFILE
 
  !## dummy variables
@@ -232,7 +233,7 @@ CONTAINS
   IF(IOS(I).EQ.0)THEN
    BUFF=CONSTANTE(I); ! NODATA(I)=0.0
   ELSE
-      write(*,*) trim(fname(i))
+   write(*,*) trim(fname(i))
    if (.not.idfread(idfc,fname(i),0)) CALL IMOD_UTL_PRINTTEXT('idfread',2)
    call idfnullify(idfm)
    !## copy modelnetwork
@@ -381,30 +382,54 @@ CONTAINS
  !## construct metaswap files
  CALL METASWAP_EXPORT4(NODATA(20),FNAME(8),modwd)
 
- IF (.FALSE.) THEN
-  DX=DELR(1)-DELR(0); DY=DELC(0)-DELC(1)
-  OK=IDFWRITE_WRAPPER(NCOL,NROW,REAL(SIMGRO%IBOUND),        (/DX/),(/DY/),SIMBOX(1),SIMBOX(2),NODATA(1),'','msbnd.idf')
-  OK=IDFWRITE_WRAPPER(NCOL,NROW,REAL(SIMGRO%LGN),           (/DX/),(/DY/),SIMBOX(1),SIMBOX(2),NODATA(1),'','mslgn.idf')
-  OK=IDFWRITE_WRAPPER(NCOL,NROW,REAL(SIMGRO%RZ),            (/DX/),(/DY/),SIMBOX(1),SIMBOX(2),NODATA(1),'','msrtz.idf')
-  OK=IDFWRITE_WRAPPER(NCOL,NROW,REAL(SIMGRO%BODEM),         (/DX/),(/DY/),SIMBOX(1),SIMBOX(2),NODATA(1),'','mssfu.idf')
-  OK=IDFWRITE_WRAPPER(NCOL,NROW,REAL(SIMGRO%METEO),         (/DX/),(/DY/),SIMBOX(1),SIMBOX(2),NODATA(1),'','msmet.idf')
-  OK=IDFWRITE_WRAPPER(NCOL,NROW,REAL(SIMGRO%MV),            (/DX/),(/DY/),SIMBOX(1),SIMBOX(2),NODATA(1),'','mssev.idf')
-  OK=IDFWRITE_WRAPPER(NCOL,NROW,REAL(SIMGRO%BEREGEN),       (/DX/),(/DY/),SIMBOX(1),SIMBOX(2),NODATA(1),'','msart.idf')
-  OK=IDFWRITE_WRAPPER(NCOL,NROW,REAL(SIMGRO%BER_LAAG),      (/DX/),(/DY/),SIMBOX(1),SIMBOX(2),NODATA(1),'','msarl.idf')
-  OK=IDFWRITE_WRAPPER(NCOL,NROW,REAL(SIMGRO%BEREGEN_Q),     (/DX/),(/DY/),SIMBOX(1),SIMBOX(2),NODATA(1),'','msarc.idf')
-  OK=IDFWRITE_WRAPPER(NCOL,NROW,REAL(SIMGRO%NOPP),          (/DX/),(/DY/),SIMBOX(1),SIMBOX(2),NODATA(1),'','mswta.idf')
-  OK=IDFWRITE_WRAPPER(NCOL,NROW,REAL(SIMGRO%SOPP),          (/DX/),(/DY/),SIMBOX(1),SIMBOX(2),NODATA(1),'','msuba.idf')
-  OK=IDFWRITE_WRAPPER(NCOL,NROW,REAL(SIMGRO%VXMU_SOPP),     (/DX/),(/DY/),SIMBOX(1),SIMBOX(2),NODATA(1),'','mspdu.idf')
-  OK=IDFWRITE_WRAPPER(NCOL,NROW,REAL(SIMGRO%VXMU_ROPP),     (/DX/),(/DY/),SIMBOX(1),SIMBOX(2),NODATA(1),'','mspdr.idf')
-  OK=IDFWRITE_WRAPPER(NCOL,NROW,REAL(SIMGRO%CRUNOFF_SOPP),  (/DX/),(/DY/),SIMBOX(1),SIMBOX(2),NODATA(1),'','msofu.idf')
-  OK=IDFWRITE_WRAPPER(NCOL,NROW,REAL(SIMGRO%CRUNOFF_ROPP),  (/DX/),(/DY/),SIMBOX(1),SIMBOX(2),NODATA(1),'','msofr.idf')
-  OK=IDFWRITE_WRAPPER(NCOL,NROW,REAL(SIMGRO%CRUNON_SOPP),   (/DX/),(/DY/),SIMBOX(1),SIMBOX(2),NODATA(1),'','msonu.idf')
-  OK=IDFWRITE_WRAPPER(NCOL,NROW,REAL(SIMGRO%CRUNON_ROPP),   (/DX/),(/DY/),SIMBOX(1),SIMBOX(2),NODATA(1),'','msonr.idf')
-  OK=IDFWRITE_WRAPPER(NCOL,NROW,REAL(SIMGRO%QINFBASIC_SOPP),(/DX/),(/DY/),SIMBOX(1),SIMBOX(2),NODATA(1),'','msqiu.idf')
-  OK=IDFWRITE_WRAPPER(NCOL,NROW,REAL(SIMGRO%QINFBASIC_ROPP),(/DX/),(/DY/),SIMBOX(1),SIMBOX(2),NODATA(1),'','msqir.idf')
-  OK=IDFWRITE_WRAPPER(NCOL,NROW,REAL(SIMGRO%PWT_LEVEL),     (/DX/),(/DY/),SIMBOX(1),SIMBOX(2),NODATA(1),'','mspwt.idf')
-  OK=IDFWRITE_WRAPPER(NCOL,NROW,REAL(SIMGRO%MOISTURE),      (/DX/),(/DY/),SIMBOX(1),SIMBOX(2),NODATA(1),'','mssfc.idf')
-  OK=IDFWRITE_WRAPPER(NCOL,NROW,REAL(SIMGRO%COND),          (/DX/),(/DY/),SIMBOX(1),SIMBOX(2),NODATA(1),'','mscfc.idf')
+ IF (debugflag.eq.1) THEN
+ !  DX=DELR(1)-DELR(0); DY=DELC(0)-DELC(1)
+  allocate(idf%x(idf%ncol,idf%nrow))
+  if(.not.metaswap_debug(real(simgro%ibound),idf,'msbnd.idf'))stop
+  !  OK=IDFWRITE_WRAPPER(NCOL,NROW,REAL(SIMGRO%IBOUND),        (/DX/),(/DY/),SIMBOX(1),SIMBOX(2),NODATA(1),'','msbnd.idf')
+  if(.not.metaswap_debug(real(simgro%lgn),idf,'mslgn.idf'))stop
+!  OK=IDFWRITE_WRAPPER(NCOL,NROW,REAL(SIMGRO%LGN),           (/DX/),(/DY/),SIMBOX(1),SIMBOX(2),NODATA(1),'','mslgn.idf')
+  if(.not.metaswap_debug(real(simgro%rz),idf,'msrtz.idf'))stop
+!  OK=IDFWRITE_WRAPPER(NCOL,NROW,REAL(SIMGRO%RZ),            (/DX/),(/DY/),SIMBOX(1),SIMBOX(2),NODATA(1),'','msrtz.idf')
+  if(.not.metaswap_debug(real(simgro%bodem),idf,'mssfu.idf'))stop
+!  OK=IDFWRITE_WRAPPER(NCOL,NROW,REAL(SIMGRO%BODEM),         (/DX/),(/DY/),SIMBOX(1),SIMBOX(2),NODATA(1),'','mssfu.idf')
+  if(.not.metaswap_debug(real(simgro%meteo),idf,'msmet.idf'))stop
+!  OK=IDFWRITE_WRAPPER(NCOL,NROW,REAL(SIMGRO%METEO),         (/DX/),(/DY/),SIMBOX(1),SIMBOX(2),NODATA(1),'','msmet.idf')
+  if(.not.metaswap_debug(real(simgro%mv),idf,'mssev.idf'))stop
+!  OK=IDFWRITE_WRAPPER(NCOL,NROW,REAL(SIMGRO%MV),            (/DX/),(/DY/),SIMBOX(1),SIMBOX(2),NODATA(1),'','mssev.idf')
+  if(.not.metaswap_debug(real(simgro%beregen),idf,'msart.idf'))stop
+  !OK=IDFWRITE_WRAPPER(NCOL,NROW,REAL(SIMGRO%BEREGEN),       (/DX/),(/DY/),SIMBOX(1),SIMBOX(2),NODATA(1),'','msart.idf')
+  if(.not.metaswap_debug(real(simgro%ber_laag),idf,'msarl.idf'))stop
+!  OK=IDFWRITE_WRAPPER(NCOL,NROW,REAL(SIMGRO%BER_LAAG),      (/DX/),(/DY/),SIMBOX(1),SIMBOX(2),NODATA(1),'','msarl.idf')
+  if(.not.metaswap_debug(real(simgro%beregen_q),idf,'msarc.idf'))stop
+!  OK=IDFWRITE_WRAPPER(NCOL,NROW,REAL(SIMGRO%BEREGEN_Q),     (/DX/),(/DY/),SIMBOX(1),SIMBOX(2),NODATA(1),'','msarc.idf')
+  if(.not.metaswap_debug(real(simgro%nopp),idf,'mswta.idf'))stop
+!  OK=IDFWRITE_WRAPPER(NCOL,NROW,REAL(SIMGRO%NOPP),          (/DX/),(/DY/),SIMBOX(1),SIMBOX(2),NODATA(1),'','mswta.idf')
+  if(.not.metaswap_debug(real(simgro%sopp),idf,'msuba.idf'))stop
+!  OK=IDFWRITE_WRAPPER(NCOL,NROW,REAL(SIMGRO%SOPP),          (/DX/),(/DY/),SIMBOX(1),SIMBOX(2),NODATA(1),'','msuba.idf')
+  if(.not.metaswap_debug(real(simgro%vxmu_sopp),idf,'mspdu.idf'))stop
+!  OK=IDFWRITE_WRAPPER(NCOL,NROW,REAL(SIMGRO%VXMU_SOPP),     (/DX/),(/DY/),SIMBOX(1),SIMBOX(2),NODATA(1),'','mspdu.idf')
+  if(.not.metaswap_debug(real(simgro%vxmu_ropp),idf,'mspdr.idf'))stop
+!  OK=IDFWRITE_WRAPPER(NCOL,NROW,REAL(SIMGRO%VXMU_ROPP),     (/DX/),(/DY/),SIMBOX(1),SIMBOX(2),NODATA(1),'','mspdr.idf')
+  if(.not.metaswap_debug(real(simgro%crunoff_sopp),idf,'msofu.idf'))stop
+!  OK=IDFWRITE_WRAPPER(NCOL,NROW,REAL(SIMGRO%CRUNOFF_SOPP),  (/DX/),(/DY/),SIMBOX(1),SIMBOX(2),NODATA(1),'','msofu.idf')
+  if(.not.metaswap_debug(real(simgro%crunoff_ropp),idf,'msofr.idf'))stop
+!  OK=IDFWRITE_WRAPPER(NCOL,NROW,REAL(SIMGRO%CRUNOFF_ROPP),  (/DX/),(/DY/),SIMBOX(1),SIMBOX(2),NODATA(1),'','msofr.idf')
+  if(.not.metaswap_debug(real(simgro%crunon_sopp),idf,'msonu.idf'))stop
+!  OK=IDFWRITE_WRAPPER(NCOL,NROW,REAL(SIMGRO%CRUNON_SOPP),   (/DX/),(/DY/),SIMBOX(1),SIMBOX(2),NODATA(1),'','msonu.idf')
+  if(.not.metaswap_debug(real(simgro%crunon_ropp),idf,'msonr.idf'))stop
+!  OK=IDFWRITE_WRAPPER(NCOL,NROW,REAL(SIMGRO%CRUNON_ROPP),   (/DX/),(/DY/),SIMBOX(1),SIMBOX(2),NODATA(1),'','msonr.idf')
+  if(.not.metaswap_debug(real(simgro%qinfbasic_sopp),idf,'msqiu.idf'))stop
+!  OK=IDFWRITE_WRAPPER(NCOL,NROW,REAL(SIMGRO%QINFBASIC_SOPP),(/DX/),(/DY/),SIMBOX(1),SIMBOX(2),NODATA(1),'','msqiu.idf')
+  if(.not.metaswap_debug(real(simgro%qinfbasic_ropp),idf,'msqir.idf'))stop
+!  OK=IDFWRITE_WRAPPER(NCOL,NROW,REAL(SIMGRO%QINFBASIC_ROPP),(/DX/),(/DY/),SIMBOX(1),SIMBOX(2),NODATA(1),'','msqir.idf')
+  if(.not.metaswap_debug(real(simgro%pwt_level),idf,'mspwt.idf'))stop
+!  OK=IDFWRITE_WRAPPER(NCOL,NROW,REAL(SIMGRO%PWT_LEVEL),     (/DX/),(/DY/),SIMBOX(1),SIMBOX(2),NODATA(1),'','mspwt.idf')
+  if(.not.metaswap_debug(real(simgro%moisture),idf,'mssfc.idf'))stop
+!  OK=IDFWRITE_WRAPPER(NCOL,NROW,REAL(SIMGRO%MOISTURE),      (/DX/),(/DY/),SIMBOX(1),SIMBOX(2),NODATA(1),'','mssfc.idf')
+  if(.not.metaswap_debug(real(simgro%cond),idf,'mscfc.idf'))stop
+!  OK=IDFWRITE_WRAPPER(NCOL,NROW,REAL(SIMGRO%COND),          (/DX/),(/DY/),SIMBOX(1),SIMBOX(2),NODATA(1),'','mscfc.idf')
+  deallocate(idf%x)
  END IF
 
  IF(IAREA.GT.0)CLOSE(IAREA)
@@ -452,6 +477,24 @@ CONTAINS
 
  END SUBROUTINE RF2MF_METASWAP
 
+ !###====================================================================
+ logical function metaswap_debug(x,idf,fname)
+ !###====================================================================
+ USE rf2mf_module
+ implicit none
+ real,dimension(:,:) :: x
+ type(idfobj),intent(inout) :: idf
+ character(len=*),intent(in) :: fname
+ integer :: irow,icol
+  
+ do irow=1,idf%nrow; do icol=1,idf%ncol
+  idf%x(icol,irow)=x(icol,irow)
+ enddo; enddo
+ 
+ metaswap_debug=idfwrite(idf,trim(MET%KWS(IMET_WRITE_DEBUG_IDF)%CVAL)//'\'//fname,0)
+
+ end function metaswap_debug
+  
  !###====================================================================
 SUBROUTINE METASWAP_IBND(IBOUND,NROW,NCOL,IFULL)
 !###====================================================================
@@ -699,10 +742,8 @@ END SUBROUTINE
     IF(IACT.EQ.2) &
     WRITE(INDSB,'(2I10,F8.3,2F8.1)') NUND,0,SIMGRO(ICOL,IROW)%VXMU_SOPP,SIMGRO(ICOL,IROW)%CRUNOFF_SOPP,SIMGRO(ICOL,IROW)%CRUNON_SOPP !1.0,1.0
 
-    !## add couple location modflow - only if not yet urban location added
-!    if(.not.lurban)then
+    !## add couple location modflow
     call storedxc(dxcid,ncol,nrow,nlay,1,irow,icol,unid,iact)
-!    endif
 
     !## write coupling table
     IF(IACT.EQ.2) &
@@ -968,7 +1009,7 @@ END SUBROUTINE
  CALL IMOD_UTL_OPENASC(IU,INPFNAME,'W')
 
  !## fill svat connection to recharge/et based upon svat-units
- NUND=0
+ NUND=0 
  DO IROW=1,SIMGRO_NROW
   DY=DELC(IROW-1)-DELC(IROW)
   DO ICOL=1,SIMGRO_NCOL
@@ -997,11 +1038,11 @@ END SUBROUTINE
   ENDDO
  ENDDO
 
- I=0
- DO IROW=1,NROW
-  DO ICOL=1,NCOL
-  ENDDO
- ENDDO
+! I=0
+! DO IROW=1,NROW
+!  DO ICOL=1,NCOL
+!  ENDDO
+! ENDDO
 
  CLOSE(IU)
 
@@ -1029,7 +1070,6 @@ END SUBROUTINE
     END SELECT
    ENDDO
   ENDDO
-! ENDIF
 
  !## minimale beworteling
  DO IROW=1,SIMGRO_NROW; DO ICOL=1,SIMGRO_NCOL

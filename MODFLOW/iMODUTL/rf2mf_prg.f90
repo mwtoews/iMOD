@@ -277,7 +277,7 @@ SUBROUTINE RF2MF_MAIN(DXCFILE,lipest,idf)
 !###====================================================================
 use pks_imod_utl, only: pks_imod_utl_iarmwp_xch_disable ! PKS
 IMPLICIT NONE
-type(idfobj),intent(in) :: idf
+type(idfobj),intent(inout) :: idf
 CHARACTER(LEN=*), INTENT(INOUT) :: DXCFILE
 logical, intent(inout) :: lipest
 
@@ -1658,7 +1658,7 @@ END SUBROUTINE RF2MF_SNAPTOGRID
 SUBROUTINE RF2MF_SCALE1DELRC(IDF)
 !###====================================================================
 IMPLICIT NONE
-TYPE(IDFOBJ),INTENT(IN) :: IDF
+TYPE(IDFOBJ),INTENT(INOUT) :: IDF
 REAL,PARAMETER :: INC=1.0     !## minimal scaling in interest
 DOUBLE PRECISION,PARAMETER :: FINCR=0.02D0    !0.02d0
 REAL,PARAMETER ::    POWR     =0.3     !     !1.3
@@ -1754,7 +1754,10 @@ ELSE
   dis%nrow = NROW
   dis%ncol = NCOL
   call AllocDis(ialloc)
-
+  
+  IDF%NCOL=NCOL
+  IDF%NROW=NROW
+  
   CALL IMOD_UTL_PRINTTEXT('',3)
   CALL IMOD_UTL_PRINTTEXT('Scaling Results along COLUMN-direction:',3)
   CALL IMOD_UTL_PRINTTEXT('',3)
@@ -1768,6 +1771,10 @@ ELSE
   !--- for metaswap ---
   ALLOCATE(DELR(0:NCOL),DELC(0:NROW))
 
+  IDF%IEQ=0
+  IF(MINVAL(DIS%DELR).NE.MAXVAL(DIS%DELR).OR. &
+     MINVAL(DIS%DELC).NE.MAXVAL(DIS%DELC))IDF%IEQ=1
+  
   DELR(0)=IDF%XMIN
   DO I=1,NCOL
    DELR(I)=DELR(I-1)+dis%delr(i)
@@ -1777,8 +1784,14 @@ ELSE
    DELC(I)=DELC(I-1)-dis%delc(i)
   ENDDO
 
+  !## create non-equidistantial network - if needed
+  IF(IDF%IEQ.EQ.1)THEN  
+   ALLOCATE(IDF%SX(0:IDF%NCOL),IDF%SY(0:IDF%NROW))
+   DO I=0,IDF%NCOL; IDF%SX(I)=DELR(I); ENDDO
+   DO I=0,IDF%NROW; IDF%SY(I)=DELC(I); ENDDO
+  ENDIF
+ 
  ENDIF
-
 ENDIF
 
 END SUBROUTINE RF2MF_SCALE1DELRC

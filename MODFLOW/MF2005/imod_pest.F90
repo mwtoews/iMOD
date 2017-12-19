@@ -360,7 +360,7 @@ do i=1,size(param)
 
       if (trim(ptype).eq.'IC') ils=-ils
       do j = 1, nlist ! match sybsystem number
-         irow=rlist(1,j); icol=rlist(2,j)
+         irow=rlist(2,j); icol=rlist(3,j)
          if (int(ils).eq.int(rlist(irivsubsys,j))) buff(icol,irow,1) = real(j)
       end do
       idat = 5 !4
@@ -373,7 +373,7 @@ do i=1,size(param)
 
       if (trim(ptype).eq.'II') ils=-ils
       do j = 1, nlist ! match sybsystem number
-         irow=rlist(1,j); icol=rlist(2,j)
+         irow=rlist(2,j); icol=rlist(3,j)
          if (int(ils).eq.int(rlist(irivsubsys,j))) buff(icol,irow,1) = real(j)
       end do
       idat = irivrfact
@@ -383,7 +383,7 @@ do i=1,size(param)
       idrnsubsys = iopt1
       if (idrnsubsys.eq.0) call imod_utl_printtext(trim(errmsg),2)
       do j = 1, nlist ! match sybsystem number
-         irow=rlist(1,j); icol=rlist(2,j)
+         irow=rlist(2,j); icol=rlist(3,j)
          if (int(ils).eq.int(rlist(idrnsubsys,j))) buff(icol,irow,1) = real(j)
       end do
       idat = 5 !2 !4
@@ -434,7 +434,6 @@ do i=1,size(param)
       if (.not.present(iopt1)) call imod_utl_printtext(trim(errmsg),2)
       ihfbfact = iopt1
       if (ihfbfact.ne.1) call imod_utl_printtext(trim(errmsg),2)
-!      fct = param(i)%alpha(1) !; fct = exp(fct)
       do j = 1, nlist
          if (int(rlist(7,j)).eq.ils) then
             nadj = nadj + 1
@@ -444,11 +443,7 @@ do i=1,size(param)
    end select
 
    line=' * '//param(i)%ptype//' adjusted ('//trim(imod_utl_itos(nadj))//') with alpha='//trim(imod_utl_rtos(fct,'f',7))
-!   if(kper.eq.1)then
-      call imod_utl_printtext(trim(line),-1,iupestout)
-!   else
-!      call imod_utl_printtext(trim(line),1)
-!   endif
+   call imod_utl_printtext(trim(line),-1,iupestout)
 
 end do
 
