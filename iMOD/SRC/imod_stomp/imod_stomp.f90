@@ -279,7 +279,7 @@ CONTAINS
  REAL,PARAMETER :: PAIR=101325.0
  INTEGER,INTENT(IN) :: IU
  INTEGER :: JU,IROW,ICOL,ILAY
- REAL :: HB,WP
+ REAL :: HB,WP,T
 
  WRITE(IU,'(A)') ''
  WRITE(IU,'(A)') '#-------------------------------------------------------'
@@ -293,7 +293,13 @@ CONTAINS
  !## relation with depth
  JU=UTL_GETUNIT(); OPEN(JU,FILE=TRIM(OUTPUTFILE)//'\ini_aqueous.dat',STATUS='UNKNOWN')
  DO ILAY=1,NLAY; DO IROW=1,NROW; DO ICOL=1,NCOL
-  HB=TB(1,1)%X(ICOL,IROW)-TB(ILAY,2)%X(ICOL,IROW)
+  !## initial pressure assigned to centroid of cell
+  T =TB(ILAY,1)%X(ICOL,IROW)-TB(ILAY,2)%X(ICOL,IROW)
+  IF(T.LE.0.0)THEN
+   WRITE(*,'(/1X,A,F10.2,A,3I5)') 'Error, thickness (',T,') less than zero',ICOL,IROW,ILAY
+   STOP
+  ENDIF
+  HB=TB(1,1)%X(ICOL,IROW)-0.5*T
   WP=RHO*G*HB+PAIR
   WRITE(JU,'(3I10,G15.7)') ICOL,IROW,ILAY,WP
  ENDDO; ENDDO; ENDDO
