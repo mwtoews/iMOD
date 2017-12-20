@@ -2222,8 +2222,8 @@ IRLOOP: DO IR=MAX(1,IROW-1),MIN(NROW,IROW+1)
  !## store conductance,stage,bottom,entry-restistance
  C=IDF(1)%X(ICOL,IROW)/A
 
- DO IR=IR1,IR2
-  DO IC=IC1,IC2
+ DO IR=MAX(1,IR1),MIN(IR2,IDF(1)%NROW)
+  DO IC=MAX(1,IC1),MIN(IC2,IDF(1)%NCOL)
 
    !## skip already filled in bathymetry/or previous wide profile
    IF(IDF(9)%X(IC,IR).LT.0.0.OR.IDF(9)%X(IC,IR).GE.1.0)CYCLE
