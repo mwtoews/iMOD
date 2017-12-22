@@ -354,15 +354,25 @@ CONTAINS
     ENDIF
    ENDDO
 
+!   if(it.eq.19)then
+!   write(*,*) 
+!   endif
+   
    !## find distance of point on segment iisg that is closest
    CALL ISGSTUWEN_INTERSECT(MAXDIST,XCRD,YCRD,PISG,NI)
-
+   
+!   IF(NI.EQ.0)THEN
+!   WRITE(*,*) 
+!   ENDIF
+   
    !## put cross-section on all segments within distance
    DO IN=1,NI
 
     TDIST=PISG(IN,2)
     IISG =INT(PISG(IN,1))
-   
+    
+!    if(iisg.ne.1)cycle
+
     !## remove cross-sections if exists on current segment
     IF(ICLEAN.EQ.2)THEN
      ICRS=ISG(IISG)%ICRS; NCRS=ISG(IISG)%NCRS

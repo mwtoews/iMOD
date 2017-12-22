@@ -1236,8 +1236,6 @@ CONTAINS
      !## uniform thickness
      ELSEIF(ASSF_IDEPTH.EQ.1)THEN
       !## depth in centimeters
-!       STIME=ASSF_TOP*100 
-!       ETIME=ASSF_BOT*100 
       STIME=(ASSF_TOP+ASSF_ZPLUS)*100
       ETIME=(ASSF_BOT-ASSF_ZPLUS)*100 
       LT=.TRUE.; LB=.TRUE.
