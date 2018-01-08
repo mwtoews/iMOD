@@ -910,7 +910,7 @@ CONTAINS
  IF(ITYPE.EQ.1)THEN  
 
   DBL_SDATE=STIME
-  QQ=NODATA(ICOL) !0.0
+  QQ=NODATA(ICOL)
   NCOUNT=0.0
       
   DO IR=1,NR
@@ -920,7 +920,7 @@ CONTAINS
     !## get volume
     READ(QD(2),*) QQ
     IF(QQ.NE.NODATA(2))THEN
-     NCOUNT=NCOUNT+1 !QQ=0.0
+     NCOUNT=NCOUNT+1
      QT=QT+QQ       
     ENDIF
    ELSE
@@ -939,7 +939,6 @@ CONTAINS
     IF(DBL_EDATE.LE.ETIME)THEN
      !## get volume
      READ(QD(ICOL),*) QQ
-!     IF(QQ.EQ.NODATA(ICOL))QQ=0.0
     ENDIF
     DBL_SDATE=DBL_EDATE 
     !## stop
@@ -948,23 +947,16 @@ CONTAINS
   ENDDO
 
   !## last record probably read, extent extraction up to end of stress-period
-!  IF(QQ.NE.0.0.AND.IR.GT.NR)THEN
   IF(QQ.NE.NODATA(ICOL).AND.IR.GT.NR)THEN
    RTIME=DIFFTIME(DBL_SDATE,ETIME)
    RTIME=MIN(TTIME,RTIME)
    QT=QT+RTIME*QQ
    NCOUNT=NCOUNT+RTIME
-!   QT=QT+MIN(TTIME,RTIME)*QQ
   ENDIF
   
   !## steady-state
-!  IF(ISS.EQ.1)THEN
-!   IF(NR.GT.0)QT=QT/REAL(NR)
-!   IF(NCOUNT.GT.0.0)QT=QT/NCOUNT
-!  ELSE
   IF(NCOUNT.GT.0.0)QT=QT/NCOUNT
-!   QT=QT/TTIME
-!  ENDIF   
+
   UTL_PCK_READTXT=.TRUE. 
 
  !## itype=2 borehole; itype=3 seismic

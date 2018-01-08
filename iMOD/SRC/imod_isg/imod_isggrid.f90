@@ -1532,18 +1532,21 @@ IRLOOP: DO IR=MAX(1,IROW-1),MIN(NROW,IROW+1)
  REAL :: DXY,X1,X2,Y1,Y2,QFLOW,QROFF,EVT,PREC,ROUGHCH,ROUGHBK,CDPTH,FDPTH,AWDTH,BWDTH,DIST,     &
        HC1FCT,THICKM1,ELEVUP,WIDTH1,DEPTH1,HC2FCT,THICKM2,ELEVDN,WIDTH2,DEPTH2,WLVLUP,WLVLDN,Z, &
        AORG,ASIMPLE
+ REAL,PARAMETER :: MOFFSET=0.0001  !#3 minimal offset for gradients less or equal zero
+ INTEGER :: IMOFFSET
  REAL,ALLOCATABLE,DIMENSION(:,:) :: QSORT,RVAL
  REAL,ALLOCATABLE,DIMENSION(:) :: XNR,NDATA
  REAL,ALLOCATABLE,DIMENSION(:) :: XCRS,ZCRS,MCRS,QCRS,WCRS,DCRS
  REAL,DIMENSION(8) :: EXCRS,EZCRS
- LOGICAL :: LWARNING1,LWARNING2
+ LOGICAL :: LWARNING1,LWARNING2,LWARNING3
  CHARACTER(LEN=512) :: LINE
  CHARACTER(LEN=MAXLEN) :: CNAME
 
  ISG2SFR  =.FALSE.
- LWARNING1=.FALSE.
- LWARNING2=.FALSE.
-
+ LWARNING1=.TRUE.
+ LWARNING2=.TRUE.
+ LWARNING3=.TRUE.
+ 
  !## only specify for first stress-period - write output to regular ISG as well
  IF(IPER.EQ.1)THEN
 
@@ -1766,11 +1769,16 @@ IRLOOP: DO IR=MAX(1,IROW-1),MIN(NROW,IROW+1)
 
   !## bottom level up always larger than bottom level down
   IF(ELEVUP.LE.ELEVDN)THEN
-   CALL WMESSAGEBOX(YESNO,QUESTIONICON,COMMONNO,'You entered an upstream bottom elevation ('//TRIM(RTOS(ELEVUP,'G',7))//') for segment '//trim(itos(I))//CHAR(13)// &
-     'which is lower/equal to the bottom elevation ('//TRIM(RTOS(ELEVDN,'G',7))//') downstream.'//CHAR(13)//'The SFR package does not allow this at any time','Error')
-   RETURN
+   IF(LWARNING3)THEN
+    CALL WMESSAGEBOX(YESNO,QUESTIONICON,COMMONNO,'You entered an upstream bottom elevation ('//TRIM(RTOS(ELEVUP,'G',7))//') for segment '//trim(itos(I))//CHAR(13)// &
+      'which is lower/equal to the bottom elevation ('//TRIM(RTOS(ELEVDN,'G',7))//') downstream.'//CHAR(13)//'The SFR package does not allow this at any time.'//CHAR(13)// & 
+      'Do you want to add an offset of '//TRIM(RTOS(MOFFSET,'F',4))//' for all that are equal and continue?','Question')
+    IF(WINFODIALOG(4).NE.1)RETURN
+    LWARNING3=.FALSE.
+   ENDIF
+   ELEVDN=ELEVUP-MOFFSET
   ENDIF
-    
+      
   !## check qflow bigger than maxqflow; m3/s might be entered as m3/d
   IF(QFLOW.GT.MAXQFLOW.AND.LWARNING1)THEN
    CALL WMESSAGEBOX(YESNO,QUESTIONICON,COMMONNO,'You might entered the external discharge in m3/d instead of m3/s.'//CHAR(13)// &
