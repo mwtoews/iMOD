@@ -2302,7 +2302,7 @@ CONTAINS
  LOGICAL FUNCTION IDFTIMESERIE_INIT()
  !###======================================================================
  IMPLICIT NONE
- INTEGER :: IPLOT,I,J,K
+ INTEGER :: IPLOT,I,J
  
  IDFTIMESERIE_INIT=.FALSE.
 
