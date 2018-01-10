@@ -24,11 +24,8 @@ subroutine pest1log()
 
 ! modules
 use global, only: lipest
-
-#ifdef IPEST
 use imod_utl, only: imod_utl_printtext,imod_utl_itos
-use pestvar, only: pest_iter,lgrad,llnsrch,pest_igrad,iupestout
-#endif
+use pestvar, only: pest_iter,lgrad,llnsrch,pest_igrad,iupestout,pest_ktype
 
 implicit none
 
@@ -36,14 +33,6 @@ implicit none
 character(len=256) :: line
 
 !###======================================================================
-
-#ifndef IPEST
-lipest = .false.; return
-#endif
-
-if (.not.lipest) return
-
-#ifdef IPEST
 
 call imod_utl_printtext('',-1,iupestout)
 if(lgrad)then
@@ -58,20 +47,16 @@ if(llnsrch)then
    call imod_utl_printtext('Line Search',-1,iupestout)
 endif
 
-#endif
-
 end subroutine pest1log
 
 !###====================================================================
 subroutine pest1alpha_grid(ptype,a,nrow,ncol,nlay,iout,a2)
 !###====================================================================
-
-use imod_utl, only: imod_utl_printtext,imod_utl_itos,imod_utl_rtos,imod_utl_createdir
-use global, only: lipest, ibound
-
-#ifdef IPEST
-use pestvar, only: param, pest_iter,lgrad,llnsrch,pest_igrad,iupestout
-#endif
+use imod_utl, only: imod_utl_printtext,imod_utl_itos,imod_utl_rtos,imod_utl_createdir, &
+   utl_kriging_range,utl_kriging_main !utl_kriging_init,utl_kriging_getgamma,utl_kriging_fillsystem
+use gwfmetmodule, only: cdelr, cdelc
+use global, only: lipest, ibound !, delr, delc
+use pestvar, only: param, pest_iter,lgrad,llnsrch,pest_igrad,iupestout,pest_ktype
 
 implicit none
 
@@ -80,7 +65,9 @@ integer, intent(in) :: nrow, ncol, nlay, iout
 real, dimension(ncol,nrow,nlay), intent(inout) :: a
 real, dimension(ncol,nrow,nlay), intent(in), optional :: a2
 character(len=2), intent(in) :: ptype
-CHARACTER(LEN=1024) :: FNAME,DIR
+real,dimension(:,:),allocatable :: xyz,xpp
+integer :: nxyz,ipp,ilay
+character(len=1024) :: fname,dir
 
 ! parameters
 real, parameter :: tiny=1.0e-20
@@ -88,20 +75,12 @@ real, parameter :: tiny=1.0e-20
 ! locals
 character(len=256) :: line
 integer :: i, j, k, ils, irow, icol
-real :: c, fct, ppart
+real :: c, fct, ppart, range, nodata
 
 CHARACTER(LEN=2),DIMENSION(6) :: PPPARAM
 DATA PPPARAM/'KD','KH','KV','VC','SC','VA'/ !## variable for pilotpoints
 
 !###======================================================================
-
-#ifndef IPEST
-lipest = .false.; return
-#endif
-
-if (.not.lipest) return
-
-#ifdef IPEST
 
 !## initialize parameters
 if(pest_iter.eq.0)then
@@ -153,6 +132,9 @@ if(pest_iter.eq.0)then
       end if
     end do
 end if
+
+DIR='.\pest\pest_parameters_c'//trim(imod_utl_itos(pest_iter))
+CALL IMOD_UTL_CREATEDIR(DIR)
 
 do i=1,size(param)
 
@@ -206,10 +188,8 @@ do i=1,size(param)
       ')with alpha='//trim(imod_utl_rtos(fct,'f',7))
     call imod_utl_printtext(trim(line),-1,iupestout)
    endif
-end do
-#endif
+ end do
 
-#ifdef IPEST_PILOTPOINTS
  !## process any pilotpoints per modellayer/ adjustable parameter
  DO IPP=1,SIZE(PPPARAM); DO ILS=1,NLAY
   DO K=1,2
@@ -227,8 +207,8 @@ end do
 
     FCT=PARAM(I)%ALPHA(1)
     IF(K.EQ.2)THEN
-     LINE=' * Module '//PARAM(I)%PTYPE//' adjusted ('//TRIM(ITOS(SIZE(PARAM(I)%XY,1)))// &
-         ') location(s) as PILOTPOINT with alpha='//TRIM(RTOS(EXP(FCT),'F',7))
+     LINE=' * Module '//PARAM(I)%PTYPE//' adjusted ('//TRIM(IMOD_UTL_ITOS(SIZE(PARAM(I)%XY,1)))// &
+         ') location(s) as PILOTPOINT with alpha='//TRIM(IMOD_UTL_RTOS(EXP(FCT),'F',7))
      CALL imod_utl_printtext(TRIM(LINE),1) 
     ENDIF
     
@@ -246,14 +226,14 @@ end do
   IF(NXYZ.EQ.0)CYCLE
 
   NODATA=-999.99; ALLOCATE(XPP(NCOL,NROW)); XPP=NODATA
-  RANGE=PEST_GETRANGE()
+  RANGE=UTL_KRIGING_RANGE(CDELR(0),CDELR(NCOL),CDELC(NROW),CDELC(0))
     
-  CALL imod_utl_printtext('Kriging applied Range:'//TRIM(RTOS(RANGE,'F',2))//' meter',1)
+  CALL imod_utl_printtext('Kriging applied Range:'//TRIM(IMOD_UTL_RTOS(RANGE,'F',2))//' meter',1)
 
   !## apply kriging interpolation
-  CALL KRIGING_MAIN(NXYZ,XYZ(:,1),XYZ(:,2),XYZ(:,3),DELR,DELC,NROW,NCOL,XPP,NODATA,RANGE,PEST_KTYPE)
+  CALL UTL_KRIGING_MAIN(NXYZ,XYZ(:,1),XYZ(:,2),XYZ(:,3),CDELR,CDELC,NROW,NCOL,XPP,NODATA,RANGE,PEST_KTYPE)
   DO IROW=1,NROW; DO ICOL=1,NCOL
-   IF(IBOUND(ICOL,IROW,ILAY).EQ.0)THEN
+   IF(IBOUND(ICOL,IROW,ILS).EQ.0)THEN
     XPP(ICOL,IROW)=NODATA
    ELSE
     XPP(ICOL,IROW)=EXP(XPP(ICOL,IROW))
@@ -262,27 +242,25 @@ end do
    ENDIF
   ENDDO; ENDDO
   
-  WRITE(FNAME,'(A,I5.5,A)') TRIM(DIR)//CHAR(92)//PPPARAM(IPP),ILAY,'.IDF'
-  CALL WRITEIDF(XPP,1,NCOL,1,NROW,1,NROW,NCOL,1,DELR(0),DELC(NROW),SIMCSIZE,NODATA,FNAME)
+  fname=trim(dir)//char(92)//trim(ppparam(ipp))//'_l'//trim(imod_utl_itos(ils))//'.idf'
+  CALL met1wrtidf(fname,xpp,ncol,nrow,nodata,iout)
 
   SELECT CASE (PPPARAM(IPP))
    CASE ('KD','KH','VC','KV','SC','VA')  !## transmissivities
     A(:,:,ILS)=A(:,:,ILS)*XPP
+   CASE DEFAULT
+    WRITE(*,*) 'CANNOT COME HERE'; PAUSE
   END SELECT
 
   DEALLOCATE(XYZ,XPP)
  
  ENDDO; ENDDO
-#endif 
 
-#ifdef IPEST
  !## export only initially
  if(PEST_IGRAD.eq.0)then
   do i=1,size(param)
    if (trim(param(i)%ptype).ne.trim(ptype)) cycle
 
-   DIR='.\pest\pest_parameters_c'//trim(imod_utl_itos(pest_iter))
-   CALL IMOD_UTL_CREATEDIR(DIR)
    do ils=1,nlay
     fname=trim(dir)//'\'//trim(ptype)//'_l'//trim(imod_utl_itos(ils))//'.idf'
     CALL met1wrtidf(fname,a(:,:,ils),ncol,nrow,-999.0,iout)
@@ -290,20 +268,17 @@ end do
    exit
   enddo
  endif
-#endif
  
 end subroutine
 
-#ifdef IPEST_PILOTPOINTS
-!###====================================================================
-REAL FUNCTION PEST_GETRANGE()
-!###====================================================================
-IMPLICIT NONE
+!!###====================================================================
+!REAL FUNCTION PEST_GETRANGE()
+!!###====================================================================
+!IMPLICIT NONE
     
-PEST_GETRANGE=0.9*SQRT((DELR(NCOL)-DELR(0))**2.0+(DELC(0)-DELC(NROW))**2.0)
+!PEST_GETRANGE=0.9*SQRT((DELR(NCOL)-DELR(0))**2.0+(DELC(0)-DELC(NROW))**2.0)
   
-END FUNCTION PEST_GETRANGE
-#endif
+!END FUNCTION PEST_GETRANGE
  
 !###====================================================================
 subroutine pest1alpha_list(ptype,nlist,rlist,ldim,mxlist,iopt1,iopt2)
@@ -311,13 +286,10 @@ subroutine pest1alpha_list(ptype,nlist,rlist,ldim,mxlist,iopt1,iopt2)
 
 ! modules
 use global, only: lipest
-
-#ifdef IPEST
 use global, only: buff
 use imod_utl, only: imod_utl_printtext, imod_utl_itos, imod_utl_rtos
 use m_mf2005_main, only: kper
 use pestvar, only: param, pest_iter, iupestout
-#endif
 
 implicit none
 
@@ -335,14 +307,6 @@ integer :: i, j, k, ils, irow, icol, idat, irivsubsys, irivrfact,&
 real :: ppart, fct
 
 !###======================================================================
-
-#ifndef IPEST
-lipest = .false.; return
-#endif
-
-if (.not.lipest) return
-
-#ifdef IPEST
 
 ! first, mark the cells
 buff = 0.
@@ -447,10 +411,4 @@ do i=1,size(param)
 
 end do
 
-#endif
-
 end subroutine
-
-
-
-

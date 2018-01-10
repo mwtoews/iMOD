@@ -123,6 +123,485 @@ data lic/'======================================================================
 
 CONTAINS
 
+ !###======================================================================
+ SUBROUTINE UTL_KRIGING_MAIN(MD,XD,YD,ZD,DELR,DELC,NROW,NCOL,X,NODATA,RANGE,KTYPE)     
+ !###======================================================================
+ IMPLICIT NONE
+ INTEGER,INTENT(IN) :: NROW,NCOL,MD,KTYPE
+ REAL,INTENT(IN),DIMENSION(0:NROW) :: DELC
+ REAL,INTENT(IN),DIMENSION(0:NCOL) :: DELR
+ REAL,INTENT(INOUT),DIMENSION(NCOL,NROW) :: X
+ REAL,INTENT(INOUT),DIMENSION(MD) :: XD,YD,ZD
+ REAL,INTENT(IN) :: NODATA
+ REAL,INTENT(INOUT) :: RANGE
+ INTEGER :: ND,IROW,ICOL
+ REAL :: XC,YC,MZ,KEST,KVAR
+ INTEGER :: ITYPE,NR,NC,MX,I,J,NAJ
+ REAL,PARAMETER :: NUGGET=0.0, SILL=100.0
+ 
+ CALL UTL_KRIGING_INIT(MD,XD,YD,ZD,ND,KTYPE,MZ,NODATA) 
+  
+ DO IROW=1,NROW
+  DO ICOL=1,NCOL
+   IF(X(ICOL,IROW).NE.NODATA)CYCLE
+   XC=(DELR(ICOL-1)+DELR(ICOL))/2.0
+   YC=(DELC(IROW)+DELC(IROW))/2.0
+   
+   CALL UTL_KRIGING_FILLSYSTEM(XD,YD,ZD,ND,XC,YC,RANGE,SILL,NUGGET,KTYPE,MZ,KEST,KVAR,NODATA)
+   X(ICOL,IROW)=KEST 
+  ENDDO
+ ENDDO
+ 
+ END SUBROUTINE UTL_KRIGING_MAIN
+ 
+  !###======================================================================
+ SUBROUTINE UTL_KRIGING_FILLSYSTEM(XD,YD,ZD,ND,X,Y,RANGE,SILL,NUGGET, &
+          KTYPE,MZ,KEST,KVAR,NODATA)
+ !###======================================================================
+ IMPLICIT NONE
+ INTEGER,INTENT(IN) :: ND,KTYPE
+ REAL,INTENT(OUT) :: KEST,KVAR
+ REAL,INTENT(IN) :: X,Y,RANGE,SILL,NUGGET,MZ,NODATA
+ REAL,INTENT(IN),DIMENSION(ND) :: XD,YD,ZD 
+ INTEGER :: I,J,IC,IR,NP,N,ID,JD,IROW,ICOL
+ REAL :: DX,DY,DXY,GAMMA,H,MZZ,F
+ INTEGER,ALLOCATABLE,DIMENSION(:) :: SELID,SELD
+ INTEGER,ALLOCATABLE,DIMENSION(:,:) :: SELDQ 
+ REAL,ALLOCATABLE,DIMENSION(:) :: B
+ REAL,ALLOCATABLE,DIMENSION(:,:) :: A
+ 
+ NP=ND; ALLOCATE(SELID(NP)); J=0
+ DO ID=1,NP
+!  IF(UTL_DIST(XD(ID),YD(ID),X,Y).LE.RANGE)THEN
+   J=J+1; SELID(J)=ID
+!  ENDIF
+ ENDDO
+ NP=J
+  
+ !## no points left, interpolated value equals nodata
+ IF(NP.LE.0)THEN
+  DEALLOCATE(SELID); KEST=NODATA; KVAR=0.0; RETURN
+ ENDIF
+ 
+ !## simple kriging (ktype.gt.0) and ordinary kriging (ktype.lt.0)
+ N=NP; IF(KTYPE.LT.0)N=NP+1
+ ALLOCATE(A(N,N),B(N))
+
+ A=0.0; B=0.0
+ DO I=1,NP 
+  ID=SELID(I)
+  !## semivariance
+  GAMMA=UTL_KRIGING_GETGAMMA(XD(ID),YD(ID),XD(ID),YD(ID),RANGE,SILL,NUGGET,KTYPE)
+  !## variance
+  A(I,I)=SILL-GAMMA
+  DO J=I+1,NP 
+   JD=SELID(J)
+   GAMMA=UTL_KRIGING_GETGAMMA(XD(ID),YD(ID),XD(JD),YD(JD),RANGE,SILL,NUGGET,KTYPE)
+   A(I,J)=SILL-GAMMA; A(J,I)=A(I,J)
+  ENDDO
+
+  ID=SELID(I)
+  GAMMA=UTL_KRIGING_GETGAMMA(XD(ID),YD(ID),X,Y,RANGE,SILL,NUGGET,KTYPE)
+  B(I)=SILL-GAMMA
+  
+ ENDDO
+ 
+ !## ordinary kriging
+ IF(KTYPE.LT.0)THEN
+  !## fill for lambda
+  J=N 
+  DO I=1,J; A(I,J)=1.0; A(J,I)=1.0; ENDDO; A(J,J)=0.0; B(J)=1.0
+ ENDIF
+ 
+ !## current point outside range of all others points
+ IF(SUM(B(1:NP)).EQ.0.0)THEN
+  KEST=NODATA
+  KVAR=0.0
+ ELSE
+  CALL UTL_LUDCMP(A,B,N) 
+
+  !## ordinary kriging compute the local mean mzz instead of the global mean mz
+  IF(KTYPE.LT.0)THEN
+   MZZ=0.0 !; DO I=1,NP; ID=SELID(I); MZZ=MZZ+ZD(ID); ENDDO; MZZ=MZZ/REAL(NP)
+  ENDIF
+
+  KEST=0.0
+  DO I=1,NP 
+   ID=SELID(I)
+   IF(KTYPE.GT.0)THEN
+    KEST=KEST+B(I)*ZD(ID)
+   ELSE
+    KEST=KEST+B(I)*(ZD(ID)-MZZ)
+   ENDIF
+  ENDDO
+  !## global mean (simple kriging)
+  IF(KTYPE.GT.0)KEST=KEST+MZ
+  !## local mean (ordinary kriging)
+  IF(KTYPE.LT.0)KEST=KEST+MZZ
+  
+  !## estimation variance
+  KVAR=0.0
+  DO I=1,NP 
+   ID=SELID(I)
+   GAMMA=UTL_KRIGING_GETGAMMA(XD(ID),YD(ID),X,Y,RANGE,SILL,NUGGET,KTYPE)
+   KVAR=KVAR+B(I)*GAMMA
+  ENDDO
+  IF(KTYPE.LT.0)KVAR=KVAR+B(N)
+   
+ ENDIF
+ 
+ DEALLOCATE(SELID,A,B)
+  
+ END SUBROUTINE UTL_KRIGING_FILLSYSTEM
+
+ !###======================================================================
+ REAL FUNCTION UTL_KRIGING_GETGAMMA(X1,Y1,X2,Y2,RANGE,SILL,NUGGET,KTYPE)
+ !###======================================================================
+ ! gamma is function that yeld factor between 0.0 and 1.0
+ IMPLICIT NONE
+ INTEGER,INTENT(IN) :: KTYPE
+ REAL,INTENT(IN) :: X1,Y1,X2,Y2,RANGE,SILL,NUGGET
+ REAL :: DX,DY,DXY,H,F
+ INTEGER :: I
+ 
+ DX=(X1-X2)**2.0; DY=(Y1-Y2)**2.0; DXY=DX+DY
+ IF(DXY.GT.0.0)DXY=SQRT(DXY)
+ 
+ !## no part of kriging, beyond given range, equal to sill
+ IF(DXY.GT.RANGE)THEN
+  H=1.0
+ ELSEIF(DXY.EQ.0.0)THEN
+  H=0.0
+ ELSE
+  SELECT CASE (ABS(KTYPE))
+   CASE (1) !## linear
+    H=DXY/RANGE !*((SILL-NUGGET)/RANGE)
+   CASE (2) !## spherical
+    H=(1.5*(DXY/RANGE))-(0.5*(DXY/RANGE)**3.0)
+   CASE (3) !## exponential
+    H=1.0-EXP(-3.0*DXY/RANGE)
+   CASE DEFAULT
+    WRITE(*,*) 'UNKNOWN KTYPE',KTYPE; PAUSE; STOP
+  END SELECT
+ ENDIF
+ UTL_KRIGING_GETGAMMA=NUGGET+((SILL-NUGGET)*H)
+  
+ END FUNCTION UTL_KRIGING_GETGAMMA
+
+ !###====================================================================
+ REAL FUNCTION UTL_KRIGING_RANGE(X1,X2,Y1,Y2)
+ !###====================================================================
+ IMPLICIT NONE
+ real,INTENT(IN) :: x1,y1,x2,y2
+ 
+ UTL_KRIGING_RANGE=0.9*SQRT((X2-X1)**2.0+(Y2-Y1)**2.0)
+
+ ! UTL_KRIGING_RANGE=0.9*SQRT((DELR(NCOL)-DELR(0))**2.0+(DELC(0)-DELC(NROW))**2.0)
+  
+ END FUNCTION UTL_KRIGING_RANGE
+
+ !###======================================================================
+ SUBROUTINE UTL_KRIGING_INIT(MD,XD,YD,ZD,ND,KTYPE,MZ,NODATA)
+ !###======================================================================
+ IMPLICIT NONE
+ INTEGER,INTENT(IN) :: MD,KTYPE
+ REAL,INTENT(IN) :: NODATA
+ REAL,INTENT(INOUT),DIMENSION(MD) :: XD,YD,ZD 
+ REAL,INTENT(OUT) :: MZ
+ INTEGER,INTENT(OUT) :: ND
+ INTEGER :: I,J,N,IS,IE,IROW,ICOL
+ REAL,ALLOCATABLE,DIMENSION(:) :: XCOL,YROW
+ 
+ !## sort x, to skip double coordinates
+ CALL UTL_SORTEM(1,MD,XD,2,YD,ZD,ZD,ZD,ZD,ZD,ZD)
+
+ !## sort y numbers
+ IS=1
+ DO I=2,MD
+  IF(XD(I).NE.XD(I-1))THEN
+   IE=I-1
+   CALL UTL_SORTEM(IS,IE,YD,2,XD,ZD,ZD,ZD,ZD,ZD,ZD)
+   IS=I
+  ENDIF
+ ENDDO
+ !## sort last
+ IE=I-1
+ CALL UTL_SORTEM(IS,IE,YD,2,XD,ZD,ZD,ZD,ZD,ZD,ZD)
+
+ N=1
+ !## mark doubles with nodata and compute mean for those double points
+ DO I=2,MD
+  IF(XD(I).EQ.XD(I-1).AND.YD(I).EQ.YD(I-1))THEN
+   IF(N.EQ.1)J=I-1
+   N=N+1
+   ZD(J)=ZD(J)+ZD(I)
+   ZD(I)=NODATA
+  ELSE
+   IF(N.GT.1)THEN
+    ZD(J)=ZD(J)/REAL(N)
+    N=1
+   ENDIF
+  ENDIF
+ END DO
+
+ !## eliminate doubles
+ J=0
+ DO I=1,MD
+  IF(ZD(I).NE.NODATA)THEN
+   J=J+1
+   IF(J.NE.I)THEN
+    XD(J)=XD(I); YD(J)=YD(I); ZD(J)=ZD(I)
+   ENDIF
+  ENDIF
+ END DO
+ ND=J
+ 
+ !## compute mean and substract values from mean - simple kriging
+ IF(KTYPE.GT.0)THEN
+  MZ=0.0 !; DO I=1,ND; MZ=MZ+ZD(I); ENDDO; MZ=MZ/REAL(ND)
+  DO I=1,ND; ZD(I)=ZD(I)-MZ; ENDDO
+ ENDIF
+ 
+ END SUBROUTINE UTL_KRIGING_INIT
+
+  !###====================================================================
+ subroutine utl_sortem(ib,ie,a,iperm,b,c,d,e,f,g,h)
+ !###====================================================================
+ IMPLICIT NONE
+ REAL,INTENT(INOUT),dimension(:) :: a,B,C,D,E,F,G,H !(*),b(*),c(*),d(*),e(*),f(*),g(*),h(*)
+ integer,DIMENSION(64) :: LT,UT !lt(64),ut(64),
+ INTEGER :: i,j,k,m,p,q
+ REAL :: XH,XG,XF,XE,XD,XC,XB,XA
+ REAL :: TH,TG,TF,TE,TD,TC,TB,TA
+ INTEGER :: IRING,IPERM,IA,IB,IC,ID,IE,IF,IG,IH
+ 
+      j     = ie
+      m     = 1
+      i     = ib
+      iring = iperm+1
+      if (iperm.gt.7) iring=1
+ 10   if (j-i-1) 100,90,15
+ 15   p    = (j+i)/2
+      ta   = a(p)
+      a(p) = a(i)
+      go to (21,19,18,17,16,161,162,163),iring
+ 163     th   = h(p)
+         h(p) = h(i)
+ 162     tg   = g(p)
+         g(p) = g(i)
+ 161     tf   = f(p)
+         f(p) = f(i)
+ 16      te   = e(p)
+         e(p) = e(i)
+ 17      td   = d(p)
+         d(p) = d(i)
+ 18      tc   = c(p)
+         c(p) = c(i)
+ 19      tb   = b(p)
+         b(p) = b(i)
+ 21   continue
+!c
+!c Start at the beginning of the segment, search for k such that a(k)>t
+!c
+      q = j
+      k = i
+ 20   k = k+1
+      if(k.gt.q)     go to 60
+      if(a(k).le.ta) go to 20
+!c
+!c Such an element has now been found now search for a q such that a(q)<t
+!c starting at the end of the segment.
+!c
+ 30   continue
+      if(a(q).lt.ta) go to 40
+      q = q-1
+      if(q.gt.k)     go to 30
+      go to 50
+!c
+!c a(q) has now been found. we interchange a(q) and a(k)
+!c
+ 40   xa   = a(k)
+      a(k) = a(q)
+      a(q) = xa
+      go to (45,44,43,42,41,411,412,413),iring
+ 413     xh   = h(k)
+         h(k) = h(q)
+         h(q) = xh
+ 412     xg   = g(k)
+         g(k) = g(q)
+         g(q) = xg
+ 411     xf   = f(k)
+         f(k) = f(q)
+         f(q) = xf
+ 41      xe   = e(k)
+         e(k) = e(q)
+         e(q) = xe
+ 42      xd   = d(k)
+         d(k) = d(q)
+         d(q) = xd
+ 43      xc   = c(k)
+         c(k) = c(q)
+         c(q) = xc
+ 44      xb   = b(k)
+         b(k) = b(q)
+         b(q) = xb
+ 45   continue
+!c
+!c Update q and search for another pair to interchange:
+!c
+      q = q-1
+      go to 20
+ 50   q = k-1
+ 60   continue
+!c
+!c The upwards search has now met the downwards search:
+!c
+      a(i)=a(q)
+      a(q)=ta
+      go to (65,64,63,62,61,611,612,613),iring
+ 613     h(i) = h(q)
+         h(q) = th
+ 612     g(i) = g(q)
+         g(q) = tg
+ 611     f(i) = f(q)
+         f(q) = tf
+ 61      e(i) = e(q)
+         e(q) = te
+ 62      d(i) = d(q)
+         d(q) = td
+ 63      c(i) = c(q)
+         c(q) = tc
+ 64      b(i) = b(q)
+         b(q) = tb
+ 65   continue
+!c
+!c The segment is now divided in three parts: (i,q-1),(q),(q+1,j)
+!c store the position of the largest segment in lt and ut
+!c
+      if (2*q.le.i+j) go to 70
+      lt(m) = i
+      ut(m) = q-1
+      i = q+1
+      go to 80
+ 70   lt(m) = q+1
+      ut(m) = j
+      j = q-1
+!c
+!c Update m and split the new smaller segment
+!c
+ 80   m = m+1
+      go to 10
+!c
+!c We arrive here if the segment has  two elements we test to see if
+!c the segment is properly ordered if not, we perform an interchange
+!c
+ 90   continue
+      if (a(i).le.a(j)) go to 100
+      xa=a(i)
+      a(i)=a(j)
+      a(j)=xa
+      go to (95,94,93,92,91,911,912,913),iring
+ 913     xh   = h(i)
+         h(i) = h(j)
+         h(j) = xh
+ 912     xg   = g(i)
+         g(i) = g(j)
+         g(j) = xg
+ 911     xf   = f(i)
+         f(i) = f(j)
+         f(j) = xf
+   91    xe   = e(i)
+         e(i) = e(j)
+         e(j) = xe
+   92    xd   = d(i)
+         d(i) = d(j)
+         d(j) = xd
+   93    xc   = c(i)
+         c(i) = c(j)
+         c(j) = xc
+   94    xb   = b(i)
+         b(i) = b(j)
+         b(j) = xb
+   95 continue
+!c
+!c If lt and ut contain more segments to be sorted repeat process:
+!c
+ 100  m = m-1
+      if (m.le.0) go to 110
+      i = lt(m)
+      j = ut(m)
+      go to 10
+ 110  continue
+      return
+      end subroutine utl_sortem
+      
+  !###====================================================================
+ SUBROUTINE UTL_LUDCMP(A,B,N)
+ !###====================================================================
+ IMPLICIT NONE
+ INTEGER,INTENT(IN)   :: N
+ REAL,DIMENSION(N,N),INTENT(INOUT)  :: A
+ REAL,DIMENSION(N),INTENT(INOUT)  :: B
+ REAL,DIMENSION(:,:),ALLOCATABLE :: L,U
+ INTEGER :: I,J,K
+ REAL :: X
+
+ ALLOCATE(L(N,N),U(N,N)); L=0.0; U=0.0
+
+ !## transform first column
+ DO I=1,N; L(I,1)=A(I,1); ENDDO
+ !## transform first row
+ DO I=1,N; U(1,I)=A(1,I)/A(1,1); ENDDO
+ DO I=1,N; U(I,I)=1.0; ENDDO
+ 
+ DO J=2,N-1
+
+  DO I=J,N
+   X=0.0
+   DO K=1,J-1
+    X=X+L(I,K)*U(K,J)
+   ENDDO
+   L(I,J)=A(I,J)-X
+  ENDDO
+  DO K=J+1,N
+   X=0.0
+   DO I=1,J-1
+    X=X+L(J,I)*U(I,K)
+   ENDDO
+   U(J,K)=(A(J,K)-X)/L(J,J)
+  ENDDO
+
+ ENDDO
+ 
+ X=0.0
+ DO K=1,N-1
+  X=X+L(N,K)*U(K,N)
+ ENDDO
+ L(N,N)=A(N,N)-X
+ 
+ !## forward substitution
+ B(1)=B(1)/L(1,1)
+ DO I=2,N
+  X=0.0
+  DO J=1,I-1
+   X=X+L(I,J)*B(J)
+  ENDDO
+  B(I)=(B(I)-X)/L(I,I)
+ ENDDO
+
+ !## backward substitution
+ DO I=N-1,1,-1
+  X=0.0
+  DO J=I+1,N
+   X=X+U(I,J)*B(J)
+  ENDDO
+  B(I)=B(I)-X
+ ENDDO
+
+ DEALLOCATE(L,U)
+ 
+ END SUBROUTINE UTL_LUDCMP
+
  !###===================================================================
  SUBROUTINE IMOD_UTL_STRING(LINE)
  !###===================================================================

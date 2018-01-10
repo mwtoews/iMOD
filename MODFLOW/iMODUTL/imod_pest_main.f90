@@ -357,18 +357,17 @@ CONTAINS
  ENDIF
 
 ! !## call fosm if covariance is known and jacobians are there
-!#ifdef IPEST_FOSM
-! IF(.FALSE.)THEN
-!  !## set igroup lt 0 for followers in group
-!  DO I=1,SIZE(PARAM)
-!   IF(PARAM(I)%IACT.EQ.0)CYCLE
-!   DO J=1,I-1 
-!    IF(PARAM(J)%IACT.EQ.0)CYCLE
-!    IF(PARAM(J)%IGROUP.EQ.PARAM(I)%IGROUP)THEN
-!     PARAM(I)%IGROUP=-1*PARAM(I)%IGROUP; EXIT
-!    ENDIF
-!   ENDDO
-!  ENDDO
+ IF(.FALSE.)THEN
+  !## set igroup lt 0 for followers in group
+  DO I=1,SIZE(PARAM)
+   IF(PARAM(I)%IACT.EQ.0)CYCLE
+   DO J=1,I-1 
+    IF(PARAM(J)%IACT.EQ.0)CYCLE
+    IF(PARAM(J)%IGROUP.EQ.PARAM(I)%IGROUP)THEN
+     PARAM(I)%IGROUP=-1*PARAM(I)%IGROUP; EXIT
+    ENDIF
+   ENDDO
+  ENDDO
 !
 !!## ibrahym
 !!  CALL IMOD_UTL_OPENASC(IUCOV,'d:\IMOD-MODELS\IBRAHYM_V2\DBASE\IMOD_USER\MODELS\ibV2_stat_fosm\totaal250\covariance_250_opt_4iter.txt','R')
@@ -390,17 +389,16 @@ CONTAINS
 !  ENDDO
 !  CDATE_SIM(1)='STEADY-STATE'
 !  CALL PESTWRITESTATISTICS_FOSM(NP,COV)
-! ENDIF 
-!#endif
+ ENDIF 
  
  ALLOCATE(ZONE(N))
 
- if(ioption.eq.0)then
+ IF(IOPTION.EQ.0)THEN
  
   DO I=1,SIZE(ZONE)
 
    NULLIFY(ZONE(I)%X,ZONE(I)%XY,ZONE(I)%IZ) 
-   READ(IURUN,*,IOSTAT=IOS) LINE
+   READ(IURUN,'(A)',IOSTAT=IOS) LINE
    IF(IOS.NE.0)THEN
     CALL IMOD_UTL_PRINTTEXT('Error reading '//TRIM(LINE),0)
     CALL IMOD_UTL_PRINTTEXT('Busy processing module: '//TRIM(CMOD(I)),2)
@@ -416,37 +414,36 @@ CONTAINS
     CALL IMOD_UTL_FILENAME(LINE)
     CALL IMOD_UTL_PRINTTEXT('Assigned '//TRIM(LINE),0)
     IF(INDEX(IMOD_UTL_CAPF(LINE,'U'),'.IDF').GT.0)THEN
-     if (.not.idfread(idfc,line,0)) CALL IMOD_UTL_PRINTTEXT('idfread',2)
-     call idfnullify(idfm)
-     call idfcopy(idf,idfm)
+     IF (.NOT.IDFREAD(IDFC,LINE,0)) CALL IMOD_UTL_PRINTTEXT('IDFREAD',2)
+     CALL IDFNULLIFY(IDFM)
+     CALL IDFCOPY(IDF,IDFM)
      IF(ASSOCIATED(IDFM%X))DEALLOCATE(IDFM%X)
-     nodata = idfc%nodata
-     idfm%nodata = nodata
-     if (.not.idfreadscale(idfc,idfm,10,0)) CALL IMOD_UTL_PRINTTEXT('idfreadscale',2)
-     
-!     do irow=1,idfm%nrow; do icol=1,idfm%ncol
-!      if(idfm%x(icol,irow).ne.0.0)write(*,*) icol,irow,idfm%x(icol,irow)
-!     enddo; enddo
-     
+     NODATA = IDFC%NODATA
+     IDFM%NODATA = NODATA
+     IF (.NOT.IDFREADSCALE(IDFC,IDFM,10,0)) CALL IMOD_UTL_PRINTTEXT('IDFREADSCALE',2)
+         
      ALLOCATE(ZONE(I)%X(NCOL,NROW))
      ZONE(I)%ZTYPE=0
      ZONE(I)%X=IDFM%X
-     call idfdeallocatex(idfc)
-     if (idfc%iu.gt.0) then
-      inquire(unit=idfc%iu,opened=lop); if(lop)close(idfc%iu)
-     endif
-#ifdef IPEST_PILOTPOINTS    
+     CALL IDFDEALLOCATEX(IDFC)
+     IF (IDFC%IU.GT.0) THEN
+      INQUIRE(UNIT=IDFC%IU,OPENED=LOP); IF(LOP)CLOSE(IDFC%IU)
+     ENDIF
+
     ELSEIF(INDEX(IMOD_UTL_CAPF(LINE,'U'),'.IPF').GT.0)THEN
+
      ZONE(I)%ZTYPE=1
-     !## read in ipf and put coordinates in bufpst()
+     !## read in ipf
      JU=GETUNIT(); CALL IMOD_UTL_OPENASC(JU,LINE,'R')
      READ(JU,*) NIPF; READ(JU,*) MIPF; DO K=1,MIPF+1; READ(JU,*); ENDDO
      ALLOCATE(ZONE(I)%XY(NIPF,2),ZONE(I)%IZ(NIPF))  
      DO K=1,NIPF; READ(JU,*) ZONE(I)%XY(K,1),ZONE(I)%XY(K,2),ZONE(I)%IZ(K); ENDDO  
      CLOSE(JU)
-#endif
+
     ELSE 
+
      CALL IMOD_UTL_PRINTTEXT('No supported file format found',2)
+
     ENDIF
    ENDIF
   ENDDO
@@ -460,23 +457,29 @@ CONTAINS
 
    NULLIFY(ZONE(I)%X,ZONE(I)%XY,ZONE(I)%IZ) 
 
-!## USE U2DREL
-    ALLOCATE(ZONE(I)%X(NCOL,NROW))
-    ZONE(I)%ZTYPE=0
-    
-    CALL U2DREL(zone(i)%x, 'zone', NROW, NCOL, 0, iurun, IOUT)
+   !## check whether IPF or IDF (arr-file)
+   READ(IURUN,'(A256)') LINE
+   
+   IF(INDEX(IMOD_UTL_CAPF(LINE,'U'),'.IPF',.TRUE.).GT.0)THEN
+   
+    ZONE(I)%ZTYPE=1
+    !## read in ipf
+    JU=GETUNIT(); CALL IMOD_UTL_OPENASC(JU,LINE,'R')
+    READ(JU,*) NIPF; READ(JU,*) MIPF; DO K=1,MIPF+1; READ(JU,*); ENDDO
+    ALLOCATE(ZONE(I)%XY(NIPF,2),ZONE(I)%IZ(NIPF))  
+    DO K=1,NIPF; READ(JU,*) ZONE(I)%XY(K,1),ZONE(I)%XY(K,2),ZONE(I)%IZ(K); ENDDO  
+    CLOSE(JU)
 
-!#ifdef IPEST_PILOTPOINTS    
-!    ELSEIF(INDEX(IMOD_UTL_CAPF(LINE,'U'),'.IPF').GT.0)THEN
-!     ZONE(I)%ZTYPE=1
-!     !## read in ipf and put coordinates in bufpst()
-!     JU=GETUNIT(); CALL IMOD_UTL_OPENASC(JU,LINE,'R')
-!     READ(JU,*) NIPF; READ(JU,*) MIPF; DO K=1,MIPF+1; READ(JU,*); ENDDO
-!     ALLOCATE(ZONE(I)%XY(NIPF,2),ZONE(I)%IZ(NIPF))  
-!     DO K=1,NIPF; READ(JU,*) ZONE(I)%XY(K,1),ZONE(I)%XY(K,2),ZONE(I)%IZ(K); ENDDO  
-!     CLOSE(JU)
-!#endif
+   ELSE
+   
+    !## use u2drel
+    ALLOCATE(ZONE(I)%X(NCOL,NROW)); ZONE(I)%ZTYPE=0  
+    BACKSPACE(IURUN)
+    CALL U2DREL(ZONE(I)%X, 'zone', NROW, NCOL, 0, IURUN, IOUT)
+
+   ENDIF
   ENDDO
+
   CLOSE(IURUN)
   
  endif
@@ -495,17 +498,25 @@ CONTAINS
  ALLOCATE(ILOCS(NUZ(NUZONE))); ILOCS=0
  ALLOCATE(NLOCS(NUZONE,SIZE(ZONE))); NLOCS=0
  !## set reference to zones
- DO I=1,NUZONE
-  ILOCS(NUZ(I))=I
- ENDDO
+ DO I=1,NUZONE; ILOCS(NUZ(I))=I; ENDDO
 
  !## see how many locations per unique zone
  DO IROW=1,NROW; DO ICOL=1,NCOL; DO J=1,SIZE(ZONE) 
-  IZ=INT(ZONE(J)%X(ICOL,IROW))
-  IF(IZ.LE.0)CYCLE
-  IP=ILOCS(IZ)
-  IF(IP.GT.0)THEN
-   NLOCS(IP,J)=NLOCS(IP,J)+1
+  !## zones 
+  IF(ASSOCIATED(ZONE(J)%X))THEN
+   IZ=INT(ZONE(J)%X(ICOL,IROW))
+   IF(IZ.LE.0)CYCLE
+   IP=ILOCS(IZ)
+   IF(IP.GT.0)THEN
+    NLOCS(IP,J)=NLOCS(IP,J)+1
+   ENDIF
+  !## pilot points
+  ELSE
+   DO K=1,SIZE(ZONE(J)%IZ)
+    IZ=ZONE(J)%IZ(K)
+    IP=ILOCS(IZ) 
+    IF(IP.GT.0)NLOCS(IP,J)=1
+   ENDDO
   ENDIF
  ENDDO; ENDDO; ENDDO
   
@@ -556,61 +567,6 @@ CONTAINS
 
  ENDDO
  
-! !## check number of zones and missing zone (if any)
-! DO I=1,SIZE(PARAM)
-!  !## parameter active and main of group
-!!  IF(PARAM(I)%IACT.EQ.1.AND.PARAM(I)%IGROUP.GT.0)THEN
-!  IF(PARAM(I)%IGROUP.GT.0)THEN
-!   DO IROW=1,NROW; DO ICOL=1,NCOL; DO J=1,SIZE(ZONE) 
-!    IF(ZONE(J)%ZTYPE.EQ.0)THEN
-!     !## check whether it's integer value is equal to param(i)%izone, if so use fraction from idf-file
-!     IF(PARAM(I)%IZONE.EQ.INT(ZONE(J)%X(ICOL,IROW)))THEN
-!      PARAM(I)%NODES=PARAM(I)%NODES+1
-!      PARAM(I)%ZTYPE=0
-!      EXIT
-!     ENDIF
-!    ENDIF
-!   ENDDO; ENDDO; ENDDO
-!   !## check pilotpoints
-!   DO J=1,SIZE(ZONE)
-!    IF(ZONE(J)%ZTYPE.EQ.1)THEN
-!     DO IROW=1,SIZE(ZONE(J)%IZ)
-!      !## check whether it's integer value is equal to param(i)%izone, if so use fraction from idf-file
-!      IF(PARAM(I)%IZONE.EQ.INT(ZONE(J)%IZ(IROW)))THEN
-!       SELECT CASE (TRIM(PARAM(I)%PTYPE))
-!        CASE ('KD','KH','KV','VC','SC','VA')
-!        CASE DEFAULT
-!         CALL IMOD_UTL_PRINTTEXT('Cannot use PilotPoints for other than KD,KH,KV,VC,SC and VA',2)
-!       END SELECT
-!       PARAM(I)%NODES=PARAM(I)%NODES+1
-!       PARAM(I)%ZTYPE=1
-!      ENDIF
-!     ENDDO
-!    ENDIF
-!   ENDDO
-!  ENDIF
-!  IF(PARAM(I)%PTYPE.EQ.'HF')THEN
-!   PARAM(I)%NODES=0 !## one single cell used as zone for horizontal barrier module
-!   WRITE(LINE,'(I2,1X,A5,2(1X,I5),5(1X,F15.7),I10,L10,A10)') PARAM(I)%IACT,PARAM(I)%PTYPE,PARAM(I)%ILS, &
-!     PARAM(I)%IZONE,PARAM(I)%INI,PARAM(I)%DELTA,PARAM(I)%MIN,PARAM(I)%MAX,PARAM(I)%FADJ,PARAM(I)%IGROUP,PARAM(I)%LOG,'EntireLine'
-!  ELSE
-!   IF(PARAM(I)%NODES.EQ.0)THEN
-!    CALL IMOD_UTL_PRINTTEXT('No area/zone assigned to parameter no. '//TRIM(ITOS(I))//' ptype= '//TRIM(PARAM(I)%PTYPE),0)
-!    PARAM(I)%IACT=0
-!   ENDIF
-!   WRITE(LINE,'(I2,1X,A5,2(1X,I5),5(1X,F15.7),I10,L10,I10)') PARAM(I)%IACT,PARAM(I)%PTYPE,PARAM(I)%ILS, &
-!     PARAM(I)%IZONE,PARAM(I)%INI,PARAM(I)%DELTA,PARAM(I)%MIN,PARAM(I)%MAX,PARAM(I)%FADJ,PARAM(I)%IGROUP,PARAM(I)%LOG,PARAM(I)%NODES
-!  ENDIF
-!  CALL IMOD_UTL_PRINTTEXT(TRIM(LINE),-1,iu=IUPESTOUT)
-!  IF(PARAM(I)%PTYPE.EQ.'EX')CALL IMOD_UTL_PRINTTEXT(TRIM(PARAM(I)%EXBATFILE),-1,iu=IUPESTOUT)
-!  CALL PEST1CHK(I)
-!  PARAM(I)%ALPHA(1)=PARAM(I)%INI !## current  alpha
-!  PARAM(I)%ALPHA(2)=PARAM(I)%INI !## previous alpha
-!  !## parameter is at the boundary whenever less than 1% away
-!  IF(ABS(PARAM(I)%ALPHA(1)-PARAM(I)%MIN).LT.XPBND)PARAM(I)%IBND=-1 !## min
-!  IF(ABS(PARAM(I)%MAX)-PARAM(I)%ALPHA(1).LT.XPBND)PARAM(I)%IBND= 1 !## max
-! ENDDO
- 
  N=0; DO I=1,SIZE(PARAM)
   IF(PARAM(I)%IACT.EQ.0.AND.PARAM(I)%IGROUP.LE.0)CYCLE
   SELECT CASE (PARAM(I)%PTYPE)
@@ -658,7 +614,7 @@ CONTAINS
      ENDDO; ENDDO
 
      IF(N.NE.PARAM(I)%NODES)THEN
-      WRITE(*,*) 'SOMETHING GOES WRONG'
+      WRITE(*,*) 'SOMETHING GOES WRONG'; PAUSE
      ENDIF
     
     ENDDO
@@ -674,10 +630,10 @@ CONTAINS
      IF(NLOCS(IP,J).EQ.0)CYCLE
 
      IF(ZONE(J)%ZTYPE.EQ.1)THEN
-      DO IROW=1,SIZE(ZONE(J)%IZ)
+      DO K=1,SIZE(ZONE(J)%IZ)
        !## check whether it's integer value is equal to param(i)%izone
-       IF(PARAM(I)%IZONE.EQ.INT(ZONE(J)%IZ(IROW)))THEN
-        N=N+1; PARAM(I)%XY(N,1)=ZONE(J)%XY(IROW,1); PARAM(I)%XY(N,2)=ZONE(J)%XY(IROW,2) 
+       IF(PARAM(I)%IZONE.EQ.INT(ZONE(J)%IZ(K)))THEN
+        N=N+1; PARAM(I)%XY(N,1)=ZONE(J)%XY(K,1); PARAM(I)%XY(N,2)=ZONE(J)%XY(K,2) 
        ENDIF
       ENDDO
      ENDIF
@@ -690,50 +646,6 @@ CONTAINS
    IF(PARAM(I)%PTYPE.NE.'HF')PARAM(I)%IACT=0
   ENDIF 
  ENDDO
- !
- !!## fill array zone and set appropriate pointers in type
- !DO I=1,SIZE(PARAM)
- ! IF(PARAM(I)%NODES.GT.0)THEN
- !  CALL IMOD_UTL_PRINTTEXT('Parameter '//TRIM(ITOS(I))//' no. of locations '//TRIM(ITOS(PARAM(I)%NODES))// &
- !     ' assigned to ptype= '//TRIM(PARAM(I)%PTYPE),0)
- !
- !  IF(PARAM(I)%ZTYPE.EQ.0)THEN
- !   
- !   ALLOCATE(PARAM(I)%IROW(PARAM(I)%NODES),PARAM(I)%ICOL(PARAM(I)%NODES))
- !   ALLOCATE(PARAM(I)%F(PARAM(I)%NODES))
- !
- !   N=0; DO IROW=1,NROW; DO ICOL=1,NCOL; DO J=1,SIZE(ZONE) 
- !    IF(ZONE(J)%ZTYPE.EQ.0)THEN
- !     IF(PARAM(I)%IZONE.EQ.INT(ZONE(J)%X(ICOL,IROW)))THEN
- !      F=MOD(ZONE(J)%X(ICOL,IROW),1.0); IF(F.EQ.0.0)F=1.0
- !      N=N+1; PARAM(I)%IROW(N)=INT(IROW,2); PARAM(I)%ICOL(N)=INT(ICOL,2); PARAM(I)%F(N)=F
- !      EXIT
- !     ENDIF
- !    ENDIF
- !   ENDDO; ENDDO; ENDDO
- !
- !  ELSEIF(PARAM(I)%ZTYPE.EQ.1)THEN
- !  
- !   ALLOCATE(PARAM(I)%XY(PARAM(I)%NODES,2))
- !
- !   !## check pilotpoints
- !   N=0; DO J=1,SIZE(ZONE)
- !    IF(ZONE(J)%ZTYPE.EQ.1)THEN
- !     DO IROW=1,SIZE(ZONE(J)%IZ)
- !      !## check whether it's integer value is equal to param(i)%izone
- !      IF(PARAM(I)%IZONE.EQ.INT(ZONE(J)%IZ(IROW)))THEN
- !       N=N+1; PARAM(I)%XY(N,1)=ZONE(J)%XY(IROW,1); PARAM(I)%XY(N,2)=ZONE(J)%XY(IROW,2) 
- !      ENDIF
- !     ENDDO
- !    ENDIF
- !   ENDDO
- !  
- !  ENDIF
- !  
- ! ELSE
- !  IF(PARAM(I)%PTYPE.NE.'HF')PARAM(I)%IACT=0
- ! ENDIF 
- !ENDDO
 
  !## set igroup lt 0 for followers in group
  DO I=1,SIZE(PARAM)
@@ -995,7 +907,7 @@ CONTAINS
   IF(TJ.GT.TJOBJ)THEN
 !   DAMPINGFACTOR=DAMPINGFACTOR*NDAMPING
 !   NDAMPING=1.0 !## do it onces only
-   IF(.NOT.PESTUPGRADEVECTOR(0.5,.TRUE.))THEN
+   IF(.NOT.PESTUPGRADEVECTOR(0.5,.FALSE.))THEN
     STOP 'ERROR PESTUPGRADEVECTOR IN LINESEARCH'
    ENDIF !# half of current search-gradient
    !## start next line-search
@@ -1132,6 +1044,7 @@ CONTAINS
  INTEGER,INTENT(IN) :: IOUT
  CHARACTER(LEN=1024) :: FNAME,DIR
  INTEGER :: I,J,IROW,ICOL
+ REAL XVAR,XF
  REAL,ALLOCATABLE,DIMENSION(:,:) :: X
  logical :: lok
 
@@ -1167,17 +1080,45 @@ CONTAINS
    CALL met1wrtidf(fname,X,ncol,nrow,-999.0,iout)
 
   ELSE
-#ifdef IPEST_PILOTPOINTS
+
    WRITE(FNAME,'(A,2I5.5,A)') TRIM(DIR)//CHAR(92)//PARAM(I)%PTYPE,PARAM(I)%ILS,PARAM(I)%IZONE,'.IPF'
    XVAR=PARAM(I)%ALPHA_ERROR_VARIANCE(PEST_ITER)
    XF  =PARAM(I)%ALPHA(2)
    CALL WRITEIPF(SIZE(PARAM(I)%XY,1),SIZE(PARAM(I)%XY,2),PARAM(I)%XY,XF,XVAR,FNAME)  
-#endif
+
   ENDIF
  ENDDO
  DEALLOCATE(X)
 
  END SUBROUTINE PESTDUMPFCT
+
+ !###====================================================================
+SUBROUTINE WRITEIPF(N,M,XY,F,BW,FNAME) 
+!###====================================================================
+!USE MOD_UTL, ONLY : OPENASC,ITOS
+IMPLICIT NONE
+INTEGER,INTENT(IN) :: N,M
+REAL,DIMENSION(N,M),INTENT(IN) :: XY
+REAL,INTENT(IN) :: F,BW
+CHARACTER(LEN=*),INTENT(IN) :: FNAME
+INTEGER :: IU,I
+
+IU=IMOD_UTL_GETUNIT()
+OPEN(IU,FILE=FNAME,STATUS='UNKNOWN',ACTION='WRITE')
+WRITE(IU,'(A)') TRIM(IMOD_UTL_ITOS(N))
+WRITE(IU,'(A)') '4'
+WRITE(IU,'(A)') 'X'
+WRITE(IU,'(A)') 'Y'
+WRITE(IU,'(A)') 'F'
+WRITE(IU,'(A)') 'ERROR_VARIANCE'
+WRITE(IU,'(A)') '0,TXT'
+DO I=1,SIZE(XY,1)
+ WRITE(IU,'(4(F15.7,1X))') XY(I,1),XY(I,2),EXP(F),BW
+ENDDO
+
+CLOSE(IU)
+
+END SUBROUTINE WRITEIPF
 
  !#####=================================================================
  SUBROUTINE PESTPROGRESS()
@@ -1310,105 +1251,103 @@ CONTAINS
 
  END SUBROUTINE PESTWRITESTATISTICS_PERROR
   
-#ifdef IPEST_FOSM
- !#####=================================================================
- SUBROUTINE PESTWRITESTATISTICS_FOSM(NP,COV)
- !#####=================================================================
- USE VERSION, ONLY : CVERSION
- USE IMOD_IDF
- USE GLBVAR, ONLY : CDATE_SIM
- IMPLICIT NONE
- INTEGER,INTENT(IN) :: NP
- DOUBLE PRECISION,INTENT(IN),DIMENSION(NP,NP) :: COV
- INTEGER :: II,I,J,IPER,ILAY,IROW,ICOL
- TYPE(IDFOBJ),DIMENSION(1) :: H
- CHARACTER(LEN=256) :: FNAME
- REAL,ALLOCATABLE,DIMENSION(:,:) :: JCBN
- REAL,ALLOCATABLE,DIMENSION(:) :: PROW
-  
- J=NP
- ALLOCATE(JCBN(NCOL*NROW*NLAY,J),PROW(J))
-
- CALL CREATEDIR(TRIM(ROOTRES)//CHAR(92)//'uncertainty')
-
- DO IPER=1,NPER  
-
-  J=0
-  DO I=1,SIZE(PARAM)
-   IF(PARAM(I)%IACT.EQ.1.AND.PARAM(I)%IGROUP.GT.0)THEN
-    J=J+1
-
-    FNAME=TRIM(ROOTRES)//CHAR(92)//'head\head_'//TRIM(CDATE_SIM(IPER))//'_l*_sens_'// &
-          TRIM(PARAM(I)%PTYPE)//'_igroup'//TRIM(ITOS(PARAM(I)%IGROUP))//'.idf'
-    CALL IMOD_UTL_PRINTTEXT('Reading '//TRIM(FNAME),0) 
-
-    DO ILAY=1,NLAY
-     
-     FNAME=TRIM(ROOTRES)//CHAR(92)//'head\head_'//TRIM(CDATE_SIM(IPER))//'_l'//TRIM(ITOS(ILAY))//'_sens_'// &
-           TRIM(PARAM(I)%PTYPE)//'_igroup'//TRIM(ITOS(PARAM(I)%IGROUP))//'.idf'
-  
-     IF(.NOT.IDFREAD(H(1),FNAME,1))THEN
-      CALL IMOD_UTL_PRINTTEXT('Can not open: '//TRIM(FNAME),0)
-      H(1)%X=0.0      
-     ENDIF 
-
-     II=(ILAY-1)*NCOL*NROW
-     DO IROW=1,NROW; DO ICOL=1,NCOL
-      II=II+1
-      JCBN(II,J)=H(1)%X(ICOL,IROW)
-     ENDDO; ENDDO
- 
-    ENDDO
-   ENDIF
-  ENDDO
-  
-  !## received the variance per location
-  H(1)%X=0.0
-
-  !## compute jcbn*cov*jcbn, process per row
-  IROW=1; ICOL=0; ILAY=1
-  DO II=1,NODES
-   ICOL=ICOL+1
-   IF(ICOL.GT.NCOL)THEN
-    IROW=IROW+1
-    IF(IROW.GT.NROW)THEN
-     FNAME=TRIM(ROOTRES)//CHAR(92)//'uncertainty\uncertainty_'//TRIM(CDATE_SIM(IPER))//'_l'//TRIM(ITOS(ILAY))//'.idf'
-     CALL IMOD_UTL_PRINTTEXT('Writing '//TRIM(FNAME),0) 
-     IF(.NOT.IDFWRITE(H(1),FNAME,0))CALL IMOD_UTL_PRINTTEXT('Can not write: '//TRIM(FNAME),2)
-     IROW=1; ILAY=ILAY+1
-    ENDIF
-    ICOL=1
-   ENDIF
-   PROW=0.0;
-   DO I=1,NP
-    DO J=1,NP
-     PROW(I)=PROW(I)+JCBN(II,I)*COV(I,J)
-    ENDDO
-   ENDDO
-   H(1)%X(ICOL,IROW)=0.0
-   DO I=1,NP
-    H(1)%X(ICOL,IROW)=H(1)%X(ICOL,IROW)+PROW(I)*PROW(I)
-   ENDDO
-   H(1)%X(ICOL,IROW)=SQRT(H(1)%X(ICOL,IROW))
-  
-  ENDDO
- 
-  !## schrijf laatste modellayer
-  FNAME=TRIM(ROOTRES)//CHAR(92)//'uncertainty\uncertainty_'//TRIM(CDATE_SIM(IPER))//'_l'//TRIM(ITOS(ILAY))//'.idf'
-  CALL IMOD_UTL_PRINTTEXT('Writing '//TRIM(FNAME),0) 
-  IF(.NOT.IDFWRITE(H(1),FNAME,0))CALL IMOD_UTL_PRINTTEXT('Can not write: '//TRIM(FNAME),2)
-  
- ENDDO 
-
- CALL IDFDEALLOCATE(H,SIZE(H))
- DEALLOCATE(JCBN)
-
- !## variance in head due to the variance (uncertainty) in the input variable
-
- CALL IMOD_UTL_PRINTTEXT('Sensitivity finished',2)
-
- END SUBROUTINE PESTWRITESTATISTICS_FOSM
-#endif 
+ !!#####=================================================================
+ !SUBROUTINE PESTWRITESTATISTICS_FOSM(NP,COV)
+ !!#####=================================================================
+ !USE VERSION, ONLY : CVERSION
+ !USE IMOD_IDF
+ !USE GLBVAR, ONLY : CDATE_SIM
+ !IMPLICIT NONE
+ !INTEGER,INTENT(IN) :: NP
+ !DOUBLE PRECISION,INTENT(IN),DIMENSION(NP,NP) :: COV
+ !INTEGER :: II,I,J,IPER,ILAY,IROW,ICOL
+ !TYPE(IDFOBJ),DIMENSION(1) :: H
+ !CHARACTER(LEN=256) :: FNAME
+ !REAL,ALLOCATABLE,DIMENSION(:,:) :: JCBN
+ !REAL,ALLOCATABLE,DIMENSION(:) :: PROW
+ ! 
+ !J=NP
+ !ALLOCATE(JCBN(NCOL*NROW*NLAY,J),PROW(J))
+ !
+ !CALL CREATEDIR(TRIM(ROOTRES)//CHAR(92)//'uncertainty')
+ !
+ !DO IPER=1,NPER  
+ !
+ ! J=0
+ ! DO I=1,SIZE(PARAM)
+ !  IF(PARAM(I)%IACT.EQ.1.AND.PARAM(I)%IGROUP.GT.0)THEN
+ !   J=J+1
+ !
+ !   FNAME=TRIM(ROOTRES)//CHAR(92)//'head\head_'//TRIM(CDATE_SIM(IPER))//'_l*_sens_'// &
+ !         TRIM(PARAM(I)%PTYPE)//'_igroup'//TRIM(ITOS(PARAM(I)%IGROUP))//'.idf'
+ !   CALL IMOD_UTL_PRINTTEXT('Reading '//TRIM(FNAME),0) 
+ !
+ !   DO ILAY=1,NLAY
+ !    
+ !    FNAME=TRIM(ROOTRES)//CHAR(92)//'head\head_'//TRIM(CDATE_SIM(IPER))//'_l'//TRIM(ITOS(ILAY))//'_sens_'// &
+ !          TRIM(PARAM(I)%PTYPE)//'_igroup'//TRIM(ITOS(PARAM(I)%IGROUP))//'.idf'
+ ! 
+ !    IF(.NOT.IDFREAD(H(1),FNAME,1))THEN
+ !     CALL IMOD_UTL_PRINTTEXT('Can not open: '//TRIM(FNAME),0)
+ !     H(1)%X=0.0      
+ !    ENDIF 
+ !
+ !    II=(ILAY-1)*NCOL*NROW
+ !    DO IROW=1,NROW; DO ICOL=1,NCOL
+ !     II=II+1
+ !     JCBN(II,J)=H(1)%X(ICOL,IROW)
+ !    ENDDO; ENDDO
+ !
+ !   ENDDO
+ !  ENDIF
+ ! ENDDO
+ ! 
+ ! !## received the variance per location
+ ! H(1)%X=0.0
+ !
+ ! !## compute jcbn*cov*jcbn, process per row
+ ! IROW=1; ICOL=0; ILAY=1
+ ! DO II=1,NODES
+ !  ICOL=ICOL+1
+ !  IF(ICOL.GT.NCOL)THEN
+ !   IROW=IROW+1
+ !   IF(IROW.GT.NROW)THEN
+ !    FNAME=TRIM(ROOTRES)//CHAR(92)//'uncertainty\uncertainty_'//TRIM(CDATE_SIM(IPER))//'_l'//TRIM(ITOS(ILAY))//'.idf'
+ !    CALL IMOD_UTL_PRINTTEXT('Writing '//TRIM(FNAME),0) 
+ !    IF(.NOT.IDFWRITE(H(1),FNAME,0))CALL IMOD_UTL_PRINTTEXT('Can not write: '//TRIM(FNAME),2)
+ !    IROW=1; ILAY=ILAY+1
+ !   ENDIF
+ !   ICOL=1
+ !  ENDIF
+ !  PROW=0.0;
+ !  DO I=1,NP
+ !   DO J=1,NP
+ !    PROW(I)=PROW(I)+JCBN(II,I)*COV(I,J)
+ !   ENDDO
+ !  ENDDO
+ !  H(1)%X(ICOL,IROW)=0.0
+ !  DO I=1,NP
+ !   H(1)%X(ICOL,IROW)=H(1)%X(ICOL,IROW)+PROW(I)*PROW(I)
+ !  ENDDO
+ !  H(1)%X(ICOL,IROW)=SQRT(H(1)%X(ICOL,IROW))
+ ! 
+ ! ENDDO
+ !
+ ! !## schrijf laatste modellayer
+ ! FNAME=TRIM(ROOTRES)//CHAR(92)//'uncertainty\uncertainty_'//TRIM(CDATE_SIM(IPER))//'_l'//TRIM(ITOS(ILAY))//'.idf'
+ ! CALL IMOD_UTL_PRINTTEXT('Writing '//TRIM(FNAME),0) 
+ ! IF(.NOT.IDFWRITE(H(1),FNAME,0))CALL IMOD_UTL_PRINTTEXT('Can not write: '//TRIM(FNAME),2)
+ ! 
+ !ENDDO 
+ !
+ !CALL IDFDEALLOCATE(H,SIZE(H))
+ !DEALLOCATE(JCBN)
+ !
+ !!## variance in head due to the variance (uncertainty) in the input variable
+ !
+ !CALL IMOD_UTL_PRINTTEXT('Sensitivity finished',2)
+ !
+ !END SUBROUTINE PESTWRITESTATISTICS_FOSM
  
  !#####=================================================================
  LOGICAL FUNCTION PESTNEXTGRAD()
@@ -1481,14 +1420,10 @@ CONTAINS
  LOGICAL :: LSCALING,LSVD
 
  SELECT CASE (PEST_ISCALING)
-  CASE (0)
-   LSCALING=.FALSE.; LSVD=.FALSE.
-  CASE (1)
-   LSCALING=.TRUE.;  LSVD=.FALSE.
-  CASE (2)
-   LSCALING=.TRUE.;  LSVD=.TRUE.
-  CASE (3)
-   LSCALING=.FALSE.; LSVD=.TRUE.
+  CASE (0); LSCALING=.FALSE.; LSVD=.FALSE.
+  CASE (1); LSCALING=.TRUE.;  LSVD=.FALSE.
+  CASE (2); LSCALING=.TRUE.;  LSVD=.TRUE.
+  CASE (3); LSCALING=.FALSE.; LSVD=.TRUE.
  END SELECT
 
  NP=SIZE(PARAM)
@@ -1503,7 +1438,6 @@ CONTAINS
    DH1=REAL(MSR%DH(IP1,J),8)
    DH2=REAL(MSR%DH(0,J),8)
    S(IP1)=S(IP1)+W*((DH1-DH2)/DF1)
-!   S(IP1)=S(IP1)+MSR%W(J)*((MSR%DH(IP1,J)-MSR%DH(0,J))/DF1)
   ENDDO
  ENDDO
  DO I=1,NP; S(I)=S(I)/REAL(PEST_NOBS,8); ENDDO
@@ -1542,65 +1476,60 @@ CONTAINS
   IF(PARAM(I)%IACT.EQ.1.AND.PARAM(I)%IGROUP.GT.0.AND.S(I).LT.PEST_SENSITIVITY)PARAM(I)%IACT=-1
  ENDDO
 
- !## freeze parameters that bounced against the boundary in the previous iteration and point in that direction again
- DO
+! !## freeze parameters that bounced against the boundary in the previous iteration and point in that direction again
+! DO
 
-  NP=0; DO I=1,SIZE(PARAM); IF(PARAM(I)%IACT.EQ.1.AND.PARAM(I)%IGROUP.GT.0)NP=NP+1; ENDDO
+!  NP=0; DO I=1,SIZE(PARAM); IF(PARAM(I)%IACT.EQ.1.AND.PARAM(I)%IGROUP.GT.0)NP=NP+1; ENDDO
+!  IF(ALLOCATED(JQJ))DEALLOCATE(JQJ);   ALLOCATE(JQJ (NP,NP))
+!  IF(ALLOCATED(JQR))DEALLOCATE(JQR);   ALLOCATE(JQR (NP))
+!  IF(ALLOCATED(U  ))DEALLOCATE(U);     ALLOCATE(U   (NP))
+!  IF(ALLOCATED(EIGW))DEALLOCATE(EIGW); ALLOCATE(EIGW(NP))
+!  IF(ALLOCATED(EIGV))DEALLOCATE(EIGV); ALLOCATE(EIGV(NP,NP))
+!  IF(ALLOCATED(C   ))DEALLOCATE(C);    ALLOCATE(C   (NP,NP))
 
-  IF(ALLOCATED(JQJ))DEALLOCATE(JQJ);   ALLOCATE(JQJ (NP,NP))
-  IF(ALLOCATED(JQR))DEALLOCATE(JQR);   ALLOCATE(JQR (NP))
-  IF(ALLOCATED(U  ))DEALLOCATE(U);     ALLOCATE(U   (NP))
-  IF(ALLOCATED(EIGW))DEALLOCATE(EIGW); ALLOCATE(EIGW(NP))
-  IF(ALLOCATED(EIGV))DEALLOCATE(EIGV); ALLOCATE(EIGV(NP,NP))
-  IF(ALLOCATED(C   ))DEALLOCATE(C);    ALLOCATE(C   (NP,NP))
+  !!## construct jTqr (<--- r is residual for current parameter set)
+  !JQR=0.0; I=0
+  !DO IP1=1,SIZE(PARAM)  !## row
+  !
+  ! IF(PARAM(IP1)%IACT.NE.1.OR.PARAM(IP1)%IGROUP.LE.0)CYCLE
+  !
+  ! DF1=REAL(PARAM(IP1)%DELTA,8)
+  !
+  ! I=I+1
+  ! DO J=1,PEST_NOBS
+  !  DH1=REAL(MSR%DH(IP1,J),8)
+  !  DH2=REAL(MSR%DH(0,J),8)
+  !  DJ1=(DH1-DH2)/DF1
+  !  DJ2=REAL(MSR%DH(0 ,J),8)
+  !  W  =REAL(MSR%W(J),8)
+  !  JQR(I)=JQR(I)+(DJ1*W*DJ2)
+  ! ENDDO
+  !ENDDO
+  !
+  !!## melt parameters that point inwards again since their last bump on the boundary
+  !I=0; DO IP1=1,SIZE(PARAM)
+  ! IF(PARAM(IP1)%IACT.NE.1.OR.PARAM(IP1)%IGROUP.LE.0)CYCLE
+  ! I=I+1
+  ! IF(ABS(PARAM(IP1)%IBND).EQ.1)THEN
+  !  IF(PARAM(IP1)%IBND.EQ.-1.AND.-1.0*JQR(I).LT.0.0)PARAM(IP1)%IACT=-1 !## still outside parameter domain(min)
+  !  IF(PARAM(IP1)%IBND.EQ. 1.AND.-1.0*JQR(I).GT.0.0)PARAM(IP1)%IACT=-1 !## still outside parameter domain(max)
+  ! ENDIF
+  !ENDDO
 
-  !## construct jTqr (<--- r is residual for current parameter set)
-  JQR=0.0; I=0
-  DO IP1=1,SIZE(PARAM)  !## row
+!  MP=0; DO I=1,SIZE(PARAM); IF(PARAM(I)%IACT.EQ.1.AND.PARAM(I)%IGROUP.GT.0)MP=MP+1; ENDDO
+!  IF(MP.EQ.NP)EXIT
 
-   IF(PARAM(IP1)%IACT.NE.1.OR.PARAM(IP1)%IGROUP.LE.0)CYCLE
-
-   DF1=REAL(PARAM(IP1)%DELTA,8)
-
-   I=I+1
-   DO J=1,PEST_NOBS
-    DH1=REAL(MSR%DH(IP1,J),8)
-    DH2=REAL(MSR%DH(0,J),8)
-    DJ1=(DH1-DH2)/DF1
-!    DJ1=(MSR%DH(IP1,J)-MSR%DH(0,J))/DF1
-    DJ2=REAL(MSR%DH(0 ,J),8)
-    W  =REAL(MSR%W(J),8)
-    JQR(I)=JQR(I)+(DJ1*W*DJ2)
-!    JQR(I)=JQR(I)+(DJ1*MSR%W(J)*DJ2)
-   ENDDO
-  ENDDO
-
-  !## melt parameters that point inwards again since their last bump on the boundary
-  I=0; DO IP1=1,SIZE(PARAM)
-   IF(PARAM(IP1)%IACT.NE.1.OR.PARAM(IP1)%IGROUP.LE.0)CYCLE
-   I=I+1
-   IF(ABS(PARAM(IP1)%IBND).EQ.1)THEN
-    IF(PARAM(IP1)%IBND.EQ.-1.AND.-1.0*JQR(I).LT.0.0)PARAM(IP1)%IACT=-1 !## still outside parameter domain(min)
-    IF(PARAM(IP1)%IBND.EQ. 1.AND.-1.0*JQR(I).GT.0.0)PARAM(IP1)%IACT=-1 !## still outside parameter domain(max)
-   ENDIF
-  ENDDO
-
-  MP=0; DO I=1,SIZE(PARAM); IF(PARAM(I)%IACT.EQ.1.AND.PARAM(I)%IGROUP.GT.0)MP=MP+1; ENDDO
-  IF(MP.EQ.NP)EXIT
-
- ENDDO
+! ENDDO
 
  IF(NP.EQ.0)CALL IMOD_UTL_PRINTTEXT('All parameters are insensitive, process stopped!',2)
 
- !## compute hessian and covariance, correlation matrix and eigenvalues/eigenvectors
- ALLOCATE(COV(NP,NP))
- CALL PEST1JQJ(JQJ,EIGW,EIGV,COV,NP,.TRUE.,root)
+! !## compute hessian and covariance, correlation matrix and eigenvalues/eigenvectors
+! ALLOCATE(COV(NP,NP))
+! CALL PEST1JQJ(JQJ,EIGW,EIGV,COV,NP,.TRUE.,root)
 
- !## multiply lateral sensitivities with sensitivities in case pest_niter=0
- CALL PESTWRITESTATISTICS_PERROR(NP,COV)
-#ifdef IPEST_FOSM
- IF(LSENS)CALL PESTWRITESTATISTICS_FOSM(NP,COV)
-#endif
+! !## multiply lateral sensitivities with sensitivities in case pest_niter=0
+! CALL PESTWRITESTATISTICS_PERROR(NP,COV)
+! IF(LSENS)CALL PESTWRITESTATISTICS_FOSM(NP,COV)
  
  IF(LSCALING)THEN
   IF(ALLOCATED(JS))DEALLOCATE(JS); ALLOCATE(JS(NP,PEST_NOBS))
@@ -1611,18 +1540,46 @@ CONTAINS
  MARQUARDT=0.001D0
  DO
 
-  !## construct jqj - NORMAL MATRIX/HESSIAN
-  CALL PEST1JQJ(JQJ,EIGW,EIGV,COV,NP,.FALSE.,root)
+  !## allocate arrays for current selection  
+  NP=0; DO I=1,SIZE(PARAM); IF(PARAM(I)%IACT.EQ.1.AND.PARAM(I)%IGROUP.GT.0)NP=NP+1; ENDDO
+  IF(ALLOCATED(JQJ))DEALLOCATE(JQJ);   ALLOCATE(JQJ (NP,NP))
+  IF(ALLOCATED(JQR))DEALLOCATE(JQR);   ALLOCATE(JQR (NP))
+  IF(ALLOCATED(U  ))DEALLOCATE(U);     ALLOCATE(U   (NP))
+  IF(ALLOCATED(EIGW))DEALLOCATE(EIGW); ALLOCATE(EIGW(NP))
+  IF(ALLOCATED(EIGV))DEALLOCATE(EIGV); ALLOCATE(EIGV(NP,NP))
+  IF(ALLOCATED(C   ))DEALLOCATE(C);    ALLOCATE(C   (NP,NP))
+  IF(ALLOCATED(COV ))DEALLOCATE(COV);  ALLOCATE(COV (NP,NP))
+
+  !## construct jTqr (<--- r is residual for current parameter set)
+  JQR=0.0; I=0
+  DO IP1=1,SIZE(PARAM)  !## row
+  
+   IF(PARAM(IP1)%IACT.NE.1.OR.PARAM(IP1)%IGROUP.LE.0)CYCLE
+  
+   DF1=REAL(PARAM(IP1)%DELTA,8)
+  
+   I=I+1
+   DO J=1,PEST_NOBS
+    DH1=REAL(MSR%DH(IP1,J),8)
+    DH2=REAL(MSR%DH(0,J),8)
+    DJ1=(DH1-DH2)/DF1
+    DJ2=REAL(MSR%DH(0 ,J),8)
+    W  =REAL(MSR%W(J),8)
+    JQR(I)=JQR(I)+(DJ1*W*DJ2)
+   ENDDO
+  ENDDO
+  
+  !## construct jqj - normal matrix/hessian
+  CALL PEST1JQJ(JQJ,EIGW,EIGV,COV,NP,.FALSE.,ROOT)
 
   IF(.NOT.LSCALING)THEN
 
-!  !## levenberg
-!   DO I=1,NP; JQJ(I,I)=JQJ(I,I)+MARQUARDT; ENDDO
    !## levenberg-marquardt
    DO I=1,NP; JQJ(I,I)=JQJ(I,I)+MARQUARDT*COV(I,I); ENDDO
 
-   !## apply scaling
+  !## apply scaling
   ELSE
+
    !## compute scaling matrix
    C=0.0D0; DO I=1,NP; C(I,I)=1.0/SQRT(JQJ(I,I)); ENDDO
 
@@ -1637,10 +1594,10 @@ CONTAINS
      DH1=REAL(MSR%DH(IP1,I),8)
      DH2=REAL(MSR%DH(0,I),8)
      DJ1=(DH1-DH2)/DF1
-!     DJ1=(MSR%DH(IP1,I)-MSR%DH(0,I))/DF1
      JS(J,I)=JS(J,I)+DJ1*C(J,J)
     ENDDO
    ENDDO
+
    !## construct JS-Q-JS - SCALED NORMAL MATRIX
    JQJ=0.0
    DO I=1,NP     !## row
@@ -1650,7 +1607,6 @@ CONTAINS
       DJ2=JS(J,II)
       W  =REAL(MSR%W(II),8)
       JQJ(J,I)=JQJ(J,I)+(DJ1*W*DJ2)
-!      JQJ(J,I)=JQJ(J,I)+(DJ1*MSR%W(II)*DJ2)
      ENDDO
     ENDDO
    ENDDO
@@ -1666,7 +1622,6 @@ CONTAINS
      DJ2=REAL(MSR%DH(0 ,J),8)
      W  =REAL(MSR%W(J),8)
      JQR(I)=JQR(I)+(DJ1*W*DJ2)
-!     JQR(I)=JQR(I)+(DJ1*MSR%W(J)*DJ2)
     ENDDO
    ENDDO
 
@@ -1758,17 +1713,41 @@ CONTAINS
   U=-1.0D0*U !# pointing downhill
 
   !## within parameter adjust-limits
-  IF(PESTUPGRADEVECTOR(1.0,.TRUE.))EXIT
+  IF(PESTUPGRADEVECTOR(1.0,.TRUE.))THEN 
+   !## freeze parameters that still point outwards after gradient update
+   I=0; DO IP1=1,SIZE(PARAM)
+    IF(PARAM(IP1)%IACT.NE.1.OR.PARAM(IP1)%IGROUP.LE.0)CYCLE
+    I=I+1
+    IF(ABS(PARAM(IP1)%IBND).EQ.1)THEN
+     IF(PARAM(IP1)%IBND.EQ.-1.AND.-1.0*U(I).LT.0.0)PARAM(IP1)%IACT=-1 !## still outside parameter domain(min)
+     IF(PARAM(IP1)%IBND.EQ. 1.AND.-1.0*U(I).GT.0.0)PARAM(IP1)%IACT=-1 !## still outside parameter domain(max)
+!    IF(PARAM(IP1)%IBND.EQ.-1.AND.-1.0*JQR(I).LT.0.0)PARAM(IP1)%IACT=-1 !## still outside parameter domain(min)
+!    IF(PARAM(IP1)%IBND.EQ. 1.AND.-1.0*JQR(I).GT.0.0)PARAM(IP1)%IACT=-1 !## still outside parameter domain(max)
+    ENDIF
+   ENDDO
+   !## check whether number of parameters is equal to the number started this loop with
+   MP=0; DO I=1,SIZE(PARAM); IF(PARAM(I)%IACT.EQ.1.AND.PARAM(I)%IGROUP.GT.0)MP=MP+1; ENDDO
+   IF(MP.EQ.NP)EXIT
+!   EXIT
+  ENDIF
+  !## increase marquardt
   MARQUARDT=MARQUARDT*DAMPINGFACTOR
 
  ENDDO !## marquardt-loop
+
+ !## write statistics
+ CALL PEST1JQJ(JQJ,EIGW,EIGV,COV,NP,.TRUE.,ROOT)
+
+ !## multiply lateral sensitivities with sensitivities in case pest_niter=0
+ CALL PESTWRITESTATISTICS_PERROR(NP,COV)
+! IF(LSENS)CALL PESTWRITESTATISTICS_FOSM(NP,COV)
 
  EIGWTHRESHOLD=0.0 !% explained variance
  WRITE(IUPESTOUT,'(/A10,2A15)') 'NE','EIGW(NE)','EIGWTHRESHOLD'
  DO NE=1,NP
   EIGWTHRESHOLD=EIGWTHRESHOLD+EIGW(NE)
   WRITE(IUPESTOUT,'(I10,2F15.7)') NE,EIGW(NE),EIGWTHRESHOLD
-  IF(LSVD.AND.EIGWTHRESHOLD.GT.99.0)EXIT
+  IF(LSVD.AND.EIGWTHRESHOLD.GT.99.0D0)EXIT
  ENDDO
  IF(LSVD)THEN
   WRITE(IUPESTOUT,'(/A,I5,A/)') 'Used ',NE,' Eigenvalues to project on limited number of basisfunctions'
@@ -1791,12 +1770,12 @@ CONTAINS
  END SUBROUTINE PESTGRADIENT
 
  !###====================================================================
- SUBROUTINE PEST1JQJ(JQJ,EIGW,EIGV,COV,NP,LVARIANCE,root)
+ SUBROUTINE PEST1JQJ(JQJ,EIGW,EIGV,COV,NP,LPRINT,ROOT)
  !###====================================================================
  IMPLICIT NONE
- character(len=*),intent(in) :: root
+ CHARACTER(LEN=*),INTENT(IN) :: ROOT
  INTEGER,INTENT(IN) :: NP
- LOGICAL,INTENT(IN) :: LVARIANCE
+ LOGICAL,INTENT(IN) :: LPRINT
  REAL(KIND=8),DIMENSION(NP,NP),INTENT(INOUT) :: JQJ,EIGV,COV
  REAL(KIND=8),DIMENSION(NP),INTENT(INOUT) :: EIGW
  REAL(KIND=8) :: DET
@@ -1829,7 +1808,6 @@ CONTAINS
     DH1=REAL(MSR%DH(IP1,I),8)
     DH2=REAL(MSR%DH(0,I),8)
     DJ1=(DH1-DH2)/DF1
-!    DJ1=(MSR%DH(IP1,I)-MSR%DH(0,I))/DF1
     N=N+1
     JQJ(N,1)=DJ1
     IF(M.GT.1)JQJ(N,2)=JQJ(N,2)+ABS(JQJ(N,1))
@@ -1857,29 +1835,26 @@ CONTAINS
     DH1=REAL(MSR%DH(IP1,J),8)
     DH2=REAL(MSR%DH(0,J),8)
     DJ1=(DH1-DH2)/DF1
- !   DJ1=(MSR%DH(IP1,J)-MSR%DH(0,J))/DF1
     DH1=REAL(MSR%DH(IP2,J),8)
     DJ2=(DH1-DH2)/DF2
-!    DJ2=(MSR%DH(IP2,J)-MSR%DH(0,J))/DF2
     W=REAL(MSR%W(J),8)
     JQJ(II,I)=JQJ(II,I)+(DJ1*W*DJ2)  
    ENDDO
   ENDDO
  ENDDO
 
- !## construct covariance on the pilotpoints
- IF(PEST_IREGULARISATION.EQ.1)THEN
-  CALL PEST_GETQPP(NP,.FALSE.)
-  JQJ=JQJ+QPP
- ENDIF
+! !## construct covariance on the pilotpoints
+! IF(PEST_IREGULARISATION.EQ.1)THEN
+!  CALL PEST_GETQPP(NP,.FALSE.)
+!  JQJ=JQJ+QPP
+! ENDIF
+  
+ IF(ALLOCATED(E  ))DEALLOCATE(E);     ALLOCATE(E   (NP))
+ IF(ALLOCATED(COR ))DEALLOCATE(COR);  ALLOCATE(COR(NP,NP))
+ IF(ALLOCATED(INDX))DEALLOCATE(INDX); ALLOCATE(INDX(NP))
+ IF(ALLOCATED(B   ))DEALLOCATE(B);    ALLOCATE(B(NP,NP))
  
- IF(LVARIANCE)THEN
-
-  IF(ALLOCATED(E  ))DEALLOCATE(E);     ALLOCATE(E   (NP))
-  IF(ALLOCATED(COR ))DEALLOCATE(COR);  ALLOCATE(COR(NP,NP))
-  IF(ALLOCATED(INDX))DEALLOCATE(INDX); ALLOCATE(INDX(NP))
-  IF(ALLOCATED(B   ))DEALLOCATE(B);    ALLOCATE(B(NP,NP))
-
+ IF(LPRINT)THEN
   !## write JQJ matrix
   WRITE(IUPESTOUT,*); WRITE(IUPESTOUT,*) 'Parameter JQJ Matrix'; WRITE(IUPESTOUT,*)
   BLINE=''
@@ -1891,6 +1866,7 @@ CONTAINS
   ENDDO
   WRITE(IUPESTOUT,'(15X,A)') TRIM(BLINE) 
   WRITE(IUPESTOUT,'(A)')
+ 
   I=0
   DO IP1=1,SIZE(PARAM)
    IF(PARAM(IP1)%IACT.EQ.1.AND.PARAM(IP1)%IGROUP.GT.0)THEN
@@ -1899,58 +1875,67 @@ CONTAINS
     WRITE(IUPESTOUT,'(A15,999E15.7)') TRIM(SLINE),(JQJ(I,J),J=1,NP)
    ENDIF
   ENDDO
+ ENDIF
 
-  !## compute determinant of JQJ
-  DET=PEST_FIND_DET(JQJ,NP)
+ !## compute determinant of JQJ
+ DET=PEST_FIND_DET(JQJ,NP)
+
+ IF(LPRINT)THEN
   WRITE(IUPESTOUT,'(/A15,E15.7)') 'Determinant JQJ = ',DET
   WRITE(IUPESTOUT,'(A/)') 'A small value for the Determinant indicates Singularity of the Matrix'
+ ENDIF
 
-  !## copy data
-  B=JQJ
+ !## copy data
+ B=JQJ
   
-  !## eigenvalue of covariance matrix 
-  CALL RED1TRED2_DBL(B,NP,NP,EIGW,E)
-  CALL RED1TQLI_DBL(EIGW,E,NP,NP,B)
-  CALL RED1EIGSRT_DBL(EIGW,B,NP,NP)
-  WRITE(IUPESTOUT,'(/10X,4A15)') 'Eigenvalues','Sing.Values','Variance','Explained Var.'
-  DO I=1,NP; IF(EIGW(I).LE.0.0)EIGW(I)=0.0; ENDDO; TEV=SUM(EIGW)
-  TV=0.0D0
-  DO I=1,NP
-   TV=TV+(EIGW(I)*100.0D0/TEV)
-   IF(EIGW(I).GT.0.0D0)THEN
-    WRITE(IUPESTOUT,'(I10,4F15.7)') I,EIGW(I),SQRT(EIGW(I)),EIGW(I)*100.0/TEV,TV
-   ELSE
-    WRITE(IUPESTOUT,'(I10,4F15.7)') I,EIGW(I),     EIGW(I) ,EIGW(I)*100.0/TEV,TV
-   ENDIF
-  ENDDO
-  EIGV= B  
-  IF(SUM(EIGW).LT.0.0D0)THEN
-   CALL IMOD_UTL_PRINTTEXT('Warning, there is NO information in parameter perturbation',0)
-   CALL IMOD_UTL_PRINTTEXT('Optimization of parameters stopped',2)
+ !## eigenvalue of covariance matrix 
+ CALL RED1TRED2_DBL(B,NP,NP,EIGW,E)
+ CALL RED1TQLI_DBL(EIGW,E,NP,NP,B)
+ CALL RED1EIGSRT_DBL(EIGW,B,NP,NP)
+ IF(LPRINT)WRITE(IUPESTOUT,'(/10X,4A15)') 'Eigenvalues','Sing.Values','Variance','Explained Var.'
+ DO I=1,NP; IF(EIGW(I).LE.0.0)EIGW(I)=0.0; ENDDO; TEV=SUM(EIGW)
+ TV=0.0D0
+ DO I=1,NP
+  TV=TV+(EIGW(I)*100.0D0/TEV)
+  IF(EIGW(I).GT.0.0D0)THEN
+   IF(LPRINT)WRITE(IUPESTOUT,'(I10,4F15.7)') I,EIGW(I),SQRT(EIGW(I)),EIGW(I)*100.0/TEV,TV
+  ELSE
+   IF(LPRINT)WRITE(IUPESTOUT,'(I10,4F15.7)') I,EIGW(I),     EIGW(I) ,EIGW(I)*100.0/TEV,TV
   ENDIF
-  EIGW=(EIGW*100.0D0)/SUM(EIGW)  
+ ENDDO
+ EIGV= B  
+ IF(SUM(EIGW).LT.0.0D0)THEN
+  CALL IMOD_UTL_PRINTTEXT('Warning, there is NO information in parameter perturbation',0)
+  CALL IMOD_UTL_PRINTTEXT('Optimization of parameters stopped',2)
+ ENDIF
+ EIGW=(EIGW*100.0D0)/SUM(EIGW)  
 
-  !## condition number
-  KAPPA=SQRT(EIGW(1))/SQRT(EIGW(NP))
+ !## condition number
+ KAPPA=SQRT(EIGW(1))/SQRT(EIGW(NP))
+ IF(LPRINT)THEN
   WRITE(IUPESTOUT,'(/A,3F15.7/)') 'Condition Number:',SQRT(EIGW(1)),SQRT(EIGW(NP)),KAPPA
   WRITE(IUPESTOUT,'(/A,3F15.7/)') 'Condition Number (kappa):',LOG(KAPPA)
   WRITE(IUPESTOUT,'(/A)') '>>> If Kappa > 15, inversion is a concern due to parameters that are highly correlated <<<'
   WRITE(IUPESTOUT,'(A/)') '>>> If Kappa > 30, inversion is highly questionable due to parameters that are highly correlated <<<'
-  
-  !## compute inverse of (JQJ)-1 -> B - covariance matrix
-  CALL IMOD_UTL_LUDECOMP_DBL(JQJ,INDX,NP,ISING)
-  B=0.0D0; DO I=1,NP; B(I,I)=1.0D0; ENDDO
-  DO I=1,NP; CALL IMOD_UTL_LUBACKSUB_DBL(JQJ,INDX,B(1,I),NP); ENDDO
+ ENDIF 
+
+ !## compute inverse of (JQJ)-1 -> B - covariance matrix
+ CALL IMOD_UTL_LUDECOMP_DBL(JQJ,INDX,NP,ISING)
+ B=0.0D0; DO I=1,NP; B(I,I)=1.0D0; ENDDO
+ DO I=1,NP; CALL IMOD_UTL_LUBACKSUB_DBL(JQJ,INDX,B(1,I),NP); ENDDO
  
-  !## parameter covariance matrix
+ !## parameter covariance matrix
   
-  N=MAX(1,PEST_NOBS-NP)
-  B1=TJ/REAL(N,8)
+ N=MAX(1,PEST_NOBS-NP)
+ B1=TJ/REAL(N,8)
 
+ IF(LPRINT)THEN
   WRITE(IUPESTOUT,*); WRITE(IUPESTOUT,*) 'B1/TJ/N=',B1,TJ,N; WRITE(IUPESTOUT,*)
+ ENDIF
 
-  DO I=1,NP; DO J=1,NP; B(I,J)=B1*B(I,J); ENDDO; ENDDO
+ DO I=1,NP; DO J=1,NP; B(I,J)=B1*B(I,J); ENDDO; ENDDO
 
+ IF(LPRINT)THEN
   WRITE(IUPESTOUT,*); WRITE(IUPESTOUT,*) 'Parameter Covariance Matrix (m2):'; WRITE(IUPESTOUT,*)
 
   BLINE=''
@@ -1962,17 +1947,21 @@ CONTAINS
   ENDDO
   WRITE(IUPESTOUT,'(15X,A)') TRIM(BLINE) 
   WRITE(IUPESTOUT,'(A)')
+ ENDIF
 
-  I=0
-  DO IP1=1,SIZE(PARAM)
-   IF(PARAM(IP1)%IACT.EQ.1.AND.PARAM(IP1)%IGROUP.GT.0)THEN
-    I=I+1
+ I=0
+ DO IP1=1,SIZE(PARAM)
+  IF(PARAM(IP1)%IACT.EQ.1.AND.PARAM(IP1)%IGROUP.GT.0)THEN
+   I=I+1
+   IF(LPRINT)THEN
     WRITE(SLINE,'(3X,A2,2I3.3,A1,I3.3)') PARAM(IP1)%PTYPE,PARAM(IP1)%ILS,PARAM(IP1)%IZONE,'-',PARAM(IP1)%IGROUP
     WRITE(IUPESTOUT,'(A15,999E15.7)') TRIM(SLINE),(B(I,J),J=1,NP)
-    DO J=1,NP; COV(I,J)=B(I,J); ENDDO
    ENDIF
-  ENDDO
+   DO J=1,NP; COV(I,J)=B(I,J); ENDDO
+  ENDIF
+ ENDDO
   
+ IF(LPRINT)THEN
   !## parameter correlation matrix
   WRITE(IUPESTOUT,'(/A)') 'Parameter Correlation Matrix (-)'
   WRITE(IUPESTOUT,'(A)')  'Indicates whether coordinated changes in the parameter values could produce the same simulated values and'
@@ -2115,33 +2104,33 @@ CONTAINS
     IF(PARAM(IP1)%ALPHA(1).LT.MINP)F=MINP-PARAM(IP1)%ALPHA(2)
     IF(PARAM(IP1)%ALPHA(1).GT.MAXP)F=MAXP-PARAM(IP1)%ALPHA(2)
 
-    !## not yet influenced by its parameter boundary
-    IF(PARAM(IP1)%IBND.EQ.0)THEN
-     !## corrects all gradients with this factor
-     F=F/G
-     !## echo correction factor
-     CALL IMOD_UTL_PRINTTEXT('Parameter '//TRIM(IMOD_UTL_ITOS(IP1))//' causes a',-1,IUPESTOUT)
-     CALL IMOD_UTL_PRINTTEXT('correction factor of '//TRIM(IMOD_UTL_RTOS(F,'F',3))// &
-       ' for the Upgrade Vector caused by Hitting its Parameter Boundary',-1,IUPESTOUT)
+!    !## not yet influenced by its parameter boundary
+!    IF(PARAM(IP1)%IBND.EQ.0)THEN
+    !## corrects all gradients with this factor
+    F=F/G
+    !## echo correction factor
+    CALL IMOD_UTL_PRINTTEXT('Parameter '//TRIM(IMOD_UTL_ITOS(IP1))//' causes a',-1,IUPESTOUT)
+    CALL IMOD_UTL_PRINTTEXT('correction factor of '//TRIM(IMOD_UTL_RTOS(F,'F',3))// &
+      ' for the Upgrade Vector caused by Hitting its Parameter Boundary',-1,IUPESTOUT)
 
-     !## adjust all parameters
-     DO IP2=1,SIZE(PARAM) !IP1 
-      G=PARAM(IP2)%ALPHA(1)-PARAM(IP2)%ALPHA(2)
-      G=G*F
-      PARAM(IP2)%ALPHA(1)=PARAM(IP2)%ALPHA(2)+G !## update parameters
-     ENDDO
+    !## adjust all parameters
+    DO IP2=1,SIZE(PARAM) !IP1 
+     G=PARAM(IP2)%ALPHA(1)-PARAM(IP2)%ALPHA(2)
+     G=G*F
+     PARAM(IP2)%ALPHA(1)=PARAM(IP2)%ALPHA(2)+G !## update parameters
+    ENDDO
 
-    ELSE
+!    ELSE
 
-     CALL IMOD_UTL_PRINTTEXT('Parameter '//TRIM(IMOD_UTL_ITOS(IP1))//' causes a conflict on the parameter boundary.',-1,IUPESTOUT)
-     CALL IMOD_UTL_PRINTTEXT('The Steepest Descent approach wants to move the parameter back in parameter space, the Gauss-Newton approach',-1,IUPESTOUT)
-     CALL IMOD_UTL_PRINTTEXT('wants to move the parameter further outside the parameter space.',-1,IUPESTOUT)
-     CALL IMOD_UTL_PRINTTEXT('iMOD excludes this parameter in this iteration cycle, nevertheless.',-1,IUPESTOUT)
-     PARAM(IP1)%ALPHA(1)=PARAM(IP1)%ALPHA(2)
+!     CALL IMOD_UTL_PRINTTEXT('Parameter '//TRIM(IMOD_UTL_ITOS(IP1))//' causes a conflict on the parameter boundary.',-1,IUPESTOUT)
+!     CALL IMOD_UTL_PRINTTEXT('The Steepest Descent approach wants to move the parameter back in parameter space, the Gauss-Newton approach',-1,IUPESTOUT)
+!     CALL IMOD_UTL_PRINTTEXT('wants to move the parameter further outside the parameter space.',-1,IUPESTOUT)
+!     CALL IMOD_UTL_PRINTTEXT('iMOD excludes this parameter in this iteration cycle, nevertheless.',-1,IUPESTOUT)
+!     PARAM(IP1)%ALPHA(1)=PARAM(IP1)%ALPHA(2)
 !     CALL IMOD_UTL_PRINTTEXT('iMOD tries to solve this by picking a smaller value for the Marquardt.',-1,IUPESTOUT)
 !     RETURN
 
-    ENDIF
+!    ENDIF
 
    ENDIF
 
@@ -2158,9 +2147,9 @@ CONTAINS
  PARAM%IBND=0
  DO IP1=1,SIZE(PARAM)
 
-  !## parameter is at the boundary whenever less than 1% away
-  IF(ABS(PARAM(IP1)%ALPHA(1)-PARAM(IP1)%MIN).LT.XPBND)PARAM(IP1)%IBND=-1 !## min
-  IF(ABS(PARAM(IP1)%MAX)-PARAM(IP1)%ALPHA(1).LT.XPBND)PARAM(IP1)%IBND= 1 !## max
+!  !## parameter is at the boundary whenever less than 1% away
+!  IF(ABS(PARAM(IP1)%ALPHA(1)-PARAM(IP1)%MIN).LT.XPBND)PARAM(IP1)%IBND=-1 !## min
+!  IF(ABS(PARAM(IP1)%MAX)-PARAM(IP1)%ALPHA(1).LT.XPBND)PARAM(IP1)%IBND= 1 !## max
 
   IF(PARAM(IP1)%LOG)THEN
    WRITE(LINE,'(2F15.7,I15)') EXP(PARAM(IP1)%ALPHA(1)),EXP(PARAM(IP1)%ALPHA(2)),PARAM(IP1)%IBND
@@ -2203,7 +2192,7 @@ CONTAINS
  CALL IMOD_UTL_PRINTTEXT(TRIM(BLINE),-1,IUPESTOUT)
 
  IF(GRADUPDATE(PEST_ITER).LT.PEST_PADJ)THEN
-  CALL IMOD_UTL_PRINTTEXT('Proces stopped, less than '//TRIM(IMOD_UTL_RTOS(PEST_PADJ,'F',3))//' of vector length',-1,IUPESTOUT)
+  CALL IMOD_UTL_PRINTTEXT('Process stopped, less than '//TRIM(IMOD_UTL_RTOS(PEST_PADJ,'F',3))//' of vector length',-1,IUPESTOUT)
   STOP
  ENDIF
 
@@ -2482,7 +2471,7 @@ CONTAINS
  ENDDO
  
  PJ=0.0D0
- IF(PEST_IREGULARISATION.EQ.1)CALL PEST_GETQPP(NP,.TRUE.)
+! IF(PEST_IREGULARISATION.EQ.1)CALL PEST_GETQPP(NP,.TRUE.)
   
  CALL IMOD_UTL_PRINTTEXT('Best Match Value   : '//TRIM(IMOD_UTL_RTOS(REAL(TJ),'G',7)),-1,IUPESTOUT)
  CALL IMOD_UTL_PRINTTEXT('Plausibility Value : '//TRIM(IMOD_UTL_RTOS(REAL(PJ),'G',7)),-1,IUPESTOUT)
@@ -2544,88 +2533,88 @@ CONTAINS
   
  END FUNCTION PEST_GOODNESS_OF_FIT
  
- !###====================================================================
- SUBROUTINE PEST_GETQPP(NP,LPJ)
- !###====================================================================
- IMPLICIT NONE
- INTEGER,INTENT(IN) :: NP
- LOGICAL,INTENT(IN) :: LPJ
- INTEGER :: I,J,II,JJ
- REAL :: ALPHA,GAMMA,X1,X2,Y1,Y2,RANGE
- REAL,ALLOCATABLE,DIMENSION(:) :: AQPP
- 
- IF(ALLOCATED(QPP))DEALLOCATE(QPP)
- ALLOCATE(QPP(NP,NP)); QPP =0.0
- !## fill array zone and set appropriate pointers in type 
- II=0; DO I=1,SIZE(PARAM)
-  !## skip zero-zones, inactive parameters/groupmembers
-  IF(PARAM(I)%NODES.LE.0.OR.PARAM(I)%IACT.NE.1.OR.PARAM(I)%IGROUP.LE.0)CYCLE
-  
-  II=II+1
-  
-  !## zones
-  IF(PARAM(I)%ZTYPE.EQ.0)THEN
-   !## add covariance ... if known - now leave it zero
-   
-  !## pilotpoints
-  ELSEIF(PARAM(I)%ZTYPE.EQ.1)THEN
-#ifdef IPEST_PILOTPOINTS
-   RANGE=PEST_GETRANGE()
-   !## fill in covariance matrix based upon semivariogram
-   X1=PARAM(I)%XY(1,1); Y1=PARAM(I)%XY(1,2)
-   JJ=0; DO J=1,SIZE(PARAM)
-    !## skip zero-zones, inactive parameters/groupmembers
-    IF(PARAM(J)%NODES.LE.0.OR.PARAM(J)%IACT.NE.1.OR.PARAM(J)%IGROUP.LE.0)CYCLE
-    JJ=JJ+1
-    X2=PARAM(J)%XY(1,1); Y2=PARAM(J)%XY(1,2)
-    GAMMA=KRIGING_GETGAMMA(X1,Y1,X2,Y2,RANGE,SILL,NUGGET,PEST_KTYPE)
-    GAMMA=SILL-GAMMA
-    QPP(II,JJ)=1.0/(2.0*SQRT(GAMMA))
-   ENDDO
-#endif   
-  ENDIF
- ENDDO
-
- !## compute plausibility value
- IF(LPJ)THEN
- 
-  !## multiply with residual pilotpoints, homogeneous criterion
-  ALLOCATE(AQPP(NP)); AQPP=0.0
-  JJ=0; DO J=1,SIZE(PARAM)
-
-   !## skip zero-zones, inactive parameters/groupmembers
-   IF(PARAM(J)%NODES.LE.0.OR.PARAM(J)%IACT.NE.1.OR.PARAM(J)%IGROUP.LE.0)CYCLE
-   
-   JJ=JJ+1
-   
-   II=0; DO I=1,SIZE(PARAM)
-
-    !## skip zero-zones, inactive parameters/groupmembers
-    IF(PARAM(I)%NODES.LE.0.OR.PARAM(I)%IACT.NE.1.OR.PARAM(I)%IGROUP.LE.0)CYCLE
-    
-    II=II+1
-    
-    ALPHA=0.0-PARAM(I)%ALPHA(1)
-    AQPP(JJ)=AQPP(JJ)+ALPHA*QPP(JJ,II)
-
-   ENDDO
-  ENDDO
- 
-  !## multiply with residual pilotpoints, homogeneous criterion
-  PJ=0.0D0
-  II=0; DO I=1,SIZE(PARAM)
-   !## skip zero-zones, inactive parameters/groupmembers
-   IF(PARAM(I)%NODES.LE.0.OR.PARAM(I)%IACT.NE.1.OR.PARAM(I)%IGROUP.LE.0)CYCLE
-   II=II+1
-   ALPHA=0.0-PARAM(I)%ALPHA(1)
-   PJ=PJ+AQPP(II)*ALPHA
-  ENDDO
-
-  DEALLOCATE(AQPP)
- 
- ENDIF
-
- END SUBROUTINE PEST_GETQPP
+ !!###====================================================================
+ !SUBROUTINE PEST_GETQPP(NP,LPJ)
+ !!###====================================================================
+ !IMPLICIT NONE
+ !INTEGER,INTENT(IN) :: NP
+ !LOGICAL,INTENT(IN) :: LPJ
+ !INTEGER :: I,J,II,JJ
+ !REAL :: ALPHA,GAMMA,X1,X2,Y1,Y2,RANGE
+ !REAL,ALLOCATABLE,DIMENSION(:) :: AQPP
+ !
+ !IF(ALLOCATED(QPP))DEALLOCATE(QPP)
+ !ALLOCATE(QPP(NP,NP)); QPP =0.0
+ !!## fill array zone and set appropriate pointers in type 
+ !II=0; DO I=1,SIZE(PARAM)
+ ! !## skip zero-zones, inactive parameters/groupmembers
+ ! IF(PARAM(I)%NODES.LE.0.OR.PARAM(I)%IACT.NE.1.OR.PARAM(I)%IGROUP.LE.0)CYCLE
+ ! 
+ ! II=II+1
+ ! 
+ ! !## zones
+ ! IF(PARAM(I)%ZTYPE.EQ.0)THEN
+ !  !## add covariance ... if known - now leave it zero
+ !  
+ ! !## pilotpoints
+ ! ELSEIF(PARAM(I)%ZTYPE.EQ.1)THEN
+ !
+ !  RANGE=PEST_GETRANGE()
+ !  !## fill in covariance matrix based upon semivariogram
+ !  X1=PARAM(I)%XY(1,1); Y1=PARAM(I)%XY(1,2)
+ !  JJ=0; DO J=1,SIZE(PARAM)
+ !   !## skip zero-zones, inactive parameters/groupmembers
+ !   IF(PARAM(J)%NODES.LE.0.OR.PARAM(J)%IACT.NE.1.OR.PARAM(J)%IGROUP.LE.0)CYCLE
+ !   JJ=JJ+1
+ !   X2=PARAM(J)%XY(1,1); Y2=PARAM(J)%XY(1,2)
+ !   GAMMA=KRIGING_GETGAMMA(X1,Y1,X2,Y2,RANGE,SILL,NUGGET,PEST_KTYPE)
+ !   GAMMA=SILL-GAMMA
+ !   QPP(II,JJ)=1.0/(2.0*SQRT(GAMMA))
+ !  ENDDO
+ !
+ ! ENDIF
+ !ENDDO
+ !
+ !!## compute plausibility value
+ !IF(LPJ)THEN
+ !
+ ! !## multiply with residual pilotpoints, homogeneous criterion
+ ! ALLOCATE(AQPP(NP)); AQPP=0.0
+ ! JJ=0; DO J=1,SIZE(PARAM)
+ !
+ !  !## skip zero-zones, inactive parameters/groupmembers
+ !  IF(PARAM(J)%NODES.LE.0.OR.PARAM(J)%IACT.NE.1.OR.PARAM(J)%IGROUP.LE.0)CYCLE
+ !  
+ !  JJ=JJ+1
+ !  
+ !  II=0; DO I=1,SIZE(PARAM)
+ !
+ !   !## skip zero-zones, inactive parameters/groupmembers
+ !   IF(PARAM(I)%NODES.LE.0.OR.PARAM(I)%IACT.NE.1.OR.PARAM(I)%IGROUP.LE.0)CYCLE
+ !   
+ !   II=II+1
+ !   
+ !   ALPHA=0.0-PARAM(I)%ALPHA(1)
+ !   AQPP(JJ)=AQPP(JJ)+ALPHA*QPP(JJ,II)
+ !
+ !  ENDDO
+ ! ENDDO
+ !
+ ! !## multiply with residual pilotpoints, homogeneous criterion
+ ! PJ=0.0D0
+ ! II=0; DO I=1,SIZE(PARAM)
+ !  !## skip zero-zones, inactive parameters/groupmembers
+ !  IF(PARAM(I)%NODES.LE.0.OR.PARAM(I)%IACT.NE.1.OR.PARAM(I)%IGROUP.LE.0)CYCLE
+ !  II=II+1
+ !  ALPHA=0.0-PARAM(I)%ALPHA(1)
+ !  PJ=PJ+AQPP(II)*ALPHA
+ ! ENDDO
+ !
+ ! DEALLOCATE(AQPP)
+ !
+ !ENDIF
+ !
+ !END SUBROUTINE PEST_GETQPP
  
  !###====================================================================
  SUBROUTINE PEST_BATCHFILES()
