@@ -388,13 +388,11 @@ CONTAINS
    
    !## get distance between points - remove whenever intersected by faults
    DXY=KRIGING_DIST(2,XCD(ID),YCD(ID),X,Y,0,IDF,IBLANKOUT,BO_VALUE,USERANGE,RAT,ANI,IBLNTYPE)
-!   DXY=KRIGING_DIST(XD(ID),YD(ID),X,Y,0,IDF,IBLANKOUT,BO_VALUE,USERANGE,RAT,ANI)
    !## otherside of fault or distance too big, take next
    IF(DXY.GT.USERANGE)CYCLE
    
    !## determine quadrant
    IQ=1; IF(IQUADRANT.EQ.1)IQ=KRIGING_QUADRANT(XCD(ID),YCD(ID),X,Y)
-!   IQ=1; IF(IQUADRANT.EQ.1)IQ=KRIGING_QUADRANT(XD(ID),YD(ID),X,Y)
    
    !## not in current list
    IF(DXY.GE.SELD(IQ,MINP))CYCLE
@@ -561,40 +559,47 @@ CONTAINS
  KRIGING_DIST=UTL_DIST(X1,Y1,X0,Y0)
 
  !## to far away (include 1.0*maxdist on edge - for smooth edges)
- IF(KRIGING_DIST.GE.MAXDIST)RETURN !THEN
- IF(KRIGING_DIST.LE.0.0)THEN
-!  IF(IMODE.EQ.1)RETURN
-! if(imode.eq.2)then
-!write(*,*)
-! endif
-  RETURN
-!  WRITE(*,'(/A/)') ' Distance equal to zero, not possible !'; STOP
- ENDIF
+ IF(KRIGING_DIST.GE.MAXDIST)RETURN
+ IF(KRIGING_DIST.LE.0.0)RETURN
   
- !## see whether nodata-areas are crossed
+ !## see whether nodata-areas are crossed/similar area
  IF(IBLANKOUT.EQ.1)THEN
-  !## aspect
-  DY=(Y0-Y1); DX=(X0-X1); A=ATAN2(DY,DX)
-  SSX=IDF%DX
-  D=KRIGING_DIST
-  CALL IDFIROWICOL(IDF,IROW,ICOL,X1,Y1)
-  DX=COS(A)*SSX
-  DY=SIN(A)*SSX
-  X3=X1; Y3=Y1
-  DO
-   X3=X3+DX; Y3=Y3+DY
-   !## get new grid location
-   CALL IDFIROWICOL(IDF,IROW,ICOL,X3,Y3)
-   !## outside window
-   IF(IROW.NE.0.AND.ICOL.NE.0)THEN
-    !## if crossed-idf value is equal nodata increase distance
-    IF(IDF%X(ICOL,IROW).EQ.BO_VALUE)THEN 
-     KRIGING_DIST=MAXDIST+1.0
-     EXIT
+
+  !## include in case point can be "seen" - fault method
+  IF(IBLNTYPE.EQ.0)THEN
+
+   !## aspect
+   DY=(Y0-Y1); DX=(X0-X1); A=ATAN2(DY,DX)
+   SSX=IDF%DX
+   D=KRIGING_DIST
+   CALL IDFIROWICOL(IDF,IROW,ICOL,X1,Y1)
+   DX=COS(A)*SSX
+   DY=SIN(A)*SSX
+   X3=X1; Y3=Y1
+   DO
+    X3=X3+DX; Y3=Y3+DY
+    !## get new grid location
+    CALL IDFIROWICOL(IDF,IROW,ICOL,X3,Y3)
+    !## outside window
+    IF(IROW.NE.0.AND.ICOL.NE.0)THEN
+     !## if crossed-idf value is equal nodata increase distance
+     IF(IDF%X(ICOL,IROW).EQ.BO_VALUE)THEN 
+      KRIGING_DIST=MAXDIST+1.0
+      EXIT
+     ENDIF
     ENDIF
-   ENDIF
-   SSX=SSX+IDF%DX; IF(SSX.GT.D)EXIT
-  ENDDO
+    SSX=SSX+IDF%DX; IF(SSX.GT.D)EXIT
+   ENDDO
+
+  !## include in case of similar area
+  ELSEIF(IBLNTYPE.EQ.1)THEN
+
+   CALL IDFIROWICOL(IDF,IROW,ICOL,X0,Y0); X3=IDF%X(ICOL,IROW)
+   CALL IDFIROWICOL(IDF,IROW,ICOL,X1,Y1); X4=IDF%X(ICOL,IROW)
+   !## not similar area
+   IF(X3.EQ.BO_VALUE.OR.X4.EQ.BO_VALUE)KRIGING_DIST=MAXDIST+1.0
+
+  ENDIF
  ENDIF
  
  !## including a genfile

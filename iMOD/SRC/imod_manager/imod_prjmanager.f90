@@ -2862,19 +2862,26 @@ TOPICLOOP: DO ITOPIC=1,MAXTOPICS
   DO I=1,SIZE(PEST%IDFFILES)
 
    LINE=TRIM(PEST%IDFFILES(I))
-
+  
    IF(IOPTION.EQ.2)THEN
     Z=INT(UTL_GETREAL(LINE,IOS))
     IF(IOS.EQ.0)THEN
      IDF%X=Z
+     !## save array, do not correct for boundary condition as we not yet know for what layer the zone will apply
+     IF(.NOT.PMANAGER_SAVEMF2005_MOD_U2DREL(TRIM(DIR)//'\PST1\ZONE_IZ'//TRIM(ITOS(I))//'.ARR',IDF,0,IU,1,0))RETURN
     ELSE
-     !## upscale is using number 15, zones
-     IDF%FNAME=LINE; SCL_UP=15; SCL_D=0
-     !## read/clip/scale idf file
-     IF(.NOT.IDFREADSCALE(IDF%FNAME,IDF,SCL_UP,SCL_D,1.0,0))RETURN
+     !## read idf
+     IF(INDEX(UTL_CAP(LINE,'U'),'.IDF',.TRUE.).GT.0)THEN
+      !## upscale is using number 15, zones
+      IDF%FNAME=LINE; SCL_UP=15; SCL_D=0
+      !## read/clip/scale idf file
+      IF(.NOT.IDFREADSCALE(IDF%FNAME,IDF,SCL_UP,SCL_D,1.0,0))RETURN
+      !## save array, do not correct for boundary condition as we not yet know for what layer the zone will apply
+      IF(.NOT.PMANAGER_SAVEMF2005_MOD_U2DREL(TRIM(DIR)//'\PST1\ZONE_IZ'//TRIM(ITOS(I))//'.ARR',IDF,0,IU,1,0))RETURN
+     ELSE
+      WRITE(IU,'(A)') TRIM(LINE)    
+     ENDIF
     ENDIF
-    !## save array, do not correct for boundary condition as we not yet know for what layer the zone will apply
-    IF(.NOT.PMANAGER_SAVEMF2005_MOD_U2DREL(TRIM(DIR)//'\PST1\ZONE_IZ'//TRIM(ITOS(I))//'.ARR',IDF,0,IU,1,0))RETURN
    ELSE
     WRITE(IU,'(A)') TRIM(LINE)    
    ENDIF

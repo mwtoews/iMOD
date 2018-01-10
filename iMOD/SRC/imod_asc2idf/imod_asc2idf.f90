@@ -1046,16 +1046,14 @@ CONTAINS
    !## blank out initial grid to use as barrier ...
    IDF(1)%X=IDF(1)%NODATA
    IF(ASSF_IDEPTH.EQ.1)THEN
-    IF(IDF(1)%NODATA.NE.   0.0)BO_VALUE=0.0    !IDF(1)%X=0.0    !IDF(1)%NODATA
-    IF(IDF(1)%NODATA.NE.-999.9)BO_VALUE=-999.9 !IDF(1)%X=-999.9 !IDF(1)%NODATA
+    IF(IDF(1)%NODATA.NE.   0.0)BO_VALUE=0.0
+    IF(IDF(1)%NODATA.NE.-999.9)BO_VALUE=-999.9
     IDF(1)%TOP=ASSF_TOP 
     IDF(1)%BOT=ASSF_TOP-ASSF_DZ
     CALL ASC2IDF_INT_BLANKOUT(BO_VALUE)
    ENDIF
     
    IF(MINP.EQ.0)MINP=SIZE(XP)
-   !## each cell need to be interpolated - not equal to nodata
-!   IDF(1)%X=IDF(1)%NODATA
    !## simple kriging (+), ordinary kriging(-)
    KTYPE=SIGN(KTYPE,IGRIDFUNC)
    CALL KRIGING_READGEN(1,1,(/BLNFILE/),(/1/))
