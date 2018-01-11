@@ -283,7 +283,8 @@ c read hfb before ani for corrections of ani
       IF(IUNIT(IUCHD).GT.0) CALL GWF2CHD7AR(IUNIT(IUCHD),IGRID)
 !      IF(IUNIT(IUHFB6).GT.0) CALL GWF2HFB7AR(IUNIT(IUHFB6),IGRID)
       IF(IUNIT(IUSFR).GT.0) CALL GWF2SFR7AR(IUNIT(IUSFR),IUNIT(IUBCF6),
-     1      IUNIT(IULPF), IUNIT(IUHUF2),IUNIT(IUGWT),NSOL,IOUTS,IGRID)
+     1      IUNIT(IULPF), IUNIT(IUHUF2),IUNIT(IUGWT),NSOL,IOUTS,
+     1      IUNIT(IUUZF),IGRID)
       IF(IUNIT(IUUZF).GT.0) CALL GWF2UZF1AR(IUNIT(IUUZF),IUNIT(IUBCF6),
      1                                IUNIT(IULPF),IUNIT(IUHUF2),IGRID)
       IF(IUNIT(IULAK).GT.0 .OR. IUNIT(IUSFR).GT.0) CALL GWF2LAK7AR(
@@ -617,7 +618,7 @@ c next stress period
 C7------SIMULATE EACH STRESS PERIOD.
 c      DO 100 KPER = 1, NPER
         CALL GWF2BAS7ST(KKPER,IGRID)
-        if(IUNIT(IUMET).gt.0) call gwf2met1st(kkper,igrid)                    ! MET
+        IF(IUNIT(IUMET).GT.0) CALL GWF2MET1ST(KKPER,IGRID)                    ! MET
         IF(IUNIT(IUIBS).GT.0) CALL GWF2IBS7ST(KKPER,IGRID)
         IF(IUNIT(IUSUB).GT.0) CALL GWF2SUB7ST(KKPER,IGRID)
         IF(IUNIT(IUSWT).GT.0) CALL GWF2SWT7ST(KKPER,IGRID)
@@ -640,20 +641,27 @@ C----------READ USING PACKAGE READ AND PREPARE MODULES.
         IF(IUNIT(IUHYD).GT.0 .AND. IUNIT(IUSTR).GT.0)
      1                     CALL GWF2HYD7STR7RP(IUNIT(IUHYD),KKPER,IGRID)
         IF(IUNIT(IUCHD).GT.0) CALL GWF2CHD7RP(IUNIT(IUCHD),IGRID)
+
+!        SUBROUTINE GWF2SFR7RP(In, Iunitgwt, Iunitlak, Kkper, Kkstp, Nsol,
+!     +                      Iouts, Iunitbcf, Iunitlpf, Iunithuf, 
+!     +                      Iunituzf, Igrid)
+
         IF(IUNIT(IUSFR).GT.0) CALL GWF2SFR7RP(IUNIT(IUSFR),IUNIT(IUGWT),
-     1                                     IUNIT(IULAK),KKPER,NSOL,
-     2                                     IOUTS,IGRID)
+     1   IUNIT(IULAK),KKPER,KKSTP,NSOL,IOUTS,IUNIT(IUBCF6),IUNIT(IULPF),
+     1   IUNIT(IUHUF2),IUNIT(IUUZF),IGRID)
         IF(IUNIT(IUHYD).GT.0 .AND. IUNIT(IUSFR).GT.0)
      1                     CALL GWF2HYD7SFR7RP(IUNIT(IUHYD),KKPER,IGRID)
         IF(IUNIT(IUUZF).GT.0) CALL GWF2UZF1RP(IUNIT(IUUZF),KKPER,IGRID)
+
+!        SUBROUTINE GWF2LAK7RP(IN,IUNITBCF,IUNITGWT,IUNITLPF,IUNITHUF,
+!     +                      IUNITSFR,IUNITUZF,KKPER,NSOL,IOUTS,IGRID)
+
         IF(IUNIT(IULAK).GT.0) CALL GWF2LAK7RP(IUNIT(IULAK),
-     1                                        IUNIT(IUBCF6),
-     1               IUNIT(IUGWT),IUNIT(IULPF),IUNIT(IUHUF2),
-     1               IUNIT(IUSFR),IUNIT(IUUZF),
-     2               KKPER,NSOL,IOUTS,IGRID)
+     1     IUNIT(IUBCF6),IUNIT(IUGWT),IUNIT(IULPF),IUNIT(IUHUF2),
+     1     IUNIT(IUSFR),IUNIT(IUUZF),KKPER,NSOL,IOUTS,IGRID)
         IF(IUNIT(IUGAGE).GT.0.AND.KKPER.EQ.1)
-     1             CALL GWF2GAG7RP(IUNIT(IUGWT),
-     1             IUNIT(IULAK),IUNIT(IUUZF),NSOL,IGRID)
+     1     CALL GWF2GAG7RP(IUNIT(IUGWT),IUNIT(IULAK),IUNIT(IUUZF),NSOL,
+     1     IGRID)
         IF(IUNIT(IUETS).GT.0) CALL GWF2ETS7RP(IUNIT(IUETS),IGRID)
         IF(IUNIT(IUDRT).GT.0) CALL GWF2DRT7RP(IUNIT(IUDRT),IGRID)
         IF(IUNIT(IUMNW2).GT.0) CALL GWF2MNW27RP(IUNIT(IUMNW2),KKPER,
@@ -874,14 +882,18 @@ C7C2A---FORMULATE THE FINITE DIFFERENCE EQUATIONS.
             IF(IUNIT(IUIBS).GT.0) CALL GWF2IBS7FM(KKPER,IGRID)
             IF(IUNIT(IUETS).GT.0) CALL GWF2ETS7FM(IGRID)
             IF(IUNIT(IUDRT).GT.0) CALL GWF2DRT7FM(IGRID)
+!                  SUBROUTINE GWF2UZF1FM(Kkper, Kkstp, Kkiter, Iunitsfr, Iunitlak, 
+!     +                      Iunitcfp, Igrid)
             IF(IUNIT(IUUZF).GT.0) CALL GWF2UZF1FM(KKPER,KKSTP,KKITER,
      1                           IUNIT(IUSFR),IUNIT(IULAK),
      1                           IUNIT(IUCFP),IGRID)
+!           SUBROUTINE GWF2SFR7FM(Kkiter, Kkper, Kkstp, Iunitlak, Iunitrch, 
+!     +                      Iunituzf, Igrid)
             IF(IUNIT(IUSFR).GT.0) CALL GWF2SFR7FM(KKITER,KKPER,KKSTP,
-     1                              IUNIT(IULAK),IGRID)
+     1        IUNIT(IULAK),IUNIT(IURCH),IUNIT(IUUZF),IGRID)
+!           SUBROUTINE GWF2LAK7FM(KKITER,KKPER,KKSTP,IUNITSFR,IUNITUZF,IGRID)
             IF(IUNIT(IULAK).GT.0) CALL GWF2LAK7FM(KKITER,KKPER,KKSTP,
-     1                                     IUNIT(IUSFR),IUNIT(IUUZF),
-     2                                     IGRID)
+     1        IUNIT(IUSFR),IUNIT(IUUZF),IGRID)
             IF(IUNIT(IUMNW2).GT.0) THEN
               IF (IUNIT(IUBCF6).GT.0) THEN
                 CALL GWF2MNW27BCF(KPER,IGRID)
@@ -1204,11 +1216,16 @@ C7C4----CALCULATE BUDGET TERMS. SAVE CELL-BY-CELL FLOW TERMS.
           IF(IUNIT(IUIBS).GT.0) CALL GWF2IBS7BD(KKSTP,KKPER,IGRID)
           IF(IUNIT(IUETS).GT.0) CALL GWF2ETS7BD(KKSTP,KKPER,IGRID)
           IF(IUNIT(IUDRT).GT.0) CALL GWF2DRT7BD(KKSTP,KKPER,IGRID)
+!           SUBROUTINE GWF2UZF1BD(Kkstp, Kkper, Iunitlak, Iunitsfr, Igrid)
           IF(IUNIT(IUUZF).GT.0) CALL GWF2UZF1BD(KKSTP,KKPER,
-     1                             IUNIT(IULAK),IGRID)
+     1                             IUNIT(IULAK),IUNIT(IUSFR),IGRID)
+!           SUBROUTINE GWF2SFR7BD(Kkstp, Kkper, Iunitgwt, Iunitlak, Iunitgage,
+!     +                      Iunituzf, Nsol, Iunitrch, Igrid)  !cjm (added Iunitrch) 
           IF(IUNIT(IUSFR).GT.0) CALL GWF2SFR7BD(KKSTP,KKPER,
      1                        IUNIT(IUGWT),IUNIT(IULAK),IUNIT(IUGAGE),
-     1                        IUNIT(IUUZF),NSOL,IGRID)
+     1                        IUNIT(IUUZF),NSOL,IUNIT(IURCH),IGRID)
+!           SUBROUTINE GWF2LAK7BD(KSTP,KPER,IUNITGWT,IUNITGAGE,IUNITSFR,
+!     1                     IUNITUZF,NSOL,IGRID)
           IF(IUNIT(IULAK).GT.0) CALL GWF2LAK7BD(KKSTP,KKPER,
      1                       IUNIT(IUGWT),IUNIT(IUGAGE),IUNIT(IUSFR),
      1                       IUNIT(IUUZF),NSOL,IGRID)
