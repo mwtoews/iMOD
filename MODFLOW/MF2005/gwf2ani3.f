@@ -340,7 +340,9 @@ C4------READ ANISOTROPY-FACTOR EN -HOEK
 
       ! save pointers to data and return.
       call sgwf2ani3psv(igrid)
-
+      
+!      write(*,*) 'finished ani'
+      
       return
       end
 

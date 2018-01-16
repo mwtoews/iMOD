@@ -53,10 +53,10 @@ end subroutine pest1log
 subroutine pest1alpha_grid(ptype,a,nrow,ncol,nlay,iout,a2)
 !###====================================================================
 use imod_utl, only: imod_utl_printtext,imod_utl_itos,imod_utl_rtos,imod_utl_createdir, &
-   utl_kriging_range,utl_kriging_main !utl_kriging_init,utl_kriging_getgamma,utl_kriging_fillsystem
+   utl_kriging_range,utl_kriging_main
 use gwfmetmodule, only: cdelr, cdelc
-use global, only: lipest, ibound !, delr, delc
-use pestvar, only: param, pest_iter,lgrad,llnsrch,pest_igrad,iupestout,pest_ktype
+use global, only: lipest, ibound 
+use pestvar, only: param, pest_iter,lgrad,llnsrch,pest_igrad,iupestout,pest_ktype,pest_krange,blnkout
 
 implicit none
 
@@ -81,6 +81,7 @@ CHARACTER(LEN=2),DIMENSION(6) :: PPPARAM
 DATA PPPARAM/'KD','KH','KV','VC','SC','VA'/ !## variable for pilotpoints
 
 !###======================================================================
+
 
 !## initialize parameters
 if(pest_iter.eq.0)then
@@ -186,7 +187,8 @@ do i=1,size(param)
    if(param(i)%igroup.gt.0)then
     line=' * '//param(i)%ptype//' adjusted ('//trim(imod_utl_itos(param(i)%nodes))// &
       ')with alpha='//trim(imod_utl_rtos(fct,'f',7))
-    call imod_utl_printtext(trim(line),-1,iupestout)
+      WRITE(*,*) TRIM(LINE)
+!      call imod_utl_printtext(trim(line),-1,iupestout)
    endif
  end do
 
@@ -226,8 +228,12 @@ do i=1,size(param)
   IF(NXYZ.EQ.0)CYCLE
 
   NODATA=-999.99; ALLOCATE(XPP(NCOL,NROW)); XPP=NODATA
-  RANGE=UTL_KRIGING_RANGE(CDELR(0),CDELR(NCOL),CDELC(NROW),CDELC(0))
-    
+  IF(PEST_KRANGE.GT.0.0)THEN
+   RANGE=PEST_KRANGE
+  ELSE
+   RANGE=UTL_KRIGING_RANGE(CDELR(0),CDELR(NCOL),CDELC(NROW),CDELC(0))
+  ENDIF
+
   CALL imod_utl_printtext('Kriging applied Range:'//TRIM(IMOD_UTL_RTOS(RANGE,'F',2))//' meter',1)
 
   !## apply kriging interpolation
@@ -236,18 +242,24 @@ do i=1,size(param)
    IF(IBOUND(ICOL,IROW,ILS).EQ.0)THEN
     XPP(ICOL,IROW)=NODATA
    ELSE
+    IF(ASSOCIATED(BLNKOUT%X))THEN
+     IF(BLNKOUT%X(ICOL,IROW).LE.0.0)XPP(ICOL,IROW)=0.0
+    ENDIF
     XPP(ICOL,IROW)=EXP(XPP(ICOL,IROW))
     !## areas outside range do get a value of 0.0, convert to 1.0
     IF(XPP(ICOL,IROW).EQ.0.0)XPP(ICOL,IROW)=1.0
    ENDIF
   ENDDO; ENDDO
   
-  fname=trim(dir)//char(92)//trim(ppparam(ipp))//'_l'//trim(imod_utl_itos(ils))//'.idf'
+  fname=trim(dir)//char(92)//'kriging_'//trim(ppparam(ipp))//'_l'//trim(imod_utl_itos(ils))//'.idf'
   CALL met1wrtidf(fname,xpp,ncol,nrow,nodata,iout)
 
   SELECT CASE (PPPARAM(IPP))
    CASE ('KD','KH','VC','KV','SC','VA')  !## transmissivities
-    A(:,:,ILS)=A(:,:,ILS)*XPP
+    DO IROW=1,NROW; DO ICOL=1,NCOL
+     IF(IBOUND(ICOL,IROW,ILS).EQ.0)CYCLE
+     A(ICOL,IROW,ILS)=A(ICOL,IROW,ILS)*XPP(ICOL,IROW)
+    ENDDO; ENDDO
    CASE DEFAULT
     WRITE(*,*) 'CANNOT COME HERE'; PAUSE
   END SELECT
@@ -268,8 +280,8 @@ do i=1,size(param)
    exit
   enddo
  endif
- 
-end subroutine
+
+ end subroutine
 
 !!###====================================================================
 !REAL FUNCTION PEST_GETRANGE()
