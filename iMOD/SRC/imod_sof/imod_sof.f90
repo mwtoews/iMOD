@@ -1370,7 +1370,6 @@ if(irow.eq.ir.and.icol.eq.ic)f=1.0
  DO I=1,NP 
   ICOL=INT(PL(I,1)); IROW=INT(PL(I,2))
   ASPECT%X(ICOL,IROW)=ASPECT%NODATA
-!  SLOPE%X(ICOL,IROW) =SLOPE%NODATA
  ENDDO
   
  !## trace depression for exit points
@@ -1406,13 +1405,23 @@ if(irow.eq.ir.and.icol.eq.ic)f=1.0
    ENDIF
   ENDDO
   
+!  !## transform into an outlet if pitt if big enough
+!  IF(NPPX.GT.PITTSIZE)THEN
+  
+!   !## change all pittpoints for this spill-value into an outlet
+!   DO J=1,NPPX; DEM%X(PPX(J)%ICOL,PPX(J)%IROW)=DEM%NODATA; ENDDO
+
+!  ELSE
+  
   !## change all pittpoints for this spill-value (zmax)
   DO J=1,NPPX; DEM%X(PPX(J)%ICOL,PPX(J)%IROW)=ZMAX; ENDDO
    
   F=REAL(I)/REAL(NP)*100.0; WRITE(6,'(A,F10.3,2(A,I8),A,F10.3,A)') '+Processing pitt:',F,' % (nppx= ',NPPX,' ; nbpx= ',NBPX,'; z=',PPX(1)%Z,')'
 
   IF(IGRAD.EQ.1)CALL SOF_FILL_FLATAREAS(DEM,DEMORG,SLOPE,ASPECT,NPPX) 
-
+  
+!  ENDIF
+  
   !## clean idfp%x()
   DO J=1,NTPX; IDFP%X(TPX(J)%ICOL,TPX(J)%IROW)=IDFP%NODATA; ENDDO 
 

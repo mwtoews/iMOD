@@ -686,12 +686,11 @@ CONTAINS
     
     K=K+1   
     DO I=1,NUMPARTS
-     WRITE(JU(1),'(A,A4,I3.3)') '"'//TRIM(CID(K))//'",part',I
+     WRITE(JU(1),'(A,I3.3)') '"'//TRIM(CID(K))//'",part',I
      DO J=IP(I),IP(I+1)-1
       READ(IU(1)) X,Y
       WRITE(JU(1),*) X,Y
      ENDDO
-!     IF(ISHP.EQ.13.OR.ISHP.EQ.15)WRITE(JU(1),'(A3)') 'END'
      WRITE(JU(1),'(A3)') 'END'
     ENDDO
 
