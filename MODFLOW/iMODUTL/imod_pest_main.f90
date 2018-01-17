@@ -161,7 +161,7 @@ CONTAINS
  ENDDO
 
  ALLOCATE(PARAM(NLINES))
- DO I=1,SIZE(PARAM); PARAM(I)%NODES=0; PARAM(I)%IBND=0; ENDDO
+ DO I=1,SIZE(PARAM); PARAM(I)%NODES=0; ENDDO
  DO I=1,SIZE(PARAM)
   NULLIFY(PARAM(I)%X,PARAM(I)%IROW,PARAM(I)%ICOL,PARAM(I)%ALPHA_HISTORY,PARAM(I)%ALPHA_ERROR_VARIANCE)
  ENDDO
@@ -600,9 +600,6 @@ CONTAINS
   CALL PEST1CHK(I)
   PARAM(I)%ALPHA(1)=PARAM(I)%INI !## current  alpha
   PARAM(I)%ALPHA(2)=PARAM(I)%INI !## previous alpha
-  !## parameter is at the boundary whenever less than 1% away
-  IF(ABS(PARAM(I)%ALPHA(1)-PARAM(I)%MIN).LT.XPBND)PARAM(I)%IBND=-1 !## min
-  IF(ABS(PARAM(I)%MAX)-PARAM(I)%ALPHA(1).LT.XPBND)PARAM(I)%IBND= 1 !## max
 
  ENDDO
  
@@ -1086,7 +1083,7 @@ CONTAINS
  INTEGER,INTENT(IN) :: IOUT
  CHARACTER(LEN=1024) :: FNAME,DIR
  INTEGER :: I,J,IROW,ICOL
- REAL XVAR,XF
+ REAL :: XVAR,XF
  REAL,ALLOCATABLE,DIMENSION(:,:) :: X
  logical :: lok
 
@@ -1099,9 +1096,10 @@ CONTAINS
 
  ALLOCATE(X(NCOL,NROW))
  DO I=1,SIZE(PARAM)
+  
   !## do not save non-optimized parameters
   IF(PARAM(I)%IACT.EQ.0)CYCLE
- 
+
   !## regular-grid
   IF(PARAM(I)%ZTYPE.EQ.0)THEN
    WRITE(FNAME,'(A,2I5.5,A)') TRIM(DIR)//CHAR(92)//PARAM(I)%PTYPE,PARAM(I)%ILS,PARAM(I)%IZONE,'.IDF'
@@ -1141,7 +1139,6 @@ CONTAINS
  !###====================================================================
 SUBROUTINE WRITEIPF(N,M,XY,F,BW,FNAME) 
 !###====================================================================
-!USE MOD_UTL, ONLY : OPENASC,ITOS
 IMPLICIT NONE
 INTEGER,INTENT(IN) :: N,M
 REAL,DIMENSION(N,M),INTENT(IN) :: XY
@@ -1159,7 +1156,7 @@ WRITE(IU,'(A)') 'F'
 WRITE(IU,'(A)') 'ERROR_VARIANCE'
 WRITE(IU,'(A)') '0,TXT'
 DO I=1,SIZE(XY,1)
- WRITE(IU,'(4(F15.7,1X))') XY(I,1),XY(I,2),EXP(F),BW
+ WRITE(IU,'(4(F15.7,1X))') XY(I,1),XY(I,2),F,BW
 ENDDO
 
 CLOSE(IU)
@@ -1472,7 +1469,7 @@ END SUBROUTINE WRITEIPF
  SUBROUTINE PESTGRADIENT(root)
  !###====================================================================
  IMPLICIT NONE
- character(len=*),intent(in) :: root
+ CHARACTER(LEN=*),INTENT(IN) :: ROOT
  REAL(KIND=8) :: DJ1,DJ2
  REAL(KIND=8) :: B1,TS,DF1,DF2,BETA,EIGWTHRESHOLD,W,DH1,DH2
  INTEGER :: I,II,J,K,L,NP,MP,IP1,IP2,NE,ISING
@@ -1484,7 +1481,7 @@ END SUBROUTINE WRITEIPF
  REAL(KIND=8),ALLOCATABLE,DIMENSION(:,:) :: EIGV,COV,B,M
  REAL(KIND=8),ALLOCATABLE,DIMENSION(:) :: EIGW,JQR
  CHARACTER(LEN=8) :: DTXT
- LOGICAL :: LSCALING,LSVD
+ LOGICAL :: LSCALING,LSVD,LAMBDARESET
 
  SELECT CASE (PEST_ISCALING)
   CASE (0); LSCALING=.FALSE.; LSVD=.FALSE.
@@ -1536,7 +1533,11 @@ END SUBROUTINE WRITEIPF
  DO I=1,SIZE(PARAM); PARAM(I)%ALPHA(1)=PARAM(I)%ALPHA(2); ENDDO
 
  !## melt frozen parameters
- DO IP1=1,SIZE(PARAM); IF(PARAM(IP1)%IACT.EQ.-1.AND.PARAM(IP1)%IGROUP.GT.0)PARAM(IP1)%IACT=1; ENDDO
+ DO IP1=1,SIZE(PARAM)
+  IF(PARAM(IP1)%IACT.EQ.-1.AND.PARAM(IP1)%IGROUP.GT.0)THEN
+   PARAM(IP1)%IACT=1
+  ENDIF
+ ENDDO
 
  !## freeze-insensitive parameters
  DO I=1,SIZE(PARAM)
@@ -1732,23 +1733,19 @@ END SUBROUTINE WRITEIPF
   U=-1.0D0*U 
 
   !## within parameter adjust-limits
-  IF(PESTUPGRADEVECTOR(1.0,.TRUE.))THEN 
-   !## freeze parameters that still point outwards after gradient update
-   I=0; DO IP1=1,SIZE(PARAM)
-    IF(PARAM(IP1)%IACT.NE.1.OR.PARAM(IP1)%IGROUP.LE.0)CYCLE
-    I=I+1
-    IF(ABS(PARAM(IP1)%IBND).EQ.1)THEN
-     IF(PARAM(IP1)%IBND.EQ.-1.AND.-1.0*U(I).LT.0.0)PARAM(IP1)%IACT=-1 !## still outside parameter domain(min)
-     IF(PARAM(IP1)%IBND.EQ. 1.AND.-1.0*U(I).GT.0.0)PARAM(IP1)%IACT=-1 !## still outside parameter domain(max)
-    ENDIF
-   ENDDO
+  IF(PESTUPGRADEVECTOR(1.0,.TRUE.,LAMBDARESET=LAMBDARESET))THEN 
    !## check whether number of parameters is equal to the number started this loop with
    MP=0; DO I=1,SIZE(PARAM); IF(PARAM(I)%IACT.EQ.1.AND.PARAM(I)%IGROUP.GT.0)MP=MP+1; ENDDO
    IF(MP.EQ.NP)EXIT
   ENDIF
-  !## increase marquardt
-  MARQUARDT=MARQUARDT*DAMPINGFACTOR
-
+  !## reset marquardt lambda
+  IF(LAMBDARESET)THEN
+   MARQUARDT=0.001D0
+  ELSE
+   !## increase marquardt
+   MARQUARDT=MARQUARDT*DAMPINGFACTOR
+  ENDIF
+ 
  ENDDO !## marquardt-loop
 
  !## write statistics
@@ -2050,17 +2047,24 @@ END SUBROUTINE WRITEIPF
  END SUBROUTINE PEST1JQJ
 
  !###====================================================================
- LOGICAL FUNCTION PESTUPGRADEVECTOR(FCT,LCHECK)
+ LOGICAL FUNCTION PESTUPGRADEVECTOR(FCT,LCHECK,LAMBDARESET)
  !###====================================================================
  IMPLICIT NONE
- LOGICAL :: LCHECK
+ LOGICAL,INTENT(IN) :: LCHECK
+ LOGICAL,INTENT(OUT),OPTIONAL :: LAMBDARESET
  REAL,INTENT(IN) :: FCT
- REAL :: F,G,MINP,MAXP,MINAP,MAXAP
- INTEGER :: I,J,IP1,IP2,N
-! REAL,ALLOCATABLE,DIMENSION(:) :: GRADUPDATE
+ REAL :: AF,F,G,MINAP,MAXAP,P1,P2,PMIN,PMAX
+ INTEGER :: I,J,IP1,IP2,N,IBND
 
  !## exit code
  PESTUPGRADEVECTOR=.FALSE.
+ IF(PRESENT(LAMBDARESET))LAMBDARESET=.FALSE.
+ 
+ !## adjust vector for fct (line-search)
+ I=0; DO IP1=1,SIZE(PARAM)
+  IF(PARAM(IP1)%IACT.NE.1.OR.PARAM(IP1)%IGROUP.LE.0)CYCLE
+  I=I+1; U(I)=U(I)*FCT
+ ENDDO
 
  I=0; DO IP1=1,SIZE(PARAM)
   !## inactive parameter
@@ -2080,83 +2084,80 @@ END SUBROUTINE WRITEIPF
    I=I+1; G=U(I)
   ENDIF
 
-  PARAM(IP1)%ALPHA(1)=PARAM(IP1)%ALPHA(2)+G*FCT !## update parameters
-
-  !## adjustment too large -causes to get another lambda
-  IF(LCHECK)THEN
-   IF(PARAM(IP1)%LOG)THEN
-    F=EXP(PARAM(IP1)%ALPHA(1))/EXP(PARAM(IP1)%ALPHA(2))
-   ELSE
-    F=PARAM(IP1)%ALPHA(1)/PARAM(IP1)%ALPHA(2)
-   ENDIF 
-
-   IF(F.LT.1.0/PARAM(IP1)%FADJ.OR. &
-      F.GT.PARAM(IP1)%FADJ)THEN
-    RETURN
-   ENDIF
-  ENDIF
+  !## update parameters
+  PARAM(IP1)%ALPHA(1)=PARAM(IP1)%ALPHA(2)+G !*FCT
 
  ENDDO
 
  !## check whether boundary has been hit or maximum adjustment exceeds
  IF(LCHECK)THEN
 
+  !## check for size of adjustment
   DO IP1=1,SIZE(PARAM)
+   
+   !## inactive parameter
+   IF(PARAM(IP1)%IACT.NE.1)CYCLE
+   !## check size of adjustment
+   IF(PARAM(IP1)%LOG)THEN
+    F=EXP(PARAM(IP1)%ALPHA(1))/EXP(PARAM(IP1)%ALPHA(2))
+   ELSE
+    F=PARAM(IP1)%ALPHA(1)/PARAM(IP1)%ALPHA(2)
+   ENDIF 
+
+   !## adjustment too large -causes to get another lambda
+   IF(F.LT.1.0/PARAM(IP1)%FADJ.OR.F.GT.PARAM(IP1)%FADJ)RETURN
+  
+  ENDDO
+  
+  F=1.0
+
+  !## check for boundary of parameter
+  DO IP1=1,SIZE(PARAM)
+   
+   !## inactive parameter
    IF(PARAM(IP1)%IACT.NE.1)CYCLE
 
-   MINP=PARAM(IP1)%MIN
-   MAXP=PARAM(IP1)%MAX
+   CALL PEST_GETBOUNDARY(IP1,IBND,P1,P2,PMIN,PMAX)
 
-   IF(PARAM(IP1)%LOG)THEN
-    MINAP=1.0/PARAM(IP1)%FADJ*EXP(PARAM(IP1)%ALPHA(2))
-    MAXAP=PARAM(IP1)%FADJ    *EXP(PARAM(IP1)%ALPHA(2))
-    MINAP=LOG(MINAP)
-    MAXAP=LOG(MAXAP)    
-   ELSE
-    MINAP=1.0/PARAM(IP1)%FADJ*PARAM(IP1)%ALPHA(2)
-    MAXAP=PARAM(IP1)%FADJ    *PARAM(IP1)%ALPHA(2)
-   ENDIF 
-  
-   MINP=MAX(MINP,MINAP)
-   MAXP=MIN(MAXP,MAXAP)
-   
-   !## parameter adjustment hit the parameter boundary - adjust all
-   IF(PARAM(IP1)%ALPHA(1).LT.MINP.OR. &
-      PARAM(IP1)%ALPHA(1).GT.MAXP)THEN
-
-    !## correct gradient
-    G=PARAM(IP1)%ALPHA(1)-PARAM(IP1)%ALPHA(2)
-    IF(PARAM(IP1)%ALPHA(1).LT.MINP)F=MINP-PARAM(IP1)%ALPHA(2)
-    IF(PARAM(IP1)%ALPHA(1).GT.MAXP)F=MAXP-PARAM(IP1)%ALPHA(2)
-
-    !## corrects all gradients with this factor
-    F=F/G
-    !## echo correction factor
-    CALL IMOD_UTL_PRINTTEXT('Parameter '//TRIM(IMOD_UTL_ITOS(IP1))//' causes a',-1,IUPESTOUT)
-    CALL IMOD_UTL_PRINTTEXT('correction factor of '//TRIM(IMOD_UTL_RTOS(F,'F',3))// &
-      ' for the Upgrade Vector caused by Hitting its Parameter Boundary',-1,IUPESTOUT)
-
-    !## adjust all parameters
-    DO IP2=1,SIZE(PARAM) !IP1 
-     G=PARAM(IP2)%ALPHA(1)-PARAM(IP2)%ALPHA(2)
-     G=G*F
-     PARAM(IP2)%ALPHA(1)=PARAM(IP2)%ALPHA(2)+G !## update parameters
-    ENDDO
-
-   ENDIF
-
+   !## parameter hits the boundary
+   IF(IBND.NE.0)THEN
+    !## hits the same boundary as before - skip it
+    IF(IBND.EQ.PARAM(IP1)%IBND)THEN 
+     !## ignore this parameter for now - reset lambda and search another update vector
+     PARAM(IP1)%IACT=-1; LAMBDARESET=.TRUE.; RETURN
+     WRITE(*,*) 'Reset lambda - parameter in boundary'
+    ELSE
+     AF=1.0
+     IF(P1.LT.PMIN)AF=(P2-PMIN)/(P2-P1)
+     IF(P1.GT.PMAX)AF=(PMAX-P2)/(P1-P2)
+     !## keep track of minimal adjustment of vector
+     F=MIN(AF,F)
+    ENDIF
+   ENDIF  
   ENDDO
 
- ENDIF
+  !## corrects all gradients with this factor
+  IF(F.LT.1.0)THEN
+   
+   WRITE(*,*) 'Correct update vector=',F
+   
+   !## adjust all parameters
+   DO IP2=1,SIZE(PARAM) 
+    G=PARAM(IP2)%ALPHA(1)-PARAM(IP2)%ALPHA(2)
+    G=G*F
+    !## update parameters
+    PARAM(IP2)%ALPHA(1)=PARAM(IP2)%ALPHA(2)+G
+   ENDDO
 
+  ENDIF
+ 
+ ENDIF
+  
  PESTUPGRADEVECTOR=.TRUE.
 
- PARAM%IBND=0
- DO IP1=1,SIZE(PARAM)
+ DO J=1,SIZE(U); WRITE(*,*) J,U(J); ENDDO
 
-  !## parameter is at the boundary whenever less than 1% away
-  IF(ABS(PARAM(IP1)%ALPHA(1)-PARAM(IP1)%MIN).LT.XPBND)PARAM(IP1)%IBND=-1 !## min
-  IF(ABS(PARAM(IP1)%MAX)-PARAM(IP1)%ALPHA(1).LT.XPBND)PARAM(IP1)%IBND= 1 !## max
+ J=0; DO IP1=1,SIZE(PARAM)
 
   IF(PARAM(IP1)%LOG)THEN
    PARAM(IP1)%ALPHA_HISTORY(PEST_ITER)=EXP(PARAM(IP1)%ALPHA(1))
@@ -2164,14 +2165,52 @@ END SUBROUTINE WRITEIPF
    PARAM(IP1)%ALPHA_HISTORY(PEST_ITER)=PARAM(IP1)%ALPHA(1)
   ENDIF
   
+  !## set ibnd flag
+  CALL PEST_GETBOUNDARY(IP1,IBND,P1,P2,PMIN,PMAX)
+  PARAM(IP1)%IBND=IBND
+
+  !## active parameter
+  IF(PARAM(IP1)%IACT.NE.1)CYCLE
+  J=J+1
+  !## store final gradient
+  U(J)=PARAM(IP1)%ALPHA(1)-PARAM(IP1)%ALPHA(2)
+  
  ENDDO
 
- I=0; DO IP1=1,SIZE(PARAM)
-  IF(PARAM(IP1)%IACT.NE.1.OR.PARAM(IP1)%IGROUP.LE.0)CYCLE
-  I=I+1; U(I)=U(I)*FCT
- ENDDO
+ DO J=1,SIZE(U); WRITE(*,*) J,U(J); ENDDO
+ 
+!PAUSE
 
  END FUNCTION PESTUPGRADEVECTOR
+
+ !###====================================================================
+ SUBROUTINE PEST_GETBOUNDARY(IP1,IBND,P1,P2,PMIN,PMAX)
+ !###====================================================================
+ IMPLICIT NONE
+ INTEGER,INTENT(IN) :: IP1
+ INTEGER,INTENT(OUT) :: IBND
+ REAL,INTENT(OUT) :: P1,P2,PMIN,PMAX
+ 
+ !## parameter adjustment hit the parameter boundary
+! IF(PARAM(IP1)%LOG)THEN
+!  P1  =EXP(PARAM(IP1)%ALPHA(1))
+!  P2  =EXP(PARAM(IP1)%ALPHA(2))
+!  PMIN=EXP(PARAM(IP1)%MIN)
+!  PMAX=EXP(PARAM(IP1)%MAX)
+! ELSE
+  P1  =PARAM(IP1)%ALPHA(1)
+  P2  =PARAM(IP1)%ALPHA(2)
+  PMIN=PARAM(IP1)%MIN
+  PMAX=PARAM(IP1)%MAX
+! ENDIF
+   
+ IBND=0
+ !## shoot over
+ IF(P1.LE.PMIN)           IBND=-1; IF(P1.GE.PMAX)           IBND= 1
+ !## too close
+ IF(ABS(P1-PMIN).LE.XPBND)IBND=-1; IF(ABS(PMAX-P1).LE.XPBND)IBND= 1
+ 
+ END SUBROUTINE PEST_GETBOUNDARY
 
  !###====================================================================
  SUBROUTINE PEST_ECHOPARAMETERS()

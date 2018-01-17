@@ -54,7 +54,7 @@ TYPE PARAOBJ
  INTEGER :: IZONE           !## zone number
  INTEGER :: ZTYPE           !## zone type (0) = grid, type (1) = ppoint
  INTEGER :: NODES           !## zone number
- INTEGER :: IBND            !## type of parameter limitation (-1=minbound,1=maxbound)
+ INTEGER :: IBND            !## whether a parameter hits its boundary
  INTEGER :: IGROUP          !## group to which parameters belongs
  LOGICAL :: LOG             !## logical to determine whether parameter is lognormal
  INTEGER(KIND=2),POINTER,DIMENSION(:) :: IROW,ICOL  !## node number of zone for parameter param(i) --- pointer to IZONE

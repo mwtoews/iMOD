@@ -340,9 +340,7 @@ C4------READ ANISOTROPY-FACTOR EN -HOEK
 
       ! save pointers to data and return.
       call sgwf2ani3psv(igrid)
-      
-!      write(*,*) 'finished ani'
-      
+          
       return
       end
 
@@ -372,7 +370,7 @@ c ------------------------------------------------------------------------------
 
       call scl1fmt(dcu,dcd,dcc,dcr,diag,rhs,ibound,hnew,ncol,nrow,
      1             nlay,hcof,anifactor)
-
+      
       call sgwf2bas7psv(igrid)
 
       return
