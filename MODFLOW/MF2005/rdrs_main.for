@@ -740,7 +740,7 @@ c end of program
       return
       end
 
-      subroutine assign_layer(tlp,irow,icol,z1,z2)
+      subroutine assign_layer(tlp,irow,icol,z1,z2,lkhv)
 c modules
       use global, only: nlay, nrow, ncol, delr, delc, cv, hcof, cc, cr,
      1 kdsv
@@ -753,6 +753,7 @@ c arguments
       real, dimension(nlay), intent(out) :: tlp
       integer, intent(in) :: irow, icol
       real, intent(in) :: z1, z2
+      logical,intent(in) :: lkhv
 c parameters
       real, parameter :: maxc = 1000000.0
       real, parameter :: minkh = 0.0
@@ -785,6 +786,8 @@ c init
              dz = tp(ilay)-bt(ilay)
              if (dz.gt.0.0) then
                 kh(ilay) = kh(ilay)/(dz+tiny)
+                !## apply uniform khv in case tlp is not depending on khv, such as for rivers
+                if(.not.lkhv)kh=1.0
              else
                 kh(ilay) = 0.0
              end if

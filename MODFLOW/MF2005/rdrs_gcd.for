@@ -339,7 +339,7 @@ c              check if subsystem is defined by ipf's only
                      q  = ipflist(isub,1)%list(3,kk)
                      z1 = ipflist(isub,1)%list(4,kk)
                      z2 = ipflist(isub,1)%list(5,kk)
-                     call assign_layer(tlp,irow,icol,z1,z2)
+                     call assign_layer(tlp,irow,icol,z1,z2,.true.)
                      do il = 1, nlay
                         if (tlp(il).gt.0.) then
                            ii = ii + 1
@@ -379,29 +379,29 @@ c              check if subsystem is of type ISG
                   nisg = 0
                   if (ilay(isub).le.0) then ! automatically assign
                      do kk = 1, isglist(isub)%nlist
-                        irow = int(isglist(isub)%list(kk,2))
-                        icol = int(isglist(isub)%list(kk,3))
-                        call pks7mpitrn(icol,irow,1,lused)              ! PKS
-                        if (lused) then                                 ! PKS
-                           z1   = isglist(isub)%list(kk,4)
-                           q    = isglist(isub)%list(kk,5)
-                           z2   = isglist(isub)%list(kk,6)
+                      irow = int(isglist(isub)%list(kk,2))
+                      icol = int(isglist(isub)%list(kk,3))
+                      call pks7mpitrn(icol,irow,1,lused)              ! PKS
+                      if (lused) then                                 ! PKS
+                         z1   = isglist(isub)%list(kk,4)
+                         q    = isglist(isub)%list(kk,5)
+                         z2   = isglist(isub)%list(kk,6)
 
-                           call assign_layer(tlp,irow,icol,z1,z2)
-                           do il = 1, nlay
-                              if (tlp(il).gt.0.) then
-                                 nisg = nisg + 1
-                                 if (jact.eq.2) then
-                                do jj = 1, size(isglist2,2) !10
-                                       isglist2(nisg,jj) =
+                         call assign_layer(tlp,irow,icol,z1,z2,.false.)
+                         do il = 1, nlay
+                            if (tlp(il).gt.0.) then
+                               nisg = nisg + 1
+                               if (jact.eq.2) then
+                              do jj = 1, size(isglist2,2) !10
+                                     isglist2(nisg,jj) =
      1                                    isglist(isub)%list(kk,jj)
-                                    end do
-                                    isglist2(nisg,1) = il
-                                    isglist2(nisg,5) = q*tlp(il)
-                                 end if
-                              end if
-                           end do
-                        end if                                          ! PKS
+                                  end do
+                                  isglist2(nisg,1) = il
+                                  isglist2(nisg,5) = q*tlp(il)
+                               end if
+                            end if
+                         end do
+                      end if                                          ! PKS
                      end do
                   else
                       nisg = 0                                          ! PKS
@@ -461,30 +461,30 @@ c              check if subsystem is of type ISG
                      end do
                      if (valid) then
                         if (ilay(isub).le.0) then ! automatically assign
-                           c = data(icol,irow,isub,1)
-                           z1 = data(icol,irow,isub,2)
-                           if (nread1.gt.2) then
-                              z2 = data(icol,irow,isub,3)
-                           else
-                              z2 = z1
-                           end if
+                         c = data(icol,irow,isub,1)
+                         z1 = data(icol,irow,isub,2)
+                         if (nread1.gt.2) then
+                            z2 = data(icol,irow,isub,3)
+                         else
+                            z2 = z1
+                         end if
 
-                           call assign_layer(tlp,irow,icol,z1,z2)
-                           do il = 1, nlay
-                              if (tlp(il).gt.0.) then
-                                 ii = ii + 1
-                                 if (iact.eq.2) then
-                                    rlisttmp(1,ii) = il
-                                    rlisttmp(2,ii) = irow
-                                    rlisttmp(3,ii) = icol
-                                    do jj = 1, nread2
-                                        rlisttmp(3+jj,ii) =
+                         call assign_layer(tlp,irow,icol,z1,z2,.false.)
+                         do il = 1, nlay
+                            if (tlp(il).gt.0.) then
+                               ii = ii + 1
+                               if (iact.eq.2) then
+                                  rlisttmp(1,ii) = il
+                                  rlisttmp(2,ii) = irow
+                                  rlisttmp(3,ii) = icol
+                                  do jj = 1, nread2
+                                      rlisttmp(3+jj,ii) =
      1                                    data(icol,irow,isub,jjj(jj))
-                                    end do
-                                    rlisttmp(3+jjj(1),ii) = c*tlp(il)
-                                 end if
-                              end if
-                           end do
+                                  end do
+                                  rlisttmp(3+jjj(1),ii) = c*tlp(il)
+                               end if
+                            end if
+                         end do
                         else
                            ii = ii + 1
                            if (iact.eq.2) then

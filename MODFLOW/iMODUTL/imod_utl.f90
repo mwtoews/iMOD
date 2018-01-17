@@ -2837,8 +2837,6 @@ END SUBROUTINE IMOD_UTL_QKSORT
  !## normalize tlp() again
  IF(SUM(TLP).GT.0.0)TLP=(1.0/SUM(TLP))*TLP
 
- 
-
  !## make sure only one layer is assigned whenever z1.eq.z2
  IF(IDIFF.EQ.1)THEN
   K=0; ZT=0.0; DO ILAY=1,N

@@ -1034,7 +1034,7 @@ CONTAINS
    PEST_ITER=PEST_ITER+1
    IF(.NOT.PESTNEXT)THEN
     CALL IMOD_UTL_PRINTTEXT('',-1,IUPESTOUT); CALL IMOD_UTL_PRINTTEXT('',-1,IUPESTOUT)
-    CALL IMOD_UTL_PRINTTEXT(' * Next Outer Iteration *',-1,IUPESTOUT)
+    CALL IMOD_UTL_PRINTTEXT(' *** Next Outer Iteration ***',-1,IUPESTOUT)
    ENDIF
    LLNSRCH=.FALSE.; LGRAD=.TRUE.; PEST_IGRAD=0; PEST_ILNSRCH=0
    IF(.NOT.PESTNEXTGRAD())THEN
@@ -1472,7 +1472,7 @@ END SUBROUTINE WRITEIPF
  CHARACTER(LEN=*),INTENT(IN) :: ROOT
  REAL(KIND=8) :: DJ1,DJ2
  REAL(KIND=8) :: B1,TS,DF1,DF2,BETA,EIGWTHRESHOLD,W,DH1,DH2
- INTEGER :: I,II,J,K,L,NP,MP,IP1,IP2,NE,ISING
+ INTEGER :: I,II,J,K,L,NP,MP,IP1,IP2,NE,ISING,ITRIES
  INTEGER,ALLOCATABLE,DIMENSION(:) :: INDX,ICOR
  REAL(KIND=8),ALLOCATABLE,DIMENSION(:,:) :: TDJ,C,JS,P,PT
  REAL(KIND=8),ALLOCATABLE,DIMENSION(:) :: GAMMA,N,RU 
@@ -1550,8 +1550,11 @@ END SUBROUTINE WRITEIPF
  !## find until parameter update within hypersphere of parameters
  !## initiate marquardt as small as possible
  MARQUARDT=0.001D0
+ ITRIES=0
  DO
 
+  ITRIES=ITRIES+1
+  
   !## allocate arrays for current selection  
   NP=0; DO I=1,SIZE(PARAM); IF(PARAM(I)%IACT.EQ.1.AND.PARAM(I)%IGROUP.GT.0)NP=NP+1; ENDDO
   IF(ALLOCATED(JQJ))DEALLOCATE(JQJ);   ALLOCATE(JQJ (NP,NP))
@@ -1569,7 +1572,12 @@ END SUBROUTINE WRITEIPF
   CALL PEST1JQJ(JQJ,EIGW,EIGV,COV,NP,.FALSE.,ROOT)
 
   !## multiply lateral sensitivities with sensitivities in case pest_niter=0
-  IF(.NOT.PESTWRITESTATISTICS_PERROR(NP,COV,.FALSE.))CYCLE
+  IF(ITRIES.EQ.1)THEN
+   !## print all first time
+   IF(.NOT.PESTWRITESTATISTICS_PERROR(NP,COV,.TRUE.))CYCLE
+  ELSE
+   IF(.NOT.PESTWRITESTATISTICS_PERROR(NP,COV,.FALSE.))CYCLE  
+  ENDIF
 
   !## construct jTqr (<--- r is residual for current parameter set)
   JQR=0.0; I=0
@@ -1935,7 +1943,7 @@ END SUBROUTINE WRITEIPF
  !## condition number
  KAPPA=SQRT(EIGW(1))/SQRT(EIGW(NP))
  IF(LPRINT)THEN
-  WRITE(IUPESTOUT,'(/A,3F15.7/)') 'Condition Number:',SQRT(EIGW(1)),SQRT(EIGW(NP)),KAPPA
+!  WRITE(IUPESTOUT,'(/A,3F15.7/)') 'Condition Number:',SQRT(EIGW(1)),SQRT(EIGW(NP)),KAPPA
   WRITE(IUPESTOUT,'(/A,3F15.7/)') 'Condition Number (kappa):',LOG(KAPPA)
   WRITE(IUPESTOUT,'(/A)') '>>> If Kappa > 15, inversion is a concern due to parameters that are highly correlated <<<'
   WRITE(IUPESTOUT,'(A/)') '>>> If Kappa > 30, inversion is highly questionable due to parameters that are highly correlated <<<'
@@ -2527,8 +2535,8 @@ END SUBROUTINE WRITEIPF
  PJ=0.0D0
 ! IF(PEST_IREGULARISATION.EQ.1)CALL PEST_GETQPP(NP,.TRUE.)
   
- CALL IMOD_UTL_PRINTTEXT('Best Match Value   : '//TRIM(IMOD_UTL_RTOS(REAL(TJ),'G',7)),-1,IUPESTOUT)
- CALL IMOD_UTL_PRINTTEXT('Plausibility Value : '//TRIM(IMOD_UTL_RTOS(REAL(PJ),'G',7)),-1,IUPESTOUT)
+ CALL IMOD_UTL_PRINTTEXT('Best Match Value   :             '//TRIM(IMOD_UTL_RTOS(REAL(TJ),'G',7)),-1,IUPESTOUT)
+ CALL IMOD_UTL_PRINTTEXT('Plausibility Value :             '//TRIM(IMOD_UTL_RTOS(REAL(PJ),'G',7)),-1,IUPESTOUT)
  TJ=TJ+PJ
   
  CALL IMOD_UTL_PRINTTEXT('TOTAL Objective Function Value : '//TRIM(IMOD_UTL_RTOS(REAL(TJ),'G',7)),-1,IUPESTOUT)
@@ -2536,7 +2544,7 @@ END SUBROUTINE WRITEIPF
          ' (n='//TRIM(IMOD_UTL_ITOS(PEST_NOBS))//')',-1,IUPESTOUT)
 
  RFIT=PEST_GOODNESS_OF_FIT(GF_H,GF_O,PEST_NOBS)
- CALL IMOD_UTL_PRINTTEXT('Goodness of Fit (sample correlation coefficient): '// &
+ CALL IMOD_UTL_PRINTTEXT('Goodness of Fit:                 '// &
      TRIM(IMOD_UTL_RTOS(REAL(RFIT),'G',7))//' (n='//TRIM(IMOD_UTL_ITOS(PEST_NOBS))//')',-1,IUPESTOUT)
  CALL IMOD_UTL_PRINTTEXT('>> Provides a measure of the extent to which variability of field measurements is explained',-1,IUPESTOUT)
  CALL IMOD_UTL_PRINTTEXT('   by the calibrated model compared to that which can be constructed as purely random. <<',-1,IUPESTOUT)
