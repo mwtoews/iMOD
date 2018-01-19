@@ -373,8 +373,8 @@ CONTAINS
   IF(J.LT.I)THEN
    IF(IBATCH.EQ.-1)CALL WDIALOGPUTSTRING(IDF_LABEL5,'External Function not well defined')
    IF(IBATCH.EQ.0)CALL WMESSAGEBOX(OKONLY,EXCLAMATIONICON,COMMONOK,'External Function not well defined!'//CHAR(13)// &
-     'External Function should start with C=abs() or C=log()','Warning')
-   IF(IBATCH.EQ.1)WRITE(*,*) 'External Function should start with C=abs() or C=log()'
+     'External Function should start with C=abs() C=ln() or C=log()','Warning')
+   IF(IBATCH.EQ.1)WRITE(*,*) 'External Function should start with C=abs(), C=ln() or C=log()'
    RETURN
   ENDIF
   SELECT CASE (FUNC(3:5))
@@ -388,6 +388,8 @@ CONTAINS
     IEFUNC=4
    CASE ('SGN')
     IEFUNC=5
+   CASE ('LN')
+    IEFUNC=6
 !   CASE ('RAD')
 !    IEFUNC=6
    CASE DEFAULT
@@ -600,14 +602,17 @@ CONTAINS
        IDFRESULT=ABS(IDFRESULT)
       CASE (2)  !## log
        IF(IDFRESULT.GT.0.0)THEN
-        IDFRESULT=LOG(IDFRESULT)
+        IDFRESULT=LOG10(IDFRESULT)
        ENDIF
       CASE (3)  !## exp
        IDFRESULT=EXP(IDFRESULT)
       CASE (4)  !## gt
 !       IDFRESULT=EXP(IDFRESULT)
       CASE (5)  !## sgn
-!      CASE (6)  !## rad
+      CASE (6)  !## ln
+       IF(IDFRESULT.GT.0.0)THEN
+        IDFRESULT=LOG(IDFRESULT)
+       ENDIF
 
 !       CALL SOF_COMPUTE_GRAD(MATH(3),ICOL,IROW,DZDX,DZDY)
 !  IF(IDF%IVF.EQ.0)CALL SOF_COMPUTE_GRAD_STEEPEST(IDF,ICOL,IROW,DZDX,DZDY)
