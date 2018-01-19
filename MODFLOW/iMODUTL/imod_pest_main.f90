@@ -1293,16 +1293,21 @@ END SUBROUTINE WRITEIPF
     Z2=PARAM(I)%ALPHA(2)+ZW
    ENDIF 
 
-   !## ignore parameter with too high of a band for unreliability, turn if off
-   IF(LOG10(Z2)-LOG10(Z1).GT.XBANDW)THEN
-    WRITE(IUPESTOUT,'(6G15.7)') Z2,Z1,LOG10(Z2),LOG10(Z1),LOG10(Z2)-LOG10(Z1),XBANDW
-    PARAM(I)%IACT=-1
-   ENDIF
-   
    IF(LPRINT)THEN
     WRITE(BLINE,'(3G15.7)') Z1,Z,Z2
     WRITE(IUPESTOUT,'(3X,A2,2I5.5,A1,I3.3,A)') PARAM(I)%PTYPE,PARAM(I)%ILS,PARAM(I)%IZONE,'-',ABS(PARAM(I)%IGROUP),TRIM(BLINE)
    ENDIF
+
+   !## ignore parameter with too high of a band for unreliability, turn if off
+   IF(LOG10(Z2)-LOG10(Z1).GT.XBANDW)THEN
+!    WRITE(IUPESTOUT,'(/6G15.7/)') Z2,Z1,LOG10(Z2),LOG10(Z1),LOG10(Z2)-LOG10(Z1),XBANDW
+    WRITE(IUPESTOUT,'(/3X,A2,2I5.5,A1,I3.3)') PARAM(I)%PTYPE,PARAM(I)%ILS,PARAM(I)%IZONE,'-',ABS(PARAM(I)%IGROUP)
+    WRITE(IUPESTOUT,'(A,2G15.7)') 'This parameter too unreliable to estimate: ',LOG10(Z2)-LOG10(Z1),XBANDW
+    WRITE(IUPESTOUT,'(A/)') 'Parameter will be turned off for this cycle'
+    !   WRITE(IUPESTOUT,'(/6G15.7/)') Z2,Z1,LOG10(Z2),LOG10(Z1),LOG10(Z2)-LOG10(Z1),XBANDW
+    PARAM(I)%IACT=-1; RETURN
+   ENDIF
+   
   ELSE
    IF(LPRINT.AND.PARAM(I)%IACT.EQ.-1)THEN
     WRITE(BLINE,'(3A15)') 'Insens.','Insens.','Insens.'
@@ -1472,8 +1477,9 @@ END SUBROUTINE WRITEIPF
  CHARACTER(LEN=*),INTENT(IN) :: ROOT
  REAL(KIND=8) :: DJ1,DJ2
  REAL(KIND=8) :: B1,TS,DF1,DF2,BETA,EIGWTHRESHOLD,W,DH1,DH2
- INTEGER :: I,II,J,K,L,NP,MP,IP1,IP2,NE,ISING,ITRIES
+ INTEGER :: I,II,J,K,L,NP,MP,IP1,IP2,NE,ISING,ITRIES,IBND
  INTEGER,ALLOCATABLE,DIMENSION(:) :: INDX,ICOR
+ REAL :: P1,P2,PMIN,PMAX
  REAL(KIND=8),ALLOCATABLE,DIMENSION(:,:) :: TDJ,C,JS,P,PT
  REAL(KIND=8),ALLOCATABLE,DIMENSION(:) :: GAMMA,N,RU 
  REAL(KIND=8),ALLOCATABLE,DIMENSION(:) :: S
@@ -1534,9 +1540,13 @@ END SUBROUTINE WRITEIPF
 
  !## melt frozen parameters
  DO IP1=1,SIZE(PARAM)
+  !## current state of the boundaries
+  CALL PEST_GETBOUNDARY(IP1,IBND,P1,P2,PMIN,PMAX)
+  PARAM(IP1)%IBND=IBND
   IF(PARAM(IP1)%IACT.EQ.-1.AND.PARAM(IP1)%IGROUP.GT.0)THEN
    PARAM(IP1)%IACT=1
   ENDIF
+!  write(*,*) ip1,param(ip1)%ibnd,param(ip1)%iact
  ENDDO
 
  !## freeze-insensitive parameters
@@ -1642,7 +1652,6 @@ END SUBROUTINE WRITEIPF
    JQR=0.0; I=0
    DO IP1=1,SIZE(PARAM)  !## row
     IF(PARAM(IP1)%IACT.NE.1.OR.PARAM(IP1)%IGROUP.LE.0)CYCLE
-!    DF1=REAL(PARAM(IP1)%DELTA,8)
     I=I+1
     DO J=1,PEST_NOBS
      DJ1=JS(I,J)
@@ -1744,6 +1753,7 @@ END SUBROUTINE WRITEIPF
   IF(PESTUPGRADEVECTOR(1.0,.TRUE.,LAMBDARESET=LAMBDARESET))THEN 
    !## check whether number of parameters is equal to the number started this loop with
    MP=0; DO I=1,SIZE(PARAM); IF(PARAM(I)%IACT.EQ.1.AND.PARAM(I)%IGROUP.GT.0)MP=MP+1; ENDDO
+!   WRITE(*,*) 'MP,NP',MP,NP
    IF(MP.EQ.NP)EXIT
   ENDIF
   !## reset marquardt lambda
@@ -1753,7 +1763,8 @@ END SUBROUTINE WRITEIPF
    !## increase marquardt
    MARQUARDT=MARQUARDT*DAMPINGFACTOR
   ENDIF
- 
+!  WRITE(*,*) 'LAMBDARESET,MARQUARDT',LAMBDARESET,MARQUARDT
+
  ENDDO !## marquardt-loop
 
  !## write statistics
@@ -2070,7 +2081,8 @@ END SUBROUTINE WRITEIPF
  
  !## adjust vector for fct (line-search)
  I=0; DO IP1=1,SIZE(PARAM)
-  IF(PARAM(IP1)%IACT.NE.1.OR.PARAM(IP1)%IGROUP.LE.0)CYCLE
+
+ IF(PARAM(IP1)%IACT.NE.1.OR.PARAM(IP1)%IGROUP.LE.0)CYCLE
   I=I+1; U(I)=U(I)*FCT
  ENDDO
 
@@ -2093,7 +2105,7 @@ END SUBROUTINE WRITEIPF
   ENDIF
 
   !## update parameters
-  PARAM(IP1)%ALPHA(1)=PARAM(IP1)%ALPHA(2)+G !*FCT
+  PARAM(IP1)%ALPHA(1)=PARAM(IP1)%ALPHA(2)+G
 
  ENDDO
 
@@ -2126,6 +2138,7 @@ END SUBROUTINE WRITEIPF
    IF(PARAM(IP1)%IACT.NE.1)CYCLE
 
    CALL PEST_GETBOUNDARY(IP1,IBND,P1,P2,PMIN,PMAX)
+!   write(*,*) ip1,param(ip1)%ibnd,ibnd,param(ip1)%iact
 
    !## parameter hits the boundary
    IF(IBND.NE.0)THEN
@@ -2138,12 +2151,14 @@ END SUBROUTINE WRITEIPF
      AF=1.0
      IF(P1.LT.PMIN)AF=(P2-PMIN)/(P2-P1)
      IF(P1.GT.PMAX)AF=(PMAX-P2)/(P1-P2)
+     write(*,*) 'p1,p2,pmin,pmax',p1,p2,pmin,pmax
      !## keep track of minimal adjustment of vector
      F=MIN(AF,F)
+     write(*,*) 'af,f',af,f
     ENDIF
    ENDIF  
   ENDDO
-
+ 
   !## corrects all gradients with this factor
   IF(F.LT.1.0)THEN
    
@@ -2161,9 +2176,10 @@ END SUBROUTINE WRITEIPF
  
  ENDIF
   
+ !## correct update gradient found
  PESTUPGRADEVECTOR=.TRUE.
 
- DO J=1,SIZE(U); WRITE(*,*) J,U(J); ENDDO
+! DO J=1,SIZE(U); WRITE(*,*) J,U(J); ENDDO
 
  J=0; DO IP1=1,SIZE(PARAM)
 
@@ -2173,9 +2189,9 @@ END SUBROUTINE WRITEIPF
    PARAM(IP1)%ALPHA_HISTORY(PEST_ITER)=PARAM(IP1)%ALPHA(1)
   ENDIF
   
-  !## set ibnd flag
-  CALL PEST_GETBOUNDARY(IP1,IBND,P1,P2,PMIN,PMAX)
-  PARAM(IP1)%IBND=IBND
+!  !## set ibnd flag
+!  CALL PEST_GETBOUNDARY(IP1,IBND,P1,P2,PMIN,PMAX)
+!  PARAM(IP1)%IBND=IBND
 
   !## active parameter
   IF(PARAM(IP1)%IACT.NE.1)CYCLE
@@ -2185,7 +2201,7 @@ END SUBROUTINE WRITEIPF
   
  ENDDO
 
- DO J=1,SIZE(U); WRITE(*,*) J,U(J); ENDDO
+! DO J=1,SIZE(U); WRITE(*,*) J,U(J); ENDDO
  
 !PAUSE
 
