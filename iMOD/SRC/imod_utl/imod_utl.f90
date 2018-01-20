@@ -1021,96 +1021,95 @@ CONTAINS
  SUBROUTINE UTL_PCK_GETTLP(N,TLP,KH,TOP,BOT,Z1,Z2,MINKHT,ICLAY)
  !###======================================================================
  IMPLICIT NONE
- REAL,PARAMETER :: MINP=0.0 !5
+ REAL,PARAMETER :: MINP=0.0
  INTEGER,INTENT(IN) :: N,ICLAY
  REAL,INTENT(IN) :: MINKHT
  REAL,INTENT(INOUT) :: Z1,Z2
  REAL,INTENT(IN),DIMENSION(N) :: KH,TOP,BOT
  REAL,INTENT(INOUT),DIMENSION(N) :: TLP
- INTEGER :: JLAY,ILAY,K,IDIFF
+ INTEGER :: JLAY,ILAY,K !,IDIFF
  REAL :: ZM,ZT,ZB,ZC,FC,DZ
  REAL,ALLOCATABLE,DIMENSION(:) :: L,TL
  INTEGER,ALLOCATABLE,DIMENSION(:) :: IL
    
  ALLOCATE(L(N),TL(N),IL(N))
  
- !## make sure thickness is not exactly zero, minimal thickness is 0.01m
- IDIFF=0; IF(Z1.EQ.Z2)THEN; Z1=Z1+0.005; Z2=Z2-0.005; IDIFF=1; ENDIF
- 
- !## filterlength for each modellayer
- L=0.0
- DO ILAY=1,N
-  ZT=MIN(TOP(ILAY),Z1); ZB=MAX(BOT(ILAY),Z2); L(ILAY)=MAX(0.0,ZT-ZB)
- ENDDO
- 
- TLP=0.0
- !## well within any aquifer(s)
- IF(SUM(L).GT.0.0)THEN
-  !## compute percentage and include sumkd, only if itype.eq.2
-  L=L*KH
-  !## percentage (0-1) L*KH
-  DO ILAY=1,N; IF(L(ILAY).NE.0.0)TLP=(1.0/SUM(L))*L; ENDDO
- ENDIF
+ !## not thickness between z1 and z2 - look for correct modellayer
+ IF(Z1.EQ.Z2)THEN
 
- !## correct for dismatch with centre of modelcell
- DO ILAY=1,N
-  IF(TLP(ILAY).GT.0.0)THEN
-   DZ= TOP(ILAY)-BOT(ILAY)
-   ZC=(TOP(ILAY)+BOT(ILAY))/2.0
-   ZT= MIN(TOP(ILAY),Z1)
-   ZB= MAX(BOT(ILAY),Z2)
-   FC=(ZT+ZB)/2.0
-   TLP(ILAY)=TLP(ILAY)*(1.0-(ABS(ZC-FC)/(0.5*DZ)))
-  ENDIF
- ENDDO
- 
- !## normalize tlp() again
- IF(SUM(TLP).GT.0.0)TLP=(1.0/SUM(TLP))*TLP
- 
-! !## remove small percentages
-! DO ILAY=1,N; IF(TLP(ILAY).LT.MINP)TLP(ILAY)=0.0; ENDDO
-
-! !## normalize tlp() again
-! IF(SUM(TLP).GT.0.0)TLP=(1.0/SUM(TLP))*TLP
-
- !## remove small transmissivities
- IF(MINKHT.GT.0.0)THEN
-  ZT=SUM(TLP) 
+  TLP=0.0; ZM=Z1
   DO ILAY=1,N
-   DZ= TOP(ILAY)-BOT(ILAY)
-   IF(KH(ILAY)*DZ.LT.MINKHT)TLP(ILAY)=0.0
-  ENDDO
-  IF(SUM(TLP).GT.0.0)THEN
-   ZT=ZT/SUM(TLP); TLP=ZT*TLP
-  ENDIF
- ENDIF
- 
- !## normalize tlp() again
- IF(SUM(TLP).GT.0.0)TLP=(1.0/SUM(TLP))*TLP
-  
- !## make sure only one layer is assigned whenever z1.eq.z2
- IF(IDIFF.EQ.1)THEN
-  K=0; ZT=0.0; DO ILAY=1,N
-   IF(ABS(TLP(ILAY)).GT.ZT)THEN
-    ZT=ABS(TLP(ILAY)); K=ILAY
+   IF(ZM.GE.BOT(ILAY).AND.ZM.LE.TOP(ILAY))THEN
+    TLP(ILAY)=1.0; EXIT
    ENDIF
   ENDDO
-  IF(K.GT.0)THEN
-   ZT=TLP(K)
-   TLP=0.0; TLP(K)=1.0 
-   IF(ZT.LT.0.0)TLP(K)=-1.0*TLP(K)
+
+ ELSE
+ 
+  !## filterlength for each modellayer
+  L=0.0
+  DO ILAY=1,N
+   ZT=MIN(TOP(ILAY),Z1); ZB=MAX(BOT(ILAY),Z2); L(ILAY)=MAX(0.0,ZT-ZB)
+  ENDDO
+ 
+  TLP=0.0
+  !## well within any aquifer(s)
+  IF(SUM(L).GT.0.0)THEN
+   !## compute percentage and include sumkd, only if itype.eq.2
+   L=L*KH
+   !## percentage (0-1) L*KH
+   DO ILAY=1,N; IF(L(ILAY).NE.0.0)TLP=(1.0/SUM(L))*L; ENDDO
   ENDIF
- ENDIF
+
+  !## correct for dismatch with centre of modelcell
+  DO ILAY=1,N
+   IF(TLP(ILAY).GT.0.0)THEN
+    DZ= TOP(ILAY)-BOT(ILAY)
+    ZC=(TOP(ILAY)+BOT(ILAY))/2.0
+    ZT= MIN(TOP(ILAY),Z1)
+    ZB= MAX(BOT(ILAY),Z2)
+    FC=(ZT+ZB)/2.0
+    TLP(ILAY)=TLP(ILAY)*(1.0-(ABS(ZC-FC)/(0.5*DZ)))
+   ENDIF
+  ENDDO
+ 
+  !## normalize tlp() again
+  IF(SUM(TLP).GT.0.0)TLP=(1.0/SUM(TLP))*TLP
+
+  !## remove small transmissivities
+  IF(MINKHT.GT.0.0)THEN
+   ZT=SUM(TLP) 
+   DO ILAY=1,N
+    DZ= TOP(ILAY)-BOT(ILAY)
+    IF(KH(ILAY)*DZ.LT.MINKHT)TLP(ILAY)=0.0
+   ENDDO
+   IF(SUM(TLP).GT.0.0)THEN
+    ZT=ZT/SUM(TLP); TLP=ZT*TLP
+   ENDIF
+  ENDIF
+ 
+  !## normalize tlp() again
+  IF(SUM(TLP).GT.0.0)TLP=(1.0/SUM(TLP))*TLP
   
+! !## make sure only one layer is assigned whenever z1.eq.z2
+! IF(IDIFF.EQ.1)THEN
+!  K=0; ZT=0.0; DO ILAY=1,N
+!   IF(ABS(TLP(ILAY)).GT.ZT)THEN
+!    ZT=ABS(TLP(ILAY)); K=ILAY
+!   ENDIF
+!  ENDDO
+!  IF(K.GT.0)THEN
+!   ZT=TLP(K)
+!   TLP=0.0; TLP(K)=1.0 
+!   IF(ZT.LT.0.0)TLP(K)=-1.0*TLP(K)
+!  ENDIF
+! ENDIF
+
+ ENDIF
+   
  !## nothing in model, whenever system on top of model, put them in first modellayer with thickness
  IF(SUM(TLP).EQ.0.0)THEN
-  IF(Z1.GE.TOP(1))THEN
-   TLP(1)=1.0
-!   DO ILAY=1,N
-!    DZ=TOP(ILAY)-BOT(ILAY)
-!    IF(DZ.GT.0.0.AND.KH(ILAY)*DZ.GT.MINKHT)THEN; TLP(ILAY)=1.0; EXIT; ENDIF
-!   ENDDO
-  ENDIF
+  IF(Z1.GE.TOP(1))TLP(1)=1.0
  ENDIF
 
  !## if no layers has been used for the assignment, try to allocate it to aquifer of this interbed
