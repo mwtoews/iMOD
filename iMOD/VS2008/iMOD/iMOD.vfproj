@@ -303,7 +303,7 @@
 			<FileConfiguration Name="Debug|Win32">
 				<Tool Name="VFFortranCompilerTool" Preprocess="preprocessYes" PreprocessorDefinitions="WINTERACTER11"/></FileConfiguration>
 			<FileConfiguration Name="Release|x64">
-				<Tool Name="VFFortranCompilerTool" Preprocess="preprocessYes" PreprocessorDefinitions="WINTERACTER11"/></FileConfiguration>
+				<Tool Name="VFFortranCompilerTool" Preprocess="preprocessYes" PreprocessorDefinitions="WINTERACTER11" FPPDefinesOnly="false"/></FileConfiguration>
 			<FileConfiguration Name="Debug|x64">
 				<Tool Name="VFFortranCompilerTool" Preprocess="preprocessYes" PreprocessorDefinitions="WINTERACTER11"/></FileConfiguration>
 			<FileConfiguration Name="Release|Win32">
@@ -471,6 +471,12 @@
 		<File RelativePath="..\..\..\iMOD\SRC\imod_tstat\tsclean.f90"/>
 		<File RelativePath="..\..\..\iMOD\SRC\imod_tstat\tscorr2.for"/>
 		<File RelativePath="..\..\..\iMOD\SRC\imod_tstat\tsstat.f90"/></Filter>
+		<Filter Name="imod_udf">
+		<File RelativePath="..\..\SRC\imod_udf\imod_udf_bench.f90"/>
+		<File RelativePath="..\..\SRC\imod_udf\imod_udf_geometry.f90"/>
+		<File RelativePath="..\..\SRC\imod_udf\imod_udf_gmshio.f90"/>
+		<File RelativePath="..\..\SRC\imod_udf\imod_udf_kdtree2.f90"/>
+		<File RelativePath="..\..\SRC\imod_udf\imod_udf_utl.f90"/></Filter>
 		<Filter Name="imod_utl">
 		<File RelativePath="..\..\..\iMOD\SRC\imod_utl\imod_idf_new.f90"/>
 		<File RelativePath="..\..\..\iMOD\SRC\imod_utl\imod_idf_par.f90"/>
@@ -498,12 +504,6 @@
 		<File RelativePath="..\..\SRC\imod_wbal\imod_wbal_graphics.f90"/>
 		<File RelativePath="..\..\..\iMOD\SRC\imod_wbal\imod_wbal_par.f90"/>
 		<File RelativePath="..\..\SRC\imod_wbal\imod_wbal_utl.f90"/></Filter>
-		<Filter Name="imod_udf">
-		<File RelativePath="..\..\SRC\imod_udf\imod_udf_bench.f90"/>
-		<File RelativePath="..\..\SRC\imod_udf\imod_udf_geometry.f90"/>
-		<File RelativePath="..\..\SRC\imod_udf\imod_udf_gmshio.f90"/>
-		<File RelativePath="..\..\SRC\imod_udf\imod_udf_kdtree2.f90"/>
-		<File RelativePath="..\..\SRC\imod_udf\imod_udf_utl.f90"/></Filter>
 		<Filter Name="programs">
 		<File RelativePath="..\..\..\iMOD\SRC\imod_main\imod_prg.f90">
 			<FileConfiguration Name="Debug|Win32">
