@@ -116,7 +116,8 @@ implicit none
             mf2005_GetQdemand,&             ! mod-ribasim coupling
             mf2005_PutQrealized,&           ! mod-ribasim coupling
             mf2005_PutHeadsForLayer,&       ! mod-wflow coupling
-            mf2005_GetRecharge              ! mod-wflow coupling 
+            mf2005_GetRecharge,&            ! mod-wflow coupling 
+            mf2005_GetDis                   ! mod-wflow coupling 
 
  ! general
 integer, dimension(:,:), allocatable :: XchModSimModCells, XchModMozModCells, XchModTranModCells

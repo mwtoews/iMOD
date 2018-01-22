@@ -986,7 +986,7 @@ subroutine modflow_dll_set_timestep_done(done_with_current_timestep, Reset_time)
           dimension(:,:), pointer :: mf_layer1_head
     real, dimension(:,:), pointer :: mf_recharge
     double precision :: mf_end_time
-    real, dimension(:), pointer :: mf_delt
+    double precision, dimension(:), pointer :: mf_delt
 
  contains
     
@@ -1034,9 +1034,7 @@ end module mf_bmi_module
     
     use mf_bmi_module
     use global
-    use rf2mf_module, only: dis, starttime
-    
-    ! return value (c_iresult == 0: everything ok)
+    use rf2mf_module, only: starttime
 
     ! arguments
     character(kind=c_char),intent(in)    :: c_config_file(MAXSTRINGLEN)
@@ -1052,8 +1050,8 @@ end module mf_bmi_module
     integer                      :: retValMF2005
     double precision             :: tstart, factor
     integer                      :: iper, year, month, day, date
-    integer                      :: perln, nsp
-    real                         :: tsmlt
+    integer                      :: mf_nsp
+    real                         :: mf_tsmlt, mf_perlen
  
     ! get the config file name name
     config_file = char_array_to_string(c_config_file, strlen(c_config_file))
@@ -1077,6 +1075,7 @@ end module mf_bmi_module
     endif
     
     ! determine starttime/endtime
+    write(*,*) 'starttime:',starttime
     read(starttime(1:4),*) year
     read(starttime(5:6),*) month
     read(starttime(7:8),*) day
@@ -1086,21 +1085,21 @@ end module mf_bmi_module
     if (itmuni.eq.1) factor = 1/86400.d0 ! seconds
     if (itmuni.eq.2) factor = 1/1440.d0  ! minutes
     if (itmuni.eq.3) factor = 1/24.d0    ! hours    
-    
-    allocate(mf_delt(dis%nper))
-    allocate(dis%sp(dis%nper))
+
+    ok = mf2005_GetDis(nper,perlen,nstp,tsmult)
+    allocate(mf_delt(nper))
     one=1.
     mf_end_time = tstart  
-    mf_nper = dis%nper
-    do kper = 1, dis%nper 
-       perln  = dis%sp(kper)%perlen
-       nsp    = dis%sp(kper)%nstp
-       tsmlt  = dis%sp(kper)%tsmult  
-       mf_delt(kper) = perln/float(nsp)
-       if(tsmlt.ne.one)then
-          mf_delt(kper)=perln*(one-tsmlt)/(one-tsmlt)**nsp
+    mf_nper = nper
+    do kper = 1, nper 
+       mf_perlen  = perlen(kper)
+       mf_nsp    = nstp(kper)
+       mf_tsmlt  = tsmult(kper)  
+       mf_delt(kper) = mf_perlen/dble(mf_nsp)
+       if(mf_tsmlt.ne.one)then
+          mf_delt(kper)=mf_perlen*(one-mf_tsmlt)/(one-mf_tsmlt)**mf_nsp
        end if    
-       mf_end_time = mf_end_time+mf_delt(kper)*factor ! [d]    
+       mf_end_time = mf_end_time+mf_delt(kper)*dble(factor) ! [d]    
     end do
 
   end function initialize
@@ -1172,16 +1171,16 @@ end module mf_bmi_module
     !DEC$ ATTRIBUTES DLLEXPORT :: update
 
     use mf_bmi_module
+    use iso_c_binding
 
     real(c_double),intent(in) :: dt
 
     logical :: stssave
     logical :: doTimeLoop
     integer :: ret_val
-    double precision :: tt,endTime, currentTime, nextTime
+    double precision :: tt,endTime,currentTime,nextTime
     
-    stssave=.true.
-    
+    stssave=.true.    
     call mf2005_getCurrentTime(currentTime, ret_val)
     endTime = currentTime + dt
     nextTime = currentTime
@@ -1191,6 +1190,7 @@ end module mf_bmi_module
     end do
         
     c_iresult = 0
+
   end function update
   
   subroutine update_until(c_time) bind(C, name="update_until")
@@ -1233,9 +1233,9 @@ end module mf_bmi_module
     var_name = char_array_to_string(c_var_name, strlen(c_var_name))
 
     select case(var_name)
-    case("head")
+    case("head","delt")
         type_name = "double"
-    case("recharge","delt")
+    case("recharge")
         type_name = "float"
     end select
 

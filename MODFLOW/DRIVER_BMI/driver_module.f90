@@ -45,6 +45,7 @@ use pks_imod_utl, only: pks_imod_utl_idfmerge_init, pks_imod_utl_write_idfmergef
 use mod_pest, only: pest1_meteo_metaswap, pest1alpha_metaswap, pest1appendlogfile, pestnext, pestdumpfct, PEST1INIT, PEST1CLOSELOGFILES
 use PESTVAR, only : IUPESTOUT
 use pks_imod_utl, only: pks_imod_utl_iarmwp_xch_read
+use rf2mf_module, only: tDis
 
 implicit none
 
@@ -375,6 +376,14 @@ interface
       integer, intent(in) :: ncol,nrow,ilay,igrid
       double precision, dimension(ncol,nrow), intent(out) :: head
    end function
+end interface
+interface
+  logical function mf2005_GetDis(disnper,disperlen,disnstp,distsmult)
+      integer, intent(out) :: disnper
+      real,dimension(*),intent(out) :: disperlen
+      integer,dimension(*),intent(out) :: disnstp
+      real,dimension(*),intent(out) :: distsmult      
+  end function
 end interface
  
  ! general
