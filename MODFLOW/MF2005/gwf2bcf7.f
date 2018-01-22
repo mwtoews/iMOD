@@ -1344,8 +1344,8 @@ C     ------------------------------------------------------------------
      1                      IMINC,MINC                                  ! DLT
 C
       DOUBLE PRECISION HCNV
-      REAL :: C, MAXC, TINY, MAXVCOND                                   ! DLT
-      PARAMETER( MAXC = 1.0E8,TINY=1.0E-20,MAXVCOND=1.0E6)              ! DLT
+      REAL :: C, TINY, MAXVCOND                                   ! DLT
+      PARAMETER( TINY=1.0E-20,MAXVCOND=1.0E6)              ! DLT
 C     ------------------------------------------------------------------
 C
 C1------MULTIPLY VERTICAL LEAKANCE BY AREA TO MAKE CONDUCTANCE.

@@ -755,7 +755,7 @@ c arguments
       real, intent(in) :: z1, z2
       logical,intent(in) :: lkhv
 c parameters
-      real, parameter :: maxc = 1000000.0
+!      real, parameter :: maxc = 1000000.0
       real, parameter :: minkh = 0.0
       real, parameter :: tiny = 1.0e-20
       integer, parameter :: iclay = 1
@@ -795,7 +795,7 @@ c init
        end do
 
        call IMOD_UTL_ST1CREATEIPF_GETTLP(nlay,tlp,kh,c,tp,bt,z1,z2,
-     1                              maxc,minkh,iclay,'error-txt')
+     1                              minkh,iclay,'error-txt')
 
 c## nothing in model, whenever system on top of model, put them in first modellayer
       if(sum(tlp).le.0)then

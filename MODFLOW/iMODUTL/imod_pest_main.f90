@@ -1223,7 +1223,8 @@ END SUBROUTINE WRITEIPF
  LOGICAL,INTENT(IN) :: LPRINT
  INTEGER :: I,J,K,IP1,IERROR
  REAL :: Z1,Z2,Z,ZW
-
+ LOGICAL :: LLOG
+ 
  PESTWRITESTATISTICS_PERROR=.FALSE.
  
  !## The asymptotic standard parameter error is a measure of how unexplained variability in the
@@ -1298,13 +1299,18 @@ END SUBROUTINE WRITEIPF
     WRITE(IUPESTOUT,'(3X,A2,2I5.5,A1,I3.3,A)') PARAM(I)%PTYPE,PARAM(I)%ILS,PARAM(I)%IZONE,'-',ABS(PARAM(I)%IGROUP),TRIM(BLINE)
    ENDIF
 
-   !## ignore parameter with too high of a band for unreliability, turn if off
-   IF(LOG10(Z2)-LOG10(Z1).GT.XBANDW)THEN
+   LLOG=.FALSE.
+   IF(Z1.NE.0.0.AND.Z2.NE.0.0)THEN
+    !## ignore parameter with too high of a band for unreliability, turn if off
+    LLOG=LOG10(Z2)-LOG10(Z1).GT.XBANDW
 !    WRITE(IUPESTOUT,'(/6G15.7/)') Z2,Z1,LOG10(Z2),LOG10(Z1),LOG10(Z2)-LOG10(Z1),XBANDW
+   ELSE
+    LLOG=.TRUE.
+   ENDIF
+   IF(LLOG)THEN
     WRITE(IUPESTOUT,'(/3X,A2,2I5.5,A1,I3.3)') PARAM(I)%PTYPE,PARAM(I)%ILS,PARAM(I)%IZONE,'-',ABS(PARAM(I)%IGROUP)
-    WRITE(IUPESTOUT,'(A,2G15.7)') 'This parameter too unreliable to estimate: ',LOG10(Z2)-LOG10(Z1),XBANDW
+    WRITE(IUPESTOUT,'(A,2G15.7)') 'This parameter too unreliable to estimate: ',Z1,Z2
     WRITE(IUPESTOUT,'(A/)') 'Parameter will be turned off for this cycle'
-    !   WRITE(IUPESTOUT,'(/6G15.7/)') Z2,Z1,LOG10(Z2),LOG10(Z1),LOG10(Z2)-LOG10(Z1),XBANDW
     PARAM(I)%IACT=-1; RETURN
    ENDIF
    

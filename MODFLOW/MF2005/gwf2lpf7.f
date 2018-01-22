@@ -1997,8 +1997,8 @@ C     ------------------------------------------------------------------
      2                        IMINC,MINC                                ! DLT
 C
       DOUBLE PRECISION BBOT,TTOP,HHD
-      REAL :: SUMVAL, MAXC, TINY                                        ! DLT
-      PARAMETER( MAXC = 1.0E8,TINY=1.0E-20)                             ! DLT
+      REAL :: SUMVAL, TINY                                        ! DLT
+      PARAMETER( TINY=1.0E-20)                             ! DLT
 C     ------------------------------------------------------------------
 C
       IF(K.EQ.NLAY) RETURN
@@ -2084,7 +2084,7 @@ C7------CALCULATE INVERSE LEAKANCE FOR CONFINING BED.
                      IF (HYC3.EQ.TINY) CBBOVK = 0.                      ! DLT
                      SUMVAL = BOVK1+CBBOVK+BOVK2
                      IF (IMINC.EQ.1) THEN                               ! DLT
-                        SUMVAL = MIN(SUMVAL,MAXC)                       ! DLT
+!                        SUMVAL = MIN(SUMVAL,MAXC)                       ! DLT
                         SUMVAL = MAX(SUMVAL,MINC)                       ! DLT
                      END IF                                             ! DLT
                      CV(J,I,K)=DELR(J)*DELC(I)/SUMVAL                   ! DLT
@@ -2094,7 +2094,7 @@ C7------CALCULATE INVERSE LEAKANCE FOR CONFINING BED.
                   IF (HYC2.EQ.TINY) BOVK2  = 0.                         ! DLT
                   SUMVAL = BOVK1+BOVK2
                   IF (IMINC.EQ.1) THEN                                  ! DLT
-                     SUMVAL = MIN(SUMVAL,MAXC)                          ! DLT
+!                     SUMVAL = MIN(SUMVAL,MAXC)                          ! DLT
                      SUMVAL = MAX(SUMVAL,MINC)                          ! DLT
                   END IF                                                ! DLT
                   CV(J,I,K)=DELR(J)*DELC(I)/SUMVAL                      ! DLT
