@@ -104,9 +104,9 @@ CONTAINS
 
  END SUBROUTINE UTL_QKSORT
 
- !====================================================
+ !###====================================================
  SUBROUTINE UTL_QKSORT2(ARR,BRR,NDIM,N)
- !====================================================
+ !###====================================================
  IMPLICIT NONE
  INTEGER,INTENT(IN) :: NDIM,N
  REAL,INTENT(INOUT),DIMENSION(:) :: ARR,BRR
@@ -205,15 +205,14 @@ CONTAINS
 
  END SUBROUTINE
 
- !====================================================
+ !###====================================================
  SUBROUTINE UTL_QKSORT_INT(ARR,BRR,NDIM,N)
- !====================================================
+ !###====================================================
  IMPLICIT NONE
  INTEGER,INTENT(IN) :: NDIM,N
  INTEGER,INTENT(INOUT),DIMENSION(NDIM) :: ARR
  REAL,INTENT(INOUT),DIMENSION(NDIM) :: BRR
  INTEGER,PARAMETER :: M=7,NSTACK=50
- !PARAMETER (M=7,NSTACK=50)
  INTEGER :: I,IR,J,JSTACK,K,L,ISTACK(NSTACK)
  REAL :: B,BTEMP
  INTEGER :: A,ATEMP
@@ -308,9 +307,9 @@ CONTAINS
 
  END SUBROUTINE
 
- !====================================================
+ !###====================================================
  SUBROUTINE UTL_QKSORT_INT2(ARR,BRR,NDIM,N)
- !====================================================
+ !###====================================================
  IMPLICIT NONE
  INTEGER,INTENT(IN) :: NDIM,N
  INTEGER,INTENT(INOUT),DIMENSION(NDIM) :: ARR
@@ -410,9 +409,9 @@ CONTAINS
 
  END SUBROUTINE
 
- !====================================================
+ !###====================================================
  SUBROUTINE QKSORTDOUBLE2(ARR,BRR,N)
- !====================================================
+ !###====================================================
  IMPLICIT NONE
  INTEGER,INTENT(IN) :: N
  DOUBLE PRECISION,INTENT(INOUT),DIMENSION(N) :: ARR,BRR
@@ -546,7 +545,7 @@ CONTAINS
  !###====================================================
  IMPLICIT NONE
  INTEGER,INTENT(IN) :: N
- INTEGER(KIND=8),POINTER,DIMENSION(:)  :: A
+ INTEGER(KIND=8),POINTER,DIMENSION(:) :: A
  INTEGER :: I,J,INC
  INTEGER(KIND=8) :: V
 
@@ -576,7 +575,7 @@ CONTAINS
  !###====================================================
  IMPLICIT NONE
  INTEGER,INTENT(IN) :: N
- DOUBLE PRECISION,DIMENSION(N)  :: A,B
+ DOUBLE PRECISION,DIMENSION(N) :: A,B
  INTEGER :: I,J,INC
  REAL :: V,W
 
