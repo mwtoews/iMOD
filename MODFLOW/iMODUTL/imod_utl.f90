@@ -124,6 +124,20 @@ data lic/'======================================================================
 CONTAINS
 
  !###======================================================================
+ REAL FUNCTION UTL_DIST(X1,Y1,X2,Y2)
+ !###======================================================================
+ IMPLICIT NONE
+ REAL,INTENT(IN) :: X1,Y1,X2,Y2
+ REAL :: DX,DY
+ 
+ UTL_DIST=0.0
+ 
+ DX=(X1-X2)**2.0; DY=(Y1-Y2)**2.0
+ IF(DX+DY.NE.0.0)UTL_DIST=SQRT(DX+DY)
+ 
+ END FUNCTION UTL_DIST
+ 
+ !###======================================================================
  SUBROUTINE UTL_KRIGING_MAIN(MD,XD,YD,ZD,DELR,DELC,NROW,NCOL,X,NODATA,RANGE,KTYPE)     
  !###======================================================================
  IMPLICIT NONE
@@ -139,14 +153,22 @@ CONTAINS
  INTEGER :: ITYPE,NR,NC,MX,I,J,NAJ
  REAL,PARAMETER :: NUGGET=0.0, SILL=100.0
  
- CALL UTL_KRIGING_INIT(MD,XD,YD,ZD,ND,KTYPE,MZ,NODATA) 
-  
+ CALL UTL_KRIGING_INIT(MD,XD,YD,ZD,ND,KTYPE,NODATA) 
+ DO I=1,ND
+  WRITE(*,'(A,I10,3G15.7)') 'XYZ',I,XD(I),YD(I),ZD(I)   
+ENDDO
+
+ !## compute mean and substract values from mean - simple kriging
+ IF(KTYPE.GT.0)THEN
+   MZ=0.0; DO I=1,ND; MZ=MZ+ZD(I); ENDDO; IF(ND.GT.0.0)MZ=MZ/REAL(ND)
+   DO I=1,ND; ZD(I)=ZD(I)-MZ; ENDDO
+ ENDIF
+
  DO IROW=1,NROW
   DO ICOL=1,NCOL
    IF(X(ICOL,IROW).NE.NODATA)CYCLE
    XC=(DELR(ICOL-1)+DELR(ICOL))/2.0
-   YC=(DELC(IROW)+DELC(IROW))/2.0
-   
+   YC=(DELC(IROW)+DELC(IROW-1))/2.0
    CALL UTL_KRIGING_FILLSYSTEM(XD,YD,ZD,ND,XC,YC,RANGE,SILL,NUGGET,KTYPE,MZ,KEST,KVAR,NODATA)
    X(ICOL,IROW)=KEST 
   ENDDO
@@ -172,9 +194,9 @@ CONTAINS
  
  NP=ND; ALLOCATE(SELID(NP)); J=0
  DO ID=1,NP
-!  IF(UTL_DIST(XD(ID),YD(ID),X,Y).LE.RANGE)THEN
+  IF(UTL_DIST(XD(ID),YD(ID),X,Y).LE.RANGE)THEN
    J=J+1; SELID(J)=ID
-!  ENDIF
+  ENDIF
  ENDDO
  NP=J
   
@@ -222,7 +244,7 @@ CONTAINS
 
   !## ordinary kriging compute the local mean mzz instead of the global mean mz
   IF(KTYPE.LT.0)THEN
-   MZZ=0.0 !; DO I=1,NP; ID=SELID(I); MZZ=MZZ+ZD(ID); ENDDO; MZZ=MZZ/REAL(NP)
+   MZZ=0.0; DO I=1,NP; ID=SELID(I); MZZ=MZZ+ZD(ID); ENDDO; MZZ=MZZ/REAL(NP)
   ENDIF
 
   KEST=0.0
@@ -244,8 +266,8 @@ CONTAINS
   DO I=1,NP 
    ID=SELID(I)
    GAMMA=UTL_KRIGING_GETGAMMA(XD(ID),YD(ID),X,Y,RANGE,SILL,NUGGET,KTYPE)
-   KVAR=KVAR+B(I)*GAMMA
-  ENDDO
+   KVAR=KVAR+B(I)*(SILL-GAMMA) 
+   ENDDO
   IF(KTYPE.LT.0)KVAR=KVAR+B(N)
    
  ENDIF
@@ -255,12 +277,12 @@ CONTAINS
  END SUBROUTINE UTL_KRIGING_FILLSYSTEM
 
  !###======================================================================
- REAL FUNCTION UTL_KRIGING_GETGAMMA(X1,Y1,X2,Y2,RANGE,SILL,NUGGET,KTYPE)
+ REAL FUNCTION UTL_KRIGING_GETGAMMA(X1,Y1,X2,Y2,RANGE,C1,C0,KTYPE) !,SILL,NUGGET,KTYPE)
  !###======================================================================
  ! gamma is function that yeld factor between 0.0 and 1.0
  IMPLICIT NONE
  INTEGER,INTENT(IN) :: KTYPE
- REAL,INTENT(IN) :: X1,Y1,X2,Y2,RANGE,SILL,NUGGET
+ REAL,INTENT(IN) :: X1,Y1,X2,Y2,RANGE,C1,C0 !SILL,NUGGET
  REAL :: DX,DY,DXY,H,F
  INTEGER :: I
  
@@ -268,23 +290,27 @@ CONTAINS
  IF(DXY.GT.0.0)DXY=SQRT(DXY)
  
  !## no part of kriging, beyond given range, equal to sill
- IF(DXY.GT.RANGE)THEN
-  H=1.0
- ELSEIF(DXY.EQ.0.0)THEN
-  H=0.0
+ IF(DXY.GE.RANGE)THEN
+  H=0.999
  ELSE
   SELECT CASE (ABS(KTYPE))
    CASE (1) !## linear
-    H=DXY/RANGE !*((SILL-NUGGET)/RANGE)
+    H=DXY/RANGE
    CASE (2) !## spherical
-    H=(1.5*(DXY/RANGE))-(0.5*(DXY/RANGE)**3.0)
+    H=(3.0*DXY)/(2.0*RANGE)-(0.5*(DXY/RANGE)**3.0)
    CASE (3) !## exponential
-    H=1.0-EXP(-3.0*DXY/RANGE)
+    H=1.0-EXP(-3.0*(DXY/RANGE))
+   CASE (4) !## gaussian
+    H=1.0-EXP(-3.0*(DXY**2.0)/(RANGE**2.0))
+   CASE (5) !## power
+    H=DXY**0.5
    CASE DEFAULT
     WRITE(*,*) 'UNKNOWN KTYPE',KTYPE; PAUSE; STOP
   END SELECT
  ENDIF
- UTL_KRIGING_GETGAMMA=NUGGET+((SILL-NUGGET)*H)
+
+ UTL_KRIGING_GETGAMMA=C0+C1*H
+ !UTL_KRIGING_GETGAMMA=NUGGET+((SILL-NUGGET)*H)
   
  END FUNCTION UTL_KRIGING_GETGAMMA
 
@@ -301,49 +327,42 @@ CONTAINS
  END FUNCTION UTL_KRIGING_RANGE
 
  !###======================================================================
- SUBROUTINE UTL_KRIGING_INIT(MD,XD,YD,ZD,ND,KTYPE,MZ,NODATA)
+ SUBROUTINE UTL_KRIGING_INIT(MD,XD,YD,ZD,ND,KTYPE,NODATA)
  !###======================================================================
  IMPLICIT NONE
+ REAL,PARAMETER :: XYCRIT=0.1 !## points wil be averaged if more near eachother
  INTEGER,INTENT(IN) :: MD,KTYPE
  REAL,INTENT(IN) :: NODATA
  REAL,INTENT(INOUT),DIMENSION(MD) :: XD,YD,ZD 
- REAL,INTENT(OUT) :: MZ
  INTEGER,INTENT(OUT) :: ND
  INTEGER :: I,J,N,IS,IE,IROW,ICOL
+ REAL :: XP,YP,ZP
  REAL,ALLOCATABLE,DIMENSION(:) :: XCOL,YROW
  
- !## sort x, to skip double coordinates
- CALL UTL_SORTEM(1,MD,XD,2,YD,ZD,ZD,ZD,ZD,ZD,ZD)
-
- !## sort y numbers
- IS=1
- DO I=2,MD
-  IF(XD(I).NE.XD(I-1))THEN
-   IE=I-1
-   CALL UTL_SORTEM(IS,IE,YD,2,XD,ZD,ZD,ZD,ZD,ZD,ZD)
-   IS=I
-  ENDIF
- ENDDO
- !## sort last
- IE=I-1
- CALL UTL_SORTEM(IS,IE,YD,2,XD,ZD,ZD,ZD,ZD,ZD,ZD)
-
- N=1
- !## mark doubles with nodata and compute mean for those double points
- DO I=2,MD
-  IF(XD(I).EQ.XD(I-1).AND.YD(I).EQ.YD(I-1))THEN
-   IF(N.EQ.1)J=I-1
-   N=N+1
-   ZD(J)=ZD(J)+ZD(I)
-   ZD(I)=NODATA
-  ELSE
-   IF(N.GT.1)THEN
-    ZD(J)=ZD(J)/REAL(N)
-    N=1
+  !## mark doubles with nodata and compute mean for those double points
+ DO I=1,MD
+  !## done allready
+  IF(ZD(I).EQ.NODATA)CYCLE
+  N=1; XP=XD(I); YP=YD(I); ZP=ZD(I)
+  DO J=I+1,MD
+   !## done allready
+   IF(ZD(J).EQ.NODATA)CYCLE
+   !## get distance between points
+   IF(UTL_DIST(XD(I),YD(I),XD(J),YD(J)).LE.XYCRIT)THEN
+!   IF(KRIGING_DIST(1,XD(I),YD(I),XD(J),YD(J),1,IDF,IBLANKOUT,BO_VALUE,XYCRIT,1.0,0.0,IBLNTYPE).LE.XYCRIT)THEN
+    N=N+1
+    ZP=ZP+ZD(J)
+    !## add point to existing point and turn location off
+    XP=XP+XD(J); YP=YP+YD(J); ZD(J)=NODATA
    ENDIF
-  ENDIF
- END DO
+  ENDDO
+  !## determine average spot
+  XD(I)=XP/REAL(N); YD(I)=YP/REAL(N)
 
+  ZD(I)=ZP/REAL(N)
+
+ END DO
+  
  !## eliminate doubles
  J=0
  DO I=1,MD
@@ -356,11 +375,56 @@ CONTAINS
  END DO
  ND=J
  
- !## compute mean and substract values from mean - simple kriging
- IF(KTYPE.GT.0)THEN
-  MZ=0.0 !; DO I=1,ND; MZ=MZ+ZD(I); ENDDO; MZ=MZ/REAL(ND)
-  DO I=1,ND; ZD(I)=ZD(I)-MZ; ENDDO
- ENDIF
+! !## sort x, to skip double coordinates
+! CALL UTL_SORTEM(1,MD,XD,2,YD,ZD,ZD,ZD,ZD,ZD,ZD)
+
+! !## sort y numbers
+! IS=1
+! DO I=2,MD
+!  IF(XD(I).NE.XD(I-1))THEN
+!   IE=I-1
+!   CALL UTL_SORTEM(IS,IE,YD,2,XD,ZD,ZD,ZD,ZD,ZD,ZD)
+!   IS=I
+!  ENDIF
+! ENDDO
+! !## sort last
+! IE=I-1
+! CALL UTL_SORTEM(IS,IE,YD,2,XD,ZD,ZD,ZD,ZD,ZD,ZD)
+
+! N=1
+! !## mark doubles with nodata and compute mean for those double points
+! DO I=2,MD
+!  IF(XD(I).EQ.XD(I-1).AND.YD(I).EQ.YD(I-1))THEN
+!   IF(N.EQ.1)J=I-1
+!   N=N+1
+!   ZD(J)=ZD(J)+ZD(I)
+!   ZD(I)=NODATA
+!  ELSE
+!   IF(N.GT.1)THEN
+!    ZD(J)=ZD(J)/REAL(N)
+!    N=1
+!   ENDIF
+!  ENDIF
+! END DO
+
+! !## eliminate doubles
+! J=0
+! DO I=1,MD
+!  IF(ZD(I).NE.NODATA)THEN
+!   J=J+1
+!   IF(J.NE.I)THEN
+!   ENDIF
+! ENDIF
+! END DO
+! ND=J
+ 
+! !## compute mean and substract values from mean - simple kriging
+! IF(KTYPE.GT.0)THEN
+!   MZ=0.0; DO I=1,ND; MZ=MZ+ZD(I); ENDDO; IF(ND.GT.0.0)MZ=MZ/REAL(ND)
+!   DO I=1,ND; ZD(I)=ZD(I)-MZ; ENDDO
+! MZ=0.0 !; DO I=1,ND; MZ=MZ+ZD(I); ENDDO; MZ=MZ/REAL(ND)
+!  DO I=1,ND; ZD(I)=ZD(I)-MZ; ENDDO
+! ENDIF
  
  END SUBROUTINE UTL_KRIGING_INIT
 
