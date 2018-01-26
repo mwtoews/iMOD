@@ -83,9 +83,11 @@ INTEGER :: ITYPE,IERROR,I,NARG
 CHARACTER(LEN=256) :: ARGSTRING,LEGNAME
 INTEGER :: IY,IM,ID
 
-call ieee_set_halting_mode (IEEE_DIVIDE_BY_ZERO, .TRUE.)
-call ieee_set_halting_mode (IEEE_OVERFLOW, .TRUE.)
-call ieee_set_halting_mode (IEEE_UNDERFLOW, .TRUE.)
+#if (defined(DEBUG))
+CALL IEEE_SET_HALTING_MODE (IEEE_DIVIDE_BY_ZERO, .TRUE.)
+CALL IEEE_SET_HALTING_MODE (IEEE_OVERFLOW, .TRUE.)
+CALL IEEE_SET_HALTING_MODE (IEEE_UNDERFLOW, .TRUE.)
+#endif
 
 !## default settings for idfgetvalue
 PLACES=15

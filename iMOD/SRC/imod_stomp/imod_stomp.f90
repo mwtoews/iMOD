@@ -294,12 +294,16 @@ CONTAINS
  JU=UTL_GETUNIT(); OPEN(JU,FILE=TRIM(OUTPUTFILE)//'\ini_aqueous.dat',STATUS='UNKNOWN')
  DO ILAY=1,NLAY; DO IROW=1,NROW; DO ICOL=1,NCOL
   !## initial pressure assigned to centroid of cell
-  T =TB(ILAY,1)%X(ICOL,IROW)-TB(ILAY,2)%X(ICOL,IROW)
+  T=TB(ILAY,1)%X(ICOL,IROW)-TB(ILAY,2)%X(ICOL,IROW)  
   IF(T.LE.0.0)THEN
    WRITE(*,'(/1X,A,F10.2,A,3I5)') 'Error, thickness (',T,') less than zero',ICOL,IROW,ILAY
    STOP
   ENDIF
-  HB=TB(1,1)%X(ICOL,IROW)-0.5*T
+  !## get total depth up to mid of current modellayer
+  IF(ILAY.GT.1)THEN
+   T =(TB(1,1)%X(ICOL,IROW)-TB(ILAY,2)%X(ICOL,IROW))+0.5*T
+  ENDIF
+  HB=T !TB(1,1)%X(ICOL,IROW)-T
   WP=RHO*G*HB+PAIR
   WRITE(JU,'(3I10,G15.7)') ICOL,IROW,ILAY,WP
  ENDDO; ENDDO; ENDDO
@@ -356,8 +360,9 @@ CONTAINS
  WRITE(IU,'(A)') '2,'         !## number of plot files
  WRITE(IU,'(A)') '1,year,'   !## number of plot files
  WRITE(IU,'(A)') '10,year,'  !## number of plot files
- WRITE(IU,'(A)') '5,'         !## number of output variables
+ WRITE(IU,'(A)') '6,'         !## number of output variables
  WRITE(IU,'(A)') 'aqueous saturation,,'        
+ WRITE(IU,'(A)') 'aqueous pressure,,' !## aqueous pressure
  WRITE(IU,'(A)') 'gas saturation,,'            
  WRITE(IU,'(A)') 'gas pressure,Pa,'
  WRITE(IU,'(A)') 'aqueous relative perm,,' !## aqueous relative permeability
