@@ -39,7 +39,7 @@ DATA IMOD_CUNITS/'m ','ft'/
 
 CHARACTER(LEN=30),PARAMETER :: RVERSION    ='V4_2'      !## release message - used for license
 CHARACTER(LEN=30),PARAMETER :: RVERSION_EXE='V4_2_1'    !## release message - only with single subnummers
-CHARACTER(LEN=30),PARAMETER :: BVERSION='Beta Build 10-01-2018 11:55'       !## banner message !!!
+CHARACTER(LEN=30),PARAMETER :: BVERSION='Beta Build 29-01-2018 15:58'       !## banner message !!!
 CHARACTER(LEN=32) :: LICFILE='I_accepted_'//TRIM(RVERSION)//'.txt'
 CHARACTER(LEN=256) :: IMFFNAME         !## name of drawing file
 CHARACTER(LEN=256) :: EXENAME,EXEPATH

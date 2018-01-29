@@ -85,8 +85,9 @@ INTEGER :: IY,IM,ID
 
 #if (defined(DEBUG))
 CALL IEEE_SET_HALTING_MODE (IEEE_DIVIDE_BY_ZERO, .TRUE.)
-CALL IEEE_SET_HALTING_MODE (IEEE_OVERFLOW, .TRUE.)
-CALL IEEE_SET_HALTING_MODE (IEEE_UNDERFLOW, .TRUE.)
+!## all kind of errors if reals are under- of overflow - particle tracking
+!CALL IEEE_SET_HALTING_MODE (IEEE_OVERFLOW, .TRUE.)
+!CALL IEEE_SET_HALTING_MODE (IEEE_UNDERFLOW, .TRUE.)
 #endif
 
 !## default settings for idfgetvalue
