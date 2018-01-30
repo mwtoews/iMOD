@@ -223,6 +223,11 @@ C3------IF THERE ARE NEW NON-PARAMETER CHDS, READ THEM
      1                     ') IS GREATER THAN MXACTC(',I6,')')
             CALL USTOP(' ')
          END IF
+
+         !## deallocate and allocate again to to be able to read in chd
+         if(associated(chds))deallocate(chds)                           ! DLT
+         allocate(chds(nchdvl,mxactc))                                  ! DLT
+
          CALL ULSTRD(NNPCHD,CHDS,1,NCHDVL,MXCHD,0,IN,IOUT,
      1    'CHD NO.   LAYER   ROW   COL    START HEAD        END HEAD',
      2     CHDAUX,5,NAUX,IFREFM,NCOL,NROW,NLAY,4,5,IPRCHD)

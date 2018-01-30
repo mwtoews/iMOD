@@ -309,19 +309,29 @@ C8G-----READ INITIAL HEADS.
          CALL U2DREL(STRT(:,:,1),ANAME(2),NLAY,NCOL,-1,INBAS,IOUT)
       END IF
 C      
-      !## cleaning for constant head cells that are only connected to other constant head/inactive cells    
-      do k=1,nlay; do i=1,nrow; do j=1,ncol
-       ic1=max(j-1,1); ic2=min(j+1,ncol)
-       ir1=max(i-1,1); ir2=min(i+1,nrow)
-       il1=max(k-1,1); il2=min(k+1,nlay)
-       if(ibound(j,i,k).lt.0)then 
-        if(ibound(j,ir1,k).le.0.and.ibound(j,ir2,k).le.0.and.
-     1     ibound(ic1,i,k).le.0.and.ibound(ic2,i,k).le.0.and.
-     1     ibound(j,i,il1).le.0.and.ibound(j,i,il2).le.0)then 
-         ibound(j,i,k)=0
-        end if
-       end if
-      enddo; enddo; enddo
+      !## cleaning corner of model in case ani is active
+      if (iunit(iuani).gt.0)then
+       do k=1,nlay
+        ibound(1,1,k)      =0
+        ibound(ncol,1,k)   =0
+        ibound(1,nrow,k)   =0
+        ibound(ncol,nrow,k)=0
+       enddo
+      endif
+
+      !## optional done in iMOD
+!      do k=1,nlay; do i=1,nrow; do j=1,ncol
+!       ic1=max(j-1,1); ic2=min(j+1,ncol)
+!       ir1=max(i-1,1); ir2=min(i+1,nrow)
+!       il1=max(k-1,1); il2=min(k+1,nlay)
+!       if(ibound(j,i,k).lt.0)then 
+!        if(ibound(j,ir1,k).le.0.and.ibound(j,ir2,k).le.0.and.
+!     1     ibound(ic1,i,k).le.0.and.ibound(ic2,i,k).le.0.and.
+!     1     ibound(j,i,il1).le.0.and.ibound(j,i,il2).le.0)then 
+!         ibound(j,i,k)=0
+!        end if
+!       end if
+!      enddo; enddo; enddo
 C      
 C-------SET IACTCELL
       DO K=1,NLAY                                                       ! PKS

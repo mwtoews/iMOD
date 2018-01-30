@@ -1300,12 +1300,12 @@ END SUBROUTINE WRITEIPF
    ENDIF
 
    LLOG=.FALSE.
-   IF(Z1.NE.0.0.AND.Z2.NE.0.0)THEN
-    !## ignore parameter with too high of a band for unreliability, turn if off
-    LLOG=LOG10(Z2)-LOG10(Z1).GT.XBANDW
-   ELSE
-    LLOG=.TRUE.
-   ENDIF
+!   IF(Z1.NE.0.0.AND.Z2.NE.0.0)THEN
+!    !## ignore parameter with too high of a band for unreliability, turn if off
+!    LLOG=LOG10(Z2)-LOG10(Z1).GT.XBANDW
+!   ELSE
+!    LLOG=.TRUE.
+!   ENDIF
    IF(LLOG)THEN
     WRITE(IUPESTOUT,'(/3X,A2,2I5.5,A1,I3.3)') PARAM(I)%PTYPE,PARAM(I)%ILS,PARAM(I)%IZONE,'-',ABS(PARAM(I)%IGROUP)
     WRITE(IUPESTOUT,'(A,2G15.7)') 'This parameter too unreliable to estimate: ',Z1,Z2
