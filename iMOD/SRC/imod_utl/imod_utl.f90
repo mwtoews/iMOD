@@ -4997,6 +4997,7 @@ CONTAINS
  ENDIF
  
  LINE='wmic cpu get NumberOfCores > "'//TRIM(TXTFILE)//'"'
+! LINE='echo %NUMBER_OF_PROCESSORS% > "'//TRIM(TXTFILE)//'"'
 ! LINE='wmic cpu get NumberOfLogicalProcessors > "'//TRIM(TXTFILE)//'"'
 
  WRITE(IU,'(A)') TRIM(LINE)

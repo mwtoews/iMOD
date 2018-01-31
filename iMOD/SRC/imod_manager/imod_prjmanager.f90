@@ -3862,7 +3862,7 @@ TOPICLOOP: DO ITOPIC=1,MAXTOPICS
  !###======================================================================
  IMPLICIT NONE
  LOGICAL,INTENT(IN) :: LTB
- INTEGER :: IROW,ICOL,ILAY,JLAY,IC1,IC2,IR1,IR2,IL1,IL2
+ INTEGER :: IROW,ICOL,ILAY,JLAY,IC1,IC2,IR1,IR2,IL1,IL2,N
  REAL :: XBOT
  REAL,DIMENSION(:),ALLOCATABLE :: TP,BT,HK,VK,VA,TH,TP_BU,BT_BU,HK_BU,VK_BU,VA_BU
  INTEGER,DIMENSION(:),ALLOCATABLE :: IB
@@ -3919,29 +3919,30 @@ TOPICLOOP: DO ITOPIC=1,MAXTOPICS
  
  ENDIF
  
-! !## apply consistency check constant head and top/bot - only whenever CHD is not active
-! IF(.NOT.LCHD)THEN
-!  DO IROW=1,IDF%NROW; DO ICOL=1,IDF%NCOL; DO ILAY=1,NLAY
-!   IF(BND(ILAY)%X(ICOL,IROW).LT.0)THEN
-!
-!    !## head is in within current layer
-!    IF(SHD(ILAY)%X(ICOL,IROW).GT.BOT(ILAY)%X(ICOL,IROW))CYCLE
-!
-!    !## constant head cell dry - becomes active node - shift to an appropriate model layer where the head is actually in
-!    DO JLAY=ILAY,NLAY
-!     IF(SHD(ILAY)%X(ICOL,IROW).LE.BOT(JLAY)%X(ICOL,IROW))THEN
-!      BND(JLAY)%X(ICOL,IROW)=1
-!      SHD(JLAY)%X(ICOL,IROW)=SHD(ILAY)%X(ICOL,IROW)
-!     ELSE
-!      BND(JLAY)%X(ICOL,IROW)=-99
-!      SHD(JLAY)%X(ICOL,IROW)=SHD(ILAY)%X(ICOL,IROW)
-!      !## exit
-!      EXIT
-!     ENDIF
-!    ENDDO
-!   ENDIF
-!  ENDDO; ENDDO; ENDDO
-! ENDIF
+ !## apply consistency check constant head and top/bot - only whenever CHD is not active
+ IF(PBMAN%ICHKCHD.EQ.1)THEN
+  N=0
+  DO IROW=1,IDF%NROW; DO ICOL=1,IDF%NCOL; DO ILAY=1,NLAY
+   IF(BND(ILAY)%X(ICOL,IROW).LT.0)THEN
+    !## head is in within current layer
+    IF(SHD(ILAY)%X(ICOL,IROW).GT.BOT(ILAY)%X(ICOL,IROW))CYCLE
+    N=N+1
+    !## constant head cell dry - becomes active node - shift to an appropriate model layer where the head is actually in
+    DO JLAY=ILAY,NLAY
+     IF(SHD(ILAY)%X(ICOL,IROW).LE.BOT(JLAY)%X(ICOL,IROW))THEN
+      BND(JLAY)%X(ICOL,IROW)=1
+      SHD(JLAY)%X(ICOL,IROW)=SHD(ILAY)%X(ICOL,IROW)
+     ELSE
+      BND(JLAY)%X(ICOL,IROW)=-99
+      SHD(JLAY)%X(ICOL,IROW)=SHD(ILAY)%X(ICOL,IROW)
+      !## exit
+      EXIT
+     ENDIF
+    ENDDO
+   ENDIF
+  ENDDO; ENDDO; ENDDO
+  WRITE(*,'(/A/)') 'iMOD corrected '//TRIM(ITOS(N))//' constant heads cell which were inappropriate regarding there levels.'
+ ENDIF
  
  !## if unconfined modify (nodata) head for dry cells, check from bottom to top
  DO IROW=1,IDF%NROW; DO ICOL=1,IDF%NCOL; DO ILAY=NLAY-1,1,-1
@@ -3965,22 +3966,22 @@ TOPICLOOP: DO ITOPIC=1,MAXTOPICS
   ENDDO
  ENDDO; ENDDO
 
- !## cleaning for constant head cells that are only connected to other constant head/inactive cells    
- DO ILAY=1,NLAY; DO IROW=1,IDF%NROW; DO ICOL=1,IDF%NCOL
-  IC1=MAX(ICOL-1,1); IC2=MIN(ICOL+1,IDF%NCOL)
-  IR1=MAX(IROW-1,1); IR2=MIN(IROW+1,IDF%NROW)
-  IL1=MAX(ILAY-1,1); IL2=MIN(ILAY+1,NLAY)
-  IF(BND(ILAY)%X(ICOL,IROW).LT.0)THEN
-   IF((BND(ILAY)%X(ICOL,IR1 ).LE.0).AND. & !N
-      (BND(ILAY)%X(ICOL,IR2 ).LE.0).AND. & !S
-      (BND(ILAY)%X(IC1,IROW ).LE.0).AND. & !W
-      (BND(ILAY)%X(IC2,IROW ).LE.0).AND. & !E
-      (BND(IL1 )%X(ICOL,IROW).LE.0).AND. & !T
-      (BND(IL2 )%X(ICOL,IROW).LE.0))THEN   !B
-    BND(ILAY)%X(ICOL,IROW)=0
-   END IF
-  END IF
- ENDDO; ENDDO; ENDDO
+! !## cleaning for constant head cells that are only connected to other constant head/inactive cells    
+! DO ILAY=1,NLAY; DO IROW=1,IDF%NROW; DO ICOL=1,IDF%NCOL
+!  IC1=MAX(ICOL-1,1); IC2=MIN(ICOL+1,IDF%NCOL)
+!  IR1=MAX(IROW-1,1); IR2=MIN(IROW+1,IDF%NROW)
+!  IL1=MAX(ILAY-1,1); IL2=MIN(ILAY+1,NLAY)
+!  IF(BND(ILAY)%X(ICOL,IROW).LT.0)THEN
+!   IF((BND(ILAY)%X(ICOL,IR1 ).LE.0).AND. & !N
+!      (BND(ILAY)%X(ICOL,IR2 ).LE.0).AND. & !S
+!      (BND(ILAY)%X(IC1,IROW ).LE.0).AND. & !W
+!      (BND(ILAY)%X(IC2,IROW ).LE.0).AND. & !E
+!      (BND(IL1 )%X(ICOL,IROW).LE.0).AND. & !T
+!      (BND(IL2 )%X(ICOL,IROW).LE.0))THEN   !B
+!    BND(ILAY)%X(ICOL,IROW)=0
+!   END IF
+!  END IF
+! ENDDO; ENDDO; ENDDO
 
  END SUBROUTINE PMANAGER_SAVEMF2005_CONSISTENCY
  
@@ -4418,7 +4419,7 @@ TOPICLOOP: DO ITOPIC=1,MAXTOPICS
  !####====================================================================
  IMPLICIT NONE
  INTEGER,INTENT(IN) :: IPRT
- INTEGER :: ITOPIC,SCL_D,SCL_U,ILAY
+ INTEGER :: ITOPIC,SCL_D,SCL_U,ILAY,IROW,ICOL,IC1,IC2,IR1,IR2,IL1,IL2
  
  PMANAGER_SAVEMF2005_BAS_READ=.FALSE.
  
@@ -4433,6 +4434,23 @@ TOPICLOOP: DO ITOPIC=1,MAXTOPICS
   !## adjust boundary for submodel()
   CALL PMANAGER_SAVEMF2005_BND(ILAY)
  ENDDO
+
+! !## cleaning for constant head cells that are only connected to other constant head/inactive cells    
+! DO ILAY=1,NLAY; DO IROW=1,IDF%NROW; DO ICOL=1,IDF%NCOL
+!  IC1=MAX(ICOL-1,1); IC2=MIN(ICOL+1,IDF%NCOL)
+!  IR1=MAX(IROW-1,1); IR2=MIN(IROW+1,IDF%NROW)
+!  IL1=MAX(ILAY-1,1); IL2=MIN(ILAY+1,NLAY)
+!  IF(BND(ILAY)%X(ICOL,IROW).LT.0)THEN
+!   IF((BND(ILAY)%X(ICOL,IR1 ).LE.0).AND. & !N
+!      (BND(ILAY)%X(ICOL,IR2 ).LE.0).AND. & !S
+!      (BND(ILAY)%X(IC1,IROW ).LE.0).AND. & !W
+!      (BND(ILAY)%X(IC2,IROW ).LE.0).AND. & !E
+!      (BND(IL1 )%X(ICOL,IROW).LE.0).AND. & !T
+!      (BND(IL2 )%X(ICOL,IROW).LE.0))THEN   !B
+!    BND(ILAY)%X(ICOL,IROW)=0
+!   END IF
+!  END IF
+! ENDDO; ENDDO; ENDDO
 
  !## shd settings
  ITOPIC=5; SCL_D=1; SCL_U=2; ILIST=ITOPIC; IF(PMANAGER_GETFNAMES(1,NLAY,0,1,0).LE.0)RETURN
@@ -5773,7 +5791,8 @@ TOPICLOOP: DO ITOPIC=1,MAXTOPICS
  INTEGER :: JD0,JD1,ISEC0,ISEC1,NUZGAG,IRUNFLG,IEQUAL,ICHECK
  INTEGER,ALLOCATABLE,DIMENSION(:,:) :: JEQUAL
  REAL :: DDAY,DSEC
-  
+ LOGICAL :: LCHKCHD
+ 
  IF(.NOT.LEX)THEN; PMANAGER_SAVEMF2005_PCK=.TRUE.; RETURN; ENDIF
  
  PMANAGER_SAVEMF2005_PCK=.FALSE.
@@ -6337,12 +6356,18 @@ TOPICLOOP: DO ITOPIC=1,MAXTOPICS
         !## chd 
         CASE (28)
          IF(BND(ILAY)%X(ICOL,IROW).LT.0)THEN
-          IF(PBMAN%SSYSTEM.EQ.1)THEN
-           WRITE(JU,FRM) ILAY,IROW,ICOL,PCK(JTOP(1))%X(ICOL,IROW),PCK(JTOP(1))%X(ICOL,IROW),ISYS
-          ELSE
-           WRITE(JU,FRM) ILAY,IROW,ICOL,PCK(JTOP(1))%X(ICOL,IROW),PCK(JTOP(1))%X(ICOL,IROW),1
+          !## check whether constant head is in appropriate cell - if not - skip it.
+          LCHKCHD=.TRUE.
+          !## head is in within current layer
+          IF(PBMAN%ICHKCHD.EQ.1)LCHKCHD=PCK(JTOP(1))%X(ICOL,IROW).GT.BOT(ILAY)%X(ICOL,IROW)
+          IF(LCHKCHD)THEN
+           IF(PBMAN%SSYSTEM.EQ.1)THEN
+            WRITE(JU,FRM) ILAY,IROW,ICOL,PCK(JTOP(1))%X(ICOL,IROW),PCK(JTOP(1))%X(ICOL,IROW),ISYS
+           ELSE
+            WRITE(JU,FRM) ILAY,IROW,ICOL,PCK(JTOP(1))%X(ICOL,IROW),PCK(JTOP(1))%X(ICOL,IROW),1
+           ENDIF
+           NP_IPER(IPER)=NP_IPER(IPER)+1
           ENDIF
-          NP_IPER(IPER)=NP_IPER(IPER)+1
          ENDIF
         !## olf
         CASE (27)
@@ -6999,15 +7024,15 @@ TOPICLOOP: DO ITOPIC=1,MAXTOPICS
  WRITE(IU,'(A)') '# PKS File Generated by '//TRIM(UTL_IMODVERSION())
 
  !## number of processors
- LINE='SOLVER '//TRIM(ITOS(NP)); WRITE(IU,'(A)') TRIM(LINE)
+ LINE='ISOLVER '//TRIM(ITOS(NP)); WRITE(IU,'(A)') TRIM(LINE)
 
  !## preconditioner
  LINE='NPC '//TRIM(ITOS(2)); WRITE(IU,'(A)') TRIM(LINE)
 
- LINE='HCLOSEKPS '//TRIM(RTOS(PCG%HCLOSE,'E',7)); WRITE(IU,'(A)') TRIM(LINE)
+ LINE='HCLOSEPKS '//TRIM(RTOS(PCG%HCLOSE,'E',7)); WRITE(IU,'(A)') TRIM(LINE)
  LINE='RCLOSEPKS '//TRIM(RTOS(PCG%RCLOSE,'E',7)); WRITE(IU,'(A)') TRIM(LINE)
- LINE='MXITER'//TRIM(ITOS(PCG%NOUTER));           WRITE(IU,'(A)') TRIM(LINE)
- LINE='INNERIT'//TRIM(ITOS(PCG%NINNER));          WRITE(IU,'(A)') TRIM(LINE)
+ LINE='MXITER '//TRIM(ITOS(PCG%NOUTER));          WRITE(IU,'(A)') TRIM(LINE)
+ LINE='INNERIT '//TRIM(ITOS(PCG%NINNER));         WRITE(IU,'(A)') TRIM(LINE)
  LINE='RELAX '//TRIM(RTOS(PCG%RELAX,'E',7));      WRITE(IU,'(A)') TRIM(LINE)
  WRITE(IU,'(A)') 'END'
 
@@ -8720,6 +8745,7 @@ TOPICLOOP: DO ITOPIC=1,MAXTOPICS
  TYPE(IDFOBJ),INTENT(INOUT),DIMENSION(:) :: BND
  INTEGER :: IROW,ICOL,JLAY
  LOGICAL :: LEX
+ CHARACTER(LEN=1) :: YESNO
    
  IF(ILAY.GT.0)THEN 
   DO IROW=1,IDF%NROW; DO ICOL=1,IDF%NCOL
@@ -8740,7 +8766,9 @@ TOPICLOOP: DO ITOPIC=1,MAXTOPICS
        WRITE(*,'(/1X,A)') 'Error NodataValue found for active cell'
        WRITE(*,'(A3,3A4,3A15        )') 'VAR','COL','ROW','LAY','IBOUND','X','NODATAVALUE'
        WRITE(*,'(A3,3I4,F15.1,2E15.7)') CMOD(ITOPIC),ICOL,IROW,ILAY,BND(ILAY)%X(ICOL,IROW),IDF%X(ICOL,IROW),IDF%NODATA
-       PAUSE; STOP
+       WRITE(*,'(A$)') 'Continue yes/no ?'
+       READ(*,'(A1)') YESNO
+       IF(UTL_CAP(YESNO,'U').EQ.'N')STOP
       ENDIF
      ENDIF  
     ENDIF

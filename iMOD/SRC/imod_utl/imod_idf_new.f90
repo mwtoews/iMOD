@@ -613,6 +613,10 @@ CONTAINS
  !## read/scale parameters
  DO IRM=1,IDFM%NROW
 
+!   IF(IRM.EQ.160)THEN
+!   WRITE(*,*) 
+!   ENDIF
+   
   !## get location to scale/cut data from IDFC
   IF(SCLTYPE_UP.EQ.10)THEN
    YD1=(IDFM%SY(IRM-1)+IDFM%SY(IRM  ))/2.0
@@ -631,6 +635,10 @@ CONTAINS
   IF(IRC2.GE.IRC1.AND.IRC2.LE.IDFC%NROW.AND.IRC1.NE.0.AND.IRC2.NE.0)THEN
    
    DO ICM=1,IDFM%NCOL
+
+!   IF(ICM.EQ.75)THEN
+!   WRITE(*,*) 
+!   ENDIF
 
     !## get location to scale/cut data from IDFC
     IF(SCLTYPE_UP.EQ.10)THEN
