@@ -790,8 +790,8 @@ IF(NR.GT.0)THEN
    
    IDATE=IMOD_UTL_IDATETOJDATE(IDATE)
    
-   !## try to speed up the search for transient searches
-   IF(IR.EQ.1)THEN
+   !## try to speed up the search for transient searches, only for more than 10 entries
+   IF(IR.EQ.1.AND.NR.GT.10)THEN
     READ(LU,REC=IREC+1+ICF) NDATE
     !## number of days in between
     N=IMOD_UTL_IDATETOJDATE(NDATE)-IDATE
