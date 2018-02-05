@@ -85,7 +85,7 @@ CONTAINS
  WBAL_TYR=UTL_IDATETOJDATE(WBAL_TYR)
  
  ILAY=WBAL_ILAYER(1)
-
+ 
  !## look for number of systems per topic
  DO IBAL=1,MXTP  
   !## current balance term not active
