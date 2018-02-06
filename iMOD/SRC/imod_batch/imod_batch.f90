@@ -5734,8 +5734,8 @@ CONTAINS
  USE MOD_WBAL_PAR
  USE IMODVAR, ONLY : TP,MXTP,MXSYS
  IMPLICIT NONE
- INTEGER :: I,J,K,N,SY,EY,NBAL
- CHARACTER(LEN=256) :: FNAME,DIR
+ INTEGER :: I,J,K,N,SY,EY,NBAL,IOPT
+ CHARACTER(LEN=256) :: FNAME,DIR,OUTPUTFNAME
  CHARACTER(LEN=15),ALLOCATABLE,DIMENSION(:) :: CBAL
  
  IBATCH=1
@@ -5752,10 +5752,6 @@ CONTAINS
  
  !## check whether the function need to be used for plotting purposes
  IF(UTL_READINITFILE('CSVFNAME',LINE,IU,1))THEN
-  
-!  !##v41
-!  WRITE(*,'(/A/)') 'Oops, this functionality is under construction and not yet available in this release.'
-!  STOP
 
   READ(LINE,*) FNAME; WRITE(*,'(A)') 'CSVFNAME='//TRIM(FNAME)
   !## imod need to read the csv first to continue
@@ -5771,9 +5767,15 @@ CONTAINS
   !## read the file - stop if there is a problem - fill in the dialog (in the back)
   CALL WBAL_ANALYSE_INIT(FNAME,1)
  
-  IF(WBAL_ANALYSE_READCONFIG(IU,1))THEN
+  IF(WBAL_ANALYSE_READCONFIG(IU,1,IOPT))THEN
    CALL UTL_CREATEDIR(DIR)
-   CALL WBAL_ANALYSE_PLOT(ID_GRAPHICS,1)
+   IF(IOPT.EQ.4)THEN
+    IF(.NOT.UTL_READINITFILE('OUTPUTFNAME',LINE,IU,0))RETURN
+    READ(LINE,*) OUTPUTFNAME; WRITE(*,'(A)') 'OUTPUTFNAME='//TRIM(OUTPUTFNAME)
+    !## imod need to read the csv first to continue
+    WRITE(*,'(A)') 'Reading the CSV file ...'
+   ENDIF
+   CALL WBAL_ANALYSE_PLOT(ID_GRAPHICS,1,OUTPUTFNAME)
   ENDIF
   
   RETURN
