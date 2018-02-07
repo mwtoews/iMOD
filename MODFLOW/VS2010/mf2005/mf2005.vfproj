@@ -92,6 +92,7 @@
 		<File RelativePath="..\..\mf2005\hufutl7.f"/>
 		<File RelativePath="..\..\mf2005\imod_isg.f90"/>
 		<File RelativePath="..\..\mf2005\imod_isg_ifvdl.f90"/>
+		<File RelativePath="..\..\MF2005\imod_isg_par.f90"/>
 		<File RelativePath="..\..\mf2005\imod_pest.F90"/>
 		<File RelativePath="..\..\MF2005\imod_tseries_mf.f90"/>
 		<File RelativePath="..\..\mf2005\lmt7.f"/>
