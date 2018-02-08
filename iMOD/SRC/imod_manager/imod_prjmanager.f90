@@ -93,6 +93,7 @@ INTEGER,PRIVATE :: IARMWP
 LOGICAL,PRIVATE :: LMODFLOW2005=.FALSE.
 LOGICAL,PRIVATE,PARAMETER :: LFREEFORMAT=.TRUE.  !## use true free-format
 CHARACTER(LEN=1024),PRIVATE :: LINE
+LOGICAL,PRIVATE :: LYESNO
 
 CHARACTER(LEN=256),POINTER,DIMENSION(:,:),PRIVATE :: FILES
 CHARACTER(LEN=256),DIMENSION(:,:),POINTER,PRIVATE :: FILES_BU
@@ -3679,7 +3680,8 @@ TOPICLOOP: DO ITOPIC=1,MAXTOPICS
  LOGICAL :: LTB
 
  PMANAGER_SAVEMF2005=.FALSE.
-
+ LYESNO=.FALSE.
+ 
  !## remove final stress as it is the final timestep
  IF(NPER.GT.1)NPER=NPER-1
    
@@ -8772,12 +8774,18 @@ TOPICLOOP: DO ITOPIC=1,MAXTOPICS
        IF(BND(ILAY+1)%X(ICOL,IROW).EQ.0)LEX=.FALSE.
       ENDIF
       IF(LEX)THEN
-       WRITE(*,'(/1X,A)') 'Error NodataValue found for active cell'
-       WRITE(*,'(A3,3A4,3A15        )') 'VAR','COL','ROW','LAY','IBOUND','X','NODATAVALUE'
-       WRITE(*,'(A3,3I4,F15.1,2E15.7)') CMOD(ITOPIC),ICOL,IROW,ILAY,BND(ILAY)%X(ICOL,IROW),IDF%X(ICOL,IROW),IDF%NODATA
-       WRITE(*,'(A$)') 'Continue yes/no ?'
-       READ(*,'(A1)') YESNO
-       IF(UTL_CAP(YESNO,'U').EQ.'N')STOP
+       IF(.NOT.LYESNO)THEN
+        WRITE(*,'(/1X,A)') 'Error NodataValue found for active cell'
+        WRITE(*,'(A3,3A4,3A15        )') 'VAR','COL','ROW','LAY','IBOUND','X','NODATAVALUE'
+        WRITE(*,'(A3,3I4,F15.1,2E15.7)') CMOD(ITOPIC),ICOL,IROW,ILAY,BND(ILAY)%X(ICOL,IROW),IDF%X(ICOL,IROW),IDF%NODATA
+        WRITE(*,'(A$)') 'Continue yes (default value of 1.0 is set) / no ?'
+        READ(*,'(A1)') YESNO
+        IF(UTL_CAP(YESNO,'U').EQ.'N')STOP
+        LYESNO=.TRUE.
+       ELSE
+        !## set dummy value
+        IDF%X(ICOL,IROW)=1.0
+       ENDIF
       ENDIF
      ENDIF  
     ENDIF
