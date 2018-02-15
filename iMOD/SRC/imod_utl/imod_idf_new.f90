@@ -438,6 +438,43 @@ CONTAINS
  END FUNCTION IDFREAD
 
  !###======================================================================
+ LOGICAL FUNCTION IDFREADCROSS(IDF,IDFNAME)
+ !###======================================================================
+ IMPLICIT NONE
+ TYPE(IDFOBJ),INTENT(INOUT) :: IDF
+ CHARACTER(LEN=*),INTENT(IN) :: IDFNAME
+ TYPE(IDFOBJ) :: TMP
+ REAL :: DX,DY,A,X1,Y1,X,Y
+ INTEGER :: ICOL,IROW,JROW,JCOL
+  
+ IDFREADCROSS=.FALSE.
+
+ !## read dimensions in other object
+ IF(.NOT.IDFREAD(TMP,IDFNAME,0))RETURN
+ DX=IDF%XMAX-IDF%XMIN; DY=IDF%YMAX-IDF%YMIN
+ X1=IDF%XMIN; Y1=IDF%YMIN; A=ATAN(DY/DX)
+ 
+ DO IROW=1,IDF%NROW
+  DX=-0.5*IDF%DX
+  DO ICOL=1,IDF%NCOL
+   DX=DX+IDF%DX
+   X=X1+COS(A)*DX; Y=Y1+SIN(A)*DX
+   CALL IDFIROWICOL(TMP,JROW,JCOL,X,Y)
+   !## get value
+   IDF%X(ICOL,IROW)=IDFGETVAL(TMP,JROW,JCOL)
+  ENDDO
+ ENDDO
+ !## correct ymax
+ IDF%YMAX=IDF%YMIN+IDF%NROW*IDF%DY
+ IDF%XMAX=IDF%XMIN+IDF%NCOL*IDF%DX
+  
+ IF(TMP%IU.GT.0)CLOSE(TMP%IU); TMP%IU=0
+ 
+ IDFREADCROSS=.TRUE.
+
+ END FUNCTION IDFREADCROSS
+
+ !###======================================================================
  LOGICAL FUNCTION IDFREADPART(IDF,XMIN,YMIN,XMAX,YMAX)
  !###======================================================================
  IMPLICIT NONE
