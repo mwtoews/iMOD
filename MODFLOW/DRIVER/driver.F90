@@ -33,6 +33,7 @@ use pks_imod_utl, only: pks_imod_utl_idfmerge_init, pks_imod_utl_write_idfmergef
 use mod_pest, only: pest1_meteo_metaswap, pest1alpha_metaswap, pest1appendlogfile, pestnext, pestdumpfct, PEST1INIT, PEST1CLOSELOGFILES
 use PESTVAR, only : IUPESTOUT
 use pks_imod_utl, only: pks_imod_utl_iarmwp_xch_read
+use, intrinsic :: ieee_exceptions
 implicit none
 
 ! general
@@ -113,6 +114,9 @@ implicit none
 ! program section
 ! ------------------------------------------------------------------------------
 
+ CALL IEEE_SET_HALTING_MODE (IEEE_DIVIDE_BY_ZERO, .TRUE.)
+
+ 
 call pks7mpiini1(lwstdo) ! PKS
 call pks7mpiactive(lpks) ! PKS
 

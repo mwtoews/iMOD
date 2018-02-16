@@ -22,6 +22,7 @@
 
 MODULE IMOD_UTL
 
+ USE IMOD_IDF_PAR
  DOUBLE PRECISION,POINTER,DIMENSION(:) :: XA,YA,XA_DUMMY,YA_DUMMY
  REAL,POINTER,DIMENSION(:) :: ZA,FA,LN,ZA_DUMMY,FA_DUMMY,LN_DUMMY
  INTEGER,POINTER,DIMENSION(:) :: CA,RA,CA_DUMMY,RA_DUMMY
@@ -136,27 +137,94 @@ CONTAINS
  IF(DX+DY.NE.0.0)UTL_DIST=SQRT(DX+DY)
  
  END FUNCTION UTL_DIST
+
+  !###======================================================================
+ SUBROUTINE UTL_IDFGETLOC(IDF,IROW,ICOL,X,Y)
+ !###======================================================================
+ IMPLICIT NONE
+ TYPE(IDFOBJ),INTENT(IN) :: IDF
+ INTEGER,INTENT(IN) :: IROW,ICOL
+ REAL,INTENT(OUT) :: X,Y
+
+ IF(IDF%IEQ.EQ.0)THEN
+
+  X=IDF%XMIN+((ICOL-1)*IDF%DX)+0.5*IDF%DX
+  Y=IDF%YMAX-((IROW-1)*IDF%DY)-0.5*IDF%DY
+
+ ELSEIF(IDF%IEQ.EQ.1)THEN
+
+  X=(IDF%SX(ICOL-1)+IDF%SX(ICOL))/2.0
+  Y=(IDF%SY(IROW-1)+IDF%SY(IROW))/2.0
+
+ ENDIF
+
+ END SUBROUTINE UTL_IDFGETLOC
+
+ !###======================================================================
+ SUBROUTINE UTL_IDFIROWICOL(IDF,IROW,ICOL,X,Y)
+ !###======================================================================
+ IMPLICIT NONE
+ TYPE(IDFOBJ),INTENT(IN) :: IDF
+ REAL,INTENT(IN) :: X,Y
+ INTEGER,INTENT(OUT) :: ICOL,IROW
+ REAL :: DX,DY
+ INTEGER :: I
+ DOUBLE PRECISION,PARAMETER :: TINY=0.001D0
+ DOUBLE PRECISION :: XD, YD
+
+ XD = DBLE(X); YD = DBLE(Y)
+
+ ICOL=0
+ IROW=0
+
+ IF(IDF%IEQ.EQ.0)THEN
+
+  !## similar to imod_utl_geticir
+  DX=X-IDF%XMIN
+  I=0; IF(MOD(DX,IDF%DX).NE.0.0)I=1
+  IF(XD+TINY.GT.REAL(IDF%XMIN,8).AND.XD-TINY.LT.REAL(IDF%XMAX,8))ICOL=INT((X-IDF%XMIN)/IDF%DX)+I
+
+  DY=IDF%YMAX-Y
+  I=0; IF(MOD(DY,IDF%DY).NE.0.0)I=1
+  IF(YD+TINY.GT.REAL(IDF%YMIN,8).AND.YD-TINY.LT.REAL(IDF%YMAX,8))IROW=INT((IDF%YMAX-Y)/IDF%DY)+I
+  
+  ICOL=MIN(ICOL,IDF%NCOL)
+  IROW=MIN(IROW,IDF%NROW)
+
+ ELSEIF(IDF%IEQ.EQ.1)THEN
+
+  CALL IMOD_UTL_POL1LOCATED(IDF%SX,IDF%NCOL+1,XD,ICOL)
+  CALL IMOD_UTL_POL1LOCATED(IDF%SY,IDF%NROW+1,YD,IROW)
+  IF(ICOL.LT.0.OR.ICOL.GT.IDF%NCOL) ICOL=0
+  IF(IROW.LT.0.OR.IROW.GT.IDF%NROW) IROW=0
+
+ ENDIF
+
+ END SUBROUTINE UTL_IDFIROWICOL
  
  !###======================================================================
- SUBROUTINE UTL_KRIGING_MAIN(MD,XD,YD,ZD,DELR,DELC,NROW,NCOL,X,NODATA,RANGE,KTYPE)     
+ SUBROUTINE UTL_KRIGING_MAIN(MD,XD,YD,ZD,DELR,DELC,NROW,NCOL,X,NODATA,RANGE,KTYPE,BLNKOUT)     
  !###======================================================================
+ USE IMOD_IDF_PAR
+! USE IMOD_IDF, ONLY : UTL_IDFIROWICOL
  IMPLICIT NONE
  INTEGER,INTENT(IN) :: NROW,NCOL,MD,KTYPE
  REAL,INTENT(IN),DIMENSION(0:NROW) :: DELC
  REAL,INTENT(IN),DIMENSION(0:NCOL) :: DELR
  REAL,INTENT(INOUT),DIMENSION(NCOL,NROW) :: X
+ TYPE(IDFOBJ),INTENT(IN) :: BLNKOUT
  REAL,INTENT(INOUT),DIMENSION(MD) :: XD,YD,ZD
  REAL,INTENT(IN) :: NODATA
  REAL,INTENT(INOUT) :: RANGE
- INTEGER :: ND,IROW,ICOL
+ INTEGER :: ND,IROW,ICOL,IZONE
  REAL :: XC,YC,MZ,KEST,KVAR
  INTEGER :: ITYPE,NR,NC,MX,I,J,NAJ
  REAL,PARAMETER :: NUGGET=0.0, SILL=100.0
  
  CALL UTL_KRIGING_INIT(MD,XD,YD,ZD,ND,KTYPE,NODATA) 
- DO I=1,ND
-  WRITE(*,'(A,I10,3G15.7)') 'XYZ',I,XD(I),YD(I),ZD(I)   
-ENDDO
+! DO I=1,ND
+!  WRITE(*,'(A,I10,3G15.7)') 'XYZ',I,XD(I),YD(I),ZD(I)   
+!ENDDO
 
  !## compute mean and substract values from mean - simple kriging
  IF(KTYPE.GT.0)THEN
@@ -169,7 +237,10 @@ ENDDO
    IF(X(ICOL,IROW).NE.NODATA)CYCLE
    XC=(DELR(ICOL-1)+DELR(ICOL))/2.0
    YC=(DELC(IROW)+DELC(IROW-1))/2.0
-   CALL UTL_KRIGING_FILLSYSTEM(XD,YD,ZD,ND,XC,YC,RANGE,SILL,NUGGET,KTYPE,MZ,KEST,KVAR,NODATA)
+   !## get current zone number for this point
+   IZONE=INT(BLNKOUT%X(ICOL,IROW))
+   CALL UTL_KRIGING_FILLSYSTEM(XD,YD,ZD,ND,XC,YC,RANGE,SILL,NUGGET,KTYPE,MZ,KEST,KVAR,NODATA, &
+     IZONE,BLNKOUT)
    X(ICOL,IROW)=KEST 
   ENDDO
  ENDDO
@@ -178,13 +249,15 @@ ENDDO
  
   !###======================================================================
  SUBROUTINE UTL_KRIGING_FILLSYSTEM(XD,YD,ZD,ND,X,Y,RANGE,SILL,NUGGET, &
-          KTYPE,MZ,KEST,KVAR,NODATA)
+          KTYPE,MZ,KEST,KVAR,NODATA,IZONE,BLNKOUT)
  !###======================================================================
+ USE IMOD_IDF_PAR
  IMPLICIT NONE
- INTEGER,INTENT(IN) :: ND,KTYPE
+ INTEGER,INTENT(IN) :: ND,KTYPE,IZONE
  REAL,INTENT(OUT) :: KEST,KVAR
  REAL,INTENT(IN) :: X,Y,RANGE,SILL,NUGGET,MZ,NODATA
  REAL,INTENT(IN),DIMENSION(ND) :: XD,YD,ZD 
+ TYPE(IDFOBJ),INTENT(IN) :: BLNKOUT
  INTEGER :: I,J,IC,IR,NP,N,ID,JD,IROW,ICOL
  REAL :: DX,DY,DXY,GAMMA,H,MZZ,F
  INTEGER,ALLOCATABLE,DIMENSION(:) :: SELID,SELD
@@ -195,7 +268,11 @@ ENDDO
  NP=ND; ALLOCATE(SELID(NP)); J=0
  DO ID=1,NP
   IF(UTL_DIST(XD(ID),YD(ID),X,Y).LE.RANGE)THEN
-   J=J+1; SELID(J)=ID
+   CALL UTL_IDFIROWICOL(BLNKOUT,IROW,ICOL,XD(ID),YD(ID))
+   !## same zone as original point
+   IF(BLNKOUT%X(ICOL,IROW).EQ.IZONE)THEN
+    J=J+1; SELID(J)=ID
+   ENDIF
   ENDIF
  ENDDO
  NP=J
@@ -339,7 +416,7 @@ ENDDO
  REAL :: XP,YP,ZP
  REAL,ALLOCATABLE,DIMENSION(:) :: XCOL,YROW
  
-  !## mark doubles with nodata and compute mean for those double points
+ !## mark doubles with nodata and compute mean for those double points
  DO I=1,MD
   !## done allready
   IF(ZD(I).EQ.NODATA)CYCLE
@@ -374,57 +451,6 @@ ENDDO
   ENDIF
  END DO
  ND=J
- 
-! !## sort x, to skip double coordinates
-! CALL UTL_SORTEM(1,MD,XD,2,YD,ZD,ZD,ZD,ZD,ZD,ZD)
-
-! !## sort y numbers
-! IS=1
-! DO I=2,MD
-!  IF(XD(I).NE.XD(I-1))THEN
-!   IE=I-1
-!   CALL UTL_SORTEM(IS,IE,YD,2,XD,ZD,ZD,ZD,ZD,ZD,ZD)
-!   IS=I
-!  ENDIF
-! ENDDO
-! !## sort last
-! IE=I-1
-! CALL UTL_SORTEM(IS,IE,YD,2,XD,ZD,ZD,ZD,ZD,ZD,ZD)
-
-! N=1
-! !## mark doubles with nodata and compute mean for those double points
-! DO I=2,MD
-!  IF(XD(I).EQ.XD(I-1).AND.YD(I).EQ.YD(I-1))THEN
-!   IF(N.EQ.1)J=I-1
-!   N=N+1
-!   ZD(J)=ZD(J)+ZD(I)
-!   ZD(I)=NODATA
-!  ELSE
-!   IF(N.GT.1)THEN
-!    ZD(J)=ZD(J)/REAL(N)
-!    N=1
-!   ENDIF
-!  ENDIF
-! END DO
-
-! !## eliminate doubles
-! J=0
-! DO I=1,MD
-!  IF(ZD(I).NE.NODATA)THEN
-!   J=J+1
-!   IF(J.NE.I)THEN
-!   ENDIF
-! ENDIF
-! END DO
-! ND=J
- 
-! !## compute mean and substract values from mean - simple kriging
-! IF(KTYPE.GT.0)THEN
-!   MZ=0.0; DO I=1,ND; MZ=MZ+ZD(I); ENDDO; IF(ND.GT.0.0)MZ=MZ/REAL(ND)
-!   DO I=1,ND; ZD(I)=ZD(I)-MZ; ENDDO
-! MZ=0.0 !; DO I=1,ND; MZ=MZ+ZD(I); ENDDO; MZ=MZ/REAL(ND)
-!  DO I=1,ND; ZD(I)=ZD(I)-MZ; ENDDO
-! ENDIF
  
  END SUBROUTINE UTL_KRIGING_INIT
 
@@ -3503,6 +3529,7 @@ END SUBROUTINE IMOD_UTL_INTERSECT_NCORNER
  N=N-1
 
  END SUBROUTINE IMOD_UTL_INTERSECT_NONEQUI
+ 
 !###======================================================================
  SUBROUTINE INTERSECT_NULLIFY() 
  !###======================================================================

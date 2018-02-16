@@ -56,7 +56,7 @@ use imod_utl, only: imod_utl_printtext,imod_utl_itos,imod_utl_rtos,imod_utl_crea
    utl_kriging_range,utl_kriging_main
 use gwfmetmodule, only: cdelr, cdelc
 use global, only: lipest, ibound 
-use pestvar, only: param, pest_iter,lgrad,llnsrch,pest_igrad,iupestout,pest_ktype,pest_krange,blnkout
+use pestvar, only: param, pest_iter,lgrad,llnsrch,pest_igrad,iupestout,pest_ktype,pest_krange,blnkout,blnkout
 
 implicit none
 
@@ -237,14 +237,15 @@ do i=1,size(param)
   CALL imod_utl_printtext('Kriging applied Range:'//TRIM(IMOD_UTL_RTOS(RANGE,'F',2))//' meter',1)
 
   !## apply kriging interpolation
-  CALL UTL_KRIGING_MAIN(NXYZ,XYZ(:,1),XYZ(:,2),XYZ(:,3),CDELR,CDELC,NROW,NCOL,XPP,NODATA,RANGE,PEST_KTYPE)
+  CALL UTL_KRIGING_MAIN(NXYZ,XYZ(:,1),XYZ(:,2),XYZ(:,3),CDELR,CDELC,NROW,NCOL,XPP,NODATA,RANGE,PEST_KTYPE, &
+     BLNKOUT)
   DO IROW=1,NROW; DO ICOL=1,NCOL
    IF(IBOUND(ICOL,IROW,ILS).EQ.0)THEN
     XPP(ICOL,IROW)=NODATA
    ELSE
-    IF(ASSOCIATED(BLNKOUT%X))THEN
-     IF(BLNKOUT%X(ICOL,IROW).LE.0.0)XPP(ICOL,IROW)=0.0
-    ENDIF
+!    IF(ASSOCIATED(BLNKOUT%X))THEN
+    IF(BLNKOUT%X(ICOL,IROW).LE.0.0)XPP(ICOL,IROW)=0.0
+!    ENDIF
     XPP(ICOL,IROW)=EXP(XPP(ICOL,IROW))
     !## areas outside range do get a value of 0.0, convert to 1.0
     IF(XPP(ICOL,IROW).EQ.0.0)XPP(ICOL,IROW)=1.0
@@ -283,15 +284,6 @@ do i=1,size(param)
 
  end subroutine
 
-!!###====================================================================
-!REAL FUNCTION PEST_GETRANGE()
-!!###====================================================================
-!IMPLICIT NONE
-    
-!PEST_GETRANGE=0.9*SQRT((DELR(NCOL)-DELR(0))**2.0+(DELC(0)-DELC(NROW))**2.0)
-  
-!END FUNCTION PEST_GETRANGE
- 
 !###====================================================================
 subroutine pest1alpha_list(ptype,nlist,rlist,ldim,mxlist,iopt1,iopt2)
 !###====================================================================

@@ -1107,10 +1107,21 @@ c parameters
       CHARACTER(LEN=16), PARAMETER :: GETTXT = '           GW ET'
       CHARACTER(LEN=16), PARAMETER :: EXFTXT = ' SURFACE LEAKAGE'
       CHARACTER(LEN=16), PARAMETER :: UETTXT = '          UZF ET'
-      !CHARACTER(LEN=16), PARAMETER :: UETTXT = '                '
+      CHARACTER(LEN=16), PARAMETER :: STRTXT = 'SFR-DIV. INFLTR.'
 !      DATA uzinftxt/'    INFILTRATION'/
 !      DATA uzsttext/'  STORAGE CHANGE'/
 
+!      DATA textinf/'    UZF INFILTR.'/
+!      DATA textinf2/'SFR-DIV. INFLTR.'/
+!      DATA textrch/'    UZF RECHARGE'/
+!      DATA textet/'           GW ET'/
+!      DATA textexfl/' SURFACE LEAKAGE'/
+!      DATA uzinftxt/'    INFILTRATION'/
+!      DATA uzsttext/'  STORAGE CHANGE'/
+!      DATA uzettext/'          UZF ET'/   
+      
+      !UZFINF BDGGRC BDGGET UZFRUN UZFET
+      
       CHARACTER(LEN=16), PARAMETER :: IBSTXT = 'INTERBED STORAGE'
       CHARACTER(LEN=16), PARAMETER :: SUBTXT = '      SUBSIDENCE'
       CHARACTER(LEN=16), PARAMETER :: LCPTXT = 'LAYER COMPACTION'
@@ -1177,7 +1188,7 @@ c check for uzf fluxen
        if (index(text,gettxt).gt.0) isub = 3
        if (index(text,exftxt).gt.0) isub = 4
        if (index(text,uettxt).gt.0) isub = 5
-!       if (index(text,uettxt).gt.0) isub = 6
+       if (index(text,strtxt).gt.0) isub = 6
        if (isub.gt.0 .and. .not.done) then
           read(prefix,*)(tmp,i=1,isub)
           prefix = tmp
@@ -1210,8 +1221,8 @@ c check for scr terms
           done = .true.
        end if
 
-      endif
-
+      endif     
+      
 c assemble root
       root = ''
       if (associated(resultdir)) then

@@ -719,6 +719,7 @@ C13-----CHECK RANGE AND ORDER FOR SEGMENTS AND REACHES.
         SEG(1, ISTRM(4, ii)) = SEG(1, ISTRM(4, ii)) + STRM(1, ii)
 C       Number of reaches in segment added to ISEG
         ISEG(4, jseg) = ireach
+
         IF ( ISFROPT.LT.4.AND.ISFROPT.GT.0 )THEN  
           uzfar_check%ltype = LAYHDT(krch)
           uzfar_check%irchnum = ii
@@ -1321,13 +1322,15 @@ C19-----COMPUTE VARIABLES NEEDED FOR STREAM LEAKAGE.
               STRM(3, irch) = SEG(8, nseg) - (elslpe*dist)
               STRM(4, irch) = STRM(3, irch) - avthk
 !             
-              uzfrp_check%ltype = LAYHDT(krck)
-              uzfrp_check%irchnum = IRCH
-              uzfrp_check%iflag = IFLG
-              uzfrp_check%iunit = IOUT
-              IERR = ICHKSTRBOT(uzfrp_check)
-              IF ( IERR.GT.0 )IFLG = IERR
-!
+              IF ( ISFROPT.LT.4.AND.ISFROPT.GT.0 )THEN  
+               uzfrp_check%ltype = LAYHDT(krck)
+               uzfrp_check%irchnum = IRCH
+               uzfrp_check%iflag = IFLG
+               uzfrp_check%iunit = IOUT
+               IERR = ICHKSTRBOT(uzfrp_check)
+               IF ( IERR.GT.0 )IFLG = IERR
+              ENDIF
+               
               STRM(6, irch) = avhc
               STRM(8, irch) = avthk 
 C20-----COMPUTE STREAMBED ELEVATION AND STREAM WIDTH FOR BEGINNING
