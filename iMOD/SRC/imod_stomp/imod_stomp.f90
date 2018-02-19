@@ -249,29 +249,34 @@ CONTAINS
  IMPLICIT NONE
  INTEGER,INTENT(IN) :: IU
  INTEGER :: JU,IROW,ICOL,ILAY
- REAL :: K1,K2,K3,K4
+ REAL :: K1,K2,K3,K4,D
 
  WRITE(IU,'(A)') ''
  WRITE(IU,'(A)') '#-------------------------------------------------------'
  WRITE(IU,'(A)') '~Hydraulic Properties Card'
  WRITE(IU,'(A)') '#-------------------------------------------------------'
- WRITE(IU,'(A)') 'IJK Indexing, file:ksx.dat,m^2, file:ksy.dat,m^2, file:ksz.dat,m^2,'
+ WRITE(IU,'(A)') 'IJK Indexing, file:ksx.dat,Darcy, file:ksy.dat,Darcy, file:ksz.dat,Darcy,'
 
  JU=UTL_GETUNIT(); OPEN(JU,FILE=TRIM(OUTPUTFILE)//'\ksx.dat',STATUS='UNKNOWN')
  DO ILAY=ILAY1,ILAY2,DLAY; DO IROW=1,NROW; DO ICOL=1,NCOL
-  WRITE(JU,'(G15.7)') KHV(ILAY,1)%X(ICOL,IROW)
+!  T=TB(ILAY,1)%X(ICOL,IROW); B=TB(ILAY,2)%X(ICOL,IROW); D=T-B
+  D=1.0/0.831
+  WRITE(JU,'(G15.7)') KHV(ILAY,1)%X(ICOL,IROW)*D
  ENDDO; ENDDO; ENDDO
  CLOSE(JU)
 
  JU=UTL_GETUNIT(); OPEN(JU,FILE=TRIM(OUTPUTFILE)//'\ksy.dat',STATUS='UNKNOWN')
  DO ILAY=ILAY1,ILAY2,DLAY; DO IROW=1,NROW; DO ICOL=1,NCOL
-  WRITE(JU,'(G15.7)') KHV(ILAY,2)%X(ICOL,IROW)
+!  T=TB(ILAY,1)%X(ICOL,IROW); B=TB(ILAY,2)%X(ICOL,IROW); D=T-B
+  D=1.0/0.831
+  WRITE(JU,'(G15.7)') KHV(ILAY,2)%X(ICOL,IROW)*D
  ENDDO; ENDDO; ENDDO
  CLOSE(JU)
 
  JU=UTL_GETUNIT(); OPEN(JU,FILE=TRIM(OUTPUTFILE)//'\ksz.dat',STATUS='UNKNOWN')
  DO ILAY=ILAY1,ILAY2,DLAY; DO IROW=1,NROW; DO ICOL=1,NCOL
-  WRITE(JU,'(G15.7)') KHV(ILAY,3)%X(ICOL,IROW)
+  D=1.0/0.831
+  WRITE(JU,'(G15.7)') KHV(ILAY,3)%X(ICOL,IROW)*D
  ENDDO; ENDDO; ENDDO
  CLOSE(JU)
 
