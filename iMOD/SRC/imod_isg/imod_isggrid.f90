@@ -1517,7 +1517,7 @@ IRLOOP: DO IR=MAX(1,IROW-1),MIN(NROW,IROW+1)
  END SUBROUTINE ISGGRIDINTSTREAMDATA
 
  !###====================================================================
- LOGICAL FUNCTION ISG2SFR(NROW,NCOL,NLAY,ILAY,IPER,NPER,MP,JU,GRIDISG,EXFNAME)
+ LOGICAL FUNCTION ISG2SFR(NROW,NCOL,NLAY,ILAY,IPER,NPER,MP,JU,GRIDISG,EXFNAME,TOP,BOT)
  !###====================================================================
  IMPLICIT NONE
  REAL,PARAMETER :: MAXQFLOW=1.0E5 !## error perhaps in entering discharge
@@ -1525,13 +1525,14 @@ IRLOOP: DO IR=MAX(1,IROW-1),MIN(NROW,IROW+1)
  CHARACTER(LEN=*),INTENT(IN) :: EXFNAME
  INTEGER,INTENT(IN) :: NROW,NCOL,NLAY,ILAY,JU,IPER,NPER
  TYPE(GRIDISGOBJ),INTENT(INOUT) :: GRIDISG
+ TYPE(IDFOBJ),DIMENSION(NLAY),INTENT(IN) :: TOP,BOT
  INTEGER,INTENT(INOUT),DIMENSION(:) :: MP
  INTEGER :: I,J,K,II,JJ,KK,KKK,TTIME,IROW,ICOL,N,ISEG,JSEG,NSEG,IREF,NDIM,KSEG,MSEG,IDATE,IISG, &
        ICALC,OUTSEG,IUPSEG,IPRIOR,NSTRPTS,ICRS,ICLC,IQHR,NREACH,NSTREAM,KCRS,CRSREF,KCLC,CLCREF,&
-       NSIM
+       NSIM,JLAY
  REAL :: DXY,X1,X2,Y1,Y2,QFLOW,QROFF,EVT,PREC,ROUGHCH,ROUGHBK,CDPTH,FDPTH,AWDTH,BWDTH,DIST,     &
        HC1FCT,THICKM1,ELEVUP,WIDTH1,DEPTH1,HC2FCT,THICKM2,ELEVDN,WIDTH2,DEPTH2,WLVLUP,WLVLDN,Z, &
-       AORG,ASIMPLE
+       AORG,ASIMPLE,GRAD_WLVL,GRAD_ELEV,GRAD_THCK,TDIST,T,B,RB,TH
  REAL,PARAMETER :: MOFFSET=0.0001  !#3 minimal offset for gradients less or equal zero
  INTEGER :: IMOFFSET
  REAL,ALLOCATABLE,DIMENSION(:,:) :: QSORT,RVAL
@@ -1547,6 +1548,28 @@ IRLOOP: DO IR=MAX(1,IROW-1),MIN(NROW,IROW+1)
  LWARNING2=.TRUE.
  LWARNING3=.TRUE.
  
+ !## translate cdate in to julian date - for transient simulations only!
+ IF(GRIDISG%ISTEADY.EQ.2)THEN
+  GRIDISG%SDATE=UTL_IDATETOJDATE(GRIDISG%SDATE)
+  GRIDISG%EDATE=UTL_IDATETOJDATE(GRIDISG%EDATE)+1
+  !## take average value
+  IF(GRIDISG%IAVERAGE.EQ.1)THEN
+   TTIME=1
+  !## take median value
+  ELSE
+   TTIME=GRIDISG%EDATE-GRIDISG%SDATE
+  ENDIF
+ ELSEIF(GRIDISG%ISTEADY.EQ.1)THEN
+  TTIME=1
+ ENDIF
+
+ IF(ALLOCATED(QSORT))DEALLOCATE(QSORT); IF(ALLOCATED(XNR))DEALLOCATE(XNR); IF(ALLOCATED(NDATA))DEALLOCATE(NDATA)
+ NDIM=13; ALLOCATE(QSORT(TTIME,NDIM),XNR(NDIM),NDATA(NDIM))
+ !## allocate storage for cross-sectional data
+ ALLOCATE(XCRS(NDIM),ZCRS(NDIM),MCRS(NDIM),QCRS(NDIM),WCRS(NDIM),DCRS(NDIM))
+ !## variable used to store segment information
+ IF(ALLOCATED(RVAL))DEALLOCATE(RVAL); ALLOCATE(RVAL(NDIM,2)); RVAL=0.0
+
  !## only specify for first stress-period - write output to regular ISG as well
  IF(IPER.EQ.1)THEN
 
@@ -1589,19 +1612,45 @@ IRLOOP: DO IR=MAX(1,IROW-1),MIN(NROW,IROW+1)
      !## get coordinates of current reach in segment
      X1 =ISP(J-1)%X; Y1=ISP(J-1)%Y; X2=ISP(J)%X; Y2=ISP(J)%Y
      !## distance between two points with information
-     DXY=(X2-X1)**2.0+(Y2-Y1)**2.0; IF(DXY.LE.0.0)CYCLE; DXY=SQRT(DXY)
+     DXY=UTL_DIST(X1,Y1,X2,Y2)
+!     DXY=(X2-X1)**2.0+(Y2-Y1)**2.0; IF(DXY.LE.0.0)CYCLE; DXY=SQRT(DXY)
      !## intersect line with rectangular-regular-equidistantial-grid
      CALL INTERSECT_EQUI(GRIDISG%XMIN,GRIDISG%XMAX,GRIDISG%YMIN,GRIDISG%YMAX,GRIDISG%CS, &
                          GRIDISG%CS,X1,X2,Y1,Y2,N,.FALSE.)
     ENDDO
 
+    IF(ILAY.EQ.0)THEN
+     !## read data for start-point
+     IREF=ISG(I)%ICLC
+     CALL ISG2GRIDGETDATA(GRIDISG%SDATE,GRIDISG%EDATE,TTIME,QSORT,XNR,SIZE(XNR),RVAL(1,1),ISD(IREF)%N, &
+                          ISD(IREF)%IREF,GRIDISG%ISTEADY,1,NDATA,GRIDISG%IAVERAGE)
+     !## read data for end-point
+     IREF=ISG(I)%ICLC+1
+     CALL ISG2GRIDGETDATA(GRIDISG%SDATE,GRIDISG%EDATE,TTIME,QSORT,XNR,SIZE(XNR),RVAL(1,2),ISD(IREF)%N, & 
+                          ISD(IREF)%IREF,GRIDISG%ISTEADY,1,NDATA,GRIDISG%IAVERAGE)
+
+     WLVLUP =RVAL(1,1); WLVLDN =RVAL(1,2)
+     ELEVUP =RVAL(2,1); ELEVDN =RVAL(2,2)
+     THICKM1=RVAL(4,1); THICKM2=RVAL(4,2)
+!   IF(I.EQ.2)THEN
+!   WRITE(*,*)
+!   ENDIF
+     !## get total distance
+     DIST=0.0; DO K=1,N; DIST=DIST+LN(K); ENDDO
+     GRAD_WLVL=(WLVLDN -WLVLUP )/DIST
+     GRAD_ELEV=(ELEVDN -ELEVUP )/DIST
+     GRAD_THCK=(THICKM2-THICKM1)/DIST
+    ELSE
+     JLAY=ILAY
+    ENDIF
+                    
     !## fill result array
-    MSEG=0; DIST=0.0
+    MSEG=0; TDIST=0.0
     K=1; DO 
-  
+     
      !## skip outside model domain
      IF(CA(K).LT.1.OR.CA(K).GT.NCOL.OR.RA(K).LT.1.OR.RA(K).GT.NROW)THEN
-      K=K+1; IF(K.GT.N)EXIT; CYCLE
+      K=K+1; TDIST=TDIST+LN(K); IF(K.GT.N)EXIT; CYCLE
      ENDIF
 
      !## found segment inside model
@@ -1625,8 +1674,27 @@ IRLOOP: DO IR=MAX(1,IROW-1),MIN(NROW,IROW+1)
 
        ICOL=CA(K); IROW=RA(K)  
       
+       !## what modellayer need the SFR to be in
+       IF(ILAY.EQ.0)THEN
+!        if(icol.eq.17.and.irow.eq.32)then
+!        write(*,*) 
+!        endif
+        RB=ELEVUP +GRAD_ELEV*(TDIST+0.5*DIST)
+        TH=THICKM1+GRAD_THCK*(TDIST+0.5*DIST)
+        RB=RB-TH
+        DO JLAY=1,NLAY
+         T=TOP(JLAY)%X(ICOL,IROW); B=BOT(JLAY)%X(ICOL,IROW)
+         IF(RB.LE.T.AND.RB.GE.B)EXIT
+        ENDDO
+        IF(JLAY.GT.NLAY)THEN
+         CALL WMESSAGEBOX(OKONLY,EXCLAMATIONICON,COMMONOK,'iMOD cannot assign element to correct modellayer'//CHAR(13)// &
+         'Segment '//TRIM(ITOS(I))//'; bottomlevel estimated on '//TRIM(RTOS(RB,'F',2)),'Error')
+         RETURN 
+        ENDIF
+       ENDIF
+       
        !## write into sfr package
-       LINE=TRIM(ITOS(ILAY))   //','//TRIM(ITOS(IROW))   //','//TRIM(ITOS(ICOL))//','// &
+       LINE=TRIM(ITOS(JLAY))   //','//TRIM(ITOS(IROW))   //','//TRIM(ITOS(ICOL))//','// &
             TRIM(ITOS(NSTREAM))//','//TRIM(ITOS(ISTR(I)))//','//TRIM(RTOS(DIST,'G',7))
        WRITE(JU,'(A)') TRIM(LINE)
        
@@ -1678,8 +1746,10 @@ IRLOOP: DO IR=MAX(1,IROW-1),MIN(NROW,IROW+1)
        WRITE(ISGIU(1,1),'(A)') TRIM(LINE)
        MSEG=0 
       ENDIF
-     
+      
+      TDIST=TDIST+DIST
       K=KKK 
+
      ELSE
       K=K+1
      ENDIF
@@ -1695,29 +1765,29 @@ IRLOOP: DO IR=MAX(1,IROW-1),MIN(NROW,IROW+1)
  !## total number of reaches - determines for stress-period 1, stays the same
  NREACH=SUM(ISTR)
 
- !## translate cdate in to julian date - for transient simulations only!
- IF(GRIDISG%ISTEADY.EQ.2)THEN
-  GRIDISG%SDATE=UTL_IDATETOJDATE(GRIDISG%SDATE)
-  GRIDISG%EDATE=UTL_IDATETOJDATE(GRIDISG%EDATE)+1
-  !## take average value
-  IF(GRIDISG%IAVERAGE.EQ.1)THEN
-   TTIME=1
-  !## take median value
-  ELSE
-   TTIME=GRIDISG%EDATE-GRIDISG%SDATE
-  ENDIF
- ELSEIF(GRIDISG%ISTEADY.EQ.1)THEN
-  TTIME=1
- ENDIF
+! !## translate cdate in to julian date - for transient simulations only!
+! IF(GRIDISG%ISTEADY.EQ.2)THEN
+!  GRIDISG%SDATE=UTL_IDATETOJDATE(GRIDISG%SDATE)
+!  GRIDISG%EDATE=UTL_IDATETOJDATE(GRIDISG%EDATE)+1
+!  !## take average value
+!  IF(GRIDISG%IAVERAGE.EQ.1)THEN
+!   TTIME=1
+!  !## take median value
+!  ELSE
+!   TTIME=GRIDISG%EDATE-GRIDISG%SDATE
+!  ENDIF
+! ELSEIF(GRIDISG%ISTEADY.EQ.1)THEN
+!  TTIME=1
+! ENDIF
 
- IF(ALLOCATED(QSORT))DEALLOCATE(QSORT); IF(ALLOCATED(XNR))DEALLOCATE(XNR); IF(ALLOCATED(NDATA))DEALLOCATE(NDATA)
- NDIM=13; ALLOCATE(QSORT(TTIME,NDIM),XNR(NDIM),NDATA(NDIM))
-
- !## allocate storage for cross-sectional data
- ALLOCATE(XCRS(NDIM),ZCRS(NDIM),MCRS(NDIM),QCRS(NDIM),WCRS(NDIM),DCRS(NDIM))
-
- !## variable used to store segment information
- IF(ALLOCATED(RVAL))DEALLOCATE(RVAL); ALLOCATE(RVAL(NDIM,2)); RVAL=0.0
+! IF(ALLOCATED(QSORT))DEALLOCATE(QSORT); IF(ALLOCATED(XNR))DEALLOCATE(XNR); IF(ALLOCATED(NDATA))DEALLOCATE(NDATA)
+! NDIM=13; ALLOCATE(QSORT(TTIME,NDIM),XNR(NDIM),NDATA(NDIM))
+!
+! !## allocate storage for cross-sectional data
+! ALLOCATE(XCRS(NDIM),ZCRS(NDIM),MCRS(NDIM),QCRS(NDIM),WCRS(NDIM),DCRS(NDIM))
+!
+! !## variable used to store segment information
+! IF(ALLOCATED(RVAL))DEALLOCATE(RVAL); ALLOCATE(RVAL(NDIM,2)); RVAL=0.0
 
  !## to be filled in later - number of streams
  LINE='NaN1#,'//TRIM(ITOS(IRDFLG))//','//TRIM(ITOS(IPTFLG))//',0'
