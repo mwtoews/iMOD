@@ -645,16 +645,16 @@ C----------READ USING PACKAGE READ AND PREPARE MODULES.
 !        SUBROUTINE GWF2SFR7RP(In, Iunitgwt, Iunitlak, Kkper, Kkstp, Nsol,
 !     +                      Iouts, Iunitbcf, Iunitlpf, Iunithuf, 
 !     +                      Iunituzf, Igrid)
-
+     
         IF(IUNIT(IUSFR).GT.0) CALL GWF2SFR7RP(IUNIT(IUSFR),IUNIT(IUGWT),
      1   IUNIT(IULAK),KKPER,KKSTP,NSOL,IOUTS,IUNIT(IUBCF6),IUNIT(IULPF),
      1   IUNIT(IUHUF2),IUNIT(IUUZF),IGRID)
         IF(IUNIT(IUHYD).GT.0 .AND. IUNIT(IUSFR).GT.0)
      1                     CALL GWF2HYD7SFR7RP(IUNIT(IUHYD),KKPER,IGRID)
-        IF(IUNIT(IUUZF).GT.0) CALL GWF2UZF1RP(IUNIT(IUUZF),iunit(iusfr),
-     1   KKPER,IGRID)
+        IF(IUNIT(IUUZF).GT.0) CALL GWF2UZF1RP(IUNIT(IUUZF),KKPER,
+     1    iunit(iusfr),IGRID)
 
-        !        SUBROUTINE GWF2LAK7RP(IN,IUNITBCF,IUNITGWT,IUNITLPF,IUNITHUF,
+!        SUBROUTINE GWF2LAK7RP(IN,IUNITBCF,IUNITGWT,IUNITLPF,IUNITHUF,
 !     +                      IUNITSFR,IUNITUZF,KKPER,NSOL,IOUTS,IGRID)
 
         IF(IUNIT(IULAK).GT.0) CALL GWF2LAK7RP(IUNIT(IULAK),
@@ -1218,18 +1218,16 @@ C7C4----CALCULATE BUDGET TERMS. SAVE CELL-BY-CELL FLOW TERMS.
           IF(IUNIT(IUIBS).GT.0) CALL GWF2IBS7BD(KKSTP,KKPER,IGRID)
           IF(IUNIT(IUETS).GT.0) CALL GWF2ETS7BD(KKSTP,KKPER,IGRID)
           IF(IUNIT(IUDRT).GT.0) CALL GWF2DRT7BD(KKSTP,KKPER,IGRID)
-!           SUBROUTINE GWF2UZF1BD(Kkstp, Kkper, Iunitlak, Iunitsfr, Igrid)
           IF(IUNIT(IUUZF).GT.0) CALL GWF2UZF1BD(KKSTP,KKPER,
      1                             IUNIT(IULAK),IUNIT(IUSFR),IGRID)
-
-!           SUBROUTINE GWF2SFR7BD(Kkstp, Kkper, Iunitgwt, Iunitlak, Iunitgage,
-!     +                      Iunituzf, Nsol, Iunitrch, Igrid)  !cjm (added Iunitrch) 
           IF(IUNIT(IUSFR).GT.0) CALL GWF2SFR7BD(KKSTP,KKPER,
      1                        IUNIT(IUGWT),IUNIT(IULAK),IUNIT(IUGAGE),
      1                        IUNIT(IUUZF),NSOL,IUNIT(IURCH),IGRID)
-!           SUBROUTINE GWF2LAK7BD(KSTP,KPER,IUNITGWT,IUNITGAGE,IUNITSFR,
-!     1                     IUNITUZF,NSOL,IGRID)
-          IF(IUNIT(IULAK).GT.0) CALL GWF2LAK7BD(KKSTP,KKPER,
+
+!SUBROUTINE GWF2SFR7BD(Kkstp, Kkper, Iunitgwt, Iunitlak, Iunitgage,
+!     +                      Iunituzf, Nsol, Iunitrch, Igrid)  !cjm (added Iunitrch)     
+     
+      IF(IUNIT(IULAK).GT.0) CALL GWF2LAK7BD(KKSTP,KKPER,
      1                       IUNIT(IUGWT),IUNIT(IUGAGE),IUNIT(IUSFR),
      1                       IUNIT(IUUZF),NSOL,IGRID)
           IF(IUNIT(IUMNW2).GT.0) CALL GWF2MNW27BD(KKSTP,KKPER,IGRID)

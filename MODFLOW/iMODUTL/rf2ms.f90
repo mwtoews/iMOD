@@ -238,11 +238,21 @@ CONTAINS
    call idfnullify(idfm)
    !## copy modelnetwork
    call idfcopy(idf,idfm)
+   if(associated(idfm%x))deallocate(idfm%x)
 
    idfm%nodata = nodata(i)
+   
+!   WRITE(*,*) idfm%nodata , nodata(i)
+   
    if (.not.idfreadscale(idfc,idfm,scltype,ismooth)) CALL IMOD_UTL_PRINTTEXT('idfreadscale',2)
    nodata(i)=idfm%nodata   
+
+!   WRITE(*,*) idfm%nodata , nodata(i)
+   
    buff = idfm%x
+
+!   WRITE(*,*) BUFF(1,1)
+
    call idfdeallocatex(idfc)
    call idfdeallocatex(idfm)
 
@@ -591,6 +601,7 @@ END SUBROUTINE
  DO IROW=1,SIMGRO_NROW
   DO ICOL=1,SIMGRO_NCOL
    lurban=.false.
+!   WRITE(*,*) ICOL,IROW,SIMGRO(ICOL,IROW)%IBOUND
    IF(SIMGRO(ICOL,IROW)%IBOUND.LE.0)CYCLE
    MDND=(IROW-1)*SIMGRO_NCOL+ICOL
 
@@ -602,6 +613,7 @@ END SUBROUTINE
    ARND= DX*DY
    ARND= ARND-SIMGRO(ICOL,IROW)%NOPP-SIMGRO(ICOL,IROW)%SOPP
 
+!   WRITE(*,*) ARND
    !## rural area > 0
    IF(ARND.GT.0.0)THEN
 

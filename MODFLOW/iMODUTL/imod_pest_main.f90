@@ -1545,7 +1545,7 @@ END SUBROUTINE WRITEIPF
  WRITE(IUPESTPROGRESS,'(A)') TRIM(BLINE) 
  WRITE(IUPESTSENSITIVITY,'(I10,A)') PEST_ITER,TRIM(BLINE(31:))  
 
- !## reset parameters
+ !## reset parameters - alpha(2)=previous alpha
  DO I=1,SIZE(PARAM); PARAM(I)%ALPHA(1)=PARAM(I)%ALPHA(2); ENDDO
 
  !## melt frozen parameters
@@ -1556,7 +1556,6 @@ END SUBROUTINE WRITEIPF
   IF(PARAM(IP1)%IACT.EQ.-1.AND.PARAM(IP1)%IGROUP.GT.0)THEN
    PARAM(IP1)%IACT=1
   ENDIF
-!  write(*,*) ip1,param(ip1)%ibnd,param(ip1)%iact
  ENDDO
 
  !## freeze-insensitive parameters
@@ -1763,7 +1762,6 @@ END SUBROUTINE WRITEIPF
   IF(PESTUPGRADEVECTOR(1.0,.TRUE.,LAMBDARESET=LAMBDARESET))THEN 
    !## check whether number of parameters is equal to the number started this loop with
    MP=0; DO I=1,SIZE(PARAM); IF(PARAM(I)%IACT.EQ.1.AND.PARAM(I)%IGROUP.GT.0)MP=MP+1; ENDDO
-!   WRITE(*,*) 'MP,NP',MP,NP
    IF(MP.EQ.NP)EXIT
   ENDIF
   !## reset marquardt lambda
@@ -1773,7 +1771,7 @@ END SUBROUTINE WRITEIPF
    !## increase marquardt
    MARQUARDT=MARQUARDT*DAMPINGFACTOR
   ENDIF
-!  WRITE(*,*) 'LAMBDARESET,MARQUARDT',LAMBDARESET,MARQUARDT
+  WRITE(*,*) 'LAMBDARESET,MARQUARDT',LAMBDARESET,MARQUARDT
 
  ENDDO !## marquardt-loop
 
@@ -2148,7 +2146,6 @@ END SUBROUTINE WRITEIPF
    IF(PARAM(IP1)%IACT.NE.1)CYCLE
 
    CALL PEST_GETBOUNDARY(IP1,IBND,P1,P2,PMIN,PMAX)
-!   write(*,*) ip1,param(ip1)%ibnd,ibnd,param(ip1)%iact
 
    !## parameter hits the boundary
    IF(IBND.NE.0)THEN
@@ -2156,15 +2153,24 @@ END SUBROUTINE WRITEIPF
     IF(IBND.EQ.PARAM(IP1)%IBND)THEN 
      !## ignore this parameter for now - reset lambda and search another update vector
      PARAM(IP1)%IACT=-1; LAMBDARESET=.TRUE.; RETURN
-     WRITE(*,*) 'Reset lambda - parameter in boundary'
+     WRITE(IUPESTOUT,'(A)') 'Reset lambda - parameter ',ip1,' in boundary'
     ELSE
      AF=1.0
      IF(P1.LT.PMIN)AF=(P2-PMIN)/(P2-P1)
      IF(P1.GT.PMAX)AF=(PMAX-P2)/(P1-P2)
-     write(*,*) 'p1,p2,pmin,pmax',p1,p2,pmin,pmax
+     write(IUPESTOUT,'(A,I10,4F10.3)') 'parameter,p1,p2,pmin,pmax',ip1,p1,p2,pmin,pmax
      !## keep track of minimal adjustment of vector
      F=MIN(AF,F)
-     write(*,*) 'af,f',af,f
+     write(IUPESTOUT,'(A,2F10.3)') 'af,f',af,f
+     !## recompute gradient and set this parameter on boundary
+     IF(F.LT.0.1)THEN
+      G=PARAM(IP1)%ALPHA(1)-PARAM(IP1)%ALPHA(2)
+      G=G*F
+      PARAM(IP1)%ALPHA(1)=PARAM(IP1)%ALPHA(2)+G
+      !## ignore this parameter
+      WRITE(IUPESTOUT,'(A,F10.2,A)') 'Reset lambda - parameter close by boundary f=',F,' snapped to it'
+      PARAM(IP1)%IACT=-1; LAMBDARESET=.TRUE.; RETURN
+     ENDIF
     ENDIF
    ENDIF  
   ENDDO
@@ -2176,8 +2182,10 @@ END SUBROUTINE WRITEIPF
    
    !## adjust all parameters
    DO IP2=1,SIZE(PARAM) 
+    
     G=PARAM(IP2)%ALPHA(1)-PARAM(IP2)%ALPHA(2)
     G=G*F
+
     !## update parameters
     PARAM(IP2)%ALPHA(1)=PARAM(IP2)%ALPHA(2)+G
    ENDDO
@@ -2189,8 +2197,6 @@ END SUBROUTINE WRITEIPF
  !## correct update gradient found
  PESTUPGRADEVECTOR=.TRUE.
 
-! DO J=1,SIZE(U); WRITE(*,*) J,U(J); ENDDO
-
  J=0; DO IP1=1,SIZE(PARAM)
 
   IF(PARAM(IP1)%LOG)THEN
@@ -2199,10 +2205,6 @@ END SUBROUTINE WRITEIPF
    PARAM(IP1)%ALPHA_HISTORY(PEST_ITER)=PARAM(IP1)%ALPHA(1)
   ENDIF
   
-!  !## set ibnd flag
-!  CALL PEST_GETBOUNDARY(IP1,IBND,P1,P2,PMIN,PMAX)
-!  PARAM(IP1)%IBND=IBND
-
   !## active parameter
   IF(PARAM(IP1)%IACT.EQ.1.AND.PARAM(IP1)%IGROUP.GT.0)THEN
    J=J+1
@@ -2227,17 +2229,10 @@ END SUBROUTINE WRITEIPF
  REAL,INTENT(OUT) :: P1,P2,PMIN,PMAX
  
  !## parameter adjustment hit the parameter boundary
-! IF(PARAM(IP1)%LOG)THEN
-!  P1  =EXP(PARAM(IP1)%ALPHA(1))
-!  P2  =EXP(PARAM(IP1)%ALPHA(2))
-!  PMIN=EXP(PARAM(IP1)%MIN)
-!  PMAX=EXP(PARAM(IP1)%MAX)
-! ELSE
-  P1  =PARAM(IP1)%ALPHA(1)
-  P2  =PARAM(IP1)%ALPHA(2)
-  PMIN=PARAM(IP1)%MIN
-  PMAX=PARAM(IP1)%MAX
-! ENDIF
+ P1  =PARAM(IP1)%ALPHA(1)
+ P2  =PARAM(IP1)%ALPHA(2)
+ PMIN=PARAM(IP1)%MIN
+ PMAX=PARAM(IP1)%MAX
    
  IBND=0
  !## shoot over
