@@ -1677,10 +1677,16 @@ IRLOOP: DO IR=MAX(1,IROW-1),MIN(NROW,IROW+1)
         RB=ELEVUP +GRAD_ELEV*(TDIST+0.5*DIST)
         TH=THICKM1+GRAD_THCK*(TDIST+0.5*DIST)
         RB=RB-TH
+        JJ=0
         DO JLAY=1,NLAY
          T=TOP(JLAY)%X(ICOL,IROW); B=BOT(JLAY)%X(ICOL,IROW)
-         IF(RB.LE.T.AND.RB.GE.B)EXIT
+         IF(T.NE.TOP(JLAY)%NODATA.AND.B.NE.BOT(JLAY)%NODATA)THEN
+          JJ=JJ+1
+          IF(RB.LE.T.AND.RB.GE.B)EXIT
+         ENDIF
         ENDDO
+        !## put in modelayer 1 for nodes above top elevation
+        IF(JLAY.GT.NLAY)JLAY=1 !.AND.JJ.EQ.0)JLAY=1
         IF(JLAY.GT.NLAY)THEN
          CALL WMESSAGEBOX(OKONLY,EXCLAMATIONICON,COMMONOK,'iMOD cannot assign element to correct modellayer'//CHAR(13)// &
          'Segment '//TRIM(ITOS(I))//'; bottomlevel estimated on '//TRIM(RTOS(RB,'F',2)),'Error')
