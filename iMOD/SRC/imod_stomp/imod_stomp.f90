@@ -152,7 +152,7 @@ CONTAINS
  IMPLICIT NONE
  REAL,INTENT(IN) :: K
  REAL,INTENT(OUT) :: A,N
- REAL :: X,M,KD
+ REAL :: X,M,KD,KM
  
  !## k in milidarcy
  KD=K*0.831*1000
@@ -160,7 +160,8 @@ CONTAINS
  A=2.01*(7.37*KD**-0.43)**-1.20
  A=A*0.10199773339984
 
- X=(LOG10(K)+20.34)/3.94
+ KM=KD*9.869233E-13
+ X=(LOG10(KM)+20.34)/3.94
  M=0.5-0.5*ERF(X)
 
  N=-1.0/(M-1.0)
@@ -349,7 +350,7 @@ CONTAINS
    GP=101325.0+1.0E-9
   ELSE
    !## deep pressure (kPA)
-   GP=3035795
+   GP=4580000.0 !  3035795
    !## initial pressure assigned to centroid of cell
    T=TB(ILAY,1)%X(ICOL,IROW)-TB(ILAY,2)%X(ICOL,IROW)  
    IF(T.LE.0.0D0)THEN
