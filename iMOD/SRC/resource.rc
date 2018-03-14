@@ -8,7 +8,7 @@
 //
 // Winteracter resource script. 
 //
-// Modified : 09/Jan/2018 13:04:47
+// Modified : 14/Mar/2018 15:39:51
 //
 ///////////////////////////////////////////////////
 //
@@ -11082,7 +11082,7 @@ BEGIN
 " 1004    8 Arial, 400 0 \n"
 " 1019    8 Arial, 400 0 \n"
 "[Grids] \n"
-" 1004     1   1000   388 \n"
+" 1004     1   5000   388 \n"
 "  100 \n"
 ,0
 END
@@ -13020,4 +13020,4 @@ END
 //*WI* FILENAME    resource.f90
 //*WI* FMODNAME    RESOURCE
 //*WI* LASTTYPE        2
-//*WI* LASTRES       216
+//*WI* LASTRES       287
