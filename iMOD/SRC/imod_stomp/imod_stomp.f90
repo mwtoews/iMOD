@@ -60,6 +60,7 @@ CONTAINS
  CALL STOMP_WRITE_GAS_REL_PERM(IU)
  CALL STOMP_WRITE_INITIAL_CONDITIONS(IU)
  CALL STOMP_WRITE_THERMAL_PROPERTY(IU)
+! CALL STOMP_WRITE_SOURCES(IU)
  CALL STOMP_WRITE_OUTPUT(IU)
  !## save stomp.idf
  IF(.NOT.IDFWRITE(BND(1),TRIM(OUTPUTFILE)//'\stomp.idf',1))THEN; ENDIF
@@ -105,10 +106,13 @@ CONTAINS
  WRITE(IU,'(A)') 'Normal,'
  WRITE(IU,'(A)') 'STOMP-GT,'
  WRITE(IU,'(A)') '1,'
- WRITE(IU,'(A)') '0.0,day,20.0,yr,0.01,sec,50,day,1.25,16,1.e-06,'
- WRITE(IU,'(A)') '10000,'   !## maximum number of timesteps
- WRITE(IU,'(A)') 'Variable Aqueous Diffusion,'
- WRITE(IU,'(A)') 'Variable Gas Diffusion,'
+! WRITE(IU,'(A)') '0.0,day,20.0,yr,0.01,sec,50,day,1.25,16,1.e-06,'
+ WRITE(IU,'(A)') '0,s,500,year,0.01,s,500,year,1.25,16,1.e-4,'
+ WRITE(IU,'(A)') '10000000,'   !## maximum number of timesteps
+ WRITE(IU,'(A)') 'No Diffusion,'
+ WRITE(IU,'(A)') 'No Gas Diffusion,'
+! WRITE(IU,'(A)') 'Variable Aqueous Diffusion,'
+! WRITE(IU,'(A)') 'Variable Gas Diffusion,'
  WRITE(IU,'(A)') '0,'
 
  END SUBROUTINE STOMP_WRITE_SOL_CNTRL
@@ -125,7 +129,8 @@ CONTAINS
  WRITE(IU,'(A)') '#-------------------------------------------------------'
  WRITE(IU,'(A)') '~Saturation Function Card'
  WRITE(IU,'(A)') '#-------------------------------------------------------'
- WRITE(IU,'(A)') 'IJK Indexing,van Genuchten with Entrapment,file:alpha.dat,1/m,file:n.dat,0.346,,0.15,2.0e-5,'
+! WRITE(IU,'(A)') 'IJK Indexing,van Genuchten with Entrapment,file:alpha.dat,1/m,file:n.dat,0.346,,0.15,2.0e-5,'
+ WRITE(IU,'(A)') 'IJK Indexing,van Genuchten,file:alpha.dat,1/m,file:n.dat,0.1,,,,'
 
  JU=UTL_GETUNIT(); OPEN(JU,FILE=TRIM(OUTPUTFILE)//'\alpha.dat',STATUS='UNKNOWN')
  DO ILAY=ILAY1,ILAY2,DLAY; DO IROW=1,NROW; DO ICOL=1,NCOL
@@ -258,7 +263,7 @@ CONTAINS
    WRITE(JU,'(G15.7)') P
    IDF%X(ICOL,IROW)=P
   ENDDO; ENDDO
-  IF(.NOT.IDFWRITE(IDF,TRIM(OUTPUTFILE)//'\INPUT_IDF\POR_L'//TRIM(ITOS(ILAY))//'.IDF',0))STOP
+  IF(.NOT.IDFWRITE(IDF,TRIM(OUTPUTFILE)//'\INPUT_IDF\POR_L'//TRIM(ITOS(ILAY))//'.IDF',1))STOP
  ENDDO
  CLOSE(JU)
 
@@ -310,7 +315,7 @@ CONTAINS
  REAL,PARAMETER :: PAIR=101325.0
  INTEGER,INTENT(IN) :: IU
  INTEGER :: JU,IROW,ICOL,ILAY,JLAY
- REAL :: HB,WP,T,GP
+ REAL :: HB,WP,T,GP,H
  LOGICAL :: LWCONSTANT,LGCONSTANT
  
  LWCONSTANT=.TRUE.
@@ -320,9 +325,9 @@ CONTAINS
  WRITE(IU,'(A)') '#-------------------------------------------------------'
  WRITE(IU,'(A)') '~Initial Conditions Card'
  WRITE(IU,'(A)') '#-------------------------------------------------------'
- WRITE(IU,'(A)') 'Aqueous Saturation,Gas Pressure,'
+ WRITE(IU,'(A)') 'Aqueous Pressure,Gas Pressure,'
  WRITE(IU,'(A)') '2,'
- WRITE(IU,'(A)') 'Aqueous Saturation File,,,ini_aqueous.dat,'
+ WRITE(IU,'(A)') 'Aqueous Pressure File,,Pa,ini_aqueous.dat,'
  WRITE(IU,'(A)') 'Gas Pressure File,,Pa,ini_gas.dat,'
 
  !## relation with depth
@@ -330,20 +335,17 @@ CONTAINS
  JLAY=0
  DO ILAY=ILAY1,ILAY2,DLAY; JLAY=JLAY+1; DO IROW=1,NROW; DO ICOL=1,NCOL
   IF(LWCONSTANT)THEN
-!   WP=1.0-WAT(ILAY)%X(ICOL,IROW)
-   WP=MAX(0.2,WAT(ILAY)%X(ICOL,IROW))
-!   IF(JLAY.GT.NLAY-3)THEN
-!    WP=1.0
-!   ELSE
-!    WP=0.5
-!   ENDIF
+
+!   WP=MAX(0.2,WAT(ILAY)%X(ICOL,IROW))
+
+   !## initial pressure assigned to centroid of cell
+   T =(TB(ILAY,1)%X(ICOL,IROW)+TB(ILAY,2)%X(ICOL,IROW))/2.0
+   H = HED(ILAY)%X(ICOL,IROW)
+   WP=(H-T)*RHO*G+PAIR
+   
   ELSE
    !## initial pressure assigned to centroid of cell
    T=TB(ILAY,1)%X(ICOL,IROW)-TB(ILAY,2)%X(ICOL,IROW)  
-   IF(T.LE.0.0)THEN
-    WRITE(*,'(/1X,A,F10.2,A,3I5)') 'Error, thickness (',T,') less than zero',ICOL,IROW,JLAY
-    STOP
-   ENDIF
    !## get total depth up to mid of current modellayer
    T=(SLEVEL%X(ICOL,IROW)-TB(ILAY,1)%X(ICOL,IROW))+0.5*T
    HB=T
@@ -359,17 +361,14 @@ CONTAINS
   IF(LGCONSTANT)THEN
    GP=101325.0+1.0E-9
   ELSE
-   !## deep pressure (kPA)
+   !## deep pressure (PA)
    GP=4580000.0 !  3035795
    !## initial pressure assigned to centroid of cell
    T=TB(ILAY,1)%X(ICOL,IROW)-TB(ILAY,2)%X(ICOL,IROW)  
-   IF(T.LE.0.0D0)THEN
-    WRITE(*,'(/1X,A,F10.2,A,3I5)') 'Error, thickness (',T,') less than zero',ICOL,IROW,JLAY; STOP
-   ENDIF
    !## get total depth up to mid of current modellayer
    T =(TB(ILAY,2)%X(ICOL,IROW)-TB(ILAY1,2)%X(ICOL,IROW))+0.5*T
    HB=T
-   GP=GP-(205*HB)
+   GP=GP-(205.0*HB)
   ENDIF
   WRITE(JU,'(3I10,G15.7)') ICOL,IROW,JLAY,GP
  ENDDO; ENDDO; ENDDO
@@ -405,6 +404,48 @@ CONTAINS
  END SUBROUTINE STOMP_WRITE_THERMAL_PROPERTY
 
  !###======================================================================
+ SUBROUTINE STOMP_WRITE_SOURCES(IU)
+ !###======================================================================
+ IMPLICIT NONE
+ INTEGER,INTENT(IN) :: IU
+ INTEGER :: N,IROW,ICOL,ILAY,JLAY
+ REAL :: QF
+ REAL,DIMENSION(2) :: QT
+
+ WRITE(IU,'(A)') ''
+ WRITE(IU,'(A)') '#-------------------------------------------------------'
+ WRITE(IU,'(A)') '~Source Card'
+ WRITE(IU,'(A)') '#-------------------------------------------------------'
+
+ N=0
+ DO ILAY=ILAY1,ILAY2,DLAY
+  DO IROW=1,NROW; DO ICOL=1,NCOL
+   IF(Q(ILAY)%X(ICOL,IROW).NE.0.0)N=N+1
+  ENDDO; ENDDO
+ ENDDO
+ 
+ WRITE(IU,'(A)') TRIM(ITOS(N))//','
+ 
+ QT=0.0; JLAY=0; DO ILAY=ILAY1,ILAY2,DLAY; JLAY=JLAY+1
+  DO IROW=1,NROW; DO ICOL=1,NCOL
+   IF(Q(ILAY)%X(ICOL,IROW).NE.0.0)THEN
+    WRITE(IU,'(A)') 'Aqueous Volumetric,null,null,'//TRIM(ITOS(ICOL))//','//TRIM(ITOS(ICOL))//','//TRIM(ITOS(IROW))//','// &
+        TRIM(ITOS(IROW))//','//TRIM(ITOS(JLAY))//','//TRIM(ITOS(JLAY))//',1,'
+    QF=Q(ILAY)%X(ICOL,IROW)/86400.0
+    if(qf.gt.0.0)then
+     QT(1)=QT(1)+QF
+    else
+     QT(2)=QT(2)+QF
+    endif
+    WRITE(IU,'(A)') '0,yr,3265,psi,'//TRIM(RTOS(QF,'G',7))//',m^3/s,'
+   ENDIF
+  ENDDO; ENDDO
+ ENDDO
+ WRITE(*,*) QT,QT*86400.0
+ 
+ END SUBROUTINE STOMP_WRITE_SOURCES
+
+ !###======================================================================
  SUBROUTINE STOMP_WRITE_OUTPUT(IU)
  !###======================================================================
  IMPLICIT NONE
@@ -417,9 +458,26 @@ CONTAINS
  WRITE(IU,'(A)') '0,'  !## number of reference nodes (echo on screen)
  WRITE(IU,'(A)') '1,1,hr,cm,6,6,6,' !## output screen intervals
  WRITE(IU,'(A)') '0,'  !## number of reference variables (echo on screen)
- WRITE(IU,'(A)') '2,'         !## number of plot files
- WRITE(IU,'(A)') '1,year,'   !## number of plot files
- WRITE(IU,'(A)') '10,year,'  !## number of plot files
+ WRITE(IU,'(A)') '16,'
+ WRITE(IU,'(A)') '0,s,'
+ WRITE(IU,'(A)') '5,s,'
+ WRITE(IU,'(A)') '60,s,'
+ WRITE(IU,'(A)') '1,hour,'
+ WRITE(IU,'(A)') '85,min,'
+ WRITE(IU,'(A)') '10,day,'
+ WRITE(IU,'(A)') '100,day,'
+ WRITE(IU,'(A)') '1,year,'
+ WRITE(IU,'(A)') '5,year,'
+ WRITE(IU,'(A)') '10,year,'
+ WRITE(IU,'(A)') '20,year,'
+ WRITE(IU,'(A)') '30,year,'
+ WRITE(IU,'(A)') '50,year,'
+ WRITE(IU,'(A)') '100,year,'
+ WRITE(IU,'(A)') '200,year,'
+ WRITE(IU,'(A)') '300,year,'
+! WRITE(IU,'(A)') '2,'         !## number of plot files
+! WRITE(IU,'(A)') '1,year,'   !## number of plot files
+! WRITE(IU,'(A)') '10,year,'  !## number of plot files
  WRITE(IU,'(A)') '6,'         !## number of output variables
  WRITE(IU,'(A)') 'aqueous saturation,,'        
  WRITE(IU,'(A)') 'aqueous pressure,,' !## aqueous pressure
@@ -502,9 +560,10 @@ CONTAINS
  TYPE(IDFOBJ),INTENT(INOUT) :: IDF
  INTEGER,INTENT(IN) :: IWINDOW,IU,ICROSS
  INTEGER :: I,J,K,II,ILAY,JLAY,KLAY,IROW,ICOL
- REAL :: K1,K2,K3,K4,T,B,D,DX,DY,DXY,A
+ REAL :: K1,K2,K3,K4,T,B,D,DX,DY,DXY,A,T1,T2,QF,CC,DH
  CHARACTER(LEN=256) :: LINE
-
+ REAL,DIMENSION(4) :: QT
+ 
  STOMP_READ=.FALSE.
 
  NLAY=SIZE(BND)
@@ -531,6 +590,8 @@ CONTAINS
   ENDDO
   IF(.NOT.UTL_READINITFILE('WAT_L'//TRIM(ITOS(I)),LINE,IU,0))RETURN
   READ(LINE,*) WAT(I)%FNAME; LINE='WAT_L'//TRIM(ITOS(I))//'='//TRIM(WAT(I)%FNAME); WRITE(*,'(A)') TRIM(LINE)
+  IF(.NOT.UTL_READINITFILE('HED_L'//TRIM(ITOS(I)),LINE,IU,0))RETURN
+  READ(LINE,*) HED(I)%FNAME; LINE='HED_L'//TRIM(ITOS(I))//'='//TRIM(HED(I)%FNAME); WRITE(*,'(A)') TRIM(LINE)
  ENDDO
  DO I=1,NLAY
   IF(.NOT.UTL_READINITFILE('TOP_L'//TRIM(ITOS(I)),LINE,IU,0))RETURN
@@ -594,6 +655,13 @@ CONTAINS
     IF(.NOT.IDFWRITE(WAT(I),WAT(I)%FNAME,1))RETURN
    ENDIF
    
+   CALL IDFCOPY(IDF,HED(I))
+   IF(.NOT.IDFREADCROSS(HED(I),HED(I)%FNAME))RETURN
+   HED(I)%FNAME=TRIM(OUTPUTFILE)//'\INPUT_IDF\HED_L'//TRIM(ITOS(I))//'.IDF'
+   IF(NAGGR.EQ.0)THEN
+    IF(.NOT.IDFWRITE(HED(I),HED(I)%FNAME,1))RETURN
+   ENDIF
+
   ENDDO
  
  ELSE
@@ -720,16 +788,20 @@ CONTAINS
    DO IROW=1,IDF%NROW; DO ICOL=1,IDF%NCOL
     IF(BND(JLAY)%X(ICOL,IROW).EQ.0)THEN
      WAT(JLAY)%X(ICOL,IROW)=WAT(JLAY)%NODATA
+     HED(JLAY)%X(ICOL,IROW)=HED(JLAY)%NODATA
     ELSE  
      DO J=1,IAGGR(I)
       KLAY=ILAY+J
       IF(J.EQ.1)THEN
        WAT(JLAY)%X(ICOL,IROW)=WAT(KLAY)%X(ICOL,IROW)
+       HED(JLAY)%X(ICOL,IROW)=HED(KLAY)%X(ICOL,IROW)
       ELSE
        WAT(JLAY)%X(ICOL,IROW)=WAT(JLAY)%X(ICOL,IROW)+WAT(KLAY)%X(ICOL,IROW)
+       HED(JLAY)%X(ICOL,IROW)=HED(JLAY)%X(ICOL,IROW)+HED(KLAY)%X(ICOL,IROW)
       ENDIF
      ENDDO
      WAT(JLAY)%X(ICOL,IROW)=WAT(JLAY)%X(ICOL,IROW)/REAL(IAGGR(I))
+     HED(JLAY)%X(ICOL,IROW)=HED(JLAY)%X(ICOL,IROW)/REAL(IAGGR(I))
     ENDIF
    ENDDO; ENDDO
 
@@ -766,6 +838,7 @@ CONTAINS
     IF(.NOT.IDFWRITE(KHV(JLAY,J),KHV(JLAY,J)%FNAME,1))RETURN
    ENDDO
    IF(.NOT.IDFWRITE(WAT(JLAY),WAT(JLAY)%FNAME,1))RETURN
+   IF(.NOT.IDFWRITE(HED(JLAY),HED(JLAY)%FNAME,1))RETURN
 
    ILAY=ILAY+IAGGR(I)
   
@@ -775,6 +848,51 @@ CONTAINS
   NLAY=JLAY
  
  ENDIF
+ 
+ QT=0.0
+ DO JLAY=1,NLAY
+  CALL IDFCOPY(IDF,Q(JLAY))
+  !## compute fluxes (estimated)
+  DO IROW=1,BND(1)%NROW; DO ICOL=1,BND(1)%NCOL
+   IF(HED(JLAY)%X(ICOL,IROW).EQ.HED(JLAY)%NODATA)CYCLE
+   QF=0.0
+   IF(JLAY.EQ.1)THEN
+    DH= HED(JLAY)%X(ICOL,IROW)-HED(JLAY+1)%X(ICOL,IROW)
+    D = 0.5*(TB(JLAY,1)%X(ICOL,IROW)-TB(JLAY+1,2)%X(ICOL,IROW))
+    CC=(HED(JLAY)%DX*HED(JLAY)%DX)/(D/KHV(JLAY,3)%X(ICOL,IROW))
+    QF= DH*CC
+    QT(1)=QT(1)+QF
+   ELSEIF(JLAY.EQ.NLAY)THEN
+    DH= HED(JLAY)%X(ICOL,IROW)-HED(JLAY-1)%X(ICOL,IROW)
+    D = 0.5*(TB(JLAY-1,1)%X(ICOL,IROW)-TB(JLAY,2)%X(ICOL,IROW))
+    CC=(HED(JLAY)%DX*HED(JLAY)%DX)/(D/KHV(JLAY,3)%X(ICOL,IROW))
+    QF=DH*CC
+    QT(2)=QT(2)+QF
+   ELSE
+    IF(ICOL.EQ.1)THEN
+     DH= HED(JLAY)%X(ICOL,IROW)-HED(JLAY)%X(ICOL+1,IROW)
+     T1= KHV(JLAY,1)%X(ICOL  ,IROW)*(TB(JLAY,1)%X(ICOL  ,IROW)-TB(JLAY,2)%X(ICOL  ,IROW))
+     T2= KHV(JLAY,1)%X(ICOL+1,IROW)*(TB(JLAY,1)%X(ICOL+1,IROW)-TB(JLAY,2)%X(ICOL+1,IROW))
+     CC=(2.0*T1*T2*HED(JLAY)%DX)/(T1*HED(JLAY)%DX+T2*HED(JLAY)%DX)
+     QF= DH*CC
+     QT(3)=QT(3)+QF
+    ELSEIF(ICOL.EQ.BND(1)%NCOL)THEN
+     DH= HED(JLAY)%X(ICOL,IROW)-HED(JLAY)%X(ICOL-1,IROW)
+     T1= KHV(JLAY,1)%X(ICOL-1,IROW)*(TB(JLAY,1)%X(ICOL-1,IROW)-TB(JLAY,2)%X(ICOL-1,IROW))
+     T2= KHV(JLAY,1)%X(ICOL  ,IROW)*(TB(JLAY,1)%X(ICOL  ,IROW)-TB(JLAY,2)%X(ICOL  ,IROW))
+     CC=(2.0*T1*T2*HED(JLAY)%DX)/(T1*HED(JLAY)%DX+T2*HED(JLAY)%DX)
+     QF= DH*CC
+     QT(4)=QT(4)+QF    
+    ENDIF
+   ENDIF
+   Q(JLAY)%X(ICOL,IROW)=QF
+  ENDDO; ENDDO
+ ENDDO
+ 
+ WRITE(*,*) QT
+ 
+!      CR(ICOL,IROW,ILAY)=2.0*T2*T1*(DELC(IROW-1)-DELC(IROW))/ &
+!      (T1*(DELR(ICOL+1)-DELR(ICOL))+T2*(DELR(ICOL)-DELR(ICOL-1)))
  
  STOMP_READ=.TRUE.
 
@@ -795,6 +913,15 @@ CONTAINS
  IF(ALLOCATED(KHV))THEN
   DO I=1,SIZE(KHV,2); CALL IDFDEALLOCATE(KHV(:,I),SIZE(KHV,1)); ENDDO; DEALLOCATE(KHV)
  ENDIF
+ IF(ALLOCATED(HED))THEN
+  CALL IDFDEALLOCATE(HED,SIZE(HED)); DEALLOCATE(HED)
+ ENDIF
+ IF(ALLOCATED(WAT))THEN
+  CALL IDFDEALLOCATE(WAT,SIZE(WAT)); DEALLOCATE(WAT)
+ ENDIF
+ IF(ALLOCATED(Q))THEN
+  CALL IDFDEALLOCATE(Q,SIZE(Q)); DEALLOCATE(Q)
+ ENDIF
 
  END SUBROUTINE STOMP_CLOSE
 
@@ -805,9 +932,11 @@ CONTAINS
  INTEGER,INTENT(IN) :: NLAY
  INTEGER :: I,J
 
- ALLOCATE(TB(NLAY,2),KHV(NLAY,3),BND(NLAY),WAT(NLAY))
+ ALLOCATE(TB(NLAY,2),KHV(NLAY,3),BND(NLAY),WAT(NLAY),HED(NLAY),Q(NLAY))
  DO I=1,NLAY                    ; CALL IDFNULLIFY(BND(I)) ; ENDDO
  DO I=1,NLAY                    ; CALL IDFNULLIFY(WAT(I)) ; ENDDO
+ DO I=1,NLAY                    ; CALL IDFNULLIFY(HED(I)) ; ENDDO
+ DO I=1,NLAY                    ; CALL IDFNULLIFY(Q(I))   ; ENDDO
  DO I=1,NLAY; DO J=1,SIZE(TB,2) ; CALL IDFNULLIFY(TB(I,J)); ENDDO; ENDDO
  DO I=1,NLAY; DO J=1,SIZE(KHV,2); CALL IDFNULLIFY(KHV(I,J)) ; ENDDO; ENDDO
  CALL IDFNULLIFY(SLEVEL)
