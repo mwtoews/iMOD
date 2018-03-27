@@ -34,9 +34,10 @@ INTEGER,PRIVATE :: ILAY1,ILAY2,DLAY
 CONTAINS
 
  !###======================================================================
- LOGICAL FUNCTION STOMP_SAVEINPUT()
+ LOGICAL FUNCTION STOMP_SAVEINPUT(ITYPE)
  !###======================================================================
  IMPLICIT NONE
+ INTEGER,INTENT(IN) :: ITYPE
  INTEGER :: IU
 
  STOMP_SAVEINPUT=.FALSE.
@@ -51,14 +52,16 @@ CONTAINS
  CALL STOMP_WRITE_SIM_TITLE(IU)
  CALL STOMP_WRITE_SOL_CNTRL(IU)
  CALL STOMP_WRITE_GRID(IU)
+ CALL STOMP_WRITE_BOUNDARY_CONDITIONS(IU)
  CALL STOMP_WRITE_SOILZONATION(IU)
+ CALL STOMP_WRITE_SURFACE_FLUX(IU)
  CALL STOMP_WRITE_INACTIVE(IU)
  CALL STOMP_WRITE_MECHANICAL(IU)
  CALL STOMP_WRITE_HYDRAULICPROPERTIES(IU)
  CALL STOMP_WRITE_SAT_FUNC(IU)
  CALL STOMP_WRITE_AQ_RE_PERM(IU)
  CALL STOMP_WRITE_GAS_REL_PERM(IU)
- CALL STOMP_WRITE_INITIAL_CONDITIONS(IU)
+ CALL STOMP_WRITE_INITIAL_CONDITIONS(IU,ITYPE)
  CALL STOMP_WRITE_THERMAL_PROPERTY(IU)
 ! CALL STOMP_WRITE_SOURCES(IU)
  CALL STOMP_WRITE_OUTPUT(IU)
@@ -94,6 +97,46 @@ CONTAINS
  END SUBROUTINE STOMP_WRITE_SIM_TITLE
 
  !###======================================================================
+ SUBROUTINE STOMP_WRITE_BOUNDARY_CONDITIONS(IU)
+ !###======================================================================
+ IMPLICIT NONE
+ INTEGER,INTENT(IN) :: IU
+
+ WRITE(IU,'(A)') ''
+ WRITE(IU,'(A)') '#-------------------------------------------------------'
+ WRITE(IU,'(A)') '~Boundary Conditions Card'
+ WRITE(IU,'(A)') '#-------------------------------------------------------'
+ WRITE(IU,'(A)') '1,'
+ WRITE(IU,'(A)') 'Top,advective,evaporative,'
+ WRITE(IU,'(A)') '1,'//TRIM(ITOS(NCOL))//',1,1,'//TRIM(ITOS(NLAY))//','//TRIM(ITOS(NLAY))//',1,'
+ WRITE(IU,'(A)') '0,day,20.11,C,5.0,W/m^2 K,4559807,Pa,0.0,m/s,0.25,'
+
+ END SUBROUTINE STOMP_WRITE_BOUNDARY_CONDITIONS
+
+ !###======================================================================
+ SUBROUTINE STOMP_WRITE_SURFACE_FLUX(IU)
+ !###======================================================================
+ IMPLICIT NONE
+ INTEGER,INTENT(IN) :: IU
+
+ WRITE(IU,'(A)') ''
+ WRITE(IU,'(A)') '#-------------------------------------------------------'
+ WRITE(IU,'(A)') '~Surface Flux Card'
+ WRITE(IU,'(A)') '#-------------------------------------------------------'
+ WRITE(IU,'(A)') '8,'
+ WRITE(IU,'(A)') 'Aqueous Volumetric Flux,m^3/day,m^3,east,'//TRIM(ITOS(NCOL))//','//TRIM(ITOS(NCOL))// &
+       ',1,1,1,'//TRIM(ITOS(NLAY))//','
+ WRITE(IU,'(A)') 'Aqueous Volumetric Flux,m^3/day,m^3,north,1,'//TRIM(ITOS(NCOL))//',1,1,'//TRIM(ITOS(NLAY))//','//TRIM(ITOS(NLAY))//','
+ WRITE(IU,'(A)') 'Aqueous Volumetric Flux,m^3/day,m^3,west,1,1,1,1,1,'//TRIM(ITOS(NLAY))//','
+ WRITE(IU,'(A)') 'Aqueous Volumetric Flux,m^3/day,m^3,south,1,'//TRIM(ITOS(NCOL))//',1,1,1,1,'
+ WRITE(IU,'(A)') 'Gas Volumetric Flux,m^3/day,m^3,east,'//TRIM(ITOS(NCOL))//','//TRIM(ITOS(NCOL))//',1,1,1,'//TRIM(ITOS(NLAY))//','
+ WRITE(IU,'(A)') 'Gas Volumetric Flux,m^3/day,m^3,north,1,'//TRIM(ITOS(NCOL))//',1,1,'//TRIM(ITOS(NLAY))//','//TRIM(ITOS(NLAY))//','
+ WRITE(IU,'(A)') 'Gas Volumetric Flux,m^3/day,m^3,west,1,1,1,1,1,'//TRIM(ITOS(NLAY))//','
+ WRITE(IU,'(A)') 'Gas Volumetric Flux,m^3/day,m^3,south,1,'//TRIM(ITOS(NCOL))//',1,1,1,1,'
+
+ END SUBROUTINE STOMP_WRITE_SURFACE_FLUX
+
+ !###======================================================================
  SUBROUTINE STOMP_WRITE_SOL_CNTRL(IU)
  !###======================================================================
  IMPLICIT NONE
@@ -107,10 +150,10 @@ CONTAINS
  WRITE(IU,'(A)') 'STOMP-GT,'
  WRITE(IU,'(A)') '1,'
 ! WRITE(IU,'(A)') '0.0,day,20.0,yr,0.01,sec,50,day,1.25,16,1.e-06,'
- WRITE(IU,'(A)') '0,s,500,year,0.01,s,500,year,1.25,16,1.e-4,'
+ WRITE(IU,'(A)') '0,s,500,year,0.01,s,500,year,1.25,16,1.e-3,'
  WRITE(IU,'(A)') '10000000,'   !## maximum number of timesteps
+ WRITE(IU,'(A)') 'No Aqueous Diffusion,'
  WRITE(IU,'(A)') 'No Diffusion,'
- WRITE(IU,'(A)') 'No Gas Diffusion,'
 ! WRITE(IU,'(A)') 'Variable Aqueous Diffusion,'
 ! WRITE(IU,'(A)') 'Variable Gas Diffusion,'
  WRITE(IU,'(A)') '0,'
@@ -307,13 +350,13 @@ CONTAINS
  END SUBROUTINE STOMP_WRITE_HYDRAULICPROPERTIES
 
  !###======================================================================
- SUBROUTINE STOMP_WRITE_INITIAL_CONDITIONS(IU)
+ SUBROUTINE STOMP_WRITE_INITIAL_CONDITIONS(IU,ITYPE)
  !###======================================================================
  IMPLICIT NONE
  REAL,PARAMETER :: RHO=1000.0
  REAL,PARAMETER :: G=9.8
  REAL,PARAMETER :: PAIR=101325.0
- INTEGER,INTENT(IN) :: IU
+ INTEGER,INTENT(IN) :: IU,ITYPE
  INTEGER :: JU,IROW,ICOL,ILAY,JLAY
  REAL :: HB,WP,T,GP,H
  LOGICAL :: LWCONSTANT,LGCONSTANT
@@ -361,14 +404,52 @@ CONTAINS
   IF(LGCONSTANT)THEN
    GP=101325.0+1.0E-9
   ELSE
-   !## deep pressure (PA)
-   GP=4580000.0 !  3035795
+
+   !## water pressure
+   T =(TB(ILAY,1)%X(ICOL,IROW)+TB(ILAY,2)%X(ICOL,IROW))/2.0
+   H = HED(ILAY)%X(ICOL,IROW)
+   WP=(H-T)*RHO*G+PAIR
+   GP=WP
+   
+   IF(GASPOINTER%X(ICOL,IROW).EQ.1)THEN
+   
+    SELECT CASE (ITYPE)
+     CASE (1,3)
+      !## add 10 meter gascolumn
+      GP=WP +960000.0
+     CASE (2,4)
+      !## add 230 meter gascolumn
+      GP=WP+2240000.0
+    END SELECT
+
+!peter
+!    !## no gas
+!    IF(JLAY.GT.1)GP=WP
+    
+!   GP=WP; IF(GASPOINTER%X(ICOL,IROW).EQ.1)GP=WP+96000.0
+
+!   !## deep pressure (PA)
+!   GP=2240000.0 !  3035795
+
    !## initial pressure assigned to centroid of cell
    T=TB(ILAY,1)%X(ICOL,IROW)-TB(ILAY,2)%X(ICOL,IROW)  
    !## get total depth up to mid of current modellayer
    T =(TB(ILAY,2)%X(ICOL,IROW)-TB(ILAY1,2)%X(ICOL,IROW))+0.5*T
    HB=T
-   GP=GP-(205.0*HB)
+
+   SELECT CASE (ITYPE)
+    CASE (3,4)
+     GP=GP-(205.0*HB)
+   END SELECT
+  
+  ENDIF
+   
+!   !## outside gasfield
+!   IF(GASPOINTER%X(ICOL,IROW).NE.1)GP=WP
+if(gp.le.0)then
+write(*,*) gp.lt.0; pause; stop
+endif
+   
   ENDIF
   WRITE(JU,'(3I10,G15.7)') ICOL,IROW,JLAY,GP
  ENDDO; ENDDO; ENDDO
@@ -478,13 +559,15 @@ CONTAINS
 ! WRITE(IU,'(A)') '2,'         !## number of plot files
 ! WRITE(IU,'(A)') '1,year,'   !## number of plot files
 ! WRITE(IU,'(A)') '10,year,'  !## number of plot files
- WRITE(IU,'(A)') '6,'         !## number of output variables
+ WRITE(IU,'(A)') '8,'         !## number of output variables
  WRITE(IU,'(A)') 'aqueous saturation,,'        
  WRITE(IU,'(A)') 'aqueous pressure,,' !## aqueous pressure
  WRITE(IU,'(A)') 'gas saturation,,'            
  WRITE(IU,'(A)') 'gas pressure,Pa,'
  WRITE(IU,'(A)') 'aqueous relative perm,,' !## aqueous relative permeability
  WRITE(IU,'(A)') 'trapped gas sat,,'  !## trapped gas saturation,'
+ WRITE(IU,'(A)') 'x aqueous volumetric flux,,' !## aqueous relative permeability
+ WRITE(IU,'(A)') 'x gas volumetric flux,,'  !## trapped gas saturation,'
 
  END SUBROUTINE STOMP_WRITE_OUTPUT
  
@@ -493,13 +576,14 @@ CONTAINS
  !###======================================================================
  IMPLICIT NONE
  INTEGER,INTENT(IN) :: IU
- INTEGER :: JU,KU,I,J,K,IROW,ICOL,ILAY,E
- REAL,DIMENSION(2) :: X,Y,Z
+ INTEGER :: JU,KU,I,J,K,N,IROW,ICOL,ILAY,E,IR,IC
+ REAL,DIMENSION(2) :: X,Y
+ REAL,DIMENSION(8) :: Z
  INTEGER,DIMENSION(8) :: IX,IY,IZ
- REAL :: XC,YC,ZC
+ REAL :: XC,YC,ZC,NZ
  DATA IX/1,2,1,2,1,2,1,2/
  DATA IY/2,2,1,1,2,2,1,1/
- DATA IZ/1,1,1,1,2,2,2,2/
+ DATA IZ/1,2,4,3,5,6,8,7/
 
  WRITE(IU,'(A)') ''
  WRITE(IU,'(A)') '#-------------------------------------------------------'
@@ -521,20 +605,61 @@ CONTAINS
 
  !## 1 2 4 3 - bottom
  !## 5 6 8 7 - top
- I=0; E=0; DO ILAY=ILAY1,ILAY2,DLAY; DO IROW=1,NROW; DO ICOL=1,NCOL
+ N=0; E=0; DO ILAY=ILAY1,ILAY2,DLAY; DO IROW=1,NROW; DO ICOL=1,NCOL
 
-  X(1)=BND(1)%SX(ICOL-1)
-  X(2)=BND(1)%SX(ICOL  )
-  Y(1)=BND(1)%SY(IROW-1)
-  Y(2)=BND(1)%SY(IROW  )
-  Z(2)=TB(ILAY,1)%X(ICOL,IROW) !## top
-  Z(1)=TB(ILAY,2)%X(ICOL,IROW) !## bot
+  X(1)=BND(1)%SX(ICOL-1); X(2)=BND(1)%SX(ICOL)
+  Y(1)=BND(1)%SY(IROW-1); Y(2)=BND(1)%SY(IROW)
 
-  IF(Z(2).EQ.TB(ILAY,1)%NODATA)Z(2)=-999.99
-  IF(Z(1).EQ.TB(ILAY,2)%NODATA)Z(1)=-999.99
+  Z =0.0
+
+  K=-4
+  DO J=2,1,-1
+   K=K+4
+   
+   I=1; NZ=0.0
+   DO IR=IROW,MIN(IROW+1,NROW)
+    DO IC=MAX(ICOL-1,1),ICOL
+     IF(TB(ILAY,J)%X(IC,IR).EQ.TB(ILAY,J)%NODATA)CYCLE
+     NZ=NZ+1.0; Z(I+K)=Z(I+K)+TB(ILAY,J)%X(IC,IR)
+    ENDDO
+   ENDDO
+   Z(I+K)=Z(I+K)/NZ
+      
+   I=2; NZ=0.0
+   DO IR=IROW,MIN(IROW+1,NROW)
+    DO IC=ICOL,MIN(ICOL+1,NCOL)
+     IF(TB(ILAY,J)%X(IC,IR).EQ.TB(ILAY,J)%NODATA)CYCLE
+     NZ=NZ+1.0; Z(I+K)=Z(I+K)+TB(ILAY,J)%X(IC,IR)
+    ENDDO
+   ENDDO
+   Z(I+K)=Z(I+K)/NZ
+
+   I=3; NZ=0.0
+   DO IR=MAX(IROW-1,1),IROW
+    DO IC=ICOL,MIN(ICOL+1,NCOL)
+     IF(TB(ILAY,J)%X(IC,IR).EQ.TB(ILAY,J)%NODATA)CYCLE
+     NZ=NZ+1.0; Z(I+K)=Z(I+K)+TB(ILAY,J)%X(IC,IR)
+    ENDDO
+   ENDDO
+   Z(I+K)=Z(I+K)/NZ
+
+   I=4; NZ=0.0
+   DO IR=MAX(IROW-1,1),IROW
+    DO IC=MAX(ICOL-1,1),ICOL
+     IF(TB(ILAY,J)%X(IC,IR).EQ.TB(ILAY,J)%NODATA)CYCLE
+     NZ=NZ+1.0; Z(I+K)=Z(I+K)+TB(ILAY,J)%X(IC,IR)
+    ENDDO
+   ENDDO
+   Z(I+K)=Z(I+K)/NZ
+ 
+   DO I=1,4
+    IF(Z(I+K).EQ.TB(ILAY,J)%NODATA)Z(I+K)=-999.99
+   ENDDO
+
+  ENDDO
 
   E=E+1
-  WRITE(KU,'(9I10)') E,(K,K=I+1,I+8)
+  WRITE(KU,'(9I10)') E,(K,K=N+1,N+8)
 
   DO J=1,8
 
@@ -542,8 +667,8 @@ CONTAINS
    YC=Y(IY(J))
    ZC=Z(IZ(J))
 
-   I=I+1
-   WRITE(JU,'(I10,3(A1,F10.2),A1)') I,',',XC,',',YC,',',ZC,','
+   N=N+1
+   WRITE(JU,'(I10,3(A1,F10.2),A1)') N,',',XC,',',YC,',',ZC,','
 
   ENDDO
 
@@ -578,6 +703,8 @@ CONTAINS
  
  IF(.NOT.UTL_READINITFILE('SURFLEVEL',LINE,IU,0))RETURN
  READ(LINE,*) SLEVEL%FNAME; LINE='SURFLEVEL='//TRIM(SLEVEL%FNAME); WRITE(*,'(A)') TRIM(LINE)
+ IF(.NOT.UTL_READINITFILE('GASPOINTER',LINE,IU,0))RETURN
+ READ(LINE,*) GASPOINTER%FNAME; LINE='GASPOINTER='//TRIM(GASPOINTER%FNAME); WRITE(*,'(A)') TRIM(LINE)
 
  DO I=1,NLAY
   IF(.NOT.UTL_READINITFILE('BND_L'//TRIM(ITOS(I)),LINE,IU,0))RETURN
@@ -613,6 +740,11 @@ CONTAINS
   SLEVEL%FNAME=TRIM(OUTPUTFILE)//'\INPUT_IDF\SLEVEL.IDF'
   IF(.NOT.IDFWRITE(SLEVEL,SLEVEL%FNAME,1))RETURN
 
+  CALL IDFCOPY(IDF,GASPOINTER)
+  IF(.NOT.IDFREADCROSS(GASPOINTER,GASPOINTER%FNAME))RETURN
+  GASPOINTER%FNAME=TRIM(OUTPUTFILE)//'\INPUT_IDF\GASPOINTER.IDF'
+  IF(.NOT.IDFWRITE(GASPOINTER,GASPOINTER%FNAME,1))RETURN
+
   K=0
   DO I=1,NLAY
    CALL IDFCOPY(IDF,BND(I))
@@ -643,6 +775,11 @@ CONTAINS
      CASE (2); KHV(I,J)%FNAME=TRIM(OUTPUTFILE)//'\INPUT_IDF\KHY_L'//TRIM(ITOS(I))//'.IDF' 
      CASE (3); KHV(I,J)%FNAME=TRIM(OUTPUTFILE)//'\INPUT_IDF\KHZ_L'//TRIM(ITOS(I))//'.IDF' 
     END SELECT
+
+!peter
+!    !## overrule all
+!    if(I.GT.1)KHV(I,J)%X=0.0432
+
     IF(NAGGR.EQ.0)THEN
      IF(.NOT.IDFWRITE(KHV(I,J),KHV(I,J)%FNAME,1))RETURN
     ENDIF
@@ -696,7 +833,7 @@ CONTAINS
   ENDDO
  
  ENDIF
- 
+
  NROW=IDF%NROW; NCOL=IDF%NCOL
 
  !## convert vertical anisotropy into k-vertical
@@ -890,10 +1027,7 @@ CONTAINS
  ENDDO
  
  WRITE(*,*) QT
- 
-!      CR(ICOL,IROW,ILAY)=2.0*T2*T1*(DELC(IROW-1)-DELC(IROW))/ &
-!      (T1*(DELR(ICOL+1)-DELR(ICOL))+T2*(DELR(ICOL)-DELR(ICOL-1)))
- 
+
  STOMP_READ=.TRUE.
 
  END FUNCTION STOMP_READ
