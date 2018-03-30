@@ -173,7 +173,7 @@ CONTAINS
  WRITE(IU,'(A)') '~Saturation Function Card'
  WRITE(IU,'(A)') '#-------------------------------------------------------'
 ! WRITE(IU,'(A)') 'IJK Indexing,van Genuchten with Entrapment,file:alpha.dat,1/m,file:n.dat,0.346,,0.15,2.0e-5,'
- WRITE(IU,'(A)') 'IJK Indexing,van Genuchten,file:alpha.dat,1/m,file:n.dat,0.1,,,,'
+ WRITE(IU,'(A)') 'IJK Indexing,van Genuchten,file:alpha.dat,1/m,file:n.dat,0.346,,,,'
 
  JU=UTL_GETUNIT(); OPEN(JU,FILE=TRIM(OUTPUTFILE)//'\alpha.dat',STATUS='UNKNOWN')
  DO ILAY=ILAY1,ILAY2,DLAY; DO IROW=1,NROW; DO ICOL=1,NCOL
@@ -416,20 +416,11 @@ CONTAINS
     SELECT CASE (ITYPE)
      CASE (1,3)
       !## add 10 meter gascolumn
-      GP=WP +960000.0
+      GP=WP +96000.0
      CASE (2,4)
       !## add 230 meter gascolumn
       GP=WP+2240000.0
     END SELECT
-
-!peter
-!    !## no gas
-!    IF(JLAY.GT.1)GP=WP
-    
-!   GP=WP; IF(GASPOINTER%X(ICOL,IROW).EQ.1)GP=WP+96000.0
-
-!   !## deep pressure (PA)
-!   GP=2240000.0 !  3035795
 
    !## initial pressure assigned to centroid of cell
    T=TB(ILAY,1)%X(ICOL,IROW)-TB(ILAY,2)%X(ICOL,IROW)  
@@ -443,12 +434,12 @@ CONTAINS
    END SELECT
   
   ENDIF
-   
-!   !## outside gasfield
-!   IF(GASPOINTER%X(ICOL,IROW).NE.1)GP=WP
+
 if(gp.le.0)then
 write(*,*) gp.lt.0; pause; stop
 endif
+   
+   IF(JLAY.EQ.NLAY)GP=WP
    
   ENDIF
   WRITE(JU,'(3I10,G15.7)') ICOL,IROW,JLAY,GP
@@ -539,15 +530,19 @@ endif
  WRITE(IU,'(A)') '0,'  !## number of reference nodes (echo on screen)
  WRITE(IU,'(A)') '1,1,hr,cm,6,6,6,' !## output screen intervals
  WRITE(IU,'(A)') '0,'  !## number of reference variables (echo on screen)
- WRITE(IU,'(A)') '16,'
+ WRITE(IU,'(A)') '20,'
  WRITE(IU,'(A)') '0,s,'
  WRITE(IU,'(A)') '5,s,'
  WRITE(IU,'(A)') '60,s,'
  WRITE(IU,'(A)') '1,hour,'
  WRITE(IU,'(A)') '85,min,'
+ WRITE(IU,'(A)') '1,day,'
  WRITE(IU,'(A)') '10,day,'
+ WRITE(IU,'(A)') '50,day,'
  WRITE(IU,'(A)') '100,day,'
+ WRITE(IU,'(A)') '200,day,'
  WRITE(IU,'(A)') '1,year,'
+ WRITE(IU,'(A)') '2,year,'
  WRITE(IU,'(A)') '5,year,'
  WRITE(IU,'(A)') '10,year,'
  WRITE(IU,'(A)') '20,year,'
@@ -679,11 +674,12 @@ endif
  END SUBROUTINE STOMP_WRITE_GRID
 
  !###======================================================================
- LOGICAL FUNCTION STOMP_READ(IU,IDF,IWINDOW,ICROSS)
+ LOGICAL FUNCTION STOMP_READ(IU,IDF,IWINDOW,ICROSS,SEAL)
  !###======================================================================
  IMPLICIT NONE
  TYPE(IDFOBJ),INTENT(INOUT) :: IDF
  INTEGER,INTENT(IN) :: IWINDOW,IU,ICROSS
+ REAL,INTENT(IN) :: SEAL
  INTEGER :: I,J,K,II,ILAY,JLAY,KLAY,IROW,ICOL
  REAL :: K1,K2,K3,K4,T,B,D,DX,DY,DXY,A,T1,T2,QF,CC,DH
  CHARACTER(LEN=256) :: LINE
@@ -775,10 +771,6 @@ endif
      CASE (2); KHV(I,J)%FNAME=TRIM(OUTPUTFILE)//'\INPUT_IDF\KHY_L'//TRIM(ITOS(I))//'.IDF' 
      CASE (3); KHV(I,J)%FNAME=TRIM(OUTPUTFILE)//'\INPUT_IDF\KHZ_L'//TRIM(ITOS(I))//'.IDF' 
     END SELECT
-
-!peter
-!    !## overrule all
-!    if(I.GT.1)KHV(I,J)%X=0.0432
 
     IF(NAGGR.EQ.0)THEN
      IF(.NOT.IDFWRITE(KHV(I,J),KHV(I,J)%FNAME,1))RETURN
@@ -886,6 +878,10 @@ endif
   DO IROW=1,IDF%NROW; DO ICOL=1,IDF%NCOL
    IF(BND(1)%X(ICOL,IROW).EQ.0)CYCLE
    TB(1,1)%X(ICOL,IROW)=TB(2,1)%X(ICOL,IROW)+5.0
+   !## insert seal strength
+   KHV(1,1)%X(ICOL,IROW)=SEAL
+   KHV(1,2)%X(ICOL,IROW)=SEAL
+   KHV(1,3)%X(ICOL,IROW)=SEAL
   ENDDO; ENDDO
 
   ILAY=0; JLAY=0
