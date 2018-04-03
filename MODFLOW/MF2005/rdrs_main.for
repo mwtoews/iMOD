@@ -763,22 +763,25 @@ c locals
       logical :: found
       integer :: ilay
       real :: dz
-      real, dimension(nlay) :: kh, c, tp, bt
+      real, dimension(nlay) :: kh, tp, bt !, C
 
 c init
       tlp = 0.
 
 c init
-       kh = 0.; c = 0.; tp = 0.; bt = 0.
+       kh = 0.; tp = 0.; bt = 0.
        do ilay = 1, nlay
           tp(ilay) = botm(icol,irow,lbotm(ilay)-1)
           bt(ilay) = botm(icol,irow,lbotm(ilay))
           if (ibound(icol,irow,ilay).gt.0) then
-             if (ilay.lt.nlay) then
-              if (ibound(icol,irow,ilay+1).gt.0) then
-               c(ilay)=1.0/(cv(icol,irow,ilay)/(delr(icol)*delc(irow)))
-              endif
-             end if
+!             if (ilay.lt.nlay) then
+!              if (ibound(icol,irow,ilay+1).gt.0) then
+!              if(cv(icol,irow,ilay).le.0.0)then
+!              write(*,*) 
+!              endif
+!              c(ilay)=1.0/(cv(icol,irow,ilay)/(delr(icol)*delc(irow)))
+!              endif
+!             end if
              kh(ilay)=kdsv(icol,irow,ilay)
              kh(ilay)=(cc(icol,irow,ilay)+cr(icol,irow,ilay))/2.0
              tp(ilay) = botm(icol,irow,lbotm(ilay)-1)
@@ -794,7 +797,7 @@ c init
           end if
        end do
 
-       call IMOD_UTL_ST1CREATEIPF_GETTLP(nlay,tlp,kh,c,tp,bt,z1,z2,
+       call IMOD_UTL_ST1CREATEIPF_GETTLP(nlay,tlp,kh,tp,bt,z1,z2,
      1                              minkh,iclay,'error-txt')
 
 c## nothing in model, whenever system on top of model, put them in first modellayer

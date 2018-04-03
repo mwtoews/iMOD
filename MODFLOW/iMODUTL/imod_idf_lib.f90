@@ -799,6 +799,7 @@ CONTAINS
   IDF%YMAX=IDF%YMIN+REAL(IDF%NROW)*DY(1)
  ELSE
   write(*,*) size(dx),idf%ncol,size(dy),idf%nrow
+  write(*,*) trim(fname)
   WRITE(*,*) 'ERROR, check array dx(.) and dy(.) to be consistent with ncol and nrow'
   RETURN
  ENDIF
