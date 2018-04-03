@@ -333,8 +333,8 @@ c         checks
 c...     arguments
       integer, intent(in) :: ncol
       integer, intent(in) :: nrow
-      real, dimension(ncol), intent(out) :: delr
-      real, dimension(nrow), intent(out) :: delc
+      real(kind=8), dimension(ncol), intent(out) :: delr
+      real(kind=8), dimension(nrow), intent(out) :: delc
       integer, intent(in) :: in
       
 c...     locals

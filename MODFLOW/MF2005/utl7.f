@@ -312,7 +312,7 @@ C
 C        SPECIFICATIONS:
 C     ------------------------------------------------------------------
       CHARACTER*24 ANAME
-      DIMENSION A(JJ)
+      REAL(KIND=8),DIMENSION(JJ),INTENT(OUT) :: A !(JJ)
       CHARACTER*20 FMTIN
       CHARACTER*200 CNTRL
       CHARACTER*200 FNAME

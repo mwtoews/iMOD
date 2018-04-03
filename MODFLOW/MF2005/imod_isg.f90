@@ -689,33 +689,9 @@ IRLOOP: DO IR=MAX(1,IROW-1),MIN(NROW,IROW+1)
  
  ENDIF
  
-! !## clean data if one of the entries is nodata
-! DO IROW=1,IDF(1)%NROW; DO ICOL=1,IDF(1)%NCOL
-!  DO I=1,4; IF(IDF(I)%X(ICOL,IROW).EQ.IDF(I)%NODATA)IDF(I)%X(ICOL,IROW)=0.0; ENDDO
-! ENDDO; ENDDO
-
  !## extent grids based upon their width
  CALL ISG2GRID_EXTENT_WITH_WIDTH(SIZE(IDF),IDF,MAXWIDTH)
-! !## extent grids based upon their width
-! CALL ISG2GRID_EXTENT_WITH_WIDTH(SIZE(IDF),IDF)
 
-! !## clean all
-! DO IROW=1,NROW; DO ICOL=1,NCOL
-!  !## turn into nodata for conductances equal to zero
-!  IF(IDF(1)%X(ICOL,IROW).EQ.IDF(1)%NODATA)THEN
-!   DO I=1,SIZE(IDF); IDF(I)%X(ICOL,IROW)=-9999.00; ENDDO
-!  ENDIF
-! ENDDO; ENDDO
-
-! !## recreate array - size of active cells
-! NISG=0
-! DO IROW=1,NROW; DO ICOL=1,NCOL
-!  IF(IDF(1)%X(ICOL,IROW).GT.0.0)NISG=NISG+1
-! ENDDO; ENDDO
-! NA=NISG; MA=SIZE(ISGLIST,2)
- 
-! DEALLOCATE(ISGLIST); ALLOCATE(ISGLIST(NA,MA)); ISGLIST=0.0
- 
  !## clean list
  DO J=1,SIZE(isgdata,1); DO I=1,SIZE(isgdata,2); isgdata(J,I)=0.0; ENDDO; ENDDO
 
@@ -740,8 +716,6 @@ IRLOOP: DO IR=MAX(1,IROW-1),MIN(NROW,IROW+1)
 
  CALL IDFDEALLOCATE(IDF,SIZE(IDF))
  CALL IMOD_UTL_PRINTTEXT('Finished gridding 2d cross-sections, no. of isg elements '//TRIM(IMOD_UTL_ITOS(NISG)),3)
-
-!ENDIF
 
 DO I=1,8; CLOSE(ISGIU(I)); END DO
 

@@ -513,8 +513,8 @@ c arguments
       integer, intent(in) :: igrid
       integer, intent(in) :: ncol
       integer, intent(in) :: nrow
-      real, dimension(ncol), intent(in) :: delr
-      real, dimension(nrow), intent(in) :: delc
+      real(kind=8), dimension(ncol), intent(in) :: delr
+      real(kind=8), dimension(nrow), intent(in) :: delc
 
 c local variables
       integer :: icol, irow

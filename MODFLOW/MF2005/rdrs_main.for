@@ -396,7 +396,7 @@ c function declaration
 c local variables
       logical :: lop
       integer :: icol, irow, ieqd, i, j
-      real :: xmin, ymin, xmax, ymax, val
+      real :: val
       character(len=1000) :: fname
       logical :: lnodata, lex
       character(len=10) :: partstr
@@ -427,10 +427,10 @@ c map on cell centroids
       do i=2,ncol; if(delr(i).ne.delr(i-1))exit; enddo
       if(i.le.ncol)ieqd=1
       if(ieqd.eq.0)then
-      idfm%dx=delr(1)
-      idfm%dy=delc(1)
-      idfm%ncol=ncol
-      idfm%nrow=nrow
+       idfm%dx=delr(1)
+       idfm%dy=delc(1)
+       idfm%ncol=ncol
+       idfm%nrow=nrow
        idfm%ieq=int(0,1)
       else
        idfm%ncol=ncol; idfm%nrow=nrow; idfm%ieq=int(1,1)
