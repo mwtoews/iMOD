@@ -27,13 +27,13 @@ c   2600 MH Delft, The Netherlands.
 
       logical, save :: lcdinit = .true.
       logical, save :: lqd
-      real, save :: simcsize, xmin, ymin, xmax, ymax
+      real(kind=8), save :: simcsize, xmin, ymin, xmax, ymax
 
       integer, dimension(:), allocatable, save :: genip
       integer, dimension(:,:), allocatable, save :: genpos
 
-      real, dimension(:), allocatable, save :: lcdelr
-      real, dimension(:), allocatable, save :: lcdelc   
+      real(kind=8), dimension(:), allocatable, save :: lcdelr
+      real(kind=8), dimension(:), allocatable, save :: lcdelc   
       
       integer, save :: lncol, lnrow
       

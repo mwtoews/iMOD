@@ -35,22 +35,22 @@ c   2600 MH Delft, The Netherlands.
          integer, save, pointer :: time_shour
          integer, save, pointer :: time_sminute
          integer, save, pointer :: time_ssecond
-         double precision, save, pointer :: time_sjd ! start
-         double precision, save, pointer :: time_cjd ! current
+         real(kind=8), save, pointer :: time_sjd ! start
+         real(kind=8), save, pointer :: time_cjd ! current
          character(len=300), save, pointer :: time_cstring
          character(len=300), save, pointer :: time_ostring
-         real, save, pointer :: coord_xll
-         real, save, pointer :: coord_yll
-         real, save, pointer :: gcoord_xll
-         real, save, pointer :: gcoord_yll
-         real, save, pointer :: coord_xur
-         real, save, pointer :: coord_yur
-         real, save, pointer :: gcoord_xur
-         real, save, pointer :: gcoord_yur
-         real, save, pointer :: coord_xll_nb
-         real, save, pointer :: coord_yll_nb
-         real, save, pointer :: coord_xur_nb
-         real, save, pointer :: coord_yur_nb
+         real(kind=8), save, pointer :: coord_xll
+         real(kind=8), save, pointer :: coord_yll
+         real(kind=8), save, pointer :: gcoord_xll
+         real(kind=8), save, pointer :: gcoord_yll
+         real(kind=8), save, pointer :: coord_xur
+         real(kind=8), save, pointer :: coord_yur
+         real(kind=8), save, pointer :: gcoord_xur
+         real(kind=8), save, pointer :: gcoord_yur
+         real(kind=8), save, pointer :: coord_xll_nb
+         real(kind=8), save, pointer :: coord_yll_nb
+         real(kind=8), save, pointer :: coord_xur_nb
+         real(kind=8), save, pointer :: coord_yur_nb
          integer, save, pointer :: iss
          integer, save, pointer :: ieq
          character(len=300), save, pointer :: resultdir
@@ -59,8 +59,8 @@ c   2600 MH Delft, The Netherlands.
          logical, save, pointer :: ibound_fixed_east
          logical, save, pointer :: ibound_fixed_north
          logical, save, pointer :: ibound_fixed_south
-         real, dimension(:), save, pointer :: cdelr
-         real, dimension(:), save, pointer :: cdelc
+         real(kind=8), dimension(:), save, pointer :: cdelr
+         real(kind=8), dimension(:), save, pointer :: cdelc
          logical, save, pointer :: save_no_buf
          logical, save, pointer :: write_debug_idf
          type gwfmettype
@@ -79,18 +79,18 @@ c   2600 MH Delft, The Netherlands.
             double precision, pointer :: time_cjd
             character(len=300), pointer :: time_cstring
             character(len=300), pointer :: time_ostring
-            real, pointer :: coord_xll
-            real, pointer :: coord_yll
-            real, pointer :: coord_xur
-            real, pointer :: coord_yur
-            real, pointer :: gcoord_xll
-            real, pointer :: gcoord_yll
-            real, pointer :: gcoord_xur
-            real, pointer :: gcoord_yur
-            real, pointer :: coord_xll_nb
-            real, pointer :: coord_yll_nb
-            real, pointer :: coord_xur_nb
-            real, pointer :: coord_yur_nb
+            real(kind=8), pointer :: coord_xll
+            real(kind=8), pointer :: coord_yll
+            real(kind=8), pointer :: coord_xur
+            real(kind=8), pointer :: coord_yur
+            real(kind=8), pointer :: gcoord_xll
+            real(kind=8), pointer :: gcoord_yll
+            real(kind=8), pointer :: gcoord_xur
+            real(kind=8), pointer :: gcoord_yur
+            real(kind=8), pointer :: coord_xll_nb
+            real(kind=8), pointer :: coord_yll_nb
+            real(kind=8), pointer :: coord_xur_nb
+            real(kind=8), pointer :: coord_yur_nb
             integer, pointer :: iss
             integer, pointer :: ieq
             character(len=300), pointer :: resultdir
@@ -99,8 +99,8 @@ c   2600 MH Delft, The Netherlands.
             logical, pointer :: ibound_fixed_east
             logical, pointer :: ibound_fixed_north
             logical, pointer :: ibound_fixed_south
-            real, dimension(:), pointer :: cdelr
-            real, dimension(:), pointer :: cdelc
+            real(kind=8), dimension(:), pointer :: cdelr
+            real(kind=8), dimension(:), pointer :: cdelc
             logical, pointer :: save_no_buf
             logical, pointer :: write_debug_idf
          end type

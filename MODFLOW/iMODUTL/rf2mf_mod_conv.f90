@@ -153,10 +153,10 @@
          character(len=maxlen) :: keyword = 'open/close'
          character(len=maxlen) :: fname = ''
          character(len=maxlen) :: fmtin = '(free)'
-         real                  :: cnstnt = 0.
-         real                  :: fct = 1.
-         real                  :: imp = 0.
-         real                  :: pow = 0.
+         real(KIND=8)          :: cnstnt = 0.
+         real(KIND=8)          :: fct = 1.
+         real(KIND=8)          :: imp = 0.
+         real(KIND=8)          :: pow = 0.
          character(len=10)     :: oper = ''
          integer               :: iprn = -1
          integer               :: ilay = 0
@@ -2980,7 +2980,7 @@
 !...     locals
       logical :: lfct, limp, lpow
       integer :: i
-      real :: val
+      real(KIND=8) :: val
       character(len=20) :: keyword
       character(len=maxlen), dimension(8) :: str
       character(len=maxlen) :: cnstnt, fstr
@@ -3052,7 +3052,7 @@
 
 !...     arguments
       character(len=*), intent(out) :: str
-      real, intent(in) :: val
+      real(kind=8), intent(in) :: val
       integer, intent(in) :: typ
 
 !...     locals

@@ -177,7 +177,7 @@ c local variables
       integer :: i, ret, ios, lun, nlist, icol, irow, ii, nc, iext,
      1   sdate, edate, ttime, idate, TSC
       integer(kind=8) :: stime, etime
-      real    :: x, y
+      real(kind=8) :: x, y
       real :: q, tf, bf  !, dimension(1)
       logical :: found
       character(len=3) :: ext
@@ -563,9 +563,7 @@ c local variables
       logical :: ok
       integer :: ret, lun, ios, mx, id, nid,
      1           i, ii, n, nn, m, l, icol, irow, iact
-      real    :: x1, y1, x2, y2, xx1, yy1, xx2, yy2, tl, zl, z1, z2, 
-     1           dz !zz1, zz2
-
+      real(kind=8) :: x1,y1,x2,y2,xx1,yy1,xx2,yy2,tl,zl,z1,z2,dz
 
 c functions
       integer   cfn_getlun,

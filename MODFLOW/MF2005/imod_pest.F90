@@ -24,7 +24,7 @@ subroutine pest1log()
 
 ! modules
 use global, only: lipest
-use imod_utl, only: imod_utl_printtext,imod_utl_itos
+use imod_utl, only: imod_utl_printtext,imod_utl_itos,imod_utl_dtos
 use pestvar, only: pest_iter,lgrad,llnsrch,pest_igrad,iupestout,pest_ktype
 
 implicit none
@@ -52,7 +52,7 @@ end subroutine pest1log
 !###====================================================================
 subroutine pest1alpha_grid(ptype,a,nrow,ncol,nlay,iout,a2)
 !###====================================================================
-use imod_utl, only: imod_utl_printtext,imod_utl_itos,imod_utl_rtos,imod_utl_createdir, &
+use imod_utl, only: imod_utl_printtext,imod_utl_itos,imod_utl_dtos,imod_utl_createdir, &
    utl_kriging_range,utl_kriging_main
 use gwfmetmodule, only: cdelr, cdelc
 use global, only: lipest, ibound 
@@ -65,17 +65,17 @@ integer, intent(in) :: nrow, ncol, nlay, iout
 real, dimension(ncol,nrow,nlay), intent(inout) :: a
 real, dimension(ncol,nrow,nlay), intent(in), optional :: a2
 character(len=2), intent(in) :: ptype
-real,dimension(:,:),allocatable :: xyz,xpp
+real(kind=8),dimension(:,:),allocatable :: xyz,xpp
 integer :: nxyz,ipp,ilay
 character(len=1024) :: fname,dir
 
 ! parameters
-real, parameter :: tiny=1.0e-20
+real(kind=8), parameter :: tiny=1.0d-20
 
 ! locals
 character(len=256) :: line
 integer :: i, j, k, ils, irow, icol
-real :: c, fct, ppart, range, nodata
+real(kind=8) :: c, fct, ppart, range, nodata
 
 CHARACTER(LEN=2),DIMENSION(6) :: PPPARAM
 DATA PPPARAM/'KD','KH','KV','VC','SC','VA'/ !## variable for pilotpoints
@@ -186,7 +186,7 @@ do i=1,size(param)
    end select
    if(param(i)%igroup.gt.0)then
     line=' * '//param(i)%ptype//' adjusted ('//trim(imod_utl_itos(param(i)%nodes))// &
-      ')with alpha='//trim(imod_utl_rtos(fct,'f',7))
+      ')with alpha='//trim(imod_utl_dtos(fct,'f',7))
       WRITE(*,*) TRIM(LINE)
 !      call imod_utl_printtext(trim(line),-1,iupestout)
    endif
@@ -210,7 +210,7 @@ do i=1,size(param)
     FCT=PARAM(I)%ALPHA(1)
     IF(K.EQ.2)THEN
      LINE=' * Module '//PARAM(I)%PTYPE//' adjusted ('//TRIM(IMOD_UTL_ITOS(SIZE(PARAM(I)%XY,1)))// &
-         ') location(s) as PILOTPOINT with alpha='//TRIM(IMOD_UTL_RTOS(EXP(FCT),'F',7))
+         ') location(s) as PILOTPOINT with alpha='//TRIM(IMOD_UTL_dTOS(EXP(FCT),'F',7))
      CALL imod_utl_printtext(TRIM(LINE),1) 
     ENDIF
     
@@ -234,7 +234,7 @@ do i=1,size(param)
    RANGE=UTL_KRIGING_RANGE(CDELR(0),CDELR(NCOL),CDELC(NROW),CDELC(0))
   ENDIF
 
-  CALL imod_utl_printtext('Kriging applied Range:'//TRIM(IMOD_UTL_RTOS(RANGE,'F',2))//' meter',1)
+  CALL imod_utl_printtext('Kriging applied Range:'//TRIM(IMOD_UTL_dTOS(RANGE,'F',2))//' meter',1)
 
   !## apply kriging interpolation
   CALL UTL_KRIGING_MAIN(NXYZ,XYZ(:,1),XYZ(:,2),XYZ(:,3),CDELR,CDELC,NROW,NCOL,XPP,NODATA,RANGE,PEST_KTYPE, &
@@ -291,7 +291,7 @@ subroutine pest1alpha_list(ptype,nlist,rlist,ldim,mxlist,iopt1,iopt2)
 ! modules
 use global, only: lipest
 use global, only: buff
-use imod_utl, only: imod_utl_printtext, imod_utl_itos, imod_utl_rtos
+use imod_utl, only: imod_utl_printtext, imod_utl_itos, imod_utl_dtos
 use m_mf2005_main, only: kper
 use pestvar, only: param, pest_iter, iupestout
 
@@ -308,7 +308,7 @@ character(len=256) :: line
 character(len=1024) :: errmsg
 integer :: i, j, k, ils, irow, icol, idat, irivsubsys, irivrfact,&
            idrnsubsys, ihfbfact, nadj
-real :: ppart, fct
+real(kind=8) :: ppart, fct
 
 !###======================================================================
 
@@ -410,7 +410,7 @@ do i=1,size(param)
       end do
    end select
 
-   line=' * '//param(i)%ptype//' adjusted ('//trim(imod_utl_itos(nadj))//') with alpha='//trim(imod_utl_rtos(fct,'f',7))
+   line=' * '//param(i)%ptype//' adjusted ('//trim(imod_utl_itos(nadj))//') with alpha='//trim(imod_utl_dtos(fct,'f',7))
    call imod_utl_printtext(trim(line),-1,iupestout)
 
 end do

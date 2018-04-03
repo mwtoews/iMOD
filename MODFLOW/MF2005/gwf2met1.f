@@ -685,18 +685,18 @@ c modules
       implicit none
 
 c arguments
-      character(len=16), intent(in)   :: text
-      integer, intent(in)             :: ibdchn
-      integer, intent(in)             :: ncol, nrow, nlay
-      real, dimension(ncol,nrow,nlay) :: buff
-      integer, intent(in)             :: iout
-      logical, intent(out)            :: retflag
+      character(len=16), intent(in) :: text
+      integer, intent(in) :: ibdchn
+      integer, intent(in) :: ncol, nrow, nlay
+      real,dimension(ncol,nrow,nlay) :: buff
+      integer, intent(in) :: iout
+      logical, intent(out) :: retflag
 
 c local variables
       logical :: writefile
       character(len=1024) :: fname
       integer :: ilay, type, isplit, iuidx, i, j
-      real :: nodata
+      real(kind=8) :: nodata
 
 c functions
       character(len=1024) :: met1fname
@@ -759,7 +759,7 @@ c     clean for nodata
             if (writefile) then
                nodata = HNOFLO !0.
                call met1wrtidf(fname,buff(:,:,ilay),ncol,nrow,
-     1                         nodata,iout)
+     1                         nodata,iout,4)
             end if
          end if
       end do
@@ -912,19 +912,19 @@ c modules
 
 c arguments
       character(len=*), intent(in) :: fname
-      integer, intent(in)             :: ncol, nrow
-      real, dimension(ncol,nrow)      :: buff
-      real, intent(in)                :: nodata
-      integer, intent(in)             :: iout
+      integer, intent(in) :: ncol, nrow
+      real(kind=8), dimension(ncol,nrow) :: buff
+      real(kind=8), intent(in) :: nodata
+      integer, intent(in) :: iout
 
 c parameters
-      double precision,parameter :: tiny=0.001D0 !1.0         !needed to compute ir1,ir2,ic1,ic2 properly
+      real(kind=8),parameter :: tiny=0.001D0 !1.0         !needed to compute ir1,ir2,ic1,ic2 properly
 
 c local variables
       integer :: i, ilay, iok
       integer, dimension(2) :: dims
-      real, dimension(2) :: lcorner
-      real, dimension(ncol+nrow) :: dgrd
+      real(kind=8), dimension(2) :: lcorner
+      real(kind=8), dimension(ncol+nrow) :: dgrd
       logical :: lok, leq
       integer :: ic1, ic2, ir1, ir2, sncol, snrow
 
@@ -934,35 +934,24 @@ c      integer :: idfx_wrfile
 c program section
 c ------------------------------------------------------------------------------
 
-c set parameters for IDF-writer
-c      dims(1) = ncol
-c      dims(2) = nrow
-c      lcorner = 0
-c      if (associated(coord_xll)) lcorner(1) = coord_xll
-c      if (associated(coord_yll)) lcorner(2) = coord_yll
-c      dgrd(1:ncol)           = delr
-c      dgrd(ncol+1:ncol+nrow) = delc
-
       leq = .true.
       if (minval(delr).ne.maxval(delr)) leq = .false.
       if (minval(delc).ne.maxval(delc)) leq = .false.
 
 c write IDF-file
       iok = 0
-c      iok = idfx_wrfile(fname,buff,2,dims,dgrd,
-c     1                  lcorner,nodata,1.)
       if (associated(save_no_buf).and.
      1    associated(coord_xll_nb).and.associated(coord_yll_nb).and.
      1    associated(coord_xur_nb).and.associated(coord_yur_nb)) then
 
          call imod_utl_pol1located(cdelr,ncol+1,
-     1        dble(coord_xll_nb)+tiny,ic1)
+     1        coord_xll_nb+tiny,ic1)
          call imod_utl_pol1located(cdelr,ncol+1,
-     1        dble(coord_xur_nb)-tiny,ic2)
+     1        coord_xur_nb-tiny,ic2)
          call imod_utl_pol1located(cdelc,nrow+1,
-     1        dble(coord_yur_nb)-tiny,ir1)
+     1        coord_yur_nb-tiny,ir1)
          call imod_utl_pol1located(cdelc,nrow+1,
-     1        dble(coord_yll_nb)+tiny,ir2)
+     1        coord_yll_nb+tiny,ir2)
 
          !#check to make sure dimensions are within bounds!
          ic1  = max(1,ic1); ic2  = min(ic2,ncol)
@@ -1000,7 +989,7 @@ c check if everything went right
 c end of program
       return
       end
-
+      
       subroutine met1wrtnc(fname)
 c description:
 c ------------------------------------------------------------------------------

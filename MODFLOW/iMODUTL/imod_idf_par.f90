@@ -22,7 +22,13 @@
 
 MODULE IMOD_IDF_PAR
 
+!## specify kind for double-precision real with 15 digits and a point ranging up to exponent 307
+INTEGER,PARAMETER :: DP_KIND=SELECTED_REAL_KIND(15,307) 
+!## specify kind for single-precision real with 6  digits and a point ranging up to exponent 37
+INTEGER,PARAMETER :: SP_KIND=SELECTED_REAL_KIND(6 ,37 ) 
+
 TYPE IDFOBJ
+ INTEGER :: ITYPE   !## type of IDF 0=4 bytes; 1=8 bytes
  INTEGER :: IU
  INTEGER :: NCOL
  INTEGER :: NROW
@@ -30,16 +36,19 @@ TYPE IDFOBJ
  INTEGER :: ITB     !=0: =1:usage of top/bot information
  INTEGER :: IXV     !=0:storage in x =1:storage in v
  INTEGER :: JD      !=julian date (if neccessary)
+ INTEGER :: IDY,IMH,IYR  !## days,months,years
+ INTEGER :: IHR,IMT,ISC  !## hours,minutes,seconds
+ REAL(KIND=DP_KIND) :: DAYFRACTION !## daily fraction 
  INTEGER :: ILAY    !=ilay of idf (if neccessary)
  INTEGER :: UNITS   !=units
- REAL :: XMIN,YMIN,XMAX,YMAX
- REAL :: DX,DY        !equi.distance if ieq=0
- REAL :: TOP,BOT      !top and bot information
- REAL :: NODATA,DMIN,DMAX
- REAL,DIMENSION(:),POINTER :: SX   !x.coord. network
- REAL,DIMENSION(:),POINTER :: SY   !y.coord. network
- REAL,DIMENSION(:,:),POINTER :: X  !idfvalues in matrix
- REAL,DIMENSION(:),POINTER :: V    !idfvalues in vector
+ REAL(KIND=DP_KIND) :: XMIN,YMIN,XMAX,YMAX
+ REAL(KIND=DP_KIND) :: DX,DY        !equi.distance if ieq=0
+ REAL(KIND=DP_KIND) :: TOP,BOT      !top and bot information
+ REAL(KIND=DP_KIND) :: NODATA,DMIN,DMAX
+ REAL(KIND=DP_KIND),DIMENSION(:),POINTER :: SX   !x.coord. network
+ REAL(KIND=DP_KIND),DIMENSION(:),POINTER :: SY   !y.coord. network
+ REAL(KIND=DP_KIND),DIMENSION(:,:),POINTER :: X  !idfvalues in matrix
+ REAL(KIND=DP_KIND),DIMENSION(:),POINTER :: V    !idfvalues in vector
  INTEGER(KIND=2),DIMENSION(:,:),POINTER :: YSEL    !idfvalues in vector, irow/icol
  CHARACTER(LEN=4),DIMENSION(:),POINTER :: COMMENT    !comments
  INTEGER :: NTHREAD

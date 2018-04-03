@@ -22,8 +22,8 @@
 
 MODULE MOD_RF2MF_READ
 
-USE IMOD_UTL, ONLY : IMOD_UTL_ITOS,IMOD_UTL_RTOS,IMOD_UTL_GETFNAME,IMOD_UTL_GETREAL,IMOD_UTL_PRINTTEXT, &
-                          IMOD_UTL_STRING,IMOD_UTL_FILENAME,IUOUT
+USE IMOD_UTL !, ONLY : IMOD_UTL_ITOS,IMOD_UTL_RTOS,IMOD_UTL_GETFNAME,IMOD_UTL_GETREAL,IMOD_UTL_PRINTTEXT, &
+             !             IMOD_UTL_STRING,IMOD_UTL_FILENAME,IUOUT
 USE rf2mf_module, ONLY : nlay,bas,bcf,pwt,dis,wel,drn,riv,ghb,hfb,ani,rch,dxc,mxrech,evt,chd,iarr,iari,nper,&
                          oc,maxsubsys,maxgen,maxcol,scr,ialloc,allocscr,&
                          iusclnodata,iusclspec,iusclarith,iusclgeom,iusclsumq,iusclsumcdr,iusclinvc,iusclmostfr,iusclsuminvcvr,iusclperc,&
@@ -47,7 +47,7 @@ CONTAINS
  IMPLICIT NONE
  INTEGER,INTENT(IN) :: IPCK,IMODPCK
  INTEGER :: ILAY,IROW,ICOL,IT,NTOPICS,isub,nsys,msys,jlay,iper
- REAL :: CONSTANTE,FCT,IMP,NODATA
+ REAL(KIND=8) :: CONSTANTE,FCT,IMP,NODATA
  LOGICAL :: LLAY
  INTEGER,DIMENSION(5) :: ITP
  CHARACTER(LEN=256) :: FNAME
@@ -275,7 +275,7 @@ CONTAINS
        end if
        call RF2MF_READ1MAIN_system(drn%sp(kper)%gcd%subsys(nsys)%data(itp(it)),ios,ilay,fct,imp,constante,iarr,fname,scltype,ismooth)
        if (itp(it).eq.2 .and. iconchk.eq.1) then
-         call RF2MF_READ1MAIN_system(drn%sp(kper)%gcd%subsys(nsys)%data(3),0,ilay,fct,imp,1.,iarr,fname,iusclmostfr,idsclnointp)
+         call RF2MF_READ1MAIN_system(drn%sp(kper)%gcd%subsys(nsys)%data(3),0,ilay,fct,imp,1.0D0,iarr,fname,iusclmostfr,idsclnointp)
        end if
       CASE (PRIV)     !## (PRIV) rivers
        riv%sp(kper)%lriv  = .true.
@@ -362,7 +362,7 @@ CONTAINS
        constante = simcsize*simcsize
        call RF2MF_READ1MAIN_system(drn%sp(kper)%gcd%subsys(msys)%data(1),0,ilay,fct,imp,constante,iarr,fname,iusclnodata,idsclnodata)
        if (iconchk.eq.1) then
-         call RF2MF_READ1MAIN_system(drn%sp(kper)%gcd%subsys(msys)%data(3),0,ilay,fct,imp,1.,iarr,fname,iusclmostfr,idsclnointp)
+         call RF2MF_READ1MAIN_system(drn%sp(kper)%gcd%subsys(msys)%data(3),0,ilay,fct,imp,1.0D0,iarr,fname,iusclmostfr,idsclnointp)
        end if
       CASE (PCHD)     !## (PCHD) constant head
        chd%sp(kper)%reuse = .false.
@@ -420,7 +420,7 @@ CONTAINS
  implicit none
  character(len=*),intent(in) :: fname
  integer,intent(in) :: ios,itype,ilay,iuscl,idscl
- real,intent(in) :: fct,imp,constante
+ real(KIND=8),intent(in) :: fct,imp,constante
  type(tArrayRead),intent(inout) :: array
 
  array%fct = fct
@@ -445,7 +445,7 @@ CONTAINS
  IMPLICIT NONE
  INTEGER,INTENT(IN) :: IMODPCK,IPCK
  CHARACTER(LEN=*),INTENT(INOUT) :: LINE
- REAL,INTENT(OUT) :: CONSTANTE,FCT,IMP
+ REAL(KIND=8),INTENT(OUT) :: CONSTANTE,FCT,IMP
  INTEGER,INTENT(OUT) :: IOS,ILAY
  CHARACTER(LEN=*),INTENT(OUT) :: FNAME
  LOGICAL :: LEX
@@ -456,8 +456,8 @@ CONTAINS
   READ(LINE,*,IOSTAT=IOS) FCT,IMP
   ILAY=1
  ELSE IF (IMODPCK.EQ.1 .AND.IPCK.EQ.PISG) THEN
-  FCT = 1.0
-  IMP = 1.0
+  FCT = 1.0D0
+  IMP = 1.0D0
   READ(LINE,*,IOSTAT=IOS) ILAY
  ELSE
   READ(LINE,*,IOSTAT=IOS) ILAY,FCT,IMP
@@ -490,20 +490,19 @@ CONTAINS
  CONSTANTE=IMOD_UTL_GETREAL(FNAME,IOS)
  IF(IOS.EQ.0)THEN
   IF(LEX)THEN
-   CALL IMOD_UTL_PRINTTEXT('Read Constant Value '//TRIM(IMOD_UTL_RTOS(CONSTANTE,'G',4)),3,IUOUT)
+   CALL IMOD_UTL_PRINTTEXT('Read Constant Value '//TRIM(IMOD_UTL_DTOS(CONSTANTE,'G',4)),3,IUOUT)
    CALL IMOD_UTL_PRINTTEXT(CHAR(9)//'* Modellayer: '//TRIM(IMOD_UTL_ITOS(ILAY))// &
-                           '; Mult. Factor: '//TRIM(IMOD_UTL_RTOS(FCT,'G',4))// &
-                           '; Addition: '//TRIM(IMOD_UTL_RTOS(IMP,'G',4)),3,IUOUT)
-!   CONSTANTE=CONSTANTE*FCT+IMP
-   CALL IMOD_UTL_PRINTTEXT(CHAR(9)//'Constant Value becomes '//TRIM(IMOD_UTL_RTOS(CONSTANTE*FCT+IMP,'G',4)),3,IUOUT)
+                           '; Mult. Factor: '//TRIM(IMOD_UTL_DTOS(FCT,'G',4))// &
+                           '; Addition: '//TRIM(IMOD_UTL_DTOS(IMP,'G',4)),3,IUOUT)
+   CALL IMOD_UTL_PRINTTEXT(CHAR(9)//'Constant Value becomes '//TRIM(IMOD_UTL_DTOS(CONSTANTE*FCT+IMP,'G',4)),3,IUOUT)
   ENDIF
  ELSE
   CALL IMOD_UTL_FILENAME(FNAME)
   IF(LEX)THEN
    CALL IMOD_UTL_PRINTTEXT('Assigned '//TRIM(FNAME),3,IUOUT)
    CALL IMOD_UTL_PRINTTEXT(CHAR(9)//'* Modellayer: '//TRIM(IMOD_UTL_ITOS(ILAY))// &
-                          '; Mult. Factor: '//TRIM(IMOD_UTL_RTOS(FCT,'G',4))// &
-                           '; Addition: '//TRIM(IMOD_UTL_RTOS(IMP,'G',4)),3,IUOUT)
+                          '; Mult. Factor: '//TRIM(IMOD_UTL_DTOS(FCT,'G',4))// &
+                           '; Addition: '//TRIM(IMOD_UTL_DTOS(IMP,'G',4)),3,IUOUT)
   ENDIF
  ENDIF
 

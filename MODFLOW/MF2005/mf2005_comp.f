@@ -3218,7 +3218,7 @@ c     if (nxch.le.0) ok = .false.
 
       logical function mf2005_TimeserieInit(igrid)
 !...     modules
-      use imod_utl, only: imod_utl_pol1locater
+      use imod_utl, only: imod_utl_pol1located
       use global, only: iunit, nlay, nrow, ncol, ibound
       use gwfmetmodule, only: coord_xll_nb,coord_yll_nb,coord_xur_nb,
      1                        coord_yur_nb,cdelr,cdelc,resultdir
@@ -3233,7 +3233,7 @@ c     if (nxch.le.0) ok = .false.
 !...     locals
       logical :: ok, valid
       integer :: jj, i, ilay, irow, icol
-      real :: x, y, w
+      real(kind=8) :: x, y, w
 !.......................................................................
 
       ok = .true.
@@ -3279,8 +3279,8 @@ c     if (nxch.le.0) ok = .false.
               icol = ts(jj)%stvalue(i)%icol
               irow = ts(jj)%stvalue(i)%irow
               if (icol.eq.0 .or. irow.eq.0) then
-                 call imod_utl_pol1locater(cdelr,ncol+1,x,icol)
-                 call imod_utl_pol1locater(cdelc,nrow+1,y,irow)
+                 call imod_utl_pol1located(cdelr,ncol+1,x,icol)
+                 call imod_utl_pol1located(cdelc,nrow+1,y,irow)
                  !## check if constant head or inactive cell - make measurment invalid
                  if(ibound(icol,irow,ilay).le.0)then
                   ts(jj)%stvalue(i)%valid = .false.

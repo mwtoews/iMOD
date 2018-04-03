@@ -23,12 +23,7 @@
 !###====================================================================
 MODULE MOD_METASWAP
 !###====================================================================
-USE IMOD_UTL, ONLY : OS,MSWPMV
-USE IMOD_UTL, ONLY : IMOD_UTL_PRINTTEXT,IMOD_UTL_ITOS,IMOD_UTL_RTOS
-USE IMOD_UTL, ONLY : IMOD_UTL_OPENASC,IMOD_UTL_STRING,IMOD_UTL_FILENAME
-USE IMOD_UTL, ONLY : IMOD_UTL_MODEL1CHECKFNAME,IMOD_UTL_CAP
-USE IMOD_UTL, ONLY : IMOD_UTL_APPLYFCT_R,IMOD_UTL_APPLYFCT_I,GETUNIT,IMOD_UTL_CAPF,IMOD_UTL_SCALE1PDELRC
-USE IMOD_UTL, ONLY : IMOD_UTL_POL1LOCATER
+USE IMOD_UTL 
 USE MOD_RF2MF, ONLY : IIDEBUG,IURUN,IACT,RESULTDIR,SIMBOX,SIMCSIZE,PCAP,MDIM,IDFTINY,IARMWP, &
                    ISAVE,CDATE,MMOD,PCAP,PPWT,LINE,NLINES,ISCEN,SIMCSIZE,USEBOX,IFULL
 USE MOD_RF2MF_READ, ONLY: RF2MF_READ_IDF
@@ -48,22 +43,22 @@ TYPE SIMGRO_OBJ
  INTEGER :: BER_LAAG !artificial recharge layer
  INTEGER :: BEREGEN  !artificial recharge
  INTEGER :: BODEM    !soil type
- REAL    :: BEREGEN_Q  !artificial recharge strength
- REAL    :: NOPP     !wetted-surface
- REAL    :: SOPP     !urban-surface
- REAL    :: RZ       !rootzone
- REAL    :: MV       !surface-level
- REAL    :: PWT_LEVEL !level for PWT (optional)
- REAL    :: COND      !conductivity
- REAL    :: MOISTURE  !moisture
- REAL    :: VXMU_SOPP !micro-storage capacity, sill of the runoff relationship
- REAL    :: VXMU_ROPP !micro-storage capacity, sill of the runoff relationship
- REAL    :: CRUNOFF_SOPP !runoff resistance (days)
- REAL    :: CRUNOFF_ROPP !runoff resistance (days)
- REAL    :: CRUNON_SOPP !runon resistance (days)
- REAL    :: CRUNON_ROPP !runon resistance (days)
- REAL    :: QINFBASIC_SOPP !infiltratie cap.
- REAL    :: QINFBASIC_ROPP
+ REAL(KIND=8) :: BEREGEN_Q  !artificial recharge strength
+ REAL(KIND=8):: NOPP     !wetted-surface
+ REAL(KIND=8):: SOPP     !urban-surface
+ REAL(KIND=8):: RZ       !rootzone
+ REAL(KIND=8):: MV       !surface-level
+ REAL(KIND=8):: PWT_LEVEL !level for PWT (optional)
+ REAL(KIND=8):: COND      !conductivity
+ REAL(KIND=8):: MOISTURE  !moisture
+ REAL(KIND=8):: VXMU_SOPP !micro-storage capacity, sill of the runoff relationship
+ REAL(KIND=8):: VXMU_ROPP !micro-storage capacity, sill of the runoff relationship
+ REAL(KIND=8):: CRUNOFF_SOPP !runoff resistance (days)
+ REAL(KIND=8):: CRUNOFF_ROPP !runoff resistance (days)
+ REAL(KIND=8):: CRUNON_SOPP !runon resistance (days)
+ REAL(KIND=8):: CRUNON_ROPP !runon resistance (days)
+ REAL(KIND=8):: QINFBASIC_SOPP !infiltratie cap.
+ REAL(KIND=8):: QINFBASIC_ROPP
 END TYPE SIMGRO_OBJ
 TYPE(SIMGRO_OBJ),ALLOCATABLE,DIMENSION(:,:) :: SIMGRO         !SIMGRO(NCOL,NROW)%[VARIABELE]
 INTEGER :: INDSB                                              !unit number for svat2swnr_roff.inp
@@ -99,11 +94,11 @@ CONTAINS
  CHARACTER(LEN=*),INTENT(INOUT) :: DXCFILE
 
  !## dummy variables
- REAL,ALLOCATABLE,DIMENSION(:,:) :: BUFF
+ REAL(KIND=8),ALLOCATABLE,DIMENSION(:,:) :: BUFF
  INTEGER :: ICOL,IROW,SCLTYPE,II,I,ISMOOTH,ILAY,NIDF
  INTEGER,DIMENSION(:),ALLOCATABLE :: IOS
- REAL :: DX,DY,ARND
- REAL,DIMENSION(:),ALLOCATABLE :: FCT,IMP,CONSTANTE,NODATA
+ REAL(KIND=8) :: DX,DY,ARND
+ REAL(KIND=8),DIMENSION(:),ALLOCATABLE :: FCT,IMP,CONSTANTE,NODATA
  INTEGER,DIMENSION(:),ALLOCATABLE :: IERROR
  INTEGER,ALLOCATABLE,DIMENSION(:) :: ITMP
  CHARACTER(LEN=256) :: FFNAME
@@ -261,7 +256,7 @@ CONTAINS
    endif
 
   ENDIF
-  CALL IMOD_UTL_APPLYFCT_R(BUFF,NODATA(I),NROW,NCOL,FCT(I),IMP(I))
+  CALL IMOD_UTL_APPLYFCT_D(BUFF,NODATA(I),NROW,NCOL,FCT(I),IMP(I))
   SELECT CASE (I)
    CASE (1);  SIMGRO%IBOUND=INT(BUFF)
    CASE (2);  SIMGRO%LGN=INT(BUFF)
@@ -545,15 +540,15 @@ END SUBROUTINE
  use pks_imod_utl, only: pks_imod_utl_iarmwp_xch_store,&
                          pks_imod_utl_iarmwp_xch_write
  IMPLICIT NONE
- REAL,INTENT(IN) :: NODATA_PWT
+ REAL(KIND=8),INTENT(IN) :: NODATA_PWT
  CHARACTER(LEN=*),INTENT(IN) :: IPFFILE
  character(len=*), intent(in) :: modwd
  INTEGER,PARAMETER :: AEND=0 !## afwateringseenheid --- hebben we niet
  INTEGER :: NUND,MDND,MDND2,IROW,ICOL,LYBE,TYBE,IC1,IC2,IR1,IR2,BEREGENID,JROW,JCOL,N,M,I,JU
- REAL :: ARND,XC,YC,DX,DY,FLBE,QBER
+ REAL(KIND=8) :: ARND,XC,YC,DX,DY,FLBE,QBER
  TYPE IPFOBJ
   INTEGER :: ILAY
-  REAL :: X,Y,CAP
+  REAL(KIND=8) :: X,Y,CAP
  END TYPE IPFOBJ
  TYPE(IPFOBJ),ALLOCATABLE,DIMENSION(:) :: IPF
  logical :: lurban
@@ -587,10 +582,10 @@ END SUBROUTINE
  ENDIF
 
  !## get window of interest
- CALL IMOD_UTL_POL1LOCATER(DELR,NCOL+1,USEBOX(1)+IDFTINY,IC1)
- CALL IMOD_UTL_POL1LOCATER(DELR,NCOL+1,USEBOX(3)-IDFTINY,IC2)
- CALL IMOD_UTL_POL1LOCATER(DELC,NROW+1,USEBOX(4)-IDFTINY,IR1)
- CALL IMOD_UTL_POL1LOCATER(DELC,NROW+1,USEBOX(2)+IDFTINY,IR2)
+ CALL IMOD_UTL_POL1LOCATED(DELR,NCOL+1,USEBOX(1)+IDFTINY,IC1)
+ CALL IMOD_UTL_POL1LOCATED(DELR,NCOL+1,USEBOX(3)-IDFTINY,IC2)
+ CALL IMOD_UTL_POL1LOCATED(DELC,NROW+1,USEBOX(4)-IDFTINY,IR1)
+ CALL IMOD_UTL_POL1LOCATED(DELC,NROW+1,USEBOX(2)+IDFTINY,IR2)
  !## check to make sure dimensions are within bounds!
  IC1=MAX(1,IC1); IC2=MIN(IC2,NCOL)
  IR1=MAX(1,IR1); IR2=MIN(IR2,NROW)
@@ -668,8 +663,8 @@ END SUBROUTINE
       QBER=IPF(BEREGENID)%CAP
       LYBE=IPF(BEREGENID)%ILAY
       TYBE=1 !## groundwater
-      CALL IMOD_UTL_POL1LOCATER(DELR,NCOL+1,IPF(BEREGENID)%X,JCOL)
-      CALL IMOD_UTL_POL1LOCATER(DELC,NROW+1,IPF(BEREGENID)%Y,JROW)
+      CALL IMOD_UTL_POL1LOCATEd(DELR,NCOL+1,IPF(BEREGENID)%X,JCOL)
+      CALL IMOD_UTL_POL1LOCATEd(DELC,NROW+1,IPF(BEREGENID)%Y,JROW)
       IF(JCOL.LT.0.OR.JCOL.GT.NCOL)JCOL=0
       IF(JROW.LT.0.OR.JROW.GT.NROW)JROW=0
      ENDIF
@@ -893,10 +888,10 @@ END SUBROUTINE
 ! WRITE(JU,'(A)') '      modf_per_unf           =      0    ! File  with period-info MODFLOW for postmetaswap'
 ! WRITE(JU,'(A)') '      sw_dtgw_unf            =      0    ! File  with dtgw-info Surfw for water quality'
 
- CALL IMOD_UTL_POL1LOCATER(DELR,NCOL+1,USEBOX(1)+IDFTINY,IC1)
- CALL IMOD_UTL_POL1LOCATER(DELR,NCOL+1,USEBOX(3)-IDFTINY,IC2)
- CALL IMOD_UTL_POL1LOCATER(DELC,NROW+1,USEBOX(4)-IDFTINY,IR1)
- CALL IMOD_UTL_POL1LOCATER(DELC,NROW+1,USEBOX(2)+IDFTINY,IR2)
+ CALL IMOD_UTL_POL1LOCATEd(DELR,NCOL+1,USEBOX(1)+IDFTINY,IC1)
+ CALL IMOD_UTL_POL1LOCATEd(DELR,NCOL+1,USEBOX(3)-IDFTINY,IC2)
+ CALL IMOD_UTL_POL1LOCATEd(DELC,NROW+1,USEBOX(4)-IDFTINY,IR1)
+ CALL IMOD_UTL_POL1LOCATEd(DELC,NROW+1,USEBOX(2)+IDFTINY,IR2)
 
  !## check to make sure dimensions are within bounds!
  IC1  = MAX(1,IC1); IC2  = MIN(IC2,NCOL)
@@ -908,19 +903,19 @@ END SUBROUTINE
  WRITE(JU,'(A)') '*'
  WRITE(JU,'(A)') '      simgro_opt             =     -1    ! simgro output file'
  WRITE(JU,'(A)') '      idf_per                =      1    ! Writing IDF files'
- LINE='      idf_xmin                =      '//TRIM(IMOD_UTL_RTOS(USEBOX(1),'F',2))
+ LINE='      idf_xmin                =      '//TRIM(IMOD_UTL_DTOS(USEBOX(1),'F',2))
  WRITE(JU,'(A)') TRIM(LINE)
- LINE='      idf_ymin                =      '//TRIM(IMOD_UTL_RTOS(USEBOX(2),'F',2))
+ LINE='      idf_ymin                =      '//TRIM(IMOD_UTL_DTOS(USEBOX(2),'F',2))
  WRITE(JU,'(A)') TRIM(LINE)
- LINE='      idf_dx                  =      '//TRIM(IMOD_UTL_RTOS(SIMCSIZE,'F',2))
+ LINE='      idf_dx                  =      '//TRIM(IMOD_UTL_DTOS(SIMCSIZE,'F',2))
  WRITE(JU,'(A)') TRIM(LINE)
- LINE='      idf_dy                  =      '//TRIM(IMOD_UTL_RTOS(SIMCSIZE,'F',2))
+ LINE='      idf_dy                  =      '//TRIM(IMOD_UTL_DTOS(SIMCSIZE,'F',2))
  WRITE(JU,'(A)') TRIM(LINE)
  LINE='      idf_ncol                =      '//TRIM(IMOD_UTL_ITOS(SNCOL))
  WRITE(JU,'(A)') TRIM(LINE)
  LINE='      idf_nrow                =      '//TRIM(IMOD_UTL_ITOS(SNROW))
  WRITE(JU,'(A)') TRIM(LINE)
- LINE='      idf_nodata              =      '//TRIM(IMOD_UTL_RTOS(-9999.99,'F',2))
+ LINE='      idf_nodata              =      '//TRIM(IMOD_UTL_DTOS(-9999.99D0,'F',2))
  WRITE(JU,'(A)') TRIM(LINE)
  CLOSE(JU)
 
@@ -992,7 +987,7 @@ END SUBROUTINE
  IMPLICIT NONE
  INTEGER :: IU,A_NROW,A_NCOL,IROW,ICOL,I,IR1,IR2,IC1,IC2,NUND
  CHARACTER(LEN=*),INTENT(IN) :: ASCIIFNAME,INPFNAME
- REAL :: A_XLLC,A_YLLC,A_NODATA,A_CELLSIZE,IX,IY,DX,DY,ARND
+ REAL(KIND=8) :: A_XLLC,A_YLLC,A_NODATA,A_CELLSIZE,IX,IY,DX,DY,ARND
  CHARACTER(LEN=52) :: TXT
  INTEGER,ALLOCATABLE,DIMENSION(:,:) :: PDELR,PDELC
 

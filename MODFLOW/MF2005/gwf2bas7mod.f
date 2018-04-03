@@ -75,8 +75,8 @@ c   If not, see <http://water.usgs.gov/software/help/notice/>.
         INTEGER, SAVE,    DIMENSION(:),     POINTER ::NSTP
         REAL,    SAVE,    DIMENSION(:),     POINTER ::TSMULT
         INTEGER, SAVE,    DIMENSION(:),     POINTER ::ISSFLG
-        REAL,    SAVE,    DIMENSION(:),     POINTER ::DELR
-        REAL,    SAVE,    DIMENSION(:),     POINTER ::DELC
+        REAL(KIND=8),SAVE,    DIMENSION(:),     POINTER ::DELR
+        REAL(KIND=8),SAVE,    DIMENSION(:),     POINTER ::DELC
         REAL,    SAVE,    DIMENSION(:,:,:), POINTER ::BOTM
         REAL,    SAVE,    DIMENSION(:,:,:), POINTER ::HOLD
         INTEGER, SAVE,    DIMENSION(:,:,:), POINTER ::IBOUND
@@ -95,7 +95,7 @@ c   If not, see <http://water.usgs.gov/software/help/notice/>.
         INTEGER,POINTER    :: ITMUNI,LENUNI,IXSEC,ITRSS,INBAS
         INTEGER,POINTER    :: IFREFM,NODES,IOUT,MXITER
         INTEGER,    DIMENSION(:),     POINTER ::IUNIT
-        DOUBLE PRECISION, DIMENSION(:,:,:), POINTER ::HNEW
+        REAL(KIND=8),DIMENSION(:,:,:), POINTER ::HNEW
         INTEGER,    DIMENSION(:),     POINTER ::LBOTM
         INTEGER,    DIMENSION(:),     POINTER ::LAYCBD
         INTEGER,    DIMENSION(:),     POINTER ::LAYHDT
@@ -104,8 +104,8 @@ c   If not, see <http://water.usgs.gov/software/help/notice/>.
         INTEGER,    DIMENSION(:),     POINTER ::NSTP
         REAL,       DIMENSION(:),     POINTER ::TSMULT
         INTEGER,    DIMENSION(:),     POINTER ::ISSFLG
-        REAL,       DIMENSION(:),     POINTER ::DELR
-        REAL,       DIMENSION(:),     POINTER ::DELC
+        REAL(KIND=8),DIMENSION(:),     POINTER ::DELR
+        REAL(KIND=8),DIMENSION(:),     POINTER ::DELC
         REAL,       DIMENSION(:,:,:), POINTER ::BOTM
         REAL,       DIMENSION(:,:,:), POINTER ::HOLD
         INTEGER,    DIMENSION(:,:,:), POINTER ::IBOUND
