@@ -688,7 +688,7 @@ c arguments
       character(len=16), intent(in) :: text
       integer, intent(in) :: ibdchn
       integer, intent(in) :: ncol, nrow, nlay
-      real,dimension(ncol,nrow,nlay) :: buff
+      real(kind=8),dimension(ncol,nrow,nlay) :: buff
       integer, intent(in) :: iout
       logical, intent(out) :: retflag
 
@@ -790,10 +790,10 @@ c modules
 
 c arguments
       character(len=16), intent(in) :: text
-      integer, intent(in)           :: ichn
-      integer, intent(in)           :: ncol, nrow
-      real, dimension(ncol,nrow)    :: buff
-      logical, intent(out)          :: retflag
+      integer, intent(in) :: ichn
+      integer, intent(in) :: ncol, nrow
+      real(kind=8), dimension(ncol,nrow) :: buff
+      logical, intent(out) :: retflag
 
 c local variables
       character(len=1024) :: fname

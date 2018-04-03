@@ -1349,7 +1349,7 @@ C
 C        SPECIFICATIONS:
 C     ------------------------------------------------------------------
       CHARACTER*16 TEXT
-      DIMENSION BUF(NCOL,NROW)
+      real(kind=8),intent(in),dimension(ncol,nrow) :: BUF
       logical retflag                                                   ! MET
 C     ------------------------------------------------------------------
 C
@@ -1364,7 +1364,7 @@ C1------INFORMATION.
 C
 C2------WRITE AN UNFORMATTED RECORD CONTAINING ARRAY VALUES
 C2------THE ARRAY IS DIMENSIONED (NCOL,NROW)
-       WRITE(ICHN) ((BUF(IC,IR),IC=1,NCOL),IR=1,NROW)
+       WRITE(ICHN) ((REAL(BUF(IC,IR),4),IC=1,NCOL),IR=1,NROW)
 
       endif
 C
@@ -1431,8 +1431,8 @@ C
 C        SPECIFICATIONS:
 C     ------------------------------------------------------------------
       CHARACTER*16 TEXT
-      DIMENSION BUFF(NCOL,NROW,NLAY)
-      logical   retflag
+      REAL(KIND=8),INTENT(IN),DIMENSION(NCOL,NROW,NLAY) :: BUFF
+      logical :: retflag
 C     ------------------------------------------------------------------
 c
 c     write idf     
@@ -1447,7 +1447,7 @@ C1------WRITE AN UNFORMATTED RECORD IDENTIFYING DATA.
 C
 C2------WRITE AN UNFORMATTED RECORD CONTAINING VALUES FOR
 C2------EACH CELL IN THE GRID.
-      WRITE(IBDCHN) BUFF
+      WRITE(IBDCHN) REAL(BUFF,4)
 C
 C3------RETURN
       RETURN
