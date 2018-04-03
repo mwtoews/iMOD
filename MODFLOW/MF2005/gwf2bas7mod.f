@@ -75,8 +75,8 @@ c   If not, see <http://water.usgs.gov/software/help/notice/>.
         INTEGER, SAVE,    DIMENSION(:),     POINTER ::NSTP
         REAL,    SAVE,    DIMENSION(:),     POINTER ::TSMULT
         INTEGER, SAVE,    DIMENSION(:),     POINTER ::ISSFLG
-        REAL(KIND=8),SAVE,    DIMENSION(:),     POINTER ::DELR
-        REAL(KIND=8),SAVE,    DIMENSION(:),     POINTER ::DELC
+        REAL(KIND=8),SAVE,    DIMENSION(:), POINTER ::DELR
+        REAL(KIND=8),SAVE,    DIMENSION(:), POINTER ::DELC
         REAL,    SAVE,    DIMENSION(:,:,:), POINTER ::BOTM
         REAL,    SAVE,    DIMENSION(:,:,:), POINTER ::HOLD
         INTEGER, SAVE,    DIMENSION(:,:,:), POINTER ::IBOUND
@@ -86,7 +86,7 @@ c   If not, see <http://water.usgs.gov/software/help/notice/>.
         REAL,    SAVE,    DIMENSION(:,:,:), POINTER ::CV
         REAL,    SAVE,    DIMENSION(:,:,:), POINTER ::HCOF
         REAL,    SAVE,    DIMENSION(:,:,:), POINTER ::RHS
-        REAL,    SAVE,    DIMENSION(:,:,:), POINTER ::BUFF
+        REAL(kind=8),SAVE,    DIMENSION(:,:,:), POINTER ::BUFF
         REAL,    SAVE,    DIMENSION(:,:,:), POINTER ::STRT
         REAL,    SAVE,    DIMENSION(:,:,:), POINTER ::DDREF
         INTEGER, SAVE,    DIMENSION(:,:,:), POINTER ::IACTCELL          ! PKS
@@ -104,8 +104,8 @@ c   If not, see <http://water.usgs.gov/software/help/notice/>.
         INTEGER,    DIMENSION(:),     POINTER ::NSTP
         REAL,       DIMENSION(:),     POINTER ::TSMULT
         INTEGER,    DIMENSION(:),     POINTER ::ISSFLG
-        REAL(KIND=8),DIMENSION(:),     POINTER ::DELR
-        REAL(KIND=8),DIMENSION(:),     POINTER ::DELC
+        REAL(KIND=8),DIMENSION(:),    POINTER ::DELR
+        REAL(KIND=8),DIMENSION(:),    POINTER ::DELC
         REAL,       DIMENSION(:,:,:), POINTER ::BOTM
         REAL,       DIMENSION(:,:,:), POINTER ::HOLD
         INTEGER,    DIMENSION(:,:,:), POINTER ::IBOUND
@@ -115,7 +115,7 @@ c   If not, see <http://water.usgs.gov/software/help/notice/>.
         REAL,       DIMENSION(:,:,:), POINTER ::CV
         REAL,       DIMENSION(:,:,:), POINTER ::HCOF
         REAL,       DIMENSION(:,:,:), POINTER ::RHS
-        REAL,       DIMENSION(:,:,:), POINTER ::BUFF
+        REAL(kind=8),DIMENSION(:,:,:), POINTER ::BUFF
         REAL,       DIMENSION(:,:,:), POINTER ::STRT
         REAL,       DIMENSION(:,:,:), POINTER ::DDREF
         INTEGER,    DIMENSION(:,:,:), POINTER ::IACTCELL                ! PKS
