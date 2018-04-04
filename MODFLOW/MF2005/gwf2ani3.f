@@ -237,7 +237,7 @@ C4------READ ANISOTROPY-FACTOR EN -HOEK
 ! removed anisotrophy in case for perched water table cells
       if (inpwt.gt.0) then
          call sgwf2pwt3pnt(igrid)
-         buff = 0.
+         buff = 0.0D0
          do ip = 2, npwt
             ilay = pwt(ipilay,ip)
             irow = pwt(ipirow,ip)
@@ -246,7 +246,7 @@ C4------READ ANISOTROPY-FACTOR EN -HOEK
             do i = max(1,irow-1), min(nrow,irow+1)
                do j = max(1,icol-1), min(ncol,icol+1)
                   do k = 1, ilay
-                     buff(j,i,k) = 1.
+                     buff(j,i,k) = 1.0D0
                   end do
                end do
             end do
@@ -256,8 +256,8 @@ C4------READ ANISOTROPY-FACTOR EN -HOEK
          do k = 1, nlay
             do j=1,nrow
                do i=1,ncol
-                  if (buff(i,j,k).gt.0.) then
-                     anifactor(i,j,k) = 1.
+                  if (buff(i,j,k).gt.0.0D0) then
+                     anifactor(i,j,k) = 1.0D0
                      n = n + 1
                   end if
                end do
@@ -438,10 +438,7 @@ c ------------------------------------------------------------------------------
         do icol=1,ncol
          buff(icol,irow,ilay)=dfu(icol,irow,ilay)+dfd(icol,irow,ilay)+
      1                        dff(icol,irow,ilay)+dfr(icol,irow,ilay)
-!        if(buff(icol,irow,ilay).gt.1.0)then
-!         write(*,*)
-!        endif
-         buff(icol,irow,ilay)=-1.0*buff(icol,irow,ilay)
+         buff(icol,irow,ilay)=-1.0D0*buff(icol,irow,ilay)
         enddo
        enddo
       enddo
@@ -607,8 +604,8 @@ c ------------------------------------------------------------------------------
      %     dcu(ncol,nrow,nlay),dcd(ncol,nrow,nlay)
       real kxx(ncol,nrow,nlay),kyy(ncol,nrow,nlay),
      %     kxy(ncol,nrow,nlay)
-      real delr(ncol)
-      real delc(nrow)
+      real(kind=8) delr(ncol)
+      real(kind=8) delc(nrow)
       integer irow,icol,i,j,ii,ising,col,row,lay
       real detk,t1,t2
 
@@ -877,7 +874,7 @@ c ------------------------------------------------------------------------------
       real dcu(ncol,nrow,nlay),dcd(ncol,nrow,nlay),
      1     dcc(ncol,nrow,nlay),dcr(ncol,nrow,nlay),
      1     diag(ncol,nrow,nlay)
-      double precision hnew(ncol,nrow,nlay)
+      real(kind=8) hnew(ncol,nrow,nlay)
       real             rhs(ncol,nrow,nlay)
       real hcof(ncol,nrow,nlay)
       real anifactor(ncol,nrow,nlay)
@@ -1033,7 +1030,7 @@ c ------------------------------------------------------------------------------
       !###====================================================================
       implicit none
       integer,intent(in) :: ncol,nrow,nlay,idir
-      real,dimension(ncol,nrow,nlay),intent(inout) :: buff
+      real(kind=8),dimension(ncol,nrow,nlay),intent(inout) :: buff
       real,dimension(ncol,nrow,nlay),intent(in) :: dfu,dfd,dff,dfr,
      1anifactor
       integer :: irow,icol,ilay,ic1,ic2,ir1,ir2

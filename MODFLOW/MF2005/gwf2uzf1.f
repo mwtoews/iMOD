@@ -4934,7 +4934,7 @@ C
       ! Arguments
       INTEGER, INTENT(IN) :: N
       REAL, INTENT(IN) :: Val
-      REAL, DIMENSION(N), INTENT(OUT) :: A
+      REAL(KIND=8), DIMENSION(N), INTENT(OUT) :: A
       ! Local Variables
       INTEGER i
       !**********************

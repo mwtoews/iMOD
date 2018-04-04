@@ -978,7 +978,7 @@ C
 C        SPECIFICATIONS:
 C     ------------------------------------------------------------------
       CHARACTER*16 TEXT
-      DIMENSION BUF(NCOL,NROW)
+      REAL(KIND=8),DIMENSION(NCOL,NROW),INTENT(IN) :: BUF
 C     ------------------------------------------------------------------
 C
 C1------MAKE SURE THE FORMAT CODE (IP OR IPRN) IS BETWEEN 1
@@ -1150,7 +1150,7 @@ C
 C        SPECIFICATIONS:
 C     ------------------------------------------------------------------
       CHARACTER*16 TEXT
-      DIMENSION BUF(NCOL,NROW)
+      REAL(KIND=8),DIMENSION(NCOL,NROW),INTENT(IN) :: BUF
 C     ------------------------------------------------------------------
 C
 C1------PRINT A HEADER DEPENDING ON ILAY
@@ -1380,7 +1380,8 @@ C
 C        SPECIFICATIONS:
 C     ------------------------------------------------------------------
       CHARACTER*16 TEXT
-      DIMENSION BUFF(NCOL,NROW),IBOUND(NCOL,NROW)
+      REAL(KIND=8),INTENT(IN),DIMENSION(NCOL,NROW) :: BUFF
+      DIMENSION IBOUND(NCOL,NROW)
       CHARACTER*20 FMTOUT
 C     ------------------------------------------------------------------
 C
@@ -1462,7 +1463,8 @@ C
 C        SPECIFICATIONS:
 C     ------------------------------------------------------------------
       CHARACTER*16 TEXT
-      DIMENSION BUFF(NCOL,NROW,NLAY),IBOUND(NCOL,NROW,NLAY)
+      REAL(KIND=8),INTENT(IN),DIMENSION(NCOL,NROW,NLAY) :: BUFF      
+      DIMENSION IBOUND(NCOL,NROW,NLAY)
 C     ------------------------------------------------------------------
 C
 C1------WRITE TWO UNFORMATTED RECORDS IDENTIFYING DATA.
@@ -1533,8 +1535,8 @@ C
 C        SPECIFICATIONS:
 C     ------------------------------------------------------------------
       CHARACTER*16 TEXT
-      DIMENSION BUFF(NCOL,NROW,NLAY),IBUFF(NCOL,NROW),
-     1          IBOUND(NCOL,NROW,NLAY)
+      REAL(KIND=8),INTENT(IN),DIMENSION(NCOL,NROW,NLAY) :: BUFF
+      DIMENSION IBUFF(NCOL,NROW),IBOUND(NCOL,NROW,NLAY)
 C     ------------------------------------------------------------------
 C
 C1------WRITE TWO UNFORMATTED RECORDS IDENTIFYING DATA.

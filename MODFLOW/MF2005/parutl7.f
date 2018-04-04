@@ -1034,7 +1034,7 @@ C        SPECIFICATIONS:
 C     ------------------------------------------------------------------
       USE PARAMMODULE
       INTEGER IBOUND(NCOL,NROW,NLAY)
-      REAL BUFF(NCOL,NROW)
+      REAL(KIND=8) BUFF(NCOL,NROW)
       CHARACTER*4 PTYP
 C     ------------------------------------------------------------------
 C
@@ -1049,7 +1049,7 @@ C
 C2------Initialize BUFF to 0.
       DO 20 I = 1, NROW
         DO 10 J = 1, NCOL
-          BUFF(J,I) = 0.0
+          BUFF(J,I) = 0.0D0
    10   CONTINUE
    20 CONTINUE
 C
@@ -1071,13 +1071,13 @@ C3B-----Loop through zones listed for this cluster.
                     DO 40 IZI = 5, IPCLST(4,IC)
                       IZ = IPCLST(IZI,IC)
                       IF (IZ.EQ.IZON(J,I,IZA)) THEN
-                        BUFF(J,I) = BUFF(J,I) + 1.0
+                        BUFF(J,I) = BUFF(J,I) + 1.0D0
                       ENDIF
    40               CONTINUE
                   ELSE
 C
 C3C-----Zones do not apply to this cluster -- apply to all cells.
-                    BUFF(J,I) = BUFF(J,I) + 1.0
+                    BUFF(J,I) = BUFF(J,I) + 1.0D0
                   ENDIF
    50           CONTINUE
    60         CONTINUE
@@ -1093,7 +1093,7 @@ C4------specified type applies.
       DO 140 I = 1, NROW
         DO 120 J = 1, NCOL
           IF (IBOUND(J,I,LAY).NE.0) THEN
-            IF (BUFF(J,I).EQ.0.0)THEN
+            IF (BUFF(J,I).EQ.0.0D0)THEN
               WRITE (IOUT,510) I,J,LAY,PTYP
   510         FORMAT(1X,'ROW: ',I5,', COLUMN: ',I5,' IN LAYER ',I3,
      &       ' NOT DEFINED FOR PARAMETER TYPE ',A)

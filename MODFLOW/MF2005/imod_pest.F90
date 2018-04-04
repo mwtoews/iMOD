@@ -63,6 +63,7 @@ implicit none
 ! arguments
 integer, intent(in) :: nrow, ncol, nlay, iout
 real, dimension(ncol,nrow,nlay), intent(inout) :: a
+!real(kind=8),dimension(:,:,:),allocatable :: a_dbl
 real, dimension(ncol,nrow,nlay), intent(in), optional :: a2
 character(len=2), intent(in) :: ptype
 real(kind=8),dimension(:,:),allocatable :: xyz,xpp
@@ -82,6 +83,7 @@ DATA PPPARAM/'KD','KH','KV','VC','SC','VA'/ !## variable for pilotpoints
 
 !###======================================================================
 
+if(.not.lipest)return
 
 !## initialize parameters
 if(pest_iter.eq.0)then
@@ -276,7 +278,7 @@ do i=1,size(param)
 
    do ils=1,nlay
     fname=trim(dir)//'\'//trim(ptype)//'_l'//trim(imod_utl_itos(ils))//'.idf'
-    CALL met1wrtidf(fname,a(:,:,ils),ncol,nrow,-999.0,iout)
+    CALL met1wrtidf(fname,real(a(:,:,ils),8),ncol,nrow,-999.0D0,iout)
    enddo
    exit
   enddo
@@ -289,8 +291,7 @@ subroutine pest1alpha_list(ptype,nlist,rlist,ldim,mxlist,iopt1,iopt2)
 !###====================================================================
 
 ! modules
-use global, only: lipest
-use global, only: buff
+use global, only: lipest,buff
 use imod_utl, only: imod_utl_printtext, imod_utl_itos, imod_utl_dtos
 use m_mf2005_main, only: kper
 use pestvar, only: param, pest_iter, iupestout
@@ -312,8 +313,10 @@ real(kind=8) :: ppart, fct
 
 !###======================================================================
 
+if(.not.lipest)return
+
 ! first, mark the cells
-buff = 0.
+buff = 0.0D0
 do i=1,size(param)
 
    if (trim(param(i)%ptype).ne.trim(ptype)) cycle
@@ -329,7 +332,7 @@ do i=1,size(param)
       if (trim(ptype).eq.'IC') ils=-ils
       do j = 1, nlist ! match sybsystem number
          irow=rlist(2,j); icol=rlist(3,j)
-         if (int(ils).eq.int(rlist(irivsubsys,j))) buff(icol,irow,1) = real(j)
+         if (int(ils).eq.int(rlist(irivsubsys,j))) buff(icol,irow,1) = real(j,8)
       end do
       idat = 5 !4
    case('RI','II') ! river/isg infiltration factors
@@ -342,7 +345,7 @@ do i=1,size(param)
       if (trim(ptype).eq.'II') ils=-ils
       do j = 1, nlist ! match sybsystem number
          irow=rlist(2,j); icol=rlist(3,j)
-         if (int(ils).eq.int(rlist(irivsubsys,j))) buff(icol,irow,1) = real(j)
+         if (int(ils).eq.int(rlist(irivsubsys,j))) buff(icol,irow,1) = real(j,8)
       end do
       idat = irivrfact
    case('DC') ! drain conductances
@@ -352,7 +355,7 @@ do i=1,size(param)
       if (idrnsubsys.eq.0) call imod_utl_printtext(trim(errmsg),2)
       do j = 1, nlist ! match sybsystem number
          irow=rlist(2,j); icol=rlist(3,j)
-         if (int(ils).eq.int(rlist(idrnsubsys,j))) buff(icol,irow,1) = real(j)
+         if (int(ils).eq.int(rlist(idrnsubsys,j))) buff(icol,irow,1) = real(j,8)
       end do
       idat = 5 !2 !4
    end select

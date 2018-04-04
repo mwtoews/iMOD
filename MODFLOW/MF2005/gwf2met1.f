@@ -743,7 +743,7 @@ c loop over the layers
 
 c     clean for nodata
       DO I=1,NROW; DO J=1,NCOL
-       IF(IBOUND(J,I,ilay).EQ.0) buff(J,I,ilay)=hnoflo !0. ! CHECK WITH PETER
+       IF(IBOUND(J,I,ilay).EQ.0) buff(J,I,ilay)=hnoflo 
       enddo; enddo
 
          if (type.eq.splitidf) then
@@ -759,7 +759,7 @@ c     clean for nodata
             if (writefile) then
                nodata = HNOFLO !0.
                call met1wrtidf(fname,buff(:,:,ilay),ncol,nrow,
-     1                         nodata,iout,4)
+     1                         nodata,iout)
             end if
          end if
       end do
@@ -923,8 +923,8 @@ c parameters
 c local variables
       integer :: i, ilay, iok
       integer, dimension(2) :: dims
-      real(kind=8), dimension(2) :: lcorner
-      real(kind=8), dimension(ncol+nrow) :: dgrd
+!      real(kind=8), dimension(2) :: lcorner
+!      real(kind=8), dimension(ncol+nrow) :: dgrd
       logical :: lok, leq
       integer :: ic1, ic2, ir1, ir2, sncol, snrow
 
@@ -971,7 +971,7 @@ c write IDF-file
          end if
       else
          if (leq) then
-            lok = idfwrite_wrapper(ncol,nrow,buff,
+         lok = idfwrite_wrapper(ncol,nrow,buff,
      1                             (/delr(1)/),(/delc(1)/),
      1                             coord_xll,coord_yll,nodata,'',fname)
          else

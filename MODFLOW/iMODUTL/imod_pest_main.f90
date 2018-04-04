@@ -1122,7 +1122,7 @@ CONTAINS
     ENDDO
    ENDIF 
 
-   CALL met1wrtidf(fname,X,ncol,nrow,-999.0,iout)
+   CALL met1wrtidf(fname,X,ncol,nrow,-999.0D0,iout)
 
   ELSE
 

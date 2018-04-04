@@ -43,7 +43,7 @@ c   If not, see <http://water.usgs.gov/software/help/notice/>.
        REAL, SAVE,     POINTER,   DIMENSION(:,:,:) ::SC2
        REAL, SAVE,     POINTER,   DIMENSION(:,:,:) ::WETDRY
        REAL, SAVE,     POINTER,   DIMENSION(:,:,:) ::CVWD
-       REAL, SAVE,     POINTER,   DIMENSION(:)     ::TRPY
+       REAL(kind=8), SAVE,     POINTER,   DIMENSION(:)     ::TRPY
        real, save,     pointer,   dimension(:,:)   ::seepage            ! DLT
 
       TYPE GWFBCFTYPE
@@ -58,7 +58,7 @@ c   If not, see <http://water.usgs.gov/software/help/notice/>.
        REAL,     POINTER,   DIMENSION(:,:,:) ::SC2
        REAL,     POINTER,   DIMENSION(:,:,:) ::WETDRY
        REAL,     POINTER,   DIMENSION(:,:,:) ::CVWD
-       REAL,     POINTER,   DIMENSION(:)     ::TRPY
+       REAL(kind=8),     POINTER,   DIMENSION(:)     ::TRPY
        real,     pointer,   dimension(:,:)   ::seepage                  ! DLT
       END TYPE
       TYPE(GWFBCFTYPE), SAVE  ::GWFBCFDAT(10)
