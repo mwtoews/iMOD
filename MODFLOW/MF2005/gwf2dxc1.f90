@@ -135,7 +135,7 @@ subroutine gwf2dxc1ar(in,igrid)
        iwrk1(i) = abs(dxcid(i))
        iwrk2(i) = i
     end do
-    call imod_utl_qksort3(iwrk1,iwrk2)
+    call imod_utl_qksort3(iwrk1,iwrk2) !,SIZE(IWRK1),SIZE(IWRK1))
     ! count interface nodes 
     nn = 0 
     do ixp = 1, nrxp

@@ -1706,60 +1706,163 @@ END SUBROUTINE IMOD_UTL_QKSORT
 
  END SUBROUTINE IMOD_UTL_QKSORT2
 
- !###====================================================
- RECURSIVE SUBROUTINE IMOD_UTL_QKSORT3(A,AI)
- !###====================================================
+  !###======================================================================
+ SUBROUTINE IMOD_UTL_QKSORT3(ARR,BRR) !,NDIM,N)
+ !###======================================================================
  IMPLICIT NONE
- INTEGER, INTENT(IN OUT) :: A(:), AI(:)
- INTEGER :: SPLIT
+ !INTEGER,INTENT(IN) :: NDIM,N
+ INTEGER,INTENT(INOUT),DIMENSION(:) :: ARR,BRR
+ INTEGER :: N,M,NSTACK
+ PARAMETER (M=7,NSTACK=50)
+ INTEGER :: I,IR,J,JSTACK,K,L,ISTACK(NSTACK)
+ REAL :: A,B,ATEMP,BTEMP
 
- IF(SIZE(A) > 1) THEN
-    CALL IMOD_UTL_PARTITION(A, AI, SPLIT)
-    CALL IMOD_UTL_QKSORT3(A(:SPLIT-1),AI(:SPLIT-1))
-    CALL IMOD_UTL_QKSORT3(A(SPLIT:),AI(SPLIT:))
- END IF
+ N=SIZE(ARR)
+ 
+ JSTACK=0
+ L=1
+ IR=N
+1  IF(IR-L.LT.M)THEN
+  DO J=L+1,IR
+   A=ARR(J)
+   B=BRR(J)
+   DO I=J-1,1,-1
+    IF(ARR(I).LE.A)GOTO 2
+    ARR(I+1)=ARR(I)
+    BRR(I+1)=BRR(I)
+   ENDDO
+   I=0
+2  ARR(I+1)=A
+   BRR(I+1)=B
+  ENDDO
+  IF(JSTACK.EQ.0)RETURN
+  IR=ISTACK(JSTACK)
+  L =ISTACK(JSTACK-1)
+  JSTACK=JSTACK-2
+ ELSE
+  K=(L+IR)/2
+  ATEMP   =ARR(K)
+  BTEMP   =BRR(K)
+  ARR(K)  =ARR(L+1)
+  BRR(K)  =BRR(L+1)
+  ARR(L+1)=ATEMP
+  BRR(L+1)=BTEMP
+  IF(ARR(L+1).GT.ARR(IR))THEN
+   ATEMP   =ARR(L+1)
+   BTEMP   =BRR(L+1)
+   ARR(L+1)=ARR(IR)
+   BRR(L+1)=BRR(IR)
+   ARR(IR)=ATEMP
+   BRR(IR)=BTEMP
+  ENDIF
+  IF(ARR(L).GT.ARR(IR))THEN
+   ATEMP  =ARR(L)
+   BTEMP  =BRR(L)
+   ARR(L) =ARR(IR)
+   BRR(L) =BRR(IR)
+   ARR(IR)=ATEMP
+   BRR(IR)=BTEMP
+  ENDIF
+  IF(ARR(L+1).GT.ARR(L))THEN
+   ATEMP   =ARR(L+1)
+   BTEMP   =BRR(L+1)
+   ARR(L+1)=ARR(L)
+   BRR(L+1)=BRR(L)
+   ARR(L)  =ATEMP
+   BRR(L)  =BTEMP
+  ENDIF
+  I=L+1
+  J=IR
+  A=ARR(L)
+  B=BRR(L)
+3   CONTINUE
+  I=I+1
+  IF(ARR(I).LT.A)GOTO 3
+4   CONTINUE
+  J=J-1
+  IF(ARR(J).GT.A)GOTO 4
+  IF(J.LT.I)GOTO 5
+  ATEMP =ARR(I)
+  BTEMP =BRR(I)
+  ARR(I)=ARR(J)
+  BRR(I)=BRR(J)
+  ARR(J)=ATEMP
+  BRR(J)=BTEMP
+  GOTO 3
+5   ARR(L)=ARR(J)
+  BRR(L)=BRR(J)
+  ARR(J)=A
+  BRR(J)=B
+  JSTACK=JSTACK+2
+  IF(JSTACK.GT.NSTACK)PAUSE 'NSTACK TOO SMALL'
+  IF(IR-I+1.GT.J-L)THEN
+   ISTACK(JSTACK)=IR
+   ISTACK(JSTACK-1)=I
+   IR=J-1
+  ELSE
+   ISTACK(JSTACK)=J-1
+   ISTACK(JSTACK-1)=L
+   L=I
+  ENDIF
+ ENDIF
+ GOTO 1
 
  END SUBROUTINE IMOD_UTL_QKSORT3
-
- !###====================================================
- SUBROUTINE IMOD_UTL_PARTITION(A,AI,MARKER)
- !###====================================================
- IMPLICIT NONE
- INTEGER, INTENT(IN OUT) :: A(:), AI(:)
- INTEGER, INTENT(OUT) :: MARKER
- INTEGER :: LEFT, RIGHT, PIVOT, TEMP
-
- PIVOT = (A(1) + A(SIZE(A))) / 2  ! AVERAGE OF FIRST AND LAST ELEMENTS TO PREVENT QUADRATIC
- LEFT = 0                         ! BEHAVIOR WITH SORTED OR REVERSE SORTED DATA
- RIGHT = SIZE(A) + 1
-
- DO WHILE (LEFT < RIGHT)
-    RIGHT = RIGHT - 1
-    DO WHILE (A(RIGHT) > PIVOT)
-       RIGHT = RIGHT-1
-    END DO
-    LEFT = LEFT + 1
-    DO WHILE (A(LEFT) < PIVOT)
-       LEFT = LEFT + 1
-    END DO
-    IF (LEFT < RIGHT) THEN
-       TEMP = A(LEFT)
-       A(LEFT) = A(RIGHT)
-       A(RIGHT) = TEMP
-
-       TEMP = AI(LEFT)
-       AI(LEFT) = AI(RIGHT)
-       AI(RIGHT) = TEMP
-    END IF
- END DO
-
- IF (LEFT == RIGHT) THEN
-    MARKER = LEFT + 1
- ELSE
-    MARKER = LEFT
- END IF
-
- END SUBROUTINE IMOD_UTL_PARTITION
+ !
+ !!###====================================================
+ !RECURSIVE SUBROUTINE IMOD_UTL_QKSORT3(A,AI)
+ !!###====================================================
+ !IMPLICIT NONE
+ !INTEGER, INTENT(IN OUT) :: A(:), AI(:)
+ !INTEGER :: SPLIT
+ !
+ !IF(SIZE(A) > 1) THEN
+ !   CALL IMOD_UTL_PARTITION(A, AI, SPLIT)
+ !   CALL IMOD_UTL_QKSORT3(A(:SPLIT-1),AI(:SPLIT-1))
+ !   CALL IMOD_UTL_QKSORT3(A(SPLIT:),AI(SPLIT:))
+ !END IF
+ !
+ !END SUBROUTINE IMOD_UTL_QKSORT3
+ !
+ !!###====================================================
+ !SUBROUTINE IMOD_UTL_PARTITION(A,AI,MARKER)
+ !!###====================================================
+ !IMPLICIT NONE
+ !INTEGER, INTENT(IN OUT) :: A(:), AI(:)
+ !INTEGER, INTENT(OUT) :: MARKER
+ !INTEGER :: LEFT, RIGHT, PIVOT, TEMP
+ !
+ !PIVOT = (A(1) + A(SIZE(A))) / 2  ! AVERAGE OF FIRST AND LAST ELEMENTS TO PREVENT QUADRATIC
+ !LEFT = 0                         ! BEHAVIOR WITH SORTED OR REVERSE SORTED DATA
+ !RIGHT = SIZE(A) + 1
+ !
+ !DO WHILE (LEFT < RIGHT)
+ !   RIGHT = RIGHT - 1
+ !   DO WHILE (A(RIGHT) > PIVOT)
+ !      RIGHT = RIGHT-1
+ !   END DO
+ !   LEFT = LEFT + 1
+ !   DO WHILE (A(LEFT) < PIVOT)
+ !      LEFT = LEFT + 1
+ !   END DO
+ !   IF (LEFT < RIGHT) THEN
+ !      TEMP = A(LEFT)
+ !      A(LEFT) = A(RIGHT)
+ !      A(RIGHT) = TEMP
+ !
+ !      TEMP = AI(LEFT)
+ !      AI(LEFT) = AI(RIGHT)
+ !      AI(RIGHT) = TEMP
+ !   END IF
+ !END DO
+ !
+ !IF (LEFT == RIGHT) THEN
+ !   MARKER = LEFT + 1
+ !ELSE
+ !   MARKER = LEFT
+ !END IF
+ !
+ !END SUBROUTINE IMOD_UTL_PARTITION
 
  !###====================================================
  SUBROUTINE IMOD_UTL_SHELLSORT(N,A)
@@ -3236,11 +3339,11 @@ ENDIF
  IF(IEQ.EQ.0)THEN
 
   dx=xc-delr(0)
-  i=0; if(mod(dx,simcsize).ne.0.0)i=1
+  i=0; if(mod(dx,simcsize).ne.0.0D0)i=1
   if(xc+TINY.gt.delr(0).and.xc-TINY.lt.delr(ncol))icol=int(dx/simcsize)+i
 
   dy=delc(0)-yc
-  i=0; if(mod(dy,simcsize).ne.0.0)i=1
+  i=0; if(mod(dy,simcsize).ne.0.0D0)i=1
   if(yc+TINY.gt.delc(nrow).and.yc-TINY.lt.delc(0))irow=int(dy/simcsize)+i
 
   icol=min(icol,ncol); irow=min(irow,nrow)

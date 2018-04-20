@@ -285,11 +285,11 @@ CONTAINS
 
  IF(MMOD(PPWT).NE.1)SIMGRO%PWT_LEVEL=NODATA(20)
 
- !## make sure corner of model are incative, no connection with MetaSWAP
- SIMGRO(1   ,1   )%IBOUND=0
- SIMGRO(1   ,NROW)%IBOUND=0
- SIMGRO(NCOL,1   )%IBOUND=0
- SIMGRO(NCOL,NROW)%IBOUND=0
+ !!## make sure corner of model are inactive, no connection with MetaSWAP
+ !SIMGRO(1   ,1   )%IBOUND=0
+ !SIMGRO(1   ,NROW)%IBOUND=0
+ !SIMGRO(NCOL,1   )%IBOUND=0
+ !SIMGRO(NCOL,NROW)%IBOUND=0
  
 !## make sure that for sopp>0 there is a vxmu value, turn nopp otherwise off
  DO IROW=1,NROW; DO ICOL=1,NCOL
