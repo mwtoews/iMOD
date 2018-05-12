@@ -62,6 +62,7 @@ c   2600 MH Delft, The Netherlands.
          real(kind=8), dimension(:), save, pointer :: cdelr
          real(kind=8), dimension(:), save, pointer :: cdelc
          logical, save, pointer :: save_no_buf
+         integer, save, pointer :: savedouble
          logical, save, pointer :: write_debug_idf
          type gwfmettype
             character(len=300), pointer :: runcomment
@@ -102,6 +103,7 @@ c   2600 MH Delft, The Netherlands.
             real(kind=8), dimension(:), pointer :: cdelr
             real(kind=8), dimension(:), pointer :: cdelc
             logical, pointer :: save_no_buf
+            integer, pointer :: savedouble
             logical, pointer :: write_debug_idf
          end type
 

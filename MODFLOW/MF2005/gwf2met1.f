@@ -67,6 +67,7 @@ c deallocate MET memory
       if (associated(save_no_buf))        deallocate(save_no_buf)
       if (associated(write_debug_idf))    deallocate(write_debug_idf)
       if (associated(idate_save))         deallocate(idate_save)
+      if (associated(savedouble))         deallocate(savedouble)
 
       if (igrid.eq.1) then
          if (allocated(xmask)) deallocate(xmask)
@@ -120,7 +121,7 @@ C change meta data to a different grid.
       cdelc => gwfmetdat(igrid)%cdelc
       save_no_buf => gwfmetdat(igrid)%save_no_buf
       write_debug_idf => gwfmetdat(igrid)%write_debug_idf
-      idate_save => gwfmetdat(igrid)%idate_save
+      savedouble => gwfmetdat(igrid)%savedouble
 
       return
       end
@@ -170,6 +171,7 @@ C save meta data for a grid.
       gwfmetdat(igrid)%cdelc => cdelc
       gwfmetdat(igrid)%save_no_buf => save_no_buf
       gwfmetdat(igrid)%write_debug_idf => write_debug_idf
+      gwfmetdat(igrid)%savedouble => savedouble
 
       return
       end
@@ -285,7 +287,7 @@ c nullify
       cdelc => null()
       save_no_buf => null()
       write_debug_idf => null()
-
+      savedouble => null()
 
 c read options
 C2------READ A LINE; IGNORE BLANK LINES AND PRINT COMMENT LINES.
@@ -371,6 +373,12 @@ C2------READ A LINE; IGNORE BLANK LINES AND PRINT COMMENT LINES.
                save_no_buf = .true.
             end if
 
+            if (line(istart:istop).eq.'SAVEDOUBLE') then
+               if (.not.associated(savedouble))
+     1            allocate(savedouble)
+               read(line(lloc:),*) savedouble
+            end if
+
             if (line(istart:istop).eq.'IDATE_SAVE') then
                if (.not.associated(idate_save))
      1            allocate(idate_save)
@@ -428,6 +436,11 @@ c set default for idate_save
       if (.not.associated(idate_save)) then     
           allocate(idate_save)
           idate_save = 0
+      end if    
+c set default for savedouble     
+      if (.not.associated(savedouble)) then     
+          allocate(savedouble)
+          savedouble = 0
       end if    
             
 c determine Julian Date of starting time
@@ -798,7 +811,7 @@ c arguments
 c local variables
       character(len=1024) :: fname
       integer :: ilay, type, isplit, iuidx
-      real :: nodata
+      real(kind=8) :: nodata
 
 c functions
       character(len=1024) :: met1fname
@@ -926,7 +939,7 @@ c local variables
 !      real(kind=8), dimension(2) :: lcorner
 !      real(kind=8), dimension(ncol+nrow) :: dgrd
       logical :: lok, leq
-      integer :: ic1, ic2, ir1, ir2, sncol, snrow
+      integer :: ic1, ic2, ir1, ir2, sncol, snrow, idbl
 
 c functions
 c      integer :: idfx_wrfile
@@ -934,6 +947,10 @@ c      integer :: idfx_wrfile
 c program section
 c ------------------------------------------------------------------------------
 
+      !## default single precisions      
+      idbl=4
+      if(associated(savedouble))idbl=(savedouble+1)*4
+      
       leq = .true.
       if (minval(delr).ne.maxval(delr)) leq = .false.
       if (minval(delc).ne.maxval(delc)) leq = .false.
@@ -962,21 +979,23 @@ c write IDF-file
             lok = idfwrite_wrapper(sncol,snrow,buff(ic1:ic2,ir1:ir2),
      1                            (/delr(1)/),(/delc(1)/),
      1                            coord_xll_nb,coord_yll_nb,
-     1                            nodata,'',fname)
+     1                            nodata,'',fname,idouble=idbl)
          else
             lok = idfwrite_wrapper(sncol,snrow,buff(ic1:ic2,ir1:ir2),
      1                            delr(ic1:ic2),delc(ir1:ir2),
      1                            coord_xll_nb,coord_yll_nb,
-     1                            nodata,'',fname)
+     1                            nodata,'',fname,idouble=idbl)
          end if
       else
          if (leq) then
          lok = idfwrite_wrapper(ncol,nrow,buff,
      1                             (/delr(1)/),(/delc(1)/),
-     1                             coord_xll,coord_yll,nodata,'',fname)
+     1                             coord_xll,coord_yll,nodata,'',fname,
+     1                             idouble=idbl)
          else
             lok = idfwrite_wrapper(ncol,nrow,buff,delr,delc,
-     1                             coord_xll,coord_yll,nodata,'',fname)
+     1                             coord_xll,coord_yll,nodata,'',fname,
+     1                             idouble=idbl)
          end if
       end if
 

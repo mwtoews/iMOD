@@ -22,8 +22,7 @@
 
 MODULE MOD_RF2MF_READ
 
-USE IMOD_UTL !, ONLY : IMOD_UTL_ITOS,IMOD_UTL_RTOS,IMOD_UTL_GETFNAME,IMOD_UTL_GETREAL,IMOD_UTL_PRINTTEXT, &
-             !             IMOD_UTL_STRING,IMOD_UTL_FILENAME,IUOUT
+USE IMOD_UTL
 USE rf2mf_module, ONLY : nlay,bas,bcf,pwt,dis,wel,drn,riv,ghb,hfb,ani,rch,dxc,mxrech,evt,chd,iarr,iari,nper,&
                          oc,maxsubsys,maxgen,maxcol,scr,ialloc,allocscr,&
                          iusclnodata,iusclspec,iusclarith,iusclgeom,iusclsumq,iusclsumcdr,iusclinvc,iusclmostfr,iusclsuminvcvr,iusclperc,&

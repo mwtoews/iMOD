@@ -638,7 +638,7 @@ CHARACTER(LEN=1) :: SLASH
 
 READ(IURUN,'(A256)') LINE
 CALL IMOD_UTL_STRING(LINE)
-READ(LINE,*,IOSTAT=IOS) NMULT,IIDEBUG,IEXPORT,IPOSWEL,ISCEN,IBDG,MINKD,MINC
+READ(LINE,*,IOSTAT=IOS) NMULT,IIDEBUG,IDOUBLE,IPOSWEL,ISCEN,IBDG,MINKD,MINC
 if (ios.eq.0) then
   bcf%iminkd = 1
   bcf%iminc = 1
@@ -646,27 +646,29 @@ if (ios.eq.0) then
   bcf%minc  = minc
 endif
 IF(IOS.NE.0)THEN
- READ(LINE,*,IOSTAT=IOS) NMULT,IIDEBUG,IEXPORT,IPOSWEL,ISCEN,IBDG,MINKD
+ READ(LINE,*,IOSTAT=IOS) NMULT,IIDEBUG,IDOUBLE,IPOSWEL,ISCEN,IBDG,MINKD
  if (ios.eq.0) then
    bcf%iminkd = 1
    bcf%minkd = minkd
  endif
  IF(IOS.NE.0)THEN
-  READ(LINE,*,IOSTAT=IOS) NMULT,IIDEBUG,IEXPORT,IPOSWEL,ISCEN,IBDG
+  READ(LINE,*,IOSTAT=IOS) NMULT,IIDEBUG,IDOUBLE,IPOSWEL,ISCEN,IBDG
   IF(IOS.NE.0)THEN
    IBDG=0
-   READ(LINE,*,IOSTAT=IOS) NMULT,IIDEBUG,IEXPORT,IPOSWEL,ISCEN
+   READ(LINE,*,IOSTAT=IOS) NMULT,IIDEBUG,IDOUBLE,IPOSWEL,ISCEN
   ENDIF
  ENDIF
 ENDIF
 IF(IOS.NE.0)CALL IMOD_UTL_PRINTTEXT('ERROR DataSet 4 (see manual):'//TRIM(LINE),-3)
+
+met%kws(imet_savedouble)%ival=idouble
+met%kws(imet_savedouble)%type = imeti
 
 !#overrule submodel whenever iflag(2)=active
 IF(IFLAG(2).GT.0)THEN
  IF(IFLAG(2).GT.NMULT)CALL IMOD_UTL_PRINTTEXT('IFLAG(2).GT.NMULT',-3)
 ENDIF
 
-IF(IEXPORT.EQ.1.OR.IEXPORT.EQ.2)IIDEBUG=0
 debugflag = iidebug
 if(abs(debugflag)==1)then
    N = LEN_TRIM(RESULTDIR)
@@ -683,8 +685,6 @@ if(abs(debugflag)==1)then
    END IF
 end if
 
-IF(IEXPORT.EQ.1.AND..NOT.LQD)   CALL IMOD_UTL_PRINTTEXT('MODFLOW export #1 not sustained in comination with non-equidistantial networks',-3)
-IF(IEXPORT.LT.0.OR.IEXPORT.GT.5)CALL IMOD_UTL_PRINTTEXT('IEXPORT should be 1 <= IEXPORT <= 5',-3)
 IF(NMULT.GE.1.AND.NSCL.EQ.0)    CALL IMOD_UTL_PRINTTEXT('You can not combine nmult.ge.1. with given raster definition (nscl.eq.0)',-3)
 
 !memory of submodels yet done!

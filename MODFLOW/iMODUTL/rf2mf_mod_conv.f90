@@ -321,8 +321,9 @@
       integer, public, parameter :: imet_save_no_buf        = 13
       integer, public, parameter :: imet_write_debug_idf    = 14
       integer, public, parameter :: imet_idate_save         = 15
+      integer, public, parameter :: imet_savedouble         = 16
 
-      integer, parameter :: nmetkws = imet_idate_save
+      integer, parameter :: nmetkws = imet_savedouble
 
       character(len=18), dimension(nmetkws) :: metkws
 !...   12345678901234567890123
@@ -341,7 +342,8 @@
       'ibound_fixed_south',&
       'save_no_buf       ',&
       'write_debug_idf   ',&     
-      'idate_save        '/
+      'idate_save        ',&
+      'savedouble        '/
 
       integer, public, parameter :: imetu = 1
       integer, public, parameter :: imeti = 2

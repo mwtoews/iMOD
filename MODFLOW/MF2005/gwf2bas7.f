@@ -707,7 +707,8 @@ C read options
       LTBCHECK = .FALSE.                                                ! DLT
    12 CALL URWORD(LINE,LLOC,ISTART,ISTOP,1,I,R,IOUT,IN)                 ! DLT
       IF(LINE(ISTART:ISTOP).EQ.'TBCHECK') THEN                          ! DLT
-         LTBCHECK=.TRUE.                                                ! DLT
+       LTBCHECK=.TRUE.                                                  ! DLT
+       WRITE(IOUT,'(10x,a)') 'Applying top/bot check'                   ! DLT
       ENDIF                                                             ! DLT
       IF(LLOC.LT.200) GO TO 12                                          ! DLT
 

@@ -174,9 +174,6 @@ C7------READ PARAMETER DEFINITIONS (ITEMS 2 AND 3)
      &         NCOL,NROW,NLAY,IPRHFB)
           CALL SGWF2HFB7CK(LSTBEG,LSTSUM-1)
    20   CONTINUE
-!        ihfbfact = 0
-!        if (lhfbfact) ihfbfact = 1
-!        call pest1alpha_list('HF',nlst,hfb,7,mxhfb,ihfbfact)            ! IPEST
       ENDIF
 C
 C8------READ BARRIERS NOT DEFINED BY PARAMETERS (ITEM 4)
@@ -393,6 +390,7 @@ C
 C1------INITIALIZE ERROR FLAG TO ZERO.
       IERFLG=0
 C
+      
 C2----DO FOR EACH BARRIER IN RANGE.
       DO 10 II = 1,NHFB
         K = HFB(1,II)
@@ -423,6 +421,7 @@ C6------IF LAYER IS CONFINED AND BOTH CELLS ARE ACTIVE, SAVE
 C-------ORIGINAL CR FOR COMPUTING SENSITIVITIES AND MODIFY CR
             IF (LAYHDT(K).EQ.0) THEN
 C
+      
 C7------IF CR(J1,I1,K) NOT 0, BOTH CELLS ARE ACTIVE.
               IF (CR(J1,I1,K).NE.0.) THEN
                 HFB(7,II) = CR(J1,I1,K)
@@ -498,6 +497,7 @@ C13-----MODIFY CC(J1,I1,K) TO ACCOUNT FOR BARRIER.
         ENDIF
    10 CONTINUE
 C
+   
 C14-----RETURN
       RETURN
       END
