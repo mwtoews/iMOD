@@ -342,7 +342,7 @@ C  Observation allocate and read
      1                                       IUNIT(IUSTR),IGRID)
       IF(IUNIT(IUCHOB).GT.0) CALL OBS2CHD7AR(IUNIT(IUCHOB),IGRID)
 
-      write(*,*) 'end'
+      write(*,*) 'End MF Allocation'
       ! init timestep
       kper=0
 

@@ -121,6 +121,8 @@ C     ------------------------------------------------------------------
       use m_mf2005_iu, only: iuani, iumet, iupwt, iusfr, iulak, iulpf,
      1                      IUMNW1, IUMNW2, IUMNWI, IUCHD, IUUZF, IUFHB ! PKS
 C
+      real :: xt,xb
+      logical :: ltbcheck
       CHARACTER*4 CUNIT(NIUNIT)
       CHARACTER*(*) VERSION
       CHARACTER*80 HEADNG(2)
@@ -191,7 +193,7 @@ C4------Initialize parameter definition variables.
 C
       if(IUNIT(IUMET).gt.0) call gwf2met1ar(IUNIT(IUMET),igrid,iout)    ! MET
 C5------Allocate and read discretization data.
-      CALL SGWF2BAS7ARDIS(IUDIS,IOUT,igrid)
+      CALL SGWF2BAS7ARDIS(IUDIS,IOUT,igrid,ltbcheck)
       NODES=NCOL*NROW*NLAY
 C
 C6------Allocate space for global arrays except discretization data.
@@ -310,7 +312,43 @@ C8G-----READ INITIAL HEADS.
       ELSE
          CALL U2DREL(STRT(:,:,1),ANAME(2),NLAY,NCOL,-1,INBAS,IOUT)
       END IF
-C      
+C      LBOTM
+      if (ltbcheck) then                                                ! DLT
+         n = 0                                                          ! DLT
+         do k = 1, nlay                                                 ! DLT
+            do i = 1, nrow                                              ! DLT
+               do j = 1, ncol                                           ! DLT
+                  if(ibound(j,i,k).eq.0)cycle                           ! DLT
+                  !## top aquifer
+                  xt = botm(j,i,lbotm(k)-1)                             ! DLT
+                  !## bottom aquifer
+                  xb = botm(j,i,lbotm(k))                               ! DLT
+                  !## if top lt bottom set bottom to top
+                  if (xt.lt.xb) then                                    ! DLT
+                     n = n + 1                                          ! DLT
+                     botm(j,i,lbotm(k)) = min(xb,xt)                    ! DLT
+                     !## check interbed
+                  endif
+                  if (k.lt.nlay) then                                   ! DLT
+                     !## top interbed   
+                     xt = xb                                            ! DLT
+                     !## bottom interbed
+                     xb = botm(j,i,lbotm(k+1)-1)                        ! DLT
+                     !## if top lt bottom set bottom to top
+                     if (xt.lt.xb) then                                 ! DLT
+                        n = n + 1                                       ! DLT
+                        botm(j,i,il2) = min(xb,xt)                      ! DLT
+                     end if                                             ! DLT
+                  end if                                                ! DLT
+               end do                                                   ! DLT
+            end do                                                      ! DLT
+         end do                                                         ! DLT
+         if (n.gt.0) then                                               ! DLT
+            write(*,*) 'Top/bot consistency check applied:',n,          ! DLT
+     1         'cells adjusted'                                         ! DLT
+         end if                                                         ! DLT
+      end if     
+      
       !## cleaning corner of model in case ani is active
       if (iunit(iuani).gt.0)then
        do k=1,nlay
@@ -653,7 +691,7 @@ C
 C6------RETURN
       RETURN
       END
-      SUBROUTINE SGWF2BAS7ARDIS(IUDIS,IOUT,igrid)
+      SUBROUTINE SGWF2BAS7ARDIS(IUDIS,IOUT,igrid,ltbcheck)
 C     *****************************************************************
 C     ALLOCATE AND READ DIS DATA
 C     *****************************************************************
@@ -661,7 +699,7 @@ C
 C        SPECIFICATIONS:
 C     ------------------------------------------------------------------
       USE GLOBAL,     ONLY:NCOL,NROW,NLAY,NPER,NBOTM,NCNFBD,ITMUNI,
-     1                     LENUNI,IUNIT,LBOTM,LAYCBD,ITRSS,
+     1                     LENUNI,IUNIT,LBOTM,LAYCBD,ITRSS,IBOUND,
      3                     PERLEN,NSTP,TSMULT,ISSFLG,DELR,DELC,BOTM
       use m_mf2005_iu, only: iumet, iupks
 C
@@ -672,7 +710,7 @@ C
       DATA ANAME(3) /'TOP ELEVATION OF LAYER 1'/
       DATA ANAME(4) /'  MODEL LAYER BOTTOM EL.'/
       DATA ANAME(5) /'BOT. EL. OF QUASI-3D BED'/
-      LOGICAL LTBCHECK                                                  ! DLT
+      LOGICAL,intent(out) :: ltbcheck                                   ! dlt
       REAL T, B
 C     ------------------------------------------------------------------
 C
@@ -810,30 +848,6 @@ C13-----Read the bottom elevations.
      1          NROW,NCOL,KK,INDIS,IOUT)
   120 CONTINUE
 C
-      if (ltbcheck) then                                                ! DLT
-         n = 0                                                          ! DLT
-         do k = 1, nbotm                                                ! DLT
-            do i = 1, nrow                                              ! DLT
-               do j = 1, ncol                                           ! DLT
-                  t = botm(j,i,k-1)                                     ! DLT
-                  b = botm(j,i,k)                                       ! DLT
-                  if (t.lt.b) then                                      ! DLT
-                     n = n + 1                                          ! DLT
-                     botm(j,i,k) = min(b,t)                             ! DLT
-                     if (k.lt.nbotm) then                               ! DLT
-                        t = botm(j,i,k+1)                               ! DLT
-                        botm(j,i,k+1) = min(b,t)                        ! DLT
-                     end if                                             ! DLT
-                  end if                                                ! DLT
-               end do                                                   ! DLT
-            end do                                                      ! DLT
-         end do                                                         ! DLT
-         if (n.gt.0) then                                               ! DLT
-            write(*,*) 'Top/bot consistency check applied:',n,          ! DLT
-     1         'cells adjusted'                                         ! DLT
-         end if                                                         ! DLT
-      end if                                                            ! DLT
-
 C14-----READ AND WRITE LENGTH OF STRESS PERIOD, NUMBER OF TIME STEPS,
 C14-----TIME STEP MULTIPLIER, AND STEADY-STATE FLAG..
       WRITE(IOUT,161)
