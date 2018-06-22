@@ -186,12 +186,12 @@ do i=1,size(param)
       call imod_utl_printtext('Something went wrong for PEST, missing parameter '//trim(ptype),2)
 
    end select
-   if(param(i)%igroup.gt.0)then
+!   if(param(i)%igroup.gt.0)then
     line=' * '//param(i)%ptype//' adjusted ('//trim(imod_utl_itos(param(i)%nodes))// &
-      ')with alpha='//trim(imod_utl_dtos(fct,'f',7))
+      ') with alpha='//trim(imod_utl_dtos(fct,'f',7))//' for ils '//trim(imod_utl_itos(ils))
       WRITE(*,*) TRIM(LINE)
 !      call imod_utl_printtext(trim(line),-1,iupestout)
-   endif
+!   endif
  end do
 
  !## process any pilotpoints per modellayer/ adjustable parameter
