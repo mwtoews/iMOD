@@ -137,11 +137,11 @@ c check or RSUBSYS has been defined and AUX variabel exist              ! wsubsy
             call ustop(' ')                                             ! wsubsys
          else                                                           ! wsubsys
             ! rsubsys found                                             ! wsubsys
-            write(iout,'(1x,3a)') 'RSUBSYS variabel ',rivsubsys,        ! wsubsys
+            write(iout,'(1x,3a)') 'RSUBSYS variabel ',welsubsys,        ! wsubsys
      1                    ' used for sub-system indices.'               ! wsubsys
-            ! isubsys gets the column number of RIVR in which the       ! wsubsys
+            ! isubsys gets the column number of WEL in which the       ! wsubsys
             ! sub system indices                                        ! wsubsys
-            iwelsubsys=iwelsubsys+6                                     ! wsubsys
+            iwelsubsys=iwelsubsys+4                                     ! wsubsys
          endif                                                          ! wsubsys
       endif       
       
