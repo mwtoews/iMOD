@@ -24,7 +24,7 @@
 MODULE PESTVAR
 !###====================================================================
 USE IMOD_IDF_PAR
-INTEGER,PARAMETER :: MXPTYPE=19
+INTEGER,PARAMETER :: MXPTYPE=20
 REAL,PARAMETER :: XPBND=0.01 !## boundary percentage
 CHARACTER(LEN=2),DIMENSION(MXPTYPE) :: PTYPE
 CHARACTER(LEN=256) :: PPBLANKOUT
@@ -104,7 +104,8 @@ DATA PTYPE/'KD',& ! 1 transmissivity
            'MC',& !16 metaswap conductivity
            'RE',& !17 recharge
            'EX',& !18 external distribution
-           'EP'/  !19 
+           'EP',& !19 corey-epsilon
+           'QR'/  !20 extraction well
 
 END MODULE PESTVAR
 

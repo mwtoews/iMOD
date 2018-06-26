@@ -405,17 +405,17 @@ CONTAINS
  ENDIF
 
 ! !## call fosm if covariance is known and jacobians are there
- IF(.FALSE.)THEN
-  !## set igroup lt 0 for followers in group
-  DO I=1,SIZE(PARAM)
-   IF(PARAM(I)%IACT.EQ.0)CYCLE
-   DO J=1,I-1 
-    IF(PARAM(J)%IACT.EQ.0)CYCLE
-    IF(PARAM(J)%IGROUP.EQ.PARAM(I)%IGROUP)THEN
-     PARAM(I)%IGROUP=-1*PARAM(I)%IGROUP; EXIT
-    ENDIF
-   ENDDO
-  ENDDO
+! IF(.FALSE.)THEN
+!  !## set igroup lt 0 for followers in group
+!  DO I=1,SIZE(PARAM)
+!   IF(PARAM(I)%IACT.EQ.0)CYCLE
+!   DO J=1,I-1 
+!    IF(PARAM(J)%IACT.EQ.0)CYCLE
+!    IF(PARAM(J)%IGROUP.EQ.PARAM(I)%IGROUP)THEN
+!     PARAM(I)%IGROUP=-1*PARAM(I)%IGROUP; EXIT
+!    ENDIF
+!   ENDDO
+!  ENDDO
 !
 !!## ibrahym
 !!  CALL IMOD_UTL_OPENASC(IUCOV,'d:\IMOD-MODELS\IBRAHYM_V2\DBASE\IMOD_USER\MODELS\ibV2_stat_fosm\totaal250\covariance_250_opt_4iter.txt','R')
@@ -437,7 +437,7 @@ CONTAINS
 !  ENDDO
 !  CDATE_SIM(1)='STEADY-STATE'
 !  CALL PESTWRITESTATISTICS_FOSM(NP,COV)
- ENDIF 
+! ENDIF 
  
  ALLOCATE(ZONE(N))
 
@@ -615,7 +615,7 @@ CONTAINS
  ENDDO
  
  N=0; DO I=1,SIZE(PARAM)
-  IF(PARAM(I)%IACT.EQ.0)CYCLE !.AND.PARAM(I)%IGROUP.LE.0)CYCLE
+  IF(PARAM(I)%IACT.EQ.0)CYCLE 
   SELECT CASE (PARAM(I)%PTYPE)
    CASE ('HF')
     N=N+1
@@ -1966,9 +1966,10 @@ END SUBROUTINE WRITEIPF
  EIGW=(EIGW*100.0D0)/SUM(EIGW)  
 
  !## condition number
- KAPPA=SQRT(EIGW(1))/SQRT(EIGW(NP))
+ !## get lowest non-zero
+ DO I=NP,1,-1; IF(EIGW(I).GT.0.0D0)EXIT; ENDDO
+ KAPPA=SQRT(EIGW(1))/SQRT(EIGW(I))
  IF(LPRINT)THEN
-!  WRITE(IUPESTOUT,'(/A,3F15.7/)') 'Condition Number:',SQRT(EIGW(1)),SQRT(EIGW(NP)),KAPPA
   WRITE(IUPESTOUT,'(/A,3F15.7/)') 'Condition Number (kappa):',LOG(KAPPA)
   WRITE(IUPESTOUT,'(/A)') '>>> If Kappa > 15, inversion is a concern due to parameters that are highly correlated <<<'
   WRITE(IUPESTOUT,'(A/)') '>>> If Kappa > 30, inversion is highly questionable due to parameters that are highly correlated <<<'

@@ -32,11 +32,13 @@ c   If not, see <http://water.usgs.gov/software/help/notice/>.
       MODULE GWFWELMODULE
         INTEGER,SAVE,POINTER  ::NWELLS,MXWELL,NWELVL,IWELCB,IPRWEL
         INTEGER,SAVE,POINTER  ::NPWEL,IWELPB,NNPWEL
+        integer,save,pointer  ::iwelsubsys
         CHARACTER(LEN=16),SAVE, DIMENSION(:),   POINTER     ::WELAUX
         REAL,             SAVE, DIMENSION(:,:), POINTER     ::WELL
       TYPE GWFWELTYPE
         INTEGER,POINTER  ::NWELLS,MXWELL,NWELVL,IWELCB,IPRWEL
         INTEGER,POINTER  ::NPWEL,IWELPB,NNPWEL
+        integer,pointer  ::iwelsubsys
         CHARACTER(LEN=16), DIMENSION(:),   POINTER     ::WELAUX
         REAL,              DIMENSION(:,:), POINTER     ::WELL
       END TYPE
@@ -54,12 +56,17 @@ C     ------------------------------------------------------------------
       use ulstrd_inferface                                              ! GCD
       USE GLOBAL,       ONLY:IOUT,NCOL,NROW,NLAY,IFREFM
       USE GWFWELMODULE, ONLY:NWELLS,MXWELL,NWELVL,IWELCB,IPRWEL,NPWEL,
-     1                       IWELPB,NNPWEL,WELAUX,WELL
+     1                       IWELPB,NNPWEL,WELAUX,WELL,
+     1                       iwelsubsys
 C
+      character     welsubsys*16                                        ! wsubsys
+
       CHARACTER*200 LINE
 C     ------------------------------------------------------------------
       ALLOCATE(NWELLS,MXWELL,NWELVL,IWELCB,IPRWEL)
       ALLOCATE(NPWEL,IWELPB,NNPWEL)
+      allocate(iwelsubsys)                                              ! wsubsys
+      
 C
 C1------IDENTIFY PACKAGE AND INITIALIZE NWELLS.
       WRITE(IOUT,1)IN
@@ -67,6 +74,7 @@ C1------IDENTIFY PACKAGE AND INITIALIZE NWELLS.
      1' INPUT READ FROM UNIT ',I4)
       NWELLS=0
       NNPWEL=0
+      iwelsubsys=0                                                      ! wsubsys
 C
 C2------READ MAXIMUM NUMBER OF WELLS AND UNIT OR FLAG FOR
 C2------CELL-BY-CELL FLOW TERMS.
@@ -102,12 +110,41 @@ C3------READ AUXILIARY VARIABLES AND PRINT FLAG.
    12       FORMAT(1X,'AUXILIARY WELL VARIABLE: ',A)
          END IF
          GO TO 10
+      else if(line(istart:istop).eq.'WSUBSYS') then                     ! wsubsys
+         call urword(line,lloc,istart,istop,1,n,r,iout,in)              ! wsubsys
+         welsubsys=line(istart:istop)                                   ! wsubsys
+         iwelsubsys=999                                                 ! wsubsys
+         go to 10                                                       ! wsubsys
       ELSE IF(LINE(ISTART:ISTOP).EQ.'NOPRINT') THEN
          WRITE(IOUT,13)
    13    FORMAT(1X,'LISTS OF WELL CELLS WILL NOT BE PRINTED')
          IPRWEL = 0
          GO TO 10
       END IF
+      
+c check or RSUBSYS has been defined and AUX variabel exist              ! wsubsys
+      if (iwelsubsys.gt.0) then                                         ! wsubsys
+         iwelsubsys=0                                                   ! wsubsys
+         do i=1,naux                                                    ! wsubsys
+            if (welsubsys.eq.welaux(i)) then                            ! wsubsys
+               iwelsubsys=i                                             ! wsubsys
+            endif                                                       ! wsubsys
+         enddo                                                          ! wsubsys
+         if (iwelsubsys.eq.0) then                                      ! wsubsys
+            ! ERROR defined variable not found                          ! wsubsys
+            write(iout,'(1x,3a)') 'ERROR RSUBSYS variable ',welsubsys,  ! wsubsys
+     1                     ' not defined as an auxiliary variable.'     ! wsubsys
+            call ustop(' ')                                             ! wsubsys
+         else                                                           ! wsubsys
+            ! rsubsys found                                             ! wsubsys
+            write(iout,'(1x,3a)') 'RSUBSYS variabel ',rivsubsys,        ! wsubsys
+     1                    ' used for sub-system indices.'               ! wsubsys
+            ! isubsys gets the column number of RIVR in which the       ! wsubsys
+            ! sub system indices                                        ! wsubsys
+            iwelsubsys=iwelsubsys+6                                     ! wsubsys
+         endif                                                          ! wsubsys
+      endif       
+      
 C3A-----THERE ARE FOUR INPUT VALUES PLUS ONE LOCATION FOR
 C3A-----CELL-BY-CELL FLOW.
       NWELVL=5+NAUX
@@ -166,7 +203,8 @@ C     ------------------------------------------------------------------
       use ulstrd_inferface                                              ! GCD
       USE GLOBAL,       ONLY:IOUT,NCOL,NROW,NLAY,IFREFM
       USE GWFWELMODULE, ONLY:NWELLS,MXWELL,NWELVL,IPRWEL,NPWEL,
-     1                       IWELPB,NNPWEL,WELAUX,WELL
+     1                       IWELPB,NNPWEL,WELAUX,WELL,
+     1                       iwelsubsys
 C
       CHARACTER*6 CWELL
 C     ------------------------------------------------------------------
@@ -218,6 +256,10 @@ C1B-----IF THERE ARE NEW NON-PARAMETER WELLS, READ THEM.
          CALL ULSTRD(NNPWEL,WELL,1,NWELVL,MXWELL,1,IN,IOUT,
      1            'WELL NO.  LAYER   ROW   COL   STRESS RATE',
      2             WELAUX,20,NAUX,IFREFM,NCOL,NROW,NLAY,4,4,IPRWEL)
+  
+         call pest1alpha_list('QR',NNPWEL,WELL,NWELVL,MXWELL,           ! IPEST
+     1                        iwelsubsys)                               ! IPEST
+
       END IF
       NWELLS=NNPWEL
 C
@@ -395,6 +437,7 @@ C  Deallocate WEL MEMORY
       USE GWFWELMODULE
 C
         CALL SGWF2WEL7PNT(IGRID)
+        deallocate(iwelsubsys)                                          ! wsubsys
         DEALLOCATE(NWELLS)
         DEALLOCATE(MXWELL)
         DEALLOCATE(NWELVL)
@@ -412,6 +455,7 @@ C
 C  Change WEL data to a different grid.
       USE GWFWELMODULE
 C
+        iwelsubsys=>gwfweldat(igrid)%iwelsubsys                         ! wsubsys
         NWELLS=>GWFWELDAT(IGRID)%NWELLS
         MXWELL=>GWFWELDAT(IGRID)%MXWELL
         NWELVL=>GWFWELDAT(IGRID)%NWELVL
@@ -429,6 +473,7 @@ C
 C  Save WEL data for a grid.
       USE GWFWELMODULE
 C
+        gwfweldat(igrid)%iwelsubsys=>iwelsubsys                         ! wsubsys
         GWFWELDAT(IGRID)%NWELLS=>NWELLS
         GWFWELDAT(IGRID)%MXWELL=>MXWELL
         GWFWELDAT(IGRID)%NWELVL=>NWELVL

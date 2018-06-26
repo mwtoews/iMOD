@@ -308,7 +308,7 @@ integer, intent(in), optional :: iopt1, iopt2
 character(len=256) :: line
 character(len=1024) :: errmsg
 integer :: i, j, k, ils, irow, icol, idat, irivsubsys, irivrfact,&
-           idrnsubsys, ihfbfact, nadj
+           idrnsubsys, iwelsubsys, ihfbfact, nadj
 real(kind=8) :: ppart, fct
 
 !###======================================================================
@@ -334,7 +334,7 @@ do i=1,size(param)
          irow=rlist(2,j); icol=rlist(3,j)
          if (int(ils).eq.int(rlist(irivsubsys,j))) buff(icol,irow,1) = real(j,8)
       end do
-      idat = 5 !4
+      idat = 5
    case('RI','II') ! river/isg infiltration factors
       errmsg = 'Cannot apply PEST scaling factor for river/isg infiltration factor'
       if (.not.present(iopt1)) call imod_utl_printtext(trim(errmsg),2)
@@ -357,8 +357,19 @@ do i=1,size(param)
          irow=rlist(2,j); icol=rlist(3,j)
          if (int(ils).eq.int(rlist(idrnsubsys,j))) buff(icol,irow,1) = real(j,8)
       end do
-      idat = 5 !2 !4
-   end select
+      idat = 5
+   case('QR') ! well rates
+      errmsg = 'Cannot apply PEST scaling factor for well rates'
+      if (.not.present(iopt1)) call imod_utl_printtext(trim(errmsg),2)
+      iwelsubsys = iopt1
+      if (iwelsubsys.eq.0) call imod_utl_printtext(trim(errmsg),2)
+      do j = 1, nlist ! match sybsystem number
+         irow=rlist(2,j); icol=rlist(3,j)
+         if (int(ils).eq.int(rlist(iwelsubsys,j))) buff(icol,irow,1) = real(j,8)
+      end do
+      idat = 4
+
+  end select
 end do
 
 ! allocate
@@ -369,7 +380,7 @@ if (pest_iter.eq.0) then
 
       if(.not.associated(param(i)%x))allocate(param(i)%x(param(i)%nodes))
       select case (trim(ptype))
-      case('RC','RI','IC','II','DC')
+      case('RC','RI','IC','II','DC','QR')
          do j=1,param(i)%nodes
             irow=param(i)%irow(j); icol=param(i)%icol(j)
             k = int(buff(icol,irow,1))
@@ -390,7 +401,7 @@ do i=1,size(param)
    IF(PARAM(I)%LOG)FCT=EXP(FCT); 
 
    select case (trim(ptype))
-   case('RC','RI','IC','II','DC')
+   case('RC','RI','IC','II','DC','QR')
       do j=1,param(i)%nodes
          irow=param(i)%irow(j); icol=param(i)%icol(j)
          k = int(buff(icol,irow,1))
