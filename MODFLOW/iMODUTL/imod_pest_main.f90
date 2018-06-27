@@ -69,7 +69,10 @@ CONTAINS
   !## open file
   IURUN=IMOD_UTL_GETUNIT()
   OPEN(IURUN,FILE=infile,STATUS='OLD',ACTION='READ',IOSTAT=IOS)
-  IF(IOS.NE.0)THEN; WRITE(*,'(A)') 'Can not find '//TRIM(infile); STOP; ENDIF
+  IF(IOS.NE.0)THEN
+   WRITE(*,'(A)') 'Can not find '//TRIM(infile)
+   STOP
+  ENDIF
 
   !## skip comment
   DO

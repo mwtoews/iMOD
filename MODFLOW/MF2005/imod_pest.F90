@@ -315,108 +315,110 @@ real(kind=8) :: ppart, fct
 
 if(.not.lipest)return
 
-! first, mark the cells
-buff = 0.0D0
+!## first, mark the cells
 do i=1,size(param)
 
-   if (trim(param(i)%ptype).ne.trim(ptype)) cycle
-   ils=param(i)%ils ! system/layer
+  !## not this package - skip it
+  if (trim(param(i)%ptype).ne.trim(ptype)) cycle
 
-   select case (trim(ptype))
+  !## fill buff with location of zone
+  buff=0.0d0
+  do j=1,param(i)%nodes
+   irow=param(i)%irow(j); icol=param(i)%icol(j)
+   !## save zone location number
+   buff(icol,irow,1)=real(j,8)
+  enddo
+
+  !## system/layer
+  ils=param(i)%ils 
+  !## factor
+  fct=param(i)%alpha(1); if(param(i)%log)fct=exp(fct)
+  
+  !## adjust
+  nadj = 0
+
+  !## modify package with location in zone
+  select case (trim(ptype))
    case('RC','IC') ! river/isg conductances
-      errmsg = 'Cannot apply PEST scaling factor for river/isg conductance'
-      if (.not.present(iopt1)) call imod_utl_printtext(trim(errmsg),2)
-      irivsubsys = iopt1
-      if (irivsubsys.eq.0) call imod_utl_printtext(trim(errmsg),2)
+     errmsg = 'Cannot apply PEST scaling factor for river/isg conductance'
+     if (.not.present(iopt1)) call imod_utl_printtext(trim(errmsg),2)
+     irivsubsys = iopt1
+     if (irivsubsys.eq.0) call imod_utl_printtext(trim(errmsg),2)
 
-      if (trim(ptype).eq.'IC') ils=-ils
-      do j = 1, nlist ! match sybsystem number
-         irow=rlist(2,j); icol=rlist(3,j)
-         if (int(ils).eq.int(rlist(irivsubsys,j))) buff(icol,irow,1) = real(j,8)
-      end do
-      idat = 5
+     idat = 5
+     if (trim(ptype).eq.'IC') ils=-ils
+     do j = 1, nlist
+        irow=rlist(2,j); icol=rlist(3,j)
+        !## not in current zone
+        if(buff(icol,irow,1).eq.0.0d0)cycle
+        !## adjust for selected system
+        if (ils.eq.int(rlist(irivsubsys,j)))then
+         nadj=nadj+1
+         rlist(idat,j)=rlist(idat,j)*fct
+        endif
+     end do
+
    case('RI','II') ! river/isg infiltration factors
-      errmsg = 'Cannot apply PEST scaling factor for river/isg infiltration factor'
-      if (.not.present(iopt1)) call imod_utl_printtext(trim(errmsg),2)
-      if (.not.present(iopt2)) call imod_utl_printtext(trim(errmsg),2)
-      irivsubsys = iopt1; irivrfact = iopt2
-      if (irivrfact.eq.0.or.irivsubsys.eq.0) call imod_utl_printtext(trim(errmsg),2)
+     errmsg = 'Cannot apply PEST scaling factor for river/isg infiltration factor'
+     if (.not.present(iopt1)) call imod_utl_printtext(trim(errmsg),2)
+     if (.not.present(iopt2)) call imod_utl_printtext(trim(errmsg),2)
+     irivsubsys = iopt1; irivrfact = iopt2
+     if (irivrfact.eq.0.or.irivsubsys.eq.0) call imod_utl_printtext(trim(errmsg),2)
 
-      if (trim(ptype).eq.'II') ils=-ils
-      do j = 1, nlist ! match sybsystem number
-         irow=rlist(2,j); icol=rlist(3,j)
-         if (int(ils).eq.int(rlist(irivsubsys,j))) buff(icol,irow,1) = real(j,8)
-      end do
-      idat = irivrfact
+     idat = irivrfact
+     if (trim(ptype).eq.'II') ils=-ils
+     do j = 1, nlist
+        irow=rlist(2,j); icol=rlist(3,j)
+        !## not in current zone
+        if(buff(icol,irow,1).eq.0.0d0)cycle
+        !## adjust for selected system
+        if (ils.eq.int(rlist(irivsubsys,j)))then
+         nadj=nadj+1
+         rlist(idat,j)=rlist(idat,j)*fct
+        endif
+     end do
+
    case('DC') ! drain conductances
-      errmsg = 'Cannot apply PEST scaling factor for drain conductance'
-      if (.not.present(iopt1)) call imod_utl_printtext(trim(errmsg),2)
-      idrnsubsys = iopt1
-      if (idrnsubsys.eq.0) call imod_utl_printtext(trim(errmsg),2)
-      do j = 1, nlist ! match sybsystem number
-         irow=rlist(2,j); icol=rlist(3,j)
-         if (int(ils).eq.int(rlist(idrnsubsys,j))) buff(icol,irow,1) = real(j,8)
-      end do
-      idat = 5
+     errmsg = 'Cannot apply PEST scaling factor for drain conductance'
+     if (.not.present(iopt1)) call imod_utl_printtext(trim(errmsg),2)
+     idrnsubsys = iopt1
+     if (idrnsubsys.eq.0) call imod_utl_printtext(trim(errmsg),2)
+     idat = 5
+     do j = 1, nlist ! match sybsystem number
+        irow=rlist(2,j); icol=rlist(3,j)
+        !## not in current zone
+        if(buff(icol,irow,1).eq.0.0d0)cycle
+        !## adjust for selected system
+        if (ils.eq.int(rlist(idrnsubsys,j)))then
+         nadj=nadj+1
+         rlist(idat,j)=rlist(idat,j)*fct
+        endif
+     end do
+
    case('QR') ! well rates
-      errmsg = 'Cannot apply PEST scaling factor for well rates'
-      if (.not.present(iopt1)) call imod_utl_printtext(trim(errmsg),2)
-      iwelsubsys = iopt1
-      if (iwelsubsys.eq.0) call imod_utl_printtext(trim(errmsg),2)
-      do j = 1, nlist ! match sybsystem number
-         irow=rlist(2,j); icol=rlist(3,j)
-         if (int(ils).eq.int(rlist(iwelsubsys,j))) buff(icol,irow,1) = real(j,8)
-      end do
-      idat = 4
+     errmsg = 'Cannot apply PEST scaling factor for well rates'
+     if (.not.present(iopt1)) call imod_utl_printtext(trim(errmsg),2)
+     iwelsubsys = iopt1
+     if (iwelsubsys.eq.0) call imod_utl_printtext(trim(errmsg),2)
+     idat = 4
+     do j = 1, nlist ! match sybsystem number
+        irow=rlist(2,j); icol=rlist(3,j)
+        !## not in current zone
+        if(buff(icol,irow,1).eq.0.0d0)cycle
+        !## adjust for selected system
+        if (ils.eq.int(rlist(iwelsubsys,j)))then
+         nadj=nadj+1
+         rlist(idat,j)=rlist(idat,j)*fct
+        endif
+     end do
 
-  end select
-end do
-
-! allocate
-if (pest_iter.eq.0) then
-   do i=1,size(param)
-      if (trim(param(i)%ptype).ne.trim(ptype)) cycle
-      ils=param(i)%ils ! system
-
-      if(.not.associated(param(i)%x))allocate(param(i)%x(param(i)%nodes))
-      select case (trim(ptype))
-      case('RC','RI','IC','II','DC','QR')
-         do j=1,param(i)%nodes
-            irow=param(i)%irow(j); icol=param(i)%icol(j)
-            k = int(buff(icol,irow,1))
-            if (k.gt.0) then
-               param(i)%x(j)=rlist(idat,k)*param(i)%f(j)
-            end if
-         end do
-      end select
-   end do
-end if
-
-! adjust
-do i=1,size(param)
-   nadj = 0
-   if (trim(param(i)%ptype).ne.trim(ptype)) cycle
-   fct=param(i)%alpha(1); ils=param(i)%ils ! system
-
-   IF(PARAM(I)%LOG)FCT=EXP(FCT); 
-
-   select case (trim(ptype))
-   case('RC','RI','IC','II','DC','QR')
-      do j=1,param(i)%nodes
-         irow=param(i)%irow(j); icol=param(i)%icol(j)
-         k = int(buff(icol,irow,1))
-         if (k.gt.0) then
-            nadj = nadj + 1
-            ppart        =rlist(idat,k)-param(i)%x(j)
-            rlist(idat,k)=ppart+param(i)%x(j)*fct
-         end if
-      end do
-   case('HF')
+    case('HF')
       errmsg = 'Cannot apply PEST scaling factor for horizontal flow barrier'
       if (.not.present(iopt1)) call imod_utl_printtext(trim(errmsg),2)
       ihfbfact = iopt1
       if (ihfbfact.ne.1) call imod_utl_printtext(trim(errmsg),2)
       do j = 1, nlist
+         !## adjust for selected system
          if (int(rlist(7,j)).eq.ils) then
             nadj = nadj + 1
             rlist(6,j) = rlist(6,j)*fct
