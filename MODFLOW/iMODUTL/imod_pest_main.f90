@@ -577,7 +577,6 @@ CONTAINS
  DO I=1,SIZE(PARAM)
  
   !## parameter active and main of group
-!  IF(PARAM(I)%IGROUP.LE.0)CYCLE
   IZ=PARAM(I)%IZONE
   IP=ILOCS(IZ)
   ND=0; DO J=1,SIZE(ZONE)
@@ -697,13 +696,19 @@ CONTAINS
   ENDIF 
  ENDDO
 
- !## set igroup lt 0 for followers in group
+ !## set igroup lt 0 for followers in group - check whether factors within group are equal --- need to be
+ !## make sure group with active nodes is positive rest is negative
  DO I=1,SIZE(PARAM)
   IF(PARAM(I)%IACT.EQ.0)CYCLE
   DO J=1,I-1 
    IF(PARAM(J)%IACT.EQ.0)CYCLE
    IF(PARAM(J)%IGROUP.EQ.PARAM(I)%IGROUP)THEN
-    PARAM(I)%IGROUP=-1*PARAM(I)%IGROUP; EXIT
+   !## check factor
+   IF(PARAM(J)%INI.NE.PARAM(I)%INI)THEN
+    CALL IMOD_UTL_PRINTTEXT('Initial factor in an group need to be identicial',0)
+    CALL IMOD_UTL_PRINTTEXT('Check initial factors for group '//TRIM(IMOD_UTL_ITOS(PARAM(J)%IGROUP)),2)
+   ENDIF
+   PARAM(I)%IGROUP=-1*PARAM(I)%IGROUP; EXIT
    ENDIF
   ENDDO
  ENDDO
@@ -1597,7 +1602,7 @@ END SUBROUTINE WRITEIPF
   ENDIF
 
   !## construct jqj - normal matrix/hessian
-  CALL PEST1JQJ(JQJ,EIGW,EIGV,COV,NP,.FALSE.,ROOT)
+  CALL PEST1JQJ(JQJ,EIGW,EIGV,COV,NP,LSENS,ROOT)
 
   !## multiply lateral sensitivities with sensitivities in case pest_niter=0
   IF(ITRIES.EQ.1)THEN
@@ -1867,12 +1872,12 @@ END SUBROUTINE WRITEIPF
     JQJ(N,1)=DJ1
     IF(M.GT.1)JQJ(N,2)=JQJ(N,2)+ABS(JQJ(N,1))
    ENDDO
-   WRITE(iu,'(2(F10.2,A1),I10,A1,F10.2,A,A32,999(G15.7,A1))') MSR%X(I),',',MSR%Y(I),',',MSR%L(I),',', &
+   WRITE(IU,'(2(F10.2,A1),I10,A1,F10.2,A,A32,999(G15.7,A1))') MSR%X(I),',',MSR%Y(I),',',MSR%L(I),',', &
            MSR%W(I),',',TRIM(MSR%CLABEL(I))//',',(JQJ(J,1),',',J=1,N)
   ENDDO
-  IF(M.EQ.1)THEN; WRITE(iu,'(/44X,A32,999(G15.7,A1))') 'Total,',(ABS(JQJ(J,1)),',',J=1,N)
-  ELSE; WRITE(iu,'(/44X,A32,999(G15.7,A1))') 'Total,',(JQJ(J,2),',',J=1,N); ENDIF
-  STOP
+  IF(M.EQ.1)THEN; WRITE(IU,'(/44X,A32,999(G15.7,A1))') 'TOTAL,',(ABS(JQJ(J,1)),',',J=1,N)
+  ELSE; WRITE(IU,'(/44X,A32,999(G15.7,A1))') 'TOTAL,',(JQJ(J,2),',',J=1,N); ENDIF
+!  STOP
  ENDIF
  
  !## save msr%dh() vector per parameter as csv ... to be read in again
@@ -2081,6 +2086,8 @@ END SUBROUTINE WRITEIPF
  IF(ALLOCATED(B   ))DEALLOCATE(B)
  IF(ALLOCATED(JQJB))DEALLOCATE(JQJB)
 
+ IF(LSENS)STOP
+ 
  END SUBROUTINE PEST1JQJ
 
  !###====================================================================
@@ -2113,7 +2120,7 @@ END SUBROUTINE WRITEIPF
    J=0; DO IP2=1,SIZE(PARAM)
     IF(ABS(PARAM(IP2)%IACT).EQ.1.AND.PARAM(IP2)%IGROUP.GT.0)THEN
      J=J+1
-     IF(ABS(PARAM(IP1)%IGROUP).EQ.PARAM(IP1)%IGROUP)THEN
+     IF(ABS(PARAM(IP1)%IGROUP).EQ.PARAM(IP2)%IGROUP)THEN
       G=U(J); EXIT
      ENDIF
     ENDIF
@@ -2225,8 +2232,6 @@ END SUBROUTINE WRITEIPF
  ENDDO
 
 ! DO J=1,SIZE(U); WRITE(*,*) J,U(J); ENDDO
- 
-!PAUSE
 
  END FUNCTION PESTUPGRADEVECTOR
 
