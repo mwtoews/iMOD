@@ -43,6 +43,7 @@ TYPE(BATCHOBJ),ALLOCATABLE,DIMENSION(:) :: PEST_IBATCH
 TYPE PARAOBJ
  INTEGER :: IACT            !## active (yes=1;no=0)
  CHARACTER(LEN=2) :: PTYPE  !## parameter type
+ CHARACTER(LEN=15) :: ACRONYM  !## acronym for parameter
  CHARACTER(LEN=256) :: EXBATFILE  !## external batch file
  REAL(KIND=8) :: MIN,MAX,INI,FADJ   !## min,max,initial value of parameter
  DOUBLE PRECISION :: TJOBJ  !## objective function value

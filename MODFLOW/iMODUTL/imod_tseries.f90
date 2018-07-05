@@ -193,7 +193,7 @@ END SUBROUTINE
 !###====================================================================
 SUBROUTINE TSERIE1INIT2(LPEST,LSS,MV,root,subm)
 !###====================================================================
-USE IMOD_UTL !, ONLY : IMOD_UTL_PRINTTEXT,IMOD_UTL_STRING,IMOD_UTL_ITOS,IMOD_UTL_RTOS,IMOD_UTL_OPENASC,IMOD_UTL_CAP,IMOD_UTL_CREATEDIR,IMOD_UTL_SWAPSLASH,OS,IMOD_UTL_GETUNIT,IMOD_UTL_DELETE_BY_UNIT
+USE IMOD_UTL 
 USE TSVAR
 IMPLICIT NONE
 ! arguments
