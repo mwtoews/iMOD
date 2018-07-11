@@ -716,16 +716,19 @@ CONTAINS
  !## set igroup lt 0 for followers in group - check whether factors within group are equal --- need to be
  !## make sure group with active nodes is positive rest is negative
  DO I=1,SIZE(PARAM)
-  IF(PARAM(I)%IACT.EQ.0)CYCLE
+  IF(PARAM(I)%IACT.EQ.0)THEN
+   PARAM(I)%IGROUP=0
+   CYCLE
+  ENDIF
   DO J=1,I-1 
    IF(PARAM(J)%IACT.EQ.0)CYCLE
    IF(PARAM(J)%IGROUP.EQ.PARAM(I)%IGROUP)THEN
-   !## check factor
-   IF(PARAM(J)%INI.NE.PARAM(I)%INI)THEN
-    CALL IMOD_UTL_PRINTTEXT('Initial factor in an group need to be identicial',0)
-    CALL IMOD_UTL_PRINTTEXT('Check initial factors for group '//TRIM(IMOD_UTL_ITOS(PARAM(J)%IGROUP)),2)
-   ENDIF
-   PARAM(I)%IGROUP=-1*PARAM(I)%IGROUP; EXIT
+    !## check factor
+    IF(PARAM(J)%INI.NE.PARAM(I)%INI)THEN
+     CALL IMOD_UTL_PRINTTEXT('Initial factor in an group need to be identicial',0)
+     CALL IMOD_UTL_PRINTTEXT('Check initial factors for group '//TRIM(IMOD_UTL_ITOS(PARAM(J)%IGROUP)),2)
+    ENDIF
+    PARAM(I)%IGROUP=-1*PARAM(I)%IGROUP; EXIT
    ENDIF
   ENDDO
  ENDDO
@@ -1007,16 +1010,16 @@ CONTAINS
        TRIM(IMOD_UTL_DTOS(TJ,'G',7))//')',-1,IUPESTOUT)
    ENDIF
 
-   !## update alpha for parameters in same group
-   DO I=1,SIZE(PARAM)
-    !## skip inactive parameters
-    IF(PARAM(I)%IACT.EQ.0)CYCLE
-    IF(PARAM(I)%IGROUP.GT.0)THEN
-     DO J=1,SIZE(PARAM)
-      IF(PARAM(I)%IGROUP.EQ.ABS(PARAM(J)%IGROUP))PARAM(J)%ALPHA(1)=PARAM(I)%ALPHA(1)
-     ENDDO
-    ENDIF
-   ENDDO
+!   !## update alpha for parameters in same group
+!   DO I=1,SIZE(PARAM)
+!    !## skip inactive parameters
+!    IF(PARAM(I)%IACT.EQ.0)CYCLE
+!    IF(PARAM(I)%IGROUP.GT.0)THEN
+!     DO J=1,SIZE(PARAM)
+!      IF(PARAM(I)%IGROUP.EQ.ABS(PARAM(J)%IGROUP))PARAM(J)%ALPHA(1)=PARAM(I)%ALPHA(1)
+!     ENDDO
+!    ENDIF
+!   ENDDO
    
    IMPROVEMENT=0; DO I=1,SIZE(PARAM)
     IF(PARAM(I)%IACT.EQ.0)CYCLE
@@ -2178,43 +2181,40 @@ END SUBROUTINE WRITEIPF
  IF(PRESENT(LAMBDARESET))LAMBDARESET=.FALSE.
  
  !## adjust vector for fct (line-search)
- !I=0; DO IP1=1,SIZE(PARAM)
- ! IF(PARAM(IP1)%IACT.NE.1.OR.PARAM(IP1)%IGROUP.LE.0)CYCLE
- ! I=I+1; U(I)=U(I)*FCT
- !ENDDO
- U=U*FCT
- 
- DO I=1,SIZE(U); WRITE(IUPESTOUT,*) I,U(I); ENDDO
+ I=0; DO IP1=1,SIZE(PARAM)
+  IF(PARAM(IP1)%IACT.NE.1.OR.PARAM(IP1)%IGROUP.LE.0)CYCLE
+  I=I+1; U(I)=U(I)*FCT
+  WRITE(IUPESTOUT,'(3I5,1X,G15.9)') IP1,PARAM(IP1)%IACT,PARAM(IP1)%IGROUP,U(I)
+ ENDDO
 
- ! I=0; 
+ !## fill in by default 
  DO IP1=1,SIZE(PARAM)
-  !## inactive parameter
-  IF(PARAM(IP1)%IACT.NE.1)THEN
-   G=0.0D0
-!  ELSEIF(PARAM(IP1)%IGROUP.LE.0)THEN
-  !## find gradient for group
-  ELSEIF(ABS(PARAM(IP1)%IGROUP).GT.0)THEN
-   J=0; DO IP2=1,SIZE(PARAM)
-    IF(ABS(PARAM(IP2)%IACT).EQ.1.AND.PARAM(IP2)%IGROUP.GT.0)THEN
-     J=J+1
-     IF(ABS(PARAM(IP1)%IGROUP).EQ.PARAM(IP2)%IGROUP)THEN
-      G=U(J); EXIT
-     ENDIF
+  PARAM(IP1)%ALPHA(1)=PARAM(IP1)%ALPHA(2)
+ ENDDO
+ 
+ I=0
+ DO IP1=1,SIZE(PARAM)
+!  !## inactive parameter or insensitive parameter
+!  IF(PARAM(IP1)%IACT.EQ. 0.OR. &
+!    (PARAM(IP1)%IACT.EQ.-1.AND.PARAM(IP1)%IGROUP.GT.0))THEN
+!   !## copy previous parameter value
+!   PARAM(IP1)%ALPHA(1)=PARAM(IP1)%ALPHA(2)
+!  !## find gradient for group
+!  ELSE
+  IF(PARAM(IP1)%IACT.EQ.1)THEN
+   I=I+1; DO IP2=1,SIZE(PARAM)
+    IF(PARAM(IP1)%IGROUP.EQ.ABS(PARAM(IP2)%IGROUP))THEN
+     PARAM(IP2)%ALPHA(1)=PARAM(IP2)%ALPHA(2)+U(I)
     ENDIF
    ENDDO
   ELSE
    !## cannot come here
    WRITE(*,'(A)') 'cannot come here'; pause; stop
-  !   IF(PARAM(IP1)%IACT.NE.1)THEN
-!    G=0.0D0
-!   ELSE
-!   I=I+1; G=U(I)
-!   ENDIF
   ENDIF
+ ENDDO  
 
-  !## update parameters
-  PARAM(IP1)%ALPHA(1)=PARAM(IP1)%ALPHA(2)+G
-
+ DO IP1=1,SIZE(PARAM)
+  WRITE(IUPESTOUT,'(3I5,3(1X,G15.9))') IP1,PARAM(IP1)%IACT,PARAM(IP1)%IGROUP,PARAM(IP1)%ALPHA(1),PARAM(IP1)%ALPHA(2)
  ENDDO
 
  !## check whether boundary has been hit or maximum adjustment exceeds
@@ -2225,6 +2225,7 @@ END SUBROUTINE WRITEIPF
    
    !## inactive parameter
    IF(PARAM(IP1)%IACT.NE.1)CYCLE
+   
    !## check size of adjustment
    IF(PARAM(IP1)%LOG)THEN
     F=EXP(PARAM(IP1)%ALPHA(1))/EXP(PARAM(IP1)%ALPHA(2))
