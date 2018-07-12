@@ -186,9 +186,16 @@ do i=1,size(param)
       call imod_utl_printtext('Something went wrong for PEST, missing parameter '//trim(ptype),2)
 
    end select
-   line='Param. '//trim(imod_utl_itos(i))//'['//param(i)%ptype//',n='//trim(imod_utl_itos(param(i)%nodes))// &
-      ',f='//trim(imod_utl_dtos(fct,'f',7))//',ils='//trim(imod_utl_itos(ils))//']'
-    WRITE(*,*) TRIM(LINE)
+   
+   if(param(i)%acronym.eq.'')then
+    line='Param. '//trim(imod_utl_itos(i))//'['//param(i)%ptype//',n='//trim(imod_utl_itos(param(i)%nodes))// &
+       ',f='//trim(imod_utl_dtos(fct,'f',7))//',ils='//trim(imod_utl_itos(ils))//']'
+   else
+    line='Param. '//trim(imod_utl_itos(i))//'['//trim(param(i)%acronym)//','//param(i)%ptype//',n='//trim(imod_utl_itos(param(i)%nodes))// &
+       ',f='//trim(imod_utl_dtos(fct,'f',7))//',ils='//trim(imod_utl_itos(ils))//']'
+   endif
+   write(*,'(a)') trim(line)
+!      WRITE(*,*) TRIM(LINE)
  end do
 
  !## process any pilotpoints per modellayer/ adjustable parameter
@@ -226,7 +233,7 @@ do i=1,size(param)
   !# next parameter, this one is not used
   IF(NXYZ.EQ.0)CYCLE
 
-  NODATA=-999.99; ALLOCATE(XPP(NCOL,NROW)); XPP=NODATA
+  NODATA=-999.99D0; ALLOCATE(XPP(NCOL,NROW)); XPP=NODATA
   IF(PEST_KRANGE.GT.0.0)THEN
    RANGE=PEST_KRANGE
   ELSE
@@ -423,8 +430,19 @@ do i=1,size(param)
       end do
    end select
 
-   line=' * '//param(i)%ptype//' adjusted ('//trim(imod_utl_itos(nadj))//') with alpha='//trim(imod_utl_dtos(fct,'f',7))
-   call imod_utl_printtext(trim(line),-1,iupestout)
+!   if(kper.eq.1)then
+    if(trim(param(i)%acronym).eq.'')then
+!    line=' * '//param(i)%ptype//' adjusted ('//trim(imod_utl_itos(nadj))//') with alpha='//trim(imod_utl_dtos(fct,'f',7))
+     line='Param. '//trim(imod_utl_itos(i))//'['//param(i)%ptype//',n='//trim(imod_utl_itos(param(i)%nodes))// &
+       ',f='//trim(imod_utl_dtos(fct,'f',7))//',ils='//trim(imod_utl_itos(ils))//']'
+     else
+      line='Param. '//trim(imod_utl_itos(i))//'['//trim(param(i)%acronym)//','//param(i)%ptype//',n='//trim(imod_utl_itos(param(i)%nodes))// &
+       ',f='//trim(imod_utl_dtos(fct,'f',7))//',ils='//trim(imod_utl_itos(ils))//']'
+!    line=' * '//param(i)%ptype//' adjusted ('//trim(imod_utl_itos(nadj))//') with alpha='//trim(imod_utl_dtos(fct,'f',7))
+    endif
+    write(*,'(a)') trim(line)
+!   endif
+!   call imod_utl_printtext(trim(line),-1,iupestout)
 
 end do
 

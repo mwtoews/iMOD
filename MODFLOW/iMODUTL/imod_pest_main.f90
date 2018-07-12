@@ -369,6 +369,14 @@ CONTAINS
    IF(IOS.EQ.0)THEN
     IF(J.EQ.0)PARAM(I)%LOG=.FALSE.
     IF(J.EQ.1)PARAM(I)%LOG=.TRUE.
+   ELSE
+    !## overrule default settings for log normal
+    SELECT CASE (PARAM(I)%PTYPE)
+     CASE ('KD','KH','KV','VC','SC','RC','RI','IC','II','DC','AF','MS','MC','VA','HF','EX','EP','QR')
+      PARAM(I)%LOG=.TRUE.
+     CASE DEFAULT
+      PARAM(I)%LOG=.FALSE.    
+    END SELECT
    ENDIF
   ENDIF
   
@@ -377,27 +385,6 @@ CONTAINS
    CALL IMOD_UTL_PRINTTEXT(' reading: '//TRIM(LINE),0)
    CALL IMOD_UTL_PRINTTEXT('Busy processing module: '//TRIM(CMOD(PPST)),2)
   ENDIF
-
-  !## overrule default settings for log normal
-  SELECT CASE (PARAM(I)%PTYPE)
-   CASE ('KD','KH','KV','VC','SC','RC','RI','IC','II','DC','AF','MS','MC','VA','HF','EX','EP')
-    PARAM(I)%LOG=.TRUE.
-   CASE DEFAULT
-    PARAM(I)%LOG=.FALSE.    
-  END SELECT
-
- ! IF(IOS.NE.0)THEN
- !  READ(LINE,*,IOSTAT=IOS) PARAM(I)%IACT, &  !## iact
- !      PARAM(I)%PTYPE, & !## ptype
- !      PARAM(I)%ILS, &   !## ilayer/system
- !      PARAM(I)%IZONE, & !## zone number
- !      PARAM(I)%INI, &   !## initial value
- !      PARAM(I)%DELTA, & !## finite difference step
- !      PARAM(I)%MIN, &   !## minimal value
- !      PARAM(I)%MAX,&    !## maximal value
- !      PARAM(I)%FADJ     !## maximal adjust factor
- !  PARAM(I)%IGROUP=I     !## group number
- ! ENDIF
  
   !## read external filename for external parameters
   IF(PARAM(I)%PTYPE.EQ.'EX')THEN
@@ -405,7 +392,7 @@ CONTAINS
    READ(LINE,'(A256)',IOSTAT=IOS) PARAM(I)%EXBATFILE
   ENDIF
   !## maximal adjust factor
-  IF(PARAM(I)%FADJ.LE.1.0)THEN
+  IF(PARAM(I)%FADJ.LE.1.0D0)THEN
    CALL IMOD_UTL_PRINTTEXT('Maximal Adjustment Factor should be at least greater than 1.0',0)
    CALL IMOD_UTL_PRINTTEXT('Parameter '//TRIM(ITOS(I))//' has a value of '//TRIM(IMOD_UTL_DTOS(PARAM(I)%FADJ,'F',3)),2)
   ENDIF
@@ -413,7 +400,7 @@ CONTAINS
   ALLOCATE(PARAM(I)%ALPHA_HISTORY(0:PEST_NITER))
   ALLOCATE(PARAM(I)%ALPHA_ERROR_VARIANCE(0:PEST_NITER))
   PARAM(I)%ALPHA_HISTORY(0)=PARAM(I)%INI
-  PARAM(I)%ALPHA_ERROR_VARIANCE=0.0
+  PARAM(I)%ALPHA_ERROR_VARIANCE=0.0D0
   PARAM(I)%PTYPE=IMOD_UTL_CAPF(PARAM(I)%PTYPE,'U')
  ENDDO
 
@@ -717,7 +704,7 @@ CONTAINS
  !## make sure group with active nodes is positive rest is negative
  DO I=1,SIZE(PARAM)
   IF(PARAM(I)%IACT.EQ.0)THEN
-   PARAM(I)%IGROUP=0
+!   PARAM(I)%IGROUP=0
    CYCLE
   ENDIF
   DO J=1,I-1 
@@ -1041,7 +1028,7 @@ CONTAINS
    DO I=1,SIZE(PARAM)
     ILOG=0; IF(PARAM(I)%LOG)ILOG=1
     IF(PARAM(I)%LOG)THEN
-     WRITE(IUPESTRUNFILE,'(I2,1X,A,1X,2(I4,1X),5(F10.3,1X),I4,1X,I2)') ABS(PARAM(I)%IACT), &  !## iact
+     WRITE(IUPESTRUNFILE,'(I2,1X,A,1X,2(I4,1X),5(F10.3,1X),I4,1X,I2,1X,A)') ABS(PARAM(I)%IACT), &  !## iact
          PARAM(I)%PTYPE, &         !## ptype
          PARAM(I)%ILS, &           !## ilayer/system
          PARAM(I)%IZONE, &         !## zone number
@@ -1051,9 +1038,10 @@ CONTAINS
          EXP(PARAM(I)%MAX),&       !## maximal value
          PARAM(I)%FADJ,&           !## maximal adjust factor
          ABS(PARAM(I)%IGROUP),&    !## group number
-         ILOG                      !## log transformed
+         ILOG,&                    !## log transformed
+         TRIM(PARAM(I)%ACRONYM)
     ELSE
-     WRITE(IUPESTRUNFILE,'(I2,1X,A,1X,2(I4,1X),5(F10.3,1X),I4,1X,I2)') ABS(PARAM(I)%IACT), &  !## iact
+     WRITE(IUPESTRUNFILE,'(I2,1X,A,1X,2(I4,1X),5(F10.3,1X),I4,1X,I2,1X,A)') ABS(PARAM(I)%IACT), &  !## iact
          PARAM(I)%PTYPE, & !## ptype
          PARAM(I)%ILS, &   !## ilayer/system
          PARAM(I)%IZONE, & !## zone number
@@ -1063,7 +1051,8 @@ CONTAINS
          PARAM(I)%MAX,&    !## maximal value
          PARAM(I)%FADJ,&   !## maximal adjust factor
          ABS(PARAM(I)%IGROUP),& !## group number
-         ILOG              !## log transformed
+         ILOG, &            !## log transformed
+         TRIM(PARAM(I)%ACRONYM)
     ENDIF 
    ENDDO
 
@@ -1517,9 +1506,10 @@ END SUBROUTINE WRITEIPF
   PARAM%ALPHA(1)=PARAM%ALPHA(2)
   !## adjust all parameters within the same group
   DO I=PEST_IGRAD,SIZE(PARAM)
+   IF(PARAM(I)%IACT.EQ.0)CYCLE
    IF(ABS(PARAM(I)%IGROUP).EQ.ABS(PARAM(PEST_IGRAD)%IGROUP))THEN
     PARAM(I)%ALPHA(1)=PARAM(I)%ALPHA(2)+PARAM(I)%DELTA
-    IF(PARAM(I)%IGROUP.GT.0)THEN
+!    IF(PARAM(I)%IGROUP.GT.0)THEN
      IF(PARAM(I)%LOG)THEN
       FCT=EXP(PARAM(I)%ALPHA(1))
      ELSE
@@ -1530,7 +1520,13 @@ END SUBROUTINE WRITEIPF
                   ';izone='//TRIM(IMOD_UTL_ITOS(PARAM(I)%IZONE))// &
                   ';igroup='//TRIM(IMOD_UTL_ITOS(PARAM(I)%IGROUP))// &
                   ';factor='//TRIM(IMOD_UTL_DTOS(FCT,'*',1)),0)
-    ENDIF
+     WRITE(IUPESTOUT,'(A)') 'Adjusting Parameter '//TRIM(PARAM(I)%PTYPE)// &
+                  '['//TRIM(PARAM(I)%ACRONYM)//']'// &
+                  ';ils='//TRIM(IMOD_UTL_ITOS(PARAM(I)%ILS))// &
+                  ';izone='//TRIM(IMOD_UTL_ITOS(PARAM(I)%IZONE))// &
+                  ';igroup='//TRIM(IMOD_UTL_ITOS(PARAM(I)%IGROUP))// &
+                  ';factor='//TRIM(IMOD_UTL_DTOS(FCT,'*',1))
+!    ENDIF
    ENDIF
   ENDDO
  ELSE
@@ -2194,28 +2190,18 @@ END SUBROUTINE WRITEIPF
  
  I=0
  DO IP1=1,SIZE(PARAM)
-!  !## inactive parameter or insensitive parameter
-!  IF(PARAM(IP1)%IACT.EQ. 0.OR. &
-!    (PARAM(IP1)%IACT.EQ.-1.AND.PARAM(IP1)%IGROUP.GT.0))THEN
-!   !## copy previous parameter value
-!   PARAM(IP1)%ALPHA(1)=PARAM(IP1)%ALPHA(2)
-!  !## find gradient for group
-!  ELSE
   IF(PARAM(IP1)%IACT.EQ.1)THEN
    I=I+1; DO IP2=1,SIZE(PARAM)
     IF(PARAM(IP1)%IGROUP.EQ.ABS(PARAM(IP2)%IGROUP))THEN
      PARAM(IP2)%ALPHA(1)=PARAM(IP2)%ALPHA(2)+U(I)
     ENDIF
    ENDDO
-  ELSE
-   !## cannot come here
-   WRITE(*,'(A)') 'cannot come here'; pause; stop
   ENDIF
  ENDDO  
 
- DO IP1=1,SIZE(PARAM)
-  WRITE(IUPESTOUT,'(3I5,3(1X,G15.9))') IP1,PARAM(IP1)%IACT,PARAM(IP1)%IGROUP,PARAM(IP1)%ALPHA(1),PARAM(IP1)%ALPHA(2)
- ENDDO
+! DO IP1=1,SIZE(PARAM)
+!  WRITE(IUPESTOUT,'(3I5,3(1X,G15.9))') IP1,PARAM(IP1)%IACT,PARAM(IP1)%IGROUP,PARAM(IP1)%ALPHA(1),PARAM(IP1)%ALPHA(2)
+! ENDDO
 
  !## check whether boundary has been hit or maximum adjustment exceeds
  IF(LCHECK)THEN
@@ -2346,10 +2332,9 @@ END SUBROUTINE WRITEIPF
   
  ENDDO
 
-! DO J=1,SIZE(U); WRITE(IUPESTOUT,*) J,U(J); ENDDO
- WRITE(IUPESTOUT,*) 
+ WRITE(IUPESTOUT,*) 'final ones'
  DO I=1,SIZE(PARAM)
-  WRITE(IUPESTOUT,'(3I5,1x,2G15.9)') I,PARAM(I)%IACT,PARAM(I)%IGROUP,EXP(PARAM(I)%ALPHA(1)),EXP(PARAM(I)%ALPHA(2))
+  WRITE(IUPESTOUT,'(3I5,1x,2G15.9)') I,PARAM(I)%IACT,PARAM(I)%IGROUP,PARAM(I)%ALPHA(1),PARAM(I)%ALPHA(2)
  ENDDO
  WRITE(IUPESTOUT,*) 
  FLUSH(IUPESTOUT)
@@ -2709,19 +2694,24 @@ END SUBROUTINE WRITEIPF
  PJ=0.0D0
 ! IF(PEST_IREGULARISATION.EQ.1)CALL PEST_GETQPP(NP,.TRUE.)
   
- CALL IMOD_UTL_PRINTTEXT('Best Match Value   :             '//TRIM(IMOD_UTL_DTOS(TJ,'G',7)),-1,IUPESTOUT)
- CALL IMOD_UTL_PRINTTEXT('Plausibility Value :             '//TRIM(IMOD_UTL_DTOS(PJ,'G',7)),-1,IUPESTOUT)
+ IF(LGRAD.AND.PEST_IGRAD.EQ.0)THEN
+  CALL IMOD_UTL_PRINTTEXT('Best Match Value   :             '//TRIM(IMOD_UTL_DTOS(TJ,'G',7)),-1,IUPESTOUT)
+  CALL IMOD_UTL_PRINTTEXT('Plausibility Value :             '//TRIM(IMOD_UTL_DTOS(PJ,'G',7)),-1,IUPESTOUT)
+ ENDIF
+ 
  TJ=TJ+PJ
   
- CALL IMOD_UTL_PRINTTEXT('TOTAL Objective Function Value : '//TRIM(IMOD_UTL_DTOS(TJ,'G',7)),-1,IUPESTOUT)
- CALL IMOD_UTL_PRINTTEXT('MEAN Objective Function Value  : '//TRIM(IMOD_UTL_DTOS(TJ/REAL(PEST_NOBS,8),'G',7))// &
-         ' (n='//TRIM(IMOD_UTL_ITOS(PEST_NOBS))//')',-1,IUPESTOUT)
-
- RFIT=PEST_GOODNESS_OF_FIT(GF_H,GF_O,PEST_NOBS)
- CALL IMOD_UTL_PRINTTEXT('Goodness of Fit:                 '// &
-     TRIM(IMOD_UTL_DTOS(RFIT,'G',7))//' (n='//TRIM(IMOD_UTL_ITOS(PEST_NOBS))//')',-1,IUPESTOUT)
- CALL IMOD_UTL_PRINTTEXT('>> Provides a measure of the extent to which variability of field measurements is explained',-1,IUPESTOUT)
- CALL IMOD_UTL_PRINTTEXT('   by the calibrated model compared to that which can be constructed as purely random. <<',-1,IUPESTOUT)
+ IF(LGRAD.AND.PEST_IGRAD.EQ.0)THEN
+  CALL IMOD_UTL_PRINTTEXT('TOTAL Objective Function Value : '//TRIM(IMOD_UTL_DTOS(TJ,'G',7)),-1,IUPESTOUT)
+  CALL IMOD_UTL_PRINTTEXT('MEAN Objective Function Value  : '//TRIM(IMOD_UTL_DTOS(TJ/REAL(PEST_NOBS,8),'G',7))// &
+          ' (n='//TRIM(IMOD_UTL_ITOS(PEST_NOBS))//')',-1,IUPESTOUT)
+          
+  RFIT=PEST_GOODNESS_OF_FIT(GF_H,GF_O,PEST_NOBS)
+  CALL IMOD_UTL_PRINTTEXT('Goodness of Fit:                 '// &
+      TRIM(IMOD_UTL_DTOS(RFIT,'G',7))//' (n='//TRIM(IMOD_UTL_ITOS(PEST_NOBS))//')',-1,IUPESTOUT)
+  CALL IMOD_UTL_PRINTTEXT('>> Provides a measure of the extent to which variability of field measurements is explained',-1,IUPESTOUT)
+  CALL IMOD_UTL_PRINTTEXT('   by the calibrated model compared to that which can be constructed as purely random. <<',-1,IUPESTOUT)
+ ENDIF
 
  IF(ALLOCATED(GF_H))DEALLOCATE(GF_H)
  IF(ALLOCATED(GF_O))DEALLOCATE(GF_O)
