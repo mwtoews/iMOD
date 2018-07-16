@@ -940,8 +940,8 @@ CONTAINS
  IMPLICIT NONE
  logical,intent(in) :: LSS
  character(len=*),intent(in) :: root
- REAL(KIND=8) :: IMPROVEMENT,F
- INTEGER :: I,J,ILOG
+ REAL(KIND=8) :: IMPROVEMENT,F,GUPDATE
+ INTEGER :: I,J,ILOG,ISTOP
 
  IF(.NOT.ALLOCATED(PARAM))STOP
 
@@ -968,6 +968,7 @@ CONTAINS
   IF(.NOT.PESTNEXTGRAD())THEN
    !## get gradient
    CALL PESTGRADIENT(ROOT)
+   CALL PEST_ECHOPARAMETERS(GUPDATE)
    LLNSRCH=.TRUE.; PEST_ILNSRCH=1; LGRAD=.FALSE.; PEST_IGRAD=0
   ENDIF
  ELSEIF(LLNSRCH)THEN
@@ -978,35 +979,25 @@ CONTAINS
    IF(.NOT.PESTUPGRADEVECTOR(0.5D0,.FALSE.))THEN
     STOP 'ERROR PESTUPGRADEVECTOR IN LINESEARCH'
    ENDIF !# half of current search-gradient
-   CALL PEST_ECHOPARAMETERS()
+!   CALL PEST_ECHOPARAMETERS(GUPDATE)
    !## start next line-search
    PEST_ILNSRCH=PEST_ILNSRCH+1
   ELSE
 !   DAMPINGFACTOR=DAMPINGFACTOR/NDAMPING
 !   NDAMPING=ININDAMPING !## do it onces only
 
-   !## continue ?
-   IF(PEST_ITER+1.GT.PEST_NITER)THEN
-    PESTNEXT=.TRUE.  !## max. number of iterations reached
-    CALL IMOD_UTL_PRINTTEXT('',-1,IUPESTOUT); CALL IMOD_UTL_PRINTTEXT('Pest iteration terminated: PEST_ITER ('// &
-        TRIM(IMOD_UTL_ITOS(PEST_ITER))//') = PEST_NITER ('//TRIM(IMOD_UTL_ITOS(PEST_NITER))//')',-1,IUPESTOUT)
-   ENDIF
-   IF(TJ.LE.0.0D0)THEN
-    PESTNEXT=.TRUE.
-    CALL IMOD_UTL_PRINTTEXT('',-1,IUPESTOUT); CALL IMOD_UTL_PRINTTEXT('Objective Function <= 0.0 ('// &
-       TRIM(IMOD_UTL_DTOS(TJ,'G',7))//')',-1,IUPESTOUT)
-   ENDIF
+   CALL PEST_ECHOPARAMETERS(GUPDATE)
 
-!   !## update alpha for parameters in same group
-!   DO I=1,SIZE(PARAM)
-!    !## skip inactive parameters
-!    IF(PARAM(I)%IACT.EQ.0)CYCLE
-!    IF(PARAM(I)%IGROUP.GT.0)THEN
-!     DO J=1,SIZE(PARAM)
-!      IF(PARAM(I)%IGROUP.EQ.ABS(PARAM(J)%IGROUP))PARAM(J)%ALPHA(1)=PARAM(I)%ALPHA(1)
-!     ENDDO
-!    ENDIF
-!   ENDDO
+   !## update alpha for parameters in same group
+   DO I=1,SIZE(PARAM)
+    !## skip inactive parameters
+    IF(PARAM(I)%IACT.EQ.0)CYCLE
+    IF(PARAM(I)%IGROUP.GT.0)THEN
+     DO J=1,SIZE(PARAM)
+      IF(PARAM(I)%IGROUP.EQ.ABS(PARAM(J)%IGROUP))PARAM(J)%ALPHA(1)=PARAM(I)%ALPHA(1)
+     ENDDO
+    ENDIF
+   ENDDO
    
    IMPROVEMENT=0; DO I=1,SIZE(PARAM)
     IF(PARAM(I)%IACT.EQ.0)CYCLE
@@ -1056,10 +1047,27 @@ CONTAINS
     ENDIF 
    ENDDO
 
+   !## length of gradient update vector
+   IF(GUPDATE.LT.PEST_PADJ)THEN
+    CALL IMOD_UTL_PRINTTEXT('Process stopped, less than '//TRIM(IMOD_UTL_DTOS(PEST_PADJ,'F',3))//' of vector length',-1,IUPESTOUT); STOP
+   ENDIF
+
+   !## continue ?
+   IF(PEST_ITER+1.GT.PEST_NITER)THEN
+    PESTNEXT=.TRUE.  !## max. number of iterations reached
+    CALL IMOD_UTL_PRINTTEXT('',-1,IUPESTOUT); CALL IMOD_UTL_PRINTTEXT('Pest iteration terminated: PEST_ITER (='// &
+        TRIM(IMOD_UTL_ITOS(PEST_ITER))//') = PEST_NITER (='//TRIM(IMOD_UTL_ITOS(PEST_NITER))//')',-1,IUPESTOUT); STOP
+   ENDIF
+   IF(TJ.LE.0.0D0)THEN
+    PESTNEXT=.TRUE.
+    CALL IMOD_UTL_PRINTTEXT('',-1,IUPESTOUT); CALL IMOD_UTL_PRINTTEXT('Objective Function <= 0.0 ('// &
+       TRIM(IMOD_UTL_DTOS(TJ,'G',7))//')',-1,IUPESTOUT); STOP
+   ENDIF
+
    IF(IMPROVEMENT.LE.PEST_JSTOP)THEN
     PESTNEXT=.TRUE.  !## min. improvement reached
     CALL IMOD_UTL_PRINTTEXT('',-1,IUPESTOUT); CALL IMOD_UTL_PRINTTEXT('Pest iteration terminated decrease objective function ('// &
-        TRIM(IMOD_UTL_DTOS(100.0D0*IMPROVEMENT,'G',7))//'%) > PEST_JSTOP ('//TRIM(IMOD_UTL_DTOS(100.0D0*PEST_JSTOP,'G',7))//'%)',-1,IUPESTOUT)
+        TRIM(IMOD_UTL_DTOS(100.0D0*IMPROVEMENT,'G',7))//'%) > PEST_JSTOP ('//TRIM(IMOD_UTL_DTOS(100.0D0*PEST_JSTOP,'G',7))//'%)',-1,IUPESTOUT); STOP
    ENDIF
 
    TJOBJ=TJ
@@ -1324,19 +1332,21 @@ END SUBROUTINE WRITEIPF
   IF(PARAM(I)%IACT.EQ.1.AND.PARAM(I)%IGROUP.GT.0)THEN
    ZW=PARAM(I)%ALPHA_ERROR_VARIANCE(PEST_ITER)*1.96D0
    IF(PARAM(I)%LOG)THEN
-    Z =EXP(PARAM(I)%ALPHA(2))
+    Z =EXP(PARAM(I)%ALPHA(1)) !2))
     Z1=TINY(1.0)
-    IF(PARAM(I)%ALPHA(2)-ZW.LT.LOG(HUGE(1.0)))THEN
-     Z1=EXP(PARAM(I)%ALPHA(2)-ZW)
+!    IF(PARAM(I)%ALPHA(2)-ZW.LT.LOG(HUGE(1.0)))THEN
+    IF(PARAM(I)%ALPHA(1)-ZW.LT.LOG(HUGE(1.0)))THEN
+     Z1=EXP(PARAM(I)%ALPHA(1)-ZW) !2)-ZW)
     ENDIF
     Z2=HUGE(1.0)
-    IF(PARAM(I)%ALPHA(2)+ZW.LT.LOG(HUGE(1.0)))THEN
-     Z2=EXP(PARAM(I)%ALPHA(2)+ZW)
+!    IF(PARAM(I)%ALPHA(2)+ZW.LT.LOG(HUGE(1.0)))THEN
+    IF(PARAM(I)%ALPHA(1)+ZW.LT.LOG(HUGE(1.0)))THEN
+     Z2=EXP(PARAM(I)%ALPHA(1)+ZW) !2)+ZW)
     ENDIF
    ELSE
-    Z= PARAM(I)%ALPHA(2)
-    Z1=PARAM(I)%ALPHA(2)-ZW
-    Z2=PARAM(I)%ALPHA(2)+ZW
+    Z= PARAM(I)%ALPHA(1) !2)
+    Z1=PARAM(I)%ALPHA(1)-ZW !2)-ZW
+    Z2=PARAM(I)%ALPHA(1)+ZW !2)+ZW
    ENDIF 
 
    IF(LPRINT)THEN
@@ -1646,8 +1656,9 @@ END SUBROUTINE WRITEIPF
   CALL PEST1JQJ(JQJ,EIGW,EIGV,COV,NP,LSENS,ROOT)
 
   !## multiply lateral sensitivities with sensitivities in case pest_niter=0
-  IF(ITRIES.EQ.1)THEN
-   !## print all first time
+!  IF(ITRIES.EQ.1)THEN
+  IF(PEST_NITER.EQ.0)THEN
+  !## print all first time
    IF(.NOT.PESTWRITESTATISTICS_PERROR(NP,COV,.TRUE.))CYCLE
   ELSE
    IF(.NOT.PESTWRITESTATISTICS_PERROR(NP,COV,.FALSE.))CYCLE  
@@ -1845,10 +1856,10 @@ END SUBROUTINE WRITEIPF
   IF(LSVD.AND.EIGWTHRESHOLD.GT.99.0D0)EXIT
  ENDDO
  IF(LSVD)THEN
-  WRITE(IUPESTOUT,'(/A,I5,A/)') 'Used ',NE,' Eigenvalues to project on limited number of basisfunctions'
+  WRITE(IUPESTOUT,'(/A,I5,A/)') 'Used ',NE,' Eigenvalues (<99%) to project on limited number of basisfunctions'
  ELSE
   WRITE(IUPESTOUT,'(/A)') 'Consider using the SVD-option to ignore tiny eigenvalues to'
-  WRITE(IUPESTOUT,'(A/)') 'make the optimization more robuust, numerically'
+  WRITE(IUPESTOUT,'(A/)') 'make the optimization more robuust, numerically.'
  ENDIF
  
  WRITE(IUPESTPROGRESS,*)
@@ -1859,8 +1870,6 @@ END SUBROUTINE WRITEIPF
  IF(LSCALING)WRITE(IUPESTPROGRESS,*) 'Scaling Value = ',MAXVAL(C)
  IF(LSVD)WRITE(IUPESTPROGRESS,*) 'Number of eigenvalues used: ',NE
 
- CALL PEST_ECHOPARAMETERS()
-
  IF(ALLOCATED(EIGW))DEALLOCATE(EIGW)
  IF(ALLOCATED(EIGV))DEALLOCATE(EIGV)
  IF(ALLOCATED(JQR ))DEALLOCATE(JQR )
@@ -1869,7 +1878,7 @@ END SUBROUTINE WRITEIPF
  IF(ALLOCATED(JS  ))DEALLOCATE(JS  )
 
  END SUBROUTINE PESTGRADIENT
-
+ 
  !###====================================================================
  SUBROUTINE PEST1JQJ(JQJ,EIGW,EIGV,COV,NP,LPRINT,ROOT)
  !###====================================================================
@@ -1925,7 +1934,6 @@ END SUBROUTINE WRITEIPF
   ENDDO
   IF(M.EQ.1)THEN; WRITE(IU,'(/44X,A32,999(G15.7,A1))') 'TOTAL,',(ABS(JQJ(J,1)),',',J=1,N)
   ELSE; WRITE(IU,'(/44X,A32,999(G15.7,A1))') 'TOTAL,',(JQJ(J,2),',',J=1,N); ENDIF
-!  STOP
  ENDIF
  
  !## save msr%dh() vector per parameter as csv ... to be read in again
@@ -2364,9 +2372,10 @@ END SUBROUTINE WRITEIPF
  END SUBROUTINE PEST_GETBOUNDARY
 
  !###====================================================================
- SUBROUTINE PEST_ECHOPARAMETERS()
+ SUBROUTINE PEST_ECHOPARAMETERS(GUPDATE)
  !###====================================================================
  IMPLICIT NONE
+ REAL(KIND=8),INTENT(OUT) :: GUPDATE
  INTEGER :: IP1,N,I
  REAL(KIND=8),ALLOCATABLE,DIMENSION(:) :: GRADUPDATE
  
@@ -2402,10 +2411,11 @@ END SUBROUTINE WRITEIPF
  WRITE(BLINE,'(19X,99E10.5)') (GRADUPDATE(I),I=PEST_ITER,1,-1)
  WRITE(IUPESTOUT,'(A)') TRIM(BLINE)
 
- IF(GRADUPDATE(PEST_ITER).LT.PEST_PADJ)THEN
-  CALL IMOD_UTL_PRINTTEXT('Process stopped, less than '//TRIM(IMOD_UTL_DTOS(PEST_PADJ,'F',3))//' of vector length',-1,IUPESTOUT)
-  STOP
- ENDIF
+ GUPDATE=GRADUPDATE(PEST_ITER)
+! IF(GRADUPDATE(PEST_ITER).LT.PEST_PADJ)THEN
+!  CALL IMOD_UTL_PRINTTEXT('Process stopped, less than '//TRIM(IMOD_UTL_DTOS(PEST_PADJ,'F',3))//' of vector length',-1,IUPESTOUT)
+!  STOP
+! ENDIF
 
  DEALLOCATE(GRADUPDATE)
 
