@@ -257,14 +257,17 @@ CONTAINS
       CASE (PDRN)     !## (PDRN) drainage
        drn%sp(kper)%ldrn  = .true.
        drn%sp(kper)%reuse = .false.
-       drn%sp(kper)%gcd%nsubsys = nsys
+       msys = drn%sp(kper)%gcd%nsubsys
+       if(it.eq.1)msys = msys + 1
+       drn%sp(kper)%gcd%nsubsys = msys
+!       drn%sp(kper)%gcd%nsubsys = nsys
        if (.not. associated(drn%sp(kper)%gcd%subsys)) allocate(drn%sp(kper)%gcd%subsys(maxsubsys))
        drn%sp(kper)%gcd%subsys(nsys)%ilay = ilay
 !       drn%sp(kper)%gcd%subsys(nsys)%factor = fct
        isys=isub; if(isumbudget.eq.1)isys=1
        drn%sp(kper)%gcd%subsys(nsys)%isub = isys
        drn%sp(kper)%gcd%subsys(nsys)%ldrn = .true.
-       if (.not.associated(drn%sp(kper)%gcd%subsys(nsys)%data)) allocate(drn%sp(kper)%gcd%subsys(nsys)%data(3))
+       if (.not.associated(drn%sp(kper)%gcd%subsys(msys)%data)) allocate(drn%sp(kper)%gcd%subsys(msys)%data(3))
        if (itp(it).eq.1) then
         scltype=iusclsumcdr
         ismooth=idsclnointp
@@ -272,21 +275,23 @@ CONTAINS
         scltype=iusclarith
         ismooth=idsclnointp
        end if
-       call RF2MF_READ1MAIN_system(drn%sp(kper)%gcd%subsys(nsys)%data(itp(it)),ios,ilay,fct,imp,constante,iarr,fname,scltype,ismooth)
+       call RF2MF_READ1MAIN_system(drn%sp(kper)%gcd%subsys(msys)%data(itp(it)),ios,ilay,fct,imp,constante,iarr,fname,scltype,ismooth)
        if (itp(it).eq.2 .and. iconchk.eq.1) then
-         call RF2MF_READ1MAIN_system(drn%sp(kper)%gcd%subsys(nsys)%data(3),0,ilay,fct,imp,1.0D0,iarr,fname,iusclmostfr,idsclnointp)
+         call RF2MF_READ1MAIN_system(drn%sp(kper)%gcd%subsys(msys)%data(3),0,ilay,fct,imp,1.0D0,iarr,fname,iusclmostfr,idsclnointp)
        end if
       CASE (PRIV)     !## (PRIV) rivers
        riv%sp(kper)%lriv  = .true.
        riv%sp(kper)%reuse = .false.
-       riv%sp(kper)%gcd%nsubsys = nsys
+       msys = riv%sp(kper)%gcd%nsubsys
+       if(it.eq.1)msys = msys + 1
+       riv%sp(kper)%gcd%nsubsys = msys
        if (.not.associated(riv%sp(kper)%gcd%subsys)) allocate(riv%sp(kper)%gcd%subsys(maxsubsys))
        riv%sp(kper)%gcd%subsys(nsys)%ilay = ilay
 !       riv%sp(kper)%gcd%subsys(nsys)%factor = fct
        isys=isub; if(isumbudget.eq.1)isys=1
        riv%sp(kper)%gcd%subsys(nsys)%isub = isys
        riv%sp(kper)%gcd%subsys(nsys)%lriv = .true.
-       if (.not.associated(riv%sp(kper)%gcd%subsys(nsys)%data)) allocate(riv%sp(kper)%gcd%subsys(nsys)%data(5))
+       if (.not.associated(riv%sp(kper)%gcd%subsys(msys)%data)) allocate(riv%sp(kper)%gcd%subsys(msys)%data(5))
        if (itp(it).eq.1) then
         scltype=iusclsumcdr
         ismooth=idsclnointp
@@ -294,7 +299,7 @@ CONTAINS
         scltype=iusclarith
         ismooth=idsclnointp
        end if
-       call RF2MF_READ1MAIN_system(riv%sp(kper)%gcd%subsys(nsys)%data(itp(it)),ios,ilay,fct,imp,constante,iarr,fname,scltype,ismooth)
+       call RF2MF_READ1MAIN_system(riv%sp(kper)%gcd%subsys(msys)%data(itp(it)),ios,ilay,fct,imp,constante,iarr,fname,scltype,ismooth)
       CASE (PEVT)     !## (PEVT) evapotranspiration
        !## ilay equal zero not possible for evt
        if(ilay.eq.0)then
