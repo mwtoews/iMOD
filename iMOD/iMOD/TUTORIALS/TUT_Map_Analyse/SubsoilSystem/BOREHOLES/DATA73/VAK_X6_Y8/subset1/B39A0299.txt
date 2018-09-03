@@ -1,0 +1,41 @@
+          35
+4,2
+"Interface,m-msl",-999.99
+"Lithology",-999.99
+"Grain-size-distr. class NEN5104",-999.99
+"Admixture",-999.99
+4.00,C,None,"None"
+-2.00,S,CSGO,"Moderate Grainly"
+-11.00,G,None,"None"
+-14.00,S,CSGO,"None"
+-18.00,C,None,"None"
+-24.00,S,CSFO,"None"
+-44.00,S,CSGO,"None"
+-51.00,S,CSFO,"Grainly"
+-57.00,S,CSGO,"None"
+-59.00,C,None,"None"
+-60.00,S,CSFO,"None"
+-62.00,S,CSFO,"Grainly"
+-65.00,S,CSGO,"None"
+-69.00,C,None,"None"
+-70.00,S,CSFO,"None"
+-73.00,S,ZFSO,"None"
+-86.00,S,CSFO,"Moderate Grainly"
+-87.00,S,CSFO,"None"
+-89.00,S,ZRSO,"None"
+-90.50,S,CSGO,"None"
+-91.00,S,CSGO,"None"
+-92.00,S,CSGO,"None"
+-93.00,S,CSGO,"Silty"
+-94.00,S,CSGO,"Moderate Grainly"
+-95.00,S,CSGO,"Grainly"
+-98.00,S,CSGO,"Strong Grainly"
+-101.00,S,CSFO,"Grainly"
+-105.00,S,CSFO,"None"
+-107.00,C,None,"None"
+-108.50,S,CSGO,"None"
+-111.00,S,CSFO,"None"
+-114.00,S,CSGO,"None"
+-117.00,S,CSGO,"None"
+-120.00,S,CSGO,"None"
+-131.00,-,-,-

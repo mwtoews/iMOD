@@ -1,0 +1,11 @@
+           5
+4,2
+"Interface,m-msl",-999.99
+"Lithology",-999.99
+"Grain-size-distr. class NEN5104",-999.99
+"Admixture",-999.99
+-1.21,C,None,"None"
+-2.56,C,None,"Organic"
+-3.71,C,None,"Organic"
+-4.71,C,None,"None"
+-7.21,-,-,-

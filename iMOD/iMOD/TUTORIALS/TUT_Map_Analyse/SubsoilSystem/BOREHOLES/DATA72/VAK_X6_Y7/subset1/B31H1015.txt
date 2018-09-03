@@ -1,0 +1,10 @@
+           4
+4,2
+"Interface,m-msl",-999.99
+"Lithology",-999.99
+"Grain-size-distr. class NEN5104",-999.99
+"Admixture",-999.99
+1.80,C,FSC,"Weak Sandy"
+1.50,C,FSC,"Strong Sandy"
+0.30,C,None,"None"
+-2.70,-,-,-

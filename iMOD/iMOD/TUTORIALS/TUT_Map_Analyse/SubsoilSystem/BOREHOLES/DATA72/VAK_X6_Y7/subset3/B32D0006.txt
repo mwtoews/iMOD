@@ -1,0 +1,23 @@
+          17
+4,2
+"Interface,m-msl",-999.99
+"Lithology",-999.99
+"Grain-size-distr. class NEN5104",-999.99
+"Admixture",-999.99
+0.45,S,None,"None"
+0.25,S,None,"Grainly"
+-1.65,S,None,"None"
+-6.80,S,None,"None"
+-8.55,S,None,"Weak Silty"
+-9.05,S,None,"None"
+-9.65,S,None,"Grainly"
+-11.65,S,RSC,"Grainly"
+-16.00,S,None,"Grainly"
+-18.10,S,RSC,"Grainly"
+-28.15,S,None,"None"
+-28.65,S,FSC,"None"
+-30.15,L,None,"None"
+-30.45,L,None,"Sandy"
+-31.00,G,None,"None"
+-31.70,S,None,"None"
+-39.55,-,-,-

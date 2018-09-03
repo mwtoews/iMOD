@@ -1,0 +1,34 @@
+0001,(TOP) Top Elevation [DIS],1
+001,001
+ 1,2,0001,   1.000000    ,   0.000000    ,  -999.9900    ,'$DBASE$\TUTORIALS\TUT_SFR\DBASE\TOP.IDF'
+0001,(BOT) Bottom Elevation [DIS],1
+001,001
+ 1,1,0001,   1.000000    ,   0.000000    ,   470.0000    ,''
+0001,(BND) Boundary Condition [BAS],1
+001,001
+ 1,2,0001,   1.000000    ,   0.000000    ,  -999.9900    ,'$DBASE$\TUTORIALS\TUT_SFR\DBASE\BND.IDF'
+0001,(SHD) Starting Heads [BAS],1
+001,001
+ 1,1,0001,   1.000000    ,   0.000000    ,   510.0000    ,''
+0001,(KHV) Horizontal Permeability [BCF/LPF],1
+001,001
+ 1,1,0001,   1.000000    ,   0.000000    ,   60.00000    ,''
+0001,(KVA) Vertical Anisotropy [BCF/LPF],1
+001,001
+ 1,1,0001,   1.000000    ,   0.000000    ,    1.00000    ,''
+0001,(RCH) Recharge [RCH],1
+STEADY-STATE
+001,001
+ 1,1,0001,   1.000000    ,   0.000000    ,   1.000000    ,''
+0001,(SFR) Stream Flow Routing [SFR],1
+STEADY-STATE
+001,001
+ 1,2,0001,   1.000000    ,   0.000000    ,  -999.9900    ,'$DBASE$\TUTORIALS\TUT_SFR\DBASE\SFR.ISG'
+0001,(FHB) Flow and Head Boundary [FHB],1
+STEADY-STATE
+002,001
+ 1,2,0001,   1.000000    ,   0.000000    ,  -999.9900    ,'$DBASE$\TUTORIALS\TUT_SFR\DBASE\FHB_Q.IDF'
+ 1,2,0001,   1.000000    ,   0.000000    ,  -999.9900    ,'$DBASE$\TUTORIALS\TUT_SFR\DBASE\FHB_H.IDF'
+0001,(PCG) Precondition Conjugate-Gradient [PCG],0
+500,20,0.10000E-03,0.10000,0.98000,1,0,1,1.0000,1.0000
+Periods

@@ -1,0 +1,39 @@
+          33
+4,2
+"Interface,m-msl",-999.99
+"Lithology",-999.99
+"Grain-size-distr. class NEN5104",-999.99
+"Admixture",-999.99
+2.96,L,None,"Moderate Organic"
+1.96,S,CSGO,"Strong Silty"
+1.71,S,CSGO,"Moderate Organic"
+0.46,L,None,"Sandy"
+0.21,S,CSGO,"Weak Grainly"
+-0.54,S,CSFO,"Weak Organic"
+-1.54,S,CSGO,"Weak Grainly"
+-4.04,S,CSGO,"Weak Grainly"
+-6.54,S,RSC,"Weak Grainly"
+-9.54,S,ZRSO,"Weak Grainly"
+-11.04,S,RSC,"Weak Grainly"
+-13.54,S,ZRSO,"Weak Grainly"
+-18.04,S,CSGO,"Weak Grainly"
+-19.54,S,ZRSO,"Weak Grainly"
+-21.54,S,CSGO,"Weak Grainly"
+-24.04,S,CSGO,"Weak Grainly"
+-26.04,S,RSC,"Weak Grainly"
+-28.04,S,CSGO,"Weak Grainly"
+-30.04,S,CSGO,"Weak Grainly"
+-32.54,S,CSGO,"Weak Grainly"
+-37.04,S,ZRSO,"Weak Grainly"
+-43.04,S,CSGO,"Weak Silty"
+-47.04,S,RSC,"Weak Grainly"
+-48.04,S,RSC,"Weak Grainly"
+-50.04,L,None,"Weak Grainly"
+-51.04,S,ZRSO,"Weak Grainly"
+-56.04,S,ZRSO,"Weak Grainly"
+-57.04,S,CSFO,"Weak Grainly"
+-58.54,S,CSGO,"Weak Grainly"
+-60.04,S,CSGO,"Weak Grainly"
+-61.04,S,CSGO,"Silty"
+-62.54,S,CSFO,"Weak Silty"
+-65.54,-,-,-

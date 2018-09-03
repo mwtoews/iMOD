@@ -1,0 +1,38 @@
+          32
+4,2
+"Interface,m-msl",-999.99
+"Lithology",-999.99
+"Grain-size-distr. class NEN5104",-999.99
+"Admixture",-999.99
+2.63,L,None,"Sandy"
+2.08,C,None,"Strong Sandy"
+1.78,S,CSGO,"Moderate Organic"
+1.28,L,None,"Moderate Organic"
+0.83,S,CSFO,"None"
+-2.67,S,CSGO,"Moderate Organic"
+-4.27,S,CSFO,"None"
+-6.77,S,CSGO,"Grainly"
+-7.52,S,ZRSO,"Grainly"
+-9.12,S,CSGO,"Grainly"
+-10.47,S,CSGO,"Grainly"
+-11.82,S,RSC,"Grainly"
+-12.82,S,CSGO,"Grainly"
+-16.77,S,RSC,"Grainly"
+-17.87,S,RSC,"Moderate Organic"
+-17.97,L,None,"Moderate Organic"
+-18.17,L,None,"Strong Organic"
+-20.42,S,RSC,"Moderate Organic"
+-21.17,S,ZRSO,"Moderate Organic"
+-23.27,S,ZRSO,"Moderate Organic"
+-24.17,S,CSGO,"Grainly"
+-25.17,S,CSGO,"Grainly"
+-25.72,S,CSGO,"Grainly"
+-26.22,S,ZRSO,"Moderate Organic"
+-26.87,S,RSC,"Grainly"
+-27.92,S,CSGO,"Grainly"
+-30.37,S,RSC,"Weak Silty"
+-31.32,S,RSC,"Grainly"
+-32.42,S,CSGO,"Weak Silty"
+-34.57,S,CSGO,"None"
+-35.07,S,CSGO,"Weak Silty"
+-37.37,-,-,-
