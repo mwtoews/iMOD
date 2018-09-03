@@ -1,0 +1,37 @@
+          31
+4,2
+"Interface,m-msl",-999.99
+"Lithology",-999.99
+"Grain-size-distr. class NEN5104",-999.99
+"Admixture",-999.99
+-6.30,P,None,"Silty"
+-6.80,C,None,"Strong Organic"
+-7.30,P,None,"None"
+-8.30,C,None,"Strong Organic"
+-8.80,C,None,"Moderate Organic"
+-9.80,P,None,"Silty"
+-10.80,P,None,"None"
+-11.30,P,None,"Sandy"
+-11.60,S,CSFO,"Weak Silty"
+-12.60,S,CSGO,"Weak Silty"
+-13.80,S,CSGO,"Weak Silty"
+-14.80,S,CSGO,"Weak Silty"
+-15.80,S,CSGO,"Weak Silty"
+-16.80,S,CSGO,"Weak Silty"
+-17.80,S,CSFO,"None"
+-18.80,S,CSGO,"Weak Silty"
+-19.80,S,CSGO,"Weak Silty"
+-20.80,S,CSGO,"Weak Silty"
+-21.80,S,CSFO,"Weak Silty"
+-22.80,S,ZRSO,"Weak Grainly"
+-23.80,S,CSGO,"Weak Silty"
+-24.80,S,ZRSO,"Weak Silty"
+-25.80,S,ZRSO,"Weak Grainly"
+-26.80,S,ZRSO,"None"
+-27.80,S,ZRSO,"Grainly"
+-28.80,S,RSC,"Weak Grainly"
+-29.80,S,RSC,"Weak Grainly"
+-30.80,S,ZRSO,"None"
+-31.60,P,None,"None"
+-32.10,G,ZUGO,"Sandy"
+-32.50,-,-,-

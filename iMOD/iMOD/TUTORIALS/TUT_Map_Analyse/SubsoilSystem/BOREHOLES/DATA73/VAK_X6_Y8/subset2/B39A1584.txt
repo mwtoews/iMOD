@@ -1,0 +1,15 @@
+           9
+4,2
+"Interface,m-msl",-999.99
+"Lithology",-999.99
+"Grain-size-distr. class NEN5104",-999.99
+"Admixture",-999.99
+2.40,C,None,"Sandy"
+1.70,S,None,"None"
+0.70,S,CSGO,"None"
+-0.60,S,None,"Grainly"
+-2.00,S,None,"None"
+-2.90,C,None,"Strong Sandy"
+-3.00,P,None,"Strong"
+-3.60,P,None,"None"
+-5.40,-,-,-

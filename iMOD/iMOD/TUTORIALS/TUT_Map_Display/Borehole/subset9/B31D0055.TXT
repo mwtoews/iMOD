@@ -1,0 +1,31 @@
+          25
+4,2
+"Interface,m-msl",-999.99
+"Lithology",-999.99
+"Grain-size-distr. class NEN5104",-999.99
+"Admixture",-999.99
+-1.80,P,None,"Moderate Organic"
+-2.80,P,None,"None"
+-3.33,P,None,"None"
+-4.33,P,None,"None"
+-6.08,P,None,"None"
+-9.08,S,FSC,"Weak Organic"
+-9.96,S,FSC,"None"
+-10.80,S,FSC,"None"
+-11.89,S,CSO,"None"
+-12.80,S,CSFO,"Weak Grainly"
+-13.89,S,CSFO,"Weak Grainly"
+-14.80,S,CSGO,"Grainly"
+-15.87,S,CSGO,"Weak Grainly"
+-16.75,S,CSFO,"Weak Grainly"
+-17.57,S,CSFO,"None"
+-18.57,S,CSFO,"None"
+-19.59,S,CSFO,"Grainly"
+-20.59,S,CSFO,"Weak Grainly"
+-21.59,S,CSFO,"Weak Grainly"
+-22.49,S,CSFO,"Grainly"
+-23.37,S,CSFO,"Weak Grainly"
+-24.37,S,CSFO,"Weak Grainly"
+-25.37,S,CSFO,"None"
+-26.25,S,CSFO,"None"
+-27.25,-,-,-

@@ -1,0 +1,38 @@
+          32
+4,2
+"Interface,m-msl",-999.99
+"Lithology",-999.99
+"Grain-size-distr. class NEN5104",-999.99
+"Admixture",-999.99
+-1.86,P,None,"None"
+-9.86,S,ZUFO,"None"
+-13.86,S,CSGO,"None"
+-17.86,S,ZRSO,"None"
+-19.86,S,CSGO,"Silty"
+-23.36,S,ZUGO,"Strong Grainly"
+-25.86,S,CSGO,"None"
+-27.86,S,ZRSO,"None"
+-30.86,S,ZUGO,"Strong Grainly"
+-32.86,S,CSGO,"None"
+-35.86,S,ZRSO,"None"
+-37.86,S,CSGO,"None"
+-40.86,C,None,"None"
+-41.36,C,None,"Sandy"
+-41.86,S,ZRSO,"None"
+-42.86,S,ZRSO,"None"
+-45.86,S,ZRSO,"None"
+-47.86,S,ZRSO,"Weak"
+-50.86,C,None,"None"
+-56.86,S,ZUFO,"Silty"
+-60.86,S,CSGO,"None"
+-62.86,S,CSGO,"Silty"
+-65.86,S,CSGO,"None"
+-67.86,S,CSGO,"None"
+-69.86,S,CSGO,"None"
+-72.86,S,ZRSO,"None"
+-74.86,S,ZRSO,"None"
+-77.86,S,ZRSO,"Silty"
+-79.86,S,CSGO,"None"
+-82.86,S,CSGO,"None"
+-84.86,S,ZUGO,"Strong Grainly"
+-84.87,-,-,-

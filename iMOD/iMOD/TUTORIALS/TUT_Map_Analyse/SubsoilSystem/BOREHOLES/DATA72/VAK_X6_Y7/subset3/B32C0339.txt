@@ -1,0 +1,42 @@
+          36
+4,2
+"Interface,m-msl",-999.99
+"Lithology",-999.99
+"Grain-size-distr. class NEN5104",-999.99
+"Admixture",-999.99
+3.47,S,CSFO,"Strong Organic"
+3.07,S,CSGO,"Weak Organic"
+-0.03,S,CSFO,"Strong Silty"
+-3.03,S,CSGO,"Weak Grainly"
+-6.03,S,ZRSO,"Moderate Grainly"
+-9.03,S,ZRSO,"Weak Grainly"
+-10.83,S,ZUGO,"Strong Grainly"
+-13.53,S,ZUGO,"Weak Grainly"
+-14.73,S,ZRSO,"Weak Grainly"
+-18.03,S,CSGO,"Weak Silty"
+-22.78,S,ZUGO,"Weak Grainly"
+-25.03,S,CSGO,"Weak Silty"
+-27.03,S,ZRSO,"Weak Grainly"
+-29.83,S,CSFO,"Very strong Silty"
+-33.03,L,None,"Weak Sandy"
+-35.93,S,ZUGO,"Weak Grainly"
+-37.23,S,ZRSO,"Moderate Grainly"
+-39.03,S,ZRSO,"Weak Grainly"
+-45.03,S,ZRSO,"Moderate Organic"
+-48.03,S,CSGO,"Moderate Grainly"
+-49.63,S,ZUGO,"Strong Grainly"
+-51.03,S,ZUGO,"Strong Grainly"
+-57.03,S,ZUGO,"Strong Grainly"
+-68.73,S,ZUGO,"Moderate Grainly"
+-71.43,S,ZRSO,"Weak Grainly"
+-73.53,S,ZRSO,"Moderate Grainly"
+-76.53,S,ZRSO,"Weak Grainly"
+-79.53,S,ZRSO,"Weak Grainly"
+-85.53,S,CSGO,"Weak Silty"
+-89.33,S,ZRSO,"Moderate Grainly"
+-90.13,S,CSFO,"Weak Silty"
+-93.03,S,CSFO,"Strong Silty"
+-96.03,S,CSFO,"Weak Silty"
+-98.03,S,CSFO,"Strong Silty"
+-100.53,S,CSFO,"Strong Silty"
+-106.53,-,-,-

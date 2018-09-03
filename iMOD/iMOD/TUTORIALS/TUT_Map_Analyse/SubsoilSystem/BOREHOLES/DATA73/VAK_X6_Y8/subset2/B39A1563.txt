@@ -1,0 +1,12 @@
+           6
+4,2
+"Interface,m-msl",-999.99
+"Lithology",-999.99
+"Grain-size-distr. class NEN5104",-999.99
+"Admixture",-999.99
+3.50,S,CSGO,"None"
+3.30,C,None,"Moderate Organic"
+3.00,S,CSGO,"None"
+2.00,S,None,"None"
+-0.50,S,CSGO,"None"
+-3.50,-,-,-

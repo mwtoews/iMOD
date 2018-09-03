@@ -1,0 +1,3 @@
+2,1,"Date","Time","Water level","Bottom level","Stream Width","Bed Thickn.","Bed Perm.","Iup Seg","Idown Seg","Calc Opt","Div Opt","Q Flow","Q Runoff","PPTSW","ETSW"
+"segment 1",1,2,1,2,1,1,0,0,1,1
+"segment 2",3,2,3,2,2,1,0,0,2,1

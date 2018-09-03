@@ -1,0 +1,16 @@
+          10
+4,2
+"Interface,m-msl",-999.99
+"Lithology",-999.99
+"Grain-size-distr. class NEN5104",-999.99
+"Admixture",-999.99
+1.30,C,None,"Moderate Silty"
+0.80,C,RSC,"Moderate Sandy"
+0.60,C,None,"Moderate Silty"
+0.10,C,FSC,"Sandy"
+-0.70,C,None,"Strong Sandy"
+-2.90,C,None,"Moderate Silty"
+-3.70,C,FSC,"Weak Sandy"
+-4.20,C,None,"Strong Organic"
+-4.30,C,FSC,"Weak Sandy"
+-5.61,-,-,-
