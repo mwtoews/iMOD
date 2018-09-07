@@ -828,8 +828,7 @@ END SUBROUTINE
   ENDIF
  ENDDO
 
-! CLOSE(IU); CLOSE(JU)
-! RETURN
+ CLOSE(IU)
 
 ! WRITE(IU,'(A)') '*'
 ! WRITE(IU,'(A)') '* Parameters for modelling options'
@@ -974,7 +973,8 @@ END SUBROUTINE
  !## open mete_grid.inp
  CALL IMOD_UTL_OPENASC(IGRID,trim(simwd)//'mete_grid.inp','R')
  READ(IGRID,*) TD,IY,PRECFNAME,ETFNAME
-
+ CLOSE(IGRID)
+ 
  CALL METASWAP_METEGRID_INP(PRECFNAME,trim(simwd)//'svat2PrecGrid.inp')
  CALL METASWAP_METEGRID_INP(ETFNAME,  trim(simwd)//'svat2EtrefGrid.inp')
 
@@ -1193,17 +1193,24 @@ END SUBROUTINE
        do icol = 1, ncol
           id = dxcid(icol,irow,ilay)
           if (id.ne.0) then        
-             if (id.lt.0) then 
-                write(strarr(1),*) -ilay
-             else
-                write(strarr(1),*) ilay
-             end if    
-             write(strarr(2),*) irow
-             write(strarr(3),*) icol
-             write(strarr(4),*) abs(dxcid(icol,irow,ilay))
-             write(str,'(4(a,1x))') (trim(adjustl(strarr(j))),j=1,4)
-             write(idxc,'(a)') trim(str)
-          end if   
+             IF (ID.LT.0) THEN 
+!                WRITE(STRARR(1),*) -ILAY
+                WRITE(IDXC,*) -ILAY,IROW,ICOL,ABS(DXCID(ICOL,IROW,ILAY))
+             ELSE
+!                WRITE(STRARR(1),*) ILAY
+                WRITE(IDXC,*)  ILAY,IROW,ICOL,ABS(DXCID(ICOL,IROW,ILAY))
+             END IF 
+          !if (id.lt.0) then 
+          !      write(strarr(1),*) -ilay
+          !   else
+          !      write(strarr(1),*) ilay
+          !   end if    
+          !   write(strarr(2),*) irow
+          !   write(strarr(3),*) icol
+          !   write(strarr(4),*) abs(dxcid(icol,irow,ilay))
+          !   write(str,'(4(a,1x))') (trim(adjustl(strarr(j))),j=1,4)
+          !   write(idxc,'(a)') trim(str)
+          !end if   
        end do      
     end do      
  end do

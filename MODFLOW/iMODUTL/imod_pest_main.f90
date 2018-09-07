@@ -1388,6 +1388,35 @@ END SUBROUTINE WRITEIPF
  
  END FUNCTION PESTWRITESTATISTICS_PERROR
   
+! IF(MMOD(PPST).EQ.1.AND.LSENS)THEN
+!  IF(PEST_IGRAD.EQ.0)THEN
+!   FNAME=TRIM(FNAME)//'_sens_'//TRIM(ITOS(PEST_IGRAD)) 
+!  ELSE
+!   PNAME='_sens_'//TRIM(PARAM(PEST_IGRAD)%PTYPE)//'_igroup'//TRIM(ITOS(PARAM(PEST_IGRAD)%IGROUP))
+!   FNAME=TRIM(FNAME)//TRIM(PNAME)
+!  ENDIF
+! ENDIF
+! 
+! !## compute sensitivities
+! IF(LSAVED.AND.MMOD(PPST).EQ.1.AND.PEST_IGRAD.GT.0.AND.LSENS)THEN
+!  !## read results under parameter adjustment (conditioned)
+!  IF(.NOT.IDFREAD(H(1),FNAME,1))CALL PRINTTEXT('Can not open: '//TRIM(FNAME),2)
+!  !## read unconditioned results
+!  FNAME=IMOD_UTL_SUBST(FNAME,TRIM(PNAME),'_sens_'//TRIM(ITOS(0)))
+!  IF(.NOT.IDFREAD(H(2),FNAME,1))CALL PRINTTEXT('Can not open: '//TRIM(FNAME),2)
+!
+!!  D=(PARAM(PEST_IGRAD)%ALPHA(2)+PARAM(PEST_IGRAD)%DELTA)-PARAM(PEST_IGRAD)%ALPHA(2)
+!  D=PARAM(PEST_IGRAD)%DELTA
+!
+!  !## gradient - perturbation/zero
+!  H(1)%X=(H(1)%X-H(2)%X)/D 
+!
+!  !## overwrite conditioned results as jacobian values
+!  FNAME=IMOD_UTL_SUBST(FNAME,'_sens_'//TRIM(ITOS(0)),TRIM(PNAME))
+!  IF(.NOT.IDFWRITE(H(1),FNAME,0))CALL PRINTTEXT('Can not write to: '//TRIM(FNAME),2)
+!  CALL IDFDEALLOCATE(H,SIZE(H))
+! ENDIF
+ 
  !!#####=================================================================
  !SUBROUTINE PESTWRITESTATISTICS_FOSM(NP,COV)
  !!#####=================================================================

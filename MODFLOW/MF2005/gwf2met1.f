@@ -794,11 +794,13 @@ c
 c declaration section
 c ------------------------------------------------------------------------------
 c modules
-      use global, only: iunit, iout
+      use global, only: iunit, iout,lipest
       use gwfbasmodule, only: hnoflo
       use fsplitmodule
+      use imod_utl, only : imod_utl_itos
       use m_mf2005_iu, only: iumet
-
+      use pestvar, only: lsens,pest_igrad !,lgrad,llnsrch,,iupestout,pest_ktype
+      
       implicit none
 
 c arguments
@@ -852,6 +854,16 @@ c loop over the layers
       nodata = hnoflo
       if (type.eq.splitidf) then
          fname = met1fname(isplit,text,ilay,'idf')
+
+         if(lipest.and.lsens)then
+          IF(PEST_IGRAD.EQ.0)THEN
+           FNAME=TRIM(FNAME)//'_sens_'//TRIM(imod_utl_itos(PEST_IGRAD)) 
+          ELSE
+!           PNAME='_sens_'//TRIM(PARAM(PEST_IGRAD)%PTYPE)//'_igroup'//TRIM(ITOS(PARAM(PEST_IGRAD)%IGROUP))
+!           FNAME=TRIM(FNAME)//TRIM(PNAME)
+          ENDIF
+         endif
+
          call met1wrtidf(fname,buff,ncol,nrow,nodata,iout)
       end if
       if (type.eq.splitnc) then
