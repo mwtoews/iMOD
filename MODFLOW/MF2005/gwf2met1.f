@@ -797,10 +797,11 @@ c modules
       use global, only: iunit, iout,lipest
       use gwfbasmodule, only: hnoflo
       use fsplitmodule
-      use imod_utl, only : imod_utl_itos
       use m_mf2005_iu, only: iumet
-      use pestvar, only: lsens,pest_igrad !,lgrad,llnsrch,,iupestout,pest_ktype
-      
+      use imod_utl, only : imod_utl_itos,imod_utl_subst
+      use pestvar, only: lsens,pest_igrad,param 
+      use imod_idf
+
       implicit none
 
 c arguments
@@ -812,8 +813,10 @@ c arguments
 
 c local variables
       character(len=1024) :: fname
-      integer :: ilay, type, isplit, iuidx
+      character(len=256) :: pname
+      integer :: ilay, type, isplit, iuidx, i
       real(kind=8) :: nodata
+      type(idfobj),dimension(2) :: h
 
 c functions
       character(len=1024) :: met1fname
@@ -855,16 +858,42 @@ c loop over the layers
       if (type.eq.splitidf) then
          fname = met1fname(isplit,text,ilay,'idf')
 
-         if(lipest.and.lsens)then
-          IF(PEST_IGRAD.EQ.0)THEN
-           FNAME=TRIM(FNAME)//'_sens_'//TRIM(imod_utl_itos(PEST_IGRAD)) 
-          ELSE
-!           PNAME='_sens_'//TRIM(PARAM(PEST_IGRAD)%PTYPE)//'_igroup'//TRIM(ITOS(PARAM(PEST_IGRAD)%IGROUP))
-!           FNAME=TRIM(FNAME)//TRIM(PNAME)
-          ENDIF
-         endif
+        if(lipest.and.lsens)then
+         i=index(fname,'.',.true.)-1
+         IF(PEST_IGRAD.EQ.0)THEN
+          FNAME=FNAME(:i)//'_sens_'//TRIM(imod_utl_itos(PEST_IGRAD))
+         ELSE
+          PNAME='_sens_'//TRIM(PARAM(PEST_IGRAD)%PTYPE)//'_igroup'//
+     1TRIM(imod_utl_itos(PARAM(PEST_IGRAD)%IGROUP))
+          FNAME=FNAME(:i)//TRIM(PNAME)
+         ENDIF
+         fname=trim(fname)//'.idf'
+        endif
 
-         call met1wrtidf(fname,buff,ncol,nrow,nodata,iout)
+        call met1wrtidf(fname,buff,ncol,nrow,nodata,iout)
+         
+        !## compute sensitivities
+        IF(lipest.and.pest_igrad.gt.0.and.lsens)then
+         !## read results under parameter adjustment (conditioned)
+         if(.not.idfread(h(1),fname,1))call imod_utl_printtext('cannot 
+     1open: '//trim(fname),2)
+         !## read unconditioned results
+         fname=imod_utl_subst(fname,trim(pname),'_sens_'//
+     1trim(imod_utl_itos(0)))
+         if(.not.idfread(h(2),fname,1))call imod_utl_printtext('cannot 
+     1open: '//trim(fname),2)
+    
+         !## gradient - perturbation/zero
+         h(1)%x=(h(1)%x-h(2)%x)/param(pest_igrad)%delta 
+    
+         !## overwrite conditioned results as jacobian values
+         fname=imod_utl_subst(fname,'_sens_'//trim(imod_utl_itos(0)),tr
+     1im(pname))
+         if(.not.idfwrite(h(1),fname,0))call imod_utl_printtext('cannot 
+     1write to: '//trim(fname),2)
+         call idfdeallocate(h,size(h))
+    
+        endif
       end if
       if (type.eq.splitnc) then
          fname = met1fname(isplit,text,ilay,'idf')

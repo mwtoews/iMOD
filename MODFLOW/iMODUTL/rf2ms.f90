@@ -1210,7 +1210,7 @@ END SUBROUTINE
           !   write(strarr(4),*) abs(dxcid(icol,irow,ilay))
           !   write(str,'(4(a,1x))') (trim(adjustl(strarr(j))),j=1,4)
           !   write(idxc,'(a)') trim(str)
-          !end if   
+          end if   
        end do      
     end do      
  end do
