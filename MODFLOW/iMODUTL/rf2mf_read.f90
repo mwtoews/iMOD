@@ -244,7 +244,9 @@ CONTAINS
      nsys=nsys+1
 
      SELECT CASE (IPCK)
+
       CASE (PWEL)     !## (PWEL) well
+      
        wel%sp(kper)%reuse = .false.
        wel%sp(kper)%gcd%nsubsys = nsys
        if (.not.associated(wel%sp(kper)%gcd%subsys)) allocate(wel%sp(kper)%gcd%subsys(maxsubsys))
@@ -254,19 +256,20 @@ CONTAINS
        wel%sp(kper)%gcd%subsys(nsys)%isub = isys
        if (.not.associated(wel%sp(kper)%gcd%subsys(nsys)%data)) allocate(wel%sp(kper)%gcd%subsys(nsys)%data(1))
        call RF2MF_READ1MAIN_system(wel%sp(kper)%gcd%subsys(nsys)%data(it),ios,ilay,fct,imp,constante,iarr,fname,iusclnodata,idsclnodata)
+
       CASE (PDRN)     !## (PDRN) drainage
+
        drn%sp(kper)%ldrn  = .true.
        drn%sp(kper)%reuse = .false.
-       msys = drn%sp(kper)%gcd%nsubsys
-       if(it.eq.1)msys = msys + 1
-       drn%sp(kper)%gcd%nsubsys = msys
-!       drn%sp(kper)%gcd%nsubsys = nsys
+       msys=drn%sp(kper)%gcd%nsubsys+nsys
+!       if(it.eq.1)msys = msys + 1
+!       drn%sp(kper)%gcd%nsubsys = msys
        if (.not. associated(drn%sp(kper)%gcd%subsys)) allocate(drn%sp(kper)%gcd%subsys(maxsubsys))
-       drn%sp(kper)%gcd%subsys(nsys)%ilay = ilay
+       drn%sp(kper)%gcd%subsys(msys)%ilay = ilay
 !       drn%sp(kper)%gcd%subsys(nsys)%factor = fct
        isys=isub; if(isumbudget.eq.1)isys=1
-       drn%sp(kper)%gcd%subsys(nsys)%isub = isys
-       drn%sp(kper)%gcd%subsys(nsys)%ldrn = .true.
+       drn%sp(kper)%gcd%subsys(msys)%isub = isys
+       drn%sp(kper)%gcd%subsys(msys)%ldrn = .true.
        if (.not.associated(drn%sp(kper)%gcd%subsys(msys)%data)) allocate(drn%sp(kper)%gcd%subsys(msys)%data(3))
        if (itp(it).eq.1) then
         scltype=iusclsumcdr
@@ -279,18 +282,22 @@ CONTAINS
        if (itp(it).eq.2 .and. iconchk.eq.1) then
          call RF2MF_READ1MAIN_system(drn%sp(kper)%gcd%subsys(msys)%data(3),0,ilay,fct,imp,1.0D0,iarr,fname,iusclmostfr,idsclnointp)
        end if
+
       CASE (PRIV)     !## (PRIV) rivers
+      
        riv%sp(kper)%lriv  = .true.
        riv%sp(kper)%reuse = .false.
-       msys = riv%sp(kper)%gcd%nsubsys
-       if(it.eq.1)msys = msys + 1
-       riv%sp(kper)%gcd%nsubsys = msys
+       msys = riv%sp(kper)%gcd%nsubsys+nsys
+!       riv%sp(kper)%gcd%nsubsys = msys
+
+!       if(it.eq.1)msys = msys + 1
+!       riv%sp(kper)%gcd%nsubsys = msys
        if (.not.associated(riv%sp(kper)%gcd%subsys)) allocate(riv%sp(kper)%gcd%subsys(maxsubsys))
-       riv%sp(kper)%gcd%subsys(nsys)%ilay = ilay
+       riv%sp(kper)%gcd%subsys(msys)%ilay = ilay
 !       riv%sp(kper)%gcd%subsys(nsys)%factor = fct
        isys=isub; if(isumbudget.eq.1)isys=1
-       riv%sp(kper)%gcd%subsys(nsys)%isub = isys
-       riv%sp(kper)%gcd%subsys(nsys)%lriv = .true.
+       riv%sp(kper)%gcd%subsys(msys)%isub = isys
+       riv%sp(kper)%gcd%subsys(msys)%lriv = .true.
        if (.not.associated(riv%sp(kper)%gcd%subsys(msys)%data)) allocate(riv%sp(kper)%gcd%subsys(msys)%data(5))
        if (itp(it).eq.1) then
         scltype=iusclsumcdr
@@ -300,7 +307,9 @@ CONTAINS
         ismooth=idsclnointp
        end if
        call RF2MF_READ1MAIN_system(riv%sp(kper)%gcd%subsys(msys)%data(itp(it)),ios,ilay,fct,imp,constante,iarr,fname,scltype,ismooth)
+      
       CASE (PEVT)     !## (PEVT) evapotranspiration
+      
        !## ilay equal zero not possible for evt
        if(ilay.eq.0)then
         CALL IMOD_UTL_PRINTTEXT('You cannot apply a layer code of zero for EVT',2,IUOUT)
@@ -319,7 +328,9 @@ CONTAINS
        endif
        if (it.eq.2) call RF2MF_READ1MAIN_system(evt%sp(kper)%surf,ios,ilay,fct,imp,constante,iarr,fname,iusclarith,idsclnointp)
        if (it.eq.3) call RF2MF_READ1MAIN_system(evt%sp(kper)%exdp,ios,ilay,fct,imp,constante,iarr,fname,iusclarith,idsclnointp)
+      
       CASE (PGHB)     !## (PGHB) general head boundary
+      
        ghb%sp(kper)%reuse = .false.
        ghb%sp(kper)%gcd%nsubsys = nsys
        if (.not.associated(ghb%sp(kper)%gcd%subsys)) allocate(ghb%sp(kper)%gcd%subsys(maxsubsys))
@@ -336,7 +347,9 @@ CONTAINS
         ismooth=idsclnointp
        end if
        call RF2MF_READ1MAIN_system(ghb%sp(kper)%gcd%subsys(nsys)%data(itp(it)),ios,ilay,fct,imp,constante,iarr,fname,scltype,ismooth)
+      
       CASE (PRCH)     !## (PRCH) recharge
+      
        !## ilay equal zero not possible for rch
        if(ilay.eq.0)then
         CALL IMOD_UTL_PRINTTEXT('You cannot apply a layer code of zero for RCH',2,IUOUT)
@@ -350,11 +363,13 @@ CONTAINS
        if (rch%sp(kper)%inrech.gt.mxrech) call imod_utl_printtext('Error, increase mxrech',-3)
        call RF2MF_READ1MAIN_system(rch%sp(kper)%rech(isub),ios,ilay,fct,imp,constante,iarr,fname,iusclarith,idsclintp)
        rch%sp(kper)%rech(isub)%fct = rch%sp(kper)%rech(isub)%fct * 0.001
+      
       CASE (POLF)     !## (POLF) overlandflow
+      
        drn%sp(kper)%lolf  = .true.
        drn%sp(kper)%reuse = .false.
        msys = drn%sp(kper)%gcd%nsubsys+nsys
-       drn%sp(kper)%gcd%nsubsys = msys
+!       drn%sp(kper)%gcd%nsubsys = msys
        drn%sp(kper)%gcd%subsys(msys)%lolf = .true.
        if (.not.associated(drn%sp(kper)%gcd%subsys)) allocate(drn%sp(kper)%gcd%subsys(maxsubsys))
        drn%sp(kper)%gcd%subsys(msys)%ilay = ilay
@@ -368,7 +383,9 @@ CONTAINS
        if (iconchk.eq.1) then
          call RF2MF_READ1MAIN_system(drn%sp(kper)%gcd%subsys(msys)%data(3),0,ilay,fct,imp,1.0D0,iarr,fname,iusclmostfr,idsclnointp)
        end if
+      
       CASE (PCHD)     !## (PCHD) constant head
+      
        chd%sp(kper)%reuse = .false.
        chd%sp(kper)%gcd%nsubsys = nsys
        if (.not.associated(chd%sp(kper)%gcd%subsys)) allocate(chd%sp(kper)%gcd%subsys(maxsubsys))
@@ -378,12 +395,14 @@ CONTAINS
        if (.not.associated(chd%sp(kper)%gcd%subsys(nsys)%data)) allocate(chd%sp(kper)%gcd%subsys(nsys)%data(3))
        call RF2MF_READ1MAIN_system(chd%sp(kper)%gcd%subsys(nsys)%data(1),ios,ilay,fct,imp,constante,iarr,fname,iusclarith,idsclintp)
        call RF2MF_READ1MAIN_system(chd%sp(kper)%gcd%subsys(nsys)%data(2),ios,ilay,fct,imp,constante,iarr,fname,iusclarith,idsclintp)
+      
       CASE (PISG)     !## (PISG) riversegments
+      
        riv%sp(kper)%lisg  = .true.
        fct = 1.; imp = 0.
        riv%sp(kper)%reuse = .false.
        msys = riv%sp(kper)%gcd%nsubsys+1
-       riv%sp(kper)%gcd%nsubsys = msys
+!       riv%sp(kper)%gcd%nsubsys = msys
        if (.not.associated(riv%sp(kper)%gcd%subsys)) allocate(riv%sp(kper)%gcd%subsys(maxsubsys))
        riv%sp(kper)%gcd%subsys(msys)%ilay = ilay
        isys=isub; if(isumbudget.eq.1)isys=1
@@ -391,6 +410,7 @@ CONTAINS
        riv%sp(kper)%gcd%subsys(msys)%lisg = .true.
        if (.not.associated(riv%sp(kper)%gcd%subsys(msys)%data)) allocate(riv%sp(kper)%gcd%subsys(msys)%data(4))
        call RF2MF_READ1MAIN_system(riv%sp(kper)%gcd%subsys(msys)%data(itp(it)),ios,ilay,fct,imp,constante,iarr,fname,iusclnodata,idsclnodata)
+       
      END SELECT
     END IF
 
@@ -398,6 +418,16 @@ CONTAINS
   ENDDO
  ENDDO
 
+ !## set number of systems
+ if(imodpck.eq.1)then
+  if(ipck.eq.priv.or.ipck.eq.pisg)then
+   riv%sp(kper)%gcd%nsubsys=riv%sp(kper)%gcd%nsubsys+nlines
+  endif
+  if(ipck.eq.pdrn.or.ipck.eq.polf)then
+   drn%sp(kper)%gcd%nsubsys=drn%sp(kper)%gcd%nsubsys+nlines
+  endif
+ endif
+ 
  !## read NLAY extra idf files for scr module
  IF(IMODPCK.EQ.0.AND.IPCK.EQ.PSCR.AND.MMOD(PSCR).EQ.1)THEN
   DO IT=1,NLAY

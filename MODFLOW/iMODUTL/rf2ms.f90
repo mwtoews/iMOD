@@ -215,15 +215,34 @@ CONTAINS
   IF(IARMWP.EQ.1.AND.II.EQ.8)CYCLE
   !## correct for artificial recharge from ipf file
   I=II; IF(IARMWP.EQ.1.AND.II.GT.8)I=II+1
+
   SELECT CASE (I)
-   CASE (1);             NODATA(I)=-999.99; SCLTYPE=1; ISMOOTH=0
-   CASE (2:5,7:9);       NODATA(I)=-999.99; SCLTYPE=7; ISMOOTH=0
-   CASE (6,12,13,20);    NODATA(I)=-999.99; SCLTYPE=2; ISMOOTH=1
-   CASE (21,22);         NODATA(I)=-999.99; SCLTYPE=2; ISMOOTH=0
-   CASE (18,19);         NODATA(I)=-999.99; SCLTYPE=6; ISMOOTH=0 !## scaling m/d -> reciprook -> m/d
-   CASE (14:17);         NODATA(I)=-999.99; SCLTYPE=6; ISMOOTH=0
-   CASE (10,11);         NODATA(I)=-999.99; SCLTYPE=5; ISMOOTH=0
+   !## bnd
+   CASE (1);          NODATA(I)=-999.99D0; SCLTYPE=1; ISMOOTH=0
+   !## lgn,root,soil,meteo
+   CASE (2:5,7:9);    NODATA(I)=-999.99D0; SCLTYPE=7; ISMOOTH=0
+   !## surf,ponding,ponding,pwtlevel
+   CASE (6,12,13,20); NODATA(I)=-999.99D0; SCLTYPE=2; ISMOOTH=1
+   !## soilfactor,cond.factor
+   CASE (21,22);      NODATA(I)=-999.99D0; SCLTYPE=2; ISMOOTH=0
+   !## qinfub,qinfru
+   CASE (18,19);      NODATA(I)=-999.99D0; SCLTYPE=7; ISMOOTH=0 !6; SCL_D=0
+   !## runoff,runoff,runon,runon
+   CASE (14:17);      NODATA(I)=-999.99D0; SCLTYPE=7; ISMOOTH=0 !6; SCL_D=0
+   !## wetted area/urban area
+   CASE (10,11);      NODATA(I)=-999.99D0; SCLTYPE=5; ISMOOTH=0
   END SELECT
+
+!  SELECT CASE (I)
+!   CASE (1);             NODATA(I)=-999.99; SCLTYPE=1; ISMOOTH=0
+!   CASE (2:5,7:9);       NODATA(I)=-999.99; SCLTYPE=7; ISMOOTH=0
+!   CASE (6,12,13,20);    NODATA(I)=-999.99; SCLTYPE=2; ISMOOTH=1
+!   CASE (21,22);         NODATA(I)=-999.99; SCLTYPE=2; ISMOOTH=0
+!   CASE (18,19);         NODATA(I)=-999.99; SCLTYPE=6; ISMOOTH=0 !## scaling m/d -> reciprook -> m/d
+!   CASE (14:17);         NODATA(I)=-999.99; SCLTYPE=6; ISMOOTH=0
+!   CASE (10,11);         NODATA(I)=-999.99; SCLTYPE=5; ISMOOTH=0
+!  END SELECT
+
   !## process data
   IF(IOS(I).EQ.0)THEN
    BUFF=CONSTANTE(I); ! NODATA(I)=0.0

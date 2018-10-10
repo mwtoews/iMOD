@@ -334,7 +334,7 @@ CHARACTER(LEN=*),intent(in) :: root,cdate,subm
 INTEGER,INTENT(IN) :: ISIM
 LOGICAL, INTENT(IN) :: LSS
 DOUBLE PRECISION, INTENT(IN) :: DDATE
-REAL(KIND=8), INTENT(IN) :: MV
+REAL(KIND=4), INTENT(IN) :: MV
 LOGICAL, INTENT(IN) :: USESTS
 ! locals
 INTEGER,ALLOCATABLE,DIMENSION(:) :: IUTXT,JUTXT
@@ -448,13 +448,9 @@ ELSE
    READ(IU,*,IOSTAT=JOS) DBLDATE !IDATE
    !## skip this period since it is apparently not a date
    IF(JOS.EQ.0)MPER=MPER+1
-!   IF(JOS.NE.0)THEN
    DO J=1,ABS(IIPF); DO I=1,TS(J)%NROWIPF
     IF(.NOT.TS(J)%STVALUE(I)%VALID)CYCLE; READ(IU,*)
    ENDDO; ENDDO
-!   ELSE
-!    MPER=MPER+1
-!   ENDIF
   ENDDO
   REWIND(IU)
 
@@ -467,7 +463,6 @@ ELSE
     II=II+1
 
     !## apply appropriate slash
-!    ichr=92; if(OS.eq.2)ichr=47
     IF(trim(subm).eq.'')THEN 
      LINE=TRIM(ROOT)//CHAR(ichr)//'timeseries'//CHAR(ichr)//'ipf'//TRIM(IMOD_UTL_ITOS(J))//'_'//TRIM(TS(J)%STVALUE(I)%ID)//'.txt'
     ELSE
