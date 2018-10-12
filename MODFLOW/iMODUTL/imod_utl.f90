@@ -3079,11 +3079,11 @@ END SUBROUTINE IMOD_UTL_QKSORT
   !## normalize tlp() again
   IF(SUM(TLP).GT.0.0)TLP=(1.0/SUM(TLP))*TLP
 
-  !## remove small percentages
-  DO ILAY=1,N; IF(TLP(ILAY).LT.MINP)TLP(ILAY)=0.0; ENDDO
+!  !## remove small percentages
+!  DO ILAY=1,N; IF(TLP(ILAY).LT.MINP)TLP(ILAY)=0.0; ENDDO
 
-  !## normalize tlp() again
-  IF(SUM(TLP).GT.0.0)TLP=(1.0/SUM(TLP))*TLP
+!  !## normalize tlp() again
+!  IF(SUM(TLP).GT.0.0)TLP=(1.0/SUM(TLP))*TLP
 
   !## remove small transmissivities
   IF(MINKH.GT.0.0)THEN

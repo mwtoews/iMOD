@@ -781,12 +781,12 @@ c init
 !              endif
 !             end if
              kh(ilay)=kdsv(icol,irow,ilay)
-             kh(ilay)=(cc(icol,irow,ilay)+cr(icol,irow,ilay))/2.0
+!             kh(ilay)=(cc(icol,irow,ilay)+cr(icol,irow,ilay))/2.0
              tp(ilay) = botm(icol,irow,lbotm(ilay)-1)
              bt(ilay) = botm(icol,irow,lbotm(ilay))
              dz = tp(ilay)-bt(ilay)
              if (dz.gt.0.0) then
-                kh(ilay) = kh(ilay)/(dz+tiny)
+                kh(ilay) = kh(ilay)/(dz) !+tiny)
                 !## apply uniform khv in case tlp is not depending on khv, such as for rivers
                 if(.not.lkhv)kh=1.0
              else
