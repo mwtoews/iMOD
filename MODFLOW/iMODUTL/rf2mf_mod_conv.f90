@@ -429,6 +429,7 @@
          character(len=maxlen) :: text = 'Well Package file'
          integer                        :: type = iwel
          integer                        :: mxactr = 1
+         logical                        :: wsubsys = .false. !## needed for ipest - but not working right now
          integer                        :: cbnlay = 0
          integer, dimension(:), pointer :: cblay => null()
          type(tSpGcdLcd), dimension(:), pointer :: sp => null()
@@ -2432,7 +2433,7 @@
 !...     locals
       integer :: cfn_getlun, lun, iper, isub, n, i, luncb
       character(len=maxlen) :: nstr
-      character(len=maxlen), dimension(3) :: str
+      character(len=maxlen), dimension(4) :: str
 !.......................................................................
 
 !...     return in case package is not active
@@ -2469,6 +2470,11 @@
          n = n + 1
          write(str(n),*) 'noprint'
       end if
+      if (wel%wsubsys) then
+         n = n + 1
+         write(str(n),*) 'wsubsys isub'
+      end if
+
       write(nstr,*) n
       write(lun,'('//trim(nstr)//'(a,1x))')(trim(adjustl(str(i))), i = 1, n)
 

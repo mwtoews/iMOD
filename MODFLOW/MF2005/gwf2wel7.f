@@ -132,12 +132,12 @@ c check or RSUBSYS has been defined and AUX variabel exist              ! wsubsy
          enddo                                                          ! wsubsys
          if (iwelsubsys.eq.0) then                                      ! wsubsys
             ! ERROR defined variable not found                          ! wsubsys
-            write(iout,'(1x,3a)') 'ERROR RSUBSYS variable ',welsubsys,  ! wsubsys
+            write(iout,'(1x,3a)') 'ERROR WSUBSYS variable ',welsubsys,  ! wsubsys
      1                     ' not defined as an auxiliary variable.'     ! wsubsys
             call ustop(' ')                                             ! wsubsys
          else                                                           ! wsubsys
             ! rsubsys found                                             ! wsubsys
-            write(iout,'(1x,3a)') 'RSUBSYS variabel ',welsubsys,        ! wsubsys
+            write(iout,'(1x,3a)') 'WSUBSYS variabel ',welsubsys,        ! wsubsys
      1                    ' used for sub-system indices.'               ! wsubsys
             ! isubsys gets the column number of WEL in which the       ! wsubsys
             ! sub system indices                                        ! wsubsys
