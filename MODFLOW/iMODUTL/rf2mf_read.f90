@@ -53,9 +53,15 @@ CONTAINS
  DATA ITP/1,2,3,4,5/
  integer :: scltype, ismooth,isys
 
- IF(IMODPCK.EQ.0)NTOPICS=MDIM(IPCK)
- IF(IMODPCK.EQ.1)THEN
-  NTOPICS=PDIM(IPCK)
+ IF(IMODPCK.EQ.0)THEN
+  NTOPICS=MDIM(IPCK)
+  IF(MMOD(IPCK).EQ.0)RETURN    !## not active in header
+
+  ELSEIF(IMODPCK.EQ.1)THEN
+
+  IF(MPCK(IPCK).EQ.0)RETURN    !## not active in header
+ 
+ NTOPICS=PDIM(IPCK)
   !## reset reuse variable on default on .false.
   SELECT CASE (IPCK)
    CASE (PWEL)     !## (PWEL) well

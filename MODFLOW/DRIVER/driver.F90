@@ -175,7 +175,7 @@ call pks7mpibarrier() ! PKS
  
  ! option for merging PKS output IDF files
  call cfn_vcl_fndc(ivcl,iarg,'-pksmergeidf',.true.,idfmergefile,1)
- if (iarg.gt.0) then
+ if (iarg.gt.0) then 
     call pks_imod_utl_idfmerge(idfmergefile) 
     stop   
  end if

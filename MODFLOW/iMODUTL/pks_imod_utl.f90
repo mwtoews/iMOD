@@ -211,6 +211,10 @@ contains
        gidf%xmax    = xmax 
        gidf%ymin    = ymin
        gidf%ymax    = ymax
+       
+       !## set precision definition
+       gidf%itype   = lidf%itype
+       
        if(.not.associated(gidf%x)) allocate(gidf%x(gncol,gnrow))
        ! assign nodata
        nodata = gidf%nodata
