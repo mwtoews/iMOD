@@ -452,8 +452,8 @@ C7C-----ANISOTROPY (VKA).
          CALL U2DREL(VKA(:,:,KK),ANAME(IANAME),NROW,NCOL,KK,IN,IOUT)
          !## imod enters vertical anisotropy as kv/kh in idf form only! mf2005 as kh/kv, so invert
          if(luse_runfile)then
-          DO I=1,NROW                                                    
-            DO J=1,NCOL  
+          DO J=1,NROW                                                    
+            DO I=1,NCOL  
              IF(VKA(I,J,KK).NE.0.0)VKA(I,J,KK)=1.0/VKA(I,J,KK)
             ENDDO
           ENDDO

@@ -210,10 +210,15 @@ CONTAINS
  
  !## include blank out array icm pilotpoitns
  PPBLANKOUT=''; NULLIFY(BLNKOUT%X)
- CALL IDFCOPY(IDFM,BLNKOUT); ALLOCATE(BLNKOUT%X(NCOL,NROW))
+ if(ioption.eq.0)then
+  CALL IDFCOPY(IDF,BLNKOUT); ALLOCATE(BLNKOUT%X(IDF%NCOL,IDF%NROW))
+ else
+  CALL IDFCOPY(IDFM,BLNKOUT); ALLOCATE(BLNKOUT%X(NCOL,NROW))
+ endif
  IF(PEST_KTYPE.LT.0)THEN
- 
+
   IF(IOPTION.EQ.0)THEN
+  
    READ(IURUN,'(A256)',IOSTAT=IOS) PPBLANKOUT
    CALL IMOD_UTL_FILENAME(PPBLANKOUT)
    CALL IMOD_UTL_PRINTTEXT('Assigned '//TRIM(PPBLANKOUT),0)
@@ -230,10 +235,12 @@ CONTAINS
    ENDIF
 
   ELSEIF(IOPTION.EQ.1)THEN
+
    ALLOCATE(X(BLNKOUT%NCOL,BLNKOUT%NROW))
    CALL U2DREL(X, 'blnkout', NROW, NCOL, 0, IURUN, IOUT)
    BLNKOUT%X=REAL(X,8)
    DEALLOCATE(X)
+  
   ENDIF
  ELSE
   !## default value 
@@ -1358,14 +1365,13 @@ END SUBROUTINE WRITEIPF
     ENDIF
    ENDIF
 
-   LLOG=.TRUE.
-   IF(Z1.NE.0.0.AND.Z2.NE.0.0)THEN
-    !## ignore parameter with too high of a band for unreliability, turn if off
-    LLOG=LOG10(Z2)-LOG10(Z1).GT.XBANDW
-   ELSE
-    LLOG=.TRUE.
-   ENDIF
-
+   LLOG=.FALSE.
+!   IF(Z1.NE.0.0.AND.Z2.NE.0.0)THEN
+!    !## ignore parameter with too high of a band for unreliability, turn if off
+!    LLOG=LOG10(Z2)-LOG10(Z1).GT.XBANDW
+!   ELSE
+!    LLOG=.TRUE.
+!   ENDIF
    IF(LLOG)THEN
     WRITE(IUPESTOUT,'(/3X,A2,2I5.5,A1,I3.3)') PARAM(I)%PTYPE,PARAM(I)%ILS,PARAM(I)%IZONE,'-',ABS(PARAM(I)%IGROUP)
     WRITE(IUPESTOUT,'(A,2G15.7)') 'This parameter too unreliable to estimate: ',Z1,Z2

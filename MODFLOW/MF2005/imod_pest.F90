@@ -56,7 +56,7 @@ use imod_utl, only: imod_utl_printtext,imod_utl_itos,imod_utl_dtos,imod_utl_crea
    utl_kriging_range,utl_kriging_main
 use gwfmetmodule, only: cdelr, cdelc
 use global, only: lipest, ibound 
-use pestvar, only: param, pest_iter,lgrad,llnsrch,pest_igrad,iupestout,pest_ktype,pest_krange,blnkout,blnkout
+use pestvar, only: param, pest_iter,lgrad,llnsrch,pest_igrad,iupestout,pest_ktype,pest_krange,blnkout
 
 implicit none
 
