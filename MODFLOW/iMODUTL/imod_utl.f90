@@ -38,8 +38,10 @@ MODULE IMOD_UTL
  INTEGER,SAVE :: IUOUT
  INTEGER,DIMENSION(2),SAVE :: IFLAG
  REAL(KIND=8),PARAMETER :: MSWPMV=0.0D0     !##   add meter to surface level urban area
-
-character(len=1024), parameter :: licfile = 'I_accepted_v4_2.txt' 
+  
+ logical :: luse_runfile !## this parameter is needed to tackle the issue of scaling vertical anisotropy artihmetical and apply it inverse fo mf2005
+ 
+character(len=1024), parameter :: licfile = 'I_accepted_v4_3.txt' 
 integer, parameter :: nlic = 33
 character(len=79), dimension(nlic) :: lic
 integer, parameter :: nhdr = 40
@@ -1348,7 +1350,7 @@ CONTAINS
  END FUNCTION IMOD_UTL_GETFNAME
 
  !###===================================================================
- REAL FUNCTION IMOD_UTL_GETREAL(LINE,IOS)
+ REAL(KIND=DP_KIND) FUNCTION IMOD_UTL_GETREAL(LINE,IOS)
  !###===================================================================
  IMPLICIT NONE
  INTEGER,INTENT(OUT) :: IOS

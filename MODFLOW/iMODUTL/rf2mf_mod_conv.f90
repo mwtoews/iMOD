@@ -778,6 +778,8 @@
             bcf%vcont(ilay)%oper = '^'
             bcf%vcont(ilay)%pow = -1.
          end do
+         !## vertical anisotropy need to scaled numerically but entered to the lpf-package as its inverse
+         !## so keep default values and inverse is computed after reading values.
 !         do ilay = 1, nlay
 !            bcf%kva(ilay)%oper = '^'
 !            bcf%kva(ilay)%pow = -1.

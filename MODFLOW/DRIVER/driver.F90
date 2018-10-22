@@ -24,7 +24,7 @@ program driver
 
 ! modules
 use driver_module
-use IMOD_UTL, only : imod_utl_capf
+use IMOD_UTL, only : imod_utl_capf,luse_runfile
 use imod_idf_par, only : idfobj
 use m_main_info
 use m_vcl, only: targ
@@ -183,6 +183,7 @@ call pks7mpibarrier() ! PKS
  call cfn_vcl_arg(ivcl,1,infile,n)
  if (imod_utl_has_ext(infile,'nam')) lnamfile= .true.
  if (imod_utl_has_ext(infile,'run')) lrunfile= .true.
+ luse_runfile=lrunfile
  if (lrunfile .or. lnamfile) then ! run-file or nam-file
     usemodflow=.true.
     modrecord=''

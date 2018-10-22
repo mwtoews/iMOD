@@ -94,7 +94,9 @@ C     ------------------------------------------------------------------
      3                      LAYFLG,VKA,VKCB,SC1,SC2,HANI,WETDRY,HK,
      4                      IMINKD,IMINC,MINKD,MINC                     ! DLT
       use m_mf2005_iu, only: iuani,iupwt
-C
+      use IMOD_UTL, only : imod_utl_capf,luse_runfile
+      
+     C
       CHARACTER*14 LAYPRN(5),AVGNAM(3),TYPNAM(2),VKANAM(2),WETNAM(2),
      1            HANNAM
       DATA AVGNAM/'      HARMONIC','   LOGARITHMIC','     LOG-ARITH'/
@@ -448,6 +450,14 @@ C7C-----ANISOTROPY (VKA).
       END IF
       IF(NPVK.EQ.0 .AND. NPVANI.EQ.0) THEN
          CALL U2DREL(VKA(:,:,KK),ANAME(IANAME),NROW,NCOL,KK,IN,IOUT)
+         !## imod enters vertical anisotropy as kv/kh in idf form only! mf2005 as kh/kv, so invert
+         if(luse_runfile)then
+          DO I=1,NROW                                                    
+            DO J=1,NCOL  
+             IF(VKA(I,J,KK).NE.0.0)VKA(I,J,KK)=1.0/VKA(I,J,KK)
+            ENDDO
+          ENDDO
+         endif
       ELSE
          READ(IN,*) LAYFLG(2,K)
          WRITE(IOUT,121) ANAME(IANAME),K,LAYFLG(2,K)
