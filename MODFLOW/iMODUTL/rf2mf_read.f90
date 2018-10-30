@@ -425,7 +425,7 @@ CONTAINS
  ENDDO
 
  !## set number of systems
- if(imodpck.eq.1)then
+ if(imodpck.eq.1.and.nlines.gt.0)then
   if(ipck.eq.priv.or.ipck.eq.pisg)then
    riv%sp(kper)%gcd%nsubsys=riv%sp(kper)%gcd%nsubsys+nlines
   endif
