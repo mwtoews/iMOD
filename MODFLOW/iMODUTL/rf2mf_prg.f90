@@ -419,7 +419,8 @@ DO
  IF(IOS.LT.0)CALL IMOD_UTL_PRINTTEXT('Error reading/finding time heading stressperiod '//TRIM(IMOD_UTL_ITOS(KPER)),-3)
  READ(LINE,*,IOSTAT=IOS) IPER,DELT,CDATE,ISAVE,isumbudget
  if(ios.ne.0)then
-  isumbudget=0
+  !## set isum flag by ibdg
+  isumbudget=ibdg
   READ(LINE,*,IOSTAT=IOS) IPER,DELT,CDATE,ISAVE
  endif
  IF(IOS.EQ.0)THEN
@@ -897,7 +898,6 @@ ELSE
     READ(LINE,*,IOSTAT=IOS) USEBOX(1:4),SIMCSIZE,MAXSIMCSIZE,LAMBDA(1)
    ENDIF
   ENDIF
-
   IF(IOS.NE.0)CALL IMOD_UTL_PRINTTEXT('ERROR line 5:'//TRIM(LINE),-3)
   IMULT    =1
  ELSEIF(NMULT.EQ.0)THEN

@@ -1334,8 +1334,8 @@ c assemble root
         else
          fmt = '(2a,i2)'
         end if
-         write(prefix,fmt) prefix(1:cfn_length(prefix)),'_sys', isub
-      end if
+        write(prefix,fmt) prefix(1:cfn_length(prefix)),'_sys', isub
+       end if
       end if
 
 c create output file name
