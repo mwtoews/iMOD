@@ -1909,8 +1909,8 @@ c count number of subsystems
          nsubs=1
          do i=2,nrow
             !## riv/isg have + en - system numbers
-            if (abs(table(icolsubs,i)).ne.abs(table(icolsubs,i-1))) then
 !            if (table(icolsubs,i).ne.table(icolsubs,i-1)) then
+            if (abs(table(icolsubs,i)).ne.abs(table(icolsubs,i-1))) then
                nsubs=nsubs+1
             endif
          enddo
@@ -1962,7 +1962,8 @@ c create index, store last position of all subsystems
       isub=1
       if (icolsubs.gt.0) then
          do i=2,nrow
-            if (table(icolsubs,i).ne.table(icolsubs,i-1)) then
+!            if (table(icolsubs,i).ne.table(icolsubs,i-1)) then
+            if (abs(table(icolsubs,i)).ne.abs(table(icolsubs,i-1))) then
                subsidx(isub)=i-1
                isub=isub+1
             endif
