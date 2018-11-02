@@ -1908,7 +1908,9 @@ c count number of subsystems
       if (icolsubs.gt.0) then
          nsubs=1
          do i=2,nrow
-            if (table(icolsubs,i).ne.table(icolsubs,i-1)) then
+            !## riv/isg have + en - system numbers
+            if (abs(table(icolsubs,i)).ne.abs(table(icolsubs,i-1))) then
+!            if (table(icolsubs,i).ne.table(icolsubs,i-1)) then
                nsubs=nsubs+1
             endif
          enddo
