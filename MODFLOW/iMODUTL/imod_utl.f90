@@ -156,6 +156,14 @@ CONTAINS
  !## record length
  IF(IOS.EQ.0)UTL_GETRECORDLENGTH=(IBYTE-247)/256  !## in bytes
  CLOSE(IU)
+
+ if(UTL_GETRECORDLENGTH.le.0)then
+  write(*,'(/a)') 'ERROR'
+  write(*,'(/a)') trim(fname)
+  write(*,'(a)')  'Error reading record length in IDF/ISG.'
+  write(*,'(a/)') 'See iMOD Manual for appropriate record-lengths'
+  stop
+ endif
  
  END FUNCTION UTL_GETRECORDLENGTH
  

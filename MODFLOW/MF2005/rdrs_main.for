@@ -124,8 +124,9 @@ c check for ipf (u2drel only)
          return
       end if
 
-      if (ios.ne.0) call ustop(' Stopped in routine rdrs_main')
-
+      if (ios.ne.0) then
+       call ustop(' Stopped in routine rdrs_main')
+      endif
 c assign result flag
       rdrs_main = ios
 
