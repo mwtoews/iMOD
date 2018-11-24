@@ -1,4 +1,4 @@
-!!  Copyright (C) Stichting Deltares, 2005-2017.
+!!  Copyright (C) Stichting Deltares, 2005-2018.
 !!
 !!  This file is part of iMOD.
 !!
@@ -20,8 +20,19 @@
 !!  P.O. Box 177
 !!  2600 MH Delft, The Netherlands.
 !!
-MODULE IMODCONFIG
+MODULE MOD_CONFIG
 
+#if (defined(X64DEBUG))
+CHARACTER(LEN=20),PARAMETER :: CCONFIG='X64 Debug'
+#endif
+#if (defined(X64RELEASE))
+CHARACTER(LEN=20),PARAMETER :: CCONFIG='X64 Optimized'
+#endif
+#if (defined(X32DEBUG))
+CHARACTER(LEN=20),PARAMETER :: CCONFIG='X32 Debug'
+#endif
+#if (defined(X32RELEASE))
 CHARACTER(LEN=20),PARAMETER :: CCONFIG='X32 Optimized'
+#endif
 
-END MODULE IMODCONFIG
+END MODULE MOD_CONFIG

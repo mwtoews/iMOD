@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<VisualStudioUserFile ProjectCreator="Intel Fortran" Keyword="Console Application" Version="11.0" ProjectIdGuid="{9DCF2814-D3E1-45BC-B145-0666F2F5A8F6}">
+	<Configurations>
+		<Configuration Name="Debug|Win32" CommandArguments="d:\IMOD-MODELS\TMODEL\IMPORTSOBEK.INI" WorkingDirectory="D:\IMOD-MODELS\IMOD"/>
+		<Configuration Name="Release|Win32"/>
+		<Configuration Name="Debug|x64" WorkingDirectory="d:\IMOD-MODELS\SWISS\"/>
+		<Configuration Name="Release|x64" CommandArguments="d:\IMOD-MODELS\A27\" WorkingDirectory="d:\OSS_DBL\"/></Configurations></VisualStudioUserFile>
