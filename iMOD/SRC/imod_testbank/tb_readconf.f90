@@ -155,13 +155,13 @@ CONTAINS
  INTEGER,PARAMETER :: MXMAP=14
  INTEGER,INTENT(IN) :: IRUN
  INTEGER :: IU,IOS,IEXE,JEXE,I,J,NNODATA,IMAP,N,IROW,ICOL
- REAL :: XMABS
+ REAL(KIND=DP_KIND) :: XMABS
  CHARACTER(LEN=256) :: RESDIR,RES,FNAME
  CHARACTER(LEN=12),DIMENSION(MXMAP) :: CMAP
  CHARACTER(LEN=256),DIMENSION(:),POINTER :: LISTNAME
- REAL,DIMENSION(5) :: XMED,PERC
+ REAL(KIND=DP_KIND),DIMENSION(5) :: XMED,PERC
  TYPE(IDFOBJ),DIMENSION(2) :: IDF
- DATA PERC/0.0,25.0,50.0,75.0,100.0/ 
+ DATA PERC/0.0D0,25.0,50.0D0,75.0,100.0D0/ 
  DATA CMAP/'head','bdgfrf','bdgflf','bdgfff','bdgsto','bdgwel','bdgdrn','bdgriv','bdgghb','bdgrch', &
            'bdgevt','bdgisg','bdgolf','bdgbnd'/  
  CHARACTER(LEN=12) :: CCODE
@@ -244,7 +244,7 @@ CONTAINS
            !## both equal to nodata difference is zero
            ELSEIF(IDF(1)%X(ICOL,IROW).EQ.IDF(1)%NODATA.AND. &
                   IDF(2)%X(ICOL,IROW).EQ.IDF(2)%NODATA)THEN
-            IDF(1)%X(ICOL,IROW)=0.0
+            IDF(1)%X(ICOL,IROW)=0.0D0
            !## one of them equal no nodata, difference is nodata
            ELSE
             IDF(1)%X(ICOL,IROW)=IDF(1)%NODATA
@@ -258,7 +258,7 @@ CONTAINS
            !## get statistics
            CALL UTL_GETMED(IDF(1)%X,IDF(1)%NCOL*IDF(1)%NROW,IDF(1)%NODATA,PERC,SIZE(PERC),NNODATA,XMED)
            !## get mean absolute difference, skip nodata
-           XMABS=0.0; N=0
+           XMABS=0.0D0; N=0
            DO IROW=1,IDF(1)%NROW; DO ICOL=1,IDF(1)%NCOL
             IF(IDF(1)%X(ICOL,IROW).NE.IDF(1)%NODATA)THEN
              XMABS=XMABS+ABS(IDF(1)%X(ICOL,IROW)); N=N+1
@@ -266,7 +266,7 @@ CONTAINS
            ENDDO; ENDDO
            IF(N.GT.0)XMABS=XMABS/REAL(N)
           ELSE
-           XMED=0.0
+           XMED=0.0D0
           ENDIF       
           WRITE(IUOUT, '(A35,5(1X,F15.7))') TRIM(LISTNAME(I)),(XMED(J),J=1,SIZE(PERC))
           WRITE(IUOUTG,'(A35,5(1X,F15.7))') TRIM(LISTNAME(I)),(XMED(J),J=1,SIZE(PERC))

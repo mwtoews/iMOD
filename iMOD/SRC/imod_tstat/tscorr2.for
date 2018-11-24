@@ -37,9 +37,9 @@ c arguments
      1          nlag,             
      1          ncol              
 
-      real, intent(out)  :: result(nlag,ncol)
+      REAL(KIND=DP_KIND), intent(out)  :: result(nlag,ncol)
       
-      double precision dtmp(nlag,ncol)
+      REAL(KIND=DP_KIND) dtmp(nlag,ncol)
 
       real      x1(nval1),y1(nval1), 
      1          x2(nval2),y2(nval2), 
@@ -62,7 +62,7 @@ c local variables
      1          lowint,uppint         
                                       
 
-      double precision val1,val2,dval,dmv
+      REAL(KIND=DP_KIND) val1,val2,dval,dmv
 
       logical   continue
 
@@ -79,12 +79,12 @@ c ------------------------------------------------------------------------------
 
 
 c init
-      dmv=mv          !  double precision version of nodata value
+      dmv=mv          !  REAL(KIND=DP_KIND) version of nodata value
 
 
       do j=1,ncol
          do i=1,nlag
-            dtmp(i,j)=0.0
+            dtmp(i,j)=0.0D0
          enddo
       enddo
 
@@ -195,11 +195,11 @@ c            if ((ts2(1,1)-ts1(i1b,1)).gt.maxlag) then
 
 
       do i=1,nlag
-         if (dtmp(i,in).eq.0.0) then
+         if (dtmp(i,in).eq.0.0D0) then
             do j=1,ncol
                dtmp(i,j)=dmv
             enddo
-            dtmp(i,in)=0.0  
+            dtmp(i,in)=0.0D0  
          else
             n=dtmp(i,in)
             dtmp(i,igmlg) = dtmp(i,igmlg)/n                        
@@ -212,7 +212,7 @@ c            if ((ts2(1,1)-ts1(i1b,1)).gt.maxlag) then
 
             dtmp(i,icov)  = dtmp(i,icov) - dtmp(i,igem1)*dtmp(i,igem2)
 
-            if ((dtmp(i,ivar1)*dtmp(i,ivar2)).gt.0.0) then
+            if ((dtmp(i,ivar1)*dtmp(i,ivar2)).gt.0.0D0) then
                dtmp(i,icc)   =
      1                 dtmp(i,icov)/sqrt(dtmp(i,ivar1)*dtmp(i,ivar2))
             else

@@ -1,4 +1,4 @@
-!!  Copyright (C) Stichting Deltares, 2005-2017.
+!!  Copyright (C) Stichting Deltares, 2005-2018.
 !!
 !!  This file is part of iMOD.
 !!
@@ -36,7 +36,7 @@ CONTAINS
  INTEGER,ALLOCATABLE,DIMENSION(:) :: IBASIS 
  REAL (DP), ALLOCATABLE,DIMENSION(:,:) :: BI 
  REAL (DP), ALLOCATABLE,DIMENSION(:) :: X,TEMP,IMULT 
- REAL :: XX
+ REAL(KIND=DP_KIND) :: XX
  INTEGER ::  KA,N0
 
  KA=NCON; N0=NVAR
@@ -50,13 +50,13 @@ CONTAINS
 
  !## initialize
  IBASIS     =0
- BI         =0.0
- TEMP       =0.0
+ BI         =0.0D0
+ TEMP       =0.0D0
  ISORT      =0
- IMULT      =1.0
+ IMULT      =1.0D0
 
  IF(ALLOCATED(IN_CON))THEN
-  CONSTR_TYPE=0; A=0.0; B=0.0; C=0.0; NUMLE=0; NUMGE=0
+  CONSTR_TYPE=0; A=0.0D0; B=0.0D0; C=0.0D0; NUMLE=0; NUMGE=0
   DO I=1,NCON
    READ(IN_CON(I)(:), *) A(I,1:NVAR)
    ISORT(I)=I
@@ -81,9 +81,9 @@ CONTAINS
  ENDIF
  
  DO I=1,KA
-  IF(B(I).LT.0.0)THEN
-   A(I,:)=-1.0*A(I,:)
-   B(I)  =-1.0*B(I)
+  IF(B(I).LT.0.0D0)THEN
+   A(I,:)=-1.0D0*A(I,:)
+   B(I)  =-1.0D0*B(I)
    IF(CONSTR_TYPE(I).EQ.1)THEN
     CONSTR_TYPE(I)=2
     NUMLE=NUMLE-1
@@ -93,7 +93,7 @@ CONTAINS
     NUMLE=NUMLE+1
     NUMGE=NUMGE-1
    ENDIF
-   IMULT(I)=-1.0*IMULT(I)
+   IMULT(I)=-1.0D0*IMULT(I)
   ENDIF
  END DO
 
@@ -151,7 +151,7 @@ CONTAINS
  ALLOCATE(X(XDIM))
 
  !## initialize
- X=0.0
+ X=0.0D0
 
  !## one variable
  IF(N0.EQ.1)THEN
@@ -192,11 +192,11 @@ CONTAINS
  IF(.NOT.ALLOCATED(XSLK))ALLOCATE(XSLK(NCON))
 
  !## initialize
- XVAR=0.0
- XSLK=0.0
+ XVAR=0.0D0
+ XSLK=0.0D0
 
  DO I=1,NCON
-  XX=0.0; DO J=1,NVAR; XX=XX+(A(I,J)*X(J)*IMULT(I)); END DO
+  XX=0.0D0; DO J=1,NVAR; XX=XX+(A(I,J)*X(J)*IMULT(I)); END DO
   XSLK(I)=XX
  END DO
 

@@ -39,11 +39,11 @@ subroutine calcgxg(x,y,nval,gxgdat,result)
 ! arguments
  integer  , intent(in)     :: nval              !> number of values in ts
 
- real     , intent(in)     :: x(nval),y(nval)   !> x,y values
+ REAL(KIND=DP_KIND)     , intent(in)     :: x(nval),y(nval)   !> x,y values
 
  integer  , intent(in)     :: gxgdat(3)         !> start/end date (yyyymmdd), min # meas for Gx3
 
- real     , intent(out)    :: result(3)         !> GHG,GLG,nyear
+ REAL(KIND=DP_KIND)     , intent(out)    :: result(3)         !> GHG,GLG,nyear
 
 
 ! local variables
@@ -51,7 +51,7 @@ subroutine calcgxg(x,y,nval,gxgdat,result)
 
  integer   sdate,edate,ngx3,nyear,ibeg,iend,i,j,jb,je,js,nmin
 
- real      gx3(np),sday,eday,bper,eper,gh3,gl3,d,ds,cper
+ REAL(KIND=DP_KIND)      gx3(np),sday,eday,bper,eper,gh3,gl3,d,ds,cper
 
 ! integer   measdate(np)
 
@@ -67,8 +67,8 @@ subroutine calcgxg(x,y,nval,gxgdat,result)
 
 
  if(nval.le.0)then
-  result(1)=0.0             ! GHG
-  result(2)=0.0             ! GLG
+  result(1)=0.0D0             ! GHG
+  result(2)=0.0D0             ! GLG
   result(3)=0               ! nyear
   return
  endif
@@ -79,8 +79,8 @@ subroutine calcgxg(x,y,nval,gxgdat,result)
  nmin =gxgdat(3)
  nmin = max(3,nmin)
 
- gh3=0.0
- gl3=0.0
+ gh3=0.0D0
+ gl3=0.0D0
 
  nyear=0
  do while (sdate.lt.edate)
@@ -139,7 +139,9 @@ subroutine calcgxg(x,y,nval,gxgdat,result)
 
     ! calc gx3 (at least nmin measurements)
     if (ngx3.ge.nmin) then
-       call sortem(1,ngx3,gx3,0,(/0.0/),(/0.0/),(/0.0/),(/0.0/),(/0.0/),(/0.0/),(/0.0/))
+       !call sortem(1,ngx3,gx3,0,(/0.0D0/),(/0.0D0/),(/0.0D0/),(/0.0D0/),(/0.0D0/),(/0.0D0/),(/0.0D0/))
+      CALL QKSORT(ngx3,GX3)
+
        ! add values to gx3
        do i=1,3
           gl3=gl3+gx3(i)
@@ -160,8 +162,8 @@ subroutine calcgxg(x,y,nval,gxgdat,result)
     result(2)=gl3/(nyear*3)   ! GLG
     result(3)=nyear           ! nyear
  else
-    result(1)=0.0             ! GHG
-    result(2)=0.0             ! GLG
+    result(1)=0.0D0             ! GHG
+    result(2)=0.0D0             ! GLG
     result(3)=0               ! nyear
  endif
 

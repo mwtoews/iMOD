@@ -1,4 +1,4 @@
-!!  Copyright (C) Stichting Deltares, 2005-2017.
+!!  Copyright (C) Stichting Deltares, 2005-2018.
 !!
 !!  This file is part of iMOD.
 !!
@@ -24,7 +24,7 @@ MODULE MOD_ABOUT
 
 USE WINTERACTER
 USE RESOURCE
-USE IMODVAR
+USE IMODVAR, ONLY : DP_KIND,SP_KIND,LBETA_QUESTION,EXEPATH,LICFILE,RVERSION,RVERSION_EXE,LBETA
 USE MOD_UTL, ONLY : NEWLINE,UTL_GETUNIT,ITOS,UTL_IMODVERSION
 USE MOD_PREF_PAR, ONLY : PREFVAL
 USE MOD_OSD, ONLY : OSD_OPEN
@@ -203,7 +203,7 @@ CONTAINS
  
  ALLOCATE(CHARACTER(LEN=STRLEN) :: STR)
 
- STR='Copyright (C) Stichting Deltares, 2005-2017. '//NEWLINE// &
+ STR='Copyright (C) Stichting Deltares, 2005-2018. '//NEWLINE// &
 NEWLINE// &
 'This Deltares-software executable is part of iMOD. iMOD is Deltares-soft'// &
 'ware; the source code of iMOD is also available as free open source soft'// &
@@ -265,7 +265,7 @@ NEWLINE// &
  
  ALLOCATE(CHARACTER(LEN=STRLEN) :: STR)
 
- STR='Copyright (C) Stichting Deltares, 2005-2017. '//NEWLINE// &
+ STR='Copyright (C) Stichting Deltares, 2005-2018. '//NEWLINE// &
  NEWLINE// &
  'WARNING: Use of ‘Beta-iMOD’ by Licensee is only allowed under the terms and conditions '// &
  'of the “Software License Agreement iMOD-Version B plus Beta 1.5, July 2014” agreed between '// &
@@ -333,7 +333,7 @@ NEWLINE// &
 'd by Deltares, including documentation, as described below under DESCRIP'// &
 'TION OF iMOD, hereinafter referred to as “iMOD”;'//NEWLINE// &
 'Licensee wishes to acquire a non-exclusive and non-transferable license,'// &
-' without the right of sub-licensing, to use iMOD within Licensee‘s organ'// &
+' without the right of sub-licensing, to USE MODPLOT within Licensee‘s organ'// &
 'isation;'//NEWLINE// &
 'Deltares grants Licensee an iMOD-license on the following conditions.'//NEWLINE// &
 NEWLINE// &
@@ -342,14 +342,14 @@ NEWLINE// &
 'Article 1 License'//NEWLINE// &
 NEWLINE// &
 'Deltares grants Licensee a conditional, non-exclusive, non-transferable '// &
-'license without the right to sublicense or modify, to use iMOD within th'// &
+'license without the right to sublicense or modify, to USE MODPLOT within th'// &
 'e organisation of Licensee. This License Agreement is provided solely un'// &
 'der the condition that Licensee complies with the provisions of this Lic'// &
 'ense Agreement. '//NEWLINE// &
 NEWLINE// &
 'Article 2 Use of iMOD (including the documentation) '//NEWLINE// &
 NEWLINE// &
-'1. Licensee shall only be authorised to use iMOD within its own organisa'// &
+'1. Licensee shall only be authorised to USE MODPLOT within its own organisa'// &
 'tion and for its own use. Licensee shall not be permitted to make any ot'// &
 'her use of iMOD or to make available or grant access to iMOD to any thir'// &
 'd party.'//NEWLINE// &
@@ -484,7 +484,7 @@ NEWLINE// &
 'A computer program to perform a variety of graphical visualizations of M'// &
 'odel Configurations and/or (in)directly related geographical information'// &
 '. The iMOD GUI itself if fully written in Fortran9x and compiled by the '// &
-'Intel Visual Fortran Compiler Professional v11.1.054 in conjunction with'// &
+'Intel Visual Fortran Compiler Professional v11.1.0D054 in conjunction with'// &
 ' Winteracter 10 (Interactive Software Services Ltd (ISS)).'//NEWLINE// &
 NEWLINE// &
 '- The MODFLOW computational core (iMODFLOW):'//NEWLINE// &
@@ -587,7 +587,7 @@ NEWLINE// &
  !###====================================================================
  IMPLICIT NONE
  INTEGER :: I
- REAL :: X
+ REAL(KIND=DP_KIND) :: X
 
  CALL WDIALOGLOAD(ID_DSTARTSCREEN,ID_DSTARTSCREEN)
  CALL WDIALOGTITLE('iMOD, Interactive Modelling ('//TRIM(UTL_IMODVERSION())//')')
@@ -599,13 +599,13 @@ NEWLINE// &
  CALL WDIALOGPUTIMAGE(IDF_PICTURE3,ID_ICONMAIN,1)
  
  CALL WDIALOGSHOW(-1,-1,0,2)
-! CALL WDIALOGRANGEPROGRESSBAR(IDF_PROGRESS1,1,50)
-! DO I=1,50
-!  CALL RANDOM_NUMBER(X)
-!  CALL IOSWAIT(INT(X*8.0))
-!  CALL WDIALOGPUTPROGRESSBAR(IDF_PROGRESS1,I,0)
-! END DO
-! CALL IOSWAIT(150)
+ CALL WDIALOGRANGEPROGRESSBAR(IDF_PROGRESS1,1,50)
+ DO I=1,50
+  CALL RANDOM_NUMBER(X)
+  CALL IOSWAIT(INT(X*8.0))
+  CALL WDIALOGPUTPROGRESSBAR(IDF_PROGRESS1,I,0)
+ END DO
+ CALL IOSWAIT(150)
  CALL WDIALOGUNLOAD()
 
  END SUBROUTINE IMOD_STARTSCREEN

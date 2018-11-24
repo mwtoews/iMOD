@@ -1,4 +1,4 @@
-!!  Copyright (C) Stichting Deltares, 2005-2017.
+!!  Copyright (C) Stichting Deltares, 2005-2018.
 !!
 !!  This file is part of iMOD.
 !!
@@ -24,7 +24,7 @@ MODULE MOD_GOOGLE
 
 USE MODPLOT, ONLY : MPW
 USE MOD_UTL, ONLY : RTOS,DECDEGREES_TO_DMS
-USE IMODVAR, ONLY : PI
+USE IMODVAR, ONLY : DP_KIND,SP_KIND,PI
 USE MOD_UTM, ONLY : UTM_INIT,UTM_UTM2LATLONG
 
 CONTAINS
@@ -35,12 +35,12 @@ CONTAINS
  IMPLICIT NONE
 ! CHARACTER(LEN=256) :: CGM
 ! CHARACTER(LEN=50) :: LL
-! REAL :: X,Y,LAT,LONG,LATMIN,LONGMIN,LATMAX,LONGMAX
- DOUBLE PRECISION :: XUTM,YUTM,LAT,LONG !,LONG0
- REAL :: D,M,S
+! REAL(KIND=DP_KIND) :: X,Y,LAT,LONG,LATMIN,LONGMIN,LATMAX,LONGMAX
+ REAL(KIND=DP_KIND) :: XUTM,YUTM,LAT,LONG !,LONG0
+ REAL(KIND=DP_KIND) :: D,M,S
  
  !## xmin/ymin
- XUTM=MPW%XMIN/1000.0; YUTM=MPW%YMIN/1000.0
+ XUTM=MPW%XMIN/1000.0D0; YUTM=MPW%YMIN/1000.0D0
  
  CALL UTM_INIT('N') !## northern hemisphere
 
@@ -77,19 +77,19 @@ return
 !
 !!WRITE(*,*) TRIM(cgm)
 !
-!!http://maps.google.com/?ie=UTF8&ll=51.360259,5.454798&spn=0.011255,0.0421&z=15
+!!http://maps.google.com/?ie=UTF8&ll=51.360259,5.454798&spn=0.011255D0,0.0421D0&z=15
 !
 !! CGM='explorer '//'"http://maps.google.com/?ie=UTF8&ll='//TRIM(LL)//'&spn=0.179101,0.673599&z=11"'
 !
 !!http://maps.google.com/?ie=UTF8&ll=51.60821,6.047287&spn=0.179101,0.673599&z=11
 !
 !!    write(CGM,'(A256)') trim(CGM)
-!!http://maps.google.com/maps?f=q&hl=en&geocode=&ie=UTF8&q=51.93256,5.712010&sll=51.93256,5.712010&sspn=0.038101,0.076218&ie=UTF8&t=h&z=16
+!!http://maps.google.com/maps?f=q&hl=en&geocode=&ie=UTF8&q=51.93256,5.712010&sll=51.93256,5.712010&sspn=0.0D038101,0.0D076218&ie=UTF8&t=h&z=16
 !!call system('c:\users\peter\work\gw\imod\src\google.bat')
 !!    OPEN(1,FILE='d:\test.txt')
 !!    WRITE(1,*) "start '"//TRIM(cgm)//"'"
 !
-!!explorer "http://maps.google.com/maps?f=q&hl=en&geocode=&ie=UTF8&q=51.93256,5.712010&sll=51.93256,5.712010&sspn=0.038101,0.076218&ie=UTF8&t=h&z=16"
+!!explorer "http://maps.google.com/maps?f=q&hl=en&geocode=&ie=UTF8&q=51.93256,5.712010&sll=51.93256,5.712010&sspn=0.0D038101,0.0D076218&ie=UTF8&t=h&z=16"
 !call system(cgm)
 !!    call system ('start "'//TRIM(cgm)//'"')
 

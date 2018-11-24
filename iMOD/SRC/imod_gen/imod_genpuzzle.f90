@@ -1,4 +1,4 @@
-!!  Copyright (C) Stichting Deltares, 2005-2017.
+!!  Copyright (C) Stichting Deltares, 2005-2018.
 !!
 !!  This file is part of iMOD.
 !!
@@ -24,18 +24,20 @@ MODULE MOD_GEN2GEN_PUZZLE
 
 USE MOD_UTL, ONLY : ITOS,UTL_GETUNIT,UTL_CAP
 USE MOD_OSD, ONLY : OSD_OPEN
+USE IMODVAR, ONLY : DP_KIND,SP_KIND
+USE MOD_QKSORT
 
 CHARACTER(LEN=256) :: GENFNAME
 
 INTEGER,PRIVATE :: NP,ND,NBRCH,DIMXY 
-DOUBLE PRECISION,ALLOCATABLE,DIMENSION(:),PRIVATE :: PNTX,PNTY,PNTX_BU,PNTY_BU
+REAL(KIND=DP_KIND),ALLOCATABLE,DIMENSION(:),PRIVATE :: PNTX,PNTY,PNTX_BU,PNTY_BU
 INTEGER,ALLOCATABLE,DIMENSION(:,:),PRIVATE :: IP,IPNT
 
 INTEGER,PRIVATE :: IU
-DOUBLE PRECISION,DIMENSION(2,2),PRIVATE :: XC,YC
-DOUBLE PRECISION,ALLOCATABLE,DIMENSION(:),PRIVATE :: DUMX,DUMY
+REAL(KIND=DP_KIND),DIMENSION(2,2),PRIVATE :: XC,YC
+REAL(KIND=DP_KIND),ALLOCATABLE,DIMENSION(:),PRIVATE :: DUMX,DUMY
 
-REAL :: SBX,SBY,SBMINX,SBMAXY,SBMAXX,SBMINY
+REAL(KIND=DP_KIND) :: SBX,SBY,SBMINX,SBMAXY,SBMAXX,SBMINY
 INTEGER :: NSBX,NSBY
 
 CONTAINS
@@ -69,7 +71,9 @@ CONTAINS
  PNTX_BU=PNTX; PNTY_BU=PNTY
 
  !## sort x-values indices
- CALL SORTEMD(1,NP,PNTX,3,IPNT(:,1),IPNT(:,2),IPNT(:,3),(/0.0/),(/0.0/),(/0.0/),(/0.0/))
+ !call sortemD(1,NP,PNTX,3,IPNT(:,1),IPNT(:,2),IPNT(:,3),(/0.0D0/),(/0.0D0/),(/0.0D0/),(/0.0D0/))
+ !CALL QKSORT(NP,PNTX,V2=IPNT(:,1),V3=IPNT(:,2),V4=IPNT(:,3))
+
  !## adjust pnty based on sorted vector ipnt(:,1)
  DO I=1,NP; PNTY(I)=PNTY_BU(IPNT(I,1)); ENDDO
 
@@ -98,7 +102,8 @@ CONTAINS
  ENDDO
 
  !## resort superblock indices
- CALL SORTEMI(1,NP,IPNT(:,1),3,IPNT(:,2),IPNT(:,3),IPNT(:,4),(/0.0/),(/0.0/),(/0.0/),(/0.0/))
+ !call sortemI(1,NP,IPNT(:,1),3,IPNT(:,2),IPNT(:,3),IPNT(:,4),(/0.0D0/),(/0.0D0/),(/0.0D0/),(/0.0D0/))
+ !CALL QKSORT(NP,IPNT(:,1),V2=IPNT(:,2),V3=IPNT(:,3),V4=IPNT(:,3),,V5=IPNT(:,4))
  !## adjust pnty based on sorted vector ipnt(:,1)
  DO I=1,NP; PNTX(I)=PNTX_BU(IPNT(I,1)); PNTY(I)=PNTY_BU(IPNT(I,1)); END DO
 
@@ -136,7 +141,9 @@ CONTAINS
  PNTX_BU=PNTX; PNTY_BU=PNTY
 
  !## sort x-values indices (real sort)
- CALL SORTEMD(1,NP,PNTX,3,IPNT(:,1),IPNT(:,2),IPNT(:,3),(/0.0/),(/0.0/),(/0.0/),(/0.0/))
+ !call sortemD(1,NP,PNTX,3,IPNT(:,1),IPNT(:,2),IPNT(:,3),(/0.0D0/),(/0.0D0/),(/0.0D0/),(/0.0D0/))
+! CALL QKSORT(NP,PNTX,V2=IPNT(:,1),V3=IPNT(:,2),V4=IPNT(:,3))
+
  !## adjust pnty based on sorted vector ipnt(:,1)
  DO I=1,NP; PNTY(I)=PNTY_BU(IPNT(I,1)); END DO
 
@@ -158,7 +165,9 @@ CONTAINS
  END DO
 
  !## resort superblock indices
- CALL SORTEMI(1,NP,IPNT(:,1),3,IPNT(:,2),IPNT(:,3),IPNT(:,4),(/0.0/),(/0.0/),(/0.0/),(/0.0/))
+ !call sortemI(1,NP,IPNT(:,1),3,IPNT(:,2),IPNT(:,3),IPNT(:,4),(/0.0D0/),(/0.0D0/),(/0.0D0/),(/0.0D0/))
+ !CALL QKSORT(NP,IPNT(:,1),V2=IPNT(:,2),V3=IPNT(:,3),V4=IPNT(:,3))
+
  !## adjust pnty based on sorted vector ipnt(:,1)
  DO I=1,NP; PNTX(I)=PNTX_BU(IPNT(I,1)); PNTY(I)=PNTY_BU(IPNT(I,1)); END DO
 
@@ -181,7 +190,9 @@ CONTAINS
  PNTY_BU=PNTY
 
  !## sort x-values indices
- CALL SORTEMD(1,NP,PNTX,3,IPNT(:,1),IPNT(:,2),IPNT(:,3),(/0.0/),(/0.0/),(/0.0/),(/0.0/))
+ !call sortemD(1,NP,PNTX,3,IPNT(:,1),IPNT(:,2),IPNT(:,3),(/0.0D0/),(/0.0D0/),(/0.0D0/),(/0.0D0/))
+ !CALL QKSORT(NP,PNTX,V2=IPNT(:,1),V3=IPNT(:,2),V4=IPNT(:,3))
+
  !## adjust pnty based on sorted vector ipnt(:,1)
  DO I=1,NP
   PNTY(I)=PNTY_BU(IPNT(I,1))
@@ -219,7 +230,7 @@ CONTAINS
  END DO
 
  !## resort superblock indices
- CALL SORTEMI(1,NP,IPNT(:,1),4,IPNT(:,2),IPNT(:,3),IPNT(:,4),IPNT(:,5),(/0.0/),(/0.0/),(/0.0/))
+ !call sortemI(1,NP,IPNT(:,1),4,IPNT(:,2),IPNT(:,3),IPNT(:,4),IPNT(:,5),(/0.0D0/),(/0.0D0/),(/0.0D0/))
  !## adjust pnty based on sorted vector ipnt(:,1)
  DO I=1,NP
   PNTX(I)=PNTX_BU(IPNT(I,1))
@@ -493,7 +504,7 @@ CONTAINS
  !##=====================================================================
  IMPLICIT NONE
  INTEGER,INTENT(IN) :: IJG
- DOUBLE PRECISION :: XC,YC
+ REAL(KIND=DP_KIND) :: XC,YC
  INTEGER :: I,J,DP
 
  DP=IP(IJG,2)+1-IP(IJG,1)

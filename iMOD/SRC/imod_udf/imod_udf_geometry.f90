@@ -86,7 +86,7 @@ subroutine angle_box_2d ( dist, p1, p2, p3, p4, p5 )
 !
 !  If DIST = 0, assume the user knows best.
 !
-  if ( dist == 0.0D+00 ) then
+  if ( dist == 0.0D0+00 ) then
     p4(1:2) = p2(1:2)
     p5(1:2) = p2(1:2)
     return
@@ -138,7 +138,7 @@ subroutine angle_box_2d ( dist, p1, p2, p3, p4, p5 )
 
   temp1 = dot_product ( u1(1:2), p3(1:2) - p2(1:2) )
 
-  if ( temp1 < 0.0D+00 ) then
+  if ( temp1 < 0.0D0+00 ) then
     u1(1:2) = -u1(1:2)
   end if
 
@@ -148,7 +148,7 @@ subroutine angle_box_2d ( dist, p1, p2, p3, p4, p5 )
   u2(1:2) = u2(1:2) / temp1
 
   temp1 = dot_product ( u2(1:2), p1(1:2) - p2(1:2) )
-  if ( temp1 < 0.0D+00 ) then
+  if ( temp1 < 0.0D0+00 ) then
     u2(1:2) = -u2(1:2)
   end if
 !
@@ -159,9 +159,9 @@ subroutine angle_box_2d ( dist, p1, p2, p3, p4, p5 )
   temp1 = dot_product ( u1(1:2), p3(1:2) - p2(1:2) )
   temp2 = dot_product ( u2(1:2), p1(1:2) - p2(1:2) )
 
-  if ( temp1 == 0.0D+00 .or. temp2 == 0.0D+00 ) then
+  if ( temp1 == 0.0D0+00 .or. temp2 == 0.0D0+00 ) then
 
-    if ( dot_product ( u1(1:2), u2(1:2) ) < 0.0D+00 ) then
+    if ( dot_product ( u1(1:2), u2(1:2) ) < 0.0D0+00 ) then
       u1(1:2) = -u1(1:2)
     end if
 
@@ -196,7 +196,7 @@ subroutine angle_box_2d ( dist, p1, p2, p3, p4, p5 )
 !  P1 = P2, which I now treat specially just to guarantee I
 !  avoid this problem!
 !
-  if ( dot_product ( u1(1:2), u2(1:2) ) < 0.0D+00 ) then
+  if ( dot_product ( u1(1:2), u2(1:2) ) < 0.0D0+00 ) then
     u2(1:2) = -u2(1:2)
   end if
 
@@ -284,7 +284,7 @@ function angle_deg_2d ( p1, p2, p3 )
 !
 !    Except for the zero angle case, it should be true that
 !
-!      ANGLE_DEG_2D ( P1, P2, P3 ) + ANGLE_DEG_2D ( P3, P2, P1 ) = 360.0
+!      ANGLE_DEG_2D ( P1, P2, P3 ) + ANGLE_DEG_2D ( P3, P2, P1 ) = 360.0D0
 !
 !        P1
 !        /
@@ -333,14 +333,14 @@ function angle_deg_2d ( p1, p2, p3 )
   p(2) = ( p3(1) - p2(1) ) * ( p1(2) - p2(2) ) &
        - ( p3(2) - p2(2) ) * ( p1(1) - p2(1) )
 
-  if ( p(1) == 0.0D+00 .and. p(2) == 0.0D+00 ) then
-    angle_deg_2d = 0.0D+00
+  if ( p(1) == 0.0D0+00 .and. p(2) == 0.0D0+00 ) then
+    angle_deg_2d = 0.0D0+00
     return
   end if
 
   angle_rad_2d = atan2 ( p(2), p(1) )
 
-  if ( angle_rad_2d < 0.0D+00 ) then
+  if ( angle_rad_2d < 0.0D0+00 ) then
     angle_rad_2d = angle_rad_2d + 2.0D+00 * r8_pi
   end if
 
@@ -458,14 +458,14 @@ function angle_rad_2d ( p1, p2, p3 )
   p(2) = ( p3(1) - p2(1) ) * ( p1(2) - p2(2) ) &
        - ( p3(2) - p2(2) ) * ( p1(1) - p2(1) )
 
-  if ( all ( p(1:2) == 0.0D+00)  ) then
-    angle_rad_2d = 0.0D+00
+  if ( all ( p(1:2) == 0.0D0+00)  ) then
+    angle_rad_2d = 0.0D0+00
     return
   end if
 
   angle_rad_2d = atan2 ( p(2), p(1) )
 
-  if ( angle_rad_2d < 0.0D+00 ) then
+  if ( angle_rad_2d < 0.0D0+00 ) then
     angle_rad_2d = angle_rad_2d + 2.0D+00 * r8_pi
   end if
 
@@ -521,15 +521,15 @@ function angle_rad_3d ( p1, p2, p3 )
 
   v1norm = sqrt ( sum ( ( p1(1:dim_num) - p2(1:dim_num) )**2 ) )
 
-  if ( v1norm == 0.0D+00 ) then
-    angle_rad_3d = 0.0D+00
+  if ( v1norm == 0.0D0+00 ) then
+    angle_rad_3d = 0.0D0+00
     return
   end if
 
   v2norm = sqrt ( sum ( ( p3(1:dim_num) - p2(1:dim_num) )**2 ) )
 
-  if ( v2norm == 0.0D+00 ) then
-    angle_rad_3d = 0.0D+00
+  if ( v2norm == 0.0D0+00 ) then
+    angle_rad_3d = 0.0D0+00
     return
   end if
 
@@ -591,15 +591,15 @@ function angle_rad_nd ( dim_num, v1, v2 )
 
   v1norm = sqrt ( sum ( v1(1:dim_num)**2 ) )
 
-  if ( v1norm == 0.0D+00 ) then
-    angle_rad_nd = 0.0D+00
+  if ( v1norm == 0.0D0+00 ) then
+    angle_rad_nd = 0.0D0+00
     return
   end if
 
   v2norm = sqrt ( sum ( v2(1:dim_num)**2 ) )
 
-  if ( v2norm == 0.0D+00 ) then
-    angle_rad_nd = 0.0D+00
+  if ( v2norm == 0.0D0+00 ) then
+    angle_rad_nd = 0.0D0+00
     return
   end if
 
@@ -678,8 +678,8 @@ subroutine angle_turn_2d ( p1, p2, p3, turn )
   p(2) = ( p3(1) - p2(1) ) * ( p1(2) - p2(2) ) &
        - ( p3(2) - p2(2) ) * ( p1(1) - p2(1) )
 
-  if ( p(1) == 0.0D+00 .and. p(2) == 0.0D+00 ) then
-    turn = 0.0D+00
+  if ( p(1) == 0.0D0+00 .and. p(2) == 0.0D0+00 ) then
+    turn = 0.0D0+00
   else
     turn = r8_pi - r8_atan ( p(2), p(1) )
   end if
@@ -944,7 +944,7 @@ subroutine ball_unit_sample_3d ( seed, p )
 !  Z and Z + dZ is independent of Z.  So choosing Z uniformly chooses
 !  a patch of area uniformly.
 !
-  vdot = 2.0D+00 * u(1) - 1.0D+00
+  vdot = 2.0D+00 * u(1) - 1.0D0+00
 
   phi = r8_acos ( vdot )
 !
@@ -955,7 +955,7 @@ subroutine ball_unit_sample_3d ( seed, p )
 !
 !  Pick a random radius R.
 !
-  r = u(3) ** ( 1.0D+00 / 3.0D+00 )
+  r = u(3) ** ( 1.0D0+00 / 3.0D+00 )
 
   p(1) = r * cos ( theta ) * sin ( phi )
   p(2) = r * sin ( theta ) * sin ( phi )
@@ -1017,17 +1017,17 @@ subroutine ball_unit_sample_nd ( dim_num, seed, p )
   real ( kind = 8 ) random_sine
   integer ( kind = 4 ) seed
 
-  p(1) = 1.0D+00
-  p(2:dim_num) = 0.0D+00
+  p(1) = 1.0D0+00
+  p(2:dim_num) = 0.0D0+00
 
   do i = 1, dim_num-1
 
     r = r8_uniform_01 ( seed )
-    random_cosine = 2.0D+00 * r - 1.0D+00
+    random_cosine = 2.0D+00 * r - 1.0D0+00
     r = r8_uniform_01 ( seed )
     random_sign = real ( 2 * int ( 2.0D+00 * r ) - 1, kind = 8 )
     r = r8_uniform_01 ( seed )
-    random_sine = random_sign * sqrt ( 1.0D+00 - random_cosine * random_cosine )
+    random_sine = random_sign * sqrt ( 1.0D0+00 - random_cosine * random_cosine )
 
     pi = p(i)
     p(i  ) = random_cosine * pi
@@ -1037,7 +1037,7 @@ subroutine ball_unit_sample_nd ( dim_num, seed, p )
 
   r = r8_uniform_01 ( seed )
 
-  r = r ** ( 1.0D+00 / real ( dim_num, kind = 8 ) )
+  r = r ** ( 1.0D0+00 / real ( dim_num, kind = 8 ) )
 
   p(1:dim_num) = r * p(1:dim_num)
 
@@ -1104,7 +1104,7 @@ subroutine basis_map_3d ( u, v, a, ierror )
 
   call r8mat_inverse_3d ( b, c, det )
 
-  if ( det == 0.0D+00 ) then
+  if ( det == 0.0D0+00 ) then
     ierror = 1
     return
   end if
@@ -1126,9 +1126,9 @@ function box_01_contains_point_2d ( p )
 !    A unit box is assumed to be a rectangle with sides aligned on coordinate
 !    axes.  It can be described as the set of points P satisfying:
 !
-!      0.0 <= P(1:DIM_NUM) <= 1.0
+!      0.0D0 <= P(1:DIM_NUM) <= 1.0D0
 !
-!      0.0 <= P(1:2) <= 1.0 
+!      0.0D0 <= P(1:2) <= 1.0D0 
 !
 !  Licensing:
 !
@@ -1155,7 +1155,7 @@ function box_01_contains_point_2d ( p )
   real ( kind = 8 ) p(2)
 
   box_01_contains_point_2d = &
-    all ( 0.0D+00 <= p(1:2) ) .and. all ( p(1:2) <= 1.0D+00 )
+    all ( 0.0D0+00 <= p(1:2) ) .and. all ( p(1:2) <= 1.0D0+00 )
 
   return
 end
@@ -1170,7 +1170,7 @@ function box_01_contains_point_nd ( dim_num, p )
 !    A unit box is assumed to be a rectangle with sides aligned on coordinate
 !    axes.  It can be described as the set of points P satisfying:
 !
-!      0.0 <= P(1:DIM_NUM) <= 1.0
+!      0.0D0 <= P(1:DIM_NUM) <= 1.0D0
 !
 !  Licensing:
 !
@@ -1201,7 +1201,7 @@ function box_01_contains_point_nd ( dim_num, p )
   real ( kind = 8 ) p(dim_num)
 
   box_01_contains_point_nd = &
-    all ( 0.0D+00 <= p(1:dim_num) ) .and. all ( p(1:dim_num) <= 1.0D+00 )
+    all ( 0.0D0+00 <= p(1:dim_num) ) .and. all ( p(1:dim_num) <= 1.0D0+00 )
 
   return
 end
@@ -1695,7 +1695,7 @@ subroutine circle_arc_point_near_2d ( r, pc, theta1, theta2, p, pn, &
 !
 !  Special case, the zero circle.
 !
-  if ( r == 0.0D+00 ) then
+  if ( r == 0.0D0+00 ) then
     pn(1:dim_num) = pc(1:dim_num)
     dist = sqrt ( sum ( ( p(1:dim_num) - pn(1:dim_num) )**2 ) )
     return
@@ -1898,7 +1898,7 @@ subroutine circle_exp_contains_point_2d ( p1, p2, p3, p, inside )
       det = ( p1(1) - p3(1) ) * ( p(2)  - p3(2) ) &
           - ( p(1)  - p3(1) ) * ( p1(2) - p3(2) )
 
-      if ( det == 0.0D+00 ) then
+      if ( det == 0.0D0+00 ) then
         inside = 4
       else
         inside = 5
@@ -1916,7 +1916,7 @@ subroutine circle_exp_contains_point_2d ( p1, p2, p3, p, inside )
     det = ( p1(1) - p2(1) ) * ( p(2)  - p2(2) ) &
         - ( p(1)  - p2(1) ) * ( p1(2) - p2(2) )
 
-    if ( det == 0.0D+00 ) then
+    if ( det == 0.0D0+00 ) then
       inside = 4
     else
       inside = 5
@@ -1931,12 +1931,12 @@ subroutine circle_exp_contains_point_2d ( p1, p2, p3, p, inside )
   det = ( p1(1) - p2(1) ) * ( p3(2) - p2(2) ) &
       - ( p3(1) - p2(1) ) * ( p1(2) - p2(2) )
 
-  if ( det == 0.0D+00 ) then
+  if ( det == 0.0D0+00 ) then
 
     det = ( p1(1) - p2(1) ) * ( p(2)  - p2(2) ) &
         - ( p(1)  - p2(1) ) * ( p1(2) - p2(2) )
 
-    if ( det == 0.0D+00 ) then
+    if ( det == 0.0D0+00 ) then
       inside = 2
     else
       inside = 3
@@ -1953,28 +1953,28 @@ subroutine circle_exp_contains_point_2d ( p1, p2, p3, p, inside )
   a(1,1) = p1(1)
   a(1,2) = p1(2)
   a(1,3) = p1(1) * p1(1) + p1(2) * p1(2)
-  a(1,4) = 1.0D+00
+  a(1,4) = 1.0D0+00
 
   a(2,1) = p2(1)
   a(2,2) = p2(2)
   a(2,3) = p2(1) * p2(1) + p2(2) * p2(2)
-  a(2,4) = 1.0D+00
+  a(2,4) = 1.0D0+00
 
   a(3,1) = p3(1)
   a(3,2) = p3(2)
   a(3,3) = p3(1) * p3(1) + p3(2) * p3(2)
-  a(3,4) = 1.0D+00
+  a(3,4) = 1.0D0+00
 
   a(4,1) = p(1)
   a(4,2) = p(2)
   a(4,3) = p(1) * p(1) + p(2) * p(2)
-  a(4,4) = 1.0D+00
+  a(4,4) = 1.0D0+00
 
   det = r8mat_det_4d ( a )
 
-  if ( det < 0.0D+00 ) then
+  if ( det < 0.0D0+00 ) then
     inside = 1
-  else if ( det == 0.0D+00 ) then
+  else if ( det == 0.0D0+00 ) then
     inside = 0
   else
     inside = -1
@@ -2068,7 +2068,7 @@ subroutine circle_exp2imp_2d ( p1, p2, p3, r, pc )
 !
   if ( all ( p1(1:dim_num) == p2(1:dim_num) ) .and. &
        all ( p1(1:dim_num) == p3(1:dim_num) ) ) then
-    r = 0.0D+00
+    r = 0.0D0+00
     pc(1:dim_num) = p1(1:dim_num)
     return
   end if
@@ -2108,9 +2108,9 @@ subroutine circle_exp2imp_2d ( p1, p2, p3, r, pc )
   g = ( p2(1) - p1(1) ) * ( p3(2) - p2(2) ) &
     - ( p2(2) - p1(2) ) * ( p3(1) - p2(1) )
 
-  if ( g == 0.0D+00 ) then
-    pc(1:2) = (/ 0.0D+00, 0.0D+00 /)
-    r = -1.0D+00
+  if ( g == 0.0D0+00 ) then
+    pc(1:2) = (/ 0.0D0+00, 0.0D0+00 /)
+    r = -1.0D0+00
     return
   end if
 !
@@ -2235,8 +2235,8 @@ subroutine circle_imp_line_exp_dist_2d ( r, pc, p1, p2, dist )
 
   dist = dist - r
 
-  if ( dist < 0.0D+00 ) then
-    dist = 0.0D+00
+  if ( dist < 0.0D0+00 ) then
+    dist = 0.0D0+00
   end if
 
   return
@@ -2304,11 +2304,11 @@ subroutine circle_imp_line_par_int_2d ( r, pc, x0, y0, f, g, int_num, p )
   root = r * r * ( f * f + g * g ) - ( f * ( pc(2) - y0 ) &
     - g * ( pc(1) - x0 ) )**2
 
-  if ( root < 0.0D+00 ) then
+  if ( root < 0.0D0+00 ) then
 
     int_num = 0
 
-  else if ( root == 0.0D+00 ) then
+  else if ( root == 0.0D0+00 ) then
 
     int_num = 1
 
@@ -2316,7 +2316,7 @@ subroutine circle_imp_line_par_int_2d ( r, pc, x0, y0, f, g, int_num, p )
     p(1,1) = x0 + f * t
     p(2,1) = y0 + g * t
 
-  else if ( 0.0D+00 < root ) then
+  else if ( 0.0D0+00 < root ) then
 
     int_num = 2
 
@@ -2897,7 +2897,7 @@ subroutine circle_imp2exp_2d ( r, pc, p1, p2, p3 )
   real ( kind = 8 ) r
   real ( kind = 8 ) theta
 
-  theta = 0.0D+00
+  theta = 0.0D0+00
   p1(1) = pc(1) + r * cos ( theta )
   p1(2) = pc(2) + r * sin ( theta )
 
@@ -3135,7 +3135,7 @@ subroutine circle_lune_centroid_2d ( r, pc, theta1, theta2, centroid )
 
   theta = theta2 - theta1
 
-  if ( theta == 0.0D+00 ) then
+  if ( theta == 0.0D0+00 ) then
     d = r
   else
     d = 4.0D+00 * r * ( sin ( 0.5D+00 * theta ) )**3 / &
@@ -3481,7 +3481,7 @@ subroutine circle_sector_centroid_2d ( r, pc, theta1, theta2, centroid )
 
   theta = theta2 - theta1
 
-  if ( theta == 0.0D+00 ) then
+  if ( theta == 0.0D0+00 ) then
     d = 2.0D+00 * r / 3.0D+00
   else
     d = 4.0D+00 * r * sin ( 0.5D+00 * theta ) / &
@@ -3816,7 +3816,7 @@ subroutine circles_imp_int_2d ( r1, pc1, r2, pc2, int_num, p )
 
   tol = epsilon ( tol )
 
-  p(1:dim_num,1:2) = 0.0D+00
+  p(1:dim_num,1:2) = 0.0D0+00
 !
 !  Take care of the case in which the circles have the same center.
 !
@@ -3824,12 +3824,12 @@ subroutine circles_imp_int_2d ( r1, pc1, r2, pc2, int_num, p )
        + abs ( pc1(2) - pc2(2) ) ) / 2.0D+00
 
   t2 = ( abs ( pc1(1) ) + abs ( pc2(1) ) &
-       + abs ( pc1(2) ) + abs ( pc2(2) ) + 1.0D+00 ) / 5.0D+00
+       + abs ( pc1(2) ) + abs ( pc2(2) ) + 1.0D0+00 ) / 5.0D+00
 
   if ( t1 <= tol * t2 ) then
 
     t1 = abs ( r1 - r2 )
-    t2 = ( abs ( r1 ) + abs ( r2 ) + 1.0D+00 ) / 3.0D+00
+    t2 = ( abs ( r1 ) + abs ( r2 ) + 1.0D0+00 ) / 3.0D+00
 
     if ( t1 <= tol * t2 ) then
       int_num = 3
@@ -4244,7 +4244,7 @@ subroutine cube_shape_3d ( point_num, face_num, face_order_max, &
 !
 !  Set point coordinates.
 !
-  a = sqrt ( 1.0D+00 / 3.0D+00 )
+  a = sqrt ( 1.0D0+00 / 3.0D+00 )
 
   point_coord(1:dim_num,1:point_num) = reshape ( (/ &
      -a, -a, -a, &
@@ -4378,7 +4378,7 @@ subroutine cylinder_point_dist_3d ( p1, p2, r, p, distance )
   axis(1:dim_num) = p2(1:dim_num) - p1(1:dim_num)
   axis_length = r8vec_norm ( dim_num, axis )
 
-  if ( axis_length == 0.0D+00 ) then
+  if ( axis_length == 0.0D0+00 ) then
     distance = -huge ( distance )
     return
   end if
@@ -4389,7 +4389,7 @@ subroutine cylinder_point_dist_3d ( p1, p2, r, p, distance )
 !
 !  Case 1: Below bottom cap.
 !
-  if ( p_dot_axis <= 0.0D+00 ) then
+  if ( p_dot_axis <= 0.0D0+00 ) then
 
     call disk_point_dist_3d ( p1, r, axis, p, distance )
 !
@@ -4484,7 +4484,7 @@ subroutine cylinder_point_dist_signed_3d ( p1, p2, r, p, distance )
   axis(1:dim_num) = p2(1:dim_num) - p1(1:dim_num)
   axis_length = r8vec_norm ( dim_num, axis )
 
-  if ( axis_length == 0.0D+00 ) then
+  if ( axis_length == 0.0D0+00 ) then
     distance = -huge ( distance )
     return
   end if
@@ -4495,7 +4495,7 @@ subroutine cylinder_point_dist_signed_3d ( p1, p2, r, p, distance )
 !
 !  Case 1: Below bottom cap.
 !
-  if ( p_dot_axis <= 0.0D+00 ) then
+  if ( p_dot_axis <= 0.0D0+00 ) then
 
     call disk_point_dist_3d ( p1, r, axis, p, distance )
 !
@@ -4508,7 +4508,7 @@ subroutine cylinder_point_dist_signed_3d ( p1, p2, r, p, distance )
 
     distance = off_axis_component - r 
 
-    if ( distance < 0.0D+00 ) then
+    if ( distance < 0.0D0+00 ) then
       distance = max ( distance, p_dot_axis - axis_length )
       distance = max ( distance, -p_dot_axis )
     end if
@@ -4581,7 +4581,7 @@ subroutine cylinder_point_inside_3d ( p1, p2, r, p, inside )
   axis(1:dim_num) = p2(1:dim_num) - p1(1:dim_num)
   axis_length = r8vec_norm ( dim_num, axis )
 
-  if ( axis_length == 0.0D+00 ) then
+  if ( axis_length == 0.0D0+00 ) then
     inside = .false.
     return
   end if
@@ -4592,7 +4592,7 @@ subroutine cylinder_point_inside_3d ( p1, p2, r, p, inside )
 !
 !  If the point lies below or above the "caps" of the cylinder, we're done.
 !
-  if ( p_dot_axis < 0.0D+00 .or. axis_length < p_dot_axis ) then
+  if ( p_dot_axis < 0.0D0+00 .or. axis_length < p_dot_axis ) then
 
     inside = .false.
 !
@@ -4687,7 +4687,7 @@ subroutine cylinder_point_near_3d ( p1, p2, r, p, pn )
 !
 !  Case 1: Below bottom cap.
 !
-  if ( axial_component <= 0.0D+00 ) then
+  if ( axial_component <= 0.0D0+00 ) then
 
     if ( off_axis_component <= r ) then
       pn(1:dim_num) = p1(1:dim_num) + off_axis(1:dim_num)
@@ -4700,7 +4700,7 @@ subroutine cylinder_point_near_3d ( p1, p2, r, p, pn )
 !
   else if ( axial_component <= axis_length ) then
 
-    if ( off_axis_component == 0.0D+00 ) then
+    if ( off_axis_component == 0.0D0+00 ) then
 
       call r8vec_any_normal ( dim_num, axis, off_axis )
       
@@ -4924,7 +4924,7 @@ function degrees_to_radians ( angle_deg )
   real ( kind = 8 ) degrees_to_radians
   real ( kind = 8 ), parameter :: r8_pi = 3.141592653589793D+00
 
-  degrees_to_radians = ( angle_deg / 180.0D+00 ) * r8_pi
+  degrees_to_radians = ( angle_deg / 180.0D0+00 ) * r8_pi
 
   return
 end
@@ -4986,14 +4986,14 @@ subroutine direction_pert_3d ( sigma, vbase, seed, vran )
 !
 !  1 <= SIGMA, just use the base vector.
 !
-  if ( 1.0D+00 <= sigma ) then
+  if ( 1.0D0+00 <= sigma ) then
 
     vran(1:dim_num) = vbase(1:dim_num)
 
-  else if ( sigma <= 0.0D+00 ) then
+  else if ( sigma <= 0.0D0+00 ) then
 
     vdot = r8_uniform_01 ( seed )
-    vdot = 2.0D+00 * vdot - 1.0D+00
+    vdot = 2.0D+00 * vdot - 1.0D0+00
 
     phi = r8_acos ( vdot )
 
@@ -5020,8 +5020,8 @@ subroutine direction_pert_3d ( sigma, vbase, seed, vran )
 !  SIGMA, we want biased towards 1.
 !
     r = r8_uniform_01 ( seed )
-    x = exp ( ( 1.0D+00 - sigma ) * log ( r ) )
-    dphi = r8_acos ( 2.0D+00 * x - 1.0D+00 )
+    x = exp ( ( 1.0D0+00 - sigma ) * log ( r ) )
+    dphi = r8_acos ( 2.0D+00 * x - 1.0D0+00 )
 !
 !  Now we know enough to write down a vector that is rotated DPHI
 !  from the base vector.
@@ -5135,7 +5135,7 @@ subroutine direction_uniform_3d ( seed, vran )
 !  a patch of area uniformly.
 !
   vdot = r8_uniform_01 ( seed )
-  vdot = 2.0D+00 * vdot - 1.0D+00
+  vdot = 2.0D+00 * vdot - 1.0D0+00
 
   phi = r8_acos ( vdot )
 !
@@ -5259,13 +5259,13 @@ subroutine disk_point_dist_3d ( pc, r, axis, p, dist )
 !  Special case: the point is the center.
 !
   if ( all ( p(1:dim_num) == pc(1:dim_num) ) ) then
-    dist = 0.0D+00
+    dist = 0.0D0+00
     return
   end if
 
   axis_length = r8vec_norm ( dim_num, axis(1:dim_num) )
 
-  if ( axis_length == 0.0D+00 ) then
+  if ( axis_length == 0.0D0+00 ) then
     dist = -huge ( dist )
     return
   end if
@@ -5276,8 +5276,8 @@ subroutine disk_point_dist_3d ( pc, r, axis, p, dist )
 !  Special case: the point satisfies the disk equation exactly.
 !
   if ( sum ( p(1:dim_num) - pc(1:dim_num) )**2 <= r * r .and. &
-        axial_component == 0.0D+00 ) then
-    dist = 0.0D+00
+        axial_component == 0.0D0+00 ) then
+    dist = 0.0D0+00
     return
   end if
 !
@@ -5339,9 +5339,9 @@ subroutine dms_to_radians ( degrees, minutes, seconds, radians )
 
   angle =   real ( degrees, kind = 8 ) &
         + ( real ( minutes, kind = 8 ) &
-        + ( real ( seconds, kind = 8 ) / 60.0D+00 ) ) / 60.0D+00
+        + ( real ( seconds, kind = 8 ) / 60.0D0+00 ) ) / 60.0D0+00
 
-  radians = ( angle / 180.0D+00 ) * r8_pi
+  radians = ( angle / 180.0D0+00 ) * r8_pi
 
   return
 end
@@ -5407,12 +5407,12 @@ subroutine dodec_shape_3d ( point_num, face_num, face_order_max, &
 !
 !  Set point coordinates.
 !
-  phi = 0.5D+00 * ( sqrt ( 5.0D+00 ) + 1.0D+00 )
+  phi = 0.5D+00 * ( sqrt ( 5.0D+00 ) + 1.0D0+00 )
 
-  a = 1.0D+00 / sqrt ( 3.0D+00 )
+  a = 1.0D0+00 / sqrt ( 3.0D+00 )
   b = phi / sqrt ( 3.0D+00 )
-  c = ( phi - 1.0D+00 ) / sqrt ( 3.0D+00 )
-  z = 0.0D+00
+  c = ( phi - 1.0D0+00 ) / sqrt ( 3.0D+00 )
+  z = 0.0D0+00
 
   point_coord(1:dim_num,1:point_num) = reshape ( (/ &
       a,  a,  a, &
@@ -5593,7 +5593,7 @@ subroutine dual_shape_3d ( point_num, face_num, face_order_max, &
 !
   do face = 1, face_num
 
-    p(1:dim_num) = 0.0D+00
+    p(1:dim_num) = 0.0D0+00
 
     do j = 1, face_order(face)
       k = face_point(j,face)
@@ -6051,21 +6051,21 @@ subroutine ellipse_point_near_2d ( r1, r2, p, pn )
   x = abs ( p(1) )
   y = abs ( p(2) )
 
-  if ( y == 0.0D+00 .and. r1 * r1 - r2 * r2 <= r1 * x ) then
+  if ( y == 0.0D0+00 .and. r1 * r1 - r2 * r2 <= r1 * x ) then
 
-    t = 0.0D+00
+    t = 0.0D0+00
 
-  else if ( x == 0.0D+00 .and. r2 * r2 - r1 * r1 <= r2 * y ) then
+  else if ( x == 0.0D0+00 .and. r2 * r2 - r1 * r1 <= r2 * y ) then
 
     t = r8_pi / 2.0D+00
 
   else
 
-    if ( y == 0.0D+00 ) then
+    if ( y == 0.0D0+00 ) then
       y = sqrt ( epsilon ( y ) ) * abs ( r2 )
     end if
 
-    if ( x == 0.0D+00 ) then
+    if ( x == 0.0D0+00 ) then
       x = sqrt ( epsilon ( x ) ) * abs ( r1 )
     end if
 !
@@ -6083,7 +6083,7 @@ subroutine ellipse_point_near_2d ( r1, r2, p, pn )
       f = ( x - abs ( r1 ) * ct ) * abs ( r1 ) * st &
         - ( y - abs ( r2 ) * st ) * abs ( r2 ) * ct
 
-      if ( abs ( f ) <= 100.0D+00 * epsilon ( f ) ) then
+      if ( abs ( f ) <= 100.0D0+00 * epsilon ( f ) ) then
         exit
       end if
 
@@ -6115,8 +6115,8 @@ subroutine ellipse_point_near_2d ( r1, r2, p, pn )
 !
 !  Take care of case where the point was in another quadrant.
 !
-  pn(1) = sign ( 1.0D+00, p(1) ) * pn(1)
-  pn(2) = sign ( 1.0D+00, p(2) ) * pn(2)
+  pn(1) = sign ( 1.0D0+00, p(1) ) * pn(1)
+  pn(2) = sign ( 1.0D0+00, p(2) ) * pn(2)
 
   return
 end
@@ -6157,7 +6157,7 @@ subroutine ellipse_points_2d ( pc, r1, r2, psi, n, p )
 !    and minor axis directions.  A circle has these values equal.
 !
 !    Input, real ( kind = 8 ) PSI, the angle that the major axis of the ellipse
-!    makes with the X axis.  A value of 0.0 means that the major and
+!    makes with the X axis.  A value of 0.0D0 means that the major and
 !    minor axes of the ellipse will be the X and Y coordinate axes.
 !
 !    Input, integer ( kind = 4 ) N, the number of points desired.  N must 
@@ -6233,7 +6233,7 @@ subroutine ellipse_points_arc_2d ( pc, r1, r2, psi, theta1, theta2, n, p )
 !    and minor axis directions.  A circle has these values equal.
 !
 !    Input, real ( kind = 8 ) PSI, the angle that the major axis of the ellipse
-!    makes with the X axis.  A value of 0.0 means that the major and
+!    makes with the X axis.  A value of 0.0D0 means that the major and
 !    minor axes of the ellipse will be the X and Y coordinate axes.
 !
 !    Input, real ( kind = 8 ) THETA1, THETA2, the angular coordinates of
@@ -6328,10 +6328,10 @@ subroutine get_seed ( seed )
 
   call date_and_time ( today, time, zone, values )
 
-  temp = 0.0D+00
+  temp = 0.0D0+00
 
-  temp = temp + real ( values(2) - 1, kind = 8 ) / 11.0D+00
-  temp = temp + real ( values(3) - 1, kind = 8 ) / 30.0D+00
+  temp = temp + real ( values(2) - 1, kind = 8 ) / 11.0D0+00
+  temp = temp + real ( values(3) - 1, kind = 8 ) / 30.0D0+00
   temp = temp + real ( values(5),     kind = 8 ) / 23.0D+00
   temp = temp + real ( values(6),     kind = 8 ) / 59.0D+00
   temp = temp + real ( values(7),     kind = 8 ) / 59.0D+00
@@ -6340,12 +6340,12 @@ subroutine get_seed ( seed )
 !
 !  Force 0 < TEMP <= 1.
 !
-  do while ( temp <= 0.0D+00 )
-    temp = temp + 1.0D+00
+  do while ( temp <= 0.0D0+00 )
+    temp = temp + 1.0D0+00
   end do
 
-  do while ( 1.0D+00 < temp )
-    temp = temp - 1.0D+00
+  do while ( 1.0D0+00 < temp )
+    temp = temp - 1.0D0+00
   end do
 
   seed = int ( real ( huge ( 1 ), kind = 8 ) * temp )
@@ -6576,7 +6576,7 @@ function halfplane_contains_point_2d ( p1, p2, p )
     + p2(1) * ( p(2)  - p1(2) ) &
     + p(1)  * ( p1(2) - p2(2) ) )
 
-  halfplane_contains_point_2d = ( 0.0D+00 <= area_signed )
+  halfplane_contains_point_2d = ( 0.0D0+00 <= area_signed )
 
   return
 end
@@ -6822,14 +6822,14 @@ subroutine halfspace_triangle_int_3d ( dist1, dist2, dist3, t, int_num, pint )
 !
   int_num = 0
 
-  if ( dist1 <= 0.0D+00 ) then
+  if ( dist1 <= 0.0D0+00 ) then
 
     int_num = int_num + 1
     pint(1:dim_num,int_num) = t(1:dim_num,1)
 
   end if
 
-  if ( dist1 * dist2 < 0.0D+00 ) then
+  if ( dist1 * dist2 < 0.0D0+00 ) then
 
     int_num = int_num + 1
     pint(1:dim_num,int_num) = &
@@ -6838,14 +6838,14 @@ subroutine halfspace_triangle_int_3d ( dist1, dist2, dist3, t, int_num, pint )
 
   end if
 
-  if ( dist2 <= 0.0D+00 ) then
+  if ( dist2 <= 0.0D0+00 ) then
 
     int_num = int_num + 1
     pint(1:dim_num,int_num) = t(1:dim_num,2)
 
   end if
 
-  if ( dist2 * dist3 < 0.0D+00 ) then
+  if ( dist2 * dist3 < 0.0D0+00 ) then
 
     int_num = int_num + 1
 
@@ -6855,14 +6855,14 @@ subroutine halfspace_triangle_int_3d ( dist1, dist2, dist3, t, int_num, pint )
 
   end if
 
-  if ( dist3 <= 0.0D+00 ) then
+  if ( dist3 <= 0.0D0+00 ) then
 
     int_num = int_num + 1
     pint(1:dim_num,int_num) = t(1:dim_num,3)
 
   end if
 
-  if ( dist3 * dist1 < 0.0D+00 ) then
+  if ( dist3 * dist1 < 0.0D0+00 ) then
 
     int_num = int_num + 1
     pint(1:dim_num,int_num) = &
@@ -6908,7 +6908,7 @@ function haversine ( a )
   real ( kind = 8 ) a
   real ( kind = 8 ) haversine
 
-  haversine = ( 1.0D+00 - cos ( a ) ) / 2.0D+00
+  haversine = ( 1.0D0+00 - cos ( a ) ) / 2.0D+00
 
   return
 end
@@ -7078,7 +7078,7 @@ function hexagon_contains_point_2d ( v, p )
 
     if (  v(1,i) * ( v(2,j) - p(2  ) ) &
         + v(1,j) * ( p(2  ) - v(2,i) ) &
-        + p(1  ) * ( v(2,i) - v(2,j) ) < 0.0D+00 ) then
+        + p(1  ) * ( v(2,i) - v(2,j) ) < 0.0D0+00 ) then
 
       hexagon_contains_point_2d = .false.
       return
@@ -7150,46 +7150,46 @@ subroutine hexagon_shape_2d ( angle_deg, p )
 !
 !  Ensure that 0 <= ANGLE < 360.
 !
-  angle2 = r8_modp ( angle_deg, 360.0D+00 )
+  angle2 = r8_modp ( angle_deg, 360.0D0+00 )
 !
 !  y = - sqrt(3) * x + sqrt(3)
 !
-  if ( 0.0D+00 <= angle2 .and. angle2 <= 60.0D+00 ) then
+  if ( 0.0D0+00 <= angle2 .and. angle2 <= 60.0D0+00 ) then
 
     p(1) = sqrt ( 3.0D+00 ) / ( r8_tand ( angle2 ) + sqrt ( 3.0D+00 ) )
     p(2) = r8_tand ( angle2 ) * p(1)
 !
 !  y = sqrt(3) / 2
 !
-  else if ( angle2 <= 120.0D+00 ) then
+  else if ( angle2 <= 120.0D0+00 ) then
 
     p(2) = sqrt ( 3.0D+00 ) / 2.0D+00
     p(1) = r8_cotd ( angle2 ) * p(2)
 !
 !  y = sqrt(3) * x + sqrt(3)
 !
-  else if ( angle2 <= 180.0D+00 ) then
+  else if ( angle2 <= 180.0D0+00 ) then
 
     p(1) = sqrt ( 3.0D+00 ) / ( r8_tand ( angle2 ) - sqrt ( 3.0D+00 ) )
     p(2) = r8_tand ( angle2 ) * p(1)
 !
 !  y = - sqrt(3) * x - sqrt(3)
 !
-  else if ( angle2 <= 240.0D+00 ) then
+  else if ( angle2 <= 240.0D0+00 ) then
 
     p(1) = - sqrt ( 3.0D+00 ) / ( r8_tand ( angle2 ) + sqrt ( 3.0D+00 ) )
     p(2) = r8_tand ( angle2 ) * p(1)
 !
 !  y = - sqrt(3) / 2
 !
-  else if ( angle2 <= 300.0D+00 ) then
+  else if ( angle2 <= 300.0D0+00 ) then
 
     p(2) = - sqrt ( 3.0D+00 ) / 2.0D+00
     p(1) = r8_cotd ( angle2 ) * p(2)
 !
 !  y = sqrt(3) * x - sqrt(3)
 !
-  else if ( angle2 <= 360.0D+00 ) then
+  else if ( angle2 <= 360.0D0+00 ) then
 
     p(1) = - sqrt ( 3.0D+00 ) / ( r8_tand ( angle2 ) - sqrt ( 3.0D+00 ) )
     p(2) = r8_tand ( angle2 ) * p(1)
@@ -7283,10 +7283,10 @@ subroutine hexagon_vertices_2d ( p )
   real ( kind = 8 ) p(dim_num,6)
 
   p(1:2,1:6) = reshape ( (/ &
-     1.0D+00,  0.0D+00, &
+     1.0D0+00,  0.0D0+00, &
      0.5D+00,  a, &
     -0.5D+00,  a, &
-    -1.0D+00,  0.0D+00, &
+    -1.0D0+00,  0.0D0+00, &
     -0.5D+00, -a, &
      0.5D+00, -a /), (/ dim_num, 6 /) )
 
@@ -7330,7 +7330,7 @@ function i4_dedekind_factor ( p, q )
   integer ( kind = 4 ) q
 
   if ( mod ( p, q ) == 0 ) then
-    i4_dedekind_factor = 0.0D+00
+    i4_dedekind_factor = 0.0D0+00
   else
     i4_dedekind_factor = real ( p, kind = 8 ) / real ( q, kind = 8 ) &
       - real ( ( p / q ), kind = 8 ) - 0.5D+00
@@ -7377,7 +7377,7 @@ subroutine i4_dedekind_sum ( p, q, s )
   integer ( kind = 4 ) q
   real ( kind = 8 ) s
 
-  s = 0.0D+00
+  s = 0.0D0+00
 
   do i = 1, q
     s = s + i4_dedekind_factor ( i, q ) * i4_dedekind_factor ( p * i, q )
@@ -9780,11 +9780,11 @@ subroutine icos_shape ( point_num, edge_num, face_num, face_order_max, &
 !
 !  Set the point coordinates.
 !
-  phi = 0.5D+00 * ( sqrt ( 5.0D+00 ) + 1.0D+00 )
+  phi = 0.5D+00 * ( sqrt ( 5.0D+00 ) + 1.0D0+00 )
 
-  a = phi / sqrt ( 1.0D+00 + phi * phi )
-  b = 1.0D+00 / sqrt ( 1.0D+00 + phi * phi )
-  z = 0.0D+00
+  a = phi / sqrt ( 1.0D0+00 + phi * phi )
+  b = 1.0D0+00 / sqrt ( 1.0D0+00 + phi * phi )
+  z = 0.0D0+00
 !
 !  A*A + B*B + Z*Z = 1.
 !
@@ -10552,13 +10552,13 @@ subroutine line_exp2imp_2d ( p1, p2, a, b, c )
 
   norm = a * a + b * b + c * c
 
-  if ( 0.0D+00 < norm ) then
+  if ( 0.0D0+00 < norm ) then
     a = a / norm
     b = b / norm
     c = c / norm
   end if
 
-  if ( a < 0.0D+00 ) then
+  if ( a < 0.0D0+00 ) then
     a = -a
     b = -b
     c = -c
@@ -10631,12 +10631,12 @@ subroutine line_exp2par_2d ( p1, p2, f, g, x0, y0 )
 
   norm = sqrt ( f * f + g * g )
 
-  if ( norm /= 0.0D+00 ) then
+  if ( norm /= 0.0D0+00 ) then
     f = f / norm
     g = g / norm
   end if
 
-  if ( f < 0.0D+00 ) then
+  if ( f < 0.0D0+00 ) then
     f = -f
     g = -g
   end if
@@ -10713,13 +10713,13 @@ subroutine line_exp2par_3d ( p1, p2, f, g, h, x0, y0, z0 )
 
   norm = sqrt ( f * f + g * g + h * h )
 
-  if ( norm /= 0.0D+00 ) then
+  if ( norm /= 0.0D0+00 ) then
     f = f / norm
     g = g / norm
     h = h / norm
   end if
 
-  if ( f < 0.0D+00 ) then
+  if ( f < 0.0D0+00 ) then
     f = -f
     g = -g
     h = -h
@@ -10767,7 +10767,7 @@ function line_imp_is_degenerate_2d ( a, b, c )
   real ( kind = 8 ) c
   logical ( kind = 4 ) line_imp_is_degenerate_2d
 
-  line_imp_is_degenerate_2d = ( a * a + b * b == 0.0D+00 )
+  line_imp_is_degenerate_2d = ( a * a + b * b == 0.0D0+00 )
 
   return
 end
@@ -10877,7 +10877,7 @@ subroutine line_imp_point_dist_signed_2d ( a, b, c, p, dist_signed )
     stop 1
   end if
 
-  dist_signed = - sign ( 1.0D+00, c ) * ( a * p(1) + b * p(2) + c ) / &
+  dist_signed = - sign ( 1.0D0+00, c ) * ( a * p(1) + b * p(2) + c ) / &
     sqrt ( a * a + b * b )
 
   return
@@ -10949,9 +10949,9 @@ subroutine line_imp2exp_2d ( a, b, c, p1, p2 )
 
   if ( abs ( b ) < abs ( a ) ) then
     p2(1) = - ( a - b / a ) * c / normsq
-    p2(2) = - ( b + 1.0D+00 ) * c / normsq
+    p2(2) = - ( b + 1.0D0+00 ) * c / normsq
   else
-    p2(1) = - ( a + 1.0D+00 ) * c / normsq
+    p2(1) = - ( a + 1.0D0+00 ) * c / normsq
     p2(2) = - ( b - a / b ) * c / normsq
   end if
 
@@ -11028,7 +11028,7 @@ subroutine line_imp2par_2d ( a, b, c, f, g, x0, y0 )
   f =   b / sqrt ( a * a + b * b )
   g = - a / sqrt ( a * a + b * b )
 
-  if ( f < 0.0D+00 ) then
+  if ( f < 0.0D0+00 ) then
     f = -f
     g = -g
   end if
@@ -11530,7 +11530,7 @@ subroutine lines_exp_angle_3d ( p1, p2, q1, q2, angle )
 !    Output, real ( kind = 8 ) ANGLE, the angle in radians between the two
 !    lines.  The angle is computed using the ACOS function, and so lies between
 !    0 and PI.  But if one of the lines is degenerate, the angle is 
-!    returned as -1.0.
+!    returned as -1.0D0.
 !
   implicit none
 
@@ -11552,7 +11552,7 @@ subroutine lines_exp_angle_3d ( p1, p2, q1, q2, angle )
 !   write ( *, '(a)' ) ' '
 !   write ( *, '(a)' ) 'LINES_EXP_ANGLE_3D - Fatal error!'
 !   write ( *, '(a)' ) '  The line (P1,P2) is degenerate!'
-    angle = -1.0D+00
+    angle = -1.0D0+00
     return
   end if
 
@@ -11560,7 +11560,7 @@ subroutine lines_exp_angle_3d ( p1, p2, q1, q2, angle )
 !   write ( *, '(a)' ) ' '
 !   write ( *, '(a)' ) 'LINES_EXP_ANGLE_3D - Warning!'
 !   write ( *, '(a)' ) '  The line (Q1,Q2) is degenerate!'
-    angle = -1.0D+00
+    angle = -1.0D0+00
     return
   end if
 
@@ -11614,7 +11614,7 @@ subroutine lines_exp_angle_nd ( dim_num, p1, p2, q1, q2, angle )
 !    Output, real ( kind = 8 ) ANGLE, the angle in radians between the two
 !    lines.  The angle is computed using the ACOS function, and so lies
 !    between 0 and PI.  But if one of the lines is degenerate, the angle
-!    is returned as -1.0.
+!    is returned as -1.0D0.
 !
   implicit none
 
@@ -11636,7 +11636,7 @@ subroutine lines_exp_angle_nd ( dim_num, p1, p2, q1, q2, angle )
     write ( *, '(a)' ) ' '
     write ( *, '(a)' ) 'LINES_EXP_ANGLE_3D - Fatal error!'
     write ( *, '(a)' ) '  The line (P1,P2) is degenerate!'
-    angle = -1.0D+00
+    angle = -1.0D0+00
     stop 1
   end if
 
@@ -11644,7 +11644,7 @@ subroutine lines_exp_angle_nd ( dim_num, p1, p2, q1, q2, angle )
     write ( *, '(a)' ) ' '
     write ( *, '(a)' ) 'LINES_EXP_ANGLE_3D - Fatal error!'
     write ( *, '(a)' ) '  The line (Q1,Q2) is degenerate!'
-    angle = -1.0D+00
+    angle = -1.0D0+00
     stop 1
   end if
 
@@ -11742,7 +11742,7 @@ subroutine lines_exp_dist_3d ( p1, p2, q1, q2, dist )
 
   bot = sqrt ( cr1 * cr1 + cr2 * cr2 + cr3 * cr3 )
 
-  if ( bot == 0.0D+00 ) then
+  if ( bot == 0.0D0+00 ) then
 
     call line_exp_point_dist_3d ( p1, p2, q1, dist )
 
@@ -11862,8 +11862,8 @@ subroutine lines_exp_dist_3d_2 ( p1, p2, q1, q2, dist )
 !
   det = - a * c + b * b
 
-  if ( det == 0.0D+00 ) then
-    sn = 0.0D+00
+  if ( det == 0.0D0+00 ) then
+    sn = 0.0D0+00
     if ( abs ( b ) < abs ( c ) ) then
       tn = e / c
     else
@@ -11940,7 +11940,7 @@ function lines_exp_equal_2d ( p1, p2, q1, q2 )
   test1 = ( p2(2) - p1(2) ) * ( q1(1) - p2(1) ) &
         - ( p2(1) - p1(1) ) * ( q1(2) - p2(2) )
 
-  if ( test1 /= 0.0D+00 ) then
+  if ( test1 /= 0.0D0+00 ) then
     lines_exp_equal_2d = .false.
     return
   end if
@@ -11950,7 +11950,7 @@ function lines_exp_equal_2d ( p1, p2, q1, q2 )
   test2 = ( q2(2) - q1(2) ) * ( q1(1) - p2(1) ) &
         - ( q2(1) - q1(1) ) * ( q1(2) - p2(2) ) 
 
-  if ( test2 /= 0.0D+00 ) then
+  if ( test2 /= 0.0D0+00 ) then
     lines_exp_equal_2d = .false.
     return
   end if
@@ -11960,7 +11960,7 @@ function lines_exp_equal_2d ( p1, p2, q1, q2 )
   test3 = ( p2(2) - p1(2) ) * ( q2(1) - p1(1) ) &
         - ( p2(1) - p1(1) ) * ( q2(2) - p1(2) )
 
-  if ( test3 /= 0.0D+00 ) then
+  if ( test3 /= 0.0D0+00 ) then
     lines_exp_equal_2d = .false.
     return
   end if
@@ -11970,7 +11970,7 @@ function lines_exp_equal_2d ( p1, p2, q1, q2 )
   test4 = ( q2(2) - q1(2) ) * ( q2(1) - p1(1) ) &
         - ( q2(1) - q1(1) ) * ( q2(2) - p1(2) ) 
 
-  if ( test4 /= 0.0D+00 ) then
+  if ( test4 /= 0.0D0+00 ) then
     lines_exp_equal_2d = .false.
     return
   end if
@@ -12037,7 +12037,7 @@ subroutine lines_exp_int_2d ( p1, p2, q1, q2, ival, p )
   real ( kind = 8 ) q2(dim_num)
 
   ival = 0
-  p(1:dim_num) = 0.0D+00
+  p(1:dim_num) = 0.0D0+00
 !
 !  Check whether either line is a point.
 !
@@ -12190,8 +12190,8 @@ subroutine lines_exp_near_3d ( p1, p2, q1, q2, pn, qn )
 !
   det = - a * c + b * b
 
-  if ( det == 0.0D+00 ) then
-    sn = 0.0D+00
+  if ( det == 0.0D0+00 ) then
+    sn = 0.0D0+00
     if ( abs ( b ) < abs ( c ) ) then
       tn = e / c
     else
@@ -12477,7 +12477,7 @@ subroutine lines_imp_dist_2d ( a1, b1, c1, a2, b2, c2, dist )
 !  Determine if the lines intersect.
 !
   if ( a1 * b2 /= a2 * b1 ) then
-    dist = 0.0D+00
+    dist = 0.0D0+00
     return
   end if
 !
@@ -12547,7 +12547,7 @@ subroutine lines_imp_int_2d ( a1, b1, c1, a2, b2, c2, ival, p )
   logical ( kind = 4 ) line_imp_is_degenerate_2d
   real ( kind = 8 ) p(dim_num)
 
-  p(1:dim_num) = 0.0D+00
+  p(1:dim_num) = 0.0D0+00
 !
 !  Refuse to handle degenerate lines.
 !
@@ -12588,7 +12588,7 @@ subroutine lines_imp_int_2d ( a1, b1, c1, a2, b2, c2, ival, p )
 
     ival = 0
 
-    if ( a1 == 0.0D+00 ) then
+    if ( a1 == 0.0D0+00 ) then
       if ( b2 * c1 == c2 * b1 ) then
         ival = 2
       end if
@@ -12887,10 +12887,10 @@ subroutine lines_par_int_2d ( f1, g1, x1, y1, f2, g2, x2, y2, t1, t2, pint )
 
   det = f2 * g1 - f1 * g2
 
-  if ( det == 0.0D+00 ) then
-    t1 = 0.0D+00
-    t2 = 0.0D+00
-    pint(1:dim_num) = 0.0D+00
+  if ( det == 0.0D0+00 ) then
+    t1 = 0.0D0+00
+    t2 = 0.0D0+00
+    pint(1:dim_num) = 0.0D0+00
   else
     t1 = ( f2 * ( y2 - y1 ) - g2 * ( x2 - x1 ) ) / det
     t2 = ( f1 * ( y2 - y1 ) - g1 * ( x2 - x1 ) ) / det
@@ -13113,7 +13113,7 @@ subroutine minabs ( x1, y1, x2, y2, x3, y3, xmin, ymin )
 !
 !  Case 1: Minimum must be at an endpoint.
 !
-  if ( slope13 <= slope12 .or. 0.0D+00 <= slope12 ) then
+  if ( slope13 <= slope12 .or. 0.0D0+00 <= slope12 ) then
 
     if ( y1 < y3 ) then
       xmin = x1
@@ -13308,12 +13308,12 @@ subroutine octahedron_shape_3d ( point_num, face_num, face_order_max, &
 !  Set point coordinates.
 !
   point_coord(1:dim_num,1:point_num) = reshape ( (/ &
-     0.0D+00,  0.0D+00, -1.0D+00, &
-     0.0D+00, -1.0D+00,  0.0D+00, &
-     1.0D+00,  0.0D+00,  0.0D+00, &
-     0.0D+00,  1.0D+00,  0.0D+00, &
-    -1.0D+00,  0.0D+00,  0.0D+00, &
-     0.0D+00,  0.0D+00,  1.0D+00 /), (/ dim_num, point_num /) )
+     0.0D0+00,  0.0D0+00, -1.0D0+00, &
+     0.0D0+00, -1.0D0+00,  0.0D0+00, &
+     1.0D0+00,  0.0D0+00,  0.0D0+00, &
+     0.0D0+00,  1.0D0+00,  0.0D0+00, &
+    -1.0D0+00,  0.0D0+00,  0.0D0+00, &
+     0.0D0+00,  0.0D0+00,  1.0D0+00 /), (/ dim_num, point_num /) )
 !
 !  Set the face orders.
 !
@@ -13593,9 +13593,9 @@ function parallelogram_contains_point_2d ( p1, p2, p3, p )
     stop 1
   end if
 
-  if ( a(1,3) < 0.0D+00 .or. 1.0D+00 < a(1,3) ) then
+  if ( a(1,3) < 0.0D0+00 .or. 1.0D0+00 < a(1,3) ) then
     parallelogram_contains_point_2d = .false.
-  else if ( a(2,3) < 0.0D+00 .or. 1.0D+00 < a(2,3) ) then
+  else if ( a(2,3) < 0.0D0+00 .or. 1.0D0+00 < a(2,3) ) then
     parallelogram_contains_point_2d = .false.
   else
     parallelogram_contains_point_2d = .true.
@@ -13710,9 +13710,9 @@ function parallelogram_contains_point_3d ( p1, p2, p3, p )
     stop 1
   end if
 
-  if ( a(1,4) < 0.0D+00 .or. 1.0D+00 < a(1,4) ) then
+  if ( a(1,4) < 0.0D0+00 .or. 1.0D0+00 < a(1,4) ) then
     parallelogram_contains_point_3d = .false.
-  else if ( a(2,4) < 0.0D+00 .or. 1.0D+00 < a(2,4) ) then
+  else if ( a(2,4) < 0.0D0+00 .or. 1.0D0+00 < a(2,4) ) then
     parallelogram_contains_point_3d = .false.
   else if ( tol < abs ( a(3,4) ) ) then
     parallelogram_contains_point_3d = .false.
@@ -13794,7 +13794,7 @@ subroutine parallelogram_point_dist_3d ( p1, p2, p3, p, dist )
 
   temp = sqrt ( sum ( pp(1:dim_num) ** 2 ) )
 
-  if ( temp == 0.0D+00 ) then
+  if ( temp == 0.0D0+00 ) then
     write ( *, '(a)' ) ' '
     write ( *, '(a)' ) 'PARALLELOGRAM_POINT_DIST_3D - Fatal error!'
     write ( *, '(a)' ) '  The normal vector is zero.'
@@ -13891,7 +13891,7 @@ subroutine parabola_ex ( x1, y1, x2, y2, x3, y3, x, y, ierror )
 
   bot = ( x2 - x3 ) * y1 - ( x1 - x3 ) * y2 + ( x1 - x2 ) * y3
 
-  if ( bot == 0.0D+00 ) then
+  if ( bot == 0.0D0+00 ) then
     ierror = 2
     return
   end if
@@ -13975,15 +13975,15 @@ subroutine parabola_ex2 ( x1, y1, x2, y2, x3, y3, x, y, a, b, c, ierror )
 !
 !  Set up the Vandermonde matrix.
 !
-  v(1,1) = 1.0D+00
+  v(1,1) = 1.0D0+00
   v(1,2) = x1
   v(1,3) = x1 * x1
 
-  v(2,1) = 1.0D+00
+  v(2,1) = 1.0D0+00
   v(2,2) = x2
   v(2,3) = x2 * x2
 
-  v(3,1) = 1.0D+00
+  v(3,1) = 1.0D0+00
   v(3,2) = x3
   v(3,3) = x3 * x3
 !
@@ -13999,7 +13999,7 @@ subroutine parabola_ex2 ( x1, y1, x2, y2, x3, y3, x, y, a, b, c, ierror )
 !
 !  Determine the extremal point.
 !
-  if ( a == 0.0D+00 ) then
+  if ( a == 0.0D0+00 ) then
     ierror = 2
     return
   end if
@@ -14074,7 +14074,7 @@ function parallelepiped_contains_point_3d ( p1, p2, p3, p4, p )
   dot = dot_product ( p(1:dim_num)  - p1(1:dim_num), &
                       p2(1:dim_num) - p1(1:dim_num) )
 
-  if ( dot < 0.0D+00 ) then
+  if ( dot < 0.0D0+00 ) then
     return
   end if
 
@@ -14085,7 +14085,7 @@ function parallelepiped_contains_point_3d ( p1, p2, p3, p4, p )
   dot = dot_product ( p(1:dim_num)  - p1(1:dim_num), &
                       p3(1:dim_num) - p1(1:dim_num) )
 
-  if ( dot < 0.0D+00 ) then
+  if ( dot < 0.0D0+00 ) then
     return
   end if
 
@@ -14096,7 +14096,7 @@ function parallelepiped_contains_point_3d ( p1, p2, p3, p4, p )
   dot = dot_product ( p(1:dim_num)  - p1(1:dim_num), &
                       p4(1:dim_num) - p1(1:dim_num) )
 
-  if ( dot < 0.0D+00 ) then
+  if ( dot < 0.0D0+00 ) then
     return
   end if
 
@@ -14428,10 +14428,10 @@ subroutine plane_exp_grid_3d ( p1, p2, p3, ncor3, line_num, cor3, lines, &
 !
   if ( ncor3 == 0 ) then
 
-    amin = 0.0D+00
-    amax = 1.0D+00
-    bmin = 0.0D+00
-    bmax = 1.0D+00
+    amin = 0.0D0+00
+    amax = 1.0D0+00
+    bmin = 0.0D0+00
+    bmax = 1.0D0+00
 
   else
 
@@ -14590,7 +14590,7 @@ subroutine plane_exp_normal_3d ( p1, p2, p3, normal )
 
   normal_norm = sqrt ( sum ( normal(1:dim_num) ** 2 ) )
 
-  if ( normal_norm == 0.0D+00 ) then
+  if ( normal_norm == 0.0D0+00 ) then
     write ( *, '(a)' ) ' '
     write ( *, '(a)' ) 'PLANE_EXP_NORMAL_3D - Fatal error!'
     write ( *, '(a)' ) '  The plane is poorly defined.'
@@ -14895,7 +14895,7 @@ subroutine plane_exp_project_3d ( p1, p2, p3, pf, n, po, pp, ivis )
 !  project points that actually lie in the plane, but we'll
 !  just bail out.
 !
-  if ( disfn == 0.0D+00 ) then
+  if ( disfn == 0.0D0+00 ) then
     ivis(1:n) = 0
     do i = 1, dim_num
       pp(i,1:n) = pf(i)
@@ -14911,7 +14911,7 @@ subroutine plane_exp_project_3d ( p1, p2, p3, pf, n, po, pp, ivis )
 !
     disfo = sqrt ( sum ( ( po(1:dim_num,i) - pf(1:dim_num) ) ** 2 ) )
 
-    if ( disfo == 0.0D+00 ) then
+    if ( disfo == 0.0D0+00 ) then
 
       ivis(i) = 0
       pp(1:dim_num,i) = pn(1:dim_num)
@@ -14922,7 +14922,7 @@ subroutine plane_exp_project_3d ( p1, p2, p3, pf, n, po, pp, ivis )
 !
       alpha = angle_rad_3d ( po(1:3,i), pf(1:3), pn(1:3) )
 
-      if ( cos ( alpha ) == 0.0D+00 ) then
+      if ( cos ( alpha ) == 0.0D0+00 ) then
 
         ivis(i) = 0
         pp(1:dim_num,i) = pn(1:dim_num)
@@ -14933,11 +14933,11 @@ subroutine plane_exp_project_3d ( p1, p2, p3, pf, n, po, pp, ivis )
 !
         beta = disfn / ( cos ( alpha ) * disfo )
 
-        if ( 1.0D+00 < beta ) then
+        if ( 1.0D0+00 < beta ) then
           ivis(i) = 1
-        else if ( beta == 1.0D+00 ) then
+        else if ( beta == 1.0D0+00 ) then
           ivis(i) = 2
-        else if ( 0.0D+00 < beta ) then
+        else if ( 0.0D0+00 < beta ) then
           ivis(i) = 3
         else
           ivis(i) = -1
@@ -15084,7 +15084,7 @@ subroutine plane_exp2normal_3d ( p1, p2, p3, pp, normal )
 
   norm = sqrt ( sum ( normal(1:dim_num) ** 2 ) )
 
-  if ( norm == 0.0D+00 ) then
+  if ( norm == 0.0D0+00 ) then
     write ( *, '(a)' ) ' '
     write ( *, '(a)' ) 'PLANE_EXP2NORMAL_3D - Fatal error!'
     write ( *, '(a)' ) '  The normal vector is null.'
@@ -15136,7 +15136,7 @@ function plane_imp_is_degenerate_3d ( a, b, c )
   real ( kind = 8 ) c
   logical ( kind = 4 ) plane_imp_is_degenerate_3d
 
-  if ( a == 0.0D+00 .and. b == 0.0D+00 .and. c == 0.0D+00 ) then
+  if ( a == 0.0D0+00 .and. b == 0.0D0+00 .and. c == 0.0D0+00 ) then
     plane_imp_is_degenerate_3d = .true.
   else
     plane_imp_is_degenerate_3d = .false.
@@ -15225,7 +15225,7 @@ subroutine plane_imp_line_par_int_3d ( a, b, c, d, x0, y0, z0, f, g, h, &
 !
   norm1 = sqrt ( a * a + b * b + c * c )
 
-  if ( norm1 == 0.0D+00 ) then
+  if ( norm1 == 0.0D0+00 ) then
     write ( *, '(a)' ) ' '
     write ( *, '(a)' ) 'PLANE_IMP_LINE_PAR_INT_3D - Fatal error!'
     write ( *, '(a)' ) '  The plane normal vector is null.'
@@ -15234,7 +15234,7 @@ subroutine plane_imp_line_par_int_3d ( a, b, c, d, x0, y0, z0, f, g, h, &
 
   norm2 = sqrt ( f * f + g * g + h * h )
 
-  if ( norm2 == 0.0D+00 ) then
+  if ( norm2 == 0.0D0+00 ) then
     write ( *, '(a)' ) ' '
     write ( *, '(a)' ) 'PLANE_IMP_LINE_PAR_INT_3D - Fatal error!'
     write ( *, '(a)' ) '  The line direction vector is null.'
@@ -15247,14 +15247,14 @@ subroutine plane_imp_line_par_int_3d ( a, b, c, d, x0, y0, z0, f, g, h, &
 !
   if ( abs ( denom ) < tol * norm1 * norm2 ) then
 
-    if ( a * x0 + b * y0 + c * z0 + d == 0.0D+00 ) then
+    if ( a * x0 + b * y0 + c * z0 + d == 0.0D0+00 ) then
       intersect = .true.
       p(1) = x0
       p(2) = y0
       p(3) = z0
     else
       intersect = .false.
-      p(1:dim_num) = 0.0D+00
+      p(1:dim_num) = 0.0D0+00
     end if
 !
 !  If they are not parallel, they must intersect.
@@ -15324,7 +15324,7 @@ subroutine plane_imp_point_dist_3d ( a, b, c, d, p, dist )
 
   norm = sqrt ( a * a + b * b + c * c )
 
-  if ( norm == 0.0D+00 ) then
+  if ( norm == 0.0D0+00 ) then
     write ( *, '(a)' ) ' '
     write ( *, '(a)' ) 'PLANE_IMP_POINT_DIST_3D - Fatal error!'
     write ( *, '(a)' ) '  The plane normal vector is null.'
@@ -15390,14 +15390,14 @@ subroutine plane_imp_point_dist_signed_3d ( a, b, c, d, p, dist_signed )
 
   norm = sqrt ( a * a + b * b + c * c )
 
-  if ( norm == 0.0D+00 ) then
+  if ( norm == 0.0D0+00 ) then
     write ( *, '(a)' ) ' '
     write ( *, '(a)' ) 'PLANE_IMP_POINT_DIST_SIGNED_3D - Fatal error!'
     write ( *, '(a)' ) '  The plane normal vector is null.'
     stop 1
   end if
 
-  dist_signed = - sign ( 1.0D+00, d ) &
+  dist_signed = - sign ( 1.0D0+00, d ) &
     * ( a * p(1) + b * p(2) + c * p(3) + d ) / norm
 
   return
@@ -15546,12 +15546,12 @@ subroutine plane_imp_segment_near_3d ( p1, p2, a, b, c, d, dist, p, pn )
   real ( kind = 8 ) p2(dim_num)
   real ( kind = 8 ) pn(dim_num)
 
-  pn(1:dim_num) = 0.0D+00
-  p(1:dim_num) = 0.0D+00
+  pn(1:dim_num) = 0.0D0+00
+  p(1:dim_num) = 0.0D0+00
 
   norm = sqrt ( a * a + b * b + c * c )
 
-  if ( norm == 0.0D+00 ) then
+  if ( norm == 0.0D0+00 ) then
     write ( *, '(a)' ) ' '
     write ( *, '(a)' ) 'PLANE_IMP_SEGMENT_NEAR_3D - Fatal error!'
     write ( *, '(a)' ) '  Plane normal vector is null.'
@@ -15587,8 +15587,8 @@ subroutine plane_imp_segment_near_3d ( p1, p2, a, b, c, d, dist, p, pn )
 !  If these have the same sign, then the line segment does not
 !  cross the plane, and one endpoint is the nearest point.
 !
-  if ( ( 0.0D+00 < dot1 .and. 0.0D+00 < dot2 ) .or. &
-       ( dot1 < 0.0D+00 .and. dot2 < 0.0D+00 ) ) then
+  if ( ( 0.0D0+00 < dot1 .and. 0.0D0+00 < dot2 ) .or. &
+       ( dot1 < 0.0D0+00 .and. dot2 < 0.0D0+00 ) ) then
 
     dot1 = abs ( dot1 )
     dot2 = abs ( dot2 )
@@ -15611,20 +15611,20 @@ subroutine plane_imp_segment_near_3d ( p1, p2, a, b, c, d, dist, p, pn )
 !
   else
 
-    if ( dot1 == 0.0D+00 ) then
-      alpha = 0.0D+00
-    else if ( dot2 == 0.0D+00 ) then
-      alpha = 1.0D+00
+    if ( dot1 == 0.0D0+00 ) then
+      alpha = 0.0D0+00
+    else if ( dot2 == 0.0D0+00 ) then
+      alpha = 1.0D0+00
     else
       alpha = dot2 / ( dot2 - dot1 )
     end if
 
     pn(1:dim_num) =             alpha   * p1(1:dim_num) &
-                  + ( 1.0D+00 - alpha ) * p2(1:dim_num)
+                  + ( 1.0D0+00 - alpha ) * p2(1:dim_num)
 
     p(1:dim_num) = pn(1:dim_num)
 
-    dist = 0.0D+00
+    dist = 0.0D0+00
 
   end if
  
@@ -15698,17 +15698,17 @@ subroutine plane_imp_triangle_int_3d ( a, b, c, d, t, int_num, pint )
 !
 !  Consider any zero distances.
 !
-  if ( dist1 == 0.0D+00 ) then
+  if ( dist1 == 0.0D0+00 ) then
     int_num = int_num + 1
     pint(1:dim_num,int_num) = t(1:dim_num,1)
   end if
 
-  if ( dist2 == 0.0D+00 ) then
+  if ( dist2 == 0.0D0+00 ) then
     int_num = int_num + 1
     pint(1:dim_num,int_num) = t(1:dim_num,2)
   end if
 
-  if ( dist3 == 0.0D+00 ) then
+  if ( dist3 == 0.0D0+00 ) then
     int_num = int_num + 1
     pint(1:dim_num,int_num) = t(1:dim_num,3)
   end if
@@ -15724,17 +15724,17 @@ subroutine plane_imp_triangle_int_3d ( a, b, c, d, t, int_num, pint )
 !
   if ( int_num == 1 ) then
 
-    if ( dist1 == 0.0D+00 ) then
+    if ( dist1 == 0.0D0+00 ) then
 
       call plane_imp_triangle_int_add_3d ( t(1:dim_num,2), t(1:dim_num,3), &
         dist2, dist3, int_num, pint )
 
-    else if ( dist2 == 0.0D+00 ) then
+    else if ( dist2 == 0.0D0+00 ) then
 
       call plane_imp_triangle_int_add_3d ( t(1:dim_num,1), t(1:dim_num,3), &
         dist1, dist3, int_num, pint )
 
-    else if ( dist3 == 0.0D+00 ) then
+    else if ( dist3 == 0.0D0+00 ) then
 
       call plane_imp_triangle_int_add_3d ( t(1:dim_num,1), t(1:dim_num,2), &
         dist1, dist2, int_num, pint )
@@ -15748,7 +15748,7 @@ subroutine plane_imp_triangle_int_3d ( a, b, c, d, t, int_num, pint )
 !  All nodal distances are nonzero, and there is at least one
 !  positive and one negative.
 !
-  if ( dist1 * dist2 < 0.0D+00 .and. dist1 * dist3 < 0.0D+00 ) then
+  if ( dist1 * dist2 < 0.0D0+00 .and. dist1 * dist3 < 0.0D0+00 ) then
 
     call plane_imp_triangle_int_add_3d ( t(1:dim_num,1), t(1:dim_num,2), &
       dist1, dist2, int_num, pint )
@@ -15756,7 +15756,7 @@ subroutine plane_imp_triangle_int_3d ( a, b, c, d, t, int_num, pint )
     call plane_imp_triangle_int_add_3d ( t(1:dim_num,1), t(1:dim_num,3), &
       dist1, dist3, int_num, pint )
 
-  else if ( dist2 * dist1 < 0.0D+00 .and. dist2 * dist3 < 0.0D+00 ) then
+  else if ( dist2 * dist1 < 0.0D0+00 .and. dist2 * dist3 < 0.0D0+00 ) then
 
     call plane_imp_triangle_int_add_3d ( t(1:dim_num,2), t(1:dim_num,1), &
       dist2, dist1, int_num, pint )
@@ -15764,7 +15764,7 @@ subroutine plane_imp_triangle_int_3d ( a, b, c, d, t, int_num, pint )
     call plane_imp_triangle_int_add_3d ( t(1:dim_num,2), t(1:dim_num,3), &
       dist2, dist3, int_num, pint )
 
-  else if ( dist3 * dist1 < 0.0D+00 .and. dist3 * dist2 < 0.0D+00 ) then
+  else if ( dist3 * dist1 < 0.0D0+00 .and. dist3 * dist2 < 0.0D0+00 ) then
 
     call plane_imp_triangle_int_add_3d ( t(1:dim_num,3), t(1:dim_num,1), &
       dist3, dist1, int_num, pint )
@@ -15826,17 +15826,17 @@ subroutine plane_imp_triangle_int_add_3d ( p1, p2, dist1, dist2, int_num, pint )
   real ( kind = 8 ) p2(dim_num)
   real ( kind = 8 ) pint(dim_num,3)
 
-  if ( dist1 == 0.0D+00 ) then
+  if ( dist1 == 0.0D0+00 ) then
     int_num = int_num + 1
     pint(1:dim_num,int_num) = p1(1:dim_num)
-  else if ( dist2 == 0.0D+00 ) then
+  else if ( dist2 == 0.0D0+00 ) then
     int_num = int_num + 1
     pint(1:dim_num,int_num) = p2(1:dim_num)
-  else if ( dist1 * dist2 < 0.0D+00 ) then
+  else if ( dist1 * dist2 < 0.0D0+00 ) then
     alpha = dist2 / ( dist2 - dist1 )
     int_num = int_num + 1
     pint(1:dim_num,int_num) =             alpha   * p1(1:dim_num) &
-                            + ( 1.0D+00 - alpha ) * p2(1:dim_num)
+                            + ( 1.0D0+00 - alpha ) * p2(1:dim_num)
   end if
 
   return
@@ -15919,7 +15919,7 @@ subroutine plane_imp_triangle_near_3d ( t, a, b, c, d, dist, near_num, pn )
   near_num = near_num + 1
   pn(1:dim_num,near_num) = pt(1:dim_num)
 
-  if ( 0.0D+00 < dist12 ) then
+  if ( 0.0D0+00 < dist12 ) then
     near_num = near_num + 1
     pn(1:dim_num,near_num) = p(1:dim_num)
   end if
@@ -15937,7 +15937,7 @@ subroutine plane_imp_triangle_near_3d ( t, a, b, c, d, dist, near_num, pn )
     near_num = near_num + 1
     pn(1:dim_num,near_num) = pt(1:dim_num)
 
-    if ( 0.0D+00 < dist23 ) then
+    if ( 0.0D0+00 < dist23 ) then
       near_num = near_num + 1
       pn(1:dim_num,near_num) = p(1:dim_num)
     end if
@@ -15947,7 +15947,7 @@ subroutine plane_imp_triangle_near_3d ( t, a, b, c, d, dist, near_num, pn )
     near_num = near_num + 1
     pn(1:dim_num,near_num) = pt(1:dim_num)
 
-    if ( 0.0D+00 < dist23 ) then
+    if ( 0.0D0+00 < dist23 ) then
       near_num = near_num + 1
       pn(1:dim_num,near_num) = p(1:dim_num)
     end if
@@ -15967,7 +15967,7 @@ subroutine plane_imp_triangle_near_3d ( t, a, b, c, d, dist, near_num, pn )
     near_num = near_num + 1
     pn(1:dim_num,near_num) = pt(1:dim_num)
 
-    if ( 0.0D+00 < dist31 ) then
+    if ( 0.0D0+00 < dist31 ) then
       near_num = near_num + 1
       pn(1:dim_num,near_num) = p(1:dim_num)
     end if
@@ -15977,7 +15977,7 @@ subroutine plane_imp_triangle_near_3d ( t, a, b, c, d, dist, near_num, pn )
     near_num = near_num + 1
     pn(1:dim_num,near_num) = pt(1:dim_num)
 
-    if ( 0.0D+00 < dist31 ) then
+    if ( 0.0D0+00 < dist31 ) then
       near_num = near_num + 1
       pn(1:dim_num,near_num) = p(1:dim_num)
     end if
@@ -16091,7 +16091,7 @@ subroutine plane_imp2normal_3d ( a, b, c, d, pp, normal )
 
   norm = sqrt ( a * a + b * b + c * c )
 
-  if ( norm == 0.0D+00 ) then
+  if ( norm == 0.0D0+00 ) then
     write ( *, '(a)' ) ' '
     write ( *, '(a)' ) 'PLANE_IMP2NORMAL_3D - Fatal error!'
     write ( *, '(a)' ) '  The plane (A,B,C) has zero norm.'
@@ -16102,17 +16102,17 @@ subroutine plane_imp2normal_3d ( a, b, c, d, pp, normal )
   normal(2) = b / norm
   normal(3) = c / norm
 
-  if ( a /= 0.0D+00 ) then
+  if ( a /= 0.0D0+00 ) then
     pp(1) = - d / a
-    pp(2) = 0.0D+00
-    pp(3) = 0.0D+00
-  else if ( b /= 0.0D+00 ) then
-    pp(1) = 0.0D+00
+    pp(2) = 0.0D0+00
+    pp(3) = 0.0D0+00
+  else if ( b /= 0.0D0+00 ) then
+    pp(1) = 0.0D0+00
     pp(2) = - d / b
-    pp(3) = 0.0D+00
-  else if ( c /= 0.0D+00 ) then
-    pp(1) = 0.0D+00
-    pp(2) = 0.0D+00
+    pp(3) = 0.0D0+00
+  else if ( c /= 0.0D0+00 ) then
+    pp(1) = 0.0D0+00
+    pp(2) = 0.0D0+00
     pp(3) = - d / c
   else
     write ( *, '(a)' ) ' '
@@ -16189,7 +16189,7 @@ subroutine plane_normal_basis_3d ( pp, normal, pq, pr )
 !
   normal_norm = r8vec_norm ( dim_num, normal )
 
-  if ( normal_norm == 0.0D+00 ) then
+  if ( normal_norm == 0.0D0+00 ) then
     write ( *, '(a)' ) ' '
     write ( *, '(a)' ) 'PLANE_NORMAL_BASIS_3D - Fatal error!'
     write ( *, '(a)' ) '  The normal vector is 0.'
@@ -16282,7 +16282,7 @@ subroutine plane_normal_line_exp_int_3d ( pp, normal, p1, p2, ival, pint )
 !
   temp = sqrt ( sum ( normal(1:dim_num) ** 2 ) )
 
-  if ( temp == 0.0D+00 ) then
+  if ( temp == 0.0D0+00 ) then
     write ( *, '(a)' ) ' '
     write ( *, '(a)' ) 'PLANE_NORMAL_LINE_EXP_INT_3D - Fatal error!'
     write ( *, '(a)' ) '  The normal vector of the plane is degenerate.'
@@ -16300,11 +16300,11 @@ subroutine plane_normal_line_exp_int_3d ( pp, normal, p1, p2, ival, pint )
 !  If the normal and direction vectors are orthogonal, then
 !  we have a special case to deal with.
 !
-  if ( dot_product ( normal(1:dim_num), direction(1:dim_num) ) == 0.0D+00 ) then
+  if ( dot_product ( normal(1:dim_num), direction(1:dim_num) ) == 0.0D0+00 ) then
 
     temp = dot_product ( normal(1:dim_num), p1(1:dim_num) - pp(1:dim_num) )
 
-    if ( temp == 0.0D+00 ) then
+    if ( temp == 0.0D0+00 ) then
       ival = 2
       pint(1:dim_num) = p1(1:dim_num)
     else
@@ -16475,7 +16475,7 @@ subroutine plane_normal_tetrahedron_intersect ( pp, normal, t, int_num, pint )
   real ( kind = 8 ) temp(3)
 
   int_num = 0
-  pint(1:3,1:4) = 0.0D+00
+  pint(1:3,1:4) = 0.0D0+00
 !
 !  DN is the length of the normal vector.
 !
@@ -16493,7 +16493,7 @@ subroutine plane_normal_tetrahedron_intersect ( pp, normal, t, int_num, pint )
 !
 !  If all D are positive or negative, no intersection.
 !
-  if ( all ( d(1:4) < 0.0D+00 ) .or. all ( 0.0D+00 < d(1:4) ) ) then
+  if ( all ( d(1:4) < 0.0D0+00 ) .or. all ( 0.0D0+00 < d(1:4) ) ) then
     int_num = 0
     return
   end if
@@ -16506,7 +16506,7 @@ subroutine plane_normal_tetrahedron_intersect ( pp, normal, t, int_num, pint )
 !
   do j1 = 1, 4
 
-    if ( d(j1) == 0.0D+00 ) then
+    if ( d(j1) == 0.0D0+00 ) then
       int_num = int_num + 1
       pint(1:3,int_num) = t(1:3,j1)
     else
@@ -16611,21 +16611,21 @@ subroutine plane_normal_triangle_int_3d ( pp, normal, t, int_num, pint )
 !
 !  Consider any zero distances.
 !
-  if ( dist1 == 0.0D+00 ) then
+  if ( dist1 == 0.0D0+00 ) then
 
     int_num = int_num + 1
     pint(1:dim_num,int_num) = t(1:dim_num,1)
 
   end if
 
-  if ( dist2 == 0.0D+00 ) then
+  if ( dist2 == 0.0D0+00 ) then
 
     int_num = int_num + 1
     pint(1:dim_num,int_num) = t(1:dim_num,2)
 
   end if
 
-  if ( dist3 == 0.0D+00 ) then
+  if ( dist3 == 0.0D0+00 ) then
 
     int_num = int_num + 1
     pint(1:dim_num,int_num) = t(1:dim_num,3)
@@ -16643,17 +16643,17 @@ subroutine plane_normal_triangle_int_3d ( pp, normal, t, int_num, pint )
 !
   if ( int_num == 1 ) then
 
-    if ( dist1 == 0.0D+00 ) then
+    if ( dist1 == 0.0D0+00 ) then
 
       call plane_imp_triangle_int_add_3d ( t(1:dim_num,2), t(1:dim_num,3), &
         dist2, dist3, int_num, pint )
 
-    else if ( dist2 == 0.0D+00 ) then
+    else if ( dist2 == 0.0D0+00 ) then
 
       call plane_imp_triangle_int_add_3d ( t(1:dim_num,1), t(1:dim_num,3), &
         dist1, dist3, int_num, pint )
 
-    else if ( dist3 == 0.0D+00 ) then
+    else if ( dist3 == 0.0D0+00 ) then
 
       call plane_imp_triangle_int_add_3d ( t(1:dim_num,1), t(1:dim_num,2), &
         dist1, dist2, int_num, pint )
@@ -16667,7 +16667,7 @@ subroutine plane_normal_triangle_int_3d ( pp, normal, t, int_num, pint )
 !  All nodal distances are nonzero, and there is at least one
 !  positive and one negative.
 !
-  if ( dist1 * dist2 < 0.0D+00 .and. dist1 * dist3 < 0.0D+00 ) then
+  if ( dist1 * dist2 < 0.0D0+00 .and. dist1 * dist3 < 0.0D0+00 ) then
 
     call plane_imp_triangle_int_add_3d ( t(1:dim_num,1), t(1:dim_num,2), &
       dist1, dist2, int_num, pint )
@@ -16675,7 +16675,7 @@ subroutine plane_normal_triangle_int_3d ( pp, normal, t, int_num, pint )
     call plane_imp_triangle_int_add_3d ( t(1:dim_num,1), t(1:dim_num,3), &
       dist1, dist3, int_num, pint )
 
-  else if ( dist2 * dist1 < 0.0D+00 .and. dist2 * dist3 < 0.0D+00 ) then
+  else if ( dist2 * dist1 < 0.0D0+00 .and. dist2 * dist3 < 0.0D0+00 ) then
 
     call plane_imp_triangle_int_add_3d ( t(1:dim_num,2), t(1:dim_num,1), &
       dist2, dist1, int_num, pint )
@@ -16683,7 +16683,7 @@ subroutine plane_normal_triangle_int_3d ( pp, normal, t, int_num, pint )
     call plane_imp_triangle_int_add_3d ( t(1:dim_num,2), t(1:dim_num,3), &
       dist2, dist3, int_num, pint )
 
-  else if ( dist3 * dist1 < 0.0D+00 .and. dist3 * dist2 < 0.0D+00 ) then
+  else if ( dist3 * dist1 < 0.0D0+00 .and. dist3 * dist2 < 0.0D0+00 ) then
 
     call plane_imp_triangle_int_add_3d ( t(1:dim_num,3), t(1:dim_num,1), &
       dist3, dist1, int_num, pint )
@@ -17064,7 +17064,7 @@ subroutine planes_imp_angle_3d ( a1, b1, c1, d1, a2, b2, c2, d2, angle )
 !
 !    Output, real ( kind = 8 ) ANGLE, the dihedral angle, in radians,
 !    defined by the two planes.  If either plane is degenerate, or they
-!    do not intersect, or they coincide, then the angle is set to HUGE(1.0).
+!    do not intersect, or they coincide, then the angle is set to HUGE(1.0D0).
 !    Otherwise, the angle is between 0 and PI.
 !
   implicit none
@@ -17087,14 +17087,14 @@ subroutine planes_imp_angle_3d ( a1, b1, c1, d1, a2, b2, c2, d2, angle )
 
   norm1 = sqrt ( a1 * a1 + b1 * b1 + c1 * c1 )
 
-  if ( norm1 == 0.0D+00 ) then
+  if ( norm1 == 0.0D0+00 ) then
     angle = huge ( angle )
     return
   end if
 
   norm2 = sqrt ( a2 * a2 + b2 * b2 + c2 * c2 )
 
-  if ( norm2 == 0.0D+00 ) then
+  if ( norm2 == 0.0D0+00 ) then
     angle = huge ( angle )
     return
   end if
@@ -17156,7 +17156,7 @@ function points_avoid_point_naive_2d ( n, p_set, p )
   logical ( kind = 4 ) points_avoid_point_naive_2d
   real ( kind = 8 ) tol
 
-  tol = 100.0D+00 * epsilon ( tol )
+  tol = 100.0D0+00 * epsilon ( tol )
 
   points_avoid_point_naive_2d = .true.
 
@@ -17290,12 +17290,12 @@ subroutine points_bisect_line_par_2d ( p1, p2, f, g, x, y )
 
   norm = f * f + g * g
 
-  if ( norm /= 0.0D+00 ) then
+  if ( norm /= 0.0D0+00 ) then
     f = f / norm
     g = g / norm
   end if
 
-  if ( f < 0.0D+00 ) then
+  if ( f < 0.0D0+00 ) then
     f = -f
     g = -g
   end if
@@ -17356,12 +17356,12 @@ subroutine points_centroid_2d ( n, p, centroid_index )
   integer ( kind = 4 ) j
   real ( kind = 8 ) p(dim_num,n)
 
-  dist_min = 0.0D+00
+  dist_min = 0.0D0+00
   centroid_index = -1
 
   do i = 1, n
 
-    dist = 0.0D+00
+    dist = 0.0D0+00
     do j = 1, n
       dist = dist + sum ( ( p(1:dim_num,i) - p(1:dim_num,j) )**2 )
     end do
@@ -17431,9 +17431,9 @@ subroutine points_colin_2d ( p1, p2, p3, colin )
 
   call triangle_area_2d ( t, area_triangle )
 
-  if ( area_triangle == 0.0D+00 ) then
+  if ( area_triangle == 0.0D0+00 ) then
 
-    colin = 0.0D+00
+    colin = 0.0D0+00
 
   else
 
@@ -17504,9 +17504,9 @@ subroutine points_colin_3d ( p1, p2, p3, colin )
 
   call triangle_area_3d ( t, area_triangle )
 
-  if ( area_triangle == 0.0D+00 ) then
+  if ( area_triangle == 0.0D0+00 ) then
 
-    colin = 0.0D+00
+    colin = 0.0D0+00
 
   else
 
@@ -17672,7 +17672,7 @@ subroutine points_hull_2d ( node_num, node_xy, hull_num, hull )
 !  and call it "P".
 !
   p_xy(1) = q_xy(1)
-  p_xy(2) = q_xy(2) - 1.0D+00
+  p_xy(2) = q_xy(2) - 1.0D0+00
 !
 !  Now, having old point P, and current point Q, find the new point R
 !  so the angle PQR is maximal.
@@ -17682,7 +17682,7 @@ subroutine points_hull_2d ( node_num, node_xy, hull_num, hull )
   do
 
     r = 0
-    angle_max = 0.0D+00
+    angle_max = 0.0D0+00
 
     do i = 1, node_num
 
@@ -17901,7 +17901,7 @@ subroutine points_plot ( file_name, node_num, node_xy, node_label )
   write ( file_unit, '(a)' ) '%'
   write ( file_unit, '(a)' ) '%  Set the RGB line color to black.'
   write ( file_unit, '(a)' ) '%'
-  write ( file_unit, '(a)' ) '0.000  0.000  0.000 setrgbcolor'
+  write ( file_unit, '(a)' ) '0.00  0.00  0.00 setrgbcolor'
   write ( file_unit, '(a)' ) '%'
   write ( file_unit, '(a)' ) '%  Set the font and its size.'
   write ( file_unit, '(a)' ) '%'
@@ -17936,7 +17936,7 @@ subroutine points_plot ( file_name, node_num, node_xy, node_label )
   write ( file_unit, '(a)' ) '%'
   write ( file_unit, '(a)' ) '%  Set the RGB color to blue.'
   write ( file_unit, '(a)' ) '%'
-  write ( file_unit, '(a)' ) '0.000  0.150  0.750 setrgbcolor'
+  write ( file_unit, '(a)' ) '0.00  0.150  0.750 setrgbcolor'
   write ( file_unit, '(a)' ) '%'
 
   do node = 1, node_num
@@ -17965,7 +17965,7 @@ subroutine points_plot ( file_name, node_num, node_xy, node_label )
     write ( file_unit, '(a)' ) '%'
     write ( file_unit, '(a)' ) '%  Set the RGB color to darker blue.'
     write ( file_unit, '(a)' ) '%'
-    write ( file_unit, '(a)' ) '0.000  0.250  0.850 setrgbcolor'
+    write ( file_unit, '(a)' ) '0.00  0.250  0.850 setrgbcolor'
     write ( file_unit, '(a)' ) '/Times-Roman findfont'
     write ( file_unit, '(a)' ) '0.20 inch scalefont'
     write ( file_unit, '(a)' ) 'setfont'
@@ -18162,7 +18162,7 @@ subroutine polygon_1_2d ( n, v, result )
   real ( kind = 8 ) result
   real ( kind = 8 ) v(2,n)
 
-  result = 0.0D+00
+  result = 0.0D0+00
 
   if ( n < 3 ) then
     write ( *, '(a)' ) ' '
@@ -18231,7 +18231,7 @@ subroutine polygon_angles_2d ( n, v, angle )
   real ( kind = 8 ) v(dim_num,n)
 
   if ( n <= 2 ) then
-    angle(1:n) = 0.0D+00
+    angle(1:n) = 0.0D0+00
     return
   end if
  
@@ -18294,7 +18294,7 @@ subroutine polygon_area_2d ( n, v, area )
   integer ( kind = 4 ) ip1
   real ( kind = 8 ) v(dim_num,n)
 
-  area = 0.0D+00
+  area = 0.0D0+00
 
   do i = 1, n
 
@@ -18366,7 +18366,7 @@ subroutine polygon_area_2d_2 ( n, v, area )
   real ( kind = 8 ) t(dim_num,3)
   real ( kind = 8 ) v(dim_num,n)
 
-  area = 0.0D+00
+  area = 0.0D0+00
 
   do i = 1, n - 2
 
@@ -18440,7 +18440,7 @@ subroutine polygon_area_3d ( n, v, area, normal )
   real ( kind = 8 ) normal(dim_num)
   real ( kind = 8 ) v(dim_num,n)
 
-  normal(1:dim_num) = 0.0D+00
+  normal(1:dim_num) = 0.0D0+00
 
   do i = 1, n
 
@@ -18462,10 +18462,10 @@ subroutine polygon_area_3d ( n, v, area, normal )
 
   area = sqrt ( sum ( normal(1:dim_num)**2 ) )
 
-  if ( area /= 0.0D+00 ) then
+  if ( area /= 0.0D0+00 ) then
     normal(1:dim_num) = normal(1:dim_num) / area
   else
-    normal(1:dim_num) = 1.0D+00 / sqrt ( real ( dim_num, kind = 8 ) )
+    normal(1:dim_num) = 1.0D0+00 / sqrt ( real ( dim_num, kind = 8 ) )
   end if
 
   area = 0.5D+00 * area
@@ -18529,7 +18529,7 @@ subroutine polygon_area_3d_2 ( n, v, area )
   real ( kind = 8 ) t(dim_num,3)
   real ( kind = 8 ) v(dim_num,n)
 
-  area_vector(1:dim_num) = 0.0D+00
+  area_vector(1:dim_num) = 0.0D0+00
 
   do j = 1, n - 2
 
@@ -18623,8 +18623,8 @@ subroutine polygon_centroid_2d ( n, v, centroid )
   real ( kind = 8 ) temp
   real ( kind = 8 ) v(dim_num,n)
 
-  area = 0.0D+00
-  centroid(1:dim_num) = 0.0D+00
+  area = 0.0D0+00
+  centroid(1:dim_num) = 0.0D0+00
 
   do i = 1, n
 
@@ -18645,7 +18645,7 @@ subroutine polygon_centroid_2d ( n, v, centroid )
 
   area = area / 2.0D+00
 
-  if ( area == 0.0D+00 ) then
+  if ( area == 0.0D0+00 ) then
     centroid(1:dim_num) = v(1:dim_num,1)
   else
     centroid(1:dim_num) = centroid(1:dim_num) / ( 6.0D+00 * area )
@@ -18703,8 +18703,8 @@ subroutine polygon_centroid_2d_2 ( n, v, centroid )
   real ( kind = 8 ) t(dim_num,3)
   real ( kind = 8 ) v(dim_num,n)
 
-  area_polygon = 0.0D+00
-  centroid(1:dim_num) = 0.0D+00
+  area_polygon = 0.0D0+00
+  centroid(1:dim_num) = 0.0D0+00
 
   do i = 1, n - 2
 
@@ -18721,7 +18721,7 @@ subroutine polygon_centroid_2d_2 ( n, v, centroid )
 
   end do
 
-  if ( area_polygon == 0.0D+00 ) then
+  if ( area_polygon == 0.0D0+00 ) then
     centroid(1:dim_num) = v(1:dim_num,1)
   else
     centroid(1:dim_num) = centroid(1:dim_num) / area_polygon
@@ -18784,8 +18784,8 @@ subroutine polygon_centroid_3d ( n, v, centroid )
   real ( kind = 8 ) t(dim_num,3)
   real ( kind = 8 ) v(dim_num,n)
 
-  area_polygon = 0.0D+00
-  centroid(1:dim_num) = 0.0D+00
+  area_polygon = 0.0D0+00
+  centroid(1:dim_num) = 0.0D0+00
 
   do i = 1, n - 2
 
@@ -18802,7 +18802,7 @@ subroutine polygon_centroid_3d ( n, v, centroid )
 
   end do
 
-  if ( area_polygon == 0.0D+00 ) then
+  if ( area_polygon == 0.0D0+00 ) then
     centroid(1:dim_num) = v(1:dim_num,1)
   else
     centroid(1:dim_num) = centroid(1:dim_num) / area_polygon
@@ -18859,7 +18859,7 @@ subroutine polygon_contains_point_2d ( n, v, p, inside )
 
   px1 = v(1,1)
   py1 = v(2,1)
-  xints = p(1) - 1.0D+00
+  xints = p(1) - 1.0D0+00
 
   do i = 1, n
 
@@ -19017,7 +19017,7 @@ subroutine polygon_contains_point_2d_3 ( n, v, p, inside )
     if ( ( v(2,i)   <  p(2) .and. p(2) <= v(2,ip1)   ) .or. &
          ( p(2) <= v(2,i)   .and. v(2,ip1)   < p(2) ) ) then
       if ( ( p(1) - v(1,i) ) - ( p(2) - v(2,i) ) &
-         * ( v(1,ip1) - v(1,i) ) / ( v(2,ip1) - v(2,i) ) < 0.0D+00 ) then
+         * ( v(1,ip1) - v(1,i) ) / ( v(2,ip1) - v(2,i) ) < 0.0D0+00 ) then
         inside = .not. inside
       end if
     end if
@@ -19071,7 +19071,7 @@ subroutine polygon_diameter_2d ( n, v, diameter )
   integer ( kind = 4 ) j
   real ( kind = 8 ) v(dim_num,n)
 
-  diameter = 0.0D+00
+  diameter = 0.0D0+00
 
   do i = 1, n
 
@@ -19284,7 +19284,7 @@ function polygon_is_convex_2d ( n, v )
   implicit none
 
   real ( kind = 8 ), parameter :: r8_pi = 3.141592653589793D+00
-  real ( kind = 8 ), parameter :: RAD_TO_DEG = 180.0D+00 / r8_pi
+  real ( kind = 8 ), parameter :: RAD_TO_DEG = 180.0D0+00 / r8_pi
 
   integer ( kind = 4 ) n
   integer ( kind = 4 ), parameter :: dim_num = 2
@@ -19302,10 +19302,10 @@ function polygon_is_convex_2d ( n, v )
   integer ( kind = 4 ), parameter :: NOT_CONVEX = -1
   integer ( kind = 4 ) polygon_is_convex_2d
   real ( kind = 8 ) sense
-  real ( kind = 8 ), parameter :: tol = 1.0D+00
+  real ( kind = 8 ), parameter :: tol = 1.0D0+00
   real ( kind = 8 ) v(dim_num,n)
 
-  exterior_total = 0.0D+00
+  exterior_total = 0.0D0+00
 !
 !  If there are not at least 3 distinct vertices, we are done.
 !
@@ -19314,7 +19314,7 @@ function polygon_is_convex_2d ( n, v )
     return
   end if
 
-  sense = 0.0D+00
+  sense = 0.0D0+00
 !
 !  Consider each polygonal vertex I.
 !
@@ -19342,24 +19342,24 @@ function polygon_is_convex_2d ( n, v )
 !  the "sense" of the polygon, or if it disagrees with the previously
 !  defined sense.
 !
-    if ( sense == 0.0D+00 ) then
+    if ( sense == 0.0D0+00 ) then
 
-      if ( angle < 0.0D+00 ) then
-        sense = -1.0D+00
-      else if ( 0.0D+00 < angle ) then
-        sense = +1.0D+00
+      if ( angle < 0.0D0+00 ) then
+        sense = -1.0D0+00
+      else if ( 0.0D0+00 < angle ) then
+        sense = +1.0D0+00
       end if
 
-    else if ( sense == 1.0D+00 ) then
+    else if ( sense == 1.0D0+00 ) then
 
-      if ( angle < 0.0D+00 ) then
+      if ( angle < 0.0D0+00 ) then
         polygon_is_convex_2d = NOT_CONVEX
         return
       end if
 
-    else if ( sense == -1.0D+00 ) then
+    else if ( sense == -1.0D0+00 ) then
 
-      if ( 0.0D+00 < angle ) then
+      if ( 0.0D0+00 < angle ) then
         polygon_is_convex_2d = NOT_CONVEX
         return
       end if
@@ -19373,16 +19373,16 @@ function polygon_is_convex_2d ( n, v )
 
     exterior_total = exterior_total + angle
 
-    if ( 360.0D+00 + tol < abs ( exterior_total ) * RAD_TO_DEG ) then
+    if ( 360.0D0+00 + tol < abs ( exterior_total ) * RAD_TO_DEG ) then
       polygon_is_convex_2d = NOT_CONVEX
       return
     end if
 
   end do
 
-  if ( sense == +1.0D+00 ) then
+  if ( sense == +1.0D0+00 ) then
     polygon_is_convex_2d = CONVEX_CCW
-  else if ( sense == -1.0D+00 ) then
+  else if ( sense == -1.0D0+00 ) then
     polygon_is_convex_2d = CONVEX_CW
   end if
 
@@ -19445,7 +19445,7 @@ subroutine polygon_lattice_area_2d ( i, b, area )
   integer ( kind = 4 ) b
   integer ( kind = 4 ) i
 
-  area = real ( i, kind = 8 ) + real ( b, kind = 8 ) / 2.0D+00 - 1.0D+00
+  area = real ( i, kind = 8 ) + real ( b, kind = 8 ) / 2.0D+00 - 1.0D0+00
 
   return
 end
@@ -19512,7 +19512,7 @@ subroutine polygon_normal_3d ( n, v, normal )
   real ( kind = 8 ) v1(dim_num)
   real ( kind = 8 ) v2(dim_num)
 
-  normal(1:dim_num) = 0.0D+00
+  normal(1:dim_num) = 0.0D0+00
 
   v1(1:dim_num) = v(1:dim_num,2) - v(1:dim_num,1)
 
@@ -19532,7 +19532,7 @@ subroutine polygon_normal_3d ( n, v, normal )
 !
   normal_norm = r8vec_norm ( dim_num, normal )
 
-  if ( normal_norm == 0.0D+00 ) then
+  if ( normal_norm == 0.0D0+00 ) then
     return
   end if
 
@@ -19711,7 +19711,7 @@ subroutine polygon_point_near_2d ( n, v, p, pn, dist )
 !  of the polygon.
 !
   dist = huge ( dist )
-  pn(1:dim_num) = 0.0D+00
+  pn(1:dim_num) = 0.0D0+00
 
   do j = 1, n
 
@@ -19878,7 +19878,7 @@ subroutine polygon_solid_angle_3d ( n, v, p, solid_angle )
   real ( kind = 8 ) v(dim_num,n)
 
   if ( n < 3 ) then
-    solid_angle = 0.0D+00
+    solid_angle = 0.0D0+00
     return
   end if
 
@@ -19886,7 +19886,7 @@ subroutine polygon_solid_angle_3d ( n, v, p, solid_angle )
  
   a(1:dim_num) = v(1:dim_num,n) - v(1:dim_num,1)
 
-  area = 0.0D+00
+  area = 0.0D0+00
 
   do j = 1, n
 
@@ -19911,7 +19911,7 @@ subroutine polygon_solid_angle_3d ( n, v, p, solid_angle )
 
     s = r8vec_scalar_triple_product ( b, a, plane )
 
-    if ( 0.0D+00 < s ) then
+    if ( 0.0D0+00 < s ) then
       area = area + r8_pi - angle
     else
       area = area + r8_pi + angle
@@ -19923,7 +19923,7 @@ subroutine polygon_solid_angle_3d ( n, v, p, solid_angle )
 
   area = area - r8_pi * real ( n - 2, kind = 8 )
 
-  if ( 0.0D+00 < dot_product ( plane(1:dim_num), r1(1:dim_num) ) ) then
+  if ( 0.0D0+00 < dot_product ( plane(1:dim_num), r1(1:dim_num) ) ) then
     solid_angle = -area
   else
     solid_angle = area
@@ -19985,7 +19985,7 @@ subroutine polygon_x_2d ( n, v, result )
   real ( kind = 8 ) result
   real ( kind = 8 ) v(2,n)
 
-  result = 0.0D+00
+  result = 0.0D0+00
 
   if ( n < 3 ) then
     write ( *, '(a)' ) ' '
@@ -20068,7 +20068,7 @@ subroutine polygon_xx_2d ( n, v, result )
   real ( kind = 8 ) result
   real ( kind = 8 ) v(2,n)
 
-  result = 0.0D+00
+  result = 0.0D0+00
 
   if ( n < 3 ) then
     write ( *, '(a)' ) ' '
@@ -20152,7 +20152,7 @@ subroutine polygon_xy_2d ( n, v, result )
   real ( kind = 8 ) result
   real ( kind = 8 ) v(dim_num,n)
 
-  result = 0.0D+00
+  result = 0.0D0+00
 
   if ( n < 3 ) then
     write ( *, '(a)' ) ' '
@@ -20236,7 +20236,7 @@ subroutine polygon_y_2d ( n, v, result )
   real ( kind = 8 ) result
   real ( kind = 8 ) v(dim_num,n)
 
-  result = 0.0D+00
+  result = 0.0D0+00
 
   if ( n < 3 ) then
     write ( *, '(a)' ) ' '
@@ -20319,7 +20319,7 @@ subroutine polygon_yy_2d ( n, v, result )
   real ( kind = 8 ) result
   real ( kind = 8 ) v(dim_num,n)
 
-  result = 0.0D+00
+  result = 0.0D0+00
 
   if ( n < 3 ) then
     write ( *, '(a)' ) ' '
@@ -20418,13 +20418,13 @@ subroutine polyhedron_area_3d ( coord, order_max, face_num, node, &
   integer ( kind = 4 ) order(face_num)
   real ( kind = 8 ) v(dim_num)
 
-  area = 0.0D+00
+  area = 0.0D0+00
 !
 !  For each face
 !
   do face = 1, face_num
 
-    v(1:dim_num) = 0.0D+00
+    v(1:dim_num) = 0.0D0+00
 !
 !  For each triangle in the face, compute the normal vector.
 !
@@ -20536,8 +20536,8 @@ subroutine polyhedron_centroid_3d ( coord, order_max, face_num, node, &
 !  Compute a point in the interior.
 !  We take the area-weighted centroid of each face.
 !
-  point(1:dim_num) = 0.0D+00
-  area = 0.0D+00
+  point(1:dim_num) = 0.0D0+00
+  area = 0.0D0+00
 
   do face = 1, face_num
 
@@ -20561,8 +20561,8 @@ subroutine polyhedron_centroid_3d ( coord, order_max, face_num, node, &
 !  Now triangulate each face.
 !  For each triangle, consider the tetrahedron created by including POINT.
 !
-  centroid(1:dim_num) = 0.0D+00
-  volume = 0.0D+00
+  centroid(1:dim_num) = 0.0D0+00
+  volume = 0.0D0+00
 
   do face = 1, face_num
 
@@ -20671,7 +20671,7 @@ subroutine polyhedron_contains_point_3d ( node_num, face_num, &
   real ( kind = 8 ) v(dim_num,node_num)
   real ( kind = 8 ) v_face(dim_num,face_order_max)
 
-  area = 0.0D+00
+  area = 0.0D0+00
 
   do face = 1, face_num
 
@@ -20760,7 +20760,7 @@ subroutine polyhedron_volume_3d ( coord, order_max, face_num, node, &
   integer ( kind = 4 ) v
   real ( kind = 8 ) volume
 
-  volume = 0.0D+00
+  volume = 0.0D0+00
 !
 !  Triangulate each face.
 !
@@ -20862,11 +20862,11 @@ subroutine polyhedron_volume_3d_2 ( coord, order_max, face_num, node, &
   real ( kind = 8 ) v(dim_num)
   real ( kind = 8 ) volume
 
-  volume = 0.0D+00
+  volume = 0.0D0+00
 
   do face = 1, face_num
 
-    v(1:dim_num) = 0.0D+00
+    v(1:dim_num) = 0.0D0+00
 !
 !  Compute the area vector for this face.
 !
@@ -20950,7 +20950,7 @@ subroutine polyline_arclength_nd ( dim_num, n, p, s )
   real ( kind = 8 ) p(dim_num,n)
   real ( kind = 8 ) s(n)
 
-  s(1) = 0.0D+00
+  s(1) = 0.0D0+00
 
   do i = 2, n
 
@@ -21034,7 +21034,7 @@ subroutine polyline_index_point_nd ( dim_num, n, p, t, pt )
 
   else
 
-    t2 = 0.0D+00
+    t2 = 0.0D0+00
 
     do i = 1, n - 1
 !
@@ -21105,7 +21105,7 @@ subroutine polyline_length_nd ( dim_num, nk, pk, length )
   real ( kind = 8 ) length
   real ( kind = 8 ) pk(dim_num,nk)
 
-  length = 0.0D+00
+  length = 0.0D0+00
 
   do i = 2, nk
 
@@ -21176,7 +21176,7 @@ subroutine polyline_points_nd ( dim_num, n, p, nt, pt )
 
   do it = 1,  nt
 
-    st = ( real ( nt - it,     kind = 8 ) * 0.0D+00 + &
+    st = ( real ( nt - it,     kind = 8 ) * 0.0D0+00 + &
            real (      it - 1, kind = 8 ) * s(n) ) &
          / real ( nt      - 1, kind = 8 )
 
@@ -21250,7 +21250,7 @@ subroutine polyloop_arclength_nd ( dim_num, nk, pk, sk )
   real ( kind = 8 ) pk(dim_num,nk)
   real ( kind = 8 ) sk(nk+1)
 
-  sk(1) = 0.0D+00
+  sk(1) = 0.0D0+00
 
   do i = 2, nk + 1
 
@@ -21313,7 +21313,7 @@ subroutine polyloop_length_nd ( dim_num, nk, pk, length )
   real ( kind = 8 ) length
   real ( kind = 8 ) pk(dim_num,nk)
 
-  length = 0.0D+00
+  length = 0.0D0+00
 
   do i = 2, nk + 1
 
@@ -21388,7 +21388,7 @@ subroutine polyloop_points_nd ( dim_num, nk, pk, nt, pt )
 
   do it = 1,  nt
 
-    st = ( real ( nt - it,     kind = 8 ) * 0.0D+00 + &
+    st = ( real ( nt - it,     kind = 8 ) * 0.0D0+00 + &
            real (      it - 1, kind = 8 ) * sk(nk+1) ) &
          / real ( nt      - 1, kind = 8 )
 
@@ -21483,7 +21483,7 @@ subroutine provec ( m, n, base, vecm, vecn, vecnm )
 
     temp = sqrt ( sum ( base(1:m,j)**2 ) )
 
-    if ( 0.0D+00 < temp ) then
+    if ( 0.0D0+00 < temp ) then
       base(1:m,j) = base(1:m,j) / temp
     end if
 
@@ -21583,7 +21583,7 @@ subroutine quad_area_2d ( q, area )
   real ( kind = 8 ) q(dim_num,4)
   real ( kind = 8 ) t(dim_num,3)
 
-  area = 0.0D+00
+  area = 0.0D0+00
 
   t(1:dim_num,1:3) = reshape ( (/ &
     q(1:2,1), q(1:2,2), q(1:2,3) /), (/ dim_num, 3 /) )
@@ -21959,7 +21959,7 @@ subroutine quad_point_dist_signed_2d ( q, p, dist_signed )
 !
 !    Output, real ( kind = 8 ) DIST_SIGNED, the signed distance from the 
 !    point to the convex quadrilateral.  If DIST_SIGNED is
-!    0.0, the point is on the boundary;
+!    0.0D0, the point is on the boundary;
 !    negative, the point is in the interior;
 !    positive, the point is in the exterior.
 !
@@ -21990,7 +21990,7 @@ subroutine quad_point_dist_signed_2d ( q, p, dist_signed )
 
   call line_exp_point_dist_signed_2d ( q(1:2,1), q(1:2,2), pm, dis )
 
-  if ( 0.0D+00 < dis ) then
+  if ( 0.0D0+00 < dis ) then
     dis = -dis
     dis12 = -dis12
   end if
@@ -22003,7 +22003,7 @@ subroutine quad_point_dist_signed_2d ( q, p, dist_signed )
 
   call line_exp_point_dist_signed_2d ( q(1:2,2), q(1:2,3), pm, dis )
 
-  if ( 0.0D+00 < dis ) then
+  if ( 0.0D0+00 < dis ) then
     dis = -dis
     dis23 = -dis23
   end if
@@ -22016,7 +22016,7 @@ subroutine quad_point_dist_signed_2d ( q, p, dist_signed )
 
   call line_exp_point_dist_signed_2d ( q(1:2,3), q(1:2,4), pm, dis )
 
-  if ( 0.0D+00 < dis ) then
+  if ( 0.0D0+00 < dis ) then
     dis = -dis
     dis34 = -dis34
   end if
@@ -22029,7 +22029,7 @@ subroutine quad_point_dist_signed_2d ( q, p, dist_signed )
 
   call line_exp_point_dist_signed_2d ( q(1:2,4), q(1:2,1), pm, dis )
 
-  if ( 0.0D+00 < dis ) then
+  if ( 0.0D0+00 < dis ) then
     dis = -dis
     dis41 = -dis41
   end if
@@ -22092,7 +22092,7 @@ subroutine quad_point_near_2d ( q, p, pn, dist )
 !  of the quadrilateral.
 !
   dist = huge ( dist )
-  pn(1:dim_num) = 0.0D+00
+  pn(1:dim_num) = 0.0D0+00
 
   do j = 1, side_num
 
@@ -22320,7 +22320,7 @@ function r4_uniform_01 ( seed )
 !      Input     Output      R4_UNIFORM_01
 !      SEED      SEED
 !
-!         12345   207482415  0.096616
+!         12345   207482415  0.0D096616
 !     207482415  1790989824  0.833995
 !    1790989824  2035175616  0.947702
 !
@@ -22402,7 +22402,7 @@ function r8_acos ( c )
 !  Discussion:
 !
 !    If you call your system ACOS routine with an input argument that is
-!    even slightly outside the range [-1.0, 1.0 ], you may get an unpleasant
+!    even slightly outside the range [-1.0D0, 1.0D0 ], you may get an unpleasant
 !    surprise (I did).
 !
 !    This routine simply truncates arguments outside the range.
@@ -22432,8 +22432,8 @@ function r8_acos ( c )
   real ( kind = 8 ) r8_acos
 
   c2 = c
-  c2 = max ( c2, -1.0D+00 )
-  c2 = min ( c2, +1.0D+00 )
+  c2 = max ( c2, -1.0D0+00 )
+  c2 = min ( c2, +1.0D0+00 )
 
   r8_acos = acos ( c2 )
 
@@ -22448,7 +22448,7 @@ function r8_asin ( s )
 !  Discussion:
 !
 !    If you call your system ASIN routine with an input argument that is
-!    even slightly outside the range [-1.0, 1.0 ], you may get an unpleasant 
+!    even slightly outside the range [-1.0D0, 1.0D0 ], you may get an unpleasant 
 !    surprise (I did).
 !
 !    This routine simply truncates arguments outside the range.
@@ -22478,8 +22478,8 @@ function r8_asin ( s )
   real ( kind = 8 ) s2
 
   s2 = s
-  s2 = max ( s2, -1.0D+00 )
-  s2 = min ( s2, +1.0D+00 )
+  s2 = max ( s2, -1.0D0+00 )
+  s2 = min ( s2, +1.0D0+00 )
 
   r8_asin = asin ( s2 )
 
@@ -22540,21 +22540,21 @@ function r8_atan ( y, x )
 !
 !  Special cases:
 !
-  if ( x == 0.0D+00 ) then
+  if ( x == 0.0D0+00 ) then
 
-    if ( 0.0D+00 < y ) then
+    if ( 0.0D0+00 < y ) then
       theta = r8_pi / 2.0D+00
-    else if ( y < 0.0D+00 ) then
+    else if ( y < 0.0D0+00 ) then
       theta = 3.0D+00 * r8_pi / 2.0D+00
-    else if ( y == 0.0D+00 ) then
-      theta = 0.0D+00
+    else if ( y == 0.0D0+00 ) then
+      theta = 0.0D0+00
     end if
 
-  else if ( y == 0.0D+00 ) then
+  else if ( y == 0.0D0+00 ) then
 
-    if ( 0.0D+00 < x ) then
-      theta = 0.0D+00
-    else if ( x < 0.0D+00 ) then
+    if ( 0.0D0+00 < x ) then
+      theta = 0.0D0+00
+    else if ( x < 0.0D0+00 ) then
       theta = r8_pi
     end if
 !
@@ -22567,13 +22567,13 @@ function r8_atan ( y, x )
 
     theta_0 = atan2 ( abs_y, abs_x )
 
-    if ( 0.0D+00 < x .and. 0.0D+00 < y ) then
+    if ( 0.0D0+00 < x .and. 0.0D0+00 < y ) then
       theta = theta_0
-    else if ( x < 0.0D+00 .and. 0.0D+00 < y ) then
+    else if ( x < 0.0D0+00 .and. 0.0D0+00 < y ) then
       theta = r8_pi - theta_0
-    else if ( x < 0.0D+00 .and. y < 0.0D+00 ) then
+    else if ( x < 0.0D0+00 .and. y < 0.0D0+00 ) then
       theta = r8_pi + theta_0
-    else if ( 0.0D+00 < x .and. y < 0.0D+00 ) then
+    else if ( 0.0D0+00 < x .and. y < 0.0D0+00 ) then
       theta = 2.0D+00 * r8_pi - theta_0
     end if
 
@@ -22614,7 +22614,7 @@ function r8_cosd ( degrees )
   real ( kind = 8 ), parameter :: r8_pi = 3.141592653589793D+00
   real ( kind = 8 ) radians
 
-  radians = r8_pi * ( degrees / 180.0D+00 )
+  radians = r8_pi * ( degrees / 180.0D0+00 )
   r8_cosd = cos ( radians )
 
   return
@@ -22650,7 +22650,7 @@ function r8_cotd ( degrees )
   real ( kind = 8 ), parameter :: r8_pi = 3.141592653589793D+00
   real ( kind = 8 ) radians
 
-  radians = r8_pi * ( degrees / 180.0D+00 )
+  radians = r8_pi * ( degrees / 180.0D0+00 )
   r8_cotd = cos ( radians ) / sin ( radians )
 
   return
@@ -22686,8 +22686,8 @@ function r8_cscd ( degrees )
   real ( kind = 8 ), parameter :: r8_pi = 3.141592653589793D+00
   real ( kind = 8 ) radians
 
-  radians = r8_pi * ( degrees / 180.0D+00 )
-  r8_cscd  = 1.0D+00 / sin ( radians )
+  radians = r8_pi * ( degrees / 180.0D0+00 )
+  r8_cscd  = 1.0D0+00 / sin ( radians )
 
   return
 end
@@ -22728,7 +22728,7 @@ function r8_huge ( )
 
   real ( kind = 8 ) r8_huge
 
-  r8_huge = 1.0D+30
+  r8_huge = 1.0D0+30
 
   return
 end
@@ -22792,10 +22792,10 @@ function r8_modp ( x, y )
 !    The MOD function computes a result with the same sign as the
 !    quantity being divided.  Thus, suppose you had an angle A,
 !    and you wanted to ensure that it was between 0 and 360.
-!    Then mod(A,360.0) would do, if A was positive, but if A
+!    Then mod(A,360.0D0) would do, if A was positive, but if A
 !    was negative, your result would be between -360 and 0.
 !
-!    On the other hand, R8_MODP(A,360.0) is between 0 and 360, always.
+!    On the other hand, R8_MODP(A,360.0D0) is between 0 and 360, always.
 !
 !  Example:
 !
@@ -22833,7 +22833,7 @@ function r8_modp ( x, y )
   real ( kind = 8 ) x
   real ( kind = 8 ) y
 
-  if ( y == 0.0D+00 ) then
+  if ( y == 0.0D0+00 ) then
     write ( *, '(a)' ) ' '
     write ( *, '(a)' ) 'R8_MODP - Fatal error!'
     write ( *, '(a,g14.6)' ) '  R8_MODP ( X, Y ) called with Y = ', y
@@ -22842,7 +22842,7 @@ function r8_modp ( x, y )
 
   r8_modp = mod ( x, y )
 
-  if ( r8_modp < 0.0D+00 ) then
+  if ( r8_modp < 0.0D0+00 ) then
     r8_modp = r8_modp + abs ( y )
   end if
 
@@ -22904,7 +22904,7 @@ function r8_normal_01 ( seed )
   integer ( kind = 4 ), save :: seed2 = 0
   integer ( kind = 4 ), save :: used = 0
   real ( kind = 8 ) x
-  real ( kind = 8 ), save :: y = 0.0D+00
+  real ( kind = 8 ), save :: y = 0.0D0+00
 !
 !  On odd numbered calls, generate two uniforms, create two normals,
 !  return the first normal and its corresponding seed.
@@ -22913,7 +22913,7 @@ function r8_normal_01 ( seed )
 
     r1 = r8_uniform_01 ( seed )
 
-    if ( r1 == 0.0D+00 ) then
+    if ( r1 == 0.0D0+00 ) then
       write ( *, '(a)' ) ' '
       write ( *, '(a)' ) 'R8_NORMAL_01 - Fatal error!'
       write ( *, '(a)' ) '  R8_UNIFORM_01 returned a value of 0.'
@@ -22981,7 +22981,7 @@ function r8_sign_opposite_strict ( r1, r2 )
 !
 !    This test could be coded numerically as
 !
-!      if ( r1 * r2 < 0.0 ) then ...
+!      if ( r1 * r2 < 0.0D0 ) then ...
 !
 !  Licensing:
 !
@@ -23008,8 +23008,8 @@ function r8_sign_opposite_strict ( r1, r2 )
   real ( kind = 8 ) r2
   logical ( kind = 4 ) r8_sign_opposite_strict
 
-  r8_sign_opposite_strict = ( r1 < 0.0D+00 .and. 0.0D+00 < r2 ) .or. &
-                            ( r2 < 0.0D+00 .and. 0.0D+00 < r1 )
+  r8_sign_opposite_strict = ( r1 < 0.0D0+00 .and. 0.0D0+00 < r2 ) .or. &
+                            ( r2 < 0.0D0+00 .and. 0.0D0+00 < r1 )
 
   return
 end
@@ -23044,7 +23044,7 @@ function r8_sind ( degrees )
   real ( kind = 8 ) r8_sind
   real ( kind = 8 ) radians
 
-  radians = r8_pi * ( degrees / 180.0D+00 )
+  radians = r8_pi * ( degrees / 180.0D0+00 )
   r8_sind  = sin ( radians )
 
   return
@@ -23080,8 +23080,8 @@ function r8_secd ( degrees )
   real ( kind = 8 ) r8_secd
   real ( kind = 8 ) radians
 
-  radians = r8_pi * ( degrees / 180.0D+00 )
-  r8_secd = 1.0D+00 / cos ( radians )
+  radians = r8_pi * ( degrees / 180.0D0+00 )
+  r8_secd = 1.0D0+00 / cos ( radians )
 
   return
 end
@@ -23151,7 +23151,7 @@ function r8_tand ( degrees )
   real ( kind = 8 ) r8_tand
   real ( kind = 8 ) radians
 
-  radians = r8_pi * ( degrees / 180.0D+00 )
+  radians = r8_pi * ( degrees / 180.0D0+00 )
   r8_tand  = tan ( radians )
 
   return
@@ -23244,7 +23244,7 @@ function r8_uniform_01 ( seed )
 !      Input     Output      R8_UNIFORM_01
 !      SEED      SEED
 !
-!         12345   207482415  0.096616
+!         12345   207482415  0.0D096616
 !     207482415  1790989824  0.833995
 !    1790989824  2035175616  0.947702
 !
@@ -23341,13 +23341,13 @@ subroutine r82vec_permute ( n, p, a )
 !
 !      N = 5
 !      P = (   2,    4,    5,    1,    3 )
-!      A = ( 1.0,  2.0,  3.0,  4.0,  5.0 )
-!          (11.0, 22.0, 33.0, 44.0, 55.0 )
+!      A = ( 1.0D0,  2.0,  3.0,  4.0,  5.0 )
+!          (11.0D0, 22.0, 33.0, 44.0, 55.0 )
 !
 !    Output:
 !
-!      A    = (  2.0,  4.0,  5.0,  1.0,  3.0 )
-!             ( 22.0, 44.0, 55.0, 11.0, 33.0 ).
+!      A    = (  2.0,  4.0,  5.0,  1.0D0,  3.0 )
+!             ( 22.0, 44.0, 55.0, 11.0D0, 33.0 ).
 !
 !  Licensing:
 !
@@ -23605,7 +23605,7 @@ subroutine r8ge_det ( n, a, pivot, det )
   integer ( kind = 4 ) i
   integer ( kind = 4 ) pivot(n)
 
-  det = 1.0D+00
+  det = 1.0D0+00
 
   do i = 1, n
     det = det * a(i,i)
@@ -23690,7 +23690,7 @@ subroutine r8ge_fa ( n, a, pivot, info )
 !
 !  If the pivot index is zero, the algorithm has failed.
 !
-    if ( a(l,k) == 0.0D+00 ) then
+    if ( a(l,k) == 0.0D0+00 ) then
       info = k
       write ( *, '(a)' ) ' '
       write ( *, '(a)' ) 'DGE_FA - Warning!'
@@ -23724,7 +23724,7 @@ subroutine r8ge_fa ( n, a, pivot, info )
 
   pivot(n) = n
 
-  if ( a(n,n) == 0.0D+00 ) then
+  if ( a(n,n) == 0.0D0+00 ) then
     info = n
     write ( *, '(a)' ) ' '
     write ( *, '(a)' ) 'DGE_FA - Warning!'
@@ -24007,7 +24007,7 @@ function r8mat_det_5d ( a )
 !  Expand the determinant into the sum of the determinants of the
 !  five 4 by 4 matrices created by dropping row 1, and column k.
 !
-  r8mat_det_5d = 0.0D+00
+  r8mat_det_5d = 0.0D0+00
 
   do k = 1, 5
 
@@ -24078,9 +24078,9 @@ subroutine r8mat_inverse_2d ( a, b, det )
 !
 !  If the determinant is zero, bail out.
 !
-  if ( det == 0.0D+00 ) then
+  if ( det == 0.0D0+00 ) then
 
-    b(1:2,1:2) = 0.0D+00
+    b(1:2,1:2) = 0.0D0+00
 
     return
   end if
@@ -24143,9 +24143,9 @@ subroutine r8mat_inverse_3d ( a, b, det )
 !
 !  If the determinant is zero, bail out.
 !
-  if ( det == 0.0D+00 ) then
+  if ( det == 0.0D0+00 ) then
 
-    b(1:3,1:3) = 0.0D+00
+    b(1:3,1:3) = 0.0D0+00
 
     return
   end if
@@ -24375,7 +24375,7 @@ subroutine r8mat_solve ( n, rhs_num, a, info )
       end if
     end do
 
-    if ( apivot == 0.0D+00 ) then
+    if ( apivot == 0.0D0+00 ) then
       info = j
       return
     end if
@@ -24388,7 +24388,7 @@ subroutine r8mat_solve ( n, rhs_num, a, info )
 !
 !  A(J,J) becomes 1.
 !
-    a(j,j) = 1.0D+00
+    a(j,j) = 1.0D0+00
     a(j,j+1:n+rhs_num) = a(j,j+1:n+rhs_num) / apivot
 !
 !  A(I,J) becomes 0.
@@ -24398,7 +24398,7 @@ subroutine r8mat_solve ( n, rhs_num, a, info )
       if ( i /= j ) then
 
         factor = a(i,j)
-        a(i,j) = 0.0D+00
+        a(i,j) = 0.0D0+00
         a(i,j+1:n+rhs_num) = a(i,j+1:n+rhs_num) - factor * a(j,j+1:n+rhs_num)
 
       end if
@@ -24460,8 +24460,8 @@ subroutine r8mat_solve_2d ( a, b, det, x )
 !
 !  If the determinant is zero, bail out.
 !
-  if ( det == 0.0D+00 ) then
-    x(1:2) = 0.0D+00
+  if ( det == 0.0D0+00 ) then
+    x(1:2) = 0.0D0+00
     return
   end if
 !
@@ -24887,9 +24887,9 @@ subroutine r8vec_any_normal ( dim_num, v1, v2 )
     stop 1
   end if
 
-  if ( r8vec_norm ( dim_num, v1 ) == 0.0D+00 ) then
-    v2(1) = 1.0D+00
-    v2(2:dim_num) = 0.0D+00
+  if ( r8vec_norm ( dim_num, v1 ) == 0.0D0+00 ) then
+    v2(1) = 1.0D0+00
+    v2(2:dim_num) = 0.0D0+00
     return
   end if
 !
@@ -24900,10 +24900,10 @@ subroutine r8vec_any_normal ( dim_num, v1, v2 )
 !  VJ, at least, is not zero.
 !
   j = -1
-  vj = 0.0D+00
+  vj = 0.0D0+00
 
   k = -1
-  vk = 0.0D+00
+  vk = 0.0D0+00
 
   do i = 1, dim_num
 
@@ -24926,7 +24926,7 @@ subroutine r8vec_any_normal ( dim_num, v1, v2 )
 !  Setting V2 to zero, except that V2(J) = -VK, and V2(K) = VJ,
 !  will just about do the trick.
 !
-  v2(1:dim_num) = 0.0D+00
+  v2(1:dim_num) = 0.0D0+00
 
   v2(j) = -vk / sqrt ( vk * vk + vj * vj )
   v2(k) =  vj / sqrt ( vk * vk + vj * vj )
@@ -25656,7 +25656,7 @@ subroutine r8vec_normal_01 ( n, seed, x )
   real ( kind = 8 ) x(n)
   integer ( kind = 4 ) x_hi_index
   integer ( kind = 4 ) x_lo_index
-  real ( kind = 8 ), save :: y = 0.0D+00
+  real ( kind = 8 ), save :: y = 0.0D0+00
 !
 !  I'd like to allow the user to reset the internal data.
 !  But this won't work properly if we have a saved value Y.
@@ -25668,7 +25668,7 @@ subroutine r8vec_normal_01 ( n, seed, x )
     n = made
     made = 0
     saved = 0
-    y = 0.0D+00
+    y = 0.0D0+00
     return
   else if ( n == 0 ) then
     return
@@ -25697,7 +25697,7 @@ subroutine r8vec_normal_01 ( n, seed, x )
 
     r(1) = r8_uniform_01 ( seed )
 
-    if ( r(1) == 0.0D+00 ) then
+    if ( r(1) == 0.0D0+00 ) then
       write ( *, '(a)' ) ' '
       write ( *, '(a)' ) 'R8VEC_NORMAL_01 - Fatal error!'
       write ( *, '(a)' ) '  R8_UNIFORM_01 returned a value of 0.'
@@ -25915,9 +25915,9 @@ subroutine r8vec_polarize ( n, a, p, a_normal, a_parallel )
 
   p_norm = sqrt ( sum ( p(1:n)**2 ) )
 
-  if ( p_norm == 0.0D+00 ) then
+  if ( p_norm == 0.0D0+00 ) then
     a_normal(1:n) = a(1:n)
-    a_parallel(1:n) = 0.0D+00
+    a_parallel(1:n) = 0.0D0+00
     return
   end if
 
@@ -26461,7 +26461,7 @@ function radians_to_degrees ( angle_rad )
   real ( kind = 8 ), parameter :: r8_pi = 3.141592653589793D+00
   real ( kind = 8 ) radians_to_degrees
 
-  radians_to_degrees = ( angle_rad / r8_pi ) * 180.0D+00
+  radians_to_degrees = ( angle_rad / r8_pi ) * 180.0D0+00
 
   return
 end
@@ -26499,15 +26499,15 @@ subroutine radians_to_dms ( angle_rad, degrees, minutes, seconds )
   real ( kind = 8 ), parameter :: r8_pi = 3.141592653589793D+00
   integer ( kind = 4 ) seconds
 
-  angle_deg = 180.0D+00 * abs ( angle_rad ) / r8_pi
+  angle_deg = 180.0D0+00 * abs ( angle_rad ) / r8_pi
 
   degrees = int ( angle_deg )
-  angle_deg = ( angle_deg - real ( degrees, kind = 8 ) ) * 60.0D+00
+  angle_deg = ( angle_deg - real ( degrees, kind = 8 ) ) * 60.0D0+00
   minutes = int ( angle_deg )
-  angle_deg = ( angle_deg - real ( minutes, kind = 8 ) ) * 60.0D+00
+  angle_deg = ( angle_deg - real ( minutes, kind = 8 ) ) * 60.0D0+00
   seconds = nint ( angle_deg )
 
-  if ( angle_rad < 0.0D+00 ) then
+  if ( angle_rad < 0.0D0+00 ) then
     degrees = - degrees
     minutes = - minutes
     seconds = - seconds
@@ -26672,8 +26672,8 @@ subroutine rotation_axis_vector_3d ( axis, angle, v, w )
 
   axis_norm = sqrt ( sum ( u(1:dim_num)**2 ) )
 
-  if ( axis_norm == 0.0D+00 ) then
-    w(1:dim_num) = 0.0D+00
+  if ( axis_norm == 0.0D0+00 ) then
+    w(1:dim_num) = 0.0D0+00
     return
   end if
 
@@ -26693,7 +26693,7 @@ subroutine rotation_axis_vector_3d ( axis, angle, v, w )
 
   normal_component = sqrt ( sum ( normal(1:dim_num)**2 ) )
 
-  if ( normal_component == 0.0D+00 ) then
+  if ( normal_component == 0.0D0+00 ) then
     w(1:dim_num) = parallel(1:dim_num)
     return
   end if
@@ -26779,8 +26779,8 @@ subroutine rotation_axis2mat_3d ( axis, angle, a )
 
   axis_norm = sqrt ( sum ( axis(1:dim_num)**2 ) )
 
-  if ( axis_norm == 0.0D+00 ) then
-    a(1:dim_num,1:dim_num) = 0.0D+00
+  if ( axis_norm == 0.0D0+00 ) then
+    a(1:dim_num,1:dim_num) = 0.0D0+00
     return
   end if
 
@@ -26791,17 +26791,17 @@ subroutine rotation_axis2mat_3d ( axis, angle, a )
   ca = cos ( angle )
   sa = sin ( angle )
 
-  a(1,1) =                    v1 * v1 + ca * ( 1.0D+00 - v1 * v1 )
-  a(1,2) = ( 1.0D+00 - ca ) * v1 * v2 - sa * v3
-  a(1,3) = ( 1.0D+00 - ca ) * v1 * v3 + sa * v2
+  a(1,1) =                    v1 * v1 + ca * ( 1.0D0+00 - v1 * v1 )
+  a(1,2) = ( 1.0D0+00 - ca ) * v1 * v2 - sa * v3
+  a(1,3) = ( 1.0D0+00 - ca ) * v1 * v3 + sa * v2
 
-  a(2,1) = ( 1.0D+00 - ca ) * v2 * v1 + sa * v3
-  a(2,2) =                    v2 * v2 + ca * ( 1.0D+00 - v2 * v2 )
-  a(2,3) = ( 1.0D+00 - ca ) * v2 * v3 - sa * v1
+  a(2,1) = ( 1.0D0+00 - ca ) * v2 * v1 + sa * v3
+  a(2,2) =                    v2 * v2 + ca * ( 1.0D0+00 - v2 * v2 )
+  a(2,3) = ( 1.0D0+00 - ca ) * v2 * v3 - sa * v1
 
-  a(3,1) = ( 1.0D+00 - ca ) * v3 * v1 - sa * v2
-  a(3,2) = ( 1.0D+00 - ca ) * v3 * v2 + sa * v1
-  a(3,3) =                    v3 * v3 + ca * ( 1.0D+00 - v3 * v3 )
+  a(3,1) = ( 1.0D0+00 - ca ) * v3 * v1 - sa * v2
+  a(3,2) = ( 1.0D0+00 - ca ) * v3 * v2 + sa * v1
+  a(3,3) =                    v3 * v3 + ca * ( 1.0D0+00 - v3 * v3 )
 
   return
 end
@@ -26860,11 +26860,11 @@ subroutine rotation_axis2quat_3d ( axis, angle, q )
 
   axis_norm = sqrt ( sum ( axis(1:dim_num)**2 ) )
 
-  if ( axis_norm == 0.0D+00 ) then
+  if ( axis_norm == 0.0D0+00 ) then
     write ( *, '(a)' ) ' '
     write ( *, '(a)' ) 'ROTATION_AXIS2QUAT_3D - Fatal error!'
     write ( *, '(a)' ) '  The axis vector is null.'
-    q(1:4) = 0.0D+00
+    q(1:4) = 0.0D0+00
     stop 1
   end if
 
@@ -26972,7 +26972,7 @@ subroutine rotation_mat2axis_3d ( a, axis, angle )
 
   axis_norm = sqrt ( sum ( axis(1:dim_num)**2 ) )
 
-  if ( axis_norm == 0.0D+00 ) then
+  if ( axis_norm == 0.0D0+00 ) then
     write ( *, '(a)' ) ' '
     write ( *, '(a)' ) 'ROTATION_MAT2AXIS_3D - Fatal error!'
     write ( *, '(a)' ) '  A is not a rotation matrix,'
@@ -26984,7 +26984,7 @@ subroutine rotation_mat2axis_3d ( a, axis, angle )
 !
 !  Find the angle.
 !
-  angle = r8_acos ( 0.5D+00 * ( a(1,1) + a(2,2) + a(3,3) - 1.0D+00 ) )
+  angle = r8_acos ( 0.5D+00 * ( a(1,1) + a(2,2) + a(3,3) - 1.0D0+00 ) )
 
   return
 end
@@ -27048,7 +27048,7 @@ subroutine rotation_mat2quat_3d ( a, q )
 
   axis_norm = sqrt ( sum ( axis(1:dim_num)**2 ) )
 
-  if ( axis_norm == 0.0D+00 ) then
+  if ( axis_norm == 0.0D0+00 ) then
     write ( *, '(a)' ) ' '
     write ( *, '(a)' ) 'ROTATION_MAT2QUAT_3D - Fatal error!'
     write ( *, '(a)' ) '  A is not a rotation matrix,'
@@ -27060,13 +27060,13 @@ subroutine rotation_mat2quat_3d ( a, q )
 !
 !  Compute the angle.
 !
-  angle = r8_acos ( 0.5D+00 * ( a(1,1) + a(2,2) + a(3,3) - 1.0D+00 ) )
+  angle = r8_acos ( 0.5D+00 * ( a(1,1) + a(2,2) + a(3,3) - 1.0D0+00 ) )
 !
 !  Compute the quaternion.
 !
   cos_phi = cos ( 0.5D+00 * angle )
 
-  sin_phi = sqrt ( 1.0D+00 - cos_phi * cos_phi )
+  sin_phi = sqrt ( 1.0D0+00 - cos_phi * cos_phi )
 
   q(1)   = cos_phi
   q(2:4) = sin_phi * axis(1:3)
@@ -27116,19 +27116,19 @@ subroutine rotation_quat_vector_3d ( q, v, w )
   real ( kind = 8 ) w(dim_num)
 
   w(1) = &
-         ( 2.0D+00 * ( q(1) * q(1) + q(2) * q(2) ) - 1.0D+00 ) * v(1) &
+         ( 2.0D+00 * ( q(1) * q(1) + q(2) * q(2) ) - 1.0D0+00 ) * v(1) &
        +   2.0D+00 * ( q(2) * q(3) - q(1) * q(4) )             * v(2) &
        +   2.0D+00 * ( q(2) * q(4) + q(1) * q(3) )             * v(3)
 
   w(2) = &
            2.0D+00 * ( q(2) * q(3) + q(1) * q(4) )             * v(1) &
-       + ( 2.0D+00 * ( q(1) * q(1) + q(3) * q(3) ) - 1.0D+00 ) * v(2) &
+       + ( 2.0D+00 * ( q(1) * q(1) + q(3) * q(3) ) - 1.0D0+00 ) * v(2) &
        +   2.0D+00 * ( q(3) * q(4) - q(1) * q(2) )             * v(3)
 
   w(3) = &
            2.0D+00 * ( q(2) * q(4) - q(1) * q(3) )             * v(1) &
        +   2.0D+00 * ( q(3) * q(4) + q(1) * q(2) )             * v(2) &
-       + ( 2.0D+00 * ( q(1) * q(1) + q(4) * q(4) ) - 1.0D+00 ) * v(3)
+       + ( 2.0D+00 * ( q(1) * q(1) + q(4) * q(4) ) - 1.0D0+00 ) * v(3)
 
   return
 end
@@ -27192,8 +27192,8 @@ subroutine rotation_quat2axis_3d ( q, axis, angle )
 
   angle = 2.0D+00 * atan2 ( sin_phi, cos_phi )
 
-  if ( sin_phi == 0.0D+00 ) then
-    axis(1:dim_num) = (/ 1.0D+00, 0.0D+00, 0.0D+00 /)
+  if ( sin_phi == 0.0D0+00 ) then
+    axis(1:dim_num) = (/ 1.0D0+00, 0.0D0+00, 0.0D0+00 /)
   else
     axis(1:dim_num) = q(2:4) / sin_phi
   end if
@@ -27252,10 +27252,10 @@ subroutine rotation_quat2mat_3d ( q, a )
 
   angle = 2.0D+00 * atan2 ( sin_phi, cos_phi )
 
-  if ( sin_phi == 0.0D+00 ) then
-    v1 = 1.0D+00
-    v2 = 0.0D+00
-    v3 = 0.0D+00
+  if ( sin_phi == 0.0D0+00 ) then
+    v1 = 1.0D0+00
+    v2 = 0.0D0+00
+    v3 = 0.0D0+00
   else
     v1 = q(2) / sin_phi
     v2 = q(3) / sin_phi
@@ -27265,17 +27265,17 @@ subroutine rotation_quat2mat_3d ( q, a )
   ca = cos ( angle )
   sa = sin ( angle )
 
-  a(1,1) =                    v1 * v1 + ca * ( 1.0D+00 - v1 * v1 )
-  a(1,2) = ( 1.0D+00 - ca ) * v1 * v2 - sa * v3
-  a(1,3) = ( 1.0D+00 - ca ) * v1 * v3 + sa * v2
+  a(1,1) =                    v1 * v1 + ca * ( 1.0D0+00 - v1 * v1 )
+  a(1,2) = ( 1.0D0+00 - ca ) * v1 * v2 - sa * v3
+  a(1,3) = ( 1.0D0+00 - ca ) * v1 * v3 + sa * v2
 
-  a(2,1) = ( 1.0D+00 - ca ) * v2 * v1 + sa * v3
-  a(2,2) =                    v2 * v2 + ca * ( 1.0D+00 - v2 * v2 )
-  a(2,3) = ( 1.0D+00 - ca ) * v2 * v3 - sa * v1
+  a(2,1) = ( 1.0D0+00 - ca ) * v2 * v1 + sa * v3
+  a(2,2) =                    v2 * v2 + ca * ( 1.0D0+00 - v2 * v2 )
+  a(2,3) = ( 1.0D0+00 - ca ) * v2 * v3 - sa * v1
 
-  a(3,1) = ( 1.0D+00 - ca ) * v3 * v1 - sa * v2
-  a(3,2) = ( 1.0D+00 - ca ) * v3 * v2 + sa * v1
-  a(3,3) =                    v3 * v3 + ca * ( 1.0D+00 - v3 * v3 )
+  a(3,1) = ( 1.0D0+00 - ca ) * v3 * v1 - sa * v2
+  a(3,2) = ( 1.0D0+00 - ca ) * v3 * v2 + sa * v1
+  a(3,3) =                    v3 * v3 + ca * ( 1.0D0+00 - v3 * v3 )
 
   return
 end
@@ -27368,7 +27368,7 @@ subroutine segment_contains_point_1d ( p1, p2, p, t )
 
   unit = p2 - p1
 
-  if ( unit == 0.0D+00 ) then
+  if ( unit == 0.0D0+00 ) then
 
     if ( p == p1 ) then
       t = 0.5D+00
@@ -27435,11 +27435,11 @@ subroutine segment_contains_point_2d ( p1, p2, p, u )
 
   normsq = sum ( ( p2(1:dim_num) - p1(1:dim_num) )**2 )
 
-  if ( normsq == 0.0D+00 ) then
+  if ( normsq == 0.0D0+00 ) then
 
     if ( all ( p(1:dim_num) == p1(1:dim_num) ) ) then
       u(1) = 0.5D+00
-      u(2) = 0.0D+00
+      u(2) = 0.0D0+00
     else
       u(1) = 0.5D+00
       u(2) = huge ( u(2) )
@@ -27450,8 +27450,8 @@ subroutine segment_contains_point_2d ( p1, p2, p, u )
     u(1) = sum ( ( p(1:dim_num)  - p1(1:dim_num) ) &
                * ( p2(1:dim_num) - p1(1:dim_num) ) ) / normsq
 
-    u(2) = sqrt ( ( ( u(1) - 1.0D+00 ) * p1(1) - u(1) * p2(1) + p(1) )**2 &
-                + ( ( u(1) - 1.0D+00 ) * p1(2) - u(1) * p2(2) + p(2) )**2 ) &
+    u(2) = sqrt ( ( ( u(1) - 1.0D0+00 ) * p1(1) - u(1) * p2(1) + p(1) )**2 &
+                + ( ( u(1) - 1.0D0+00 ) * p1(2) - u(1) * p2(2) + p(2) )**2 ) &
                 / sqrt ( normsq )
 
   end if
@@ -27527,7 +27527,7 @@ subroutine segment_point_coords_2d ( p1, p2, p, s, t )
 !
   if ( all ( p1(1:dim_num) == p2(1:dim_num) ) ) then
 
-    t = 0.0D+00
+    t = 0.0D0+00
 
   else
 
@@ -27613,7 +27613,7 @@ subroutine segment_point_coords_3d ( p1, p2, p, s, t )
 !
   if ( all ( p1(1:dim_num) == p2(1:dim_num) ) ) then
 
-    t = 0.0D+00
+    t = 0.0D0+00
 
   else
 
@@ -27685,7 +27685,7 @@ subroutine segment_point_dist_2d ( p1, p2, p, dist )
 !
   if ( all ( p1(1:dim_num) == p2(1:dim_num) ) ) then
 
-    t = 0.0D+00
+    t = 0.0D0+00
 
   else
 
@@ -27694,8 +27694,8 @@ subroutine segment_point_dist_2d ( p1, p2, p, dist )
     t = sum ( ( p(1:dim_num)  - p1(1:dim_num) ) &
             * ( p2(1:dim_num) - p1(1:dim_num) ) ) / bot
 
-    t = max ( t, 0.0D+00 )
-    t = min ( t, 1.0D+00 )
+    t = max ( t, 0.0D0+00 )
+    t = min ( t, 1.0D0+00 )
 
   end if
 
@@ -27760,7 +27760,7 @@ subroutine segment_point_dist_3d ( p1, p2, p, dist )
 !
   if ( all ( p1(1:dim_num) == p2(1:dim_num) ) ) then
 
-    t = 0.0D+00
+    t = 0.0D0+00
 
   else
 
@@ -27769,8 +27769,8 @@ subroutine segment_point_dist_3d ( p1, p2, p, dist )
     t = sum ( ( p(1:dim_num)  - p1(1:dim_num) ) &
             * ( p2(1:dim_num) - p1(1:dim_num) ) ) / bot
 
-    t = max ( t, 0.0D+00 )
-    t = min ( t, 1.0D+00 )
+    t = max ( t, 0.0D0+00 )
+    t = min ( t, 1.0D0+00 )
 
   end if
 
@@ -27841,7 +27841,7 @@ subroutine segment_point_near_2d ( p1, p2, p, pn, dist, t )
 !
   if ( all ( p1(1:dim_num) == p2(1:dim_num) ) ) then
 
-    t = 0.0D+00
+    t = 0.0D0+00
 
   else
 
@@ -27850,8 +27850,8 @@ subroutine segment_point_near_2d ( p1, p2, p, pn, dist, t )
     t = sum ( ( p(1:dim_num)  - p1(1:dim_num) ) &
             * ( p2(1:dim_num) - p1(1:dim_num) ) ) / bot
 
-    t = max ( t, 0.0D+00 )
-    t = min ( t, 1.0D+00 )
+    t = max ( t, 0.0D0+00 )
+    t = min ( t, 1.0D0+00 )
 
   end if
 
@@ -27922,7 +27922,7 @@ subroutine segment_point_near_3d ( p1, p2, p, pn, dist, t )
 !
   if ( all ( p1(1:dim_num) == p2(1:dim_num) ) ) then
 
-    t = 0.0D+00
+    t = 0.0D0+00
 
   else
 
@@ -27931,8 +27931,8 @@ subroutine segment_point_near_3d ( p1, p2, p, pn, dist, t )
     t = sum ( ( p(1:dim_num)  - p1(1:dim_num) ) &
             * ( p2(1:dim_num) - p1(1:dim_num) ) ) / bot
 
-    t = max ( t, 0.0D+00 )
-    t = min ( t, 1.0D+00 )
+    t = max ( t, 0.0D0+00 )
+    t = min ( t, 1.0D0+00 )
 
   end if
 
@@ -27994,10 +27994,10 @@ subroutine segments_curvature_2d ( p1, p2, p3, curvature )
 
   call circle_exp2imp_2d ( p1, p2, p3, r, pc )
 
-  if ( 0.0D+00 < r ) then
-    curvature = 1.0D+00 / r
+  if ( 0.0D0+00 < r ) then
+    curvature = 1.0D0+00 / r
   else
-    curvature = 0.0D+00
+    curvature = 0.0D0+00
   end if
 
   return
@@ -28086,9 +28086,9 @@ subroutine segments_dist_2d ( p1, p2, q1, q2, dist )
     call segment_point_coords_2d ( p1, p2, r, rps, rpt )
     call segment_point_coords_2d ( q1, q2, r, rqs, rqt )
 
-    if ( 0.0D+00 <= rpt .and. rpt <= 1.0D+00 .and. &
-         0.0D+00 <= rqt .and. rqt <= 1.0D+00 ) then
-      dist = 0.0D+00
+    if ( 0.0D0+00 <= rpt .and. rpt <= 1.0D0+00 .and. &
+         0.0D0+00 <= rqt .and. rqt <= 1.0D0+00 ) then
+      dist = 0.0D0+00
       return
     end if
 
@@ -28268,8 +28268,8 @@ subroutine segments_dist_3d ( p1, p2, q1, q2, dist )
 !
   det = - a * c + b * b
 
-  if ( det == 0.0D+00 ) then
-    sn = 0.0D+00
+  if ( det == 0.0D0+00 ) then
+    sn = 0.0D0+00
     if ( abs ( b ) < abs ( c ) ) then
       tn = e / c
     else
@@ -28284,8 +28284,8 @@ subroutine segments_dist_3d ( p1, p2, q1, q2, dist )
 !  also happen to lie inside their line segments,
 !  then we have found the nearest points on the line segments.
 !
-  if ( 0.0D+00 <= sn .and. sn <= 1.0D+00 .and. &
-       0.0D+00 <= tn .and. tn <= 1.0D+00 ) then
+  if ( 0.0D0+00 <= sn .and. sn <= 1.0D0+00 .and. &
+       0.0D0+00 <= tn .and. tn <= 1.0D0+00 ) then
     pn(1:dim_num) = p1(1:dim_num) + sn * ( p2(1:dim_num) - p1(1:dim_num) )
     qn(1:dim_num) = q1(1:dim_num) + tn * ( q2(1:dim_num) - q1(1:dim_num) )
     dist = sqrt ( sum ( ( pn(1:dim_num) - qn(1:dim_num) )**2 ) )
@@ -28383,9 +28383,9 @@ subroutine segments_dist_3d_old ( p1, p2, q1, q2, dist )
   call segment_point_dist_3d ( p1, p2, pm, dm )
   call segment_point_dist_3d ( p1, p2, pn2, dr )
 
-  tl = 0.0D+00
+  tl = 0.0D0+00
   tm = 0.5D+00
-  tr = 1.0D+00
+  tr = 1.0D0+00
 
   dl = dl * dl
   dm = dm * dm
@@ -28522,7 +28522,7 @@ subroutine segments_int_2d ( p1, p2, q1, q2, flag, r )
 !
 !  Find the intersection of the two lines.
 !
-  r(1:dim_num) = (/ 0.0D+00, 0.0D+00 /)
+  r(1:dim_num) = (/ 0.0D0+00, 0.0D0+00 /)
 
   call lines_exp_int_2d ( p1, p2, q1, q2, ival, r )
 
@@ -28535,7 +28535,7 @@ subroutine segments_int_2d ( p1, p2, q1, q2, flag, r )
 !
   call segment_contains_point_2d ( p1, p2, r, u )
 
-  if ( u(1) < 0.0D+00 .or. 1.0D+00 < u(1) .or. tol < u(2) ) then
+  if ( u(1) < 0.0D0+00 .or. 1.0D0+00 < u(1) .or. tol < u(2) ) then
     flag = 0
     return
   end if
@@ -28544,7 +28544,7 @@ subroutine segments_int_2d ( p1, p2, q1, q2, flag, r )
 !
   call segment_contains_point_2d ( q1, q2, r, u )
 
-  if ( u(1) < 0.0D+00 .or. 1.0D+00 < u(1) .or. tol < u(2) ) then
+  if ( u(1) < 0.0D0+00 .or. 1.0D0+00 < u(1) .or. tol < u(2) ) then
     flag = 0
     return
   end if
@@ -28610,7 +28610,7 @@ subroutine shape_point_dist_2d ( pc, p1, side_num, p, dist )
 !
 !  Determine the angle subtended by a single side.
 !
-  sector_angle = 360.0D+00 / real ( side_num, kind = 8 )
+  sector_angle = 360.0D0+00 / real ( side_num, kind = 8 )
 !
 !  How long is the half-diagonal?
 !
@@ -28618,7 +28618,7 @@ subroutine shape_point_dist_2d ( pc, p1, side_num, p, dist )
 !
 !  If the radius is zero, then the shape is a point and the computation is easy.
 !
-  if ( radius == 0.0D+00 ) then
+  if ( radius == 0.0D0+00 ) then
     dist = sqrt ( sum ( ( p(1:dim_num) - pc(1:dim_num) )**2 ) )
     return
   end if
@@ -28723,7 +28723,7 @@ subroutine shape_point_near_2d ( pc, p1, side_num, p, pn, dist )
 !
 !  Determine the angle subtended by a single side.
 !
-  sector_angle = 360.0D+00 / real ( side_num, kind = 8 )
+  sector_angle = 360.0D0+00 / real ( side_num, kind = 8 )
 !
 !  How long is the half-diagonal?
 !
@@ -28731,7 +28731,7 @@ subroutine shape_point_near_2d ( pc, p1, side_num, p, pn, dist )
 !
 !  If the radius is zero, then the shape is a point and the computation is easy.
 !
-  if ( radius == 0.0D+00 ) then
+  if ( radius == 0.0D0+00 ) then
     pn(1:dim_num) = pc(1:dim_num)
     dist = sqrt ( sum ( ( p(1:dim_num) - pn(1:dim_num) )**2 ) )
     return
@@ -28928,7 +28928,7 @@ subroutine shape_ray_int_2d ( pc, p1, side_num, pa, pb, pint )
 !
 !  Determine the angle subtended by a single side.
 !
-  sector_angle = 360.0D+00 / real ( side_num, kind = 8 )
+  sector_angle = 360.0D0+00 / real ( side_num, kind = 8 )
 !
 !  How long is the half-diagonal?
 !
@@ -28936,7 +28936,7 @@ subroutine shape_ray_int_2d ( pc, p1, side_num, pa, pb, pint )
 !
 !  If the radius is zero, refuse to continue.
 !
-  if ( radius == 0.0D+00 ) then
+  if ( radius == 0.0D0+00 ) then
     write ( *, '(a)' ) ' '
     write ( *, '(a)' ) 'SHAPE_RAY_INT_2D - Fatal error!'
     write ( *, '(a)' ) '  The shape has radius zero.'
@@ -28945,7 +28945,7 @@ subroutine shape_ray_int_2d ( pc, p1, side_num, pa, pb, pint )
 !
 !  Determine which sector side intersects the ray.
 !
-  v2(1:dim_num) = (/ 0.0D+00, 0.0D+00 /)
+  v2(1:dim_num) = (/ 0.0D0+00, 0.0D0+00 /)
 
   do sector_index = 1, side_num
 !
@@ -29332,7 +29332,7 @@ subroutine simplex_unit_volume_nd ( dim_num, volume )
   integer ( kind = 4 ) dim_num
   real ( kind = 8 ) volume
 
-  volume = 1.0D+00
+  volume = 1.0D0+00
   do i = 1, dim_num
     volume = volume / real ( i, kind = 8 )
   end do
@@ -29396,7 +29396,7 @@ subroutine simplex_volume_nd ( dim_num, a, volume )
 
   if ( info /= 0 ) then
 
-    volume = -1.0D+00
+    volume = -1.0D0+00
 
   else
 
@@ -29466,7 +29466,7 @@ function sin_power_int ( a, b, n )
     write ( *, '(a)' ) ' '
     write ( *, '(a)' ) 'SIN_POWER_INT - Fatal error!'
     write ( *, '(a)' ) '  Power N < 0.'
-    value = 0.0D+00
+    value = 0.0D0+00
     stop 1
   end if
 
@@ -29959,8 +29959,8 @@ subroutine sphere_cap_area_2d ( r, h, area )
   real ( kind = 8 ), parameter :: r8_pi = 3.141592653589793D+00
   real ( kind = 8 ) theta
 
-  if ( h <= 0.0D+00 ) then
-    area = 0.0D+00
+  if ( h <= 0.0D0+00 ) then
+    area = 0.0D0+00
   else if ( 2.0D+00 * r <= h ) then
     area = 2.0D+00 * r8_pi * r
   else
@@ -30020,8 +30020,8 @@ subroutine sphere_cap_area_3d ( r, h, area )
   real ( kind = 8 ) r
   real ( kind = 8 ), parameter :: r8_pi = 3.141592653589793D+00
 
-  if ( h <= 0.0D+00 ) then
-    area = 0.0D+00
+  if ( h <= 0.0D0+00 ) then
+    area = 0.0D0+00
   else if ( 2.0D+00 * r <= h ) then
     area = 4.0D+00 * r8_pi * r * r
   else
@@ -30090,8 +30090,8 @@ subroutine sphere_cap_area_nd ( dim_num, r, h, area )
   real ( kind = 8 ) tj
   real ( kind = 8 ) tk
 
-  if ( h <= 0.0D+00 ) then
-    area = 0.0D+00
+  if ( h <= 0.0D0+00 ) then
+    area = 0.0D0+00
     return
   end if
 
@@ -30108,12 +30108,12 @@ subroutine sphere_cap_area_nd ( dim_num, r, h, area )
 
   if ( dim_num < 1 ) then
 
-    area = -1.0D+00
+    area = -1.0D0+00
     return
 
   else if ( dim_num == 1 ) then
 
-    area = 0.0D+00
+    area = 0.0D0+00
 
   else if ( dim_num == 2 ) then
 
@@ -30124,7 +30124,7 @@ subroutine sphere_cap_area_nd ( dim_num, r, h, area )
     ti = theta
 
     tj = ti
-    ti = 1.0D+00 - cos ( theta )
+    ti = 1.0D0+00 - cos ( theta )
 
     do i = 2, dim_num-2
       tk = tj
@@ -30192,9 +30192,9 @@ subroutine sphere_cap_volume_2d ( r, h, volume )
   real ( kind = 8 ) theta
   real ( kind = 8 ) volume
 
-  if ( h <= 0.0D+00 ) then
+  if ( h <= 0.0D0+00 ) then
 
-    volume = 0.0D+00
+    volume = 0.0D0+00
 
   else if ( 2.0D+00 * r <= h ) then
 
@@ -30257,12 +30257,12 @@ subroutine sphere_cap_volume_3d ( r, h, volume )
   real ( kind = 8 ), parameter :: r8_pi = 3.141592653589793D+00
   real ( kind = 8 ) volume
 
-  if ( h <= 0.0D+00 ) then
-    volume = 0.0D+00
+  if ( h <= 0.0D0+00 ) then
+    volume = 0.0D0+00
   else if ( 2.0D+00 * r <= h ) then
     volume = ( 4.0D+00 / 3.0D+00 ) * r8_pi * r * r * r
   else
-    volume = ( 1.0D+00 / 3.0D+00 ) * r8_pi * h * h * ( 3.0D+00 * r - h )
+    volume = ( 1.0D0+00 / 3.0D+00 ) * r8_pi * h * h * ( 3.0D+00 * r - h )
   end if
 
   return
@@ -30341,8 +30341,8 @@ subroutine sphere_cap_volume_nd ( dim_num, r, h, volume )
   real ( kind = 8 ) volume
   real ( kind = 8 ) volume2
 
-  if ( h <= 0.0D+00 ) then
-    volume = 0.0D+00
+  if ( h <= 0.0D0+00 ) then
+    volume = 0.0D0+00
     return
   end if
 
@@ -30353,7 +30353,7 @@ subroutine sphere_cap_volume_nd ( dim_num, r, h, volume )
 
   if ( dim_num < 1 ) then
 
-    volume = -1.0D+00
+    volume = -1.0D0+00
 
   else if ( dim_num == 1 ) then
 
@@ -30365,7 +30365,7 @@ subroutine sphere_cap_volume_nd ( dim_num, r, h, volume )
 
     angle = r8_asin ( sqrt ( ( 2.0D+00 * r - h ) * h / r ) )
 
-    factor2 = sin_power_int ( 0.0D+00, angle, dim_num )
+    factor2 = sin_power_int ( 0.0D0+00, angle, dim_num )
 
     volume = factor1 * factor2 * r**dim_num
 
@@ -30763,29 +30763,29 @@ subroutine sphere_exp_contains_point_3d ( p1, p2, p3, p4, p, inside )
 !
   a(1,1:dim_num) = p1(1:dim_num)
   a(1,4) = sum ( p1(1:dim_num)**2 )
-  a(1,5) = 1.0D+00
+  a(1,5) = 1.0D0+00
 
   a(2,1:dim_num) = p2(1:dim_num)
   a(2,4) = sum ( p2(1:dim_num)**2 )
-  a(2,5) = 1.0D+00
+  a(2,5) = 1.0D0+00
 
   a(3,1:dim_num) = p3(1:dim_num)
   a(3,4) = sum ( p3(1:dim_num)**2 )
-  a(3,5) = 1.0D+00
+  a(3,5) = 1.0D0+00
 
   a(4,1:dim_num) = p4(1:dim_num)
   a(4,4) = sum ( p4(1:dim_num)**2 )
-  a(4,5) = 1.0D+00
+  a(4,5) = 1.0D0+00
 
   a(5,1:dim_num) = p(1:dim_num)
   a(5,4) = sum ( p(1:dim_num)**2 )
-  a(5,5) = 1.0D+00
+  a(5,5) = 1.0D0+00
 
   det = r8mat_det_5d ( a )
 
-  if ( det < 0.0D+00 ) then
+  if ( det < 0.0D0+00 ) then
     inside = .false.
-  else if ( 0.0D+00 <= det ) then
+  else if ( 0.0D0+00 <= det ) then
     inside = .true.
   end if
 
@@ -30850,7 +30850,7 @@ subroutine sphere_exp_point_near_3d ( p1, p2, p3, p4, p, pn )
 !
   norm = sqrt ( sum ( ( p(1:dim_num) - pc(1:dim_num) )**2 ) )
 
-  if ( norm == 0.0D+00 ) then
+  if ( norm == 0.0D0+00 ) then
     pn(1:dim_num) = pc(1:dim_num) + r / sqrt ( real ( dim_num, kind = 8 ) )
     return
   end if
@@ -30982,8 +30982,8 @@ subroutine sphere_exp2imp_nd ( n, p, r, pc )
 !  If the system was singular, return a consolation prize.
 !
   if ( info /= 0 ) then
-    r = -1.0D+00
-    pc(1:n) = 0.0D+00
+    r = -1.0D0+00
+    pc(1:n) = 0.0D0+00
     return
   end if
 !
@@ -31240,7 +31240,7 @@ subroutine sphere_imp_line_project_3d ( r, pc, n, p, maxpnt2, n2, pp, &
 !
 !  Check the input.
 !
-  if ( r == 0.0D+00 ) then
+  if ( r == 0.0D0+00 ) then
     n2 = 0
     return
   end if
@@ -31300,7 +31300,7 @@ subroutine sphere_imp_line_project_3d ( r, pc, n, p, maxpnt2, n2, pp, &
 
               tnorm = sqrt ( sum ( pd(1:dim_num)**2 ) )
 
-              if ( tnorm /= 0.0D+00 ) then
+              if ( tnorm /= 0.0D0+00 ) then
                 pd(1:dim_num) = pc(1:dim_num) + r * pd(1:dim_num) / tnorm
                 n2 = n2 + 1
                 pp(1:dim_num,n2) = pd(1:dim_num)
@@ -31435,7 +31435,7 @@ subroutine sphere_imp_point_near_3d ( r, pc, p, pn )
 !
   norm = sqrt ( sum ( ( p(1:dim_num) - pc(1:dim_num) )**2 ) )
 
-  if ( norm == 0.0D+00 ) then
+  if ( norm == 0.0D0+00 ) then
     pn(1:dim_num) = pc(1:dim_num) + r / sqrt ( real ( dim_num, kind = 8 ) )
     return
   end if
@@ -31490,7 +31490,7 @@ subroutine sphere_imp_point_project_3d ( r, pc, p, pp )
   real ( kind = 8 ) pp(dim_num)
   real ( kind = 8 ) r
 
-  if ( r == 0.0D+00 ) then
+  if ( r == 0.0D0+00 ) then
 
     pp(1:dim_num) = pc(1:dim_num)
 
@@ -31655,8 +31655,8 @@ subroutine sphere_imp_zone_area_3d ( r, h1, h2, area  )
 
   h = abs ( h1 - h2 )
 
-  if ( h <= 0.0D+00 ) then
-    area = 0.0D+00
+  if ( h <= 0.0D0+00 ) then
+    area = 0.0D0+00
   else if ( 2.0D+00 * r <= h ) then
     area = 4.0D+00 * r8_pi * r * r
   else
@@ -31716,22 +31716,22 @@ subroutine sphere_imp_zone_volume_3d ( r, h1, h2, volume )
   real ( kind = 8 ) volume
 
   h11 = min ( h1, h2 )
-  h11 = max ( h11, 0.0D+00 )
+  h11 = max ( h11, 0.0D0+00 )
 
   if ( 2.0D+00 * r <= h11 ) then
-    volume = 0.0D+00
+    volume = 0.0D0+00
     return
   end if
 
   h22 = max ( h1, h2 )
   h22 = min ( h22, 2.0D+00 * r )
 
-  if ( h22 <= 0.0D+00 ) then
-    volume = 0.0D+00
+  if ( h22 <= 0.0D0+00 ) then
+    volume = 0.0D0+00
     return
   end if
 
-  volume = ( 1.0D+00 / 3.0D+00 ) * r8_pi * ( &
+  volume = ( 1.0D0+00 / 3.0D+00 ) * r8_pi * ( &
       h22 * h22 * ( 3.0D+00 * r - h22 ) &
     - h11 * h11 * ( 3.0D+00 * r - h11 ) )
 
@@ -31792,14 +31792,14 @@ subroutine sphere_imp2exp_3d ( r, pc, p1, p2, p3, p4 )
   real ( kind = 8 ), parameter :: r8_pi = 3.141592653589793D+00
   real ( kind = 8 ) theta
 
-  theta = 0.0D+00
-  phi = 0.0D+00
+  theta = 0.0D0+00
+  phi = 0.0D0+00
 
   p1(1) = pc(1) + r * cos ( theta ) * sin ( phi )
   p1(2) = pc(2) + r * sin ( theta ) * sin ( phi )
   p1(3) = pc(3) + r                 * cos ( phi )
 
-  theta = 0.0D+00
+  theta = 0.0D0+00
   phi = 2.0D+00 * r8_pi / 3.0D+00
 
   p2(1) = pc(1) + r * cos ( theta ) * sin ( phi )
@@ -32264,7 +32264,7 @@ subroutine sphere_triangle_vertices_to_orientation ( a, b, c, o )
 !
 !  Compare the directions.
 !
-  if ( dot_product ( cp, cd ) < 0.0D+00 ) then
+  if ( dot_product ( cp, cd ) < 0.0D0+00 ) then
     o = - 1
   else
     o = + 1
@@ -32522,7 +32522,7 @@ subroutine sphere_unit_area_values ( n_data, n, area )
   if ( n_max < n_data ) then
     n_data = 0
     n = 0
-    area = 0.0D+00
+    area = 0.0D0+00
   else
     n = n_vec(n_data)
     area = area_vec(n_data)
@@ -32630,7 +32630,7 @@ subroutine sphere_unit_sample_3d ( seed, x )
 !  a patch of area uniformly.
 !
   vdot = r8_uniform_01 ( seed )
-  vdot = 2.0D+00 * vdot - 1.0D+00
+  vdot = 2.0D+00 * vdot - 1.0D0+00
 
   phi = r8_acos ( vdot )
 !
@@ -32768,15 +32768,15 @@ subroutine sphere_unit_sample_nd ( dim_num, seed, x )
   real ( kind = 8 ) x(dim_num)
   real ( kind = 8 ) xi
 
-  x(1) = 1.0D+00
-  x(2:dim_num) = 0.0D+00
+  x(1) = 1.0D0+00
+  x(2:dim_num) = 0.0D0+00
 
   do i = 1, dim_num-1
     random_cosine = r8_uniform_01 ( seed )
-    random_cosine = 2.0D+00 * random_cosine - 1.0D+00
+    random_cosine = 2.0D+00 * random_cosine - 1.0D0+00
     random_sign = r8_uniform_01 ( seed )
     random_sign = real ( 2 * int ( 2.0D+00 * random_sign ) - 1,  kind = 8 )
-    random_sine = random_sign * sqrt ( 1.0D+00 - random_cosine**2 )
+    random_sine = random_sign * sqrt ( 1.0D0+00 - random_cosine**2 )
     xi = x(i)
     x(i  ) = random_cosine * xi
     x(i+1) = random_sine   * xi
@@ -32890,7 +32890,7 @@ subroutine sphere_unit_sample_nd_3 ( dim_num, seed, x )
 
     call r8vec_uniform_01 ( dim_num, seed, x )
 
-    x(1:dim_num) = 2.0D+00 * x(1:dim_num) - 1.0D+00
+    x(1:dim_num) = 2.0D+00 * x(1:dim_num) - 1.0D0+00
 
     norm = sqrt ( sum ( x(1:dim_num)**2 ) )
 
@@ -33095,7 +33095,7 @@ subroutine sphere_unit_volume_values ( n_data, n, volume )
   if ( n_max < n_data ) then
     n_data = 0
     n = 0
-    volume = 0.0D+00
+    volume = 0.0D0+00
   else
     n = n_vec(n_data)
     volume = volume_vec(n_data)
@@ -33268,7 +33268,7 @@ function sphere01_polygon_area ( n, lat, lon )
   real ( kind = 8 ) sphere01_polygon_area
   real ( kind = 8 ) t
 
-  area = 0.0D+00
+  area = 0.0D0+00
 
   do j = 1, n + 1
 
@@ -34038,12 +34038,12 @@ subroutine super_ellipse_points_2d ( pc, r1, r2, expo, psi, n, p )
 !    Input, real ( kind = 8 ) EXPO, the exponent of the superellipse. 
 !    0 = a rectangle;
 !    between 0 and 1, a "rounded" rectangle;
-!    1.0 = an ellipse;
+!    1.0D0 = an ellipse;
 !    2.0 = a diamond;
 !    > 2.0 a pinched shape.
 !
 !    Input, real ( kind = 8 ) PSI, the angle that the major axis of the
-!    superellipse makes with the X axis.  A value of 0.0 means that the
+!    superellipse makes with the X axis.  A value of 0.0D0 means that the
 !    major and minor axes of the superellipse will be the X and Y 
 !    coordinate axes.
 !
@@ -34078,9 +34078,9 @@ subroutine super_ellipse_points_2d ( pc, r1, r2, expo, psi, n, p )
       / real ( n, kind = 8 )
 
     act = abs ( cos ( theta ) )
-    sct = sign ( 1.0D+00, cos ( theta ) )
+    sct = sign ( 1.0D0+00, cos ( theta ) )
     ast = abs ( sin ( theta ) )
-    sst = sign ( 1.0D+00, sin ( theta ) )
+    sst = sign ( 1.0D0+00, sin ( theta ) )
 
     p(1,i) = pc(1) + r1 * cos ( psi ) * sct * ( act ) ** expo &
                    - r2 * sin ( psi ) * sst * ( ast ) ** expo
@@ -34173,7 +34173,7 @@ subroutine tetrahedron_barycentric_3d ( tetra, p, c )
 
   c(2:4) = a(1:dim_num,4)
 
-  c(1) = 1.0D+00 - sum ( c(2:4) )
+  c(1) = 1.0D0+00 - sum ( c(2:4) )
 
   return
 end
@@ -34295,8 +34295,8 @@ subroutine tetrahedron_circumsphere_3d ( tetra, r, pc )
 !  If the system was singular, return a consolation prize.
 !
   if ( info /= 0 ) then
-    r = -1.0D+00
-    pc(1:dim_num) = 0.0D+00
+    r = -1.0D0+00
+    pc(1:dim_num) = 0.0D0+00
     return
   end if
 !
@@ -34354,7 +34354,7 @@ subroutine tetrahedron_contains_point_3d ( tetra, p, inside )
 !  If the point is in the tetrahedron, its barycentric coordinates
 !  must be nonnegative.
 !
-  if ( any ( c(1:dim_num+1) < 0.0D+00 ) ) then
+  if ( any ( c(1:dim_num+1) < 0.0D0+00 ) ) then
     inside = .false.
   else
     inside = .true.
@@ -34684,7 +34684,7 @@ subroutine tetrahedron_insphere_3d ( tetra, r, pc )
                 / ( l234 + l134 + l124 + l123 )
 
   b(1:dim_num,1:4) = tetra(1:dim_num,1:4)
-  b(4,1:4) = 1.0D+00
+  b(4,1:4) = 1.0D0+00
 
   gamma = abs ( r8mat_det_4d ( b ) )
 
@@ -35185,8 +35185,8 @@ subroutine tetrahedron_quality3_3d ( tetra, quality3 )
 
   denom = lab + lac + lad + lbc + lbd + lcd
 
-  if ( denom == 0.0D+00 ) then
-    quality3 = 0.0D+00
+  if ( denom == 0.0D0+00 ) then
+    quality3 = 0.0D0+00
   else
     quality3 = 12.0D+00 * ( 3.0D+00 * volume )**( 2.0D+00 / 3.0D+00 ) / denom
   end if
@@ -35283,7 +35283,7 @@ subroutine tetrahedron_quality4_3d ( tetra, quality4 )
     + ab(2) * ( ac(3) * ad(1) - ac(1) * ad(3) ) &
     + ab(3) * ( ac(1) * ad(2) - ac(2) * ad(1) ) ) / 6.0D+00
 
-  quality4 = 1.0D+00
+  quality4 = 1.0D0+00
 
   l1 = lab + lac
   l2 = lab + lad
@@ -35293,8 +35293,8 @@ subroutine tetrahedron_quality4_3d ( tetra, quality4 )
         * ( l2 + lbd ) * ( l2 - lbd ) &
         * ( l3 + lcd ) * ( l3 - lcd )
 
-  if ( denom <= 0.0D+00 ) then
-    quality4 = 0.0D+00
+  if ( denom <= 0.0D0+00 ) then
+    quality4 = 0.0D0+00
   else
     quality4 = min ( quality4, 12.0D+00 * volume / sqrt ( denom ) )
   end if
@@ -35307,8 +35307,8 @@ subroutine tetrahedron_quality4_3d ( tetra, quality4 )
         * ( l2 + lad ) * ( l2 - lad ) &
         * ( l3 + lcd ) * ( l3 - lcd )
 
-  if ( denom <= 0.0D+00 ) then
-    quality4 = 0.0D+00
+  if ( denom <= 0.0D0+00 ) then
+    quality4 = 0.0D0+00
   else
     quality4 = min ( quality4, 12.0D+00 * volume / sqrt ( denom ) )
   end if
@@ -35321,8 +35321,8 @@ subroutine tetrahedron_quality4_3d ( tetra, quality4 )
         * ( l2 + lad ) * ( l2 - lad ) &
         * ( l3 + lbd ) * ( l3 - lbd )
 
-  if ( denom <= 0.0D+00 ) then
-    quality4 = 0.0D+00
+  if ( denom <= 0.0D0+00 ) then
+    quality4 = 0.0D0+00
   else
     quality4 = min ( quality4, 12.0D+00 * volume / sqrt ( denom ) )
   end if
@@ -35335,8 +35335,8 @@ subroutine tetrahedron_quality4_3d ( tetra, quality4 )
         * ( l2 + lac ) * ( l2 - lac ) &
         * ( l3 + lbc ) * ( l3 - lbc )
 
-  if ( denom <= 0.0D+00 ) then
-    quality4 = 0.0D+00
+  if ( denom <= 0.0D0+00 ) then
+    quality4 = 0.0D0+00
   else
     quality4 = min ( quality4, 12.0D+00 * volume / sqrt ( denom ) )
   end if
@@ -35414,12 +35414,12 @@ subroutine tetrahedron_rhombic_shape_3d ( point_num, face_num, &
   integer ( kind = 4 ) face_order(face_num)
   integer ( kind = 4 ) face_point(face_order_max,face_num)
   real ( kind = 8 ) point_coord(dim_num,point_num)
-  real ( kind = 8 ), parameter :: z = 0.0D+00
+  real ( kind = 8 ), parameter :: z = 0.0D0+00
 
-  a =        1.0D+00   / sqrt ( 3.0D+00 )
+  a =        1.0D0+00   / sqrt ( 3.0D+00 )
   b = sqrt ( 2.0D+00 ) / sqrt ( 3.0D+00 )
   c = sqrt ( 3.0D+00 ) /        6.0D+00
-  d =        1.0D+00   / sqrt ( 6.0D+00 )
+  d =        1.0D0+00   / sqrt ( 6.0D+00 )
 !
 !  Set the point coordinates.
 !
@@ -35556,16 +35556,16 @@ subroutine tetrahedron_sample_3d ( t, n, seed, p )
 !  The plane will intersect sides 12, 13, and 14 at a fraction
 !  ALPHA = R^1/3 of the distance from vertex 1 to vertices 2, 3, and 4.
 !  
-    alpha = r**( 1.0D+00 / 3.0D+00 )
+    alpha = r**( 1.0D0+00 / 3.0D+00 )
 !
 !  Determine the coordinates of the points on sides 12, 13 and 14 intersected
 !  by the plane, which form a triangle TR.
 !
-    tr(1:dim_num,1) = ( 1.0D+00 - alpha ) * t(1:dim_num,1) &
+    tr(1:dim_num,1) = ( 1.0D0+00 - alpha ) * t(1:dim_num,1) &
                                 + alpha   * t(1:dim_num,2)
-    tr(1:dim_num,2) = ( 1.0D+00 - alpha ) * t(1:dim_num,1) &
+    tr(1:dim_num,2) = ( 1.0D0+00 - alpha ) * t(1:dim_num,1) &
                                 + alpha   * t(1:dim_num,3)
-    tr(1:dim_num,3) = ( 1.0D+00 - alpha ) * t(1:dim_num,1) &
+    tr(1:dim_num,3) = ( 1.0D0+00 - alpha ) * t(1:dim_num,1) &
                                 + alpha   * t(1:dim_num,4)
 !
 !  Now choose, uniformly at random, a point in this triangle.
@@ -35585,16 +35585,16 @@ subroutine tetrahedron_sample_3d ( t, n, seed, p )
 !  Determine the coordinates of the points on sides 2 and 3 intersected
 !  by line L.
 !
-    p12(1:dim_num) = ( 1.0D+00 - beta ) * tr(1:dim_num,1) &
+    p12(1:dim_num) = ( 1.0D0+00 - beta ) * tr(1:dim_num,1) &
                                + beta   * tr(1:dim_num,2)
-    p13(1:dim_num) = ( 1.0D+00 - beta ) * tr(1:dim_num,1) &
+    p13(1:dim_num) = ( 1.0D0+00 - beta ) * tr(1:dim_num,1) &
                                + beta   * tr(1:dim_num,3)
 !
 !  Now choose, uniformly at random, a point on the line L.
 !
     gamma = r8_uniform_01 ( seed )
 
-    p(1:dim_num,j) = ( 1.0D+00 - gamma ) * p12(1:dim_num) &
+    p(1:dim_num,j) = ( 1.0D0+00 - gamma ) * p12(1:dim_num) &
                    +             gamma   * p13(1:dim_num)
 
   end do
@@ -35859,7 +35859,7 @@ subroutine tetrahedron_volume_3d ( tetra, volume )
   real ( kind = 8 ) volume
 
   a(1:dim_num,1:4) = tetra(1:dim_num,1:4)
-  a(4,1:4) = 1.0D+00
+  a(4,1:4) = 1.0D0+00
 
   volume = abs ( r8mat_det_4d ( a ) ) / 6.0D+00
 
@@ -36006,9 +36006,9 @@ subroutine tmat_init ( a )
   do i = 1, 4
     do j = 1, 4
       if ( i == j ) then
-        a(i,j) = 1.0D+00
+        a(i,j) = 1.0D0+00
       else
-        a(i,j) = 0.0D+00
+        a(i,j) = 0.0D0+00
       end if
     end do
   end do
@@ -36364,7 +36364,7 @@ subroutine tmat_rot_vector ( a, angle, axis, b )
 
   norm = sqrt ( v1 * v1 + v2 * v2 + v3 * v3 )
 
-  if ( norm == 0.0D+00 ) then
+  if ( norm == 0.0D0+00 ) then
     return
   end if
 
@@ -36378,17 +36378,17 @@ subroutine tmat_rot_vector ( a, angle, axis, b )
 
   call tmat_init ( c )
 
-  c(1,1) =                    v1 * v1 + ca * ( 1.0D+00 - v1 * v1 )
-  c(1,2) = ( 1.0D+00 - ca ) * v1 * v2 - sa * v3
-  c(1,3) = ( 1.0D+00 - ca ) * v1 * v3 + sa * v2
+  c(1,1) =                    v1 * v1 + ca * ( 1.0D0+00 - v1 * v1 )
+  c(1,2) = ( 1.0D0+00 - ca ) * v1 * v2 - sa * v3
+  c(1,3) = ( 1.0D0+00 - ca ) * v1 * v3 + sa * v2
 
-  c(2,1) = ( 1.0D+00 - ca ) * v2 * v1 + sa * v3
-  c(2,2) =                    v2 * v2 + ca * ( 1.0D+00 - v2 * v2 )
-  c(2,3) = ( 1.0D+00 - ca ) * v2 * v3 - sa * v1
+  c(2,1) = ( 1.0D0+00 - ca ) * v2 * v1 + sa * v3
+  c(2,2) =                    v2 * v2 + ca * ( 1.0D0+00 - v2 * v2 )
+  c(2,3) = ( 1.0D0+00 - ca ) * v2 * v3 - sa * v1
 
-  c(3,1) = ( 1.0D+00 - ca ) * v3 * v1 - sa * v2
-  c(3,2) = ( 1.0D+00 - ca ) * v3 * v2 + sa * v1
-  c(3,3) =                    v3 * v3 + ca * ( 1.0D+00 - v3 * v3 )
+  c(3,1) = ( 1.0D0+00 - ca ) * v3 * v1 - sa * v2
+  c(3,2) = ( 1.0D0+00 - ca ) * v3 * v2 + sa * v1
+  c(3,3) =                    v3 * v3 + ca * ( 1.0D0+00 - v3 * v3 )
 
   b(1:4,1:4) = matmul ( c(1:4,1:4), a(1:4,1:4) )
 
@@ -36751,24 +36751,24 @@ subroutine triangle_angles_2d ( t, angle )
 !
 !  Take care of ridiculous special cases.
 !
-  if ( a == 0.0D+00 .and. b == 0.0D+00 .and. c == 0.0D+00 ) then
+  if ( a == 0.0D0+00 .and. b == 0.0D0+00 .and. c == 0.0D0+00 ) then
     angle(1:3) = 2.0D+00 * r8_pi / 3.0D+00
     return
   end if
 
-  if ( c == 0.0D+00 .or. a == 0.0D+00 ) then
+  if ( c == 0.0D0+00 .or. a == 0.0D0+00 ) then
     angle(1) = r8_pi
   else
     angle(1) = r8_acos ( ( c * c + a * a - b * b ) / ( 2.0D+00 * c * a ) )
   end if
 
-  if ( a == 0.0D+00 .or. b == 0.0D+00 ) then
+  if ( a == 0.0D0+00 .or. b == 0.0D0+00 ) then
     angle(2) = r8_pi
   else
     angle(2) = r8_acos ( ( a * a + b * b - c * c ) / ( 2.0D+00 * a * b ) )
   end if
 
-  if ( b == 0.0D+00 .or. c == 0.0D+00 ) then
+  if ( b == 0.0D0+00 .or. c == 0.0D0+00 ) then
     angle(3) = r8_pi
   else
     angle(3) = r8_acos ( ( b * b + c * c - a * a ) / ( 2.0D+00 * b * c ) )
@@ -36829,24 +36829,24 @@ subroutine triangle_angles_3d ( t, angle )
 !
 !  Take care of a ridiculous special case.
 !
-  if ( a == 0.0D+00 .and. b == 0.0D+00 .and. c == 0.0D+00 ) then
+  if ( a == 0.0D0+00 .and. b == 0.0D0+00 .and. c == 0.0D0+00 ) then
     angle(1:3) = 2.0D+00 * r8_pi / 3.0D+00
     return
   end if
 
-  if ( c == 0.0D+00 .or. a == 0.0D+00 ) then
+  if ( c == 0.0D0+00 .or. a == 0.0D0+00 ) then
     angle(1) = r8_pi
   else
     angle(1) = r8_acos ( ( c * c + a * a - b * b ) / ( 2.0D+00 * c * a ) )
   end if
 
-  if ( a == 0.0D+00 .or. b == 0.0D+00 ) then
+  if ( a == 0.0D0+00 .or. b == 0.0D0+00 ) then
     angle(2) = r8_pi
   else
     angle(2) = r8_acos ( ( a * a + b * b - c * c ) / ( 2.0D+00 * a * b ) )
   end if
 
-  if ( b == 0.0D+00 .or. c == 0.0D+00 ) then
+  if ( b == 0.0D0+00 .or. c == 0.0D0+00 ) then
     angle(3) = r8_pi
   else
     angle(3) = r8_acos ( ( b * b + c * c - a * a ) / ( 2.0D+00 * b * c ) )
@@ -37020,9 +37020,9 @@ subroutine triangle_area_3d_2 ( t, area )
 !  The height of the triangle is the length of (P3-P1) after its
 !  projection onto (P2-P1) has been subtracted.
 !
-  if ( base == 0.0D+00 ) then
+  if ( base == 0.0D0+00 ) then
 
-    height = 0.0D+00
+    height = 0.0D0+00
 
   else
 
@@ -37087,7 +37087,7 @@ subroutine triangle_area_3d_3 ( t, area )
 
   do j = 1, 3
     jp1 = mod ( j, 3 ) + 1
-    s(j) = 0.0D+00
+    s(j) = 0.0D0+00
     do i = 1, dim_num
       s(j) = s(j) + ( t(i,j) - t(i,jp1) )**2
     end do
@@ -37099,8 +37099,8 @@ subroutine triangle_area_3d_3 ( t, area )
        * (   s(1) - s(2) + s(3) ) &
        * (   s(1) + s(2) - s(3) )
 
-  if ( area < 0.0D+00 ) then
-    area = -1.0D+00
+  if ( area < 0.0D0+00 ) then
+    area = -1.0D0+00
     return
   end if
 
@@ -37135,7 +37135,7 @@ subroutine triangle_area_heron ( s, area )
 !
 !    Input, real ( kind = 8 ) S(3), the lengths of the three sides.
 !
-!    Output, real ( kind = 8 ) AREA, the area of the triangle, or -1.0 if the
+!    Output, real ( kind = 8 ) AREA, the area of the triangle, or -1.0D0 if the
 !    sides cannot constitute a triangle.
 !
   implicit none
@@ -37148,8 +37148,8 @@ subroutine triangle_area_heron ( s, area )
        * (   s(1) - s(2) + s(3) ) &
        * (   s(1) + s(2) - s(3) )
 
-  if ( area < 0.0D+00 ) then
-    area = -1.0D+00
+  if ( area < 0.0D0+00 ) then
+    area = -1.0D0+00
     return
   end if
 
@@ -37305,7 +37305,7 @@ subroutine triangle_barycentric_2d ( t, p, xsi )
 
   xsi(1) = a(1,3)
   xsi(2) = a(2,3)
-  xsi(3) = 1.0D+00 - xsi(1) - xsi(2)
+  xsi(3) = 1.0D0+00 - xsi(1) - xsi(2)
 
   return
 end
@@ -37568,7 +37568,7 @@ subroutine triangle_circumcenter_2d_2 ( t, pc )
 !  Compute the center
 !
   if ( info /= 0 ) then
-    pc(1:dim_num) = 0.0D+00
+    pc(1:dim_num) = 0.0D0+00
   else
     pc(1:dim_num) = t(1:dim_num,1) + 0.5D+00 * a(1:dim_num,dim_num+1)
   end if
@@ -37705,9 +37705,9 @@ subroutine triangle_circumcircle_2d ( t, r, pc )
 
   bot = ( a + b + c ) * ( - a + b + c ) * (   a - b + c ) * (   a + b - c )
 
-  if ( bot <= 0.0D+00 ) then
-    r = -1.0D+00
-    pc(1:2) = 0.0D+00
+  if ( bot <= 0.0D0+00 ) then
+    r = -1.0D0+00
+    pc(1:2) = 0.0D0+00
     return
   end if
 
@@ -37803,8 +37803,8 @@ subroutine triangle_circumcircle_2d_2 ( t, r, pc )
   call r8mat_solve ( dim_num, rhs_num, a, info )
 
   if ( info /= 0 ) then
-    r = -1.0D+00
-    pc(1:dim_num) = 0.0D+00
+    r = -1.0D0+00
+    pc(1:dim_num) = 0.0D0+00
   end if
 
   r = 0.5D+00 * sqrt ( a(1,dim_num+1) * a(1,dim_num+1) &
@@ -37865,8 +37865,8 @@ subroutine triangle_circumradius_2d ( t, r )
 
   bot = ( a + b + c ) * ( - a + b + c ) * (   a - b + c ) * (   a + b - c )
 
-  if ( bot <= 0.0D+00 ) then
-    r = -1.0D+00
+  if ( bot <= 0.0D0+00 ) then
+    r = -1.0D0+00
     return
   end if
 
@@ -38005,7 +38005,7 @@ subroutine triangle_contains_line_exp_3d ( t, p1, p2, inside, pint )
   normal2(2) = v1(3) * v2(1) - v1(1) * v2(3)
   normal2(3) = v1(1) * v2(2) - v1(2) * v2(1)
 
-  if ( dot_product ( normal(1:dim_num), normal2(1:dim_num) ) < 0.0D+00 ) then
+  if ( dot_product ( normal(1:dim_num), normal2(1:dim_num) ) < 0.0D0+00 ) then
     inside = .false.
     return
   end if
@@ -38017,7 +38017,7 @@ subroutine triangle_contains_line_exp_3d ( t, p1, p2, inside, pint )
   normal2(2) = v1(3) * v2(1) - v1(1) * v2(3)
   normal2(3) = v1(1) * v2(2) - v1(2) * v2(1)
 
-  if ( dot_product ( normal(1:dim_num), normal2(1:dim_num) ) < 0.0D+00 ) then
+  if ( dot_product ( normal(1:dim_num), normal2(1:dim_num) ) < 0.0D0+00 ) then
     inside = .false.
     return
   end if
@@ -38029,7 +38029,7 @@ subroutine triangle_contains_line_exp_3d ( t, p1, p2, inside, pint )
   normal2(2) = v1(3) * v2(1) - v1(1) * v2(3)
   normal2(3) = v1(1) * v2(2) - v1(2) * v2(1)
 
-  if ( dot_product ( normal(1:dim_num), normal2(1:dim_num) ) < 0.0D+00 ) then
+  if ( dot_product ( normal(1:dim_num), normal2(1:dim_num) ) < 0.0D0+00 ) then
     inside = .false.
     return
   end if
@@ -38147,12 +38147,12 @@ subroutine triangle_contains_line_par_3d ( t, p0, pd, inside, p )
 !
   norm1 = sqrt ( a * a + b * b + c * c )
 
-  if ( norm1 == 0.0D+00 ) then
+  if ( norm1 == 0.0D0+00 ) then
     write ( *, '(a)' ) ' '
     write ( *, '(a)' ) 'TRIANGLE_LINE_PAR_INT_3D - Fatal error!'
     write ( *, '(a)' ) '  The plane normal vector is null.'
     inside = .false.
-    p(1:dim_num) = 0.0D+00
+    p(1:dim_num) = 0.0D0+00
     stop 1
   end if
 !
@@ -38160,12 +38160,12 @@ subroutine triangle_contains_line_par_3d ( t, p0, pd, inside, p )
 !
   norm2 = sqrt ( sum ( pd(1:dim_num)**2 ) )
 
-  if ( norm2 == 0.0D+00 ) then
+  if ( norm2 == 0.0D0+00 ) then
     write ( *, '(a)' ) ' '
     write ( *, '(a)' ) 'TRIANGLE_LINE_PAR_INT_3D - Fatal error!'
     write ( *, '(a)' ) '  The line direction vector is null.'
     inside = .false.
-    p(1:dim_num) = 0.0D+00
+    p(1:dim_num) = 0.0D0+00
     stop 1
   end if
 !
@@ -38183,7 +38183,7 @@ subroutine triangle_contains_line_par_3d ( t, p0, pd, inside, p )
 !  The line may actually lie in the plane.  We're not going
 !  to try to address this possibility.
 !
-    if ( a * p0(1) + b * p0(2) + c * p0(3) + d == 0.0D+00 ) then
+    if ( a * p0(1) + b * p0(2) + c * p0(3) + d == 0.0D0+00 ) then
 
       intersect = .true.
       inside = .false.
@@ -38195,7 +38195,7 @@ subroutine triangle_contains_line_par_3d ( t, p0, pd, inside, p )
 
       intersect = .false.
       inside = .false.
-      p(1:dim_num) = 0.0D+00
+      p(1:dim_num) = 0.0D0+00
 
     end if
 !
@@ -38218,7 +38218,7 @@ subroutine triangle_contains_line_par_3d ( t, p0, pd, inside, p )
 
     norm = sqrt ( sum ( v1(1:dim_num)**2 ) )
 
-    if ( norm == 0.0D+00 ) then
+    if ( norm == 0.0D0+00 ) then
       inside = .true.
       return
     end if
@@ -38227,7 +38227,7 @@ subroutine triangle_contains_line_par_3d ( t, p0, pd, inside, p )
 
     norm = sqrt ( sum ( v2(1:dim_num)**2 ) )
 
-    if ( norm == 0.0D+00 ) then
+    if ( norm == 0.0D0+00 ) then
       inside = .true.
       return
     end if
@@ -38236,7 +38236,7 @@ subroutine triangle_contains_line_par_3d ( t, p0, pd, inside, p )
 
     norm = sqrt ( sum ( v3(1:dim_num)**2 ) )
 
-    if ( norm == 0.0D+00 ) then
+    if ( norm == 0.0D0+00 ) then
       inside = .true.
       return
     end if
@@ -38300,7 +38300,7 @@ subroutine triangle_contains_point_2d_1 ( t, p, inside )
 
   call triangle_barycentric_2d ( t, p, xsi )
 
-  if ( any ( xsi(1:3) < 0.0D+00 ) ) then
+  if ( any ( xsi(1:3) < 0.0D0+00 ) ) then
     inside = .false.
   else
     inside = .true.
@@ -38360,7 +38360,7 @@ subroutine triangle_contains_point_2d_2 ( t, p, inside )
 
     k = mod ( j, 3 ) + 1
 
-    if ( 0.0D+00 < ( p(1) - t(1,j) ) * ( t(2,k) - t(2,j) ) &
+    if ( 0.0D0+00 < ( p(1) - t(1,j) ) * ( t(2,k) - t(2,j) ) &
                  - ( p(2) - t(2,j) ) * ( t(1,k) - t(1,j) ) ) then
       inside = .false.
       return
@@ -38426,7 +38426,7 @@ subroutine triangle_contains_point_2d_3 ( t, p, inside )
   real ( kind = 8 ) p(dim_num)
   real ( kind = 8 ) t(dim_num,3)
 
-  dir_old = 0.0D+00
+  dir_old = 0.0D0+00
 
   do j = 1, 3
 
@@ -38435,12 +38435,12 @@ subroutine triangle_contains_point_2d_3 ( t, p, inside )
     dir_new = ( p(1) - t(1,j) ) * ( t(2,k) - t(2,j) ) &
             - ( p(2) - t(2,j) ) * ( t(1,k) - t(1,j) )
     
-    if ( dir_new * dir_old < 0.0D+00 ) then
+    if ( dir_new * dir_old < 0.0D0+00 ) then
       inside = .false.
       return
     end if
 
-    if ( dir_new /= 0.0D+00 ) then
+    if ( dir_new /= 0.0D0+00 ) then
       dir_old = dir_new
     end if
 
@@ -38502,13 +38502,13 @@ subroutine triangle_diameter_2d ( t, diameter )
 !
 !  Take care of a zero side.
 !
-  if ( asq == 0.0D+00 ) then
+  if ( asq == 0.0D0+00 ) then
     diameter = sqrt ( bsq )
     return
-  else if ( bsq == 0.0D+00 ) then
+  else if ( bsq == 0.0D0+00 ) then
     diameter = sqrt ( csq )
     return
-  else if ( csq == 0.0D+00 ) then
+  else if ( csq == 0.0D0+00 ) then
     diameter = sqrt ( asq )
     return
   end if
@@ -38749,7 +38749,7 @@ subroutine triangle_incenter_2d ( t, pc )
 
   perimeter = a + b + c
 
-  if ( perimeter == 0.0D+00 ) then
+  if ( perimeter == 0.0D0+00 ) then
     pc(1:dim_num) = t(1:dim_num,1)
   else
     pc(1:dim_num) = ( b * t(1:dim_num,1) &
@@ -38818,9 +38818,9 @@ subroutine triangle_incircle_2d ( t, r, pc )
 
   perimeter = a + b + c
 
-  if ( perimeter == 0.0D+00 ) then
+  if ( perimeter == 0.0D0+00 ) then
     pc(1:dim_num) = t(1:dim_num,1)
-    r = 0.0D+00
+    r = 0.0D0+00
     return
   end if
 
@@ -38893,8 +38893,8 @@ subroutine triangle_inradius_2d ( t, r )
 
   perimeter = a + b + c
 
-  if ( perimeter == 0.0D+00 ) then
-    r = 0.0D+00
+  if ( perimeter == 0.0D0+00 ) then
+    r = 0.0D0+00
     return
   end if
 
@@ -39303,11 +39303,11 @@ function triangle_orientation_2d ( t )
   det = ( t(1,1) - t(1,3) ) * ( t(2,2) - t(2,3) ) &
       - ( t(1,2) - t(1,3) ) * ( t(2,1) - t(2,3) )
 
-  if ( det == 0.0D+00 ) then
+  if ( det == 0.0D0+00 ) then
     triangle_orientation_2d = 2
-  else if ( det < 0.0D+00 ) then
+  else if ( det < 0.0D0+00 ) then
     triangle_orientation_2d = 1
-  else if ( 0.0D+00 < det ) then
+  else if ( 0.0D0+00 < det ) then
     triangle_orientation_2d = 0
   end if
 
@@ -39568,7 +39568,7 @@ subroutine triangle_point_dist_signed_2d ( t, p, dist_signed )
 !  The largest (negative) line distance has the smallest magnitude,
 !  and is the signed triangle distance.
 !
-  if ( dis12 <= 0.0D+00 .and. dis23 <= 0.0D+00 .and. dis31 <= 0.0D+00 ) then
+  if ( dis12 <= 0.0D0+00 .and. dis23 <= 0.0D0+00 .and. dis31 <= 0.0D0+00 ) then
     dist_signed = max ( dis12, dis23, dis31 )
 !
 !  If the point is outside the triangle, then we have to compute
@@ -39636,7 +39636,7 @@ subroutine triangle_point_near_2d ( t, p, pn, dist )
 !  of the triangle.
 !
   dist = huge ( dist )
-  pn(1:dim_num) = 0.0D+00
+  pn(1:dim_num) = 0.0D0+00
 
   do j = 1, side_num
 
@@ -39707,8 +39707,8 @@ subroutine triangle_quality_2d ( t, quality )
   b = sqrt ( sum ( ( t(1:dim_num,2) - t(1:dim_num,3) )**2 ) )
   c = sqrt ( sum ( ( t(1:dim_num,3) - t(1:dim_num,1) )**2 ) )
 
-  if ( a * b * c == 0.0D+00 ) then
-    quality = 0.0D+00
+  if ( a * b * c == 0.0D0+00 ) then
+    quality = 0.0D0+00
   else
     quality = ( - a + b + c ) * ( a - b + c ) * ( a + b - c ) &
       / ( a * b * c )
@@ -39834,10 +39834,10 @@ subroutine triangle_sample ( t, n, seed, p )
 !
   do dim = 1, dim_num
 
-    p12(dim,1:n) = ( 1.0D+00 - alpha(1:n) ) * t(dim,1) &
+    p12(dim,1:n) = ( 1.0D0+00 - alpha(1:n) ) * t(dim,1) &
                              + alpha(1:n)   * t(dim,2)
 
-    p13(dim,1:n) = ( 1.0D+00 - alpha(1:n) ) * t(dim,1) &
+    p13(dim,1:n) = ( 1.0D0+00 - alpha(1:n) ) * t(dim,1) &
                              + alpha(1:n)   * t(dim,3)
 
   end do
@@ -39859,7 +39859,7 @@ subroutine triangle_sample ( t, n, seed, p )
 
   do dim = 1, dim_num
 
-    p(dim,1:n) = ( 1.0D+00 - alpha(1:n) ) * p12(dim,1:n) &
+    p(dim,1:n) = ( 1.0D0+00 - alpha(1:n) ) * p12(dim,1:n) &
                            + alpha(1:n)   * p13(dim,1:n)
 
   end do
@@ -40004,7 +40004,7 @@ subroutine triangle_xy_to_xsi_2d ( t, p, xsi )
   xsi(2) = ( - ( t(2,1) - t(2,3) ) * ( p(1) - t(1,3) ) &
              + ( t(1,1) - t(1,3) ) * ( p(2) - t(2,3) ) ) / det
 
-  xsi(3) = 1.0D+00 - xsi(1) - xsi(2)
+  xsi(3) = 1.0D0+00 - xsi(1) - xsi(2)
 
   return
 end
@@ -40076,30 +40076,30 @@ subroutine truncated_octahedron_shape_3d ( point_num, face_num, &
 !  Set the point coordinates.
 !
   point_coord(1:dim_num,1:point_num) = reshape ( (/ &
-    -1.5D+00, -0.5D+00,  0.0D+00,        &
-    -1.5D+00,  0.5D+00,  0.0D+00,        &
-    -1.0D+00, -1.0D+00, -0.70710677D+00, &
-    -1.0D+00, -1.0D+00,  0.70710677D+00, &
-    -1.0D+00,  1.0D+00, -0.70710677D+00, &
-    -1.0D+00,  1.0D+00,  0.70710677D+00, &
-    -0.5D+00, -1.5D+00,  0.0D+00,        &
+    -1.5D+00, -0.5D+00,  0.0D0+00,        &
+    -1.5D+00,  0.5D+00,  0.0D0+00,        &
+    -1.0D0+00, -1.0D0+00, -0.70710677D+00, &
+    -1.0D0+00, -1.0D0+00,  0.70710677D+00, &
+    -1.0D0+00,  1.0D0+00, -0.70710677D+00, &
+    -1.0D0+00,  1.0D0+00,  0.70710677D+00, &
+    -0.5D+00, -1.5D+00,  0.0D0+00,        &
     -0.5D+00, -0.5D+00, -1.4142135D+00,  &
     -0.5D+00, -0.5D+00,  1.4142135D+00,  &
     -0.5D+00,  0.5D+00, -1.4142135D+00,  &
     -0.5D+00,  0.5D+00,  1.4142135D+00,  &
-    -0.5D+00,  1.5D+00,  0.0D+00,        &
-     0.5D+00, -1.5D+00,  0.0D+00,        &
+    -0.5D+00,  1.5D+00,  0.0D0+00,        &
+     0.5D+00, -1.5D+00,  0.0D0+00,        &
      0.5D+00, -0.5D+00, -1.4142135D+00,  &
      0.5D+00, -0.5D+00,  1.4142135D+00,  &
      0.5D+00,  0.5D+00, -1.4142135D+00,  &
      0.5D+00,  0.5D+00,  1.4142135D+00,  &
-     0.5D+00,  1.5D+00,  0.0D+00,        &
-     1.0D+00, -1.0D+00, -0.70710677D+00, &
-     1.0D+00, -1.0D+00,  0.70710677D+00, &
-     1.0D+00,  1.0D+00, -0.70710677D+00, &
-     1.0D+00,  1.0D+00,  0.70710677D+00, &
-     1.5D+00, -0.5D+00,  0.0D+00,        &
-     1.5D+00,  0.5D+00,  0.0D+00 /), (/ dim_num, point_num /) )
+     0.5D+00,  1.5D+00,  0.0D0+00,        &
+     1.0D0+00, -1.0D0+00, -0.70710677D+00, &
+     1.0D0+00, -1.0D0+00,  0.70710677D+00, &
+     1.0D0+00,  1.0D0+00, -0.70710677D+00, &
+     1.0D0+00,  1.0D0+00,  0.70710677D+00, &
+     1.5D+00, -0.5D+00,  0.0D0+00,        &
+     1.5D+00,  0.5D+00,  0.0D0+00 /), (/ dim_num, point_num /) )
 !
 !  Set the face orders.
 !
@@ -40297,7 +40297,7 @@ subroutine tube_2d ( dist, n, p, p1, p2 )
 
       dis2 = ( a * p1(1,i) + b * p1(2,i) + c ) / sqrt ( a * a + b * b )
 
-      if ( sign ( 1.0D+00, dis1 ) /= sign ( 1.0D+00, dis2 ) ) then
+      if ( sign ( 1.0D0+00, dis1 ) /= sign ( 1.0D0+00, dis2 ) ) then
 
         call r8_swap ( p1(1,i), p2(1,i) )
         call r8_swap ( p1(2,i), p2(2,i) )
@@ -40361,8 +40361,8 @@ subroutine vector_directions_nd ( dim_num, v, angle )
 !
   vnorm = sqrt ( sum ( v(1:dim_num)**2 ) )
 
-  if ( vnorm == 0.0D+00 ) then
-    angle(1:dim_num) = 0.0D+00
+  if ( vnorm == 0.0D0+00 ) then
+    angle(1:dim_num) = 0.0D0+00
     return
   end if
 
@@ -40477,7 +40477,7 @@ subroutine vector_rotate_3d ( v1, axis, angle, v2 )
 !
   norm = r8vec_norm ( 3, axis )
 
-  if ( norm == 0.0D+00 ) then
+  if ( norm == 0.0D0+00 ) then
     v2(1:3) = v1(1:3)
     return
   end if
@@ -40496,7 +40496,7 @@ subroutine vector_rotate_3d ( v1, axis, angle, v2 )
 
   norm_vn = r8vec_norm ( 3, vn )
 
-  if ( norm == 0.0D+00 ) then
+  if ( norm == 0.0D0+00 ) then
     v2(1:3) = vp(1:3)
     return
   end if
@@ -40663,7 +40663,7 @@ subroutine vector_unit_nd ( dim_num, v )
 
   norm = sqrt ( sum ( v(1:dim_num)**2 ) )
 
-  if ( norm /= 0.0D+00 ) then
+  if ( norm /= 0.0D0+00 ) then
     v(1:dim_num) = v(1:dim_num) / norm
   end if
 
@@ -41229,7 +41229,7 @@ subroutine voxels_step_3d ( v1, v2, inc, jnc, knc, v3 )
     return
   end if
 
-  alpha = 0.0D+00
+  alpha = 0.0D0+00
 !
 !  Compute the smallest ALPHA that will change one of V2(1:3) by +-0.5.
 !
@@ -41267,15 +41267,15 @@ subroutine voxels_step_3d ( v1, v2, inc, jnc, knc, v3 )
 !
   alpha = huge ( alpha )
 
-  if ( 0.0D+00 < alphai ) then
+  if ( 0.0D0+00 < alphai ) then
     alpha = min ( alpha, alphai )
   end if
 
-  if ( 0.0D+00 < alphaj ) then
+  if ( 0.0D0+00 < alphaj ) then
     alpha = min ( alpha, alphaj )
   end if
 
-  if ( 0.0D+00 < alphak ) then
+  if ( 0.0D0+00 < alphak ) then
     alpha = min ( alpha, alphak )
   end if
 !
@@ -41331,8 +41331,8 @@ subroutine xy_to_polar ( xy, r, t )
 
   r = sqrt ( xy(1) * xy(1) + xy(2) * xy(2) )
 
-  if ( r == 0.0D+00 ) then
-    t = 0.0D+00
+  if ( r == 0.0D0+00 ) then
+    t = 0.0D0+00
   else
     t = r8_atan ( xy(2), xy(1) )
   end if
@@ -41393,16 +41393,16 @@ subroutine xyz_to_radec ( p, ra, dec )
 
   p_norm = sqrt ( sum ( p(1:dim_num)**2 )  )
 
-  if ( p_norm == 0.0D+00 ) then
-    dec = 0.0D+00
-    ra = 0.0D+00
+  if ( p_norm == 0.0D0+00 ) then
+    dec = 0.0D0+00
+    ra = 0.0D0+00
     return
   end if
 
   phi = r8_asin ( p(3) / p_norm )
 
-  if ( cos ( phi ) == 0.0D+00 ) then
-    theta = 0.0D+00
+  if ( cos ( phi ) == 0.0D0+00 ) then
+    theta = 0.0D0+00
   else
     theta = r8_atan ( p(2), p(1) )
   end if
@@ -41458,9 +41458,9 @@ subroutine xyz_to_rtp ( xyz, r, theta, phi )
 
   r = sqrt ( sum ( xyz(1:3)**2 )  )
 
-  if ( r == 0.0D+00 ) then
-    theta = 0.0D+00
-    phi = 0.0D+00
+  if ( r == 0.0D0+00 ) then
+    theta = 0.0D0+00
+    phi = 0.0D0+00
     return
   end if
 
@@ -41519,9 +41519,9 @@ subroutine xyz_to_tp ( xyz, theta, phi )
 
   r = sqrt ( sum ( xyz(1:3)**2 )  )
 
-  if ( r == 0.0D+00 ) then
-    theta = 0.0D+00
-    phi = 0.0D+00
+  if ( r == 0.0D0+00 ) then
+    theta = 0.0D0+00
+    phi = 0.0D0+00
     return
   end if
 

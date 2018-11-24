@@ -1,4 +1,4 @@
-!!  Copyright (C) Stichting Deltares, 2005-2017.
+!!  Copyright (C) Stichting Deltares, 2005-2018.
 !!
 !!  This file is part of iMOD.
 !!
@@ -22,9 +22,10 @@
 !!
 MODULE BMPVAR
 
+USE IMODVAR, ONLY : DP_KIND,SP_KIND
 INTEGER,PARAMETER :: MXBMP=100           !## max. bitmaps
 TYPE BMPOBJ
- REAL :: XMIN,YMIN,XMAX,YMAX,DX,DY       !## coordinates within mplot-box (m)
+ REAL(KIND=DP_KIND) :: XMIN,YMIN,XMAX,YMAX,DX,DY       !## coordinates within mplot-box (m)
  INTEGER :: NCOL,NROW,ITYPE,NCLR,COMPR,CDEPT
  INTEGER :: IBITMAP                      !## bitmap handle
  INTEGER :: IACT

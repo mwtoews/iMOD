@@ -30,8 +30,8 @@
 
     type series
        integer, pointer :: n       ! nullify done by subroutine m_cross_init
-       real, pointer    :: x(:)    ! nullify done by subroutine m_cross_init
-       real, pointer    :: y(:)    ! nullify done by subroutine m_cross_init
+       REAL(KIND=DP_KIND), pointer    :: x(:)    ! nullify done by subroutine m_cross_init
+       REAL(KIND=DP_KIND), pointer    :: y(:)    ! nullify done by subroutine m_cross_init
     end type
 
 
@@ -40,11 +40,11 @@
 
     ! some usefull help pointers
     integer, pointer           :: n,n1,n2
-    real, pointer,dimension(:) :: x,y,x1,y1,x2,y2
+    REAL(KIND=DP_KIND), pointer,dimension(:) :: x,y,x1,y1,x2,y2
 
     ! temporary arrays
-    real, allocatable, dimension(:) :: tsw1,tsw2,tsw3
-    double precision, allocatable, dimension(:) :: tsw4
+    REAL(KIND=DP_KIND), allocatable, dimension(:) :: tsw1,tsw2,tsw3
+    REAL(KIND=DP_KIND), allocatable, dimension(:) :: tsw4
 
     ! logical to check or module has to be inited (compatibility with Fortran90)
     logical, save :: crossInit=.true.

@@ -11,22 +11,22 @@ subroutine udf_bench()
 ! program idf2udf
   ! modules
   use ifport
-!  use imod_idf
+!  USE MODPLOT_idf
   use MOD_UDF_UTL
   implicit none
   ! locals  
   type(idfobj) :: idf
   character(len=mxlen) :: idffile, udffile, csvfile
   integer :: ncol, nrow
-  real :: xmin, ymin, xmax, ymax, dxy, nodata, x, y
+  REAL(KIND=DP_KIND) :: xmin, ymin, xmax, ymax, dxy, nodata, x, y
   integer :: nbench
   integer :: nrxy
-  real, dimension(:,:), allocatable :: rxy
+  REAL(KIND=DP_KIND), dimension(:,:), allocatable :: rxy
   integer :: i, icol, irow, n, ibench
   integer, dimension(8) :: t1, t2  
   integer, dimension(:), allocatable :: ndiff 
-  real, dimension(:,:), allocatable :: td
-  real, dimension(:), allocatable :: idfval, udfval
+  REAL(KIND=DP_KIND), dimension(:,:), allocatable :: td
+  REAL(KIND=DP_KIND), dimension(:), allocatable :: idfval, udfval
   character(len=mxlen) :: s
   character(len=mxlen), dimension(4) :: sa
   integer :: iu

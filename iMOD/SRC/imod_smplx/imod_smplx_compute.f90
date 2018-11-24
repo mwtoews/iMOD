@@ -1,4 +1,4 @@
-!!  Copyright (C) Stichting Deltares, 2005-2017.
+!!  Copyright (C) Stichting Deltares, 2005-2018.
 !!
 !!  This file is part of iMOD.
 !!
@@ -111,7 +111,7 @@ CONTAINS
 
  !     ********** EPS0 IS A MACHINE DEPENDENT PARAMETER. ASSIGN EPS0
  !                THE VALUE U WHERE U IS THE SMALLEST POSITIVE FLOATING
- !                POINT NUMBER SUCH THAT 1.0 + U .GT. 1.0.
+ !                POINT NUMBER SUCH THAT 1.0D0 + U .GT. 1.0D0.
 
  !     LOCAL VARIABLES
  REAL (DP) :: EPS0, RERRMN, RERRMX
@@ -120,8 +120,8 @@ CONTAINS
 
  !------------------------
  RERRMN = 10.0_DP*EPS0
- RERRMX = 1.D-4
- IF (EPS0 < 1.D-13) RERRMX = 1.D-5
+ RERRMX = 1.0D-4
+ IF (EPS0 < 1.0D-13) RERRMX = 1.0D-5
 
 !WRITE(*,*) A
 !WRITE(*,*) B0

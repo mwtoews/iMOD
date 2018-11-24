@@ -52,7 +52,7 @@ subroutine imod_tstat_calc(infile1,infile2,coldate,colval,options,mv,     & ! in
                                                     !!         9 : period timeseries 2
                                                     !!        10 : 
 
- real     , intent(out)         :: result(*)        !> Result of the calculations
+ REAL(KIND=DP_KIND)     , intent(out)         :: result(*)        !> Result of the calculations
                                                     !! Depending on options() the next data will be
                                                     !! assigned to results
                                                     !! results(1): auto correlation timeseries 1
@@ -89,23 +89,23 @@ subroutine imod_tstat_calc(infile1,infile2,coldate,colval,options,mv,     & ! in
                                                     !! if numeric it's the column number
  character (len=*), DIMENSION(2), intent(in)  :: colval           !> column name for the values
                                                     !! if numeric it's the column number
- real   , intent(in)            :: mv               !> missing value code
+ REAL(KIND=DP_KIND)   , intent(in)            :: mv               !> missing value code
 
- real   , intent(in)            :: lag              !> lag distance
- real   , intent(in)            :: dlag             !> lag width (half)
+ REAL(KIND=DP_KIND)   , intent(in)            :: lag              !> lag distance
+ REAL(KIND=DP_KIND)   , intent(in)            :: dlag             !> lag width (half)
 
  integer, intent(in)            :: ibegdat          !> begin date finding top/bot period (yyyymmdd)
  integer, intent(in)            :: ienddat          !> end   date finding top/bot period (yyyymmdd)
- real   , intent(in)            :: slen             !> 
- real   , intent(in)            :: wfc              !> 
- real   , intent(in)            :: xstep            !> 
+ REAL(KIND=DP_KIND)   , intent(in)            :: slen             !> 
+ REAL(KIND=DP_KIND)   , intent(in)            :: wfc              !> 
+ REAL(KIND=DP_KIND)   , intent(in)            :: xstep            !> 
 
  integer, intent(in)            :: gbegdat          !> begin date (yyyymmdd)
  integer, intent(in)            :: genddat          !> end   date (yyyymmdd)
  integer, intent(in)            :: gnpy             !> minimal number of measurments in a year to calc Gx3
 
- real   , intent(in)            :: perc1            !> percentile value for time series 1
- real   , intent(in)            :: perc2            !> percentile value for time series 2
+ REAL(KIND=DP_KIND)   , intent(in)            :: perc1            !> percentile value for time series 1
+ REAL(KIND=DP_KIND)   , intent(in)            :: perc2            !> percentile value for time series 2
 
  INTEGER,INTENT(OUT) :: EXITCODE
 
@@ -114,11 +114,11 @@ subroutine imod_tstat_calc(infile1,infile2,coldate,colval,options,mv,     & ! in
 
  ! corr
  integer   nlag
- real      minlag,maxlag
+ REAL(KIND=DP_KIND)      minlag,maxlag
  integer, parameter :: ncol = 12   ! number of result variabeles of correlation calculation
 
  ! period
- real      begdat,enddat
+ REAL(KIND=DP_KIND)      begdat,enddat
 
  ! gxg
  integer  datgxg(3)
@@ -130,7 +130,7 @@ subroutine imod_tstat_calc(infile1,infile2,coldate,colval,options,mv,     & ! in
 
  logical  lauto1,lauto2,lcor,lperc1,lperc2,lgxg1,lgxg2,lper1,lper2
 
- real     tresult(ncol)
+ REAL(KIND=DP_KIND)     tresult(ncol)
 
  include 'tscorr2.inc'
 

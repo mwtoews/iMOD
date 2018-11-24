@@ -1,4 +1,4 @@
-!!  Copyright (C) Stichting Deltares, 2005-2017.
+!!  Copyright (C) Stichting Deltares, 2005-2018.
 !!
 !!  This file is part of iMOD.
 !!
@@ -61,7 +61,7 @@
 
  !  FLOATING-POINT NUMBERS.
 
- !     IT IS ASSUMED THAT THE SINGLE AND DOUBLE PRECISION FLOATING
+ !     IT IS ASSUMED THAT THE SINGLE AND REAL(KIND=DP_KIND) FLOATING
  !     POINT ARITHMETICS HAVE THE SAME BASE, SAY B, AND THAT THE
  !     NONZERO NUMBERS ARE REPRESENTED IN THE FORM
 
@@ -102,13 +102,13 @@
    CASE( 3)
      FN_VAL = HUGE(I)
    CASE( 4)
-     FN_VAL = RADIX(1.0)
+     FN_VAL = RADIX(1.0D0)
    CASE( 5)
-     FN_VAL = DIGITS(1.0)
+     FN_VAL = DIGITS(1.0D0)
    CASE( 6)
-     FN_VAL = MINEXPONENT(1.0)
+     FN_VAL = MINEXPONENT(1.0D0)
    CASE( 7)
-     FN_VAL = MAXEXPONENT(1.0)
+     FN_VAL = MAXEXPONENT(1.0D0)
    CASE( 8)
      FN_VAL = DIGITS(1.0D0)
    CASE( 9)
@@ -145,7 +145,7 @@
  REAL                :: FN_VAL
 
  ! LOCAL VARIABLE
- REAL                :: ONE = 1.0
+ REAL                :: ONE = 1.0D0
 
  SELECT CASE (I)
    CASE (1)
@@ -164,10 +164,10 @@
  !###======================================================================
  !-----------------------------------------------------------------------
 
- !     DPMPAR PROVIDES THE DOUBLE PRECISION MACHINE CONSTANTS FOR
+ !     DPMPAR PROVIDES THE REAL(KIND=DP_KIND) MACHINE CONSTANTS FOR
  !     THE COMPUTER BEING USED. IT IS ASSUMED THAT THE ARGUMENT
  !     I IS AN INTEGER HAVING ONE OF THE VALUES 1, 2, OR 3. IF THE
- !     DOUBLE PRECISION ARITHMETIC BEING USED HAS M BASE B DIGITS AND
+ !     REAL(KIND=DP_KIND) ARITHMETIC BEING USED HAS M BASE B DIGITS AND
  !     ITS SMALLEST AND LARGEST EXPONENTS ARE EMIN AND EMAX, THEN
 
  !        DPMPAR(1) = B**(1 - M), THE MACHINE PRECISION,
@@ -201,13 +201,13 @@
  !###======================================================================
  !--------------------------------------------------------------------
  !     THE EVALUATION OF LN(EPS) WHERE EPS IS THE SMALLEST NUMBER
- !     SUCH THAT 1.0 + EPS .GT. 1.0 .  L IS A DUMMY ARGUMENT.
+ !     SUCH THAT 1.0D0 + EPS .GT. 1.0D0 .  L IS A DUMMY ARGUMENT.
  !--------------------------------------------------------------------
  IMPLICIT NONE
  REAL                :: FN_VAL
 
  ! LOCAL VARIABLE
- REAL                :: ONE = 1.0
+ REAL                :: ONE = 1.0D0
 
  FN_VAL = LOG( EPSILON(ONE) )
  RETURN
@@ -230,7 +230,7 @@
  REAL                :: FN_VAL
 
  ! LOCAL VARIABLE
- REAL                :: ONE = 1.0
+ REAL                :: ONE = 1.0D0
 
  IF (L == 0) THEN
    FN_VAL = LOG( HUGE(ONE) )

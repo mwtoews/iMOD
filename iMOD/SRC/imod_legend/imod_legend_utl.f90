@@ -1,4 +1,4 @@
-!!  Copyright (C) Stichting Deltares, 2005-2017.
+!!  Copyright (C) Stichting Deltares, 2005-2018.
 !!
 !!  This file is part of iMOD.
 !!
@@ -59,7 +59,7 @@ CONTAINS
  LEG%HEDTXT  =''
  LEG%LEGTXT  =''
  LEG%RGB     =0
- LEG%CLASS   =0.0
+ LEG%CLASS   =0.0D0
  LEG%NCLR    =0
  LEG%CGRAD   =0
  LEG%ICLRGRAD=0
@@ -67,18 +67,18 @@ CONTAINS
 
  END SUBROUTINE LEG_ALLOCATE
 
- !###======================================================================
- SUBROUTINE LEG_DEALLOCATE(LEG)
- !###======================================================================
- IMPLICIT NONE
- TYPE(LEGENDOBJ) :: LEG
+! !###======================================================================
+! SUBROUTINE LEG_DEALLOCATE(LEG)
+! !###======================================================================
+! IMPLICIT NONE
+! TYPE(LEGENDOBJ) :: LEG
 
 ! IF(ASSOCIATED(LEG%LEGTXT))DEALLOCATE(LEG%LEGTXT)
 ! IF(ASSOCIATED(LEG%CGRAD))DEALLOCATE(LEG%CGRAD)
 ! IF(ASSOCIATED(LEG%RGB))DEALLOCATE(LEG%RGB)
 ! IF(ASSOCIATED(LEG%CLASS))DEALLOCATE(LEG%CLASS)
 
- END SUBROUTINE LEG_DEALLOCATE
+! END SUBROUTINE LEG_DEALLOCATE
 
  !###======================================================================
  SUBROUTINE LEG_WRITE(LEG,LEGNAME)
@@ -172,7 +172,7 @@ CONTAINS
  LEG%CGRAD(SIZE(LEG%CGRAD))=1
  READ(IU,*)
 
- LEG%CLASS=0.0
+ LEG%CLASS=0.0D0
  DO I=1,LEG%NCLR
   READ(IU,*) LEG%CLASS(I-1),LEG%CLASS(I),IR,IG,IB,LEG%LEGTXT(I)
   LEG%RGB(I)=WRGB(IR,IG,IB)

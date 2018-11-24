@@ -36,27 +36,27 @@ subroutine findperiod(x,y,nval,minx,maxx,slen,wfc,xstep,mv,result)
 ! arguments
  integer  , intent(in)     :: nval              ! number of values in ts
 
- real     , intent(in)     :: x(nval),y(nval)   ! graph
- real     , intent(in)     :: mv                ! missing value for y()
+ REAL(KIND=DP_KIND)     , intent(in)     :: x(nval),y(nval)   ! graph
+ REAL(KIND=DP_KIND)     , intent(in)     :: mv                ! missing value for y()
 
- real     , intent(in)     :: minx,maxx         ! window where to find the top and bottom value
- real     , intent(in)     :: slen              ! search length
- real     , intent(in)     :: wfc               ! weight factor coefficient
- real     , intent(in)     :: xstep             ! step for x-values to find a top or bottom
+ REAL(KIND=DP_KIND)     , intent(in)     :: minx,maxx         ! window where to find the top and bottom value
+ REAL(KIND=DP_KIND)     , intent(in)     :: slen              ! search length
+ REAL(KIND=DP_KIND)     , intent(in)     :: wfc               ! weight factor coefficient
+ REAL(KIND=DP_KIND)     , intent(in)     :: xstep             ! step for x-values to find a top or bottom
                                                 ! between two measurements witch are more then 
                                                 ! xstep appart
 
- real     , intent(out)    :: result(4)         ! xtop,ytop,xbot,ybot
+ REAL(KIND=DP_KIND)     , intent(out)    :: result(4)         ! xtop,ytop,xbot,ybot
 
 
 ! local variables
  integer   i,j,ib,ie,itop,ibot,ibeg,iend,nstep
 
- real      vtop,vbot,v,xv,xtop,xbot,xb,xe
+ REAL(KIND=DP_KIND)      vtop,vbot,v,xv,xtop,xbot,xb,xe
 
 
 ! functions
- real      weightedvalue
+ REAL(KIND=DP_KIND)      weightedvalue
 
  integer   cfn_fidxlow_r,cfn_fidxupp_r
 
@@ -110,7 +110,7 @@ subroutine findperiod(x,y,nval,minx,maxx,slen,wfc,xstep,mv,result)
        xbot=x(ibot)
 
       ! find a top/bottom between x(itop-1)...x(itop+1)  and x(ibot-1)...x(ibot+1)
-      if (xstep.gt.0.0) then
+      if (xstep.gt.0.0D0) then
        do j=1,2
           if (j.eq.1) then
              ! search arround top
@@ -181,7 +181,7 @@ function weightedvalue(x,y,ibeg,iend,xv,slen,wfc)
 
 
 ! function declaration
- real      weightedvalue   ! return value: weighted value
+ REAL(KIND=DP_KIND)      weightedvalue   ! return value: weighted value
                           !               :
 
 
@@ -189,16 +189,16 @@ function weightedvalue(x,y,ibeg,iend,xv,slen,wfc)
  integer  , intent(in)     :: ibeg          ! 
  integer  , intent(in)     :: iend          ! 
 
- real     , intent(in)     :: x(iend),y(iend)   ! graph
+ REAL(KIND=DP_KIND)     , intent(in)     :: x(iend),y(iend)   ! graph
 
- real     , intent(in)     :: xv                ! centre x-value
- real     , intent(in)     :: slen              ! search length
- real     , intent(in)     :: wfc               ! weight factor coefficient
+ REAL(KIND=DP_KIND)     , intent(in)     :: xv                ! centre x-value
+ REAL(KIND=DP_KIND)     , intent(in)     :: slen              ! search length
+ REAL(KIND=DP_KIND)     , intent(in)     :: wfc               ! weight factor coefficient
 
 ! local variables
  integer   i
 
- double precision f1,f2,sumval,sumwf,d,wf
+ REAL(KIND=DP_KIND) f1,f2,sumval,sumwf,d,wf
 
 ! functions
 

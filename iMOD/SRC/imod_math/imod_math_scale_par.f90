@@ -1,4 +1,4 @@
-!!  Copyright (C) Stichting Deltares, 2005-2017.
+!!  Copyright (C) Stichting Deltares, 2005-2018.
 !!
 !!  This file is part of iMOD.
 !!
@@ -22,9 +22,10 @@
 !!
 MODULE MOD_MATH_SCALE_PAR
 
+USE IMODVAR, ONLY : DP_KIND,SP_KIND
 USE MOD_IDF_PAR, ONLY : IDFOBJ
 
-REAL,SAVE :: SCLSIZE    !## cellsize
+REAL(KIND=DP_KIND),SAVE :: SCLSIZE    !## cellsize
 INTEGER,SAVE :: SCLTYPE_UP,SCLTYPE_DOWN
 !iscale=+1 (upscaling)
 ! WRITE(*,'(1X,A)') ' 1 = special (iboundary)'
@@ -42,21 +43,21 @@ INTEGER,SAVE :: SCLTYPE_UP,SCLTYPE_DOWN
 !iscale=-1 (downscaling)
 ! WRITE(*,'(1X,A)') '-1 = arithmetic average'
 ! WRITE(*,'(1X,A)') '-2 = block values'
-REAL,SAVE :: HOR_FCT  !## multiplication idfvalue*hor_fct to compute kd
-REAL,SAVE :: VER_FCT  !## multiplication idfvalue*hor_fct to compute kd
-REAL,SAVE :: DHX,DHY,DHZ  !## gradients in x,y,z direction
-REAL,SAVE :: MAXK !## maximum k value
+REAL(KIND=DP_KIND),SAVE :: HOR_FCT  !## multiplication idfvalue*hor_fct to compute kd
+REAL(KIND=DP_KIND),SAVE :: VER_FCT  !## multiplication idfvalue*hor_fct to compute kd
+REAL(KIND=DP_KIND),SAVE :: DHX,DHY,DHZ  !## gradients in x,y,z direction
+REAL(KIND=DP_KIND),SAVE :: MAXK !## maximum k value
 INTEGER,SAVE :: IBUFFER   !## usage of buffer (for darcian simulations), delta-cell
 INTEGER,DIMENSION(2) :: ITRIM !## usage of trimfiles
 INTEGER,SAVE :: IIEXT  !## usage of a window
 INTEGER,SAVE :: IINT  !##  size of scaling block
-INTEGER,SAVE :: ISURFWATER !## assign nodata value to surface water ... total nodata column only.
-REAL,SAVE :: SFCT     !## new cellsize
-REAL,SAVE :: QRATE    !## strength of extraction
-REAL,SAVE :: AQFR_KD  !## transmissivity of aquifer
+INTEGER,SAVE :: FILLNODATA !## assign nodata value to surface water ... total nodata column only.
+REAL(KIND=DP_KIND),SAVE :: SFCT     !## new cellsize
+REAL(KIND=DP_KIND),SAVE :: QRATE    !## strength of extraction
+REAL(KIND=DP_KIND),SAVE :: AQFR_KD  !## transmissivity of aquifer
 CHARACTER(LEN=256),DIMENSION(:),ALLOCATABLE :: IDFNAMES,OUTNAMES
 TYPE(IDFOBJ),DIMENSION(:),ALLOCATABLE :: TRIMIDF
-REAL :: KMIN
+REAL(KIND=DP_KIND) :: KMIN
 INTEGER :: ILGROUP
 
 END MODULE MOD_MATH_SCALE_PAR

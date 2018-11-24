@@ -1,4 +1,4 @@
-!!  Copyright (C) Stichting Deltares, 2005-2017.
+!!  Copyright (C) Stichting Deltares, 2005-2018.
 !!
 !!  This file is part of iMOD.
 !!
@@ -22,15 +22,16 @@
 !!
 MODULE MOD_UTL
 
+USE MOD_DBL
 USE WINTERACTER
 USE RESOURCE
-USE IMODCONFIG
-USE MOD_PREF_PAR, ONLY : PREFVAL
-USE MODPLOT, ONLY : MP,MPW,LEGENDOBJ,MXCLR,MXCLASS
-USE MOD_IDF_PAR, ONLY : IDFOBJ
-USE MOD_POLINT, ONLY : POL1LOCATE
-USE IMODVAR, ONLY : MXTP,TP,IDPROC,BVERSION,RVERSION_EXE,RVERSION,LBETA,LEXPDATE,EXPDATE,SAVEDIR,ICDEBUGLEVEL,PI
-USE MOD_OSD, ONLY : OSD_OPEN,OSD_GETENV,OS
+USE MOD_CONFIG
+USE MOD_PREF_PAR 
+USE MODPLOT 
+USE MOD_IDF_PAR 
+USE MOD_POLINT 
+USE IMODVAR 
+USE MOD_OSD 
 USE MOD_QKSORT
 
 !## max. number of messages
@@ -44,7 +45,7 @@ CHARACTER(LEN=2),PARAMETER :: NEWLINE=CHAR(13)//CHAR(10)
 INTEGER,PARAMETER :: MAXLEN=52
 CHARACTER(LEN=MAXLEN),POINTER,DIMENSION(:,:) :: VAR,VAR_TMP,DVAR
 CHARACTER(LEN=MAXLEN),POINTER,DIMENSION(:) :: CCNST
-INTEGER,ALLOCATABLE,DIMENSION(:) :: ICOL_VAR,IACT_VAR  !IVAR,
+INTEGER,ALLOCATABLE,DIMENSION(:) :: ICOL_VAR,IACT_VAR  
 !## max. variables/max. lines
 INTEGER :: NV,NL,IV  
 
@@ -54,23 +55,817 @@ TYPE PROCOBJ
  CHARACTER(LEN=52) :: CID
 END TYPE PROCOBJ
 
-REAL,PARAMETER,PRIVATE :: SDAY=86400.0
+REAL(KIND=DP_KIND),PARAMETER,PRIVATE :: SDAY=86400.0D0
 
-REAL,DIMENSION(13) :: SXVALUE,SYVALUE
+REAL(KIND=DP_KIND),DIMENSION(13) :: SXVALUE,SYVALUE
 INTEGER :: NSX,NSY
 
-CONTAINS
+CONTAINS 
+
+ !###======================================================================
+ SUBROUTINE UTL_MF2005_MAXNO(FNAME,NP)
+ !###======================================================================
+ IMPLICIT NONE
+ INTEGER,INTENT(IN),DIMENSION(:) :: NP
+ CHARACTER(LEN=*),INTENT(IN) :: FNAME
+ INTEGER :: I,IU,JU,IOS
+ CHARACTER(LEN=12) :: NAN
+ CHARACTER(LEN=256) :: LINE
+ 
+ IU=UTL_GETUNIT(); CALL OSD_OPEN(IU,FILE=FNAME                    ,STATUS='OLD'    ,ACTION='READ' ,FORM='FORMATTED'); IF(IU.EQ.0)RETURN
+ JU=UTL_GETUNIT(); CALL OSD_OPEN(JU,FILE=FNAME(:LEN_TRIM(FNAME)-1),STATUS='UNKNOWN',ACTION='WRITE',FORM='FORMATTED'); IF(JU.EQ.0)RETURN
+ DO
+  READ(IU,'(A256)',IOSTAT=IOS) LINE; IF(IOS.NE.0)EXIT
+  IF(INDEX(LINE,'NaN').GT.0)THEN
+   DO I=1,SIZE(NP)
+    NAN='NaN'//TRIM(ITOS(I))//'#'
+    IF(INDEX(LINE,TRIM(NAN)).GT.0)LINE=UTL_SUBST(LINE,TRIM(NAN),ITOS(NP(I)))
+   ENDDO
+  ENDIF
+  WRITE(JU,'(A)') TRIM(ADJUSTL(LINE))
+ ENDDO
+ 
+ CLOSE(IU,STATUS='DELETE'); CLOSE(JU)
+ 
+ END SUBROUTINE UTL_MF2005_MAXNO
+ 
+ !###======================================================================
+ REAL(KIND=SP_KIND) FUNCTION UTL_D2R(X,PLACES)
+ !###======================================================================
+ IMPLICIT NONE
+ REAL(KIND=DP_KIND),INTENT(IN) :: X
+ INTEGER,INTENT(IN) :: PLACES
+  
+ UTL_D2R = ANINT(X*(10.D0**PLACES))/(10.D0**PLACES)
+
+ END FUNCTION UTL_D2R
+
+ !###======================================================================
+ LOGICAL FUNCTION UTL_DRAWPOLYGON(XPOL,YPOL,MAXPOL,NPOL)
+ !###======================================================================
+ IMPLICIT NONE
+ INTEGER,INTENT(IN) :: MAXPOL
+ INTEGER,INTENT(OUT) :: NPOL
+ REAL(KIND=DP_KIND),DIMENSION(MAXPOL),INTENT(INOUT) :: XPOL,YPOL
+ INTEGER :: ITYPE
+ TYPE(WIN_MESSAGE) :: MESSAGE
+ LOGICAL :: LEX
+ REAL(KIND=DP_KIND) :: XC1,YC1,MOUSEX,MOUSEY
+
+ UTL_DRAWPOLYGON=.FALSE.
+
+ CALL WCURSORSHAPE(ID_CURSORPOLYGON)
+
+ NPOL=1
+
+ CALL IGRPLOTMODE(MODEXOR)
+ CALL IGRCOLOURN(WRGB(255,255,255))
+ CALL IGRFILLPATTERN(OUTLINE)
+ LEX=.FALSE.
+
+ DO
+  CALL WMESSAGE(ITYPE,MESSAGE)
+
+  MOUSEX=DBLE(MESSAGE%GX)+OFFSETX
+  MOUSEY=DBLE(MESSAGE%GY)+OFFSETY
+
+  SELECT CASE (ITYPE)
+   !## mouse-move
+   CASE (MOUSEMOVE)
+    CALL WINDOWSELECT(0)
+    CALL WINDOWOUTSTATUSBAR(1,'X:'//TRIM(RTOS(MOUSEX,'F',3))//' m, Y:'//TRIM(RTOS(MOUSEY,'F',3))//' m')
+
+    XC1=MOUSEX; YC1=MOUSEY
+
+    IF(NPOL.GT.1)THEN
+     CALL UTL_PLOT1BITMAP()
+     IF(LEX)CALL UTL_PLOTPOLYGON(SIZE(XPOL),NPOL,XPOL,YPOL)
+     LEX=.TRUE.
+     XPOL(NPOL)=XC1; YPOL(NPOL)=YC1
+     CALL UTL_PLOTPOLYGON(SIZE(XPOL),NPOL,XPOL,YPOL)
+     CALL UTL_PLOT2BITMAP()
+    ENDIF
+
+   CASE (MOUSEBUTDOWN)
+    CALL UTL_PLOT1BITMAP()
+    IF(LEX)CALL UTL_PLOTPOLYGON(SIZE(XPOL),NPOL,XPOL,YPOL)
+    SELECT CASE (MESSAGE%VALUE1)
+     !## left button
+     CASE (1)
+      XPOL(NPOL:NPOL+1)=XC1; YPOL(NPOL:NPOL+1)=YC1; NPOL=NPOL+1
+      CALL UTL_PLOTPOLYGON(SIZE(XPOL),NPOL,XPOL,YPOL)
+      CALL UTL_PLOT2BITMAP()
+     !## right button
+     CASE (3)
+      NPOL=NPOL-1
+      CALL UTL_PLOT2BITMAP()
+      EXIT
+    END SELECT
+    !## bitmap scrolled, renew top-left pixel coordinates
+   CASE (BITMAPSCROLLED)
+    MPW%IX=MESSAGE%VALUE1
+    MPW%IY=MESSAGE%VALUE2
+   END SELECT
+ END DO
+
+ CALL WCURSORSHAPE(CURARROW)
+ CALL IGRPLOTMODE(MODECOPY)
+ CALL IGRFILLPATTERN(OUTLINE)
+
+ UTL_DRAWPOLYGON=.TRUE.
+
+ END FUNCTION UTL_DRAWPOLYGON
+ 
+ !###======================================================================
+ SUBROUTINE UTL_PLOTPOLYGON(MAXPOL,NPOL,XPOL,YPOL)
+ !###======================================================================
+ IMPLICIT NONE
+ INTEGER,INTENT(IN) :: NPOL,MAXPOL
+ REAL(KIND=DP_KIND),INTENT(IN),DIMENSION(MAXPOL) :: XPOL,YPOL
+
+ IF(NPOL.EQ.2)THEN
+  CALL DBL_IGRJOIN(XPOL(1),YPOL(1),XPOL(2),YPOL(2),IOFFSET=1)
+ ELSE
+  CALL DBL_IGRPOLYGONCOMPLEX(XPOL,YPOL,NPOL,IOFFSET=1)
+ ENDIF
+ 
+ END SUBROUTINE UTL_PLOTPOLYGON
+
+ !###======================================================================
+ SUBROUTINE UTL_GETMIDPOINT(X,Y,N,XMID,YMID)
+ !###======================================================================
+ IMPLICIT NONE
+ INTEGER,INTENT(IN) :: N
+ REAL(KIND=DP_KIND),INTENT(IN),DIMENSION(N) :: X,Y 
+ REAL(KIND=DP_KIND),INTENT(OUT) :: XMID,YMID
+ REAL(KIND=DP_KIND) :: X1,Y1,X2,Y2,INT,DX,DY
+ INTEGER :: I,J,ISTEP
+
+ XMID=(MAXVAL(X)+MINVAL(X))/2.0D0
+ YMID=(MAXVAL(Y)+MINVAL(Y))/2.0D0
+ 
+ !## check whether point is inside polygon, if not try others - but limited, could be a line as polygon!
+ IF(DBL_IGRINSIDEPOLYGON(XMID,YMID,X,Y,N).NE.1)THEN
+  ISTEP=10
+DOLOOP: DO
+   X1=MINVAL(X); Y1=MINVAL(Y)
+   X2=MAXVAL(X); Y2=MAXVAL(Y)
+   DX=(X2-X1)/REAL(ISTEP,8)
+   DY=(Y2-Y1)/REAL(ISTEP,8)
+   YMID=Y1
+   DO I=1,ISTEP
+    YMID=YMID+DY
+    XMID=X1
+    DO J=1,ISTEP
+     XMID=XMID+DX     
+     IF(DBL_IGRINSIDEPOLYGON(XMID,YMID,X,Y,N).EQ.1)EXIT DOLOOP
+    ENDDO
+   ENDDO
+   ISTEP=ISTEP+1
+   IF(ISTEP.GT.10)EXIT
+  ENDDO DOLOOP
+ ENDIF
+
+ END SUBROUTINE UTL_GETMIDPOINT
+
+ !###======================================================================
+ SUBROUTINE UTL_CLEANLINE(LINE)
+ !###======================================================================
+ IMPLICIT NONE
+ INTEGER :: I
+ CHARACTER(LEN=*),INTENT(INOUT) :: LINE
+ 
+ DO; I=INDEX(TRIM(LINE),'>'); IF(I.EQ.0)EXIT; LINE(I:I)=' '; ENDDO
+ !## probably :-delimited
+ IF(INDEX(TRIM(LINE),';').GT.0)THEN
+  !## replace "," for "."
+  DO; I=INDEX(TRIM(LINE),','); IF(I.EQ.0)EXIT; LINE(I:I)='.'; ENDDO
+  DO; I=INDEX(TRIM(LINE),';'); IF(I.EQ.0)EXIT; LINE(I:I)=','; ENDDO
+ ENDIF
+ DO; I=INDEX(TRIM(LINE),' '); IF(I.EQ.0)EXIT; LINE(I:I)='_'; ENDDO
+ DO; I=INDEX(TRIM(LINE),'/'); IF(I.EQ.0)EXIT; LINE(I:I)='|'; ENDDO
+    
+ END SUBROUTINE UTL_CLEANLINE
+ 
+ !###======================================================================
+ INTEGER FUNCTION UTL_DETERMINEIDFTYPE(XMIN,YMIN,XMAX,YMAX,CSIZE,NCOL,NROW)
+ !###======================================================================
+ IMPLICIT NONE
+ REAL(KIND=DP_KIND),INTENT(IN) :: XMIN,YMIN,XMAX,YMAX,CSIZE
+ INTEGER,INTENT(IN) :: NCOL,NROW
+ REAL(KIND=SP_KIND) :: XSMAX,YSMAX
+ INTEGER :: I
+  
+ !## determine whether it need to be a double precision IDF file
+ XSMAX=REAL(XMIN,4); DO I=1,NCOL; XSMAX=XSMAX+REAL(CSIZE,4); ENDDO
+ YSMAX=REAL(YMIN,4); DO I=1,NROW; YSMAX=YSMAX+REAL(CSIZE,4); ENDDO
+
+ UTL_DETERMINEIDFTYPE=4
+ IF(.NOT.UTL_EQUALS_REAL(XMAX,REAL(XSMAX,8)).OR. &
+    .NOT.UTL_EQUALS_REAL(YMAX,REAL(YSMAX,8)))UTL_DETERMINEIDFTYPE=8
+ 
+ END FUNCTION UTL_DETERMINEIDFTYPE
+
+ !###======================================================================
+ INTEGER FUNCTION UTL_SELECTIEDGE(X,Y,XA1,YA1,XA2,YA2)
+ !###======================================================================
+ IMPLICIT NONE
+ REAL(KIND=DP_KIND),INTENT(IN) ::  X,Y,XA1,YA1,XA2,YA2
+ REAL(KIND=DP_KIND) :: MIND,WX1,WX2,WY1,WY2
+ INTEGER :: IEDGE
+ INTEGER,DIMENSION(0:9) :: IDCURSOR
+ DATA IDCURSOR/CURARROW,         ID_CURSORMOVELEFTRIGHT,ID_CURSORMOVELEFTRIGHT,ID_CURSORMOVEUPDOWN,ID_CURSORMOVEUPDOWN, &
+               ID_CURSORMOVENESW,ID_CURSORMOVENWSE,     ID_CURSORMOVENESW,     ID_CURSORMOVENWSE,  ID_CURSORMOVE/
+ 
+ WX1=REAL(WINFOGRREAL(GRAPHICSUNITMINX),8) ! (7)  left  limit of main graphics area
+ WY1=REAL(WINFOGRREAL(GRAPHICSUNITMINY),8) ! (8)  lower limit of main graphics area
+ WX2=REAL(WINFOGRREAL(GRAPHICSUNITMAXX),8) ! (9)  right limit of main graphics area
+ WY2=REAL(WINFOGRREAL(GRAPHICSUNITMAXY),8) ! (10) upper limit of main graphics area
+
+ MIND=MIN(WX2-WX1,WY2-WY1)/250.0D0
+
+ IEDGE=0
+ IF(UTL_DIST(X,Y,XA1,YA1).LE.MIND)IEDGE=5
+ IF(UTL_DIST(X,Y,XA2,YA1).LE.MIND)IEDGE=6  !## lrc
+ IF(UTL_DIST(X,Y,XA2,YA2).LE.MIND)IEDGE=7  !## urc
+ IF(UTL_DIST(X,Y,XA1,YA2).LE.MIND)IEDGE=8  !## ulc
+ IF(IEDGE.EQ.0)THEN
+  IF(ABS(X-XA1).LE.MIND)THEN
+   IF(Y.GE.YA1.AND.Y.LE.YA2)IEDGE=1 !## west
+  ENDIF
+  IF(ABS(X-XA2).LE.MIND)THEN
+   IF(Y.GE.YA1.AND.Y.LE.YA2)IEDGE=2 !## east
+  ENDIF
+  IF(ABS(Y-YA1).LE.MIND)THEN
+   IF(X.GE.XA1.AND.X.LE.XA2)IEDGE=3 !## south
+  ENDIF
+  IF(ABS(Y-YA2).LE.MIND)THEN
+   IF(X.GE.XA1.AND.X.LE.XA2)IEDGE=4 !## north
+  ENDIF
+ ENDIF
+ IF(IEDGE.EQ.0)THEN
+  MIND=MIND*5.0D0
+  IF(UTL_DIST(X,Y,XA1,YA1).LE.MIND)IEDGE=9
+  IF(UTL_DIST(X,Y,XA2,YA1).LE.MIND)IEDGE=9
+  IF(UTL_DIST(X,Y,XA2,YA2).LE.MIND)IEDGE=9
+  IF(UTL_DIST(X,Y,XA1,YA2).LE.MIND)IEDGE=9
+ ENDIF
+
+ !## select something else
+ IF(WINFOMOUSE(MOUSECURSOR).NE.IDCURSOR(IEDGE))CALL WCURSORSHAPE(IDCURSOR(IEDGE))
+
+ UTL_SELECTIEDGE=IEDGE
+ 
+ END FUNCTION UTL_SELECTIEDGE
+ 
+ !###===============================================================================
+ INTEGER FUNCTION UTL_PUTRECORDLENGTH(NBYTES)
+ !###===============================================================================
+ IMPLICIT NONE
+ INTEGER,INTENT(IN) :: NBYTES
+
+ UTL_PUTRECORDLENGTH=(NBYTES*256)+247 
+ 
+ END FUNCTION UTL_PUTRECORDLENGTH
+ 
+ !###===============================================================================
+ INTEGER FUNCTION UTL_GETRECORDLENGTH(FNAME)
+ !###===============================================================================
+ IMPLICIT NONE
+ CHARACTER(LEN=*),INTENT(IN) :: FNAME
+ INTEGER :: IU,IBYTE,IOS
+
+ UTL_GETRECORDLENGTH=0
+  
+ !## open file
+ IU=UTL_GETUNIT()
+ OPEN(IU,FILE=FNAME,STATUS='OLD',FORM='UNFORMATTED',ACTION='READ',ACCESS='STREAM',IOSTAT=IOS)
+ IF(IOS.NE.0)RETURN
+ 
+ READ(IU,IOSTAT=IOS) IBYTE
+ !## record length
+ IF(IOS.EQ.0)UTL_GETRECORDLENGTH=(IBYTE-247)/256  !## in bytes
+ CLOSE(IU)
+ IF(UTL_GETRECORDLENGTH.LE.0)THEN
+  CALL WMESSAGEBOX(OKONLY,EXCLAMATIONICON,COMMONOK,'iMOD read recordlength of '//TRIM(ITOS(UTL_GETRECORDLENGTH)),'Error')
+ ENDIF
+ 
+ END FUNCTION UTL_GETRECORDLENGTH
+
+ !###===============================================================================
+ SUBROUTINE UTL_PLOTLINE(X,Z1,Z2,THICKNESS)
+ !###===============================================================================
+ IMPLICIT NONE
+ INTEGER,INTENT(IN) :: THICKNESS
+ REAL(KIND=DP_KIND),INTENT(IN) :: X,Z1,Z2
+
+ CALL IGRLINEWIDTH(THICKNESS)
+ CALL DBL_IGRJOIN(X,Z1,X,Z2)
+
+ END SUBROUTINE UTL_PLOTLINE
+
+ !###===============================================================================
+ SUBROUTINE UTL_PLOTPOINT(X,Y,SYMBOL,FCT)
+ !###===============================================================================
+ IMPLICIT NONE
+ INTEGER,INTENT(IN) :: SYMBOL
+ REAL(KIND=DP_KIND),INTENT(IN) :: X,Y,FCT
+ REAL(KIND=DP_KIND) :: XWID,XHGH,CHW,CHH
+ INTEGER :: IFAM,ISTL
+ 
+ IFAM=WINFOGRINTEGER(GRTEXTFAMILY)
+ ISTL=WINFOGRINTEGER(GRTEXTSTYLE)
+ XWID=REAL(WINFOGRREAL(GRAPHICSCHWIDTH),8)
+ XHGH=REAL(WINFOGRREAL(GRAPHICSCHHEIGHT),8)
+ 
+ CALL UTL_SETTEXTSIZE(CHW,CHH,FCT=FCT*5.0D0,IMARKER=1)
+ CALL DBL_WGRTEXTFONT(IFAMILY=0,TWIDTH=CHW,THEIGHT=CHH,ISTYLE=0)
+ CALL DBL_IGRMARKER(X,Y,SYMBOL,IOFFSET=1)
+
+ END SUBROUTINE UTL_PLOTPOINT
+
+ !###===============================================================================
+ SUBROUTINE UTL_PLOTLABEL(X,Y,STRING,IATTRIB,NATTRIB,TWIDTH,THEIGHT,ATTRIB,LPROF,IEQ,IALIGN,GANGLE)
+ !###===============================================================================
+ IMPLICIT NONE
+ INTEGER,INTENT(IN) :: NATTRIB,IEQ,IALIGN
+ REAL(KIND=DP_KIND),INTENT(IN) :: TWIDTH,THEIGHT
+ CHARACTER(LEN=*),INTENT(IN),DIMENSION(NATTRIB) :: STRING,ATTRIB
+ INTEGER,DIMENSION(NATTRIB),INTENT(IN) :: IATTRIB
+ LOGICAL,INTENT(IN) :: LPROF
+ REAL(KIND=DP_KIND),INTENT(IN) :: X,Y
+ REAL(KIND=DP_KIND),INTENT(IN),OPTIONAL :: GANGLE
+ REAL(KIND=DP_KIND) :: DX,DY,XC,YC,DXS,DYS
+ INTEGER :: I,J
+ CHARACTER(LEN=256) :: LINE
+
+ !## nothing to draw
+ IF(SUM(IATTRIB).EQ.0)RETURN
+
+ CALL IGRLINEWIDTH(1)
+
+ IF(LPROF)THEN
+
+  CALL DBL_WGRTEXTFONT(IFAMILY=TFONT,TWIDTH=TWIDTH*1.5D0,THEIGHT=THEIGHT*1.5D0,ISTYLE=0)
+
+  LINE=''
+  DO I=SIZE(IATTRIB),1,-1
+   IF(IATTRIB(I).EQ.1)THEN
+    J=0
+    IF(IBACKSLASH.EQ.1)THEN
+     J=INDEX(STRING(I),'\',.TRUE.)
+     IF(J.GT.0)J=J+1
+    ENDIF
+    J=MAX(1,J)
+    IF(ILABELNAME.EQ.1)THEN 
+     IF(LEN_TRIM(ATTRIB(I)).GT.0)THEN
+      LINE=TRIM(LINE)//TRIM(ATTRIB(I))//'= '//TRIM(STRING(I)(J:))//';'
+     ELSE
+      LINE=TRIM(LINE)//TRIM(STRING(I)(J:))//';'    
+     ENDIF
+    ELSE
+     LINE=TRIM(LINE)//TRIM(STRING(I)(J:))//';'    
+    ENDIF
+   ENDIF
+  ENDDO
+  I=INDEX(LINE,';',.TRUE.)
+  IF(I.GT.0)LINE(I:I)=''
+
+  !## place connection line
+  IF(PRESENT(GANGLE))THEN
+   CALL DBL_WGRTEXTORIENTATION(IALIGN=IALIGN,ANGLE=GANGLE)
+  ELSE
+   CALL DBL_WGRTEXTORIENTATION(IALIGN=IALIGN,ANGLE=90.0D0)
+  ENDIF
+  CALL DBL_WGRTEXTSTRING(X,Y,'   '//TRIM(LINE),IOFFSET=1)
+
+ ELSE
+
+  CALL DBL_WGRTEXTFONT(IFAMILY=TFONT,TWIDTH=TWIDTH,THEIGHT=THEIGHT,ISTYLE=0)
+  !## size of text character width/height in user units
+  DXS=WINFOGRREAL(GRAPHICSCHWIDTH)
+  DYS=WINFOGRREAL(GRAPHICSCHHEIGHT)
+  IF(PRESENT(GANGLE))THEN
+   CALL DBL_WGRTEXTORIENTATION(IALIGN=IALIGN,ANGLE=GANGLE)
+  ELSE
+   CALL DBL_WGRTEXTORIENTATION(IALIGN=IALIGN,ANGLE=0.0D0)
+  ENDIF
+  
+  !## get size of box over labels
+  DX=0.0D0
+  DO I=1,SIZE(IATTRIB)
+   IF(IATTRIB(I).EQ.1)THEN
+    J=0
+    IF(IBACKSLASH.EQ.1)THEN
+     J=INDEX(STRING(I),'\',.TRUE.)
+     IF(J.GT.0)J=J+1
+    ENDIF
+    J=MAX(1,J)
+    IF(ILABELNAME.EQ.1)THEN
+     IF(LEN_TRIM(ATTRIB(I)).GT.0)THEN
+      DX=MAX(DX,WGRTEXTLENGTH('0'//TRIM(ATTRIB(I))//'= '//TRIM(STRING(I)(J:))//'0',0)*DXS)
+     ELSE
+      DX=MAX(DX,WGRTEXTLENGTH('0'//TRIM(STRING(I)(J:))//'0',0)*DXS)
+     ENDIF
+    ELSE
+     DX=MAX(DX,WGRTEXTLENGTH('0'//TRIM(STRING(I)(J:))//'0',0)*DXS)
+    ENDIF
+   ENDIF
+  END DO
+
+  !## size of box for text
+  DXS=DX
+
+  DX=(WINFOGRREAL(GRAPHICSUNITMAXX)-WINFOGRREAL(GRAPHICSUNITMINX))/250.0D0
+  DY= DYS*SUM(IATTRIB)
+  XC= X+DX
+  YC= Y-(DY/2.0D0)
+  DX= WGRTEXTLENGTH('0',0)*WINFOGRREAL(GRAPHICSCHWIDTH)
+
+  !## position labels in centre
+  IF(.TRUE.)THEN
+   XC=X
+   YC=Y-1.0D0*DYS
+  ENDIF
+   
+!  CALL IGRFILLPATTERN(OUTLINE)
+!  CALL IGRCOLOURN(WRGB(0,0,0)) !## black
+!  CALL DBL_IGRRECTANGLE(XC-DX,YC+0.5D0*DYS,XC+DX+DXS,YC-DY-0.5D0*DYS,IOFFSET=1)
+
+  DO I=1,SIZE(IATTRIB) 
+   IF(IATTRIB(I).EQ.1)THEN
+    IF(IEQ.GT.0)THEN
+    ELSE
+     CALL IGRFILLPATTERN(SOLID)
+     CALL IGRCOLOURN(WRGB(0,0,0)) 
+    ENDIF
+    J=0
+    IF(IBACKSLASH.EQ.1)THEN
+     J=INDEX(STRING(I),'\',.TRUE.)
+     IF(J.GT.0)J=J+1
+    ENDIF
+    J=MAX(1,J)
+    IF(ILABELNAME.EQ.1)THEN
+     IF(LEN_TRIM(ATTRIB(I)).GT.0)THEN
+      CALL DBL_WGRTEXTSTRING(XC,YC,TRIM(ATTRIB(I))//'= '//STRING(I)(J:),IOFFSET=1)
+     ELSE
+      CALL DBL_WGRTEXTSTRING(XC,YC,STRING(I)(J:),IOFFSET=1)
+     ENDIF
+    ELSE
+     CALL DBL_WGRTEXTSTRING(XC,YC,STRING(I)(J:),IOFFSET=1)
+    ENDIF
+
+!    write(99,'(2(f15.3,1x),a)') xc,yc,string(i)(j:)
+
+    YC=YC-DYS
+   ENDIF
+  END DO
+ 
+  !## place dot
+  CALL UTL_PLOTPOINT(X,Y,14,1.0D0)
+
+ ENDIF
+
+ END SUBROUTINE UTL_PLOTLABEL
+
+      subroutine UTL_MODELLHS1(PDELR,ORGNCOL,newncol,&
+                          IC1,IC2,OC1,OC2,INC,fincr,powr,&
+                          NOMINCELL,NOMaxCELL,lclip)
+
+! description:
+! ------------------------------------------------------------------------------
+!
+!
+
+! declaration section
+! ------------------------------------------------------------------------------
+
+      implicit none
+
+
+! arguments
+      INTEGER    ORGNCOL,&        ! (I) original number of columns
+                 newncol,&        ! (O) new number of columns
+                 NOMINCELL,&      ! (I) minimum number of cells (rows/columns)
+                                  !     in an upscaled cell
+                 NOMaxCELL,&      ! (I) maximum number of cells (rows/columns)
+                                  !     in an upscaled cell
+                 IC1,&            ! (I) column number 1 of unscaled area
+                 IC2,&            ! (I) column number 2 of unscaled area
+                 OC1,&            ! (O) column number 1 of scaled area
+                 OC2              ! (O) column number 2 of scaled area
+
+      REAL(KIND=DP_KIND)  INC,&            ! (I) start increment factor
+                 powr             ! (I) power
+      REAL(KIND=DP_KIND) fincr      ! (I) factor increment factor
+                                  !     Used scale factor:
+                                  !        f=fincr*(x-1)^powr+inc
+                                  !        step=f*step
+                                  !    x: cell position offset from AOI
+
+      INTEGER    PDELR(ORGNCOL)   ! (O) pointer from unscaled to scaled
+                                  !     column numbers
+
+      logical   lclip             ! .true.  use clip-edges
+                                  ! .false. don't use clip edges
+                                  ! clip edge: first and last upscaled cell
+                                  !            exist of one unscaled cell
+
+! local variables
+      INTEGER    ISC,L,I,J,ICOL,CCOL,ncel,idir
+
+      integer    maxscc   ! maximum number of rows/columns to put together
+
+      real(KIND=DP_KIND) x
+      REAL(KIND=DP_KIND)  STEP,f
+
+
+! functions
+
+
+! include files
+
+
+! program section
+! ------------------------------------------------------------------------------
+
+
+! get Area Of Interest
+      isc = min(ic1,ic2)
+      ccol= max(ic1,ic2)
+
+      maxscc=nomaxcell
+
+
+!##ccol fits minimal cell value
+      I=((INT((CCOL-ISC)/NOMINCELL)+1)*NOMINCELL)-1
+      CCOL=ISC+I
+
+
+!##correct if ccol.gt.orgncol:i<0
+      I=ORGNCOL-CCOL
+      IF(I.LT.0)THEN
+         ISC=MAX(1,ISC+I)
+         CCOL=MAX(1,CCOL+I)
+      ENDIF
+
+!##correct if ccol.lt.1
+      I=CCOL-1
+      IF(I.LT.0)THEN
+!         ISC =MIN(NCOL,ISC-I)
+!         CCOL=MIN(NCOL,CCOL-I)
+         ISC =MIN(ORGNCOL,ISC-I)
+         CCOL=MIN(ORGNCOL,CCOL-I)
+      ENDIF
+
+
+!##computation of column-definition
+! Area Of Interest
+      L=0
+      I=1
+      DO ICOL=ISC,CCOL
+         PDELR(ICOL)=L
+!         write(*,*) ' AOI icol,L: ',icol,L
+         I=I+1
+         IF(I.GT.NOMINCELL)THEN
+            I=1
+            L=L+1
+         ENDIF
+      END DO
+      IF(I.NE.1)L=L+1
+
+! Area 'higher' and 'lower' than AOI
+
+! 'lower' part
+      idir=-1
+      icol=isc
+      !--------
+      j   =pdelr(icol)
+      icol=icol+idir
+      step=inc
+      x=1.
+
+      do while(icol.ge.1)
+
+         ncel=nint(step)*nomincell
+         ncel=min(ncel,maxscc)
+         j=j+idir
+
+         do i=icol,min(orgncol,max(icol+idir*(ncel-1),1)),idir
+!      write(*,*) ' i,j,ncel,step: ',i,j,ncel,step
+            pdelr(i)=j
+!         write(*,*) ' LOW icol,L: ',icol,L
+         enddo
+         icol=icol+idir*ncel
+
+         if (ncel.lt.maxscc) then
+            x=x+ncel
+            f=fincr*(x-1.)**powr+inc
+            step=f*step
+         endif
+
+      enddo
+
+! 'upper' part
+      idir=+1
+      icol=ccol
+      !--------
+      j   =pdelr(icol)
+      icol=icol+idir
+      step=inc
+      x=1.
+
+      do while(icol.le.orgncol)
+
+         ncel=nint(step)*nomincell
+         ncel=min(ncel,maxscc)
+         j=j+idir
+
+         do i=icol,min(orgncol,max(icol+idir*(ncel-1),1)),idir
+!      write(*,*) ' i,j,ncel,step: ',i,j,ncel,step
+            pdelr(i)=j
+!         write(*,*) ' UPP icol,L: ',icol,L
+         enddo
+         icol=icol+idir*ncel
+
+         if (ncel.lt.maxscc) then
+            x=x+ncel
+            f=fincr*(x-1.)**powr+inc
+            step=f*step
+         endif
+
+      enddo
+
+
+! when clip option is active (lclip=.true.)
+! The outermost active upscaled cell must consist at only 1 unscaled cell!
+      if (lclip) then
+
+         ! set edge cells to a width of 1
+         if (pdelr(1).eq.pdelr(2)) then
+            pdelr(1)=pdelr(1)-1
+         endif
+
+         if (pdelr(orgncol).eq.pdelr(orgncol-1)) then
+            pdelr(orgncol)=pdelr(orgncol)+1
+         endif
+
+      endif
+
+
+! renumber pdelr to let it undefined with value 1 in pdelr(1)
+      J=1-PDELR(1)
+      DO ICOL=1,orgncol
+         PDELR(ICOL)=PDELR(ICOL)+J
+      END DO
+
+
+! assign number of scaled are cells
+      newncol=PDELR(orgncol)
+
+
+! Area Of Interest in scaled area
+      oc1=PDELR(ic1)
+      oc2=PDELR(ic2)
+
+!      write(*,*) ' UTL_MODELLHS: nnew nold AOI ',newncol,orgncol,ic1,ic2
+!      write(*,*) PDELR
+
+! end of program
+      end subroutine UTL_MODELLHS1
+ 
+ !###======================================================================
+ INTEGER FUNCTION UTL_GETUNITIPF(IPFNAME,TSTAT)
+ !###======================================================================
+ IMPLICIT NONE
+ CHARACTER(LEN=*),INTENT(IN) :: IPFNAME
+ CHARACTER(LEN=*),INTENT(IN) :: TSTAT
+ LOGICAL :: LEX,LOPEN
+ CHARACTER(LEN=10) :: TSTATUS
+
+ TSTATUS=UTL_CAP(TSTAT,'U')
+ UTL_GETUNITIPF=0
+
+ INQUIRE(FILE=IPFNAME,OPENED=LOPEN)
+ IF(LOPEN)THEN
+  INQUIRE(FILE=IPFNAME,NUMBER=UTL_GETUNITIPF)
+  CLOSE(UTL_GETUNITIPF)
+ ENDIF
+
+ IF(TRIM(TSTATUS).EQ.'OLD')THEN
+  INQUIRE(FILE=IPFNAME,EXIST=LEX)
+  IF(.NOT.LEX)THEN
+   CALL WMESSAGEBOX(OKONLY,EXCLAMATIONICON,COMMONOK,'Cannot find'//CHAR(13)//TRIM(IPFNAME),'Warning')
+   RETURN
+  ENDIF
+  UTL_GETUNITIPF=UTL_GETUNIT()
+  CALL OSD_OPEN(UTL_GETUNITIPF,FILE=IPFNAME,STATUS=TSTATUS,FORM='FORMATTED',ACTION='READ,DENYWRITE')
+ ELSEIF(TRIM(TSTATUS).EQ.'UNKNOWN')THEN
+  INQUIRE(FILE=IPFNAME,EXIST=LEX)
+  IF(LEX)THEN
+  ENDIF
+  UTL_GETUNITIPF=UTL_GETUNIT()
+  CALL OSD_OPEN(UTL_GETUNITIPF,FILE=IPFNAME,STATUS=TSTATUS,FORM='FORMATTED',ACTION='WRITE,DENYREAD') 
+ ENDIF
+
+ END FUNCTION UTL_GETUNITIPF
+ 
+ !###=========================================================================
+ SUBROUTINE UTL_GETHELP(TOPIC,CTOPIC) 
+ !###=========================================================================
+ IMPLICIT NONE
+ CHARACTER(LEN=*),INTENT(IN) :: TOPIC,CTOPIC
+ LOGICAL :: LEX,LACROBAT
+ INTEGER :: ISTATUS,IEXCOD
+ CHARACTER(LEN=256) :: LINE
+
+ !## error/warning checking
+ IF(PREFVAL(4).EQ.'')THEN
+  CALL WMESSAGEBOX(OKONLY,COMMONOK,EXCLAMATIONICON,'You should specify the keyword HELPFILE in the Preference file of iMOD.'// &
+               'E.g. HELPFILE=D:\IMOD\HELP.PDF','Warning')
+  RETURN
+ ENDIF
+ INQUIRE(FILE=PREFVAL(4),EXIST=LEX)
+ IF(.NOT.LEX)THEN
+  CALL WMESSAGEBOX(OKONLY,COMMONOK,EXCLAMATIONICON,'Cannot find the specified HELPFILE='//TRIM(PREFVAL(4)),'Warning')
+  RETURN
+ ENDIF
+
+ LACROBAT=.TRUE.
+
+ !## acrobat reader
+ IF(PREFVAL(13).EQ.'')THEN
+  CALL WMESSAGEBOX(OKONLY,COMMONOK,EXCLAMATIONICON,'You should specify the keyword ACROBATREADER in the Preference file of iMOD.'// &
+               'E.g. ACROBATREADER=c:\Program Files (x86)\Adobe\Reader 11.0D0\Reader\AcroRd32.exe','Warning')
+  RETURN
+ ENDIF
+ INQUIRE(FILE=PREFVAL(13),EXIST=LEX)
+ IF(.NOT.LEX)THEN
+  CALL WMESSAGEBOX(OKONLY,COMMONOK,EXCLAMATIONICON,'Cannot find the specified ACROBATREADER='//TRIM(PREFVAL(13)),'Warning')
+  RETURN
+ ENDIF
+
+ !## acrobat reader
+ IF(LACROBAT)THEN
+  LINE='"'//TRIM(PREFVAL(13))//'" /A "nameddest='//TRIM(CTOPIC)//'" "'//TRIM(PREFVAL(4))//'"'
+ !## sumatra pdf
+ ELSE
+  LINE='"'//TRIM(PREFVAL(13))//'" -reuse-instance -named-dest sec:'//TRIM(CTOPIC)//' "'//TRIM(PREFVAL(4))//'"'
+ ENDIF
+
+ IF(IDPROC(1).NE.0)THEN
+#if (defined(WINTERACTER11))
+   CALL IOSCOMMANDCHECK(IDPROC,ISTATUS,IEXCOD=IEXCOD)
+#endif
+  !## killed
+  IF(ISTATUS.EQ.0)THEN
+
+  !## still running, kill it
+  ELSEIF(ISTATUS.EQ.1)THEN
+#if (defined(WINTERACTER11))
+   CALL IOSCOMMANDKILL(IDPROC,0)
+#endif
+  ENDIF
+ ENDIF
+
+ CALL IOSCOMMAND(LINE,PROCSILENT,IDPROC=IDPROC)
+
+ END SUBROUTINE UTL_GETHELP
+
+ !###================================================================================
+ SUBROUTINE UTL_STOREZOOMEXTENT()
+ !###================================================================================
+ IMPLICIT NONE
+ INTEGER :: I,J,N
+
+ ZM%IZOOM=ZM%IZOOM+1
+ ZM%NZOOM=ZM%IZOOM
+ N=SIZE(ZM%ZOOMXY,1)
+ IF(ZM%NZOOM.GT.N)THEN
+  ALLOCATE(ZM%ZOOMXY_BU(N+10,4))
+  DO I=1,N
+   DO J=1,4; ZM%ZOOMXY_BU(I,J)=ZM%ZOOMXY(I,J); ENDDO
+  ENDDO
+  IF(ASSOCIATED(ZM%ZOOMXY))DEALLOCATE(ZM%ZOOMXY)
+  ZM%ZOOMXY=>ZM%ZOOMXY_BU
+ ENDIF
+ ZM%ZOOMXY(ZM%NZOOM,1)=MPW%XMIN
+ ZM%ZOOMXY(ZM%NZOOM,2)=MPW%YMIN
+ ZM%ZOOMXY(ZM%NZOOM,3)=MPW%XMAX
+ ZM%ZOOMXY(ZM%NZOOM,4)=MPW%YMAX
+
+ END SUBROUTINE UTL_STOREZOOMEXTENT
 
  !###======================================================================
  SUBROUTINE UTL_TIMING(IBDT,IEDT,ELSEC)
  !###======================================================================
  IMPLICIT NONE
  INTEGER, DIMENSION(8), INTENT(IN) :: IBDT,IEDT
- REAL, INTENT(OUT) :: ELSEC
+ REAL(KIND=DP_KIND), INTENT(OUT) :: ELSEC
  INTEGER, PARAMETER :: NSPD = 86400  
  INTEGER, DIMENSION(12) :: IDPM(12)
  DATA IDPM/31,28,31,30,31,30,31,31,30,31,30,31/ ! DAYS PER MONTH  
- INTEGER :: NDAYS, LEAP, IBD, IED, MB, ME, MM, MC, M, NM
+ INTEGER :: NDAYS, LEAP, IBD, IED, MB, ME, MC, M, NM
   
  !## calculate elapsed time in days and seconds
  NDAYS=0
@@ -106,10 +901,10 @@ CONTAINS
    ELSEC=NDAYS*NSPD
 !
   !## add or subtract seconds
-  ELSEC = ELSEC+(IEDT(5)-IBDT(5))*3600.0
-  ELSEC = ELSEC+(IEDT(6)-IBDT(6))*60.0
+  ELSEC = ELSEC+(IEDT(5)-IBDT(5))*3600.0D0
+  ELSEC = ELSEC+(IEDT(6)-IBDT(6))*60.0D0
   ELSEC = ELSEC+(IEDT(7)-IBDT(7))
-  ELSEC = ELSEC+(IEDT(8)-IBDT(8))*0.001      
+  ELSEC = ELSEC+(IEDT(8)-IBDT(8))*0.01D0      
 
   END SUBROUTINE UTL_TIMING
   
@@ -119,10 +914,10 @@ CONTAINS
  !###======================================================================
  IMPLICIT NONE
  INTEGER,INTENT(IN),DIMENSION(:) :: BND
- REAL,INTENT(INOUT),DIMENSION(:) :: TOP,BOT,HK,VK,VA,TH,TOP_BU,BOT_BU,HK_BU,VK_BU,VA_BU
- REAL,INTENT(IN) :: MINTHICKNESS 
- INTEGER :: NLAY,ILAY,I,IL,IL1,IL2,M,N,ILL,ILL1,ILL2
- REAL :: K,TT,T,B,MT,T1,T2,K1,K2,B1,MP,D,KD,VC
+ REAL(KIND=DP_KIND),INTENT(INOUT),DIMENSION(:) :: TOP,BOT,HK,VK,VA,TH,TOP_BU,BOT_BU,HK_BU,VK_BU,VA_BU
+ REAL(KIND=DP_KIND),INTENT(IN) :: MINTHICKNESS 
+ INTEGER :: NLAY,ILAY,IL,IL1,IL2,ILL,ILL1,ILL2
+ REAL(KIND=DP_KIND) :: K,TT,T,B,MT,T1,T2,K1,K2,B1,MP,D,KD,VC
  
  NLAY=SIZE(BND)
 
@@ -136,7 +931,7 @@ CONTAINS
  ENDDO
 
  !## get thickness of aquitards
- TH=0.0; DO ILAY=1,NLAY-1; IF(BND(ILAY).NE.0.AND.BND(ILAY+1).NE.0)TH(ILAY)=BOT(ILAY)-TOP(ILAY+1); ENDDO
+ TH=0.0D0; DO ILAY=1,NLAY-1; IF(BND(ILAY).NE.0.AND.BND(ILAY+1).NE.0)TH(ILAY)=BOT(ILAY)-TOP(ILAY+1); ENDDO
  
  IL2=0; IL1=1
  DO
@@ -147,28 +942,28 @@ CONTAINS
   IF(BND(IL2).EQ.0)CYCLE
   
   !## found maximum vertical space in aquitards to redistribute layers
-  IF(TH(IL2).GT.0.0.OR.IL2.EQ.NLAY)THEN
+  IF(TH(IL2).GT.0.0D0.OR.IL2.EQ.NLAY)THEN
   
    !## thickness of available space
    T=TOP(IL1)-BOT(IL2)
    
    !## search for thin aquifers in this "space"
-   MT=0.0; TT=0.0; ILL2=0; ILL1=0
+   MT=0.0D0; TT=0.0D0; ILL2=0; ILL1=0
    DO IL=IL1,IL2
     ILL2=ILL2+1
-    !# set total thickness necessary at least since last correction
+    !## set total thickness necessary at least since last correction
     IF((TOP(IL)-BOT(IL)).LT.MINTHICKNESS)THEN
      TT=TT+MINTHICKNESS; IF(ILL1.EQ.0)ILL1=IL
      MT=MT+MINTHICKNESS
     ELSE
-     IF(MT.GT.0.0)THEN
+     IF(MT.GT.0.0D0)THEN
       MT=MT+MINTHICKNESS
       !## enough space to correct layers
       IF(TOP(ILL1)-BOT(IL).GE.MT)THEN
        !## define potential mid
-       MP=(TOP(ILL1)+BOT(ILL2-1))/2.0
-       T1=MP+0.5*MT
-       B1=MP-0.5*MT
+       MP=(TOP(ILL1)+BOT(ILL2-1))/2.0D0
+       T1=MP+0.5D0*MT
+       B1=MP-0.5D0*MT
        IF(T1.GT.TOP(ILL1))THEN
         D=T1-TOP(ILL1)
         T1=T1-D
@@ -188,7 +983,7 @@ CONTAINS
         TOP(ILL)=BOT(ILL-1)
         IF(ILL.NE.ILL2)BOT(ILL)=TOP(ILL)-MINTHICKNESS
        ENDDO
-       TT=0.0; MT=0.0; ILL1=0
+       TT=0.0D0; MT=0.0D0; ILL1=0
       ENDIF
      ENDIF
     ENDIF    
@@ -207,66 +1002,98 @@ CONTAINS
  !## correct permeabilities for aquifers
  DO ILAY=1,NLAY
 
-!IF(ILAY.EQ.93)THEN
-!WRITE(*,*)
-!ENDIF
+  !## skip inactive cells
+  IF(BND(ILAY).EQ.0)CYCLE
 
   !## current corrected layer
   T=TOP(ILAY)
   B=BOT(ILAY)
   
   !## if layer thickness, leave it - could be possible most lower layer(s)
-  IF(T-B.LE.0.0)THEN
+  IF(T-B.LE.0.0D0)THEN
 
-   HK(ILAY)=0.0
-   VA(ILAY)=0.0
-   IF(ILAY.LT.NLAY)VK(ILAY)=0.0
+   HK(ILAY)=0.0D0
+   VA(ILAY)=0.0D0
+!   IF(ILAY.LT.NLAY)VK(ILAY)=0.0D0
 
   ELSE
     
-   KD=0.0; VC=0.0
+   KD=0.0D0; VC=0.0D0
    DO IL=1,NLAY
+
+    !## skip inactive cells
+    IF(BND(IL).EQ.0)CYCLE
+
     T1=TOP_BU(IL)
     B1=BOT_BU(IL)
     D=MIN(T,T1)-MAX(B,B1)
     !## part of aquifer
-    IF(D.GT.0.0)THEN
+    IF(D.GT.0.0D0)THEN
      KD=KD+HK_BU(IL)*D
      VC=VC+D/(HK_BU(IL)*VA_BU(IL))
     ENDIF
+
     IF(IL.LT.NLAY)THEN
      T1=BOT_BU(IL)
      B1=TOP_BU(IL+1)
      D=MIN(T,T1)-MAX(B,B1)
      !## part of aquitard
-     IF(D.GT.0.0)THEN
+     IF(D.GT.0.0D0)THEN
       KD=KD+VK_BU(IL)*D
       VC=VC+D/(VK_BU(IL))
      ENDIF
     ENDIF
+
    ENDDO 
    !## new parameters
    HK(ILAY)=KD/(T-B)
    K=(T-B)/VC
-   IF(ILAY.LT.NLAY)VK(ILAY)=K
    VA(ILAY)=K/HK(ILAY)
   
   ENDIF
 
  ENDDO
  
+ !## correct permeabilities for aquitards
+ DO ILAY=1,NLAY-1
+
+  !## skip inactive cells
+  IF(BND(ILAY).EQ.0.OR.BND(ILAY+1).EQ.0)CYCLE
+
+  !## original layer
+  T=BOT_BU(ILAY)
+  B=TOP_BU(ILAY+1)
+  
+  !## if layer thickness, leave it - could be possible most lower layer(s)
+  IF(T-B.GT.0.0D0)THEN
+
+!   VK(ILAY)=0.0D0
+!  ELSE
+  
+   !## previous c
+   VC=(T-B)/VK_BU(ILAY)
+  
+   !## current corrected layer
+   T=BOT(ILAY)
+   B=TOP(ILAY+1)
+   VK(ILAY)=(T-B)/VC
+
+  ENDIF
+  
+ ENDDO
+
  !## check before and after
  
  !## get thickness of aquifers
- TH=0.0; DO ILAY=1,NLAY; IF(BND(ILAY).NE.0)TH(ILAY)=TOP_BU(ILAY)-BOT_BU(ILAY); ENDDO; T1=SUM(TH)
+ TH=0.0D0; DO ILAY=1,NLAY; IF(BND(ILAY).NE.0)TH(ILAY)=TOP_BU(ILAY)-BOT_BU(ILAY); ENDDO; T1=SUM(TH)
  DO ILAY=1,NLAY; TH(ILAY)=TH(ILAY)*HK_BU(ILAY); ENDDO; K1=SUM(TH)
  
  !## get thickness of aquifers
- TH=0.0; DO ILAY=1,NLAY; IF(BND(ILAY).NE.0)TH(ILAY)=TOP(ILAY)-BOT(ILAY); ENDDO; T2=SUM(TH)
+ TH=0.0D0; DO ILAY=1,NLAY; IF(BND(ILAY).NE.0)TH(ILAY)=TOP(ILAY)-BOT(ILAY); ENDDO; T2=SUM(TH)
  DO ILAY=1,NLAY; TH(ILAY)=TH(ILAY)*HK(ILAY); ENDDO; K2=SUM(TH)
  
  IF((.NOT.UTL_EQUALS_REAL(T2,T1).OR..NOT.UTL_EQUALS_REAL(K2,K1)).AND. &
-   (ABS(T2-T1).GT.1.0.OR.ABS(K2-K1).GT.1.0))THEN
+   (ABS(T2-T1).GT.1.0D0.OR.ABS(K2-K1).GT.1.0D0))THEN
   !## get thickness of aquifers
   DO ILAY=1,NLAY
    WRITE(*,'(I3,8F10.2)') ILAY,TOP(ILAY)   ,BOT(ILAY)   ,TOP(ILAY)   -BOT(ILAY)   ,TOP(ILAY)   -BOT(ILAY)   *HK(ILAY), &
@@ -274,27 +1101,27 @@ CONTAINS
   ENDDO
   WRITE(*,*) T1,T2,T2-T1,K1,K2,K2-K1
  ENDIF
- 
+
  END SUBROUTINE UTL_MINTHICKNESS
 
  !###======================================================================
  SUBROUTINE UTL_DRAWELLIPSE(X,Y,DX,DY,A)
  !###======================================================================
  IMPLICIT NONE
- REAL,INTENT(IN) :: X,Y,DX,DY,A
- REAL :: THETA,DTHETA
- REAL :: XP,YP,AR,XR,YR,FY
+ REAL(KIND=DP_KIND),INTENT(IN) :: X,Y,DX,DY,A
+ REAL(KIND=DP_KIND) :: THETA,DTHETA
+ REAL(KIND=DP_KIND) :: XP,YP,AR,FY
  
- AR=A/(360.0/(2.0*PI))
+ AR=A/(360.0D0/(2.0*PI))
  FY=DY/DX
 
- THETA=0.0; DTHETA=PI/50.0
+ THETA=0.0D0; DTHETA=PI/50.0D0
  DO
   CALL UTL_POINTELLIPSE(X,Y,THETA,FY,DX,AR,XP,YP)
-  IF(THETA.EQ.0.0)THEN
-   CALL IGRMOVETO(XP,YP)
+  IF(THETA.EQ.0.0D0)THEN
+   CALL DBL_IGRMOVETO(XP,YP)
   ELSE
-   CALL IGRLINETO(XP,YP)
+   CALL DBL_IGRLINETO(XP,YP)
   ENDIF
   THETA=THETA+DTHETA
   IF(THETA.GT.2.0*PI)EXIT
@@ -306,13 +1133,13 @@ CONTAINS
  SUBROUTINE UTL_POINTELLIPSE(X,Y,THETA,FY,DX,AR,XP,YP)
  !###======================================================================
  IMPLICIT NONE
- REAL,INTENT(IN) :: FY,THETA,DX,AR,X,Y
- REAL,INTENT(OUT) :: XP,YP
- REAL :: XR,YR
+ REAL(KIND=DP_KIND),INTENT(IN) :: FY,THETA,DX,AR,X,Y
+ REAL(KIND=DP_KIND),INTENT(OUT) :: XP,YP
+ REAL(KIND=DP_KIND) :: XR,YR
  
  XP=    DX*COS(THETA); XR=XP
  YP=-FY*DX*SIN(THETA); YR=YP
- IF(AR.NE.0.0)THEN
+ IF(AR.NE.0.0D0)THEN
   XR= COS(AR)*XP+SIN(AR)*YP
   YR=-SIN(AR)*XP+COS(AR)*YP
  ENDIF
@@ -326,43 +1153,78 @@ CONTAINS
  !###======================================================================
  !https://stackoverflow.com/questions/7946187/point-and-ellipse-rotated-position-test-algorithm
  IMPLICIT NONE
- REAL,INTENT(IN) :: XP,YP,X0,Y0,DX,DY,A
- REAL :: X1,X2,X3,A2,B2,AR
+ REAL(KIND=DP_KIND),INTENT(IN) :: XP,YP,X0,Y0,DX,DY,A
+ REAL(KIND=DP_KIND) :: X1,X2,X3,A2,B2,AR
  
  UTL_INSIDEELLIPSE=.FALSE.
  
- AR=A/(360.0/(2.0*PI))
- AR=-1.0*AR
+ AR=A/(360.0D0/(2.0D0*PI))
+ AR=-1.0D0*AR
  
- X1=( (XP-X0)*COS(AR)+(YP-Y0)*SIN(AR) ) **2.0 
- X2=( (XP-X0)*SIN(AR)-(YP-Y0)*COS(AR) ) **2.0 
- A2= DX**2.0
- B2= DY**2.0
+ X1=( (XP-X0)*COS(AR)+(YP-Y0)*SIN(AR) ) **2.0D0 
+ X2=( (XP-X0)*SIN(AR)-(YP-Y0)*COS(AR) ) **2.0D0 
+ A2= DX**2.0D0
+ B2= DY**2.0D0
  
  X3=X1/A2+X2/B2
-! X3=X1+X2
  
- UTL_INSIDEELLIPSE=X3.LE.1.0
+ UTL_INSIDEELLIPSE=X3.LE.1.0D0
  
  END FUNCTION UTL_INSIDEELLIPSE
  
  !###======================================================================
- LOGICAL FUNCTION UTL_COUNT_COLUMNS(LINE)
+ INTEGER FUNCTION UTL_COUNT_COLUMNS(LINE,SEP,BPV,EPV)
  !###======================================================================
  IMPLICIT NONE
- CHARACTER(LEN=*),INTENT(IN) :: LINE
- INTEGER :: I,J,IOUT
+ CHARACTER(LEN=*),INTENT(IN) :: LINE,SEP
+ INTEGER,DIMENSION(:),OPTIONAL,INTENT(OUT) :: BPV,EPV
+ INTEGER :: I,J,K,IOUT,NCSEP
+ CHARACTER(LEN=1),ALLOCATABLE,DIMENSION(:) :: CSEP
  
- J=0; IOUT=1
+ NCSEP=LEN_TRIM(SEP); ALLOCATE(CSEP(NCSEP))
+ DO I=1,NCSEP; CSEP(I)=SEP(I:I); ENDDO
+
+ IF(PRESENT(EPV))EPV=0
+ IF(PRESENT(BPV))THEN; BPV=0; BPV(1)=1; ENDIF
+ 
+! !## remove duplicate spaces in Line
+! DO 
+!  IF(INDEX(LINE,'  ').EQ.0)EXIT
+!  LINE=UTL_SUBST(LINE,'  ',' ')
+! ENDDO
+
+ !## look for first non-blank character
  DO I=1,LEN_TRIM(LINE)
-  IF(LINE(I:I).EQ.','.AND.IOUT.EQ.1)J=J+1
+  IF(LINE(I:I).NE.' ')EXIT
+ ENDDO
+ I=I-1
+ 
+ J=1; IOUT=1
+ DO 
+  I=I+1
+  
+  DO K=1,NCSEP
+   IF(LINE(I:I).EQ.CSEP(K).AND.IOUT.EQ.1)THEN
+    IF(PRESENT(EPV))EPV(J)=I-1
+    J=J+1
+    IF(PRESENT(BPV))BPV(J)=I+1
+    EXIT
+   ENDIF
+  ENDDO
+
   !## inside quoted string
   IF(LINE(I:I).EQ.CHAR(34).OR. &             !'
-     LINE(I:I).EQ.CHAR(39).OR. &             !'"
+     LINE(I:I).EQ.CHAR(39).OR. &             !"
      LINE(I:I).EQ.CHAR(96))IOUT=ABS(IOUT-1)  !`
+  
+  !## stop, whole line examined
+  IF(I.EQ.LEN_TRIM(LINE))EXIT
+  
  ENDDO
+ IF(PRESENT(EPV))EPV(J)=LEN_TRIM(LINE)
+
  !## number of columns is number of comma-delimiters + 1
- UTL_COUNT_COLUMNS=J+1
+ UTL_COUNT_COLUMNS=J
  
  END FUNCTION UTL_COUNT_COLUMNS
 
@@ -397,7 +1259,7 @@ CONTAINS
   READ(LINE(I+1:),*)  I2
   N=(I2-I1)+1
  ELSE
-  N=UTL_COUNT_COLUMNS(LINE)
+  N=UTL_COUNT_COLUMNS(LINE,',')
  ENDIF
  
  IF(ASSOCIATED(IPOINTER))THEN
@@ -437,9 +1299,9 @@ CONTAINS
  !###======================================================================
  IMPLICIT NONE
  INTEGER,INTENT(IN) :: IOPT,IU !## ioptional
- REAL,INTENT(IN),OPTIONAL :: EXCLVALUE,IECHO !## wrong value
+ REAL(KIND=DP_KIND),INTENT(IN),OPTIONAL :: EXCLVALUE,IECHO !## wrong value
  INTEGER,INTENT(OUT) :: NPOINTER
- REAL,POINTER,DIMENSION(:) :: XPOINTER
+ REAL(KIND=DP_KIND),POINTER,DIMENSION(:) :: XPOINTER
  CHARACTER(LEN=*),INTENT(IN) :: TXT
  INTEGER :: IOS,I,N,JECHO
  CHARACTER(LEN=3*256) :: LINE
@@ -457,7 +1319,7 @@ CONTAINS
   IF(.NOT.UTL_READINITFILE(TRIM(TXT),LINE,IU,1))RETURN
  ENDIF
 
- N=UTL_COUNT_COLUMNS(LINE)
+ N=UTL_COUNT_COLUMNS(LINE,',')
 
  IF(ASSOCIATED(XPOINTER))THEN
   NPOINTER=SIZE(XPOINTER)
@@ -466,19 +1328,7 @@ CONTAINS
  NPOINTER=N
  IF(.NOT.ASSOCIATED(XPOINTER))ALLOCATE(XPOINTER(NPOINTER))
 
-! IF(ASSOCIATED(XPOINTER))THEN
-!  NPOINTER=SIZE(XPOINTER)
-! ELSE
-!  NPOINTER=80; ALLOCATE(XPOINTER(NPOINTER))
-! ENDIF
-
-! DO
  READ(LINE,*,IOSTAT=IOS) (XPOINTER(I),I=1,NPOINTER)
-!  IF(IOS.EQ.0)EXIT
-!  NPOINTER=NPOINTER-1
-! ENDDO
-! DEALLOCATE(XPOINTER); ALLOCATE(XPOINTER(NPOINTER))
-! READ(LINE,*,IOSTAT=IOS) (XPOINTER(I),I=1,NPOINTER)
  IF(IOS.NE.0)THEN
   IF(JECHO.EQ.0)CALL WMESSAGEBOX(OKONLY,EXCLAMATIONICON,COMMONOK,'ERROR READING '//TRIM(TXT),'Error')
   IF(JECHO.EQ.1)WRITE(*,'(/1A/)') 'ERROR READING '//TRIM(TXT); STOP
@@ -499,32 +1349,80 @@ CONTAINS
  END FUNCTION UTL_READPOINTER_REAL
  
  !###======================================================================
+ LOGICAL FUNCTION UTL_READPOINTER_CHARACTER(IU,NPOINTER,CPOINTER,TXT,IOPT,IECHO)
+ !###======================================================================
+ IMPLICIT NONE
+ INTEGER,INTENT(IN) :: IOPT,IU !## ioptional
+ REAL(KIND=DP_KIND),INTENT(IN),OPTIONAL :: IECHO !## wrong value
+ INTEGER,INTENT(OUT) :: NPOINTER
+ CHARACTER(LEN=*),POINTER,DIMENSION(:) :: CPOINTER
+ CHARACTER(LEN=*),INTENT(IN) :: TXT
+ INTEGER :: IOS,I,N,JECHO
+ CHARACTER(LEN=3*256) :: LINE
+ 
+ JECHO=1; IF(PRESENT(IECHO))THEN
+  JECHO=IECHO
+ ENDIF
+
+ NPOINTER=0
+ IF(IOPT.EQ.0)THEN
+  UTL_READPOINTER_CHARACTER=.FALSE.
+  IF(.NOT.UTL_READINITFILE(TRIM(TXT),LINE,IU,0))RETURN
+ ELSEIF(IOPT.EQ.1)THEN
+  UTL_READPOINTER_CHARACTER=.TRUE.
+  IF(.NOT.UTL_READINITFILE(TRIM(TXT),LINE,IU,1))RETURN
+ ENDIF
+
+ N=UTL_COUNT_COLUMNS(LINE,',')
+
+ IF(ASSOCIATED(CPOINTER))THEN
+  NPOINTER=SIZE(CPOINTER)
+  IF(NPOINTER.LT.N)DEALLOCATE(CPOINTER)
+ ENDIF
+ NPOINTER=N
+ IF(.NOT.ASSOCIATED(CPOINTER))ALLOCATE(CPOINTER(NPOINTER))
+
+ READ(LINE,*,IOSTAT=IOS) (CPOINTER(I),I=1,NPOINTER)
+ IF(IOS.NE.0)THEN
+  IF(JECHO.EQ.0)CALL WMESSAGEBOX(OKONLY,EXCLAMATIONICON,COMMONOK,'ERROR READING '//TRIM(TXT),'Error')
+  IF(JECHO.EQ.1)WRITE(*,'(/1A/)') 'ERROR READING '//TRIM(TXT); STOP
+ ENDIF
+
+ WRITE(*,'(A,99(A,A1))') TRIM(TXT)//'=',(TRIM(CPOINTER(I)),',',I=1,NPOINTER)
+
+ UTL_READPOINTER_CHARACTER=.TRUE.
+
+ END FUNCTION UTL_READPOINTER_CHARACTER
+   
+ !###======================================================================
  SUBROUTINE UTL_MEASUREMAIN()
  !###======================================================================
  IMPLICIT NONE
- REAL,DIMENSION(:),POINTER :: XCRD,YCRD => NULL()
+ REAL(KIND=DP_KIND),DIMENSION(:),POINTER :: XCRD,YCRD => NULL()
  INTEGER :: NCRD
 
  IF(ASSOCIATED(XCRD))DEALLOCATE(XCRD)
  IF(ASSOCIATED(YCRD))DEALLOCATE(YCRD)
- CALL UTL_MEASURE(XCRD,YCRD,NCRD)
+ CALL UTL_MEASURE(XCRD,YCRD,NCRD,ID_CURSORDISTANCE)
  DEALLOCATE(XCRD,YCRD)
 
  END SUBROUTINE UTL_MEASUREMAIN
 
  !###======================================================================
- SUBROUTINE UTL_MEASURE(XCRD,YCRD,NCRD)
+ SUBROUTINE UTL_MEASURE(XCRD,YCRD,NCRD,IDCURSOR)
  !###======================================================================
  IMPLICIT NONE
- REAL,DIMENSION(:),POINTER,INTENT(INOUT) :: XCRD,YCRD
- REAL,DIMENSION(:),POINTER :: XCRD_BU,YCRD_BU
+ REAL(KIND=DP_KIND),DIMENSION(:),POINTER,INTENT(INOUT) :: XCRD,YCRD
+ REAL(KIND=DP_KIND),DIMENSION(:),POINTER :: XCRD_BU,YCRD_BU
+ REAL(KIND=DP_KIND) :: MOUSEX,MOUSEY
+ INTEGER,INTENT(IN) :: IDCURSOR
  INTEGER,INTENT(OUT) :: NCRD
  TYPE(WIN_MESSAGE) :: MESSAGE
  INTEGER :: I,ITYPE,MAXCRD
  LOGICAL :: LEX
 
  CALL IGRPLOTMODE(MODEXOR); CALL IGRCOLOURN(WRGB(255,255,255))
- CALL WCURSORSHAPE(ID_CURSORDISTANCE) 
+ CALL WCURSORSHAPE(IDCURSOR) !ID_CURSORDISTANCE) 
 
  CALL IGRFILLPATTERN(OUTLINE); CALL IGRLINETYPE(SOLIDLINE)
  CALL WINDOWOUTSTATUSBAR(2,'Press right mouse button to stop')
@@ -534,31 +1432,29 @@ CONTAINS
 
  DO
   CALL WMESSAGE(ITYPE,MESSAGE)
+
+  MOUSEX=DBLE(MESSAGE%GX)+OFFSETX
+  MOUSEY=DBLE(MESSAGE%GY)+OFFSETY
+
   SELECT CASE (ITYPE)
 
    !## mouse-move
    CASE (MOUSEMOVE)
 
     CALL WINDOWSELECT(0)
-    CALL WINDOWOUTSTATUSBAR(1,'X:'//TRIM(RTOS(MESSAGE%GX/1000.,'F',7))//' km, Y:'//TRIM(RTOS(MESSAGE%GY/1000.,'F',7))//' km')
+    CALL WINDOWOUTSTATUSBAR(1,'X:'//TRIM(RTOS(MOUSEX,'F',3))//' m, Y:'//TRIM(RTOS(MOUSEY,'F',3))//' m')
    
     !## first point set
     IF(NCRD.GE.2)THEN
-     CALL IDFPLOT1BITMAP()
+     CALL UTL_PLOT1BITMAP()
      IF(LEX)CALL UTL_MEASUREPLOTSHAPE(XCRD,YCRD,NCRD)
-     LEX=.TRUE.; XCRD(NCRD)=MESSAGE%GX; YCRD(NCRD)=MESSAGE%GY
+     LEX=.TRUE.; XCRD(NCRD)=MOUSEX; YCRD(NCRD)=MOUSEY
      CALL UTL_MEASUREPLOTSHAPE(XCRD,YCRD,NCRD)
-     CALL IDFPLOT2BITMAP()
+     CALL UTL_PLOT2BITMAP()
     ENDIF
 
-!   CASE (PUSHBUTTON)
-!    SELECT CASE (MESSAGE%VALUE1)
-!     CASE (IDCANCEL)
-!      EXIT
-!    END SELECT
-
    CASE (MOUSEBUTDOWN)
-    CALL IDFPLOT1BITMAP()
+    CALL UTL_PLOT1BITMAP()
     IF(LEX)CALL UTL_MEASUREPLOTSHAPE(XCRD,YCRD,NCRD)
 
     SELECT CASE (MESSAGE%VALUE1)
@@ -571,9 +1467,9 @@ CONTAINS
        DEALLOCATE(XCRD,YCRD); XCRD=>XCRD_BU; YCRD=>YCRD_BU
       ENDIF
       NCRD=NCRD+1; IF(NCRD.EQ.1)NCRD=NCRD+1
-      DO I=NCRD-1,NCRD; XCRD(I)=MESSAGE%GX; YCRD(I)=MESSAGE%GY; ENDDO
+      DO I=NCRD-1,NCRD; XCRD(I)=MOUSEX; YCRD(I)=MOUSEY; ENDDO
       CALL UTL_MEASUREPLOTSHAPE(XCRD,YCRD,NCRD)
-      CALL IDFPLOT2BITMAP()
+      CALL UTL_PLOT2BITMAP()
 
      !## right button
      CASE (3)  
@@ -586,17 +1482,17 @@ CONTAINS
 
 !   CASE (EXPOSE)
 !    IF(WMENUGETSTATE(ID_PLOTLEGEND,2).EQ.1)CALL LEGPLOT_PLOTUPDATE(.FALSE.)
-!    CALL IGRUNITS(MPW%XMIN,MPW%YMIN,MPW%XMAX,MPW%YMAX)
+!    CALL DBL_IGRUNITS(MPW%XMIN,MPW%YMIN,MPW%XMAX,MPW%YMAX)
 
   END SELECT
  END DO
 
  NCRD=NCRD-1
 
- CALL IDFPLOT1BITMAP()
+ CALL UTL_PLOT1BITMAP()
  CALL UTL_MEASUREPLOTSHAPE(XCRD,YCRD,NCRD)
  CALL UTL_MEASUREPLOTSHAPE(XCRD,YCRD,NCRD)
- CALL IDFPLOT2BITMAP()
+ CALL UTL_PLOT2BITMAP()
 
  CALL WCURSORSHAPE(CURARROW); CALL IGRPLOTMODE(MODECOPY)
  CALL IGRFILLPATTERN(OUTLINE); CALL IGRLINETYPE(SOLIDLINE)
@@ -609,33 +1505,33 @@ CONTAINS
  !###======================================================================
  IMPLICIT NONE
  INTEGER,INTENT(IN) :: NCRD
- REAL,DIMENSION(:),POINTER,INTENT(IN) :: XCRD,YCRD
+ REAL(KIND=DP_KIND),DIMENSION(:),POINTER,INTENT(IN) :: XCRD,YCRD
  INTEGER :: I
- REAL :: TDIST,DIST
+ REAL(KIND=DP_KIND) :: TDIST,DIST
  CHARACTER(LEN=256) :: STRING
  CHARACTER(LEN=256) :: CDIST,CTDIST
 
  CALL IGRFILLPATTERN(OUTLINE)
- CALL IGRPOLYLINE(XCRD,YCRD,NCRD)
- TDIST=0.0; DIST =0.0
+ CALL DBL_IGRPOLYLINE(XCRD,YCRD,NCRD,IOFFSET=1)
+ TDIST=0.0D0; DIST =0.0D0
  DO I=2,NCRD
-  DIST =SQRT((XCRD(I)-XCRD(I-1))**2.0+(YCRD(I)-YCRD(I-1))**2.0)
+  DIST =SQRT((XCRD(I)-XCRD(I-1))**2.0D0+(YCRD(I)-YCRD(I-1))**2.0D0)
   TDIST=DIST+TDIST
  END DO
 
- IF(TDIST.LT.1.0)THEN
-  CTDIST=TRIM(RTOS(TDIST*100.0 ,'F',3))//' cm'
- ELSEIF(TDIST.LT.1000.0)THEN
+ IF(TDIST.LT.1.0D0)THEN
+  CTDIST=TRIM(RTOS(TDIST*100.0D0 ,'F',3))//' cm'
+ ELSEIF(TDIST.LT.1000.0D0)THEN
   CTDIST=TRIM(RTOS(TDIST       ,'F',3))//' m'
  ELSE
-  CTDIST=TRIM(RTOS(TDIST/1000.0,'F',3))//' km'
+  CTDIST=TRIM(RTOS(TDIST/1000.0D0,'F',3))//' km'
  ENDIF
- IF(DIST.LT.1.0)THEN
-  CDIST=TRIM(RTOS(DIST*100.0 ,'F',3))//' cm'
- ELSEIF(DIST.LT.1000.0)THEN
+ IF(DIST.LT.1.0D0)THEN
+  CDIST=TRIM(RTOS(DIST*100.0D0 ,'F',3))//' cm'
+ ELSEIF(DIST.LT.1000.0D0)THEN
   CDIST=TRIM(RTOS(DIST       ,'F',3))//' m'
  ELSE
-  CDIST=TRIM(RTOS(DIST/1000.0,'F',3))//' km'
+  CDIST=TRIM(RTOS(DIST/1000.0D0,'F',3))//' km'
  ENDIF
 
  STRING='Total distance= '//TRIM(CTDIST)//'; Distance last segment= '//TRIM(CDIST)
@@ -648,8 +1544,8 @@ CONTAINS
  SUBROUTINE UTL_GETAXESCALES(XMIN,YMIN,XMAX,YMAX)
  !###======================================================================
  IMPLICIT NONE
- REAL,INTENT(IN) :: XMIN,YMIN,XMAX,YMAX
- REAL :: DX,DY,X1,X2,Y1,Y2
+ REAL(KIND=DP_KIND),INTENT(IN) :: XMIN,YMIN,XMAX,YMAX
+ REAL(KIND=DP_KIND) :: DX,DY,X1,X2,Y1,Y2
  INTEGER :: I,ITER
  
  CALL IPGNEWPLOT(PGSCATTERPLOT,1,1,0,1) 
@@ -658,22 +1554,22 @@ CONTAINS
 
  DO
  
-  CALL IPGUNITS(X1,Y1,X2,Y2)
+  CALL DBL_IPGUNITS(X1,Y1,X2,Y2)
 
   !## get x-scale intervals
-  SXVALUE=0.0; CALL IPGXGETSCALE(SXVALUE,NSX)
+  SXVALUE=0.0D0; CALL DBL_IPGXGETSCALE(SXVALUE,NSX,'X')
   !## get y-scale intervals
-  SYVALUE=0.0; CALL IPGYGETSCALE(SYVALUE,NSY) 
+  SYVALUE=0.0D0; CALL DBL_IPGXGETSCALE(SYVALUE,NSY,'Y') 
 
   I=0; ITER=ITER+1
   !## see whether x-classes are distinghuisable
-  IF(UTL_EQUALS_REAL(SXVALUE(2),SXVALUE(1)))THEN
+  IF(UTL_EQUALS_REAL(REAL(SXVALUE(2),8),REAL(SXVALUE(1),8)))THEN
    DX=ABS(X1)*EPSILON(X1); X1=X1-DX*REAL(ITER)
    DX=ABS(X2)*EPSILON(X2); X2=X2+DX*REAL(ITER)
    I=I+1
   ENDIF
   !## see whether y-classes are distinghuisable
-  IF(UTL_EQUALS_REAL(SYVALUE(2),SYVALUE(1)))THEN
+  IF(UTL_EQUALS_REAL(REAL(SYVALUE(2),8),REAL(SYVALUE(1),8)))THEN
    DY=ABS(Y1)*EPSILON(Y1); Y1=Y1-DY*REAL(ITER)
    DY=ABS(Y2)*EPSILON(Y2); Y2=Y2+DY*REAL(ITER)
    I=I+1
@@ -694,51 +1590,66 @@ CONTAINS
  END SUBROUTINE UTL_GETAXESCALES
 
  !###======================================================================
- CHARACTER(LEN=15) FUNCTION UTL_WRITENUMBER(X)
+ CHARACTER(LEN=24) FUNCTION UTL_WRITENUMBER(X)
  !###======================================================================
  IMPLICIT NONE
- REAL,INTENT(IN) :: X
+ REAL(KIND=DP_KIND),INTENT(IN) :: X
  
  WRITE(UTL_WRITENUMBER,UTL_GETFORMAT(X)) X
  
  END FUNCTION UTL_WRITENUMBER
  
  !###======================================================================
- CHARACTER(LEN=15) FUNCTION UTL_GETFORMAT(X)
+ CHARACTER(LEN=32) FUNCTION UTL_GETFORMAT(X)
  !###======================================================================
  IMPLICIT NONE
- REAL,INTENT(IN) :: X
- CHARACTER(LEN=20) :: XC
- INTEGER :: I,J,K,NDEC
-
+ REAL(KIND=DP_KIND),INTENT(IN) :: X
+ CHARACTER(LEN=32) :: XC
+ INTEGER :: I,J,K,II,NDEC,NNUM,DIGITS
+ CHARACTER(LEN=1) :: F
+  
+ !## number equal to a NaN
+ IF(X.NE.X.OR.X.GT.HUGE(1.0D0).OR.X.LT.-HUGE(1.0D0))THEN
+  UTL_GETFORMAT='*'
+  RETURN
+ ENDIF
+ 
  WRITE(XC,*) X
  XC=ADJUSTL(XC)
 
  CALL IUPPERCASE(XC)
- J=INDEX(XC,'E+00')
- IF(J.GT.0)XC=XC(:J-1) 
- I=INDEX(XC,'E')
- IF(I.GT.0)THEN
-  UTL_GETFORMAT='(E10.4)'
- ELSE
-  I=INDEX(XC,'.')
-  IF(I.EQ.0)THEN
-   UTL_GETFORMAT='(F10.0)'
-  ELSE
-   J=LEN_TRIM(XC)
-   DO K=J,I+1,-1
-    IF(XC(K:K).NE.'0')EXIT
-   END DO
-   NDEC=K-I
 
-   IF(NDEC.EQ.0)THEN
-    UTL_GETFORMAT='(F10.0)'
-   ELSE
-    WRITE(UTL_GETFORMAT,'(A5,I2.2,A)') '(F10.',NDEC,')'
-   ENDIF
+ !## determine length of value
+ I=LEN_TRIM(XC); K=MAX(INDEX(XC,'D'),INDEX(XC,'E')); IF(K.GT.0)I=K-1
+ 
+ !## get numbers before digit
+ J=INDEX(XC,'.')
+ IF(J.GT.0)THEN
+  !## get first non-zero character
+  DO II=I,J+1,-1
+   IF(XC(II:II).NE.'0')EXIT
+  ENDDO
+  NDEC=MAX(0,II-J)
+  IF(K.GT.0)NDEC=MAX(NDEC,1)
+  NNUM=J-1+NDEC+1
+ ELSE
+  NDEC=0
+  NNUM=J-1
+ ENDIF
+
+ F='F'
+ IF(K.GT.0)THEN
+  READ(XC(K+2:),*) DIGITS
+  IF(DIGITS.NE.0)THEN
+   F='E'
+   NNUM=NNUM+4
   ENDIF
  ENDIF
 
+ IF(X.LT.0.0D0)NNUM=NNUM+1
+
+ WRITE(UTL_GETFORMAT,'(2A1,2(I2.2,A1))') '(',F,NNUM,'.',NDEC,')'
+ 
  END FUNCTION UTL_GETFORMAT
 
  !###======================================================================
@@ -759,27 +1670,27 @@ CONTAINS
  FUNCTION UTL_REALTOSTRING(X)
  !###====================================================================
  IMPLICIT NONE
- CHARACTER(LEN=15) :: UTL_REALTOSTRING,FSTRING
- REAL,INTENT(IN) :: X
+ CHARACTER(LEN=20) :: UTL_REALTOSTRING,FSTRING
+ REAL(KIND=DP_KIND),INTENT(IN) :: X
  INTEGER :: I,J,NSIG
- REAL :: F
+ REAL(KIND=DP_KIND) :: F
  CHARACTER(LEN=12) :: FRM
  
  I=INT(X); F=X-I
  UTL_REALTOSTRING=TRIM(ITOS(I))
- IF(F.NE.0.0)THEN
+ IF(F.NE.0.0D0)THEN
   NSIG=MAX(0,7-LEN_TRIM(UTL_REALTOSTRING))
-  WRITE(FRM,'(A5,I2.2,A1)') '(F10.',NSIG,')'
+  WRITE(FRM,'(A5,I3.3,A1)') '(F15.',NSIG,')'
   WRITE(FSTRING,FRM) F; FSTRING=ADJUSTL(FSTRING)
   !## search backwards for first non-zero
   DO J=LEN_TRIM(FSTRING),1,-1
    IF(FSTRING(J:J).NE.'0')EXIT
   ENDDO
-  IF(F.GT.0.0)UTL_REALTOSTRING=TRIM(UTL_REALTOSTRING)//'.'//FSTRING(3:J)
-  IF(F.LT.0.0)UTL_REALTOSTRING=TRIM(UTL_REALTOSTRING)//'.'//FSTRING(4:J)
+  IF(F.GT.0.0D0)UTL_REALTOSTRING=TRIM(UTL_REALTOSTRING)//'.'//FSTRING(3:J)
+  IF(F.LT.0.0D0)UTL_REALTOSTRING=TRIM(UTL_REALTOSTRING)//'.'//FSTRING(4:J)
  ENDIF
  !## add minus
- IF(I.EQ.0.AND.X.LT.0.0)UTL_REALTOSTRING='-'//TRIM(UTL_REALTOSTRING)
+ IF(I.EQ.0.AND.X.LT.0.0D0)UTL_REALTOSTRING='-'//TRIM(UTL_REALTOSTRING)
  
  END FUNCTION UTL_REALTOSTRING
 
@@ -826,12 +1737,70 @@ CONTAINS
  
  END SUBROUTINE UTL_RELPATHNAME
 
+!###======================================================================
+ SUBROUTINE UTL_REL_TO_ABS(ROOT,FNAME)
+ !###======================================================================
+ IMPLICIT NONE
+ CHARACTER(LEN=*), INTENT(INOUT) :: ROOT
+ CHARACTER(LEN=*), INTENT(INOUT) :: FNAME
+ INTEGER :: M,N,IL
+ CHARACTER(LEN=1) :: SLASH
+ LOGICAL :: LREL  
+ 
+ N = LEN_TRIM(FNAME)
+ IF (N==0) RETURN
+ CALL UTL_GETSLASH(SLASH)
+ FNAME = ADJUSTL(FNAME)
+ N = LEN_TRIM(FNAME)
+ 
+ M = LEN_TRIM(ROOT)
+ IF(ROOT(M:M).EQ.SLASH) THEN
+    ROOT = ROOT(1:M-1)  
+    M = M - 1
+ END IF
+ IL = M + 1
+ 
+ LREL = .FALSE.
+ DO WHILE(.TRUE.)
+    IF(FNAME(1:1).NE.'.')EXIT 
+    IF(FNAME(1:2).EQ.'.'//SLASH)THEN
+       LREL = .TRUE. 
+       FNAME = FNAME(3:N)
+       N = LEN_TRIM(FNAME)
+    END IF
+    IF(FNAME(1:3).EQ.'..'//SLASH)THEN
+       LREL = .TRUE. 
+       FNAME = FNAME(4:N)
+       N = LEN_TRIM(FNAME)
+       IL = INDEX(ROOT(1:IL-1),SLASH,BACK=.TRUE.)
+    END IF
+ END DO
+ IF(LREL) THEN
+    FNAME = ROOT(1:IL-1)//SLASH//TRIM(FNAME)
+ END IF
+ 
+ END SUBROUTINE UTL_REL_TO_ABS
+ 
+ !###===================================================================
+ SUBROUTINE UTL_GETSLASH(SLASH)
+ !###===================================================================
+ IMPLICIT NONE
+ CHARACTER(LEN=*),INTENT(OUT) :: SLASH
+
+ IF(OS.EQ.1)THEN ! DOS
+   SLASH='\'   
+ ELSEIF(OS.EQ.2)THEN ! UNIX
+   SLASH='/'   
+ ENDIF
+
+ END SUBROUTINE UTL_GETSLASH
+ 
  !###====================================================================
  FUNCTION UTL_IMODVERSION(S1,S2)
  !###====================================================================
  IMPLICIT NONE
  CHARACTER(LEN=*),INTENT(IN),OPTIONAL :: S1,S2
- CHARACTER(LEN=75) :: UTL_IMODVERSION
+ CHARACTER(LEN=156) :: UTL_IMODVERSION
  
  IF(LBETA)THEN
   UTL_IMODVERSION=TRIM(BVERSION)//'-iMOD'
@@ -845,32 +1814,32 @@ CONTAINS
   UTL_IMODVERSION=TRIM(UTL_IMODVERSION)//' ['//TRIM(RVERSION_EXE)//' '//TRIM(CCONFIG)//']'
  ENDIF
  IF(LEXPDATE)THEN
-  UTL_IMODVERSION=TRIM(UTL_IMODVERSION)//' [Expiring date: '//TRIM(JDATETOGDATE(UTL_IDATETOJDATE(EXPDATE)))//']'
+  UTL_IMODVERSION=TRIM(UTL_IMODVERSION)//' !!! Expiring date: '//TRIM(JDATETOGDATE(UTL_IDATETOJDATE(EXPDATE)))//' !!!'
  ENDIF
  
  END FUNCTION UTL_IMODVERSION
  
  !###====================================================================
- LOGICAL FUNCTION UTL_PCK_READTXT(ICOL,STIME,ETIME,QT,FNAME,INDICATOR,THRESHOLD,ISS) 
+ LOGICAL FUNCTION UTL_PCK_READTXT(ICOL,STIME,ETIME,QT,FNAME,INDICATOR,THRESHOLD,ISS,NCOUNT) 
  !###====================================================================
  IMPLICIT NONE
  INTEGER,INTENT(IN) :: ICOL,INDICATOR,ISS
  INTEGER(KIND=8),INTENT(IN) :: STIME,ETIME
  CHARACTER(LEN=*),INTENT(IN) :: FNAME,THRESHOLD
- REAL,INTENT(OUT) :: QT
- INTEGER :: IR,I,I1,I2,IU,NR,NC,IDATE,JDATE,NDATE,N,IOS,ITYPE,IZMAX,SDATE,EDATE, &
-  IYR1,IMH1,IDY1,IHR1,IMT1,ISC1,IYR2,IMH2,IDY2,IHR2,IMT2,ISC2
- REAL :: Q1,QQ,Z,TZ,BZ,DZ,F,Z1,NQ,RTIME,TTIME,NCOUNT
+ REAL(KIND=DP_KIND),INTENT(OUT) :: QT
+ REAL(KIND=DP_KIND),INTENT(OUT) :: NCOUNT
+ INTEGER :: IR,I,IU,NR,NC,IOS,ITYPE,IZMAX,SDATE
+ REAL(KIND=DP_KIND) :: Q1,QQ,Z,TZ,BZ,DZ,F,Z1,NQ,RTIME,TTIME
  INTEGER(KIND=8) :: DBL_SDATE,DBL_EDATE
  CHARACTER(LEN=8) :: ATTRIB
  CHARACTER(LEN=256) :: LINE
- REAL,DIMENSION(:),ALLOCATABLE :: NODATA
+ REAL(KIND=DP_KIND),DIMENSION(:),ALLOCATABLE :: NODATA
  CHARACTER(LEN=52),DIMENSION(:),ALLOCATABLE :: QD
   
  UTL_PCK_READTXT=.FALSE.
 
  !## transient(2)/steady-state(1)
- QT=0.0
+ QT=0.0D0
 
  !## open textfiles with pump information
  IU=UTL_GETUNIT()
@@ -895,7 +1864,7 @@ CONTAINS
    !## duration in days - transient
    IF(ISS.EQ.2)THEN
     TTIME=DIFFTIME(STIME,ETIME)
-    IF(TTIME.LE.0.0)THEN
+    IF(TTIME.LE.0.0D0)THEN
      CLOSE(IU); CALL WMESSAGEBOX(OKONLY,EXCLAMATIONICON,COMMONOK,'Timestep size to extract data is '//TRIM(RTOS(TTIME,'E',7)),'Error')
      RETURN
     ENDIF
@@ -914,7 +1883,7 @@ CONTAINS
 
   DBL_SDATE=STIME
   QQ=NODATA(ICOL)
-  NCOUNT=0.0
+  NCOUNT=0.0D0
       
   DO IR=1,NR
    READ(IU,*) DBL_EDATE,(QD(I),I=2,NC)
@@ -958,14 +1927,14 @@ CONTAINS
   ENDIF
   
   !## steady-state
-  IF(NCOUNT.GT.0.0)QT=QT/NCOUNT
+  IF(NCOUNT.GT.0.0D0)QT=QT/NCOUNT
 
   UTL_PCK_READTXT=.TRUE. 
-
+ 
  !## itype=2 borehole; itype=3 seismic
  ELSEIF(ITYPE.EQ.2.OR.ITYPE.EQ.3)THEN
    
-  QQ=0.0
+  QQ=0.0D0
   
   !## get elevation in chronologic order
   IF(ICOL.EQ.1)THEN
@@ -978,7 +1947,7 @@ CONTAINS
   !## get the average value for the choosen interval
   ELSE
   
-   NQ=0.0; TZ=STIME/100.0; BZ=ETIME/100.0; DZ=TZ-BZ
+   NQ=0.0D0; TZ=STIME/100.0D0; BZ=ETIME/100.0D0; DZ=TZ-BZ
    DO IR=1,NR
        
     READ(IU,*) Z,(QD(I),I=2,NC)
@@ -999,7 +1968,7 @@ CONTAINS
     Z1=Z
     !## apply indicator
     IF(INDICATOR.GT.0)THEN
-     Q1=0.0; IF(TRIM(UTL_CAP(QD(ICOL),'U')).EQ.TRIM(UTL_CAP(THRESHOLD,'U')))Q1=1.0
+     Q1=0.0D0; IF(TRIM(UTL_CAP(QD(ICOL),'U')).EQ.TRIM(UTL_CAP(THRESHOLD,'U')))Q1=1.0D0
     ELSE
      READ(QD(ICOL),*) Q1
     ENDIF
@@ -1008,7 +1977,8 @@ CONTAINS
    
    ENDDO
 
-   IF(NQ.GT.0.0)THEN
+   IF(NQ.GT.0.0D0)THEN
+    NCOUNT=NQ
     QT=QT/NQ
     UTL_PCK_READTXT=.TRUE. 
    ENDIF
@@ -1021,18 +1991,18 @@ CONTAINS
  END FUNCTION UTL_PCK_READTXT
 
  !###======================================================================
- SUBROUTINE UTL_PCK_GETTLP(N,TLP,KH,TOP,BOT,Z1,Z2,MINKHT,ICLAY)
+ SUBROUTINE UTL_PCK_GETTLP(N,TLP,KH,TOP,BOT,Z1,Z2,MINKHT)
  !###======================================================================
  IMPLICIT NONE
- REAL,PARAMETER :: MINP=0.0
- INTEGER,INTENT(IN) :: N,ICLAY
- REAL,INTENT(IN) :: MINKHT
- REAL,INTENT(INOUT) :: Z1,Z2
- REAL,INTENT(IN),DIMENSION(N) :: KH,TOP,BOT
- REAL,INTENT(INOUT),DIMENSION(N) :: TLP
- INTEGER :: JLAY,ILAY,K !,IDIFF
- REAL :: ZM,ZT,ZB,ZC,FC,DZ
- REAL,ALLOCATABLE,DIMENSION(:) :: L,TL
+ REAL(KIND=DP_KIND),PARAMETER :: MINP=0.0D0
+ INTEGER,INTENT(IN) :: N
+ REAL(KIND=DP_KIND),INTENT(IN) :: MINKHT
+ REAL(KIND=DP_KIND),INTENT(INOUT) :: Z1,Z2
+ REAL(KIND=DP_KIND),INTENT(IN),DIMENSION(N) :: KH,TOP,BOT
+ REAL(KIND=DP_KIND),INTENT(INOUT),DIMENSION(N) :: TLP
+ INTEGER :: ILAY
+ REAL(KIND=DP_KIND) :: ZM,ZT,ZB,ZC,FC,DZ
+ REAL(KIND=DP_KIND),ALLOCATABLE,DIMENSION(:) :: L,TL
  INTEGER,ALLOCATABLE,DIMENSION(:) :: IL
    
  ALLOCATE(L(N),TL(N),IL(N))
@@ -1040,86 +2010,86 @@ CONTAINS
  !## not thickness between z1 and z2 - look for correct modellayer
  IF(Z1.EQ.Z2)THEN
 
-  TLP=0.0; ZM=Z1
+  TLP=0.0D0; ZM=Z1
   DO ILAY=1,N
    IF(ZM.GE.BOT(ILAY).AND.ZM.LE.TOP(ILAY))THEN
-    TLP(ILAY)=1.0; EXIT
+    TLP(ILAY)=1.0D0; EXIT
    ENDIF
   ENDDO
 
  ELSE
  
   !## filterlength for each modellayer
-  L=0.0
+  L=0.0D0
   DO ILAY=1,N
-   ZT=MIN(TOP(ILAY),Z1); ZB=MAX(BOT(ILAY),Z2); L(ILAY)=MAX(0.0,ZT-ZB)
+   ZT=MIN(TOP(ILAY),Z1); ZB=MAX(BOT(ILAY),Z2); L(ILAY)=MAX(0.0D0,ZT-ZB)
   ENDDO
  
-  TLP=0.0
+  TLP=0.0D0
   !## well within any aquifer(s)
-  IF(SUM(L).GT.0.0)THEN
+  IF(SUM(L).GT.0.0D0)THEN
    !## compute percentage and include sumkd, only if itype.eq.2
    L=L*KH
    !## percentage (0-1) L*KH
-   DO ILAY=1,N; IF(L(ILAY).NE.0.0)TLP=(1.0/SUM(L))*L; ENDDO
+   DO ILAY=1,N; IF(L(ILAY).NE.0.0D0)TLP=(1.0D0/SUM(L))*L; ENDDO
   ENDIF
 
   !## correct for dismatch with centre of modelcell
   DO ILAY=1,N
-   IF(TLP(ILAY).GT.0.0)THEN
+   IF(TLP(ILAY).GT.0.0D0)THEN
     DZ= TOP(ILAY)-BOT(ILAY)
     ZC=(TOP(ILAY)+BOT(ILAY))/2.0
     ZT= MIN(TOP(ILAY),Z1)
     ZB= MAX(BOT(ILAY),Z2)
     FC=(ZT+ZB)/2.0
-    TLP(ILAY)=TLP(ILAY)*(1.0-(ABS(ZC-FC)/(0.5*DZ)))
+    TLP(ILAY)=TLP(ILAY)*(1.0D0-(ABS(ZC-FC)/(0.5*DZ)))
    ENDIF
   ENDDO
  
   !## normalize tlp() again
-  IF(SUM(TLP).GT.0.0)TLP=(1.0/SUM(TLP))*TLP
+  IF(SUM(TLP).GT.0.0D0)TLP=(1.0D0/SUM(TLP))*TLP
 
   !## remove small transmissivities
-  IF(MINKHT.GT.0.0)THEN
+  IF(MINKHT.GT.0.0D0)THEN
    ZT=SUM(TLP) 
    DO ILAY=1,N
     DZ= TOP(ILAY)-BOT(ILAY)
-    IF(KH(ILAY)*DZ.LT.MINKHT)TLP(ILAY)=0.0
+    IF(KH(ILAY)*DZ.LT.MINKHT)TLP(ILAY)=0.0D0
    ENDDO
-   IF(SUM(TLP).GT.0.0)THEN
+   IF(SUM(TLP).GT.0.0D0)THEN
     ZT=ZT/SUM(TLP); TLP=ZT*TLP
    ENDIF
   ENDIF
  
   !## normalize tlp() again
-  IF(SUM(TLP).GT.0.0)TLP=(1.0/SUM(TLP))*TLP
+  IF(SUM(TLP).GT.0.0D0)TLP=(1.0D0/SUM(TLP))*TLP
   
 ! !## make sure only one layer is assigned whenever z1.eq.z2
 ! IF(IDIFF.EQ.1)THEN
-!  K=0; ZT=0.0; DO ILAY=1,N
+!  K=0; ZT=0.0D0; DO ILAY=1,N
 !   IF(ABS(TLP(ILAY)).GT.ZT)THEN
 !    ZT=ABS(TLP(ILAY)); K=ILAY
 !   ENDIF
 !  ENDDO
 !  IF(K.GT.0)THEN
 !   ZT=TLP(K)
-!   TLP=0.0; TLP(K)=1.0 
-!   IF(ZT.LT.0.0)TLP(K)=-1.0*TLP(K)
+!   TLP=0.0D0; TLP(K)=1.0D0 
+!   IF(ZT.LT.0.0D0)TLP(K)=-1.0D0*TLP(K)
 !  ENDIF
 ! ENDIF
 
  ENDIF
    
  !## nothing in model, whenever system on top of model, put them in first modellayer with thickness
- IF(SUM(TLP).EQ.0.0)THEN
-  IF(Z1.GE.TOP(1))TLP(1)=1.0
+ IF(SUM(TLP).EQ.0.0D0)THEN
+  IF(Z1.GE.TOP(1))TLP(1)=1.0D0
  ENDIF
 
  !## if no layers has been used for the assignment, try to allocate it to aquifer of this interbed
  IF(SUM(TLP).LE.0)THEN
   TLP=0
   DO ILAY=1,N-1
-   IF(BOT(ILAY).GE.Z1.AND.TOP(ILAY+1).LE.Z2)THEN; TLP(ILAY)=1.0; EXIT; ENDIF
+   IF(BOT(ILAY).GE.Z1.AND.TOP(ILAY+1).LE.Z2)THEN; TLP(ILAY)=1.0D0; EXIT; ENDIF
   ENDDO
  ENDIF
 
@@ -1458,7 +2428,7 @@ CONTAINS
   !## acrobat reader
   IF(PREFVAL(13).EQ.'')THEN
    CALL WMESSAGEBOX(OKONLY,COMMONOK,EXCLAMATIONICON,'You should specify the keyword ACROBATREADER in the Preference file of iMOD.'// &
-              'E.g. ACROBATREADER=c:\Program Files (x86)\Adobe\Reader 11.0\Reader\AcroRd32.exe','Warning')
+              'E.g. ACROBATREADER=c:\Program Files (x86)\Adobe\Reader 11.0D0\Reader\AcroRd32.exe','Warning')
    RETURN
   ENDIF
   INQUIRE(FILE=PREFVAL(13),EXIST=LEX)
@@ -1519,7 +2489,7 @@ CONTAINS
  IMPLICIT NONE
  INTEGER,INTENT(IN) :: LU
  CHARACTER(LEN=*),INTENT(IN) :: FNAME
- REAL :: X
+ REAL(KIND=DP_KIND) :: X
  INTEGER :: IOS,I,J
  LOGICAL :: LEX
 
@@ -1563,8 +2533,8 @@ CONTAINS
  !###====================================================================
  IMPLICIT NONE
  INTEGER,INTENT(IN) :: NROW,NCOL
- REAL,INTENT(IN) :: FCT,IMP,NODATA
- REAL,INTENT(INOUT),DIMENSION(NCOL,NROW) :: A
+ REAL(KIND=DP_KIND),INTENT(IN) :: FCT,IMP,NODATA
+ REAL(KIND=DP_KIND),INTENT(INOUT),DIMENSION(NCOL,NROW) :: A
  INTEGER :: IROW,ICOL
 
  DO IROW=1,NROW
@@ -1583,7 +2553,7 @@ CONTAINS
  !###====================================================================
  IMPLICIT NONE
  INTEGER,INTENT(IN) :: NROW,NCOL
- REAL,INTENT(IN) :: FCT,IMP,NODATA
+ REAL(KIND=DP_KIND),INTENT(IN) :: FCT,IMP,NODATA
  INTEGER,INTENT(INOUT),DIMENSION(NCOL,NROW) :: A
  INTEGER :: IROW,ICOL
 
@@ -1651,14 +2621,14 @@ CONTAINS
  END SUBROUTINE UTL_DELCONTROLM
  
  !###===================================================================
- REAL FUNCTION UTL_GETREAL(LINE,IOS)
+ REAL(KIND=DP_KIND) FUNCTION UTL_GETREAL(LINE,IOS)
  !###===================================================================
  IMPLICIT NONE
  INTEGER,INTENT(OUT) :: IOS
  CHARACTER(LEN=*),INTENT(IN) :: LINE
 
  READ(LINE,*,IOSTAT=IOS) UTL_GETREAL
- IF(IOS.NE.0)UTL_GETREAL=0.0
+ IF(IOS.NE.0)UTL_GETREAL=0.0D0
 
  END FUNCTION UTL_GETREAL
 
@@ -1766,21 +2736,21 @@ CONTAINS
  SUBROUTINE UTL_GET_ANGLES(X,Y,Z,RX,RY,RZ)
  !###======================================================================
  IMPLICIT NONE
- REAL,INTENT(IN) :: X,Y,Z
- REAL,INTENT(OUT) :: RX,RY,RZ
- REAL :: P,DXY,DXYZ
+ REAL(KIND=DP_KIND),INTENT(IN) :: X,Y,Z
+ REAL(KIND=DP_KIND),INTENT(OUT) :: RX,RY,RZ
+ REAL(KIND=DP_KIND) :: P,DXY,DXYZ
  
- DXY =X**2.0+Y**2.0; IF(DXY.GT.0.0)DXY=SQRT(DXY)
- DXYZ=X**2.0+Y**2.0+Z**2.0; IF(DXYZ.GT.0.0)DXYZ=SQRT(DXYZ)
+ DXY =X**2.0D0+Y**2.0D0; IF(DXY.GT.0.0D0)DXY=SQRT(DXY)
+ DXYZ=X**2.0D0+Y**2.0D0+Z**2.0D0; IF(DXYZ.GT.0.0D0)DXYZ=SQRT(DXYZ)
 
  !## get length of vector
- P=0.0; IF(DXYZ.GT.0.0)P=DXYZ
+ P=0.0D0; IF(DXYZ.GT.0.0D0)P=DXYZ
 
- RX=0.0
- RY=0.0
- RZ=0.0
+ RX=0.0D0
+ RY=0.0D0
+ RZ=0.0D0
  
- IF(P.GT.0.0)THEN
+ IF(P.GT.0.0D0)THEN
   !## get angle with x-axes
   RX=ACOS(X/P)
   !## get angle with x-axes
@@ -1788,10 +2758,10 @@ CONTAINS
  ENDIF
  
  !## get angle with x-axes
- IF(DXY.GT.0.0)RZ=ACOS(X/DXY)
+ IF(DXY.GT.0.0D0)RZ=ACOS(X/DXY)
 
 ! write(*,*) RX,RY,RZ
-! write(*,*) RX*(360.0/(2.0*pi)),RY*(360.0/(2.0*pi)),RZ*(360.0/(2.0*pi))
+! write(*,*) RX*(360.0D0/(2.0*pi)),RY*(360.0D0/(2.0*pi)),RZ*(360.0D0/(2.0*pi))
  
  END SUBROUTINE UTL_GET_ANGLES
  
@@ -1799,12 +2769,12 @@ CONTAINS
  SUBROUTINE UTL_ROTATE_XYZ(X,Y,Z,AX,AY,AZ)
  !###======================================================================
  IMPLICIT NONE
- REAL,INTENT(INOUT) :: X,Y,Z
- REAL,INTENT(IN) :: AX,AY,AZ
- REAL :: X1,Y1,Z1
+ REAL(KIND=DP_KIND),INTENT(INOUT) :: X,Y,Z
+ REAL(KIND=DP_KIND),INTENT(IN) :: AX,AY,AZ
+ REAL(KIND=DP_KIND) :: X1,Y1,Z1
  
  !## perform rotation around z-axes
- IF(AZ.NE.0.0)THEN
+ IF(AZ.NE.0.0D0)THEN
   X1= COS(AZ)*X+SIN(AZ)*Y
   Y1=-SIN(AZ)*X+COS(AZ)*Y
   X=X1
@@ -1812,7 +2782,7 @@ CONTAINS
  ENDIF
  
  !## perform rotation around x-axes
- IF(AX.NE.0.0)THEN
+ IF(AX.NE.0.0D0)THEN
   Y1=COS(AX)*Y-SIN(AX)*Z
   Z1=SIN(AX)*Y+COS(AX)*Z
   Y=Y1
@@ -1820,7 +2790,7 @@ CONTAINS
  ENDIF
  
  !## perform rotation around y-axes
- IF(AY.NE.0.0)THEN
+ IF(AY.NE.0.0D0)THEN
   X1= COS(AY)*X-SIN(AY)*Z
   Z1= SIN(AY)*X+COS(AY)*Z
   X=X1
@@ -1833,9 +2803,9 @@ CONTAINS
  SUBROUTINE UTL_PROFILE_GETVIEWBOX(X1,Y1,X2,Y2,XSIGHT,XYPOL,XMN,YMN,XMX,YMX)
  !###======================================================================
  IMPLICIT NONE
- REAL,INTENT(IN) :: X1,X2,Y1,Y2,XSIGHT
- REAL,INTENT(OUT) :: XMN,YMN,XMX,YMX
- REAL,DIMENSION(4,2),INTENT(OUT) :: XYPOL
+ REAL(KIND=DP_KIND),INTENT(IN) :: X1,X2,Y1,Y2,XSIGHT
+ REAL(KIND=DP_KIND),INTENT(OUT) :: XMN,YMN,XMX,YMX
+ REAL(KIND=DP_KIND),DIMENSION(4,2),INTENT(OUT) :: XYPOL
 
  CALL UTL_PROFILE_COMPVIEWBOX(X1,X2,Y1,Y2,XYPOL,XSIGHT)
  XMN=MINVAL(XYPOL(:,1))
@@ -1849,16 +2819,16 @@ CONTAINS
  SUBROUTINE UTL_PROFILE_COMPVIEWBOX(X1,X2,Y1,Y2,XYPOL,XSIGHT)
  !###======================================================================
  IMPLICIT NONE
- REAL,PARAMETER :: RAD=360.0/(2.0*3.1415)
- REAL,INTENT(IN) :: X1,X2,Y1,Y2,XSIGHT
- REAL,INTENT(OUT),DIMENSION(4,2) :: XYPOL
- REAL :: DX,DY,TNG
+ REAL(KIND=DP_KIND),PARAMETER :: RAD=360.0D0/(2.0*3.1415)
+ REAL(KIND=DP_KIND),INTENT(IN) :: X1,X2,Y1,Y2,XSIGHT
+ REAL(KIND=DP_KIND),INTENT(OUT),DIMENSION(4,2) :: XYPOL
+ REAL(KIND=DP_KIND) :: DX,DY,TNG
 
  DX =X2-X1
  DY =Y2-Y1
- IF(DY.EQ.0.0)TNG=0.0
- IF(ABS(DY).GT.0.0)TNG=ATAN2(DY,DX)
- TNG=TNG+90.0/RAD
+ IF(DY.EQ.0.0D0)TNG=0.0D0
+ IF(ABS(DY).GT.0.0D0)TNG=ATAN2(DY,DX)
+ TNG=TNG+90.0D0/RAD
 
  XYPOL(1,1)=X1+COS(TNG)*XSIGHT
  XYPOL(1,2)=Y1+SIN(TNG)*XSIGHT
@@ -2061,7 +3031,7 @@ CONTAINS
       UTL_DATA_CSV=.TRUE.
       EXIT
      CASE (IDHELP)  
-      CALL IMODGETHELP('2.5.10','iF.CSV')
+      CALL UTL_GETHELP('2.5.10','iF.CSV')
      CASE (IDCANCEL)
       EXIT
     END SELECT
@@ -2091,7 +3061,7 @@ CONTAINS
 
  !## evaluate the first
  DO JL=1,M-1
-  STRING=VARIABLE(SC,JL) !-1)
+  STRING=VARIABLE(SC,JL)
   !## math found
   J=INDEX(TRIM(UTL_CAP(CID,'U')),',')
   IF(J.GT.0)THEN
@@ -2113,9 +3083,8 @@ CONTAINS
  CHARACTER(LEN=*),DIMENSION(:,:),POINTER,INTENT(INOUT) :: VARIABLE
  INTEGER,INTENT(OUT) :: NVV,NVL
  INTEGER,INTENT(IN),OPTIONAL :: SKIPLINES,ILABELS
- INTEGER :: CFN_N_ELEM,CFN_ELEM_POS,CFN_UNQUOTE,INL
  INTEGER,ALLOCATABLE,DIMENSION(:) :: BPV,EPV
- INTEGER :: ML,I,J,INCL,IOS,IU
+ INTEGER :: ML,I,J,INCL,IOS,IU,INL
  CHARACTER(LEN=1256) :: STRING
  CHARACTER(LEN=MAXLEN),DIMENSION(:,:),POINTER :: DVARIABLE
 
@@ -2153,7 +3122,7 @@ CONTAINS
  INL=-1
  IF(PRESENT(ILABELS))INL=-ILABELS
 
- NVV=CFN_N_ELEM(' ,;',3,STRING)
+ NVV=UTL_COUNT_COLUMNS(STRING,',;')
  ALLOCATE(BPV(NVV)); ALLOCATE(EPV(NVV))
  ALLOCATE(VARIABLE(NVV,INL+1:NVL)) 
  ML=NVL 
@@ -2170,7 +3139,7 @@ CONTAINS
    NULLIFY(DVARIABLE)
   ENDIF
   !## get variables
-  I=CFN_ELEM_POS(NVV,' ,;',3,STRING,1000,BPV,EPV)
+  NVV=UTL_COUNT_COLUMNS(STRING,' ,;',BPV=BPV,EPV=EPV)
   DO I=1,NVV
    VARIABLE(I,NVL)=''
    IF(BPV(I).LE.LEN(STRING).AND. &
@@ -2178,7 +3147,6 @@ CONTAINS
     !## maximize length of variable
     J=(EPV(I)-BPV(I))+1; EPV(I)=BPV(I)+MIN(MAXLEN,J)-1
     VARIABLE(I,NVL)=STRING(BPV(I):EPV(I))
-    IF(CFN_UNQUOTE(VARIABLE(I,NVL)).LE.0)VARIABLE(I,NVL)=''
    ENDIF
   END DO
   READ(IU,'(A1256)',IOSTAT=IOS) STRING
@@ -2244,44 +3212,38 @@ CONTAINS
  END SUBROUTINE UTL_GENLABELSDEALLOCATE
 
  !###======================================================================
- REAL FUNCTION UTL_POLYGON1AREA(X,Y,N)
+ REAL(KIND=DP_KIND) FUNCTION UTL_POLYGON1AREA(X,Y,N)
  !###======================================================================
  IMPLICIT NONE
  INTEGER,INTENT(IN) :: N
- REAL,INTENT(IN),DIMENSION(N) :: X,Y
+ REAL(KIND=DP_KIND),INTENT(IN),DIMENSION(N) :: X,Y
  INTEGER :: I
 
- UTL_POLYGON1AREA=0.0
+ UTL_POLYGON1AREA=0.0D0
  DO I=1,N-1
-  UTL_POLYGON1AREA=UTL_POLYGON1AREA+0.5*((X(I)*Y(I+1))-(X(I+1)*Y(I)))
+  UTL_POLYGON1AREA=UTL_POLYGON1AREA+0.5D0*((X(I)*Y(I+1))-(X(I+1)*Y(I)))
  END DO
- UTL_POLYGON1AREA=UTL_POLYGON1AREA+0.5*((X(N)*Y(1))-(X(1)*Y(N)))
+ UTL_POLYGON1AREA=UTL_POLYGON1AREA+0.5D0*((X(N)*Y(1))-(X(1)*Y(N)))
 
  END FUNCTION UTL_POLYGON1AREA
 
- !###======================================================================
- INTEGER FUNCTION UTL_INSIDEPOLYGON(PX,PY,XX,YY,N)
- !###======================================================================
- IMPLICIT NONE
- INTEGER,INTENT(IN) :: N
- REAL,INTENT(IN) :: PX,PY
- REAL,DIMENSION(:),INTENT(IN) :: XX,YY
- INTEGER :: ND
- REAL,DIMENSION(4) :: XXD,YYD 
- 
- UTL_INSIDEPOLYGON=-1
- IF(N.EQ.2)THEN
-  ND=4
-  XXD(1)=XX(1); YYD(1)=YY(1)
-  XXD(2)=XX(2); YYD(2)=YY(1)
-  XXD(3)=XX(2); YYD(3)=YY(2)
-  XXD(4)=XX(1); YYD(4)=YY(2)
-  IF(IGRINSIDEPOLYGON(XXD,YYD,ND,PX,PY))UTL_INSIDEPOLYGON=1
- ELSE
-  IF(IGRINSIDEPOLYGON(XX,YY,N,PX,PY))UTL_INSIDEPOLYGON=1
- ENDIF
- 
- END FUNCTION UTL_INSIDEPOLYGON
+! !###======================================================================
+! REAL(KIND=DP_KIND) FUNCTION UTL_POLYGON1AREA(X,Y,N)
+! !###======================================================================
+! IMPLICIT NONE
+! INTEGER,INTENT(IN) :: N
+! REAL(KIND=DP_KIND),INTENT(IN),DIMENSION(N) :: X,Y
+! INTEGER :: I
+! REAL(KIND=DP_KIND) :: XM,DY
+! 
+! UTL_POLYGON1AREA=0.0D0
+! DO I=1,N-1
+!  XM=(X(I)+X(I+1))/2.0D0
+!  DY=Y(I+1)-Y(I)
+!  UTL_POLYGON1AREA=UTL_POLYGON1AREA+(XM-XMIN)*DY
+! ENDDO
+!  
+! END FUNCTION UTL_POLYGON1AREA
 
  !###======================================================================
  SUBROUTINE UTL_STDEF(X,N,NODATA,VAR,XT,NPOP)
@@ -2289,16 +3251,16 @@ CONTAINS
  IMPLICIT NONE
  INTEGER,INTENT(IN) :: N
  INTEGER,INTENT(OUT) :: NPOP
- REAL,DIMENSION(N),INTENT(IN) :: X
- REAL,INTENT(IN) :: NODATA
- REAL,INTENT(OUT) :: XT,VAR
+ REAL(KIND=DP_KIND),DIMENSION(N),INTENT(IN) :: X
+ REAL(KIND=DP_KIND),INTENT(IN) :: NODATA
+ REAL(KIND=DP_KIND),INTENT(OUT) :: XT,VAR
  INTEGER :: I
- REAL :: XV
+ REAL(KIND=DP_KIND) :: XV
 
- VAR=0.0
+ VAR=0.0D0
 
  NPOP=0
- XT=0.0
+ XT=0.0D0
  DO I=1,N
   IF(X(I).NE.NODATA)THEN
    NPOP=NPOP+1
@@ -2311,56 +3273,73 @@ CONTAINS
  XT=XT/REAL(NPOP)
 
  NPOP=0
- XV=0.0
+ XV=0.0D0
  DO I=1,N
   IF(X(I).NE.NODATA)THEN
    NPOP=NPOP+1
-   XV=XV+(X(I)-XT)**2.0
+   XV=XV+(X(I)-XT)**2.0D0
   ENDIF
  END DO
 
- IF(XV.LE.0.0)RETURN
+ IF(XV.LE.0.0D0)RETURN
  VAR=SQRT(XV/REAL(NPOP))
 
  END SUBROUTINE UTL_STDEF
 
  !###======================================================================
- REAL FUNCTION UTL_DIST(X1,Y1,X2,Y2)
+ REAL(KIND=DP_KIND) FUNCTION UTL_DIST(X1,Y1,X2,Y2)
  !###======================================================================
  IMPLICIT NONE
- REAL,INTENT(IN) :: X1,Y1,X2,Y2
- REAL :: DX,DY
+ REAL(KIND=DP_KIND),INTENT(IN) :: X1,Y1,X2,Y2
+ REAL(KIND=DP_KIND) :: DX,DY
  
- UTL_DIST=0.0
+ UTL_DIST=0.0D0
  
- DX=(X1-X2)**2.0; DY=(Y1-Y2)**2.0
- IF(DX+DY.NE.0.0)UTL_DIST=SQRT(DX+DY)
+ DX=(X1-X2)**2.0D0; DY=(Y1-Y2)**2.0D0
+ IF(DX+DY.NE.0.0D0)UTL_DIST=SQRT(DX+DY)
  
  END FUNCTION UTL_DIST
  
  !###======================================================================
- LOGICAL FUNCTION UTL_WSELECTFILE(FILTERSTR,IFLAGS,FILEDIR,TITLE) 
+ REAL(KIND=DP_KIND) FUNCTION UTL_DIST_3D(X1,Y1,Z1,X2,Y2,Z2)
+ !###======================================================================
+ IMPLICIT NONE
+ REAL(KIND=DP_KIND),INTENT(IN) :: X1,Y1,Z1,X2,Y2,Z2
+ REAL(KIND=DP_KIND) :: DX,DY,DZ
+ 
+ UTL_DIST_3D=0.0D0
+ 
+ DX=(X2-X1)**2.0D0; DY=(Y2-Y1)**2.0D0; DZ=(Z2-Z1)**2.0D0
+ IF(DX+DY+DZ.NE.0.0D0)UTL_DIST_3D=SQRT(DX+DY+DZ)
+ 
+ END FUNCTION UTL_DIST_3D
+
+ !###======================================================================
+ LOGICAL FUNCTION UTL_WSELECTFILE(FILTERSTR,IFLAGS,FILEDIR,TITLE,FTYPE) 
  !###======================================================================
  IMPLICIT NONE
  CHARACTER(LEN=*),INTENT(IN) :: FILTERSTR
  CHARACTER(LEN=*),INTENT(INOUT) :: FILEDIR
  INTEGER,INTENT(IN) :: IFLAGS
+ INTEGER,INTENT(OUT),OPTIONAL :: FTYPE
  CHARACTER(LEN=*),INTENT(IN),OPTIONAL :: TITLE
  INTEGER :: I,J,K,ISAVE
  CHARACTER(LEN=10) :: EXT
- 
+ INTEGER :: IFTYPE
+  
  UTL_WSELECTFILE=.FALSE.
  
  !## store original filedir
  ISAVE=1; IF(INDEX(FILEDIR,'*').GT.0)ISAVE=0
  IF(ISAVE.EQ.1)FILEDIR=SAVEDIR
+ IFTYPE=1; IF(PRESENT(FTYPE))IFTYPE=FTYPE
 
  DO
     
   IF(PRESENT(TITLE))THEN
-   CALL WSELECTFILE(FILTERSTR,IFLAGS,FILEDIR,TITLE)
+   CALL WSELECTFILE(FILTERSTR,IFLAGS,FILEDIR,TITLE,IFTYPE=IFTYPE)
   ELSE
-   CALL WSELECTFILE(FILTERSTR,IFLAGS,FILEDIR)
+   CALL WSELECTFILE(FILTERSTR,IFLAGS,FILEDIR,IFTYPE=IFTYPE)
   ENDIF
   IF(WINFODIALOG(4).NE.1)THEN
    FILEDIR=''
@@ -2387,53 +3366,42 @@ CONTAINS
  K=INDEX(FILEDIR,'\',.TRUE.)
  !## save directory name into SAVEDIR
  IF(ISAVE.EQ.1)SAVEDIR=FILEDIR(:K) 
- 
+ IF(PRESENT(FTYPE))FTYPE=IFTYPE
+  
  UTL_WSELECTFILE=.TRUE.
  
  END FUNCTION UTL_WSELECTFILE
 
  !###======================================================================
- SUBROUTINE IDFPLOT1BITMAP()
+ SUBROUTINE UTL_PLOT1BITMAP()
  !###======================================================================
  IMPLICIT NONE
 
  CALL IGRSELECT(DRAWBITMAP,MPW%IBITMAP)
- CALL IGRAREA(0.0,0.0,1.0,1.0)
- CALL IGRUNITS(MPW%XMIN,MPW%YMIN,MPW%XMAX,MPW%YMAX)
+ CALL DBL_IGRAREA(0.0D0,0.0D0,1.0D0,1.0D0)
+ CALL DBL_IGRUNITS(MPW%XMIN,MPW%YMIN,MPW%XMAX,MPW%YMAX,IOFFSET=1)
 
- END SUBROUTINE IDFPLOT1BITMAP
+ END SUBROUTINE UTL_PLOT1BITMAP
 
  !###======================================================================
- SUBROUTINE IDFPLOT2BITMAP()
+ SUBROUTINE UTL_PLOT2BITMAP()
  !###======================================================================
  IMPLICIT NONE
 
  CALL IGRSELECT(DRAWWIN)
  CALL WINDOWSELECT(MPW%IWIN)
  CALL WBITMAPVIEW(MPW%IBITMAP,MPW%IX,MPW%IY,MODELESS)
- CALL IGRAREA(0.0,0.0,1.0,1.0)
- CALL IGRUNITS(MPW%XMIN,MPW%YMIN,MPW%XMAX,MPW%YMAX)
+ CALL DBL_IGRAREA(0.0D0,0.0D0,1.0D0,1.0D0)
+ CALL DBL_IGRUNITS(MPW%XMIN,MPW%YMIN,MPW%XMAX,MPW%YMAX,IOFFSET=1)
 
- END SUBROUTINE IDFPLOT2BITMAP
-
- !###======================================================================
- SUBROUTINE IDFMEM2BITMAP()
- !###======================================================================
- IMPLICIT NONE
-
- CALL IGRSELECT(DRAWWIN)
- CALL WINDOWSELECT(MPW%IWIN)
- CALL IGRAREA(0.0,0.0,1.0,1.0)
- CALL IGRUNITS(MPW%XMIN,MPW%YMIN,MPW%XMAX,MPW%YMAX)
-
- END SUBROUTINE IDFMEM2BITMAP
+ END SUBROUTINE UTL_PLOT2BITMAP
 
  !###======================================================================
  FUNCTION REALTOSTRING(X)
  !###======================================================================
  IMPLICIT NONE
  CHARACTER(LEN=20) :: REALTOSTRING
- REAL,INTENT(IN) :: X
+ REAL(KIND=DP_KIND),INTENT(IN) :: X
  INTEGER :: I
 
  WRITE(REALTOSTRING,*) X
@@ -2451,7 +3419,7 @@ CONTAINS
  !###======================================================================
  IMPLICIT NONE
  TYPE(LEGENDOBJ),INTENT(IN) :: LEG
- REAL,INTENT(IN) :: GRD
+ REAL(KIND=DP_KIND),INTENT(IN) :: GRD
  INTEGER :: I
 
  !## default=wit!
@@ -2474,8 +3442,8 @@ CONTAINS
  !###======================================================================
  IMPLICIT NONE
  TYPE(IDFOBJ),INTENT(INOUT) :: IDF
- REAL,INTENT(IN) :: XMIN,YMIN,XMAX,YMAX
- REAL :: D
+ REAL(KIND=DP_KIND),INTENT(IN) :: XMIN,YMIN,XMAX,YMAX
+ REAL(KIND=DP_KIND) :: D
  INTEGER,INTENT(OUT) :: NC1,NC2,NR1,NR2
 
  IF(IDF%IEQ.EQ.0)THEN
@@ -2483,14 +3451,14 @@ CONTAINS
   !## min. column
   D  =XMIN-IDF%XMIN
   NC1=INT(D/IDF%DX)+1
-  IF(MOD(D,IDF%DX).NE.0.0)NC1=NC1+1
+  IF(MOD(D,IDF%DX).NE.0.0D0)NC1=NC1+1
   !## max. column
   D  =XMAX-IDF%XMIN
   NC2=INT(D/IDF%DX)
   !## min. row
   D  =IDF%YMAX-YMAX
   NR1=INT(D/IDF%DY)+1
-  IF(MOD(D,IDF%DY).NE.0.0)NR1=NR1+1
+  IF(MOD(D,IDF%DY).NE.0.0D0)NR1=NR1+1
   !## max. row
   D  =IDF%YMAX-YMIN
   NR2=INT(D/IDF%DY)
@@ -2507,21 +3475,20 @@ CONTAINS
   CALL POL1LOCATE(IDF%SY,IDF%NROW+1,REAL(YMIN,8),NR2)
 
  ENDIF
-
- NC1=MAX(1,NC1)
- NC1=MIN(NC1,IDF%NCOL)
- NC2=MAX(1,NC2)
- NC2=MIN(NC2,IDF%NCOL)
- NR1=MAX(1,NR1)
- NR1=MIN(NR1,IDF%NROW)
- NR2=MAX(1,NR2)
- NR2=MIN(NR2,IDF%NROW)
+ 
+! !## always increase a single row/column
+! NC1=NC1-1; NC2=NC2+1; NR1=NR1-1; NR2=NR2+1
+ 
+ NC1=MAX(1,NC1); NC1=MIN(NC1,IDF%NCOL)
+ NC2=MAX(1,NC2); NC2=MIN(NC2,IDF%NCOL)
+ NR1=MAX(1,NR1); NR1=MIN(NR1,IDF%NROW)
+ NR2=MAX(1,NR2); NR2=MIN(NR2,IDF%NROW)
 
  IF(IDF%IEQ.EQ.1)THEN
   IF(MPW%XMIN.GT.IDF%SX(NC1-1))NC1=NC1+1
-  IF(MPW%XMAX.LT.IDF%SX(NC2))NC2=NC2-1
+  IF(MPW%XMAX.LT.IDF%SX(NC2))  NC2=NC2-1
   IF(MPW%YMAX.LT.IDF%SY(NR1-1))NR1=NR1+1
-  IF(MPW%YMIN.GT.IDF%SY(NR2))NR2=NR2-1
+  IF(MPW%YMIN.GT.IDF%SY(NR2))  NR2=NR2-1
  ENDIF
 
  END SUBROUTINE UTL_IDFCURDIM
@@ -2530,32 +3497,43 @@ CONTAINS
  SUBROUTINE UTL_IDFCRDCOR(X1,X2,Y1,Y2,WIDTH,HEIGTH)
  !###======================================================================
  IMPLICIT NONE
- REAL,INTENT(IN) :: WIDTH,HEIGTH
- REAL,INTENT(INOUT) :: X1,X2,Y1,Y2
- REAL :: RAT1,RAT2,X,Y,XLEN,YLEN
+ REAL(KIND=DP_KIND),INTENT(IN) :: WIDTH,HEIGTH
+ REAL(KIND=DP_KIND),INTENT(INOUT) :: X1,X2,Y1,Y2
+ REAL(KIND=DP_KIND) :: RAT1,RAT2,DX,DY,XC,YC
 
- RAT1=WIDTH/HEIGTH
- X=X2-X1
- Y=Y2-Y1
- RAT2=X/Y
- IF(RAT2.LT.RAT1)THEN
-  YLEN=Y2-Y1
-  XLEN=YLEN*RAT1
-  X1=X1-((XLEN-X)/2.)
-  X2=X1+XLEN
+ RAT1=WIDTH/HEIGTH; DX=X2-X1; DY=Y2-Y1; RAT2=DX/DY
+ XC=(X1+X2)/2.0D0; YC=(Y1+Y2)/2.0D0
+
+ !## area up
+ IF(RAT1.LT.1.0D0)THEN
+ 
+  !## box smaller than image
+  IF(RAT1.LT.RAT2)THEN
+   DY=0.5D0*DX/RAT1; Y1=YC-DY; Y2=YC+DY   
+  !## image smaller than box
+  ELSE
+   DX=0.5D0*DY*RAT1; X1=XC-DX; X2=XC+DX
+  ENDIF 
+ 
+ !## area flat
  ELSE
-  XLEN=X2-X1
-  YLEN=XLEN/RAT1
-  Y1=Y1-((YLEN-Y)/2.)
-  Y2=Y1+YLEN
- ENDIF
+
+  !## 
+  IF(RAT1.GT.RAT2)THEN
+   DX=0.5D0*DY*RAT1; X1=XC-DX; X2=XC+DX   
+  !## figure flat too
+  ELSE
+   DY=0.5D0*DX/RAT1; Y1=YC-DY; Y2=YC+DY   
+  ENDIF 
+ 
+ ENDIF 
 
  END SUBROUTINE UTL_IDFCRDCOR
 
  !###======================================================================
  SUBROUTINE UTL_FILLARRAY(IP,NP,B)
  !###======================================================================
- !# read binair number (e.g. 256) and returns array (/1,0,0,1,0,0,1/)
+ !## read binair number (e.g. 256) and returns array (/1,0,0,1,0,0,1/)
  IMPLICIT NONE
  INTEGER,INTENT(IN) :: NP,B
  INTEGER,INTENT(OUT),DIMENSION(NP) :: IP
@@ -2578,7 +3556,7 @@ CONTAINS
  !###======================================================================
  SUBROUTINE UTL_READARRAY(IP,NP,B)
  !###======================================================================
- !# write a binair-number given an array (/1,0,0,4,0,0,7/)
+ !## write a binair-number given an array (/1,0,0,4,0,0,7/)
  IMPLICIT NONE
  INTEGER,INTENT(IN) :: NP
  INTEGER,INTENT(OUT) :: B
@@ -2699,11 +3677,11 @@ CONTAINS
  IMPLICIT NONE
  INTEGER,INTENT(IN) :: IPATTERN !## 0=solid,1=line,2=dots
  INTEGER,INTENT(IN) :: ICLR,IWIDTH,ITYPE
- REAL,INTENT(IN) :: XMIN,XMAX,YMAX
- REAL,INTENT(INOUT) :: YMIN
- REAL,INTENT(IN),OPTIONAL :: XT
+ REAL(KIND=DP_KIND),INTENT(IN) :: XMIN,XMAX,YMAX
+ REAL(KIND=DP_KIND),INTENT(INOUT) :: YMIN
+ REAL(KIND=DP_KIND),INTENT(IN),OPTIONAL :: XT
  TYPE(LEGENDOBJ),INTENT(INOUT),OPTIONAL :: LEG
- REAL :: DX,DY,Y
+ REAL(KIND=DP_KIND) :: DX,DY,Y
  INTEGER :: I
 
  !## solid
@@ -2711,7 +3689,7 @@ CONTAINS
 
   CALL IGRCOLOURN(ICLR)
   CALL IGRFILLPATTERN(SOLID)
-  CALL IGRRECTANGLE(XMIN,YMIN,XMAX,YMAX)
+  CALL DBL_IGRRECTANGLE(XMIN,YMIN,XMAX,YMAX)
 
  !## lines
  ELSEIF(IPATTERN.EQ.1)THEN
@@ -2719,20 +3697,20 @@ CONTAINS
   !## clear it (white)
   CALL IGRFILLPATTERN(SOLID)
   CALL IGRCOLOURN(WRGB(255,255,255))
-  CALL IGRRECTANGLE(XMIN,YMIN,XMAX,YMAX)
+  CALL DBL_IGRRECTANGLE(XMIN,YMIN,XMAX,YMAX)
 
   CALL IGRCOLOURN(ICLR)
   CALL IGRFILLPATTERN(OUTLINE)
 
   CALL IGRLINETYPE(ITYPE)
   CALL IGRLINEWIDTH(IWIDTH)
-  CALL IGRMOVETO(XMIN,YMIN)
+  CALL DBL_IGRMOVETO(XMIN,YMIN)
   DX=(XMAX-XMIN)/3.0
   DY=(YMAX-YMIN)
 
-  CALL IGRLINETOREL(DX, DY)
-  CALL IGRLINETOREL(DX,-DY)
-  CALL IGRLINETOREL(DX, DY)
+  CALL DBL_IGRLINETOREL(DX, DY)
+  CALL DBL_IGRLINETOREL(DX,-DY)
+  CALL DBL_IGRLINETOREL(DX, DY)
 
  !## dots
  ELSEIF(IPATTERN.EQ.2)THEN
@@ -2740,14 +3718,14 @@ CONTAINS
   !## clear it (white)
   CALL IGRFILLPATTERN(SOLID)
   CALL IGRCOLOURN(WRGB(255,255,255))
-  CALL IGRRECTANGLE(XMIN,YMIN,XMAX,YMAX)
+  CALL DBL_IGRRECTANGLE(XMIN,YMIN,XMAX,YMAX)
 
-  DY=(XMAX-XMIN)/10.0
+  DY=(XMAX-XMIN)/10.0D0
   CALL IGRCOLOURN(ICLR)
   CALL IGRFILLPATTERN(SOLID)
   DX=(XMAX-XMIN)/4.0
   DO I=1,3
-   CALL IGRCIRCLE(XMIN+(DX*REAL(I)),(YMAX+YMIN)/2.0,DY)
+   CALL DBL_IGRCIRCLE(XMIN+(DX*REAL(I)),(YMAX+YMIN)/2.0,DY)
   END DO
 
  !## filled in (a) if present with legend (b) stripes
@@ -2759,23 +3737,23 @@ CONTAINS
   IF(PRESENT(LEG))THEN
    IF(LEG%NCLR.GT.MXCLASS)THEN; DY=(3.0*(YMAX-YMIN))/REAL(LEG%NCLR); ELSE; DY=YMAX-YMIN; ENDIF; Y=YMAX
    DO I=1,LEG%NCLR
-    CALL IGRCOLOURN(LEG%RGB(I)); CALL IGRRECTANGLE(XMIN,Y-DY,XMAX,Y)
+    CALL IGRCOLOURN(LEG%RGB(I)); CALL DBL_IGRRECTANGLE(XMIN,Y-DY,XMAX,Y)
     IF(LEG%NCLR.LE.MXCLASS)THEN
-     CALL IGRCOLOURN(WRGB(0,0,0)); CALL WGRTEXTSTRING(XT,Y-(DY/2.0),TRIM(LEG%LEGTXT(I)))
+     CALL IGRCOLOURN(WRGB(0,0,0)); CALL DBL_WGRTEXTSTRING(XT,Y-(DY/2.0),TRIM(LEG%LEGTXT(I)))
     ELSE
      CALL IGRCOLOURN(WRGB(0,0,0))
-     IF(I.EQ.1)       CALL WGRTEXTSTRING(XT,YMAX-(0.5*(YMAX-YMIN)),TRIM(LEG%LEGTXT(I)))
-     IF(I.EQ.LEG%NCLR)CALL WGRTEXTSTRING(XT,YMAX-(2.5*(YMAX-YMIN)),TRIM(LEG%LEGTXT(I)))
+     IF(I.EQ.1)       CALL DBL_WGRTEXTSTRING(XT,YMAX-(0.5*(YMAX-YMIN)),TRIM(LEG%LEGTXT(I)))
+     IF(I.EQ.LEG%NCLR)CALL DBL_WGRTEXTSTRING(XT,YMAX-(2.5*(YMAX-YMIN)),TRIM(LEG%LEGTXT(I)))
     ENDIF
     Y=Y-DY
    END DO 
    YMIN=Y  
   ELSE
-   DX=(XMAX-XMIN)/10.0
+   DX=(XMAX-XMIN)/10.0D0
    DO I=1,9
     IF(MOD(I,2).EQ.0)CALL IGRCOLOURN(ICLR)
     IF(MOD(I,2).NE.0)CALL IGRCOLOURN(WRGB(255,255,255))
-    CALL IGRRECTANGLE(XMIN+(DX*REAL(I-1)),YMIN,XMIN+(DX*REAL(I)),YMAX)
+    CALL DBL_IGRRECTANGLE(XMIN+(DX*REAL(I-1)),YMIN,XMIN+(DX*REAL(I)),YMAX)
    END DO
   ENDIF
 
@@ -2784,8 +3762,8 @@ CONTAINS
  CALL IGRFILLPATTERN(OUTLINE)
  CALL IGRLINETYPE(SOLIDLINE)
  CALL IGRLINEWIDTH(1)
- CALL IGRCOLOURN(WRGB(225,225,225)) !0,0,0))
- CALL IGRRECTANGLE(XMIN,YMIN,XMAX,YMAX)
+ CALL IGRCOLOURN(WRGB(225,225,225)) 
+ CALL DBL_IGRRECTANGLE(XMIN,YMIN,XMAX,YMAX)
 
  CALL IGRCOLOURN(ICLR)
 
@@ -2858,22 +3836,32 @@ CONTAINS
  END SUBROUTINE UTL_GETDIRPART
 
  !###====================================================================
- SUBROUTINE UTL_SETTEXTSIZE(CHW,CHH,DY)
+ SUBROUTINE UTL_SETTEXTSIZE(CHW,CHH,FCT,IMARKER)
  !###====================================================================
  IMPLICIT NONE
- REAL,INTENT(IN) :: DY
- REAL,INTENT(OUT) :: CHW,CHH
- REAL :: IWD,IHD,X1,X2,Y1,Y2,RAT
+ REAL(KIND=DP_KIND),PARAMETER :: INI_CHH=0.00333D0
+ REAL(KIND=DP_KIND),PARAMETER :: INI_CHW=0.00133D0
+ REAL(KIND=DP_KIND),OPTIONAL :: FCT
+ INTEGER,INTENT(IN),OPTIONAL :: IMARKER
+ REAL(KIND=DP_KIND),INTENT(OUT) :: CHW,CHH
+ REAL(KIND=DP_KIND) :: IWD,IHD,X1,X2,Y1,Y2,RAT,DY
 
- IWD=WINFODRAWABLE(DRAWABLEWIDTH)
- IHD=WINFODRAWABLE(DRAWABLEHEIGHT)
- X1 =INFOGRAPHICS(GRAPHICSAREAMINX)
- X2 =INFOGRAPHICS(GRAPHICSAREAMAXX)
- Y1 =INFOGRAPHICS(GRAPHICSAREAMINY)
- Y2 =INFOGRAPHICS(GRAPHICSAREAMAXY)
+ IWD=REAL(WINFODRAWABLE(DRAWABLEWIDTH),8)
+ IHD=REAL(WINFODRAWABLE(DRAWABLEHEIGHT),8)
+ X1 =REAL(INFOGRAPHICS(GRAPHICSAREAMINX),8)
+ X2 =REAL(INFOGRAPHICS(GRAPHICSAREAMAXX),8)
+ Y1 =REAL(INFOGRAPHICS(GRAPHICSAREAMINY),8)
+ Y2 =REAL(INFOGRAPHICS(GRAPHICSAREAMAXY),8)
 
- CHH=DY 
- CHW=DY/(0.03333/0.01333)
+ DY=1.0D0; IF(PRESENT(FCT))DY=FCT
+
+ CHH=INI_CHH 
+ IF(PRESENT(IMARKER))THEN
+  IF(IMARKER.EQ.1)CHH=0.00133D0
+ ENDIF
+ 
+ CHH=CHH*FCT 
+ CHW=INI_CHW*FCT
 
  RAT=IWD/IHD
  CHW=CHW/RAT
@@ -2938,12 +3926,12 @@ CONTAINS
     ENDIF
    ELSEIF(IMENUTYPE.EQ.1)THEN
     ALLOCATE(ILIST(N)); ILIST=0
-    CALL WDIALOGPUTMENU(ID,LISTNAME,N,ILIST)
+    CALL WDIALOGPUTMENU(ID,LISTNAME(1:N),N,ILIST)
    ENDIF
   ELSE
    IF(ID.NE.0)THEN
     CALL WDIALOGCLEARFIELD(ID)
-    CALL WDIALOGFIELDSTATE(ID,2)
+    IF(IMENUTYPE.EQ.0)CALL WDIALOGFIELDSTATE(ID,2)
    ENDIF
   ENDIF
  ENDIF
@@ -2982,12 +3970,12 @@ CONTAINS
  IMPLICIT NONE
  TYPE(IDFOBJ),INTENT(IN) :: IDF
  INTEGER,INTENT(IN) :: IROW,ICOL
- REAL :: X1,X2,Y1,Y2
+ REAL(KIND=DP_KIND) :: X1,X2,Y1,Y2
  
  IF(IROW.EQ.0.OR.ICOL.EQ.0)RETURN
 
  CALL IGRPLOTMODE(MODEXOR); CALL IGRFILLPATTERN(OUTLINE); CALL IGRLINEWIDTH(2)
- CALL IDFPLOT1BITMAP()
+ CALL UTL_PLOT1BITMAP()
 
  IF(IDF%IEQ.EQ.0)THEN
   X1=IDF%XMIN+(ICOL-1)*IDF%DX; X2=IDF%XMIN+ ICOL   *IDF%DX
@@ -2998,17 +3986,9 @@ CONTAINS
  ENDIF
 
  !## selected cell
- CALL IGRRECTANGLE(X1,Y1,X2,Y2)
+ CALL DBL_IGRRECTANGLE(X1,Y1,X2,Y2,IOFFSET=1)
 
- CALL IGRLINEWIDTH(1)
- 
-! CALL IGRLINETYPE(DASHED)
-! !## plot lines
-! X=(X1+X2)/2.0; Y=(Y1+Y2)/2.0
-! CALL IGRJOIN(MPW%XMIN,Y,X1,Y); CALL IGRJOIN(X2,Y,MPW%XMAX,Y)
-! CALL IGRJOIN(X,Y2,X,MPW%YMIN); CALL IGRJOIN(X,Y1,X,MPW%YMAX)
-
- CALL IGRLINETYPE(SOLIDLINE); CALL IDFPLOT2BITMAP()
+ CALL IGRLINEWIDTH(1); CALL IGRLINETYPE(SOLIDLINE); CALL UTL_PLOT2BITMAP()
 
  END SUBROUTINE UTL_PLOTLOCATIONIDF
 
@@ -3066,7 +4046,7 @@ CONTAINS
  CHARACTER(LEN=*),DIMENSION(N) :: IDFNAME
  INTEGER :: I,IDATE,IYR,IMH,IDY,IHR,IMT,ISC
  INTEGER(KIND=8) :: DIDATE
- REAL :: DAYFRACTION
+ REAL(KIND=DP_KIND) :: DAYFRACTION
  
  MINDATE=21000101000000
  MAXDATE=19000101000000
@@ -3074,10 +4054,8 @@ CONTAINS
  O      =0
  DO I=1,N
   IDATE=UTL_IDFGETDATE(IDFNAME(I),DAYFRACTION,IYR,IMH,IDY,IHR,IMT,ISC)
-!  IDATE=UTL_IDFGETDATE(IDFNAME(I))
   IF(IDATE.NE.0)THEN
    O=O+1
-!   didate=idate
    DIDATE=YMDHMSTOITIME(IYR,IMH,IDY,IHR,IMT,ISC)
    MINDATE=MIN(MINDATE,DIDATE)
    MAXDATE=MAX(MAXDATE,DIDATE)
@@ -3092,12 +4070,13 @@ CONTAINS
  END SUBROUTINE UTL_IDFGETDATES
 
  !###======================================================================
- INTEGER FUNCTION UTL_IDFGETDATE(IDFNAME,DAYFRACTION,IYR,IMH,IDY,IHR,IMT,ISC)
+ INTEGER FUNCTION UTL_IDFGETDATE(IDFNAME,DAYFRACTION,IYR,IMH,IDY,IHR,IMT,ISC,IDATEFULL)
  !###======================================================================
  IMPLICIT NONE
  CHARACTER(LEN=*),INTENT(IN) :: IDFNAME
- REAL,INTENT(OUT),OPTIONAL :: DAYFRACTION
+ REAL(KIND=DP_KIND),INTENT(OUT),OPTIONAL :: DAYFRACTION
  INTEGER,INTENT(OUT),OPTIONAL :: IDY,IMH,IYR,IHR,IMT,ISC
+ INTEGER(KIND=DP_KIND),INTENT(OUT),OPTIONAL :: IDATEFULL
  INTEGER :: IOS
  INTEGER :: I,II,J,N,YR,MT,DY,HR,MN,SC
  INTEGER,DIMENSION(2) :: NI
@@ -3131,17 +4110,21 @@ CONTAINS
  ENDDO
  
  !## default
- IF(PRESENT(DAYFRACTION))DAYFRACTION=-1.0
+ IF(PRESENT(DAYFRACTION))DAYFRACTION=-1.0D0
  
  IF(II.EQ.1)THEN
+  IF(PRESENT(IDATEFULL))READ(IDFNAME(J:J+13),*) IDATEFULL
   READ(IDFNAME(J:)  ,'(I8) ',IOSTAT=IOS) UTL_IDFGETDATE
   IF(PRESENT(DAYFRACTION))THEN
    READ(IDFNAME(J+8:),'(3I2)',IOSTAT=IOS) HR,MN,SC
-   DAYFRACTION=REAL(HR*3600+MN*60+SC)/86400.0
-   DAYFRACTION=MAX(0.0,MIN(DAYFRACTION,1.0))
+   DAYFRACTION=REAL(HR*3600+MN*60+SC)/86400.0D0
+   DAYFRACTION=MAX(0.0D0,MIN(DAYFRACTION,1.0D0))
   ENDIF  
   READ(IDFNAME(J:)  ,'(I4,5I2)',IOSTAT=IOS) YR,MT,DY,HR,MN,SC
  ELSE
+  IF(PRESENT(IDATEFULL))THEN
+   READ(IDFNAME(J:J+7),*) IDATEFULL; IDATEFULL=IDATEFULL*1000000
+  ENDIF
   READ(IDFNAME(J:)  ,'(I8)',IOSTAT=IOS) UTL_IDFGETDATE
   READ(IDFNAME(J:)  ,'(I4,2I2)',IOSTAT=IOS) YR,MT,DY
   HR=0; MN=0; SC=0
@@ -3208,13 +4191,25 @@ CONTAINS
  END FUNCTION ITOS
 
  !###======================================================================
- FUNCTION RTOS(X,F,NDEC)
+ FUNCTION ITOS_DBL(I)
+ !###======================================================================
+ IMPLICIT NONE
+ INTEGER(KIND=DP_KIND),INTENT(IN) :: I
+ CHARACTER(LEN=16) :: TXT,ITOS_DBL
+
+ WRITE(TXT,'(I16)') I
+ ITOS_DBL=ADJUSTL(TXT)
+
+ END FUNCTION ITOS_DBL
+
+ !###======================================================================
+ CHARACTER(LEN=24) FUNCTION RTOS(X,F,NDEC)
  !###======================================================================
  IMPLICIT NONE
  INTEGER,INTENT(IN) :: NDEC
- REAL,INTENT(IN) :: X
+ REAL(KIND=DP_KIND),INTENT(IN) :: X
  CHARACTER(LEN=1),INTENT(IN) :: F
- CHARACTER(LEN=15) :: TXT,FRM,RTOS 
+ CHARACTER(LEN=24) :: TXT,FRM 
  INTEGER :: IOS
 
  IF(F.EQ.'*')THEN
@@ -3388,8 +4383,8 @@ CONTAINS
  SUBROUTINE UTL_WAITMESSAGE(IRAT,IRAT1,I1,I2,WAITTXT,IBOX)
  !###======================================================================
  IMPLICIT NONE
- INTEGER,INTENT(IN)          :: I1,I2
- INTEGER,INTENT(IN OUT)      :: IRAT,IRAT1
+ INTEGER,INTENT(IN) :: I1,I2
+ INTEGER,INTENT(INOUT) :: IRAT,IRAT1
  CHARACTER(LEN=*),INTENT(IN) :: WAITTXT
  INTEGER,OPTIONAL,INTENT(IN) :: IBOX
  INTEGER :: JBOX
@@ -3489,9 +4484,9 @@ CONTAINS
  IMPLICIT NONE
  INTEGER,INTENT(IN) :: JOFFSET
  INTEGER,INTENT(IN),OPTIONAL :: DTYPE
- REAL,INTENT(IN) :: X
+ REAL(KIND=DP_KIND),INTENT(IN) :: X
  CHARACTER(LEN=8) :: CTIME
- REAL :: FTIME
+ REAL(KIND=DP_KIND) :: FTIME
  INTEGER :: DDTYPE
  
  IF(PRESENT(DTYPE))THEN
@@ -3590,7 +4585,7 @@ CONTAINS
  SUBROUTINE FTIMETOITIME(FTIME,IH,IM,IS)
  !###====================================================================
  IMPLICIT NONE
- REAL,INTENT(IN) :: FTIME
+ REAL(KIND=DP_KIND),INTENT(IN) :: FTIME
  INTEGER,INTENT(OUT) :: IH,IM,IS
  INTEGER :: ITIME
   
@@ -3603,7 +4598,7 @@ CONTAINS
  SUBROUTINE FTIMETOCTIME(FTIME,CTIME,DTYPE)
  !###====================================================================
  IMPLICIT NONE
- REAL,INTENT(IN) :: FTIME
+ REAL(KIND=DP_KIND),INTENT(IN) :: FTIME
  CHARACTER(LEN=*),INTENT(OUT) :: CTIME
  INTEGER,INTENT(IN),OPTIONAL :: DTYPE
  INTEGER :: IH,IM,IS
@@ -3644,14 +4639,14 @@ CONTAINS
  END SUBROUTINE ITIMETOCDATE
  
  !###====================================================================
- REAL FUNCTION ITIMETOFTIME(ITIME)
+ REAL(KIND=DP_KIND) FUNCTION ITIMETOFTIME(ITIME)
  !###====================================================================
  IMPLICIT NONE
  INTEGER,INTENT(IN) :: ITIME !## hhmmss notation
  INTEGER :: IH,IM,IS
 
  CALL ITIMETOHMS(ITIME,IH,IM,IS)
- ITIMETOFTIME=(REAL(IH)*3600.0+REAL(IM)*60.0+REAL(IS))/SDAY
+ ITIMETOFTIME=(REAL(IH)*3600.0D0+REAL(IM)*60.0D0+REAL(IS))/SDAY
 
  END FUNCTION ITIMETOFTIME
 
@@ -3717,14 +4712,14 @@ CONTAINS
  END SUBROUTINE ITIMETOGDATE
 
  !###====================================================================
- REAL FUNCTION DIFFTIME(SDATE,EDATE)
+ REAL(KIND=DP_KIND) FUNCTION DIFFTIME(SDATE,EDATE)
  !###====================================================================
  IMPLICIT NONE
  INTEGER(KIND=8),INTENT(IN) :: SDATE,EDATE
  INTEGER :: IYR1,IMH1,IDY1,IHR1,IMT1,ISC1, &
             IYR2,IMH2,IDY2,IHR2,IMT2,ISC2
- INTEGER :: SD,ED,DD,IHR,IMT,ISC
- REAL :: F1,F2,F
+ INTEGER :: SD,ED,DD
+ REAL(KIND=DP_KIND) :: F1,F2,F
  
  SD=SDATE/1000000; ED=EDATE/1000000
  SD=UTL_IDATETOJDATE(SD); ED=UTL_IDATETOJDATE(ED)
@@ -3732,35 +4727,35 @@ CONTAINS
 
  !## start time
  CALL ITIMETOGDATE(SDATE,IYR1,IMH1,IDY1,IHR1,IMT1,ISC1)
- F1=(REAL(IHR1)*3600.0+REAL(IMT1)*60.0+REAL(ISC1))/SDAY
+ F1=(REAL(IHR1)*3600.0D0+REAL(IMT1)*60.0D0+REAL(ISC1))/SDAY
 
  !## end   time
  CALL ITIMETOGDATE(EDATE,IYR2,IMH2,IDY2,IHR2,IMT2,ISC2)
- F2=(REAL(IHR2)*3600.0+REAL(IMT2)*60.0+REAL(ISC2))/SDAY
+ F2=(REAL(IHR2)*3600.0D0+REAL(IMT2)*60.0D0+REAL(ISC2))/SDAY
   
  !## same day
  IF(SD.EQ.ED)THEN
   F=F2-F1
  ELSE
-  F=1.0-F1+F2+(DD-1)
+  F=1.0D0-F1+F2+(DD-1)
  ENDIF
  
-! IF(ED.GT.SD)THEN; F1=1.0-F1; DD=DD-1; ENDIF
-! IF(ED.EQ.SD)THEN; F1=F2-F1; F2=0.0; ENDIF
+! IF(ED.GT.SD)THEN; F1=1.0D0-F1; DD=DD-1; ENDIF
+! IF(ED.EQ.SD)THEN; F1=F2-F1; F2=0.0D0; ENDIF
  
  DIFFTIME=F !DD+(F1+F2)
  
  END FUNCTION DIFFTIME
  
  !###====================================================================
- REAL FUNCTION CTIMETOFTIME(CTIME)
+ REAL(KIND=DP_KIND) FUNCTION CTIMETOFTIME(CTIME)
  !###====================================================================
  IMPLICIT NONE
  CHARACTER(LEN=*) :: CTIME
  INTEGER :: IH,IM,IS
 
  READ(CTIME,'(3(I2.0,1X))') IH,IM,IS
- CTIMETOFTIME=(REAL(IH)*3600.0+REAL(IM)*60.0+REAL(IS))/SDAY
+ CTIMETOFTIME=(REAL(IH)*3600.0D0+REAL(IM)*60.0D0+REAL(IS))/SDAY
 
  END FUNCTION CTIMETOFTIME
 
@@ -3768,12 +4763,12 @@ CONTAINS
  SUBROUTINE DECDEGREES_TO_DMS(DEGREES,D,M,S)
  !###====================================================================
  IMPLICIT NONE
- DOUBLE PRECISION,INTENT(IN) :: DEGREES
- REAL,INTENT(OUT) :: D,M,S
- REAL :: F
+ REAL(KIND=DP_KIND),INTENT(IN) :: DEGREES
+ REAL(KIND=DP_KIND),INTENT(OUT) :: D,M,S
+ REAL(KIND=DP_KIND) :: F
  
  D = INT(DEGREES)
- F = 60.0 * (DEGREES - D)
+ F = 60.0D0 * (DEGREES - D)
  M = INT(F)
  S = F - M
 
@@ -3874,26 +4869,26 @@ CONTAINS
  END SUBROUTINE UTL_CHECKNAME
 
  !###======================================================================
- INTEGER FUNCTION INVERSECOLOUR(IRGB)
+ INTEGER FUNCTION UTL_INVERSECOLOUR(IRGB)
  !###======================================================================
  IMPLICIT NONE
  INTEGER,INTENT(IN) :: IRGB
  INTEGER :: IR,IG,IB
 
  CALL WRGBSPLIT(IRGB,IR,IG,IB)
- INVERSECOLOUR=WRGB(255-IR,255-IG,255-IB)
+ UTL_INVERSECOLOUR=WRGB(255-IR,255-IG,255-IB)
 
- END FUNCTION INVERSECOLOUR
+ END FUNCTION UTL_INVERSECOLOUR
 
  !###======================================================================
  SUBROUTINE UTL_FADEOUTCOLOUR(ICLR,FCT) 
  !###======================================================================
  IMPLICIT NONE
  INTEGER,INTENT(INOUT) :: ICLR
- REAL,INTENT(IN) :: FCT
+ REAL(KIND=DP_KIND),INTENT(IN) :: FCT
  INTEGER :: IR,IG,IB
 
- IF(FCT.GT.1.0.OR.FCT.LE.0.0)RETURN
+ IF(FCT.GT.1.0D0.OR.FCT.LE.0.0D0)RETURN
  
  CALL WRGBSPLIT(ICLR,IR,IG,IB)
  IR =IR+((255-IR)*FCT)
@@ -3908,15 +4903,87 @@ CONTAINS
  END SUBROUTINE UTL_FADEOUTCOLOUR
 
  !###======================================================================
- LOGICAL FUNCTION EQUALNAMES(NAME1,NAME2)
+ SUBROUTINE UTL_EQUALNAMES_UNITTEST()
  !###======================================================================
  IMPLICIT NONE
- CHARACTER(LEN=*),INTENT(IN) :: NAME1,NAME2
- LOGICAL :: CHF_LK
+ 
+ write(*,*) '*'   ,' TEST',0,UTL_EQUALNAMES('*','TEST',0)
+ write(*,*) 'T*'  ,' TEST',0,UTL_EQUALNAMES('T*','TEST',0)
+ write(*,*) 't*'  ,' TEST',1,UTL_EQUALNAMES('t*','TEST',1)
+ write(*,*) 'T*T' ,' TEST',1,UTL_EQUALNAMES('T*T','TEST',1)
+ write(*,*) 'T??T',' TEST',1,UTL_EQUALNAMES('T??T','TEST',1)
+ write(*,*) '*T'  ,' TEST',1,UTL_EQUALNAMES('*T','TEST',1)
+ write(*,*) '*TS' ,' TEST',1,UTL_EQUALNAMES('*TS','TEST',1)
+ write(*,*) 'T?T' ,' TEST',1,UTL_EQUALNAMES('T?T','TEST',1)
+ write(*,*) 'T?S?',' TEST',1,UTL_EQUALNAMES('T?S?','TEST',1)
+ write(*,*) '*S?' ,' TEST',1,UTL_EQUALNAMES('*S?','TEST',1)
+ write(*,*) '*B31D011*' ,' cfB31D011gt',1,UTL_EQUALNAMES('*B31D011*','cfB31D011gt',1)
+ write(*,*) '*B31D011*' ,' cfB31D01gt',1,UTL_EQUALNAMES('*B31D011*','cfB31D01gt',1)
+ PAUSE
+ 
+ END SUBROUTINE UTL_EQUALNAMES_UNITTEST
+ 
+ !###======================================================================
+ LOGICAL FUNCTION UTL_EQUALNAMES(SEARCH,STRING,ICAP)
+ !###======================================================================
+ IMPLICIT NONE
+ CHARACTER(LEN=*),INTENT(IN) :: SEARCH,STRING
+ INTEGER,OPTIONAL,INTENT(IN) :: ICAP
+ INTEGER :: I,J,N,M,ICASE
+ LOGICAL :: LEX
+ 
+ ICASE=0; IF(PRESENT(ICAP))ICASE=ICAP
+ 
+ N=LEN_TRIM(STRING)
+ M=LEN_TRIM(SEARCH)
+ 
+ !## test string on search
+ J=1; I=0; DO 
 
- EQUALNAMES=CHF_LK(NAME1,LEN(NAME1),NAME2,LEN(NAME2))
+  LEX=.FALSE.; I=I+1
+  !## string finished before ending
+  IF(I.GT.N)EXIT
 
- END FUNCTION EQUALNAMES
+  !## check wildcard
+  IF(SEARCH(J:J).EQ.'*')THEN
+   !## proceed to next character in search
+   J=J+1
+   IF(J.LE.M)THEN
+    LEX=.FALSE.
+    DO 
+     IF(ICASE.EQ.0)THEN
+      IF(SEARCH(J:J).EQ.STRING(I:I))EXIT
+     ELSE
+      IF(UTL_CAP(SEARCH(J:J),'U').EQ.UTL_CAP(STRING(I:I),'U'))EXIT
+     ENDIF
+     I=I+1; IF(I.GT.N)EXIT
+    ENDDO
+    IF(I.LE.N)THEN; LEX=.TRUE.; J=J+1; ENDIF
+   ELSE
+    LEX=.TRUE.
+   ENDIF
+  !## check wildcard
+  ELSEIF(SEARCH(J:J).EQ.'?')THEN
+   !## proceed to next character in search
+   LEX=.TRUE.; J=J+1
+  ELSE
+   IF(ICASE.EQ.0)THEN
+    LEX=SEARCH(J:J).EQ.STRING(I:I)
+   ELSE
+    LEX=UTL_CAP(SEARCH(J:J),'U').EQ.UTL_CAP(STRING(I:I),'U')
+   ENDIF
+   IF(LEX)J=J+1
+  ENDIF
+  !## incorectness found
+  IF(.NOT.LEX)EXIT
+  IF(J.GT.M)EXIT
+ ENDDO
+ 
+ J=MIN(J,M); IF(SEARCH(J:J).EQ.'*')LEX=.TRUE.
+ 
+ UTL_EQUALNAMES=LEX
+
+ END FUNCTION UTL_EQUALNAMES
 
  !###======================================================================
  FUNCTION UTL_CAP(STR,TXT)
@@ -4091,7 +5158,7 @@ CONTAINS
  ENDIF
 
  INQUIRE(FILE=TXTFILE,EXIST=LEX)
- !## Successfully deleted
+ !## successfully deleted
  IF(LEX)THEN
   I=WINFOERROR(1)
   CALL IOSDELETEFILE(TXTFILE)
@@ -4177,22 +5244,21 @@ CONTAINS
  !###======================================================================
  SUBROUTINE UTL_IDFSNAPTOGRID(MINX,MAXX,MINY,MAXY,CS,NCOL,NROW)
  !###======================================================================
- REAL,INTENT(INOUT) :: MINX,MAXX,MINY,MAXY
- REAL,INTENT(IN) :: CS
+ REAL(KIND=DP_KIND),INTENT(INOUT) :: MINX,MAXX,MINY,MAXY
+ REAL(KIND=DP_KIND),INTENT(IN) :: CS
  INTEGER,INTENT(OUT) :: NCOL,NROW
- REAL :: D
-
-! CALL UTL_IDFSNAPTOGRID_LLC(MINX,MAXX,MINY,MAXY,CS,NCOL,NROW)
-! RETURN
+ REAL(KIND=DP_KIND) :: D
  
- D=MOD(ABS(MINX),CS)
- IF(D.NE.0.0)MINX=(MINX+(CS-D))-CS
- D=MOD(ABS(MAXX),CS)
- IF(D.NE.0.0)MAXX=(MAXX-D)+CS
- D=MOD(ABS(MINY),CS)
- IF(D.NE.0.0)MINY=(MINY+(CS-D))-CS
- D=MOD(ABS(MAXY),CS)
- IF(D.NE.0.0)MAXY=(MAXY-D)+CS
+! 1105.811
+! 19,189
+ D=MOD(MINX,CS)
+ IF(D.NE.0.0D0)MINX=(MINX+(CS-D))-CS
+ D=MOD(MAXX,CS)
+ IF(D.NE.0.0D0)MAXX=(MAXX-D)+CS
+ D=MOD(MINY,CS)
+ IF(D.NE.0.0D0)MINY=(MINY+(CS-D))-CS
+ D=MOD(MAXY,CS)
+ IF(D.NE.0.0D0)MAXY=(MAXY-D)+CS
 
  NCOL=INT((MAXX-MINX)/CS)
  NROW=INT((MAXY-MINY)/CS)
@@ -4202,19 +5268,19 @@ CONTAINS
  !###======================================================================
  SUBROUTINE UTL_IDFSNAPTONICEGRID(MINX,MAXX,MINY,MAXY,CS,NCOL,NROW)
  !###======================================================================
- REAL,INTENT(INOUT) :: MINX,MAXX,MINY,MAXY
- REAL,INTENT(IN) :: CS
+ REAL(KIND=DP_KIND),INTENT(INOUT) :: MINX,MAXX,MINY,MAXY
+ REAL(KIND=DP_KIND),INTENT(IN) :: CS
  INTEGER,INTENT(OUT) :: NCOL,NROW
- REAL :: D
+ REAL(KIND=DP_KIND) :: D
  
  D=MOD(ABS(MINX),CS)
- IF(D.NE.0.0)MINX=(MINX+(CS-D))-CS
+ IF(D.NE.0.0D0)MINX=(MINX+(CS-D))-CS
  D=MOD(ABS(MAXX),CS)
- IF(D.NE.0.0)MAXX=(MAXX-D)+CS
+ IF(D.NE.0.0D0)MAXX=(MAXX-D)+CS
  D=MOD(ABS(MINY),CS)
- IF(D.NE.0.0)MINY=(MINY+(CS-D))-CS
+ IF(D.NE.0.0D0)MINY=(MINY+(CS-D))-CS
  D=MOD(ABS(MAXY),CS)
- IF(D.NE.0.0)MAXY=(MAXY-D)+CS
+ IF(D.NE.0.0D0)MAXY=(MAXY-D)+CS
 
  NCOL=INT((MAXX-MINX)/CS)
  NROW=INT((MAXY-MINY)/CS)
@@ -4224,8 +5290,8 @@ CONTAINS
  !###======================================================================
  SUBROUTINE UTL_IDFSNAPTOGRID_LLC(MINX,MAXX,MINY,MAXY,CSX,CSY,NCOL,NROW,LLC)
  !###======================================================================
- REAL,INTENT(INOUT) :: MINX,MAXX,MINY,MAXY
- REAL,INTENT(IN) :: CSX,CSY
+ REAL(KIND=DP_KIND),INTENT(INOUT) :: MINX,MAXX,MINY,MAXY
+ REAL(KIND=DP_KIND),INTENT(IN) :: CSX,CSY
  INTEGER,INTENT(OUT) :: NCOL,NROW
  LOGICAL,INTENT(IN),OPTIONAL :: LLC
  LOGICAL :: LLLC
@@ -4246,11 +5312,11 @@ CONTAINS
  END SUBROUTINE UTL_IDFSNAPTOGRID_LLC
 
  !###====================================================================
- REAL FUNCTION UTL_GETMOSTFREQ(FREQ,MFREQ,NFREQ)
+ REAL(KIND=DP_KIND) FUNCTION UTL_GETMOSTFREQ(FREQ,MFREQ,NFREQ)
  !###====================================================================
  IMPLICIT NONE
  INTEGER,INTENT(IN) :: MFREQ,NFREQ
- REAL,DIMENSION(MFREQ),INTENT(IN) :: FREQ
+ REAL(KIND=DP_KIND),DIMENSION(MFREQ),INTENT(IN) :: FREQ
  INTEGER :: I,MI,NI
 
  NI=1  !number of unique
@@ -4274,12 +5340,12 @@ CONTAINS
  END FUNCTION UTL_GETMOSTFREQ
 
 ! !###====================================================================
-! REAL FUNCTION UTL_GETMOSTFREQ(FREQ,MFREQ,NFREQ,NODATA)
+! REAL(KIND=DP_KIND) FUNCTION UTL_GETMOSTFREQ(FREQ,MFREQ,NFREQ,NODATA)
 ! !###====================================================================
 ! IMPLICIT NONE
 ! INTEGER,INTENT(IN) :: MFREQ,NFREQ
-! REAL,INTENT(IN) :: NODATA
-! REAL,DIMENSION(MFREQ),INTENT(IN) :: FREQ
+! REAL(KIND=DP_KIND),INTENT(IN) :: NODATA
+! REAL(KIND=DP_KIND),DIMENSION(MFREQ),INTENT(IN) :: FREQ
 ! INTEGER :: I,IS,MI,NI
 !
 ! UTL_GETMOSTFREQ=NODATA
@@ -4318,13 +5384,13 @@ CONTAINS
  IMPLICIT NONE
  INTEGER,INTENT(IN) :: NX,NHIST         !## size array,number of percentiles to be comp.
  INTEGER,INTENT(OUT) :: MX              !## number of values ne nodata
- REAL,INTENT(IN),DIMENSION(:) :: HIST   !## percentile 0-100%
- REAL,INTENT(OUT),DIMENSION(:) :: XHIST !## yielding percentile(s)
- REAL,INTENT(IN) :: NODATA              !## nodata value !,PERC
- REAL,DIMENSION(NX),INTENT(INOUT) :: X  !## array
+ REAL(KIND=DP_KIND),INTENT(IN),DIMENSION(:) :: HIST   !## percentile 0-100%
+ REAL(KIND=DP_KIND),INTENT(OUT),DIMENSION(:) :: XHIST !## yielding percentile(s)
+ REAL(KIND=DP_KIND),INTENT(IN) :: NODATA              !## nodata value !,PERC
+ REAL(KIND=DP_KIND),DIMENSION(NX),INTENT(INOUT) :: X  !## array
  INTEGER :: I,J
 
- XHIST=0.0; MX=0; IF(NX.LE.0)RETURN
+ XHIST=0.0D0; MX=0; IF(NX.LE.0)RETURN
 
  DO I=1,NX
   IF(X(I).EQ.NODATA)CYCLE
@@ -4345,12 +5411,12 @@ CONTAINS
  IMPLICIT NONE
  INTEGER,INTENT(IN) :: NX,NPERC        !## size array,number of percentiles to be comp.
  INTEGER,INTENT(OUT) :: MX             !## number of values ne nodata
- REAL,INTENT(IN),DIMENSION(:) :: PERC  !## percentile 0-100%
- REAL,INTENT(OUT),DIMENSION(:) :: XMED !## yielding percentile(s)
- REAL,INTENT(IN) :: NODATA             !## nodata value !,PERC
- REAL,DIMENSION(NX),INTENT(INOUT) :: X !## array
+ REAL(KIND=DP_KIND),INTENT(IN),DIMENSION(:) :: PERC  !## percentile 0-100%
+ REAL(KIND=DP_KIND),INTENT(OUT),DIMENSION(:) :: XMED !## yielding percentile(s)
+ REAL(KIND=DP_KIND),INTENT(IN) :: NODATA             !## nodata value !,PERC
+ REAL(KIND=DP_KIND),DIMENSION(NX),INTENT(INOUT) :: X !## array
  INTEGER :: I,J,IP
- REAL :: FRAC
+ REAL(KIND=DP_KIND) :: FRAC
 
  XMED=NODATA; MX=0
 
@@ -4375,29 +5441,24 @@ CONTAINS
 
  IF(MX.LE.0)RETURN
 
- !## sort data, excl. nodata values
- IF(MX.LE.100)THEN
-  CALL SHELLSORT(MX,X)
- ELSE
-  CALL UTL_QKSORT(MX,MX,X)
- ENDIF
+ CALL QKSORT_SGL(MX,X)
 
  DO IP=1,NPERC
 
-  IF(PERC(IP).LE.0.0)THEN
+  IF(PERC(IP).LE.0.0D0)THEN
    XMED(IP)=X(1)
-  ELSEIF(PERC(IP).GE.100.0)THEN
+  ELSEIF(PERC(IP).GE.100.0D0)THEN
    XMED(IP)=X(MX) 
   ELSE
-   FRAC=1.0/(PERC(IP)/100.0)
+   FRAC=1.0D0/(PERC(IP)/100.0D0)
 
-   IF(MOD(REAL(MX),FRAC).EQ.0.0)THEN
+   IF(MOD(REAL(MX),FRAC).EQ.0.0D0)THEN
     I=MAX(1,INT(REAL(MX)/FRAC))
     XMED(IP)=X(I)
    ELSE
     I=MAX(1,INT(REAL(MX)/FRAC))
     J=MIN(I+1,MX)
-    XMED(IP)=(X(I)+X(J))/2.0
+    XMED(IP)=(X(I)+X(J))/2.0D0
    ENDIF
   ENDIF
  ENDDO
@@ -4410,12 +5471,12 @@ CONTAINS
  IMPLICIT NONE
  INTEGER,INTENT(IN) :: NX,NPERC        !## size array,number of percentiles to be comp.
  INTEGER,INTENT(OUT) :: MX             !## number of values ne nodata
- REAL,INTENT(IN),DIMENSION(:) :: PERC  !## percentile 0-100%
- REAL,INTENT(OUT),DIMENSION(:) :: XMED !## yielding percentile(s)
- REAL,INTENT(IN) :: NODATA             !## nodata value 
- REAL,DIMENSION(NX),INTENT(INOUT) :: X !## array
+ REAL(KIND=DP_KIND),INTENT(IN),DIMENSION(:) :: PERC  !## percentile 0-100%
+ REAL(KIND=DP_KIND),INTENT(OUT),DIMENSION(:) :: XMED !## yielding percentile(s)
+ REAL(KIND=DP_KIND),INTENT(IN) :: NODATA             !## nodata value 
+ REAL(KIND=DP_KIND),DIMENSION(NX),INTENT(INOUT) :: X !## array
  INTEGER :: I,IP
- REAL :: FRAC
+ REAL(KIND=DP_KIND) :: FRAC
 
  XMED=NODATA 
 
@@ -4424,8 +5485,8 @@ CONTAINS
  !## only one sample
  IF(NX.EQ.1)THEN
   DO IP=1,NPERC
-   XMED(IP)=0.0
-   IF(X(1).LE.PERC(IP))XMED(IP)=1.0
+   XMED(IP)=0.0D0
+   IF(X(1).LE.PERC(IP))XMED(IP)=1.0D0
   ENDDO
   MX  =1
   RETURN
@@ -4443,23 +5504,23 @@ CONTAINS
  IF(MX.LE.0)RETURN
 
  !## sort data, excl. nodata values
- IF(MX.LE.100)THEN
-  CALL SHELLSORT(MX,X)
- ELSE
-  CALL UTL_QKSORT(MX,MX,X)
- ENDIF
+! IF(MX.LE.100)THEN
+!  CALL SHELLSORT(MX,X)
+! ELSE
+ CALL QKSORT_SGL(MX,X) !MX,X)
+! ENDIF
 
  !## find appropriate values for percentiles
- FRAC=1.0
+ FRAC=1.0D0
  DO IP=1,NPERC
   IF(MX.EQ.1)THEN
-   XMED(IP)=0.0
-   IF(X(1).LE.PERC(IP))XMED(IP)=1.0
+   XMED(IP)=0.0D0
+   IF(X(1).LE.PERC(IP))XMED(IP)=1.0D0
   ELSE
    IF(PERC(IP).LE.X(1))THEN
-    XMED(IP)=0.0
+    XMED(IP)=0.0D0
    ELSEIF(PERC(IP).GT.X(MX))THEN
-    XMED(IP)=1.0
+    XMED(IP)=1.0D0
    ELSE
     DO I=2,MX
      IF(X(I-1).LE.PERC(IP).AND. &
@@ -4495,11 +5556,11 @@ CONTAINS
  IMPLICIT NONE
  INTEGER,INTENT(IN) :: N
  INTEGER,INTENT(OUT) :: NU
- REAL,INTENT(IN),OPTIONAL :: NODATA
- REAL,INTENT(INOUT),DIMENSION(N) :: X
+ REAL(KIND=DP_KIND),INTENT(IN),OPTIONAL :: NODATA
+ REAL(KIND=DP_KIND),INTENT(INOUT),DIMENSION(N) :: X
  INTEGER :: I
 
- CALL UTL_QKSORT(N,N,X)
+ CALL QKSORT_SGL(N,X) !N,X)
  
  !## determine number of unique classes
  IF(PRESENT(NODATA))THEN
@@ -4535,8 +5596,8 @@ CONTAINS
  IMPLICIT NONE
  INTEGER,INTENT(IN) :: N
  INTEGER,INTENT(OUT) :: NU
- REAL,INTENT(IN),OPTIONAL :: NODATA
- REAL,POINTER,INTENT(INOUT),DIMENSION(:) :: X
+ REAL(KIND=DP_KIND),INTENT(IN),OPTIONAL :: NODATA
+ REAL(KIND=DP_KIND),POINTER,INTENT(INOUT),DIMENSION(:) :: X
  INTEGER :: I
 
  CALL WSORT(X,1,N)
@@ -4678,12 +5739,12 @@ CONTAINS
  LOGICAL FUNCTION UTL_EQUALS_REAL(A,B)
  !###====================================================
  IMPLICIT NONE
- REAL, INTENT(IN) :: A, B
- REAL :: EPS
+ REAL(KIND=DP_KIND),INTENT(IN) :: A,B
+ REAL(KIND=DP_KIND) :: EPS
 
  EPS=ABS(A)*EPSILON(A) ! SCALE EPSILON
 
- IF(EPS.EQ.0.0)THEN
+ IF(EPS.EQ.0.0D0)THEN
   EPS=TINY (A) ! IF EPS UNDERFLOWED TO 0
  ! USE A VERY SMALL
  ! POSITIVE VALUE FOR EPSILON
@@ -4702,27 +5763,27 @@ CONTAINS
  !###====================================================
  IMPLICIT NONE
  INTEGER,INTENT(IN) :: N
- REAL,INTENT(IN),DIMENSION(N) :: XC,YC
- REAL,INTENT(OUT),DIMENSION(N) :: PDCODE
+ REAL(KIND=DP_KIND),INTENT(IN),DIMENSION(N) :: XC,YC
+ REAL(KIND=DP_KIND),INTENT(OUT),DIMENSION(N) :: PDCODE
  INTEGER :: MJ,J1,J2
- REAL :: MD
+ REAL(KIND=DP_KIND) :: MD
 
- PDCODE=-999.99
+ PDCODE=-999.99D0
  !## set first and last point, distance is zero
- PDCODE(1)=0.0; PDCODE(N)=0.0
+ PDCODE(1)=0.0D0; PDCODE(N)=0.0D0
  
  !## process each intermediate point
  DO 
 
   !## get the start point (first empty spot)
-  DO J1=1,N-1; IF(PDCODE(J1).LT.0.0)EXIT; ENDDO
+  DO J1=1,N-1; IF(PDCODE(J1).LT.0.0D0)EXIT; ENDDO
   !## finished
   IF(J1.EQ.N)EXIT
   !## previous fixed point
   J1=J1-1
   
   !## get the end point (fixed point)
-  DO J2=J1+1,N; IF(PDCODE(J2).GE.0.0)EXIT; ENDDO
+  DO J2=J1+1,N; IF(PDCODE(J2).GE.0.0D0)EXIT; ENDDO
 
   !## get the maximal distance in between i1 and i2 and tag it
   CALL PEUCKER_CALCDISTANCE(J1,J2,N,XC,YC,MJ,MD)
@@ -4739,14 +5800,18 @@ CONTAINS
  !###====================================================
  IMPLICIT NONE
  INTEGER,INTENT(IN) :: N,J1,J2
- REAL,INTENT(OUT) :: MD
- REAL,INTENT(IN),DIMENSION(N) :: XC,YC
+ REAL(KIND=DP_KIND),INTENT(OUT) :: MD
+ REAL(KIND=DP_KIND),INTENT(IN),DIMENSION(N) :: XC,YC
  INTEGER,INTENT(OUT) :: MJ
  INTEGER :: J
- REAL :: B,A,D,Y
+ REAL(KIND=DP_KIND) :: B,A,D,Y,DX,DY
  
  !## line equation
- B=YC(J1); A=(YC(J2)-YC(J1))/(XC(J2)-XC(J1)); MD=-1.0; MJ=0
+ B=YC(J1)
+ DY=(YC(J2)-YC(J1))
+ DX=(XC(J2)-XC(J1))
+ A=10.0D10; IF(DX.NE.0.0D0)A=DY/DX
+ MD=-1.0D0; MJ=0
  
  !## loop over all points
  DO J=J1+1,J2-1
@@ -4763,28 +5828,28 @@ CONTAINS
  END SUBROUTINE PEUCKER_CALCDISTANCE
 
  !###====================================================================
- REAL FUNCTION UTL_GOODNESS_OF_FIT(X,Y,N)
+ REAL(KIND=DP_KIND) FUNCTION UTL_GOODNESS_OF_FIT(X,Y,N)
  !###====================================================================
  IMPLICIT NONE
  INTEGER,INTENT(IN) :: N
- REAL,INTENT(IN),DIMENSION(N) :: X,Y
- REAL :: XN,YN,X1,X2,X3
+ REAL(KIND=DP_KIND),INTENT(IN),DIMENSION(N) :: X,Y
+ REAL(KIND=DP_KIND) :: XN,YN,X1,X2,X3
  INTEGER :: I
  
- UTL_GOODNESS_OF_FIT=0.0
+ UTL_GOODNESS_OF_FIT=0.0D0
 
  XN=SUM(X)/REAL(N)
  YN=SUM(Y)/REAL(N)
  
- X1=0.0; X2=0.0; X3=0.0
+ X1=0.0D0; X2=0.0D0; X3=0.0D0
  DO I=1,N
   X1=X1+(X(I)-XN)*(Y(I)-YN)
-  X2=X2+(X(I)-XN)**2.0
-  X3=X3+(Y(I)-YN)**2.0
+  X2=X2+(X(I)-XN)**2.0D0
+  X3=X3+(Y(I)-YN)**2.0D0
  ENDDO
 
  !## sample correlation coefficient
- IF(X2.NE.0.0.AND.X3.NE.0.0)UTL_GOODNESS_OF_FIT=X1/SQRT(X2*X3)
+ IF(X2.NE.0.0D0.AND.X3.NE.0.0D0)UTL_GOODNESS_OF_FIT=X1/SQRT(X2*X3)
   
  END FUNCTION UTL_GOODNESS_OF_FIT
 
@@ -4793,20 +5858,20 @@ CONTAINS
  !###====================================================
  IMPLICIT NONE
  INTEGER,INTENT(IN) :: NDATA,MWT
- REAL,INTENT(OUT) :: A,B,CHI2,Q,SIGA,SIGB
- REAL,DIMENSION(NDATA) :: X,Y,SIG
+ REAL(KIND=DP_KIND),INTENT(OUT) :: A,B,CHI2,Q,SIGA,SIGB
+ REAL(KIND=DP_KIND),DIMENSION(NDATA) :: X,Y,SIG
  INTEGER :: I
- REAL :: SIGDAT,SS,ST2,SX,SXOSS,SY,T,WT
+ REAL(KIND=DP_KIND) :: SIGDAT,SS,ST2,SX,SXOSS,SY,T,WT
 
- SX =0.0
- SY =0.0
- ST2=0.0
- B  =0.0
+ SX =0.0D0
+ SY =0.0D0
+ ST2=0.0D0
+ B  =0.0D0
  
  IF(MWT.NE.0)THEN
-  SS=0.0
+  SS=0.0D0
   DO I=1,NDATA
-   WT=1.0/(SIG(I)**2)
+   WT=1.0D0/(SIG(I)**2)
    SS=SS+WT
    SX=SX+X(I)*WT
    SY=SY+Y(I)*WT
@@ -4837,15 +5902,15 @@ CONTAINS
 
  B=B/ST2
  A=(SY-SX*B)/SS
- SIGA=SQRT((1.0+SX*SX/(SS*ST2))/SS)
- SIGB=SQRT(1.0/ST2)
- CHI2=0.0
+ SIGA=SQRT((1.0D0+SX*SX/(SS*ST2))/SS)
+ SIGB=SQRT(1.0D0/ST2)
+ CHI2=0.0D0
 
  IF(MWT.EQ.0)THEN
   DO I=1,NDATA
    CHI2=CHI2+(Y(I)-A-B*X(I))**2
   ENDDO
-  Q=1.0
+  Q=1.0D0
   SIGDAT=SQRT(CHI2/REAL(NDATA-2))
   SIGA=SIGA*SIGDAT
   SIGB=SIGB*SIGDAT
@@ -4853,22 +5918,22 @@ CONTAINS
   DO I=1,NDATA
    CHI2=CHI2+((Y(I)-A-B*X(I))/SIG(I))**2
   ENDDO
-  Q=UTL_GAMMQ(0.5*(NDATA-2),0.5*CHI2)
+  Q=UTL_GAMMQ(REAL(0.5*(NDATA-2),8),REAL(0.5*CHI2,8))
  ENDIF
  
  END SUBROUTINE UTL_FIT_REGRESSION
 
  !###====================================================
- REAL FUNCTION UTL_GAMMQ(A,X)
+ REAL(KIND=DP_KIND) FUNCTION UTL_GAMMQ(A,X)
  !###====================================================
  IMPLICIT NONE
- REAL,INTENT(IN) :: A,X
- REAL :: GAMMCF,GAMSER,GLN
+ REAL(KIND=DP_KIND),INTENT(IN) :: A,X
+ REAL(KIND=DP_KIND) :: GAMMCF,GAMSER,GLN
  
- IF(X.LT.0.0.OR.A.LE.0.0)PAUSE 'BAD ARGUMENT IN UTL_GAMMQ'
- IF(X.LT.A+1.0)THEN
+ IF(X.LT.0.0D0.OR.A.LE.0.0D0)PAUSE 'BAD ARGUMENT IN UTL_GAMMQ'
+ IF(X.LT.A+1.0D0)THEN
   CALL UTL_GSER(GAMSER,A,X,GLN)
-  UTL_GAMMQ=1.0-GAMSER
+  UTL_GAMMQ=1.0D0-GAMSER
  ELSE
   CALL UTL_GCF(GAMMCF,A,X,GLN)
   UTL_GAMMQ=GAMMCF
@@ -4880,26 +5945,26 @@ CONTAINS
  SUBROUTINE UTL_GSER(GAMSER,A,X,GLN)
  !###====================================================
  IMPLICIT NONE
- REAL,INTENT(IN) :: A,X
- REAL,INTENT(OUT) :: GLN,GAMSER
+ REAL(KIND=DP_KIND),INTENT(IN) :: A,X
+ REAL(KIND=DP_KIND),INTENT(OUT) :: GLN,GAMSER
  INTEGER,PARAMETER :: ITMAX=100
- REAL,PARAMETER :: EPS=3.0E-7
+ REAL(KIND=DP_KIND),PARAMETER :: EPS=3.0E-7
  INTEGER :: N
- REAL :: AP,DEL,SUM
+ REAL(KIND=DP_KIND) :: AP,DEL,SUM
  
  GLN=UTL_GAMMLN(A)
- IF(X.LE.0.0)THEN
-  IF(X.LT.0.0)PAUSE 'X < 0 IN UTL_GSER'
-  GAMSER=0.0
+ IF(X.LE.0.0D0)THEN
+  IF(X.LT.0.0D0)PAUSE 'X < 0 IN UTL_GSER'
+  GAMSER=0.0D0
   RETURN
  ENDIF
 
  AP=A
- SUM=1.0/A
+ SUM=1.0D0/A
  DEL=SUM
 
  DO N=1,ITMAX
-  AP=AP+1.0
+  AP=AP+1.0D0
   DEL=DEL*X/AP
   SUM=SUM+DEL
   IF(ABS(DEL).LT.ABS(SUM)*EPS)GOTO 1
@@ -4915,16 +5980,16 @@ CONTAINS
  !###====================================================
  IMPLICIT NONE
  INTEGER,PARAMETER :: ITMAX=100
- REAL,PARAMETER :: EPS=3.0E-7,FPMIN=1.0-30
- REAL,INTENT(IN) :: A,X 
- REAL,INTENT(OUT) :: GAMMCF,GLN
+ REAL(KIND=DP_KIND),PARAMETER :: EPS=3.0E-7,FPMIN=1.0D0-30
+ REAL(KIND=DP_KIND),INTENT(IN) :: A,X 
+ REAL(KIND=DP_KIND),INTENT(OUT) :: GAMMCF,GLN
  INTEGER :: I
- REAL :: AN,B,C,D,DEL,H
+ REAL(KIND=DP_KIND) :: AN,B,C,D,DEL,H
  
  GLN=UTL_GAMMLN(A)
- B=X+1.0-A
- C=1.0/FPMIN
- D=1.0/B
+ B=X+1.0D0-A
+ C=1.0D0/FPMIN
+ D=1.0D0/B
  H=D
  DO I=1,ITMAX
   AN=-I*(I-A) 
@@ -4933,10 +5998,10 @@ CONTAINS
   IF(ABS(D).LT.FPMIN)D=FPMIN
   C=B+AN/C
   IF(ABS(C).LT.FPMIN)C=FPMIN
-  D=1.0/D
+  D=1.0D0/D
   DEL=D*C
   H=H*DEL
-  IF(ABS(DEL-1.0).LT.EPS)GOTO 1
+  IF(ABS(DEL-1.0D0).LT.EPS)GOTO 1
  ENDDO
  PAUSE 'A TOO LARGE, ITMAX TOOP SMALL IN UTL_GCF'
 1 GAMMCF=EXP(-X+A*LOG(X)-GLN)*H
@@ -4944,12 +6009,12 @@ CONTAINS
  END SUBROUTINE UTL_GCF
  
  !###====================================================
- REAL FUNCTION UTL_GAMMLN(XX)
+ REAL(KIND=DP_KIND) FUNCTION UTL_GAMMLN(XX)
  !###====================================================
  IMPLICIT NONE
- REAL,INTENT(IN) :: XX
+ REAL(KIND=DP_KIND),INTENT(IN) :: XX
  INTEGER :: J
- DOUBLE PRECISION,SAVE :: SER,STP,TMP,X,Y,COF(6)
+ REAL(KIND=DP_KIND),SAVE :: SER,STP,TMP,X,Y,COF(6)
  DATA COF,STP/76.18009172947146D0,-86.50532032941677D0, &
               24.01409824083091D0,-1.231739572450155D0,0.1208650973866179D-2, &
               -0.5395239384953D-5,2.5066282746310005D0/

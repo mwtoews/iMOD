@@ -39,7 +39,7 @@ c ------------------------------------------------------------------------------
 c arguments
       integer   narr          ! (I) number of elements                   !*UAR*
 
-      real      array(narr),  ! (I/O) data                   !*UAR*
+      REAL(KIND=DP_KIND)      array(narr),  ! (I/O) data                   !*UAR*
      1          mv,           ! (I) missing value
      1          perc,         ! (I)   to be calculated percentile
      1          p             ! (O)   calculated value
@@ -50,7 +50,7 @@ c local variables
 
 
 c functions
-      real      cfn_perc_r
+      REAL(KIND=DP_KIND)      cfn_perc_r
 
 
 c include files
@@ -72,7 +72,7 @@ c remove missing values
 
 c sort
       if (n.gt.1) then
-         CALL UTL_QKSORT(N,N,ARRAY)
+         CALL QKSORT_DBL(N,ARRAY)
          p=cfn_perc_r(array,n,perc)
       else
          p=mv

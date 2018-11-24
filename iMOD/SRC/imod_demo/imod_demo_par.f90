@@ -1,4 +1,4 @@
-!!  Copyright (C) Stichting Deltares, 2005-2017.
+!!  Copyright (C) Stichting Deltares, 2005-2018.
 !!
 !!  This file is part of iMOD.
 !!
@@ -23,11 +23,12 @@
 MODULE MOD_DEMO_PAR
 
 USE RESOURCE
+USE IMODVAR, ONLY : DP_KIND,SP_KIND
 IMPLICIT NONE
 
 TYPE DEMOBJ
  CHARACTER(LEN=52) :: TDNAME      !## demo type name
- REAL,POINTER,DIMENSION(:) :: X,Y !## coordinates of the edges of the profile
+ REAL(KIND=DP_KIND),POINTER,DIMENSION(:) :: X,Y !## coordinates of the edges of the profile
  CHARACTER(LEN=52),POINTER,DIMENSION(:) :: L !## label for the coordinates
  INTEGER :: NXY         !## Number of cross-section points
  INTEGER :: IDEMO       !## Type of demo (e.g. Cross-section=1, 3D-tool=2)

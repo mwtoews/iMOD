@@ -1,4 +1,4 @@
-!!  Copyright (C) Stichting Deltares, 2005-2017.
+!!  Copyright (C) Stichting Deltares, 2005-2018.
 !!
 !!  This file is part of iMOD.
 !!
@@ -21,27 +21,28 @@
 !!  2600 MH Delft, The Netherlands.
 MODULE MOD_UTM_PAR
 
+USE IMODVAR, ONLY : DP_KIND,SP_KIND
 INTEGER,PARAMETER :: NUTM=2
 CHARACTER(LEN=32) :: DATUM
 
 TYPE UTMOBJ
  CHARACTER(LEN=32) :: DATUM
 
- DOUBLE PRECISION :: A     !## (a) equatorial radius (km)
- DOUBLE PRECISION :: B     !## (b) polar radius (km)
- DOUBLE PRECISION :: FLAT  !## flattening (a-b)/a
- DOUBLE PRECISION :: K0    !## scale along long0
- DOUBLE PRECISION :: E0  
- DOUBLE PRECISION :: N0  
- DOUBLE PRECISION :: E     !## eccentricity of earth's elliptical cross-section
- DOUBLE PRECISION :: EQ    !## 
- DOUBLE PRECISION :: N     !## 
- DOUBLE PRECISION :: LBAND !## 
+ REAL(KIND=DP_KIND) :: A     !## (a) equatorial radius (km)
+ REAL(KIND=DP_KIND) :: B     !## (b) polar radius (km)
+ REAL(KIND=DP_KIND) :: FLAT  !## flattening (a-b)/a
+ REAL(KIND=DP_KIND) :: K0    !## scale along long0
+ REAL(KIND=DP_KIND) :: E0  
+ REAL(KIND=DP_KIND) :: N0  
+ REAL(KIND=DP_KIND) :: E     !## eccentricity of earth's elliptical cross-section
+ REAL(KIND=DP_KIND) :: EQ    !## 
+ REAL(KIND=DP_KIND) :: N     !## 
+ REAL(KIND=DP_KIND) :: LBAND !## 
  
- DOUBLE PRECISION :: AA    
- DOUBLE PRECISION,DIMENSION(3) :: ALPHA
- DOUBLE PRECISION,DIMENSION(3) :: BETA
- DOUBLE PRECISION,DIMENSION(3) :: DELTA
+ REAL(KIND=DP_KIND) :: AA    
+ REAL(KIND=DP_KIND),DIMENSION(3) :: ALPHA
+ REAL(KIND=DP_KIND),DIMENSION(3) :: BETA
+ REAL(KIND=DP_KIND),DIMENSION(3) :: DELTA
 
 END TYPE UTMOBJ
 TYPE(UTMOBJ),DIMENSION(NUTM) :: UTM

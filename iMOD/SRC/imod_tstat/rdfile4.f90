@@ -35,7 +35,7 @@ subroutine rdfile4(infile,string,mv,sn,coldate,colval,exitcode)
 ! arguments
  integer  , intent(in)          :: sn              !> series number to store the data
 
- real     , intent(in)          :: mv              !> missing value
+ REAL(KIND=DP_KIND)     , intent(in)          :: mv              !> missing value
 
  character (len=*), intent(in)  :: infile          !> input file name
  character (len=*), intent(out) :: string          !> description of data set
@@ -47,13 +47,13 @@ subroutine rdfile4(infile,string,mv,sn,coldate,colval,exitcode)
 
 
 ! local variables
- integer   lun,ios,l,lc1,lc2,ftype,nd,i
+ integer   lun,ios,lc1,lc2,ftype,nd,i
  integer   icoldate,icolval
 
  character record*128,del*1
  character (len=32) :: cdate,cval,cname
 
- real      vmv,r
+ REAL(KIND=DP_KIND)      vmv,r
 
 
 ! functions
@@ -234,7 +234,7 @@ endif
       if (size(psr%x).lt.n) then
          ! current allocated array too small
          deallocate(psr%x,psr%y)
-         ! reallocate
+         ! REAL(KIND=DP_KIND)locate
          allocate(psr%x(n),psr%y(n))
       endif
    else
@@ -282,31 +282,31 @@ subroutine rdseries4(lun,x,y,n,mv,icoldate,icolval,exitcode)
  integer  , intent(in)     :: lun          !> unit number
  integer  , intent(inout)  :: n            !> number of data values
 
- real     , intent(out)    :: x(*),y(*)    !> values
+ REAL(KIND=DP_KIND)     , intent(out)    :: x(*),y(*)    !> values
 
  integer  , intent(in)     :: icoldate     !> column number for date values
  integer  , intent(in)     :: icolval      !> column number for values
 
- real     , intent(in)     :: mv           !> missing value code
+ REAL(KIND=DP_KIND)     , intent(in)     :: mv           !> missing value code
 
  integer  , intent(out)    :: exitcode     !> exit status: 0=OK
 
 
 ! local variables
- integer   i,j,idat,ios,l,nval,mc
+ integer   i,j,idat,ios,nval,mc
 
- real      v
+ REAL(KIND=DP_KIND)      v
 
- double precision ddat
+ REAL(KIND=DP_KIND) ddat
 
  integer, parameter :: mxcol=20
- double precision tmpv(mxcol)
+ REAL(KIND=DP_KIND) tmpv(mxcol)
 
  character record*128
 
 
 ! functions
- integer   cfn_length,cfn_dat2cen
+ integer   cfn_dat2cen
 
 
 ! program section

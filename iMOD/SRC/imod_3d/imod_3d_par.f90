@@ -1,4 +1,4 @@
-!!  Copyright (C) Stichting Deltares, 2005-2017.
+!!  Copyright (C) Stichting Deltares, 2005-2018.
 !!
 !!  This file is part of iMOD.
 !!
@@ -24,11 +24,11 @@ MODULE MOD_3D_PAR
 
 USE WINTERACTER
 USE RESOURCE
-USE MOD_IDF_PAR, ONLY : IDFOBJ
-USE IMODVAR, ONLY : ICDEBUGLEVEL
 USE OPENGL
+USE IMODVAR, ONLY : DP_KIND,SP_KIND,ICDEBUGLEVEL
+USE MOD_IPF_PAR, ONLY : MAXATTRIB
+USE MOD_IDF_PAR, ONLY : IDFOBJ
 USE MODPLOT, ONLY : LEGENDOBJ
-
 LOGICAL :: LCAP
 INTEGER,SAVE :: IORTHO
 INTEGER,PARAMETER :: MXROWFORFANCY=1000 !## maximum number of rows to change to non-fancy
@@ -45,7 +45,7 @@ INTEGER(GLENUM),DIMENSION(6) :: CLPPLANES
 DATA CLPPLANES/GL_CLIP_PLANE0,GL_CLIP_PLANE1,GL_CLIP_PLANE2,GL_CLIP_PLANE3, &
                GL_CLIP_PLANE4,GL_CLIP_PLANE5/
 
-REAL,PARAMETER :: ZEXT = 0.0 !.2 (thickness)   !## extrusion factor
+REAL(KIND=DP_KIND),PARAMETER :: ZEXT = 0.0D0 !.2 (thickness)   !## extrusion factor
 INTEGER :: IFAM1 ! = FFHelvetica!  FFCourier,FFTimes
 
 INTEGER,PARAMETER :: ROTATE = 1
@@ -58,7 +58,7 @@ INTEGER,PARAMETER :: SCALEXY= 7
 
 INTEGER :: IMOUSEMOVE=0 !## whether mousemove need to be processed in 3d window
 
-INTEGER :: IWIN  !## window-number
+INTEGER :: IWIN3D  !## window-number
 
 TYPE IDFSETTING
  INTEGER :: IFILL,JFILL     !## solid fill (1), wireframes (2) or combined (3)
@@ -72,19 +72,30 @@ TYPE IDFSETTING
  INTEGER :: ILIST           !## list sequence
  INTEGER :: DISP_ILIST      !## list sequence
  INTEGER :: IPLOTLEGEND     !## plotlegend
- REAL    :: ZMAX,ZMIN       !## zmax,zmin
+ REAL(KIND=DP_KIND) :: ZMAX,ZMIN       !## zmax,zmin
  INTEGER :: ICUBE           !## (0)flat;(1)cube
  INTEGER :: ICONFIG         !## configuration number
  INTEGER :: IACC            !## accuracy (=resolution) number
  INTEGER :: ITRANSPARANCY   !## transparancy
  INTEGER :: ISTACKED        !## stacked idf-files (0-100)
- REAL :: FSTACKED        !## stacked idf-files (computed offset)
+ REAL(KIND=DP_KIND) :: FSTACKED        !## stacked idf-files (computed offset)
  INTEGER :: ICLIP           !## effected by clipping
  CHARACTER(LEN=50) :: ALIAS,DISP_ALIAS
  CHARACTER(LEN=256) :: FNAME
  TYPE(LEGENDOBJ) :: LEG
 END TYPE IDFSETTING
 TYPE(IDFSETTING),ALLOCATABLE,DIMENSION(:) :: IDFPLOT
+
+TYPE IPFQUERY
+ INTEGER :: IACT
+ INTEGER :: OPER
+ INTEGER :: ANDOR
+ INTEGER :: IFIELD
+ CHARACTER(LEN=MAXATTRIB) :: CVALUE
+ INTEGER :: INAME1,INAME2
+ LOGICAL :: EVALUATE
+ CHARACTER(LEN=256) :: FNAME1,FNAME2
+END TYPE IPFQUERY
 
 TYPE IPFSETTING
  INTEGER :: ISEL        !## selected
@@ -100,11 +111,17 @@ TYPE IPFSETTING
  INTEGER :: IPLOTLABELS !## plot labels
  INTEGER :: ILEGDLF     !## legend dlf
  INTEGER :: ISTYLE      !## plotstyle
- REAL :: RADIUS         !## size of borehole
- REAL :: SIMPLIFY       !## simplification distance
- INTEGER,DIMENSION(3) :: ISELECT
- REAL,DIMENSION(3) :: RSELECT
- CHARACTER(LEN=50) :: FNAME
+ REAL(KIND=DP_KIND) :: RADIUS         !## size of borehole
+ REAL(KIND=DP_KIND) :: SIMPLIFY       !## simplification distance
+ INTEGER,DIMENSION(4) :: ISELECT      !## 1=less depth 2=more depth 3=cross-section
+ REAL(KIND=DP_KIND),DIMENSION(3) :: RSELECT
+ TYPE(IPFQUERY),DIMENSION(50) :: QUERY !## query definitions
+ INTEGER :: NQUERY                     !## number of queries
+ INTEGER :: IEXCLUDE                   !## 0=exclude all 1=exclude part
+ INTEGER :: EXCLCOLOUR                 !## excludecolour
+ INTEGER :: IEXCLCOLOUR                !## usage of excludecolour
+ CHARACTER(LEN=52) :: FNAME
+ CHARACTER(LEN=256) :: QYFFNAME,GENFNAME
  INTEGER :: ICLIP       !## effected by clipping
 END TYPE IPFSETTING
 TYPE(IPFSETTING),ALLOCATABLE,DIMENSION(:) :: IPFPLOT
@@ -162,19 +179,19 @@ INTEGER,SAVE :: IREADBMP            !## bitmap read/allocated
 INTEGER,SAVE :: IWINWIDTH,IWINHEIGHT
 
 !## named parameter for pi
-REAL(KIND=GLDOUBLE), PARAMETER :: PI = 3.141592653589793_GLDOUBLE
+REAL(KIND=GLDOUBLE), PARAMETER :: PI_OPENGL = 3.141592653589793_GLDOUBLE
 
 REAL(KIND=GLFLOAT), DIMENSION(3) :: AMBIENT 
 REAL(KIND=GLFLOAT), DIMENSION(3) :: DIFFUSE 
 REAL(KIND=GLFLOAT), DIMENSION(3) :: SPECULAR
-REAL(KIND=GLFLOAT), DIMENSION(4) :: POS   = (/-1.0_GLFLOAT, &
-                                              -1.0_GLFLOAT, &
-                                              -1.0_GLFLOAT, &
-                                               0.0_GLFLOAT/)!<--- DIRECTIONAL ONE!
-REAL(KIND=GLFLOAT), DIMENSION(4) :: WHITE = (/1.0_GLFLOAT, &
-                                              1.0_GLFLOAT, &
-                                              1.0_GLFLOAT, &
-                                              1.0_GLFLOAT/)
+REAL(KIND=GLFLOAT), DIMENSION(4) :: POS   = (/-1.0_GLDOUBLE, &
+                                              -1.0_GLDOUBLE, &
+                                              -1.0_GLDOUBLE, &
+                                               0.0_GLDOUBLE/)!<--- DIRECTIONAL ONE!
+REAL(KIND=GLFLOAT), DIMENSION(4) :: WHITE = (/1.0_GLDOUBLE, &
+                                              1.0_GLDOUBLE, &
+                                              1.0_GLDOUBLE, &
+                                              1.0_GLDOUBLE/)
 
 REAL(KIND=GLFLOAT), DIMENSION(4) :: L1_AMBIENT  
 REAL(KIND=GLFLOAT), DIMENSION(4) :: L1_DIFFUSE  
@@ -192,9 +209,9 @@ TYPE :: CART3D ! 3D CARTESIAN COORDINATES
  REAL(KIND=GLDOUBLE) :: Z
 END TYPE CART3D
 TYPE :: CART3R ! 3D CARTESIAN COORDINATES (FLOAT)
- REAL(KIND=GLFLOAT) :: X
- REAL(KIND=GLFLOAT) :: Y
- REAL(KIND=GLFLOAT) :: Z
+ REAL(KIND=GLDOUBLE) :: X
+ REAL(KIND=GLDOUBLE) :: Y
+ REAL(KIND=GLDOUBLE) :: Z
 END TYPE CART3R
 TYPE :: SPHERE3D ! 3D SPHERICAL COORDINATES
  REAL(KIND=GLDOUBLE) :: THETA
@@ -219,6 +236,7 @@ TYPE(CART2D), SAVE :: BEGIN_RIGHT
 
 !## real position of mid of view
 TYPE(CART3D), SAVE :: MIDPOS !## mid of box
+TYPE(CART3D), SAVE :: ROTPOS !## rotation point
 TYPE(CART3D), SAVE :: TOP  !## upper right top corner
 TYPE(CART3D), SAVE :: BOT  !## lower left  bottom corner
 
@@ -249,8 +267,10 @@ INTEGER, SAVE :: CURSOR_KEY_FUNC    = SCALEXY
 TYPE (CART3D),SAVE :: LOOKAT,LOOKFROM
 TYPE (CART3R),SAVE :: INDPOS
 TYPE (CART3R),DIMENSION(:,:),POINTER :: XYZCROSS => NULL()
-INTEGER, SAVE :: IDRAWCROSS,IVALIDCROSS
+TYPE (CART3R),DIMENSION(:),POINTER :: XYZWELL => NULL()
+INTEGER, SAVE :: IDRAWCROSS,IVALIDPOS,IDRAWWELL
 INTEGER,DIMENSION(:),ALLOCATABLE :: NXYZCROSS
+INTEGER,SAVE :: NXYZWELL
 
 !## initial scale factors
 REAL(KIND=GLDOUBLE), PARAMETER :: INIT_XSCALE_FACTOR = 1.0_GLDOUBLE
@@ -274,7 +294,7 @@ INTEGER(KIND=GLUINT),ALLOCATABLE,DIMENSION(:) ::   GENLISTINDEX,IFFLISTINDEX,BMP
 INTEGER(KIND=GLUINT),ALLOCATABLE,DIMENSION(:,:) :: IPFLISTINDEX,SOLLISTINDEX,PLLISTINDEX
 INTEGER,ALLOCATABLE,DIMENSION(:,:) :: IPFDLIST !## selected features of the 
 INTEGER,ALLOCATABLE,DIMENSION(:) :: PLLISTCLR  !## color fraction of current time in drawing list
-REAL,ALLOCATABLE,DIMENSION(:) :: PLLISTAGE     !## age of current time in drawing list
+REAL(KIND=DP_KIND),ALLOCATABLE,DIMENSION(:) :: PLLISTAGE     !## age of current time in drawing list
 
 TYPE(IDFOBJ),ALLOCATABLE,DIMENSION(:) :: IDF_CC  !## idf (part)
 
@@ -282,12 +302,17 @@ INTEGER,SAVE :: ISOLID_3D
 INTEGER,SAVE :: IPATHLINE_3D
 INTEGER,SAVE :: IRENDER_3D !## 0=3D INACTIVE; -1=3D ACTIVE, 1=RENDERING ACTIVE
 
-REAL(KIND=GLFLOAT),SAVE :: ALPHA
+REAL(KIND=GLDOUBLE),SAVE :: ALPHA
 INTEGER,SAVE :: IALPHA
 
 INTEGER,DIMENSION(6) :: IDZR
 DATA IDZR/ID_ZRATIO1,ID_ZRATIO2,ID_ZRATIO3,ID_ZRATIO4,ID_ZRATIO5,ID_ZRATIO6/
 REAL(KIND=GLDOUBLE),DIMENSION(6) :: ZR
+
+REAL(KIND=DP_KIND),DIMENSION(:),POINTER :: XBH=>NULL(),YBH=>NULL(),ZBH=>NULL(),RBH=>NULL(), &
+ XBH_DUMMY=>NULL(),YBH_DUMMY=>NULL(),ZBH_DUMMY=>NULL(),RBH_DUMMY=>NULL()
+INTEGER,DIMENSION(:),POINTER :: CBH=>NULL(),CBH_DUMMY=>NULL()
+CHARACTER(LEN=256),DIMENSION(:),POINTER :: LBH=>NULL(),LBH_DUMMY=>NULL()
 
 CONTAINS
 

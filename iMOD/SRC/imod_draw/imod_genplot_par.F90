@@ -1,4 +1,4 @@
-!!  Copyright (C) Stichting Deltares, 2005-2017.
+!!  Copyright (C) Stichting Deltares, 2005-2018.
 !!
 !!  This file is part of iMOD.
 !!
@@ -22,23 +22,24 @@
 !!
 MODULE MOD_GENPLOT_PAR
 
-INTEGER,PARAMETER         :: MXGEN  =150
+USE IMODVAR, ONLY : DP_KIND,SP_KIND
+INTEGER,PARAMETER :: MXGEN=150
 TYPE GENOBJ
- LOGICAL                  :: IACT                      !plot type,1=grid,2=ipf,3=iff
- LOGICAL                  :: ISEL                      !plot selected
- INTEGER                  :: ITYPE                     !plot type,1=grid,2=ipf,3=iff
- INTEGER                  :: SYMBOL                    !no.
-! INTEGER                  :: FILL                      !0/1
- INTEGER                  :: THICKNESS                 !dikte
- REAL                     :: XMIN,YMIN,XMAX,YMAX       !coordinates of gen
- INTEGER                  :: RGB                       !color
- CHARACTER(LEN=256)       :: GENFNAME                  !name of idf/ipf-file
+ LOGICAL :: IACT                      !## active
+ LOGICAL :: ISEL                      !## plot selected
+ INTEGER :: ITYPE                     !## plot type,1=grid,2=ipf,3=iff
+ INTEGER :: SYMBOL                    !## no.
+ INTEGER :: THICKNESS                 !## dikte
+ INTEGER :: ILABELS                   !## selected label for plotting
+ INTEGER :: IFILL                     !## fill polygons
+ INTEGER :: TSIZE                     !## text size labels
+ REAL(KIND=DP_KIND) :: XMIN,YMIN,XMAX,YMAX       !## coordinates of gen
+ INTEGER :: RGB                       !## color
+ CHARACTER(LEN=256) :: GENFNAME       !## name of idf/ipf-file
 END TYPE GENOBJ
 TYPE(GENOBJ),DIMENSION(MXGEN) :: GEN
-CHARACTER(LEN=256),DIMENSION(MXGEN) :: ACTGEN   !##which gen is active in manager
-INTEGER,DIMENSION(MXGEN) :: ACTLISTGEN  !##which gen is selected
+CHARACTER(LEN=256),DIMENSION(MXGEN) :: ACTGEN   !## which gen is active in manager
+INTEGER,DIMENSION(MXGEN) :: ACTLISTGEN  !## which gen is selected
 INTEGER :: NGEN
-
-REAL,POINTER,DIMENSION(:) :: X,Y,XDUMMY,YDUMMY
 
 END MODULE MOD_GENPLOT_PAR

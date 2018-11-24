@@ -1,4 +1,4 @@
-!!  Copyright (C) Stichting Deltares, 2005-2017.
+!!  Copyright (C) Stichting Deltares, 2005-2018.
 !!
 !!  This file is part of iMOD.
 !!
@@ -23,42 +23,42 @@ MODULE MOD_OSD
 
 USE WINTERACTER
 
-INTEGER,PARAMETER :: ICF=1  !## operating is zero=lahey90 1=intel95
+!INTEGER,PARAMETER :: ICF=1  !## operating is zero=lahey90 1=intel95
 
-INTEGER,PARAMETER :: NOS=3
-INTEGER,SAVE :: OS = 1                      !## operating system 1=dos,2=linux,3=unix
-CHARACTER(LEN=20),DIMENSION(NOS),SAVE :: OSN
+!INTEGER,PARAMETER :: NOS=3
+INTEGER,PARAMETER :: OS = 1                      !## operating system 1=dos,2=linux,3=unix
+!CHARACTER(LEN=20),DIMENSION(NOS),SAVE :: OSN
 
 CONTAINS
 
- !###===================================================================
- SUBROUTINE UTL_OSSYSTEM()
- !###===================================================================
- IMPLICIT NONE
- INTEGER :: VOS,OSD_GET_OS
-
- !#get operating system
- VOS=OSD_GET_OS()
- OS =0
- IF(VOS.EQ.3)OS=1
- IF(VOS.EQ.2)OS=2
- IF(VOS.EQ.4)OS=2
-
- OS=1
-
- SELECT CASE (OS)
-  !## dos
-  CASE (1)
-   OSN(OS)   ='DOS-mode'
-  !## linux/unix (beowulf)
-  CASE (2)
-   OSN(OS)   ='UNIX/LINUX-mode'
-  !## something different
-  CASE DEFAULT
-   WRITE(*,*) 'No proper operating system!'
- END SELECT
-
- END SUBROUTINE UTL_OSSYSTEM
+! !###===================================================================
+! SUBROUTINE UTL_OSSYSTEM()
+! !###===================================================================
+! IMPLICIT NONE
+! INTEGER :: VOS,OSD_GET_OS
+!
+! !#get operating system
+! VOS=OSD_GET_OS()
+! OS =0
+! IF(VOS.EQ.3)OS=1
+! IF(VOS.EQ.2)OS=2
+! IF(VOS.EQ.4)OS=2
+!
+! OS=1
+!
+! SELECT CASE (OS)
+!  !## dos
+!  CASE (1)
+!   OSN(OS)   ='DOS-mode'
+!  !## linux/unix (beowulf)
+!  CASE (2)
+!   OSN(OS)   ='UNIX/LINUX-mode'
+!  !## something different
+!  CASE DEFAULT
+!   WRITE(*,*) 'No proper operating system!'
+! END SELECT
+!
+! END SUBROUTINE UTL_OSSYSTEM
 
 !###======================================================================
  SUBROUTINE OSD_GETARG(NARG,STRING)
@@ -82,16 +82,16 @@ CONTAINS
  END SUBROUTINE OSD_GETNARG
  
  !###======================================================================
- SUBROUTINE OSD_DATE_AND_TIME(DATEANDTIME,IDATE,ITIME)
+ SUBROUTINE OSD_DATE_AND_TIME(DATEANDTIME) !,IDATE,ITIME)
  !###======================================================================
  IMPLICIT NONE
- INTEGER,OPTIONAL,INTENT(OUT) :: IDATE,ITIME
+! INTEGER,OPTIONAL,INTENT(OUT) :: IDATE,ITIME
  CHARACTER(LEN=*),OPTIONAL,INTENT(OUT) :: DATEANDTIME
  CHARACTER(LEN=50) :: CTIME
  INTEGER :: TIME
  
- IF(PRESENT(IDATE))PAUSE
- IF(PRESENT(ITIME))PAUSE
+! IF(PRESENT(IDATE))PAUSE
+! IF(PRESENT(ITIME))PAUSE
  IF(PRESENT(DATEANDTIME))THEN
   DATEANDTIME=CTIME(TIME())
   DATEANDTIME=DATEANDTIME(1:LEN_TRIM(DATEANDTIME)-1) !## there is something "dirty" on the back of this

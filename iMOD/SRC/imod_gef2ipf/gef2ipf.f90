@@ -1,4 +1,4 @@
-!!  Copyright (C) Stichting Deltares, 2005-2017.
+!!  Copyright (C) Stichting Deltares, 2005-2018.
 !!
 !!  This file is part of iMOD.
 !!
@@ -141,8 +141,8 @@ CONTAINS
      IF(JCOL.GT.0)THEN
       IATTRIB(JCOL)=ICOL
           
-      FMULT(JCOL)=1.0
-      IF(INDEX(UTL_CAP(TRIM(ATTRIB1(ICOL)),'U'),'KPA').GT.0)FMULT(JCOL)=0.001
+      FMULT(JCOL)=1.0D0
+      IF(INDEX(UTL_CAP(TRIM(ATTRIB1(ICOL)),'U'),'KPA').GT.0)FMULT(JCOL)=0.01D0
      ENDIF
      
     ENDIF
@@ -151,7 +151,7 @@ CONTAINS
      SELECT CASE (UTL_CAP(TRIM(ATTRIB2(ICOL)),'U'))
       CASE ('WRIJVINGSGETAL','WRIJVINGSGETALRF','RF','WRIJVINGGETAL','LOCALFRICTION', &
             'FRICTIONRATIO','FRICTIONNUMBER')
-       IATTRIB(4)=ICOL; FMULT(4)=1.0
+       IATTRIB(4)=ICOL; FMULT(4)=1.0D0
      END SELECT
     ENDIF
     
@@ -167,7 +167,7 @@ CONTAINS
     ENDIF
     
     LINE='"'//TRIM(RTOS(X,'F',2))//'","'//TRIM(RTOS(Y,'F',2))//'","'// &
-         TRIM(CID)//'","'//TRIM(RTOS(0.0,'F',2))//'","'//TRIM(ITOS(1))//'"'
+         TRIM(CID)//'","'//TRIM(RTOS(0.0D0,'F',2))//'","'//TRIM(ITOS(1))//'"'
     DO ICOL=1,NCOLIPF 
      IF(IATTRIB(ICOL).EQ.0)THEN
       LINE=TRIM(LINE)//',"NotAvailable"'
@@ -239,7 +239,7 @@ CONTAINS
 
    ENDIF
 
-   IF(IBATCH.EQ.1)WRITE(6,'(A,F10.2,A)') '+Progress ',REAL(I)/REAL(SIZE(GEFNAMES))*100.0,'%              '  
+   IF(IBATCH.EQ.1)WRITE(6,'(A,F10.2,A)') '+Progress ',REAL(I)/REAL(SIZE(GEFNAMES))*100.0D0,'%              '  
 
   ELSE
 
@@ -247,7 +247,7 @@ CONTAINS
    IF(IBATCH.EQ.1)WRITE(*,'(A)') TRIM(ESTRING)
 
    LINE='"'//TRIM(RTOS(X,'F',2))//'","'//TRIM(RTOS(Y,'F',2))//'","'// &
-         TRIM(CID)//'","'//TRIM(RTOS(0.0,'F',2))//'","'//TRIM(ITOS(1))//'"'
+         TRIM(CID)//'","'//TRIM(RTOS(0.0D0,'F',2))//'","'//TRIM(ITOS(1))//'"'
    DO ICOL=1,NCOLIPF; LINE=TRIM(LINE)//',"NotAvailable"'; ENDDO
    WRITE(JU,'(A)') TRIM(LINE)
 
@@ -358,7 +358,7 @@ CONTAINS
     ENDIF
     
     LINE=CHAR(39)//TRIM(RTOS(X,'F',2))//CHAR(39)//','//CHAR(39)//TRIM(RTOS(Y,'F',2))//CHAR(39)//','//CHAR(39)// &
-         TRIM(CID)//CHAR(39)//','//CHAR(39)//TRIM(RTOS(0.0,'F',2))//CHAR(39)//','//CHAR(39)//TRIM(ITOS(1))//CHAR(39)
+         TRIM(CID)//CHAR(39)//','//CHAR(39)//TRIM(RTOS(0.0D0,'F',2))//CHAR(39)//','//CHAR(39)//TRIM(ITOS(1))//CHAR(39)
     DO ICOL=1,(MAXVAL(NCOLLINE)+5)   
      IF(IATTRIB(ICOL).EQ.0)THEN
       LINE=TRIM(LINE)//','//CHAR(39)//'NotAvailable'//CHAR(39)
@@ -459,7 +459,7 @@ CONTAINS
     
    ENDIF
 
-   IF(IBATCH.EQ.1)WRITE(6,'(A,F10.2,A)') '+Progress ',REAL(I)/REAL(SIZE(GEFNAMES))*100.0,'%              '  
+   IF(IBATCH.EQ.1)WRITE(6,'(A,F10.2,A)') '+Progress ',REAL(I)/REAL(SIZE(GEFNAMES))*100.0D0,'%              '  
 
   ELSE
 
@@ -467,7 +467,7 @@ CONTAINS
    IF(IBATCH.EQ.1)WRITE(*,'(A)') TRIM(ESTRING)
 
    LINE=CHAR(39)//TRIM(RTOS(X,'F',2))//CHAR(39)//','//CHAR(39)//TRIM(RTOS(Y,'F',2))//CHAR(39)//','//CHAR(39)// &
-         TRIM(CID)//CHAR(39)//','//CHAR(39)//TRIM(RTOS(0.0,'F',1))//CHAR(39)//','//CHAR(39)//TRIM(ITOS(1))//CHAR(39)
+         TRIM(CID)//CHAR(39)//','//CHAR(39)//TRIM(RTOS(0.0D0,'F',1))//CHAR(39)//','//CHAR(39)//TRIM(ITOS(1))//CHAR(39)
    DO ICOL=1,STORE_NCOLLINE(1); LINE=TRIM(LINE)//','//CHAR(39)//'NotAvailable'//CHAR(39); ENDDO
    WRITE(JU,'(A)') TRIM(LINE)
 

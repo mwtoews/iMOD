@@ -34,30 +34,30 @@ subroutine findoffset(x1,y1,n1,x2,y2,n2,xt,yt1,yt2,nt,  &
 ! arguments
  integer  , intent(in)     :: n1,n2           !> size of time series
 
- real     , intent(in)     :: x1(n1),y1(n1)   !> time series 1
- real     , intent(in)     :: x2(n2),y2(n2)   !> time series 2
- real     , intent(in)     :: perresult(4,2)  !> xtop,ytop,xbot,ybot for each time series
- real     , intent(out)    :: offresult(4)    !> varmovav,crsmovav,movav1,movav2
- real     , intent(in)     :: slen            !> search length
- real     , intent(in)     :: wfc             !> weight factor coefficient
+ REAL(KIND=DP_KIND)     , intent(in)     :: x1(n1),y1(n1)   !> time series 1
+ REAL(KIND=DP_KIND)     , intent(in)     :: x2(n2),y2(n2)   !> time series 2
+ REAL(KIND=DP_KIND)     , intent(in)     :: perresult(4,2)  !> xtop,ytop,xbot,ybot for each time series
+ REAL(KIND=DP_KIND)     , intent(out)    :: offresult(4)    !> varmovav,crsmovav,movav1,movav2
+ REAL(KIND=DP_KIND)     , intent(in)     :: slen            !> search length
+ REAL(KIND=DP_KIND)     , intent(in)     :: wfc             !> weight factor coefficient
  integer  , intent(in)     :: nt              !> length of temp arrays
- real     , intent(out)    :: xt(nt),yt1(nt),yt2(nt) !> temporary time series
- real     , intent(in)     :: off             !> start value to create timeseries of movav
- real     , intent(in)     :: ostep           !> step size for creating timeseries
- real     , intent(in)     :: mv              !> missing value for y()
+ REAL(KIND=DP_KIND)     , intent(out)    :: xt(nt),yt1(nt),yt2(nt) !> temporary time series
+ REAL(KIND=DP_KIND)     , intent(in)     :: off             !> start value to create timeseries of movav
+ REAL(KIND=DP_KIND)     , intent(in)     :: ostep           !> step size for creating timeseries
+ REAL(KIND=DP_KIND)     , intent(in)     :: mv              !> missing value for y()
 
 ! local variables
  integer   n,i,ibeg,iend
 
- real      xbot1,ybot1,xbot2,ybot2,xv
+ REAL(KIND=DP_KIND)      xbot1,ybot1,xbot2,ybot2,xv
 
- double precision val1,val2,vald,cov,var1,var2,vard,gem1,gem2,gemd,corr
+ REAL(KIND=DP_KIND) val1,val2,vald,cov,var1,var2,vard,gem1,gem2,gemd,corr
 
 
 ! functions
  integer   cfn_fidxlow_r,cfn_fidxupp_r
 
- real      weightedvalue
+ REAL(KIND=DP_KIND)      weightedvalue
 
 
 ! program section
@@ -105,13 +105,13 @@ subroutine findoffset(x1,y1,n1,x2,y2,n2,xt,yt1,yt2,nt,  &
 
 
    ! calc cross correlation between two movav series
-    cov =0.0
-    var1=0.0
-    var2=0.0
-    vard=0.0
-    gem1=0.0
-    gem2=0.0
-    gemd=0.0
+    cov =0.0D0
+    var1=0.0D0
+    var2=0.0D0
+    vard=0.0D0
+    gem1=0.0D0
+    gem2=0.0D0
+    gemd=0.0D0
     n   =0
     do i=1,nt
        val1 = yt1(i)

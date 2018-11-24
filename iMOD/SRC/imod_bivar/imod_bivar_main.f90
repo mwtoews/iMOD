@@ -1,4 +1,4 @@
-!!  Copyright (C) Stichting Deltares, 2005-2017.
+!!  Copyright (C) Stichting Deltares, 2005-2018.
 !!
 !!  This file is part of iMOD.
 !!
@@ -25,6 +25,8 @@ MODULE MOD_BIVARIATE
 USE WINTERACTER
 USE MOD_IDF_PAR, ONLY : IDFOBJ
 USE MOD_UTL, ONLY : UTL_DIST
+USE MOD_BIVAR
+USE IMODVAR, ONLY : DP_KIND,SP_KIND
 
 CONTAINS
 
@@ -35,17 +37,18 @@ CONTAINS
  TYPE(IDFOBJ),INTENT(INOUT) :: IDF
  INTEGER,INTENT(IN) :: MD
  INTEGER,INTENT(OUT) :: IERROR
- REAL,INTENT(INOUT),DIMENSION(:),POINTER :: XD,YD,ZD
+ REAL(KIND=DP_KIND),INTENT(INOUT),DIMENSION(:),POINTER :: XD,YD,ZD
  !## bivariate interpolation
  INTEGER :: NIWK,NWK,I,ICOL,IROW,IMODE,ND,IOS
  INTEGER,ALLOCATABLE,DIMENSION(:) :: IWK
- REAL,ALLOCATABLE,DIMENSION(:) :: WK,XI,YI
- REAL,ALLOCATABLE,DIMENSION(:,:) :: ZI
+ REAL(KIND=DP_KIND),ALLOCATABLE,DIMENSION(:) :: WK,XI,YI
+ REAL(KIND=DP_KIND),ALLOCATABLE,DIMENSION(:,:) :: ZI
  
  IERROR=1
  
  CALL BIVARIATE_DATA(XD,YD,ZD,MD,I,IDF%NODATA); ND=I
-
+ ND=MD
+ 
  IF(ND.LE.3)THEN
   CALL WMESSAGEBOX(OKONLY,EXCLAMATIONICON,COMMONOK,'The number of unique point should > 3!','Error')
   RETURN
@@ -82,9 +85,10 @@ CONTAINS
  IMPLICIT NONE 
  INTEGER,INTENT(IN) :: MD
  INTEGER,INTENT(OUT) :: ND
- REAL,INTENT(IN) :: NODATA
- REAL,INTENT(INOUT),DIMENSION(MD) :: XD,YD,ZD
- INTEGER :: I,J,N,XP,YP,ZP
+ REAL(KIND=DP_KIND),INTENT(IN) :: NODATA
+ REAL(KIND=DP_KIND),INTENT(INOUT),DIMENSION(MD) :: XD,YD,ZD
+ INTEGER :: I,J,N
+ REAL(KIND=DP_KIND) :: XP,YP,ZP
  
   !## mark doubles with nodata and compute mean for those double points
  DO I=1,MD
@@ -95,7 +99,7 @@ CONTAINS
    !## done allready
    IF(ZD(J).EQ.NODATA)CYCLE
    !## get distance between points - increase distance whenever points are intersected by fault
-   IF(UTL_DIST(XD(I),YD(I),XD(J),YD(J)).LE.0.0)THEN
+   IF(UTL_DIST(XD(I),YD(I),XD(J),YD(J)).LE.0.0D0)THEN
     N=N+1
     ZP=ZP+ZD(J)
     !## add point to existing point and turn location off
@@ -103,7 +107,7 @@ CONTAINS
    ENDIF
   ENDDO
   !## determine average spot
-  XD(I)=XP/REAL(N); YD(I)=YP/REAL(N); ZD(I)=ZP/REAL(N)
+  XD(I)=XP/REAL(N,8); YD(I)=YP/REAL(N,8); ZD(I)=ZP/REAL(N,8)
 
  END DO
   
@@ -119,39 +123,6 @@ CONTAINS
  END DO
  ND=J
  
-! !## sort x-coordinates for x, to skip double coordinates and mean values for those
-! CALL SORTEM(1,MD,XD,2,YD,ZD,(/0.0/),(/0.0/),(/0.0/),(/0.0/),(/0.0/)) !,ZD,ZD,ZD,ZD,ZD)
-!
-! !## sort y-coordinates
-! IS=1
-! DO I=2,MD
-!  IF(XD(I).NE.XD(I-1))THEN
-!   IE=I-1
-!   CALL SORTEM(IS,IE,YD,2,XD,ZD,(/0.0/),(/0.0/),(/0.0/),(/0.0/),(/0.0/)) !,ZD,ZD,ZD,ZD,ZD)
-!   IS=I
-!  ENDIF
-! ENDDO
-! !## sort last
-! IE=I-1
-! CALL SORTEM(IS,IE,YD,2,XD,ZD,(/0.0/),(/0.0/),(/0.0/),(/0.0/),(/0.0/)) !,ZD,ZD,ZD,ZD,ZD)
-!
-! J=1
-! !## mark doubles with nodata
-! DO I=2,MD
-!  IF(XD(I).EQ.XD(I-1).AND.YD(I).EQ.YD(I-1))ZD(I)=NODATA
-! END DO
-!
-! J=0
-! DO I=1,MD
-!  IF(ZD(I).NE.NODATA)THEN
-!   J=J+1
-!   IF(J.NE.I)THEN
-!    XD(J)=XD(I); YD(J)=YD(I); ZD(J)=ZD(I)
-!   ENDIF
-!  ENDIF
-! END DO
-! ND=J
-
  END SUBROUTINE BIVARIATE_DATA
  
 END MODULE MOD_BIVARIATE

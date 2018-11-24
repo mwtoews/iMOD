@@ -36,21 +36,21 @@ subroutine tsstat(lcor,nlag,ncol,minlag,maxlag,       &
 ! arguments
  integer  , intent(out)    :: exitcode       !> exit status
 
- real     , intent(out)    :: result(*)      !> result array
+ REAL(KIND=DP_KIND)     , intent(out)    :: result(*)      !> result array
                                              !! content depends on active statistics
- real     , intent(in)     :: mv             !> nodata value
+ REAL(KIND=DP_KIND)     , intent(in)     :: mv             !> nodata value
 
 
  logical  , intent(in)     :: lcor           !> .true. calculate correltations switched on
  integer  , intent(in)     :: nlag,ncol      !> 
- real     , intent(in)     :: minlag,maxlag  !> 
+ REAL(KIND=DP_KIND)     , intent(in)     :: minlag,maxlag  !> 
 
  logical  , intent(in)     :: lper           !> .true. calculate period        switched on
- real     , intent(in)     :: begdat,enddat,slen,wfc,xstep  !> 
+ REAL(KIND=DP_KIND)     , intent(in)     :: begdat,enddat,slen,wfc,xstep  !> 
 
  logical  , intent(in)     :: loff           !> .true. calculate offset        switched on
  integer  , intent(in)     :: noff           !> 
- real     , intent(in)     :: off,ostep      !> 
+ REAL(KIND=DP_KIND)     , intent(in)     :: off,ostep      !> 
 
  logical  , intent(in)     :: lgxg           !> .true. calculate GxG           switched on
  integer  , intent(in)     :: datgxg(3)      !> 

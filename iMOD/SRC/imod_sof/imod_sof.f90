@@ -1,4 +1,4 @@
-!!  Copyright (C) Stichting Deltares, 2005-2017.
+!!  Copyright (C) Stichting Deltares, 2005-2018.
 !!
 !!  This file is part of iMOD.
 !!
@@ -23,24 +23,25 @@
 MODULE MOD_SOF
 
 USE MOD_IDF_PAR, ONLY : IDFOBJ
-USE MOD_IDF, ONLY : IDFREAD,IDFREADSCALE,IDFCOPY,IDFALLOCATEX,IDFWRITE,IDFDEALLOCATEX,IDFNULLIFY,IDFGETLOC,IDFIROWICOL,IDFGETVAL, &
-        IDFDEALLOCATE
+USE MOD_IDF !, ONLY : IDFREAD,IDFREADSCALE,IDFCOPY,IDFALLOCATEX,IDFWRITE,IDFDEALLOCATEX,IDFNULLIFY,IDFGETLOC,IDFIROWICOL,IDFGETVAL, &
+        !IDFDEALLOCATE
 USE MOD_IDFEDIT_TRACE, ONLY : IDFEDITTRACE 
-USE MOD_OSD, ONLY : OSD_TIMER,OSD_OPEN
-USE MOD_UTL, ONLY : UTL_IDFSNAPTOGRID,UTL_GETUNIT,UTL_DIST,ITOS,UTL_DIRINFO_POINTER,UTL_GETMED,JD,UTL_GDATE,UTL_JDATETOIDATE,UTL_EQUALS_REAL
-USE MOD_SOLID_PAR, ONLY : HCLOSE,MXITER1,MXITER2,IDAMPING,RELAX,ITIGHT,MICNVG
-USE MOD_POLINT, ONLY : POL1LOCATE
-USE MOD_IPF, ONLY : IPFALLOCATE,IPFREAD2,IPFDEALLOCATE
-USE MOD_IPF_PAR, ONLY : IPF,NIPF
-USE MOD_PMANAGER, ONLY : PMANAGER_SAVEMF2005_MAXNO
-USE IMODVAR, ONLY : PI
+USE MOD_OSD !, ONLY : OSD_TIMER,OSD_OPEN
+USE MOD_UTL !, ONLY : UTL_IDFSNAPTOGRID,UTL_GETUNIT,UTL_DIST,ITOS,UTL_DIRINFO_POINTER,UTL_GETMED,JD,UTL_GDATE,UTL_JDATETOIDATE,UTL_EQUALS_REAL
+USE MOD_SOLID_PAR !, ONLY : HCLOSE,MXITER1,MXITER2,IDAMPING,RELAX,ITIGHT,MICNVG
+USE MOD_POLINT !, ONLY : POL1LOCATE
+USE MOD_IPF !, ONLY : IPFALLOCATE,IPFREAD2,IPFDEALLOCATE
+USE MOD_IPF_PAR !, ONLY : IPF,NIPF
+!USE MOD_PMANAGER_UTL !, ONLY : UTL_MF2005_MAXNO
+USE IMODVAR !, ONLY : DP_KIND,SP_KIND,PI
+USE MOD_QKSORT
 
-REAL,POINTER,DIMENSION(:,:),PRIVATE :: PL,PL_BU
+REAL(KIND=DP_KIND),POINTER,DIMENSION(:,:),PRIVATE :: PL,PL_BU
 INTEGER,PRIVATE :: NP
 
 TYPE BPXOBJ
  INTEGER :: ICOL,IROW
- REAL :: Z
+ REAL(KIND=DP_KIND) :: Z
 END TYPE BPXOBJ
 TYPE(BPXOBJ),ALLOCATABLE,DIMENSION(:),PRIVATE :: BPX,PPX,TPX
 
@@ -51,12 +52,12 @@ CONTAINS
  !###======================================================================
  IMPLICIT NONE
  INTEGER,INTENT(IN) :: N,IFORMAT,MINFRICTION
- REAL,INTENT(INOUT) :: RAIN
- REAL,INTENT(IN),DIMENSION(:,:),POINTER :: QDW
+ REAL(KIND=DP_KIND),INTENT(INOUT) :: RAIN
+ REAL(KIND=DP_KIND),INTENT(IN),DIMENSION(:,:),POINTER :: QDW
  TYPE(IDFOBJ),INTENT(INOUT),DIMENSION(N) :: IDF
- REAL,DIMENSION(2) :: LX,LY
+ REAL(KIND=DP_KIND),DIMENSION(2) :: LX,LY
  INTEGER :: I,IROW,ICOL,IC,IR,JC,JR,IU,JU,MF,NF,NR
- REAL :: SSX,SSY,A,DX,DY,RCOND,RSTAGE,RBOT
+ REAL(KIND=DP_KIND) :: SSX,SSY,A,DX,DY,RCOND,RSTAGE,RBOT
  
  !## read files
  DO I=1,4; IF(.NOT.IDFREAD(IDF(I),IDF(I)%FNAME,1))THEN; ENDIF; ENDDO
@@ -71,8 +72,8 @@ CONTAINS
  SSX=IDF(1)%DX; SSY=SSX
 
  !## rain in m3/sec
- RAIN=(RAIN/1000.0)*IDF(1)%DX**2.0
- RAIN= RAIN/86400.0
+ RAIN=(RAIN/1000.0D0)*IDF(1)%DX**2.0D0
+ RAIN= RAIN/86400.0D0
  
  IU=0; JU=0; NR=0
  IF(IFORMAT.EQ.2)THEN
@@ -92,11 +93,11 @@ CONTAINS
  ENDIF
 
  !## clean files
- DO I=5,9; IDF(I)%X=0.0; ENDDO
+ DO I=5,9; IDF(I)%X=0.0D0; ENDDO
 
  !## clean visited locations for nodata points
  DO IROW=1,IDF(1)%NROW; DO ICOL=1,IDF(1)%NCOL
-  IF(IDF(1)%X(ICOL,IROW).EQ.IDF(1)%NODATA)IDF(9)%X(ICOL,IROW)=1.0
+  IF(IDF(1)%X(ICOL,IROW).EQ.IDF(1)%NODATA)IDF(9)%X(ICOL,IROW)=1.0D0
  ENDDO; ENDDO
 
  !## number of sections
@@ -106,7 +107,7 @@ CONTAINS
  DO IROW=1,IDF(1)%NROW; DO ICOL=1,IDF(1)%NCOL
 
   !## skip visited location
-  IF(IDF(9)%X(ICOL,IROW).NE.0.0)CYCLE
+  IF(IDF(9)%X(ICOL,IROW).NE.0.0D0)CYCLE
 
   !## start in the middle
   CALL IDFGETLOC(IDF(1),IROW,ICOL,LX(1),LY(1))
@@ -159,12 +160,12 @@ CONTAINS
 
  !## correct 
  DO IROW=1,IDF(1)%NROW; DO ICOL=1,IDF(1)%NCOL
-  IF(IDF(5)%X(ICOL,IROW).LE.0.0)CYCLE
+  IF(IDF(5)%X(ICOL,IROW).LE.0.0D0)CYCLE
   RCOND =IDF(5)%X(ICOL,IROW)
   RSTAGE=IDF(6)%X(ICOL,IROW)/RCOND
   RBOT  =IDF(7)%X(ICOL,IROW)/RCOND
 !  RINF  =IDF(8)%X(ICOL,IROW)/RCOND
-!  IF(RSTAGE-RBOT.LT.1.0)RBOT=RSTAGE-1.0
+!  IF(RSTAGE-RBOT.LT.1.0D0)RBOT=RSTAGE-1.0D0
   IDF(6)%X(ICOL,IROW)=RSTAGE !## stage
   IDF(7)%X(ICOL,IROW)=RBOT   !## bottom
 !  IDF(8)%X(ICOL,IROW)=RINF   !## infiltration
@@ -172,7 +173,7 @@ CONTAINS
  
  IF(IFORMAT.EQ.2)THEN
   CLOSE(IU); CLOSE(JU) 
-  CALL PMANAGER_SAVEMF2005_MAXNO(IDF(1)%FNAME(:INDEX(IDF(1)%FNAME,'.',.TRUE.)-1)//'.IPF_',(/NR/))
+  CALL UTL_MF2005_MAXNO(IDF(1)%FNAME(:INDEX(IDF(1)%FNAME,'.',.TRUE.)-1)//'.IPF_',(/NR/))
  ENDIF
  
  IDF(9)%FNAME='d:\IMOD-MODELS\AMERIKA\CALIFORNIA\DBASE\OLF\PROSSER_CREEK\CHECK.IDF'
@@ -187,17 +188,17 @@ CONTAINS
  SUBROUTINE SOF_EXPORT_FILL(IC,IR,LX,LY,IDF,RAIN,JU,MF,NR,MINFRICTION,QDW)
  !###======================================================================
  IMPLICIT NONE
- REAL,PARAMETER :: MRC=0.03 !## clean, straight, full stage, no rifts or deep pools
+ REAL(KIND=DP_KIND),PARAMETER :: MRC=0.03D0 !## clean, straight, full stage, no rifts or deep pools
                             !## (http://www.fsl.orst.edu/geowater/FX3/help/8_Hydraulic_Reference/Mannings_n_Tables.htm)
- REAL,PARAMETER :: C=1.0    !## default water resistance
+ REAL(KIND=DP_KIND),PARAMETER :: C=1.0D0    !## default water resistance
  INTEGER,INTENT(INOUT) :: NR
  INTEGER,INTENT(IN),DIMENSION(:) :: IR,IC
  INTEGER,INTENT(IN) :: JU,MF,MINFRICTION
- REAL,INTENT(IN),DIMENSION(:,:),POINTER :: QDW
- REAL,INTENT(IN),DIMENSION(:) :: LX,LY
- REAL,INTENT(IN) :: RAIN
+ REAL(KIND=DP_KIND),INTENT(IN),DIMENSION(:,:),POINTER :: QDW
+ REAL(KIND=DP_KIND),INTENT(IN),DIMENSION(:) :: LX,LY
+ REAL(KIND=DP_KIND),INTENT(IN) :: RAIN
  TYPE(IDFOBJ),INTENT(INOUT),DIMENSION(:) :: IDF
- REAL :: D,RCOND,RSTAGE,RBOT,RINF,Q,DH,S,H,W,DW,DQ,PERM,WP,F
+ REAL(KIND=DP_KIND) :: D,RCOND,RSTAGE,RBOT,RINF,Q,DH,S,H,W,DW,DQ,PERM,WP,F
  INTEGER :: I
  
  !## half of the distance for each cell
@@ -223,8 +224,8 @@ CONTAINS
     W =QDW(I-1,3)+F*DW
     WP=W+2.0*H
    ELSE
-    H =0.0
-    WP=0.0
+    H =0.0D0
+    WP=0.0D0
    ENDIF   
   
   ELSE
@@ -233,14 +234,14 @@ CONTAINS
    DH    =ABS(IDF(2)%X(IC(1),IR(1)))
    !## slope
    S     =DH/(D*2.0)
-   IF(S.EQ.0.0)THEN
-    H=0.0
-    W=0.0
+   IF(S.EQ.0.0D0)THEN
+    H=0.0D0
+    W=0.0D0
    ELSE
 
     !## waterdepth (assuming waterwidth of log(10) of count
-    W=LOG10(F) !1.0
-    H=0.0; IF(W.GT.0.0)H=((Q*MRC)/(W*SQRT(S)))**(3.0/5.0)
+    W=LOG10(F) !1.0D0
+    H=0.0D0; IF(W.GT.0.0D0)H=((Q*MRC)/(W*SQRT(S)))**(3.0/5.0)
 
    ENDIF
 
@@ -254,14 +255,14 @@ CONTAINS
   
   RCOND =(D*WP)/C
   
-  RINF=1.0
+  RINF=1.0D0
   
   DO I=1,2
    IDF(5)%X(IC(I),IR(I))=IDF(5)%X(IC(I),IR(I))+RCOND        !## total conductance
    !## assign to from pixels only
    RSTAGE=IDF(4)%X(IC(I),IR(I))
    RBOT  =IDF(4)%X(IC(I),IR(I))-H   
-!   RINF=1.0; IF(RSTAGE-RBOT.LT.0.10)RINF=0.0
+!   RINF=1.0D0; IF(RSTAGE-RBOT.LT.0.10)RINF=0.0D0
    IDF(6)%X(IC(I),IR(I))=IDF(6)%X(IC(I),IR(I))+RSTAGE*RCOND !## stage
    IDF(7)%X(IC(I),IR(I))=IDF(7)%X(IC(I),IR(I))+RBOT*RCOND   !## bottom
 !   IDF(8)%X(IC(I),IR(I))=IDF(8)%X(IC(I),IR(I))+RINF*RCOND   !## inffactor
@@ -273,7 +274,7 @@ CONTAINS
     DO I=1,2
      NR=NR+1
      !## assign to from pixels only
-     PERM  =1.0
+     PERM  =1.0D0
      RSTAGE=IDF(4)%X(IC(I),IR(I))
      RBOT  =IDF(4)%X(IC(I),IR(I))-H
      WRITE(JU,'(6(G15.7,A),2(I4,A))') LX(I),',',LY(I),','//TRIM(ITOS(MF))//',Segment_'//TRIM(ITOS(MF))//',',W,',',RSTAGE,',', &
@@ -290,16 +291,16 @@ CONTAINS
  SUBROUTINE SOF_EXPORT_FILL_OLD(IC,IR,LX,LY,IDF,RAIN,JU,MF,NR)
  !###======================================================================
  IMPLICIT NONE
- REAL,PARAMETER :: MRC=0.03 !## clean, straight, full stage, no rifts or deep pools
+ REAL(KIND=DP_KIND),PARAMETER :: MRC=0.03D0 !## clean, straight, full stage, no rifts or deep pools
                             !## (http://www.fsl.orst.edu/geowater/FX3/help/8_Hydraulic_Reference/Mannings_n_Tables.htm)
- REAL,PARAMETER :: C=0.1    !## default water resistance
+ REAL(KIND=DP_KIND),PARAMETER :: C=0.1    !## default water resistance
  INTEGER,INTENT(INOUT) :: NR
  INTEGER,INTENT(IN),DIMENSION(:) :: IR,IC
  INTEGER,INTENT(IN) :: JU,MF
- REAL,INTENT(IN),DIMENSION(:) :: LX,LY
- REAL,INTENT(IN) :: RAIN
+ REAL(KIND=DP_KIND),INTENT(IN),DIMENSION(:) :: LX,LY
+ REAL(KIND=DP_KIND),INTENT(IN) :: RAIN
  TYPE(IDFOBJ),INTENT(INOUT),DIMENSION(:) :: IDF
- REAL :: D,RCOND,RSTAGE,RBOT,RINF,Q,DH,S,Y,W,PERM
+ REAL(KIND=DP_KIND) :: D,RCOND,RSTAGE,RBOT,RINF,Q,DH,S,Y,W,PERM
  INTEGER :: I
  
  !## half of the distance for each cell
@@ -314,11 +315,11 @@ CONTAINS
   DH    =ABS(IDF(2)%X(IC(I),IR(I)))
   !## slope
   S     =DH/(D*2.0)
-  IF(S.EQ.0.0)THEN
-   Y=0.0 !IDF(1)%DX
+  IF(S.EQ.0.0D0)THEN
+   Y=0.0D0 !IDF(1)%DX
   ELSE
-   !## waterdepth (assuming waterwidth of 1.0)
-   W=1.0
+   !## waterdepth (assuming waterwidth of 1.0D0)
+   W=1.0D0
    Y=((Q*MRC)/(W*SQRT(S)))**(3.0/5.0)
   ENDIF
 
@@ -331,8 +332,8 @@ CONTAINS
   RSTAGE=IDF(4)%X(IC(I),IR(I))
   RBOT  =IDF(4)%X(IC(I),IR(I))-Y
   
-  RINF=1.0
-  PERM=1.0
+  RINF=1.0D0
+  PERM=1.0D0
 
   IDF(5)%X(IC(I),IR(I))=IDF(5)%X(IC(I),IR(I))+RCOND  !## conductance
   IDF(6)%X(IC(I),IR(I))=RSTAGE !## stage
@@ -354,7 +355,7 @@ CONTAINS
  IMPLICIT NONE
  TYPE(IDFOBJ),INTENT(INOUT) :: IDF
  INTEGER,INTENT(INOUT) :: IR,IC
- REAL,INTENT(IN) :: LX,LY
+ REAL(KIND=DP_KIND),INTENT(IN) :: LX,LY
    
  SOF_TRACE_EDGE=.FALSE.
  
@@ -375,10 +376,10 @@ CONTAINS
  !###======================================================================
  IMPLICIT NONE
  CHARACTER(LEN=*),INTENT(IN) :: RESULTIDF,OUTPUTFOLDER
- REAL,INTENT(IN) :: MINQ
+ REAL(KIND=DP_KIND),INTENT(IN) :: MINQ
  TYPE(IDFOBJ),INTENT(INOUT),DIMENSION(:) :: IDF
  TYPE(IDFOBJ),INTENT(INOUT),DIMENSION(:,:) :: TQP
- REAL,DIMENSION(:),INTENT(IN) :: PTQP
+ REAL(KIND=DP_KIND),DIMENSION(:),INTENT(IN) :: PTQP
  INTEGER,INTENT(IN) :: ITQP,TTQP
  TYPE(IDFOBJ),ALLOCATABLE,DIMENSION(:) :: FIDF,RIDF
  INTEGER :: I,II,J,IROW,ICOL,JROW,JCOL,IPZ,JPZ,NIDF,NX,IMND
@@ -389,7 +390,7 @@ CONTAINS
  CHARACTER(LEN=256),DIMENSION(:),POINTER :: LISTNAME
  CHARACTER(LEN=256) :: DIR
  CHARACTER(LEN=52) :: WCD
- REAL,DIMENSION(:,:),ALLOCATABLE :: XSORT,YSORT,XMED
+ REAL(KIND=DP_KIND),DIMENSION(:,:),ALLOCATABLE :: XSORT,YSORT,XMED
  
  DIR=RESULTIDF(:INDEX(RESULTIDF,'\',.TRUE.)-1)
  WCD=RESULTIDF(INDEX(RESULTIDF,'\',.TRUE.)+1:)
@@ -402,12 +403,10 @@ CONTAINS
  ALLOCATE(FIDF(NIDF),RIDF(NIDF));DO I=1,NIDF; CALL IDFNULLIFY(FIDF(I)); CALL IDFNULLIFY(RIDF(I)); ENDDO
  
  !## read in all result files in fidf() and make a copy of it to ridf()
-! J=JD(2100,1,1)
  DO I=1,SIZE(LISTNAME)
   FIDF(I)%FNAME=TRIM(DIR)//'\'//TRIM(LISTNAME(I))
   WRITE(*,'(A)') 'Reading '//TRIM(FIDF(I)%FNAME)
   IF(.NOT.IDFREAD(FIDF(I),FIDF(I)%FNAME,1))RETURN
-!  IF(FIDF(I)%JD.NE.0)J=MIN(J,FIDF(I)%JD)
   CALL IDFCOPY(FIDF(I),RIDF(I))
  ENDDO
  
@@ -422,7 +421,7 @@ CONTAINS
   
  !## read in dewatering pointer file
  IF(.NOT.IDFREAD(IDF(1),IDF(1)%FNAME,1))THEN; ENDIF
- !# read percentiles
+ !## read percentiles
  IF(ITQP.EQ.0)THEN
   !## number of percentiles (i), number of month (j)
   DO I=1,SIZE(TQP,1); DO J=1,SIZE(TQP,2)
@@ -431,7 +430,7 @@ CONTAINS
   ENDDO; ENDDO
  ELSE
   DO I=1,SIZE(TQP,1); DO J=1,SIZE(TQP,2)
-   CALL IDFCOPY(IDF(1),TQP(I,J)); TQP(I,J)%X=0.0
+   CALL IDFCOPY(IDF(1),TQP(I,J)); TQP(I,J)%X=0.0D0
   ENDDO; ENDDO
  ENDIF
 
@@ -456,7 +455,7 @@ CONTAINS
   CALL IDFEDITTRACE(IDF(1),IDF(2),THREAD,YSEL,ISPEC,DTERM,IMENU,MAXTHREAD,MAXN,IDF(1)%X(ICOL,IROW),NTHREAD,IPZ)
 
   !## add fluxes to get total discharge per catchment per month
-  XSORT=0.0; YSORT=0.0; NSORT=0
+  XSORT=0.0D0; YSORT=0.0D0; NSORT=0
   DO J=1,NIDF
    !## month of current result idf-file
    IMND=FIDF(J)%IMH
@@ -468,7 +467,7 @@ CONTAINS
     XSORT(NSORT(IMND),IMND)=XSORT(NSORT(IMND),IMND)+FIDF(J)%X(JCOL,JROW)
 !    XSORT(J)=XSORT(J)+FIDF(J)%X(JCOL,JROW)
 !    !## sum fluxes
-!    IDF(3)%X(JCOL,JROW)=IDF(3)%X(JCOL,JROW)+1.0
+!    IDF(3)%X(JCOL,JROW)=IDF(3)%X(JCOL,JROW)+1.0D0
    ENDDO
   ENDDO
 
@@ -501,7 +500,7 @@ CONTAINS
     !## number of percentiles
     DO I=1,SIZE(TQP,1); XMED(I,IMND)=TQP(I,IMND)%X(ICOL,IROW); ENDDO
     !## if percentiles are zero for months, reset nsort
-    NMED(IMND)=SIZE(TQP,1); IF(SUM(XMED(:,IMND)).EQ.0.0)NMED(IMND)=0
+    NMED(IMND)=SIZE(TQP,1); IF(SUM(XMED(:,IMND)).EQ.0.0D0)NMED(IMND)=0
 !    WRITE(*,*) IMND,NMED(IMND)
    ENDDO
    
@@ -601,8 +600,8 @@ CONTAINS
  INTEGER,INTENT(IN) :: IWRITE,N 
  TYPE(IDFOBJ),INTENT(INOUT),DIMENSION(N) :: IDF
  INTEGER :: IROW,ICOL,IR,IC,IP,IU,I,J,NF,M,NFTHREAD,IZ,IZ1,IZ2
- REAL :: A,DX,DY,F,SSX,SSY,XWBAL,Z1,Z2,DZ,S,ZCRIT
- REAL,DIMENSION(0:2) :: LX,LY
+ REAL(KIND=DP_KIND) :: A,DX,DY,F,SSX,SSY,XWBAL,Z1,Z2,DZ,S,ZCRIT
+ REAL(KIND=DP_KIND),DIMENSION(0:2) :: LX,LY
  LOGICAL :: LWBAL,LSTOP
  TYPE TPOBJ
   INTEGER,POINTER,DIMENSION(:) :: IC,IR,IC_BU,IR_BU
@@ -615,7 +614,7 @@ CONTAINS
  ALLOCATE(TP(1))
  NULLIFY(TP(1)%IC); NULLIFY(TP(1)%IR)
 
- F=1.0
+ F=1.0D0
  
  IF(.NOT.IDFREAD(IDF(1),IDF(1)%FNAME,1))THEN; ENDIF !## read friction
  
@@ -634,7 +633,7 @@ CONTAINS
  LWBAL=.FALSE.
  IF(IDF(4)%FNAME.NE.'')THEN
   LWBAL=.TRUE.
-  CALL IDFCOPY(IDF(1),IDF(4)); IDF(4)%X=0.0
+  CALL IDFCOPY(IDF(1),IDF(4)); IDF(4)%X=0.0D0
   !## read entire ipf
   NIPF=1; CALL IPFALLOCATE(); IPF(1)%XCOL=1; IPF(1)%YCOL=2; IPF(1)%ZCOL=3; IPF(1)%Z2COL=1; IPF(1)%QCOL=1 
   IPF(1)%FNAME=IDF(4)%FNAME; IF(.NOT.IPFREAD2(1,1,0))RETURN
@@ -652,7 +651,7 @@ CONTAINS
 
  WRITE(6,'(1X,A/)') 'Tracing ...'
 
- IDF(2)%X=0.0; IDF(3)%X=0.0
+ IDF(2)%X=0.0D0; IDF(3)%X=0.0D0
  ALLOCATE(TP(1)%IC(NFTHREAD),TP(1)%IR(NFTHREAD))
 
  !## number of particles
@@ -686,7 +685,7 @@ CONTAINS
 
    IF(IWRITE.EQ.1)THEN; WRITE(IU,*) IP; WRITE(IU,'(2(F15.3,1X))') LX(0),LY(0); ENDIF
    IC=ICOL; IR=IROW
-   IDF(2)%X(IC,IR)=IDF(2)%X(IC,IR)+1.0
+   IDF(2)%X(IC,IR)=IDF(2)%X(IC,IR)+1.0D0
    IDF(3)%X(IC,IR)=REAL(IP)
 
    !## store starting location
@@ -728,7 +727,7 @@ CONTAINS
     
     !## count particles passes
     IF(IDF(3)%X(IC,IR).NE.REAL(IP))THEN
-     IDF(2)%X(IC,IR)=IDF(2)%X(IC,IR)+1.0
+     IDF(2)%X(IC,IR)=IDF(2)%X(IC,IR)+1.0D0
      
      !## store thread
      TP(1)%NT=TP(1)%NT+1; M=TP(1)%NT
@@ -754,7 +753,7 @@ CONTAINS
 
    !## waterbalance - trace backwards because of waterbalance-stations
    IF(LWBAL)THEN
-    XWBAL=0.0
+    XWBAL=0.0D0
     DO I=TP(1)%NT,1,-1
      IC=TP(1)%IC(I); IR=TP(1)%IR(I)
      IF(IDF(4)%X(IC,IR).NE.0)XWBAL=IDF(4)%X(IC,IR)
@@ -764,7 +763,7 @@ CONTAINS
 
    IC=TP(1)%IC(1);        IR=TP(1)%IR(1);        Z2=IDF(8)%X(IC,IR)
    IC=TP(1)%IC(TP(1)%NT); IR=TP(1)%IR(TP(1)%NT); Z1=IDF(8)%X(IC,IR)
-   ZCRIT=Z2-Z1; ZCRIT=0.0001*ZCRIT
+   ZCRIT=Z2-Z1; ZCRIT=0.001D0*ZCRIT
 
    !## adjust flat areas - get z-values final point
    IC=TP(1)%IC(1); IR=TP(1)%IR(1); IZ1=0; Z1=IDF(8)%X(IC,IR)
@@ -783,7 +782,7 @@ CONTAINS
      !## change values
      IF(IZ1.NE.0)THEN
 !IF(Z2.EQ.Z1)THEN
-!z2=z2-1.0
+!z2=z2-1.0D0
 !WRITE(*,*)
 !ENDIF
       IZ2=I; DZ=Z2-Z1; S=DZ/(IZ2-IZ1)
@@ -822,14 +821,14 @@ CONTAINS
  END SUBROUTINE SOF_TRACE
 
  !###======================================================================
- REAL FUNCTION SOF_TRACE_GET_ANGLE_MEAN(IDF,XC,YC)
+ REAL(KIND=DP_KIND) FUNCTION SOF_TRACE_GET_ANGLE_MEAN(IDF,XC,YC)
  !###======================================================================
  IMPLICIT NONE
  TYPE(IDFOBJ),INTENT(IN) :: IDF
- REAL,INTENT(IN) :: XC,YC
- REAL,DIMENSION(2) :: A
+ REAL(KIND=DP_KIND),INTENT(IN) :: XC,YC
+ REAL(KIND=DP_KIND),DIMENSION(2) :: A
  INTEGER :: IROW,ICOL,IC1,IC2,IR1,IR2,IC,IR,IWINDOW
- REAL :: DX,DY,X1,Y1,F,AF,TD,X2,Y2
+ REAL(KIND=DP_KIND) :: DX,DY,X1,Y1,F,AF,TD,X2,Y2
 
  !## get proper cell
  CALL IDFIROWICOL(IDF,IR,IC,XC,YC)
@@ -865,20 +864,20 @@ CONTAINS
 
  if(.TRUE.)then
   !## get mean of 4 points
-  A=0.0; AF=0.0
+  A=0.0D0; AF=0.0D0
   DO IROW=MAX(1,IR1),MIN(IDF%NROW,IR2); DO ICOL=MAX(1,IC1),MIN(IDF%NCOL,IC2)
    IF(IDF%X(ICOL,IROW).EQ.IDF%NODATA)EXIT
 !   CALL IDFGETLOC(IDF,IROW,ICOL,X1,Y1)
 !   F=UTL_DIST(XC,YC,X1,Y1)
-!   IF(F.EQ.0.0)THEN
-!F=1.0
+!   IF(F.EQ.0.0D0)THEN
+!F=1.0D0
 !    SOF_TRACE_GET_ANGLE_MEAN=IDF%X(ICOL,IROW); RETURN
 !   ENDIF
-f=0.0
-if(irow.eq.ir.or.icol.eq.ic)f=0.0
-if(irow.eq.ir.and.icol.eq.ic)f=1.0
+f=0.0D0
+if(irow.eq.ir.or.icol.eq.ic)f=0.0D0
+if(irow.eq.ir.and.icol.eq.ic)f=1.0D0
    !## each weighted as much as the others, in that way it converges
-!   F=1.0/F
+!   F=1.0D0/F
    DX=IDF%DX*COS(IDF%X(ICOL,IROW)); DY=IDF%DY*SIN(IDF%X(ICOL,IROW))
    A(1)=A(1)+DX*F; A(2)=A(2)+DY*F; AF=AF+F
   ENDDO; ENDDO
@@ -889,13 +888,13 @@ if(irow.eq.ir.and.icol.eq.ic)f=1.0
    CALL IDFGETLOC(IDF,IR1,IC2,X2,Y2)   
    TD=X2-X1; F=(XC-X1)/TD
    
-   DX=0.0; DY=0.0
-   DX=   (1.0-F)*COS(IDF%X(IC1,IR1)); DY=   (1.0-F)*SIN(IDF%X(IC1,IR1))
+   DX=0.0D0; DY=0.0D0
+   DX=   (1.0D0-F)*COS(IDF%X(IC1,IR1)); DY=   (1.0D0-F)*SIN(IDF%X(IC1,IR1))
    DX=DX+     F *COS(IDF%X(IC2,IR1)); DY=DY+     F *SIN(IDF%X(IC2,IR1))
    A(1)=ATAN2(DY,DX)
 
-   DX=0.0; DY=0.0
-   DX=   (1.0-F)*COS(IDF%X(IC1,IR2)); DY=   (1.0-F)*SIN(IDF%X(IC1,IR2))
+   DX=0.0D0; DY=0.0D0
+   DX=   (1.0D0-F)*COS(IDF%X(IC1,IR2)); DY=   (1.0D0-F)*SIN(IDF%X(IC1,IR2))
    DX=DX+     F *COS(IDF%X(IC2,IR2)); DY=DY+     F *SIN(IDF%X(IC2,IR2))
    A(2)=ATAN2(DY,DX)
    
@@ -904,8 +903,8 @@ if(irow.eq.ir.and.icol.eq.ic)f=1.0
    CALL IDFGETLOC(IDF,IR2,IC1,X2,Y2)   
    TD=Y1-Y2; F=(Y1-YC)/TD
 
-   DX=0.0; DY=0.0
-   DX=DX+(1.0-F)*COS(A(1)); DY=DY+(1.0-F)*SIN(A(1))
+   DX=0.0D0; DY=0.0D0
+   DX=DX+(1.0D0-F)*COS(A(1)); DY=DY+(1.0D0-F)*SIN(A(1))
    DX=DX+     F *COS(A(2)); DY=DY+     F *SIN(A(2))
 
    A(1)=DX
@@ -918,12 +917,12 @@ if(irow.eq.ir.and.icol.eq.ic)f=1.0
  END FUNCTION SOF_TRACE_GET_ANGLE_MEAN
  
  !###======================================================================
- SUBROUTINE SOF_MAIN(IDF,IPNTR,IWINDOW,XMIN,YMIN,XMAX,YMAX,CELLSIZE,IGRAD,PITTSIZE)
+ SUBROUTINE SOF_MAIN(IDF,IPNTR,IWINDOW,XMIN,YMIN,XMAX,YMAX,CELLSIZE,IGRAD)
  !###======================================================================
  IMPLICIT NONE
  TYPE(IDFOBJ),INTENT(INOUT),DIMENSION(:) :: IDF
- INTEGER,INTENT(IN) :: IWINDOW,IGRAD,PITTSIZE
- REAL,INTENT(IN) :: XMIN,YMIN,XMAX,YMAX,CELLSIZE
+ INTEGER,INTENT(IN) :: IWINDOW,IGRAD
+ REAL(KIND=DP_KIND),INTENT(IN) :: XMIN,YMIN,XMAX,YMAX,CELLSIZE
  INTEGER,INTENT(IN) :: IPNTR !## ipntr=0 no pointer to stop, 1 use pointer to stop
  INTEGER :: ITIC,ITOC,I,IROW,ICOL
   
@@ -945,7 +944,7 @@ if(irow.eq.ir.and.icol.eq.ic)f=1.0
   IDF(1)%DX=CELLSIZE; IDF(1)%DY=IDF(1)%DX
   CALL UTL_IDFSNAPTOGRID(IDF(1)%XMIN,IDF(1)%XMAX,IDF(1)%YMIN,IDF(1)%YMAX,IDF(1)%DX,IDF(1)%NCOL,IDF(1)%NROW)
   !## take blockvalue since no scaling is used, only a window is specified
-  IF(.NOT.IDFREADSCALE(IDF(1)%FNAME,IDF(1),10,1,0.0,0))THEN; RETURN; ENDIF
+  IF(.NOT.IDFREADSCALE(IDF(1)%FNAME,IDF(1),10,1,0.0D0,0))THEN; RETURN; ENDIF
  ENDIF
 
  !## allocate grid to determine area of influence by pointer
@@ -956,7 +955,7 @@ if(irow.eq.ir.and.icol.eq.ic)f=1.0
 
  !## read pointer (scale with most frequent value, option 7)
  IF(IPNTR.EQ.1)THEN
-  IF(.NOT.IDFREADSCALE(IDF(5)%FNAME,IDF(5),7,1,0.0,0))THEN; RETURN; ENDIF
+  IF(.NOT.IDFREADSCALE(IDF(5)%FNAME,IDF(5),7,1,0.0D0,0))THEN; RETURN; ENDIF
   !## adjust idf(1) for pointer
   DO IROW=1,IDF(1)%NROW; DO ICOL=1,IDF(1)%NCOL
    IF(IDF(5)%X(ICOL,IROW).NE.IDF(5)%NODATA)IDF(1)%X(ICOL,IROW)=IDF(1)%NODATA
@@ -965,7 +964,7 @@ if(irow.eq.ir.and.icol.eq.ic)f=1.0
  
  !## indentify pitts
  CALL SOF_GET_PITT(IDF(1),IDF(6)) 
- IDF(6)%NODATA=0.0; IF(.NOT.IDFWRITE(IDF(6),IDF(3)%FNAME(:INDEX(IDF(3)%FNAME,'.',.TRUE.)-1)//'_pitt.idf',1))THEN; ENDIF
+ IDF(6)%NODATA=0.0D0; IF(.NOT.IDFWRITE(IDF(6),IDF(3)%FNAME(:INDEX(IDF(3)%FNAME,'.',.TRUE.)-1)//'_pitt.idf',1))THEN; ENDIF
 
  !## copy dem
  IDF(5)%X=IDF(1)%X; IDF(5)%NODATA=IDF(1)%NODATA
@@ -974,7 +973,7 @@ if(irow.eq.ir.and.icol.eq.ic)f=1.0
  ENDIF
  
  !## fill in pitts; fill in gradients
- CALL SOF_FILL_PITT(IDF(1),IDF(2),IDF(3),IDF(4),IDF(5),IGRAD,PITTSIZE)
+ CALL SOF_FILL_PITT(IDF(1),IDF(2),IDF(3),IDF(4),IDF(5),IGRAD)
  IF(.NOT.IDFWRITE(IDF(1),IDF(3)%FNAME,1))THEN; ENDIF
 
  IF(IGRAD.EQ.1)THEN
@@ -988,12 +987,12 @@ if(irow.eq.ir.and.icol.eq.ic)f=1.0
  I=(ITOC/100)-(ITIC/100)
  IF(I.LT.360)THEN
   WRITE(6,'(A,F10.3,A)') 'Process took',REAL(I),' seconds'
- ELSEIF(I.LT.3600.0)THEN
-  WRITE(6,'(A,F10.3,A)') 'Process took',REAL(I)/360.0,' minutes'
- ELSEIF(I.LT.86400.0)THEN
-  WRITE(6,'(A,F10.3,A)') 'Process took',REAL(I)/3600.0,' hours'
+ ELSEIF(I.LT.3600.0D0)THEN
+  WRITE(6,'(A,F10.3,A)') 'Process took',REAL(I)/360.0D0,' minutes'
+ ELSEIF(I.LT.86400.0D0)THEN
+  WRITE(6,'(A,F10.3,A)') 'Process took',REAL(I)/3600.0D0,' hours'
  ELSE
-  WRITE(6,'(A,F10.3,A)') 'Process took',REAL(I)/86400.0,' days'
+  WRITE(6,'(A,F10.3,A)') 'Process took',REAL(I)/86400.0D0,' days'
  ENDIF
  
  END SUBROUTINE SOF_MAIN
@@ -1020,7 +1019,7 @@ if(irow.eq.ir.and.icol.eq.ic)f=1.0
  !###======================================================================
  IMPLICIT NONE
  TYPE(IDFOBJ) :: DEM,SLOPE,ASPECT
- REAL :: TG,DZDX,DZDY,S,A
+ REAL(KIND=DP_KIND) :: TG,DZDX,DZDY,S,A
  INTEGER :: ICOL,IROW
 
  !## nodata dem map
@@ -1032,16 +1031,16 @@ if(irow.eq.ir.and.icol.eq.ic)f=1.0
  CALL SOF_COMPUTE_GRAD_STEEPEST(DEM,ICOL,IROW,DZDX,DZDY,TG,.TRUE.)
         
  !## slope ...
- S=TG !ATAN(SQRT(DZDX**2.0+DZDY**2.0))
+ S=TG !ATAN(SQRT(DZDX**2.0D0+DZDY**2.0D0))
  !## aspect
- A=ATAN2(-1.0*DZDY,DZDX)
+ A=ATAN2(-1.0D0*DZDY,DZDX)
 
     !## degrees
-!    S=S*(360.0/(2.0*3.1415)) 
-!    A=A*(360.0/(2.0*3.1415))
+!    S=S*(360.0D0/(2.0*3.1415)) 
+!    A=A*(360.0D0/(2.0*3.1415))
     
  !## not a flat area
- IF(S.NE.0.0)THEN
+ IF(S.NE.0.0D0)THEN
   SLOPE%X(ICOL,IROW) =S
   ASPECT%X(ICOL,IROW)=A
  ENDIF
@@ -1054,13 +1053,13 @@ if(irow.eq.ir.and.icol.eq.ic)f=1.0
  IMPLICIT NONE
  TYPE(IDFOBJ),INTENT(IN) :: DEM
  INTEGER,INTENT(IN) :: ICOL,IROW
- REAL,INTENT(OUT) :: DZDX,DZDY,TG
+ REAL(KIND=DP_KIND),INTENT(OUT) :: DZDX,DZDY,TG
  LOGICAL,INTENT(IN) :: LNODATSINK
- REAL,DIMENSION(9) :: Z,GRADX,GRADY
+ REAL(KIND=DP_KIND),DIMENSION(9) :: Z,GRADX,GRADY
  INTEGER :: IC1,IC2,IR1,IR2,I,J
- REAL :: AX,AY,ZM,F,G
- DATA GRADX/-1.0, 0.0, 1.0, 1.0, 1.0, 0.0,-1.0,-1.0,0.0/
- DATA GRADY/ 1.0, 1.0, 1.0, 0.0,-1.0,-1.0,-1.0, 0.0,0.0/
+ REAL(KIND=DP_KIND) :: AX,AY,ZM,F,G
+ DATA GRADX/-1.0D0, 0.0D0, 1.0D0, 1.0D0, 1.0D0, 0.0D0,-1.0D0,-1.0D0,0.0D0/
+ DATA GRADY/ 1.0D0, 1.0D0, 1.0D0, 0.0D0,-1.0D0,-1.0D0,-1.0D0, 0.0D0,0.0D0/
                    
  !## steepest all around
  IC1=MAX(1,ICOL-1)
@@ -1115,11 +1114,11 @@ if(irow.eq.ir.and.icol.eq.ic)f=1.0
  IF(LNODATSINK)THEN
   DO I=1,8
    IF(Z(I).EQ.DEM%NODATA)THEN
-    Z(I)=MINVAL(Z)-1.0
+    Z(I)=MINVAL(Z)-1.0D0
 !    IF(I.LE.4)THEN
-!     Z(I)=-1.0*Z(I+4)
+!     Z(I)=-1.0D0*Z(I+4)
 !    ELSE
-!     Z(I)=-1.0*Z(I-4)
+!     Z(I)=-1.0D0*Z(I-4)
 !    ENDIF
    ENDIF
   ENDDO
@@ -1131,14 +1130,14 @@ if(irow.eq.ir.and.icol.eq.ic)f=1.0
    IF(Z(I).EQ.DEM%NODATA)Z(I)=ZM
   ENDDO
    
-!  AX=0.0; AY=0.0 
+!  AX=0.0D0; AY=0.0D0 
 !  DO I=1,9
 !   Z(I)=Z(I)-ZM
-!   IF(Z(I).LT.0.0)THEN
+!   IF(Z(I).LT.0.0D0)THEN
 !    !## distance
-!    F=SQRT(GRADX(I)**2.0+GRADY(I)**2.0)
+!    F=SQRT(GRADX(I)**2.0D0+GRADY(I)**2.0D0)
 !    !## inverse distance
-!    F=1.0/F
+!    F=1.0D0/F
 !    AX=AX+GRADX(I)*F*ABS(Z(I))
 !    AY=AY+GRADY(I)*F*ABS(Z(I))
 !   ENDIF
@@ -1146,12 +1145,12 @@ if(irow.eq.ir.and.icol.eq.ic)f=1.0
  
  ENDIF
  
- J=0; TG=0.0; AX=0.0; AY=0.0 
+ J=0; TG=0.0D0; AX=0.0D0; AY=0.0D0 
  DO I=1,9
   Z(I)=Z(I)-ZM
-  IF(Z(I).LT.0.0)THEN
+  IF(Z(I).LT.0.0D0)THEN
    !## distance
-   F=SQRT(GRADX(I)**2.0+GRADY(I)**2.0)
+   F=SQRT(GRADX(I)**2.0D0+GRADY(I)**2.0D0)
    G=Z(I)/F
    IF(G.LT.TG)THEN
     TG=G; J=I
@@ -1167,7 +1166,7 @@ if(irow.eq.ir.and.icol.eq.ic)f=1.0
  DZDY= AY 
 
  !## perfect dome in flat area - occurs, but direction is irrelevant, choose 
- IF(DZDX.EQ.0.0.AND.DZDY.EQ.0.0)DZDX=1.0
+ IF(DZDX.EQ.0.0D0.AND.DZDY.EQ.0.0D0)DZDX=1.0D0
   
  END SUBROUTINE SOF_COMPUTE_GRAD_STEEPEST
  
@@ -1177,10 +1176,10 @@ if(irow.eq.ir.and.icol.eq.ic)f=1.0
  IMPLICIT NONE
  TYPE(IDFOBJ),INTENT(IN) :: DEM
  INTEGER,INTENT(IN) :: ICOL,IROW
- REAL,INTENT(OUT) :: DZDX,DZDY
+ REAL(KIND=DP_KIND),INTENT(OUT) :: DZDX,DZDY
  INTEGER :: IR1,IR2,IC1,IC2,I
- REAL :: Z1,Z2
- REAL,DIMENSION(0:6) :: Z
+ REAL(KIND=DP_KIND) :: Z1,Z2
+ REAL(KIND=DP_KIND),DIMENSION(0:6) :: Z
  
  !## 1nd order derivative
  IC1=MAX(1,ICOL-1)
@@ -1249,9 +1248,9 @@ if(irow.eq.ir.and.icol.eq.ic)f=1.0
  IMPLICIT NONE
  TYPE(IDFOBJ),INTENT(IN) :: VEC
  INTEGER,INTENT(IN) :: ICOL,IROW
- REAL,INTENT(OUT) :: DZDX,DZDY,DZDZ
+ REAL(KIND=DP_KIND),INTENT(OUT) :: DZDX,DZDY,DZDZ
  INTEGER :: IR1,IR2,IC1,IC2
- REAL :: FE,FN,FW,FS,FU,FD,TM,TE,TW,TN,TS,DX,DY
+ REAL(KIND=DP_KIND) :: FE,FN,FW,FS,FU,FD,TM,TE,TW,TN,TS,DX,DY
  
  !## 1nd order derivative
  IC1=MAX(1,ICOL-1)
@@ -1270,10 +1269,10 @@ if(irow.eq.ir.and.icol.eq.ic)f=1.0
  
  !## flux east,north,west,south,up,down (m3/day)
  FE=     VEC%XV(ICOL,IROW,3)
- FN=-1.0*VEC%XV(ICOL,IR1 ,4)
- FW=-1.0*VEC%XV(IC1 ,IROW,3)
+ FN=-1.0D0*VEC%XV(ICOL,IR1 ,4)
+ FW=-1.0D0*VEC%XV(IC1 ,IROW,3)
  FS=     VEC%XV(ICOL,IROW,4)
- FU=-1.0*VEC%XV(ICOL,IROW,5)
+ FU=-1.0D0*VEC%XV(ICOL,IROW,5)
  FD=     VEC%XV(ICOL,IROW,6)
 
  !## thicknesses (m)
@@ -1307,10 +1306,10 @@ if(irow.eq.ir.and.icol.eq.ic)f=1.0
  TYPE(IDFOBJ),INTENT(IN) :: DEM
  TYPE(IDFOBJ),INTENT(INOUT) :: IDFP
  INTEGER :: ICOL,IROW,IR,IC
- REAL :: Z,F
+ REAL(KIND=DP_KIND) :: Z,F
  INTEGER :: IP,I,J
  
- ALLOCATE(PL(10,3)); IDFP%X=0.0; NP=0
+ ALLOCATE(PL(10,3)); IDFP%X=0.0D0; NP=0
  WRITE(6,'(1X,A/)') 'Searching for pitts'
 
  DO IROW=1,DEM%NROW
@@ -1336,32 +1335,32 @@ if(irow.eq.ir.and.icol.eq.ic)f=1.0
      DEALLOCATE(PL); PL=>PL_BU
     ENDIF
     NP=NP+1; PL(NP,1)=REAL(ICOL); PL(NP,2)=REAL(IROW); PL(NP,3)=DEM%X(ICOL,IROW)
-    IDFP%X(ICOL,IROW)=1.0  
+    IDFP%X(ICOL,IROW)=1.0D0  
    ENDIF
 
   ENDDO
-  F=REAL(IROW)/REAL(DEM%NROW)*100.0
+  F=REAL(IROW)/REAL(DEM%NROW)*100.0D0
   WRITE(6,'(A,F7.3,A)') '+Progress ',F,' % finished         '
  ENDDO
  
  !## sort list
- CALL SORTEM(1,NP,PL(:,3),2,PL(:,1),PL(:,2),(/0.0/),(/0.0/),(/0.0/),(/0.0/),(/0.0/)) 
- 
+ CALL QKSORT(NP,PL(:,3),V2=PL(:,1),V3=PL(:,2))
+
  END SUBROUTINE SOF_GET_PITT
 
  !###======================================================================
- SUBROUTINE SOF_FILL_PITT(DEM,SLOPE,ASPECT,IDFP,DEMORG,IGRAD,PITTSIZE)
+ SUBROUTINE SOF_FILL_PITT(DEM,SLOPE,ASPECT,IDFP,DEMORG,IGRAD)
  !###======================================================================
  IMPLICIT NONE
  TYPE(IDFOBJ),INTENT(INOUT) :: DEM,IDFP,SLOPE,ASPECT,DEMORG
- INTEGER,INTENT(IN) :: IGRAD,PITTSIZE
+ INTEGER,INTENT(IN) :: IGRAD
  INTEGER :: I,J,ICOL,IROW,NBPX,NPPX,NTPX,ITYPE
- REAL :: F,ZMAX
+ REAL(KIND=DP_KIND) :: F,ZMAX
  
  WRITE(6,'(1X,A,I10,A/)') 'Filling in ',NP,' pitts'
   
  ALLOCATE(BPX(DEM%NROW*DEM%NCOL),PPX(DEM%NROW*DEM%NCOL),TPX(DEM%NROW*DEM%NCOL))
- IDFP%NODATA=0.0; IDFP%X=IDFP%NODATA
+ IDFP%NODATA=0.0D0; IDFP%X=IDFP%NODATA
   
  !## compute gradient/orientation for all
  CALL SOF_COMPUTE_SLOPE_ASPECT(DEMORG,SLOPE,ASPECT)
@@ -1381,11 +1380,11 @@ if(irow.eq.ir.and.icol.eq.ic)f=1.0
 
   !## add this point to the pitt list, remove from the DEM
   !## pitt list
-  NPPX=1; PPX(NPPX)%ICOL=ICOL; PPX(NPPX)%IROW=IROW; PPX(NPPX)%Z=DEM%X(ICOL,IROW); DEM%X(ICOL,IROW)=10.0E10
+  NPPX=1; PPX(NPPX)%ICOL=ICOL; PPX(NPPX)%IROW=IROW; PPX(NPPX)%Z=DEM%X(ICOL,IROW); DEM%X(ICOL,IROW)=10.0D10
   !## current spill level
   ZMAX=PPX(NPPX)%Z
   !## boundary list
-  NBPX=0; IDFP%X(ICOL,IROW)=1.0
+  NBPX=0; IDFP%X(ICOL,IROW)=1.0D0
   !## total boundary list (cleaning)
   NTPX=1; TPX(NPPX)%ICOL=ICOL; TPX(NPPX)%IROW=IROW
 
@@ -1416,9 +1415,9 @@ if(irow.eq.ir.and.icol.eq.ic)f=1.0
   !## change all pittpoints for this spill-value (zmax)
   DO J=1,NPPX; DEM%X(PPX(J)%ICOL,PPX(J)%IROW)=ZMAX; ENDDO
    
-  F=REAL(I)/REAL(NP)*100.0; WRITE(6,'(A,F10.3,2(A,I8),A,F10.3,A)') '+Processing pitt:',F,' % (nppx= ',NPPX,' ; nbpx= ',NBPX,'; z=',PPX(1)%Z,')'
+  F=REAL(I)/REAL(NP)*100.0D0; WRITE(6,'(A,F10.3,2(A,I8),A,F10.3,A)') '+Processing pitt:',F,' % (nppx= ',NPPX,' ; nbpx= ',NBPX,'; z=',PPX(1)%Z,')'
 
-  IF(IGRAD.EQ.1)CALL SOF_FILL_FLATAREAS(DEM,DEMORG,SLOPE,ASPECT,NPPX) 
+  IF(IGRAD.EQ.1)CALL SOF_FILL_FLATAREAS(DEM,SLOPE,ASPECT,NPPX) 
   
 !  ENDIF
   
@@ -1426,7 +1425,7 @@ if(irow.eq.ir.and.icol.eq.ic)f=1.0
   DO J=1,NTPX; IDFP%X(TPX(J)%ICOL,TPX(J)%IROW)=IDFP%NODATA; ENDDO 
 
   !## clean for pits inside current core-volume
-  DO J=1,NPPX-1; IDFP%X(PPX(J)%ICOL,PPX(J)%IROW)=1.0; ENDDO
+  DO J=1,NPPX-1; IDFP%X(PPX(J)%ICOL,PPX(J)%IROW)=1.0D0; ENDDO
   !## clean pit list for pits inside current flat area
   DO J=I,NP 
    ICOL=INT(PL(J,1)); IROW=INT(PL(J,2))
@@ -1446,15 +1445,15 @@ if(irow.eq.ir.and.icol.eq.ic)f=1.0
  END SUBROUTINE SOF_FILL_PITT 
  
  !###======================================================================
- SUBROUTINE SOF_FILL_FLATAREAS(DEM,DEMORG,SLOPE,ASPECT,NPPX)
+ SUBROUTINE SOF_FILL_FLATAREAS(DEM,SLOPE,ASPECT,NPPX)
  !###======================================================================
  IMPLICIT NONE
- TYPE(IDFOBJ),INTENT(INOUT) :: SLOPE,ASPECT,DEM,DEMORG
+ TYPE(IDFOBJ),INTENT(INOUT) :: SLOPE,ASPECT,DEM
  INTEGER,INTENT(IN) :: NPPX
  TYPE(IDFOBJ) :: PCG 
  INTEGER :: IC1,IC2,IR1,IR2,I,ICOL,IROW,IC,IR
- REAL :: A
- REAL,PARAMETER :: HINI=0.0
+ REAL(KIND=DP_KIND) :: A
+ REAL(KIND=DP_KIND),PARAMETER :: HINI=0.0D0
    
  CALL IDFNULLIFY(PCG)
 
@@ -1481,7 +1480,7 @@ if(irow.eq.ir.and.icol.eq.ic)f=1.0
  !## locate spill-location
  IC=PPX(NPPX)%ICOL-IC1+1
  IR=PPX(NPPX)%IROW-IR1+1
- PCG%X(IC,IR)=-1.0
+ PCG%X(IC,IR)=-1.0D0
 
 ! !## spill z
 ! Z=PPX(NPPX)%Z 
@@ -1498,7 +1497,7 @@ if(irow.eq.ir.and.icol.eq.ic)f=1.0
    ICOL=PPX(I)%ICOL
    IROW=PPX(I)%IROW
 
-   SLOPE%X(ICOL,IROW) =0.0
+   SLOPE%X(ICOL,IROW) =0.0D0
    ASPECT%X(ICOL,IROW)=A
   ENDIF
  ENDDO
@@ -1521,7 +1520,7 @@ if(irow.eq.ir.and.icol.eq.ic)f=1.0
  TYPE(IDFOBJ) :: PCG
  INTEGER(KIND=1),ALLOCATABLE,DIMENSION(:,:) :: ID
  INTEGER(KIND=2),POINTER,DIMENSION(:,:,:) :: CR
- REAL,ALLOCATABLE,DIMENSION(:,:) :: A
+ REAL(KIND=DP_KIND),ALLOCATABLE,DIMENSION(:,:) :: A
  INTEGER :: IROW,ICOL,NCR,D,DR,DC,IL,I,IR,IC,ICR,JCR
  
  ALLOCATE(A(PCG%NCOL,PCG%NROW),ID(PCG%NCOL,PCG%NROW),CR(PCG%NCOL*PCG%NROW,2,2))
@@ -1548,7 +1547,7 @@ ROWLOOP: DO IROW=1,PCG%NROW
 
    DO IR=MAX(1,IROW-1),MIN(PCG%NROW,IROW+1)
     DO IC=MAX(1,ICOL-1),MIN(PCG%NCOL,ICOL+1)
-     IF(PCG%X(IC,IR).EQ.0.0)THEN
+     IF(PCG%X(IC,IR).EQ.0.0D0)THEN
       !## relative distance
       DR=IR-IROW
       DC=IC-ICOL
@@ -1556,7 +1555,7 @@ ROWLOOP: DO IROW=1,PCG%NROW
       !## compare with distance to see if it is smaller
       IF(D.LT.ID(IC,IR))THEN
        ID(IC,IR)=D
-       A(IC,IR)=ATAN2(-1.0*REAL(DR),REAL(DC))
+       A(IC,IR)=ATAN2(-1.0D0*REAL(DR),REAL(DC))
        !## add to list
        IL=IL+1
        CR(IL,1,JCR)=IC
@@ -1571,7 +1570,7 @@ ROWLOOP: DO IROW=1,PCG%NROW
   !## no new location found
   IF(IL.EQ.0)EXIT
   
-  !# interchange list
+  !## interchange list
   IF(ICR.EQ.1)THEN
    ICR=2; JCR=1
   ELSE
@@ -1596,8 +1595,8 @@ ROWLOOP: DO IROW=1,PCG%NROW
  TYPE(IDFOBJ),INTENT(INOUT) :: DEM,IDFP
  INTEGER,INTENT(IN) :: ITYPE
  INTEGER,INTENT(INOUT) :: NBPX,NPPX
- REAL,INTENT(INOUT) :: ZMAX
- REAL :: ZMIN
+ REAL(KIND=DP_KIND),INTENT(INOUT) :: ZMAX
+ REAL(KIND=DP_KIND) :: ZMIN
  INTEGER,INTENT(OUT) :: IROW,ICOL
  INTEGER :: I,IBND,I1
    
@@ -1637,7 +1636,7 @@ ROWLOOP: DO IROW=1,PCG%NROW
  IF(ITYPE.EQ.0)ZMAX=ZMIN
  
  !## include a very high offset
- BPX(IBND)%Z=10.0E10
+ BPX(IBND)%Z=10.0D10
  !## remove from boundary list not to be used again
  IDFP%X(BPX(IBND)%ICOL,BPX(IBND)%IROW)=IDFP%NODATA  
  DO I=IBND,NBPX-1; BPX(I)=BPX(I+1); ENDDO; NBPX=NBPX-1
@@ -1657,7 +1656,7 @@ ROWLOOP: DO IROW=1,PCG%NROW
   PPX(NPPX-1)%IROW=IROW
   PPX(NPPX-1)%Z   =ZMAX
  ENDIF
- DEM%X(ICOL,IROW)=10.0E10 
+ DEM%X(ICOL,IROW)=10.0D10 
  
  SOF_GET_EXITPOINT=.FALSE.
  
@@ -1671,7 +1670,7 @@ ROWLOOP: DO IROW=1,PCG%NROW
  INTEGER,INTENT(IN) :: IROW,ICOL
  INTEGER,INTENT(INOUT) :: NBPX,NTPX
  INTEGER :: IR,IC
- REAL :: Z
+ REAL(KIND=DP_KIND) :: Z
  
  !## fill in boundary matrix
  DO IR=MAX(IROW-1,1),MIN(IROW+1,DEM%NROW)
@@ -1679,13 +1678,13 @@ ROWLOOP: DO IROW=1,PCG%NROW
    !## centre point
    IF(IC.EQ.ICOL.AND.IR.EQ.IROW)CYCLE
    !## already pit location
-   IF(DEM%X(IC,IR).EQ.10.0E10)CYCLE
+   IF(DEM%X(IC,IR).EQ.10.0D10)CYCLE
    !## already member of boundary
    IF(IDFP%X(IC,IR).NE.IDFP%NODATA)CYCLE
 
    Z=DEM%X(IC,IR)
    !## nodata location - include as spill-level   
-   IF(DEM%X(IC,IR).EQ.DEM%NODATA)Z=-10.0E10 
+   IF(DEM%X(IC,IR).EQ.DEM%NODATA)Z=-10.0D10 
 
    NBPX=NBPX+1
    BPX(NBPX)%ICOL=IC
@@ -1694,7 +1693,7 @@ ROWLOOP: DO IROW=1,PCG%NROW
    NTPX=NTPX+1
    TPX(NTPX)%ICOL=IC
    TPX(NTPX)%IROW=IR
-   IDFP%X(IC,IR) =1.0
+   IDFP%X(IC,IR) =1.0D0
   ENDDO
  ENDDO
  
@@ -1709,8 +1708,8 @@ ROWLOOP: DO IROW=1,PCG%NROW
 ! TYPE(IDFOBJ) :: PCG
 ! INTEGER,DIMENSION(2) :: PITLOC,OUTLOC
 ! INTEGER :: IC1,IC2,IR1,IR2,I,ICOL,IROW,IC,IR
-! REAL :: A
-! REAL,PARAMETER :: HINI=0.0
+! REAL(KIND=DP_KIND) :: A
+! REAL(KIND=DP_KIND),PARAMETER :: HINI=0.0D0
 !   
 ! CALL IDFNULLIFY(PCG)
 !
@@ -1741,7 +1740,7 @@ ROWLOOP: DO IROW=1,PCG%NROW
 !  CALL SOF_COMPUTE_SLOPE_ASPECT_CALC(DEMORG,SLOPE,ASPECT,PPX(I)%IROW,PPX(I)%ICOL)
 !!  CALL SOF_COMPUTE_SLOPE_ASPECT_CALC(DEM,SLOPE,ASPECT,PPX(I)%IROW,PPX(I)%ICOL)
 !  !## if pitt, set angle to nodata
-!  IF(PITS%X(PPX(I)%ICOL,PPX(I)%IROW).EQ.1.0)ASPECT%X(PPX(I)%ICOL,PPX(I)%IROW)=ASPECT%NODATA
+!  IF(PITS%X(PPX(I)%ICOL,PPX(I)%IROW).EQ.1.0D0)ASPECT%X(PPX(I)%ICOL,PPX(I)%IROW)=ASPECT%NODATA
 !  PCG%X(IC,IR)=ASPECT%X(PPX(I)%ICOL,PPX(I)%IROW) 
 ! ENDDO
 !
@@ -1754,7 +1753,7 @@ ROWLOOP: DO IROW=1,PCG%NROW
 !!  ENDDO
 !! ENDDO
 ! 
-! !# if flat area --
+! !## if flat area --
 ! CALL SOF_SOLVE_OLD(PCG,PITLOC,OUTLOC)
 ! !## remove all the pits in the current-flat area, not to be processed again !!!
 ! 
@@ -1767,7 +1766,7 @@ ROWLOOP: DO IROW=1,PCG%NROW
 !!  IF(A.NE.PCG%NODATA)THEN
 !   ICOL=PPX(I)%ICOL
 !   IROW=PPX(I)%IROW
-!!   SLOPE%X(ICOL,IROW) =0.0
+!!   SLOPE%X(ICOL,IROW) =0.0D0
 !   ASPECT%X(ICOL,IROW)=A
 !!  ENDIF
 ! ENDDO
@@ -1792,9 +1791,9 @@ ROWLOOP: DO IROW=1,PCG%NROW
 ! INTEGER,DIMENSION(2),INTENT(IN) :: PITLOC,OUTLOC
 ! INTEGER(KIND=1),ALLOCATABLE,DIMENSION(:,:) :: ID
 ! INTEGER(KIND=2),POINTER,DIMENSION(:,:,:) :: CR
-! REAL,ALLOCATABLE,DIMENSION(:,:) :: A
+! REAL(KIND=DP_KIND),ALLOCATABLE,DIMENSION(:,:) :: A
 ! INTEGER :: IROW,ICOL,NCR,D,DR,DC,IL,I,IR,IC,ICR,JCR
-! REAL :: XC,YC,ASPECT,DX,DY,ASPILL
+! REAL(KIND=DP_KIND) :: XC,YC,ASPECT,DX,DY,ASPILL
 ! 
 ! ALLOCATE(A(PCG%NCOL,PCG%NROW),ID(PCG%NCOL,PCG%NROW),CR(PCG%NCOL*PCG%NROW,2,2))
 ! A=PCG%NODATA; ID=INT(3,1)
@@ -1815,7 +1814,7 @@ ROWLOOP: DO IROW=1,PCG%NROW
 ! ASPILL=A(ICOL,IROW); A(ICOL,IROW)=PCG%NODATA
 !
 ! !## store visited locations
-! PCG%X=0.0
+! PCG%X=0.0D0
 ! 
 ! !## trace all to pit - nodata only
 ! ICOL=PITLOC(1); IROW=PITLOC(2)
@@ -1839,7 +1838,7 @@ ROWLOOP: DO IROW=1,PCG%NROW
 !   DO IR=MAX(1,IROW-1),MIN(PCG%NROW,IROW+1)
 !    DO IC=MAX(1,ICOL-1),MIN(PCG%NCOL,ICOL+1)
 !     !## not yet visited
-!     IF(PCG%X(IC,IR).EQ.0.0)THEN
+!     IF(PCG%X(IC,IR).EQ.0.0D0)THEN
 !      !## if aspect filled in with nodata (flat areas), fill in new gradient towards pit
 !      IF(A(IC,IR).EQ.PCG%NODATA)THEN
 !       !## relative distance
@@ -1849,7 +1848,7 @@ ROWLOOP: DO IROW=1,PCG%NROW
 !       !## compare with distance to see if it is smaller
 !       IF(D.LT.ID(IC,IR))THEN
 !        ID(IC,IR)=D
-!        A(IC,IR)=ATAN2(-1.0*REAL(DR),REAL(DC))
+!        A(IC,IR)=ATAN2(-1.0D0*REAL(DR),REAL(DC))
 !       ENDIF
 !      ENDIF
 !      !## add to new list of to be analysed locations
@@ -1866,7 +1865,7 @@ ROWLOOP: DO IROW=1,PCG%NROW
 !  !## no new location found
 !  IF(IL.EQ.0)EXIT
 !  
-!  !# interchange list
+!  !## interchange list
 !  IF(ICR.EQ.1)THEN
 !   ICR=2; JCR=1
 !  ELSE

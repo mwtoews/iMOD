@@ -44,7 +44,7 @@ subroutine rdfiles(file1,file2,coldate,colval,mv,string1,string2,exitcode)
                                               !! are interpeted as iModflow text files
  character (len=*), intent(out) :: string1    !> identification of data of file1
  character (len=*), intent(out) :: string2    !> identification of data of file2
- real             , intent(in)  :: mv         !> missing value code
+ REAL(KIND=DP_KIND)             , intent(in)  :: mv         !> missing value code
 
  integer          , intent(out) :: exitcode   !> exit status, 0=OK
 

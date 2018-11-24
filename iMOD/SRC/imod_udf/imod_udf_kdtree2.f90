@@ -6,8 +6,8 @@
 !
 module kdtree2_precision_module
   
-  integer, parameter :: sp = kind(0.0)
-  integer, parameter :: dp = kind(0.0d0)
+  integer, parameter :: sp = kind(0.0D0)
+  integer, parameter :: dp = kind(0.0D0)
 
   private :: sp, dp
 
@@ -16,7 +16,7 @@ module kdtree2_precision_module
   ! of the two lines.  If you comment
   ! out kdkind = sp then you get single precision
   ! and if you comment out kdkind = dp 
-  ! you get double precision.
+  ! you get REAL(KIND=DP_KIND).
   !
 
   !integer, parameter :: kdkind = sp  
@@ -34,7 +34,7 @@ module kdtree2_priority_queue_module
   !
   type kdtree2_result
       ! a pair of distances, indexes
-      real(kdkind)    :: dis!=0.0
+      real(kdkind)    :: dis!=0.0D0
       integer :: idx!=-1   Initializers cause some bugs in compilers.
   end type kdtree2_result
   !
@@ -749,7 +749,7 @@ contains
             call spread_in_coordinate(tp,i,l,u,res%box(i))
          end do
          res%cut_dim = 0
-         res%cut_val = 0.0
+         res%cut_val = 0.0D0
          res%l = l
          res%u = u
          res%left =>null()
@@ -1035,7 +1035,7 @@ contains
     type(kdtree2_result), target :: results(:)
 
 
-    sr%ballsize = huge(1.0)
+    sr%ballsize = huge(1.0D0)
     sr%qv => qv
     sr%nn = nn
     sr%nfound = 0
@@ -1078,7 +1078,7 @@ contains
 
     allocate (sr%qv(tp%dimen))
     sr%qv = tp%the_data(:,idxin) ! copy the vector
-    sr%ballsize = huge(1.0)       ! the largest real(kdkind) number
+    sr%ballsize = huge(1.0D0)       ! the largest real(kdkind) number
     sr%centeridx = idxin
     sr%correltime = correltime
 
@@ -1454,7 +1454,7 @@ contains
           res = (amin-x)**2;
           return
        else
-          res = 0.0
+          res = 0.0D0
           return
        endif
     endif
@@ -1477,7 +1477,7 @@ contains
 
     dimen = sr%dimen
     ballsize = sr%ballsize
-    dis = 0.0
+    dis = 0.0D0
     res = .true.
     do i=1,dimen
        l = node%box(i)%lower
@@ -1531,7 +1531,7 @@ contains
 
     mainloop: do i = node%l, node%u
        if (rearrange) then
-          sd = 0.0
+          sd = 0.0D0
           do k = 1,dimen
              sd = sd + (data(k,i) - qv(k))**2
              if (sd>ballsize) cycle mainloop
@@ -1539,7 +1539,7 @@ contains
           indexofi = ind(i)  ! only read it if we have not broken out
        else
           indexofi = ind(i)
-          sd = 0.0
+          sd = 0.0D0
           do k = 1,dimen
              sd = sd + (data(k,indexofi) - qv(k))**2
              if (sd>ballsize) cycle mainloop
@@ -1654,7 +1654,7 @@ contains
        ! which index to the point do we use? 
 
        if (rearrange) then
-          sd = 0.0
+          sd = 0.0D0
           do k = 1,dimen
              sd = sd + (data(k,i) - qv(k))**2
              if (sd>ballsize) cycle mainloop
@@ -1662,7 +1662,7 @@ contains
           indexofi = ind(i)  ! only read it if we have not broken out
        else
           indexofi = ind(i)
-          sd = 0.0
+          sd = 0.0D0
           do k = 1,dimen
              sd = sd + (data(k,indexofi) - qv(k))**2
              if (sd>ballsize) cycle mainloop
@@ -1708,7 +1708,7 @@ contains
     end do
     ! now find 'n' smallest distances
     do i = 1, nn
-       results(i)%dis =  huge(1.0)
+       results(i)%dis =  huge(1.0D0)
        results(i)%idx = -1
     end do
     do i = 1, tp%n

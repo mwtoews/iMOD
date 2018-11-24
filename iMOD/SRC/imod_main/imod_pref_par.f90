@@ -1,4 +1,4 @@
-!!  Copyright (C) Stichting Deltares, 2005-2017.
+!!  Copyright (C) Stichting Deltares, 2005-2018.
 !!
 !!  This file is part of iMOD.
 !!
@@ -35,7 +35,7 @@ DATA PREF/'USER', &          ! 1
           'TAGS',&           ! 7
           'MODFLOW',&        ! 8
           '---empty---', &   ! 9
-          'SCENTOOL',&       !10
+          'PUMPINGTOOL',&    !10
           'NORTHARROW',&     !11
           '---empty---', &   !12
           'ACROBATREADER', & !13
@@ -55,7 +55,7 @@ DATA PREF/'USER', &          ! 1
           'PLUGIN1', &       !27
           'PLUGIN2', &       !28
           'FFMPEG', &        !29 used to create the movie (and to play if not other available)
-          'FFMPLAY', &       !30 used to play the movie
+          'FFPLAY', &        !30 used to play the movie
           'VLCPLAYER'/       !31
 
 END MODULE MOD_PREF_PAR

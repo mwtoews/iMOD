@@ -70,7 +70,8 @@ c
 c NO EXTERNAL ROUTINES REQUIRED:
 c
 c-----------------------------------------------------------------------
-      dimension a(*),b(*),c(*),d(*),e(*),f(*),g(*),h(*)
+      IMPLICIT NONE
+      REAL(KIND=DP_KIND),dimension a(*),b(*),c(*),d(*),e(*),f(*),g(*),h(*)
 c
 c The dimensions for lt and ut have to be at least log (base 2) n
 c
@@ -524,7 +525,7 @@ c
 c NO EXTERNAL ROUTINES REQUIRED:
 c
 c-----------------------------------------------------------------------
-      double precision   a,xa,ta
+      REAL(KIND=DP_KIND)   a,xa,ta
 
       dimension a(*),b(*),c(*),d(*),e(*),f(*),g(*),h(*)
 c

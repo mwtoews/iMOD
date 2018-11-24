@@ -1,4 +1,4 @@
-!!  Copyright (C) Stichting Deltares, 2005-2017.
+!!  Copyright (C) Stichting Deltares, 2005-2018.
 !!
 !!  This file is part of iMOD.
 !!
@@ -26,7 +26,8 @@ USE WINTERACTER
 USE RESOURCE
 USE MOD_IPF_PAR
 USE MOD_IPF, ONLY : IPFREAD2,IPFALLOCATE,IPFDEALLOCATE
-USE MOD_IPFASSFILE,ONLY : IPFOPENASSFILE,IPFREADASSFILELABEL,IPFREADASSFILE,IPFASSFILEALLOCATE
+USE MOD_IPFASSFILE,ONLY : IPFOPENASSFILE,IPFREADASSFILELABEL,IPFREADASSFILE
+USE MOD_IPFASSFILE_UTL
 USE MOD_OSD, ONLY : OSD_OPEN
 USE MOD_UTL, ONLY : UTL_CAP,UTL_GETUNIT,UTL_CREATEDIR,RTOS,ITOS
 
@@ -37,7 +38,7 @@ TYPE FLMOBJ
 END TYPE FLMOBJ
 TYPE(FLMOBJ),ALLOCATABLE,DIMENSION(:) :: FLM
 
-REAL :: XOFFSET,YOFFSET,ZOFFSET
+REAL(KIND=DP_KIND) :: XOFFSET,YOFFSET,ZOFFSET
 
 CONTAINS
 
@@ -48,7 +49,7 @@ CONTAINS
  CHARACTER(LEN=*),INTENT(IN) :: IPFFNAME
  INTEGER :: IU,JU,I,J,K,IOS
  CHARACTER(LEN=256) :: FNAME,DIR,LINE
- REAL :: X,Y,DZ,DZT,DZV,DY
+ REAL(KIND=DP_KIND) :: X,Y,DZ,DZT,DZV,DY
  
  NIPF=1; CALL IPFALLOCATE()
  IPF(1)%XCOL =1 !## x
@@ -58,7 +59,7 @@ CONTAINS
  IPF(1)%Z2COL=1 !## z2 not used  
  IPF(1)%FNAME=IPFFNAME
  
- !# read entire ipf
+ !## read entire ipf
  IF(.NOT.IPFREAD2(1,1,1))RETURN
 
  !## store each drill in memory for picking purposes
@@ -70,8 +71,8 @@ CONTAINS
 
  !## Read all lines from IPF-file and open related associated file
  DO I=1,IPF(1)%NROW
-  X=IPF(1)%XYZ(1,I) !# x-coordinate borehole
-  Y=IPF(1)%XYZ(2,I) !# y-coordinate borehole
+  X=IPF(1)%XYZ(1,I) !## x-coordinate borehole
+  Y=IPF(1)%XYZ(2,I) !## y-coordinate borehole
 
   !## read associated file 
   FNAME=TRIM(DIR)//'\'//TRIM(IPF(1)%INFO(IPF(1)%ACOL,I))//'.'//TRIM(ADJUSTL(IPF(1)%FEXT))
@@ -123,7 +124,7 @@ CONTAINS
        !## grain found
        IF(J.LE.SIZE(FLM))THEN
         DZT=ASSF(1)%Z(1)-ASSF(1)%Z(ASSF(1)%NRASS) !#difference between top and bottom of borehole
-        DZ=ASSF(1)%Z(1)-ASSF(1)%Z(K+1) !# difference between 2 layers
+        DZ=ASSF(1)%Z(1)-ASSF(1)%Z(K+1) !## difference between 2 layers
         DZV=DZ-DZT !#difference between total depth borehole and the depth of specific layer
         LINE=TRIM(ITOS(FLM(J)%FACN))//' '//TRIM(UTL_CAP(FLM(J)%FACL,'U'))//' '//TRIM(RTOS(DZT+DZV,'F',1))
         WRITE(JU,'(A)') TRIM(LINE)

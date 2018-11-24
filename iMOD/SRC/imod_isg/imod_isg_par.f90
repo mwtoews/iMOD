@@ -1,4 +1,4 @@
-!!  Copyright (C) Stichting Deltares, 2005-2017.
+!!  Copyright (C) Stichting Deltares, 2005-2018.
 !!
 !!  This file is part of iMOD.
 !!
@@ -24,7 +24,10 @@ MODULE MOD_ISG_PAR
 
 USE MOD_IDF_PAR, ONLY : IDFOBJ
 USE MODPLOT, ONLY : LEGENDOBJ
+USE IMODVAR, ONLY : DP_KIND,SP_KIND
 
+INTEGER :: ICF=1 
+REAL(KIND=SP_KIND),DIMENSION(9) :: X_SP
 INTEGER,DIMENSION(:),ALLOCATABLE :: IACTSTREAM,ISTR !## active yes/no (1/0) of stream in model domain
 
 INTEGER,PARAMETER :: IRDFLG=-1
@@ -39,7 +42,9 @@ INTEGER,PARAMETER :: IPTFLG=0
  !ICBCFL or 'Save Budget' is specified in Output Control, the results for specified time steps during this stress period will
  !be printed. If IPTFLG > 0, then the results during this stress period will not be printed.
 
-INTEGER,PARAMETER :: MAXLEN  =32
+INTEGER,SAVE :: ISGDOUBLE
+
+INTEGER,PARAMETER :: MAXLENISG  =32
 INTEGER,PARAMETER :: MAXFILES=10 !## number of files for ISG-"family"
 INTEGER,PARAMETER :: MAXITEMS=12
 INTEGER,SAVE :: ICLRSC,ICLRSD,ICLRSP,ICLRND,ICLRST,ICLRQH,ICLRSG,ICLRSF,ICLRCO
@@ -61,7 +66,7 @@ CHARACTER(LEN=256),SAVE :: ISGFNAME
 
 !## type for coordinates along the segment
 TYPE ISPOBJ
- REAL :: X,Y
+ REAL(KIND=DP_KIND) :: X,Y
 END TYPE ISPOBJ
 TYPE(ISPOBJ),ALLOCATABLE,DIMENSION(:) :: ISP,ISP2,DUMISP
 INTEGER :: TISP
@@ -75,15 +80,15 @@ TYPE ISGOBJ
  INTEGER :: JLIST !## old selected list
 END TYPE ISGOBJ
 TYPE(ISGOBJ),ALLOCATABLE,DIMENSION(:) :: ISG,DUMISG
-CHARACTER(LEN=MAXLEN),DIMENSION(:),ALLOCATABLE :: ISDLABELS
+CHARACTER(LEN=MAXLENISG),DIMENSION(:),ALLOCATABLE :: ISDLABELS
 
 TYPE(LEGENDOBJ),ALLOCATABLE,DIMENSION(:) :: ISGLEG
 
 !## general type for all
 TYPE DATOBJ1
  INTEGER :: N,IREF
- REAL :: DIST
- CHARACTER(LEN=MAXLEN) :: CNAME
+ REAL(KIND=DP_KIND) :: DIST
+ CHARACTER(LEN=MAXLENISG) :: CNAME
 END TYPE DATOBJ1
 TYPE(DATOBJ1),ALLOCATABLE,DIMENSION(:) :: ISD,ISC,IST,ISQ,DUMISD,DUMISC,DUMIST,DUMISQ
 
@@ -99,25 +104,25 @@ TYPE ISDOBJ
  !## isfr=0
  INTEGER :: IDATE  !## date in yyyymmdd
  INTEGER :: ID_STW    !## influenced by structure #
- REAL :: RESIS        !## resistance
- REAL :: INFF         !## infiltration factor
- REAL :: WL_STW       !## influenced waterlevel
+ REAL(KIND=DP_KIND) :: RESIS        !## resistance
+ REAL(KIND=DP_KIND) :: INFF         !## infiltration factor
+ REAL(KIND=DP_KIND) :: WL_STW       !## influenced waterlevel
  !## isfr=0/1
- REAL :: WLVL         !## average waterlevel
- REAL :: BTML      !## averagebottom level
+ REAL(KIND=DP_KIND) :: WLVL         !## average waterlevel
+ REAL(KIND=DP_KIND) :: BTML      !## averagebottom level
  !## isfr=1
  CHARACTER(LEN=8) :: CTIME !## time in hhmmss
- REAL :: WIDTH     !## average width
- REAL :: THCK      !## thickness of riverbed
- REAL :: HCND      !## permeability of riverbed
+ REAL(KIND=DP_KIND) :: WIDTH     !## average width
+ REAL(KIND=DP_KIND) :: THCK      !## thickness of riverbed
+ REAL(KIND=DP_KIND) :: HCND      !## permeability of riverbed
  INTEGER :: DWNS   !## downstream segment number
  INTEGER :: UPSG   !## upstream segment number
  INTEGER :: ICLC   !## calculation option
  INTEGER :: IPRI   !## diversion option
- REAL :: QFLW      !## streamflow entering segment
- REAL :: QROF      !## runoff 
- REAL :: PPTSW     !## precipitation
- REAL :: ETSW      !## evaporation
+ REAL(KIND=DP_KIND) :: QFLW      !## streamflow entering segment
+ REAL(KIND=DP_KIND) :: QROF      !## runoff 
+ REAL(KIND=DP_KIND) :: PPTSW     !## precipitation
+ REAL(KIND=DP_KIND) :: ETSW      !## evaporation
 END TYPE ISDOBJ
 TYPE(ISDOBJ),ALLOCATABLE,DIMENSION(:) :: DATISD,DUMDATISD,ISGEDITISD
 TYPE(ISDOBJ),ALLOCATABLE,DIMENSION(:,:) :: DATISD2
@@ -125,7 +130,7 @@ INTEGER,DIMENSION(:),ALLOCATABLE :: TISD
 
 !## type for cross-sections
 TYPE ISCOBJ
- REAL :: DISTANCE,BOTTOM,MRC,ZP
+ REAL(KIND=DP_KIND) :: DISTANCE,BOTTOM,MRC,ZP
 END TYPE ISCOBJ
 TYPE(ISCOBJ),ALLOCATABLE,DIMENSION(:) :: DATISC,DUMDATISC,ISGEDITISC
 TYPE(ISCOBJ),ALLOCATABLE,DIMENSION(:,:) :: DATISC2
@@ -134,7 +139,8 @@ INTEGER,DIMENSION(:),ALLOCATABLE :: TISC,ISCN
 !## type for weirs
 TYPE ISTOBJ
  INTEGER :: IDATE
- REAL :: WLVL_UP,WLVL_DOWN
+ REAL(KIND=DP_KIND) :: WLVL_UP,WLVL_DOWN
+ CHARACTER(LEN=8) :: CTIME !## time in hhmmss
 END TYPE ISTOBJ
 TYPE(ISTOBJ),ALLOCATABLE,DIMENSION(:) :: DATIST,DUMDATIST,ISGEDITIST
 TYPE(ISTOBJ),ALLOCATABLE,DIMENSION(:,:) :: DATIST2
@@ -142,43 +148,51 @@ INTEGER,DIMENSION(:),ALLOCATABLE :: TIST
 
 !## type for discharge-water level relationships
 TYPE ISQOBJ
- REAL :: Q,W,D,F
+ REAL(KIND=DP_KIND) :: Q,W,D,F
 END TYPE ISQOBJ
 TYPE(ISQOBJ),ALLOCATABLE,DIMENSION(:) :: DATISQ,DUMDATISQ,ISGEDITISQ
 TYPE(ISQOBJ),ALLOCATABLE,DIMENSION(:,:) :: DATISQ2
 INTEGER,DIMENSION(:),ALLOCATABLE :: TISQ
 
 CHARACTER(LEN=24),DIMENSION(MAXITEMS) :: FNAME
-REAL,DIMENSION(2,MAXITEMS) :: ISGVALUE
+REAL(KIND=DP_KIND),DIMENSION(2,MAXITEMS) :: ISGVALUE
 
 CHARACTER(LEN=4),DIMENSION(MAXFILES) :: EXT
 CHARACTER(LEN=50),DIMENSION(MAXFILES) :: TFORM
-INTEGER,DIMENSION(MAXFILES) :: RECLEN
+INTEGER,DIMENSION(MAXFILES) :: RECLEN,RECLND
 
 DATA FNAME/'COND','STAGE','BOTTOM','INFFCT','TOTAL_LENGTH','MEAN_WPERIMETER','MEAN_WWIDTH','RESISTANCE','EROSION','EFFECT','CUR_ID','NEX_ID'/
 DATA EXT/'ISG ','ISP ','ISD1','ISD2','ISC1','ISC2','IST1','IST2','ISQ1','ISQ2'/
-DATA RECLEN/0,8,44,20,44,12,44,12,44,16/
+!## single precision ISG
+DATA RECLEN/0, 8,44,20,44,12,44,12,44,16/
+!## double precision ISG
+DATA RECLND/0,16,48,44,48,24,48,28,48,32/
+
 DATA TFORM/'FORMATTED  ','UNFORMATTED','UNFORMATTED','UNFORMATTED', &
            'UNFORMATTED','UNFORMATTED','UNFORMATTED','UNFORMATTED'  , &
            'UNFORMATTED','UNFORMATTED'/
 
-CHARACTER(LEN=12),DIMENSION(5) :: TATTRIB1
-CHARACTER(LEN=12),DIMENSION(15) :: TATTRIB2
+CHARACTER(LEN=24),DIMENSION(5) :: TATTRIB1
+CHARACTER(LEN=24),DIMENSION(6) :: TATTRIB3
+CHARACTER(LEN=24),DIMENSION(15) :: TATTRIB2
 INTEGER,DIMENSION(5) :: CTATTRIB1
 INTEGER,DIMENSION(15) :: CTATTRIB2
+INTEGER,DIMENSION(6) :: CTATTRIB3
 
 !## items for isd2-file for 1) riv approach and 2) sfr approach
 DATA TATTRIB1/'Date','Water level (m+MSL)','Bottom level (m+MSL)','Resistance (d)','Inf.factor (-)'/
 DATA TATTRIB2/'Date','Time','Water level (m+MSL)','Bottom level (m+MSL)','Stream Width (m)','Bed Thickn. (m)','Bed Perm. (m/d)', &
     'Iup Seg (-)','Idown Seg (-)','Calc Opt (-)','Div Opt (-)','Q Flow (m3/s)','Q Runoff (m3/s)','PPTSW (mm/d)','ETSW (mm/d)'/
-DATA CTATTRIB1/1,2,2,2,2/   !## 1=integer,2=real,3=menu
+DATA TATTRIB3/'Date','Time','Water level (m+MSL)','Bottom level (m+MSL)','Resistance (d)','Inf.factor (-)'/
+DATA CTATTRIB1/1,2,2,2,2/     !## 1=integer,2=real,3=menu,4=character
 DATA CTATTRIB2/1,4,2,2,2,2,2,1,1,3,3,2,2,2,2/
+DATA CTATTRIB3/1,4,2,2,2,2/   !## 1=integer,2=real,3=menu,4=character
 
 TYPE ISGTYPE
  INTEGER :: ISOURCE,IACT
  TYPE(IDFOBJ),DIMENSION(4) :: IDF                       !idf-structure
  INTEGER,DIMENSION(4) :: IATTRIB,IOP,IACTATTRIB
- REAL,DIMENSION(4) :: VALUE 
+ REAL(KIND=DP_KIND),DIMENSION(4) :: VALUE 
  CHARACTER(LEN=256),DIMENSION(4) :: IDFNAME
  CHARACTER(LEN=256) :: FNAME
  CHARACTER(LEN=50) :: WC
@@ -187,30 +201,30 @@ END TYPE ISGTYPE
 TYPE(ISGTYPE),ALLOCATABLE,DIMENSION(:) :: ISGADJ
 INTEGER,ALLOCATABLE,DIMENSION(:) :: ISEGMENTS,IDATES
 CHARACTER(LEN=8),ALLOCATABLE,DIMENSION(:) :: CDATES
-REAL,SAVE :: ISGX,ISGY
-REAL,ALLOCATABLE,DIMENSION(:) :: XPOL,YPOL   
+REAL(KIND=DP_KIND),SAVE :: ISGX,ISGY
+REAL(KIND=DP_KIND),ALLOCATABLE,DIMENSION(:) :: XPOL,YPOL   
 INTEGER,SAVE :: NXY,IULOG
 INTEGER,DIMENSION(4) :: NRECORDS
 
 TYPE GRIDISGOBJ
- REAL :: XMIN,YMIN,XMAX,YMAX          !## area to be gridded (x1,y1,x2,y2)'
- REAL,POINTER,DIMENSION(:) :: DELR=>NULL(),DELC=>NULL()  !## cellsizes
+ REAL(KIND=DP_KIND) :: XMIN,YMIN,XMAX,YMAX          !## area to be gridded (x1,y1,x2,y2)'
+ REAL(KIND=DP_KIND),POINTER,DIMENSION(:) :: DELR=>NULL(),DELC=>NULL()  !## cellsizes
  INTEGER :: NCOL,NROW                 !## number of columns/row for griddin non-equidistantial
  INTEGER :: ISTEADY                   !## (1) mean over all periods, (2) mean over given period'
  INTEGER :: SDATE,EDATE,DDATE         !## startdate,enddate,ddate (yyyymmdd,yyyymmdd,dd)'
  INTEGER(KIND=8) :: STIME,ETIME,DTIME !## starttime,endtime (yyyymmddmmhhss,yyyymmddmmhhss)'
  INTEGER :: IDIM                      !## (0) give area (2) entire domain of isg (3) selected isg'
- REAL :: CS                           !## cellsize'
- REAL :: MINDEPTH                     !## minimal waterdepth for computing conductances (m)'
- REAL :: WDEPTH                       !## waterdepth only used in combination with isimgro>0'
+ REAL(KIND=DP_KIND) :: CS                           !## cellsize'
+ REAL(KIND=DP_KIND) :: MINDEPTH                     !## minimal waterdepth for computing conductances (m)'
+ REAL(KIND=DP_KIND) :: WDEPTH                       !## waterdepth only used in combination with isimgro>0'
  INTEGER :: ICDIST                    !## (0) do not compute effect of weirs (1) do compute effect of weirs'
  INTEGER :: ISIMGRO                   !## ISIMGRO'
  INTEGER :: IEXPORT                   !## (0) idf (1) modflow river file
  CHARACTER(LEN=256) :: ROOT           !## resultmap'
  CHARACTER(LEN=52) :: POSTFIX         !## POSTFIX {POSTFIX}_stage.idf etc.'
- REAL :: NODATA                       !## nodatavalue in ISG
+ REAL(KIND=DP_KIND) :: NODATA                       !## nodatavalue in ISG
  INTEGER,DIMENSION(12) :: ISAVE       !## array to specify the attributes to be saved
- REAL :: MAXWIDTH                     !## 3 maximum widht for computing rivier-width (in case cross-sections are rubbish)
+ REAL(KIND=DP_KIND) :: MAXWIDTH                     !## 3 maximum widht for computing rivier-width (in case cross-sections are rubbish)
  INTEGER :: IAVERAGE                  !## (1) mean (2) median value
  !## applicable for svat export to swnr_svat_drng.inp
  CHARACTER(LEN=256) :: THIESSENFNAME,AHNFNAME,SEGMENTCSVFNAME,SVAT2SWNR_DRNG

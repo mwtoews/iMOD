@@ -1,4 +1,4 @@
-!!  Copyright (C) Stichting Deltares, 2005-2017.
+!!  Copyright (C) Stichting Deltares, 2005-2018.
 !!
 !!  This file is part of iMOD.
 !!
@@ -22,26 +22,27 @@
 MODULE MOD_SCENTOOL_PAR
 
 USE MOD_IDF_PAR, ONLY : IDFOBJ
+USE IMODVAR, ONLY : DP_KIND,SP_KIND
 
-INTEGER,PARAMETER :: MXRES=4
+INTEGER,PARAMETER :: MXRES=2
 CHARACTER(LEN=50),DIMENSION(MXRES) :: RESLIST
-DATA RESLIST/'Phreatic Heads','DrawDown','Flowlines Well System','Flowlines Other Wells'/
+DATA RESLIST/'Phreatic Heads','DrawDown'/ !,'Flowlines Well System','Flowlines Other Wells'/
 
-REAL :: NODATAGRID=-99999.0
+REAL(KIND=DP_KIND) :: NODATAGRID=-99999.0
 
 !!#obj. voor packages to be manipulated
 
 TYPE ST1WEL_SUB1
  CHARACTER(LEN=10) :: ID
- REAL :: X,Y,Z1,Z2
+ REAL(KIND=DP_KIND) :: X,Y,Z1,Z2
 END TYPE ST1WEL_SUB1
 TYPE ST1WEL_SUB2
  INTEGER :: IDATE
- REAL :: QRATE
+ REAL(KIND=DP_KIND) :: QRATE
 END TYPE ST1WEL_SUB2
 TYPE ST1OBS_SUB1
  INTEGER :: IDATE
- REAL :: MEASURE
+ REAL(KIND=DP_KIND) :: MEASURE
 END TYPE ST1OBS_SUB1
 
 !## wells
@@ -63,9 +64,9 @@ INTEGER :: NROWL    !## number of row in grid loc
 !## cutouts
 TYPE ST1CUT
  CHARACTER(LEN=24) :: CNAME
- REAL :: Z          !## depth of cutout
+ REAL(KIND=DP_KIND) :: Z          !## depth of cutout
  INTEGER :: NXY     !## number of points
- REAL,POINTER,DIMENSION(:,:) :: XY !## locations
+ REAL(KIND=DP_KIND),POINTER,DIMENSION(:,:) :: XY !## locations
 END TYPE ST1CUT
 
 !## observations
@@ -79,9 +80,9 @@ TYPE ST1OBS
  TYPE(ST1WEL_SUB1),POINTER,DIMENSION(:) :: LOC
  INTEGER :: NZ      !## number of rate-dates
  TYPE(ST1OBS_SUB1),POINTER,DIMENSION(:) :: Z
-! REAL :: X,Y       !## locations
+! REAL(KIND=DP_KIND) :: X,Y       !## locations
 ! INTEGER :: NZ     !## number of observations
-! REAL,POINTER,DIMENSION(:,:) :: TZ  !## rates (jdate,z)
+! REAL(KIND=DP_KIND),POINTER,DIMENSION(:,:) :: TZ  !## rates (jdate,z)
 END TYPE ST1OBS
 
 !## monitoring
@@ -89,9 +90,9 @@ TYPE ST1MON
  CHARACTER(LEN=24) :: CNAME
  INTEGER :: ITYPE  !## itype of z coordinate (0=tov maaiveld, 1=tov nap)
  INTEGER :: NXY    !## number of points on segment (always two!)
- REAL,POINTER,DIMENSION(:,:) :: XY  !## location of segment
+ REAL(KIND=DP_KIND),POINTER,DIMENSION(:,:) :: XY  !## location of segment
  INTEGER :: NXZ    !## number of intervals on segment
- REAL,POINTER,DIMENSION(:,:) :: XZ  !## location of segment
+ REAL(KIND=DP_KIND),POINTER,DIMENSION(:,:) :: XZ  !## location of segment
 END TYPE ST1MON
 
 !## results
@@ -102,7 +103,7 @@ TYPE ST1RES
  !CHARACTER(LEN=256),POINTER,DIMENSION(:) :: IDFNAME
 END TYPE ST1RES
 
-REAL,ALLOCATABLE,DIMENSION(:) :: SIMDELT  !## simulation delt
+REAL(KIND=DP_KIND),ALLOCATABLE,DIMENSION(:) :: SIMDELT  !## simulation delt
 INTEGER,ALLOCATABLE,DIMENSION(:) :: SIMJDATE !## julian date of simulation
 INTEGER :: SIMNPER !## simulation nper
 
@@ -118,16 +119,17 @@ INTEGER :: MAXNWEL,MAXNCUT,MAXNOBS,MAXNMON,MAXNRES
 INTEGER :: NSCNCONF
 
 TYPE ST1CONF
- CHARACTER(LEN=256) :: RUNF  !## runfile
- CHARACTER(LEN=100) :: RUNNAME !## name to be displayed
+ CHARACTER(LEN=256) :: PRJF    !## prjfile
+ CHARACTER(LEN=100) :: PRJNAME !## prjname to be displayed
 END TYPE ST1CONF
 TYPE(ST1CONF),DIMENSION(:),ALLOCATABLE :: CONF
 
 CHARACTER(LEN=256) :: RESDIR,SCFFNAME
 
-TYPE(IDFOBJ),ALLOCATABLE,DIMENSION(:) :: TOPIDF,BOTIDF,KDIDF,DDNIDF,CIDF
+TYPE(IDFOBJ),ALLOCATABLE,DIMENSION(:) :: DDNIDF,CIDF,TOPIDF,BOTIDF,KHVIDF
+INTEGER,ALLOCATABLE,DIMENSION(:) :: IKD
 
-INTEGER :: STNLAY !## number of top/bottom layers to be used assigning wells
+!INTEGER :: STNLAY !## number of top/bottom layers to be used assigning wells
 
 CONTAINS
 

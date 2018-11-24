@@ -1,4 +1,4 @@
-!!  Copyright (C) Stichting Deltares, 2005-2017.
+!!  Copyright (C) Stichting Deltares, 2005-2018.
 !!
 !!  This file is part of iMOD.
 !!
@@ -20,704 +20,239 @@
 !!  P.O. Box 177
 !!  2600 MH Delft, The Netherlands.
 !!
-!###======================================================================
-SUBROUTINE IDFINIT(IDFNAMEGIVEN,LEGNAME,LPLOT,ISTYLE,LDEACTIVATE,IPFICOL,ILABELS,IPFASSFILES) 
-!###======================================================================
+MODULE MOD_IDFPLOT
+
 USE WINTERACTER
 USE RESOURCE
-USE IMODVAR
+USE MOD_DBL
 USE MODPLOT
-USE MOD_PREF_PAR, ONLY : PREFVAL
+USE IMODVAR 
 USE MOD_COLOURS
-USE MOD_IDF, ONLY : IDFREAD
-USE MOD_ISG_PAR, ONLY : MAXFILES
-USE MOD_IPF, ONLY : UTL_GETUNITIPF
+USE MOD_PREF_PAR, ONLY : PREFVAL
+USE MOD_UTL
+USE MOD_IDF
 USE MOD_MDF, ONLY : READMDF,MDFDEALLOCATE,MDF
-USE MOD_UTL, ONLY : UTL_GETUNIT,UTL_MESSAGEHANDLE,UTL_READARRAY,UTL_WSELECTFILE,ITOS,UTL_CAP
+USE MOD_IDF_PAR, ONLY : IDFOBJ
+USE MOD_SOF, ONLY : SOF_COMPUTE_GRAD,SOF_COMPUTE_GRAD_3D
 USE MOD_ASC2IDF, ONLY : ASC2IDF_IMPORTASC,ASC2IDF_IMPORTASC_TYPE5
 USE MOD_NC2IDF, ONLY : NC2IDF_IMPORTNC,INETCDF
 USE MOD_LEGEND, ONLY : LEG_CREATE_CLASSES,LEG_CREATE_COLORS
 USE MOD_LEGEND_UTL, ONLY : LEG_READ
-USE MOD_MANAGER, ONLY : MANAGERFILL,MANAGERUPDATE
-USE MOD_IFF, ONLY : UTL_GETUNITIFF
 USE MOD_OSD, ONLY : OSD_OPEN
-USE MOD_ISG_UTL, ONLY : UTL_GETUNITSISG
+USE MOD_ISG_PLOT, ONLY : ISGPLOTMAIN
 USE MOD_MAP2IDF, ONLY : MAP2IDF_IMPORTMAP
 USE MOD_GEF2IPF, ONLY : GEF2IPF_MAIN
-USE MOD_GEF2IPF_PAR, ONLY : GEFNAMES,IPFFNAME
-USE MOD_GENPLOT, ONLY : TOPOSHPTOGEN
-USE MOD_UDF_UTL, ONLY : UDF_DEALLOCATEMESH,UDF_OPEN
-IMPLICIT NONE
-CHARACTER(LEN=*),INTENT(IN),OPTIONAL :: IDFNAMEGIVEN
-CHARACTER(LEN=*),INTENT(IN),OPTIONAL :: LEGNAME
-LOGICAL,INTENT(IN),OPTIONAL :: LPLOT,LDEACTIVATE
-INTEGER,INTENT(IN),OPTIONAL :: ISTYLE
-INTEGER,INTENT(IN),OPTIONAL,DIMENSION(:) :: IPFASSFILES
-INTEGER,INTENT(IN),DIMENSION(:),OPTIONAL :: ILABELS
-INTEGER,DIMENSION(5),INTENT(IN),OPTIONAL :: IPFICOL
-INTEGER :: IDF,NIDF,I,J,K,IOS,IPLOT,N,IACT,M
-INTEGER,ALLOCATABLE,DIMENSION(:) :: ILIST
-INTEGER,DIMENSION(MAXFILES) :: IU
-REAL :: DR
-CHARACTER(LEN=10000) :: IDFNAME,IDFLIST
-CHARACTER(LEN=256),ALLOCATABLE,DIMENSION(:) :: FNAMES
-LOGICAL :: LLEG,LPLOTTING,LGEF,LIPF
-
-!## how many active before opening files
-IACT=MPW%NACT
-
-!## initialize iu
-IU=0
-
-LPLOTTING=.TRUE.
-IF(PRESENT(LPLOT))LPLOTTING=LPLOT
-
-IF(.NOT.PRESENT(IDFNAMEGIVEN))THEN
- IDFNAME=''
- IF(INETCDF.EQ.0)THEN
-  IF(.NOT.UTL_WSELECTFILE('All Known Files (*.idf;*.udf;*.mdf;*.ipf;*.isg;*.iff;*.asc;*.shp;*.gen;*.gef;*.map)'//&
-                   '|*.idf;*.udf;*.mdf;*.ipf;*.isg;*.iff;*.arr;*.asc;*.shp;*.gen;*.gef;*.map|'// &
-                   'iMOD Map (*.idf)|*.idf|'               //&
-                   'iMOD Unstructered Data File (*.udf)|*.udf|'   //&
-                   'iMOD Multi Data File (*.mdf)|*.mdf|'   //&
-                   'iMOD Pointers (*.ipf)|*.ipf|'          //&
-                   'iMOD Segment-River File (*.isg)|*.isg|'//&
-                   'iMOD Flowline File (*.iff)|*.iff|'     //&
-                   'iMOD Array File (*.arr)|*.arr|'        //&
-                   'ESRI Raster file (*.asc)|*.asc|'       //&
-                   'ESRI Shape file (*.shp)|*.shp|'        //&
-                   'ESRI Ungenerate file (*.gen)|*.gen|'   //&
-                   'GEF file (*.gef)|*.gef|'               //&
-                   'PC Raster Map file (*.map)|*.map|',      &
-                   LOADDIALOG+MUSTEXIST+PROMPTON+DIRCHANGE+MULTIFILE,IDFNAME,&
-                   'Load iMOD Map (*.idf,*.mdf,*.ipf,*.isg,*.iff,*.asc,*.shp,*.gen,*.gef,*.map)'))RETURN
- ELSEIF(INETCDF.EQ.1)THEN
-  IF(.NOT.UTL_WSELECTFILE('All Known Files (*.idf;*.udf;*.mdf;*.ipf;*.isg;*.iff;*.nc;*.asc;*.shp;*.gen;*.gef;*.map)'//&
-                   '|*.idf;*.udf;*.mdf;*.ipf;*.isg;*.iff,*.arr;*.nc;*.asc;*.shp;*.gen;*.gef;*.map|'// &
-                   'iMOD Map (*.idf)|*.idf|'               //&
-                   'iMOD Unstructered Data File (*.udf)|*.udf|'   //&
-                   'iMOD Multi Data File (*.mdf)|*.mdf|'   //&
-                   'iMOD Pointers (*.ipf)|*.ipf|'          //&
-                   'iMOD Segment-River File (*.isg)|*.isg|'//&
-                   'iMOD Flowline File (*.iff)|*.iff|'     //&
-                   'iMOD Array File (*.arr)|*.arr|'        //&
-                   'NetCDF File (*.nc)|*.nc|'              //&
-                   'ESRI Raster file (*.asc)|*.asc|'       //&
-                   'ESRI Shape file (*.shp)|*.shp|'       //&
-                   'ESRI Ungenerate file (*.gen)|*.gen|'   //&
-                   'GEF file (*.gef)|*.gef|'               //&
-                   'PC Raster Map file (*.map)|*.map|',      &
-                   LOADDIALOG+MUSTEXIST+PROMPTON+DIRCHANGE+MULTIFILE,IDFNAME,&
-                   'Load iMOD Map (*.idf,*.mdf,*.ipf,*.isg,*.iff,*.nc,*.asc,*.shp,*.gen,*.gef,*.map)'))RETURN
- ENDIF
-ELSE
- IDFNAME=IDFNAMEGIVEN
-ENDIF
-
-CALL UTL_MESSAGEHANDLE(0)
-
-K=INDEX(IDFNAME,CHAR(0))
-IF(K.GT.0)THEN
- IDFLIST=IDFNAME
- NIDF=0
- I=K+1
- DO WHILE(.TRUE.)
-  J=INDEX(IDFLIST(I:),CHAR(0))
-  NIDF=NIDF+1
-  IF(J.EQ.0)EXIT
-  I=I+J
- END DO
-ELSE
- NIDF=1
-ENDIF
-
-!## inactivate all
-IF(PRESENT(LDEACTIVATE))THEN
- IF(LDEACTIVATE)MP%ISEL=.NOT.LDEACTIVATE
-ELSE
- MP%ISEL=.FALSE.
-ENDIF
-
-ALLOCATE(FNAMES(NIDF))
-DO IDF=1,NIDF
- !## construct new name in multi-file selection mode
- IF(NIDF.GT.1)THEN
-  I=INDEX(IDFLIST,CHAR(0))+1
-  DO K=1,IDF-1
-   J=INDEX(IDFLIST(I:),CHAR(0))
-   I=I+J
-  END DO
-  J=INDEX(IDFLIST(I:),CHAR(0))
-  K=INDEX(IDFLIST,CHAR(0))-1
-  IF(J.EQ.0)THEN
-   FNAMES(IDF)=IDFLIST(:K)//'\'//IDFLIST(I:)
-  ELSE
-   J=J+I
-   FNAMES(IDF)=IDFLIST(:K)//'\'//IDFLIST(I:J-1)
-  ENDIF
-  J=INDEXNOCASE(FNAMES(IDF),CHAR(0),.TRUE.)
-  IF(J.GT.0)FNAMES(IDF)=FNAMES(IDF)(:J-1)
- ELSE
-  FNAMES(IDF)=IDFNAME
- ENDIF
- CALL IUPPERCASE(FNAMES(IDF))
-ENDDO
-
-LGEF=.FALSE.
-DO IDF=1,NIDF
-
- IDFNAME=FNAMES(IDF)
- 
- !## check whether file already opened ... overwrite it otherwise
- DO IPLOT=1,MXMPLOT
-  IF(MP(IPLOT)%IACT.AND.TRIM(UTL_CAP(MP(IPLOT)%IDFNAME,'U')).EQ.TRIM(UTL_CAP(IDFNAME,'U')))EXIT
- END DO
- !## get empty iplot-location
- IF(IPLOT.GT.MXMPLOT)THEN
-  DO IPLOT=1,MXMPLOT
-   IF(.NOT.MP(IPLOT)%IACT)EXIT
-  END DO
- ENDIF
- IF(IPLOT.GT.MXMPLOT)THEN
-  CALL WMESSAGEBOX(OKONLY,EXCLAMATIONICON,COMMONOK,'Cannot open more than '//TRIM(ITOS(MXMPLOT))//' file in the iMOD Manager!','Error')
-  EXIT
- ENDIF
- 
- !## determine what kind of file *.idf, *.ipf etc.
- I=INDEXNOCASE(IDFNAME,'.',.TRUE.)+1
- SELECT CASE (IDFNAME(I:I+2))
-  CASE ('IDF')
-   MP(IPLOT)%IPLOT=1
-  CASE ('IPF')
-   MP(IPLOT)%IPLOT=2
-  CASE ('GEF')
-   LGEF=.TRUE.; MP(IPLOT)%IPLOT=0
-   IF(UTL_WSELECTFILE('iMOD Point file (*.ipf)|*.ipf|',SAVEDIALOG+PROMPTON+DIRCHANGE+APPENDEXT,&
-      IPFFNAME,'Save GEF files in a single IPF file (*.ipf)'))THEN
-    ALLOCATE(GEFNAMES(NIDF)); GEFNAMES=FNAMES; CALL GEF2IPF_MAIN(0,0); DEALLOCATE(GEFNAMES)
-    IDFNAME=IPFFNAME; MP(IPLOT)%IPLOT=2
-   ENDIF
-  CASE ('ASC','NC ','MAP','ARR')
-   IF(IDFNAME(I:I+2).EQ.'ASC')THEN
-    CALL ASC2IDF_IMPORTASC(IDFNAME,0.0,0.0,I,0)
-   ELSEIF(IDFNAME(I:I+2).EQ.'NC ')THEN
-    CALL NC2IDF_IMPORTNC(IDFNAME,I)
-   ELSEIF(IDFNAME(I:I+2).EQ.'MAP')THEN
-    CALL MAP2IDF_IMPORTMAP(IDFNAME,I)
-   ELSEIF(IDFNAME(I:I+2).EQ.'ARR')THEN
-    CALL ASC2IDF_IMPORTASC_TYPE5(IDFNAME,I)
-   ENDIF
-   IF(I.EQ.0)THEN
-    I=INDEXNOCASE(IDFNAME,'.',.TRUE.)
-    IDFNAME=IDFNAME(:I)//'IDF'
-    !## Re-check whether file already opened ... overwrite it otherwise
-    DO I=1,MXMPLOT; IF(MP(I)%IACT.AND.MP(I)%IDFNAME.EQ.IDFNAME)EXIT; END DO
-    IF(I.LE.MXMPLOT)IPLOT=I
-    MP(IPLOT)%IPLOT=1
-   ELSE
-    MP(IPLOT)%IPLOT=0
-    EXIT
-   ENDIF
-  CASE ('IFF')
-   MP(IPLOT)%IPLOT=3
-  CASE ('ISG')
-   MP(IPLOT)%IPLOT=4
-  CASE ('MDF')
-   MP(IPLOT)%IPLOT=5
-  CASE ('GEN')
-   MP(IPLOT)%IPLOT=6
-  CASE ('SHP')
-   !## transform shp/dbf -> gen/dat
-   IF(.NOT.TOPOSHPTOGEN(TRIM(IDFNAME),LIPF))CYCLE
-   IF(LIPF)THEN
-    MP(IPLOT)%IPLOT=2; IDFNAME=IDFNAME(:INDEX(IDFNAME,'.',.TRUE.)-1)//'.IPF'
-   ELSE
-    MP(IPLOT)%IPLOT=6; IDFNAME=IDFNAME(:INDEX(IDFNAME,'.',.TRUE.)-1)//'.GEN'
-   ENDIF
-  CASE ('UDF')
-   MP(IPLOT)%IPLOT=7
-  CASE DEFAULT
-   CALL WMESSAGEBOX(OKONLY,EXCLAMATIONICON,COMMONOK,'iMOD cannot recognize current extension in'//CHAR(13)//TRIM(IDFNAME),'Error')
-   EXIT
- END SELECT
-
- !## open idf-file (only to test whether file exists!)
- IF(MP(IPLOT)%IPLOT.EQ.1)THEN
-  IF(.NOT.IDFREAD(MP(IPLOT)%IDF,IDFNAME,0))MP(IPLOT)%IPLOT=0
-  IU(1)=MP(IPLOT)%IDF%IU
- !## open ipf-file
- ELSEIF(MP(IPLOT)%IPLOT.EQ.2)THEN
-  IU(1)=UTL_GETUNITIPF(IDFNAME,'OLD'); IF(IU(1).LE.0)MP(IPLOT)%IPLOT=0
- !## open iff-file
- ELSEIF(MP(IPLOT)%IPLOT.EQ.3)THEN
-  IU(1)=UTL_GETUNITIFF(IDFNAME,'OLD'); IF(IU(1).LE.0)MP(IPLOT)%IPLOT=0
- !## open isg-file
- ELSEIF(MP(IPLOT)%IPLOT.EQ.4)THEN
-  CALL UTL_GETUNITSISG(IU,IDFNAME,'OLD'); IF(MINVAL(IU).LE.0)MP(IPLOT)%IPLOT=0
- !## open mdf-file
- ELSEIF(MP(IPLOT)%IPLOT.EQ.5)THEN
-  IF(.NOT.READMDF(IDFNAME,N))MP(IPLOT)%IPLOT=0; IF(N.EQ.0)MP(IPLOT)%IPLOT=0
-  MP(IPLOT)%NLIDF=1 !## default take the first to be plotted
- !## open gen-file
- ELSEIF(MP(IPLOT)%IPLOT.EQ.6)THEN
-  IU(1)=UTL_GETUNIT()
-  CALL OSD_OPEN(IU(1),FILE=IDFNAME,STATUS='OLD',FORM='FORMATTED',ACTION='READ,DENYWRITE',ACCESS='SEQUENTIAL',IOSTAT=IOS)
-  IF(IOS.NE.0)MP(IPLOT)%IPLOT=0
- !## open udf-file
- ELSEIF(MP(IPLOT)%IPLOT.EQ.7)THEN
-  IF(.NOT.UDF_OPEN(MP(IPLOT)%IDF,IDFNAME,0,IU(1)))THEN;
-   CALL UDF_DEALLOCATEMESH(); MP(IPLOT)%IPLOT=0
-  ENDIF
- ENDIF
-
- IF(MP(IPLOT)%IPLOT.EQ.0)EXIT !## idfloop
-
- !## initialize plot-variables
- MPW%NACT            =MPW%NACT+1
- MP(IPLOT)%IACT      =.TRUE.               !## plot active
- MP(IPLOT)%ISEL      =.TRUE.               !## selected
- MP(IPLOT)%IDFNAME   =IDFNAME              !## name of the idf-file
- I=INDEX(IDFNAME,'.')-1
- J=INDEXNOCASE(IDFNAME,'\',.TRUE.)+1
- 
- LLEG=.TRUE.
- IF(PRESENT(LEGNAME))THEN
-  !## do not generate a legend
-  IF(LEGNAME.NE.'')LLEG=.FALSE.
- ENDIF
-
- MP(IPLOT)%ALIAS=IDFNAME(J:)
-
- I=MOD(IPLOT,MAXCOLOUR); I=MAX(1,I)
- MP(IPLOT)%SCOLOR=ICOLOR(I)   !## color for profile
- !## active - drawing lines in profile on default
- CALL UTL_READARRAY((/1,1,0,0,0,0/),6,MP(IPLOT)%PRFTYPE) 
-
- MP(IPLOT)%IDFI =0
- MP(IPLOT)%UNITS=0   
-
- SELECT CASE (MP(IPLOT)%IPLOT)
-
-  !## idf/udf
-  CASE (1,7)
-
-   MP(IPLOT)%THICKNESS=1  !## contour width
-   IF(PRESENT(ISTYLE))THEN
-    MP(IPLOT)%IDFKIND=ISTYLE
-   ELSE
-    IF(MP(IPLOT)%IDF%IVF.EQ.0)THEN
-     CALL UTL_READARRAY((/1,0,0/),3,MP(IPLOT)%IDFKIND)
-    ELSE
-     CALL UTL_READARRAY((/0,0,1/),3,MP(IPLOT)%IDFKIND)
-    ENDIF
-   ENDIF
-
-  !## ipf
-  CASE (2)
-
-   !## active/non active in profile
-   MP(IPLOT)%PRFTYPE=1    
-   IF(PRESENT(ILABELS))THEN
-    READ(IU(1),*); READ(IU(1),*) M
-    ALLOCATE(ILIST(M)); ILIST=0; DO I=1,SIZE(ILABELS); ILIST(ILABELS(I))=1; ENDDO  
-    CALL UTL_READARRAY(ILIST,M,MP(IPLOT)%IEQ); DEALLOCATE(ILIST)
-    !## no value plotted <--- used as binaire pointer for label plotting, white
-    MP(IPLOT)%IEQ=-1.0*MP(IPLOT)%IEQ    
-   ELSE
-    MP(IPLOT)%IEQ=0    !no value plotted <--- used as binaire pointer for label plotting
-   ENDIF  
-   IF(PRESENT(ISTYLE))THEN
-    IF(.NOT.LLEG)THEN !PRESENT(LEGNAME))THEN
-     MP(IPLOT)%ILEG   =ISTYLE    !legend used for plotting
-     IF(ISTYLE.EQ.1)THEN
-      IF(PRESENT(IPFICOL))THEN
-       MP(IPLOT)%IATTRIB=IPFICOL(3)
-      ELSE
-       MP(IPLOT)%IATTRIB=3    !initial first label for colouring
-      ENDIF
-     ENDIF
-    ELSE
-     MP(IPLOT)%ILEG   =0    !no legend used for plotting, use colour in %scolor
-     MP(IPLOT)%ILEGDLF=1    
-     MP(IPLOT)%IATTRIB=1    !initial first label for colouring
-    ENDIF
-   ELSE
-    MP(IPLOT)%ILEG   =0    !no legend used for plotting, use colour in %scolor
-    MP(IPLOT)%ILEGDLF=1    
-    MP(IPLOT)%IATTRIB=1    !initial first label for colouring
-   ENDIF
-   !## plot associated files
-   MP(IPLOT)%ASSFILES=0
-   IF(PRESENT(IPFASSFILES))THEN
-    MP(IPLOT)%ASSFILES(1)=IPFASSFILES(1)
-    MP(IPLOT)%ASSFILES(2)=IPFASSFILES(2)
-   ENDIF
-   MP(IPLOT)%IDFKIND=0    !type of plotting for associate file
-   MP(IPLOT)%IDFI   =250  !sight (m)
-   MP(IPLOT)%SCOLOR =WRGB(100,100,100)! single - colour    !no colouring, attribute colouring
-   MP(IPLOT)%UNITS  =1    !plot associated files within ipf profile mode
-   IF(PRESENT(IPFICOL))THEN
-    MP(IPLOT)%XCOL  =IPFICOL(1)    !column used for X-COORDINATE
-    MP(IPLOT)%YCOL  =IPFICOL(2)    !column used for Y-COORDINATE
-    MP(IPLOT)%HCOL  =IPFICOL(4)    !column used for HIGHLIGHTING
-    MP(IPLOT)%HCOL_METHOD=IPFICOL(5)    !method for scaling
-   ELSE
-    MP(IPLOT)%XCOL  =1    !column used for X-COORDINATE
-    MP(IPLOT)%YCOL  =2    !column used for Y-COORDINATE
-    MP(IPLOT)%HCOL  =0    !no column used for highlighting
-    MP(IPLOT)%HCOL_METHOD=1    !method for scaling
-   ENDIF
-   MP(IPLOT)%ZCOL   =1    !column used for Z-COORDINATE, default x-coordinate
-   MP(IPLOT)%IAXES  =1    !all columns to be plotted on the first axes
-   MP(IPLOT)%FADEOUT=1    !fadeout
-   MP(IPLOT)%SYMBOL =14   !symbol
-   MP(IPLOT)%THICKNESS=1  !thickness
-   MP(IPLOT)%TSIZE    =7  !textsize
-   MP(IPLOT)%ASSCOL1=2 !## borehole plotting
-   MP(IPLOT)%ASSCOL2=0 !## borehole plotting
-   MP(IPLOT)%PCOL   =0    !column for plotting
-
-  !## iff
-  CASE (3)
-
-   MP(IPLOT)%PRFTYPE=1    !active/non active in profile
-   MP(IPLOT)%IDFI   =250  !sight (m)
-   MP(IPLOT)%SCOLOR =WRGB(100,100,100)! single - colour    !no colouring, attribute colouring
-!  MP(IPLOT)%SCOLOR =0    !no colouring, attribute colouring
-   IF(PRESENT(ISTYLE))THEN
-    MP(IPLOT)%ILEG   =ISTYLE    !no legend used for plotting, use colour in %scolor
-    MP(IPLOT)%IATTRIB=6    !cumtt
-   ELSE
-    MP(IPLOT)%ILEG   =0    !no legend used for plotting, use colour in %scolor
-    MP(IPLOT)%IATTRIB=1    !initial label
-   ENDIF
-!  MP(IPLOT)%IDFKIND=0    !nog vrij te gebruiken
-!  MP(IPLOT)%IEQ    =0    !nog vrij te gebruiken
-!  MP(IPLOT)%UNITS  =0    !nog vrij te gebruiken
-   MP(IPLOT)%FADEOUT=0    !fadeout
-   MP(IPLOT)%SYMBOL =0    !symbol
-   MP(IPLOT)%THICKNESS=1  !thickness
-
-  CASE (4) !## isg 
-!  MP(IPLOT)%PRFTYPE=0    !nog vrij te gebruiken
-!  MP(IPLOT)%IDFI   =0    !nog vrij te gebruiken
-!  MP(IPLOT)%SCOLOR =0    !nog vrij te gebruiken
-!  MP(IPLOT)%IDFKIND=0    !nog vrij te gebruiken
-!  MP(IPLOT)%IEQ    =0    !nog vrij te gebruiken
-!  MP(IPLOT)%UNITS  =0    !nog vrij te gebruiken
-!  MP(IPLOT)%FADEOUT=0    !nog vrij te gebruiken
-   MP(IPLOT)%SYMBOL =0    !symbol
-   MP(IPLOT)%THICKNESS=1  !thickness
-
-  !## mdf
-  CASE (5)
-  
-   IF(READMDF(IDFNAME,N))THEN
-    MP(IPLOT)%LEG%NCLR  =MDF(MP(IPLOT)%NLIDF)%LEG%NCLR
-    MP(IPLOT)%LEG%CLASS =MDF(MP(IPLOT)%NLIDF)%LEG%CLASS
-    MP(IPLOT)%LEG%RGB   =MDF(MP(IPLOT)%NLIDF)%LEG%RGB
-    MP(IPLOT)%LEG%LEGTXT=MDF(MP(IPLOT)%NLIDF)%LEG%LEGTXT
-    CALL MDFDEALLOCATE()
-    MP(IPLOT)%THICKNESS=1  !contour width
-    CALL UTL_READARRAY((/1,0,0/),3,MP(IPLOT)%IDFKIND)
-   ENDIF
-
-  !## gen
-  CASE (6)
-
-   MP(IPLOT)%IEQ    =0    !no value plotted <--- used as binaire pointer for label plotting
-   MP(IPLOT)%ILEG   =0    !no legend used for plotting, use colour in %scolor
-   MP(IPLOT)%IATTRIB=1    !initial first label for colouring
-   MP(IPLOT)%SCOLOR =WRGB(100,100,100)! single - colour    !no colouring, attribute colouring
-   MP(IPLOT)%TSIZE  =2  !textsize
-   MP(IPLOT)%PRFTYPE=0  !filled in (0=no,1=yes)
-   MP(IPLOT)%THICKNESS=1  !line thickness
-
- END SELECT
-
- MP(IPLOT)%ISCREEN=1  !usage of screen (profile)
-
- !## close idf/ivf/ipf/iff/isg/gen
- DO I=1,MAXFILES; IF(IU(I).GT.0)CLOSE(IU(I)); END DO
-
- !## try to read in legfile
- IF(.NOT.LLEG)THEN
-  CALL LEG_READ(MP(IPLOT)%LEG,LEGNAME,IOS)
-  !## error occured, generate a internal legend
-  IF(IOS.NE.0)LLEG=.TRUE.
- ENDIF
-
- !## generate linear legend for entire domain and write it if not assigned to file at this stage
- IF(LLEG)THEN
-  SELECT CASE (MP(IPLOT)%IPLOT)
-   !## 1=idf,2=ipf,3=iff,5=mdf,6=gen,7=udf
-   CASE (1:3,5,6)
-    IF(.NOT.LEG_CREATE_CLASSES('LIN','ALE',IPLOT))THEN; MP(IPLOT)%IPLOT=0; EXIT; ENDIF
-   !## isg
-   CASE (4)
-    DR=1.0/REAL(MXCLR+1); MP(IPLOT)%LEG%CLASS(0)=1.0
-    DO I=1,MXCLR; MP(IPLOT)%LEG%CLASS(I)=MP(IPLOT)%LEG%CLASS(I-1)-DR; END DO
-    MP(IPLOT)%LEG%NCLR=MXCLR
-  END SELECT
-  MP(IPLOT)%LEG%LEGTXT    =''      !## default name of the legend file
-  MP(IPLOT)%LEG%CGRAD     =1       !## all checkboxes selected
-  !## apply default colours
-  DO I=1,MXCGRAD; MP(IPLOT)%LEG%ICLRGRAD(I)=WRGB(CLR(I,1),CLR(I,2),CLR(I,3)); ENDDO
-  !# create all colours based upon iclrgrad
-  CALL LEG_CREATE_COLORS(IPLOT)
- ENDIF
-
- !## increase number of active plots
- IF(MPW%NACT.GE.MXMPLOT)EXIT
- !## terminate in case GEF is read in
- IF(LGEF)EXIT
- 
-ENDDO
-
-DEALLOCATE(FNAMES)
-
-CALL UTL_MESSAGEHANDLE(1)
-
-!## fill manager
-CALL MANAGERFILL()
-
-!## plot selected sets
-IF(LPLOTTING)THEN
- !## zoom direct to the map(s)
-! IF(IACT.EQ.0)CALL IDFZOOM(ID_ZOOMFULLMAP,0.0,0.0,0)
- CALL IDFPLOTFAST(1)
-ENDIF
-
-!## update manager
-CALL MANAGERUPDATE()
-
-RETURN
-END SUBROUTINE
-
-!###======================================================================
-SUBROUTINE IDFPLOTFAST(IFAST)
-!###======================================================================
-USE WINTERACTER
-USE RESOURCE
-USE MODPLOT
-USE IMODVAR
-USE MOD_LEGPLOT, ONLY : LEGPLOT_PLOT_SHOW
-USE MOD_UTL, ONLY : UTL_GETUNIT,ITOS
-USE MOD_3D_SETTINGS, ONLY : IMOD3D_DISPLAY_UPDATE
-IMPLICIT NONE
-INTEGER,INTENT(IN) :: IFAST
-INTEGER :: I,J,N,IPLOT
-INTEGER,DIMENSION(4) :: ID
-DATA                   (ID(I),I=1,4) /ID_LOWACCURACY, ID_MEDIUMACCURACY, &
-                                      ID_HIGHACCURACY,ID_EXCELLENTACCURACY/
-
-!## check whether transparancy need to be checked off
-IF(WMENUGETSTATE(ID_TRANSPARANTIDF,2))THEN !.EQ.0.AND.   &
-!   WMENUGETSTATE(ID_TRANSPARANTNODATAIDF,2).EQ.0)THEN
- N=0
- DO IPLOT=1,MXMPLOT
-  IF(MP(IPLOT)%ISEL.AND.MP(IPLOT)%IPLOT.EQ.1.OR.MP(IPLOT)%IPLOT.EQ.4)N=N+1
- ENDDO
- IF(N.GT.10)THEN
-  CALL WMESSAGEBOX(YESNOCANCEL,QUESTIONICON,COMMONYES,'Are you sure to display '//TRIM(ITOS(N))//' IDF files in transparancy?'//CHAR(13)// &
-   'If not, choose [No] and iMOD turn transparancy off','Question')
-  IF(WINFODIALOG(1).EQ.2)CALL WMENUSETSTATE(ID_TRANSPARANTIDF,2,0)
- ENDIF
-ENDIF
-
-IF(IFAST.EQ.0)THEN
- CALL IDFPLOT(1)
-ELSE
- CALL WINDOWSELECT(0)
- DO I=1,4
-  IF(WMENUGETSTATE(ID(I),2).EQ.1)EXIT
- END DO
- CALL WMENUSETSTATE(ID(I),2,0)
-
- DO J=1,I,MAX(1,I-1)
-
-  CALL WMENUSETSTATE(ID(J),2,1)
-  IF(J.EQ.I)THEN
-   CALL IDFPLOT(1)  !## final
-  ELSE
-   CALL IDFPLOT(0)  !## rough
-  ENDIF
-  CALL WMENUSETSTATE(ID(J),2,0)
- END DO
- CALL WMENUSETSTATE(ID(I),2,1)
-ENDIF
-
-!## refresh legend in legend tab
-CALL LEGPLOT_PLOT_SHOW()
-
-CALL IMOD3D_DISPLAY_UPDATE(MPW%XMIN,MPW%YMIN,MPW%XMAX,MPW%YMAX)
-
-RETURN
-END SUBROUTINE
-
-!###======================================================================
-SUBROUTINE IDFPLOT(IPLOTFAST)
-!###======================================================================
-USE WINTERACTER
-USE RESOURCE
+USE MOD_LEGPLOT, ONLY : LEGPLOT_PLOT_SHOW,LEGPLOT_PLOTUPDATE
 USE MOD_POLYGON_PAR
-USE MODPLOT
-USE IMODVAR
 USE MOD_POLYGON_DRAW, ONLY : POLYGON1DRAWSHAPE,POLYGON1DRAWYSEL
-USE MOD_IPF, ONLY : IPFDRAW,IPFINIT
 USE MOD_IPF_PAR, ONLY : NIPF
-USE MOD_IDF, ONLY : IDFREAD,IDFDEALLOCATEX,IDFGETLOC,IDFGETXYVAL
-USE MOD_GENPLOT, ONLY : TOPOGENDRAW,GENDRAW
 USE MOD_IR_PAR, ONLY : IRWIN
-USE MOD_IR_FIELDS, ONLY : IR1DRAWSHAPES
+USE MOD_IR_PLOT, ONLY : IR1DRAWSHAPES
 USE MOD_IR_GEN, ONLY : IR1GENDRAW
-USE MOD_UTL, ONLY : UTL_GETUNIT,UTL_MESSAGEHANDLE,UTL_IDFCRDCOR,UTL_FILLARRAY,IDFPLOT1BITMAP,IDFPLOT2BITMAP,UTL_DRAWELLIPSE,UTL_INSIDEELLIPSE
-USE MOD_LEGPLOT, ONLY : LEGPLOT_PLOTUPDATE
-USE MOD_IFF, ONLY : UTL_GETUNITIFF,IFFDRAW
-USE MOD_MDF, ONLY : READMDF,MDFDEALLOCATE,MDF
 USE MOD_TAGS, ONLY : TAGDRAW
-USE MOD_MODEL, ONLY : MODEL1DRAW_SIMBOX
-USE MOD_IDFTIMESERIE, ONLY : IDFTIMESERIE_PLUSPLOTPOINT
-USE MOD_TOPO, ONLY : TOPO1DRAW
-USE MOD_SCENTOOL, ONLY : ST1DRAWSCENARIO
+USE MOD_IDFTIMESERIE_UTL, ONLY : IDFTIMESERIE_PLUSPLOTPOINT
+USE MOD_TOPO, ONLY : TOPO1DRAW,TOPO1UPDATEMANAGER
+USE MOD_SCENTOOL_PLOT, ONLY : ST1DRAWSCENARIO
 USE MOD_SOLID_PROFILE, ONLY : SOLID_PLOTLOCATION_CROSSSECTIONS
-USE IMOD, ONLY : IDFDRAW
-USE MOD_ISG_PLOT, ONLY : ISGPLOTMAIN
+USE MOD_MODEL_UTL, ONLY : MODEL1DRAW_SIMBOX
+USE MOD_IFF, ONLY : IFFDRAW,IFFGETUNIT
+USE MOD_GEF2IPF_PAR, ONLY : GEFNAMES,IPFFNAME
+USE MOD_GENPLOT, ONLY : GEN_DRAW,GENDRAW
+USE MOD_IPF, ONLY : IPFDRAW,IPFINIT
+USE MOD_OSD, ONLY : OSD_OPEN
 USE MOD_UDF_UTL, ONLY : UDF_OPEN,UDF_PLOTNETWORK,UDF_DEALLOCATEMESH
-IMPLICIT NONE
-INTEGER,INTENT(IN) :: IPLOTFAST
-INTEGER :: IPLOT,IIBITMAP,I,N
-REAL :: XMIN,YMIN,XMAX,YMAX
-INTEGER,DIMENSION(4) :: IP
-LOGICAL :: LPLOT,LEX
-CHARACTER(LEN=256) :: FNAME
+USE MOD_ISG_PAR, ONLY : MAXFILES
+USE MOD_ISG_PLOT, ONLY : ISGPLOTMINMAX
+USE MOD_PROFILE_PAR, ONLY : AREA
+USE MOD_PROFILE_UTL, ONLY : PROFILE_PUTBITMAP
+USE MOD_GENPLOT_PAR, ONLY : GEN,MXGEN,ACTLISTGEN
+USE MOD_TAGS, ONLY : TAGZOOM
+USE MOD_MODEL_PAR, ONLY : SIMBOX
 
-!INTEGER :: iu,ios,nn,mm,irow,icol
-!REAL :: dxe,dye,rat,x,y
-!TYPE(IDFOBJ),DIMENSION(3) :: E
+CONTAINS
 
-CALL WINDOWSELECT(0)
+ !###======================================================================
+ SUBROUTINE IDFPLOTFAST(IFAST)
+ !###======================================================================
+ IMPLICIT NONE
+ INTEGER,INTENT(IN) :: IFAST
+ INTEGER :: I,J,N,IPLOT
+ INTEGER,DIMENSION(4) :: ID
+ DATA                   (ID(I),I=1,4) /ID_LOWACCURACY, ID_MEDIUMACCURACY, &
+                                       ID_HIGHACCURACY,ID_EXCELLENTACCURACY/
 
-CALL UTL_MESSAGEHANDLE(0)
-
-IF(MPW%IWIN.GT.0)THEN
- IIBITMAP=WINFOBITMAP(MPW%IWIN,BITMAPHANDLE)
-ELSE
- IIBITMAP=MPW%IBITMAP
-ENDIF
-
-!## create 'mother' bitmap for current coordinates
-CALL WBITMAPCREATE(MPW%IBITMAP,MPW%DIX,MPW%DIY)
-
-!## set area/units
-CALL UTL_IDFCRDCOR(MPW%XMIN,MPW%XMAX,MPW%YMIN,MPW%YMAX,REAL(MPW%DIX),REAL(MPW%DIY))
-CALL IGRPLOTMODE(MODECOPY)
-
-!## define drawable
-CALL IDFPLOT1BITMAP()
-
-!## clean canvas
-CALL IGRCOLOURN(WRGB(255,255,255))
-CALL IGRRECTANGLE(MPW%XMIN,MPW%YMIN,MPW%XMAX,MPW%YMAX)
-
-!## topo-drawing - if not transparant
-CALL WINDOWSELECT(0)
-IF(WMENUGETSTATE(ID_TOPOGRAPHY,2).EQ.1.AND. &
-   WMENUGETSTATE(ID_TOPTRANSPARACY,2).EQ.0)CALL TOPO1DRAW(0,MPW%XMIN,MPW%YMIN,MPW%XMAX,MPW%YMAX,MPW%IBITMAP)
-
-!## polygons
-IF(IPLOTFAST.EQ.1)CALL GENDRAW(1)
- 
-!## collect all other 'child' bitmaps
-DRWLIST=0
-I      =0
-DO IPLOT=1,MXMPLOT
-
- CALL UTL_FILLARRAY(IP,4,MP(IPLOT)%IDFKIND)
- !## grid colouring
- IF(SUM(IP).EQ.0)CYCLE
- !## temp. turn out contouring/texting
- IF(IPLOTFAST.EQ.0)THEN; IP(2)=0; IP(4)=0; ENDIF
- !## plot for active plot
- IF(.NOT.MP(IPLOT)%ISEL)CYCLE
- !## selected ones only (idf,mdf)
- IF(MP(IPLOT)%IPLOT.NE.1.AND.MP(IPLOT)%IPLOT.NE.5)CYCLE
-
- !## get idf for mdf file
- LEX=.TRUE.
- IF(MP(IPLOT)%IPLOT.EQ.5)THEN
-  FNAME=MP(IPLOT)%IDFNAME
-  !## read *.mdf file, only to get selected idf to be plotted
-  IF(READMDF(MP(IPLOT)%IDFNAME,N))THEN
-   MP(IPLOT)%IDFNAME=MDF(MP(IPLOT)%NLIDF)%FNAME
-   CALL MDFDEALLOCATE()
-  ELSE
-   LEX=.FALSE.
-  ENDIF
- ENDIF
-
- IF(LEX)THEN
-
-  !## reread dimensions ... in case different idf is placed ...
-  IF(IDFREAD(MP(IPLOT)%IDF,MP(IPLOT)%IDFNAME,0))THEN
-
-   !## check whether current plot inside current plot-domain
-   IF(MP(IPLOT)%IDF%XMIN.LT.MPW%XMAX.AND.MP(IPLOT)%IDF%XMAX.GE.MPW%XMIN.AND. &
-      MP(IPLOT)%IDF%YMIN.LT.MPW%YMAX.AND.MP(IPLOT)%IDF%YMAX.GE.MPW%YMIN)THEN
-
-    !## size of coord. fit in plotwindow
-    XMIN=MAX(MP(IPLOT)%IDF%XMIN,MPW%XMIN); XMAX=MIN(MP(IPLOT)%IDF%XMAX,MPW%XMAX)
-    YMIN=MAX(MP(IPLOT)%IDF%YMIN,MPW%YMIN); YMAX=MIN(MP(IPLOT)%IDF%YMAX,MPW%YMAX)
-
-    LPLOT=.TRUE.
-    IF(WMENUGETSTATE(ID_TRANSPARANTIDF,2).EQ.0.AND.   &
-       WMENUGETSTATE(ID_TRANSPARANTNODATAIDF,2).EQ.0)THEN
-     I=I+1  
-     CALL IDFPLOTAREA(XMIN,YMIN,XMAX,YMAX,I,LPLOT)
-    ENDIF
-    !## plot anyhow
-    IF(WMENUGETSTATE(ID_SHOWOPAQUE,2).EQ.1)LPLOT=.TRUE.
-    
-    !## draw idf in bitmap
-     CALL IDFPLOT1BITMAP()
-     IF(IDFDRAW(MP(IPLOT)%IDF,MP(IPLOT)%LEG,MP(IPLOT)%UNITS,IP,XMIN,YMIN,XMAX,YMAX, &
-        MP(IPLOT)%THICKNESS,LPLOT,UMIN=MP(IPLOT)%UMIN,UMAX=MP(IPLOT)%UMAX))DRWLIST(IPLOT)=1
-     !## deallocate idf%x
-    CALL IDFDEALLOCATEX(MP(IPLOT)%IDF)
+ !## check whether transparancy need to be checked off
+ IF(WMENUGETSTATE(ID_TRANSPARANTIDF,2))THEN
+  N=0
+  DO IPLOT=1,MXMPLOT
+   IF(MP(IPLOT)%ISEL.AND.(MP(IPLOT)%IPLOT.EQ.1.OR.MP(IPLOT)%IPLOT.EQ.4))N=N+1
+  ENDDO
+  IF(N.GT.10)THEN
+   CALL WMESSAGEBOX(YESNOCANCEL,QUESTIONICON,COMMONYES,'Are you sure to display '//TRIM(ITOS(N))//' IDF files in transparancy?'//CHAR(13)// &
+    'If not, choose [No] and iMOD turns transparancy off','Question')
+   IF(WINFODIALOG(EXITBUTTONCOMMON).EQ.2)THEN
+    CALL WMENUSETSTATE(ID_TRANSPARANTIDF,2,0)
    ENDIF
-   CLOSE(MP(IPLOT)%IDF%IU); MP(IPLOT)%IDF%IU=0
   ENDIF
  ENDIF
- IF(MP(IPLOT)%IPLOT.EQ.5)THEN; MP(IPLOT)%IDFNAME=FNAME; ENDIF
 
-ENDDO
+ IF(IFAST.EQ.0)THEN
+  CALL IDFPLOT(1)
+ ELSE
+  CALL WINDOWSELECT(0)
+  DO I=1,4
+   IF(WMENUGETSTATE(ID(I),2).EQ.1)EXIT
+  END DO
+  CALL WMENUSETSTATE(ID(I),2,0)
 
-CALL IDFPLOT1BITMAP()
+  DO J=1,I,MAX(1,I-1)
+   CALL WMENUSETSTATE(ID(J),2,1)
+   IF(J.EQ.I)THEN
+    CALL IDFPLOT(1)  !## final
+   ELSE
+    CALL IDFPLOT(0)  !## rough
+   ENDIF
+   CALL WMENUSETSTATE(ID(J),2,0)
+  END DO
+  CALL WMENUSETSTATE(ID(I),2,1)
+ ENDIF
 
-!## Topo-drawing
-CALL WINDOWSELECT(0)
-IF(WMENUGETSTATE(ID_TOPOGRAPHY,2).EQ.1.AND. &
-   WMENUGETSTATE(ID_TOPTRANSPARACY,2).EQ.1)CALL TOPO1DRAW(0,MPW%XMIN,MPW%YMIN,MPW%XMAX,MPW%YMAX,MPW%IBITMAP)
+ !## refresh legend in legend tab
+ CALL LEGPLOT_PLOT_SHOW()
 
-IF(IPLOTFAST.EQ.1)THEN
+!USE MOD_3D_SETTINGS, ONLY : IMOD3D_DISPLAY_UPDATE
+! CALL IMOD3D_DISPLAY_UPDATE(MPW%XMIN,MPW%YMIN,MPW%XMAX,MPW%YMAX)
 
+ END SUBROUTINE IDFPLOTFAST
+
+ !###======================================================================
+ SUBROUTINE IDFPLOT(IPLOTFAST)
+ !###======================================================================
+ IMPLICIT NONE
+ INTEGER,INTENT(IN) :: IPLOTFAST
+ INTEGER :: IPLOT,IIBITMAP,I,N
+ REAL(KIND=DP_KIND) :: XMIN,YMIN,XMAX,YMAX,XA1,YA1,XA2,YA2
+ INTEGER,DIMENSION(4) :: IP
+ LOGICAL :: LPLOT,LEX
+ CHARACTER(LEN=256) :: FNAME
+
+ CALL WINDOWSELECT(0)
+ CALL UTL_MESSAGEHANDLE(0)
+
+ IF(MPW%IWIN.GT.0)THEN
+  IIBITMAP=WINFOBITMAP(MPW%IWIN,BITMAPHANDLE)
+ ELSE
+  IIBITMAP=MPW%IBITMAP
+ ENDIF
+
+ !## create 'mother' bitmap for current coordinates
+ CALL WBITMAPCREATE(MPW%IBITMAP,MPW%DIX,MPW%DIY)
+
+ !## set area/units
  CALL IGRPLOTMODE(MODECOPY)
- CALL IDFPLOT1BITMAP()
 
+ !## define drawable and units
+ CALL UTL_PLOT1BITMAP()
+
+ !## get active drawing area (local coordinate system)
+ CALL IDFPLOT_FEATURES_AXES_CRD(XA1,YA1,XA2,YA2)
+
+ !## topo-drawing - if not transparant
+ CALL WINDOWSELECT(0)
+ IF(WMENUGETSTATE(ID_TOPOGRAPHY,2).EQ.1.AND. &
+    WMENUGETSTATE(ID_TOPTRANSPARACY,2).EQ.0)CALL TOPO1DRAW()
+
+ !## polygons
+ IF(IPLOTFAST.EQ.1)CALL GENDRAW()
+ 
+ !## collect all other 'child' bitmaps
+ DRWLIST=0
+ I      =0
  DO IPLOT=1,MXMPLOT
-  IF(MP(IPLOT)%ISEL.AND.MP(IPLOT)%IPLOT.EQ.7)THEN
-   !## plot udf
-   IF(UDF_OPEN(MP(IPLOT)%IDF,MP(IPLOT)%IDFNAME,1,MP(IPLOT)%IDF%IU))THEN
-    CALL UDF_PLOTNETWORK(MP(IPLOT)%IDF%IU,MP(IPLOT)%LEG,MP(IPLOT)%IDF%NODATA,MP(IPLOT)%UMIN,MP(IPLOT)%UMAX)
+
+  CALL UTL_FILLARRAY(IP,4,MP(IPLOT)%IDFKIND)
+  !## grid colouring
+  IF(SUM(IP).EQ.0)CYCLE
+  !## temp. turn out contouring/texting
+  IF(IPLOTFAST.EQ.0)THEN; IP(2)=0; IP(4)=0; ENDIF
+  !## plot for active plot
+  IF(.NOT.MP(IPLOT)%ISEL)CYCLE
+  !## selected ones only (idf,mdf)
+  IF(MP(IPLOT)%IPLOT.NE.1.AND.MP(IPLOT)%IPLOT.NE.5)CYCLE
+
+  !## get idf for mdf file
+  LEX=.TRUE.
+  IF(MP(IPLOT)%IPLOT.EQ.5)THEN
+   FNAME=MP(IPLOT)%IDFNAME
+   !## read *.mdf file, only to get selected idf to be plotted
+   IF(READMDF(MP(IPLOT)%IDFNAME,N))THEN
+    MP(IPLOT)%IDFNAME=MDF(MP(IPLOT)%NLIDF)%FNAME
+    CALL MDFDEALLOCATE()
+   ELSE
+    LEX=.FALSE.
    ENDIF
-   CALL UDF_DEALLOCATEMESH() 
   ENDIF
+
+  IF(LEX)THEN
+
+   !## reread dimensions ... in case different idf is placed ...
+   IF(IDFREAD(MP(IPLOT)%IDF,MP(IPLOT)%IDFNAME,0))THEN
+
+    !## check whether current plot inside current plot-domain
+    IF(MP(IPLOT)%IDF%XMIN.LT.MPW%XMAX.AND.MP(IPLOT)%IDF%XMAX.GE.MPW%XMIN.AND. &
+       MP(IPLOT)%IDF%YMIN.LT.MPW%YMAX.AND.MP(IPLOT)%IDF%YMAX.GE.MPW%YMIN)THEN
+
+     !## size of coord. fit in plotwindow
+     XMIN=MAX(MP(IPLOT)%IDF%XMIN,MPW%XMIN); XMAX=MIN(MP(IPLOT)%IDF%XMAX,MPW%XMAX)
+     YMIN=MAX(MP(IPLOT)%IDF%YMIN,MPW%YMIN); YMAX=MIN(MP(IPLOT)%IDF%YMAX,MPW%YMAX)
+
+     LPLOT=.TRUE.
+     IF(WMENUGETSTATE(ID_TRANSPARANTIDF,2).EQ.0.AND.   &
+        WMENUGETSTATE(ID_TRANSPARANTNODATAIDF,2).EQ.0)THEN
+      I=I+1  
+      CALL IDFPLOTAREA(XMIN,YMIN,XMAX,YMAX,I,LPLOT)
+     ENDIF
+     !## plot anyhow
+     IF(WMENUGETSTATE(ID_SHOWOPAQUE,2).EQ.1)LPLOT=.TRUE.
+    
+     !## draw idf in bitmap
+      CALL UTL_PLOT1BITMAP()
+      IF(IDFDRAW(MP(IPLOT)%IDF,MP(IPLOT)%LEG,MP(IPLOT)%UNITS,IP,XMIN,YMIN,XMAX,YMAX, &
+         MP(IPLOT)%THICKNESS,LPLOT,UMIN=MP(IPLOT)%UMIN,UMAX=MP(IPLOT)%UMAX))DRWLIST(IPLOT)=1
+      !## deallocate idf%x
+     CALL IDFDEALLOCATEX(MP(IPLOT)%IDF)
+    ENDIF
+    CLOSE(MP(IPLOT)%IDF%IU); MP(IPLOT)%IDF%IU=0
+   ENDIF
+  ENDIF
+  IF(MP(IPLOT)%IPLOT.EQ.5)THEN; MP(IPLOT)%IDFNAME=FNAME; ENDIF
+
  ENDDO
+
+ CALL UTL_PLOT1BITMAP()
+
+ !## topo-drawing
+ CALL WINDOWSELECT(0)
+ IF(WMENUGETSTATE(ID_TOPOGRAPHY,2).EQ.1.AND. &
+    WMENUGETSTATE(ID_TOPTRANSPARACY,2).EQ.1)CALL TOPO1DRAW()
+
+ IF(IPLOTFAST.EQ.1)THEN
+
+  CALL IGRPLOTMODE(MODECOPY)
+  CALL UTL_PLOT1BITMAP()
+
+  DO IPLOT=1,MXMPLOT
+   IF(MP(IPLOT)%ISEL.AND.MP(IPLOT)%IPLOT.EQ.7)THEN
+    !## plot udf
+    IF(UDF_OPEN(MP(IPLOT)%IDF,MP(IPLOT)%IDFNAME,1,MP(IPLOT)%IDF%IU))THEN
+     CALL UDF_PLOTNETWORK(MP(IPLOT)%IDF%IU,MP(IPLOT)%LEG,MP(IPLOT)%IDF%NODATA,MP(IPLOT)%UMIN,MP(IPLOT)%UMAX)
+    ENDIF
+    CALL UDF_DEALLOCATEMESH() 
+   ENDIF
+  ENDDO
  
- !## draw gens
- CALL IGRPLOTMODE(MODECOPY)
- CALL IDFPLOT1BITMAP()
- CALL TOPOGENDRAW(0)
+  !## draw gens from overlay tab
+  CALL IGRPLOTMODE(MODECOPY); CALL UTL_PLOT1BITMAP(); CALL GEN_DRAW(0) 
 
 ! if(.not.idfread(e(1),'d:\IMOD-MODELS\SWISS\DBASE_VISP_II\ANI\VERSION_2\ELLIPS_RAT.IDF',1))then; endif
 ! if(.not.idfread(e(2),'d:\IMOD-MODELS\SWISS\DBASE_VISP_II\ANI\VERSION_2\ELLIPS_ANI.IDF',1))then; endif
@@ -731,7 +266,7 @@ IF(IPLOTFAST.EQ.1)THEN
 !  dye=dxe*e(1)%x(icol,irow)
 !  rat=e(2)%x(icol,irow)
 !  !## 90 for ellips drawing
-!  CALL UTL_DRAWELLIPSE(x,y,dxe,dye,rat-90.0) !e(2)%x(icol,irow)-90.0)
+!  CALL UTL_DRAWELLIPSE(x,y,dxe,dye,rat-90.0D0) !e(2)%x(icol,irow)-90.0D0)
 ! enddo; enddo
 !
 ! if(.not.idfread(e(1),'d:\iMOD-TEST\IMODBATCH_KRIGING\rat.IDF',0))then; endif
@@ -747,129 +282,107 @@ IF(IPLOTFAST.EQ.1)THEN
 !  rat=IDFGETXYVAL(e(2),x,y) !-1928.36,2517.28)
 !  dxe=IDFGETXYVAL(e(3),x,y) !-1928.36,2517.28)
 !  dye=dxe*IDFGETXYVAL(e(1),x,y) !-1928.36,2517.28)
-!  CALL UTL_DRAWELLIPSE(x,y,dxe,dye,rat-90.0) !e(2)%x(icol,irow)-90.0)
+!  CALL UTL_DRAWELLIPSE(x,y,dxe,dye,rat-90.0D0) !e(2)%x(icol,irow)-90.0D0)
 ! enddo
 ! close(iu)
  
- !## imod isg plotting!!!
- CALL IGRPLOTMODE(MODECOPY)
- CALL IDFPLOT1BITMAP()
- DO IPLOT=1,MXMPLOT
-  IF(MP(IPLOT)%ISEL.AND.MP(IPLOT)%IPLOT.EQ.4)THEN
-   CALL IDFPLOT1BITMAP()
-   CALL ISGPLOTMAIN(IPLOT,MPW%XMIN,MPW%YMIN,MPW%XMAX,MPW%YMAX)
-  ENDIF
- END DO
-
- !## imodflow-line-files plotting!!!
- CALL IGRPLOTMODE(MODECOPY); 
- CALL IDFPLOT1BITMAP(); CALL IFFDRAW()
-
- !## imod-point-files plotting!!!
- CALL IGRPLOTMODE(MODECOPY); 
- CALL IDFPLOT1BITMAP(); CALL IPFDRAW() 
-
- !## esri-gen files plotting!!! 
- CALL IGRPLOTMODE(MODECOPY); 
- CALL IDFPLOT1BITMAP(); CALL GENDRAW(0)
-
- IF(WMENUGETSTATE(ID_RUNMODEL,2).EQ.1)CALL MODEL1DRAW_SIMBOX(.TRUE.)
-
- IF(WMENUGETSTATE(ID_IRDATABASE,2).EQ.1)THEN
-  !## from previous itree/ifield
-  CALL IR1DRAWSHAPES(2)
-
-  !## draw gen-file
-  CALL IR1GENDRAW()
-
- ENDIF
-
- !peter
- CALL POLYGON1DRAWSHAPE(1,SHPNO)
-
- !## draw selected points in idftimeserie
- CALL IDFTIMESERIE_PLUSPLOTPOINT()
-
- !## draw features from the scenario tool
- IF(WMENUGETSTATE(ID_SCENTOOL,2).EQ.1)CALL ST1DRAWSCENARIO()
-
- !## draw location of cross-sections in case solid modeling is active and profile tool is on!
- IF(WMENUGETSTATE(ID_SOLIDS,2).EQ.1)THEN 
-  CALL IDFPLOT1BITMAP()
+  !## imod isg plotting!!!
   CALL IGRPLOTMODE(MODECOPY)
-  CALL SOLID_PLOTLOCATION_CROSSSECTIONS()
- ENDIF
+  CALL UTL_PLOT1BITMAP()
+  DO IPLOT=1,MXMPLOT
+   IF(MP(IPLOT)%ISEL.AND.MP(IPLOT)%IPLOT.EQ.4)THEN
+    CALL UTL_PLOT1BITMAP()
+    CALL ISGPLOTMAIN(IPLOT,MPW%XMIN,MPW%YMIN,MPW%XMAX,MPW%YMAX)
+   ENDIF
+  END DO
+
+  !## imodflow-line-files plotting!!!
+  CALL IGRPLOTMODE(MODECOPY); CALL UTL_PLOT1BITMAP(); CALL IFFDRAW()
+
+  !## imod-point-files plotting!!!
+  CALL IGRPLOTMODE(MODECOPY); CALL UTL_PLOT1BITMAP(); CALL IPFDRAW() 
+
+  !## esri-gen files plotting!!! 
+  CALL IGRPLOTMODE(MODECOPY); CALL UTL_PLOT1BITMAP(); CALL GENDRAW()
+
+  IF(WMENUGETSTATE(ID_RUNMODEL,2).EQ.1)CALL MODEL1DRAW_SIMBOX()
+
+  IF(WMENUGETSTATE(ID_IRDATABASE,2).EQ.1)THEN
+   !## from previous itree/ifield
+   CALL IR1DRAWSHAPES(2)
+
+   !## draw gen-file
+   CALL IR1GENDRAW()
+
+  ENDIF
+
+  CALL POLYGON1DRAWSHAPE(1,SHP%NPOL,LPLOT=.FALSE.)
+
+  !## draw selected points in idftimeserie
+  CALL IDFTIMESERIE_PLUSPLOTPOINT()
+
+  !## draw features from the scenario tool
+  IF(WMENUGETSTATE(ID_SCENTOOL,2).EQ.1)CALL ST1DRAWSCENARIO()
+
+  !## draw location of cross-sections in case solid modeling is active and profile tool is on!
+  IF(WMENUGETSTATE(ID_SOLIDS,2).EQ.1)THEN 
+   CALL UTL_PLOT1BITMAP()
+   CALL IGRPLOTMODE(MODECOPY)
+   CALL SOLID_PLOTLOCATION_CROSSSECTIONS()
+  ENDIF
  
+ ENDIF
+
  !## draw external features
  CALL IGRPLOTMODE(MODECOPY)
- CALL IDFPLOT1BITMAP()
+ CALL UTL_PLOT1BITMAP()
  CALL IDFPLOT_FEATURES()
 
-ENDIF
+ !## tag-drawing
+ CALL TAGDRAW()
 
-!## tag-drawing
-CALL TAGDRAW()
+ CALL UTL_PLOT2BITMAP()
 
-CALL IDFPLOT2BITMAP()
+ IF(IIBITMAP.NE.0.AND.IIBITMAP.NE.MPW%IBITMAP)CALL WBITMAPDESTROY(IIBITMAP)
 
-IF(IIBITMAP.NE.0.AND.IIBITMAP.NE.MPW%IBITMAP)CALL WBITMAPDESTROY(IIBITMAP)
+ !## legend plotting
+ IF(IPLOTFAST.EQ.1)CALL LEGPLOT_PLOTUPDATE()
 
-!## legend plotting
-CALL LEGPLOT_PLOTUPDATE(.FALSE.)
+ CALL UTL_MESSAGEHANDLE(1)
 
-CALL UTL_MESSAGEHANDLE(1)
-
-RETURN
-END SUBROUTINE
+ END SUBROUTINE IDFPLOT
 
 !###======================================================================
 SUBROUTINE IDFPLOT_CONTOUR(IDF,LEG,IP,THICKNESS)
 !###======================================================================
-USE WINTERACTER
-USE MOD_IDF_PAR, ONLY : IDFOBJ
-USE MOD_IDF, ONLY : IDFREAD,IDFDEALLOCATEX
-USE MODPLOT, ONLY : LEGENDOBJ,CONT
-USE MOD_IDF, ONLY : IDFREADPART,UTL_IDFGETCLASS,IDFALLOCATEX 
-USE MODPLOT, ONLY : LEGENDOBJ,CONT,NLAB,LABDIST,MPW
-USE MOD_UTL, ONLY : RTOS,UTL_SETTEXTSIZE,UTL_REALTOSTRING
 IMPLICIT NONE
 TYPE(IDFOBJ),INTENT(INOUT) :: IDF
 TYPE(LEGENDOBJ),INTENT(INOUT) :: LEG
 INTEGER,INTENT(IN),DIMENSION(3) :: IP
 INTEGER,INTENT(IN) :: THICKNESS
-REAL,ALLOCATABLE,DIMENSION(:) :: DELR,DELC,XC,YC
+REAL(KIND=DP_KIND),ALLOCATABLE,DIMENSION(:) :: DELR,DELC,XC,YC
 INTEGER :: I,ICLR
-REAL :: TWIDTH,THEIGHT,DXS,DYS,DX
+REAL(KIND=DP_KIND) :: TWIDTH,THEIGHT,DXS,DYS,DX
 CHARACTER(LEN=15) :: STR
-
-!IF(IDF%IXV.EQ.3)THEN
-! IF(ASSOCIATED(IDF%X))DEALLOCATE(IDF%X); ALLOCATE(IDF%X(IDF%NCOL,IDF%NROW))
-! DO IROW=1,IDF%NROW; DO ICOL=1,IDF%NCOL
-!  I1=IDF%IV(ICOL,IROW,1); I2=IDF%IV(ICOL,IROW,2)
-!  I3=IDF%IV(ICOL,IROW,3); I4=IDF%IV(ICOL,IROW,4)
-!  F=EXP(REAL(I4)/10.0)
-!  IDF%X(ICOL,IROW)=SQRT((REAL(I1)/F)**2.0+(REAL(I2)/F)**2.0+(REAL(I3)/F)**2.0)
-! ENDDO; ENDDO
-!ENDIF
 
 ALLOCATE(DELR(IDF%NCOL),DELC(IDF%NROW),XC(IDF%NCOL),YC(IDF%NROW))
 
 IF(IDF%IEQ.EQ.0)THEN
- XC(1)=IDF%XMIN+IDF%DX/2.0
+ XC(1)=IDF%XMIN+IDF%DX/2.0D0
  DO I=2,IDF%NCOL; XC(I)=XC(I-1)+IDF%DX; ENDDO
- YC(IDF%NROW)=IDF%YMIN+IDF%DY/2.0
+ YC(IDF%NROW)=IDF%YMIN+IDF%DY/2.0D0
  DO I=IDF%NROW-1,1,-1; YC(I)=YC(I+1)+IDF%DY; ENDDO
  DELR=IDF%DX; DELC=IDF%DY
 ELSEIF(IDF%IEQ.EQ.1)THEN
- DO I=1,IDF%NCOL; XC(I)  =(IDF%SX(I-1)+IDF%SX(I))/2.0; ENDDO
- DO I=1,IDF%NCOL; DELR(I)= IDF%SX(I)-IDF%SX(I-1)     ; ENDDO
- DO I=1,IDF%NROW; YC(I)  =(IDF%SY(I-1)+IDF%SY(I))/2.0; ENDDO
- DO I=1,IDF%NROW; DELC(I)= IDF%SY(I-1)-IDF%SY(I)     ; ENDDO
+ DO I=1,IDF%NCOL; XC(I)  =(IDF%SX(I-1)+IDF%SX(I))/2.0D0; ENDDO
+ DO I=1,IDF%NCOL; DELR(I)= IDF%SX(I)-IDF%SX(I-1)       ; ENDDO
+ DO I=1,IDF%NROW; YC(I)  =(IDF%SY(I-1)+IDF%SY(I))/2.0D0; ENDDO
+ DO I=1,IDF%NROW; DELC(I)= IDF%SY(I-1)-IDF%SY(I)       ; ENDDO
 ENDIF
 
 !## allocate memory for labeling
 ALLOCATE(CONT(100)); NLAB=0
-LABDIST=0.10*SQRT((MPW%YMAX-MPW%YMIN)**2.0+(MPW%XMAX-MPW%XMIN)**2.0)
+LABDIST=0.10D0*SQRT((MPW%YMAX-MPW%YMIN)**2.0D0+(MPW%XMAX-MPW%XMIN)**2.0D0)
 
 #if(defined(WINTERACTER11))
  CALL IGRLINECAP(ROUNDCAP)
@@ -894,8 +407,8 @@ ENDDO
 #endif
 
 IF(THICKNESS.GT.0)THEN
- CALL UTL_SETTEXTSIZE(TWIDTH,THEIGHT,REAL(THICKNESS)*0.01) 
- CALL WGRTEXTFONT(FFHELVETICA,WIDTH=TWIDTH,HEIGHT=THEIGHT,ISTYLE=0)
+ CALL UTL_SETTEXTSIZE(TWIDTH,THEIGHT,FCT=REAL(THICKNESS,8)) 
+ CALL DBL_WGRTEXTFONT(IFAMILY=FFHELVETICA,TWIDTH=TWIDTH,THEIGHT=THEIGHT,ISTYLE=0)
  DXS=WINFOGRREAL(GRAPHICSCHWIDTH)
  DYS=WINFOGRREAL(GRAPHICSCHHEIGHT)
 
@@ -903,10 +416,10 @@ IF(THICKNESS.GT.0)THEN
  DO I=1,NLAB
   STR=UTL_REALTOSTRING(CONT(I)%VLAB)
   DX=WGRTEXTLENGTH(' '//TRIM(STR)//' ',0)*DXS
-  CALL IDFPLOT_CLEANBOX(CONT(I)%XLAB,CONT(I)%YLAB,CONT(I)%ALAB,DX,DYS*0.8,WRGB(255,255,255)) 
-  CALL WGRTEXTORIENTATION(ALIGNCENTRE,ANGLE=CONT(I)%ALAB) 
+  CALL IDFPLOT_CLEANBOX(CONT(I)%XLAB,CONT(I)%YLAB,CONT(I)%ALAB,DX,DYS*0.8D0,WRGB(255,255,255)) 
+  CALL DBL_WGRTEXTORIENTATION(IALIGN=ALIGNCENTRE,ANGLE=CONT(I)%ALAB) 
   CALL IGRCOLOURN(WRGB(0,0,0))
-  CALL WGRTEXTSTRING(CONT(I)%XLAB,CONT(I)%YLAB,TRIM(STR))
+  CALL DBL_WGRTEXTSTRING(CONT(I)%XLAB,CONT(I)%YLAB,TRIM(STR),IOFFSET=1)
  ENDDO
 ENDIF
 
@@ -920,49 +433,46 @@ END SUBROUTINE IDFPLOT_CONTOUR
 !###======================================================================
 SUBROUTINE IDFPLOT_CLEANBOX(X,Y,ANGLE,DX,DY,ICLR)
 !###======================================================================
-USE IMODVAR, ONLY : PI
 IMPLICIT NONE
-REAL,INTENT(IN) :: X,Y,ANGLE,DX,DY
+REAL(KIND=DP_KIND),INTENT(IN) :: X,Y,ANGLE,DX,DY
 INTEGER,INTENT(IN) :: ICLR
-REAL,DIMENSION(6) :: XC,YC
-REAL :: RAD
+REAL(KIND=DP_KIND),DIMENSION(6) :: XC,YC
+REAL(KIND=DP_KIND) :: RAD
 
-IF(DX.LE.0.0)RETURN
+IF(DX.LE.0.0D0)RETURN
 CALL IGRCOLOURN(ICLR)
 
-RAD=ANGLE/(360.0/(2.0*PI))
+RAD=ANGLE/(360.0D0/(2.0*PI))
 XC(6)=X-(COS(RAD)*0.5*DX); YC(6)=Y-(SIN(RAD)*0.5*DX)
 XC(5)=X+(COS(RAD)*0.5*DX); YC(5)=Y+(SIN(RAD)*0.5*DX)
 
-RAD=(ANGLE+90.0)/(360.0/(2.0*PI))
+RAD=(ANGLE+90.0D0)/(360.0D0/(2.0*PI))
 XC(1)=XC(6)-(COS(RAD)*0.5*DY); YC(1)=YC(6)-(SIN(RAD)*0.5*DY)
 XC(2)=XC(5)-(COS(RAD)*0.5*DY); YC(2)=YC(5)-(SIN(RAD)*0.5*DY)
 XC(3)=XC(5)+(COS(RAD)*0.5*DY); YC(3)=YC(5)+(SIN(RAD)*0.5*DY)
 XC(4)=XC(6)+(COS(RAD)*0.5*DY); YC(4)=YC(6)+(SIN(RAD)*0.5*DY)
 
-CALL IGRPOLYGONCOMPLEX(XC,YC,4)
+CALL DBL_IGRPOLYGONCOMPLEX(XC,YC,4,IOFFSET=1)
 
 END SUBROUTINE IDFPLOT_CLEANBOX
 
 !###======================================================================
 SUBROUTINE IDFPLOT_PUTLABEL(X1,Y1,X2,Y2,V,INILAB,XMIN,YMIN,XMAX,YMAX)
 !###======================================================================
-USE MODPLOT, ONLY : LEGENDOBJ,CONT,CONT_BU,NLAB,LABDIST !,MPW
-USE IMODVAR, ONLY : PI
 IMPLICIT NONE
-REAL,INTENT(IN) :: X1,Y1,X2,Y2,V,XMIN,YMIN,XMAX,YMAX
+REAL(KIND=DP_KIND),INTENT(IN) :: X1,Y1,X2,Y2,V,XMIN,YMIN,XMAX,YMAX
 INTEGER,INTENT(INOUT) :: INILAB
 INTEGER :: IOK,I
-REAL :: X12,Y12,D,DE
+REAL(KIND=DP_KIND) :: X12,Y12,D,DE
 
 !!## if segment too short do not place a label
-!D=(X1-X2)**2.0+(Y1-Y2)**2.0; IF(D.GT.0.0)D=SQRT(D)
-!IF(D.LT.LABDIST/10.0)RETURN
+!D=(X1-X2)**2.0D0+(Y1-Y2)**2.0D0; IF(D.GT.0.0D0)D=SQRT(D)
+!IF(D.LT.LABDIST/10.0D0)RETURN
 
 X12=(X1+X2)/2.0; Y12=(Y1+Y2)/2.0
 IOK=1; IF(NLAB.GT.0)THEN
  DO I=1,NLAB
-  D =(X12-CONT(I)%XLAB)**2.0+(Y12-CONT(I)%YLAB)**2.0; IF(D.GT.0.0)D=SQRT(D)
+  D =(X12-CONT(I)%XLAB)**2.0D0+(Y12-CONT(I)%YLAB)**2.0D0; IF(D.GT.0.0D0)D=SQRT(D)
   IF(V.EQ.CONT(I)%VLAB)THEN
    !## to close to another label
    IF(D.LT.LABDIST)THEN; IOK=0; EXIT; ENDIF
@@ -993,9 +503,9 @@ CONT(NLAB)%XLAB=X12
 CONT(NLAB)%YLAB=Y12 
 !## store angle
 IF(X1.NE.X2) THEN
- CONT(NLAB)%ALAB=ATAN((Y1-Y2)/(X1-X2))/PI*180.0
+ CONT(NLAB)%ALAB=ATAN((Y1-Y2)/(X1-X2))/PI*180.0D0
 ELSE
- CONT(NLAB)%ALAB=90.0
+ CONT(NLAB)%ALAB=90.0D0
 ENDIF
 !## store label-value
 CONT(NLAB)%VLAB=V
@@ -1005,18 +515,17 @@ END SUBROUTINE IDFPLOT_PUTLABEL
 !###======================================================================
 SUBROUTINE IDFPLOT_COMPCONTOUR(XVAL,NCOL,NROW,XC,YC,V,XNODATA,THICKNESS)
 !###======================================================================
-USE MODPLOT, ONLY : MPW
 IMPLICIT NONE
 INTEGER,INTENT(IN) :: NCOL,NROW,THICKNESS
-REAL,INTENT(IN) :: XNODATA,V
-REAL,INTENT(IN),DIMENSION(NCOL,NROW) :: XVAL
-REAL,INTENT(IN),DIMENSION(NCOL) :: XC
-REAL,INTENT(IN),DIMENSION(NROW) :: YC
-REAL,DIMENSION(8) :: XS,YS
+REAL(KIND=DP_KIND),INTENT(IN) :: XNODATA,V
+REAL(KIND=DP_KIND),INTENT(IN),DIMENSION(NCOL,NROW) :: XVAL
+REAL(KIND=DP_KIND),INTENT(IN),DIMENSION(NCOL) :: XC
+REAL(KIND=DP_KIND),INTENT(IN),DIMENSION(NROW) :: YC
+REAL(KIND=DP_KIND),DIMENSION(8) :: XS,YS
 INTEGER :: I,J,II,INILAB,IROW,ICOL
-REAL :: XMIN,YMIN,XMAX,YMAX,DX,DY,DA,DV
-REAL,DIMENSION(4) :: A
-REAL,DIMENSION(4) :: X,Y
+REAL(KIND=DP_KIND) :: XMIN,YMIN,XMAX,YMAX,DX,DY,DA,DV
+REAL(KIND=DP_KIND),DIMENSION(4) :: A
+REAL(KIND=DP_KIND),DIMENSION(4) :: X,Y
 INTEGER,DIMENSION(2,8) :: POS
 DATA POS/1,3,1,2,2,4,2,3,3,1,3,4,4,2,4,1/
 
@@ -1062,7 +571,7 @@ DO ICOL=1,NCOL-1
    ENDIF
   ENDDO
   
-  DO I=1,II-1; CALL IGRJOIN(XS(I),YS(I),XS(I+1),YS(I+1)); ENDDO
+  DO I=1,II-1; CALL DBL_IGRJOIN(XS(I),YS(I),XS(I+1),YS(I+1),IOFFSET=1); ENDDO
   !## add label
   IF(II.GT.1.AND.THICKNESS.GT.0)CALL IDFPLOT_PUTLABEL(XS(1),YS(1),XS(2),YS(2),V,INILAB,XMIN,YMIN,XMAX,YMAX)
 
@@ -1074,291 +583,452 @@ END SUBROUTINE IDFPLOT_COMPCONTOUR
 !###======================================================================
 SUBROUTINE IDFPLOT_FEATURES()
 !###======================================================================
-USE WINTERACTER
-USE RESOURCE
-USE MODPLOT
 IMPLICIT NONE
-REAL :: XP1,YP1,XP2,YP2,DX,DY
 
 CALL WINDOWSELECT(0)
 IF(WMENUGETSTATE(ID_IDFRASTERLINES,2).EQ.1)CALL IDFPLOT_FEATURES_RASTER()
-!IF(WMENUGETSTATE(ID_IDFEXTENT,2).EQ.1)     
 CALL IDFPLOT_FEATURES_EXTENT()
-!IF(WMENUGETSTATE(ID_IDFINDICES,2).EQ.1)    CALL IDFPLOT_FEATURES_EXTENT()
+IF(WMENUGETSTATE(ID_SHOWAXES,2).EQ.1)CALL IDFPLOT_FEATURES_AXES()
 IF(WMENUGETSTATE(ID_SHOWSCALEBAR,2).EQ.1)THEN
- XP1=0.75 !0.6
- YP1=0.075
- XP2=0.95 !1.0
- YP2=0.175
- DX =MPW%XMAX-MPW%XMIN
- DY =MPW%YMAX-MPW%YMIN
- CALL IGRAREA(XP1,YP1,XP2,YP2)
- CALL IGRUNITS(MPW%XMIN+XP1*DX,MPW%YMIN+YP1*DY,MPW%XMIN+XP2*DX,MPW%YMIN+YP2*DY)
  CALL IDFPLOT_FEATURES_SCALE()
- CALL IGRAREA(0.0,0.0,1.0,1.0)
- CALL IGRUNITS(MPW%XMIN,MPW%YMIN,MPW%XMAX,MPW%YMAX)
+ CALL DBL_IGRAREA(0.0D0,0.0D0,1.0D0,1.0D0)
+ CALL DBL_IGRUNITS(MPW%XMIN,MPW%YMIN,MPW%XMAX,MPW%YMAX,IOFFSET=1)
 ENDIF
 IF(WMENUGETSTATE(ID_SHOWNARROW,2).EQ.1)CALL IDFPLOT_FEATURES_NARROW()
-IF(WMENUGETSTATE(ID_SHOWAXES,2).EQ.1)  CALL IDFPLOT_FEATURES_AXES()
 
 END SUBROUTINE IDFPLOT_FEATURES
 
-!###======================================================================
-SUBROUTINE IDFPLOT_FEATURES_AXES()
-!###======================================================================
-USE WINTERACTER
-USE MODPLOT
-USE MOD_UTL, ONLY : UTL_GETAXESCALES,UTL_GETFORMAT,NSX,NSY,SXVALUE,SYVALUE,UTL_EQUALS_REAL
-IMPLICIT NONE
-REAL :: R1,R2,R3
-INTEGER,PARAMETER :: N=10
-INTEGER :: I,J
-REAL :: DX,DY,V1,VI,X1,X2,Y1,Y2,R4,TWIDTH,THEIGHT
-REAL :: DXX,OX1,OY1,OX2,OY2,RAT
-CHARACTER(LEN=10) :: FRM
+ !###======================================================================
+ SUBROUTINE IDFPLOT_FEATURES_AXES_SELECT(X,Y)
+ !###======================================================================
+ IMPLICIT NONE
+ REAL(KIND=DP_KIND),INTENT(IN) :: X,Y
+ REAL(KIND=DP_KIND) :: XA1,YA1,XA2,YA2
+ INTEGER :: IEDGE,I
 
-R1=2.5  !% percentage of total border around plot (white)
-R2=2.0  !% part occupied by axes (blue)
-R3=0.35 !% of area to be used for axes (other area occupied by text)
-
-OX1=WINFOGRREAL(GRAPHICSUNITMINX)! (7) LEFT LIMIT OF MAIN GRAPHICS AREA
-OY1=WINFOGRREAL(GRAPHICSUNITMINY)! (8) LOWER LIMIT OF MAIN GRAPHICS AREA
-OX2=WINFOGRREAL(GRAPHICSUNITMAXX)! (9) RIGHT LIMIT OF MAIN GRAPHICS AREA
-OY2=WINFOGRREAL(GRAPHICSUNITMAXY)! (10) UPPER LIMIT OF
-
-RAT=(OX2-OX1)/(OY2-OY1)
-
-IF(RAT.GT.1.0)THEN
- R1=R1*RAT
- R2=R2*RAT
- R3=R3*RAT
-ELSEIF(RAT.LT.1.0)THEN
- R1=R1/RAT
- R2=R2/RAT
- R3=R3/RAT
-ENDIF
-
-!## textsize in graphical dimensions
-R4=R2-(2.0*R3)
-!## textsize (percentage)
-R4=R4/100.0 
-
-IF(RAT.GE.1.0)THEN
- THEIGHT=R4
- TWIDTH =THEIGHT/(0.03333/0.01333)/RAT 
-ELSEIF(RAT.LT.1.0)THEN
- THEIGHT=R4*RAT 
- TWIDTH =THEIGHT/(0.03333/0.01333)/RAT
-ENDIF
-!CALL WGRTEXTFONT(FFHELVETICA,WIDTH=TWIDTH,HEIGHT=THEIGHT,ISTYLE=0)
-
-!## white
-DXX=MIN((MPW%XMAX-MPW%XMIN),(MPW%YMAX-MPW%YMIN))
-DX=DXX*(R1/100.0); DY=DX
-
-!DO
-! IF(.NOT.UTL_EQUALS_REAL(MPW%XMIN+DX,MPW%XMIN))EXIT
-! DX=DX*2.0
-!ENDDO
-!DO
-! IF(.NOT.UTL_EQUALS_REAL(MPW%YMIN+DY,MPW%YMIN))EXIT
-! DY=DY*2.0
-!ENDDO
-
-CALL IGRFILLPATTERN(SOLID)
-CALL IGRCOLOURN(WRGB(255,255,255))
-CALL IGRRECTANGLE(MPW%XMIN,MPW%YMIN,MPW%XMIN+DX,MPW%YMAX)
-CALL IGRRECTANGLE(MPW%XMIN,MPW%YMIN,MPW%XMAX,MPW%YMIN+DY)
-CALL IGRRECTANGLE(MPW%XMIN,MPW%YMAX-DY,MPW%XMAX,MPW%YMAX)
-CALL IGRRECTANGLE(MPW%XMAX-DX,MPW%YMIN,MPW%XMAX,MPW%YMAX)
-
-!## wit - blank out axes-area
-DX=DXX*(R2/100.0); DY=DX
-
-!## bounding box
-CALL IGRFILLPATTERN(OUTLINE); CALL IGRLINEWIDTH(2); CALL IGRCOLOURN(WRGB(0,0,0))
-CALL IGRRECTANGLE(MPW%XMIN+DX,MPW%YMIN+DY,MPW%XMAX-DX,MPW%YMAX-DY)
-
-!CALL WGRTEXTORIENTATION(IALIGN=ALIGNCENTRE,ANGLE=0.0,NALIGN=ALIGNCENTRE)
-
-Y1=(MPW%YMIN+MPW%YMAX)/2.0-(MPW%XMAX-MPW%XMIN)/2.0
-Y2=(MPW%YMIN+MPW%YMAX)/2.0+(MPW%XMAX-MPW%XMIN)/2.0
-CALL UTL_GETAXESCALES(MPW%XMIN+DX,Y1+DX,MPW%XMAX-DX,Y2-DX) 
-
-!## x-axes interval
-VI=SXVALUE(2)-SXVALUE(1)
-
-Y1=MPW%YMIN+DXX*(R2/100.0)
-Y2=MPW%YMAX-DXX*(R2/100.0)
-DY=DXX*(R3/100.0)
-
-CALL WGRTEXTFONT(FFHELVETICA,WIDTH=TWIDTH/2.0,HEIGHT=THEIGHT/2.0,ISTYLE=0)
-CALL WGRTEXTORIENTATION(IALIGN=ALIGNCENTRE,ANGLE=0.0,NALIGN=ALIGNCENTRE)
-
-!## minor ticks along x-axes
-CALL IGRLINEWIDTH(1)
-!## check whether interval is large enough
-DO
- IF(.NOT.UTL_EQUALS_REAL(SXVALUE(1)-VI/4.0,SXVALUE(1)))EXIT
- VI=VI*2.0
-ENDDO
-V1=SXVALUE(1)-VI
-I=0
-DO
- I=I+1
- V1=V1+VI/4.0
- IF(V1.GT.MPW%XMAX-DXX*(R1/100.0))EXIT
- IF(V1.GT.MPW%XMIN+DXX*(R1/100.0))THEN
-  CALL IGRJOIN(V1,Y1-DY/2.0,V1,Y1+DY/2.0)
-  CALL IGRJOIN(V1,Y2-DY/2.0,V1,Y2+DY/2.0)
-
-  IF(MOD(I,4).NE.0.AND.MOD(I,2).EQ.0)THEN
-   FRM=TRIM(UTL_GETFORMAT(V1/1000.0))
-   J=INDEX(FRM,'.0)',.TRUE.)
-   IF(J.EQ.0)THEN
-    CALL WGRTEXTREAL(V1,Y1-3.0*DY,V1/1000.0,FRM)
-    CALL WGRTEXTREAL(V1,Y2+3.0*DY,V1/1000.0,FRM)
-   ELSE
-    CALL WGRTEXTINTEGER(V1,Y1-3.0*DY,INT(V1/1000.0))
-    CALL WGRTEXTINTEGER(V1,Y2+3.0*DY,INT(V1/1000.0))
-   ENDIF
-  ENDIF
-
- ENDIF
-END DO
-
-CALL WGRTEXTFONT(FFHELVETICA,WIDTH=TWIDTH,HEIGHT=THEIGHT,ISTYLE=0)
-CALL WGRTEXTORIENTATION(IALIGN=ALIGNCENTRE,ANGLE=0.0,NALIGN=ALIGNCENTRE)
-
-!## major ticks
-CALL IGRLINEWIDTH(2)
-V1=SXVALUE(1)-VI
-DO
- V1=V1+VI
- IF(V1.GT.MPW%XMAX-DXX*(R1/100.0))EXIT
- IF(V1.GT.MPW%XMIN+DXX*(R1/100.0))THEN
-  CALL IGRJOIN(V1,Y1-DY,V1,Y1+DY)
-  CALL IGRJOIN(V1,Y2-DY,V1,Y2+DY)
-  FRM=TRIM(UTL_GETFORMAT(V1/1000.0))
-  J=INDEX(FRM,'.0)',.TRUE.)
-  IF(J.EQ.0)THEN
-   CALL WGRTEXTREAL(V1,Y1-3.0*DY,V1/1000.0,FRM)
-   CALL WGRTEXTREAL(V1,Y2+3.0*DY,V1/1000.0,FRM)
-  ELSE
-   CALL WGRTEXTINTEGER(V1,Y1-3.0*DY,INT(V1/1000.0))
-   CALL WGRTEXTINTEGER(V1,Y2+3.0*DY,INT(V1/1000.0))
-  ENDIF
- ENDIF
-END DO
-
-!## y-axes
-
-!## minor ticks
-
-CALL WGRTEXTFONT(FFHELVETICA,WIDTH=TWIDTH/2.0,HEIGHT=THEIGHT/2.0,ISTYLE=0)
-CALL WGRTEXTORIENTATION(IALIGN=ALIGNCENTRE,ANGLE=90.0,NALIGN=ALIGNCENTRE)
-
-!## y-axes interval
-VI=SYVALUE(2)-SYVALUE(1)
-
-X1=MPW%XMIN+DXX*(R2/100.0)
-X2=MPW%XMAX-DXX*(R2/100.0)
-DX=DXX*(R3/100.0) 
-CALL IGRLINEWIDTH(1)
-!## check whether interval is large enough
-DO
- IF(.NOT.UTL_EQUALS_REAL(SYVALUE(1)-VI/4.0,SYVALUE(1)))EXIT
- VI=VI*2.0
-ENDDO
-
-V1=SYVALUE(1)-VI
-I=0
-DO
- I=I+1
- V1=V1+VI/4.0
- IF(V1.GT.MPW%YMAX-DXX*(R1/100.0))EXIT
- IF(V1.GT.MPW%YMIN+DXX*(R1/100.0))THEN
-  CALL IGRJOIN(X1-DX/2.0,V1,X1+DX/2.0,V1)
-  CALL IGRJOIN(X2-DX/2.0,V1,X2+DX/2.0,V1)
-  
-  IF(MOD(I,4).NE.0.AND.MOD(I,2).EQ.0)THEN
-   FRM=TRIM(UTL_GETFORMAT(V1/1000.0))
-   J=INDEX(FRM,'.0)',.TRUE.)
-   IF(J.EQ.0)THEN
-    CALL WGRTEXTREAL(X1-3.0*DX,V1,V1/1000.0,FRM)
-    CALL WGRTEXTREAL(X2+3.0*DX,V1,V1/1000.0,FRM)
-   ELSE
-    CALL WGRTEXTINTEGER(X1-3.0*DX,V1,INT(V1/1000.0))
-    CALL WGRTEXTINTEGER(X2+3.0*DX,V1,INT(V1/1000.0))
-   ENDIF
-  ENDIF
+ IF(WMENUGETSTATE(ID_SHOWAXES,2).EQ.0)RETURN
  
+ CALL IDFPLOT_FEATURES_AXES_CRD(XA1,YA1,XA2,YA2)
+
+ IEDGE=UTL_SELECTIEDGE(X-OFFSETX,Y-OFFSETY,XA1,YA1,XA2,YA2)
+  
+ !## remove previous selected line - if that is something else
+ IF(SUM(IMOVEAX).NE.0)THEN
+  DO I=1,SIZE(IMOVEAX); IF(IMOVEAX(I).EQ.1)EXIT; ENDDO
+  CALL IDFPLOT_FEATURES_AXES_DRAWBOX()
  ENDIF
-END DO
+ 
+ IMOVEAX=0
+ IF(IEDGE.NE.0)THEN
+  IMOVEAX(IEDGE)=1
+  CALL IDFPLOT_FEATURES_AXES_DRAWBOX()
+ ENDIF
+ 
+ END SUBROUTINE IDFPLOT_FEATURES_AXES_SELECT
 
-!## major ticks
+ !###======================================================================
+ SUBROUTINE IDFPLOT_FEATURES_AXES_CRD(XA1,YA1,XA2,YA2)
+ !###======================================================================
+ IMPLICIT NONE
+ REAL(KIND=DP_KIND),INTENT(OUT) :: XA1,YA1,XA2,YA2
+ REAL(KIND=DP_KIND) :: DX,DY,WX1,WX2,WY1,WY2
 
-CALL WGRTEXTFONT(FFHELVETICA,WIDTH=TWIDTH,HEIGHT=THEIGHT,ISTYLE=0)
+ WX1=REAL(WINFOGRREAL(GRAPHICSUNITMINX),8) ! (7)  left  limit of main graphics area
+ WY1=REAL(WINFOGRREAL(GRAPHICSUNITMINY),8) ! (8)  lower limit of main graphics area
+ WX2=REAL(WINFOGRREAL(GRAPHICSUNITMAXX),8) ! (9)  right limit of main graphics area
+ WY2=REAL(WINFOGRREAL(GRAPHICSUNITMAXY),8) ! (10) upper limit of main graphics area
 
-CALL IGRLINEWIDTH(2)
-V1=SYVALUE(1)-VI
-DO
- V1=V1+VI
- IF(V1.GT.MPW%YMAX-DXX*(R1/100.0))EXIT
- IF(V1.GT.MPW%YMIN+DXX*(R1/100.0))THEN
-  CALL IGRJOIN(X1-DX,V1,X1+DX,V1)
-  CALL IGRJOIN(X2-DX,V1,X2+DX,V1)
-  FRM=TRIM(UTL_GETFORMAT(V1/1000.0))
-  J=INDEX(FRM,'.0)',.TRUE.)
-  IF(J.EQ.0)THEN
-   CALL WGRTEXTREAL(X1-3.0*DX,V1,V1/1000.0,FRM)
-   CALL WGRTEXTREAL(X2+3.0*DX,V1,V1/1000.0,FRM)
-  ELSE
-   CALL WGRTEXTINTEGER(X1-3.0*DX,V1,INT(V1/1000.0))
-   CALL WGRTEXTINTEGER(X2+3.0*DX,V1,INT(V1/1000.0))
+ DX =WX2-WX1;       DY =WY2-WY1
+ XA1=WX1+AX_XP1*DX; XA2=WX1+AX_XP2*DX
+ YA1=WY1+AX_YP1*DY; YA2=WY1+AX_YP2*DY
+
+ END SUBROUTINE IDFPLOT_FEATURES_AXES_CRD
+ 
+ !###======================================================================
+ SUBROUTINE IDFPLOT_FEATURES_AXES_MOVE(X,Y,X0,Y0)
+ !###======================================================================
+ IMPLICIT NONE
+ REAL(KIND=DP_KIND),INTENT(IN) :: X,Y,X0,Y0
+
+ CALL IDFPLOT_FEATURES_AXES_DRAWBOX()
+ CALL IDFPLOT_FEATURES_MOVE(X,Y,X0,Y0,IMOVEAX,AX_XP1,AX_YP1,AX_XP2,AX_YP2)
+ CALL IDFPLOT_FEATURES_AXES_DRAWBOX()
+ 
+ END SUBROUTINE IDFPLOT_FEATURES_AXES_MOVE
+ 
+ !###======================================================================
+ SUBROUTINE IDFPLOT_FEATURES_AXES_DRAWBOX()
+ !###======================================================================
+ IMPLICIT NONE
+ REAL(KIND=DP_KIND) :: XA1,YA1,XA2,YA2
+
+ CALL IGRPLOTMODE(MODEXOR)
+ CALL IGRCOLOURN(WRGB(255,0,0))
+ CALL IGRFILLPATTERN(OUTLINE)
+
+ CALL UTL_PLOT1BITMAP()
+ CALL IDFPLOT_FEATURES_AXES_CRD(XA1,YA1,XA2,YA2)
+ IF(    IMOVEAX(1).EQ.1)THEN
+  CALL DBL_IGRJOIN(XA1,YA1,XA1,YA2)
+ ELSEIF(IMOVEAX(2).EQ.1)THEN
+  CALL DBL_IGRJOIN(XA2,YA1,XA2,YA2)
+ ELSEIF(IMOVEAX(3).EQ.1)THEN
+  CALL DBL_IGRJOIN(XA1,YA1,XA2,YA1)
+ ELSEIF(IMOVEAX(4).EQ.1)THEN
+  CALL DBL_IGRJOIN(XA1,YA2,XA2,YA2)
+ ELSE
+  CALL DBL_IGRRECTANGLE(XA1,YA1,XA2,YA2)
+ ENDIF
+ 
+ CALL UTL_PLOT2BITMAP()
+
+ CALL IGRPLOTMODE(MODECOPY)
+ CALL IGRFILLPATTERN(OUTLINE)
+ CALL IGRLINETYPE(SOLIDLINE)
+
+ END SUBROUTINE IDFPLOT_FEATURES_AXES_DRAWBOX 
+ 
+ !###======================================================================
+ SUBROUTINE IDFPLOT_FEATURES_AXES()
+ !###======================================================================
+ IMPLICIT NONE
+ INTEGER,PARAMETER :: N=10
+ INTEGER :: I,J,IRASTER
+ REAL(KIND=DP_KIND) :: V1,VI,X1,X2,Y1,Y2,TWIDTH,THEIGHT
+ REAL(KIND=DP_KIND) :: XA1,YA1,XA2,YA2,MINORTIC,MAJORTIC,OFFSTTXT,DXX 
+ REAL(KIND=DP_KIND) :: WX1,WX2,WY1,WY2
+ CHARACTER(LEN=10) :: FRM
+
+ WX1=REAL(WINFOGRREAL(GRAPHICSUNITMINX),8) ! (7)  left  limit of main graphics area
+ WY1=REAL(WINFOGRREAL(GRAPHICSUNITMINY),8) ! (8)  lower limit of main graphics area
+ WX2=REAL(WINFOGRREAL(GRAPHICSUNITMAXX),8) ! (9)  right limit of main graphics area
+ WY2=REAL(WINFOGRREAL(GRAPHICSUNITMAXY),8) ! (10) upper limit of main graphics area
+
+ IRASTER=WMENUGETSTATE(ID_SHOWRASTERLINES,2)
+
+ !## get coordinates of axes
+ CALL IDFPLOT_FEATURES_AXES_CRD(XA1,YA1,XA2,YA2)
+
+ DXX=MIN((MPW%XMAX-MPW%XMIN),(MPW%YMAX-MPW%YMIN))
+ MINORTIC=DXX*0.005D0
+ MAJORTIC=DXX*0.010D0
+ OFFSTTXT=DXX*0.020D0
+
+ !## textsize
+ CALL UTL_SETTEXTSIZE(TWIDTH,THEIGHT,FCT=6.0D0)
+
+ CALL IGRFILLPATTERN(SOLID)
+ CALL IGRCOLOURN(WRGB(255,255,255))
+ CALL DBL_IGRRECTANGLE(WX1,WY1,WX2,YA1)  !## bottom
+ CALL DBL_IGRRECTANGLE(XA2,WY1,WX2,WY2)  !## right
+ CALL DBL_IGRRECTANGLE(WX1,WY2,WX2,YA2)  !## top
+ CALL DBL_IGRRECTANGLE(WX1,WY1,XA1,WY2)  !## left
+
+ !## bounding box
+ CALL IGRFILLPATTERN(OUTLINE); CALL IGRLINEWIDTH(2); CALL IGRCOLOURN(WRGB(0,0,0))
+ CALL DBL_IGRRECTANGLE(XA1,YA1,XA2,YA2)
+
+ !## transform to correct coordinates
+ XA1=XA1+OFFSETX; XA2=XA2+OFFSETX
+ YA1=YA1+OFFSETY; YA2=YA2+OFFSETY
+
+ !## get scale axes
+
+ !## make sure both axes have similar length
+ DX=XA2-XA1
+ DY=YA2-YA1
+ IF(DX.GT.DY)THEN
+  DY=0.5D0*(DX-DY )
+  DX=0.0D0
+ ELSE
+  DX=0.5D0*(DY-DX)
+  DY=0.0D0
+ ENDIF
+
+ CALL UTL_GETAXESCALES(XA1-DX,YA1-DY,XA2+DX,YA2+DY) 
+
+ !## x-axes interval
+ VI=SXVALUE(2)-SXVALUE(1)
+
+ Y1=YA1
+ Y2=YA2
+
+ CALL DBL_WGRTEXTFONT(IFAMILY=FFHELVETICA,TWIDTH=TWIDTH/1.5D0,THEIGHT=THEIGHT/1.5D0,ISTYLE=0)
+ CALL DBL_WGRTEXTORIENTATION(IALIGN=ALIGNCENTRE,ANGLE=0.0D0,NALIGN=ALIGNCENTRE)
+
+ !## minor ticks along x-axes
+ CALL IGRLINEWIDTH(1)
+ !## check whether interval is large enough
+ DO
+  IF(.NOT.UTL_EQUALS_REAL(SXVALUE(1)-VI/4.0D0,SXVALUE(1)))EXIT
+  VI=VI*2.0D0
+ ENDDO
+ V1=SXVALUE(1)-VI
+ I=0
+ DO
+  I=I+1
+  V1=V1+VI/4.0D0
+  IF(V1.GT.XA2)EXIT 
+  IF(V1.GT.XA1)THEN 
+   CALL DBL_IGRJOIN(V1,Y1-MINORTIC,V1,Y1+MINORTIC,IOFFSET=1)
+   CALL DBL_IGRJOIN(V1,Y2-MINORTIC,V1,Y2+MINORTIC,IOFFSET=1)
+
+   IF(MOD(I,4).NE.0.AND.MOD(I,2).EQ.0)THEN
+    FRM=TRIM(UTL_GETFORMAT(V1/1000.0D0))
+    J=INDEX(FRM,'.00)',.TRUE.)
+    IF(J.EQ.0)THEN
+     CALL DBL_WGRTEXTREAL(V1,Y1-OFFSTTXT,V1/1000.0D0,FRM,IOFFSET=1)
+     CALL DBL_WGRTEXTREAL(V1,Y2+OFFSTTXT,V1/1000.0D0,FRM,IOFFSET=1)
+    ELSE
+     CALL DBL_WGRTEXTINTEGER(V1,Y1-OFFSTTXT,INT(V1/1000.0D0),IOFFSET=1)
+     CALL DBL_WGRTEXTINTEGER(V1,Y2+OFFSTTXT,INT(V1/1000.0D0),IOFFSET=1)
+    ENDIF
+   ENDIF
+ 
   ENDIF
+ END DO
+
+ CALL DBL_WGRTEXTFONT(IFAMILY=FFHELVETICA,TWIDTH=TWIDTH,THEIGHT=THEIGHT,ISTYLE=0)
+ CALL DBL_WGRTEXTORIENTATION(IALIGN=ALIGNCENTRE,ANGLE=0.0D0,NALIGN=ALIGNCENTRE)
+
+ !## major ticks
+ CALL IGRLINEWIDTH(2)
+ V1=SXVALUE(1)-VI
+ DO
+  V1=V1+VI
+  IF(V1.GT.XA2)EXIT 
+  IF(V1.GT.XA1)THEN 
+  
+   CALL IGRLINEWIDTH(2)
+   CALL IGRLINETYPE(SOLIDLINE)
+   CALL DBL_IGRJOIN(V1,Y1-MAJORTIC,V1,Y1+MAJORTIC,IOFFSET=1)
+   CALL DBL_IGRJOIN(V1,Y2-MAJORTIC,V1,Y2+MAJORTIC,IOFFSET=1)
+
+   IF(IRASTER.EQ.1)THEN
+    CALL IGRCOLOURN(WRGB(20,20,20))
+    CALL IGRLINEWIDTH(1)
+    CALL IGRLINETYPE(DOTTED)
+    CALL DBL_IGRJOIN(V1,Y1+MAJORTIC,V1,Y2-MAJORTIC,IOFFSET=1)
+    CALL IGRLINETYPE(SOLIDLINE)
+    CALL IGRCOLOURN(WRGB(0,0,0))
+   ENDIF
+   
+   FRM=TRIM(UTL_GETFORMAT(V1/1000.0D0))
+   J=INDEX(FRM,'.00)',.TRUE.)
+   IF(J.EQ.0)THEN
+    CALL DBL_WGRTEXTREAL(V1,Y1-OFFSTTXT,V1/1000.0D0,FRM,IOFFSET=1)
+    CALL DBL_WGRTEXTREAL(V1,Y2+OFFSTTXT,V1/1000.0D0,FRM,IOFFSET=1)
+   ELSE
+    CALL DBL_WGRTEXTINTEGER(V1,Y1-OFFSTTXT,INT(V1/1000.0D0),IOFFSET=1)
+    CALL DBL_WGRTEXTINTEGER(V1,Y2+OFFSTTXT,INT(V1/1000.0D0),IOFFSET=1)
+   ENDIF
+  ENDIF
+ END DO
+
+ !## y-axes
+
+ !## minor ticks
+
+ CALL DBL_WGRTEXTFONT(IFAMILY=FFHELVETICA,TWIDTH=TWIDTH/1.5,THEIGHT=THEIGHT/1.5,ISTYLE=0)
+ CALL DBL_WGRTEXTORIENTATION(IALIGN=ALIGNCENTRE,ANGLE=90.0D0,NALIGN=ALIGNCENTRE)
+
+ !## y-axes interval
+ VI=SYVALUE(2)-SYVALUE(1)
+
+ X1=XA1
+ X2=XA2
+ CALL IGRLINEWIDTH(1)
+ !## check whether interval is large enough
+ DO
+  IF(.NOT.UTL_EQUALS_REAL(SYVALUE(1)-VI/4.0D0,SYVALUE(1)))EXIT
+  VI=VI*2.0D0
+ ENDDO
+
+ V1=SYVALUE(1)-VI
+ I=0
+ DO
+  I=I+1
+  V1=V1+VI/4.0D0
+  IF(V1.GT.YA2)EXIT 
+  IF(V1.GT.YA1)THEN 
+   CALL DBL_IGRJOIN(X1-MINORTIC,V1,X1+MINORTIC,V1,IOFFSET=1)
+   CALL DBL_IGRJOIN(X2-MINORTIC,V1,X2+MINORTIC,V1,IOFFSET=1)
+  
+   IF(MOD(I,4).NE.0.AND.MOD(I,2).EQ.0)THEN
+    FRM=TRIM(UTL_GETFORMAT(V1/1000.0D0))
+    J=INDEX(FRM,'.00)',.TRUE.)
+    IF(J.EQ.0)THEN
+     CALL DBL_WGRTEXTREAL(X1-OFFSTTXT,V1,V1/1000.0D0,FRM,IOFFSET=1)
+     CALL DBL_WGRTEXTREAL(X2+OFFSTTXT,V1,V1/1000.0D0,FRM,IOFFSET=1)
+    ELSE
+     CALL DBL_WGRTEXTINTEGER(X1-OFFSTTXT,V1,INT(V1/1000.0D0),IOFFSET=1)
+     CALL DBL_WGRTEXTINTEGER(X2+OFFSTTXT,V1,INT(V1/1000.0D0),IOFFSET=1)
+    ENDIF
+   ENDIF
+ 
+  ENDIF
+ END DO
+
+ !## major ticks
+
+ CALL DBL_WGRTEXTFONT(IFAMILY=FFHELVETICA,TWIDTH=TWIDTH,THEIGHT=THEIGHT,ISTYLE=0)
+
+ CALL IGRLINEWIDTH(2)
+ V1=SYVALUE(1)-VI
+ DO
+  V1=V1+VI
+  IF(V1.GT.YA2)EXIT 
+  IF(V1.GT.YA1)THEN 
+
+   CALL IGRLINEWIDTH(2)
+   CALL IGRLINETYPE(SOLIDLINE)
+   CALL DBL_IGRJOIN(X1-MAJORTIC,V1,X1+MAJORTIC,V1,IOFFSET=1)
+   CALL DBL_IGRJOIN(X2-MAJORTIC,V1,X2+MAJORTIC,V1,IOFFSET=1)
+
+   IF(IRASTER.EQ.1)THEN
+    CALL IGRCOLOURN(WRGB(20,20,20))
+    CALL IGRLINEWIDTH(1)
+    CALL IGRLINETYPE(DOTTED)
+    CALL DBL_IGRJOIN(X1+MAJORTIC,V1,X2-MAJORTIC,V1,IOFFSET=1)
+    CALL IGRLINETYPE(SOLIDLINE)
+    CALL IGRCOLOURN(WRGB(0,0,0))
+   ENDIF
+   
+   FRM=TRIM(UTL_GETFORMAT(V1/1000.0D0))
+   J=INDEX(FRM,'.00)',.TRUE.)
+   IF(J.EQ.0)THEN
+    CALL DBL_WGRTEXTREAL(X1-OFFSTTXT,V1,V1/1000.0D0,FRM,IOFFSET=1)
+    CALL DBL_WGRTEXTREAL(X2+OFFSTTXT,V1,V1/1000.0D0,FRM,IOFFSET=1)
+   ELSE
+    CALL DBL_WGRTEXTINTEGER(X1-OFFSTTXT,V1,INT(V1/1000.0D0),IOFFSET=1)
+    CALL DBL_WGRTEXTINTEGER(X2+OFFSTTXT,V1,INT(V1/1000.0D0),IOFFSET=1)
+   ENDIF
+  ENDIF
+ END DO
+
+ CALL DBL_WGRTEXTORIENTATION(IALIGN=ALIGNLEFT,ANGLE=0.0D0)
+ CALL IGRLINEWIDTH(1)
+
+ END SUBROUTINE IDFPLOT_FEATURES_AXES
+
+ !###======================================================================
+ SUBROUTINE IDFPLOT_FEATURES_SCALE_CRD(XA1,YA1,XA2,YA2)
+ !###======================================================================
+ IMPLICIT NONE
+ REAL(KIND=DP_KIND),INTENT(OUT) :: XA1,YA1,XA2,YA2
+ REAL(KIND=DP_KIND) :: DX,DY,WX1,WX2,WY1,WY2
+
+ WX1=REAL(WINFOGRREAL(GRAPHICSUNITMINX),8) ! (7)  left  limit of main graphics area
+ WY1=REAL(WINFOGRREAL(GRAPHICSUNITMINY),8) ! (8)  lower limit of main graphics area
+ WX2=REAL(WINFOGRREAL(GRAPHICSUNITMAXX),8) ! (9)  right limit of main graphics area
+ WY2=REAL(WINFOGRREAL(GRAPHICSUNITMAXY),8) ! (10) upper limit of main graphics area
+
+ DX =WX2-WX1;       DY =WY2-WY1
+ XA1=WX1+SB_XP1*DX; XA2=WX1+SB_XP2*DX
+ YA1=WY1+SB_YP1*DY; YA2=WY1+SB_YP2*DY
+
+ END SUBROUTINE IDFPLOT_FEATURES_SCALE_CRD
+ 
+ !###======================================================================
+ SUBROUTINE IDFPLOT_FEATURES_SCALE_SELECT(X,Y)
+ !###======================================================================
+ IMPLICIT NONE
+ REAL(KIND=DP_KIND),INTENT(IN) :: X,Y
+ REAL(KIND=DP_KIND) :: XA1,YA1,XA2,YA2
+ INTEGER :: I,IEDGE
+ 
+ IF(WMENUGETSTATE(ID_SHOWSCALEBAR,2).EQ.0)RETURN
+ 
+ CALL IDFPLOT_FEATURES_SCALE_CRD(XA1,YA1,XA2,YA2)
+
+ IEDGE=UTL_SELECTIEDGE(X-OFFSETX,Y-OFFSETY,XA1,YA1,XA2,YA2)
+  
+ !## remove previous selected line - if that is something else
+ IF(SUM(IMOVESC).NE.0)THEN
+  DO I=1,SIZE(IMOVESC); IF(IMOVESC(I).EQ.1)EXIT; ENDDO
+  CALL IDFPLOT_FEATURES_SCALE_DRAWBOX()
  ENDIF
-END DO
+ 
+ IMOVESC=0
+ IF(IEDGE.NE.0)THEN
+  IMOVESC(IEDGE)=1
+  CALL IDFPLOT_FEATURES_SCALE_DRAWBOX()
+ ENDIF
 
-CALL WGRTEXTORIENTATION(IALIGN=ALIGNLEFT,ANGLE=0.0)
-CALL IGRLINEWIDTH(1)
+ END SUBROUTINE IDFPLOT_FEATURES_SCALE_SELECT
 
-END SUBROUTINE IDFPLOT_FEATURES_AXES
+ !###======================================================================
+ SUBROUTINE IDFPLOT_FEATURES_SCALE_MOVE(X,Y,X0,Y0)
+ !###======================================================================
+ IMPLICIT NONE
+ REAL(KIND=DP_KIND),INTENT(IN) :: X,Y,X0,Y0
 
-!###======================================================================
-SUBROUTINE IDFPLOT_FEATURES_SCALE()
-!###======================================================================
-USE WINTERACTER
-USE RESOURCE
-USE IMODVAR, ONLY : IMOD_IUNITS
-USE MOD_UTL, ONLY : UTL_GETAXESCALES,UTL_GETFORMAT,SXVALUE,SYVALUE,NSX,NSY,UTL_EQUALS_REAL
-IMPLICIT NONE
-REAL :: WX1,WY1,WX2,WY2
-REAL :: X,X1,X2,XI,TWIDTH,THEIGHT,Y,DY,XT
-INTEGER :: N,I,J,II
-CHARACTER(LEN=10) :: FRM
-CHARACTER(LEN=20) :: LINE
-INTEGER,DIMENSION(2,2) :: ICLR
-REAL :: RAT,XFCT
+ CALL IDFPLOT_FEATURES_SCALE_DRAWBOX()
+ CALL IDFPLOT_FEATURES_MOVE(X,Y,X0,Y0,IMOVESC,SB_XP1,SB_YP1,SB_XP2,SB_YP2)
+ CALL IDFPLOT_FEATURES_SCALE_DRAWBOX()
+ 
+ END SUBROUTINE IDFPLOT_FEATURES_SCALE_MOVE
+ 
+ !###======================================================================
+ SUBROUTINE IDFPLOT_FEATURES_SCALE_DRAWBOX()
+ !###======================================================================
+ IMPLICIT NONE
+ REAL(KIND=DP_KIND) :: XA1,YA1,XA2,YA2
 
-WX1=WINFOGRREAL(GRAPHICSUNITMINX)! (7) LEFT LIMIT OF MAIN GRAPHICS AREA
-WY1=WINFOGRREAL(GRAPHICSUNITMINY)! (8) LOWER LIMIT OF MAIN GRAPHICS AREA
-WX2=WINFOGRREAL(GRAPHICSUNITMAXX)! (9) RIGHT LIMIT OF MAIN GRAPHICS AREA
-WY2=WINFOGRREAL(GRAPHICSUNITMAXY)! (10) UPPER LIMIT OF
-RAT=(WX2-WX1)/(WY2-WY1)
+ CALL IGRPLOTMODE(MODEXOR)
+ CALL IGRCOLOURN(WRGB(50,50,50))
+ CALL IGRFILLPATTERN(OUTLINE)
 
-X1=0.0; X2=(WX2-WX1)/1.25 
-CALL UTL_GETAXESCALES(X1,0.0,X2,1.0)
+ CALL UTL_PLOT1BITMAP()
+! CALL IDFPLOT_FEATURES_SCALE()
+ CALL IDFPLOT_FEATURES_SCALE_CRD(XA1,YA1,XA2,YA2)
+ CALL DBL_IGRRECTANGLE(XA1,YA1,XA2,YA2)
+ CALL UTL_PLOT2BITMAP()
+
+ CALL IGRPLOTMODE(MODECOPY)
+ CALL IGRFILLPATTERN(OUTLINE)
+ CALL IGRLINETYPE(SOLIDLINE)
+
+ END SUBROUTINE IDFPLOT_FEATURES_SCALE_DRAWBOX
+
+ !###======================================================================
+ SUBROUTINE IDFPLOT_FEATURES_SCALE()
+ !###======================================================================
+ IMPLICIT NONE
+ REAL(KIND=DP_KIND) :: WX1,WY1,WX2,WY2
+ REAL(KIND=DP_KIND) :: X,X1,X2,XI,TWIDTH,THEIGHT,Y,DY,XT
+ INTEGER :: N,I,J,II
+ CHARACTER(LEN=10) :: FRM
+ CHARACTER(LEN=24) :: LINE
+ INTEGER,DIMENSION(2,2) :: ICLR
+ REAL(KIND=DP_KIND) :: RAT,XFCT,DX
+
+ DX =MPW%XMAX-MPW%XMIN
+ DY =MPW%YMAX-MPW%YMIN
+ CALL DBL_IGRAREA(SB_XP1,SB_YP1,SB_XP2,SB_YP2)
+ CALL DBL_IGRUNITS(MPW%XMIN+SB_XP1*DX,MPW%YMIN+SB_YP1*DY,MPW%XMIN+SB_XP2*DX,MPW%YMIN+SB_YP2*DY,IOFFSET=1)
+ CALL IGRAREACLEAR()
+
+ WX1=REAL(WINFOGRREAL(GRAPHICSUNITMINX),8) ! (7)  LEFT LIMIT OF MAIN GRAPHICS AREA
+ WY1=REAL(WINFOGRREAL(GRAPHICSUNITMINY),8) ! (8)  LOWER LIMIT OF MAIN GRAPHICS AREA
+ WX2=REAL(WINFOGRREAL(GRAPHICSUNITMAXX),8) ! (9)  RIGHT LIMIT OF MAIN GRAPHICS AREA
+ WY2=REAL(WINFOGRREAL(GRAPHICSUNITMAXY),8) ! (10) UPPER LIMIT OF MAIN GRAPHICS AREA
+ RAT=(WX2-WX1)/(WY2-WY1)
+
+X1=0.0D0; X2=(WX2-WX1)/1.25D0 
+
+CALL UTL_GETAXESCALES(X1,0.0D0,X2,1.0D0)
 
 XI=SXVALUE(2)-SXVALUE(1)
-IF(NSX.GT.8)THEN; NSX=NSX/2; XI=XI*2.0; ENDIF
+IF(NSX.GT.8)THEN; NSX=NSX/2; XI=XI*2.0D0; ENDIF
 N=NSX
 
 !## mid
-X1=(WX2+WX1)/2.0-((REAL(N)*XI)/2.0)
+X1=(WX2+WX1)/2.0D0-((REAL(N)*XI)/2.0D0)
 X2=X1+REAL(N)*XI
 
-DY=(WY2-WY1)/6.0 
+!## heigth of the scalebar
+DY=(WY2-WY1)/6.0D0
 
 ICLR(1,1)=WRGB(0,0,0)
 ICLR(2,1)=WRGB(255,255,255)
@@ -1366,125 +1036,267 @@ ICLR(1,2)=WRGB(255,255,255)
 ICLR(2,2)=WRGB(0,0,0)
 CALL IGRFILLPATTERN(SOLID)
 
-Y=WY1+DY*4.0
+Y=WY1+DY*4.0D0
 CALL IGRFILLPATTERN(SOLID)
 DO II=1,2
- IF(II.EQ.2)Y=Y-(0.5*DY)
+ IF(II.EQ.2)Y=Y-(0.5D0*DY)
  DO I=1,N
   IF(MOD(I,2).EQ.0)CALL IGRCOLOURN(ICLR(1,II))
   IF(MOD(I,2).NE.0)CALL IGRCOLOURN(ICLR(2,II))
   X =X1+(I-1)*XI
   X2=X1+(I)*XI
-  IF(.NOT.UTL_EQUALS_REAL(Y-0.5*DY,Y))CALL IGRRECTANGLE(X,Y-0.5*DY,X2,Y)
+  IF(.NOT.UTL_EQUALS_REAL(Y-0.5D0*DY,Y))CALL DBL_IGRRECTANGLE(X,Y-0.5D0*DY,X2,Y)
  ENDDO
  !## first, split in 10
  DO I=1,10
   IF(MOD(I,2).EQ.0)CALL IGRCOLOURN(ICLR(1,II))
   IF(MOD(I,2).NE.0)CALL IGRCOLOURN(ICLR(2,II))
-  X =X1+(I-1)*(XI/10.0)
-  X2=X1+I*(XI/10.0)
-  IF(.NOT.UTL_EQUALS_REAL(Y-0.5*DY,Y))CALL IGRRECTANGLE(X,Y-0.5*DY,X2,Y)
+  X =X1+(I-1)*(XI/10.0D0)
+  X2=X1+I*(XI/10.0D0)
+  IF(.NOT.UTL_EQUALS_REAL(Y-0.5D0*DY,Y))CALL DBL_IGRRECTANGLE(X,Y-0.5D0*DY,X2,Y)
  ENDDO
  !## second, split in 2
  DO I=1,2
   IF(MOD(I,2).EQ.0)CALL IGRCOLOURN(ICLR(1,II))
   IF(MOD(I,2).NE.0)CALL IGRCOLOURN(ICLR(2,II))
-  X =X1+XI+(I-1)*(XI/2.0)
-  X2=X1+XI+I*(XI/2.0)
-  IF(.NOT.UTL_EQUALS_REAL(Y-0.5*DY,Y))CALL IGRRECTANGLE(X,Y-0.5*DY,X2,Y)
+  X =X1+XI+(I-1)*(XI/2.0D0)
+  X2=X1+XI+I*(XI/2.0D0)
+  IF(.NOT.UTL_EQUALS_REAL(Y-0.5D0*DY,Y))CALL DBL_IGRRECTANGLE(X,Y-0.5D0*DY,X2,Y)
  ENDDO
 END DO
 
 CALL IGRCOLOURN(WRGB(0,0,0))
 CALL IGRFILLPATTERN(OUTLINE)
-X1=(WX2+WX1)/2.0-((REAL(N)*XI)/2.0)
+X1=(WX2+WX1)/2.0D0-((REAL(N)*XI)/2.0D0)
 X2=X1+REAL(N)*XI
-Y=WY1+DY*4
-CALL IGRRECTANGLE(X1,Y-DY,X2,Y)
-CALL IGRJOIN     (X1,Y-0.5*DY,X2,Y-0.5*DY)
+Y=WY1+DY*4.0D0
+CALL DBL_IGRRECTANGLE(X1,Y-DY,X2,Y)
+CALL DBL_IGRJOIN     (X1,Y-0.5D0*DY,X2,Y-0.5D0*DY)
 
 I=INT(LOG10(WX2-WX1))
 
 SELECT CASE (IMOD_IUNITS)
  CASE (0,1)
   SELECT CASE (I)
-   CASE (6:);  XFCT=1000000.0
-   CASE (3:5); XFCT=1000.0 !## km
-   CASE (:2);  XFCT=1.0    !## meter
+   CASE (6:);   XFCT=1000000.0D0
+   CASE (3:5);  XFCT=1000.0D0  !## km
+   CASE (1:2);  XFCT=1.0D0     !## meter
+   CASE (0);    XFCT=0.1D0     !## decimeter
+   CASE (-1);   XFCT=0.01D0    !## centimeter
+   CASE (:-2);  XFCT=0.001D0   !## millimeter
   END SELECT
  CASE (2)
   SELECT CASE (I)
-   CASE (6:);  XFCT=5280000.0 !## 1000 mile
-   CASE (3:5); XFCT=5280.0    !## mile
-   CASE (:2);  XFCT=1.0       !## feet
+   CASE (6:);  XFCT=5280000.0D0 !## 1000 mile
+   CASE (3:5); XFCT=5280.0D0    !## mile
+   CASE (:2);  XFCT=1.0D0       !## feet
   END SELECT
 END SELECT
 
 CALL IGRLINEWIDTH(1)
 CALL IGRFILLPATTERN(OUTLINE)
 !## textsize in graphical dimensions
-THEIGHT=0.25 
-TWIDTH =THEIGHT/(0.03333/0.01333)/RAT
-CALL WGRTEXTFONT(FFHELVETICA,WIDTH=TWIDTH,HEIGHT=THEIGHT,ISTYLE=0)
-CALL WGRTEXTORIENTATION(IALIGN=ALIGNCENTRE,ANGLE=0.0)
+
+CALL UTL_SETTEXTSIZE(TWIDTH,THEIGHT,FCT=60.0D0)
+CALL DBL_WGRTEXTFONT(IFAMILY=FFHELVETICA,TWIDTH=TWIDTH,THEIGHT=THEIGHT,ISTYLE=0)
+CALL DBL_WGRTEXTORIENTATION(IALIGN=ALIGNCENTRE,ANGLE=0.0D0)
 !## vertical lines
-Y =WY1+DY*3.0
-XT=0.0
+Y =WY1+DY*3.0D0
+XT=0.0D0
 DO I=1,N+1
  X =X1+(I-1)*XI
  XT=(I-1)*XI
  CALL IGRCOLOURN(WRGB(0,0,0))
- CALL IGRJOIN(X,Y-0.5*DY,X,Y+DY )
+ CALL DBL_IGRJOIN(X,Y-0.5D0*DY,X,Y+DY )
  FRM=TRIM(UTL_GETFORMAT(XT/XFCT))
- J=INDEX(FRM,'.0)',.TRUE.)
+ J=INDEX(FRM,'.00)',.TRUE.)
  IF(J.EQ.0)THEN
-  CALL IREALTOSTRING(XT/XFCT,LINE,FRM)
+  CALL IDOUBLETOSTRING(XT/XFCT,LINE,FRM)
  ELSE
   CALL INTEGERTOSTRING(INT(XT/XFCT),LINE,'(I10)')
  ENDIF
  LINE=ADJUSTL(LINE)
- CALL WGRTEXTSTRING(X,WY1+1.75*DY,TRIM(LINE))
+ CALL DBL_WGRTEXTSTRING(X,WY1+1.75D0*DY,TRIM(LINE))
 END DO
-Y =WY1+DY*5.0
-CALL WGRTEXTFONT(FFHELVETICA,WIDTH=TWIDTH,HEIGHT=THEIGHT,ISTYLE=0)
+Y =WY1+DY*5.0D0
 
 SELECT CASE (IMOD_IUNITS)
  CASE (0,1) !## meters
-  IF(XFCT.EQ.1000000.0)CALL WGRTEXTSTRING((WX1+WX2)/2.0,Y,'kilometer (*1000)')
-  IF(XFCT.EQ.1000.0)CALL WGRTEXTSTRING((WX1+WX2)/2.0,Y,'kilometer')
-  IF(XFCT.EQ.1.0)CALL WGRTEXTSTRING((WX1+WX2)/2.0,Y,'meters')
+  IF(XFCT.EQ.1000000.0D0)CALL DBL_WGRTEXTSTRING((WX1+WX2)/2.0D0,Y,'kilometer (*1000)')
+  IF(XFCT.EQ.1000.0D0)   CALL DBL_WGRTEXTSTRING((WX1+WX2)/2.0D0,Y,'kilometer')
+  IF(XFCT.EQ.1.0D0)      CALL DBL_WGRTEXTSTRING((WX1+WX2)/2.0D0,Y,'meters')
+  IF(XFCT.EQ.0.1D0)      CALL DBL_WGRTEXTSTRING((WX1+WX2)/2.0D0,Y,'decimeters')
+  IF(XFCT.EQ.0.01D0)     CALL DBL_WGRTEXTSTRING((WX1+WX2)/2.0D0,Y,'millimeters')
  CASE (2) !## feet
-  IF(XFCT.EQ.5280000.0)CALL WGRTEXTSTRING((WX1+WX2)/2.0,Y,'mile (*1000)')
-  IF(XFCT.EQ.5280.0)CALL WGRTEXTSTRING((WX1+WX2)/2.0,Y,'mile')
-  IF(XFCT.EQ.1.0)CALL WGRTEXTSTRING((WX1+WX2)/2.0,Y,'feet')
+  IF(XFCT.EQ.5280000.0D0)CALL DBL_WGRTEXTSTRING((WX1+WX2)/2.0D0,Y,'mile (*1000)')
+  IF(XFCT.EQ.5280.0D0)   CALL DBL_WGRTEXTSTRING((WX1+WX2)/2.0D0,Y,'mile')
+  IF(XFCT.EQ.1.0D0)      CALL DBL_WGRTEXTSTRING((WX1+WX2)/2.0D0,Y,'feet')
 END SELECT
 
 END SUBROUTINE IDFPLOT_FEATURES_SCALE
 
+ !###======================================================================
+ SUBROUTINE IDFPLOT_FEATURES_LEGEND_SELECT(X,Y)
+ !###======================================================================
+ IMPLICIT NONE
+ REAL(KIND=DP_KIND),INTENT(IN) :: X,Y
+ REAL(KIND=DP_KIND) :: XA1,YA1,XA2,YA2
+ INTEGER :: IEDGE,I
+
+ CALL WINDOWSELECT(0); IF(WMENUGETSTATE(ID_PLOTLEGEND,2).NE.1)RETURN
+ 
+ CALL IDFPLOT_FEATURES_LEGEND_CRD(XA1,YA1,XA2,YA2)
+
+ IEDGE=UTL_SELECTIEDGE(X-OFFSETX,Y-OFFSETY,XA1,YA1,XA2,YA2)
+  
+ !## remove previous selected line - if that is something else
+ IF(SUM(IMOVELG).NE.0)THEN
+  DO I=1,SIZE(IMOVELG); IF(IMOVELG(I).EQ.1)EXIT; ENDDO
+  CALL IDFPLOT_FEATURES_LEGEND_DRAWBOX()
+ ENDIF
+ 
+ IMOVELG=0
+ IF(IEDGE.NE.0)THEN
+  IMOVELG(IEDGE)=1
+  CALL IDFPLOT_FEATURES_LEGEND_DRAWBOX()
+ ENDIF
+ 
+ END SUBROUTINE IDFPLOT_FEATURES_LEGEND_SELECT
+
+ !###======================================================================
+ SUBROUTINE IDFPLOT_FEATURES_LEGEND_CRD(XA1,YA1,XA2,YA2)
+ !###======================================================================
+ IMPLICIT NONE
+ REAL(KIND=DP_KIND),INTENT(OUT) :: XA1,YA1,XA2,YA2
+ REAL(KIND=DP_KIND) :: DX,DY,WX1,WX2,WY1,WY2
+
+ WX1=REAL(WINFOGRREAL(GRAPHICSUNITMINX),8) ! (7)  left  limit of main graphics area
+ WY1=REAL(WINFOGRREAL(GRAPHICSUNITMINY),8) ! (8)  lower limit of main graphics area
+ WX2=REAL(WINFOGRREAL(GRAPHICSUNITMAXX),8) ! (9)  right limit of main graphics area
+ WY2=REAL(WINFOGRREAL(GRAPHICSUNITMAXY),8) ! (10) upper limit of main graphics area
+
+ DX =WX2-WX1;       DY =WY2-WY1
+ XA1=WX1+LG_XP1*DX; XA2=WX1+LG_XP2*DX
+ YA1=WY1+LG_YP1*DY; YA2=WY1+LG_YP2*DY
+
+ END SUBROUTINE IDFPLOT_FEATURES_LEGEND_CRD
+ 
+ !###======================================================================
+ SUBROUTINE IDFPLOT_FEATURES_LEGEND_MOVE(X,Y,X0,Y0)
+ !###======================================================================
+ IMPLICIT NONE
+ REAL(KIND=DP_KIND),INTENT(IN) :: X,Y,X0,Y0
+
+ CALL IDFPLOT_FEATURES_LEGEND_DRAWBOX()
+ CALL IDFPLOT_FEATURES_MOVE(X,Y,X0,Y0,IMOVELG,LG_XP1,LG_YP1,LG_XP2,LG_YP2)
+ CALL IDFPLOT_FEATURES_LEGEND_DRAWBOX()
+ 
+ END SUBROUTINE IDFPLOT_FEATURES_LEGEND_MOVE
+ 
+ !###======================================================================
+ SUBROUTINE IDFPLOT_FEATURES_LEGEND_DRAWBOX()
+ !###======================================================================
+ IMPLICIT NONE
+ REAL(KIND=DP_KIND) :: XA1,YA1,XA2,YA2
+
+ CALL IGRPLOTMODE(MODEXOR)
+ CALL IGRCOLOURN(WRGB(50,50,50))
+ CALL IGRFILLPATTERN(OUTLINE)
+
+ CALL UTL_PLOT1BITMAP()
+ CALL IDFPLOT_FEATURES_LEGEND_CRD(XA1,YA1,XA2,YA2)
+ IF(    IMOVELG(1).EQ.1)THEN
+  CALL DBL_IGRJOIN(XA1,YA1,XA1,YA2)
+ ELSEIF(IMOVELG(2).EQ.1)THEN
+  CALL DBL_IGRJOIN(XA2,YA1,XA2,YA2)
+ ELSEIF(IMOVELG(3).EQ.1)THEN
+  CALL DBL_IGRJOIN(XA1,YA1,XA2,YA1)
+ ELSEIF(IMOVELG(4).EQ.1)THEN
+  CALL DBL_IGRJOIN(XA1,YA2,XA2,YA2)
+ ELSE
+  CALL DBL_IGRRECTANGLE(XA1,YA1,XA2,YA2)
+ ENDIF
+ 
+ CALL UTL_PLOT2BITMAP()
+
+ CALL IGRPLOTMODE(MODECOPY)
+ CALL IGRFILLPATTERN(OUTLINE)
+ CALL IGRLINETYPE(SOLIDLINE)
+
+ END SUBROUTINE IDFPLOT_FEATURES_LEGEND_DRAWBOX 
+
+ !###======================================================================
+ SUBROUTINE IDFPLOT_FEATURES_MOVE(X,Y,X0,Y0,IMOVE,XP1,YP1,XP2,YP2)
+ !###======================================================================
+ IMPLICIT NONE
+ REAL(KIND=DP_KIND),INTENT(IN) :: X,Y,X0,Y0
+ REAL(KIND=DP_KIND),INTENT(INOUT) :: XP1,YP1,XP2,YP2
+ INTEGER,INTENT(IN),DIMENSION(:) :: IMOVE
+ REAL(KIND=DP_KIND) :: DX,DY
+
+ DX=X-X0
+ DY=Y-Y0
+
+ DOWNX=DOWNX+DX
+ DOWNY=DOWNY+DY
+
+ DX=DX/(MPW%XMAX-MPW%XMIN)
+ DY=DY/(MPW%YMAX-MPW%YMIN)
+ 
+ IF(    IMOVE(1).EQ.1)THEN
+  XP1=MIN(XP2,XP1+DX)
+ ELSEIF(IMOVE(2).EQ.1)THEN
+  XP2=MAX(XP1,XP2+DX)
+ ELSEIF(IMOVE(3).EQ.1)THEN
+  YP1=MIN(YP2,YP1+DY)
+ ELSEIF(IMOVE(4).EQ.1)THEN
+  YP2=MAX(YP1,YP2+DY)
+ ELSEIF(IMOVE(5).EQ.1)THEN
+  XP1=MIN(XP2,XP1+DX)
+  YP1=MIN(YP2,YP1+DY)
+ ELSEIF(IMOVE(6).EQ.1)THEN
+  XP2=MAX(XP1,XP2+DX)
+  YP1=MIN(YP2,YP1+DY)
+ ELSEIF(IMOVE(7).EQ.1)THEN
+  XP2=MAX(XP1,XP2+DX)
+  YP2=MAX(YP1,YP2+DY)
+ ELSEIF(IMOVE(8).EQ.1)THEN
+  XP1=MIN(XP2,XP1+DX)
+  YP2=MAX(YP1,YP2+DY)
+ ELSEIF(IMOVE(9).EQ.1)THEN
+  XP1=MIN(XP2,XP1+DX)
+  YP1=MIN(YP2,YP1+DY)
+  XP2=MAX(XP1,XP2+DX)
+  YP2=MAX(YP1,YP2+DY)
+ ENDIF 
+ 
+ XP1=MAX(0.0,MIN(1.0,XP1))
+ XP2=MAX(0.0,MIN(1.0,XP2))
+
+ YP1=MAX(0.0,MIN(1.0,YP1))
+ YP2=MAX(0.0,MIN(1.0,YP2))
+ 
+ END SUBROUTINE IDFPLOT_FEATURES_MOVE
+ 
 !###======================================================================
 SUBROUTINE IDFPLOT_FEATURES_NARROW()
 !###======================================================================
-USE WINTERACTER
-USE RESOURCE
-USE MOD_PREF_PAR, ONLY : PREFVAL
-USE MODPLOT, ONLY : MPW
-USE MOD_UTL, ONLY : UTL_LOADIMAGE
 IMPLICIT NONE
-REAL :: X1,Y2,XOFFSET,IXDES1,IYDES1,IXDES2,IYDES2,RAT1,RAT2
+REAL(KIND=DP_KIND) :: X1,Y2,XOFFSET,IXDES1,IYDES1,IXDES2,IYDES2,RAT1,RAT2
 INTEGER,DIMENSION(3) :: INFO
 INTEGER,ALLOCATABLE,DIMENSION(:,:) :: IBMPDATA
 INTEGER :: IBITMAP
 
-!# appropriate keyword not available
+!## appropriate keyword not available
 IF(LEN_TRIM(PREFVAL(11)).EQ.0)RETURN
 
-IF(WMENUGETSTATE(ID_SHOWAXES,2).EQ.1)XOFFSET=0.05
-IF(WMENUGETSTATE(ID_SHOWAXES,2).EQ.0)XOFFSET=0.025
+IF(WMENUGETSTATE(ID_SHOWAXES,2).EQ.1)XOFFSET=0.05D0
+IF(WMENUGETSTATE(ID_SHOWAXES,2).EQ.0)XOFFSET=0.025D0
 
 RAT1=WINFOGRREAL(GRAPHICSRATIO) !## dx/dy
 
-X1=XOFFSET!0.05
-Y2=1.0-XOFFSET*RAT1!0.95
+X1=XOFFSET !0.05D0
+Y2=1.0D0-XOFFSET*RAT1 !0.95
 
 !CALL WGRCURVE(X,Y,3)
 !BMPFNAME='D:\IMOD-CODE\IMOD-GUI\BMP\NORTH_ARROW.PNG'
@@ -1521,23 +1333,23 @@ IF(INFO(2).GT.INFO(3))THEN !## col>row
  IXDES2=X1+0.1
  IYDES1=Y2-(0.1*RAT1*RAT2)
  IYDES2=Y2
- Y2    =0.005*RAT1
- X1    =0.005
+ Y2    =0.05D0*RAT1
+ X1    =0.05D0
 ELSE                       !## row>col
  IXDES1=X1
  IXDES2=X1+(0.1/RAT1/RAT2)
  IYDES1=Y2-0.1
  IYDES2=Y2
- X1    =0.005/RAT1
- Y2    =0.005
+ X1    =0.05D0/RAT1
+ Y2    =0.05D0
 ENDIF
 
-CALL IGRAREA(IXDES1-X1,IYDES1-Y2,IXDES2+X1,IYDES2+Y2)
+CALL DBL_IGRAREA(IXDES1-X1,IYDES1-Y2,IXDES2+X1,IYDES2+Y2)
 CALL IGRFILLPATTERN(SOLID)
 CALL IGRCOLOURN(WRGB(255,255,255))
-CALL IGRUNITS(0.0,0.0,1.0,1.0)
-CALL IGRRECTANGLE(0.0,0.0,1.0,1.0)
-CALL IGRAREA(IXDES1,IYDES1,IXDES2,IYDES2)
+CALL DBL_IGRUNITS(0.0D0,0.0D0,1.0D0,1.0D0)
+CALL DBL_IGRRECTANGLE(0.0D0,0.0D0,1.0D0,1.0D0)
+CALL DBL_IGRAREA(IXDES1,IYDES1,IXDES2,IYDES2)
 CALL WBITMAPPUT(IBITMAP,2,1)
 CALL WBITMAPDESTROY(IBITMAP)
 
@@ -1546,12 +1358,6 @@ END SUBROUTINE IDFPLOT_FEATURES_NARROW
 !###======================================================================
 SUBROUTINE IDFPLOT_FEATURES_RASTER()
 !###======================================================================
-USE WINTERACTER
-USE RESOURCE
-USE MODPLOT,ONLY : MP,MXMPLOT
-USE MOD_IDF, ONLY : IDFREAD,IDFDEALLOCATEX
-USE MOD_UDF_UTL, ONLY : UDF_OPEN,UDF_PLOTNETWORK
-USE MOD_MDF, ONLY : READMDF,MDFDEALLOCATE,MDF
 IMPLICIT NONE
 INTEGER :: IPLOT,IC,IR,N
 LOGICAL :: LEX
@@ -1586,21 +1392,21 @@ DO IPLOT=1,MXMPLOT
     IF(MP(IPLOT)%IDF%IEQ.EQ.0)THEN
 
      DO IR=0,MP(IPLOT)%IDF%NROW
-      CALL IGRJOIN(MP(IPLOT)%IDF%XMIN,MP(IPLOT)%IDF%YMAX-IR*MP(IPLOT)%IDF%DY, &
-                   MP(IPLOT)%IDF%XMAX,MP(IPLOT)%IDF%YMAX-IR*MP(IPLOT)%IDF%DY)
+      CALL DBL_IGRJOIN(MP(IPLOT)%IDF%XMIN,MP(IPLOT)%IDF%YMAX-IR*MP(IPLOT)%IDF%DY, &
+                   MP(IPLOT)%IDF%XMAX,MP(IPLOT)%IDF%YMAX-IR*MP(IPLOT)%IDF%DY,IOFFSET=1)
      ENDDO
      DO IC=0,MP(IPLOT)%IDF%NCOL
-      CALL IGRJOIN(MP(IPLOT)%IDF%XMIN+IC*MP(IPLOT)%IDF%DX,MP(IPLOT)%IDF%YMIN, &
-                   MP(IPLOT)%IDF%XMIN+IC*MP(IPLOT)%IDF%DX,MP(IPLOT)%IDF%YMAX)
+      CALL DBL_IGRJOIN(MP(IPLOT)%IDF%XMIN+IC*MP(IPLOT)%IDF%DX,MP(IPLOT)%IDF%YMIN, &
+                   MP(IPLOT)%IDF%XMIN+IC*MP(IPLOT)%IDF%DX,MP(IPLOT)%IDF%YMAX,IOFFSET=1)
      ENDDO
 
     ELSE
 
      DO IR=0,MP(IPLOT)%IDF%NROW
-      CALL IGRJOIN(MP(IPLOT)%IDF%XMIN,MP(IPLOT)%IDF%SY(IR),MP(IPLOT)%IDF%XMAX,MP(IPLOT)%IDF%SY(IR))
+      CALL DBL_IGRJOIN(MP(IPLOT)%IDF%XMIN,MP(IPLOT)%IDF%SY(IR),MP(IPLOT)%IDF%XMAX,MP(IPLOT)%IDF%SY(IR),IOFFSET=1)
      ENDDO
      DO IC=0,MP(IPLOT)%IDF%NCOL
-      CALL IGRJOIN(MP(IPLOT)%IDF%SX(IC),MP(IPLOT)%IDF%YMIN,MP(IPLOT)%IDF%SX(IC),MP(IPLOT)%IDF%YMAX)
+      CALL DBL_IGRJOIN(MP(IPLOT)%IDF%SX(IC),MP(IPLOT)%IDF%YMIN,MP(IPLOT)%IDF%SX(IC),MP(IPLOT)%IDF%YMAX,IOFFSET=1)
      ENDDO
 
     ENDIF
@@ -1618,22 +1424,14 @@ DO IPLOT=1,MXMPLOT
  ENDIF
 ENDDO
 
-RETURN
 END SUBROUTINE IDFPLOT_FEATURES_RASTER
 
 !###======================================================================
 SUBROUTINE IDFPLOT_FEATURES_EXTENT()
 !###======================================================================
-USE WINTERACTER
-USE RESOURCE
-USE MOD_UTL, ONLY : ITOS,UTL_SETTEXTSIZE
-USE MODPLOT,ONLY : MP,MXMPLOT,MPW
-USE MOD_IDF, ONLY : IDFREAD,IDFDEALLOCATEX,IDFGETEDGE
-USE MOD_MDF, ONLY : READMDF,MDFDEALLOCATE,MDF
 IMPLICIT NONE
 INTEGER :: I,J,IPLOT,N,IROW,ICOL,IDX,IDY
-REAL :: TWIDTH,THEIGHT,X,Y,X1,Y1,X2,Y2,XMIN,XMAX,YMIN,YMAX,FRAC
-REAL,PARAMETER :: THICKNESS=1.5
+REAL(KIND=DP_KIND) :: TWIDTH,THEIGHT,X,Y,X1,Y1,X2,Y2,XMIN,XMAX,YMIN,YMAX
 LOGICAL :: LEX
 CHARACTER(LEN=256) :: FNAME
 CHARACTER(LEN=52) :: STRING
@@ -1642,9 +1440,9 @@ I=0; J=0
 IF(WMENUGETSTATE(ID_IDFEXTENT,2).EQ.1)I=1   
 IF(WMENUGETSTATE(ID_IDFINDICES,2).EQ.1)J=1
 
-CALL UTL_SETTEXTSIZE(TWIDTH,THEIGHT,THICKNESS*0.01) 
-CALL WGRTEXTFONT(FFHELVETICA,WIDTH=TWIDTH,HEIGHT=THEIGHT,ISTYLE=0)
-CALL WGRTEXTORIENTATION(ALIGNCENTRE,ANGLE=0.0)
+CALL UTL_SETTEXTSIZE(TWIDTH,THEIGHT,FCT=5.0D0)
+CALL DBL_WGRTEXTFONT(IFAMILY=FFHELVETICA,TWIDTH=TWIDTH,THEIGHT=THEIGHT,ISTYLE=0)
+CALL DBL_WGRTEXTORIENTATION(IALIGN=ALIGNCENTRE,ANGLE=0.0D0)
 
 CALL IGRLINEWIDTH(1); CALL IGRFILLPATTERN(OUTLINE)
 CALL IGRCOLOURN(WRGB(0,0,0)) 
@@ -1671,8 +1469,8 @@ DO IPLOT=1,MXMPLOT
    IF(IDFREAD(MP(IPLOT)%IDF,MP(IPLOT)%IDFNAME,0))THEN
 
     !## display idf extent
-    IF(I.EQ.1)CALL IGRRECTANGLE(MP(IPLOT)%IDF%XMIN,MP(IPLOT)%IDF%YMIN, &
-                                MP(IPLOT)%IDF%XMAX,MP(IPLOT)%IDF%YMAX)
+    IF(I.EQ.1)CALL DBL_IGRRECTANGLE(MP(IPLOT)%IDF%XMIN,MP(IPLOT)%IDF%YMIN, &
+                                MP(IPLOT)%IDF%XMAX,MP(IPLOT)%IDF%YMAX,IOFFSET=1)
     !## display indices
     IF(J.EQ.1)THEN
  
@@ -1687,14 +1485,12 @@ DO IPLOT=1,MXMPLOT
       IDX=1; IDY=1
      ENDIF
 
-     FRAC=3.0 !XMAX-XMIN
-     
      DO IROW=1,MP(IPLOT)%IDF%NROW,IDY; DO ICOL=1,MP(IPLOT)%IDF%NCOL,IDX
       CALL IDFGETEDGE(MP(IPLOT)%IDF,IROW,ICOL,X1,Y1,X2,Y2)
       IF(X1.GE.XMIN.AND.X2.LE.XMAX.AND.Y2.GE.YMIN.AND.Y1.LE.YMAX)THEN
-       X=X1+(X2-X1)/FRAC; Y=Y2-(Y2-Y1)/FRAC
+       X=(X1+X2)/2.0D0; Y=(Y1+Y2)/2.0D0
        STRING='('//TRIM(ITOS(IROW))//'-'//TRIM(ITOS(ICOL))//')'
-       CALL WGRTEXTSTRING(X,Y,TRIM(STRING))
+       CALL DBL_WGRTEXTSTRING(X,Y,TRIM(STRING),IOFFSET=1)
       ENDIF
      ENDDO; ENDDO
 
@@ -1714,17 +1510,17 @@ DO IPLOT=1,MXMPLOT
  ENDIF
 ENDDO
 
-RETURN
+CALL DBL_WGRTEXTORIENTATION(IALIGN=ALIGNLEFT,ANGLE=0.0D0,IDIR=DIRHORIZ,NALIGN=ALIGNCENTRE)
+
 END SUBROUTINE IDFPLOT_FEATURES_EXTENT
 
 !###======================================================================
 SUBROUTINE IDFPLOTAREA(XMIN,YMIN,XMAX,YMAX,I,LPLOT)
 !###======================================================================
-USE MODPLOT
 IMPLICIT NONE
 INTEGER,INTENT(IN) :: I
 LOGICAL,INTENT(OUT) :: LPLOT
-REAL,INTENT(IN) :: XMIN,YMIN,XMAX,YMAX
+REAL(KIND=DP_KIND),INTENT(IN) :: XMIN,YMIN,XMAX,YMAX
 INTEGER :: J
 
 !## always draw first
@@ -1763,26 +1559,20 @@ END SUBROUTINE IDFPLOTAREA
 !###======================================================================
 LOGICAL FUNCTION IDFDRAW(IDF,LEG,UNITS,IP,XMIN,YMIN,XMAX,YMAX,THICKNESS,LPLOT,UMIN,UMAX)
 !###======================================================================
-USE WINTERACTER
-USE RESOURCE
-USE MODPLOT
-USE MOD_UTL, ONLY : UTL_WAITMESSAGE,ITOS,UTL_GETUNIT,UTL_IDFCURDIM,UTL_IDFGETCLASS,IDFPLOT1BITMAP
-USE MOD_IDF, ONLY : IDFGETVAL_CHECK,IDFGETICLR,IDFREADPART,IDFDEALLOCATEX
-USE MOD_IDF_PAR, ONLY : IDFOBJ
 IMPLICIT NONE
 TYPE(IDFOBJ),INTENT(INOUT) :: IDF
 TYPE(LEGENDOBJ),INTENT(INOUT) :: LEG
 INTEGER,INTENT(IN) :: UNITS,THICKNESS
 INTEGER,INTENT(IN),DIMENSION(4) :: IP
-REAL,INTENT(IN) :: XMIN,YMIN,XMAX,YMAX
+REAL(KIND=DP_KIND),INTENT(IN) :: XMIN,YMIN,XMAX,YMAX
 LOGICAL,INTENT(IN) :: LPLOT
-REAL,INTENT(OUT),OPTIONAL :: UMIN,UMAX
+REAL(KIND=DP_KIND),INTENT(OUT),OPTIONAL :: UMIN,UMAX
 TYPE(WIN_MESSAGE) :: MESSAGE
 INTEGER :: NC1,NC2,NR1,NR2,ANROW,ANCOL,IRAT,IRAT1,IDY,IDX,I,IOS,&
            J,IWID,IHGT,JBITMAP,KBITMAP,ITYPE,IROW,ICOL,ICLR,ITNODATA,ITRANS
 INTEGER :: IDTYPE,IDHANDLE
 CHARACTER(LEN=120) :: WAITTXT
-REAL :: AX1,AX2,AY1,AY2,X,DX,DY,X1,X2,Y1,Y2,DMIN,DMAX,OX1,OY1,OX2,OY2
+REAL(KIND=DP_KIND) :: AX1,AX2,AY1,AY2,X,DX,DY,X1,X2,Y1,Y2,DMIN,DMAX,OX1,OY1,OX2,OY2
 INTEGER,ALLOCATABLE,DIMENSION(:) :: IBMPDATA,KBMPDATA
 LOGICAL :: LEX
 
@@ -1795,16 +1585,12 @@ OY1     =WINFOGRREAL(GRAPHICSAREAMINY)! (8)  LOWER LIMIT OF MAIN GRAPHICS AREA
 OX2     =WINFOGRREAL(GRAPHICSAREAMAXX)! (9)  RIGHT LIMIT OF MAIN GRAPHICS AREA
 OY2     =WINFOGRREAL(GRAPHICSAREAMAXY)! (10) UPPER LIMIT OF
 
-!  DrawableDialog (3) Dialog identifier (if type=3)
-!  DrawableWidth (4) Width in pixels (type=1-3) or internal metafile units (type=4)
-!  DrawableHeight (5) Height in pixels (type=1-3) or internal metafile units (type=4)
-
 CALL WINDOWSELECT(0)
 ITNODATA=WMENUGETSTATE(ID_TRANSPARANTNODATAIDF,2)
 ITRANS  =WMENUGETSTATE(ID_TRANSPARANTIDF,2)
 
 !## try reading last record:
-IF(IDFGETVAL_CHECK(IDF,IDF%NROW,IDF%NCOL,X).NE.0)THEN
+IF(.NOT.IDFGETVAL_CHECK(IDF,IDF%NROW,IDF%NCOL,X))THEN 
  CALL WMESSAGEBOX(OKONLY,EXCLAMATIONICON,COMMONOK,'Error reading last record of idf'//CHAR(13)//TRIM(IDF%FNAME),'Error')
  RETURN
 ENDIF
@@ -1859,7 +1645,7 @@ IF(IP(1).EQ.1.AND.LPLOT)THEN
  JBITMAP=0; CALL WBITMAPCREATE(JBITMAP,IWID,IHGT)
 
  !## adjust min/max values current window-level
- DMIN= 10.0E+10; DMAX=-10.0E+10
+ DMIN=HUGE(DMIN); DMAX=-HUGE(DMAX)
 
  IRAT1=0
 
@@ -1878,6 +1664,7 @@ IF(IP(1).EQ.1.AND.LPLOT)THEN
   END DO
   CALL WBITMAPGETDATA(JBITMAP,IBMPDATA)
   DEALLOCATE(IBMPDATA)
+  
   X  = IDF%XMIN+(NC1-1)*IDF%DX;  AX1=(X-MPW%XMIN)/(MPW%XMAX-MPW%XMIN)
   X  = IDF%XMIN+(NC2   *IDF%DX); AX2=(X-MPW%XMIN)/(MPW%XMAX-MPW%XMIN)
   X  = IDF%YMAX-(NR2   *IDF%DY); AY1=(X-MPW%YMIN)/(MPW%YMAX-MPW%YMIN)
@@ -1886,8 +1673,8 @@ IF(IP(1).EQ.1.AND.LPLOT)THEN
  ELSEIF(IDF%IEQ.EQ.1)THEN
 
   CALL IGRSELECT(DRAWBITMAP,JBITMAP)
-  CALL IGRAREA(0.0,0.0,1.0,1.0)
-  CALL IGRUNITS(IDF%SX(NC1-1),IDF%SY(NR2),IDF%SX(NC2),IDF%SY(NR1-1))
+  CALL DBL_IGRAREA(0.0D0,0.0D0,1.0D0,1.0D0)
+  CALL DBL_IGRUNITS(IDF%SX(NC1-1),IDF%SY(NR2),IDF%SX(NC2),IDF%SY(NR1-1),IOFFSET=1)
 
   CALL IGRFILLPATTERN(SOLID)
   I=0
@@ -1904,7 +1691,7 @@ IF(IP(1).EQ.1.AND.LPLOT)THEN
 
     ICLR=IDFGETICLR(IDF,LEG,UNITS,IROW,ICOL,DMIN,DMAX)
     CALL IGRCOLOURN(ICLR)
-    CALL IGRRECTANGLE(X1,Y1,X2,Y2)
+    CALL DBL_IGRRECTANGLE(X1,Y1,X2,Y2,IOFFSET=1)
 
    ENDDO
 
@@ -1927,14 +1714,14 @@ IF(IP(1).EQ.1.AND.LPLOT)THEN
  AY2=OY1+AY2*(OY2-OY1)
 
  !## set target area to be replaced
- CALL IGRAREA(AX1,AY1,AX2,AY2)
+ CALL DBL_IGRAREA(AX1,AY1,AX2,AY2)
 
  !## compute new pixel values with transparant nodata values
  IF(ITNODATA.EQ.1)THEN
 
   CALL IGRSELECT(DRAWBITMAP,MPW%IBITMAP)
   CALL WBITMAPSTRETCHMODE(STRETCHDELETE)
-  !## get current window in bitmap (only for area set by igrarea)
+  !## get current window in bitmap (only for area set by DBL_IGRAREA)
   KBITMAP=0
   CALL WBITMAPGET(KBITMAP,2)
   !## size of current images
@@ -1987,7 +1774,7 @@ IF(IP(2).NE.0.OR.IP(3).NE.0.OR.IP(4).NE.0)THEN
  !## read part
  IF(.NOT.IDFREADPART(IDF,XMIN,YMIN,XMAX,YMAX))RETURN
 
- DMIN=10.0E10; DMAX=-10.0E10
+ DMIN=HUGE(DMIN); DMAX=-HUGE(DMAX)
  DO IROW=1,IDF%NROW; DO ICOL=1,IDF%NCOL
   IF(IDF%X(ICOL,IROW).NE.IDF%NODATA)THEN
    DMIN=MIN(DMIN,IDF%X(ICOL,IROW))
@@ -1996,7 +1783,7 @@ IF(IP(2).NE.0.OR.IP(3).NE.0.OR.IP(4).NE.0)THEN
  ENDDO; ENDDO
 
  CALL IGRPLOTMODE(MODECOPY)
- CALL IDFPLOT1BITMAP()
+ CALL UTL_PLOT1BITMAP()
  CALL IGRLINEWIDTH(THICKNESS)
 
  IF(IP(2).EQ.1)THEN
@@ -2031,23 +1818,19 @@ IF(LEX.AND.SUM(IP).GT.0)THEN
  IF(PRESENT(UMIN))UMIN=DMIN; IF(PRESENT(UMAX))UMAX=DMAX
 ENDIF
 
-IDFDRAW=.TRUE.
+IDFDRAW=LEX
 
 END FUNCTION IDFDRAW
 
 !###======================================================================
 SUBROUTINE IDFPLOT_TEXTING(IDF,XMAX,XMIN,YMAX,YMIN,THICKNESS)
 !###======================================================================
-USE WINTERACTER
-USE MOD_IDF_PAR, ONLY : IDFOBJ
-USE MOD_UTL, ONLY : UTL_SETTEXTSIZE,ITOS,UTL_REALTOSTRING
-USE MOD_IDF, ONLY : IDFGETLOC
 IMPLICIT NONE
 INTEGER,INTENT(IN) :: THICKNESS
-REAL,INTENT(IN) :: XMAX,XMIN,YMAX,YMIN
+REAL(KIND=DP_KIND),INTENT(IN) :: XMAX,XMIN,YMAX,YMIN
 TYPE(IDFOBJ) :: IDF
 INTEGER :: IROW,ICOL,IDX,IDY
-REAL :: TWIDTH,THEIGHT,X,Y
+REAL(KIND=DP_KIND) :: TWIDTH,THEIGHT,X,Y
 CHARACTER(LEN=15) :: STRING
 
 !## get the accuracy of the drawing, stepsize idx,idy
@@ -2057,9 +1840,9 @@ ELSEIF(IDF%IEQ.EQ.1)THEN
  IDX=1; IDY=1
 ENDIF
 
-CALL UTL_SETTEXTSIZE(TWIDTH,THEIGHT,REAL(THICKNESS)*0.01) 
-CALL WGRTEXTFONT(FFHELVETICA,WIDTH=TWIDTH,HEIGHT=THEIGHT,ISTYLE=0)
-CALL WGRTEXTORIENTATION(ALIGNCENTRE,ANGLE=0.0)
+CALL UTL_SETTEXTSIZE(TWIDTH,THEIGHT,FCT=THICKNESS*0.01D0) 
+CALL DBL_WGRTEXTFONT(IFAMILY=FFHELVETICA,TWIDTH=TWIDTH,THEIGHT=THEIGHT,ISTYLE=0)
+CALL DBL_WGRTEXTORIENTATION(ALIGNCENTRE,ANGLE=0.0D0)
 
 CALL IGRCOLOURN(WRGB(0,0,0))
 DO IROW=1,IDF%NROW,IDY; DO ICOL=1,IDF%NCOL,IDX
@@ -2067,7 +1850,7 @@ DO IROW=1,IDF%NROW,IDY; DO ICOL=1,IDF%NCOL,IDX
  CALL IDFGETLOC(IDF,IROW,ICOL,X,Y)
  IF(X.GT.XMIN.AND.X.LT.XMAX.AND.Y.GT.YMIN.AND.Y.LT.YMAX)THEN
   STRING=UTL_REALTOSTRING(IDF%X(ICOL,IROW))
-  CALL WGRTEXTSTRING(X,Y,TRIM(STRING))
+  CALL DBL_WGRTEXTSTRING(X,Y,TRIM(STRING))
  ENDIF
 ENDDO; ENDDO
 
@@ -2076,22 +1859,15 @@ END SUBROUTINE IDFPLOT_TEXTING
 !###======================================================================
 SUBROUTINE IDFPLOT_VECTOR(IDF,LEG,UNITS,XMAX,XMIN,YMAX,YMIN,IP)
 !###======================================================================
-USE WINTERACTER
-USE MOD_IDF_PAR, ONLY : IDFOBJ
-USE MOD_IDF, ONLY : IDFDEALLOCATEX,IDFGETLOC
-USE MODPLOT, ONLY : LEGENDOBJ
-USE MOD_IDF, ONLY : IDFREADPART
-USE MOD_UTL, ONLY : UTL_IDFGETCLASS
-USE MOD_SOF, ONLY : SOF_COMPUTE_GRAD,SOF_COMPUTE_GRAD_3D
 IMPLICIT NONE
 TYPE(IDFOBJ),INTENT(INOUT) :: IDF
 TYPE(LEGENDOBJ),INTENT(INOUT) :: LEG
-REAL,INTENT(IN) :: XMAX,XMIN,YMAX,YMIN
+REAL(KIND=DP_KIND),INTENT(IN) :: XMAX,XMIN,YMAX,YMIN
 INTEGER,INTENT(IN),DIMENSION(3) :: IP
 INTEGER,INTENT(IN) :: UNITS
 INTEGER :: IROW,ICOL,IDX,IDY,ICLR
-REAL :: X,DX,Y,DY,F
-REAL :: DZDX,DZDY,DZDZ,A
+REAL(KIND=DP_KIND) :: X,DX,Y,DY,F
+REAL(KIND=DP_KIND) :: DZDX,DZDY,A
 
 !## get the accuracy of the drawing, stepsize idx,idy
 IF(IDF%IEQ.EQ.0)THEN
@@ -2103,22 +1879,23 @@ ENDIF
 CALL IGRCOLOURN(WRGB(50,50,50))
 DO IROW=1,IDF%NROW,IDY; DO ICOL=1,IDF%NCOL,IDX
 
- IF(IDF%IVF.EQ.0)THEN
-  IF(IDF%X(ICOL,IROW).EQ.IDF%NODATA)CYCLE
- ELSEIF(IDF%IVF.EQ.3)THEN
-  IF(IDF%XV(ICOL,IROW,1).EQ.IDF%NODATA)CYCLE
- ENDIF
+! IF(IDF%IVF.EQ.0)THEN
+ IF(IDF%X(ICOL,IROW).EQ.IDF%NODATA)CYCLE
+! ELSEIF(IDF%IVF.EQ.3)THEN
+!  IF(IDF%XV(ICOL,IROW,1).EQ.IDF%NODATA)CYCLE
+! ENDIF
 
  IF(UNITS.EQ.0)THEN
   !## normal IDF
-  IF(IDF%IVF.EQ.0)CALL SOF_COMPUTE_GRAD(IDF,ICOL,IROW,DZDX,DZDY)
+!  IF(IDF%IVF.EQ.0)
+  CALL SOF_COMPUTE_GRAD(IDF,ICOL,IROW,DZDX,DZDY)
 !  IF(IDF%IVF.EQ.0)CALL SOF_COMPUTE_GRAD_STEEPEST(IDF,ICOL,IROW,DZDX,DZDY)
 
-  !## 3IDF
-  IF(IDF%IVF.EQ.1)CALL SOF_COMPUTE_GRAD_3D(IDF,ICOL,IROW,DZDX,DZDY,DZDZ)
+!  !## 3IDF
+!  IF(IDF%IVF.EQ.1)CALL SOF_COMPUTE_GRAD_3D(IDF,ICOL,IROW,DZDX,DZDY,DZDZ)
 
   IF(IP(1).EQ.0.AND.IP(2).EQ.0)THEN
-   F=DZDX**2.0+DZDY**2.0; IF(F.NE.0.0)F=SQRT(F)
+   F=DZDX**2.0D0+DZDY**2.0D0; IF(F.NE.0.0D0)F=SQRT(F)
    IF(F.NE.IDF%NODATA)THEN
     ICLR=UTL_IDFGETCLASS(LEG,F)
    ELSE
@@ -2127,7 +1904,7 @@ DO IROW=1,IDF%NROW,IDY; DO ICOL=1,IDF%NCOL,IDX
    CALL IGRCOLOURN(ICLR)  
   ENDIF   
   !## radians  
-  A=ATAN2(-1.0*DZDY,DZDX)
+  A=ATAN2(-1.0D0*DZDY,DZDX)
  ELSE
   A=IDF%X(ICOL,IROW)
  ENDIF
@@ -2135,27 +1912,25 @@ DO IROW=1,IDF%NROW,IDY; DO ICOL=1,IDF%NCOL,IDX
  
  DX= 0.5*COS(A)*IDF%DX
  DY= 0.5*SIN(A)*IDF%DY
- CALL IGRJOIN(X,Y,X+DX,Y+DY)
+ CALL DBL_IGRJOIN(X,Y,X+DX,Y+DY)
  DX=-0.5*COS(A)*IDF%DX
  DY=-0.5*SIN(A)*IDF%DY
- CALL IGRARROWJOIN(X,Y,X+DX,Y+DY,1)
+ CALL DBL_IGRARROWJOIN(X,Y,X+DX,Y+DY,1)
 
 ENDDO; ENDDO
 
 !  DX= 0.5*COS(IDF%X(ICOL,IROW))*IDF%DX
 !  DY= 0.5*SIN(IDF%X(ICOL,IROW))*IDF%DY
-!  CALL IGRJOIN(X,Y,X+DX,Y+DY)
+!  CALL DBL_IGRJOIN(X,Y,X+DX,Y+DY)
 !  DX=-0.5*COS(IDF%X(ICOL,IROW))*IDF%DX
 !  DY=-0.5*SIN(IDF%X(ICOL,IROW))*IDF%DY
-!  CALL IGRARROWJOIN(X,Y,X+DX,Y+DY,1)
+!  CALL DBL_IGRARROWJOIN(X,Y,X+DX,Y+DY,1)
 
 END SUBROUTINE IDFPLOT_VECTOR
  
 !###======================================================================
 SUBROUTINE IDFCOPYCOLOUR(NDIM,IBMPDATA,KBMPDATA)
 !###======================================================================
-USE WINTERACTER
-USE MOD_UTL, ONLY : UTL_GETUNIT
 IMPLICIT NONE
 INTEGER,INTENT(IN) :: NDIM
 INTEGER,INTENT(OUT),DIMENSION(NDIM) :: IBMPDATA
@@ -2173,15 +1948,11 @@ END SUBROUTINE IDFCOPYCOLOUR
 !###======================================================================
 SUBROUTINE IDFGETACCURACY(NPX,NPY,NCOL,NROW,DX,DY)
 !###======================================================================
-USE WINTERACTER
-USE RESOURCE
-USE MODPLOT, ONLY : MPW
-USE MOD_UTL, ONLY : ITOS
 IMPLICIT NONE
 INTEGER,INTENT(IN) :: NCOL,NROW
 INTEGER,INTENT(OUT) :: NPX,NPY
-REAL,INTENT(IN) :: DX,DY
-REAL :: PCX,PCY,ACC
+REAL(KIND=DP_KIND),INTENT(IN) :: DX,DY
+REAL(KIND=DP_KIND) :: PCX,PCY,ACC
 
 !## pixels neccessary to plot data
 PCX=DX*(REAL(MPW%DIX)/(MPW%XMAX-MPW%XMIN))
@@ -2199,5 +1970,566 @@ NPY=MAX(1,INT(REAL(NROW*ACC)/PCY))
 
 CALL WINDOWSELECT(0); CALL WINDOWOUTSTATUSBAR(3,'X:'//TRIM(ITOS(NPX))//'/Y:'//TRIM(ITOS(NPY)))
 
-RETURN
-END SUBROUTINE
+END SUBROUTINE IDFGETACCURACY
+
+!###======================================================================
+SUBROUTINE IDFMOVE(IWIN_ID)
+!###======================================================================
+IMPLICIT NONE
+INTEGER,INTENT(IN) :: IWIN_ID
+TYPE(WIN_MESSAGE) :: MESSAGE
+INTEGER :: ITYPE,IDCURSOR,IMOVED
+
+!## hide dmanager
+IF(IWIN_ID.EQ.0)THEN
+ CALL WINDOWSELECT(0)
+ IF(WMENUGETSTATE(ID_MANAGER,2).EQ.1) THEN
+  CALL WDIALOGSELECT(ID_DMANAGER)
+  CALL WDIALOGHIDE()
+ END IF
+ENDIF
+
+CALL IDFMOVEINIT(0,IWIN_ID)
+
+IDCURSOR=ID_CURSORHAND
+CALL WCURSORSHAPE(IDCURSOR)
+
+IDOWN=0; IMOVED=0
+DO WHILE(.TRUE.)
+
+ CALL WMESSAGE(ITYPE, MESSAGE)
+
+ IF(IWIN_ID.NE.0.AND.MESSAGE%WIN.NE.IWIN_ID)THEN
+   
+  IF(WINFOMOUSE(MOUSECURSOR).NE.CURHOURGLASS)CALL WCURSORSHAPE(CURHOURGLASS)
+  
+ ELSE
+  
+  IF(WINFOMOUSE(MOUSECURSOR).NE.IDCURSOR)CALL WCURSORSHAPE(IDCURSOR)
+
+  SELECT CASE(ITYPE)
+
+   CASE(MOUSEMOVE)
+    IF(IDOWN.EQ.1)THEN
+     IMOVED=1; CALL IDFMOVEIT(REAL(MESSAGE%GX,8),REAL(MESSAGE%GY,8),IWIN_ID)
+    ENDIF
+   CASE (MOUSEBUTUP)
+    SELECT CASE (MESSAGE%VALUE1)
+     CASE (1)
+      !## update moved plot
+      IF(IMOVED.EQ.1)THEN
+       CALL IDFMOVEPLOT(IWIN_ID)
+       IDCURSOR=ID_CURSORHAND
+       CALL WCURSORSHAPE(IDCURSOR)
+       CALL WINDOWSELECT(0)
+       CALL WINDOWOUTSTATUSBAR(2,'')
+       CALL WINDOWOUTSTATUSBAR(4,'Click your right-mouse button to leave this move-mode')
+       IDOWN=0; IMOVED=0
+      ENDIF
+    END SELECT
+
+   !## mouse button pressed
+   CASE (MOUSEBUTDOWN)
+    SELECT CASE (MESSAGE%VALUE1)
+     CASE (1)
+      IDCURSOR=ID_CURSORHANDGREP
+      CALL WCURSORSHAPE(IDCURSOR)
+      PX=INT(MESSAGE%GX)
+      PY=INT(MESSAGE%GY)
+      IDOWN=1
+     CASE (3)
+      EXIT
+    END SELECT
+
+   CASE (BITMAPSCROLLED)
+    MPW%IX=MESSAGE%VALUE1
+    MPW%IY=MESSAGE%VALUE2
+
+  END SELECT
+ 
+ ENDIF
+ENDDO
+
+CALL IDFMOVECLOSE(IWIN_ID)
+
+IF(IWIN_ID.EQ.0)THEN
+
+ OFFSETX=MPW%XMIN
+ OFFSETY=MPW%YMIN
+
+ !## show dmanager
+ IF(WMENUGETSTATE(ID_MANAGER,2).EQ.1) THEN
+  CALL WDIALOGSELECT(ID_DMANAGER)
+  CALL WDIALOGSHOW(-0,65,0,2)
+ ENDIF
+ENDIF
+
+END SUBROUTINE IDFMOVE
+
+!###======================================================================
+SUBROUTINE IDFMOVEINIT(ITYPE,IWIN_ID)
+!###======================================================================
+IMPLICIT NONE
+INTEGER,INTENT(IN) :: ITYPE,IWIN_ID
+
+IW=WINFOBITMAP(MPW%IBITMAP,BITMAPWIDTH)
+IH=WINFOBITMAP(MPW%IBITMAP,BITMAPHEIGHT)
+
+IF(IWIN_ID.EQ.0)THEN
+ CALL IGRSELECT(DRAWWIN)
+ELSE
+ !## moving in profile-dialog
+ CALL WDIALOGSELECT(ID_DSERIESTAB1)
+ CALL IGRSELECT(DRAWFIELD,IDF_PICTURE1)
+ENDIF 
+
+CALL DBL_IGRUNITS(0.0D0,0.0D0,REAL(IW,8),REAL(IH,8))
+CALL WBITMAPCREATE(IBITMAP,IW,IH)
+
+CALL WINDOWSELECT(0)
+IF(ITYPE.EQ.0)CALL WINDOWOUTSTATUSBAR(4,'Click your right-mouse button to leave this move-mode')
+IF(ITYPE.EQ.1)CALL WINDOWOUTSTATUSBAR(4,'Release Ctrl-Left Mouse Button to leave this move-mode')
+
+END SUBROUTINE IDFMOVEINIT
+
+!###======================================================================
+SUBROUTINE IDFMOVECLOSE(IWIN_ID)
+!###======================================================================
+IMPLICIT NONE
+INTEGER,INTENT(IN) :: IWIN_ID
+
+CALL WCURSORSHAPE(CURARROW)
+CALL WINDOWOUTSTATUSBAR(1,'')
+CALL WINDOWOUTSTATUSBAR(4,'')
+
+IF(IWIN_ID.EQ.0)THEN
+ CALL IGRSELECT(DRAWWIN)
+ CALL DBL_IGRUNITS(MPW%XMIN,MPW%YMIN,MPW%XMAX,MPW%YMAX,IOFFSET=1)
+ CALL WBITMAPDESTROY(IBITMAP)
+ELSE
+ !## moving in profile-dialog
+ CALL WDIALOGSELECT(ID_DSERIESTAB1)
+ CALL IGRSELECT(DRAWFIELD,IDF_PICTURE1)
+ CALL DBL_IGRAREA(AREA(1),AREA(2),AREA(3),AREA(4))
+ CALL DBL_IGRUNITS(MPW%XMIN,MPW%YMIN,MPW%XMAX,MPW%YMAX)
+ENDIF
+
+END SUBROUTINE IDFMOVECLOSE
+
+!###======================================================================
+SUBROUTINE IDFMOVEIT(GX,GY,IWIN_ID)
+!###======================================================================
+IMPLICIT NONE
+INTEGER,INTENT(IN) :: IWIN_ID
+REAL(KIND=DP_KIND),INTENT(IN) :: GX,GY
+INTEGER :: IXSOUR1,IYSOUR1,IXSOUR2,IYSOUR2,IXDEST,IYDEST
+
+CALL WINDOWSELECT(0)
+CALL WINDOWOUTSTATUSBAR(1,'Pixel X:'//TRIM(ITOS(INT(GX)))//' Pixel Y:'//TRIM(ITOS(INT(GY))))
+
+!##moving bitmap
+DX=INT(GX-PX)
+DY=INT(PY-GY)
+CALL WINDOWOUTSTATUSBAR(2,'DP X:'//TRIM(ITOS(DX))//' DP Y:'//TRIM(ITOS(DY)))
+!###shifted to the right
+IF(DX.GT.0)THEN
+ IXSOUR1=    1    !left
+ IXSOUR2=  IW-DX  !right
+ IXDEST =   DX    !left
+ELSE
+ IXSOUR1=-1*DX    !left
+ IXSOUR2=   IW    !right
+ IXDEST =    1    !left
+ENDIF
+!###shifted to the top
+IF(DY.GT.0)THEN
+ IYSOUR1=  IH-DY  !top
+ IYSOUR2=    1    !bottom
+ IYDEST =    IH   !top
+ELSE
+ IYSOUR1=   IH    !top
+ IYSOUR2=  -1*DY  !bottom
+ IYDEST =  IH+DY  !top
+ENDIF
+
+CALL IGRSELECT(DRAWBITMAP,IBITMAP)
+CALL IGRPLOTMODE(MODECOPY)
+CALL DBL_IGRAREA(0.0D0,0.0D0,1.0D0,1.0D0)
+CALL DBL_IGRUNITS(0.0D0,0.0D0,REAL(IW,8),REAL(IH,8))
+CALL IGRFILLPATTERN(SOLID)
+CALL IGRCOLOURN(WRGB(255,255,255))
+CALL DBL_IGRRECTANGLE(0.0D0,0.0D0,REAL(IW,8),REAL(IH,8))
+CALL WBITMAPPUTPART(MPW%IBITMAP,1,IXSOUR1,IYSOUR1,IXSOUR2,IYSOUR2,IXDEST,IYDEST)
+
+CALL IGRSELECT(DRAWWIN)
+CALL WINDOWSELECT(MPW%IWIN)
+CALL WBITMAPVIEW(IBITMAP,MPW%IX,MPW%IY,MODELESS)
+
+IF(IWIN_ID.NE.0)THEN
+ CALL PROFILE_PUTBITMAP(IBITMAP)
+ENDIF
+
+CALL DBL_IGRAREA(0.0D0,0.0D0,1.0D0,1.0D0)
+CALL DBL_IGRUNITS(0.0D0,0.0D0,REAL(IW,8),REAL(IH,8))
+
+END SUBROUTINE IDFMOVEIT
+
+ !###======================================================================
+ SUBROUTINE IDFMOVEPLOT(IWIN_ID)
+ !###======================================================================
+ IMPLICIT NONE
+ INTEGER,INTENT(IN) :: IWIN_ID
+ REAL(KIND=DP_KIND) :: DXC,DYC
+
+ !##compute transformation of pixels onto coordinates
+ DXC=REAL(DX,8)*(MPW%XMAX-MPW%XMIN)/REAL(IW,8)
+ DYC=REAL(-1.0D0*DY,8)*(MPW%YMAX-MPW%YMIN)/REAL(IH,8)
+
+ DXC=-1.0D0*DXC
+ DYC=-1.0D0*DYC
+
+ MPW%XMIN=MPW%XMIN+DXC
+ MPW%XMAX=MPW%XMAX+DXC
+ MPW%YMIN=MPW%YMIN+DYC
+ MPW%YMAX=MPW%YMAX+DYC
+
+ CALL WBITMAPDESTROY(MPW%IBITMAP)
+
+ CALL IDFPLOTFAST(0)
+
+ IF(IWIN_ID.EQ.0)THEN
+  CALL IGRSELECT(DRAWWIN)
+ ELSE
+  !## moving in profile-dialog
+  CALL WDIALOGSELECT(ID_DSERIESTAB1)
+  CALL IGRSELECT(DRAWFIELD,IDF_PICTURE1)
+  !## put bitmap to field ...
+  CALL PROFILE_PUTBITMAP(MPW%IBITMAP)
+ ENDIF 
+
+ CALL DBL_IGRUNITS(0.0D0,0.0D0,REAL(IW,8),REAL(IH,8))
+ CALL WBITMAPCREATE(IBITMAP,IW,IH)
+
+ END SUBROUTINE IDFMOVEPLOT
+
+ !###======================================================================
+ SUBROUTINE IDFZOOM(IDZ,GX,GY,IWIN_ID)
+ !###======================================================================
+ IMPLICIT NONE
+ REAL(KIND=DP_KIND),PARAMETER :: FZIN =0.90D0
+ REAL(KIND=DP_KIND),PARAMETER :: FZOUT=1.0D0/FZIN
+ INTEGER,INTENT(IN) :: IDZ,IWIN_ID
+ TYPE(WIN_MESSAGE) :: MESSAGE
+ REAL(KIND=DP_KIND),INTENT(IN) :: GX,GY
+ INTEGER :: ITYPE,I,IPLOT,IDOWN,IDCURSOR,ITAB,N
+ REAL(KIND=DP_KIND) :: FZ,XC1,YC1,XC2,YC2,XC3,YC3,XMIN,XMAX,YMIN,YMAX,DX,DY,F,XA1,YA1,XA2,YA2,MOUSEX,MOUSEY
+ LOGICAL :: LEX
+ CHARACTER(LEN=256) :: FNAME
+
+ IF(IDZ.EQ.ID_ZOOMINMAP)THEN
+  FZ=FZIN
+ ELSEIF(IDZ.EQ.ID_ZOOMOUTMAP)THEN
+  FZ=FZOUT
+ ELSEIF(IDZ.EQ.ID_ZOOMRECTANGLEMAP)THEN
+  IDCURSOR=ID_CURSORZOOMRECTANGLE
+  FZ=FZIN
+ ENDIF
+
+ !## full map-view - selected idf's
+ IF(IDZ.EQ.ID_ZOOMFULLMAP)THEN
+
+  CALL WDIALOGSELECT(ID_DMANAGER)
+  CALL WDIALOGGETTAB(ID_DMTAB,ITAB)
+  I=0
+ 
+  IF(ITAB.EQ.ID_DMANAGERTAB1)THEN
+   DO IPLOT=1,MXMPLOT
+    IF(ACTLIST(IPLOT).EQ.1)THEN
+     SELECT CASE (MP(IPLOT)%IPLOT)
+      !## idf,mdf,udf
+      CASE (1,5,7) !##
+       !## get idf or mdf file
+       LEX=.TRUE.
+       IF(MP(IPLOT)%IPLOT.EQ.5)THEN
+        FNAME=MP(IPLOT)%IDFNAME
+        !## read *.mdf file, only to get selected idf to be plotted
+        LEX=READMDF(MP(IPLOT)%IDFNAME,N)
+        MP(IPLOT)%IDFNAME=MDF(MP(IPLOT)%NLIDF)%FNAME
+        CALL MDFDEALLOCATE()
+       ENDIF
+       IF(LEX)THEN
+        IF(MP(IPLOT)%IPLOT.EQ.7)THEN
+         LEX=UDF_OPEN(MP(IPLOT)%IDF,MP(IPLOT)%IDFNAME,0,MP(IPLOT)%IDF%IU)
+        ELSE
+         LEX=IDFREAD(MP(IPLOT)%IDF,MP(IPLOT)%IDFNAME,0)
+        ENDIF
+        IF(LEX)THEN
+         CLOSE(MP(IPLOT)%IDF%IU)
+         IF(I.EQ.0)THEN
+          XMIN=MP(IPLOT)%IDF%XMIN; XMAX=MP(IPLOT)%IDF%XMAX
+          YMIN=MP(IPLOT)%IDF%YMIN; YMAX=MP(IPLOT)%IDF%YMAX
+         ELSE
+          XMIN=MIN(XMIN,MP(IPLOT)%IDF%XMIN)
+          YMIN=MIN(YMIN,MP(IPLOT)%IDF%YMIN)
+          XMAX=MAX(XMAX,MP(IPLOT)%IDF%XMAX)
+          YMAX=MAX(YMAX,MP(IPLOT)%IDF%YMAX)
+         ENDIF
+         I=I+1
+        ENDIF
+       ENDIF
+       IF(MP(IPLOT)%IPLOT.EQ.5)MP(IPLOT)%IDFNAME=FNAME
+      !## ipf/iff/gen
+      CASE (2,3,6)
+       IF(I.EQ.0)THEN
+        XMIN=MP(IPLOT)%XMIN; XMAX=MP(IPLOT)%XMAX
+        YMIN=MP(IPLOT)%YMIN; YMAX=MP(IPLOT)%YMAX
+       ELSE
+        IF(MP(IPLOT)%XMIN.NE.0.0D0.OR.MP(IPLOT)%XMAX.NE.0.0D0.OR. &
+           MP(IPLOT)%YMIN.NE.0.0D0.OR.MP(IPLOT)%YMAX.NE.0.0D0)THEN
+         XMIN=MIN(XMIN,MP(IPLOT)%XMIN); YMIN=MIN(YMIN,MP(IPLOT)%YMIN)
+         XMAX=MAX(XMAX,MP(IPLOT)%XMAX); YMAX=MAX(YMAX,MP(IPLOT)%YMAX)
+        ENDIF
+       ENDIF
+       I=I+1
+      !## isg
+      CASE (4)
+       IF(I.EQ.0)THEN
+        XMIN=0.0D0; XMAX=0.0D0
+        YMIN=0.0D0; YMAX=0.0D0
+       ENDIF
+       CALL ISGPLOTMINMAX(MP(IPLOT)%IDFNAME,XMIN,XMAX,YMIN,YMAX)
+       I=I+1
+     END SELECT
+    ENDIF
+   ENDDO
+
+  !## gen zoom
+  ELSEIF(ITAB.EQ.ID_DMANAGERTAB2)THEN
+
+   DO IPLOT=1,MXGEN
+    IF(ACTLISTGEN(IPLOT).EQ.1)THEN
+     IF(I.EQ.0)THEN
+      I=I+1
+      XMIN=GEN(IPLOT)%XMIN
+      YMIN=GEN(IPLOT)%YMIN
+      XMAX=GEN(IPLOT)%XMAX
+      YMAX=GEN(IPLOT)%YMAX
+     ELSE
+      XMIN=MIN(XMIN,GEN(IPLOT)%XMIN)
+      YMIN=MIN(YMIN,GEN(IPLOT)%YMIN)
+      XMAX=MAX(XMAX,GEN(IPLOT)%XMAX)
+      YMAX=MAX(YMAX,GEN(IPLOT)%YMAX)
+     ENDIF
+    ENDIF
+   ENDDO
+
+  !## tag zoom
+  ELSEIF(ITAB.EQ.ID_DMANAGERTAB3)THEN
+
+   CALL TAGZOOM(XMIN,YMIN,XMAX,YMAX)
+
+  ENDIF
+
+  !## nothing found - leave current zoom level intact
+  IF(I.EQ.0)THEN
+
+   XMIN=MPW%XMIN; XMAX=MPW%XMAX
+   YMIN=MPW%YMIN; YMAX=MPW%YMAX
+
+  ENDIF
+
+  IF(XMAX-XMIN.LE.0.0D0)THEN
+   XMAX=XMAX+1.0D0; XMIN=XMIN-1.0D0
+  ENDIF
+  IF(YMAX-YMIN.LE.0.0D0)THEN
+   YMAX=YMAX+1.0D0; YMIN=YMIN-1.0D0
+  ENDIF
+
+ !## zoom tags
+ ELSEIF(IDZ.EQ.ID_ZOOMTAG)THEN
+
+  CALL TAGZOOM(XMIN,YMIN,XMAX,YMAX)
+
+ !## interactive zooming
+ ELSEIF(IDZ.EQ.ID_ZOOMINMAP.OR.IDZ.EQ.ID_ZOOMOUTMAP)THEN
+
+  !## get active drawing area
+  CALL IDFPLOT_FEATURES_AXES_CRD(XA1,YA1,XA2,YA2)
+  DX=XA2-XA1; DY=YA2-YA1
+  DX=FZ*DX-DX
+  DY=FZ*DY-DY
+
+  XMIN=XA1-DX+OFFSETX
+  XMAX=XA2+DX+OFFSETX
+  YMIN=YA1-DY+OFFSETY
+  YMAX=YA2+DY+OFFSETY
+
+ !## interactive zooming
+ ELSEIF(IDZ.EQ.ID_ZOOMRECTANGLEMAP)THEN
+
+  !## rectangle zoom
+  CALL IGRPLOTMODE(MODEXOR)
+  CALL IGRCOLOURN(WRGB(255,255,255))
+  CALL IGRFILLPATTERN(OUTLINE)
+  CALL IGRLINETYPE(DASHED)
+  CALL IGRLINEWIDTH(1)
+  CALL WCURSORSHAPE(IDCURSOR)
+
+  IDOWN=0
+  LEX  =.FALSE.
+  XC1  =0.0D0
+  YC1  =0.0D0
+  DO
+
+   CALL WMESSAGE(ITYPE,MESSAGE)
+
+   IF(IWIN_ID.NE.0.AND.MESSAGE%WIN.NE.IWIN_ID)THEN
+   
+    IF(WINFOMOUSE(MOUSECURSOR).NE.CURHOURGLASS)CALL WCURSORSHAPE(CURHOURGLASS)
+  
+   ELSE
+  
+    IF(WINFOMOUSE(MOUSECURSOR).NE.IDCURSOR)CALL WCURSORSHAPE(IDCURSOR)
+   
+    SELECT CASE(ITYPE)
+ 
+     CASE(MOUSEMOVE)
+
+      MOUSEX=DBLE(MESSAGE%GX)+OFFSETX
+      MOUSEY=DBLE(MESSAGE%GY)+OFFSETY
+     
+      CALL WINDOWSELECT(0)
+      CALL WINDOWOUTSTATUSBAR(1,'X:'//TRIM(RTOS(MOUSEX,'G',7))//' m, Y:'// &
+                                      TRIM(RTOS(MOUSEY,'G',7))//' m')
+      XC2=MOUSEX; YC2=MOUSEY
+
+      IF(IDOWN.EQ.1)CALL WINDOWOUTSTATUSBAR(2,'delta x:'//TRIM(RTOS(XC2-XC1,'G',7))//' m, delta y:'//TRIM(RTOS(YC2-YC1,'G',7))//' m')
+
+      !##first point set!
+      IF(IDOWN.EQ.1)THEN
+       CALL UTL_PLOT1BITMAP()
+       IF(LEX)CALL DBL_IGRRECTANGLE(XC1,YC1,XC3,YC3,IOFFSET=1)
+       LEX=.FALSE.
+       IF(XC1.NE.XC2.AND.YC1.NE.YC2)LEX=.TRUE.
+       IF(LEX)CALL DBL_IGRRECTANGLE(XC1,YC1,XC2,YC2,IOFFSET=1)
+       CALL UTL_PLOT2BITMAP()
+       !## if profiel zoomrectangle, put bitmap to that dialog too.
+       IF(IWIN_ID.NE.0)CALL PROFILE_PUTBITMAP(MPW%IBITMAP)
+      ENDIF
+
+      XC3=XC2; YC3=YC2
+
+     !## mouse button pressed
+     CASE (MOUSEBUTDOWN)
+      SELECT CASE (MESSAGE%VALUE1)
+
+       !## left button
+       CASE (1)
+        IF(IDOWN.EQ.0)THEN
+         XC1=XC2; YC1=YC2; IDOWN=1
+        ELSE
+         XMIN=MIN(XC1,XC2); XMAX=MAX(XC1,XC2)
+         YMIN=MIN(YC1,YC2); YMAX=MAX(YC1,YC2)
+         CALL IGRLINETYPE(SOLIDLINE)
+         EXIT
+        ENDIF
+
+       !## right button
+       CASE (3)
+        IF(IDOWN.EQ.1)THEN
+         CALL UTL_PLOT1BITMAP()
+         IF(LEX)CALL DBL_IGRRECTANGLE(XC1,YC1,XC3,YC3,IOFFSET=1)
+         CALL UTL_PLOT2BITMAP()
+         !## if profiel zoomrectangle, put bitmap to that dialog too.
+         IF(IWIN_ID.NE.0)CALL PROFILE_PUTBITMAP(MPW%IBITMAP)
+        ENDIF
+        RETURN
+      END SELECT
+
+     CASE (BITMAPSCROLLED)
+      MPW%IX=MESSAGE%VALUE1
+      MPW%IY=MESSAGE%VALUE2
+
+    END SELECT
+  
+   ENDIF
+  ENDDO
+
+  CALL WCURSORSHAPE(CURARROW)
+  CALL IGRPLOTMODE(MODECOPY)
+  CALL IGRLINETYPE(SOLIDLINE)
+
+ !## zoom to previous extent
+ ELSEIF(IDZ.EQ.ID_ZOOMPREVIOUS)THEN
+
+  ZM%IZOOM=ZM%IZOOM-1
+  XMIN=ZM%ZOOMXY(ZM%IZOOM,1)
+  YMIN=ZM%ZOOMXY(ZM%IZOOM,2)
+  XMAX=ZM%ZOOMXY(ZM%IZOOM,3)
+  YMAX=ZM%ZOOMXY(ZM%IZOOM,4)
+
+ !## zoom to next extent
+ ELSEIF(IDZ.EQ.ID_ZOOMNEXT)THEN
+
+  ZM%IZOOM=ZM%IZOOM+1
+  XMIN=ZM%ZOOMXY(ZM%IZOOM,1)
+  YMIN=ZM%ZOOMXY(ZM%IZOOM,2)
+  XMAX=ZM%ZOOMXY(ZM%IZOOM,3)
+  YMAX=ZM%ZOOMXY(ZM%IZOOM,4)
+ 
+ ELSEIF(IDZ.EQ.ID_DMODEL)THEN
+ 
+  XMIN=SIMBOX(1)
+  YMIN=SIMBOX(2)
+  XMAX=SIMBOX(3)
+  YMAX=SIMBOX(4)
+
+ ELSEIF(IDZ.EQ.ID_DGOTOXY)THEN
+ 
+  XMIN=MPW%XMIN
+  XMAX=MPW%XMAX
+  YMIN=MPW%YMIN
+  YMAX=MPW%YMAX
+
+ ENDIF
+
+ F=(XMAX-XMIN)*0.025D0; XMIN=XMIN-F; XMAX=XMAX+F
+ F=(YMAX-YMIN)*0.025D0; YMIN=YMIN-F; YMAX=YMAX+F
+
+ F=REAL(MPW%DIX,8)/REAL(MPW%DIY,8)
+ DX=(AX_XP2-AX_XP1)
+ DY=(AX_YP2-AX_YP1)/F
+ CALL UTL_IDFCRDCOR(XMIN,XMAX,YMIN,YMAX,DX,DY)
+ 
+ !## include graphical area
+ F=(XMAX-XMIN)/(AX_XP2-AX_XP1)
+ MPW%XMIN=XMIN-        AX_XP1 *F
+ MPW%XMAX=XMAX+(1.0D0- AX_XP2)*F
+ F=(YMAX-YMIN)/(AX_YP2-AX_YP1)
+ MPW%YMIN=YMIN-        AX_YP1 *F
+ MPW%YMAX=YMAX+(1.0D0- AX_YP2)*F
+
+ !## final check, make sure still viewable extent
+ DX=MPW%XMAX-MPW%XMIN; DY=MPW%YMAX-MPW%YMIN
+ IF(DX.LE.0.0D0.OR.DY.LE.0.0D0)THEN
+  IF(DX.LE.0.0D0.AND.DY.LE.0.0D0)THEN
+   MPW%XMAX=MPW%XMIN+1.0D0; MPW%YMAX=MPW%YMIN+1.0D0
+  ELSEIF(DX.LE.0.0D0.AND.DY.GT.0.0D0)THEN
+   MPW%XMAX=MPW%XMIN+DY
+  ELSE
+   MPW%YMAX=MPW%YMIN+DX
+  ENDIF
+ ENDIF
+
+ !## determine new offset to be applied
+ OFFSETX=MPW%XMIN
+ OFFSETY=MPW%YMIN
+
+ CALL WINDOWSELECT(0); CALL WINDOWOUTSTATUSBAR(2,'')
+
+ !## store current zoom-extent
+ IF(IDZ.NE.ID_ZOOMPREVIOUS.AND.IDZ.NE.ID_ZOOMNEXT)CALL UTL_STOREZOOMEXTENT()
+
+ END SUBROUTINE IDFZOOM
+
+END MODULE MOD_IDFPLOT

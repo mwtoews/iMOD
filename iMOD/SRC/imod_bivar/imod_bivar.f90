@@ -1,4 +1,4 @@
-!!  Copyright (C) Stichting Deltares, 2005-2017.
+!!  Copyright (C) Stichting Deltares, 2005-2018.
 !!
 !!  This file is part of iMOD.
 !!
@@ -19,6 +19,12 @@
 !!  Stichting Deltares
 !!  P.O. Box 177
 !!  2600 MH Delft, The Netherlands.
+!!
+module mod_bivar
+
+use imodvar, only : dp_kind,sp_kind
+
+contains
 
 subroutine idbvip ( md, ndp, xd, yd, zd, nip, xi, yi, zi, iwk, wk )
 !
@@ -154,32 +160,32 @@ subroutine idbvip ( md, ndp, xd, yd, zd, nip, xi, yi, zi, iwk, wk )
 !    Input, integer NDP, the number of data points (must be 4 or
 !    greater, else an error return occurs).
 !
-!    Input, real XD(NDP), Y(NDP), the X and Y coordinates of the data points.
+!    Input, REAL(KIND=DP_KIND) :: XD(NDP), Y(NDP), the X and Y coordinates of the data points.
 !
-!    Input, real ZD(NDP), the data values at the data points.
+!    Input, REAL(KIND=DP_KIND) :: ZD(NDP), the data values at the data points.
 !
 !    Input, integer NIP, the number of output points at which
 !    interpolation is to be performed (must be 1 or greater, else an
 !    error return occurs).
 !
-!    Input, real XI(NIP), YI(NIP), the coordinates of the points at which
+!    Input, REAL(KIND=DP_KIND) :: XI(NIP), YI(NIP), the coordinates of the points at which
 !    interpolation is to be performed.
 !
-!    Output, real ZI(NIP), the interpolated data values.
+!    Output, REAL(KIND=DP_KIND) :: ZI(NIP), the interpolated data values.
 !
 !    Workspace, integer IWK(31*NDP+NIP).
 !
-!    Workspace, real WK(8*NDP).
+!    Workspace, REAL(KIND=DP_KIND) :: WK(8*NDP).
 !
   implicit none
 !
   integer ndp
   integer nip
 !
-  real ap
-  real bp
-  real cp
-  real dp
+  REAL(KIND=DP_KIND) :: ap
+  REAL(KIND=DP_KIND) :: bp
+  REAL(KIND=DP_KIND) :: cp
+  REAL(KIND=DP_KIND) :: dp
   integer iip
   integer itipv
   integer itpv
@@ -196,40 +202,40 @@ subroutine idbvip ( md, ndp, xd, yd, zd, nip, xi, yi, zi, iwk, wk )
   integer nl
   integer nt
   integer ntsc
-  real p00
-  real p01
-  real p02
-  real p03
-  real p04
-  real p05
-  real p10
-  real p11
-  real p12
-  real p13
-  real p14
-  real p20
-  real p21
-  real p22
-  real p23
-  real p30
-  real p31
-  real p32
-  real p40
-  real p41
-  real p50
-  real wk(8*ndp)
-  real x0
-  real xd(ndp)
-  real xi(nip)
-  real xs1
-  real xs2
-  real y0
-  real yd(ndp)
-  real yi(nip)
-  real ys1
-  real ys2
-  real zd(ndp)
-  real zi(nip)
+  REAL(KIND=DP_KIND) :: p00
+  REAL(KIND=DP_KIND) :: p01
+  REAL(KIND=DP_KIND) :: p02
+  REAL(KIND=DP_KIND) :: p03
+  REAL(KIND=DP_KIND) :: p04
+  REAL(KIND=DP_KIND) :: p05
+  REAL(KIND=DP_KIND) :: p10
+  REAL(KIND=DP_KIND) :: p11
+  REAL(KIND=DP_KIND) :: p12
+  REAL(KIND=DP_KIND) :: p13
+  REAL(KIND=DP_KIND) :: p14
+  REAL(KIND=DP_KIND) :: p20
+  REAL(KIND=DP_KIND) :: p21
+  REAL(KIND=DP_KIND) :: p22
+  REAL(KIND=DP_KIND) :: p23
+  REAL(KIND=DP_KIND) :: p30
+  REAL(KIND=DP_KIND) :: p31
+  REAL(KIND=DP_KIND) :: p32
+  REAL(KIND=DP_KIND) :: p40
+  REAL(KIND=DP_KIND) :: p41
+  REAL(KIND=DP_KIND) :: p50
+  REAL(KIND=DP_KIND) :: wk(8*ndp)
+  REAL(KIND=DP_KIND) :: x0
+  REAL(KIND=DP_KIND) :: xd(ndp)
+  REAL(KIND=DP_KIND) :: xi(nip)
+  REAL(KIND=DP_KIND) :: xs1
+  REAL(KIND=DP_KIND) :: xs2
+  REAL(KIND=DP_KIND) :: y0
+  REAL(KIND=DP_KIND) :: yd(ndp)
+  REAL(KIND=DP_KIND) :: yi(nip)
+  REAL(KIND=DP_KIND) :: ys1
+  REAL(KIND=DP_KIND) :: ys2
+  REAL(KIND=DP_KIND) :: zd(ndp)
+  REAL(KIND=DP_KIND) :: zi(nip)
 !
   save /idlc/
   save /idpt/
@@ -356,8 +362,8 @@ subroutine idbvip ( md, ndp, xd, yd, zd, nip, xi, yi, zi, iwk, wk )
 
   end do
  
-  return
-end
+end subroutine idbvip
+
 subroutine idgrid ( xd, yd, nt, ipt, nl, ipl, nxi, nyi, xi, yi, ngp, igp )
 !
 !*******************************************************************************
@@ -372,7 +378,7 @@ subroutine idgrid ( xd, yd, nt, ipt, nl, ipl, nxi, nyi, xi, yi, ngp, igp )
 !
 !  Parameters:
 !
-!    Input, real XD(NDP), YD(NDP), the X and Y coordinates of the data 
+!    Input, REAL(KIND=DP_KIND) :: XD(NDP), YD(NDP), the X and Y coordinates of the data 
 !    points.
 !
 !    Input, integer NT, the number of triangles.
@@ -387,7 +393,7 @@ subroutine idgrid ( xd, yd, nt, ipt, nl, ipl, nxi, nyi, xi, yi, ngp, igp )
 !    Input, integer NXI, NYI, the number of grid points in the X and Y
 !    coordinates.
 !
-!    Input, real XI(NXI), YI(NYI), the coordinates of the grid points.
+!    Input, REAL(KIND=DP_KIND) :: XI(NXI), YI(NYI), the coordinates of the grid points.
 !
 !    Output, integer NGP(2*(NT+2*NL)) where the
 !    number of grid points that belong to each of the
@@ -397,6 +403,7 @@ subroutine idgrid ( xd, yd, nt, ipt, nl, ipl, nxi, nyi, xi, yi, ngp, igp )
 !    stored in ascending order of the triangle number and the border line
 !    segment number.
 !
+  USE imodvar, only : dp_kind,sp_kind
   implicit none
 !
   integer nl
@@ -434,34 +441,34 @@ subroutine idgrid ( xd, yd, nt, ipt, nl, ipl, nxi, nyi, xi, yi, ngp, igp )
   integer nl0
   integer nt0
   integer nxinyi
-  real spdt
-  real u1
-  real u2
-  real u3
-  real v1
-  real v2
-  real v3
-  real vpdt
-  real x1
-  real x2
-  real x3
-  real xd(*)
-  real xi(nxi)
-  real xii
-  real ximn
-  real ximx
-  real xmn
-  real xmx
-  real y1
-  real y2
-  real y3
-  real yd(*)
-  real yi(nyi)
-  real yii
-  real yimn
-  real yimx
-  real ymn
-  real ymx
+  REAL(KIND=DP_KIND) :: spdt
+  REAL(KIND=DP_KIND) :: u1
+  REAL(KIND=DP_KIND) :: u2
+  REAL(KIND=DP_KIND) :: u3
+  REAL(KIND=DP_KIND) :: v1
+  REAL(KIND=DP_KIND) :: v2
+  REAL(KIND=DP_KIND) :: v3
+  REAL(KIND=DP_KIND) :: vpdt
+  REAL(KIND=DP_KIND) :: x1
+  REAL(KIND=DP_KIND) :: x2
+  REAL(KIND=DP_KIND) :: x3
+  REAL(KIND=DP_KIND) :: xd(*)
+  REAL(KIND=DP_KIND) :: xi(nxi)
+  REAL(KIND=DP_KIND) :: xii
+  REAL(KIND=DP_KIND) :: ximn
+  REAL(KIND=DP_KIND) :: ximx
+  REAL(KIND=DP_KIND) :: xmn
+  REAL(KIND=DP_KIND) :: xmx
+  REAL(KIND=DP_KIND) :: y1
+  REAL(KIND=DP_KIND) :: y2
+  REAL(KIND=DP_KIND) :: y3
+  REAL(KIND=DP_KIND) :: yd(*)
+  REAL(KIND=DP_KIND) :: yi(nyi)
+  REAL(KIND=DP_KIND) :: yii
+  REAL(KIND=DP_KIND) :: yimn
+  REAL(KIND=DP_KIND) :: yimx
+  REAL(KIND=DP_KIND) :: ymn
+  REAL(KIND=DP_KIND) :: ymx
 !
 !  Statement functions
 !
@@ -798,8 +805,8 @@ subroutine idgrid ( xd, yd, nt, ipt, nl, ipl, nxi, nyi, xi, yi, ngp, igp )
  
   end do
  
-  return
-end
+end subroutine idgrid
+
 subroutine idlctn ( ndp, xd, yd, nt, ipt, nl, ipl, xii, yii, iti, iwk, wk )
 !
 !*******************************************************************************
@@ -819,7 +826,7 @@ subroutine idlctn ( ndp, xd, yd, nt, ipt, nl, ipl, xii, yii, iti, iwk, wk )
 !
 !    Input, integer NDP, the number of data points.
 !
-!    Input, real XD(NDP), YD(NDP), the X and Y coordinates of the data.
+!    Input, REAL(KIND=DP_KIND) :: XD(NDP), YD(NDP), the X and Y coordinates of the data.
 !
 !    Input, integer NT, the number of triangles.
 !
@@ -831,7 +838,7 @@ subroutine idlctn ( ndp, xd, yd, nt, ipt, nl, ipl, xii, yii, iti, iwk, wk )
 !    Input, integer IPL(3*NL), the point numbers of the end points of 
 !    the border line segments and their respective triangle numbers.
 !
-!    Input, real XII, YII, the coordinates of the point to be located.
+!    Input, REAL(KIND=DP_KIND) :: XII, YII, the coordinates of the point to be located.
 !
 !    Output, integer ITI, the triangle number, when the point is inside the
 !    data area, or two border line segment numbers, il1 and il2,
@@ -839,7 +846,7 @@ subroutine idlctn ( ndp, xd, yd, nt, ipt, nl, ipl, xii, yii, iti, iwk, wk )
 !
 !    Workspace, integer IWK(18*NDP).
 !
-!    Workspace, real WK(8*NDP).
+!    Workspace, REAL(KIND=DP_KIND) :: WK(8*NDP).
 !
   implicit none
 !
@@ -874,35 +881,35 @@ subroutine idlctn ( ndp, xd, yd, nt, ipt, nl, ipl, xii, yii, iti, iwk, wk )
   integer ntl
   integer ntsc
   integer ntsci
-  real spdt
-  real u1
-  real u2
-  real u3
-  real v1
-  real v2
-  real v3
-  real vpdt
-  real wk(8*ndp)
-  real x0
-  real x1
-  real x2
-  real x3
-  real xd(ndp)
-  real xii
-  real xmn
-  real xmx
-  real xs1
-  real xs2
-  real y0
-  real y1
-  real y2
-  real y3
-  real yd(ndp)
-  real yii
-  real ymn
-  real ymx
-  real ys1
-  real ys2
+  REAL(KIND=DP_KIND) :: spdt
+  REAL(KIND=DP_KIND) :: u1
+  REAL(KIND=DP_KIND) :: u2
+  REAL(KIND=DP_KIND) :: u3
+  REAL(KIND=DP_KIND) :: v1
+  REAL(KIND=DP_KIND) :: v2
+  REAL(KIND=DP_KIND) :: v3
+  REAL(KIND=DP_KIND) :: vpdt
+  REAL(KIND=DP_KIND) :: wk(8*ndp)
+  REAL(KIND=DP_KIND) :: x0
+  REAL(KIND=DP_KIND) :: x1
+  REAL(KIND=DP_KIND) :: x2
+  REAL(KIND=DP_KIND) :: x3
+  REAL(KIND=DP_KIND) :: xd(ndp)
+  REAL(KIND=DP_KIND) :: xii
+  REAL(KIND=DP_KIND) :: xmn
+  REAL(KIND=DP_KIND) :: xmx
+  REAL(KIND=DP_KIND) :: xs1
+  REAL(KIND=DP_KIND) :: xs2
+  REAL(KIND=DP_KIND) :: y0
+  REAL(KIND=DP_KIND) :: y1
+  REAL(KIND=DP_KIND) :: y2
+  REAL(KIND=DP_KIND) :: y3
+  REAL(KIND=DP_KIND) :: yd(ndp)
+  REAL(KIND=DP_KIND) :: yii
+  REAL(KIND=DP_KIND) :: ymn
+  REAL(KIND=DP_KIND) :: ymx
+  REAL(KIND=DP_KIND) :: ys1
+  REAL(KIND=DP_KIND) :: ys2
 !
   save /idlc/
 !
@@ -1178,8 +1185,8 @@ subroutine idlctn ( ndp, xd, yd, nt, ipt, nl, ipl, xii, yii, iti, iwk, wk )
   iti = it0
   itipv = it0
 
-  return
-end
+end subroutine idlctn
+
 subroutine idpdrv ( ndp, xd, yd, zd, nt, ipt, pd, wk )
 !
 !*******************************************************************************
@@ -1191,41 +1198,41 @@ subroutine idpdrv ( ndp, xd, yd, zd, nt, ipt, pd, wk )
 !
 !    Input, integer NDP, the number of data points.
 !
-!    Input, real XD(NDP), YD(NDP), the X and Y coordinates of the data.
+!    Input, REAL(KIND=DP_KIND) :: XD(NDP), YD(NDP), the X and Y coordinates of the data.
 !
-!    Input, real ZD(NDP), the data values.
+!    Input, REAL(KIND=DP_KIND) :: ZD(NDP), the data values.
 !
 !    Input, integer NT, the number of triangles.
 !
 !    Input, integer IPT(3*NT), the point numbers of the vertexes of the 
 !    triangles.
 !
-!    Output, real PD(5*NDP), the estimated zx, zy, zxx, zxy, and zyy values 
+!    Output, REAL(KIND=DP_KIND) :: PD(5*NDP), the estimated zx, zy, zxx, zxy, and zyy values 
 !    at the ith data point are to be stored as  the (5*i-4)th, (5*i-3)rd, 
 !    (5*i-2)nd, (5*i-1)st and (5*i)th elements, respectively, where i = 
 !    1, 2, ..., ndp.
 !
-!    Workspace, real WK(NDP).
+!    Workspace, REAL(KIND=DP_KIND) :: WK(NDP).
 !
   implicit none
 !
   integer ndp
   integer nt
 !
-  real d12
-  real d23
-  real d31
-  real dx1
-  real dx2
-  real dy1
-  real dy2
-  real dz1
-  real dz2
-  real dzx1
-  real dzx2
-  real dzy1
-  real dzy2
-  real, parameter :: epsln = 1.0E-06
+  REAL(KIND=DP_KIND) :: d12
+  REAL(KIND=DP_KIND) :: d23
+  REAL(KIND=DP_KIND) :: d31
+  REAL(KIND=DP_KIND) :: dx1
+  REAL(KIND=DP_KIND) :: dx2
+  REAL(KIND=DP_KIND) :: dy1
+  REAL(KIND=DP_KIND) :: dy2
+  REAL(KIND=DP_KIND) :: dz1
+  REAL(KIND=DP_KIND) :: dz2
+  REAL(KIND=DP_KIND) :: dzx1
+  REAL(KIND=DP_KIND) :: dzx2
+  REAL(KIND=DP_KIND) :: dzy1
+  REAL(KIND=DP_KIND) :: dzy2
+  REAL(KIND=DP_KIND), parameter :: epsln = 1.0E-06
   integer idp
   integer ipt(3*nt)
   integer ipti(3)
@@ -1236,27 +1243,27 @@ subroutine idpdrv ( ndp, xd, yd, zd, nt, ipt, pd, wk )
   integer jpt
   integer jpt0
   integer nt0
-  real pd(5*ndp)
-  real vpx
-  real vpxx
-  real vpxy
-  real vpy
-  real vpyx
-  real vpyy
-  real vpz
-  real vpzmn
-  real w1(3)
-  real w2(3)
-  real wi
-  real wk(ndp)
-  real xd(ndp)
-  real xv(3)
-  real yd(ndp)
-  real yv(3)
-  real zd(ndp)
-  real zv(3)
-  real zxv(3)
-  real zyv(3)
+  REAL(KIND=DP_KIND) :: pd(5*ndp)
+  REAL(KIND=DP_KIND) :: vpx
+  REAL(KIND=DP_KIND) :: vpxx
+  REAL(KIND=DP_KIND) :: vpxy
+  REAL(KIND=DP_KIND) :: vpy
+  REAL(KIND=DP_KIND) :: vpyx
+  REAL(KIND=DP_KIND) :: vpyy
+  REAL(KIND=DP_KIND) :: vpz
+  REAL(KIND=DP_KIND) :: vpzmn
+  REAL(KIND=DP_KIND) :: w1(3)
+  REAL(KIND=DP_KIND) :: w2(3)
+  REAL(KIND=DP_KIND) :: wi
+  REAL(KIND=DP_KIND) :: wk(ndp)
+  REAL(KIND=DP_KIND) :: xd(ndp)
+  REAL(KIND=DP_KIND) :: xv(3)
+  REAL(KIND=DP_KIND) :: yd(ndp)
+  REAL(KIND=DP_KIND) :: yv(3)
+  REAL(KIND=DP_KIND) :: zd(ndp)
+  REAL(KIND=DP_KIND) :: zv(3)
+  REAL(KIND=DP_KIND) :: zxv(3)
+  REAL(KIND=DP_KIND) :: zyv(3)
 !
 !  Preliminary processing.
 !
@@ -1391,8 +1398,8 @@ subroutine idpdrv ( ndp, xd, yd, zd, nt, ipt, pd, wk )
     pd(jpd0+5) = -pd(jpd0+5)/wk(idp)
   end do
  
-  return
-end
+end subroutine idpdrv
+
 subroutine idptip ( ndp,xd, yd, zd, nt, ipt, nl, ipl, pdd, iti, xii, yii, zii )
 !
 !*******************************************************************************
@@ -1408,9 +1415,9 @@ subroutine idptip ( ndp,xd, yd, zd, nt, ipt, nl, ipl, pdd, iti, xii, yii, zii )
 !
 !    Input, integer NDP, the number of data values.
 !
-!    Input, real XD(NDP), YD(NDP), the X and Y coordinates of the data.
+!    Input, REAL(KIND=DP_KIND) :: XD(NDP), YD(NDP), the X and Y coordinates of the data.
 !
-!    Input, real ZD(NDP), the data values.
+!    Input, REAL(KIND=DP_KIND) :: ZD(NDP), the data values.
 !
 !    Input, integer NT, the number of triangles.
 !
@@ -1422,15 +1429,15 @@ subroutine idptip ( ndp,xd, yd, zd, nt, ipt, nl, ipl, pdd, iti, xii, yii, zii )
 !    Input, integer IPL(3*NL), the point numbers of the end points of the 
 !    border line segments and their respective triangle numbers,
 !
-!    Input, real PDD(5*NDP). the partial derivatives at the data points,
+!    Input, REAL(KIND=DP_KIND) :: PDD(5*NDP). the partial derivatives at the data points,
 !
 !    Input, integer ITI, triangle number of the triangle in which lies
 !    the point for which interpolation is to be performed,
 !
-!    Input, real XII, YII, the X and Y coordinates of the point for which
+!    Input, REAL(KIND=DP_KIND) :: XII, YII, the X and Y coordinates of the point for which
 !    interpolation is to be performed.
 !
-!    Output, real ZII, the interpolated Z value.
+!    Output, REAL(KIND=DP_KIND) :: ZII, the interpolated Z value.
 !
   implicit none
 !
@@ -1438,35 +1445,35 @@ subroutine idptip ( ndp,xd, yd, zd, nt, ipt, nl, ipl, pdd, iti, xii, yii, zii )
   integer nl
   integer nt
 !
-  real a
-  real aa
-  real ab
-  real ac
-  real act2
-  real ad
-  real adbc
-  real ap
-  real b
-  real bb
-  real bc
-  real bdt2
-  real bp
-  real c
-  real cc
-  real cd
-  real cp
-  real csuv
-  real d
-  real dd
-  real dlt
-  real dp
-  real dx
-  real dy
-  real g1
-  real g2
-  real h1
-  real h2
-  real h3
+  REAL(KIND=DP_KIND) :: a
+  REAL(KIND=DP_KIND) :: aa
+  REAL(KIND=DP_KIND) :: ab
+  REAL(KIND=DP_KIND) :: ac
+  REAL(KIND=DP_KIND) :: act2
+  REAL(KIND=DP_KIND) :: ad
+  REAL(KIND=DP_KIND) :: adbc
+  REAL(KIND=DP_KIND) :: ap
+  REAL(KIND=DP_KIND) :: b
+  REAL(KIND=DP_KIND) :: bb
+  REAL(KIND=DP_KIND) :: bc
+  REAL(KIND=DP_KIND) :: bdt2
+  REAL(KIND=DP_KIND) :: bp
+  REAL(KIND=DP_KIND) :: c
+  REAL(KIND=DP_KIND) :: cc
+  REAL(KIND=DP_KIND) :: cd
+  REAL(KIND=DP_KIND) :: cp
+  REAL(KIND=DP_KIND) :: csuv
+  REAL(KIND=DP_KIND) :: d
+  REAL(KIND=DP_KIND) :: dd
+  REAL(KIND=DP_KIND) :: dlt
+  REAL(KIND=DP_KIND) :: dp
+  REAL(KIND=DP_KIND) :: dx
+  REAL(KIND=DP_KIND) :: dy
+  REAL(KIND=DP_KIND) :: g1
+  REAL(KIND=DP_KIND) :: g2
+  REAL(KIND=DP_KIND) :: h1
+  REAL(KIND=DP_KIND) :: h2
+  REAL(KIND=DP_KIND) :: h3
   integer i
   integer idp
   integer il1
@@ -1482,60 +1489,60 @@ subroutine idptip ( ndp,xd, yd, zd, nt, ipt, nl, ipl, pdd, iti, xii, yii, zii )
   integer jpdd
   integer kpd
   integer ntl
-  real lu
-  real lv
-  real p0
-  real p00
-  real p01
-  real p02
-  real p03
-  real p04
-  real p05
-  real p1
-  real p10
-  real p11
-  real p12
-  real p13
-  real p14
-  real p2
-  real p20
-  real p21
-  real p22
-  real p23
-  real p3
-  real p30
-  real p31
-  real p32
-  real p4
-  real p40
-  real p41
-  real p5
-  real p50
-  real pd(15)
-  real pdd(5*ndp)
-  real thsv
-  real thus
-  real thuv
-  real thxu
-  real u
-  real v
-  real x(3)
-  real x0
-  real xd(*)
-  real xii
-  real y(3)
-  real y0
-  real yd(*)
-  real yii
-  real z(3)
-  real z0
-  real zd(*)
-  real zii
-  real zu(3)
-  real zuu(3)
-  real zuv(3)
-  real zv(3)
-  real zvv(3)
+  REAL(KIND=DP_KIND) :: lu
+  REAL(KIND=DP_KIND) :: lv
+  REAL(KIND=DP_KIND) :: p0
+  REAL(KIND=DP_KIND) :: p00
+  REAL(KIND=DP_KIND) :: p01
+  REAL(KIND=DP_KIND) :: p02
+  REAL(KIND=DP_KIND) :: p03
+  REAL(KIND=DP_KIND) :: p04
+  REAL(KIND=DP_KIND) :: p05
+  REAL(KIND=DP_KIND) :: p1
+  REAL(KIND=DP_KIND) :: p10
+  REAL(KIND=DP_KIND) :: p11
+  REAL(KIND=DP_KIND) :: p12
+  REAL(KIND=DP_KIND) :: p13
+  REAL(KIND=DP_KIND) :: p14
+  REAL(KIND=DP_KIND) :: p2
+  REAL(KIND=DP_KIND) :: p20
+  REAL(KIND=DP_KIND) :: p21
+  REAL(KIND=DP_KIND) :: p22
+  REAL(KIND=DP_KIND) :: p23
+  REAL(KIND=DP_KIND) :: p3
+  REAL(KIND=DP_KIND) :: p30
+  REAL(KIND=DP_KIND) :: p31
+  REAL(KIND=DP_KIND) :: p32
+  REAL(KIND=DP_KIND) :: p4
+  REAL(KIND=DP_KIND) :: p40
+  REAL(KIND=DP_KIND) :: p41
+  REAL(KIND=DP_KIND) :: p5
+  REAL(KIND=DP_KIND) :: p50
+  REAL(KIND=DP_KIND) :: pd(15)
+  REAL(KIND=DP_KIND) :: pdd(5*ndp)
+  REAL(KIND=DP_KIND) :: thsv
+  REAL(KIND=DP_KIND) :: thus
+  REAL(KIND=DP_KIND) :: thuv
+  REAL(KIND=DP_KIND) :: thxu
+  REAL(KIND=DP_KIND) :: u
+  REAL(KIND=DP_KIND) :: v
+  REAL(KIND=DP_KIND) :: x(3)
+  REAL(KIND=DP_KIND) :: x0
+  REAL(KIND=DP_KIND) :: xd(*)
+  REAL(KIND=DP_KIND) :: xii
+  REAL(KIND=DP_KIND) :: y(3)
+  REAL(KIND=DP_KIND) :: y0
+  REAL(KIND=DP_KIND) :: yd(*)
+  REAL(KIND=DP_KIND) :: yii
+  REAL(KIND=DP_KIND) :: z(3)
+  REAL(KIND=DP_KIND) :: z0
+  REAL(KIND=DP_KIND) :: zd(*)
+  REAL(KIND=DP_KIND) :: zii
+  REAL(KIND=DP_KIND) :: zu(3)
+  REAL(KIND=DP_KIND) :: zuu(3)
+  REAL(KIND=DP_KIND) :: zuv(3)
+  REAL(KIND=DP_KIND) :: zv(3)
+  REAL(KIND=DP_KIND) :: zvv(3)
 !
   save /idpt/
 !
@@ -1856,8 +1863,8 @@ subroutine idptip ( ndp,xd, yd, zd, nt, ipt, nl, ipl, pdd, iti, xii, yii, zii )
   p1 = p10+v*p11
   zii = p0+u*(p1+u*p20)
  
-  return
-end
+end subroutine idptip
+
 subroutine idsfft ( md, ndp, xd, yd, zd, nxi, nyi, nzi, xi, yi, zi, iwk, wk )
 !
 !*******************************************************************************
@@ -1901,9 +1908,9 @@ subroutine idsfft ( md, ndp, xd, yd, zd, nxi, nyi, nzi, xi, yi, zi, iwk, wk )
 !
 !    Input, integer NDP, the number of data points.  NDP must be at least 4.
 !
-!    Input, real XD(NDP), YD(NDP), the X and Y coordinates of the data.
+!    Input, REAL(KIND=DP_KIND) :: XD(NDP), YD(NDP), the X and Y coordinates of the data.
 !
-!    Input, real ZD(NDP), the data values.
+!    Input, REAL(KIND=DP_KIND) :: ZD(NDP), the data values.
 !
 !    Input, integer NXI, NYI, the number of output grid points in the
 !    X and Y directions.  NXI and NYI must each be at least 1.
@@ -1911,14 +1918,14 @@ subroutine idsfft ( md, ndp, xd, yd, zd, nxi, nyi, nzi, xi, yi, zi, iwk, wk )
 !    Input, integer NZI, the first dimension of ZI.  NZI must be at
 !    least NXI.
 !
-!    Input, real XI(NXI), YI(NYI), the X and Y coordinates of the grid
+!    Input, REAL(KIND=DP_KIND) :: XI(NXI), YI(NYI), the X and Y coordinates of the grid
 !    points.
 !
 !    Workspace, integer IWK(31*NDP+NXI*NYI).
 !
-!    Workspace, real WK(6*NDP).
+!    Workspace, REAL(KIND=DP_KIND) :: WK(6*NDP).
 !
-!    Output, real ZI(NZI,NYI), contains the interpolated Z values at the
+!    Output, REAL(KIND=DP_KIND) :: ZI(NZI,NYI), contains the interpolated Z values at the
 !    grid points.
 !
   implicit none
@@ -1928,10 +1935,10 @@ subroutine idsfft ( md, ndp, xd, yd, zd, nxi, nyi, nzi, xi, yi, zi, iwk, wk )
   integer nyi
   integer nzi
 !
-  real ap
-  real bp
-  real cp
-  real dp
+  REAL(KIND=DP_KIND) :: ap
+  REAL(KIND=DP_KIND) :: bp
+  REAL(KIND=DP_KIND) :: cp
+  REAL(KIND=DP_KIND) :: dp
   integer il1
   integer il2
   integer iti
@@ -1961,36 +1968,36 @@ subroutine idsfft ( md, ndp, xd, yd, zd, nxi, nyi, nzi, xi, yi, zi, iwk, wk )
   integer nl
   integer nngp
   integer nt
-  real p00
-  real p01
-  real p02
-  real p03
-  real p04
-  real p05
-  real p10
-  real p11
-  real p12
-  real p13
-  real p14
-  real p20
-  real p21
-  real p22
-  real p23
-  real p30
-  real p31
-  real p32
-  real p40
-  real p41
-  real p50
-  real wk(6*ndp)
-  real x0
-  real xd(ndp)
-  real xi(nxi)
-  real y0
-  real yd(ndp)
-  real yi(nyi)
-  real zd(ndp)
-  real zi(nzi,nyi)
+  REAL(KIND=DP_KIND) :: p00
+  REAL(KIND=DP_KIND) :: p01
+  REAL(KIND=DP_KIND) :: p02
+  REAL(KIND=DP_KIND) :: p03
+  REAL(KIND=DP_KIND) :: p04
+  REAL(KIND=DP_KIND) :: p05
+  REAL(KIND=DP_KIND) :: p10
+  REAL(KIND=DP_KIND) :: p11
+  REAL(KIND=DP_KIND) :: p12
+  REAL(KIND=DP_KIND) :: p13
+  REAL(KIND=DP_KIND) :: p14
+  REAL(KIND=DP_KIND) :: p20
+  REAL(KIND=DP_KIND) :: p21
+  REAL(KIND=DP_KIND) :: p22
+  REAL(KIND=DP_KIND) :: p23
+  REAL(KIND=DP_KIND) :: p30
+  REAL(KIND=DP_KIND) :: p31
+  REAL(KIND=DP_KIND) :: p32
+  REAL(KIND=DP_KIND) :: p40
+  REAL(KIND=DP_KIND) :: p41
+  REAL(KIND=DP_KIND) :: p50
+  REAL(KIND=DP_KIND) :: wk(6*ndp)
+  REAL(KIND=DP_KIND) :: x0
+  REAL(KIND=DP_KIND),intent(in) :: xd(ndp)
+  REAL(KIND=DP_KIND) :: xi(nxi)
+  REAL(KIND=DP_KIND) :: y0
+  REAL(KIND=DP_KIND),intent(in) :: yd(ndp)
+  REAL(KIND=DP_KIND) :: yi(nyi)
+  REAL(KIND=DP_KIND),intent(in) :: zd(ndp)
+  REAL(KIND=DP_KIND) :: zi(nzi,nyi)
 !
   save /idpt/
 !
@@ -2184,8 +2191,8 @@ subroutine idsfft ( md, ndp, xd, yd, zd, nxi, nyi, nzi, xi, yi, zi, iwk, wk )
  
   end do
  
-  return
-end
+end subroutine idsfft
+
 subroutine idtang ( ndp, xd, yd, nt, ipt, nl, ipl, iwl, iwp, wk )
 !
 !*******************************************************************************
@@ -2209,7 +2216,7 @@ subroutine idtang ( ndp, xd, yd, nt, ipt, nl, ipl, iwl, iwp, wk )
 !
 !    Input, integer NDP, the number of data points.
 !
-!    Input, real XD(NDP), YD(NDP), the X and Y coordinates of the data.
+!    Input, REAL(KIND=DP_KIND) :: XD(NDP), YD(NDP), the X and Y coordinates of the data.
 !
 !    Output, integer NT, the number of triangles,
 !
@@ -2228,17 +2235,17 @@ subroutine idtang ( ndp, xd, yd, nt, ipt, nl, ipl, iwl, iwp, wk )
 !
 !    Workspace, integer IWP(NDP),
 !
-!    Workspace, real WK(NDP).
+!    Workspace, REAL(KIND=DP_KIND) :: WK(NDP).
 !
   implicit none
 !
   integer ndp
 !
-  real dsqf
-  real dsqi
-  real dsqmn
-  real, parameter :: epsln = 1.0E-06
-  integer idxchg
+  REAL(KIND=DP_KIND) :: dsqf
+  REAL(KIND=DP_KIND) :: dsqi
+  REAL(KIND=DP_KIND) :: dsqmn
+  REAL(KIND=DP_KIND), parameter :: epsln = 1.0E-06
+  !integer idxchg
   integer il
   integer ilf
   integer iliv
@@ -2303,27 +2310,27 @@ subroutine idtang ( ndp, xd, yd, nt, ipt, nl, ipl, iwl, iwp, wk )
   integer ntf
   integer ntt3
   integer ntt3p3
-  real sp
-  real spdt
-  real u1
-  real u2
-  real u3
-  real v1
-  real v2
-  real v3
-  real vp
-  real vpdt
-  real wk(ndp)
-  real x1
-  real x2
-  real x3
-  real xd(ndp)
-  real xdmp
-  real y1
-  real y2
-  real y3
-  real yd(ndp)
-  real ydmp
+  REAL(KIND=DP_KIND) :: sp
+  REAL(KIND=DP_KIND) :: spdt
+  REAL(KIND=DP_KIND) :: u1
+  REAL(KIND=DP_KIND) :: u2
+  REAL(KIND=DP_KIND) :: u3
+  REAL(KIND=DP_KIND) :: v1
+  REAL(KIND=DP_KIND) :: v2
+  REAL(KIND=DP_KIND) :: v3
+  REAL(KIND=DP_KIND) :: vp
+  REAL(KIND=DP_KIND) :: vpdt
+  REAL(KIND=DP_KIND) :: wk(ndp)
+  REAL(KIND=DP_KIND) :: x1
+  REAL(KIND=DP_KIND) :: x2
+  REAL(KIND=DP_KIND) :: x3
+  REAL(KIND=DP_KIND) :: xd(ndp)
+  REAL(KIND=DP_KIND) :: xdmp
+  REAL(KIND=DP_KIND) :: y1
+  REAL(KIND=DP_KIND) :: y2
+  REAL(KIND=DP_KIND) :: y3
+  REAL(KIND=DP_KIND) :: yd(ndp)
+  REAL(KIND=DP_KIND) :: ydmp
 !
 !  Statement functions
 !
@@ -2357,7 +2364,7 @@ subroutine idtang ( ndp, xd, yd, nt, ipt, nl, ipl, iwl, iwp, wk )
  
       dsqi = dsqf(x1,y1,xd(ip2),yd(ip2))
  
-      if ( dsqi == 0.0 ) then
+      if ( dsqi == 0.0D0 ) then
         write ( *, '(a)' ) ' '
         write ( *, '(a)' ) 'IDTANG - Fatal error!'
         write ( *, '(a)' ) '  Two of the input data points are identical.'
@@ -2788,8 +2795,8 @@ subroutine idtang ( ndp, xd, yd, nt, ipt, nl, ipl, iwl, iwp, wk )
   nt = nt0
   nl = nl0
  
-  return
-end
+end subroutine idtang
+
 function idxchg ( x, y, i1, i2, i3, i4 )
 !
 !*******************************************************************************
@@ -2803,7 +2810,7 @@ function idxchg ( x, y, i1, i2, i3, i4 )
 !
 !  Parameters:
 !
-!    Input, real X(*), Y(*), the coordinates of the data points.
+!    Input, REAL(KIND=DP_KIND) :: X(*), Y(*), the coordinates of the data points.
 !
 !    Input, integer I1, I2, I3, I4, are the point numbers of
 !    four points P1, P2, P3, and P4 that form a quadrilateral,
@@ -2816,37 +2823,37 @@ function idxchg ( x, y, i1, i2, i3, i4 )
 !
   implicit none
 !
-  real a1sq
-  real a2sq
-  real a3sq
-  real a4sq
-  real c1sq
-  real c3sq
-  real, parameter :: epsln = 1.0E-06
+  REAL(KIND=DP_KIND) :: a1sq
+  REAL(KIND=DP_KIND) :: a2sq
+  REAL(KIND=DP_KIND) :: a3sq
+  REAL(KIND=DP_KIND) :: a4sq
+  REAL(KIND=DP_KIND) :: c1sq
+  REAL(KIND=DP_KIND) :: c3sq
+  REAL(KIND=DP_KIND), parameter :: epsln = 1.0E-06
   integer i1
   integer i2
   integer i3
   integer i4
   integer idx
   integer idxchg
-  real s1sq
-  real s2sq
-  real s3sq
-  real s4sq
-  real u1
-  real u2
-  real u3
-  real u4
-  real x(*)
-  real x1
-  real x2
-  real x3
-  real x4
-  real y(*)
-  real y1
-  real y2
-  real y3
-  real y4
+  REAL(KIND=DP_KIND) :: s1sq
+  REAL(KIND=DP_KIND) :: s2sq
+  REAL(KIND=DP_KIND) :: s3sq
+  REAL(KIND=DP_KIND) :: s4sq
+  REAL(KIND=DP_KIND) :: u1
+  REAL(KIND=DP_KIND) :: u2
+  REAL(KIND=DP_KIND) :: u3
+  REAL(KIND=DP_KIND) :: u4
+  REAL(KIND=DP_KIND) :: x(*)
+  REAL(KIND=DP_KIND) :: x1
+  REAL(KIND=DP_KIND) :: x2
+  REAL(KIND=DP_KIND) :: x3
+  REAL(KIND=DP_KIND) :: x4
+  REAL(KIND=DP_KIND) :: y(*)
+  REAL(KIND=DP_KIND) :: y1
+  REAL(KIND=DP_KIND) :: y2
+  REAL(KIND=DP_KIND) :: y3
+  REAL(KIND=DP_KIND) :: y4
 !
 !  Preliminary processing
 !
@@ -2889,8 +2896,7 @@ function idxchg ( x, y, i1, i2, i3, i4 )
  
   idxchg = idx
  
-  return
-end
+end function idxchg
 
 !subroutine timestamp ( )
 !!
@@ -2970,3 +2976,5 @@ end
 !
 !  return
 !end
+
+end module mod_bivar

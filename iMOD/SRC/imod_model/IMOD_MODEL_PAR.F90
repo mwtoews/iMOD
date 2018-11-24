@@ -1,4 +1,4 @@
-!!  Copyright (C) Stichting Deltares, 2005-2017.
+!!  Copyright (C) Stichting Deltares, 2005-2018.
 !!
 !!  This file is part of iMOD.
 !!
@@ -20,24 +20,23 @@
 !!  P.O. Box 177
 !!  2600 MH Delft, The Netherlands.
 !!
-MODULE MOD_MDL_PAR
+MODULE MOD_MODEL_PAR
 
+USE IMODVAR, ONLY : DP_KIND,SP_KIND
 USE MOD_IDF_PAR, ONLY : IDFOBJ
 CHARACTER(LEN=256) :: RUNFILE,RESDIR,CLIPDIR
 
 INTEGER,PARAMETER :: MXMDL=26 
 INTEGER,PARAMETER :: MAXCSIZES=100
 
-INTEGER :: NRUNFILES,NSCENFILES,NSDFFILES,NRESULTDIR,NSCENARIOS,&
+INTEGER :: NRUNFILES,NRESULTDIR, &
 !## settings in runfiles:
            NLAY,    &  !## number of layers
            MXITER,  &  !## maximum number of iterations
            NITER,   &  !## maximum number of inner iterations
            IIPF,    &  !## usage of ipf
            IDBG,    &  !## idebug configuration
-           IEXPORT, &  !## export setting
            IPOSWEL, &  !## positioning of wells
-           ISCEN,   &  !## usage of scenarios
            MXNLAY,  &  !## maximum number of modellayers
            NPER,    &  !## number of stressperiods
            ISS,     &  !## usage of storage coefficient
@@ -51,32 +50,30 @@ INTEGER :: NRUNFILES,NSCENFILES,NSDFFILES,NRESULTDIR,NSCENARIOS,&
            IDAMPING,&  !## use if damping
            NPCOND,  &  !## preconditioning
            IUNCONF, &  !## unconfined
+           IDOUBLE, &  !## double precision
+           IROUND,  &  !## apply round coordinates
            IFVDL,   &  !## formulea of de lange
            IARMSWP, &  !## artificial recharge metaswap
            IMERGE,  &  !## PKS-package: option idf-merge output files
            PARTOPT, &  !## PKS-package: methode of subdomain partition
            NMAXCORES, &!## amount of system cores available for parallel simulation
            NCORES      !## amount of cores selected for model simulation 
-REAL :: MDLBUFFER,  &  !## buffersize
+REAL(KIND=DP_KIND) :: MDLBUFFER,  &  !## buffersize
         SIMCSIZE,   &  !## cellsize
         MAXSIMCSIZE,&  !## max.cellsize
         HCLOSE,     &  !## closure criterion heads
         RCLOSE,     &  !## closure criterion budgets
         RELAX,      &  !## relaxation parameter
-        MAXWBAL,    &  !## 0.01 %
+        MAXWBAL,    &  !## 0.01D0 %
         MINKD,      &  !## minimal kD
         MINC           !## minimal c-value
-        !DELTCNVG
-REAL,DIMENSION(4) :: SIMBOX  !## chosen size of model-simulation
-REAL,DIMENSION(4) :: MODBOX  !## bigest size of model-simulation
+REAL(KIND=DP_KIND),DIMENSION(4) :: SIMBOX  !## chosen size of model-simulation
+REAL(KIND=DP_KIND),DIMENSION(4) :: MODBOX  !## bigest size of model-simulation
 INTEGER :: IDRAW             !## idraw=0 after idfplot() idraw=1 remove drawn lines
 INTEGER,DIMENSION(:),ALLOCATABLE :: NLMDL, & !## number of modellayers for output
                                     IAMDL    !## activeness of module/package
 INTEGER,DIMENSION(:,:),ALLOCATABLE :: ILMDL  !## modellayers for output
-CHARACTER(LEN=10),PARAMETER :: REPLACESTRING='$DBASE$'
-CHARACTER(LEN=256) :: SCENFNAME,BNDFNAME,MRGFNAME !## scenario filename
-CHARACTER(LEN=256),DIMENSION(:),POINTER :: SDFFNAME,SDFFNAME_DUMMY !## sdf path+filename
-CHARACTER(LEN=50),DIMENSION(:),ALLOCATABLE :: SDFFNAME_SHORT !## sdf filename
+CHARACTER(LEN=256) :: BNDFNAME,MRGFNAME 
 
 CHARACTER(LEN=25),DIMENSION(MXMDL) :: MDLALIAS !## Alias of acronym
 CHARACTER(LEN=3) ,DIMENSION(MXMDL) :: MDLKEYWS !## keywords
@@ -97,5 +94,5 @@ DATA MDLKEYWS/'CAP','BND','SHD','KDW','VCW','STO', &     !  1- 6
 
 TYPE(IDFOBJ) :: IDF,IDFC
 
-END MODULE MOD_MDL_PAR
+END MODULE MOD_MODEL_PAR
 

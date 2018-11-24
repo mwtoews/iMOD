@@ -1,4 +1,3 @@
-!!  Copyright (C) Stichting Deltares, 2005-2017.
 !!
 !!  This file is part of iMOD.
 !!
@@ -22,9 +21,19 @@
 !!
 MODULE IMODVAR
 
+USE WINTERACTER
+
+!## font
+INTEGER,PARAMETER :: TFONT=FFHELVETICA
+
+!## specify kind for double-precision real with 15 digits and a point ranging up to exponent 307
+INTEGER,PARAMETER :: DP_KIND=SELECTED_REAL_KIND(15,307) 
+!## specify kind for single-precision real with 6  digits and a point ranging up to exponent 37
+INTEGER,PARAMETER :: SP_KIND=SELECTED_REAL_KIND(6 ,37 ) 
+
 INTEGER,DIMENSION(2) :: IDPROC
 
-REAL,PARAMETER :: PI=ATAN(1.0)*4.0  !## value pi
+REAL(KIND=DP_KIND),PARAMETER :: PI=ATAN(1.0D0)*4.0D0  !## value pi
 
 LOGICAL :: LBETA=.TRUE.           !## if TRUE: Show question whether it is allowed to use Beta-version or not
 LOGICAL :: LBETA_QUESTION=.FALSE. !## overrule the question at startup
@@ -36,16 +45,18 @@ INTEGER,SAVE :: GKEYPRESSED    !## keypressed (cntr/shift)
 INTEGER,SAVE :: IMOD_IUNITS
 CHARACTER(LEN=2),DIMENSION(2) :: IMOD_CUNITS
 DATA IMOD_CUNITS/'m ','ft'/
+CHARACTER(LEN=10),PARAMETER :: REPLACESTRING='$DBASE$'
 
-CHARACTER(LEN=30),PARAMETER :: RVERSION    ='V4_2'      !## release message - used for license
-CHARACTER(LEN=30),PARAMETER :: RVERSION_EXE='V4_2_1'    !## release message - only with single subnummers
-CHARACTER(LEN=30),PARAMETER :: BVERSION='Beta Build 02-07-2018 11:38'       !## banner message !!!
+CHARACTER(LEN=30),PARAMETER :: RVERSION    ='V4_3'      !## release message - used for license
+CHARACTER(LEN=30),PARAMETER :: RVERSION_EXE='V4_3'      !## release message - only with single subnummers
+CHARACTER(LEN=30),PARAMETER :: BVERSION='Beta Build 21-11-2018 09:53'       !## banner message !!!
 CHARACTER(LEN=32) :: LICFILE='I_accepted_'//TRIM(RVERSION)//'.txt'
 CHARACTER(LEN=256) :: IMFFNAME         !## name of drawing file
 CHARACTER(LEN=256) :: EXENAME,EXEPATH
 CHARACTER(LEN=256) :: SAVEDIR          !## remember opened location
-REAL :: MASKXMIN,MASKXMAX,MASKYMIN,MASKYMAX
-REAL :: DOWNX,DOWNY
+REAL(KIND=DP_KIND) :: MASKXMIN,MASKXMAX,MASKYMIN,MASKYMAX
+REAL(KIND=DP_KIND) :: DOWNX,DOWNY
+REAL(KIND=DP_KIND) :: OFFSETX,OFFSETY
 
 INTEGER :: PLACES,DECPLACES,IFORM !## idfgetvalue variables to put on map-menu
 
@@ -64,20 +75,11 @@ TYPE TPOBJ
  CHARACTER(LEN=50) :: ALIAS  !## alias of acronym
  CHARACTER(LEN=5) :: UNIT   !## unit of the budget element
  INTEGER :: IACT
-! INTEGER :: ICPL
  INTEGER :: MODFLOWMETASWAP !## code whether part of modflow or part of metaswap
  INTEGER,DIMENSION(:),POINTER :: ISYS  !## system numbers  *_sys{i}.idf
  INTEGER :: NSYS !## number of systems in waterbalance
 END TYPE TPOBJ
 TYPE(TPOBJ),DIMENSION(MXTP)   :: TP
-!DATA TP%ACRNM/'HEAD','BDGBND','BDGFLF','BDGFRF','BDGFFF',&
-!              'BDGSTO','BDGWEL','BDGDRN','BDGRIV','BDGEVT',&
-!              'BDGGHB','BDGOLF','BDGRCH','BDGISG','BDGCAP',&
-!              'BDGDS','BDGPM','BDGPS','BDGEVA','BDGQRUN',&
-!              'PWTHEAD','GWL','BDGETACT','BDGPSGW','MSW_EBSPOT',&
-!              'MSW_EIC','MSW_EPD','MSW_ESP','MSW_TPOT','BDGQSPGW',&
-!              'MSW_EBS','MSW_QMODFBOT','MSW_QMR','BDGDECSTOT','BDGPSSW',&
-!              'MSW_TACT','BDGQMODF'/
 
 DATA TP%UNIT/ '    m',' m3/d',' m3/d',' m3/d',' m3/d',' m3/d',&
               ' m3/d',' m3/d',' m3/d',' m3/d',' m3/d',&
@@ -116,69 +118,7 @@ DATA TP%MODFLOWMETASWAP/0,1,1,1,1,1, &
                         0,0,2,2,0, &
                         0,0,0,0,2, &
                         0,2,2,2,2, &
-                        0,2/ 
-
-!ETACT x BDGETACT
-!PM x BDGPM
-!PMGW x BDGPSGW
-!PMSW x BDGPSSW
-!DECSTO x BDGDECSTOT
-!QSPGW x BDGQSPGW
-!QCOR x BDGQMODF
-!QDR x MSW_QMR
-!QRUN x BDGQRUN
-!QMODF x BDGQMODF
-
-! !## couple table for graph function in waterbalance analyse
-! DATA ICPL   /08, & !## 01 drn
-!              12, & !## 02 olf
-!              09, & !## 03 riv
-!              11, & !## 04 ghb
-!              14, & !## 05 isg
-!              07, & !## 06 wel
-!              00, & !## 07 reg ---?
-!              02, & !## 08 chh
-!              03, & !## 09 flf 
-!              00, & !## 10 fuf ---?
-!              13, & !## 11 rch
-!              10, & !## 12 evt
-!              15, & !## 13 cap
-!              13, & !## 14 etact
-!              00, & !## 15 pm ---?
-!              24, & !## 16 pmgw (bdgpsgw)
-!              35, & !## 17 pmsw (bdgpssw)
-!              06, & !## 18 sto
-!              34, & !## 19 decsto
-!              30, & !## 20 bdgqspgw
-!              00, & !## 21 qcor 
-!              00, & !## 22 qdr (bdgqdr)
-!              00, & !## 23 qrun 
-!              00/ !## 24 qmodf
-
-!bdgdecstot
-!bdgetact
-!bdgpm
-!bdgpsgw
-!bdgpssw
-!bdgqrun
-!bdgqdr
-!bdgqspgw
-!bdgqmodf
-!msw_qsimcorrmf
-              
-!!     Q(01,1)=QDRN_IN   Q(01,1)=QDRN_OUT    Q(13,1)=QCAP_IN   Q(13,1)=QCAP_OUT    
-!!     Q(02,1)=QOLF_IN   Q(02,1)=QOLF_OUT    Q(14,1)=QETACT_IN Q(14,1)=QETACT_OUT  
-!!     Q(03,1)=QRIV_IN   Q(03,1)=QRIV_OUT    Q(15,1)=QPM_IN    Q(15,1)=QPM_OUT     
-!!     Q(04,1)=QGHB_IN   Q(04,1)=QGHB_OUT    Q(16,1)=QPMGW_IN  Q(16,1)=QPMGW_OUT   
-!!     Q(05,1)=QISG_IN   Q(05,1)=QISG_OUT    Q(17,1)=QPMSW_IN  Q(17,1)=QPMSW_OUT   
-!!     Q(06,1)=QWEL_IN   Q(06,1)=QWEL_OUT    Q(18,1)=QSTO_IN   Q(18,1)=QSTO_OUT    
-!!     Q(07,1)=QREG_IN   Q(07,1)=QREG_OUT    Q(19,1)=QDECSTO_INQ(19,1)=QDECSTO_OUT 
-!!     Q(08,1)=QCNH_IN   Q(08,1)=QCNH_OUT    Q(20,1)=QQSPGW_IN Q(20,1)=QQSPGW_OUT  
-!!     Q(09,1)=QFLF1_IN  Q(09,1)=QFLF1_OUT   Q(21,1)=QQCOR_IN  Q(21,1)=QQCOR_OUT   
-!!     Q(10,1)=QFLF2_IN  Q(10,1)=QFLF2_OUT   Q(22,1)=QQDR_IN   Q(22,1)=QQDR_OUT    
-!!     Q(11,1)=QRCH_IN   Q(11,1)=QRCH_OUT    Q(23,1)=QQRUN_IN  Q(23,1)=QQRUN_OUT   
-!!     Q(12,1)=QEVT_IN   Q(12,1)=QEVT_OUT    Q(24,1)=QMODF_IN  Q(24,1)=QMODF_OUT   
-
+                        0,2/
 
 END MODULE IMODVAR
 

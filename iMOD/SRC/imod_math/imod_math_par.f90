@@ -1,4 +1,4 @@
-!!  Copyright (C) Stichting Deltares, 2005-2017.
+!!  Copyright (C) Stichting Deltares, 2005-2018.
 !!
 !!  This file is part of iMOD.
 !!
@@ -22,12 +22,13 @@
 !!
 MODULE MOD_MATH_PAR
 
+USE IMODVAR, ONLY : DP_KIND,SP_KIND
 CHARACTER(LEN=80),SAVE :: FUNC  !## function
 INTEGER,SAVE :: IIEXT           !## usage of window
 INTEGER,SAVE :: IGEN            !## usage of polygon
 INTEGER,SAVE :: INODATA         !## usage of nodata value
-REAL,SAVE :: NODATA_VALUE       !## nodata value to be used in computation
-REAL,SAVE :: TRIM_VALUE         !## trim value for results
+REAL(KIND=DP_KIND),SAVE :: NODATA_VALUE       !## nodata value to be used in computation
+REAL(KIND=DP_KIND),SAVE :: TRIM_VALUE         !## trim value for results
 INTEGER,SAVE :: IEQUI           !## make equidist. idf as result
 CHARACTER(LEN=256),DIMENSION(:,:),ALLOCATABLE,SAVE :: IDFNAMES
 CHARACTER(LEN=256),SAVE :: GENNAME

@@ -1,4 +1,4 @@
-!!  Copyright (C) Stichting Deltares, 2005-2017.
+!!  Copyright (C) Stichting Deltares, 2005-2018.
 !!
 !!  This file is part of iMOD.
 !!
@@ -24,15 +24,16 @@ MODULE MOD_PLUGIN
 
 USE WINTERACTER
 USE RESOURCE
+!USE MOD_IDFPLOT
 USE MOD_PLUGIN_PAR
-USE MOD_PREF_PAR, ONLY : PREFVAL        
-USE MOD_UTL, ONLY : UTL_GETUNIT,UTL_READINITFILE,UTL_DIRINFO_POINTER,UTL_CAP,ITOS,UTL_LISTOFFILES,UTL_READTXTFILE
-USE MOD_IDF, ONLY : IDFDEALLOCATE,IDFNULLIFY
-USE MOD_OSD, ONLY : OSD_GETARG,OSD_OPEN,OSD_GETENV
-USE IMODVAR, ONLY : IDIAGERROR
+USE MOD_PREF_PAR
+USE MOD_UTL
+USE MOD_IDF
+USE MOD_OSD
+USE IMODVAR
+USE MOD_MANAGER_UTL
 USE MODPLOT
-USE IMOD
-USE MOD_UTL, ONLY : IMESSAGE,UTL_DEBUGLEVEL
+USE MOD_UTL
 
 CONTAINS
 
@@ -55,7 +56,7 @@ CONTAINS
  
  CALL PLUGIN_READ(IPI)
  CALL WGRIDSETCELL(IDF_GRID1,1,1)
- CALL PLUGIN_FIELDCHANGE(IPI,1,1)
+ CALL PLUGIN_FIELDCHANGE(IPI,1)
  CALL WDIALOGSHOW(-1,-1,0,2)
   
  DO
@@ -76,7 +77,7 @@ CONTAINS
     SELECT CASE (MESSAGE%VALUE2)
      CASE (IDF_GRID1)
       CALL WGRIDPOS(MESSAGE%Y,ICOL,IROW) 
-      CALL PLUGIN_FIELDCHANGE(IPI,IROW,ICOL)
+      CALL PLUGIN_FIELDCHANGE(IPI,IROW)
     END SELECT
 
   END SELECT
@@ -109,7 +110,7 @@ CONTAINS
   DEALLOCATE(PI); ALLOCATE(PI(IVALUE))
  ENDIF
 
- READ(IU,*,IOSTAT=IOS) PLUGDIR !# plugin-directory (not) equal to prefval test
+ READ(IU,*,IOSTAT=IOS) PLUGDIR !## plugin-directory (not) equal to prefval test
  IF(TRIM(PLUGDIR).NE.TRIM(PREFVAL(IPI)))THEN
   CALL WMESSAGEBOX(OKONLY,EXCLAMATIONICON,COMMONOK,'Given plugin-directory ('//TRIM(PLUGDIR)//') in .imf file is not similar to given directory in preference file ('//TRIM(PREFVAL(IPI))//')','Error')
  ENDIF    
@@ -323,11 +324,11 @@ CONTAINS
  END SUBROUTINE PLUGIN_INITMENU_RUN
  
  !###======================================================================
- SUBROUTINE PLUGIN_FIELDCHANGE(IPI,IROW,ICOL)
+ SUBROUTINE PLUGIN_FIELDCHANGE(IPI,IROW)
  !###======================================================================
  !## subroutine to read ini-file of plugin tool and echoes this to plugin manager
  IMPLICIT NONE
- INTEGER,INTENT(IN) :: IROW,ICOL,IPI
+ INTEGER,INTENT(IN) :: IROW,IPI
  CHARACTER(LEN=256) :: DIRNAME,FNAME
  CHARACTER(LEN=1256):: LINE
  INTEGER :: IU
@@ -399,7 +400,7 @@ CONTAINS
  ENDIF
  
  !## check flag iact on occurance plugin in imf-file and save in imf-file after plugin-session 
- !## (happens in imod_main.f90 -> imodsaveimf/imodloadimf).
+ !## (happens in imod_main.f90 -> MAIN_UTL_SAVE_IMF/MAIN_UTL_LOAD_IMF).
  IF(IPI.EQ.27)THEN  
   CALL PLUGIN_CHECK(PI1,LISTNAME,SIZE(LISTNAME))
  ELSEIF(IPI.EQ.28)THEN
@@ -413,7 +414,7 @@ CONTAINS
  !###======================================================================
  SUBROUTINE PLUGIN_CHECK(PI,LN,NLN)
  !###======================================================================
- !# Subroutine to check if PI# contains the same filenames as Listname (folder)
+ !## Subroutine to check if PI# contains the same filenames as Listname (folder)
  IMPLICIT NONE
  INTEGER,INTENT(IN) :: NLN
  TYPE(PIOBJ),POINTER,DIMENSION(:),INTENT(INOUT) :: PI
@@ -600,7 +601,7 @@ CONTAINS
  
  CLOSE(IU)
  
- !# BACK: If output-file not available create new file, else replace by empty file
+ !## BACK: If output-file not available create new file, else replace by empty file
  FNAME=TRIM(DIRNAME)//'\'//TRIM(BACK); INQUIRE(FILE=FNAME,EXIST=LEX)
  IF(LEX)THEN
   I=INFOERROR(1); CALL IOSDELETEFILE(FNAME); I=INFOERROR(1)
@@ -684,7 +685,7 @@ CONTAINS
  INTEGER :: I,IU,IOS,NFILE 
  CHARACTER(LEN=256) :: DIRNAME,BACK,FNAME,LINE,MESSINFO,MESSERR,MESSPROG,RESULTFILE
  CHARACTER(LEN=52) :: PNAME
- REAL,DIMENSION(4) :: WINDOW
+ REAL(KIND=DP_KIND),DIMENSION(4) :: WINDOW
  LOGICAL :: LEX
  
  IF(IPI.EQ.27)THEN
@@ -749,9 +750,9 @@ CONTAINS
      CLOSE(IU,STATUS='DELETE'); RETURN
     ENDIF
     IF(I.EQ.1)THEN
-     CALL IDFINIT(IDFNAMEGIVEN=RESULTFILE,LPLOT=.FALSE.,LDEACTIVATE=.TRUE.)
+     CALL MANAGER_UTL_ADDFILE(IDFNAMEGIVEN=RESULTFILE,LDEACTIVATE=.TRUE.)
     ELSE
-     CALL IDFINIT(IDFNAMEGIVEN=RESULTFILE,LPLOT=.FALSE.,LDEACTIVATE=.FALSE.)
+     CALL MANAGER_UTL_ADDFILE(IDFNAMEGIVEN=RESULTFILE,LDEACTIVATE=.FALSE.)
     ENDIF
    ELSE
     CALL WMESSAGEBOX(OKONLY,EXCLAMATIONICON,COMMONOK,'Error, reading files.','Error')
@@ -774,8 +775,8 @@ CONTAINS
 
  CLOSE(IU,STATUS='DELETE')
  
- !## plot last loaded file in manager to window
- CALL IDFPLOTFAST(0) 
+! !## plot last loaded file in manager to window
+! CALL IDFPLOTFAST(0) 
 
  END SUBROUTINE PLUGIN_EXE_READ_BACK
 

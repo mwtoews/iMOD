@@ -1,4 +1,4 @@
-!!  Copyright (C) Stichting Deltares, 2005-2017.
+!!  Copyright (C) Stichting Deltares, 2005-2018.
 !!
 !!  This file is part of iMOD.
 !!
@@ -22,29 +22,29 @@
 !!
 MODULE MOD_IDF_PAR
 
+USE IMODVAR, ONLY : DP_KIND,SP_KIND
 TYPE IDFOBJ
- INTEGER :: IU
- INTEGER :: NCOL
- INTEGER :: NROW
- INTEGER :: IEQ     !=0:equi =1:non-equi
- INTEGER :: ITB     !=0: =1:usage of top/bot information
- INTEGER :: IVF     !=0: =1:usage of vector content
- INTEGER :: IPG     !=0: =1:usage of polygon used in IDFEDIT
- INTEGER :: IXV     !=0:storage in x =1:storage in v
- INTEGER :: JD      !=julian date (if neccessary)
+ INTEGER :: ITYPE   !## type of IDF 0=4 bytes; 1=8 bytes
+ INTEGER :: IU      !## unit number
+ INTEGER :: NCOL    !## number of columns
+ INTEGER :: NROW    !## number of row
+ INTEGER :: IEQ     !## 0:equi =1:non-equi
+ INTEGER :: ITB     !## 0: =1:usage of top/bot information
+ INTEGER :: IXV     !## 0:storage in x 1:storage in v
+ INTEGER :: JD      !## julian date (if neccessary)
  INTEGER :: IDY,IMH,IYR  !## days,months,years
  INTEGER :: IHR,IMT,ISC  !## hours,minutes,seconds
- REAL :: DAYFRACTION !=daily fraction 
- INTEGER :: ILAY    !=ilay of idf (if neccessary)
- REAL :: XMIN,YMIN,XMAX,YMAX
- REAL :: DX,DY        !equi.distance if ieq=0
- REAL :: TOP,BOT      !top and bot information
- REAL :: NODATA,DMIN,DMAX
- REAL,DIMENSION(:),POINTER :: SX => NULL()                  !## x.coord. network
- REAL,DIMENSION(:),POINTER :: SY => NULL()                  !## y.coord. network
- REAL,DIMENSION(:,:),POINTER :: X => NULL()                 !## idfvalues in matrix
- REAL,DIMENSION(:),POINTER :: V => NULL()                   !## idfvalues in vector
- REAL,DIMENSION(:,:,:),POINTER :: XV  => NULL()             !## vector field, top,bot,vx,vy,vz1,vz2
+ REAL(KIND=DP_KIND) :: DAYFRACTION !## daily fraction 
+ INTEGER :: ILAY    !## ilay of idf (if neccessary)
+ REAL(KIND=DP_KIND) :: XMIN,YMIN,XMAX,YMAX
+ REAL(KIND=DP_KIND) :: DX,DY        !## equi.distance if ieq=0
+ REAL(KIND=DP_KIND) :: TOP,BOT      !## top and bot information
+ REAL(KIND=DP_KIND) :: NODATA,DMIN,DMAX
+ REAL(KIND=DP_KIND),DIMENSION(:),POINTER :: SX => NULL()                  !## x.coord. network
+ REAL(KIND=DP_KIND),DIMENSION(:),POINTER :: SY => NULL()                  !## y.coord. network
+ REAL(KIND=DP_KIND),DIMENSION(:,:),POINTER :: X => NULL()                 !## idfvalues in matrix
+ REAL(KIND=DP_KIND),DIMENSION(:),POINTER :: V => NULL()                   !## idfvalues in vector
+ REAL(KIND=DP_KIND),DIMENSION(:,:,:),POINTER :: XV  => NULL()             !## vector field, top,bot,vx,vy,vz1,vz2
  INTEGER(KIND=2),DIMENSION(:,:),POINTER :: YSEL => NULL()   !## idfvalues in vector, irow/icol
  CHARACTER(LEN=4),DIMENSION(:),POINTER :: COMMENT => NULL() !## comments
  INTEGER :: NTHREAD

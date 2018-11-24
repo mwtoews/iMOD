@@ -1,4 +1,4 @@
-!!  Copyright (C) Stichting Deltares, 2005-2017.
+!!  Copyright (C) Stichting Deltares, 2005-2018.
 !!
 !!  This file is part of iMOD.
 !!
@@ -22,6 +22,7 @@
 !!
 MODULE MOD_LUDCMP
 
+USE IMODVAR, ONLY : DP_KIND,SP_KIND
 CONTAINS
 
  !###====================================================================
@@ -29,31 +30,31 @@ CONTAINS
  !###====================================================================
  IMPLICIT NONE
  INTEGER,INTENT(IN)   :: N
- REAL,DIMENSION(N,N),INTENT(INOUT)  :: A
- REAL,DIMENSION(N),INTENT(INOUT)  :: B
- REAL,DIMENSION(:,:),ALLOCATABLE :: L,U
+ REAL(KIND=DP_KIND),DIMENSION(N,N),INTENT(INOUT)  :: A
+ REAL(KIND=DP_KIND),DIMENSION(N),INTENT(INOUT)  :: B
+ REAL(KIND=DP_KIND),DIMENSION(:,:),ALLOCATABLE :: L,U
  INTEGER :: I,J,K
- REAL :: X
+ REAL(KIND=DP_KIND) :: X
 
- ALLOCATE(L(N,N),U(N,N)); L=0.0; U=0.0
+ ALLOCATE(L(N,N),U(N,N)); L=0.0D0; U=0.0D0
 
  !## transform first column
  DO I=1,N; L(I,1)=A(I,1); ENDDO
  !## transform first row
  DO I=1,N; U(1,I)=A(1,I)/A(1,1); ENDDO
- DO I=1,N; U(I,I)=1.0; ENDDO
+ DO I=1,N; U(I,I)=1.0D0; ENDDO
  
  DO J=2,N-1
 
   DO I=J,N
-   X=0.0
+   X=0.0D0
    DO K=1,J-1
     X=X+L(I,K)*U(K,J)
    ENDDO
    L(I,J)=A(I,J)-X
   ENDDO
   DO K=J+1,N
-   X=0.0
+   X=0.0D0
    DO I=1,J-1
     X=X+L(J,I)*U(I,K)
    ENDDO
@@ -62,7 +63,7 @@ CONTAINS
 
  ENDDO
  
- X=0.0
+ X=0.0D0
  DO K=1,N-1
   X=X+L(N,K)*U(K,N)
  ENDDO
@@ -71,7 +72,7 @@ CONTAINS
  !## forward substitution
  B(1)=B(1)/L(1,1)
  DO I=2,N
-  X=0.0
+  X=0.0D0
   DO J=1,I-1
    X=X+L(I,J)*B(J)
   ENDDO
@@ -80,7 +81,7 @@ CONTAINS
 
  !## backward substitution
  DO I=N-1,1,-1
-  X=0.0
+  X=0.0D0
   DO J=I+1,N
    X=X+U(I,J)*B(J)
   ENDDO
@@ -96,13 +97,13 @@ CONTAINS
 ! !###====================================================================
 ! IMPLICIT NONE
 ! INTEGER,PARAMETER :: NMAX=2000
-! REAL,PARAMETER :: TINY=1.0E-20
+! REAL(KIND=DP_KIND),PARAMETER :: TINY=1.0E-20
 ! INTEGER,INTENT(IN) :: N
 ! INTEGER,DIMENSION(N),INTENT(OUT) :: INDX
-! REAL,DIMENSION(N,N),INTENT(INOUT)  :: AA
-! REAL,DIMENSION(NMAX) :: VV
+! REAL(KIND=DP_KIND),DIMENSION(N,N),INTENT(INOUT)  :: AA
+! REAL(KIND=DP_KIND),DIMENSION(NMAX) :: VV
 ! INTEGER :: I,IMAX,J,K
-! REAL :: AAMAX,DUM,SUM
+! REAL(KIND=DP_KIND) :: AAMAX,DUM,SUM
 !
 ! INDX=0
 !
@@ -164,11 +165,11 @@ CONTAINS
 ! USE MODFLOW
 ! IMPLICIT NONE
 ! INTEGER,INTENT(IN) :: N
-! REAL,DIMENSION(N,N),INTENT(INOUT) :: AA
-! REAL,DIMENSION(N),INTENT(INOUT) :: BB
+! REAL(KIND=DP_KIND),DIMENSION(N,N),INTENT(INOUT) :: AA
+! REAL(KIND=DP_KIND),DIMENSION(N),INTENT(INOUT) :: BB
 ! INTEGER,DIMENSION(N),INTENT(IN) :: INDX
 ! INTEGER :: I,II,J,LL
-! REAL :: SUM
+! REAL(KIND=DP_KIND) :: SUM
 !
 ! II=0
 ! DO I=1,N

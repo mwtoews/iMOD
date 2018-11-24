@@ -1,4 +1,4 @@
-!!  Copyright (C) Stichting Deltares, 2005-2017.
+!!  Copyright (C) Stichting Deltares, 2005-2018.
 !!
 !!  This file is part of iMOD.
 !!
@@ -25,30 +25,34 @@ MODULE MOD_IR_PAR
 USE WINTERACTER
 USE RESOURCE
 USE MOD_IDF_PAR, ONLY : IDFOBJ
+USE IMODVAR, ONLY : DP_KIND,SP_KIND
 
+INTEGER,PARAMETER :: MAXLENIR=30
 CHARACTER(LEN=256) :: PRJFNAME
+CHARACTER(LEN=MAXLENIR),DIMENSION(3) :: CTREE
+CHARACTER(LEN=256) :: DIRNAME
+INTEGER,ALLOCATABLE,DIMENSION(:) :: IFIXED  !## variable fixed 0=no;1=yes
+REAL(KIND=DP_KIND),ALLOCATABLE,DIMENSION(:) :: IMP        !## impulse strength
 
 INTEGER :: ICLRMEASURE,ICLRTARGET !## default colours for polygons
 INTEGER,PARAMETER :: TFONT=FFHELVETICA
 INTEGER,PARAMETER :: MAXTARGET=50,MAXMEASURE=50,MAXRESULT=50
-
-INTEGER,PARAMETER :: MAXLEN=30
 
 INTEGER,DIMENSION(3) :: TABID,BUTID,ACTID
 
 INTEGER :: IRWIN
 
 INTEGER(KIND=1),DIMENSION(:),ALLOCATABLE :: ISELGEN
-REAL :: XCMOUSE,YCMOUSE
+REAL(KIND=DP_KIND) :: XCMOUSE,YCMOUSE
 
 !## coefficients for inverse IR computation
-REAL,ALLOCATABLE,DIMENSION(:,:,:,:,:,:) :: COEF
+REAL(KIND=DP_KIND),ALLOCATABLE,DIMENSION(:,:,:,:,:,:) :: COEF
 
 TYPE IDFTYPE
  CHARACTER(LEN=256) :: IDFFILE
  CHARACTER(LEN=50) :: IDFNAME
  TYPE(IDFOBJ) :: IDF !idf object
- REAL :: IMP         !impulse strength for current idf
+ REAL(KIND=DP_KIND) :: IMP         !impulse strength for current idf
 END TYPE IDFTYPE
 TYPE(IDFTYPE),ALLOCATABLE,DIMENSION(:) :: IDF,IDFP
 TYPE(IDFOBJ),ALLOCATABLE,DIMENSION(:) :: EFFECT
@@ -76,13 +80,13 @@ CHARACTER(LEN=100),DIMENSION(:),ALLOCATABLE :: PERRES  !## combined name for "pe
 TYPE IRTYPE
  CHARACTER(LEN=50) :: NAMEIR
  CHARACTER(LEN=256) :: DIRIR,IDFIR,SDFIR,SDFBM
- REAL :: MINIR,MAXIR
- INTEGER :: TYPEIR  !0=real,1=binair
+ REAL(KIND=DP_KIND) :: MINIR,MAXIR
+ INTEGER :: TYPEIR  !0=REAL(KIND=DP_KIND),1=binair
  !## neccessary for linear-programming
  INTEGER :: ISEL    !selected in ir-inverse mode
- REAL :: ULIMP      !upper limit
- REAL :: LLIMP      !lower limit
- REAL :: IMP        !fixed limit
+ REAL(KIND=DP_KIND) :: ULIMP      !upper limit
+ REAL(KIND=DP_KIND) :: LLIMP      !lower limit
+ REAL(KIND=DP_KIND) :: IMP        !fixed limit
  INTEGER :: IFIXED  !fixed
 END TYPE IRTYPE
 TYPE(IRTYPE),DIMENSION(:),ALLOCATABLE :: IR
@@ -91,8 +95,8 @@ CHARACTER(LEN=256) :: MAINRESDIR,RESDIR,QUARTERRUNFILE,BASISRUNFILE,TARGETLEG
 
 TYPE BCTYPE
  INTEGER,DIMENSION(:),POINTER :: IXY              !## number of coordinates
- REAL,DIMENSION(:),POINTER :: X,Y                 !## coordinates
- REAL,DIMENSION(:),POINTER :: XMIN,XMAX,YMIN,YMAX !## min/max of polygon
+ REAL(KIND=DP_KIND),DIMENSION(:),POINTER :: X,Y                 !## coordinates
+ REAL(KIND=DP_KIND),DIMENSION(:),POINTER :: XMIN,XMAX,YMIN,YMAX !## min/max of polygon
  INTEGER :: NCRD,NGEN
  INTEGER :: ITYPE  !## 0=gen,1=ipf
  CHARACTER(LEN=256) :: BCNAME
@@ -100,7 +104,7 @@ END TYPE BCTYPE
 TYPE(BCTYPE),ALLOCATABLE,DIMENSION(:) :: BC
 INTEGER :: NBC 
 
-REAL,DIMENSION(:),ALLOCATABLE :: XPOL,YPOL !## used in ir1highlightgen to highlight selected polygons
+REAL(KIND=DP_KIND),DIMENSION(:),ALLOCATABLE :: XPOL,YPOL !## used in ir1highlightgen to highlight selected polygons
 
 !##-------------
 !## definition of TARGET object and sub-objects
@@ -109,16 +113,14 @@ REAL,DIMENSION(:),ALLOCATABLE :: XPOL,YPOL !## used in ir1highlightgen to highli
 TYPE SUB_TARGET
  INTEGER :: INEWP      !period
  INTEGER :: INEWT      !topic
- REAL    :: LOWER      !lower limit
- REAL    :: UPPER      !upper limit
- REAL    :: MEAN !FLUXSUM    !mean values!sum of fluxes
-! INTEGER :: REFFECT_UP    !realized effectiveness upper bound (used in IR1FIELDS_TAB3_CALCDIFF)
-! INTEGER :: REFFECT_LO    !realized effectiveness lower bound (used in IR1FIELDS_TAB3_CALCDIFF)
+ REAL(KIND=DP_KIND) :: LOWER      !lower limit
+ REAL(KIND=DP_KIND) :: UPPER      !upper limit
+ REAL(KIND=DP_KIND) :: MEAN !FLUXSUM    !mean values!sum of fluxes
  INTEGER :: POLSIZE    !size of polygon in cells (used in IR1FIELDS_TAB3_CALCDIFF)
 END TYPE SUB_TARGET
 
 TYPE SUB_TARGET_POLYGON
- REAL,POINTER,DIMENSION(:) :: X,Y      !x-y coordinates
+ REAL(KIND=DP_KIND),POINTER,DIMENSION(:) :: X,Y      !x-y coordinates
  INTEGER :: NCRD       !number of coordinates
  INTEGER :: ITYPE      !polygon type
  INTEGER :: IACT       !polygon selected
@@ -133,7 +135,7 @@ END TYPE SUB_TARGET_POLYGON
 TYPE TYPE_TARGET
  INTEGER :: TARGET_ID                   !id of current target in treefield
  INTEGER :: IDPOS                       !id of mother id
- CHARACTER(LEN=MAXLEN) :: CNAME         !name of the target
+ CHARACTER(LEN=MAXLENIR) :: CNAME         !name of the target
  INTEGER :: NPOL
  TYPE(SUB_TARGET_POLYGON),POINTER,DIMENSION(:) :: POL
 END TYPE TYPE_TARGET
@@ -147,21 +149,21 @@ INTEGER :: NTARGET !number of targets currently available
 !##-------------
 
 TYPE SUB_MEASURE
- REAL    :: IMP    !impulse strength
- REAL    :: FT_IMP !full-throttle strength
+ REAL(KIND=DP_KIND) :: IMP    !impulse strength
+ REAL(KIND=DP_KIND) :: FT_IMP !full-throttle strength
  INTEGER :: IMES   !number of the measurement
 END TYPE SUB_MEASURE
 
 TYPE OPTIMIZETYPE
  INTEGER :: ISEL    !selected in ir-inverse mode
- REAL :: ULIMP      !upper limit
- REAL :: LLIMP      !lower limit
- REAL :: IMP        !fixed limit
+ REAL(KIND=DP_KIND) :: ULIMP      !upper limit
+ REAL(KIND=DP_KIND) :: LLIMP      !lower limit
+ REAL(KIND=DP_KIND) :: IMP        !fixed limit
  INTEGER :: IFIXED  !fixed
 END TYPE OPTIMIZETYPE
 
 TYPE SUB_MEASURE_POLYGON
- REAL,POINTER,DIMENSION(:) :: X,Y      !x-y coordinates
+ REAL(KIND=DP_KIND),POINTER,DIMENSION(:) :: X,Y      !x-y coordinates
  INTEGER :: NCRD       !number of coordinates
  INTEGER :: ITYPE      !polygon type
  INTEGER :: IACT       !polygon selected
@@ -175,7 +177,7 @@ END TYPE SUB_MEASURE_POLYGON
 TYPE TYPE_MEASURE
  INTEGER :: MEASURE_ID                  !id of current measure in treefield
  INTEGER :: IDPOS                       !id of mother id
- CHARACTER(LEN=MAXLEN) :: CNAME         !name of the measure
+ CHARACTER(LEN=MAXLENIR) :: CNAME         !name of the measure
  INTEGER :: NPOL
  TYPE(SUB_MEASURE_POLYGON),POINTER,DIMENSION(:) :: POL
  INTEGER :: NOPT
@@ -194,12 +196,19 @@ TYPE TYPE_RESULT
  INTEGER :: RESULT_ID                   !reference to measure id in treefield
  INTEGER :: IDPOS                       !id of mother id
  INTEGER :: IMENU                       !selected menu-item
- CHARACTER(LEN=MAXLEN) :: CNAME         !name of the result
+ CHARACTER(LEN=MAXLENIR) :: CNAME         !name of the result
 END TYPE TYPE_RESULT
 TYPE(TYPE_RESULT),ALLOCATABLE,DIMENSION(:),SAVE :: RTREE
 INTEGER :: NRESULT
 
 DATA TABID/ID_DIR_PMTAB1,ID_DIR_PMTAB2,ID_DIR_PMTAB3/
 DATA BUTID/ID_NEWTARGET ,ID_NEWMEASURE,ID_NEWRESULTS/
+
+INTEGER :: ICUR_IFIELD,ICUR_ITREE !## previous tree-field
+INTEGER :: NLIST
+CHARACTER(LEN=256) :: IDFNAME
+CHARACTER(LEN=256),DIMENSION(:),ALLOCATABLE :: IDFRESLIST
+INTEGER(KIND=1),ALLOCATABLE,DIMENSION(:,:) :: IP
+TYPE(IDFOBJ),ALLOCATABLE,DIMENSION(:) :: IDFDIFF
 
 END MODULE MOD_IR_PAR

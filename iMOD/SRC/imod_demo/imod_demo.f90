@@ -1,4 +1,4 @@
-!!  Copyright (C) Stichting Deltares, 2005-2017.
+!!  Copyright (C) Stichting Deltares, 2005-2018.
 !!
 !!  This file is part of iMOD.
 !!
@@ -25,6 +25,7 @@ MODULE MOD_DEMO
 USE MOD_DEMO_PAR
 USE MOD_PROFILE, ONLY : PROFILE_INIT
 USE MOD_UTL, ONLY : UTL_CAP
+USE MOD_IDFPLOT
 USE MOD_3D, ONLY : IMOD3D_INIT
 
 CONTAINS
@@ -34,7 +35,7 @@ CONTAINS
  !###======================================================================
  IMPLICIT NONE
 
- !# Starts cross-section tool if demo type name equals 'cross'
+ !## Starts cross-section tool if demo type name equals 'cross'
  IF(TRIM(UTL_CAP(DEMO%TDNAME,'U')).EQ.'CROSS')THEN
   CALL PROFILE_INIT()
   IF(DEMO%ISAVEBMP.EQ.0)CALL IDFPLOTFAST(0)
