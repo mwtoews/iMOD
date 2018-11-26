@@ -468,7 +468,7 @@ c map on cell centroids
 c read idf and scale
       if (.not.idfreadscale(idfc,idfm,iupsc,idosc)) then
          if (idfc%iu.gt.0) close(idfc%iu)
-         imod_idfread = 1
+         imod_idfread = 1 
          return
       end if
 
@@ -496,6 +496,8 @@ c            if (val.eq.idfm%nodata) val = nodata
             end if
          end do
       end do
+
+!      idfm%x(200,199)
 
 c check for nodata
       if (nrproc.gt.1) then
