@@ -808,6 +808,11 @@ CONTAINS
  !## allocate first column - required to have at least a single column
  DO I=1,MAXSHAPES
   SHP%POL(I)%N=0
+  NULLIFY(SHP%POL(I)%X)
+  NULLIFY(SHP%POL(I)%Y)
+  NULLIFY(SHP%POL(I)%CX)
+  NULLIFY(SHP%POL(I)%CY)
+  NULLIFY(SHP%POL(I)%LBL)
  ENDDO 
 
  ALLOCATE(SHP%COLNAMES(1),SHP%LWIDTH(1))
