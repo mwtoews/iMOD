@@ -609,11 +609,6 @@ c open file
 
 c init
       mx=lncol*lnrow
-!      if(allocated(xa))deallocate(xa)
-!      if(allocated(ya))deallocate(ya)
-!      if(allocated(ln))deallocate(ln)
-!      if(allocated(fa))deallocate(fa)
-!      allocate(xa(mx),ya(mx),ln(mx),fa(mx))
       if (allocated(genpos))deallocate(genpos)
       if (allocated(genip))deallocate(genip)
 

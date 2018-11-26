@@ -3089,12 +3089,6 @@ END SUBROUTINE IMOD_UTL_QKSORT
   !## normalize tlp() again
   IF(SUM(TLP).GT.0.0)TLP=(1.0/SUM(TLP))*TLP
 
-!  !## remove small percentages
-!  DO ILAY=1,N; IF(TLP(ILAY).LT.MINP)TLP(ILAY)=0.0; ENDDO
-
-!  !## normalize tlp() again
-!  IF(SUM(TLP).GT.0.0)TLP=(1.0/SUM(TLP))*TLP
-
   !## remove small transmissivities
   IF(MINKH.GT.0.0)THEN
    ZT=SUM(TLP)
@@ -3107,29 +3101,15 @@ END SUBROUTINE IMOD_UTL_QKSORT
     !## normalize tlp() again
     TLP=ZT*TLP
    ENDIF
+
+   !## normalize tlp() again
+   IF(SUM(TLP).GT.0.0)TLP=(1.0/SUM(TLP))*TLP
+
   ENDIF
 
-  !## normalize tlp() again
-  IF(SUM(TLP).GT.0.0)TLP=(1.0/SUM(TLP))*TLP
- 
-ENDIF
- 
-! !## make sure only one layer is assigned whenever z1.eq.z2
-! IF(IDIFF.EQ.1)THEN
-!  K=0; ZT=0.0; DO ILAY=1,N
-!   IF(ABS(TLP(ILAY)).GT.ZT)THEN
-!    ZT=ABS(TLP(ILAY)); K=ILAY
-!   ENDIF
-!  ENDDO
-!  !## not assigned to any layer
-!  IF(K.NE.0)THEN
-!  ZT=TLP(K)
-!  TLP=0.0; TLP(K)=1.0
-!  IF(ZT.LT.0.0)TLP(K)=-1.0*TLP(K)
-! ENDIF
-! ENDIF
+ ENDIF
 
-!## nothing in model, whenever system on top of model, put them in first modellayer with thickness
+ !## nothing in model, whenever system on top of model, put them in first modellayer with thickness
  IF(SUM(TLP).EQ.0.0)THEN
   IF(Z1.GE.TOP(1))TLP(1)=1.0
  ENDIF
