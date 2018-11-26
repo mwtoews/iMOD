@@ -2038,11 +2038,11 @@ DOLOOP: DO
   DO ILAY=1,N
    IF(TLP(ILAY).GT.0.0D0)THEN
     DZ= TOP(ILAY)-BOT(ILAY)
-    ZC=(TOP(ILAY)+BOT(ILAY))/2.0
+    ZC=(TOP(ILAY)+BOT(ILAY))/2.0D0
     ZT= MIN(TOP(ILAY),Z1)
     ZB= MAX(BOT(ILAY),Z2)
-    FC=(ZT+ZB)/2.0
-    TLP(ILAY)=TLP(ILAY)*(1.0D0-(ABS(ZC-FC)/(0.5*DZ)))
+    FC=(ZT+ZB)/2.0D0
+    TLP(ILAY)=TLP(ILAY)*(1.0D0-(ABS(ZC-FC)/(0.5D0*DZ)))
    ENDIF
   ENDDO
  
@@ -2059,24 +2059,11 @@ DOLOOP: DO
    IF(SUM(TLP).GT.0.0D0)THEN
     ZT=ZT/SUM(TLP); TLP=ZT*TLP
    ENDIF
-  ENDIF
  
-  !## normalize tlp() again
-  IF(SUM(TLP).GT.0.0D0)TLP=(1.0D0/SUM(TLP))*TLP
+   !## normalize tlp() again
+   IF(SUM(TLP).GT.0.0D0)TLP=(1.0D0/SUM(TLP))*TLP
   
-! !## make sure only one layer is assigned whenever z1.eq.z2
-! IF(IDIFF.EQ.1)THEN
-!  K=0; ZT=0.0D0; DO ILAY=1,N
-!   IF(ABS(TLP(ILAY)).GT.ZT)THEN
-!    ZT=ABS(TLP(ILAY)); K=ILAY
-!   ENDIF
-!  ENDDO
-!  IF(K.GT.0)THEN
-!   ZT=TLP(K)
-!   TLP=0.0D0; TLP(K)=1.0D0 
-!   IF(ZT.LT.0.0D0)TLP(K)=-1.0D0*TLP(K)
-!  ENDIF
-! ENDIF
+  ENDIF
 
  ENDIF
    
