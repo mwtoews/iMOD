@@ -49,7 +49,7 @@ CHARACTER(LEN=10),PARAMETER :: REPLACESTRING='$DBASE$'
 
 CHARACTER(LEN=30),PARAMETER :: RVERSION    ='V4_3'      !## release message - used for license
 CHARACTER(LEN=30),PARAMETER :: RVERSION_EXE='V4_3'      !## release message - only with single subnummers
-CHARACTER(LEN=30),PARAMETER :: BVERSION='Beta Build 21-11-2018 09:53'       !## banner message !!!
+CHARACTER(LEN=50),PARAMETER :: BVERSION='Beta Build Intel v19.1.144 [26-11-2018 13:02]'       !## banner message !!!
 CHARACTER(LEN=32) :: LICFILE='I_accepted_'//TRIM(RVERSION)//'.txt'
 CHARACTER(LEN=256) :: IMFFNAME         !## name of drawing file
 CHARACTER(LEN=256) :: EXENAME,EXEPATH
