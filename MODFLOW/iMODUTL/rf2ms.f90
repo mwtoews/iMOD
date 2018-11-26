@@ -933,7 +933,7 @@ END SUBROUTINE
  WRITE(JU,'(A)') TRIM(LINE)
  LINE='      idf_nrow                =      '//TRIM(IMOD_UTL_ITOS(SNROW))
  WRITE(JU,'(A)') TRIM(LINE)
- LINE='      idf_nodata              =      '//TRIM(IMOD_UTL_DTOS(-9999.99D0,'F',2))
+ LINE='      idf_nodata              =      '//TRIM(IMOD_UTL_DTOS(-9999.00D0,'F',2))
  WRITE(JU,'(A)') TRIM(LINE)
  CLOSE(JU)
 

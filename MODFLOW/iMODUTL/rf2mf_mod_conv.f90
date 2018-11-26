@@ -29,6 +29,8 @@
 
       private
 
+      real,parameter :: hnoflo=huge(1.0)
+      
 !...     parameters
       integer, parameter :: ilst = 1
       integer, parameter :: idis = 2
@@ -251,7 +253,7 @@
          character(len=maxlen) :: text = 'Basic Package file'
          character(len=maxlen) :: options = 'free'
          type(tArrayRead), dimension(:), pointer :: ibound => null()
-         real :: hnoflo = huge(1.0) !-999.99
+         real :: hnoflo = hnoflo !huge(1.0) !-999.99
          type(tArrayRead), dimension(:), pointer :: strt => null()
       end type tBas
       type(tBas), public, save :: bas

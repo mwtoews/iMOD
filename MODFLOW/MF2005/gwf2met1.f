@@ -904,8 +904,8 @@ c loop over the layers
       retflag = .true.
 
 c end of program
-      return
-      end
+      return 
+      end subroutine met1ulasav
 
       subroutine met1getfiletype(iu,type,isplit)
 c declaration section
@@ -957,6 +957,7 @@ c declaration section
 c ------------------------------------------------------------------------------
 c modules
       use global, only: delr, delc
+      use GWFBASMODULE, only : hdry,hnoflo
       use fsplitmodule
       use gwfmetmodule
       use imod_idf
@@ -967,7 +968,7 @@ c modules
 c arguments
       character(len=*), intent(in) :: fname
       integer, intent(in) :: ncol, nrow
-      real(kind=8), dimension(ncol,nrow) :: buff
+      real(kind=8), dimension(ncol,nrow),intent(inout) :: buff
       real(kind=8), intent(in) :: nodata
       integer, intent(in) :: iout
 
@@ -980,7 +981,7 @@ c local variables
 !      real(kind=8), dimension(2) :: lcorner
 !      real(kind=8), dimension(ncol+nrow) :: dgrd
       logical :: lok, leq
-      integer :: ic1, ic2, ir1, ir2, sncol, snrow, idbl
+      integer :: ic1, ic2, ir1, ir2, sncol, snrow, idbl,irow,icol
 
 c functions
 c      integer :: idfx_wrfile
@@ -995,6 +996,11 @@ c ------------------------------------------------------------------------------
       leq = .true.
       if (minval(delr).ne.maxval(delr)) leq = .false.
       if (minval(delc).ne.maxval(delc)) leq = .false.
+
+      !## check for hdry
+      do irow=1,nrow; do icol=1,ncol
+       if(buff(icol,irow).eq.hdry)buff(icol,irow)=hnoflo
+      enddo; enddo
 
 c write IDF-file
       iok = 0
