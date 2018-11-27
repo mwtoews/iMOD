@@ -67,7 +67,8 @@ CONTAINS
  
  IF(IOPTION.NE.1)THEN
   IF(ASSOCIATED(PEST%MEASURES))THEN
-   I=SIGN(SIZE(PEST%MEASURES),PEST%IIPF)
+   I=SIZE(PEST%MEASURES)
+   IF(PEST%IIPF.EQ.1)I=-1*I
    LINE=TRIM(ITOS(I))
    WRITE(IU,'(A)') TRIM(LINE)
    DO I=1,SIZE(PEST%MEASURES)
@@ -107,7 +108,7 @@ CONTAINS
   IF(IOPTION.EQ.1)THEN
    WRITE(IU,'(A)') TRIM(PEST%PPBNDIDF)
   ELSEIF(IOPTION.EQ.2)THEN
-   !## upscale is using number 1, boundary
+   !## upscale is using number 7, most frequent
    SCL_UP=7; SCL_D=0
    !## read/clip/scale idf file
    IF(.NOT.IDFREADSCALE(PEST%PPBNDIDF,PRJIDF,SCL_UP,SCL_D,1.0D0,0))RETURN
@@ -164,7 +165,7 @@ CONTAINS
     ELSE
      !## read idf
      IF(INDEX(UTL_CAP(LINE,'U'),'.IDF',.TRUE.).GT.0)THEN
-      !## upscale is using number 15, zones
+      !## upscale is using number 15 is not completely correct but for reasons of backward compatibility. Undesired results can be overcome through additional file
       PRJIDF%FNAME=LINE; SCL_UP=15; SCL_D=0
       !## read/clip/scale idf file
       IF(.NOT.IDFREADSCALE(PRJIDF%FNAME,PRJIDF,SCL_UP,SCL_D,1.0D0,0))RETURN
@@ -3285,7 +3286,7 @@ IRLOOP: DO IROW=1,PRJIDF%NROW; DO ICOL=1,PRJIDF%NCOL
    ILAY  =TOPICS(ITOPIC)%STRESS(KPER)%FILES(1,ISYS)%ILAY
    SFNAME=TOPICS(ITOPIC)%STRESS(KPER)%FILES(1,ISYS)%FNAME
 
-   IF(PBMAN%SSYSTEM.EQ.1)THEN
+   IF(PBMAN%SSYSTEM.EQ.0)THEN
     JSYS=ISYS
    ELSE
     JSYS=1
@@ -4010,7 +4011,7 @@ IRLOOP: DO IROW=1,PRJIDF%NROW; DO ICOL=1,PRJIDF%NCOL
           !## head is in within current layer pck(jtop(1))%x(1,1:50)
           IF(PBMAN%ICHKCHD.EQ.1)LCHKCHD=PCK(JTOP(1))%X(ICOL,IROW).GT.BOT(ILAY)%X(ICOL,IROW)
           IF(LCHKCHD)THEN
-           IF(PBMAN%SSYSTEM.EQ.1)THEN
+           IF(PBMAN%SSYSTEM.EQ.0)THEN
             WRITE(JU,FRM) ILAY,IROW,ICOL,PCK(JTOP(1))%X(ICOL,IROW),PCK(JTOP(1))%X(ICOL,IROW),ISYS
            ELSE
             WRITE(JU,FRM) ILAY,IROW,ICOL,PCK(JTOP(1))%X(ICOL,IROW),PCK(JTOP(1))%X(ICOL,IROW),1
@@ -4021,7 +4022,7 @@ IRLOOP: DO IROW=1,PRJIDF%NROW; DO ICOL=1,PRJIDF%NCOL
         !## olf
         CASE (27)
          OLFCOND=(IDFGETAREA(PCK(JTOP(1)),ICOL,IROW)/COLF)   !## drainage conductance
-         IF(PBMAN%SSYSTEM.EQ.1)THEN
+         IF(PBMAN%SSYSTEM.EQ.0)THEN
           WRITE(JU,FRM) ILAY,IROW,ICOL,PCK(JTOP(1))%X(ICOL,IROW),OLFCOND,ISYS
          ELSE
           WRITE(JU,FRM) ILAY,IROW,ICOL,PCK(JTOP(1))%X(ICOL,IROW),OLFCOND,1
@@ -4039,7 +4040,7 @@ IRLOOP: DO IROW=1,PRJIDF%NROW; DO ICOL=1,PRJIDF%NCOL
 
          !## in current model (layers)
          IF(PBMAN%ILAY(ILAY).EQ.1)THEN
-          JSYS=1; IF(PBMAN%SSYSTEM.EQ.1)JSYS=ISYS
+          JSYS=1; IF(PBMAN%SSYSTEM.EQ.0)JSYS=ISYS
           WRITE(JU,FRM) ILAY,IROW,ICOL,(XTMP(JTOP(I)),I=1,NTOP),JSYS
           NP_IPER(IPER)=NP_IPER(IPER)+1
          ENDIF

@@ -1426,7 +1426,7 @@ CONTAINS
    READ(LINE,*) PBMAN%MODFLOW; WRITE(*,'(A)') 'MODFLOW='//TRIM(PBMAN%MODFLOW)
   ENDIF
 
-  !## overrule system in case of ipest
+  !## overrule system in case of ipest - ssystem=sumsystem
   IF(PBMAN%IPEST.EQ.1)PBMAN%SSYSTEM=0
 
   IF(UTL_READINITFILE('NETWORKIDF',LINE,IU,1))THEN
