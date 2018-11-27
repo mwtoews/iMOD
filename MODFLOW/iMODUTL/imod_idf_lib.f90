@@ -507,11 +507,12 @@ CONTAINS
   CASE (6)  !## c-waarde reciprook opgeteld, terug naar gem. dagen
    SVALUE=1.0/(SVALUE/NVALUE)
   CASE (7)
-   CALL IMOD_UTL_QKSORT(SIZE(FREQ),INT(NVALUE),FREQ)
-   SVALUE=IMOD_UTL_GETMOSTFREQ(FREQ,SIZE(FREQ),INT(NVALUE))
-   !## add fraction to the most frequent occurence
-   NFRAC=NVALUE/REAL(((IR2-IR1)+1)*((IC2-IC1)+1))
-   SVALUE=SVALUE+(1.0-NFRAC)
+   N=INT(NVALUE)
+   CALL IMOD_UTL_QKSORT(SIZE(FREQ),N,FREQ)
+   SVALUE=IMOD_UTL_GETMOSTFREQ(FREQ,SIZE(FREQ),N)
+!   !## add fraction to the most frequent occurence
+!   NFRAC=NVALUE/REAL(((IR2-IR1)+1)*((IC2-IC1)+1))
+!   SVALUE=SVALUE+(1.0-NFRAC)
   CASE (8)  !## PWT c-waarde reciprook opgeteld, terug naar gem. dagen * fraction
    NFRAC=NVALUE/REAL(((IR2-IR1)+1)*((IC2-IC1)+1))
    SVALUE=1.0/((SVALUE*NFRAC)/NVALUE)

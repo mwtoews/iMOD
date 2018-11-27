@@ -3312,7 +3312,8 @@ c     if (nxch.le.0) ok = .false.
 !...     locals
       logical :: ok
       integer :: jj, i, ilay, irow, icol
-      real :: x, y, h
+      real(kind=8) :: x, y
+      real :: h
 !.......................................................................
 
       ok = .true.
