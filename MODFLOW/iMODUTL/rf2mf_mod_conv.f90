@@ -1905,7 +1905,7 @@
       logical :: writekey, dq, sq
       integer :: cfn_getlun, lun, ikey, n, i
       character(len=maxlen) :: cdum
-      character(len=maxlen), dimension(7) :: str, nstr
+      character(len=maxlen), dimension(15) :: str, nstr
       type(tKw) :: kwtmp
 !.......................................................................
 
@@ -1927,7 +1927,7 @@
             case(imeti)
                write(str(1),*) kwtmp%ival
             case(imetr)
-               write(str(1),*) kwtmp%rval
+               write(str(1),'(F15.3)') kwtmp%rval
             case(imetc)
                cdum = trim(adjustl(kwtmp%cval))
                n = len_trim(cdum)
