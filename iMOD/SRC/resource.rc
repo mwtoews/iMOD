@@ -8,7 +8,7 @@
 //
 // Winteracter resource script. 
 //
-// Modified : 28/Nov/2018 11:14:39
+// Modified : 29/Nov/2018 14:44:58
 //
 ///////////////////////////////////////////////////
 //
@@ -11650,13 +11650,15 @@ BEGIN
 " 1012 1 \n"
 " 1014 0 \n"
 "[Menus] \n"
-" 1192     6     1 \n"
+" 1192     8     1 \n"
 "Transmissivities \n"
 "Vertical Resistances Aquifers \n"
 "Vertical Resistances Aquitards \n"
 "Total Vertical Resistances \n"
 "Thickness of Aquifers \n"
 "Thickness of Aquitards \n"
+"Horizontal Permeability of Aquifers \n"
+"Vertical Permeability of Aquitards \n"
 "[Ranges] \n"
 "[Fonts] \n"
 "    2    8 Arial, 400 0 1 \n"
@@ -13304,4 +13306,4 @@ END
 //*WI* FILENAME    resource.f90
 //*WI* FMODNAME    RESOURCE
 //*WI* LASTTYPE        2
-//*WI* LASTRES       299
+//*WI* LASTRES       301

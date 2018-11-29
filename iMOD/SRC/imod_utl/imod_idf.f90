@@ -1058,7 +1058,7 @@ CONTAINS
     IF(SVALUE.GT.0)THEN
      !## set fraction to zero for zones not equal to most available zone
      !## only whenever fraction are existing priorly
-     IF(INT(SUM(FREQ(1:N,1))).NE.N)THEN
+     IF(INT(SUM(FREQ(1:N,2))).NE.N)THEN
       DO I=1,N; IF(INT(SVALUE).NE.INT(FREQ(I,1)))FREQ(I,2)=0.0D0; ENDDO
       !## get mean fraction
       F=0; DO I=1,N; F=F+FREQ(I,2); ENDDO; F=F/REAL(N)
