@@ -634,7 +634,7 @@ CONTAINS
     SSX=SSX+IDF%DX; IF(SSX.GT.D)EXIT
    ENDDO
 
-  !## include in case of similar area
+  !## include in case of a similar area
   ELSEIF(IBLNTYPE.EQ.1)THEN
 
    CALL IDFIROWICOL(IDF,IROW,ICOL,X0,Y0); X3=IDF%X(ICOL,IROW)
@@ -695,27 +695,18 @@ CONTAINS
  
  !## in case of an ellips see if it is inside the current ellips
  IF(RAT.NE.1.0D0)THEN
-  IF(.NOT.UTL_INSIDEELLIPSE(X0,Y0,MAXDIST/2.0,RAT*MAXDIST/2.0,ANI-90.0D0,X1,Y1))THEN
+  IF(.NOT.UTL_INSIDEELLIPSE(X0,Y0,MAXDIST/2.0D0,RAT*MAXDIST/2.0D0,ANI-90.0D0,X1,Y1))THEN
    KRIGING_DIST=MAXDIST+1.0D0
   ELSE
    !## adjust distance for perfect circle
    DY=(Y0-Y1); DX=(X0-X1); A=ATAN2(DY,DX)
 
-   A=-(ANI+90.0D0)/(360.0D0/(2.0*PI))
+   A=-(ANI+90.0D0)/(360.0D0/(2.0D0*PI))
    X1=         COS(A)*DX+        SIN(A)*DY
    Y1=-1.0D0/RAT*SIN(A)*DX+1.0D0/RAT*COS(A)*DY
    X1=X0+X1
    Y1=Y0+Y1
-   
-!   !## get point on ellips for current aspect
-!   CALL UTL_POINTELLIPSE(X0,Y0,A,RAT,MAXDIST,ANI,X3,Y3)
-!   D=UTL_DIST(X0,Y0,X3,Y3)
-!   F=MAXDIST/D
-!   KRIGING_DIST=KRIGING_DIST*F
-!   !## set temporary new location
-!   X1=X0+KRIGING_DIST*COS(A)
-!   Y1=Y0-KRIGING_DIST*SIN(A)
-  
+
    KRIGING_DIST=UTL_DIST(X1,Y1,X0,Y0)
   
   ENDIF
