@@ -29,7 +29,7 @@ CONTAINS
  DO I=1,NS
 !  SVALUE(I)=DBLE(S(I))
   !## seven significant numbers as it is a single-precision
-  WRITE(VAL,'(G15.7)') S(I)
+  WRITE(VAL,'(G15.6)') S(I)
   READ(VAL,*) SVALUE(I)
  ENDDO
  
