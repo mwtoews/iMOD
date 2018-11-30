@@ -8,7 +8,7 @@
 //
 // Winteracter resource script. 
 //
-// Modified : 29/Nov/2018 14:44:58
+// Modified : 30/Nov/2018 17:57:32
 //
 ///////////////////////////////////////////////////
 //
@@ -2441,18 +2441,20 @@ STYLE WS_CHILD | DS_CONTROL | DS_3DLOOK
 FONT    8, "Arial"
 BEGIN
     CONTROL "Output Folder",IDF_GROUP2,"BUTTON",WS_CHILD | WS_VISIBLE | WS_GROUP | BS_GROUPBOX | BS_TEXT,    7,    4,  289,  224
-    CONTROL "",IDF_MENU1,"COMBOBOX",WS_CHILD | WS_VISIBLE | WS_VSCROLL | WS_TABSTOP | CBS_SIMPLE | CBS_HASSTRINGS | CBS_UPPERCASE,   14,   30,  273,  162
+    CONTROL "",IDF_MENU1,"COMBOBOX",WS_CHILD | WS_VISIBLE | WS_VSCROLL | WS_TABSTOP | CBS_SIMPLE | CBS_HASSTRINGS | CBS_UPPERCASE,   14,   30,  273,  134
     CONTROL "Enter or Select Output Folder:",IDF_LABEL8,"STATIC",WS_CHILD | WS_VISIBLE | WS_GROUP | SS_LEFT,   14,   19,  100,    8
-    CONTROL "Results written in:",IDF_LABEL9,"STATIC",WS_CHILD | WS_VISIBLE | WS_GROUP | SS_LEFT,   14,  197,   80,    8
-    CONTROL "u:j6b9p69109dbaseresultatenversie_6625x25",IDF_LABEL4,"STATIC",WS_CHILD | WS_VISIBLE | WS_GROUP | SS_LEFT,   14,  208,  273,   16
+    CONTROL "Results written in:",IDF_LABEL9,"STATIC",WS_CHILD | WS_VISIBLE | WS_GROUP | SS_LEFT,   14,  167,   80,    8
+    CONTROL "u:j6b9p69109dbaseresultatenversie_6625x25",IDF_LABEL4,"STATIC",WS_CHILD | WS_VISIBLE | WS_GROUP | SS_LEFT,   14,  178,  273,   16
     CONTROL "&Start Model Simulation ...",IDOK,"BUTTON",WS_CHILD | WS_VISIBLE | WS_GROUP | WS_TABSTOP | BS_PUSHBUTTON | BS_TEXT | BS_FLAT,    6,  233,  100,   14
-    CONTROL "Block iMOD from Using until Simulation is finished",IDF_CHECK1,"BUTTON",WS_CHILD | WS_VISIBLE | WS_GROUP | WS_TABSTOP | BS_AUTOCHECKBOX | BS_TEXT | BS_FLAT,  111,  233,  179,   14
+    CONTROL "Block iMOD from Using until Simulation is finished",IDF_CHECK1,"BUTTON",WS_CHILD | WS_VISIBLE | WS_GROUP | WS_TABSTOP | BS_AUTOCHECKBOX | BS_TEXT | BS_FLAT,   14,  196,  179,   14
+    CONTROL "Save Echo of Simulation Window in Logfile",IDF_CHECK2,"BUTTON",WS_CHILD | WS_VISIBLE | WS_GROUP | WS_TABSTOP | BS_AUTOCHECKBOX | BS_TEXT | BS_FLAT,   14,  210,  179,   14
 END
 
 ID_DMDLTAB4 RCDATA
 BEGIN
 "[Checks] \n"
 " 1182 1 \n"
+" 1183 0 \n"
 "[Menus] \n"
 " 1192    10     0 \n"
 "HEADS [M+NAP] \n"
@@ -13306,4 +13308,4 @@ END
 //*WI* FILENAME    resource.f90
 //*WI* FMODNAME    RESOURCE
 //*WI* LASTTYPE        2
-//*WI* LASTRES       301
+//*WI* LASTRES        36
