@@ -181,6 +181,8 @@ CONTAINS
  TYPE (SPHERE3D) :: SLOOKFROM
  REAL(KIND=GLDOUBLE) :: Z
  
+ IF(ORIENTINDEX.NE.0)RETURN
+ 
  CALL GLMATRIXMODE(GL_MODELVIEW)
  CALL GLPOPMATRIX()   !## pops off the top matrix second-from-the top becomes the top
  CALL GLPUSHMATRIX()  !## pushes all matrices in the current stack down one level, topmost is copied
