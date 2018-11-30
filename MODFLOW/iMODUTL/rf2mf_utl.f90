@@ -62,7 +62,7 @@ CONTAINS
      IF(RFPCK(I).EQ.0)CALL IMOD_UTL_PRINTTEXT(' ('//CPCK(I)//') : absent ['//TRIM(TXTPCK(I))//']',3,IUOUT)
      IF(RFPCK(I).GT.0)CALL IMOD_UTL_PRINTTEXT(' ('//CPCK(I)//') : present but NOT found! ['//TRIM(TXTPCK(I))//']',3,IUOUT)
     ENDDO
-    CALL IMOD_UTL_PRINTTEXT(' Missing data in Package-block',-3,IUOUT)
+    IF(SUM(RFPCK).NE.0)CALL IMOD_UTL_PRINTTEXT(' Missing data in Package-block',-3,IUOUT)
    ENDIF
    !## continue for packages --- EOF could be correct
    IF(IMODPCK.EQ.1)RETURN

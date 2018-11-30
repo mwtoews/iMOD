@@ -257,8 +257,7 @@ CONTAINS
        wel%sp(kper)%gcd%nsubsys = nsys
        if (.not.associated(wel%sp(kper)%gcd%subsys)) allocate(wel%sp(kper)%gcd%subsys(maxsubsys))
        wel%sp(kper)%gcd%subsys(nsys)%ilay = ilay
-!       wel%sp(kper)%gcd%subsys(nsys)%factor = fct
-       isys=isub; if(isumbudget.eq.1)isys=1 !0 !1
+       isys=isub; if(isumbudget.eq.1)isys=1 
        wel%sp(kper)%gcd%subsys(nsys)%isub = isys
        if (.not.associated(wel%sp(kper)%gcd%subsys(nsys)%data)) allocate(wel%sp(kper)%gcd%subsys(nsys)%data(1))
        call RF2MF_READ1MAIN_system(wel%sp(kper)%gcd%subsys(nsys)%data(it),ios,ilay,fct,imp,constante,iarr,fname,iusclnodata,idsclnodata)
@@ -268,12 +267,9 @@ CONTAINS
        drn%sp(kper)%ldrn  = .true.
        drn%sp(kper)%reuse = .false.
        msys=drn%sp(kper)%gcd%nsubsys+nsys
-!       if(it.eq.1)msys = msys + 1
-!       drn%sp(kper)%gcd%nsubsys = msys
        if (.not. associated(drn%sp(kper)%gcd%subsys)) allocate(drn%sp(kper)%gcd%subsys(maxsubsys))
        drn%sp(kper)%gcd%subsys(msys)%ilay = ilay
-!       drn%sp(kper)%gcd%subsys(nsys)%factor = fct
-       isys=isub; if(isumbudget.eq.1)isys=1 !0 !1
+       isys=isub; if(isumbudget.eq.1)isys=1 
        drn%sp(kper)%gcd%subsys(msys)%isub = isys
        drn%sp(kper)%gcd%subsys(msys)%ldrn = .true.
        if (.not.associated(drn%sp(kper)%gcd%subsys(msys)%data)) allocate(drn%sp(kper)%gcd%subsys(msys)%data(3))
@@ -294,14 +290,10 @@ CONTAINS
        riv%sp(kper)%lriv  = .true.
        riv%sp(kper)%reuse = .false.
        msys = riv%sp(kper)%gcd%nsubsys+nsys
-!       riv%sp(kper)%gcd%nsubsys = msys
 
-!       if(it.eq.1)msys = msys + 1
-!       riv%sp(kper)%gcd%nsubsys = msys
        if (.not.associated(riv%sp(kper)%gcd%subsys)) allocate(riv%sp(kper)%gcd%subsys(maxsubsys))
        riv%sp(kper)%gcd%subsys(msys)%ilay = ilay
-!       riv%sp(kper)%gcd%subsys(nsys)%factor = fct
-       isys=isub; if(isumbudget.eq.1)isys=1 !0 !1
+       isys=isub; if(isumbudget.eq.1)isys=1 
        riv%sp(kper)%gcd%subsys(msys)%isub = isys
        riv%sp(kper)%gcd%subsys(msys)%lriv = .true.
        if (.not.associated(riv%sp(kper)%gcd%subsys(msys)%data)) allocate(riv%sp(kper)%gcd%subsys(msys)%data(5))
@@ -341,8 +333,7 @@ CONTAINS
        ghb%sp(kper)%gcd%nsubsys = nsys
        if (.not.associated(ghb%sp(kper)%gcd%subsys)) allocate(ghb%sp(kper)%gcd%subsys(maxsubsys))
        ghb%sp(kper)%gcd%subsys(isub)%ilay = ilay
-!       ghb%sp(kper)%gcd%subsys(nsys)%factor = fct
-       isys=isub; if(isumbudget.eq.1)isys=1 !0 !1
+       isys=isub; if(isumbudget.eq.1)isys=1 
        ghb%sp(kper)%gcd%subsys(isub)%isub = isys
        if (.not.associated(ghb%sp(kper)%gcd%subsys(nsys)%data)) allocate(ghb%sp(kper)%gcd%subsys(nsys)%data(3))
        if (itp(it).eq.1) then
@@ -375,12 +366,11 @@ CONTAINS
        drn%sp(kper)%lolf  = .true.
        drn%sp(kper)%reuse = .false.
        msys = drn%sp(kper)%gcd%nsubsys+nsys
-!       drn%sp(kper)%gcd%nsubsys = msys
        drn%sp(kper)%gcd%subsys(msys)%lolf = .true.
        if (.not.associated(drn%sp(kper)%gcd%subsys)) allocate(drn%sp(kper)%gcd%subsys(maxsubsys))
        drn%sp(kper)%gcd%subsys(msys)%ilay = ilay
-       isys=isub; if(isumbudget.eq.1)isys=1 !0 !1
-       drn%sp(kper)%gcd%subsys(msys)%isub = -isys !drn%sp(kper)%gcd%subsys(nsys)%isub + 1
+       isys=isub; if(isumbudget.eq.1)isys=1 
+       drn%sp(kper)%gcd%subsys(msys)%isub = -isys 
        if (.not.associated(drn%sp(kper)%gcd%subsys(msys)%data)) allocate(drn%sp(kper)%gcd%subsys(msys)%data(3))
        call RF2MF_READ1MAIN_system(drn%sp(kper)%gcd%subsys(msys)%data(2),ios,ilay,fct,imp,constante,iarr,fname,iusclarith,idsclintp)
        drn%sp(kper)%gcd%subsys(msys)%data(1)%keyword = 'constant'
@@ -396,7 +386,7 @@ CONTAINS
        chd%sp(kper)%gcd%nsubsys = nsys
        if (.not.associated(chd%sp(kper)%gcd%subsys)) allocate(chd%sp(kper)%gcd%subsys(maxsubsys))
        chd%sp(kper)%gcd%subsys(nsys)%ilay = ilay
-       isys=isub; if(isumbudget.eq.1)isys=1 !0 !1
+       isys=isub; if(isumbudget.eq.1)isys=1 
        chd%sp(kper)%gcd%subsys(nsys)%isub = isys
        if (.not.associated(chd%sp(kper)%gcd%subsys(nsys)%data)) allocate(chd%sp(kper)%gcd%subsys(nsys)%data(3))
        call RF2MF_READ1MAIN_system(chd%sp(kper)%gcd%subsys(nsys)%data(1),ios,ilay,fct,imp,constante,iarr,fname,iusclarith,idsclintp)
@@ -408,10 +398,9 @@ CONTAINS
        fct = 1.; imp = 0.
        riv%sp(kper)%reuse = .false.
        msys = riv%sp(kper)%gcd%nsubsys+nsys
-!       riv%sp(kper)%gcd%nsubsys = msys
        if (.not.associated(riv%sp(kper)%gcd%subsys)) allocate(riv%sp(kper)%gcd%subsys(maxsubsys))
        riv%sp(kper)%gcd%subsys(msys)%ilay = ilay
-       isys=isub; if(isumbudget.eq.1)isys=1 !0 !=1
+       isys=isub; if(isumbudget.eq.1)isys=1 
        riv%sp(kper)%gcd%subsys(msys)%isub = -isys
        riv%sp(kper)%gcd%subsys(msys)%lisg = .true.
        if (.not.associated(riv%sp(kper)%gcd%subsys(msys)%data)) allocate(riv%sp(kper)%gcd%subsys(msys)%data(4))
