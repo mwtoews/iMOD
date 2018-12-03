@@ -250,8 +250,6 @@ CONTAINS
  !## make drawinglist for orientation
  CALL IMOD3D_SETUPORIENTATION()
 
- CALL IMOD3D_ERROR('3')
-
  !## make drawinglist for axes
  CALL IMOD3D_SETUPAXES()
  !## make drawinglist for labels
@@ -317,15 +315,22 @@ CONTAINS
  !## get filled background first
  !##----------------------------
 
+ CALL IMOD3D_ERROR('IMOD3D_SETUPAXES_1')
+
  !## destroy current display list index
  IF(AXESINDEX(0).NE.0)CALL GLDELETELISTS(AXESINDEX(0),1_GLSIZEI)
+
+ CALL IMOD3D_ERROR('IMOD3D_SETUPAXES_2')
 
  !## generate display-lists
  AXESINDEX(0)=GLGENLISTS(1)
  
  CALL GLNEWLIST(AXESINDEX(0),GL_COMPILE)
 
-  !## draw bottom
+ CALL IMOD3D_ERROR('IMOD3D_SETUPAXES_3')
+!The function was called between a call to glBegin and the corresponding call to glEnd.
+
+ !## draw bottom
   CALL GLBEGIN(GL_POLYGON)
    CALL GLVERTEX3D(X1,Y1,Z1)
    CALL GLVERTEX3D(X2,Y1,Z1)

@@ -408,16 +408,11 @@ IIRLOOP: DO IIR=1,NIR
       !## store results in ir results map for "permanent" storage
       ELSE
        DIRNAME=TRIM(RESDIR)//'\'//TRIM(ADJUSTL(CTREE(1)))//'\'//TRIM(ADJUSTL(CTREE(2)))//'\'//TRIM(ADJUSTL(CTREE(3)))
-!WRITE(*,*) TRIM(DIRNAME)
       ENDIF
      ENDIF
      IF(.NOT.IOSDIREXISTS(TRIM(DIRNAME)))CALL UTL_CREATEDIR(DIRNAME)
      !## store results
      IDFNAME=TRIM(DIRNAME)//'\'//TRIM(PER(IPER)%NAMEPER)//'_'//TRIM(RES(IRES)%NAMERES)//'.idf'
-
-!WRITE(*,*) TRIM(IDFNAME)
-
-!     IDFNAME=TRIM(DIRNAME)//'\'//TRIM(PER(IPER)%NAMEPER)//'_'//TRIM(RES(IRES)%DIRRES)//'_L'//TRIM(ITOS(RES(IRES)%ILAYRES))//'.idf'
 
      !## write result
      IF(.NOT.IDFWRITE(EFFECT(1),IDFNAME,1))RETURN
@@ -430,10 +425,6 @@ IIRLOOP: DO IIR=1,NIR
       !## draw legend
       CALL LEGPLOT_MAIN(ID_DIR_PMTAB2TAB3,IDF_PICTURE1,3)  !## two columns
      ENDIF
-
-!   IDFNAME=TRIM(DIRNAME)//'\'//'result_equi.idf'
-!   IF(.NOT.IDFWRITE_EQUI(EFFECT(1),IDFNAME,RES(J)%ITYPERES))RETURN
-!   CALL MANAGER_UTL_ADDFILE(IDFNAMEGIVEN=IDFNAME,'')
 
      !## start computing percentiles of current effect computation
      IF(LINVIR)THEN

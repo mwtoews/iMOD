@@ -112,7 +112,7 @@ CONTAINS
     CALL UTL_WAITMESSAGE(IRAT,IRAT1,IROW,IDF%NROW,'Progress Ordinary Kriging ('//TRIM(ITOS(NACTP))//') points')
    ENDIF  
   ELSE
-   WRITE(6,'(A,F10.3,A)') '+Progress ',REAL(100*IROW)/REAL(IDF%NROW),' % ('//TRIM(ITOS(NACTP))//') points'
+   WRITE(6,'(A,F10.3,A)') '+Progress ',REAL(100*IROW)/REAL(IDF%NROW),' % ('//TRIM(ITOS(NACTP))//') points           '
   ENDIF
  ENDDO
 
@@ -460,7 +460,7 @@ CONTAINS
  ENDIF
   
  !## no points left, interpolated value equals nodata
- IF(NP.LE.0)THEN; KEST=NODATA; KVAR=0.0D0; RETURN; ENDIF
+ IF(NP.LE.0)THEN; KEST=NODATA; KVAR=0.0D0; NACTP=NP; RETURN; ENDIF
   
 ! !## save points
 ! IU=UTL_GETUNIT()

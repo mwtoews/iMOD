@@ -56,7 +56,7 @@ CONTAINS
  IMPLICIT NONE
  CHARACTER(LEN=*),INTENT(IN) :: FNAME
  CHARACTER(LEN=256) :: RUNFILE
- INTEGER :: I,IBATCH,ILAY,IPLOT,NG,IDEF
+ INTEGER :: I,IBATCH,ILAY,IPLOT,NG,IDEF,NCONS
 
  TRACE_3D_INIT=.FALSE.
 
@@ -98,7 +98,7 @@ CONTAINS
  ENDIF
 
  !## read data 
- IF(.NOT.TRACECALC_INIT(0))RETURN
+ IF(.NOT.TRACECALC_INIT(0,NCONS))RETURN
  !## read fluxes, default forward simulation
  IF(.NOT.TRACEREADBUDGET(1,0))RETURN 
 
@@ -1459,11 +1459,11 @@ CONTAINS
  END FUNCTION TRACEMAIN
  
  !###======================================================================
- LOGICAL FUNCTION TRACECALC_INIT(IBATCH)
+ LOGICAL FUNCTION TRACECALC_INIT(IBATCH,NCONS)
  !###======================================================================
  IMPLICIT NONE
  INTEGER,INTENT(IN) :: IBATCH
- INTEGER :: NCONS
+ INTEGER,INTENT(OUT) :: NCONS
  
  TRACECALC_INIT=.FALSE.
 
@@ -1489,7 +1489,7 @@ CONTAINS
  REAL(KIND=DP_KIND) :: TIME,TTMAX,DT,MAXVELOCITY
  TYPE(WIN_MESSAGE) :: MESSAGE
  INTEGER :: I,J,ILAY,ITYPE,IPER,IPART,NCONS,IPERIOD,NIDSCH,IDSCH,IP,IRAT, &
-                IRAT1,DPER,MPER,SPER 
+            IRAT1,DPER,MPER,SPER 
  LOGICAL :: LEX
  
  TRACE_CALC=.FALSE.
@@ -1505,7 +1505,7 @@ CONTAINS
   WRITE(*,'(/1X,A/)') 'Particle tracking for a part of the model only'
  ENDIF
 
- IF(.NOT.TRACECALC_INIT(IBATCH))RETURN
+ IF(.NOT.TRACECALC_INIT(IBATCH,NCONS))RETURN
  
  ALLOCATE(IVISIT(IDF%NCOL*IDF%NROW*NLAY)); IVISIT=INT(0,1)
  ALLOCATE(LVISIT(IDF%NCOL*IDF%NROW*NLAY)); LVISIT=0
@@ -1732,7 +1732,7 @@ CONTAINS
   STRING=TRIM(STRING)//' and added to the iMOD-manager.'// &
     TRIM(ITOS(SP(ISPFNAME)%NPART))//' particles were released out of '//TRIM(ITOS(TPART))//'. '//  &
    'Unreleased particles occured due to inactive/constant head boundary conditions '// &
-   'and/or particles positioned above/beneath given thresshold.'// &
+   'and/or particles positioned above/beneath given thresshold. '// &
     TRIM(ITOS(NCONS))//' inconsequences were removed from top/bottom information! '// &
     'IMPORTANT: Maximum velocity that occured: '//TRIM(RTOS(MAXVELOCITY,'E',4))//' m/day'
   WRITE(IULOG,'(/A/)') TRIM(STRING)
