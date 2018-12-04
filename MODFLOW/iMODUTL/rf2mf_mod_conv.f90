@@ -1191,14 +1191,13 @@
 !.......................................................................
       
       if(.not.pks%active)return 
-      
       call pks7mpigetnrproc(nrproc)
       if(nrproc.le.1)return
       
       call pks7mpisetgnodes( ncol, nrow, nlay )
             
       if (pks%partopt.eq.0) then ! uniform
-         pks%nrproc = nrproc
+      pks%nrproc = nrproc
          allocate(pks%partminmax(pks%nrproc,4)) 
          call pks7mpipartdef( pks%partminmax(:,1), pks%partminmax(:,2),& 
                               pks%partminmax(:,3), pks%partminmax(:,4) )

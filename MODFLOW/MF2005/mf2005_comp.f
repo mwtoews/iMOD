@@ -970,7 +970,7 @@ c
       call SGWF2BAS7PNT(IGRID)                                                  ! DLT: instances
 
       kkiter=kiter                                                              ! DLT: instances
-      write(*,*) kiter
+!      write(*,*) kiter
 C7C2B---MAKE ONE CUT AT AN APPROXIMATE SOLUTION.
             IERR=0
             IF (IUNIT(IUSIP).GT.0) THEN

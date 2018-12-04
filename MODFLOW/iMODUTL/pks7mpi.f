@@ -2253,7 +2253,7 @@ c...    clipping parameters layers
       end subroutine pks7mpisetrcl
 
       !> Append output file name with rank ID for MPP.
-      subroutine pks7mpifname( fname, len)
+      subroutine pks7mpifname( fname, n)
 
       use pksmpi_mod
 
@@ -2261,7 +2261,7 @@ c...    clipping parameters layers
 c
 c...     Arguments
       character(len=*), intent(inout) :: fname !< (I) file name
-      integer, intent(inout) :: len            !< (I/O) length of file name
+      integer, intent(inout) :: n            !< (I/O) length of file name
 c
 c...     Local variables
 c.......................................................................
@@ -2269,8 +2269,9 @@ c.......................................................................
       if (mpptyp.eq.mppser .or. mpptyp.eq.mppini1) return
 
 c...     add rank ID to file name
-      write(fname,'(2a,i3.3)') fname(1:len), '.p', myrank
-      len = len + 5
+      write(fname,'(2a,i3.3)') trim(fname), '.p', myrank
+!       write(line,'(2a,i3.3)') fname(:n), '.p', myrank
+      n = n + 5
 c
 c...     normal return
       return
@@ -4031,7 +4032,6 @@ c.......................................................................
       else
          np = nrproc
       end if
-
       return
       end subroutine pks7mpigetnrproc 
  

@@ -1064,7 +1064,6 @@ CONTAINS
  IMOD_UTL_DIREXIST=.FALSE.
  !## try to create a file in folder
  IU=IMOD_UTL_GETUNIT()
- 
  FNAME = TRIM(DIRNAME)//'\tmp.tmp#0#1#2'
 #ifdef PKSMPI 
  N = LEN_TRIM(FNAME)
