@@ -1340,7 +1340,8 @@ c assemble root
         else
          fmt = '(2a,i2)'
         end if
-        write(prefix,fmt) prefix(1:cfn_length(prefix)),'_sys', isub
+        write(tmp,fmt) prefix(1:cfn_length(prefix)),'_sys', isub
+        prefix=tmp
        end if
       end if
 
@@ -1382,11 +1383,6 @@ c create output file name
      1                       cdate_string(1:cfn_length(cdate_string)),
      1                      '_l', ilay, partstr(1:cfn_length(partstr)),
      1                      '.',ext(1:cfn_length(ext))
-!         write(fname,fmt) root(1:cfn_length(root)),
-!     1                       prefix(1:cfn_length(prefix)),'_',
-!     1                       time_cstring(1:cfn_length(time_cstring)),
-!     1                      '_l', ilay, partstr(1:cfn_length(partstr)),
-!     1                      '.',ext(1:cfn_length(ext))
          endif
       else ! SS
          fmt = '(5a,'//fmt
