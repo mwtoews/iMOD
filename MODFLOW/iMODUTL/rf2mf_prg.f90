@@ -203,6 +203,8 @@ IF(IACT.NE.0)THEN
  CALL RF2MF_CHECKRUN()
  !## determine size of SIMBOX and adjust ncol/nrow
  CALL RF2MF_EXTENT(idf)
+ !### PKS partitioning
+ if(pks%active)call PartPks()
  !## read empty string - header MODULES FOR EACH LAYER
  READ(IURUN,*) LINE
  !## solve current model - lstop=.true.: quit ; lstop=.false. whenever effect 'bounds' to boundary!
@@ -211,9 +213,6 @@ ELSE
  CLOSE(IURUN)
  CLOSE(IUOUT)
 END IF
-
-!### PKS partitioning
-if(pks%active)call PartPks()
 
 !...     write package input files
 if (myrank.eq.0) then ! master only

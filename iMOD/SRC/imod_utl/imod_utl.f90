@@ -3464,9 +3464,6 @@ DOLOOP: DO
 
  ENDIF
  
-! !## always increase a single row/column
-! NC1=NC1-1; NC2=NC2+1; NR1=NR1-1; NR2=NR2+1
- 
  NC1=MAX(1,NC1); NC1=MIN(NC1,IDF%NCOL)
  NC2=MAX(1,NC2); NC2=MIN(NC2,IDF%NCOL)
  NR1=MAX(1,NR1); NR1=MIN(NR1,IDF%NROW)
