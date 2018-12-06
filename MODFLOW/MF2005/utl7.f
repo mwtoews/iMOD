@@ -1683,7 +1683,7 @@ c parameters
 c local variables
       logical :: lmin, ltok
       character(len=200) :: s
-      integer :: oper, ifnd, i, j, n
+      integer :: oper, ifnd, i, j, k, n
       integer, dimension(ntoken) :: wrk
       real :: val
       real, dimension(ntoken) :: fac
@@ -1717,7 +1717,10 @@ c init
 
          ! find the next token
          wrk = 200;
-         do i = 1, ntoken
+         i=1
+         do !i = 1, ntoken
+            i = i + 1 
+            if(i.gt.size(token))exit
             j = index(s,token(i))
             ltok = .false.
             if (j.gt.0) then
@@ -1725,7 +1728,14 @@ c init
                    if (j.eq.1) then
                       ltok = .true.
                    else
-                      if (s(j-1:j-1).ne.'e') ltok = .true.
+                      if (s(j-1:j-1).ne.'e') then
+                       ltok = .true.
+                      else
+                       i=i-1
+                       do k=1,len(s)-j
+                        s(k:k)=s(j+k:j+k)
+                       enddo
+                      endif
                    end if
                 else
                     ltok = .true.
