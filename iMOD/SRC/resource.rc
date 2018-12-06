@@ -8,7 +8,7 @@
 //
 // Winteracter resource script. 
 //
-// Modified : 03/Dec/2018 13:10:10
+// Modified : 06/Dec/2018 14:49:35
 //
 ///////////////////////////////////////////////////
 //
@@ -7488,6 +7488,13 @@ BEGIN
     CONTROL "Label",ISS1,"EDIT",WS_CHILD | WS_VISIBLE | WS_BORDER | WS_TABSTOP | ES_LEFT,    0,    0,   75,   14
 END
 
+IDD_TEMPLATE038 RCDATA
+BEGIN
+"[Lengths] \n"
+" 1059   256 \n"
+,0
+END
+
 ID_DTSTAT DIALOG 0, 0,  293,  310
 STYLE WS_CHILD | WS_CLIPSIBLINGS | WS_BORDER | WS_DLGFRAME | WS_SYSMENU | WS_MINIMIZEBOX | DS_3DLOOK | DS_MODALFRAME
 FONT    8, "Arial"
@@ -13309,4 +13316,4 @@ END
 //*WI* FILENAME    resource.f90
 //*WI* FMODNAME    RESOURCE
 //*WI* LASTTYPE        2
-//*WI* LASTRES       164
+//*WI* LASTRES       191

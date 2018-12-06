@@ -1479,23 +1479,23 @@ END SUBROUTINE MODFLOW_IDF
 SUBROUTINE RF2MF_WRITEBOX()
 !#####=================================================================
 IMPLICIT NONE
-REAL :: AREA
+REAL(KIND=DP_KIND) :: AREA
 
 CALL IMOD_UTL_PRINTTEXT('Given window of interest:' ,3)
-WRITE(LINE,'(A,3(F15.2,A1))') ' Xmin - Xmax - Delta X (m):',USEBOX(1),' - ',USEBOX(3),' - ',USEBOX(3)-USEBOX(1)
+WRITE(LINE,'(A,3(F15.3,A1))') ' Xmin - Xmax - Delta X (m):',USEBOX(1),' - ',USEBOX(3),' - ',USEBOX(3)-USEBOX(1)
 CALL IMOD_UTL_PRINTTEXT(TRIM(LINE),3)
-WRITE(LINE,'(A,3(F15.2,A1))') ' Ymin - Ymax - Delta Y (m):',USEBOX(2),' - ',USEBOX(4),' - ',USEBOX(4)-USEBOX(2)
+WRITE(LINE,'(A,3(F15.3,A1))') ' Ymin - Ymax - Delta Y (m):',USEBOX(2),' - ',USEBOX(4),' - ',USEBOX(4)-USEBOX(2)
 CALL IMOD_UTL_PRINTTEXT(TRIM(LINE),3)
-IF(NSCL.LE.2)WRITE(LINE,'(A,2(F15.2,A1))') ' Cellsize - Buffer (m)    :',SIMCSIZE,' - ',LAMBDA(1)
-IF(NSCL.GE.3)WRITE(LINE,'(A,F10.2,A1,4F10.2)') ' Cellsize - Four Buffers (m)    :',SIMCSIZE,' - ',LAMBDA(1:4)
+IF(NSCL.LE.2)WRITE(LINE,'(A,2(F15.3,A1))') ' Cellsize - Buffer (m)    :',SIMCSIZE,' - ',LAMBDA(1)
+IF(NSCL.GE.3)WRITE(LINE,'(A,F10.2,A1,4F15.3)') ' Cellsize - Four Buffers (m)    :',SIMCSIZE,' - ',LAMBDA(1:4)
 CALL IMOD_UTL_PRINTTEXT('Computed window of simulation:' ,3)
 CALL IMOD_UTL_PRINTTEXT(TRIM(LINE),3)
-WRITE(LINE,'(A,3(F15.2,A1))') ' Xmin - Xmax - Delta X (m):',SIMBOX(1),' - ',SIMBOX(3),' - ',SIMBOX(3)-SIMBOX(1)
+WRITE(LINE,'(A,3(F15.3,A1))') ' Xmin - Xmax - Delta X (m):',SIMBOX(1),' - ',SIMBOX(3),' - ',SIMBOX(3)-SIMBOX(1)
 CALL IMOD_UTL_PRINTTEXT(TRIM(LINE),3)
-WRITE(LINE,'(A,3(F15.2,A1))') ' Ymin - Ymax - Delta Y (m):',SIMBOX(2),' - ',SIMBOX(4),' - ',SIMBOX(4)-SIMBOX(2)
+WRITE(LINE,'(A,3(F15.3,A1))') ' Ymin - Ymax - Delta Y (m):',SIMBOX(2),' - ',SIMBOX(4),' - ',SIMBOX(4)-SIMBOX(2)
 CALL IMOD_UTL_PRINTTEXT(TRIM(LINE),3)
 AREA=(SIMBOX(3)-SIMBOX(1))*(SIMBOX(4)-SIMBOX(2))
-WRITE(LINE,'(A,F15.2,A1)')    ' Total Area (km2)         :',AREA/1.0E6
+WRITE(LINE,'(A,F15.3,A1)')    ' Total Area (km2)         :',AREA/1.0D6
 CALL IMOD_UTL_PRINTTEXT(TRIM(LINE),3)
 
 END SUBROUTINE RF2MF_WRITEBOX
