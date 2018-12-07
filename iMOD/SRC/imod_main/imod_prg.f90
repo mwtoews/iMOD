@@ -172,8 +172,6 @@ CALL PMANAGER_UTL_INIT(); CALL PMANAGER_UTL_UPDATE(0,0,0); CALL PMANAGERFIELDS()
 CALL IMODINIT()
 !## initialize preferences
 CALL PREFINIT()
-!!## allocate polygons
-!CALL POLYGON1INIT()
 !## no colour read
 NLITHO=0
 !## initiate white colors

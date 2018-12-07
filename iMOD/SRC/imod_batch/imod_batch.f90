@@ -7550,6 +7550,20 @@ CONTAINS
   IF(LEN_TRIM(IFFNAME).NE.0)CALL MANAGER_UTL_ADDFILE(IDFNAMEGIVEN=IFFNAME,LEGNAME=IFFLEGNAME,ISTYLE=IFFSTYLE,LDEACTIVATE=.FALSE.)
   DO I=1,NGEN; CALL GEN_INIT(GENNAME=GENNAME(I),LDEACTIVATE=.FALSE.,GENCOLOUR=GENCOLOUR(I),GENTHICKNESS=GENTHICKNESS(I)); ENDDO
 
+  IF(NFIG.EQ.4)THEN
+   !## bitmap size ... screensize --- vierkant
+   MPW%DIX=RESOLUTION !1600
+   MPW%DIY=RESOLUTION !1600
+  ELSE
+   RAT=(MPW%XMAX-MPW%XMIN)/(MPW%YMAX-MPW%YMIN)
+   IF(RAT.GE.1)THEN
+    MPW%DIX=RESOLUTION !1600
+    MPW%DIY=MPW%DIX/RAT
+   ELSE
+    MPW%DIY=3200 !1600
+    MPW%DIX=MPW%DIY*RAT
+   ENDIF
+  ENDIF
   IF(XMAX-XMIN.EQ.0.0D0)THEN
    !## draw in case no window is specified
    CALL IDFPLOT(1)
@@ -7565,20 +7579,6 @@ CONTAINS
    MPW%YMIN=YMIN
    MPW%XMAX=XMAX
    MPW%YMAX=YMAX
-  ENDIF
-  IF(NFIG.EQ.4)THEN
-   !## bitmap size ... screensize --- vierkant
-   MPW%DIX=RESOLUTION !1600
-   MPW%DIY=RESOLUTION !1600
-  ELSE
-   RAT=(MPW%XMAX-MPW%XMIN)/(MPW%YMAX-MPW%YMIN)
-   IF(RAT.GE.1)THEN
-    MPW%DIX=RESOLUTION !1600
-    MPW%DIY=MPW%DIX/RAT
-   ELSE
-    MPW%DIY=3200 !1600
-    MPW%DIX=MPW%DIY*RAT
-   ENDIF
   ENDIF
 
   CALL WMENUSETSTATE(ID_SHOWSCALEBAR,2,0)
@@ -7599,7 +7599,6 @@ CONTAINS
   I=INFOERROR(1)
   CALL WBITMAPSAVE(IBITMAP,BMPOUTNAME)
   I=INFOERROR(1)
-  WRITE(*,*) I
   CALL WBITMAPDESTROY(MPW%IBITMAP)
   IF(IBITMAP.NE.0)CALL WBITMAPDESTROY(IBITMAP) 
  ENDDO
@@ -7624,22 +7623,20 @@ CONTAINS
  INTEGER :: IHR,IMT,IS,MS,IY,IM,ID,N
  CHARACTER(LEN=50) :: STRING
 
- BND =5.0     !## witte rand
+ BND =5.0D0     !## witte rand
  XP  =420.0D0   !## paper width
- YP  =297.0   !## paper heigth
- GR  =YP      !## graph area right
+ YP  =297.0D0   !## paper heigth
+ GR  =YP        !## graph area right
  BH  =YP-40.0D0 !## title bot area
- LT  =YP-75.0 !## legend top aera
- LB  =65.0    !## legend bot aera
- AB  =45.0    !## axes bot area
- PB  =19.0    !## project
- FB  =15.0    !## figure number
+ LT  =YP-75.0D0 !## legend top area
+ LB  =65.0D0    !## legend bot area
+ AB  =45.0D0    !## axes bot area
+ PB  =19.0D0    !## project
+ FB  =15.0D0    !## figure number
  DB  =10.0D0    !## date
  TBND=BND+BND
-
- !MPW%DX
  
- ACC=5.0
+ ACC=5.0D0
 
  !## create 'mother' bitmap for current coordinates
  CALL WBITMAPCREATE(IBITMAP,INT(XP*ACC),INT(YP*ACC))
@@ -7648,15 +7645,23 @@ CONTAINS
  CALL IGRPLOTMODE(MODECOPY)
  CALL DBL_IGRAREA(0.0D0,0.0D0,1.0D0,1.0D0)
  CALL DBL_IGRUNITS(0.0D0,0.0D0,XP,YP)
- CALL IGRCOLOURN(WRGB(235,235,235))                !## legend area
+
+ !## legend area
+ CALL IGRCOLOURN(WRGB(255,255,255))
  CALL IGRFILLPATTERN(SOLID)
  CALL DBL_IGRRECTANGLE(GR,AB,XP-BND,LT)
+
+ !## top text
  CALL IGRCOLOURN(WRGB(123,152,168))
- CALL DBL_IGRRECTANGLE(GR,LT,XP-BND,YP-BND)            !## top
- CALL IGRCOLOURN(WRGB(0,102,161))
- CALL DBL_IGRRECTANGLE(GR,0.0D0+BND,XP-BND,AB)           !## below
+ CALL DBL_IGRRECTANGLE(GR,LT,XP-BND,YP-BND)            
+
+ !## bottom text
+ CALL IGRCOLOURN(WRGB(123,152,168)) !0,102,161))
+ CALL DBL_IGRRECTANGLE(GR,0.0D0+BND,XP-BND,AB)          
+ 
+  !## main window
  CALL IGRCOLOURN(WRGB(255,255,255))
- CALL DBL_IGRRECTANGLE(0.0D0+BND,0.0D0+BND,GR-BND,YP-BND)  !## main window
+ CALL DBL_IGRRECTANGLE(0.0D0+BND,0.0D0+BND,GR-BND,YP-BND)  
 
  Y1=0.03333D0
  X1=Y1/(0.03333D0/0.01333D0)
@@ -7745,6 +7750,25 @@ CONTAINS
  X2=MPW%XMIN+(XP/GR)*(MPW%XMAX-MPW%XMIN)
  Y2=MPW%YMIN+(LB/YP)*(MPW%YMAX-MPW%YMIN)
  CALL DBL_IGRUNITS(X1,Y1,X2,Y2)
+ 
+ SB_XP1=GR/XP 
+ SB_YP1=AB/YP 
+ SB_XP2=(XP-BND)/XP
+ SB_YP2=LB/YP 
+
+ !BND =5.0D0     !## witte rand
+ !XP  =420.0D0   !## paper width
+ !YP  =297.0D0   !## paper heigth
+ !GR  =YP        !## graph area right
+ !BH  =YP-40.0D0 !## title bot area
+ !LT  =YP-75.0D0 !## legend top area
+ !LB  =65.0D0    !## legend bot area
+ !AB  =45.0D0    !## axes bot area
+ !PB  =19.0D0    !## project
+ !FB  =15.0D0    !## figure number
+ !DB  =10.0D0    !## date
+ !
+ 
  CALL IDFPLOT_FEATURES_SCALE() !
 
  END SUBROUTINE IMODBATH_PLOTFIG
