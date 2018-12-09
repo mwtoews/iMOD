@@ -4772,39 +4772,39 @@ IRLOOP: DO IROW=1,PRJIDF%NROW; DO ICOL=1,PRJIDF%NCOL
  WRITE(IU,'(/A/)') '#General options'
  WRITE(IU,'(A)') 'BEGIN OPTIONS'
  WRITE(IU,'(A)') ' PRINT_OPTION SUMMARY'
- WRITE(IU,'(A)') ' COMPLEXITY MODERATE'  !## simple complex
+! WRITE(IU,'(A)') ' COMPLEXITY MODERATE'  !## simple complex
  WRITE(IU,'(A)') ' CSV_OUTPUT FILEOUT '//TRIM(DIRMNAME(INDEX(DIRMNAME,'\',.TRUE.)+1:))//'.CSV'
  WRITE(IU,'(A)') 'END OPTIONS'
 
 !## set by complexity
-! WRITE(IU,'(/A/)') '#Nonlinear options'
-! WRITE(IU,'(A)') 'BEGIN NONLINEAR'
-! WRITE(IU,'(A)') 'OUTER_HCLOSE <outer_hclose>'
-! WRITE(IU,'(A)') 'OUTER_MAXIMUM <outer_maximum>'
-! WRITE(IU,'(A)') '[UNDER_RELAXATION <under_relaxation>]'
-! WRITE(IU,'(A)') '[UNDER_RELAXATION_THETA <under_relaxation_theta>]'
-! WRITE(IU,'(A)') '[UNDER_RELAXATION_KAPPA <under_relaxation_kappa>]'
-! WRITE(IU,'(A)') '[UNDER_RELAXATION_GAMMA <under_relaxation_gamma>]'
-! WRITE(IU,'(A)') '[UNDER_RELAXATION_MOMENTUM <under_relaxation_momentum>]'
-! WRITE(IU,'(A)') '[BACKTRACKING_NUMBER <backtracking_number>]'
-! WRITE(IU,'(A)') '[BACKTRACKING_TOLERANCE <backtracking_tolerance>]'
-! WRITE(IU,'(A)') '[BACKTRACKING_REDUCTION_FACTOR <backtracking_reduction_factor>]'
-! WRITE(IU,'(A)') '[BACKTRACKING_RESIDUAL_LIMIT <backtracking_residual_limit>]'
-! WRITE(IU,'(A)') 'END NONLINEAR'
-!
-! WRITE(IU,'(/A/)') '#Linear options'
-! WRITE(IU,'(A)') 'BEGIN LINEAR'
-! WRITE(IU,'(A)') 'INNER_MAXIMUM <inner_maximum>'
-! WRITE(IU,'(A)') 'INNER_HCLOSE <inner_hclose>'
-! WRITE(IU,'(A)') 'INNER_RCLOSE <inner_rclose> [<rclose_option>]'
-! WRITE(IU,'(A)') 'LINEAR_ACCELERATION <linear_acceleration>'
-! WRITE(IU,'(A)') '[RELAXATION_FACTOR <relaxation_factor>]'
-! WRITE(IU,'(A)') '[PRECONDITIONER_LEVELS <preconditioner_levels>]'
-! WRITE(IU,'(A)') '[PRECONDITIONER_DROP_TOLERANCE <preconditioner_drop_tolerance>]'
-! WRITE(IU,'(A)') '[NUMBER_ORTHOGONALIZATIONS <number_orthogonalizations>]'
-! WRITE(IU,'(A)') '[SCALING_METHOD <scaling_method>]'
-! WRITE(IU,'(A)') '[REORDERING_METHOD <reordering_method>]'
-! WRITE(IU,'(A)') 'END LINEAR'
+ WRITE(IU,'(/A/)') '#Nonlinear options'
+ WRITE(IU,'(A)') 'BEGIN NONLINEAR'
+ WRITE(IU,'(A,G15.7)') ' OUTER_HCLOSE ',PCG%HCLOSE
+ WRITE(IU,'(A,I10)') ' OUTER_MAXIMUM ',PCG%NOUTER
+! WRITE(IU,'(A)') ' [UNDER_RELAXATION <under_relaxation>]'
+! WRITE(IU,'(A)') ' [UNDER_RELAXATION_THETA <under_relaxation_theta>]'
+! WRITE(IU,'(A)') ' [UNDER_RELAXATION_KAPPA <under_relaxation_kappa>]'
+! WRITE(IU,'(A)') ' [UNDER_RELAXATION_GAMMA <under_relaxation_gamma>]'
+! WRITE(IU,'(A)') ' [UNDER_RELAXATION_MOMENTUM <under_relaxation_momentum>]'
+! WRITE(IU,'(A)') ' [BACKTRACKING_NUMBER <backtracking_number>]'
+! WRITE(IU,'(A)') ' [BACKTRACKING_TOLERANCE <backtracking_tolerance>]'
+! WRITE(IU,'(A)') ' [BACKTRACKING_REDUCTION_FACTOR <backtracking_reduction_factor>]'
+! WRITE(IU,'(A)') ' [BACKTRACKING_RESIDUAL_LIMIT <backtracking_residual_limit>]'
+ WRITE(IU,'(A)') 'END NONLINEAR'
+
+ WRITE(IU,'(/A/)') '#Linear options'
+ WRITE(IU,'(A)')       'BEGIN LINEAR'
+ WRITE(IU,'(A,I10)')   ' INNER_MAXIMUM ',PCG%NINNER
+ WRITE(IU,'(A,G15.7)') ' INNER_HCLOSE ',PCG%HCLOSE
+ WRITE(IU,'(A,G15.7)') ' INNER_RCLOSE ',PCG%RCLOSE
+ WRITE(IU,'(A)')       ' LINEAR_ACCELERATION CG'
+ WRITE(IU,'(A,G15.7)') ' RELAXATION_FACTOR ',PCG%RELAX
+! WRITE(IU,'(A)') ' [PRECONDITIONER_LEVELS <preconditioner_levels>]'
+! WRITE(IU,'(A)') ' [PRECONDITIONER_DROP_TOLERANCE <preconditioner_drop_tolerance>]'
+! WRITE(IU,'(A)') ' [NUMBER_ORTHOGONALIZATIONS <number_orthogonalizations>]'
+! WRITE(IU,'(A)') ' [SCALING_METHOD <scaling_method>]'
+! WRITE(IU,'(A)') ' [REORDERING_METHOD <reordering_method>]'
+ WRITE(IU,'(A)')      'END LINEAR'
 
  CLOSE(IU)
  
