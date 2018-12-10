@@ -236,7 +236,7 @@ CONTAINS
 
  CALL MAIN_UTL_INACTMODULE(ID_CREATEGEN)
 
- !## other module no closed, no approvement given
+ !## other module not closed, no approvement given
  IF(IDIAGERROR.EQ.1)RETURN
 
  CALL WMENUSETSTATE(ID_CREATEGEN,2,1)

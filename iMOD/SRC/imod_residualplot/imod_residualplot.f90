@@ -495,9 +495,8 @@ CONTAINS
   CALL IPGSTYLE(1,4,2,0,NCLR,WRGB(6,165,205),1) 
   !## minimum x-value, minimum y-value, maximum x-value, maximum y-value
   !## to be computed ourselves beforehand in subroutine "RESIDUAL_PROC_HISTCLASS"
-!  CALL DBL_IPGUNITS(HCLASSES(2)-1,MINVAL(XCLASSES),HCLASSES(SIZE(HCLASSES)-1)+1,MAXVAL(XCLASSES)) !## in principe wil ik deze regel gebruiken, maar...
   X1=0.0D0; X2=REAL(NBAR); Y1=MINVAL(XCLASSES); Y2=MAXVAL(XCLASSES); DY=(Y2-Y1)/50.0D0; Y2=Y2+DY
-  CALL DBL_IPGUNITS(X1,Y1,X2,Y2)  !## ... deze regel is voor het testen en dat levert dezelfde resultaten op.
+  CALL DBL_IPGUNITS(X1,Y1,X2,Y2) 
  ENDIF
 
  !## clip graph on graphical area

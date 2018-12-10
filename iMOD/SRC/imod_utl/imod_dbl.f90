@@ -517,13 +517,22 @@ CONTAINS
  END FUNCTION UTL_INSIDEPOLYGON2
 
  !###====================================================================
- SUBROUTINE DBL_IPGUNITS(X1,Y1,X2,Y2)
+ SUBROUTINE DBL_IPGUNITS(X1,Y1,X2,Y2) !,IOFFSET)
  !###====================================================================
  IMPLICIT NONE
  REAL(KIND=DP_KIND),INTENT(IN) :: X1,Y1,X2,Y2
+! INTEGER,INTENT(IN),OPTIONAL :: IOFFSET
 
+! IF(PRESENT(IOFFSET))THEN
+!  IF(IOFFSET.EQ.0)THEN
+!   CALL IPGUNITS(REAL(X1,4),REAL(Y1,4),REAL(X2,4),REAL(Y2,4))
+!  ELSE
+!   CALL IPGUNITS(REAL(X1-XOFFSET,4),REAL(Y1-YOFFSET,4)-YOFFSET,REAL(X2-XOFFSET,4),REAL(Y2-YOFFSET,4))
+!  ENDIF
+! ELSE
  CALL IPGUNITS(REAL(X1,4),REAL(Y1,4),REAL(X2,4),REAL(Y2,4))
-
+! ENDIF
+ 
  END SUBROUTINE DBL_IPGUNITS
 
  !###====================================================================
