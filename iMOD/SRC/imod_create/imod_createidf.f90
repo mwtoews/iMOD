@@ -135,11 +135,13 @@ CONTAINS
    ENDIF
      
    CALL CREATEIDF1FIELDS()
-   SELECT CASE (MESSAGE%VALUE2)
-    !## read/show current data from memory!     
-    CASE(ID_INFO)
-     CALL POLYGON_UTL_FILLDATAGRID() !'')
-   END SELECT
+   IF(ITYPE.EQ.PUSHBUTTON)THEN
+    SELECT CASE (MESSAGE%VALUE1)
+     !## read/show current data from memory!     
+     CASE(ID_INFO)
+      CALL POLYGON_UTL_FILLDATAGRID() !'')
+    END SELECT
+   ENDIF
    
   !## iff's
   CASE (ID_DCREATEIDFTAB3)

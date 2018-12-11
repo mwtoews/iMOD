@@ -96,7 +96,7 @@ CONTAINS
         IF(J.EQ.1)THEN
          TL=0.5*LN(J)
         ELSE
-         TL=TL+0.5*LN(J-1)+0.5*LN(J)
+         TL=TL+0.5D0*LN(J-1)+0.5D0*LN(J)
         ENDIF
         ZL=Z1+(TL*DZ); ZP(NP)=ZL*100.0D0
        ENDIF
