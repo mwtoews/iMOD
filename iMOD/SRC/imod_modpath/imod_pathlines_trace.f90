@@ -1729,11 +1729,11 @@ CONTAINS
   STRING='Completed particle tracking. Results are stored within:'
   IF(IMODE(1).GT.0)STRING=TRIM(STRING)//' '//TRIM(IFFFNAME(ISPFNAME))//'.IFF'
   IF(IMODE(2).GT.0)STRING=TRIM(STRING)//' '//TRIM(IFFFNAME(ISPFNAME))//'.IPF'
-  STRING=TRIM(STRING)//' and added to the iMOD-manager.'// &
+  STRING=TRIM(STRING)//' and added to the iMOD-manager. '// &
     TRIM(ITOS(SP(ISPFNAME)%NPART))//' particles were released out of '//TRIM(ITOS(TPART))//'. '//  &
    'Unreleased particles occured due to inactive/constant head boundary conditions '// &
    'and/or particles positioned above/beneath given thresshold. '// &
-    TRIM(ITOS(NCONS))//' inconsequences were removed from top/bottom information! '// &
+    TRIM(ITOS(NCONS))//' inconsequences were removed from top/bottom data! '//CHAR(13)//CHAR(13)// &
     'IMPORTANT: Maximum velocity that occured: '//TRIM(RTOS(MAXVELOCITY,'E',4))//' m/day'
   WRITE(IULOG,'(/A/)') TRIM(STRING)
   IF(IBATCH.EQ.1)WRITE(*,'(A)') TRIM(STRING)
@@ -3097,12 +3097,13 @@ IPFLOOP: DO I=1,SIZE(IPF)
    DO ILAY=1,NLAY
     IF(IBOUND(ICOL,IROW,ILAY).NE.0)THEN
      IF(ZTOP(ICOL,IROW,ILAY).LT.ZBOT(ICOL,IROW,ILAY)+MINTHICKNESS)THEN
-      NCONS=NCONS+1
+      !## only account for an error if they intersect
+      IF(ZTOP(ICOL,IROW,ILAY).LT.ZBOT(ICOL,IROW,ILAY))NCONS=NCONS+1
       ZBOT(ICOL,IROW,ILAY)=ZTOP(ICOL,IROW,ILAY)-MINTHICKNESS
      ENDIF
      IF(ILAY.LT.NLAY)THEN
       IF(IBOUND(ICOL,IROW,ILAY+1).NE.0)THEN
-       IF(ZBOT(ICOL,IROW,ILAY).LT.ZTOP(ICOL,IROW,ILAY+1)+MINTHICKNESS)THEN
+       IF(ZBOT(ICOL,IROW,ILAY).LT.ZTOP(ICOL,IROW,ILAY+1))THEN !+MINTHICKNESS)THEN
         NCONS=NCONS+1
         ZTOP(ICOL,IROW,ILAY+1)=ZBOT(ICOL,IROW,ILAY)-MINTHICKNESS
        ENDIF
