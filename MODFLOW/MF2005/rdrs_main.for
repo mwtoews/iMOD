@@ -539,7 +539,72 @@ c end of program
       return
       end
 
-      function rdrs_rddata_gen(file,iout,ilay)
+      integer function rdrs_rddata_gen(file,iout,ilay)
+c description:
+c ------------------------------------------------------------------------------
+c Read GEN file.
+c
+
+c declaration section
+c ------------------------------------------------------------------------------
+      use lcdmodule
+      use imod_utl
+      use gwfmetmodule, only: cdelr, cdelc
+      implicit none
+
+c arguments
+      character(len=*) :: file
+      integer, intent(in) :: iout,ilay
+
+c local variables
+      integer :: lun 
+
+c functions
+      integer   cfn_getlun,iformat !,osd_open2
+      logical rdrs_rddata_gen_ascii,polygon_utl_opengen,
+     1rdrs_rddata_gen_binair
+      
+c include files
+
+
+c program section
+c ------------------------------------------------------------------------------
+c
+c check for lcd file
+      rdrs_rddata_gen = 0
+
+      if (lcdinit) then
+         rdrs_rddata_gen = -20
+         return
+      end if
+
+c open file
+      if(.not.polygon_utl_opengen(file,iformat,lun))then
+          rdrs_rddata_gen = -20
+          return
+      end if
+
+c init
+      if (allocated(genpos))deallocate(genpos)
+      if (allocated(genip))deallocate(genip)
+
+      if(iformat.eq.0)then
+       if(.not.rdrs_rddata_gen_binair(file,lun,iout,ilay))
+     1rdrs_rddata_gen=-14
+      else
+       if(.not.rdrs_rddata_gen_ascii(file,lun,iout,ilay))
+     1rdrs_rddata_gen=-14
+      endif
+      
+c close file
+      close(lun)
+
+c clear memory
+      call intersect_deallocate()
+
+      end function rdrs_rddata_gen
+      
+      logical function rdrs_rddata_gen_binair(file,lun,iout,ilay)
 c description:
 c ------------------------------------------------------------------------------
 c Read GEN file.
@@ -558,67 +623,183 @@ c function declaration
       integer   rdrs_rddata_gen  ! return value: ios
 
 c arguments
+      integer, intent(in) :: iout,ilay,lun
       character(len=*) :: file
-      integer, intent(in) :: iout,ilay
 
 c local variables
       character(len=256) :: line
       logical :: ok
-      integer :: ret, lun, ios, mx, id, nid,
+      integer :: maxpol,maxcol,itype,iact,nid,i,j,ii,n,l,icol,irow,m,nn
+      real(kind=8) :: x1,y1,x2,y2,tl,zl,z1,z2,dz
+      real(kind=8),allocatable,dimension(:) :: xc,yc,zc
+      
+c include files
+
+
+c program section
+c ------------------------------------------------------------------------------
+
+      rdrs_rddata_gen_binair = .false.
+
+c read file
+      do iact = 1, 2
+
+       read(lun) 
+       read(lun) maxpol,maxcol
+       if(maxcol.gt.0)then
+        read(lun)
+        read(lun)
+       endif
+       
+       m = 0; nid = 0
+       do i=1,maxpol
+        ii=0
+
+        READ(lun) n,itype
+        if(maxcol.gt.0)read(lun)
+ 
+        !## xmin,ymin,xmax,ymax
+        read(lun)
+
+        !## only line - otherwise skip it
+        if(itype.ne.1028)then
+         read(lun); cycle
+        endif
+
+        IF(ilay.EQ.0)THEN
+         allocate(xc(n),yc(n),zc(n))
+         read(lun) (xc(j),yc(j),zc(j),j=1,n)
+        ELSE
+         allocate(xc(n),yc(n))
+         read(lun) (xc(j),yc(j),j=1,n)
+        ENDIF
+        
+        nid = nid + 1
+        if (iact.eq.2) genip(nid) = genip(nid-1)
+        do j=1,n-1
+
+         !## intersect line
+         x1 = xc(j) !xx1
+         y1 = yc(j) !yy1
+         x2 = xc(j+1) !xx2
+         y2 = yc(j+1) !yy2
+         if(lqd)then
+          call imod_utl_intersect_equi(xmin,xmax,ymin,ymax,
+     1                    simcsize,simcsize,x1,x2,y1,y2,n,.true.)
+         else
+          call imod_utl_intersect_nonequi(cdelr,cdelc,lnrow,lncol,
+     1                    x1,x2,y1,y2,n,.true.)
+         endif
+
+         IF(ilay.EQ.0)THEN
+          !## skip, probably a perfect-vertical segment
+          TL=0.0; DZ=0.0
+          IF(SUM(LN(1:N)).LE.0.0)THEN
+           N=0
+          ELSE
+           z1=zc(j)
+           z2=zc(j+1)
+           DZ=(Z2-Z1)/SUM(LN(1:N))
+          ENDIF
+         ENDIF
+
+         !## fill result array
+         nn = 0
+         do l = 1, n
+          icol=int(ca(l))
+          irow=int(ra(l))
+          if(icol.ge.1.and.irow.ge.1.and.
+     1                icol.le.lncol.and.irow.le.lnrow) then
+           m = m + 1; nn = nn + 1
+           if (iact.eq.2) then
+            genpos(m,1) = icol
+            genpos(m,2) = irow
+            genpos(m,3) = nid
+            genpos(m,4) = int(fa(l))
+                       
+            IF(ilay.EQ.0)THEN
+             IF(L.EQ.1)THEN
+              TL=0.5*LN(L)
+             ELSE
+              TL=TL+0.5*LN(L-1)+0.5*LN(L)
+             ENDIF
+             ZL=Z1+(TL*DZ); genpos(m,5)=ZL*100.0
+            ENDIF
+           endif
+          end if
+         enddo
+         if (iact.eq.2) then
+          genip(nid) = genip(nid)+nn
+         end if
+!         endif
+!         ii=ii+1
+!         IF(ilay.EQ.0)Z1=Z2
+        enddo
+        deallocate(xc,yc)
+        if(ilay.eq.0)deallocate(zc)
+       end do
+
+       if (iact.eq.1) then
+        rewind lun
+        if (m.gt.0) allocate(genpos(m,5))
+        allocate(genip(0:nid))
+        genip = 0
+       else
+        close(lun)
+       end if
+
+      end do ! iact
+
+c assign function value
+      rdrs_rddata_gen_binair = .true.
+
+c end of program
+      return
+      end function rdrs_rddata_gen_binair
+      
+      logical function rdrs_rddata_gen_ascii(file,lun,iout,ilay)
+c description:
+c ------------------------------------------------------------------------------
+c Read GEN file.
+c
+
+c declaration section
+c ------------------------------------------------------------------------------
+      use lcdmodule
+      use imod_utl, only: imod_utl_intersect_equi,
+     1                    imod_utl_intersect_nonequi,
+     1                    xa,ya,fa,ln,ca,ra,intersect_deallocate
+      use gwfmetmodule, only: cdelr, cdelc
+      implicit none
+
+c function declaration
+      integer   rdrs_rddata_gen  ! return value: ios
+
+c arguments
+      integer, intent(in) :: iout,ilay,lun
+      character(len=*) :: file
+
+c local variables
+      character(len=256) :: line
+      logical :: ok
+      integer :: ios, id, nid,
      1           i, ii, n, nn, m, l, icol, irow, iact
       real(kind=8) :: x1,y1,x2,y2,xx1,yy1,xx2,yy2,tl,zl,z1,z2,dz
-
-c functions
-      integer   cfn_getlun,
-     1          osd_open2
 
 c include files
 
 
 c program section
 c ------------------------------------------------------------------------------
-c
-c check for lcd file
-      ret = 0
-      if (lcdinit) then
-         ret = -20
-         rdrs_rddata_gen = ret
-         return
-      end if
 
-c open file
-      lun=cfn_getlun(10,99)
-      if (lun.gt.0) then
-
-         ios=osd_open2(lun,0,file,'old,formatted,readonly,shared')
-
-         if (ios.ne.0) then
-               ! ERROR opening file
-               write(*,*) ' ERROR. opening file. ',
-     1              'I/O status: ',ios
-               ret = -14
-         endif
-      else
-            ! ERROR no lun found
-         write(*,*) ' ERROR. no free lun found for opening file.'
-         ret = -15
-      end if
-
-      if (ret.ne.0) then
-          rdrs_rddata_gen = ret
-          return
-      end if
-
-c init
-      mx=lncol*lnrow
-      if (allocated(genpos))deallocate(genpos)
-      if (allocated(genip))deallocate(genip)
+      rdrs_rddata_gen_ascii=.true.
 
 c read file
       do iact = 1, 2
-      m = 0; nid = 0
-      do while(.true.)
+       m = 0; nid = 0
+       do while(.true.)
          ii=0
+
          read(lun,'(a)') line
          call cfn_s_trim(line)
          call cfn_s_lowcase(line)
@@ -626,23 +807,26 @@ c read file
          if(index(line,'end').gt.0)exit
          read(line,*,iostat=ios) id
          if(ios.ne.0)exit
+
          nid = nid + 1
          if (iact.eq.2) genip(nid) = genip(nid-1)
          do while (.true.)
+
             read(lun,'(a)') line
             call cfn_s_trim(line)
             call cfn_s_lowcase(line)
             ios=0
             if(index(line,'end').gt.0)exit
-
+            
             IF(ilay.EQ.0)THEN
              READ(LINE,*,IOSTAT=IOS) xx2,yy2,Z2; IF(IOS.NE.0)EXIT
             ELSE
              READ(LINE,*,IOSTAT=IOS) xx2,yy2; IF(IOS.NE.0)EXIT
             ENDIF
-!            read(line,*,iostat=ios) xx2,yy2
+ !           read(line,*,iostat=ios) xx2,yy2
+            
             if(ios.ne.0)exit
-
+           
             if(ii.gt.0)then
 
 !######intersect line
@@ -707,7 +891,7 @@ c read file
          enddo
       if (ios.ne.0) then
          write(*,*) 'ERROR. Reading ',trim(file)
-         ret = -17
+         rdrs_rddata_gen_ascii = .false.
          exit
       end if
 
@@ -724,18 +908,49 @@ c read file
 
       end do ! iact
 
-c close file
-      close(lun)
-
-c clear memory
-      call intersect_deallocate()
-c assign function value
-      rdrs_rddata_gen = ret
-
 c end of program
       return
-      end
+      end function rdrs_rddata_gen_ascii
 
+      !###======================================================================
+      LOGICAL FUNCTION POLYGON_UTL_OPENGEN(FNAME,IFORMAT,IU)
+      !###======================================================================
+      use imod_utl, only: imod_utl_getunit
+      IMPLICIT NONE
+      CHARACTER(LEN=*),INTENT(IN) :: FNAME
+      INTEGER,INTENT(OUT) :: IFORMAT,IU
+      INTEGER :: IOS
+      REAL(KIND=8) :: X
+ 
+      POLYGON_UTL_OPENGEN=.FALSE.
+
+      IU=imod_utl_getunit()
+
+      IFORMAT=0
+      open(IU,FILE=FNAME,STATUS='OLD',FORM='UNFORMATTED',
+     1ACTION='READ',IOSTAT=IOS)
+      !## error in opening gen file
+      IF(IU.EQ.0)RETURN
+      READ(IU,IOSTAT=IOS) X; IF(IOS.NE.0)IFORMAT=1; CLOSE(IU)
+     
+      IF(IFORMAT.EQ.1)THEN 
+       open(IU,FILE=FNAME,STATUS='OLD',FORM='FORMATTED',ACTION='READ',
+     1IOSTAT=IOS)
+      ELSEIF(IFORMAT.EQ.0)THEN 
+       open(IU,FILE=FNAME,STATUS='OLD',FORM='UNFORMATTED',ACTION='READ',
+     1IOSTAT=IOS)
+      ELSE
+       IOS=-1
+      ENDIF
+      IF(IOS.NE.0)THEN
+       write(*,*) 'iMOD cannot open/read '//TRIM(FNAME)
+       RETURN
+      ENDIF
+ 
+      POLYGON_UTL_OPENGEN=.TRUE.
+ 
+      END FUNCTION POLYGON_UTL_OPENGEN
+ 
       subroutine assign_layer(tlp,irow,icol,z1,z2,lkhv)
 c modules
       use global, only: nlay, nrow, ncol, delr, delc, cv, hcof, cc, cr,
