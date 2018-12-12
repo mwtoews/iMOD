@@ -592,7 +592,7 @@ CONTAINS
  !## to far away (include 1.0D0*maxdist on edge - for smooth edges)
  IF(KRIGING_DIST.GE.MAXDIST)RETURN
  IF(KRIGING_DIST.LE.0.0D0)RETURN
-  
+
  !## see whether nodata-areas are crossed/similar area
  IF(IBLANKOUT.EQ.1)THEN
 
@@ -688,7 +688,9 @@ CONTAINS
   X4=IDFGETXYVAL(ZONE_IDF,X1,Y1) 
   !## not similar area
   IF(X3.NE.X4)KRIGING_DIST=MAXDIST+1.0D0
-
+  !## skip locations with nodata
+  IF(X3.EQ.ZONE_IDF%NODATA.OR.X4.EQ.ZONE_IDF%NODATA)KRIGING_DIST=MAXDIST+1.0D0
+  
  ENDIF
  
  !## in case of an ellips see if it is inside the current ellips

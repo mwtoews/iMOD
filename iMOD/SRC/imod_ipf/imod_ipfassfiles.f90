@@ -459,7 +459,6 @@ CONTAINS
     AXES%XOFFSET=MINDATE
     !## correct for super-small dates
     DO I=1,ASSF(IASSF)%NRASS; ASSF(IASSF)%IDATE(I)=ASSF(IASSF)%IDATE(I)-MINDATE; ENDDO
-!    AXES%XMIN=AXES%XMIN-MINDATE; AXES%XMAX=AXES%XMAX-MINDATE
     CALL GRAPH_PLOTAXES(AXES,1)
     DO I=1,ASSF(IASSF)%NRASS; ASSF(IASSF)%IDATE(I)=ASSF(IASSF)%IDATE(I)+MINDATE; ENDDO
    !## drills
@@ -645,9 +644,9 @@ CONTAINS
      ELSE
       EXIT
      ENDIF
-    ELSE
-     !## do nothing
-     K=0
+!    ELSE
+!     !## do nothing
+!     K=0
     ENDIF
     X2=X1
    END DO
@@ -660,7 +659,7 @@ CONTAINS
     X1=ASSF(IASSF)%IDATE(I)-MINDATE
     Y1=ASSF(IASSF)%MEASURE(J,I)
     IF(Y1.NE.ASSF(IASSF)%NODATA(J+1))THEN
-     K =MAX(0,K)+1
+     K=MAX(0,K)+1
      IF(X1.GT.X2)THEN
       IF(K.EQ.1)THEN
        CALL DBL_IGRMOVETO(X1,Y1)
@@ -671,11 +670,12 @@ CONTAINS
      ELSE
       EXIT
      ENDIF
-    ELSE
-     !## do nothing
-     K=0
+     X2=X1; Y2=Y1
+     !    ELSE
+!     !## do nothing
+!     K=0
     ENDIF
-    X2=X1; Y2=Y1
+!    X2=X1; Y2=Y1
    END DO
   ENDIF
 

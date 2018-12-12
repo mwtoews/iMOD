@@ -8,7 +8,7 @@
 //
 // Winteracter resource script. 
 //
-// Modified : 11/Dec/2018 14:08:19
+// Modified : 12/Dec/2018 14:05:23
 //
 ///////////////////////////////////////////////////
 //
@@ -1235,6 +1235,10 @@
 #define IDSIMULATE2                      1285
 #define WINTGRIDCOL2                     1317
 #define ID_CREATEIPF                    40231
+#define ID_OPENFILES                    40323
+#define IDD_DIALOG027                     406
+#define ID_DFILESOPEN                     407
+#define WINTGRIDCOL1                     1318
 
 ///////////////////////////////////////////////////
 //
@@ -11800,6 +11804,49 @@ BEGIN
 ,0
 END
 
+ID_DFILESOPEN DIALOG 0, 0,  319,  157
+STYLE WS_POPUP | WS_BORDER | WS_DLGFRAME | WS_SYSMENU | WS_THICKFRAME | DS_3DLOOK
+FONT    8, "Arial"
+CAPTION "Files Currently Open/Locked"
+BEGIN
+    CONTROL "Close Selected Files",IDOK,"BUTTON",WS_CHILD | WS_VISIBLE | WS_GROUP | WS_TABSTOP | BS_PUSHBUTTON | BS_TEXT | BS_FLAT,    5,  136,   80,   14
+    CONTROL "&Help ...",IDHELP,"BUTTON",WS_CHILD | WS_VISIBLE | WS_TABSTOP | BS_PUSHBUTTON | BS_TEXT | BS_FLAT,  231,  136,   40,   14
+    CONTROL "List of Opened Files",IDF_GROUP1,"BUTTON",WS_CHILD | WS_VISIBLE | WS_GROUP | BS_GROUPBOX | BS_TEXT | BS_LEFT,    5,    5,  307,  104
+    CONTROL "",IDF_GRID1,"ISSGRID",WS_CHILD | WS_VISIBLE | WS_BORDER | WS_VSCROLL | WS_HSCROLL | WS_GROUP | WS_TABSTOP | GS_DEFROWLABELS | GS_COLUMNLABELS | GS_RESIZECOLUMNS,   10,   36,  292,   96
+    CONTROL "Close",IDCANCEL,"BUTTON",WS_CHILD | WS_VISIBLE | WS_GROUP | WS_TABSTOP | BS_PUSHBUTTON | BS_TEXT | BS_FLAT,  274,  136,   40,   14
+    CONTROL "Select All",ID_SELECTALL,"BUTTON",WS_CHILD | WS_VISIBLE | WS_GROUP | WS_TABSTOP | BS_PUSHBUTTON | BS_TEXT | BS_FLAT,    9,   19,   50,   14
+    CONTROL "Deselect All",ID_DESELECTALL,"BUTTON",WS_CHILD | WS_VISIBLE | WS_GROUP | WS_TABSTOP | BS_PUSHBUTTON | BS_TEXT | BS_FLAT,   62,   19,   50,   14
+END
+
+ID_DFILESOPEN RCDATA
+BEGIN
+"[Dialog] \n"
+" 0  1004 0 1 \n"
+"[Grids] \n"
+" 1004     3    100   406 \n"
+,0
+END
+
+IDD_DIALOG027 DIALOG 0, 0, 1000,   16
+STYLE DS_3DLOOK
+FONT    8, "Arial"
+BEGIN
+    CONTROL "OK",ISS3,"BUTTON",WS_CHILD | WS_VISIBLE | WS_TABSTOP | BS_AUTOCHECKBOX | BS_TEXT,    0,    0,   20,   14
+    CONTROL "Unit",WINTGRIDCOL1,"INTEGEREDIT",WS_CHILD | WS_VISIBLE | WS_BORDER | WS_TABSTOP | ES_LEFT | ES_READONLY,    0,    0,   40,   14
+    CONTROL "Files",ISS1,"EDIT",WS_CHILD | WS_VISIBLE | WS_BORDER | WS_TABSTOP | ES_LEFT | ES_READONLY,    0,    0,  256,  150
+END
+
+IDD_DIALOG027 RCDATA
+BEGIN
+"[Dialog] \n"
+" 0     0 0 1 \n"
+"[Checks] \n"
+" 1247 0 \n"
+"[Menus] \n"
+"[Ranges] \n"
+,0
+END
+
 ///////////////////////////////////////////////////
 //
 // Menus
@@ -12494,6 +12541,7 @@ BEGIN
             MENUITEM "Report to standard output",                ID_IDEBUGLEVEL1
             MENUITEM "Report in a message box",                  ID_IDEBUGLEVEL4
         END
+        MENUITEM "Open Files ...",                           ID_OPENFILES
     END
 END
 
@@ -12730,6 +12778,7 @@ ID_IMPORT_DEVWELLS_MULTIPLE,"Import Deviated Wells from a set of CSV Files\0",
 ID_IMPORTSHAPEFILE,"Select this option to import a ESRI Shapefile into a Binary iMOD GEN-file\0",
 ID_IMPORTGENFILE,"Select this option to import a ESRI GEN file into a Binary iMOD GEN-file\0",
 ID_CREATEIPF,"Create IPF files ...\0",
+ID_OPENFILES,"List Files that are currently opened by iMOD\0",
 0
 END
 
@@ -13317,4 +13366,4 @@ END
 //*WI* FILENAME    resource.f90
 //*WI* FMODNAME    RESOURCE
 //*WI* LASTTYPE        2
-//*WI* LASTRES        50
+//*WI* LASTRES       305
