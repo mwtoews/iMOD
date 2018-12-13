@@ -3012,19 +3012,22 @@
             end if
             !...     set slashes
             call osd_s_filename(fstr)
+            cnstnt='fct='//trim(cnstnt)
             call AppendVal(cnstnt,arr%fct,arr%type)
             if (limp) then
-               if (arr%imp.gt.0.) then
-                  cnstnt = trim(cnstnt)//'+'
-                  call AppendVal(cnstnt,arr%imp,arr%type)
-               else
-                  cnstnt = trim(cnstnt)//'-'
-                  call AppendVal(cnstnt,-arr%imp,arr%type)
-               end if
+             cnstnt=trim(cnstnt)//' imp='
+             call AppendVal(cnstnt,arr%imp,arr%type)
+!               if (arr%imp.gt.0.) then
+!                  cnstnt = trim(cnstnt)//'+'
+!                  call AppendVal(cnstnt,arr%imp,arr%type)
+!               else
+!                  cnstnt = trim(cnstnt)//'-'
+!                  call AppendVal(cnstnt,-arr%imp,arr%type)
+!               end if
             end if
             if (lpow) then
-               cnstnt = trim(cnstnt)//'^'
-               call AppendVal(cnstnt,arr%pow,arr%type)
+             cnstnt = trim(cnstnt)//' pow='
+             call AppendVal(cnstnt,arr%pow,arr%type)
             end if
             !cnstnt = trim(cnstnt)//trim(arr%oper)
             ! replace relative dot for one level deeper
@@ -3062,7 +3065,7 @@
       implicit none
 
 !...     arguments
-      character(len=*), intent(out) :: str
+      character(len=*), intent(inout) :: str
       real(kind=8), intent(in) :: val
       integer, intent(in) :: typ
 

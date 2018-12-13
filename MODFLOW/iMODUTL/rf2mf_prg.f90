@@ -392,8 +392,8 @@ if (.not.savebuf.and.savenobuf) then
    met%kws(imet_save_no_buf)%type = imetc
 end if
 
-met%kws(imet_idate_save)%type = imeti
-met%kws(imet_idate_save)%ival = 0
+!met%kws(imet_idate_save)%type = imeti
+!met%kws(imet_idate_save)%ival = 0
 
 CALL IMOD_UTL_PRINTTEXT('  ',3)
 CALL IMOD_UTL_PRINTTEXT('---------------------------------------------',3)
@@ -575,13 +575,17 @@ if (ifvdl.ne.0) then
     riv%ifvdl=.true.
 end if
 
-if (sdate.gt.0) then
-   write(date,'(i8)') sdate
-   starttime = date(1:8)
-   read(date(1:4),*) met%kws(imet_starttime)%time%year
-   read(date(5:6),*) met%kws(imet_starttime)%time%month
-   read(date(7:8),*) met%kws(imet_starttime)%time%day
-end if
+if(sdate.ne.1)sdate=0
+met%kws(imet_idate_save)%type = imeti
+met%kws(imet_idate_save)%ival = sdate
+
+!if (sdate.gt.0) then
+!   write(date,'(i8)') sdate
+!   starttime = date(1:8)
+!   read(date(1:4),*) met%kws(imet_starttime)%time%year
+!   read(date(5:6),*) met%kws(imet_starttime)%time%month
+!   read(date(7:8),*) met%kws(imet_starttime)%time%day
+!end if
 IF(IOS.NE.0)CALL IMOD_UTL_PRINTTEXT('ERROR line 2:'//TRIM(LINE),-3)
 IF(NPER.EQ.0)CALL IMOD_UTL_PRINTTEXT('NPER.EQ.0',-3)
 IF(NLAY.EQ.0.OR.NLAY.GT.MXNLAY)CALL IMOD_UTL_PRINTTEXT('NLAY.EQ.0.OR.NLAY.GT.MXNLAY',-3)

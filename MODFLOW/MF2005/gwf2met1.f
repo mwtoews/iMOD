@@ -1358,7 +1358,6 @@ c create output file name
 
       if (issflg(kper).eq.0 .and. associated(time_ostring)) then ! TR
          fmt = '(5a,'//fmt
-!         write(*,*) idate_save
          if(idate_save.eq.0)then
           cdate_string=time_ostring
           !## trim last zero is all zero

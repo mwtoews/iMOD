@@ -458,7 +458,12 @@ C     ------------------------------------------------------------------
       DATA NUNOPN/99/
       INCLUDE 'openspec.inc'
       integer rdrs_main, rdrsflg                                        ! DLT
-      integer iupsc,idosc                                               ! DLT
+      logical, dimension(5) :: ioper                                    ! DLT
+      real, dimension(5) :: coper                                       ! DLT
+      character(len=200) :: oper                                        ! DLT
+      integer :: i,iupsc,idosc,jcol                                     ! DLT
+      logical :: loper                                                  ! DLT
+
 C     ------------------------------------------------------------------
 C
       ICONST = 0                                                        ! DLT
@@ -497,10 +502,16 @@ C2------FORMAT.  SET A FLAG SPECIFYING IF FREE FORMAT OR FIXED FORMAT.
          icol = jcol                                                    ! DLT
          rdrsflg=rdrs_main(fname,ia,ii*jj,2,'i',iout,iupsc,idosc,k)     ! DLT
          if (rdrsflg.ge.0) then ! supported file type found             ! DLT
-            ! read cnstnt and iprn                                      ! DLT
-            call urword(cntrl,icol,istart,istop,2,iconst,r,iout,in)     ! DLT
+          call urword(cntrl,icol,istart,istop,1,n,r,iout,in)            ! DLT
+          oper=cntrl(istart:istop)                                      ! DLT
+          call getarithoper(oper,'r',iout,ioper,0,coper,locat)        ! DLT
+!            iclose = 0               
+         ! read cnstnt and iprn                                      ! DLT
+!            call urword(cntrl,icol,istart,istop,2,iconst,r,iout,in)     ! DLT
             call urword(cntrl,icol,istart,istop,1,n,r,iout,in)          ! DLT
             call urword(cntrl,icol,istart,istop,2,iprn,r,iout,in)       ! DLT
+            loper = .true.                                              ! DLT
+            call applyarithoper(fname,a,jj,ii,ioper,coper)              ! DLT
             iclose = 0                                                  ! DLT
             goto 305                                                    ! DLT
          end if                                                         ! DLT
@@ -1677,80 +1688,132 @@ c parameters
       integer, parameter :: operexp = 5
       integer, parameter :: ntoken  = 5
 
+      integer,parameter :: nop=3
+      character(len=4),dimension(nop) :: op
+      data op/'fct=','imp=','pow='/
+      
       character(len=1), dimension(ntoken) :: token
       data token/'*','+','-','/','^'/
 
 c local variables
       logical :: lmin, ltok
-      character(len=200) :: s
-      integer :: oper, ifnd, i, j, k, n
+!      character(len=200) :: s
+      character(len=52) :: tmp
+      integer :: oper, ifnd, i, j, k, n, ios
       integer, dimension(ntoken) :: wrk
       real :: val
       real, dimension(ntoken) :: fac
 
 c ------------------------------------------------------------------------------
 c init
+      !## initial
       ioper = .false.
-      s = '*'//trim(adjustl(str))
-      call imod_utl_s_cap(s,'l')
+      fac=1.0
+      
+      do i=1,size(op)
+       j=index(str,op(i))
+       if(j.gt.0)then
+        j=j+4
+        read(str(j:),*,iostat=ios) val
+        if(ios.ne.0)stop 'cannot convert fct/imp/pow'
+        write(tmp,*) val; tmp=adjustl(tmp)
+        !## power operator
+        if(i.eq.3)then
+         k=5
+        else
+         !## check operator
+         do k=1,ntoken
+          if(tmp(1:1).eq.token(k))exit
+         enddo
+        endif
+        ioper(k)=.true.
+        fac(k)=val
+       endif
+      enddo
 
-      fac = 1.
-
-      do while(.true.)
-         oper = -1
-         do i = 1, ntoken
-            if (s(1:1) == token(i)) then
-               oper = i
-               exit
-            end if
-         end do
-         if (oper.lt.0) exit
-         ioper(oper) = .true.
-         s = s(2:); s = adjustl(s) ! strip token
-
-         ! check for sign
-         lmin = .false.
-         if (s(1:1) == '-') then
-            lmin = .true.
-            s = s(2:); s = adjustl(s) ! strip minus sign
-         end if
-
-         ! find the next token
-         wrk = 200;
-         i=1
-         do !i = 1, ntoken
-            i = i + 1 
-            if(i.gt.size(token))exit
-            j = index(s,token(i))
-            ltok = .false.
-            if (j.gt.0) then
-                if (i == operadd .or. i == opersub) then
-                   if (j.eq.1) then
-                      ltok = .true.
-                   else
-                      if (s(j-1:j-1).ne.'e') then
-                       ltok = .true.
-                      else
-                       i=i-1
-                       do k=1,len(s)-j
-                        s(k:k)=s(j+k:j+k)
-                       enddo
-                      endif
-                   end if
-                else
-                    ltok = .true.
-                end if
-            end if
-            if (ltok) wrk(i) = j
-         end do
-         ifnd = minval(wrk)
-         read(s(1:ifnd-1),*) fac(oper)
-         if (lmin) fac(oper) = -fac(oper)
-         s = s(ifnd:); s = adjustl(s) ! strip token
-      end do
-
+      !s = '*'//trim(adjustl(str))
+      !call imod_utl_s_cap(s,'l')
+      !
+      !!## initial
+      !fac = 1.0
+      !
+      !!## find tokens and factors, max. two
+      !i1=2
+      !do i=1,2
+      ! do j=1,ntoken
+      !  k=index(s(i1:),token(j))
+      !  if(k.gt.0)then
+      !   if(k.eq.1)exit
+      !   if(s(k-1:k-1).ne.'e'.and.s(k-1:k-1).ne.'E')exit
+      !  endif
+      ! enddo
+      ! ioper(j)=.true.
+      ! !## nothing left
+      ! if(k.eq.0)then
+      !  k=len_trim(s); read(s(i1+1:k),*) fac(j)
+      ! else
+      !  read(s(i1:k-1),*) fac(j)
+      ! endif
+      ! if(j.eq.opersub)fac(j)=-1.0*fac(j)
+      ! i1=k
+      !enddo
+      ! 
+      !
+      !do while(.true.)
+      !   oper = -1
+      !   do i = 1, ntoken
+      !      if (s(1:1) == token(i)) then
+      !         oper = i
+      !         exit
+      !      end if
+      !   end do
+      !   if (oper.lt.0) exit
+      !   ioper(oper) = .true.
+      !   s = s(2:); s = adjustl(s) ! strip token
+      !
+      !   ! check for sign
+      !   lmin = .false.
+      !   if (s(1:1) == '-') then
+      !      lmin = .true.
+      !      s = s(2:); s = adjustl(s) ! strip minus sign
+      !   end if
+      !
+      !   ! find the next token
+      !   wrk = 200;
+      !   i=1
+      !   do !i = 1, ntoken
+      !      i = i + 1 
+      !      if(i.gt.size(token))exit
+      !      j = index(s,token(i))
+      !      ltok = .false.
+      !      if (j.gt.0) then
+      !          if (i == operadd .or. i == opersub) then
+      !             if (j.eq.1) then
+      !                ltok = .true.
+      !             else
+      !                if (s(j-1:j-1).ne.'e') then
+      !                 ltok = .true.
+      !                else
+      !                 i=i-1
+      !                 do k=1,len(s)-j
+      !                  s(k:k)=s(j+k:j+k)
+      !                 enddo
+      !                endif
+      !             end if
+      !          else
+      !              ltok = .true.
+      !          end if
+      !      end if
+      !      if (ltok) wrk(i) = j
+      !   end do
+      !   ifnd = minval(wrk)
+      !   read(s(1:ifnd-1),*) fac(oper)
+      !   if (lmin) fac(oper) = -fac(oper)
+      !   s = s(ifnd:); s = adjustl(s) ! strip token
+      !end do
+      !
       if (type == 'i') then
-         do i = 1, 5
+         do i = 1, ntoken
             icnstnt(i) = int(fac(i))
          end do
       else
