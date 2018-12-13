@@ -3015,7 +3015,7 @@
             cnstnt='fct='//trim(cnstnt)
             call AppendVal(cnstnt,arr%fct,arr%type)
             if (limp) then
-             cnstnt=trim(cnstnt)//' imp='
+             cnstnt=trim(cnstnt)//'_imp='
              call AppendVal(cnstnt,arr%imp,arr%type)
 !               if (arr%imp.gt.0.) then
 !                  cnstnt = trim(cnstnt)//'+'
@@ -3026,7 +3026,7 @@
 !               end if
             end if
             if (lpow) then
-             cnstnt = trim(cnstnt)//' pow='
+             cnstnt = trim(cnstnt)//'_pow='
              call AppendVal(cnstnt,arr%pow,arr%type)
             end if
             !cnstnt = trim(cnstnt)//trim(arr%oper)

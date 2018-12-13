@@ -8,7 +8,7 @@
 //
 // Winteracter resource script. 
 //
-// Modified : 12/Dec/2018 14:05:23
+// Modified : 13/Dec/2018 22:42:40
 //
 ///////////////////////////////////////////////////
 //
@@ -8926,7 +8926,7 @@ BEGIN
 "3 \n"
 "[Ranges] \n"
 "[Grids] \n"
-" 1004     1   2500   338 \n"
+" 1004     1  10000   338 \n"
 "[Formats] \n"
 ,0
 END
@@ -11842,7 +11842,6 @@ BEGIN
 " 0     0 0 1 \n"
 "[Checks] \n"
 " 1247 0 \n"
-"[Menus] \n"
 "[Ranges] \n"
 ,0
 END
@@ -13366,4 +13365,4 @@ END
 //*WI* FILENAME    resource.f90
 //*WI* FMODNAME    RESOURCE
 //*WI* LASTTYPE        2
-//*WI* LASTRES       305
+//*WI* LASTRES       179

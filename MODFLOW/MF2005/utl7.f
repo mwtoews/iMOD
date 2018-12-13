@@ -459,7 +459,7 @@ C     ------------------------------------------------------------------
       INCLUDE 'openspec.inc'
       integer rdrs_main, rdrsflg                                        ! DLT
       logical, dimension(5) :: ioper                                    ! DLT
-      real, dimension(5) :: coper                                       ! DLT
+      integer, dimension(5) :: coper                                       ! DLT
       character(len=200) :: oper                                        ! DLT
       integer :: i,iupsc,idosc,jcol                                     ! DLT
       logical :: loper                                                  ! DLT
@@ -476,6 +476,7 @@ C2------FORMAT.  SET A FLAG SPECIFYING IF FREE FORMAT OR FIXED FORMAT.
       ICLOSE=0
       IFREE=1
       ICOL=1
+      loper=.false.
       CALL URWORD(CNTRL,ICOL,ISTART,ISTOP,1,N,R,IOUT,IN)
       IF (CNTRL(ISTART:ISTOP).EQ.'CONSTANT') THEN
          LOCAT=0
@@ -504,14 +505,13 @@ C2------FORMAT.  SET A FLAG SPECIFYING IF FREE FORMAT OR FIXED FORMAT.
          if (rdrsflg.ge.0) then ! supported file type found             ! DLT
           call urword(cntrl,icol,istart,istop,1,n,r,iout,in)            ! DLT
           oper=cntrl(istart:istop)                                      ! DLT
-          call getarithoper(oper,'r',iout,ioper,0,coper,locat)        ! DLT
-!            iclose = 0               
+          call getarithoper(oper,'i',iout,ioper,coper,0.0,locat)        ! DLT
          ! read cnstnt and iprn                                      ! DLT
 !            call urword(cntrl,icol,istart,istop,2,iconst,r,iout,in)     ! DLT
             call urword(cntrl,icol,istart,istop,1,n,r,iout,in)          ! DLT
             call urword(cntrl,icol,istart,istop,2,iprn,r,iout,in)       ! DLT
             loper = .true.                                              ! DLT
-            call applyarithoper(fname,a,jj,ii,ioper,coper)              ! DLT
+            call applyarithoper_int(fname,ia,jj,ii,ioper,coper)         ! DLT
             iclose = 0                                                  ! DLT
             goto 305                                                    ! DLT
          end if                                                         ! DLT
@@ -604,10 +604,12 @@ C
 C5------IF ICONST NOT ZERO THEN MULTIPLY ARRAY VALUES BY ICONST.
       IF(ICLOSE.NE.0) CLOSE(UNIT=LOCAT)
       IF(ICONST.EQ.0) GO TO 320
-      DO 310 I=1,II
-      DO 310 J=1,JJ
-      IA(J,I)=IA(J,I)*ICONST
+      if (.not.loper)then
+       DO 310 I=1,II
+       DO 310 J=1,JJ
+       IA(J,I)=IA(J,I)*ICONST
   310 CONTINUE
+      endif
 C
 C6------IF PRINT CODE (IPRN) <0 THEN RETURN.
   320 IF(IPRN.LT.0) RETURN
@@ -1688,9 +1690,9 @@ c parameters
       integer, parameter :: operexp = 5
       integer, parameter :: ntoken  = 5
 
-      integer,parameter :: nop=3
+      integer,parameter :: nop=4
       character(len=4),dimension(nop) :: op
-      data op/'fct=','imp=','pow='/
+      data op/'FCT=','IMP=','POW=','DIV='/
       
       character(len=1), dimension(ntoken) :: token
       data token/'*','+','-','/','^'/
@@ -1699,7 +1701,7 @@ c local variables
       logical :: lmin, ltok
 !      character(len=200) :: s
       character(len=52) :: tmp
-      integer :: oper, ifnd, i, j, k, n, ios
+      integer :: oper, ifnd, i, j, jj,k, n, ios
       integer, dimension(ntoken) :: wrk
       real :: val
       real, dimension(ntoken) :: fac
@@ -1714,18 +1716,26 @@ c init
        j=index(str,op(i))
        if(j.gt.0)then
         j=j+4
-        read(str(j:),*,iostat=ios) val
-        if(ios.ne.0)stop 'cannot convert fct/imp/pow'
+        jj=index(str(j:),'_')-1
+        if(jj.lt.0)jj=len_trim(str)
+        read(str(j:jj),*,iostat=ios) val
+        if(ios.ne.0)stop 'cannot convert fct/imp/pow/div'
         write(tmp,*) val; tmp=adjustl(tmp)
-        !## power operator
-        if(i.eq.3)then
-         k=5
-        else
-         !## check operator
-         do k=1,ntoken
-          if(tmp(1:1).eq.token(k))exit
-         enddo
-        endif
+        select case (i)
+         !## multiplication
+         case (1)
+          k=1
+         !## addition
+         case (2)
+          if(val.ge.0.0)k=2
+          if(val.lt.0.0)k=3
+         !## divide
+         case (4)
+          k=4
+         !## power operator
+         case (3)
+          k=5
+        end select
         ioper(k)=.true.
         fac(k)=val
        endif
@@ -1812,6 +1822,7 @@ c init
       !   s = s(ifnd:); s = adjustl(s) ! strip token
       !end do
       !
+
       if (type == 'i') then
          do i = 1, ntoken
             icnstnt(i) = int(fac(i))
@@ -1942,6 +1953,73 @@ c ------------------------------------------------------------------------------
 
       end subroutine
 
+      subroutine applyarithoper_int(file,ia,jj,ii,ioper,icnstnt)
+      use rdrsmodule, only: nodata
+      use gcdmodule
+      use imod_utl, only: imod_utl_has_ext
+
+      implicit none
+c arguments
+      character(len=*), intent(in) :: file
+      integer, intent(in) :: jj, ii
+      integer, dimension(jj,ii), intent(inout) :: ia
+      logical, dimension(5), intent(in) :: ioper
+      integer, dimension(5), intent(in)  :: icnstnt
+c parameters
+      integer, parameter :: opermlt = 1
+      integer, parameter :: operadd = 2
+      integer, parameter :: opersub = 3
+      integer, parameter :: operdiv = 4
+      integer, parameter :: operexp = 5
+      real, parameter :: zero = 0.
+c functions
+      logical :: has_ext
+c locals
+!      logical :: lipf
+      integer :: k, i, j, nlist
+      real :: val
+c ------------------------------------------------------------------------------
+
+      if (ioper(opermlt)) then
+            do i = 1, ii
+               do j = 1, jj
+               if (ia(j,i).ne.nodata) ia(j,i)=ia(j,i) * icnstnt(opermlt)
+               end do
+            end do
+      end if
+      if (ioper(operadd)) then
+            do i = 1, ii
+               do j = 1, jj
+              if(ia(j,i).ne.nodata) ia(j,i) = ia(j,i) + icnstnt(operadd)
+               end do
+            end do
+      end if
+      if (ioper(opersub)) then
+            do i = 1, ii
+               do j = 1, jj
+             if (ia(j,i).ne.nodata) ia(j,i) = ia(j,i) - icnstnt(opersub)
+               end do
+            end do
+      end if
+      if (ioper(operdiv)) then
+         if (icnstnt(operdiv).ne.zero) then
+               do i = 1, ii
+                  do j = 1, jj
+                 if (ia(j,i).ne.nodata) ia(j,i)=ia(j,i)/icnstnt(operdiv)
+                  end do
+               end do
+         end if
+      end if
+      if (ioper(operexp)) then
+            do i = 1, ii
+               do j = 1, jj
+              if (ia(j,i).ne.nodata) ia(j,i) = ia(j,i)**icnstnt(operexp)
+               end do
+            end do
+      end if
+
+      end subroutine
+      
       subroutine usubscnt(table,ncol,nrow,icolsubs,nsubs)
 
 c description:
