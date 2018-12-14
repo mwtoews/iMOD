@@ -1879,7 +1879,7 @@ c ------------------------------------------------------------------------------
             do i = 1, nlist
                val = ipflist(isub,icolumn)%list(3,i)
                if (val.ne.nodata) then
-                  ipflist(isub,icolumn)%list(3,i) = val*cnstnt(opermlt)
+                  ipflist(isub,icolumn)%list(3,i) = val *cnstnt(opermlt)
                end if   
             end do
          end if
@@ -1895,7 +1895,7 @@ c ------------------------------------------------------------------------------
             do i = 1, nlist
                val = ipflist(isub,icolumn)%list(3,i)
                if (val.ne.nodata) then
-                  ipflist(isub,icolumn)%list(3,i) = val+cnstnt(operadd)
+                  ipflist(isub,icolumn)%list(3,i) = val +cnstnt(operadd)
                end if   
             end do
          end if
@@ -1904,14 +1904,14 @@ c ------------------------------------------------------------------------------
          if (.not. lipf) then
             do i = 1, ii
                do j = 1, jj
-                 if (a(j,i).ne.nodata) a(j,i) = a(j,i) - cnstnt(opersub)
+                 if (a(j,i).ne.nodata) a(j,i) = a(j,i) + cnstnt(opersub)
                end do
             end do
          else
             do i = 1, nlist
                val = ipflist(isub,icolumn)%list(3,i)
                if (val.ne.nodata) then
-                  ipflist(isub,icolumn)%list(3,i) = val-cnstnt(opersub)
+                  ipflist(isub,icolumn)%list(3,i) = val +cnstnt(opersub)
                end if   
             end do
          end if
@@ -1997,7 +1997,7 @@ c ------------------------------------------------------------------------------
       if (ioper(opersub)) then
             do i = 1, ii
                do j = 1, jj
-             if (ia(j,i).ne.nodata) ia(j,i) = ia(j,i) - icnstnt(opersub)
+             if (ia(j,i).ne.nodata) ia(j,i) = ia(j,i) + icnstnt(opersub)
                end do
             end do
       end if
