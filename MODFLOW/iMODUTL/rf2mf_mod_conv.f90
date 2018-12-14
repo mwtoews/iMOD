@@ -155,10 +155,10 @@
          character(len=maxlen) :: keyword = 'open/close'
          character(len=maxlen) :: fname = ''
          character(len=maxlen) :: fmtin = '(free)'
-         real(KIND=8)          :: cnstnt = 0.
-         real(KIND=8)          :: fct = 1.
-         real(KIND=8)          :: imp = 0.
-         real(KIND=8)          :: pow = 0.
+         real(KIND=8)          :: cnstnt = 0.0d0
+         real(KIND=8)          :: fct = 1.0d0
+         real(KIND=8)          :: imp = 0.0d0
+         real(KIND=8)          :: pow = 0.0d0
          character(len=10)     :: oper = ''
          integer               :: iprn = -1
          integer               :: ilay = 0
@@ -1348,7 +1348,7 @@
       if (iact == ialloc) then
          nam%package(ievt)%active = .true.
          allocate(evt%sp(nper))
-         evt%sp(1:nper)%evtr%fct = 0.001 ! iMOD in mm!
+         evt%sp(1:nper)%evtr%fct = 0.001D0 ! iMOD in mm!
          allocate(evt%cblay(nlay))
       else
          if (associated(evt%sp))    deallocate(evt%sp)
@@ -2998,9 +2998,9 @@
 !.......................................................................
 
       lfct = .false.; limp = .false.; lpow = .false.
-      if (arr%fct/= 1.) lfct = .true.
-      if (arr%imp/= 0.) limp = .true.
-      if (arr%pow/= 0.) lpow = .true.
+      if (arr%fct/= 1.0D0) lfct = .true.
+      if (arr%imp/= 0.0D0) limp = .true.
+      if (arr%pow/= 0.0D0) lpow = .true.
 
       keyword = adjustl(arr%keyword)
       cnstnt = ''

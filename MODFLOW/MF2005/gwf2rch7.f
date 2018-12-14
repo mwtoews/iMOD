@@ -153,6 +153,7 @@ C     ------------------------------------------------------------------
       use rdrsmodule, only: nodata                                      ! DLT
 C
       CHARACTER*24 ANAME(2)
+      real,allocatable,dimension(:,:) :: tmp
 C
       DATA ANAME(1) /'    RECHARGE LAYER INDEX'/
       DATA ANAME(2) /'                RECHARGE'/
@@ -195,14 +196,16 @@ C3B1----THERE ARE NO PARAMETERS, SO READ RECH USING U2DREL.
           nodata = 0.                                                   ! DLT
           CALL U2DREL(RECH,ANAME(2),NROW,NCOL,0,IN,IOUT)
           IF (IADDRECH.EQ.1) THEN                                       ! DLT
+             allocate(tmp(ncol,nrow))
              DO I = 2, INRECH                                           ! DLT
-                CALL U2DREL(BUFF(1,1,1),ANAME(2),NROW,NCOL,0,IN,IOUT)   ! DLT
+                CALL U2DREL(tmp,ANAME(2),NROW,NCOL,0,IN,IOUT)           ! DLT
                 DO IC=1,NCOL                                            ! DLT
                    DO IR=1,NROW                                         ! DLT
-                      RECH(IC,IR)=RECH(IC,IR)+BUFF(IC,IR,1)             ! DLT
+                      RECH(IC,IR)=RECH(IC,IR)+tmp(IC,IR)                ! DLT
                    END DO                                               ! DLT
                 END DO                                                  ! DLT
              END DO                                                     ! DLT
+             deallocate(tmp)
           END IF                                                        ! DLT
           nodata = -9999.                                               ! DLT
         ELSE
