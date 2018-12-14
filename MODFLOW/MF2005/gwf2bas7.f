@@ -314,11 +314,11 @@ C8G-----READ INITIAL HEADS.
       END IF
 C      LBOTM
       if (ltbcheck) then                                                ! DLT
-         n = 0                                                          ! DLT
+         n = 0; m = 0                                                         ! DLT
          do k = 1, nlay                                                 ! DLT
             do i = 1, nrow                                              ! DLT
                do j = 1, ncol                                           ! DLT
-                  if(ibound(j,i,k).eq.0)cycle                           ! DLT
+                 if(ibound(j,i,k).eq.0)cycle                           ! DLT
                   !## top aquifer
                   xt = botm(j,i,lbotm(k)-1)                             ! DLT
                   !## bottom aquifer
@@ -326,26 +326,26 @@ C      LBOTM
                   !## if top lt bottom set bottom to top
                   if (xt.lt.xb) then                                    ! DLT
                      n = n + 1                                          ! DLT
-                     botm(j,i,lbotm(k)) = min(xb,xt)                    ! DLT
+                     botm(j,i,lbotm(k)) = xt                            ! DLT
                      !## check interbed
                   endif
                   if (k.lt.nlay) then                                   ! DLT
                      !## top interbed   
-                     xt = xb                                            ! DLT
+                     xt = botm(j,i,lbotm(k))  !xb                       ! DLT
                      !## bottom interbed
                      xb = botm(j,i,lbotm(k+1)-1)                        ! DLT
                      !## if top lt bottom set bottom to top
                      if (xt.lt.xb) then                                 ! DLT
-                        n = n + 1                                       ! DLT
-                        botm(j,i,il2) = min(xb,xt)                      ! DLT
+                        m = m + 1                                       ! DLT
+                        botm(j,i,lbotm(k+1)-1) = xt                     ! DLT
                      end if                                             ! DLT
                   end if                                                ! DLT
                end do                                                   ! DLT
             end do                                                      ! DLT
          end do                                                         ! DLT
-         if (n.gt.0) then                                               ! DLT
-            write(*,*) 'Top/bot consistency check applied:',n,          ! DLT
-     1         'cells adjusted'                                         ! DLT
+         if (n+m.gt.0) then                                             ! DLT
+            write(*,'(2(a,i10),a)') 'Top/bot consistency check applied', ! DLT
+     1n,' cells adjusted for aquifers and ',m,' for aquitards'          ! DLT
          end if                                                         ! DLT
       end if     
       

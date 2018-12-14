@@ -1125,6 +1125,7 @@ CONTAINS
  REAL(KIND=DP_KIND) :: XBOT
  REAL(KIND=DP_KIND),DIMENSION(:),ALLOCATABLE :: TP,BT,HK,VK,VA,TH,TP_BU,BT_BU,HK_BU,VK_BU,VA_BU
  INTEGER,DIMENSION(:),ALLOCATABLE :: IB
+ REAL(KIND=SP_KIND) :: ST,SB
  
  !## make sure nodata for anisotropy factors is 1.0D0
  IF(LANI)THEN
@@ -1156,14 +1157,18 @@ CONTAINS
   DO IROW=1,PRJIDF%NROW; DO ICOL=1,PRJIDF%NCOL; JLAY=0; DO ILAY=1,PRJNLAY
    IF(BND(ILAY)%X(ICOL,IROW).EQ.0)CYCLE
 
+   SB=REAL(BOT(ILAY)%X(ICOL,IROW),4)
+   ST=REAL(TOP(ILAY)%X(ICOL,IROW),4)
+   SB=MIN(ST,SB)
+   BOT(ILAY)%X(ICOL,IROW)=DBLE(SB)
+   
    IF(JLAY.GT.0)THEN
-    XBOT=BOT(JLAY)%X(ICOL,IROW)
     !## minimal aquifer thickness
-    TOP(ILAY)%X(ICOL,IROW)=MIN(XBOT,TOP(ILAY)%X(ICOL,IROW))
+    SB=BOT(JLAY)%X(ICOL,IROW)
+    ST=TOP(ILAY)%X(ICOL,IROW)
+    ST=MIN(SB,ST)
+    TOP(ILAY)%X(ICOL,IROW)=DBLE(ST)
    ENDIF
-
-!   !## due to scaling layers can have a zero thickness - if extent of layers are not coincidentical
-!   BOT(ILAY)%X(ICOL,IROW)=MIN(TOP(ILAY)%X(ICOL,IROW)-0.01  ,BOT(ILAY)%X(ICOL,IROW))
 
    !## store last active layer
    JLAY=ILAY

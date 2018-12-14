@@ -259,30 +259,30 @@ CONTAINS
  IF(PEST_NITER.EQ.0)PEST_SENSITIVITY=0.0D0
  
  CALL IMOD_UTL_PRINTTEXT('',0); CALL IMOD_UTL_PRINTTEXT(' Pest-Settings',-1)
- CALL IMOD_UTL_PRINTTEXT(' @@@ Internal Multiplication Factor for Weights: '//TRIM(IMOD_UTL_DTOS(FWIIPF,'G',5)),-1,IUPESTOUT)
- CALL IMOD_UTL_PRINTTEXT(' @@@ Number of Pest Iterations: '//TRIM(ITOS(PEST_NITER)),-1,IUPESTOUT)
- IF(PEST_NITER.EQ.0)CALL IMOD_UTL_PRINTTEXT(' @@@ Sensitivity Analyses Started',-1,IUPESTOUT)
- CALL IMOD_UTL_PRINTTEXT(' @@@ Stop Criterium Objective Function Value: '//TRIM(IMOD_UTL_DTOS(PEST_JSTOP,'F',3)),-1,IUPESTOUT)
- CALL IMOD_UTL_PRINTTEXT(' @@@ Sensitivity to Exclude Parameter (temporarily): '//TRIM(IMOD_UTL_DTOS(PEST_SENSITIVITY,'F',3)),-1,IUPESTOUT)
+ CALL IMOD_UTL_PRINTTEXT(' - Internal Multiplication Factor for Weights: '//TRIM(IMOD_UTL_DTOS(FWIIPF,'G',5)),-1,IUPESTOUT)
+ CALL IMOD_UTL_PRINTTEXT(' - Number of Pest Iterations: '//TRIM(ITOS(PEST_NITER)),-1,IUPESTOUT)
+ IF(PEST_NITER.EQ.0)CALL IMOD_UTL_PRINTTEXT(' - Sensitivity Analyses Started',-1,IUPESTOUT)
+ CALL IMOD_UTL_PRINTTEXT(' - Stop Criterium Objective Function Value: '//TRIM(IMOD_UTL_DTOS(PEST_JSTOP,'F',3)),-1,IUPESTOUT)
+ CALL IMOD_UTL_PRINTTEXT(' - Sensitivity to Exclude Parameter (temporarily): '//TRIM(IMOD_UTL_DTOS(PEST_SENSITIVITY,'F',3)),-1,IUPESTOUT)
  SELECT CASE (PEST_ISCALING)
   CASE (0)
-   CALL IMOD_UTL_PRINTTEXT(' @@@ No  Scaling, No  SVD',-1,IUPESTOUT)
+   CALL IMOD_UTL_PRINTTEXT(' - No  Scaling, No  SVD',-1,IUPESTOUT)
   CASE (1)
-   CALL IMOD_UTL_PRINTTEXT(' @@@ Yes Scaling, No  SVD',-1,IUPESTOUT)
+   CALL IMOD_UTL_PRINTTEXT(' - Yes Scaling, No  SVD',-1,IUPESTOUT)
   CASE (2)
-   CALL IMOD_UTL_PRINTTEXT(' @@@ Yes Scaling, Yes SVD',-1,IUPESTOUT)
+   CALL IMOD_UTL_PRINTTEXT(' - Yes Scaling, Yes SVD',-1,IUPESTOUT)
   CASE (3)
-   CALL IMOD_UTL_PRINTTEXT(' @@@ No  Scaling, Yes SVD',-1,IUPESTOUT)
+   CALL IMOD_UTL_PRINTTEXT(' - No  Scaling, Yes SVD',-1,IUPESTOUT)
  END SELECT
  SELECT CASE (PEST_KTYPE)
   CASE ( 2)
-   CALL IMOD_UTL_PRINTTEXT(' @@@ Simple Kriging is used (if neccessary)',-1,IUPESTOUT)
+   CALL IMOD_UTL_PRINTTEXT(' - Simple Kriging is used (if neccessary)',-1,IUPESTOUT)
   CASE (-2)
-   CALL IMOD_UTL_PRINTTEXT(' @@@ Ordinary Kriging is used (if neccessary)',-1,IUPESTOUT)
+   CALL IMOD_UTL_PRINTTEXT(' - Ordinary Kriging is used (if neccessary)',-1,IUPESTOUT)
   CASE DEFAULT
    CALL IMOD_UTL_PRINTTEXT(' Select 1 or 2 for Kriging Type',2)
  END SELECT
- CALL IMOD_UTL_PRINTTEXT(' @@@ Termination Criterion for Parameter Adjustments (vectorlength): '//TRIM(IMOD_UTL_DTOS(PEST_PADJ,'F',3)),-1,IUPESTOUT)
+ CALL IMOD_UTL_PRINTTEXT(' - Termination Criterion for Parameter Adjustments (vectorlength): '//TRIM(IMOD_UTL_DTOS(PEST_PADJ,'F',3)),-1,IUPESTOUT)
   
  DO I=1,SIZE(PEST_ITARGET)
   IF(PEST_ITARGET(I).LT.0.0)CALL IMOD_UTL_PRINTTEXT('Error PEST_ITARGET('//TRIM(ITOS(I))//') < 0.0',2)
@@ -290,7 +290,7 @@ CONTAINS
  
  TF=SUM(PEST_ITARGET)
 
- CALL IMOD_UTL_PRINTTEXT(' @@@ Number of BatchFiles Used: '//TRIM(ITOS(PEST_NBATCH)),-1,IUPESTOUT)
+ CALL IMOD_UTL_PRINTTEXT(' - Number of BatchFiles Used: '//TRIM(ITOS(PEST_NBATCH)),-1,IUPESTOUT)
  IF(PEST_NBATCH.GT.0)THEN
   ALLOCATE(PEST_IBATCH(PEST_NBATCH))
   DO I=1,PEST_NBATCH
@@ -311,15 +311,15 @@ CONTAINS
  DO I=1,PEST_NBATCH; PEST_IBATCH(I)%FRACTION=TF*PEST_IBATCH(I)%FRACTION; ENDDO
 
  !## write fractions
- CALL IMOD_UTL_PRINTTEXT(' @@@ Fraction Heads: '//TRIM(IMOD_UTL_DTOS(PEST_ITARGET(1),'F',3)),-1,IUPESTOUT)
- CALL IMOD_UTL_PRINTTEXT(' @@@ Fraction DynHd: '//TRIM(IMOD_UTL_DTOS(PEST_ITARGET(2),'F',3)),-1,IUPESTOUT)
+ CALL IMOD_UTL_PRINTTEXT(' - Fraction Heads: '//TRIM(IMOD_UTL_DTOS(PEST_ITARGET(1),'F',3)),-1,IUPESTOUT)
+ CALL IMOD_UTL_PRINTTEXT(' - Fraction DynHd: '//TRIM(IMOD_UTL_DTOS(PEST_ITARGET(2),'F',3)),-1,IUPESTOUT)
  DO I=1,PEST_NBATCH
-  CALL IMOD_UTL_PRINTTEXT(' @@@ Fraction Batch '//TRIM(IMOD_UTL_ITOS(I))//': '//TRIM(IMOD_UTL_DTOS(PEST_IBATCH(I)%FRACTION,'F',3)),-1,IUPESTOUT)
-  CALL IMOD_UTL_PRINTTEXT(' @@@ BatchFile      '//TRIM(IMOD_UTL_ITOS(I))//': '//TRIM(PEST_IBATCH(I)%BATCHFILE),-1,IUPESTOUT)
-  CALL IMOD_UTL_PRINTTEXT(' @@@ BatchOutFile   '//TRIM(IMOD_UTL_ITOS(I))//': '//TRIM(PEST_IBATCH(I)%OUTFILE),-1,IUPESTOUT)
+  CALL IMOD_UTL_PRINTTEXT(' - Fraction Batch '//TRIM(IMOD_UTL_ITOS(I))//': '//TRIM(IMOD_UTL_DTOS(PEST_IBATCH(I)%FRACTION,'F',3)),-1,IUPESTOUT)
+  CALL IMOD_UTL_PRINTTEXT(' - BatchFile      '//TRIM(IMOD_UTL_ITOS(I))//': '//TRIM(PEST_IBATCH(I)%BATCHFILE),-1,IUPESTOUT)
+  CALL IMOD_UTL_PRINTTEXT(' - BatchOutFile   '//TRIM(IMOD_UTL_ITOS(I))//': '//TRIM(PEST_IBATCH(I)%OUTFILE),-1,IUPESTOUT)
  ENDDO
 
- CALL IMOD_UTL_PRINTTEXT(' @@@ Number of Periods Used: '//TRIM(IMOD_UTL_ITOS(PEST_NPERIOD)),-1,IUPESTOUT)
+ CALL IMOD_UTL_PRINTTEXT(' - Number of Periods Used: '//TRIM(IMOD_UTL_ITOS(PEST_NPERIOD)),-1,IUPESTOUT)
  IF(PEST_NPERIOD.GT.0)THEN
   ALLOCATE(PEST_IPERIOD(PEST_NPERIOD,2))
   DO I=1,PEST_NPERIOD
@@ -329,7 +329,7 @@ CONTAINS
     CALL IMOD_UTL_PRINTTEXT('Error reading PERIOD1,PERIOD2: '//TRIM(LINE),0)
     CALL IMOD_UTL_PRINTTEXT('Busy processing module: '//TRIM(CMOD(PPST)),2)
    ENDIF
-   CALL IMOD_UTL_PRINTTEXT(' @@@ Period '//TRIM(IMOD_UTL_ITOS(I))//': '//TRIM(IMOD_UTL_DBL_ITOS(PEST_IPERIOD(I,1)))// &
+   CALL IMOD_UTL_PRINTTEXT(' - Period '//TRIM(IMOD_UTL_ITOS(I))//': '//TRIM(IMOD_UTL_DBL_ITOS(PEST_IPERIOD(I,1)))// &
      '-'//TRIM(IMOD_UTL_DBL_ITOS(PEST_IPERIOD(I,2))),-1,IUPESTOUT)
   ENDDO
  ENDIF
@@ -415,49 +415,13 @@ CONTAINS
   CALL IMOD_UTL_PRINTTEXT('Error reading NZONE'//TRIM(LINE),0)
   CALL IMOD_UTL_PRINTTEXT('Busy processing module: '//TRIM(CMOD(PPST)),2)
  ENDIF
-
-! !## call fosm if covariance is known and jacobians are there
-! IF(.FALSE.)THEN
-
-!  !## set igroup lt 0 for followers in group
-!  DO I=1,SIZE(PARAM)
-!   IF(PARAM(I)%IACT.EQ.0)CYCLE
-!   DO J=1,I-1 
-!    IF(PARAM(J)%IACT.EQ.0)CYCLE
-!    IF(PARAM(J)%IGROUP.EQ.PARAM(I)%IGROUP)THEN
-!     PARAM(I)%IGROUP=-1*PARAM(I)%IGROUP; EXIT
-!    ENDIF
-!   ENDDO
-!  ENDDO
-
-!!## ibrahym
-!!  CALL IMOD_UTL_OPENASC(IUCOV,'d:\IMOD-MODELS\IBRAHYM_V2\DBASE\IMOD_USER\MODELS\ibV2_stat_fosm\totaal250\covariance_250_opt_4iter.txt','R')
-!
-!!## tilburg
-!!  CALL IMOD_UTL_OPENASC(IUCOV,'p:\1210574-wilhelmina-kanaal\20150224_Tilburg\model2imod\output\v4_08_calib_02_peter\cov_iter0.txt','R')
-!  CALL IMOD_UTL_OPENASC(IUCOV,'p:\1210574-wilhelmina-kanaal\20150224_Tilburg\model2imod\output\v4_08_calib_02_peter_optimalisatie\cov_iter5.txt','R')
-!  READ(IUCOV,*) NP; ALLOCATE(COV(NP,NP),TXTCOV(NP))
-!  READ(IUCOV,*); READ(IUCOV,*); READ(IUCOV,*)
-!  DO I=1,NP; READ(IUCOV,*) TXTCOV(I),(COV(I,J),J=1,NP); ENDDO
-!  !## deactive parameter that are not represented by txtcov()
-!  J=1; DO I=1,SIZE(PARAM)
-!   WRITE(LINE,'(A2,2I3.3,A1,I3.3)') PARAM(I)%PTYPE,PARAM(I)%ILS,PARAM(I)%IZONE,'-',PARAM(I)%IGROUP
-!   IF(TRIM(LINE).EQ.TRIM(TXTCOV(J)))THEN
-!    J=J+1; IF(J.GT.NP)J=1
-!   ELSE
-!    PARAM(I)%IACT=0
-!   ENDIF
-!  ENDDO
-!  CDATE_SIM(1)='STEADY-STATE'
-!  CALL PESTWRITESTATISTICS_FOSM(NP,COV)
-! ENDIF 
  
  ALLOCATE(ZONE(N))
 
  IF(IOPTION.EQ.0)THEN
   
-  ncol=idf%ncol
-  nrow=idf%nrow
+  NCOL=IDF%NCOL
+  NROW=IDF%NROW
   
   DO I=1,SIZE(ZONE)
 
@@ -515,8 +479,8 @@ CONTAINS
  
  else
   
-  ncol=idfm%ncol
-  nrow=idfm%nrow
+  NCOL=IDFM%NCOL
+  NROW=IDFM%NROW
   
   DO I=1,SIZE(ZONE)
 
@@ -639,8 +603,12 @@ CONTAINS
     N=N+PARAM(I)%NODES
   END SELECT
  ENDDO 
- IF(N.EQ.0)CALL IMOD_UTL_PRINTTEXT('Nothing to do',2)
 
+ !## only in active-optimization mode
+ IF(PEST_SINGLE.EQ.0)THEN
+  IF(N.EQ.0)CALL IMOD_UTL_PRINTTEXT('Nothing to do',2)
+ ENDIF
+ 
  !## fill array zone and set appropriate pointers in type 
  DO I=1,SIZE(PARAM)
   IF(PARAM(I)%NODES.GT.0)THEN
@@ -714,7 +682,6 @@ CONTAINS
  !## make sure group with active nodes is positive rest is negative
  DO I=1,SIZE(PARAM)
   IF(PARAM(I)%IACT.EQ.0)THEN
-!   PARAM(I)%IGROUP=0
    CYCLE
   ENDIF
   DO J=1,I-1 
