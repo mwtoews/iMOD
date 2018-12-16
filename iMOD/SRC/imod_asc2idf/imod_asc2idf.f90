@@ -1708,17 +1708,17 @@ CONTAINS
        SNROW=(YMAX-YMIN)/CS
       ENDIF
 
-      WRITE(CH,*) SNCOL;                WRITE(JU,'(A)') 'NCOLS         '//TRIM(CH)
-      WRITE(CH,*) SNROW;                WRITE(JU,'(A)') 'NROWS         '//TRIM(CH)
+      WRITE(CH,*) SNCOL; WRITE(JU,'(A)') 'NCOLS         '//TRIM(CH)
+      WRITE(CH,*) SNROW; WRITE(JU,'(A)') 'NROWS         '//TRIM(CH)
       IF(MP(IPLOT)%IDF%ITYPE.EQ.4)THEN
-       WRITE(CH,*) UTL_D2R(XMIN,7);                 WRITE(JU,'(A)') 'XLLCORNER     '//TRIM(CH) 
-       WRITE(CH,*) UTL_D2R(YMIN,7);                 WRITE(JU,'(A)') 'YLLCORNER     '//TRIM(CH)
-       WRITE(CH,*) UTL_D2R(CS,7);                   WRITE(JU,'(A)') 'CELLSIZE      '//TRIM(CH)
+       WRITE(CH,*) UTL_D2R(XMIN,7); WRITE(JU,'(A)') 'XLLCORNER     '//TRIM(CH) 
+       WRITE(CH,*) UTL_D2R(YMIN,7); WRITE(JU,'(A)') 'YLLCORNER     '//TRIM(CH)
+       WRITE(CH,*) UTL_D2R(CS,7); WRITE(JU,'(A)') 'CELLSIZE      '//TRIM(CH)
        WRITE(CH,*) UTL_D2R(MP(IPLOT)%IDF%NODATA,7); WRITE(JU,'(A)') 'NODATA_VALUE  '//TRIM(CH) 
       ELSEIF(MP(IPLOT)%IDF%ITYPE.EQ.8)THEN
-       WRITE(CH,*) XMIN;                 WRITE(JU,'(A)') 'XLLCORNER     '//TRIM(CH) 
-       WRITE(CH,*) YMIN;                 WRITE(JU,'(A)') 'YLLCORNER     '//TRIM(CH)
-       WRITE(CH,*) CS;                   WRITE(JU,'(A)') 'CELLSIZE      '//TRIM(CH)
+       WRITE(CH,*) XMIN; WRITE(JU,'(A)') 'XLLCORNER     '//TRIM(CH) 
+       WRITE(CH,*) YMIN; WRITE(JU,'(A)') 'YLLCORNER     '//TRIM(CH)
+       WRITE(CH,*) CS; WRITE(JU,'(A)') 'CELLSIZE      '//TRIM(CH)
        WRITE(CH,*) MP(IPLOT)%IDF%NODATA; WRITE(JU,'(A)') 'NODATA_VALUE  '//TRIM(CH) 
       ENDIF
 

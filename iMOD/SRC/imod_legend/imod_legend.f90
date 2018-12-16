@@ -182,7 +182,6 @@ CONTAINS
          CALL UTL_READARRAY(IP,4,MP(IPLOT)%IDFKIND)
          CALL WDIALOGGETINTEGER(IDF_INTEGER1,MP(IPLOT)%THICKNESS)       
          CALL WDIALOGHIDE()
-!         CALL IDFPLOTFAST(1)
          EXIT
         ENDIF
 
@@ -760,8 +759,6 @@ CONTAINS
  IF(LTYPE.EQ.2)THEN
   CALL WDIALOGPUTDOUBLE(ID1(1),XMAX)
   CALL WDIALOGPUTDOUBLE(ID1(SIZE(ID1)),XMIN)
-!  MP(IPLOT)%LEG%CLASS(NLEG)=XMIN !## min
-!  MP(IPLOT)%LEG%CLASS(0)=XMAX    !## max
  ENDIF
 
  MP(IPLOT)%LEG%CLASS(NLEG)=XMIN !## min
@@ -1553,7 +1550,7 @@ CONTAINS
 
     !## add one artificial if only one value is found
     IF(J.EQ.1)THEN
-     IDFVAL(1)=IDFVAL(1)-0.5
+     IDFVAL(1)=IDFVAL(1)-0.5D0
      IDFVAL(2)=IDFVAL(1)+1.0D0
      J=J+1
     ENDIF
@@ -1576,7 +1573,10 @@ CONTAINS
      END DO
      
      !## overrule maximal value by maximal value of IDF - only for entire extent
-     IF(LEGDOMAIN.EQ.'ALE')MP(IPLOT)%LEG%CLASS(0)=MP(IPLOT)%IDF%DMAX
+     IF(LEGDOMAIN.EQ.'ALE')THEN
+      MP(IPLOT)%LEG%CLASS(0)=MP(IPLOT)%IDF%DMAX
+      MP(IPLOT)%LEG%CLASS(MXCLR)=MP(IPLOT)%IDF%DMIN
+     ENDIF
      
      !## resample colours
      CALL LEG_SAMPLE_STRETCHED_GETIPOS(IPLOT,1)
