@@ -816,7 +816,7 @@ SUBROUTINE IMOD1CLIPBOARD
 !###======================================================================
 IMPLICIT NONE
 INTEGER :: IX1,IY1,IX2,IY2,IW,IH,IHANDLE
-REAL(KIND=DP_KIND) :: DXX,OFFSTTXT
+REAL(KIND=DP_KIND) :: OFFSTTXT
 
 !## copy whole image if axes are absent
 IF(WMENUGETSTATE(ID_SHOWAXES,2).EQ.0)THEN
