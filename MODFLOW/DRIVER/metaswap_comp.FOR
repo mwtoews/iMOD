@@ -22,13 +22,13 @@
 !  
       SUBROUTINE   MetaSWAP_initComponent
 !
-#ifdef INCLUDE_METASWAP         
+#if(defined(INCLUDE_METASWAP))
       USE          SIMVAR
 #endif            
       IMPLICIT     NONE
 !
 !     Set flag for use of MetaSWAP as component
-#ifdef INCLUDE_METASWAP         
+#if(defined(INCLUDE_METASWAP))   
       MetaSWAP_comp = .TRUE.        
 #else
       write(*,*) 'Error: MetaSWAP_initComponent'; stop 1
@@ -52,7 +52,7 @@
 !     Read data for setting up simulation, check that time is within meteo period
       iact = 0
       iter = 0
-#ifdef INCLUDE_METASWAP         
+#if(defined(INCLUDE_METASWAP))   
       CALL SIMGRO(iact,iter,time,dt,cvg,ready)
 #else
       write(*,*) 'Error: MetaSWAP_initSimulation'; stop 1
@@ -99,7 +99,7 @@
 !     Determine the end-time of meteo data
       iact = 10
       iter = 0
-#ifdef INCLUDE_METASWAP         
+#if(defined(INCLUDE_METASWAP))   
       CALL SIMGRO(iact,iter,time,dt,cvg,ready)        
 #else
       write(*,*) 'Error: MetaSWAP_getEndofCurrentTimestep'; stop 1
@@ -179,7 +179,7 @@
       call timing_tic('METASWAP','performIter')
 
       iact = 2
-#ifdef INCLUDE_METASWAP      
+#if(defined(INCLUDE_METASWAP))
       CALL SIMGRO(iact,iter,time,dt,cvg,ready)   
 #else
       write(*,*) 'Error: MetaSWAP_performIter'; stop 1
@@ -222,7 +222,7 @@
       call timing_tic('METASWAP','finishIter')
 
       iact = 3
-#ifdef INCLUDE_METASWAP      
+#if(defined(INCLUDE_METASWAP))
       CALL SIMGRO(iact,iter,time,dt,cvg,ready)        
 #else
       write(*,*) 'Error: MetaSWAP_finishIter'; stop 1
@@ -249,7 +249,7 @@
 !     Write data to file
       call timing_tic('METASWAP','finishTimestep')
       iact = 4
-#ifdef INCLUDE_METASWAP      
+#if(defined(INCLUDE_METASWAP))
       CALL SIMGRO(iact,iter,time,dt,cvg,ready)
 #else
       write(*,*) 'Error: MetaSWAP_finishTimestep'; stop 1
@@ -274,7 +274,7 @@
 !     Finalize simulation
       call timing_tic('METASWAP','finishSimulation')
       iact = 5
-#ifdef INCLUDE_METASWAP      
+#if(defined(INCLUDE_METASWAP))
       CALL SIMGRO(iact,iter,time,dt,cvg,ready)
 #else
       write(*,*) 'Error: MetaSWAP_finishSimulation'; stop 1
@@ -289,7 +289,7 @@
 !
       IMPLICIT     NONE
        
-#ifdef INCLUDE_METASWAP      
+#if(defined(INCLUDE_METASWAP))
       CALL SIMGRO_save
 #else
       write(*,*) 'Error: MetaSWAP_saveState'; stop 1
@@ -312,7 +312,7 @@
 !
       iact = -1
 
-#ifdef INCLUDE_METASWAP      
+#if(defined(INCLUDE_METASWAP))
       CALL SIMGRO(iact,iter,time,dt,cvg,ready)
 #else
       write(*,*) 'Error: MetaSWAP_restoreState'; stop 1
@@ -335,7 +335,7 @@
 !      LOGICAL*4 status
 !
       call timing_tic('METASWAP','saveRestore')
-#ifdef INCLUDE_METASWAP      
+#if(defined(INCLUDE_METASWAP))
        if (strestore) then
           write(*,*) ' RESTORE STATE: MetaSwap'
           call MetaSWAP_restoreState()
@@ -354,7 +354,7 @@
       !> Return the number of exchange items (IDs).
       logical function metaswap_PutModSimNumberOfIDs(nxch)
 !...     modules
-#ifdef INCLUDE_METASWAP      
+#if(defined(INCLUDE_METASWAP))
       use simvar, only: mfi ! integer*4
 #endif
       implicit none
@@ -365,7 +365,7 @@
 !...     locals
       logical :: retval
 !.......................................................................
-#ifdef INCLUDE_METASWAP      
+#if(defined(INCLUDE_METASWAP))
       nxch = size(mfi)
 #else
       write(*,*) 'Error: metaswap_PutModSimNumberOfIDs'; stop 1
@@ -383,7 +383,7 @@
       ! Put exchange IDs.
       logical function metaswap_PutModSimIDs(ids)
 !...     modules      
-#ifdef INCLUDE_METASWAP      
+#if(defined(INCLUDE_METASWAP))
       use simvar, only: mfi     ! integer*4
 #endif
       implicit none
@@ -396,7 +396,7 @@
       integer :: i
 !.......................................................................
  
-#ifdef INCLUDE_METASWAP      
+#if(defined(INCLUDE_METASWAP))
       do i =1, size(mfi)
          ids(i) = mfi(i)
       end do
@@ -413,7 +413,7 @@
       logical function metaswap_GetHeads(gwheads,nid,
      1                                       xchIdx,xchOff,mv)
 !...     modules  
-#ifdef INCLUDE_METASWAP      
+#if(defined(INCLUDE_METASWAP))
       use simvar, only: hgwmod, mfi
       use pks_imod_utl, only: pks_imod_utl_iarmwp_xch ! PKS
 #endif
@@ -431,7 +431,7 @@
       integer :: i, j, js, je, k, n
 !.......................................................................
 
-#ifdef INCLUDE_METASWAP      
+#if(defined(INCLUDE_METASWAP))
       n = size(mfi)
       if (n.ne.nid) then
          ok = .false.      
@@ -467,7 +467,7 @@
       !> Put unsaturated zone flux.    
       logical function metaswap_PutModSimUnsaturatedZoneFlux(uszflux,mv)
 !...     modules    
-#ifdef INCLUDE_METASWAP      
+#if(defined(INCLUDE_METASWAP))
       use pksmpi_mod,only:myrank
       use simvar, only: vsim, mfi, ki
 #endif
@@ -483,7 +483,7 @@
       real :: rmask ! PKS
 !.......................................................................
 
-#ifdef INCLUDE_METASWAP      
+#if(defined(INCLUDE_METASWAP))
       n = size(mfi)
       
 !...     checks: to do      
@@ -505,7 +505,7 @@
       !> Put unsaturated zone flux.    
       logical function metaswap_PutSimMozUnsaturatedZoneFlux(uszflux,mv)
 !...     modules
-#ifdef INCLUDE_METASWAP      
+#if(defined(INCLUDE_METASWAP))
       use simvar, only: vsim, nuomilsw, klswi
 #endif
       implicit none
@@ -523,7 +523,7 @@
       ok = .true.
 
 !...      copy unsaturated zone flux     
-#ifdef INCLUDE_METASWAP      
+#if(defined(INCLUDE_METASWAP))
       do i = 1, nuomilsw
          uszflux(i) = vsim(klswi(i))
       end do        
@@ -536,7 +536,7 @@
       
       logical function metaswap_PutStorageFactor(strfct,mv)
 !...     modules      
-#ifdef INCLUDE_METASWAP      
+#if(defined(INCLUDE_METASWAP))
       use simvar, only: sc1sim, mfi
 #endif
       implicit none
@@ -553,7 +553,7 @@
 !...     checks: to do     
       ok = .true.
 
-#ifdef INCLUDE_METASWAP      
+#if(defined(INCLUDE_METASWAP))
       n = size(mfi)
       do i = 1, size(mfi)
          strfct(i) = sc1sim(i)
@@ -567,7 +567,7 @@
       
       logical function metaswap_PutModMozNumberOfIDs(nid)
 !...     modules      
-#ifdef INCLUDE_METASWAP      
+#if(defined(INCLUDE_METASWAP))
       use simvar, only: nuomilsw
 #endif
       implicit none
@@ -579,7 +579,7 @@
       logical :: ok           
 !.......................................................................
       
-#ifdef INCLUDE_METASWAP      
+#if(defined(INCLUDE_METASWAP))
       if (nuomilsw.le.0) then
          ok = .false.
          metaswap_PutModMozNumberOfIDs = ok
@@ -597,7 +597,7 @@
       
       logical function metaswap_PutModMozIDs(ids)
 !...     modules      
-#ifdef INCLUDE_METASWAP      
+#if(defined(INCLUDE_METASWAP))
       use simvar, only: nuomilsw, lswi
 #endif
       implicit none
@@ -610,7 +610,7 @@
       integer :: i           
 !.......................................................................
 
-#ifdef INCLUDE_METASWAP      
+#if(defined(INCLUDE_METASWAP))
       do i = 1, nuomilsw
          ids(i) = lswi(i)      
       end do
@@ -625,7 +625,7 @@
       logical function MetaSWAP_PutCumSWSprinklingDemandFluxes(sprflux,
      1                                                         mvin)
 !...     modules      
-#ifdef INCLUDE_METASWAP      
+#if(defined(INCLUDE_METASWAP))
       use simvar, only: nuomilsw, cupsswdemm3i 
 #endif
       implicit none
@@ -645,7 +645,7 @@
  
       ok = .true.
 
-#ifdef INCLUDE_METASWAP      
+#if(defined(INCLUDE_METASWAP))
       if (nuomilsw.le.0) ok = .false.
       do i = 1, nuomilsw
          flux = cupsswdemm3i(i)
@@ -663,7 +663,7 @@
       
       logical function MetaSWAP_PutCumRunonFluxes(runonflux,mvin)
 !...     modules      
-#ifdef INCLUDE_METASWAP      
+#if(defined(INCLUDE_METASWAP))
       use simvar, only: nuomilsw, cuqrunm3i 
 #endif
       implicit none
@@ -682,7 +682,7 @@
 !.......................................................................
       ok = .true.
 
-#ifdef INCLUDE_METASWAP            
+#if(defined(INCLUDE_METASWAP))      
       if (nuomilsw.le.0) ok = .false.
       do i = 1, nuomilsw
          flux = cuqrunm3i(i)
@@ -701,7 +701,7 @@
       logical function metaswap_GetFractions(fractions,nid,
      1                                       xchIdx,xchOff,mvin)
 !...     modules    
-#ifdef INCLUDE_METASWAP            
+#if(defined(INCLUDE_METASWAP))      
       use simvar, only: frpsswi, lswi
 #endif
       implicit none
@@ -722,7 +722,7 @@
       real :: frc
 !.......................................................................
 
-#ifdef INCLUDE_METASWAP            
+#if(defined(INCLUDE_METASWAP))      
       n = size(lswi)
       if (n.ne.nid) then
          ok = .false.      

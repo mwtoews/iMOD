@@ -25,13 +25,13 @@
 !  
       SUBROUTINE TRANSOL_initComponent()
 !
-#ifdef INCLUDE_METASWAP 
+#if(defined(INCLUDE_METASWAP)) 
       USE        SIMVAR
 #endif      
       IMPLICIT   NONE
 !
 !     Set flag for TRANSOL as component
-#ifdef INCLUDE_METASWAP 
+#if(defined(INCLUDE_METASWAP)) 
       TRANSOL_comp = .TRUE. 
 #else   
       write(*,*) 'Error: TRANSOL_initComponent'; stop 1
@@ -115,7 +115,7 @@
 !
       call timing_tic('TRANSOL','prepareIter') 
 !     Restore the SIMGRO state if this is the second iteration of TRANSOL
-#ifdef INCLUDE_METASWAP 
+#if(defined(INCLUDE_METASWAP)) 
       IF (iter_transol .GE. 2) THEN
         iact = -1
         CALL SIMGRO(iact,iter,time,dt,cvg,ready)        
@@ -159,7 +159,7 @@
       call timing_tic('TRANSOL','performIter') 
 
       iact = 41
-#ifdef INCLUDE_METASWAP 
+#if(defined(INCLUDE_METASWAP)) 
       CALL SIMGRO(iact,iter,time,dt,cvg,ready)
 #else
       write(*,*) 'Error: TRANSOL_performIter'; stop 1
@@ -212,7 +212,7 @@
 
 !     Write data to file
       iact = 42
-#ifdef INCLUDE_METASWAP 
+#if(defined(INCLUDE_METASWAP)) 
       CALL SIMGRO(iact,iter,time,dt,cvg,ready)        
 #else      
       write(*,*) 'Error: TRANSOL_finishTimestep'; stop 1
@@ -258,7 +258,7 @@
       logical function TRANSOL_GetSeepageRiverDrain(val,nid,
      1                                          xchIdx,xchOff,mvin,act)
 !...     modules  
-#ifdef INCLUDE_METASWAP 
+#if(defined(INCLUDE_METASWAP)) 
       use simvar, only: qseepmodi, qdrsymodi, lvswdrsymodi, mfi
 #endif
       implicit none
@@ -277,7 +277,7 @@
       integer :: i, j, js, je, k
       real :: fval
 !.......................................................................
-#ifdef INCLUDE_METASWAP 
+#if(defined(INCLUDE_METASWAP)) 
       action = act
       call cfn_token(action ,'tu')
       ok = .true.
@@ -338,7 +338,7 @@
       logical function TRANSOL_GetSalt(flux,nid,
      1                                 xchIdx,xchOff,mvin)
 !...     modules 
-#ifdef INCLUDE_METASWAP 
+#if(defined(INCLUDE_METASWAP)) 
       use solute2lsw, only: coliin_i
 #endif
       implicit none
@@ -361,7 +361,7 @@
 
       ok = .true.
       
-#ifdef INCLUDE_METASWAP 
+#if(defined(INCLUDE_METASWAP)) 
       js = 1
       do i = 1, nid
          je = xchOff(i)
@@ -387,7 +387,7 @@
 
       logical function TRANSOL_PutSalt(salt,mvin)
 !...     modules   
-#ifdef INCLUDE_METASWAP 
+#if(defined(INCLUDE_METASWAP)) 
       use solute2lsw, only: amdrrukg_i, nuomilsw_pmsw
 #endif
       implicit none
@@ -406,7 +406,7 @@
 !.......................................................................
       ok = .true.
       
-#ifdef INCLUDE_METASWAP 
+#if(defined(INCLUDE_METASWAP)) 
       if (nuomilsw_pmsw.le.0) ok = .false.
   
       do i = 1, nuomilsw_pmsw
