@@ -522,8 +522,8 @@ DOLOOP: DO
    ENDIF
   END DO
  
-  !## place dot
-  CALL UTL_PLOTPOINT(X,Y,14,1.0D0)
+!  !## place dot
+!  CALL UTL_PLOTPOINT(X,Y,14,1.0D0)
 
  ENDIF
 

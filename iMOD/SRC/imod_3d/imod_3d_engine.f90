@@ -4071,7 +4071,7 @@ SOLLOOP: DO I=1,NSOLLIST
   !## get selected labels for printing
   CALL UTL_FILLARRAY(ILIST,IPF(IIPF)%NCOL,ABS(MP(IPLOT)%IEQ))
 
-  TSIZE=TS*MP(IPLOT)%TSIZE
+  TSIZE=MP(IPLOT)%TSIZE*TS
   ACOL=IPF(IIPF)%ACOL; IF(ACOL.LT.0.OR.ACOL.GT.IPF(IIPF)%NCOL)ACOL=0
   IF(ACOL.EQ.0)N=N+1
     
@@ -4086,13 +4086,14 @@ SOLLOOP: DO I=1,NSOLLIST
 
     !## start new drawing list for current object
     CALL GLNEWLIST(IPFLISTINDEX(N,3),GL_COMPILE)
-    CALL WGLTEXTORIENTATION(ALIGNLEFT) 
+    !## underneath borehole
+    CALL WGLTEXTORIENTATION(ALIGNRIGHT) !LEFT) 
   
     X =IPF(IIPF)%XYZ(1,I)
     Y =IPF(IIPF)%XYZ(2,I)
     Z =IPF(IIPF)%XYZ(3,I)
 
-    X=X-BSIZE
+!    X=X-BSIZE
 
     !## copy temporary the modelmatrix
     CALL GLPUSHMATRIX()
@@ -4131,7 +4132,7 @@ SOLLOOP: DO I=1,NSOLLIST
      IF(J.NE.0)LINE(J:J)=' '
     ENDIF
 
-    CALL WGLTEXTSTRING(TRIM(LINE))
+    CALL WGLTEXTSTRING(TRIM(LINE)//'  ')
 
     !## get previous modelmatrix again
     CALL GLPOPMATRIX()
