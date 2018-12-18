@@ -24,7 +24,7 @@ MODULE MOD_POLYGON_UTL
 
 USE WINTERACTER
 USE RESOURCE
-USE MODPLOT, ONLY : MPW
+USE MODPLOT, ONLY : MPW,MP,MXMPLOT
 USE IMODVAR, ONLY : OFFSETX,OFFSETY
 USE MOD_POLYGON_PAR
 USE MOD_PREF_PAR, ONLY : PREFVAL
@@ -35,6 +35,38 @@ USE MOD_OSD, ONLY : OSD_OPEN
 
 CONTAINS
 
+ !###======================================================================
+ SUBROUTINE POLYGON1_UTL_EXPORTGEN()
+ !###======================================================================
+ IMPLICIT NONE
+ INTEGER :: IPLOT,IFORMAT,IU
+ 
+ DO IPLOT=1,MXMPLOT
+  IF(MP(IPLOT)%ISEL)THEN
+   IF(MP(IPLOT)%IPLOT.EQ.6)EXIT
+  ENDIF
+ ENDDO
+ !## nothing find
+ IF(IPLOT.GT.MXMPLOT)RETURN
+ 
+ !## initialise gen
+ CALL POLYGON1INIT()
+
+ IF(.NOT.POLYGON_UTL_OPENGEN(MP(IPLOT)%IDFNAME,IFORMAT,IU))RETURN
+ !## ascii
+ IF(IFORMAT.EQ.1)THEN
+  CALL POLYGON_UTL_CONVERTGEN(MP(IPLOT)%IDFNAME)
+ ELSE
+  !## read binary genfile
+  CALL POLYGON1SAVELOADSHAPE(ID_LOADSHAPE,MP(IPLOT)%IDFNAME,'GEN') 
+  !## save gen 
+  IF(SHP%NPOL.GT.0)CALL POLYGON1SAVELOADSHAPE(ID_SAVESHAPE,'','GEN')
+ ENDIF
+ !## clear gen
+ CALL POLYGON1CLOSE()
+ 
+ END SUBROUTINE POLYGON1_UTL_EXPORTGEN
+ 
  !###======================================================================
  LOGICAL FUNCTION POLYGON_UTL_OPENGEN(FNAME,IFORMAT,IU)
  !###======================================================================
@@ -816,11 +848,8 @@ CONTAINS
      ENDDO
     ENDDO
 
-    IF(JU.EQ.0)THEN
-     WRITE(IU,'(I10)') I
-    ELSE
-     WRITE(JU,'(99A)') ('"'//TRIM(STR(J)%STRING)//'",',J=1,MAXCOL-1),'"'//TRIM(STR(MAXCOL)%STRING)//'"'
-    ENDIF
+    WRITE(IU,'(I10)') I
+    IF(JU.GT.0)WRITE(JU,'(99A)') ('"'//TRIM(STR(J)%STRING)//'",',J=1,MAXCOL-1),'"'//TRIM(STR(MAXCOL)%STRING)//'"'
 
     IF(SHP%POL(I)%ITYPE.EQ.ID_LINE.OR.SHP%POL(I)%ITYPE.EQ.ID_POLYGON)THEN
 

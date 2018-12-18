@@ -3,5 +3,5 @@
 	<Configurations>
 		<Configuration Name="Debug|Win32" CommandArguments="d:\IMOD-MODELS\TMODEL\IMPORTSOBEK.INI" WorkingDirectory="D:\IMOD-MODELS\IMOD"/>
 		<Configuration Name="Release|Win32"/>
-		<Configuration Name="Debug|x64" CommandArguments="h:\IMOD-MODELS\IBRAHYM_V2.0\DBASE_DLD\IMOD_USER\MODELS\IBRAHYM_V2.0.6_93\TOTAL_250.0\IMODPATH.INI" WorkingDirectory="d:\IMOD-MODELS\IMOD"/>
+		<Configuration Name="Debug|x64" WorkingDirectory="d:\IMOD-MODELS\IMOD"/>
 		<Configuration Name="Release|x64" CommandArguments="h:\IMOD-MODELS\IBRAHYM_V2.0\DBASE_DLD\IMOD_USER\MODELS\IBRAHYM_V2.0.6_93\TOTAL_250.0\IMODPATH.INI" WorkingDirectory="d:\OSS_DBL\"/></Configurations></VisualStudioUserFile>

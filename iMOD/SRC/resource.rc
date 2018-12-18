@@ -8,7 +8,7 @@
 //
 // Winteracter resource script. 
 //
-// Modified : 13/Dec/2018 22:42:40
+// Modified : 18/Dec/2018 11:12:31
 //
 ///////////////////////////////////////////////////
 //
@@ -1239,6 +1239,7 @@
 #define IDD_DIALOG027                     406
 #define ID_DFILESOPEN                     407
 #define WINTGRIDCOL1                     1318
+#define ID_GENEXPORT                    40324
 
 ///////////////////////////////////////////////////
 //
@@ -11962,6 +11963,7 @@ BEGIN
     POPUP "GEN Options"
     BEGIN
         MENUITEM "GEN &Configure ...",                       ID_GENCONFIGURE
+        MENUITEM "GEN Export ...",                           ID_GENEXPORT
     END
     MENUITEM SEPARATOR
     POPUP "Legend"
@@ -12078,6 +12080,7 @@ ID_IDFSHAPEVALUERECTANGLE,"Display of the sum of the raster cell values of the c
 ID_IDFSHAPEVALUEPOLYGON,"Display of the sum of the raster cell values of the cells selected by drawing a polygon\0",
 ID_IDFSHAPEVALUECIRCLE,"Display of the sum of the raster cell values of the cells selected by drawing a circle\0",
 ID_ISGSFR,"Shows the Stream Direction\0",
+ID_GENEXPORT,"Load in a BINARY/ASCII GEN and Export it to BINARY/ASCII\0",
 0
 END
 
@@ -12429,6 +12432,7 @@ BEGIN
         POPUP "&GEN-options"
         BEGIN
             MENUITEM "GEN &Configure ...",                       ID_GENCONFIGURE
+            MENUITEM "GEN Export ...",                           ID_GENEXPORT
         END
         MENUITEM SEPARATOR
         POPUP "&Legend"
@@ -12778,6 +12782,7 @@ ID_IMPORTSHAPEFILE,"Select this option to import a ESRI Shapefile into a Binary 
 ID_IMPORTGENFILE,"Select this option to import a ESRI GEN file into a Binary iMOD GEN-file\0",
 ID_CREATEIPF,"Create IPF files ...\0",
 ID_OPENFILES,"List Files that are currently opened by iMOD\0",
+ID_GENEXPORT,"Load in a BINARY/ASCII GEN and Export it to BINARY/ASCII\0",
 0
 END
 
@@ -13364,5 +13369,5 @@ END
 //*WI* FORTSAVE    1
 //*WI* FILENAME    resource.f90
 //*WI* FMODNAME    RESOURCE
-//*WI* LASTTYPE        2
-//*WI* LASTRES       179
+//*WI* LASTTYPE        1
+//*WI* LASTRES         2
