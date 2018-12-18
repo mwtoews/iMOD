@@ -746,6 +746,7 @@ CONTAINS
   CASE (1)
    !## in graph plot optie maken om de bmp te saven en terug te keren - loopn of graphnames() met name
    LEXPORT=.FALSE.; IF(ID.EQ.ID_GRAPHICS)LEXPORT=.TRUE.
+   GRAPHDIM%IFIXX=0; GRAPHDIM%IFIXY=0
    IF(IUNIT.EQ.1)CALL GRAPH_PLOT('Time','Volumes (m3/d)' ,.FALSE.,LEXPORT,DIR=DIR)
    IF(IUNIT.EQ.2)CALL GRAPH_PLOT('Time','Quantity (mm/d)',.FALSE.,LEXPORT,DIR=DIR)
 
