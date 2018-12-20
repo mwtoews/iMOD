@@ -31,7 +31,7 @@ MODULE MOD_SOBEK_PAR
                       ISG=8,ISD1=9,ISP=10,ISC1=11,ISD2=12,ISC2=13,    &
                       ISQ1=14,ISQ2=15,IST=16,IST1=17,IST2=18, &
                       IHIS=19,SHIS=20,IOUT=21 
-                    
+                      
  CHARACTER(LEN=256) :: SOBEKDIR,CALCPNTHISNAME,STRUCHISNAME,ISGNAME
  INTEGER :: IBATCH
 

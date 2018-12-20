@@ -4,9 +4,9 @@
 		<Platform Name="Win32"/>
 		<Platform Name="x64"/></Platforms>
 	<Configurations>
-		<Configuration Name="Debug|Win32">
-				<Tool Name="VFFortranCompilerTool" SuppressStartupBanner="true" DebugInformationFormat="debugEnabled" Optimization="optimizeDisabled" BufferedIO="true" HeapArrays="0" AdditionalIncludeDirectories="..\..\..\imod\lib\NETCDF\OS_X32\debug; ..\..\..\imod\lib\DELFTIO\OS_X32;D:\OSS_DBL\IMOD\LIB\WINTERACTER\OS_X32\INCLUDE;D:\OSS_DBL\IMOD\LIB\WINTERACTER\OS_X32" WarnDeclarations="true" WarnUnusedVariables="true" WarnIgnoreLOC="true" SuppressUsageMessages="true" WarnInterfaces="true" Traceback="true" NullPointerCheck="true" BoundsCheck="true" UninitializedVariablesCheck="true" DescriptorDataTypeCheck="true" DescriptorDataSizeCheck="true" RuntimeLibrary="rtMultiThreadedDebug" UseWindowsLibs="true" Interfaces="true"/>
-				<Tool Name="VFLinkerTool" OutputFile="..\..\bin\$(ProjectName)_X32_D.exe" LinkIncremental="linkIncrementalNo" SuppressStartupBanner="true" AdditionalLibraryDirectories="..\..\..\imod\lib\DELFTIO\OS_X32; D:\OSS_DBL\IMOD\LIB\NETCDF\OS_X32\debug" IgnoreDefaultLibraryNames="msvcrt.lib" GenerateDebugInformation="true" SubSystem="subSystemConsole" AdditionalDependencies="delftio.lib netcdf.lib f90_netcdf.lib f77_netcdf.lib"/>
+		<Configuration Name="Debug|Win32" OutputDirectory="$(PlatformName)\$(ConfigurationName)" IntermediateDirectory="$(PlatformName)\$(ConfigurationName)" TargetName="$(ProjectName)_X32_D">
+				<Tool Name="VFFortranCompilerTool" SuppressStartupBanner="true" DebugInformationFormat="debugEnabled" Optimization="optimizeDisabled" BufferedIO="true" HeapArrays="0" AdditionalIncludeDirectories="d:\COMPILE\OSSDELTARES\iMOD\LIB\WINTERACTER\OS_X32_V12;d:\COMPILE\OSSDELTARES\iMOD\lib\WINTERACTER\OS_X32_V12\INCLUDE;d:\COMPILE\OSSDELTARES\iMOD\LIB\DELFTIO\OS_X32;d:\COMPILE\OSSDELTARES\iMOD\LIB\NETCDF\OS_X32\release" WarnDeclarations="true" WarnUnusedVariables="true" WarnIgnoreLOC="true" SuppressUsageMessages="true" WarnInterfaces="true" Traceback="true" NullPointerCheck="true" BoundsCheck="true" UninitializedVariablesCheck="true" DescriptorDataTypeCheck="true" DescriptorDataSizeCheck="true" RuntimeLibrary="rtMultiThreadedDebug" UseWindowsLibs="true" Interfaces="true"/>
+				<Tool Name="VFLinkerTool" LinkIncremental="linkIncrementalNo" SuppressStartupBanner="true" AdditionalLibraryDirectories="d:\COMPILE\OSSDELTARES\imod\lib\DELFTIO\OS_X32;d:\COMPILE\OSSDELTARES\iMOD\lib\NETCDF\OS_X32\debug;d:\COMPILE\OSSDELTARES\iMOD\LIB\WINTERACTER\OS_X32_V12" GenerateDebugInformation="true" SubSystem="subSystemConsole" AdditionalDependencies="winter.lib delftio.lib AdvAPI32.Lib ComDlg32.Lib Gdi32.Lib GlU32.Lib Htmlhelp.Lib OpenGL32.Lib Shell32.Lib User32.Lib WinMM.Lib WinSpool.Lib netcdf.lib f90_netcdf.lib f77_netcdf.lib netcdf.lib f90_netcdf.lib f77_netcdf.lib"/>
 				<Tool Name="VFResourceCompilerTool" AdditionalIncludeDirectories="..\..\..\imod\lib\WINTERACTER\OS_X32\INCLUDE" ShowProgress="true" ResourceOutputFileName="..\..\..\iMOD\SRC\resource.res"/>
 				<Tool Name="VFMidlTool"/>
 				<Tool Name="VFCustomBuildTool"/>
@@ -14,9 +14,9 @@
 				<Tool Name="VFPreBuildEventTool"/>
 				<Tool Name="VFPostBuildEventTool"/>
 				<Tool Name="VFManifestTool" SuppressStartupBanner="true"/></Configuration>
-		<Configuration Name="Release|Win32">
-				<Tool Name="VFFortranCompilerTool" SuppressStartupBanner="true" BufferedIO="true" HeapArrays="0" AdditionalIncludeDirectories="..\..\..\imod\lib\NETCDF\OS_X32\release; ..\..\..\imod\lib\DELFTIO\OS_X32;..\..\..\imod\lib\WINTERACTER\OS_X32\INCLUDE;..\..\..\IMOD\LIB\WINTERACTER\OS_X32" UseWindowsLibs="true"/>
-				<Tool Name="VFLinkerTool" OutputFile="..\..\bin\$(ProjectName)_X32_R.exe" LinkIncremental="linkIncrementalNo" SuppressStartupBanner="true" AdditionalLibraryDirectories="..\..\..\imod\lib\DELFTIO\OS_X32; ..\..\..\imod\lib\NETCDF\OS_X32\release" IgnoreDefaultLibraryNames="msvcrt.lib" SubSystem="subSystemConsole" AdditionalDependencies="delftio.lib delftio.lib netcdf.lib f90_netcdf.lib f77_netcdf.lib"/>
+		<Configuration Name="Release|Win32" OutputDirectory="$(PlatformName)\$(ConfigurationName)" IntermediateDirectory="$(PlatformName)\$(ConfigurationName)" TargetName="$(ProjectName)_X32_R">
+				<Tool Name="VFFortranCompilerTool" SuppressStartupBanner="true" BufferedIO="true" HeapArrays="0" AdditionalIncludeDirectories="d:\COMPILE\OSSDELTARES\iMOD\LIB\WINTERACTER\OS_X32_V12;d:\COMPILE\OSSDELTARES\iMOD\lib\WINTERACTER\OS_X32_V12\INCLUDE;d:\COMPILE\OSSDELTARES\iMOD\LIB\DELFTIO\OS_X32;d:\COMPILE\OSSDELTARES\iMOD\LIB\NETCDF\OS_X32\release" UseWindowsLibs="true"/>
+				<Tool Name="VFLinkerTool" LinkIncremental="linkIncrementalNo" SuppressStartupBanner="true" AdditionalLibraryDirectories="d:\COMPILE\OSSDELTARES\imod\lib\DELFTIO\OS_X32;d:\COMPILE\OSSDELTARES\iMOD\lib\NETCDF\OS_X32\RELEASE;d:\COMPILE\OSSDELTARES\iMOD\LIB\WINTERACTER\OS_X32_V12" SubSystem="subSystemConsole" AdditionalDependencies="winter.lib delftio.lib AdvAPI32.Lib ComDlg32.Lib Gdi32.Lib GlU32.Lib Htmlhelp.Lib OpenGL32.Lib Shell32.Lib User32.Lib WinMM.Lib WinSpool.Lib netcdf.lib f90_netcdf.lib f77_netcdf.lib"/>
 				<Tool Name="VFResourceCompilerTool" AdditionalIncludeDirectories="..\..\..\imod\lib\WINTERACTER\OS_X32\include" ShowProgress="true" ResourceOutputFileName="..\..\..\iMOD\SRC\resource.res"/>
 				<Tool Name="VFMidlTool" SuppressStartupBanner="true"/>
 				<Tool Name="VFCustomBuildTool"/>
@@ -25,9 +25,9 @@
 				<Tool Name="VFPostBuildEventTool"/>
 				<Tool Name="VFManifestTool"/></Configuration>
 		<Configuration Name="Debug|x64" TargetName="$(ProjectName)_x64_d">
-				<Tool Name="VFFortranCompilerTool" SuppressStartupBanner="true" DebugInformationFormat="debugEnabled" Optimization="optimizeDisabled" BufferedIO="true" HeapArrays="0" AdditionalIncludeDirectories="..\..\..\imod\lib\DELFTIO\OS_X64;..\..\..\imod\lib\WINTERACTER\OS_X64_V11\INCLUDE;..\..\..\IMOD\LIB\WINTERACTER\OS_X64_V11" WarnDeclarations="true" WarnUnusedVariables="true" WarnIgnoreLOC="true" WarnUncalled="true" SuppressUsageMessages="true" WarnInterfaces="true" Traceback="true" NullPointerCheck="true" BoundsCheck="true" UninitializedVariablesCheck="true" RuntimeLibrary="rtMultiThreadedDebug" UseWindowsLibs="true" Interfaces="true"/>
-				<Tool Name="VFLinkerTool" LinkIncremental="linkIncrementalNo" SuppressStartupBanner="true" AdditionalLibraryDirectories="..\..\..\imod\lib\DELFTIO\OS_X64" GenerateDebugInformation="true" SubSystem="subSystemConsole" LargeAddressAware="addrAwareLarge"/>
-				<Tool Name="VFResourceCompilerTool" AdditionalIncludeDirectories="..\..\..\imod\lib\WINTERACTER\OS_X64_V11\include" ShowProgress="true" ResourceOutputFileName="..\..\..\iMOD\SRC\resource.res"/>
+				<Tool Name="VFFortranCompilerTool" SuppressStartupBanner="true" DebugInformationFormat="debugEnabled" Optimization="optimizeDisabled" BufferedIO="true" HeapArrays="0" AdditionalIncludeDirectories="d:\COMPILE\OSSDELTARES\iMOD\LIB\WINTERACTER\OS_X64_V12\INCLUDE;d:\COMPILE\OSSDELTARES\iMOD\LIB\WINTERACTER\OS_X64_V12\;d:\COMPILE\OSSDELTARES\iMOD\LIB\DELFTIO\OS_X64\" WarnDeclarations="true" WarnUnusedVariables="true" WarnIgnoreLOC="true" WarnUncalled="true" SuppressUsageMessages="true" WarnInterfaces="true" Traceback="true" NullPointerCheck="true" BoundsCheck="true" UninitializedVariablesCheck="true" RuntimeLibrary="rtMultiThreadedDebug" UseWindowsLibs="true" Interfaces="true"/>
+				<Tool Name="VFLinkerTool" LinkIncremental="linkIncrementalNo" SuppressStartupBanner="true" AdditionalLibraryDirectories="d:\COMPILE\OSSDELTARES\iMOD\LIB\DELFTIO\OS_X64;d:\COMPILE\OSSDELTARES\iMOD\LIB\WINTERACTER\OS_X64_V12" GenerateDebugInformation="true" SubSystem="subSystemConsole" LargeAddressAware="addrAwareLarge" AdditionalDependencies="winter.lib delftio.lib AdvAPI32.Lib ComDlg32.Lib Gdi32.Lib GlU32.Lib Htmlhelp.Lib OpenGL32.Lib Shell32.Lib User32.Lib WinMM.Lib WinSpool.Lib"/>
+				<Tool Name="VFResourceCompilerTool" AdditionalIncludeDirectories="d:\COMPILE\OSSDELTARES\iMOD\LIB\WINTERACTER\OS_X64_V12" ShowProgress="true" ResourceOutputFileName="..\..\..\iMOD\SRC\resource.res"/>
 				<Tool Name="VFMidlTool" SuppressStartupBanner="true" TargetEnvironment="midlTargetAMD64"/>
 				<Tool Name="VFCustomBuildTool"/>
 				<Tool Name="VFPreLinkEventTool"/>
@@ -35,8 +35,8 @@
 				<Tool Name="VFPostBuildEventTool"/>
 				<Tool Name="VFManifestTool" SuppressStartupBanner="true"/></Configuration>
 		<Configuration Name="Release|x64" TargetName="$(ProjectName)_x64_r">
-				<Tool Name="VFFortranCompilerTool" SuppressStartupBanner="true" DebugInformationFormat="debugLineInfoOnly" BufferedIO="true" HeapArrays="0" AdditionalIncludeDirectories="..\..\..\imod\lib\DELFTIO\OS_X64_V11;..\..\..\imod\lib\WINTERACTER\OS_X64_V11\INCLUDE;..\..\..\IMOD\LIB\WINTERACTER\OS_X64_V11" FloatingPointSpeculation="fpSpeculationSafe" UninitializedVariablesCheck="true" UseWindowsLibs="true"/>
-				<Tool Name="VFLinkerTool" LinkIncremental="linkIncrementalNo" SuppressStartupBanner="true" AdditionalLibraryDirectories="..\..\..\imod\lib\DELFTIO\OS_X64" IgnoreDefaultLibraryNames="msvcrt.lib" SubSystem="subSystemConsole"/>
+				<Tool Name="VFFortranCompilerTool" SuppressStartupBanner="true" DebugInformationFormat="debugLineInfoOnly" BufferedIO="true" HeapArrays="0" AdditionalIncludeDirectories="d:\COMPILE\OSSDELTARES\iMOD\LIB\WINTERACTER\OS_X64_V12\INCLUDE;d:\COMPILE\OSSDELTARES\iMOD\LIB\WINTERACTER\OS_X64_V12\;d:\COMPILE\OSSDELTARES\iMOD\LIB\DELFTIO\OS_X64\" FloatingPointSpeculation="fpSpeculationSafe" UninitializedVariablesCheck="true" UseWindowsLibs="true"/>
+				<Tool Name="VFLinkerTool" LinkIncremental="linkIncrementalNo" SuppressStartupBanner="true" AdditionalLibraryDirectories="d:\COMPILE\OSSDELTARES\iMOD\LIB\DELFTIO\OS_X64;d:\COMPILE\OSSDELTARES\iMOD\LIB\WINTERACTER\OS_X64_V12" SubSystem="subSystemConsole" AdditionalDependencies="winter.lib delftio.lib AdvAPI32.Lib ComDlg32.Lib Gdi32.Lib GlU32.Lib Htmlhelp.Lib OpenGL32.Lib Shell32.Lib User32.Lib WinMM.Lib WinSpool.Lib"/>
 				<Tool Name="VFResourceCompilerTool" AdditionalIncludeDirectories="..\..\..\imod\lib\WINTERACTER\OS_X64_V11\include" ResourceOutputFileName="..\..\..\iMOD\SRC\resource.res"/>
 				<Tool Name="VFMidlTool" SuppressStartupBanner="true" TargetEnvironment="midlTargetAMD64"/>
 				<Tool Name="VFCustomBuildTool"/>
@@ -345,6 +345,8 @@
 			<FileConfiguration Name="Release|x64">
 				<Tool Name="VFFortranCompilerTool" Preprocess="preprocessYes" PreprocessorDefinitions="WINTERACTER11"/></FileConfiguration>
 			<FileConfiguration Name="Debug|x64">
+				<Tool Name="VFFortranCompilerTool" Preprocess="preprocessYes" PreprocessorDefinitions="WINTERACTER11"/></FileConfiguration>
+			<FileConfiguration Name="Release|Win32">
 				<Tool Name="VFFortranCompilerTool" Preprocess="preprocessYes" PreprocessorDefinitions="WINTERACTER11"/></FileConfiguration></File>
 		<File RelativePath="..\..\..\iMOD\SRC\imod_modpath\imod_plines_par.f90"/></Filter>
 		<Filter Name="imod_movie">
@@ -368,6 +370,8 @@
 			<FileConfiguration Name="Release|x64">
 				<Tool Name="VFFortranCompilerTool" Preprocess="preprocessYes" PreprocessorDefinitions="WINTERACTER11"/></FileConfiguration>
 			<FileConfiguration Name="Debug|x64">
+				<Tool Name="VFFortranCompilerTool" Preprocess="preprocessYes" PreprocessorDefinitions="WINTERACTER11"/></FileConfiguration>
+			<FileConfiguration Name="Release|Win32">
 				<Tool Name="VFFortranCompilerTool" Preprocess="preprocessYes" PreprocessorDefinitions="WINTERACTER11"/></FileConfiguration></File>
 		<File RelativePath="..\..\SRC\imod_plugin\imod_plugin_par.f90"/></Filter>
 		<Filter Name="imod_polint">
@@ -433,15 +437,13 @@
 		<File RelativePath="..\..\..\iMOD\SRC\imod_smplx\imod_smplx_nswc.f90"/>
 		<File RelativePath="..\..\..\iMOD\SRC\imod_smplx\imod_smplx_par.f90"/></Filter>
 		<Filter Name="imod_sobek">
-		<File RelativePath="..\..\..\iMOD\SRC\imod_sobek\imod_sobek.f90">
-			<FileConfiguration Name="Release|x64" ExcludedFromBuild="true"/>
-			<FileConfiguration Name="Debug|x64" ExcludedFromBuild="true"/></File>
+		<File RelativePath="..\..\..\iMOD\SRC\imod_sobek\imod_sobek.f90"/>
 		<File RelativePath="..\..\..\iMOD\SRC\imod_sobek\imod_sobek_lh90.f90">
 			<FileConfiguration Name="Debug|Win32" ExcludedFromBuild="true"/>
-			<FileConfiguration Name="Release|Win32" ExcludedFromBuild="true"/></File>
-		<File RelativePath="..\..\..\iMOD\SRC\imod_sobek\imod_sobek_par.f90">
 			<FileConfiguration Name="Release|x64" ExcludedFromBuild="true"/>
-			<FileConfiguration Name="Debug|x64" ExcludedFromBuild="true"/></File></Filter>
+			<FileConfiguration Name="Debug|x64" ExcludedFromBuild="true"/>
+			<FileConfiguration Name="Release|Win32" ExcludedFromBuild="true"/></File>
+		<File RelativePath="..\..\..\iMOD\SRC\imod_sobek\imod_sobek_par.f90"/></Filter>
 		<Filter Name="imod_sof">
 		<File RelativePath="..\..\..\iMOD\SRC\imod_sof\imod_sof.f90"/></Filter>
 		<Filter Name="imod_solid">
@@ -524,119 +526,5 @@
 		<File RelativePath="..\..\..\iMOD\SRC\datevar.f90"/>
 		<File RelativePath="..\..\..\iMOD\SRC\imodvar.f90"/>
 		<File RelativePath="..\..\..\iMOD\SRC\modplot.f90"/>
-		<File RelativePath="..\..\..\iMOD\SRC\resource.f90"/></Filter>
-		<File RelativePath="..\..\..\IMOD\LIB\WINTERACTER\OS_X32\AdvAPI32.Lib">
-			<FileConfiguration Name="Release|x64" ExcludedFromBuild="true"/>
-			<FileConfiguration Name="Debug|x64" ExcludedFromBuild="true"/></File>
-		<File RelativePath="..\..\..\imod\lib\WINTERACTER\OS_X64_V11\AdvAPI32.Lib">
-			<FileConfiguration Name="Debug|Win32" ExcludedFromBuild="true"/>
-			<FileConfiguration Name="Release|Win32" ExcludedFromBuild="true"/></File>
-		<File RelativePath="..\..\..\IMOD\LIB\WINTERACTER\OS_X32\ComDlg32.Lib">
-			<FileConfiguration Name="Release|x64" ExcludedFromBuild="true"/>
-			<FileConfiguration Name="Debug|x64" ExcludedFromBuild="true"/></File>
-		<File RelativePath="..\..\..\imod\lib\WINTERACTER\OS_X64_V11\ComDlg32.Lib">
-			<FileConfiguration Name="Debug|Win32" ExcludedFromBuild="true"/>
-			<FileConfiguration Name="Release|Win32" ExcludedFromBuild="true"/></File>
-		<File RelativePath="..\..\..\IMOD\LIB\WINTERACTER\OS_X32\Gdi32.Lib">
-			<FileConfiguration Name="Release|x64" ExcludedFromBuild="true"/>
-			<FileConfiguration Name="Debug|x64" ExcludedFromBuild="true"/></File>
-		<File RelativePath="..\..\..\imod\lib\WINTERACTER\OS_X64_V11\Gdi32.Lib">
-			<FileConfiguration Name="Debug|Win32" ExcludedFromBuild="true"/>
-			<FileConfiguration Name="Release|Win32" ExcludedFromBuild="true"/></File>
-		<File RelativePath="..\..\..\IMOD\LIB\WINTERACTER\OS_X32\GlU32.Lib">
-			<FileConfiguration Name="Release|x64" ExcludedFromBuild="true"/>
-			<FileConfiguration Name="Debug|x64" ExcludedFromBuild="true"/></File>
-		<File RelativePath="..\..\..\imod\lib\WINTERACTER\OS_X64_V11\GlU32.Lib">
-			<FileConfiguration Name="Debug|Win32" ExcludedFromBuild="true"/>
-			<FileConfiguration Name="Release|Win32" ExcludedFromBuild="true"/></File>
-		<File RelativePath="..\..\..\IMOD\LIB\WINTERACTER\OS_X32\Htmlhelp.Lib">
-			<FileConfiguration Name="Release|x64" ExcludedFromBuild="true"/>
-			<FileConfiguration Name="Debug|x64" ExcludedFromBuild="true"/></File>
-		<File RelativePath="..\..\..\imod\lib\WINTERACTER\OS_X64_V11\Htmlhelp.Lib">
-			<FileConfiguration Name="Debug|Win32" ExcludedFromBuild="true"/>
-			<FileConfiguration Name="Release|Win32" ExcludedFromBuild="true"/></File>
-		<File RelativePath="..\..\..\imod\lib\WINTERACTER\OS_X64_V11\opengl.mod">
-			<FileConfiguration Name="Debug|Win32" ExcludedFromBuild="true"/>
-			<FileConfiguration Name="Release|Win32" ExcludedFromBuild="true"/></File>
-		<File RelativePath="..\..\..\imod\lib\WINTERACTER\OS_X32\opengl.mod">
-			<FileConfiguration Name="Release|x64" ExcludedFromBuild="true"/>
-			<FileConfiguration Name="Debug|x64" ExcludedFromBuild="true"/></File>
-		<File RelativePath="..\..\..\imod\lib\WINTERACTER\OS_X64_V11\opengl2.mod">
-			<FileConfiguration Name="Debug|Win32" ExcludedFromBuild="true"/>
-			<FileConfiguration Name="Release|Win32" ExcludedFromBuild="true"/></File>
-		<File RelativePath="..\..\..\imod\lib\WINTERACTER\OS_X32\opengl2.mod">
-			<FileConfiguration Name="Release|x64" ExcludedFromBuild="true"/>
-			<FileConfiguration Name="Debug|x64" ExcludedFromBuild="true"/></File>
-		<File RelativePath="..\..\..\IMOD\LIB\WINTERACTER\OS_X32\OpenGL32.Lib">
-			<FileConfiguration Name="Release|x64" ExcludedFromBuild="true"/>
-			<FileConfiguration Name="Debug|x64" ExcludedFromBuild="true"/></File>
-		<File RelativePath="..\..\..\imod\lib\WINTERACTER\OS_X64_V11\OpenGL32.Lib">
-			<FileConfiguration Name="Debug|Win32" ExcludedFromBuild="true"/>
-			<FileConfiguration Name="Release|Win32" ExcludedFromBuild="true"/></File>
-		<File RelativePath="..\..\..\IMOD\LIB\WINTERACTER\OS_X32\shell32.lib">
-			<FileConfiguration Name="Release|x64" ExcludedFromBuild="true"/>
-			<FileConfiguration Name="Debug|x64" ExcludedFromBuild="true"/></File>
-		<File RelativePath="..\..\..\imod\lib\WINTERACTER\OS_X64_V11\Shell32.Lib">
-			<FileConfiguration Name="Debug|Win32" ExcludedFromBuild="true"/>
-			<FileConfiguration Name="Release|Win32" ExcludedFromBuild="true"/></File>
-		<File RelativePath="..\..\..\IMOD\LIB\WINTERACTER\OS_X32\User32.Lib">
-			<FileConfiguration Name="Release|x64" ExcludedFromBuild="true"/>
-			<FileConfiguration Name="Debug|x64" ExcludedFromBuild="true"/></File>
-		<File RelativePath="..\..\..\imod\lib\WINTERACTER\OS_X64_V11\User32.Lib">
-			<FileConfiguration Name="Debug|Win32" ExcludedFromBuild="true"/>
-			<FileConfiguration Name="Release|Win32" ExcludedFromBuild="true"/></File>
-		<File RelativePath="..\..\..\IMOD\LIB\WINTERACTER\OS_X32\WinMM.Lib">
-			<FileConfiguration Name="Release|x64" ExcludedFromBuild="true"/>
-			<FileConfiguration Name="Debug|x64" ExcludedFromBuild="true"/></File>
-		<File RelativePath="..\..\..\imod\lib\WINTERACTER\OS_X64_V11\WinMM.Lib">
-			<FileConfiguration Name="Debug|Win32" ExcludedFromBuild="true"/>
-			<FileConfiguration Name="Release|Win32" ExcludedFromBuild="true"/></File>
-		<File RelativePath="..\..\..\IMOD\LIB\WINTERACTER\OS_X32\WinSpool.Lib">
-			<FileConfiguration Name="Release|x64" ExcludedFromBuild="true"/>
-			<FileConfiguration Name="Debug|x64" ExcludedFromBuild="true"/></File>
-		<File RelativePath="..\..\..\imod\lib\WINTERACTER\OS_X64_V11\WinSpool.Lib">
-			<FileConfiguration Name="Debug|Win32" ExcludedFromBuild="true"/>
-			<FileConfiguration Name="Release|Win32" ExcludedFromBuild="true"/></File>
-		<File RelativePath="..\..\..\imod\lib\WINTERACTER\OS_X64_V11\winter.lib">
-			<FileConfiguration Name="Debug|Win32" ExcludedFromBuild="true"/>
-			<FileConfiguration Name="Release|Win32" ExcludedFromBuild="true"/></File>
-		<File RelativePath="..\..\..\imod\lib\WINTERACTER\OS_X32\winter.lib">
-			<FileConfiguration Name="Release|x64" ExcludedFromBuild="true"/>
-			<FileConfiguration Name="Debug|x64" ExcludedFromBuild="true"/></File>
-		<File RelativePath="..\..\..\imod\lib\WINTERACTER\OS_X64_V11\winteracter.mod">
-			<FileConfiguration Name="Debug|Win32" ExcludedFromBuild="true"/>
-			<FileConfiguration Name="Release|Win32" ExcludedFromBuild="true"/></File>
-		<File RelativePath="..\..\..\imod\lib\WINTERACTER\OS_X32\winteracter.mod">
-			<FileConfiguration Name="Release|x64" ExcludedFromBuild="true"/>
-			<FileConfiguration Name="Debug|x64" ExcludedFromBuild="true"/></File>
-		<File RelativePath="..\..\LIB\WINTERACTER\OS_X64_V11\winteracter_interfaces.mod">
-			<FileConfiguration Name="Debug|Win32" ExcludedFromBuild="true"/>
-			<FileConfiguration Name="Release|Win32" ExcludedFromBuild="true"/></File>
-		<File RelativePath="..\..\LIB\WINTERACTER\OS_X32\winteracter_interfaces.mod">
-			<FileConfiguration Name="Release|x64" ExcludedFromBuild="true"/>
-			<FileConfiguration Name="Debug|x64" ExcludedFromBuild="true"/></File>
-		<File RelativePath="..\..\LIB\WINTERACTER\OS_X64_V11\winteracter_resid.mod">
-			<FileConfiguration Name="Debug|Win32" ExcludedFromBuild="true"/>
-			<FileConfiguration Name="Release|Win32" ExcludedFromBuild="true"/></File>
-		<File RelativePath="..\..\LIB\WINTERACTER\OS_X32\winteracter_resid.mod">
-			<FileConfiguration Name="Release|x64" ExcludedFromBuild="true"/>
-			<FileConfiguration Name="Debug|x64" ExcludedFromBuild="true"/></File>
-		<File RelativePath="..\..\LIB\WINTERACTER\OS_X64_V11\winteracter_symnames.mod">
-			<FileConfiguration Name="Debug|Win32" ExcludedFromBuild="true"/>
-			<FileConfiguration Name="Release|Win32" ExcludedFromBuild="true"/></File>
-		<File RelativePath="..\..\LIB\WINTERACTER\OS_X32\winteracter_symnames.mod">
-			<FileConfiguration Name="Release|x64" ExcludedFromBuild="true"/>
-			<FileConfiguration Name="Debug|x64" ExcludedFromBuild="true"/></File>
-		<File RelativePath="..\..\LIB\WINTERACTER\OS_X64_V11\winteracter_types.mod">
-			<FileConfiguration Name="Debug|Win32" ExcludedFromBuild="true"/>
-			<FileConfiguration Name="Release|Win32" ExcludedFromBuild="true"/></File>
-		<File RelativePath="..\..\LIB\WINTERACTER\OS_X32\winteracter_types.mod">
-			<FileConfiguration Name="Release|x64" ExcludedFromBuild="true"/>
-			<FileConfiguration Name="Debug|x64" ExcludedFromBuild="true"/></File>
-		<File RelativePath="..\..\..\imod\lib\WINTERACTER\OS_X64_V11\winttypes.mod">
-			<FileConfiguration Name="Debug|Win32" ExcludedFromBuild="true"/>
-			<FileConfiguration Name="Release|Win32" ExcludedFromBuild="true"/></File>
-		<File RelativePath="..\..\..\imod\lib\WINTERACTER\OS_X32\winttypes.mod">
-			<FileConfiguration Name="Release|x64" ExcludedFromBuild="true"/>
-			<FileConfiguration Name="Debug|x64" ExcludedFromBuild="true"/></File></Files>
+		<File RelativePath="..\..\..\iMOD\SRC\resource.f90"/></Filter></Files>
 	<Globals/></VisualStudioProject>
