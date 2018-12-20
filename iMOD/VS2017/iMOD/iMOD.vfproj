@@ -6,8 +6,8 @@
 	<Configurations>
 		<Configuration Name="Debug|Win32" OutputDirectory="$(PlatformName)\$(ConfigurationName)" IntermediateDirectory="$(PlatformName)\$(ConfigurationName)" TargetName="$(ProjectName)_X32_D">
 				<Tool Name="VFFortranCompilerTool" SuppressStartupBanner="true" DebugInformationFormat="debugEnabled" Optimization="optimizeDisabled" BufferedIO="true" HeapArrays="0" AdditionalIncludeDirectories="d:\COMPILE\OSSDELTARES\iMOD\LIB\WINTERACTER\OS_X32_V12;d:\COMPILE\OSSDELTARES\iMOD\lib\WINTERACTER\OS_X32_V12\INCLUDE;d:\COMPILE\OSSDELTARES\iMOD\LIB\DELFTIO\OS_X32;d:\COMPILE\OSSDELTARES\iMOD\LIB\NETCDF\OS_X32\release" WarnDeclarations="true" WarnUnusedVariables="true" WarnIgnoreLOC="true" SuppressUsageMessages="true" WarnInterfaces="true" Traceback="true" NullPointerCheck="true" BoundsCheck="true" UninitializedVariablesCheck="true" DescriptorDataTypeCheck="true" DescriptorDataSizeCheck="true" RuntimeLibrary="rtMultiThreadedDebug" UseWindowsLibs="true" Interfaces="true"/>
-				<Tool Name="VFLinkerTool" LinkIncremental="linkIncrementalNo" SuppressStartupBanner="true" AdditionalLibraryDirectories="d:\COMPILE\OSSDELTARES\imod\lib\DELFTIO\OS_X32;d:\COMPILE\OSSDELTARES\iMOD\lib\NETCDF\OS_X32\debug;d:\COMPILE\OSSDELTARES\iMOD\LIB\WINTERACTER\OS_X32_V12" GenerateDebugInformation="true" SubSystem="subSystemConsole" AdditionalDependencies="winter.lib delftio.lib AdvAPI32.Lib ComDlg32.Lib Gdi32.Lib GlU32.Lib Htmlhelp.Lib OpenGL32.Lib Shell32.Lib User32.Lib WinMM.Lib WinSpool.Lib netcdf.lib f90_netcdf.lib f77_netcdf.lib netcdf.lib f90_netcdf.lib f77_netcdf.lib"/>
-				<Tool Name="VFResourceCompilerTool" AdditionalIncludeDirectories="..\..\..\imod\lib\WINTERACTER\OS_X32\INCLUDE" ShowProgress="true" ResourceOutputFileName="..\..\..\iMOD\SRC\resource.res"/>
+				<Tool Name="VFLinkerTool" LinkIncremental="linkIncrementalNo" SuppressStartupBanner="true" AdditionalLibraryDirectories="d:\COMPILE\OSSDELTARES\imod\lib\DELFTIO\OS_X32;d:\COMPILE\OSSDELTARES\iMOD\lib\NETCDF\OS_X32\debug;d:\COMPILE\OSSDELTARES\iMOD\LIB\WINTERACTER\OS_X32_V12" IgnoreDefaultLibraryNames="msvcrt.lib" GenerateDebugInformation="true" SubSystem="subSystemConsole" AdditionalDependencies="winter.lib delftio.lib AdvAPI32.Lib ComDlg32.Lib Gdi32.Lib GlU32.Lib Htmlhelp.Lib OpenGL32.Lib Shell32.Lib User32.Lib WinMM.Lib WinSpool.Lib netcdf.lib f90_netcdf.lib f77_netcdf.lib netcdf.lib f90_netcdf.lib f77_netcdf.lib"/>
+				<Tool Name="VFResourceCompilerTool" AdditionalIncludeDirectories="d:\COMPILE\OSSDELTARES\iMOD\LIB\WINTERACTER\OS_X32_V12\include" ShowProgress="true" ResourceOutputFileName="..\..\..\iMOD\SRC\resource.res"/>
 				<Tool Name="VFMidlTool"/>
 				<Tool Name="VFCustomBuildTool"/>
 				<Tool Name="VFPreLinkEventTool"/>
@@ -16,8 +16,8 @@
 				<Tool Name="VFManifestTool" SuppressStartupBanner="true"/></Configuration>
 		<Configuration Name="Release|Win32" OutputDirectory="$(PlatformName)\$(ConfigurationName)" IntermediateDirectory="$(PlatformName)\$(ConfigurationName)" TargetName="$(ProjectName)_X32_R">
 				<Tool Name="VFFortranCompilerTool" SuppressStartupBanner="true" BufferedIO="true" HeapArrays="0" AdditionalIncludeDirectories="d:\COMPILE\OSSDELTARES\iMOD\LIB\WINTERACTER\OS_X32_V12;d:\COMPILE\OSSDELTARES\iMOD\lib\WINTERACTER\OS_X32_V12\INCLUDE;d:\COMPILE\OSSDELTARES\iMOD\LIB\DELFTIO\OS_X32;d:\COMPILE\OSSDELTARES\iMOD\LIB\NETCDF\OS_X32\release" UseWindowsLibs="true"/>
-				<Tool Name="VFLinkerTool" LinkIncremental="linkIncrementalNo" SuppressStartupBanner="true" AdditionalLibraryDirectories="d:\COMPILE\OSSDELTARES\imod\lib\DELFTIO\OS_X32;d:\COMPILE\OSSDELTARES\iMOD\lib\NETCDF\OS_X32\RELEASE;d:\COMPILE\OSSDELTARES\iMOD\LIB\WINTERACTER\OS_X32_V12" SubSystem="subSystemConsole" AdditionalDependencies="winter.lib delftio.lib AdvAPI32.Lib ComDlg32.Lib Gdi32.Lib GlU32.Lib Htmlhelp.Lib OpenGL32.Lib Shell32.Lib User32.Lib WinMM.Lib WinSpool.Lib netcdf.lib f90_netcdf.lib f77_netcdf.lib"/>
-				<Tool Name="VFResourceCompilerTool" AdditionalIncludeDirectories="..\..\..\imod\lib\WINTERACTER\OS_X32\include" ShowProgress="true" ResourceOutputFileName="..\..\..\iMOD\SRC\resource.res"/>
+				<Tool Name="VFLinkerTool" LinkIncremental="linkIncrementalNo" SuppressStartupBanner="true" AdditionalLibraryDirectories="d:\COMPILE\OSSDELTARES\imod\lib\DELFTIO\OS_X32;d:\COMPILE\OSSDELTARES\iMOD\lib\NETCDF\OS_X32\RELEASE;d:\COMPILE\OSSDELTARES\iMOD\LIB\WINTERACTER\OS_X32_V12" IgnoreDefaultLibraryNames="msvcrt.lib" SubSystem="subSystemConsole" AdditionalDependencies="winter.lib delftio.lib AdvAPI32.Lib ComDlg32.Lib Gdi32.Lib GlU32.Lib Htmlhelp.Lib OpenGL32.Lib Shell32.Lib User32.Lib WinMM.Lib WinSpool.Lib netcdf.lib f90_netcdf.lib f77_netcdf.lib"/>
+				<Tool Name="VFResourceCompilerTool" AdditionalIncludeDirectories="d:\COMPILE\OSSDELTARES\iMOD\LIB\WINTERACTER\OS_X32_V12\include" ShowProgress="true" ResourceOutputFileName="..\..\..\iMOD\SRC\resource.res"/>
 				<Tool Name="VFMidlTool" SuppressStartupBanner="true"/>
 				<Tool Name="VFCustomBuildTool"/>
 				<Tool Name="VFPreLinkEventTool"/>
@@ -26,8 +26,8 @@
 				<Tool Name="VFManifestTool"/></Configuration>
 		<Configuration Name="Debug|x64" TargetName="$(ProjectName)_x64_d">
 				<Tool Name="VFFortranCompilerTool" SuppressStartupBanner="true" DebugInformationFormat="debugEnabled" Optimization="optimizeDisabled" BufferedIO="true" HeapArrays="0" AdditionalIncludeDirectories="d:\COMPILE\OSSDELTARES\iMOD\LIB\WINTERACTER\OS_X64_V12\INCLUDE;d:\COMPILE\OSSDELTARES\iMOD\LIB\WINTERACTER\OS_X64_V12\;d:\COMPILE\OSSDELTARES\iMOD\LIB\DELFTIO\OS_X64\" WarnDeclarations="true" WarnUnusedVariables="true" WarnIgnoreLOC="true" WarnUncalled="true" SuppressUsageMessages="true" WarnInterfaces="true" Traceback="true" NullPointerCheck="true" BoundsCheck="true" UninitializedVariablesCheck="true" RuntimeLibrary="rtMultiThreadedDebug" UseWindowsLibs="true" Interfaces="true"/>
-				<Tool Name="VFLinkerTool" LinkIncremental="linkIncrementalNo" SuppressStartupBanner="true" AdditionalLibraryDirectories="d:\COMPILE\OSSDELTARES\iMOD\LIB\DELFTIO\OS_X64;d:\COMPILE\OSSDELTARES\iMOD\LIB\WINTERACTER\OS_X64_V12" GenerateDebugInformation="true" SubSystem="subSystemConsole" LargeAddressAware="addrAwareLarge" AdditionalDependencies="winter.lib delftio.lib AdvAPI32.Lib ComDlg32.Lib Gdi32.Lib GlU32.Lib Htmlhelp.Lib OpenGL32.Lib Shell32.Lib User32.Lib WinMM.Lib WinSpool.Lib"/>
-				<Tool Name="VFResourceCompilerTool" AdditionalIncludeDirectories="d:\COMPILE\OSSDELTARES\iMOD\LIB\WINTERACTER\OS_X64_V12" ShowProgress="true" ResourceOutputFileName="..\..\..\iMOD\SRC\resource.res"/>
+				<Tool Name="VFLinkerTool" LinkIncremental="linkIncrementalNo" SuppressStartupBanner="true" AdditionalLibraryDirectories="d:\COMPILE\OSSDELTARES\iMOD\LIB\DELFTIO\OS_X64;d:\COMPILE\OSSDELTARES\iMOD\LIB\WINTERACTER\OS_X64_V12" IgnoreDefaultLibraryNames="msvcrt.lib" GenerateDebugInformation="true" SubSystem="subSystemConsole" LargeAddressAware="addrAwareLarge" AdditionalDependencies="winter.lib delftio.lib AdvAPI32.Lib ComDlg32.Lib Gdi32.Lib GlU32.Lib Htmlhelp.Lib OpenGL32.Lib Shell32.Lib User32.Lib WinMM.Lib WinSpool.Lib"/>
+				<Tool Name="VFResourceCompilerTool" AdditionalIncludeDirectories="d:\COMPILE\OSSDELTARES\iMOD\LIB\WINTERACTER\OS_X64_V12\include" ShowProgress="true" ResourceOutputFileName="..\..\..\iMOD\SRC\resource.res"/>
 				<Tool Name="VFMidlTool" SuppressStartupBanner="true" TargetEnvironment="midlTargetAMD64"/>
 				<Tool Name="VFCustomBuildTool"/>
 				<Tool Name="VFPreLinkEventTool"/>
@@ -36,8 +36,8 @@
 				<Tool Name="VFManifestTool" SuppressStartupBanner="true"/></Configuration>
 		<Configuration Name="Release|x64" TargetName="$(ProjectName)_x64_r">
 				<Tool Name="VFFortranCompilerTool" SuppressStartupBanner="true" DebugInformationFormat="debugLineInfoOnly" BufferedIO="true" HeapArrays="0" AdditionalIncludeDirectories="d:\COMPILE\OSSDELTARES\iMOD\LIB\WINTERACTER\OS_X64_V12\INCLUDE;d:\COMPILE\OSSDELTARES\iMOD\LIB\WINTERACTER\OS_X64_V12\;d:\COMPILE\OSSDELTARES\iMOD\LIB\DELFTIO\OS_X64\" FloatingPointSpeculation="fpSpeculationSafe" UninitializedVariablesCheck="true" UseWindowsLibs="true"/>
-				<Tool Name="VFLinkerTool" LinkIncremental="linkIncrementalNo" SuppressStartupBanner="true" AdditionalLibraryDirectories="d:\COMPILE\OSSDELTARES\iMOD\LIB\DELFTIO\OS_X64;d:\COMPILE\OSSDELTARES\iMOD\LIB\WINTERACTER\OS_X64_V12" SubSystem="subSystemConsole" AdditionalDependencies="winter.lib delftio.lib AdvAPI32.Lib ComDlg32.Lib Gdi32.Lib GlU32.Lib Htmlhelp.Lib OpenGL32.Lib Shell32.Lib User32.Lib WinMM.Lib WinSpool.Lib"/>
-				<Tool Name="VFResourceCompilerTool" AdditionalIncludeDirectories="..\..\..\imod\lib\WINTERACTER\OS_X64_V11\include" ResourceOutputFileName="..\..\..\iMOD\SRC\resource.res"/>
+				<Tool Name="VFLinkerTool" LinkIncremental="linkIncrementalNo" SuppressStartupBanner="true" AdditionalLibraryDirectories="d:\COMPILE\OSSDELTARES\iMOD\LIB\DELFTIO\OS_X64;d:\COMPILE\OSSDELTARES\iMOD\LIB\WINTERACTER\OS_X64_V12" IgnoreDefaultLibraryNames="msvcrt.lib" SubSystem="subSystemConsole" AdditionalDependencies="winter.lib delftio.lib AdvAPI32.Lib ComDlg32.Lib Gdi32.Lib GlU32.Lib Htmlhelp.Lib OpenGL32.Lib Shell32.Lib User32.Lib WinMM.Lib WinSpool.Lib"/>
+				<Tool Name="VFResourceCompilerTool" AdditionalIncludeDirectories="d:\COMPILE\OSSDELTARES\iMOD\LIB\WINTERACTER\OS_X64_V12\include" ResourceOutputFileName="..\..\..\iMOD\SRC\resource.res"/>
 				<Tool Name="VFMidlTool" SuppressStartupBanner="true" TargetEnvironment="midlTargetAMD64"/>
 				<Tool Name="VFCustomBuildTool"/>
 				<Tool Name="VFPreLinkEventTool"/>
@@ -62,9 +62,9 @@
 			<FileConfiguration Name="Debug|Win32">
 				<Tool Name="VFFortranCompilerTool" Preprocess="preprocessYes" PreprocessorDefinitions=""/></FileConfiguration>
 			<FileConfiguration Name="Release|x64">
-				<Tool Name="VFFortranCompilerTool" Preprocess="preprocessYes" PreprocessorDefinitions="WINTERACTER11C"/></FileConfiguration>
+				<Tool Name="VFFortranCompilerTool" Preprocess="preprocessYes" PreprocessorDefinitions=""/></FileConfiguration>
 			<FileConfiguration Name="Debug|x64">
-				<Tool Name="VFFortranCompilerTool" Preprocess="preprocessYes" PreprocessorDefinitions="WINTERACTER11C"/></FileConfiguration>
+				<Tool Name="VFFortranCompilerTool" Preprocess="preprocessYes" PreprocessorDefinitions=""/></FileConfiguration>
 			<FileConfiguration Name="Release|Win32">
 				<Tool Name="VFFortranCompilerTool" Preprocess="preprocessYes" PreprocessorDefinitions=""/></FileConfiguration></File>
 		<File RelativePath="..\..\..\iMOD\SRC\imod_3d\imod_3d_display.f90"/>
@@ -89,9 +89,9 @@
 			<FileConfiguration Name="Debug|Win32">
 				<Tool Name="VFFortranCompilerTool" Preprocess="preprocessYes" PreprocessorDefinitions=""/></FileConfiguration>
 			<FileConfiguration Name="Release|x64">
-				<Tool Name="VFFortranCompilerTool" Preprocess="preprocessYes" PreprocessorDefinitions="WINTERACTER11"/></FileConfiguration>
+				<Tool Name="VFFortranCompilerTool" Preprocess="preprocessYes" PreprocessorDefinitions=""/></FileConfiguration>
 			<FileConfiguration Name="Debug|x64">
-				<Tool Name="VFFortranCompilerTool" Preprocess="preprocessYes" PreprocessorDefinitions="WINTERACTER11"/></FileConfiguration>
+				<Tool Name="VFFortranCompilerTool" Preprocess="preprocessYes" PreprocessorDefinitions=""/></FileConfiguration>
 			<FileConfiguration Name="Release|Win32">
 				<Tool Name="VFFortranCompilerTool" Preprocess="preprocessYes"/></FileConfiguration></File>
 		<File RelativePath="..\..\SRC\imod_batch\imod_batch_flumy.f90"/>
@@ -141,9 +141,9 @@
 			<FileConfiguration Name="Debug|Win32">
 				<Tool Name="VFFortranCompilerTool" Preprocess="preprocessYes" PreprocessorDefinitions="WINTERACTER11"/></FileConfiguration>
 			<FileConfiguration Name="Release|x64">
-				<Tool Name="VFFortranCompilerTool" Preprocess="preprocessYes" PreprocessorDefinitions="WINTERACTER11"/></FileConfiguration>
+				<Tool Name="VFFortranCompilerTool" Preprocess="preprocessYes" PreprocessorDefinitions=""/></FileConfiguration>
 			<FileConfiguration Name="Debug|x64">
-				<Tool Name="VFFortranCompilerTool" Preprocess="preprocessYes" PreprocessorDefinitions="WINTERACTER11"/></FileConfiguration>
+				<Tool Name="VFFortranCompilerTool" Preprocess="preprocessYes" PreprocessorDefinitions=""/></FileConfiguration>
 			<FileConfiguration Name="Release|Win32">
 				<Tool Name="VFFortranCompilerTool" Preprocess="preprocessYes" PreprocessorDefinitions="WINTERACTER11"/></FileConfiguration></File>
 		<File RelativePath="..\..\..\iMOD\SRC\imod_draw\imod_genplot.f90"/>
@@ -160,9 +160,9 @@
 			<FileConfiguration Name="Debug|Win32">
 				<Tool Name="VFFortranCompilerTool" Preprocess="preprocessYes" PreprocessorDefinitions="WINTERACTER11"/></FileConfiguration>
 			<FileConfiguration Name="Release|x64">
-				<Tool Name="VFFortranCompilerTool" Preprocess="preprocessYes" PreprocessorDefinitions="WINTERACTER11"/></FileConfiguration>
+				<Tool Name="VFFortranCompilerTool" Preprocess="preprocessNo" PreprocessorDefinitions=""/></FileConfiguration>
 			<FileConfiguration Name="Debug|x64">
-				<Tool Name="VFFortranCompilerTool" Preprocess="preprocessYes" PreprocessorDefinitions="WINTERACTER11"/></FileConfiguration>
+				<Tool Name="VFFortranCompilerTool" Preprocess="preprocessNo" PreprocessorDefinitions=""/></FileConfiguration>
 			<FileConfiguration Name="Release|Win32">
 				<Tool Name="VFFortranCompilerTool" Preprocess="preprocessYes" PreprocessorDefinitions="WINTERACTER11"/></FileConfiguration></File>
 		<File RelativePath="..\..\SRC\imod_geoconnect\imod_geoconnect_par.f90"/></Filter>
@@ -189,9 +189,9 @@
 			<FileConfiguration Name="Debug|Win32">
 				<Tool Name="VFFortranCompilerTool" Preprocess="preprocessYes" PreprocessorDefinitions="WINTERACTER11"/></FileConfiguration>
 			<FileConfiguration Name="Release|x64">
-				<Tool Name="VFFortranCompilerTool" Preprocess="preprocessYes" PreprocessorDefinitions="WINTERACTER11"/></FileConfiguration>
+				<Tool Name="VFFortranCompilerTool" Preprocess="preprocessNo" PreprocessorDefinitions=""/></FileConfiguration>
 			<FileConfiguration Name="Debug|x64">
-				<Tool Name="VFFortranCompilerTool" Preprocess="preprocessYes" PreprocessorDefinitions="WINTERACTER11"/></FileConfiguration>
+				<Tool Name="VFFortranCompilerTool" Preprocess="preprocessNo" PreprocessorDefinitions=""/></FileConfiguration>
 			<FileConfiguration Name="Release|Win32">
 				<Tool Name="VFFortranCompilerTool" Preprocess="preprocessYes" PreprocessorDefinitions="WINTERACTER11"/></FileConfiguration></File>
 		<File RelativePath="..\..\..\iMOD\SRC\imod_idfedit\imod_idfedit_trace.f90"/>
@@ -222,9 +222,9 @@
 			<FileConfiguration Name="Debug|Win32">
 				<Tool Name="VFFortranCompilerTool" Preprocess="preprocessYes" PreprocessorDefinitions="WINTERACTER11"/></FileConfiguration>
 			<FileConfiguration Name="Release|x64">
-				<Tool Name="VFFortranCompilerTool" Preprocess="preprocessYes" PreprocessorDefinitions="WINTERACTER11"/></FileConfiguration>
+				<Tool Name="VFFortranCompilerTool" Preprocess="preprocessNo" PreprocessorDefinitions=""/></FileConfiguration>
 			<FileConfiguration Name="Debug|x64">
-				<Tool Name="VFFortranCompilerTool" Preprocess="preprocessYes" PreprocessorDefinitions="WINTERACTER11"/></FileConfiguration>
+				<Tool Name="VFFortranCompilerTool" Preprocess="preprocessNo" PreprocessorDefinitions=""/></FileConfiguration>
 			<FileConfiguration Name="Release|Win32">
 				<Tool Name="VFFortranCompilerTool" Preprocess="preprocessYes" PreprocessorDefinitions="WINTERACTER11"/></FileConfiguration></File>
 		<File RelativePath="..\..\SRC\imod_ipf\imod_extractipf_utl.f90"/>
@@ -235,9 +235,9 @@
 			<FileConfiguration Name="Debug|Win32">
 				<Tool Name="VFFortranCompilerTool" Preprocess="preprocessYes" PreprocessorDefinitions="WINTERACTER11"/></FileConfiguration>
 			<FileConfiguration Name="Release|x64">
-				<Tool Name="VFFortranCompilerTool" Preprocess="preprocessYes" PreprocessorDefinitions="WINTERACTER11"/></FileConfiguration>
+				<Tool Name="VFFortranCompilerTool" Preprocess="preprocessNo" PreprocessorDefinitions=""/></FileConfiguration>
 			<FileConfiguration Name="Debug|x64">
-				<Tool Name="VFFortranCompilerTool" Preprocess="preprocessYes" PreprocessorDefinitions="WINTERACTER11"/></FileConfiguration>
+				<Tool Name="VFFortranCompilerTool" Preprocess="preprocessNo" PreprocessorDefinitions=""/></FileConfiguration>
 			<FileConfiguration Name="Release|Win32">
 				<Tool Name="VFFortranCompilerTool" Preprocess="preprocessYes" PreprocessorDefinitions="WINTERACTER11"/></FileConfiguration></File>
 		<File RelativePath="..\..\..\iMOD\SRC\imod_ipf\imod_ipfassfiles.f90"/>
@@ -343,9 +343,9 @@
 			<FileConfiguration Name="Debug|Win32">
 				<Tool Name="VFFortranCompilerTool" Preprocess="preprocessYes" PreprocessorDefinitions="WINTERACTER11"/></FileConfiguration>
 			<FileConfiguration Name="Release|x64">
-				<Tool Name="VFFortranCompilerTool" Preprocess="preprocessYes" PreprocessorDefinitions="WINTERACTER11"/></FileConfiguration>
+				<Tool Name="VFFortranCompilerTool" Preprocess="preprocessNo" PreprocessorDefinitions=""/></FileConfiguration>
 			<FileConfiguration Name="Debug|x64">
-				<Tool Name="VFFortranCompilerTool" Preprocess="preprocessYes" PreprocessorDefinitions="WINTERACTER11"/></FileConfiguration>
+				<Tool Name="VFFortranCompilerTool" Preprocess="preprocessNo" PreprocessorDefinitions=""/></FileConfiguration>
 			<FileConfiguration Name="Release|Win32">
 				<Tool Name="VFFortranCompilerTool" Preprocess="preprocessYes" PreprocessorDefinitions="WINTERACTER11"/></FileConfiguration></File>
 		<File RelativePath="..\..\..\iMOD\SRC\imod_modpath\imod_plines_par.f90"/></Filter>
@@ -368,9 +368,9 @@
 			<FileConfiguration Name="Debug|Win32">
 				<Tool Name="VFFortranCompilerTool" Preprocess="preprocessYes" PreprocessorDefinitions="WINTERACTER11"/></FileConfiguration>
 			<FileConfiguration Name="Release|x64">
-				<Tool Name="VFFortranCompilerTool" Preprocess="preprocessYes" PreprocessorDefinitions="WINTERACTER11"/></FileConfiguration>
+				<Tool Name="VFFortranCompilerTool" Preprocess="preprocessNo" PreprocessorDefinitions=""/></FileConfiguration>
 			<FileConfiguration Name="Debug|x64">
-				<Tool Name="VFFortranCompilerTool" Preprocess="preprocessYes" PreprocessorDefinitions="WINTERACTER11"/></FileConfiguration>
+				<Tool Name="VFFortranCompilerTool" Preprocess="preprocessNo" PreprocessorDefinitions=""/></FileConfiguration>
 			<FileConfiguration Name="Release|Win32">
 				<Tool Name="VFFortranCompilerTool" Preprocess="preprocessYes" PreprocessorDefinitions="WINTERACTER11"/></FileConfiguration></File>
 		<File RelativePath="..\..\SRC\imod_plugin\imod_plugin_par.f90"/></Filter>
@@ -386,9 +386,9 @@
 			<FileConfiguration Name="Debug|Win32">
 				<Tool Name="VFFortranCompilerTool" Preprocess="preprocessYes" PreprocessorDefinitions="WINTERACTER11"/></FileConfiguration>
 			<FileConfiguration Name="Release|x64">
-				<Tool Name="VFFortranCompilerTool" Preprocess="preprocessYes" PreprocessorDefinitions="WINTERACTER11"/></FileConfiguration>
+				<Tool Name="VFFortranCompilerTool" Preprocess="preprocessNo" PreprocessorDefinitions=""/></FileConfiguration>
 			<FileConfiguration Name="Debug|x64">
-				<Tool Name="VFFortranCompilerTool" Preprocess="preprocessYes" PreprocessorDefinitions="WINTERACTER11"/></FileConfiguration>
+				<Tool Name="VFFortranCompilerTool" Preprocess="preprocessNo" PreprocessorDefinitions=""/></FileConfiguration>
 			<FileConfiguration Name="Release|Win32">
 				<Tool Name="VFFortranCompilerTool" Preprocess="preprocessYes" PreprocessorDefinitions="WINTERACTER11"/></FileConfiguration></File>
 		<File RelativePath="..\..\SRC\imod_prjmanager\imod_prjmanager_mf2005.f90"/>
@@ -497,9 +497,9 @@
 			<FileConfiguration Name="Debug|Win32">
 				<Tool Name="VFFortranCompilerTool" Preprocess="preprocessYes" PreprocessorDefinitions="WINTERACTER11"/></FileConfiguration>
 			<FileConfiguration Name="Release|x64">
-				<Tool Name="VFFortranCompilerTool" Preprocess="preprocessYes" PreprocessorDefinitions="WINTERACTER11"/></FileConfiguration>
+				<Tool Name="VFFortranCompilerTool" Preprocess="preprocessNo" PreprocessorDefinitions=""/></FileConfiguration>
 			<FileConfiguration Name="Debug|x64">
-				<Tool Name="VFFortranCompilerTool" Preprocess="preprocessYes" PreprocessorDefinitions="WINTERACTER11"/></FileConfiguration>
+				<Tool Name="VFFortranCompilerTool" Preprocess="preprocessNo" PreprocessorDefinitions=""/></FileConfiguration>
 			<FileConfiguration Name="Release|Win32">
 				<Tool Name="VFFortranCompilerTool" Preprocess="preprocessYes" PreprocessorDefinitions="WINTERACTER11"/></FileConfiguration></File></Filter>
 		<Filter Name="imod_utm">
@@ -511,16 +511,19 @@
 		<File RelativePath="..\..\SRC\imod_wbal\imod_wbal_graphics.f90"/>
 		<File RelativePath="..\..\..\iMOD\SRC\imod_wbal\imod_wbal_par.f90"/>
 		<File RelativePath="..\..\SRC\imod_wbal\imod_wbal_utl.f90"/></Filter>
+		<Filter Name="imod_ipest">
+		<File RelativePath="..\..\SRC\imod_ipest\imod_ipest_main.f90"/>
+		<File RelativePath="..\..\SRC\imod_ipest\imod_ipest_par.f90"/></Filter>
 		<Filter Name="programs">
 		<File RelativePath="..\..\..\iMOD\SRC\imod_main\imod_prg.f90">
 			<FileConfiguration Name="Debug|Win32">
 				<Tool Name="VFFortranCompilerTool" Preprocess="preprocessYes" PreprocessorDefinitions="DEBUG"/></FileConfiguration>
 			<FileConfiguration Name="Release|x64">
-				<Tool Name="VFFortranCompilerTool" Preprocess="preprocessYes" PreprocessorDefinitions="INTERACTER11C"/></FileConfiguration>
+				<Tool Name="VFFortranCompilerTool" Preprocess="preprocessYes" PreprocessorDefinitions=""/></FileConfiguration>
 			<FileConfiguration Name="Debug|x64">
-				<Tool Name="VFFortranCompilerTool" Preprocess="preprocessYes" PreprocessorDefinitions="DEBUG,WINTERACTER11C"/></FileConfiguration>
+				<Tool Name="VFFortranCompilerTool" Preprocess="preprocessYes" PreprocessorDefinitions="DEBUG"/></FileConfiguration>
 			<FileConfiguration Name="Release|Win32">
-				<Tool Name="VFFortranCompilerTool" Preprocess="preprocessYes" PreprocessorDefinitions=""/></FileConfiguration></File></Filter>
+				<Tool Name="VFFortranCompilerTool" Preprocess="preprocessNo" PreprocessorDefinitions=""/></FileConfiguration></File></Filter>
 		<File RelativePath="..\..\..\iMOD\SRC\bmpvar.f90"/>
 		<File RelativePath="..\..\..\iMOD\SRC\colours.f90"/>
 		<File RelativePath="..\..\..\iMOD\SRC\datevar.f90"/>

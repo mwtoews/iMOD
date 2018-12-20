@@ -201,15 +201,11 @@ CONTAINS
  IF(I.EQ.1)IFLAGS=IFLAGS+PROCBLOCKED
  !## executes on commandtool such that commands alike 'dir' etc. works
 
-#if(defined(WINTERACTER11))
  IFLAGS=IFLAGS+PROCCMDPROC
-#endif
 
  I=UTL_GETIDPROC(PROC,0)
 
-#if(defined(WINTERACTER11))
  CALL IOSCOMMAND(TRIM(PREFVAL(1))//'\IMODBATCH\'//TRIM(FNAME),IFLAGS,0,PID)
-#endif
 
  PROC(I)%ID=PID(1)
  PROC(I)%CID=TRIM(FNAME)

@@ -85,6 +85,7 @@ USE MOD_GEOCONNECT, ONLY: GC_MAIN_INIT
 USE MOD_DEVWEL 
 USE MOD_DEMO
 USE MOD_START
+USE MOD_IPEST_ANALYSER, ONLY : IPEST_ANALYSE_INIT
 
 CONTAINS
 
@@ -688,19 +689,22 @@ SELECT CASE (MESSAGE%VALUE1)
  !## model-manager
  CASE (ID_RUNMODEL)
   CALL MODEL1INIT()
-!## import modflow model
+ !## import modflow model
  CASE (ID_IMPORTMODFLOW)
   CALL IMPORT_MAIN()
-!## import modflow model
+ !## import modflow model
  CASE (ID_IMPORTSOBEK)
   CALL SOBEK1MAIN()
-!## start waterbalance analyse
+ !## start waterbalance analyse
  CASE (ID_WBAL_ANALYSE)
   CALL WBAL_ANALYSE_INIT('',0)
-!## scenario tool
+ !## start ipest analyser
+ CASE (ID_IPESTANALYSER)
+  CALL IPEST_ANALYSE_INIT()
+ !## scenario tool
  CASE (ID_SCENTOOL)
   CALL ST1INIT()
-!## plugin tool manager
+ !## plugin tool manager
  CASE(ID_TI1,ID_TI2,ID_TI3,ID_TI4) 
   IF(WMENUGETSTATE(ID_TI1,2).EQ.1) CALL WMENUSETSTATE(ID_TI1,2,0)
   IF(WMENUGETSTATE(ID_TI2,2).EQ.1) CALL WMENUSETSTATE(ID_TI2,2,0)

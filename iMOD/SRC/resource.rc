@@ -8,21 +8,21 @@
 //
 // Winteracter resource script. 
 //
-// Modified : 18/Dec/2018 23:29:02
+// Modified : 20/Dec/2018 17:15:20
 //
 ///////////////////////////////////////////////////
 //
 // Include files
 //
-#include "..\LIB\WINTERACTER\OS_X64\include\winparam.h"
+#include "..\LIB\WINTERACTER\OS_X64_V12\include\winparam.h"
 #ifdef XLIB
-#include "..\LIB\WINTERACTER\OS_X64\include\filesel.rc"
-#include "..\LIB\WINTERACTER\OS_X64\include\colour.rc"
+#include "..\LIB\WINTERACTER\OS_X64_V12\include\filesel.rc"
+#include "..\LIB\WINTERACTER\OS_X64_V12\include\colour.rc"
 #endif
-#include "..\LIB\WINTERACTER\OS_X64\include\dirsel.rc"
-#include "..\LIB\WINTERACTER\OS_X64\include\editor.rc"
-#include "..\LIB\WINTERACTER\OS_X64\include\pagesetup.rc"
-#include "..\LIB\WINTERACTER\OS_X64\include\hardcopy.rc"
+#include "..\LIB\WINTERACTER\OS_X64_V12\include\dirsel.rc"
+#include "..\LIB\WINTERACTER\OS_X64_V12\include\editor.rc"
+#include "..\LIB\WINTERACTER\OS_X64_V12\include\pagesetup.rc"
+#include "..\LIB\WINTERACTER\OS_X64_V12\include\hardcopy.rc"
  
 ///////////////////////////////////////////////////
 //
@@ -1240,6 +1240,11 @@
 #define ID_DFILESOPEN                     407
 #define WINTGRIDCOL1                     1318
 #define ID_GENEXPORT                    40324
+#define ID_IPESTANALYSER                40325
+#define IDD_DIALOG028                     408
+#define IDD_DIALOG029                     409
+#define IDD_DIALOG030                     410
+#define ID_DIPESTANALYSE                  411
 
 ///////////////////////////////////////////////////
 //
@@ -11847,6 +11852,31 @@ BEGIN
 ,0
 END
 
+ID_DIPESTANALYSE DIALOG 0, 0,  350,  273
+STYLE WS_POPUP | WS_BORDER | WS_DLGFRAME | WS_SYSMENU | DS_3DLOOK | DS_MODALFRAME
+FONT    8, "Arial"
+CAPTION "iPEST Analyse"
+BEGIN
+    CONTROL "&Compute ...",IDOK,"BUTTON",WS_CHILD | WS_VISIBLE | WS_TABSTOP | BS_PUSHBUTTON | BS_TEXT | BS_FLAT,    7,  250,   80,   14
+    CONTROL "&Close",IDCANCEL,"BUTTON",WS_CHILD | WS_VISIBLE | WS_TABSTOP | BS_PUSHBUTTON | BS_TEXT | BS_FLAT,  303,  250,   40,   14
+    CONTROL "&Help ...",IDHELP,"BUTTON",WS_CHILD | WS_VISIBLE | WS_TABSTOP | BS_PUSHBUTTON | BS_TEXT | BS_FLAT,  261,  250,   40,   14
+    CONTROL "Window",IDF_RADIO1,"BUTTON",WS_CHILD | WS_VISIBLE | WS_GROUP | WS_TABSTOP | BS_AUTORADIOBUTTON | BS_TEXT | BS_PUSHLIKE | BS_FLAT,   13,  222,   40,   14
+    CONTROL "IDF #1",IDF_RADIO2,"BUTTON",WS_CHILD | WS_VISIBLE | WS_TABSTOP | BS_AUTORADIOBUTTON | BS_TEXT | BS_PUSHLIKE | BS_FLAT,   56,  222,   61,   14
+    CONTROL "x1,y1,x2,y2",IDF_RADIO3,"BUTTON",WS_CHILD | WS_VISIBLE | WS_TABSTOP | BS_AUTORADIOBUTTON | BS_TEXT | BS_PUSHLIKE | BS_FLAT,  122,  222,   57,   14
+    CONTROL "Apply to:",IDF_GROUP1,"BUTTON",WS_CHILD | WS_VISIBLE | WS_GROUP | BS_GROUPBOX | BS_TEXT,    7,  208,  336,   36
+    CONTROL "128000.0,400000.0,130000.0,410000.034",IDF_STRING1,"EDIT",WS_CHILD | WS_VISIBLE | WS_BORDER | WS_GROUP | WS_TABSTOP | ES_LEFT,  184,  223,  151,   12
+END
+
+ID_DIPESTANALYSE RCDATA
+BEGIN
+"[Checks] \n"
+" 1012 0 \n"
+" 1014 1 \n"
+" 1015 0 \n"
+"[Tabs] \n"
+,0
+END
+
 ///////////////////////////////////////////////////
 //
 // Menus
@@ -12521,6 +12551,7 @@ BEGIN
             END
         END
         MENUITEM SEPARATOR
+        MENUITEM "iPEST Analyser ...",                       ID_IPESTANALYSER
         POPUP "Water Balance"
         BEGIN
             MENUITEM "Generate &Water Balance ...",              ID_WBAL_GENERATE
@@ -12590,7 +12621,7 @@ ID_PLUGIN_TIMECHECK,5,8,1,0,
 ID_MODELIMPORT,5,10,0,
 ID_PARTICLETRACKING,5,16,0,
 ID_IPS,5,16,3,0,
-ID_WBAL_ALL,5,18,0,
+ID_WBAL_ALL,5,19,0,
 ID_HELPMAIN,6,0,
 ID_ACTIVEDEBUG,6,6,0,
 0
@@ -12783,6 +12814,7 @@ ID_IMPORTGENFILE,"Select this option to import a ESRI GEN file into a Binary iMO
 ID_CREATEIPF,"Create IPF files ...\0",
 ID_OPENFILES,"List Files that are currently opened by iMOD\0",
 ID_GENEXPORT,"Load in a BINARY/ASCII GEN and Export it to BINARY/ASCII\0",
+ID_IPESTANALYSER,"Start the iPEST Analyser\0",
 0
 END
 
@@ -13369,5 +13401,5 @@ END
 //*WI* FORTSAVE    1
 //*WI* FILENAME    resource.f90
 //*WI* FMODNAME    RESOURCE
-//*WI* LASTTYPE        2
-//*WI* LASTRES         1
+//*WI* LASTTYPE        1
+//*WI* LASTRES         7

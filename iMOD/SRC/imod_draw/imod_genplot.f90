@@ -107,7 +107,7 @@ CONTAINS
    ENDIF
   ENDIF
 
-  CALL IUPPERCASE(GENFNAME)
+  GENFNAME=UTL_CAP(GENFNAME,'U')
 
   !## check whether file already opened ... overwrite it otherwise
   DO IPLOT=1,MXGEN; IF(GEN(IPLOT)%IACT.AND.GEN(IPLOT)%GENFNAME.EQ.GENFNAME)EXIT; END DO

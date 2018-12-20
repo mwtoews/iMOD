@@ -406,8 +406,11 @@ CONTAINS
   PBMAN%DWEL=1
   PBMAN%DISG=1
   PBMAN%ISAVEENDDATE=0
-  ENDIF
+  PBMAN%IPEST=0
+ ENDIF
 
+ IF(LPST)PBMAN%IPEST=1
+ 
  IF(.NOT.ASSOCIATED(PBMAN%ILAY))THEN
   ALLOCATE(PBMAN%ILAY(PRJNLAY))
   DO I=1,SIZE(PBMAN%ILAY); PBMAN%ILAY(I)=1; ENDDO
@@ -2000,10 +2003,8 @@ JLOOP: DO K=1,SIZE(TOPICS)
  IF(IRUNMODE.GT.0)THEN
 
   IFLAGS=PROCBLOCKED 
- !## executes on commandtool such that commands alike 'dir' etc. works
-#if (defined(WINTERACTER11))
+  !## executes on commandtool such that commands alike 'dir' etc. works
   IFLAGS=IFLAGS+PROCCMDPROC
-#endif 
 
   IF(ILOGFILE.EQ.0)THEN
    CALL IOSCOMMAND('RUN.BAT',IFLAGS,IEXCOD=IEXCOD)
@@ -2035,9 +2036,7 @@ JLOOP: DO K=1,SIZE(TOPICS)
   IFLAGS=0 
  !## executes on commandtool such that commands alike 'dir' etc. works
 
-#if(defined(WINTERACTER11))
   IFLAGS=IFLAGS+PROCCMDPROC
-#endif 
   
   IF(ILOGFILE.EQ.0)THEN
    CALL IOSCOMMAND('RUN.BAT',IFLAGS,IEXCOD=IEXCOD)
