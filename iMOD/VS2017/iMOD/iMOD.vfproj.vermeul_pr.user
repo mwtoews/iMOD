@@ -3,5 +3,5 @@
 	<Configurations>
 		<Configuration Name="Debug|Win32" CommandArguments="d:\IMOD-MODELS\TMODEL\IMPORTSOBEK.INI" WorkingDirectory="D:\IMOD-MODELS\IMOD"/>
 		<Configuration Name="Release|Win32"/>
-		<Configuration Name="Debug|x64" CommandArguments="h:\IMOD-MODELS\A27\runfile.ini" WorkingDirectory="d:\imod-models\imod"/>
+		<Configuration Name="Debug|x64" WorkingDirectory="d:\imod-models\imod"/>
 		<Configuration Name="Release|x64" WorkingDirectory="d:\COMPILE\OSSDELTARES\iMOD\TUTORIALS"/></Configurations></VisualStudioUserFile>
