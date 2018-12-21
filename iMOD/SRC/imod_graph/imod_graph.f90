@@ -747,6 +747,7 @@ CONTAINS
   GRAPHUNITS(6,IWINID)=AXES%Y2MAX+DMY2
  ENDIF
 
+
  !## compute marge - depends on size - textsize depend on these distances!!!
  DMX1=DX*(SX_RATIO*(1.0D0/AXES%DXAXESL))
  DMX2=DX*(SX_RATIO*(1.0D0/AXES%DXAXESR))
