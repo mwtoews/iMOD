@@ -8,7 +8,7 @@
 //
 // Winteracter resource script. 
 //
-// Modified : 22/Dec/2018 18:09:03
+// Modified : 23/Dec/2018 14:07:22
 //
 ///////////////////////////////////////////////////
 //
@@ -11868,6 +11868,8 @@ BEGIN
     CONTROL "Parameters",IDF_RADIO2,"BUTTON",WS_CHILD | WS_VISIBLE | WS_TABSTOP | BS_AUTORADIOBUTTON | BS_TEXT,  312,  164,   48,   14
     CONTROL "Iteration",IDF_RADIO3,"BUTTON",WS_CHILD | WS_VISIBLE | WS_GROUP | WS_TABSTOP | BS_AUTORADIOBUTTON | BS_TEXT,   56,  340,   48,   14
     CONTROL "Parameters",IDF_RADIO4,"BUTTON",WS_CHILD | WS_VISIBLE | WS_TABSTOP | BS_AUTORADIOBUTTON | BS_TEXT,  106,  340,   48,   14
+    CONTROL "Scatter",IDF_RADIO5,"BUTTON",WS_CHILD | WS_VISIBLE | WS_GROUP | WS_TABSTOP | BS_AUTORADIOBUTTON | BS_TEXT,  484,  160,   48,   14
+    CONTROL "Histogram",IDF_RADIO7,"BUTTON",WS_CHILD | WS_VISIBLE | WS_TABSTOP | BS_AUTORADIOBUTTON | BS_TEXT,  534,  160,   48,   14
 END
 
 ID_DIPESTANALYSE RCDATA
@@ -11877,6 +11879,8 @@ BEGIN
 " 1014 0 \n"
 " 1015 1 \n"
 " 1016 0 \n"
+" 1017 1 \n"
+" 1110 0 \n"
 "[Ranges] \n"
 " 1154               0             100 \n"
 "[Trackbars] \n"
