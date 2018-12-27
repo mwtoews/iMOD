@@ -126,10 +126,10 @@ CHARACTER (LEN=1) :: key
 !DATA y/65647., 70638., 75889., 81399., 87169., 93202., 99503., &
 !       106079., 112939., 120094., 127557./
 
-WRITE(*, *)'Fitting nasty cubic'
-WRITE(*, *)'1st 4 regression coefficients should equal 1.0'
-WRITE(*, *)'Last variable = X + X^2, to introduce a deliberate singularity'
-WRITE(*, *)
+!WRITE(*, *)'Fitting nasty cubic'
+!WRITE(*, *)'1st 4 regression coefficients should equal 1.0'
+!WRITE(*, *)'Last variable = X + X^2, to introduce a deliberate singularity'
+!WRITE(*, *)
 
 X(:,1)=XC
 Y(:)=YC
@@ -160,10 +160,10 @@ END DO
 
 CALL tolset
 CALL sing(lindep, ifault)
-WRITE(*, *)'From routine SING, IFAULT =', ifault
-WRITE(*, *)'Array LINDEP:', lindep
-WRITE(*, *)
-WRITE(*, *)'sserr = ', sserr, '   Should be 286.000'
+!WRITE(*, *)'From routine SING, IFAULT =', ifault
+!WRITE(*, *)'Array LINDEP:', lindep
+!WRITE(*, *)
+!WRITE(*, *)'sserr = ', sserr, '   Should be 286.000'
 
 !     Calculate residual sums of squares (RSS).
 
