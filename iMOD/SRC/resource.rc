@@ -8,7 +8,7 @@
 //
 // Winteracter resource script. 
 //
-// Modified : 23/Dec/2018 14:07:22
+// Modified : 27/Dec/2018 13:48:01
 //
 ///////////////////////////////////////////////////
 //
@@ -1242,6 +1242,8 @@
 #define ID_GENEXPORT                    40324
 #define ID_IPESTANALYSER                40325
 #define ID_DIPESTANALYSE                  411
+#define ID_LEGEND1                       1319
+#define ID_LEGEND2                       1320
 
 ///////////////////////////////////////////////////
 //
@@ -11849,7 +11851,7 @@ BEGIN
 ,0
 END
 
-ID_DIPESTANALYSE DIALOG 0, 0,  709,  397
+ID_DIPESTANALYSE DIALOG 0, 0,  735,  397
 STYLE WS_POPUP | WS_BORDER | WS_DLGFRAME | WS_SYSMENU | WS_MINIMIZEBOX | DS_3DLOOK | DS_MODALFRAME
 FONT    8, "Arial"
 CAPTION "iPEST Analyse"
@@ -11870,6 +11872,10 @@ BEGIN
     CONTROL "Parameters",IDF_RADIO4,"BUTTON",WS_CHILD | WS_VISIBLE | WS_TABSTOP | BS_AUTORADIOBUTTON | BS_TEXT,  106,  340,   48,   14
     CONTROL "Scatter",IDF_RADIO5,"BUTTON",WS_CHILD | WS_VISIBLE | WS_GROUP | WS_TABSTOP | BS_AUTORADIOBUTTON | BS_TEXT,  484,  160,   48,   14
     CONTROL "Histogram",IDF_RADIO7,"BUTTON",WS_CHILD | WS_VISIBLE | WS_TABSTOP | BS_AUTORADIOBUTTON | BS_TEXT,  534,  160,   48,   14
+    CONTROL "Properties",ID_PROP1,"BUTTON",WS_CHILD | WS_VISIBLE | WS_GROUP | WS_TABSTOP | BS_AUTOCHECKBOX | BS_TEXT | BS_BITMAP | BS_PUSHLIKE | BS_FLAT,  706,    3,   16,   14
+    CONTROL "Properties",ID_PROP2,"BUTTON",WS_CHILD | WS_VISIBLE | WS_GROUP | WS_TABSTOP | BS_AUTOCHECKBOX | BS_TEXT | BS_BITMAP | BS_PUSHLIKE | BS_FLAT,  706,  179,   16,   14
+    CONTROL "Properties",ID_LEGEND2,"BUTTON",WS_CHILD | WS_VISIBLE | WS_GROUP | WS_TABSTOP | BS_AUTOCHECKBOX | BS_TEXT | BS_BITMAP | BS_PUSHLIKE | BS_FLAT,  706,  197,   16,   14
+    CONTROL "Properties",ID_LEGEND1,"BUTTON",WS_CHILD | WS_VISIBLE | WS_GROUP | WS_TABSTOP | BS_AUTOCHECKBOX | BS_TEXT | BS_BITMAP | BS_PUSHLIKE | BS_FLAT,  706,   20,   16,   14
 END
 
 ID_DIPESTANALYSE RCDATA
@@ -11881,6 +11887,10 @@ BEGIN
 " 1016 0 \n"
 " 1017 1 \n"
 " 1110 0 \n"
+" 1249 1 \n"
+" 1260 1 \n"
+" 1320 1 \n"
+" 1319 1 \n"
 "[Ranges] \n"
 " 1154               0             100 \n"
 "[Trackbars] \n"
