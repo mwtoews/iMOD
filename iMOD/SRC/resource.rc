@@ -8,7 +8,7 @@
 //
 // Winteracter resource script. 
 //
-// Modified : 27/Dec/2018 17:28:38
+// Modified : 28/Dec/2018 12:04:21
 //
 ///////////////////////////////////////////////////
 //
@@ -11879,6 +11879,9 @@ BEGIN
     CONTROL "Button",ID_PROP2,"BUTTON",WS_CHILD | WS_VISIBLE | WS_GROUP | WS_TABSTOP | BS_PUSHBUTTON | BS_TEXT | BS_BITMAP | BS_FLAT,  706,  200,   16,   14
     CONTROL "Button",ID_LEGEND1,"BUTTON",WS_CHILD | WS_VISIBLE | WS_GROUP | WS_TABSTOP | BS_PUSHBUTTON | BS_TEXT | BS_BITMAP | BS_FLAT,  706,   40,   16,   14
     CONTROL "Button",ID_LEGEND2,"BUTTON",WS_CHILD | WS_VISIBLE | WS_GROUP | WS_TABSTOP | BS_PUSHBUTTON | BS_TEXT | BS_BITMAP | BS_FLAT,  706,  216,   16,   14
+    CONTROL "Include Reliability",IDF_CHECK1,"BUTTON",WS_CHILD | WS_VISIBLE | WS_GROUP | WS_TABSTOP | BS_AUTOCHECKBOX | BS_TEXT,  158,  360,   72,   12
+    CONTROL "Correlation",IDF_RADIO11,"BUTTON",WS_CHILD | WS_VISIBLE | WS_GROUP | WS_TABSTOP | BS_AUTORADIOBUTTON | BS_TEXT,  252,  360,   48,   14
+    CONTROL "Eigenvalues",IDF_RADIO12,"BUTTON",WS_CHILD | WS_VISIBLE | WS_TABSTOP | BS_AUTORADIOBUTTON | BS_TEXT,  302,  360,   56,   14
 END
 
 ID_DIPESTANALYSE RCDATA
@@ -11893,6 +11896,9 @@ BEGIN
 " 1111 1 \n"
 " 1112 0 \n"
 " 1219 0 \n"
+" 1182 0 \n"
+" 1220 1 \n"
+" 1255 0 \n"
 "[Ranges] \n"
 " 1154               0             100 \n"
 "[Trackbars] \n"
