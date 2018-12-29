@@ -911,10 +911,11 @@ CONTAINS
  END FUNCTION PESTRUNEXT
  
  !#####=================================================================
- LOGICAL FUNCTION PESTNEXT(LSS,root)
+ LOGICAL FUNCTION PESTNEXT(LSS,root,IDF)
  !#####=================================================================
  use rf2mf_module, only: nper
  IMPLICIT NONE
+ type(idfobj),intent(in) :: idf
  logical,intent(in) :: LSS
  character(len=*),intent(in) :: root
  REAL(KIND=8) :: IMPROVEMENT,F,GUPDATE
@@ -931,7 +932,7 @@ CONTAINS
  IF(PEST_ITER.EQ.0)PEST_ITER=1
 
  !## compute objective function
- CALL PEST_GETJ(LSS,ROOT)
+ CALL PEST_GETJ(LSS,ROOT,idf)
 
  IF(PEST_SINGLE.EQ.1)STOP
  
@@ -939,12 +940,12 @@ CONTAINS
 !  !## next parameter combination
 !  IF(.NOT.PESTNEXTSENS())STOP
 !  IF(.NOT.PESTNEXTGRAD())STOP
-  IF(.NOT.PESTNEXTGRAD())CALL PESTGRADIENT(root)
+  IF(.NOT.PESTNEXTGRAD())CALL PESTGRADIENT(root,idf)
  ELSEIF(LGRAD)THEN
   !## what proces is going on?
   IF(.NOT.PESTNEXTGRAD())THEN
    !## get gradient
-   CALL PESTGRADIENT(ROOT)
+   CALL PESTGRADIENT(ROOT,idf)
    CALL PEST_ECHOPARAMETERS(GUPDATE)
    LLNSRCH=.TRUE.; PEST_ILNSRCH=1; LGRAD=.FALSE.; PEST_IGRAD=0
   ENDIF
@@ -1552,9 +1553,10 @@ END SUBROUTINE WRITEIPF
  END FUNCTION PESTNEXTGRAD
 
  !###====================================================================
- SUBROUTINE PESTGRADIENT(root)
+ SUBROUTINE PESTGRADIENT(root,idf)
  !###====================================================================
  IMPLICIT NONE
+ type(idfobj),intent(in) :: idf
  CHARACTER(LEN=*),INTENT(IN) :: ROOT
  REAL(KIND=8) :: DJ1,DJ2
  REAL(KIND=8) :: B1,TS,DF1,DF2,BETA,EIGWTHRESHOLD,W,DH1,DH2
@@ -1662,7 +1664,7 @@ END SUBROUTINE WRITEIPF
   ENDIF
 
   !## construct jqj - normal matrix/hessian
-  CALL PEST1JQJ(JQJ,EIGW,EIGV,COV,NP,LSENS,ROOT)
+  CALL PEST1JQJ(JQJ,EIGW,EIGV,COV,NP,LSENS,ROOT,idf)
 
   !## multiply lateral sensitivities with sensitivities in case pest_niter=0
 !  IF(ITRIES.EQ.1)THEN
@@ -1851,7 +1853,7 @@ END SUBROUTINE WRITEIPF
  ENDDO !## marquardt-loop
 
  !## write statistics
- CALL PEST1JQJ(JQJ,EIGW,EIGV,COV,NP,.TRUE.,ROOT)
+ CALL PEST1JQJ(JQJ,EIGW,EIGV,COV,NP,.TRUE.,ROOT,idf)
 
  !## multiply lateral sensitivities with sensitivities in case pest_niter=0
  IF(.NOT.PESTWRITESTATISTICS_PERROR(NP,COV,.TRUE.))THEN; ENDIF
@@ -1889,9 +1891,10 @@ END SUBROUTINE WRITEIPF
  END SUBROUTINE PESTGRADIENT
  
  !###====================================================================
- SUBROUTINE PEST1JQJ(JQJ,EIGW,EIGV,COV,NP,LPRINT,ROOT)
+ SUBROUTINE PEST1JQJ(JQJ,EIGW,EIGV,COV,NP,LPRINT,ROOT,idf)
  !###====================================================================
  IMPLICIT NONE
+ type(idfobj),intent(in) :: idf
  CHARACTER(LEN=*),INTENT(IN) :: ROOT
  INTEGER,INTENT(IN) :: NP
  LOGICAL,INTENT(IN) :: LPRINT
@@ -1968,11 +1971,11 @@ END SUBROUTINE WRITEIPF
   ENDDO
  ENDDO
 
-! !## construct covariance on the pilotpoints
-! IF(PEST_IREGULARISATION.EQ.1)THEN
-!  CALL PEST_GETQPP(NP,.FALSE.)
-!  JQJ=JQJ+QPP
-! ENDIF
+ !## construct covariance on the pilotpoints
+ IF(PEST_IREGULARISATION.EQ.1)THEN
+  CALL PEST_GETQPP(NP,.FALSE.,idf)
+  JQJ=JQJ+QPP
+ ENDIF
   
  IF(ALLOCATED(E   ))DEALLOCATE(E);    ALLOCATE(E   (NP))
  IF(ALLOCATED(COR ))DEALLOCATE(COR);  ALLOCATE(COR(NP,NP))
@@ -2458,10 +2461,11 @@ END SUBROUTINE WRITEIPF
  END SUBROUTINE PEST_ECHOPARAMETERS
 
  !###====================================================================
- SUBROUTINE PEST_GETJ(LSS,root)
+ SUBROUTINE PEST_GETJ(LSS,root,idf)
  !###====================================================================
  USE RF2MF_MODULE, ONLY: NPER
  IMPLICIT NONE
+ type(idfobj),intent(in) :: idf
  LOGICAL,INTENT(IN) :: LSS
  CHARACTER(LEN=*),INTENT(IN) :: ROOT
  INTEGER :: I,II,III,J,JJ,K,KK,ILAY,NROWIPFTXT,IUIPFTXT,NCOLIPFTXT, &
@@ -2585,7 +2589,7 @@ END SUBROUTINE WRITEIPF
   !## transient
   ELSE
     
-   XCROSS=0.0
+   XCROSS=0.0D0
    DO J=1,TS(I)%NROWIPF
    
     READ(TS(I)%IUIPF,*) X,Y,ILAY,ID,WW     !## w(i)=variance
@@ -2739,7 +2743,7 @@ END SUBROUTINE WRITEIPF
  ENDDO
  
  PJ=0.0D0
-! IF(PEST_IREGULARISATION.EQ.1)CALL PEST_GETQPP(NP,.TRUE.)
+ IF(PEST_IREGULARISATION.EQ.1)CALL PEST_GETQPP(NP,.TRUE.,idf)
   
  IF(LGRAD.AND.PEST_IGRAD.EQ.0)THEN
   CALL IMOD_UTL_PRINTTEXT('Best Match Value   :             '//TRIM(IMOD_UTL_DTOS(TJ,'G',7)),-1,IUPESTOUT)
@@ -2814,88 +2818,92 @@ END SUBROUTINE WRITEIPF
   
  END FUNCTION PEST_GOODNESS_OF_FIT
  
- !!###====================================================================
- !SUBROUTINE PEST_GETQPP(NP,LPJ)
- !!###====================================================================
- !IMPLICIT NONE
- !INTEGER,INTENT(IN) :: NP
- !LOGICAL,INTENT(IN) :: LPJ
- !INTEGER :: I,J,II,JJ
- !REAL(KIND=8) :: ALPHA,GAMMA,X1,X2,Y1,Y2,RANGE
- !REAL,ALLOCATABLE,DIMENSION(:) :: AQPP
- !
- !IF(ALLOCATED(QPP))DEALLOCATE(QPP)
- !ALLOCATE(QPP(NP,NP)); QPP =0.0
- !!## fill array zone and set appropriate pointers in type 
- !II=0; DO I=1,SIZE(PARAM)
- ! !## skip zero-zones, inactive parameters/groupmembers
- ! IF(PARAM(I)%NODES.LE.0.OR.PARAM(I)%IACT.NE.1.OR.PARAM(I)%IGROUP.LE.0)CYCLE
- ! 
- ! II=II+1
- ! 
- ! !## zones
- ! IF(PARAM(I)%ZTYPE.EQ.0)THEN
- !  !## add covariance ... if known - now leave it zero
- !  
- ! !## pilotpoints
- ! ELSEIF(PARAM(I)%ZTYPE.EQ.1)THEN
- !
- !  RANGE=PEST_GETRANGE()
- !  !## fill in covariance matrix based upon semivariogram
- !  X1=PARAM(I)%XY(1,1); Y1=PARAM(I)%XY(1,2)
- !  JJ=0; DO J=1,SIZE(PARAM)
- !   !## skip zero-zones, inactive parameters/groupmembers
- !   IF(PARAM(J)%NODES.LE.0.OR.PARAM(J)%IACT.NE.1.OR.PARAM(J)%IGROUP.LE.0)CYCLE
- !   JJ=JJ+1
- !   X2=PARAM(J)%XY(1,1); Y2=PARAM(J)%XY(1,2)
- !   GAMMA=KRIGING_GETGAMMA(X1,Y1,X2,Y2,RANGE,SILL,NUGGET,PEST_KTYPE)
- !   GAMMA=SILL-GAMMA
- !   QPP(II,JJ)=1.0/(2.0*SQRT(GAMMA))
- !  ENDDO
- !
- ! ENDIF
- !ENDDO
- !
- !!## compute plausibility value
- !IF(LPJ)THEN
- !
- ! !## multiply with residual pilotpoints, homogeneous criterion
- ! ALLOCATE(AQPP(NP)); AQPP=0.0
- ! JJ=0; DO J=1,SIZE(PARAM)
- !
- !  !## skip zero-zones, inactive parameters/groupmembers
- !  IF(PARAM(J)%NODES.LE.0.OR.PARAM(J)%IACT.NE.1.OR.PARAM(J)%IGROUP.LE.0)CYCLE
- !  
- !  JJ=JJ+1
- !  
- !  II=0; DO I=1,SIZE(PARAM)
- !
- !   !## skip zero-zones, inactive parameters/groupmembers
- !   IF(PARAM(I)%NODES.LE.0.OR.PARAM(I)%IACT.NE.1.OR.PARAM(I)%IGROUP.LE.0)CYCLE
- !   
- !   II=II+1
- !   
- !   ALPHA=0.0-PARAM(I)%ALPHA(1)
- !   AQPP(JJ)=AQPP(JJ)+ALPHA*QPP(JJ,II)
- !
- !  ENDDO
- ! ENDDO
- !
- ! !## multiply with residual pilotpoints, homogeneous criterion
- ! PJ=0.0D0
- ! II=0; DO I=1,SIZE(PARAM)
- !  !## skip zero-zones, inactive parameters/groupmembers
- !  IF(PARAM(I)%NODES.LE.0.OR.PARAM(I)%IACT.NE.1.OR.PARAM(I)%IGROUP.LE.0)CYCLE
- !  II=II+1
- !  ALPHA=0.0-PARAM(I)%ALPHA(1)
- !  PJ=PJ+AQPP(II)*ALPHA
- ! ENDDO
- !
- ! DEALLOCATE(AQPP)
- !
- !ENDIF
- !
- !END SUBROUTINE PEST_GETQPP
+ !###====================================================================
+ SUBROUTINE PEST_GETQPP(NP,LPJ,idf)
+ !###====================================================================
+ IMPLICIT NONE
+ type(idfobj),intent(in) :: idf
+ INTEGER,INTENT(IN) :: NP
+ LOGICAL,INTENT(IN) :: LPJ
+ INTEGER :: I,J,II,JJ
+ REAL(KIND=8) :: ALPHA,GAMMA,X1,X2,Y1,Y2,RANGE,NUGGET,SILL
+ REAL,ALLOCATABLE,DIMENSION(:) :: AQPP
+ 
+ SILL=100.0D0
+ NUGGET=0.0D0
+ 
+ IF(ALLOCATED(QPP))DEALLOCATE(QPP); ALLOCATE(QPP(NP,NP)); QPP =0.0D0
+
+ !## fill array zone and set appropriate pointers in type 
+ II=0; DO I=1,SIZE(PARAM)
+  !## skip zero-zones, inactive parameters/groupmembers
+  IF(PARAM(I)%NODES.LE.0.OR.PARAM(I)%IACT.NE.1.OR.PARAM(I)%IGROUP.LE.0)CYCLE
+  
+  II=II+1
+  
+  !## zones
+  IF(PARAM(I)%ZTYPE.EQ.0)THEN
+   !## add covariance ... if known - now leave it zero
+   
+  !## pilotpoints
+  ELSEIF(PARAM(I)%ZTYPE.EQ.1)THEN
+ 
+   RANGE=UTL_KRIGING_RANGE(idf%xmin,idf%ymin,idf%xmax,idf%ymax) !CDELR(0),CDELR(NCOL),CDELC(NROW),CDELC(0))
+   !## fill in covariance matrix based upon semivariogram
+   X1=PARAM(I)%XY(1,1); Y1=PARAM(I)%XY(1,2)
+   JJ=0; DO J=1,SIZE(PARAM)
+    !## skip zero-zones, inactive parameters/groupmembers
+    IF(PARAM(J)%NODES.LE.0.OR.PARAM(J)%IACT.NE.1.OR.PARAM(J)%IGROUP.LE.0)CYCLE
+    JJ=JJ+1
+    X2=PARAM(J)%XY(1,1); Y2=PARAM(J)%XY(1,2)
+    GAMMA=UTL_KRIGING_GETGAMMA(X1,Y1,X2,Y2,RANGE,SILL,NUGGET,PEST_KTYPE)
+    GAMMA=SILL-GAMMA
+    QPP(II,JJ)=1.0D0/(2.0D0*SQRT(GAMMA))
+   ENDDO
+ 
+  ENDIF
+ ENDDO
+ 
+ !## compute plausibility value
+ IF(LPJ)THEN
+ 
+  !## multiply with residual pilotpoints, homogeneous criterion
+  ALLOCATE(AQPP(NP)); AQPP=0.0
+  JJ=0; DO J=1,SIZE(PARAM)
+ 
+   !## skip zero-zones, inactive parameters/groupmembers
+   IF(PARAM(J)%NODES.LE.0.OR.PARAM(J)%IACT.NE.1.OR.PARAM(J)%IGROUP.LE.0)CYCLE
+   
+   JJ=JJ+1
+   
+   II=0; DO I=1,SIZE(PARAM)
+ 
+    !## skip zero-zones, inactive parameters/groupmembers
+    IF(PARAM(I)%NODES.LE.0.OR.PARAM(I)%IACT.NE.1.OR.PARAM(I)%IGROUP.LE.0)CYCLE
+    
+    II=II+1
+    
+    ALPHA=0.0D0-PARAM(I)%ALPHA(1)
+    AQPP(JJ)=AQPP(JJ)+ALPHA*QPP(JJ,II)
+ 
+   ENDDO
+  ENDDO
+ 
+  !## multiply with residual pilotpoints, homogeneous criterion
+  PJ=0.0D0
+  II=0; DO I=1,SIZE(PARAM)
+   !## skip zero-zones, inactive parameters/groupmembers
+   IF(PARAM(I)%NODES.LE.0.OR.PARAM(I)%IACT.NE.1.OR.PARAM(I)%IGROUP.LE.0)CYCLE
+   II=II+1
+   ALPHA=0.0D0-PARAM(I)%ALPHA(1)
+   PJ=PJ+AQPP(II)*ALPHA
+  ENDDO
+ 
+  DEALLOCATE(AQPP)
+ 
+ ENDIF
+ 
+ END SUBROUTINE PEST_GETQPP
  
  !###====================================================================
  SUBROUTINE PEST_BATCHFILES()

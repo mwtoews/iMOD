@@ -402,24 +402,24 @@ CONTAINS
  REAL(KIND=8) :: DX,DY,DXY,H,F
  INTEGER :: I
  
- DX=(X1-X2)**2.0; DY=(Y1-Y2)**2.0; DXY=DX+DY
+ DX=(X1-X2)**2.0D0; DY=(Y1-Y2)**2.0D0; DXY=DX+DY
  IF(DXY.GT.0.0)DXY=SQRT(DXY)
  
  !## no part of kriging, beyond given range, equal to sill
  IF(DXY.GE.RANGE)THEN
-  H=0.999
+  H=0.999D0
  ELSE
   SELECT CASE (ABS(KTYPE))
    CASE (1) !## linear
     H=DXY/RANGE
    CASE (2) !## spherical
-    H=(3.0*DXY)/(2.0*RANGE)-(0.5*(DXY/RANGE)**3.0)
+    H=(3.0D0*DXY)/(2.0D0*RANGE)-(0.5D0*(DXY/RANGE)**3.0D0)
    CASE (3) !## exponential
-    H=1.0-EXP(-3.0*(DXY/RANGE))
+    H=1.0D0-EXP(-3.0D0*(DXY/RANGE))
    CASE (4) !## gaussian
-    H=1.0-EXP(-3.0*(DXY**2.0)/(RANGE**2.0))
+    H=1.0D0-EXP(-3.0D0*(DXY**2.0D0)/(RANGE**2.0D0))
    CASE (5) !## power
-    H=DXY**0.5
+    H=DXY**0.5D0
    CASE DEFAULT
     WRITE(*,*) 'UNKNOWN KTYPE',KTYPE; PAUSE; STOP
   END SELECT
@@ -433,9 +433,9 @@ CONTAINS
  REAL FUNCTION UTL_KRIGING_RANGE(X1,X2,Y1,Y2)
  !###====================================================================
  IMPLICIT NONE
- real(KIND=8),INTENT(IN) :: x1,y1,x2,y2
+ real(KIND=8),INTENT(IN) :: X1,Y1,X2,Y2
  
- UTL_KRIGING_RANGE=0.9*SQRT((X2-X1)**2.0+(Y2-Y1)**2.0)
+ UTL_KRIGING_RANGE=0.9D0*SQRT((X2-X1)**2.0D0+(Y2-Y1)**2.0D0)
  
  END FUNCTION UTL_KRIGING_RANGE
 
