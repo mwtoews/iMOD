@@ -296,6 +296,25 @@ CONTAINS
  END SUBROUTINE DBL_WGRTEXTSTRING
 
  !###====================================================================
+ SUBROUTINE DBL_WGRTEXTDOUBLE(X,Y,XTXT,IOFFSET)
+ !###====================================================================
+ IMPLICIT NONE
+ REAL(KIND=DP_KIND),INTENT(IN) :: X,Y,XTXT
+ INTEGER,INTENT(IN),OPTIONAL :: IOFFSET
+
+ IF(PRESENT(IOFFSET))THEN
+  IF(IOFFSET.EQ.0)THEN
+   CALL WGRTEXTDOUBLE(REAL(X,4),REAL(Y,4),XTXT)
+  ELSE
+   CALL WGRTEXTDOUBLE(REAL(X-OFFSETX,4),REAL(Y-OFFSETY,4),XTXT)
+  ENDIF
+ ELSE
+  CALL WGRTEXTDOUBLE(REAL(X,4),REAL(Y,4),XTXT)
+ ENDIF
+ 
+ END SUBROUTINE DBL_WGRTEXTDOUBLE
+
+ !###====================================================================
  SUBROUTINE DBL_IGRCIRCLE(X,Y,R,IOFFSET)
  !###====================================================================
  IMPLICIT NONE

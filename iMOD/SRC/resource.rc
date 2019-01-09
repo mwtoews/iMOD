@@ -8,7 +8,7 @@
 //
 // Winteracter resource script. 
 //
-// Modified : 07/Jan/2019 12:03:48
+// Modified : 08/Jan/2019 17:36:12
 //
 ///////////////////////////////////////////////////
 //
@@ -11892,6 +11892,7 @@ BEGIN
     CONTROL "",IDF_MENU3,"LISTBOX",WS_CHILD | WS_VISIBLE | WS_BORDER | WS_VSCROLL | WS_TABSTOP | LBS_NOTIFY | LBS_HASSTRINGS | LBS_USETABSTOPS | LBS_EXTENDEDSEL,  484,  248,   78,  108
     CONTROL "0.0000",IDF_DOUBLE1,"DOUBLEEDIT",WS_CHILD | WS_VISIBLE | WS_BORDER | WS_GROUP | WS_TABSTOP | ES_LEFT | ES_CENTER | ES_MULTILINE,  744,  184,   40,   12
     CONTROL "Bandwidth",IDF_LABEL4,"STATIC",WS_CHILD | WS_VISIBLE | WS_GROUP | SS_LEFT,  700,  184,   40,    8
+    CONTROL "Labels",IDF_CHECK4,"BUTTON",WS_CHILD | WS_VISIBLE | WS_GROUP | WS_TABSTOP | BS_AUTOCHECKBOX | BS_TEXT,  362,  360,   72,   12
 END
 
 ID_DIPESTANALYSE RCDATA
@@ -11911,6 +11912,7 @@ BEGIN
 " 1255 0 \n"
 " 1183 0 \n"
 " 1186 0 \n"
+" 1184 0 \n"
 "[Menus] \n"
 "[Ranges] \n"
 "[Formats] \n"

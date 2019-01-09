@@ -3824,7 +3824,7 @@ IRLOOP: DO IROW=1,PRJIDF%NROW; DO ICOL=1,PRJIDF%NCOL
     !## check to see whether equal to previous timestep
     IEQUAL=1
     SELECT CASE (ITOPIC)
-     !## uzf,rch,evt
+     !## uzf(18),evt(24),rch(26)
      CASE (18,24,26)
       IF(LPER.GT.0)THEN
        !## only whenever number of systems are equal
