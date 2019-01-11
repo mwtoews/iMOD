@@ -8,7 +8,7 @@
 //
 // Winteracter resource script. 
 //
-// Modified : 11/Jan/2019 20:06:38
+// Modified : 11/Jan/2019 21:06:49
 //
 ///////////////////////////////////////////////////
 //
@@ -1245,6 +1245,8 @@
 #define ID_LEGEND1                       1319
 #define ID_LEGEND2                       1320
 #define ID_DIPESTANALYSE_SETTINGS         408
+#define ID_MSPANALYSER                  40326
+#define ID_DMSPANALYSER                   409
 
 ///////////////////////////////////////////////////
 //
@@ -11944,6 +11946,23 @@ BEGIN
 ,0
 END
 
+ID_DMSPANALYSER DIALOG 0, 0,  285,  194
+STYLE WS_POPUP | WS_BORDER | WS_DLGFRAME | WS_SYSMENU | DS_3DLOOK | DS_MODALFRAME
+FONT    8, "Arial"
+CAPTION "MetaSWAP Analyser"
+BEGIN
+    CONTROL "Close",IDCANCEL,"BUTTON",WS_CHILD | WS_VISIBLE | WS_GROUP | WS_TABSTOP | BS_PUSHBUTTON | BS_TEXT | BS_FLAT,  236,  172,   40,   14
+    CONTROL "Help ...",IDHELP,"BUTTON",WS_CHILD | WS_VISIBLE | WS_GROUP | WS_TABSTOP | BS_PUSHBUTTON | BS_TEXT | BS_FLAT,  192,  172,   40,   14
+    CONTROL "OK",IDOK3,"BUTTON",WS_CHILD | WS_VISIBLE | WS_GROUP | WS_TABSTOP | BS_PUSHBUTTON | BS_TEXT | BS_FLAT,   26,  172,   40,   14
+END
+
+ID_DMSPANALYSER RCDATA
+BEGIN
+"[Dialog] \n"
+" 0     0 0 1 \n"
+,0
+END
+
 ///////////////////////////////////////////////////
 //
 // Menus
@@ -12619,6 +12638,7 @@ BEGIN
         END
         MENUITEM SEPARATOR
         MENUITEM "iPEST Analyser ...",                       ID_IPESTANALYSER
+        MENUITEM "MetaSWAP Analyser ...",                    ID_MSPANALYSER
         POPUP "Water Balance"
         BEGIN
             MENUITEM "Generate &Water Balance ...",              ID_WBAL_GENERATE
@@ -12688,7 +12708,7 @@ ID_PLUGIN_TIMECHECK,5,8,1,0,
 ID_MODELIMPORT,5,10,0,
 ID_PARTICLETRACKING,5,16,0,
 ID_IPS,5,16,3,0,
-ID_WBAL_ALL,5,19,0,
+ID_WBAL_ALL,5,20,0,
 ID_HELPMAIN,6,0,
 ID_ACTIVEDEBUG,6,6,0,
 0
@@ -12882,6 +12902,7 @@ ID_CREATEIPF,"Create IPF files ...\0",
 ID_OPENFILES,"List Files that are currently opened by iMOD\0",
 ID_GENEXPORT,"Load in a BINARY/ASCII GEN and Export it to BINARY/ASCII\0",
 ID_IPESTANALYSER,"Start the iPEST Analyser\0",
+ID_MSPANALYSER,"Start the MetaSWAP Analyser\0",
 0
 END
 
@@ -13469,4 +13490,4 @@ END
 //*WI* FILENAME    resource.f90
 //*WI* FMODNAME    RESOURCE
 //*WI* LASTTYPE        2
-//*WI* LASTRES       307
+//*WI* LASTRES       309

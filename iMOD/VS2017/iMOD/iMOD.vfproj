@@ -217,6 +217,9 @@
 		<Filter Name="imod_intersect">
 		<File RelativePath="..\..\..\iMOD\SRC\imod_intersect\imod_intersect.f90"/>
 		<File RelativePath="..\..\..\iMOD\SRC\imod_intersect\imod_intersect_par.f90"/></Filter>
+		<Filter Name="imod_ipest">
+		<File RelativePath="..\..\SRC\imod_ipest\imod_ipest_main.f90"/>
+		<File RelativePath="..\..\SRC\imod_ipest\imod_ipest_par.f90"/></Filter>
 		<Filter Name="imod_ipf">
 		<File RelativePath="..\..\..\iMOD\SRC\imod_ipf\imod_extractipf.f90">
 			<FileConfiguration Name="Debug|Win32">
@@ -511,9 +514,10 @@
 		<File RelativePath="..\..\SRC\imod_wbal\imod_wbal_graphics.f90"/>
 		<File RelativePath="..\..\..\iMOD\SRC\imod_wbal\imod_wbal_par.f90"/>
 		<File RelativePath="..\..\SRC\imod_wbal\imod_wbal_utl.f90"/></Filter>
-		<Filter Name="imod_ipest">
-		<File RelativePath="..\..\SRC\imod_ipest\imod_ipest_main.f90"/>
-		<File RelativePath="..\..\SRC\imod_ipest\imod_ipest_par.f90"/></Filter>
+		<Filter Name="imod_mspinspector">
+		<File RelativePath="..\..\SRC\imod_mspinspector\imod_mspinspector.f90"/>
+		<File RelativePath="..\..\SRC\imod_mspinspector\imod_mspinspector_par.f90"/>
+		<File RelativePath="..\..\SRC\imod_mspinspector\imod_mspinspector_utl.f90"/></Filter>
 		<Filter Name="programs">
 		<File RelativePath="..\..\..\iMOD\SRC\imod_main\imod_prg.f90">
 			<FileConfiguration Name="Debug|Win32">
