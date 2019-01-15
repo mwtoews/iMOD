@@ -312,7 +312,7 @@ integer, intent(in), optional :: iopt1, iopt2
 character(len=256) :: line
 character(len=1024) :: errmsg
 integer :: i, j, k, ils, irow, icol, idat, irivsubsys, irivrfact,&
-           idrnsubsys, iwelsubsys, ihfbfact, nadj
+           idrnsubsys, iwelsubsys, ihfbfact, ighbsubsys, nadj
 real(kind=8) :: ppart, fct
 
 !###======================================================================
@@ -394,6 +394,23 @@ do i=1,size(param)
         if(buff(icol,irow,1).eq.0.0d0)cycle
         !## adjust for selected system
         if (ils.eq.int(rlist(idrnsubsys,j)))then
+         nadj=nadj+1
+         rlist(idat,j)=rlist(idat,j)*fct
+        endif
+     end do
+
+   case('GC') ! drain conductances
+     errmsg = 'Cannot apply PEST scaling factor for general conductance'
+     if (.not.present(iopt1)) call imod_utl_printtext(trim(errmsg),2)
+     ighbsubsys = iopt1
+     if (ighbsubsys.eq.0) call imod_utl_printtext(trim(errmsg),2)
+     idat = 5
+     do j = 1, nlist ! match sybsystem number
+        irow=rlist(2,j); icol=rlist(3,j)
+        !## not in current zone
+        if(buff(icol,irow,1).eq.0.0d0)cycle
+        !## adjust for selected system
+        if (ils.eq.int(rlist(ighbsubsys,j)))then
          nadj=nadj+1
          rlist(idat,j)=rlist(idat,j)*fct
         endif

@@ -377,7 +377,7 @@ CONTAINS
    ELSE
     !## overrule default settings for log normal
     SELECT CASE (PARAM(I)%PTYPE)
-     CASE ('KD','KH','KV','VC','SC','RC','RI','IC','II','DC','AF','MS','MC','VA','HF','EX','EP','QR')
+     CASE ('KD','KH','KV','VC','SC','RC','RI','IC','II','DC','AF','MS','MC','VA','HF','EX','EP','QR','GC')
       PARAM(I)%LOG=.TRUE.
      CASE DEFAULT
       PARAM(I)%LOG=.FALSE.    
@@ -2046,7 +2046,7 @@ END SUBROUTINE WRITEIPF
  DO I=NP,1,-1; IF(EIGW(I).GT.0.0D0)EXIT; ENDDO
  KAPPA=SQRT(EIGW(1))/SQRT(EIGW(I))
  IF(LPRINT)THEN
-  WRITE(IUPESTOUT,'(/A,3F15.7/)') 'Condition Number (kappa):',LOG(KAPPA)
+  WRITE(IUPESTOUT,'(/A,F15.7/)') 'Condition Number (kappa):',LOG(KAPPA)
   WRITE(IUPESTOUT,'(/A)') '>>> If Kappa > 15, inversion is a concern due to parameters that are highly correlated <<<'
   WRITE(IUPESTOUT,'(A/)') '>>> If Kappa > 30, inversion is highly questionable due to parameters that are highly correlated <<<'
  ENDIF 

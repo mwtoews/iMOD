@@ -900,7 +900,7 @@ call pks7mpibarrier() ! PKS
  if (.not.lipest) then
     convergedPest=.true.
  else
-  convergedPest=pestnext(lss,modwd1)
+  convergedPest=pestnext(lss,modwd1,idf)
  end if
 ! call imod_utl_closeunits()
 

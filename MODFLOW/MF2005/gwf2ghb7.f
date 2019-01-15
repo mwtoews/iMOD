@@ -34,11 +34,15 @@ c   If not, see <http://water.usgs.gov/software/help/notice/>.
         INTEGER,SAVE,POINTER  ::NPGHB,IGHBPB,NNPGHB
         CHARACTER(LEN=16),SAVE, DIMENSION(:),   POINTER     ::GHBAUX
         REAL,             SAVE, DIMENSION(:,:), POINTER     ::BNDS
+        integer,save,pointer  ::ighbsubsys,nghbsubsys                   ! dsubsys
+        integer,save,dimension(:),pointer :: ghbsubsidx                 ! dsubsys
       TYPE GWFGHBTYPE
         INTEGER,POINTER  ::NBOUND,MXBND,NGHBVL,IGHBCB,IPRGHB
         INTEGER,POINTER  ::NPGHB,IGHBPB,NNPGHB
         CHARACTER(LEN=16), DIMENSION(:),   POINTER     ::GHBAUX
         REAL,              DIMENSION(:,:), POINTER     ::BNDS
+        integer,pointer  ::ighbsubsys,nghbsubsys                        ! dsubsys
+        integer,dimension(:),pointer :: ghbsubsidx                      ! dsubsys
       END TYPE
       TYPE(GWFGHBTYPE), SAVE:: GWFGHBDAT(10)
       END MODULE GWFGHBMODULE
@@ -56,11 +60,14 @@ C     ------------------------------------------------------------------
       USE GLOBAL,       ONLY:IOUT,NCOL,NROW,NLAY,IFREFM
       USE GWFGHBMODULE, ONLY:NBOUND,MXBND,NGHBVL,IGHBCB,IPRGHB,NPGHB,
      1                       IGHBPB,NNPGHB,GHBAUX,BNDS
+     1                      ,ighbsubsys                                 ! dsubsys
 C
       CHARACTER*200 LINE
+      character     ghbsubsys*16                                        ! dsubsys
 C     ------------------------------------------------------------------
       ALLOCATE(NBOUND,MXBND,NGHBVL,IGHBCB,IPRGHB)
       ALLOCATE(NPGHB,IGHBPB,NNPGHB)
+      allocate(ighbsubsys)                                              ! dsubsys
 C
 C1------IDENTIFY PACKAGE AND INITIALIZE NBOUND.
       WRITE(IOUT,1)IN
@@ -68,6 +75,7 @@ C1------IDENTIFY PACKAGE AND INITIALIZE NBOUND.
      1   ', 5/2/2005',/,9X,'INPUT READ FROM UNIT ',I4)
       NBOUND=0
       NNPGHB=0
+      ighbsubsys=0                                                      ! dsubsys      
 C
 C2------READ MAXIMUM NUMBER OF GHB'S AND UNIT OR FLAG FOR
 C2------CELL-BY-CELL FLOW TERMS.
@@ -103,6 +111,11 @@ C3------READ AUXILIARY VARIABLES AND PRINT OPTION.
    12       FORMAT(1X,'AUXILIARY GHB VARIABLE: ',A)
          END IF
          GO TO 10
+      else if(line(istart:istop).eq.'DSUBSYS') then                     ! dsubsys
+         call urword(line,lloc,istart,istop,1,n,r,iout,in)              ! dsubsys
+         ghbsubsys=line(istart:istop)                                   ! dsubsys
+         ighbsubsys=999                                                 ! dsubsys
+         go to 10                                                       ! dsubsys
       ELSE IF(LINE(ISTART:ISTOP).EQ.'NOPRINT') THEN
          WRITE(IOUT,13)
    13    FORMAT(1X,'LISTS OF GENERAL-HEAD BOUNDARY CELLS WILL NOT BE',
@@ -110,6 +123,29 @@ C3------READ AUXILIARY VARIABLES AND PRINT OPTION.
          IPRGHB = 0
          GO TO 10
       END IF
+
+c check or DSUBSYS has been defined and AUX variabel exist              ! dsubsys
+      if (ighbsubsys.gt.0) then                                         ! dsubsys
+         ighbsubsys=0                                                   ! dsubsys
+         do i=1,naux                                                    ! dsubsys
+            if (ghbsubsys.eq.ghbaux(i)) then                            ! dsubsys
+               ighbsubsys=i                                             ! dsubsys
+            endif                                                       ! dsubsys
+         enddo                                                          ! dsubsys
+         if (ighbsubsys.eq.0) then                                      ! dsubsys
+            ! ERROR defined variable not found                          ! dsubsys
+            write(iout,'(1x,3a)') 'ERROR DSUBSYS variable ',ghbsubsys,  ! dsubsys
+     1                     ' not defined as an auxiliary variable.'     ! dsubsys
+            call ustop(' ')                                             ! dsubsys
+         else                                                           ! dsubsys
+            ! dsubsys found                                             ! dsubsys
+            write(iout,'(1x,3a)') 'DSUBSYS variabel ',ghbsubsys,        ! dsubsys
+     1                    ' used for sub-system indices.'               ! dsubsys
+            ! isubsys gets the column number of drnR in which the       ! dsubsys
+            ! sub system indices                                        ! dsubsys
+            ighbsubsys=ighbsubsys+5                                     ! dsubsys
+         endif                                                          ! dsubsys
+      endif                                                             ! dsubsys
 C3A-----THERE ARE FIVE INPUT DATA VALUES PLUS ONE LOCATION FOR
 C3A-----CELL-BY-CELL FLOW.
       NGHBVL=6+NAUX
@@ -164,6 +200,7 @@ C     ------------------------------------------------------------------
       USE GLOBAL,       ONLY:IOUT,NCOL,NROW,NLAY,IFREFM
       USE GWFGHBMODULE, ONLY:NBOUND,MXBND,NGHBVL,IPRGHB,NPGHB,
      1                       IGHBPB,NNPGHB,GHBAUX,BNDS
+     1                       ,ighbsubsys,nghbsubsys,ghbsubsidx          ! dsubsys
 C     ------------------------------------------------------------------
       CALL SGWF2GHB7PNT(IGRID)
 C
@@ -212,6 +249,9 @@ C3------IF THERE ARE NEW NON-PARAMETER GHB'S, READ THEM.
          CALL ULSTRD(NNPGHB,BNDS,1,NGHBVL,MXBND,1,IN,IOUT,
      1      'BOUND. NO. LAYER   ROW   COL     STAGE      CONDUCTANCE',
      2      GHBAUX,20,NAUX,IFREFM,NCOL,NROW,NLAY,5,5,IPRGHB)
+         call pest1alpha_list('GC',NNPGHB,BNDS,NGHBVL,MXBND,            ! IPEST
+     1                        ighbsubsys)                               ! IPEST
+
       END IF
       NBOUND=NNPGHB
 C
@@ -230,6 +270,16 @@ C
 C3------PRINT NUMBER OF GHB'S IN CURRENT STRESS PERIOD.
       WRITE (IOUT,101) NBOUND
   101 FORMAT(1X,/1X,I6,' GHB CELLS')
+
+      ! create subsystem index
+      if (associated(nghbsubsys)) deallocate(nghbsubsys)                ! dsubsys
+      allocate(nghbsubsys)                                              ! dsubsys
+      call usubscnt(drai,ndrnvl,nnpdrn,ighbsubsys,nghbsubsys)           ! dsubsys
+      if (associated(ghbsubsidx)) deallocate(ghbsubsidx)                ! dsubsys
+      allocate(ghbsubsidx(nghbsubsys))                                  ! dsubsys
+      call usubsidx(BNDS,NGHBVL,NNPGHB,ighbsubsys,ghbsubsidx,           ! dsubsys
+     1              nghbsubsys)                                         ! dsubsys
+  
 C
 C7------SAVE POINTERS TO DATA AND RETURN.
       CALL SGWF2GHB7PSV(IGRID)                                          ! DLT

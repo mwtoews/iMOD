@@ -3704,7 +3704,7 @@ C     ------------------------------------------------------------------
       REAL Eps, Fksat, Thetas
       DOUBLE PRECISION Depth(NWAV), Theta(NWAV), Flux(NWAV), Speed(NWAV)
       DOUBLE PRECISION Feps2, Totalflux, Surflux, Oldsflx, Thetar, Time,
-     +                 Delt
+     +                 Delt,div
 C     ------------------------------------------------------------------
 C     LOCAL VARIABLES
 C     ------------------------------------------------------------------
@@ -3794,9 +3794,14 @@ C4------LEAD WAVE INTERSECTS A TRAIL WAVE.
      +                fhold = (f7*Theta(jpntm2+j)+f8*Theta(jpntm3+j)-
      +                        Thetar)/(Theta(jpntm1+jj)-Thetar)
                   IF ( fhold.LT.NEARZERO ) fhold = 0.0D0
-                    CHECKTIME(j) = (Depth(jpntm1+j)-Depth(jpntm1+jj)
-     +                             *(fhold**eps_m1))/(Speed(jpntm1+jj)
-     +                             *(fhold**eps_m1)-Speed(jpntm1+j))
+                   div=Speed(jpntm1+jj)*(fhold**eps_m1)-Speed(jpntm1+j)  !## pv
+                   if(div.lt.nearzero)div=nearzero                       !## pv
+                    
+                   CHECKTIME(j) = (Depth(jpntm1+j)-Depth(jpntm1+jj)
+     +                             *(fhold**eps_m1))/div
+!                   CHECKTIME(j) = (Depth(jpntm1+j)-Depth(jpntm1+jj)
+!     +                             *(fhold**eps_m1))/(Speed(jpntm1+jj)
+!     +                             *(fhold**eps_m1)-Speed(jpntm1+j))
                 ELSE
                   j = j + 1
                   lcheck = (Ltrail(jpntm1+j).NE.0 .AND.
@@ -3869,9 +3874,14 @@ C8--------ROUTE TRAILING WAVES.
             ELSE
               jjj = jpntm2 + j
               DO k = j + jpntm1, j + Itrwave(jpntm1+j) - 1
-                Depth(k) = Depth(jjj)*(((f7*Theta(k)
-     +                     +f8*Theta(k-1)-Thetar)
-     +                     /(Theta(jjj)-Thetar))**eps_m1)
+                div=(Theta(jjj)-Thetar)            !## pv
+                if(div.lt.nearzero)div=nearzero    !## pv
+                Depth(k) = Depth(jjj)*(((f7*Theta(k)  !## pv
+     +                     +f8*Theta(k-1)-Thetar)     !## pv
+     +                     /div)**eps_m1)             !## pv
+!                Depth(k) = Depth(jjj)*(((f7*Theta(k)
+!     +                     +f8*Theta(k-1)-Thetar)
+!     +                     /(Theta(jjj)-Thetar))**eps_m1)
               END DO
               j = j + Itrwave(jpntm1+j) - 1
             END IF
@@ -3933,7 +3943,10 @@ C10-----CHECK IF WAVES INTERCEPT BEFORE TIME STEP ENDS.
 C
 C11-----ROUTE TRAIL WAVES.
               jjj = jpntm2 + j
-              ttt = 1.0D0/(Theta(jjj)-Thetar)
+              div=(Theta(jjj)-Thetar) !## pv
+              if(div.lt.nearzero)div=nearzero !## pv
+              ttt = 1.0D0/div  !## pv
+!              ttt = 1.0D0/(Theta(jjj)-Thetar)  
               DO k = j+jpntm1, j + Itrwave(jpntm1+j) - 1
                 Depth(k) = Depth(jjj)*(((f7*Theta(k)
      +                     +f8*Theta(k-1)-Thetar)*ttt)**eps_m1)
@@ -4140,7 +4153,12 @@ C         DURING REMAINING TIME.
 C
 C18-----ROUTE TRAILING WAVES.
               jjj = jpntm2 + j
-              ttt = 1.0D0/(Theta(jjj)-Thetar)
+              !## avoid divide by zero (deltares pv)
+              if(Theta(jjj)-Thetar.LT.NEARZERO)then  !## pv 
+               ttt=1.0d0/nearzero                    !## pv 
+              else                                   !## pv 
+               ttt = 1.0D0/(Theta(jjj)-Thetar)
+              endif                                  !## pv 
               DO k = j+jpntm1, j + Itrwave(jpntm1+j) - 1
                 Depth(k) = Depth(jjj)*(((f7*Theta(k)
      +                     +f8*Theta(k-1)-Thetar)*ttt)**eps_m1)
