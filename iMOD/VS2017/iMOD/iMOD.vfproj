@@ -355,6 +355,10 @@
 		<Filter Name="imod_movie">
 		<File RelativePath="..\..\SRC\imod_movie\imod_movie.f90"/>
 		<File RelativePath="..\..\SRC\imod_movie\imod_movie_par.f90"/></Filter>
+		<Filter Name="imod_mspinspector">
+		<File RelativePath="..\..\SRC\imod_mspinspector\imod_mspinspector.f90"/>
+		<File RelativePath="..\..\SRC\imod_mspinspector\imod_mspinspector_par.f90"/>
+		<File RelativePath="..\..\SRC\imod_mspinspector\imod_mspinspector_utl.f90"/></Filter>
 		<Filter Name="imod_nc2idf">
 		<File RelativePath="..\..\..\iMOD\SRC\imod_nc2idf\imod_nc2idf.f90">
 			<FileConfiguration Name="Release|x64" ExcludedFromBuild="true"/>
@@ -514,10 +518,10 @@
 		<File RelativePath="..\..\SRC\imod_wbal\imod_wbal_graphics.f90"/>
 		<File RelativePath="..\..\..\iMOD\SRC\imod_wbal\imod_wbal_par.f90"/>
 		<File RelativePath="..\..\SRC\imod_wbal\imod_wbal_utl.f90"/></Filter>
-		<Filter Name="imod_mspinspector">
-		<File RelativePath="..\..\SRC\imod_mspinspector\imod_mspinspector.f90"/>
-		<File RelativePath="..\..\SRC\imod_mspinspector\imod_mspinspector_par.f90"/>
-		<File RelativePath="..\..\SRC\imod_mspinspector\imod_mspinspector_utl.f90"/></Filter>
+		<Filter Name="imod_uzfanalyser">
+		<File RelativePath="..\..\SRC\imod_uzfanalyser\imod_uzfanalyser.f90"/>
+		<File RelativePath="..\..\SRC\imod_uzfanalyser\imod_uzfanalyser_par.f90"/>
+		<File RelativePath="..\..\SRC\imod_uzfanalyser\imod_uzfanalyser_utl.f90"/></Filter>
 		<Filter Name="programs">
 		<File RelativePath="..\..\..\iMOD\SRC\imod_main\imod_prg.f90">
 			<FileConfiguration Name="Debug|Win32">

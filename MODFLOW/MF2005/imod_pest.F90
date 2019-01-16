@@ -399,7 +399,7 @@ do i=1,size(param)
         endif
      end do
 
-   case('GC') ! drain conductances
+   case('GC') ! general head conductances
      errmsg = 'Cannot apply PEST scaling factor for general conductance'
      if (.not.present(iopt1)) call imod_utl_printtext(trim(errmsg),2)
      ighbsubsys = iopt1

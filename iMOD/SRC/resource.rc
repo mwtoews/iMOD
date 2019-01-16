@@ -8,7 +8,7 @@
 //
 // Winteracter resource script. 
 //
-// Modified : 11/Jan/2019 21:06:49
+// Modified : 16/Jan/2019 15:36:56
 //
 ///////////////////////////////////////////////////
 //
@@ -1247,6 +1247,8 @@
 #define ID_DIPESTANALYSE_SETTINGS         408
 #define ID_MSPANALYSER                  40326
 #define ID_DMSPANALYSER                   409
+#define ID_UZFANALYSER                  40327
+#define ID_DUZFANALYSER                   410
 
 ///////////////////////////////////////////////////
 //
@@ -11963,6 +11965,28 @@ BEGIN
 ,0
 END
 
+ID_DUZFANALYSER DIALOG 0, 0,  292,  277
+STYLE WS_POPUP | WS_BORDER | WS_DLGFRAME | WS_SYSMENU | DS_3DLOOK | DS_MODALFRAME
+FONT    8, "Arial"
+CAPTION "UZF Analyser"
+BEGIN
+    CONTROL "Close",IDCANCEL,"BUTTON",WS_CHILD | WS_VISIBLE | WS_GROUP | WS_TABSTOP | BS_PUSHBUTTON | BS_TEXT | BS_FLAT,  236,  248,   40,   14
+    CONTROL "Help ...",IDHELP,"BUTTON",WS_CHILD | WS_VISIBLE | WS_GROUP | WS_TABSTOP | BS_PUSHBUTTON | BS_TEXT | BS_FLAT,  192,  248,   40,   14
+    CONTROL "OK",IDOK3,"BUTTON",WS_CHILD | WS_VISIBLE | WS_GROUP | WS_TABSTOP | BS_PUSHBUTTON | BS_TEXT | BS_FLAT,   26,  248,   40,   14
+    CONTROL "",IDF_PICTURE1,"STATIC",WS_CHILD | WS_VISIBLE | WS_GROUP | SS_WHITERECT | SS_NOTIFY | SS_CENTERIMAGE,   26,   24,  236,  208
+    CONTROL "Open ...",ID_OPEN,"BUTTON",WS_CHILD | WS_VISIBLE | WS_GROUP | WS_TABSTOP | BS_PUSHBUTTON | BS_TEXT | BS_FLAT,   20,    8,   40,   14
+    CONTROL "",IDF_MENU1,"COMBOBOX",WS_CHILD | WS_VISIBLE | WS_VSCROLL | WS_GROUP | WS_TABSTOP | CBS_DROPDOWNLIST | CBS_HASSTRINGS,  116,    4,  134,  188
+    CONTROL "dates",IDF_LABEL1,"STATIC",WS_CHILD | WS_VISIBLE | WS_GROUP | SS_LEFT,   72,    8,   40,    8
+END
+
+ID_DUZFANALYSER RCDATA
+BEGIN
+"[Dialog] \n"
+" 0     0 0 1 \n"
+"[Menus] \n"
+,0
+END
+
 ///////////////////////////////////////////////////
 //
 // Menus
@@ -12639,6 +12663,7 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "iPEST Analyser ...",                       ID_IPESTANALYSER
         MENUITEM "MetaSWAP Analyser ...",                    ID_MSPANALYSER
+        MENUITEM "UZF Analyser ...",                         ID_UZFANALYSER
         POPUP "Water Balance"
         BEGIN
             MENUITEM "Generate &Water Balance ...",              ID_WBAL_GENERATE
@@ -12708,7 +12733,7 @@ ID_PLUGIN_TIMECHECK,5,8,1,0,
 ID_MODELIMPORT,5,10,0,
 ID_PARTICLETRACKING,5,16,0,
 ID_IPS,5,16,3,0,
-ID_WBAL_ALL,5,20,0,
+ID_WBAL_ALL,5,21,0,
 ID_HELPMAIN,6,0,
 ID_ACTIVEDEBUG,6,6,0,
 0
@@ -12903,6 +12928,7 @@ ID_OPENFILES,"List Files that are currently opened by iMOD\0",
 ID_GENEXPORT,"Load in a BINARY/ASCII GEN and Export it to BINARY/ASCII\0",
 ID_IPESTANALYSER,"Start the iPEST Analyser\0",
 ID_MSPANALYSER,"Start the MetaSWAP Analyser\0",
+ID_UZFANALYSER,"Start the UZF Analyser to Display Moisture Profiles\0",
 0
 END
 
@@ -13490,4 +13516,4 @@ END
 //*WI* FILENAME    resource.f90
 //*WI* FMODNAME    RESOURCE
 //*WI* LASTTYPE        2
-//*WI* LASTRES       309
+//*WI* LASTRES       310

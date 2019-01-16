@@ -111,7 +111,7 @@ C3------READ AUXILIARY VARIABLES AND PRINT OPTION.
    12       FORMAT(1X,'AUXILIARY GHB VARIABLE: ',A)
          END IF
          GO TO 10
-      else if(line(istart:istop).eq.'DSUBSYS') then                     ! dsubsys
+      else if(line(istart:istop).eq.'GSUBSYS') then                     ! dsubsys
          call urword(line,lloc,istart,istop,1,n,r,iout,in)              ! dsubsys
          ghbsubsys=line(istart:istop)                                   ! dsubsys
          ighbsubsys=999                                                 ! dsubsys
@@ -134,12 +134,12 @@ c check or DSUBSYS has been defined and AUX variabel exist              ! dsubsy
          enddo                                                          ! dsubsys
          if (ighbsubsys.eq.0) then                                      ! dsubsys
             ! ERROR defined variable not found                          ! dsubsys
-            write(iout,'(1x,3a)') 'ERROR DSUBSYS variable ',ghbsubsys,  ! dsubsys
+            write(iout,'(1x,3a)') 'ERROR GSUBSYS variable ',ghbsubsys,  ! dsubsys
      1                     ' not defined as an auxiliary variable.'     ! dsubsys
             call ustop(' ')                                             ! dsubsys
          else                                                           ! dsubsys
-            ! dsubsys found                                             ! dsubsys
-            write(iout,'(1x,3a)') 'DSUBSYS variabel ',ghbsubsys,        ! dsubsys
+            ! gsubsys found                                             ! dsubsys
+            write(iout,'(1x,3a)') 'GSUBSYS variabel ',ghbsubsys,        ! dsubsys
      1                    ' used for sub-system indices.'               ! dsubsys
             ! isubsys gets the column number of drnR in which the       ! dsubsys
             ! sub system indices                                        ! dsubsys
