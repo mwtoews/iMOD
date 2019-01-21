@@ -3512,7 +3512,8 @@ IRLOOP: DO IROW=1,PRJIDF%NROW; DO ICOL=1,PRJIDF%NCOL
   !## uzf
 !NUZTOP=1 !## recharge specified to top cell
   CASE (18); NUZGAG=0; IRUNFLG=0; NUZTOP=1
-!   WRITE(IU,'(A)') 'SPECIFYTHTR'
+   !## define initial water content
+   WRITE(IU,'(A)') 'SPECIFYTHTI'
    LINE='NaN1#,2,'//TRIM(ITOS(IRUNFLG))//',1,'//TRIM(ITOS(-IUZFCB1))//',0,20,50,'//TRIM(ITOS(NUZGAG))//',0.5'
    IF(PBMAN%IFORMAT.EQ.2)WRITE(IU,'(A)') TRIM(LINE)
    
@@ -3855,7 +3856,6 @@ IRLOOP: DO IROW=1,PRJIDF%NROW; DO ICOL=1,PRJIDF%NCOL
       END SELECT
       !## skip uzf package info for coming stress-periods
       IF(KTOP.LE.4.AND.IPER.GT.1)CYCLE
-
      !## evt
      CASE (24) 
       SCL_D=1; SCL_U=2
