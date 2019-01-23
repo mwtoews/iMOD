@@ -30,12 +30,51 @@ USE MOD_MSPINSPECTOR_PAR
 CONTAINS
 
  !###======================================================================
+ SUBROUTINE MSPINSPECTOR_ALLOCATE()
+ !###======================================================================
+ IMPLICIT NONE
+
+ END SUBROUTINE MSPINSPECTOR_ALLOCATE
+ 
+ !###======================================================================
+ LOGICAL FUNCTION MSPINSPECTOR_ALLOCATE_DXC()
+ !###======================================================================
+ IMPLICIT NONE
+ INTEGER :: IOS
+ 
+ MSPINSPECTOR_ALLOCATE_DXC=.FALSE.
+ 
+ NULLIFY(DXC%ILAY); ALLOCATE(DXC%ILAY(DXC%MXID),STAT=IOS); IF(IOS.NE.0)RETURN
+ NULLIFY(DXC%IROW); ALLOCATE(DXC%IROW(DXC%MXID),STAT=IOS); IF(IOS.NE.0)RETURN
+ NULLIFY(DXC%ICOL); ALLOCATE(DXC%ICOL(DXC%MXID),STAT=IOS); IF(IOS.NE.0)RETURN
+ NULLIFY(DXC%ID);   ALLOCATE(DXC%ID(DXC%MXID)  ,STAT=IOS); IF(IOS.NE.0)RETURN
+ 
+ MSPINSPECTOR_ALLOCATE_DXC=.TRUE.
+ 
+ END FUNCTION MSPINSPECTOR_ALLOCATE_DXC
+
+ !###======================================================================
  SUBROUTINE MSPINSPECTOR_DEALLOCATE()
  !###======================================================================
  IMPLICIT NONE
 
- END SUBROUTINE MSPINSPECTOR_DEALLOCATE
+ CALL MSPINSPECTOR_DEALLOCATE_DXC()
  
+ END SUBROUTINE MSPINSPECTOR_DEALLOCATE
+
+ !###======================================================================
+ SUBROUTINE MSPINSPECTOR_DEALLOCATE_DXC()
+ !###======================================================================
+ IMPLICIT NONE
+
+ IF(ASSOCIATED(DXC%ILAY))DEALLOCATE(DXC%ILAY)
+ IF(ASSOCIATED(DXC%IROW))DEALLOCATE(DXC%IROW)
+ IF(ASSOCIATED(DXC%ICOL))DEALLOCATE(DXC%ICOL)
+ IF(ASSOCIATED(DXC%ID))  DEALLOCATE(DXC%ID)
+ DXC%MXID=0
+ 
+ END SUBROUTINE MSPINSPECTOR_DEALLOCATE_DXC
+
  !###======================================================================
  SUBROUTINE MSPINSPECTOR_CLOSE()
  !###======================================================================

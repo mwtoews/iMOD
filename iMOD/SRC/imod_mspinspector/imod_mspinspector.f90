@@ -26,6 +26,7 @@ USE WINTERACTER
 USE RESOURCE
 USE MOD_MSPINSPECTOR_PAR
 USE MOD_MSPINSPECTOR_UTL
+USE MOD_UTL, ONLY : UTL_GETUNIT
 USE MOD_MAIN_UTL, ONLY : MAIN_UTL_INACTMODULE
 
 CONTAINS
@@ -37,29 +38,198 @@ CONTAINS
  TYPE(WIN_MESSAGE),INTENT(INOUT) :: MESSAGE
  INTEGER,INTENT(IN) :: ITYPE
  
+ SELECT CASE (MESSAGE%WIN)
+
+  CASE (ID_DMSPANALYSER_TAB1); CALL MSPINSPECTOR_TAB1(ITYPE,MESSAGE)
+ 
+  CASE (ID_DMSPANALYSER_TAB2); CALL MSPINSPECTOR_TAB2(ITYPE,MESSAGE)
+ 
+  CASE (ID_DMSPANALYSER_TAB3); CALL MSPINSPECTOR_TAB3(ITYPE,MESSAGE)
+ 
+  CASE (ID_DMSPANALYSER_TAB4); CALL MSPINSPECTOR_TAB4(ITYPE,MESSAGE)
+ 
+  CASE (ID_DMSPANALYSER)
+   SELECT CASE (ITYPE)
+
+    !## case tab changed
+    CASE (TABCHANGED)
+     SELECT CASE (MESSAGE%VALUE1)
+     END SELECT
+
+    !## case field changed
+    CASE (FIELDCHANGED) 
+     CALL MSPINSPECTOR_MAIN_FIELDS()
+
+    !## pushbutton
+    CASE (PUSHBUTTON)
+     SELECT CASE (MESSAGE%VALUE1)
+      CASE (IDHELP)
+
+      CASE (IDCANCEL)
+       CALL MSPINSPECTOR_CLOSE()
+
+     END SELECT
+   END SELECT
+ END SELECT
+ 
+ END SUBROUTINE MSPINSPECTOR_MAIN
+
+ !###======================================================================
+ SUBROUTINE MSPINSPECTOR_TAB1(ITYPE,MESSAGE)
+ !###======================================================================
+ IMPLICIT NONE
+ TYPE(WIN_MESSAGE),INTENT(INOUT) :: MESSAGE
+ INTEGER,INTENT(IN) :: ITYPE
+
  SELECT CASE (ITYPE)
 
   !## case field changed
   CASE (FIELDCHANGED)
-   SELECT CASE (MESSAGE%VALUE1)
-   END SELECT
-  
+   CALL MSPINSPECTOR_TAB1_FIELDS()
+
+  !## pushbutton
   CASE (PUSHBUTTON)
    SELECT CASE (MESSAGE%VALUE1)
-    CASE (IDHELP)
-    CASE (IDCANCEL)
-     CALL MSPINSPECTOR_CLOSE()
+    CASE (ID_OPEN)
+     CALL MSPINSPECTOR_OPENFILES()
    END SELECT
  END SELECT
+ 
+ END SUBROUTINE MSPINSPECTOR_TAB1
 
- END SUBROUTINE MSPINSPECTOR_MAIN
+ !###======================================================================
+ SUBROUTINE MSPINSPECTOR_TAB2(ITYPE,MESSAGE)
+ !###======================================================================
+ IMPLICIT NONE
+ TYPE(WIN_MESSAGE),INTENT(INOUT) :: MESSAGE
+ INTEGER,INTENT(IN) :: ITYPE
 
+ SELECT CASE (ITYPE)
+
+  !## case field changed
+  CASE (FIELDCHANGED)
+   CALL MSPINSPECTOR_TAB2_FIELDS()
+
+  !## pushbutton
+  CASE (PUSHBUTTON)
+   SELECT CASE (MESSAGE%VALUE1)
+   END SELECT
+ END SELECT
+ 
+ END SUBROUTINE MSPINSPECTOR_TAB2
+ 
+  !###======================================================================
+ SUBROUTINE MSPINSPECTOR_TAB3(ITYPE,MESSAGE)
+ !###======================================================================
+ IMPLICIT NONE
+ TYPE(WIN_MESSAGE),INTENT(INOUT) :: MESSAGE
+ INTEGER,INTENT(IN) :: ITYPE
+
+ SELECT CASE (ITYPE)
+
+  !## case field changed
+  CASE (FIELDCHANGED)
+   CALL MSPINSPECTOR_TAB3_FIELDS()
+
+  !## pushbutton
+  CASE (PUSHBUTTON)
+   SELECT CASE (MESSAGE%VALUE1)
+   END SELECT
+ END SELECT
+ 
+ END SUBROUTINE MSPINSPECTOR_TAB3
+ 
+  !###======================================================================
+ SUBROUTINE MSPINSPECTOR_TAB4(ITYPE,MESSAGE)
+ !###======================================================================
+ IMPLICIT NONE
+ TYPE(WIN_MESSAGE),INTENT(INOUT) :: MESSAGE
+ INTEGER,INTENT(IN) :: ITYPE
+
+ SELECT CASE (ITYPE)
+
+  !## case field changed
+  CASE (FIELDCHANGED)
+   CALL MSPINSPECTOR_TAB4_FIELDS()
+
+  !## pushbutton
+  CASE (PUSHBUTTON)
+   SELECT CASE (MESSAGE%VALUE1)
+   END SELECT
+ END SELECT
+ 
+ END SUBROUTINE MSPINSPECTOR_TAB4
+ 
  !###======================================================================
  SUBROUTINE MSPINSPECTOR_OPENFILES()
  !###======================================================================
  IMPLICIT NONE
+ INTEGER :: IU
+ LOGICAL :: LEX
+ 
+ !## get foldername
+ ROOT='D:\IMOD-MODELS\CGO-MSWP'; MNAME='A27'
 
+ !## open files
+ IF(.NOT.MSPINSPECTOR_OPENFILES_DXC(IU))THEN
+  INQUIRE(UNIT=IU,OPENED=LEX); IF(LEX)CLOSE(IU)
+  CALL WMESSAGEBOX(OKONLY,EXCLAMATIONICON,COMMONOK,'iMOD cannot open file '//CHAR(13)// &
+   TRIM(ROOT)//'\MF2005_TMP\'//TRIM(MNAME)//'.DXC','Error'); RETURN
+ ENDIF
+! CALL MSPINSPECTOR_OPENFILES_MOD2SVAT(ROOT)
+ 
  END SUBROUTINE MSPINSPECTOR_OPENFILES
+
+ !###======================================================================
+ LOGICAL FUNCTION MSPINSPECTOR_OPENFILES_DXC(IU)
+ !###======================================================================
+ IMPLICIT NONE
+ INTEGER,INTENT(OUT) :: IU
+ INTEGER :: I,IOS
+
+ MSPINSPECTOR_OPENFILES_DXC=.FALSE.
+
+ !## allocate memory - mainly number of svats
+ IU=UTL_GETUNIT(); OPEN(IU,FILE=TRIM(ROOT)//'\MF2005_TMP\'//TRIM(MNAME)//'.DXC',STATUS='OLD',ACTION='READ',IOSTAT=IOS)
+ IF(IOS.NE.0)RETURN
+ READ(IU,*,IOSTAT=IOS) DXC%MXID; IF(IOS.NE.0)RETURN
+ READ(IU,*,IOSTAT=IOS) DXC%MXID; IF(IOS.NE.0)RETURN
+ IF(.NOT.MSPINSPECTOR_ALLOCATE_DXC())RETURN
+ DO I=1,DXC%MXID 
+  READ(IU,*,IOSTAT=IOS) DXC%ILAY(I),DXC%IROW(I),DXC%ICOL(I),DXC%ID(I)
+  IF(IOS.NE.0)RETURN
+ ENDDO
+ CLOSE(IU)
+ 
+ !## netwerk inlezen ... MET coordinaten netwerk uit iets anders ... liefst een idf inlezen
+
+ MSPINSPECTOR_OPENFILES_DXC=.TRUE.
+ 
+ END FUNCTION MSPINSPECTOR_OPENFILES_DXC
+
+ !###======================================================================
+ SUBROUTINE MSPINSPECTOR_OPENFILES_MOD2SVAT(ROOT)
+ !###======================================================================
+ IMPLICIT NONE
+ CHARACTER(LEN=*),INTENT(IN) :: ROOT
+ INTEGER :: IU
+
+ !## allocate memory - mainly number of svats
+ IU=UTL_GETUNIT(); OPEN(IU,FILE=TRIM(ROOT)//'MOD2SVAT.INP',STATUS='OLD',ACTION='READ')
+! DO I=1,2
+!  N=N+1
+!  DO
+!   READ(IU,'(I10,2X,I10,I5)',IOSTAT=IOS) UNID,NUND,LYBE
+!   IF(IOS.NE.0)EXIT; N=N+1
+!   IF(I.EQ.2)THEN
+!!    (N)%UNID=UNID
+!!    (N)%NUND=NUND
+!!    (N)%LYBE=LYBE
+!   ENDIF
+!  ENDDO
+! ENDDO
+ 
+ END SUBROUTINE MSPINSPECTOR_OPENFILES_MOD2SVAT
 
  !###======================================================================
  SUBROUTINE MSPINSPECTOR_PLOTLOC() !X,Y,ICODE)
@@ -68,11 +238,6 @@ CONTAINS
 ! INTEGER,INTENT(IN) :: ICODE
 ! REAL(KIND=DP_KIND),INTENT(IN) :: X,Y
 ! INTEGER :: I,IROW,ICOL,N
-
- !!## nothing to show
- !IF(ISHOW.EQ.0)RETURN
- !IF(ISHOW.EQ.1)N=1
- !IF(ISHOW.EQ.2)N=NIDFS
  !
  !!## remove all rectangles
  !IF(ICODE.EQ.0)THEN
@@ -98,11 +263,39 @@ CONTAINS
  END SUBROUTINE MSPINSPECTOR_PLOTLOC
 
  !###======================================================================
- SUBROUTINE MSPINSPECTOR_FIELDS()
+ SUBROUTINE MSPINSPECTOR_MAIN_FIELDS()
  !###======================================================================
  IMPLICIT NONE
 
- END SUBROUTINE MSPINSPECTOR_FIELDS
+ END SUBROUTINE MSPINSPECTOR_MAIN_FIELDS
+
+ !###======================================================================
+ SUBROUTINE MSPINSPECTOR_TAB1_FIELDS()
+ !###======================================================================
+ IMPLICIT NONE
+
+ END SUBROUTINE MSPINSPECTOR_TAB1_FIELDS
+
+ !###======================================================================
+ SUBROUTINE MSPINSPECTOR_TAB2_FIELDS()
+ !###======================================================================
+ IMPLICIT NONE
+
+ END SUBROUTINE MSPINSPECTOR_TAB2_FIELDS
+
+ !###======================================================================
+ SUBROUTINE MSPINSPECTOR_TAB3_FIELDS()
+ !###======================================================================
+ IMPLICIT NONE
+
+ END SUBROUTINE MSPINSPECTOR_TAB3_FIELDS
+
+ !###======================================================================
+ SUBROUTINE MSPINSPECTOR_TAB4_FIELDS()
+ !###======================================================================
+ IMPLICIT NONE
+
+ END SUBROUTINE MSPINSPECTOR_TAB4_FIELDS
 
  !###======================================================================
  SUBROUTINE MSPINSPECTOR_INIT()
@@ -121,8 +314,7 @@ CONTAINS
 
  CALL WMENUSETSTATE(ID_MSPANALYSER,2,1)
 
- CALL WDIALOGLOAD(ID_DMSPANALYSER,ID_DMSPANALYSER)
- CALL WDIALOGSHOW(-1,-1,0,2)
+ CALL WDIALOGLOAD(ID_DMSPANALYSER,ID_DMSPANALYSER); CALL WDIALOGSHOW(-1,-1,0,2)
 
  END SUBROUTINE MSPINSPECTOR_INIT
    
