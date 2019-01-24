@@ -600,6 +600,10 @@ C use LPF SC2, Iunitlpf>0
                 ELSE IF ( ibndflg.EQ.0 ) THEN
                   isyflg = 0
                 END IF
+                test = THTR(ncth, nrth)
+                if(test.lt.0.0)then
+                 write(*,'(/a/)') 'Residual Water Content lt 0.0'; stop
+                endif
                 test = (THTI(ncth, nrth)-THTR(ncth, nrth))
                 IF ( test.LT.CLOSEZERO ) THTI(ncth,nrth) = 
      +               THTR(ncth,nrth)
@@ -1094,7 +1098,8 @@ C         CONTENT.
               DO ncck = 1, NUZCL
                 IF ( IUZFBND(ncck, nrck).LT.1 .AND. WCWILT(ncck, nrck)
      +               .GT.0 ) WCWILT(ncck, nrck) = 0.0
-                IF ( iss.NE.0 .AND. IUZFBND(ncck, nrck).GT.0 ) THEN
+!                IF ( iss.NE.0 .AND.   !## pv
+                IF(IUZFBND(ncck, nrck).GT.0 ) THEN
                   IF ( WCWILT(ncck, nrck).LT.THTR(ncck, nrck)+ZEROD9 )
      +                 THEN
                     WRITE (IOUT, 9014) nrck, ncck
