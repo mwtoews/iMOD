@@ -94,7 +94,8 @@ CONTAINS
  N=0; IF(ASSOCIATED(PEST%S_PERIOD))  N=SIZE(PEST%S_PERIOD)
  M=0; IF(ASSOCIATED(PEST%B_FRACTION))M=SIZE(PEST%B_FRACTION)
  
- LINE=TRIM(ITOS(PEST%PE_MXITER))         //','//TRIM(RTOS(PEST%PE_STOP,'G',7))     //','// &
+ I=PEST%PE_MXITER; IF(PBMAN%IPESTP.EQ.1)I=-1
+ LINE=TRIM(ITOS(I))                      //','//TRIM(RTOS(PEST%PE_STOP,'G',7))     //','// &
       TRIM(RTOS(PEST%PE_SENS,'G',7))     //','//TRIM(ITOS(N))                      //','// &
       TRIM(ITOS(M))                      //','//TRIM(RTOS(PEST%PE_TARGET(1),'G',7))//','// &
       TRIM(RTOS(PEST%PE_TARGET(2),'G',7))//','//TRIM(ITOS(PEST%PE_SCALING-1))      //','// &

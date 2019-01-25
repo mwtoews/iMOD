@@ -148,7 +148,7 @@ CONTAINS
   ENDIF
   CALL WINDOWCLOSE(); STOP
  ENDIF
- !CALL WINDOWCLOSE()
+ CALL WINDOWCLOSE()
  
  !## open Unit for Same Line Printing of echo (is equal to screen or '*')
  OPEN(UNIT=6,CARRIAGECONTROL='fortran')    
@@ -1434,6 +1434,9 @@ CONTAINS
   !## overrule system in case of ipest - ssystem=sumsystem
   IF(PBMAN%IPEST.EQ.1)PBMAN%SSYSTEM=0
 
+  CALL WINDOWOPEN(FLAGS=SYSMENUON+HIDEWINDOW+STATUSBAR)
+  CALL WINDOWSTATUSBARPARTS(4,(/2000,2000,750,-1/),(/1,1,1,1/))
+
   IF(UTL_READINITFILE('NETWORKIDF',LINE,IU,1))THEN
 
    PBMAN%IWINDOW=2; PBMAN%ISUBMODEL=1
@@ -1526,6 +1529,7 @@ CONTAINS
   WRITE(*,'(/A/)') 'Stop not appropriate conversion mode found'; STOP
 
  ENDIF
+ CALL WINDOWCLOSE()
 
  END SUBROUTINE IMODBATCH_RUNFILE
  
