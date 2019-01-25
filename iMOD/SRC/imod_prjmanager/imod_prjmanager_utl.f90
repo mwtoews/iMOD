@@ -406,10 +406,8 @@ CONTAINS
   PBMAN%DWEL=1
   PBMAN%DISG=1
   PBMAN%ISAVEENDDATE=0
-  PBMAN%IPEST=0
+  PBMAN%IPEST=0; IF(LPST)PBMAN%IPEST=1
  ENDIF
-
- IF(LPST)PBMAN%IPEST=1
  
  IF(.NOT.ASSOCIATED(PBMAN%ILAY))THEN
   ALLOCATE(PBMAN%ILAY(PRJNLAY))
@@ -1891,7 +1889,7 @@ JLOOP: DO K=1,SIZE(TOPICS)
   CLOSE(IU)  
  ENDIF
 
- !## simulate batch-file, inclusive pause statement.
+ !## simulate batch-file
  IU=UTL_GETUNIT()
  CALL OSD_OPEN(IU,FILE=TRIM(DIR)//'\RUN.BAT',STATUS='REPLACE',ACTION='WRITE,DENYREAD',IOSTAT=IOS)
  IF(IOS.NE.0)THEN
@@ -1942,6 +1940,7 @@ JLOOP: DO K=1,SIZE(TOPICS)
  WRITE(IU,'(A)') 'REM =========================='
  WRITE(IU,'(A)') 'REM Run Script iMOD '//TRIM(RVERSION)
  WRITE(IU,'(A)') 'REM =========================='
+
  !## namfile
  IF(IMODE.EQ.1)THEN
 
@@ -1954,11 +1953,20 @@ JLOOP: DO K=1,SIZE(TOPICS)
     WRITE(IU,'(/A/)') '"'//TRIM(PREFVAL(8))//'" -components components.inp -ipest ".\modelinput\'//TRIM(MNAME)//'.pst1"' 
    ENDIF
   ELSE
-   IF(PBMAN%IPEST.EQ.0)THEN
+   IF(PBMAN%IPEST+PBMAN%IPESTP.EQ.0)THEN
     IF(PBMAN%IFORMAT.EQ.2)WRITE(IU,'(/A/)') '"'//TRIM(PREFVAL(8))//'" "'//TRIM(MNAME)//'.nam"' 
     IF(PBMAN%IFORMAT.EQ.3)WRITE(IU,'(/A/)') '"'//TRIM(PREFVAL(8))//'"' 
-   ELSE
+   !## ipest
+   ELSEIF(PBMAN%IPEST.EQ.1)THEN
     WRITE(IU,'(/A/)') '"'//TRIM(PREFVAL(8))//'" "'//TRIM(MNAME)//'.nam" -ipest ".\modelinput\'//TRIM(MNAME)//'.pst1"'
+   !## parrallel ipest
+   ELSEIF(PBMAN%IPESTP.EQ.1)THEN
+    DO I=1,SIZE(PEST%PARAM)
+     IF(PEST%PARAM(I)%PACT.EQ.1)THEN
+      WRITE(IU,'(/A/)') 'start "'//TRIM(PREFVAL(8))//'" "'//TRIM(MNAME)//'_P#'//TRIM(ITOS(I))//'.nam" -ipest ".\modelinput\'// &
+                                   TRIM(MNAME)//'_P#'//TRIM(ITOS(I))//'.pst1"'
+     ENDIF
+    ENDDO
    ENDIF
   ENDIF
 
@@ -2257,7 +2265,9 @@ JLOOP: DO K=1,SIZE(TOPICS)
  IF(ASSOCIATED(PEST%B_FRACTION)) DEALLOCATE(PEST%B_FRACTION)
  IF(ASSOCIATED(PEST%B_BATCHFILE))DEALLOCATE(PEST%B_BATCHFILE)
  IF(ASSOCIATED(PEST%B_OUTFILE))  DEALLOCATE(PEST%B_OUTFILE)
-
+ IF(ASSOCIATED(PEST%IDFFILES))   DEALLOCATE(PEST%IDFFILES)
+ IF(ASSOCIATED(PEST%MEASURES))   DEALLOCATE(PEST%MEASURES) 
+ 
  END SUBROUTINE PMANAGER_DEALLOCATE_PEST
 
  !###======================================================================
