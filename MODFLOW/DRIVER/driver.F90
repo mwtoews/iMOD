@@ -910,7 +910,6 @@ call pks7mpibarrier() ! PKS
  if (.not.lipest) then
     convergedPest=.true.
  else
-!  call mf2005_GetSavePath_TS(tssavepath)
   convergedPest=pestnext(lss,tssavepath,idf)
  end if
 ! call imod_utl_closeunits()

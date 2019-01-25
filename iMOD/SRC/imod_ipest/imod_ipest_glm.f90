@@ -22,20 +22,82 @@
 !!
 MODULE MOD_IPEST_GLM
 
+USE WINTERACTER
+USE MOD_PMANAGER_PAR, ONLY : PEST
+USE MOD_UTL, ONLY  : UTL_GETUNIT,UTL_CAP,ITOS
+USE MOD_IPEST_GLM_PAR
+
 CONTAINS
 
  !#####=================================================================
- SUBROUTINE IPEST_GLM_MAIN(RUNBAT)
+ SUBROUTINE IPEST_GLM_MAIN(DIR)
  !#####=================================================================
  IMPLICIT NONE
- CHARACTER(LEN=*),INTENT(IN) :: RUNBAT
+ INTEGER,PARAMETER :: NCSECS=5000
+ CHARACTER(LEN=*),INTENT(IN) :: DIR
+ INTEGER :: I,J,ITER,N,IFLAGS,ISTATUS,IEXCOD,IU,IOS,ITYPE
+ TYPE(WIN_MESSAGE) :: MESSAGE
+
+ !## executes on commandtool such that commands alike 'dir' etc. works
+ IFLAGS=PROCCMDPROC
+ 
+ N=0; DO I=1,SIZE(PEST%PARAM); IF(PEST%PARAM(I)%PACT.EQ.0)CYCLE; N=N+1; ENDDO
+ CALL IPEST_GLM_ALLOCATE(N)
+ N=0; DO I=1,SIZE(PEST%PARAM); IF(PEST%PARAM(I)%PACT.EQ.0)CYCLE; N=N+1; RN(N)=TRIM(DIR)//'\RUN_P#'//TRIM(ITOS(I))//'.BAT'; ENDDO
+
+ CALL WMESSAGEENABLE(TIMEREXPIRED,1)
+ DO ITER=1,PEST%PE_MXITER
+
+  !## start processes
+  DO I=1,SIZE(RN)
+   CALL IOSCOMMAND(TRIM(RN(I)),IFLAGS=IFLAGS,IDPROC=IPROC(:,I)) !,IEXCOD=IEXCOD)
+   IF(WINFOERROR(1).EQ.ERROSCOMMAND) THEN
+    WRITE(*,'(A)') 'Failed to start model P#'//TRIM(ITOS(I))
+   ENDIF
+  ENDDO
+
+  !## wait until all finished
+  CALL WMESSAGETIMER(NCSECS,IREPEAT=1)
+  DO
+   CALL WMESSAGE(ITYPE,MESSAGE)
+   !## timer expired
+   IF(ITYPE.EQ.TIMEREXPIRED)THEN
+
+    N=0; DO I=1,SIZE(RN)
+     !## all handled process
+     IF(IPROC(1,I)+IPROC(2,I).EQ.0)CYCLE
+ 
+     CALL IOSCOMMANDCHECK(IPROC(:,I),ISTATUS,IEXCOD=IEXCOD)
+     !## stopped running
+     IF(ISTATUS.EQ.0)THEN
+      !## error occured 
+      IF(IEXCOD.NE.0)THEN
+       WRITE(*,*) 'ERROR OCCURED RUNNING MODEL P#'//TRIM(ITOS(I))
+      ENDIF
+      !## set part of objective function
+      !CALL IPEST_GLM_GETJ()
+      IPROC(:,I)=0
+     ELSE
+      N=N+1
+     ENDIF
+    ENDDO   
+    !## all finished
+    IF(N.EQ.0)EXIT
+   ENDIF
+  ENDDO
+ ENDDO
+ CALL WMESSAGETIMER(0); CALL WMESSAGEENABLE(TIMEREXPIRED,0)
  
  END SUBROUTINE IPEST_GLM_MAIN
  
  !#####=================================================================
- SUBROUTINE IPEST_GLM_INIT()
+ SUBROUTINE IPEST_GLM_ALLOCATE(N)
  !#####=================================================================
  IMPLICIT NONE
+ INTEGER,INTENT(IN) :: N
+ 
+ CALL IPEST_GLM_DEALLOCATE()
+ ALLOCATE(RN(N),IPROC(2,N))
  
 !IF(ASSOCIATED(PEST%PARAM))THEN
 !  DO I=1,SIZE(PEST%PARAM)
@@ -54,9 +116,19 @@ CONTAINS
 !   WRITE(IU,'(A)') TRIM(LINE)
 !  ENDDO
   
-  END SUBROUTINE IPEST_GLM_INIT
+  END SUBROUTINE IPEST_GLM_ALLOCATE
 
-  !#####=================================================================
+ !#####=================================================================
+ SUBROUTINE IPEST_GLM_DEALLOCATE()
+ !#####=================================================================
+ IMPLICIT NONE
+
+ IF(ALLOCATED(RN))DEALLOCATE(RN)
+ IF(ALLOCATED(IPROC))DEALLOCATE(IPROC)
+ 
+ END SUBROUTINE IPEST_GLM_DEALLOCATE
+ 
+ !#####=================================================================
   LOGICAL FUNCTION IPEST_GLM_NEXT()
   !#####=================================================================
   IMPLICIT NONE

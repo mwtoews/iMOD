@@ -35,7 +35,7 @@ USE MOD_PREF_PAR
 USE DATEVAR
 USE MODPLOT
 USE MOD_ABOUT
-USE MOD_IPEST_GLM
+USE MOD_IPEST_GLM, ONLY : IPEST_GLM_MAIN
 
 CONTAINS
 
@@ -1826,7 +1826,7 @@ JLOOP: DO K=1,SIZE(TOPICS)
  INTEGER,INTENT(IN) :: IRUNMODE,IBATCH,NICORES,ILOGFILE
  CHARACTER(LEN=256) :: DIR,DIRNAME
  CHARACTER(LEN=52) :: MNAME
- INTEGER :: IU,IOS,I,IFLAGS,IEXCOD,IERROR,IMODE
+ INTEGER :: IU,IOS,I,N,IFLAGS,IEXCOD,IERROR,IMODE
  LOGICAL :: LEX
 
  IMODE=0
@@ -1890,21 +1890,6 @@ JLOOP: DO K=1,SIZE(TOPICS)
   CLOSE(IU)  
  ENDIF
 
- !## simulate batch-file
- IU=UTL_GETUNIT()
- CALL OSD_OPEN(IU,FILE=TRIM(DIR)//'\RUN.BAT',STATUS='REPLACE',ACTION='WRITE,DENYREAD',IOSTAT=IOS)
- IF(IOS.NE.0)THEN
-  IF(IBATCH.EQ.0)THEN
-   CALL WMESSAGEBOX(OKONLY,EXCLAMATIONICON,COMMONOK,'iMODFLOW is already running, you cannot start '//CHAR(13)// &
-    'new run while previous run is still running'//CHAR(13)//'or'//CHAR(13)//'Run-script cannot be created'//CHAR(13)// &
-    TRIM(DIR)//'\RUN.BAT','Error')
-  ELSE
-   WRITE(*,'(A)') 'iMODFLOW is already running, you cannot start new run while previous run is still running'// &
-       'or Run-script cannot be created '//TRIM(DIR)//'\RUN.BAT'
-  ENDIF
-  RETURN
- ENDIF
-
  !## remove previous version of imodflow
  I=INDEXNOCASE(PREFVAL(8),'\',.TRUE.)+1
  INQUIRE(FILE=TRIM(DIR)//'\'//TRIM(PREFVAL(8)(I:)),EXIST=LEX)
@@ -1937,79 +1922,102 @@ JLOOP: DO K=1,SIZE(TOPICS)
  !## copy imod license text file
  CALL IOSCOPYFILE(TRIM(EXEPATH)//'\'//TRIM(LICFILE),TRIM(DIR)//'\'//TRIM(LICFILE))
 
- !## write start script in batch file
- WRITE(IU,'(A)') 'REM =========================='
- WRITE(IU,'(A)') 'REM Run Script iMOD '//TRIM(RVERSION)
- WRITE(IU,'(A)') 'REM =========================='
+ N=1; IF(PBMAN%IPESTP.EQ.1)N=SIZE(PEST%PARAM)
+ DO I=1,N
 
- !## namfile
- IF(IMODE.EQ.1)THEN
-
-  IF(PBMAN%IFORMAT.EQ.1)WRITE(IU,'(A)') 'TITLE "NAMFILE: '//TRIM(MNAME)//'.nam"' 
-
-  IF(LMSP)THEN
-   IF(PBMAN%IPEST.EQ.0)THEN
-    WRITE(IU,'(/A/)') '"'//TRIM(PREFVAL(8))//'" -components components.inp' 
-   ELSE
-    WRITE(IU,'(/A/)') '"'//TRIM(PREFVAL(8))//'" -components components.inp -ipest ".\modelinput\'//TRIM(MNAME)//'.pst1"' 
-   ENDIF
+  !## simulate batch-file
+  IU=UTL_GETUNIT()
+  IF(PBMAN%IPESTP.EQ.0)THEN
+   CALL OSD_OPEN(IU,FILE=TRIM(DIR)//'\RUN.BAT',STATUS='REPLACE',ACTION='WRITE,DENYREAD',IOSTAT=IOS)
   ELSE
-   IF(PBMAN%IPEST+PBMAN%IPESTP.EQ.0)THEN
-    IF(PBMAN%IFORMAT.EQ.2)WRITE(IU,'(/A/)') '"'//TRIM(PREFVAL(8))//'" "'//TRIM(MNAME)//'.nam"' 
-    IF(PBMAN%IFORMAT.EQ.3)WRITE(IU,'(/A/)') '"'//TRIM(PREFVAL(8))//'"' 
-   !## ipest
-   ELSEIF(PBMAN%IPEST.EQ.1)THEN
-    WRITE(IU,'(/A/)') '"'//TRIM(PREFVAL(8))//'" "'//TRIM(MNAME)//'.nam" -ipest ".\modelinput\'//TRIM(MNAME)//'.pst1"'
-   !## parrallel ipest
-   ELSEIF(PBMAN%IPESTP.EQ.1)THEN
-    DO I=1,SIZE(PEST%PARAM)
-     IF(PEST%PARAM(I)%PACT.EQ.1)THEN
-      WRITE(IU,'(/A/)') 'START "P#'//TRIM(ITOS(I))//'" "'//TRIM(PREFVAL(8))//'" "'//TRIM(MNAME)//'_P#'//TRIM(ITOS(I))//'.nam" -ipest ".\modelinput\'// &
-                                   TRIM(MNAME)//'_P#'//TRIM(ITOS(I))//'.pst1"'
-     ENDIF
-    ENDDO
-   ENDIF
+   IF(PEST%PARAM(I)%PACT.EQ.0)CYCLE
+   CALL OSD_OPEN(IU,FILE=TRIM(DIR)//'\RUN_P#'//TRIM(ITOS(I))//'.BAT',STATUS='REPLACE',ACTION='WRITE,DENYREAD',IOSTAT=IOS)
   ENDIF
 
-  !## include conversion of sfr package into isg-file
-  IF(LSFR)THEN
-   WRITE(IU,'(/A)') 'REM ============================================='
-   WRITE(IU,'( A)') 'REM iMOD Batch Script iMOD '//TRIM(RVERSION)
-   WRITE(IU,'( A)') 'REM ============================================='
-   WRITE(IU,'( A)')  'ECHO FUNCTION=SFRTOISG > SFRTOISG.INI'
-   WRITE(IU,'( A)')  'ECHO ISGFILE_IN= "'//TRIM(DIR)//'\MODELINPUT\SFR7\SFR.ISG" >> SFRTOISG.INI'
-   WRITE(IU,'( A)')  'ECHO ISGFILE_OUT="'//TRIM(DIR)//'\BDGSFR\ISG\SFR.ISG" >> SFRTOISG.INI'
-   WRITE(IU,'(A/)')  'ECHO SFRFILE_IN= "'//TRIM(DIR)//'\'//TRIM(MNAME)//'_FSFR.TXT" >> SFRTOISG.INI'
-   WRITE(IU,'(A)') 
-   WRITE(IU,'(A)') '"'//TRIM(EXENAME)//'" SFRTOISG.INI'
-   WRITE(IU,'(A)') 
+  IF(IOS.NE.0)THEN
+   IF(IBATCH.EQ.0)THEN
+    CALL WMESSAGEBOX(OKONLY,EXCLAMATIONICON,COMMONOK,'iMODFLOW is already running, you cannot start '//CHAR(13)// &
+     'new run while previous run is still running'//CHAR(13)//'or'//CHAR(13)//'Run-script cannot be created','Error')
+   ELSE
+    WRITE(*,'(A)') 'iMODFLOW is already running, you cannot start new run while previous run is still running'// &
+        'or Run-script cannot be created'
+   ENDIF
+   RETURN
   ENDIF
-  
- !## runfile
- ELSEIF(IMODE.EQ.2)THEN
+
+  !## write start script in batch file
+  WRITE(IU,'(A)') 'REM =========================='
+  WRITE(IU,'(A)') 'REM Run Script iMOD '//TRIM(RVERSION)
+  WRITE(IU,'(A)') 'REM =========================='
+
+  !## namfile
+  IF(IMODE.EQ.1)THEN
+
+   IF(PBMAN%IFORMAT.EQ.1)WRITE(IU,'(A)') 'TITLE "NAMFILE: '//TRIM(MNAME)//'.nam"' 
+
+   IF(LMSP)THEN
+    IF(PBMAN%IPEST.EQ.0)THEN
+     WRITE(IU,'(/A/)') '"'//TRIM(PREFVAL(8))//'" -components components.inp' 
+    ELSE
+     WRITE(IU,'(/A/)') '"'//TRIM(PREFVAL(8))//'" -components components.inp -ipest ".\modelinput\'//TRIM(MNAME)//'.pst1"' 
+    ENDIF
+   ELSE
+    IF(PBMAN%IPEST+PBMAN%IPESTP.EQ.0)THEN
+     IF(PBMAN%IFORMAT.EQ.2)WRITE(IU,'(/A/)') '"'//TRIM(PREFVAL(8))//'" "'//TRIM(MNAME)//'.nam"' 
+     IF(PBMAN%IFORMAT.EQ.3)WRITE(IU,'(/A/)') '"'//TRIM(PREFVAL(8))//'"' 
+    !## ipest
+    ELSEIF(PBMAN%IPEST.EQ.1)THEN
+     WRITE(IU,'(/A/)') '"'//TRIM(PREFVAL(8))//'" "'//TRIM(MNAME)//'.nam" -ipest ".\modelinput\'//TRIM(MNAME)//'.pst1"'
+    !## parrallel ipest
+    ELSEIF(PBMAN%IPESTP.EQ.1)THEN
+     WRITE(IU,'(/A/)') '"'//TRIM(PREFVAL(8))//'" "'//TRIM(MNAME)//'_P#'//TRIM(ITOS(I))//'.nam" -ipest ".\modelinput\'// &
+                            TRIM(MNAME)//'_P#'//TRIM(ITOS(I))//'.pst1"'
+    ENDIF
+   ENDIF
  
-  IF(IBATCH.EQ.0)THEN
-   IF(NICORES.GT.1)THEN
-    WRITE(IU,'(A)') ':: Set number of MPI processes'
-    WRITE(IU,'(A)') 'set np='//ITOS(NICORES)
-    WRITE(IU,'(A)') ''
-    WRITE(IU,'(A)') ':: Run model'
-    WRITE(IU,'(A)') '"C:\Program Files\MPICH2\bin\mpiexec.exe" -localonly %np% "'//TRIM(PREFVAL(8))//'" '//TRIM(MNAME)//'.run"'
-   ELSE
-    WRITE(IU,'(A)') '"'//TRIM(PREFVAL(8))//'" '//'IMODFLOW.RUN'
+   !## include conversion of sfr package into isg-file
+   IF(LSFR)THEN
+    WRITE(IU,'(/A)') 'REM ============================================='
+    WRITE(IU,'( A)') 'REM iMOD Batch Script iMOD '//TRIM(RVERSION)
+    WRITE(IU,'( A)') 'REM ============================================='
+    WRITE(IU,'( A)')  'ECHO FUNCTION=SFRTOISG > SFRTOISG.INI'
+    WRITE(IU,'( A)')  'ECHO ISGFILE_IN= "'//TRIM(DIR)//'\MODELINPUT\SFR7\SFR.ISG" >> SFRTOISG.INI'
+    WRITE(IU,'( A)')  'ECHO ISGFILE_OUT="'//TRIM(DIR)//'\BDGSFR\ISG\SFR.ISG" >> SFRTOISG.INI'
+    WRITE(IU,'(A/)')  'ECHO SFRFILE_IN= "'//TRIM(DIR)//'\'//TRIM(MNAME)//'_FSFR.TXT" >> SFRTOISG.INI'
+    WRITE(IU,'(A)') 
+    WRITE(IU,'(A)') '"'//TRIM(EXENAME)//'" SFRTOISG.INI'
+    WRITE(IU,'(A)') 
    ENDIF
-  ELSE
-   WRITE(IU,'(A)') '"'//TRIM(PREFVAL(8))//'" '//TRIM(MNAME)//'.run' 
-  ENDIF
   
- ENDIF
- CLOSE(IU)
+  !## runfile
+  ELSEIF(IMODE.EQ.2)THEN
+ 
+   IF(IBATCH.EQ.0)THEN
+    IF(NICORES.GT.1)THEN
+     WRITE(IU,'(A)') ':: Set number of MPI processes'
+     WRITE(IU,'(A)') 'set np='//ITOS(NICORES)
+     WRITE(IU,'(A)') ''
+     WRITE(IU,'(A)') ':: Run model'
+     WRITE(IU,'(A)') '"C:\Program Files\MPICH2\bin\mpiexec.exe" -localonly %np% "'//TRIM(PREFVAL(8))//'" '//TRIM(MNAME)//'.run"'
+    ELSE
+     WRITE(IU,'(A)') '"'//TRIM(PREFVAL(8))//'" '//'IMODFLOW.RUN'
+    ENDIF
+   ELSE
+    WRITE(IU,'(A)') '"'//TRIM(PREFVAL(8))//'" '//TRIM(MNAME)//'.run' 
+   ENDIF
+  
+  ENDIF
+  CLOSE(IU)
 
+ ENDDO
+ 
  !## move iMOD to the simulation directory
  CALL IOSDIRNAME(DIRNAME); CALL IOSDIRCHANGE(TRIM(DIR)//'\')
 
  IF(PBMAN%IPESTP.EQ.1)THEN
-  CALL IPEST_GLM_MAIN('RUN.BAT')
+
+  CALL IPEST_GLM_MAIN(TRIM(DIR))
+ 
  ELSE
   !## start the batch file - run in the foreground
   IF(IRUNMODE.GT.0)THEN
@@ -2046,8 +2054,7 @@ JLOOP: DO K=1,SIZE(TOPICS)
   ELSEIF(IRUNMODE.LT.0)THEN
 
    IFLAGS=0 
-  !## executes on commandtool such that commands alike 'dir' etc. works
-
+   !## executes on commandtool such that commands alike 'dir' etc. works
    IFLAGS=IFLAGS+PROCCMDPROC
   
    IF(ILOGFILE.EQ.0)THEN

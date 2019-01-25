@@ -148,7 +148,7 @@ CONTAINS
   ENDIF
   CALL WINDOWCLOSE(); STOP
  ENDIF
- CALL WINDOWCLOSE()
+ !CALL WINDOWCLOSE()
  
  !## open Unit for Same Line Printing of echo (is equal to screen or '*')
  OPEN(UNIT=6,CARRIAGECONTROL='fortran')    
@@ -156,7 +156,6 @@ CONTAINS
  CALL UTL_CREATEDIR(TRIM(PREFVAL(1))//'\tmp')
  !## initialize polygons
  MAXSHAPES=500  
-! MAXSHPCRD=1000 
  CALL POLYGON1INIT()
 
  SELECT CASE (IFN)
