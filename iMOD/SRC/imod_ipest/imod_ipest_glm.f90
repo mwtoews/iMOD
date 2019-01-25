@@ -25,7 +25,7 @@ MODULE MOD_IPEST_GLM
 USE WINTERACTER
 USE IMODVAR, ONLY : DP_KIND
 USE MOD_PMANAGER_PAR, ONLY : PEST,SIM
-USE MOD_UTL, ONLY  : UTL_GETUNIT,UTL_CAP,ITOS,UTL_GETMED,UTL_CREATEDIR
+USE MOD_UTL, ONLY  : UTL_GETUNIT,UTL_CAP,ITOS,RTOS,UTL_GETMED,UTL_CREATEDIR
 USE MOD_IPEST_GLM_PAR
 
 CONTAINS
@@ -60,8 +60,23 @@ CONTAINS
   IF(IUPESTRESIDUAL.GT.0)CLOSE(IUPESTRESIDUAL)
   IUPESTRESIDUAL=UTL_GETUNIT(); OPEN(IUPESTRESIDUAL,FILE=TRIM(DIR)//'\IPEST\LOG_PEST_RESIDUAL_'//TRIM(ITOS(ITER))//'.TXT',STATUS='UNKNOWN',ACTION='WRITE')
 
-  !## start processes
+  !## compute the initial simulation first
+!  DO
+  !   set pst-file
+  ! RUN MODEL - P#0 MODEL
+!  CALL IOSCOMMAND(TRIM(RN(I)),IFLAGS=IFLAGS,IDPROC=IPROC(:,I))
+!   IF(WINFOERROR(1).EQ.ERROSCOMMAND)THEN; WRITE(*,'(A)') 'Failed to start model P#'//TRIM(ITOS(I)); STOP; ENDIF
+! GET OBJECTIVE
+  !   CALL IPEST_GLM_GETJ(DIR,0)
+ !## evaluate whether in line-search
+!    IF(MSR%TJ.LE....)EXIT
+!  ENDDO
+  
+  !## start finite difference approximation for parameters
   DO I=1,SIZE(RN)
+  !## rekening houden met op te geven aantal processoren
+!   IF(IPEST_GLM_NEXTGRAD(I))THEN; ENDIF
+  ! MODIFY PST-FILE
    CALL IOSCOMMAND(TRIM(RN(I)),IFLAGS=IFLAGS,IDPROC=IPROC(:,I))
    IF(WINFOERROR(1).EQ.ERROSCOMMAND)THEN; WRITE(*,'(A)') 'Failed to start model P#'//TRIM(ITOS(I)); STOP; ENDIF
   ENDDO
@@ -95,7 +110,7 @@ CONTAINS
   ENDDO
 
   !## determine new gradient
-  IF(.NOT.IPEST_GLM_NEXT())EXIT
+  IF(.NOT.IPEST_GLM_NEXT(ITER))EXIT
 
  ENDDO
  CALL WMESSAGETIMER(0); CALL WMESSAGEENABLE(TIMEREXPIRED,0)
@@ -141,16 +156,19 @@ CONTAINS
  END SUBROUTINE IPEST_GLM_DEALLOCATE
  
  !#####=================================================================
-  LOGICAL FUNCTION IPEST_GLM_NEXT()
+  LOGICAL FUNCTION IPEST_GLM_NEXT(ITER)
   !#####=================================================================
   IMPLICIT NONE
+  INTEGER,INTENT(IN) :: ITER
 !  REAL(KIND=8) :: IMPROVEMENT,F,GUPDATE
 !  INTEGER :: I,J,ILOG,ISTOP
 
   IPEST_GLM_NEXT=.FALSE.
 
-  !## get gradient
-  CALL PESTGRADIENT()
+  CALL IPEST_GLM_GRADIENT(ITER)
+  
+!  !## get gradient
+!  CALL PESTGRADIENT()
 !
 ! IF(LSENS)THEN
 !!  !## next parameter combination
@@ -285,25 +303,82 @@ CONTAINS
 
  END FUNCTION IPEST_GLM_NEXT
 
+ !#####=================================================================
+ LOGICAL FUNCTION IPEST_GLM_NEXTGRAD(IGRAD)
+ !#####=================================================================
+ IMPLICIT NONE
+ INTEGER :: I
+ INTEGER,INTENT(INOUT) :: IGRAD
+ REAL(KIND=DP_KIND) :: FCT
+ 
+ IPEST_GLM_NEXTGRAD=.TRUE.
+
+ DO
+  IGRAD=IGRAD+1
+  !## all gradients processed
+  IF(IGRAD.GT.SIZE(PEST%PARAM))EXIT
+  !## zero gradient in case parameter is fixed
+  IF(PEST%PARAM(IGRAD)%PACT.EQ.0)THEN
+   DO I=1,SIZE(MSR%DH,2); MSR%DH(IGRAD,I)=MSR%DH(0,I); ENDDO
+  !## check whether the parameters has been modified allready since it belongs to the same group
+  ELSEIF(PEST%PARAM(IGRAD)%PIGROUP.LT.0)THEN
+   DO I=1,SIZE(MSR%DH,2); MSR%DH(IGRAD,I)=MSR%DH(0,I); ENDDO
+  !## possible candidate found
+  ELSE
+   EXIT
+  ENDIF
+ ENDDO
+ !## proceed gradient
+ IF(IGRAD.LE.SIZE(PEST%PARAM))THEN
+  !## reset all alpha's
+  PEST%PARAM%ALPHA(1)=PEST%PARAM%ALPHA(2)
+  !## adjust all parameters within the same group
+  DO I=IGRAD,SIZE(PEST%PARAM)
+   IF(PEST%PARAM(I)%PACT.EQ.0)CYCLE
+   IF(ABS(PEST%PARAM(I)%PIGROUP).EQ.ABS(PEST%PARAM(IGRAD)%PIGROUP))THEN
+    IF(PEST%PARAM(I)%PLOG.EQ.1)THEN
+     PEST%PARAM(I)%ALPHA(1)=PEST%PARAM(I)%ALPHA(2)+PEST%PARAM(I)%PDELTA
+     FCT=EXP(PEST%PARAM(I)%ALPHA(1))
+    ELSE
+     PEST%PARAM(I)%ALPHA(1)=PEST%PARAM(I)%ALPHA(2)*PEST%PARAM(I)%PDELTA
+     FCT=PEST%PARAM(I)%ALPHA(1)
+    ENDIF
+    WRITE(*,'(A)') 'Adjusting Parameter '//TRIM(PEST%PARAM(I)%PPARAM)// &
+                 ';ils='//TRIM(ITOS(PEST%PARAM(I)%PILS))// &
+                 ';izone='//TRIM(ITOS(PEST%PARAM(I)%PIZONE))// &
+                 ';igroup='//TRIM(ITOS(PEST%PARAM(I)%PIGROUP))// &
+                 ';factor='//TRIM(RTOS(FCT,'*',1))
+    WRITE(IUPESTOUT,'(A)') 'Adjusting Parameter '//TRIM(PEST%PARAM(I)%PPARAM)// &
+                 '['//TRIM(PEST%PARAM(I)%ACRONYM)//']'// &
+                 ';ils='//TRIM(ITOS(PEST%PARAM(I)%PILS))// &
+                 ';izone='//TRIM(ITOS(PEST%PARAM(I)%PIZONE))// &
+                 ';igroup='//TRIM(ITOS(PEST%PARAM(I)%PIGROUP))// &
+                 ';factor='//TRIM(RTOS(FCT,'*',1))
+   ENDIF
+  ENDDO
+ ELSE
+  IPEST_GLM_NEXTGRAD=.FALSE.
+ ENDIF
+
+ END FUNCTION IPEST_GLM_NEXTGRAD
+ 
  !###====================================================================
- SUBROUTINE IPEST_GLM_GRADIENT(ITER)!root,idf)
+ SUBROUTINE IPEST_GLM_GRADIENT(ITER)
  !###====================================================================
  IMPLICIT NONE
-! type(idfobj),intent(in) :: idf
-! CHARACTER(LEN=*),INTENT(IN) :: ROOT
  INTEGER,INTENT(IN) :: ITER
  REAL(KIND=DP_KIND) :: DJ1,DJ2
- REAL(KIND=DP_KIND) :: B1,TS,DF1,DF2,BETA,EIGWTHRESHOLD,W,DH1,DH2
- INTEGER :: I,II,J,K,L,NP,MP,IP1,IP2,NE,ISING,ITRIES,IBND
- INTEGER,ALLOCATABLE,DIMENSION(:) :: INDX,ICOR
+ REAL(KIND=DP_KIND) :: TS,DF1,EIGWTHRESHOLD,W,DH1,DH2
+ INTEGER :: I,II,J,K,NP,MP,IP1,NE,ISING,ITRIES,IBND
+ INTEGER,ALLOCATABLE,DIMENSION(:) :: INDX
  REAL(KIND=DP_KIND) :: P1,P2,PMIN,PMAX
- REAL(KIND=DP_KIND),ALLOCATABLE,DIMENSION(:,:) :: TDJ,C,JS,P,PT
- REAL(KIND=DP_KIND),ALLOCATABLE,DIMENSION(:) :: GAMMA,N,RU 
+ REAL(KIND=DP_KIND),ALLOCATABLE,DIMENSION(:,:) :: C,JS,P,PT
+ REAL(KIND=DP_KIND),ALLOCATABLE,DIMENSION(:) :: N,RU 
  REAL(KIND=DP_KIND),ALLOCATABLE,DIMENSION(:) :: S
- CHARACTER(LEN=8),ALLOCATABLE,DIMENSION(:) :: TXT
+! CHARACTER(LEN=8),ALLOCATABLE,DIMENSION(:) :: TXT
  REAL(KIND=DP_KIND),ALLOCATABLE,DIMENSION(:,:) :: EIGV,COV,B,M
  REAL(KIND=DP_KIND),ALLOCATABLE,DIMENSION(:) :: EIGW,JQR
- CHARACTER(LEN=8) :: DTXT
+! CHARACTER(LEN=8) :: DTXT
  LOGICAL :: LSCALING,LSVD,LAMBDARESET
 
  SELECT CASE (PEST%PE_SCALING)
@@ -352,7 +427,7 @@ CONTAINS
  !## melt frozen parameters
  DO IP1=1,SIZE(PEST%PARAM)
   !## current state of the boundaries
-  CALL PEST_GETBOUNDARY(IP1,IBND,P1,P2,PMIN,PMAX)
+  CALL IPEST_GLM_GETBOUNDARY(IP1,IBND,P1,P2,PMIN,PMAX)
   PEST%PARAM(IP1)%IBND=IBND
   IF(PEST%PARAM(IP1)%PACT.EQ.-1.AND.ABS(PEST%PARAM(IP1)%PIGROUP).GT.0)PEST%PARAM(IP1)%PACT=1
  ENDDO
@@ -499,9 +574,9 @@ CONTAINS
    !## compute inverse of (Pt(JQJ)P)-1 -> B
    IF(ALLOCATED(INDX))DEALLOCATE(INDX); ALLOCATE(INDX(NE))
    IF(ALLOCATED(B   ))DEALLOCATE(B);    ALLOCATE(B   (NE,NE))
-   CALL IMOD_UTL_LUDECOMP_DBL(M,INDX,NE,ISING)
+   CALL IPEST_LUDECOMP_DBL(M,INDX,NE,ISING)
    B=0.0D0; DO I=1,NE; B(I,I)=1.0D0; ENDDO
-   DO I=1,NE; CALL IMOD_UTL_LUBACKSUB_DBL(M,INDX,B(1,I),NE); ENDDO
+   DO I=1,NE; CALL IPEST_LUBACKSUB_DBL(M,INDX,B(1,I),NE); ENDDO
 
    !## compute U=(M)-1*N
    RU=0.0D0; DO I=1,NE; DO J=1,NE
@@ -524,9 +599,9 @@ CONTAINS
    IF(NP.EQ.1)THEN
     B(1,1)=1.0D0/JQJ(1,1)
    ELSE
-    CALL IMOD_UTL_LUDECOMP_DBL(JQJ,INDX,NP,ISING)
+    CALL IPEST_LUDECOMP_DBL(JQJ,INDX,NP,ISING)
     B=0.0D0; DO I=1,NP; B(I,I)=1.0D0; ENDDO
-    DO I=1,NP; CALL IMOD_UTL_LUBACKSUB_DBL(JQJ,INDX,B(1,I),NP); ENDDO
+    DO I=1,NP; CALL IPEST_LUBACKSUB_DBL(JQJ,INDX,B(1,I),NP); ENDDO
    ENDIF
    
    !## compute (JQJ)-1*JQR
@@ -603,7 +678,29 @@ CONTAINS
 
  END SUBROUTINE IPEST_GLM_GRADIENT
  
-!###====================================================================
+ !###====================================================================
+ SUBROUTINE IPEST_GLM_GETBOUNDARY(IP1,IBND,P1,P2,PMIN,PMAX)
+ !###====================================================================
+ IMPLICIT NONE
+ INTEGER,INTENT(IN) :: IP1
+ INTEGER,INTENT(OUT) :: IBND
+ REAL(KIND=8),INTENT(OUT) :: P1,P2,PMIN,PMAX
+ 
+ !## parameter adjustment hit the parameter boundary
+ P1  =PEST%PARAM(IP1)%ALPHA(1)
+ P2  =PEST%PARAM(IP1)%ALPHA(2)
+ PMIN=PEST%PARAM(IP1)%PMIN
+ PMAX=PEST%PARAM(IP1)%PMAX
+   
+ IBND=0
+ !## shoot over
+ IF(P1.LE.PMIN)           IBND=-1; IF(P1.GE.PMAX)           IBND= 1
+ !## too close
+ IF(ABS(P1-PMIN).LE.XPBND)IBND=-1; IF(ABS(PMAX-P1).LE.XPBND)IBND= 1
+ 
+ END SUBROUTINE IPEST_GLM_GETBOUNDARY
+ 
+ !###====================================================================
  LOGICAL FUNCTION IPEST_GLM_UPGRADEVECTOR(FCT,LCHECK,ITER,LAMBDARESET)
  !###====================================================================
  IMPLICIT NONE
@@ -611,8 +708,8 @@ CONTAINS
  LOGICAL,INTENT(IN) :: LCHECK
  LOGICAL,INTENT(OUT),OPTIONAL :: LAMBDARESET
  REAL(KIND=8),INTENT(IN) :: FCT
- REAL(KIND=8) :: AF,F,G,MINAP,MAXAP,P1,P2,PMIN,PMAX
- INTEGER :: I,J,IP1,IP2,N,IBND
+ REAL(KIND=8) :: AF,F,G,P1,P2,PMIN,PMAX
+ INTEGER :: I,J,IP1,IP2,IBND
 
  !## exit code
  IPEST_GLM_UPGRADEVECTOR=.FALSE.
@@ -675,7 +772,7 @@ CONTAINS
    !## inactive parameter
    IF(PEST%PARAM(IP1)%PACT.NE.1)CYCLE
 
-   CALL PEST_GETBOUNDARY(IP1,IBND,P1,P2,PMIN,PMAX)
+   CALL IPEST_GLM_GETBOUNDARY(IP1,IBND,P1,P2,PMIN,PMAX)
 
    !## parameter hits the boundary
    IF(IBND.NE.0)THEN
@@ -783,7 +880,7 @@ CONTAINS
  INTEGER,INTENT(IN) :: NP,ITER
  REAL(KIND=DP_KIND),INTENT(IN),DIMENSION(NP,NP) :: COV
  LOGICAL,INTENT(IN) :: LPRINT
- INTEGER :: I,J,K,IP1,IERROR
+ INTEGER :: I,J,IP1,IERROR
  REAL(KIND=DP_KIND) :: Z1,Z2,Z,ZW
  LOGICAL :: LLOG
  
@@ -900,7 +997,7 @@ CONTAINS
  REAL(KIND=8),DIMENSION(NP,NP),INTENT(OUT) :: JQJ,EIGV,COV
  REAL(KIND=8),DIMENSION(NP),INTENT(OUT) :: EIGW
  REAL(KIND=8) :: DET
- INTEGER :: I,J,K,IP1,IP2,II,N,M,ISING,IU,IIU,JUPESTOUT
+ INTEGER :: I,J,K,IP1,IP2,II,N,ISING,IIU,JUPESTOUT
  REAL(KIND=8) :: DF1,DF2,DJ1,DJ2,B1,TV,TEV,CB,KAPPA,W,DH1,DH2
  REAL(KIND=8),ALLOCATABLE,DIMENSION(:,:) :: B,JQJB
  REAL(KIND=8),ALLOCATABLE,DIMENSION(:,:) :: COR
@@ -1009,8 +1106,7 @@ CONTAINS
  ENDDO
  EIGV= B  
  IF(SUM(EIGW).LT.0.0D0)THEN
-  CALL IMOD_UTL_PRINTTEXT('Warning, there is NO information in parameter perturbation',0)
-  CALL IMOD_UTL_PRINTTEXT('Optimization of parameters stopped',2)
+  WRITE(*,'(/A/)') 'Warning, there is NO information (no eigenvalues) in parameter perturbation'; STOP
  ENDIF
  EIGW=(EIGW*100.0D0)/SUM(EIGW)  
 
@@ -1025,9 +1121,9 @@ CONTAINS
  ENDIF 
 
  !## compute inverse of (JQJB)-1 -> B - covariance matrix
- CALL IMOD_UTL_LUDECOMP_DBL(JQJB,INDX,NP,ISING)
+ CALL IPEST_LUDECOMP_DBL(JQJB,INDX,NP,ISING)
  B=0.0D0; DO I=1,NP; B(I,I)=1.0D0; ENDDO
- DO I=1,NP; CALL IMOD_UTL_LUBACKSUB_DBL(JQJB,INDX,B(1,I),NP); ENDDO
+ DO I=1,NP; CALL IPEST_LUBACKSUB_DBL(JQJB,INDX,B(1,I),NP); ENDDO
  
  !## parameter covariance matrix
   
@@ -1660,7 +1756,7 @@ CONTAINS
  ENDDO
 
  !## allocate memory
- CALL IPEST_GLM_ALLOCATEMSR(MX)
+ CALL IPEST_GLM_ALLOCATEMSR(MX,IGRAD)
 
  !## initialise head-differences
  IF(IGRAD.EQ.0)THEN
@@ -1875,7 +1971,7 @@ CONTAINS
 !  CALL IMOD_UTL_PRINTTEXT('MEAN Objective Function Value  : '//TRIM(IMOD_UTL_DTOS(TJ/REAL(PEST_NOBS,8),'G',7))// &
 !          ' (n='//TRIM(IMOD_UTL_ITOS(PEST_NOBS))//')',-1,IUPESTOUT)
 !          
-!  RFIT=PEST_GOODNESS_OF_FIT(GF_H,GF_O,PEST_NOBS)
+!  RFIT=IPEST_GOODNESS_OF_FIT(GF_H,GF_O,PEST_NOBS)
 !  CALL IMOD_UTL_PRINTTEXT('Goodness of Fit:                 '// &
 !      TRIM(IMOD_UTL_DTOS(RFIT,'G',7))//' (n='//TRIM(IMOD_UTL_ITOS(PEST_NOBS))//')',-1,IUPESTOUT)
 !  CALL IMOD_UTL_PRINTTEXT('>> Provides a measure of the extent to which variability of field measurements is explained',-1,IUPESTOUT)
@@ -1904,17 +2000,17 @@ CONTAINS
  END SUBROUTINE IPEST_GLM_GETJ
 
  !###====================================================================
- SUBROUTINE IPEST_GLM_ALLOCATEMSR(N)
+ SUBROUTINE IPEST_GLM_ALLOCATEMSR(N,IGRAD)
  !###====================================================================
  IMPLICIT NONE
- INTEGER,INTENT(IN) :: N
+ INTEGER,INTENT(IN) :: N,IGRAD
  INTEGER :: M
  
  !## only one value per measurement
  M=N*SIZE(SIM)
  
- CALL IPEST_GLM_DEALLOCATEMSR()
- ALLOCATE(MSR%DH(0:SIZE(PEST%PARAM),M))
+ CALL IPEST_GLM_DEALLOCATEMSR(IGRAD)
+ IF(IGRAD.EQ.0)ALLOCATE(MSR%DH(0:SIZE(PEST%PARAM),M))
  ALLOCATE(MSR%W (M)) 
  ALLOCATE(MSR%X (M)) 
  ALLOCATE(MSR%Y (M)) 
@@ -1926,11 +2022,13 @@ CONTAINS
  END SUBROUTINE IPEST_GLM_ALLOCATEMSR
  
  !###====================================================================
- SUBROUTINE IPEST_GLM_DEALLOCATEMSR()
+ SUBROUTINE IPEST_GLM_DEALLOCATEMSR(IGRAD)
  !###====================================================================
  IMPLICIT NONE
+ INTEGER,INTENT(IN) :: IGRAD
 
- IF(ASSOCIATED(MSR%DH))    DEALLOCATE(MSR%DH)
+ !## reset for next cycle
+ IF(IGRAD.EQ.0)THEN; IF(ASSOCIATED(MSR%DH))DEALLOCATE(MSR%DH); ENDIF
  IF(ASSOCIATED(MSR%W ))    DEALLOCATE(MSR%W) 
  IF(ASSOCIATED(MSR%X ))    DEALLOCATE(MSR%X) 
  IF(ASSOCIATED(MSR%Y ))    DEALLOCATE(MSR%Y) 
@@ -1942,7 +2040,7 @@ CONTAINS
  END SUBROUTINE IPEST_GLM_DEALLOCATEMSR
  
  !###====================================================================
- REAL FUNCTION PEST_GOODNESS_OF_FIT(X,Y,N)
+ REAL FUNCTION IPEST_GOODNESS_OF_FIT(X,Y,N)
  !###====================================================================
  IMPLICIT NONE
  INTEGER,INTENT(IN) :: N
@@ -1951,15 +2049,125 @@ CONTAINS
  INTEGER :: I
  
  !## compute nash-sutcliff
- PEST_GOODNESS_OF_FIT=0.0D0
+ IPEST_GOODNESS_OF_FIT=0.0D0
  
  !## average observation
  YA=0.0D0; DO I=1,N; YA=YA+Y(I)          ; ENDDO; YA=YA/REAL(N)
  XN=0.0D0; DO I=1,N; XN=XN+ABS(Y(I)-X(I)); ENDDO; XN=XN**2.0D0
  YN=0.0D0; DO I=1,N; YN=YN+ABS(Y(I)-YA)  ; ENDDO; YN=YN**2.0D0
  
- PEST_GOODNESS_OF_FIT=1.0D0-XN/YN
+ IPEST_GOODNESS_OF_FIT=1.0D0-XN/YN
 
- END FUNCTION PEST_GOODNESS_OF_FIT 
+ END FUNCTION IPEST_GOODNESS_OF_FIT 
+ 
+ !###====================================================================
+ SUBROUTINE IPEST_LUDECOMP_DBL(AA,IDX,N,ISING)
+ !###====================================================================
+ IMPLICIT NONE
+ INTEGER :: NMAX
+ DOUBLE PRECISION :: TINY
+ PARAMETER( TINY=1.0E-20, NMAX=2000)
+ INTEGER :: N
+ INTEGER :: ISING
+ INTEGER :: IDX(N)
+ DOUBLE PRECISION :: AA(N,N)
+ DOUBLE PRECISION :: VV(NMAX)
+ INTEGER :: I,IMAX,J,K
+ DOUBLE PRECISION :: AAMAX,DUM,SUM
+
+ DO I=1,N
+  IDX(I)=0
+ END DO
+ ISING=0
+
+ DO I=1,N
+  AAMAX=0.
+  DO J=1,N
+   IF(ABS(AA(I,J)).GT.AAMAX)AAMAX=ABS(AA(I,J))
+  ENDDO
+  IF(AAMAX.EQ.0.)THEN
+   WRITE(*,*) 'Matrix is singular'
+   ISING=1
+   RETURN
+  ENDIF
+  VV(I)=1./AAMAX
+ ENDDO
+ DO J=1,N
+  DO I=1,J-1
+   SUM=AA(I,J)
+   DO K=1,I-1
+    SUM=SUM-AA(I,K)*AA(K,J)
+   ENDDO
+   AA(I,J)=SUM
+  ENDDO
+  AAMAX=0.
+  DO I=J,N
+   SUM=AA(I,J)
+   DO K=1,J-1
+    SUM=SUM-AA(I,K)*AA(K,J)
+   ENDDO
+   AA(I,J)=SUM
+   DUM=VV(I)*ABS(SUM)
+   IF(DUM.GE.AAMAX)THEN
+    IMAX=I
+    AAMAX=DUM
+   ENDIF
+  ENDDO
+  IF(J.NE.IMAX)THEN
+   DO K=1,N
+    DUM=AA(IMAX,K)
+    AA(IMAX,K)=AA(J,K)
+    AA(J,K)=DUM
+   ENDDO
+   VV(IMAX)=VV(J)
+  ENDIF
+  IDX(J)=IMAX
+  IF(AA(J,J).EQ.0.)AA(J,J)=TINY
+  IF(J.NE.N)THEN
+   DUM=1./AA(J,J)
+   DO I=J+1,N
+    AA(I,J)=AA(I,J)*DUM
+   ENDDO
+  ENDIF
+ ENDDO
+
+ RETURN
+ END SUBROUTINE IPEST_LUDECOMP_DBL
+
+ !###====================================================================
+ SUBROUTINE IPEST_LUBACKSUB_DBL(AA,IDX,BB,N)
+ !###====================================================================
+ IMPLICIT NONE
+ INTEGER :: N
+ DOUBLE PRECISION :: AA(N,N)
+ DOUBLE PRECISION :: BB(N)
+ INTEGER :: IDX(N)
+ INTEGER :: I,II,J,LL
+ DOUBLE PRECISION :: SUM
+
+ II=0
+ DO I=1,N
+  LL=IDX(I)
+  SUM=BB(LL)
+  BB(LL)=BB(I)
+  IF(II.NE.0)THEN
+   DO J=II,I-1
+    SUM=SUM-AA(I,J)*BB(J)
+   ENDDO
+  ELSE IF(SUM.NE.0.)THEN
+   II=I
+  ENDIF
+  BB(I)=SUM
+ ENDDO
+ DO I=N,1,-1
+  SUM=BB(I)
+  DO J=I+1,N
+   SUM=SUM-AA(I,J)*BB(J)
+  ENDDO
+  BB(I)=SUM/AA(I,I)
+ ENDDO
+
+ RETURN
+ END SUBROUTINE IPEST_LUBACKSUB_DBL
  
 END MODULE MOD_IPEST_GLM

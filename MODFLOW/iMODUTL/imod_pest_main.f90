@@ -1523,27 +1523,24 @@ END SUBROUTINE WRITEIPF
   DO I=PEST_IGRAD,SIZE(PARAM)
    IF(PARAM(I)%IACT.EQ.0)CYCLE
    IF(ABS(PARAM(I)%IGROUP).EQ.ABS(PARAM(PEST_IGRAD)%IGROUP))THEN
-!    PARAM(I)%ALPHA(1)=PARAM(I)%ALPHA(2)+PARAM(I)%DELTA
-!    IF(PARAM(I)%IGROUP.GT.0)THEN
-     IF(PARAM(I)%LOG)THEN
-      PARAM(I)%ALPHA(1)=PARAM(I)%ALPHA(2)+PARAM(I)%DELTA
-      FCT=EXP(PARAM(I)%ALPHA(1))
-     ELSE
-      PARAM(I)%ALPHA(1)=PARAM(I)%ALPHA(2)*PARAM(I)%DELTA
-      FCT=PARAM(I)%ALPHA(1)
-     ENDIF
-     CALL IMOD_UTL_PRINTTEXT('Adjusting Parameter '//TRIM(PARAM(I)%PTYPE)// &
-                  ';ils='//TRIM(IMOD_UTL_ITOS(PARAM(I)%ILS))// &
-                  ';izone='//TRIM(IMOD_UTL_ITOS(PARAM(I)%IZONE))// &
-                  ';igroup='//TRIM(IMOD_UTL_ITOS(PARAM(I)%IGROUP))// &
-                  ';factor='//TRIM(IMOD_UTL_DTOS(FCT,'*',1)),0)
-     WRITE(IUPESTOUT,'(A)') 'Adjusting Parameter '//TRIM(PARAM(I)%PTYPE)// &
-                  '['//TRIM(PARAM(I)%ACRONYM)//']'// &
-                  ';ils='//TRIM(IMOD_UTL_ITOS(PARAM(I)%ILS))// &
-                  ';izone='//TRIM(IMOD_UTL_ITOS(PARAM(I)%IZONE))// &
-                  ';igroup='//TRIM(IMOD_UTL_ITOS(PARAM(I)%IGROUP))// &
-                  ';factor='//TRIM(IMOD_UTL_DTOS(FCT,'*',1))
-!    ENDIF
+    IF(PARAM(I)%LOG)THEN
+     PARAM(I)%ALPHA(1)=PARAM(I)%ALPHA(2)+PARAM(I)%DELTA
+     FCT=EXP(PARAM(I)%ALPHA(1))
+    ELSE
+     PARAM(I)%ALPHA(1)=PARAM(I)%ALPHA(2)*PARAM(I)%DELTA
+     FCT=PARAM(I)%ALPHA(1)
+    ENDIF
+    CALL IMOD_UTL_PRINTTEXT('Adjusting Parameter '//TRIM(PARAM(I)%PTYPE)// &
+                 ';ils='//TRIM(IMOD_UTL_ITOS(PARAM(I)%ILS))// &
+                 ';izone='//TRIM(IMOD_UTL_ITOS(PARAM(I)%IZONE))// &
+                 ';igroup='//TRIM(IMOD_UTL_ITOS(PARAM(I)%IGROUP))// &
+                 ';factor='//TRIM(IMOD_UTL_DTOS(FCT,'*',1)),0)
+    WRITE(IUPESTOUT,'(A)') 'Adjusting Parameter '//TRIM(PARAM(I)%PTYPE)// &
+                 '['//TRIM(PARAM(I)%ACRONYM)//']'// &
+                 ';ils='//TRIM(IMOD_UTL_ITOS(PARAM(I)%ILS))// &
+                 ';izone='//TRIM(IMOD_UTL_ITOS(PARAM(I)%IZONE))// &
+                 ';igroup='//TRIM(IMOD_UTL_ITOS(PARAM(I)%IGROUP))// &
+                 ';factor='//TRIM(IMOD_UTL_DTOS(FCT,'*',1))
    ENDIF
   ENDDO
  ELSE
