@@ -54,7 +54,7 @@ subroutine pest1alpha_grid(ptype,a,nrow,ncol,nlay,iout,a2)
 !###====================================================================
 use imod_utl, only: imod_utl_printtext,imod_utl_itos,imod_utl_dtos,imod_utl_createdir, &
    utl_kriging_range,utl_kriging_main
-use gwfmetmodule, only: cdelr, cdelc
+use gwfmetmodule, only: cdelr, cdelc, resultdir
 use global, only: lipest, ibound 
 use pestvar, only: param, pest_iter,lgrad,llnsrch,pest_igrad,iupestout,pest_ktype,pest_krange,blnkout
 
@@ -84,6 +84,8 @@ DATA PPPARAM/'KD','KH','KV','VC','SC','VA'/ !## variable for pilotpoints
 !###======================================================================
 
 if(.not.lipest)return
+
+call sgwf2met1pnt(1) !igrid)
 
 !## initialize parameters
 if(pest_iter.eq.0)then
@@ -136,7 +138,8 @@ if(pest_iter.eq.0)then
     end do
 end if
 
-DIR='.\pest\pest_parameters_c'//trim(imod_utl_itos(pest_iter))
+DIR=trim(resultdir)//'\pest\parameters_cycle'//trim(imod_utl_itos(pest_iter))
+!dir='.\pest\pest_parameters_c'//trim(imod_utl_itos(pest_iter))
 CALL IMOD_UTL_CREATEDIR(DIR)
 
 do i=1,size(param)
@@ -447,19 +450,14 @@ do i=1,size(param)
       end do
    end select
 
-!   if(kper.eq.1)then
     if(trim(param(i)%acronym).eq.'')then
-!    line=' * '//param(i)%ptype//' adjusted ('//trim(imod_utl_itos(nadj))//') with alpha='//trim(imod_utl_dtos(fct,'f',7))
      line='Param. '//trim(imod_utl_itos(i))//'['//param(i)%ptype//',n='//trim(imod_utl_itos(param(i)%nodes))// &
        ',f='//trim(imod_utl_dtos(fct,'f',7))//',ils='//trim(imod_utl_itos(ils))//']'
      else
       line='Param. '//trim(imod_utl_itos(i))//'['//trim(param(i)%acronym)//','//param(i)%ptype//',n='//trim(imod_utl_itos(param(i)%nodes))// &
        ',f='//trim(imod_utl_dtos(fct,'f',7))//',ils='//trim(imod_utl_itos(ils))//']'
-!    line=' * '//param(i)%ptype//' adjusted ('//trim(imod_utl_itos(nadj))//') with alpha='//trim(imod_utl_dtos(fct,'f',7))
     endif
     write(*,'(a)') trim(line)
-!   endif
-!   call imod_utl_printtext(trim(line),-1,iupestout)
 
 end do
 

@@ -3296,16 +3296,28 @@ c     if (nxch.le.0) ok = .false.
       mf2005_TimeserieInit = ok
       end function
 
+      subroutine mf2005_GetSavePath_TS(savepath)
+!...     modules
+      use gwfmetmodule
+!...     arguments
+      character(len=*),intent(out) :: savepath
+
+      call sgwf2met1pnt(1) !igrid)
+      if (associated(resultdir))savepath=resultdir
+      
+      end subroutine mf2005_GetSavePath_TS
+
       logical function mf2005_TimeserieGetHead(igrid)
 !...     modules
       use global, only: hnew, iunit, nlay, nrow, ncol
+      use gwfmetmodule
       use tsvar
 
       implicit none
 
 !...     arguments
       integer, intent(in) :: igrid
-
+      
 !...     functions
       real :: mf2005_tserie1hmean
 
@@ -3348,7 +3360,7 @@ c     if (nxch.le.0) ok = .false.
            ts(jj)%stvalue(i)%c = h ! set computed value
         end do
       end do
-
+      
       mf2005_TimeserieGetHead = ok
       end function
 

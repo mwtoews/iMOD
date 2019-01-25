@@ -103,6 +103,7 @@ implicit none
  type(idfobj) :: idf
 
  character(len=1024) :: str
+ character(len=256) :: tssavepath 
  
  real, dimension(4) :: imodusebox
  
@@ -331,7 +332,7 @@ call pks7mpibarrier() ! PKS
   call cfn_vcl_fndc(ivcl,iarg,'-ipest',.true.,pfile,1)
   if (iarg.gt.0) then
    lipest=.true.  
-   CALL PEST1INIT(1,pfile,IUPESTOUT,modwd1,idf,0) !'CODE OF HET UIT RUN- OF NAMFILE KOMT')
+ !  CALL PEST1INIT(1,pfile,IUPESTOUT,modwd1,idf,0) !'CODE OF HET UIT RUN- OF NAMFILE KOMT')
   endif
  endif
  
@@ -397,6 +398,10 @@ call pks7mpibarrier() ! PKS
     call osd_chdir(modwd2)
     if (usestsmodflow) call sts2init(usestsmodflow,lunsts)
     call mf2005_initComponent(modrecord,retValMF2005)
+    !## get pest variables
+    call mf2005_GetSavePath_TS(tssavepath)
+    CALL PEST1INIT(1,pfile,IUPESTOUT,tssavepath,idf,0) !'CODE OF HET UIT RUN- OF NAMFILE KOMT')
+    
     ! get number of grids
     ok = mf2005_PutNumberOfGrids(mf_ngrid); call driverChk(ok,'mf2005_PutNumberOfGrids')
     if (mf_ngrid.ne.1) call driverChk(.false.,'More than one MODFLOW grids is not supported.'); mf_igrid = 1
@@ -424,7 +429,8 @@ call pks7mpibarrier() ! PKS
 
  ! append the PEST log-file
  if (lipest) then
-    call pest1appendlogfile(modwd1)
+!    call mf2005_GetSavePath_TS(tssavepath)
+    call pest1appendlogfile(tssavepath)
     call pest1log()
     CALL PEST1CLOSELOGFILES()
  end if
@@ -461,15 +467,15 @@ call pks7mpibarrier() ! PKS
 
  ! append the PEST log-file
  if (lipest) then
+!    call mf2005_GetSavePath_TS(tssavepath)
     call mf2005_returnIOUT(iout)
-    CALL PESTDUMPFCT(modwd1,iout)
+    CALL PESTDUMPFCT(tssavepath,iout)
  endif
 
  !#### TIMESERIES ####
  call osd_chdir(root)
  call tserie1init1(lipest,lss,hnoflo)
  ok = mf2005_TimeserieInit(mf_igrid); call driverChk(ok,'mf2005_TimeserieInit')
- call tserie1init2(lipest,lss,hnoflo,modwd1,submstr(isub))
 
  if (rt.eq.rtmodsimtranmoz) then
     call osd_chdir(mozwd)
@@ -756,7 +762,10 @@ call pks7mpibarrier() ! PKS
              call osd_chdir(root)  
              ok = mf2005_TimeserieGetHead(mf_igrid); call DriverChk(ok,'mf2005_TimeserieGetHead')
              call gwf2getcurrentdate(mf_igrid,time_string)  !,issflg(kkper)
-             call tserie1write(0,lss,currentTime,hnoflo,usests,modwd1,submstr(isub),time_string)
+!             call mf2005_GetSavePath_TS(tssavepath)
+
+             call tserie1init2(lipest,lss,hnoflo,tssavepath,submstr(isub))
+             call tserie1write(0,lss,currentTime,hnoflo,usests,tssavepath,submstr(isub),time_string) !,tssavepath)
 
              !#### TIMESERIES #####
 
@@ -873,7 +882,8 @@ call pks7mpibarrier() ! PKS
  end if
 !#### TIMESERIES #####
  call osd_chdir(root)
- call tserie1write(1,lss,currentTime,hnoflo,usests,modwd1,submstr(isub),time_string)
+! call mf2005_GetSavePath_TS(tssavepath)
+ call tserie1write(1,lss,currentTime,hnoflo,usests,tssavepath,submstr(isub),time_string)
  call tserie1close()
 !#### TIMESERIES #####
 
@@ -900,7 +910,8 @@ call pks7mpibarrier() ! PKS
  if (.not.lipest) then
     convergedPest=.true.
  else
-  convergedPest=pestnext(lss,modwd1,idf)
+!  call mf2005_GetSavePath_TS(tssavepath)
+  convergedPest=pestnext(lss,tssavepath,idf)
  end if
 ! call imod_utl_closeunits()
 

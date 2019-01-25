@@ -35,6 +35,7 @@ USE MOD_PREF_PAR
 USE DATEVAR
 USE MODPLOT
 USE MOD_ABOUT
+USE MOD_IPEST_GLM
 
 CONTAINS
 
@@ -1963,7 +1964,7 @@ JLOOP: DO K=1,SIZE(TOPICS)
    ELSEIF(PBMAN%IPESTP.EQ.1)THEN
     DO I=1,SIZE(PEST%PARAM)
      IF(PEST%PARAM(I)%PACT.EQ.1)THEN
-      WRITE(IU,'(/A/)') 'start "'//TRIM(PREFVAL(8))//'" "'//TRIM(MNAME)//'_P#'//TRIM(ITOS(I))//'.nam" -ipest ".\modelinput\'// &
+      WRITE(IU,'(/A/)') 'START "P#'//TRIM(ITOS(I))//'" "'//TRIM(PREFVAL(8))//'" "'//TRIM(MNAME)//'_P#'//TRIM(ITOS(I))//'.nam" -ipest ".\modelinput\'// &
                                    TRIM(MNAME)//'_P#'//TRIM(ITOS(I))//'.pst1"'
      ENDIF
     ENDDO
@@ -2007,61 +2008,65 @@ JLOOP: DO K=1,SIZE(TOPICS)
  !## move iMOD to the simulation directory
  CALL IOSDIRNAME(DIRNAME); CALL IOSDIRCHANGE(TRIM(DIR)//'\')
 
- !## start the batch file - run in the foreground
- IF(IRUNMODE.GT.0)THEN
+ IF(PBMAN%IPESTP.EQ.1)THEN
+  CALL IPEST_GLM_MAIN('RUN.BAT')
+ ELSE
+  !## start the batch file - run in the foreground
+  IF(IRUNMODE.GT.0)THEN
 
-  IFLAGS=PROCBLOCKED 
-  !## executes on commandtool such that commands alike 'dir' etc. works
-  IFLAGS=IFLAGS+PROCCMDPROC
-
-  IF(ILOGFILE.EQ.0)THEN
-   CALL IOSCOMMAND('RUN.BAT',IFLAGS,IEXCOD=IEXCOD)
-  ELSE
-  CALL IOSCOMMAND('RUN.BAT > RUN_LOG.TXT',IFLAGS,IEXCOD=IEXCOD)
-  ENDIF
+   IFLAGS=PROCBLOCKED 
+   !## executes on commandtool such that commands alike 'dir' etc. works
+   IFLAGS=IFLAGS+PROCCMDPROC
+ 
+   IF(ILOGFILE.EQ.0)THEN
+    CALL IOSCOMMAND('RUN.BAT',IFLAGS,IEXCOD=IEXCOD)
+   ELSE
+    CALL IOSCOMMAND('RUN.BAT > RUN_LOG.TXT',IFLAGS,IEXCOD=IEXCOD)
+   ENDIF
   
-  IF(IEXCOD.EQ.0)THEN
-   IF(IBATCH.EQ.0)THEN 
-    CALL WMESSAGEBOX(OKONLY,INFORMATIONICON,COMMONOK,'Successful simulation using: '//CHAR(13)// &
+   IF(IEXCOD.EQ.0)THEN
+    IF(IBATCH.EQ.0)THEN 
+     CALL WMESSAGEBOX(OKONLY,INFORMATIONICON,COMMONOK,'Successful simulation using: '//CHAR(13)// &
+                    'MODFLOW:         '//TRIM(PREFVAL(8))//CHAR(13)// &
+                    'RUNFILE/NAMFILE: '//TRIM(RUNFNAME),'Information')
+    ELSE
+     WRITE(*,'(A)') 'Successfully STARTED the Modflow simulation using:'
+     WRITE(*,'(A)') 'MODFLOW:         '//TRIM(PREFVAL(8))
+     WRITE(*,'(A)') 'RUNFILE/NAMFILE: '//TRIM(RUNFNAME)
+    ENDIF
+   ELSE
+    IF(IBATCH.EQ.0)THEN
+     CALL WMESSAGEBOX(OKONLY,EXCLAMATIONICON,COMMONOK,'An error occured in starting your simulation','Error')
+    ELSE
+     WRITE(*,'(A)') 'An error occured in starting your simulation'
+    ENDIF
+   ENDIF
+   
+  !## start the batch file - run in the background
+  ELSEIF(IRUNMODE.LT.0)THEN
+
+   IFLAGS=0 
+  !## executes on commandtool such that commands alike 'dir' etc. works
+
+   IFLAGS=IFLAGS+PROCCMDPROC
+  
+   IF(ILOGFILE.EQ.0)THEN
+    CALL IOSCOMMAND('RUN.BAT',IFLAGS,IEXCOD=IEXCOD)
+   ELSE
+    CALL IOSCOMMAND('RUN.BAT > RUN_LOG.TXT',IFLAGS,IEXCOD=IEXCOD)
+   ENDIF
+  
+   IF(IBATCH.EQ.0)THEN
+    CALL WMESSAGEBOX(OKONLY,INFORMATIONICON,COMMONOK,'Successfully STARTED the Modflow simulation using:'//CHAR(13)// &
                    'MODFLOW:         '//TRIM(PREFVAL(8))//CHAR(13)// &
                    'RUNFILE/NAMFILE: '//TRIM(RUNFNAME),'Information')
    ELSE
-    WRITE(*,'(A)') 'Successfully STARTED the Modflow simulation using:'
+    WRITE(*,'(A)') 'Successful simulation using:'
     WRITE(*,'(A)') 'MODFLOW:         '//TRIM(PREFVAL(8))
     WRITE(*,'(A)') 'RUNFILE/NAMFILE: '//TRIM(RUNFNAME)
    ENDIF
-  ELSE
-   IF(IBATCH.EQ.0)THEN
-    CALL WMESSAGEBOX(OKONLY,EXCLAMATIONICON,COMMONOK,'An error occured in starting your simulation','Error')
-   ELSE
-    WRITE(*,'(A)') 'An error occured in starting your simulation'
-   ENDIF
-  ENDIF
-   
- !## start the batch file - run in the background
- ELSEIF(IRUNMODE.LT.0)THEN
 
-  IFLAGS=0 
- !## executes on commandtool such that commands alike 'dir' etc. works
-
-  IFLAGS=IFLAGS+PROCCMDPROC
-  
-  IF(ILOGFILE.EQ.0)THEN
-   CALL IOSCOMMAND('RUN.BAT',IFLAGS,IEXCOD=IEXCOD)
-  ELSE
-   CALL IOSCOMMAND('RUN.BAT > RUN_LOG.TXT',IFLAGS,IEXCOD=IEXCOD)
   ENDIF
-  
-  IF(IBATCH.EQ.0)THEN
-   CALL WMESSAGEBOX(OKONLY,INFORMATIONICON,COMMONOK,'Successfully STARTED the Modflow simulation using:'//CHAR(13)// &
-                  'MODFLOW:         '//TRIM(PREFVAL(8))//CHAR(13)// &
-                  'RUNFILE/NAMFILE: '//TRIM(RUNFNAME),'Information')
-  ELSE
-   WRITE(*,'(A)') 'Successful simulation using:'
-   WRITE(*,'(A)') 'MODFLOW:         '//TRIM(PREFVAL(8))
-   WRITE(*,'(A)') 'RUNFILE/NAMFILE: '//TRIM(RUNFNAME)
-  ENDIF
-
  ENDIF
 
  CALL IOSDIRCHANGE(DIRNAME)

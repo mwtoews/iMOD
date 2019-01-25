@@ -214,19 +214,27 @@ IF(IIPF.EQ.0)RETURN
 IF(LPEST.EQ.1.AND.SUM(TS%NROWIPF).LE.0)CALL IMOD_UTL_PRINTTEXT('Should at least be some measurement points in area of interest!',2)
 
 CALL PKS7MPIACTIVE(LPKS) ! PKS
-CALL PKS7MPIPARTSTR(PS) ! PKS
+CALL PKS7MPIPARTSTR(PS)  ! PKS
 
 ichr=92; if(OS.eq.2)ichr=47
 
+if(trim(subm).eq.'')then
+ CALL IMOD_UTL_CREATEDIR(TRIM(root)//CHAR(ichr)//'timeseries')
+else
+ CALL IMOD_UTL_CREATEDIR(TRIM(root)//CHAR(ichr)//trim(subm)//char(ichr)//'timeseries')
+endif
+
 !## steady-state
 IF(LSS)THEN
+
  DO JJ=1,ABS(IIPF)
+
   I=INDEX(TS(JJ)%IPFNAME,CHAR(92),.TRUE.)+1
   K = INDEX(TS(JJ)%IPFNAME,'.',.TRUE.)-1 ! PKS
   if(trim(subm).eq.'')then
-   LINE=TRIM(ROOT)//CHAR(ichr)//TS(JJ)%IPFNAME(I:K)//TRIM(PS)//'.ipf'
+   LINE=TRIM(ROOT)//CHAR(ichr)//'timeseries'//char(ichr)//TS(JJ)%IPFNAME(I:K)//TRIM(PS)//'.ipf'
   else
-   LINE=TRIM(ROOT)//CHAR(ichr)//trim(subm)//char(ichr)//TS(JJ)%IPFNAME(I:K)//TRIM(PS)//'.ipf'
+   LINE=TRIM(ROOT)//CHAR(ichr)//trim(subm)//char(ichr)//'timeseries'//char(ichr)//TS(JJ)%IPFNAME(I:K)//TRIM(PS)//'.ipf'
   endif
   CALL IMOD_UTL_SWAPSLASH(LINE)
   CALL IMOD_UTL_OPENASC(TS(JJ)%IUIPF,LINE,'W')
@@ -252,22 +260,24 @@ IF(LSS)THEN
 !## transient
 ELSE
 
- if(trim(subm).eq.'')then
-  CALL IMOD_UTL_CREATEDIR(TRIM(root)//CHAR(ichr)//'timeseries')
-  LINE=TRIM(root)//CHAR(ichr)//'timeseries'//CHAR(ichr)//'timeseries_collect'//TRIM(PS)//'.txt'
- else
-  CALL IMOD_UTL_CREATEDIR(TRIM(root)//CHAR(ichr)//trim(subm)//char(ichr)//'timeseries')
-  LINE=TRIM(root)//CHAR(ichr)//trim(subm)//char(ichr)//'timeseries'//CHAR(ichr)//'timeseries_collect'//TRIM(PS)//'.txt'
+ if(IUIPFTXT.eq.0)then
+  if(trim(subm).eq.'')then
+   LINE=TRIM(root)//CHAR(ichr)//'timeseries'//CHAR(ichr)//'timeseries_collect'//TRIM(PS)//'.txt'
+  else
+   LINE=TRIM(root)//CHAR(ichr)//trim(subm)//char(ichr)//'timeseries'//CHAR(ichr)//'timeseries_collect'//TRIM(PS)//'.txt'
+  endif
+  !## open txt file to collect all timeseries
+  CALL IMOD_UTL_SWAPSLASH(LINE)
+  IUIPFTXT=IMOD_UTL_GETUNIT()
+  CALL IMOD_UTL_OPENASC(IUIPFTXT,LINE,'W')
  endif
- !## open txt file to collect all timeseries
- CALL IMOD_UTL_SWAPSLASH(LINE)
- IUIPFTXT=IMOD_UTL_GETUNIT()
- CALL IMOD_UTL_OPENASC(IUIPFTXT,LINE,'W')
- !OPEN(IUIPFTXT,FILE=LINE,STATUS='UNKNOWN',ACTION='WRITE',FORM='FORMATTED')
  
  II=0
  DO JJ=1,ABS(IIPF)
 
+  !## skip as file already closed again
+  IF(TS(JJ)%IUIPF.EQ.0)CYCLE
+  
   IF(OS.EQ.1)THEN
    I=INDEX(TS(JJ)%IPFNAME,CHAR(92),.TRUE.)+1
   ELSE
@@ -315,6 +325,7 @@ ELSE
   ELSE  ! PKS
    CLOSE(TS(JJ)%IUIPF)
   ENDIF 
+  TS(JJ)%IUIPF=0
  ENDDO
 ENDIF
 

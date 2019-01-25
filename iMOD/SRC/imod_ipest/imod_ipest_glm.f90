@@ -25,6 +25,14 @@ MODULE MOD_IPEST_GLM
 CONTAINS
 
  !#####=================================================================
+ SUBROUTINE IPEST_GLM_MAIN(RUNBAT)
+ !#####=================================================================
+ IMPLICIT NONE
+ CHARACTER(LEN=*),INTENT(IN) :: RUNBAT
+ 
+ END SUBROUTINE IPEST_GLM_MAIN
+ 
+ !#####=================================================================
  SUBROUTINE IPEST_GLM_INIT()
  !#####=================================================================
  IMPLICIT NONE
