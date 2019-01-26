@@ -24,7 +24,7 @@ MODULE MOD_IPEST_GLM
 
 USE WINTERACTER
 USE IMODVAR, ONLY : DP_KIND
-USE MOD_PMANAGER_PAR, ONLY : PEST,SIM
+USE MOD_PMANAGER_PAR, ONLY : PEST,SIM,PARAM,PRJNLAY
 USE MOD_UTL, ONLY  : UTL_GETUNIT,UTL_CAP,ITOS,RTOS,UTL_GETMED,UTL_CREATEDIR
 USE MOD_IPEST_GLM_PAR
 
@@ -34,9 +34,10 @@ CONTAINS
  SUBROUTINE IPEST_GLM_MAIN(DIR)
  !#####=================================================================
  IMPLICIT NONE
+ INTEGER,PARAMETER :: MXLNSRCH=20 !# maximum of sequential linesearches
  INTEGER,PARAMETER :: NCSECS=5000
  CHARACTER(LEN=*),INTENT(IN) :: DIR
- INTEGER :: I,ITER,N,IFLAGS,ISTATUS,IEXCOD,ITYPE
+ INTEGER :: I,ITER,N,IFLAGS,ISTATUS,IEXCOD,ITYPE,IGRAD,ILNSRCH
  TYPE(WIN_MESSAGE) :: MESSAGE
 
  !## open output files
@@ -47,10 +48,15 @@ CONTAINS
  IUPESTSENSITIVITY=UTL_GETUNIT(); OPEN(IUPESTSENSITIVITY,FILE=TRIM(DIR)//'\IPEST_P#0\LOG_PEST_SENSITIVITY.TXT',STATUS='UNKNOWN',ACTION='WRITE')
  IUPESTRUNFILE=UTL_GETUNIT();     OPEN(IUPESTRUNFILE,    FILE=TRIM(DIR)//'\IPEST_P#0\LOG_PEST_RUNFILE.TXT'    ,STATUS='UNKNOWN',ACTION='WRITE')
  
- N=0 ; DO I=1,SIZE(PEST%PARAM); IF(PEST%PARAM(I)%PACT.EQ.0)CYCLE; N=N+1; ENDDO
+ N=0 ; DO I=1,SIZE(PEST%PARAM); IF(PEST%PARAM(I)%PACT.EQ.0.OR.PEST%PARAM(I)%PIGROUP.LT.0)CYCLE; N=N+1; ENDDO
  CALL IPEST_GLM_ALLOCATE(N)
- N=-1; DO I=0,SIZE(PEST%PARAM); IF(I.GT.0)THEN; IF(PEST%PARAM(I)%PACT.EQ.0)CYCLE; ENDIF; N=N+1; RN(N)=TRIM(DIR)//'\RUN_P#'//TRIM(ITOS(I))//'.BAT'; ENDDO
+ N=-1; DO I=0,SIZE(PEST%PARAM)
+  IF(I.GT.0)THEN; IF(PEST%PARAM(I)%PACT.EQ.0.OR.PEST%PARAM(I)%PIGROUP.LT.0)CYCLE; ENDIF; N=N+1; RN(N)=TRIM(DIR)//'\RUN_P#'//TRIM(ITOS(I))//'.BAT'
+ ENDDO
 
+ !## set initial values for alpha()
+ DO I=1,SIZE(PEST%PARAM); CALL IPEST_GLM_CHK(I); ENDDO
+ 
  IUPESTRESIDUAL=0; CALL WMESSAGEENABLE(TIMEREXPIRED,1); MSR%PJ=HUGE(1.0D0)
  DO ITER=1,PEST%PE_MXITER
 
@@ -61,14 +67,16 @@ CONTAINS
   IFLAGS=PROCCMDPROC+PROCBLOCKED
 
   !## compute the initial simulation first
-  DO
+  IGRAD=0
+  DO ILNSRCH=1,MXLNSRCH
    !## define update in pst file
-   I=0; IF(.NOT.IPEST_GLM_PST(DIR,0))THEN; WRITE(*,'(/A/)') 'ERROR CREATED PST1 FILE FOR P#'//TRIM(ITOS(I)); STOP; ENDIF
+   IF(.NOT.IPEST_GLM_PST(DIR,0))THEN; WRITE(*,'(/A/)') 'ERROR CREATED PST1 FILE FOR P#'//TRIM(ITOS(IGRAD)); STOP; ENDIF
    !## run model
-   CALL IOSCOMMAND(TRIM(RN(I)),IFLAGS=IFLAGS) !,IDPROC=IPROC(:,I))
-   IF(WINFOERROR(1).EQ.ERROSCOMMAND)THEN; WRITE(*,'(/A/)') 'FAILED TO START MODEL P#'//TRIM(ITOS(I)); STOP; ENDIF
+   CALL IOSCOMMAND(TRIM(RN(IGRAD)),IFLAGS=IFLAGS)
+   IF(WINFOERROR(1).EQ.ERROSCOMMAND)THEN; WRITE(*,'(/A/)') 'FAILED TO START MODEL P#'//TRIM(ITOS(IGRAD)); STOP; ENDIF
    !## get objective function value
-   CALL IPEST_GLM_GETJ(DIR,I)
+   CALL IPEST_GLM_GETJ(DIR,IGRAD)
+   CALL IPEST_GLM_PROGRESS(ITER,IGRAD,ILNSRCH)
    !## evaluate whether in line-search objective function value is reduced compared to previous objective function value
    IF(MSR%TJ.LE.MSR%PJ)EXIT
    !## modify alpha ...
@@ -81,34 +89,37 @@ CONTAINS
   !## executes on commandtool such that commands alike 'dir' etc. works
   IFLAGS=PROCCMDPROC
 
- !## start finite difference approximation for parameters
-  DO I=1,SIZE(RN)
-  !## rekening houden met op te geven aantal processoren
-!   IF(IPEST_GLM_NEXTGRAD(I))THEN; ENDIF
-  ! MODIFY PST-FILE
-   CALL IOSCOMMAND(TRIM(RN(I)),IFLAGS=IFLAGS,IDPROC=IPROC(:,I))
-   IF(WINFOERROR(1).EQ.ERROSCOMMAND)THEN; WRITE(*,'(/A/)') 'FAILED TO START MODEL P#'//TRIM(ITOS(I)); STOP; ENDIF
+  !## start finite difference approximation for parameters
+  DO IGRAD=1,SIZE(RN)-1
+   !## rekening houden met op te geven aantal processoren
+   !## adjust alpha for current igrad
+   CALL IPEST_GLM_NEXTGRAD(IGRAD)
+   !## define update in pst file
+   IF(.NOT.IPEST_GLM_PST(DIR,IGRAD))THEN; WRITE(*,'(/A/)') 'ERROR CREATED PST1 FILE FOR P#'//TRIM(ITOS(IGRAD)); STOP; ENDIF
+   CALL IOSCOMMAND(TRIM(RN(IGRAD)),IFLAGS=IFLAGS,IDPROC=IPROC(:,IGRAD))
+   IF(WINFOERROR(1).EQ.ERROSCOMMAND)THEN; WRITE(*,'(/A/)') 'FAILED TO START MODEL P#'//TRIM(ITOS(IGRAD)); STOP; ENDIF
   ENDDO
 
   !## wait until all finished
-  CALL WMESSAGETIMER(NCSECS,IREPEAT=1)
+  CALL WMESSAGETIMER(NCSECS,IREPEAT=1); ILNSRCH=0
   DO
    CALL WMESSAGE(ITYPE,MESSAGE)
    !## timer expired
    IF(ITYPE.EQ.TIMEREXPIRED)THEN
 
-    N=0; DO I=1,SIZE(RN)
+    N=0; DO IGRAD=1,SIZE(RN)-1
      !## all handled process
-     IF(IPROC(1,I)+IPROC(2,I).EQ.0)CYCLE
+     IF(IPROC(1,IGRAD)+IPROC(2,IGRAD).EQ.0)CYCLE
  
-     CALL IOSCOMMANDCHECK(IPROC(:,I),ISTATUS,IEXCOD=IEXCOD)
+     CALL IOSCOMMANDCHECK(IPROC(:,IGRAD),ISTATUS,IEXCOD=IEXCOD)
      !## stopped running
      IF(ISTATUS.EQ.0)THEN
       !## error occured 
       IF(IEXCOD.NE.0)THEN; WRITE(*,'(/A/)') 'ERROR OCCURED RUNNING MODEL P#'//TRIM(ITOS(I)); STOP; ENDIF
       !## set part of objective function
-      CALL IPEST_GLM_GETJ(DIR,I)
-      IPROC(:,I)=0
+      CALL IPEST_GLM_GETJ(DIR,IGRAD)
+      CALL IPEST_GLM_PROGRESS(ITER,IGRAD,ILNSRCH)
+      IPROC(:,IGRAD)=0
      ELSE
       N=N+1
      ENDIF
@@ -126,6 +137,74 @@ CONTAINS
  
  END SUBROUTINE IPEST_GLM_MAIN
 
+  !###====================================================================
+ SUBROUTINE IPEST_GLM_CHK(IP)
+ !###====================================================================
+ IMPLICIT NONE
+ INTEGER,INTENT(IN) :: IP
+ INTEGER :: I
+ 
+ DO I=1,SIZE(PARAM); IF(TRIM(PEST%PARAM(IP)%PPARAM).EQ.TRIM(PARAM(I)))EXIT; ENDDO
+ IF(I.GT.SIZE(PARAM))THEN
+  WRITE(*,'(/A)') 'Error can not recognize parameter type:'//TRIM(PEST%PARAM(IP)%PPARAM)
+  WRITE(*,'(/A)') ' Choose from:'
+  DO I=1,SIZE(PARAM); WRITE(*,'(A)') ' - '//TRIM(PARAM(I)); ENDDO
+  WRITE(*,'(A)'); STOP
+ ENDIF
+ IF(PEST%PARAM(IP)%PMIN.GE.PEST%PARAM(IP)%PMAX)THEN; WRITE(*,'(/A/)') 'No proper parameter width defined for parameter '//TRIM(ITOS(IP)); STOP; ENDIF
+ IF(PEST%PARAM(IP)%PINI.LT.PEST%PARAM(IP)%PMIN.OR.PEST%PARAM(IP)%PINI.GT.PEST%PARAM(IP)%PMAX)THEN
+  WRITE(*,'(/A/)') 'Parameter '//TRIM(ITOS(IP))//' outside parameter width'; STOP
+ ENDIF
+ SELECT CASE (TRIM(PEST%PARAM(IP)%PPARAM))
+  CASE ('KD','KH','SC','AF','VA')
+   IF(PEST%PARAM(IP)%PILS.LE.0.OR.PEST%PARAM(IP)%PILS.GT.PRJNLAY)THEN; WRITE(*,'(/A/)') 'Parameter '//TRIM(ITOS(IP))//': ILS exceeds NLAY'; STOP; ENDIF
+  CASE ('VC','KV')
+   IF(PEST%PARAM(IP)%PILS.LE.0.OR.PEST%PARAM(IP)%PILS.GT.PRJNLAY-1)THEN; WRITE(*,'(/A/)') 'Parameter '//TRIM(ITOS(IP))//': ILS exceeds NLAY-1'; STOP; ENDIF
+  CASE ('EP','RE')
+   IF(PEST%PARAM(IP)%PILS.NE.1)THEN; WRITE(*,'(/A/)') 'Parameter '//TRIM(ITOS(IP))//': ILS need to be equal to 1'; STOP; ENDIF
+ END SELECT
+
+ !## scaling
+ IF(PEST%PARAM(IP)%PLOG.EQ.1)THEN
+  IF(PEST%PARAM(IP)%PDELTA.EQ.1.0)WRITE(*,'(/A/)') 'You can not specify delta alpha eq 1.0 for log-transformed parameters'
+  IF(PEST%PARAM(IP)%PMIN  .EQ.0.0)WRITE(*,'(/A/)') 'You can not specify minimal value eq 0.0 for log-transformed parameters'
+  PEST%PARAM(IP)%PINI  =LOG(PEST%PARAM(IP)%PINI)
+  PEST%PARAM(IP)%PMIN  =LOG(PEST%PARAM(IP)%PMIN)
+  PEST%PARAM(IP)%PMAX  =LOG(PEST%PARAM(IP)%PMAX)
+  PEST%PARAM(IP)%PDELTA=LOG(PEST%PARAM(IP)%PDELTA)
+ ENDIF
+ PEST%PARAM(IP)%ALPHA(1)=PEST%PARAM(IP)%PINI !## current  alpha
+ PEST%PARAM(IP)%ALPHA(2)=PEST%PARAM(IP)%PINI !## previous alpha
+
+ END SUBROUTINE IPEST_GLM_CHK
+ 
+ !#####=================================================================
+ SUBROUTINE IPEST_GLM_SETGROUPS()
+ !#####=================================================================
+ IMPLICIT NONE
+ INTEGER :: I,J
+ 
+ !## set igroup lt 0 for followers in group - check whether factors within group are equal --- need to be
+ !## make sure group with active nodes is positive rest is negative
+ DO I=1,SIZE(PEST%PARAM)
+  IF(PEST%PARAM(I)%PACT.EQ.0)THEN
+   CYCLE
+  ENDIF
+  DO J=1,I-1 
+   IF(PEST%PARAM(J)%PACT.EQ.0)CYCLE
+   IF(PEST%PARAM(J)%PIGROUP.EQ.PEST%PARAM(I)%PIGROUP)THEN
+    !## check factor
+    IF(PEST%PARAM(J)%PINI.NE.PEST%PARAM(I)%PINI)THEN
+     WRITE(*,'(/A)') 'Initial factor in an group need to be identicial'
+     WRITE(*,'(A/)') 'Check initial factors for group '//TRIM(ITOS(PEST%PARAM(J)%PIGROUP))
+    ENDIF
+    PEST%PARAM(I)%PIGROUP=-1*PEST%PARAM(I)%PIGROUP; EXIT
+   ENDIF
+  ENDDO
+ ENDDO
+ 
+ END SUBROUTINE IPEST_GLM_SETGROUPS
+ 
  !#####=================================================================
  LOGICAL FUNCTION IPEST_GLM_PST(DIR,IGRAD)
  !#####=================================================================
@@ -177,18 +256,33 @@ CONTAINS
  DO I=1,SIZE(PEST%PARAM)
   !## read old settings
   READ(IU,'(A256)',IOSTAT=IOS) LINE; IF(IOS.NE.0)RETURN
-  LINE=TRIM(ITOS(PEST%PARAM(I)%PACT))           //','// &
-       TRIM(PEST%PARAM(I)%PPARAM)               //','// &
-       TRIM(ITOS(PEST%PARAM(I)%PILS))           //','// &
-       TRIM(ITOS(PEST%PARAM(I)%PIZONE))         //','// &    
-       TRIM(RTOS(PEST%PARAM(I)%PINI,'G',7))     //','// &
-       TRIM(RTOS(PEST%PARAM(I)%PDELTA,'G',7))   //','// &
-       TRIM(RTOS(PEST%PARAM(I)%PMIN,'G',7))     //','// &
-       TRIM(RTOS(PEST%PARAM(I)%PMAX,'G',7))     //','// &
-       TRIM(RTOS(PEST%PARAM(I)%PINCREASE,'G',7))//','// &
-       TRIM(ITOS(PEST%PARAM(I)%PIGROUP))        //','// &
-       TRIM(ITOS(PEST%PARAM(I)%PLOG))
-  IF(TRIM(PEST%PARAM(I)%ACRONYM).NE.'')LINE=TRIM(LINE)//','//TRIM(PEST%PARAM(I)%ACRONYM)
+  IF(PEST%PARAM(I)%PLOG.EQ.0)THEN
+   LINE=TRIM(ITOS(PEST%PARAM(I)%PACT))           //','// &
+        TRIM(PEST%PARAM(I)%PPARAM)               //','// &
+        TRIM(ITOS(PEST%PARAM(I)%PILS))           //','// &
+        TRIM(ITOS(PEST%PARAM(I)%PIZONE))         //','// &    
+        TRIM(RTOS(PEST%PARAM(I)%PINI,'G',7))     //','// &
+        TRIM(RTOS(PEST%PARAM(I)%PDELTA,'G',7))   //','// &
+        TRIM(RTOS(PEST%PARAM(I)%PMIN,'G',7))     //','// &
+        TRIM(RTOS(PEST%PARAM(I)%PMAX,'G',7))     //','// &
+        TRIM(RTOS(PEST%PARAM(I)%PINCREASE,'G',7))//','// &
+        TRIM(ITOS(PEST%PARAM(I)%PIGROUP))        //','// &
+        TRIM(ITOS(PEST%PARAM(I)%PLOG))
+   IF(TRIM(PEST%PARAM(I)%ACRONYM).NE.'')LINE=TRIM(LINE)//','//TRIM(PEST%PARAM(I)%ACRONYM)
+  ELSE
+   LINE=TRIM(ITOS(PEST%PARAM(I)%PACT))             //','// &
+        TRIM(PEST%PARAM(I)%PPARAM)                 //','// &
+        TRIM(ITOS(PEST%PARAM(I)%PILS))             //','// &
+        TRIM(ITOS(PEST%PARAM(I)%PIZONE))           //','// &    
+        TRIM(RTOS(EXP(PEST%PARAM(I)%PINI),'G',7))  //','// &
+        TRIM(RTOS(EXP(PEST%PARAM(I)%PDELTA),'G',7))//','// &
+        TRIM(RTOS(EXP(PEST%PARAM(I)%PMIN),'G',7))  //','// &
+        TRIM(RTOS(EXP(PEST%PARAM(I)%PMAX),'G',7))  //','// &
+        TRIM(RTOS(PEST%PARAM(I)%PINCREASE,'G',7))  //','// &
+        TRIM(ITOS(PEST%PARAM(I)%PIGROUP))          //','// &
+        TRIM(ITOS(PEST%PARAM(I)%PLOG))
+   IF(TRIM(PEST%PARAM(I)%ACRONYM).NE.'')LINE=TRIM(LINE)//','//TRIM(PEST%PARAM(I)%ACRONYM)
+  ENDIF
   WRITE(JU,'(A)') TRIM(LINE)
  ENDDO
  
@@ -391,63 +485,67 @@ CONTAINS
  END FUNCTION IPEST_GLM_NEXT
 
  !#####=================================================================
- LOGICAL FUNCTION IPEST_GLM_NEXTGRAD(IGRAD)
+ SUBROUTINE IPEST_GLM_NEXTGRAD(IGRAD)
  !#####=================================================================
  IMPLICIT NONE
  INTEGER :: I
- INTEGER,INTENT(INOUT) :: IGRAD
+ INTEGER,INTENT(IN) :: IGRAD
  REAL(KIND=DP_KIND) :: FCT
  
- IPEST_GLM_NEXTGRAD=.TRUE.
+! IPEST_GLM_NEXTGRAD=.TRUE.
 
- DO
-  IGRAD=IGRAD+1
-  !## all gradients processed
-  IF(IGRAD.GT.SIZE(PEST%PARAM))EXIT
-  !## zero gradient in case parameter is fixed
-  IF(PEST%PARAM(IGRAD)%PACT.EQ.0)THEN
-   DO I=1,SIZE(MSR%DH,2); MSR%DH(IGRAD,I)=MSR%DH(0,I); ENDDO
-  !## check whether the parameters has been modified allready since it belongs to the same group
-  ELSEIF(PEST%PARAM(IGRAD)%PIGROUP.LT.0)THEN
-   DO I=1,SIZE(MSR%DH,2); MSR%DH(IGRAD,I)=MSR%DH(0,I); ENDDO
-  !## possible candidate found
-  ELSE
-   EXIT
+ !DO
+ ! IGRAD=IGRAD+1
+ ! !## all gradients processed
+ ! IF(IGRAD.GT.SIZE(PEST%PARAM))EXIT
+ ! !## zero gradient in case parameter is fixed
+ ! IF(PEST%PARAM(IGRAD)%PACT.EQ.0)THEN
+ !  DO I=1,SIZE(MSR%DH,2); MSR%DH(IGRAD,I)=MSR%DH(0,I); ENDDO
+ ! !## check whether the parameters has been modified allready since it belongs to the same group
+ ! ELSEIF(PEST%PARAM(IGRAD)%PIGROUP.LT.0)THEN
+ !  DO I=1,SIZE(MSR%DH,2); MSR%DH(IGRAD,I)=MSR%DH(0,I); ENDDO
+ ! !## possible candidate found
+ ! ELSE
+ !  EXIT
+ ! ENDIF
+ !ENDDO
+ !!## proceed gradient
+ !IF(IGRAD.LE.SIZE(PEST%PARAM))THEN
+
+ !## reset all alpha's
+ PEST%PARAM%ALPHA(1)=PEST%PARAM%ALPHA(2)
+ !## reset new initial paramater value
+ PEST%PARAM%PINI=PEST%PARAM%ALPHA(1)
+
+ !## adjust all parameters within the same group
+ DO I=1,SIZE(PEST%PARAM)
+  !## skip inactive parameters
+  IF(PEST%PARAM(I)%PACT.EQ.0)CYCLE
+  IF(ABS(PEST%PARAM(I)%PIGROUP).EQ.ABS(PEST%PARAM(IGRAD)%PIGROUP))THEN
+   IF(PEST%PARAM(I)%PLOG.EQ.1)THEN
+    PEST%PARAM(I)%ALPHA(1)=PEST%PARAM(I)%ALPHA(2)+PEST%PARAM(I)%PDELTA
+    FCT=EXP(PEST%PARAM(I)%ALPHA(1))
+   ELSE
+    PEST%PARAM(I)%ALPHA(1)=PEST%PARAM(I)%ALPHA(2)*PEST%PARAM(I)%PDELTA
+    FCT=PEST%PARAM(I)%ALPHA(1)
+   ENDIF
+   !## set new initial paramater value
+   PEST%PARAM(I)%PINI=PEST%PARAM(I)%ALPHA(1)
+   WRITE(*,'(A)') 'Adjusting Parameter '//TRIM(PEST%PARAM(I)%PPARAM)// &
+                ';ils='//TRIM(ITOS(PEST%PARAM(I)%PILS))// &
+                ';izone='//TRIM(ITOS(PEST%PARAM(I)%PIZONE))// &
+                ';igroup='//TRIM(ITOS(PEST%PARAM(I)%PIGROUP))// &
+                ';factor='//TRIM(RTOS(FCT,'*',1))
+   WRITE(IUPESTOUT,'(A)') 'Adjusting Parameter '//TRIM(PEST%PARAM(I)%PPARAM)// &
+                '['//TRIM(PEST%PARAM(I)%ACRONYM)//']'// &
+                ';ils='//TRIM(ITOS(PEST%PARAM(I)%PILS))// &
+                ';izone='//TRIM(ITOS(PEST%PARAM(I)%PIZONE))// &
+                ';igroup='//TRIM(ITOS(PEST%PARAM(I)%PIGROUP))// &
+                ';factor='//TRIM(RTOS(FCT,'*',1))
   ENDIF
  ENDDO
- !## proceed gradient
- IF(IGRAD.LE.SIZE(PEST%PARAM))THEN
-  !## reset all alpha's
-  PEST%PARAM%ALPHA(1)=PEST%PARAM%ALPHA(2)
-  !## adjust all parameters within the same group
-  DO I=IGRAD,SIZE(PEST%PARAM)
-   IF(PEST%PARAM(I)%PACT.EQ.0)CYCLE
-   IF(ABS(PEST%PARAM(I)%PIGROUP).EQ.ABS(PEST%PARAM(IGRAD)%PIGROUP))THEN
-    IF(PEST%PARAM(I)%PLOG.EQ.1)THEN
-     PEST%PARAM(I)%ALPHA(1)=PEST%PARAM(I)%ALPHA(2)+PEST%PARAM(I)%PDELTA
-     FCT=EXP(PEST%PARAM(I)%ALPHA(1))
-    ELSE
-     PEST%PARAM(I)%ALPHA(1)=PEST%PARAM(I)%ALPHA(2)*PEST%PARAM(I)%PDELTA
-     FCT=PEST%PARAM(I)%ALPHA(1)
-    ENDIF
-    WRITE(*,'(A)') 'Adjusting Parameter '//TRIM(PEST%PARAM(I)%PPARAM)// &
-                 ';ils='//TRIM(ITOS(PEST%PARAM(I)%PILS))// &
-                 ';izone='//TRIM(ITOS(PEST%PARAM(I)%PIZONE))// &
-                 ';igroup='//TRIM(ITOS(PEST%PARAM(I)%PIGROUP))// &
-                 ';factor='//TRIM(RTOS(FCT,'*',1))
-    WRITE(IUPESTOUT,'(A)') 'Adjusting Parameter '//TRIM(PEST%PARAM(I)%PPARAM)// &
-                 '['//TRIM(PEST%PARAM(I)%ACRONYM)//']'// &
-                 ';ils='//TRIM(ITOS(PEST%PARAM(I)%PILS))// &
-                 ';izone='//TRIM(ITOS(PEST%PARAM(I)%PIZONE))// &
-                 ';igroup='//TRIM(ITOS(PEST%PARAM(I)%PIGROUP))// &
-                 ';factor='//TRIM(RTOS(FCT,'*',1))
-   ENDIF
-  ENDDO
- ELSE
-  IPEST_GLM_NEXTGRAD=.FALSE.
- ENDIF
 
- END FUNCTION IPEST_GLM_NEXTGRAD
+ END SUBROUTINE IPEST_GLM_NEXTGRAD
  
  !###====================================================================
  SUBROUTINE IPEST_GLM_GRADIENT(ITER)
@@ -462,10 +560,8 @@ CONTAINS
  REAL(KIND=DP_KIND),ALLOCATABLE,DIMENSION(:,:) :: C,JS,P,PT
  REAL(KIND=DP_KIND),ALLOCATABLE,DIMENSION(:) :: N,RU 
  REAL(KIND=DP_KIND),ALLOCATABLE,DIMENSION(:) :: S
-! CHARACTER(LEN=8),ALLOCATABLE,DIMENSION(:) :: TXT
  REAL(KIND=DP_KIND),ALLOCATABLE,DIMENSION(:,:) :: EIGV,COV,B,M
  REAL(KIND=DP_KIND),ALLOCATABLE,DIMENSION(:) :: EIGW,JQR
-! CHARACTER(LEN=8) :: DTXT
  LOGICAL :: LSCALING,LSVD,LAMBDARESET
 
  SELECT CASE (PEST%PE_SCALING)
@@ -551,7 +647,7 @@ CONTAINS
   ENDIF
 
   !## construct jqj - normal matrix/hessian
-  CALL IPEST_GLM_JQJ(JQJ,EIGW,EIGV,COV,NP,LSENS) !,ROOT,idf)
+  CALL IPEST_GLM_JQJ(JQJ,EIGW,EIGV,COV,NP,.FALSE.) !LSENS) !,ROOT,idf)
 
   !## multiply lateral sensitivities with sensitivities in case pest_niter=0
   IF(PEST%PE_MXITER.EQ.0)THEN
@@ -572,7 +668,7 @@ CONTAINS
    I=I+1
    DO J=1,MSR%NOBS
     DH1=MSR%DH(IP1,J); DH2=MSR%DH(0,J)
-    DJ1=(DH1-DH2)/DF1; DJ2=MSR%DH(0 ,J)
+    DJ1=(DH1-DH2)/DF1; DJ2=MSR%DH(0,J)
     W  =MSR%W(J)
     JQR(I)=JQR(I)+(DJ1*W*DJ2)
    ENDDO
@@ -621,7 +717,7 @@ CONTAINS
     IF(PEST%PARAM(IP1)%PACT.NE.1.OR.PEST%PARAM(IP1)%PIGROUP.LE.0)CYCLE
     I=I+1
     DO J=1,MSR%NOBS
-     DJ1=JS(I,J); DJ2=MSR%DH(0 ,J); W=MSR%W(J)
+     DJ1=JS(I,J); DJ2=MSR%DH(0,J); W=MSR%W(J)
      JQR(I)=JQR(I)+(DJ1*W*DJ2)
     ENDDO
    ENDDO
@@ -1074,21 +1170,19 @@ CONTAINS
  END FUNCTION IPEST_GLM_WRITESTAT_PERROR
  
  !###====================================================================
- SUBROUTINE IPEST_GLM_JQJ(JQJ,EIGW,EIGV,COV,NP,LPRINT) !,ROOT,idf)
+ SUBROUTINE IPEST_GLM_JQJ(JQJ,EIGW,EIGV,COV,NP,LPRINT) 
  !###====================================================================
  IMPLICIT NONE
-! type(idfobj),intent(in) :: idf
-! CHARACTER(LEN=*),INTENT(IN) :: ROOT
  INTEGER,INTENT(IN) :: NP
  LOGICAL,INTENT(IN) :: LPRINT
- REAL(KIND=8),DIMENSION(NP,NP),INTENT(OUT) :: JQJ,EIGV,COV
- REAL(KIND=8),DIMENSION(NP),INTENT(OUT) :: EIGW
- REAL(KIND=8) :: DET
- INTEGER :: I,J,K,IP1,IP2,II,N,ISING,IIU,JUPESTOUT
- REAL(KIND=8) :: DF1,DF2,DJ1,DJ2,B1,TV,TEV,CB,KAPPA,W,DH1,DH2
- REAL(KIND=8),ALLOCATABLE,DIMENSION(:,:) :: B,JQJB
- REAL(KIND=8),ALLOCATABLE,DIMENSION(:,:) :: COR
- REAL(KIND=8),ALLOCATABLE,DIMENSION(:) :: E
+ REAL(KIND=DP_KIND),DIMENSION(NP,NP),INTENT(OUT) :: JQJ,EIGV,COV
+ REAL(KIND=DP_KIND),DIMENSION(NP),INTENT(OUT) :: EIGW
+ REAL(KIND=DP_KIND) :: DET
+ INTEGER :: I,J,K,IP1,IP2,II,N,ISING,IIU !,JUPESTOUT
+ REAL(KIND=DP_KIND) :: DF1,DF2,DJ1,DJ2,B1,TV,TEV,CB,KAPPA,W,DH1,DH2
+ REAL(KIND=DP_KIND),ALLOCATABLE,DIMENSION(:,:) :: B,JQJB
+ REAL(KIND=DP_KIND),ALLOCATABLE,DIMENSION(:,:) :: COR
+ REAL(KIND=DP_KIND),ALLOCATABLE,DIMENSION(:) :: E
  INTEGER,ALLOCATABLE,DIMENSION(:) :: INDX
  
  !!## if sensisivities need to be computed generate csv file and stop
@@ -1218,40 +1312,40 @@ CONTAINS
 
  DO I=1,NP; DO J=1,NP; B(I,J)=B1*B(I,J); ENDDO; ENDDO
 
- !IF(LPRINT)THEN
- ! DO K=1,2
- !  IF(K.EQ.1)IIU=IUPESTOUT 
- !  IF(K.EQ.2)THEN
- !   !## write covariance 
- !   IF(.NOT.LSENS)EXIT
- !   JUPESTOUT=UTL_GETUNIT()
- !   OPEN(JUPESTOUT,FILE=TRIM(ROOT)//CHAR(92)//'PEST'//CHAR(92)//'COVARIANCE_'//TRIM(ITOS(PEST_NITER))//'.TXT',STATUS='UNKNOWN',ACTION='WRITE')
- !   IIU=JUPESTOUT 
- !   WRITE(IIU,*) NP
- !   DO J=1,SIZE(PEST%PARAM)
- !    IF(PEST%PARAM(J)%PACT.EQ.1.AND.PEST%PARAM(J)%PIGROUP.GT.0)THEN
- !     WRITE(IIU,'(A2,3I3,A16)') PEST%PARAM(J)%PPARAM,PEST%PARAM(J)%PILS,PEST%PARAM(J)%PIZONE,PEST%PARAM(J)%PIGROUP,PEST%PARAM(J)%ACRONYM
- !    ENDIF
- !   ENDDO
- !  ENDIF
- !  WRITE(IIU,*); WRITE(IIU,*) 'Parameter Covariance Matrix (m2):'; WRITE(IUPESTOUT,*)
- !
- !  BLINE=''
- !  DO J=1,SIZE(PEST%PARAM)
- !   IF(PEST%PARAM(J)%PACT.EQ.1.AND.PEST%PARAM(J)%PIGROUP.GT.0)THEN
- !    IF(PEST%PARAM(J)%ACRONYM.EQ.'')THEN
- !     WRITE(SLINE,'(3X,A2,2I3.3,A1,I3.3)') PEST%PARAM(J)%PPARAM,PEST%PARAM(J)%PILS,PEST%PARAM(J)%PIZONE,'-',PEST%PARAM(J)%PIGROUP
- !    ELSE
- !     WRITE(SLINE,'(A15)') PEST%PARAM(J)%ACRONYM
- !    ENDIF
- !    BLINE=TRIM(BLINE)//TRIM(SLINE)
- !   ENDIF
- !  ENDDO
- !  WRITE(IIU,'(15X,A)') TRIM(BLINE) 
- !  WRITE(IIU,'(A)')
- ! 
- ! ENDDO
- !ENDIF
+ IF(LPRINT)THEN
+  DO K=1,2
+   IF(K.EQ.1)IIU=IUPESTOUT 
+!   IF(K.EQ.2)THEN
+!    !## write covariance 
+!    IF(.NOT.LSENS)EXIT
+!    JUPESTOUT=UTL_GETUNIT()
+!    OPEN(JUPESTOUT,FILE=TRIM(ROOT)//CHAR(92)//'PEST'//CHAR(92)//'COVARIANCE_'//TRIM(ITOS(PEST_NITER))//'.TXT',STATUS='UNKNOWN',ACTION='WRITE')
+!    IIU=JUPESTOUT 
+!    WRITE(IIU,*) NP
+!    DO J=1,SIZE(PEST%PARAM)
+!     IF(PEST%PARAM(J)%PACT.EQ.1.AND.PEST%PARAM(J)%PIGROUP.GT.0)THEN
+!      WRITE(IIU,'(A2,3I3,A16)') PEST%PARAM(J)%PPARAM,PEST%PARAM(J)%PILS,PEST%PARAM(J)%PIZONE,PEST%PARAM(J)%PIGROUP,PEST%PARAM(J)%ACRONYM
+!     ENDIF
+!    ENDDO
+!   ENDIF
+   WRITE(IIU,*); WRITE(IIU,*) 'Parameter Covariance Matrix (m2):'; WRITE(IUPESTOUT,*)
+ 
+   BLINE=''
+   DO J=1,SIZE(PEST%PARAM)
+    IF(PEST%PARAM(J)%PACT.EQ.1.AND.PEST%PARAM(J)%PIGROUP.GT.0)THEN
+     IF(PEST%PARAM(J)%ACRONYM.EQ.'')THEN
+      WRITE(SLINE,'(3X,A2,2I3.3,A1,I3.3)') PEST%PARAM(J)%PPARAM,PEST%PARAM(J)%PILS,PEST%PARAM(J)%PIZONE,'-',PEST%PARAM(J)%PIGROUP
+     ELSE
+      WRITE(SLINE,'(A15)') PEST%PARAM(J)%ACRONYM
+     ENDIF
+     BLINE=TRIM(BLINE)//TRIM(SLINE)
+    ENDIF
+   ENDDO
+   WRITE(IIU,'(15X,A)') TRIM(BLINE) 
+   WRITE(IIU,'(A)')
+  
+  ENDDO
+ ENDIF
 
  I=0
  DO IP1=1,SIZE(PEST%PARAM)
@@ -1263,12 +1357,13 @@ CONTAINS
     ELSE
      WRITE(SLINE,'(A15)') PEST%PARAM(IP1)%ACRONYM
     ENDIF
-    DO K=1,2
-     IF(K.EQ.1)IIU=IUPESTOUT 
-     IF(K.EQ.2)IIU=JUPESTOUT 
+!    DO K=1,2
+!     IF(K.EQ.1)
+    IIU=IUPESTOUT 
+!     IF(K.EQ.2)IIU=JUPESTOUT 
      WRITE(IIU,'(A15,999E15.7)') TRIM(SLINE),(B(I,J),J=1,NP)
-     IF(.NOT.LSENS)EXIT
-    ENDDO
+!     IF(.NOT.LSENS)EXIT
+!    ENDDO
    ENDIF
    DO J=1,NP; COV(I,J)=B(I,J); ENDDO
   ENDIF
@@ -1351,8 +1446,8 @@ CONTAINS
  IF(ALLOCATED(B   ))DEALLOCATE(B)
  IF(ALLOCATED(JQJB))DEALLOCATE(JQJB)
 
- IF(LSENS)STOP
- IF(.FALSE.)CLOSE(IIU)
+! IF(LSENS)STOP
+! IF(.FALSE.)CLOSE(IIU)
  
  END SUBROUTINE IPEST_GLM_JQJ
  
@@ -1815,8 +1910,8 @@ CONTAINS
  IMPLICIT NONE
  CHARACTER(LEN=*),INTENT(IN) :: DIR
  INTEGER,INTENT(IN) :: IGRAD
- INTEGER :: I,J,II,NC,MX,NPERIOD,III,K,KK,ILAY,NROWIPFTXT,IUIPFTXT,NCOLIPFTXT,IOS,NAJ
- REAL(KIND=DP_KIND) :: X,Y,Z,H,WW,MC,MM,DHH,XCOR,YCOR,ZCOR,XCROSS,DHW
+ INTEGER :: I,J,II,NC,NP,MX,NPERIOD,III,K,KK,ILAY,NROWIPFTXT,IUIPFTXT,NCOLIPFTXT,IOS,NAJ
+ REAL(KIND=DP_KIND) :: X,Y,Z,H,WW,MC,MM,DHH,XCOR,YCOR,ZCOR,XCROSS,DHW,RFIT
  CHARACTER(LEN=256) :: DIRNAME,FNAME
  CHARACTER(LEN=52) :: CID,TXT
  CHARACTER(LEN=12),ALLOCATABLE,DIMENSION(:) :: CEXT
@@ -1853,8 +1948,6 @@ CONTAINS
   DO I=1,SIZE(MSR%DH,2); MSR%DH(IGRAD,I)=MSR%DH(0,I); ENDDO
  ENDIF
  
-! MSR%W=0.0D0
-
  WRITE(IUPESTRESIDUAL,'(I10,A)') I,','//TRIM(FNAME)
  !## steady-state
  IF(IEXT(1).EQ.0)THEN
@@ -2023,11 +2116,11 @@ CONTAINS
 
   CLOSE(IU(I))
 
-!  IF(TS(I)%NROWIPF.GT.0)THEN
-!   IF(.NOT.LSS)CALL IMOD_UTL_PRINTTEXT('MEAN Cross-Correlation         : '// &
-!          TRIM(IMOD_UTL_DTOS(REAL(XCROSS)/REAL(TS(I)%NROWIPF,8),'F',7))//' (n='//TRIM(ITOS(TS(I)%NROWIPF))//')',1)
-!  ENDIF
-!
+  IF(NR(I).GT.0)THEN
+   IF(IEXT(I).GT.0)WRITE(IUPESTOUT,'(/A/)') 'MEAN Cross-Correlation: '// &
+          TRIM(RTOS(REAL(XCROSS)/DBLE(NR(I)),'F',7))//' (n='//TRIM(ITOS(NR(I)))//')'
+  ENDIF
+
  ENDDO
  MSR%NOBS=II
  
@@ -2036,56 +2129,101 @@ CONTAINS
 ! !## run batch files
 ! CALL PEST_BATCHFILES()
 !
-! !## insert regularisation to objective function
-! NP=0
-! DO I=1,SIZE(PARAM)
-!  IF(PARAM(I)%NODES.EQ.0.OR.PARAM(I)%IACT.EQ.0.OR.PARAM(I)%IGROUP.LE.0)CYCLE
-!  NP=NP+1
-! ENDDO
-! 
-! PJ=0.0D0
+ !## insert regularisation to objective function
+ NP=0; DO I=1,SIZE(PEST%PARAM); IF(PEST%PARAM(I)%PACT.EQ.0.OR.PEST%PARAM(I)%PIGROUP.LE.0)CYCLE; NP=NP+1; ENDDO
+ 
+ MSR%RJ=0.0D0
 ! IF(PEST_IREGULARISATION.EQ.1)CALL PEST_GETQPP(NP,.TRUE.,idf)
-!  
-! IF(LGRAD.AND.PEST_IGRAD.EQ.0)THEN
-!  CALL IMOD_UTL_PRINTTEXT('Best Match Value   :             '//TRIM(IMOD_UTL_DTOS(TJ,'G',7)),-1,IUPESTOUT)
-!  CALL IMOD_UTL_PRINTTEXT('Plausibility Value :             '//TRIM(IMOD_UTL_DTOS(PJ,'G',7)),-1,IUPESTOUT)
-! ENDIF
-! 
-! TJ=TJ+PJ
-!  
-! IF(LGRAD.AND.PEST_IGRAD.EQ.0)THEN
-!  CALL IMOD_UTL_PRINTTEXT('TOTAL Objective Function Value : '//TRIM(IMOD_UTL_DTOS(TJ,'G',7)),-1,IUPESTOUT)
-!  CALL IMOD_UTL_PRINTTEXT('MEAN Objective Function Value  : '//TRIM(IMOD_UTL_DTOS(TJ/REAL(PEST_NOBS,8),'G',7))// &
-!          ' (n='//TRIM(IMOD_UTL_ITOS(PEST_NOBS))//')',-1,IUPESTOUT)
-!          
-!  RFIT=IPEST_GOODNESS_OF_FIT(GF_H,GF_O,PEST_NOBS)
-!  CALL IMOD_UTL_PRINTTEXT('Goodness of Fit:                 '// &
-!      TRIM(IMOD_UTL_DTOS(RFIT,'G',7))//' (n='//TRIM(IMOD_UTL_ITOS(PEST_NOBS))//')',-1,IUPESTOUT)
-!  CALL IMOD_UTL_PRINTTEXT('>> Provides a measure of the extent to which variability of field measurements is explained',-1,IUPESTOUT)
-!  CALL IMOD_UTL_PRINTTEXT('   by the calibrated model compared to that which can be constructed as purely random. <<',-1,IUPESTOUT)
-! ENDIF
-!
-! IF(ALLOCATED(GF_H))DEALLOCATE(GF_H)
-! IF(ALLOCATED(GF_O))DEALLOCATE(GF_O)
-!  
-! CALL PESTPROGRESS()
-!
+  
+ IF(IGRAD.EQ.0)THEN
+  WRITE(IUPESTOUT,'(/A)') 'Best Match Value   : '//TRIM(RTOS(MSR%TJ,'G',7))
+  WRITE(IUPESTOUT,'(A/)') 'Plausibility Value : '//TRIM(RTOS(MSR%RJ,'G',7))
+ ENDIF
+ 
+ MSR%TJ=MSR%TJ+MSR%RJ
+  
+ IF(IGRAD.EQ.0)THEN
+  WRITE(IUPESTOUT,'(/A)') 'TOTAL Objective Function Value : '//TRIM(RTOS(MSR%TJ,'G',7))
+  WRITE(IUPESTOUT,'( A)') 'MEAN Objective Function Value  : '//TRIM(RTOS(MSR%TJ/REAL(MSR%NOBS,8),'G',7))//' (n='//TRIM(ITOS(MSR%NOBS))//')'
+          
+  RFIT=IPEST_GOODNESS_OF_FIT(GF_H,GF_O,MSR%NOBS)
+  WRITE(IUPESTOUT,'( A)') 'Goodness of Fit                : '//TRIM(RTOS(RFIT,'G',7))//' (n='//TRIM(ITOS(MSR%NOBS))//')'
+  WRITE(IUPESTOUT,'( A)') '>> Provides a measure of the extent to which variability of field measurements is explained'
+  WRITE(IUPESTOUT,'(A/)') '   by the calibrated model compared to that which can be constructed as purely random. <<'
+ ENDIF
+
 ! IF(LGRAD)THEN
-!  IF(PEST_IGRAD.EQ.0)THEN
-!   IF(PEST_ITER.EQ.1)WRITE(IUPESTEFFICIENCY,'(3E15.7)') TJ,SQRT(TJ),TJ/REAL(PEST_NOBS)
-!   TJOBJ=TJ
+!  IF(IGRAD.EQ.0)THEN
+!   IF(ITER.EQ.1)WRITE(IUPESTEFFICIENCY,'(3E15.7)') MSR%TJ,SQRT(MSR%TJ),MSR%TJ/REAL(MSR%NOBS,8)
 !  ELSE
-!   PARAM(PEST_IGRAD)%TJOBJ=TJ
+!   PEST%PARAM(IGRAD)%TJOBJ=TJ
 !  ENDIF
 ! ENDIF
 ! IF(LLNSRCH)THEN
-!
 ! ENDIF
-! 
-! CALL IMOD_UTL_PRINTTEXT('',0); CALL IMOD_UTL_PRINTTEXT(' Finished Getting residuals from IPF files ...',0)
+ 
+ WRITE(*,'(A)') '>>> Finished <<<'
 
  END SUBROUTINE IPEST_GLM_GETJ
 
+ !#####=================================================================
+ SUBROUTINE IPEST_GLM_PROGRESS(ITER,IGRAD,ILNSRCH)
+ !#####=================================================================
+ IMPLICIT NONE
+ INTEGER,INTENT(IN) :: ITER,IGRAD,ILNSRCH
+ REAL(KIND=DP_KIND),ALLOCATABLE,DIMENSION(:) :: X
+ INTEGER :: I,J
+ 
+ ALLOCATE(X(SIZE(PEST%PARAM)))
+
+ DO I=1,SIZE(PEST%PARAM)
+  IF(PEST%PARAM(I)%PLOG)THEN
+   X(I)=EXP(PEST%PARAM(I)%ALPHA(1))
+  ELSE
+   X(I)=PEST%PARAM(I)%ALPHA(1)
+  ENDIF
+ ENDDO
+
+ IF(IGRAD.EQ.0)THEN
+  WRITE(BLINE,'(3A5,A15)') 'IT','GD','LS','TOT_J'
+  DO J=1,SIZE(PEST%PARAM)
+   IF(ABS(PEST%PARAM(J)%PACT).EQ.1.AND.PEST%PARAM(J)%PIGROUP.GT.0)THEN
+    WRITE(SLINE,'(3X,A2,2I5.5)') PEST%PARAM(J)%PPARAM,PEST%PARAM(J)%PILS,PEST%PARAM(J)%PIZONE
+    BLINE=TRIM(BLINE)//TRIM(SLINE)
+   ENDIF
+  ENDDO
+  WRITE(IUPESTPROGRESS,'(/A)') TRIM(BLINE) 
+  BLINE=''
+  DO J=1,SIZE(PEST%PARAM)
+   IF(ABS(PEST%PARAM(J)%PACT).EQ.1.AND.PEST%PARAM(J)%PIGROUP.GT.0)THEN
+    WRITE(SLINE,'(12X,I3.3)') PEST%PARAM(J)%PIGROUP
+    BLINE=TRIM(BLINE)//TRIM(SLINE)
+   ENDIF
+  ENDDO
+  WRITE(IUPESTPROGRESS,'(30X,A)') TRIM(BLINE) 
+  BLINE=''
+  DO J=1,SIZE(PEST%PARAM)
+   IF(ABS(PEST%PARAM(J)%PACT).EQ.1.AND.PEST%PARAM(J)%PIGROUP.GT.0)THEN
+    WRITE(SLINE,'(A15)') PEST%PARAM(J)%ACRONYM
+    BLINE=TRIM(BLINE)//TRIM(SLINE)
+   ENDIF
+  ENDDO
+  WRITE(IUPESTPROGRESS,'(30X,A)') TRIM(BLINE) 
+ ENDIF
+ 
+ WRITE(BLINE,'(3I5,E15.7)') ITER,IGRAD,ILNSRCH,MSR%TJ
+ DO I=1,SIZE(PEST%PARAM)
+  IF(ABS(PEST%PARAM(I)%PACT).EQ.1.AND.PEST%PARAM(I)%PIGROUP.GT.0)THEN
+   WRITE(SLINE,'(E15.7)') X(I)
+   BLINE=TRIM(BLINE)//TRIM(SLINE)
+  ENDIF
+ ENDDO
+
+ WRITE(IUPESTPROGRESS,'(A)') TRIM(BLINE) 
+ DEALLOCATE(X)
+
+ END SUBROUTINE IPEST_GLM_PROGRESS
+ 
  !###====================================================================
  SUBROUTINE IPEST_GLM_ALLOCATEMSR(N,IGRAD)
  !###====================================================================
