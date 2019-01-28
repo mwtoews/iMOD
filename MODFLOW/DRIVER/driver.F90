@@ -399,9 +399,10 @@ call pks7mpibarrier() ! PKS
     if (usestsmodflow) call sts2init(usestsmodflow,lunsts)
     call mf2005_initComponent(modrecord,retValMF2005)
     !## get pest variables
-    call mf2005_GetSavePath_TS(tssavepath)
-    CALL PEST1INIT(1,pfile,IUPESTOUT,tssavepath,idf,0) !'CODE OF HET UIT RUN- OF NAMFILE KOMT')
-    
+    IF(lipest)THEN
+     call mf2005_GetSavePath_TS(tssavepath)
+     CALL PEST1INIT(1,pfile,IUPESTOUT,tssavepath,idf,0) !'CODE OF HET UIT RUN- OF NAMFILE KOMT')
+    ENDIF
     ! get number of grids
     ok = mf2005_PutNumberOfGrids(mf_ngrid); call driverChk(ok,'mf2005_PutNumberOfGrids')
     if (mf_ngrid.ne.1) call driverChk(.false.,'More than one MODFLOW grids is not supported.'); mf_igrid = 1

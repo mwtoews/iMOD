@@ -915,15 +915,13 @@ DOLOOP: DO
  REAL(KIND=DP_KIND),INTENT(IN) :: MINTHICKNESS 
  INTEGER :: NLAY,ILAY,IL,IL1,IL2,ILL,ILL1,ILL2
  REAL(KIND=DP_KIND) :: K,TT,T,B,MT,T1,T2,K1,K2,B1,MP,D,KD,VC
+ LOGICAL :: LEX
  
  NLAY=SIZE(BND)
 
  !## make backup
  DO ILAY=1,NLAY
-  TOP_BU(ILAY)=TOP(ILAY)
-  BOT_BU(ILAY)=BOT(ILAY)
-  HK_BU(ILAY) =HK(ILAY)
-  VA_BU(ILAY) =VA(ILAY)
+  TOP_BU(ILAY)=TOP(ILAY); BOT_BU(ILAY)=BOT(ILAY); HK_BU(ILAY)=HK(ILAY); VA_BU(ILAY)=VA(ILAY)
   IF(ILAY.LT.NLAY)VK_BU(ILAY) =VK(ILAY)
  ENDDO
 
@@ -949,16 +947,18 @@ DOLOOP: DO
    DO IL=IL1,IL2
     ILL2=ILL2+1
     !## set total thickness necessary at least since last correction
+    LEX=.FALSE.
     IF((TOP(IL)-BOT(IL)).LT.MINTHICKNESS)THEN
      TT=TT+MINTHICKNESS; IF(ILL1.EQ.0)ILL1=IL
-     MT=MT+MINTHICKNESS
-    ELSE
+     MT=MT+MINTHICKNESS; LEX=.TRUE.
+    ENDIF
+    IF(LEX.OR.IL.EQ.IL2)THEN
      IF(MT.GT.0.0D0)THEN
-      MT=MT+MINTHICKNESS
-      !## enough space to correct layers
-      IF(TOP(ILL1)-BOT(IL).GE.MT)THEN
+!      MT=MT+MINTHICKNESS
+!      !## enough space to correct layers
+!      IF(TOP(ILL1)-BOT(IL).GE.MT)THEN
        !## define potential mid
-       MP=(TOP(ILL1)+BOT(ILL2-1))/2.0D0
+       MP=(TOP(ILL1)+BOT(MAX(1,ILL2-1)))/2.0D0
        T1=MP+0.5D0*MT
        B1=MP-0.5D0*MT
        IF(T1.GT.TOP(ILL1))THEN
@@ -981,7 +981,7 @@ DOLOOP: DO
         IF(ILL.NE.ILL2)BOT(ILL)=TOP(ILL)-MINTHICKNESS
        ENDDO
        TT=0.0D0; MT=0.0D0; ILL1=0
-      ENDIF
+!      ENDIF
      ENDIF
     ENDIF    
    ENDDO
@@ -992,10 +992,6 @@ DOLOOP: DO
   IF(IL2.EQ.NLAY)EXIT
  ENDDO
 
-! DO ILAY=1,NLAY
-!  WRITE(*,'(I3,6F12.4)') ILAY,TOP_BU(ILAY),BOT_BU(ILAY),TOP_BU(ILAY)-BOT_BU(ILAY),TOP(ILAY),BOT(ILAY),TOP(ILAY)-BOT(ILAY)
-! ENDDO
- 
  !## correct permeabilities for aquifers
  DO ILAY=1,NLAY
 
@@ -1003,15 +999,12 @@ DOLOOP: DO
   IF(BND(ILAY).EQ.0)CYCLE
 
   !## current corrected layer
-  T=TOP(ILAY)
-  B=BOT(ILAY)
+  T=TOP(ILAY); B=BOT(ILAY)
   
   !## if layer thickness, leave it - could be possible most lower layer(s)
   IF(T-B.LE.0.0D0)THEN
 
-   HK(ILAY)=0.0D0
-   VA(ILAY)=0.0D0
-!   IF(ILAY.LT.NLAY)VK(ILAY)=0.0D0
+   HK(ILAY)=0.0D0; VA(ILAY)=0.0D0
 
   ELSE
     
@@ -1021,8 +1014,8 @@ DOLOOP: DO
     !## skip inactive cells
     IF(BND(IL).EQ.0)CYCLE
 
-    T1=TOP_BU(IL)
-    B1=BOT_BU(IL)
+    T1=TOP_BU(IL); B1=BOT_BU(IL)
+    
     D=MIN(T,T1)-MAX(B,B1)
     !## part of aquifer
     IF(D.GT.0.0D0)THEN
@@ -1031,14 +1024,15 @@ DOLOOP: DO
     ENDIF
 
     IF(IL.LT.NLAY)THEN
-     T1=BOT_BU(IL)
-     B1=TOP_BU(IL+1)
+
+     T1=BOT_BU(IL); B1=TOP_BU(IL+1)
      D=MIN(T,T1)-MAX(B,B1)
      !## part of aquitard
      IF(D.GT.0.0D0)THEN
       KD=KD+VK_BU(IL)*D
       VC=VC+D/(VK_BU(IL))
      ENDIF
+    
     ENDIF
 
    ENDDO 
@@ -1058,21 +1052,16 @@ DOLOOP: DO
   IF(BND(ILAY).EQ.0.OR.BND(ILAY+1).EQ.0)CYCLE
 
   !## original layer
-  T=BOT_BU(ILAY)
-  B=TOP_BU(ILAY+1)
+  T=BOT_BU(ILAY); B=TOP_BU(ILAY+1)
   
   !## if layer thickness, leave it - could be possible most lower layer(s)
   IF(T-B.GT.0.0D0)THEN
 
-!   VK(ILAY)=0.0D0
-!  ELSE
-  
    !## previous c
    VC=(T-B)/VK_BU(ILAY)
   
    !## current corrected layer
-   T=BOT(ILAY)
-   B=TOP(ILAY+1)
+   T=BOT(ILAY); B=TOP(ILAY+1)
    VK(ILAY)=(T-B)/VC
 
   ENDIF
