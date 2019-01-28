@@ -911,11 +911,12 @@ DOLOOP: DO
  !###======================================================================
  IMPLICIT NONE
  INTEGER,INTENT(IN),DIMENSION(:) :: BND
- REAL(KIND=DP_KIND),INTENT(INOUT),DIMENSION(:) :: TOP,BOT,HK,VK,VA,TH,TOP_BU,BOT_BU,HK_BU,VK_BU,VA_BU
+ REAL(KIND=DP_KIND),INTENT(INOUT),DIMENSION(:) :: TOP,BOT,HK,VK,VA,TOP_BU,BOT_BU,HK_BU,VK_BU,VA_BU
+ REAL(KIND=DP_KIND),INTENT(INOUT),DIMENSION(:,:) :: TH
  REAL(KIND=DP_KIND),INTENT(IN) :: MINTHICKNESS 
- INTEGER :: NLAY,ILAY,IL,IL1,IL2,ILL,ILL1,ILL2
- REAL(KIND=DP_KIND) :: K,TT,T,B,MT,T1,T2,K1,K2,B1,MP,D,KD,VC
- LOGICAL :: LEX
+ INTEGER :: N,NLAY,ILAY,IL,IL1,IL2 !,ILL,ILL1,ILL2,N
+ REAL(KIND=DP_KIND) :: K,T,B,T1,T2,K1,K2,B1,D,KD,VC,MT
+! LOGICAL :: LEX
  
  NLAY=SIZE(BND)
 
@@ -925,72 +926,108 @@ DOLOOP: DO
   IF(ILAY.LT.NLAY)VK_BU(ILAY) =VK(ILAY)
  ENDDO
 
+ TH=0.0D0
+ !## get thickness of aquifers
+ DO ILAY=1,NLAY;   IF(BND(ILAY).NE.0)TH(ILAY,1)=BOT(ILAY)-TOP(ILAY+1); ENDDO
  !## get thickness of aquitards
- TH=0.0D0; DO ILAY=1,NLAY-1; IF(BND(ILAY).NE.0.AND.BND(ILAY+1).NE.0)TH(ILAY)=BOT(ILAY)-TOP(ILAY+1); ENDDO
- 
- IL2=0; IL1=1
- DO
-  IL2=IL2+1
-  IF(IL2.GT.NLAY)EXIT
-  
-  !## skip inactive cells
-  IF(BND(IL2).EQ.0)CYCLE
-  
-  !## found maximum vertical space in aquitards to redistribute layers
-  IF(TH(IL2).GT.0.0D0.OR.IL2.EQ.NLAY)THEN
-  
-   !## thickness of available space
-   T=TOP(IL1)-BOT(IL2)
-   
-   !## search for thin aquifers in this "space"
-   MT=0.0D0; TT=0.0D0; ILL2=0; ILL1=0
-   DO IL=IL1,IL2
-    ILL2=ILL2+1
-    !## set total thickness necessary at least since last correction
-    LEX=.FALSE.
-    IF((TOP(IL)-BOT(IL)).LT.MINTHICKNESS)THEN
-     TT=TT+MINTHICKNESS; IF(ILL1.EQ.0)ILL1=IL
-     MT=MT+MINTHICKNESS; LEX=.TRUE.
-    ENDIF
-    IF(LEX.OR.IL.EQ.IL2)THEN
-     IF(MT.GT.0.0D0)THEN
-!      MT=MT+MINTHICKNESS
-!      !## enough space to correct layers
-!      IF(TOP(ILL1)-BOT(IL).GE.MT)THEN
-       !## define potential mid
-       MP=(TOP(ILL1)+BOT(MAX(1,ILL2-1)))/2.0D0
-       T1=MP+0.5D0*MT
-       B1=MP-0.5D0*MT
-       IF(T1.GT.TOP(ILL1))THEN
-        D=T1-TOP(ILL1)
-        T1=T1-D
-        B1=B1-D
-       ELSEIF(B1.LT.BOT(IL))THEN
-        D=BOT(IL)-B1
-        T1=T1+D
-        B1=B1+D
-       ENDIF
-       !## special case if top layer is less than thickness
-       IF(ILL1.EQ.1)THEN
-        TOP(ILL1)=T1; BOT(ILL1)=TOP(ILL1)-MINTHICKNESS; ILL1=ILL1+1
-       ELSE
-        BOT(ILL1-1)=T1
-       ENDIF
-       DO ILL=ILL1,ILL2
-        TOP(ILL)=BOT(ILL-1)
-        IF(ILL.NE.ILL2)BOT(ILL)=TOP(ILL)-MINTHICKNESS
-       ENDDO
-       TT=0.0D0; MT=0.0D0; ILL1=0
-!      ENDIF
-     ENDIF
-    ENDIF    
-   ENDDO
+ DO ILAY=1,NLAY-1; IF(BND(ILAY).NE.0.AND.BND(ILAY+1).NE.0)TH(ILAY,2)=BOT(ILAY)-TOP(ILAY+1); ENDDO
 
-   IL1=IL2+1
+ IL1=1; IL2=0
+ DO
+ 
+  !## find bottom of current trajectory
+  IL2=IL1; DO; IL2=IL2+1; IF(IL2.EQ.NLAY)EXIT; IF(TH(IL2,2).GT.0.0D0)EXIT; ENDDO
+
+  !## needed minimal thickness of layers
+  N=IL2-IL1+1; MT=MINTHICKNESS*REAL(N,8)
+
+  !## total thickness of aquifer in between
+  T=0.0D0; DO IL=IL1,IL2; T=T+TH(IL,1); ENDDO
+
+  !## shortage of space
+  D=MT-T
+  
+  !## more space needed, see how much included from aquitards
+  IF(D.GT.0.0D0)THEN
+
+   !## minimal acceptable thickness of layers (including half of aquitards thicknesses)
+   T1=(TH(IL1,2)+TH(IL2,2))/2.0D0
+   !## actual available
+   D=MIN(D,T1)
+   !## update acceptable minimal thickness of layers
+   MT=D/REAL(N,8)
+   !## correct thickness aquitard
+   TH(IL1,2)=TH(IL1,2)-0.5D0*D
+   TH(IL2,2)=TH(IL2,2)-0.5D0*D
+
   ENDIF
-  !## finished
-  IF(IL2.EQ.NLAY)EXIT
+  
+  DO IL=IL1,IL2; TH(IL,1)=MAX(TH(IL2,1),MT); ENDDO
+  
+  IL1=IL2
+  
  ENDDO
+
+ !## recompute all levels from the corrected thicknesses
+ DO ILAY=1,NLAY
+  IF(ILAY.GT.1)TOP(ILAY)=BOT(ILAY-1)-TH(ILAY,2)
+  BOT(ILAY)=TOP(ILAY)-TH(ILAY,1)
+ ENDDO
+ 
+  !IL1=1; IL2=0
+ !DO
+ ! 
+ ! !## find bottom of current trajectory
+ ! IL2=IL1; DO; IL2=IL2+1; IF(IL2.EQ.NLAY)EXIT; IF(TH(IL2).GT.0.0D0)EXIT; ENDDO
+ !
+ ! !## set minimal distance possible in interface
+ ! MT=MINTHICKNESS
+ !
+ ! !## thickness of available space, including aquitards - cannot use space above/below as undesired connection appears
+ ! T1=TOP(IL1); IF(IL1.GT.1)   T1=BOT(IL1-1)
+ ! B1=BOT(IL2); IF(IL2.LT.NLAY)B1=TOP(IL2+1)
+ !
+ ! !## available space
+ ! T=T1-B1; TT=T/(IL2-IL1+1)
+ !
+ ! !## adjust available space for minimal thickness
+ ! TT=MAX(TT,MT); B1=T1-TT
+ ! 
+ ! !## divide layers in between current interval
+ ! ILL1=0; ILL2=0; TT=0.0D0
+ ! DO IL=IL1,IL2
+ !
+ !  LEX=.TRUE.
+ !  IF((TOP(IL)-BOT(IL)).LT.MT)THEN
+ !   TT=TT+MT; IF(ILL1.EQ.0)ILL1=IL; ILL2=IL; LEX=.FALSE.
+ !  ENDIF
+ !
+ !  IF((LEX.OR.IL.EQ.IL2).AND.TT.GT.0.0D0)THEN
+ !
+ !   !## define potential mid
+ !   MP=(TOP(ILL1)+BOT(ILL2))/2.0D0
+ !   T=MP+0.5D0*TT; B=MP-0.5D0*TT
+ !   !## limits
+ !   T11=T1-((IL-IL1-1)*MT)
+ !   B11=B1+((IL2-IL+1)*MT)
+ !   IF(T.GT.T11)THEN
+ !    D=T-T11; T=T-D; B=B-D
+ !   ELSEIF(B.LT.B11)THEN
+ !    D=B11-B; T=T+D; B=B+D
+ !   ENDIF
+ !   TOP(ILL1)=T; BOT(ILL1)=TOP(ILL1)-MT
+ !   DO ILL=ILL1+1,ILL2
+ !    TOP(ILL)=BOT(ILL-1)
+ !    BOT(ILL)=TOP(ILL)-MT
+ !   ENDDO
+ !   TT=0.0D0; MT=0.0D0; ILL1=0
+ !  ENDIF
+ !
+ ! ENDDO
+ ! IL1=IL2
+ ! !## finished
+ ! IF(IL1.EQ.NLAY)EXIT
+ !ENDDO
 
  !## correct permeabilities for aquifers
  DO ILAY=1,NLAY
@@ -1071,12 +1108,12 @@ DOLOOP: DO
  !## check before and after
  
  !## get thickness of aquifers
- TH=0.0D0; DO ILAY=1,NLAY; IF(BND(ILAY).NE.0)TH(ILAY)=TOP_BU(ILAY)-BOT_BU(ILAY); ENDDO; T1=SUM(TH)
- DO ILAY=1,NLAY; TH(ILAY)=TH(ILAY)*HK_BU(ILAY); ENDDO; K1=SUM(TH)
+ TH=0.0D0; DO ILAY=1,NLAY; IF(BND(ILAY).NE.0)TH(ILAY,1)=TOP_BU(ILAY)-BOT_BU(ILAY); ENDDO; T1=SUM(TH(:,1))
+ DO ILAY=1,NLAY; TH(ILAY,1)=TH(ILAY,1)*HK_BU(ILAY); ENDDO; K1=SUM(TH(:,1))
  
  !## get thickness of aquifers
- TH=0.0D0; DO ILAY=1,NLAY; IF(BND(ILAY).NE.0)TH(ILAY)=TOP(ILAY)-BOT(ILAY); ENDDO; T2=SUM(TH)
- DO ILAY=1,NLAY; TH(ILAY)=TH(ILAY)*HK(ILAY); ENDDO; K2=SUM(TH)
+ TH=0.0D0; DO ILAY=1,NLAY; IF(BND(ILAY).NE.0)TH(ILAY,2)=TOP(ILAY)-BOT(ILAY); ENDDO; T2=SUM(TH(:,2))
+ DO ILAY=1,NLAY; TH(ILAY,2)=TH(ILAY,2)*HK(ILAY); ENDDO; K2=SUM(TH(:,2))
  
  IF((.NOT.UTL_EQUALS_REAL(T2,T1).OR..NOT.UTL_EQUALS_REAL(K2,K1)).AND. &
    (ABS(T2-T1).GT.1.0D0.OR.ABS(K2-K1).GT.1.0D0))THEN
@@ -1532,7 +1569,7 @@ DOLOOP: DO
  IMPLICIT NONE
  REAL(KIND=DP_KIND),INTENT(IN) :: XMIN,YMIN,XMAX,YMAX
  REAL(KIND=DP_KIND) :: DX,DY,X1,X2,Y1,Y2
- INTEGER :: I,ITER
+ INTEGER :: I
  
  !## initially try 20 ticks
  NSX=15; DX=UTL_GETNICEAXES(XMAX-XMIN,DBLE(NSX))
@@ -1544,47 +1581,6 @@ DOLOOP: DO
  NSX=(X2-X1)/DX; NSX=NSX+1; NSY=(Y2-Y1)/DY; NSY=NSY+1
  SXVALUE(1)=X1; DO I=2,NSX; SXVALUE(I)=SXVALUE(I-1)+DX; ENDDO
  SYVALUE(1)=Y1; DO I=2,NSY; SYVALUE(I)=SYVALUE(I-1)+DY; ENDDO
- 
- RETURN
- 
- !CALL IPGNEWPLOT(PGSCATTERPLOT,1,1,0,1) 
- !
- !X1=XMIN; Y1=YMIN; X2=XMAX; Y2=YMAX; ITER=0
- !
- !DO
- !
- ! CALL DBL_IPGUNITS(X1,Y1,X2,Y2)
- !
- ! !## get x-scale intervals
- ! SXVALUE=0.0D0; CALL DBL_IPGXGETSCALE(SXVALUE,NSX,'X')
- ! !## get y-scale intervals
- ! SYVALUE=0.0D0; CALL DBL_IPGXGETSCALE(SYVALUE,NSY,'Y') 
- !
- ! I=0; ITER=ITER+1
- ! !## see whether x-classes are distinghuisable
- ! IF(UTL_EQUALS_REAL(SXVALUE(2),SXVALUE(1)))THEN
- !  DX=ABS(X1)*EPSILON(X1); X1=X1-DX*DBLE(ITER)
- !  DX=ABS(X2)*EPSILON(X2); X2=X2+DX*DBLE(ITER)
- !  I=I+1
- ! ENDIF
- ! !## see whether y-classes are distinghuisable
- ! IF(UTL_EQUALS_REAL(SYVALUE(2),SYVALUE(1)))THEN
- !  DY=ABS(Y1)*EPSILON(Y1); Y1=Y1-DY*DBLE(ITER)
- !  DY=ABS(Y2)*EPSILON(Y2); Y2=Y2+DY*DBLE(ITER)
- !  I=I+1
- ! ENDIF
- !
- ! IF(I.EQ.0)EXIT
- ! 
- !ENDDO
- !
- !!## get x-scale intervals
- !DX=SXVALUE(2)-SXVALUE(1)
- !DO I=2,NSX; SXVALUE(I)=SXVALUE(I-1)+DX; ENDDO
- !
- !!## get y-scale intervals
- !DY=SYVALUE(2)-SYVALUE(1)
- !DO I=2,NSY; SYVALUE(I)=SYVALUE(I-1)+DY; ENDDO
  
  END SUBROUTINE UTL_GETAXESCALES
 
