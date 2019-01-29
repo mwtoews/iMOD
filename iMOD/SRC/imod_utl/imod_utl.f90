@@ -914,9 +914,8 @@ DOLOOP: DO
  REAL(KIND=DP_KIND),INTENT(INOUT),DIMENSION(:) :: TOP,BOT,HK,VK,VA,TOP_BU,BOT_BU,HK_BU,VK_BU,VA_BU
  REAL(KIND=DP_KIND),INTENT(INOUT),DIMENSION(:,:) :: TH
  REAL(KIND=DP_KIND),INTENT(IN) :: MINTHICKNESS 
- INTEGER :: N,NLAY,ILAY,IL,IL1,IL2 !,ILL,ILL1,ILL2,N
- REAL(KIND=DP_KIND) :: K,T,B,T1,T2,K1,K2,B1,D,KD,VC,MT
-! LOGICAL :: LEX
+ INTEGER :: N,NLAY,ILAY,IL,IL1,IL2
+ REAL(KIND=DP_KIND) :: K,T,B,T1,T2,K1,K2,B1,D,KD,VC,MT,F
  
  NLAY=SIZE(BND)
 
@@ -928,15 +927,18 @@ DOLOOP: DO
 
  TH=0.0D0
  !## get thickness of aquifers
- DO ILAY=1,NLAY;   IF(BND(ILAY).NE.0)TH(ILAY,1)=BOT(ILAY)-TOP(ILAY+1); ENDDO
+ DO ILAY=1,NLAY;   IF(BND(ILAY).NE.0)TH(ILAY,1)=TOP(ILAY)-BOT(ILAY); ENDDO
  !## get thickness of aquitards
  DO ILAY=1,NLAY-1; IF(BND(ILAY).NE.0.AND.BND(ILAY+1).NE.0)TH(ILAY,2)=BOT(ILAY)-TOP(ILAY+1); ENDDO
 
+ !## nothing to do
+ IF(SUM(TH(:,1)).EQ.0.0D0)RETURN
+ 
  IL1=1; IL2=0
  DO
  
   !## find bottom of current trajectory
-  IL2=IL1; DO; IL2=IL2+1; IF(IL2.EQ.NLAY)EXIT; IF(TH(IL2,2).GT.0.0D0)EXIT; ENDDO
+  IL2=IL1-1; DO; IL2=IL2+1; IF(IL2.EQ.NLAY)EXIT; IF(TH(IL2,2).GT.0.0D0)EXIT; ENDDO
 
   !## needed minimal thickness of layers
   N=IL2-IL1+1; MT=MINTHICKNESS*REAL(N,8)
@@ -947,7 +949,7 @@ DOLOOP: DO
   !## shortage of space
   D=MT-T
   
-  !## more space needed, see how much included from aquitards
+  !## more space needed, see how much can be included from aquitards
   IF(D.GT.0.0D0)THEN
 
    !## minimal acceptable thickness of layers (including half of aquitards thicknesses)
@@ -960,17 +962,45 @@ DOLOOP: DO
    TH(IL1,2)=TH(IL1,2)-0.5D0*D
    TH(IL2,2)=TH(IL2,2)-0.5D0*D
 
+  ELSE
+   MT=MINTHICKNESS
   ENDIF
   
-  DO IL=IL1,IL2; TH(IL,1)=MAX(TH(IL2,1),MT); ENDDO
+  !## correct minimal thicknesses
+  T=0.0; DO IL=IL1,IL2
+   IF(TH(IL,1).LT.MT)THEN
+    T=T+MT-TH(IL,1); TH(IL,1)=MT
+   ENDIF
+  ENDDO
   
-  IL1=IL2
+  !## corrections applied
+  IF(T.GT.0.0D0)THEN
+  
+   !## divide remaining t1 amoung the rest
+   T1=0.0D0; DO IL=IL1,IL2
+    IF(TH(IL,1).GT.MT)T1=T1+(TH(IL,1)-MT)
+   ENDDO
+
+   !## divide fractional
+   DO IL=IL1,IL2
+    IF(TH(IL,1).GT.MT)THEN
+     !# set fraction
+     D=(TH(IL,1)-MT)
+     F=D/T1
+     TH(IL,1)=TH(IL,1)-T*F
+    ENDIF
+   ENDDO
+
+  ENDIF
+  
+  IL1=IL2+1
+  IF(IL1.GE.NLAY)EXIT
   
  ENDDO
 
  !## recompute all levels from the corrected thicknesses
  DO ILAY=1,NLAY
-  IF(ILAY.GT.1)TOP(ILAY)=BOT(ILAY-1)-TH(ILAY,2)
+  IF(ILAY.GT.1)TOP(ILAY)=BOT(ILAY-1)-TH(ILAY-1,2)
   BOT(ILAY)=TOP(ILAY)-TH(ILAY,1)
  ENDDO
  
