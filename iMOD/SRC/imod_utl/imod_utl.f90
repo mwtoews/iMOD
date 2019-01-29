@@ -1003,61 +1003,6 @@ DOLOOP: DO
   IF(ILAY.GT.1)TOP(ILAY)=BOT(ILAY-1)-TH(ILAY-1,2)
   BOT(ILAY)=TOP(ILAY)-TH(ILAY,1)
  ENDDO
- 
-  !IL1=1; IL2=0
- !DO
- ! 
- ! !## find bottom of current trajectory
- ! IL2=IL1; DO; IL2=IL2+1; IF(IL2.EQ.NLAY)EXIT; IF(TH(IL2).GT.0.0D0)EXIT; ENDDO
- !
- ! !## set minimal distance possible in interface
- ! MT=MINTHICKNESS
- !
- ! !## thickness of available space, including aquitards - cannot use space above/below as undesired connection appears
- ! T1=TOP(IL1); IF(IL1.GT.1)   T1=BOT(IL1-1)
- ! B1=BOT(IL2); IF(IL2.LT.NLAY)B1=TOP(IL2+1)
- !
- ! !## available space
- ! T=T1-B1; TT=T/(IL2-IL1+1)
- !
- ! !## adjust available space for minimal thickness
- ! TT=MAX(TT,MT); B1=T1-TT
- ! 
- ! !## divide layers in between current interval
- ! ILL1=0; ILL2=0; TT=0.0D0
- ! DO IL=IL1,IL2
- !
- !  LEX=.TRUE.
- !  IF((TOP(IL)-BOT(IL)).LT.MT)THEN
- !   TT=TT+MT; IF(ILL1.EQ.0)ILL1=IL; ILL2=IL; LEX=.FALSE.
- !  ENDIF
- !
- !  IF((LEX.OR.IL.EQ.IL2).AND.TT.GT.0.0D0)THEN
- !
- !   !## define potential mid
- !   MP=(TOP(ILL1)+BOT(ILL2))/2.0D0
- !   T=MP+0.5D0*TT; B=MP-0.5D0*TT
- !   !## limits
- !   T11=T1-((IL-IL1-1)*MT)
- !   B11=B1+((IL2-IL+1)*MT)
- !   IF(T.GT.T11)THEN
- !    D=T-T11; T=T-D; B=B-D
- !   ELSEIF(B.LT.B11)THEN
- !    D=B11-B; T=T+D; B=B+D
- !   ENDIF
- !   TOP(ILL1)=T; BOT(ILL1)=TOP(ILL1)-MT
- !   DO ILL=ILL1+1,ILL2
- !    TOP(ILL)=BOT(ILL-1)
- !    BOT(ILL)=TOP(ILL)-MT
- !   ENDDO
- !   TT=0.0D0; MT=0.0D0; ILL1=0
- !  ENDIF
- !
- ! ENDDO
- ! IL1=IL2
- ! !## finished
- ! IF(IL1.EQ.NLAY)EXIT
- !ENDDO
 
  !## correct permeabilities for aquifers
  DO ILAY=1,NLAY

@@ -24,7 +24,7 @@ MODULE MOD_IPEST_GLM
 
 USE WINTERACTER
 USE IMODVAR, ONLY : DP_KIND
-USE MOD_PMANAGER_PAR, ONLY : PEST,SIM,PARAM,PRJNLAY
+USE MOD_PMANAGER_PAR, ONLY : PEST,SIM,PARAM,PRJNLAY,PBMAN
 USE MOD_UTL, ONLY  : UTL_GETUNIT,UTL_CAP,ITOS,RTOS,UTL_GETMED,UTL_CREATEDIR
 USE MOD_IPEST_GLM_PAR
 
@@ -37,7 +37,7 @@ CONTAINS
  INTEGER,PARAMETER :: MXLNSRCH=20 !# maximum of sequential linesearches
  INTEGER,PARAMETER :: NCSECS=1000
  CHARACTER(LEN=*),INTENT(IN) :: DIR
- INTEGER :: I,ITER,N,IFLAGS,ISTATUS,IEXCOD,ITYPE,IGRAD,ILNSRCH
+ INTEGER :: I,ITER,N,IFLAGS,ISTATUS,IEXCOD,ITYPE,IGRAD,JGRAD,ILNSRCH,NCPU
  TYPE(WIN_MESSAGE) :: MESSAGE
 
  !## open output files
@@ -95,48 +95,71 @@ CONTAINS
   IFLAGS=PROCCMDPROC
 
   !## start finite difference approximation for parameters
-  DO IGRAD=1,SIZE(RN)-1
-   !## rekening houden met op te geven aantal processoren
-   !## adjust alpha for current igrad
-   CALL IPEST_GLM_NEXTGRAD(IGRAD)
-   !## define update in pst file
-   IF(.NOT.IPEST_GLM_PST(DIR,IGRAD))THEN; WRITE(*,'(/A/)') 'ERROR CREATED PST1 FILE FOR P#'//TRIM(ITOS(IGRAD)); STOP; ENDIF
-   CALL IOSCOMMAND(TRIM(RN(IGRAD)),IFLAGS=IFLAGS,IDPROC=IPROC(:,IGRAD))
-   IF(WINFOERROR(1).EQ.ERROSCOMMAND)THEN; WRITE(*,'(/A/)') 'FAILED TO START MODEL P#'//TRIM(ITOS(IGRAD)); STOP; ENDIF
+  CALL WMESSAGETIMER(NCSECS,IREPEAT=1); ILNSRCH=0; IGRAD=0
+
+  !## number of cpu occupied
+  NCPU=0; IGRAD=0; IPROC=0
+  DO 
+
+   DO
+    IGRAD=IGRAD+1
+    !## number of cpu full
+    NCPU=NCPU+1
+    !## rekening houden met op te geven aantal processoren
+    !## adjust alpha for current igrad
+    CALL IPEST_GLM_NEXTGRAD(IGRAD)
+    !## define update in pst file
+    IF(.NOT.IPEST_GLM_PST(DIR,IGRAD))THEN; WRITE(*,'(/A/)') 'ERROR CREATED PST1 FILE FOR P#'//TRIM(ITOS(IGRAD)); STOP; ENDIF
+    CALL IOSCOMMAND(TRIM(RN(IGRAD)),IFLAGS=IFLAGS,IDPROC=IPROC(:,IGRAD))
+    IF(WINFOERROR(1).EQ.ERROSCOMMAND)THEN; WRITE(*,'(/A/)') 'FAILED TO START MODEL P#'//TRIM(ITOS(IGRAD)); STOP; ENDIF
+    !## all started
+    IF(IGRAD.EQ.SIZE(RN)-1)EXIT
+    !## maximum number of cpu reached
+    IF(NCPU.GE.PBMAN%NCPU)EXIT
+   ENDDO
+
+   !## check processes
+   DO
+    CALL WMESSAGE(ITYPE,MESSAGE)
+    !## timer expired
+    IF(ITYPE.EQ.TIMEREXPIRED)THEN
+
+     N=0; DO JGRAD=1,SIZE(RN)-1
+      !## all handled process
+      IF(IPROC(1,JGRAD)+IPROC(2,JGRAD).EQ.0)CYCLE
+      !## check running status
+      CALL IOSCOMMANDCHECK(IPROC(:,JGRAD),ISTATUS,IEXCOD=IEXCOD)
+      !## stopped running
+      IF(ISTATUS.EQ.0)THEN
+       !## error occured 
+       IF(IEXCOD.NE.0)THEN; WRITE(*,'(/A/)') 'ERROR OCCURED RUNNING MODEL P#'//TRIM(ITOS(JGRAD)); STOP; ENDIF
+       !## set part of objective function
+       CALL IPEST_GLM_GETJ(DIR,JGRAD)
+       !## write echo
+       CALL IPEST_GLM_PROGRESS(ITER,JGRAD,ILNSRCH)
+       !## reset running handle proces
+       IPROC(:,JGRAD)=0
+       !## release cpu so another can be started
+       NCPU=NCPU-1
+      ELSE
+       !# still running
+       N=N+1
+      ENDIF
+     ENDDO   
+     !## nothing running anymore
+     IF(N.EQ.0)EXIT
+     IF(N.GT.0)WRITE(*,'(/A/)') 'STILL RUNNING '//TRIM(ITOS(N))//' MODELS'
+     !## start another one as a proces has been stopped and there is still one waiting in the que
+     IF(NCPU.LT.PBMAN%NCPU.AND.IGRAD.LT.SIZE(RN)-1)EXIT
+    ENDIF
+   ENDDO
+   !## finished
+   IF(IGRAD.EQ.SIZE(RN)-1)EXIT
   ENDDO
-
-  !## wait until all finished
-  CALL WMESSAGETIMER(NCSECS,IREPEAT=1); ILNSRCH=0
-  DO
-   CALL WMESSAGE(ITYPE,MESSAGE)
-   !## timer expired
-   IF(ITYPE.EQ.TIMEREXPIRED)THEN
-
-    N=0; DO IGRAD=1,SIZE(RN)-1
-     !## all handled process
-     IF(IPROC(1,IGRAD)+IPROC(2,IGRAD).EQ.0)CYCLE
- 
-     CALL IOSCOMMANDCHECK(IPROC(:,IGRAD),ISTATUS,IEXCOD=IEXCOD)
-     !## stopped running
-     IF(ISTATUS.EQ.0)THEN
-      !## error occured 
-      IF(IEXCOD.NE.0)THEN; WRITE(*,'(/A/)') 'ERROR OCCURED RUNNING MODEL P#'//TRIM(ITOS(I)); STOP; ENDIF
-      !## set part of objective function
-      CALL IPEST_GLM_GETJ(DIR,IGRAD)
-      CALL IPEST_GLM_PROGRESS(ITER,IGRAD,ILNSRCH)
-      IPROC(:,IGRAD)=0
-     ELSE
-      N=N+1
-     ENDIF
-    ENDDO   
-    !## all finished
-    IF(N.EQ.0)EXIT
-   ENDIF
-  ENDDO
-
+  
   !## determine new gradient
   CALL IPEST_GLM_GRADIENT(ITER)
-!  alpha(1)=nieuwe gradient
+
  ENDDO
  CALL WMESSAGETIMER(0); CALL WMESSAGEENABLE(TIMEREXPIRED,0)
  
@@ -312,7 +335,7 @@ CONTAINS
  INTEGER,INTENT(IN) :: N
  
  CALL IPEST_GLM_DEALLOCATE()
- ALLOCATE(RN(0:N),IPROC(2,0:N))
+ ALLOCATE(RN(0:N),IPROC(2,0:N))!,ICPU(N))
  
  END SUBROUTINE IPEST_GLM_ALLOCATE
 
@@ -323,6 +346,7 @@ CONTAINS
 
  IF(ALLOCATED(RN))   DEALLOCATE(RN)
  IF(ALLOCATED(IPROC))DEALLOCATE(IPROC)
+! IF(ALLOCATED(ICPU))  DEALLOCATE(ICPU)
  
  END SUBROUTINE IPEST_GLM_DEALLOCATE
  
