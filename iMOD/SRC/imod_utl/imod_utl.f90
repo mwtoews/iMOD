@@ -938,7 +938,7 @@ DOLOOP: DO
  DO
  
   !## find bottom of current trajectory
-  IL2=IL1-1; DO; IL2=IL2+1; IF(IL2.EQ.NLAY)EXIT; IF(TH(IL2,2).GT.0.0D0)EXIT; ENDDO
+  IL2=IL1-1; DO; IL2=IL2+1; IF(IL2.EQ.NLAY)EXIT; IF(BND(IL2).NE.0.AND.TH(IL2,2).GT.0.0D0)EXIT; ENDDO
 
   !## needed minimal thickness of layers
   N=IL2-IL1+1; MT=MINTHICKNESS*REAL(N,8)
@@ -968,7 +968,7 @@ DOLOOP: DO
   
   !## correct minimal thicknesses
   T=0.0; DO IL=IL1,IL2
-   IF(TH(IL,1).LT.MT)THEN
+   IF(TH(IL,1).LT.MT.AND.BND(IL).NE.0)THEN
     T=T+MT-TH(IL,1); TH(IL,1)=MT
    ENDIF
   ENDDO
@@ -978,12 +978,12 @@ DOLOOP: DO
   
    !## divide remaining t1 amoung the rest
    T1=0.0D0; DO IL=IL1,IL2
-    IF(TH(IL,1).GT.MT)T1=T1+(TH(IL,1)-MT)
+    IF(TH(IL,1).GT.MT.AND.BND(IL).NE.0)T1=T1+(TH(IL,1)-MT)
    ENDDO
 
    !## divide fractional
    DO IL=IL1,IL2
-    IF(TH(IL,1).GT.MT)THEN
+    IF(TH(IL,1).GT.MT.AND.BND(IL).NE.0)THEN
      !# set fraction
      D=(TH(IL,1)-MT)
      F=D/T1
