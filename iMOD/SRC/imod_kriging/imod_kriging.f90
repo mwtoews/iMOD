@@ -783,8 +783,10 @@ CONTAINS
   DO J=I+1,MD
    !## done allready
    IF(ZD(J).EQ.IDF%NODATA)CYCLE
-   !## set average weighting
-   W=(WD(I)+WD(J))/2.0D0
+!   !## set average weighting
+!   W=(WD(I)+WD(J))/2.0D0
+   !## points have been shifted already
+   W=1.0D0
    !## get distance between points - increase distance whenever points are intersected by fault
    IF(KRIGING_DIST(XD(I),YD(I),XD(J),YD(J),W,IDF,IBLANKOUT,BO_VALUE,XYCRIT,1.0D0,0.0D0,IBLNTYPE).LE.XYCRIT)THEN
     N=N+1
