@@ -1922,9 +1922,10 @@ JLOOP: DO K=1,SIZE(TOPICS)
  !## copy imod license text file
  CALL IOSCOPYFILE(TRIM(EXEPATH)//'\'//TRIM(LICFILE),TRIM(DIR)//'\'//TRIM(LICFILE))
 
- N1=1; N2=1; IF(PBMAN%IPESTP.EQ.1)THEN; N1=0; N2=SIZE(PEST%PARAM); ENDIF
+ N1=1; N2=1; IF(PBMAN%IPESTP.EQ.1)THEN; N1=-PBMAN%NLINESEARCH; N2=SIZE(PEST%PARAM); ENDIF
  DO I=N1,N2
-
+  !## skip zero
+  IF(I.EQ.0)CYCLE
   !## simulate batch-file
   IU=UTL_GETUNIT()
   IF(PBMAN%IPESTP.EQ.0)THEN
@@ -1934,7 +1935,7 @@ JLOOP: DO K=1,SIZE(TOPICS)
     IF(PEST%PARAM(I)%PACT.EQ.0.OR.PEST%PARAM(I)%PIGROUP.LT.0)CYCLE
     CALL OSD_OPEN(IU,FILE=TRIM(DIR)//'\RUN_P#'//TRIM(ITOS(I))//'.BAT',STATUS='REPLACE',ACTION='WRITE,DENYREAD',IOSTAT=IOS)
    ELSE
-    CALL OSD_OPEN(IU,FILE=TRIM(DIR)//'\RUN_L#'//TRIM(ITOS(I))//'.BAT',STATUS='REPLACE',ACTION='WRITE,DENYREAD',IOSTAT=IOS)
+    CALL OSD_OPEN(IU,FILE=TRIM(DIR)//'\RUN_L#'//TRIM(ITOS(ABS(I)))//'.BAT',STATUS='REPLACE',ACTION='WRITE,DENYREAD',IOSTAT=IOS)
    ENDIF
   ENDIF
 
@@ -1978,8 +1979,8 @@ JLOOP: DO K=1,SIZE(TOPICS)
       WRITE(IU,'(/A/)') '"'//TRIM(PREFVAL(8))//'" "'//TRIM(MNAME)//'_P#'//TRIM(ITOS(I))//'.nam" -ipest ".\modelinput\'// &
                              TRIM(MNAME)//'_P#'//TRIM(ITOS(I))//'.pst1"'
      ELSE
-      WRITE(IU,'(/A/)') '"'//TRIM(PREFVAL(8))//'" "'//TRIM(MNAME)//'_L#'//TRIM(ITOS(I))//'.nam" -ipest ".\modelinput\'// &
-                             TRIM(MNAME)//'_L#'//TRIM(ITOS(I))//'.pst1"'
+      WRITE(IU,'(/A/)') '"'//TRIM(PREFVAL(8))//'" "'//TRIM(MNAME)//'_L#'//TRIM(ITOS(ABS(I)))//'.nam" -ipest ".\modelinput\'// &
+                             TRIM(MNAME)//'_L#'//TRIM(ITOS(ABS(I)))//'.pst1"'
      ENDIF
     ENDIF
    ENDIF
