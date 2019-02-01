@@ -435,7 +435,7 @@ ELSE
  ELSE
   
   CALL IMOD_UTL_PRINTTEXT('',0); CALL IMOD_UTL_PRINTTEXT(' Writing Timeseries to IPF file ...',0)
-  CLOSE(IUIPFTXT)
+  CLOSE(IUIPFTXT); IUIPFTXT=0
   CALL PKS7MPIPARTSTR(PS) ! PKS
   ichr=92; if(OS.eq.2)ichr=47
   if(trim(subm).eq.'')then
