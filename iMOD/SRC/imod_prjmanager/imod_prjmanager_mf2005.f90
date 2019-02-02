@@ -144,7 +144,7 @@ CONTAINS
         TRIM(RTOS(PEST%PARAM(I)%PMIN,'G',7))     //','// &
         TRIM(RTOS(PEST%PARAM(I)%PMAX,'G',7))     //','// &
         TRIM(RTOS(PEST%PARAM(I)%PINCREASE,'G',7))//','// &
-        TRIM(ITOS(PEST%PARAM(I)%PIGROUP))        //','// &
+        TRIM(ITOS(ABS(PEST%PARAM(I)%PIGROUP)))   //','// &
         TRIM(ITOS(PEST%PARAM(I)%PLOG))
    IF(TRIM(PEST%PARAM(I)%ACRONYM).NE.'')LINE=TRIM(LINE)//','//TRIM(PEST%PARAM(I)%ACRONYM)
    WRITE(IU,'(A)') TRIM(LINE)
