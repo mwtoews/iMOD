@@ -588,16 +588,16 @@ CONTAINS
  
  KRIGING_DIST=UTL_DIST(X1,Y1,X0,Y0)
 
- !## to far away (include 1.0D0*maxdist on edge - for smooth edges)
- IF(KRIGING_DIST.GE.MAXDIST)RETURN
- IF(KRIGING_DIST.LE.0.0D0)RETURN
-
  !## change position of point temporarily
  IF(W.NE.0.0D0)THEN
   X1=X0+W*(X1-X0); Y1=Y0+W*(Y1-Y0)
   KRIGING_DIST=UTL_DIST(X1,Y1,X0,Y0)
  ENDIF
  
+ !## to far away (include 1.0D0*maxdist on edge - for smooth edges)
+ IF(KRIGING_DIST.GE.MAXDIST)RETURN
+ IF(KRIGING_DIST.LE.0.0D0)RETURN
+
  !## see whether nodata-areas are crossed/similar area
  IF(IBLANKOUT.EQ.1)THEN
 
