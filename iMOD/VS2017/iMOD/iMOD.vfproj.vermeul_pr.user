@@ -3,5 +3,5 @@
 	<Configurations>
 		<Configuration Name="Debug|Win32" CommandArguments="d:\IMOD-MODELS\TMODEL\IMPORTSOBEK.INI" WorkingDirectory="D:\IMOD-MODELS\IMOD"/>
 		<Configuration Name="Release|Win32"/>
-		<Configuration Name="Debug|x64" CommandArguments="h:\IMOD-MODELS\A27\REGISMODEL\RUNFILE.INI" WorkingDirectory="d:\IMOD-MODELS\IMOD\"/>
+		<Configuration Name="Debug|x64" CommandArguments="p:\1230669-a27-utrecht\modellen\A27_phase2c\DBASE\OBS\VERSION_14\ipfstat_metingen.ini" WorkingDirectory="d:\IMOD-MODELS\IMOD\"/>
 		<Configuration Name="Release|x64" WorkingDirectory="d:\COMPILE\OSSDELTARES\iMOD\TUTORIALS"/></Configurations></VisualStudioUserFile>

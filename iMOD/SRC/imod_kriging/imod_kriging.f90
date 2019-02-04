@@ -592,11 +592,10 @@ CONTAINS
  IF(KRIGING_DIST.GE.MAXDIST)RETURN
  IF(KRIGING_DIST.LE.0.0D0)RETURN
 
- 
  !## change position of point temporarily
  IF(W.NE.0.0D0)THEN
-  X1=X0+KRIGING_DIST*W*(X1-X0)
-  Y1=Y0+KRIGING_DIST*W*(Y1-Y0)
+  X1=X0+W*(X1-X0); Y1=Y0+W*(Y1-Y0)
+  KRIGING_DIST=UTL_DIST(X1,Y1,X0,Y0)
  ENDIF
  
  !## see whether nodata-areas are crossed/similar area
@@ -783,10 +782,8 @@ CONTAINS
   DO J=I+1,MD
    !## done allready
    IF(ZD(J).EQ.IDF%NODATA)CYCLE
-!   !## set average weighting
-!   W=(WD(I)+WD(J))/2.0D0
-   !## points have been shifted already
-   W=1.0D0
+   !## irrelevant here - this is only used to thinout point which are too near
+   W=0.0D0
    !## get distance between points - increase distance whenever points are intersected by fault
    IF(KRIGING_DIST(XD(I),YD(I),XD(J),YD(J),W,IDF,IBLANKOUT,BO_VALUE,XYCRIT,1.0D0,0.0D0,IBLNTYPE).LE.XYCRIT)THEN
     N=N+1
