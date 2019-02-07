@@ -52,7 +52,7 @@ CONTAINS
  IUPESTRUNFILE=UTL_GETUNIT();     OPEN(IUPESTRUNFILE,    FILE=TRIM(DIR)//'\IPEST\LOG_PEST_RUNFILE.TXT'    ,STATUS='UNKNOWN',ACTION='WRITE')
  
  WRITE(IUPESTOUT,'(A)') 'Parameters'
- WRITE(IUPESTOUT,'(A2,1X,A5,2(1X,A5),5(1X,A15),3A10,A15)') 'AC','PTYPE','ILS','IZN','INITIAL','DELTA','MINIMUM','MAXIMUM','FADJ','IGROUP','LTRANS','NODES','ACRONYM'
+ WRITE(IUPESTOUT,'(A2,1X,A5,2(1X,A5),5(1X,A15),3A10,2A15)') 'AC','PTYPE','ILS','IZN','INITIAL','DELTA','MINIMUM','MAXIMUM','FADJ','IGROUP','LTRANS','NODES','ACRONYM','PPRIOR'
 
  WRITE(IUPESTEFFICIENCY,'(6A15)') 'TJ','SQRT(TJ)','MEAN(TJ)','MEAN(SQRT(TJ))','ADJUSTMENTS','EFFICIENCY'
  WRITE(IUPESTEFFICIENCY,'(6A15)') '(L2)','(L)','MEAN(L2)','MEAN(L)','(%)','-'
@@ -68,10 +68,6 @@ CONTAINS
  !## set initial values for alpha()
  DO I=1,SIZE(PEST%PARAM); CALL IPEST_GLM_CHK(I); ENDDO
  
-! DO I=1,SIZE(PEST%PARAM)
-!  WRITE(*,*) I,PEST%PARAM(I)%PACT,PEST%PARAM(I)%PIGROUP
-! ENDDO
-
  !## set linesearch-runbatch-files
  DO I=1,PBMAN%NLINESEARCH; RNL(I)=TRIM(DIR)//'\RUN_L#'//TRIM(ITOS(I))//'.BAT'; LPARAM(I)=I; ENDDO
 
@@ -215,7 +211,7 @@ CONTAINS
  
  END SUBROUTINE IPEST_GLM_MAIN
 
-  !###====================================================================
+ !###====================================================================
  SUBROUTINE IPEST_GLM_CHK(IP)
  !###====================================================================
  IMPLICIT NONE
@@ -698,6 +694,20 @@ CONTAINS
 
   ENDDO
   
+  !## add parameter regularisation
+  IF(PEST%PE_REGULARISATION.EQ.1)THEN
+   I=0
+   DO IP1=1,SIZE(PEST%PARAM)  !## row
+    IF(PEST%PARAM(IP1)%PACT.NE.1)CYCLE
+
+    I=I+1
+    DP=PEST%PARAM(IP1)%ALPHA(2)-PEST%PARAM(IP1)%PPRIOR
+    DP=DP*PEST%PE_REGFACTOR
+    JQR(I)=JQR(I)+DP
+     
+   ENDDO
+  ENDIF
+
   IF(.NOT.LSCALING)THEN
 
    !## levenberg-marquardt
@@ -712,8 +722,7 @@ CONTAINS
    !## construct JS matrix, scaled
    JS=0.0D0
    DO I=1,MSR%NOBS    !## row
-    J=0
-    IPARAM=0
+    J=0; IPARAM=0
     DO IP1=1,SIZE(PEST%PARAM)
 
      IF(ABS(PEST%PARAM(IP1)%PACT).NE.1)CYCLE
@@ -748,17 +757,7 @@ CONTAINS
      JQR(I)=JQR(I)+(DJ1*W*DJ2)
     ENDDO
    ENDDO
-   
-   !## add parameter regularisation
-   IF(PEST%PE_REGULARISATION.EQ.1)THEN
-    DO IP1=1,SIZE(PEST%PARAM)  !## row
-     IF(PEST%PARAM(IP1)%PACT.NE.1)CYCLE
-     DP=PEST%PARAM(IP1)%ALPHA(1)-PEST%PARAM(IP1)%PPRIOR
-     DP=DP*PEST%PE_REGFACTOR
-     JQR(I)=JQR(I)+DP
-    ENDDO
-   ENDIF
-   
+
    !## add levenberg-marquardt
    DO I=1,NP; JQJ(I,I)=JQJ(I,I)+MARQUARDT*C(I,I)**2.0D0; ENDDO
 
