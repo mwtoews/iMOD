@@ -88,7 +88,7 @@ CONTAINS
        TRIM(DIR_DBS)//CHAR(13)//CHAR(13)//'Are you sure to start the import ? ','Question')
        IF(WINFODIALOG(4).EQ.1)THEN
         CALL IMPORT_FIELDS()
-        IF(IMPORT_CALC())EXIT
+        IF(IMPORT_CALC(0))EXIT
         CALL IMPORT_CLOSE()
         CALL UTL_CLOSEUNITS()
        ENDIF

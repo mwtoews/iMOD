@@ -3634,7 +3634,7 @@ C
         IF ( ffcheck.LT.-feps2 ) THEN
           CALL TRAILWAVE2(Numwaves, I, Flux, Theta, Speed, Depth, 
      +                    Itrwave, Ltrail, Fksat, Eps, Thetas, Thetar, 
-     +                    Surflux, Jpnt )
+     +                    Surflux, Jpnt ,ic,ir)
           itrailflg = 1
         END IF
         CALL LEADWAVE2(Numwaves, time, Totalflux, itester, Flux, 
@@ -4199,7 +4199,7 @@ C--------SUBROUTINE TRAILWAVE2
 C
       SUBROUTINE TRAILWAVE2(Numwaves, I, Flux, Theta, Speed, Depth, 
      +                      Itrwave, Ltrail, Fksat, Eps, Thetas, Thetar,
-     +                      Surflux, Jpnt)
+     +                      Surflux, Jpnt, ic,ir)
       USE GWFUZFMODULE, ONLY: NWAV, NTRAIL, NEARZERO, THETAB, FLUXB,
      +                        FLUXHLD2, ZEROD6
       USE GLOBAL, ONLY: IOUT
@@ -4214,7 +4214,7 @@ C     ------------------------------------------------------------------
 C     ARGUMENTS
 C     ------------------------------------------------------------------
       REAL Eps, Fksat, Thetas
-      INTEGER I, Jpnt, Numwaves, Itrwave(NWAV), Ltrail(NWAV)
+      INTEGER I, Jpnt, Numwaves, Itrwave(NWAV), Ltrail(NWAV), ic,ir
       DOUBLE PRECISION Depth(NWAV), Theta(NWAV), Flux(NWAV), Speed(NWAV)
       DOUBLE PRECISION Surflux, Thetar
 C     ------------------------------------------------------------------
@@ -4253,9 +4253,9 @@ C1------INITIALIZE TRAILING WAVES.
         DO j = Numwaves, Numwaves + numtrail2 - 1
           IF ( j.GT.NWAV ) THEN
             WRITE (*, *) 'TOO MANY WAVES IN UNSAT CELL', I, Numwaves, 
-     +                   '   PROGRAM TERMINATED IN TRAILWAVE2 UZF - 2'
+     +         ic,ir,'   PROGRAM TERMINATED IN TRAILWAVE2 UZF - 2'
             WRITE (IOUT, *) 'TOO MANY WAVES IN UNSAT CELL', I, Numwaves,
-     +              '   PROGRAM TERMINATED IN UZFLOW-2; INCREASE NSETS2'
+     +        ic,ir,'   PROGRAM TERMINATED IN UZFLOW-2; INCREASE NSETS2'
             STOP
           END IF
           jpntpjm1 = jpntm1 + j
@@ -4287,9 +4287,9 @@ C1------INITIALIZE TRAILING WAVES.
         Numwaves = Numwaves + numtrail2 - 1
         IF ( Numwaves.GE.NWAV ) THEN
           WRITE (*, *) 'TOO MANY WAVES IN UNSAT CELL', I, Numwaves, 
-     +                 '   PROGRAM TERMINATED IN UZFLOW-4'
+     +                 ic,ir,'   PROGRAM TERMINATED IN UZFLOW-4'
           WRITE (IOUT, *) 'TOO MANY WAVES IN UNSAT CELL', I, Numwaves, 
-     +              '   PROGRAM TERMINATED IN UZFLOW-4; INCREASE NSETS2'
+     +      ic,ir,'   PROGRAM TERMINATED IN UZFLOW-4; INCREASE NSETS2'
           STOP
         END IF
       ELSE

@@ -101,8 +101,9 @@ CONTAINS
       TRIM(ITOS(M))                      //','//TRIM(RTOS(PEST%PE_TARGET(1),'G',7))//','// &
       TRIM(RTOS(PEST%PE_TARGET(2),'G',7))//','//TRIM(ITOS(PEST%PE_SCALING-1))      //','// &
       TRIM(RTOS(PEST%PE_PADJ,'G',7))     //','//TRIM(RTOS(PEST%PE_DRES,'G',7))     //','// &
-      TRIM(ITOS(PEST%PE_KTYPE))          //','//TRIM(RTOS(PEST%PE_KRANGE,'G',7))
-
+      TRIM(ITOS(PEST%PE_KTYPE))          //','//TRIM(RTOS(PEST%PE_KRANGE,'G',7))   //','// &
+      TRIM(ITOS(PEST%PE_REGULARISATION))//','//TRIM(RTOS(PEST%PE_REGFACTOR,'G',7))
+      
  WRITE(IU,'(A)') TRIM(LINE)
 
  !## write blankout idf
@@ -145,8 +146,9 @@ CONTAINS
         TRIM(RTOS(PEST%PARAM(I)%PMAX,'G',7))     //','// &
         TRIM(RTOS(PEST%PARAM(I)%PINCREASE,'G',7))//','// &
         TRIM(ITOS(ABS(PEST%PARAM(I)%PIGROUP)))   //','// &
-        TRIM(ITOS(PEST%PARAM(I)%PLOG))
-   IF(TRIM(PEST%PARAM(I)%ACRONYM).NE.'')LINE=TRIM(LINE)//','//TRIM(PEST%PARAM(I)%ACRONYM)
+        '"'//TRIM(PEST%PARAM(I)%ACRONYM)        //'",'// &
+        TRIM(ITOS(PEST%PARAM(I)%PLOG))           //','// &
+        TRIM(RTOS(PEST%PARAM(I)%PPRIOR,'G',7))
    WRITE(IU,'(A)') TRIM(LINE)
   ENDDO
  ENDIF
@@ -3994,6 +3996,8 @@ IRLOOP: DO IROW=1,PRJIDF%NROW; DO ICOL=1,PRJIDF%NCOL
         DO IROW=1,PCK(1)%NROW; DO ICOL=1,PCK(1)%NCOL
          !## assigned layer
          I=PCK(1)%X(ICOL,IROW)
+         !## skip this one as it is an inactive cell
+         IF(I.LE.0)CYCLE
          !## search first active layer
          DO ILAY=1,PRJNLAY; IF(BND(ILAY)%X(ICOL,IROW).GT.0)EXIT; ENDDO
          !## overrule for the first active layer

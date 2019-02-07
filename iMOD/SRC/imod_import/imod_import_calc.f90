@@ -111,9 +111,10 @@ CONTAINS
  END SUBROUTINE IMPORT_MF2005_WEL
 
  !###====================================================================
- LOGICAL FUNCTION IMPORT_CALC()
+ LOGICAL FUNCTION IMPORT_CALC(IBATCH)
  !###====================================================================
  IMPLICIT NONE
+ INTEGER,INTENT(IN) :: IBATCH
  TYPE(WIN_MESSAGE) :: MESSAGE
  INTEGER :: ITYPE,I,IH,IM,IS,KPER
  REAL(KIND=DP_KIND) :: DT,TT,TDT,FTIME
@@ -307,13 +308,19 @@ CONTAINS
  CALL IDFDEALLOCATE(BAS,SIZE(BAS)); DEALLOCATE(BAS)
 
  IMPORT_CALC=.TRUE.
+ IF(IBATCH.EQ.0)THEN
+  CALL WMESSAGEBOX(OKONLY,INFORMATIONICON,COMMONOK,'Import Successfully completed.'//CHAR(13)// &
+        'Modelfiles (IDFs,IPFs,GENs) saved in the folder:'//CHAR(13)// &
+        TRIM(DIR_DBS)//CHAR(13)//CHAR(13)// &
+        'Runfile (*.run) stored in the folder:,'//CHAR(13)// &
+        TRIM(RUNFILE),'Information')
+ ELSE
+  WRITE(*,'(A)') 'Import Successfully completed.'
+  WRITE(*,'(A)') 'Modelfiles (IDFs,IPFs,GENs) saved in the folder:'
+  WRITE(*,'(A)') TRIM(DIR_DBS)
+  WRITE(*,'(A)') 'Runfile (*.run) stored in the folder:,'
+ ENDIF
  
- CALL WMESSAGEBOX(OKONLY,INFORMATIONICON,COMMONOK,'Import Successfully completed.'//CHAR(13)// &
-       'Modelfiles (IDFs,IPFs,GENs) saved in the folder:'//CHAR(13)// &
-       TRIM(DIR_DBS)//CHAR(13)//CHAR(13)// &
-       'Runfile (*.run) stored in the folder:,'//CHAR(13)// &
-       TRIM(RUNFILE),'Information')
-
  END FUNCTION IMPORT_CALC
 
  !###====================================================================

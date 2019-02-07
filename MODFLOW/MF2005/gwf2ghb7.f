@@ -274,7 +274,7 @@ C3------PRINT NUMBER OF GHB'S IN CURRENT STRESS PERIOD.
       ! create subsystem index
       if (associated(nghbsubsys)) deallocate(nghbsubsys)                ! dsubsys
       allocate(nghbsubsys)                                              ! dsubsys
-      call usubscnt(drai,ndrnvl,nnpdrn,ighbsubsys,nghbsubsys)           ! dsubsys
+      call usubscnt(bnds,nghbvl,nnpghb,ighbsubsys,nghbsubsys)           ! dsubsys
       if (associated(ghbsubsidx)) deallocate(ghbsubsidx)                ! dsubsys
       allocate(ghbsubsidx(nghbsubsys))                                  ! dsubsys
       call usubsidx(BNDS,NGHBVL,NNPGHB,ighbsubsys,ghbsubsidx,           ! dsubsys
