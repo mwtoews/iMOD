@@ -122,9 +122,10 @@ CONTAINS
   WRITE(IUPESTOUT,'(/A)') 'Best Residual Value     : '//TRIM(RTOS(MSR%TJ-MSR%RJ,'G',7))
   WRITE(IUPESTOUT,'(A)')  'Best Plausibility Value : '//TRIM(RTOS(MSR%RJ,'G',7))
   WRITE(IUPESTOUT,'(A)')  'Total Objective Value   : '//TRIM(RTOS(MSR%TJ,'G',7))
-  WRITE(IUPESTOUT,'(A)')  'Mean Objective Value    : '//TRIM(RTOS(MSR%TJ/REAL(MSR%NOBS,8),'G',7))//' (n='//TRIM(ITOS(MSR%NOBS))//')'
+  WRITE(IUPESTOUT,'(A)')  'Mean Objective Value    : '//TRIM(RTOS(MSR%TJ/REAL(MSR%NOBS,8),'G',7))
   RFIT=IPEST_GOODNESS_OF_FIT(GF_H,GF_O,MSR%NOBS)
-  WRITE(IUPESTOUT,'( A)') 'Goodness of Fit         : '//TRIM(RTOS(RFIT,'G',7))//' (n='//TRIM(ITOS(MSR%NOBS))//')'
+  WRITE(IUPESTOUT,'( A)') 'Goodness of Fit         : '//TRIM(RTOS(RFIT,'G',7))
+  WRITE(IUPESTOUT,'( A)') 'Number of Observations  : '//TRIM(ITOS(MSR%NOBS))
   
   FLUSH(IUPESTOUT); FLUSH(IUPESTPROGRESS); FLUSH(IUPESTEFFICIENCY); FLUSH(IUPESTSENSITIVITY); FLUSH(IUPESTRUNFILE)
 
