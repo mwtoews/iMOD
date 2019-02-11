@@ -2012,7 +2012,7 @@ END SUBROUTINE WRITEIPF
  DET=PEST_FIND_DET(JQJB,NP)
 
  IF(LPRINT)THEN
-  WRITE(IUPESTOUT,'(/A15,E15.7)') 'Determinant JQJ = ',DET
+  WRITE(IUPESTOUT,'(/A18,E15.7)') 'Determinant JQJ = ',DET
   WRITE(IUPESTOUT,'(A/)') 'A small value for the Determinant indicates Singularity of the Matrix'
  ENDIF
   

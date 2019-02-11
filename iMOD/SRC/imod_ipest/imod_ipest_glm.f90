@@ -138,6 +138,8 @@ CONTAINS
   WRITE(IUPESTOUT,'( A)') 'Goodness of Fit         : '//TRIM(RTOS(RFIT,'G',7))
   WRITE(IUPESTOUT,'( A)') 'Number of Observations  : '//TRIM(ITOS(MSR%NOBS))
   
+  WRITE(IUPESTOUT,'(/A/)') '*** Next Outer Iteration ***'
+  
   FLUSH(IUPESTOUT); FLUSH(IUPESTPROGRESS); FLUSH(IUPESTEFFICIENCY); FLUSH(IUPESTSENSITIVITY); FLUSH(IUPESTRUNFILE)
 
   !## "melt" all parameters for next cycle
@@ -1350,7 +1352,7 @@ MAINLOOP: DO
  INTEGER :: IP1,N,I
  REAL(KIND=DP_KIND),ALLOCATABLE,DIMENSION(:) :: GRADUPDATE
  
- WRITE(IUPESTOUT,'(/A)') 'Upgrade Vector Parameter History:'
+ WRITE(IUPESTOUT,'(/A/)') 'Upgrade Vector Parameter History:'
  WRITE(BLINE,'(A19,99(A7,I3.3))') 'Parameter',('   ITER',I,I=ITER,0,-1)
  WRITE(IUPESTOUT,'(A)') TRIM(BLINE)
   
@@ -1489,7 +1491,7 @@ MAINLOOP: DO
  DET=IPEST_GLM_DET(JQJB,NP)
 
  IF(LPRINT)THEN
-  WRITE(IUPESTOUT,'(/A15,E15.7)') 'Determinant JQJ = ',DET
+  WRITE(IUPESTOUT,'(/A18,E15.7)') 'Determinant JQJ = ',DET
   WRITE(IUPESTOUT,'(A/)') 'A small value for the Determinant indicates Singularity of the Matrix'
  ENDIF
   
