@@ -248,14 +248,14 @@ CONTAINS
    DO 
     IS=IS+1
     !## found start of connected piece of the line without nodata
-    IF(SERIE(IIDF)%Y(IS).NE.XEXCLUDE(I+1).AND.SERIE(IIDF)%Y(IS).NE.PROFIDF(IIDF)%IDF%NODATA)THEN
+    IF(SERIE(IIDF)%Y(IS).NE.XEXCLUDE(I+1))THEN !.AND.SERIE(IIDF)%Y(IS).NE.PROFIDF(IIDF)%IDF%NODATA)THEN
      IE=IS
      DO 
       IE=IE+1
       !## found start of connected piece of the line without nodata         
       IF(IE.GE.SERIE(IIDF)%N.OR. &   !## final reached for line
-         SERIE(IIDF)%Y(IE).EQ.XEXCLUDE(I+1).OR. &
-         SERIE(IIDF)%Y(IE).EQ.PROFIDF(IIDF)%IDF%NODATA)THEN 
+         SERIE(IIDF)%Y(IE).EQ.XEXCLUDE(I+1))THEN !.OR. &
+!         SERIE(IIDF)%Y(IE).EQ.PROFIDF(IIDF)%IDF%NODATA)THEN 
        !## not final of line --- do not use nodata point in that case
        IF(IE.LT.SERIE(IIDF)%N)IE=IE-1
        
@@ -271,7 +271,7 @@ CONTAINS
        IF(ICLEAN(I+1).EQ.1)THEN
        
         !## add intermediate point, take into account maximum array-size
-        DO J=1,N !MIN(N,SIZE(SPF(ISPF)%PROF(I)%PX))
+        DO J=1,N 
          !## use point from Urs-Douglas-Peucker algorithm (greater then given tolerance)
          IF(GCODE(J).GT.DTOL(I+1))THEN
 
@@ -279,10 +279,9 @@ CONTAINS
           II=II+1
           !## maximize the size of the vector - overwrite values
           II=MIN(II,SIZE(SPF(ISPF)%PROF(I)%PX))
-          SPF(ISPF)%PROF(I)%PX(II)=SERIE(IIDF)%X(IS) !J)
-          SPF(ISPF)%PROF(I)%PZ(II)=SERIE(IIDF)%Y(IS) !J)
+          SPF(ISPF)%PROF(I)%PX(II)=SERIE(IIDF)%X(IS) 
+          SPF(ISPF)%PROF(I)%PZ(II)=SERIE(IIDF)%Y(IS) 
           SPF(ISPF)%PROF(I)%NPOS=SPF(ISPF)%PROF(I)%NPOS+1
-!          IS=IS+1
 
          ENDIF
          IS=IS+1
@@ -304,7 +303,7 @@ CONTAINS
         ENDIF
 
         !## add intermediate point, take into account maximum array-size
-        DO J=2,N !MIN(N-1,SIZE(SPF(ISPF)%PROF(I)%PX))
+        DO J=2,N 
          !## use point from Urs-Douglas-Peucker algorithm (greater then given tolerance)
          IF(GCODE(J).GT.DTOL(I+1))THEN
           !## cannot add more points          
