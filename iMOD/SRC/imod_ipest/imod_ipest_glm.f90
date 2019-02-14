@@ -512,7 +512,7 @@ MAINLOOP: DO
         TRIM(ITOS(ABS(PEST%PARAM(I)%PIGROUP)))     //','// &
         TRIM(ITOS(PEST%PARAM(I)%PLOG))//','// &
         TRIM(PEST%PARAM(I)%ACRONYM)//','// &
-        TRIM(RTOS(EXP(PEST%PARAM(I)%PPRIOR,'G',7))        )
+        TRIM(RTOS(EXP(PEST%PARAM(I)%PPRIOR),'G',7))    
   ENDIF
   WRITE(JU,'(A)') TRIM(LINE)
 
