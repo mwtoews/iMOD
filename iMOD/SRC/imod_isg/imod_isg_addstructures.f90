@@ -23,10 +23,10 @@
 MODULE MOD_ISG_STRUCTURES
 
 USE WINTERACTER
-USE MOD_UTL !, ONLY : UTL_GETUNIT,ITOS,RTOS,JD,UTL_JDATETOIDATE,UTL_IDATETOJDATE
+USE MOD_UTL
 USE MOD_ISG_PAR 
-USE MOD_ISG_UTL !, ONLY : ISGREAD,ISGGETPOSID,ISGMEMORYIST,ISGMEMORYDATIST,ISGSTUWEN_INTERSECT
-USE MOD_OSD !, ONLY : OSD_OPEN
+USE MOD_ISG_UTL
+USE MOD_OSD 
 
 CHARACTER(LEN=256) :: STRUCIPFFNAME,LOGFNAME,LINE
 INTEGER :: IX,IY,ID,IO,IS,IWISG,IBATCH,SY,EY
@@ -62,7 +62,7 @@ CONTAINS
   RETURN
  ENDIF
 
- !#read isg file
+ !## read isg file
  IF(IBATCH.EQ.1)THEN
 
   IF(ISGREAD((/ISGFILE/),IBATCH))THEN; ENDIF
@@ -178,7 +178,7 @@ CONTAINS
  REAL(KIND=DP_KIND),DIMENSION(:,:),ALLOCATABLE :: PISG
  REAL(KIND=DP_KIND) :: P,H,SP
 
- IF(ALLOCATED(PISG))DEALLOCATE(PISG); ALLOCATE(PISG(1,3))
+ IF(ALLOCATED(PISG))DEALLOCATE(PISG); ALLOCATE(PISG(NISG,3))
  
  !## read/write header of ipf
  CALL ISGSTUWEN_READIPF()
@@ -216,12 +216,15 @@ CONTAINS
     CALL ISGSTUWEN_COMPUTEXY(IISG,IIST)
    ELSE
     !## compute nearest location for current structure
-    CALL ISGSTUWEN_INTERSECT(MAXDIST,XC,YC,PISG,NI) !,PISG,DISG) !INEARISG,1) !IISG)
-    !## take only first
-    IISG=INT(PISG(NI,1))
-    DIST=PISG(NI,2)
-    !## apply angle correction according to from and to node flow scheme
-    IF(IISG.NE.0)CALL ISGSTUWEN_CORANGLE(IISG)
+    CALL ISGSTUWEN_INTERSECT(MAXDIST,XC,YC,PISG,NI) 
+    IISG=0
+    IF(NI.GT.0)THEN
+     !## take only first
+     IISG=INT(PISG(NI,1))
+     DIST=PISG(NI,2)
+!     !## apply angle correction according to from and to node flow scheme
+!     IF(IISG.NE.0)CALL ISGSTUWEN_CORANGLE(IISG)
+    ENDIF
     IIST=0
    ENDIF
 
@@ -233,15 +236,15 @@ CONTAINS
     WRITE(STRING(IX),'(F12.2)') ISGX
     WRITE(STRING(IY),'(F12.2)') ISGY
 
-    !## compare angle and or
-    IF(OR.GT.HNODATA)THEN
-     WRITE(STRING(IO),'(F12.2)') ORIENT(OR)
-     !## do something with comparison with given and computed angle
-     IF(ABS(ORIENT(OR)-ORIENT(ANGL)).GT.90.0D0)THEN
-      !## turn around push direction?
-      IOKAY=-1
-     ENDIF
-    ENDIF
+    !!## compare angle and or
+    !IF(OR.GT.HNODATA)THEN
+    ! WRITE(STRING(IO),'(F12.2)') ORIENT(OR)
+    ! !## do something with comparison with given and computed angle
+    ! IF(ABS(ORIENT(OR)-ORIENT(ANGL)).GT.90.0D0)THEN
+    !  !## turn around push direction?
+    !  IOKAY=-1
+    ! ENDIF
+    !ENDIF
 
     !## number of records to be put in ist(.) initially
     N=NIP*2
@@ -265,6 +268,19 @@ CONTAINS
      IST(IIST)%DIST = DIST
      N              =(N-IST(IIST)%N)
      IOKAY          = 2
+    ENDIF
+
+    !## get angle of line
+    CALL ISGSTUWEN_COMPUTEXY(IISG,IIST)
+
+    !## compare angle and or
+    IF(OR.GT.HNODATA)THEN
+     WRITE(STRING(IO),'(F12.2)') ORIENT(OR)
+     !## do something with comparison with given and computed angle
+     IF(ABS(ORIENT(OR)-ORIENT(ANGL)).GT.90.0D0)THEN
+      !## turn around push direction?
+      IOKAY=-1
+     ENDIF
     ENDIF
 
     !## get mean waterleveldown based upon calc. point after and before current structrue
@@ -302,7 +318,7 @@ CONTAINS
     IOKAY=0
    ENDIF
   ELSE
-   IOKAY=-2; DORTHO=-999.99; ANGL=-999.99
+   IOKAY=-2; DORTHO=-999.99D0; ANGL=-999.99D0
   ENDIF
   
   !## write results
@@ -464,6 +480,7 @@ CONTAINS
  F   =(IST(IIST)%DIST-(TD-DXY))/DXY
  ISGX= ISP(J-1)%X+(ISP(J)%X-ISP(J-1)%X)*F
  ISGY= ISP(J-1)%Y+(ISP(J)%Y-ISP(J-1)%Y)*F
+ 
  ANGL= ATAN2(ISP(J)%Y-ISP(J-1)%Y,ISP(J)%X-ISP(J-1)%X)
  ANGL= R2G*ANGL
 
