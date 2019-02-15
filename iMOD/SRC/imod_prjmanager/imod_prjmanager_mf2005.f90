@@ -5606,7 +5606,7 @@ IRLOOP: DO IROW=1,PRJIDF%NROW; DO ICOL=1,PRJIDF%NCOL
 
      !## write idf_svat.inp - inside area of interest
      IF(ICOL.GE.IC1.AND.ICOL.LE.IC2.AND.IROW.GE.IR1.AND.IROW.LE.IR2) THEN
-      IF(IACT.EQ.2)WRITE(IIDF,'(3I10)') NUND,IROW-IR1+1,ICOL-IC1+1
+      IF(IACT.EQ.2)WRITE(IIDF,'(3I10,2F15.3)') NUND,IROW-IR1+1,ICOL-IC1+1,XC,YC
      ENDIF
        
      !## write sel_svat_bda.inp
