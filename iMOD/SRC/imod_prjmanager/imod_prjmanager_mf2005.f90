@@ -2090,6 +2090,8 @@ CONTAINS
     IF(T.LE.0.0D0)PRJIDF%X(ICOL,IROW)=-1.0D0
    ENDDO; ENDDO
 
+   BND(ILAY)%X=PRJIDF%X
+
    !## modify idomain a bit in case MF6 is used to force an export to an ARR-file
 IRLOOP: DO IROW=1,PRJIDF%NROW; DO ICOL=1,PRJIDF%NCOL
     IF(PRJIDF%X(ICOL,IROW).GT.0)THEN
@@ -4088,11 +4090,8 @@ IRLOOP: DO IROW=1,PRJIDF%NROW; DO ICOL=1,PRJIDF%NCOL
       ENDIF
      ELSEIF(PBMAN%IFORMAT.EQ.3)THEN
       DO IROW=1,PCK(1)%NROW; DO ICOL=1,PCK(1)%NCOL
-       !## skip inactive cells
-       IF(PCK(1)%ILAY.GT.0.AND.PBMAN%ILAY(PCK(1)%ILAY).EQ.1)THEN
-        IF(BND(PCK(1)%ILAY)%X(ICOL,IROW).EQ.0.0D0)CYCLE
-       ENDIF
        !## find uppermost layer
+       TLP=0.0D0
        IF(PCK(1)%ILAY.EQ.-1)THEN
         DO ILAY=1,SIZE(PBMAN%ILAY); IF(PBMAN%ILAY(ILAY).EQ.1.AND.BND(ILAY)%X(ICOL,IROW).GT.0)EXIT; ENDDO
         !## assign to uppermost active layer
@@ -4101,9 +4100,15 @@ IRLOOP: DO IROW=1,PRJIDF%NROW; DO ICOL=1,PRJIDF%NCOL
         !## assign to predefined layer
         TLP(PCK(1)%ILAY)=1.0D0
        ENDIF
+       
+!       !## skip inactive cells
+!       IF(PCK(1)%ILAY.GT.0.AND.PBMAN%ILAY(ILAY).EQ.1)THEN !PCK(1)%ILAY).EQ.1)THEN
+!        IF(BND(PCK(1)%ILAY)%X(ICOL,IROW).EQ.0.0D0)CYCLE
+!       ENDIF
+
        DO ILAY=1,SIZE(PBMAN%ILAY)
         IF(PBMAN%ILAY(ILAY).EQ.0)CYCLE
-        !## not put into model layer
+        !## not put into this model layer
         IF(TLP(ILAY).LE.0.0D0)CYCLE
         WRITE(JU,'(3I10,G15.7)') ILAY,IROW,ICOL,PCK(1)%X(ICOL,IROW)
         NP_IPER(IPER)=NP_IPER(IPER)+1
@@ -4129,9 +4134,9 @@ IRLOOP: DO IROW=1,PRJIDF%NROW; DO ICOL=1,PRJIDF%NCOL
       
      DO IROW=1,PCK(1)%NROW; DO ICOL=1,PCK(1)%NCOL
 
-      !## skip inactive cells
+      !## skip inactive/constant head cells
       IF(PCK(1)%ILAY.GT.0)THEN
-       IF(BND(PCK(1)%ILAY)%X(ICOL,IROW).EQ.0.0D0)CYCLE
+       IF(BND(PCK(1)%ILAY)%X(ICOL,IROW).LE.0.0D0)CYCLE !EQ.0.0D0)CYCLE
       ENDIF
       
       IF(ITOPIC.EQ.31)THEN
@@ -4173,12 +4178,12 @@ IRLOOP: DO IROW=1,PRJIDF%NROW; DO ICOL=1,PRJIDF%NCOL
        !## get fraction per model layer
        CALL UTL_PCK_GETTLP(PRJNLAY,TLP,KH,TP,BT,Z1,Z2,MINKHT) 
 
-      !## find uppermost layer
+      !## find uppermost active layer
       ELSEIF(PCK(1)%ILAY.EQ.-1)THEN
 
-       DO ILAY=1,PRJNLAY; IF(BND(ILAY)%X(ICOL,IROW).GT.0)EXIT; ENDDO
+       DO ILAY=1,PRJNLAY; IF(BND(ILAY)%X(ICOL,IROW).NE.0)EXIT; ENDDO !.GT.0)EXIT; ENDDO
        !## assign to uppermost active layer
-       IF(ILAY.LE.PRJNLAY)TLP(ILAY)=1.0D0
+       IF(ILAY.LE.PRJNLAY.AND.BND(ILAY)%X(ICOL,IROW).GT.0)TLP(ILAY)=1.0D0
 
       ELSE
 
