@@ -236,16 +236,6 @@ CONTAINS
     WRITE(STRING(IX),'(F12.2)') ISGX
     WRITE(STRING(IY),'(F12.2)') ISGY
 
-    !!## compare angle and or
-    !IF(OR.GT.HNODATA)THEN
-    ! WRITE(STRING(IO),'(F12.2)') ORIENT(OR)
-    ! !## do something with comparison with given and computed angle
-    ! IF(ABS(ORIENT(OR)-ORIENT(ANGL)).GT.90.0D0)THEN
-    !  !## turn around push direction?
-    !  IOKAY=-1
-    ! ENDIF
-    !ENDIF
-
     !## number of records to be put in ist(.) initially
     N=NIP*2
 
@@ -309,7 +299,7 @@ CONTAINS
      !## end of structure
      ISTW=ISTW+1
      DATIST(ISTW)%IDATE    =UTL_JDATETOIDATE(JDS+IP(I,2))
-     DATIST(ISTW)%WLVL_UP  =SP !H
+     DATIST(ISTW)%WLVL_UP  =SP
      DATIST(ISTW)%WLVL_DOWN=H
 
     END DO
