@@ -3,5 +3,5 @@
 	<Configurations>
 		<Configuration Name="Debug|Win32" CommandArguments="d:\IMOD-MODELS\TMODEL\IMPORTSOBEK.INI" WorkingDirectory="D:\IMOD-MODELS\IMOD"/>
 		<Configuration Name="Release|Win32"/>
-		<Configuration Name="Debug|x64" CommandArguments="h:\IMOD-MODELS\LHM\mf6toidf.ini" WorkingDirectory="d:\iMOD-TEST\ISG\secundaire_watergangen4peter_430\"/>
+		<Configuration Name="Debug|x64" CommandArguments="d:\iMOD-TEST\ISG\secundaire_watergangen4peter_430\gen2isg.ini" WorkingDirectory="d:\IMOD-MODELS\IMOD\"/>
 		<Configuration Name="Release|x64" WorkingDirectory="d:\COMPILE\OSSDELTARES\iMOD\TUTORIALS"/></Configurations></VisualStudioUserFile>

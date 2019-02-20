@@ -13742,8 +13742,8 @@ ID_ICONCUT                      BITMAP DISCARDABLE "..\\BMP\\CUT.BMP"
 ID_ICONEDITNODESTOAUTO          BITMAP DISCARDABLE "..\\BMP\\EDITNODESTOAUTO.BMP"
 ID_ICONDRIP                     BITMAP DISCARDABLE "..\\BMP\\ISGDRIP.BMP"
 ID_ICONPROPERTIES_AUTO          BITMAP DISCARDABLE "..\\BMP\\properties_AUTO.bmp"
-ID_ICONIRRIGATION1              BITMAP DISCARDABLE "d:\\oss\\imod\\BMP\\irrigation_source.bmp"
-ID_ICONIRRIGATION2              BITMAP DISCARDABLE "d:\\oss\\imod\\BMP\\irrigation_location.bmp"
+ID_ICONIRRIGATION1              BITMAP DISCARDABLE "..\\BMP\\irrigation_source.bmp"
+ID_ICONIRRIGATION2              BITMAP DISCARDABLE "..\\BMP\\irrigation_location.bmp"
 
 ///////////////////////////////////////////////////
 //
