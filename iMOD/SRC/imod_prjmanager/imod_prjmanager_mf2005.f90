@@ -1906,12 +1906,12 @@ CONTAINS
   ENDIF
   IF(.NOT.LEX)THEN; BOT(ILAY)%X=0.0D0; LTB=.FALSE.; ENDIF
 
-  !## check layer thickness to be zero - mark them ibound=2
-  IF(LTB)THEN
-   DO IROW=1,TOP(ILAY)%NROW; DO ICOL=1,TOP(ILAY)%NCOL
-    IF(TOP(ILAY)%X(ICOL,IROW).LE.BOT(ILAY)%X(ICOL,IROW))BND(ILAY)%X(ICOL,IROW)=2.0D0
-   ENDDO; ENDDO
-  ENDIF
+!  !## check layer thickness to be zero - mark them ibound=99
+!  IF(LTB)THEN
+!   DO IROW=1,TOP(ILAY)%NROW; DO ICOL=1,TOP(ILAY)%NCOL
+!    IF(TOP(ILAY)%X(ICOL,IROW).LE.BOT(ILAY)%X(ICOL,IROW))BND(ILAY)%X(ICOL,IROW)=99.0D0
+!   ENDDO; ENDDO
+!  ENDIF
   
  ENDDO
 

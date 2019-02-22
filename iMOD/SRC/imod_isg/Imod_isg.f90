@@ -5719,14 +5719,6 @@ CONTAINS
   ISQ(I+J)%DIST=TDIST-ISQ(I+J)%DIST
  ENDDO
 
- !## isd2()
- !## rotate alleen de eerste en laatste ...?
- 
-! TISD()
-! TISC()
-! TIST()
-! TISQ()
- 
  !## put isd,isc and isq values
  IF(ALLOCATED(TISD))CALL ISGATTRIBUTESPUTISDVALUES()
  IF(ALLOCATED(TISC))CALL ISGATTRIBUTESPUTISCVALUES()

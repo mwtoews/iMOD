@@ -29,7 +29,7 @@ USE MOD_ISG_UTL
 USE MOD_OSD 
 
 CHARACTER(LEN=256) :: STRUCIPFFNAME,LOGFNAME,LINE
-INTEGER :: IX,IY,ID,IO,IS,IWISG,IBATCH,SY,EY
+INTEGER :: IX,IY,ID,IO,IS,IWISG,IBATCH,SY,EY,ICORDIR
 REAL(KIND=DP_KIND) :: MAXDIST
 CHARACTER(LEN=5) :: CSPS,CEPS,CSPW,CEPW
 CHARACTER(LEN=10) :: CMD
@@ -270,6 +270,7 @@ CONTAINS
      IF(ABS(ORIENT(OR)-ORIENT(ANGL)).GT.90.0D0)THEN
       !## turn around push direction?
       IOKAY=-1
+      IF(ICORDIR.EQ.1)CALL ISGSTUWEN_FLIPXY(IISG)
      ENDIF
     ENDIF
 
@@ -478,6 +479,57 @@ CONTAINS
 
  END SUBROUTINE ISGSTUWEN_COMPUTEXY
 
+ !###===============================================================================
+ SUBROUTINE ISGSTUWEN_FLIPXY(IISG)
+ !###===============================================================================
+ IMPLICIT NONE
+ INTEGER,INTENT(IN) :: IISG
+ INTEGER :: I,J,K
+ REAL(KIND=DP_KIND) :: DXY,TDIST,X,Y
+
+ !## rotate
+ J=ISG(IISG)%ISEG
+ K=J+ISG(IISG)%NSEG
+ DO I=1,ISG(IISG)%NSEG/2
+  K=K-1; J=J+1
+  X=ISP(J)%X; Y=ISP(J)%Y
+  ISP(J)%X=ISP(K)%X; ISP(J)%Y=ISP(K)%Y
+  ISP(K)%X=X; ISP(K)%Y=Y
+ ENDDO
+
+ TDIST=0.0D0; J=ISG(IISG)%ISEG
+ DO I=2,ISG(IISG)%NSEG
+  J=J+1
+  DXY=((ISP(J)%X-ISP(J-1)%X)**2.0D0)+((ISP(J)%Y-ISP(J-1)%Y)**2.0D0)
+  IF(DXY.GT.0.0D0)DXY=SQRT(DXY); TDIST=TDIST+DXY
+ END DO
+
+ !## adjust distance for calculation points
+ I=ISG(IISG)%ICLC-1
+ DO J=1,ISG(IISG)%NCLC
+  ISD(I+J)%DIST=TDIST-ISD(I+J)%DIST
+ ENDDO
+ 
+ !## adjust distance for weirs
+ I=ISG(IISG)%ISTW-1
+ DO J=1,ISG(IISG)%NSTW
+  IST(I+J)%DIST=TDIST-IST(I+J)%DIST
+ ENDDO
+
+ !## adjust distance for cross-sections
+ I=ISG(IISG)%ICRS-1
+ DO J=1,ISG(IISG)%NCRS
+  ISC(I+J)%DIST=TDIST-ISC(I+J)%DIST
+ ENDDO
+ 
+ !## adjust distance for qh-relationships
+ I=ISG(IISG)%IQHR-1
+ DO J=1,ISG(IISG)%NQHR
+  ISQ(I+J)%DIST=TDIST-ISQ(I+J)%DIST
+ ENDDO 
+ 
+ END SUBROUTINE ISGSTUWEN_FLIPXY 
+ 
  !###===============================================================================
  SUBROUTINE ISGSTUWEN_CORANGLE(IISG)
  !###===============================================================================
