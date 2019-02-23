@@ -24,9 +24,12 @@ MODULE MOD_MSPINSPECTOR
 
 USE WINTERACTER
 USE RESOURCE
+USE MOD_COLOURS
 USE IMODVAR, ONLY : OFFSETX,OFFSETY
 USE MOD_MSPINSPECTOR_PAR
 USE MOD_MSPINSPECTOR_UTL
+USE MOD_GRAPH
+USE MOD_GRAPH_PAR
 USE MOD_IDFPLOT, ONLY : IDFPLOT,IDFZOOM
 USE MODPLOT, ONLY : MPW
 USE MOD_PREF_PAR, ONLY : PREFVAL
@@ -171,14 +174,74 @@ CONTAINS
    SELECT CASE (MESSAGE%VALUE1)
     !## draw graph of selected features
     CASE(ID_GRAPH)
-!      ! moet nog een subroutine  MSPINSPECTOR_GRAPH komen
-!      CALL WDIALOGLOAD(ID_DMSPANALYSER_GRAPH,ID_DMSPANALYSER_GRAPH); CALL WDIALOGSHOW(-1,-1,0,2)
+     CALL MSPINSPECTOR_TAB3_GRAPH()
    END SELECT
  END SELECT
 
  END SUBROUTINE MSPINSPECTOR_TAB3
+ 
+ !###======================================================================
+ SUBROUTINE MSPINSPECTOR_TAB3_GRAPH()
+ !###======================================================================
+ IMPLICIT NONE
+ INTEGER :: II,I,J,K,M,N,NXG,ICLR,WID
+ REAL(KIND=DP_KIND) :: IWIDTH
+ 
+! IF(ISELECTED.LE.0)THEN
+!  CALL WMESSAGEBOX(OKONLY,EXCLAMATIONICON,COMMONOK,'You need to select a borehole first.','Error')
+!  RETURN
+! ENDIF
+ 
+ WID=WINFODIALOG(CURRENTDIALOG)
+ 
+ !## call stuff to be plotted
+ 
+ !## number of lines to be combined
+ M=1
+ !## number of graphs/groups
+ N=1
+ !# number of series
+ NXG=10
+ CALL GRAPH_ALLOCATE(M,N)
+ DO J=1,N
+  DO I=1,M
+   ALLOCATE(GRAPH(I,J)%RX(NXG),GRAPH(I,J)%RY(NXG))
+   GRAPH(I,J)%RX=0.0D0; GRAPH(I,J)%RY=0.0D0; GRAPH(I,J)%NP=NXG; GRAPH(I,J)%CTYPE=''; GRAPH(I,J)%ICLR=0; GRAPH(I,J)%GTYPE=4
+   DO K=1,NXG
+    GRAPH(I,J)%RX(K)=DBLE(K)
+    CALL RANDOM_NUMBER(GRAPH(I,J)%RY(K))
+   ENDDO
+   GRAPH(I,J)%ICLR=COLOUR_RANDOM()
+   GRAPH(I,J)%LEGTXT='LEGEND '//TRIM(ITOS(I))//':'//TRIM(ITOS(J))
+  ENDDO
+  GRAPHNAMES(J)='Graph '//TRIM(ITOS(II))
+ ENDDO
 
-  !###======================================================================
+ !## add custom predefined axes titles
+ GRAPHDIM%IFIXX=0; GRAPHDIM%IFIXY=0
+! ALLOCATE(GRAPHDIM%XTXT(NXG),GRAPHDIM%YTXT(NXG),GRAPHDIM%XPOS(NXG)); GRAPHDIM%XPOS=0.0D0; GRAPHDIM%IFIXX=1
+! GRAPHDIM%XTXT='X-axes'
+! GRAPHDIM%YTXT='Y-axes'
+ 
+! !## set axes dimensions
+! GRAPHDIM%XINT=1.0D0; GRAPHDIM%XMIN=GRAPHDIM%XPOS(1)-1.0D0; GRAPHDIM%XMAX=GRAPHDIM%XPOS(NXG)+1.0D0
+
+! GRAPH(1,1)%RX=0.0D0
+! GRAPH(1,1)%RY=0.0D0
+
+! END DO
+
+! !## make sure last is equal to final-least
+! GRAPH(1,1)%NP=1
+! GRAPHNAMES=''
+ CALL GRAPH_PLOT('[-]','Depth (m+MSL)',.FALSE.,.FALSE.)
+ 
+ CALL GRAPH_DEALLOCATE()
+ CALL WDIALOGSELECT(WID)
+
+ END SUBROUTINE MSPINSPECTOR_TAB3_GRAPH
+ 
+ !###======================================================================
  SUBROUTINE MSPINSPECTOR_TAB4(ITYPE,MESSAGE)
  !###======================================================================
  IMPLICIT NONE
