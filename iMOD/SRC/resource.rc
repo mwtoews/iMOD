@@ -6,9 +6,9 @@
 //
 ///////////////////////////////////////////////////
 //
-// Winteracter resource script.
+// Winteracter resource script. 
 //
-// Modified : 25/Feb/2019 16:57:26
+// Modified : 01/Mar/2019 10:34:33
 //
 ///////////////////////////////////////////////////
 //
@@ -23,7 +23,7 @@
 #include "..\LIB\WINTERACTER\OS_X64_V12\include\editor.rc"
 #include "..\LIB\WINTERACTER\OS_X64_V12\include\pagesetup.rc"
 #include "..\LIB\WINTERACTER\OS_X64_V12\include\hardcopy.rc"
-
+ 
 ///////////////////////////////////////////////////
 //
 // Parameter Definitions
@@ -3161,16 +3161,18 @@ FONT    8, "Arial"
 BEGIN
     CONTROL "Result Saved as:",IDF_GROUP2,"BUTTON",WS_CHILD | WS_VISIBLE | WS_GROUP | BS_GROUPBOX | BS_TEXT,    7,   36,  200,  136
     CONTROL "Forward",IDF_RADIO7,"BUTTON",WS_CHILD | WS_VISIBLE | WS_GROUP | WS_TABSTOP | BS_AUTORADIOBUTTON | BS_TEXT,   12,   15,   49,   12
-    CONTROL "Backward",IDF_RADIO8,"BUTTON",WS_CHILD | WS_VISIBLE | WS_TABSTOP | BS_AUTORADIOBUTTON | BS_TEXT,   64,   15,   49,   12
-    CONTROL "",IDF_MENU1,"COMBOBOX",WS_CHILD | WS_VISIBLE | WS_VSCROLL | WS_TABSTOP | CBS_SIMPLE | CBS_HASSTRINGS,   12,   88,  188,   80
+    CONTROL "Backward",IDF_RADIO8,"BUTTON",WS_CHILD | WS_VISIBLE | WS_TABSTOP | BS_AUTORADIOBUTTON | BS_TEXT,   82,   15,   49,   12
+    CONTROL "",IDF_MENU1,"COMBOBOX",WS_CHILD | WS_VISIBLE | WS_VSCROLL | WS_GROUP | WS_TABSTOP | CBS_SIMPLE | CBS_HASSTRINGS,   12,  100,  188,   68
     CONTROL "&Start ...",IDOK,"BUTTON",WS_CHILD | WS_VISIBLE | WS_GROUP | WS_TABSTOP | BS_PUSHBUTTON | BS_TEXT | BS_FLAT,  167,  177,   40,   14
     CONTROL "Save Flowpath",IDF_CHECK1,"BUTTON",WS_CHILD | WS_VISIBLE | WS_GROUP | WS_TABSTOP | BS_AUTOCHECKBOX | BS_TEXT,   12,   50,   64,   10
     CONTROL "Save End- and Startpoints",IDF_CHECK2,"BUTTON",WS_CHILD | WS_VISIBLE | WS_GROUP | WS_TABSTOP | BS_AUTOCHECKBOX | BS_TEXT,   82,   50,  100,   10
     CONTROL "&Start Interactive Particle Simulation (IPS) ...",IDOK2,"BUTTON",WS_CHILD | WS_VISIBLE | WS_GROUP | WS_TABSTOP | BS_PUSHBUTTON | BS_TEXT | BS_FLAT,    6,  177,  160,   14
     CONTROL "Trace Direction",IDF_GROUP3,"BUTTON",WS_CHILD | WS_VISIBLE | WS_GROUP | BS_GROUPBOX | BS_TEXT | BS_LEFT,    7,    2,  200,   30
     CONTROL "You cannot use START as you do not have any ISD files.",IDF_LABEL1,"STATIC",WS_CHILD | WS_VISIBLE | WS_GROUP | SS_LEFT,    9,  195,  192,    8
-    CONTROL "DD",ID_OPEN,"BUTTON",WS_CHILD | WS_VISIBLE | WS_GROUP | WS_TABSTOP | BS_PUSHBUTTON | BS_TEXT | BS_BITMAP | BS_FLAT,  182,   68,   16,   14
-    CONTROL "",IDF_STRING1,"EDIT",WS_CHILD | WS_VISIBLE | WS_BORDER | WS_GROUP | WS_TABSTOP | ES_LEFT | ES_AUTOHSCROLL,   12,   68,  158,   12
+    CONTROL "DD",ID_SELECT,"BUTTON",WS_CHILD | WS_VISIBLE | WS_GROUP | WS_TABSTOP | BS_PUSHBUTTON | BS_TEXT | BS_BITMAP | BS_FLAT,  182,   63,   16,   14
+    CONTROL "",IDF_STRING1,"EDIT",WS_CHILD | WS_VISIBLE | WS_BORDER | WS_GROUP | WS_TABSTOP | ES_LEFT | ES_AUTOHSCROLL,   66,   65,  108,   12
+    CONTROL "Default Folder",IDF_RADIO2,"BUTTON",WS_CHILD | WS_VISIBLE | WS_GROUP | WS_TABSTOP | BS_AUTORADIOBUTTON | BS_TEXT,   12,   80,   62,   12
+    CONTROL "Browse:",IDF_RADIO1,"BUTTON",WS_CHILD | WS_VISIBLE | WS_TABSTOP | BS_AUTORADIOBUTTON | BS_TEXT,   12,   65,   42,   12
 END
 
 ID_DPATHTAB4 RCDATA
@@ -3180,6 +3182,8 @@ BEGIN
 " 1111 0 \n"
 " 1182 0 \n"
 " 1183 0 \n"
+" 1014 1 \n"
+" 1012 0 \n"
 "[Menus] \n"
 "[Lengths] \n"
 " 1078   256 \n"
@@ -13945,4 +13949,4 @@ END
 //*WI* FILENAME    resource.f90
 //*WI* FMODNAME    RESOURCE
 //*WI* LASTTYPE        2
-//*WI* LASTRES       315
+//*WI* LASTRES        58
