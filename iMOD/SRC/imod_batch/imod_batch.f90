@@ -4017,7 +4017,8 @@ CONTAINS
  END SELECT
  
  IF(IGRIDFUNC.NE.7)THEN
-  !## points from idf files
+  IF(.NOT.UTL_READINITFILE('IDFFILE',LINE,IU,0))RETURN
+  READ(LINE,*) IDFFILE; WRITE(*,'(A)') 'IDFFILE='//TRIM(IDFFILE)  !## points from idf files
   IF(IN_TYPE.EQ.3)THEN 
    !## neccessary to read in cell-size
    IF(XMIN.NE.XMAX)THEN
