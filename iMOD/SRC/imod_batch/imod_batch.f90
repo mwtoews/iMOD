@@ -6227,6 +6227,16 @@ CONTAINS
        !## perc
        CASE (5)
         DO JJ=1,NPERC; LINE=TRIM(LINE)//','//TRIM(RTOS(X,'F',3)); ENDDO 
+        !## write txt file
+        IF(ITXTFILE.EQ.1)THEN
+         FNAME=TRIM(DIR)//'\'//TRIM(IPF(1)%INFO(IPF(1)%ACOL,I))//'_PERCENTILES.'//TRIM(ADJUSTL(IPF(1)%FEXT))
+         LU=UTL_GETUNIT(); OPEN(LU,FILE=FNAME,STATUS='UNKNOWN',ACTION='WRITE')
+         WRITE(LU,'(A)') '0'
+         WRITE(LU,'(A)') '2,1'
+         WRITE(LU,'(A)') 'DATE,-999.99'
+         WRITE(LU,'(A)') 'OBS,-999.99'
+         CLOSE(LU)
+        ENDIF
        CASE DEFAULT
         LINE=TRIM(LINE)//','//TRIM(RTOS(X,'F',3))
       END SELECT
