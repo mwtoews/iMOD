@@ -26,16 +26,16 @@ USE MOD_DBL
 USE WINTERACTER
 USE RESOURCE
 USE MOD_CONFIG
-USE MOD_PREF_PAR 
-USE MODPLOT 
-USE MOD_IDF_PAR 
-USE MOD_POLINT 
-USE IMODVAR 
-USE MOD_OSD 
+USE MOD_PREF_PAR
+USE MODPLOT
+USE MOD_IDF_PAR
+USE MOD_POLINT
+USE IMODVAR
+USE MOD_OSD
 USE MOD_QKSORT
 
 !## max. number of messages
-INTEGER,PARAMETER :: MXMESSAGE=16     
+INTEGER,PARAMETER :: MXMESSAGE=16
 INTEGER,DIMENSION(MXMESSAGE) :: IMESSAGE
 INTEGER,PARAMETER :: MAXUNITS=10000
 
@@ -46,9 +46,9 @@ CHARACTER(LEN=2),PARAMETER :: NEWLINE=CHAR(13)//CHAR(10)
 INTEGER,PARAMETER :: MAXLEN=52
 CHARACTER(LEN=MAXLEN),POINTER,DIMENSION(:,:) :: VAR,VAR_TMP,DVAR
 CHARACTER(LEN=MAXLEN),POINTER,DIMENSION(:) :: CCNST
-INTEGER,ALLOCATABLE,DIMENSION(:) :: ICOL_VAR,IACT_VAR  
+INTEGER,ALLOCATABLE,DIMENSION(:) :: ICOL_VAR,IACT_VAR
 !## max. variables/max. lines
-INTEGER :: NV,NL,IV  
+INTEGER :: NV,NL,IV
 
 TYPE PROCOBJ
  INTEGER,DIMENSION(2) :: IFLAGS
@@ -61,7 +61,7 @@ REAL(KIND=DP_KIND),PARAMETER,PRIVATE :: SDAY=86400.0D0
 REAL(KIND=DP_KIND),DIMENSION(20) :: SXVALUE,SYVALUE
 INTEGER :: NSX,NSY
 
-CONTAINS 
+CONTAINS
 
  !###======================================================================
  SUBROUTINE UTL_MF2005_MAXNO(FNAME,NP)
@@ -72,7 +72,7 @@ CONTAINS
  INTEGER :: I,IU,JU,IOS
  CHARACTER(LEN=12) :: NAN
  CHARACTER(LEN=256) :: LINE
- 
+
  IU=UTL_GETUNIT(); CALL OSD_OPEN(IU,FILE=FNAME                    ,STATUS='OLD'    ,ACTION='READ' ,FORM='FORMATTED'); IF(IU.EQ.0)RETURN
  JU=UTL_GETUNIT(); CALL OSD_OPEN(JU,FILE=FNAME(:LEN_TRIM(FNAME)-1),STATUS='UNKNOWN',ACTION='WRITE',FORM='FORMATTED'); IF(JU.EQ.0)RETURN
  DO
@@ -85,18 +85,18 @@ CONTAINS
   ENDIF
   WRITE(JU,'(A)') TRIM(ADJUSTL(LINE))
  ENDDO
- 
+
  CLOSE(IU,STATUS='DELETE'); CLOSE(JU)
- 
+
  END SUBROUTINE UTL_MF2005_MAXNO
- 
+
  !###======================================================================
  REAL(KIND=SP_KIND) FUNCTION UTL_D2R(X,PLACES)
  !###======================================================================
  IMPLICIT NONE
  REAL(KIND=DP_KIND),INTENT(IN) :: X
  INTEGER,INTENT(IN) :: PLACES
-  
+
  UTL_D2R = ANINT(X*(10.D0**PLACES))/(10.D0**PLACES)
 
  END FUNCTION UTL_D2R
@@ -176,7 +176,7 @@ CONTAINS
  UTL_DRAWPOLYGON=.TRUE.
 
  END FUNCTION UTL_DRAWPOLYGON
- 
+
  !###======================================================================
  SUBROUTINE UTL_PLOTPOLYGON(MAXPOL,NPOL,XPOL,YPOL)
  !###======================================================================
@@ -189,7 +189,7 @@ CONTAINS
  ELSE
   CALL DBL_IGRPOLYGONCOMPLEX(XPOL,YPOL,NPOL,IOFFSET=1)
  ENDIF
- 
+
  END SUBROUTINE UTL_PLOTPOLYGON
 
  !###======================================================================
@@ -197,14 +197,14 @@ CONTAINS
  !###======================================================================
  IMPLICIT NONE
  INTEGER,INTENT(IN) :: N
- REAL(KIND=DP_KIND),INTENT(IN),DIMENSION(N) :: X,Y 
+ REAL(KIND=DP_KIND),INTENT(IN),DIMENSION(N) :: X,Y
  REAL(KIND=DP_KIND),INTENT(OUT) :: XMID,YMID
  REAL(KIND=DP_KIND) :: X1,Y1,X2,Y2,DX,DY
  INTEGER :: I,J,ISTEP
 
  XMID=(MAXVAL(X)+MINVAL(X))/2.0D0
  YMID=(MAXVAL(Y)+MINVAL(Y))/2.0D0
- 
+
  !## check whether point is inside polygon, if not try others - but limited, could be a line as polygon!
  IF(DBL_IGRINSIDEPOLYGON(XMID,YMID,X,Y,N).NE.1)THEN
   ISTEP=10
@@ -218,7 +218,7 @@ DOLOOP: DO
     YMID=YMID+DY
     XMID=X1
     DO J=1,ISTEP
-     XMID=XMID+DX     
+     XMID=XMID+DX
      IF(DBL_IGRINSIDEPOLYGON(XMID,YMID,X,Y,N).EQ.1)EXIT DOLOOP
     ENDDO
    ENDDO
@@ -235,7 +235,7 @@ DOLOOP: DO
  IMPLICIT NONE
  INTEGER :: I
  CHARACTER(LEN=*),INTENT(INOUT) :: LINE
- 
+
  DO; I=INDEX(TRIM(LINE),'>'); IF(I.EQ.0)EXIT; LINE(I:I)=' '; ENDDO
  !## probably :-delimited
  IF(INDEX(TRIM(LINE),';').GT.0)THEN
@@ -245,9 +245,9 @@ DOLOOP: DO
  ENDIF
  DO; I=INDEX(TRIM(LINE),' '); IF(I.EQ.0)EXIT; LINE(I:I)='_'; ENDDO
  DO; I=INDEX(TRIM(LINE),'/'); IF(I.EQ.0)EXIT; LINE(I:I)='|'; ENDDO
-    
+
  END SUBROUTINE UTL_CLEANLINE
- 
+
  !###======================================================================
  INTEGER FUNCTION UTL_DETERMINEIDFTYPE(XMIN,YMIN,XMAX,YMAX,CSIZE,NCOL,NROW)
  !###======================================================================
@@ -256,7 +256,7 @@ DOLOOP: DO
  INTEGER,INTENT(IN) :: NCOL,NROW
  REAL(KIND=SP_KIND) :: XSMAX,YSMAX
  INTEGER :: I
-  
+
  !## determine whether it need to be a double precision IDF file
  XSMAX=REAL(XMIN,4); DO I=1,NCOL; XSMAX=XSMAX+REAL(CSIZE,4); ENDDO
  YSMAX=REAL(YMIN,4); DO I=1,NROW; YSMAX=YSMAX+REAL(CSIZE,4); ENDDO
@@ -264,7 +264,7 @@ DOLOOP: DO
  UTL_DETERMINEIDFTYPE=4
  IF(.NOT.UTL_EQUALS_REAL(XMAX,REAL(XSMAX,8)).OR. &
     .NOT.UTL_EQUALS_REAL(YMAX,REAL(YSMAX,8)))UTL_DETERMINEIDFTYPE=8
- 
+
  END FUNCTION UTL_DETERMINEIDFTYPE
 
  !###======================================================================
@@ -277,7 +277,7 @@ DOLOOP: DO
  INTEGER,DIMENSION(0:9) :: IDCURSOR
  DATA IDCURSOR/CURARROW,         ID_CURSORMOVELEFTRIGHT,ID_CURSORMOVELEFTRIGHT,ID_CURSORMOVEUPDOWN,ID_CURSORMOVEUPDOWN, &
                ID_CURSORMOVENESW,ID_CURSORMOVENWSE,     ID_CURSORMOVENESW,     ID_CURSORMOVENWSE,  ID_CURSORMOVE/
- 
+
  WX1=REAL(WINFOGRREAL(GRAPHICSUNITMINX),8) ! (7)  left  limit of main graphics area
  WY1=REAL(WINFOGRREAL(GRAPHICSUNITMINY),8) ! (8)  lower limit of main graphics area
  WX2=REAL(WINFOGRREAL(GRAPHICSUNITMAXX),8) ! (9)  right limit of main graphics area
@@ -316,19 +316,19 @@ DOLOOP: DO
  IF(WINFOMOUSE(MOUSECURSOR).NE.IDCURSOR(IEDGE))CALL WCURSORSHAPE(IDCURSOR(IEDGE))
 
  UTL_SELECTIEDGE=IEDGE
- 
+
  END FUNCTION UTL_SELECTIEDGE
- 
+
  !###===============================================================================
  INTEGER FUNCTION UTL_PUTRECORDLENGTH(NBYTES)
  !###===============================================================================
  IMPLICIT NONE
  INTEGER,INTENT(IN) :: NBYTES
 
- UTL_PUTRECORDLENGTH=(NBYTES*256)+247 
- 
+ UTL_PUTRECORDLENGTH=(NBYTES*256)+247
+
  END FUNCTION UTL_PUTRECORDLENGTH
- 
+
  !###===============================================================================
  INTEGER FUNCTION UTL_GETRECORDLENGTH(FNAME)
  !###===============================================================================
@@ -337,12 +337,12 @@ DOLOOP: DO
  INTEGER :: IU,IBYTE,IOS
 
  UTL_GETRECORDLENGTH=0
-  
+
  !## open file
  IU=UTL_GETUNIT()
  OPEN(IU,FILE=FNAME,STATUS='OLD',FORM='UNFORMATTED',ACTION='READ',ACCESS='STREAM',IOSTAT=IOS)
  IF(IOS.NE.0)RETURN
- 
+
  READ(IU,IOSTAT=IOS) IBYTE
  !## record length
  IF(IOS.EQ.0)UTL_GETRECORDLENGTH=(IBYTE-247)/256  !## in bytes
@@ -350,7 +350,7 @@ DOLOOP: DO
  IF(UTL_GETRECORDLENGTH.LE.0)THEN
   CALL WMESSAGEBOX(OKONLY,EXCLAMATIONICON,COMMONOK,'iMOD read recordlength of '//TRIM(ITOS(UTL_GETRECORDLENGTH)),'Error')
  ENDIF
- 
+
  END FUNCTION UTL_GETRECORDLENGTH
 
  !###===============================================================================
@@ -374,13 +374,13 @@ DOLOOP: DO
  REAL(KIND=DP_KIND),INTENT(IN) :: X,Y,FCT
  REAL(KIND=DP_KIND) :: XWID,XHGH,CHW,CHH
  INTEGER :: IFAM,ISTL,IOFFSET
- 
+
  IFAM=WINFOGRINTEGER(GRTEXTFAMILY)
  ISTL=WINFOGRINTEGER(GRTEXTSTYLE)
  XWID=REAL(WINFOGRREAL(GRAPHICSCHWIDTH),8)
  XHGH=REAL(WINFOGRREAL(GRAPHICSCHHEIGHT),8)
- 
- IOFFSET=1; IF(LPROF)IOFFSET=0 
+
+ IOFFSET=1; IF(LPROF)IOFFSET=0
  CALL UTL_SETTEXTSIZE(CHW,CHH,FCT=FCT*5.0D0,IMARKER=1)
  CALL DBL_WGRTEXTFONT(IFAMILY=0,TWIDTH=CHW,THEIGHT=CHH,ISTYLE=0)
  CALL DBL_IGRMARKER(X,Y,SYMBOL,IOFFSET=IOFFSET)
@@ -420,14 +420,14 @@ DOLOOP: DO
      IF(J.GT.0)J=J+1
     ENDIF
     J=MAX(1,J)
-    IF(ILABELNAME.EQ.1)THEN 
+    IF(ILABELNAME.EQ.1)THEN
      IF(LEN_TRIM(ATTRIB(I)).GT.0)THEN
       LINE=TRIM(LINE)//TRIM(ATTRIB(I))//'= '//TRIM(STRING(I)(J:))//';'
      ELSE
-      LINE=TRIM(LINE)//TRIM(STRING(I)(J:))//';'    
+      LINE=TRIM(LINE)//TRIM(STRING(I)(J:))//';'
      ENDIF
     ELSE
-     LINE=TRIM(LINE)//TRIM(STRING(I)(J:))//';'    
+     LINE=TRIM(LINE)//TRIM(STRING(I)(J:))//';'
     ENDIF
    ENDIF
   ENDDO
@@ -453,7 +453,7 @@ DOLOOP: DO
   ELSE
    CALL DBL_WGRTEXTORIENTATION(IALIGN=IALIGN,ANGLE=0.0D0)
   ENDIF
-  
+
   !## get size of box over labels
   DX=0.0D0
   DO I=1,SIZE(IATTRIB)
@@ -490,17 +490,17 @@ DOLOOP: DO
    XC=X
    YC=Y-1.0D0*DYS
   ENDIF
-   
+
 !  CALL IGRFILLPATTERN(OUTLINE)
 !  CALL IGRCOLOURN(WRGB(0,0,0)) !## black
 !  CALL DBL_IGRRECTANGLE(XC-DX,YC+0.5D0*DYS,XC+DX+DXS,YC-DY-0.5D0*DYS,IOFFSET=1)
 
-  DO I=1,SIZE(IATTRIB) 
+  DO I=1,SIZE(IATTRIB)
    IF(IATTRIB(I).EQ.1)THEN
     IF(IEQ.GT.0)THEN
     ELSE
      CALL IGRFILLPATTERN(SOLID)
-     CALL IGRCOLOURN(WRGB(0,0,0)) 
+     CALL IGRCOLOURN(WRGB(0,0,0))
     ENDIF
     J=0
     IF(IBACKSLASH.EQ.1)THEN
@@ -523,7 +523,7 @@ DOLOOP: DO
     YC=YC-DYS
    ENDIF
   END DO
- 
+
  ENDIF
 
  END SUBROUTINE UTL_PLOTLABEL
@@ -733,7 +733,7 @@ DOLOOP: DO
 
 ! end of program
       end subroutine UTL_MODELLHS1
- 
+
  !###======================================================================
  INTEGER FUNCTION UTL_GETUNITIPF(IPFNAME,TSTAT)
  !###======================================================================
@@ -765,13 +765,13 @@ DOLOOP: DO
   IF(LEX)THEN
   ENDIF
   UTL_GETUNITIPF=UTL_GETUNIT()
-  CALL OSD_OPEN(UTL_GETUNITIPF,FILE=IPFNAME,STATUS=TSTATUS,FORM='FORMATTED',ACTION='WRITE,DENYREAD') 
+  CALL OSD_OPEN(UTL_GETUNITIPF,FILE=IPFNAME,STATUS=TSTATUS,FORM='FORMATTED',ACTION='WRITE,DENYREAD')
  ENDIF
 
  END FUNCTION UTL_GETUNITIPF
- 
+
  !###=========================================================================
- SUBROUTINE UTL_GETHELP(TOPIC,CTOPIC) 
+ SUBROUTINE UTL_GETHELP(TOPIC,CTOPIC)
  !###=========================================================================
  IMPLICIT NONE
  CHARACTER(LEN=*),INTENT(IN) :: TOPIC,CTOPIC
@@ -858,11 +858,11 @@ DOLOOP: DO
  IMPLICIT NONE
  INTEGER, DIMENSION(8), INTENT(IN) :: IBDT,IEDT
  REAL(KIND=DP_KIND), INTENT(OUT) :: ELSEC
- INTEGER, PARAMETER :: NSPD = 86400  
+ INTEGER, PARAMETER :: NSPD = 86400
  INTEGER, DIMENSION(12) :: IDPM(12)
- DATA IDPM/31,28,31,30,31,30,31,31,30,31,30,31/ ! DAYS PER MONTH  
+ DATA IDPM/31,28,31,30,31,30,31,31,30,31,30,31/ ! DAYS PER MONTH
  INTEGER :: NDAYS, LEAP, IBD, IED, MB, ME, MC, M, NM
-  
+
  !## calculate elapsed time in days and seconds
  NDAYS=0
  LEAP=0
@@ -900,10 +900,10 @@ DOLOOP: DO
   ELSEC = ELSEC+(IEDT(5)-IBDT(5))*3600.0D0
   ELSEC = ELSEC+(IEDT(6)-IBDT(6))*60.0D0
   ELSEC = ELSEC+(IEDT(7)-IBDT(7))
-  ELSEC = ELSEC+(IEDT(8)-IBDT(8))*0.01D0      
+  ELSEC = ELSEC+(IEDT(8)-IBDT(8))*0.01D0
 
   END SUBROUTINE UTL_TIMING
-  
+
  !###======================================================================
  SUBROUTINE UTL_MINTHICKNESS(TOP,BOT,HK,VK,VA, &
            TOP_BU,BOT_BU,HK_BU,VK_BU,VA_BU,BND,TH,MINTHICKNESS)
@@ -912,10 +912,10 @@ DOLOOP: DO
  INTEGER,INTENT(IN),DIMENSION(:) :: BND
  REAL(KIND=DP_KIND),INTENT(INOUT),DIMENSION(:) :: TOP,BOT,HK,VK,VA,TOP_BU,BOT_BU,HK_BU,VK_BU,VA_BU
  REAL(KIND=DP_KIND),INTENT(INOUT),DIMENSION(:,:) :: TH
- REAL(KIND=DP_KIND),INTENT(IN) :: MINTHICKNESS 
+ REAL(KIND=DP_KIND),INTENT(IN) :: MINTHICKNESS
  INTEGER :: N,NLAY,ILAY,IL,IL1,IL2
  REAL(KIND=DP_KIND) :: K,T,B,T1,T2,K1,K2,B1,D,KD,VC,MT,F
- 
+
  NLAY=SIZE(BND)
 
  !## make backup
@@ -932,10 +932,10 @@ DOLOOP: DO
 
  !## nothing to do
  IF(SUM(TH(:,1)).EQ.0.0D0)RETURN
- 
+
  IL1=1; IL2=0
  DO
- 
+
   !## find bottom of current trajectory
   IL2=IL1-1; DO; IL2=IL2+1; IF(IL2.EQ.NLAY)EXIT; IF(BND(IL2).NE.0.AND.TH(IL2,2).GT.0.0D0)EXIT; ENDDO
 
@@ -947,7 +947,7 @@ DOLOOP: DO
 
   !## shortage of space
   D=MT-T
-  
+
   !## more space needed, see how much can be included from aquitards
   IF(D.GT.0.0D0)THEN
 
@@ -964,17 +964,17 @@ DOLOOP: DO
   ELSE
    MT=MINTHICKNESS
   ENDIF
-  
+
   !## correct minimal thicknesses
   T=0.0; DO IL=IL1,IL2
    IF(TH(IL,1).LT.MT.AND.BND(IL).NE.0)THEN
     T=T+MT-TH(IL,1); TH(IL,1)=MT
    ENDIF
   ENDDO
-  
+
   !## corrections applied
   IF(T.GT.0.0D0)THEN
-  
+
    !## divide remaining t1 amoung the rest
    T1=0.0D0; DO IL=IL1,IL2
     IF(TH(IL,1).GT.MT.AND.BND(IL).NE.0)T1=T1+(TH(IL,1)-MT)
@@ -991,10 +991,10 @@ DOLOOP: DO
    ENDDO
 
   ENDIF
-  
+
   IL1=IL2+1
   IF(IL1.GE.NLAY)EXIT
-  
+
  ENDDO
 
  !## recompute all levels from the corrected thicknesses
@@ -1011,14 +1011,14 @@ DOLOOP: DO
 
   !## current corrected layer
   T=TOP(ILAY); B=BOT(ILAY)
-  
+
   !## if layer thickness, leave it - could be possible most lower layer(s)
   IF(T-B.LE.0.0D0)THEN
 
    HK(ILAY)=0.0D0; VA(ILAY)=0.0D0
 
   ELSE
-    
+
    KD=0.0D0; VC=0.0D0
    DO IL=1,NLAY
 
@@ -1026,7 +1026,7 @@ DOLOOP: DO
     IF(BND(IL).EQ.0)CYCLE
 
     T1=TOP_BU(IL); B1=BOT_BU(IL)
-    
+
     D=MIN(T,T1)-MAX(B,B1)
     !## part of aquifer
     IF(D.GT.0.0D0)THEN
@@ -1043,19 +1043,19 @@ DOLOOP: DO
       KD=KD+VK_BU(IL)*D
       VC=VC+D/(VK_BU(IL))
      ENDIF
-    
+
     ENDIF
 
-   ENDDO 
+   ENDDO
    !## new parameters
    HK(ILAY)=KD/(T-B)
    K=(T-B)/VC
    VA(ILAY)=K/HK(ILAY)
-  
+
   ENDIF
 
  ENDDO
- 
+
  !## correct permeabilities for aquitards
  DO ILAY=1,NLAY-1
 
@@ -1064,31 +1064,31 @@ DOLOOP: DO
 
   !## original layer
   T=BOT_BU(ILAY); B=TOP_BU(ILAY+1)
-  
+
   !## if layer thickness, leave it - could be possible most lower layer(s)
   IF(T-B.GT.0.0D0)THEN
 
    !## previous c
    VC=(T-B)/VK_BU(ILAY)
-  
+
    !## current corrected layer
    T=BOT(ILAY); B=TOP(ILAY+1)
    VK(ILAY)=(T-B)/VC
 
   ENDIF
-  
+
  ENDDO
 
  !## check before and after
- 
+
  !## get thickness of aquifers
  TH=0.0D0; DO ILAY=1,NLAY; IF(BND(ILAY).NE.0)TH(ILAY,1)=TOP_BU(ILAY)-BOT_BU(ILAY); ENDDO; T1=SUM(TH(:,1))
  DO ILAY=1,NLAY; TH(ILAY,1)=TH(ILAY,1)*HK_BU(ILAY); ENDDO; K1=SUM(TH(:,1))
- 
+
  !## get thickness of aquifers
  TH=0.0D0; DO ILAY=1,NLAY; IF(BND(ILAY).NE.0)TH(ILAY,2)=TOP(ILAY)-BOT(ILAY); ENDDO; T2=SUM(TH(:,2))
  DO ILAY=1,NLAY; TH(ILAY,2)=TH(ILAY,2)*HK(ILAY); ENDDO; K2=SUM(TH(:,2))
- 
+
  IF((.NOT.UTL_EQUALS_REAL(T2,T1).OR..NOT.UTL_EQUALS_REAL(K2,K1)).AND. &
    (ABS(T2-T1).GT.1.0D0.OR.ABS(K2-K1).GT.1.0D0))THEN
   !## get thickness of aquifers
@@ -1108,7 +1108,7 @@ DOLOOP: DO
  REAL(KIND=DP_KIND),INTENT(IN) :: X,Y,DX,DY,A
  REAL(KIND=DP_KIND) :: THETA,DTHETA
  REAL(KIND=DP_KIND) :: XP,YP,AR,FY
- 
+
  AR=A/(360.0D0/(2.0D0*PI))
  FY=DY/DX
 
@@ -1123,9 +1123,9 @@ DOLOOP: DO
   THETA=THETA+DTHETA
   IF(THETA.GT.2.0D0*PI)EXIT
  ENDDO
- 
+
  END SUBROUTINE UTL_DRAWELLIPSE
- 
+
  !###======================================================================
  SUBROUTINE UTL_POINTELLIPSE(X,Y,THETA,FY,DX,AR,XP,YP)
  !###======================================================================
@@ -1133,7 +1133,7 @@ DOLOOP: DO
  REAL(KIND=DP_KIND),INTENT(IN) :: FY,THETA,DX,AR,X,Y
  REAL(KIND=DP_KIND),INTENT(OUT) :: XP,YP
  REAL(KIND=DP_KIND) :: XR,YR
- 
+
  XP=    DX*COS(THETA); XR=XP
  YP=-FY*DX*SIN(THETA); YR=YP
  IF(AR.NE.0.0D0)THEN
@@ -1142,7 +1142,7 @@ DOLOOP: DO
  ENDIF
  XP=X+XR
  YP=Y+YR
-  
+
  END SUBROUTINE UTL_POINTELLIPSE
 
  !###======================================================================
@@ -1152,23 +1152,23 @@ DOLOOP: DO
  IMPLICIT NONE
  REAL(KIND=DP_KIND),INTENT(IN) :: XP,YP,X0,Y0,DX,DY,A
  REAL(KIND=DP_KIND) :: X1,X2,X3,A2,B2,AR
- 
+
  UTL_INSIDEELLIPSE=.FALSE.
- 
+
  AR=A/(360.0D0/(2.0D0*PI))
  AR=-1.0D0*AR
- 
- X1=( (XP-X0)*COS(AR)+(YP-Y0)*SIN(AR) ) **2.0D0 
- X2=( (XP-X0)*SIN(AR)-(YP-Y0)*COS(AR) ) **2.0D0 
+
+ X1=( (XP-X0)*COS(AR)+(YP-Y0)*SIN(AR) ) **2.0D0
+ X2=( (XP-X0)*SIN(AR)-(YP-Y0)*COS(AR) ) **2.0D0
  A2= DX**2.0D0
  B2= DY**2.0D0
- 
+
  X3=X1/A2+X2/B2
- 
+
  UTL_INSIDEELLIPSE=X3.LE.1.0D0
- 
+
  END FUNCTION UTL_INSIDEELLIPSE
- 
+
  !###======================================================================
  INTEGER FUNCTION UTL_COUNT_COLUMNS(LINE,SEP,BPV,EPV)
  !###======================================================================
@@ -1177,15 +1177,15 @@ DOLOOP: DO
  INTEGER,DIMENSION(:),OPTIONAL,INTENT(OUT) :: BPV,EPV
  INTEGER :: I,J,K,IOUT,NCSEP
  CHARACTER(LEN=1),ALLOCATABLE,DIMENSION(:) :: CSEP
- 
+
  NCSEP=LEN_TRIM(SEP); ALLOCATE(CSEP(NCSEP))
  DO I=1,NCSEP; CSEP(I)=SEP(I:I); ENDDO
 
  IF(PRESENT(EPV))EPV=0
  IF(PRESENT(BPV))THEN; BPV=0; BPV(1)=1; ENDIF
- 
+
 ! !## remove duplicate spaces in Line
-! DO 
+! DO
 !  IF(INDEX(LINE,'  ').EQ.0)EXIT
 !  LINE=UTL_SUBST(LINE,'  ',' ')
 ! ENDDO
@@ -1195,11 +1195,11 @@ DOLOOP: DO
   IF(LINE(I:I).NE.' ')EXIT
  ENDDO
  I=I-1
- 
+
  J=1; IOUT=1
- DO 
+ DO
   I=I+1
-  
+
   DO K=1,NCSEP
    IF(LINE(I:I).EQ.CSEP(K).AND.IOUT.EQ.1)THEN
     IF(PRESENT(EPV))EPV(J)=I-1
@@ -1213,16 +1213,16 @@ DOLOOP: DO
   IF(LINE(I:I).EQ.CHAR(34).OR. &             !'
      LINE(I:I).EQ.CHAR(39).OR. &             !"
      LINE(I:I).EQ.CHAR(96))IOUT=ABS(IOUT-1)  !`
-  
+
   !## stop, whole line examined
   IF(I.EQ.LEN_TRIM(LINE))EXIT
-  
+
  ENDDO
  IF(PRESENT(EPV))EPV(J)=LEN_TRIM(LINE)
 
  !## number of columns is number of comma-delimiters + 1
  UTL_COUNT_COLUMNS=J
- 
+
  END FUNCTION UTL_COUNT_COLUMNS
 
  !###======================================================================
@@ -1258,7 +1258,7 @@ DOLOOP: DO
  ELSE
   N=UTL_COUNT_COLUMNS(LINE,',')
  ENDIF
- 
+
  IF(ASSOCIATED(IPOINTER))THEN
   NPOINTER=SIZE(IPOINTER)
   IF(NPOINTER.LT.N)DEALLOCATE(IPOINTER)
@@ -1302,7 +1302,7 @@ DOLOOP: DO
  CHARACTER(LEN=*),INTENT(IN) :: TXT
  INTEGER :: IOS,I,N,JECHO
  CHARACTER(LEN=3*256) :: LINE
- 
+
  JECHO=1; IF(PRESENT(IECHO))THEN
   JECHO=IECHO
  ENDIF
@@ -1344,7 +1344,7 @@ DOLOOP: DO
  UTL_READPOINTER_REAL=.TRUE.
 
  END FUNCTION UTL_READPOINTER_REAL
- 
+
  !###======================================================================
  LOGICAL FUNCTION UTL_READPOINTER_CHARACTER(IU,NPOINTER,CPOINTER,TXT,IOPT,IECHO)
  !###======================================================================
@@ -1356,7 +1356,7 @@ DOLOOP: DO
  CHARACTER(LEN=*),INTENT(IN) :: TXT
  INTEGER :: IOS,I,N,JECHO
  CHARACTER(LEN=3*256) :: LINE
- 
+
  JECHO=1; IF(PRESENT(IECHO))THEN
   JECHO=IECHO
  ENDIF
@@ -1390,7 +1390,7 @@ DOLOOP: DO
  UTL_READPOINTER_CHARACTER=.TRUE.
 
  END FUNCTION UTL_READPOINTER_CHARACTER
-   
+
  !###======================================================================
  SUBROUTINE UTL_MEASUREMAIN()
  !###======================================================================
@@ -1419,11 +1419,11 @@ DOLOOP: DO
  LOGICAL :: LEX
 
  CALL IGRPLOTMODE(MODEXOR); CALL IGRCOLOURN(WRGB(255,255,255))
- CALL WCURSORSHAPE(IDCURSOR) !ID_CURSORDISTANCE) 
+ CALL WCURSORSHAPE(IDCURSOR) !ID_CURSORDISTANCE)
 
  CALL IGRFILLPATTERN(OUTLINE); CALL IGRLINETYPE(SOLIDLINE)
  CALL WINDOWOUTSTATUSBAR(2,'Press right mouse button to stop')
- 
+
  MAXCRD=50; ALLOCATE(XCRD(MAXCRD),YCRD(MAXCRD))
  LEX =.FALSE.; NCRD=0
 
@@ -1440,7 +1440,7 @@ DOLOOP: DO
 
     CALL WINDOWSELECT(0)
     CALL WINDOWOUTSTATUSBAR(1,'X:'//TRIM(RTOS(MOUSEX,'F',3))//' m, Y:'//TRIM(RTOS(MOUSEY,'F',3))//' m')
-   
+
     !## first point set
     IF(NCRD.GE.2)THEN
      CALL UTL_PLOT1BITMAP()
@@ -1469,7 +1469,7 @@ DOLOOP: DO
       CALL UTL_PLOT2BITMAP()
 
      !## right button
-     CASE (3)  
+     CASE (3)
       EXIT
     END SELECT
 
@@ -1544,18 +1544,18 @@ DOLOOP: DO
  REAL(KIND=DP_KIND),INTENT(IN) :: XMIN,YMIN,XMAX,YMAX
  REAL(KIND=DP_KIND) :: DX,DY,X1,X2,Y1,Y2
  INTEGER :: I
- 
+
  !## initially try 20 ticks
  NSX=15; DX=UTL_GETNICEAXES(XMAX-XMIN,DBLE(NSX))
  NSY=15; DY=UTL_GETNICEAXES(YMAX-YMIN,DBLE(NSY))
- 
+
  !## set first tick-marK
  X1=  DX*CEILING(XMIN/DX);  Y1=  DY*CEILING(YMIN/DY)
- X2=  DX*FLOOR(XMAX/DX);    Y2=  DY*FLOOR(YMAX/DY) 
+ X2=  DX*FLOOR(XMAX/DX);    Y2=  DY*FLOOR(YMAX/DY)
  NSX=(X2-X1)/DX; NSX=NSX+1; NSY=(Y2-Y1)/DY; NSY=NSY+1
  SXVALUE(1)=X1; DO I=2,NSX; SXVALUE(I)=SXVALUE(I-1)+DX; ENDDO
  SYVALUE(1)=Y1; DO I=2,NSY; SYVALUE(I)=SYVALUE(I-1)+DY; ENDDO
- 
+
  END SUBROUTINE UTL_GETAXESCALES
 
  !###======================================================================
@@ -1564,7 +1564,7 @@ DOLOOP: DO
  IMPLICIT NONE
  REAL(KIND=DP_KIND),INTENT(IN) :: R,NTIC
  REAL(KIND=DP_KIND) :: S,M,TIC,RES
- 
+
  S=R/NTIC
  M=10.0D0**FLOOR(LOG10(S))
  RES=S/M
@@ -1578,7 +1578,7 @@ DOLOOP: DO
   TIC=M
  ENDIF
  UTL_GETNICEAXES=TIC
- 
+
  END FUNCTION UTL_GETNICEAXES
 
  !###======================================================================
@@ -1586,11 +1586,11 @@ DOLOOP: DO
  !###======================================================================
  IMPLICIT NONE
  REAL(KIND=DP_KIND),INTENT(IN) :: X
- 
+
  WRITE(UTL_WRITENUMBER,UTL_GETFORMAT(X)) X
- 
+
  END FUNCTION UTL_WRITENUMBER
- 
+
  !###======================================================================
  CHARACTER(LEN=32) FUNCTION UTL_GETFORMAT(X)
  !###======================================================================
@@ -1599,13 +1599,13 @@ DOLOOP: DO
  CHARACTER(LEN=32) :: XC
  INTEGER :: I,J,K,II,NDEC,NNUM,DIGITS
  CHARACTER(LEN=1) :: F
-  
+
  !## number equal to a NaN
  IF(X.NE.X.OR.X.GT.HUGE(1.0D0).OR.X.LT.-HUGE(1.0D0))THEN
   UTL_GETFORMAT='*'
   RETURN
  ENDIF
- 
+
  WRITE(XC,'(G18.11)') X
  XC=ADJUSTL(XC)
 
@@ -1613,7 +1613,7 @@ DOLOOP: DO
 
  !## determine length of value
  I=LEN_TRIM(XC); K=MAX(INDEX(XC,'D'),INDEX(XC,'E')); IF(K.GT.0)I=K-1
- 
+
  !## get numbers before digit
  J=INDEX(XC,'.')
  IF(J.GT.0)THEN
@@ -1641,7 +1641,7 @@ DOLOOP: DO
  IF(X.LT.0.0D0)NNUM=NNUM+1
 
  WRITE(UTL_GETFORMAT,'(2A1,2(I2.2,A1))') '(',F,NNUM,'.',NDEC,')'
- 
+
  END FUNCTION UTL_GETFORMAT
 
  !###======================================================================
@@ -1649,13 +1649,13 @@ DOLOOP: DO
  !###======================================================================
  IMPLICIT NONE
  INTEGER,INTENT(IN) :: IONOFF
- 
+
  IF(IONOFF.EQ.0)THEN
   CALL IDEBUGLEVEL(DBGSILENT)
  ELSE
   CALL IDEBUGLEVEL(ICDEBUGLEVEL)
  ENDIF
- 
+
  END SUBROUTINE UTL_DEBUGLEVEL
 
  !###====================================================================
@@ -1667,7 +1667,7 @@ DOLOOP: DO
  INTEGER :: I,J,NSIG
  REAL(KIND=DP_KIND) :: F
  CHARACTER(LEN=12) :: FRM
- 
+
  I=INT(X); F=X-I
  UTL_REALTOSTRING=TRIM(ITOS(I))
  IF(F.NE.0.0D0)THEN
@@ -1683,7 +1683,7 @@ DOLOOP: DO
  ENDIF
  !## add minus
  IF(I.EQ.0.AND.X.LT.0.0D0)UTL_REALTOSTRING='-'//TRIM(UTL_REALTOSTRING)
- 
+
  END FUNCTION UTL_REALTOSTRING
 
  !###====================================================================
@@ -1694,25 +1694,25 @@ DOLOOP: DO
  CHARACTER(LEN=*),INTENT(INOUT) :: RFNAME
  CHARACTER(LEN=*),INTENT(OUT) :: GFNAME
  CHARACTER(LEN=256) :: ROOTNAME
- 
+
  !## check relative-pathnames
  IF(INDEX(RFNAME,':').EQ.0)THEN
   !## if file is given
   IF(INDEX(PATH,'.').GT.0)THEN
-   ROOTNAME=PATH(:INDEX(PATH,'\',.TRUE.)-1)   
+   ROOTNAME=PATH(:INDEX(PATH,'\',.TRUE.)-1)
   ELSE
    ROOTNAME=PATH
   ENDIF
-  !## clip number of "..\" from the rootname  
+  !## clip number of "..\" from the rootname
   DO
    IF(INDEX(RFNAME,'..\',.FALSE.).EQ.0)THEN
     IF(INDEX(RFNAME,'.\',.FALSE.).EQ.0)EXIT
     !## one point means same folder
     RFNAME=RFNAME(INDEX(RFNAME,'.\',.FALSE.)+2:); EXIT
    ELSE
-    RFNAME=RFNAME(INDEX(RFNAME,'..\',.FALSE.)+3:) 
+    RFNAME=RFNAME(INDEX(RFNAME,'..\',.FALSE.)+3:)
    ENDIF
-   ROOTNAME=ROOTNAME(:INDEX(ROOTNAME,'\',.TRUE.)-1)   
+   ROOTNAME=ROOTNAME(:INDEX(ROOTNAME,'\',.TRUE.)-1)
   ENDDO
   !## construct global filename
   GFNAME=TRIM(ROOTNAME)//'\'//TRIM(RFNAME)
@@ -1726,7 +1726,7 @@ DOLOOP: DO
   IF(INDEX(GFNAME,'\\').EQ.0)EXIT
   GFNAME=UTL_SUBST(GFNAME,'\\','\')
  ENDDO
- 
+
  END SUBROUTINE UTL_RELPATHNAME
 
 !###======================================================================
@@ -1737,31 +1737,31 @@ DOLOOP: DO
  CHARACTER(LEN=*), INTENT(INOUT) :: FNAME
  INTEGER :: M,N,IL
  CHARACTER(LEN=1) :: SLASH
- LOGICAL :: LREL  
- 
+ LOGICAL :: LREL
+
  N = LEN_TRIM(FNAME)
  IF (N==0) RETURN
  CALL UTL_GETSLASH(SLASH)
  FNAME = ADJUSTL(FNAME)
  N = LEN_TRIM(FNAME)
- 
+
  M = LEN_TRIM(ROOT)
  IF(ROOT(M:M).EQ.SLASH) THEN
-    ROOT = ROOT(1:M-1)  
+    ROOT = ROOT(1:M-1)
     M = M - 1
  END IF
  IL = M + 1
- 
+
  LREL = .FALSE.
  DO WHILE(.TRUE.)
-    IF(FNAME(1:1).NE.'.')EXIT 
+    IF(FNAME(1:1).NE.'.')EXIT
     IF(FNAME(1:2).EQ.'.'//SLASH)THEN
-       LREL = .TRUE. 
+       LREL = .TRUE.
        FNAME = FNAME(3:N)
        N = LEN_TRIM(FNAME)
     END IF
     IF(FNAME(1:3).EQ.'..'//SLASH)THEN
-       LREL = .TRUE. 
+       LREL = .TRUE.
        FNAME = FNAME(4:N)
        N = LEN_TRIM(FNAME)
        IL = INDEX(ROOT(1:IL-1),SLASH,BACK=.TRUE.)
@@ -1770,9 +1770,9 @@ DOLOOP: DO
  IF(LREL) THEN
     FNAME = ROOT(1:IL-1)//SLASH//TRIM(FNAME)
  END IF
- 
+
  END SUBROUTINE UTL_REL_TO_ABS
- 
+
  !###===================================================================
  SUBROUTINE UTL_GETSLASH(SLASH)
  !###===================================================================
@@ -1780,26 +1780,26 @@ DOLOOP: DO
  CHARACTER(LEN=*),INTENT(OUT) :: SLASH
 
  IF(OS.EQ.1)THEN ! DOS
-   SLASH='\'   
+   SLASH='\'
  ELSEIF(OS.EQ.2)THEN ! UNIX
-   SLASH='/'   
+   SLASH='/'
  ENDIF
 
  END SUBROUTINE UTL_GETSLASH
- 
+
  !###====================================================================
  FUNCTION UTL_IMODVERSION(S1,S2)
  !###====================================================================
  IMPLICIT NONE
  CHARACTER(LEN=*),INTENT(IN),OPTIONAL :: S1,S2
  CHARACTER(LEN=156) :: UTL_IMODVERSION
- 
+
  IF(LBETA)THEN
   UTL_IMODVERSION=TRIM(BVERSION)//'-iMOD'
  ELSE
   UTL_IMODVERSION='iMOD'
  ENDIF
- 
+
  IF(PRESENT(S1).AND.PRESENT(S2))THEN
   UTL_IMODVERSION=TRIM(UTL_IMODVERSION)//' ['//TRIM(UTL_SUBST(RVERSION_EXE,S1,S2))//' '//TRIM(CCONFIG)//']'
  ELSE
@@ -1808,11 +1808,11 @@ DOLOOP: DO
  IF(LEXPDATE)THEN
   UTL_IMODVERSION=TRIM(UTL_IMODVERSION)//' !!! Expiring date: '//TRIM(JDATETOGDATE(UTL_IDATETOJDATE(EXPDATE)))//' !!!'
  ENDIF
- 
+
  END FUNCTION UTL_IMODVERSION
- 
+
  !###====================================================================
- LOGICAL FUNCTION UTL_PCK_READTXT(ICOL,STIME,ETIME,QT,FNAME,INDICATOR,THRESHOLD,ISS,NCOUNT) 
+ LOGICAL FUNCTION UTL_PCK_READTXT(ICOL,STIME,ETIME,QT,FNAME,INDICATOR,THRESHOLD,ISS,NCOUNT)
  !###====================================================================
  IMPLICIT NONE
  INTEGER,INTENT(IN) :: ICOL,INDICATOR,ISS
@@ -1827,7 +1827,7 @@ DOLOOP: DO
  CHARACTER(LEN=256) :: LINE
  REAL(KIND=DP_KIND),DIMENSION(:),ALLOCATABLE :: NODATA
  CHARACTER(LEN=52),DIMENSION(:),ALLOCATABLE :: QD
-  
+
  UTL_PCK_READTXT=.FALSE.
 
  !## transient(2)/steady-state(1)
@@ -1841,14 +1841,14 @@ DOLOOP: DO
     TRIM(FNAME),'Error')
   RETURN
  ENDIF
- 
+
  READ(IU,*) NR; IF(NR.LE.0)THEN; CLOSE(IU); UTL_PCK_READTXT=.TRUE.; RETURN; ENDIF
 
  READ(IU,'(A256)') LINE
  READ(LINE,*,IOSTAT=IOS) NC,ITYPE
  IF(IOS.NE.0)ITYPE=1
  ITYPE=MAX(ITYPE,1)
-  
+
  !## what type of file?
  SELECT CASE (ITYPE)
   !## timeseries
@@ -1867,16 +1867,16 @@ DOLOOP: DO
  END SELECT
 
  ALLOCATE(NODATA(NC),QD(NC)); QD=''
-  
- DO I=1,NC; READ(IU,*) ATTRIB,NODATA(I); ENDDO 
+
+ DO I=1,NC; READ(IU,*) ATTRIB,NODATA(I); ENDDO
 
  !## timeseries
- IF(ITYPE.EQ.1)THEN  
+ IF(ITYPE.EQ.1)THEN
 
   DBL_SDATE=STIME
   QQ=NODATA(ICOL)
   NCOUNT=0.0D0
-      
+
   DO IR=1,NR
    READ(IU,*) DBL_EDATE,(QD(I),I=2,NC)
    !## steady-state
@@ -1885,7 +1885,7 @@ DOLOOP: DO
     READ(QD(2),*) QQ
     IF(QQ.NE.NODATA(2))THEN
      NCOUNT=NCOUNT+1
-     QT=QT+QQ       
+     QT=QT+QQ
     ENDIF
    ELSE
     !## make double if needed
@@ -1904,7 +1904,7 @@ DOLOOP: DO
      !## get volume
      READ(QD(ICOL),*) QQ
     ENDIF
-    DBL_SDATE=DBL_EDATE 
+    DBL_SDATE=DBL_EDATE
     !## stop
     IF(DBL_EDATE.GE.ETIME)EXIT
    ENDIF
@@ -1917,31 +1917,31 @@ DOLOOP: DO
    QT=QT+RTIME*QQ
    NCOUNT=NCOUNT+RTIME
   ENDIF
-  
+
   !## steady-state
   IF(NCOUNT.GT.0.0D0)QT=QT/NCOUNT
 
-  UTL_PCK_READTXT=.TRUE. 
- 
+  UTL_PCK_READTXT=.TRUE.
+
  !## itype=2 borehole; itype=3 seismic
  ELSEIF(ITYPE.EQ.2.OR.ITYPE.EQ.3)THEN
-   
+
   QQ=0.0D0
-  
+
   !## get elevation in chronologic order
   IF(ICOL.EQ.1)THEN
    IZMAX=SDATE
    DO IR=1,MIN(IZMAX,NR)
     READ(IU,*) Z
    ENDDO
-   QT=Z; IF(Z.NE.NODATA(1).AND.IR.EQ.IZMAX+1)UTL_PCK_READTXT=.TRUE. 
-  
+   QT=Z; IF(Z.NE.NODATA(1).AND.IR.EQ.IZMAX+1)UTL_PCK_READTXT=.TRUE.
+
   !## get the average value for the choosen interval
   ELSE
-  
+
    NQ=0.0D0; TZ=STIME/100.0D0; BZ=ETIME/100.0D0; DZ=TZ-BZ
    DO IR=1,NR
-       
+
     READ(IU,*) Z,(QD(I),I=2,NC)
 
     !## get first
@@ -1950,13 +1950,13 @@ DOLOOP: DO
      IF(Q1.NE.NODATA(ICOL))THEN
       !## get fraction
       IF(Z1.GE.BZ.AND.Z.LT.TZ)THEN
-       F=(MIN(TZ,Z1)-MAX(BZ,Z))/DZ    
+       F=(MIN(TZ,Z1)-MAX(BZ,Z))/DZ
        QT=QT+F*Q1
-       NQ=NQ+F 
+       NQ=NQ+F
       ENDIF
      ENDIF
     ENDIF
-    
+
     Z1=Z
     !## apply indicator
     IF(INDICATOR.GT.0)THEN
@@ -1966,20 +1966,20 @@ DOLOOP: DO
     ENDIF
 
     IF(Z.LT.BZ)EXIT
-   
+
    ENDDO
 
    IF(NQ.GT.0.0D0)THEN
     NCOUNT=NQ
     QT=QT/NQ
-    UTL_PCK_READTXT=.TRUE. 
+    UTL_PCK_READTXT=.TRUE.
    ENDIF
 
   ENDIF
  ENDIF
-      
- CLOSE(IU); DEALLOCATE(QD) 
- 
+
+ CLOSE(IU); DEALLOCATE(QD)
+
  END FUNCTION UTL_PCK_READTXT
 
  !###======================================================================
@@ -1996,9 +1996,9 @@ DOLOOP: DO
  REAL(KIND=DP_KIND) :: ZM,ZT,ZB,ZC,FC,DZ
  REAL(KIND=DP_KIND),ALLOCATABLE,DIMENSION(:) :: L,TL
  INTEGER,ALLOCATABLE,DIMENSION(:) :: IL
-   
+
  ALLOCATE(L(N),TL(N),IL(N))
- 
+
  !## not thickness between z1 and z2 - look for correct modellayer
  IF(Z1.EQ.Z2)THEN
 
@@ -2010,13 +2010,13 @@ DOLOOP: DO
   ENDDO
 
  ELSE
- 
+
   !## filterlength for each modellayer
   L=0.0D0
   DO ILAY=1,N
    ZT=MIN(TOP(ILAY),Z1); ZB=MAX(BOT(ILAY),Z2); L(ILAY)=MAX(0.0D0,ZT-ZB)
   ENDDO
- 
+
   TLP=0.0D0
   !## well within any aquifer(s)
   IF(SUM(L).GT.0.0D0)THEN
@@ -2037,13 +2037,13 @@ DOLOOP: DO
     TLP(ILAY)=TLP(ILAY)*(1.0D0-(ABS(ZC-FC)/(0.5D0*DZ)))
    ENDIF
   ENDDO
- 
+
   !## normalize tlp() again
   IF(SUM(TLP).GT.0.0D0)TLP=(1.0D0/SUM(TLP))*TLP
 
   !## remove small transmissivities
   IF(MINKHT.GT.0.0D0)THEN
-   ZT=SUM(TLP) 
+   ZT=SUM(TLP)
    DO ILAY=1,N
     DZ= TOP(ILAY)-BOT(ILAY)
     IF(KH(ILAY)*DZ.LT.MINKHT)TLP(ILAY)=0.0D0
@@ -2051,14 +2051,14 @@ DOLOOP: DO
    IF(SUM(TLP).GT.0.0D0)THEN
     ZT=ZT/SUM(TLP); TLP=ZT*TLP
    ENDIF
- 
+
    !## normalize tlp() again
    IF(SUM(TLP).GT.0.0D0)TLP=(1.0D0/SUM(TLP))*TLP
-  
+
   ENDIF
 
  ENDIF
-   
+
  !## nothing in model, whenever system on top of model, put them in first modellayer with thickness
  IF(SUM(TLP).EQ.0.0D0)THEN
   IF(Z1.GE.TOP(1))TLP(1)=1.0D0
@@ -2073,7 +2073,7 @@ DOLOOP: DO
  ENDIF
 
  DEALLOCATE(L,TL,IL)
- 
+
  END SUBROUTINE UTL_PCK_GETTLP
 
  !###======================================================================
@@ -2092,7 +2092,7 @@ DOLOOP: DO
  CHARACTER(LEN=256),INTENT(IN),OPTIONAL :: HELP
  INTEGER,DIMENSION(:),ALLOCATABLE :: LRLIST,ILIST,JLIST
  INTEGER :: N,DID,I,J,NL,NR
- 
+
  DID=WINFODIALOG(CURRENTDIALOG)
 
  !## store copy of filenames
@@ -2104,7 +2104,7 @@ DOLOOP: DO
    DO I=1,SIZE(FNAME); FNAME(I)=FNAME_IN(I); ENDDO
   ENDIF
  ENDIF
- 
+
  !## define "String" for changing names on push buttons and window title if "String" is available.
  IF(STRING(1).EQ.'IMODMANAGER')THEN
   CALL WDIALOGLOAD(ID_DLISTOFFILES2,ID_DLISTOFFILES2)
@@ -2121,14 +2121,14 @@ DOLOOP: DO
   CALL WDIALOGPUTIMAGE(ID_OPEN,ID_ICONOPEN,1)
   CALL WDIALOGPUTIMAGE(ID_DELETE,ID_ICONDELETE,1)
  ENDIF
- 
+
  CALL WDIALOGTITLE('Extra files')
  IF(LEN_TRIM(STRING(2)).NE.0)CALL WDIALOGTITLE(TRIM(STRING(2)))                !## changes title of dialog window
  IF(LEN_TRIM(STRING(3)).NE.0)CALL WDIALOGPUTSTRING(IDCANCEL,TRIM(STRING(3)))   !## changes text on close-button
  IF(LEN_TRIM(STRING(4)).NE.0)CALL WDIALOGPUTSTRING(IDHELP,TRIM(STRING(4)))     !## changes text on help-button
  IF(LEN_TRIM(STRING(5)).NE.0)CALL WDIALOGPUTSTRING(IDOK,TRIM(STRING(5)))       !## changes text on apply-button
  IF(LEN_TRIM(STRING(6)).NE.0)CALL WDIALOGPUTSTRING(IDF_STRING1,TRIM(STRING(6))//': '//TRIM(TEXT))!## changes text on text field
- 
+
  IF(.NOT.PRESENT(HELP))CALL WDIALOGFIELDSTATE(IDHELP,3)
 
  IF(STRING(1).EQ.'IMODMANAGER')THEN
@@ -2139,7 +2139,7 @@ DOLOOP: DO
   CALL UTL_LISTOFFILES_MANIPULATE(FNAME,STRLEN,0,EFNAME)
  ENDIF
  CALL WDIALOGSHOW(-1,-1,0,3)
- 
+
  BACTION=0
  DO
   CALL WMESSAGE(ITYPE,MESSAGE)
@@ -2162,9 +2162,9 @@ DOLOOP: DO
        CALL WDIALOGFIELDSTATE(ID_LEFT,MIN(1,SUM(JLIST)))
       ENDIF
     END SELECT
-   
+
    CASE(PUSHBUTTON)
-    SELECT CASE (MESSAGE%VALUE1)  
+    SELECT CASE (MESSAGE%VALUE1)
      CASE (ID_OPEN)
       IF(UTL_WSELECTFILE('Files ('//TRIM(STRING(1))//')|'//TRIM(STRING(1))//'|',LOADDIALOG+MUSTEXIST+PROMPTON+ &
          DIRCHANGE+APPENDEXT+MULTIFILE,EFNAME,'Load Files ('//TRIM(STRING(1))//')'))CALL UTL_LISTOFFILES_MANIPULATE(FNAME,STRLEN,1,EFNAME)
@@ -2192,11 +2192,11 @@ DOLOOP: DO
         ENDIF
        ENDDO
       ENDIF
-      
+
       CALL UTL_LISTOFFILES_FILLMENU(LRLIST,FNAME,FNAME_IN,ILIST,JLIST)
- 
+
       CALL WDIALOGFIELDSTATE(ID_RIGHT,0); CALL WDIALOGFIELDSTATE(ID_LEFT,0)
-      
+
      CASE (IDOK)
       BACTION=1
       !## copy adjusted filename
@@ -2226,7 +2226,7 @@ DOLOOP: DO
  IF(ALLOCATED(ILIST))DEALLOCATE(ILIST); IF(ALLOCATED(JLIST))DEALLOCATE(JLIST)
 
  CALL WDIALOGUNLOAD(); IF(DID.NE.0)CALL WDIALOGSELECT(DID)
- 
+
  END SUBROUTINE UTL_LISTOFFILES
 
  !###======================================================================
@@ -2237,7 +2237,7 @@ DOLOOP: DO
  CHARACTER(LEN=*),DIMENSION(:),INTENT(OUT) :: FNAME
  INTEGER,DIMENSION(:),INTENT(INOUT) :: LRLIST,ILIST,JLIST
  INTEGER :: NR,NL,I
- 
+
  !## fill left menu
  NL=0; DO I=1,SIZE(LRLIST); IF(LRLIST(I).GT.0)THEN; NL=NL+1; FNAME(NL)=FNAME_IN(I)(INDEX(FNAME_IN(I),'\',.TRUE.)+1:); ENDIF; ENDDO
  IF(NL.GT.0)THEN
@@ -2265,13 +2265,13 @@ DOLOOP: DO
  INTEGER,INTENT(IN) :: IADD,STRLEN
  CHARACTER(LEN=STRLEN),INTENT(IN) :: EFNAME
  CHARACTER(LEN=STRLEN),POINTER,DIMENSION(:),INTENT(INOUT) :: FNAME
- CHARACTER(LEN=STRLEN),POINTER,DIMENSION(:) :: FNAME_BU 
+ CHARACTER(LEN=STRLEN),POINTER,DIMENSION(:) :: FNAME_BU
  INTEGER :: I,J,K,II,ISEL,NFILE
  CHARACTER(LEN=256) :: FLIST
  CHARACTER(LEN=256),ALLOCATABLE,DIMENSION(:) :: FNAMES
 
  NULLIFY(FNAME_BU)
-   
+
  !## get number of files selected
  K=INDEX(EFNAME,CHAR(0))
  IF(K.GT.0)THEN
@@ -2337,7 +2337,7 @@ DOLOOP: DO
 !    ALLOCATE(FNAME_BU(1)); FNAME_BU(1)=EFNAME; ISEL=1
    ENDIF
    FNAME=>FNAME_BU
- 
+
   !## remove file
   ELSEIF(IADD.EQ.-1)THEN
 
@@ -2360,10 +2360,10 @@ DOLOOP: DO
 
    ISEL=1
 
-  ENDIF 
- 
+  ENDIF
+
  ENDDO
- 
+
  IF(ASSOCIATED(FNAME))THEN
   CALL WDIALOGPUTMENU(IDF_MENU1,FNAME,SIZE(FNAME),MAX(1,ISEL))
   CALL WDIALOGFIELDSTATE(IDF_MENU1,1)
@@ -2373,11 +2373,11 @@ DOLOOP: DO
   CALL WDIALOGFIELDSTATE(IDF_MENU1,2)
   CALL WDIALOGFIELDSTATE(ID_DELETE,2)
  ENDIF
- 
+
  END SUBROUTINE UTL_LISTOFFILES_MANIPULATE
 
 !###=========================================================================
- SUBROUTINE UTL_LISTOFFILES_GETHELP(HELP) 
+ SUBROUTINE UTL_LISTOFFILES_GETHELP(HELP)
 !###=========================================================================
  IMPLICIT NONE
  CHARACTER(LEN=*),INTENT(IN) :: HELP
@@ -2385,7 +2385,7 @@ DOLOOP: DO
  INTEGER :: I
  CHARACTER(LEN=256) :: LINE
  CHARACTER(LEN=10) :: EXT
- 
+
  !## error/warning checking
  IF(TRIM(HELP).EQ.'')THEN
   CALL WMESSAGEBOX(OKONLY,COMMONOK,EXCLAMATIONICON,'You should specify the keyword HELP in the *.INI file of the plugin.'// &
@@ -2397,11 +2397,11 @@ DOLOOP: DO
   CALL WMESSAGEBOX(OKONLY,COMMONOK,EXCLAMATIONICON,'Cannot find the specified HELP= '//TRIM(HELP),'Warning')
   RETURN
  ENDIF
- 
+
  !#find file extension
  I=INDEXNOCASE(TRIM(HELP),'.',.TRUE.)
  EXT=HELP(I+1:)
- 
+
  !## open help file
  IF(UTL_CAP(TRIM(EXT),'U').EQ.'PDF')THEN
   !## acrobat reader
@@ -2421,32 +2421,32 @@ DOLOOP: DO
  ELSEIF(UTL_CAP(TRIM(EXT),'U').EQ.'HTM')THEN
   !## webpage
   CALL WHELPFILE(TRIM(HELP))
- 
+
  ENDIF
- 
+
  END SUBROUTINE UTL_LISTOFFILES_GETHELP
 
  !###======================================================================
  SUBROUTINE UTL_READTXTFILE(FNAME,TEXT)
  !###======================================================================
- !## Subroutine to read text containing multiple lines 
+ !## Subroutine to read text containing multiple lines
  IMPLICIT NONE
  CHARACTER(LEN=*),INTENT(INOUT) :: TEXT
  CHARACTER(LEN=:),ALLOCATABLE :: LINE
  CHARACTER(LEN=*), INTENT(IN) :: FNAME
  INTEGER :: IU,IOS,LENTXT
  LOGICAL :: LEX
- 
+
  TEXT=''
- 
+
  INQUIRE(FILE=FNAME,EXIST=LEX)
  IF(.NOT.LEX)THEN; TEXT='No textfile with additional information found.'; RETURN; ENDIF
  IU=UTL_GETUNIT(); CALL OSD_OPEN(IU,FILE=FNAME,STATUS='OLD',ACTION='READ')
  IF(IU.EQ.0)RETURN
- 
+
  LENTXT = LEN(TEXT)
  ALLOCATE(CHARACTER(LEN=LENTXT) :: LINE)
- 
+
  DO
    READ(IU,'(A)',IOSTAT=IOS) LINE
    IF(IOS.NE.0)EXIT
@@ -2457,9 +2457,9 @@ DOLOOP: DO
    ENDIF
  ENDDO
  CLOSE(IU)
- 
+
  DEALLOCATE(LINE)
- 
+
  END SUBROUTINE UTL_READTXTFILE
 
  !###===================================================================
@@ -2506,7 +2506,7 @@ DOLOOP: DO
  ENDIF
 
  END SUBROUTINE UTL_MODEL1CHECKFNAME
- 
+
  !###====================================================================
  SUBROUTINE UTL_APPLYFCT_R(A,NODATA,NROW,NCOL,FCT,IMP)
  !###====================================================================
@@ -2546,7 +2546,7 @@ DOLOOP: DO
  END DO
 
  END SUBROUTINE UTL_APPLYFCT_I
- 
+
  !###===================================================================
  SUBROUTINE UTL_STRING(LINE)
  !###===================================================================
@@ -2598,7 +2598,7 @@ DOLOOP: DO
  LINE(I:I)=CHAR(32)
 
  END SUBROUTINE UTL_DELCONTROLM
- 
+
  !###===================================================================
  REAL(KIND=DP_KIND) FUNCTION UTL_GETREAL(LINE,IOS)
  !###===================================================================
@@ -2638,7 +2638,7 @@ DOLOOP: DO
   !## search for comma's, backward
   I=INDEX(TRIM(LINE),',',.TRUE.)
   J=INDEX(TRIM(LINE),' ',.TRUE.)
-  UTL_GETFNAME=LINE(MAX(I+1,J+1):) 
+  UTL_GETFNAME=LINE(MAX(I+1,J+1):)
  ENDIF
 
  END FUNCTION UTL_GETFNAME
@@ -2669,7 +2669,7 @@ DOLOOP: DO
  !###======================================================================
  SUBROUTINE UTL_DIR_LEVEL_UP(FNAME)
  !###======================================================================
- 
+
  IMPLICIT NONE
 
  CHARACTER(LEN=*), INTENT(INOUT) :: FNAME
@@ -2718,7 +2718,7 @@ DOLOOP: DO
  REAL(KIND=DP_KIND),INTENT(IN) :: X,Y,Z
  REAL(KIND=DP_KIND),INTENT(OUT) :: RX,RY,RZ
  REAL(KIND=DP_KIND) :: P,DXY,DXYZ
- 
+
  DXY =X**2.0D0+Y**2.0D0; IF(DXY.GT.0.0D0)DXY=SQRT(DXY)
  DXYZ=X**2.0D0+Y**2.0D0+Z**2.0D0; IF(DXYZ.GT.0.0D0)DXYZ=SQRT(DXYZ)
 
@@ -2728,22 +2728,22 @@ DOLOOP: DO
  RX=0.0D0
  RY=0.0D0
  RZ=0.0D0
- 
+
  IF(P.GT.0.0D0)THEN
   !## get angle with x-axes
   RX=ACOS(X/P)
   !## get angle with x-axes
   RY=ACOS(Y/P)
  ENDIF
- 
+
  !## get angle with x-axes
  IF(DXY.GT.0.0D0)RZ=ACOS(X/DXY)
 
 ! write(*,*) RX,RY,RZ
 ! write(*,*) RX*(360.0D0/(2.0*pi)),RY*(360.0D0/(2.0*pi)),RZ*(360.0D0/(2.0*pi))
- 
+
  END SUBROUTINE UTL_GET_ANGLES
- 
+
  !###======================================================================
  SUBROUTINE UTL_ROTATE_XYZ(X,Y,Z,AX,AY,AZ)
  !###======================================================================
@@ -2751,7 +2751,7 @@ DOLOOP: DO
  REAL(KIND=DP_KIND),INTENT(INOUT) :: X,Y,Z
  REAL(KIND=DP_KIND),INTENT(IN) :: AX,AY,AZ
  REAL(KIND=DP_KIND) :: X1,Y1,Z1
- 
+
  !## perform rotation around z-axes
  IF(AZ.NE.0.0D0)THEN
   X1= COS(AZ)*X+SIN(AZ)*Y
@@ -2759,7 +2759,7 @@ DOLOOP: DO
   X=X1
   Y=Y1
  ENDIF
- 
+
  !## perform rotation around x-axes
  IF(AX.NE.0.0D0)THEN
   Y1=COS(AX)*Y-SIN(AX)*Z
@@ -2767,7 +2767,7 @@ DOLOOP: DO
   Y=Y1
   Z=Z1
  ENDIF
- 
+
  !## perform rotation around y-axes
  IF(AY.NE.0.0D0)THEN
   X1= COS(AY)*X-SIN(AY)*Z
@@ -2775,9 +2775,9 @@ DOLOOP: DO
   X=X1
   Z=Z1
  ENDIF
- 
+
  END SUBROUTINE UTL_ROTATE_XYZ
- 
+
  !###======================================================================
  SUBROUTINE UTL_PROFILE_GETVIEWBOX(X1,Y1,X2,Y2,XSIGHT,XYPOL,XMN,YMN,XMX,YMX)
  !###======================================================================
@@ -2831,32 +2831,32 @@ DOLOOP: DO
  CHARACTER(LEN=256) :: LINE
  INTEGER :: I
  LOGICAL :: LEX
-  
+
  UTL_LOADIMAGE=.TRUE.
- 
+
  INQUIRE(FILE=BMPFNAME,EXIST=LEX)
  IF(.NOT.LEX)THEN
   IF(IBATCH.EQ.0)CALL WMESSAGEBOX(OKONLY,EXCLAMATIONICON,COMMONOK,'File: '//TRIM(BMPFNAME)//CHAR(13)//'does not exists','Error')
   IF(IBATCH.EQ.1)WRITE(*,'(A)') 'File: '//TRIM(BMPFNAME)//' does not exists'
   RETURN
  ENDIF
- 
+
  !## clear existing error
  I=WINFOERROR(1)
  CALL IGRLOADIMAGEDATA(BMPFNAME,IBMPDATA)
  I=WINFOERROR(1)
- 
+
  IF(I.EQ.0)RETURN
- 
+
  CALL WINFOERRORMESSAGE(I,LINE)
  IF(IBATCH.EQ.0)CALL WMESSAGEBOX(OKONLY,EXCLAMATIONICON,COMMONOK,'Error reading file:'//CHAR(13)// &
   TRIM(BMPFNAME)//CHAR(13)//'Error message:'//CHAR(13)//TRIM(LINE),'Error')
  IF(IBATCH.EQ.1)WRITE(*,'(A)') 'Error reading file:'//TRIM(BMPFNAME)//' Error message:'//TRIM(LINE)
 
  UTL_LOADIMAGE=.FALSE.
- 
+
  END FUNCTION UTL_LOADIMAGE
- 
+
  !###======================================================================
  INTEGER FUNCTION UTL_GETIDPROC(PROC,ICLEAN)
  !###======================================================================
@@ -2867,7 +2867,7 @@ DOLOOP: DO
  INTEGER :: I,J,N,ISTATUS,IEXCOD
  CHARACTER(LEN=256) :: STRING
  INTEGER,DIMENSION(2) :: PID
- 
+
  IF(ASSOCIATED(PROC))THEN
   !## evaluate current status
   DO I=1,SIZE(PROC)
@@ -2882,7 +2882,7 @@ DOLOOP: DO
     PROC(I)%ID=0; PROC(I)%CID=''; PROC(I)%IFLAGS=0
    !## process is still running
    ELSEIF(ISTATUS.EQ.1)THEN
-   
+
    ENDIF
   ENDDO
  ELSE
@@ -2891,7 +2891,7 @@ DOLOOP: DO
 
  N=SIZE(PROC)
 
- !## clean 
+ !## clean
  J=0; DO I=1,N
   IF(PROC(I)%ID.NE.0)THEN
    J=J+1; IF(I.NE.J)THEN; PROC(J)=PROC(I); ENDIF
@@ -2902,7 +2902,7 @@ DOLOOP: DO
  !## find empty spot
  DO I=1,SIZE(PROC); IF(PROC(I)%ID.EQ.0)EXIT; ENDDO; N=I
  IF(ICLEAN.EQ.1)N=I-1
-   
+
  IF(N.EQ.0)THEN
   IF(ASSOCIATED(PROC))DEALLOCATE(PROC)
  ELSE
@@ -2912,9 +2912,9 @@ DOLOOP: DO
    DO I=1,N; PROC(I)=PROC_BU(I); ENDDO; DEALLOCATE(PROC_BU)
   ENDIF
  ENDIF
- 
+
  UTL_GETIDPROC=N
- 
+
  END FUNCTION UTL_GETIDPROC
 
  !###======================================================================
@@ -2924,7 +2924,7 @@ DOLOOP: DO
  CHARACTER(LEN=*),INTENT(IN) :: LINE1
  CHARACTER(LEN=*),INTENT(OUT) :: LINE2
  INTEGER :: I,J,K
- 
+
  LINE2=''; K=0
  J=0; DO I=1,LEN_TRIM(LINE1)
   IF(LINE1(I:I).EQ.CHAR(34).OR.LINE1(I:I).EQ.CHAR(39))THEN
@@ -2935,9 +2935,9 @@ DOLOOP: DO
    J=J+1; LINE2(J:J)=LINE1(I:I)
   ENDIF
  ENDDO
- 
+
  END SUBROUTINE UTL_DELSPACE
- 
+
  !###======================================================================
  LOGICAL FUNCTION UTL_DATA_CSV(TXT,VAR,ICOL_VAR,IACT_VAR,CCNST)
  !###======================================================================
@@ -2952,7 +2952,7 @@ DOLOOP: DO
 
  UTL_DATA_CSV=.FALSE.
  NP=SIZE(TXT)
- 
+
  IF(.NOT.UTL_WSELECTFILE('Load Comma Separated File (*.csv)|*.csv|',&
                   LOADDIALOG+MUSTEXIST+PROMPTON+DIRCHANGE+APPENDEXT,FNAME,&
                   'Load Comma Separated File (*.csv)'))RETURN
@@ -2963,16 +2963,16 @@ DOLOOP: DO
  IF(NV.LE.0)THEN
   CALL WMESSAGEBOX(OKONLY,EXCLAMATIONICON,COMMONOK,'Cannot read column info (header) from file!','Error'); RETURN
  ENDIF
- 
+
  CALL WDIALOGLOAD(ID_READCSV,ID_READCSV)
  IF(SIZE(TXT).GT.WINFOGRID(IDF_GRID1,GRIDROWSMAX))THEN
   CALL WDIALOGUNLOAD()
   CALL WMESSAGEBOX(OKONLY,EXCLAMATIONICON,COMMONOK,'Cannot read more than '//TRIM(ITOS(WINFOGRID(IDF_GRID1,GRIDROWSMAX)))// &
-  ' columns in this iMOD version','Error'); RETURN 
+  ' columns in this iMOD version','Error'); RETURN
  ENDIF
-  
+
  CALL WGRIDROWS(IDF_GRID1,NP)
- 
+
  !## put parameters
  CALL WGRIDPUTSTRING(IDF_GRID1,2,TXT,NP)
 
@@ -2985,10 +2985,10 @@ DOLOOP: DO
  CALL WGRIDPUTMENU(IDF_GRID1,3,VAR(:,0),NV,ICOL_VAR,NP)
  IF(ASSOCIATED(CCNST))DEALLOCATE(CCNST); ALLOCATE(CCNST(NP))
  CCNST=''
- CALL WGRIDPUTSTRING(IDF_GRID1,4,CCNST,NP) 
-  
+ CALL WGRIDPUTSTRING(IDF_GRID1,4,CCNST,NP)
+
  CALL WDIALOGSHOW(-1,-1,0,3)
- 
+
  DO
   CALL WMESSAGE(ITYPE,MESSAGE)
   SELECT CASE (ITYPE)
@@ -2996,7 +2996,7 @@ DOLOOP: DO
     SELECT CASE (MESSAGE%VALUE1)
      CASE (IDF_GRID1)
       CALL WGRIDGETCHECKBOX(IDF_GRID1,1,IACT_VAR,NP)
-      DO I=1,SIZE(IACT_VAR)    
+      DO I=1,SIZE(IACT_VAR)
        CALL WGRIDSTATECELL(IDF_GRID1,3,I,IACT_VAR(I))
        CALL WGRIDSTATECELL(IDF_GRID1,4,I,IACT_VAR(I))
       ENDDO
@@ -3009,15 +3009,15 @@ DOLOOP: DO
       CALL WGRIDGETSTRING(IDF_GRID1,4,CCNST,NP)
       UTL_DATA_CSV=.TRUE.
       EXIT
-     CASE (IDHELP)  
+     CASE (IDHELP)
       CALL UTL_GETHELP('2.5.10','iF.CSV')
      CASE (IDCANCEL)
       EXIT
     END SELECT
-   
+
   END SELECT
  ENDDO
- 
+
  CALL WDIALOGUNLOAD()
 
  END FUNCTION UTL_DATA_CSV
@@ -3031,7 +3031,7 @@ DOLOOP: DO
  INTEGER,INTENT(OUT) :: JL
  INTEGER :: SC,N,M,J
  CHARACTER(LEN=52) :: STRING,GENSTR
- 
+
  IF(.NOT.ASSOCIATED(VARIABLE))RETURN
  N=SIZE(VARIABLE,1); M=SIZE(VARIABLE,2)
  JL=0; IF(N.LE.0.OR.M.LE.0)RETURN
@@ -3051,7 +3051,7 @@ DOLOOP: DO
   IF(TRIM(UTL_CAP(GENSTR,'U')).EQ.TRIM(UTL_CAP(STRING,'U')))RETURN
  END DO
  IF(JL.GE.NL)JL=0
- 
+
  END SUBROUTINE UTL_GENLABELSGET
 
  !###======================================================================
@@ -3079,7 +3079,7 @@ DOLOOP: DO
     TRIM(FNAME),'Error')
   RETURN
  ENDIF
- 
+
  !## estimate number of records
  NVL=0; DO
   READ(IU,'(A1256)',IOSTAT=IOS) STRING
@@ -3087,11 +3087,11 @@ DOLOOP: DO
   NVL=NVL+1
  ENDDO
  REWIND(IU)
- 
+
  IF(PRESENT(SKIPLINES))THEN
   DO I=1,SKIPLINES; READ(IU,*); ENDDO
  ENDIF
-  
+
  !## get number of variables
  READ(IU,'(A1256)',IOSTAT=IOS) STRING
  IF(IOS.NE.0)RETURN
@@ -3103,8 +3103,8 @@ DOLOOP: DO
 
  NVV=UTL_COUNT_COLUMNS(STRING,',;')
  ALLOCATE(BPV(NVV)); ALLOCATE(EPV(NVV))
- ALLOCATE(VARIABLE(NVV,INL+1:NVL)) 
- ML=NVL 
+ ALLOCATE(VARIABLE(NVV,INL+1:NVL))
+ ML=NVL
  NVL=INL
  DO
   NVL=NVL+1
@@ -3144,8 +3144,8 @@ DOLOOP: DO
   NULLIFY(DVARIABLE)
  ELSE
   NVV=0; NVL=0
- ENDIF 
- 
+ ENDIF
+
  END SUBROUTINE UTL_GENLABELSREAD
 
  !###======================================================================
@@ -3156,11 +3156,11 @@ DOLOOP: DO
  CHARACTER(LEN=*),POINTER,DIMENSION(:,:),INTENT(IN) :: VAR
  INTEGER :: IU,IOS,I,J
  CHARACTER(LEN=512) :: LINE
- 
+
  !## nothing to write
  IF(NL.LE.0)RETURN
  IF(.NOT.ASSOCIATED(VAR))RETURN
- 
+
  IU=UTL_GETUNIT()
  CALL OSD_OPEN(IU,FILE=FNAME,STATUS='UNKNOWN',ACTION='WRITE',IOSTAT=IOS)
  IF(IOS.NE.0)THEN
@@ -3173,9 +3173,9 @@ DOLOOP: DO
   LINE=TRIM(VAR(1,I))
   DO J=2,NV; LINE=TRIM(LINE)//','//TRIM(VAR(J,I)); END DO
   WRITE(IU,'(A)') TRIM(LINE)
- ENDDO 
+ ENDDO
  CLOSE(IU)
-  
+
  END SUBROUTINE UTL_GENLABELSWRITE
 
  !###======================================================================
@@ -3187,7 +3187,7 @@ DOLOOP: DO
  IF(ALLOCATED(ICOL_VAR))DEALLOCATE(ICOL_VAR)
  IF(ALLOCATED(IACT_VAR))DEALLOCATE(IACT_VAR)
  IF(ASSOCIATED(CCNST))  DEALLOCATE(CCNST)
- 
+
  END SUBROUTINE UTL_GENLABELSDEALLOCATE
 
  !###======================================================================
@@ -3214,14 +3214,14 @@ DOLOOP: DO
 ! REAL(KIND=DP_KIND),INTENT(IN),DIMENSION(N) :: X,Y
 ! INTEGER :: I
 ! REAL(KIND=DP_KIND) :: XM,DY
-! 
+!
 ! UTL_POLYGON1AREA=0.0D0
 ! DO I=1,N-1
 !  XM=(X(I)+X(I+1))/2.0D0
 !  DY=Y(I+1)-Y(I)
 !  UTL_POLYGON1AREA=UTL_POLYGON1AREA+(XM-XMIN)*DY
 ! ENDDO
-!  
+!
 ! END FUNCTION UTL_POLYGON1AREA
 
  !###======================================================================
@@ -3271,30 +3271,30 @@ DOLOOP: DO
  IMPLICIT NONE
  REAL(KIND=DP_KIND),INTENT(IN) :: X1,Y1,X2,Y2
  REAL(KIND=DP_KIND) :: DX,DY
- 
+
  UTL_DIST=0.0D0
- 
+
  DX=(X1-X2)**2.0D0; DY=(Y1-Y2)**2.0D0
  IF(DX+DY.NE.0.0D0)UTL_DIST=SQRT(DX+DY)
- 
+
  END FUNCTION UTL_DIST
- 
+
  !###======================================================================
  REAL(KIND=DP_KIND) FUNCTION UTL_DIST_3D(X1,Y1,Z1,X2,Y2,Z2)
  !###======================================================================
  IMPLICIT NONE
  REAL(KIND=DP_KIND),INTENT(IN) :: X1,Y1,Z1,X2,Y2,Z2
  REAL(KIND=DP_KIND) :: DX,DY,DZ
- 
+
  UTL_DIST_3D=0.0D0
- 
+
  DX=(X2-X1)**2.0D0; DY=(Y2-Y1)**2.0D0; DZ=(Z2-Z1)**2.0D0
  IF(DX+DY+DZ.NE.0.0D0)UTL_DIST_3D=SQRT(DX+DY+DZ)
- 
+
  END FUNCTION UTL_DIST_3D
 
  !###======================================================================
- LOGICAL FUNCTION UTL_WSELECTFILE(FILTERSTR,IFLAGS,FILEDIR,TITLE,FTYPE) 
+ LOGICAL FUNCTION UTL_WSELECTFILE(FILTERSTR,IFLAGS,FILEDIR,TITLE,FTYPE)
  !###======================================================================
  IMPLICIT NONE
  CHARACTER(LEN=*),INTENT(IN) :: FILTERSTR
@@ -3305,16 +3305,16 @@ DOLOOP: DO
  INTEGER :: I,J,K,ISAVE
  CHARACTER(LEN=10) :: EXT
  INTEGER :: IFTYPE
-  
+
  UTL_WSELECTFILE=.FALSE.
- 
+
  !## store original filedir
  ISAVE=1; IF(INDEX(FILEDIR,'*').GT.0)ISAVE=0
  IF(ISAVE.EQ.1)FILEDIR=SAVEDIR
  IFTYPE=1; IF(PRESENT(FTYPE))IFTYPE=FTYPE
 
  DO
-    
+
   IF(PRESENT(TITLE))THEN
    CALL WSELECTFILE(FILTERSTR,IFLAGS,FILEDIR,TITLE,IFTYPE=IFTYPE)
   ELSE
@@ -3325,9 +3325,9 @@ DOLOOP: DO
    RETURN
   ENDIF
   !## check extent ...
-  I=INDEX(FILEDIR,'.',.TRUE.) 
+  I=INDEX(FILEDIR,'.',.TRUE.)
   IF(I.EQ.0)EXIT
-  
+
   IF(INDEX(FILTERSTR,'*.*').LE.0)THEN
    EXT=FILEDIR(I+1:)
    J=INDEX(UTL_CAP_BIG(FILTERSTR(1:MIN(1024,LEN(FILTERSTR))),'U'),'*.'//TRIM(UTL_CAP(EXT,'U')))
@@ -3337,18 +3337,18 @@ DOLOOP: DO
     TRIM(FILTERSTR),'Error')
   ELSE
    EXIT
-  ENDIF 
+  ENDIF
 
  ENDDO
- 
+
  !## removes filename from directory name before saving
  K=INDEX(FILEDIR,'\',.TRUE.)
  !## save directory name into SAVEDIR
- IF(ISAVE.EQ.1)SAVEDIR=FILEDIR(:K) 
+ IF(ISAVE.EQ.1)SAVEDIR=FILEDIR(:K)
  IF(PRESENT(FTYPE))FTYPE=IFTYPE
-  
+
  UTL_WSELECTFILE=.TRUE.
- 
+
  END FUNCTION UTL_WSELECTFILE
 
  !###======================================================================
@@ -3405,9 +3405,9 @@ DOLOOP: DO
  UTL_IDFGETCLASS=WRGB(255,255,255)
  !## NaN
  IF(GRD.NE.GRD)RETURN
- 
+
  IF(GRD.GT.LEG%CLASS(0).OR.GRD.LT.LEG%CLASS(LEG%NCLR))RETURN
- 
+
  CALL POL1LOCATE(LEG%CLASS,LEG%NCLR,REAL(GRD,8),I)
  !## correct if equal to top-class boundary
  IF(I.GT.0.AND.I.LE.LEG%NCLR)THEN !MXCLR)THEN
@@ -3415,7 +3415,7 @@ DOLOOP: DO
  ELSE
   IF(UTL_EQUALS_REAL(GRD,LEG%CLASS(0)))UTL_IDFGETCLASS=LEG%RGB(1)
  ENDIF
- 
+
  END FUNCTION UTL_IDFGETCLASS
 
  !###======================================================================
@@ -3456,7 +3456,7 @@ DOLOOP: DO
   CALL POL1LOCATE(IDF%SY,IDF%NROW+1,REAL(YMIN,8),NR2)
 
  ENDIF
- 
+
  NC1=MAX(1,NC1); NC1=MIN(NC1,IDF%NCOL)
  NC2=MAX(1,NC2); NC2=MIN(NC2,IDF%NCOL)
  NR1=MAX(1,NR1); NR1=MIN(NR1,IDF%NROW)
@@ -3484,27 +3484,27 @@ DOLOOP: DO
 
  !## area up
  IF(RAT1.LT.1.0D0)THEN
- 
+
   !## box smaller than image
   IF(RAT1.LT.RAT2)THEN
-   DY=0.5D0*DX/RAT1; Y1=YC-DY; Y2=YC+DY   
+   DY=0.5D0*DX/RAT1; Y1=YC-DY; Y2=YC+DY
   !## image smaller than box
   ELSE
    DX=0.5D0*DY*RAT1; X1=XC-DX; X2=XC+DX
-  ENDIF 
- 
+  ENDIF
+
  !## area flat
  ELSE
 
-  !## 
+  !##
   IF(RAT1.GT.RAT2)THEN
-   DX=0.5D0*DY*RAT1; X1=XC-DX; X2=XC+DX   
+   DX=0.5D0*DY*RAT1; X1=XC-DX; X2=XC+DX
   !## figure flat too
   ELSE
-   DY=0.5D0*DX/RAT1; Y1=YC-DY; Y2=YC+DY   
-  ENDIF 
- 
- ENDIF 
+   DY=0.5D0*DX/RAT1; Y1=YC-DY; Y2=YC+DY
+  ENDIF
+
+ ENDIF
 
  END SUBROUTINE UTL_IDFCRDCOR
 
@@ -3567,7 +3567,7 @@ DOLOOP: DO
 
  !## backup line
  ALLOCATE(CHARACTER(LEN=N) :: STR)
- 
+
  !## read from current position, if not found try from beginning
  ITRY=1
  DO
@@ -3615,12 +3615,12 @@ DOLOOP: DO
    ENDIF
    !## make sure next to i or j no character or "=" sign
    IF(LINE(I+LEN_TRIM(CKEY):I+LEN_TRIM(CKEY)).NE.' '.AND. &
-      LINE(I+LEN_TRIM(CKEY):I+LEN_TRIM(CKEY)).NE.'=')I=0 !## not correct 
+      LINE(I+LEN_TRIM(CKEY):I+LEN_TRIM(CKEY)).NE.'=')I=0 !## not correct
    J=INDEX(TRIM(LINE),'=')
-   IF(I.NE.0.AND.J.GT.I)EXIT 
+   IF(I.NE.0.AND.J.GT.I)EXIT
   ENDIF
  ENDDO
- 
+
  I=INDEX(LINE,'=')
  IF(I.LE.0)THEN
   INQUIRE(UNIT=IU,NAME=FNAME); CLOSE(IU)
@@ -3630,21 +3630,21 @@ DOLOOP: DO
  ENDIF
 
  I=I+1
- LINE(1:N-I+1)=STR(I:N) 
-  
+ LINE(1:N-I+1)=STR(I:N)
+
  !## remove leading space, if there is one
  LINE=ADJUSTL(LINE)
- 
+
  DEALLOCATE(STR)
- 
+
  !## check whether there is an argment given ...
  IF(TRIM(LINE).EQ.'')THEN
   INQUIRE(UNIT=IU,NAME=FNAME); CLOSE(IU)
   CALL WMESSAGEBOX(OKONLY,EXCLAMATIONICON,COMMONOK,'iMOD misses an argument after the "=" sign for keyword: ['//TRIM(CKEY)//'] within Settings file:'// &
              CHAR(13)//'[ '//TRIM(FNAME)//' ]','Error')
-  RETURN 
+  RETURN
  ENDIF
-  
+
  UTL_READINITFILE=.TRUE.
 
  END FUNCTION UTL_READINITFILE
@@ -3710,7 +3710,7 @@ DOLOOP: DO
  ELSEIF(IPATTERN.EQ.3)THEN
 
   CALL IGRFILLPATTERN(SOLID)
-  
+
   !## use a legend if present
   IF(PRESENT(LEG))THEN
    IF(LEG%NCLR.GT.MXCLASS)THEN; DY=(3.0*(YMAX-YMIN))/REAL(LEG%NCLR); ELSE; DY=YMAX-YMIN; ENDIF; Y=YMAX
@@ -3724,8 +3724,8 @@ DOLOOP: DO
      IF(I.EQ.LEG%NCLR)CALL DBL_WGRTEXTSTRING(XT,YMAX-(2.5*(YMAX-YMIN)),TRIM(LEG%LEGTXT(I)))
     ENDIF
     Y=Y-DY
-   END DO 
-   YMIN=Y  
+   END DO
+   YMIN=Y
   ELSE
    DX=(XMAX-XMIN)/10.0D0
    DO I=1,9
@@ -3740,7 +3740,7 @@ DOLOOP: DO
  CALL IGRFILLPATTERN(OUTLINE)
  CALL IGRLINETYPE(SOLIDLINE)
  CALL IGRLINEWIDTH(1)
- CALL IGRCOLOURN(WRGB(225,225,225)) 
+ CALL IGRCOLOURN(WRGB(225,225,225))
  CALL DBL_IGRRECTANGLE(XMIN,YMIN,XMAX,YMAX)
 
  CALL IGRCOLOURN(ICLR)
@@ -3776,7 +3776,7 @@ DOLOOP: DO
     IF(DIRNAMES(I)(II:II).NE.DIRNAMES(J)(II:II).AND.JJ.EQ.0)JJ=II!EXIT! LOOPII
    END DO
   END DO
- ENDDO 
+ ENDDO
  DO I=1,NDIR
   J=INDEX(DIRNAMES(I)(:II),'\',.TRUE.)
   IF(J.NE.0)DIRNAMES(I)='..\'//DIRNAMES(I)(J+1:)
@@ -3833,12 +3833,12 @@ DOLOOP: DO
 
  DY=1.0D0; IF(PRESENT(FCT))DY=FCT
 
- CHH=INI_CHH 
+ CHH=INI_CHH
  IF(PRESENT(IMARKER))THEN
   IF(IMARKER.EQ.1)CHH=0.00133D0
  ENDIF
- 
- CHH=CHH*FCT 
+
+ CHH=CHH*FCT
  CHW=INI_CHW*FCT
 
  RAT=IWD/IHD
@@ -3854,9 +3854,9 @@ DOLOOP: DO
  !###======================================================================
  IMPLICIT NONE
  INTEGER,INTENT(OUT) :: N
- INTEGER,INTENT(IN) :: ID,IMENUTYPE,ISTORE
- CHARACTER(LEN=*),INTENT(IN),OPTIONAL :: SETNAME,CORDER
- CHARACTER(LEN=*),INTENT(IN) :: DIRNAME,WC,F
+ INTEGER,INTENT(IN) :: ID,IMENUTYPE,ISTORE                ! Dialog ID,*, *
+ CHARACTER(LEN=*),INTENT(IN),OPTIONAL :: SETNAME,CORDER   !*, display ordered (1) or not (0)
+ CHARACTER(LEN=*),INTENT(IN) :: DIRNAME,WC,F              ! Directoryname, Selection string, display type (file 'F' or directory 'D')
  INTEGER :: I
 
  CALL UTL_IMODFILLMENU_DEAL()
@@ -3889,7 +3889,7 @@ DOLOOP: DO
    CALL UTL_DIRINFO(DIRNAME,WC,LISTNAME,N,F)
   ENDIF
   IF(N.GT.0.AND.ID.NE.0)THEN
-   DO I=1,N; LISTNAME(I)=UTL_CAP(LISTNAME(I),'U'); END DO   
+   DO I=1,N; LISTNAME(I)=UTL_CAP(LISTNAME(I),'U'); END DO
    CALL WDIALOGFIELDSTATE(ID,1)
    IF(IMENUTYPE.EQ.0)THEN
     IF(PRESENT(SETNAME))THEN
@@ -3949,7 +3949,7 @@ DOLOOP: DO
  TYPE(IDFOBJ),INTENT(IN) :: IDF
  INTEGER,INTENT(IN) :: IROW,ICOL
  REAL(KIND=DP_KIND) :: X1,X2,Y1,Y2
- 
+
  IF(IROW.EQ.0.OR.ICOL.EQ.0)RETURN
 
  CALL IGRPLOTMODE(MODEXOR); CALL IGRFILLPATTERN(OUTLINE); CALL IGRLINEWIDTH(2)
@@ -3990,7 +3990,7 @@ DOLOOP: DO
  END SUBROUTINE UTL_HIDESHOWDIALOG
 
  !###======================================================================
- SUBROUTINE UTL_IDFGETLAYERS(IDFNAME,N,ILAY) 
+ SUBROUTINE UTL_IDFGETLAYERS(IDFNAME,N,ILAY)
  !###======================================================================
  IMPLICIT NONE
  INTEGER,INTENT(IN) :: N
@@ -4025,7 +4025,7 @@ DOLOOP: DO
  INTEGER :: I,IDATE,IYR,IMH,IDY,IHR,IMT,ISC
  INTEGER(KIND=8) :: DIDATE
  REAL(KIND=DP_KIND) :: DAYFRACTION
- 
+
  MINDATE=21000101000000
  MAXDATE=19000101000000
  M      =0
@@ -4059,7 +4059,7 @@ DOLOOP: DO
  INTEGER :: I,II,J,N,YR,MT,DY,HR,MN,SC
  INTEGER,DIMENSION(2) :: NI
  DATA NI/14,8/
- 
+
  !## initially no data
  UTL_IDFGETDATE=0
 
@@ -4069,13 +4069,13 @@ DOLOOP: DO
   N=0
   !## start after last "\"-symbol
   DO I=INDEX(IDFNAME,'\',.TRUE.)+1,LEN_TRIM(IDFNAME)
-   !## part of a number 
+   !## part of a number
    SELECT CASE (ICHAR(IDFNAME(I:I)))
     CASE (48:57)
      !## count numbers
      N=N+1
      !## stop if total number is 8 or 14
-     IF(N.EQ.NI(II))EXIT 
+     IF(N.EQ.NI(II))EXIT
      !## mark first position
      IF(N.EQ.1)J=I
     CASE DEFAULT
@@ -4084,12 +4084,12 @@ DOLOOP: DO
   END DO
   IF(N.EQ.NI(II))EXIT
   !## nothing found
-  IF(II.EQ.2.AND.N.LT.NI(II))RETURN 
+  IF(II.EQ.2.AND.N.LT.NI(II))RETURN
  ENDDO
- 
+
  !## default
  IF(PRESENT(DAYFRACTION))DAYFRACTION=-1.0D0
- 
+
  IF(II.EQ.1)THEN
   IF(PRESENT(IDATEFULL))READ(IDFNAME(J:J+13),*) IDATEFULL
   READ(IDFNAME(J:)  ,'(I8) ',IOSTAT=IOS) UTL_IDFGETDATE
@@ -4097,7 +4097,7 @@ DOLOOP: DO
    READ(IDFNAME(J+8:),'(3I2)',IOSTAT=IOS) HR,MN,SC
    DAYFRACTION=REAL(HR*3600+MN*60+SC)/86400.0D0
    DAYFRACTION=MAX(0.0D0,MIN(DAYFRACTION,1.0D0))
-  ENDIF  
+  ENDIF
   READ(IDFNAME(J:)  ,'(I4,5I2)',IOSTAT=IOS) YR,MT,DY,HR,MN,SC
  ELSE
   IF(PRESENT(IDATEFULL))THEN
@@ -4146,16 +4146,16 @@ DOLOOP: DO
  IMPLICIT NONE
  INTEGER,INTENT(IN) :: ID,IDD,IDM,IDY,JD
  INTEGER :: I,J,K
- 
+
  CALL WDIALOGSELECT(ID)
  !## put begin date
  CALL IDATETOGDATE(JD,I,J,K)  !## id,iy,im,id
  CALL WDIALOGPUTINTEGER(IDD,K)
  CALL WDIALOGPUTINTEGER(IDY,I)
  CALL WDIALOGPUTOPTION(IDM,J)
- 
+
  END SUBROUTINE UTL_FILLDATESDIALOG
- 
+
  !###======================================================================
  FUNCTION ITOS(I)
  !###======================================================================
@@ -4187,7 +4187,7 @@ DOLOOP: DO
  INTEGER,INTENT(IN) :: NDEC
  REAL(KIND=DP_KIND),INTENT(IN) :: X
  CHARACTER(LEN=1),INTENT(IN) :: F
- CHARACTER(LEN=24) :: TXT,FRM 
+ CHARACTER(LEN=24) :: TXT,FRM
  INTEGER :: IOS
 
  IF(F.EQ.'*')THEN
@@ -4210,14 +4210,14 @@ DOLOOP: DO
  LOGICAL :: LEX
 
  UTL_GETUNIT=19
- DO 
-  UTL_GETUNIT=UTL_GETUNIT+1 
+ DO
+  UTL_GETUNIT=UTL_GETUNIT+1
   INQUIRE(UNIT=UTL_GETUNIT,OPENED=LEX)
   IF(.NOT.LEX)EXIT
   IF(UTL_GETUNIT.GT.MAXUNITS)EXIT
  END DO
 
- IF(LEX)THEN 
+ IF(LEX)THEN
   CALL WMESSAGEBOX(OKONLY,COMMONOK,EXCLAMATIONICON,'iMOD cannot open more than '//TRIM(ITOS(MAXUNITS))//' files simultaneously!','ERROR')
   UTL_GETUNIT=0
  ENDIF
@@ -4250,7 +4250,7 @@ DOLOOP: DO
  INTEGER :: I,J
  LOGICAL :: LEX
  CHARACTER(LEN=256) :: FN
-  
+
  NOPEN=0; DO I=20,MAXUNITS
   J=I
   INQUIRE(UNIT=J,OPENED=LEX)
@@ -4282,13 +4282,13 @@ DOLOOP: DO
   IF(.NOT.IOSDIREXISTS(DIRNAME(:J-2)))CALL IOSDIRMAKE(DIRNAME(:J-2))
   I=J
  END DO
- 
+
  !## only create folder, is there is a subfolder left
  IF(INDEX(DIRNAME,'\').NE.0)THEN
   !## last remaining of string
   IF(.NOT.IOSDIREXISTS(TRIM(DIRNAME)))CALL IOSDIRMAKE(TRIM(DIRNAME))
  ENDIF
- 
+
  END SUBROUTINE UTL_CREATEDIR
 
  !###======================================================================
@@ -4376,9 +4376,9 @@ DOLOOP: DO
  CHARACTER(LEN=*),INTENT(IN) :: WAITTXT
  INTEGER,OPTIONAL,INTENT(IN) :: IBOX
  INTEGER :: JBOX
- 
+
  JBOX=4; IF(PRESENT(IBOX))JBOX=IBOX
- 
+
  IRAT=(I1*100)/I2
  IF(IRAT.NE.IRAT1)THEN
   CALL WINDOWOUTSTATUSBAR(JBOX,TRIM(WAITTXT)//' '//TRIM(ITOS(IRAT))//' %')
@@ -4421,10 +4421,10 @@ DOLOOP: DO
  !###======================================================================
  IMPLICIT NONE
  INTEGER :: IY,IM,ID
- 
+
  CALL IOSDATE(IY,IM,ID)
  UTL_GETCURRENTDATE=IY*10000+IM*100+ID
- 
+
  END FUNCTION UTL_GETCURRENTDATE
 
  !###======================================================================
@@ -4433,12 +4433,12 @@ DOLOOP: DO
  IMPLICIT NONE
  INTEGER :: IH,IM,IS
  CHARACTER(LEN=8) :: CTIME
-  
+
  CALL IOSTIME(IH,IM,IS)
  WRITE(CTIME,'(3(I2.2,A1))') IH,':',IM,':',IS
- 
+
  UTL_GETCURRENTTIME=TRIM(CTIME)
- 
+
  END FUNCTION UTL_GETCURRENTTIME
 
  !###======================================================================
@@ -4476,13 +4476,13 @@ DOLOOP: DO
  CHARACTER(LEN=8) :: CTIME
  REAL(KIND=DP_KIND) :: FTIME
  INTEGER :: DDTYPE
- 
+
  IF(PRESENT(DTYPE))THEN
   DDTYPE=DTYPE
  ELSE
   DDTYPE=0
  ENDIF
- 
+
  JDATETOFDATE=JDATETOGDATE(INT(X)+JOFFSET,DTYPE)
  FTIME=X-FLOOR(X)
  CALL FTIMETOCTIME(FTIME,CTIME,DDTYPE)
@@ -4493,7 +4493,7 @@ DOLOOP: DO
    JDATETOFDATE=TRIM(JDATETOFDATE)//' '//TRIM(CTIME)
   ENDIF
  ENDIF
- 
+
  END FUNCTION JDATETOFDATE
 
  !###======================================================================
@@ -4565,7 +4565,7 @@ DOLOOP: DO
 
  IY =      IDATE          / 10000
  IM = MOD( IDATE, 10000 ) / 100
- ID = MOD( IDATE, 100 ) 
+ ID = MOD( IDATE, 100 )
 
  END SUBROUTINE IDATETOGDATE
 
@@ -4576,12 +4576,12 @@ DOLOOP: DO
  REAL(KIND=DP_KIND),INTENT(IN) :: FTIME
  INTEGER,INTENT(OUT) :: IH,IM,IS
  INTEGER :: ITIME
-  
+
  ITIME=FTIME*SDAY
  CALL ITIMETOGTIME(ITIME,IH,IM,IS)
- 
+
  END SUBROUTINE FTIMETOITIME
- 
+
  !###====================================================================
  SUBROUTINE FTIMETOCTIME(FTIME,CTIME,DTYPE)
  !###====================================================================
@@ -4591,7 +4591,7 @@ DOLOOP: DO
  INTEGER,INTENT(IN),OPTIONAL :: DTYPE
  INTEGER :: IH,IM,IS
  INTEGER :: ITIME
-  
+
  ITIME=FTIME*SDAY
  CALL ITIMETOGTIME(ITIME,IH,IM,IS)
  IF(PRESENT(DTYPE))THEN
@@ -4606,7 +4606,7 @@ DOLOOP: DO
  ELSE
   WRITE(CTIME,'(3(I2.2,A1))') IH,':',IM,':',IS
  ENDIF
-  
+
  END SUBROUTINE FTIMETOCTIME
 
  !###====================================================================
@@ -4616,16 +4616,16 @@ DOLOOP: DO
  INTEGER(KIND=8),INTENT(IN) :: IDATE
  CHARACTER(LEN=52) :: CDATE
  INTEGER :: IYR,IMH,IDY,IHR,IMT,ISC
- 
+
  CALL ITIMETOGDATE(IDATE,IYR,IMH,IDY,IHR,IMT,ISC)
  IF(IHR.EQ.0.AND.IMT.EQ.0.AND.ISC.EQ.0)THEN
   WRITE(CDATE,'(I4.4,2(A1,I2.2))') IYR,'/',IMH,'/',IDY
  ELSE
   WRITE(CDATE,'(I4.4,5(A1,I2.2))') IYR,'/',IMH,'/',IDY,' ',IHR,':',IMT,':',ISC
  ENDIF
- 
+
  END SUBROUTINE ITIMETOCDATE
- 
+
  !###====================================================================
  REAL(KIND=DP_KIND) FUNCTION ITIMETOFTIME(ITIME)
  !###====================================================================
@@ -4647,7 +4647,7 @@ DOLOOP: DO
 
  IH =      ITIME          / 10000
  IM = MOD( ITIME, 10000 ) / 100
- IS = MOD( ITIME, 100 ) 
+ IS = MOD( ITIME, 100 )
 
  END SUBROUTINE ITIMETOHMS
 
@@ -4667,7 +4667,7 @@ DOLOOP: DO
  IMPLICIT NONE
  INTEGER,INTENT(IN) :: IY,IM,ID,IH,IT,IS
  INTEGER(KIND=8) :: IYD,IMD,IDD,IHD,ITD,ISD
- 
+
  IYD=IY
  IMD=IM
  IDD=ID
@@ -4682,7 +4682,7 @@ DOLOOP: DO
                ISD
 
  END FUNCTION YMDHMSTOITIME
- 
+
  !###====================================================================
  SUBROUTINE ITIMETOGDATE(IDATE,IYR,IMH,IDY,IHR,IMT,ISC)
  !###====================================================================
@@ -4708,7 +4708,7 @@ DOLOOP: DO
             IYR2,IMH2,IDY2,IHR2,IMT2,ISC2
  INTEGER :: SD,ED,DD
  REAL(KIND=DP_KIND) :: F1,F2,F
- 
+
  SD=SDATE/1000000; ED=EDATE/1000000
  SD=UTL_IDATETOJDATE(SD); ED=UTL_IDATETOJDATE(ED)
  DD=ED-SD
@@ -4720,21 +4720,21 @@ DOLOOP: DO
  !## end   time
  CALL ITIMETOGDATE(EDATE,IYR2,IMH2,IDY2,IHR2,IMT2,ISC2)
  F2=(REAL(IHR2)*3600.0D0+REAL(IMT2)*60.0D0+REAL(ISC2))/SDAY
-  
+
  !## same day
  IF(SD.EQ.ED)THEN
   F=F2-F1
  ELSE
   F=1.0D0-F1+F2+(DD-1)
  ENDIF
- 
+
 ! IF(ED.GT.SD)THEN; F1=1.0D0-F1; DD=DD-1; ENDIF
 ! IF(ED.EQ.SD)THEN; F1=F2-F1; F2=0.0D0; ENDIF
- 
+
  DIFFTIME=F !DD+(F1+F2)
- 
+
  END FUNCTION DIFFTIME
- 
+
  !###====================================================================
  REAL(KIND=DP_KIND) FUNCTION CTIMETOFTIME(CTIME)
  !###====================================================================
@@ -4754,7 +4754,7 @@ DOLOOP: DO
  REAL(KIND=DP_KIND),INTENT(IN) :: DEGREES
  REAL(KIND=DP_KIND),INTENT(OUT) :: D,M,S
  REAL(KIND=DP_KIND) :: F
- 
+
  D = INT(DEGREES)
  F = 60.0D0 * (DEGREES - D)
  M = INT(F)
@@ -4771,7 +4771,7 @@ DOLOOP: DO
 
  IH =      ITIME         / 3600
  IM = MOD( ITIME, 3600 ) / 60
- IS = MOD( ITIME, 60 ) 
+ IS = MOD( ITIME, 60 )
 
  END SUBROUTINE ITIMETOGTIME
 
@@ -4869,7 +4869,7 @@ DOLOOP: DO
  END FUNCTION UTL_INVERSECOLOUR
 
  !###======================================================================
- SUBROUTINE UTL_FADEOUTCOLOUR(ICLR,FCT) 
+ SUBROUTINE UTL_FADEOUTCOLOUR(ICLR,FCT)
  !###======================================================================
  IMPLICIT NONE
  INTEGER,INTENT(INOUT) :: ICLR
@@ -4877,7 +4877,7 @@ DOLOOP: DO
  INTEGER :: IR,IG,IB
 
  IF(FCT.GT.1.0D0.OR.FCT.LE.0.0D0)RETURN
- 
+
  CALL WRGBSPLIT(ICLR,IR,IG,IB)
  IR =IR+((255-IR)*FCT)
  IG =IG+((255-IG)*FCT)
@@ -4894,7 +4894,7 @@ DOLOOP: DO
  SUBROUTINE UTL_EQUALNAMES_UNITTEST()
  !###======================================================================
  IMPLICIT NONE
- 
+
  write(*,*) '*'   ,' TEST',0,UTL_EQUALNAMES('*','TEST',0)
  write(*,*) 'T*'  ,' TEST',0,UTL_EQUALNAMES('T*','TEST',0)
  write(*,*) 't*'  ,' TEST',1,UTL_EQUALNAMES('t*','TEST',1)
@@ -4908,9 +4908,9 @@ DOLOOP: DO
  write(*,*) '*B31D011*' ,' cfB31D011gt',1,UTL_EQUALNAMES('*B31D011*','cfB31D011gt',1)
  write(*,*) '*B31D011*' ,' cfB31D01gt',1,UTL_EQUALNAMES('*B31D011*','cfB31D01gt',1)
  PAUSE
- 
+
  END SUBROUTINE UTL_EQUALNAMES_UNITTEST
- 
+
  !###======================================================================
  LOGICAL FUNCTION UTL_EQUALNAMES(SEARCH,STRING,ICAP)
  !###======================================================================
@@ -4919,14 +4919,14 @@ DOLOOP: DO
  INTEGER,OPTIONAL,INTENT(IN) :: ICAP
  INTEGER :: I,J,N,M,ICASE
  LOGICAL :: LEX
- 
+
  ICASE=0; IF(PRESENT(ICAP))ICASE=ICAP
- 
+
  N=LEN_TRIM(STRING)
  M=LEN_TRIM(SEARCH)
- 
+
  !## test string on search
- J=1; I=0; DO 
+ J=1; I=0; DO
 
   LEX=.FALSE.; I=I+1
   !## string finished before ending
@@ -4938,7 +4938,7 @@ DOLOOP: DO
    J=J+1
    IF(J.LE.M)THEN
     LEX=.FALSE.
-    DO 
+    DO
      IF(ICASE.EQ.0)THEN
       IF(SEARCH(J:J).EQ.STRING(I:I))EXIT
      ELSE
@@ -4966,9 +4966,9 @@ DOLOOP: DO
   IF(.NOT.LEX)EXIT
   IF(J.GT.M)EXIT
  ENDDO
- 
+
  J=MIN(J,M); IF(SEARCH(J:J).EQ.'*')LEX=.TRUE.
- 
+
  UTL_EQUALNAMES=LEX
 
  END FUNCTION UTL_EQUALNAMES
@@ -5074,7 +5074,7 @@ DOLOOP: DO
    LINE='dir /ad /b /o "'                  //TRIM(DIR)//'\'//TRIM(WC)//'" > "'//TRIM(TXTFILE)//'"'
   ENDIF
  ENDIF
- 
+
  !## remove \\
  DO
   I=INDEX(LINE,'\\')
@@ -5093,9 +5093,9 @@ DOLOOP: DO
   CALL WMESSAGEBOX(OKONLY,EXCLAMATIONICON,COMMONOK,'iMOD cannot OPEN: '//CHAR(13)//TRIM(TXTFILE),'Error')
   IU=0; N=0; RETURN
  ENDIF
-  
+
  I=0
- DO 
+ DO
   READ(IU,'(A256)',IOSTAT=IOS) LINE
   IF(IOS.NE.0)EXIT
   J=LEN_TRIM(LINE)
@@ -5114,7 +5114,7 @@ DOLOOP: DO
  N=I
 
  END SUBROUTINE UTL_DIRINFO
- 
+
  !###======================================================================
  LOGICAL FUNCTION UTL_DIRINFO_POINTER(DIR,WC,LISTNAME,FT,CORDER)
  !###======================================================================
@@ -5128,9 +5128,9 @@ DOLOOP: DO
  LOGICAL :: LEX
 
  UTL_DIRINFO_POINTER=.FALSE.
- 
+
  IF(LEN(C_LISTNAME).LT.LEN(LISTNAME))CALL WMESSAGEBOX(OKONLY,EXCLAMATIONICON,COMMONOK,'c_listname()<listname()','error')
- 
+
  BATFILE=TRIM(PREFVAL(1))//'\tmp\'//TRIM(OSD_GETENV('USERNAME'))//'_dir_imod.bat'
  TXTFILE=TRIM(PREFVAL(1))//'\tmp\'//TRIM(OSD_GETENV('USERNAME'))//'_dir_imod.txt'
 
@@ -5165,7 +5165,7 @@ DOLOOP: DO
    LINE='dir /ad /b /o "'                  //TRIM(DIR)//'\'//TRIM(WC)//'" > "'//TRIM(TXTFILE)//'"'
   ENDIF
  ENDIF
- 
+
  !## remove \\
  DO
   I=INDEX(LINE,'\\')
@@ -5177,18 +5177,18 @@ DOLOOP: DO
  CLOSE(IU)
 
  CALL IOSCOMMAND('"'//TRIM(BATFILE)//'"',PROCSILENT+PROCBLOCKED+PROCCMDPROC)
- 
+
  IU=UTL_GETUNIT()
  CALL OSD_OPEN(IU,FILE=TXTFILE,ACTION='READ',FORM='FORMATTED')
  IF(IU.LE.0)THEN
   CALL WMESSAGEBOX(OKONLY,EXCLAMATIONICON,COMMONOK,'iMOD cannot OPEN: '//CHAR(13)//TRIM(TXTFILE),'Error')
   IU=0; N=0; RETURN
  ENDIF
- 
+
  ALLOCATE(C_LISTNAME(50))
- 
+
  I=0
- DO 
+ DO
   READ(IU,'(A256)',IOSTAT=IOS) LINE
   IF(IOS.NE.0)EXIT
   J=LEN_TRIM(LINE)
@@ -5208,15 +5208,15 @@ DOLOOP: DO
  END DO
 
  CLOSE(IU)
- 
- N=I 
- 
+
+ N=I
+
  ALLOCATE(LISTNAME(N))
  LISTNAME(1:N)=C_LISTNAME(1:N)
  DEALLOCATE(C_LISTNAME)
- 
+
  UTL_DIRINFO_POINTER=.TRUE.
- 
+
  END FUNCTION UTL_DIRINFO_POINTER
 
  !###======================================================================
@@ -5226,7 +5226,7 @@ DOLOOP: DO
  REAL(KIND=DP_KIND),INTENT(IN) :: CS
  INTEGER,INTENT(OUT) :: NCOL,NROW
  REAL(KIND=DP_KIND) :: D
- 
+
  D=MOD(MINX,CS)
  IF(D.NE.0.0D0)MINX=(MINX+(CS-D))-CS
  D=MOD(MAXX,CS)
@@ -5248,7 +5248,7 @@ DOLOOP: DO
  REAL(KIND=DP_KIND),INTENT(IN) :: CS
  INTEGER,INTENT(OUT) :: NCOL,NROW
  REAL(KIND=DP_KIND) :: D
- 
+
  D=MOD(ABS(MINX),CS)
  IF(D.NE.0.0D0)MINX=(MINX+(CS-D))-CS
  D=MOD(ABS(MAXX),CS)
@@ -5271,20 +5271,20 @@ DOLOOP: DO
  INTEGER,INTENT(OUT) :: NCOL,NROW
  LOGICAL,INTENT(IN),OPTIONAL :: LLC
  LOGICAL :: LLLC
- 
+
  NCOL=(MAXX-MINX)/CSX
  NROW=(MAXY-MINY)/CSY
 
  LLLC=.TRUE.; IF(PRESENT(LLC))LLLC=LLC
- 
- IF(LLLC)THEN 
+
+ IF(LLLC)THEN
   MAXX=MINX+NCOL*CSX
   MAXY=MINY+NROW*CSY
  ELSE
   MINX=MAXX-NCOL*CSX
   MINY=MAXY-NROW*CSY
  ENDIF
- 
+
  END SUBROUTINE UTL_IDFSNAPTOGRID_LLC
 
  !###====================================================================
@@ -5325,16 +5325,16 @@ DOLOOP: DO
 ! INTEGER :: I,IS,MI,NI
 !
 ! UTL_GETMOSTFREQ=NODATA
-! 
+!
 ! IS=0
 ! DO
-!  IS=IS+1  
+!  IS=IS+1
 !  IF(FREQ(IS).NE.NODATA)EXIT
 !  IF(IS.GE.NFREQ)RETURN !## nothing found ne nodata
 ! ENDDO
 ! UTL_GETMOSTFREQ=FREQ(IS)
 ! MI=1 !NI !max. number of unique
-! 
+!
 ! NI=1
 ! IS=IS+1
 ! DO I=IS,NFREQ
@@ -5424,7 +5424,7 @@ DOLOOP: DO
   IF(PERC(IP).LE.0.0D0)THEN
    XMED(IP)=X(1)
   ELSEIF(PERC(IP).GE.100.0D0)THEN
-   XMED(IP)=X(MX) 
+   XMED(IP)=X(MX)
   ELSE
    FRAC=1.0D0/(PERC(IP)/100.0D0)
 
@@ -5449,12 +5449,12 @@ DOLOOP: DO
  INTEGER,INTENT(OUT) :: MX             !## number of values ne nodata
  REAL(KIND=DP_KIND),INTENT(IN),DIMENSION(:) :: PERC  !## percentile 0-100%
  REAL(KIND=DP_KIND),INTENT(OUT),DIMENSION(:) :: XMED !## yielding percentile(s)
- REAL(KIND=DP_KIND),INTENT(IN) :: NODATA             !## nodata value 
+ REAL(KIND=DP_KIND),INTENT(IN) :: NODATA             !## nodata value
  REAL(KIND=DP_KIND),DIMENSION(NX),INTENT(INOUT) :: X !## array
  INTEGER :: I,IP
  REAL(KIND=DP_KIND) :: FRAC
 
- XMED=NODATA 
+ XMED=NODATA
 
  IF(NX.LE.0)RETURN
 
@@ -5503,7 +5503,7 @@ DOLOOP: DO
         X(I)  .GE.PERC(IP))THEN
       FRAC=(PERC(IP)-X(I-1))/(X(I)-X(I-1))
       XMED(IP)=(REAL(I-1)+FRAC)/REAL(MX)
-      EXIT    
+      EXIT
      ENDIF
     ENDDO
    ENDIF
@@ -5513,7 +5513,7 @@ DOLOOP: DO
   WRITE(*,*) 'FRAC    =',FRAC
   DO I=1,MX; WRITE(*,'(I10,F15.7)') I,X(I); ENDDO
  ENDDO
-   
+
  END SUBROUTINE UTL_GETMED_INVERSE
 
  !###======================================================================
@@ -5537,7 +5537,7 @@ DOLOOP: DO
  INTEGER :: I
 
  CALL QKSORT_SGL(N,X) !N,X)
- 
+
  !## determine number of unique classes
  IF(PRESENT(NODATA))THEN
   NU=0
@@ -5554,7 +5554,7 @@ DOLOOP: DO
     ENDIF
    ENDIF
   END DO
- ELSE 
+ ELSE
   NU=1
   DO I=2,N
    IF(X(I).NE.X(NU))THEN
@@ -5577,7 +5577,7 @@ DOLOOP: DO
  INTEGER :: I
 
  CALL WSORT(X,1,N)
- 
+
  !## determine number of unique classes
  IF(PRESENT(NODATA))THEN
   NU=0
@@ -5594,7 +5594,7 @@ DOLOOP: DO
     ENDIF
    ENDIF
   END DO
- ELSE 
+ ELSE
   NU=1
   DO I=2,N
    IF(X(I).NE.X(NU))THEN
@@ -5634,7 +5634,7 @@ DOLOOP: DO
     ENDIF
    ENDIF
   END DO
- ELSE 
+ ELSE
   !## determine number of unique classes
   NU=1
   DO I=2,N
@@ -5644,9 +5644,9 @@ DOLOOP: DO
    ENDIF
   END DO
  ENDIF
- 
+
  END SUBROUTINE UTL_GETUNIQUE_INT
- 
+
   !###====================================================
  SUBROUTINE UTL_GETUNIQUE_DINT(IX,N,NU,NODATA)
  !###====================================================
@@ -5675,7 +5675,7 @@ DOLOOP: DO
     ENDIF
    ENDIF
   END DO
- ELSE 
+ ELSE
   !## determine number of unique classes
   NU=1
   DO I=2,N
@@ -5685,9 +5685,9 @@ DOLOOP: DO
    ENDIF
   END DO
  ENDIF
- 
+
  END SUBROUTINE UTL_GETUNIQUE_DINT
- 
+
  !###====================================================
  SUBROUTINE UTL_GETUNIQUE_CHAR(CH,N,NU)
  !###====================================================
@@ -5747,9 +5747,9 @@ DOLOOP: DO
  PDCODE=-999.99D0
  !## set first and last point, distance is zero
  PDCODE(1)=0.0D0; PDCODE(N)=0.0D0
- 
+
  !## process each intermediate point
- DO 
+ DO
 
   !## get the start point (first empty spot)
   DO J1=1,N-1; IF(PDCODE(J1).LT.0.0D0)EXIT; ENDDO
@@ -5757,7 +5757,7 @@ DOLOOP: DO
   IF(J1.EQ.N)EXIT
   !## previous fixed point
   J1=J1-1
-  
+
   !## get the end point (fixed point)
   DO J2=J1+1,N; IF(PDCODE(J2).GE.0.0D0)EXIT; ENDDO
 
@@ -5768,7 +5768,7 @@ DOLOOP: DO
   IF(MJ.GT.0)PDCODE(MJ)=MD
 
  ENDDO
- 
+
  END SUBROUTINE PEUCKER_SIMPLIFYLINE
 
  !###====================================================
@@ -5781,14 +5781,14 @@ DOLOOP: DO
  INTEGER,INTENT(OUT) :: MJ
  INTEGER :: J
  REAL(KIND=DP_KIND) :: B,A,D,Y,DX,DY
- 
+
  !## line equation
  B=YC(J1)
  DY=(YC(J2)-YC(J1))
  DX=(XC(J2)-XC(J1))
  A=10.0D10; IF(DX.NE.0.0D0)A=DY/DX
  MD=-1.0D0; MJ=0
- 
+
  !## loop over all points
  DO J=J1+1,J2-1
   !## get point on line
@@ -5811,12 +5811,12 @@ DOLOOP: DO
  REAL(KIND=DP_KIND),INTENT(IN),DIMENSION(N) :: X,Y
  REAL(KIND=DP_KIND) :: XN,YN,X1,X2,X3
  INTEGER :: I
- 
+
  UTL_GOODNESS_OF_FIT=0.0D0
 
  XN=SUM(X)/DBLE(N)
  YN=SUM(Y)/DBLE(N)
- 
+
  X1=0.0D0; X2=0.0D0; X3=0.0D0
  DO I=1,N
   X1=X1+(X(I)-XN)*(Y(I)-YN)
@@ -5826,7 +5826,7 @@ DOLOOP: DO
 
  !## sample correlation coefficient
  IF(X2.NE.0.0D0.AND.X3.NE.0.0D0)UTL_GOODNESS_OF_FIT=X1/SQRT(X2*X3)
-  
+
  END FUNCTION UTL_GOODNESS_OF_FIT
 
  !###====================================================
@@ -5843,7 +5843,7 @@ DOLOOP: DO
  SY =0.0D0
  ST2=0.0D0
  B  =0.0D0
- 
+
  IF(MWT.NE.0)THEN
   SS=0.0D0
   DO I=1,NDATA
@@ -5855,7 +5855,7 @@ DOLOOP: DO
  ELSE
   DO I=1,NDATA
    SX=SX+X(I)
-   SY=SY+Y(I)   
+   SY=SY+Y(I)
   ENDDO
   SS=FLOAT(NDATA)
  ENDIF
@@ -5896,7 +5896,7 @@ DOLOOP: DO
   ENDDO
   Q=UTL_GAMMQ(REAL(0.5*(NDATA-2),8),REAL(0.5*CHI2,8))
  ENDIF
- 
+
  END SUBROUTINE UTL_FIT_REGRESSION
 
  !###====================================================
@@ -5905,7 +5905,7 @@ DOLOOP: DO
  IMPLICIT NONE
  REAL(KIND=DP_KIND),INTENT(IN) :: A,X
  REAL(KIND=DP_KIND) :: GAMMCF,GAMSER,GLN
- 
+
  IF(X.LT.0.0D0.OR.A.LE.0.0D0)PAUSE 'BAD ARGUMENT IN UTL_GAMMQ'
  IF(X.LT.A+1.0D0)THEN
   CALL UTL_GSER(GAMSER,A,X,GLN)
@@ -5914,9 +5914,9 @@ DOLOOP: DO
   CALL UTL_GCF(GAMMCF,A,X,GLN)
   UTL_GAMMQ=GAMMCF
  ENDIF
-   
+
  END FUNCTION
- 
+
  !###====================================================
  SUBROUTINE UTL_GSER(GAMSER,A,X,GLN)
  !###====================================================
@@ -5927,7 +5927,7 @@ DOLOOP: DO
  REAL(KIND=DP_KIND),PARAMETER :: EPS=3.0E-7
  INTEGER :: N
  REAL(KIND=DP_KIND) :: AP,DEL,SUM
- 
+
  GLN=UTL_GAMMLN(A)
  IF(X.LE.0.0D0)THEN
   IF(X.LT.0.0D0)PAUSE 'X < 0 IN UTL_GSER'
@@ -5948,7 +5948,7 @@ DOLOOP: DO
 
  PAUSE 'A TOO LARGE, ITMAX TOO SMALL IN UTL_GSER'
 1 GAMSER=SUM*EXP(-X+A*LOG(X)-GLN)
- 
+
  END SUBROUTINE UTL_GSER
 
  !###====================================================
@@ -5957,18 +5957,18 @@ DOLOOP: DO
  IMPLICIT NONE
  INTEGER,PARAMETER :: ITMAX=100
  REAL(KIND=DP_KIND),PARAMETER :: EPS=3.0E-7,FPMIN=1.0D0-30
- REAL(KIND=DP_KIND),INTENT(IN) :: A,X 
+ REAL(KIND=DP_KIND),INTENT(IN) :: A,X
  REAL(KIND=DP_KIND),INTENT(OUT) :: GAMMCF,GLN
  INTEGER :: I
  REAL(KIND=DP_KIND) :: AN,B,C,D,DEL,H
- 
+
  GLN=UTL_GAMMLN(A)
  B=X+1.0D0-A
  C=1.0D0/FPMIN
  D=1.0D0/B
  H=D
  DO I=1,ITMAX
-  AN=-I*(I-A) 
+  AN=-I*(I-A)
   B=B+2.0
   D=AN*D+B
   IF(ABS(D).LT.FPMIN)D=FPMIN
@@ -5981,9 +5981,9 @@ DOLOOP: DO
  ENDDO
  PAUSE 'A TOO LARGE, ITMAX TOOP SMALL IN UTL_GCF'
 1 GAMMCF=EXP(-X+A*LOG(X)-GLN)*H
- 
+
  END SUBROUTINE UTL_GCF
- 
+
  !###====================================================
  REAL(KIND=DP_KIND) FUNCTION UTL_GAMMLN(XX)
  !###====================================================
@@ -5994,7 +5994,7 @@ DOLOOP: DO
  DATA COF,STP/76.18009172947146D0,-86.50532032941677D0, &
               24.01409824083091D0,-1.231739572450155D0,0.1208650973866179D-2, &
               -0.5395239384953D-5,2.5066282746310005D0/
- 
+
  X=XX
  Y=X
  TMP=X+5.5D0
@@ -6004,8 +6004,8 @@ DOLOOP: DO
   Y=Y+1.0D0
   SER=SER+COF(J)/Y
  ENDDO
- UTL_GAMMLN=TMP+LOG(STP*SER/X)             
- 
+ UTL_GAMMLN=TMP+LOG(STP*SER/X)
+
  END FUNCTION UTL_GAMMLN
 
  !###======================================================================
@@ -6040,7 +6040,7 @@ DOLOOP: DO
    CLOSE(IU); IU=0; RETURN
   ENDIF
  ENDIF
- 
+
  LINE='wmic cpu get NumberOfCores > "'//TRIM(TXTFILE)//'"'
 ! LINE='echo %NUMBER_OF_PROCESSORS% > "'//TRIM(TXTFILE)//'"'
 ! LINE='wmic cpu get NumberOfLogicalProcessors > "'//TRIM(TXTFILE)//'"'
@@ -6056,15 +6056,15 @@ DOLOOP: DO
   CALL WMESSAGEBOX(OKONLY,EXCLAMATIONICON,COMMONOK,'iMOD cannot OPEN: '//CHAR(13)//TRIM(TXTFILE),'Error')
   IU=0; RETURN
  ENDIF
- 
+
  !READ(IU,*,IOSTAT=IOS)
  !READ(IU,*,IOSTAT=IOS) NOCINT
  !IF(IOS.NE.0)NOCINT=-1
  NOCINT=4
- 
+
  !## delete result txt file
  CLOSE(IU,STATUS='DELETE')
- 
+
  END SUBROUTINE UTL_SYSCOREINFO
- 
+
 END MODULE MOD_UTL
