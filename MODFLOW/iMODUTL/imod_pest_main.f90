@@ -388,7 +388,7 @@ CONTAINS
   IF(IOS.NE.0)THEN
    CALL IMOD_UTL_PRINTTEXT('Missing parameter in: PTYPE,ILS,IZONE,INI,DELTA,MIN,MAX,FADJ',0)
    CALL IMOD_UTL_PRINTTEXT(' reading: '//TRIM(LINE),0)
-   CALL IMOD_UTL_PRINTTEXT('Busy processing module: '//TRIM(CMOD(PPST)),2)
+   CALL IMOD_UTL_PRINTTEXT('Busy processing module: PST',2)
   ENDIF
  
   !## read external filename for external parameters
