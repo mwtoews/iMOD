@@ -67,7 +67,8 @@ CONTAINS
  !###======================================================================
  IMPLICIT NONE
 
- CALL WDIALOGSELECT(ID_DMSPANALYSER_TAB2) ; CALL WGridClear(IDF_GRID1); CALL WGridClear(IDF_GRID2); CALL WGridClear(IDF_GRID3); CALL WGridClear(IDF_GRID4); CALL WGridClear(IDF_GRID5)
+ CALL WDIALOGSELECT(ID_DMSPANALYSER_TAB2) ; CALL WGridClear(IDF_GRID1); CALL WGridClear(IDF_GRID2); CALL WGridClear(IDF_GRID4); CALL WGridClear(IDF_GRID5)
+                                            CALL WGridClearCell(IDF_GRID3,2,1) ; CALL WGridClearCell(IDF_GRID3,3,1) 
  CALL WDIALOGSELECT(ID_DMSPANALYSER_TAB4) ; CALL WGridClear(IDF_GRID1); CALL WGridClear(IDF_GRID2);  
  
  !## remove drawn irrigation  rectangles
