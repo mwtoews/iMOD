@@ -349,7 +349,7 @@ CONTAINS
  ENDDO
  DEALLOCATE(IGROUP,SGROUP,ACRONYM)
  NP=NU
- do i=1,np; write(*,*) '"'//trim(param(i)%acronym)//'"'; enddo
+! do i=1,np; write(*,*) '"'//trim(param(i)%acronym)//'"'; enddo
  
  !## continue reading
  NPER=1
@@ -427,7 +427,7 @@ CONTAINS
  IU=UTL_GETUNIT(); OPEN(IU,FILE=TRIM(DIR)//'\log_pest_sensitivity.txt',STATUS='OLD',ACTION='READ')
  DO I=1,2; READ(IU,'(A256)',IOSTAT=IOS) LINE; IF(IOS.NE.0)EXIT; ENDDO
  DO I=1,SIZE(IPEST)-1
-  READ(IU,'(10X,99F15.0)') (IPEST(I+1)%SENSI(J),J=1,NP)
+  READ(IU,'(10X,999F15.0)') (IPEST(I+1)%SENSI(J),J=1,NP)
  ENDDO
  CLOSE(IU)
  

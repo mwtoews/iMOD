@@ -1264,6 +1264,7 @@ MAINLOOP: DO
    ELSE
     !## error value - should not happen
     PEST%PARAM(I)%ALPHA_ERROR_VARIANCE(ITER)=-999.99D0 
+    WRITE(IUPESTOUT,*) J,COV(J,J)
     IERROR=IERROR+1
    ENDIF
    !## check whether current other parameters belong to this group
@@ -1279,8 +1280,8 @@ MAINLOOP: DO
  ENDDO
  
  IF(IERROR.GT.0)THEN
-  WRITE(IUPESTOUT,*); WRITE(IUPESTOUT,*) 'Errors ('//TRIM(ITOS(IERROR))//') found in the Covariance Matrix:'; WRITE(IUPESTOUT,*)
-  WRITE(*,'(/A/)') 'Errors found in the computation of the Covariance Matrix'; STOP
+  WRITE(IUPESTOUT,*); WRITE(IUPESTOUT,*) 'Errors (#'//TRIM(ITOS(IERROR))//') found in the Covariance Matrix, check your matrix, might by singular'; WRITE(IUPESTOUT,*)
+  WRITE(*,'(/A/)') 'Errors found in the computation of the Covariance Matrix, check your matrix, might by singular'; STOP
  ENDIF
  
  IF(LPRINT)THEN; WRITE(IUPESTOUT,*); WRITE(IUPESTOUT,*) 'Confidence Limits (96%):'; WRITE(IUPESTOUT,*); ENDIF
@@ -1675,37 +1676,37 @@ MAINLOOP: DO
  
  END SUBROUTINE IPEST_GLM_JQJ
  
- !###========================================================================
- SUBROUTINE RED1EIGSRT(D,A,N,NP)
- !###========================================================================
- IMPLICIT NONE
- INTEGER,INTENT(IN) :: N,NP
- REAL,DIMENSION(NP),INTENT(INOUT) :: D
- REAL,DIMENSION(NP,NP),INTENT(INOUT) :: A
- INTEGER :: I,J,K
- REAL(KIND=8) :: P
-
- DO I=1,N-1
-  K=I
-  P=D(I)
-  DO J=I+1,N
-   IF(D(J).GE.P)THEN
-    K=J
-    P=D(J)
-   ENDIF
-  END DO
-  IF(K.NE.I)THEN
-   D(K)=D(I)
-   D(I)=P
-   DO J=1,N
-    P=A(J,I)
-    A(J,I)=A(J,K)
-    A(J,K)=P
-   END DO
-  ENDIF
- END DO
-
- END SUBROUTINE RED1EIGSRT
+ !!###========================================================================
+ !SUBROUTINE RED1EIGSRT(D,A,N,NP)
+ !!###========================================================================
+ !IMPLICIT NONE
+ !INTEGER,INTENT(IN) :: N,NP
+ !REAL,DIMENSION(NP),INTENT(INOUT) :: D
+ !REAL,DIMENSION(NP,NP),INTENT(INOUT) :: A
+ !INTEGER :: I,J,K
+ !REAL(KIND=8) :: P
+ !
+ !DO I=1,N-1
+ ! K=I
+ ! P=D(I)
+ ! DO J=I+1,N
+ !  IF(D(J).GE.P)THEN
+ !   K=J
+ !   P=D(J)
+ !  ENDIF
+ ! END DO
+ ! IF(K.NE.I)THEN
+ !  D(K)=D(I)
+ !  D(I)=P
+ !  DO J=1,N
+ !   P=A(J,I)
+ !   A(J,I)=A(J,K)
+ !   A(J,K)=P
+ !  END DO
+ ! ENDIF
+ !END DO
+ !
+ !END SUBROUTINE RED1EIGSRT
 
  !###========================================================================
  SUBROUTINE RED1EIGSRT_DBL(D,A,N,NP)
@@ -1739,89 +1740,89 @@ MAINLOOP: DO
 
  END SUBROUTINE RED1EIGSRT_DBL
  
-!###========================================================================
- SUBROUTINE RED1TRED2(A,N,NP,D,E)
-!###========================================================================
- IMPLICIT NONE
- INTEGER,INTENT(IN) :: N,NP
- REAL,DIMENSION(NP,NP),INTENT(INOUT) :: A
- REAL,DIMENSION(NP),INTENT(INOUT) :: D,E
- INTEGER :: I,J,K,L
- REAL(KIND=8) :: F,G,H,HH,SCALE
-
- DO I=N,2,-1
-  L=I-1
-  H=0.
-  SCALE=0.
-  IF(L.GT.1)THEN
-   DO K=1,L
-    SCALE=SCALE+ABS(A(I,K))
-   ENDDO
-   IF(SCALE.EQ.0.)THEN
-    E(I)=A(I,L)
-   ELSE
-    DO K=1,L
-     A(I,K)=A(I,K)/SCALE
-     H=H+A(I,K)**2.
-    ENDDO
-    F=A(I,L)
-    G=-SIGN(SQRT(H),F)
-    E(I)=SCALE*G
-    H=H-F*G
-    A(I,L)=F-G
-    F=0.
-    DO J=1,L
-     A(J,I)=A(I,J)/H
-     G=0.
-     DO K=1,J
-      G=G+A(J,K)*A(I,K)
-     ENDDO
-     DO K=J+1,L
-      G=G+A(K,J)*A(I,K)
-     ENDDO
-     E(J)=G/H
-     F=F+E(J)*A(I,J)
-    ENDDO
-    HH=F/(H+H)
-    DO J=1,L
-     F=A(I,J)
-     G=E(J)-HH*F
-     E(J)=G
-     DO K=1,J
-      A(J,K)=A(J,K)-F*E(K)-G*A(I,K)
-     ENDDO
-    ENDDO
-   ENDIF
-  ELSE
-   E(I)=A(I,L)
-  ENDIF
-  D(I)=H
- ENDDO
-
- D(1)=0.
- E(1)=0.
- DO I=1,N
-  L=I-1
-  IF(D(I).NE.0.)THEN
-   DO J=1,L
-    G=0.
-    DO K=1,L
-     G=G+A(I,K)*A(K,J)
-    END DO
-    DO K=1,L
-     A(K,J)=A(K,J)-G*A(K,I)
-    END DO
-   END DO
-  ENDIF
-  D(I)=A(I,I)
-  A(I,I)=1.
-  DO J=1,L
-   A(I,J)=0.
-   A(J,I)=0.
-  END DO
- END DO
-
- END SUBROUTINE RED1TRED2
+!!###========================================================================
+! SUBROUTINE RED1TRED2(A,N,NP,D,E)
+!!###========================================================================
+! IMPLICIT NONE
+! INTEGER,INTENT(IN) :: N,NP
+! REAL,DIMENSION(NP,NP),INTENT(INOUT) :: A
+! REAL,DIMENSION(NP),INTENT(INOUT) :: D,E
+! INTEGER :: I,J,K,L
+! REAL(KIND=8) :: F,G,H,HH,SCALE
+!
+! DO I=N,2,-1
+!  L=I-1
+!  H=0.
+!  SCALE=0.
+!  IF(L.GT.1)THEN
+!   DO K=1,L
+!    SCALE=SCALE+ABS(A(I,K))
+!   ENDDO
+!   IF(SCALE.EQ.0.)THEN
+!    E(I)=A(I,L)
+!   ELSE
+!    DO K=1,L
+!     A(I,K)=A(I,K)/SCALE
+!     H=H+A(I,K)**2.
+!    ENDDO
+!    F=A(I,L)
+!    G=-SIGN(SQRT(H),F)
+!    E(I)=SCALE*G
+!    H=H-F*G
+!    A(I,L)=F-G
+!    F=0.
+!    DO J=1,L
+!     A(J,I)=A(I,J)/H
+!     G=0.
+!     DO K=1,J
+!      G=G+A(J,K)*A(I,K)
+!     ENDDO
+!     DO K=J+1,L
+!      G=G+A(K,J)*A(I,K)
+!     ENDDO
+!     E(J)=G/H
+!     F=F+E(J)*A(I,J)
+!    ENDDO
+!    HH=F/(H+H)
+!    DO J=1,L
+!     F=A(I,J)
+!     G=E(J)-HH*F
+!     E(J)=G
+!     DO K=1,J
+!      A(J,K)=A(J,K)-F*E(K)-G*A(I,K)
+!     ENDDO
+!    ENDDO
+!   ENDIF
+!  ELSE
+!   E(I)=A(I,L)
+!  ENDIF
+!  D(I)=H
+! ENDDO
+!
+! D(1)=0.
+! E(1)=0.
+! DO I=1,N
+!  L=I-1
+!  IF(D(I).NE.0.)THEN
+!   DO J=1,L
+!    G=0.
+!    DO K=1,L
+!     G=G+A(I,K)*A(K,J)
+!    END DO
+!    DO K=1,L
+!     A(K,J)=A(K,J)-G*A(K,I)
+!    END DO
+!   END DO
+!  ENDIF
+!  D(I)=A(I,I)
+!  A(I,I)=1.
+!  DO J=1,L
+!   A(I,J)=0.
+!   A(J,I)=0.
+!  END DO
+! END DO
+!
+! END SUBROUTINE RED1TRED2
 
  !###========================================================================
  SUBROUTINE RED1TRED2_DBL(A,N,NP,D,E)

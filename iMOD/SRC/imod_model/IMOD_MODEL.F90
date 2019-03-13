@@ -936,7 +936,8 @@ CONTAINS
  IMPLICIT NONE
  INTEGER,INTENT(IN) :: IBATCH
  INTEGER :: IU,JU,KU,I,II,J,JJ,K,IOS,IROW,ICOL,N
- CHARACTER(LEN=256) :: LINE,STRING,FNAMETO,FNAME,FNAME1,FNAME2  
+ CHARACTER(LEN=256) :: LINE,FNAMETO,FNAME,FNAME1,FNAME2  
+ CHARACTER(LEN=512) :: STRING
  CHARACTER(LEN=52) :: SUBMAP
  CHARACTER(LEN=4),DIMENSION(10) :: EXTISG
  LOGICAL :: LEX,LCOPY,LRUN
@@ -1131,6 +1132,11 @@ MAINLOOP: DO
            CALL UTL_CREATEDIR(FNAME2(:INDEX(FNAME2,'\',.TRUE.)-1))
            !## copy batch
            STRING='copy '//TRIM(FNAME1)//' '//TRIM(FNAME2)
+           IF(STRING(LEN(STRING):LEN(STRING)).NE.' ')THEN
+            IF(IBATCH.EQ.0)CALL WINDOWOUTSTATUSBAR(4,'Copy string to short - organise folder differenly with shorter names, max. = '//TRIM(ITOS(LEN(STRING)))//' characters')
+            IF(IBATCH.EQ.1)WRITE(*,'(A)') 'Copy string to short - organise folder differenly with shorter names, max. = '//TRIM(ITOS(LEN(STRING)))//' characters'
+            PAUSE; STOP
+           ENDIF
            WRITE(KU,'(A)') TRIM(STRING)
           ENDIF
          ENDIF     
