@@ -273,7 +273,7 @@ CONTAINS
         
       !## create pointer - only once to be created
       IF(.NOT.LIP)THEN
-       !## copy settings
+       !## copy settings  SHP
        CALL WBALFILLPOINTER(WBAL_ISEL)  !## need because of iplist()-array
        !## if IPIDF%X eq 0, nothing to do!
        IF(SUM(IPIDF%X).EQ.0.0D0)THEN
