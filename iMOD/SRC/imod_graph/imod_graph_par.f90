@@ -24,7 +24,7 @@ TYPE AXESOBJ
  REAL(KIND=DP_KIND) :: DXAXESL,DXAXESR,DYAXESB,DYAXEST     !1.0D0/fraction of space occupied by left,right,bottom and top axes
  INTEGER :: TFONT
  INTEGER,DIMENSION(2) :: IAXES  !## left/bottom, and top/right
- REAL(KIND=DP_KIND) :: CHH,CHW                !## characterheight,characterwidth
+ REAL(KIND=DP_KIND) :: CHH,CHW,CHS                !## characterheight,characterwidth,charactersize
  INTEGER :: ICLRBACKGROUND !## background color
 END TYPE AXESOBJ
 
@@ -51,7 +51,7 @@ TYPE GRAPHDIMOBJ
  INTEGER :: IFIXX=0                     !ifix - fixed x-axes
  INTEGER :: IFIXY=0                     !ifix - fixed y-axes
  INTEGER :: IFIXY2=0                    !ifix - fixed y2-axes
-! INTEGER :: ICOMBINED=0                 !icombined=0 default; icombined=1 combined graphs - instead of dropdown menu
+ !INTEGER :: ICOMBINED=0                 !icombined=0 default; icombined=1 combined graphs - instead of dropdown menu
  REAL(KIND=DP_KIND) :: XINT,YINT,Y2INT              !xint,yint - interval
  REAL(KIND=DP_KIND) :: XMIN,YMIN,XMAX,YMAX,Y2MIN,Y2MAX     !XMIN,YMIN,XMAX,YMAX = dimensions of current graph
 END TYPE GRAPHDIMOBJ

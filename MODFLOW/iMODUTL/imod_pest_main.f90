@@ -2563,7 +2563,7 @@ END SUBROUTINE WRITEIPF
    
     II=II+1
     READ(TS(I)%IUIPF,*) X,Y,ILAY,Z,MSR%W(II),H    !## w(i)=variance
-    !## weigh=1/sqrt(variance)
+    !## weigh=1/variance
     IF(TS(I)%IVCOL.GT.0)THEN
      IF(MSR%W(II).LE.0.0D0)THEN
       !## insert measurement only whenever h.gt.z
@@ -2573,7 +2573,7 @@ END SUBROUTINE WRITEIPF
        MSR%W(II)=0.0D0
       ENDIF
      ELSE
-      MSR%W(II)=1.0D0/SQRT(MSR%W(II))
+      MSR%W(II)=1.0D0/MSR%W(II)
      ENDIF
     ENDIF
     
@@ -2608,12 +2608,12 @@ END SUBROUTINE WRITEIPF
    DO J=1,TS(I)%NROWIPF
    
     READ(TS(I)%IUIPF,*) X,Y,ILAY,ID,WW     !## w(i)=variance
-    !## weigh=1/stdev=1/sqrt(variance)
+    !## weigh=1/stdev=1/variance
     IF(TS(I)%IVCOL.GT.0)THEN
      IF(WW.LE.0.0D0)THEN
       WW=0.0D0
      ELSE
-      WW=1.0/SQRT(WW)
+      WW=1.0/WW
      ENDIF
     ENDIF
     

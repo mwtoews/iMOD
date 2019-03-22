@@ -553,8 +553,8 @@ CONTAINS
  ENDIF
  
  DO I=1,IZ
- !## determine in which layer location is situated, SKIP POSITIONS WITHIN CLAY-LAYERS!!!!
- NLAYLOOP: DO ILAY=1,NLAY
+  !## determine in which layer location is situated
+  NLAYLOOP: DO ILAY=1,NLAY
    !## within current aquifer - thickness > 0.0D0
    THICKNESS=ZTOP(ICOL,IROW,ILAY)-ZBOT(ICOL,IROW,ILAY)
    !## determine whether location is within active cell, SKIP INACTIVE CELLS!
@@ -575,26 +575,26 @@ CONTAINS
 
    ENDIF
 
-    IF(ILAY.LT.NLAY)THEN
-     !## within underlying aquitard - thickness > 0.0D0
-     THICKNESS=ZBOT(ICOL,IROW,ILAY)-ZTOP(ICOL,IROW,ILAY+1)
-     !## determine whether both locations are within active cell, SKIP INACTIVE CELLS!
-     IF(THICKNESS.GT.0.0D0.AND.(IBOUND(ICOL,IROW,ILAY).NE.0.AND.IBOUND(ICOL,IROW,ILAY+1).NE.0))THEN 
-      IF(Z.LE.ZBOT(ICOL,IROW,ILAY).AND.Z.GE.ZTOP(ICOL,IROW,ILAY+1))THEN
+   IF(ILAY.LT.NLAY)THEN
+    !## within underlying aquitard - thickness > 0.0D0
+    THICKNESS=ZBOT(ICOL,IROW,ILAY)-ZTOP(ICOL,IROW,ILAY+1)
+    !## determine whether both locations are within active cell, SKIP INACTIVE CELLS!
+    IF(THICKNESS.GT.0.0D0.AND.(IBOUND(ICOL,IROW,ILAY).NE.0.AND.IBOUND(ICOL,IROW,ILAY+1).NE.0))THEN 
+     IF(Z.LE.ZBOT(ICOL,IROW,ILAY).AND.Z.GE.ZTOP(ICOL,IROW,ILAY+1))THEN
  !## compute local z
  !bot (zl=-1)
  !mid (zl=-0.5)
  !top (zl=-0)
-       DZZ=ZBOT(ICOL,IROW,ILAY)-ZTOP(ICOL,IROW,ILAY+1)
-       IF(DZZ.EQ.0.0D0)ZL=0.0D0
-       IF(DZZ.NE.0.0D0)ZL=(ZTOP(ICOL,IROW,ILAY+1)-Z)/DZZ
-       WRITE(JU,'(3(I10,A1),4(F15.3,A1),F10.2,A1,2(F15.3,A1))') ILAY,',',IROW,',',ICOL,',',XC-IDF%XMIN,',',YC-IDF%YMIN,',',Z,',',ZL,',',THICKNESS,',AQT,',XC,',',YC
-       !## count number of particles
-       NPART=NPART+1
-       EXIT NLAYLOOP
-      ENDIF
+      DZZ=ZBOT(ICOL,IROW,ILAY)-ZTOP(ICOL,IROW,ILAY+1)
+      IF(DZZ.EQ.0.0D0)ZL=0.0D0
+      IF(DZZ.NE.0.0D0)ZL=(ZTOP(ICOL,IROW,ILAY+1)-Z)/DZZ
+      WRITE(JU,'(3(I10,A1),4(F15.3,A1),F10.2,A1,2(F15.3,A1))') ILAY,',',IROW,',',ICOL,',',XC-IDF%XMIN,',',YC-IDF%YMIN,',',Z,',',ZL,',',THICKNESS,',AQT,',XC,',',YC
+      !## count number of particles
+      NPART=NPART+1
+      EXIT NLAYLOOP
      ENDIF
     ENDIF
+   ENDIF
 
   ENDDO NLAYLOOP
   TPART=TPART+1
