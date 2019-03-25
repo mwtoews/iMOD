@@ -57,7 +57,7 @@ CONTAINS
   WRITE(IUPESTOUT,'(A)') 'Parameters'
   WRITE(IUPESTOUT,'(A2,1X,A5,2(1X,A5),5(1X,A15),3A10,2A15)') 'AC','PTYPE','ILS','IZN','INITIAL','DELTA','MINIMUM','MAXIMUM','FADJ','IGROUP','LTRANS','NODES','ACRONYM','PPRIOR'
 
-  WRITE(IUPESTEFFICIENCY,'(A)') 'RMSE is an absolute measure of fit and can be interpreted as the standard deviation of the unexplained variance; lower values of RMSE indicate better fit.'
+!  WRITE(IUPESTEFFICIENCY,'(A)') 'RMSE is an absolute measure of fit and can be interpreted as the standard deviation of the unexplained variance; lower values of RMSE indicate better fit.'
   
   WRITE(IUPESTEFFICIENCY,'(6A15)') 'TJ','SQRT(TJ)','MEAN(TJ)','RMSE','ADJUSTMENTS','EFFICIENCY'
   WRITE(IUPESTEFFICIENCY,'(6A15)') '(L2)','(L)','(L2)','(L)','(%)','-'
@@ -1368,7 +1368,7 @@ MAINLOOP: DO
  N=0
  DO IP1=1,SIZE(PEST%PARAM)
 
-  WRITE(BLINE,'(99(G10.5))') (PEST%PARAM(IP1)%ALPHA_HISTORY(I),I=ITER,0,-1)
+  WRITE(BLINE,'(99(G10.3))') (PEST%PARAM(IP1)%ALPHA_HISTORY(I),I=ITER,0,-1)
   
   IF(ABS(PEST%PARAM(IP1)%PACT).EQ.1.AND.PEST%PARAM(IP1)%PIGROUP.GT.0)THEN
    IF(PEST%PARAM(IP1)%ACRONYM.EQ.'')THEN
