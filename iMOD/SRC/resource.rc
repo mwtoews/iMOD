@@ -8,7 +8,7 @@
 //
 // Winteracter resource script. 
 //
-// Modified : 15/Mar/2019 10:45:36
+// Modified : 25/Mar/2019 11:01:11
 //
 ///////////////////////////////////////////////////
 //
@@ -3515,7 +3515,7 @@ BEGIN
 END
 
 ID_DADDTOPO DIALOG 0, 0,  300,  165
-STYLE WS_POPUP | WS_BORDER | WS_DLGFRAME | WS_SYSMENU | DS_3DLOOK | DS_MODALFRAME
+STYLE WS_POPUP | WS_BORDER | WS_DLGFRAME | WS_SYSMENU | WS_THICKFRAME | DS_3DLOOK
 FONT    8, "Arial"
 CAPTION "Add Background Image(s)"
 BEGIN
@@ -3546,6 +3546,8 @@ END
 
 ID_DADDTOPO RCDATA
 BEGIN
+"[Dialog] \n"
+" 0  1192 0 0 \n"
 "[Menus] \n"
 "[Ranges] \n"
 "[Formats] \n"
@@ -12223,6 +12225,8 @@ END
 
 ID_DMSPANALYSER_TAB5 RCDATA
 BEGIN
+"[Dialog] \n"
+" 0  1064 0 0 \n"
 "[Checks] \n"
 " 1012 1 \n"
 " 1014 0 \n"
@@ -12230,11 +12234,15 @@ BEGIN
 " 1094     2     1 \n"
 "BMP \n"
 "PNG \n"
-" 1192     4     4 \n"
-"MOD2SVAT.INP \n"
+" 1192     8     1 \n"
 "IDF_SVAT.INP \n"
-"PARA_SIM.INP \n"
+"MOD2SVAT.INP \n"
 "AREA_SVAT.INP \n"
+"INFI_SVAT.INP \n"
+"SCAP_SVAT.INP \n"
+"LUSE_SVAT.INP \n"
+"METE_GRID.INP \n"
+"FACT_SVAT \n"
 " 1064     4     0 \n"
 "par1 \n"
 "par2 \n"
@@ -13989,4 +13997,4 @@ END
 //*WI* FILENAME    resource.f90
 //*WI* FMODNAME    RESOURCE
 //*WI* LASTTYPE        2
-//*WI* LASTRES         4
+//*WI* LASTRES       315
