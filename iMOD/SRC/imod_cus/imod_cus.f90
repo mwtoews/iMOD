@@ -185,6 +185,12 @@ CONTAINS
 
     !## corrected ilay identification
     ZIDF(IIDF)%X(ICOL,IROW)=ILAY
+
+    IF(ILAY.GE.NLAY)THEN
+     WRITE(*,'(/A,I5,A,I5,A)') 'Maximum aquitard layer number is ',NLAY-1,' iMOD found layer number ',ILAY,' in '
+     WRITE(*,'(A/)') TRIM(ZIDF(IIDF)%FNAME)
+     STOP
+    ENDIF
     
     IF(ILAY.GE.1.AND.ILAY.LE.NLAY)THEN
      !## check whether top/bot have data
