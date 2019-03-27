@@ -1868,24 +1868,49 @@ JLOOP: DO K=1,SIZE(TOPICS)
  !## modelname
  MNAME=RUNFNAME(INDEX(RUNFNAME,'\',.TRUE.)+1:INDEX(RUNFNAME,'.',.TRUE.)-1)
  
- !## create component file
+ !## create component file(s)
  IF(LMSP)THEN
-  IU=UTL_GETUNIT()
-  CALL OSD_OPEN(IU,FILE=TRIM(DIR)//'\COMPONENTS.INP',STATUS='REPLACE',ACTION='WRITE,DENYREAD',IOSTAT=IOS)
-  IF(IOS.NE.0)THEN
-   IF(IBATCH.EQ.0)THEN
-    CALL WMESSAGEBOX(OKONLY,EXCLAMATIONICON,COMMONOK,'iMODFLOW is already running, you cannot start '//CHAR(13)// &
-     'new run while previous run is still running'//CHAR(13)//'or'//CHAR(13)//'Run-script cannot be created'//CHAR(13)// &
-     TRIM(DIR)//'\COMPONENTS.INP','Error')
+  N1=1; N2=1; IF(PBMAN%IPESTP.EQ.1)THEN; N1=-PBMAN%NLINESEARCH; N2=SIZE(PEST%PARAM); ENDIF
+  DO I=N1,N2
+   !## skip zero
+   IF(I.EQ.0)CYCLE
+   !## simulate batch-file
+   IU=UTL_GETUNIT()
+   IF(PBMAN%IPESTP.EQ.0)THEN
+    CALL OSD_OPEN(IU,FILE=TRIM(DIR)//'\COMPONENTS.INP',STATUS='REPLACE',ACTION='WRITE,DENYREAD',IOSTAT=IOS)
    ELSE
-    WRITE(*,'(A)') 'iMODFLOW is already running, you cannot start new run while previous run is still running'// &
-        'or Run-script cannot be created '//TRIM(DIR)//'\COMPONENTS.INP'
+    IF(I.GT.0)THEN
+     IF(PEST%PARAM(I)%PACT.EQ.0.OR.PEST%PARAM(I)%PIGROUP.LT.0)CYCLE
+      CALL OSD_OPEN(IU,FILE=TRIM(DIR)//'\COMPONENTS_P#'//TRIM(ITOS(I))//'.INP',STATUS='REPLACE',ACTION='WRITE,DENYREAD',IOSTAT=IOS)
+    ELSE
+     CALL OSD_OPEN(IU,FILE=TRIM(DIR)//'\COMPONENTS_L#'//TRIM(ITOS(I))//'.INP',STATUS='REPLACE',ACTION='WRITE,DENYREAD',IOSTAT=IOS)
+    ENDIF
    ENDIF
-   RETURN
-  ENDIF
-  WRITE(IU,'(A)') 'MODFLOW -wd \MODELINPUT -namfile '//TRIM(DIR)//'\'//TRIM(MNAME)//'.NAM -DXC .\MODELINPUT\'//TRIM(MNAME)//'.DXC'
-  WRITE(IU,'(A)') 'METASWAP -wd \MSWAPINPUT'
-  CLOSE(IU)  
+
+   IF(IOS.NE.0)THEN
+    IF(IBATCH.EQ.0)THEN
+     CALL WMESSAGEBOX(OKONLY,EXCLAMATIONICON,COMMONOK,'iMODFLOW is already running, you cannot start '//CHAR(13)// &
+      'new run while previous run is still running'//CHAR(13)//'or'//CHAR(13)//'Run-script cannot be created'//CHAR(13)// &
+      TRIM(DIR)//'\COMPONENTS.INP','Error')
+    ELSE
+     WRITE(*,'(A)') 'iMODFLOW is already running, you cannot start new run while previous run is still running'// &
+         'or Run-script cannot be created '//TRIM(DIR)//'\COMPONENTS.INP'
+    ENDIF
+    RETURN
+   ENDIF
+   IF(PBMAN%IPESTP.EQ.0)THEN
+    WRITE(IU,'(A)') 'MODFLOW -wd \MODELINPUT -namfile '//TRIM(DIR)//'\'//TRIM(MNAME)//'.NAM -DXC .\MODELINPUT\'//TRIM(MNAME)//'.DXC'
+   ELSE
+    IF(I.GT.0)THEN
+     IF(PEST%PARAM(I)%PACT.EQ.0.OR.PEST%PARAM(I)%PIGROUP.LT.0)CYCLE
+     WRITE(IU,'(A)') 'MODFLOW -wd \MODELINPUT -namfile '//TRIM(DIR)//'\'//TRIM(MNAME)//'_P#'//TRIM(ITOS(I))//'.NAM -DXC .\MODELINPUT\'//TRIM(MNAME)//'.DXC'
+    ELSE
+     WRITE(IU,'(A)') 'MODFLOW -wd \MODELINPUT -namfile '//TRIM(DIR)//'\'//TRIM(MNAME)//'_L#'//TRIM(ITOS(ABS(I)))//'.NAM -DXC .\MODELINPUT\'//TRIM(MNAME)//'.DXC'
+    ENDIF
+   ENDIF
+   WRITE(IU,'(A)') 'METASWAP -wd \MSWAPINPUT'
+   CLOSE(IU)  
+  ENDDO
  ENDIF
 
  !## remove previous version of imodflow
@@ -1962,7 +1987,11 @@ JLOOP: DO K=1,SIZE(TOPICS)
     IF(PBMAN%IPEST.EQ.0)THEN
      WRITE(IU,'(/A/)') '"'//TRIM(PREFVAL(8))//'" -components components.inp' 
     ELSE
-     WRITE(IU,'(/A/)') '"'//TRIM(PREFVAL(8))//'" -components components.inp -ipest ".\modelinput\'//TRIM(MNAME)//'.pst1"' 
+     IF(I.GT.0)THEN
+      WRITE(IU,'(/A/)') '"'//TRIM(PREFVAL(8))//'" -components components_P#'//TRIM(ITOS(I))//'.inp -ipest ".\modelinput\'//TRIM(MNAME)//'.pst1"' 
+     ELSE
+      WRITE(IU,'(/A/)') '"'//TRIM(PREFVAL(8))//'" -components components_L#'//TRIM(ITOS(ABS(I)))//'.inp -ipest ".\modelinput\'//TRIM(MNAME)//'.pst1"' 
+     ENDIF
     ENDIF
    ELSE
     IF(PBMAN%IPEST+PBMAN%IPESTP.EQ.0)THEN
@@ -2096,7 +2125,7 @@ JLOOP: DO K=1,SIZE(TOPICS)
  REAL(KIND=DP_KIND),INTENT(IN) :: BUFFERCS,X1,Y1,X2,Y2
  REAL(KIND=DP_KIND),PARAMETER :: INC=1.0D0                    !## minimal scaling in interest
  REAL(KIND=DP_KIND),PARAMETER :: FINCR=0.02D0
- REAL(KIND=DP_KIND),PARAMETER :: POWR=0.3     !     
+ REAL(KIND=DP_KIND),PARAMETER :: POWR=0.3D0     !     
  INTEGER :: NOMAXCELL                         !## maximal # cells in the end
  INTEGER,PARAMETER :: NOMINCELL=1             !## minimal # cells in the centre
  LOGICAL,PARAMETER :: LCLIP=.TRUE.            !## along edge small cells

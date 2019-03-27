@@ -2315,7 +2315,7 @@ CONTAINS
  !## split window?
  
  !## plot profile with ipf's
-    !## draw line of the profile... !##Liduin
+    !## draw line of the profile
    CALL IGRCOLOURN(WRGB(0,0,0))
    IF(.NOT.LPS)THEN
     DO J=2,NXY

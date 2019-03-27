@@ -90,9 +90,11 @@ CONTAINS
   if(idfm%ieq.EQ.0)then
    READ(IURUN,*) IDFM%DX
    IDFM%DY=IDFM%DX
-   else
-!   WRITE(IU,*) (IDFM%SX(ICOL),ICOL=1,IDFM%NCOL)
-!   WRITE(IU,*) (IDFM%SY(IROW),IROW=1,IDFM%NROW)
+  else
+   allocate(idfm%sx(0:idfm%ncol))
+   Read(IURUN,*) (IDFM%SX(ICOL),ICOL=0,IDFM%NCOL)
+   allocate(idfm%sy(0:idfm%nrow))
+   Read(IURUN,*) (IDFM%SY(IROW),IROW=0,IDFM%NROW)
   endif
     
   READ(IURUN,'(A256)') LINE
