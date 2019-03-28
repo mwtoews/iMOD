@@ -268,7 +268,7 @@ CONTAINS
    'Probably caused by:'//CHAR(13)// &
    ' - wrong startpoint file selected;'//CHAR(13)// &
    ' - all startpoints are above surface level or beneath base;'//CHAR(13)// &
-   ' - all startpoints are outside current model domain.','Information')
+   ' - all startpoints are outside current model domain (IBOUND=0).','Information')
   RETURN
  ELSE
   TRACEPREPARESP=.TRUE.
