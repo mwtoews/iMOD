@@ -186,13 +186,17 @@ CONTAINS
     !## corrected ilay identification
     ZIDF(IIDF)%X(ICOL,IROW)=ILAY
 
+    !## added to the base
     IF(ILAY.GE.NLAY)THEN
-     WRITE(*,'(/A,I5,A,I5,A)') 'Maximum aquitard layer number is ',NLAY-1,' iMOD found layer number ',ILAY,' in '
-     WRITE(*,'(A/)') TRIM(ZIDF(IIDF)%FNAME)
-     STOP
+     IF(TOPIDF(IIDF)%X(ICOL,IROW).NE.TOPIDF(IIDF)%NODATA)THEN
+      MDLBOT(NLAY)%X(ICOL,IROW)=MAX(MDLBOT(NLAY)%X(ICOL,IROW),TOPIDF(IIDF)%X(ICOL,IROW))
+     ENDIF
+!     WRITE(*,'(/A,I5,A,I5,A)') 'Maximum aquitard layer number is ',NLAY-1,' iMOD found layer number ',ILAY,' in '
+!     WRITE(*,'(A/)') TRIM(ZIDF(IIDF)%FNAME)
+!     STOP
     ENDIF
     
-    IF(ILAY.GE.1.AND.ILAY.LE.NLAY)THEN
+    IF(ILAY.GE.1.AND.ILAY.LT.NLAY)THEN !E.NLAY)THEN
      !## check whether top/bot have data
      IF(TOPIDF(IIDF)%X(ICOL,IROW).NE.TOPIDF(IIDF)%NODATA.AND. &
         BOTIDF(IIDF)%X(ICOL,IROW).NE.BOTIDF(IIDF)%NODATA)THEN

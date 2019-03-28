@@ -300,7 +300,7 @@ ELSE
   END DO
   IF(LPKS.AND.NVALID.EQ.0) TS(JJ)%DEL = .TRUE. ! PKS
   CALL IMOD_UTL_PRINTTEXT('        * Assigned '//TRIM(IMOD_UTL_ITOS(NVALID))//' locations from total of '//TRIM(IMOD_UTL_ITOS(TS(JJ)%NROWIPF)),0)
-  CALL IMOD_UTL_PRINTTEXT('          >>> NO locations will be used that are WITHIN the buffer-zone <<<',0)
+!  CALL IMOD_UTL_PRINTTEXT('          >>> NO locations will be used that are WITHIN the buffer-zone <<<',0)
 
   !## write entire ipf again
   WRITE(TS(JJ)%IUIPF,*) NVALID
