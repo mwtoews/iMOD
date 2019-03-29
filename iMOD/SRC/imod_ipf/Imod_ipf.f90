@@ -988,6 +988,8 @@ CONTAINS
  !## take size as is
  IF(IMETHOD.EQ.4)THEN
   LZ=Z
+ ELSEIF(IMETHOD.EQ.5)THEN
+  LZ=1.0D0; IF(Z.GT.0.0D0)LZ=MAX(1.0D0,LOG(Z))
  ELSE
   !## use the absolute value to scale
   IF(IMETHOD.EQ.3)Z=ABS(Z)
