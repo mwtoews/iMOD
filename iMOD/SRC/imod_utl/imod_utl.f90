@@ -936,14 +936,48 @@ DOLOOP: DO
            TOP_BU,BOT_BU,HK_BU,VK_BU,VA_BU,BND,TH,MINTHICKNESS)
  !###======================================================================
  IMPLICIT NONE
- INTEGER,INTENT(IN),DIMENSION(:) :: BND
+ INTEGER,INTENT(INOUT),DIMENSION(:) :: BND
  REAL(KIND=DP_KIND),INTENT(INOUT),DIMENSION(:) :: TOP,BOT,HK,VK,VA,TOP_BU,BOT_BU,HK_BU,VK_BU,VA_BU
  REAL(KIND=DP_KIND),INTENT(INOUT),DIMENSION(:,:) :: TH
  REAL(KIND=DP_KIND),INTENT(IN) :: MINTHICKNESS
  INTEGER :: N,NLAY,ILAY,IL,IL1,IL2
- REAL(KIND=DP_KIND) :: K,T,B,T1,T2,K1,K2,B1,D,KD,VC,MT,F
+ REAL(KIND=DP_KIND) :: K,T,B,T1,T2,K1,K2,B1,D,KD,VC,MT,F,TT1,TT2
 
  NLAY=SIZE(BND)
+
+ !## make sure no negative-thicknesses in original set
+ DO ILAY=1,NLAY
+  IF(ILAY.GT.1)TOP(ILAY)=MIN(TOP(ILAY),BOT(ILAY-1))
+  BOT(ILAY)=MIN(TOP(ILAY),BOT(ILAY))
+ ENDDO
+ !## clean boundary for zero-thickness layers from the bottom
+ DO ILAY=NLAY,1,-1
+  IF(TOP(ILAY)-BOT(ILAY).EQ.0.0D0)THEN
+   BND(ILAY)=0
+  ELSE
+   EXIT
+  ENDIF
+ ENDDO
+ 
+ TH=0.0D0
+ !## get thickness of aquifers
+ DO ILAY=1,NLAY;   TH(ILAY,1)=TOP(ILAY)-BOT(ILAY); ENDDO
+ !## get thickness of aquitards
+ DO ILAY=1,NLAY-1; TH(ILAY,2)=BOT(ILAY)-TOP(ILAY+1); ENDDO
+
+ !## need to have data 
+ DO ILAY=1,NLAY
+  IF(TH(ILAY,1).GT.0)THEN
+   IF(HK(ILAY).LE.0.0)WRITE(*,*) 'HK',HK(ILAY)
+   IF(VA(ILAY).LE.0.0)WRITE(*,*) 'VA',VA(ILAY)
+  ENDIF
+  IF(TH(ILAY,2).GT.0)THEN
+   IF(VK(ILAY).LE.0.0)WRITE(*,*) 'VK',VK(ILAY)
+  ENDIF
+ ENDDO
+
+ !## nothing to do
+ IF(SUM(TH(:,1)).EQ.0.0D0)RETURN
 
  !## make backup
  DO ILAY=1,NLAY
@@ -951,77 +985,39 @@ DOLOOP: DO
   IF(ILAY.LT.NLAY)VK_BU(ILAY) =VK(ILAY)
  ENDDO
 
- TH=0.0D0
- !## get thickness of aquifers
- DO ILAY=1,NLAY;   TH(ILAY,1)=TOP(ILAY)-BOT(ILAY); ENDDO
- !## get thickness of aquitards
- DO ILAY=1,NLAY-1; TH(ILAY,2)=BOT(ILAY)-TOP(ILAY+1); ENDDO
-
- !## nothing to do
- IF(SUM(TH(:,1)).EQ.0.0D0)RETURN
-
- IL1=1; IL2=0
- DO
-
-  !## find bottom of current trajectory
-  IL2=IL1-1; DO; IL2=IL2+1; IF(IL2.EQ.NLAY)EXIT; IF(BND(IL2).NE.0.AND.TH(IL2,2).GT.0.0D0)EXIT; ENDDO
-
-  !## needed minimal thickness of layers
-  N=IL2-IL1+1; MT=MINTHICKNESS*REAL(N,8)
-
-  !## total thickness of aquifer in between
-  T=0.0D0; DO IL=IL1,IL2; T=T+TH(IL,1); ENDDO
-
-  !## shortage of space
-  D=MT-T
-
-  !## more space needed, see how much can be included from aquitards
-  IF(D.GT.0.0D0)THEN
-
-   !## minimal acceptable thickness of layers (including half of aquitards thicknesses)
-   T1=(TH(IL1,2)+TH(IL2,2))/2.0D0
-   !## actual available
-   D=MIN(D,T1)
-   !## update acceptable minimal thickness of layers
-   MT=D/REAL(N,8)
-   !## correct thickness aquitard
-   TH(IL1,2)=TH(IL1,2)-0.5D0*D
-   TH(IL2,2)=TH(IL2,2)-0.5D0*D
-
-  ELSE
-   MT=MINTHICKNESS
+ !## total thickness
+ TT1=0.0D0; DO ILAY=1,NLAY; TT1=TT1+TH(ILAY,1); IF(ILAY.LE.NLAY)TT1=TT1+TH(ILAY,2); ENDDO
+ MT=MIN(MINTHICKNESS,TT1/DBLE(NLAY))
+ 
+ !## adjust thicknesses
+ D=0.0D0
+ DO ILAY=1,NLAY
+  !## aquifer to thin
+  IF(TH(ILAY,1).LT.MT)THEN
+   !## corrected by
+   D=D+(MT-TH(ILAY,1)); TH(ILAY,1)=MT
   ENDIF
-
-  !## correct minimal thicknesses
-  T=0.0; DO IL=IL1,IL2
-   IF(TH(IL,1).LT.MT.AND.BND(IL).NE.0)THEN
-    T=T+MT-TH(IL,1); TH(IL,1)=MT
-   ENDIF
+  !## so go grab that from an aquitard - might become zero
+  IF(TH(ILAY,2).GT.0.0)THEN
+   !## what can be corrected in this aquitard
+   F=TH(ILAY,2)-D; D=0.0D0; IF(F.LT.0.0D0)D=ABS(F)
+   TH(ILAY,2)=MAX(0.0D0,F)
+  ENDIF
+ ENDDO
+ 
+ !## correct in case new thickness is more than original thickness - use fraction
+ TT2=0.0D0; DO ILAY=1,NLAY; TT2=TT2+TH(ILAY,1); IF(ILAY.LE.NLAY)TT2=TT2+TH(ILAY,2); ENDDO
+ IF(TT2.GT.TT1)THEN
+  F=TT1/TT2
+  DO ILAY=1,NLAY
+   TH(ILAY,1)=TH(ILAY,1)*F
+   TH(ILAY,2)=TH(ILAY,2)*F
   ENDDO
-
-  !## corrections applied
-  IF(T.GT.0.0D0)THEN
-
-   !## divide remaining t1 amoung the rest
-   T1=0.0D0; DO IL=IL1,IL2
-    IF(TH(IL,1).GT.MT.AND.BND(IL).NE.0)T1=T1+(TH(IL,1)-MT)
-   ENDDO
-
-   !## divide fractional
-   DO IL=IL1,IL2
-    IF(TH(IL,1).GT.MT.AND.BND(IL).NE.0)THEN
-     !# set fraction
-     D=(TH(IL,1)-MT)
-     F=D/T1
-     TH(IL,1)=TH(IL,1)-T*F
-    ENDIF
-   ENDDO
-
-  ENDIF
-
-  IL1=IL2+1
-  IF(IL1.GE.NLAY)EXIT
-
+ ENDIF
+ 
+ !## check total thickness
+ TT2=0.0D0; DO ILAY=1,NLAY
+  TT2=TT2+TH(ILAY,1); IF(ILAY.LE.NLAY)TT2=TT2+TH(ILAY,2)
  ENDDO
 
  !## recompute all levels from the corrected thicknesses
@@ -1029,7 +1025,7 @@ DOLOOP: DO
   IF(ILAY.GT.1)TOP(ILAY)=BOT(ILAY-1)-TH(ILAY-1,2)
   BOT(ILAY)=TOP(ILAY)-TH(ILAY,1)
  ENDDO
-
+ 
  !## correct permeabilities for aquifers
  DO ILAY=1,NLAY
 
@@ -1076,7 +1072,7 @@ DOLOOP: DO
    ENDDO
    !## new parameters
    HK(ILAY)=KD/(T-B)
-   K=(T-B)/VC
+   K=HK(ILAY); IF(VC.GT.0.0)K=(T-B)/VC
    VA(ILAY)=K/HK(ILAY)
 
   ENDIF
@@ -1108,22 +1104,28 @@ DOLOOP: DO
 
  !## check before and after
 
- !## get thickness of aquifers
- TH=0.0D0; DO ILAY=1,NLAY; IF(BND(ILAY).NE.0)TH(ILAY,1)=TOP_BU(ILAY)-BOT_BU(ILAY); ENDDO; T1=SUM(TH(:,1))
- DO ILAY=1,NLAY; TH(ILAY,1)=TH(ILAY,1)*HK_BU(ILAY); ENDDO; K1=SUM(TH(:,1))
+ !## get thickness of aquifers/aquitards
+ TH=0.0D0
 
- !## get thickness of aquifers
- TH=0.0D0; DO ILAY=1,NLAY; IF(BND(ILAY).NE.0)TH(ILAY,2)=TOP(ILAY)-BOT(ILAY); ENDDO; T2=SUM(TH(:,2))
- DO ILAY=1,NLAY; TH(ILAY,2)=TH(ILAY,2)*HK(ILAY); ENDDO; K2=SUM(TH(:,2))
+ !## get total conductance
+ DO ILAY=1,NLAY;   TH(ILAY,1)=TH(ILAY,1)+(TOP(ILAY) -BOT(ILAY)  )*HK(ILAY); ENDDO
+ DO ILAY=1,NLAY-1; TH(ILAY,1)=TH(ILAY,1)+((BOT(ILAY)-TOP(ILAY+1))*VK(ILAY)); ENDDO
 
- IF((.NOT.UTL_EQUALS_REAL(T2,T1).OR..NOT.UTL_EQUALS_REAL(K2,K1)).AND. &
-   (ABS(T2-T1).GT.1.0D0.OR.ABS(K2-K1).GT.1.0D0))THEN
+ !## get total conductance
+ DO ILAY=1,NLAY;   TH(ILAY,2)=TH(ILAY,2)+(TOP_BU(ILAY) -BOT_BU(ILAY)  )*HK_BU(ILAY); ENDDO
+ DO ILAY=1,NLAY-1; TH(ILAY,2)=TH(ILAY,2)+((BOT_BU(ILAY)-TOP_BU(ILAY+1))*VK_BU(ILAY)); ENDDO
+
+ !## get total conductances
+ T1=SUM(TH(:,1)); T2=SUM(TH(:,2)) 
+ !## procent
+ F=100.0D0*(T1/T2); F=ABS(100.0D0-F)
+ IF(F.GT.0.5D0)THEN !.NOT.UTL_EQUALS_REAL(T2,T1).AND.ABS(T2-T1).GT.0.1D0)THEN
   !## get thickness of aquifers
+  WRITE(*,'(A3,4F9.2)') 'TKD',T1,T2,T2-T1,F
   DO ILAY=1,NLAY
-   WRITE(*,'(I3,8F10.2)') ILAY,TOP(ILAY)   ,BOT(ILAY)   ,TOP(ILAY)   -BOT(ILAY)   ,TOP(ILAY)   -BOT(ILAY)   *HK(ILAY), &
-                               TOP_BU(ILAY),BOT_BU(ILAY),TOP_BU(ILAY)-BOT_BU(ILAY),TOP_BU(ILAY)-BOT_BU(ILAY)*HK_BU(ILAY)
+   WRITE(*,'(I3,8F9.2)') ILAY,TOP(ILAY)   ,BOT(ILAY)   ,HK(ILAY)    ,(TOP(ILAY)   -BOT(ILAY))   *HK(ILAY), &
+                               TOP_BU(ILAY),BOT_BU(ILAY),HK_BU(ILAY),(TOP_BU(ILAY)-BOT_BU(ILAY))*HK_BU(ILAY)
   ENDDO
-  WRITE(*,*) T1,T2,T2-T1,K1,K2,K2-K1
  ENDIF
 
  END SUBROUTINE UTL_MINTHICKNESS

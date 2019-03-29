@@ -72,8 +72,8 @@ CONTAINS
   IURUN=IMOD_UTL_GETUNIT()
   OPEN(IURUN,FILE=infile,STATUS='OLD',ACTION='READ',IOSTAT=IOS)
   IF(IOS.NE.0)THEN
-   WRITE(*,'(A)') 'Can not find '//TRIM(infile)
-   STOP
+   WRITE(*,'(A)') 'Can not find ipest file: ['//TRIM(infile)//']'
+   PAUSE; STOP
   ENDIF
 
   !## skip comment

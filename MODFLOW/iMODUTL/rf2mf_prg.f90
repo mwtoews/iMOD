@@ -163,8 +163,8 @@ MULTLOOP: DO
 IURUN=IMOD_UTL_GETUNIT()
 OPEN(IURUN,FILE=CL,STATUS='OLD',ACTION='READ',SHARE='DENYNONE',IOSTAT=IOS)
 IF(IOS.NE.0)THEN
- WRITE(*,'(A)') 'Can not find '//TRIM(CL)
- STOP
+ WRITE(*,'(A)') 'Can not find runfile ['//TRIM(CL)//']'
+ PAUSE; STOP
 ENDIF
 
 !## read result-root

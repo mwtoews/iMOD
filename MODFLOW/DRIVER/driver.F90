@@ -401,7 +401,7 @@ call pks7mpibarrier() ! PKS
     !## get pest variables
     IF(lipest)THEN
      call mf2005_GetSavePath_TS(tssavepath)
-     CALL PEST1INIT(1,pfile,IUPESTOUT,tssavepath,idf,0) !'CODE OF HET UIT RUN- OF NAMFILE KOMT')
+     if(lnamfile)CALL PEST1INIT(1,pfile,IUPESTOUT,tssavepath,idf,0) !'CODE OF HET UIT RUN- OF NAMFILE KOMT')
     ENDIF
     ! get number of grids
     ok = mf2005_PutNumberOfGrids(mf_ngrid); call driverChk(ok,'mf2005_PutNumberOfGrids')
