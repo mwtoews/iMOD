@@ -3281,12 +3281,17 @@ c     if (nxch.le.0) ok = .false.
               if (icol.eq.0 .or. irow.eq.0) then
                  call imod_utl_pol1located(cdelr,ncol+1,x,icol)
                  call imod_utl_pol1located(cdelc,nrow+1,y,irow)
-                 !## check if constant head or inactive cell - make measurment invalid
-                 if(ibound(icol,irow,ilay).le.0)then
-                  ts(jj)%stvalue(i)%valid = .false.
+                 if(icol.gt.0.and.icol.le.ncol.and. 
+     &              irow.gt.0.and.irow.le.nrow)then
+                  !## check if constant head or inactive cell - make measurment invalid
+                  if(ibound(icol,irow,ilay).le.0)then
+                   ts(jj)%stvalue(i)%valid = .false.
+                  else
+                  ts(jj)%stvalue(i)%icol = icol
+                  ts(jj)%stvalue(i)%irow = irow
+                  endif
                  else
-                 ts(jj)%stvalue(i)%icol = icol
-                 ts(jj)%stvalue(i)%irow = irow
+                  ts(jj)%stvalue(i)%valid = .false.
                  endif
               end if
            end if
