@@ -8,7 +8,7 @@
 //
 // Winteracter resource script. 
 //
-// Modified : 30/Mar/2019 09:58:05
+// Modified : 02/Apr/2019 08:45:18
 //
 ///////////////////////////////////////////////////
 //
@@ -12151,16 +12151,18 @@ BEGIN
     CONTROL "",IDF_GROUP1,"BUTTON",WS_CHILD | WS_VISIBLE | WS_GROUP | BS_GROUPBOX | BS_TEXT | BS_LEFT,    8,    8,  324,  236
     CONTROL "",IDF_GRID1,"ISSGRID",WS_CHILD | WS_VISIBLE | WS_VSCROLL | WS_GROUP | WS_TABSTOP | GS_REPCUTPASTE | GS_DEFROWLABELS | GS_COLUMNLABELS | GS_RESIZECOLUMNS,   16,   44,  282,  156
     CONTROL "Draw Graph ...",ID_GRAPH,"BUTTON",WS_CHILD | WS_VISIBLE | WS_GROUP | WS_TABSTOP | BS_PUSHBUTTON | BS_TEXT | BS_FLAT,  220,  208,   80,   14
-    CONTROL "Create parameter IDFs",ID_CREATEIDF,"BUTTON",WS_CHILD | WS_VISIBLE | WS_GROUP | WS_TABSTOP | BS_PUSHBUTTON | BS_TEXT | BS_FLAT,  123,  208,   80,   14
+    CONTROL "Create parameter IDFs ...",ID_CREATEIDF,"BUTTON",WS_CHILD | WS_VISIBLE | WS_GROUP | WS_TABSTOP | BS_PUSHBUTTON | BS_TEXT | BS_FLAT,  104,  208,   99,   14
 END
 
 ID_DMSPANALYSER_TAB3 RCDATA
 BEGIN
+"[Dialog] \n"
+" 0  1004 0 0 \n"
 "[Checks] \n"
 " 1012 1 \n"
 " 1014 0 \n"
 "[Grids] \n"
-" 1004     4     17   424 \n"
+" 1004     4     70   424 \n"
 ,0
 END
 
@@ -14001,4 +14003,4 @@ END
 //*WI* FILENAME    resource.f90
 //*WI* FMODNAME    RESOURCE
 //*WI* LASTTYPE        2
-//*WI* LASTRES       311
+//*WI* LASTRES       313
