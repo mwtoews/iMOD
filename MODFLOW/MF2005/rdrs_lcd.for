@@ -81,7 +81,7 @@ c declaration section
 c ------------------------------------------------------------------------------
       use imod_utl, only: imod_utl_openasc
       use lcdmodule, only: genip, genpos, lncol, lnrow, lcdelr,lcdelc
-      USE GLOBAL,      ONLY: IUNIT
+      USE GLOBAL,      ONLY: IUNIT, BOTM,LBOTM
       USE M_MF2005_IU, ONLY : IULPF
       
       implicit none
@@ -107,7 +107,7 @@ c local variables
       integer ::  il, is, ie, iline, jline, nline
       integer :: ilay,il1,il2,jlay,isys
       real :: fct,HFB1EXPORT_GETDZ,c,z,c1,c2,zz,TFV,bfv,tpv,btv
-      real, dimension(:,:), allocatable :: tmp,tf,bf,res,fdz
+      real, dimension(:,:), allocatable :: tmp,res,fdz,tf,bf
       integer(kind=1),allocatable,dimension(:,:) :: sys
       integer(kind=1), dimension(:,:,:), allocatable :: ipc
       logical, dimension(:), allocatable :: writegen
@@ -189,46 +189,66 @@ c count number of hfb and fill
             call u2drel(tmp,aname(1),
      1                  lnrow,lncol,kk,in,iout) ! fill genpos list
 
-            nline = size(genip)-1
+            NLINE = SIZE(GENIP)-1
 
-             ipc = int(0,1)
-            IF(ilay.EQ.0)THEN; TF=NODATA; BF=NODATA; ENDIF
+            IPC = INT(0,1)
+            IF(ILAY.EQ.0)THEN; TF=NODATA; BF=NODATA; ENDIF
 
-            do j = 1, nline 
+            DO J = 1, NLINE 
              
-             is = genip(j-1)+1; ie = genip(j)
+             IS = GENIP(J-1)+1; IE = GENIP(J)
 
              !## line not in current model dimensions
-             if(ie.eq.0)cycle
-             if(is.gt.size(genpos,1).or.ie.gt.size(genpos,1))cycle
+             IF(IE.EQ.0)CYCLE
+             IF(IS.GT.SIZE(GENPOS,1).OR.IE.GT.SIZE(GENPOS,1))CYCLE
              
               !## process line
-              do il = is+1, ie
-              JLINE=GENPOS(IL-1,3)
-              ILINE=GENPOS(il,3)
-              !## similar line
-              IF(ILINE.NE.JLINE)CYCLE
-                IC1=GENPOS(il-1,1); IC2=GENPOS(il  ,1)
-                IR1=GENPOS(il-1,2); IR2=GENPOS(il  ,2)
-                IP1=GENPOS(il-1,4); IP2=GENPOS(il  ,4)
+              DO IL = IS+1, IE
+               JLINE=GENPOS(IL-1,3)
+               ILINE=GENPOS(il,3)
+               !## similar line
+               IF(ILINE.NE.JLINE)CYCLE
 
-              CALL HFBGETFACES(IC1,IC2,IR1,IR2,IP1,IP2,IPC,LNROW,LNCOL)
+               IC1=GENPOS(IL-1,1); IC2=GENPOS(IL  ,1)
+               IR1=GENPOS(IL-1,2); IR2=GENPOS(IL  ,2)
+               IP1=GENPOS(IL-1,4); IP2=GENPOS(IL  ,4)
 
-              !## get top/bottom elevations on grid
-              IF(ilay.EQ.0)THEN
+               CALL HFBGETFACES(IC1,IC2,IR1,IR2,IP1,IP2,IPC,LNROW,LNCOL)
+
+               !## get top/bottom elevations on grid - only for display purposes
+               IF(ILAY.EQ.0)THEN
                 !## fill in z-coordinates
-                ZF=(genpos(IL-1,5)+genpos(IL,5))/2.0
-                DO IROW=IR1,IR2; DO ICOL=IC1,IC2
-                 IF(TF(ICOL,IROW).EQ.NODATA)THEN
-                  TF(ICOL,IROW)=ZF/100.0
-                  BF(ICOL,IROW)=ZF/100.0
-                 ELSE
-                  TF(ICOL,IROW)=MAX(TF(ICOL,IROW),ZF/100.0)
-                  BF(ICOL,IROW)=MIN(BF(ICOL,IROW),ZF/100.0)
-                 ENDIF
-                ENDDO; ENDDO
+                ZF=(GENPOS(IL-1,5)+GENPOS(IL,5))/2.0
+
+                ICOL=IC1; IROW=IR1
+                IF(TF(ICOL,IROW).EQ.NODATA)THEN
+                 TF(ICOL,IROW)=ZF/100.0; BF(ICOL,IROW)=ZF/100.0
+                ELSE
+                 !## take values from modflow itself
+                 TF(ICOL,IROW)=MAX(TF(ICOL,IROW),ZF/100.0)
+                 BF(ICOL,IROW)=MIN(BF(ICOL,IROW),ZF/100.0)
+                ENDIF
+                ICOL=IC2; IROW=IR2
+                IF(TF(ICOL,IROW).EQ.NODATA)THEN
+                 TF(ICOL,IROW)=ZF/100.0; BF(ICOL,IROW)=ZF/100.0
+                ELSE
+                 !## take values from modflow itself
+                 TF(ICOL,IROW)=MAX(TF(ICOL,IROW),ZF/100.0)
+                 BF(ICOL,IROW)=MIN(BF(ICOL,IROW),ZF/100.0)
+                ENDIF
+
+                !DO IROW=IR1,IR2; DO ICOL=IC1,IC2
+                ! IF(TF(ICOL,IROW).EQ.NODATA)THEN
+                !  TF(ICOL,IROW)=ZF/100.0
+                !  BF(ICOL,IROW)=ZF/100.0
+                ! ELSE
+                !  !## take values from modflow itself
+                !  TF(ICOL,IROW)=MAX(TF(ICOL,IROW),ZF/100.0)
+                !  BF(ICOL,IROW)=MIN(BF(ICOL,IROW),ZF/100.0)
+                ! ENDIF
+                !ENDDO; ENDDO
                ENDIF
-             ENDDO
+              ENDDO
 
             ENDDO
 
