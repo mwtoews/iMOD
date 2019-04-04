@@ -108,6 +108,7 @@ INTEGER,DIMENSION(9),SAVE :: IMOVEAX,IMOVESC,IMOVELG
 
  TYPE MPWINOBJ
   INTEGER :: IBITMAP                   !## number of bitmap stores entire window
+  INTEGER :: ITRBITMAP                 !## I fraction of transparancy
   INTEGER :: NACT                      !## number of active idf's
   INTEGER :: DIX,DIY                   !## size of bitmap (pixels)
   INTEGER :: IWIN                      !## child window handle

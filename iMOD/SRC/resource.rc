@@ -8,7 +8,7 @@
 //
 // Winteracter resource script. 
 //
-// Modified : 02/Apr/2019 08:45:18
+// Modified : 04/Apr/2019 14:08:21
 //
 ///////////////////////////////////////////////////
 //
@@ -234,7 +234,7 @@
 #define ID_ICONSAVEAS                    2060
 #define ID_ICONPROFILE                   2061
 #define ID_ICONTOP25                     2062
-#define ID_TOPTRANSPARACY               40010
+#define ID_TOPOTRANSPARANCY             40010
 #define ID_LINE                          1028
 #define ID_FLIP                          1029
 #define ID_ICONFLIP                      2063
@@ -1281,6 +1281,12 @@
 #define ID_ICONIRRIGATION2               2151
 #define IDD_TEMPLATE072                   425
 #define ID_ICONIRRIGATION3               2152
+#define ID_TOPOTRANSPARANCY10           40328
+#define ID_TOPOTRANSPARANCY25           40329
+#define ID_TOPOTRANSPARANCY50           40330
+#define ID_TOPOTRANSPARANCY75           40331
+#define ID_TOPOTRANSPARANCY90           40332
+#define ID_TOPOTRANSPARANCY0            40333
 
 ///////////////////////////////////////////////////
 //
@@ -12956,7 +12962,15 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "&Show Background Image(s)",                ID_TOPOGRAPHY
         MENUITEM "Add Background Image(s) ...",              ID_ADDTOPO
-        MENUITEM "Transparent Background Image(s)",          ID_TOPTRANSPARACY
+        POPUP "Transparent Background Image(s)"
+        BEGIN
+            MENUITEM "0%",                                       ID_TOPOTRANSPARANCY0
+            MENUITEM "10%",                                      ID_TOPOTRANSPARANCY10
+            MENUITEM "25%",                                      ID_TOPOTRANSPARANCY25, CHECKED
+            MENUITEM "50%",                                      ID_TOPOTRANSPARANCY50
+            MENUITEM "75%",                                      ID_TOPOTRANSPARANCY75
+            MENUITEM "90%",                                      ID_TOPOTRANSPARANCY90
+        END
         MENUITEM SEPARATOR
         POPUP "Display &Accuracy for IDFs"
         BEGIN
@@ -13191,6 +13205,7 @@ ID_ZOOMMAP,3,11,0,
 ID_ITEM346,3,12,0,
 ID_SFIGURE,3,14,0,
 ID_ISGEDIT_SETTINGS,3,14,17,0,
+ID_TOPOTRANSPARANCY,3,18,0,
 ID_ACCURACY,3,20,0,
 ID_LAYOUT,3,21,0,
 ID_UNITS,3,21,1,0,
@@ -13273,7 +13288,7 @@ ID_ITEM346,"Area defined to be displayed\0",
 ID_GOTOXY,"Start the Goto XY window to zoom to the specified coordinates or cell indices\0",
 ID_SFIGURE,"Not available\0",
 ID_TOPOGRAPHY,"Display Background Image(s)\0",
-ID_TOPTRANSPARACY,"Display the Background Image(s) in Transparent Mode\0",
+ID_TOPOTRANSPARANCY,"Display the Background Image(s) in Transparent Mode\0",
 ID_ACCURACY,"Define the resolution at which the maps are shown in the graphical display\0",
 ID_LOWACCURACY,"Show the maps in the graphical display at a 10th of the optimal detail\0",
 ID_MEDIUMACCURACY,"Show the maps in the graphical display at a 5th of the optimal detail\0",
@@ -13413,6 +13428,12 @@ ID_GENEXPORT,"Load in a BINARY/ASCII GEN and Export it to BINARY/ASCII\0",
 ID_IPESTANALYSER,"Start the iPEST Analyser\0",
 ID_MSPANALYSER,"Start the MetaSWAP Analyser\0",
 ID_UZFANALYSER,"Start the UZF Analyser to Display Moisture Profiles\0",
+ID_TOPOTRANSPARANCY10,"10% Transparancy\0",
+ID_TOPOTRANSPARANCY0,"No Transparancy\0",
+ID_TOPOTRANSPARANCY25,"25% Transparancy\0",
+ID_TOPOTRANSPARANCY50,"50% Transparancy\0",
+ID_TOPOTRANSPARANCY75,"75% Transparancy\0",
+ID_TOPOTRANSPARANCY90,"90% Transparancy\0",
 0
 END
 
@@ -14002,5 +14023,5 @@ END
 //*WI* FORTSAVE    1
 //*WI* FILENAME    resource.f90
 //*WI* FMODNAME    RESOURCE
-//*WI* LASTTYPE        2
-//*WI* LASTRES       313
+//*WI* LASTTYPE        1
+//*WI* LASTRES         7
