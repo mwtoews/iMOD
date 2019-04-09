@@ -617,7 +617,7 @@ CONTAINS
  !## open idf-files
  ALLOCATE(IDFQ(SIZE(IDFS))); DO I=1,SIZE(IDFQ); CALL IDFNULLIFY(IDFQ(I)); ENDDO
  !## open selected ones only
-ILOOP: DO I=1,SIZE(IDFS)
+ILOOP: DO I=1,IPFPLOT(IIPF)%NQUERY !SIZE(IDFS)
   DO II=1,2
    !## selected idf file
    IF(II.EQ.1)THEN
