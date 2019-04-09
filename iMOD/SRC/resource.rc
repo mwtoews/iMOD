@@ -8,7 +8,7 @@
 //
 // Winteracter resource script. 
 //
-// Modified : 09/Apr/2019 19:24:50
+// Modified : 09/Apr/2019 20:11:52
 //
 ///////////////////////////////////////////////////
 //
@@ -12969,10 +12969,10 @@ BEGIN
         BEGIN
             POPUP "Adjust Tones"
             BEGIN
-                MENUITEM "No Filter",                                ID_COLOURTONE, CHECKED
-                MENUITEM "Grey Scale via Lightness Method",          ID_GREYTONES1
-                MENUITEM "Grey Scale via Average Method",            ID_GREYTONES2, CHECKED
-                MENUITEM "Grey Scale via Luminosity Method",         ID_GREYTONES3
+                MENUITEM "Apply Grey Filter",                        ID_COLOURTONE
+                MENUITEM "Grey Scale via Lightness Method",          ID_GREYTONES1, GRAYED
+                MENUITEM "Grey Scale via Average Method",            ID_GREYTONES2, GRAYED, CHECKED
+                MENUITEM "Grey Scale via Luminosity Method",         ID_GREYTONES3, GRAYED
             END
             MENUITEM "0% Transparancy",                          ID_TOPOTRANSPARANCY0
             MENUITEM "10% Transparancy",                         ID_TOPOTRANSPARANCY10
@@ -13448,7 +13448,7 @@ ID_TOPOTRANSPARANCY90,"90% Transparancy\0",
 ID_GREYTONES1,"The lightness method averages the most prominent and least prominent colors\0",
 ID_GREYTONES2,"The average method simply averages the values\0",
 ID_GREYTONES3,"The luminosity method is aweighted average to account for human perception\0",
-ID_COLOURTONE,"Leave Original Tones\0",
+ID_COLOURTONE,"Apply a Grey Filter\0",
 0
 END
 
