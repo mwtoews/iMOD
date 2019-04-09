@@ -8,7 +8,7 @@
 //
 // Winteracter resource script. 
 //
-// Modified : 05/Apr/2019 14:15:45
+// Modified : 05/Apr/2019 14:46:23
 //
 ///////////////////////////////////////////////////
 //
@@ -12411,12 +12411,16 @@ BEGIN
     CONTROL "Attribute",WINTGRIDCOL4,"EDIT",WS_CHILD | WS_VISIBLE | WS_BORDER | WS_TABSTOP | ES_LEFT | ES_READONLY,    0,    0,  100,   14
     CONTROL "Value",WINTGRIDCOL1,"EDIT",WS_CHILD | WS_VISIBLE | WS_BORDER | WS_TABSTOP | ES_LEFT | ES_READONLY,    0,    0,   50,   14
     CONTROL "Unit",WINTGRIDCOL2,"EDIT",WS_CHILD | WS_VISIBLE | WS_BORDER | WS_TABSTOP | ES_LEFT | ES_READONLY,    0,    0,   80,   14
-    CONTROL "Display",WINTGRIDCOL3,"COMBOBOX",WS_CHILD | WS_VISIBLE | WS_VSCROLL | WS_TABSTOP | CBS_DROPDOWNLIST | CBS_HASSTRINGS,    0,    0,   40,   30
+    CONTROL "Graph",WINTGRIDCOL5,"COMBOBOX",WS_CHILD | WS_VISIBLE | WS_VSCROLL | WS_TABSTOP | CBS_DROPDOWNLIST | CBS_HASSTRINGS,    0,    0,   40,   30
 END
 
 IDD_TEMPLATE069 RCDATA
 BEGIN
-"[Checks] \n"
+"[Menus] \n"
+" 1326     3     1 \n"
+"Graph \n"
+"On \n"
+"Off \n"
 ,0
 END
 
