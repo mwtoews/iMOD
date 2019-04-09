@@ -8,7 +8,7 @@
 //
 // Winteracter resource script. 
 //
-// Modified : 05/Apr/2019 14:46:23
+// Modified : 09/Apr/2019 19:24:50
 //
 ///////////////////////////////////////////////////
 //
@@ -1287,6 +1287,11 @@
 #define ID_TOPOTRANSPARANCY75           40331
 #define ID_TOPOTRANSPARANCY90           40332
 #define ID_TOPOTRANSPARANCY0            40333
+#define ID_GREYTONES                    40334
+#define ID_COLOURTONE                   40335
+#define ID_GREYTONES1                   40336
+#define ID_GREYTONES2                   40337
+#define ID_GREYTONES3                   40338
 
 ///////////////////////////////////////////////////
 //
@@ -12962,12 +12967,19 @@ BEGIN
         MENUITEM "Add Background Image(s) ...",              ID_ADDTOPO
         POPUP "Transparent Background Image(s)"
         BEGIN
-            MENUITEM "0%",                                       ID_TOPOTRANSPARANCY0
-            MENUITEM "10%",                                      ID_TOPOTRANSPARANCY10
-            MENUITEM "25%",                                      ID_TOPOTRANSPARANCY25, CHECKED
-            MENUITEM "50%",                                      ID_TOPOTRANSPARANCY50
-            MENUITEM "75%",                                      ID_TOPOTRANSPARANCY75
-            MENUITEM "90%",                                      ID_TOPOTRANSPARANCY90
+            POPUP "Adjust Tones"
+            BEGIN
+                MENUITEM "No Filter",                                ID_COLOURTONE, CHECKED
+                MENUITEM "Grey Scale via Lightness Method",          ID_GREYTONES1
+                MENUITEM "Grey Scale via Average Method",            ID_GREYTONES2, CHECKED
+                MENUITEM "Grey Scale via Luminosity Method",         ID_GREYTONES3
+            END
+            MENUITEM "0% Transparancy",                          ID_TOPOTRANSPARANCY0
+            MENUITEM "10% Transparancy",                         ID_TOPOTRANSPARANCY10
+            MENUITEM "25% Transparancy",                         ID_TOPOTRANSPARANCY25, CHECKED
+            MENUITEM "50% Transparancy",                         ID_TOPOTRANSPARANCY50
+            MENUITEM "75% Transparancy",                         ID_TOPOTRANSPARANCY75
+            MENUITEM "90% Transparancy",                         ID_TOPOTRANSPARANCY90
         END
         MENUITEM SEPARATOR
         POPUP "Display &Accuracy for IDFs"
@@ -13204,6 +13216,7 @@ ID_ITEM346,3,12,0,
 ID_SFIGURE,3,14,0,
 ID_ISGEDIT_SETTINGS,3,14,17,0,
 ID_TOPOTRANSPARANCY,3,18,0,
+ID_GREYTONES,3,18,1,0,
 ID_ACCURACY,3,20,0,
 ID_LAYOUT,3,21,0,
 ID_UNITS,3,21,1,0,
@@ -13432,6 +13445,10 @@ ID_TOPOTRANSPARANCY25,"25% Transparancy\0",
 ID_TOPOTRANSPARANCY50,"50% Transparancy\0",
 ID_TOPOTRANSPARANCY75,"75% Transparancy\0",
 ID_TOPOTRANSPARANCY90,"90% Transparancy\0",
+ID_GREYTONES1,"The lightness method averages the most prominent and least prominent colors\0",
+ID_GREYTONES2,"The average method simply averages the values\0",
+ID_GREYTONES3,"The luminosity method is aweighted average to account for human perception\0",
+ID_COLOURTONE,"Leave Original Tones\0",
 0
 END
 
@@ -14021,5 +14038,5 @@ END
 //*WI* FORTSAVE    1
 //*WI* FILENAME    resource.f90
 //*WI* FMODNAME    RESOURCE
-//*WI* LASTTYPE        2
-//*WI* LASTRES       313
+//*WI* LASTTYPE        1
+//*WI* LASTRES         7
