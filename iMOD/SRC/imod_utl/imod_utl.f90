@@ -4446,6 +4446,23 @@ DOLOOP: DO
  END SUBROUTINE UTL_MESSAGEHANDLE3D
 
  !###======================================================================
+ SUBROUTINE UTL_GETMONTHFROMDAYNUMBER(ID,IY,IM)
+ !###======================================================================
+ IMPLICIT NONE
+ INTEGER,INTENT(IN) :: IY
+ INTEGER,INTENT(INOUT) :: ID
+ INTEGER,INTENT(OUT) :: IM
+ INTEGER :: TD
+ 
+ TD=0; DO IM=1,12
+  TD=TD+WDATEDAYSINMONTH(IY,IM)
+  IF(ID.LE.TD)EXIT 
+ ENDDO
+ ID=WDATEDAYSINMONTH(IY,IM)-(TD-ID)
+
+ END SUBROUTINE UTL_GETMONTHFROMDAYNUMBER
+
+ !###======================================================================
  INTEGER FUNCTION UTL_GETCURRENTDATE()
  !###======================================================================
  IMPLICIT NONE
