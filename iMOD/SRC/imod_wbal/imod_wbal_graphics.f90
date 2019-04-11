@@ -28,8 +28,9 @@ USE MOD_UTL, ONLY : UTL_GETFORMAT
 USE MOD_IDF_PAR, ONLY : IDFOBJ
 
 CONTAINS
+
 !###====================================================================
-      LOGICAL FUNCTION DRAWBAL(Q,QTXT,NXPIX,NYPIX,CS,IIPOL,NPOL,QSUBREGIO,ICOLPLG,IPLG,IDF,LOCAL,GRAPHTITLE,IPLOT,LSUM,STRUNIT,SUMNR)    
+LOGICAL FUNCTION DRAWBAL(Q,QTXT,NXPIX,NYPIX,CS,IIPOL,NPOL,QSUBREGIO,ICOLPLG,IPLG,IDF,LOCAL,GRAPHTITLE,IPLOT,LSUM,STRUNIT,SUMNR)    
 !###====================================================================
 !     THIS LOGICAL FUNCTION GENERATES A PNG FILE CONTAINING A PICTURE OF AN AVERAGE WATERBALANCE
 !     THE FOLLOWING TERMS ARE USED
@@ -212,7 +213,8 @@ CONTAINS
            ENDIF                                     
 
 !          plotting subregio text.....
-           CALL PLOTSUBREGIO(II,JJ,-QSUBREGIO(JPOL,2),-QSUBREGIO(JPOL,1),REGNAME,JPOL,NPOL,ICOLPLG,IPLG,DH,B,H,IFIT)
+           CALL PLOTSUBREGIO(II,JJ,QSUBREGIO(JPOL,1),QSUBREGIO(JPOL,2),REGNAME,JPOL,NPOL,ICOLPLG,IPLG,DH,B,H,IFIT)
+!           CALL PLOTSUBREGIO(II,JJ,-QSUBREGIO(JPOL,2),-QSUBREGIO(JPOL,1),REGNAME,JPOL,NPOL,ICOLPLG,IPLG,DH,B,H,IFIT)
 
 !          testing.....calculate width of plotted text starting at position x=0.13*b, y=0.65*h-(ii-0.5)*dh, until the centre....nxpix/2
 !          left side of plot, calculating width of box
