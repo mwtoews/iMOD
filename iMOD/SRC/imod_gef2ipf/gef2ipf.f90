@@ -216,7 +216,7 @@ CONTAINS
      ELSE
       LINE=TRIM(LINE)//'-99999'
      ENDIF
-     WRITE(KU,*) TRIM(LINE)
+     WRITE(KU,'(A)') TRIM(LINE)
     END DO
 
     DO IROW=1,NROW
@@ -232,7 +232,7 @@ CONTAINS
        LINE=TRIM(LINE)//',-99999.0'
       ENDIF
      END DO
-     WRITE(KU,*) TRIM(LINE)
+     WRITE(KU,'(A)') TRIM(LINE)
     END DO
     
     CLOSE(KU)
@@ -414,7 +414,7 @@ CONTAINS
      ELSE
       LINE=TRIM(LINE)//'-99999'
      ENDIF
-     WRITE(KU,*) TRIM(LINE)
+     WRITE(KU,'(A)') TRIM(LINE)
     END DO
     
     NCOLMAX=MAXVAL(NCOLLINE)

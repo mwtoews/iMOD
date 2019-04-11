@@ -4446,7 +4446,7 @@ DOLOOP: DO
  END SUBROUTINE UTL_MESSAGEHANDLE3D
 
  !###======================================================================
- SUBROUTINE UTL_GETMONTHFROMDAYNUMBER(ID,IY,IM)
+ SUBROUTINE UTL_GETMONTHFROMDAYNUMBER(ID,IM,IY)
  !###======================================================================
  IMPLICIT NONE
  INTEGER,INTENT(IN) :: IY
