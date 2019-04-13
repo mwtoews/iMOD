@@ -32,7 +32,6 @@ TYPE GRAPHOBJ
  REAL(KIND=DP_KIND),POINTER,DIMENSION(:) :: RX,RY !## x and y values
  INTEGER :: GTYPE !## graph type 1=solid 2=lines 3=histogram
  INTEGER :: NP  !## no. points
- INTEGER :: IGRAPH  !## plotted on which graph
  CHARACTER(LEN=50) :: LEGTXT !## legend text
  CHARACTER(LEN=50) :: CTYPE  !## attribute type
  INTEGER :: ICLR
@@ -51,7 +50,7 @@ TYPE GRAPHDIMOBJ
  INTEGER :: IFIXX=0                     !ifix - fixed x-axes
  INTEGER :: IFIXY=0                     !ifix - fixed y-axes
  INTEGER :: IFIXY2=0                    !ifix - fixed y2-axes
- !INTEGER :: ICOMBINED=0                 !icombined=0 default; icombined=1 combined graphs - instead of dropdown menu
+ INTEGER :: IGROUP                      !connected to which graph group
  REAL(KIND=DP_KIND) :: XINT,YINT,Y2INT              !xint,yint - interval
  REAL(KIND=DP_KIND) :: XMIN,YMIN,XMAX,YMAX,Y2MIN,Y2MAX     !XMIN,YMIN,XMAX,YMAX = dimensions of current graph
 END TYPE GRAPHDIMOBJ
