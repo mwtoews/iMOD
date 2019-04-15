@@ -524,8 +524,7 @@ CONTAINS
  !## look for network dimensions
  DO I=1,3; READ(IU,*,IOSTAT=IOS); ENDDO
  IF(IOS.NE.0)THEN
-  CALL WMESSAGEBOX(OKONLY,EXCLAMATIONICON,COMMONNO,'Cannot read the selected CSV properly.'//CHAR(13)//'Probably missing information for the applied zone.','Error')
-  RETURN
+  CLOSE(IU); CALL WMESSAGEBOX(OKONLY,EXCLAMATIONICON,COMMONNO,'Cannot read the selected CSV properly.'//CHAR(13)//'Probably missing information for the applied zone.','Error'); RETURN
  ENDIF
  
  IF(.NOT.IDFREADFREE(IU,IDFP,'T'))RETURN
@@ -992,6 +991,7 @@ CONTAINS
    GRAPHDIM(I)%YTITLE='Quantity ('//TRIM(LUNIT)//'/'//TRIM(TUNIT)//')'
   ENDIF
   GRAPHDIM(I)%XTITLE='('//TRIM(TUNIT)//')'
+  GRAPHDIM(I)%TEXTSIZE=5.0D0
  ENDDO
  
  !## remove memory of dt

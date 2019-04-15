@@ -6456,7 +6456,7 @@ CONTAINS
  TP%IACT=0
  DO I=1,SIZE(TP)
   TP(I)%NSYS=1
-  TP(I)%ISYS=0
+  ALLOCATE(TP(I)%ISYS(1)); TP(I)%ISYS=0
  ENDDO
  
  !## check whether the function need to be used for plotting purposes

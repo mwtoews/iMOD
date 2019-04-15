@@ -1991,7 +1991,10 @@ DOLOOP: DO
     IF(INDICATOR.GT.0)THEN
      Q1=0.0D0; IF(TRIM(UTL_CAP(QD(ICOL),'U')).EQ.TRIM(UTL_CAP(THRESHOLD,'U')))Q1=1.0D0
     ELSE
-     READ(QD(ICOL),*) Q1
+     READ(QD(ICOL),*,IOSTAT=IOS) Q1
+     IF(IOS.NE.0)THEN
+      WRITE(*,'(/A/)') 'IMOD cannot read '//QD(ICOL)//' into a number'; STOP
+     ENDIF
     ENDIF
 
     IF(Z.LT.BZ)EXIT
