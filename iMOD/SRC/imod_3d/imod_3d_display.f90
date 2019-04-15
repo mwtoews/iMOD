@@ -933,6 +933,50 @@ CONTAINS
  END SUBROUTINE IMOD3D_DISPLAY_IDF
 
  !###======================================================================
+ SUBROUTINE IMOD3D_DISPLAY_TIME_IDF()
+ !###======================================================================
+ IMPLICIT NONE
+ INTEGER :: I,J
+
+ DO I=1,SIZE(IDFLISTINDEX) 
+ 
+  IF(IDFPLOT(I)%ISEL.NE.1.OR.IDFLISTINDEX(I).EQ.0)CYCLE
+  
+  !## turn off clipping as it is not effected by this selected IDF file
+  IF(IDFPLOT(I)%ICLIP.EQ.0)THEN
+   DO J=1,NCLPLIST; CALL GLDISABLE(CLPPLANES(J)); ENDDO
+  ENDIF
+
+  IF(IDFPLOT(I)%IFILL.EQ.1.OR.IDFPLOT(I)%IFILL.EQ.3)THEN
+
+   !## full opaque mode
+   CALL GLBLENDFUNC(GL_ONE,GL_ZERO)  !## (1) source (2) destination
+   CALL GLPOLYGONMODE(GL_BACK, GL_FILL); CALL GLPOLYGONMODE(GL_FRONT,GL_FILL) 
+   CALL IMOD3D_SETCOLOR(IDFPLOT(I)%ICOLOR)
+
+   !## turn on light if neccessary
+   CALL GLENABLE(GL_LIGHTING)
+
+   CALL GLCALLLIST(IDFLISTINDEX(I))
+
+   !## turn of light
+   CALL GLDISABLE(GL_LIGHTING)
+
+  ENDIF
+
+  !## turn on clipping as it was not effected by this selected IDF file
+  IF(IDFPLOT(I)%ICLIP.EQ.0)THEN
+   DO J=1,NCLPLIST; IF(CLPPLOT(J)%ISEL.EQ.1)CALL GLENABLE(CLPPLANES(J)); END DO
+  ENDIF
+
+ END DO
+
+ !## default
+ CALL GLPOLYGONMODE(GL_BACK, GL_FILL); CALL GLPOLYGONMODE(GL_FRONT,GL_FILL)
+
+ END SUBROUTINE IMOD3D_DISPLAY_TIME_IDF
+
+ !###======================================================================
  SUBROUTINE IMOD3D_DISPLAY_IFF()
  !###======================================================================
  IMPLICIT NONE
