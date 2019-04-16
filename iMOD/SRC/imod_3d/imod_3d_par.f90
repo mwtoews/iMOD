@@ -63,8 +63,6 @@ INTEGER :: IWIN3D  !## window-number
 TYPE IDFSETTING
  
  !## needed for time-variant idffiles
-! INTEGER(KIND=8),POINTER,DIMENSION(:) :: LDATES=>NULL()
-! INTEGER(KIND=8),POINTER,DIMENSION(:,:) :: FDATES=>NULL()
  CHARACTER(LEN=256),POINTER,DIMENSION(:) :: TFILES=>NULL()
  
  INTEGER :: IFILL,JFILL     !## solid fill (1), wireframes (2) or combined (3)
