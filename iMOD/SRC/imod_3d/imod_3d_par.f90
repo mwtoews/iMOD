@@ -61,6 +61,12 @@ INTEGER :: IMOUSEMOVE=0 !## whether mousemove need to be processed in 3d window
 INTEGER :: IWIN3D  !## window-number
 
 TYPE IDFSETTING
+ 
+ !## needed for time-variant idffiles
+! INTEGER(KIND=8),POINTER,DIMENSION(:) :: LDATES=>NULL()
+! INTEGER(KIND=8),POINTER,DIMENSION(:,:) :: FDATES=>NULL()
+ CHARACTER(LEN=256),POINTER,DIMENSION(:) :: TFILES=>NULL()
+ 
  INTEGER :: IFILL,JFILL     !## solid fill (1), wireframes (2) or combined (3)
  INTEGER :: ICOLOR,JCOLOR   !## colornumber (copy for selecting mode)
  INTEGER :: ILEG,JLEG       !## use legend  (copy for selecting mode)
