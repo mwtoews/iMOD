@@ -1722,8 +1722,8 @@ CONTAINS
     DO K=1,NFILES(I)
      IDATE=UTL_IDFGETDATE(LISTFILES(K,J),IYR=IYR,IMH=IMH,IDY=IDY,IHR=IHR,IMT=IMT,ISC=ISC)
      IF(IDATE.NE.0)THEN
-      FDATES(J,K)=YMDHMSTOITIME(IYR,IMH,IDY,IHR,IMT,ISC)
-      N=N+1; LDATES(N)=FDATES(J,I)
+      FDATES(K,J)=YMDHMSTOITIME(IYR,IMH,IDY,IHR,IMT,ISC)
+      N=N+1; LDATES(N)=FDATES(K,J)
      ENDIF
     ENDDO
   END SELECT
@@ -1764,8 +1764,8 @@ CONTAINS
       !## do not update filename for plotting
       IF(FDATES(IFILES(J),J).GT.LDATES(K))EXIT
       !## take the next, next time
-      IDFPLOT(I)%TFILES(J)=LISTFILES(IFILES(J),J)
-      IFILES(J)           =IFILES(J)+1
+      IDFPLOT(I)%TFILES(IFILES(J) )=LISTFILES(IFILES(J),J)
+      IFILES(J)                    =IFILES(J)+1
       EXIT
      ENDDO
    END SELECT
@@ -1898,10 +1898,11 @@ CONTAINS
  !###======================================================================
  IMPLICIT NONE
  INTEGER,INTENT(IN) :: IMODE
- INTEGER :: I,II,JJ,ILST,KLST,LLST
+ INTEGER :: I,II,JJ,ILST,KLST,LLST,ICOL,IROW,IU
  INTEGER,DIMENSION(3) :: ID_IDF,ND_IDF
  REAL(KIND=DP_KIND) :: F
  INTEGER(KIND=GLSIZEI) :: N
+ INTEGER,ALLOCATABLE,DIMENSION(:) :: ICLR
  
  IMOD3D_REDRAWIDF=.FALSE.
 
@@ -2036,37 +2037,49 @@ CONTAINS
  ENDDO
  
  !## generate time-variant data
- ILST=0; DO I=1,SIZE(IDFPLOT) 
+ IF(IMODE.EQ.0)THEN
+  ILST=0; DO I=1,SIZE(IDFPLOT) 
 
-  !## skip processing of vectors the first loop
-  IF(IMODE.EQ.0.AND.IDFPLOT(I)%ICUBE.EQ.4)CYCLE  
-  !## skip others for the other loop
-  IF(IMODE.EQ.1.AND.IDFPLOT(I)%ICUBE.NE.4)CYCLE  
-  !## deselected in menu field
-  IF(IDFPLOT(I)%ISEL.EQ.0)CYCLE
+   !## skip processing of vectors the first loop
+   IF(IDFPLOT(I)%ICUBE.LE.5.OR.IDFPLOT(I)%ISEL.EQ.0)CYCLE
   
-  !## use always column of legend
+   !## use always column of legend
+   IU=UTL_GETUNIT(); OPEN(IU,FILE=TRIM(PREFVAL(1))//'\TMP\TVAR_IDF_COLOUR_F'//TRIM(ITOS(I))//'.4DV',FORM='UNFORMATTED',STATUS='UNKNOWN',ACTION='WRITE')
+   ALLOCATE(ICLR(IDF(1)%NROW*IDF(1)%NCOL))
+   WRITE(IU) IDF(1)%NROW*IDF(1)%NCOL,SIZE(IDFPLOT(I)%TFILES)
+   
+   DO II=1,SIZE(IDFPLOT(I)%TFILES)
 
-  DO II=1,SIZE(IDFPLOT(I)%TFILES)
+    F=DBLE(II)*100.0D0/DBLE(SIZE(IDFPLOT(I)%TFILES))
+    CALL WINDOWOUTSTATUSBAR(2,'Processing '//TRIM(IDFPLOT(I)%TFILES(II))//'('//TRIM(RTOS(F,'F',2))//'%)')
 
-   F=DBLE(II)*100.0D0/DBLE(SIZE(IDFPLOT(I)%TFILES))
-   CALL WINDOWOUTSTATUSBAR(2,'Processing '//TRIM(IDFPLOT(I)%TFILES(II))//'('//TRIM(RTOS(F,'F',2))//'%)')
-
-   !## create mother if number of columns/rows to large
-   IF(.NOT.IDFREAD(IDF(5),IDFPLOT(I)%TFILES(II),0))EXIT
-   !## template idf will become idf(1) based upon original idf(5)
-   IF(IMOD3D_DRAWIDF_SIZE(IDF(5),IDF(1)))THEN
-    IF(.NOT.IDFREADSCALE_GETX(IDF(5),IDF(1),IDFDATA(3),1,0.0D0))EXIT   !## child,mother,blockvalue,percentile
-   ELSE
-    !## copy idf(5) to idf(1) to become the original
-    CALL IDFCOPY(IDF(5),IDF(1)); IDF(1)%IU=IDF(5)%IU
-    !## read part of idf(1)
-    IF(.NOT.IDFREADPART(IDF(1),BOT%X,BOT%Y,TOP%X,TOP%Y))EXIT
-   ENDIF
-
+    !## create mother if number of columns/rows to large
+    IF(.NOT.IDFREAD(IDF(5),IDFPLOT(I)%TFILES(II),0))EXIT
+    !## template idf will become idf(1) based upon original idf(5)
+    IF(IMOD3D_DRAWIDF_SIZE(IDF(5),IDF(1)))THEN
+     IF(.NOT.IDFREADSCALE_GETX(IDF(5),IDF(1),IDFDATA(3),1,0.0D0))EXIT   !## child,mother,blockvalue,percentile
+    ELSE
+     !## copy idf(5) to idf(1) to become the original
+     CALL IDFCOPY(IDF(5),IDF(1)); IDF(1)%IU=IDF(5)%IU
+     !## read part of idf(1)
+     IF(.NOT.IDFREADPART(IDF(1),BOT%X,BOT%Y,TOP%X,TOP%Y))EXIT
+    ENDIF
+   
+    WRITE(IU) IDF(5)%JD,IDF(5)%IYR,IDF(5)%IMH,IDF(5)%IDY,IDF(5)%IHR,IDF(5)%IMT,IDF(5)%ISC,IDFPLOT(I)%TFILES(II)
+   
+    !## save legend-colours per timestep in file
+    JJ=0; DO IROW=1,IDF(1)%NROW; DO ICOL=1,IDF(1)%NCOL
+     JJ=JJ+1; ICLR(JJ)=UTL_IDFGETCLASS(IDFPLOT(I)%LEG,IDF(1)%X(ICOL,IROW))
+    ENDDO; ENDDO
+   
+    !## save colours
+    WRITE(IU) (ICLR(JJ),JJ=1,IDF(1)%NROW*IDF(1)%NCOL)
+   
+   ENDDO
+   CLOSE(IU); DEALLOCATE(ICLR) 
+  
   ENDDO
-  
- ENDDO
+ ENDIF
  
  IF(ALLOCATED(IDF))THEN; CALL IDFDEALLOCATE(IDF,SIZE(IDF)); DEALLOCATE(IDF); ENDIF
 
@@ -2900,22 +2913,25 @@ CONTAINS
    IF(ICUBE.EQ.3)THEN
     IF(IDFPLOT(ILST)%ILEG.EQ.2)CALL IMOD3D_IDF_COLOUR(IDF(1)%X(ICOL,IROW),ILST)
    ELSE
-!    !## start new drawing list
-!    N=N+1; IDFLISTINDEX(ILST)%INDEX(N)=GLGENLISTS(1); 
+    !## start new drawing list
     N=N+1; CALL GLNEWLIST(IDFLISTINDEX(ILST)%INDEX(N),GL_COMPILE)
 
    ENDIF
    CALL IMOD3D_VOXEL(X,Y,Z,IB)
+   
+   IF(ICUBE.NE.3)CALL GLENDLIST()
    
   ENDDO
  ENDDO
 
  IDFPLOT(ILST)%ZMIN=Z(2) 
  IDFPLOT(ILST)%ZMAX=Z(1) 
-
- CALL GLDISABLE(GL_COLOR_MATERIAL)
- CALL GLENDLIST()
-
+ 
+ IF(ICUBE.EQ.3)THEN
+  CALL GLDISABLE(GL_COLOR_MATERIAL)
+  CALL GLENDLIST()
+ ENDIF
+ 
  CALL IMOD3D_ERROR('IMOD3D_DRAWIDF_VOXEL END')
 
  END SUBROUTINE IMOD3D_DRAWIDF_VOXEL

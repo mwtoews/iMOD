@@ -695,7 +695,7 @@ CONTAINS
  SUBROUTINE IMOD3D_DISPLAY_IDF(IMODE,IT)
  !###======================================================================
  IMPLICIT NONE
- INTEGER :: I,II,J,JJ,T
+ INTEGER :: I,J,JJ,T
  REAL(KIND=DP_KIND) :: NT,FT,DZ,SDZ,TS,FS
  INTEGER,INTENT(IN) :: IMODE,IT
  REAL(KIND=GLDOUBLE) :: TSTACK
@@ -811,88 +811,88 @@ CONTAINS
 
     ENDDO
     
-    IF(.false.)THEN
-   
-     CALL GLENABLE(GL_STENCIL_TEST)
+    !IF(.false.)THEN
+    !
+    ! CALL GLENABLE(GL_STENCIL_TEST)
+    !
+    ! !## process each clipping plane
+    ! DO JJ=1,NCLPLIST
+    !  IF(CLPPLOT(JJ)%ISEL.EQ.0)CYCLE; IF(CLPPLOT(JJ)%ICAP.EQ.0)CYCLE
+    !  CALL GLCLEARSTENCIL(0_GLINT); CALL GLCLEAR(GL_STENCIL_BUFFER_BIT)
+    !  
+    !  !## to specify the conditions under which a fragment passes the stencil test, thus always except
+    !  CALL GLSTENCILFUNC(GL_ALWAYS,1_GLINT,3_GLUINT)
+    !  !## invert value each time (order: stencilfail,stencilpass-depthfail,stenciltest-and-depthpass)
+    !  CALL GLSTENCILOP(GL_KEEP,GL_INVERT,GL_INVERT)
+    !
+    !  !## disable all clipping planes except current
+    !  DO II=1,NCLPLIST; IF(CLPPLOT(II)%ISEL.EQ.1)CALL GLDISABLE(CLPPLANES(II)); ENDDO; CALL GLENABLE(CLPPLANES(JJ))
+    !  !## colour buffer disabled
+    !  CALL GLCOLORMASK(.FALSE._GLBOOLEAN,.FALSE._GLBOOLEAN,.FALSE._GLBOOLEAN,.FALSE._GLBOOLEAN)
+    !
+    !  !## draw model
+    !  CALL GLCALLLIST(IDFLISTINDEX(I)%INDEX(1))
+    !
+    !  !## colour buffer enabled
+    !  CALL GLCOLORMASK(.TRUE._GLBOOLEAN,.TRUE._GLBOOLEAN,.TRUE._GLBOOLEAN,.TRUE._GLBOOLEAN)
+    ! 
+    !  !## draw only where stencil is 1
+    !  CALL GLSTENCILFUNC(GL_NOTEQUAL,0_GLINT,3_GLUINT)
+    !
+    !  !## turn on all clipping planes except current
+    !  DO II=1,NCLPLIST; IF(CLPPLOT(II)%ISEL.EQ.1)CALL GLENABLE(CLPPLANES(II)); ENDDO; CALL GLDISABLE(CLPPLANES(JJ))
+    !
+    !  !## draw cap - use the clipplane vertices
+    !  CALL IMOD3D_DISPLAY_CLP_DRAW(JJ,IDFPLOT(I)%ICOLOR)
+    ! 
+    ! ENDDO
+    ! 
+    ! CALL GLDISABLE(GL_STENCIL_TEST)
+    !
+    !ELSE
 
-     !## process each clipping plane
-     DO JJ=1,NCLPLIST
-      IF(CLPPLOT(JJ)%ISEL.EQ.0)CYCLE; IF(CLPPLOT(JJ)%ICAP.EQ.0)CYCLE
-      CALL GLCLEARSTENCIL(0_GLINT); CALL GLCLEAR(GL_STENCIL_BUFFER_BIT)
-      
-      !## to specify the conditions under which a fragment passes the stencil test, thus always except
-      CALL GLSTENCILFUNC(GL_ALWAYS,1_GLINT,3_GLUINT)
-      !## invert value each time (order: stencilfail,stencilpass-depthfail,stenciltest-and-depthpass)
-      CALL GLSTENCILOP(GL_KEEP,GL_INVERT,GL_INVERT)
+    !## process each clipping plane or quadratic order
+    CALL GLENABLE(GL_STENCIL_TEST)
+    DO JJ=1,NCLPLIST
 
-      !## disable all clipping planes except current
-      DO II=1,NCLPLIST; IF(CLPPLOT(II)%ISEL.EQ.1)CALL GLDISABLE(CLPPLANES(II)); ENDDO; CALL GLENABLE(CLPPLANES(JJ))
-      !## colour buffer disabled
-      CALL GLCOLORMASK(.FALSE._GLBOOLEAN,.FALSE._GLBOOLEAN,.FALSE._GLBOOLEAN,.FALSE._GLBOOLEAN)
+     IF(CLPPLOT(JJ)%ISEL.EQ.0)CYCLE
+     !## not to be capped
+     IF(CLPPLOT(JJ)%ICAP.EQ.0)CYCLE
 
-      !## draw model
-      CALL GLCALLLIST(IDFLISTINDEX(I)%INDEX(1))
+     CALL GLCLEARSTENCIL(0_GLINT)
+     CALL GLCLEAR(GL_STENCIL_BUFFER_BIT)
 
-      !## colour buffer enabled
-      CALL GLCOLORMASK(.TRUE._GLBOOLEAN,.TRUE._GLBOOLEAN,.TRUE._GLBOOLEAN,.TRUE._GLBOOLEAN)
-     
-      !## draw only where stencil is 1
-      CALL GLSTENCILFUNC(GL_NOTEQUAL,0_GLINT,3_GLUINT)
+     !## to specify the conditions under which a fragment passes the stencil test, thus always except
+     CALL GLSTENCILFUNC(GL_ALWAYS,1_GLINT,3_GLUINT)
+     !## invert value each time (order: stencilfail,stencilpass-depthfail,stenciltest-and-depthpass)
+     CALL GLSTENCILOP(GL_KEEP,GL_INVERT,GL_INVERT)
 
-      !## turn on all clipping planes except current
-      DO II=1,NCLPLIST; IF(CLPPLOT(II)%ISEL.EQ.1)CALL GLENABLE(CLPPLANES(II)); ENDDO; CALL GLDISABLE(CLPPLANES(JJ))
-
-      !## draw cap - use the clipplane vertices
-      CALL IMOD3D_DISPLAY_CLP_DRAW(JJ,IDFPLOT(I)%ICOLOR)
-     
-     ENDDO
-     
-     CALL GLDISABLE(GL_STENCIL_TEST)
-
-    ELSE
-
-     !## process each clipping plane or quadratic order
-     CALL GLENABLE(GL_STENCIL_TEST)
-     DO JJ=1,NCLPLIST
-
-      IF(CLPPLOT(JJ)%ISEL.EQ.0)CYCLE
-      !## not to be capped
-      IF(CLPPLOT(JJ)%ICAP.EQ.0)CYCLE
-
-      CALL GLCLEARSTENCIL(0_GLINT)
-      CALL GLCLEAR(GL_STENCIL_BUFFER_BIT)
-
-      !## to specify the conditions under which a fragment passes the stencil test, thus always except
-      CALL GLSTENCILFUNC(GL_ALWAYS,1_GLINT,3_GLUINT)
-      !## invert value each time (order: stencilfail,stencilpass-depthfail,stenciltest-and-depthpass)
-      CALL GLSTENCILOP(GL_KEEP,GL_INVERT,GL_INVERT)
-
-      !## colour buffer disabled
-      CALL GLCOLORMASK(.FALSE._GLBOOLEAN,.FALSE._GLBOOLEAN,.FALSE._GLBOOLEAN,.FALSE._GLBOOLEAN)
-      CALL GLDEPTHMASK(.FALSE._GLBOOLEAN)
-      !## draw model
-      CALL GLCALLLIST(IDFLISTINDEX(I)%INDEX(1))
-      !## colour buffer enabled
-      CALL GLCOLORMASK(.TRUE._GLBOOLEAN,.TRUE._GLBOOLEAN,.TRUE._GLBOOLEAN,.TRUE._GLBOOLEAN)
-      CALL GLDEPTHMASK(.TRUE._GLBOOLEAN)
-
-      !## deactivate current clipping plane
-      CALL GLDISABLE(CLPPLANES(JJ))
-
-      !## draw only where stencil is 1
-      CALL GLSTENCILFUNC(GL_NOTEQUAL,0_GLINT,3_GLUINT)
-
-      !## draw cap - use the clipplane vertices
-      CALL IMOD3D_DISPLAY_CLP_DRAW(JJ,IDFPLOT(I)%ICOLOR)
-      CALL GLENABLE(CLPPLANES(JJ))
-      
-     ENDDO
-     CALL GLDISABLE(GL_STENCIL_TEST)
-
+     !## colour buffer disabled
+     CALL GLCOLORMASK(.FALSE._GLBOOLEAN,.FALSE._GLBOOLEAN,.FALSE._GLBOOLEAN,.FALSE._GLBOOLEAN)
+     CALL GLDEPTHMASK(.FALSE._GLBOOLEAN)
      !## draw model
      CALL GLCALLLIST(IDFLISTINDEX(I)%INDEX(1))
+     !## colour buffer enabled
+     CALL GLCOLORMASK(.TRUE._GLBOOLEAN,.TRUE._GLBOOLEAN,.TRUE._GLBOOLEAN,.TRUE._GLBOOLEAN)
+     CALL GLDEPTHMASK(.TRUE._GLBOOLEAN)
 
-    ENDIF
+     !## deactivate current clipping plane
+     CALL GLDISABLE(CLPPLANES(JJ))
+
+     !## draw only where stencil is 1
+     CALL GLSTENCILFUNC(GL_NOTEQUAL,0_GLINT,3_GLUINT)
+
+     !## draw cap - use the clipplane vertices
+     CALL IMOD3D_DISPLAY_CLP_DRAW(JJ,IDFPLOT(I)%ICOLOR)
+     CALL GLENABLE(CLPPLANES(JJ))
+      
+    ENDDO
+    CALL GLDISABLE(GL_STENCIL_TEST)
+
+    !## draw model
+    CALL GLCALLLIST(IDFLISTINDEX(I)%INDEX(1))
+
+!    ENDIF
     
    ELSE
 
@@ -900,7 +900,7 @@ CONTAINS
 
    ENDIF
    
-   !## turn of light
+   !## turn off light
    IF(IDFPLOT(I)%ISHADED.EQ.1)CALL GLDISABLE(GL_LIGHTING)
 
   ENDIF
@@ -940,8 +940,9 @@ CONTAINS
  SUBROUTINE IMOD3D_DISPLAY_TIME_IDF()
  !###======================================================================
  IMPLICIT NONE
- INTEGER :: I,J
-
+ INTEGER :: I,II,J,JJ,IU,JD,IYR,IMH,IDY,IHR,IMT,ISC,NC,NF
+ INTEGER,ALLOCATABLE,DIMENSION(:) :: ICLR
+ 
  DO I=1,SIZE(IDFLISTINDEX) 
  
   IF(IDFPLOT(I)%ISEL.NE.1)CYCLE
@@ -958,23 +959,63 @@ CONTAINS
    !## full opaque mode
    CALL GLBLENDFUNC(GL_ONE,GL_ZERO)  !## (1) source (2) destination
    CALL GLPOLYGONMODE(GL_BACK, GL_FILL); CALL GLPOLYGONMODE(GL_FRONT,GL_FILL) 
-   CALL IMOD3D_SETCOLOR(IDFPLOT(I)%ICOLOR)
-
+   CALL GLCOLORMATERIAL(GL_FRONT_AND_BACK,GL_AMBIENT_AND_DIFFUSE)
+   CALL GLENABLE(GL_COLOR_MATERIAL)
+ 
    !## turn on light if neccessary
-   CALL GLENABLE(GL_LIGHTING)
+   IF(IDFPLOT(I)%ISHADED.EQ.1)CALL GLENABLE(GL_LIGHTING)
 
-   DO J=1,SIZE(IDFLISTINDEX(I)%INDEX)
+   !## use always column of legend
+   IU=UTL_GETUNIT(); OPEN(IU,FILE=TRIM(PREFVAL(1))//'\TMP\TVAR_IDF_COLOUR_F'//TRIM(ITOS(I))//'.4DV',FORM='UNFORMATTED',STATUS='OLD',ACTION='READ')
+   READ(IU) NC,NF; ALLOCATE(ICLR(NC))
+   
+   DO II=1,NF !SIZE(IDFPLOT(I)%TFILES)
+    READ(IU) JD,IYR,IMH,IDY,IHR,IMT,ISC !,IDFPLOT(I)%TFILES(II)
+
+    !## read colours
+    READ(IU) (ICLR(JJ),JJ=1,NC)
+   
+    DO J=1,NC !SIZE(IDFLISTINDEX(I)%INDEX)
   
-    IF(IDFLISTINDEX(I)%INDEX(J).EQ.0)CYCLE
-    CALL GLCALLLIST(IDFLISTINDEX(I)%INDEX(J))
+     IF(IDFLISTINDEX(I)%INDEX(J).EQ.0)CYCLE
+     CALL IMOD3D_SETCOLOR(ICLR(J))
+     CALL GLCALLLIST(IDFLISTINDEX(I)%INDEX(J))
+ 
+    ENDDO
 
    ENDDO
-   
-   !## turn of light
-   CALL GLDISABLE(GL_LIGHTING)
+   CLOSE(IU); DEALLOCATE(ICLR) 
+ 
+   !## turn off light
+   IF(IDFPLOT(I)%ISHADED.EQ.1)CALL GLDISABLE(GL_LIGHTING)
+   CALL GLDISABLE(GL_COLOR_MATERIAL)
 
   ENDIF
 
+  !!## draw mesh
+  !IF(IDFPLOT(I)%IFILL.EQ.2.OR.IDFPLOT(I)%IFILL.EQ.3)THEN
+  !
+  ! CALL GLENABLE(GL_LIGHTING)
+  ! !## show lines to represent rectangles/triangles
+  ! IF(IDFPLOT(I)%IFILL.EQ.2)CALL IMOD3D_SETCOLOR(IDFPLOT(I)%ICOLOR)
+  ! IF(IDFPLOT(I)%IFILL.EQ.3)CALL IMOD3D_SETCOLOR(WRGB(0,0,0))
+  ! CALL GLLINEWIDTH(1.0_GLFLOAT)
+  ! !## outline (showing rectangles)
+  ! CALL GLPOLYGONMODE(GL_FRONT,GL_LINE); CALL GLPOLYGONMODE(GL_BACK, GL_LINE)
+  !
+  ! DO J=1,SIZE(IDFLISTINDEX(I)%INDEX)
+  !
+  !  IF(IDFLISTINDEX(I)%INDEX(J).EQ.0)CYCLE
+  !  CALL GLCALLLIST(IDFLISTINDEX(I)%INDEX(J))
+  !
+  ! ENDDO
+  !
+  ! CALL GLCALLLIST(IDFLISTINDEX(I)%INDEX(1))
+  !
+  ! CALL GLDISABLE(GL_LIGHTING)
+  !
+  !ENDIF
+  
   !## turn on clipping as it was not effected by this selected IDF file
   IF(IDFPLOT(I)%ICLIP.EQ.0)THEN
    DO J=1,NCLPLIST; IF(CLPPLOT(J)%ISEL.EQ.1)CALL GLENABLE(CLPPLANES(J)); END DO
