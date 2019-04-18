@@ -8,13 +8,13 @@
 //
 // Winteracter resource script. 
 //
-// Modified : 17/apr/2019 22:46:47
+// Modified : 18/Apr/2019 10:27:45
 //
 ///////////////////////////////////////////////////
 //
 // Include files
 //
-#include "winparam.h"
+#include "..\LIB\WINTERACTER\OS_X64_V12\include\winparam.h"
 #ifdef XLIB
 #include "..\LIB\WINTERACTER\OS_X64_V12\include\filesel.rc"
 #include "..\LIB\WINTERACTER\OS_X64_V12\include\colour.rc"
@@ -12221,7 +12221,7 @@ BEGIN
     CONTROL "",IDF_GROUP3,"BUTTON",WS_CHILD | WS_VISIBLE | WS_GROUP | BS_GROUPBOX | BS_TEXT | BS_LEFT,  195,   72,  116,   72
     CONTROL "Handling Meteo Data",IDF_LABEL3,"STATIC",WS_CHILD | WS_VISIBLE | WS_GROUP | SS_LEFT,  204,   80,   73,    8
     CONTROL "Screendump format",IDF_LABEL4,"STATIC",WS_CHILD | WS_VISIBLE | WS_GROUP | SS_LEFT,  206,  112,   73,    8
-    CONTROL "",IDF_MENU4,"COMBOBOX",WS_CHILD | WS_VISIBLE | WS_VSCROLL | WS_GROUP | WS_TABSTOP | CBS_DROPDOWNLIST | CBS_HASSTRINGS | CBS_LOWERCASE,  202,  124,  100,  100
+    CONTROL "",IDF_MENU4,"COMBOBOX",WS_CHILD | WS_VISIBLE | WS_VSCROLL | WS_GROUP | WS_TABSTOP | CBS_DROPDOWNLIST | CBS_HASSTRINGS,  202,  124,  100,  100
     CONTROL "",IDF_MENU1,"LISTBOX",WS_CHILD | WS_VISIBLE | WS_BORDER | WS_VSCROLL | WS_GROUP | WS_TABSTOP | LBS_NOTIFY | LBS_HASSTRINGS | LBS_USETABSTOPS,   14,   32,   80,  100
     CONTROL "",IDF_MENU2,"LISTBOX",WS_CHILD | WS_VISIBLE | WS_BORDER | WS_VSCROLL | WS_TABSTOP | LBS_NOTIFY | LBS_HASSTRINGS | LBS_USETABSTOPS | LBS_EXTENDEDSEL,  104,   32,   80,  100
     CONTROL "Load / Save settings file",IDF_GROUP2,"BUTTON",WS_CHILD | WS_VISIBLE | WS_GROUP | BS_GROUPBOX | BS_TEXT | BS_LEFT,  195,    8,  116,   36
@@ -12258,9 +12258,9 @@ BEGIN
 "par3 \n"
 "par4 \n"
 " 1093     3     1 \n"
-"Read existing IDF \n"
-"Create missing IDF \n"
-"Read existing ASC \n"
+"Read Existing ASC \n"
+"Create Missing IDF \n"
+"Read Existing IDF \n"
 " 1065    12     1 \n"
 "January \n"
 "February \n"
@@ -14023,4 +14023,4 @@ END
 //*WI* FILENAME    resource.f90
 //*WI* FMODNAME    RESOURCE
 //*WI* LASTTYPE        2
-//*WI* LASTRES       313
+//*WI* LASTRES       315
