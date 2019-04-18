@@ -883,8 +883,8 @@ CONTAINS
   XTITLE='Measure (m+MSL)'
   YTITLE='Computed (m+MSL)'
  ELSE
-  YTITLE='Difference'
-  XTITLE='Frequency (%)'
+  YTITLE='Frequency (%)'
+  XTITLE='Difference'
  ENDIF
  
  IF(IPARAM.EQ.1)THEN

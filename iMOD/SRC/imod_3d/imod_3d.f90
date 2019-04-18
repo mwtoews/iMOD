@@ -383,7 +383,6 @@ CONTAINS
  INTEGER,INTENT(IN) :: IACTSOLID,IACTPATHLINE
  INTEGER :: IFLAGS,I
  CHARACTER(LEN=256) :: TITLE
-! LOGICAL(KIND=GLBOOLEAN) :: LEX
  
  CALL WINDOWSELECT(0)
  IF(WMENUGETSTATE(ID_3DTOOL,2).EQ.1)THEN
@@ -443,6 +442,8 @@ CONTAINS
  NGENLIST=0 !## number of gen files
  NSOLLIST=0 !## number of solids
  NCLPLIST=0 !## number of clipping planes
+
+ D4ITIME=0
 
  IDFDATA(1)=1  !## low resolution
  IDFDATA(2)=10 !## scaling blockvalue
