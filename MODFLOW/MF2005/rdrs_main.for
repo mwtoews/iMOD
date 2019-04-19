@@ -858,11 +858,16 @@ c read file
                do l = 1, n
                   icol=int(ca(l))
                   irow=int(ra(l))
-
+!                  if(icol.eq.12.and.irow.eq.6)then
+!                  write(*,*)
+!                  endif
                   if(icol.ge.1.and.irow.ge.1.and.
      1               icol.le.lncol.and.irow.le.lnrow) then
                      m = m + 1; nn = nn + 1
                      if (iact.eq.2) then
+!                     if(m.eq.92)then
+!                     write(*,*)
+!                     endif
                         genpos(m,1) = icol
                         genpos(m,2) = irow
                         genpos(m,3) = nid
@@ -874,9 +879,9 @@ c read file
                          ELSE
                           TL=TL+0.5*LN(L-1)+0.5*LN(L)
                          ENDIF
-                         if(dz.ne.0.0)then
-                         write(*,*)
-                         endif
+!                         if(dz.ne.0.0)then
+!                         write(*,*)
+!                         endif
                          ZL=Z1+(TL*DZ); genpos(m,5)=ZL*100.0
                         ENDIF
 

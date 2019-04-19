@@ -8,13 +8,13 @@
 //
 // Winteracter resource script. 
 //
-// Modified : 18/Apr/2019 13:38:29
+// Modified : 19/Apr/2019 20:14:36
 //
 ///////////////////////////////////////////////////
 //
 // Include files
 //
-#include "..\LIB\WINTERACTER\OS_X64_V12\include\winparam.h"
+#include "winparam.h"
 #ifdef XLIB
 #include "..\LIB\WINTERACTER\OS_X64_V12\include\filesel.rc"
 #include "..\LIB\WINTERACTER\OS_X64_V12\include\colour.rc"
@@ -3424,11 +3424,11 @@ BEGIN
     CONTROL "Weak Sinks",IDF_GROUP5,"BUTTON",WS_CHILD | WS_VISIBLE | WS_GROUP | BS_GROUPBOX | BS_TEXT,    5,    3,  200,  133
     CONTROL "Particles pass through cell with weak sinks.",IDF_RADIO1,"BUTTON",WS_CHILD | WS_VISIBLE | WS_GROUP | WS_TABSTOP | BS_AUTORADIOBUTTON | BS_TEXT,   10,   13,  189,   12
     CONTROL "Particles are stopped when they enter cell with weak sinks.",IDF_RADIO2,"BUTTON",WS_CHILD | WS_VISIBLE | WS_TABSTOP | BS_AUTORADIOBUTTON | BS_TEXT | BS_MULTILINE | BS_FLAT,   10,   26,  188,   18
-    CONTROL "Particles are stopped when they enter cell where discharge to sinks is larger than a specified fraction of the total inflow to the cell.",IDF_RADIO3,"BUTTON",WS_CHILD | WS_VISIBLE | WS_TABSTOP | BS_AUTORADIOBUTTON | BS_TEXT | BS_MULTILINE | BS_FLAT,   10,   47,  188,   24
+    CONTROL "Particles are stopped when they enter cells where discharge to sinks is larger than a specified fraction of the total inflow to the cell.",IDF_RADIO3,"BUTTON",WS_CHILD | WS_VISIBLE | WS_TABSTOP | BS_AUTORADIOBUTTON | BS_TEXT | BS_MULTILINE | BS_FLAT,   10,   47,  188,   24
     CONTROL "0.500",IDF_REAL1,"DOUBLESPIN",WS_CHILD | WS_VISIBLE | WS_BORDER | WS_GROUP | WS_TABSTOP | ES_LEFT | ES_CENTER | ES_MULTILINE,  145,   74,   49,   12
-    CONTROL "Enter a number between 0 and 1:",IDF_LABEL1,"STATIC",WS_CHILD | WS_VISIBLE | WS_GROUP | SS_LEFT,   22,   75,  121,    9
-    CONTROL "0.0 = none of the inflow to the cell is discharged",IDF_LABEL2,"STATIC",WS_CHILD | WS_VISIBLE | WS_GROUP | SS_LEFT,   30,   88,  157,   10
-    CONTROL "1.0 = all inflow to the cell is discharged",IDF_LABEL3,"STATIC",WS_CHILD | WS_VISIBLE | WS_GROUP | SS_LEFT,   30,   99,  157,   10
+    CONTROL "Enter a number between 0.0 and 1.0:",IDF_LABEL1,"STATIC",WS_CHILD | WS_VISIBLE | WS_GROUP | SS_LEFT,   22,   75,  121,    9
+    CONTROL "0.0 = particles stop at weak sink",IDF_LABEL2,"STATIC",WS_CHILD | WS_VISIBLE | WS_GROUP | SS_LEFT,   30,   88,  157,   10
+    CONTROL "1.0 = particles pass through weak sinks",IDF_LABEL3,"STATIC",WS_CHILD | WS_VISIBLE | WS_GROUP | SS_LEFT,   30,   99,  157,   10
 END
 
 ID_DPATHTAB5 RCDATA
@@ -14025,4 +14025,4 @@ END
 //*WI* FILENAME    resource.f90
 //*WI* FMODNAME    RESOURCE
 //*WI* LASTTYPE        2
-//*WI* LASTRES        97
+//*WI* LASTRES        68

@@ -6626,9 +6626,9 @@ REAL(KIND=DP_KIND) :: WETFCT,T,TMP_KH,KHMIN,TMP_TOP,TMP_BOT,THICK
     FDZ(IC1,IR1)=MIN(1.0D0,FDZ(IC1,IR1)+ABS(Z))
     
     !## maximum top fault for display
-    TF(IC1,IR1)=MAX(TF(IC1,IR1),TFV)
+    TF(IC1,IR1)=MAX(TF(IC1,IR1),TF(IC2,IR2),TFV)
     !## minimum bot fault for display
-    BF(IC1,IR1)=MIN(BF(IC1,IR1),BFV)
+    BF(IC1,IR1)=MIN(BF(IC1,IR1),BF(IC2,IR2),BFV)
     
 !## dit klopt niet ... de vulling van een breuk gaan niet op de cell niveau maar op vlak-niveau :-(
 

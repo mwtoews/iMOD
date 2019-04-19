@@ -223,6 +223,9 @@ c count number of hfb and fill
                 ZF=(GENPOS(IL-1,5)+GENPOS(IL,5))/2.0
                 DO I=1,4
                  ICOL=ICOUT(I); IROW=IROUT(I)
+                 if(icol.eq.12.and.irow.eq.6)then
+                 write(*,*)
+                 endif
                  IF(ICOL.LE.0.OR.IROW.LE.0)CYCLE
                  IF(TF(ICOL,IROW).EQ.NODATA)THEN
                   TF(ICOL,IROW)=ZF/100.0; BF(ICOL,IROW)=ZF/100.0
@@ -250,7 +253,6 @@ c count number of hfb and fill
               !## place horizontal wall
               if (irow.lt.lnrow) then
                if(ipc(icol,irow,2).eq.int(1,1)) then
-                   
                 !## x-direction
                 DO jLAY=IL1,IL2
                  Z=-1.0
@@ -293,7 +295,10 @@ c count number of hfb and fill
               !## place vertical wall
               if (icol.lt.lncol) then
                if(ipc(icol,irow,1).eq.int(1,1)) then
-                   
+!               if(ii.eq.191)then
+!                write(*,*)
+!                endif
+
                 !## y-direction
                 DO jLAY=IL1,IL2
  
@@ -430,9 +435,9 @@ c count number of hfb and fill
           FDZ(IC1,IR1)=MIN(1.0,FDZ(IC1,IR1)+ABS(Z))
          
           !## maximum top fault for display
-          TF(IC1,IR1)=MAX(TF(IC1,IR1),TFV)
+          TF(IC1,IR1)=MAX(TF(IC1,IR1),TF(IC2,IR2),TFV)
           !## minimum bot fault for display
-          BF(IC1,IR1)=MIN(BF(IC1,IR1),BFV)
+          BF(IC1,IR1)=MIN(BF(IC1,IR1),BF(IC2,IR2),BFV)
         
          ENDIF
          
@@ -700,7 +705,7 @@ c end of program
 !      il2=lbotm(ilay)
 
       !## skip faults that passes inactive cells
-      if(ibound(jc1,jr1,ilay).eq.0.or.ibound(jc2,jr2,ilay).eq.0)return
+      IF(IBOUND(JC1,JR1,ILAY).EQ.0.OR.IBOUND(JC2,JR2,ILAY).EQ.0)RETURN
       
       TPV=(BOTM(JC1,JR1,IL1)+BOTM(JC2,JR2,IL1))/2.0
       BTV=(BOTM(JC1,JR1,IL2)+BOTM(JC2,JR2,IL2))/2.0

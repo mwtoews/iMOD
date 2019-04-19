@@ -282,46 +282,46 @@ CONTAINS
  IF(JPR(1).NE.JPR(2).AND.JPC(1).NE.JPC(2))THEN
   !## goto to the west
   IF(JPC(1).GT.JPC(2))THEN
-        !## goto to the north-west
-        IF(JPR(1).GT.JPR(2))THEN
-         IC=MIN(JPC(1),JPC(2)); IR=MAX(JPR(1),JPR(2))
-         IPC(IC,IR,1)=INT(1,1) !## vertical
-         ICOUT(3)=IC; IROUT(3)=IR; ICOUT(4)=IC+1; IROUT(4)=IR
-         IC=MAX(JPC(1),JPC(2)); IR=MAX(JPR(1),JPR(2))
-         IPC(IC,IR,2)=INT(1,1) !## horizontal
-         ICOUT(1)=IC; IROUT(1)=IR; ICOUT(2)=IC; IROUT(2)=IR+1
-        !## goto to the south-west
-        ELSE
-         IC=MIN(JPC(1),JPC(2)); IR=MAX(JPR(1),JPR(2))
-         IPC(IC,IR,1)=INT(1,1) !## vertical
-         ICOUT(3)=IC; IROUT(3)=IR; ICOUT(4)=IC+1; IROUT(4)=IR
-         IC=MAX(JPC(1),JPC(2)); IR=MIN(JPR(1),JPR(2))
-         IPC(IC,IR,2)=INT(1,1) !## horizontal
-         ICOUT(1)=IC; IROUT(1)=IR; ICOUT(2)=IC; IROUT(2)=IR+1
-        ENDIF
-       !## goto to the east
-       ELSE
-        !## goto to the north-east
-        IF(JPR(1).GT.JPR(2))THEN
-         IC=MIN(JPC(1),JPC(2)); IR=MAX(JPR(1),JPR(2))
-         IPC(IC,IR,1)=INT(1,1) !## vertical
-         ICOUT(3)=IC; IROUT(3)=IR; ICOUT(4)=IC+1; IROUT(4)=IR
-         IC=MAX(JPC(1),JPC(2)); IR=MIN(JPR(1),JPR(2))
-         IPC(IC,IR,2)=INT(1,1) !## horizontal   
-         ICOUT(1)=IC; IROUT(1)=IR; ICOUT(2)=IC; IROUT(2)=IR+1
-        !## goto to the south-east
-        ELSE
-         IC=MIN(JPC(1),JPC(2)); IR=MAX(JPR(1),JPR(2))
-         IPC(IC,IR,1)=INT(1,1) !## vertical
-         ICOUT(3)=IC; IROUT(3)=IR; ICOUT(4)=IC+1; IROUT(4)=IR
-         IC=MAX(JPC(1),JPC(2)); IR=MAX(JPR(1),JPR(2))
-         IPC(IC,IR,2)=INT(1,1) !## horizontal  
-         ICOUT(1)=IC; IROUT(1)=IR; ICOUT(2)=IC; IROUT(2)=IR+1
-        ENDIF
-       ENDIF
-      ENDIF
+   !## goto to the north-west
+   IF(JPR(1).GT.JPR(2))THEN
+    IC=MIN(JPC(1),JPC(2)); IR=MAX(JPR(1),JPR(2))
+    IPC(IC,IR,1)=INT(1,1) !## vertical
+    ICOUT(3)=IC; IROUT(3)=IR; ICOUT(4)=IC+1; IROUT(4)=IR
+    IC=MAX(JPC(1),JPC(2)); IR=MAX(JPR(1),JPR(2))
+    IPC(IC,IR,2)=INT(1,1) !## horizontal
+    ICOUT(1)=IC; IROUT(1)=IR; ICOUT(2)=IC; IROUT(2)=IR+1
+   !## goto to the south-west
+   ELSE
+    IC=MIN(JPC(1),JPC(2)); IR=MAX(JPR(1),JPR(2))
+    IPC(IC,IR,1)=INT(1,1) !## vertical
+    ICOUT(3)=IC; IROUT(3)=IR; ICOUT(4)=IC+1; IROUT(4)=IR
+    IC=MAX(JPC(1),JPC(2)); IR=MIN(JPR(1),JPR(2))
+    IPC(IC,IR,2)=INT(1,1) !## horizontal
+    ICOUT(1)=IC; IROUT(1)=IR; ICOUT(2)=IC; IROUT(2)=IR+1
+   ENDIF
+  !## goto to the east
+  ELSE
+   !## goto to the north-east
+   IF(JPR(1).GT.JPR(2))THEN
+    IC=MIN(JPC(1),JPC(2)); IR=MAX(JPR(1),JPR(2))
+    IPC(IC,IR,1)=INT(1,1) !## vertical
+    ICOUT(3)=IC; IROUT(3)=IR; ICOUT(4)=IC+1; IROUT(4)=IR
+    IC=MAX(JPC(1),JPC(2)); IR=MIN(JPR(1),JPR(2))
+    IPC(IC,IR,2)=INT(1,1) !## horizontal   
+    ICOUT(1)=IC; IROUT(1)=IR; ICOUT(2)=IC; IROUT(2)=IR+1
+   !## goto to the south-east
+   ELSE
+    IC=MIN(JPC(1),JPC(2)); IR=MAX(JPR(1),JPR(2))
+    IPC(IC,IR,1)=INT(1,1) !## vertical
+    ICOUT(3)=IC; IROUT(3)=IR; ICOUT(4)=IC+1; IROUT(4)=IR
+    IC=MAX(JPC(1),JPC(2)); IR=MAX(JPR(1),JPR(2))
+    IPC(IC,IR,2)=INT(1,1) !## horizontal  
+    ICOUT(1)=IC; IROUT(1)=IR; ICOUT(2)=IC; IROUT(2)=IR+1
+   ENDIF
+  ENDIF
+ ENDIF
 
-      END SUBROUTINE ASC2IDF_HFB_GETFACES
+ END SUBROUTINE ASC2IDF_HFB_GETFACES
 
  !!###====================================================================
  !SUBROUTINE ASC2IDF_HFB_GETFACES(IC1,IC2,IR1,IR2,IP1,IP2,IPC,NROW,NCOL)
