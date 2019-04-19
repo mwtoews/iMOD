@@ -860,7 +860,7 @@ c read file
                   irow=int(ra(l))
 
                   if(icol.ge.1.and.irow.ge.1.and.
-     1                icol.le.lncol.and.irow.le.lnrow) then
+     1               icol.le.lncol.and.irow.le.lnrow) then
                      m = m + 1; nn = nn + 1
                      if (iact.eq.2) then
                         genpos(m,1) = icol
@@ -874,6 +874,9 @@ c read file
                          ELSE
                           TL=TL+0.5*LN(L-1)+0.5*LN(L)
                          ENDIF
+                         if(dz.ne.0.0)then
+                         write(*,*)
+                         endif
                          ZL=Z1+(TL*DZ); genpos(m,5)=ZL*100.0
                         ENDIF
 

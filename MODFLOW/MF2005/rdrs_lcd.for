@@ -104,12 +104,13 @@ c local variables
       real, dimension(:,:), allocatable :: rlisttmp                     ! DLT
       integer :: icol, irow, jcol, jrow, igen, iact, ngen, ii, kk,
      1           ip1, ip2,ic1, ic2, ir1, ir2, j, jj !, nlist
-      integer ::  il, is, ie, iline, jline, nline
+      integer ::  i,il, is, ie, iline, jline, nline
       integer :: ilay,il1,il2,jlay,isys
       real :: fct,HFB1EXPORT_GETDZ,c,z,c1,c2,zz,TFV,bfv,tpv,btv
       real, dimension(:,:), allocatable :: tmp,res,fdz,tf,bf
       integer(kind=1),allocatable,dimension(:,:) :: sys
       integer(kind=1), dimension(:,:,:), allocatable :: ipc
+      integer,dimension(4) :: ICOUT,IROUT
       logical, dimension(:), allocatable :: writegen
       character(len=1024) :: fname
       integer,dimension(:),allocatable :: lun,dun,nlun
@@ -213,40 +214,25 @@ c count number of hfb and fill
                IR1=GENPOS(IL-1,2); IR2=GENPOS(IL  ,2)
                IP1=GENPOS(IL-1,4); IP2=GENPOS(IL  ,4)
 
-               CALL HFBGETFACES(IC1,IC2,IR1,IR2,IP1,IP2,IPC,LNROW,LNCOL)
+               CALL HFBGETFACES(IC1,IC2,IR1,IR2,IP1,IP2,IPC,LNROW,LNCOL,
+     &ICOUT,IROUT)
 
                !## get top/bottom elevations on grid - only for display purposes
                IF(ILAY.EQ.0)THEN
                 !## fill in z-coordinates
                 ZF=(GENPOS(IL-1,5)+GENPOS(IL,5))/2.0
+                DO I=1,4
+                 ICOL=ICOUT(I); IROW=IROUT(I)
+                 IF(ICOL.LE.0.OR.IROW.LE.0)CYCLE
+                 IF(TF(ICOL,IROW).EQ.NODATA)THEN
+                  TF(ICOL,IROW)=ZF/100.0; BF(ICOL,IROW)=ZF/100.0
+                 ELSE
+                  !## take maximal/minimal elevations
+                  TF(ICOL,IROW)=MAX(TF(ICOL,IROW),ZF/100.0)
+                  BF(ICOL,IROW)=MIN(BF(ICOL,IROW),ZF/100.0)
+                 ENDIF
+                ENDDO
 
-                ICOL=IC1; IROW=IR1
-                IF(TF(ICOL,IROW).EQ.NODATA)THEN
-                 TF(ICOL,IROW)=ZF/100.0; BF(ICOL,IROW)=ZF/100.0
-                ELSE
-                 !## take values from modflow itself
-                 TF(ICOL,IROW)=MAX(TF(ICOL,IROW),ZF/100.0)
-                 BF(ICOL,IROW)=MIN(BF(ICOL,IROW),ZF/100.0)
-                ENDIF
-                ICOL=IC2; IROW=IR2
-                IF(TF(ICOL,IROW).EQ.NODATA)THEN
-                 TF(ICOL,IROW)=ZF/100.0; BF(ICOL,IROW)=ZF/100.0
-                ELSE
-                 !## take values from modflow itself
-                 TF(ICOL,IROW)=MAX(TF(ICOL,IROW),ZF/100.0)
-                 BF(ICOL,IROW)=MIN(BF(ICOL,IROW),ZF/100.0)
-                ENDIF
-
-                !DO IROW=IR1,IR2; DO ICOL=IC1,IC2
-                ! IF(TF(ICOL,IROW).EQ.NODATA)THEN
-                !  TF(ICOL,IROW)=ZF/100.0
-                !  BF(ICOL,IROW)=ZF/100.0
-                ! ELSE
-                !  !## take values from modflow itself
-                !  TF(ICOL,IROW)=MAX(TF(ICOL,IROW),ZF/100.0)
-                !  BF(ICOL,IROW)=MIN(BF(ICOL,IROW),ZF/100.0)
-                ! ENDIF
-                !ENDDO; ENDDO
                ENDIF
               ENDDO
 
@@ -726,8 +712,8 @@ c end of program
       IF(DZ.LT.0.0)RETURN
 
       IF(TPV-BTV.GT.0.0)THEN
-      !## fraction of fault in modellayer
-      DZ=DZ/(TPV-BTV)
+       !## fraction of fault in modellayer
+       DZ=DZ/(TPV-BTV)
       ELSE
        !## completely filled in model layer with thickness of zero
        DZ=1.0
@@ -800,15 +786,20 @@ c end of program
 !      END FUNCTION HFB1EXPORT_GETFACTOR
 
       !###====================================================================
-      SUBROUTINE HFBGETFACES(IC1,IC2,IR1,IR2,IP1,IP2,IPC,NROW,NCOL)
+      SUBROUTINE HFBGETFACES(IC1,IC2,IR1,IR2,IP1,IP2,IPC,NROW,NCOL,
+     &ICOUT,IROUT)
       !###====================================================================
       IMPLICIT NONE
       INTEGER,INTENT(IN) :: IC1,IC2,IR1,IR2,IP1,IP2
       INTEGER,INTENT(IN) :: NROW,NCOL
+      INTEGER,INTENT(OUT),DIMENSION(4) :: ICOUT,IROUT
       INTEGER(KIND=1),INTENT(INOUT),DIMENSION(NCOL,NROW,2) :: IPC
       INTEGER,DIMENSION(2) :: JPC,JPR,JC,JR,JP
       INTEGER :: I,IC,IR 
 
+      !## cells capture faults
+      ICOUT=0; IROUT=0
+      
       JC(1)=IC1; JC(2)=IC2
       JR(1)=IR1; JR(2)=IR2
       JP(1)=IP1; JP(2)=IP2
@@ -830,10 +821,12 @@ c end of program
       !## horizontal fault ipc(,,1)=1
       IF(JPR(1).EQ.JPR(2).AND.JPC(1).NE.JPC(2))THEN
        IC=MAX(JPC(1),JPC(2)); IR=JPR(1); IPC(IC,IR,2)=INT(1,1)
+       ICOUT(1)=IC; IROUT(1)=IR; ICOUT(2)=IC; IROUT(2)=IR+1
       ENDIF
       !## vertical fault ipc(,,2)=1
       IF(JPC(1).EQ.JPC(2).AND.JPR(1).NE.JPR(2))THEN
        IC=JPC(1); IR=MAX(JPR(1),JPR(2)); IPC(IC,IR,1)=INT(1,1)
+       ICOUT(3)=IC; IROUT(3)=IR; ICOUT(4)=IC+1; IROUT(4)=IR
       ENDIF
       !## diagonal, add two faults
       IF(JPR(1).NE.JPR(2).AND.JPC(1).NE.JPC(2))THEN
@@ -843,14 +836,18 @@ c end of program
         IF(JPR(1).GT.JPR(2))THEN
          IC=MIN(JPC(1),JPC(2)); IR=MAX(JPR(1),JPR(2))
          IPC(IC,IR,1)=INT(1,1) !## vertical
+         ICOUT(3)=IC; IROUT(3)=IR; ICOUT(4)=IC+1; IROUT(4)=IR
          IC=MAX(JPC(1),JPC(2)); IR=MAX(JPR(1),JPR(2))
          IPC(IC,IR,2)=INT(1,1) !## horizontal
+         ICOUT(1)=IC; IROUT(1)=IR; ICOUT(2)=IC; IROUT(2)=IR+1
         !## goto to the south-west
         ELSE
          IC=MIN(JPC(1),JPC(2)); IR=MAX(JPR(1),JPR(2))
          IPC(IC,IR,1)=INT(1,1) !## vertical
+         ICOUT(3)=IC; IROUT(3)=IR; ICOUT(4)=IC+1; IROUT(4)=IR
          IC=MAX(JPC(1),JPC(2)); IR=MIN(JPR(1),JPR(2))
          IPC(IC,IR,2)=INT(1,1) !## horizontal
+         ICOUT(1)=IC; IROUT(1)=IR; ICOUT(2)=IC; IROUT(2)=IR+1
         ENDIF
        !## goto to the east
        ELSE
@@ -858,14 +855,18 @@ c end of program
         IF(JPR(1).GT.JPR(2))THEN
          IC=MIN(JPC(1),JPC(2)); IR=MAX(JPR(1),JPR(2))
          IPC(IC,IR,1)=INT(1,1) !## vertical
+         ICOUT(3)=IC; IROUT(3)=IR; ICOUT(4)=IC+1; IROUT(4)=IR
          IC=MAX(JPC(1),JPC(2)); IR=MIN(JPR(1),JPR(2))
          IPC(IC,IR,2)=INT(1,1) !## horizontal   
+         ICOUT(1)=IC; IROUT(1)=IR; ICOUT(2)=IC; IROUT(2)=IR+1
         !## goto to the south-east
         ELSE
          IC=MIN(JPC(1),JPC(2)); IR=MAX(JPR(1),JPR(2))
          IPC(IC,IR,1)=INT(1,1) !## vertical
+         ICOUT(3)=IC; IROUT(3)=IR; ICOUT(4)=IC+1; IROUT(4)=IR
          IC=MAX(JPC(1),JPC(2)); IR=MAX(JPR(1),JPR(2))
          IPC(IC,IR,2)=INT(1,1) !## horizontal  
+         ICOUT(1)=IC; IROUT(1)=IR; ICOUT(2)=IC; IROUT(2)=IR+1
         ENDIF
        ENDIF
       ENDIF
