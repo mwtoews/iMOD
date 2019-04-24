@@ -939,7 +939,9 @@ CONTAINS
   DO ILAY=1,MNLAY(IMDL1)
  
    IF(LSUBMODEL)THEN
-
+    
+    !## isubmodel 1 en isubmodel 2 komen uit grid
+    
     !## north connection
     IF(I.EQ.2)WRITE(IU,'(/A)') '# North Connection'
     IROW=1; DO ICOL=1,BND(IMDL1,ILAY)%NCOL
@@ -1172,6 +1174,7 @@ CONTAINS
  !## area of connection
  ELSEIF(IHC.EQ.0)THEN
 
+  !## ook 2d denk ik ... gewoon recht naar het vlak toe
   CL(IMDL1)=UTL_DIST_3D(XP1,YP1,ZP1,XINT1,YINT1,ZINT1)
   CL(IMDL2)=UTL_DIST_3D(XP2,YP2,ZP2,XINT2,YINT2,ZINT2)
   HWVA=(X2-X1)*(Y2-Y1)
