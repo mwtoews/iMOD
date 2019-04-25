@@ -35,7 +35,7 @@ INTEGER,PARAMETER :: MXROWFORFANCY=1500 !## maximum number of rows to change to 
 
 CHARACTER(LEN=3),DIMENSION(:),ALLOCATABLE :: NANSTRING
 
-INTEGER :: D4ITIME
+!INTEGER :: D4ITIME
 
 REAL(KIND=GLDOUBLE),SAVE :: HEADING,TILT
 INTEGER,SAVE :: WALK_MODE
@@ -66,6 +66,8 @@ TYPE IDFSETTING
  
  !## needed for time-variant idffiles
  CHARACTER(LEN=256),POINTER,DIMENSION(:) :: TFILES=>NULL()
+ CHARACTER(LEN=52),POINTER,DIMENSION(:) :: CDATES=>NULL()
+ INTEGER :: D4ITIME         !## timestep if applicable
  INTEGER :: IFILL,JFILL     !## solid fill (1), wireframes (2) or combined (3)
  INTEGER :: ICOLOR,JCOLOR   !## colornumber (copy for selecting mode)
  INTEGER :: ILEG,JLEG       !## use legend  (copy for selecting mode)
