@@ -443,7 +443,7 @@ CONTAINS
  NSOLLIST=0 !## number of solids
  NCLPLIST=0 !## number of clipping planes
 
-! D4ITIME=0
+ D4ITIMEDIR=0
 
  IDFDATA(1)=1  !## low resolution
  IDFDATA(2)=10 !## scaling blockvalue
