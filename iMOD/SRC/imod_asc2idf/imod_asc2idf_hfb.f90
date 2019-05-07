@@ -34,10 +34,11 @@ USE MOD_OSD
 CONTAINS
 
  !###====================================================================
- SUBROUTINE ASC2IDF_HFB(IDF,NROW,NCOL,IPC,FNAME,ITB,TOP,BOT)
+ SUBROUTINE ASC2IDF_HFB(IDF,NROW,NCOL,IPC,FNAME,ITB,TOP,BOT,IPOL)
  !###====================================================================
  IMPLICIT NONE
  INTEGER,INTENT(IN) :: ITB,NCOL,NROW
+ INTEGER,INTENT(IN),OPTIONAL :: IPOL
  TYPE(IDFOBJ),INTENT(INOUT) :: IDF
  TYPE(IDFOBJ),INTENT(INOUT),OPTIONAL :: TOP,BOT
  INTEGER(KIND=1),DIMENSION(NCOL,NROW,2),INTENT(OUT) :: IPC
@@ -69,6 +70,10 @@ CONTAINS
    READ(IU) MAXPOL,MAXCOL
    IF(MAXCOL.GT.0)THEN; READ(IU); READ(IU); ENDIF
    DO I=1,MAXPOL
+    !## process selected line only
+    IF(PRESENT(IPOL))THEN
+     IF(IPOL.NE.I)CYCLE
+    ENDIF
     ILINE=ILINE+1
     READ(IU) NPNT,ITYPE
     IF(MAXCOL.GT.0)READ(IU)
@@ -131,6 +136,12 @@ CONTAINS
    DO
     READ(IU,*,IOSTAT=IOS) CID; IF(IOS.NE.0)EXIT
     I=0; ILINE=ILINE+1
+    
+    !## process selected line only
+    IF(PRESENT(IPOL))THEN
+     IF(IPOL.NE.ILINE)CYCLE
+    ENDIF
+    
     DO
      IF(ITB.EQ.0)THEN
       READ(IU,*,IOSTAT=IOS) X2,Y2,Z2; IF(IOS.NE.0)EXIT
@@ -214,21 +225,6 @@ CONTAINS
      BOT%X(ICOL,IROW)=MIN(BOT%X(ICOL,IROW),ZF/100.0D0)
     ENDIF
    ENDDO
-
-!   ICOL=IC1; IROW=IR1
-!   IF(TOP%X(ICOL,IROW).EQ.NODATA)THEN
-!    TOP%X(ICOL,IROW)=ZF/100.0D0; BOT%X(ICOL,IROW)=ZF/100.0D0
-!   ELSE
-!    TOP%X(ICOL,IROW)=MAX(TOP%X(ICOL,IROW),ZF/100.0D0)
-!    BOT%X(ICOL,IROW)=MIN(BOT%X(ICOL,IROW),ZF/100.0D0)
-!   ENDIF
-!   ICOL=IC2; IROW=IR2
-!   IF(TOP%X(ICOL,IROW).EQ.NODATA)THEN
-!    TOP%X(ICOL,IROW)=ZF/100.0D0; BOT%X(ICOL,IROW)=ZF/100.0D0
-!   ELSE
-!    TOP%X(ICOL,IROW)=MAX(TOP%X(ICOL,IROW),ZF/100.0D0)
-!    BOT%X(ICOL,IROW)=MIN(BOT%X(ICOL,IROW),ZF/100.0D0)
-!   ENDIF
 
   ENDIF
   
@@ -322,70 +318,5 @@ CONTAINS
  ENDIF
 
  END SUBROUTINE ASC2IDF_HFB_GETFACES
-
- !!###====================================================================
- !SUBROUTINE ASC2IDF_HFB_GETFACES(IC1,IC2,IR1,IR2,IP1,IP2,IPC,NROW,NCOL)
- !!###====================================================================
- !IMPLICIT NONE
- !INTEGER,INTENT(IN) :: IC1,IC2,IR1,IR2,IP1,IP2
- !INTEGER,INTENT(IN) :: NROW,NCOL
- !INTEGER(KIND=1),INTENT(INOUT),DIMENSION(NCOL,NROW,2) :: IPC
- !INTEGER,DIMENSION(2) :: JPC,JPR,JC,JR,JP
- !INTEGER :: I,IC,IR
- !
- !JC(1)=IC1; JC(2)=IC2
- !JR(1)=IR1; JR(2)=IR2
- !JP(1)=IP1; JP(2)=IP2
- !
- !DO I=1,2
- ! IF(JP(I).EQ.2.OR.JP(I).EQ.3)JPC(I)=JC(I)
- ! IF(JP(I).EQ.1.OR.JP(I).EQ.4)JPC(I)=JC(I)-1
- ! IF(JP(I).EQ.1.OR.JP(I).EQ.2)JPR(I)=JR(I)-1
- ! IF(JP(I).EQ.3.OR.JP(I).EQ.4)JPR(I)=JR(I)
- !ENDDO
- !
- !!## do nothing, is similar point
- !IF(JPR(1).EQ.JPR(2).AND.JPC(1).EQ.JPC(2))RETURN
- !
- !!## do nothing whenever jpc.eq.0 or jpr.eq.0
- !IF(JPC(1).EQ.0.OR.JPC(2).EQ.0)RETURN
- !IF(JPR(1).EQ.0.OR.JPR(2).EQ.0)RETURN
- !
- !!## horizontal fault ipc(,,1)=1
- !IF(JPR(1).EQ.JPR(2).AND.JPC(1).NE.JPC(2))THEN
- ! IC=MAX(JPC(1),JPC(2)); IR=JPR(1); IPC(IC,IR,2)=INT(1,1)
- !ENDIF
- !!## vertical fault ipc(,,2)=1
- !IF(JPC(1).EQ.JPC(2).AND.JPR(1).NE.JPR(2))THEN
- ! IC=JPC(1); IR=MAX(JPR(1),JPR(2)); IPC(IC,IR,1)=INT(1,1)
- !ENDIF
- !!## diagonal, add two faults
- !IF(JPR(1).NE.JPR(2).AND.JPC(1).NE.JPC(2))THEN
- ! !## goto to the west
- ! IF(JPC(1).GT.JPC(2))THEN
- !  !## goto to the north-west
- !  IF(JPR(1).GT.JPR(2))THEN
- !   IC=MIN(JPC(1),JPC(2)); IR=MAX(JPR(1),JPR(2)); IPC(IC,IR,1)=INT(1,1) !## vertical
- !   IC=MAX(JPC(1),JPC(2)); IR=MAX(JPR(1),JPR(2)); IPC(IC,IR,2)=INT(1,1) !## horizontal
- !  !## goto to the south-west
- !  ELSE
- !   IC=MIN(JPC(1),JPC(2)); IR=MAX(JPR(1),JPR(2)); IPC(IC,IR,1)=INT(1,1) !## vertical
- !   IC=MAX(JPC(1),JPC(2)); IR=MIN(JPR(1),JPR(2)); IPC(IC,IR,2)=INT(1,1) !## horizontal
- !  ENDIF
- ! !## goto to the east
- ! ELSE
- !  !## goto to the north-east
- !  IF(JPR(1).GT.JPR(2))THEN
- !   IC=MIN(JPC(1),JPC(2)); IR=MAX(JPR(1),JPR(2)); IPC(IC,IR,1)=INT(1,1) !## vertical
- !   IC=MAX(JPC(1),JPC(2)); IR=MIN(JPR(1),JPR(2)); IPC(IC,IR,2)=INT(1,1) !## horizontal   
- !  !## goto to the south-east
- !  ELSE
- !   IC=MIN(JPC(1),JPC(2)); IR=MAX(JPR(1),JPR(2)); IPC(IC,IR,1)=INT(1,1) !## vertical
- !   IC=MAX(JPC(1),JPC(2)); IR=MAX(JPR(1),JPR(2)); IPC(IC,IR,2)=INT(1,1) !## horizontal  
- !  ENDIF
- ! ENDIF
- !ENDIF
- ! 
- !END SUBROUTINE ASC2IDF_HFB_GETFACES
   
 END MODULE MOD_ASC2IDF_HFB
