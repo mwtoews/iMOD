@@ -323,6 +323,7 @@ CONTAINS
        if (it.eq.1)then
         call RF2MF_READ1MAIN_system(evt%sp(kper)%evtr,ios,ilay,fct,imp,constante,iarr,fname,iusclarithnd,idsclintp)
         evt%sp(kper)%evtr%fct = evt%sp(kper)%evtr%fct * 0.001D0
+        evt%sp(kper)%evtr%imp = evt%sp(kper)%evtr%imp * 0.001D0
        endif
        if (it.eq.2) call RF2MF_READ1MAIN_system(evt%sp(kper)%surf,ios,ilay,fct,imp,constante,iarr,fname,iusclarith,idsclnointp)
        if (it.eq.3) call RF2MF_READ1MAIN_system(evt%sp(kper)%exdp,ios,ilay,fct,imp,constante,iarr,fname,iusclarith,idsclnointp)
@@ -360,6 +361,7 @@ CONTAINS
        if (rch%sp(kper)%inrech.gt.mxrech) call imod_utl_printtext('Error, increase mxrech',-3)
        call RF2MF_READ1MAIN_system(rch%sp(kper)%rech(isub),ios,ilay,fct,imp,constante,iarr,fname,iusclarithnd,idsclintp)
        rch%sp(kper)%rech(isub)%fct = rch%sp(kper)%rech(isub)%fct * 0.001D0
+       rch%sp(kper)%rech(isub)%imp = rch%sp(kper)%rech(isub)%imp * 0.001D0
       
       CASE (POLF)     !## (POLF) overlandflow
       
