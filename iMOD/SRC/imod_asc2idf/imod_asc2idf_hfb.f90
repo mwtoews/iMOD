@@ -71,10 +71,6 @@ CONTAINS
    READ(IU) MAXPOL,MAXCOL
    IF(MAXCOL.GT.0)THEN; READ(IU); READ(IU); ENDIF
    DO I=1,MAXPOL
-    !## process selected line only
-    IF(PRESENT(IPOL))THEN
-     IF(IPOL.NE.I)CYCLE
-    ENDIF
     ILINE=ILINE+1
     READ(IU) NPNT,ITYPE
     IF(MAXCOL.GT.0)READ(IU)
@@ -107,6 +103,11 @@ CONTAINS
      CASE DEFAULT
       MPNT=0
     END SELECT
+
+    !## process selected line only
+    IF(PRESENT(IPOL))THEN
+     IF(IPOL.NE.I)MPNT=0
+    ENDIF
 
     DO J=1,MPNT-1 !NPNT-1
      X1=XC(J); X2=XC(J+1)

@@ -41,7 +41,7 @@ REAL(KIND=DP_KIND) :: SBX,SBY,SBMINX,SBMAXY,SBMAXX,SBMINY
 INTEGER :: NSBX,NSBY
 
 CONTAINS
-
+ 
  !##=====================================================================
  SUBROUTINE PUZZLEMAIN()
  !##=====================================================================

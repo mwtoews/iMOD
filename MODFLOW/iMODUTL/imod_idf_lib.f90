@@ -259,7 +259,7 @@ CONTAINS
 
  !## check for valid scaling options
  SELECT CASE(SCLTYPE)
-  CASE(1,2,3,4,5,6,7,8,9,10)
+  CASE(1,2,3,4,5,6,7,8,9,10,11)
   CASE DEFAULT
    CALL IMOD_UTL_PRINTTEXT('Error!',0)
    CALL IMOD_UTL_PRINTTEXT('File: '//TRIM(IDFNAME),0)
