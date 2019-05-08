@@ -125,6 +125,7 @@
       integer, parameter, public :: iusclmostfr    =  7 ! most freq. occ
       integer, parameter, public :: iusclsuminvcvr =  8 ! sum(1/c)*ratio
       integer, parameter, public :: iusclperc      =  9 ! percentile
+      integer, parameter, public :: iusclarithnd   =  11 ! average including locations with nodata (rch/evt)
 
       ! downscaling
       integer, parameter, public :: idsclnodata    = -1 ! no data

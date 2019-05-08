@@ -56,6 +56,7 @@ CONTAINS
  
  CALL POLYGON1SAVELOADSHAPE(ID_LOADSHAPE,TRIM(GENFNAME),'GEN')
  IF(SHP%NPOL.LE.0)THEN; WRITE(*,'(/A/)') 'No polygons found in GEN file'; RETURN; ENDIF
+ !## convert polygon to line?
  CALL UTL_CREATEDIR(OUTFOLDER); IU=UTL_GETUNIT(); CALL OSD_OPEN(IU,FILE=TRIM(OUTFOLDER)//'\BND.GEN',ACTION='WRITE',STATUS='UNKNOWN',FORM='FORMATTED')
  IF(IU.EQ.0)THEN; WRITE(*,'(A)') 'Error opening '//TRIM(OUTFOLDER)//'\BND.GEN'; RETURN; ENDIF
 
@@ -4137,16 +4138,16 @@ REAL(KIND=DP_KIND) :: WETFCT,T,TMP_KH,KHMIN,TMP_TOP,TMP_BOT,THICK
       IF(KTOP.LE.4.AND.IPER.GT.1)CYCLE
      !## evt
      CASE (24) 
-      SCL_D=1; SCL_U=2
+      SCL_D=1
       !## check to see whether equal to previous timestep
       SELECT CASE (KTOP)
-       CASE (1); INSURF=IEQUAL
-       CASE (2); INEVTR=IEQUAL
-       CASE (3); INEXDP=IEQUAL
+       CASE (1); INSURF=IEQUAL; SCL_U=2
+       CASE (2); INEVTR=IEQUAL; SCL_U=16
+       CASE (3); INEXDP=IEQUAL; SCL_U=2
       END SELECT
      !## rch
      CASE (26) 
-      SCL_D=1; SCL_U=2   !## average
+      SCL_D=1; SCL_U=16   !## average
       !## equal from previous timestep
       INRECH=IEQUAL
      !## drn,riv,ghb

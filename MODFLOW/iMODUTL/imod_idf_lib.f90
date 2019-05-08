@@ -302,7 +302,6 @@ CONTAINS
  MXN=1;MXM=1
  select case (scltype)
   case (7,9,10)
-! IF(SCLTYPE.EQ.7.OR.SCLTYPE.EQ.9.or.)THEN
    MXN=0; DO I=1,IDFM%NCOL; N=(IDFM%SX(I)-IDFM%SX(I-1))/IDFC%DX; MXN=MAX(MXN,N); END DO
    MXN=MXN+2
    MXM=0; DO I=1,IDFM%NROW; M=(IDFM%SY(I-1)-IDFM%SY(I))/IDFC%DY; MXM=MAX(MXM,M); END DO
@@ -486,6 +485,10 @@ CONTAINS
       NVALUE=NVALUE+1.0
       FREQ(INT(NVALUE))=IDFVAL
      ENDIF
+    !## arithmetic mean - include nodata
+    CASE (11)
+     IF(IDFVAL.NE.IDF%NODATA)SVALUE=SVALUE+IDFVAL
+     NVALUE=NVALUE+1.0
     CASE DEFAULT
      WRITE(*,'(//A//)') 'Scaling not known for: '//TRIM(IDF%FNAME)
    END SELECT
@@ -500,7 +503,7 @@ CONTAINS
  SELECT CASE (SCLTYPE)
   CASE (1,4)!## boundary, sum
 
-  CASE (2)  !## arithmetic mean
+  CASE (2,11)  !## arithmetic mean
    SVALUE=SVALUE/NVALUE
   CASE (3)  !## geometric
    SVALUE=EXP(SVALUE/NVALUE)

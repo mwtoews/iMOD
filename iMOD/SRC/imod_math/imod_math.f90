@@ -79,7 +79,8 @@ CALL WDIALOGPUTMENU(IDF_MENU1,(/'Boundary       ','Arithmetic Mean','Geometric M
  ! 8 = SUM (1/c)*RATIO
  ! 9 = PERCENTILE 
  !10 = BLOCKVALUE
-
+ !16 = rekenkundig gemiddelde excl. nodata
+                                
 CALL WDIALOGPUTMENU(IDF_MENU2,(/'Arithm. average','Block Value    '/),2,1)
 CALL WDIALOGFIELDOPTIONS(IDF_REAL2,EDITFIELDCHANGED,1)
 

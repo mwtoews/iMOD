@@ -26,7 +26,7 @@ USE IMOD_UTL
 USE rf2mf_module, ONLY : nlay,bas,bcf,pwt,dis,wel,drn,riv,ghb,hfb,ani,rch,dxc,mxrech,evt,chd,iarr,iari,nper,&
                          oc,maxsubsys,maxgen,maxcol,scr,ialloc,allocscr,&
                          iusclnodata,iusclspec,iusclarith,iusclgeom,iusclsumq,iusclsumcdr,iusclinvc,iusclmostfr,iusclsuminvcvr,iusclperc,&
-                         idsclnodata,idsclnointp,idsclintp
+                         idsclnodata,idsclnointp,idsclintp,iusclarithnd
 
 USE MOD_RF2MF
 
@@ -321,7 +321,7 @@ CONTAINS
        evt%sp(kper)%inevtr = 1
        evt%sp(kper)%inexdp = 1
        if (it.eq.1)then
-        call RF2MF_READ1MAIN_system(evt%sp(kper)%evtr,ios,ilay,fct,imp,constante,iarr,fname,iusclarith,idsclintp)
+        call RF2MF_READ1MAIN_system(evt%sp(kper)%evtr,ios,ilay,fct,imp,constante,iarr,fname,iusclarithnd,idsclintp)
         evt%sp(kper)%evtr%fct = evt%sp(kper)%evtr%fct * 0.001D0
        endif
        if (it.eq.2) call RF2MF_READ1MAIN_system(evt%sp(kper)%surf,ios,ilay,fct,imp,constante,iarr,fname,iusclarith,idsclnointp)
@@ -358,7 +358,7 @@ CONTAINS
        rch%sp(kper)%reuse = .false.
        rch%sp(kper)%inrech = rch%sp(kper)%inrech + 1
        if (rch%sp(kper)%inrech.gt.mxrech) call imod_utl_printtext('Error, increase mxrech',-3)
-       call RF2MF_READ1MAIN_system(rch%sp(kper)%rech(isub),ios,ilay,fct,imp,constante,iarr,fname,iusclarith,idsclintp)
+       call RF2MF_READ1MAIN_system(rch%sp(kper)%rech(isub),ios,ilay,fct,imp,constante,iarr,fname,iusclarithnd,idsclintp)
        rch%sp(kper)%rech(isub)%fct = rch%sp(kper)%rech(isub)%fct * 0.001D0
       
       CASE (POLF)     !## (POLF) overlandflow

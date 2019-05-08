@@ -691,7 +691,7 @@ CONTAINS
  ! 1 = special (iboundary)
  ! 2 = arithmetic (shead/vcont/s)
  ! 3 = geometrisch (kd)
- ! 4 = sum(q)
+ ! 4 = sum
  ! 5 = sum(cond)*ratio (riv/drn/ghb conductance/rch/evt)
  ! 6 = inverse (c)
  ! 7 = most frequent occurence
@@ -703,6 +703,7 @@ CONTAINS
  !13 = global-local not supported here
  !14 = 3-d simulation not supported here
  !15 = zonation
+ !16 = artithmetic mean (rch/evt) discarding nodata
  !###======================================================================
  IMPLICIT NONE
  TYPE(IDFOBJ),INTENT(INOUT) :: IDFM 
@@ -893,7 +894,7 @@ CONTAINS
       ENDIF
      ENDDO
     ENDDO
-   CASE (4) !## rch/evt
+   CASE (4,16) !## sum; rch/evt
     DO IROW=IR1,IR2
      DO ICOL=IC1,IC2
       IDFVAL=IDF%X(ICOL,IROW) 
@@ -968,8 +969,8 @@ CONTAINS
        SVALUE=SVALUE+IDFVAL 
        NVALUE=NVALUE+1.0D0
       ENDIF
-     !## arithmetic mean (rch/evt)
-     CASE (4)
+     !## sum; arithmetic mean (rch/evt)
+     CASE (4,16)
       IF(IDFVAL.NE.IDF%NODATA)SVALUE=SVALUE+IDFVAL 
       NVALUE=NVALUE+1.0D0
      !## geometric mean (KD)
@@ -1011,7 +1012,7 @@ CONTAINS
  SELECT CASE (SCLTYPE)
   CASE (1,10)!## boundary, sum
 
-  CASE (2)  !## arithmetic mean
+  CASE (2,16)  !## arithmetic mean
    SVALUE=SVALUE/NVALUE
   CASE (3)  !## geometric
    IF(NVALUE.NE.0.0D0)THEN
@@ -1117,16 +1118,6 @@ CONTAINS
    X1A(NPC)=XMID
    !## read value from idfm%x()
    CALL IDFIROWICOL(IDFM,IROW,ICOL,X1A(NPC),X2A(NPR))
-   
-!   IF(IROW.EQ.0)THEN
-!    !## if file to be interpolated
-!    IF(YMID.LE.IDFM%YMIN)IROW=IDFM%NROW
-!    IF(YMID.GE.IDFM%YMAX)IROW=1
-!   ENDIF
-!   IF(ICOL.EQ.0)THEN
-!    IF(XMID.LE.IDFM%XMIN)ICOL=1
-!    IF(XMID.GE.IDFM%XMAX)ICOL=IDFM%NCOL
-!   ENDIF
 
    IF(ICOL.EQ.0.OR.IROW.EQ.0)THEN
     IF(ASSOCIATED(IDFC%X))THEN
@@ -1139,8 +1130,6 @@ CONTAINS
     IDFVAL=IDFM%X(ICOL,IROW)  
    ENDIF
    Y2A(NPC,NPR)=IDFVAL
-
-!   Y2A(NPC,NPR)=IDFM%X(ICOL,IROW)
 
   ENDDO
  ENDDO
