@@ -103,7 +103,7 @@ c local variables
       real,parameter :: thickness=0.5
       real, dimension(:,:), allocatable :: rlisttmp                     ! DLT
       integer :: icol, irow, jcol, jrow, igen, iact, ngen, ii, kk,
-     1           ip1, ip2,ic1, ic2, ir1, ir2, j, jj !, nlist
+     1           ip1, ip2,ic1, ic2, ir1, ir2, j, jj 
       integer ::  i,il, is, ie, iline, jline, nline
       integer :: ilay,il1,il2,jlay,isys
       real :: fct,HFB1EXPORT_GETDZ,c,z,c1,c2,zz,TFV,bfv,tpv,btv
@@ -223,9 +223,9 @@ c count number of hfb and fill
                 ZF=(GENPOS(IL-1,5)+GENPOS(IL,5))/2.0
                 DO I=1,4
                  ICOL=ICOUT(I); IROW=IROUT(I)
-                 if(icol.eq.12.and.irow.eq.6)then
-                 write(*,*)
-                 endif
+!                 if(icol.eq.12.and.irow.eq.6)then
+!                 write(*,*)
+!                 endif
                  IF(ICOL.LE.0.OR.IROW.LE.0)CYCLE
                  IF(TF(ICOL,IROW).EQ.NODATA)THEN
                   TF(ICOL,IROW)=ZF/100.0; BF(ICOL,IROW)=ZF/100.0
