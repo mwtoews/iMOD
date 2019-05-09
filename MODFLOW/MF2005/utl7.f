@@ -320,6 +320,8 @@ C     ------------------------------------------------------------------
       INCLUDE 'openspec.inc'
       integer rdrs_main, rdrsflg                                        ! DLT
       integer :: i,iupsc,idosc,jcol                                     ! DLT
+      logical, dimension(5) :: ioper                                    ! DLT
+      real, dimension(5) :: coper                                       ! DLT
 C     ------------------------------------------------------------------
 C
       CNSTNT = 0.0                                                      ! DLT
@@ -355,7 +357,10 @@ C2------FORMAT.  SET A FLAG SPECIFYING IF FREE FORMAT OR FIXED FORMAT.
             call urword(cntrl,icol,istart,istop,2,idosc,r,iout,in)      ! DLT
          end if                                                         ! DLT
          icol = jcol                                                    ! DLT
-         rdrsflg=rdrs_main(fname,a,jj,1,'r',iout,iupsc,idosc,0)         ! DLT
+         !## dummy variables
+         ioper=.false.; coper=1.0
+         rdrsflg=rdrs_main(fname,a,jj,1,'r',iout,iupsc,idosc,0,
+     1ioper,coper)         ! DLT
          if (rdrsflg.ge.0) then ! supported file type found             ! DLT
             ! read cnstnt and iprn                                      ! DLT
             call urword(cntrl,icol,istart,istop,3,n,cnstnt,iout,in)     ! DLT
@@ -501,20 +506,29 @@ C2------FORMAT.  SET A FLAG SPECIFYING IF FREE FORMAT OR FIXED FORMAT.
             call urword(cntrl,icol,istart,istop,2,idosc,r,iout,in)      ! DLT
          end if                                                         ! DLT
          icol = jcol                                                    ! DLT
-         rdrsflg=rdrs_main(fname,ia,ii*jj,2,'i',iout,iupsc,idosc,k)     ! DLT
+
+         !## get operators
+         call urword(cntrl,icol,istart,istop,1,n,r,iout,in)            ! DLT
+         oper=cntrl(istart:istop)                                      ! DLT
+         call getarithoper(oper,'i',iout,ioper,coper,0.0,locat)        ! DLT
+         
+         icol = jcol                                                    ! DLT
+
+         rdrsflg=rdrs_main(fname,ia,ii*jj,2,'i',iout,iupsc,idosc,k,
+     1ioper,coper)     ! DLT
+
          if (rdrsflg.ge.0) then ! supported file type found             ! DLT
-          call urword(cntrl,icol,istart,istop,1,n,r,iout,in)            ! DLT
-          oper=cntrl(istart:istop)                                      ! DLT
-          call getarithoper(oper,'i',iout,ioper,coper,0.0,locat)        ! DLT
-         ! read cnstnt and iprn                                      ! DLT
-!            call urword(cntrl,icol,istart,istop,2,iconst,r,iout,in)     ! DLT
-            call urword(cntrl,icol,istart,istop,1,n,r,iout,in)          ! DLT
-            call urword(cntrl,icol,istart,istop,2,iprn,r,iout,in)       ! DLT
-            loper = .true.                                              ! DLT
-            call applyarithoper_int(fname,ia,jj,ii,ioper,coper)         ! DLT
-            iclose = 0                                                  ! DLT
-            goto 305                                                    ! DLT
-         end if                                                         ! DLT
+!          call urword(cntrl,icol,istart,istop,1,n,r,iout,in)            ! DLT
+!          oper=cntrl(istart:istop)                                      ! DLT
+!          call getarithoper(oper,'i',iout,ioper,coper,0.0,locat)        ! DLT
+          call urword(cntrl,icol,istart,istop,1,n,r,iout,in)          ! DLT
+          call urword(cntrl,icol,istart,istop,2,iprn,r,iout,in)       ! DLT
+          loper = .true.                                              ! DLT
+!          call applyarithoper_int(fname,ia,jj,ii,ioper,coper)         ! DLT
+          iclose = 0                                                  ! DLT
+          goto 305                                                    ! DLT
+            
+        end if                                                         ! DLT
       ELSE
 C
 C2A-----DID NOT FIND A RECOGNIZED WORD, SO NOT USING FREE FORMAT.
@@ -768,16 +782,24 @@ C2------FORMAT.  SET A FLAG SPECIFYING IF FREE FORMAT OR FIXED FORMAT.
             call urword(cntrl,icol,istart,istop,2,idosc,r,iout,in)      ! DLT
          end if                                                         ! DLT
          icol = jcol                                                    ! DLT
-         rdrsflg=rdrs_main(fname,a,ii*jj,2,'r',iout,iupsc,idosc,k)      ! DLT
+
+         call urword(cntrl,icol,istart,istop,1,n,r,iout,in)          ! DLT
+         oper=cntrl(istart:istop)                                    ! DLT
+         call getarithoper(oper,'r',iout,ioper,0,coper,locat)        ! DLT
+
+         icol = jcol                                                    ! DLT
+
+         rdrsflg=rdrs_main(fname,a,ii*jj,2,'r',iout,iupsc,idosc,k,
+     1ioper,coper)      ! DLT
          if (rdrsflg.ge.0) then ! supported file type found             ! DLT
 c            ! read cnstnt and iprn                                     ! DLT
-            call urword(cntrl,icol,istart,istop,1,n,r,iout,in)          ! DLT
-            oper=cntrl(istart:istop)                                    ! DLT
-            call getarithoper(oper,'r',iout,ioper,0,coper,locat)        ! DLT
+!            call urword(cntrl,icol,istart,istop,1,n,r,iout,in)          ! DLT
+!            oper=cntrl(istart:istop)                                    ! DLT
+!            call getarithoper(oper,'r',iout,ioper,0,coper,locat)        ! DLT
             call urword(cntrl,icol,istart,istop,1,n,r,iout,in) !fmtin   ! DLT
             call urword(cntrl,icol,istart,istop,2,iprn,r,iout,in) !iprn ! DLT
             loper = .true.                                              ! DLT
-            call applyarithoper(fname,a,jj,ii,ioper,coper)              ! DLT
+!            call applyarithoper(fname,a,jj,ii,ioper,coper)              ! DLT
             iclose = 0                                                  ! DLT
             goto 305                                                    ! DLT
          end if                                                         ! DLT

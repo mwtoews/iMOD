@@ -21,7 +21,7 @@ c   P.O. Box 177
 c   2600 MH Delft, The Netherlands.
 
       function rdrs_main(file,array,larray,ndimi,type,iout,
-     1                        iupsc,idosc,ilay)
+     1                        iupsc,idosc,ilay,ioper,coper)
 
 c description:
 c ------------------------------------------------------------------------------
@@ -50,6 +50,9 @@ c              O: number of dimension of data read
 c      nodata: I: no data value
 c      type  : I: data type as expected for array: 'R'eal 'I'nteger
 c                 If necessary, conversion will be applied
+
+      logical, dimension(5),intent(in) :: ioper                                    ! DLT
+      integer, dimension(5),intent(in) :: coper                                       ! DLT
 
       integer :: larray          ! (I)
       integer :: ndimi           ! (I)
@@ -102,7 +105,7 @@ c check for ipf (u2drel only)
                 end if
             end if
             ios = imod_idfread(file,array,rwrk,nodata,type(1:1),
-     1            iupsc,idosc)
+     1            iupsc,idosc,ioper,coper)
          else
             if (.not.allocated(iwrk)) then
                allocate(iwrk(ncol,nrow))
@@ -114,7 +117,7 @@ c check for ipf (u2drel only)
                 end if
             end if
             ios = imod_idfread(file,iwrk,array,nodata,type(1:1),
-     1            iupsc,idosc)
+     1            iupsc,idosc,ioper,coper)
          end if
       else if (imod_utl_has_ext(file,'gen')) then
          filetype = igen
@@ -127,6 +130,7 @@ c check for ipf (u2drel only)
       if (ios.ne.0) then
        call ustop(' Stopped in routine rdrs_main')
       endif
+
 c assign result flag
       rdrs_main = ios
 
@@ -367,7 +371,7 @@ c end of program
       end
 
       function imod_idfread(file,iarray,rarray,nodata,type,
-     1                      iupsc,idosc)
+     1                      iupsc,idosc,ioper,coper)
 c description:
 c ------------------------------------------------------------------------------
 c read idf file and scale is necessary
@@ -383,6 +387,8 @@ c modules
       implicit none
 
 c arguments
+      logical, dimension(5),intent(in) :: ioper                                    ! DLT
+      integer, dimension(5),intent(in) :: coper                                       ! DLT
       character(len=*), intent(in) :: file
       integer, dimension(ncol,nrow), intent(inout) :: iarray
       real, dimension(ncol,nrow), intent(inout)    :: rarray
@@ -496,6 +502,13 @@ c            if (val.eq.idfm%nodata) val = nodata
             end if
          end do
       end do
+
+      !## apply fct/imp
+      if(type.eq.'i')then
+       call applyarithoper_int(fname,rarray,nrow,ncol,ioper,coper)         ! DLT
+      else
+       call applyarithoper(fname,rarray,nrow,ncol,ioper,coper)         ! DLT
+      endif
 
 !      idfm%x(200,199)
 
