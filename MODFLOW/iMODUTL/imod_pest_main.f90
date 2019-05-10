@@ -397,7 +397,7 @@ CONTAINS
    ELSE
     !## overrule default settings for log normal
     SELECT CASE (PARAM(I)%PTYPE)
-     CASE ('KD','KH','KV','VC','SC','RC','RI','IC','II','DC','AF','MS','MC','VA','HF','EX','EP','QR','GC')
+     CASE ('KD','KH','KV','VC','SC','RC','RI','IC','II','DC','AF','MS','MC','VA','HF','EX','EP','QR','GC','SY')
       PARAM(I)%LOG=.TRUE.
      CASE DEFAULT
       PARAM(I)%LOG=.FALSE.    
@@ -587,9 +587,9 @@ CONTAINS
   !## not applicable for pilotpoints
   IF(PARAM(I)%ZTYPE.EQ.1)THEN
    SELECT CASE (TRIM(PARAM(I)%PTYPE))
-    CASE ('KD','KH','KV','VC','SC','VA','RE')
+    CASE ('KD','KH','KV','VC','SC','VA','RE','SY')
     CASE DEFAULT
-     CALL IMOD_UTL_PRINTTEXT('Cannot use PilotPoints for other than KD,KH,KV,VC,SC and VA',2)
+     CALL IMOD_UTL_PRINTTEXT('Cannot use PilotPoints for other than KD,KH,KV,VC,SC,SY and VA',2)
     END SELECT
   ENDIF
 
@@ -653,7 +653,7 @@ CONTAINS
        IF(PARAM(I)%IZONE.EQ.INT(ZONE(J)%X(ICOL,IROW)))THEN
 
         SELECT CASE (TRIM(PARAM(I)%PTYPE))
-         CASE ('KD','KH','KV','VC','SC','AF','AA','MS','MC','VA','HF','EX')
+         CASE ('KD','KH','KV','VC','SC','AF','AA','MS','MC','VA','HF','EX','SY')
           F=MOD(ZONE(J)%X(ICOL,IROW),1.0); IF(F.EQ.0.0)F=1.0
          CASE DEFAULT
           F=1.0
@@ -3015,7 +3015,7 @@ END SUBROUTINE WRITEIPF
   CALL IMOD_UTL_PRINTTEXT('Parameter '//TRIM(IMOD_UTL_ITOS(IP))//' outside parameter width',2)
  ENDIF
  SELECT CASE (TRIM(PARAM(IP)%PTYPE))
-  CASE ('KD','KH','SC','AF','VA')
+  CASE ('KD','KH','SC','AF','VA','SY')
    IF(PARAM(IP)%ILS.LE.0.OR.PARAM(IP)%ILS.GT.NLAY)   &
     CALL IMOD_UTL_PRINTTEXT('Parameter '//TRIM(IMOD_UTL_ITOS(IP))//': ILS exceeds NLAY',2)
   CASE ('VC','KV')

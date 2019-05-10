@@ -68,6 +68,7 @@ TYPE IDFSETTING
  CHARACTER(LEN=256),POINTER,DIMENSION(:) :: TFILES=>NULL()  !## filenames
  CHARACTER(LEN=52),POINTER,DIMENSION(:) :: CDATES=>NULL()   !## dates available
  INTEGER,POINTER,DIMENSION(:) :: ICLR=>NULL()               !## colour last read/processed
+ INTEGER(KIND=1),POINTER,DIMENSION(:) :: IACT=>NULL()       !## active (de)selected
  INTEGER :: D4ITIME         !## timestep if applicable
  INTEGER :: D4JTIME         !## timestep stored in memory
  INTEGER :: IFILL,JFILL     !## solid fill (1), wireframes (2) or combined (3)

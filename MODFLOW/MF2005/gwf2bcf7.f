@@ -334,7 +334,13 @@ C8H-----CAPABILITY HAS BEEN INVOKED (IWDFLG NOT 0).
   200 CONTINUE      
       call pest1alpha_grid('KD',cc,nrow,ncol,nlay,iout)                 ! IPEST
       call pest1alpha_grid('VC',cv,nrow,ncol,nlay-1,iout)               ! IPEST
-      if (iss.eq.0) call pest1alpha_grid('SC',sc1,nrow,ncol,nlay,iout)  ! IPEST
+      if (iss.eq.0)then
+       call pest1alpha_grid('SC',sc1,nrow,ncol,nlay,iout)  ! IPEST
+       IF(NTOP.GT.0)then
+        if(NTOP.ne.nlay)stop 'NTOP need to be equal to nlay'
+        call pest1alpha_grid('SY',sc2,nrow,ncol,nlay,iout)  ! IPEST
+       endif
+      endif
 C
 C9------PREPARE AND CHECK BCF DATA.
       CALL SGWF2BCF7N(ISS)

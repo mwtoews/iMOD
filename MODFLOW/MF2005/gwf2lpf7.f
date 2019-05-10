@@ -534,7 +534,13 @@ C
       call pest1alpha_grid('KH',hk,nrow,ncol,nlay,iout)                 ! IPEST
       call pest1alpha_grid('VA',vka,nrow,ncol,nlay,iout)                ! IPEST
       call pest1alpha_grid('KV',vkcb,nrow,ncol,nlay-1,iout)             ! IPEST
-      if(itrss.ne.0) call pest1alpha_grid('SC',sc1,nrow,ncol,nlay,iout) ! IPEST
+      if(itrss.ne.0)then
+       call pest1alpha_grid('SC',sc1,nrow,ncol,nlay,iout) ! IPEST
+       IF(NCNVRT.GT.0)then
+        if(ncnvrt.ne.nlay)stop 'ncnvrt need to be equal to nlay'
+        call pest1alpha_grid('SY',sc2,nrow,ncol,nlay,iout)! IPEST
+       endif
+      endif
 
       !## clean from bottom to top inactive layers with zero conductance
       do irow=1,nrow; do icol=1,ncol

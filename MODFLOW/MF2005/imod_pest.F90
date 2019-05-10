@@ -78,8 +78,8 @@ character(len=256) :: line
 integer :: i, j, k, ils, irow, icol
 real(kind=8) :: c, fct, ppart, range, nodata
 
-CHARACTER(LEN=2),DIMENSION(6) :: PPPARAM
-DATA PPPARAM/'KD','KH','KV','VC','SC','VA'/ !## variable for pilotpoints
+CHARACTER(LEN=2),DIMENSION(7) :: PPPARAM
+DATA PPPARAM/'KD','KH','KV','VC','SC','VA','SY'/ !## variable for pilotpoints
 
 !###======================================================================
 
@@ -100,7 +100,7 @@ if(pest_iter.eq.0)then
 
        if(.not.associated(param(i)%x))allocate(param(i)%x(param(i)%nodes))
        select case (trim(ptype))
-       case('KD','KH','KV','VA','SC','AF','EP','RE')
+       case('KD','KH','KV','VA','SC','AF','EP','RE','SY')
           do j=1,param(i)%nodes
              irow=param(i)%irow(j); icol=param(i)%icol(j)
              !## only modify active/constant head nodes
@@ -153,7 +153,7 @@ do i=1,size(param)
    IF(PARAM(I)%LOG)FCT=EXP(FCT)
 
    select case (trim(ptype))
-   case('KD','KH','KV','VA','SC','AF','EP','RE')
+   case('KD','KH','KV','VA','SC','AF','EP','RE','SY')
       do j=1,param(i)%nodes
          irow=param(i)%irow(j); icol=param(i)%icol(j)
          if(ibound(icol,irow,ils).ne.0)then
@@ -265,7 +265,7 @@ do i=1,size(param)
   CALL met1wrtidf(fname,xpp,ncol,nrow,nodata,iout)
 
   SELECT CASE (PPPARAM(IPP))
-   CASE ('KD','KH','VC','KV','SC','VA')  !## transmissivities
+   CASE ('KD','KH','VC','KV','SC','VA','SY')  !## transmissivities
     DO IROW=1,NROW; DO ICOL=1,NCOL
      IF(IBOUND(ICOL,IROW,ILS).EQ.0)CYCLE
      A(ICOL,IROW,ILS)=A(ICOL,IROW,ILS)*XPP(ICOL,IROW)
