@@ -5930,6 +5930,27 @@ DOLOOP: DO
  END SUBROUTINE PEUCKER_CALCDISTANCE
 
  !###====================================================================
+ REAL(KIND=DP_KIND) FUNCTION UTL_NASH_SUTCLIFFE(X,Y,N)
+ !###====================================================================
+ IMPLICIT NONE
+ INTEGER,INTENT(IN) :: N
+ REAL(KIND=DP_KIND),INTENT(IN),DIMENSION(N) :: X,Y !## x=head; y=obs
+ REAL(KIND=DP_KIND) :: XN,YN,YA
+ INTEGER :: I
+ 
+ !## compute nash-sutcliff
+ UTL_NASH_SUTCLIFFE=0.0D0
+ 
+ !## average observation
+ YA=0.0D0; DO I=1,N; YA=YA+Y(I)               ; ENDDO; YA=YA/REAL(N)
+ XN=0.0D0; DO I=1,N; XN=XN+(Y(I)-X(I))**2.0D0 ; ENDDO
+ YN=0.0D0; DO I=1,N; YN=YN+(Y(I)-YA)**2.0D0   ; ENDDO
+ 
+ UTL_NASH_SUTCLIFFE=1.0D0-XN/YN
+
+ END FUNCTION UTL_NASH_SUTCLIFFE 
+ 
+ !###====================================================================
  REAL(KIND=DP_KIND) FUNCTION UTL_GOODNESS_OF_FIT(X,Y,N)
  !###====================================================================
  IMPLICIT NONE

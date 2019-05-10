@@ -27,7 +27,7 @@ USE MOD_IDF_PAR
 USE MOD_IDF, ONLY : IDFNULLIFY,IDFALLOCATEX,IDFWRITE
 USE IMODVAR, ONLY : DP_KIND
 USE MOD_PMANAGER_PAR, ONLY : PEST,SIM,PARAM,PRJNLAY,PBMAN,PRJNPER
-USE MOD_UTL, ONLY  : UTL_GETUNIT,UTL_CAP,ITOS,RTOS,UTL_GETMED,UTL_CREATEDIR
+USE MOD_UTL, ONLY  : UTL_GETUNIT,UTL_CAP,ITOS,RTOS,UTL_GETMED,UTL_CREATEDIR,UTL_GOODNESS_OF_FIT,UTL_NASH_SUTCLIFFE
 USE MOD_IPEST_GLM_PAR
 
 CONTAINS
@@ -136,9 +136,9 @@ CONTAINS
   WRITE(IUPESTOUT,'(A)')  'Best Plausibility Value : '//TRIM(RTOS(MSR%RJ,'G',7))
   WRITE(IUPESTOUT,'(A)')  'Total Objective Value   : '//TRIM(RTOS(MSR%TJ,'G',7))
   WRITE(IUPESTOUT,'(A)')  'Mean Objective Value    : '//TRIM(RTOS(MSR%TJ/REAL(MSR%NOBS,8),'G',7))
-  RFIT=IPEST_GOODNESS_OF_FIT(GF_H,GF_O,MSR%NOBS)
+  RFIT=UTL_GOODNESS_OF_FIT(GF_H,GF_O,MSR%NOBS)
   WRITE(IUPESTOUT,'( A)') 'Goodness of Fit         : '//TRIM(RTOS(RFIT,'G',7))
-  RFIT=IPEST_NASH_SUTCLIFFE(GF_H,GF_O,MSR%NOBS)
+  RFIT=UTL_NASH_SUTCLIFFE(GF_H,GF_O,MSR%NOBS)
   WRITE(IUPESTOUT,'( A)') 'Nash Sutcliffe          : '//TRIM(RTOS(RFIT,'G',7))
   WRITE(IUPESTOUT,'( A)') 'Number of Observations  : '//TRIM(ITOS(MSR%NOBS))
   
@@ -299,7 +299,7 @@ MAINLOOP: DO
   IF(WINFOERROR(1).EQ.ERROSCOMMAND)THEN; WRITE(*,'(/A/)') 'FAILED TO START MODEL L#'//TRIM(ITOS(LPARAM(ILIN))); STOP; ENDIF
   !## get objective function value
   CALL IPEST_GLM_GETJ(DIR,ILIN,LPARAM(ILIN),'L')
-  XSTAT(1)=MSR%TJ-MSR%RJ; XSTAT(2)=MSR%RJ; XSTAT(3)=MSR%TJ; XSTAT(4)=MSR%TJ/REAL(MSR%NOBS,8); XSTAT(5)=IPEST_GOODNESS_OF_FIT(GF_H,GF_O,MSR%NOBS); XSTAT(6)=IPEST_NASH_SUTCLIFFE(GF_H,GF_O,MSR%NOBS)
+  XSTAT(1)=MSR%TJ-MSR%RJ; XSTAT(2)=MSR%RJ; XSTAT(3)=MSR%TJ; XSTAT(4)=MSR%TJ/REAL(MSR%NOBS,8); XSTAT(5)=UTL_GOODNESS_OF_FIT(GF_H,GF_O,MSR%NOBS); XSTAT(6)=UTL_NASH_SUTCLIFFE(GF_H,GF_O,MSR%NOBS)
  
   IPARAM=0; DO I=1,SIZE(PEST%PARAM)
    IF(PEST%PARAM(I)%PACT.EQ.0)CYCLE; IPARAM=IPARAM+1
@@ -2518,47 +2518,26 @@ MAINLOOP: DO
  
  END SUBROUTINE IPEST_GLM_DEALLOCATEMSR
  
- !###====================================================================
- REAL FUNCTION IPEST_GOODNESS_OF_FIT(X,Y,N)
- !###====================================================================
- IMPLICIT NONE
- INTEGER,INTENT(IN) :: N
- REAL(KIND=DP_KIND),INTENT(IN),DIMENSION(N) :: X,Y !## x=head; y=obs
- REAL(KIND=DP_KIND) :: XN,YN,YA
- INTEGER :: I
+! !###====================================================================
+! REAL FUNCTION IPEST_GOODNESS_OF_FIT(X,Y,N)
+! !###====================================================================
+! IMPLICIT NONE
+! INTEGER,INTENT(IN) :: N
+! REAL(KIND=DP_KIND),INTENT(IN),DIMENSION(N) :: X,Y !## x=head; y=obs
+! REAL(KIND=DP_KIND) :: XN,YN,YA
+! INTEGER :: I
  
- !## compute nash-sutcliff
- IPEST_GOODNESS_OF_FIT=0.0D0
+! !## compute nash-sutcliff
+! IPEST_GOODNESS_OF_FIT=0.0D0
  
- !## average observation
- YA=0.0D0; DO I=1,N; YA=YA+Y(I)          ; ENDDO; YA=YA/REAL(N)
- XN=0.0D0; DO I=1,N; XN=XN+ABS(Y(I)-X(I)); ENDDO; XN=XN**2.0D0
- YN=0.0D0; DO I=1,N; YN=YN+ABS(Y(I)-YA)  ; ENDDO; YN=YN**2.0D0
+! !## average observation
+! YA=0.0D0; DO I=1,N; YA=YA+Y(I)          ; ENDDO; YA=YA/REAL(N)
+! XN=0.0D0; DO I=1,N; XN=XN+ABS(Y(I)-X(I)); ENDDO; XN=XN**2.0D0
+! YN=0.0D0; DO I=1,N; YN=YN+ABS(Y(I)-YA)  ; ENDDO; YN=YN**2.0D0
  
- IPEST_GOODNESS_OF_FIT=1.0D0-XN/YN
+! IPEST_GOODNESS_OF_FIT=1.0D0-XN/YN
 
- END FUNCTION IPEST_GOODNESS_OF_FIT 
- 
- !###====================================================================
- REAL FUNCTION IPEST_NASH_SUTCLIFFE(X,Y,N)
- !###====================================================================
- IMPLICIT NONE
- INTEGER,INTENT(IN) :: N
- REAL(KIND=DP_KIND),INTENT(IN),DIMENSION(N) :: X,Y !## x=head; y=obs
- REAL(KIND=DP_KIND) :: XN,YN,YA
- INTEGER :: I
- 
- !## compute nash-sutcliff
- IPEST_NASH_SUTCLIFFE=0.0D0
- 
- !## average observation
- YA=0.0D0; DO I=1,N; YA=YA+Y(I)               ; ENDDO; YA=YA/REAL(N)
- XN=0.0D0; DO I=1,N; XN=XN+(Y(I)-X(I))**2.0D0 ; ENDDO
- YN=0.0D0; DO I=1,N; YN=YN+(Y(I)-YA)**2.0D0   ; ENDDO
- 
- IPEST_NASH_SUTCLIFFE=1.0D0-XN/YN
-
- END FUNCTION IPEST_NASH_SUTCLIFFE 
+! END FUNCTION IPEST_GOODNESS_OF_FIT 
  
  !###====================================================================
  SUBROUTINE IPEST_LUDECOMP_DBL(AA,IDX,N,ISING)
