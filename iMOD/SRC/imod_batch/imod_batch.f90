@@ -94,6 +94,8 @@ USE MOD_IPFASSFILE, ONLY : IPFOPENASSFILE,IPFREADASSFILELABEL,IPFREADASSFILE,IPF
 USE MOD_IPFASSFILE_UTL
 USE MOD_IPF_PAR, ONLY : ASSF,IPF,NIPF
 USE MOD_IPF, ONLY : IPFINIT,IPFREAD,IPFDEALLOCATE,IPFALLOCATE,IPFWRITE
+USE MOD_MSPNETRCH, ONLY : MSPNETRCHCOMPUTE
+
 
 INTEGER,PARAMETER,PRIVATE :: MAXFUNC=80
 CHARACTER(LEN=50),DIMENSION(MAXFUNC),PRIVATE :: CFUNC
@@ -6383,7 +6385,7 @@ CONTAINS
  
  END SUBROUTINE IMODBATCH_IPFSTAT_MAIN
 
- !###======================================================================
+ !###==================MOD_MEAN_PAR     ===================================================
  SUBROUTINE IMODBATCH_IDFMEAN_MAIN()
  !###======================================================================
  USE MOD_MEAN_PAR
@@ -8179,82 +8181,61 @@ CONTAINS
  IMPLICIT NONE
  INTEGER :: I,K,N,SY,EY,NBAL,IOPT
  CHARACTER(LEN=256) :: DIR,OUTPUTFNAME
- !
- !! acties: 
- !! lezen keywords: een keyword is modelmap, mer niet.
- !! zoeken naar de inhoud van 1 willekeurige map er van uitgaande dat in de andere mappen deze ook zoude moeten zitten, niet meer
- !! loop over alle gevonden filenamen
- !! vervolgens string zoek en vervang voor andere variabelen IDF's. 
- !! pas als alle IDF's aanwezig zijn dan overgaan tot RCH formule
- !! dan ook nog bepalen welke periode je de sc1 gaat berekenen:
- ! 1 neem je zelfde periode als gewenste rch periode?  dat kan te kort zijn
-! 2. andere uiterste is dat je alle beschikbare tijdstappen neemt (dat kan te lang zijn)
- ! 3. je kunt ook eis stellen aan lengte van periode  : minstens sdate-edate, als beschikbare hoeveelheid is langer, dan zoeken naar x jaar door steed naar boven en onder te zoeken naar ruimte (
 
- ! hoe werkt de berekening
- ! formule is: gwa = delta lvgwmodf * sc1 - qmodf
- ! sc1 = langjarig gemiddelde van de bergingscoefficient per svat
- ! lvgwmodf = berekende modflow-head per tijdstap
- ! 
+ !## - reading Compulsory input - 
+
+ !## read location info
+ IF(.NOT.UTL_READINITFILE('SOURCEDIR',LINE,IU,0))RETURN
+ READ(LINE,*) SOURCEDIR; WRITE(*,'(A)') 'SOURCEDIR='//TRIM(SOURCEDIR)
+ 
+ !## - reading Optional input - 
+
+ IF(UTL_READINITFILE('RESULTDIR',LINE,IU,0))THEN
+   READ(LINE,*) RESDIR; WRITE(*,'(A)') 'RESULTDIR='//TRIM(RESDIR)
+ ELSE   
+   RESDIR='\'//TRIM(SOURCEDIR)//'\METASWAP\MSPNETRCH'
+ ENDIF
+ 
+ 
  MSPRCH_NYEAR=0
- !## read start date (optional)
+ !## read start date 
+ MSPRCH_FYR=00000000 ;  MSPRCH_TYR=99991231
  IF(UTL_READINITFILE('SDATE',LINE,IU,1))THEN
-  READ(LINE,*) MSPRCH_FYR; IF(MSPRCH_FYR.LT.99999999)MSPRCH_FYR=MSPRCH_FYR*1000000
+  READ(LINE,*) MSPRCH_FYR !; IF(MSPRCH_FYR.LT.99999999)MSPRCH_FYR=MSPRCH_FYR*1000000
   WRITE(*,'(A,I16)') 'SDATE=',MSPRCH_FYR
   LINE=ADJUSTL(LINE); READ(LINE,'(I4)') SY
  
  !## read end date
   IF(.NOT.UTL_READINITFILE('EDATE',LINE,IU,0))RETURN
-  READ(LINE,*) MSPRCH_TYR; IF(MSPRCH_TYR.LT.99999999)MSPRCH_TYR=MSPRCH_TYR*1000000
+  READ(LINE,*) MSPRCH_TYR !; IF(MSPRCH_TYR.LT.99999999)MSPRCH_TYR=MSPRCH_TYR*1000000
   WRITE(*,'(A,I16)') 'EDATE=',MSPRCH_TYR
   LINE=ADJUSTL(LINE); READ(LINE,'(I4)') EY
- 
   IF(.NOT.IMODBATH_READYEAR(MSPRCH_NYEAR,MSPRCH_IYEAR,SYEAR=SY,EYEAR=EY))RETURN
  ELSE
   WRITE(*,'(/1A/)') 'COMPUTING NET RECHARGE FOR ALL TIMESTEPS'
  ENDIF
  
- !## read location info
- IF(.NOT.UTL_READINITFILE('SOURCEDIR',LINE,IU,0))RETURN
- READ(LINE,*) SOURCEDIR
- LINE='SOURCEDIR'//TRIM(ITOS(I))//'='
- WRITE(*,'(A)') TRIM(LINE)//TRIM(SOURCEDIR)
- 
- IF(.NOT.UTL_READINITFILE('RESULTDIR',LINE,IU,0))RETURN
- READ(LINE,*) RESDIR
- LINE='RESULTDIR'//TRIM(ITOS(I))//'='
- WRITE(*,'(A)') TRIM(LINE)//TRIM(RESDIR)
-  
-! IF(.NOT.MSPRCHCOMPUTE())THEN; ENDIF
+ !## read Storage coefficient
+ SCOPT=-1
+ IF(UTL_READINITFILE('STOAVG',LINE,IU,1))THEN
+   READ(LINE,*) STOAVG; WRITE(*,'(A)') 'STOAVG='//TRIM(STOAVG)
+ ELSE
+   WRITE(*,'(A)') 'COMPUTING AVERAGE STORAGE COEFFICIENT'
+   !## read flag to determine period for calculating average Storage coefficient
+   IF(UTL_READINITFILE('SCOPT',LINE,IU,1))THEN
+     READ(LINE,*) SCOPT; WRITE(*,'(A)') 'SCOPT='//TRIM(ITOS(SCOPT))
+   ENDIF
+   IF(SCOPT.EQ.0) WRITE(*,'(A)') 'COMPUTING AVERAGE STORAGE COEFFICIENT FOR THE MODELED PERIODE'
+   IF(SCOPT.EQ.1) WRITE(*,'(A)') 'COMPUTING AVERAGE STORAGE COEFFICIENT FOR THE PERIODE SDATE-EDATE'
+ ENDIF
 
- !CALL UTL_DIRINFO(TRIM(MEAN_RESDIR),TRIM(IDFFILE)//'*_L'//TRIM(ITOS(ILAY))//'.IDF',MEAN_LISTNAME,NFILES,'F')
+ IF(.NOT.MSPNETRCHCOMPUTE())THEN;
+  WRITE(*,'(/A)') 'NOT Successfully completed MSPNETRCH. Check the echo. '
+ ELSE
+  WRITE(*,'(/A)') 'Successfully completed MSPNETRCH, results written in:'
+  WRITE(*,'(A/)') TRIM(RESDIR)
+ ENDIF
 
- !FNAME=TRIM(WCTP(IBAL)%BDGNAME)
- !IF(ASSOCIATED(WCTP(IBAL)%ISYS))FNAME=TRIM(FNAME)//'_SYS'//TRIM(ITOS(WCTP(IBAL)%ISYS(JSYS)))
- !FNAME=TRIM(FNAME)//'_*_L'//TRIM(ITOS(ILAY))//'.IDF'
-
-     !!## get them all
-     !IF(UTL_DIRINFO_POINTER(ROOT,FNAME,IDFNAMES,'F',CORDER='N'))THEN; ENDIF
-     !DO I=1,SIZE(IDFNAMES)
-     ! IDATE=UTL_IDFGETDATE(IDFNAMES(I),IDATEFULL=IDATEFULL) 
-     ! IF(IDATE.NE.0)THEN   > sdate < edate
-     !  NFILES=NFILES+1
-     !  IF(NFILES.GT.SIZE(ITIME))THEN
-     !   ALLOCATE(ITIME_BU(SIZE(ITIME)+1000))
-     !   DO J=1,SIZE(ITIME); ITIME_BU(J)=ITIME(J); ENDDO
-     !   DEALLOCATE(ITIME); ITIME=>ITIME_BU
-     !  ENDIF
-     !  ITIME(NFILES)=IDATEFULL 
-     ! ENDIF        
-     !ENDDO
-     !DEALLOCATE(IDFNAMES)
-
- !## get number unique dates
-!  CALL UTL_GETUNIQUE_DINT(LDATES,NFILES,NU,0); NFILES=NU 
- 
- !!## release waterbalance-related memory again
- !CALL WBALABORT()
- 
  END SUBROUTINE IMODBATCH_MSPNETRCH
 
  
