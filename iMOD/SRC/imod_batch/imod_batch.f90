@@ -1357,6 +1357,8 @@ CONTAINS
       WRITE(*,'(A,I5,A)') 'Time step: ',PBMAN%IDT,' years'
      CASE (8)
       WRITE(*,'(A)')      'Time step: depending on packages'; PBMAN%IDT=1
+     CASE (9)
+      WRITE(*,'(A)')      'Time step: ',PBMAN%IDT,' minutes'
     END SELECT
 
     IF(UTL_READINITFILE('NSTEP',LINE,IU,1))READ(LINE,*) PBMAN%NSTEP

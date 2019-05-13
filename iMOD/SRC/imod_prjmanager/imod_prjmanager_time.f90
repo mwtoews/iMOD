@@ -166,7 +166,7 @@ CONTAINS
  CALL WDIALOGLOAD(ID_DPMANAGER_TIMES,ID_DPMANAGER_TIMES)
  CALL WDIALOGPUTIMAGE(ID_OPEN,ID_ICONOPEN,1)
  CALL WDIALOGPUTIMAGE(ID_SAVE,ID_ICONSAVEAS,1)
- CALL WDIALOGPUTMENU(IDF_MENU1,TMENU1,SIZE(TMENU1),2)
+ CALL WDIALOGPUTMENU(IDF_MENU1,TMENU1,SIZE(TMENU1),3)
 
  CALL WDIALOGTITLE('Time Discretization Manager for Simulation')
 
@@ -265,15 +265,15 @@ CONTAINS
  INTEGER,INTENT(OUT) :: ISTATE,ISTEP
  
  SELECT CASE (IPERIOD)
-  CASE (1,2,6,7) !## hourly,daily,monthly,yearly
+  CASE (1,2,3,7,8) !## hourly,daily,monthly,yearly
    ISTATE=1; ISTEP=1
-  CASE (3) !## weekly
+  CASE (4) !## weekly
    ISTATE=1; ISTEP=1
-  CASE (4) !## decade
+  CASE (5) !## decade
    ISTATE=1; ISTEP=1
-  CASE (5) !## 14/28
+  CASE (6) !## 14/28
    ISTATE=0; ISTEP=14
-  CASE (8,9) !## all
+  CASE (9,10) !## all
    ISTATE=0; ISTEP=0
  END SELECT
  
@@ -334,7 +334,7 @@ CONTAINS
  ALLOCATE(SIM_C2(SIZE(SIM))); SIM_C2=SIM; DEALLOCATE(SIM)
   
  !## all selected between irow1 and irow2
- IF(ITG.EQ.2.AND.IPERIOD.EQ.9)THEN
+ IF(ITG.EQ.2.AND.IPERIOD.EQ.10)THEN
   PRJNPER=IROW2-IROW1+1; ALLOCATE(SIM(PRJNPER))
   DO I=1,PRJNPER; SIM(I)=SIM_C2(I+IROW1-1); ENDDO
  ELSE
@@ -541,41 +541,43 @@ CONTAINS
  !## overrule in case istep=0
  IF(ISTEP.EQ.0)THEN
   SELECT CASE (IPERIOD)
-   CASE (1,2,6,7) !## hourly,daily,monthly,yearly
+   CASE (1,2,3,7,8) !## minutes,hourly,daily,monthly,yearly
     ISTEP=1
-   CASE (3) !## weekly
+   CASE (4) !## weekly
     ISTEP=7
-   CASE (4) !## decade
+   CASE (5) !## decade
     ISTEP=10
-   CASE (5) !## 14/28
+   CASE (6) !## 14/28
     ISTEP=14
   END SELECT
  ENDIF
 
  SELECT CASE (IPERIOD)
-  CASE (3) !## weekly
+  CASE (4) !## weekly
    ISTEP=JSTEP*7
-  CASE (4) !## decade
+  CASE (5) !## decade
    ISTEP=JSTEP*10
  END SELECT
 
  !## fill in intermediate timesteps
  SELECT CASE (IPERIOD)
-  CASE (1) !## hourly
+  CASE (1) !## minutes
+   I=I2; DO; I=I+1; IF(.NOT.PMANAGER_ADDTIMESTEP(I,I1, ISTEP,5))EXIT; ENDDO; PRJNPER=I
+  CASE (2) !## hourly
    I=I2; DO; I=I+1; IF(.NOT.PMANAGER_ADDTIMESTEP(I,I1, ISTEP,4))EXIT; ENDDO; PRJNPER=I
-  CASE (2) !## daily
+  CASE (3) !## daily
    I=I2; DO; I=I+1; IF(.NOT.PMANAGER_ADDTIMESTEP(I,I1, ISTEP,3))EXIT; ENDDO; PRJNPER=I
-  CASE (3) !## weekly
+  CASE (4) !## weekly
    I=I2; DO; I=I+1; IF(.NOT.PMANAGER_ADDTIMESTEP(I,I1, ISTEP,3))EXIT; ENDDO; PRJNPER=I
-  CASE (4) !## decade
+  CASE (5) !## decade
    I=I2; DO; I=I+1; IF(.NOT.PMANAGER_ADDTIMESTEP(I,I1, ISTEP,3))EXIT; ENDDO; PRJNPER=I
-  CASE (5) !## 14/28
+  CASE (6) !## 14/28
    I=I2; DO; I=I+1; IF(.NOT.PMANAGER_ADDTIMESTEP(I,I1,10,7))EXIT; ENDDO; PRJNPER=I
-  CASE (6) !## monthly
+  CASE (7) !## monthly
    I=I2; DO; I=I+1; IF(.NOT.PMANAGER_ADDTIMESTEP(I,I1, ISTEP,2))EXIT; ENDDO; PRJNPER=I
-  CASE (7) !## yearly
+  CASE (8) !## yearly
    I=I2; DO; I=I+1; IF(.NOT.PMANAGER_ADDTIMESTEP(I,I1, ISTEP,1))EXIT; ENDDO; PRJNPER=I
-  CASE (8) !## packages
+  CASE (9) !## packages
    CALL PMANAGER_GETPRJNPER(JD1,IHMS1,JD2,IHMS2)
  END SELECT
 

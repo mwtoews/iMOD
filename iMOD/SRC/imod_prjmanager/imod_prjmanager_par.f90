@@ -223,10 +223,10 @@ MODULE MOD_PMANAGER_PAR
  CHARACTER(LEN=52),SAVE :: MODELNAME='Model'
  REAL(KIND=DP_KIND),DIMENSION(7) :: SUBMODEL
  
- CHARACTER(LEN=8),DIMENSION(9) :: TMENU1,TMENU2
- DATA TMENU1/'Hourly  ','Daily   ','Weekly  ','Decade  ', &
+ CHARACTER(LEN=8),DIMENSION(10) :: TMENU1,TMENU2
+ DATA TMENU1/'Minutes ','Hourly  ','Daily   ','Weekly  ','Decade  ', &
              '14/28   ','Monthly ','Yearly  ','Packages','Custom  '/
- DATA TMENU2/'Hourly  ','Daily   ','Weekly  ','Decade  ', &
+ DATA TMENU2/'Minutes ','Hourly  ','Daily   ','Weekly  ','Decade  ', &
              '14/28   ','Monthly ','Yearly  ','Packages','All     '/
  
  INTEGER,ALLOCATABLE,DIMENSION(:) :: PRJILIST
