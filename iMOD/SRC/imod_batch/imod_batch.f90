@@ -1335,30 +1335,30 @@ CONTAINS
     IF(.NOT.UTL_READINITFILE('ITT',LINE,IU,0))RETURN
     READ(LINE,*) PBMAN%ITT; WRITE(*,'(A,I14)') 'ITT=',PBMAN%ITT
     SELECT CASE (PBMAN%ITT)
-     CASE (1:5,6,7)
+     CASE (1:8)
       !## timesteps
       IF(.NOT.UTL_READINITFILE('IDT',LINE,IU,0))RETURN
       READ(LINE,*) PBMAN%IDT; WRITE(*,'(A,I14)') 'IDT=',PBMAN%IDT
     END SELECT
     SELECT CASE (PBMAN%ITT)
      CASE (1)
-      WRITE(*,'(A,I5,A)') 'Time step: ',PBMAN%IDT,' hours'
-     CASE (2)
-      WRITE(*,'(A,I5,A)') 'Time step: ',PBMAN%IDT,' days'
-     CASE (3)
-      WRITE(*,'(A,I5,A)') 'Time step: ',PBMAN%IDT,' weeks'
-     CASE (4)
-      WRITE(*,'(A,I5,A)') 'Time step: decades',PBMAN%IDT,' days'
-     CASE (5)
-      WRITE(*,'(A)')      'Time step: every 14/28'
-     CASE (6)
-      WRITE(*,'(A,I5,A)') 'Time step: ',PBMAN%IDT,' months'
-     CASE (7)
-      WRITE(*,'(A,I5,A)') 'Time step: ',PBMAN%IDT,' years'
-     CASE (8)
-      WRITE(*,'(A)')      'Time step: depending on packages'; PBMAN%IDT=1
-     CASE (9)
       WRITE(*,'(A)')      'Time step: ',PBMAN%IDT,' minutes'
+     CASE (2)
+      WRITE(*,'(A,I5,A)') 'Time step: ',PBMAN%IDT,' hours'
+     CASE (3)
+      WRITE(*,'(A,I5,A)') 'Time step: ',PBMAN%IDT,' days'
+     CASE (4)
+      WRITE(*,'(A,I5,A)') 'Time step: ',PBMAN%IDT,' weeks'
+     CASE (5)
+      WRITE(*,'(A,I5,A)') 'Time step: decades',PBMAN%IDT,' days'
+     CASE (6)
+      WRITE(*,'(A)')      'Time step: every 14/28'
+     CASE (7)
+      WRITE(*,'(A,I5,A)') 'Time step: ',PBMAN%IDT,' months'
+     CASE (8)
+      WRITE(*,'(A,I5,A)') 'Time step: ',PBMAN%IDT,' years'
+     CASE (9)
+      WRITE(*,'(A)')      'Time step: depending on packages'; PBMAN%IDT=1
     END SELECT
 
     IF(UTL_READINITFILE('NSTEP',LINE,IU,1))READ(LINE,*) PBMAN%NSTEP

@@ -359,6 +359,7 @@
 		<File RelativePath="..\..\SRC\imod_movie\imod_movie_par.f90"/></Filter>
 		<Filter Name="imod_mspinspector">
 		<File RelativePath="..\..\SRC\imod_mspinspector\imod_mspinspector.f90"/>
+		<File RelativePath="..\..\SRC\imod_mspinspector\imod_mspinspector_mspnetrch.f90"/>
 		<File RelativePath="..\..\SRC\imod_mspinspector\imod_mspinspector_par.f90"/>
 		<File RelativePath="..\..\SRC\imod_mspinspector\imod_mspinspector_utl.f90"/></Filter>
 		<Filter Name="imod_nc2idf">
