@@ -186,8 +186,9 @@ INTEGER,DIMENSION(MXMSFILES) :: MSFILES_IACT
 
 CHARACTER(LEN=256) :: ROOT,LINE,FNAME
 CHARACTER(LEN=52) :: MNAME,MFNAME
-TYPE(IDFOBJ) :: MSPIDF,MSPSCAPSVAT,MSPLUSE
-TYPE(IDFOBJ) :: SVATRU,SVATUR,SVATIR  ! GRID position of SVAT for rural, urban and irrigation
+TYPE(IDFOBJ) :: MSPIDF               ! variable use e.g. pointer of selected irrigatied cells
+TYPE(IDFOBJ) :: MSPSCAPSVAT,MSPLUSE  ! layer of irrigation source / landuse value (not urban) 
+TYPE(IDFOBJ) :: SVATRU,SVATUR,SVATIR,SVATIRS ! GRID position of SVAT for rural, urban, irrigation and irrigationsource
 TYPE(IDFOBJ) :: METEO
 INTEGER :: IYBG,TDBG     !PARA_SIM: starting time of calculations [d] / year number of starting time
 INTEGER :: MSPSDATE,MSPEDATE

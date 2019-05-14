@@ -104,7 +104,7 @@ CONTAINS
  CALL UTL_CREATEDIR(TRIM(RESDIR))
 
  !## if not given, calc mean Storage Coefficient 
- IF(SCOPT.NE.-1)THEN 
+ IF(LEN(TRIM(STOAVG)).EQ.0)THEN 
 
    !## Calc average storage coefficient
    IBATCH=1
@@ -126,6 +126,8 @@ CONTAINS
    STOAVG =TRIM(MEAN_RESDIR)//'_'//TRIM(CFUNC)//'_'// &                                 
            TRIM(ITOS(FY))//'-'//TRIM(ITOS(FM))//'-'//TRIM(ITOS(FD))//'_to_'// &
            TRIM(ITOS(TY))//'-'//TRIM(ITOS(TM))//'-'//TRIM(ITOS(TD))//'_L'//TRIM(ITOS(MEAN_NLAYER))//'.IDF'
+   WRITE(*,*) 'No Mean Storage Coefficient (MSC) file given. MSC is calculated.'  
+   WRITE(*,'(A/)') '.... with files: '//TRIM(MEAN_RESDIR)//'_YYYYMMDD_L1.IDF'
    IF(.NOT.MEAN1COMPUTE())THEN ; ENDIF
  ENDIF
 
@@ -139,16 +141,16 @@ IF(.NOT.IDFREAD(SC1,TRIM(FNAME),1))RETURN ; WRITE(*,'(A)') 'Reading '//TRIM(FNAM
 NCREATE=0
 DO IFILES=2,NFILES   ! start at time position 2 while "delta lvgwmodf" is defined as "lvgmodf (t) - lvgmodf (t-1)".
  CALL ITIMETOGDATE(LDATES(IFILES),IY,IM,ID,IHR,IMT,ISC)
+ WRITE(CDATE,'(I4.4,2I2.2)') IY,IM,ID
+ WRITE(*,*) 'Timestep '//TRIM(CDATE)//'...'  
  JD0=JD(IY,IM,ID)
  !## check if time is within period
  IF(JD0.GE.JD1.AND.JD0.LE.JD2)THEN  
   NCREATE=NCREATE+1
-  
-  !## timestep=t
+
+  !## timestep=t  (HEAD2)
   CALL ITIMETOGDATE(LDATES(IFILES),IY,IM,ID,IHR,IMT,ISC)
   WRITE(CDATE,'(I4.4,2I2.2)') IY,IM,ID
-  WRITE(*,*) 'Timestep'//TRIM(CDATE)//'...'  
-  
   FNAME=TRIM(SOURCEDIR)//'\HEAD\HEAD_'//TRIM(CDATE)//'_L1.IDF'
   IF(.NOT.IDFREAD(HEAD2,TRIM(FNAME),1))RETURN ; WRITE(*,'(A)') 'Reading '//TRIM(FNAME)//'...' 
   FNAME=TRIM(SOURCEDIR)//'\METASWAP\BDGQMODF\BDGQMODF_'//TRIM(CDATE)//'_L1.IDF'
@@ -165,7 +167,7 @@ DO IFILES=2,NFILES   ! start at time position 2 while "delta lvgwmodf" is define
     ENDIF   
   ENDIF
 
-  !## timestep=t-1
+  !## timestep=t-1 (HEAD1)
   CALL ITIMETOGDATE(LDATES(IFILES-1),IY,IM,ID,IHR,IMT,ISC)
   WRITE(CDATE,'(I4.4,2I2.2)') IY,IM,ID
 
