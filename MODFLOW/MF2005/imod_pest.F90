@@ -265,7 +265,7 @@ do i=1,size(param)
   CALL met1wrtidf(fname,xpp,ncol,nrow,nodata,iout)
 
   SELECT CASE (PPPARAM(IPP))
-   CASE ('KD','KH','VC','KV','SC','VA','SY')  !## transmissivities
+   CASE ('KD','KH','VC','KV','SC','VA','SY','EP')  !## transmissivities
     DO IROW=1,NROW; DO ICOL=1,NCOL
      IF(IBOUND(ICOL,IROW,ILS).EQ.0)CYCLE
      A(ICOL,IROW,ILS)=A(ICOL,IROW,ILS)*XPP(ICOL,IROW)
