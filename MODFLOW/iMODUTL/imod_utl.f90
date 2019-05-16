@@ -26,7 +26,8 @@ MODULE IMOD_UTL
  REAL(KIND=8),POINTER,DIMENSION(:) :: XA,YA,XA_DUMMY,YA_DUMMY
  REAL(KIND=8),POINTER,DIMENSION(:) :: ZA,FA,LN,ZA_DUMMY,FA_DUMMY,LN_DUMMY
  INTEGER,POINTER,DIMENSION(:) :: CA,RA,CA_DUMMY,RA_DUMMY
- REAL(KIND=8) :: XBEGIN,YBEGIN,A,B
+! REAL(KIND=8) :: XBEGIN,YBEGIN,
+ REAL(KIND=8) :: A,B
  INTEGER :: IHOR,IVER
  INTEGER,PARAMETER :: NOS=3
  INTEGER, SAVE :: OS = 1                     !## operating system 1=dos,2=linux,3=unix
@@ -3353,6 +3354,7 @@ END SUBROUTINE IMOD_UTL_QKSORT
  LOGICAL,INTENT(IN) :: LHFB
  REAL(KIND=8) :: X,Y,XMN,XMX,YMN,YMX,DX,DY,LENG,TD,X1,X2,Y1,Y2,CSX,CSY
  INTEGER :: I,ICOL,IROW,ID,N_IN
+ LOGICAL :: LFLIP
  
  N=0; X1=XIN1; Y1=YIN1; X2=XIN2; Y2=YIN2
  
@@ -3369,7 +3371,7 @@ END SUBROUTINE IMOD_UTL_QKSORT
  
  N_IN=N
 
- IF(.NOT.INTERSECT_EQUATION(XMIN,XMAX,YMIN,YMAX,X1,X2,Y1,Y2,N)) RETURN 
+ IF(.NOT.INTERSECT_EQUATION(XMIN,XMAX,YMIN,YMAX,X1,X2,Y1,Y2,N,LFLIP)) RETURN 
  
  !## find search box - result can be negative, does not matter!
  IF(X1.LT.XMIN)THEN
@@ -3454,7 +3456,7 @@ END SUBROUTINE IMOD_UTL_QKSORT
  CSY=CSY_IN
 
  DX=X1-X2; DY=Y2-Y1
- CALL INTERSECT_SORT(DX,DY,N_IN+1,N)
+ CALL INTERSECT_SORT(DX,DY,N_IN+1,N,LFLIP)
 
  !## sample each of the point to determine irow/icol, overwrite point with this
  !## skip first and last, they represented already by the second and one-last point
@@ -3538,6 +3540,7 @@ END SUBROUTINE IMOD_UTL_INTERSECT_NCORNER
  LOGICAL,INTENT(IN) :: LHFB
  REAL(KIND=8) :: X,Y,XMN,XMX,YMN,YMX,DX,DY,LENG,XMIN,YMIN,XMAX,YMAX,X1,X2,Y1,Y2,CS,TD,CSX,CSY
  INTEGER :: I,ICOL,IROW,IMN,JMN,ID,N_IN
+ LOGICAL :: LFLIP
  
  X1=XIN1; Y1=YIN1; X2=XIN2; Y2=YIN2
  
@@ -3552,7 +3555,7 @@ END SUBROUTINE IMOD_UTL_INTERSECT_NCORNER
 
  N_IN=N
  
- IF(.NOT.INTERSECT_EQUATION(XMIN,XMAX,YMIN,YMAX,X1,X2,Y1,Y2,N))RETURN
+ IF(.NOT.INTERSECT_EQUATION(XMIN,XMAX,YMIN,YMAX,X1,X2,Y1,Y2,N,LFLIP))RETURN
  
  !## continue search rest of intersections
  !## try intersections with y-axes firstly
@@ -3659,7 +3662,7 @@ END SUBROUTINE IMOD_UTL_INTERSECT_NCORNER
 
  !## sort intersections, determined by the one with the largest difference
  DX=X1-X2; DY=Y2-Y1
- CALL INTERSECT_SORT(DX,DY,N_IN+1,N)
+ CALL INTERSECT_SORT(DX,DY,N_IN+1,N,LFLIP)
 
  !## sample each of the point to determine irow/icol, overwrite point with this
  !## skip first and last, they represented already by the second and one-last point
@@ -3764,20 +3767,23 @@ END SUBROUTINE IMOD_UTL_INTERSECT_NCORNER
  END SUBROUTINE INTERSECT_RESIZEVECTORS
  
  !###======================================================================
- LOGICAL FUNCTION INTERSECT_EQUATION(XMIN,XMAX,YMIN,YMAX,X1,X2,Y1,Y2,N)
+ LOGICAL FUNCTION INTERSECT_EQUATION(XMIN,XMAX,YMIN,YMAX,X1,X2,Y1,Y2,N,LFLIP)
  !###======================================================================
  IMPLICIT NONE
  REAL(KIND=8),INTENT(IN) :: XMIN,XMAX,YMIN,YMAX
+ LOGICAL,INTENT(OUT) :: LFLIP
  REAL(KIND=8),INTENT(INOUT) :: X1,X2,Y1,Y2
  INTEGER,INTENT(INOUT) :: N
  REAL(KIND=8) :: X,Y,DX,DY
 
  INTERSECT_EQUATION=.FALSE.
 
- XBEGIN=X1; YBEGIN=Y1
+! XBEGIN=X1; YBEGIN=Y1
 
  !## arrange x1,x2,y1,y2 such that x1<x2
+ LFLIP=.FALSE.
  IF(X1.GT.X2)THEN
+  LFLIP=.TRUE.
   X =X1; Y =Y1
   X1=X2; Y1=Y2
   X2=X;  Y2=Y
@@ -3812,23 +3818,32 @@ END SUBROUTINE IMOD_UTL_INTERSECT_NCORNER
  END FUNCTION INTERSECT_EQUATION
 
  !###======================================================================
- SUBROUTINE INTERSECT_SORT(DX,DY,N_IN,N)
+ SUBROUTINE INTERSECT_SORT(DX,DY,N_IN,N,LFLIP)
  !###======================================================================
  IMPLICIT NONE
  REAL(KIND=8),INTENT(IN) :: DX,DY
+ LOGICAL,INTENT(INOUT) :: LFLIP
  INTEGER,INTENT(IN) :: N,N_IN
- REAL(KIND=8) :: X,Y,LENG
+ REAL(KIND=8) :: X,Y,LENG,DX1,DX2,DY1,DY2
  INTEGER :: I
 
  !## sort intersections, determined by the one with the largest difference
  IF(ABS(DX).GE.ABS(DY))THEN
+  DX1=XA(N_IN)-XA((N-N_IN)+1)
   CALL QKSORTDOUBLE2(XA(N_IN:),YA(N_IN:),(N-N_IN)+1)
+  DX2=XA(N_IN)-XA((N-N_IN)+1)
+  IF(DX1.LT.0.0D0.AND.DX2.GT.0.0D0)LFLIP=.NOT.LFLIP
+  IF(DX1.GT.0.0D0.AND.DX2.LT.0.0D0)LFLIP=.NOT.LFLIP
  ELSE
+  DY1=YA(N_IN)-YA((N-N_IN)+1)
   CALL QKSORTDOUBLE2(YA(N_IN:),XA(N_IN:),(N-N_IN)+1)
+  DY2=YA(N_IN)-YA((N-N_IN)+1)
+  IF(DY1.LT.0.0D0.AND.DY2.GT.0.0D0)LFLIP=.NOT.LFLIP
+  IF(DY1.GT.0.0D0.AND.DY2.LT.0.0D0)LFLIP=.NOT.LFLIP
  ENDIF
 
  !## resort - if neccessary
- IF(XA(N_IN).NE.XBEGIN.OR.YA(N_IN).NE.YBEGIN)THEN
+ IF(LFLIP)THEN !XA(N_IN).NE.XBEGIN.OR.YA(N_IN).NE.YBEGIN)THEN
   DO I=N_IN,N_IN+((N-N_IN)/2)
    X           =XA(I)
    XA(I)       =XA(N-I+N_IN) 

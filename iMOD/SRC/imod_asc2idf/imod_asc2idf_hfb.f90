@@ -118,6 +118,9 @@ CONTAINS
       CALL INTERSECT_EQUI(IDF%XMIN,IDF%XMAX,IDF%YMIN,IDF%YMAX,IDF%DX,IDF%DY,X1,X2,Y1,Y2,N,.TRUE.)
      !## non-equidistantial
      ELSE
+      if(j.eq.3.and.i.eq.3)then
+      write(*,*)
+      endif
       CALL INTERSECT_NONEQUI(IDF%SX,IDF%SY,IDF%NROW,IDF%NCOL,X1,X2,Y1,Y2,N,.TRUE.)
      ENDIF
      
@@ -139,10 +142,17 @@ CONTAINS
          ICOL.LE.IDF%NCOL.AND.IROW.LE.IDF%NROW)THEN
        NP=NP+1; CALL ASC2IDF_INT_RESIZEVECTORS(NP,100)
        XP(NP)=REAL(ICOL); YP(NP)=REAL(IROW); FP(NP)=INT(FA(K)); WP(NP)=REAL(ILINE) 
- 
-       IF(ITB.EQ.0)THEN
+       IF(NP.EQ.1571)THEN
+        WRITE(*,*) 
+       ENDIF
+!        IF((ICOL.EQ.223.OR.ICOL.EQ.224).AND. &
+!           IROW.EQ.97)THEN
+!         PAUSE
+!        ENDIF
+
+        IF(ITB.EQ.0)THEN
         IF(K.EQ.1)THEN
-         TL=0.5D0*LN(K)
+         TL=   0.5D0*LN(K)
         ELSE
          TL=TL+0.5D0*LN(K-1)+0.5D0*LN(K)
         ENDIF
@@ -204,10 +214,10 @@ CONTAINS
           ICOL.LE.IDF%NCOL.AND.IROW.LE.IDF%NROW)THEN
         NP=NP+1; CALL ASC2IDF_INT_RESIZEVECTORS(NP,100)
         XP(NP)=REAL(ICOL); YP(NP)=REAL(IROW); FP(NP)=INT(FA(J)); WP(NP)=REAL(ILINE) 
- 
+        
         IF(ITB.EQ.0)THEN
          IF(J.EQ.1)THEN
-          TL=0.5D0*LN(J)
+          TL=   0.5D0*LN(J)
          ELSE
           TL=TL+0.5D0*LN(J-1)+0.5D0*LN(J)
          ENDIF
@@ -234,14 +244,19 @@ CONTAINS
   IL2=INT(WP(I))
   !## similar line
   IF(IL1.NE.IL2)CYCLE
-
+!  XP(1565:1575)
   IC1=INT(XP(I-1))
   IC2=INT(XP(I  ))
   IR1=INT(YP(I-1))
   IR2=INT(YP(I  ))
   IP1=INT(FP(I-1))
   IP2=INT(FP(I  ))
- 
+  
+!  IF((IC1.EQ.224.OR.IC2.EQ.223.OR.IC2.EQ.224.OR.IC1.EQ.223).AND. &
+!     (IR1.EQ.97.OR.IR2.EQ.97))THEN
+!   PAUSE
+!  ENDIF
+  
   CALL ASC2IDF_HFB_GETFACES(IC1,IC2,IR1,IR2,IP1,IP2,IPC,NROW,NCOL,ICOUT,IROUT)
 
   IF(ITB.EQ.0)THEN

@@ -38,6 +38,7 @@ CONTAINS
  LOGICAL,INTENT(IN) :: LHFB
  REAL(KIND=DP_KIND) :: X,Y,XMN,XMX,YMN,YMX,DX,DY,LENG,TD,X1,X2,Y1,Y2,CSX,CSY,A,B
  INTEGER :: I,ICOL,IROW,ID,N_IN
+ LOGICAL :: LFLIP
  
  X1=XIN1; Y1=YIN1; X2=XIN2; Y2=YIN2
  
@@ -54,7 +55,7 @@ CONTAINS
  
  N_IN=N
 
- IF(.NOT.INTERSECT_EQUATION(X1,X2,Y1,Y2,N,A,B))RETURN
+ IF(.NOT.INTERSECT_EQUATION(X1,X2,Y1,Y2,N,A,B,LFLIP))RETURN
  
  !## find search box - result can be negative, does not matter!
  IF(X1.LT.XMIN)THEN
@@ -139,8 +140,8 @@ CONTAINS
  CSY=CSY_IN
 
  DX=X1-X2; DY=Y2-Y1
- CALL INTERSECT_SORT(DX,DY,N_IN+1,N)
-
+ CALL INTERSECT_SORT(DX,DY,N_IN+1,N,LFLIP)
+ 
  !## sample each of the point to determine irow/icol, overwrite point with this
  !## skip first and last, they represented already by the second and one-last point
  DO I=N_IN+2,N 
@@ -211,6 +212,7 @@ CONTAINS
  LOGICAL,INTENT(IN) :: LHFB
  REAL(KIND=DP_KIND) :: X,Y,XMN,XMX,YMN,YMX,DX,DY,LENG,XMIN,YMIN,XMAX,YMAX,X1,X2,Y1,Y2,CS,TD,CSX,CSY,A,B
  INTEGER :: I,ICOL,IROW,IMN,JMN,ID,N_IN
+ LOGICAL :: LFLIP
  
  X1=XIN1; Y1=YIN1; X2=XIN2; Y2=YIN2
  
@@ -225,7 +227,7 @@ CONTAINS
 
  N_IN=N
  
- IF(.NOT.INTERSECT_EQUATION(X1,X2,Y1,Y2,N,A,B))RETURN
+ IF(.NOT.INTERSECT_EQUATION(X1,X2,Y1,Y2,N,A,B,LFLIP))RETURN
  
  !## continue search rest of intersections
  !## try intersections with y-axes firstly
@@ -332,7 +334,7 @@ CONTAINS
 
  !## sort intersections, determined by the one with the largest difference
  DX=X1-X2; DY=Y2-Y1
- CALL INTERSECT_SORT(DX,DY,N_IN+1,N)
+ CALL INTERSECT_SORT(DX,DY,N_IN+1,N,LFLIP)
 
  !## sample each of the point to determine irow/icol, overwrite point with this
  !## skip first and last, they represented already by the second and one-last point
@@ -434,19 +436,22 @@ CONTAINS
  END SUBROUTINE INTERSECT_RESIZEVECTORS
  
  !###======================================================================
- LOGICAL FUNCTION INTERSECT_EQUATION(X1,X2,Y1,Y2,N,A,B)
+ LOGICAL FUNCTION INTERSECT_EQUATION(X1,X2,Y1,Y2,N,A,B,LFLIP)
  !###======================================================================
  IMPLICIT NONE
  REAL(KIND=DP_KIND),INTENT(INOUT) :: X1,X2,Y1,Y2,A,B
+ LOGICAL,INTENT(OUT) :: LFLIP
  INTEGER,INTENT(INOUT) :: N
  REAL(KIND=DP_KIND) :: X,Y,DX,DY
 
  INTERSECT_EQUATION=.FALSE.
 
- XBEGIN=X1; YBEGIN=Y1
+! XBEGIN=X1; YBEGIN=Y1
 
  !## arrange x1,x2,y1,y2 such that x1<x2
- IF(X1.GT.X2)THEN               
+ LFLIP=.FALSE.
+ IF(X1.GT.X2)THEN
+  LFLIP=.TRUE.
   X =X1; Y =Y1
   X1=X2; Y1=Y2
   X2=X;  Y2=Y
@@ -481,26 +486,32 @@ CONTAINS
  END FUNCTION INTERSECT_EQUATION
 
  !###======================================================================
- SUBROUTINE INTERSECT_SORT(DX,DY,N_IN,N)
+ SUBROUTINE INTERSECT_SORT(DX,DY,N_IN,N,LFLIP)
  !###======================================================================
  IMPLICIT NONE
  REAL(KIND=DP_KIND),INTENT(IN) :: DX,DY
+ LOGICAL,INTENT(INOUT) :: LFLIP
  INTEGER,INTENT(IN) :: N,N_IN
- REAL(KIND=DP_KIND) :: X,Y
- REAL(KIND=DP_KIND) :: LENG
+ REAL(KIND=DP_KIND) :: X,Y,DX1,DX2,DY1,DY2,LENG
  INTEGER :: I
 
  !## sort intersections, determined by the one with the largest difference
  IF(ABS(DX).GE.ABS(DY))THEN
+  DX1=XA(N_IN)-XA((N-N_IN)+1)
   CALL QKSORT((N-N_IN)+1,XA(N_IN:),V2=YA(N_IN:))
-!  CALL QKSORT_DBL(XA(N_IN:),YA(N_IN:),(N-N_IN)+1)
+  DX2=XA(N_IN)-XA((N-N_IN)+1)
+  IF(DX1.LT.0.0D0.AND.DX2.GT.0.0D0)LFLIP=.NOT.LFLIP
+  IF(DX1.GT.0.0D0.AND.DX2.LT.0.0D0)LFLIP=.NOT.LFLIP
  ELSE
+  DY1=YA(N_IN)-YA((N-N_IN)+1)
   CALL QKSORT((N-N_IN)+1,YA(N_IN:),V2=XA(N_IN:))
-!  CALL QKSORT_DBL(YA(N_IN:),XA(N_IN:),(N-N_IN)+1)
+  DY2=YA(N_IN)-YA((N-N_IN)+1)
+  IF(DY1.LT.0.0D0.AND.DY2.GT.0.0D0)LFLIP=.NOT.LFLIP
+  IF(DY1.GT.0.0D0.AND.DY2.LT.0.0D0)LFLIP=.NOT.LFLIP
  ENDIF
 
  !## resort - if neccessary
- IF(XA(N_IN).NE.XBEGIN.OR.YA(N_IN).NE.YBEGIN)THEN
+ IF(LFLIP)THEN !XA(N_IN).NE.XBEGIN.OR.YA(N_IN).NE.YBEGIN)THEN
   DO I=N_IN,N_IN+((N-N_IN)/2)
    X           =XA(I)
    XA(I)       =XA(N-I+N_IN) 
