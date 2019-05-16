@@ -9,7 +9,7 @@ TYPE DATADXCTYPE
 END TYPE DATADXCTYPE
 TYPE DXCTYPE
  TYPE(DATADXCTYPE),POINTER,DIMENSION(:) :: INFO      ! file content 
- CHARACTER(LEN=24),POINTER,DIMENSION(:) :: LABEL     ! name label for each variable
+ CHARACTER(LEN=35),POINTER,DIMENSION(:) :: LABEL     ! name label for each variable
  CHARACTER(LEN=10),POINTER,DIMENSION(:) :: UNIT      ! unit of variable 
  CHARACTER(LEN=15),POINTER,DIMENSION(:) :: INSPVAL   ! Value for each parameter at mouse location
  INTEGER,POINTER,DIMENSION(:) :: IACT                ! pointer: user settings for (not) displaying  a variable 
@@ -187,7 +187,7 @@ INTEGER,DIMENSION(MXMSFILES) :: MSFILES_IACT
 CHARACTER(LEN=256) :: ROOT,LINE,FNAME
 CHARACTER(LEN=52) :: MNAME,MFNAME
 TYPE(IDFOBJ) :: MSPIDF               ! variable use e.g. pointer of selected irrigatied cells
-TYPE(IDFOBJ) :: MSPSCAPSVAT,MSPLUSE  ! layer of irrigation source / landuse value (not urban) 
+TYPE(IDFOBJ) :: MSPSCAPSVAT  ! layer of irrigation source  
 TYPE(IDFOBJ) :: SVATRU,SVATUR,SVATIR,SVATIRS ! GRID position of SVAT for rural, urban, irrigation and irrigationsource
 TYPE(IDFOBJ) :: METEO
 INTEGER :: IYBG,TDBG     !PARA_SIM: starting time of calculations [d] / year number of starting time

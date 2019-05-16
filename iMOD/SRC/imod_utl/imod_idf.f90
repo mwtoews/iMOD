@@ -2316,7 +2316,23 @@ CONTAINS
     'are not equal!','Error')
  
  END FUNCTION IDFEQUAL
+
+  !###======================================================================
+ LOGICAL FUNCTION IDFCHECKRC(IDF,IROW,ICOL)
+ !###======================================================================
+ IMPLICIT NONE
+ TYPE(IDFOBJ),INTENT(IN) :: IDF
+ INTEGER,INTENT(IN) :: ICOL,IROW
+ !!# Functions  checks if given IROW/ICOL is within the given GRID
+ IDFCHECKRC=.TRUE. 
  
+ IF(IROW.LT.1)        IDFCHECKRC=.FALSE.
+ IF(IROW.GT.IDF%NROW) IDFCHECKRC=.FALSE.
+ IF(ICOL.LT.1)        IDFCHECKRC=.FALSE.
+ IF(ICOL.GT.IDF%NCOL) IDFCHECKRC=.FALSE.
+ 
+ END FUNCTION IDFCHECKRC
+
  !###======================================================================
  LOGICAL FUNCTION IDFALLOCATESXY(IDF)
  !###======================================================================
