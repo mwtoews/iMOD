@@ -518,7 +518,7 @@ C2------FORMAT.  SET A FLAG SPECIFYING IF FREE FORMAT OR FIXED FORMAT.
      1ioper,coper)     ! DLT
 
          if (rdrsflg.ge.0) then ! supported file type found             ! DLT
-!          call urword(cntrl,icol,istart,istop,1,n,r,iout,in)            ! DLT
+          call urword(cntrl,icol,istart,istop,1,n,r,iout,in)            ! DLT
 !          oper=cntrl(istart:istop)                                      ! DLT
 !          call getarithoper(oper,'i',iout,ioper,coper,0.0,locat)        ! DLT
           call urword(cntrl,icol,istart,istop,1,n,r,iout,in)          ! DLT
@@ -793,7 +793,7 @@ C2------FORMAT.  SET A FLAG SPECIFYING IF FREE FORMAT OR FIXED FORMAT.
      1ioper,coper)      ! DLT
          if (rdrsflg.ge.0) then ! supported file type found             ! DLT
 c            ! read cnstnt and iprn                                     ! DLT
-!            call urword(cntrl,icol,istart,istop,1,n,r,iout,in)          ! DLT
+            call urword(cntrl,icol,istart,istop,1,n,r,iout,in)          ! DLT
 !            oper=cntrl(istart:istop)                                    ! DLT
 !            call getarithoper(oper,'r',iout,ioper,0,coper,locat)        ! DLT
             call urword(cntrl,icol,istart,istop,1,n,r,iout,in) !fmtin   ! DLT

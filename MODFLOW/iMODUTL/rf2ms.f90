@@ -618,7 +618,7 @@ END SUBROUTINE
  NUND=0; unid = 0
  DO IROW=1,SIMGRO_NROW
   DO ICOL=1,SIMGRO_NCOL
-   if(irow.eq.47.and.icol.eq.20)then
+   if(irow.eq.140.and.icol.eq.187)then
     pause
    endif
    lurban=.false.
@@ -697,8 +697,8 @@ END SUBROUTINE
       IF(JROW.LT.0.OR.JROW.GT.NROW)JROW=0
      ENDIF
     ENDIF
-    !MDND2=      (JROW-1)*SIMGRO_NCOL+JCOL
-    !MDND2=MDND2+(LYBE-1)*SIMGRO_NCOL*SIMGRO_NROW
+    MDND2=      (JROW-1)*SIMGRO_NCOL+JCOL
+    MDND2=MDND2+(LYBE-1)*SIMGRO_NCOL*SIMGRO_NROW
     
     IF(JROW.NE.0.AND.JCOL.NE.0)THEN
 
@@ -730,11 +730,11 @@ END SUBROUTINE
          call pks_imod_utl_iarmwp_xch_store(irow,icol,lybe,jrow,jcol,dxcid,ncol,nrow,nlay,iact)    
       end if      
       !## write coupling table
-      IF(IACT.EQ.2) &
-      WRITE(IGWMP  ,'(I10,2X,I10,I5)') unid,NUND,LYBE
-      IF(IACT.EQ.2) &
-      WRITE(IMODSIM,'(I10,2X,I10,I5)') unid,NUND,LYBE
-
+      IF(IACT.EQ.2)THEN
+       WRITE(IGWMP  ,'(I10,2X,I10,I5)') unid,NUND,LYBE
+       WRITE(IMODSIM,'(I10,2X,I10,I5)') unid,NUND,LYBE
+      ENDIF
+      
      ENDIF
 
     ENDIF

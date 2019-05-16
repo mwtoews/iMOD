@@ -963,6 +963,7 @@ C       STRESS PERIOD.
 C
 C3------READ IN ARRAY FOR INFILTRATION RATE.
         CALL U2DREL(FINF, aname(1), NROW, NCOL, 0, In, IOUT)
+        call pest1alpha_grid('RE',FINF,nrow,ncol,1,iout)                 ! IPEST
 
 C
 C4------CHECK FOR NEGATIVE INFILTRATION RATES.
