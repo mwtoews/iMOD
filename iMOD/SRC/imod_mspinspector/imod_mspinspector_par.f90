@@ -184,8 +184,8 @@ CHARACTER(LEN=9),DIMENSION(MXMSFILES) :: MSFILES = &
 
 INTEGER,DIMENSION(MXMSFILES) :: MSFILES_IACT
 
-CHARACTER(LEN=256) :: ROOT,LINE,FNAME
-CHARACTER(LEN=52) :: MNAME,MFNAME
+CHARACTER(LEN=512) :: ROOT,LINE,FNAME
+CHARACTER(LEN=128) :: MNAME,MFNAME
 TYPE(IDFOBJ) :: MSPIDF               ! variable use e.g. pointer of selected irrigatied cells
 TYPE(IDFOBJ) :: MSPSCAPSVAT  ! layer of irrigation source  
 TYPE(IDFOBJ) :: SVATRU,SVATUR,SVATIR,SVATIRS ! GRID position of SVAT for rural, urban, irrigation and irrigationsource
