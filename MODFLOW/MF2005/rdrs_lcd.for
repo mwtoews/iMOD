@@ -223,9 +223,6 @@ c count number of hfb and fill
                 ZF=(GENPOS(IL-1,5)+GENPOS(IL,5))/2.0
                 DO I=1,4
                  ICOL=ICOUT(I); IROW=IROUT(I)
-!                 if(icol.eq.12.and.irow.eq.6)then
-!                 write(*,*)
-!                 endif
                  IF(ICOL.LE.0.OR.IROW.LE.0)CYCLE
                  IF(TF(ICOL,IROW).EQ.NODATA)THEN
                   TF(ICOL,IROW)=ZF/100.0; BF(ICOL,IROW)=ZF/100.0
@@ -295,9 +292,6 @@ c count number of hfb and fill
               !## place vertical wall
               if (icol.lt.lncol) then
                if(ipc(icol,irow,1).eq.int(1,1)) then
-!               if(ii.eq.191)then
-!                write(*,*)
-!                endif
 
                 !## y-direction
                 DO jLAY=IL1,IL2
@@ -460,7 +454,6 @@ c count number of hfb and fill
            IF(FDZ(ICOL,IROW).LT.1.0)THEN
             !## take harmonic mean in case of unsaturated thickness of fault 
             C2=1.0/((1.0/C1*FDZ(ICOL,IROW))+(1.0-FDZ(ICOL,IROW)))
-!            C2=C1*FDZ(ICOL,IROW)**4.0
            ELSE
             C2=C1
            ENDIF
@@ -614,17 +607,17 @@ c end of program
        if(ltb.and.tfv.gt.bfv)then
         t1=tfv
         b1=bfv
-        write(iu,'(i10,1x,e15.7)') n
-        write(iu,'(3(g15.7,a1))') lcdelr(icol-1),',',lcdelc(irow),',',t1
-        write(iu,'(3(g15.7,a1))') lcdelr(icol  ),',',lcdelc(irow),',',t1
-        write(iu,'(3(g15.7,a1))') lcdelr(icol  ),',',lcdelc(irow),',',b1
-        write(iu,'(3(g15.7,a1))') lcdelr(icol-1),',',lcdelc(irow),',',b1
-        write(iu,'(3(g15.7,a1))') lcdelr(icol-1),',',lcdelc(irow),',',t1
+        write(iu,'(i10)') n
+        write(iu,'(3(f15.3,a1))') lcdelr(icol-1),',',lcdelc(irow),',',t1
+        write(iu,'(3(f15.3,a1))') lcdelr(icol  ),',',lcdelc(irow),',',t1
+        write(iu,'(3(f15.3,a1))') lcdelr(icol  ),',',lcdelc(irow),',',b1
+        write(iu,'(3(f15.3,a1))') lcdelr(icol-1),',',lcdelc(irow),',',b1
+        write(iu,'(3(f15.3,a1))') lcdelr(icol-1),',',lcdelc(irow),',',t1
         write(iu,'(a)') 'end'       
        else
-        write(iu,'(i10,1x,e15.7)') n
-        write(iu,'(2(g15.7,a1))') lcdelr(icol-1),',',lcdelc(irow)
-        write(iu,'(2(g15.7,a1))') lcdelr(icol)  ,',',lcdelc(irow)
+        write(iu,'(i10)') n
+        write(iu,'(2(f15.3,a1))') lcdelr(icol-1),',',lcdelc(irow)
+        write(iu,'(2(f15.3,a1))') lcdelr(icol)  ,',',lcdelc(irow)
         write(iu,'(a)') 'end'
        endif
       endif
@@ -639,17 +632,17 @@ c end of program
        if(ltb.and.tfv.gt.bfv)then
         t1=tfv
         b1=bfv
-        write(iu,'(i10,1x,e15.7)') n
-        write(iu,'(3(g15.7,a1))') lcdelr(icol),',',lcdelc(irow-1),',',t1
-        write(iu,'(3(g15.7,a1))') lcdelr(icol),',',lcdelc(irow)  ,',',t1
-        write(iu,'(3(g15.7,a1))') lcdelr(icol),',',lcdelc(irow)  ,',',b1
-        write(iu,'(3(g15.7,a1))') lcdelr(icol),',',lcdelc(irow-1),',',b1
+        write(iu,'(i10)') n
+        write(iu,'(3(f15.3,a1))') lcdelr(icol),',',lcdelc(irow-1),',',t1
+        write(iu,'(3(f15.3,a1))') lcdelr(icol),',',lcdelc(irow)  ,',',t1
+        write(iu,'(3(f15.3,a1))') lcdelr(icol),',',lcdelc(irow)  ,',',b1
+        write(iu,'(3(f15.3,a1))') lcdelr(icol),',',lcdelc(irow-1),',',b1
         write(iu,'(3(g15.7,a1))') lcdelr(icol),',',lcdelc(irow-1),',',t1
         write(iu,'(a)') 'end'       
        else
-        write(iu,'(i10,1x,e15.7)') n
-        write(iu,'(2(f10.2,a1))') lcdelr(icol),',',lcdelc(irow-1)
-        write(iu,'(2(f10.2,a1))') lcdelr(icol),',',lcdelc(irow  )
+        write(iu,'(i10)') n
+        write(iu,'(2(f15.3,a1))') lcdelr(icol),',',lcdelc(irow-1)
+        write(iu,'(2(f15.3,a1))') lcdelr(icol),',',lcdelc(irow  )
         write(iu,'(a)') 'end'
        endif
       end if

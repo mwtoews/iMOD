@@ -2103,6 +2103,11 @@ C7------CALCULATE INVERSE LEAKANCE FOR CONFINING BED.
 !                        SUMVAL = MIN(SUMVAL,MAXC)                       ! DLT
                         SUMVAL = MAX(SUMVAL,MINC)                       ! DLT
                      END IF                                             ! DLT
+                     IF(SUMVAL.LE.0.0)THEN
+                      WRITE(*,*) 'ERROR C IS ',SUMVAL
+                      WRITE(*,*) 'FOR ILAY-IROW-ICOL',J,I,K
+                      STOP
+                     ENDIF
                      CV(J,I,K)=DELR(J)*DELC(I)/SUMVAL                   ! DLT
                   END IF
                ELSE
@@ -2113,6 +2118,11 @@ C7------CALCULATE INVERSE LEAKANCE FOR CONFINING BED.
 !                     SUMVAL = MIN(SUMVAL,MAXC)                          ! DLT
                      SUMVAL = MAX(SUMVAL,MINC)                          ! DLT
                   END IF                                                ! DLT
+                  IF(SUMVAL.LE.0.0)THEN
+                   WRITE(*,*) 'ERROR C IS ',SUMVAL
+                   WRITE(*,*) 'FOR ILAY-IROW-ICOL',J,I,K
+                   STOP
+                  ENDIF
                   CV(J,I,K)=DELR(J)*DELC(I)/SUMVAL                      ! DLT
                END IF
             END IF

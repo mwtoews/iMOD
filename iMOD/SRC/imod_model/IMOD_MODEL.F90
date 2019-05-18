@@ -939,6 +939,7 @@ CONTAINS
  CHARACTER(LEN=256) :: LINE,FNAMETO,FNAME,FNAME1,FNAME2  
  CHARACTER(LEN=512) :: STRING
  CHARACTER(LEN=52) :: SUBMAP
+ CHARACTER(LEN=1) :: YN
  CHARACTER(LEN=4),DIMENSION(10) :: EXTISG
  LOGICAL :: LEX,LCOPY,LRUN
  DATA EXTISG/'ISG','ISP','ISD1','ISD2','ISC1','ISC2','IST1','IST2','ISQ1','ISQ2'/
@@ -1125,7 +1126,9 @@ MAINLOOP: DO
           IF(.NOT.LEX)THEN
            IF(IBATCH.EQ.0)CALL WINDOWOUTSTATUSBAR(4,TRIM(FNAME1)//' does not exists!')
            IF(IBATCH.EQ.1)WRITE(*,'(A)') TRIM(FNAME1)//' does not exists!'
-           PAUSE; STOP
+           WRITE(*,'(1X,A$)') 'This might be an issue if you want a transient simulation, continue ?'
+           READ(*,'(A)') YN
+           IF(YN.EQ.'Y'.OR.YN.EQ.'y')CYCLE; STOP
           ELSE
            FNAME2=FNAMETO(:INDEX(FNAMETO,'\',.TRUE.)-1)
            FNAME2=TRIM(FNAME2)//'\'//TRIM(IPF(1)%INFO(IPF(1)%ACOL,II))//'.'//TRIM(ADJUSTL(IPF(1)%FEXT))

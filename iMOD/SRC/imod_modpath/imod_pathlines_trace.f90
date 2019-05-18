@@ -2536,7 +2536,6 @@ IPFLOOP: DO I=1,SIZE(IPF)
  IF(ALLOCATED(IVISIT))  DEALLOCATE(IVISIT)
  IF(ALLOCATED(LVISIT))  DEALLOCATE(LVISIT)
  IF(ALLOCATED(IUOUT))   DEALLOCATE(IUOUT)
-! IF(ALLOCATED(PLIPER))  DEALLOCATE(PLIPER); 
  END SUBROUTINE TRACEDEALLOCATE
 
  !###======================================================================
@@ -2554,7 +2553,7 @@ IPFLOOP: DO I=1,SIZE(IPF)
            (SP(IG)%YLC(IPART)-SPR(IG)%YLC(IPART))**2.0D0+ &
            (SP(IG)%ZLC(IPART)-SPR(IG)%ZLC(IPART))**2.0D0)
 
- WRITE(IU,'(2(3(E15.7,1X),3(I10,1X)),E15.7,1X,I10,1X,E15.7,1X,2(I10,1X))') &
+ WRITE(IU,'(2(3(F15.3,1X),3(I10,1X)),E15.7,1X,I10,1X,F15.3,1X,2(I10,1X))') &
        SP(IG) %XLC(IPART)+IDF%XMIN, &
        SP(IG) %YLC(IPART)+IDF%YMIN, &
        SP(IG) %ZLC(IPART),          &
@@ -2567,7 +2566,7 @@ IPFLOOP: DO I=1,SIZE(IPF)
        SPR(IG)%KLC(IPART),          &
        SPR(IG)%ILC(IPART),          &
        SPR(IG)%JLC(IPART),          &
-       SPR(IG)%TOT(IPART)/365.25,   &
+       SPR(IG)%TOT(IPART)/365.25D0, &
        SPR(IG)%MXL(IPART),          &
        DIST,                        &
        IPART,                       &

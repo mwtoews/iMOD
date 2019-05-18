@@ -573,15 +573,15 @@ END SUBROUTINE
  logical :: lurban
  integer :: ndxc, unid, iact
  integer, dimension(:,:,:), allocatable :: dxcid
- integer, dimension(:,:), allocatable :: ruralsvatid
+! integer, dimension(:,:), allocatable :: ruralsvatid
 
  if (allocated(dxcid)) deallocate(dxcid)
  allocate(dxcid(ncol,nrow,nlay))
- allocate(ruralsvatid(ncol,nrow))
+! allocate(ruralsvatid(ncol,nrow))
  
  dxcid = 0
  ndxc = 0
- ruralsvatid=0
+! ruralsvatid=0
  
  !## check input parameters
  CALL METASWAP_CHECK()
@@ -618,9 +618,7 @@ END SUBROUTINE
  NUND=0; unid = 0
  DO IROW=1,SIMGRO_NROW
   DO ICOL=1,SIMGRO_NCOL
-   if(irow.eq.140.and.icol.eq.187)then
-    pause
-   endif
+
    lurban=.false.
 !   WRITE(*,*) ICOL,IROW,SIMGRO(ICOL,IROW)%IBOUND
    IF(SIMGRO(ICOL,IROW)%IBOUND.LE.0)CYCLE
@@ -641,7 +639,7 @@ END SUBROUTINE
     lurban=.true.
     NUND=NUND+1
     
-    if(iact.eq.1)ruralsvatid(icol,irow)=nund
+!    if(iact.eq.1)ruralsvatid(icol,irow)=nund
     
     !## write idf_svat.inp - inside area of interest
     IF(ICOL.GE.IC1.AND.ICOL.LE.IC2.AND. &
@@ -712,8 +710,8 @@ END SUBROUTINE
      IF(FLBE.GT.0.0)THEN
       IF(TYBE.EQ.1)THEN
        IF(IACT.EQ.2)then
-        MDND2=RURALSVATID(JCOL,JROW)
-        WRITE(ISCAP,'(I10,F8.2,24X,I10,I6)') NUND,FLBE,MDND2,LYBE !NUND,LYBE
+!        MDND2=RURALSVATID(JCOL,JROW)
+        WRITE(ISCAP,'(I10,F8.2,24X,I10,I6)') NUND,FLBE,NUND,LYBE
        ENDIF
       ELSEIF(TYBE.EQ.2)THEN
        IF(IACT.EQ.2) &
@@ -819,7 +817,7 @@ END SUBROUTINE
  end if    
  
  call writedxc(idxc,dxcid,ncol,nrow,nlay,ndxc)
- deallocate(dxcid,ruralsvatid)
+ deallocate(dxcid) !,ruralsvatid)
 
  IF(IARMWP.EQ.1)DEALLOCATE(IPF)
 
