@@ -127,14 +127,11 @@ CONTAINS
  SUBROUTINE CREATEGEN_CUTLINES()
  !###======================================================================
  IMPLICIT NONE
-! REAL(KIND=DP_KIND),DIMENSION(:),POINTER :: XCRD,YCRD => NULL()
-! INTEGER :: NCRD,I,J,K,II,JJ,ISTATUS,NINT
-! REAL(KIND=DP_KIND) :: X1,X2,X3,X4,Y1,Y2,Y3,Y4,XINTER,YINTER
-! LOGICAL :: LINT
+ REAL(KIND=DP_KIND),DIMENSION(:),POINTER :: XCRD,YCRD => NULL()
+ INTEGER :: NCRD,I,J,K,II,JJ,ISTATUS,NINT
+ REAL(KIND=DP_KIND) :: X1,X2,X3,X4,Y1,Y2,Y3,Y4,XINTER,YINTER
+ LOGICAL :: LINT
  
- CALL WMESSAGEBOX(OKONLY,EXCLAMATIONICON,COMMONOK,'This functionality is not availabel temporarily','Information')
- RETURN
-
  IF(SHP%NPOL.GE.MAXSHAPES)THEN
   CALL WMESSAGEBOX(OKONLY,EXCLAMATIONICON,COMMONOK,'You can only use this functionality whenever you have at least'//CHAR(13)// &
     '1 shape less than the maximal number which is allowed','Error')
@@ -152,8 +149,8 @@ CONTAINS
 !   
 !   !## copy original coordinates first
 !   DO J=1,SHP%POL(I)%N
-!    SHP(POL(MAXSHAPES)%X(J)=SHP(I)%X(J)
-!    SHP(POL(MAXSHAPES)%Y(J)=SHP(I)%Y(J)
+!    SHP%POL(MAXSHAPES)%X(J)=SHP%POL(I)%X(J)
+!    SHP%POL(MAXSHAPES)%Y(J)=SHP%POL(I)%Y(J)
 !   ENDDO
 !   
 !   !## copy first coordinates
@@ -167,7 +164,9 @@ CONTAINS
 !    SHP%POL(NINT)%ITYPE =SHP%POL(I)%ITYPE
 !   ENDIF
 !   
-!   LINT=.FALSE.
+!!  CALL POLYGON1CREATESHAPE_ADDSEGMENT(INEW)
+!  
+!  LINT=.FALSE.
 !   DO J=1,SHP%POL(I)%N-1
 !    !## try intersection with all of them
 !    X3=SHP%POL(I)%X(J); Y3=SHP%POL(I)%Y(J); X4=SHP%POL(I)%X(J+1); Y4=SHP%POL(I)%Y(J+1)
@@ -205,7 +204,7 @@ CONTAINS
 !     ENDIF
 !    ENDDO
 !
-!    !## last coordinaten of segment
+!    !## last coordinate of segment
 !    IF(II.EQ.2)THEN
 !     JJ             =JJ+1
 !     CSHPXC(JJ,NINT)=SHP%POL(I)%X(J+1)
@@ -215,7 +214,7 @@ CONTAINS
 !
 !   ENDDO
 !
-!  ENDDO
+! ENDDO
 !  IF(II.EQ.1)ALLOCATE(CSHPXC(MAXSHPCRD,MAXSHAPES+1),CSHPYC(MAXSHPCRD,MAXSHAPES+1),CSHPNCRD(MAXSHAPES))
 ! ENDDO
 ! 
