@@ -1344,10 +1344,6 @@ CONTAINS
      IPSPOS(2,ISEG)=J
     ENDDO
 
-!    DO J=1,NSEG
-!     WRITE(*,*) IPSPOS(1,J),IPSPOS(2,J)
-!    ENDDO
-
     !## start to intersect all segment/segmentpoints to the model-grid
     ISGLEN=0.0D0
     DO ISEG=2,NSEG
@@ -2336,15 +2332,14 @@ IRLOOP: DO IR=MAX(1,IROW-1),MIN(NROW,IROW+1)
     ENDDO
     CALL UTL_PCK_GETTLP(NLAY,TLP,KH,TP,BT,WL,BL,MINKHT) 
    ELSE
-    TLP(MLAY)=1.0D0
-    DO I=1,NLAY
-     KH(I)=KHV(I)%X(ICOL,IROW) 
-    ENDDO
+    TLP(MLAY)=1.0D0; DO I=1,NLAY; KH(I)=KHV(I)%X(ICOL,IROW) ; ENDDO
    ENDIF
    
    !## assign to modellayer 1 by default, when no layers are read in
    DO I=1,NLAY
     IF(TLP(I).EQ.0.0D0)CYCLE
+    !## skip inactive cells
+    IF(BND(I)%X(ICOL,IROW).LE.0.0D0)CYCLE
     N=N+1
     IF(J.EQ.2)THEN
      LC=1.0D0
