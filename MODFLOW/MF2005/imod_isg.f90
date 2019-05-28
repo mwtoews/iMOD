@@ -249,6 +249,8 @@ ELSEIF(ISS.EQ.1)THEN
 ENDIF
 ALLOCATE(QSORT(TTIME,MAXITEMS),XNR(MAXITEMS))
 
+!## initialize unitnumbers
+ISGIU=0
 I=INDEX(FNAME,'.',.TRUE.)-1
 !## open *.ISG file
 LINE=FNAME(:I)//'.ISG'

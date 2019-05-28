@@ -1289,7 +1289,7 @@ c          IF(ICNVG.EQ.0) GO TO 110
      1       1X,'BUDGET PERCENT DISCREPANCY IS',F10.4)
             IF(ABS(BUDPERC).GT.STOPER) THEN
               WRITE(IOUT,*) 'STOPPING SIMULATION'
-              stop
+              stop 99
 !              GO TO 110
             ELSE
               WRITE(IOUT,*) 'CONTINUING EXECUTION'

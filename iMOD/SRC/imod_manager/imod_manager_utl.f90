@@ -1,4 +1,4 @@
-!!  Copyright (C) Stichting Deltares, 2005-2018.
+!!  Copyright (C) Stichting Deltares, 2005-2019.
 !!
 !!  This file is part of iMOD.
 !!
@@ -33,7 +33,6 @@ USE MOD_MDF
 USE MOD_IFF, ONLY : IFFGETUNIT
 USE MOD_GEF2IPF_PAR, ONLY : GEFNAMES,IPFFNAME
 USE MOD_IDF
-USE MOD_UDF_UTL
 USE MOD_LEGEND 
 USE MOD_ISG_PAR, ONLY : MAXFILES
 USE MOD_GEF2IPF, ONLY : GEF2IPF_MAIN
@@ -80,10 +79,9 @@ CONTAINS
  IF(.NOT.PRESENT(IDFNAMEGIVEN))THEN
   IDFNAME=''
   IF(INETCDF.EQ.0)THEN
-   IF(.NOT.UTL_WSELECTFILE('All Known Files (*.idf;*.udf;*.mdf;*.ipf;*.isg;*.iff;*.asc;*.gen;*.gef;*.map)'//&
-                    '|*.idf;*.udf;*.mdf;*.ipf;*.isg;*.iff;*.arr;*.asc;*.gen;*.gef;*.map|'// &
+   IF(.NOT.UTL_WSELECTFILE('All Known Files (*.idf;*.mdf;*.ipf;*.isg;*.iff;*.asc;*.gen;*.gef;*.map)'//&
+                    '|*.idf;*.mdf;*.ipf;*.isg;*.iff;*.arr;*.asc;*.gen;*.gef;*.map|'// &
                     'iMOD Map (*.idf)|*.idf|'               //&
-                    'iMOD Unstructered Data File (*.udf)|*.udf|'   //&
                     'iMOD Multi Data File (*.mdf)|*.mdf|'   //&
                     'iMOD Pointers (*.ipf)|*.ipf|'          //&
                     'iMOD Segment-River File (*.isg)|*.isg|'//&
@@ -96,10 +94,9 @@ CONTAINS
                     LOADDIALOG+MUSTEXIST+PROMPTON+DIRCHANGE+MULTIFILE,IDFNAME,&
                     'Load iMOD Map (*.idf,*.mdf,*.ipf,*.isg,*.iff,*.asc,*.gen,*.gef,*.map)'))RETURN
   ELSEIF(INETCDF.EQ.1)THEN
-   IF(.NOT.UTL_WSELECTFILE('All Known Files (*.idf;*.udf;*.mdf;*.ipf;*.isg;*.iff;*.nc;*.asc;*.gen;;*.gef;*.map)'//&
-                    '|*.idf;*.udf;*.mdf;*.ipf;*.isg;*.iff,*.arr;*.nc;*.asc;*.gen;*.gef;*.map|'// &
+   IF(.NOT.UTL_WSELECTFILE('All Known Files (*.idf;*.mdf;*.ipf;*.isg;*.iff;*.nc;*.asc;*.gen;;*.gef;*.map)'//&
+                    '|*.idf;*.mdf;*.ipf;*.isg;*.iff,*.arr;*.nc;*.asc;*.gen;*.gef;*.map|'// &
                     'iMOD Map (*.idf)|*.idf|'               //&
-                    'iMOD Unstructered Data File (*.udf)|*.udf|'   //&
                     'iMOD Multi Data File (*.mdf)|*.mdf|'   //&
                     'iMOD Pointers (*.ipf)|*.ipf|'          //&
                     'iMOD Segment-River File (*.isg)|*.isg|'//&
@@ -234,8 +231,6 @@ CONTAINS
     MP(IPLOT)%IPLOT=5
    CASE ('GEN')
     MP(IPLOT)%IPLOT=6
-   CASE ('UDF')
-    MP(IPLOT)%IPLOT=7
    CASE DEFAULT
     CALL WMESSAGEBOX(OKONLY,EXCLAMATIONICON,COMMONOK,'iMOD cannot recognize current extension in'//CHAR(13)//TRIM(IDFNAME),'Error')
     EXIT
@@ -263,11 +258,6 @@ CONTAINS
    IU(1)=UTL_GETUNIT()
    CALL OSD_OPEN(IU(1),FILE=IDFNAME,STATUS='OLD',FORM='FORMATTED',ACTION='READ,DENYWRITE',ACCESS='SEQUENTIAL',IOSTAT=IOS)
    IF(IOS.NE.0)MP(IPLOT)%IPLOT=0
-  !## open udf-file
-  ELSEIF(MP(IPLOT)%IPLOT.EQ.7)THEN
-   IF(.NOT.UDF_OPEN(MP(IPLOT)%IDF,IDFNAME,0,IU(1)))THEN;
-    CALL UDF_DEALLOCATEMESH(); MP(IPLOT)%IPLOT=0
-   ENDIF
   ENDIF
 
   IF(MP(IPLOT)%IPLOT.EQ.0)EXIT !## idfloop

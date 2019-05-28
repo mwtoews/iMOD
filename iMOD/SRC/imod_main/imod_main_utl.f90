@@ -1,3 +1,25 @@
+!!  Copyright (C) Stichting Deltares, 2005-2019.
+!!
+!!  This file is part of iMOD.
+!!
+!!  This program is free software: you can redistribute it and/or modify
+!!  it under the terms of the GNU General Public License as published by
+!!  the Free Software Foundation, either version 3 of the License, or
+!!  (at your option) any later version.
+!!
+!!  This program is distributed in the hope that it will be useful,
+!!  but WITHOUT ANY WARRANTY; without even the implied warranty of
+!!  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+!!  GNU General Public License for more details.
+!!
+!!  You should have received a copy of the GNU General Public License
+!!  along with this program.  If not, see <http://www.gnu.org/licenses/>.
+!!
+!!  Contact: imod.support@deltares.nl
+!!  Stichting Deltares
+!!  P.O. Box 177
+!!  2600 MH Delft, The Netherlands.
+!!
 MODULE MOD_MAIN_UTL
 
 USE WINTERACTER
@@ -794,10 +816,6 @@ DO JPLOT=1,MXMPLOT
     !## gen
     CASE (6)
      MP(IPLOT)%TSIZE=MIN(MAX(MP(IPLOT)%TSIZE,1),25)
-    CASE (7)
-     IF(.NOT.UDF_OPEN(MP(IPLOT)%IDF,MP(IPLOT)%IDFNAME,0,MP(IPLOT)%IDF%IU))MP(IPLOT)%IPLOT=0
-     IF(MP(IPLOT)%IDF%IU.GT.0)CLOSE(MP(IPLOT)%IDF%IU)
-     IF(MP(IPLOT)%IDFKIND.EQ.0)CALL UTL_READARRAY((/1,0,0/),3,MP(IPLOT)%IDFKIND)
    END SELECT
   ELSE
    J=J+1

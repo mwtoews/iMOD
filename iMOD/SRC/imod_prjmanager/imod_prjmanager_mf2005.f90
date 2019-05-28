@@ -1,4 +1,4 @@
-!!  Copyright (C) Stichting Deltares, 2005-2018.
+!!  Copyright (C) Stichting Deltares, 2005-2019.
 !!
 !!  This file is part of iMOD.
 !!
@@ -1133,6 +1133,11 @@ CONTAINS
        READ(KU,'(A256)') STRING
        IF(INDEX(STRING,'MAXBOUND').GT.0)THEN
         READ(STRING(9:),*) N
+        IF(N.GT.0)WRITE(JU,'(A)') TRIM(LINE)
+        EXIT
+       ENDIF
+       IF(INDEX(STRING,'MAXHFB').GT.0)THEN
+        READ(STRING(7:),*) N
         IF(N.GT.0)WRITE(JU,'(A)') TRIM(LINE)
         EXIT
        ENDIF

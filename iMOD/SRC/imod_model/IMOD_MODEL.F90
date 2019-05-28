@@ -1,4 +1,4 @@
-!!  Copyright (C) Stichting Deltares, 2005-2018.
+!!  Copyright (C) Stichting Deltares, 2005-2019.
 !!
 !!  This file is part of iMOD.
 !!
@@ -1126,7 +1126,7 @@ MAINLOOP: DO
           IF(.NOT.LEX)THEN
            IF(IBATCH.EQ.0)CALL WINDOWOUTSTATUSBAR(4,TRIM(FNAME1)//' does not exists!')
            IF(IBATCH.EQ.1)WRITE(*,'(A)') TRIM(FNAME1)//' does not exists!'
-           WRITE(*,'(1X,A$)') 'This might be an issue if you want a transient simulation, continue ?'
+           WRITE(*,'(A$)') 'This might be an issue if you want a transient simulation, continue ?'
            READ(*,'(A)') YN
            IF(YN.EQ.'Y'.OR.YN.EQ.'y')CYCLE; STOP
           ELSE

@@ -642,7 +642,8 @@ c arguments
 c local variables
       character(len=256) :: line
       logical :: ok
-      integer :: maxpol,maxcol,itype,iact,nid,i,j,ii,n,l,icol,irow,m,nn
+      integer :: maxpol,maxcol,itype,iact,nid,i,j,ii,n,l,icol,irow,m,nn,
+     1npnt
       real(kind=8) :: x1,y1,x2,y2,tl,zl,z1,z2,dz
       real(kind=8),allocatable,dimension(:) :: xc,yc,zc
       
@@ -668,7 +669,7 @@ c read file
        do i=1,maxpol
         ii=0
 
-        READ(lun) n,itype
+        READ(lun) npnt,itype
         if(maxcol.gt.0)read(lun)
  
         !## xmin,ymin,xmax,ymax
@@ -680,22 +681,23 @@ c read file
         endif
 
         IF(ilay.EQ.0)THEN
-         allocate(xc(n),yc(n),zc(n))
-         read(lun) (xc(j),yc(j),zc(j),j=1,n)
+         allocate(xc(npnt),yc(npnt),zc(npnt))
+         read(lun) (xc(j),yc(j),zc(j),j=1,npnt)
         ELSE
-         allocate(xc(n),yc(n))
-         read(lun) (xc(j),yc(j),j=1,n)
+         allocate(xc(npnt),yc(npnt))
+         read(lun) (xc(j),yc(j),j=1,npnt)
         ENDIF
         
         nid = nid + 1
         if (iact.eq.2) genip(nid) = genip(nid-1)
-        do j=1,n-1
+        do j=1,npnt-1
 
          !## intersect line
          x1 = xc(j) !xx1
          y1 = yc(j) !yy1
          x2 = xc(j+1) !xx2
          y2 = yc(j+1) !yy2
+         n=0
          if(lqd)then
           call imod_utl_intersect_equi(xmin,xmax,ymin,ymax,
      1                    simcsize,simcsize,x1,x2,y1,y2,n,.true.)
@@ -848,6 +850,7 @@ c read file
                x2 = xx2
                y2 = yy2
 !               IF(ilay.EQ.0)THEN; ZZ1=Z1; ZZ2=Z2; ENDIF
+               n=0
                if(lqd)then
                 call imod_utl_intersect_equi(xmin,xmax,ymin,ymax,
      1                    simcsize,simcsize,x1,x2,y1,y2,n,.true.)

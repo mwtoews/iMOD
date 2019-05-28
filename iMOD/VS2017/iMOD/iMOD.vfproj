@@ -491,12 +491,6 @@
 		<Filter Name="imod_tstat">
 		<File RelativePath="..\..\..\iMOD\SRC\imod_tstat\imod_tstat.f90"/>
 		<File RelativePath="..\..\..\iMOD\SRC\imod_tstat\imod_tstat_par.f90"/></Filter>
-		<Filter Name="imod_udf">
-		<File RelativePath="..\..\SRC\imod_udf\imod_udf_bench.f90"/>
-		<File RelativePath="..\..\SRC\imod_udf\imod_udf_geometry.f90"/>
-		<File RelativePath="..\..\SRC\imod_udf\imod_udf_gmshio.f90"/>
-		<File RelativePath="..\..\SRC\imod_udf\imod_udf_kdtree2.f90"/>
-		<File RelativePath="..\..\SRC\imod_udf\imod_udf_utl.f90"/></Filter>
 		<Filter Name="imod_utl">
 		<File RelativePath="..\..\SRC\imod_utl\imod_dbl.f90"/>
 		<File RelativePath="..\..\SRC\imod_utl\imod_elf.f90"/>

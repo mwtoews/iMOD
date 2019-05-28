@@ -1,4 +1,4 @@
-!!  Copyright (C) Stichting Deltares, 2005-2018.
+!!  Copyright (C) Stichting Deltares, 2005-2019.
 !!
 !!  This file is part of iMOD.
 !!
@@ -147,7 +147,7 @@ CONTAINS
      CALL MATH1MAIN()
     CASE(ID_DELETE)
      CALL MANAGER_UTL_DELETE(IQ=1)
-     !CALL IDFPLOTFAST(1)
+     CALL IDFPLOTFAST(1)
     CASE (ID_PROPERTIES)
      CALL MANAGERPROPERTIES()
     CASE (ID_FIND)

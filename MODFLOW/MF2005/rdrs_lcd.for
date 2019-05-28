@@ -920,9 +920,9 @@ c check if grid is uniform
      &    (maxval(delc).ne.minval(delc))) lqd = .false.
       if (lqd) then
          simcsize = delr(1)
-      else
-         write(*,*) 'Error: non-uniform grids not yet supported.'
-         call ustop(' ')
+!      else
+!         write(*,*) 'Error: non-uniform grids not yet supported.'
+!         call ustop(' ')
       end if
 
       simcsize = delr(1)
