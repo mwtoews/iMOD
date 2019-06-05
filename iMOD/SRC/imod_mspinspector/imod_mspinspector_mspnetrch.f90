@@ -100,6 +100,13 @@ CONTAINS
    RETURN
  ENDIF
  
+ !## check: Minimum of 2 timesteps must be given
+ IF(NFILES.EQ.1)THEN 
+    WRITE(*,'(/A,A)') 'Function is stopped. Only 1 timestep available: ', TRIM(ITOS(LDATES(1)/1000000))
+    WRITE(*,'(A)') 'For NETRCH calculation a minimum of 2 timesteps is needed. '  
+    RETURN
+ ENDIF
+ 
  !## create NETRCH folder
  CALL UTL_CREATEDIR(TRIM(RESDIR))
 
@@ -157,7 +164,7 @@ DO IFILES=2,NFILES   ! start at time position 2 while "delta lvgwmodf" is define
   IF(.NOT.IDFREAD(QMODF,TRIM(FNAME),1))RETURN ; WRITE(*,'(A)') 'Reading '//TRIM(FNAME)//'...'
 
   !## Initialization
-  IF(IFILES.EQ.2)THEN
+  IF(NCREATE.EQ.1)THEN
     !## create result IDF
     CALL IDFCOPY(HEAD2,NETRCH) 
     !## check whether files are equal
@@ -188,12 +195,15 @@ DO IFILES=2,NFILES   ! start at time position 2 while "delta lvgwmodf" is define
   ENDDO
   
   !## write result IDF
+  CALL ITIMETOGDATE(LDATES(IFILES),IY,IM,ID,IHR,IMT,ISC)
+  WRITE(CDATE,'(I4.4,2I2.2)') IY,IM,ID
   FNAME=TRIM(RESDIR)//'\NETRCH_'//TRIM(CDATE)//'_L1.IDF' ; WRITE(*,'(A/)') 'Writing '//TRIM(FNAME)//'...' 
   IF(.NOT.IDFWRITE(NETRCH,FNAME,1))THEN ; ENDIF
- ENDIF
- ENDDO    
 
- WRITE(*,'(A/)') 'Number of NETRCH files writen: '//TRIM(ITOS(NCREATE))
+ ENDIF
+ENDDO    
+
+ WRITE(*,'(A)') 'Number of NETRCH files writen: '//TRIM(ITOS(NCREATE))
 
  MSPNETRCHCOMPUTE=.TRUE.
 

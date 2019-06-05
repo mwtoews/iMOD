@@ -8231,22 +8231,22 @@ CONTAINS
  ENDIF
  
  !## read Storage coefficient
- SCOPT=-1
+ SCOPT=-1  ! Option to choose methode of calculating STORAGE COEFICIENT is disabled
  STOAVG=''
  IF(UTL_READINITFILE('STOAVG',LINE,IU,1))THEN
    READ(LINE,*) STOAVG; WRITE(*,'(A)') 'STOAVG='//TRIM(STOAVG)
  ELSE
-   WRITE(*,'(A)') 'COMPUTING AVERAGE STORAGE COEFFICIENT'
+   !WRITE(*,'(A)') 'COMPUTING AVERAGE STORAGE COEFFICIENT'
    !## read flag to determine period for calculating average Storage coefficient
-   IF(UTL_READINITFILE('SCOPT',LINE,IU,1))THEN
-     READ(LINE,*) SCOPT; WRITE(*,'(A)') 'SCOPT='//TRIM(ITOS(SCOPT))
-   ENDIF
+   !IF(UTL_READINITFILE('SCOPT',LINE,IU,1))THEN
+   !  READ(LINE,*) SCOPT; WRITE(*,'(A)') 'SCOPT='//TRIM(ITOS(SCOPT))
+   !ENDIF
    IF(SCOPT.EQ.0) WRITE(*,'(A)') 'COMPUTING AVERAGE STORAGE COEFFICIENT FOR THE MODELED PERIODE'
    IF(SCOPT.EQ.1) WRITE(*,'(A)') 'COMPUTING AVERAGE STORAGE COEFFICIENT FOR THE PERIODE SDATE-EDATE'
  ENDIF
 
  IF(.NOT.MSPNETRCHCOMPUTE())THEN;
-  WRITE(*,'(/A)') 'NOT Successfully completed MSPNETRCH. Check the echo. '
+  WRITE(*,'(/A/)') 'NOT Successfully completed MSPNETRCH. Check the echo. '
  ELSE
   WRITE(*,'(/A)') 'Successfully completed MSPNETRCH, results written in:'
   WRITE(*,'(A/)') TRIM(RESDIR)
