@@ -371,213 +371,208 @@ CONTAINS
 
  END SUBROUTINE MANAGERMOVE
 
- !###======================================================================
- SUBROUTINE MANAGERSORT()
- !###======================================================================
- IMPLICIT NONE
- INTEGER :: IPLOT,N,IROW,ICOL,I,J,K,M
- REAL(KIND=DP_KIND) :: XC,YC
- TYPE(IDFOBJ),ALLOCATABLE,DIMENSION(:) :: IDF,IDFM
- INTEGER,ALLOCATABLE,DIMENSION(:) :: IX,JX
- REAL(KIND=DP_KIND),ALLOCATABLE,DIMENSION(:) :: X
- INTEGER,ALLOCATABLE,DIMENSION(:,:) :: IORDER
- LOGICAL :: LEQUAL
+! !###======================================================================
+! SUBROUTINE MANAGERSORT()
+! !###======================================================================
+! IMPLICIT NONE
+! INTEGER :: IPLOT,N,IROW,ICOL,I,J,K,M
+! REAL(KIND=DP_KIND) :: XC,YC
+! TYPE(IDFOBJ),ALLOCATABLE,DIMENSION(:) :: IDF,IDFM
+! INTEGER,ALLOCATABLE,DIMENSION(:) :: IX,JX
+! REAL(KIND=DP_KIND),ALLOCATABLE,DIMENSION(:) :: X
+! INTEGER,ALLOCATABLE,DIMENSION(:,:) :: IORDER
+! LOGICAL :: LEQUAL
+!
+! CALL UTL_MESSAGEHANDLE(0)
+!
+! !## make sure all associated idf's re deallocated
+! DO IPLOT=1,MXMPLOT; CALL IDFDEALLOCATEX(MP(IPLOT)%IDF); ENDDO
+! 
+! N=0; DO IPLOT=1,MXMPLOT; IF(MP(IPLOT)%ISEL.AND.MP(IPLOT)%IPLOT.EQ.1)N=N+1; ENDDO
+! ALLOCATE(IDF(N),IDFM(1),X(N),IX(N),JX(N),IORDER(N,N))
+! IX=0; JX=0; IORDER=0
+! DO I=1,SIZE(IDF);  CALL IDFNULLIFY(IDF(I));  ENDDO
+! DO I=1,SIZE(IDFM); CALL IDFNULLIFY(IDFM(I)); ENDDO
+!  
+! N=0; DO IPLOT=1,MXMPLOT
+!  IF(MP(IPLOT)%ISEL.AND.MP(IPLOT)%IPLOT.EQ.1)THEN
+!   N=N+1; IF(.NOT.IDFREAD(IDF(N),MP(IPLOT)%IDFNAME,0))EXIT
+!  ENDIF
+! ENDDO
+!
+! !## check whether files are equal, speeds up process
+! DO I=2,N; IF(.NOT.IDFEQUAL(IDF(1),IDF(I),0))EXIT; ENDDO
+! LEQUAL=.FALSE.; IF(I.GT.N)LEQUAL=.TRUE. 
+! 
+! IORDER=0
+! 
+! !## process idf files
+! IF(LEQUAL)THEN
+!  CALL IDFCOPY(IDF(1),IDFM(1))
+!IRLOOP1: DO IROW=1,IDFM(1)%NROW; DO ICOL=1,IDFM(1)%NCOL
+!   DO I=1,N; IX(I)=REAL(I); X(I)=IDFGETVAL(IDF(I),IROW,ICOL); ENDDO
+!   IF(MANAGERSORT_PROCESS(IDF,IX,X,IORDER))EXIT IRLOOP1
+!  ENDDO; ENDDO IRLOOP1
+! ELSE
+!  !## minimum overlapping size
+!  IF(.NOT.IDF_EXTENT(N,IDF,IDFM(1),2))RETURN
+!IRLOOP2: DO IROW=1,IDFM(1)%NROW; DO ICOL=1,IDFM(1)%NCOL
+!   CALL IDFGETLOC(IDFM(1),IROW,ICOL,XC,YC)
+!   DO I=1,N; IX(I)=REAL(I); X(I)=IDFGETXYVAL(IDF(1),XC,YC); ENDDO
+!   IF(MANAGERSORT_PROCESS(IDF,IX,X,IORDER))EXIT IRLOOP2
+!  ENDDO; ENDDO IRLOOP2
+! ENDIF
+!
+! !## get the biggest value to be the order number
+! IX=0.0D0
+! DO I=1,N
+!  M=0
+!  DO J=1,N
+!   IF(IORDER(I,J).GT.M)THEN
+!    M=IORDER(I,J)
+!    IX(I)=REAL(J)
+!   ENDIF
+!  ENDDO
+! ENDDO
+!
+! !## get right order
+! I=0
+! DO IPLOT=1,MXMPLOT
+!  IF(MP(IPLOT)%ISEL.AND.MP(IPLOT)%IPLOT.EQ.1)THEN
+!   I=I+1
+!   !## get right iplot number
+!   DO J=1,N
+!    IF(IX(J).EQ.I)JX(I)=IPLOT
+!   ENDDO
+!  ENDIF
+! ENDDO
+!
+! !## process ordering in correct order
+! DO I=1,N
+!  DO J=1,N
+!   IF(IX(J).EQ.I)THEN
+!
+!    !## don't interchange those idf's since it remains on the same position
+!    IF(JX(I).EQ.JX(J))CYCLE
+!    
+!    IPLOT=JX(I)
+!    !## remove current iplot
+!    MP(MXMPLOT)=MP(IPLOT)   
+!    !## copy right one
+!    MP(IPLOT)  =MP(JX(J))
+!    !## switch
+!    MP(JX(J))  =MP(MXMPLOT)
+!
+!    K    =IX(I)
+!    IX(I)=IX(J)
+!    IX(J)=K
+!
+!   ENDIF
+!  ENDDO
+! ENDDO
+! 
+! MP(MXMPLOT)%IACT=.FALSE.
+! MP(MXMPLOT)%ISEL=.FALSE.
+!
+! CALL IDFDEALLOCATE(IDF,SIZE(IDF));  DEALLOCATE(IDF)
+! CALL IDFDEALLOCATE(IDFM,SIZE(IDFM)); DEALLOCATE(IDFM)
+! DEALLOCATE(X,IX,JX,IORDER)
+! 
+! CALL UTL_MESSAGEHANDLE(1)
+!
+! !##  fill manager
+! CALL MANAGER_UTL_FILL()
+! CALL MANAGER_UTL_UPDATE()
+!
+! END SUBROUTINE MANAGERSORT
 
- CALL UTL_MESSAGEHANDLE(0)
-
- !## make sure all associated idf's re deallocated
- DO IPLOT=1,MXMPLOT; CALL IDFDEALLOCATEX(MP(IPLOT)%IDF); ENDDO
- 
- N=0; DO IPLOT=1,MXMPLOT; IF(MP(IPLOT)%ISEL.AND.MP(IPLOT)%IPLOT.EQ.1)N=N+1; ENDDO
- ALLOCATE(IDF(N),IDFM(1),X(N),IX(N),JX(N),IORDER(N,N))
- IX=0; JX=0; IORDER=0
- DO I=1,SIZE(IDF);  CALL IDFNULLIFY(IDF(I));  ENDDO
- DO I=1,SIZE(IDFM); CALL IDFNULLIFY(IDFM(I)); ENDDO
-  
- N=0; DO IPLOT=1,MXMPLOT
-  IF(MP(IPLOT)%ISEL.AND.MP(IPLOT)%IPLOT.EQ.1)THEN
-   N=N+1; IF(.NOT.IDFREAD(IDF(N),MP(IPLOT)%IDFNAME,0))EXIT
-  ENDIF
- ENDDO
-
- !## check whether files are equal, speeds up process
- DO I=2,N; IF(.NOT.IDFEQUAL(IDF(1),IDF(I),0))EXIT; ENDDO
- LEQUAL=.FALSE.; IF(I.GT.N)LEQUAL=.TRUE. 
- 
- IORDER=0
- 
- !## process idf files
- IF(LEQUAL)THEN
-  CALL IDFCOPY(IDF(1),IDFM(1))
-IRLOOP1: DO IROW=1,IDFM(1)%NROW; DO ICOL=1,IDFM(1)%NCOL
-   DO I=1,N; IX(I)=REAL(I); X(I)=IDFGETVAL(IDF(I),IROW,ICOL); ENDDO
-   IF(MANAGERSORT_PROCESS(IDF,IX,X,IORDER))EXIT IRLOOP1
-  ENDDO; ENDDO IRLOOP1
- ELSE
-  !## minimum overlapping size
-  IF(.NOT.IDF_EXTENT(N,IDF,IDFM(1),2))RETURN
-IRLOOP2: DO IROW=1,IDFM(1)%NROW; DO ICOL=1,IDFM(1)%NCOL
-   CALL IDFGETLOC(IDFM(1),IROW,ICOL,XC,YC)
-   DO I=1,N; IX(I)=REAL(I); X(I)=IDFGETXYVAL(IDF(1),XC,YC); ENDDO
-   IF(MANAGERSORT_PROCESS(IDF,IX,X,IORDER))EXIT IRLOOP2
-  ENDDO; ENDDO IRLOOP2
- ENDIF
-
- !## get the biggest value to be the order number
- IX=0.0D0
- DO I=1,N
-  M=0
-  DO J=1,N
-   IF(IORDER(I,J).GT.M)THEN
-    M=IORDER(I,J)
-    IX(I)=REAL(J)
-   ENDIF
-  ENDDO
- ENDDO
-
- !## get right order
- I=0
- DO IPLOT=1,MXMPLOT
-  IF(MP(IPLOT)%ISEL.AND.MP(IPLOT)%IPLOT.EQ.1)THEN
-   I=I+1
-   !## get right iplot number
-   DO J=1,N
-    IF(IX(J).EQ.I)JX(I)=IPLOT
-   ENDDO
-  ENDIF
- ENDDO
-
- !## process ordering in correct order
- DO I=1,N
-  DO J=1,N
-   IF(IX(J).EQ.I)THEN
-
-    !## don't interchange those idf's since it remains on the same position
-    IF(JX(I).EQ.JX(J))CYCLE
-    
-    IPLOT=JX(I)
-    !## remove current iplot
-    MP(MXMPLOT)=MP(IPLOT)   
-    !## copy right one
-    MP(IPLOT)  =MP(JX(J))
-    !## switch
-    MP(JX(J))  =MP(MXMPLOT)
-
-    K    =IX(I)
-    IX(I)=IX(J)
-    IX(J)=K
-
-   ENDIF
-  ENDDO
- ENDDO
- 
- MP(MXMPLOT)%IACT=.FALSE.
- MP(MXMPLOT)%ISEL=.FALSE.
-
- CALL IDFDEALLOCATE(IDF,SIZE(IDF));  DEALLOCATE(IDF)
- CALL IDFDEALLOCATE(IDFM,SIZE(IDFM)); DEALLOCATE(IDFM)
- DEALLOCATE(X,IX,JX,IORDER)
- 
- CALL UTL_MESSAGEHANDLE(1)
-
- !##  fill manager
- CALL MANAGER_UTL_FILL()
- CALL MANAGER_UTL_UPDATE()
-
- END SUBROUTINE MANAGERSORT
-
- !###======================================================================
- LOGICAL FUNCTION MANAGERSORT_PROCESS(IDF,IX,X,IORDER)
- !###======================================================================
- IMPLICIT NONE
- TYPE(IDFOBJ),INTENT(INOUT),DIMENSION(:) :: IDF
- INTEGER,INTENT(INOUT),DIMENSION(:) :: IX
- INTEGER,INTENT(INOUT),DIMENSION(:,:) :: IORDER
- REAL(KIND=DP_KIND),INTENT(INOUT),DIMENSION(:) :: X
- INTEGER :: I,J,N
- 
- MANAGERSORT_PROCESS=.TRUE.
- 
- N=SIZE(IX)
- 
- DO I=1,N; IF(X(I).EQ.IDF(I)%NODATA)X(I)=-999999.99; ENDDO
- !## sort for altitude/value
- CALL WSORT(X,1,N,SORTDESCEND,IX) 
- !## reset values for nodata
- DO I=1,N; IF(X(I).EQ.-999999.99)IX(I)=0.0D0; ENDDO   
-   
- !## set all values to nodata for values "too much" equal to previous values
- J=1; DO I=2,N
-  IF(ABS(X(I)-X(J)).LT.0.1)THEN
-   IX(I)=0.0D0; IX(J)=0
-  ELSE
-   J=I
-  ENDIF
- ENDDO   
-   
- !## collect sorts per idf-file
- J=0; DO I=1,N
-  IF(INT(IX(I)).EQ.0)CYCLE
-  J=J+1
-  IORDER(INT(IX(I)),I)=IORDER(INT(IX(I)),I)+1 
- ENDDO
-
- !## all filed in, process can be terminated
- IF(J.EQ.N)THEN
-  !## clean progress up to now
-  IORDER=0
-  DO I=1,N; IORDER(INT(IX(I)),I)=IORDER(INT(IX(I)),I)+1; ENDDO
- ENDIF
-  
- MANAGERSORT_PROCESS=.FALSE.
- 
- END FUNCTION MANAGERSORT_PROCESS
+ !!###======================================================================
+ !LOGICAL FUNCTION MANAGERSORT_PROCESS(IDF,IX,X,IORDER)
+ !!###======================================================================
+ !IMPLICIT NONE
+ !TYPE(IDFOBJ),INTENT(INOUT),DIMENSION(:) :: IDF
+ !INTEGER,INTENT(INOUT),DIMENSION(:) :: IX
+ !INTEGER,INTENT(INOUT),DIMENSION(:,:) :: IORDER
+ !REAL(KIND=DP_KIND),INTENT(INOUT),DIMENSION(:) :: X
+ !INTEGER :: I,J,N
+ !
+ !MANAGERSORT_PROCESS=.TRUE.
+ !
+ !N=SIZE(IX)
+ !
+ !DO I=1,N; IF(X(I).EQ.IDF(I)%NODATA)X(I)=-999999.99; ENDDO
+ !!## sort for altitude/value
+ !CALL WSORT(X,1,N,SORTDESCEND,IX) 
+ !!## reset values for nodata
+ !DO I=1,N; IF(X(I).EQ.-999999.99)IX(I)=0.0D0; ENDDO   
+ !  
+ !!## set all values to nodata for values "too much" equal to previous values
+ !J=1; DO I=2,N
+ ! IF(ABS(X(I)-X(J)).LT.0.1)THEN
+ !  IX(I)=0.0D0; IX(J)=0
+ ! ELSE
+ !  J=I
+ ! ENDIF
+ !ENDDO   
+ !  
+ !!## collect sorts per idf-file
+ !J=0; DO I=1,N
+ ! IF(INT(IX(I)).EQ.0)CYCLE
+ ! J=J+1
+ ! IORDER(INT(IX(I)),I)=IORDER(INT(IX(I)),I)+1 
+ !ENDDO
+ !
+ !!## all filed in, process can be terminated
+ !IF(J.EQ.N)THEN
+ ! !## clean progress up to now
+ ! IORDER=0
+ ! DO I=1,N; IORDER(INT(IX(I)),I)=IORDER(INT(IX(I)),I)+1; ENDDO
+ !ENDIF
+ ! 
+ !MANAGERSORT_PROCESS=.FALSE.
+ !
+ !END FUNCTION MANAGERSORT_PROCESS
  
  !###======================================================================
  SUBROUTINE MANAGERSORT_ALPHA(ID)
  !###======================================================================
  IMPLICIT NONE
  INTEGER,INTENT(IN) :: ID
- INTEGER :: IPLOT,N,I,J,K
+ INTEGER :: IPLOT,N,J
  INTEGER,ALLOCATABLE,DIMENSION(:) :: IX,JX
  CHARACTER(LEN=52),DIMENSION(:),ALLOCATABLE :: CN
  
  N=0; DO IPLOT=1,MXMPLOT; IF(MP(IPLOT)%ISEL)N=N+1; ENDDO
  ALLOCATE(IX(N),JX(N),CN(N)); IX=0; JX=0; CN=''
  N=0; DO IPLOT=1,MXMPLOT; IF(MP(IPLOT)%ISEL)THEN; N=N+1; CN(N)=MP(IPLOT)%ALIAS; ENDIF; ENDDO
- 
- IF(ID.EQ.ID_SORTALPHA_ZA)CALL WSORT(CN,1,N,IFLAGS=SORTDESCEND,IORDER=IX)
- IF(ID.EQ.ID_SORTALPHA_AZ)CALL WSORT(CN,1,N,                   IORDER=IX)
 
- !## get right order
- I=0; DO IPLOT=1,MXMPLOT
+ !## get right iplot number
+ N=0; DO IPLOT=1,MXMPLOT
   IF(MP(IPLOT)%ISEL)THEN
    !## get right iplot number
-   I=I+1; DO J=1,N; IF(IX(J).EQ.I)JX(I)=IPLOT; ENDDO
+   N=N+1; IX(N)=IPLOT; JX(N)=N
   ENDIF
  ENDDO
-   
+
+ IF(ID.EQ.ID_SORTALPHA_ZA)CALL WSORT(CN,1,N,IFLAGS=SORTDESCEND,IORDER=JX)
+ IF(ID.EQ.ID_SORTALPHA_AZ)CALL WSORT(CN,1,N,                   IORDER=JX)
+
  !## process ordering in correct order
- DO I=1,N
-  DO J=1,N
-   IF(IX(J).EQ.I)THEN
+ N=0; DO IPLOT=1,MXMPLOT-1
+  IF(.NOT.MP(IPLOT)%ISEL)CYCLE
+  N=N+1
+  !## skip as no shift need to be applied
+  IF(IPLOT.EQ.IX(JX(N)))CYCLE
 
-    !## don't interchange those idf's since it remains on the same position
-    IF(JX(I).EQ.JX(J))CYCLE
-    
-    IPLOT=JX(I)
-    !## remove current iplot
-    MP(MXMPLOT)=MP(IPLOT)   
-    !## copy right one
-    MP(IPLOT)  =MP(JX(J))
-    !## switch
-    MP(JX(J))  =MP(MXMPLOT)
-
-    K    =IX(I)
-    IX(I)=IX(J)
-    IX(J)=K
-
-   ENDIF
+  !## remove current iplot
+  MP(MXMPLOT)=MP(IPLOT)   
+  !## copy right one
+  MP(IPLOT)  =MP(IX(JX(N)))
+  !## switch
+  MP(IX(JX(N)))  =MP(MXMPLOT)
+  !## adjust list of sort
+  DO J=1,SIZE(IX)
+   IF(IX(JX(J)).EQ.IPLOT)IX(JX(J))=IX(JX(N))
   ENDDO
  ENDDO
  
