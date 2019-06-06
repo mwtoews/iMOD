@@ -420,8 +420,8 @@ CONTAINS
        CALL UTL_DEBUGLEVEL(0)
        CALL WDIALOGGETMENU(IDF_MENU3,I,DIR)
        CALL UTL_DEBUGLEVEL(1)
-       IF(TRIM(DIR).EQ.'')THEN
-        CALL WMESSAGEBOX(OKONLY,EXCLAMATIONICON,COMMONOK,'You need to Select an existing or Specify a NEW output folder.','Error')
+       IF(TRIM(DIR).EQ.''.OR.INDEX(DIR,':').GT.0.OR.INDEX(DIR,'\').GT.0)THEN
+        CALL WMESSAGEBOX(OKONLY,EXCLAMATIONICON,COMMONOK,'The output main folder is fixed. Create or Select a subfolder.','Error')
        ELSE
         CALL WDIALOGGETINTEGER(IDF_INTEGER6,ISEC)
         CALL WDIALOGGETDOUBLE(IDF_REAL1,RFRAME)
