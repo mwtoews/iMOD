@@ -2025,7 +2025,7 @@ CONTAINS
     ENDIF
     IDFPLOT(ILST)%ILIST=ILST; IDFPLOT(ILST)%ISEL=1
 
-   !## cubes or tplanes (applies only for legend files)
+   !## cubes or tcubes (applies only for legend files)
    ELSEIF(IDFPLOT(I)%ICUBE.EQ.2.OR.IDFPLOT(I)%ICUBE.EQ.7)THEN
     
     IF(ID_IDF(1).EQ.ID_IDF(2))THEN
@@ -2036,7 +2036,7 @@ CONTAINS
     ENDIF
     IDFPLOT(ILST)%ILIST=ILST; IDFPLOT(ILST)%ISEL=1
 
-   !## voxel
+   !## voxel or tvoxels
    ELSEIF(IDFPLOT(I)%ICUBE.EQ.3.OR.IDFPLOT(I)%ICUBE.EQ.8)THEN
 
     !## create 3D VOXEL for current idf
@@ -2336,7 +2336,7 @@ CONTAINS
  DO IROW=1,IDF(1)%NROW 
   DO ICOL=1,IDF(1)%NCOL 
    
-   !## skip this for temporarl-planes
+   !## skip this for temporarily-planes
    IF(ICUBE.LE.5)THEN
     !## apply exclude value whenever value outside legend
     IF(ILST.NE.LLST)THEN
@@ -2353,7 +2353,7 @@ CONTAINS
       IDF(4)%X(ICOL,IROW).EQ.IDF(4)%NODATA.OR.   &
       IDF(1)%X(ICOL,IROW).LE.IDF(4)%X(ICOL,IROW))THEN
     IDF(1)%X(ICOL,IROW)=IDF(1)%NODATA
-    IDF(4)%X(ICOL,IROW)=IDF(1)%NODATA
+    IDF(4)%X(ICOL,IROW)=IDF(4)%NODATA
    ENDIF
   ENDDO
  ENDDO
