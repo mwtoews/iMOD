@@ -36,7 +36,7 @@ INTEGER,DIMENSION(2) :: IDPROC
 REAL(KIND=DP_KIND),PARAMETER :: PI=ATAN(1.0D0)*4.0D0  !## value pi
 
 LOGICAL :: LBETA=.TRUE.           !## if TRUE: Show question whether it is allowed to use Beta-version or not
-LOGICAL :: LBETA_QUESTION=.TRUE. !## overrule the question at startup
+LOGICAL :: LBETA_QUESTION=.FALSE. !## overrule the question at startup
 LOGICAL :: LEXPDATE=.TRUE.        !## if TRUE: activate expire date
 INTEGER :: EXPDATE=20190701       !## expire data, after this date the iMOD-beta version cannot be used.
 INTEGER,SAVE :: ICDEBUGLEVEL      !## applied current debuglevel

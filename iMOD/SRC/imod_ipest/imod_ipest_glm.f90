@@ -46,12 +46,12 @@ CONTAINS
  
  PEST%PE_SCALING=PEST%PE_SCALING-1
  LSENS=.FALSE.; IF(PEST%PE_MXITER.EQ.0)THEN; LSENS=.TRUE.; PEST%PE_MXITER=1; ENDIF
- IF(ABS(PEST%PE_KTYPE).EQ.1)THEN
-  WRITE(*,'(/1X,A/)') 'It is not adviced to use Simple Kriging for PilotPoint interpolation, rather use Ordinary Kriging'
-  WRITE(*,'(A$)') 'Do you want to continue ?'
-  READ(*,'(A1)') YN; IF(YN.EQ.'N'.OR.YN.EQ.'n')STOP
-  WRITE(*,'(/1X,A/)') '... continuing  ...'
- ENDIF
+! IF(ABS(PEST%PE_KTYPE).EQ.1)THEN
+!  WRITE(*,'(/1X,A/)') 'It is not adviced to use Simple Kriging for PilotPoint interpolation, rather use Ordinary Kriging'
+!  WRITE(*,'(A$)') 'Do you want to continue ?'
+!  READ(*,'(A1)') YN; IF(YN.EQ.'N'.OR.YN.EQ.'n')STOP
+!  WRITE(*,'(/1X,A/)') '... continuing  ...'
+! ENDIF
  
  !## allocate memory for running the models
  N=0 ; DO I=1,SIZE(PEST%PARAM)
@@ -667,7 +667,7 @@ MAINLOOP: DO
  DO I=1,SIZE(PEST%PARAM)
   ILOG=PEST%PARAM(I)%PLOG
   IF(PEST%PARAM(I)%PLOG.EQ.1)THEN
-   WRITE(IUPESTRUNFILE,'(I2,1X,A,1X,2(I4,1X),5(F10.3,1X),I4,1X,I2,1X,A)') MIN(1,ABS(PEST%PARAM(I)%PACT)), &  !## iact
+   WRITE(IUPESTRUNFILE,'(I2,1X,A,1X,2(I4,1X),5(F10.3,1X),I4,1X,I2,1X,A,F10.3)') MIN(1,ABS(PEST%PARAM(I)%PACT)), &  !## iact
        PEST%PARAM(I)%PPARAM, &         !## ptype
        PEST%PARAM(I)%PILS, &           !## ilayer/system
        PEST%PARAM(I)%PIZONE, &         !## zone number
@@ -678,9 +678,10 @@ MAINLOOP: DO
        PEST%PARAM(I)%PINCREASE,&           !## maximal adjust factor
        ABS(PEST%PARAM(I)%PIGROUP),&    !## group number
        ILOG,&                    !## log transformed
-       TRIM(PEST%PARAM(I)%ACRONYM)
+       TRIM(PEST%PARAM(I)%ACRONYM), &
+       EXP(PEST%PARAM(I)%PPRIOR)
   ELSE
-   WRITE(IUPESTRUNFILE,'(I2,1X,A,1X,2(I4,1X),5(F10.3,1X),I4,1X,I2,1X,A)') MIN(1,ABS(PEST%PARAM(I)%PACT)), &  !## iact
+   WRITE(IUPESTRUNFILE,'(I2,1X,A,1X,2(I4,1X),5(F10.3,1X),I4,1X,I2,1X,A,F10.3)') MIN(1,ABS(PEST%PARAM(I)%PACT)), &  !## iact
        PEST%PARAM(I)%PPARAM, & !## ptype
        PEST%PARAM(I)%PILS, &   !## ilayer/system
        PEST%PARAM(I)%PIZONE, & !## zone number
@@ -691,7 +692,8 @@ MAINLOOP: DO
        PEST%PARAM(I)%PINCREASE,&   !## maximal adjust factor
        ABS(PEST%PARAM(I)%PIGROUP),& !## group number
        ILOG, &            !## log transformed
-       TRIM(PEST%PARAM(I)%ACRONYM)
+       TRIM(PEST%PARAM(I)%ACRONYM), &
+       PEST%PARAM(I)%PPRIOR
   ENDIF 
  ENDDO
 

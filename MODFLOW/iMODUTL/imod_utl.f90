@@ -266,10 +266,11 @@ CONTAINS
  
  CALL UTL_KRIGING_INIT(MD,XD,YD,ZD,ND,KTYPE,NODATA) 
 
- !## compute mean and substract values from mean - simple kriging
+ !## compute mean (= always zero) and substract values from mean - simple kriging
  IF(KTYPE.GT.0)THEN
-   MZ=0.0; DO I=1,ND; MZ=MZ+ZD(I); ENDDO; IF(ND.GT.0.0)MZ=MZ/REAL(ND)
-   DO I=1,ND; ZD(I)=ZD(I)-MZ; ENDDO
+!   MZ=0.0; DO I=1,ND; MZ=MZ+ZD(I); ENDDO; IF(ND.GT.0.0)MZ=MZ/REAL(ND)
+!   DO I=1,ND; ZD(I)=ZD(I)-MZ; ENDDO
+  MZ=0.0
  ENDIF
 
  DO IROW=1,NROW

@@ -731,6 +731,7 @@ C
 C        SPECIFICATIONS:
 C     ------------------------------------------------------------------
 c      CHARACTER*24 ANAME
+      use imod_utl, only: imod_utl_has_ext
       character(len=*) aname
       DIMENSION A(JJ,II)
       CHARACTER*20 FMTIN
@@ -799,7 +800,9 @@ c            ! read cnstnt and iprn                                     ! DLT
             call urword(cntrl,icol,istart,istop,1,n,r,iout,in) !fmtin   ! DLT
             call urword(cntrl,icol,istart,istop,2,iprn,r,iout,in) !iprn ! DLT
             loper = .true.                                              ! DLT
-!            call applyarithoper(fname,a,jj,ii,ioper,coper)              ! DLT
+            if (imod_utl_has_ext(fname,'ipf')) then
+             call applyarithoper(fname,a,jj,ii,ioper,coper)              ! DLT
+            endif
             iclose = 0                                                  ! DLT
             goto 305                                                    ! DLT
          end if                                                         ! DLT
@@ -1739,7 +1742,11 @@ c init
        if(j.gt.0)then
         j=j+4
         jj=index(str(j:),'_')-1
-        if(jj.lt.0)jj=len_trim(str)
+        if(jj.lt.0)then
+         jj=len_trim(str)
+        else
+         jj=jj+4
+        endif
         read(str(j:jj),*,iostat=ios) val
         if(ios.ne.0)stop 'cannot convert fct/imp/pow/div'
         write(tmp,*) val; tmp=adjustl(tmp)

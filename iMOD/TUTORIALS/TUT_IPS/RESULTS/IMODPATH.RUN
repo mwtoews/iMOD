@@ -11,25 +11,25 @@
 19960414, !## startdate
 19960414, !## startwindow
 20040328, !## endwindow
-'$DBASE$\TUTORIALS\TUT_IPS\BOUNDARY.IDF', !## ibound layer 1
-'$DBASE$\TUTORIALS\TUT_IPS\surface_level.idf', !## top layer 1
-'$DBASE$\TUTORIALS\TUT_IPS\Aquitard_top.idf', !## bottom layer 1
+'d:\COMPILE\ossdeltares\iMOD\TUTORIALS\TUT_IPS\BOUNDARY.IDF', !## ibound layer 1
+'d:\COMPILE\ossdeltares\iMOD\TUTORIALS\TUT_IPS\surface_level.idf', !## top layer 1
+'d:\COMPILE\ossdeltares\iMOD\TUTORIALS\TUT_IPS\Aquitard_top.idf', !## bottom layer 1
 '0.3', !## porosity aquifer layer 1
 '0.1', !## porosity aquitard layer 1
 '1', !## ibound layer 2
-'$DBASE$\TUTORIALS\TUT_IPS\Aquitard_top.idf', !## top layer 2
-'$DBASE$\TUTORIALS\TUT_IPS\Aquitard_BOT.idf', !## bottom layer 2
+'d:\COMPILE\ossdeltares\iMOD\TUTORIALS\TUT_IPS\Aquitard_top.idf', !## top layer 2
+'d:\COMPILE\ossdeltares\iMOD\TUTORIALS\TUT_IPS\Aquitard_BOT.idf', !## bottom layer 2
 '0.1', !## porosity aquifer layer 2
 '0.1', !## porosity aquitard layer 2
 '1', !## ibound layer 3
-'$DBASE$\TUTORIALS\TUT_IPS\Aquitard_BOT.idf', !## top layer 3
-'$DBASE$\TUTORIALS\TUT_IPS\BEDROCK.IDF', !## bottom layer 3
+'d:\COMPILE\ossdeltares\iMOD\TUTORIALS\TUT_IPS\Aquitard_BOT.idf', !## top layer 3
+'d:\COMPILE\ossdeltares\iMOD\TUTORIALS\TUT_IPS\BEDROCK.IDF', !## bottom layer 3
 '0.1', !## porosity aquifer layer 3
-'$DBASE$\TUTORIALS\TUT_IPS\RESULTS\BDGFRF\BDGFRF_STEADY-STATE_L1.IDF', !## bdgfrf
-'$DBASE$\TUTORIALS\TUT_IPS\RESULTS\BDGFFF\BDGFFF_STEADY-STATE_L1.IDF', !## bdffff
-'$DBASE$\TUTORIALS\TUT_IPS\RESULTS\BDGFLF\BDGFLF_STEADY-STATE_L1.IDF', !## bdgflf
-'$DBASE$\TUTORIALS\TUT_IPS\RESULTS\BDGFRF\BDGFRF_STEADY-STATE_L2.IDF', !## bdgfrf
-'$DBASE$\TUTORIALS\TUT_IPS\RESULTS\BDGFFF\BDGFFF_STEADY-STATE_L2.IDF', !## bdffff
-'$DBASE$\TUTORIALS\TUT_IPS\RESULTS\BDGFLF\BDGFLF_STEADY-STATE_L2.IDF', !## bdgflf
-'$DBASE$\TUTORIALS\TUT_IPS\RESULTS\BDGFRF\BDGFRF_STEADY-STATE_L3.IDF', !## bdgfrf
-'$DBASE$\TUTORIALS\TUT_IPS\RESULTS\BDGFFF\BDGFFF_STEADY-STATE_L3.IDF', !## bdffff
+'d:\COMPILE\ossdeltares\iMOD\TUTORIALS\TUT_IPS\RESULTS\BDGFRF\BDGFRF_STEADY-STATE_L1.IDF', !## bdgfrf
+'d:\COMPILE\ossdeltares\iMOD\TUTORIALS\TUT_IPS\RESULTS\BDGFFF\BDGFFF_STEADY-STATE_L1.IDF', !## bdffff
+'d:\COMPILE\ossdeltares\iMOD\TUTORIALS\TUT_IPS\RESULTS\BDGFLF\BDGFLF_STEADY-STATE_L1.IDF', !## bdgflf
+'d:\COMPILE\ossdeltares\iMOD\TUTORIALS\TUT_IPS\RESULTS\BDGFRF\BDGFRF_STEADY-STATE_L2.IDF', !## bdgfrf
+'d:\COMPILE\ossdeltares\iMOD\TUTORIALS\TUT_IPS\RESULTS\BDGFFF\BDGFFF_STEADY-STATE_L2.IDF', !## bdffff
+'d:\COMPILE\ossdeltares\iMOD\TUTORIALS\TUT_IPS\RESULTS\BDGFLF\BDGFLF_STEADY-STATE_L2.IDF', !## bdgflf
+'d:\COMPILE\ossdeltares\iMOD\TUTORIALS\TUT_IPS\RESULTS\BDGFRF\BDGFRF_STEADY-STATE_L3.IDF', !## bdgfrf
+'d:\COMPILE\ossdeltares\iMOD\TUTORIALS\TUT_IPS\RESULTS\BDGFFF\BDGFFF_STEADY-STATE_L3.IDF', !## bdffff
