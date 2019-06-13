@@ -100,13 +100,19 @@ if(pest_iter.eq.0)then
 
        if(.not.associated(param(i)%x))allocate(param(i)%x(param(i)%nodes))
        select case (trim(ptype))
-       case('KD','KH','KV','VA','SC','AF','EP','RE','SY')
+       case('KD','KH','KV','VA','SC','AF','EP','SY')
           do j=1,param(i)%nodes
              irow=param(i)%irow(j); icol=param(i)%icol(j)
              !## only modify active/constant head nodes
              if(ibound(icol,irow,ils).ne.0)then
               param(i)%x(j)=a(icol,irow,ils)*param(i)%f(j)
              endif
+          enddo
+       !## can become unconfined and then it is not layer 1
+       case('RE')
+          do j=1,param(i)%nodes
+             irow=param(i)%irow(j); icol=param(i)%icol(j)
+             param(i)%x(j)=a(icol,irow,ils)*param(i)%f(j)
           enddo
        case('VC')   !## vertical c values
           do j=1,param(i)%nodes
@@ -153,13 +159,20 @@ do i=1,size(param)
    IF(PARAM(I)%LOG)FCT=EXP(FCT)
 
    select case (trim(ptype))
-   case('KD','KH','KV','VA','SC','AF','EP','RE','SY')
+   case('KD','KH','KV','VA','SC','AF','EP','SY')
       do j=1,param(i)%nodes
          irow=param(i)%irow(j); icol=param(i)%icol(j)
          if(ibound(icol,irow,ils).ne.0)then
            ppart           =a(icol,irow,ils)-param(i)%x(j)
            a(icol,irow,ils)=ppart+param(i)%x(j)*fct
          endif
+      enddo
+   !## can become unconfined and then it is not layer 1
+   case('RE')
+      do j=1,param(i)%nodes
+         irow=param(i)%irow(j); icol=param(i)%icol(j)
+         ppart           =a(icol,irow,ils)-param(i)%x(j)
+         a(icol,irow,ils)=ppart+param(i)%x(j)*fct
       enddo
    case('VC')   !## vertical c values
       do j=1,param(i)%nodes
