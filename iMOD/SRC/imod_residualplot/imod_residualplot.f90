@@ -127,10 +127,12 @@ CONTAINS
       !## read associated file
       IF(IPFREADASSFILELABEL(IU,1,FNAME).AND.IPFREADASSFILE(IU,1,FNAME))THEN
 
-       N=N+1
-       IF(I.EQ.2)THEN
-        IPFR(1)%O(N)=0.0D0
-        IPFR(1)%M(N)=0.0D0
+       IF(IAVERAGE.EQ.1)THEN
+        N=N+1
+        IF(I.EQ.2)THEN
+         IPFR(1)%O(N)=0.0D0
+         IPFR(1)%M(N)=0.0D0
+        ENDIF
        ENDIF
        
        NM=0
@@ -146,6 +148,10 @@ CONTAINS
            M.NE.ASSF(1)%NODATA(ICOL(4)))THEN
  
          IF(I.EQ.2)THEN
+
+          !# no averaging, take all measurements
+          IF(IAVERAGE.EQ.0)N=N+1
+         
           READ(IPF(1)%INFO(ICOL(1),J),*)  IPFR(1)%X(N)
           READ(IPF(1)%INFO(ICOL(2),J),*)  IPFR(1)%Y(N)
        
@@ -163,7 +169,7 @@ CONTAINS
         ENDIF  
        ENDDO
 
-       IF(I.EQ.2.AND.NM.GT.0)THEN
+       IF(IAVERAGE.EQ.1.AND.I.EQ.2.AND.NM.GT.0)THEN
         IPFR(1)%O(N)=IPFR(1)%O(N)/REAL(NM)
         IPFR(1)%M(N)=IPFR(1)%M(N)/REAL(NM)
        ENDIF
@@ -229,8 +235,6 @@ CONTAINS
      READ(LINE,'(2(G15.7,1X),I10,1X,3(G15.7,1X),5(A15,1X),10X,1X,32X,1X,I15)') IPFR(NIPF)%X(N),IPFR(NIPF)%Y(N), &
                                       IPFR(NIPF)%L(N),IPFR(NIPF)%W(N),IPFR(NIPF)%O(N),IPFR(NIPF)%M(N)
      READ(LINE,'(171X,10X,1X,32X,1X,I15)',IOSTAT=IOS) IPFR(NIPF)%D(N)
-!WRITE(IUPESTRESIDUAL,'(2(G15.7,1X),I10,1X,8(G15.7,1X),I10,1X,A32,1X,I15)') &
-!         X,Y,ILAY,WW,M(K),C(K),C(K)-M(K),DYN(1),DYN(2),DYN(2)-DYN(1),XCOR,I,MSR%CLABEL(II),IDATE(K)
     ELSE
      READ(LINE,'(2(G15.7,1X),I10,1X,6(G15.7,1X))') IPFR(NIPF)%X(N),IPFR(NIPF)%Y(N), &
                                       IPFR(NIPF)%L(N),IPFR(NIPF)%O(N),IPFR(NIPF)%M(N), &

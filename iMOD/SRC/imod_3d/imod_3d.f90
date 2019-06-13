@@ -642,6 +642,12 @@ CONTAINS
   BOT%X=IDF%XMIN; BOT%Y=IDF%YMIN
  ENDIF
 
+ !## if not visible extent, return
+ IF(TOP%X.LE.BOT%X.OR.TOP%Y.LE.BOT%Y)THEN
+  CALL WMESSAGEBOX(OKONLY,EXCLAMATIONICON,COMMONOK,'All selected files outside current visible extent','Error')
+  RETURN
+ ENDIF
+ 
  !## normalize normalvector after initialisation
  CALL GLENABLE(GL_NORMALIZE)
  !## flat shading, need a single normal per polygon

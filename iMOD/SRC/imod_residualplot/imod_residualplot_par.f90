@@ -38,7 +38,7 @@ REAL(KIND=DP_KIND),DIMENSION(:),POINTER :: X,Y,Z                     !## values 
 REAL(KIND=DP_KIND),DIMENSION(:),POINTER :: X_TMP,Y_TMP,Z_TMP         !## values to be plotted
 CHARACTER(LEN=256) :: INPUTFILE,BMPNAME,IPFNAME        !## name of txtfile
 INTEGER :: IPLOT,IWEIGHT                               !## plot type
-INTEGER :: ITRANSIENT                                  !## transient/steadystate (lacking date)
+INTEGER :: ITRANSIENT,IAVERAGE                         !## transient/steadystate (lacking date)
 INTEGER,POINTER,DIMENSION(:) :: ILAYER,IIPFS,IRDATE    !## all layer numbers/IPF-files to be read
 INTEGER :: NLAYER,NIPFS,NRDATE                         !## amount of layers/IPF-files to be read
 REAL(KIND=DP_KIND) :: GOF                                            !## goodness-of-fit with linear regression
