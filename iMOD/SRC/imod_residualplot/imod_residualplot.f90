@@ -147,10 +147,10 @@ CONTAINS
         IF(O.NE.ASSF(1)%NODATA(ICOL(3)).AND. &
            M.NE.ASSF(1)%NODATA(ICOL(4)))THEN
  
-         IF(I.EQ.2)THEN
+         !# no averaging, take all measurements
+         IF(IAVERAGE.EQ.0)N=N+1; NM=NM+1
 
-          !# no averaging, take all measurements
-          IF(IAVERAGE.EQ.0)N=N+1
+         IF(I.EQ.2)THEN
          
           READ(IPF(1)%INFO(ICOL(1),J),*)  IPFR(1)%X(N)
           READ(IPF(1)%INFO(ICOL(2),J),*)  IPFR(1)%Y(N)
@@ -162,7 +162,6 @@ CONTAINS
 
           IPFR(1)%O(N)=IPFR(1)%O(N)+O 
           IPFR(1)%M(N)=IPFR(1)%M(N)+M
-          NM=NM+1
           
          ENDIF
                  

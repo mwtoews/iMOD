@@ -851,8 +851,11 @@ CONTAINS
    IPER=PMANAGER_GETCURRENTIPER(KPER,I,ITIME,JTIME)
    
    !## overrule wel/isg packages per stress-period
-   SELECT CASE (I); CASE (21,29); IPER=ABS(IPER); END SELECT
-   
+   SELECT CASE (I)
+    CASE (21); IF(PBMAN%DWEL.EQ.1)IPER=ABS(IPER)
+    CASE (29); IF(PBMAN%DISG.EQ.1)IPER=ABS(IPER)
+   END SELECT
+
    !## reuse previous timestep
    IF(IPER.LE.0)THEN
 
@@ -2463,7 +2466,7 @@ CONTAINS
     T=TOP(ILAY)%X(ICOL,IROW)-BOT(ILAY)%X(ICOL,IROW)
     IF(T.LE.0.0D0)THEN
      PRJIDF%X(ICOL,IROW)=-1.0D0
-     !## make sure a active cells are not allowed on thickness of zero
+     !## make sure an active cells are not allowed on thickness of zero
      BND(ILAY)%X(ICOL,IROW)=0.0
     ENDIF
    ENDDO; ENDDO
@@ -4640,8 +4643,8 @@ IRLOOP: DO IROW=1,PRJIDF%NROW; DO ICOL=1,PRJIDF%NCOL
 
       ELSE
 
-       !## assign to predefined layer
-       TLP(PCK(1)%ILAY)=1.0D0
+       !## assign to predefined layer - if not constant or inactive
+       IF(BND(PCK(1)%ILAY)%X(ICOL,IROW).GT.0)TLP(PCK(1)%ILAY)=1.0D0
 
       ENDIF
       
