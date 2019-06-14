@@ -477,11 +477,15 @@ CONTAINS
   ENDIF
  ENDDO
    
- !## get minimum and maximum x and y values for plotting area scatter plot
- MINX=X(1); MAXX=X(1)
- DO I=2,SIZE(X); MINX=MIN(MINX,X(I)); MAXX=MAX(MAXX,X(I)); ENDDO
- MINY=Y(1); MAXY=Y(1)
- DO I=2,SIZE(Y); MINY=MIN(MINY,Y(I)); MAXY=MAX(MAXY,Y(I)); ENDDO
+ !## get minimum and maximum x and y values for plotting area scatter plot if not predefined
+ IF(IXY.EQ.1)THEN
+  MINX=XMIN; MAXX=XMAX; MINY=YMIN; MAXY=YMAX
+ ELSE
+  MINX=X(1); MAXX=X(1)
+  DO I=2,SIZE(X); MINX=MIN(MINX,X(I)); MAXX=MAX(MAXX,X(I)); ENDDO
+  MINY=Y(1); MAXY=Y(1)
+  DO I=2,SIZE(Y); MINY=MIN(MINY,Y(I)); MAXY=MAX(MAXY,Y(I)); ENDDO
+ ENDIF
 
  !## create bitmap - resolution
  CALL WBITMAPCREATE(IPLOTBMP,2000,2000)

@@ -36,9 +36,10 @@ END TYPE IPFRESOBJ
 TYPE(IPFRESOBJ),DIMENSION(:),ALLOCATABLE :: IPFR       !## stores original values from txtfile per ipf
 REAL(KIND=DP_KIND),DIMENSION(:),POINTER :: X,Y,Z                     !## values to be plotted
 REAL(KIND=DP_KIND),DIMENSION(:),POINTER :: X_TMP,Y_TMP,Z_TMP         !## values to be plotted
+REAL(KIND=DP_KIND) :: XMAX,XMIN,YMAX,YMIN               !## scatterplot range x and y axis
 CHARACTER(LEN=256) :: INPUTFILE,BMPNAME,IPFNAME        !## name of txtfile
 INTEGER :: IPLOT,IWEIGHT                               !## plot type
-INTEGER :: ITRANSIENT,IAVERAGE                         !## transient/steadystate (lacking date)
+INTEGER :: ITRANSIENT,IAVERAGE,IXY                     !## transient/steadystate (lacking date)
 INTEGER,POINTER,DIMENSION(:) :: ILAYER,IIPFS,IRDATE    !## all layer numbers/IPF-files to be read
 INTEGER :: NLAYER,NIPFS,NRDATE                         !## amount of layers/IPF-files to be read
 REAL(KIND=DP_KIND) :: GOF                                            !## goodness-of-fit with linear regression
