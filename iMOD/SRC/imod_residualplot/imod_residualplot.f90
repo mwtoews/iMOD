@@ -48,7 +48,7 @@ CONTAINS
  
  !## read in complete ipf file
  IF(INDEX(UTL_CAP(INPUTFILE,'U'),'IPF').GT.0)THEN
-  CALL RESIDUAL_DATA_IPF(ICOL)
+  IF(.NOT.RESIDUAL_DATA_IPF(ICOL))STOP
  !## read in complete txtfile
  ELSE
   CALL RESIDUAL_DATA()
@@ -63,14 +63,16 @@ CONTAINS
  END SUBROUTINE RESIDUAL_MAIN
 
  !###===================================
- SUBROUTINE RESIDUAL_DATA_IPF(ICOL)
+ LOGICAL FUNCTION RESIDUAL_DATA_IPF(ICOL)
  !###===================================
  IMPLICIT NONE
  INTEGER,DIMENSION(:),INTENT(IN) :: ICOL
  INTEGER :: I,J,K,IU,N,NM
  REAL(KIND=DP_KIND) :: O,M
  CHARACTER(LEN=256) :: FNAME,DIR
-
+ 
+ RESIDUAL_DATA_IPF=.FALSE.
+ 
  NIPF=1; CALL IPFALLOCATE(); IPF(1)%FNAME=INPUTFILE
 
  IPF(1)%XCOL=ICOL(1)
@@ -139,7 +141,9 @@ CONTAINS
        DO K=1,ASSF(1)%NRASS
 
         !## store date - for first entered data line
-        IF(K.EQ.1.AND.I.EQ.2)IPFR(1)%D(N)=ASSF(1)%IDATE(I)
+        IF(I.EQ.2)THEN
+         IF(K.EQ.1.AND.IAVERAGE.EQ.1)IPFR(1)%D(N)=ASSF(1)%IDATE(K)
+        ENDIF
 
         O=ASSF(1)%MEASURE(ICOL(3)-1,K)
         M=ASSF(1)%MEASURE(ICOL(4)-1,K)
@@ -160,8 +164,14 @@ CONTAINS
           IF(ICOL(6).EQ.0)THEN; IPFR(1)%L(N)=1
           ELSE; READ(IPF(1)%INFO(ICOL(6),J),*)  IPFR(1)%L(N); ENDIF
 
-          IPFR(1)%O(N)=IPFR(1)%O(N)+O 
-          IPFR(1)%M(N)=IPFR(1)%M(N)+M
+          IF(IAVERAGE.EQ.0)THEN
+           IPFR(1)%D(N)=ASSF(1)%IDATE(K)
+           IPFR(1)%O(N)=O 
+           IPFR(1)%M(N)=M
+          ELSE
+           IPFR(1)%O(N)=IPFR(1)%O(N)+O 
+           IPFR(1)%M(N)=IPFR(1)%M(N)+M
+          ENDIF
           
          ENDIF
                  
@@ -188,7 +198,9 @@ CONTAINS
  
  ENDIF
 
- END SUBROUTINE RESIDUAL_DATA_IPF
+ RESIDUAL_DATA_IPF=.TRUE.
+ 
+ END FUNCTION RESIDUAL_DATA_IPF
  
  !###===================================
  SUBROUTINE RESIDUAL_DATA()
