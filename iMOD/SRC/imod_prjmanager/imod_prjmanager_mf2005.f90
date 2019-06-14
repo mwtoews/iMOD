@@ -6901,7 +6901,7 @@ IRLOOP: DO IROW=1,PRJIDF%NROW; DO ICOL=1,PRJIDF%NCOL
    !## rasterize genfile
    CALL ASC2IDF_HFB(IDF,IDF%NROW,IDF%NCOL,IPC,(/IDF%FNAME/),ILAY,TIDF,BIDF)
    !## collect all fault in a single file with resistances and layer fractions
-   CALL PMANAGER_SAVEMF2005_HFB_COLLECT(IPC,IDF%NROW,IDF%NCOL,FCT+IMP,IU,BND,TOP,BOT,ILAY,TIDF,BIDF,ISYS)
+   CALL PMANAGER_SAVEMF2005_HFB_COLLECT(IPC,IDF%NROW,IDF%NCOL,FCT*IMP,IU,BND,TOP,BOT,ILAY,TIDF,BIDF,ISYS)
   ENDIF
    
  ENDDO
@@ -7093,8 +7093,6 @@ IRLOOP: DO IROW=1,PRJIDF%NROW; DO ICOL=1,PRJIDF%NCOL
     !## minimum bot fault for display
     BF(IC1,IR1)=MIN(BF(IC1,IR1),BF(IC2,IR2),BFV)
     
-!## dit klopt niet ... de vulling van een breuk gaan niet op de cell niveau maar op vlak-niveau :-(
-
    ENDIF
    
   ENDDO

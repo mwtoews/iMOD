@@ -214,7 +214,7 @@ CONTAINS
         if (.not.associated(hfb%sp(iper)%lcd%gen)) allocate(hfb%sp(iper)%lcd%gen(maxsubsys))
         if (.not.associated(hfb%sp(iper)%lcd%gen(isub)%data)) allocate(hfb%sp(iper)%lcd%gen(isub)%data(1))
         hfb%sp(iper)%lcd%gen(isub)%ilay   = ilay
-        hfb%sp(iper)%lcd%gen(isub)%factor = fct+imp
+        hfb%sp(iper)%lcd%gen(isub)%factor = fct*imp
         hfb%sp(iper)%lcd%gen(isub)%data(it)%fname = trim(fname)
        end do
       CASE (PTOP)     !## (PTOP) top
