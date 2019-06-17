@@ -36,7 +36,7 @@ INTEGER,DIMENSION(2) :: IDPROC
 REAL(KIND=DP_KIND),PARAMETER :: PI=ATAN(1.0D0)*4.0D0  !## value pi
 
 LOGICAL :: LBETA=.TRUE.           !## if TRUE: Show question whether it is allowed to use Beta-version or not
-LOGICAL :: LBETA_QUESTION=.FALSE. !## overrule the question at startup
+LOGICAL :: LBETA_QUESTION=.TRUE. !## overrule the question at startup
 LOGICAL :: LEXPDATE=.TRUE.        !## if TRUE: activate expire date
 INTEGER :: EXPDATE=20190701       !## expire data, after this date the iMOD-beta version cannot be used.
 INTEGER,SAVE :: ICDEBUGLEVEL      !## applied current debuglevel
@@ -49,7 +49,7 @@ CHARACTER(LEN=10),PARAMETER :: REPLACESTRING='$DBASE$'
 
 CHARACTER(LEN=30),PARAMETER :: RVERSION    ='V4_4'      !## release message - used for license
 CHARACTER(LEN=30),PARAMETER :: RVERSION_EXE='V4_4'      !## release message - only with single subnummers
-CHARACTER(LEN=50),PARAMETER :: BVERSION='Beta Build Intel v2019.1.144 [06-05-2019 11:47]'       !## banner message !!!
+CHARACTER(LEN=50),PARAMETER :: BVERSION='Beta Build Intel v2019.1.144 [17-06-2019 15:56]'       !## banner message !!!
 CHARACTER(LEN=32) :: LICFILE='I_accepted_'//TRIM(RVERSION)//'.txt'
 CHARACTER(LEN=256) :: IMFFNAME         !## name of drawing file
 CHARACTER(LEN=256) :: EXENAME,EXEPATH
