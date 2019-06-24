@@ -41,7 +41,7 @@ LOGICAL :: LEXPDATE=.TRUE.        !## if TRUE: activate expire date
 INTEGER :: EXPDATE=20190701       !## expire data, after this date the iMOD-beta version cannot be used.
 INTEGER,SAVE :: ICDEBUGLEVEL      !## applied current debuglevel
 
-INTEGER,SAVE :: GKEYPRESSED    !## keypressed (cntr/shift)
+INTEGER,SAVE :: GKEYPRESSED       !## keypressed (cntr/shift)
 INTEGER,SAVE :: IMOD_IUNITS
 CHARACTER(LEN=2),DIMENSION(2) :: IMOD_CUNITS
 DATA IMOD_CUNITS/'m ','ft'/
@@ -49,7 +49,7 @@ CHARACTER(LEN=10),PARAMETER :: REPLACESTRING='$DBASE$'
 
 CHARACTER(LEN=30),PARAMETER :: RVERSION    ='V4_4'      !## release message - used for license
 CHARACTER(LEN=30),PARAMETER :: RVERSION_EXE='V4_4'      !## release message - only with single subnummers
-CHARACTER(LEN=50),PARAMETER :: BVERSION='Beta Build Intel v2019.1.144 [17-06-2019 15:56]'       !## banner message !!!
+CHARACTER(LEN=50),PARAMETER :: BVERSION='Beta Build Intel v2019.1.144 [24-06-2019 11:47]'       !## banner message !!!
 CHARACTER(LEN=32) :: LICFILE='I_accepted_'//TRIM(RVERSION)//'.txt'
 CHARACTER(LEN=256) :: IMFFNAME         !## name of drawing file
 CHARACTER(LEN=256) :: EXENAME,EXEPATH

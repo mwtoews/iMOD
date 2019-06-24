@@ -4883,8 +4883,10 @@ CONTAINS
  DO I=1,SHP%POL(MAXSHAPES)%N
   ISP(J+I-1)%X=SHP%POL(MAXSHAPES)%X(I)
   ISP(J+I-1)%Y=SHP%POL(MAXSHAPES)%Y(I)
-  IF(I.GE.2)TD=TD+SQRT((SHP%POL(MAXSHAPES)%X(I)-SHP%POL(MAXSHAPES)%X(I-1))**2.0D0+ &
-                       (SHP%POL(MAXSHAPES)%Y(I)-SHP%POL(MAXSHAPES)%Y(I-1))**2.0D0)
+  IF(I.GE.2)TD=TD+UTL_DIST(SHP%POL(MAXSHAPES)%X(I)  ,SHP%POL(MAXSHAPES)%Y(I), &
+                           SHP%POL(MAXSHAPES)%X(I-1),SHP%POL(MAXSHAPES)%Y(I-1))
+!  IF(I.GE.2)TD=TD+SQRT((SHP%POL(MAXSHAPES)%X(I)-SHP%POL(MAXSHAPES)%X(I-1))**2.0D0+ &
+!                       (SHP%POL(MAXSHAPES)%Y(I)-SHP%POL(MAXSHAPES)%Y(I-1))**2.0D0)
  ENDDO
 
  CALL ISGISPADJUST(TD)
@@ -4904,16 +4906,20 @@ CONTAINS
  DO I=ISG(ISELISG)%ICLC,ISG(ISELISG)%ICLC+ISG(ISELISG)%NCLC-1
   IF(ISD(I)%DIST.GT.TD)ISD(I)%DIST=TD
  END DO
- !## find max. to be maximum now again
- D=0.0D0
+
+ !## find max. to be maximum now again - as segments can become longer
+ D=0.0D0; J=0
  DO I=ISG(ISELISG)%ICLC,ISG(ISELISG)%ICLC+ISG(ISELISG)%NCLC-1
-  IF(ISD(I)%DIST.GT.D)THEN
-   D=ISD(I)%DIST
-   J=I
+  IF(ISD(I)%DIST.GE.D)THEN
+   D=ISD(I)%DIST; J=I
   ENDIF
  END DO
-
- ISD(J)%DIST=TD
+ IF(J.EQ.0)THEN
+  CALL WMESSAGEBOX(OKONLY,EXCLAMATIONICON,COMMONOK,'iMOD could not position the calculation at the utmost'// &
+     ' position on stream '//TRIM(ITOS(ISELISG))//CHAR(13)//'Total length of this segment is '//TRIM(RTOS(TD,'F',3)),'Error')
+ ELSE
+  ISD(J)%DIST=TD
+ ENDIF
 
  !## make sure cross-section do not exceed new segment length
  DO I=ISG(ISELISG)%ICRS,ISG(ISELISG)%ICRS+ISG(ISELISG)%NCRS-1
@@ -5507,7 +5513,8 @@ CONTAINS
  TD=0.0D0
  DO I=1,TISP
   ISP(J+I-1)=ISP2(I)
-  IF(I.GE.2)TD=TD+SQRT((ISP2(I-1)%X-ISP2(I)%X)**2.0D0+(ISP2(I-1)%Y-ISP2(I)%Y)**2.0D0)
+  IF(I.GE.2)TD=TD+UTL_DIST(ISP2(I-1)%X,ISP2(I-1)%Y,ISP2(I)%X,ISP2(I)%Y)
+!  IF(I.GE.2)TD=TD+SQRT((ISP2(I-1)%X-ISP2(I)%X)**2.0D0+(ISP2(I-1)%Y-ISP2(I)%Y)**2.0D0)
  ENDDO
  CALL ISGISPADJUST(TD)
 
