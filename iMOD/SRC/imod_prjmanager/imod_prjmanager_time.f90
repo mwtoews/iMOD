@@ -583,7 +583,7 @@ CONTAINS
 
  !## remove first "temporary" timestep
  SELECT CASE (IPERIOD)
-  CASE (1:7)
+  CASE (1:8)
    !## make sure size(sim) is equal to PRJNPER
    ALLOCATE(SIM_C(PRJNPER-1)); DO I=1,PRJNPER-1; SIM_C(I)=SIM(I+1); ENDDO; DEALLOCATE(SIM); SIM=>SIM_C; PRJNPER=PRJNPER-1
  END SELECT

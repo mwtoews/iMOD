@@ -190,6 +190,7 @@ CONTAINS
       CASE (ID_NEW)
        IF(SOLID_NEWMASKS(ZOFFSET))THEN; ENDIF
       CASE (ID_OPENIDF)
+      
       CASE (ID_INFO)
        CALL WDIALOGSELECT(ID_DSOLIDTAB3)
        CALL WDIALOGGETMENU(IDF_MENU1,IWIN,FNAME)
@@ -736,12 +737,6 @@ ILLOOP: DO
   IF(.NOT.IDFWRITE(MASK(I)%IDF,MASK(I)%FNAME,1))THEN; ENDIF
  END DO
 
- CALL IDFDEALLOCATE(SOLIDF,SIZE(SOLIDF)); DEALLOCATE(SOLIDF)
- DO I=1,SIZE(MASK); CALL IDFDEALLOCATEX(MASK(I)%IDF); CALL IDFDEALLOCATESX(MASK(I)%IDF); ENDDO
- DEALLOCATE(MASK)
- 
- CALL UTL_CLOSEUNITS()
-
  IF(IBATCH.EQ.0)THEN
   CALL UTL_MESSAGEHANDLE(1)
   CALL WDIALOGSELECT(ID_DSOLIDTAB3)
@@ -764,6 +759,11 @@ ILLOOP: DO
   CALL WMESSAGEBOX(OKONLY,INFORMATIONICON,COMMONOK,'Successfully created masks','Information')
  ENDIF
  DEALLOCATE(NMSK)
+
+! CALL IDFDEALLOCATE(SOLIDF,SIZE(SOLIDF)); DEALLOCATE(SOLIDF)
+! DO I=1,SIZE(MASK); CALL IDFDEALLOCATEX(MASK(I)%IDF); CALL IDFDEALLOCATESX(MASK(I)%IDF); ENDDO; DEALLOCATE(MASK)
+ 
+ CALL UTL_CLOSEUNITS()
 
  SOLID_NEWMASKS=.TRUE.
 
@@ -1494,17 +1494,20 @@ ILLOOP: DO
     BOT=XBOT
    ENDIF
 
-   DZZ=(TOP-BOT)/REAL(NTBSOL-1) 
-   !## check consistency
-   IF(DZZ.LT.0.0D0)THEN
-    DO I=1,SIZE(SOLIDF); CLOSE(SOLIDF(I)%IU); ENDDO
-    CALL UTL_MESSAGEHANDLE(1)
-    CALL WMESSAGEBOX(OKONLY,INFORMATIONICON,COMMONOK,'iMOD cannot create a Solid whenever the values from the first'//CHAR(13)// &
-     'given IDF are lower than the values in for the second given IDF.'//CHAR(13)// &
-     'Check whether you should change the order of the selected IDF files.','Information')
-    RETURN
+   IF(TOP.NE.SOLIDF(1)%NODATA.AND. &
+      BOT.NE.SOLIDF(2)%NODATA)THEN
+    DZZ=(TOP-BOT)/REAL(NTBSOL-1) 
+    !## check consistency
+    IF(DZZ.LT.0.0D0)THEN
+     DO I=1,SIZE(SOLIDF); CLOSE(SOLIDF(I)%IU); ENDDO
+     CALL UTL_MESSAGEHANDLE(1)
+     CALL WMESSAGEBOX(OKONLY,INFORMATIONICON,COMMONOK,'iMOD cannot create a Solid whenever the values from the first'//CHAR(13)// &
+      'given IDF are lower than the values in for the second given IDF.'//CHAR(13)// &
+      'Check whether you should change the order of the selected IDF files.','Information')
+     RETURN
+    ENDIF
    ENDIF
-
+   
    !## compute all intervals
    DO I=1,NTBSOL
     IF(TOP.NE.SOLIDF(1)%NODATA.AND. &

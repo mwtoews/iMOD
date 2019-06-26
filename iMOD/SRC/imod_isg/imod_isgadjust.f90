@@ -352,7 +352,7 @@ CONTAINS
      WRITE(IU,'(A)') '   '//TRIM(FNAME)
     ELSE
      CALL WDIALOGGETDOUBLE(IDS(16+I),X) !real
-     FNAME=TRIM(ITOS(K))//',"'//TRIM(COPERATOR(K))//'",'//TRIM(RTOS(X,'F',2))
+     FNAME=TRIM(ITOS(K))//',"'//TRIM(COPERATOR(K))//'",'//TRIM(RTOS(X,'F',7))
      WRITE(IU,'(A)') '   '//TRIM(FNAME)
     ENDIF
    ENDIF

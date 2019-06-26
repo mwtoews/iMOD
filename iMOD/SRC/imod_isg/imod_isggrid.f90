@@ -1115,7 +1115,7 @@ CONTAINS
  INTEGER :: I,J,K,II,JJ,TTIME,IROW,ICOL,NETTRAP,ITYPE,N,ISTW,IR,IC,MDIM,I1,I2
  INTEGER :: JCRS,MAXNSEG,IRAT,IRAT1
  INTEGER,DIMENSION(3) :: IUDMM
- REAL(KIND=DP_KIND) :: C,INFF,DXY,RWIDTH,WETPER,ISGLEN,AORG,ATRAP,XSTW,YSTW,GSTW,ZCHK,D,W
+ REAL(KIND=DP_KIND) :: C,INFF,DXY,RWIDTH,WETPER,ISGLEN,AORG,ATRAP,XSTW,YSTW,GSTW,ZCHK,D,W,BEDT,BEDK
  REAL(KIND=DP_KIND),ALLOCATABLE,DIMENSION(:,:) :: QSORT,RVAL
  REAL(KIND=DP_KIND),ALLOCATABLE,DIMENSION(:) :: DIST,XNR,NDATA
  REAL(KIND=DP_KIND),ALLOCATABLE,DIMENSION(:) :: X,Y
@@ -1432,11 +1432,18 @@ CONTAINS
         IF(ICOL.GE.1   .AND.IROW.GE.1.AND. &
            ICOL.LE.NCOL.AND.IROW.LE.NROW)THEN
 
-         ISGVALUE(1,2)=RVAL(1,ISEG-1)+DXY*RVAL(1,0)   !## waterlevel
-         ISGVALUE(1,3)=RVAL(2,ISEG-1)+DXY*RVAL(2,0)   !## waterbottom
-         C            =RVAL(3,ISEG-1)+DXY*RVAL(3,0)   !## c-value
-         ISGVALUE(1,4)=RVAL(4,ISEG-1)+DXY*RVAL(4,0)   !## inf.factors
-
+         ISGVALUE(1,2)=RVAL(1,ISEG-1)+DXY*RVAL(1,0)    !## waterlevel
+         ISGVALUE(1,3)=RVAL(2,ISEG-1)+DXY*RVAL(2,0)    !## waterbottom
+         IF(ISFR.EQ.0)THEN
+          C            =RVAL(3,ISEG-1)+DXY*RVAL(3,0)   !## c-value
+          ISGVALUE(1,4)=RVAL(4,ISEG-1)+DXY*RVAL(4,0)   !## inf.factors
+         ELSEIF(ISFR.EQ.1)THEN
+          BEDT         =RVAL(4,ISEG-1)+DXY*RVAL(4,0)   !## river bed thickness
+          BEDK         =RVAL(5,ISEG-1)+DXY*RVAL(5,0)   !## river bed permeability
+          C            =BEDT/BEDK                      !## c-value
+          ISGVALUE(1,4)=1.0D0                          !## inf.factors
+         ENDIF
+         
          IF(C.GT.0.0D0)THEN
 
           !## translate from local to global coordinates and get proper wetted perimeter and width of channel!
