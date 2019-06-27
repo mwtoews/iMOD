@@ -20,6 +20,74 @@ c   Stichting Deltares
 c   P.O. Box 177
 c   2600 MH Delft, The Netherlands.
 
+      subroutine pks7mpianiclean(ibound, ncol, nrow, nlay)
+      use pksmpi_mod, only: mpptyp, mppser, myproc, inovl, gncol, gnrow,
+     & proc_icolmin, proc_icolmax, proc_irowmin, proc_irowmax
+
+      implicit none
+       
+c...     arguments
+      integer, intent(in) :: ncol, nrow, nlay
+      integer, dimension(ncol,nrow,nlay), intent(inout) :: ibound      
+
+c...     locals
+      integer :: icol, irow, ilay
+      logical :: pks7mpignodeinpart, lin
+c.......................................................................
+      
+      if (mpptyp.eq.mppser) return
+
+      !## north-west
+      icol = 1; irow = 1
+      lin =  pks7mpignodeinpart(icol, irow, 
+     &                          proc_icolmin(myproc,inovl),
+     &                          proc_icolmax(myproc,inovl),
+     &                          proc_irowmin(myproc,inovl),
+     &                          proc_irowmax(myproc,inovl))
+      If (lin) then
+        do ilay = 1, nlay
+           ibound(1,1,ilay) = 0
+        end do
+      end if
+      !## north-east
+      icol = gncol; irow = 1
+      lin =  pks7mpignodeinpart(icol, irow, 
+     &                          proc_icolmin(myproc,inovl),
+     &                          proc_icolmax(myproc,inovl),
+     &                          proc_irowmin(myproc,inovl),
+     &                          proc_irowmax(myproc,inovl))
+      If (lin) then
+        do ilay = 1, nlay
+           ibound(ncol,1,ilay) = 0
+        end do
+      end if
+      !## south-west
+      icol = 1; irow = gnrow
+      lin =  pks7mpignodeinpart(icol, irow, 
+     &                          proc_icolmin(myproc,inovl),
+     &                          proc_icolmax(myproc,inovl),
+     &                          proc_irowmin(myproc,inovl),
+     &                          proc_irowmax(myproc,inovl))
+      If (lin) then
+         do ilay = 1, nlay
+            ibound(1,nrow,ilay) = 0
+         end do
+      end if
+      !## south-east
+      icol = gncol; irow = gnrow
+      lin =  pks7mpignodeinpart(icol, irow, 
+     &                          proc_icolmin(myproc,inovl),
+     &                          proc_icolmax(myproc,inovl),
+     &                          proc_irowmin(myproc,inovl),
+     &                          proc_irowmax(myproc,inovl))
+      If (lin) then
+        do ilay = 1, nlay
+           ibound(ncol,nrow,ilay) = 0
+        end do
+      end if
+      
+      end subroutine pks7mpianiclean
+
       !> MPP initialization phase 1.
       !! Set mpptyp flag and initialize array to store unit numbers.
       subroutine pks7mpiini1( writesto )

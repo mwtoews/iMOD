@@ -351,13 +351,28 @@ C      LBOTM
       
       !## cleaning corner of model in case ani is active
       if (iunit(iuani).gt.0)then
-       do k=1,nlay
-        ibound(1,1,k)      =0
-        ibound(ncol,1,k)   =0
-        ibound(1,nrow,k)   =0
-        ibound(ncol,nrow,k)=0
-       enddo
-      endif
+       call pks7mpiactive(lpks)
+       if (lpks) then
+        call pks7mpianiclean(ibound, ncol, nrow, nlay)
+       else
+        do k=1,nlay
+         ibound(1,1,k)      =0
+         ibound(ncol,1,k)   =0
+         ibound(1,nrow,k)   =0
+         ibound(ncol,nrow,k)=0
+        enddo
+        end if
+      end if
+
+      !!## cleaning corner of model in case ani is active
+      !if (iunit(iuani).gt.0)then
+      ! do k=1,nlay
+      !  ibound(1,1,k)      =0
+      !  ibound(ncol,1,k)   =0
+      !  ibound(1,nrow,k)   =0
+      !  ibound(ncol,nrow,k)=0
+      ! enddo
+      !endif
 C      
 C-------SET IACTCELL
       DO K=1,NLAY                                                       ! PKS
