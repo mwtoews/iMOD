@@ -1750,7 +1750,7 @@ IRLOOP: DO IR=MAX(1,IROW-1),MIN(NROW,IROW+1)
  LOGICAL FUNCTION ISG2SFR(NROW,NCOL,NLAY,ILAY,IPER,NPER,MP,JU,GRIDISG,EXFNAME,TOP,BOT)
  !###====================================================================
  IMPLICIT NONE
- REAL(KIND=DP_KIND),PARAMETER :: MAXQFLOW=1.0E5 !## error perhaps in entering discharge
+ REAL(KIND=DP_KIND),PARAMETER :: MAXQFLOW=1.0D5 !## error perhaps in entering discharge
  REAL(KIND=DP_KIND),PARAMETER :: FAREA=0.50D0     !## error in area of cross-section
  CHARACTER(LEN=*),INTENT(IN) :: EXFNAME
  INTEGER,INTENT(IN) :: NROW,NCOL,NLAY,ILAY,JU,IPER,NPER

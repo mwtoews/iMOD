@@ -854,6 +854,7 @@ CONTAINS
    SELECT CASE (I)
     CASE (21); IF(PBMAN%DWEL.EQ.1)IPER=ABS(IPER)
     CASE (29); IF(PBMAN%DISG.EQ.1)IPER=ABS(IPER)
+    CASE (30); IF(PBMAN%DSFR.EQ.1)IPER=ABS(IPER)
    END SELECT
 
    !## reuse previous timestep
@@ -3766,6 +3767,8 @@ IRLOOP: DO IROW=1,PRJIDF%NROW; DO ICOL=1,PRJIDF%NCOL
 
   !## always export rivers per stress-period
   IF(ITOPIC.EQ.29)THEN; IF(PBMAN%DISG.EQ.1)KPER=ABS(KPER); ENDIF
+  !## always export streamflow routing per stress-period
+  IF(ITOPIC.EQ.30)THEN; IF(PBMAN%DSFR.EQ.1)KPER=ABS(KPER); ENDIF
   
   !## output
   WRITE(IPRT,'(1X,A,2I10,2(1X,I14))') 'Exporting timestep ',IPER,KPER,ITIME,JTIME  
