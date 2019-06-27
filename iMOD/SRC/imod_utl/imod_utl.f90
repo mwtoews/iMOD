@@ -1107,6 +1107,9 @@ DOLOOP: DO
  !## get thickness of aquifers/aquitards
  TH=0.0D0
 
+ !## make sure vka is not zero
+ DO ILAY=1,NLAY; IF(VA(ILAY).LE.0.0D0)VA(ILAY)=1.0D0; ENDDO
+ 
  !## get total conductance
  DO ILAY=1,NLAY;   TH(ILAY,1)=TH(ILAY,1)+(TOP(ILAY) -BOT(ILAY)  )*HK(ILAY); ENDDO
  DO ILAY=1,NLAY-1; TH(ILAY,1)=TH(ILAY,1)+((BOT(ILAY)-TOP(ILAY+1))*VK(ILAY)); ENDDO
@@ -1119,7 +1122,7 @@ DOLOOP: DO
  T1=SUM(TH(:,1)); T2=SUM(TH(:,2)) 
  !## procent
  F=100.0D0*(T1/T2); F=ABS(100.0D0-F)
- IF(F.GT.0.5D0)THEN !.NOT.UTL_EQUALS_REAL(T2,T1).AND.ABS(T2-T1).GT.0.1D0)THEN
+ IF(F.GT.0.5D0)THEN 
   !## get thickness of aquifers
   WRITE(*,'(A3,4F9.2)') 'TKD',T1,T2,T2-T1,F
   DO ILAY=1,NLAY
