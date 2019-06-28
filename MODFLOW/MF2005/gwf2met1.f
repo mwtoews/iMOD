@@ -962,6 +962,7 @@ c modules
       use gwfmetmodule
       use imod_idf
       use imod_utl, only: imod_utl_pol1located
+      use pksmpi_mod, only: mppini2, mpptyp
 
       implicit none
 
@@ -988,7 +989,15 @@ c      integer :: idfx_wrfile
 
 c program section
 c ------------------------------------------------------------------------------
-
+      
+      if (mpptyp.eq.mppini2) then
+          ! if PKS, use partitioning without overlap for the IDF
+          ! otherwise the merging of the files is using the cells in the
+          ! overlapping zones
+          if(.not.associated(save_no_buf)) allocate(save_no_buf)
+          save_no_buf = .true.
+      endif
+      
       !## default single precisions      
       idbl=4
       if(associated(savedouble))idbl=(savedouble+1)*4
@@ -1533,7 +1542,7 @@ c south
       subroutine gwf2met1pks(igrid,nlay,nrow,ncol)
 c modules
       use gwfmetmodule, only: coord_xll, coord_yll,
-     1                        coord_xur, coord_yur,     
+     1                        coord_xur, coord_yur,
      1                        gcoord_xll, gcoord_yll,
      1                        gcoord_xur, gcoord_yur,
      1                        coord_xll_nb, coord_yll_nb,
@@ -1647,6 +1656,7 @@ c...     local yll non-overlapping
             yll = yll + gdelc(ir)     
          end do    
       end if                
+
 c...     local xur non-overlapping
       xur = xll
       if (.not.associated(gcoord_xur)) allocate(gcoord_xur)
@@ -1662,6 +1672,7 @@ c...     local xur non-overlapping
             gcoord_xur = gcoord_xur + gdelr(ic)
          end do
       end if
+
 c...     local yur non-overlapping
       yur = yll
       if (.not.associated(gcoord_yur)) allocate(gcoord_yur)

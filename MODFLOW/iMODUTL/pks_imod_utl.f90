@@ -130,7 +130,7 @@ contains
  type(idfobj) :: gidf, lidf
  integer :: ios, gncol, gnrow, nrproc, iproc, ic1, ic2, ir1, ir2, ip0, i, j
  real :: xmin, xmax, ymin, ymax, dx, dy
- character(len=1024) :: s, fp0, f 
+ character(len=1024) :: s, fp0, f
  real :: nodata
  character(len=1) :: slash 
  !......................................................................
@@ -141,9 +141,10 @@ contains
     
     inquire(file=fname,exist=lex)
     if(.not.lex) call imod_utl_printtext('File '//trim(fname)//' does not exist',2)
+
     
     iu = getunit()
-    open(unit=iu,file=fname,status='unknown')
+    open(unit=iu,file=fname,status='old')
     read(iu,*,iostat=ios) nrproc
     if(ios.ne.0) call imod_utl_printtext('Error reading '//trim(fname),2)
     
