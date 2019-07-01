@@ -378,6 +378,44 @@ do i=1,size(param)
         endif
      end do
 
+   case('RL','IL') ! river/isg river levels
+     errmsg = 'Cannot apply PEST scaling factor for river/isg levels'
+     if (.not.present(iopt1)) call imod_utl_printtext(trim(errmsg),2)
+     irivsubsys = iopt1
+     if (irivsubsys.eq.0) call imod_utl_printtext(trim(errmsg),2)
+
+     idat = 4
+     if (trim(ptype).eq.'IL') ils=-ils
+     do j = 1, nlist
+        irow=rlist(2,j); icol=rlist(3,j)
+        !## not in current zone
+        if(buff(icol,irow,1).eq.0.0d0)cycle
+        !## adjust for selected system
+        if (ils.eq.int(rlist(irivsubsys,j)))then
+         nadj=nadj+1
+         rlist(idat,j)=rlist(idat,j)*fct
+        endif
+     end do
+
+   case('RB','IB') ! river/isg bottom levels
+     errmsg = 'Cannot apply PEST scaling factor for river/isg bottom levels'
+     if (.not.present(iopt1)) call imod_utl_printtext(trim(errmsg),2)
+     irivsubsys = iopt1
+     if (irivsubsys.eq.0) call imod_utl_printtext(trim(errmsg),2)
+
+     idat = 6
+     if (trim(ptype).eq.'IB') ils=-ils
+     do j = 1, nlist
+        irow=rlist(2,j); icol=rlist(3,j)
+        !## not in current zone
+        if(buff(icol,irow,1).eq.0.0d0)cycle
+        !## adjust for selected system
+        if (ils.eq.int(rlist(irivsubsys,j)))then
+         nadj=nadj+1
+         rlist(idat,j)=rlist(idat,j)*fct
+        endif
+     end do
+
    case('RI','II') ! river/isg infiltration factors
      errmsg = 'Cannot apply PEST scaling factor for river/isg infiltration factor'
      if (.not.present(iopt1)) call imod_utl_printtext(trim(errmsg),2)
@@ -404,6 +442,23 @@ do i=1,size(param)
      idrnsubsys = iopt1
      if (idrnsubsys.eq.0) call imod_utl_printtext(trim(errmsg),2)
      idat = 5
+     do j = 1, nlist ! match sybsystem number
+        irow=rlist(2,j); icol=rlist(3,j)
+        !## not in current zone
+        if(buff(icol,irow,1).eq.0.0d0)cycle
+        !## adjust for selected system
+        if (ils.eq.int(rlist(idrnsubsys,j)))then
+         nadj=nadj+1
+         rlist(idat,j)=rlist(idat,j)*fct
+        endif
+     end do
+
+   case('DL') ! drain level
+     errmsg = 'Cannot apply PEST scaling factor for drain level'
+     if (.not.present(iopt1)) call imod_utl_printtext(trim(errmsg),2)
+     idrnsubsys = iopt1
+     if (idrnsubsys.eq.0) call imod_utl_printtext(trim(errmsg),2)
+     idat = 4
      do j = 1, nlist ! match sybsystem number
         irow=rlist(2,j); icol=rlist(3,j)
         !## not in current zone

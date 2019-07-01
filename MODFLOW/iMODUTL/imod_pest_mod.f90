@@ -24,7 +24,7 @@
 MODULE PESTVAR
 !###====================================================================
 USE IMOD_IDF_PAR
-INTEGER,PARAMETER :: MXPTYPE=22
+INTEGER,PARAMETER :: MXPTYPE=27
 REAL,PARAMETER :: XPBND=0.01 !## boundary percentage
 CHARACTER(LEN=2),DIMENSION(MXPTYPE) :: PTYPE
 CHARACTER(LEN=256) :: PPBLANKOUT
@@ -94,9 +94,14 @@ DATA PTYPE/'KD',& ! 1 transmissivity
            'SC',& ! 5 storage    coefficient
            'RC',& ! 6 river      conductance
            'RI',& ! 7 river      infiltration
+           'RL',& !   river stage level
+           'RB',& !   river bottom level
            'DC',& ! 8 drainage   conductance
+           'DL',& !   drainage   level
            'IC',& ! 9 isg        conductance
            'II',& !10 isg        infiltration
+           'IL',& !   isg stage level
+           'IB',& !   isg bottom level
            'AF',& !11 ani        factor
            'AA',& !12 ani        angle
            'VA',& !13 kva        vertical anisotropy

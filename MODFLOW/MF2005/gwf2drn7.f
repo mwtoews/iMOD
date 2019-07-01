@@ -268,6 +268,8 @@ C3------IF THERE ARE NEW NON-PARAMETER DRAINS, READ THEM.
      2     DRNAUX,20,NAUX,IFREFM,NCOL,NROW,NLAY,5,5,IPRDRN)
          call pest1alpha_list('DC',nnpdrn,drai,ndrnvl,mxdrn,            ! IPEST
      1                        idrnsubsys)                               ! IPEST
+         call pest1alpha_list('DL',nnpdrn,drai,ndrnvl,mxdrn,            ! IPEST
+     1                        idrnsubsys)                               ! IPEST
       END IF
       NDRAIN=NNPDRN
 C

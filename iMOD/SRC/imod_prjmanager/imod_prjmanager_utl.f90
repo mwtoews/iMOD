@@ -1698,8 +1698,8 @@ JLOOP: DO K=1,SIZE(TOPICS)
      IF(IOS.NE.0)THEN
 
       SELECT CASE (PEST%PARAM(I)%PPARAM)
-       !## recharge/anisotropy angle non log transformed
-       CASE ('RE','AH')
+       !## recharge/anisotropy/stages angle non log transformed
+       CASE ('RE','AH','RL','RB','IL','IB','DL')
         PEST%PARAM(I)%PLOG=0
        CASE DEFAULT
         PEST%PARAM(I)%PLOG=1

@@ -148,12 +148,12 @@ c allocate ipc
       allocate(lun(nlay),dun(nlay),nlun(nlay)); lun=0; dun=0; nlun=0
 
       do ilay=1,nlay
-       write(fname,'(a,i2.2)') 'hfb_l',ilay
+       write(fname,'(a,i4.4)') 'hfb_l',ilay
        iflen = len_trim(fname)
        call pks7mpifname(fname,iflen)   
        fname = trim(fname)//'.gen'   
        call imod_utl_openasc(lun(ilay),fname,'w')
-       write(fname,'(a,i2.2)') 'hfb_l',ilay
+       write(fname,'(a,i4.4)') 'hfb_l',ilay
        iflen = len_trim(fname)
        call pks7mpifname(fname,iflen)   
        fname = trim(fname)//'.dat'   

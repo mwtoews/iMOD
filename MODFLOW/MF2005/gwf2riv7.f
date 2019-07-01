@@ -358,6 +358,14 @@ C3------IF THERE ARE NEW NON-PARAMETER REACHES, READ THEM.
      1                        irivsubsys)                               ! IPEST
          call pest1alpha_list('II',nnpriv,rivr,nrivvl,mxrivr,           ! IPEST
      1                        irivsubsys,irivrfact)                     ! IPEST
+         call pest1alpha_list('IL',nnpriv,rivr,nrivvl,mxrivr,           ! IPEST
+     1                        irivsubsys,irivrfact)                     ! IPEST
+         call pest1alpha_list('IB',nnpriv,rivr,nrivvl,mxrivr,           ! IPEST
+     1                        irivsubsys,irivrfact)                     ! IPEST
+         call pest1alpha_list('RL',nnpriv,rivr,nrivvl,mxrivr,           ! IPEST
+     1                        irivsubsys,irivrfact)                     ! IPEST
+         call pest1alpha_list('RB',nnpriv,rivr,nrivvl,mxrivr,           ! IPEST
+     1                        irivsubsys,irivrfact)                     ! IPEST
       END IF
       NRIVER=NNPRIV
 C
