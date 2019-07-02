@@ -2352,7 +2352,7 @@ END SUBROUTINE IMOD_UTL_QKSORT
  END DO
 
  IF(GETUNIT.GT.5000)THEN
-  WRITE(*,*) 'Can not open more than 500 files simultaneously!'
+  WRITE(*,*) 'Can not open more than 5000 files simultaneously!'
   GETUNIT=0
  ENDIF
 
