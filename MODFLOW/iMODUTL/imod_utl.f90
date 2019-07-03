@@ -50,9 +50,9 @@ character(len=79), dimension(nhdr) :: hdr
 
 !         1234567890123456789012345678901234567890123456789012345678901234567890123456789
 data hdr/'===============================================================================',&!01
-         'iMODFLOW Version 4_3, December 2018                                            ',&!02
+         'iMODFLOW Version 4_4, July 2019                                                ',&!02
          '                                                                               ',&!03
-         'Copyright (C) Stichting Deltares, 2005-2017.                                   ',&!04
+         'Copyright (C) Stichting Deltares, 2005-2019.                                   ',&!04
          '                                                                               ',&!05
          'This Deltares-software executable is part of iMOD. iMOD is Deltares-software;  ',&!06 
          'the source code of iMOD is also available as free open source software at      ',&!07 
@@ -92,7 +92,7 @@ data hdr/'======================================================================
                                                                                             
 !         1234567890123456789012345678901234567890123456789012345678901234567890123456789   
 data lic/'===============================================================================',&!01
-         'Copyright (C) Stichting Deltares, 2005-2017.                                   ',&!02
+         'Copyright (C) Stichting Deltares, 2005-2019.                                   ',&!02
          '                                                                               ',&!03
          'This Deltares-software executable is part of iMOD. iMOD is Deltares-software;  ',&!04 
          'the source code of iMOD is also available as free open source software at      ',&!05 
