@@ -3231,7 +3231,7 @@ c     if (nxch.le.0) ok = .false.
       integer, intent(in) :: igrid
 
 !...     locals
-      logical :: ok, valid
+      logical :: ok, valid, LPKS
       integer :: jj, i, ilay, irow, icol
       real(kind=8) :: x, y, w
 !.......................................................................
@@ -3263,6 +3263,7 @@ c     if (nxch.le.0) ok = .false.
          return
       end if
 
+      CALL PKS7MPIACTIVE(LPKS)  
       do jj = 1, abs(iipf)
         do i = 1, ts(jj)%nrowipf
            x = ts(jj)%stvalue(i)%x
@@ -3270,8 +3271,11 @@ c     if (nxch.le.0) ok = .false.
            w = ts(jj)%stvalue(i)%w
            ilay = ts(jj)%stvalue(i)%ilay
            valid = .true.
-!           if (x.le.coord_xll_nb .or. x.ge.coord_xur_nb) valid = .false.
-!           if (y.le.coord_yll_nb .or. y.ge.coord_yur_nb) valid = .false.
+           !## overrule measurements in buffer in case of PKS
+           if(lpks)then
+            if (x.le.coord_xll_nb .or. x.ge.coord_xur_nb)valid = .false.
+            if (y.le.coord_yll_nb .or. y.ge.coord_yur_nb)valid = .false.
+           endif
            if (ilay.lt.1 .or. ilay.gt.nlay) valid = .false.
            if(w.eq.0.0)valid=.false.
            ts(jj)%stvalue(i)%valid = valid
@@ -3283,7 +3287,7 @@ c     if (nxch.le.0) ok = .false.
                  call imod_utl_pol1located(cdelc,nrow+1,y,irow)
                  if(icol.gt.0.and.icol.le.ncol.and. 
      &              irow.gt.0.and.irow.le.nrow)then
-                  !## check if constant head or inactive cell - make measurment invalid
+                  !## check if constant head or inactive cell - make measurement invalid
                   if(ibound(icol,irow,ilay).le.0)then
                    ts(jj)%stvalue(i)%valid = .false.
                   else
