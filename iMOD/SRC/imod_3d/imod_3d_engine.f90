@@ -4977,7 +4977,7 @@ SOLLOOP: DO I=1,NSOLLIST
   !## not to be processed
   IF(IDFPLOT(J)%ICUBE.EQ.5)CYCLE
   !## voxel, use colouring only
-  IF(IDFPLOT(J)%ICUBE.EQ.3.OR.IDFPLOT(I)%ICUBE.EQ.8)THEN
+  IF(IDFPLOT(J)%ICUBE.EQ.3.OR.IDFPLOT(J)%ICUBE.EQ.8)THEN
    ICOMBINE(J,3)=J
    !## reset xclude value nodata
    XEXCLUDE(J+1)=PROFIDF(J)%IDF%NODATA-1.0D0
@@ -5575,7 +5575,7 @@ SOLLOOP: DO I=1,NSOLLIST
        !## show interfaces
        IF(IPROF(3).GT.0)THEN
         IICLR=UTL_IDFGETCLASS(IDFPLOT(IPROF(3))%LEG,ZT(IPOS,3))
-        SPF(I)%PROF(IPROF(2))%ICLR=IICLR
+        SPF(I)%PROF(IPROF(3))%ICLR=IICLR
        ELSE
         IICLR=SPF(I)%PROF(IPROF(2))%ICLR
        ENDIF
