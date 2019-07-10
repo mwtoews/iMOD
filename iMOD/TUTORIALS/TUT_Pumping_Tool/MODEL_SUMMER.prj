@@ -1,24 +1,24 @@
 0001,(TOP),1, Top
 001,008
- 1,2, 001,   1.000000    ,   0.000000    ,  -999.9900    ,'d:\IMOD_TUTORIALS\TUT_Pumping_Tool\topbottom\top1.IDF'
- 1,2, 002,   1.000000    ,   0.000000    ,  -999.9900    ,'d:\IMOD_TUTORIALS\TUT_Pumping_Tool\topbottom\top2.IDF'
- 1,2, 003,   1.000000    ,   0.000000    ,  -999.9900    ,'d:\IMOD_TUTORIALS\TUT_Pumping_Tool\topbottom\top3.IDF'
- 1,2, 004,   1.000000    ,   0.000000    ,  -999.9900    ,'d:\IMOD_TUTORIALS\TUT_Pumping_Tool\topbottom\top4.IDF'
- 1,2, 005,   1.000000    ,   0.000000    ,  -999.9900    ,'d:\IMOD_TUTORIALS\TUT_Pumping_Tool\topbottom\top5.IDF'
- 1,2, 006,   1.000000    ,   0.000000    ,  -999.9900    ,'d:\IMOD_TUTORIALS\TUT_Pumping_Tool\topbottom\top6.IDF'
- 1,2, 007,   1.000000    ,   0.000000    ,  -999.9900    ,'d:\IMOD_TUTORIALS\TUT_Pumping_Tool\topbottom\top7.IDF'
- 1,2, 008,   1.000000    ,   0.000000    ,  -999.9900    ,'d:\IMOD_TUTORIALS\TUT_Pumping_Tool\topbottom\top8.IDF'
+ 1,2, 001,   1.000000    ,   0.000000    ,  -999.9900    ,'$DBASE$\TUTORIALS\TUT_Pumping_Tool\topbottom\top1.IDF'
+ 1,2, 002,   1.000000    ,   0.000000    ,  -999.9900    ,'$DBASE$\TUTORIALS\TUT_Pumping_Tool\topbottom\top2.IDF'
+ 1,2, 003,   1.000000    ,   0.000000    ,  -999.9900    ,'$DBASE$\TUTORIALS\TUT_Pumping_Tool\topbottom\top3.IDF'
+ 1,2, 004,   1.000000    ,   0.000000    ,  -999.9900    ,'$DBASE$\TUTORIALS\TUT_Pumping_Tool\topbottom\top4.IDF'
+ 1,2, 005,   1.000000    ,   0.000000    ,  -999.9900    ,'$DBASE$\TUTORIALS\TUT_Pumping_Tool\topbottom\top5.IDF'
+ 1,2, 006,   1.000000    ,   0.000000    ,  -999.9900    ,'$DBASE$\TUTORIALS\TUT_Pumping_Tool\topbottom\top6.IDF'
+ 1,2, 007,   1.000000    ,   0.000000    ,  -999.9900    ,'$DBASE$\TUTORIALS\TUT_Pumping_Tool\topbottom\top7.IDF'
+ 1,2, 008,   1.000000    ,   0.000000    ,  -999.9900    ,'$DBASE$\TUTORIALS\TUT_Pumping_Tool\topbottom\top8.IDF'
 
 0001,(BOT),1, Bot
 001,008
- 1,2, 001,   1.000000    ,   0.000000    ,  -999.9900    ,'d:\IMOD_TUTORIALS\TUT_Pumping_Tool\topbottom\bot1.IDF'
- 1,2, 002,   1.000000    ,   0.000000    ,  -999.9900    ,'d:\IMOD_TUTORIALS\TUT_Pumping_Tool\topbottom\bot2.IDF'
- 1,2, 003,   1.000000    ,   0.000000    ,  -999.9900    ,'d:\IMOD_TUTORIALS\TUT_Pumping_Tool\topbottom\bot3.IDF'
- 1,2, 004,   1.000000    ,   0.000000    ,  -999.9900    ,'d:\IMOD_TUTORIALS\TUT_Pumping_Tool\topbottom\bot4.IDF'
- 1,2, 005,   1.000000    ,   0.000000    ,  -999.9900    ,'d:\IMOD_TUTORIALS\TUT_Pumping_Tool\topbottom\bot5.IDF'
- 1,2, 006,   1.000000    ,   0.000000    ,  -999.9900    ,'d:\IMOD_TUTORIALS\TUT_Pumping_Tool\topbottom\bot6.IDF'
- 1,2, 007,   1.000000    ,   0.000000    ,  -999.9900    ,'d:\IMOD_TUTORIALS\TUT_Pumping_Tool\topbottom\bot7.IDF'
- 1,2, 008,   1.000000    ,   0.000000    ,  -999.9900    ,'d:\IMOD_TUTORIALS\TUT_Pumping_Tool\topbottom\bot8.IDF'
+ 1,2, 001,   1.000000    ,   0.000000    ,  -999.9900    ,'$DBASE$\TUTORIALS\TUT_Pumping_Tool\topbottom\bot1.IDF'
+ 1,2, 002,   1.000000    ,   0.000000    ,  -999.9900    ,'$DBASE$\TUTORIALS\TUT_Pumping_Tool\topbottom\bot2.IDF'
+ 1,2, 003,   1.000000    ,   0.000000    ,  -999.9900    ,'$DBASE$\TUTORIALS\TUT_Pumping_Tool\topbottom\bot3.IDF'
+ 1,2, 004,   1.000000    ,   0.000000    ,  -999.9900    ,'$DBASE$\TUTORIALS\TUT_Pumping_Tool\topbottom\bot4.IDF'
+ 1,2, 005,   1.000000    ,   0.000000    ,  -999.9900    ,'$DBASE$\TUTORIALS\TUT_Pumping_Tool\topbottom\bot5.IDF'
+ 1,2, 006,   1.000000    ,   0.000000    ,  -999.9900    ,'$DBASE$\TUTORIALS\TUT_Pumping_Tool\topbottom\bot6.IDF'
+ 1,2, 007,   1.000000    ,   0.000000    ,  -999.9900    ,'$DBASE$\TUTORIALS\TUT_Pumping_Tool\topbottom\bot7.IDF'
+ 1,2, 008,   1.000000    ,   0.000000    ,  -999.9900    ,'$DBASE$\TUTORIALS\TUT_Pumping_Tool\topbottom\bot8.IDF'
 
 0001,(STO),1, Storage
 001,008
@@ -33,86 +33,86 @@
 
 0001,(BND),1, Boundary Condition,[BND]
 001,008
- 1,2, 001,   1.000000    ,   0.000000    ,  -999.9900    ,'d:\IMOD_TUTORIALS\TUT_Model_Simulation\BND\BND_L1.IDF'
- 1,2, 002,   1.000000    ,   0.000000    ,  -999.9900    ,'d:\IMOD_TUTORIALS\TUT_Model_Simulation\BND\BND_L2-8.IDF'
- 1,2, 003,   1.000000    ,   0.000000    ,  -999.9900    ,'d:\IMOD_TUTORIALS\TUT_Model_Simulation\BND\BND_L2-8.IDF'
- 1,2, 004,   1.000000    ,   0.000000    ,  -999.9900    ,'d:\IMOD_TUTORIALS\TUT_Model_Simulation\BND\BND_L2-8.IDF'
- 1,2, 005,   1.000000    ,   0.000000    ,  -999.9900    ,'d:\IMOD_TUTORIALS\TUT_Model_Simulation\BND\BND_L2-8.IDF'
- 1,2, 006,   1.000000    ,   0.000000    ,  -999.9900    ,'d:\IMOD_TUTORIALS\TUT_Model_Simulation\BND\BND_L2-8.IDF'
- 1,2, 007,   1.000000    ,   0.000000    ,  -999.9900    ,'d:\IMOD_TUTORIALS\TUT_Model_Simulation\BND\BND_L2-8.IDF'
- 1,2, 008,   1.000000    ,   0.000000    ,  -999.9900    ,'d:\IMOD_TUTORIALS\TUT_Model_Simulation\BND\BND_L2-8.IDF'
+ 1,2, 001,   1.000000    ,   0.000000    ,  -999.9900    ,'$DBASE$\TUTORIALS\TUT_Model_Simulation\BND\BND_L1.IDF'
+ 1,2, 002,   1.000000    ,   0.000000    ,  -999.9900    ,'$DBASE$\TUTORIALS\TUT_Model_Simulation\BND\BND_L2-8.IDF'
+ 1,2, 003,   1.000000    ,   0.000000    ,  -999.9900    ,'$DBASE$\TUTORIALS\TUT_Model_Simulation\BND\BND_L2-8.IDF'
+ 1,2, 004,   1.000000    ,   0.000000    ,  -999.9900    ,'$DBASE$\TUTORIALS\TUT_Model_Simulation\BND\BND_L2-8.IDF'
+ 1,2, 005,   1.000000    ,   0.000000    ,  -999.9900    ,'$DBASE$\TUTORIALS\TUT_Model_Simulation\BND\BND_L2-8.IDF'
+ 1,2, 006,   1.000000    ,   0.000000    ,  -999.9900    ,'$DBASE$\TUTORIALS\TUT_Model_Simulation\BND\BND_L2-8.IDF'
+ 1,2, 007,   1.000000    ,   0.000000    ,  -999.9900    ,'$DBASE$\TUTORIALS\TUT_Model_Simulation\BND\BND_L2-8.IDF'
+ 1,2, 008,   1.000000    ,   0.000000    ,  -999.9900    ,'$DBASE$\TUTORIALS\TUT_Model_Simulation\BND\BND_L2-8.IDF'
 
 0001,(SHD),1, Starting Heads,[SHD]
 001,008
- 1,2, 001,   1.000000    ,   0.000000    ,  -999.9900    ,'d:\IMOD_TUTORIALS\TUT_Model_Simulation\SHD\HEAD_STEADY-STATE_L1.IDF'
- 1,2, 002,   1.000000    ,   0.000000    ,  -999.9900    ,'d:\IMOD_TUTORIALS\TUT_Model_Simulation\SHD\HEAD_STEADY-STATE_L2.IDF'
- 1,2, 003,   1.000000    ,   0.000000    ,  -999.9900    ,'d:\IMOD_TUTORIALS\TUT_Model_Simulation\SHD\HEAD_STEADY-STATE_L3.IDF'
- 1,2, 004,   1.000000    ,   0.000000    ,  -999.9900    ,'d:\IMOD_TUTORIALS\TUT_Model_Simulation\SHD\HEAD_STEADY-STATE_L4.IDF'
- 1,2, 005,   1.000000    ,   0.000000    ,  -999.9900    ,'d:\IMOD_TUTORIALS\TUT_Model_Simulation\SHD\HEAD_STEADY-STATE_L5.IDF'
- 1,2, 006,   1.000000    ,   0.000000    ,  -999.9900    ,'d:\IMOD_TUTORIALS\TUT_Model_Simulation\SHD\HEAD_STEADY-STATE_L6.IDF'
- 1,2, 007,   1.000000    ,   0.000000    ,  -999.9900    ,'d:\IMOD_TUTORIALS\TUT_Model_Simulation\SHD\HEAD_STEADY-STATE_L7.IDF'
- 1,2, 008,   1.000000    ,   0.000000    ,  -999.9900    ,'d:\IMOD_TUTORIALS\TUT_Model_Simulation\SHD\HEAD_STEADY-STATE_L8.IDF'
+ 1,2, 001,   1.000000    ,   0.000000    ,  -999.9900    ,'$DBASE$\TUTORIALS\TUT_Model_Simulation\SHD\HEAD_STEADY-STATE_L1.IDF'
+ 1,2, 002,   1.000000    ,   0.000000    ,  -999.9900    ,'$DBASE$\TUTORIALS\TUT_Model_Simulation\SHD\HEAD_STEADY-STATE_L2.IDF'
+ 1,2, 003,   1.000000    ,   0.000000    ,  -999.9900    ,'$DBASE$\TUTORIALS\TUT_Model_Simulation\SHD\HEAD_STEADY-STATE_L3.IDF'
+ 1,2, 004,   1.000000    ,   0.000000    ,  -999.9900    ,'$DBASE$\TUTORIALS\TUT_Model_Simulation\SHD\HEAD_STEADY-STATE_L4.IDF'
+ 1,2, 005,   1.000000    ,   0.000000    ,  -999.9900    ,'$DBASE$\TUTORIALS\TUT_Model_Simulation\SHD\HEAD_STEADY-STATE_L5.IDF'
+ 1,2, 006,   1.000000    ,   0.000000    ,  -999.9900    ,'$DBASE$\TUTORIALS\TUT_Model_Simulation\SHD\HEAD_STEADY-STATE_L6.IDF'
+ 1,2, 007,   1.000000    ,   0.000000    ,  -999.9900    ,'$DBASE$\TUTORIALS\TUT_Model_Simulation\SHD\HEAD_STEADY-STATE_L7.IDF'
+ 1,2, 008,   1.000000    ,   0.000000    ,  -999.9900    ,'$DBASE$\TUTORIALS\TUT_Model_Simulation\SHD\HEAD_STEADY-STATE_L8.IDF'
 
 0001,(KDW),1, Transmissivity,[KDW]
 001,008
- 1,2, 001,   1.000000    ,   0.000000    ,  -999.9900    ,'d:\IMOD_TUTORIALS\TUT_Model_Simulation\KDW\KDW_L1.IDF'
- 1,2, 002,   1.000000    ,   0.000000    ,  -999.9900    ,'d:\IMOD_TUTORIALS\TUT_Model_Simulation\KDW\KDW_L2.IDF'
- 1,2, 003,   1.000000    ,   0.000000    ,  -999.9900    ,'d:\IMOD_TUTORIALS\TUT_Model_Simulation\KDW\KDW_L3.IDF'
- 1,2, 004,   1.000000    ,   0.000000    ,  -999.9900    ,'d:\IMOD_TUTORIALS\TUT_Model_Simulation\KDW\KDW_L4.IDF'
- 1,2, 005,   1.000000    ,   0.000000    ,  -999.9900    ,'d:\IMOD_TUTORIALS\TUT_Model_Simulation\KDW\KDW_L5.IDF'
- 1,2, 006,   1.000000    ,   0.000000    ,  -999.9900    ,'d:\IMOD_TUTORIALS\TUT_Model_Simulation\KDW\KDW_L6.IDF'
- 1,2, 007,   1.000000    ,   0.000000    ,  -999.9900    ,'d:\IMOD_TUTORIALS\TUT_Model_Simulation\KDW\KDW_L7.IDF'
- 1,2, 008,   1.000000    ,   0.000000    ,  -999.9900    ,'d:\IMOD_TUTORIALS\TUT_Model_Simulation\KDW\KDW_L8.IDF'
+ 1,2, 001,   1.000000    ,   0.000000    ,  -999.9900    ,'$DBASE$\TUTORIALS\TUT_Model_Simulation\KDW\KDW_L1.IDF'
+ 1,2, 002,   1.000000    ,   0.000000    ,  -999.9900    ,'$DBASE$\TUTORIALS\TUT_Model_Simulation\KDW\KDW_L2.IDF'
+ 1,2, 003,   1.000000    ,   0.000000    ,  -999.9900    ,'$DBASE$\TUTORIALS\TUT_Model_Simulation\KDW\KDW_L3.IDF'
+ 1,2, 004,   1.000000    ,   0.000000    ,  -999.9900    ,'$DBASE$\TUTORIALS\TUT_Model_Simulation\KDW\KDW_L4.IDF'
+ 1,2, 005,   1.000000    ,   0.000000    ,  -999.9900    ,'$DBASE$\TUTORIALS\TUT_Model_Simulation\KDW\KDW_L5.IDF'
+ 1,2, 006,   1.000000    ,   0.000000    ,  -999.9900    ,'$DBASE$\TUTORIALS\TUT_Model_Simulation\KDW\KDW_L6.IDF'
+ 1,2, 007,   1.000000    ,   0.000000    ,  -999.9900    ,'$DBASE$\TUTORIALS\TUT_Model_Simulation\KDW\KDW_L7.IDF'
+ 1,2, 008,   1.000000    ,   0.000000    ,  -999.9900    ,'$DBASE$\TUTORIALS\TUT_Model_Simulation\KDW\KDW_L8.IDF'
 
 0001,(VCW),1, Vertical Resistance,[VCW]
 001,007
- 1,2, 001,   1.000000    ,   0.000000    ,  -999.9900    ,'d:\IMOD_TUTORIALS\TUT_Model_Simulation\VCW\VCW_L1.IDF'
- 1,2, 002,   1.000000    ,   0.000000    ,  -999.9900    ,'d:\IMOD_TUTORIALS\TUT_Model_Simulation\VCW\VCW_L2.IDF'
- 1,2, 003,   1.000000    ,   0.000000    ,  -999.9900    ,'d:\IMOD_TUTORIALS\TUT_Model_Simulation\VCW\VCW_L3.IDF'
- 1,2, 004,   1.000000    ,   0.000000    ,  -999.9900    ,'d:\IMOD_TUTORIALS\TUT_Model_Simulation\VCW\VCW_L4.IDF'
- 1,2, 005,   1.000000    ,   0.000000    ,  -999.9900    ,'d:\IMOD_TUTORIALS\TUT_Model_Simulation\VCW\VCW_L5.IDF'
- 1,2, 006,   1.000000    ,   0.000000    ,  -999.9900    ,'d:\IMOD_TUTORIALS\TUT_Model_Simulation\VCW\VCW_L6.IDF'
- 1,2, 007,   1.000000    ,   0.000000    ,  -999.9900    ,'d:\IMOD_TUTORIALS\TUT_Model_Simulation\VCW\VCW_L7.IDF'
+ 1,2, 001,   1.000000    ,   0.000000    ,  -999.9900    ,'$DBASE$\TUTORIALS\TUT_Model_Simulation\VCW\VCW_L1.IDF'
+ 1,2, 002,   1.000000    ,   0.000000    ,  -999.9900    ,'$DBASE$\TUTORIALS\TUT_Model_Simulation\VCW\VCW_L2.IDF'
+ 1,2, 003,   1.000000    ,   0.000000    ,  -999.9900    ,'$DBASE$\TUTORIALS\TUT_Model_Simulation\VCW\VCW_L3.IDF'
+ 1,2, 004,   1.000000    ,   0.000000    ,  -999.9900    ,'$DBASE$\TUTORIALS\TUT_Model_Simulation\VCW\VCW_L4.IDF'
+ 1,2, 005,   1.000000    ,   0.000000    ,  -999.9900    ,'$DBASE$\TUTORIALS\TUT_Model_Simulation\VCW\VCW_L5.IDF'
+ 1,2, 006,   1.000000    ,   0.000000    ,  -999.9900    ,'$DBASE$\TUTORIALS\TUT_Model_Simulation\VCW\VCW_L6.IDF'
+ 1,2, 007,   1.000000    ,   0.000000    ,  -999.9900    ,'$DBASE$\TUTORIALS\TUT_Model_Simulation\VCW\VCW_L7.IDF'
 
 0001,(WEL),1, Wells,[WRA]
 STEADY-STATE
 001,008
- 1,2, 001,   1.000000    ,   0.000000    ,  -999.9900    ,'d:\IMOD_TUTORIALS\TUT_Model_Simulation\WEL\WEL_L1.IPF'
- 1,2, 002,   1.000000    ,   0.000000    ,  -999.9900    ,'d:\IMOD_TUTORIALS\TUT_Model_Simulation\WEL\WEL_L2.IPF'
- 1,2, 003,   1.000000    ,   0.000000    ,  -999.9900    ,'d:\IMOD_TUTORIALS\TUT_Model_Simulation\WEL\WEL_L3.IPF'
- 1,2, 004,   1.000000    ,   0.000000    ,  -999.9900    ,'d:\IMOD_TUTORIALS\TUT_Model_Simulation\WEL\WEL_L4.IPF'
- 1,2, 005,   1.000000    ,   0.000000    ,  -999.9900    ,'d:\IMOD_TUTORIALS\TUT_Model_Simulation\WEL\WEL_L5.IPF'
- 1,2, 006,   1.000000    ,   0.000000    ,  -999.9900    ,'d:\IMOD_TUTORIALS\TUT_Model_Simulation\WEL\WEL_L6.IPF'
- 1,2, 007,   1.000000    ,   0.000000    ,  -999.9900    ,'d:\IMOD_TUTORIALS\TUT_Model_Simulation\WEL\WEL_L7.IPF'
- 1,2, 008,   1.000000    ,   0.000000    ,  -999.9900    ,'d:\IMOD_TUTORIALS\TUT_Model_Simulation\WEL\WEL_L8.IPF'
+ 1,2, 001,   1.000000    ,   0.000000    ,  -999.9900    ,'$DBASE$\TUTORIALS\TUT_Model_Simulation\WEL\WEL_L1.IPF'
+ 1,2, 002,   1.000000    ,   0.000000    ,  -999.9900    ,'$DBASE$\TUTORIALS\TUT_Model_Simulation\WEL\WEL_L2.IPF'
+ 1,2, 003,   1.000000    ,   0.000000    ,  -999.9900    ,'$DBASE$\TUTORIALS\TUT_Model_Simulation\WEL\WEL_L3.IPF'
+ 1,2, 004,   1.000000    ,   0.000000    ,  -999.9900    ,'$DBASE$\TUTORIALS\TUT_Model_Simulation\WEL\WEL_L4.IPF'
+ 1,2, 005,   1.000000    ,   0.000000    ,  -999.9900    ,'$DBASE$\TUTORIALS\TUT_Model_Simulation\WEL\WEL_L5.IPF'
+ 1,2, 006,   1.000000    ,   0.000000    ,  -999.9900    ,'$DBASE$\TUTORIALS\TUT_Model_Simulation\WEL\WEL_L6.IPF'
+ 1,2, 007,   1.000000    ,   0.000000    ,  -999.9900    ,'$DBASE$\TUTORIALS\TUT_Model_Simulation\WEL\WEL_L7.IPF'
+ 1,2, 008,   1.000000    ,   0.000000    ,  -999.9900    ,'$DBASE$\TUTORIALS\TUT_Model_Simulation\WEL\WEL_L8.IPF'
 
 0001,(DRN),1, Drainage,[CON,DEL]
 STEADY-STATE
 002,001
- 1,2, 001,   1.000000    ,   0.000000    ,  -999.9900    ,'d:\IMOD_TUTORIALS\TUT_Model_Simulation\DRN\DRN_COND_L1.IDF'
- 1,2, 001,   1.000000    ,   0.000000    ,  -999.9900    ,'d:\IMOD_TUTORIALS\TUT_Model_Simulation\DRN\DRN_LEVEL_L1.IDF'
+ 1,2, 001,   1.000000    ,   0.000000    ,  -999.9900    ,'$DBASE$\TUTORIALS\TUT_Model_Simulation\DRN\DRN_COND_L1.IDF'
+ 1,2, 001,   1.000000    ,   0.000000    ,  -999.9900    ,'$DBASE$\TUTORIALS\TUT_Model_Simulation\DRN\DRN_LEVEL_L1.IDF'
 
 0001,(RIV),1, Rivers,[CON,RST,RBT,RIF]
 STEADY-STATE
 004,002
- 1,2, 001,   1.000000    ,   0.000000    ,  -999.9900    ,'d:\IMOD_TUTORIALS\TUT_Model_Simulation\RIV\RIV_COND_L1.IDF'
- 1,2, 002,   1.000000    ,   0.000000    ,  -999.9900    ,'d:\IMOD_TUTORIALS\TUT_Model_Simulation\RIV\RIV_COND_L2.IDF'
- 1,2, 001,   1.000000    ,   0.000000    ,  -999.9900    ,'d:\IMOD_TUTORIALS\TUT_Model_Simulation\RIV\RIV_STAGE_L1.IDF'
- 1,2, 002,   1.000000    ,   0.000000    ,  -999.9900    ,'d:\IMOD_TUTORIALS\TUT_Model_Simulation\RIV\RIV_STAGE_L2.IDF'
- 1,2, 001,   1.000000    ,   0.000000    ,  -999.9900    ,'d:\IMOD_TUTORIALS\TUT_Model_Simulation\RIV\RIV_BOT_L1.IDF'
- 1,2, 002,   1.000000    ,   0.000000    ,  -999.9900    ,'d:\IMOD_TUTORIALS\TUT_Model_Simulation\RIV\RIV_BOT_L2.IDF'
- 1,2, 001,   1.000000    ,   0.000000    ,  -999.9900    ,'d:\IMOD_TUTORIALS\TUT_Model_Simulation\RIV\RIV_INF_L1.IDF'
- 1,2, 002,   1.000000    ,   0.000000    ,  -999.9900    ,'d:\IMOD_TUTORIALS\TUT_Model_Simulation\RIV\RIV_INF_L2.IDF'
+ 1,2, 001,   1.000000    ,   0.000000    ,  -999.9900    ,'$DBASE$\TUTORIALS\TUT_Model_Simulation\RIV\RIV_COND_L1.IDF'
+ 1,2, 002,   1.000000    ,   0.000000    ,  -999.9900    ,'$DBASE$\TUTORIALS\TUT_Model_Simulation\RIV\RIV_COND_L2.IDF'
+ 1,2, 001,   1.000000    ,   0.000000    ,  -999.9900    ,'$DBASE$\TUTORIALS\TUT_Model_Simulation\RIV\RIV_STAGE_L1.IDF'
+ 1,2, 002,   1.000000    ,   0.000000    ,  -999.9900    ,'$DBASE$\TUTORIALS\TUT_Model_Simulation\RIV\RIV_STAGE_L2.IDF'
+ 1,2, 001,   1.000000    ,   0.000000    ,  -999.9900    ,'$DBASE$\TUTORIALS\TUT_Model_Simulation\RIV\RIV_BOT_L1.IDF'
+ 1,2, 002,   1.000000    ,   0.000000    ,  -999.9900    ,'$DBASE$\TUTORIALS\TUT_Model_Simulation\RIV\RIV_BOT_L2.IDF'
+ 1,2, 001,   1.000000    ,   0.000000    ,  -999.9900    ,'$DBASE$\TUTORIALS\TUT_Model_Simulation\RIV\RIV_INF_L1.IDF'
+ 1,2, 002,   1.000000    ,   0.000000    ,  -999.9900    ,'$DBASE$\TUTORIALS\TUT_Model_Simulation\RIV\RIV_INF_L2.IDF'
 
 0001,(RCH),1, Recharge,[RCH]
 STEADY-STATE
 001,001
- 1,2, 001,   1.000000    ,   0.000000    ,  -999.9900    ,'d:\IMOD_TUTORIALS\TUT_Model_Simulation\RCH\RCH_L1.IDF'
+ 1,2, 001,   1.000000    ,   0.000000    ,  -999.9900    ,'$DBASE$\TUTORIALS\TUT_Model_Simulation\RCH\RCH_L1.IDF'
 
 0001,(OLF),1, Overland Flow,[LVL]
 STEADY-STATE
 001,001
- 1,2, 001,   1.000000    ,   0.000000    ,  -999.9900    ,'d:\IMOD_TUTORIALS\TUT_Model_Simulation\OLF\OLF_L1.IDF'
+ 1,2, 001,   1.000000    ,   0.000000    ,  -999.9900    ,'$DBASE$\TUTORIALS\TUT_Model_Simulation\OLF\OLF_L1.IDF'
 
 0001,(PCG),1, Precondition Conjugate-Gradient []
 150,50,0.10000E-02,10.000,0.98000,1,1,0,1.0000,1.0000,0,0.10000
