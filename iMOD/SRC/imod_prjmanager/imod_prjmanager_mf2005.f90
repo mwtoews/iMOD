@@ -4363,7 +4363,8 @@ IRLOOP: DO IROW=1,PRJIDF%NROW; DO ICOL=1,PRJIDF%NCOL
      CASE (18)
       SELECT CASE (KTOP)
        CASE (1);   SCL_D=0; SCL_U=7 !## boundary
-       CASE (2:4); SCL_D=0; SCL_U=2 !## avg
+       CASE (2);   SCL_D=0; SCL_U=7 !## brook-corey
+       CASE (3:4); SCL_D=0; SCL_U=2 !## thts/thhi
        CASE (5);   SCL_D=0; SCL_U=2; NUZF1=IEQUAL
        CASE (6);   SCL_D=0; SCL_U=2; NUZF2=IEQUAL
        CASE (7);   SCL_D=0; SCL_U=2; NUZF3=IEQUAL

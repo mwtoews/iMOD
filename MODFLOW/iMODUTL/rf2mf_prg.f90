@@ -914,6 +914,9 @@ ELSE
 
 ENDIF
 
+!## cannot combine buffer>0 and pks - stop
+IF(LAMBDA(1).NE.0.0.AND.pks%active)CALL IMOD_UTL_PRINTTEXT('ERROR It is not allowed to combine a BUFEER>0 with PKS',-3)
+
 IF(NSCL.NE.0.AND.SIMCSIZE.LE.0.0)CALL IMOD_UTL_PRINTTEXT('ERROR Grid Size le 0.0',-3)
 
 DO I=2,4; LAMBDA(I)=LAMBDA(1); ENDDO
