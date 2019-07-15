@@ -42,7 +42,7 @@ INTEGER :: IPLOT,IWEIGHT                               !## plot type
 INTEGER :: ITRANSIENT,IAVERAGE,IXY                     !## transient/steadystate (lacking date)
 INTEGER,POINTER,DIMENSION(:) :: ILAYER,IIPFS,IRDATE    !## all layer numbers/IPF-files to be read
 INTEGER :: NLAYER,NIPFS,NRDATE                         !## amount of layers/IPF-files to be read
-REAL(KIND=DP_KIND) :: GOF                                            !## goodness-of-fit with linear regression
+REAL(KIND=DP_KIND) :: GOF,NSC                                        !## goodness-of-fit with linear regression, nashshuttcliff
 REAL(KIND=DP_KIND) :: WC1,WC2                                        !## weight lower and upper class
 REAL(KIND=DP_KIND),DIMENSION(:),POINTER :: HCLASSES                  !## (user) defined histogram classes
 REAL(KIND=DP_KIND),DIMENSION(:),POINTER :: XCLASSES                  !## amount of points per defined histogram class for x-array
