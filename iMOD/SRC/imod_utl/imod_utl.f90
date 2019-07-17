@@ -4827,6 +4827,43 @@ DOLOOP: DO
  END SUBROUTINE ITIMETOGDATE
 
  !###====================================================================
+ INTEGER FUNCTION UTL_DIFFDATE(SDATE,EDATE,DDATE)
+ !###====================================================================
+ IMPLICIT NONE
+ INTEGER,INTENT(IN) :: SDATE,EDATE,DDATE
+ INTEGER,DIMENSION(2) :: IY,IM,ID
+ INTEGER :: SD,ED,N
+ 
+ SD=UTL_IDATETOJDATE(SDATE); ED=UTL_IDATETOJDATE(EDATE)
+ CALL IDATETOGDATE(SDATE,IY(1),IM(1),ID(1))
+ CALL IDATETOGDATE(EDATE,IY(2),IM(2),ID(2))
+
+ SELECT CASE (DDATE)
+  !## daily
+  CASE (1)
+   UTL_DIFFDATE=(ED-SD)+1
+  !## weekly
+  CASE (2)
+   N=((ED-SD)+1)
+   UTL_DIFFDATE=N/7
+   IF(MOD(N,7).NE.0)UTL_DIFFDATE=UTL_DIFFDATE+1
+  !## month
+  CASE (3)
+   IF(IY(2).GT.IY(1))THEN
+    N=(12-IM(1))+1
+    N=N+(((IY(2)-IY(1))-1)*12)
+    N=N+IM(2)
+    UTL_DIFFDATE=N
+   ELSE
+    UTL_DIFFDATE=(IM(2)-IM(1))+1
+   ENDIF
+  CASE (4)
+   UTL_DIFFDATE=(IY(2)-IY(1))+1
+ END SELECT
+ 
+ END FUNCTION UTL_DIFFDATE
+
+  !###====================================================================
  REAL(KIND=DP_KIND) FUNCTION DIFFTIME(SDATE,EDATE)
  !###====================================================================
  IMPLICIT NONE
@@ -4861,7 +4898,7 @@ DOLOOP: DO
  DIFFTIME=F !DD+(F1+F2)
 
  END FUNCTION DIFFTIME
-
+ 
  !###====================================================================
  REAL(KIND=DP_KIND) FUNCTION CTIMETOFTIME(CTIME)
  !###====================================================================

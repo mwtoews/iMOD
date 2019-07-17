@@ -55,9 +55,16 @@ CONTAINS
  TS1COMPUTE=.FALSE.
  
  !## get them all
- IF(.NOT.UTL_DIRINFO_POINTER(TSDIR(:INDEX(TSDIR,'\',.TRUE.)-1), &
-                        TRIM(TSDIR(INDEX(TSDIR,'\',.TRUE.)+1:))//'_*_L'//TRIM(ITOS(TSILAY))//'.IDF',IDFNAMES,'F',CORDER='N'))RETURN
- IF(.NOT.ASSOCIATED(IDFNAMES))RETURN
+ IF(IOSDIREXISTS(TSDIR(:INDEX(TSDIR,'\',.TRUE.)-1)))THEN
+  IF(.NOT.UTL_DIRINFO_POINTER(TSDIR(:INDEX(TSDIR,'\',.TRUE.)-1), &
+                         TRIM(TSDIR(INDEX(TSDIR,'\',.TRUE.)+1:))//'_*_L'//TRIM(ITOS(TSILAY))//'.IDF',IDFNAMES,'F',CORDER='N'))RETURN
+  IF(.NOT.ASSOCIATED(IDFNAMES))THEN
+   CALL TS_ERROR_MESSAGE(IBATCH,'Error iMOD cannot find any appropriate files in '//TSDIR(:INDEX(TSDIR,'\',.TRUE.)-1)//CHAR(13)// &
+    ' with wildcard '//TRIM(TSDIR(INDEX(TSDIR,'\',.TRUE.)+1:))//'_*_L'//TRIM(ITOS(TSILAY))//'.IDF'); RETURN
+  ENDIF
+ ELSE
+  CALL TS_ERROR_MESSAGE(IBATCH,'Error iMOD cannot find folder '//TSDIR(:INDEX(TSDIR,'\',.TRUE.)-1)); RETURN
+ ENDIF
  IF(SIZE(IDFNAMES).EQ.0)RETURN
  DO I=1,SIZE(IDFNAMES); IDFNAMES(I)=TSDIR(:INDEX(TSDIR,'\',.TRUE.)-1)//'\'//TRIM(IDFNAMES(I)); ENDDO
 
@@ -93,6 +100,15 @@ CONTAINS
    !## read associated file (could be spaces within) column
    CDUM='"'//TRIM(STRING(IEXT))//'"'; READ(CDUM,*,IOSTAT=IOS) CTS
    IF(IOS.NE.0)THEN; CALL TS_ERROR_MESSAGE(IBATCH,'Error reading identification in IROW '//TRIM(ITOS(I))//' in file '//TRIM(IPFNAME1)//'.'); RETURN; ENDIF
+  ELSE
+   IF(LCOL.EQ.0)THEN
+    CTS='ts_measure'//TRIM(ITOS(I))
+    J=INDEX(IPFNAME2,'\',.TRUE.)+1
+    K=INDEX(IPFNAME2,'.',.TRUE.)-1
+    CTS=IPFNAME2(J:K)//'\'//TRIM(CTS)
+   ELSEIF(LCOL.GT.0)THEN
+    CTS=STRING(LCOL)  
+   ENDIF
   ENDIF
 
   !## read the timeseries, if available
@@ -106,17 +122,8 @@ CONTAINS
 
   !## write results
   LINE=IPFNAME2(:INDEX(IPFNAME2,'\',.TRUE.))//TRIM(CTS)//'.'//TRIM(CEXT)
-  IF(TS_WRITE(IBATCH,LINE))THEN
+  IF(TS_WRITE(IBATCH,LINE,TSDIR(INDEX(TSDIR,'\',.TRUE.)+1:)))THEN
 
-   IF(LCOL.EQ.0)THEN
-    CTS='ts_measure'//TRIM(ITOS(I))
-    J=INDEX(IPFNAME2,'\',.TRUE.)+1
-    K=INDEX(IPFNAME2,'.',.TRUE.)-1
-    CTS=IPFNAME2(J:K)//'\'//TRIM(CTS)
-   ELSEIF(LCOL.GT.0)THEN
-    CTS=STRING(LCOL)  
-   ENDIF
-    
    !## writing comma delimited file
    LINE=TRIM(STRING(1))
    DO J=2,NCOL; LINE=TRIM(LINE)//','//TRIM(STRING(J)); ENDDO
@@ -231,11 +238,11 @@ CONTAINS
  END FUNCTION TS_READ_IPF
 
  !###====================================================================
- LOGICAL FUNCTION TS_WRITE(IBATCH,FNAME)
+ LOGICAL FUNCTION TS_WRITE(IBATCH,FNAME,ANAME)
  !###====================================================================
  IMPLICIT NONE
  INTEGER,INTENT(IN) :: IBATCH
- CHARACTER(LEN=*),INTENT(IN) :: FNAME
+ CHARACTER(LEN=*),INTENT(IN) :: FNAME,ANAME
  INTEGER :: I,J,NRECS,IOS,NFIELDS,N1,N2
  INTEGER(KIND=DP_KIND),DIMENSION(:),ALLOCATABLE :: IDATES
  
@@ -267,10 +274,11 @@ CONTAINS
  IF(IASSF.EQ.1)NFIELDS=3
  WRITE(IU(3),*) NFIELDS
  DO I=1,NFIELDS
+  CF(2)=TRIM(ANAME) !'Value (-)'
 !  CF(2)='Recharge_mm/d'
 !  CF(2)='Precipitation_mm/d'
 !  CF(2)='Evaporation_mm/d'
-  CF(2)='Flux_mm/d'
+!  CF(2)='Flux_mm/d'
   SELECT CASE (I)
    CASE (1); LINE=TRIM(CF(I))//','//TRIM(RTOS(-999.0D0,'F',0))
    CASE (2); LINE=TRIM(CF(I))//','//TRIM(RTOS(MSR%NODATA,'G',8))
@@ -291,7 +299,7 @@ CONTAINS
    LINE=TRIM(ITOS_DBL(IDATES(I)))
    DO J=1,MSR%NPER
     IF(MSR%IDATE(J).EQ.IDATES(I))THEN
-     IF(MSR%OBS(J).NE.MSR%NODATA)then !.AND.MSR%OBS(J).lt.10.0e10)then !NE.0.0D0)THEN
+     IF(MSR%OBS(J).NE.MSR%NODATA)THEN 
       LINE=TRIM(LINE)//','//TRIM(RTOS(MSR%OBS(J),'G',8)); N1=N1+1; EXIT
      ENDIF
     ENDIF
@@ -314,7 +322,7 @@ CONTAINS
  IF(ALLOCATED(IDATES))DEALLOCATE(IDATES)
 
  !## nothing found, exclude this one.
- IF(N1.EQ.0.OR.N2.EQ.0)THEN
+ IF(N1.EQ.0.OR.N2.EQ.0.AND.IEXT.NE.0)THEN
   CLOSE(IU(3),STATUS='DELETE')
  ELSE
   CLOSE(IU(3))
@@ -451,7 +459,7 @@ CONTAINS
  MSR%NPER=J
  
  IF(MSR%NPER.EQ.0)THEN
-  CALL TS_ERROR_MESSAGE(IBATCH,'No IDF found that is within the given timeselection.')
+  CALL TS_ERROR_MESSAGE(IBATCH,'No IDF found that is within the given timeselection for the current SOURCEDIR folder.')
  ELSE
   TS_INIT_IDF=.TRUE.
  ENDIF
