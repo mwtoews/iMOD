@@ -940,6 +940,115 @@ DOLOOP: DO
  REAL(KIND=DP_KIND),INTENT(INOUT),DIMENSION(:) :: TOP,BOT,HK,VK,VA,TOP_BU,BOT_BU,HK_BU,VK_BU,VA_BU
  REAL(KIND=DP_KIND),INTENT(INOUT),DIMENSION(:,:) :: TH
  REAL(KIND=DP_KIND),INTENT(IN) :: MINTHICKNESS
+ INTEGER :: NLAY,ILAY,JLAY,IL 
+ REAL(KIND=DP_KIND) :: K,T,B,T1,T2,B1,D,KD,VC,MT,F,TT1,TT2,DT,TT
+
+ NLAY=SIZE(BND)
+
+ !## make sure no negative-thicknesses in original set
+ DO ILAY=1,NLAY
+  IF(ILAY.GT.1)TOP(ILAY)=MIN(TOP(ILAY),BOT(ILAY-1))
+  BOT(ILAY)=MIN(TOP(ILAY),BOT(ILAY))
+ ENDDO
+ !## clean boundary for zero-thickness layers from the bottom
+ DO ILAY=NLAY,1,-1
+  IF(TOP(ILAY)-BOT(ILAY).EQ.0.0D0)THEN
+   BND(ILAY)=0
+  ELSE
+   EXIT
+  ENDIF
+ ENDDO
+ 
+ TH=0.0D0
+ !## get thickness of aquifers
+ DO ILAY=1,NLAY;   TH(ILAY,1)=TOP(ILAY)-BOT(ILAY); ENDDO
+ !## get thickness of aquitards
+ DO ILAY=1,NLAY-1; TH(ILAY,2)=BOT(ILAY)-TOP(ILAY+1); ENDDO
+
+ !## need to have data 
+ DO ILAY=1,NLAY
+  IF(TH(ILAY,1).GT.0)THEN
+   IF(HK(ILAY).LE.0.0)WRITE(*,*) 'HK',HK(ILAY)
+   IF(VA(ILAY).LE.0.0)WRITE(*,*) 'VA',VA(ILAY)
+  ENDIF
+  IF(TH(ILAY,2).GT.0)THEN
+   IF(VK(ILAY).LE.0.0)WRITE(*,*) 'VK',VK(ILAY)
+  ENDIF
+ ENDDO
+
+ !## nothing to do
+ IF(SUM(TH(:,1)).EQ.0.0D0)RETURN
+
+ !## make backup
+ DO ILAY=1,NLAY
+  TOP_BU(ILAY)=TOP(ILAY); BOT_BU(ILAY)=BOT(ILAY); HK_BU(ILAY)=HK(ILAY); VA_BU(ILAY)=VA(ILAY)
+  IF(ILAY.LT.NLAY)VK_BU(ILAY) =VK(ILAY)
+ ENDDO
+
+ !## total thickness
+ TT1=0.0D0; TT2=0.0D0; DO ILAY=1,NLAY; IF(BND(ILAY).NE.0)TT1=TT1+TH(ILAY,1); IF(ILAY.LE.NLAY)TT2=TT2+TH(ILAY,2); ENDDO
+ !## minimal appropriate layer thickness
+ MT=(TT1-TT2)/DBLE(NLAY); MT=MIN(MINTHICKNESS,MT)
+ 
+ !## adjust thicknesses
+ DO ILAY=1,NLAY
+  !## skip inactive 
+  IF(BND(ILAY).EQ.0)CYCLE
+  IF(TH(ILAY,1).LT.MT)THEN
+   DT=MT-TH(ILAY,1) !; F=TH(ILAY,1)/MT; TH(ILAY,1)=MT
+!   !## increase permeability to ensure transmissivity
+!   HK(ILAY)=F*HK(ILAY)    
+   !## reduce for this correction
+   DO JLAY=ILAY,NLAY
+    !## possible corrected quantity
+    TT=TH(JLAY,1)-DT
+    !## enough space
+    IF(TT.GT.0.0D0)THEN
+     TT=DT
+    !## limited space
+    ELSE
+     TT=DT+TT
+    ENDIF
+    TH(JLAY,1)=TH(JLAY,1)-TT
+    !## reduced to be corrected quantity
+    DT=DT-TT
+    !## stop if all corrected
+    IF(DT.LE.0.0D0)EXIT
+   ENDDO   
+   !## correct the rest
+   DO JLAY=ILAY,NLAY
+    IF(JLAY.GT.1)TOP(JLAY)=BOT(JLAY-1)-TH(JLAY-1,2)
+    BOT(JLAY)=TOP(JLAY)-TH(JLAY,1) 
+   ENDDO
+   !## get updated thickness of aquifers
+   DO JLAY=1,NLAY; TH(JLAY,1)=TOP(JLAY)-BOT(JLAY); ENDDO
+  ENDIF
+ ENDDO
+
+ !## correct permeabilities for aquifers
+ DO ILAY=1,NLAY
+
+  !## skip inactive cells
+  IF(BND(ILAY).EQ.0)CYCLE
+  
+  !## no horizontal flow
+  IF(HK(ILAY).LE.0.0D0)HK(ILAY)=0.01D0
+  !## easy vertical flow
+  IF(VA(ILAY).LE.0.0D0)VA(ILAY)=100.0D0
+ 
+ ENDDO
+ 
+ END SUBROUTINE UTL_MINTHICKNESS
+
+ !###======================================================================
+ SUBROUTINE UTL_MINTHICKNESS_COMPLEX(TOP,BOT,HK,VK,VA, &
+           TOP_BU,BOT_BU,HK_BU,VK_BU,VA_BU,BND,TH,MINTHICKNESS)
+ !###======================================================================
+ IMPLICIT NONE
+ INTEGER,INTENT(INOUT),DIMENSION(:) :: BND
+ REAL(KIND=DP_KIND),INTENT(INOUT),DIMENSION(:) :: TOP,BOT,HK,VK,VA,TOP_BU,BOT_BU,HK_BU,VK_BU,VA_BU
+ REAL(KIND=DP_KIND),INTENT(INOUT),DIMENSION(:,:) :: TH
+ REAL(KIND=DP_KIND),INTENT(IN) :: MINTHICKNESS
  INTEGER :: NLAY,ILAY,IL !N,IL1,IL2
  REAL(KIND=DP_KIND) :: K,T,B,T1,T2,B1,D,KD,VC,MT,F,TT1,TT2  !,K1,K2
 
@@ -1131,8 +1240,8 @@ DOLOOP: DO
   ENDDO
  ENDIF
 
- END SUBROUTINE UTL_MINTHICKNESS
-
+ END SUBROUTINE UTL_MINTHICKNESS_COMPLEX
+ 
  !###======================================================================
  SUBROUTINE UTL_DRAWELLIPSE(X,Y,DX,DY,A)
  !###======================================================================
@@ -3174,6 +3283,7 @@ DOLOOP: DO
  IF(ALLOCATED(BPV))DEALLOCATE(BPV); IF(ALLOCATED(EPV))DEALLOCATE(EPV)
 
  IF(NVL.NE.ML)THEN
+  NVV=MAX(NVV,SIZE(VARIABLE,1))
   ALLOCATE(DVARIABLE(NVV,INL+1:NVL))
   !## copy current part
   DO I=1,SIZE(VARIABLE,1); DO J=INL+1,NVL; DVARIABLE(I,J)=VARIABLE(I,J); ENDDO; ENDDO

@@ -102,7 +102,7 @@ CONTAINS
  
  !## check: Minimum of 2 timesteps must be given
  IF(NFILES.EQ.1)THEN 
-  WRITE(*,'(/A)') 'Function is stopped. Only 1 timestep available: '//TRIM(ITOS(LDATES(1)/INT(1000000,8)))
+  WRITE(*,'(/A)') 'Function is stopped. Only 1 timestep available: '//TRIM(ITOS_DBL(LDATES(1)/INT(1000000,8)))
   WRITE(*,'(A)') 'For NETRCH calculation a minimum of 2 timesteps is needed. '  
   RETURN
  ENDIF

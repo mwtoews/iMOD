@@ -2694,7 +2694,7 @@ IRLOOP: DO IROW=1,PRJIDF%NROW; DO ICOL=1,PRJIDF%NCOL
      IF(PBMAN%MINC.GT.0.0D0)THEN
       KVV(ILAY)%X(ICOL,IROW)=T/PBMAN%MINC
      ELSE
-      KVV(ILAY)%X(ICOL,IROW)=0.0D0
+      KVV(ILAY)%X(ICOL,IROW)=1.0D0
      ENDIF
     ELSE
      !## irrelevant but need to have some value otherwise MF turns it into inactive nodes
