@@ -995,11 +995,11 @@ DOLOOP: DO
   !## skip inactive 
   IF(BND(ILAY).EQ.0)CYCLE
   IF(TH(ILAY,1).LT.MT)THEN
-   DT=MT-TH(ILAY,1) !; F=TH(ILAY,1)/MT; TH(ILAY,1)=MT
+   DT=MT-TH(ILAY,1); TH(ILAY,1)=MT !; F=TH(ILAY,1)/MT
 !   !## increase permeability to ensure transmissivity
 !   HK(ILAY)=F*HK(ILAY)    
    !## reduce for this correction
-   DO JLAY=ILAY,NLAY
+   DO JLAY=ILAY+1,NLAY
     !## possible corrected quantity
     TT=TH(JLAY,1)-DT
     !## enough space

@@ -1719,7 +1719,12 @@ JLOOP: DO K=1,SIZE(TOPICS)
       ENDIF
      ENDIF
     ENDIF
+    !## set an acronym always - to be sure that size of acronyme is not exceeded
+    IF(LEN_TRIM(PEST%PARAM(I)%ACRONYM).EQ.0)THEN
+     WRITE(PEST%PARAM(I)%ACRONYM,'(A2,2I5.5,I3.3)') ADJUSTL(PEST%PARAM(I)%PPARAM),PEST%PARAM(I)%PILS,PEST%PARAM(I)%PIZONE,PEST%PARAM(I)%PIGROUP
+    ENDIF
    ENDIF
+
 
    !## fill in iparam
    DO J=1,SIZE(PARAM); IF(PEST%PARAM(I)%PPARAM.EQ.PARAM(J))EXIT; ENDDO
