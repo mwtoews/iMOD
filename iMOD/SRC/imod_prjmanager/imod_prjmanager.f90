@@ -1639,7 +1639,7 @@ CONTAINS
  !###======================================================================
  IMPLICIT NONE
  INTEGER,INTENT(IN) :: ID
- INTEGER :: N
+ INTEGER :: N,I
  
  PMANAGEROPEN_PESTPARAM_GETVALUES=.FALSE.
  

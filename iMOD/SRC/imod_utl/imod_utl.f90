@@ -1357,7 +1357,10 @@ DOLOOP: DO
 
   !## stop, whole line examined
   IF(I.EQ.LEN_TRIM(LINE))EXIT
-
+  
+  !## stop if last character is a comma
+  IF(LINE(I:I).EQ.',')EXIT
+  
  ENDDO
  IF(PRESENT(EPV))EPV(J)=LEN_TRIM(LINE)
 
