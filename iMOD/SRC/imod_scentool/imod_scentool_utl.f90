@@ -410,8 +410,7 @@ CONTAINS
     ENDIF
    END DO
    
-!   CALL ST1CREATEIPF_GETTLP(STNLAY,IL,TL,L,TLP,KHV,C)
-   CALL UTL_PCK_GETTLP(NLAY,TLP(J,:),KHV,TOP,BOT,Z1,Z2,0.1D0) !MINKHT)
+   CALL UTL_PCK_GETTLP(NLAY,TLP(J,:),KHV,TOP,BOT,Z1,Z2,0.1D0) 
    
    !## well within any aquifer(s)
    IF(SUM(L).GT.0.0D0)THEN
@@ -455,7 +454,7 @@ CONTAINS
      IF(Q(ILAY).NE.0)THEN
       IDT=WEL(I)%Q(K+1)%IDATE-WEL(I)%Q(K)%IDATE
       SUMQ=SUMQ+Q(ILAY)*REAL(IDT) !## sumq for current system
-      LAYQ(ILAY)=LAYQ(ILAY)+IDT    !## count for modellayer
+      LAYQ(ILAY)=LAYQ(ILAY)+IDT   !## count for modellayer
      ENDIF
     ENDDO
     CLOSE(JU)

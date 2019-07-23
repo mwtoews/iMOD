@@ -67,7 +67,10 @@ CONTAINS
   IUPESTSENSITIVITY=UTL_GETUNIT(); OPEN(IUPESTSENSITIVITY,FILE=TRIM(DIR)//'\IPEST\LOG_PEST_SENSITIVITY.TXT',STATUS='UNKNOWN',ACTION='WRITE')
   IUPESTRUNFILE=UTL_GETUNIT();     OPEN(IUPESTRUNFILE,    FILE=TRIM(DIR)//'\IPEST\LOG_PEST_RUNFILE.TXT'    ,STATUS='UNKNOWN',ACTION='WRITE')
   IF(LSENS)THEN
-   IUJACOBIAN=UTL_GETUNIT();     OPEN(IUJACOBIAN,FILE=TRIM(DIR)//'\IPEST\LOG_PEST_JACOBIAN.TXT'    ,STATUS='UNKNOWN',ACTION='WRITE')
+   IUJACOBIAN=UTL_GETUNIT(); OPEN(IUJACOBIAN,FILE=TRIM(DIR)//'\IPEST\LOG_PEST_JACOBIAN.TXT',STATUS='UNKNOWN',ACTION='WRITE')
+  ENDIF
+  IF(PBMAN%PDEBUG.EQ.1)THEN
+   IUPDEBUG=UTL_GETUNIT(); OPEN(IUPDEBUG,FILE=TRIM(DIR)//'\IPEST\log_pest_debug.m',STATUS='UNKNOWN',ACTION='WRITE')
   ENDIF
   
   WRITE(IUPESTOUT,'(A)') 'Parameters'
@@ -506,6 +509,7 @@ MAINLOOP: DO
  IF(IUPESTSENSITIVITY.GT.0)CLOSE(IUPESTSENSITIVITY); IUPESTSENSITIVITY=0
  IF(IUPESTRUNFILE.GT.0)    CLOSE(IUPESTRUNFILE); IUPESTRUNFILE=0
  IF(IUPESTRESIDUAL.GT.0)   CLOSE(IUPESTRESIDUAL); IUPESTRESIDUAL=0
+ IF(IUPDEBUG.GT.0)         CLOSE(IUPDEBUG); IUPDEBUG=0
 
  END SUBROUTINE IPEST_GLM_RESET_PARAMETER
  
@@ -915,11 +919,14 @@ MAINLOOP: DO
  ENDDO
  S=ABS(S)*100.0D0
 
- WRITE(BLINE,'(A30)') '              Sensitivity (%):'
- IPARAM=0; DO I=1,SIZE(PEST%PARAM)
-  IF(PEST%PARAM(I)%PACT.NE.1)CYCLE; IPARAM=IPARAM+1; WRITE(SLINE,'(E15.7)') S(IPARAM); BLINE=TRIM(BLINE)//TRIM(SLINE)
- ENDDO
- WRITE(IUPESTSENSITIVITY,'(I10,A)') ITER,TRIM(BLINE(31:))  
+! WRITE(BLINE,'(A30)') '              Sensitivity (%):'
+! IPARAM=0; DO I=1,SIZE(PEST%PARAM)
+!  IF(PEST%PARAM(I)%PACT.NE.1)CYCLE; IPARAM=IPARAM+1 !; WRITE(SLINE,'(E15.7)') S(IPARAM); BLINE=TRIM(BLINE)//TRIM(SLINE)
+! ENDDO
+! IPARAM=0; DO I=1,SIZE(PEST%PARAM)
+!  IF(PEST%PARAM(I)%PACT.NE.1)CYCLE; IPARAM=IPARAM+1; WRITE(SLINE,'(E15.7)') S(IPARAM); BLINE=TRIM(BLINE)//TRIM(SLINE)
+! ENDDO
+ WRITE(IUPESTSENSITIVITY,'(I10,99999F15.7)') ITER,(S(I),I=1,NP) !TRIM(BLINE(31:))  
 
  !## reset parameters - alpha(2)=previous alpha
  DO I=1,SIZE(PEST%PARAM); PEST%PARAM(I)%ALPHA(1)=PEST%PARAM(I)%ALPHA(2); ENDDO
@@ -951,7 +958,7 @@ MAINLOOP: DO
   NP=0; DO I=1,SIZE(PEST%PARAM); IF(PEST%PARAM(I)%PACT.EQ.1)NP=NP+1; ENDDO
   IF(NP.EQ.0)THEN
    IF(IBATCH.EQ.1)WRITE(*,'(/A/)') 'NO PARAMETERS LEFT THAT ARE SENSITIVE, PROCESS STOPPED!'
-   IF(IBATCH.EQ.0)CALL WMESSAGEBOX(OKONLY,EXCLAMATIONICON,COMMONOK,'NO PARAMETERS LEFT THAT ARE SENSITIVE, PROCESS STOPPED!','Error')
+   IF(IBATCH.EQ.0)CALL WMESSAGEBOX(OKONLY,EXCLAMATIONICON,COMMONOK,'NO PARAMETERS LEFT THAT ARE SENSITIVE, PROCESS STOPPED!','ERROR')
    RETURN
   ENDIF
   
@@ -967,12 +974,12 @@ MAINLOOP: DO
   ENDIF
 
   !## construct jqj - normal matrix/hessian
-  CALL IPEST_GLM_JQJ(JQJ,EIGW,EIGV,COV,NP,.FALSE.) 
+  CALL IPEST_GLM_JQJ(JQJ,EIGW,EIGV,COV,NP,.FALSE.,ITRIES) 
 
   !## multiply lateral sensitivities with sensitivities in case pest_niter=0
   IF(PEST%PE_MXITER.EQ.0)THEN
    !## print all first time
-   IF(.NOT.IPEST_GLM_WRITESTAT_PERROR(NP,COV,.TRUE.,ITER,IBATCH))CYCLE
+   IF(.NOT.IPEST_GLM_WRITESTAT_PERROR(NP,COV,.TRUE. ,ITER,IBATCH))CYCLE
   ELSE
    IF(.NOT.IPEST_GLM_WRITESTAT_PERROR(NP,COV,.FALSE.,ITER,IBATCH))CYCLE  
   ENDIF
@@ -1159,12 +1166,11 @@ MAINLOOP: DO
    !## increase marquardt
    MARQUARDT=MARQUARDT*DAMPINGFACTOR
   ENDIF
-!  WRITE(IUPESTOUT,*) 'LAMBDARESET,MARQUARDT',LAMBDARESET,MARQUARDT
 
  ENDDO !## marquardt-loop
 
  !## write statistics
- CALL IPEST_GLM_JQJ(JQJ,EIGW,EIGV,COV,NP,.TRUE.)
+ CALL IPEST_GLM_JQJ(JQJ,EIGW,EIGV,COV,NP,.TRUE.,ITRIES)
 
  !## multiply lateral sensitivities with sensitivities in case pest_niter=0
  IF(.NOT.IPEST_GLM_WRITESTAT_PERROR(NP,COV,.TRUE.,ITER,IBATCH))THEN; ENDIF
@@ -1555,10 +1561,10 @@ MAINLOOP: DO
  END SUBROUTINE IPEST_GLM_ECHOPARAMETERS
  
  !###====================================================================
- SUBROUTINE IPEST_GLM_JQJ(JQJ,EIGW,EIGV,COV,NP,LPRINT) 
+ SUBROUTINE IPEST_GLM_JQJ(JQJ,EIGW,EIGV,COV,NP,LPRINT,ITRIES) 
  !###====================================================================
  IMPLICIT NONE
- INTEGER,INTENT(IN) :: NP
+ INTEGER,INTENT(IN) :: NP,ITRIES
  LOGICAL,INTENT(IN) :: LPRINT
  REAL(KIND=DP_KIND),DIMENSION(NP,NP),INTENT(OUT) :: JQJ,EIGV,COV
  REAL(KIND=DP_KIND),DIMENSION(NP),INTENT(OUT) :: EIGW
@@ -1610,6 +1616,7 @@ MAINLOOP: DO
   ENDDO
   IF(M.EQ.1)THEN; WRITE(IUJACOBIAN,'(/44X,A32,99999(G15.7,A1))') 'TOTAL,',(ABS(JQJ(J,1)),',',J=1,N)
   ELSE; WRITE(IUJACOBIAN,'(/44X,A32,99999(G15.7,A1))') 'TOTAL,',(JQJ(J,2),',',J=1,N); ENDIF
+  CLOSE(IUJACOBIAN)
   STOP
  ENDIF
  
@@ -1640,6 +1647,17 @@ MAINLOOP: DO
   ENDDO
  ENDDO
 
+ !## save jacobian
+ IF(PBMAN%PDEBUG.EQ.1)THEN
+  WRITE(IUPDEBUG,'(/A,I10/)') 'ITRIES=',ITRIES
+  WRITE(IUPDEBUG,'(A)') 'JQJ=['
+  DO I=1,NP; WRITE(IUPDEBUG,'(99999E15.7)') (JQJ(I,J),J=1,NP); ENDDO
+  WRITE(IUPDEBUG,'(A/)') ']'
+  FLUSH(IUPDEBUG)
+  WRITE(*,'(/A,I10/)') 'WROTE JQJ FOR ITRIES=',ITRIES
+  PAUSE
+ ENDIF
+ 
 ! !## construct covariance on the pilotpoints
 ! IF(PEST%PE_REGULARISATION.EQ.1)THEN
 !  CALL PEST_GETQPP(NP,.FALSE.,idf)
@@ -1669,6 +1687,7 @@ MAINLOOP: DO
  CALL RED1TRED2_DBL(B,NP,NP,EIGW,E)
  CALL RED1TQLI_DBL(EIGW,E,NP,NP,B)
  CALL RED1EIGSRT_DBL(EIGW,B,NP,NP)
+
  IF(LPRINT)WRITE(IUPESTOUT,'(/10X,4A15)') 'Eigenvalues','Sing.Values','Variance','Explained Var.'
  DO I=1,NP; IF(EIGW(I).LE.0.0)EIGW(I)=0.0; ENDDO; TEV=SUM(EIGW)
  TV=0.0D0
@@ -1681,6 +1700,20 @@ MAINLOOP: DO
   ENDIF
  ENDDO
  EIGV= B  
+
+ IF(PBMAN%PDEBUG.EQ.1)THEN
+  WRITE(IUPDEBUG,'(/A,I10/)') 'ITRIES=',ITRIES
+  WRITE(IUPDEBUG,'(A)') 'EIGVALUE=['
+  DO I=1,NP; WRITE(IUPDEBUG,'(E15.7)') EIGW(I); ENDDO
+  WRITE(IUPDEBUG,'(A/)') ']'
+  WRITE(IUPDEBUG,'(A)') 'EIGVECTOR=['
+  DO I=1,NP; WRITE(IUPDEBUG,'(99999E15.7)') (EIGV(I,J),J=1,NP); ENDDO
+  WRITE(IUPDEBUG,'(A/)') ']'
+  FLUSH(IUPDEBUG)
+  WRITE(*,'(/A,I10/)') 'WROTE EIGVALUES/EIGVECTOR FOR ITRIES=',ITRIES
+  PAUSE
+ ENDIF
+
  IF(SUM(EIGW).LT.0.0D0)THEN
   WRITE(*,'(/A/)') 'Warning, there is NO information (no eigenvalues) in parameter perturbation'; STOP
  ENDIF
@@ -2006,17 +2039,17 @@ MAINLOOP: DO
  DO I=N,2,-1
   L=I-1
   H=0.
-  SCALE=0.
+  SCALE=0.0D0
   IF(L.GT.1)THEN
    DO K=1,L
     SCALE=SCALE+ABS(A(I,K))
    ENDDO
-   IF(SCALE.EQ.0.)THEN
+   IF(SCALE.EQ.0.0D0)THEN
     E(I)=A(I,L)
    ELSE
     DO K=1,L
      A(I,K)=A(I,K)/SCALE
-     H=H+A(I,K)**2.
+     H=H+A(I,K)**2.0D0
     ENDDO
     F=A(I,L)
     G=-SIGN(SQRT(H),F)
@@ -2052,13 +2085,13 @@ MAINLOOP: DO
   D(I)=H
  ENDDO
 
- D(1)=0.
- E(1)=0.
+ D(1)=0.0D0
+ E(1)=0.0D0
  DO I=1,N
   L=I-1
-  IF(D(I).NE.0.)THEN
+  IF(D(I).NE.0.0D0)THEN
    DO J=1,L
-    G=0.
+    G=0.0D0
     DO K=1,L
      G=G+A(I,K)*A(K,J)
     END DO
@@ -2068,10 +2101,10 @@ MAINLOOP: DO
    END DO
   ENDIF
   D(I)=A(I,I)
-  A(I,I)=1.
+  A(I,I)=1.0D0
   DO J=1,L
-   A(I,J)=0.
-   A(J,I)=0.
+   A(I,J)=0.0D0
+   A(J,I)=0.0D0
   END DO
  END DO
 
@@ -2108,12 +2141,12 @@ MAINLOOP: DO
  ABSA=ABS(A)
  ABSB=ABS(B)
  IF(ABSA.GT.ABSB)THEN
-  PYTHAG_DBL=ABSA*SQRT(1.+(ABSB/ABSA)**2.)
+  PYTHAG_DBL=ABSA*SQRT(1.0D0+(ABSB/ABSA)**2.0D0)
  ELSE
-  IF(ABSB.EQ.0.)THEN
-   PYTHAG_DBL=0.
+  IF(ABSB.EQ.0.0D0)THEN
+   PYTHAG_DBL=0.0D0
   ELSE
-   PYTHAG_DBL=ABSB*SQRT(1.+(ABSA/ABSB)**2.)
+   PYTHAG_DBL=ABSB*SQRT(1.0D0+(ABSA/ABSB)**2.0D0)
   ENDIF
  ENDIF
 
@@ -2203,28 +2236,28 @@ MAINLOOP: DO
   END DO
   M=N
 2  IF(M.NE.L)THEN
-   IF(ITER.EQ.100)PAUSE 'TOO MANY ITERATIONS IN TQLI'
+   IF(ITER.EQ.100)WRITE(*,'(A)') 'TOO MANY ITERATIONS IN TQLI - CONTINUING'
    ITER=ITER+1
-   G=(D(L+1)-D(L))/(2.*E(L))
+   G=(D(L+1)-D(L))/(2.0D0*E(L))
    R=PYTHAG_DBL(G,1.0D0)
    G=D(M)-D(L)+E(L)/(G+SIGN(R,G))
-   S=1.
-   C=1.
-   P=0.
+   S=1.0D0
+   C=1.0D0
+   P=0.0D0
    DO I=M-1,L,-1
     F=S*E(I)
     B=C*E(I)
     R=PYTHAG_DBL(F,G)
     E(I+1)=R
-    IF(R.EQ.0.)THEN
+    IF(R.EQ.0.0D0)THEN
      D(I+1)=D(I+1)-P
-     E(M)=0.
+     E(M)=0.0D0
      GOTO 1
     ENDIF
     S=F/R
     C=G/R
     G=D(I+1)-P
-    R=(D(I)-G)*S+2.*C*B
+    R=(D(I)-G)*S+2.0D0*C*B
     P=S*R
     D(I+1)=G+P
     G=C*R-B
@@ -2236,11 +2269,13 @@ MAINLOOP: DO
    END DO
    D(L)=D(L)-P
    E(L)=G
-   E(M)=0.
+   E(M)=0.0D0
    GOTO 1
   ENDIF
  END DO
 
+ IF(ITER.GT.100)WRITE(*,'(/A/)') 'TQLI NEEDED ',ITER,'ITERATIONS'
+ 
  END SUBROUTINE RED1TQLI_DBL
  
  !###========================================================================
@@ -2260,10 +2295,10 @@ MAINLOOP: DO
  L = 1
  !## convert to upper triangular form
  DO K = 1, N-1
-  IF (MATRIX(K,K) == 0) THEN
+  IF (MATRIX(K,K).EQ.0.0D0) THEN
    DETEXISTS = .FALSE.
    DO I = K+1, N
-    IF (MATRIX(I,K) /= 0) THEN
+    IF (MATRIX(I,K).NE.0.0D0) THEN
      DO J = 1, N
       TEMP = MATRIX(I,J)
       MATRIX(I,J)= MATRIX(K,J)
@@ -2275,7 +2310,7 @@ MAINLOOP: DO
     ENDIF
    END DO
    IF (DETEXISTS .EQV. .FALSE.) THEN
-    IPEST_GLM_DET = 0.0
+    IPEST_GLM_DET = 0.0D0
     DEALLOCATE(MATRIX)
     RETURN
    END IF
@@ -2814,3 +2849,119 @@ MAINLOOP: DO
  END SUBROUTINE IPEST_LUBACKSUB_DBL
  
 END MODULE MOD_IPEST_GLM
+
+!  Program Main
+!!====================================================================
+!!  eigenvalues and eigenvectors of a real symmetric matrix
+!!  Method: calls Jacobi
+!!====================================================================
+!implicit none
+!integer, parameter :: n=3
+!double precision :: a(n,n), x(n,n)
+!double precision, parameter:: abserr=1.0e-09
+!integer i, j
+!
+!! matrix A
+!  data (a(1,i), i=1,3) /   1.0,  2.0,  3.0 /
+!  data (a(2,i), i=1,3) /   2.0,  2.0, -2.0 /
+!  data (a(3,i), i=1,3) /   3.0, -2.0,  4.0 /
+!
+!! print a header and the original matrix
+!  write (*,200)
+!  do i=1,n
+!     write (*,201) (a(i,j),j=1,n)
+!  end do
+!
+!  call Jacobi(a,x,abserr,n)
+!
+!! print solutions
+!  write (*,202)
+!  write (*,201) (a(i,i),i=1,n)
+!  write (*,203)
+!  do i = 1,n
+!     write (*,201)  (x(i,j),j=1,n)
+!  end do
+!
+!200 format (' Eigenvalues and eigenvectors (Jacobi method) ',/, &
+!            ' Matrix A')
+!201 format (6f12.6)
+!202 format (/,' Eigenvalues')
+!203 format (/,' Eigenvectors')
+!end program main
+!
+!subroutine Jacobi(a,x,abserr,n)
+!!===========================================================
+!! Evaluate eigenvalues and eigenvectors
+!! of a real symmetric matrix a(n,n): a*x = lambda*x 
+!! method: Jacoby method for symmetric matrices 
+!! Alex G. (December 2009)
+!!-----------------------------------------------------------
+!! input ...
+!! a(n,n) - array of coefficients for matrix A
+!! n      - number of equations
+!! abserr - abs tolerance [sum of (off-diagonal elements)^2]
+!! output ...
+!! a(i,i) - eigenvalues
+!! x(i,j) - eigenvectors
+!! comments ...
+!!===========================================================
+!implicit none
+!integer i, j, k, n
+!double precision a(n,n),x(n,n)
+!double precision abserr, b2, bar
+!double precision beta, coeff, c, s, cs, sc
+!
+!! initialize x(i,j)=0, x(i,i)=1
+!! *** the array operation x=0.0 is specific for Fortran 90/95
+!x = 0.0
+!do i=1,n
+!  x(i,i) = 1.0
+!end do
+!
+!! find the sum of all off-diagonal elements (squared)
+!b2 = 0.0
+!do i=1,n
+!  do j=1,n
+!    if (i.ne.j) b2 = b2 + a(i,j)**2
+!  end do
+!end do
+!
+!if (b2 <= abserr) return
+!
+!! average for off-diagonal elements /2
+!bar = 0.5*b2/float(n*n)
+!
+!do while (b2.gt.abserr)
+!  do i=1,n-1
+!    do j=i+1,n
+!      if (a(j,i)**2 <= bar) cycle  ! do not touch small elements
+!      b2 = b2 - 2.0*a(j,i)**2
+!      bar = 0.5*b2/float(n*n)
+!! calculate coefficient c and s for Givens matrix
+!      beta = (a(j,j)-a(i,i))/(2.0*a(j,i))
+!      coeff = 0.5*beta/sqrt(1.0+beta**2)
+!      s = sqrt(max(0.5+coeff,0.0))
+!      c = sqrt(max(0.5-coeff,0.0))
+!! recalculate rows i and j
+!      do k=1,n
+!        cs =  c*a(i,k)+s*a(j,k)
+!        sc = -s*a(i,k)+c*a(j,k)
+!        a(i,k) = cs
+!        a(j,k) = sc
+!      end do
+!! new matrix a_{k+1} from a_{k}, and eigenvectors 
+!      do k=1,n
+!        cs =  c*a(k,i)+s*a(k,j)
+!        sc = -s*a(k,i)+c*a(k,j)
+!        a(k,i) = cs
+!        a(k,j) = sc
+!        cs =  c*x(k,i)+s*x(k,j)
+!        sc = -s*x(k,i)+c*x(k,j)
+!        x(k,i) = cs
+!        x(k,j) = sc
+!      end do
+!    end do
+!  end do
+!end do
+!return
+!end

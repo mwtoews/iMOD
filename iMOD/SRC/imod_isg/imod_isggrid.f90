@@ -2288,7 +2288,7 @@ IRLOOP: DO IR=MAX(1,IROW-1),MIN(NROW,IROW+1)
  CHARACTER(LEN=25) :: FRM
  REAL(KIND=DP_KIND),ALLOCATABLE,DIMENSION(:) :: TLP,KH,TP,BT
  REAL(KIND=DP_KIND),PARAMETER :: MINKHT=0.0D0
- INTEGER,PARAMETER :: ICLAY=1 !## shift to nearest aquifer
+! INTEGER,PARAMETER :: ICLAY=1 !## shift to nearest aquifer
 
  IF(MLAY.EQ.0)THEN
   !## read in all top/bottom layers
