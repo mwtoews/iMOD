@@ -5,7 +5,7 @@
 !!  This program is free software: you can redistribute it and/or modify
 !!  it under the terms of the GNU General Public License as published by
 !!  the Free Software Foundation, either version 3 of the License, or
-!!  (at your option) any later version.LS
+!!  (at your option) any later version.
 !!
 !!  This program is distributed in the hope that it will be useful,
 !!  but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -41,7 +41,6 @@ CONTAINS
  CHARACTER(LEN=*),INTENT(IN) :: DIR,MNAME
  REAL(KIND=DP_KIND) :: RFIT
  INTEGER :: I,J,ITER,N,M,IFLAGS,ISTATUS,IEXCOD,ITYPE,IGRAD,ILIN,JGRAD,NCPU,IU
- CHARACTER(LEN=15),ALLOCATABLE,DIMENSION(:) :: CTMP
  TYPE(WIN_MESSAGE) :: MESSAGE
  INTEGER,DIMENSION(2) :: IDPROC
  
@@ -85,24 +84,25 @@ CONTAINS
   N=0; DO J=1,SIZE(PEST%PARAM)
    IF(ABS(PEST%PARAM(J)%PACT).EQ.1.AND.PEST%PARAM(J)%PIGROUP.GT.0)N=N+1
   ENDDO
-  ALLOCATE(CTMP(N))
+!  ALLOCATE(CTMP(N))
 
-  N=0; DO J=1,SIZE(PEST%PARAM)
-   IF(ABS(PEST%PARAM(J)%PACT).EQ.1.AND.PEST%PARAM(J)%PIGROUP.GT.0)THEN
-    N=N+1
-    IF(TRIM(PEST%PARAM(J)%ACRONYM).EQ.'')THEN
-     WRITE(CTMP(N),'(3X,A2,2I5.5)') PEST%PARAM(J)%PPARAM,PEST%PARAM(J)%PILS,PEST%PARAM(J)%PIZONE
-    ELSE
-     WRITE(CTMP(N),'(A15)') PEST%PARAM(J)%ACRONYM
-    ENDIF
-   ENDIF
-  ENDDO
-  WRITE(IUPESTSENSITIVITY,'(A10,99999A15)') 'Iteration',(CTMP(I),I=1,N) 
+  CALL IPEST_GLM_WRITEHEADER('Iteration      ',N,IUPESTSENSITIVITY)
+!  N=0; DO J=1,SIZE(PEST%PARAM)
+!   IF(ABS(PEST%PARAM(J)%PACT).EQ.1.AND.PEST%PARAM(J)%PIGROUP.GT.0)THEN
+!    N=N+1
+!    IF(TRIM(PEST%PARAM(J)%ACRONYM).EQ.'')THEN
+!     WRITE(CTMP(N),'(3X,A2,2I5.5)') PEST%PARAM(J)%PPARAM,PEST%PARAM(J)%PILS,PEST%PARAM(J)%PIZONE
+!    ELSE
+!     WRITE(CTMP(N),'(A15)') PEST%PARAM(J)%ACRONYM
+!    ENDIF
+!   ENDIF
+!  ENDDO
+!  WRITE(IUPESTSENSITIVITY,'(A10,99999A15)') 'Iteration',(CTMP(I),I=1,N) 
  ELSE
   IUPESTOUT=UTL_GETUNIT();         OPEN(IUPESTOUT,        FILE=TRIM(DIR)//'\IPEST\LOG_PEST_TEST.CSV'      ,STATUS='UNKNOWN',ACTION='WRITE')
  ENDIF
  
- DEALLOCATE(CTMP)
+! DEALLOCATE(CTMP)
  
  !## set linesearch-runbatch-files
  DO I=1,PBMAN%NLINESEARCH; RNL(I)=TRIM(DIR)//'\RUN_L#'//TRIM(ITOS(I))//'.BAT'; LPARAM(I)=I; ENDDO
@@ -398,7 +398,7 @@ MAINLOOP: DO
    IF(II.EQ.1)THEN; IDF%FNAME=TRIM(DIR)//'\IPEST\MEASURE_J.IDF'      ; IF(.NOT.IDFWRITE(IDF,IDF%FNAME,1))STOP; ENDIF  
    IF(II.EQ.2)THEN; IDF%FNAME=TRIM(DIR)//'\IPEST\PARAMETER_J.IDF'    ; IF(.NOT.IDFWRITE(IDF,IDF%FNAME,1))STOP; ENDIF  
    IF(II.EQ.3)THEN; IDF%FNAME=TRIM(DIR)//'\IPEST\TOTAL_J.IDF'        ; IF(.NOT.IDFWRITE(IDF,IDF%FNAME,1))STOP; ENDIF
-   IF(II.EQ.4)THEN; IDF%FNAME=TRIM(DIR)//'\IPEST\ABERAGE_TOTAL_J.IDF'; IF(.NOT.IDFWRITE(IDF,IDF%FNAME,1))STOP; ENDIF
+   IF(II.EQ.4)THEN; IDF%FNAME=TRIM(DIR)//'\IPEST\AVERAGE_TOTAL_J.IDF'; IF(.NOT.IDFWRITE(IDF,IDF%FNAME,1))STOP; ENDIF
    IF(II.EQ.5)THEN; IDF%FNAME=TRIM(DIR)//'\IPEST\GOODNESS_OF_FIT.IDF'; IF(.NOT.IDFWRITE(IDF,IDF%FNAME,1))STOP; ENDIF
    IF(II.EQ.6)THEN; IDF%FNAME=TRIM(DIR)//'\IPEST\NASH_SUTCLIFF.IDF'  ; IF(.NOT.IDFWRITE(IDF,IDF%FNAME,1))STOP; ENDIF
    REWIND(IUPESTOUT)
@@ -928,8 +928,17 @@ MAINLOOP: DO
  DO I=1,SIZE(PEST%PARAM); CALL IPEST_GLM_GETBOUNDARY(I,IBND,P1,P2,PMIN,PMAX); PEST%PARAM(I)%IBND=IBND; ENDDO
 
  !## "freeze"-insensitive parameters
+ WRITE(IUPESTOUT,*); WRITE(IUPESTOUT,*) 'List of Insensitive Parameter (Sensitivity <= '//TRIM(RTOS(PEST%PE_SENS,'F',7))//' %):'; WRITE(IUPESTOUT,*)
  IPARAM=0; DO I=1,SIZE(PEST%PARAM)
-  IF(PEST%PARAM(I)%PACT.NE.1)CYCLE; IPARAM=IPARAM+1; IF(S(IPARAM).LT.PEST%PE_SENS)PEST%PARAM(I)%PACT=-1
+  IF(PEST%PARAM(I)%PACT.NE.1)CYCLE; IPARAM=IPARAM+1
+  IF(S(IPARAM).LE.PEST%PE_SENS)THEN
+   PEST%PARAM(I)%PACT=-1
+   IF(PEST%PARAM(I)%ACRONYM.EQ.'')THEN
+    WRITE(IUPESTOUT,'(A2,2I5.5,I3.3,F15.7,A2)') PEST%PARAM(I)%PPARAM,PEST%PARAM(I)%PILS,PEST%PARAM(I)%PIZONE,ABS(PEST%PARAM(I)%PIGROUP),S(IPARAM),' %'
+   ELSE
+    WRITE(IUPESTOUT,'(A15,F15.7,A2)') PEST%PARAM(I)%ACRONYM,S(IPARAM),' %'
+   ENDIF
+  ENDIF
  ENDDO
 
  !## initiate number of parameters
@@ -1449,7 +1458,7 @@ MAINLOOP: DO
   RETURN
  ENDIF
  
- IF(LPRINT)THEN; WRITE(IUPESTOUT,*); WRITE(IUPESTOUT,*) 'Confidence Limits (96%):'; WRITE(IUPESTOUT,*); ENDIF
+ IF(LPRINT)THEN; WRITE(IUPESTOUT,*) 'Confidence Limits (96%):'; WRITE(IUPESTOUT,*); ENDIF
 
  DO I=1,SIZE(PEST%PARAM)
   IF(PEST%PARAM(I)%PACT.EQ.1)THEN
@@ -1570,31 +1579,31 @@ MAINLOOP: DO
  INTEGER,ALLOCATABLE,DIMENSION(:) :: INDX
  
  !## if sensisivities need to be computed generate csv file and stop
- IF(LSENS)THEN
+ IF(LSENS.OR.PBMAN%PDEBUG.EQ.1)THEN
  
-  WRITE(IUJACOBIAN,*) 'POSITIVE numbers means that an INcreasement of the parameter raises the head'
-  WRITE(IUJACOBIAN,*) 'NEGATIVE numbers means that an DEcreasement of the parameter raises the head'
+  IF(LSENS)THEN
+   WRITE(IUJACOBIAN,*) 'POSITIVE numbers means that an INcreasement of the parameter raises the head'
+   WRITE(IUJACOBIAN,*) 'NEGATIVE numbers means that an DEcreasement of the parameter raises the head'
+  ENDIF
+
   BLINE=''; M=0
   DO IP1=1,SIZE(PEST%PARAM)
    IF(PEST%PARAM(IP1)%PACT.NE.1.OR.PEST%PARAM(IP1)%PIGROUP.LE.0)CYCLE
-   WRITE(SLINE,'(3X,A2,2I3.3,A1,I3.3,A1)') PEST%PARAM(IP1)%PPARAM,PEST%PARAM(IP1)%PILS,PEST%PARAM(IP1)%PIZONE,'-',PEST%PARAM(IP1)%PIGROUP,','
+   IF(LSENS)WRITE(SLINE,'(3X,A2,2I3.3,A1,I3.3,A1)') PEST%PARAM(IP1)%PPARAM,PEST%PARAM(IP1)%PILS, &
+                                                    PEST%PARAM(IP1)%PIZONE,'-',PEST%PARAM(IP1)%PIGROUP,','
    BLINE=TRIM(BLINE)//TRIM(SLINE); M=M+1
   ENDDO
-  WRITE(IUJACOBIAN,'(4A11,A32,A)') 'X,','Y,','ILAY,','WEIGTH,','LABEL,',TRIM(BLINE)
+  IF(LSENS)WRITE(IUJACOBIAN,'(4A11,A32,A)') 'X,','Y,','ILAY,','WEIGTH,','LABEL,',TRIM(BLINE)
   BLINE=''
   DO IP1=1,SIZE(PEST%PARAM)
    IF(PEST%PARAM(IP1)%PACT.NE.1.OR.PEST%PARAM(IP1)%PIGROUP.LE.0)CYCLE
-   WRITE(SLINE,'(A15,A1)') PEST%PARAM(IP1)%ACRONYM
-  BLINE=TRIM(BLINE)//TRIM(SLINE)
+   IF(LSENS)WRITE(SLINE,'(A15,A1)') PEST%PARAM(IP1)%ACRONYM
+   BLINE=TRIM(BLINE)//TRIM(SLINE)
   ENDDO
-  WRITE(IUJACOBIAN,'(76X,A)') TRIM(BLINE)
- 
- ENDIF
- 
- IF(LSENS.OR.PBMAN%PDEBUG.EQ.1)THEN
-
+  
+  IF(LSENS)WRITE(IUJACOBIAN,'(76X,A)') TRIM(BLINE)
   IF(PBMAN%PDEBUG.EQ.1)WRITE(IUPDEBUG,'(/A)') 'JACOBIAN=['
- 
+
   JQJ=0.0D0
   DO I=1,MSR%NOBS
    N=0; IPARAM=0
@@ -1613,9 +1622,7 @@ MAINLOOP: DO
    ENDDO
    IF(LSENS)WRITE(IUJACOBIAN,'(2(F10.2,A1),I10,A1,F10.2,A,A32,99999(G15.7,A1))') MSR%X(I),',',MSR%Y(I),',',MSR%L(I),',', &
            MSR%W(I),',',TRIM(MSR%CLABEL(I))//',',(JQJ(J,1),',',J=1,N)
-   IF(PBMAN%PDEBUG.EQ.1)THEN
-    WRITE(IUPDEBUG,'(99999E15.7)') (JQJ(I,1),J=1,N)
-   ENDIf
+   IF(PBMAN%PDEBUG.EQ.1)WRITE(IUPDEBUG,'(99999E15.7)') (JQJ(J,1),J=1,N)
   ENDDO
 
   IF(LSENS)THEN
@@ -1624,6 +1631,7 @@ MAINLOOP: DO
    CLOSE(IUJACOBIAN)
    STOP
   ENDIF
+  
   IF(PBMAN%PDEBUG.EQ.1)WRITE(IUPDEBUG,'(A/)') ']'
 
  ENDIF
@@ -1766,19 +1774,7 @@ MAINLOOP: DO
    ENDIF
 
    WRITE(IIU,'(/A/)') 'Parameter Covariance Matrix (m2):'
- 
-   BLINE=''
-   DO J=1,SIZE(PEST%PARAM)
-    IF(PEST%PARAM(J)%PACT.EQ.1)THEN
-     IF(PEST%PARAM(J)%ACRONYM.EQ.'')THEN
-      WRITE(SLINE,'(A2,2I5.5,I3.3)') PEST%PARAM(J)%PPARAM,PEST%PARAM(J)%PILS,PEST%PARAM(J)%PIZONE,PEST%PARAM(J)%PIGROUP
-     ELSE
-      WRITE(SLINE,'(A15)') PEST%PARAM(J)%ACRONYM
-     ENDIF
-     BLINE=TRIM(BLINE)//TRIM(SLINE)
-    ENDIF
-   ENDDO
-   WRITE(IIU,'(15X,A)') TRIM(BLINE) 
+   CALL IPEST_GLM_WRITEHEADER('               ',NP,IIU)
    WRITE(IIU,'(A)')
 
    EXIT
@@ -1812,19 +1808,8 @@ MAINLOOP: DO
   WRITE(IUPESTOUT,'(/A)') 'Parameter Correlation Matrix (-)'
   WRITE(IUPESTOUT,'(A)')  'Indicates whether coordinated changes in the parameter values could produce the same simulated values and'
   WRITE(IUPESTOUT,'(A/)') '  therefore, the same model fit'
-
-  BLINE=''
-  DO J=1,SIZE(PEST%PARAM)
-   IF(PEST%PARAM(J)%PACT.EQ.1)THEN
-    IF(PEST%PARAM(J)%ACRONYM.EQ.'')THEN
-     WRITE(SLINE,'(A2,2I5.5,I3.3)') PEST%PARAM(J)%PPARAM,PEST%PARAM(J)%PILS,PEST%PARAM(J)%PIZONE,PEST%PARAM(J)%PIGROUP
-    ELSE
-     WRITE(SLINE,'(A15)') PEST%PARAM(J)%ACRONYM
-    ENDIF
-    BLINE=TRIM(BLINE)//TRIM(SLINE)
-   ENDIF
-  ENDDO
-  WRITE(IUPESTOUT,'(15X,A)') TRIM(BLINE) 
+  
+  CALL IPEST_GLM_WRITEHEADER('               ',NP,IUPESTOUT)
   WRITE(IUPESTOUT,'(A)')
 
   COR=0.0D0; I=0
@@ -1849,7 +1834,7 @@ MAINLOOP: DO
   ENDDO
 
   !## write per parameter highly correlated other parameter
-  WRITE(IUPESTOUT,*); WRITE(IUPESTOUT,*) 'Parameter Correlated to (correlation > 0.95):'; WRITE(IUPESTOUT,*)
+  WRITE(IUPESTOUT,*); WRITE(IUPESTOUT,*) 'List of Parameter Highly Correlated (correlation > 0.95):'; WRITE(IUPESTOUT,*)
   IP1=0
   DO I=1,SIZE(PEST%PARAM)
    IF(PEST%PARAM(I)%PACT.EQ.1)THEN
@@ -1860,6 +1845,7 @@ MAINLOOP: DO
     ENDIF
     IP1=IP1+1
     IP2=0
+    II=0
     DO J=1,SIZE(PEST%PARAM)
      IF(PEST%PARAM(J)%PACT.EQ.1)THEN
       IP2=IP2+1
@@ -1869,11 +1855,14 @@ MAINLOOP: DO
        ELSE
         WRITE(SLINE,'(A15)') PEST%PARAM(J)%ACRONYM
        ENDIF
-       IF(ABS(COR(IP1,IP2)).GE.0.95D0)BLINE=TRIM(BLINE)//','//TRIM(SLINE)
+       IF(ABS(COR(IP1,IP2)).GE.0.95D0)THEN
+        II=II+1
+        BLINE=TRIM(BLINE)//','//TRIM(SLINE)
+       ENDIF
       ENDIF
      ENDIF
     ENDDO
-    WRITE(IUPESTOUT,'(A)') TRIM(BLINE)
+    IF(II.GT.0)WRITE(IUPESTOUT,'(A)') TRIM(BLINE)
    ENDIF  
   ENDDO
  ENDIF 
@@ -1886,7 +1875,35 @@ MAINLOOP: DO
  
  END SUBROUTINE IPEST_GLM_JQJ
  
- !!###========================================================================
+ !###========================================================================
+ SUBROUTINE IPEST_GLM_WRITEHEADER(TXT,NP,IU)
+ !###========================================================================
+ IMPLICIT NONE
+ CHARACTER(LEN=*),INTENT(IN) :: TXT
+ INTEGER,INTENT(IN) :: IU,NP
+ INTEGER :: I,J,N
+ CHARACTER(LEN=15),ALLOCATABLE,DIMENSION(:) :: CTMP
+   
+ ALLOCATE(CTMP(NP))
+   
+ N=0
+ DO J=1,SIZE(PEST%PARAM)
+  IF(PEST%PARAM(J)%PACT.EQ.1.AND.PEST%PARAM(J)%PIGROUP.GT.0)THEN
+   N=N+1
+   IF(TRIM(PEST%PARAM(J)%ACRONYM).EQ.'')THEN
+    WRITE(CTMP(N),'(A2,2I5.5,I3.3)') PEST%PARAM(J)%PPARAM,PEST%PARAM(J)%PILS,PEST%PARAM(J)%PIZONE,PEST%PARAM(J)%PIGROUP
+   ELSE
+    WRITE(CTMP(N),'(A15)') PEST%PARAM(J)%ACRONYM
+   ENDIF
+  ENDIF
+ ENDDO
+ WRITE(IU,'(A15,99999A15)') TXT,(CTMP(I),I=1,NP) 
+ 
+ DEALLOCATE(CTMP)
+ 
+ END SUBROUTINE IPEST_GLM_WRITEHEADER
+  
+  !!###========================================================================
  !SUBROUTINE RED1EIGSRT(D,A,N,NP)
  !!###========================================================================
  !IMPLICIT NONE
@@ -2118,26 +2135,26 @@ MAINLOOP: DO
 
  END SUBROUTINE RED1TRED2_DBL
 
- !###========================================================================
- REAL FUNCTION PYTHAG(A,B)
- !###========================================================================
- IMPLICIT NONE
- REAL(KIND=8),INTENT(IN) :: A,B
- REAL(KIND=8) :: ABSA,ABSB
-
- ABSA=ABS(A)
- ABSB=ABS(B)
- IF(ABSA.GT.ABSB)THEN
-  PYTHAG=ABSA*SQRT(1.+(ABSB/ABSA)**2.)
- ELSE
-  IF(ABSB.EQ.0.)THEN
-   PYTHAG=0.
-  ELSE
-   PYTHAG=ABSB*SQRT(1.+(ABSA/ABSB)**2.)
-  ENDIF
- ENDIF
-
- END FUNCTION PYTHAG
+ !!###========================================================================
+ !REAL FUNCTION PYTHAG(A,B)
+ !!###========================================================================
+ !IMPLICIT NONE
+ !REAL(KIND=8),INTENT(IN) :: A,B
+ !REAL(KIND=8) :: ABSA,ABSB
+ !
+ !ABSA=ABS(A)
+ !ABSB=ABS(B)
+ !IF(ABSA.GT.ABSB)THEN
+ ! PYTHAG=ABSA*SQRT(1.0D0+(ABSB/ABSA)**2.0D0)
+ !ELSE
+ ! IF(ABSB.EQ.0.)THEN
+ !  PYTHAG=0.
+ ! ELSE
+ !  PYTHAG=ABSB*SQRT(1.0D0+(ABSA/ABSB)**2.0D0)
+ ! ENDIF
+ !ENDIF
+ !
+ !END FUNCTION PYTHAG
 
  !###========================================================================
  REAL FUNCTION PYTHAG_DBL(A,B)
@@ -2160,67 +2177,67 @@ MAINLOOP: DO
 
  END FUNCTION PYTHAG_DBL
  
- !###========================================================================
- SUBROUTINE RED1TQLI(D,E,N,NP,A)
- !###========================================================================
- IMPLICIT NONE
- INTEGER,INTENT(IN) :: N,NP
- REAL(KIND=8),DIMENSION(NP),INTENT(INOUT) :: D,E
- REAL(KIND=8),DIMENSION(NP,NP),INTENT(INOUT) :: A
- INTEGER :: I,ITER,K,L,M
- REAL(KIND=8) :: B,C,DD,F,G,P,R,S
-
- DO I=2,N
-  E(I-1)=E(I)
- ENDDO
- E(N)=0.
- DO L=1,N
-  ITER=0
-1  DO M=L,N-1
-   DD=ABS(D(M))+ABS(D(M+1))
-   IF(ABS(E(M))+DD.EQ.DD)GOTO 2
-  END DO
-  M=N
-2  IF(M.NE.L)THEN
-   IF(ITER.EQ.100)PAUSE 'TOO MANY ITERATIONS IN TQLI'
-   ITER=ITER+1
-   G=(D(L+1)-D(L))/(2.*E(L))
-   R=PYTHAG(G,1.0D0)
-   G=D(M)-D(L)+E(L)/(G+SIGN(R,G))
-   S=1.
-   C=1.
-   P=0.
-   DO I=M-1,L,-1
-    F=S*E(I)
-    B=C*E(I)
-    R=PYTHAG(F,G)
-    E(I+1)=R
-    IF(R.EQ.0.)THEN
-     D(I+1)=D(I+1)-P
-     E(M)=0.
-     GOTO 1
-    ENDIF
-    S=F/R
-    C=G/R
-    G=D(I+1)-P
-    R=(D(I)-G)*S+2.*C*B
-    P=S*R
-    D(I+1)=G+P
-    G=C*R-B
-    DO K=1,N
-     F=A(K,I+1)
-     A(K,I+1)=S*A(K,I)+C*F
-     A(K,I)=C*A(K,I)-S*F
-    END DO
-   END DO
-   D(L)=D(L)-P
-   E(L)=G
-   E(M)=0.
-   GOTO 1
-  ENDIF
- END DO
-
- END SUBROUTINE RED1TQLI
+! !###========================================================================
+! SUBROUTINE RED1TQLI(D,E,N,NP,A)
+! !###========================================================================
+! IMPLICIT NONE
+! INTEGER,INTENT(IN) :: N,NP
+! REAL(KIND=8),DIMENSION(NP),INTENT(INOUT) :: D,E
+! REAL(KIND=8),DIMENSION(NP,NP),INTENT(INOUT) :: A
+! INTEGER :: I,ITER,K,L,M
+! REAL(KIND=8) :: B,C,DD,F,G,P,R,S
+!
+! DO I=2,N
+!  E(I-1)=E(I)
+! ENDDO
+! E(N)=0.
+! DO L=1,N
+!  ITER=0
+!1  DO M=L,N-1
+!   DD=ABS(D(M))+ABS(D(M+1))
+!   IF(ABS(E(M))+DD.EQ.DD)GOTO 2
+!  END DO
+!  M=N
+!2  IF(M.NE.L)THEN
+!   IF(ITER.EQ.100)PAUSE 'TOO MANY ITERATIONS IN TQLI'
+!   ITER=ITER+1
+!   G=(D(L+1)-D(L))/(2.*E(L))
+!   R=PYTHAG(G,1.0D0)
+!   G=D(M)-D(L)+E(L)/(G+SIGN(R,G))
+!   S=1.
+!   C=1.
+!   P=0.
+!   DO I=M-1,L,-1
+!    F=S*E(I)
+!    B=C*E(I)
+!    R=PYTHAG(F,G)
+!    E(I+1)=R
+!    IF(R.EQ.0.)THEN
+!     D(I+1)=D(I+1)-P
+!     E(M)=0.
+!     GOTO 1
+!    ENDIF
+!    S=F/R
+!    C=G/R
+!    G=D(I+1)-P
+!    R=(D(I)-G)*S+2.*C*B
+!    P=S*R
+!    D(I+1)=G+P
+!    G=C*R-B
+!    DO K=1,N
+!     F=A(K,I+1)
+!     A(K,I+1)=S*A(K,I)+C*F
+!     A(K,I)=C*A(K,I)-S*F
+!    END DO
+!   END DO
+!   D(L)=D(L)-P
+!   E(L)=G
+!   E(M)=0.
+!   GOTO 1
+!  ENDIF
+! END DO
+!
+! END SUBROUTINE RED1TQLI
 
  !###========================================================================
  SUBROUTINE RED1TQLI_DBL(D,E,N,NP,A)
