@@ -5023,8 +5023,10 @@ CONTAINS
    WRITE(*,'(1X,A)') 'Removes all data in all files whenever at least a single nodata value is found among them.'
   CASE (2)
    WRITE(*,'(1X,A)') 'Removes all data whenever at least a nodata value is found for the first and second idf file.'
+  CASE (3)
+   WRITE(*,'(1X,A)') 'Fill nodata values from first active layer below inactive location.'
   CASE DEFAULT
-   WRITE(*,'(A)') 'ICLEAN need to be 0,1,2'
+   WRITE(*,'(A)') 'ICLEAN need to be 0-3'
  END SELECT
  
  ALLOCATE(IDF(NLAY*2)); DO I=1,SIZE(IDF); CALL IDFNULLIFY(IDF(I)); ENDDO
@@ -5125,6 +5127,20 @@ CONTAINS
   ENDDO; ENDDO
  ENDIF
  
+ IF(ICLEAN.EQ.3)THEN
+  !## correct top->bottom and apply vertical shift
+  DO IROW=1,MOTHER%NROW; DO ICOL=1,MOTHER%NCOL
+   DO I=1,SIZE(IDF)
+    IF(IDF(I)%X(ICOL,IROW).NE.IDF(I)%NODATA)CYCLE
+    DO J=I+1,SIZE(IDF)
+     !## value available - if not search for next one in row
+     IF(IDF(J)%X(ICOL,IROW).EQ.IDF(J)%NODATA)CYCLE
+     IDF(I)%X(ICOL,IROW)=IDF(J)%X(ICOL,IROW); EXIT
+    ENDDO
+   ENDDO
+  ENDDO; ENDDO
+ ENDIF
+
  !## correct idf->top
  DO IROW=1,MOTHER%NROW; DO ICOL=1,MOTHER%NCOL
   DO I=2,SIZE(IDF)

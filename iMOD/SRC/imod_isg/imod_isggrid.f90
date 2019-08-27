@@ -1115,7 +1115,7 @@ CONTAINS
  INTEGER :: I,J,K,II,JJ,TTIME,IROW,ICOL,NETTRAP,ITYPE,N,ISTW,IR,IC,MDIM,I1,I2
  INTEGER :: JCRS,MAXNSEG,IRAT,IRAT1
  INTEGER,DIMENSION(3) :: IUDMM
- REAL(KIND=DP_KIND) :: C,INFF,DXY,RWIDTH,WETPER,ISGLEN,AORG,ATRAP,XSTW,YSTW,GSTW,ZCHK,D,W,BEDT,BEDK
+ REAL(KIND=DP_KIND) :: C,INFF,DXY,RWIDTH,WETPER,ISGLEN,AORG,ATRAP,XSTW,YSTW,GSTW,ZCHK,D,W,BEDT,BEDK,DD,CDXY
  REAL(KIND=DP_KIND),ALLOCATABLE,DIMENSION(:,:) :: QSORT,RVAL
  REAL(KIND=DP_KIND),ALLOCATABLE,DIMENSION(:) :: DIST,XNR,NDATA
  REAL(KIND=DP_KIND),ALLOCATABLE,DIMENSION(:) :: X,Y
@@ -1345,7 +1345,7 @@ CONTAINS
     ENDDO
 
     !## start to intersect all segment/segmentpoints to the model-grid
-    ISGLEN=0.0D0
+    ISGLEN=0.0D0; CDXY=0.0D0
     DO ISEG=2,NSEG
      
      X1 =X(ISEG-1); Y1=Y(ISEG-1); X2=X(ISEG); Y2=Y(ISEG)
@@ -1426,7 +1426,8 @@ CONTAINS
         ICOL=CA(J); IROW=RA(J)
 
         !## interpolate to centre of line ...
-        DXY=DXY+(LN(J)/2.0D0)
+        DXY = DXY+(LN(J)/2.0D0)
+        CDXY=CDXY+(LN(J)/2.0D0)
 
         !## within model-domain
         IF(ICOL.GE.1   .AND.IROW.GE.1.AND. &
@@ -1461,10 +1462,15 @@ CONTAINS
 
           !## export in case dmmfiles are concerned
           IF(PBMAN%DMMFILE.EQ.1)THEN
-           
+
            MP(1)=MP(1)+1
-           I1=IPSPOS(1,ISEG)
-           I2=IPSPOS(2,ISEG)
+           !## previous calculation point
+           IF(ISEG.GT.2)THEN
+            IF(IPSPOS(1,ISEG-1).NE.IPSPOS(1,ISEG-2))CDXY=LN(J)/2.0D0
+           ENDIF
+           I1=IPSPOS(1,ISEG-1)
+           !## next calculation point
+           I2=IPSPOS(2,ISEG-1)
 
            !## get most close location
            IF(ABS(CUMDIST(I1)-CUMDIST(ISEG)).LE.ABS(CUMDIST(I2)-CUMDIST(ISEG)))THEN
@@ -1474,11 +1480,21 @@ CONTAINS
            ENDIF
 
            !## fractie naar boven- en benedenstrooms knooppunt
-           D=CUMDIST(I2)-CUMDIST(1)
-           W=CUMDIST(ISEG)/D
-           WRITE(IUDMM(2),'(I10,3F15.3)') MP(1),X(I1),Y(I1),W
-           WRITE(IUDMM(2),'(I10,3F15.3)') MP(1),X(I2),Y(I2),1.0D0-W
+           D=CUMDIST(I2)-CUMDIST(I1)
+           DD=CDXY
+           W=DD/D
+!           W=CUMDIST(ISEG)/D
            
+           !## ignore small parts
+           IF(W.GT.0.99)THEN
+            WRITE(IUDMM(2),'(I10,3F15.3)') MP(1),X(I1),Y(I1),1.0D0
+           ELSEIF(W.LT.0.01)THEN
+            WRITE(IUDMM(2),'(I10,3F15.3)') MP(1),X(I2),Y(I2),1.0D0
+           ELSE
+            WRITE(IUDMM(2),'(I10,3F15.3)') MP(1),X(I1),Y(I1),W
+            WRITE(IUDMM(2),'(I10,3F15.3)') MP(1),X(I2),Y(I2),1.0D0-W
+           ENDIF           
+
            !## write conventional river package
            WRITE(IUDMM(3),'(3I10,4F10.3,I10)') 1,IROW,ICOL,ISGVALUE(1,2),ISGVALUE(1,1),ISGVALUE(1,3),ISGVALUE(1,4),ISYS
           
@@ -1554,7 +1570,8 @@ CONTAINS
          ENDIF
         ENDIF
 
-        DXY=DXY+(LN(J)/2.0D0)
+        DXY =DXY +(LN(J)/2.0D0)
+        CDXY=CDXY+(LN(J)/2.0D0)
 
        ENDIF
       ENDDO
