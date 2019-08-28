@@ -1368,6 +1368,12 @@ CONTAINS
       
       !## fill result array
       DXY=0.0D0
+      
+      !## previous calculation point
+      IF(ISEG.GT.2)THEN
+       IF(IPSPOS(1,ISEG-1).NE.IPSPOS(1,ISEG-2))CDXY=0.0D0 !LN(J)/2.0D0
+      ENDIF
+      
       DO J=1,N
 
        ISGLEN=ISGLEN+LN(J)
@@ -1464,10 +1470,10 @@ CONTAINS
           IF(PBMAN%DMMFILE.EQ.1)THEN
 
            MP(1)=MP(1)+1
-           !## previous calculation point
-           IF(ISEG.GT.2)THEN
-            IF(IPSPOS(1,ISEG-1).NE.IPSPOS(1,ISEG-2))CDXY=LN(J)/2.0D0
-           ENDIF
+!           !## previous calculation point
+!           IF(ISEG.GT.2)THEN
+!            IF(IPSPOS(1,ISEG-1).NE.IPSPOS(1,ISEG-2))CDXY=LN(J)/2.0D0
+!           ENDIF
            I1=IPSPOS(1,ISEG-1)
            !## next calculation point
            I2=IPSPOS(2,ISEG-1)
@@ -1487,12 +1493,12 @@ CONTAINS
            
            !## ignore small parts
            IF(W.GT.0.99)THEN
-            WRITE(IUDMM(2),'(I10,3F15.3)') MP(1),X(I1),Y(I1),1.0D0
-           ELSEIF(W.LT.0.01)THEN
             WRITE(IUDMM(2),'(I10,3F15.3)') MP(1),X(I2),Y(I2),1.0D0
+           ELSEIF(W.LT.0.01)THEN
+            WRITE(IUDMM(2),'(I10,3F15.3)') MP(1),X(I1),Y(I1),1.0D0
            ELSE
-            WRITE(IUDMM(2),'(I10,3F15.3)') MP(1),X(I1),Y(I1),W
-            WRITE(IUDMM(2),'(I10,3F15.3)') MP(1),X(I2),Y(I2),1.0D0-W
+            WRITE(IUDMM(2),'(I10,3F15.3)') MP(1),X(I1),Y(I1),1.0D0-W
+            WRITE(IUDMM(2),'(I10,3F15.3)') MP(1),X(I2),Y(I2),W
            ENDIF           
 
            !## write conventional river package
