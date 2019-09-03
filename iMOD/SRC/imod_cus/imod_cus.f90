@@ -233,7 +233,7 @@ CONTAINS
    ILAY=INT(ZIDF(IIDF)%X(ICOL,IROW)) 
    !## assign not assignable distinctive layer in modellayer 1
    IF(ILAY.EQ.-1)ILAY=1
-   IF(ILAY.GE.1.AND.ILAY.LE.NLAY)MDLTOP(ILAY)%X(ICOL,IROW)=REAL(IIDF)
+   IF(ILAY.GE.1.AND.ILAY.LE.NLAY)MDLTOP(ILAY)%X(ICOL,IROW)=DBLE(IIDF)
   ENDDO; ENDDO
  
  ENDDO
@@ -364,12 +364,13 @@ CONTAINS
   N=ZINFO(IIDF)%NZ; ALLOCATE(IL(N))
   DO I=1,N; ILAY=ILAY+1; IL(I)=ILAY; ENDDO
   
-  WRITE(*,'(2(I3.3,A))') IIDF,'-',NFORM,' Reading Pointer Files for '//TRIM(ZIDF(IIDF)%FNAME)//' ...'
+  WRITE(*,'(2(I3.3,A))') IIDF,'-',NFORM,' Reading Object Pointer Files for '//TRIM(ZIDF(IIDF)%FNAME)//' ...'
   CALL IDFDEALLOCATEX(ZIDF(IIDF)); IF(.NOT.IDFREAD(ZIDF(IIDF),ZIDF(IIDF)%FNAME,1))RETURN
 
   DO IROW=1,ZIDF(IIDF)%NROW; DO ICOL=1,ZIDF(IIDF)%NCOL
    IF(ZIDF(IIDF)%X(ICOL,IROW).GT.0)THEN
     IZ=INT(ZIDF(IIDF)%X(ICOL,IROW))
+    
     IF(XVAR(IL(IZ)).GE.0)THEN
      ZIDF(IIDF)%X(ICOL,IROW)=XVAR(IL(IZ))+1
     ELSE
@@ -442,6 +443,7 @@ CONTAINS
                                           SMPLX(NCON)%IF2,SMPLX(NCON)%IZ2,SMPLX(NCON)%IVAR2, &
                                           SMPLX(NCON)%IAREA,SMPLX(NCON)%PERC
   IF(IOS.NE.0)EXIT
+  
  ENDDO
  NCON=NCON-1
  
@@ -561,7 +563,6 @@ CONTAINS
   ENDDO
     
   !## clean buffer assignment for those allready assigned outside buffer
-!if(.false.)then
   IF(IEXPZONE.GT.0)THEN
 
    !## fill in zones captured/found nearest of "real" connections of parts of layers
@@ -663,7 +664,6 @@ CONTAINS
    DO Z=1,ZINFO(I)%NZ
     IF(DZ(Z)%NZ.EQ.0.0D0)CYCLE
     CALL QKSORT_P_INT4REAL8(DZ(Z)%NZ,DZ(Z)%IZ,V2=DZ(Z)%D)
-!    CALL UTL_QKSORT_INT(DZ(Z)%IZ,DZ(Z)%D,DZ(Z)%NZ,DZ(Z)%NZ)
     !## get percentile for z according to zz
     KK=1; DO K=2,DZ(Z)%NZ
      IF(DZ(Z)%IZ(K).NE.DZ(Z)%IZ(K-1))THEN
@@ -700,7 +700,7 @@ CONTAINS
  !###======================================================================
  IMPLICIT NONE
  INTEGER,INTENT(IN) :: IIDF
- INTEGER :: IROW,ICOL,JROW,JCOL,IPZ,I,MAXTHREAD,NTHREAD,DTERM,IMENU,MAXN,TTHREAD
+ INTEGER :: IROW,ICOL,JROW,JCOL,IPZ,I,MAXTHREAD,NTHREAD,DTERM,IMENU,MAXN,TTHREAD,SMZ
  REAL(KIND=DP_KIND) :: THICKNESS  
  INTEGER(KIND=1),POINTER,DIMENSION(:) :: ISPEC 
  INTEGER(KIND=2),POINTER,DIMENSION(:,:) :: THREAD,YSEL
@@ -723,7 +723,7 @@ CONTAINS
  MDLIDF(3)%X=CRIT_THICKNESS 
  
  !## search for clay extinctions
- IPZ=0; ALLOCATE(NT(10))
+ IPZ=0; SMZ=0; ALLOCATE(NT(10))
  DO IROW=1,MDLIDF(1)%NROW; DO ICOL=1,MDLIDF(1)%NCOL
     
   IF(MDLIDF(2)%X(ICOL,IROW).EQ.MDLIDF(2)%NODATA.AND. &  !## not yet visited
@@ -734,7 +734,7 @@ CONTAINS
    !## try to find another, close by start point associated with this zone
    DO
 
-    NTHREAD=1; YSEL(1,NTHREAD)=JCOL; YSEL(2,NTHREAD)=JROW; MDLIDF(2)%X(JCOL,JROW)=REAL(IPZ)
+    NTHREAD=1; YSEL(1,NTHREAD)=JCOL; YSEL(2,NTHREAD)=JROW; MDLIDF(2)%X(JCOL,JROW)=DBLE(IPZ)
 
     !## trace all ne equal nodata and step less than thickness (mdlidf(3))
     CALL IDFEDITTRACE(MDLIDF(1),MDLIDF(2),THREAD,YSEL,ISPEC,DTERM,IMENU,MAXTHREAD,MAXN, &
@@ -756,19 +756,30 @@ CONTAINS
    IF(IPZ.GT.SIZE(NT))THEN
     I=SIZE(NT); ALLOCATE(NT_DUMMY(I*2)); NT_DUMMY(1:I)=NT(1:I); DEALLOCATE(NT); NT=>NT_DUMMY
    ENDIF
-   NT(IPZ)=TTHREAD 
+   !## correct for MINEXTENT
+   IF(TTHREAD.GE.MINEXTENT)THEN
+    NT(IPZ)=TTHREAD 
+   ELSE
+    !## remove from idf
+    DO I=1,TTHREAD
+     JCOL=YSEL(1,I); JROW=YSEL(2,I); MDLIDF(2)%X(JCOL,JROW)=MDLIDF(2)%NODATA
+    ENDDO
+    IPZ=IPZ-1
+    SMZ=SMZ+1
+   ENDIF
   ENDIF  
    
  ENDDO; ENDDO
 
- WRITE(*,'(A,I10,A/)') ' ... found ',IPZ,' individual zones'
-
+ WRITE(*,'(A,I10,A)') ' ... found   ',IPZ,' individual zones'
+ WRITE(*,'(A,I10,A/)') ' ... skipped ',SMZ,' small zones (< '//TRIM(ITOS(MINEXTENT))//')'
+ 
  IF(.NOT.IDFWRITE(MDLIDF(2),MDLIDF(2)%FNAME,1))STOP 'ERROR WRITING ZONES'
 
  ZINFO(IIDF)%NZ=IPZ
  ALLOCATE(ZINFO(IIDF)%NP(ZINFO(IIDF)%NZ))
  DO I=1,IPZ; ZINFO(IIDF)%NP(I)=NT(I); ENDDO
-   
+
  DEALLOCATE(THREAD,ISPEC,YSEL,NT)
 
  CUS_TRACE=.TRUE.
