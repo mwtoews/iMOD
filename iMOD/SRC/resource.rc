@@ -8,7 +8,7 @@
 //
 // Winteracter resource script. 
 //
-// Modified : 03/Sep/2019 20:59:20
+// Modified : 03/Sep/2019 21:03:12
 //
 ///////////////////////////////////////////////////
 //
@@ -12521,9 +12521,6 @@ BEGIN
     CONTROL "Date/Period",IDF_LABEL2,"STATIC",WS_CHILD | WS_VISIBLE | WS_GROUP | SS_LEFT,    8,   36,   66,    8
     CONTROL "Topics",IDF_LABEL3,"STATIC",WS_CHILD | WS_VISIBLE | WS_GROUP | SS_LEFT,    8,   65,   66,    8
     CONTROL "Entries",IDF_LABEL4,"STATIC",WS_CHILD | WS_VISIBLE | WS_GROUP | SS_LEFT,    8,   95,   66,    8
-    CONTROL "ILAY=1",IDF_LABEL5,"STATIC",WS_CHILD | WS_VISIBLE | WS_GROUP | SS_LEFT,   14,  124,   40,    8
-    CONTROL "FCT=1.0",IDF_LABEL6,"STATIC",WS_CHILD | WS_VISIBLE | WS_GROUP | SS_LEFT,   14,  136,   40,    8
-    CONTROL "IMP=1.0",IDF_LABEL7,"STATIC",WS_CHILD | WS_VISIBLE | WS_GROUP | SS_LEFT,   14,  148,   40,    8
 END
 
 ID_DPMANAGER_TAB2 RCDATA
@@ -12537,7 +12534,7 @@ BEGIN
 " 1093     1     1 \n"
 "IBOUND \n"
 " 1094     1     1 \n"
-"DDFD.IDF \n"
+"1,1.0,1.0,DDFD.IDF \n"
 ,0
 END
 

@@ -85,6 +85,8 @@
 		<File RelativePath="..\..\..\iMOD\SRC\imod_asc2idf\imod_asc2idf_par.f90"/>
 		<File RelativePath="..\..\SRC\imod_asc2idf\imod_asc2idf_utl.f90"/></Filter>
 		<Filter Name="imod_batch">
+		<File RelativePath="..\..\SRC\imod_batch\imod_aggregate.f90"/>
+		<File RelativePath="..\..\SRC\imod_batch\imod_aggregate_par.f90"/>
 		<File RelativePath="..\..\SRC\imod_batch\imod_batch.f90">
 			<FileConfiguration Name="Debug|Win32">
 				<Tool Name="VFFortranCompilerTool" Preprocess="preprocessYes" PreprocessorDefinitions=""/></FileConfiguration>
