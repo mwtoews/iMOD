@@ -2769,7 +2769,6 @@ MAINLOOP: DO
  IMPLICIT NONE
  INTEGER,PARAMETER :: NMAX=2000
  REAL(KIND=DP_KIND),PARAMETER :: TINY=1.0D-20
- !PARAMETER( TINY=1.0D-20, NMAX=2000)
  INTEGER,INTENT(IN) :: N
  INTEGER,INTENT(OUT) :: ISING
  INTEGER,DIMENSION(N),INTENT(OUT) :: IDX
@@ -2827,14 +2826,13 @@ MAINLOOP: DO
   IDX(J)=IMAX
   IF(AA(J,J).EQ.0.0D0)AA(J,J)=TINY
   IF(J.NE.N)THEN
-   DUM=1./AA(J,J)
+   DUM=1.0D0/AA(J,J)
    DO I=J+1,N
     AA(I,J)=AA(I,J)*DUM
    ENDDO
   ENDIF
  ENDDO
 
- RETURN
  END SUBROUTINE IPEST_LUDECOMP_DBL
 
  !###====================================================================
@@ -2870,123 +2868,67 @@ MAINLOOP: DO
   BB(I)=SUM/AA(I,I)
  ENDDO
 
- RETURN
  END SUBROUTINE IPEST_LUBACKSUB_DBL
  
-END MODULE MOD_IPEST_GLM
+ !###====================================================================
+ SUBROUTINE IPEST_ECHELON_DBL(AO,B,NROW,NCOL)
+ !###====================================================================
+ IMPLICIT NONE
+ INTEGER,INTENT(IN) :: NROW,NCOL
+ REAL(KIND=DP_KIND),DIMENSION(NCOL,NROW),INTENT(IN) :: AO
+ INTEGER,DIMENSION(NROW),INTENT(OUT) :: B
+ REAL(KIND=DP_KIND),PARAMETER :: TINY=1.0D-20
+ REAL(KIND=DP_KIND),DIMENSION(:,:),ALLOCATABLE :: A
+ INTEGER :: IROW,JROW,KROW,ICOL,PCOL !,BTMP
+ REAL(KIND=DP_KIND) :: AMAX,ATMP,F
+ 
+ !## copy matrix
+ ALLOCATE(A(NCOL,NROW)); A=AO
+ 
+ PCOL=1
+MLOOP: DO IROW=1,NROW
+  !## find pivot icol
+PLOOP: DO
+   DO JROW=IROW+1,NROW
+    IF(A(PCOL,JROW).NE.0.0D0)EXIT PLOOP
+   ENDDO
+   PCOL=PCOL+1
+   !## finished
+   IF(PCOL.GT.NCOL)EXIT MLOOP
+  ENDDO PLOOP
 
-!  Program Main
-!!====================================================================
-!!  eigenvalues and eigenvectors of a real symmetric matrix
-!!  Method: calls Jacobi
-!!====================================================================
-!implicit none
-!integer, parameter :: n=3
-!double precision :: a(n,n), x(n,n)
-!double precision, parameter:: abserr=1.0e-09
-!integer i, j
-!
-!! matrix A
-!  data (a(1,i), i=1,3) /   1.0,  2.0,  3.0 /
-!  data (a(2,i), i=1,3) /   2.0,  2.0, -2.0 /
-!  data (a(3,i), i=1,3) /   3.0, -2.0,  4.0 /
-!
-!! print a header and the original matrix
-!  write (*,200)
-!  do i=1,n
-!     write (*,201) (a(i,j),j=1,n)
-!  end do
-!
-!  call Jacobi(a,x,abserr,n)
-!
-!! print solutions
-!  write (*,202)
-!  write (*,201) (a(i,i),i=1,n)
-!  write (*,203)
-!  do i = 1,n
-!     write (*,201)  (x(i,j),j=1,n)
-!  end do
-!
-!200 format (' Eigenvalues and eigenvectors (Jacobi method) ',/, &
-!            ' Matrix A')
-!201 format (6f12.6)
-!202 format (/,' Eigenvalues')
-!203 format (/,' Eigenvectors')
-!end program main
-!
-!subroutine Jacobi(a,x,abserr,n)
-!!===========================================================
-!! Evaluate eigenvalues and eigenvectors
-!! of a real symmetric matrix a(n,n): a*x = lambda*x 
-!! method: Jacoby method for symmetric matrices 
-!! Alex G. (December 2009)
-!!-----------------------------------------------------------
-!! input ...
-!! a(n,n) - array of coefficients for matrix A
-!! n      - number of equations
-!! abserr - abs tolerance [sum of (off-diagonal elements)^2]
-!! output ...
-!! a(i,i) - eigenvalues
-!! x(i,j) - eigenvectors
-!! comments ...
-!!===========================================================
-!implicit none
-!integer i, j, k, n
-!double precision a(n,n),x(n,n)
-!double precision abserr, b2, bar
-!double precision beta, coeff, c, s, cs, sc
-!
-!! initialize x(i,j)=0, x(i,i)=1
-!! *** the array operation x=0.0 is specific for Fortran 90/95
-!x = 0.0
-!do i=1,n
-!  x(i,i) = 1.0
-!end do
-!
-!! find the sum of all off-diagonal elements (squared)
-!b2 = 0.0
-!do i=1,n
-!  do j=1,n
-!    if (i.ne.j) b2 = b2 + a(i,j)**2
-!  end do
-!end do
-!
-!if (b2 <= abserr) return
-!
-!! average for off-diagonal elements /2
-!bar = 0.5*b2/float(n*n)
-!
-!do while (b2.gt.abserr)
-!  do i=1,n-1
-!    do j=i+1,n
-!      if (a(j,i)**2 <= bar) cycle  ! do not touch small elements
-!      b2 = b2 - 2.0*a(j,i)**2
-!      bar = 0.5*b2/float(n*n)
-!! calculate coefficient c and s for Givens matrix
-!      beta = (a(j,j)-a(i,i))/(2.0*a(j,i))
-!      coeff = 0.5*beta/sqrt(1.0+beta**2)
-!      s = sqrt(max(0.5+coeff,0.0))
-!      c = sqrt(max(0.5-coeff,0.0))
-!! recalculate rows i and j
-!      do k=1,n
-!        cs =  c*a(i,k)+s*a(j,k)
-!        sc = -s*a(i,k)+c*a(j,k)
-!        a(i,k) = cs
-!        a(j,k) = sc
-!      end do
-!! new matrix a_{k+1} from a_{k}, and eigenvectors 
-!      do k=1,n
-!        cs =  c*a(k,i)+s*a(k,j)
-!        sc = -s*a(k,i)+c*a(k,j)
-!        a(k,i) = cs
-!        a(k,j) = sc
-!        cs =  c*x(k,i)+s*x(k,j)
-!        sc = -s*x(k,i)+c*x(k,j)
-!        x(k,i) = cs
-!        x(k,j) = sc
-!      end do
-!    end do
-!  end do
-!end do
-!return
-!end
+  !## find row with largest pivot value
+  KROW=IROW; AMAX=0.0D0; DO JROW=IROW+1,NROW
+   IF(ABS(A(PCOL,JROW)).GT.ABS(AMAX))THEN; AMAX=A(PCOL,JROW); KROW=JROW; ENDIF
+  ENDDO
+
+  !## interchange rows
+  IF(KROW.NE.IROW)THEN
+   DO ICOL=PCOL,NCOL
+    ATMP        =A(ICOL,IROW)
+    A(ICOL,IROW)=A(ICOL,KROW)
+    A(ICOL,KROW)=ATMP
+   ENDDO
+  ENDIF
+  !## reduce all rows using the pivot row
+  AMAX=A(PCOL,IROW)
+  DO JROW=IROW+1,NROW
+   F=A(PCOL,JROW)/AMAX
+   DO ICOL=PCOL,NCOL
+    A(ICOL,JROW)=A(ICOL,JROW)-A(ICOL,IROW)*F
+   ENDDO
+  ENDDO
+ ENDDO MLOOP
+
+ DO IROW=1,NROW
+  WRITE(*,'(99F10.2)') (A(ICOL,IROW),ICOL=1,NCOL)
+ ENDDO
+ 
+ !## determine over/bad dimension of matrix
+ B=0; DO IROW=1,NROW
+  DO ICOL=1,NCOL; IF(ABS(A(ICOL,IROW)).GT.TINY)THEN; B(IROW)=ICOL; EXIT; ENDIF; ENDDO
+ ENDDO
+ 
+ END SUBROUTINE IPEST_ECHELON_DBL
+ 
+ END MODULE MOD_IPEST_GLM

@@ -495,7 +495,7 @@ ELSE
 
      OPEN(IUTXT(II),FILE=LINE,FORM='FORMATTED',ACTION='WRITE',STATUS='UNKNOWN',IOSTAT=IOS) 
      IF(IOS.NE.0)THEN
-     CALL IMOD_UTL_PRINTTEXT(' Cannot create file '//TRIM(LINE),0)
+      CALL IMOD_UTL_PRINTTEXT(' Cannot create file '//TRIM(LINE),0)
       CALL IMOD_UTL_PRINTTEXT(' Probably not enough free unit numbers '//TRIM(IMOD_UTL_ITOS(IUTXT(II))),0)
       CALL IMOD_UTL_PRINTTEXT(' or duplicate file name and file is allready opened',0)
       CALL IMOD_UTL_PRINTTEXT('Stopped',2)
@@ -523,6 +523,9 @@ ELSE
       JUTXT(JJ)=IMOD_UTL_GETUNIT()
      ENDIF
      OPEN(JUTXT(JJ),FILE=LINE,FORM='FORMATTED',ACTION='READ',STATUS='OLD',SHARE='DENYNONE',IOSTAT=IOS) 
+     IF(IOS.NE.0)THEN
+      CALL IMOD_UTL_PRINTTEXT(' Cannot create file '//TRIM(LINE),2)
+     ENDIF
 
      READ(JUTXT(II),*)
      READ(JUTXT(II),*) N
