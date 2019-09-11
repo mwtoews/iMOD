@@ -994,6 +994,8 @@ CONTAINS
  !## write time-discretisation file
  IF(.NOT.PMANAGER_SAVEMF2005_TDIS(TRIM(MAINDIR)//'\MFSIM'))RETURN
 
+ IF(PBMAN%PRESTART.EQ.1)THEN; PMANAGER_SAVEMF2005=.TRUE.; RETURN; ENDIF
+
  !##================
  !## reading section
  !##================
