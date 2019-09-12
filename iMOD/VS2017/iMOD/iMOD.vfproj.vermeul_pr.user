@@ -3,5 +3,5 @@
 	<Configurations>
 		<Configuration Name="Debug|Win32" CommandArguments="d:\IMOD-MODELS\LHM\AGGREGATE.INI" WorkingDirectory="d:\IMOD\"/>
 		<Configuration Name="Release|Win32"/>
-		<Configuration Name="Debug|x64" CommandArguments="d:\IMOD-MODELS\LHM\AGGREGATE.INI" WorkingDirectory="d:\IMOD\"/>
-		<Configuration Name="Release|x64" WorkingDirectory="d:\IMOD"/></Configurations></VisualStudioUserFile>
+		<Configuration Name="Debug|x64" CommandArguments="d:\IMOD-MODELS\LHM\RUNFILE.INI" WorkingDirectory="d:\IMOD\"/>
+		<Configuration Name="Release|x64" CommandArguments="d:\IMOD-MODELS\IBRAHYM_V2.0\DBASE_DLD\IMOD_USER\RUNFILES\IBRAHYM_V2.0.7\RUNFILE_NAM_V04.INI" WorkingDirectory="d:\IMOD"/></Configurations></VisualStudioUserFile>
