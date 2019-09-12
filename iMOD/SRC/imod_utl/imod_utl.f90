@@ -933,17 +933,19 @@ DOLOOP: DO
 
  !###======================================================================
  SUBROUTINE UTL_MINTHICKNESS(TOP,BOT,HK,VK,VA, &
-           TOP_BU,BOT_BU,HK_BU,VK_BU,VA_BU,BND,TH,MINTHICKNESS)
+           TOP_BU,BOT_BU,HK_BU,VK_BU,VA_BU,BND,TH,MINTHICKNESS,NLAY)
  !###======================================================================
  IMPLICIT NONE
- INTEGER,INTENT(INOUT),DIMENSION(:) :: BND
- REAL(KIND=DP_KIND),INTENT(INOUT),DIMENSION(:) :: TOP,BOT,HK,VK,VA,TOP_BU,BOT_BU,HK_BU,VK_BU,VA_BU
- REAL(KIND=DP_KIND),INTENT(INOUT),DIMENSION(:,:) :: TH
+ INTEGER,INTENT(IN) :: NLAY
+ INTEGER, PARAMETER :: DP_KIND=8
+ INTEGER,INTENT(INOUT),DIMENSION(NLAY) :: BND
+ REAL(KIND=DP_KIND),INTENT(INOUT),DIMENSION(NLAY) :: TOP,BOT,HK,VK,VA,TOP_BU,BOT_BU,HK_BU,VK_BU,VA_BU
+ REAL(KIND=DP_KIND),INTENT(INOUT),DIMENSION(NLAY,2) :: TH
  REAL(KIND=DP_KIND),INTENT(IN) :: MINTHICKNESS
- INTEGER :: NLAY,ILAY,JLAY,IL 
- REAL(KIND=DP_KIND) :: K,T,B,T1,T2,B1,D,KD,VC,MT,F,TT1,TT2,DT,TT,Z
+ INTEGER :: ILAY,JLAY,IL 
+ REAL(KIND=DP_KIND) :: K,T,B,T1,T2,B1,D,KD,VC,MT,F,TT1,TT2,DT,TT,Z,TC
 
- NLAY=SIZE(BND)
+! NLAY=SIZE(BND)
 
  !## make sure no negative-thicknesses in original set
  DO ILAY=1,NLAY
@@ -1003,53 +1005,97 @@ DOLOOP: DO
   IF(TH(ILAY,1).LT.MT)THEN
    DT=MT-TH(ILAY,1); TH(ILAY,1)=MT
    !## reduce for this correction
-   DO JLAY=ILAY+1,NLAY
-    !## possible corrected quantity
-    TT=TH(JLAY,1)-DT
-    !## enough space
-    IF(TT.GT.0.0D0)THEN
-     TT=DT
-    !## limited space
-    ELSE
-     TT=DT+TT
-    ENDIF
-    TH(JLAY,1)=TH(JLAY,1)-TT
-    !## reduced to be corrected quantity
-    DT=DT-TT
-    !## stop if all corrected
-    IF(DT.LE.0.0D0)EXIT
-   ENDDO   
-   !## correct the rest
    DO JLAY=ILAY,NLAY
-    IF(JLAY.GT.1)TOP(JLAY)=BOT(JLAY-1)-TH(JLAY-1,2)
-    BOT(JLAY)=TOP(JLAY)-TH(JLAY,1) 
-   ENDDO
-   !## get updated thickness of aquifers
-   DO JLAY=1,NLAY; TH(JLAY,1)=TOP(JLAY)-BOT(JLAY); ENDDO
+    
+    !## possible to correct from aquitard
+    TT=0.0D0
+    IF(JLAY.LT.NLAY)THEN
+     TT=TH(JLAY,2)-DT
+     IF(TT.GT.0.0D0)THEN
+      TT=DT
+     !## limited space
+     ELSE
+      TT=DT+TT
+     ENDIF
+     TH(JLAY,2)=TH(JLAY,2)-TT   
+    ENDIF
+
+    !## reduced to be corrected quantity, stop if all corrected
+    DT=DT-TT; IF(DT.LE.0.0D0)EXIT
+    
+    TT=0.0D0
+    !## possible to correct from aquifer
+    IF(JLAY.GT.ILAY)THEN
+     TT=TH(JLAY,1)-DT
+     !## enough space
+     IF(TT.GT.0.0D0)THEN
+      TT=DT
+     !## limited space
+     ELSE
+      TT=DT+TT
+     ENDIF
+     TH(JLAY,1)=TH(JLAY,1)-TT
+    ENDIF
+    
+    !## reduced to be corrected quantity, stop if all corrected
+    DT=DT-TT; IF(DT.LE.0.0D0)EXIT
+
+   ENDDO   
   ENDIF
  ENDDO
 
- !## correct permeabilities for aquifers
+ !## recompute new top/bottoms
+ DO ILAY=1,NLAY
+  IF(ILAY.GT.1)TOP(ILAY)=BOT(ILAY-1)-TH(ILAY-1,2)
+  BOT(ILAY)=TOP(ILAY)-TH(ILAY,1) 
+ ENDDO
+
+ TH=0.0D0
+ !## get thickness of aquifers
+ DO ILAY=1,NLAY;   TH(ILAY,1)=TOP(ILAY)-BOT(ILAY); ENDDO
+ !## get thickness of aquitards
+ DO ILAY=1,NLAY-1; TH(ILAY,2)=BOT(ILAY)-TOP(ILAY+1); ENDDO
+
+ !## correct permeabilities for aquifers - leave k-aquitard intact
  DO ILAY=1,NLAY
 
   !## skip inactive cells
   IF(BND(ILAY).EQ.0)CYCLE
   
-  !## in aquifer
-  Z=0.5D0*(TOP(ILAY)+BOT(ILAY))
+  KD=0.0D0
+  TC=0.0D0
 
+  !## add existing aquifers
   DO JLAY=1,NLAY
-   IF(TOP_BU(JLAY).GE.Z.AND.BOT_BU(JLAY).LE.Z)THEN; HK(ILAY)=HK(JLAY); VA(ILAY)=VA(JLAY); EXIT; ENDIF
-   IF(JLAY.LT.NLAY)THEN
-    IF(BOT_BU(JLAY).GE.Z.AND.TOP_BU(JLAY+1).LE.Z)THEN; HK(ILAY)=VK(JLAY); VA(ILAY)=1.0D0; EXIT; ENDIF
+   T =MIN(TOP(ILAY),TOP_BU(JLAY)) 
+   B =MAX(BOT(ILAY),BOT_BU(JLAY)) 
+   TT=T-B
+   IF(TT.GT.0.0D0)THEN
+    KD=KD+TT*HK_BU(JLAY)
+    TC=TC+TT/HK_BU(JLAY)*VA_BU(JLAY)
    ENDIF
   ENDDO
+
+  !## add existing aquitards
+  DO JLAY=1,NLAY-1
+   T =MIN(TOP(ILAY),BOT_BU(JLAY)) 
+   B =MAX(BOT(ILAY),TOP_BU(JLAY+1)) 
+   TT=T-B
+   IF(TT.GT.0.0D0)THEN
+    KD=KD+TT*VK_BU(JLAY)
+    TC=TC+TT/VK_BU(JLAY)
+   ENDIF
+  ENDDO
+
+  TT=TOP(ILAY)-BOT(ILAY)
+  HK(ILAY)=KD/TT
+  VK(ILAY)=TT/TC
   
-  !## no horizontal flow
-  IF(HK(ILAY).LE.0.0D0)HK(ILAY)=0.01D0
-  !## easy vertical flow
-  IF(VA(ILAY).LE.0.0D0)VA(ILAY)=100.0D0
- 
+  !## minimal horizontal k first layer is 0.5m2/d
+  F=KD/0.5D0
+  IF(F.LT.1.0D0)HK(ILAY)=HK(ILAY)/F
+  VA(ILAY)=VK(ILAY)/HK(ILAY)
+  
  ENDDO
  
  END SUBROUTINE UTL_MINTHICKNESS
