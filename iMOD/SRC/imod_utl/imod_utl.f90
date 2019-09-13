@@ -944,7 +944,9 @@ DOLOOP: DO
  REAL(KIND=DP_KIND),INTENT(IN) :: MINTHICKNESS
  INTEGER :: ILAY,JLAY
  REAL(KIND=DP_KIND) :: T,B,T1,T2,KD,MT,F,TT1,TT2,DT,TT,TC,KV
-
+ INTEGER :: IU,I
+ CHARACTER(LEN=24) :: FRM
+ 
  !## make sure no negative-thicknesses in original set
  DO ILAY=1,NLAY
   IF(ILAY.GT.1)TOP(ILAY)=MIN(TOP(ILAY),BOT(ILAY-1))
@@ -1000,6 +1002,19 @@ DOLOOP: DO
  ENDDO
  !## minimal appropriate layer thickness
  MT=(TT1+TT2)/DBLE(NLAY); MT=MIN(MINTHICKNESS,MT)
+ 
+ !## remove everything - model here is too thin
+ IF(MT.LT.0.25D0*MINTHICKNESS)THEN
+  DO ILAY=1,NLAY
+   BND(ILAY)=0
+   TOP(ILAY)=TOP(1)
+   BOT(ILAY)=TOP(1)
+   HK(ILAY)=0.0D0
+   VA(ILAY)=0.0D0
+   VK(ILAY)=0.0D0
+  ENDDO
+  RETURN
+ ENDIF
  
  !## adjust thicknesses
  DO ILAY=1,NLAY
@@ -1118,10 +1133,9 @@ DOLOOP: DO
  ENDDO
  
  !## get thickness of aquifers
- TH=0.0D0
- DO ILAY=1,NLAY; TH(ILAY,1)=TOP_BU(ILAY)-BOT_BU(ILAY); ENDDO
+ TH=0.0D0; DO ILAY=1,NLAY; TH(ILAY,1)=TOP(ILAY)-BOT(ILAY); ENDDO
  !## get thickness of aquitards
- DO ILAY=1,NLAY-1; TH(ILAY,2)=BOT_BU(ILAY)-TOP_BU(ILAY+1); ENDDO
+ DO ILAY=1,NLAY-1; TH(ILAY,2)=BOT(ILAY)-TOP(ILAY+1); ENDDO
 
  !## get total sum of transmissivity
  TT=0.0D0; DO ILAY=1,NLAY
@@ -1136,8 +1150,7 @@ DOLOOP: DO
  TT1=TT; TT2=TC
  
  !## get thickness of aquifers
- TH=0.0D0
- DO ILAY=1,NLAY; TH(ILAY,1)=TOP_BU(ILAY)-BOT_BU(ILAY); ENDDO
+ TH=0.0D0; DO ILAY=1,NLAY; TH(ILAY,1)=TOP_BU(ILAY)-BOT_BU(ILAY); ENDDO
  !## get thickness of aquitards
  DO ILAY=1,NLAY-1; TH(ILAY,2)=BOT_BU(ILAY)-TOP_BU(ILAY+1); ENDDO
 
@@ -1153,11 +1166,24 @@ DOLOOP: DO
  ENDDO
  T1=TT; T2=TC
 
- IF(ABS(TT1-T1).GT.0.01D0*T1)THEN
-  WRITE(*,'(/1X,A,2F15.7/)') 'Error in consistency check ',TT1,T1
- ENDIF
- IF(ABS(TT2-T2).GT.0.01D0*T2)THEN
-  WRITE(*,'(/1X,A,2F15.7/)') 'Error in consistency check ',TT2,T2
+ IF(ABS(TT1-T1).GT.0.01D0*T1.OR.ABS(TT2-T2).GT.0.01D0*T2)THEN
+  IU=UTL_GETUNIT(); OPEN(IU,FILE='VAR.F90',STATUS='UNKNOWN',ACTION='WRITE',FORM='FORMATTED')
+  WRITE(FRM,'(A3,I3.3,A10)') '(A,',NLAY,'(I5,A1),A)'
+  WRITE(IU,FRM) 'DATA BND/',(BND(I),',',I=1,NLAY-1),BND(NLAY),'/'
+  WRITE(FRM,'(A3,I3.3,A13)') '(A,',NLAY,'(F10.3,A1),A)'
+  WRITE(IU,FRM) 'DATA TOP/',(TOP(I),',',I=1,NLAY-1),TOP(NLAY),'/'
+  WRITE(IU,FRM) 'DATA BOT/',(BOT(I),',',I=1,NLAY-1),BOT(NLAY),'/'
+  WRITE(IU,FRM) 'DATA HK/',(HK(I),',',I=1,NLAY-1),HK(NLAY),'/'
+  WRITE(IU,FRM) 'DATA VA/',(VA(I),',',I=1,NLAY-1),VA(NLAY),'/'
+  WRITE(IU,FRM) 'DATA VK/',(VK(I),',',I=1,NLAY-1),VK(NLAY),'/'
+  WRITE(IU,FRM) 'DATA TOP_BU/',(TOP_BU(I),',',I=1,NLAY-1),TOP_BU(NLAY),'/'
+  WRITE(IU,FRM) 'DATA BOT_BU/',(BOT_BU(I),',',I=1,NLAY-1),BOT_BU(NLAY),'/'
+  WRITE(IU,FRM) 'DATA HK_BU/',(HK_BU(I),',',I=1,NLAY-1),HK_BU(NLAY),'/'
+  WRITE(IU,FRM) 'DATA VA_BU/',(VA_BU(I),',',I=1,NLAY-1),VA_BU(NLAY),'/'
+  WRITE(IU,FRM) 'DATA VK_BU/',(VK_BU(I),',',I=1,NLAY-1),VK_BU(NLAY),'/'
+  CLOSE(IU)
+  IF(ABS(TT1-T1).GT.0.01D0*T1)WRITE(*,'(/1X,A,2F15.7/)') 'Error in consistency check KD ',TT1,T1
+  IF(ABS(TT2-T2).GT.0.01D0*T2)WRITE(*,'(/1X,A,2F15.7/)') 'Error in consistency check VC ',TT2,T2
  ENDIF
  
  !## minimal horizontal k first layer is 0.5m2/d
