@@ -39,8 +39,8 @@ CONTAINS
  INTEGER,PARAMETER :: NCSECS=1000
  INTEGER,INTENT(IN) :: IBATCH
  CHARACTER(LEN=*),INTENT(IN) :: DIR,MNAME
- REAL(KIND=DP_KIND) :: RFIT
- INTEGER :: I,J,ITER,N,M,IFLAGS,ISTATUS,IEXCOD,ITYPE,IGRAD,ILIN,JGRAD,NCPU,IU
+ REAL(KIND=DP_KIND) :: RFIT,F
+ INTEGER :: I,J,ITER,N,M,IFLAGS,IEXCOD,ITYPE,IGRAD,ILIN,JGRAD,NCPU,IU,NDONE
  TYPE(WIN_MESSAGE) :: MESSAGE
  INTEGER,DIMENSION(2) :: IDPROC
  
@@ -188,10 +188,16 @@ CONTAINS
   !## start finite difference approximation for parameters
   CALL WMESSAGETIMER(NCSECS,IREPEAT=1); ILIN=0; IGRAD=0; NCPU=0; IPROC=0
 
+  ISTATUS=-1
   DO 
 
+   !## start processes
    DO
-    IGRAD=IGRAD+1
+
+    !## find gradient simulation to be (re)carried out
+    DO IGRAD=1,SIZE(RNG); IF(ISTATUS(IGRAD).EQ.-1)EXIT; ENDDO
+    IF(IGRAD.GT.SIZE(RNG))EXIT
+    
     !## number of cpu full
     NCPU=NCPU+1
     !## consider number of cpu's
@@ -216,48 +222,54 @@ CONTAINS
       IF(IBATCH.EQ.0)CALL WMESSAGEBOX(OKONLY,EXCLAMATIONICON,COMMONOK,'FAILED TO START MODEL P#'//TRIM(ITOS(GPARAM(IGRAD))),'Error')
       RETURN
      ENDIF
+     ISTATUS(IGRAD)=1
+!     F=DBLE(NDONE)*100.0D0/DBLE(SIZE(RNG))
+!     WRITE(*,'(A)') 'Starting Model P#'//TRIM(ITOS(GPARAM(IGRAD)))//' completed: '//TRIM(RTOS(F,'F',2))//'%'
     ELSE
      !## set fake processnumber in restart mode
      IPROC(1,IGRAD)=IGRAD
      IPROC(2,IGRAD)=0
+     ISTATUS(IGRAD)=1
     ENDIF
     
     !## all started
-    IF(IGRAD.EQ.SIZE(RNG))EXIT
+    DO IGRAD=1,SIZE(RNG); IF(ISTATUS(IGRAD).EQ.-1)EXIT; ENDDO; IF(IGRAD.GT.SIZE(RNG))EXIT
     !## maximum number of cpu reached
     IF(NCPU.GE.PBMAN%NCPU)EXIT
    ENDDO
-
-   !## check processes
+   
+   !## evaluate processes
    WRITE(*,*)
    DO
     CALL WMESSAGE(ITYPE,MESSAGE)
     !## timer expired
     IF(ITYPE.EQ.TIMEREXPIRED)THEN
-
      N=0; DO JGRAD=1,SIZE(RNG)
       !## all handled process
       IF(IPROC(1,JGRAD)+IPROC(2,JGRAD).EQ.0)CYCLE
       !## check running status
       IDPROC=IPROC(:,JGRAD)
       IF(PBMAN%PRESTART.EQ.0)THEN
-       CALL IOSCOMMANDCHECK(IDPROC,ISTATUS,IEXCOD=IEXCOD)
+       CALL IOSCOMMANDCHECK(IDPROC,ISTATUS(JGRAD),IEXCOD=IEXCOD)
       ELSE
-       ISTATUS=0; IEXCOD=0
+       ISTATUS(JGRAD)=0; IEXCOD=0
       ENDIF
       !## stopped running
-      IF(ISTATUS.EQ.0)THEN
+      IF(ISTATUS(JGRAD).EQ.0)THEN
        !## error occured 
        IF(IEXCOD.NE.0)THEN
         IF(IBATCH.EQ.1)WRITE(*,'(/A/)') 'ERROR OCCURED RUNNING MODEL P#'//TRIM(ITOS(GPARAM(JGRAD)))
         IF(IBATCH.EQ.0)CALL WMESSAGEBOX(OKONLY,EXCLAMATIONICON,COMMONOK,'ERROR OCCURED RUNNING MODEL P#'//TRIM(ITOS(GPARAM(JGRAD))),'Error')
-        RETURN
+        !## try again - need to run again
+        ISTATUS(JGRAD)=-1
        ENDIF
        !## set part of objective function
-       IF(.NOT.IPEST_GLM_GETJ(DIR,JGRAD,GPARAM(JGRAD),'P',IBATCH))RETURN
-       !## write echo
-       CALL IPEST_GLM_PROGRESS(ITER,JGRAD,ILIN,'P')
-       FLUSH(IUPESTPROGRESS)
+       IF(ISTATUS(JGRAD).EQ.0)THEN
+        IF(.NOT.IPEST_GLM_GETJ(DIR,JGRAD,GPARAM(JGRAD),'P',IBATCH))RETURN
+        !## write echo
+        CALL IPEST_GLM_PROGRESS(ITER,JGRAD,ILIN,'P')
+        FLUSH(IUPESTPROGRESS)
+       ENDIF
        !## reset running handle proces
        IPROC(:,JGRAD)=0
        !## release cpu so another can be started
@@ -270,12 +282,17 @@ CONTAINS
      !## nothing running anymore
      IF(N.EQ.0)EXIT
      IF(N.GT.0)WRITE(6,'(A)') '+STILL RUNNING '//TRIM(ITOS(N))//' MODELS     '
+     !## how much done?
+     NDONE=0; DO IGRAD=1,SIZE(RNG); IF(ISTATUS(IGRAD).EQ.0)NDONE=NDONE+1; ENDDO
+     F=DBLE(NDONE)*100.0D0/DBLE(SIZE(RNG))
+     WRITE(*,'(A)') 'Completed: '//TRIM(RTOS(F,'F',2))//'%'
      !## start another one as a proces has been stopped and there is still one waiting in the que
-     IF(NCPU.LT.PBMAN%NCPU.AND.IGRAD.LT.SIZE(RNG))EXIT
+     IF(NCPU.LT.PBMAN%NCPU.AND.NDONE.LT.SIZE(RNG))EXIT !IGRAD.LT.SIZE(RNG))EXIT
     ENDIF
    ENDDO
-   !## finished
-   IF(IGRAD.EQ.SIZE(RNG))EXIT
+   !## finished if all succesfully completed
+   DO IGRAD=1,SIZE(RNG); IF(ISTATUS(IGRAD).EQ.-1)EXIT; ENDDO
+   IF(IGRAD.GT.SIZE(RNG))EXIT
   ENDDO
   
   !## determine new gradient
@@ -690,7 +707,7 @@ MAINLOOP: DO
  
  CALL IPEST_GLM_DEALLOCATE()
  M=PBMAN%NLINESEARCH
- ALLOCATE(RNG(N),RNL(M),IPROC(2,N),GPARAM(N),LPARAM(M))
+ ALLOCATE(RNG(N),RNL(M),IPROC(2,N),GPARAM(N),LPARAM(M),ISTATUS(N))
  
  END SUBROUTINE IPEST_GLM_ALLOCATE
 
@@ -699,11 +716,12 @@ MAINLOOP: DO
  !#####=================================================================
  IMPLICIT NONE
 
- IF(ALLOCATED(RNG))   DEALLOCATE(RNG)
- IF(ALLOCATED(RNL))   DEALLOCATE(RNL)
- IF(ALLOCATED(IPROC)) DEALLOCATE(IPROC)
- IF(ALLOCATED(GPARAM))DEALLOCATE(GPARAM)
- IF(ALLOCATED(LPARAM))DEALLOCATE(LPARAM)
+ IF(ALLOCATED(RNG))    DEALLOCATE(RNG)
+ IF(ALLOCATED(RNL))    DEALLOCATE(RNL)
+ IF(ALLOCATED(IPROC))  DEALLOCATE(IPROC)
+ IF(ALLOCATED(GPARAM)) DEALLOCATE(GPARAM)
+ IF(ALLOCATED(LPARAM)) DEALLOCATE(LPARAM)
+ IF(ALLOCATED(ISTATUS))DEALLOCATE(ISTATUS)
  
  END SUBROUTINE IPEST_GLM_DEALLOCATE
  

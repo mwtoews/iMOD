@@ -942,10 +942,8 @@ DOLOOP: DO
  REAL(KIND=DP_KIND),INTENT(INOUT),DIMENSION(NLAY) :: TOP,BOT,HK,VK,VA,TOP_BU,BOT_BU,HK_BU,VK_BU,VA_BU
  REAL(KIND=DP_KIND),INTENT(INOUT),DIMENSION(NLAY,2) :: TH
  REAL(KIND=DP_KIND),INTENT(IN) :: MINTHICKNESS
- INTEGER :: ILAY,JLAY,IL 
- REAL(KIND=DP_KIND) :: K,T,B,T1,T2,B1,D,KD,VC,MT,F,TT1,TT2,DT,TT,Z,TC
-
-! NLAY=SIZE(BND)
+ INTEGER :: ILAY,JLAY
+ REAL(KIND=DP_KIND) :: T,B,T1,T2,KD,MT,F,TT1,TT2,DT,TT,TC,KV
 
  !## make sure no negative-thicknesses in original set
  DO ILAY=1,NLAY
@@ -994,9 +992,14 @@ DOLOOP: DO
  ENDDO
 
  !## total thickness
- TT1=0.0D0; TT2=0.0D0; DO ILAY=1,NLAY; IF(BND(ILAY).NE.0)TT1=TT1+TH(ILAY,1); IF(ILAY.LE.NLAY)TT2=TT2+TH(ILAY,2); ENDDO
+ TT1=0.0D0; TT2=0.0D0; DO ILAY=1,NLAY
+  IF(BND(ILAY).NE.0)THEN
+   TT1=TT1+TH(ILAY,1)
+   IF(ILAY.LE.NLAY)TT2=TT2+TH(ILAY,2)
+  ENDIF
+ ENDDO
  !## minimal appropriate layer thickness
- MT=(TT1-TT2)/DBLE(NLAY); MT=MIN(MINTHICKNESS,MT)
+ MT=(TT1+TT2)/DBLE(NLAY); MT=MIN(MINTHICKNESS,MT)
  
  !## adjust thicknesses
  DO ILAY=1,NLAY
@@ -1050,6 +1053,25 @@ DOLOOP: DO
   BOT(ILAY)=TOP(ILAY)-TH(ILAY,1) 
  ENDDO
 
+ !## may never exceed bottom
+ DO JLAY=NLAY,1,-1; IF(BND(JLAY).NE.0)EXIT; ENDDO
+ !## include aquitard
+ IF(JLAY.EQ.NLAY)THEN
+  TT=BOT_BU(JLAY)
+ ELSE
+  TT=TOP_BU(JLAY+1)
+ ENDIF
+ !## set all below to this "new" base
+ DO ILAY=JLAY+1,NLAY
+  BOT(ILAY)=TT; TOP(ILAY)=TT
+ ENDDO
+ 
+ DO ILAY=JLAY,1,-1
+  BOT(ILAY)=MAX(BOT(ILAY),TT)
+  TT=TT+MT
+  TOP(ILAY)=MAX(TOP(ILAY),TT)
+ ENDDO
+
  TH=0.0D0
  !## get thickness of aquifers
  DO ILAY=1,NLAY;   TH(ILAY,1)=TOP(ILAY)-BOT(ILAY); ENDDO
@@ -1072,7 +1094,7 @@ DOLOOP: DO
    TT=T-B
    IF(TT.GT.0.0D0)THEN
     KD=KD+TT*HK_BU(JLAY)
-    TC=TC+TT/HK_BU(JLAY)*VA_BU(JLAY)
+    TC=TC+TT/(HK_BU(JLAY)/VA_BU(JLAY))
    ENDIF
   ENDDO
 
@@ -1089,15 +1111,59 @@ DOLOOP: DO
 
   TT=TOP(ILAY)-BOT(ILAY)
   HK(ILAY)=KD/TT
-  VK(ILAY)=TT/TC
+  KV      =TT/TC
   
-  !## minimal horizontal k first layer is 0.5m2/d
-  F=KD/0.5D0
-  IF(F.LT.1.0D0)HK(ILAY)=HK(ILAY)/F
-  VA(ILAY)=VK(ILAY)/HK(ILAY)
+  VA(ILAY)=HK(ILAY)/KV
   
  ENDDO
  
+ !## get thickness of aquifers
+ TH=0.0D0
+ DO ILAY=1,NLAY; TH(ILAY,1)=TOP_BU(ILAY)-BOT_BU(ILAY); ENDDO
+ !## get thickness of aquitards
+ DO ILAY=1,NLAY-1; TH(ILAY,2)=BOT_BU(ILAY)-TOP_BU(ILAY+1); ENDDO
+
+ !## get total sum of transmissivity
+ TT=0.0D0; DO ILAY=1,NLAY
+  TT=TT+TH(ILAY,1)*HK(ILAY)
+  IF(ILAY.LT.NLAY)TT=TT+TH(ILAY,2)*VK(ILAY)
+ ENDDO
+ !## get total vertical resistance
+ TC=0.0D0; DO ILAY=1,NLAY
+  TC=TC+TH(ILAY,1)/(HK(ILAY)/VA(ILAY))
+  IF(ILAY.LT.NLAY)TC=TC+TH(ILAY,2)/VK(ILAY)
+ ENDDO
+ TT1=TT; TT2=TC
+ 
+ !## get thickness of aquifers
+ TH=0.0D0
+ DO ILAY=1,NLAY; TH(ILAY,1)=TOP_BU(ILAY)-BOT_BU(ILAY); ENDDO
+ !## get thickness of aquitards
+ DO ILAY=1,NLAY-1; TH(ILAY,2)=BOT_BU(ILAY)-TOP_BU(ILAY+1); ENDDO
+
+ !## get total sum of transmissivity
+ TT=0.0D0; DO ILAY=1,NLAY
+  TT=TT+TH(ILAY,1)*HK_BU(ILAY)
+  IF(ILAY.LT.NLAY)TT=TT+TH(ILAY,2)*VK_BU(ILAY)
+ ENDDO
+ !## get total vertical resistance
+ TC=0.0D0; DO ILAY=1,NLAY
+  IF((HK_BU(ILAY)/VA_BU(ILAY)).GT.0.0D0)TC=TC+TH(ILAY,1)/(HK_BU(ILAY)/VA_BU(ILAY))
+  IF(ILAY.LT.NLAY)TC=TC+TH(ILAY,2)/VK_BU(ILAY)
+ ENDDO
+ T1=TT; T2=TC
+
+ IF(ABS(TT1-T1).GT.0.01D0*T1)THEN
+  WRITE(*,'(/1X,A,2F15.7/)') 'Error in consistency check ',TT1,T1
+ ENDIF
+ IF(ABS(TT2-T2).GT.0.01D0*T2)THEN
+  WRITE(*,'(/1X,A,2F15.7/)') 'Error in consistency check ',TT2,T2
+ ENDIF
+ 
+ !## minimal horizontal k first layer is 0.5m2/d
+ ILAY=1; KD=(TOP(ILAY)-BOT(ILAY))*HK(ILAY)
+ F=KD/0.5D0; IF(F.LT.1.0D0)HK(ILAY)=HK(ILAY)/F
+
  END SUBROUTINE UTL_MINTHICKNESS
 
  !###======================================================================
