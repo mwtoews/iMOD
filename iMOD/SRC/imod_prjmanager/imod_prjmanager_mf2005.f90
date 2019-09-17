@@ -1008,6 +1008,8 @@ CONTAINS
  IF(.NOT.PMANAGER_SAVEMF2005_BCF_READ(ISS,IPRT))RETURN
  !## read lpf
  IF(.NOT.PMANAGER_SAVEMF2005_LPF_READ(ISS,IPRT))RETURN
+ !## compute kdw/vcw
+ CALL PMANAGER_SAVEMF2005_COMPUTE_KDW_VCW()
  !## read ani
  IF(.NOT.PMANAGER_SAVEMF2005_ANI_READ(IPRT))RETURN
  !## read top/bot information
@@ -1021,6 +1023,8 @@ CONTAINS
 
  !## apply consistency checks
  CALL PMANAGER_SAVEMF2005_CONSISTENCY(LTB)
+ !## recompute kdw/vcw
+ CALL PMANAGER_SAVEMF2005_COMPUTE_KDW_VCW()
  !## get lak position and conductances
  IF(.NOT.PMANAGER_SAVEMF2005_LAK_CONFIG())RETURN
 
@@ -1571,20 +1575,22 @@ CONTAINS
   ENDDO; ENDDO; ENDDO
  ENDIF
  
- !## clean from bottom to top inactive layers with zero conductance
- DO IROW=1,PRJIDF%NROW; DO ICOL=1,PRJIDF%NCOL
-  DO ILAY=PRJNLAY,1,-1
-   IF(KDW(ILAY)%X(ICOL,IROW).LE.0.0D0)THEN
-    IF(ILAY.GT.1)VCW(ILAY-1)%X(ICOL,IROW)=0.0D0
-    KDW(ILAY)%X(ICOL,IROW)=0.0D0   
-    BND(ILAY)%X(ICOL,IROW)=0.0D0
-   ELSE
-    !## stop search for this location
-    EXIT
-   ENDIF
-  ENDDO
- ENDDO; ENDDO
-
+ !## clean from bottom to top inactive layers with zero conductance - in case of iconsistency.eq.2
+ IF(PBMAN%ICONSISTENCY.NE.2)THEN
+  DO IROW=1,PRJIDF%NROW; DO ICOL=1,PRJIDF%NCOL
+   DO ILAY=PRJNLAY,1,-1
+    IF(KDW(ILAY)%X(ICOL,IROW).LE.0.0D0)THEN
+     IF(ILAY.GT.1)VCW(ILAY-1)%X(ICOL,IROW)=0.0D0
+     KDW(ILAY)%X(ICOL,IROW)=0.0D0   
+     BND(ILAY)%X(ICOL,IROW)=0.0D0
+    ELSE
+     !## stop search for this location
+     EXIT
+    ENDIF
+   ENDDO
+  ENDDO; ENDDO
+ ENDIF
+ 
  IF(.NOT.LTB)RETURN
 
  !## apply consistency check top/bot
@@ -1625,7 +1631,7 @@ CONTAINS
     DO ILAY=1,PRJNLAY  ; VA(ILAY)=KVA(ILAY)%X(ICOL,IROW); ENDDO
     VK=0.0D0; DO ILAY=1,PRJNLAY-1; VK(ILAY)=KVV(ILAY)%X(ICOL,IROW); ENDDO
     
-    if(icol.eq.1058.and.irow.eq.594)then
+    if(icol.eq.768.and.irow.eq.1252)then
      write(*,*) 
     endif
     
@@ -1685,19 +1691,21 @@ CONTAINS
  ENDDO; ENDDO; ENDDO 
 
  !## clean from bottom to top inactive layers with zero conductance
- DO IROW=1,PRJIDF%NROW; DO ICOL=1,PRJIDF%NCOL
-  DO ILAY=PRJNLAY,1,-1
-   IF(KDW(ILAY)%X(ICOL,IROW).LE.0.0D0)THEN
-    IF(ILAY.GT.1)VCW(ILAY-1)%X(ICOL,IROW)=0.0D0
-    KDW(ILAY)%X(ICOL,IROW)=0.0D0   
-    BND(ILAY)%X(ICOL,IROW)=0.0D0
-   ELSE
-    !## stop search for this location
-    EXIT
-   ENDIF
-  ENDDO
- ENDDO; ENDDO
-
+ IF(PBMAN%ICONSISTENCY.NE.2)THEN
+  DO IROW=1,PRJIDF%NROW; DO ICOL=1,PRJIDF%NCOL
+   DO ILAY=PRJNLAY,1,-1
+    IF(KDW(ILAY)%X(ICOL,IROW).LE.0.0D0)THEN
+     IF(ILAY.GT.1)VCW(ILAY-1)%X(ICOL,IROW)=0.0D0
+     KDW(ILAY)%X(ICOL,IROW)=0.0D0   
+     BND(ILAY)%X(ICOL,IROW)=0.0D0
+    ELSE
+     !## stop search for this location
+     EXIT
+    ENDIF
+   ENDDO
+  ENDDO; ENDDO
+ ENDIF
+ 
  END SUBROUTINE PMANAGER_SAVEMF2005_CONSISTENCY
  
  !###======================================================================
@@ -2677,6 +2685,19 @@ IRLOOP: DO IROW=1,PRJIDF%NROW; DO ICOL=1,PRJIDF%NCOL
   ENDIF
  ENDDO  
  
+ DEALLOCATE(FNAMES,PRJILIST)
+
+ PMANAGER_SAVEMF2005_LPF_READ=.TRUE.
+ 
+ END FUNCTION PMANAGER_SAVEMF2005_LPF_READ
+
+ !####====================================================================
+ SUBROUTINE PMANAGER_SAVEMF2005_COMPUTE_KDW_VCW()
+ !####====================================================================
+ IMPLICIT NONE
+ INTEGER :: ILAY,IROW,ICOL
+ REAL(KIND=DP_KIND) :: T,T1,T2,T3
+ 
  !## compute transmissivity - could be used by packages to assign to modellayers
  DO ILAY=1,PRJNLAY; DO IROW=1,PRJIDF%NROW; DO ICOL=1,PRJIDF%NCOL
   IF(BND(ILAY)%X(ICOL,IROW).NE.0)THEN
@@ -2718,11 +2739,7 @@ IRLOOP: DO IROW=1,PRJIDF%NROW; DO ICOL=1,PRJIDF%NCOL
   ENDIF
  ENDDO; ENDDO; ENDDO
  
- DEALLOCATE(FNAMES,PRJILIST)
-
- PMANAGER_SAVEMF2005_LPF_READ=.TRUE.
- 
- END FUNCTION PMANAGER_SAVEMF2005_LPF_READ
+ END SUBROUTINE PMANAGER_SAVEMF2005_COMPUTE_KDW_VCW
  
  !####====================================================================
  LOGICAL FUNCTION PMANAGER_SAVEMF2005_LPF_SAVE(DIR,DIRMNAME,IBATCH,ISS)

@@ -952,21 +952,21 @@ DOLOOP: DO
   IF(ILAY.GT.1)TOP(ILAY)=MIN(TOP(ILAY),BOT(ILAY-1))
   BOT(ILAY)=MIN(TOP(ILAY),BOT(ILAY))
  ENDDO
- !## clean boundary for zero-thickness layers from the bottom
- DO ILAY=NLAY,1,-1
-  IF(TOP(ILAY)-BOT(ILAY).EQ.0.0D0)THEN
-   BND(ILAY)=0
-  ELSE
-   EXIT
-  ENDIF
- ENDDO
+! !## clean boundary for zero-thickness layers from the bottom
+! DO ILAY=NLAY,1,-1
+!  IF(TOP(ILAY)-BOT(ILAY).EQ.0.0D0)THEN
+!   BND(ILAY)=0
+!  ELSE
+!   EXIT
+!  ENDIF
+! ENDDO
  
  TH=0.0D0
  !## get thickness of aquifers
  DO ILAY=1,NLAY;   TH(ILAY,1)=TOP(ILAY)-BOT(ILAY); ENDDO
  !## get thickness of aquitards
  DO ILAY=1,NLAY-1; TH(ILAY,2)=BOT(ILAY)-TOP(ILAY+1); ENDDO
-
+ 
  !## need to have data 
  DO ILAY=1,NLAY
   IF(BND(ILAY).NE.0)THEN
@@ -987,7 +987,7 @@ DOLOOP: DO
  ENDDO
 
  !## nothing to do
- IF(SUM(TH(:,1)).EQ.0.0D0)RETURN
+ IF(SUM(TH(:,1))+SUM(TH(:,2)).EQ.0.0D0)RETURN
 
  !## make backup
  DO ILAY=1,NLAY
@@ -1111,7 +1111,9 @@ DOLOOP: DO
    TT=T-B
    IF(TT.GT.0.0D0)THEN
     KD=KD+TT*HK_BU(JLAY)
-    TC=TC+TT/(HK_BU(JLAY)/VA_BU(JLAY))
+    IF(VA_BU(JLAY).NE.0.0D0.AND.HK_BU(JLAY).NE.0.0D0)THEN
+     TC=TC+TT/(HK_BU(JLAY)/VA_BU(JLAY))
+    ENDIF
    ENDIF
   ENDDO
 
@@ -1121,14 +1123,16 @@ DOLOOP: DO
    B =MAX(BOT(ILAY),TOP_BU(JLAY+1)) 
    TT=T-B
    IF(TT.GT.0.0D0)THEN
-    KD=KD+TT*VK_BU(JLAY)
-    TC=TC+TT/VK_BU(JLAY)
+    IF(VK_BU(JLAY).NE.0.0D0)THEN
+     KD=KD+TT*VK_BU(JLAY)
+     TC=TC+TT/VK_BU(JLAY)
+    ENDIF
    ENDIF
   ENDDO
 
   TT=TOP(ILAY)-BOT(ILAY)
   HK(ILAY)=KD/TT
-  KV      =TT/TC
+  KV=HK(ILAY); IF(TC.NE.0.0D0)KV=TT/TC
   
   VA(ILAY)=HK(ILAY)/KV
   
@@ -1147,7 +1151,7 @@ DOLOOP: DO
  !## get total vertical resistance
  TC=0.0D0; DO ILAY=1,NLAY
   TC=TC+TH(ILAY,1)/(HK(ILAY)/VA(ILAY))
-  IF(ILAY.LT.NLAY)TC=TC+TH(ILAY,2)/VK(ILAY)
+  IF(ILAY.LT.NLAY.AND.VK(ILAY).NE.0.0D0)TC=TC+TH(ILAY,2)/VK(ILAY)
  ENDDO
  TT1=TT; TT2=TC
  
