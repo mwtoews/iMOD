@@ -281,11 +281,11 @@ CONTAINS
      ENDDO   
      !## nothing running anymore
      IF(N.EQ.0)EXIT
-     IF(N.GT.0)WRITE(6,'(A)') '+STILL RUNNING '//TRIM(ITOS(N))//' MODELS     '
+!     IF(N.GT.0)WRITE(6,'(A)') '+STILL RUNNING '//TRIM(ITOS(N))//' MODELS     '
      !## how much done?
      NDONE=0; DO IGRAD=1,SIZE(RNG); IF(ISTATUS(IGRAD).EQ.0)NDONE=NDONE+1; ENDDO
      F=DBLE(NDONE)*100.0D0/DBLE(SIZE(RNG))
-     WRITE(*,'(A)') 'Completed: '//TRIM(RTOS(F,'F',2))//'% (total '//TRIM(ITOS(NDONE))//' out of '//TRIM(ITOS(SIZE(RNG)))//' simulations)'
+     WRITE(6,'(A)') '+Still running '//TRIM(ITOS(N))//'; models completed: '//TRIM(RTOS(F,'F',2))//'% (total '//TRIM(ITOS(NDONE))//' out of '//TRIM(ITOS(SIZE(RNG)))//' simulations)'
      !## start another one as a proces has been stopped and there is still one waiting in the que
      IF(NCPU.LT.PBMAN%NCPU.AND.NDONE.LT.SIZE(RNG))EXIT !IGRAD.LT.SIZE(RNG))EXIT
     ENDIF

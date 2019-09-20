@@ -113,6 +113,8 @@ MODULE MOD_AGGREGATE
   !## read data
   IF(.NOT.LHM_ADDIWHB_READFLIST(IDF,TP,BT,KH,KV,I,SIZE(ALIST),ALIST))STOP 
 
+  !## loop for irow,icol en check rest tot bepaalde diepte --- hoeft niet dieper te kijken als het niet nodig is.
+ 
  ENDDO
  
  IF(.NOT.IDFALLOCATEX(TP))STOP; IF(.NOT.IDFALLOCATEX(BT))STOP
