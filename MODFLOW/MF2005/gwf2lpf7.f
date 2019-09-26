@@ -2058,6 +2058,7 @@ C4------CV FROM BEING HEAD DEPENDENT.
                   IF(HHD.LT.TTOP) TTOP=HHD
                END IF
                BOVK1=(TTOP-BBOT)*HALF/HYC1
+               IF (IMINC.EQ.1) BOVK1 = MAX(BOVK1,MINC)                
 C
 C5------CALCULATE INVERSE LEAKANCE FOR CELL BELOW.
                BBOT=BOTM(J,I,LBOTM(K+1))
@@ -2074,6 +2075,7 @@ C5A-----AND ICONCV FLAGS TURN OFF THIS CORRECTION.
                   IF(HHD.LT.TTOP) B=ZERO
                END IF
                BOVK2=B/HYC2
+               IF (IMINC.EQ.1) BOVK2 = MAX(BOVK2,MINC)
 C
 C6------CALCULATE VERTICAL HYDRAULIC CONDUCTIVITY FOR CONFINING BED.
                IF(LAYCBD(K).NE.0) THEN
@@ -2107,6 +2109,10 @@ C7------CALCULATE INVERSE LEAKANCE FOR CONFINING BED.
                       WRITE(*,*) 'ERROR C IS ',SUMVAL
                       WRITE(*,*) 'FOR ILAY-IROW-ICOL',J,I,K
                       STOP
+                     ENDIF
+                     IF(J.EQ.93.AND.I.EQ.8)THEN
+                      WRITE(99,'(3I10,4F10.2)') J,I,K,SUMVAL,BOVK1,CBBOV
+     1K,BOVK2
                      ENDIF
                      CV(J,I,K)=DELR(J)*DELC(I)/SUMVAL                   ! DLT
                   END IF
