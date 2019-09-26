@@ -286,6 +286,7 @@
 		<File RelativePath="..\..\..\iMOD\SRC\imod_legend\imod_legplot_par.f90"/>
 		<File RelativePath="..\..\..\iMOD\SRC\imod_legend\imod_settings.f90"/></Filter>
 		<Filter Name="imod_ludcmp">
+		<File RelativePath="..\..\SRC\imod_ludcmp\imod_lhc.f90"/>
 		<File RelativePath="..\..\..\iMOD\SRC\imod_ludcmp\imod_ludcmp.f90"/></Filter>
 		<Filter Name="imod_main">
 		<File RelativePath="..\..\..\iMOD\SRC\imod_main\imod_about.f90"/>

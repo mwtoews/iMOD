@@ -290,8 +290,6 @@ CONTAINS
     ENDIF
    ENDDO
    !## finished if all succesfully completed
-!   DO IGRAD=1,SIZE(RNG); IF(ISTATUS(IGRAD)).EQ.-1)EXIT; ENDDO
-!   IF(IGRAD.GT.SIZE(RNG))EXIT
    IF(NDONE.EQ.SIZE(RNG))EXIT
   ENDDO
   
@@ -507,6 +505,56 @@ MAINLOOP: DO
  IPEST_GLM_CHK=.TRUE.
 
  END FUNCTION IPEST_GLM_CHK
+ 
+ !###====================================================================
+ SUBROUTINE IPEST_GLM_APPLY_LHC()
+ !###====================================================================
+ IMPLICIT NONE
+!real,parameter :: kfact=100.0
+!type(idfobj) :: k,dummy,top,bot,pntr
+!real :: z1,z2,d,dxy,p
+ integer :: I,J,N,M,SEED
+ real(kind=8),allocatable,dimension(:,:) :: table
+!character(len=256),dimension(:),pointer :: listname
+!character(len=256) :: dir
+!character(len=10),dimension(10) :: cleg
+!real,dimension(:,:,:),allocatable :: v
+!real,dimension(:,:),allocatable :: x,tv
+ real,dimension(10) :: kleg
+ real,dimension(20) :: nhist,xhist
+ real,dimension(10) :: slegmin,slegmax,slegmean
+ !## from classes
+ data kleg    /1.0e-5,1.0e-4,1.0e-3,1.0e-2,1.0e-1, 1.0e0, 1.0e1, 1.0e2, 1.0e3, 1.0e4/
+ data slegmean/0.06  ,0.27  ,0.20  ,0.20  ,0.33  ,0.32  ,0.30  ,0.28  ,0.24  ,0.21  /
+ data slegmin /0.01  ,0.12  ,0.01  ,0.01  ,0.01  ,0.16  ,0.18  ,0.13  ,0.17  ,0.13  /
+ data slegmax /0.18  ,0.41  ,0.39  ,0.39  ,0.46  ,0.46  ,0.43  ,0.40  ,0.44  ,0.25  /
+
+ !## number of classes
+ m=size(Kleg)
+ !## number of points/samples
+ n=1000
+ seed=2
+ allocate(table(m,n)) !,v(n,2,size(flumy)),tv(size(flumy),2))
+
+ call lhc(n,m,seed,table)
+
+ !## fill in set of porosities
+ do j=1,m
+  slegmean(j)=0.5*(slegmax(j)+slegmin(j))
+  do i=1,n
+   table(j,i)=slegmin(j)+(table(j,i)*(slegmax(j)-slegmin(j)))
+  enddo
+ enddo
+
+ write(*,'(a10,99f10.3)') 'mean',(slegmean(j),j=1,m)
+ write(*,'(a10,99f10.3)') 'min',(slegmin(j),j=1,m)
+ write(*,'(a10,99f10.3)') 'max',(slegmax(j),j=1,m)
+ write(*,'(110a1)') ('-',i=1,m*11)
+ do i=1,n
+  write(*,'(10x,99f10.3)') (table(j,i),j=1,m)
+ enddo
+ 
+ END SUBROUTINE IPEST_GLM_APPLY_LHC
  
  !###====================================================================
  SUBROUTINE IPEST_GLM_RESET_PARAMETER()
@@ -2398,7 +2446,7 @@ MAINLOOP: DO
  CHARACTER(LEN=*),INTENT(IN) :: DIR,CTYPE
  INTEGER,INTENT(IN) :: IGRAD,IPARAM,IBATCH
  INTEGER :: I,J,II,NC,NP,NPERIOD,III,K,KK,ILAY,NROWIPFTXT,IUIPFTXT,NCOLIPFTXT,IOS,NAJ
- REAL(KIND=DP_KIND) :: X,Y,Z,H,WW,MC,MM,DHH,XCOR,YCOR,ZCOR,DHW,DP,F
+ REAL(KIND=DP_KIND) :: X,Y,Z,H,WW,MC,MM,DHH,XCOR,YCOR,ZCOR,DHW,DP,F,DTH
  CHARACTER(LEN=256) :: DIRNAME,FNAME
  CHARACTER(LEN=52) :: CID,TXT
  CHARACTER(LEN=12) :: CEXT
@@ -2473,7 +2521,13 @@ MAINLOOP: DO
     ENDIF
     
     !## calculated - measured
-    DHH=0.0D0; IF(ABS(H-Z).GT.PEST%PE_DRES)DHH=H-Z
+!    DHH=0.0D0; IF(ABS(H-Z).GT.PEST%PE_DRES)DHH=H-Z
+    DHH=H-Z
+    IF(DHH.GT.PEST%PE_DRES)DHH=MAX(DHH-PEST%PE_DRES,0.0D0)
+    IF(DHH.LT.PEST%PE_DRES)DHH=MIN(DHH+PEST%PE_DRES,0.0D0)
+!1-2=1
+!DRES=0.5
+!DUS DH=0.5 EN NIET 1.0
 
     !## save information for measurement
     IF(TRIM(CTYPE).EQ.'P')THEN
@@ -2577,12 +2631,20 @@ MAINLOOP: DO
 
       !## target is residual (calculated minus measured)
       IF(PEST%PE_TARGET(1).GT.0.0D0)THEN
-       IF(ABS(C(K)-M(K)).GT.PEST%PE_DRES)DHH=DHH+PEST%PE_TARGET(1)*(C(K)-M(K)) 
+       DTH=C(K)-M(K)
+       IF(DTH.GT.PEST%PE_DRES)DTH=MAX(DTH-PEST%PE_DRES,0.0D0)
+       IF(DTH.LT.PEST%PE_DRES)DTH=MIN(DTH+PEST%PE_DRES,0.0D0)
+       !IF(ABS().GT.PEST%PE_DRES)DHH=DHH+PEST%PE_TARGET(1)*(C(K)-M(K)) 
+       DHH=DHH+PEST%PE_TARGET(1)*DTH
       ENDIF
       
       !## target is dynamics (calculated minus measured)
       IF(PEST%PE_TARGET(2).GT.0.0D0)THEN
-       IF(ABS(DYN(2)-DYN(1)).GT.PEST%PE_DRES)DHH=DHH+PEST%PE_TARGET(2)*(DYN(2)-DYN(1))
+       DTH=DYN(2)-DYN(1)
+       IF(DTH.GT.PEST%PE_DRES)DTH=MAX(DTH-PEST%PE_DRES,0.0D0)
+       IF(DTH.LT.PEST%PE_DRES)DTH=MIN(DTH+PEST%PE_DRES,0.0D0)
+!       IF(ABS(DYN(2)-DYN(1)).GT.PEST%PE_DRES)DHH=DHH+PEST%PE_TARGET(2)*(DYN(2)-DYN(1))
+       IF(ABS(DYN(2)-DYN(1)).GT.PEST%PE_DRES)DHH=DHH+PEST%PE_TARGET(2)*DTH
       ENDIF
       
       !## calculated - measured
