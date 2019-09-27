@@ -541,7 +541,7 @@ ELSE
   TSDATE=0D0
   DO IREC=1,NREC
 
-   READ(IU,*,IOSTAT=JOS) DBLDATE !IDATE
+   READ(IU,*,IOSTAT=JOS) DBLDATE 
    !## skip this period since it is apparently not a date
    IF(JOS.NE.0)THEN
     DO J=1,ABS(IIPF); DO I=1,TS(J)%NROWIPF; IF(.NOT.TS(J)%STVALUE(I)%VALID)CYCLE; READ(IU,*); ENDDO; ENDDO
@@ -569,7 +569,6 @@ ELSE
        !## read until current date is found
        DO
         READ(JUTXT(II),*,IOSTAT=IOS) TSDATE(II),TSM(II)
-!        READ(JUTXT(II),*,IOSTAT=IOS) TSDATE(II),XXX,TSM(II)
         IF(IOS.NE.0)EXIT
         IF(TSDATE(II).LT.100000000)TSDATE(II)=TSDATE(II)*1000000
         IF(TSDATE(II).GE.DBLDATE)EXIT 

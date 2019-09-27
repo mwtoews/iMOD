@@ -3555,15 +3555,26 @@ IRLOOP: DO IROW=1,PRJIDF%NROW; DO ICOL=1,PRJIDF%NCOL
   
   IF(IPER.GT.0)THEN
 
-   !## output
-   WRITE(IPRT,'(1X,A,I10)') 'Exporting timestep ',IPER  
    !## get appropriate stress-period to store in runfile   
    KPER=PMANAGER_GETCURRENTIPER(IPER,ITOPIC,ITIME,JTIME)
+   !## output
+   WRITE(IPRT,'(1X,A,2I10,2(1X,I14))') 'Exporting timestep ',IPER,KPER,ITIME,JTIME  
+   IF(IBATCH.EQ.1)WRITE(6,'(A,3I6,2(1X,I14))') '+Exporting timestep ',IPER,PRJNPER,KPER,ITIME,JTIME  
 
-   !## always export extraction values
-   KPER=ABS(KPER)
-     
+   !## always export wells per stress-period
+   IF(PBMAN%DWEL.EQ.1)KPER=ABS(KPER)
+
   ENDIF
+  
+  !## reuse previous timestep
+  IF(KPER.LE.0)THEN
+   IF(PBMAN%IFORMAT.EQ.2)THEN
+    IF(IPER.EQ.1)THEN; WRITE(IU,'(I10)') 0
+    ELSE; WRITE(IU,'(I10)') -1; ENDIF
+   ENDIF
+   !## goto next timestep
+   CYCLE
+  ENDIF  
   
   IF(IPER.GT.0)THEN; LINE='NaN'//TRIM(ITOS(IPER+1))//'#'; WRITE(IU,'(A)') TRIM(LINE); ENDIF
   

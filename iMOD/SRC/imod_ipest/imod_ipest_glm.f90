@@ -29,6 +29,7 @@ USE IMODVAR, ONLY : DP_KIND
 USE MOD_PMANAGER_PAR, ONLY : PEST,SIM,PARAM,PRJNLAY,PBMAN,PRJNPER
 USE MOD_UTL, ONLY  : UTL_GETUNIT,UTL_CAP,ITOS,RTOS,UTL_GETMED,UTL_CREATEDIR,UTL_GOODNESS_OF_FIT,UTL_NASH_SUTCLIFFE
 USE MOD_IPEST_GLM_PAR
+USE MOD_LHC, ONLY : LHC
 
 CONTAINS
 
@@ -204,6 +205,8 @@ CONTAINS
 
     IF(PBMAN%PRESTART.EQ.0)THEN
 
+     !## set alphas from predefined factor from a lhc sampling
+    
      !## adjust alpha for current igrad
      CALL IPEST_GLM_NEXTGRAD(GPARAM(IGRAD))
      !## define update in pst file
@@ -223,8 +226,6 @@ CONTAINS
       RETURN
      ENDIF
      ISTATUS(IGRAD)=1
-!     F=DBLE(NDONE)*100.0D0/DBLE(SIZE(RNG))
-!     WRITE(*,'(A)') 'Starting Model P#'//TRIM(ITOS(GPARAM(IGRAD)))//' completed: '//TRIM(RTOS(F,'F',2))//'%'
     ELSE
      !## set fake processnumber in restart mode
      IPROC(1,IGRAD)=IGRAD
@@ -2446,7 +2447,7 @@ MAINLOOP: DO
  CHARACTER(LEN=*),INTENT(IN) :: DIR,CTYPE
  INTEGER,INTENT(IN) :: IGRAD,IPARAM,IBATCH
  INTEGER :: I,J,II,NC,NP,NPERIOD,III,K,KK,ILAY,NROWIPFTXT,IUIPFTXT,NCOLIPFTXT,IOS,NAJ
- REAL(KIND=DP_KIND) :: X,Y,Z,H,WW,MC,MM,DHH,XCOR,YCOR,ZCOR,DHW,DP,F,DTH
+ REAL(KIND=DP_KIND) :: X,Y,Z,H,WW,MC,MM,DHH,XCOR,YCOR,ZCOR,DHW,DP,F,DTH,DTD
  CHARACTER(LEN=256) :: DIRNAME,FNAME
  CHARACTER(LEN=52) :: CID,TXT
  CHARACTER(LEN=12) :: CEXT
@@ -2521,13 +2522,13 @@ MAINLOOP: DO
     ENDIF
     
     !## calculated - measured
-!    DHH=0.0D0; IF(ABS(H-Z).GT.PEST%PE_DRES)DHH=H-Z
     DHH=H-Z
-    IF(DHH.GT.PEST%PE_DRES)DHH=MAX(DHH-PEST%PE_DRES,0.0D0)
-    IF(DHH.LT.PEST%PE_DRES)DHH=MIN(DHH+PEST%PE_DRES,0.0D0)
-!1-2=1
-!DRES=0.5
-!DUS DH=0.5 EN NIET 1.0
+    IF(ABS(DHH).LT.PEST%PE_DRES)THEN
+     DHH=0.0D0
+    ELSE
+     IF(DHH.GT. PEST%PE_DRES)DHH=DHH-PEST%PE_DRES
+     IF(DHH.LT.-PEST%PE_DRES)DHH=DHH+PEST%PE_DRES
+    ENDIF
 
     !## save information for measurement
     IF(TRIM(CTYPE).EQ.'P')THEN
@@ -2545,7 +2546,7 @@ MAINLOOP: DO
     DHW=MSR%W(II)*(DHH**2.0D0); MSR%TJ=MSR%TJ+DHW
     IF(IUPESTRESIDUAL.GT.0.AND.TRIM(CTYPE).EQ.'L')THEN
      WRITE(IUPESTRESIDUAL,'(2(F15.2,A1),I10,A1,6(F15.3,A1),I10,A1,A32)') &
-        X,',',Y,',',ILAY,',',Z,',',H,',',DHW,',',MSR%W(II)*H,',',MSR%W(II)*(H-Z),',',MSR%W(II),',',I,',',MSR%CLABEL(II)
+        X,',',Y,',',ILAY,',',Z,',',H,',',DHW,',',MSR%W(II)*H,',',MSR%W(II)*DHH,',',MSR%W(II),',',I,',',MSR%CLABEL(II)
     ENDIF
     
    ENDDO
@@ -2627,25 +2628,36 @@ MAINLOOP: DO
      !## add observation
      DO K=1,KK
       II =II+1
-      DHH=0.0D0
 
+      DTH=0.0D0
       !## target is residual (calculated minus measured)
       IF(PEST%PE_TARGET(1).GT.0.0D0)THEN
        DTH=C(K)-M(K)
-       IF(DTH.GT.PEST%PE_DRES)DTH=MAX(DTH-PEST%PE_DRES,0.0D0)
-       IF(DTH.LT.PEST%PE_DRES)DTH=MIN(DTH+PEST%PE_DRES,0.0D0)
+       IF(ABS(DTH).LT.PEST%PE_DRES)THEN
+        DTH=0.0D0
+       ELSE
+        IF(DTH.GT. PEST%PE_DRES)DTH=DTH-PEST%PE_DRES
+        IF(DTH.LT.-PEST%PE_DRES)DTH=DTH+PEST%PE_DRES
+       ENDIF
        !IF(ABS().GT.PEST%PE_DRES)DHH=DHH+PEST%PE_TARGET(1)*(C(K)-M(K)) 
-       DHH=DHH+PEST%PE_TARGET(1)*DTH
+       DTH=PEST%PE_TARGET(1)*DTH
       ENDIF
       
       !## target is dynamics (calculated minus measured)
+      DTD=0.0D0
       IF(PEST%PE_TARGET(2).GT.0.0D0)THEN
-       DTH=DYN(2)-DYN(1)
-       IF(DTH.GT.PEST%PE_DRES)DTH=MAX(DTH-PEST%PE_DRES,0.0D0)
-       IF(DTH.LT.PEST%PE_DRES)DTH=MIN(DTH+PEST%PE_DRES,0.0D0)
+       DTD=DYN(2)-DYN(1)
+       IF(ABS(DTD).LT.PEST%PE_DRES)THEN
+        DTD=0.0D0
+       ELSE
+        IF(DTD.GT. PEST%PE_DRES)DTD=DTD-PEST%PE_DRES
+        IF(DTD.LT.-PEST%PE_DRES)DTD=DTD+PEST%PE_DRES
+       ENDIF
 !       IF(ABS(DYN(2)-DYN(1)).GT.PEST%PE_DRES)DHH=DHH+PEST%PE_TARGET(2)*(DYN(2)-DYN(1))
-       IF(ABS(DYN(2)-DYN(1)).GT.PEST%PE_DRES)DHH=DHH+PEST%PE_TARGET(2)*DTH
+       DTD=PEST%PE_TARGET(2)*DTD
       ENDIF
+      
+      DHH=DTH+DTD
       
       !## calculated - measured
       IF(TRIM(CTYPE).EQ.'P')THEN
@@ -2670,7 +2682,7 @@ MAINLOOP: DO
 
       IF(IUPESTRESIDUAL.GT.0.AND.TRIM(CTYPE).EQ.'L')THEN
        WRITE(IUPESTRESIDUAL,'(2(F15.2,A1),I10,A1,8(F15.2,A1),I10,A1,A32,A1,I15)') &
-         X,',',Y,',',ILAY,',',WW,',',M(K),',',C(K),',',C(K)-M(K),',',DYN(1),',',DYN(2),',',DYN(2)-DYN(1),',',XCOR,',',I,',',MSR%CLABEL(II),',',IDATE(K)
+         X,',',Y,',',ILAY,',',WW,',',M(K),',',C(K),',',DTH,',',DYN(1),',',DYN(2),',',DTD,',',XCOR,',',I,',',MSR%CLABEL(II),',',IDATE(K)
       ENDIF
       
       IF(PEST%PE_TARGET(1).EQ.0.0D0.AND.PEST%PE_TARGET(2).GT.0.0D0)EXIT

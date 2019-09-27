@@ -2110,10 +2110,10 @@ C7------CALCULATE INVERSE LEAKANCE FOR CONFINING BED.
                       WRITE(*,*) 'FOR ILAY-IROW-ICOL',J,I,K
                       STOP
                      ENDIF
-                     IF(J.EQ.93.AND.I.EQ.8)THEN
-                      WRITE(99,'(3I10,4F10.2)') J,I,K,SUMVAL,BOVK1,CBBOV
-     1K,BOVK2
-                     ENDIF
+!                     IF(J.EQ.93.AND.I.EQ.8)THEN
+!                      WRITE(99,'(3I10,4F10.2)') J,I,K,SUMVAL,BOVK1,CBBOV
+!     1K,BOVK2
+!                     ENDIF
                      CV(J,I,K)=DELR(J)*DELC(I)/SUMVAL                   ! DLT
                   END IF
                ELSE
