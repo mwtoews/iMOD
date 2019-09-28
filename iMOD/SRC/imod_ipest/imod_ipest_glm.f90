@@ -192,6 +192,9 @@ CONTAINS
   ISTATUS=-1
   DO 
 
+   !## set all alphas from predefined factor from a lhc sampling
+   CALL IPEST_GLM_APPLY_LHC()
+
    !## start processes
    DO
 
@@ -204,9 +207,7 @@ CONTAINS
     !## consider number of cpu's
 
     IF(PBMAN%PRESTART.EQ.0)THEN
-
-     !## set alphas from predefined factor from a lhc sampling
-    
+     
      !## adjust alpha for current igrad
      CALL IPEST_GLM_NEXTGRAD(GPARAM(IGRAD))
      !## define update in pst file
@@ -511,49 +512,41 @@ MAINLOOP: DO
  SUBROUTINE IPEST_GLM_APPLY_LHC()
  !###====================================================================
  IMPLICIT NONE
-!real,parameter :: kfact=100.0
-!type(idfobj) :: k,dummy,top,bot,pntr
-!real :: z1,z2,d,dxy,p
- integer :: I,J,N,M,SEED
- real(kind=8),allocatable,dimension(:,:) :: table
-!character(len=256),dimension(:),pointer :: listname
-!character(len=256) :: dir
-!character(len=10),dimension(10) :: cleg
-!real,dimension(:,:,:),allocatable :: v
-!real,dimension(:,:),allocatable :: x,tv
- real,dimension(10) :: kleg
- real,dimension(20) :: nhist,xhist
- real,dimension(10) :: slegmin,slegmax,slegmean
- !## from classes
- data kleg    /1.0e-5,1.0e-4,1.0e-3,1.0e-2,1.0e-1, 1.0e0, 1.0e1, 1.0e2, 1.0e3, 1.0e4/
- data slegmean/0.06  ,0.27  ,0.20  ,0.20  ,0.33  ,0.32  ,0.30  ,0.28  ,0.24  ,0.21  /
- data slegmin /0.01  ,0.12  ,0.01  ,0.01  ,0.01  ,0.16  ,0.18  ,0.13  ,0.17  ,0.13  /
- data slegmax /0.18  ,0.41  ,0.39  ,0.39  ,0.46  ,0.46  ,0.43  ,0.40  ,0.44  ,0.25  /
+ INTEGER :: I,J,N,SEED
+ REAL(KIND=DP_KIND),ALLOCATABLE,DIMENSION(:,:) :: TABLE
+ REAL(KIND=DP_KIND),DIMENSION(:),ALLOCATABLE :: SLEGMIN,SLEGMAX,SLEGMEAN
 
- !## number of classes
- m=size(Kleg)
+ N=0; DO J=1,SIZE(PEST%PARAM)
+  IF(ABS(PEST%PARAM(J)%PACT).EQ.1.AND.PEST%PARAM(J)%PIGROUP.GT.0)N=N+1
+ ENDDO
+
+ ALLOCATE(SLEGMIN(N),SLEGMAX(N),SLEGMEAN(N),TABLE(N,N))
+
+ N=0; DO I=1,SIZE(PEST%PARAM)
+  IF(PEST%PARAM(I)%PACT.NE.1)CYCLE; N=N+1
+  SLEGMIN(N) =PEST%PARAM(I)%ALPHA(2)-PEST%PARAM(I)%PDELTA
+  SLEGMAX(N) =PEST%PARAM(I)%ALPHA(2)+PEST%PARAM(I)%PDELTA
+  SLEGMEAN(N)=PEST%PARAM(I)%ALPHA(2)
+ ENDDO
+
  !## number of points/samples
- n=1000
- seed=2
- allocate(table(m,n)) !,v(n,2,size(flumy)),tv(size(flumy),2))
+ SEED=2; CALL LHC(N,N,SEED,TABLE)
 
- call lhc(n,m,seed,table)
+ !## fill in set of parameters
+ DO I=1,N
+  SLEGMEAN(I)=0.5D0*(SLEGMAX(I)+SLEGMIN(I))
+  DO J=1,N
+   TABLE(I,J)=SLEGMIN(I)+(TABLE(I,J)*(SLEGMAX(I)-SLEGMIN(I)))
+  ENDDO
+ ENDDO
 
- !## fill in set of porosities
- do j=1,m
-  slegmean(j)=0.5*(slegmax(j)+slegmin(j))
-  do i=1,n
-   table(j,i)=slegmin(j)+(table(j,i)*(slegmax(j)-slegmin(j)))
-  enddo
- enddo
-
- write(*,'(a10,99f10.3)') 'mean',(slegmean(j),j=1,m)
- write(*,'(a10,99f10.3)') 'min',(slegmin(j),j=1,m)
- write(*,'(a10,99f10.3)') 'max',(slegmax(j),j=1,m)
- write(*,'(110a1)') ('-',i=1,m*11)
- do i=1,n
-  write(*,'(10x,99f10.3)') (table(j,i),j=1,m)
- enddo
+ WRITE(*,'(A10,999F10.3)') 'MEAN',(SLEGMEAN(J),J=1,N)
+ WRITE(*,'(A10,999F10.3)') 'MIN',(SLEGMIN(J),J=1,N)
+ WRITE(*,'(A10,999F10.3)') 'MAX',(SLEGMAX(J),J=1,N)
+ WRITE(*,'(999A1)') ('-',I=1,N*11)
+ DO I=1,N
+  WRITE(*,'(10X,999F10.3)') (TABLE(J,I),J=1,N)
+ ENDDO
  
  END SUBROUTINE IPEST_GLM_APPLY_LHC
  
