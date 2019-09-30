@@ -3276,7 +3276,8 @@ c     if (nxch.le.0) ok = .false.
             if (x.le.coord_xll_nb .or. x.ge.coord_xur_nb)valid = .false.
             if (y.le.coord_yll_nb .or. y.ge.coord_yur_nb)valid = .false.
            endif
-           if (ilay.lt.1 .or. ilay.gt.nlay) valid = .false.
+!           if (ilay.lt.1 .or. ilay.gt.nlay) valid = .false.
+           if (ilay.lt.0 .or. ilay.gt.nlay) valid = .false.           
            if(w.eq.0.0)valid=.false.
            ts(jj)%stvalue(i)%valid = valid
            if (valid) then ! store indices
@@ -3288,12 +3289,13 @@ c     if (nxch.le.0) ok = .false.
                  if(icol.gt.0.and.icol.le.ncol.and. 
      &              irow.gt.0.and.irow.le.nrow)then
                   !## check if constant head or inactive cell - make measurement invalid
-                  if(ibound(icol,irow,ilay).le.0)then
-                   ts(jj)%stvalue(i)%valid = .false.
-                  else
+                  if(ilay.gt.0)then
+                   if(ibound(icol,irow,ilay).le.0)then
+                    ts(jj)%stvalue(i)%valid = .false.
+                   endif
+                  endif
                   ts(jj)%stvalue(i)%icol = icol
                   ts(jj)%stvalue(i)%irow = irow
-                  endif
                  else
                   ts(jj)%stvalue(i)%valid = .false.
                  endif
@@ -3319,6 +3321,7 @@ c     if (nxch.le.0) ok = .false.
       logical function mf2005_TimeserieGetHead(igrid)
 !...     modules
       use global, only: hnew, iunit, nlay, nrow, ncol
+      use gwfbasmodule, only: hnoflo
       use gwfmetmodule
       use tsvar
 
@@ -3332,7 +3335,7 @@ c     if (nxch.le.0) ok = .false.
 
 !...     locals
       logical :: ok
-      integer :: jj, i, ilay, irow, icol
+      integer :: jj, i, ilay, irow, icol, jlay
       real(kind=8) :: x, y
       real :: h
 !.......................................................................
@@ -3359,7 +3362,15 @@ c     if (nxch.le.0) ok = .false.
            end if
            ilay = ts(jj)%stvalue(i)%ilay
            if(iipf.gt.0)then
-              h=real(hnew(icol,irow,ilay))
+              !## assign appropriate model layer
+              if(ilay.eq.0)then
+               do jlay=1,nlay
+                if(real(hnew(icol,irow,jlay)).ne.hnoflo)exit
+               enddo
+               h=hnoflo; if(jlay.le.nlay)h=real(hnew(icol,irow,jlay))
+              else
+               h=real(hnew(icol,irow,ilay))
+              endif
            else
               x = ts(jj)%stvalue(i)%x
               y = ts(jj)%stvalue(i)%y

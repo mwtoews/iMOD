@@ -762,7 +762,7 @@ call pks7mpibarrier() ! PKS
              ok = mf2005_TimeserieGetHead(mf_igrid); call DriverChk(ok,'mf2005_TimeserieGetHead')
              call gwf2getcurrentdate(mf_igrid,time_string)  !,issflg(kkper)
              call tserie1init2(lipest,lss,hnoflo,tssavepath,submstr(isub))
-             call tserie1write(0,lss,currentTime,hnoflo,usests,tssavepath,submstr(isub),time_string) !,tssavepath)
+             call tserie1write(0,lss,currentTime,dble(hnoflo),usests,tssavepath,submstr(isub),time_string) !,tssavepath)
 
              !#### TIMESERIES #####
 
@@ -879,7 +879,7 @@ call pks7mpibarrier() ! PKS
  end if
 !#### TIMESERIES #####
  call osd_chdir(root)
- call tserie1write(1,lss,currentTime,hnoflo,usests,tssavepath,submstr(isub),time_string)
+ call tserie1write(1,lss,currentTime,dble(hnoflo),usests,tssavepath,submstr(isub),time_string)
  call tserie1close()
 !#### TIMESERIES #####
 

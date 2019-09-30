@@ -345,7 +345,7 @@ CHARACTER(LEN=*),intent(in) :: root,cdate,subm
 INTEGER,INTENT(IN) :: ISIM
 LOGICAL, INTENT(IN) :: LSS
 DOUBLE PRECISION, INTENT(IN) :: DDATE
-REAL(KIND=4), INTENT(IN) :: MV
+REAL(KIND=8), INTENT(IN) :: MV
 LOGICAL, INTENT(IN) :: USESTS
 ! locals
 INTEGER,ALLOCATABLE,DIMENSION(:) :: IUTXT,JUTXT
@@ -558,6 +558,9 @@ ELSE
 
      !## without impulse/default
      READ(IU,*,IOSTAT=JOS) KK,J,H,W
+     
+     if(h.eq.TSNODATA(II))h=mv
+     
      IF(JOS.NE.0)CYCLE
      IF(KK.NE.JJ)CALL IMOD_UTL_PRINTTEXT(' Something goes wrong in reading summary timeseries on line 532 in imodflow_tseries.f90',2)
 
@@ -581,9 +584,9 @@ ELSE
      ENDIF
 
      IF(TS(JJ)%IEXT.GT.0)THEN
-      WRITE(IUTXT(II),*) DBLDATE,M,H !IDATE,M,H
+      WRITE(IUTXT(II),*) DBLDATE,M,H 
      ELSE
-      WRITE(IUTXT(II),*) DBLDATE,H   !IDATE,H
+      WRITE(IUTXT(II),*) DBLDATE,H   
      ENDIF   
 
     ENDDO

@@ -125,6 +125,8 @@ CONTAINS
    IF(IUPESTRESIDUAL.GT.0)CLOSE(IUPESTRESIDUAL)
    IUPESTRESIDUAL=UTL_GETUNIT(); OPEN(IUPESTRESIDUAL,FILE=TRIM(DIR)//'\IPEST\LOG_PEST_RESIDUAL_'//TRIM(ITOS(ITER))//'.TXT',STATUS='UNKNOWN',ACTION='WRITE')
 
+!   WRITE(6,'(A)') '+Still running '//TRIM(ITOS(N))//'; models completed: '//TRIM(RTOS(F,'F',2))//'% (total '//TRIM(ITOS(NDONE))//' out of '//TRIM(ITOS(SIZE(RNG)))//' simulations)'
+
    IF(PBMAN%PRESTART.EQ.0)THEN
     !## define update in pst file
     IF(.NOT.IPEST_GLM_PST(DIR,MNAME,ILIN,LPARAM(ILIN),'L'))THEN
@@ -192,8 +194,8 @@ CONTAINS
   ISTATUS=-1
   DO 
 
-   !## set all alphas from predefined factor from a lhc sampling
-   CALL IPEST_GLM_APPLY_LHC()
+!   !## set all alphas from predefined factor from a lhc sampling
+!   CALL IPEST_GLM_APPLY_LHC()
 
    !## start processes
    DO
@@ -241,7 +243,6 @@ CONTAINS
    ENDDO
    
    !## evaluate processes
-   WRITE(*,*)
    DO
     CALL WMESSAGE(ITYPE,MESSAGE)
     !## timer expired
