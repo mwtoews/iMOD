@@ -2923,8 +2923,8 @@ c
          
          if(irecalc.eq.1) then
 c-----if the cell is inactive or specified then bypass processing.
-c         if(ibound(ix,iy,iz).ne.0 ) then
-            if(LAYHDT(IZ).EQ.0) then
+c         if(ibound(ix,iy,iz).ne.0 ) then 
+            if(LAYHDT(IZ).EQ.0) then 
 c if confined (THICKNESS IS NOT HEAD-DEPENDENT), don't use hnew=top
               top=BOTM(IX,IY,LBOTM(IZ)-1)
             else

@@ -217,8 +217,18 @@ c open file
       lun=cfn_getlun(10,99)
       if (lun.gt.0) then
 
-         ios=osd_open2(lun,0,file,'old,formatted,readonly,shared')
+         !## wait until it is ther
+         i=0; do   
+          inquire(file=file,exist=found)
+          if(found)exit
+          if(i.eq.0)write(*,'(a)') 'iMODFLOW keeps trying to find '//
+     1trim(file)
+          i=1; call sleep(1)
+         enddo
 
+         !## try to open it
+         ios=osd_open2(lun,0,file,'old,formatted,readonly,shared')
+         
          if (ios.ne.0) then
                ! ERROR opening file
                write(*,*) ' ERROR. opening file. ',
@@ -335,7 +345,6 @@ c allocate
             else
                txtfile = trim(root)//trim(string(iext))//'.'//trim(ext)
                call imod_utl_readipf(stime,etime,q,txtfile,iss)
-!               call imod_utl_readipf(sdate,edate,q,txtfile,iss)
             end if
        
             ii = ii + 1

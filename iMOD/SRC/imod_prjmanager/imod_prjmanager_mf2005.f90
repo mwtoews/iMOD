@@ -347,13 +347,13 @@ CONTAINS
  
   !## place vertical wall
   IF(IPC(ICOL,IROW,1).EQ.INT(1,1))THEN
-   CALL PMANAGER_GENERATEMFNETWORKS_WRITEXY(1,IU,JU,IPC,IDF,IROW,ICOL,N) 
+   CALL PMANAGER_GENERATEMFNETWORKS_WRITEXY(1,IU,JU,IPC,IDF,IROW,ICOL,N,0,0.0D0,0.0D0) 
   ENDIF
  
   !## place horizontal wall
   IF(IPC(ICOL,IROW,2).EQ.INT(1,1))THEN
    !## write line in genfile
-   CALL PMANAGER_GENERATEMFNETWORKS_WRITEXY(2,IU,JU,IPC,IDF,IROW,ICOL,N) 
+   CALL PMANAGER_GENERATEMFNETWORKS_WRITEXY(2,IU,JU,IPC,IDF,IROW,ICOL,N,0,0.0D0,0.0D0) 
   ENDIF
  
  ENDDO; ENDDO
@@ -361,33 +361,66 @@ CONTAINS
  END SUBROUTINE PMANAGER_GENERATEMFNETWORKS_WRITEGEN
  
  !###====================================================================
- SUBROUTINE PMANAGER_GENERATEMFNETWORKS_WRITEXY(IT,IU,JU,IPC,IDF,IROW,ICOL,N)
+ SUBROUTINE PMANAGER_GENERATEMFNETWORKS_WRITEXY(IT,IU,JU,IPC,IDF,IROW,ICOL,N,I3D,T,B)
  !###====================================================================
  IMPLICIT NONE
  TYPE(IDFOBJ),INTENT(IN) :: IDF
- INTEGER,INTENT(IN) :: IROW,ICOL,IU,JU,N,IT
+ INTEGER,INTENT(IN) :: IROW,ICOL,IU,JU,N,IT,I3D
  INTEGER(KIND=1),INTENT(IN),DIMENSION(:,:,:) :: IPC 
+ REAL(KIND=DP_KIND),INTENT(IN) :: T,B
 
- !## place vertical wall
- IF(IT.EQ.1)THEN
-  IF(IPC(ICOL,IROW,1).EQ.INT(1,1))THEN
-   WRITE(IU,'(I10)') N
-   WRITE(IU,'(2(F15.3,A1))') IDF%SX(ICOL),',',IDF%SY(IROW-1)
-   WRITE(IU,'(2(F15.3,A1))') IDF%SX(ICOL),',',IDF%SY(IROW)
-   WRITE(IU,'(A)') 'END'
-   IF(JU.GT.0)WRITE(JU,'(I10,4(A1,F15.3))') N,',',IDF%SX(ICOL),',',IDF%SY(IROW-1),',',IDF%SX(ICOL),',',IDF%SY(IROW)
+ IF(I3D.EQ.0)THEN
+
+  !## place vertical wall
+  IF(IT.EQ.1)THEN
+   IF(IPC(ICOL,IROW,1).EQ.INT(1,1))THEN
+    WRITE(IU,'(I10)') N
+    WRITE(IU,'(2(F15.3,A1))') IDF%SX(ICOL),',',IDF%SY(IROW-1)
+    WRITE(IU,'(2(F15.3,A1))') IDF%SX(ICOL),',',IDF%SY(IROW)
+    WRITE(IU,'(A)') 'END'
+    IF(JU.GT.0)WRITE(JU,'(I10,4(A1,F15.3))') N,',',IDF%SX(ICOL),',',IDF%SY(IROW-1),',',IDF%SX(ICOL),',',IDF%SY(IROW)
+   ENDIF
   ENDIF
- ENDIF
  
- !## place horizontal wall
- IF(IT.EQ.2)THEN
-  IF(IPC(ICOL,IROW,2).EQ.INT(1,1))THEN
-   WRITE(IU,'(I10)') N  
-   WRITE(IU,'(2(F15.3,A1))') IDF%SX(ICOL-1),',',IDF%SY(IROW)
-   WRITE(IU,'(2(F15.3,A1))') IDF%SX(ICOL  ),',',IDF%SY(IROW)
-   WRITE(IU,'(A)') 'END'
-   IF(JU.GT.0)WRITE(JU,'(I10,4(A1,F15.3))') N,',',IDF%SX(ICOL-1),',',IDF%SY(IROW),',',IDF%SX(ICOL  ),',',IDF%SY(IROW)
+  !## place horizontal wall
+  IF(IT.EQ.2)THEN
+   IF(IPC(ICOL,IROW,2).EQ.INT(1,1))THEN
+    WRITE(IU,'(I10)') N  
+    WRITE(IU,'(2(F15.3,A1))') IDF%SX(ICOL-1),',',IDF%SY(IROW)
+    WRITE(IU,'(2(F15.3,A1))') IDF%SX(ICOL  ),',',IDF%SY(IROW)
+    WRITE(IU,'(A)') 'END'
+    IF(JU.GT.0)WRITE(JU,'(I10,4(A1,F15.3))') N,',',IDF%SX(ICOL-1),',',IDF%SY(IROW),',',IDF%SX(ICOL  ),',',IDF%SY(IROW)
+   ENDIF
   ENDIF
+
+ ELSE
+
+  !## place vertical wall
+  IF(IT.EQ.1)THEN
+   IF(IPC(ICOL,IROW,1).EQ.INT(1,1))THEN
+    WRITE(IU,'(I10)') N
+    WRITE(IU,'(3(F15.3,A1))') IDF%SX(ICOL),',',IDF%SY(IROW-1),',',T
+    WRITE(IU,'(3(F15.3,A1))') IDF%SX(ICOL),',',IDF%SY(IROW)  ,',',T
+    WRITE(IU,'(3(F15.3,A1))') IDF%SX(ICOL),',',IDF%SY(IROW)  ,',',B
+    WRITE(IU,'(3(F15.3,A1))') IDF%SX(ICOL),',',IDF%SY(IROW-1),',',B
+    WRITE(IU,'(3(F15.3,A1))') IDF%SX(ICOL),',',IDF%SY(IROW-1),',',T
+    WRITE(IU,'(A)') 'END'
+   ENDIF
+  ENDIF
+ 
+  !## place horizontal wall
+  IF(IT.EQ.2)THEN
+   IF(IPC(ICOL,IROW,2).EQ.INT(1,1))THEN
+    WRITE(IU,'(I10)') N  
+    WRITE(IU,'(3(F15.3,A1))') IDF%SX(ICOL-1),',',IDF%SY(IROW),',',T
+    WRITE(IU,'(3(F15.3,A1))') IDF%SX(ICOL  ),',',IDF%SY(IROW),',',T
+    WRITE(IU,'(3(F15.3,A1))') IDF%SX(ICOL  ),',',IDF%SY(IROW),',',B
+    WRITE(IU,'(3(F15.3,A1))') IDF%SX(ICOL-1),',',IDF%SY(IROW),',',B
+    WRITE(IU,'(3(F15.3,A1))') IDF%SX(ICOL-1),',',IDF%SY(IROW),',',T
+    WRITE(IU,'(A)') 'END'
+   ENDIF
+  ENDIF
+
  ENDIF
  
  END SUBROUTINE PMANAGER_GENERATEMFNETWORKS_WRITEXY
@@ -570,6 +603,10 @@ CONTAINS
       PRJIDF%FNAME=LINE; SCL_UP=15; SCL_D=0
       !## read/clip/scale idf file
       IF(.NOT.IDFREADSCALE(PRJIDF%FNAME,PRJIDF,SCL_UP,SCL_D,1.0D0,0))RETURN
+      !## replace nodata for zero
+      DO IROW=1,PRJIDF%NROW; DO ICOL=1,PRJIDF%NCOL
+       IF(PRJIDF%X(ICOL,IROW).EQ.PRJIDF%NODATA)PRJIDF%X(ICOL,IROW)=0.0D0
+      ENDDO; ENDDO
       !## save array, do not correct for boundary condition as we not yet know for what layer the zone will apply
       IF(.NOT.PMANAGER_SAVEMF2005_MOD_U2DREL(TRIM(DIR)//'\PST1\ZONE_IZ'//TRIM(ITOS(I))//'.ARR',PRJIDF,0,IU,1,0))RETURN
      ELSE
@@ -3671,8 +3708,9 @@ IRLOOP: DO IROW=1,PRJIDF%NROW; DO ICOL=1,PRJIDF%NCOL
      
      PUMPLOC=0 !## no location of pump intake or injection
      QLIMIT=0  !## pumpage not by constraints
-     IF(NNODES.EQ. 1)PPFLAG=0  !## head not adjusted for partial penetration of well
-     IF(NNODES.EQ.-1)PPFLAG=1  !## head adjusted for partial penetration of well
+     PPFLAG=0  !## head not adjusted for partial penetration of well - error in case ibound is zero
+     !IF(NNODES.EQ. 1)PPFLAG=0  !## head not adjusted for partial penetration of well
+     !IF(NNODES.EQ.-1)PPFLAG=1  !## head adjusted for partial penetration of well
      PUMPCAP=0 !## discharge not defined by head-capacity relation
      LINE=TRIM(LOSSTYPE)//','//TRIM(ITOS(PUMPLOC))//','//TRIM(ITOS(QLIMIT))//','//TRIM(ITOS(PPFLAG))//','//TRIM(ITOS(PUMPCAP))
      WRITE(IU,'(A)') TRIM(LINE)
@@ -3694,6 +3732,8 @@ IRLOOP: DO IROW=1,PRJIDF%NROW; DO ICOL=1,PRJIDF%NCOL
      ELSE
       READ(STRING(4),*,IOSTAT=IOS) Z1; IF(IOS.NE.0)EXIT
       READ(STRING(5),*,IOSTAT=IOS) Z2; IF(IOS.NE.0)EXIT
+      Z1=MIN(Z1,TOP(1      )%X(ICOL,IROW)-0.1D0)
+      Z2=MAX(Z2,BOT(PRJNLAY)%X(ICOL,IROW)+0.1D0)
       LINE=TRIM(RTOS(Z1,'F',2))//','//TRIM(RTOS(Z2,'F',2))//','//TRIM(ITOS(IROW))//','//TRIM(ITOS(ICOL))
       WRITE(IU,'(A)') TRIM(LINE)
      ENDIF
@@ -7408,7 +7448,7 @@ IRLOOP: DO IROW=1,PRJIDF%NROW; DO ICOL=1,PRJIDF%NCOL
  !## constant value
  IF(MAXV.EQ.MINV)THEN
 
- IF(IINT.EQ.0)THEN
+  IF(IINT.EQ.0)THEN
    IF(MAXV.EQ.IDF%NODATA)THEN
     LINE='CONSTANT '//TRIM(RTOS(HNOFLOW,'E',7))
    ELSE
