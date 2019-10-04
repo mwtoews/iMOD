@@ -997,11 +997,19 @@ c     save IR and IC to check vs the subsequent nodes
             END IF
 c
 c     find first layer that the top of this interval penetrates, set = IL
-            K=1
+!            K=1
 c     botm(...k) points to the bottom of layer K
-            DO WHILE (Ztop.le.BOTM(IC,IR,LBOTM(K)))
-              K=K+1
-            END DO
+!            DO WHILE (Ztop.le.BOTM(IC,IR,LBOTM(K)))
+!              K=K+1
+!            END DO
+
+             do k=1,nlay
+              !## skip inactive cells
+              if(ibound(ic,ir,k).ne.0)then
+               if(ztop.gt.botm(ic,ir,lbotm(k)))exit
+              endif
+             enddo
+             
             IF(K.LE.NLAY) then
               IL=K
             ELSE

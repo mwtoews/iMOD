@@ -3,5 +3,5 @@
 	<Configurations>
 		<Configuration Name="Debug|Win32" CommandArguments="d:\IMOD-MODELS\LHM\AGGREGATE.INI" WorkingDirectory="d:\IMOD\"/>
 		<Configuration Name="Release|Win32"/>
-		<Configuration Name="Debug|x64" CommandArguments="d:\IMOD-TEST\GENSNAPTOGRID\GENSNAPTOGRID.INI" WorkingDirectory="d:\IMOD\"/>
+		<Configuration Name="Debug|x64" CommandArguments="d:\IMOD-MODELS\MAROCCO\Modele_iMod_17-09-2019\Model_OCP_Marrakech_v53MC.ini" WorkingDirectory="d:\IMOD\"/>
 		<Configuration Name="Release|x64" CommandArguments="d:\TESTBANK\IMODFLOW\STEST\PST\T3\RUNFILE.INI" WorkingDirectory="d:\IMOD"/></Configurations></VisualStudioUserFile>
