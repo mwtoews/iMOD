@@ -190,14 +190,15 @@ CONTAINS
 
     !## added to the base
     IF(ILAY.GE.NLAY)THEN
-!     IF(TOPIDF(IIDF)%X(ICOL,IROW).NE.TOPIDF(IIDF)%NODATA)THEN
-!      MDLBOT(NLAY)%X(ICOL,IROW)=MAX(MDLBOT(NLAY)%X(ICOL,IROW),TOPIDF(IIDF)%X(ICOL,IROW))
-!     ENDIF
-     IF(.NOT.LEX)THEN
-      WRITE(*,'(/A,I5,A,I5,A)') 'Maximum aquitard layer number is ',NLAY-1,' iMOD found layer number ',ILAY,' in '
-      WRITE(*,'(A/)') TRIM(ZIDF(IIDF)%FNAME)
+     !# change base
+     IF(TOPIDF(IIDF)%X(ICOL,IROW).NE.TOPIDF(IIDF)%NODATA)THEN
+      MDLBOT(NLAY)%X(ICOL,IROW)=MAX(MDLBOT(NLAY)%X(ICOL,IROW),TOPIDF(IIDF)%X(ICOL,IROW))
      ENDIF
-     LEX=.TRUE.
+!     IF(.NOT.LEX)THEN
+!      WRITE(*,'(/A,I5,A,I5,A)') 'Maximum aquitard layer number is ',NLAY-1,' iMOD found layer number ',ILAY,' in '
+!      WRITE(*,'(A/)') TRIM(ZIDF(IIDF)%FNAME)
+!     ENDIF
+!     LEX=.TRUE.
     ENDIF
     
     IF(ILAY.GE.1.AND.ILAY.LT.NLAY)THEN

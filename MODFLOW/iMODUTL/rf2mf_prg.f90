@@ -333,9 +333,7 @@ DO
  !## evaluate modules to be processed
  DO I=1,MXMOD; IF(RFMOD(I).GT.0)EXIT; ENDDO
  !## all processed stop!
- IF(I.GT.MXMOD)THEN
-     EXIT
- ENDIF
+ IF(I.GT.MXMOD)EXIT
 ENDDO
 RFMOD=ABS(RFMOD)
 dxc%fname = dxcfile
