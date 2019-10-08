@@ -1499,12 +1499,12 @@ JLOOP: DO K=1,SIZE(TOPICS)
    
     READ(LINE,*,IOSTAT=IOS) NSYS; IF(IOS.NE.0)RETURN; IF(NSYS.LE.0)CYCLE
     !## reduce number of system to 1 for metaswap
-    IF(ITOPIC.EQ.1)THEN
+    IF(ITOPIC.EQ.TCAP)THEN
      MSYS=NSYS; NSYS=1 
     ENDIF
       
     !## pst module
-    IF(ITOPIC.EQ.20)THEN
+    IF(ITOPIC.EQ.TPST)THEN
      !## create new system
      IPER=0; CALL PMANAGER_STRESSES(ITOPIC,IPER)
      ISYS=0; CALL PMANAGER_SYSTEMS(ITOPIC,IPER,ISYS)
@@ -1531,7 +1531,7 @@ JLOOP: DO K=1,SIZE(TOPICS)
      DO ISYS=1,NSYS
 
       SELECT CASE (ITOPIC)
-       CASE (1,13)  !## msp,pwt
+       CASE (TCAP,TPWT)  !## msp,pwt
         READ(IU,*,IOSTAT=IOS) TOPICS(ITOPIC)%STRESS(IPER)%FILES(I,ISYS)%FCT,  &
                               TOPICS(ITOPIC)%STRESS(IPER)%FILES(I,ISYS)%IMP,  &
                               TOPICS(ITOPIC)%STRESS(IPER)%FILES(I,ISYS)%FNAME    
@@ -1548,11 +1548,11 @@ JLOOP: DO K=1,SIZE(TOPICS)
         ENDIF
 
         !## found ipf for artificial recharge
-        IF(ITOPIC.EQ.1.AND.I.EQ.8.AND.TOPICS(ITOPIC)%STRESS(IPER)%FILES(I,ISYS)%ICNST.EQ.2)THEN
+        IF(ITOPIC.EQ.TCAP.AND.I.EQ.8.AND.TOPICS(ITOPIC)%STRESS(IPER)%FILES(I,ISYS)%ICNST.EQ.2)THEN
          IF(INDEX(UTL_CAP(TOPICS(ITOPIC)%STRESS(IPER)%FILES(I,ISYS)%FNAME,'U'),'.IPF').GT.0)THEN
-          TOPICS(1)%SNAME(7) ='Recharge-ID (IDF)'
-          TOPICS(1)%SNAME(8) ='Extraction (IPF)'
-          TOPICS(1)%SNAME(9) ='<not neccessary>'
+          TOPICS(TCAP)%SNAME(7) ='Recharge-ID (IDF)'
+          TOPICS(TCAP)%SNAME(8) ='Extraction (IPF)'
+          TOPICS(TCAP)%SNAME(9) ='<not neccessary>'
           I=I+1; IARMWP=1
           TOPICS(ITOPIC)%STRESS(IPER)%FILES(I,ISYS)%FNAME=''
           TOPICS(ITOPIC)%STRESS(IPER)%FILES(I,ISYS)%FCT=1.0D0
@@ -1562,13 +1562,13 @@ JLOOP: DO K=1,SIZE(TOPICS)
           TOPICS(ITOPIC)%STRESS(IPER)%FILES(I,ISYS)%ILAY=1
           TOPICS(ITOPIC)%STRESS(IPER)%FILES(I,ISYS)%IACT=1
          ELSE
-          TOPICS(1)%SNAME(7) ='Artificial discharge (IDF)'
-          TOPICS(1)%SNAME(8) ='Artificial layer (IDF)'
-          TOPICS(1)%SNAME(9) ='Artificial location (IDF)'
+          TOPICS(TCAP)%SNAME(7) ='Artificial discharge (IDF)'
+          TOPICS(TCAP)%SNAME(8) ='Artificial layer (IDF)'
+          TOPICS(TCAP)%SNAME(9) ='Artificial location (IDF)'
          ENDIF
         ENDIF
 
-       CASE (29) !## isg
+       CASE (TISG) !## isg
         READ(IU,*,IOSTAT=IOS) TOPICS(ITOPIC)%STRESS(IPER)%FILES(I,ISYS)%ILAY, &
                               TOPICS(ITOPIC)%STRESS(IPER)%FILES(I,ISYS)%FCT,  &
                               TOPICS(ITOPIC)%STRESS(IPER)%FILES(I,ISYS)%IMP,  &
@@ -1601,7 +1601,7 @@ JLOOP: DO K=1,SIZE(TOPICS)
      ENDDO
     ENDDO
     !## read in the inp files
-    IF(ITOPIC.EQ.1)THEN
+    IF(ITOPIC.EQ.TCAP)THEN
      MSYS=MSYS-TOPICS(ITOPIC)%NSUBTOPICS+IARMWP
      ALLOCATE(TOPICS(ITOPIC)%STRESS(IPER)%INPFILES(MSYS))
      DO ISYS=1,MSYS
@@ -2361,200 +2361,200 @@ JLOOP: DO K=1,SIZE(TOPICS)
  !###======================================================================
  IMPLICIT NONE
  INTEGER :: I
- 
- TOPICS(1)%TNAME ='(CAP) MetaSwap'
- TOPICS(2)%TNAME ='(TOP) Top Elevation'
- TOPICS(3)%TNAME ='(BOT) Bottom Elevation'
- TOPICS(4)%TNAME ='(BND) Boundary Condition'
- TOPICS(5)%TNAME ='(SHD) Starting Heads'
- TOPICS(6)%TNAME ='(KDW) Transmissivity'
- TOPICS(7)%TNAME ='(KHV) Horizontal Permeability'
- TOPICS(8)%TNAME ='(KVA) Vertical Anisotropy'
- TOPICS(9)%TNAME ='(VCW) Vertical Resistance'
- TOPICS(10)%TNAME='(KVV) Vertical Permeability'
- TOPICS(11)%TNAME='(STO) Confined Storage Coefficient'
- TOPICS(12)%TNAME='(SPY) Specific Yield'
- TOPICS(13)%TNAME='(PWT) Perched Water Table'
- TOPICS(14)%TNAME='(ANI) Anisotropy'
- TOPICS(15)%TNAME='(HFB) Horizontal Flow Barrier'
- TOPICS(16)%TNAME='(IBS) Interbed Storage'
- TOPICS(17)%TNAME='(SFT) StreamFlow Thickness'
- TOPICS(18)%TNAME='(UZF) Unsaturated Zone Flow Package'
- TOPICS(19)%TNAME='(MNW) Multi Node Well Package'
- TOPICS(20)%TNAME='(PST) Parameter Estimation'
- TOPICS(21)%TNAME='(WEL) Wells'
- TOPICS(22)%TNAME='(DRN) Drainage'
- TOPICS(23)%TNAME='(RIV) Rivers'
- TOPICS(24)%TNAME='(EVT) Evapotranspiration'
- TOPICS(25)%TNAME='(GHB) General Head Boundary'
- TOPICS(26)%TNAME='(RCH) Recharge'
- TOPICS(27)%TNAME='(OLF) Overland Flow'
- TOPICS(28)%TNAME='(CHD) Constant Head Boundary'
- TOPICS(29)%TNAME='(ISG) iMOD Segment Rivers'
- TOPICS(30)%TNAME='(SFR) Stream Flow Routing'
- TOPICS(31)%TNAME='(FHB) Flow and Head Boundary'
- TOPICS(32)%TNAME='(LAK) Lake Package'
- TOPICS(33)%TNAME='(PCG) Precondition Conjugate-Gradient'
 
- TOPICS(1)%NSUBTOPICS =22 !CAP
- TOPICS(2)%NSUBTOPICS =1  !TOP
- TOPICS(3)%NSUBTOPICS =1  !BOT
- TOPICS(4)%NSUBTOPICS =1  !BND
- TOPICS(5)%NSUBTOPICS =1  !SHD
- TOPICS(6)%NSUBTOPICS =1  !KDW
- TOPICS(7)%NSUBTOPICS =1  !KHV
- TOPICS(8)%NSUBTOPICS =1  !KHA
- TOPICS(9)%NSUBTOPICS =1  !VCW
- TOPICS(10)%NSUBTOPICS=1  !KVV
- TOPICS(11)%NSUBTOPICS=1  !STO
- TOPICS(12)%NSUBTOPICS=1  !SSC
- TOPICS(13)%NSUBTOPICS=6  !PWT
- TOPICS(14)%NSUBTOPICS=2  !ANI
- TOPICS(15)%NSUBTOPICS=1  !HFB
- TOPICS(16)%NSUBTOPICS=4  !IBS
- TOPICS(17)%NSUBTOPICS=2  !SFT
- TOPICS(18)%NSUBTOPICS=8  !UZF
- TOPICS(19)%NSUBTOPICS=1  !MNW
- TOPICS(20)%NSUBTOPICS=1  !PST
- TOPICS(21)%NSUBTOPICS=1  !WEL
- TOPICS(22)%NSUBTOPICS=2  !DRN
- TOPICS(23)%NSUBTOPICS=4  !RIV
- TOPICS(24)%NSUBTOPICS=3  !EVT
- TOPICS(25)%NSUBTOPICS=2  !GHB
- TOPICS(26)%NSUBTOPICS=1  !RCH
- TOPICS(27)%NSUBTOPICS=1  !OLF
- TOPICS(28)%NSUBTOPICS=1  !CHD
- TOPICS(29)%NSUBTOPICS=1  !ISG
- TOPICS(30)%NSUBTOPICS=1  !SFR
- TOPICS(31)%NSUBTOPICS=2  !FHB
- TOPICS(32)%NSUBTOPICS=10 !LAK
- TOPICS(33)%NSUBTOPICS=1  !PCG
+ TOPICS(TCAP)%TNAME='(CAP) MetaSwap'
+ TOPICS(TTOP)%TNAME='(TOP) Top Elevation'
+ TOPICS(TBOT)%TNAME='(BOT) Bottom Elevation'
+ TOPICS(TBND)%TNAME='(BND) Boundary Condition'
+ TOPICS(TSHD)%TNAME='(SHD) Starting Heads'
+ TOPICS(TKDW)%TNAME='(KDW) Transmissivity'
+ TOPICS(TKHV)%TNAME='(KHV) Horizontal Permeability'
+ TOPICS(TKVA)%TNAME='(KVA) Vertical Anisotropy'
+ TOPICS(TVCW)%TNAME='(VCW) Vertical Resistance'
+ TOPICS(TKVV)%TNAME='(KVV) Vertical Permeability'
+ TOPICS(TSTO)%TNAME='(STO) Confined Storage Coefficient'
+ TOPICS(TSPY)%TNAME='(SPY) Specific Yield'
+ TOPICS(TPWT)%TNAME='(PWT) Perched Water Table'
+ TOPICS(TANI)%TNAME='(ANI) Anisotropy'
+ TOPICS(THFB)%TNAME='(HFB) Horizontal Flow Barrier'
+ TOPICS(TIBS)%TNAME='(IBS) Interbed Storage'
+ TOPICS(TSFT)%TNAME='(SFT) StreamFlow Thickness'
+ TOPICS(TUZF)%TNAME='(UZF) Unsaturated Zone Flow Package'
+ TOPICS(TMNW)%TNAME='(MNW) Multi Node Well Package'
+ TOPICS(TPST)%TNAME='(PST) Parameter Estimation'
+ TOPICS(TWEL)%TNAME='(WEL) Wells'
+ TOPICS(TDRN)%TNAME='(DRN) Drainage'
+ TOPICS(TRIV)%TNAME='(RIV) Rivers'
+ TOPICS(TEVT)%TNAME='(EVT) Evapotranspiration'
+ TOPICS(TGHB)%TNAME='(GHB) General Head Boundary'
+ TOPICS(TRCH)%TNAME='(RCH) Recharge'
+ TOPICS(TOLF)%TNAME='(OLF) Overland Flow'
+ TOPICS(TCHD)%TNAME='(CHD) Constant Head Boundary'
+ TOPICS(TISG)%TNAME='(ISG) iMOD Segment Rivers'
+ TOPICS(TSFR)%TNAME='(SFR) Stream Flow Routing'
+ TOPICS(TFHB)%TNAME='(FHB) Flow and Head Boundary'
+ TOPICS(TLAK)%TNAME='(LAK) Lake Package'
+ TOPICS(TPCG)%TNAME='(PCG) Precondition Conjugate-Gradient'
 
- TOPICS(1)%TIMDEP =.FALSE. !CAP
- TOPICS(2)%TIMDEP =.FALSE. !TOP
- TOPICS(3)%TIMDEP =.FALSE. !BOT
- TOPICS(4)%TIMDEP =.FALSE. !BND
- TOPICS(5)%TIMDEP =.FALSE. !SHD
- TOPICS(6)%TIMDEP =.FALSE. !KDW
- TOPICS(7)%TIMDEP =.FALSE. !KHV
- TOPICS(8)%TIMDEP =.FALSE. !KVA
- TOPICS(9)%TIMDEP =.FALSE. !VCW
- TOPICS(10)%TIMDEP=.FALSE. !KVV
- TOPICS(11)%TIMDEP=.FALSE. !STO
- TOPICS(12)%TIMDEP=.FALSE. !SSC
- TOPICS(13)%TIMDEP=.FALSE. !PWT
- TOPICS(14)%TIMDEP=.FALSE. !ANI
- TOPICS(15)%TIMDEP=.FALSE. !HFB
- TOPICS(16)%TIMDEP=.FALSE. !IBS
- TOPICS(17)%TIMDEP=.FALSE. !SFT
- TOPICS(18)%TIMDEP=.TRUE.  !UZF
- TOPICS(19)%TIMDEP=.TRUE.  !MNW
- TOPICS(20)%TIMDEP=.FALSE. !PST
- TOPICS(21)%TIMDEP=.TRUE.  !WEL
- TOPICS(22)%TIMDEP=.TRUE.  !DRN
- TOPICS(23)%TIMDEP=.TRUE.  !RIV
- TOPICS(24)%TIMDEP=.TRUE.  !EVT
- TOPICS(25)%TIMDEP=.TRUE.  !GHB
- TOPICS(26)%TIMDEP=.TRUE.  !RCH
- TOPICS(27)%TIMDEP=.TRUE.  !OLF
- TOPICS(28)%TIMDEP=.TRUE.  !CHD
- TOPICS(29)%TIMDEP=.TRUE.  !ISG
- TOPICS(30)%TIMDEP=.TRUE.  !SFR
- TOPICS(31)%TIMDEP=.TRUE.  !FHB
- TOPICS(32)%TIMDEP=.TRUE.  !LAK
- TOPICS(33)%TIMDEP=.FALSE. !PCG
+ TOPICS(TCAP)%NSUBTOPICS =22 !CAP
+ TOPICS(TTOP)%NSUBTOPICS =1  !TOP
+ TOPICS(TBOT)%NSUBTOPICS =1  !BOT
+ TOPICS(TBND)%NSUBTOPICS =1  !BND
+ TOPICS(TSHD)%NSUBTOPICS =1  !SHD
+ TOPICS(TKDW)%NSUBTOPICS =1  !KDW
+ TOPICS(TKHV)%NSUBTOPICS =1  !KHV
+ TOPICS(TKVA)%NSUBTOPICS =1  !KHA
+ TOPICS(TVCW)%NSUBTOPICS =1  !VCW
+ TOPICS(TKVV)%NSUBTOPICS=1  !KVV
+ TOPICS(TSTO)%NSUBTOPICS=1  !STO
+ TOPICS(TSPY)%NSUBTOPICS=1  !SSC
+ TOPICS(TPWT)%NSUBTOPICS=6  !PWT
+ TOPICS(TANI)%NSUBTOPICS=2  !ANI
+ TOPICS(THFB)%NSUBTOPICS=1  !HFB
+ TOPICS(TIBS)%NSUBTOPICS=4  !IBS
+ TOPICS(TSFT)%NSUBTOPICS=2  !SFT
+ TOPICS(TUZF)%NSUBTOPICS=8  !UZF
+ TOPICS(TMNW)%NSUBTOPICS=1  !MNW
+ TOPICS(TPST)%NSUBTOPICS=1  !PST
+ TOPICS(TWEL)%NSUBTOPICS=1  !WEL
+ TOPICS(TDRN)%NSUBTOPICS=2  !DRN
+ TOPICS(TRIV)%NSUBTOPICS=4  !RIV
+ TOPICS(TEVT)%NSUBTOPICS=3  !EVT
+ TOPICS(TGHB)%NSUBTOPICS=2  !GHB
+ TOPICS(TRCH)%NSUBTOPICS=1  !RCH
+ TOPICS(TOLF)%NSUBTOPICS=1  !OLF
+ TOPICS(TCHD)%NSUBTOPICS=1  !CHD
+ TOPICS(TISG)%NSUBTOPICS=1  !ISG
+ TOPICS(TSFR)%NSUBTOPICS=1  !SFR
+ TOPICS(TFHB)%NSUBTOPICS=2  !FHB
+ TOPICS(TLAK)%NSUBTOPICS=10 !LAK
+ TOPICS(TPCG)%NSUBTOPICS=1  !PCG
+
+ TOPICS(TCAP)%TIMDEP =.FALSE. !CAP
+ TOPICS(TTOP)%TIMDEP =.FALSE. !TOP
+ TOPICS(TBOT)%TIMDEP =.FALSE. !BOT
+ TOPICS(TBND)%TIMDEP =.FALSE. !BND
+ TOPICS(TSHD)%TIMDEP =.FALSE. !SHD
+ TOPICS(TKDW)%TIMDEP =.FALSE. !KDW
+ TOPICS(TKHV)%TIMDEP =.FALSE. !KHV
+ TOPICS(TKVA)%TIMDEP =.FALSE. !KVA
+ TOPICS(TVCW)%TIMDEP =.FALSE. !VCW
+ TOPICS(TKVV)%TIMDEP=.FALSE. !KVV
+ TOPICS(TSTO)%TIMDEP=.FALSE. !STO
+ TOPICS(TSPY)%TIMDEP=.FALSE. !SSC
+ TOPICS(TPWT)%TIMDEP=.FALSE. !PWT
+ TOPICS(TANI)%TIMDEP=.FALSE. !ANI
+ TOPICS(THFB)%TIMDEP=.FALSE. !HFB
+ TOPICS(TIBS)%TIMDEP=.FALSE. !IBS
+ TOPICS(TSFT)%TIMDEP=.FALSE. !SFT
+ TOPICS(TUZF)%TIMDEP=.TRUE.  !UZF
+ TOPICS(TMNW)%TIMDEP=.TRUE.  !MNW
+ TOPICS(TPST)%TIMDEP=.FALSE. !PST
+ TOPICS(TWEL)%TIMDEP=.TRUE.  !WEL
+ TOPICS(TDRN)%TIMDEP=.TRUE.  !DRN
+ TOPICS(TRIV)%TIMDEP=.TRUE.  !RIV
+ TOPICS(TEVT)%TIMDEP=.TRUE.  !EVT
+ TOPICS(TGHB)%TIMDEP=.TRUE.  !GHB
+ TOPICS(TRCH)%TIMDEP=.TRUE.  !RCH
+ TOPICS(TOLF)%TIMDEP=.TRUE.  !OLF
+ TOPICS(TCHD)%TIMDEP=.TRUE.  !CHD
+ TOPICS(TISG)%TIMDEP=.TRUE.  !ISG
+ TOPICS(TSFT)%TIMDEP=.TRUE.  !SFR
+ TOPICS(TFHB)%TIMDEP=.TRUE.  !FHB
+ TOPICS(TLAK)%TIMDEP=.TRUE.  !LAK
+ TOPICS(TPCG)%TIMDEP=.FALSE. !PCG
  
- TOPICS(1)%SNAME(1)  ='(BND) Boundary (IDF)'
- TOPICS(1)%SNAME(2)  ='(LUS) Landuse (IDF)'
- TOPICS(1)%SNAME(3)  ='(RTZ) Rootzone (IDF)'
- TOPICS(1)%SNAME(4)  ='(SLT) Soiltype (IDF)'
- TOPICS(1)%SNAME(5)  ='(MST) Meteostation (IDF)'
- TOPICS(1)%SNAME(6)  ='(SFL) Surfacelevel (IDF)'
- TOPICS(1)%SNAME(7)  ='(ARQ) Artificial discharge (IDF)'
- TOPICS(1)%SNAME(8)  ='(ARL) Artificial layer (IDF)'
- TOPICS(1)%SNAME(9)  ='(ARL) Artificial location (IPF)' 
- TOPICS(1)%SNAME(10) ='(WRA) Wetted Rural Area (IDF)'
- TOPICS(1)%SNAME(11) ='(WUA) Wetted Urban Area (IDF)'
- TOPICS(1)%SNAME(12) ='(PUA) Pondingdepth Urban Area (IDF)'
- TOPICS(1)%SNAME(13) ='(PRA) Pondingdepth Rural Area (IDF)'
- TOPICS(1)%SNAME(14) ='(RUA) Runoff Resistance Urban Area (IDF)'
- TOPICS(1)%SNAME(15) ='(RRA) Runoff Resistance Rural Area (IDF)'
- TOPICS(1)%SNAME(16) ='(RUA) Runon Resistance Urban Area (IDF)'
- TOPICS(1)%SNAME(17) ='(RRA) Runon Resistance Rural Area (IDF)'
- TOPICS(1)%SNAME(18) ='(IUA) Infiltration Capacity Urban Area (IDF)'
- TOPICS(1)%SNAME(19) ='(IRA) Infiltration Capacity Rural Area (IDF)'
- TOPICS(1)%SNAME(20) ='(PWD) Purgewater Depth (IDF)'
- TOPICS(1)%SNAME(21) ='(SMF) Soil Moisture Factor (IDF)'
- TOPICS(1)%SNAME(22) ='(SPF) Soil Permeability Factor (IDF)'
- TOPICS(2)%SNAME(1)  ='(TOP) Top of Modellayer (IDF)'
- TOPICS(3)%SNAME(1)  ='(BOT) Bottom of Modellayer (IDF)'
- TOPICS(4)%SNAME(1)  ='(BND) Boundary Settings (IDF)'
- TOPICS(5)%SNAME(1)  ='(SHD) Starting Heads (IDF)'
- TOPICS(6)%SNAME(1)  ='(KDW) COnductance (IDF)'
- TOPICS(7)%SNAME(1)  ='(KHV) Horizontal Permeability (IDF)'
- TOPICS(8)%SNAME(1)  ='(KVA) Vertical Anisotropy (IDF)'
- TOPICS(9)%SNAME(1)  ='(VCW) Vertical Resistance (IDF)'
- TOPICS(10)%SNAME(1) ='(KVV) Vertical Permeability (IDF)'
- TOPICS(11)%SNAME(1) ='(STO) Storage Coefficient (IDF)'
- TOPICS(12)%SNAME(1) ='(SSY) Specific Yield / Confined Storage Coef. (IDF)'
- TOPICS(13)%SNAME(1) ='(LAY) Layer Identification (IDF)'
- TOPICS(13)%SNAME(2) ='(STO) Phreatic Storage Coefficient (IDF)'
- TOPICS(13)%SNAME(3) ='(TA1) Top of Aquifer above PWT-layer (IDF)'
- TOPICS(13)%SNAME(4) ='(TAQ) Top of Aquitard PWT-layer (IDF)'
- TOPICS(13)%SNAME(5) ='(TA2) Top of Aquifer beneath PWT-layer (IDF)'
- TOPICS(13)%SNAME(6) ='(VCP) Vertical Resistance of PWT-clay (IDF)'
- TOPICS(14)%SNAME(1) ='(FCT) Factor (IDF)'
- TOPICS(14)%SNAME(2) ='(ANG) Angle (IDF)'
- TOPICS(15)%SNAME(1) ='(HFB) Horizontal Barrier Flow (GEN)'
- TOPICS(16)%SNAME(1) ='(PCH) Preconsolidation Head (IDF)'
- TOPICS(16)%SNAME(2) ='(ESC) Elastic Storage Coefficient (IDF)'
- TOPICS(16)%SNAME(3) ='(ISC) Inelastic Storage Coefficient (IDF)'
- TOPICS(16)%SNAME(4) ='(SCP) Starting Compaction (IDF)'
- TOPICS(17)%SNAME(1) ='(SFT) Stream Flow Thickness (IDF)'
- TOPICS(17)%SNAME(2) ='(PER) Permeability (IDF)'
- TOPICS(18)%SNAME(1) ='(AEA) Areal Extent of Active Model (IDF)'
-! TOPICS(18)%SNAME(2) ='Overland Flow to SFR (>0) / LAK (<0) (IDF)'
-! TOPICS(18)%SNAME(2) ='Saturated Vertical Conductivity (IDF)'
- TOPICS(18)%SNAME(2) ='(BCE) Brooks-Corey Epsilon (IDF)'
- TOPICS(18)%SNAME(3) ='(SWC) Saturated Water Content of Unsat. Zone (IDF)'
-! TOPICS(18)%SNAME(4) ='(RWC) Residual Water Content of Unsat. Zone (IDF)'
- TOPICS(18)%SNAME(4) ='(IWC) Initial Water Content (IDF)'
- TOPICS(18)%SNAME(5) ='(INF) Infiltration Rates at Land Surface (IDF)'
- TOPICS(18)%SNAME(6) ='(EVA) Evaporation Demands (IDF)'
- TOPICS(18)%SNAME(7) ='(EXD) Extinction Depth (IDF)'
- TOPICS(18)%SNAME(8) ='(EWC) Extinction Water Content (IDF)'
- TOPICS(19)%SNAME(1) ='(WRL) Well Rate and Well Loss (IPF)'
- TOPICS(20)%SNAME(1) ='(PAR) Parameters Estimation (-)'
- TOPICS(21)%SNAME(1) ='(WRA) Well Rate (IPF)'
- TOPICS(22)%SNAME(1) ='(CON) Conductance (IDF)'
- TOPICS(22)%SNAME(2) ='(DEL) Drainage Level (IDF)'
- TOPICS(23)%SNAME(1) ='(CON) Conductance (IDF)'
- TOPICS(23)%SNAME(2) ='(RST) River Stage (IDF)'
- TOPICS(23)%SNAME(3) ='(RBT) River Bottom (IDF)'
- TOPICS(23)%SNAME(4) ='(RIF) Infiltration Factor (IDF)'
- TOPICS(24)%SNAME(1) ='(EVA) Evapotranspiration Rate (IDF)'
- TOPICS(24)%SNAME(2) ='(SUR) Surface Level (IDF)'
- TOPICS(24)%SNAME(3) ='(EXD) Extinction Depth (IDF)'
- TOPICS(25)%SNAME(1) ='(CON) Conductance (IDF)'
- TOPICS(25)%SNAME(2) ='(LVL) Reference Level (IDF)'
- TOPICS(26)%SNAME(1) ='(RCH) Recharge Rate (IDF)'
- TOPICS(27)%SNAME(1) ='(LVL) Overland Flow Level (IDF)'
- TOPICS(28)%SNAME(1) ='(CHD) Constant Head (IDF)'
- TOPICS(29)%SNAME(1) ='(ISG) Segment River (ISG)'
- TOPICS(30)%SNAME(1) ='(ISG) Stream Flow River (ISG)'
- TOPICS(31)%SNAME(1) ='(FHB) Specified Flow (IDF)'
- TOPICS(31)%SNAME(2) ='(FHB) Specified Head (IDF)'
- TOPICS(32)%SNAME(1) ='(LID) Lake Identifications (IDF)'
- TOPICS(32)%SNAME(2) ='(LBA) Lake Bathymetry (IDF)'
- TOPICS(32)%SNAME(3) ='(INI) Initial Lake Levels (IDF)'
- TOPICS(32)%SNAME(4) ='(MIN) Minimal Lake Levels (IDF)'
- TOPICS(32)%SNAME(5) ='(MAX) Maximal Lake Levels (IDF)'
- TOPICS(32)%SNAME(6) ='(LRE) Lakebed Resistance (IDF)'
- TOPICS(32)%SNAME(7) ='(LPR) Precipitation at surface Lake (IDF)'
- TOPICS(32)%SNAME(8) ='(LEV) Evaporation at surface Lake (IDF)'
- TOPICS(32)%SNAME(9) ='(LOR) Overland runoff (IDF)'
- TOPICS(32)%SNAME(10)='(LWD) Lake Withdrawall (IDF)'
- TOPICS(33)%SNAME(1) ='(PCG) Parameters PCG method (-)'
+ TOPICS(TCAP)%SNAME(1)  ='(BND) Boundary (IDF)'
+ TOPICS(TCAP)%SNAME(2)  ='(LUS) Landuse (IDF)'
+ TOPICS(TCAP)%SNAME(3)  ='(RTZ) Rootzone (IDF)'
+ TOPICS(TCAP)%SNAME(4)  ='(SLT) Soiltype (IDF)'
+ TOPICS(TCAP)%SNAME(5)  ='(MST) Meteostation (IDF)'
+ TOPICS(TCAP)%SNAME(6)  ='(SFL) Surfacelevel (IDF)'
+ TOPICS(TCAP)%SNAME(7)  ='(ARQ) Artificial discharge (IDF)'
+ TOPICS(TCAP)%SNAME(8)  ='(ARL) Artificial layer (IDF)'
+ TOPICS(TCAP)%SNAME(9)  ='(ARL) Artificial location (IPF)' 
+ TOPICS(TCAP)%SNAME(10) ='(WRA) Wetted Rural Area (IDF)'
+ TOPICS(TCAP)%SNAME(11) ='(WUA) Wetted Urban Area (IDF)'
+ TOPICS(TCAP)%SNAME(12) ='(PUA) Pondingdepth Urban Area (IDF)'
+ TOPICS(TCAP)%SNAME(13) ='(PRA) Pondingdepth Rural Area (IDF)'
+ TOPICS(TCAP)%SNAME(14) ='(RUA) Runoff Resistance Urban Area (IDF)'
+ TOPICS(TCAP)%SNAME(15) ='(RRA) Runoff Resistance Rural Area (IDF)'
+ TOPICS(TCAP)%SNAME(16) ='(RUA) Runon Resistance Urban Area (IDF)'
+ TOPICS(TCAP)%SNAME(17) ='(RRA) Runon Resistance Rural Area (IDF)'
+ TOPICS(TCAP)%SNAME(18) ='(IUA) Infiltration Capacity Urban Area (IDF)'
+ TOPICS(TCAP)%SNAME(19) ='(IRA) Infiltration Capacity Rural Area (IDF)'
+ TOPICS(TCAP)%SNAME(20) ='(PWD) Purgewater Depth (IDF)'
+ TOPICS(TCAP)%SNAME(21) ='(SMF) Soil Moisture Factor (IDF)'
+ TOPICS(TCAP)%SNAME(22) ='(SPF) Soil Permeability Factor (IDF)'
+ TOPICS(TTOP)%SNAME(1)  ='(TOP) Top of Modellayer (IDF)'
+ TOPICS(TBOT)%SNAME(1)  ='(BOT) Bottom of Modellayer (IDF)'
+ TOPICS(TBND)%SNAME(1)  ='(BND) Boundary Settings (IDF)'
+ TOPICS(TSHD)%SNAME(1)  ='(SHD) Starting Heads (IDF)'
+ TOPICS(TKDW)%SNAME(1)  ='(KDW) COnductance (IDF)'
+ TOPICS(TKHV)%SNAME(1)  ='(KHV) Horizontal Permeability (IDF)'
+ TOPICS(TKVA)%SNAME(1)  ='(KVA) Vertical Anisotropy (IDF)'
+ TOPICS(TVCW)%SNAME(1)  ='(VCW) Vertical Resistance (IDF)'
+ TOPICS(TKVV)%SNAME(1) ='(KVV) Vertical Permeability (IDF)'
+ TOPICS(TSTO)%SNAME(1) ='(STO) Storage Coefficient (IDF)'
+ TOPICS(TSPY)%SNAME(1) ='(SSY) Specific Yield / Confined Storage Coef. (IDF)'
+ TOPICS(TPWT)%SNAME(1) ='(LAY) Layer Identification (IDF)'
+ TOPICS(TPWT)%SNAME(2) ='(STO) Phreatic Storage Coefficient (IDF)'
+ TOPICS(TPWT)%SNAME(3) ='(TA1) Top of Aquifer above PWT-layer (IDF)'
+ TOPICS(TPWT)%SNAME(4) ='(TAQ) Top of Aquitard PWT-layer (IDF)'
+ TOPICS(TPWT)%SNAME(5) ='(TA2) Top of Aquifer beneath PWT-layer (IDF)'
+ TOPICS(TPWT)%SNAME(6) ='(VCP) Vertical Resistance of PWT-clay (IDF)'
+ TOPICS(TANI)%SNAME(1) ='(FCT) Factor (IDF)'
+ TOPICS(TANI)%SNAME(2) ='(ANG) Angle (IDF)'
+ TOPICS(THFB)%SNAME(1) ='(HFB) Horizontal Barrier Flow (GEN)'
+ TOPICS(TIBS)%SNAME(1) ='(PCH) Preconsolidation Head (IDF)'
+ TOPICS(TIBS)%SNAME(2) ='(ESC) Elastic Storage Coefficient (IDF)'
+ TOPICS(TIBS)%SNAME(3) ='(ISC) Inelastic Storage Coefficient (IDF)'
+ TOPICS(TIBS)%SNAME(4) ='(SCP) Starting Compaction (IDF)'
+ TOPICS(TSFT)%SNAME(1) ='(SFT) Stream Flow Thickness (IDF)'
+ TOPICS(TSFT)%SNAME(2) ='(PER) Permeability (IDF)'
+ TOPICS(TUZF)%SNAME(1) ='(AEA) Areal Extent of Active Model (IDF)'
+! TOPICS(TUZF)%SNAME(2) ='Overland Flow to SFR (>0) / LAK (<0) (IDF)'
+! TOPICS(TUZF)%SNAME(2) ='Saturated Vertical Conductivity (IDF)'
+ TOPICS(TUZF)%SNAME(2) ='(BCE) Brooks-Corey Epsilon (IDF)'
+ TOPICS(TUZF)%SNAME(3) ='(SWC) Saturated Water Content of Unsat. Zone (IDF)'
+! TOPICS(TUZF)%SNAME(4) ='(RWC) Residual Water Content of Unsat. Zone (IDF)'
+ TOPICS(TUZF)%SNAME(4) ='(IWC) Initial Water Content (IDF)'
+ TOPICS(TUZF)%SNAME(5) ='(INF) Infiltration Rates at Land Surface (IDF)'
+ TOPICS(TUZF)%SNAME(6) ='(EVA) Evaporation Demands (IDF)'
+ TOPICS(TUZF)%SNAME(7) ='(EXD) Extinction Depth (IDF)'
+ TOPICS(TUZF)%SNAME(8) ='(EWC) Extinction Water Content (IDF)'
+ TOPICS(TMNW)%SNAME(1) ='(WRL) Well Rate and Well Loss (IPF)'
+ TOPICS(TPST)%SNAME(1) ='(PAR) Parameters Estimation (-)'
+ TOPICS(TWEL)%SNAME(1) ='(WRA) Well Rate (IPF)'
+ TOPICS(TDRN)%SNAME(1) ='(CON) Conductance (IDF)'
+ TOPICS(TDRN)%SNAME(2) ='(DEL) Drainage Level (IDF)'
+ TOPICS(TRIV)%SNAME(1) ='(CON) Conductance (IDF)'
+ TOPICS(TRIV)%SNAME(2) ='(RST) River Stage (IDF)'
+ TOPICS(TRIV)%SNAME(3) ='(RBT) River Bottom (IDF)'
+ TOPICS(TRIV)%SNAME(4) ='(RIF) Infiltration Factor (IDF)'
+ TOPICS(TEVT)%SNAME(1) ='(EVA) Evapotranspiration Rate (IDF)'
+ TOPICS(TEVT)%SNAME(2) ='(SUR) Surface Level (IDF)'
+ TOPICS(TEVT)%SNAME(3) ='(EXD) Extinction Depth (IDF)'
+ TOPICS(TGHB)%SNAME(1) ='(CON) Conductance (IDF)'
+ TOPICS(TGHB)%SNAME(2) ='(LVL) Reference Level (IDF)'
+ TOPICS(TRCH)%SNAME(1) ='(RCH) Recharge Rate (IDF)'
+ TOPICS(TOLF)%SNAME(1) ='(LVL) Overland Flow Level (IDF)'
+ TOPICS(TCHD)%SNAME(1) ='(CHD) Constant Head (IDF)'
+ TOPICS(TISG)%SNAME(1) ='(ISG) Segment River (ISG)'
+ TOPICS(TSFR)%SNAME(1) ='(ISG) Stream Flow River (ISG)'
+ TOPICS(TFHB)%SNAME(1) ='(FHB) Specified Flow (IDF)'
+ TOPICS(TFHB)%SNAME(2) ='(FHB) Specified Head (IDF)'
+ TOPICS(TLAK)%SNAME(1) ='(LID) Lake Identifications (IDF)'
+ TOPICS(TLAK)%SNAME(2) ='(LBA) Lake Bathymetry (IDF)'
+ TOPICS(TLAK)%SNAME(3) ='(INI) Initial Lake Levels (IDF)'
+ TOPICS(TLAK)%SNAME(4) ='(MIN) Minimal Lake Levels (IDF)'
+ TOPICS(TLAK)%SNAME(5) ='(MAX) Maximal Lake Levels (IDF)'
+ TOPICS(TLAK)%SNAME(6) ='(LRE) Lakebed Resistance (IDF)'
+ TOPICS(TLAK)%SNAME(7) ='(LPR) Precipitation at surface Lake (IDF)'
+ TOPICS(TLAK)%SNAME(8) ='(LEV) Evaporation at surface Lake (IDF)'
+ TOPICS(TLAK)%SNAME(9) ='(LOR) Overland runoff (IDF)'
+ TOPICS(TLAK)%SNAME(10)='(LWD) Lake Withdrawall (IDF)'
+ TOPICS(TPCG)%SNAME(1) ='(PCG) Parameters PCG method (-)'
  
  CALL WDIALOGLOAD(ID_DPMANAGER)
  CALL WDIALOGPUTIMAGE(ID_OPEN,ID_ICONOPEN,1)
