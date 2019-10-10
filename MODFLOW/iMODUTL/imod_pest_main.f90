@@ -2488,7 +2488,7 @@ END SUBROUTINE WRITEIPF
  CHARACTER(LEN=*),INTENT(IN) :: ROOT
  INTEGER :: I,II,III,J,JJ,K,KK,ILAY,NROWIPFTXT,NCOLIPFTXT, &
      IOS,NAJ,NP,N,IUIPFTXT
- REAL(KIND=8) :: X,Y,Z,H,WW,MC,MM,DHH,XCOR,YCOR,ZCOR,XCROSS,RFIT
+ REAL(KIND=8) :: X,Y,Z,H,WW,MC,MM,DHH,XCOR,YCOR,ZCOR,XCROSS,RFIT,DTH,DTD
  CHARACTER(LEN=52) :: ID,TXT
  DOUBLE PRECISION :: DHW
  REAL(KIND=8),ALLOCATABLE,DIMENSION(:) :: TSNODATA,M,C,GF_H,GF_O,MCOPY,CCOPY
@@ -2583,10 +2583,20 @@ END SUBROUTINE WRITEIPF
     !## apply general multiplication for weight values
     MSR%W(II)=FWIIPF*MSR%W(II)
     
-    DHH=0.0D0
-    IF(ABS(H-Z).GT.PEST_DRES)THEN
-     DHH=H-Z
+    !## calculated - measured
+    DHH=H-Z
+    IF(ABS(DHH).LT.PEST_DRES)THEN
+     DHH=0.0D0
+    ELSE
+     IF(DHH.GT. PEST_DRES)DHH=DHH-PEST_DRES
+     IF(DHH.LT.-PEST_DRES)DHH=DHH+PEST_DRES
     ENDIF
+
+!    DHH=0.0D0
+!    IF(ABS(H-Z).GT.PEST_DRES)THEN
+!     DHH=H-Z
+!    ENDIF
+
     MSR%DH(PEST_IGRAD,II)=DHH  !## calculated - measured
     DHW              =MSR%W(II)*(DHH**2.0D0)
 
@@ -2690,19 +2700,50 @@ END SUBROUTINE WRITEIPF
      !## add obseravtion
      DO K=1,KK
       II =II+1
-      DHH=0.0D0
 
-      !## accept residuals less than 0.1 
-      IF(ABS(C(K)-M(K)).GT.PEST_DRES)THEN
+      DTH=0.0D0
+      !## target is residual (calculated minus measured)
+      IF(PEST_ITARGET(1).GT.0.0D0)THEN
+       DTH=C(K)-M(K)
+       IF(ABS(DTH).LT.PEST_DRES)THEN
+        DTH=0.0D0
+       ELSE
+        IF(DTH.GT. PEST_DRES)DTH=DTH-PEST_DRES
+        IF(DTH.LT.-PEST_DRES)DTH=DTH+PEST_DRES
+       ENDIF
+       !IF(ABS().GT.PEST%PE_DRES)DHH=DHH+PEST%PE_TARGET(1)*(C(K)-M(K)) 
+       DTH=PEST_ITARGET(1)*DTH
+      ENDIF
+      
+      !## target is dynamics (calculated minus measured)
+      DTD=0.0D0
+      IF(PEST_ITARGET(2).GT.0.0D0)THEN
+       DTD=DYN(2)-DYN(1)
+       IF(ABS(DTD).LT.PEST_DRES)THEN
+        DTD=0.0D0
+       ELSE
+        IF(DTD.GT. PEST_DRES)DTD=DTD-PEST_DRES
+        IF(DTD.LT.-PEST_DRES)DTD=DTD+PEST_DRES
+       ENDIF
+!       IF(ABS(DYN(2)-DYN(1)).GT.PEST%PE_DRES)DHH=DHH+PEST%PE_TARGET(2)*(DYN(2)-DYN(1))
+       DTD=PEST_ITARGET(2)*DTD
+      ENDIF
+      
+      DHH=DTH+DTD      
+      
+!      DHH=0.0D0
+
+!      !## accept residuals less than 0.1 
+!      IF(ABS(C(K)-M(K)).GT.PEST_DRES)THEN
 !      IF(ABS(MC-MM).GT.PEST_DRES)THEN
-        !## target is residual (calculated minus measured)
-       DHH=DHH+PEST_ITARGET(1)*(C(K)-M(K)) !MC-MM)
-      ENDIF
+!        !## target is residual (calculated minus measured)
+!       DHH=DHH+PEST_ITARGET(1)*(C(K)-M(K)) !MC-MM)
+!      ENDIF
 
-      IF(ABS(DYN(2)-DYN(1)).GT.PEST_DRES)THEN
-       !## target is dynamics (calculated minus measured)
-       DHH=DHH+PEST_ITARGET(2)*(DYN(2)-DYN(1))
-      ENDIF
+!      IF(ABS(DYN(2)-DYN(1)).GT.PEST_DRES)THEN
+!       !## target is dynamics (calculated minus measured)
+!       DHH=DHH+PEST_ITARGET(2)*(DYN(2)-DYN(1))
+!      ENDIF
 
       MSR%DH(PEST_IGRAD,II)=DHH       !## - total sensitivity
 

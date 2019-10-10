@@ -182,7 +182,7 @@ CONTAINS
  
  END FUNCTION UTL_DIST
 
-  !###======================================================================
+ !###======================================================================
  SUBROUTINE UTL_IDFGETLOC(IDF,IROW,ICOL,X,Y)
  !###======================================================================
  IMPLICIT NONE
@@ -1018,7 +1018,7 @@ CONTAINS
 
  END FUNCTION IMOD_UTL_RTOS
 
-  !###======================================================================
+ !###======================================================================
  CHARACTER(LEN=15) FUNCTION IMOD_UTL_DTOS(X,F,NDEC)
  !###======================================================================
  IMPLICIT NONE
@@ -2242,7 +2242,7 @@ END SUBROUTINE IMOD_UTL_QKSORT
  END SUBROUTINE IMOD_UTL_PRINTTEXT
 
  !###====================================================================
- REAL FUNCTION IMOD_UTL_GETMOSTFREQ(FREQ,MFREQ,NFREQ)
+ REAL(KIND=DP_KIND) FUNCTION IMOD_UTL_GETMOSTFREQ(FREQ,MFREQ,NFREQ)
  !###====================================================================
  IMPLICIT NONE
  INTEGER,INTENT(IN) :: MFREQ,NFREQ
@@ -2376,7 +2376,7 @@ END SUBROUTINE IMOD_UTL_QKSORT
 
  END FUNCTION JD
 
-  !###======================================================================
+ !###======================================================================
  INTEGER FUNCTION UTL_IDFGETDATE(IDFNAME,DAYFRACTION,IYR,IMH,IDY,IHR,IMT,ISC)
  !###======================================================================
  IMPLICIT NONE

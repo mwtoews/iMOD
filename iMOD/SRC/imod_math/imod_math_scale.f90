@@ -711,13 +711,13 @@ CONTAINS
  SUBROUTINE MATH1_SIM(BVALUE,TVALUE,NCOL,NROW,NLAY)
  !###====================================================================
  IMPLICIT NONE
+ INTEGER,PARAMETER :: MICNVG=25
  INTEGER,INTENT(IN) :: NCOL,NROW,NLAY
  REAL(KIND=DP_KIND),INTENT(OUT),DIMENSION(:) :: BVALUE,TVALUE
- INTEGER :: ICNVG,ITER1,ITER2,IROW,ICOL,ILAY,NICNVG 
+ INTEGER :: ICNVG,ITER1,ITER2,IROW,ICOL,ILAY,NICNVG,TL,BL
  REAL(KIND=DP_KIND) :: CVT,CT,NCV,HCHG,HCHGOLD,S,RCHG
- INTEGER :: MICNVG=25
  
- CALL MATH1_SIM_COND(NCOL,NROW,NLAY)
+ CALL MATH1_SIM_COND(NCOL,NROW,NLAY,TL,BL)
  
  NICNVG=0; RELAX=0.98D0
  DO ITER1=1,MXITER1
@@ -726,7 +726,8 @@ CONTAINS
   IF(QRATE.NE.0.0D0)THEN
    ICOL=(NCOL+1)/2
    IROW=(NROW+1)/2
-   RHS(ICOL,IROW,NLAY)=QRATE
+   RHS(ICOL,IROW,BL)=QRATE
+!   RHS(ICOL,IROW,NLAY)=QRATE
   ENDIF
   HCOF=0.0D0
   CALL PCG2AP(NROW*NCOL*NLAY,NROW,NCOL,NLAY,IB,CR,CC,CV,HCOF,RHS,V,SS,P, &
@@ -748,7 +749,7 @@ CONTAINS
 
  ENDDO
  
- CALL MATH1_SIM_POSTPROC(NCOL,NROW,NLAY,TVALUE,BVALUE)
+ CALL MATH1_SIM_POSTPROC(NCOL,NROW,NLAY,TVALUE,BVALUE,TL,BL)
 
  !## compute arithmetic values for resistance
  CT=0.0D0; NCV=0.0D0
@@ -777,10 +778,10 @@ CONTAINS
  END SUBROUTINE MATH1_SIM
 
  !###====================================================================
- SUBROUTINE MATH1_SIM_POSTPROC(NCOL,NROW,NLAY,TVALUE,BVALUE)
+ SUBROUTINE MATH1_SIM_POSTPROC(NCOL,NROW,NLAY,TVALUE,BVALUE,TL,BL)
  !###====================================================================
  IMPLICIT NONE
- INTEGER,INTENT(IN) :: NCOL,NROW,NLAY
+ INTEGER,INTENT(IN) :: NCOL,NROW,NLAY,TL,BL
  REAL(KIND=DP_KIND),DIMENSION(:),INTENT(INOUT) :: TVALUE,BVALUE
  INTEGER :: IROW,ICOL,ILAY
  REAL(KIND=DP_KIND),DIMENSION(3) :: TQ,DH
@@ -788,13 +789,13 @@ CONTAINS
  REAL(KIND=DP_KIND) :: KDX,KDY,NH,SQ,DP,A,KV,SZ
  
  !## total thickness of volume
- SZ=SUM(DZ) 
+ SZ=SUM(DZ(TL+1:BL-1))
  SZ=TVALUE(4)-BVALUE(4)
  !## area
  A=(REAL(NCOL-2)*MATH(1)%DX*REAL(NROW-2)*MATH(1)%DY)
 
  KDX=0.0D0; KDY=0.0D0
- DO ILAY=2,NLAY-1
+ DO ILAY=TL+1,BL-1 !2,NLAY-1
 
   TQ=0.0D0
   !## outflow from the east
@@ -821,7 +822,7 @@ CONTAINS
  TVALUE(1)=KDX/SZ 
  TVALUE(2)=KDY/SZ 
 
- ILAY=NLAY
+ ILAY=BL !NLAY
 
  !## get total q over last
  TQ(3)=0.0D0
@@ -868,18 +869,32 @@ CONTAINS
  END SUBROUTINE MATH1_SIM_POSTPROC
 
  !###====================================================================
- SUBROUTINE MATH1_SIM_COND(NCOL,NROW,NLAY)
+ SUBROUTINE MATH1_SIM_COND(NCOL,NROW,NLAY,TL,BL)
  !###====================================================================
  IMPLICIT NONE
  INTEGER,INTENT(IN) :: NCOL,NROW,NLAY
+ INTEGER,INTENT(OUT) :: TL,BL
  INTEGER :: IROW,ICOL,ILAY
  REAL(KIND=DP_KIND) :: T1,T2,DX,DY,D,C1,C2
 
+ !## determine top/bottom of simulation window
+ TL=NLAY; BL=1
+ DO IROW=1,NROW; DO ICOL=1,NCOL
+  !## tl=0
+  DO ILAY=1,NLAY;    IF(IB(ICOL,IROW,ILAY).EQ.1)EXIT; ENDDO; TL=MIN(TL,NLAY,ILAY+1)
+  !## bl  
+  DO ILAY=NLAY,1,-1; IF(IB(ICOL,IROW,ILAY).EQ.1)EXIT; ENDDO; BL=MAX(BL,   1,ILAY-1)
+ ENDDO; ENDDO
+ DO IROW=1,NROW; DO ICOL=1,NCOL; DO ILAY=1,NLAY
+  IF(IB(ICOL,IROW,ILAY).EQ.1)EXIT
+  IB(ICOL,IROW,ILAY)=0
+ ENDDO; ENDDO; ENDDO
+ 
  !## fill in maximal k-value --- if not fully absent
  IF(FILLNODATA.EQ.1)THEN
   DO IROW=1,NROW; DO ICOL=1,NCOL; DO ILAY=1,NLAY
    IF(CC(ICOL,IROW,ILAY).LE.0.0)CC(ICOL,IROW,ILAY)=MAXK
-   IF(IB(ICOL,IROW,ILAY).EQ.0)IB(ICOL,IROW,ILAY)=1
+!   IF(IB(ICOL,IROW,ILAY).EQ.0)IB(ICOL,IROW,ILAY)=1
   ENDDO; ENDDO; ENDDO
  ENDIF
 
@@ -887,9 +902,12 @@ CONTAINS
  
  !## set vertical boundary
  IF(DHZ.NE.0.0D0)THEN
-  IB(:,:,1)   =-1
-  IB(:,:,NLAY)=-1
-  HNEW(:,:,NLAY)=-DHZ
+!  IB(:,:,1)   =-1
+!  IB(:,:,NLAY)=-1
+!  HNEW(:,:,NLAY)=-DHZ
+  IB(:,:,TL)   =-1
+  IB(:,:,BL)=-1
+  HNEW(:,:,BL)=-DHZ
  ENDIF
  IF(DHX.NE.0.0D0)THEN
   DO IROW=1,NROW; DO ILAY=1,NLAY
@@ -914,8 +932,10 @@ CONTAINS
  CC(:,:,NLAY)=CC(:,:,NLAY-1)  !## last layer  (artificial) equal to second-last layer
 
  IF(QRATE.NE.0.0D0)THEN
-  CC(:,:,NLAY)=AQFR_KD        !## last layer  (artificial) equal to second-last layer
-  IB(:,:,NLAY)=1              !## active again
+  CC(:,:,BL)=AQFR_KD          !## last layer  (artificial) equal to second-last layer
+  IB(:,:,BL)=1                !## active again
+!  CC(:,:,NLAY)=AQFR_KD       !## last layer  (artificial) equal to second-last layer
+!  IB(:,:,NLAY)=1             !## active again
   IB(1,:,:)=1                 !## active again
   IB(NCOL,:,:)=1              !## active again
   IB(:,1,:)=1                 !## active again
