@@ -66,7 +66,7 @@ c deallocate MET memory
       if (associated(cdelc))              deallocate(cdelc)
       if (associated(save_no_buf))        deallocate(save_no_buf)
       if (associated(write_debug_idf))    deallocate(write_debug_idf)
-      if (associated(idate_save))         deallocate(idate_save)
+!      if (associated(idate_save))         deallocate(idate_save)
       if (associated(savedouble))         deallocate(savedouble)
 
       if (igrid.eq.1) then
@@ -85,7 +85,7 @@ C change meta data to a different grid.
       runcomment   => gwfmetdat(igrid)%runcomment
       coord_descr  => gwfmetdat(igrid)%coord_descr
 
-      idate_save   => gwfmetdat(igrid)%idate_save
+!      idate_save   => gwfmetdat(igrid)%idate_save
 
       time_syear   => gwfmetdat(igrid)%time_syear
       time_smonth  => gwfmetdat(igrid)%time_smonth
@@ -135,7 +135,7 @@ C save meta data for a grid.
       gwfmetdat(igrid)%runcomment   => runcomment
       gwfmetdat(igrid)%coord_descr  => coord_descr
 
-      gwfmetdat(igrid)%idate_save   => idate_save
+!      gwfmetdat(igrid)%idate_save   => idate_save
 
       gwfmetdat(igrid)%time_syear   => time_syear
       gwfmetdat(igrid)%time_smonth  => time_smonth
@@ -181,7 +181,7 @@ C save meta data for a grid.
 
       USE IMOD_UTL, ONLY : IMOD_UTL_IDATETOJDATE,imod_utl_printtext
       use m_mf2005_main, only : kkper
-      use global, only : issflg
+      use global, only : issflg,npertxt
       implicit none
       integer,intent(in) :: igrid !,issflg
       character(len=*),intent(out) :: cdate
@@ -190,12 +190,13 @@ C save meta data for a grid.
 c body
       call sgwf2met1pnt(igrid)
 
-      if (issflg(kkper).eq.0 .and. associated(time_ostring)) then ! TR
-       if(idate_save.eq.0)then
-        cdate=time_ostring
-       elseif(idate_save.eq.1)then
-        cdate=time_cstring
-       endif
+      if (issflg(kkper).eq.0)then ! .and. associated(time_ostring)) then ! TR
+       cdate=npertxt(kkper)
+!       if(idate_save.eq.0)then
+!        cdate=time_ostring
+!       elseif(idate_save.eq.1)then
+!        cdate=time_cstring
+!       endif
        cdate=adjustl(cdate)
    
        read(cdate,'(i8)',iostat=ios) idate
@@ -207,8 +208,8 @@ c body
        endif
        
       else ! SS
-  
-       cdate='steady-state'
+       cdate=npertxt(kkper)
+!       cdate='steady-state'
   
       end if
 
@@ -255,7 +256,7 @@ c nullify
       runcomment   => null()
       coord_descr  => null()
 
-      idate_save   => null()
+!      idate_save   => null()
 
       time_syear   => null()
       time_smonth  => null()
@@ -379,11 +380,11 @@ C2------READ A LINE; IGNORE BLANK LINES AND PRINT COMMENT LINES.
                read(line(lloc:),*) savedouble
             end if
 
-            if (line(istart:istop).eq.'IDATE_SAVE') then
-               if (.not.associated(idate_save))
-     1            allocate(idate_save)
-               read(line(lloc:),*) idate_save
-            end if
+!            if (line(istart:istop).eq.'IDATE_SAVE') then
+!               if (.not.associated(idate_save))
+!     1            allocate(idate_save)
+!               read(line(lloc:),*) idate_save
+!            end if
 
             if (line(istart:istop).eq.'WRITE_DEBUG_IDF') then
                if (.not.associated(write_debug_idf))
@@ -433,10 +434,10 @@ C2------READ A LINE; IGNORE BLANK LINES AND PRINT COMMENT LINES.
       end do
 
 c set default for idate_save     
-      if (.not.associated(idate_save)) then     
-          allocate(idate_save)
-          idate_save = 0
-      end if    
+!      if (.not.associated(idate_save)) then     
+!          allocate(idate_save)
+!          idate_save = 0
+!      end if    
 c set default for savedouble     
       if (.not.associated(savedouble)) then     
           allocate(savedouble)
@@ -1119,7 +1120,7 @@ c modules
       use fsplitmodule
       use gwfmetmodule
 
-      USE GLOBAL,ONLY : ISSFLG
+      use global,only : issflg,npertxt
       use m_mf2005_main, only : kper
       use gwfrivmodule, only: nrivsubsys
       use gwfdrnmodule, only: ndrnsubsys
@@ -1365,41 +1366,42 @@ c create output file name
     
       call pks7mpipartstr(partstr) 
 
-      if (issflg(kper).eq.0 .and. associated(time_ostring)) then ! TR
+!      if (issflg(kper).eq.0 .and. associated(time_ostring)) then ! TR
          fmt = '(5a,'//fmt
-         if(idate_save.eq.0)then
-          cdate_string=time_ostring
-          !## trim last zero is all zero
-          read(time_ostring(9:14),*,iostat=ios) ihms
-          if(ios.eq.0)then
-           if(ihms.eq.0)cdate_string=time_ostring(1:8)
-          endif
+!         if(idate_save.eq.0)then
+          cdate_string=npertxt(kper) !time_ostring
+!          cdate_string=time_ostring
+!          !## trim last zero is all zero
+!          read(time_ostring(9:14),*,iostat=ios) ihms
+!          if(ios.eq.0)then
+!           if(ihms.eq.0)cdate_string=time_ostring(1:8)
+!          endif
           write(fname,fmt) root(1:cfn_length(root)),
      1                       prefix(1:cfn_length(prefix)),'_',
      1                       cdate_string(1:cfn_length(cdate_string)),
      1                       '_l', ilay, partstr(1:cfn_length(partstr)),
      1                       '.',ext(1:cfn_length(ext))
-         elseif(idate_save.eq.1)then
-          cdate_string=time_cstring
-          !## trim last zero is all zero
-          read(time_cstring(9:14),*,iostat=ios) ihms
-          if(ios.eq.0)then
-           if(ihms.eq.0)cdate_string=time_cstring(1:8)
-          endif
-          write(fname,fmt) root(1:cfn_length(root)),
-     1                       prefix(1:cfn_length(prefix)),'_',
-     1                       cdate_string(1:cfn_length(cdate_string)),
-     1                      '_l', ilay, partstr(1:cfn_length(partstr)),
-     1                      '.',ext(1:cfn_length(ext))
-         endif
-      else ! SS
-         fmt = '(5a,'//fmt
-         write(fname,fmt) root(1:cfn_length(root)),
-     1                    prefix(1:cfn_length(prefix)),'_',
-     1                    'steady-state',
-     1                    '_l', ilay, partstr(1:cfn_length(partstr)),
-     1                    '.',ext(1:cfn_length(ext))
-      end if
+!         elseif(idate_save.eq.1)then
+!          cdate_string=time_cstring
+!          !## trim last zero is all zero
+!          read(time_cstring(9:14),*,iostat=ios) ihms
+!          if(ios.eq.0)then
+!           if(ihms.eq.0)cdate_string=time_cstring(1:8)
+!          endif
+!          write(fname,fmt) root(1:cfn_length(root)),
+!     1                       prefix(1:cfn_length(prefix)),'_',
+!     1                       cdate_string(1:cfn_length(cdate_string)),
+!     1                      '_l', ilay, partstr(1:cfn_length(partstr)),
+!     1                      '.',ext(1:cfn_length(ext))
+!         endif
+!      else ! SS
+!         fmt = '(5a,'//fmt
+!         write(fname,fmt) root(1:cfn_length(root)),
+!     1                    prefix(1:cfn_length(prefix)),'_',
+!     1                    'steady-state',
+!     1                    '_l', ilay, partstr(1:cfn_length(partstr)),
+!     1                    '.',ext(1:cfn_length(ext))
+!      end if
 
 c assign result
       met1fname = fname

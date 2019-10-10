@@ -24,7 +24,7 @@
       module rf2mf_module
 
       use imod_utl, only: imod_utl_rel_to_abs
-
+      use mod_rf2mf
       implicit none
 
       private
@@ -229,6 +229,7 @@
          real             :: tsmult = 1.0
          character(len=2) :: SsTr   = ''
          logical          :: writeoc = .true.
+         character(len=52) :: cdate = ''  !## output string to be used
       end type tSp
       type tDis
          character(len=maxlen) :: text = 'Discretization file'
@@ -323,8 +324,8 @@
       integer, public, parameter :: imet_ibound_fixed_south = 12
       integer, public, parameter :: imet_save_no_buf        = 13
       integer, public, parameter :: imet_write_debug_idf    = 14
-      integer, public, parameter :: imet_idate_save         = 15
-      integer, public, parameter :: imet_savedouble         = 16
+!      integer, public, parameter :: imet_idate_save         = 15
+      integer, public, parameter :: imet_savedouble         = 15
 
       integer, parameter :: nmetkws = imet_savedouble
 
@@ -345,7 +346,7 @@
       'ibound_fixed_south',&
       'save_no_buf       ',&
       'write_debug_idf   ',&     
-      'idate_save        ',&
+!      'idate_save        ',&
       'savedouble        '/
 
       integer, public, parameter :: imetu = 1
@@ -1550,13 +1551,20 @@
          !## set perlen eq 1.0 for steady-state, otherwise crash in UZF package
          if(dis%sp(iper)%SsTr.eq.'SS')then
           write(str(1),'(G15.7)') 1.0 !dis%sp(iper)%perlen         
+          write(str(5),'(A)') '[STEADY-STATE]'
          else
           write(str(1),'(G15.7)') dis%sp(iper)%perlen
+          if(sdate.eq.0)then
+           write(str(5),'(A)') '['//trim(dis%sp(iper)%cdate)//']'
+          else
+           write(str(5),'(A)') '['//trim(dis%sp(iper+1)%cdate)//']'
+          endif
          endif
          write(str(2),'(I10)') dis%sp(iper)%nstp
          write(str(3),'(G15.7)') dis%sp(iper)%tsmult
          write(str(4),'(A)') dis%sp(iper)%SsTr
-         write(lun,'(4(a,1x))')(trim(adjustl(str(i))), i = 1, 4) ! perlen nstp tsmult SS/Tr
+         write(lun,'(5(a,1x))')(trim(adjustl(str(i))), i = 1, 5) ! perlen nstp tsmult SS/Tr,cdate
+         
       end do
 
 !...     close dis-file

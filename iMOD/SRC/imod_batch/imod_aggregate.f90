@@ -79,7 +79,7 @@ MODULE MOD_AGGREGATE
  SUBROUTINE LHM_ADDIWHB()
  !###===========================
  IMPLICIT NONE
- INTEGER :: I,II,III,J,K,L,N,M,O,IROW,ICOL,IU
+ INTEGER :: I,II,III,J,K,L,N,M,O,IROW,ICOL,IU,NS
  REAL(KIND=DP_KIND) :: F,T,B
  INTEGER,DIMENSION(:),ALLOCATABLE :: NL
  TYPE(IDFOBJ) :: MDL
@@ -148,17 +148,26 @@ MODULE MOD_AGGREGATE
    O=SIZE(FM(I)%SF(J)%AT); IF(O.EQ.0)EXIT
 
    DO II=3,5; IDF(II)%X=IDF(II)%NODATA; ENDDO
-    
+   
+   NS=0
    DO L=1,O
     IROW=INT(FM(I)%SF(J)%AT(L)%IROW,4)
     ICOL=INT(FM(I)%SF(J)%AT(L)%ICOL,4)
-    IDF(1)%X(ICOL,IROW)=FM(I)%SF(J)%AT(L)%TP
-    IDF(2)%X(ICOL,IROW)=FM(I)%SF(J)%AT(L)%BT  
-    IDF(3)%X(ICOL,IROW)=FM(I)%SF(J)%AT(L)%KH
-    IDF(4)%X(ICOL,IROW)=FM(I)%SF(J)%AT(L)%KV
-    IDF(5)%X(ICOL,IROW)=IDF(4)%X(ICOL,IROW)/IDF(3)%X(ICOL,IROW)
+    T=FM(I)%SF(J)%AT(L)%TP; B=FM(I)%SF(J)%AT(L)%BT
+    !## due to aggregation layers can become zero thickness
+    IF(T-B.GT.0.0D0)THEN
+     NS=NS+1
+     IDF(1)%X(ICOL,IROW)=FM(I)%SF(J)%AT(L)%TP
+     IDF(2)%X(ICOL,IROW)=FM(I)%SF(J)%AT(L)%BT  
+     IDF(3)%X(ICOL,IROW)=FM(I)%SF(J)%AT(L)%KH
+     IDF(4)%X(ICOL,IROW)=FM(I)%SF(J)%AT(L)%KV
+     IDF(5)%X(ICOL,IROW)=IDF(4)%X(ICOL,IROW)/IDF(3)%X(ICOL,IROW)
+    ENDIF
    ENDDO
-    
+   
+   !## nothing left from this layer
+   IF(NS.EQ.0)CYCLE
+   
    !## save idf files
    DO L=1,5; IDF(L)%FNAME=TRIM(OUTDIR)//'\'//TRIM(FM(I)%IDF(L)%FNAME); ENDDO
    CALL LHM_CONVERTREGIS_OUTPUT(IDF(1),IDF(2),IDF(3),IDF(4),IDF(5))

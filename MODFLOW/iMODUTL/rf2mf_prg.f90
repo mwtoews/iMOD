@@ -437,6 +437,7 @@ dis%sp(kper)%writeoc=.true.
 dis%sp(kper)%sstr='SS'   !## steady
 if (delt.gt.0.0) then
    dis%sp(kper)%sstr='TR'  !## transient
+   dis%sp(kper)%cdate=trim(cdate) !## output date
    !## take first transient period - first can be steady-state
    if (kper.eq.1.or. &
       (kper.eq.2.and.dis%sp(1)%sstr.eq.'SS'))then
@@ -573,9 +574,9 @@ if (ifvdl.ne.0) then
     riv%ifvdl=.true.
 end if
 
-if(sdate.ne.1)sdate=0
-met%kws(imet_idate_save)%type = imeti
-met%kws(imet_idate_save)%ival = sdate
+!if(sdate.ne.1)sdate=0
+!met%kws(imet_idate_save)%type = imeti
+!met%kws(imet_idate_save)%ival = sdate
 
 !if (sdate.gt.0) then
 !   write(date,'(i8)') sdate

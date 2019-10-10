@@ -72,6 +72,7 @@ c   If not, see <http://water.usgs.gov/software/help/notice/>.
         INTEGER, SAVE,    DIMENSION(:),     POINTER ::LAYHDT
         INTEGER, SAVE,    DIMENSION(:),     POINTER ::LAYHDS
         REAL,    SAVE,    DIMENSION(:),     POINTER ::PERLEN
+        character(len=14),save,dimension(:),pointer ::npertxt
         INTEGER, SAVE,    DIMENSION(:),     POINTER ::NSTP
         REAL,    SAVE,    DIMENSION(:),     POINTER ::TSMULT
         INTEGER, SAVE,    DIMENSION(:),     POINTER ::ISSFLG
@@ -101,6 +102,7 @@ c   If not, see <http://water.usgs.gov/software/help/notice/>.
         INTEGER,    DIMENSION(:),     POINTER ::LAYHDT
         INTEGER,    DIMENSION(:),     POINTER ::LAYHDS
         REAL,       DIMENSION(:),     POINTER ::PERLEN
+        character(len=14),dimension(:),pointer ::npertxt
         INTEGER,    DIMENSION(:),     POINTER ::NSTP
         REAL,       DIMENSION(:),     POINTER ::TSMULT
         INTEGER,    DIMENSION(:),     POINTER ::ISSFLG

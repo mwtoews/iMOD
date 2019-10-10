@@ -27,7 +27,7 @@ c   2600 MH Delft, The Netherlands.
          character(len=300), save, pointer :: runcomment
          character(len=300), save, pointer :: coord_descr
 
-         integer, save, pointer :: idate_save !## 0=begindate 1=enddate
+!         integer, save, pointer :: idate_save !## 0=begindate 1=enddate
 
          integer, save, pointer :: time_syear
          integer, save, pointer :: time_smonth
@@ -68,7 +68,7 @@ c   2600 MH Delft, The Netherlands.
             character(len=300), pointer :: runcomment
             character(len=300), pointer :: coord_descr
 
-            integer, pointer :: idate_save
+!            integer, pointer :: idate_save
 
             integer, pointer :: time_syear
             integer, pointer :: time_smonth
