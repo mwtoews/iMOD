@@ -1472,7 +1472,7 @@
       implicit none
 
 !...     locals
-      integer :: cfn_getlun, lun, i, ilay, irow, icol, iper
+      integer :: cfn_getlun, lun, i, ilay, irow, icol, iper, kper !,lhms
       character(len=maxlen) :: nstr
       character(len=maxlen), dimension(:), allocatable :: str
       character(len=20), dimension(:), allocatable :: strdelrc
@@ -1543,6 +1543,10 @@
          call WriteArrayRead(dis%aquifertop(ilay),lun) ! top
          call WriteArrayRead(dis%aquiferbot(ilay),lun) !bot
       end do
+!      lhms=0; do iper = 1, nper
+!       if(dis%sp(iper)%SsTr.eq.'TR')then
+!       if(len_trim(dis%sp(iper)%cdate).gt.8)then; lhms=1; exit; endif
+!      enddo
       do iper = 1, nper
          if (dis%sp(iper)%perlen < 0.0 .or. len(dis%sp(iper)%SsTr) < 2) then
             write(*,*) 'Error: incorrect stress period writing for DIS file'
@@ -1554,11 +1558,8 @@
           write(str(5),'(A)') '[STEADY-STATE]'
          else
           write(str(1),'(G15.7)') dis%sp(iper)%perlen
-          if(sdate.eq.0)then
-           write(str(5),'(A)') '['//trim(dis%sp(iper)%cdate)//']'
-          else
-           write(str(5),'(A)') '['//trim(dis%sp(iper+1)%cdate)//']'
-          endif
+          kper=iper; if(sdate.eq.1)kper=kper+1
+          write(str(5),'(A)') '['//trim(dis%sp(kper)%cdate)//']'
          endif
          write(str(2),'(I10)') dis%sp(iper)%nstp
          write(str(3),'(G15.7)') dis%sp(iper)%tsmult

@@ -537,7 +537,8 @@ C
       if(itrss.ne.0)then
        call pest1alpha_grid('SC',sc1,nrow,ncol,nlay,iout) ! IPEST
        IF(NCNVRT.GT.0)then
-        if(ncnvrt.ne.nlay)stop 'ncnvrt need to be equal to nlay'
+        if(ncnvrt.ne.nlay)stop 'ncnvrt (number of unconfined layers) nee
+     1d to be equal to nlay'
         call pest1alpha_grid('SY',sc2,nrow,ncol,nlay,iout)! IPEST
        endif
       endif
