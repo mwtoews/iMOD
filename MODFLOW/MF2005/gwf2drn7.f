@@ -310,6 +310,7 @@ C
      1              ndrnsubsys)                                         ! dsubsys
 
       if (iiconchk.gt.0) then                                           ! iconchk
+!         OPEN(99,FILE='D:\RIV_V44.TXT',STATUS='UNKNOWN',ACTION='WRITE')
          if (inriv.gt.0) then                                           ! iconchk
            CALL SGWF2RIV7PNT(IGRID)                                     ! iconchk
            rhs=-999.99
@@ -317,6 +318,7 @@ C
                   IL=RIVR(1,L)                                          ! iconchk
                   IR=RIVR(2,L)                                          ! iconchk
                   IC=RIVR(3,L)                                          ! iconchk
+!                  WRITE(99,'(4I10,F15.7)') L,IL,IR,IC,RIVR(4,L)
                   if(rivr(4,l).gt.rhs(ic,ir,1))rhs(ic,ir,1)=rivr(4,l)   ! iconchk
            end do                                                       ! iconchk
            ncor=0
@@ -326,8 +328,10 @@ C
                ic = drai(3,l)                                           ! iconchk
                !## reset drain conductance
                drai(5,l)=abs(drai(5,l))
+!        WRITE(99,'(4I10,2F15.7)') L,IL,IR,IC,DRAI(4,L),RHS(IC,IR,1)
                if(drai(4,l).lt.rhs(ic,ir,1))then
          !## set drain conductance to negative values in order to skip them
+!                WRITE(99,'(I10,F15.7)') NCOR,DRAI(5,L)
                 drai(5,l)=-1.0*drai(5,l)
                 ncor=ncor+1
                end if                                                  ! iconchk
@@ -335,6 +339,7 @@ C
         write(IOUT,'(a)') 'Corrections caused by higher waterlevel in RI
      1V package'                                                           ! iconchk
         write(IOUT,'(a,i8)') 'No. of corrections ',ncor
+!        CLOSE(99); STOP
        endif
       end if                                                            ! iconchk
 

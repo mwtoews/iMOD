@@ -600,28 +600,33 @@ CONTAINS
       ENDIF
      ENDDO
      !## ib nul outside trimidf files
+     ITOP=0; IBOT=0
      IF(ITRIM(1).EQ.1.OR.ITRIM(2).EQ.1)THEN
       CALL IDFGETLOC(MATH(1),IROW,ICOL,X,Y)
       !## trim top
       IF(ITRIM(1).EQ.1)THEN
        XTOP=IDFGETXYVAL(TRIMIDF(1),X,Y)
        IF(XTOP.EQ.TRIMIDF(1)%NODATA)THEN
-        DO I=1,SIZE(MATH); IB(IC,IR,1+I)=2; ENDDO
+        DO I=1,SIZE(MATH); IB(IC+1,IR+1,1+I)=2; ENDDO
+!        DO I=1,SIZE(MATH); IB(IC,IR,1+I)=2; ENDDO
        ELSE
         DO I=1,SIZE(MATH)
          ZMID=(MATH(I)%TOP+MATH(I)%BOT)/2.0D0
-         IF(ZMID.GT.XTOP)IB(IC,IR,1+I)=2
+         IF(ZMID.GT.XTOP)THEN; IB(IC+1,IR+1,1+I)=2; ITOP=1; ENDIF
+!         IF(ZMID.GT.XTOP)THEN; IB(IC,IR,1+I)=2; ITOP=1; ENDIF
         ENDDO
        ENDIF
       ENDIF
       IF(ITRIM(2).EQ.1)THEN
        XBOT=IDFGETXYVAL(TRIMIDF(2),X,Y)
        IF(XBOT.EQ.TRIMIDF(2)%NODATA)THEN
-        DO I=1,SIZE(MATH); IB(IC,IR,1+I)=2; ENDDO
+        DO I=1,SIZE(MATH); IB(IC+1,IR+1,1+I)=2; ENDDO
+!        DO I=1,SIZE(MATH); IB(IC,IR,1+I)=2; ENDDO
        ELSE
         DO I=1,SIZE(MATH)
          ZMID=(MATH(I)%TOP+MATH(I)%BOT)/2.0D0
-         IF(ZMID.LT.XBOT)IB(IC,IR,1+I)=2
+         IF(ZMID.LT.XBOT)THEN; IB(IC+1,IR+1,1+I)=2; IBOT=1; ENDIF
+!         IF(ZMID.LT.XBOT)THEN; IB(IC,IR,1+I)=2; IBOT=1; ENDIF
         ENDDO
        ENDIF
       ENDIF          
@@ -633,20 +638,25 @@ CONTAINS
 
  IF(SCLTYPE_UP.EQ.14)THEN
   !## get scaled cc for model area (i-1,i,i+1)   
-  ITOP=0; DO I=1,SIZE(MATH) 
-  IF(MATH1GETK_CUBE(I+1))THEN; XTOP=MATH(I)%TOP; ITOP=I; EXIT; ENDIF
-  ENDDO
-  IBOT=0; DO I=SIZE(MATH),1,-1
-  IF(MATH1GETK_CUBE(I+1))THEN; XBOT=MATH(I)%BOT; IBOT=I; EXIT; ENDIF
-  ENDDO
+  IF(ITRIM(1).EQ.0)THEN !ITRIM(1).EQ.1)THEN
+   ITOP=0; DO I=1,SIZE(MATH) 
+    IF(MATH1GETK_CUBE(I+1))THEN; XTOP=MATH(I)%TOP; ITOP=I; EXIT; ENDIF
+   ENDDO
+  ENDIF
+  IF(ITRIM(2).EQ.0)THEN !1)THEN
+   IBOT=0; DO I=SIZE(MATH),1,-1
+    IF(MATH1GETK_CUBE(I+1))THEN; XBOT=MATH(I)%BOT; IBOT=I; EXIT; ENDIF
+   ENDDO
+  ENDIF
   IF(ITOP.EQ.0.AND.IBOT.EQ.0)THEN
    XTOP=MATH(1)%NODATA; XBOT=MATH(1)%NODATA
   ENDIF
   TVALUE(4)=XTOP; BVALUE(4)=XBOT
   IF(TVALUE(4).LE.BVALUE(4))THEN
-   WRITE(*,'(/A)') 'iMOD can not determing the top- and bottom of the voxel properly.'
-   WRITE(*,'(A/)') 'You need to increase KMIN to solve this'
-   STOP
+   NVALUE=0
+!   WRITE(*,'(/A)') 'iMOD can not determing the top- and bottom of the voxel properly.'
+!   WRITE(*,'(A/)') 'You need to increase KMIN to solve this'
+!   STOP
   ENDIF
  ENDIF
  
@@ -757,7 +767,7 @@ CONTAINS
  DO IROW=2,NROW-1
   DO ICOL=2,NCOL-1
    CVT=0.0D0
-   DO ILAY=2,NLAY-1
+   DO ILAY=TL+1,BL-1 !2,NLAY-1
     !## skip nodata
     IF(CV(ICOL,IROW,ILAY).LE.0.0D0)CYCLE
     !## sum resistances
@@ -878,12 +888,14 @@ CONTAINS
  REAL(KIND=DP_KIND) :: T1,T2,DX,DY,D,C1,C2
 
  !## determine top/bottom of simulation window
+! do ilay=1,nlay; write(*,*) ilay,ib(2,2,ilay); enddo
+ 
  TL=NLAY; BL=1
  DO IROW=1,NROW; DO ICOL=1,NCOL
   !## tl=0
-  DO ILAY=1,NLAY;    IF(IB(ICOL,IROW,ILAY).EQ.1)EXIT; ENDDO; TL=MIN(TL,NLAY,ILAY+1)
+  DO ILAY=1,NLAY;    IF(IB(ICOL,IROW,ILAY).EQ.1)EXIT; ENDDO; TL=MIN(TL,NLAY,ILAY-1)
   !## bl  
-  DO ILAY=NLAY,1,-1; IF(IB(ICOL,IROW,ILAY).EQ.1)EXIT; ENDDO; BL=MAX(BL,   1,ILAY-1)
+  DO ILAY=NLAY,1,-1; IF(IB(ICOL,IROW,ILAY).EQ.1)EXIT; ENDDO; BL=MAX(BL,   1,ILAY+1)
  ENDDO; ENDDO
  DO IROW=1,NROW; DO ICOL=1,NCOL; DO ILAY=1,NLAY
   IF(IB(ICOL,IROW,ILAY).EQ.1)EXIT
