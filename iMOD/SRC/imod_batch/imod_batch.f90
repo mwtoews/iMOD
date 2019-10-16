@@ -6740,7 +6740,7 @@ CONTAINS
  
  END SUBROUTINE IMODBATCH_IPFSTAT_MAIN
 
- !###==================MOD_MEAN_PAR     ===================================================
+ !###======================================================================
  SUBROUTINE IMODBATCH_IDFMEAN_MAIN()
  !###======================================================================
  USE MOD_MEAN_PAR
@@ -6750,7 +6750,9 @@ CONTAINS
  IBATCH=1; MEAN_FYR=0; MEAN_TYR=0
  
  !## read mean ilay (optional)
- IF(.NOT.UTL_READPOINTER(IU,MEAN_NLAYER,MEAN_ILAYER,'ILAYER',1))THEN
+ IF(.NOT.UTL_READPOINTER(IU,MEAN_NLAYER,MEAN_ILAYER,'ILAYER',1))THEN; ENDIF
+ !## layer specified
+ IF(MEAN_NLAYER.GT.0)THEN
   !## read start date (optional)
   IF(.NOT.UTL_READINITFILE('SDATE',LINE,IU,0))RETURN
   READ(LINE,*) MEAN_FYR; WRITE(*,'(A,I8)') 'SDATE=',MEAN_FYR
