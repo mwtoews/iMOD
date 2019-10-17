@@ -165,7 +165,7 @@ CONTAINS
 
  MSR%OBS=MSR%NODATA
 
- !## loop over de data van start datum tot eind datum
+ !## loop over the data from start- to end date
  DO I=1,MSR%NPER
   !## check whether inside period and if idf is opened
   IF(IDF(I)%IU.NE.0) THEN
