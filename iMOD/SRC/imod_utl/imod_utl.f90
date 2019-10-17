@@ -1517,13 +1517,14 @@ DOLOOP: DO
   !## stop, whole line examined
   IF(I.EQ.LEN_TRIM(LINE))EXIT
   
-  !## stop if last character is a comma
-  IF(LINE(I:I).EQ.',')EXIT
+!  !## stop if last character is a comma
+!  IF(LINE(I:I).EQ.',')EXIT
   
  ENDDO
  IF(PRESENT(EPV))EPV(J)=LEN_TRIM(LINE)
 
  !## number of columns is number of comma-delimiters + 1
+ IF(LINE(I:I).EQ.',')J=J-1
  UTL_COUNT_COLUMNS=J
 
  END FUNCTION UTL_COUNT_COLUMNS

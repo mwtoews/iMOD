@@ -643,7 +643,7 @@ CONTAINS
  !## overrule ipst if not as keyword given
  IF(IBATCH.EQ.1.AND.PBMAN%IPEST.EQ.0)TOPICS(TPST)%IACT_MODEL=0
  
- !## get active packages
+ !## get active packages, set default values
  IF(.NOT.PMANAGER_GETPACKAGES(IBATCH))RETURN
 
  DO I=1,MAXTOPICS  
