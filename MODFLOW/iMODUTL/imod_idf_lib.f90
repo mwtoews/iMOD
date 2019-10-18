@@ -76,7 +76,7 @@ CONTAINS
   INQUIRE(FILE=IDFNAME,EXIST=LEX)
   IF(LEX)EXIT
   IF(I.EQ.0)WRITE(*,'(A)') 'iMODFLOW keeps trying to find '//TRIM(IDFNAME); I=1
-  CALL SLEEP(1)
+  CALL SLEEP(10)
  ENDDO
  
  !## open idf

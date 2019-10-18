@@ -223,7 +223,7 @@ c open file
           if(found)exit
           if(i.eq.0)write(*,'(a)') 'iMODFLOW keeps trying to find '//
      1trim(file)
-          i=1; call sleep(1)
+          i=1; call sleep(10)
          enddo
 
          !## try to open it
