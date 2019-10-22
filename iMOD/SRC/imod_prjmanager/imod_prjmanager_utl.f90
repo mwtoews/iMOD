@@ -2880,7 +2880,10 @@ JLOOP: DO K=1,SIZE(TOPICS)
   NULLIFY(TOPICS(I)%STRESS)
   NULLIFY(TOPICS(I)%STRESS_TMP)
  ENDDO
-
+ 
+ !## initially treeview tabview
+ ITABVIEW=ID_DPMANAGER_TAB1; CALL WDIALOGSETTAB(ID_TAB,ITABVIEW)
+ 
  END SUBROUTINE PMANAGER_UTL_INIT
 
  !#####=================================================================

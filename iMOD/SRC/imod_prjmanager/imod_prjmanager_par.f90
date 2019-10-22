@@ -71,7 +71,9 @@ MODULE MOD_PMANAGER_PAR
  INTEGER,PARAMETER :: MAXSPECIES  =10
  INTEGER,PARAMETER :: MAXPARAM    =27
  REAL(KIND=DP_KIND),PARAMETER :: HNOFLOW=HUGE(1.0)
-
+ 
+ INTEGER :: ITABVIEW
+ 
  REAL(KIND=DP_KIND),PARAMETER :: COLF=1.0D0     !## resistance of overland flow package
  REAL(KIND=DP_KIND),PARAMETER :: MINKH=0.0D0    !## minimal k-value to assign wells to modellayers
 

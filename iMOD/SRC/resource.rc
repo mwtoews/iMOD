@@ -8,7 +8,7 @@
 //
 // Winteracter resource script. 
 //
-// Modified : 22/Oct/2019 18:06:15
+// Modified : 22/Oct/2019 22:13:29
 //
 ///////////////////////////////////////////////////
 //
@@ -12409,7 +12409,7 @@ BEGIN
 " 1093     1     1 \n"
 "IBOUND \n"
 " 1094     1     1 \n"
-"1,1.0,1.0,DDFD.IDF \n"
+"1.0,1.0,DDFD.IDF \n"
 " 1065     1     1 \n"
 "1 \n"
 ,0
@@ -14626,4 +14626,4 @@ END
 //*WI* FILENAME    resource.f90
 //*WI* FMODNAME    RESOURCE
 //*WI* LASTTYPE        2
-//*WI* LASTRES       338
+//*WI* LASTRES       322

@@ -330,7 +330,7 @@ DO
    CALL MANAGERMAIN(ITYPE,MESSAGE)
 
   !## Message from project manager Menub
-  CASE(ID_DPMANAGER)
+  CASE(ID_DPMANAGER,ID_DPMANAGER_TAB1,ID_DPMANAGER_TAB2)
    CALL PMANAGERMAIN(ITYPE,MESSAGE)
 
   !## Message from ir-manager MainMenu
