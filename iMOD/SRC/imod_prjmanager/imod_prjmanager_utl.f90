@@ -842,7 +842,7 @@ JLOOP: DO K=1,SIZE(TOPICS)
  SUBROUTINE PMANAGER_INITSIM_FIELDS_TAB1()
  !###======================================================================
  IMPLICIT NONE
- INTEGER :: I,J,N,ID,IFORMAT
+ INTEGER :: I,N,ID,IFORMAT
 
  ID=WINFODIALOG(CURRENTDIALOG)
  
@@ -929,7 +929,7 @@ JLOOP: DO K=1,SIZE(TOPICS)
   IF(PCKLIST(I)%IPLIST.EQ.1)THEN
    CALL WGRIDCOLOURROW(IDF_GRID2,I,-1,-1)
   ELSE
-   CALL WGRIDCOLOURROW(IDF_GRID2,I,WRGB(255,0,0),-1) !WRGB(255,0,0))
+   CALL WGRIDCOLOURROW(IDF_GRID2,I,WRGB(255,0,0),-1)
   ENDIF
  ENDDO
 
@@ -2678,6 +2678,11 @@ JLOOP: DO K=1,SIZE(TOPICS)
  TOPICS(TFHB)%TNAME='(FHB) Flow and Head Boundary'
  TOPICS(TLAK)%TNAME='(LAK) Lake Package'
  TOPICS(TPCG)%TNAME='(PCG) Precondition Conjugate-Gradient'
+ TOPICS(TGCG)%TNAME='(GCG) to be filled in'
+ TOPICS(TRCT)%TNAME='(RCT) to be filled in'
+ TOPICS(TADV)%TNAME='(ADV) to be filled in'
+ TOPICS(TVDF)%TNAME='(VDF) to be filled in'
+ TOPICS(TBTN)%TNAME='(BTN) Initial Conditions Species'
 
  TOPICS(TCAP)%NSUBTOPICS =22 !CAP
  TOPICS(TTOP)%NSUBTOPICS =1  !TOP
@@ -2712,6 +2717,11 @@ JLOOP: DO K=1,SIZE(TOPICS)
  TOPICS(TFHB)%NSUBTOPICS=2  !FHB
  TOPICS(TLAK)%NSUBTOPICS=10 !LAK
  TOPICS(TPCG)%NSUBTOPICS=1  !PCG
+ TOPICS(TGCG)%NSUBTOPICS=1  !GCG
+ TOPICS(TRCT)%NSUBTOPICS=1  !RCT
+ TOPICS(TADV)%NSUBTOPICS=1  !ADV
+ TOPICS(TVDF)%NSUBTOPICS=1  !VDF
+ TOPICS(TBTN)%NSUBTOPICS=1  !BTN
 
  TOPICS(TCAP)%TIMDEP =.FALSE. !CAP
  TOPICS(TTOP)%TIMDEP =.FALSE. !TOP
@@ -2746,37 +2756,42 @@ JLOOP: DO K=1,SIZE(TOPICS)
  TOPICS(TFHB)%TIMDEP=.TRUE.  !FHB
  TOPICS(TLAK)%TIMDEP=.TRUE.  !LAK
  TOPICS(TPCG)%TIMDEP=.FALSE. !PCG
- 
- TOPICS(TCAP)%SNAME(1)  ='(BND) Boundary (IDF)'
- TOPICS(TCAP)%SNAME(2)  ='(LUS) Landuse (IDF)'
- TOPICS(TCAP)%SNAME(3)  ='(RTZ) Rootzone (IDF)'
- TOPICS(TCAP)%SNAME(4)  ='(SLT) Soiltype (IDF)'
- TOPICS(TCAP)%SNAME(5)  ='(MST) Meteostation (IDF)'
- TOPICS(TCAP)%SNAME(6)  ='(SFL) Surfacelevel (IDF)'
- TOPICS(TCAP)%SNAME(7)  ='(ARQ) Artificial discharge (IDF)'
- TOPICS(TCAP)%SNAME(8)  ='(ARL) Artificial layer (IDF)'
- TOPICS(TCAP)%SNAME(9)  ='(ARL) Artificial location (IPF)' 
- TOPICS(TCAP)%SNAME(10) ='(WRA) Wetted Rural Area (IDF)'
- TOPICS(TCAP)%SNAME(11) ='(WUA) Wetted Urban Area (IDF)'
- TOPICS(TCAP)%SNAME(12) ='(PUA) Pondingdepth Urban Area (IDF)'
- TOPICS(TCAP)%SNAME(13) ='(PRA) Pondingdepth Rural Area (IDF)'
- TOPICS(TCAP)%SNAME(14) ='(RUA) Runoff Resistance Urban Area (IDF)'
- TOPICS(TCAP)%SNAME(15) ='(RRA) Runoff Resistance Rural Area (IDF)'
- TOPICS(TCAP)%SNAME(16) ='(RUA) Runon Resistance Urban Area (IDF)'
- TOPICS(TCAP)%SNAME(17) ='(RRA) Runon Resistance Rural Area (IDF)'
- TOPICS(TCAP)%SNAME(18) ='(IUA) Infiltration Capacity Urban Area (IDF)'
- TOPICS(TCAP)%SNAME(19) ='(IRA) Infiltration Capacity Rural Area (IDF)'
- TOPICS(TCAP)%SNAME(20) ='(PWD) Purgewater Depth (IDF)'
- TOPICS(TCAP)%SNAME(21) ='(SMF) Soil Moisture Factor (IDF)'
- TOPICS(TCAP)%SNAME(22) ='(SPF) Soil Permeability Factor (IDF)'
- TOPICS(TTOP)%SNAME(1)  ='(TOP) Top of Modellayer (IDF)'
- TOPICS(TBOT)%SNAME(1)  ='(BOT) Bottom of Modellayer (IDF)'
- TOPICS(TBND)%SNAME(1)  ='(BND) Boundary Settings (IDF)'
- TOPICS(TSHD)%SNAME(1)  ='(SHD) Starting Heads (IDF)'
- TOPICS(TKDW)%SNAME(1)  ='(KDW) COnductance (IDF)'
- TOPICS(TKHV)%SNAME(1)  ='(KHV) Horizontal Permeability (IDF)'
- TOPICS(TKVA)%SNAME(1)  ='(KVA) Vertical Anisotropy (IDF)'
- TOPICS(TVCW)%SNAME(1)  ='(VCW) Vertical Resistance (IDF)'
+ TOPICS(TGCG)%TIMDEP=.FALSE. !GCG
+ TOPICS(TRCT)%TIMDEP=.FALSE. !RCT
+ TOPICS(TADV)%TIMDEP=.FALSE. !ADV
+ TOPICS(TVDF)%TIMDEP=.FALSE. !VDF
+ TOPICS(TBTN)%TIMDEP=.TRUE.  !BTN
+
+ TOPICS(TCAP)%SNAME(1) ='(BND) Boundary (IDF)'
+ TOPICS(TCAP)%SNAME(2) ='(LUS) Landuse (IDF)'
+ TOPICS(TCAP)%SNAME(3) ='(RTZ) Rootzone (IDF)'
+ TOPICS(TCAP)%SNAME(4) ='(SLT) Soiltype (IDF)'
+ TOPICS(TCAP)%SNAME(5) ='(MST) Meteostation (IDF)'
+ TOPICS(TCAP)%SNAME(6) ='(SFL) Surfacelevel (IDF)'
+ TOPICS(TCAP)%SNAME(7) ='(ARQ) Artificial discharge (IDF)'
+ TOPICS(TCAP)%SNAME(8) ='(ARL) Artificial layer (IDF)'
+ TOPICS(TCAP)%SNAME(9) ='(ARL) Artificial location (IPF)' 
+ TOPICS(TCAP)%SNAME(10)='(WRA) Wetted Rural Area (IDF)'
+ TOPICS(TCAP)%SNAME(11)='(WUA) Wetted Urban Area (IDF)'
+ TOPICS(TCAP)%SNAME(12)='(PUA) Pondingdepth Urban Area (IDF)'
+ TOPICS(TCAP)%SNAME(13)='(PRA) Pondingdepth Rural Area (IDF)'
+ TOPICS(TCAP)%SNAME(14)='(RUA) Runoff Resistance Urban Area (IDF)'
+ TOPICS(TCAP)%SNAME(15)='(RRA) Runoff Resistance Rural Area (IDF)'
+ TOPICS(TCAP)%SNAME(16)='(RUA) Runon Resistance Urban Area (IDF)'
+ TOPICS(TCAP)%SNAME(17)='(RRA) Runon Resistance Rural Area (IDF)'
+ TOPICS(TCAP)%SNAME(18)='(IUA) Infiltration Capacity Urban Area (IDF)'
+ TOPICS(TCAP)%SNAME(19)='(IRA) Infiltration Capacity Rural Area (IDF)'
+ TOPICS(TCAP)%SNAME(20)='(PWD) Purgewater Depth (IDF)'
+ TOPICS(TCAP)%SNAME(21)='(SMF) Soil Moisture Factor (IDF)'
+ TOPICS(TCAP)%SNAME(22)='(SPF) Soil Permeability Factor (IDF)'
+ TOPICS(TTOP)%SNAME(1) ='(TOP) Top of Modellayer (IDF)'
+ TOPICS(TBOT)%SNAME(1) ='(BOT) Bottom of Modellayer (IDF)'
+ TOPICS(TBND)%SNAME(1) ='(BND) Boundary Settings (IDF)'
+ TOPICS(TSHD)%SNAME(1) ='(SHD) Starting Heads (IDF)'
+ TOPICS(TKDW)%SNAME(1) ='(KDW) COnductance (IDF)'
+ TOPICS(TKHV)%SNAME(1) ='(KHV) Horizontal Permeability (IDF)'
+ TOPICS(TKVA)%SNAME(1) ='(KVA) Vertical Anisotropy (IDF)'
+ TOPICS(TVCW)%SNAME(1) ='(VCW) Vertical Resistance (IDF)'
  TOPICS(TKVV)%SNAME(1) ='(KVV) Vertical Permeability (IDF)'
  TOPICS(TSTO)%SNAME(1) ='(STO) Storage Coefficient (IDF)'
  TOPICS(TSPY)%SNAME(1) ='(SSY) Specific Yield / Confined Storage Coef. (IDF)'
@@ -2838,6 +2853,11 @@ JLOOP: DO K=1,SIZE(TOPICS)
  TOPICS(TLAK)%SNAME(9) ='(LOR) Overland runoff (IDF)'
  TOPICS(TLAK)%SNAME(10)='(LWD) Lake Withdrawall (IDF)'
  TOPICS(TPCG)%SNAME(1) ='(PCG) Parameters PCG method (-)'
+ TOPICS(TGCG)%SNAME(1) ='(GCG) Parameters GCG method (-)'
+ TOPICS(TRCT)%SNAME(1) ='(RCT) Parameters RCT method (-)'
+ TOPICS(TADV)%SNAME(1) ='(ADV) Parameters ADV method (-)'
+ TOPICS(TVDF)%SNAME(1) ='(VDF) Parameters VDF method (-)'
+ TOPICS(TBTN)%SNAME(1) ='(BTN) Initial Conditions Species (-)'
  
  DO I=1,MAXTOPICS; TOPICS(I)%CMOD=TOPICS(I)%TNAME(2:4); ENDDO
 
@@ -2853,7 +2873,8 @@ JLOOP: DO K=1,SIZE(TOPICS)
  CALL WDIALOGPUTIMAGE(ID_CLEAN,ID_ICONNEW,1)
  CALL WDIALOGPUTIMAGE(ID_DELETE,ID_ICONDELETE,1)
  CALL WDIALOGPUTIMAGE(ID_CALC,ID_ICONCALC,1)
- ALLOCATE(PERIOD(MAXPERIODS)); NPERIOD=0
+ ALLOCATE(PERIOD(MAXPERIODS));  NPERIOD=0
+ ALLOCATE(SPECIES(MAXSPECIES)); NSPECIES=0
  
  DO I=1,SIZE(TOPICS)
   NULLIFY(TOPICS(I)%STRESS)

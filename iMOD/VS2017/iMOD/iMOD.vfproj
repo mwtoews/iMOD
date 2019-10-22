@@ -290,8 +290,10 @@
 		<File RelativePath="..\..\..\iMOD\SRC\imod_ludcmp\imod_ludcmp.f90"/></Filter>
 		<Filter Name="imod_main">
 		<File RelativePath="..\..\..\iMOD\SRC\imod_main\imod_about.f90">
+			<FileConfiguration Name="Release|x64">
+				<Tool Name="VFFortranCompilerTool" Preprocess="preprocessYes" PreprocessorDefinitions="RELEASE"/></FileConfiguration>
 			<FileConfiguration Name="Debug|x64">
-				<Tool Name="VFFortranCompilerTool" Preprocess="preprocessYes" PreprocessorDefinitions="DEBUG"/></FileConfiguration></File>
+				<Tool Name="VFFortranCompilerTool" Preprocess="preprocessYes" PreprocessorDefinitions=""/></FileConfiguration></File>
 		<File RelativePath="..\..\SRC\imod_main\imod_config_par.f90">
 			<FileConfiguration Name="Debug|Win32">
 				<Tool Name="VFFortranCompilerTool" Preprocess="preprocessYes" PreprocessorDefinitions="X32DEBUG"/></FileConfiguration>
