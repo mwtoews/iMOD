@@ -1,4 +1,5 @@
-!!  Copyright (C) Stichting Deltares, 2005-2019.
+
+    !!  Copyright (C) Stichting Deltares, 2005-2019.
 !!
 !!  This file is part of iMOD.
 !!
@@ -533,7 +534,7 @@ CONTAINS
       TRIM(RTOS(PEST%PE_TARGET(2),'G',7))//','//TRIM(ITOS(PEST%PE_SCALING-1))      //','// &
       TRIM(RTOS(PEST%PE_PADJ,'G',7))     //','//TRIM(RTOS(PEST%PE_DRES,'G',7))     //','// &
       TRIM(ITOS(PEST%PE_KTYPE))          //','//TRIM(RTOS(PEST%PE_KRANGE,'G',7))   //','// &
-      TRIM(ITOS(PEST%PE_REGULARISATION))//','//TRIM(RTOS(PEST%PE_REGFACTOR,'G',7))
+      TRIM(ITOS(PEST%PE_REGULARISATION)) //','//TRIM(RTOS(PEST%PE_REGFACTOR,'G',7))
       
  WRITE(IU,'(A)') TRIM(LINE)
 
@@ -663,6 +664,7 @@ CONTAINS
  
  PRJNLAY=PRJMXNLAY
  
+ !## check on RUN file
  CALL UTL_CREATEDIR(FNAME(1:INDEX(FNAME,'\',.TRUE.)-1))
  IF(IBATCH.EQ.0)THEN
   INQUIRE(FILE=FNAME,EXIST=LEX)
@@ -675,6 +677,7 @@ CONTAINS
  CALL OSD_OPEN(IU,FILE=FNAME,STATUS='REPLACE',ACTION='WRITE,DENYREAD',FORM='FORMATTED')
  IF(IU.EQ.0)RETURN
 
+ !## write Data set 1
  IF(IBATCH.EQ.1)THEN
   IF(TRIM(PBMAN%OUTPUT).EQ.'')THEN
    WRITE(IU,'(A)') CHAR(39)//FNAME(1:INDEX(FNAME,'\',.TRUE.)-1)//CHAR(39)
@@ -718,6 +721,7 @@ CONTAINS
   ENDDO
  ENDIF
 
+ !## Data set 4
  IF(PBMAN%IWINDOW.EQ.3)THEN
   LINE='0'
  ELSE
@@ -729,6 +733,7 @@ CONTAINS
  ENDIF
  WRITE(IU,'(A)') TRIM(LINE)
 
+ !## Data set 5
  IF(PCG%PARTOPT.GT.1)PCG%NOUTER=-ABS(PCG%NOUTER)
  LINE=TRIM(ITOS(PCG%NOUTER))//','//TRIM(ITOS(PCG%NINNER))//','// & 
       TRIM(RTOS(PCG%HCLOSE,'E',7))//','//TRIM(RTOS(PCG%RCLOSE,'E',7))//','// &
@@ -751,6 +756,7 @@ CONTAINS
   WRITE(IU,'(A)') '"'//TRIM(PCG%MRGFNAME)//'"'
  ENDIF
 
+ !## Data set 6
  !## non-equistantial network
  IF(PBMAN%IWINDOW.EQ.3)THEN
 
@@ -778,6 +784,7 @@ CONTAINS
  
  WRITE(IU,'(A)') 'ACTIVE MODULES'
 
+ !## Data set 8
  DO I=1,MAXTOPICS  
   IF(TOPICS(I)%IACT_MODEL.EQ.0)CYCLE
   !## skip pcg
@@ -814,6 +821,301 @@ CONTAINS
   !  WRITE(IU,'(A)') '1,0 '//TRIM(TOPICS(I)%TNAME)
   !END SELECT
 
+ ENDDO
+
+ !## write bndfile, Data set 9
+ WRITE(IU,'(A)') CHAR(39)//TRIM(BNDFNAME)//CHAR(39)
+
+ WRITE(IU,'(A)') 'MODULES FOR EACH LAYER'
+  
+ !## write modules not timedependent
+ DO I=1,MAXTOPICS
+  IF(TOPICS(I)%IACT_MODEL.EQ.0)CYCLE
+  IF(TOPICS(I)%TIMDEP)CYCLE
+
+  !## skip pcg
+  IF(I.EQ.TPCG)CYCLE
+  
+  !## pst module is exception
+  IF(I.EQ.TPST)THEN
+   LINE=TRIM(ITOS(SIZE(PEST%PARAM)))//',(PST)'; WRITE(IU,'(A)') TRIM(LINE) 
+   IF(.NOT.PMANAGER_SAVEPST(IU,1,'',0,0))THEN; ENDIF; CYCLE
+  ENDIF
+  
+  IF(.NOT.ASSOCIATED(TOPICS(I)%STRESS))CYCLE
+  IF(.NOT.ASSOCIATED(TOPICS(I)%STRESS(1)%FILES))CYCLE
+  
+  !## check the number of active packages
+  IF(I.EQ.TCAP)THEN
+   N=SIZE(TOPICS(I)%STRESS(1)%FILES,1)
+   IF(ASSOCIATED(TOPICS(I)%STRESS(1)%INPFILES))THEN
+    N=N+SIZE(TOPICS(I)%STRESS(1)%INPFILES)
+   ENDIF
+  ELSE
+   K=1; N=0
+   DO J=1,SIZE(TOPICS(I)%STRESS(1)%FILES,2)
+    IF(TOPICS(I)%STRESS(1)%FILES(K,J)%IACT.EQ.1)N=N+1
+   ENDDO
+  ENDIF
+  
+  WRITE(IU,'(I3.3,A)') N,','//TRIM(TOPICS(I)%TNAME)
+
+  IF(N.GT.0)THEN
+   !## number of subtopics
+   DO K=1,SIZE(TOPICS(I)%STRESS(1)%FILES,1)
+    !## number of systems
+    DO J=1,SIZE(TOPICS(I)%STRESS(1)%FILES,2)
+     !## skip temporary deactivated packages
+     IF(TOPICS(I)%STRESS(1)%FILES(K,J)%IACT.EQ.0)CYCLE
+     !## msp/pwt - skip ilay
+     IF(I.EQ.TCAP.OR.I.EQ.TPWT)THEN
+      WRITE(LINE,'(5X,     2(G15.7,A1))') &
+                                  TOPICS(I)%STRESS(1)%FILES(K,J)%FCT ,',', &
+                                  TOPICS(I)%STRESS(1)%FILES(K,J)%IMP ,','
+     ELSE
+      WRITE(LINE,'(1X,I5,2(A1,G15.7),A1)') &
+                                  TOPICS(I)%STRESS(1)%FILES(K,J)%ILAY,',', &
+                                  TOPICS(I)%STRESS(1)%FILES(K,J)%FCT ,',', &
+                                  TOPICS(I)%STRESS(1)%FILES(K,J)%IMP ,','
+     ENDIF
+     IF(TOPICS(I)%STRESS(1)%FILES(K,J)%ICNST.EQ.1)THEN
+      LINE=TRIM(LINE)//TRIM(RTOS(TOPICS(I)%STRESS(1)%FILES(K,J)%CNST,'G',7))
+     ELSEIF(TOPICS(I)%STRESS(1)%FILES(K,J)%ICNST.EQ.2)THEN
+      LINE=TRIM(LINE)//CHAR(39)//TRIM(TOPICS(I)%STRESS(1)%FILES(K,J)%FNAME)//CHAR(39)
+     ENDIF
+     WRITE(IU,'(A)') TRIM(LINE)
+
+    ENDDO
+   ENDDO
+  
+   !## write extra files only for MetaSWAP
+   IF(I.EQ.TCAP)THEN
+    IF(ASSOCIATED(TOPICS(I)%STRESS(1)%INPFILES))THEN
+     K=SIZE(TOPICS(I)%STRESS(1)%INPFILES)
+     DO J=1,K; WRITE(IU,'(1X,A)') TRIM(TOPICS(I)%STRESS(1)%INPFILES(J)); ENDDO
+    ENDIF
+   ENDIF
+ 
+  ENDIF
+
+ ENDDO
+
+ WRITE(IU,'(A)') 'PACKAGES FOR EACH LAYER AND STRESS-PERIOD '
+
+ !## only days available
+ LDAYS=.TRUE.
+ DO KPER=1,PRJNPER
+  IF(SIM(KPER)%IHR+SIM(KPER)%IMT+SIM(KPER)%ISC.GT.0)THEN; LDAYS=.FALSE.; EXIT; ENDIF
+ ENDDO
+
+ !## write packages - incl./excl. steady-state
+ DO KPER=1,PRJNPER
+  
+  !## steady-state
+  IF(SIM(KPER)%DELT.EQ.0.0D0)THEN
+   WRITE(IU,'(I5.5,A1,F15.7,A1,A,2(A1,I1))') KPER,',',SIM(KPER)%DELT,',',TRIM(SIM(KPER)%CDATE),',',SIM(KPER)%ISAVE,',',SIM(KPER)%ISUM
+  !## transient (use final date as well, used for labeling file-names!)
+  ELSE
+   IF(LDAYS)THEN
+    WRITE(CDATE1,'(I4.4,2I2.2)') SIM(KPER)%IYR  ,SIM(KPER)%IMH  ,SIM(KPER)%IDY
+   ELSE
+    WRITE(CDATE1,'(I4.4,5I2.2)') SIM(KPER)%IYR  ,SIM(KPER)%IMH  ,SIM(KPER)%IDY  ,SIM(KPER)%IHR  ,SIM(KPER)%IMT  ,SIM(KPER)%ISC
+   ENDIF   
+   IF(LDAYS)THEN
+    WRITE(CDATE2,'(I4.4,2I2.2)') SIM(KPER+1)%IYR,SIM(KPER+1)%IMH,SIM(KPER+1)%IDY
+   ELSE
+    WRITE(CDATE2,'(I4.4,5I2.2)') SIM(KPER+1)%IYR,SIM(KPER+1)%IMH,SIM(KPER+1)%IDY,SIM(KPER+1)%IHR,SIM(KPER+1)%IMT,SIM(KPER+1)%ISC
+   ENDIF
+   WRITE(IU,'(I5.5,A1,F15.7,A1,A,2(A1,I1),A)') KPER,',',SIM(KPER)%DELT,',',TRIM(CDATE1),',',SIM(KPER)%ISAVE,',',SIM(KPER)%ISUM,','//TRIM(CDATE2)
+  ENDIF
+
+  DO I=1,MAXTOPICS  
+   IF(TOPICS(I)%IACT_MODEL.EQ.0)CYCLE
+   IF(.NOT.TOPICS(I)%TIMDEP)CYCLE
+   IF(.NOT.ASSOCIATED(TOPICS(I)%STRESS))CYCLE
+   IF(.NOT.ASSOCIATED(TOPICS(I)%STRESS(1)%FILES))CYCLE
+
+   IPER=PMANAGER_GETCURRENTIPER(KPER,I,ITIME,JTIME)
+   
+   !## overrule wel/isg packages per stress-period
+   SELECT CASE (I)
+    CASE (TWEL); IF(PBMAN%DWEL.EQ.1)IPER=ABS(IPER)
+    CASE (TISG); IF(PBMAN%DISG.EQ.1)IPER=ABS(IPER)
+    CASE (TSFR); IF(PBMAN%DSFR.EQ.1)IPER=ABS(IPER)
+   END SELECT
+
+   !## reuse previous timestep
+   IF(IPER.LE.0)THEN
+
+    N=MAX(IPER,-1)
+    WRITE(IU,'(I3,A)') N,','//TRIM(TOPICS(I)%TNAME)
+   
+   ELSE
+   
+    !## check the number of active packages
+    K=1; N=0
+    DO J=1,SIZE(TOPICS(I)%STRESS(IPER)%FILES,2)
+     IF(TOPICS(I)%STRESS(IPER)%FILES(K,J)%IACT.EQ.1)N=N+1
+    ENDDO
+    WRITE(IU,'(I3,A)') N,','//TRIM(TOPICS(I)%TNAME)
+ 
+    IF(N.GT.0)THEN
+     !## number of subtopics
+     DO K=1,SIZE(TOPICS(I)%STRESS(IPER)%FILES,1)
+      !## number of systems
+      DO J=1,SIZE(TOPICS(I)%STRESS(IPER)%FILES,2)
+       !## skip temporary deactivated packages
+       IF(TOPICS(I)%STRESS(IPER)%FILES(K,J)%IACT.EQ.0)CYCLE
+       IF(TOPICS(I)%STRESS(IPER)%FILES(K,J)%ICNST.EQ.1)THEN
+        WRITE(IU,'(1X,I5,3(A1,G15.7))') &
+                                    TOPICS(I)%STRESS(IPER)%FILES(K,J)%ILAY,',', &
+                                    TOPICS(I)%STRESS(IPER)%FILES(K,J)%FCT ,',', &
+                                    TOPICS(I)%STRESS(IPER)%FILES(K,J)%IMP ,',', &
+                                    TOPICS(I)%STRESS(IPER)%FILES(K,J)%CNST
+       ELSEIF(TOPICS(I)%STRESS(IPER)%FILES(K,J)%ICNST.EQ.2)THEN
+        WRITE(IU,'(1X,I5,2(A1,G15.7),A1,A)') &
+                                    TOPICS(I)%STRESS(IPER)%FILES(K,J)%ILAY,',', &
+                                    TOPICS(I)%STRESS(IPER)%FILES(K,J)%FCT ,',', &
+                                    TOPICS(I)%STRESS(IPER)%FILES(K,J)%IMP ,',', &
+                     CHAR(39)//TRIM(TOPICS(I)%STRESS(IPER)%FILES(K,J)%FNAME)//CHAR(39)
+       ENDIF
+      ENDDO
+     ENDDO
+    ENDIF
+    
+   ENDIF
+  ENDDO
+ ENDDO
+ 
+ CLOSE(IU)
+ 
+ PMANAGER_SAVERUN=.TRUE.
+
+ END FUNCTION PMANAGER_SAVERUN
+
+  !###======================================================================
+ LOGICAL FUNCTION PMANAGER_SAVERUNWQ(FNAME,IBATCH)
+ !###======================================================================
+ IMPLICIT NONE
+ CHARACTER(LEN=*),INTENT(IN) :: FNAME
+ INTEGER,INTENT(IN) :: IBATCH
+ CHARACTER(LEN=52) :: CDATE1,CDATE2
+ CHARACTER(LEN=256) :: BNDFNAME
+ INTEGER(KIND=8) :: ITIME,JTIME
+ INTEGER :: IU,I,J,K,IPER,KPER,N,NSCL
+ LOGICAL :: LDAYS,LEX
+ TYPE(IDFOBJ),ALLOCATABLE,DIMENSION(:) :: IDF
+ CHARACTER(LEN=256) :: LINE
+ 
+ PMANAGER_SAVERUNWQ=.FALSE.
+ 
+
+ !!## overrule ipst if not as keyword given
+ !IF(IBATCH.EQ.1.AND.PBMAN%IPEST.EQ.0)TOPICS(TPST)%IACT_MODEL=0
+
+ !## get active packages, set default values
+ ! Frans: moet deze aangepast voor SEAWAT?
+ IF(.NOT.PMANAGER_GETPACKAGES())RETURN
+
+ !# Check if obligatory packages are active for MT3D and SEAWAT
+ IF(.NOT.PMANAGER_SAVERUNWQ_CHK())RETURN
+
+ !DO I=1,MAXTOPICS  
+ ! SELECT CASE (I)
+ !  CASE (TFHB,TUZF,TMNW,TSFR,TLAK)
+ !   IF(TOPICS(I)%IACT_MODEL.EQ.1)THEN
+ !    CALL WMESSAGEBOX(OKONLY,INFORMATIONICON,COMMONOK,'You cannot use the package '//TRIM(TOPICS(I)%TNAME)//CHAR(13)// &
+ !     'to save for a RUN-file. Select the option MODFLOW2005 instead','Information')
+ !    RETURN
+ !   ENDIF
+ ! END SELECT
+ !ENDDO
+
+ !## remove last timestep sinces it is the final date
+ IF(PRJNPER.GT.1)PRJNPER=PRJNPER-1
+ 
+ PRJNLAY=PRJMXNLAY
+
+ !## Prepare result model file 
+ CALL UTL_CREATEDIR(FNAME(1:INDEX(FNAME,'\',.TRUE.)-1))
+ IF(IBATCH.EQ.0)THEN
+  INQUIRE(FILE=FNAME,EXIST=LEX)
+  IF(LEX)THEN
+   CALL WMESSAGEBOX(YESNO,QUESTIONICON,COMMONNO,'Are you sure to overwrite'//CHAR(13)//TRIM(FNAME),'Question')
+   IF(WINFODIALOG(4).NE.1)RETURN
+  ENDIF
+ ENDIF
+ IU=UTL_GETUNIT()
+ CALL OSD_OPEN(IU,FILE=FNAME,STATUS='REPLACE',ACTION='WRITE,DENYREAD',FORM='FORMATTED')
+ IF(IU.EQ.0)RETURN
+
+ !## write genfile
+ WRITE(IU,'(A)') '############################################################################'
+ WRITE(IU,'(A)') '# iMOD run-file for SEAWAT '
+ WRITE(IU,'(A)') '############################################################################'
+
+ WRITE(IU,'(/A)') '[GEN] # GENeral settings'
+ WRITE(IU,'(A)') 'MODELNAME = '//CHAR(39)//TRIM(MODELNAME)//CHAR(39)
+ WRITE(IU,'(A)') 'WRITEHELP     =   F'         
+ WRITE(IU,'(A)') 'ECHODEFAULTS  =   F'         
+ WRITE(IU,'(A)') 'RESULT_DIR    =   '//CHAR(39)//TRIM(PREFVAL(1))//'\MODELS\'//TRIM(MODELNAME)//CHAR(39)
+ WRITE(IU,'(A)') 'IDFDEBUG      =   F'         
+ PBMAN%RUNTYPE='SEAWAT' ; IF(PBMAN%IFORMAT.EQ.5) PBMAN%RUNTYPE='MT3DMS'
+ WRITE(IU,'(A)') 'RUNTYPE       =   '//PBMAN%RUNTYPE
+ WRITE(IU,'(A)') 'PACKAGES      =   -'         
+ WRITE(IU,'(A)') 'COORD_XLL     =   '//TRIM(UTL_REALTOSTRING(PBMAN%XMIN))
+ WRITE(IU,'(A)') 'COORD_YLL     =   '//TRIM(UTL_REALTOSTRING(PBMAN%YMIN)) 
+ WRITE(IU,'(A)') 'COORD_XUR     =   '//TRIM(UTL_REALTOSTRING(PBMAN%XMAX)) 
+ WRITE(IU,'(A)') 'COORD_YUR     =   '//TRIM(UTL_REALTOSTRING(PBMAN%YMAX)) 
+ WRITE(IU,'(A)') 'START_YEAR    =   '//TRIM(ITOS(SIM(1)%IYR))
+ WRITE(IU,'(A)') 'START_MONTH   =   '//TRIM(ITOS(SIM(1)%IMH))
+ WRITE(IU,'(A)') 'START_DAY     =   '//TRIM(ITOS(SIM(1)%IDY))
+ WRITE(IU,'(A)') 'START_HOUR    =   1'         
+ WRITE(IU,'(A)') 'START_MINUTE  =   1'         
+ WRITE(IU,'(A)') 'START_SECOND  =   1'         
+
+ WRITE(IU,'(/A)') '[DIS] # MODFLOW DIScretization Package'
+ WRITE(IU,'(A)') '[BAS6] # MODFLOW BASic Package'
+ WRITE(IU,'(A)') '[OC] # Output Control option'
+ WRITE(IU,'(A)') '[LPF]'
+ WRITE(IU,'(A)') '[RCH]'
+ WRITE(IU,'(A)') '[DRN]'
+ WRITE(IU,'(A)') '[RIV]'
+ WRITE(IU,'(A)') '[GHB]'
+ WRITE(IU,'(A)') '[WEL]'
+ WRITE(IU,'(A)') '[CHD]'
+ WRITE(IU,'(A)') '[PCG] # MODFLOW Preconditioned Conjugate-Gradient Package'
+ WRITE(IU,'(A)') '[BTN] # MT3DMS Basic Transport Package'
+ WRITE(IU,'(A)') '[ADV] # MT3DMS ADVection package'
+ WRITE(IU,'(A)') '[DSP]'
+ WRITE(IU,'(A)') '[GCG] # MT3DMS Generalized Conjugate Gradient Solver Package'
+ WRITE(IU,'(A)') '[SSM] # MT3DMS Sink Source Mixing Package'
+ WRITE(IU,'(A)') '[VDF] #'
+
+ 
+ ! Frans: lijstje PBMAN uitbreiden met iMOD WQ items....
+ !    er is bijvoorbeeld PBMAN%IWINDOW,PBMAN%IDOUBLE
+ ! Frans: modelwindow: gegevens uit tabblad halen. Daar wordt berekendt welke minmx x y het wordt. 
+ 
+ ! Frans: voorbeeld skippen bij foute invoer
+ IF(PCG%PARTOPT.EQ.3.AND.TRIM(PCG%MRGFNAME).EQ.'')THEN
+  CLOSE(IU); CALL WMESSAGEBOX(OKONLY,EXCLAMATIONICON,COMMONOK,'You need to specify a pointer IDF-file when selecting the RCB partition method.','Error')
+  RETURN
+ ENDIF
+
+
+ WRITE(IU,'(A)') 'ACTIVE MODULES'
+
+ DO I=1,MAXTOPICS  
+  IF(TOPICS(I)%IACT_MODEL.EQ.0)CYCLE
+  !## skip pcg
+  IF(I.EQ.TPCG)CYCLE
+  !## pst module is exception
+  IF(I.EQ.TPST)THEN; WRITE(IU,'(A)') '1,0 '//TRIM(TOPICS(I)%TNAME); CYCLE; ENDIF
+  IF(.NOT.ASSOCIATED(TOPICS(I)%STRESS))CYCLE
+  IF(.NOT.ASSOCIATED(TOPICS(I)%STRESS(1)%FILES))CYCLE
+
+  CALL PMANAGER_SAVEMF2005_RUN_ISAVE(PBMAN%ISAVE(I)%ILAY,TOPICS(I)%TNAME(1:5),IU)
  ENDDO
 
  !## write bndfile
@@ -982,10 +1284,42 @@ CONTAINS
  
  CLOSE(IU)
  
- PMANAGER_SAVERUN=.TRUE.
+ PMANAGER_SAVERUNWQ=.TRUE.
 
- END FUNCTION PMANAGER_SAVERUN
+ END FUNCTION PMANAGER_SAVERUNWQ
 
+ !###======================================================================
+ LOGICAL FUNCTION PMANAGER_SAVERUNWQ_CHK()
+ !###======================================================================
+ ! actie: nog opschonen
+ IMPLICIT NONE
+ !CHARACTER(LEN=*),INTENT(IN) :: FNAME
+ !INTEGER,INTENT(IN) :: IBATCH
+ !CHARACTER(LEN=52) :: CDATE1,CDATE2
+ !CHARACTER(LEN=256) :: BNDFNAME
+ !INTEGER(KIND=8) :: ITIME,JTIME
+ !INTEGER :: IU,I,J,K,IPER,KPER,N,NSCL
+ !LOGICAL :: LDAYS,LEX
+ !TYPE(IDFOBJ),ALLOCATABLE,DIMENSION(:) :: IDF
+ !CHARACTER(LEN=256) :: LINE
+ 
+ PMANAGER_SAVERUNWQ_CHK=.FALSE.
+! VDF, BTN, ADV ,DSP ,SSM, FTL, GCG, RCT, UDR
+! RCT en UDR zijn reactie packages; die zijn wel echt optioneel. En per simulatie kan maar 1 van deze 2 gebruikt worden.
+! dus als het makkelijker is zou je gewoon alle MT3DMS packages verplicht kunnen maken.
+
+! BAS6, DIS, WEL, DRN, RIV, GHB, CHD, LPF, BCF6, RCH, EVT, OC, VDF, PCG, , BTN
+! verplicht: BAS6, DIS, OC, PCG en  LPF of BCF6
+ 
+ IF(.NOT.LPCG)THEN
+  CALL WMESSAGEBOX(OKONLY,EXCLAMATIONICON,COMMONOK,'It is compulsory to add a solver, e.g. PCG','Error')
+  RETURN
+ ENDIF
+
+ PMANAGER_SAVERUNWQ_CHK=.TRUE.
+
+ END FUNCTION PMANAGER_SAVERUNWQ_CHK
+ 
  !###======================================================================
  LOGICAL FUNCTION PMANAGER_SAVEMF2005(FNAME,IBATCH) 
  !###======================================================================
