@@ -111,6 +111,7 @@ MODULE MOD_PMANAGER_PAR
  TYPE(SPECIESOBJ),ALLOCATABLE,DIMENSION(:),SAVE :: SPECIES
  INTEGER :: NSPECIES
 
+ !## For each simulation step date-time info and MODFLOW flags
  TYPE SIMOBJ
   INTEGER :: ISAVE
   CHARACTER(LEN=MAXLENPRJ) :: CDATE
@@ -145,8 +146,8 @@ MODULE MOD_PMANAGER_PAR
                                                                 !(:,I) = system i
   CHARACTER(LEN=256),POINTER,DIMENSION(:) :: INPFILES => NULL()  !stores the inp files for metaswap
  END TYPE STRESSOBJ
- TYPE(STRESSOBJ),ALLOCATABLE,DIMENSION(:) :: STRESS
-
+ TYPE(STRESSOBJ),ALLOCATABLE,DIMENSION(:) :: STRESS  !## only in PMANAGER_GETIPER, temp to fill TOPICS(ITOPIC)%STRESS
+ 
  TYPE SIPOBJ
   INTEGER :: NOUTER=150
   REAL(KIND=DP_KIND) :: HCLOSE=1.0D-4
@@ -253,6 +254,7 @@ MODULE MOD_PMANAGER_PAR
 
  TYPE(PSTOBJ) :: PEST
  
+ !## Complete set of all files in time for all packages
  TYPE TOPICSOBJ
   INTEGER :: ID                                                 !id of main topics
   INTEGER,POINTER,DIMENSION(:) :: IDT                           !id of each time step for current topic
@@ -266,10 +268,9 @@ MODULE MOD_PMANAGER_PAR
   CHARACTER(LEN=3) :: CMOD                                      !short name (3 characters) of the topic
   TYPE(STRESSOBJ),POINTER,DIMENSION(:) :: STRESS,STRESS_TMP => NULL()     !files 
  END TYPE TOPICSOBJ
-
  TYPE(TOPICSOBJ),DIMENSION(MAXTOPICS) :: TOPICS
- CHARACTER(LEN=MAXLENPRJ),ALLOCATABLE,DIMENSION(:) :: MENUNAMES
 
+ CHARACTER(LEN=MAXLENPRJ),ALLOCATABLE,DIMENSION(:) :: MENUNAMES
  CHARACTER(LEN=3),DIMENSION(MAXPARAM) :: PARAM
  DATA PARAM/'KD','KH','KV','VC','SC','RC','RI','DC','IC','II','AF','AA','VA','HF','MS','MC','RE','EX','EP', &
     'QR','GC','SY','RL','RB','IL','IB','DL'/

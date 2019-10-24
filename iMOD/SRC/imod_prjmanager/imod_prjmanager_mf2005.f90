@@ -993,7 +993,7 @@ CONTAINS
 
  END FUNCTION PMANAGER_SAVERUN
 
-  !###======================================================================
+ !###======================================================================
  LOGICAL FUNCTION PMANAGER_SAVERUNWQ(FNAME,IBATCH)
  !###======================================================================
  IMPLICIT NONE
@@ -1034,8 +1034,6 @@ CONTAINS
  !## remove last timestep sinces it is the final date
  IF(PRJNPER.GT.1)PRJNPER=PRJNPER-1
  
- PRJNLAY=PRJMXNLAY
-
  !## Prepare result model file 
  CALL UTL_CREATEDIR(FNAME(1:INDEX(FNAME,'\',.TRUE.)-1))
  IF(IBATCH.EQ.0)THEN
@@ -1049,32 +1047,14 @@ CONTAINS
  CALL OSD_OPEN(IU,FILE=FNAME,STATUS='REPLACE',ACTION='WRITE,DENYREAD',FORM='FORMATTED')
  IF(IU.EQ.0)RETURN
 
- !## write genfile
  WRITE(IU,'(A)') '############################################################################'
  WRITE(IU,'(A)') '# iMOD run-file for SEAWAT '
  WRITE(IU,'(A)') '############################################################################'
 
- WRITE(IU,'(/A)') '[GEN] # GENeral settings'
- WRITE(IU,'(A)') 'MODELNAME = '//CHAR(39)//TRIM(MODELNAME)//CHAR(39)
- WRITE(IU,'(A)') 'WRITEHELP     =   F'         
- WRITE(IU,'(A)') 'ECHODEFAULTS  =   F'         
- WRITE(IU,'(A)') 'RESULT_DIR    =   '//CHAR(39)//TRIM(PREFVAL(1))//'\MODELS\'//TRIM(MODELNAME)//CHAR(39)
- WRITE(IU,'(A)') 'IDFDEBUG      =   F'         
- PBMAN%RUNTYPE='SEAWAT' ; IF(PBMAN%IFORMAT.EQ.5) PBMAN%RUNTYPE='MT3DMS'
- WRITE(IU,'(A)') 'RUNTYPE       =   '//PBMAN%RUNTYPE
- WRITE(IU,'(A)') 'PACKAGES      =   -'         
- WRITE(IU,'(A)') 'COORD_XLL     =   '//TRIM(UTL_REALTOSTRING(PBMAN%XMIN))
- WRITE(IU,'(A)') 'COORD_YLL     =   '//TRIM(UTL_REALTOSTRING(PBMAN%YMIN)) 
- WRITE(IU,'(A)') 'COORD_XUR     =   '//TRIM(UTL_REALTOSTRING(PBMAN%XMAX)) 
- WRITE(IU,'(A)') 'COORD_YUR     =   '//TRIM(UTL_REALTOSTRING(PBMAN%YMAX)) 
- WRITE(IU,'(A)') 'START_YEAR    =   '//TRIM(ITOS(SIM(1)%IYR))
- WRITE(IU,'(A)') 'START_MONTH   =   '//TRIM(ITOS(SIM(1)%IMH))
- WRITE(IU,'(A)') 'START_DAY     =   '//TRIM(ITOS(SIM(1)%IDY))
- WRITE(IU,'(A)') 'START_HOUR    =   1'         
- WRITE(IU,'(A)') 'START_MINUTE  =   1'         
- WRITE(IU,'(A)') 'START_SECOND  =   1'         
-
- WRITE(IU,'(/A)') '[DIS] # MODFLOW DIScretization Package'
+ !## write genfile
+ IF(.NOT.PMANAGER_SAVERUNWQ_WRTGEN(IU))RETURN
+ IF(.NOT.PMANAGER_SAVERUNWQ_WRTDIS(IU))RETURN
+ 
  WRITE(IU,'(A)') '[BAS6] # MODFLOW BASic Package'
  WRITE(IU,'(A)') '[OC] # Output Control option'
  WRITE(IU,'(A)') '[LPF]'
@@ -1288,6 +1268,118 @@ CONTAINS
 
  END FUNCTION PMANAGER_SAVERUNWQ
 
+ !####====================================================================
+ LOGICAL FUNCTION PMANAGER_SAVERUNWQ_WRTDIS(IU)
+ !####====================================================================
+ IMPLICIT NONE
+ !CHARACTER(LEN=*),INTENT(IN) :: DIR,DIRMNAME
+ INTEGER,INTENT(IN) :: IU
+ INTEGER :: ILAY,ICOL,IROW,LCBD,N,ITOPIC
+ REAL(KIND=DP_KIND) :: DELX,DELY
+
+ PMANAGER_SAVERUNWQ_WRTDIS=.FALSE.
+
+ WRITE(IU,'(/A)') '[DIS] # MODFLOW DIScretization Package'
+  
+ WRITE(IU,'(A)') 'MODELNAME = '//CHAR(39)//TRIM(MODELNAME)//CHAR(39)
+ N=0; DO I=1,SIZE(PBMAN%ILAY); IF(PBMAN%ILAY(I).EQ.1)N=N+1; ENDDO
+ WRITE(IU,'(A)') 'NLAY = '//TRIM(ITOS(N)) ! PRJNLAY))
+ WRITE(IU,'(A)') 'NROW = '//TRIM(ITOS(PRJIDF%NROW))
+ WRITE(IU,'(A)') 'NCOL = '//TRIM(ITOS(PRJIDF%NCOL))
+ WRITE(IU,'(A)') 'NPER = '//TRIM(ITOS(PRJNPER))
+ WRITE(IU,'(A)') 'ITMUNI = 4' ! default
+ WRITE(IU,'(A)') 'LENUNI = 2' ! default
+ LCBD=-1
+ DO ILAY=1,PRJNLAY
+  IF(ILAY.LT.PRJNLAY)THEN
+   !## quasi-3d scheme
+   IF(LQBD)THEN
+    LCBD=1
+   !## 3d no quasi confining bed
+   ELSE
+    LCBD=0
+   ENDIF
+  ELSE
+   !## lowest layer has never a quasi-confining bed
+   LCBD=0
+  ENDIF
+  WRITE(IU,'(A)') 'LAYCBD_L'//TRIM(ITOS(PRJNLAY))//' = '//TRIM(ITOS(LCBD))
+ ENDDO
+
+ IF(PRJIDF%IEQ.EQ.0)THEN 
+   WRITE(IU,'(A)') '  DELR_C? = '//TRIM(RTOS(PRJIDF%DX,'E',7))//' '//TRIM(UTL_REALTOSTRING(SUBMODEL(5)))
+ ELSE
+  DO ICOL=1,PRJIDF%NCOL 
+   DELX=PRJIDF%SX(ICOL)-PRJIDF%SX(ICOL-1)   
+   WRITE(IU,'(A)')'  DELR_C'//TRIM(ITOS(ICOL))//' = '//TRIM(RTOS(DELX,'E',7))
+  ENDDO
+ ENDIF
+ IF(PRJIDF%IEQ.EQ.0)THEN
+   WRITE(IU,'(A)') '  DELR_R? = '//TRIM(RTOS(PRJIDF%DY,'E',7))//' '//TRIM(UTL_REALTOSTRING(SUBMODEL(5)))
+ ELSE
+  DO IROW=1,PRJIDF%NROW
+   DELY=PRJIDF%SY(IROW-1)-PRJIDF%SY(IROW)   
+   WRITE(IU,'(A)')'  DELR_R'//TRIM(ITOS(IROW))//' = '//TRIM(RTOS(DELY,'E',7))
+  ENDDO
+ ENDIF
+
+ DO ILAY=1,PRJNLAY
+  ITOPIC=TTOP
+  !## quasi-3d scheme add top aquifer modellayer
+  IF(LQBD.OR.ILAY.EQ.1)THEN
+    WRITE(IU,'(A)') 'TOP = '//TOP(ILAY)%FNAME ; RETURN
+  ENDIF
+  ITOPIC=TBOT
+    WRITE(IU,'(A)') 'BOTM_L'//TRIM(ITOS(ILAY))//' = '//BOT(ILAY)%FNAME ; RETURN
+ ENDDO
+  
+ WRITE(IU,'(A)') 'BOTM_L? = default'
+ WRITE(IU,'(A)') 'PERLEN_P? = default'
+ WRITE(IU,'(A)') 'NSTP_P? = default'
+ WRITE(IU,'(A)') 'TSMULT_P? = default'
+ WRITE(IU,'(A)') 'SSTR_P? = default'
+
+ PMANAGER_SAVERUNWQ_WRTDIS=.TRUE.
+
+ END FUNCTION PMANAGER_SAVERUNWQ_WRTDIS
+
+ !####====================================================================
+ LOGICAL FUNCTION PMANAGER_SAVERUNWQ_WRTGEN(IU)
+ !####====================================================================
+ IMPLICIT NONE
+ !CHARACTER(LEN=*),INTENT(IN) :: DIR,DIRMNAME
+ INTEGER,INTENT(IN) :: IU
+ INTEGER :: KPER
+
+ PMANAGER_SAVERUNWQ_WRTGEN=.FALSE.
+ WRITE(IU,'(/A)') '[GEN] # GENeral settings'
+ WRITE(IU,'(A)') 'MODELNAME = '//CHAR(39)//TRIM(MODELNAME)//CHAR(39)
+ WRITE(IU,'(A)') 'WRITEHELP     =   F'         
+ WRITE(IU,'(A)') 'ECHODEFAULTS  =   F'         
+ WRITE(IU,'(A)') 'RESULT_DIR    =   '//CHAR(39)//TRIM(PREFVAL(1))//'\MODELS\'//TRIM(MODELNAME)//CHAR(39)
+ WRITE(IU,'(A)') 'IDFDEBUG      =   F'         
+ PBMAN%RUNTYPE='SEAWAT' ; IF(PBMAN%IFORMAT.EQ.5) PBMAN%RUNTYPE='MT3DMS'
+ WRITE(IU,'(A)') 'RUNTYPE       =   '//PBMAN%RUNTYPE
+ WRITE(IU,'(A)') 'PACKAGES      =   -'         
+ WRITE(IU,'(A)') 'COORD_XLL     =   '//TRIM(UTL_REALTOSTRING(PBMAN%XMIN))//' '//TRIM(UTL_REALTOSTRING(SUBMODEL(1)))   ! Frans vraag: of gebruiken SUBMODEL(x)
+ WRITE(IU,'(A)') 'COORD_YLL     =   '//TRIM(UTL_REALTOSTRING(PBMAN%YMIN))//' '//TRIM(UTL_REALTOSTRING(SUBMODEL(2))) 
+ WRITE(IU,'(A)') 'COORD_XUR     =   '//TRIM(UTL_REALTOSTRING(PBMAN%XMAX))//' '//TRIM(UTL_REALTOSTRING(SUBMODEL(3)))
+ WRITE(IU,'(A)') 'COORD_YUR     =   '//TRIM(UTL_REALTOSTRING(PBMAN%YMAX))//' '//TRIM(UTL_REALTOSTRING(SUBMODEL(4)))
+
+ !## look for first
+ DO KPER=1,PRJNPER; IF(SIM(KPER)%DELT.GT.0.0D0)EXIT; ENDDO
+ 
+ WRITE(IU,'(A)') 'START_YEAR    =   '//TRIM(ITOS(SIM(KPER)%IYR))
+ WRITE(IU,'(A)') 'START_MONTH   =   '//TRIM(ITOS(SIM(KPER)%IMH))
+ WRITE(IU,'(A)') 'START_DAY     =   '//TRIM(ITOS(SIM(KPER)%IDY))
+ WRITE(IU,'(A)') 'START_HOUR    =   1'         
+ WRITE(IU,'(A)') 'START_MINUTE  =   1'         
+ WRITE(IU,'(A)') 'START_SECOND  =   1'         
+
+ PMANAGER_SAVERUNWQ_WRTGEN=.TRUE.
+
+ END FUNCTION PMANAGER_SAVERUNWQ_WRTGEN
+
  !###======================================================================
  LOGICAL FUNCTION PMANAGER_SAVERUNWQ_CHK()
  !###======================================================================
@@ -1310,6 +1402,8 @@ CONTAINS
 
 ! BAS6, DIS, WEL, DRN, RIV, GHB, CHD, LPF, BCF6, RCH, EVT, OC, VDF, PCG, , BTN
 ! verplicht: BAS6, DIS, OC, PCG en  LPF of BCF6
+ 
+ ! NPER > 0 
  
  IF(.NOT.LPCG)THEN
   CALL WMESSAGEBOX(OKONLY,EXCLAMATIONICON,COMMONOK,'It is compulsory to add a solver, e.g. PCG','Error')
