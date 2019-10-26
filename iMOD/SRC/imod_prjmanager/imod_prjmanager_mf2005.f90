@@ -1051,11 +1051,12 @@ CONTAINS
  WRITE(IU,'(A)') '# iMOD run-file for SEAWAT '
  WRITE(IU,'(A)') '############################################################################'
 
- !## write genfile
+ !## write Packages
  IF(.NOT.PMANAGER_SAVERUNWQ_WRTGEN(IU))RETURN
  IF(.NOT.PMANAGER_SAVERUNWQ_WRTDIS(IU))RETURN
- 
- WRITE(IU,'(A)') '[BAS6] # MODFLOW BASic Package'
+ IF(.NOT.PMANAGER_SAVERUNWQ_WRTBAS6(IU))RETURN
+ IF(.NOT.PMANAGER_SAVERUNWQ_WRTBCF6(IU))RETURN
+  
  WRITE(IU,'(A)') '[OC] # Output Control option'
  WRITE(IU,'(A)') '[LPF]'
  WRITE(IU,'(A)') '[RCH]'
@@ -1083,185 +1084,6 @@ CONTAINS
   RETURN
  ENDIF
 
-
- WRITE(IU,'(A)') 'ACTIVE MODULES'
-
- DO I=1,MAXTOPICS  
-  IF(TOPICS(I)%IACT_MODEL.EQ.0)CYCLE
-  !## skip pcg
-  IF(I.EQ.TPCG)CYCLE
-  !## pst module is exception
-  IF(I.EQ.TPST)THEN; WRITE(IU,'(A)') '1,0 '//TRIM(TOPICS(I)%TNAME); CYCLE; ENDIF
-  IF(.NOT.ASSOCIATED(TOPICS(I)%STRESS))CYCLE
-  IF(.NOT.ASSOCIATED(TOPICS(I)%STRESS(1)%FILES))CYCLE
-
-  CALL PMANAGER_SAVEMF2005_RUN_ISAVE(PBMAN%ISAVE(I)%ILAY,TOPICS(I)%TNAME(1:5),IU)
- ENDDO
-
- !## write bndfile
- WRITE(IU,'(A)') CHAR(39)//TRIM(BNDFNAME)//CHAR(39)
-
- WRITE(IU,'(A)') 'MODULES FOR EACH LAYER'
-  
- !## write modules
- DO I=1,MAXTOPICS
-  IF(TOPICS(I)%IACT_MODEL.EQ.0)CYCLE
-  IF(TOPICS(I)%TIMDEP)CYCLE
-
-  !## skip pcg
-  IF(I.EQ.TPCG)CYCLE
-  
-  !## pst module is exception
-  IF(I.EQ.TPST)THEN
-   LINE=TRIM(ITOS(SIZE(PEST%PARAM)))//',(PST)'; WRITE(IU,'(A)') TRIM(LINE) 
-   IF(.NOT.PMANAGER_SAVEPST(IU,1,'',0,0))THEN; ENDIF; CYCLE
-  ENDIF
-  
-  IF(.NOT.ASSOCIATED(TOPICS(I)%STRESS))CYCLE
-  IF(.NOT.ASSOCIATED(TOPICS(I)%STRESS(1)%FILES))CYCLE
-  
-  !## check the number of active packages
-  IF(I.EQ.TCAP)THEN
-   N=SIZE(TOPICS(I)%STRESS(1)%FILES,1)
-   IF(ASSOCIATED(TOPICS(I)%STRESS(1)%INPFILES))THEN
-    N=N+SIZE(TOPICS(I)%STRESS(1)%INPFILES)
-   ENDIF
-  ELSE
-   K=1; N=0
-   DO J=1,SIZE(TOPICS(I)%STRESS(1)%FILES,2)
-    IF(TOPICS(I)%STRESS(1)%FILES(K,J)%IACT.EQ.1)N=N+1
-   ENDDO
-  ENDIF
-  
-  WRITE(IU,'(I3.3,A)') N,','//TRIM(TOPICS(I)%TNAME)
-
-  IF(N.GT.0)THEN
-   !## number of subtopics
-   DO K=1,SIZE(TOPICS(I)%STRESS(1)%FILES,1)
-    !## number of systems
-    DO J=1,SIZE(TOPICS(I)%STRESS(1)%FILES,2)
-     !## skip temporary deactivated packages
-     IF(TOPICS(I)%STRESS(1)%FILES(K,J)%IACT.EQ.0)CYCLE
-     !## msp/pwt - skip ilay
-     IF(I.EQ.TCAP.OR.I.EQ.TPWT)THEN
-      WRITE(LINE,'(5X,     2(G15.7,A1))') &
-                                  TOPICS(I)%STRESS(1)%FILES(K,J)%FCT ,',', &
-                                  TOPICS(I)%STRESS(1)%FILES(K,J)%IMP ,','
-     ELSE
-      WRITE(LINE,'(1X,I5,2(A1,G15.7),A1)') &
-                                  TOPICS(I)%STRESS(1)%FILES(K,J)%ILAY,',', &
-                                  TOPICS(I)%STRESS(1)%FILES(K,J)%FCT ,',', &
-                                  TOPICS(I)%STRESS(1)%FILES(K,J)%IMP ,','
-     ENDIF
-     IF(TOPICS(I)%STRESS(1)%FILES(K,J)%ICNST.EQ.1)THEN
-      LINE=TRIM(LINE)//TRIM(RTOS(TOPICS(I)%STRESS(1)%FILES(K,J)%CNST,'G',7))
-     ELSEIF(TOPICS(I)%STRESS(1)%FILES(K,J)%ICNST.EQ.2)THEN
-      LINE=TRIM(LINE)//CHAR(39)//TRIM(TOPICS(I)%STRESS(1)%FILES(K,J)%FNAME)//CHAR(39)
-     ENDIF
-     WRITE(IU,'(A)') TRIM(LINE)
-
-    ENDDO
-   ENDDO
-  
-   !## write extra files only for MetaSWAP
-   IF(I.EQ.TCAP)THEN
-    IF(ASSOCIATED(TOPICS(I)%STRESS(1)%INPFILES))THEN
-     K=SIZE(TOPICS(I)%STRESS(1)%INPFILES)
-     DO J=1,K; WRITE(IU,'(1X,A)') TRIM(TOPICS(I)%STRESS(1)%INPFILES(J)); ENDDO
-    ENDIF
-   ENDIF
- 
-  ENDIF
-
- ENDDO
-
- WRITE(IU,'(A)') 'PACKAGES FOR EACH LAYER AND STRESS-PERIOD '
-
- !## only days available
- LDAYS=.TRUE.
- DO KPER=1,PRJNPER
-  IF(SIM(KPER)%IHR+SIM(KPER)%IMT+SIM(KPER)%ISC.GT.0)THEN; LDAYS=.FALSE.; EXIT; ENDIF
- ENDDO
-
- !## write packages - incl./excl. steady-state
- DO KPER=1,PRJNPER
-  
-  !## steady-state
-  IF(SIM(KPER)%DELT.EQ.0.0D0)THEN
-   WRITE(IU,'(I5.5,A1,F15.7,A1,A,2(A1,I1))') KPER,',',SIM(KPER)%DELT,',',TRIM(SIM(KPER)%CDATE),',',SIM(KPER)%ISAVE,',',SIM(KPER)%ISUM
-  !## transient (use final date as well, used for labeling file-names!)
-  ELSE
-   IF(LDAYS)THEN
-    WRITE(CDATE1,'(I4.4,2I2.2)') SIM(KPER)%IYR  ,SIM(KPER)%IMH  ,SIM(KPER)%IDY
-   ELSE
-    WRITE(CDATE1,'(I4.4,5I2.2)') SIM(KPER)%IYR  ,SIM(KPER)%IMH  ,SIM(KPER)%IDY  ,SIM(KPER)%IHR  ,SIM(KPER)%IMT  ,SIM(KPER)%ISC
-   ENDIF   
-   IF(LDAYS)THEN
-    WRITE(CDATE2,'(I4.4,2I2.2)') SIM(KPER+1)%IYR,SIM(KPER+1)%IMH,SIM(KPER+1)%IDY
-   ELSE
-    WRITE(CDATE2,'(I4.4,5I2.2)') SIM(KPER+1)%IYR,SIM(KPER+1)%IMH,SIM(KPER+1)%IDY,SIM(KPER+1)%IHR,SIM(KPER+1)%IMT,SIM(KPER+1)%ISC
-   ENDIF
-   WRITE(IU,'(I5.5,A1,F15.7,A1,A,2(A1,I1),A)') KPER,',',SIM(KPER)%DELT,',',TRIM(CDATE1),',',SIM(KPER)%ISAVE,',',SIM(KPER)%ISUM,','//TRIM(CDATE2)
-  ENDIF
-
-  DO I=1,MAXTOPICS  
-   IF(TOPICS(I)%IACT_MODEL.EQ.0)CYCLE
-   IF(.NOT.TOPICS(I)%TIMDEP)CYCLE
-   IF(.NOT.ASSOCIATED(TOPICS(I)%STRESS))CYCLE
-   IF(.NOT.ASSOCIATED(TOPICS(I)%STRESS(1)%FILES))CYCLE
-
-   IPER=PMANAGER_GETCURRENTIPER(KPER,I,ITIME,JTIME)
-   
-   !## overrule wel/isg packages per stress-period
-   SELECT CASE (I)
-    CASE (TWEL); IF(PBMAN%DWEL.EQ.1)IPER=ABS(IPER)
-    CASE (TISG); IF(PBMAN%DISG.EQ.1)IPER=ABS(IPER)
-    CASE (TSFR); IF(PBMAN%DSFR.EQ.1)IPER=ABS(IPER)
-   END SELECT
-
-   !## reuse previous timestep
-   IF(IPER.LE.0)THEN
-
-    N=MAX(IPER,-1)
-    WRITE(IU,'(I3,A)') N,','//TRIM(TOPICS(I)%TNAME)
-   
-   ELSE
-   
-    !## check the number of active packages
-    K=1; N=0
-    DO J=1,SIZE(TOPICS(I)%STRESS(IPER)%FILES,2)
-     IF(TOPICS(I)%STRESS(IPER)%FILES(K,J)%IACT.EQ.1)N=N+1
-    ENDDO
-    WRITE(IU,'(I3,A)') N,','//TRIM(TOPICS(I)%TNAME)
- 
-    IF(N.GT.0)THEN
-     !## number of subtopics
-     DO K=1,SIZE(TOPICS(I)%STRESS(IPER)%FILES,1)
-      !## number of systems
-      DO J=1,SIZE(TOPICS(I)%STRESS(IPER)%FILES,2)
-       !## skip temporary deactivated packages
-       IF(TOPICS(I)%STRESS(IPER)%FILES(K,J)%IACT.EQ.0)CYCLE
-       IF(TOPICS(I)%STRESS(IPER)%FILES(K,J)%ICNST.EQ.1)THEN
-        WRITE(IU,'(1X,I5,3(A1,G15.7))') &
-                                    TOPICS(I)%STRESS(IPER)%FILES(K,J)%ILAY,',', &
-                                    TOPICS(I)%STRESS(IPER)%FILES(K,J)%FCT ,',', &
-                                    TOPICS(I)%STRESS(IPER)%FILES(K,J)%IMP ,',', &
-                                    TOPICS(I)%STRESS(IPER)%FILES(K,J)%CNST
-       ELSEIF(TOPICS(I)%STRESS(IPER)%FILES(K,J)%ICNST.EQ.2)THEN
-        WRITE(IU,'(1X,I5,2(A1,G15.7),A1,A)') &
-                                    TOPICS(I)%STRESS(IPER)%FILES(K,J)%ILAY,',', &
-                                    TOPICS(I)%STRESS(IPER)%FILES(K,J)%FCT ,',', &
-                                    TOPICS(I)%STRESS(IPER)%FILES(K,J)%IMP ,',', &
-                     CHAR(39)//TRIM(TOPICS(I)%STRESS(IPER)%FILES(K,J)%FNAME)//CHAR(39)
-       ENDIF
-      ENDDO
-     ENDDO
-    ENDIF
-    
-   ENDIF
-  ENDDO
- ENDDO
- 
  CLOSE(IU)
  
  PMANAGER_SAVERUNWQ=.TRUE.
@@ -1269,12 +1091,77 @@ CONTAINS
  END FUNCTION PMANAGER_SAVERUNWQ
 
  !####====================================================================
+ LOGICAL FUNCTION PMANAGER_SAVERUNWQ_WRTBCF6(IU)
+ !####====================================================================
+ IMPLICIT NONE
+ INTEGER,INTENT(IN) :: IU
+ INTEGER :: ILAY,ITOPIC
+
+ PMANAGER_SAVERUNWQ_WRTBCF6=.FALSE.
+
+ WRITE(IU,'(/A)') '[BCF6] # BLOCK CENTRED FLOW'
+ 
+ WRITE(IU,'(A)') 'IBCFCB = 0 '
+ WRITE(IU,'(A)') 'HDRY = -9999 '
+ WRITE(IU,'(A)') 'IWDFLG = 0 '
+ WRITE(IU,'(A)') 'WETFCT = 1 '
+ WRITE(IU,'(A)') 'IWETIT = 1 '
+ WRITE(IU,'(A)') 'IHDWET = 0 '
+ WRITE(IU,'(A)') 'LTYPE_L? = 0 '
+ WRITE(IU,'(A)') 'TRPY_L? = 1 '
+ WRITE(IU,'(A)') 'SF1_L? = - '
+ WRITE(IU,'(A)') 'TRAN_L? = - '
+ WRITE(IU,'(A)') 'HY_L? = - '
+ WRITE(IU,'(A)') 'VCONT_L? = - '
+ WRITE(IU,'(A)') 'SF2_L? = - '
+ WRITE(IU,'(A)') 'WETDRY_L? = - '
+
+
+  PMANAGER_SAVERUNWQ_WRTBCF6=.TRUE.
+
+ END FUNCTION PMANAGER_SAVERUNWQ_WRTBCF6
+ 
+ !####====================================================================
+ LOGICAL FUNCTION PMANAGER_SAVERUNWQ_WRTBAS6(IU)
+ !####====================================================================
+ IMPLICIT NONE
+ INTEGER,INTENT(IN) :: IU
+ INTEGER :: ILAY,ITOPIC
+
+ PMANAGER_SAVERUNWQ_WRTBAS6=.FALSE.
+ 
+ WRITE(IU,'(/A)') '[BAS6] # MODFLOW BASic Package'
+
+ DO ILAY=1,PRJNLAY
+  ITOPIC=TBND
+  IF(TOPICS(ITOPIC)%STRESS(1)%FILES(1,ILAY)%ICNST.EQ.1)THEN
+    WRITE(IU,'(A)') 'IBOUND_L'//TRIM(ITOS(ILAY))//' = '//TRIM(UTL_REALTOSTRING(TOPICS(ITOPIC)%STRESS(1)%FILES(1,ILAY)%CNST)) 
+  ELSE
+    WRITE(IU,'(A)') 'IBOUND_L'//TRIM(ITOS(ILAY))//' = '//TRIM(TOPICS(ITOPIC)%STRESS(1)%FILES(1,ILAY)%FNAME)
+  ENDIF  
+ ENDDO
+
+ WRITE(IU,'(A)') 'HNOFLO    = -9999.0            '
+
+ DO ILAY=1,PRJNLAY
+  ITOPIC=TSHD
+  IF(TOPICS(ITOPIC)%STRESS(1)%FILES(1,ILAY)%ICNST.EQ.1)THEN
+    WRITE(IU,'(A)') 'STRT_L'//TRIM(ITOS(ILAY))//' = '//TRIM(UTL_REALTOSTRING(TOPICS(ITOPIC)%STRESS(1)%FILES(1,ILAY)%CNST)) 
+  ELSE
+    WRITE(IU,'(A)') 'STRT_L'//TRIM(ITOS(ILAY))//' = '//TRIM(TOPICS(ITOPIC)%STRESS(1)%FILES(1,ILAY)%FNAME)
+  ENDIF  
+ ENDDO
+ 
+ PMANAGER_SAVERUNWQ_WRTBAS6=.TRUE.
+
+ END FUNCTION PMANAGER_SAVERUNWQ_WRTBAS6
+ 
+ !####====================================================================
  LOGICAL FUNCTION PMANAGER_SAVERUNWQ_WRTDIS(IU)
  !####====================================================================
  IMPLICIT NONE
- !CHARACTER(LEN=*),INTENT(IN) :: DIR,DIRMNAME
  INTEGER,INTENT(IN) :: IU
- INTEGER :: ILAY,ICOL,IROW,LCBD,N,ITOPIC
+ INTEGER :: ILAY,ICOL,IROW,LCBD,N,ITOPIC,KPER
  REAL(KIND=DP_KIND) :: DELX,DELY
 
  PMANAGER_SAVERUNWQ_WRTDIS=.FALSE.
@@ -1325,19 +1212,43 @@ CONTAINS
 
  DO ILAY=1,PRJNLAY
   ITOPIC=TTOP
+  !ITOPIC=2
   !## quasi-3d scheme add top aquifer modellayer
-  IF(LQBD.OR.ILAY.EQ.1)THEN
-    WRITE(IU,'(A)') 'TOP = '//TOP(ILAY)%FNAME ; RETURN
+  !IF(LQBD.OR.ILAY.EQ.1)THEN
+  IF(ILAY.EQ.1)THEN
+    IF(TOPICS(ITOPIC)%STRESS(1)%FILES(1,ILAY)%ICNST.EQ.1)THEN
+      WRITE(IU,'(A)') 'TOP = '//TRIM(UTL_REALTOSTRING(TOPICS(ITOPIC)%STRESS(1)%FILES(1,ILAY)%CNST)) 
+    ELSE
+      WRITE(IU,'(A)') 'TOP = '//TRIM(TOPICS(ITOPIC)%STRESS(1)%FILES(1,ILAY)%FNAME)
+    ENDIF  
   ENDIF
   ITOPIC=TBOT
-    WRITE(IU,'(A)') 'BOTM_L'//TRIM(ITOS(ILAY))//' = '//BOT(ILAY)%FNAME ; RETURN
+  !ITOPIC=3
+  IF(TOPICS(ITOPIC)%STRESS(1)%FILES(1,ILAY)%ICNST.EQ.1)THEN
+    WRITE(IU,'(A)') 'BOT_L'//TRIM(ITOS(ILAY))//' = '//TRIM(UTL_REALTOSTRING(TOPICS(ITOPIC)%STRESS(1)%FILES(1,ILAY)%CNST)) 
+  ELSE
+    WRITE(IU,'(A)') 'BOT_L'//TRIM(ITOS(ILAY))//' = '//TRIM(TOPICS(ITOPIC)%STRESS(1)%FILES(1,ILAY)%FNAME)
+  ENDIF  
  ENDDO
-  
- WRITE(IU,'(A)') 'BOTM_L? = default'
- WRITE(IU,'(A)') 'PERLEN_P? = default'
- WRITE(IU,'(A)') 'NSTP_P? = default'
- WRITE(IU,'(A)') 'TSMULT_P? = default'
- WRITE(IU,'(A)') 'SSTR_P? = default'
+
+ IF(MINVAL(SIM(1:PRJNPER)%DELT).EQ.MAXVAL(SIM(1:PRJNPER)%DELT))THEN
+   WRITE(IU,'(A)') 'PERLEN_P? = '//TRIM(UTL_REALTOSTRING(MAXVAL(SIM(:)%DELT)))
+ ELSE
+   DO KPER=1,PRJNPER
+    WRITE(IU,'(A)') 'PERLEN_P'//TRIM(ITOS(KPER))//' = '//TRIM(UTL_REALTOSTRING(SIM(KPER)%DELT))
+   ENDDO
+ ENDIF
+
+ IF(MINVAL(SIM(1:PRJNPER)%NSTP).EQ.MAXVAL(SIM(1:PRJNPER)%NSTP))THEN
+   WRITE(IU,'(A)') 'NSTP_P? = '//TRIM(ITOS(MAXVAL(SIM(1:PRJNPER)%NSTP)))
+ ELSE
+   DO KPER=1,PRJNPER
+    WRITE(IU,'(A)') 'NSTP_P'//TRIM(ITOS(KPER))//' = '//TRIM(ITOS(SIM(KPER)%NSTP))
+   ENDDO
+ ENDIF
+
+ WRITE(IU,'(A)') 'TSMULT_P? = 1'  ! frans: aanpassen?
+ WRITE(IU,'(A)') 'SSTR_P? = TR'   ! frans: aanpassen?
 
  PMANAGER_SAVERUNWQ_WRTDIS=.TRUE.
 
