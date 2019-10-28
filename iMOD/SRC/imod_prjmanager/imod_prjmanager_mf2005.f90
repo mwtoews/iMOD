@@ -1009,6 +1009,15 @@ CONTAINS
  
  PMANAGER_SAVERUNWQ=.FALSE.
  
+ ! Frans: lijstje PBMAN uitbreiden met iMOD WQ items....
+ !    er is bijvoorbeeld PBMAN%IWINDOW,PBMAN%IDOUBLE
+ ! Frans: modelwindow: gegevens uit tabblad halen. Daar wordt berekendt welke minmx x y het wordt. 
+ 
+ ! Frans: voorbeeld skippen bij foute invoer
+ !IF(PCG%PARTOPT.EQ.3.AND.TRIM(PCG%MRGFNAME).EQ.'')THEN
+ ! CLOSE(IU); CALL WMESSAGEBOX(OKONLY,EXCLAMATIONICON,COMMONOK,'You need to specify a pointer IDF-file when selecting the RCB partition method.','Error')
+ ! RETURN
+ !ENDIF
 
  !!## overrule ipst if not as keyword given
  !IF(IBATCH.EQ.1.AND.PBMAN%IPEST.EQ.0)TOPICS(TPST)%IACT_MODEL=0
@@ -1051,45 +1060,260 @@ CONTAINS
  WRITE(IU,'(A)') '# iMOD run-file for SEAWAT '
  WRITE(IU,'(A)') '############################################################################'
 
- !## write Packages
+ !## write Modflow Packages
  IF(.NOT.PMANAGER_SAVERUNWQ_WRTGEN(IU))RETURN
  IF(.NOT.PMANAGER_SAVERUNWQ_WRTDIS(IU))RETURN
  IF(.NOT.PMANAGER_SAVERUNWQ_WRTBAS6(IU))RETURN
  IF(.NOT.PMANAGER_SAVERUNWQ_WRTBCF6(IU))RETURN
+ IF(.NOT.PMANAGER_SAVERUNWQ_WRTOC(IU))RETURN
+ IF(.NOT.PMANAGER_SAVERUNWQ_WRTLPF(IU))RETURN
+ IF(.NOT.PMANAGER_SAVERUNWQ_WRTRCH(IU))RETURN
+ IF(.NOT.PMANAGER_SAVERUNWQ_WRTDRN(IU))RETURN
+ IF(.NOT.PMANAGER_SAVERUNWQ_WRTRIV(IU))RETURN
+ IF(.NOT.PMANAGER_SAVERUNWQ_WRTGHB(IU))RETURN
+ IF(.NOT.PMANAGER_SAVERUNWQ_WRTWEL(IU))RETURN
+ IF(.NOT.PMANAGER_SAVERUNWQ_WRTCHD(IU))RETURN
+ IF(.NOT.PMANAGER_SAVERUNWQ_WRTPCG(IU))RETURN
   
- WRITE(IU,'(A)') '[OC] # Output Control option'
- WRITE(IU,'(A)') '[LPF]'
- WRITE(IU,'(A)') '[RCH]'
- WRITE(IU,'(A)') '[DRN]'
- WRITE(IU,'(A)') '[RIV]'
- WRITE(IU,'(A)') '[GHB]'
- WRITE(IU,'(A)') '[WEL]'
- WRITE(IU,'(A)') '[CHD]'
- WRITE(IU,'(A)') '[PCG] # MODFLOW Preconditioned Conjugate-Gradient Package'
- WRITE(IU,'(A)') '[BTN] # MT3DMS Basic Transport Package'
- WRITE(IU,'(A)') '[ADV] # MT3DMS ADVection package'
- WRITE(IU,'(A)') '[DSP]'
- WRITE(IU,'(A)') '[GCG] # MT3DMS Generalized Conjugate Gradient Solver Package'
- WRITE(IU,'(A)') '[SSM] # MT3DMS Sink Source Mixing Package'
- WRITE(IU,'(A)') '[VDF] #'
-
+ !## write MT3D/Seawat Packages
+ IF(.NOT.PMANAGER_SAVERUNWQ_WRTBTN(IU))RETURN
+ IF(.NOT.PMANAGER_SAVERUNWQ_WRTADV(IU))RETURN
+ IF(.NOT.PMANAGER_SAVERUNWQ_WRTDSP(IU))RETURN
+ IF(.NOT.PMANAGER_SAVERUNWQ_WRTGCG(IU))RETURN
+ IF(.NOT.PMANAGER_SAVERUNWQ_WRTSSM(IU))RETURN
+ IF(.NOT.PMANAGER_SAVERUNWQ_WRTVDF(IU))RETURN
  
- ! Frans: lijstje PBMAN uitbreiden met iMOD WQ items....
- !    er is bijvoorbeeld PBMAN%IWINDOW,PBMAN%IDOUBLE
- ! Frans: modelwindow: gegevens uit tabblad halen. Daar wordt berekendt welke minmx x y het wordt. 
- 
- ! Frans: voorbeeld skippen bij foute invoer
- IF(PCG%PARTOPT.EQ.3.AND.TRIM(PCG%MRGFNAME).EQ.'')THEN
-  CLOSE(IU); CALL WMESSAGEBOX(OKONLY,EXCLAMATIONICON,COMMONOK,'You need to specify a pointer IDF-file when selecting the RCB partition method.','Error')
-  RETURN
- ENDIF
-
  CLOSE(IU)
  
  PMANAGER_SAVERUNWQ=.TRUE.
 
  END FUNCTION PMANAGER_SAVERUNWQ
 
+ !####====================================================================
+ LOGICAL FUNCTION PMANAGER_SAVERUNWQ_WRTBTN(IU)
+ !####====================================================================
+ IMPLICIT NONE
+ INTEGER,INTENT(IN) :: IU
+ INTEGER :: ILAY,ITOPIC
+
+ PMANAGER_SAVERUNWQ_WRTBTN=.FALSE.
+
+ WRITE(IU,'(/A)') '[BTN] # MT3DMS Basic Transport Package'
+
+ PMANAGER_SAVERUNWQ_WRTBTN=.TRUE.
+
+ END FUNCTION PMANAGER_SAVERUNWQ_WRTBTN
+
+ !####====================================================================
+ LOGICAL FUNCTION PMANAGER_SAVERUNWQ_WRTADV(IU)
+ !####====================================================================
+ IMPLICIT NONE
+ INTEGER,INTENT(IN) :: IU
+ INTEGER :: ILAY,ITOPIC
+
+ PMANAGER_SAVERUNWQ_WRTADV=.FALSE.
+
+ WRITE(IU,'(/A)') '[ADV] # MT3DMS ADVection package'
+
+ PMANAGER_SAVERUNWQ_WRTADV=.TRUE.
+
+ END FUNCTION PMANAGER_SAVERUNWQ_WRTADV
+ 
+ !####====================================================================
+ LOGICAL FUNCTION PMANAGER_SAVERUNWQ_WRTDSP(IU)
+ !####====================================================================
+ IMPLICIT NONE
+ INTEGER,INTENT(IN) :: IU
+ INTEGER :: ILAY,ITOPIC
+
+ PMANAGER_SAVERUNWQ_WRTDSP=.FALSE.
+
+ WRITE(IU,'(/A)') '[DSP] #MT3DMS Dispersion Package'
+
+ PMANAGER_SAVERUNWQ_WRTDSP=.TRUE.
+
+ END FUNCTION PMANAGER_SAVERUNWQ_WRTDSP
+ 
+ !####====================================================================
+ LOGICAL FUNCTION PMANAGER_SAVERUNWQ_WRTGCG(IU)
+ !####====================================================================
+ IMPLICIT NONE
+ INTEGER,INTENT(IN) :: IU
+ INTEGER :: ILAY,ITOPIC
+
+ PMANAGER_SAVERUNWQ_WRTGCG=.FALSE.
+
+ WRITE(IU,'(/A)') '[GCG] # MT3DMS Generalized Conjugate Gradient Solver Package'
+
+ PMANAGER_SAVERUNWQ_WRTGCG=.TRUE.
+
+ END FUNCTION PMANAGER_SAVERUNWQ_WRTGCG
+ 
+ !####====================================================================
+ LOGICAL FUNCTION PMANAGER_SAVERUNWQ_WRTSSM(IU)
+ !####====================================================================
+ IMPLICIT NONE
+ INTEGER,INTENT(IN) :: IU
+ INTEGER :: ILAY,ITOPIC
+
+ PMANAGER_SAVERUNWQ_WRTSSM=.FALSE.
+
+ WRITE(IU,'(A)') '[SSM] # MT3DMS Sink Source Mixing Package'
+
+ PMANAGER_SAVERUNWQ_WRTSSM=.TRUE.
+
+ END FUNCTION PMANAGER_SAVERUNWQ_WRTSSM
+
+ !####====================================================================
+ LOGICAL FUNCTION PMANAGER_SAVERUNWQ_WRTVDF(IU)
+ !####====================================================================
+ IMPLICIT NONE
+ INTEGER,INTENT(IN) :: IU
+ INTEGER :: ILAY,ITOPIC
+
+ PMANAGER_SAVERUNWQ_WRTVDF=.FALSE.
+
+ WRITE(IU,'(/A)') '[VDF] # Variable-Density Flow '
+
+ PMANAGER_SAVERUNWQ_WRTVDF=.TRUE.
+
+ END FUNCTION PMANAGER_SAVERUNWQ_WRTVDF
+
+ !####====================================================================
+ LOGICAL FUNCTION PMANAGER_SAVERUNWQ_WRTPCG(IU)
+ !####====================================================================
+ IMPLICIT NONE
+ INTEGER,INTENT(IN) :: IU
+ INTEGER :: ILAY,ITOPIC
+
+ PMANAGER_SAVERUNWQ_WRTPCG=.FALSE.
+
+ WRITE(IU,'(/A)') '[PCG] # MODFLOW Preconditioned Conjugate-Gradient Package'
+
+ PMANAGER_SAVERUNWQ_WRTPCG=.TRUE.
+
+ END FUNCTION PMANAGER_SAVERUNWQ_WRTPCG
+
+ !####====================================================================
+ LOGICAL FUNCTION PMANAGER_SAVERUNWQ_WRTCHD(IU)
+ !####====================================================================
+ IMPLICIT NONE
+ INTEGER,INTENT(IN) :: IU
+ INTEGER :: ILAY,ITOPIC
+
+ PMANAGER_SAVERUNWQ_WRTCHD=.FALSE.
+
+ WRITE(IU,'(/A)') '[CHD]'
+
+ PMANAGER_SAVERUNWQ_WRTCHD=.TRUE.
+
+ END FUNCTION PMANAGER_SAVERUNWQ_WRTCHD
+
+ !####====================================================================
+ LOGICAL FUNCTION PMANAGER_SAVERUNWQ_WRTWEL(IU)
+ !####====================================================================
+ IMPLICIT NONE
+ INTEGER,INTENT(IN) :: IU
+ INTEGER :: ILAY,ITOPIC
+
+ PMANAGER_SAVERUNWQ_WRTWEL=.FALSE.
+
+ WRITE(IU,'(/A)') '[WEL]'
+
+ PMANAGER_SAVERUNWQ_WRTWEL=.TRUE.
+
+ END FUNCTION PMANAGER_SAVERUNWQ_WRTWEL
+
+ !####====================================================================
+ LOGICAL FUNCTION PMANAGER_SAVERUNWQ_WRTGHB(IU)
+ !####====================================================================
+ IMPLICIT NONE
+ INTEGER,INTENT(IN) :: IU
+ INTEGER :: ILAY,ITOPIC
+
+ PMANAGER_SAVERUNWQ_WRTGHB=.FALSE.
+
+ WRITE(IU,'(/A)') '[GHB]'
+
+ PMANAGER_SAVERUNWQ_WRTGHB=.TRUE.
+
+ END FUNCTION PMANAGER_SAVERUNWQ_WRTGHB
+
+ !####====================================================================
+ LOGICAL FUNCTION PMANAGER_SAVERUNWQ_WRTRIV(IU)
+ !####====================================================================
+ IMPLICIT NONE
+ INTEGER,INTENT(IN) :: IU
+ INTEGER :: ILAY,ITOPIC
+
+ PMANAGER_SAVERUNWQ_WRTRIV=.FALSE.
+
+ WRITE(IU,'(/A)') '[RIV]'
+
+ PMANAGER_SAVERUNWQ_WRTRIV=.TRUE.
+
+ END FUNCTION PMANAGER_SAVERUNWQ_WRTRIV
+
+ !####====================================================================
+ LOGICAL FUNCTION PMANAGER_SAVERUNWQ_WRTDRN(IU)
+ !####====================================================================
+ IMPLICIT NONE
+ INTEGER,INTENT(IN) :: IU
+ INTEGER :: ILAY,ITOPIC
+
+ PMANAGER_SAVERUNWQ_WRTDRN=.FALSE.
+
+ WRITE(IU,'(/A)') '[DRN]'
+
+ PMANAGER_SAVERUNWQ_WRTDRN=.TRUE.
+
+ END FUNCTION PMANAGER_SAVERUNWQ_WRTDRN
+
+ !####====================================================================
+ LOGICAL FUNCTION PMANAGER_SAVERUNWQ_WRTRCH(IU)
+ !####====================================================================
+ IMPLICIT NONE
+ INTEGER,INTENT(IN) :: IU
+ INTEGER :: ILAY,ITOPIC
+
+ PMANAGER_SAVERUNWQ_WRTRCH=.FALSE.
+
+ WRITE(IU,'(A)') '[RCH]'
+
+ PMANAGER_SAVERUNWQ_WRTRCH=.TRUE.
+
+ END FUNCTION PMANAGER_SAVERUNWQ_WRTRCH
+
+ !####====================================================================
+ LOGICAL FUNCTION PMANAGER_SAVERUNWQ_WRTLPF(IU)
+ !####====================================================================
+ IMPLICIT NONE
+ INTEGER,INTENT(IN) :: IU
+ INTEGER :: ILAY,ITOPIC
+
+ PMANAGER_SAVERUNWQ_WRTLPF=.FALSE.
+
+ WRITE(IU,'(/A)') '[LPF]'
+  
+ PMANAGER_SAVERUNWQ_WRTLPF=.TRUE.
+
+ END FUNCTION PMANAGER_SAVERUNWQ_WRTLPF
+
+ !####====================================================================
+ LOGICAL FUNCTION PMANAGER_SAVERUNWQ_WRTOC(IU)
+ !####====================================================================
+ IMPLICIT NONE
+ INTEGER,INTENT(IN) :: IU
+ INTEGER :: ILAY,ITOPIC
+
+ PMANAGER_SAVERUNWQ_WRTOC=.FALSE.
+
+ WRITE(IU,'(/A)') '[OC] # Output Control option'
+  
+ PMANAGER_SAVERUNWQ_WRTOC=.TRUE.
+
+ END FUNCTION PMANAGER_SAVERUNWQ_WRTOC
+ 
  !####====================================================================
  LOGICAL FUNCTION PMANAGER_SAVERUNWQ_WRTBCF6(IU)
  !####====================================================================
@@ -1117,7 +1341,7 @@ CONTAINS
  WRITE(IU,'(A)') 'WETDRY_L? = - '
 
 
-  PMANAGER_SAVERUNWQ_WRTBCF6=.TRUE.
+ PMANAGER_SAVERUNWQ_WRTBCF6=.TRUE.
 
  END FUNCTION PMANAGER_SAVERUNWQ_WRTBCF6
  
