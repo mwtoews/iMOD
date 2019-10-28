@@ -419,7 +419,8 @@
 			<FileConfiguration Name="Debug|x64">
 				<Tool Name="VFFortranCompilerTool" Preprocess="preprocessYes" PreprocessorDefinitions="WINTERACTER11"/></FileConfiguration>
 			<FileConfiguration Name="Release|Win32">
-				<Tool Name="VFFortranCompilerTool" Preprocess="preprocessYes" PreprocessorDefinitions="WINTERACTER11"/></FileConfiguration></File></Filter>
+				<Tool Name="VFFortranCompilerTool" Preprocess="preprocessYes" PreprocessorDefinitions="WINTERACTER11"/></FileConfiguration></File>
+		<File RelativePath="..\..\SRC\imod_prjmanager\imod_prjmanager_wq.f90"/></Filter>
 		<Filter Name="imod_profile">
 		<File RelativePath="..\..\..\iMOD\SRC\imod_profile\imod_profile.f90">
 			<FileConfiguration Name="Debug|Win32">
