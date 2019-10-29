@@ -746,12 +746,14 @@ CONTAINS
   CASE (1)
    !## in graph plot optie maken om de bmp te saven en terug te keren - loop of GRAPHDIM%GRAPHNAMES() met name
    LEXPORT=.FALSE.; IF(ID.EQ.ID_GRAPHICS)LEXPORT=.TRUE.
-   CALL GRAPH_INIT(3,LEXPORT=LEXPORT,DIR=DIR)
-   DO
-    CALL WMESSAGE(ITYPE,MESSAGE)
-    CALL GRAPH_MAIN(ITYPE,MESSAGE,IEXIT=IEXIT)
-    IF(IEXIT.EQ.1)EXIT
-   ENDDO
+   CALL GRAPH_INIT(3,LEXPORT=LEXPORT,DIR=DIR,IBATCH=IBATCH)
+   IF(IBATCH.EQ.0)THEN
+    DO
+     CALL WMESSAGE(ITYPE,MESSAGE)
+     CALL GRAPH_MAIN(ITYPE,MESSAGE,IEXIT=IEXIT)
+     IF(IEXIT.EQ.1)EXIT
+    ENDDO
+   ENDIF
   !## graph
   CASE (2)
    N=SIZE(GRAPH(1,1)%RY)+SIZE(GRAPHDIM%GRAPHNAMES)
@@ -773,8 +775,12 @@ CONTAINS
    ENDDO
    IF(ID.EQ.ID_GRAPHICS)THEN
     CALL UTL_MESSAGEHANDLE(1)
-    CALL WMESSAGEBOX(OKONLY,INFORMATIONICON,COMMONOK,'iMOD SAVED (all) the requested bitmaps in the folder:'//CHAR(13)//&
-      TRIM(DIR)//'\FIGURE_*.PNG'//CHAR(13)//'successfully.','Information')
+    IF(IBATCH.EQ.0)THEN
+     CALL WMESSAGEBOX(OKONLY,INFORMATIONICON,COMMONOK,'iMOD SAVED (all) the requested bitmaps in the folder:'//CHAR(13)//&
+       TRIM(DIR)//'\FIGURE_*.PNG'//CHAR(13)//'successfully.','Information')
+    ELSE
+     WRITE(*,'(/A/)') 'iMOD SAVED (all) the requested bitmaps in the folder: '//TRIM(DIR)//'\FIGURE_*.PNG'
+    ENDIF
    ENDIF
 
   !## table
