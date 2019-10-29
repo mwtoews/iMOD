@@ -87,7 +87,7 @@ MODULE MOD_AGGREGATE
  SUBROUTINE LHM_ADDIWHB()
  !###===========================
  IMPLICIT NONE
- INTEGER :: I,II,III,J,K,L,N,M,O,IROW,ICOL,IU,NS
+ INTEGER :: I,II,III,J,K,L,N,NN,M,O,IROW,ICOL,IU,NS
  REAL(KIND=DP_KIND) :: F,T,B
  INTEGER,DIMENSION(:),ALLOCATABLE :: NL
  TYPE(IDFOBJ) :: MDL
@@ -103,54 +103,57 @@ MODULE MOD_AGGREGATE
   IF(.NOT.IDFREAD(MDL,FLIST(1)%FILE(1),0))STOP
  ENDIF
  
- N=SIZE(FLIST)+SIZE(ALIST); ALLOCATE(FM(N),NL(N))
- DO I=1,SIZE(FM); ALLOCATE(FM(I)%IDF(5)); DO J=1,SIZE(FM(I)%IDF); CALL IDFNULLIFY(FM(I)%IDF(J)); ENDDO; ENDDO
+ N=SIZE(FLIST)
+ DO I=1,SIZE(ALIST)
+  SELECT CASE (ALIST(I)%METH)
+   CASE (1); N=N+1
+  END SELECT
+ ENDDO
+ ALLOCATE(FM(N),NL(N))
 
  N=SIZE(FLIST); DO I=1,N
 
   !## read data
-  IF(.NOT.LHM_ADDIWHB_READFLIST(MDL,FM(I)%IDF(1),FM(I)%IDF(2),FM(I)%IDF(3),FM(I)%IDF(4),FM(I)%IDF(5),SIZE(FLIST(I)%FILE),FLIST(I)%FILE,INDIR))STOP
-  CALL LHM_ADDIWHB_ADDDATA(I,FLIST(I)%FILE); FM(I)%IORDER=I
-  DO J=1,SIZE(FM(I)%IDF); CALL IDFDEALLOCATEX(FM(I)%IDF(J)); CALL IDFDEALLOCATESX(FM(I)%IDF(J)); ENDDO
+  IF(.NOT.LHM_ADDIWHB_READFLIST(MDL,IDF(1),IDF(2),IDF(3),IDF(4),IDF(5),SIZE(FLIST(I)%FILE),FLIST(I)%FILE,INDIR))STOP
+  CALL LHM_ADDIWHB_ADDDATA(I,FLIST(I)%FILE,IDF); FM(I)%IORDER=I
   
   F=100.0D0*DBLE(I)/DBLE(N); WRITE(6,'(A)') '+READING '//TRIM(FLIST(I)%FILE(1))//'('//TRIM(RTOS(F,'F',2))//'%)       '
 
  ENDDO
 
  !## modifying the solid
- N=SIZE(FLIST)+SIZE(ALIST); J=0; DO I=SIZE(FLIST)+1,N
+ N=SIZE(FLIST)+SIZE(ALIST); J=0; NN=SIZE(FLIST); DO I=SIZE(FLIST)+1,N
   !## read data
   J=J+1
-  IF(.NOT.LHM_ADDIWHB_READFLIST(MDL,FM(I)%IDF(1),FM(I)%IDF(2),FM(I)%IDF(3),FM(I)%IDF(4),FM(I)%IDF(5),SIZE(ALIST(J)%FILE),ALIST(J)%FILE,IWHBDIR))STOP
+  IF(.NOT.LHM_ADDIWHB_READFLIST(MDL,IDF(1),IDF(2),IDF(3),IDF(4),IDF(5),SIZE(ALIST(J)%FILE),ALIST(J)%FILE,IWHBDIR))STOP
   F=100.0D0*DBLE(I)/DBLE(N); WRITE(6,'(A)') '+READING '//TRIM(ALIST(J)%FILE(1))//'('//TRIM(RTOS(F,'F',2))//'%)          '
 
   !## read in data
-  CALL LHM_ADDIWHB_ADDDATA(I,ALIST(J)%FILE)
+  CALL LHM_ADDIWHB_ADDDATA(I,ALIST(J)%FILE,IDF)
 
   SELECT CASE (ALIST(J)%METH)
    !## find location
    CASE (1)
     !## check minimum and maximum layer to insert layer
-    CALL LHM_ADDIWHB_GETMAXLAYER(I,SIZE(NL),NL); IF(SUM(NL).EQ.0)CYCLE
+    NN=NN+1; CALL LHM_ADDIWHB_GETMAXLAYER(NN,SIZE(NL),NL,IDF); IF(SUM(NL).EQ.0)CYCLE
     !## get layer
     L=0; K=0; DO II=1,SIZE(NL); IF(NL(II).GT.K)THEN; K=NL(II); L=II; ENDIF; ENDDO; FM(I)%IORDER=L
+    !## shift all others
+    DO II=1,NN-1; IF(FM(II)%IORDER.GE.L)FM(II)%IORDER=FM(II)%IORDER+1; ENDDO
    !## fixed location
    CASE (2)
-    FM(I)%IORDER=ALIST(J)%ITOP
+    DO II=1,SIZE(NL); IF(FM(II)%IORDER.EQ.ALIST(J)%ITOP)EXIT; ENDDO
   END SELECT
-
-  !## shift all others
-  DO II=1,I-1; IF(FM(II)%IORDER.GE.L)FM(II)%IORDER=FM(II)%IORDER+1; ENDDO
   
   SELECT CASE (ALIST(J)%METH)
    CASE (1)
     !## correct all others for this inserted layer
-    CALL LHM_ADDIWHB_INSERT_IWHB(I)
-   CASE (2)
+    CALL LHM_ADDIWHB_INSERT_IWHB(NN,IDF)
+   CASE (2,3)
     !## fixed location
-    CALL LHM_ADDIWHB_REPLACE_IWHB(I)
+    CALL LHM_ADDIWHB_REPLACE_IWHB(NN,ALIST(J)%METH,IDF)
     !## correct all others for this inserted layer
-    CALL LHM_ADDIWHB_INSERT_IWHB(I)
+    CALL LHM_ADDIWHB_INSERT_IWHB(NN,IDF)
   END SELECT
   
  ENDDO
@@ -197,7 +200,7 @@ MODULE MOD_AGGREGATE
    IF(NS.EQ.0)CYCLE
    
    !## save idf files
-   DO L=1,5; IDF(L)%FNAME=TRIM(OUTDIR)//'\'//TRIM(FM(I)%IDF(L)%FNAME); ENDDO
+   DO L=1,5; IDF(L)%FNAME=TRIM(OUTDIR)//'\'//TRIM(IDF(L)%FNAME); ENDDO
    CALL LHM_CONVERTREGIS_OUTPUT(IDF(1),IDF(2),IDF(3),IDF(4),IDF(5))
    DO L=1,5
     II=INDEX(IDF(L)%FNAME,'\',.TRUE.); IF(II.NE.0)IDF(L)%FNAME=IDF(L)%FNAME(II+1:)
@@ -225,17 +228,17 @@ MODULE MOD_AGGREGATE
    ENDDO
    DEALLOCATE(FM(I)%SF)
   ENDIF
-  DO J=1,SIZE(FM(I)%IDF); CALL IDFDEALLOCATEX(FM(I)%IDF(J)); CALL IDFDEALLOCATESX(FM(I)%IDF(J)); ENDDO
  ENDDO
  DO I=1,SIZE(IDF); CALL IDFDEALLOCATEX(IDF(I)); CALL IDFDEALLOCATESX(IDF(I)); ENDDO
  
  END SUBROUTINE LHM_ADDIWHB
  
  !###===========================
- SUBROUTINE LHM_ADDIWHB_INSERT_IWHB(IFM)
+ SUBROUTINE LHM_ADDIWHB_INSERT_IWHB(IFM,IDF)
  !###===========================
  IMPLICIT NONE
  INTEGER,INTENT(IN) :: IFM
+ TYPE(IDFOBJ),INTENT(INOUT),DIMENSION(5) :: IDF
  INTEGER :: I,II,J,K,N,IROW,ICOL,IORDER
  REAL(KIND=DP_KIND) :: T,B,VC,TR,DZ
  LOGICAL :: LTOP,LBOT
@@ -262,7 +265,7 @@ MODULE MOD_AGGREGATE
     IROW=INT(FM(I)%SF(J)%AT(K)%IROW,4)
     ICOL=INT(FM(I)%SF(J)%AT(K)%ICOL,4)
 
-    T=FM(IFM)%IDF(1)%X(ICOL,IROW); B=FM(IFM)%IDF(2)%X(ICOL,IROW)
+    T=IDF(1)%X(ICOL,IROW); B=IDF(2)%X(ICOL,IROW)
     !## new iwhb has a thickness here - correct if needed
     IF(T-B.GT.0.0D0)THEN
      
@@ -270,7 +273,7 @@ MODULE MOD_AGGREGATE
      TR=DZ*FM(I)%SF(J)%AT(K)%KH
      VC=DZ/FM(I)%SF(J)%AT(K)%KV
      
-     !## layers above
+     !## layers above - KAN GAT ONTSTAAN --- MOET IK OOK ZORGEN DAT DAT NIET GEBEURT
      IF(LTOP)THEN 
       FM(I)%SF(J)%AT(K)%TP=MAX(FM(I)%SF(J)%AT(K)%TP,T)
       FM(I)%SF(J)%AT(K)%BT=MAX(FM(I)%SF(J)%AT(K)%BT,T)
@@ -293,75 +296,121 @@ MODULE MOD_AGGREGATE
  END SUBROUTINE LHM_ADDIWHB_INSERT_IWHB
  
  !###===========================
- SUBROUTINE LHM_ADDIWHB_REPLACE_IWHB(IFM)
+ SUBROUTINE LHM_ADDIWHB_REPLACE_IWHB(IFM,IMETH,IDF)
  !###===========================
  IMPLICIT NONE
- INTEGER,INTENT(IN) :: IFM
- INTEGER :: I,J,N,M,IROW,ICOL,IORDER
- REAL(KIND=DP_KIND) :: T,B
- 
- !## make temp array wth values to be combined
+ INTEGER,INTENT(IN) :: IFM,IMETH
+ TYPE(IDFOBJ),INTENT(INOUT),DIMENSION(5) :: IDF 
+ INTEGER :: I,J,N,IROW,ICOL,IORDER
+ REAL(KIND=DP_KIND) :: T,B,TP,BT,D,TR,VC,KH,KV
  
  !## location of inserted layer
  IORDER=FM(IFM)%IORDER
 
- !## size of current layer to be added
- N=0; DO I=1,SIZE(FM(IORDER)%SF)
-  N=N+SIZE(FM(IORDER)%SF(I)%AT)
- ENDDO
-
- !## get size of to be inserted layer
- M=0; DO IROW=1,FM(IFM)%IDF(1)%NROW; DO ICOL=1,FM(IFM)%IDF(1)%NCOL
-  T=FM(IFM)%IDF(1)%X(ICOL,IROW); B=FM(IFM)%IDF(2)%X(ICOL,IROW)
-  IF(T-B.GT.0.0D0)M=M+1
- ENDDO; ENDDO
- 
- !## fill in new object of this layer
- ALLOCATE(FM(IFM)%SF(1)%AT_TMP(N+M))
+ !## combine with existing data
  DO I=1,SIZE(FM(IORDER)%SF)
   DO J=1,SIZE(FM(IORDER)%SF(I)%AT)
-   FM(IFM)%SF(I)%AT_TMP(J)%IROW=FM(IFM)%SF(I)%AT_TMP(J)%IROW
-   FM(IFM)%SF(I)%AT_TMP(J)%ICOL=FM(IFM)%SF(I)%AT_TMP(J)%ICOL
-   FM(IFM)%SF(I)%AT_TMP(J)%TP  =FM(IFM)%SF(I)%AT_TMP(J)%TP
-   FM(IFM)%SF(I)%AT_TMP(J)%BT  =FM(IFM)%SF(I)%AT_TMP(J)%BT
-   FM(IFM)%SF(I)%AT_TMP(J)%KH  =FM(IFM)%SF(I)%AT_TMP(J)%KH
-   FM(IFM)%SF(I)%AT_TMP(J)%KV  =FM(IFM)%SF(I)%AT_TMP(J)%KV
+  
+   IROW=FM(IFM)%SF(I)%AT(J)%IROW
+   ICOL=FM(IFM)%SF(I)%AT(J)%ICOL
+   TP  =FM(IFM)%SF(I)%AT(J)%TP
+   BT  =FM(IFM)%SF(I)%AT(J)%BT
+   KH  =FM(IFM)%SF(I)%AT(J)%KH
+   KV  =FM(IFM)%SF(I)%AT(J)%KV
+   T=IDF(1)%X(ICOL,IROW); B=IDF(2)%X(ICOL,IROW)
+   !## new data available here
+   IF(T-B.GT.0.0D0)THEN
+    TR=0.0D0; VC=0.0D0
+    
+    !## add to an existing layer
+    IF(IMETH.EQ.3)THEN
+     !## remaining original thickness
+     D=MAX(0.0D0,(TP-BT)-(T-B))
+     !## remaining transmissivity
+     TR=D*KH
+     !## remaining vertical resistance
+     VC=D/KV
+    ENDIF
+    
+    !## compute thickness
+    D=T-B
+
+    KH=IDF(3)%X(ICOL,IROW)
+    KV=IDF(4)%X(ICOL,IROW)
+    !## compute total transmissivity
+    TR=TR+D*KH
+    !## compute total vertical resistance
+    VC=VC+D/KV
+
+    IF(IMETH.EQ.3)THEN
+     !## update top- and bottom values
+     T=MAX(TP,T)
+     B=MIN(BT,B)
+    ENDIF
+    
+    !## recompute representative k-values
+    D =T-B
+    KH=TR/D
+    KV=D/VC
+
+    !## save updated values
+    IDF(1)%X(ICOL,IROW)=T
+    IDF(2)%X(ICOL,IROW)=B
+    IDF(3)%X(ICOL,IROW)=KH
+    IDF(4)%X(ICOL,IROW)=KV
+   
+   !## no update here needed, copy existing data
+   ELSE
+   
+    IDF(1)%X(ICOL,IROW)=TP; IDF(2)%X(ICOL,IROW)=BT
+    IDF(3)%X(ICOL,IROW)=KH; IDF(4)%X(ICOL,IROW)=KV
+    
+   ENDIF
+   
   ENDDO
  ENDDO
 
- !## remove current layer
- DEALLOCATE(FM(IORDER)%SF(I)%AT)
- 
- !## add new layer to it - correct top/bot en k-values
- M=J-1; DO IROW=1,FM(IFM)%IDF(1)%NROW; DO ICOL=1,FM(IFM)%IDF(1)%NCOL
-  T=FM(IFM)%IDF(1)%X(ICOL,IROW); B=FM(IFM)%IDF(2)%X(ICOL,IROW)
-  IF(T-B.GT.0.0D0)THEN
-   M=M+1
-   FM(IFM)%SF(I)%AT_TMP(J)%IROW=INT(IROW,2)
-   FM(IFM)%SF(I)%AT_TMP(J)%ICOL=INT(ICOL,2)
-   FM(IFM)%SF(I)%AT_TMP(J)%TP  =T
-   FM(IFM)%SF(I)%AT_TMP(J)%BT  =B
-   FM(IFM)%SF(I)%AT_TMP(J)%KH  =FM(IFM)%IDF(3)%X(ICOL,IROW)
-   FM(IFM)%SF(I)%AT_TMP(J)%KV  =FM(IFM)%IDF(4)%X(ICOL,IROW)
-  ENDIF   
+ !## get size of to be total combined inserted layer
+ N=0; DO IROW=1,IDF(1)%NROW; DO ICOL=1,IDF(1)%NCOL
+  T=IDF(1)%X(ICOL,IROW); B=IDF(2)%X(ICOL,IROW)
+  IF(T-B.GT.0.0D0)N=N+1
  ENDDO; ENDDO
  
- DEALLOCATE(FM(IFM)%SF(I)%AT); FM(IFM)%SF(I)%AT=>FM(IFM)%SF(I)%AT_TMP
+ !## remove current layer
+ DEALLOCATE(FM(IORDER)%SF(1)%AT)
+
+ !## fill in new object of this layer
+ ALLOCATE(FM(IORDER)%SF(1)%AT(N))
+ 
+ !## add new layer to it - correct top/bot en k-values
+ N=0; DO IROW=1,IDF(1)%NROW; DO ICOL=1,IDF(1)%NCOL
+  T=IDF(1)%X(ICOL,IROW); B=IDF(2)%X(ICOL,IROW)
+  IF(T-B.GT.0.0D0)THEN
+   N=N+1
+   FM(IORDER)%SF(I)%AT(N)%IROW=INT(IROW,2)
+   FM(IORDER)%SF(I)%AT(N)%ICOL=INT(ICOL,2)
+   FM(IORDER)%SF(I)%AT(N)%TP  =IDF(1)%X(ICOL,IROW)
+   FM(IORDER)%SF(I)%AT(N)%BT  =IDF(2)%X(ICOL,IROW)
+   FM(IORDER)%SF(I)%AT(N)%KH  =IDF(3)%X(ICOL,IROW)
+   FM(IORDER)%SF(I)%AT(N)%KV  =IDF(4)%X(ICOL,IROW)
+  ENDIF   
+ ENDDO; ENDDO
  
  END SUBROUTINE LHM_ADDIWHB_REPLACE_IWHB
 
  !###===========================
- SUBROUTINE LHM_ADDIWHB_ADDDATA(IFM,FNAME)
+ SUBROUTINE LHM_ADDIWHB_ADDDATA(IFM,FNAME,IDF)
  !###===========================
  IMPLICIT NONE
  INTEGER,INTENT(IN) :: IFM
  CHARACTER(LEN=*),INTENT(IN),DIMENSION(:) :: FNAME
+ TYPE(IDFOBJ),INTENT(INOUT),DIMENSION(5) :: IDF
  INTEGER :: I,M,IROW,ICOL
  REAL(KIND=DP_KIND) :: T,B
  
  DO I=1,2
-  M=0; DO IROW=1,FM(IFM)%IDF(1)%NROW; DO ICOL=1,FM(IFM)%IDF(1)%NCOL
-   T=FM(IFM)%IDF(1)%X(ICOL,IROW); B=FM(IFM)%IDF(2)%X(ICOL,IROW)
+  M=0; DO IROW=1,IDF(1)%NROW; DO ICOL=1,IDF(1)%NCOL
+   T=IDF(1)%X(ICOL,IROW); B=IDF(2)%X(ICOL,IROW)
    IF(T-B.GT.0.0D0)THEN
     M=M+1
     IF(I.EQ.2)THEN
@@ -369,30 +418,31 @@ MODULE MOD_AGGREGATE
      FM(IFM)%SF(1)%AT(M)%ICOL=INT(ICOL,2)
      FM(IFM)%SF(1)%AT(M)%TP  =T
      FM(IFM)%SF(1)%AT(M)%BT  =B
-     FM(IFM)%SF(1)%AT(M)%KH  =FM(IFM)%IDF(3)%X(ICOL,IROW)
-     FM(IFM)%SF(1)%AT(M)%KV  =FM(IFM)%IDF(4)%X(ICOL,IROW)
+     FM(IFM)%SF(1)%AT(M)%KH  =IDF(3)%X(ICOL,IROW)
+     FM(IFM)%SF(1)%AT(M)%KV  =IDF(4)%X(ICOL,IROW)
     ENDIF
    ENDIF
   ENDDO; ENDDO
   IF(I.EQ.1)THEN; ALLOCATE(FM(IFM)%SF(MF)); ALLOCATE(FM(IFM)%SF(1)%AT(M)); ENDIF
  ENDDO
- DO I=1,5; FM(IFM)%IDF(I)%FNAME=ADJUSTL(FNAME(I)); ENDDO
+ DO I=1,5; IDF(I)%FNAME=ADJUSTL(FNAME(I)); ENDDO
  
  END SUBROUTINE LHM_ADDIWHB_ADDDATA
  
  !###===========================
- SUBROUTINE LHM_ADDIWHB_GETMAXLAYER(IFM,N,NL)
+ SUBROUTINE LHM_ADDIWHB_GETMAXLAYER(IFM,N,NL,IDF)
  !###===========================
  IMPLICIT NONE
  INTEGER,INTENT(IN) :: IFM,N
  INTEGER,INTENT(OUT),DIMENSION(N) :: NL
+ TYPE(IDFOBJ),INTENT(INOUT),DIMENSION(5) :: IDF
  INTEGER :: IROW,ICOL,I,J,K,NNODATA,M,NTHICKN
  REAL(KIND=DP_KIND) :: T,B,TF,BF
  
  NL=0; NNODATA=0; NTHICKN=0
  
  !## check formations till now
-ILOOP: DO I=1,IFM-1 !SIZE(FM)
+ILOOP: DO I=1,IFM-1
   !## number of subformations
   DO J=1,SIZE(FM(I)%SF)
    M=SIZE(FM(I)%SF(J)%AT); IF(M.EQ.0)EXIT
@@ -400,8 +450,8 @@ ILOOP: DO I=1,IFM-1 !SIZE(FM)
     IROW=INT(FM(I)%SF(J)%AT(K)%IROW,4)
     ICOL=INT(FM(I)%SF(J)%AT(K)%ICOL,4)
     
-    T   =FM(IFM)%IDF(1)%X(ICOL,IROW)
-    B   =FM(IFM)%IDF(2)%X(ICOL,IROW)
+    T   =IDF(1)%X(ICOL,IROW)
+    B   =IDF(2)%X(ICOL,IROW)
     !## no thickness of current iwhb layer
     IF(T-B.LE.0.0D0)CYCLE
 
