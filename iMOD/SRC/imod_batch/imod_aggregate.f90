@@ -87,7 +87,7 @@ MODULE MOD_AGGREGATE
  SUBROUTINE LHM_ADDIWHB()
  !###===========================
  IMPLICIT NONE
- INTEGER :: I,II,III,J,K,L,N,NN,M,O,IROW,ICOL,IU,NS
+ INTEGER :: I,II,III,J,K,L,N,M,O,IROW,ICOL,IU,NS
  REAL(KIND=DP_KIND) :: F,T,B
  INTEGER,DIMENSION(:),ALLOCATABLE :: NL
  TYPE(IDFOBJ) :: MDL
@@ -103,12 +103,11 @@ MODULE MOD_AGGREGATE
   IF(.NOT.IDFREAD(MDL,FLIST(1)%FILE(1),0))STOP
  ENDIF
  
- N=SIZE(FLIST)
- DO I=1,SIZE(ALIST)
-  SELECT CASE (ALIST(I)%METH)
-   CASE (1); N=N+1
-  END SELECT
- ENDDO
+ N=SIZE(FLIST)+SIZE(ALIST)
+!  SELECT CASE (ALIST(I)%METH)
+!   CASE (1); N=N+1
+!  END SELECT
+! ENDDO
  ALLOCATE(FM(N),NL(N))
 
  N=SIZE(FLIST); DO I=1,N
@@ -117,12 +116,12 @@ MODULE MOD_AGGREGATE
   IF(.NOT.LHM_ADDIWHB_READFLIST(MDL,IDF(1),IDF(2),IDF(3),IDF(4),IDF(5),SIZE(FLIST(I)%FILE),FLIST(I)%FILE,INDIR))STOP
   CALL LHM_ADDIWHB_ADDDATA(I,FLIST(I)%FILE,IDF); FM(I)%IORDER=I
   
-  F=100.0D0*DBLE(I)/DBLE(N); WRITE(6,'(A)') '+READING '//TRIM(FLIST(I)%FILE(1))//'('//TRIM(RTOS(F,'F',2))//'%)       '
+  F=100.0D0*DBLE(I)/DBLE(N); WRITE(6,'(A)') '+READING '//TRIM(FLIST(I)%FILE(1))//'('//TRIM(RTOS(F,'F',2))//'%)         '
 
  ENDDO
 
  !## modifying the solid
- N=SIZE(FLIST)+SIZE(ALIST); J=0; NN=SIZE(FLIST); DO I=SIZE(FLIST)+1,N
+ N=SIZE(FLIST)+SIZE(ALIST); J=0; DO I=SIZE(FLIST)+1,N
   !## read data
   J=J+1
   IF(.NOT.LHM_ADDIWHB_READFLIST(MDL,IDF(1),IDF(2),IDF(3),IDF(4),IDF(5),SIZE(ALIST(J)%FILE),ALIST(J)%FILE,IWHBDIR))STOP
@@ -135,25 +134,25 @@ MODULE MOD_AGGREGATE
    !## find location
    CASE (1)
     !## check minimum and maximum layer to insert layer
-    NN=NN+1; CALL LHM_ADDIWHB_GETMAXLAYER(NN,SIZE(NL),NL,IDF); IF(SUM(NL).EQ.0)CYCLE
+    CALL LHM_ADDIWHB_GETMAXLAYER(I,SIZE(NL),NL,IDF); IF(SUM(NL).EQ.0)CYCLE
     !## get layer
     L=0; K=0; DO II=1,SIZE(NL); IF(NL(II).GT.K)THEN; K=NL(II); L=II; ENDIF; ENDDO; FM(I)%IORDER=L
     !## shift all others
-    DO II=1,NN-1; IF(FM(II)%IORDER.GE.L)FM(II)%IORDER=FM(II)%IORDER+1; ENDDO
+    DO II=1,I-1; IF(FM(II)%IORDER.GE.L)FM(II)%IORDER=FM(II)%IORDER+1; ENDDO
    !## fixed location
-   CASE (2)
-    DO II=1,SIZE(NL); IF(FM(II)%IORDER.EQ.ALIST(J)%ITOP)EXIT; ENDDO
+   CASE (2,3)
+    DO L=1,SIZE(NL); IF(FM(L)%IORDER.EQ.ALIST(J)%ITOP)EXIT; ENDDO; FM(I)%IORDER=L
   END SELECT
   
   SELECT CASE (ALIST(J)%METH)
    CASE (1)
     !## correct all others for this inserted layer
-    CALL LHM_ADDIWHB_INSERT_IWHB(NN,IDF)
+    CALL LHM_ADDIWHB_INSERT_IWHB(I,IDF)
    CASE (2,3)
     !## fixed location
-    CALL LHM_ADDIWHB_REPLACE_IWHB(NN,ALIST(J)%METH,IDF)
+    CALL LHM_ADDIWHB_REPLACE_IWHB(I,ALIST(J)%METH,IDF)
     !## correct all others for this inserted layer
-    CALL LHM_ADDIWHB_INSERT_IWHB(NN,IDF)
+    CALL LHM_ADDIWHB_INSERT_IWHB(I,IDF)
   END SELECT
   
  ENDDO
@@ -173,9 +172,10 @@ MODULE MOD_AGGREGATE
   DO I=1,N; IF(FM(I)%IORDER.EQ.III)EXIT; ENDDO
   
   !## number of subformations
+  IF(.NOT.ASSOCIATED(FM(I)%SF))CYCLE
   M=SIZE(FM(I)%SF)
   DO J=1,M 
- 
+   IF(.NOT.ASSOCIATED(FM(I)%SF(J)%AT))CYCLE
    O=SIZE(FM(I)%SF(J)%AT); IF(O.EQ.0)EXIT
 
    DO II=3,5; IDF(II)%X=IDF(II)%NODATA; ENDDO
@@ -216,7 +216,7 @@ MODULE MOD_AGGREGATE
   ENDDO
 
   II=LEN_TRIM(OUTDIR)
-  F=100.0D0*DBLE(I)/DBLE(N); WRITE(6,'(A)') '+WRITING '//TRIM(IDF(1)%FNAME(II+2:))//'('//TRIM(RTOS(F,'F',2))//'%)'
+  F=100.0D0*DBLE(I)/DBLE(N); WRITE(6,'(A)') '+WRITING '//TRIM(IDF(1)%FNAME(II+2:))//'('//TRIM(RTOS(F,'F',2))//'%)         '
  
  ENDDO
  CLOSE(IU)
@@ -240,8 +240,12 @@ MODULE MOD_AGGREGATE
  INTEGER,INTENT(IN) :: IFM
  TYPE(IDFOBJ),INTENT(INOUT),DIMENSION(5) :: IDF
  INTEGER :: I,II,J,K,N,IROW,ICOL,IORDER
- REAL(KIND=DP_KIND) :: T,B,VC,TR,DZ
+ REAL(KIND=DP_KIND) :: T,B,VC,TR,DZ,TF,BF
+! REAL(KIND=DP_KIND),ALLOCATABLE,DIMENSION(:) :: TF,BF
+! INTEGER,ALLOCATABLE,DIMENSION(:) :: ID
  LOGICAL :: LTOP,LBOT
+ REAL(KIND=DP_KIND),ALLOCATABLE,DIMENSION(:,:) :: DZT,DZB
+ INTEGER,ALLOCATABLE,DIMENSION(:,:) :: ID
  
  !## location of inserted layer
  IORDER=FM(IFM)%IORDER
@@ -259,7 +263,9 @@ MODULE MOD_AGGREGATE
   DO I=1,IFM; IF(FM(I)%IORDER.EQ.II)EXIT; ENDDO
     
   !## number of subformations
+  IF(.NOT.ASSOCIATED(FM(I)%SF))CYCLE
   DO J=1,SIZE(FM(I)%SF)
+   IF(.NOT.ASSOCIATED(FM(I)%SF(J)%AT))CYCLE
    N=SIZE(FM(I)%SF(J)%AT); IF(N.EQ.0)EXIT
    DO K=1,N
     IROW=INT(FM(I)%SF(J)%AT(K)%IROW,4)
@@ -273,8 +279,8 @@ MODULE MOD_AGGREGATE
      TR=DZ*FM(I)%SF(J)%AT(K)%KH
      VC=DZ/FM(I)%SF(J)%AT(K)%KV
      
-     !## layers above - KAN GAT ONTSTAAN --- MOET IK OOK ZORGEN DAT DAT NIET GEBEURT
-     IF(LTOP)THEN 
+     !## layers above
+     IF(LTOP)THEN
       FM(I)%SF(J)%AT(K)%TP=MAX(FM(I)%SF(J)%AT(K)%TP,T)
       FM(I)%SF(J)%AT(K)%BT=MAX(FM(I)%SF(J)%AT(K)%BT,T)
      !## layer underneath
@@ -293,6 +299,105 @@ MODULE MOD_AGGREGATE
   ENDDO
  ENDDO
  
+! !## correct for caps
+! ALLOCATE(TF(IFM),BF(IFM),ID(IFM))
+ 
+ !## find formation(s) nearest from top and bottom
+ ALLOCATE(DZT(IDF(1)%NCOL,IDF(1)%NROW)); DZT=HUGE(1.0)
+ ALLOCATE(DZB(IDF(1)%NCOL,IDF(1)%NROW)); DZB=HUGE(1.0)
+ ALLOCATE(ID (IDF(1)%NCOL,IDF(1)%NROW)); ID =0
+ 
+! DO IROW=1,IDF(1)%NROW; DO ICOL=1,IDF(1)%NCOL
+!  T=IDF(1)%X(ICOL,IROW); B=IDF(2)%X(ICOL,IROW)
+
+!  !## skip nodata locations
+!  IF(T.EQ.IDF(1)%NODATA.OR.B.EQ.IDF(2)%NODATA)CYCLE
+  
+!  !## potential location for a "leak"
+!  IF(T-B.GT.0.0D0)THEN
+   !## fill in nearest elements
+!   ID=0
+ DO II=1,IFM-1
+  IF(.NOT.ASSOCIATED(FM(II)%SF))CYCLE
+  DO J=1,SIZE(FM(II)%SF)
+   IF(.NOT.ASSOCIATED(FM(II)%SF(J)%AT))CYCLE
+   N=SIZE(FM(II)%SF(J)%AT); IF(N.EQ.0)EXIT
+   DO K=1,N
+    TF=FM(II)%SF(J)%AT(K)%TP; BF=FM(II)%SF(J)%AT(K)%BT; IF(TF-BF.LE.0.0D0)CYCLE
+    IROW=INT(FM(II)%SF(J)%AT(K)%IROW,4); ICOL=INT(FM(II)%SF(J)%AT(K)%ICOL,4)
+    T=IDF(1)%X(ICOL,IROW); B=IDF(2)%X(ICOL,IROW)
+    IF(T.EQ.IDF(1)%NODATA.OR.B.EQ.IDF(2)%NODATA)CYCLE
+    !## skip if not a new location for a potential "leak"
+    IF(T-B.LE.0.0D0)CYCLE
+    !## compute distance above
+    DZ=BF-T
+    IF(DZ.GT.0.0D0.AND.DZ.LE.DZT(ICOL,IROW))THEN
+     DZT(ICOL,IROW)=DZ; ID(ICOL,IROW)=II
+    ENDIF
+   ENDDO
+  ENDDO
+ ENDDO
+
+!    IF(JROW.NE.IROW.OR.JCOL.NE.ICOL)CYCLE
+!      !## found location
+!      TF(II)=FM(II)%SF(J)%AT(K)%TP
+!      BF(II)=FM(II)%SF(J)%AT(K)%BT
+!      ID(II)=K
+!      EXIT
+!     ENDDO
+!    ENDDO
+!   ENDDO
+   
+!!   TF(IFM)=T; BF(IFM)=B
+!   
+!   !## correct above the inserted layer
+!   DO II=IORDER-1,1,-1
+!    !## get correct number
+!    DO I=1,IFM; IF(FM(I)%IORDER.EQ.II)EXIT; ENDDO; IF(I.GT.IFM)EXIT
+!    IF(ID(I).EQ.0)CYCLE
+!    !## above
+!    T=TF(I); B=BF(I)
+!    !## shift zero thickness
+!    IF(T.LE.B)THEN
+!     TF(I)=TF(IFM); BF(I)=TF(I)
+!    ELSE
+!     BF(I)=TF(IFM); EXIT
+!    ENDIF
+!   ENDDO
+!   !## correct below the inserted layer
+!   DO II=IORDER+1,IFM
+!    !## get correct number
+!    DO I=1,IFM; IF(FM(I)%IORDER.EQ.II)EXIT; ENDDO; IF(I.GT.IFM)EXIT
+!    IF(ID(I).EQ.0)CYCLE
+!    !## below
+!    T=TF(I); B=BF(I)
+!    !## shift zero thickness
+!    IF(T.LE.B)THEN
+!     TF(I)=BF(IFM); BF(I)=TF(I)
+!    ELSE
+!     TF(I)=BF(IFM); EXIT
+!    ENDIF
+!   ENDDO
+!   
+!   !## fill in updated top/bottom
+!   DO II=1,IFM
+!    IF(.NOT.ASSOCIATED(FM(II)%SF))CYCLE
+!    DO J=1,SIZE(FM(II)%SF)
+!     IF(.NOT.ASSOCIATED(FM(II)%SF(J)%AT))CYCLE
+!     K=ID(II); IF(K.NE.0)THEN
+!      FM(II)%SF(J)%AT(K)%TP=TF(II)
+!      FM(II)%SF(J)%AT(K)%BT=BF(II)
+!     ENDIF
+!    ENDDO
+!   ENDDO
+    
+!  ENDIF
+! ENDDO; ENDDO
+ 
+ DEALLOCATE(DZT,DZB,ID)
+ 
+! DEALLOCATE(TF,BF,ID)
+ 
  END SUBROUTINE LHM_ADDIWHB_INSERT_IWHB
  
  !###===========================
@@ -308,91 +413,100 @@ MODULE MOD_AGGREGATE
  IORDER=FM(IFM)%IORDER
 
  !## combine with existing data
- DO I=1,SIZE(FM(IORDER)%SF)
-  DO J=1,SIZE(FM(IORDER)%SF(I)%AT)
+ IF(ASSOCIATED(FM(IORDER)%SF))THEN
+  DO I=1,SIZE(FM(IORDER)%SF)
+   IF(.NOT.ASSOCIATED(FM(IORDER)%SF(I)%AT))CYCLE
+   DO J=1,SIZE(FM(IORDER)%SF(I)%AT)
   
-   IROW=FM(IFM)%SF(I)%AT(J)%IROW
-   ICOL=FM(IFM)%SF(I)%AT(J)%ICOL
-   TP  =FM(IFM)%SF(I)%AT(J)%TP
-   BT  =FM(IFM)%SF(I)%AT(J)%BT
-   KH  =FM(IFM)%SF(I)%AT(J)%KH
-   KV  =FM(IFM)%SF(I)%AT(J)%KV
-   T=IDF(1)%X(ICOL,IROW); B=IDF(2)%X(ICOL,IROW)
-   !## new data available here
-   IF(T-B.GT.0.0D0)THEN
-    TR=0.0D0; VC=0.0D0
+    IROW=FM(IORDER)%SF(I)%AT(J)%IROW
+    ICOL=FM(IORDER)%SF(I)%AT(J)%ICOL
+    TP  =FM(IORDER)%SF(I)%AT(J)%TP
+    BT  =FM(IORDER)%SF(I)%AT(J)%BT
+    KH  =FM(IORDER)%SF(I)%AT(J)%KH
+    KV  =FM(IORDER)%SF(I)%AT(J)%KV
+
+    T=IDF(1)%X(ICOL,IROW); B=IDF(2)%X(ICOL,IROW)
+
+    !## new data available here
+    IF(T.NE.IDF(1)%NODATA.AND.B.NE.IDF(2)%NODATA.AND.(T-B).GT.0.0D0)THEN
+     TR=0.0D0; VC=0.0D0
     
-    !## add to an existing layer
-    IF(IMETH.EQ.3)THEN
-     !## remaining original thickness
-     D=MAX(0.0D0,(TP-BT)-(T-B))
-     !## remaining transmissivity
-     TR=D*KH
-     !## remaining vertical resistance
-     VC=D/KV
+     !## add to an existing layer
+     IF(IMETH.EQ.3)THEN
+      !## remaining original thickness
+      D=MAX(0.0D0,(TP-BT)-(T-B))
+      !## remaining transmissivity
+      TR=D*KH
+      !## remaining vertical resistance
+      VC=D/KV
+     ENDIF
+    
+     !## compute thickness
+     D=T-B
+
+     KH=IDF(3)%X(ICOL,IROW)
+     KV=IDF(4)%X(ICOL,IROW)
+     !## compute total transmissivity
+     TR=TR+D*KH
+     !## compute total vertical resistance
+     VC=VC+D/KV
+
+     IF(IMETH.EQ.3)THEN
+      !## update top- and bottom values
+      T=MAX(TP,T)
+      B=MIN(BT,B)
+     ENDIF
+    
+     !## recompute representative k-values
+     D =T-B
+     KH=TR/D
+     KV=D/VC
+
+     !## save updated values
+     IDF(1)%X(ICOL,IROW)=T
+     IDF(2)%X(ICOL,IROW)=B
+     IDF(3)%X(ICOL,IROW)=KH
+     IDF(4)%X(ICOL,IROW)=KV
+   
+    !## no update here needed, copy existing data
+    ELSE
+   
+     IDF(1)%X(ICOL,IROW)=TP; IDF(2)%X(ICOL,IROW)=BT
+     IDF(3)%X(ICOL,IROW)=KH; IDF(4)%X(ICOL,IROW)=KV
+     
     ENDIF
-    
-    !## compute thickness
-    D=T-B
-
-    KH=IDF(3)%X(ICOL,IROW)
-    KV=IDF(4)%X(ICOL,IROW)
-    !## compute total transmissivity
-    TR=TR+D*KH
-    !## compute total vertical resistance
-    VC=VC+D/KV
-
-    IF(IMETH.EQ.3)THEN
-     !## update top- and bottom values
-     T=MAX(TP,T)
-     B=MIN(BT,B)
-    ENDIF
-    
-    !## recompute representative k-values
-    D =T-B
-    KH=TR/D
-    KV=D/VC
-
-    !## save updated values
-    IDF(1)%X(ICOL,IROW)=T
-    IDF(2)%X(ICOL,IROW)=B
-    IDF(3)%X(ICOL,IROW)=KH
-    IDF(4)%X(ICOL,IROW)=KV
    
-   !## no update here needed, copy existing data
-   ELSE
-   
-    IDF(1)%X(ICOL,IROW)=TP; IDF(2)%X(ICOL,IROW)=BT
-    IDF(3)%X(ICOL,IROW)=KH; IDF(4)%X(ICOL,IROW)=KV
-    
-   ENDIF
-   
+   ENDDO
   ENDDO
- ENDDO
-
+ ENDIF
+ 
  !## get size of to be total combined inserted layer
  N=0; DO IROW=1,IDF(1)%NROW; DO ICOL=1,IDF(1)%NCOL
   T=IDF(1)%X(ICOL,IROW); B=IDF(2)%X(ICOL,IROW)
+  IF(T.EQ.IDF(1)%NODATA.OR.B.EQ.IDF(2)%NODATA)CYCLE
   IF(T-B.GT.0.0D0)N=N+1
  ENDDO; ENDDO
  
  !## remove current layer
- DEALLOCATE(FM(IORDER)%SF(1)%AT)
-
+ IF(ASSOCIATED(FM(IORDER)%SF))THEN
+  DO J=1,SIZE(FM(IORDER)%SF); IF(ASSOCIATED(FM(IORDER)%SF(J)%AT))DEALLOCATE(FM(IORDER)%SF(J)%AT); ENDDO
+ ENDIF
+ 
  !## fill in new object of this layer
  ALLOCATE(FM(IORDER)%SF(1)%AT(N))
  
  !## add new layer to it - correct top/bot en k-values
  N=0; DO IROW=1,IDF(1)%NROW; DO ICOL=1,IDF(1)%NCOL
   T=IDF(1)%X(ICOL,IROW); B=IDF(2)%X(ICOL,IROW)
+  IF(T.EQ.IDF(1)%NODATA.OR.B.EQ.IDF(2)%NODATA)CYCLE
   IF(T-B.GT.0.0D0)THEN
    N=N+1
-   FM(IORDER)%SF(I)%AT(N)%IROW=INT(IROW,2)
-   FM(IORDER)%SF(I)%AT(N)%ICOL=INT(ICOL,2)
-   FM(IORDER)%SF(I)%AT(N)%TP  =IDF(1)%X(ICOL,IROW)
-   FM(IORDER)%SF(I)%AT(N)%BT  =IDF(2)%X(ICOL,IROW)
-   FM(IORDER)%SF(I)%AT(N)%KH  =IDF(3)%X(ICOL,IROW)
-   FM(IORDER)%SF(I)%AT(N)%KV  =IDF(4)%X(ICOL,IROW)
+   FM(IORDER)%SF(1)%AT(N)%IROW=INT(IROW,2)
+   FM(IORDER)%SF(1)%AT(N)%ICOL=INT(ICOL,2)
+   FM(IORDER)%SF(1)%AT(N)%TP  =IDF(1)%X(ICOL,IROW)
+   FM(IORDER)%SF(1)%AT(N)%BT  =IDF(2)%X(ICOL,IROW)
+   FM(IORDER)%SF(1)%AT(N)%KH  =IDF(3)%X(ICOL,IROW)
+   FM(IORDER)%SF(1)%AT(N)%KV  =IDF(4)%X(ICOL,IROW)
   ENDIF   
  ENDDO; ENDDO
  
@@ -411,15 +525,17 @@ MODULE MOD_AGGREGATE
  DO I=1,2
   M=0; DO IROW=1,IDF(1)%NROW; DO ICOL=1,IDF(1)%NCOL
    T=IDF(1)%X(ICOL,IROW); B=IDF(2)%X(ICOL,IROW)
-   IF(T-B.GT.0.0D0)THEN
-    M=M+1
-    IF(I.EQ.2)THEN
-     FM(IFM)%SF(1)%AT(M)%IROW=INT(IROW,2)
-     FM(IFM)%SF(1)%AT(M)%ICOL=INT(ICOL,2)
-     FM(IFM)%SF(1)%AT(M)%TP  =T
-     FM(IFM)%SF(1)%AT(M)%BT  =B
-     FM(IFM)%SF(1)%AT(M)%KH  =IDF(3)%X(ICOL,IROW)
-     FM(IFM)%SF(1)%AT(M)%KV  =IDF(4)%X(ICOL,IROW)
+   IF(T.NE.IDF(1)%NODATA.AND.B.NE.IDF(2)%NODATA)THEN
+    IF(T-B.GT.0.0D0)THEN
+     M=M+1
+     IF(I.EQ.2)THEN
+      FM(IFM)%SF(1)%AT(M)%IROW=INT(IROW,2)
+      FM(IFM)%SF(1)%AT(M)%ICOL=INT(ICOL,2)
+      FM(IFM)%SF(1)%AT(M)%TP  =T
+      FM(IFM)%SF(1)%AT(M)%BT  =B
+      FM(IFM)%SF(1)%AT(M)%KH  =IDF(3)%X(ICOL,IROW)
+      FM(IFM)%SF(1)%AT(M)%KV  =IDF(4)%X(ICOL,IROW)
+     ENDIF
     ENDIF
    ENDIF
   ENDDO; ENDDO
@@ -443,8 +559,10 @@ MODULE MOD_AGGREGATE
  
  !## check formations till now
 ILOOP: DO I=1,IFM-1
+  IF(.NOT.ASSOCIATED(FM(I)%SF))CYCLE
   !## number of subformations
   DO J=1,SIZE(FM(I)%SF)
+   IF(.NOT.ASSOCIATED(FM(I)%SF(J)%AT))CYCLE
    M=SIZE(FM(I)%SF(J)%AT); IF(M.EQ.0)EXIT
    DO K=1,M
     IROW=INT(FM(I)%SF(J)%AT(K)%IROW,4)
@@ -482,7 +600,8 @@ ILOOP: DO I=1,IFM-1
  CHARACTER(LEN=*),INTENT(IN) :: DIR
  INTEGER,INTENT(IN) :: N
  CHARACTER(LEN=256) :: FN
- INTEGER :: ICOL,IROW
+ INTEGER :: ICOL,IROW,IOS
+ REAL(KIND=DP_KIND) :: X
  CHARACTER(LEN=*),DIMENSION(N) :: LIST
  
  LHM_ADDIWHB_READFLIST=.FALSE.
@@ -502,24 +621,39 @@ ILOOP: DO I=1,IFM-1
  ENDIF
  
  !## make sure with constant values not to add dir
- 
- FN=TRIM(DIR)//'\'//TRIM(LIST(3)) 
- IF(IWINDOW.EQ.1)THEN
-  CALL IDFCOPY(IDF,KH); IF(.NOT.IDFREADSCALE(FN,KH,10,1,0.0D0,0))THEN; WRITE(*,'(/A/)') 'ERROR READING '//TRIM(FN); STOP; ENDIF 
+ IF(TRIM(LIST(3)).NE.'')THEN
+  READ(LIST(3),*,IOSTAT=IOS) X; IF(IOS.NE.0)THEN; FN=TRIM(DIR)//'\'//TRIM(LIST(3)); ELSE; FN=TRIM(LIST(3)); ENDIF
+  IF(IWINDOW.EQ.1)THEN
+   CALL IDFCOPY(IDF,KH); IF(.NOT.IDFREADSCALE(FN,KH,10,1,0.0D0,0))THEN; WRITE(*,'(/A/)') 'ERROR READING '//TRIM(FN); STOP; ENDIF 
+  ELSE
+   IF(.NOT.IDFREAD(KH,FN,1))THEN; WRITE(*,'(/A/)') 'ERROR READING '//TRIM(FN); STOP; ENDIF  
+  ENDIF
  ELSE
-  IF(.NOT.IDFREAD(KH,FN,1))THEN; WRITE(*,'(/A/)') 'ERROR READING '//TRIM(FN); STOP; ENDIF  
- ENDIF
-  
- FN=TRIM(DIR)//'\'//TRIM(LIST(4)) 
- IF(IWINDOW.EQ.1)THEN
-  CALL IDFCOPY(IDF,KV); IF(.NOT.IDFREADSCALE(FN,KV,10,1,0.0D0,0))THEN; WRITE(*,'(/A/)') 'ERROR READING '//TRIM(FN); STOP; ENDIF 
- ELSE
-  IF(.NOT.IDFREAD(KV,FN,1))THEN; WRITE(*,'(/A/)') 'ERROR READING '//TRIM(FN); STOP; ENDIF
+  CALL IDFCOPY(IDF,KH); IF(.NOT.IDFALLOCATEX(KH))THEN
+   CALL WMESSAGEBOX(OKONLY,EXCLAMATIONICON,COMMONOK,'Cannot ALLOCATE memory for a constant value KH.','Error'); RETURN
+  ENDIF
  ENDIF
  
+ !## make sure with constant values not to add dir
+ IF(TRIM(LIST(4)).NE.'')THEN
+  READ(LIST(4),*,IOSTAT=IOS) X; IF(IOS.NE.0)THEN; FN=TRIM(DIR)//'\'//TRIM(LIST(4)); ELSE; FN=TRIM(LIST(4)); ENDIF
+  IF(IWINDOW.EQ.1)THEN
+   CALL IDFCOPY(IDF,KV); IF(.NOT.IDFREADSCALE(FN,KV,10,1,0.0D0,0))THEN; WRITE(*,'(/A/)') 'ERROR READING '//TRIM(FN); STOP; ENDIF 
+  ELSE
+   IF(.NOT.IDFREAD(KV,FN,1))THEN; WRITE(*,'(/A/)') 'ERROR READING '//TRIM(FN); STOP; ENDIF
+  ENDIF
+ ELSE
+  CALL IDFCOPY(IDF,KV); IF(.NOT.IDFALLOCATEX(KV))THEN
+   CALL WMESSAGEBOX(OKONLY,EXCLAMATIONICON,COMMONOK,'Cannot ALLOCATE memory for a constant value KV.','Error'); RETURN
+  ENDIF
+ ENDIF
+
  !## if kh and kv are not both read, use va
  IF(TRIM(LIST(3)).EQ.''.OR.TRIM(LIST(4)).EQ.'')THEN
-  FN=TRIM(DIR)//'\'//TRIM(LIST(5)) 
+  IF(TRIM(LIST(5)).EQ.'')THEN
+   WRITE(*,'(/A/)') 'ERROR entry for VA is empty'; STOP
+  ENDIF
+  READ(LIST(5),*,IOSTAT=IOS) X; IF(IOS.NE.0)THEN; FN=TRIM(DIR)//'\'//TRIM(LIST(5)); ELSE; FN=TRIM(LIST(5)); ENDIF
   IF(IWINDOW.EQ.1)THEN
    CALL IDFCOPY(IDF,VA); IF(.NOT.IDFREADSCALE(FN,VA,10,1,0.0D0,0))THEN; WRITE(*,'(/A/)') 'ERROR READING '//TRIM(FN); STOP; ENDIF 
   ELSE
@@ -529,13 +663,13 @@ ILOOP: DO I=1,IFM-1
   IF(TRIM(LIST(3)).EQ.'')THEN
    DO IROW=1,VA%NROW; DO ICOL=1,VA%NCOL
     IF(VA%X(ICOL,IROW).NE.VA%NODATA.AND.KH%X(ICOL,IROW).NE.KH%NODATA)THEN
-     KV%X(ICOL,IROW)=KH%X(ICOL,IROW)*VA%X(ICOL,IROW)
+     KH%X(ICOL,IROW)=KV%X(ICOL,IROW)/VA%X(ICOL,IROW)
     ENDIF
    ENDDO; ENDDO
   ELSE
    DO IROW=1,VA%NROW; DO ICOL=1,VA%NCOL
     IF(VA%X(ICOL,IROW).NE.VA%NODATA.AND.KV%X(ICOL,IROW).NE.KH%NODATA)THEN
-     KH%X(ICOL,IROW)=KV%X(ICOL,IROW)/VA%X(ICOL,IROW)
+     KV%X(ICOL,IROW)=KH%X(ICOL,IROW)*VA%X(ICOL,IROW)
     ENDIF
    ENDDO; ENDDO
   ENDIF
