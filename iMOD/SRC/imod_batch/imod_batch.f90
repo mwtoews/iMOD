@@ -5813,9 +5813,6 @@ CONTAINS
    ENDDO
    JDATE(NN+1)=UTL_IDATETOJDATE(EDATE)+1
    
-!   jdates(1)=20100101
-!   jdates(2)=20110101
-   
    DO K=0,NN
     !## fill in all periods
     DO IPER=1,NYR
