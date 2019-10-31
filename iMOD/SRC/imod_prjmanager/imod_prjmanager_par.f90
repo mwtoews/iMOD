@@ -25,7 +25,7 @@ MODULE MOD_PMANAGER_PAR
  USE MOD_IDF_PAR, ONLY : IDFOBJ
  USE IMODVAR, ONLY : DP_KIND,SP_KIND
  
- INTEGER,PARAMETER :: MAXTOPICS=40
+ INTEGER,PARAMETER :: MAXTOPICS=42
  INTEGER,PARAMETER :: TBND= 1
  INTEGER,PARAMETER :: TTOP= 2
  INTEGER,PARAMETER :: TBOT= 3
@@ -62,10 +62,12 @@ MODULE MOD_PMANAGER_PAR
  INTEGER,PARAMETER :: TOBS=34
  INTEGER,PARAMETER :: TPCG=35
  INTEGER,PARAMETER :: TGCG=36 !## mt3d/seawat
- INTEGER,PARAMETER :: TRCT=37 !## mt3d/seawat
+ INTEGER,PARAMETER :: TBTN=37 !## mt3d/seawat
  INTEGER,PARAMETER :: TADV=38 !## mt3d/seawat
- INTEGER,PARAMETER :: TVDF=39 !## mt3d/seawat
- INTEGER,PARAMETER :: TBTN=40 !## mt3d/seawat
+ INTEGER,PARAMETER :: TDSP=39 !## mt3d/seawat
+ INTEGER,PARAMETER :: TRCT=40 !## mt3d/seawat
+ INTEGER,PARAMETER :: TUDR=41 !## mt3d/seawat
+ INTEGER,PARAMETER :: TVDF=42 !## mt3d/seawat
  
  INTEGER,PARAMETER :: MAXLENPRJ   =52
  INTEGER,PARAMETER :: MAXSUBTOPICS=24
@@ -273,8 +275,8 @@ MODULE MOD_PMANAGER_PAR
   INTEGER :: ID                                                 !id of main topics
   INTEGER,POINTER,DIMENSION(:) :: IDT                           !id of each time step for current topic
   INTEGER,POINTER,DIMENSION(:,:) :: ISD                         !id of main subtopics for each timestep
-  INTEGER :: IACT                                               !active in projectmanager
-  INTEGER :: IACT_MODEL                                         !active in runfile/model
+  INTEGER :: IACT                                               !active in projectmanager (only 1 at the same time)
+  INTEGER :: IACT_MODEL                                         !active in runfile/model 
   CHARACTER(LEN=MAXLENPRJ) :: TNAME                             !name of topic
   CHARACTER(LEN=MAXLENPRJ),DIMENSION(MAXSUBTOPICS) :: SNAME     !name of subtopics
   INTEGER :: NSUBTOPICS                                         !number of subtopics
@@ -301,8 +303,10 @@ MODULE MOD_PMANAGER_PAR
 
  INTEGER :: PRJNLAY,PRJMXNLAY,ISUBMODEL,PRJNPER 
  INTEGER,DIMENSION(4) :: IFULL
- LOGICAL :: LBCF,LLPF,LNPF,LPCG,LRCH,LEVT,LDRN,LRIV,LGHB,LOLF,LCHD,LWEL,LISG,LPWT,LHFB,LMSP,LQBD,LSFR, &
-            LFHB,LLAK,LMNW,LUZF,LPST,LANI,LSFT,LPKS
+ LOGICAL :: LBCF,LLPF,LNPF,LPCG,LRCH,LEVT,LDRN,LRIV,LGHB,LOLF, &   ! Logical for all (composed) packages indicating if the package COMPLETE/Active
+            LCHD,LWEL,LISG,LPWT,LHFB,LMSP,LQBD,LSFR,LFHB,LLAK, &   ! composed is based on items in MAXTOPICS list e.g. LBCF checks for existing TKDW and TVCW
+            LMNW,LUZF,LPST,LANI,LSFT,LPKS,LBAS, &
+            LGCG,LRCT,LADV,LVDF,LBTN,LDIS,LDSP,LSSM,LUDR,LFTL ! added for iMOD WQ
  INTEGER :: IHEDUN,IBCFCB,IRCHCB,IEVTCB,IDRNCB,IRIVCB,IGHBCB,ICHDCB,IWELCB,ISFRCB,IFHBCB,ISFRCB2,IFHBUN,ILAKCB,IUZFCB1,IWL2CB
  
  REAL(KIND=DP_KIND),DIMENSION(:,:),ALLOCATABLE :: FHBHED,FHBFLW
@@ -324,7 +328,7 @@ MODULE MOD_PMANAGER_PAR
  DATA TMENU2/'Minutes ','Hourly  ','Daily   ','Weekly  ','Decade  ', &
              '14/28   ','Monthly ','Yearly  ','Packages','All     '/
  
- INTEGER,ALLOCATABLE,DIMENSION(:) :: PRJILIST
+   INTEGER,ALLOCATABLE,DIMENSION(:) :: PRJILIST
  TYPE(PRJOBJ),POINTER,DIMENSION(:) :: FNAMES,FNAMES_BU
  
  INTEGER :: NMAXCORES
@@ -373,5 +377,12 @@ MODULE MOD_PMANAGER_PAR
  LOGICAL,PARAMETER :: LFREEFORMAT=.TRUE.  !## use true free-format
  CHARACTER(LEN=1024) :: LINE
  LOGICAL :: LYESNO
+
+ TYPE RUNFILEWQ_OBJ  ! For re-use of parameter information in iMOD WQ input files 
+  CHARACTER(LEN=256) :: DELR_C, DELR_R, LAYCON_L
+  INTEGER :: NLAY
+ END TYPE RUNFILEWQ_OBJ
+ 
+ TYPE(RUNFILEWQ_OBJ) :: WQFILE         
 
 END MODULE MOD_PMANAGER_PAR
