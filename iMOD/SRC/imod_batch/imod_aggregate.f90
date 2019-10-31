@@ -241,8 +241,6 @@ MODULE MOD_AGGREGATE
  TYPE(IDFOBJ),INTENT(INOUT),DIMENSION(5) :: IDF
  INTEGER :: I,II,J,K,N,IROW,ICOL,IORDER
  REAL(KIND=DP_KIND) :: T,B,VC,TR,DZ,TF,BF
-! REAL(KIND=DP_KIND),ALLOCATABLE,DIMENSION(:) :: TF,BF
-! INTEGER,ALLOCATABLE,DIMENSION(:) :: ID
  LOGICAL :: LTOP,LBOT
  REAL(KIND=DP_KIND),ALLOCATABLE,DIMENSION(:,:) :: DZT,DZB
  INTEGER,ALLOCATABLE,DIMENSION(:,:,:) :: BFM,IFP
@@ -299,25 +297,13 @@ MODULE MOD_AGGREGATE
   ENDDO
  ENDDO
  
-! !## correct for caps
-! ALLOCATE(TF(IFM),BF(IFM),ID(IFM))
- 
  !## find formation(s) nearest from top and bottom
  ALLOCATE(DZT(IDF(1)%NCOL,IDF(1)%NROW)); DZT=HUGE(1.0)
  ALLOCATE(DZB(IDF(1)%NCOL,IDF(1)%NROW)); DZB=HUGE(1.0)
  ALLOCATE(BFM(IDF(1)%NCOL,IDF(1)%NROW,2)); BFM=0
  ALLOCATE(IFP(IDF(1)%NCOL,IDF(1)%NROW,2)); IFP=0
  
-! DO IROW=1,IDF(1)%NROW; DO ICOL=1,IDF(1)%NCOL
-!  T=IDF(1)%X(ICOL,IROW); B=IDF(2)%X(ICOL,IROW)
-
-!  !## skip nodata locations
-!  IF(T.EQ.IDF(1)%NODATA.OR.B.EQ.IDF(2)%NODATA)CYCLE
-  
-!  !## potential location for a "leak"
-!  IF(T-B.GT.0.0D0)THEN
-   !## fill in nearest elements
-!   ID=0
+ !## correct for caps
  DO II=1,IFM-1
   IF(.NOT.ASSOCIATED(FM(II)%SF))CYCLE
   DO J=1,SIZE(FM(II)%SF)
@@ -347,47 +333,6 @@ MODULE MOD_AGGREGATE
  !## correct single formation above and below
  !## zero thickness is absent anyhow
  
-!    IF(JROW.NE.IROW.OR.JCOL.NE.ICOL)CYCLE
-!      !## found location
-!      TF(II)=FM(II)%SF(J)%AT(K)%TP
-!      BF(II)=FM(II)%SF(J)%AT(K)%BT
-!      ID(II)=K
-!      EXIT
-!     ENDDO
-!    ENDDO
-!   ENDDO
-   
-!!   TF(IFM)=T; BF(IFM)=B
-!   
-!   !## correct above the inserted layer
-!   DO II=IORDER-1,1,-1
-!    !## get correct number
-!    DO I=1,IFM; IF(FM(I)%IORDER.EQ.II)EXIT; ENDDO; IF(I.GT.IFM)EXIT
-!    IF(ID(I).EQ.0)CYCLE
-!    !## above
-!    T=TF(I); B=BF(I)
-!    !## shift zero thickness
-!    IF(T.LE.B)THEN
-!     TF(I)=TF(IFM); BF(I)=TF(I)
-!    ELSE
-!     BF(I)=TF(IFM); EXIT
-!    ENDIF
-!   ENDDO
-!   !## correct below the inserted layer
-!   DO II=IORDER+1,IFM
-!    !## get correct number
-!    DO I=1,IFM; IF(FM(I)%IORDER.EQ.II)EXIT; ENDDO; IF(I.GT.IFM)EXIT
-!    IF(ID(I).EQ.0)CYCLE
-!    !## below
-!    T=TF(I); B=BF(I)
-!    !## shift zero thickness
-!    IF(T.LE.B)THEN
-!     TF(I)=BF(IFM); BF(I)=TF(I)
-!    ELSE
-!     TF(I)=BF(IFM); EXIT
-!    ENDIF
-!   ENDDO
-!   
 !   !## fill in updated top/bottom
 !   DO II=1,IFM
 !    IF(.NOT.ASSOCIATED(FM(II)%SF))CYCLE
@@ -404,8 +349,6 @@ MODULE MOD_AGGREGATE
 ! ENDDO; ENDDO
  
  DEALLOCATE(DZT,DZB,IFP,BFM)
- 
-! DEALLOCATE(TF,BF,ID)
  
  END SUBROUTINE LHM_ADDIWHB_INSERT_IWHB
  
