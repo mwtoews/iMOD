@@ -322,6 +322,8 @@ MODULE MOD_PMANAGER_PAR
  
  !## Complete set of all files in time for all packages
  TYPE TOPICSOBJ
+  LOGICAL :: DEFINED                                            !logical whether it is defined
+  INTEGER :: NLAY                                               !maximum # continuous layers from 1 downwards
   INTEGER :: ID                                                 !id of main topics
   INTEGER,POINTER,DIMENSION(:) :: IDT                           !id of each time step for current topic
   INTEGER,POINTER,DIMENSION(:,:) :: ISD                         !id of main subtopics for each timestep
@@ -353,10 +355,11 @@ MODULE MOD_PMANAGER_PAR
 
  INTEGER :: PRJNLAY,PRJMXNLAY,ISUBMODEL,PRJNPER 
  INTEGER,DIMENSION(4) :: IFULL
- LOGICAL :: LBCF,LLPF,LNPF,LPCG,LRCH,LEVT,LDRN,LRIV,LGHB,LOLF, &   ! Logical for all (composed) packages indicating if the package COMPLETE/Active
-            LCHD,LWEL,LISG,LPWT,LHFB,LMSP,LQBD,LSFR,LFHB,LLAK, &   ! composed is based on items in MAXTOPICS list e.g. LBCF checks for existing TKDW and TVCW
-            LMNW,LUZF,LPST,LANI,LSFT,LPKS,LBAS, &
-            LGCG,LRCT,LADV,LVDF,LBTN,LDIS,LDSP,LSSM,LUDR,LFTL ! added for iMOD WQ
+ LOGICAL :: LQBD !## if true apply quasi 3D
+ LOGICAL :: LBCF !## if true use bcf
+ LOGICAL :: LLPF !## if true use lpf
+ LOGICAL :: LNPF !## if true use npf for mf6
+ LOGICAL :: LPKS !## if true use pks
  INTEGER :: IHEDUN,IBCFCB,IRCHCB,IEVTCB,IDRNCB,IRIVCB,IGHBCB,ICHDCB,IWELCB,ISFRCB,IFHBCB,ISFRCB2,IFHBUN,ILAKCB,IUZFCB1,IWL2CB
  
  REAL(KIND=DP_KIND),DIMENSION(:,:),ALLOCATABLE :: FHBHED,FHBFLW
