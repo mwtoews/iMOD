@@ -25,7 +25,7 @@ MODULE MOD_PMANAGER_PAR
  USE MOD_IDF_PAR, ONLY : IDFOBJ
  USE IMODVAR, ONLY : DP_KIND,SP_KIND
  
- INTEGER,PARAMETER :: MAXTOPICS=39
+ INTEGER,PARAMETER :: MAXTOPICS=44
  INTEGER,PARAMETER :: TBND= 1
  INTEGER,PARAMETER :: TTOP= 2
  INTEGER,PARAMETER :: TBOT= 3
@@ -65,14 +65,15 @@ MODULE MOD_PMANAGER_PAR
  INTEGER,PARAMETER :: TGCG=37 !## mt3d/seawat
  INTEGER,PARAMETER :: TVDF=38 !## mt3d/seawat - parameters vdf
  INTEGER,PARAMETER :: TFDE=39 !## mt3d/seawat - fluid density
+ INTEGER,PARAMETER :: TCBI=40 !## mt3d/seawat - concentration boundary indicator
+ INTEGER,PARAMETER :: TSCO=41 !## mt3d/seawat - start concentration per layer and species
+ INTEGER,PARAMETER :: TADV=42 !## mt3d/seawat - advection parameters
+ INTEGER,PARAMETER :: TDSP=43 !## mt3d/seawat - dispersiviteit
+ INTEGER,PARAMETER :: TTVC=44 !## mt3d/seawat - time varying concentration
 
 ! INTEGER,PARAMETER :: TBDE=38 !## mt3d/seawat - bulk density
 ! INTEGER,PARAMETER :: TPID=39 !## mt3d/seawat - porosity imobile domain
-! INTEGER,PARAMETER :: TICB=40 !## mt3d/seawat - initial concentration
-! INTEGER,PARAMETER :: TSCO=41 !## mt3d/seawat - starting concentration
-! INTEGER,PARAMETER :: TDSP=43 !## mt3d/seawat + parameter per laag - long. dispersie + constante
 ! INTEGER,PARAMETER :: TRCT=44 !## mt3d/seawat + parameter per laag (5)
-! INTEGER,PARAMETER :: TADV=46 !## mt3d/seawat - parameters adv
 ! INTEGER,PARAMETER :: TUDR=47 !## mt3d/seawat
  
  INTEGER,PARAMETER :: MAXLENPRJ   =52
@@ -90,6 +91,50 @@ MODULE MOD_PMANAGER_PAR
  TYPE LAYOBJ
   INTEGER,DIMENSION(:),POINTER :: ILAY
  END TYPE LAYOBJ
+  
+ !TYPE RCTOBJ
+ ! INTEGER :: MUT=1
+ ! REAL(KIND=DP_KIND) :: HCLOSE=1.0D-4
+ !END TYPE RCTOBJ
+ !TYPE(RCTOBJ) :: RCT
+ 
+ !## parameter for vdf
+ TYPE BTNOBJ
+  CHARACTER(LEN=1) :: TUNIT='D'   !## fixed
+  CHARACTER(LEN=1) :: LUNIT='M'   !## fixed
+  CHARACTER(LEN=1) :: MUNIT='K'   !## fixed
+  INTEGER :: NPRS=0     !## fixed
+  INTEGER :: IFMTCN=0   !## fixed
+  INTEGER :: IFMTNP=0   !## fixed
+  INTEGER :: IFMTRF=0   !## fixed
+  INTEGER :: IFMTDP=0   !## fixed
+  INTEGER :: NPRMAS=1   !## fixed
+  LOGICAL :: SAVUCN=.TRUE. !## fixed
+  LOGICAL :: CHKMAS=.TRUE. !## fixed
+  REAL(KIND=DP_KIND) :: CINACT=-9999.0D0  !## fixed
+  REAL(KIND=DP_KIND) :: THKMIN=1.0D-02    !## fixed
+ END TYPE BTNOBJ
+ 
+ !## parameter for adv
+ TYPE ADVOBJ
+  INTEGER :: MIXELM=-1
+  INTEGER :: MXPART=0   !## fixed
+  INTEGER :: NADVFD=0   !## fixed
+  !## hmoc/moc/mmoc options
+  INTEGER :: ITRACK   !## fixed
+  INTEGER :: NPLANE   !## fixed
+  INTEGER :: NPL      !## fixed
+  INTEGER :: NPH      !## fixed
+  INTEGER :: NPMIN    !## fixed
+  INTEGER :: NPMAX    !## fixed
+  INTEGER :: INTERP   !## fixed
+  INTEGER :: NLSINK   !## fixed
+  INTEGER :: NPSINK   !## fixed
+  REAL(KIND=DP_KIND) :: DCHMOC !## fixed
+  REAL(KIND=DP_KIND) :: WD     !## fixed
+  REAL(KIND=DP_KIND) :: DCEPS  !## fixed
+  REAL(KIND=DP_KIND) :: PERCEL !## fixed
+ END TYPE ADVOBJ
  
  !## parameter for vdf
  TYPE VDFOBJ
@@ -121,6 +166,8 @@ MODULE MOD_PMANAGER_PAR
  TYPE WQOBJ
   TYPE(VDFOBJ) :: VDF
   TYPE(GCGOBJ) :: GCG
+  TYPE(BTNOBJ) :: BTN
+  TYPE(ADVOBJ) :: ADV
  END TYPE WQOBJ
      
  TYPE PMANBATCH
@@ -137,7 +184,7 @@ MODULE MOD_PMANAGER_PAR
   INTEGER,POINTER,DIMENSION(:) :: ILAY
   CHARACTER(LEN=256) :: TIMFNAME,MODFLOW,BNDFILE,OUTPUT,GENFNAME
   CHARACTER(LEN=6) :: RUNTYPE
-  TYPE(WQOBJ) :: WQ     ! parameters for iMOD WQ
+  TYPE(WQOBJ) :: WQ     !## parameters for iMOD WQ
  END TYPE PMANBATCH
  TYPE(PMANBATCH) :: PBMAN
 
@@ -217,25 +264,6 @@ MODULE MOD_PMANAGER_PAR
   CHARACTER(LEN=256) :: MRGFNAME=''
  END TYPE PCGOBJ
  TYPE(PCGOBJ) :: PCG
-
- !## mt3d/seawat
- TYPE BTNOBJ
-  INTEGER :: MUT=1,NCOMP, MCOMP, MIXELM
-  REAL(KIND=DP_KIND) :: HCLOSE=1.0D-4, THKMIN, CINACT
- END TYPE BTNOBJ
- TYPE(BTNOBJ) :: BTN
- 
- TYPE RCTOBJ
-  INTEGER :: MUT=1
-  REAL(KIND=DP_KIND) :: HCLOSE=1.0D-4
- END TYPE RCTOBJ
- TYPE(RCTOBJ) :: RCT
-  
- TYPE ADVOBJ
-  INTEGER :: MUT=1
-  REAL(KIND=DP_KIND) :: HCLOSE=1.0D-4
- END TYPE ADVOBJ
- TYPE(ADVOBJ) :: ADV
   
  !## pest settings
  TYPE PSTMEASURE
