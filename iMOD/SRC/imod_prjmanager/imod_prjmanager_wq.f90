@@ -79,17 +79,6 @@ CONTAINS
  !# Check if obligatory packages are active for MT3D and SEAWAT
  IF(.NOT.PMANAGER_SAVERUNWQ_CHK())RETURN
 
- !DO I=1,MAXTOPICS
- ! SELECT CASE (I)
- !  CASE (TFHB,TUZF,TMNW,TSFR,TLAK)
- !   IF(TOPICS(I)%IACT_MODEL.EQ.1)THEN
- !    CALL WMESSAGEBOX(OKONLY,INFORMATIONICON,COMMONOK,'You cannot use the package '//TRIM(TOPICS(I)%TNAME)//CHAR(13)// &
- !     'to save for a RUN-file. Select the option MODFLOW2005 instead','Information')
- !    RETURN
- !   ENDIF
- ! END SELECT
- !ENDDO
-
  !## remove last timestep sinces it is the final date
  IF(PRJNPER.GT.1)PRJNPER=PRJNPER-1
 
@@ -627,7 +616,7 @@ CONTAINS
  LINE=''
  IF(PBMAN%IFORMAT.EQ.4) THEN    ! for Seawat
   DO ITOPIC=1,MAXTOPICS
-   SELECT CASE (ITOPIC)  ! Frans: chech of dit klopt
+   SELECT CASE (ITOPIC)  ! Frans: check of dit klopt
      CASE (TWEL, TDRN, TRIV, TGHB, TCHD, TRCH, TEVT, TPCG)
          IF(TOPICS(ITOPIC)%IACT_MODEL.GT.0) LINE=TRIM(LINE)//TRIM(TOPICS(ITOPIC)%CMOD)//','
      CASE (TBND)
@@ -671,46 +660,33 @@ CONTAINS
  !###======================================================================
  LOGICAL FUNCTION PMANAGER_SAVERUNWQ_CHK()
  !###======================================================================
- ! actie: nog opschonen
  IMPLICIT NONE
- !CHARACTER(LEN=*),INTENT(IN) :: FNAME
- !INTEGER,INTENT(IN) :: IBATCH
- !CHARACTER(LEN=52) :: CDATE1,CDATE2
- !CHARACTER(LEN=256) :: BNDFNAME
- !INTEGER(KIND=8) :: ITIME,JTIME
+ 
  INTEGER :: ITOPIC
- !LOGICAL :: LDAYS,LEX
- !TYPE(IDFOBJ),ALLOCATABLE,DIMENSION(:) :: IDF
- !CHARACTER(LEN=256) :: LINE
 
  PMANAGER_SAVERUNWQ_CHK=.FALSE.
-! VDF, BTN, ADV ,DSP ,SSM, FTL, GCG, RCT, UDR
-! RCT en UDR zijn reactie packages; die zijn wel echt optioneel. En per simulatie kan maar 1 van deze 2 gebruikt worden.
-! dus als het makkelijker is zou je gewoon alle MT3DMS packages verplicht kunnen maken.
 
-! BAS6, DIS, WEL, DRN, RIV, GHB, CHD, LPF, BCF6, RCH, EVT, OC, VDF, PCG, , BTN
-! verplicht: BAS6, DIS, OC, PCG en  LPF of BCF6
+ !DO ITOPIC=1,MAXTOPICS
+ !  IF(PBMAN%IFORMAT.EQ.4) THEN    ! for Seawat
+ !   SELECT CASE (ITOPIC)  
+ !    CASE (TBTN, TADV, TGCG, TRCT, TVDF) 
+ !        IF(TOPICS(ITOPIC)%IACT_MODEL.EQ.0) THEN
+ !          CALL WMESSAGEBOX(OKONLY,EXCLAMATIONICON,COMMONOK,'To run Seawat you need to activate package '//TRIM(TOPICS(ITOPIC)%TNAME) ,'Error')
+ !          RETURN
+ !        ENDIF
+ !   END SELECT
+ !  ENDIF ! seawat   
+ !  IF(PBMAN%IFORMAT.EQ.5) THEN    ! for MT3D
+ !   SELECT CASE (ITOPIC)  
+ !    CASE (TBTN, TADV, TGCG, TRCT, TVDF, TSSM, TDSP, TUDR)
+ !        IF(TOPICS(ITOPIC)%IACT_MODEL.EQ.0) THEN
+ !          CALL WMESSAGEBOX(OKONLY,EXCLAMATIONICON,COMMONOK,'To run MT3D you need to activate package '//TRIM(TOPICS(ITOPIC)%TNAME) ,'Error')
+ !          RETURN
+ !        ENDIF
+ !   END SELECT
+ !  ENDIF ! MT3D   
+ !ENDDO
 
- DO ITOPIC=1,MAXTOPICS
-   SELECT CASE (ITOPIC)  
-     CASE (TWEL, TDRN, TRIV, TGHB, TCHD, TRCH, TEVT, TPCG)
-         IF(TOPICS(ITOPIC)%IACT_MODEL.EQ.0) RETURN
-!     CASE (TBTN, TADV, TGCG, TRCT, TVDF)  !(SSM, DSP, TUDR)
-     CASE (TGCG,TVDF)  !(SSM, DSP, TUDR)
-         IF(TOPICS(ITOPIC)%IACT_MODEL.EQ.0) RETURN
-     CASE (TBND)
-         IF(TOPICS(ITOPIC)%IACT_MODEL.EQ.0) RETURN
-     CASE (TKHV, TKDW)
-         IF(TOPICS(ITOPIC)%IACT_MODEL.EQ.0) RETURN
-   END SELECT
- ENDDO
-
- IF(TOPICS(ITOPIC)%IACT_MODEL.EQ.0) THEN
-  CALL WMESSAGEBOX(OKONLY,EXCLAMATIONICON,COMMONOK,'You need to specify a pointer IDF-file when selecting the RCB partition method.','Error')
-  RETURN
- ENDIF
- 
- 
  PMANAGER_SAVERUNWQ_CHK=.TRUE. 
 
  END FUNCTION PMANAGER_SAVERUNWQ_CHK
