@@ -72,11 +72,12 @@ MODULE MOD_PMANAGER_PAR
  INTEGER,PARAMETER :: TTVC=44 !## mt3d/seawat - time varying concentration
 
  TYPE MTOBJ
-  INTEGER,POINTER,DIMENSION(:) :: T
+  INTEGER,POINTER,DIMENSION(:) :: T     !## packages active for this configuration
+  CHARACTER(LEN=24) :: MCNAME           !## model configuration name
  END TYPE MTOBJ
- TYPE(MTOBJ),DIMENSION(5) :: MC     ! Model Configuration - list of topics for each Model (modflow2005, modflow6,seawat,mt3d,modpath)
+ TYPE(MTOBJ),DIMENSION(6) :: MC     ! Model Configuration - list of topics for each Model (modflow2005, modflow6,seawat,mt3d,modpath)
  
- ! INTEGER,PARAMETER :: TBDE=38 !## mt3d/seawat - bulk density
+! INTEGER,PARAMETER :: TBDE=38 !## mt3d/seawat - bulk density
 ! INTEGER,PARAMETER :: TPID=39 !## mt3d/seawat - porosity imobile domain
 ! INTEGER,PARAMETER :: TRCT=44 !## mt3d/seawat + parameter per laag (5)
 ! INTEGER,PARAMETER :: TUDR=47 !## mt3d/seawat
@@ -144,7 +145,7 @@ MODULE MOD_PMANAGER_PAR
   INTEGER :: MTDNCONC=1   !## fixed
   INTEGER :: MFNADVFD=1   !## fixed
   INTEGER :: NSWTCPL=1    !## fixed
-  INTEGER :: IWTABLE=0     !## fixed
+  INTEGER :: IWTABLE=0    !## fixed
   INTEGER :: INDENSE_P=1  !## fixed
   REAL(KIND=DP_KIND) :: DENSEMIN=0.0D0
   REAL(KIND=DP_KIND) :: DENSEMAX=0.0D0
@@ -201,7 +202,7 @@ MODULE MOD_PMANAGER_PAR
  
  TYPE SPECIESOBJ
   CHARACTER(LEN=MAXLENPRJ) :: NAME
-  INTEGER :: IMOBILE   ! flag indicating mobility of a species (1: mobile, 2: immobile). Related to BTN keu 'MCOMP'
+  INTEGER :: IMOBILE   !## flag indicating mobility of a species (1: mobile, 2: immobile). Related to BTN keu 'MCOMP'
  END TYPE SPECIESOBJ
  TYPE(SPECIESOBJ),ALLOCATABLE,DIMENSION(:),SAVE :: SPECIES
  INTEGER :: NSPECIES
@@ -243,13 +244,6 @@ MODULE MOD_PMANAGER_PAR
  END TYPE STRESSOBJ
  TYPE(STRESSOBJ),ALLOCATABLE,DIMENSION(:) :: STRESS  !## only in PMANAGER_GETIPER, temp to fill TOPICS(ITOPIC)%STRESS
  
- TYPE SIPOBJ
-  INTEGER :: NOUTER=150
-  REAL(KIND=DP_KIND) :: HCLOSE=1.0D-4
-  REAL(KIND=DP_KIND) :: RELAX=0.98D0
- END TYPE SIPOBJ
- TYPE(SIPOBJ) :: SIP
-
  TYPE PCGOBJ
   INTEGER :: NOUTER=150
   INTEGER :: NINNER=30
