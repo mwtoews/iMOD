@@ -3092,9 +3092,6 @@ JLOOP: DO K=1,SIZE(TOPICS)
  !## for particle tracking
  ALLOCATE(MC(5)%T(3)); MC(5)%T=[TBND,TTOP,TBOT]
 
- !## initially treeview tabview
- ITABVIEW=ID_DPMANAGER_TAB1; CALL WDIALOGSETTAB(ID_TAB,ITABVIEW)
- 
  END SUBROUTINE PMANAGER_UTL_INIT
 
  !#####=================================================================
