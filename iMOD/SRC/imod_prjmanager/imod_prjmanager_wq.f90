@@ -80,6 +80,9 @@ CONTAINS
 
  !# Check if obligatory packages are active for MT3D and SEAWAT
  IF(.NOT.PMANAGER_SAVERUNWQ_CHK())RETURN
+ 
+ !# general preparations
+ IF(.NOT.PMANAGER_SAVERUNWQ_INIT())RETURN
 
  !## Prepare result model file
  CALL UTL_CREATEDIR(FNAME(1:INDEX(FNAME,'\',.TRUE.)-1))
@@ -152,11 +155,11 @@ CONTAINS
  WRITE(IU,'(A)') 'NLAY = '//TRIM(ITOS(PRJNLAY))
  WRITE(IU,'(A)') 'NPER = '//TRIM(ITOS(PRJNPER))
  WRITE(IU,'(A)') 'NCOMP = '//TRIM(ITOS(NSPECIES))
- WRITE(IU,'(A)') 'MCOMP = '   ! frans, moet nog
- WRITE(IU,'(A)') 'TUNIT =  D'
- WRITE(IU,'(A)') 'LUNIT =  M'
- WRITE(IU,'(A)') 'MUNIT =  K'
- WRITE(IU,'(A)') '#TRNOP = '   !given in GEN file, not obligatory
+ WRITE(IU,'(A)') 'MCOMP = #nader te bepalen'   ! frans, moet nog
+ WRITE(IU,'(A)') 'TUNIT =  D # default'
+ WRITE(IU,'(A)') 'LUNIT =  M # default'
+ WRITE(IU,'(A)') 'MUNIT =  K # default'
+ WRITE(IU,'(A)') '#TRNOP = given in GEN package'  
 
  !## define LAYCON_L
  LCBD=-1
@@ -176,28 +179,10 @@ CONTAINS
   WRITE(IU,'(A)') 'LAYCON_L'//TRIM(ITOS(PRJNLAY))//' = '//TRIM(ITOS(LCBD))
  ENDDO
 
- IF(PRJIDF%IEQ.EQ.0)THEN
-   WQFILE%DELR_C='  DELR_C? = '//TRIM(RTOS(PRJIDF%DX,'E',7))//' '//TRIM(UTL_REALTOSTRING(SUBMODEL(5)))  
-   WRITE(IU,'(A)') TRIM(WQFILE%DELR_C)
- ELSE
-  DO ICOL=1,PRJIDF%NCOL
-   DELX=PRJIDF%SX(ICOL)-PRJIDF%SX(ICOL-1)
-   WQFILE%DELR_C='  DELR_C'//TRIM(ITOS(ICOL))//' = '//TRIM(RTOS(DELX,'E',7))
-   WRITE(IU,'(A)') TRIM(WQFILE%DELR_C)
-  ENDDO
- ENDIF
+ !# Write DELR_C and DELR_R
+ WRITE(IU,'(A)') TRIM(WQFILE%DELR_C)
+ WRITE(IU,'(A)') TRIM(WQFILE%DELR_R)
 
- IF(PRJIDF%IEQ.EQ.0)THEN
-   WQFILE%DELR_R=  '  DELR_R? = '//TRIM(RTOS(PRJIDF%DY,'E',7))//' '//TRIM(UTL_REALTOSTRING(SUBMODEL(5)))
-   WRITE(IU,'(A)') TRIM(WQFILE%DELR_R)
- ELSE
-  DO IROW=1,PRJIDF%NROW
-   DELY=PRJIDF%SY(IROW-1)-PRJIDF%SY(IROW)
-   WQFILE%DELR_R='  DELR_R'//TRIM(ITOS(IROW))//' = '//TRIM(RTOS(DELY,'E',7))
-   WRITE(IU,'(A)') TRIM(WQFILE%DELR_R)
-  ENDDO
- ENDIF
- 
  DO ILAY=1,PRJNLAY
   !## quasi-3d scheme add top aquifer modellayer
   !IF(LQBD.OR.ILAY.EQ.1)THEN
@@ -225,7 +210,7 @@ CONTAINS
   IF(.NOT.PMANAGER_SAVERUNWQ_U2DREL(IU,'SCONC_T?_L?',ITOPIC,1,1,ILAY))RETURN
  ENDDO
 
- WRITE(IU,'(A)') 'CINACT = '
+ WRITE(IU,'(A)') 'CINACT = -9999 # default'
  WRITE(IU,'(A)') 'THKMIN = '
  WRITE(IU,'(A)') 'IFMTCN = '
  WRITE(IU,'(A)') 'IFMTNP = '
@@ -472,14 +457,14 @@ CONTAINS
 
  WRITE(IU,'(/A)') '[BCF6] # BLOCK CENTRED FLOW'
 
- WRITE(IU,'(A)') 'IBCFCB = 0 '
- WRITE(IU,'(A)') 'HDRY = -9999 '
- WRITE(IU,'(A)') 'IWDFLG = 0 '
- WRITE(IU,'(A)') 'WETFCT = 1 '
- WRITE(IU,'(A)') 'IWETIT = 1 '
- WRITE(IU,'(A)') 'IHDWET = 0 '
- WRITE(IU,'(A)') 'LTYPE_L? = 0 '
- WRITE(IU,'(A)') 'TRPY_L? = 1 '
+ WRITE(IU,'(A)') 'IBCFCB = 0  # default'
+ WRITE(IU,'(A)') 'HDRY = -9999  # default'
+ WRITE(IU,'(A)') 'IWDFLG = 0  # default'
+ WRITE(IU,'(A)') 'WETFCT = 1  # default'
+ WRITE(IU,'(A)') 'IWETIT = 1  # default'
+ WRITE(IU,'(A)') 'IHDWET = 0  # default'
+ WRITE(IU,'(A)') 'LTYPE_L? = 0  # default'
+ WRITE(IU,'(A)') 'TRPY_L? = 1 # default'
  WRITE(IU,'(A)') 'SF1_L? = - '
  WRITE(IU,'(A)') 'TRAN_L? = - '
  WRITE(IU,'(A)') 'HY_L? = - '
@@ -508,7 +493,7 @@ CONTAINS
   IF(.NOT.PMANAGER_SAVERUNWQ_U2DREL(IU,'IBOUND_test_L?',ITOPIC,1,1,ILAY))RETURN
  ENDDO
 
- WRITE(IU,'(A)') 'HNOFLO    = -9999.0            '
+ WRITE(IU,'(A)') 'HNOFLO    = -9999.0  # default'
 
  DO ILAY=1,PRJNLAY
   ITOPIC=TSHD
@@ -536,8 +521,8 @@ CONTAINS
  WRITE(IU,'(A)') 'NROW = '//TRIM(ITOS(PRJIDF%NROW))
  WRITE(IU,'(A)') 'NCOL = '//TRIM(ITOS(PRJIDF%NCOL))
  WRITE(IU,'(A)') 'NPER = '//TRIM(ITOS(PRJNPER))
- WRITE(IU,'(A)') 'ITMUNI = 4' ! default
- WRITE(IU,'(A)') 'LENUNI = 2' ! default
+ WRITE(IU,'(A)') 'ITMUNI = 4 # default' 
+ WRITE(IU,'(A)') 'LENUNI = 2 # default' 
 
  !## define LAYCON_L
  LCBD=-1
@@ -556,7 +541,8 @@ CONTAINS
   ENDIF
   WRITE(IU,'(A)') 'LAYCON_L'//TRIM(ITOS(PRJNLAY))//' = '//TRIM(ITOS(LCBD))
  ENDDO
-
+ 
+ !# Write DELR_C and DELR_R
  WRITE(IU,'(A)') TRIM(WQFILE%DELR_C)
  WRITE(IU,'(A)') TRIM(WQFILE%DELR_R)
 
@@ -608,10 +594,10 @@ CONTAINS
  WRITE(IU,'(/A)') '[GEN] # GENeral settings'
  MODELNAME=MODELNAME(1:INDEX(MODELNAME,'.RUN',.TRUE.)-1)
  WRITE(IU,'(A)') 'MODELNAME = '//CHAR(39)//TRIM(MODELNAME)//CHAR(39)            
- WRITE(IU,'(A)') 'WRITEHELP     =   F'
- WRITE(IU,'(A)') 'ECHODEFAULTS  =   F'
+ WRITE(IU,'(A)') 'WRITEHELP     =   F # default'
+ WRITE(IU,'(A)') 'ECHODEFAULTS  =   F # default'
  WRITE(IU,'(A)') 'RESULT_DIR    =   '//CHAR(39)//TRIM(PREFVAL(1))//'\MODELS\'//TRIM(MODELNAME)//CHAR(39)
- WRITE(IU,'(A)') 'IDFDEBUG      =   F'
+ WRITE(IU,'(A)') 'IDFDEBUG      =   F # default'
  IF(PBMAN%IFORMAT.EQ.4) WRITE(IU,'(A)') 'RUNTYPE       = SEAWAT'
  IF(PBMAN%IFORMAT.EQ.5) WRITE(IU,'(A)') 'RUNTYPE       = MT3DMS'
  
@@ -652,7 +638,7 @@ CONTAINS
  WRITE(IU,'(A)') 'START_YEAR    =   '//TRIM(ITOS(SIM(KPER)%IYR))
  WRITE(IU,'(A)') 'START_MONTH   =   '//TRIM(ITOS(SIM(KPER)%IMH))
  WRITE(IU,'(A)') 'START_DAY     =   '//TRIM(ITOS(SIM(KPER)%IDY))
- WRITE(IU,'(A)') 'START_HOUR    =   1'
+ WRITE(IU,'(A)') 'START_HOUR    =   1' ! Frans: nog uitbreiden zodat hhmmss ook meegaat?
  WRITE(IU,'(A)') 'START_MINUTE  =   1'
  WRITE(IU,'(A)') 'START_SECOND  =   1'
 
@@ -733,4 +719,37 @@ CONTAINS
 
  END FUNCTION PMANAGER_SAVERUNWQ_U2DREL
  
+ !###======================================================================
+ LOGICAL FUNCTION PMANAGER_SAVERUNWQ_INIT()
+ !###======================================================================
+ IMPLICIT NONE
+ INTEGER :: ICOL, IROW
+ REAL(KIND=DP_KIND) :: DELX, DELY
+ 
+
+ PMANAGER_SAVERUNWQ_INIT=.FALSE.
+
+ IF(PRJIDF%IEQ.EQ.0)THEN
+   WQFILE%DELR_C='  DELR_C? = '//TRIM(RTOS(PRJIDF%DX,'E',7))//' '//TRIM(UTL_REALTOSTRING(SUBMODEL(5)))  
+ ELSE
+  DO ICOL=1,PRJIDF%NCOL
+   DELX=PRJIDF%SX(ICOL)-PRJIDF%SX(ICOL-1)
+   WQFILE%DELR_C='  DELR_C'//TRIM(ITOS(ICOL))//' = '//TRIM(RTOS(DELX,'E',7))
+  ENDDO
+ ENDIF
+
+ IF(PRJIDF%IEQ.EQ.0)THEN
+   WQFILE%DELR_R=  '  DELR_R? = '//TRIM(RTOS(PRJIDF%DY,'E',7))//' '//TRIM(UTL_REALTOSTRING(SUBMODEL(5)))
+ ELSE
+  DO IROW=1,PRJIDF%NROW
+   DELY=PRJIDF%SY(IROW-1)-PRJIDF%SY(IROW)
+   WQFILE%DELR_R='  DELR_R'//TRIM(ITOS(IROW))//' = '//TRIM(RTOS(DELY,'E',7))
+  ENDDO
+ ENDIF
+ 
+
+ PMANAGER_SAVERUNWQ_INIT=.TRUE. 
+
+ END FUNCTION PMANAGER_SAVERUNWQ_INIT
+
 END MODULE MOD_PMANAGER_WQ
