@@ -8,7 +8,7 @@
 //
 // Winteracter resource script. 
 //
-// Modified : 01/Nov/2019 14:14:29
+// Modified : 01/Nov/2019 17:53:55
 //
 ///////////////////////////////////////////////////
 //
@@ -5070,7 +5070,7 @@ BEGIN
 " 0  1077 1 1 \n"
 "[Tabs] \n"
 " 1077     2  1329 \n"
-" 1329  TreeView \n"
+" 1329  TreeView ------------ \n"
 "  427  Configuration \n"
 ,0
 END
@@ -14635,4 +14635,4 @@ END
 //*WI* FILENAME    resource.f90
 //*WI* FMODNAME    RESOURCE
 //*WI* LASTTYPE        2
-//*WI* LASTRES       339
+//*WI* LASTRES       110

@@ -74,7 +74,7 @@ MODULE MOD_PMANAGER_PAR
  TYPE MTOBJ
   INTEGER,POINTER,DIMENSION(:) :: T
  END TYPE MTOBJ
- TYPE(MTOBJ),DIMENSION(5) :: MC
+ TYPE(MTOBJ),DIMENSION(5) :: MC     ! Model Configuration - list of topics for each Model (modflow2005, modflow6,seawat,mt3d,modpath)
  
  ! INTEGER,PARAMETER :: TBDE=38 !## mt3d/seawat - bulk density
 ! INTEGER,PARAMETER :: TPID=39 !## mt3d/seawat - porosity imobile domain
@@ -205,7 +205,7 @@ MODULE MOD_PMANAGER_PAR
  END TYPE SPECIESOBJ
  TYPE(SPECIESOBJ),ALLOCATABLE,DIMENSION(:),SAVE :: SPECIES
  INTEGER :: NSPECIES
-
+ 
  !## For each simulation step date-time info and MODFLOW flags
  TYPE SIMOBJ
   INTEGER :: ISAVE
