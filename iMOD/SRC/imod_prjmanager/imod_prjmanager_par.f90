@@ -71,7 +71,12 @@ MODULE MOD_PMANAGER_PAR
  INTEGER,PARAMETER :: TDSP=43 !## mt3d/seawat - dispersiviteit
  INTEGER,PARAMETER :: TTVC=44 !## mt3d/seawat - time varying concentration
 
-! INTEGER,PARAMETER :: TBDE=38 !## mt3d/seawat - bulk density
+ TYPE MTOBJ
+  INTEGER,POINTER,DIMENSION(:) :: T
+ END TYPE MTOBJ
+ TYPE(MTOBJ),DIMENSION(5) :: MF
+ 
+ ! INTEGER,PARAMETER :: TBDE=38 !## mt3d/seawat - bulk density
 ! INTEGER,PARAMETER :: TPID=39 !## mt3d/seawat - porosity imobile domain
 ! INTEGER,PARAMETER :: TRCT=44 !## mt3d/seawat + parameter per laag (5)
 ! INTEGER,PARAMETER :: TUDR=47 !## mt3d/seawat
