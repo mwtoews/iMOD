@@ -829,8 +829,8 @@ CONTAINS
   
  !## write modules not timedependent
  DO I=1,MAXTOPICS
-  IF(TOPICS(I)%IACT_MODEL.EQ.0)CYCLE
-  IF(TOPICS(I)%TIMDEP)CYCLE
+  IF(TOPICS(I)%IACT_MODEL.EQ.0)CYCLE   !## only active
+  IF(TOPICS(I)%TIMDEP)CYCLE         !## only time independent   
 
   !## skip pcg
   IF(I.EQ.TPCG)CYCLE
@@ -1984,6 +1984,9 @@ CONTAINS
  INTEGER,INTENT(IN) :: ISS,IBATCH
  INTEGER :: ILAY
  REAL(KIND=DP_KIND) :: X1,Y1,X2,Y2
+ 
+ ! Reads idf for model dimensions
+ ! Creates IDF objects to store parameter values
  
  PMANAGER_SAVEMF2005_SIM=.FALSE.
  
