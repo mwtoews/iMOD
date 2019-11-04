@@ -409,6 +409,7 @@
 			<FileConfiguration Name="Release|Win32">
 				<Tool Name="VFFortranCompilerTool" Preprocess="preprocessYes" PreprocessorDefinitions="WINTERACTER11"/></FileConfiguration></File>
 		<File RelativePath="..\..\SRC\imod_prjmanager\imod_prjmanager_mf2005.f90"/>
+		<File RelativePath="..\..\SRC\imod_prjmanager\imod_prjmanager_mf6network.f90"/>
 		<File RelativePath="..\..\SRC\imod_prjmanager\imod_prjmanager_par.f90"/>
 		<File RelativePath="..\..\SRC\imod_prjmanager\imod_prjmanager_time.f90"/>
 		<File RelativePath="..\..\SRC\imod_prjmanager\imod_prjmanager_utl.f90">

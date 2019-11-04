@@ -73,6 +73,7 @@ MODULE MOD_PMANAGER_PAR
 
  TYPE MTOBJ
   INTEGER,POINTER,DIMENSION(:) :: T     !## packages active for this configuration
+  INTEGER,POINTER,DIMENSION(:) :: IACT  !## packages active for this configuration
   CHARACTER(LEN=24) :: MCNAME           !## model configuration name
  END TYPE MTOBJ
  TYPE(MTOBJ),DIMENSION(6) :: MC     ! Model Configuration - list of topics for each Model (modflow2005, modflow6,seawat,mt3d,modpath)

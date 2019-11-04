@@ -33,6 +33,7 @@ USE MOD_PMANAGER_UTL
 USE MOD_PMANAGER_MF2005
 USE MOD_MANAGER_UTL
 USE MOD_PMANAGER_WQ
+USE MOD_PMANAGER_MF6NETWORK
 USE MOD_IDFPLOT
 USE MODPLOT
 USE DATEVAR
@@ -102,13 +103,31 @@ CONTAINS
   CASE (ID_DPMANAGER_TAB2)
    SELECT CASE (ITYPE)
     CASE (FIELDCHANGED)
-     SELECT CASE (MESSAGE%VALUE1)
+     SELECT CASE (MESSAGE%VALUE2)
+      CASE (IDF_MENU1)
+       CALL PMANAGEROPEN_LISTITEMS()
      END SELECT
    END SELECT
  END SELECT
  
  END SUBROUTINE PMANAGERMAIN
 
+ !###======================================================================
+ SUBROUTINE PMANAGEROPEN_LISTITEMS()
+ !###======================================================================
+ IMPLICIT NONE
+ INTEGER :: IMF,I
+ 
+ CALL WDIALOGGETMENU(IDF_MENU1,IMF)
+ 
+ CALL WGRIDROWS(IDF_GRID1,SIZE(MC(IMF)%T))
+ DO I=1,SIZE(MC(IMF)%T)
+  CALL WGRIDPUTCELLSTRING(IDF_GRID1,1,I,TOPICS(MC(IMF)%T(I))%TNAME)
+  CALL WGRIDPUTCELLCHECKBOX(IDF_GRID1,2,I,MC(IMF)%IACT(I))
+ ENDDO
+ 
+ END SUBROUTINE PMANAGEROPEN_LISTITEMS
+ 
  !###======================================================================
  SUBROUTINE PMANAGEROPEN()
  !###======================================================================
@@ -2748,9 +2767,10 @@ TOPICLOOP: DO ITOPIC=1,MAXTOPICS
 
   IF(RUNFNAME.EQ.'')THEN
    FNAME='' 
-   IF(.NOT.UTL_WSELECTFILE('iMOD Project File (*.prj)|*.prj|',     &
-        LOADDIALOG+MUSTEXIST+PROMPTON+DIRCHANGE+APPENDEXT,FNAME,&
-        'Load iMOD Project File'))RETURN
+   FNAME='d:\IMOD-MODELS\MF6\RUNFILES\MF6_V2.PRJ'
+!   IF(.NOT.UTL_WSELECTFILE('iMOD Project File (*.prj)|*.prj|',     &
+!        LOADDIALOG+MUSTEXIST+PROMPTON+DIRCHANGE+APPENDEXT,FNAME,&
+!        'Load iMOD Project File'))RETURN
   ELSE
    FNAME=RUNFNAME
   ENDIF
@@ -2967,9 +2987,15 @@ TOPICLOOP: DO ITOPIC=1,MAXTOPICS
     ENDIF
    ENDIF
    READ(IU,*,IOSTAT=IOS) NC,NSYS
-   IF(IOS.NE.0.OR.NC.NE.TOPICS(I)%NSUBTOPICS)THEN
-    IF(IBATCH.EQ.0)CALL WMESSAGEBOX(OKONLY,EXCLAMATIONICON,COMMONOK,'Number of parameters is not correct'//CHAR(13)//TRIM(TOPICS(I)%TNAME),'Error')
-    IF(IBATCH.EQ.1)WRITE(*,'(/A/)') 'Number of parameters is not correct '//TRIM(TOPICS(I)%TNAME)//' stress '//TRIM(ITOS(L))//' "'//TRIM(LINE)//'"'
+   IF(IOS.NE.0)THEN
+    IF(IBATCH.EQ.0)CALL WMESSAGEBOX(OKONLY,EXCLAMATIONICON,COMMONOK,'Error reading of parameters for'//CHAR(13)//TRIM(TOPICS(I)%TNAME),'Error')
+    IF(IBATCH.EQ.1)WRITE(*,'(/A/)') 'Error reading parameters for '//TRIM(TOPICS(I)%TNAME)//' stress '//TRIM(ITOS(L))//' "'//TRIM(LINE)//'"'
+    CLOSE(IU); RETURN
+   ENDIF
+   !## check whether number of attributes is similar to the number defined before
+   IF(L.GT.1.AND.NC.NE.TOPICS(I)%NSUBTOPICS)THEN
+    IF(IBATCH.EQ.0)CALL WMESSAGEBOX(OKONLY,EXCLAMATIONICON,COMMONOK,'Number of attributes is not correct'//CHAR(13)//TRIM(TOPICS(I)%TNAME),'Error')
+    IF(IBATCH.EQ.1)WRITE(*,'(/A/)') 'Number of attributes is not correct '//TRIM(TOPICS(I)%TNAME)//' stress '//TRIM(ITOS(L))//' "'//TRIM(LINE)//'"'
     CLOSE(IU); RETURN
    ENDIF
    ALLOCATE(TOPICS(I)%STRESS(L)%FILES(NC,NSYS))
