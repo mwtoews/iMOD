@@ -387,7 +387,7 @@ c init the PWT data
 
       ! compute transmissivities using harmonic mean
       do ilay = 1, nlay
-         call sgwf2bcf7c(ilay,cc,cr)
+         call sgwf2bcf7c(ilay) !,cc,cr)
       end do
 
       !## correct harmonic conductances whenever next cells are dry (below top pwt)

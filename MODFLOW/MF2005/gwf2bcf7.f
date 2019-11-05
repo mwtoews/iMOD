@@ -1093,7 +1093,7 @@ C5C-----RECORD CONTENTS OF BUFFER AND RETURN.
 
       RETURN
       END
-      SUBROUTINE SGWF2BCF7C(K,cc,cr)
+      SUBROUTINE SGWF2BCF7C(K) !,cc,cr)
 C     ******************************************************************
 C     COMPUTE BRANCH CONDUCTANCE USING HARMONIC MEAN OF BLOCK
 C     CONDUCTANCES -- BLOCK TRANSMISSIVITY IS IN CC UPON ENTRY
@@ -1101,19 +1101,20 @@ C     ******************************************************************
 C
 C      SPECIFICATIONS:
 C     ------------------------------------------------------------------
-!      USE GLOBAL,      ONLY:NCOL,NROW,CR,CC,DELR,DELC
-      USE GLOBAL,      ONLY:NCOL,NROW,NLAY,DELR,DELC
+      USE GLOBAL,      ONLY:NCOL,NROW,CR,CC,DELR,DELC
+!      USE GLOBAL,      ONLY:NCOL,NROW,NLAY,DELR,DELC
       USE GWFBCFMODULE,ONLY:TRPY,
      1                      IMINKD,MINKD                                ! DLT
 
 c arguments
       integer, intent(in) :: k                                          ! DLT
-      real, dimension(ncol,nrow,nlay), intent(inout) :: cc              ! DLT
-      real, dimension(ncol,nrow,nlay), intent(inout) :: cr              ! DLT
+!      real, dimension(ncol,nrow,nlay), intent(inout) :: cc              ! DLT
+!      real, dimension(ncol,nrow,nlay), intent(inout) :: cr              ! DLT
 C     ------------------------------------------------------------------
 C
       ZERO=0.
       TWO=2.
+      WRITE(*,*) K,TRPY(K)
       YX=TRPY(K)*TWO
 C
 C1------FOR EACH CELL CALCULATE BRANCH CONDUCTANCES FROM THAT CELL
@@ -1323,7 +1324,7 @@ C8------ITERATION FROM 30000 to 1.
 C
 C9------COMPUTE HORIZONTAL BRANCH CONDUCTANCES FROM TRANSMISSIVITY.
   210 IF(LAYAVG(K).EQ.0) THEN
-         CALL SGWF2BCF7C(K,cc,cr)
+         CALL SGWF2BCF7C(K) !,cc,cr)
       ELSE IF(LAYAVG(K).EQ.10) THEN
          CALL SGWF2BCF7A(K)
       ELSE IF(LAYAVG(K).EQ.20) THEN
@@ -1453,7 +1454,7 @@ C5------CALCULATE HOR. CONDUCTANCE(CR AND CC) FOR CONSTANT T LAYERS.
       KK=K
       IF(LAYCON(K).EQ.3 .OR. LAYCON(K).EQ.1) GO TO 70
       IF(LAYAVG(K).EQ.0) THEN
-         CALL SGWF2BCF7C(KK,cc,cr)
+         CALL SGWF2BCF7C(KK) !,cc,cr)
       ELSE IF(LAYAVG(K).EQ.10) THEN
          CALL SGWF2BCF7A(KK)
       ELSE

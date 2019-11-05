@@ -2897,16 +2897,20 @@ JLOOP: DO K=1,SIZE(TOPICS)
  TOPICS(TGCG)%TNAME='(GCG) Generalized Conjugate-Gradient'
  TOPICS(TVDF)%TNAME='(VDF) Variable-Density Flow Settings'
  TOPICS(TFDE)%TNAME='(FDE) Fluid Density'
-! TOPICS(TBTN)%TNAME='(BTN) Basic Transport' 
  TOPICS(TCBI)%TNAME='(CBI) Concentration Boundary Indicator' 
  TOPICS(TSCO)%TNAME='(SCO) Starting Concentration' 
  TOPICS(TADV)%TNAME='(ADV) Advection Package' 
  TOPICS(TDSP)%TNAME='(DSP) Dispersivity '
  TOPICS(TTVC)%TNAME='(TVC) Time Varying Constant Concentration'
- ! TOPICS(TRCT)%TNAME='(RCT) Chemical Reaction'
- ! TOPICS(TRCT)%TNAME='(UDF) User Defined Reaction'
  TOPICS(TPOR)%TNAME='(POR) Porosity'
  TOPICS(TOBS)%TNAME='(OBS) Observation'
+ TOPICS(THOB)%TNAME='(HOB) Bulk density of the porous medium'
+ TOPICS(TPID)%TNAME='(PID) Porosity of the immobile domain'
+ TOPICS(TICS)%TNAME='(ICS) Initial concentration of the sorbed or immobile liquid phase'
+ TOPICS(TFSC)%TNAME='(FSC) First Sorption constant'
+ TOPICS(TSSC)%TNAME='(SSC) Second Sorption constant'
+ TOPICS(TFOD)%TNAME='(FOD) First order rate reaction dissolved hase'
+ TOPICS(TFOS)%TNAME='(FOS) First order rate reaction for the sorbed phase'
  
  TOPICS(TCAP)%NSUBTOPICS=22 !CAP
  TOPICS(TTOP)%NSUBTOPICS=1  !TOP
@@ -2945,16 +2949,20 @@ JLOOP: DO K=1,SIZE(TOPICS)
  TOPICS(TGCG)%NSUBTOPICS=1  !GCG
  TOPICS(TVDF)%NSUBTOPICS=1  !VDF
  TOPICS(TFDE)%NSUBTOPICS=1  !FDE
-! TOPICS(TBTN)%NSUBTOPICS=1  !BTN
  TOPICS(TCBI)%NSUBTOPICS=1  !CBI
  TOPICS(TSCO)%NSUBTOPICS=0  !SCO - initial no subtopics
  TOPICS(TADV)%NSUBTOPICS=1  !ADV
  TOPICS(TDSP)%NSUBTOPICS=4  !DSP
  TOPICS(TTVC)%NSUBTOPICS=0  !TVC - initial no subtopics
- ! TOPICS(TRCT)%NSUBTOPICS=1  !RCT
-! TOPICS(TBTN)%NSUBTOPICS=2  !BTN
  TOPICS(TPOR)%NSUBTOPICS=1  !POR
  TOPICS(TOBS)%NSUBTOPICS=1  !OBS
+ TOPICS(THOB)%NSUBTOPICS=1  !HOB
+ TOPICS(TPID)%NSUBTOPICS=1  !PID
+ TOPICS(TICS)%NSUBTOPICS=0  !ICS - initial no subtopics
+ TOPICS(TFSC)%NSUBTOPICS=0  !FSC - initial no subtopics
+ TOPICS(TSSC)%NSUBTOPICS=0  !SSC - initial no subtopics
+ TOPICS(TFOD)%NSUBTOPICS=0  !FOD - initial no subtopics
+ TOPICS(TFOS)%NSUBTOPICS=0  !FOS - initial no subtopics
 
  TOPICS(TCAP)%TIMDEP=.FALSE. !CAP
  TOPICS(TTOP)%TIMDEP=.FALSE. !TOP
@@ -2993,24 +3001,29 @@ JLOOP: DO K=1,SIZE(TOPICS)
  TOPICS(TGCG)%TIMDEP=.FALSE. !GCG
  TOPICS(TVDF)%TIMDEP=.FALSE. !VDF
  TOPICS(TFDE)%TIMDEP=.TRUE.  !FDE
-! TOPICS(TBTN)%TIMDEP=.FALSE. !BTN
  TOPICS(TCBI)%TIMDEP=.FALSE. !CBI
  TOPICS(TSCO)%TIMDEP=.FALSE. !SCO
  TOPICS(TADV)%TIMDEP=.FALSE. !ADV
  TOPICS(TDSP)%TIMDEP=.FALSE. !DSP
  TOPICS(TTVC)%TIMDEP=.TRUE.  !TVC
- !TOPICS(TRCT)%TIMDEP=.FALSE. !RCT
  TOPICS(TPOR)%TIMDEP=.FALSE. !POR
  TOPICS(TOBS)%TIMDEP=.TRUE.  !OBS
-
+ TOPICS(THOB)%TIMDEP=.FALSE. !HOB
+ TOPICS(TPID)%TIMDEP=.FALSE. !PID
+ TOPICS(TICS)%TIMDEP=.FALSE. !ICS
+ TOPICS(TFSC)%TIMDEP=.FALSE. !FSC
+ TOPICS(TSSC)%TIMDEP=.FALSE. !SSC
+ TOPICS(TFOD)%TIMDEP=.FALSE. !FOD
+ TOPICS(TFOS)%TIMDEP=.FALSE. !FOS
+  
  !## option to add species
  DO I=1,MAXTOPICS
   SELECT CASE (I)
    !## no species for drn,tolf
    CASE (TDRN,TOLF,TISG,TSFT,TUZF)
     TOPICS(I)%LSPECIES=.FALSE.
-   !## species for sco
-   CASE (TSCO)
+   !## species for tsco,tics,tfsc,tssc,tfod,tfos
+   CASE (TSCO,TICS,TFSC,TSSC,TFOD,TFOS)
     TOPICS(I)%LSPECIES=.TRUE.
    CASE DEFAULT
     IF(TOPICS(I)%TIMDEP)TOPICS(I)%LSPECIES=.TRUE.
@@ -3073,7 +3086,6 @@ JLOOP: DO K=1,SIZE(TOPICS)
 ! TOPICS(TUZF)%SNAME(2) ='Saturated Vertical Conductivity (IDF)'
  TOPICS(TUZF)%SNAME(2) ='(BCE) Brooks-Corey Epsilon (IDF)'
  TOPICS(TUZF)%SNAME(3) ='(SWC) Saturated Water Content of Unsat. Zone (IDF)'
-! TOPICS(TUZF)%SNAME(4) ='(RWC) Residual Water Content of Unsat. Zone (IDF)'
  TOPICS(TUZF)%SNAME(4) ='(IWC) Initial Water Content (IDF)'
  TOPICS(TUZF)%SNAME(5) ='(INF) Infiltration Rates at Land Surface (IDF)'
  TOPICS(TUZF)%SNAME(6) ='(EVA) Evaporation Demands (IDF)'
@@ -3114,20 +3126,22 @@ JLOOP: DO K=1,SIZE(TOPICS)
  TOPICS(TGCG)%SNAME(1) ='(GCG) Parameters GCG method (-)'
  TOPICS(TVDF)%SNAME(1) ='(VDF) Parameters VDF package (-)'
  TOPICS(TFDE)%SNAME(1) ='(FDE) Fluid Density (IDF)'
-! TOPICS(TBTN)%SNAME(1) ='(BTN) Parameters Basic Transport package (-)'
  TOPICS(TCBI)%SNAME(1) ='(CBI) Concentration Boundary Indicator (IDF)'
-! TOPICS(TSCO)%SNAME(1) ='(SCO) Starting Concentration (IDF)'
  TOPICS(TADV)%SNAME(1) ='(ADV) Parameters ADV package (-)'
  TOPICS(TDSP)%SNAME(1) ='(DSP) Longitudinal Dispesivity (IDF)'
  TOPICS(TDSP)%SNAME(2) ='(DSP) Ratio of Horizontal Transverse Dispersivity (IDF)'
  TOPICS(TDSP)%SNAME(3) ='(DSP) Ratio of Vertical Transverse Dispersivity (IDF)'
  TOPICS(TDSP)%SNAME(4) ='(DSP) Effective Molecular Diffusion Coefficient (IDF)'
- !TOPICS(TTVC)%SNAME(1) ='(TVC) ... need to be defined in runtime ...'
-
- ! TOPICS(TRCT)%SNAME(1) ='(RCT) Parameters RCT (-)'
  TOPICS(TPOR)%SNAME(1) ='(POR) Porosity POR (IDF)'
  TOPICS(TOBS)%SNAME(1) ='(OBS) Observation (IPF)'
- 
+ TOPICS(THOB)%SNAME(1) ='(HOB) Bulk density of the porous medium (IDF)'
+ TOPICS(TPID)%SNAME(1) ='(PID) Porosity of the immobile domain (IDF)'
+ TOPICS(TICS)%SNAME(1) =''!(ICS) Initial concentration of the sorbed or immobile liquid phase (IDF)'
+ TOPICS(TFSC)%SNAME(1) =''!(FSC) First Sorption constant (IDF)'
+ TOPICS(TSSC)%SNAME(1) =''!(SSC) Second Sorption constant (IDF)'
+ TOPICS(TFOD)%SNAME(1) =''!(FOD) First order rate reaction dissolved hase (IDF)'
+ TOPICS(TFOS)%SNAME(1) =''!(FOS) First order rate reaction for the sorbed phase (IDF)'
+
  DO I=1,MAXTOPICS; TOPICS(I)%CMOD=TOPICS(I)%TNAME(2:4); ENDDO
 
  CALL WDIALOGLOAD(ID_DPMANAGER)
@@ -3165,14 +3179,16 @@ JLOOP: DO K=1,SIZE(TOPICS)
  MC(3)%MCNAME='MODFLOW6'; MC(3)%IACT=1
  MC(3)%T=[TBND,TTOP,TBOT,TKHV,TKVA,TSHD,TSTO,TSPY,THFB,TUZF,TRCH,TEVT,TDRN,TRIV,TISG,TWEL,TMNW,TGHB,TCHD,TPCG]
  !## for seawat
- ALLOCATE(MC(4)%T(30),MC(4)%IACT(30))
+ ALLOCATE(MC(4)%T(35),MC(4)%IACT(35))
  MC(4)%MCNAME='SEAWAT'; MC(4)%IACT=1
  MC(4)%T=[TBND,TTOP,TBOT,TKHV,TKVA,TKDW,TKVV,TVCW,TSHD,TSTO,TSPY,TPOR,TANI,TRCH,TEVT, &
-          TDRN,TRIV,TWEL,TGHB,TCHD,TOBS,TPCG,TGCG,TVDF,TFDE,TCBI,TSCO,TADV,TDSP,TTVC]
+          TDRN,TRIV,TWEL,TGHB,TCHD,TOBS,TPCG,TGCG,TVDF,TFDE,TCBI,TSCO,TADV,TDSP,TTVC, &
+          TICS,TFSC,TSSC,TFOD,TFOS]
  !## for mt3d
- ALLOCATE(MC(5)%T(19),MC(5)%IACT(19))
+ ALLOCATE(MC(5)%T(24),MC(5)%IACT(24))
  MC(5)%MCNAME='MT3D'; MC(5)%IACT=1
- MC(5)%T=[TTOP,TBOT,TTHK,TPOR,TRCH,TEVT,TRIV,TWEL,TGHB,TCHD,TOBS,TGCG,TVDF,TFDE,TCBI,TSCO,TADV,TDSP,TTVC]
+ MC(5)%T=[TTOP,TBOT,TTHK,TPOR,TRCH,TEVT,TRIV,TWEL,TGHB,TCHD,TOBS,TGCG,TVDF,TFDE,TCBI,TSCO,TADV,TDSP,TTVC, &
+          TICS,TFSC,TSSC,TFOD,TFOS]
  !## for particle tracking
  ALLOCATE(MC(6)%T(4),MC(6)%IACT(4))
  MC(6)%MCNAME='MODPATH'; MC(6)%IACT=1

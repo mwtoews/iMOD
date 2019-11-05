@@ -299,12 +299,15 @@ CONTAINS
 
  CALL WDIALOGPUTIMAGE(ID_OPEN ,ID_ICONOPENIDF,1)
  
- IF(.NOT.TOPICS(ITOPIC)%TIMDEP)THEN
+ IF(.NOT.TOPICS(ITOPIC)%LSPECIES)THEN
   !## species section
   CALL WDIALOGFIELDSTATE(IDF_GROUP3,0)
   CALL WDIALOGFIELDSTATE(IDF_LABEL8,0)
   CALL WDIALOGFIELDSTATE(IDF_LABEL9,0)
   CALL WDIALOGFIELDSTATE(ID_SPECIES,0)
+ ENDIF
+ 
+ IF(.NOT.TOPICS(ITOPIC)%TIMDEP)THEN
 
   CALL WDIALOGFIELDSTATE(IDF_RADIO3,0)
   CALL WDIALOGFIELDSTATE(IDF_RADIO4,0)
@@ -417,7 +420,7 @@ CONTAINS
        PRJ_TMP(ISUBTOPIC)%IMP  =0.0D0
        PRJ_TMP(ISUBTOPIC)%CNST =0.0D0
        PRJ_TMP(ISUBTOPIC)%ICNST=1
-       IF(N.GT.0)THEN
+       IF(M.GT.0)THEN
         PRJ_TMP(ISUBTOPIC)%ILAY=PRJ(1)%ILAY
        ELSE
         PRJ_TMP(ISUBTOPIC)%ILAY=1
@@ -554,7 +557,7 @@ CONTAINS
 
  ENDIF
   
- DEALLOCATE(MENUNAMES,PRJ)
+ IF(ALLOCATED(MENUNAMES))DEALLOCATE(MENUNAMES); IF(ASSOCIATED(PRJ))DEALLOCATE(PRJ)
 
  END SUBROUTINE PMANAGEROPEN
  
@@ -2361,7 +2364,7 @@ CONTAINS
   !## modify all to include the species
   DO I=1,MAXTOPICS
    !## skip time invarient topics
-   IF(.NOT.TOPICS(I)%TIMDEP)CYCLE
+   IF(.NOT.TOPICS(I)%LSPECIES)CYCLE
    !## drainage does not have species
    SELECT CASE (I)
     CASE (TDRN,TOLF); CYCLE
@@ -2397,7 +2400,7 @@ CONTAINS
     ENDDO
    ENDIF
    TOPICS(I)%NSUBTOPICS=NTOP
-   DO J=1,NSPECIES; TOPICS(I)%SNAME(J+NORG)='Concentration '//TRIM(SPECIES(J)%NAME)//' (IDF)'; ENDDO 
+   DO J=1,NSPECIES; TOPICS(I)%SNAME(J+NORG)='Concentration '//TRIM(SPECIES(J)%NAME); ENDDO !//' (IDF)'; ENDDO 
   ENDDO
  ENDIF
  
@@ -2474,9 +2477,7 @@ TOPICLOOP: DO ITOPIC=1,MAXTOPICS
  ENDDO TOPICLOOP
 
  IF(ITOPIC.GT.MAXTOPICS)THEN
-  ITOPIC=0
-  CALL WMESSAGEBOX(OKONLY,EXCLAMATIONICON,COMMONOK,'You should select a MAIN TOPIC at least','Warning')
-  RETURN
+  ITOPIC=0; CALL WMESSAGEBOX(OKONLY,EXCLAMATIONICON,COMMONOK,'You should select a MAIN TOPIC at least','Warning'); RETURN
  ENDIF
  
  !## ITOPIC   =TOPIC NUMBER (E.G. SHD, BND, WEL)
@@ -2827,10 +2828,25 @@ TOPICLOOP: DO ITOPIC=1,MAXTOPICS
  !###======================================================================
  IMPLICIT NONE
  CHARACTER(LEN=*),INTENT(IN) :: FNAME
- INTEGER :: IU,I,J,K,L
+ INTEGER :: IU,I,J,K,L,N
+ CHARACTER(LEN=52) :: FRM
  
  PMANAGER_SAVEPRJ=.FALSE.
-  
+
+ !## get maximal file length for file names
+ N=0; DO I=1,MAXTOPICS
+  IF(.NOT.ASSOCIATED(TOPICS(I)%STRESS))CYCLE
+  DO J=1,SIZE(TOPICS(I)%STRESS)
+   IF(.NOT.ASSOCIATED(TOPICS(I)%STRESS(J)%FILES))CYCLE
+   DO K=1,SIZE(TOPICS(I)%STRESS(J)%FILES,1)  !## systems(.)
+    DO L=1,SIZE(TOPICS(I)%STRESS(J)%FILES,2) !## subtopics(.)
+     N=MAX(len_trim(TOPICS(I)%STRESS(J)%FILES(K,L)%FNAME),N)
+    ENDDO
+   ENDDO
+  ENDDO
+ ENDDO
+ N=N+2; WRITE(FRM,'(A34,I3.3,A3)') '(1X,2(I1,A1),I4.3,3(A1,G15.7),A1,A',N,',A)'
+ 
  IU=UTL_GETUNIT()
  CALL OSD_OPEN(IU,FILE=FNAME,STATUS='REPLACE',ACTION='WRITE,DENYREAD',FORM='FORMATTED')
   
@@ -2846,33 +2862,33 @@ TOPICLOOP: DO ITOPIC=1,MAXTOPICS
     CYCLE
    !## pcg module another exception
    CASE (TPCG)
-    WRITE(IU,'(/I4.4,A,I1,A)') 1,','//TOPICS(I)%TNAME(1:5)//',',TOPICS(I)%IACT_MODEL,','//TRIM(TOPICS(I)%TNAME(6:))//' []'
+    WRITE(IU,'(/I4.4,A,I1,A)') 1,','//TOPICS(I)%TNAME(1:5)//',',TOPICS(I)%IACT_MODEL,','//TRIM(TOPICS(I)%TNAME(6:)) !//' []'
     CALL PMANAGER_SAVEPCG(IU,0)
     CYCLE
    !## gcg module another exception
    CASE (TGCG)
-    WRITE(IU,'(/I4.4,A,I1,A)') 1,','//TOPICS(I)%TNAME(1:5)//',',TOPICS(I)%IACT_MODEL,','//TRIM(TOPICS(I)%TNAME(6:))//' []'
+    WRITE(IU,'(/I4.4,A,I1,A)') 1,','//TOPICS(I)%TNAME(1:5)//',',TOPICS(I)%IACT_MODEL,','//TRIM(TOPICS(I)%TNAME(6:)) !//' []'
     CYCLE
 !   !## rct module another exception
 !   CASE (TRCT)
-!    WRITE(IU,'(/I4.4,A,I1,A)') 1,','//TOPICS(I)%TNAME(1:5)//',',TOPICS(I)%IACT_MODEL,','//TRIM(TOPICS(I)%TNAME(6:))//' []'
+!    WRITE(IU,'(/I4.4,A,I1,A)') 1,','//TOPICS(I)%TNAME(1:5)//',',TOPICS(I)%IACT_MODEL,','//TRIM(TOPICS(I)%TNAME(6:)) !//' []'
 !    CYCLE
 !   !## adv module another exception
    CASE (TADV)
-    WRITE(IU,'(/I4.4,A,I1,A)') 1,','//TOPICS(I)%TNAME(1:5)//',',TOPICS(I)%IACT_MODEL,','//TRIM(TOPICS(I)%TNAME(6:))//' []'
+    WRITE(IU,'(/I4.4,A,I1,A)') 1,','//TOPICS(I)%TNAME(1:5)//',',TOPICS(I)%IACT_MODEL,','//TRIM(TOPICS(I)%TNAME(6:)) !//' []'
     CYCLE
    !## vdf module another exception
    CASE (TVDF)
-    WRITE(IU,'(/I4.4,A,I1,A)') 1,','//TOPICS(I)%TNAME(1:5)//',',TOPICS(I)%IACT_MODEL,','//TRIM(TOPICS(I)%TNAME(6:))//' []'
+    WRITE(IU,'(/I4.4,A,I1,A)') 1,','//TOPICS(I)%TNAME(1:5)//',',TOPICS(I)%IACT_MODEL,','//TRIM(TOPICS(I)%TNAME(6:)) !//' []'
     CYCLE
   END SELECT
   
   WRITE(LINE,'(I4.4,A,I1,A)') SIZE(TOPICS(I)%STRESS),','//TOPICS(I)%TNAME(1:5)//',',TOPICS(I)%IACT_MODEL,','//TRIM(TOPICS(I)%TNAME(6:))
-  LINE=TRIM(LINE)//',['//TOPICS(I)%SNAME(1)(2:4)
-  DO L=2,(TOPICS(I)%NSUBTOPICS)
-   LINE=TRIM(LINE)//','//TOPICS(I)%SNAME(L)(2:4)
-  ENDDO
-  LINE=TRIM(LINE)//']'
+!  LINE=TRIM(LINE)//',['//TOPICS(I)%SNAME(1)(2:4)
+!  DO L=2,(TOPICS(I)%NSUBTOPICS)
+!   LINE=TRIM(LINE)//','//TOPICS(I)%SNAME(L)(2:4)
+!  ENDDO
+!  LINE=TRIM(LINE)//']'
   WRITE(IU,'(/A)') TRIM(LINE)
   DO L=1,SIZE(TOPICS(I)%STRESS)
    IF(.NOT.ASSOCIATED(TOPICS(I)%STRESS(L)%FILES))CYCLE
@@ -2886,16 +2902,16 @@ TOPICLOOP: DO ITOPIC=1,MAXTOPICS
     ENDIF
    ENDIF
    WRITE(IU,'(2(I3.3,A1))') SIZE(TOPICS(I)%STRESS(L)%FILES,1),',',SIZE(TOPICS(I)%STRESS(L)%FILES,2)
-   DO K=1,SIZE(TOPICS(I)%STRESS(L)%FILES,1)  !## systems(.)
-    DO J=1,SIZE(TOPICS(I)%STRESS(L)%FILES,2) !## subtopics(.)
-     WRITE(IU,'(1X,2(I1,A1),I4.3,3(A1,G15.7),A1,A)') &
-                                 TOPICS(I)%STRESS(L)%FILES(K,J)%IACT ,',', &
+   DO K=1,SIZE(TOPICS(I)%STRESS(L)%FILES,1)  !## subtopics(.)
+    DO J=1,SIZE(TOPICS(I)%STRESS(L)%FILES,2) !## systems(.)
+!     WRITE(IU,'(1X,2(I1,A1),I4.3,3(A1,G15.7),A1,A)') &
+     WRITE(IU,FRM) TOPICS(I)%STRESS(L)%FILES(K,J)%IACT ,',', &
                                  TOPICS(I)%STRESS(L)%FILES(K,J)%ICNST,',', &
                                  TOPICS(I)%STRESS(L)%FILES(K,J)%ILAY ,',', &
                                  TOPICS(I)%STRESS(L)%FILES(K,J)%FCT  ,',', &
                                  TOPICS(I)%STRESS(L)%FILES(K,J)%IMP  ,',', &
                                  TOPICS(I)%STRESS(L)%FILES(K,J)%CNST ,',', &
-                  CHAR(39)//TRIM(TOPICS(I)%STRESS(L)%FILES(K,J)%FNAME)//CHAR(39)
+                  CHAR(39)//TRIM(TOPICS(I)%STRESS(L)%FILES(K,J)%FNAME)//CHAR(39),' >>> '//TRIM(TOPICS(I)%SNAME(K))//' <<<'
     ENDDO
    ENDDO
   
@@ -3108,13 +3124,16 @@ TOPICLOOP: DO ITOPIC=1,MAXTOPICS
  
  CLOSE(IU)
  
- !## if species defines update relevant packages
+ !## if species defined update relevant packages
  DO I=1,MAXTOPICS
   IF(.NOT.TOPICS(I)%LSPECIES)CYCLE
   !## find first empty spot
-  DO J=1,SIZE(TOPICS(I)%SNAME); IF(TRIM(TOPICS(I)%SNAME(J)).EQ.'')EXIT; ENDDO
-  M2=(J-1)+1; M1=(M2-NSPECIES)+1
-  K=0; DO J=M1,M2; K=K+1; TOPICS(I)%SNAME(J)=SPECIES(K)%NAME; ENDDO
+  DO J=1,SIZE(TOPICS(I)%SNAME); IF(TRIM(TOPICS(I)%SNAME(J)).EQ.'')EXIT; ENDDO; J=J-1
+  !## number of available subtopics, if none, start at 1
+  M1=J-NSPECIES; IF(M1.LT.0)M1=0
+  !## determine startpoint to add species
+  M2=M1+NSPECIES
+  K=0; DO J=MAX(1,M1),M2; K=K+1; TOPICS(I)%SNAME(J)=SPECIES(K)%NAME; ENDDO
   !## insert space to include species
   TOPICS(I)%NSUBTOPICS=M2
  ENDDO
@@ -3894,8 +3913,6 @@ TOPICLOOP: DO ITOPIC=1,MAXTOPICS
   !## create main topics
   CALL WDIALOGINSERTTREEVIEWITEM(ID_TREEVIEW1,TOPICS(MAX(1,II))%ID,INSERTAFTER, &
                                  TOPICS(I)%ID,TRIM(TOPICS(I)%TNAME))
-!  CALL WDIALOGINSERTTREEVIEWITEM(ID_TREEVIEW1,TOPICS(MAX(1,I-1))%ID,INSERTAFTER, &
-!                                 TOPICS(I)%ID,TRIM(TOPICS(I)%TNAME))
   !## save previous inserted treeview item
   II=I  
 

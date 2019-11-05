@@ -25,7 +25,7 @@ MODULE MOD_PMANAGER_PAR
  USE MOD_IDF_PAR, ONLY : IDFOBJ
  USE IMODVAR, ONLY : DP_KIND,SP_KIND
  
- INTEGER,PARAMETER :: MAXTOPICS=44
+ INTEGER,PARAMETER :: MAXTOPICS=51
  INTEGER,PARAMETER :: TBND= 1
  INTEGER,PARAMETER :: TTOP= 2
  INTEGER,PARAMETER :: TBOT= 3
@@ -70,6 +70,13 @@ MODULE MOD_PMANAGER_PAR
  INTEGER,PARAMETER :: TADV=42 !## mt3d/seawat - advection parameters
  INTEGER,PARAMETER :: TDSP=43 !## mt3d/seawat - dispersiviteit
  INTEGER,PARAMETER :: TTVC=44 !## mt3d/seawat - time varying concentration
+ INTEGER,PARAMETER :: THOB=45 !## mt3d/seawat - bulk density of the porous medium
+ INTEGER,PARAMETER :: TPID=46 !## mt3d/seawat - porosity of the immobile domain
+ INTEGER,PARAMETER :: TICS=47 !## mt3d/seawat - initial concentration of the sorbed or immobile liquid phase
+ INTEGER,PARAMETER :: TFSC=48 !## mt3d/seawat - first sorption constant
+ INTEGER,PARAMETER :: TSSC=49 !## mt3d/seawat - second sorption constant
+ INTEGER,PARAMETER :: TFOD=50 !## mt3d/seawat - first order rate reaction for the dissolved phase
+ INTEGER,PARAMETER :: TFOS=51 !## mt3d/seawat - second order rate reaction for the sorbed phase
 
  TYPE MTOBJ
   INTEGER,POINTER,DIMENSION(:) :: T     !## fixed: packages available for selected Model
