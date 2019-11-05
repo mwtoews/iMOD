@@ -3151,6 +3151,7 @@ JLOOP: DO K=1,SIZE(TOPICS)
   NULLIFY(TOPICS(I)%STRESS_TMP)
  ENDDO
  
+ !## Define for each model which topics is available
  !## all
  ALLOCATE(MC(1)%T(MAXTOPICS),MC(1)%IACT(MAXTOPICS))
  MC(1)%MCNAME='ALL'

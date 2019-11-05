@@ -72,8 +72,8 @@ MODULE MOD_PMANAGER_PAR
  INTEGER,PARAMETER :: TTVC=44 !## mt3d/seawat - time varying concentration
 
  TYPE MTOBJ
-  INTEGER,POINTER,DIMENSION(:) :: T     !## packages active for this configuration
-  INTEGER,POINTER,DIMENSION(:) :: IACT  !## packages active for this configuration
+  INTEGER,POINTER,DIMENSION(:) :: T     !## fixed: packages available for selected Model
+  INTEGER,POINTER,DIMENSION(:) :: IACT  !## variable: packages (de)activated by the user 
   CHARACTER(LEN=24) :: MCNAME           !## model configuration name
  END TYPE MTOBJ
  TYPE(MTOBJ),DIMENSION(6) :: MC     ! Model Configuration - list of topics for each Model (modflow2005, modflow6,seawat,mt3d,modpath)
@@ -160,12 +160,19 @@ MODULE MOD_PMANAGER_PAR
   REAL(KIND=DP_KIND) :: CCLOSE=1.0D-06
  END TYPE GCGOBJ
 
+ !## parameter for rct
+ TYPE RCTOBJ
+  INTEGER :: ISOTHM,IREACT,IGETSC    
+  INTEGER :: IRCTOP=2 !# fixed
+ END TYPE RCTOBJ
+
  !## parameters for iMOD WQ
  TYPE WQOBJ
   TYPE(VDFOBJ) :: VDF
   TYPE(GCGOBJ) :: GCG
   TYPE(BTNOBJ) :: BTN
   TYPE(ADVOBJ) :: ADV
+  TYPE(RCTOBJ) :: RCT
  END TYPE WQOBJ
  TYPE(WQOBJ) :: WQ     !## parameters for iMOD WQ. Given with the Projectmanager or read from the PRJ file 
 
@@ -176,7 +183,7 @@ MODULE MOD_PMANAGER_PAR
              DWEL,DISG,DSFR,DMMFILE,NSUBMODEL,ISUBMODEL,NLINESEARCH,NCPU,CMDHIDE,PTEST,NSWAIT,PDEBUG,MC,IGENMF6
   REAL(KIND=DP_KIND) :: XMIN,YMIN,XMAX,YMAX,CELLSIZE,BUFFER,NMULT,MINKD,MINC,BUFFERCS,MINTHICKNESS,EIGV
   !## Seawat
-  INTEGER :: NPRS,NPROBS,NPRMAS  
+  INTEGER :: NPRS,NPROBS,NPRMAS,MXSS
   REAL(KIND=DP_KIND) :: TIMPRS
   !CHARACTER(LEN=256) :: 
   !## isave options
@@ -200,7 +207,7 @@ MODULE MOD_PMANAGER_PAR
  
  TYPE SPECIESOBJ
   CHARACTER(LEN=MAXLENPRJ) :: NAME
-  INTEGER :: IMOBILE   !## flag indicating mobility of a species (1: mobile, 2: immobile). Related to BTN keu 'MCOMP'
+  INTEGER :: IMOBILE   !## flag indicating mobility of a species (1: mobile, 2: immobile). Related to BTN key 'MCOMP'
  END TYPE SPECIESOBJ
  TYPE(SPECIESOBJ),ALLOCATABLE,DIMENSION(:),SAVE :: SPECIES
  INTEGER :: NSPECIES,ISPECIES
