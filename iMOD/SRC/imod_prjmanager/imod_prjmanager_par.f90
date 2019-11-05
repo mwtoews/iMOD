@@ -214,15 +214,20 @@ MODULE MOD_PMANAGER_PAR
  
  !## For each simulation step date-time info and MODFLOW flags
  TYPE SIMOBJ
-  INTEGER :: ISAVE
-  CHARACTER(LEN=MAXLENPRJ) :: CDATE
-  REAL(KIND=DP_KIND) :: DELT
-  INTEGER :: DDAY,DSEC
-  INTEGER :: ISUM
-  INTEGER :: NSTP  !## number of timesteps
-  REAL(KIND=DP_KIND) :: TMULT !## multiplication of timesteps
-  INTEGER :: IDY,IMH,IYR
-  INTEGER :: IHR,IMT,ISC
+  INTEGER :: ISAVE                   !## save results
+  CHARACTER(LEN=MAXLENPRJ) :: CDATE  !## date string
+  REAL(KIND=DP_KIND) :: DELT         !## delta time timestep
+  INTEGER :: DSEC                    !## number of second in between stresses
+  INTEGER :: DDAY                    !## number of days in between stresses
+  INTEGER :: ISUM                    !## sum fluxes
+  INTEGER :: NSTP                    !## number of timesteps
+  REAL(KIND=DP_KIND) :: TMULT        !## multiplication of timesteps
+  REAL(KIND=DP_KIND) :: TTSMULT      !## transport step multiplier (only for fully implicit finite-difference method)
+  REAL(KIND=DP_KIND) :: TTSMAX       !## maximum transport steps step size (only for fully implicit finite-difference method)
+  REAL(KIND=DP_KIND) :: DT0          !## Transport time size
+  INTEGER :: MXSTRN                  !## maximum transport steps allowed in one flow time-step
+  INTEGER :: IDY,IMH,IYR             !## day,month,year
+  INTEGER :: IHR,IMT,ISC             !## hour,minute,second
  END TYPE SIMOBJ
  TYPE(SIMOBJ),POINTER,DIMENSION(:) :: SIM,SIM_C,SIM_C2
   
@@ -434,11 +439,10 @@ MODULE MOD_PMANAGER_PAR
  CHARACTER(LEN=1024) :: LINE
  LOGICAL :: LYESNO
 
- TYPE RUNFILEWQ_OBJ  ! For re-use of parameter information in iMOD WQ input files 
-  CHARACTER(LEN=256) :: DELR_C, DELR_R, LAYCON_L
-  INTEGER :: NLAY
- END TYPE RUNFILEWQ_OBJ
- 
- TYPE(RUNFILEWQ_OBJ) :: WQFILE         
+! TYPE RUNFILEWQ_OBJ  ! For re-use of parameter information in iMOD WQ input files 
+!  CHARACTER(LEN=256) :: DELR_C, DELR_R, LAYCON_L
+!  INTEGER :: NLAY
+! END TYPE RUNFILEWQ_OBJ
+! TYPE(RUNFILEWQ_OBJ) :: WQFILE         
 
 END MODULE MOD_PMANAGER_PAR
