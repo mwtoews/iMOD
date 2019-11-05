@@ -210,7 +210,7 @@ MODULE MOD_PMANAGER_PAR
   INTEGER :: IMOBILE   !## flag indicating mobility of a species (1: mobile, 2: immobile). Related to BTN key 'MCOMP'
  END TYPE SPECIESOBJ
  TYPE(SPECIESOBJ),ALLOCATABLE,DIMENSION(:),SAVE :: SPECIES
- INTEGER :: NSPECIES,ISPECIES
+ INTEGER :: NSPECIES
  
  !## For each simulation step date-time info and MODFLOW flags
  TYPE SIMOBJ
