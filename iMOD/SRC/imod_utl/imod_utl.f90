@@ -4481,6 +4481,23 @@ DOLOOP: DO
  ITOS=ADJUSTL(TXT)
 
  END FUNCTION ITOS
+ 
+ !###======================================================================
+ FUNCTION LTOS(LEX,OC)
+ !###======================================================================
+ IMPLICIT NONE
+ LOGICAL,INTENT(IN) :: LEX
+ INTEGER,INTENT(IN) :: OC ! output control: 1=single, 2= full
+ CHARACTER(LEN=10)  :: TXT,LTOS
+
+ ! Function: Logical 2 string
+ 
+ IF(LEX) THEN ; WRITE(TXT,'(A)') 'TRUE' ; 
+         ELSE ; WRITE(TXT,'(A)') 'FALSE' ; ENDIF         
+ IF(OC.EQ.1) TXT=TXT(:1)
+ LTOS=ADJUSTL(TXT)
+
+ END FUNCTION LTOS
 
  !###======================================================================
  FUNCTION ITOS_DBL(I)

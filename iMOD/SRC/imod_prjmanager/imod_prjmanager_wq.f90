@@ -146,14 +146,14 @@ CONTAINS
  WRITE(IU,'(A)') 'NROW = '//TRIM(ITOS(PRJIDF%NROW))
  WRITE(IU,'(A)') 'NCOL = '//TRIM(ITOS(PRJIDF%NCOL))
 
- WRITE(IU,'(A)') 'NPER = '//TRIM(ITOS(PRJNPER))
+ WRITE(IU,'(A)') 'NPER  = '//TRIM(ITOS(PRJNPER))
  WRITE(IU,'(A)') 'NCOMP = '//TRIM(ITOS(NSPECIES))
  MCOMP=0
  DO I=1,NSPECIES ; IF(SPECIES(I)%IMOBILE.EQ.2) MCOMP=MCOMP+1 ;  ENDDO
  WRITE(IU,'(A)') 'MCOMP = '//TRIM(ITOS(MCOMP))
- WRITE(IU,'(A)') 'TUNIT =  '//TRIM(WQ%BTN%TUNIT)//' # default'  
- WRITE(IU,'(A)') 'LUNIT =  '//TRIM(WQ%BTN%LUNIT)//' # default'  
- WRITE(IU,'(A)') 'MUNIT =  '//TRIM(WQ%BTN%MUNIT)//' # default'  
+ WRITE(IU,'(A)') 'TUNIT = '//TRIM(WQ%BTN%TUNIT)//' # default'  
+ WRITE(IU,'(A)') 'LUNIT = '//TRIM(WQ%BTN%LUNIT)//' # default'  
+ WRITE(IU,'(A)') 'MUNIT = '//TRIM(WQ%BTN%MUNIT)//' # default'  
  
  !## define LAYCON_L    
  LCBD=-1
@@ -199,32 +199,52 @@ CONTAINS
   IF(.NOT.PMANAGER_SAVERUNWQ_U2DREL(IU,'ICBUND_L?',ITOPIC,0,1,0,ILAY,0))RETURN
  ENDDO
 
- DO ILAY=1,PRJNLAY
-  ITOPIC=TSCO
-  IF(.NOT.PMANAGER_SAVERUNWQ_U2DREL(IU,'SCONC_T?_L?',ITOPIC,1,1,0,ILAY,0))RETURN
- ENDDO
+ DO ISPECIES=1,NSPECIES
+  DO ILAY=1,PRJNLAY
+   ITOPIC=TSCO
+   IF(.NOT.PMANAGER_SAVERUNWQ_U2DREL(IU,'SCONC_T?_L?',ITOPIC,1,0,0,ILAY,ISPECIES))RETURN
+  ENDDO
+ ENDDO 
 
- WRITE(IU,'(A)') 'CINACT = -9999 # default'
- WRITE(IU,'(A)') 'THKMIN = 1.00E-02 # default'
- WRITE(IU,'(A)') 'IFMTCN = 0 # default'
- WRITE(IU,'(A)') 'IFMTNP = 0 # default'
- WRITE(IU,'(A)') 'IFMTRF = 0 # default'
- WRITE(IU,'(A)') 'IFMTDP = 0 # default'
- WRITE(IU,'(A)') 'SAVUCN = T # default'
- WRITE(IU,'(A)') 'NPRS = '//TRIM(ITOS(PBMAN%NPRS))
+ WRITE(IU,'(A)') 'CINACT = '//TRIM(UTL_REALTOSTRING(WQ%BTN%CINACT))//' # default'
+ WRITE(IU,'(A)') 'THKMIN = '//TRIM(UTL_REALTOSTRING(WQ%BTN%THKMIN))//' # default'
+ WRITE(IU,'(A)') 'IFMTCN = '//TRIM(ITOS(WQ%BTN%IFMTCN))//' # default'
+ WRITE(IU,'(A)') 'IFMTNP = '//TRIM(ITOS(WQ%BTN%IFMTNP))//' # default'
+ WRITE(IU,'(A)') 'IFMTRF = '//TRIM(ITOS(WQ%BTN%IFMTRF))//' # default'
+ WRITE(IU,'(A)') 'IFMTDP = '//TRIM(ITOS(WQ%BTN%IFMTDP))//' # default'
+ WRITE(IU,'(A)') 'SAVUCN = '//TRIM(LTOS(WQ%BTN%SAVUCN,1))//' # default'
+ WRITE(IU,'(A)') 'NPRS =   '//TRIM(ITOS(PBMAN%NPRS))
  WRITE(IU,'(A)') 'TIMPRS = '//TRIM(UTL_REALTOSTRING(PBMAN%TIMPRS))
  WRITE(IU,'(A)') 'NPROBS = '//TRIM(ITOS(PBMAN%NPROBS))
- WRITE(IU,'(A)') 'OBS_L? = '
- WRITE(IU,'(A)') 'CHKMAS = T # default'
- WRITE(IU,'(A)') 'NPRMAS = '
- WRITE(IU,'(A)') 'PERLEN_P? = '
- WRITE(IU,'(A)') 'NSTP_P? = '
- WRITE(IU,'(A)') 'TSMULT_P? = '
- WRITE(IU,'(A)') 'TSLNGH_P? = '
- WRITE(IU,'(A)') 'DT0_P? = '
- WRITE(IU,'(A)') 'MXSTRN_P? = '
- WRITE(IU,'(A)') 'TTSMULT_P? = '
- WRITE(IU,'(A)') 'TTSMAX_P? = '
+ DO ILAY=1,PRJNLAY
+  ITOPIC=TOBS
+  IF(.NOT.PMANAGER_SAVERUNWQ_U2DREL(IU,'OBS_L?',ITOPIC,0,1,0,ILAY,0))RETURN
+ ENDDO
+ WRITE(IU,'(A)') 'CHKMAS = '//TRIM(LTOS(WQ%BTN%CHKMAS,1))//' # default'
+ WRITE(IU,'(A)') 'NPRMAS = '//TRIM(ITOS(PBMAN%NPRMAS))
+ 
+ IF(MINVAL(SIM(1:PRJNPER)%DELT).EQ.MAXVAL(SIM(1:PRJNPER)%DELT))THEN
+   WRITE(IU,'(A)') 'PERLEN_P? = '//TRIM(UTL_REALTOSTRING(MAXVAL(SIM(:)%DELT)))
+ ELSE
+   DO KPER=1,PRJNPER
+    WRITE(IU,'(A)') 'PERLEN_P'//TRIM(ITOS(KPER))//' = '//TRIM(UTL_REALTOSTRING(SIM(KPER)%DELT))
+   ENDDO
+ ENDIF
+
+ IF(MINVAL(SIM(1:PRJNPER)%NSTP).EQ.MAXVAL(SIM(1:PRJNPER)%NSTP))THEN
+   WRITE(IU,'(A)') 'NSTP_P? = '//TRIM(ITOS(MAXVAL(SIM(1:PRJNPER)%NSTP)))
+ ELSE
+   DO KPER=1,PRJNPER
+    WRITE(IU,'(A)') 'NSTP_P'//TRIM(ITOS(KPER))//' = '//TRIM(ITOS(SIM(KPER)%NSTP))
+   ENDDO
+ ENDIF
+
+ WRITE(IU,'(A)') 'TSMULT_P? = to do'
+ WRITE(IU,'(A)') 'TSLNGH_P? = to do'
+ WRITE(IU,'(A)') 'DT0_P? = to do'
+ WRITE(IU,'(A)') 'MXSTRN_P? = to do'
+ WRITE(IU,'(A)') 'TTSMULT_P? = to do'
+ WRITE(IU,'(A)') 'TTSMAX_P? = to do'
 
  PMANAGER_SAVERUNWQ_WRTBTN=.TRUE.
 
@@ -240,7 +260,23 @@ CONTAINS
  PMANAGER_SAVERUNWQ_WRTADV=.FALSE.
 
  WRITE(IU,'(/A)') '[ADV] # MT3DMS ADVection package'
-
+ WRITE(IU,'(A)') 'MIXELM = '//TRIM(ITOS(WQ%ADV%MIXELM))
+ WRITE(IU,'(A)') 'PERCEL = '//TRIM(UTL_REALTOSTRING(WQ%ADV%PERCEL))
+ WRITE(IU,'(A)') 'MXPART = '//TRIM(ITOS(WQ%ADV%MXPART))
+ WRITE(IU,'(A)') 'NADVFD = '//TRIM(ITOS(WQ%ADV%NADVFD))
+ WRITE(IU,'(A)') 'ITRACK = '
+ WRITE(IU,'(A)') 'WD = '
+ WRITE(IU,'(A)') 'DCEPS = '
+ WRITE(IU,'(A)') 'NPLANE = '
+ WRITE(IU,'(A)') 'NPL = '
+ WRITE(IU,'(A)') 'NPH = '
+ WRITE(IU,'(A)') 'NPMIN = '
+ WRITE(IU,'(A)') 'NPMAX = '
+ WRITE(IU,'(A)') 'INTERP = '
+ WRITE(IU,'(A)') 'NLSINK = '
+ WRITE(IU,'(A)') 'NPSINK = '
+ WRITE(IU,'(A)') 'DCHMOC = '
+ 
  PMANAGER_SAVERUNWQ_WRTADV=.TRUE.
 
  END FUNCTION PMANAGER_SAVERUNWQ_WRTADV
@@ -568,7 +604,8 @@ CONTAINS
  ENDIF
 
  WRITE(IU,'(A)') 'TSMULT_P? = 1'  ! frans: aanpassen?
- WRITE(IU,'(A)') 'SSTR_P? = TR'   ! frans: aanpassen?
+ IF(ISS.EQ.1) WRITE(IU,'(A)') 'SSTR_P? = TR'  
+ IF(ISS.EQ.0) WRITE(IU,'(A)') 'SSTR_P? = SS'  
 
  PMANAGER_SAVERUNWQ_WRTDIS=.TRUE.
 
@@ -647,35 +684,22 @@ CONTAINS
  CHARACTER(LEN=*),INTENT(IN) :: KEYNAME
  INTEGER,INTENT(IN) :: IU,ITOPIC,IPER,ISUBT,ISYS,ISPEC,ILAY
  CHARACTER(LEN=256) :: FNAME,LINE,LINE2
- INTEGER :: ICNST, JLAY,JSYS,CPER,JSUBT
+ INTEGER :: ICNST, JLAY,JSYS,CPER,JSUBT,NSYS
  REAL(KIND=DP_KIND) :: FCT, IMP, CNST
  INTEGER(KIND=8) :: ITIME,JTIME
  
- ! wat als ik laag wil hebben
- ! dan ga ik alle systemen af en wacht tot de laag er bij zit 
- ! wat als ik systeem wil hebben, dan ga ik alle systemen af maar skip het checken op een laag, die zet ik bijv 0
- ! wat te doen bij subtopics en species. 
- ! 2 manieren: hierbuiten max isubt aangeven en ispec optellen (want niet 0) 
- ! of als ispec niet 0 is dan optellen bij max isubt, dan als hulje isubt 0 maken. 
- ! gewoon allemaal loops maken en vooraf bepalen hoe groot die loop is.
- ! dus:
- ! - iper en itopic altijd waarde
- ! - isubt alleen 0 als ik ispec wil
- ! - isys aflopen als ik bijv RIV wil
- ! - ilay 0 als het om isys gaat, ilay niet nul als check of isys geprint moet worden
- ! - ispec de waarde van de ispec en anders 0
- 
  PMANAGER_SAVERUNWQ_U2DREL=.FALSE.
 
- !## Find proper record for IPER in Arry within object Topic
+ !## Find proper record for current IPER in Files Arry of actual Topic
  CPER=0
  IF(IPER.GT.0) CPER=PMANAGER_GETCURRENTIPER(IPER,ITOPIC,ITIME,JTIME) ; CPER=MAX(1,CPER)
  
  !## Correction in case ISUBT is incorrect. Species are considered additional/extra Subtopics in the object
- JSUBT=ISUBT ; IF(ISPEC.GT.0) JSUBT=SIZE(TOPICS(ITOPIC)%STRESS(CPER)%FILES,1) 
+ JSUBT=ISUBT ; IF(ISPEC.GT.0) JSUBT=TOPICS(ITOPIC)%NSUBTOPICS
 
 !## loop over systems to find 
- DO JSYS=1,SIZE(TOPICS(ITOPIC)%STRESS(CPER)%FILES,2)
+ NSYS=SIZE(TOPICS(ITOPIC)%STRESS(CPER)%FILES,2)
+ DO JSYS=1,NSYS
 
      !## substitute variables
      ICNST =TOPICS(ITOPIC)%STRESS(CPER)%FILES(JSUBT+ISPEC,JSYS)%ICNST 
@@ -689,9 +713,13 @@ CONTAINS
      IF(JSYS.NE.0.AND.JSYS.EQ.ISYS) EXIT ! found correct system 
      
  ENDDO     
-     
+ 
+ IF(JSYS.GT.NSYS) THEN
+     PMANAGER_SAVERUNWQ_U2DREL=.TRUE. ;  RETURN ! no system found 
+ ENDIF    
+ 
  ! Macro’s can be used for ranges layers (_L), rows (_R), columns (_C), stress periods (_P), species (_T) and sub-systems (_S)
- LINE= UTL_CAP(KEYNAME,'U')
+ LINE=UTL_CAP(KEYNAME,'U')
  IF(JLAY.GT.0)  LINE=TRIM(UTL_SUBST(LINE,'_L?','_L'//TRIM(ITOS(JLAY))))
  IF(IPER.GT.0)  LINE=TRIM(UTL_SUBST(LINE,'_P?','_P'//TRIM(ITOS(IPER))))
  IF(ISPEC.GT.0) LINE=TRIM(UTL_SUBST(LINE,'_T?','_T'//TRIM(ITOS(ISPEC))))

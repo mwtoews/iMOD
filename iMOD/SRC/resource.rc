@@ -8,7 +8,7 @@
 //
 // Winteracter resource script. 
 //
-// Modified : 04/Nov/2019 19:56:44
+// Modified : 05/Nov/2019 07:54:14
 //
 ///////////////////////////////////////////////////
 //
@@ -12804,10 +12804,19 @@ BEGIN
     CONTROL "0",IDF_INTEGER2,"INTEGERSPIN",WS_CHILD | WS_VISIBLE | WS_BORDER | WS_GROUP | WS_TABSTOP | ES_LEFT | ES_CENTER | ES_MULTILINE,  238,   46,   40,   12
     CONTROL "Total elapsed times to save simulation results (TIMPRS):",IDF_LABEL2,"STATIC",WS_CHILD | WS_VISIBLE | WS_GROUP | SS_LEFT,   14,   31,  180,    8
     CONTROL "1.0000",IDF_REAL10,"DOUBLEEDIT",WS_CHILD | WS_VISIBLE | WS_BORDER | WS_GROUP | WS_TABSTOP | ES_LEFT | ES_CENTER | ES_MULTILINE,  208,   31,   70,   12
+    CONTROL "Advection solution option (MIXELM):",IDF_LABEL4,"STATIC",WS_CHILD | WS_VISIBLE | WS_GROUP | SS_LEFT,   16,   76,  118,    8
+    CONTROL "",IDF_MENU3,"COMBOBOX",WS_CHILD | WS_VISIBLE | WS_VSCROLL | WS_GROUP | WS_TABSTOP | CBS_DROPDOWN | CBS_HASSTRINGS | CBS_UPPERCASE,  164,   76,  110,  108
 END
 
 ID_DSIMMANAGER_TAB7 RCDATA
 BEGIN
+"[Menus] \n"
+" 1093     5     1 \n"
+"Finite-Difference \n"
+"MOC (not available) \n"
+"MMOC  (not available) \n"
+"HMOC  (not available) \n"
+"TVD \n"
 "[Ranges] \n"
 " 1194               0           10000 \n"
 " 1195               0           10000 \n"
@@ -12816,6 +12825,8 @@ BEGIN
 " 1194    8 Arial, 400 0 1 \n"
 " 1195    8 Arial, 400 0 1 \n"
 "[Formats] \n"
+"[Flags] \n"
+" 1093  1 \n"
 ,0
 END
 
@@ -14641,4 +14652,4 @@ END
 //*WI* FILENAME    resource.f90
 //*WI* FMODNAME    RESOURCE
 //*WI* LASTTYPE        2
-//*WI* LASTRES       322
+//*WI* LASTRES       330
