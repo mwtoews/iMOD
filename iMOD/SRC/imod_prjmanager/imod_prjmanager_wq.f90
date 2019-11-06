@@ -13,7 +13,7 @@
 !!  GNU General Public License for more details.
 !!
 !!  You should have received a copy of the GNU General Public License
-!!  along with this program.  If not, see <http://www.gnu.org/licenses/>.Q*
+!!  along with this program.  If not, see <http://www.gnu.org/licenses/>.
 !!
 !!  Contact: imod.support@deltares.nl
 !!  Stichting Deltares
@@ -91,12 +91,12 @@ CONTAINS
  !## write Start Packages
  IF(.NOT.PMANAGER_SAVERUNWQ_WRTGEN(IU))RETURN
 
- !## write Modflow Packages
+ !## write Modflow Packages obligatory
  IF(.NOT.PMANAGER_SAVERUNWQ_WRTBAS6(IU))RETURN
  IF(.NOT.PMANAGER_SAVERUNWQ_WRTBCF6(IU))RETURN
  IF(.NOT.PMANAGER_SAVERUNWQ_WRTOC(IU))RETURN
  IF(.NOT.PMANAGER_SAVERUNWQ_WRTLPF(IU))RETURN
- IF(.NOT.PMANAGER_SAVERUNWQ_WRTRCH(IU))RETURN
+ IF(.NOT.PMANAGER_SAVERUNWQ_WRTRCH(IU))RETURN  
  IF(.NOT.PMANAGER_SAVERUNWQ_WRTDRN(IU))RETURN
  IF(.NOT.PMANAGER_SAVERUNWQ_WRTRIV(IU))RETURN
  IF(.NOT.PMANAGER_SAVERUNWQ_WRTGHB(IU))RETURN
@@ -134,7 +134,8 @@ CONTAINS
 
  PMANAGER_SAVERUNWQ_WRTBTN=.FALSE.
 
- WRITE(IU,'(/A)') '[BTN] # MT3DMS Basic Transport Package'
+ WRITE(IU,'(/A)') '#-------------------------------------------'
+ WRITE(IU,'(A)') '[BTN] # MT3DMS Basic Transport Package'
  WRITE(IU,'(A)') 'HEADING1 = -'
  WRITE(IU,'(A)') 'HEADING2 = -'
 
@@ -233,7 +234,8 @@ CONTAINS
 
  PMANAGER_SAVERUNWQ_WRTADV=.FALSE.
 
- WRITE(IU,'(/A)') '[ADV] # MT3DMS ADVection package'
+ WRITE(IU,'(/A)') '#-------------------------------------------'
+ WRITE(IU,'(A)') '[ADV] # MT3DMS ADVection package'
  WQ%ADV%MIXELM=WQ%ADV%MIXELM-1 ; IF(WQ%ADV%MIXELM.EQ.4) WQ%ADV%MIXELM=-1
  WRITE(IU,'(A)') 'MIXELM =  '//TRIM(ITOS(WQ%ADV%MIXELM))
  WRITE(IU,'(A)') 'PERCEL =  '//TRIM(UTL_REALTOSTRING(WQ%ADV%PERCEL))
@@ -265,7 +267,8 @@ CONTAINS
 
  PMANAGER_SAVERUNWQ_WRTDSP=.FALSE.
 
- WRITE(IU,'(/A)') '[DSP] #MT3DMS Dispersion Package'
+ WRITE(IU,'(/A)') '#-------------------------------------------'
+ WRITE(IU,'(A)') '[DSP] #MT3DMS Dispersion Package'
  DO ILAY=1,PRJNLAY
   ITOPIC=TDSP
   IF(.NOT.PMANAGER_SAVERUNWQ_U2DREL(IU,'TRPT_L?',ITOPIC,0,1,0,ILAY,0))RETURN
@@ -287,7 +290,8 @@ CONTAINS
 
  PMANAGER_SAVERUNWQ_WRTGCG=.FALSE.
 
- WRITE(IU,'(/A)') '[GCG] # MT3DMS Generalized Conjugate Gradient Solver Package'
+ WRITE(IU,'(/A)') '#-------------------------------------------'
+ WRITE(IU,'(A)') '[GCG] # MT3DMS Generalized Conjugate Gradient Solver Package'
 
  PMANAGER_SAVERUNWQ_WRTGCG=.TRUE.
 
@@ -302,6 +306,7 @@ CONTAINS
 
  PMANAGER_SAVERUNWQ_WRTSSM=.FALSE.
 
+ WRITE(IU,'(/A)') '#-------------------------------------------'
  WRITE(IU,'(A)') '[SSM] # MT3DMS Sink Source Mixing Package'
  WRITE(IU,'(A)') 'MXSS = '//TRIM(ITOS(PBMAN%MXSS))
 
@@ -310,13 +315,15 @@ CONTAINS
   IF(.NOT.PMANAGER_SAVERUNWQ_U2DREL(IU,'CEVT_T?_P?',TEVT,KPER,0,0,ILAY,ISPECIES))RETURN
   DO ILAY=1,PRJNLAY
     IF(.NOT.PMANAGER_SAVERUNWQ_U2DREL(IU,'CCHD_T?_P?_L?',TCHD,KPER,0,0,ILAY,ISPECIES))RETURN
-    !IF(.NOT.PMANAGER_SAVERUNWQ_U2DREL(IU,'CWEL_T?_P?_L?',TWEL,KPER,0,0,ILAY,ISPECIES))RETURN
-    !IF(.NOT.PMANAGER_SAVERUNWQ_U2DREL(IU,'CDRN_T?_P?_L?',TDRN,KPER,0,0,ILAY,ISPECIES))RETURN
-    !IF(.NOT.PMANAGER_SAVERUNWQ_U2DREL(IU,'CRIV_T?_P?_L?',TRIV,KPER,0,0,ILAY,ISPECIES))RETURN
-    !IF(.NOT.PMANAGER_SAVERUNWQ_U2DREL(IU,'CGHB_T?_P?_L?',TGHB,KPER,0,0,ILAY,ISPECIES))RETURN
-    !IF(.NOT.PMANAGER_SAVERUNWQ_U2DREL(IU,'CTVC_T?_P?_L?',TTVC,KPER,0,0,ILAY,ISPECIES))RETURN
+    IF(.NOT.PMANAGER_SAVERUNWQ_U2DREL(IU,'CWEL_T?_P?_L?',TWEL,KPER,0,0,ILAY,ISPECIES))RETURN
+    IF(.NOT.PMANAGER_SAVERUNWQ_U2DREL(IU,'CDRN_T?_P?_L?',TDRN,KPER,0,0,ILAY,ISPECIES))RETURN
+    IF(.NOT.PMANAGER_SAVERUNWQ_U2DREL(IU,'CRIV_T?_P?_L?',TRIV,KPER,0,0,ILAY,ISPECIES))RETURN
+    IF(.NOT.PMANAGER_SAVERUNWQ_U2DREL(IU,'CGHB_T?_P?_L?',TGHB,KPER,0,0,ILAY,ISPECIES))RETURN
+    IF(.NOT.PMANAGER_SAVERUNWQ_U2DREL(IU,'CTVC_T?_P?_L?',TTVC,KPER,0,0,ILAY,ISPECIES))RETURN
   ENDDO    
  ENDDO ; ENDDO
+
+ WRITE(IU,'(A)') '#CMAL_T?_P?_L? = 0  # default'
 
  PMANAGER_SAVERUNWQ_WRTSSM=.TRUE.
 
@@ -331,7 +338,8 @@ CONTAINS
 
  PMANAGER_SAVERUNWQ_WRTVDF=.FALSE.
 
- WRITE(IU,'(/A)') '[VDF] # Variable-Density Flow '
+ WRITE(IU,'(/A)') '#-------------------------------------------'
+ WRITE(IU,'(A)') '[VDF] # Variable-Density Flow '
  WRITE(IU,'(A)') 'MTDNCONC = '//TRIM(ITOS(WQ%VDF%MTDNCONC))//' # default'
  WRITE(IU,'(A)') 'MFNADVFD = '//TRIM(ITOS(WQ%VDF%MFNADVFD))//' # default'
  WRITE(IU,'(A)') 'NSWTCPL =  '//TRIM(ITOS(WQ%VDF%NSWTCPL))//' # default'
@@ -354,22 +362,30 @@ CONTAINS
  !####====================================================================
  IMPLICIT NONE
  INTEGER,INTENT(IN) :: IU
- INTEGER :: ILAY,ITOPIC
+ INTEGER :: ILAY,ITOPIC,ISPECIES
 
  PMANAGER_SAVERUNWQ_WRTRCT=.FALSE.
 
- WRITE(IU,'(/A)') '[RCT] # Chemical Reaction package'
+ WRITE(IU,'(/A)') '#-------------------------------------------'
+ WRITE(IU,'(A)') '[RCT] # Chemical Reaction package'
  WRITE(IU,'(A)') 'ISOTHM = '//TRIM(ITOS(WQ%RCT%ISOTHM))
  WRITE(IU,'(A)') 'IREACT = '//TRIM(ITOS(WQ%RCT%IREACT))
  WRITE(IU,'(A)') 'IRCTOP = '//TRIM(ITOS(WQ%RCT%IRCTOP))//'# default'
  WRITE(IU,'(A)') 'IGETSC = '//TRIM(ITOS(WQ%RCT%IGETSC))
- WRITE(IU,'(A)') 'RHOB_L? = '
- WRITE(IU,'(A)') 'PRSITY2_L? = '
- WRITE(IU,'(A)') 'SRCONC_T?_L? = '
- WRITE(IU,'(A)') 'SP1_T?_L? = '
- WRITE(IU,'(A)') 'SP2_T?_L? = '
- WRITE(IU,'(A)') 'RC1_T?_L? = '
- WRITE(IU,'(A)') 'RC2_T?_L? = '
+
+ DO ILAY=1,PRJNLAY
+   IF(.NOT.PMANAGER_SAVERUNWQ_U2DREL(IU,'RHOB_L?',THOB,0,0,0,ILAY,0))RETURN
+   IF(.NOT.PMANAGER_SAVERUNWQ_U2DREL(IU,'PRSITY2_L?',TPID,0,0,0,ILAY,0))RETURN
+ ENDDO    
+
+ DO ISPECIES=1,NSPECIES
+  DO ILAY=1,PRJNLAY
+    IF(.NOT.PMANAGER_SAVERUNWQ_U2DREL(IU,'SRCONC_T?_L?',TICS,0,0,0,ILAY,ISPECIES))RETURN
+    IF(.NOT.PMANAGER_SAVERUNWQ_U2DREL(IU,'SP1_T?_L?',TFSC,0,0,0,ILAY,ISPECIES))RETURN
+    IF(.NOT.PMANAGER_SAVERUNWQ_U2DREL(IU,'SP2_T?_L?',TSSC,0,0,0,ILAY,ISPECIES))RETURN
+    IF(.NOT.PMANAGER_SAVERUNWQ_U2DREL(IU,'RC1_T?_L?',TFOD,0,0,0,ILAY,ISPECIES))RETURN
+    IF(.NOT.PMANAGER_SAVERUNWQ_U2DREL(IU,'RC2_T?_L?',TFOS,0,0,0,ILAY,ISPECIES))RETURN
+  ENDDO ; ENDDO
 
 
  PMANAGER_SAVERUNWQ_WRTRCT=.TRUE.
@@ -385,7 +401,8 @@ CONTAINS
 
  PMANAGER_SAVERUNWQ_WRTUDR=.FALSE.
 
- WRITE(IU,'(/A)') '[UDF] # User Difined Reaction'
+ WRITE(IU,'(/A)') '#-------------------------------------------'
+ WRITE(IU,'(A)') '[UDF] # User Difined Reaction'
 
  PMANAGER_SAVERUNWQ_WRTUDR=.TRUE.
 
@@ -400,7 +417,8 @@ CONTAINS
 
  PMANAGER_SAVERUNWQ_WRTFTL=.FALSE.
 
- WRITE(IU,'(/A)') '[FTL] # Flow Transport Link'
+ WRITE(IU,'(/A)') '#-------------------------------------------'
+ WRITE(IU,'(A)') '[FTL] # Flow Transport Link'
 
  PMANAGER_SAVERUNWQ_WRTFTL=.TRUE.
 
@@ -416,7 +434,8 @@ CONTAINS
 
  PMANAGER_SAVERUNWQ_WRTPCG=.FALSE.
 
- WRITE(IU,'(/A)') '[PCG] # MODFLOW Preconditioned Conjugate-Gradient Package'
+ WRITE(IU,'(/A)') '#-------------------------------------------'
+ WRITE(IU,'(A)') '[PCG] # MODFLOW Preconditioned Conjugate-Gradient Package'
 
  PMANAGER_SAVERUNWQ_WRTPCG=.TRUE.
 
@@ -430,8 +449,13 @@ CONTAINS
  INTEGER :: ILAY,ITOPIC
 
  PMANAGER_SAVERUNWQ_WRTCHD=.FALSE.
+ ITOPIC=TCHD
+ 
+ !## skip this optional package if not selected
+ IF(TOPICS(ITOPIC)%IACT_MODEL.NE.1)THEN; PMANAGER_SAVERUNWQ_WRTCHD=.TRUE. ; RETURN ; ENDIF
 
- WRITE(IU,'(/A)') '[CHD]'
+ WRITE(IU,'(/A)') '#-------------------------------------------'
+ WRITE(IU,'(A)') '[CHD]'
 
  PMANAGER_SAVERUNWQ_WRTCHD=.TRUE.
 
@@ -445,8 +469,13 @@ CONTAINS
  INTEGER :: ILAY,ITOPIC
 
  PMANAGER_SAVERUNWQ_WRTWEL=.FALSE.
+ ITOPIC=TWEL
+ 
+ !## skip this optional package if not selected
+ IF(TOPICS(ITOPIC)%IACT_MODEL.NE.1)THEN; PMANAGER_SAVERUNWQ_WRTWEL=.TRUE. ; RETURN ; ENDIF
 
- WRITE(IU,'(/A)') '[WEL]'
+ WRITE(IU,'(/A)') '#-------------------------------------------'
+ WRITE(IU,'(A)') '[WEL]'
 
  PMANAGER_SAVERUNWQ_WRTWEL=.TRUE.
 
@@ -460,8 +489,13 @@ CONTAINS
  INTEGER :: ILAY,ITOPIC
 
  PMANAGER_SAVERUNWQ_WRTGHB=.FALSE.
+ ITOPIC=TGHB
+ 
+ !## skip this optional package if not selected
+ IF(TOPICS(ITOPIC)%IACT_MODEL.NE.1)THEN; PMANAGER_SAVERUNWQ_WRTGHB=.TRUE. ; RETURN ; ENDIF
 
- WRITE(IU,'(/A)') '[GHB]'
+ WRITE(IU,'(/A)') '#-------------------------------------------'
+ WRITE(IU,'(A)') '[GHB]'
 
  PMANAGER_SAVERUNWQ_WRTGHB=.TRUE.
 
@@ -475,8 +509,13 @@ CONTAINS
  INTEGER :: ILAY,ITOPIC
 
  PMANAGER_SAVERUNWQ_WRTRIV=.FALSE.
+ ITOPIC=TRIV
+ 
+ !## skip this optional package if not selected
+ IF(TOPICS(ITOPIC)%IACT_MODEL.NE.1)THEN; PMANAGER_SAVERUNWQ_WRTRIV=.TRUE. ; RETURN ; ENDIF
 
- WRITE(IU,'(/A)') '[RIV]'
+ WRITE(IU,'(/A)') '#-------------------------------------------'
+ WRITE(IU,'(A)') '[RIV]'
 
  PMANAGER_SAVERUNWQ_WRTRIV=.TRUE.
 
@@ -490,8 +529,13 @@ CONTAINS
  INTEGER :: ILAY,ITOPIC
 
  PMANAGER_SAVERUNWQ_WRTDRN=.FALSE.
+ ITOPIC=TDRN
+ 
+ !## skip this optional package if not selected
+ IF(TOPICS(ITOPIC)%IACT_MODEL.NE.1)THEN; PMANAGER_SAVERUNWQ_WRTDRN=.TRUE. ; RETURN ; ENDIF
 
- WRITE(IU,'(/A)') '[DRN]'
+ WRITE(IU,'(/A)') '#-------------------------------------------'
+ WRITE(IU,'(A)') '[DRN]'
 
  PMANAGER_SAVERUNWQ_WRTDRN=.TRUE.
 
@@ -505,7 +549,12 @@ CONTAINS
  INTEGER :: ILAY,ITOPIC
 
  PMANAGER_SAVERUNWQ_WRTRCH=.FALSE.
-
+ ITOPIC=TRCH
+ 
+ !## skip this optional package if not selected
+ IF(TOPICS(ITOPIC)%IACT_MODEL.NE.1)THEN; PMANAGER_SAVERUNWQ_WRTRCH=.TRUE. ; RETURN ; ENDIF
+ 
+ WRITE(IU,'(/A)') '#-------------------------------------------'
  WRITE(IU,'(A)') '[RCH]'
 
  PMANAGER_SAVERUNWQ_WRTRCH=.TRUE.
@@ -521,7 +570,8 @@ CONTAINS
 
  PMANAGER_SAVERUNWQ_WRTLPF=.FALSE.
 
- WRITE(IU,'(/A)') '[LPF]'
+ WRITE(IU,'(/A)') '#-------------------------------------------'
+ WRITE(IU,'(A)') '[LPF]'
 
  PMANAGER_SAVERUNWQ_WRTLPF=.TRUE.
 
@@ -536,7 +586,8 @@ CONTAINS
 
  PMANAGER_SAVERUNWQ_WRTOC=.FALSE.
 
- WRITE(IU,'(/A)') '[OC] # Output Control option'
+ WRITE(IU,'(/A)') '#-------------------------------------------'
+ WRITE(IU,'(A)') '[OC] # Output Control option'
 
  PMANAGER_SAVERUNWQ_WRTOC=.TRUE.
 
@@ -551,7 +602,8 @@ CONTAINS
 
  PMANAGER_SAVERUNWQ_WRTBCF6=.FALSE.
 
- WRITE(IU,'(/A)') '[BCF6] # BLOCK CENTRED FLOW'
+ WRITE(IU,'(/A)') '#-------------------------------------------'
+ WRITE(IU,'(A)') '[BCF6] # BLOCK CENTRED FLOW'
 
  WRITE(IU,'(A)') 'IBCFCB = 0  # default'
  WRITE(IU,'(A)') 'HDRY = -9999  # default'
@@ -582,7 +634,8 @@ CONTAINS
 
  PMANAGER_SAVERUNWQ_WRTBAS6=.FALSE.
 
- WRITE(IU,'(/A)') '[BAS6] # MODFLOW BASic Package'
+ WRITE(IU,'(/A)') '#-------------------------------------------'
+ WRITE(IU,'(A)') '[BAS6] # MODFLOW BASic Package'
 
  DO ILAY=1,PRJNLAY
   ITOPIC=TBND
@@ -609,7 +662,8 @@ CONTAINS
 
  PMANAGER_SAVERUNWQ_WRTDIS=.FALSE.
 
- WRITE(IU,'(/A)') '[DIS] # MODFLOW DIScretization Package'
+ WRITE(IU,'(/A)') '#-------------------------------------------'
+ WRITE(IU,'(A)') '[DIS] # MODFLOW DIScretization Package'
 
  WRITE(IU,'(A)') 'NLAY = '//TRIM(ITOS(PRJNLAY)) 
  WRITE(IU,'(A)') 'NROW = '//TRIM(ITOS(PRJIDF%NROW))
@@ -746,7 +800,8 @@ CONTAINS
  INTEGER :: KPER,ITOPIC
 
  PMANAGER_SAVERUNWQ_WRTGEN=.FALSE.
- WRITE(IU,'(/A)') '[GEN] # GENeral settings'
+ WRITE(IU,'(/A)') '#-------------------------------------------'
+ WRITE(IU,'(A)') '[GEN] # GENeral settings'
  MODELNAME=MODELNAME(1:INDEX(MODELNAME,'.RUN',.TRUE.)-1)
  WRITE(IU,'(A)') 'MODELNAME = '//CHAR(39)//TRIM(MODELNAME)//CHAR(39)            
  WRITE(IU,'(A)') 'WRITEHELP     =   F # default'
@@ -760,7 +815,7 @@ CONTAINS
  LINE=''
  IF(PBMAN%IFORMAT.EQ.4) THEN    ! for Seawat
   DO ITOPIC=1,MAXTOPICS
-   SELECT CASE (ITOPIC)  !## Frans: check of dit klopt
+   SELECT CASE (ITOPIC)  !## Frans: check of dit klopt --> nee, anders: met MC( )%iact etc)
      CASE (TWEL, TDRN, TRIV, TGHB, TCHD, TRCH, TEVT, TPCG)
          IF(TOPICS(ITOPIC)%IACT_MODEL.GT.0) LINE=TRIM(LINE)//TRIM(TOPICS(ITOPIC)%CMOD)//','
      CASE (TBND)
@@ -789,13 +844,20 @@ CONTAINS
 
  !## look for first
  DO KPER=1,PRJNPER; IF(SIM(KPER)%DELT.GT.0.0D0)EXIT; ENDDO
-
- WRITE(IU,'(A)') 'START_YEAR    =   '//TRIM(ITOS(SIM(KPER)%IYR))
- WRITE(IU,'(A)') 'START_MONTH   =   '//TRIM(ITOS(SIM(KPER)%IMH))
- WRITE(IU,'(A)') 'START_DAY     =   '//TRIM(ITOS(SIM(KPER)%IDY))  
- WRITE(IU,'(A)') 'START_HOUR    =   '//TRIM(ITOS(SIM(KPER)%IHR))
- WRITE(IU,'(A)') 'START_MINUTE  =   '//TRIM(ITOS(SIM(KPER)%IMT))
- WRITE(IU,'(A)') 'START_SECOND  =   '//TRIM(ITOS(SIM(KPER)%ISC))
+     
+ IF(KPER.GT.PRJNPER)THEN  ! Steady State?   Frans: check of dit de juiste aanpak is, beter verwijzen naar PBMAN parameter?? 
+  WRITE(IU,'(A)') '# No timesteps defined'
+  WRITE(IU,'(A)') 'START_YEAR    =   2000 # default'
+  WRITE(IU,'(A)') 'START_MONTH   =      1 # default'
+  WRITE(IU,'(A)') 'START_DAY     =      1 # default'  
+ ELSE
+  WRITE(IU,'(A)') 'START_YEAR    =   '//TRIM(ITOS(SIM(KPER)%IYR))
+  WRITE(IU,'(A)') 'START_MONTH   =   '//TRIM(ITOS(SIM(KPER)%IMH))
+  WRITE(IU,'(A)') 'START_DAY     =   '//TRIM(ITOS(SIM(KPER)%IDY))  
+  WRITE(IU,'(A)') 'START_HOUR    =   '//TRIM(ITOS(SIM(KPER)%IHR))
+  WRITE(IU,'(A)') 'START_MINUTE  =   '//TRIM(ITOS(SIM(KPER)%IMT))
+  WRITE(IU,'(A)') 'START_SECOND  =   '//TRIM(ITOS(SIM(KPER)%ISC))
+ ENDIF
 
  PMANAGER_SAVERUNWQ_WRTGEN=.TRUE.
 
@@ -809,15 +871,15 @@ CONTAINS
  CHARACTER(LEN=*),INTENT(IN) :: KEYNAME
  INTEGER,INTENT(IN) :: IU,ITOPIC,IPER,ISUBT,ISYS,ISPEC,ILAY
  CHARACTER(LEN=256) :: FNAME,LINE,LINE2
- INTEGER :: ICNST, JLAY,JSYS,CPER,JSUBT,NSYS
+ INTEGER :: ICNST, JLAY,JSYS,CPER,JSUBT,NSYS,I
  REAL(KIND=DP_KIND) :: FCT, IMP, CNST
  INTEGER(KIND=8) :: ITIME,JTIME
  
  PMANAGER_SAVERUNWQ_U2DREL=.FALSE.
+ WRITE(IU,'(A)') '                     # debug u2drel:'//TRIM(TOPICS(ITOPIC)%TNAME)
 
  !## Skip this topic in case it is not active
- IF(MC(PBMAN%IFORMAT)%IACT(ITOPIC).EQ.0) THEN
-      !TOPICS(I)%IACT_MODEL,
+ IF(TOPICS(ITOPIC)%IACT_MODEL.NE.1) THEN
     PMANAGER_SAVERUNWQ_U2DREL=.TRUE. ;  RETURN ! 
  ENDIF   
  

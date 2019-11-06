@@ -202,7 +202,7 @@ MODULE MOD_PMANAGER_PAR
   INTEGER,POINTER,DIMENSION(:) :: UNCONFINED
   INTEGER,POINTER,DIMENSION(:) :: ILAY
   CHARACTER(LEN=256) :: TIMFNAME,MODFLOW,BNDFILE,OUTPUT,GENFNAME
-  CHARACTER(LEN=6) :: RUNTYPE
+  !CHARACTER(LEN=6) :: RUNTYPE
  END TYPE PMANBATCH
  TYPE(PMANBATCH) :: PBMAN  ! Object contains all input/keyword from the batch function RUNFILE. Data is used for writing different type of RUN files
                            ! in GUI modus: PBMAN is filled from the Simulation Manager (sub)windows. 
