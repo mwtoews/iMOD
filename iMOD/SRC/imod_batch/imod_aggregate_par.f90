@@ -9,8 +9,7 @@ MODULE MOD_AGGREGATE_PAR
  TYPE FOBJ
   CHARACTER(LEN=256),DIMENSION(5) :: FILE        !## files top,bottom,kh,kv,va
   INTEGER,DIMENSION(5) :: ITYPE                  !## 0=idf, 1=constant value
-  INTEGER :: ITOP                                !## top formtion for insertion
-  INTEGER :: IBOT                                !## bot formtion for insertion
+  INTEGER :: ILAYER                              !## top formtion for insertion
   INTEGER :: METH                                !## method for insertion
   REAL(KIND=DP_KIND),DIMENSION(5) :: XVAL
  END TYPE FOBJ
