@@ -8,7 +8,7 @@
 //
 // Winteracter resource script. 
 //
-// Modified : 05/Nov/2019 17:44:41
+// Modified : 05/Nov/2019 23:16:58
 //
 ///////////////////////////////////////////////////
 //
@@ -12938,8 +12938,8 @@ BEGIN
 "SSOR \n"
 "MIC \n"
 " 1064     2     1 \n"
-"0: lumped to the right-hand side \n"
-"1: full dispersion tensor \n"
+"Lumped to the right-hand side \n"
+"Full dispersion tensor \n"
 "[Ranges] \n"
 " 1194               1           10000 \n"
 " 1195               1            1000 \n"
@@ -12975,16 +12975,16 @@ ID_DPMANAGER_MT3D_RCT RCDATA
 BEGIN
 "[Menus] \n"
 " 1192     7     1 \n"
-"0: None \n"
-"1: linear \n"
-"2: Freundlich \n"
-"3: Langmuir \n"
-"4: onequilibrium \n"
-"5: dual-domain mass transfer (without sorption) \n"
-"6: dual-domain mass transfer (with sorption) \n"
+"None \n"
+"linear \n"
+"Freundlich \n"
+"Langmuir \n"
+"onequilibrium \n"
+"dual-domain mass transfer (without sorption) \n"
+"dual-domain mass transfer (with sorption) \n"
 " 1064     2     1 \n"
-"0: no kinetic rate reaction is simulated \n"
-"1: first-order irreversible reaction \n"
+"no kinetic rate reaction is simulated \n"
+"first-order irreversible reaction \n"
 "[Ranges] \n"
 " 1194               1            1000 \n"
 "[Fonts] \n"
@@ -13000,7 +13000,7 @@ FONT    8, "Arial"
 CAPTION "ADV Settings"
 BEGIN
     CONTROL "Paremeter options",IDF_GROUP1,"BUTTON",WS_CHILD | WS_VISIBLE | WS_GROUP | BS_GROUPBOX | BS_TEXT | BS_LEFT,    7,    4,  289,  244
-    CONTROL "gebruiken we niet, alleen in tab iMOD-WQ Misc.",IDF_LABEL1,"STATIC",WS_CHILD | WS_VISIBLE | WS_GROUP | SS_LEFT,   14,   19,   93,    8
+    CONTROL "gebruiken we niet, alleen in tab iMOD-WQ Misc.",IDF_LABEL1,"STATIC",WS_CHILD | WS_VISIBLE | WS_GROUP | SS_LEFT,   14,   19,  236,    8
     CONTROL "&Cancel",IDCANCEL,"BUTTON",WS_CHILD | WS_VISIBLE | WS_TABSTOP | BS_PUSHBUTTON | BS_TEXT | BS_FLAT,  248,  252,   49,   14
     CONTROL "&Help ...",IDHELP,"BUTTON",WS_CHILD | WS_VISIBLE | WS_TABSTOP | BS_PUSHBUTTON | BS_TEXT | BS_FLAT,  196,  252,   49,   14
     CONTROL "Apply",IDOK,"BUTTON",WS_CHILD | WS_VISIBLE | WS_GROUP | WS_TABSTOP | BS_PUSHBUTTON | BS_TEXT | BS_FLAT,    6,  252,   49,   14
@@ -14670,4 +14670,4 @@ END
 //*WI* FILENAME    resource.f90
 //*WI* FMODNAME    RESOURCE
 //*WI* LASTTYPE        2
-//*WI* LASTRES       224
+//*WI* LASTRES       335
