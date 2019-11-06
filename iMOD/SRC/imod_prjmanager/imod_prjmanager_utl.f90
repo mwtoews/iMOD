@@ -254,56 +254,73 @@ CONTAINS
   ENDIF
  ENDDO
 
+  !## turn metaswap off for steady-state
+ IF(ISS.EQ.0)TOPICS(TCAP)%DEFINED=.FALSE.
+ IF(.NOT.TOPICS(TPCG)%DEFINED)THEN
+  CALL WMESSAGEBOX(OKONLY,EXCLAMATIONICON,COMMONOK,'It is compulsory to add a solver, e.g. PCG','Error')
+  RETURN
+ ENDIF
+
+ LPKS=.FALSE.
+ IF(TOPICS(TPCG)%DEFINED.AND.PBMAN%IPKS.EQ.1)THEN
+  TOPICS(TPCG)%DEFINED=.FALSE.; LPKS=.TRUE.
+ ENDIF
+
  !## if vcw/kvv specified use quasi-3d discretisation
  LQBD=.FALSE.; IF(PRJNLAY.GT.1)THEN
   IF(TOPICS(TVCW)%NLAY.GT.0.OR.TOPICS(TKVV)%NLAY.GT.0)LQBD=.TRUE.
  ENDIF
+ 
 
 
- !## Test is packages are complete  Frans busy
- SELECT CASE (PBMAN%IFORMAT)
-  !## modflow 2005 (run/nam) 
-  CASE (1,2)
-   !## turn metaswap off for steady-state
-   IF(ISS.EQ.0)TOPICS(TCAP)%DEFINED=.FALSE.
-
-   !##
-   IF(.NOT.TOPICS(TPCG)%DEFINED)THEN
-    CALL WMESSAGEBOX(OKONLY,EXCLAMATIONICON,COMMONOK,'It is compulsory to add a solver, e.g. PCG','Error')
-    RETURN
-   ENDIF
-   
-   LPKS=.FALSE.
-   IF(TOPICS(TPCG)%DEFINED.AND.PBMAN%IPKS.EQ.1)THEN ; TOPICS(TPCG)%DEFINED=.FALSE.; LPKS=.TRUE. ; ENDIF
-
-  !## mf6
-  CASE (3)
-   LPKS=.FALSE.
-   IF(TOPICS(TPCG)%DEFINED.AND.PBMAN%IPKS.EQ.1)THEN ; TOPICS(TPCG)%DEFINED=.FALSE.; LPKS=.TRUE. ; ENDIF
-
-  !## seawat
-  CASE (4)
-   LPKS=.FALSE.
-   IF(TOPICS(TPCG)%DEFINED.AND.PBMAN%IPKS.EQ.1)THEN ; TOPICS(TPCG)%DEFINED=.FALSE.; LPKS=.TRUE. ; ENDIF
-  
-  !## mt3d
-  CASE (5)
-   IMODEL=PBMAN%IFORMAT    
-   LEX=.TRUE.
-   DO I = 1, SIZE(MC(IMODEL)%T) ! loop over all packegs for mt3d
-     ITOPIC= MC(IMODEL)%T(I)
-     IF(MC(IMODEL)%IACT(I).EQ.1.AND.TOPICS(ITOPIC)%DEFINED) LEX=.FALSE. ! PACKAGE must be selected and filled
-     IF(.NOT.TOPICS(ITOPIC)%TIMDEP.AND.TOPICS(ITOPIC)%NLAY.GE.PRJNLAY) LEX=.FALSE.  ! PACKAGE must be complete 
-     IF(.NOT.LEX)THEN
-         LINE='For '//TRIM(MC(IMODEL)%MCNAME)//' it is compulsory to add package '//TRIM(TOPICS(ITOPIC)%TNAME)//' (for all layers).'
-         IF(IBATCH.EQ.0)THEN ; CALL WMESSAGEBOX(OKONLY,INFORMATIONICON,COMMONOK,TRIM(LINE),'Information')
-         ELSE ; WRITE(*,'(/A/)') TRIM(LINE) ; ENDIF
-     ELSE
-       RETURN        
-     ENDIF
-   ENDDO
-
- END SELECT
+! !## Test is packages are complete  Frans busy
+! SELECT CASE (PBMAN%IFORMAT)
+!  !## modflow 2005 (run/nam) 
+!  CASE (1,2)
+!   !## turn metaswap off for steady-state
+!   IF(ISS.EQ.0)TOPICS(TCAP)%DEFINED=.FALSE.
+!
+!   !##
+!   IF(.NOT.TOPICS(TPCG)%DEFINED)THEN
+!    CALL WMESSAGEBOX(OKONLY,EXCLAMATIONICON,COMMONOK,'It is compulsory to add a solver, e.g. PCG','Error')
+!    RETURN
+!   ENDIF
+!   
+!   LPKS=.FALSE.
+!   IF(TOPICS(TPCG)%DEFINED.AND.PBMAN%IPKS.EQ.1)THEN ; TOPICS(TPCG)%DEFINED=.FALSE.; LPKS=.TRUE. ; ENDIF
+!
+!  !## mf6
+!  CASE (3)
+!   LPKS=.FALSE.
+!   IF(TOPICS(TPCG)%DEFINED.AND.PBMAN%IPKS.EQ.1)THEN ; TOPICS(TPCG)%DEFINED=.FALSE.; LPKS=.TRUE. ; ENDIF
+!
+!  !## seawat
+!  CASE (4)
+!   LPKS=.FALSE.
+!   IF(TOPICS(TPCG)%DEFINED.AND.PBMAN%IPKS.EQ.1)THEN ; TOPICS(TPCG)%DEFINED=.FALSE.; LPKS=.TRUE. ; ENDIF
+!  
+!  !## mt3d
+!  CASE (5)
+!   IMODEL=PBMAN%IFORMAT    
+!   ! obligatory:  GEN, BTN, GCG
+!   DO ITOPIC=1,MAXTOPICS    
+!    SELECT CASE (ITOPIC)
+!     CASE (TTOP,TTHK,TPOR,TCBI,TSCO)
+!      LEX=.FALSE.
+!      IF(TOPICS(ITOPIC)%IACT.EQ.1.AND.TOPICS(ITOPIC)%DEFINED) LEX=.TRUE. ! Topic must be selected and filled
+!      IF(.NOT.TOPICS(ITOPIC)%TIMDEP.AND.TOPICS(ITOPIC)%NLAY.LT.PRJNLAY) LEX=.FALSE.  ! Topic must be complete 
+!      IF(.NOT.LEX)THEN
+!        LINE='For '//TRIM(MC(IMODEL)%MCNAME)//' it is compulsory to add Topic '//TRIM(TOPICS(ITOPIC)%TNAME)//' (for all layers).'
+!        IF(IBATCH.EQ.0)THEN ; CALL WMESSAGEBOX(OKONLY,INFORMATIONICON,COMMONOK,TRIM(LINE),'Information')
+!        ELSE ; WRITE(*,'(/A/)') TRIM(LINE) ; ENDIF
+!        RETURN        
+!      ENDIF
+!    END SELECT
+!    ENDDO 
+!   ! RCT or UDR
+!   IF(TOPICS(ITOPIC)%IACT.EQ.1.AND.TOPICS(ITOPIC)%DEFINED) LEX=.TRUE. ! Topic must be selected and filled
+!   
+!END SELECT
 
  
  PMANAGER_GETPACKAGES=.TRUE.
