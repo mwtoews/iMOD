@@ -107,6 +107,7 @@
 			<FileConfiguration Name="Release|Win32">
 				<Tool Name="VFFortranCompilerTool" Preprocess="preprocessYes" PreprocessorDefinitions="WINTERACTER11"/></FileConfiguration></File>
 		<File RelativePath="..\..\SRC\imod_batch\imod_batch_par.f90"/>
+		<File RelativePath="..\..\SRC\imod_batch\imod_batch_utl.f90"/>
 		<File RelativePath="..\..\..\iMOD\SRC\imod_batch\imod_createizone.f90"/>
 		<File RelativePath="..\..\..\iMOD\SRC\imod_batch\imod_drainsurface.f90"/></Filter>
 		<Filter Name="imod_bivar">
