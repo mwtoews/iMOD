@@ -86,9 +86,6 @@ CONTAINS
  WRITE(IU,'(A)') '# iMOD run-file for SEAWAT '
  WRITE(IU,'(A)') '############################################################################'
 
- !## write Start Packages
- IF(.NOT.PMANAGER_SAVERUNWQ_WRTGEN(IU))RETURN
-
  !## write Modflow Packages obligatory
  IF(.NOT.PMANAGER_SAVERUNWQ_WRTBAS6(IU))RETURN
  IF(.NOT.PMANAGER_SAVERUNWQ_WRTBCF6(IU,ISS))RETURN
@@ -119,6 +116,8 @@ CONTAINS
  IF(.NOT.PMANAGER_SAVERUNWQ_WRTRCT(IU))RETURN
  IF(.NOT.PMANAGER_SAVERUNWQ_WRTUDR(IU))RETURN
 
+ !## write Start Packages
+ IF(.NOT.PMANAGER_SAVERUNWQ_WRTGEN(IU))RETURN
 
  CLOSE(IU)
 
@@ -437,7 +436,6 @@ CONTAINS
  WRITE(IU,'(A)') 'TYPELABEL = steady-state # default'
  WRITE(IU,'(A)') 'BDG = '
  WRITE(IU,'(A)') 'FTLSOURCE = 1 # default'
- 
 
  PMANAGER_SAVERUNWQ_WRTFTL=.TRUE.
 
@@ -1034,13 +1032,13 @@ CONTAINS
  IMPLICIT NONE
  INTEGER,INTENT(IN) :: IU
 
- WRITE(IU,'(A)') 'MXITER='//TRIM(ITOS(WQ%GCG%MXITER))
- WRITE(IU,'(A)') 'ITER1='// TRIM(ITOS(WQ%GCG%ITER1))
- WRITE(IU,'(A)') 'ISOLVE='//TRIM(ITOS(WQ%GCG%ISOLVE))
- WRITE(IU,'(A)') 'NCRS='//  TRIM(ITOS(WQ%GCG%NCRS))
- WRITE(IU,'(A)') 'IPRGCG='//TRIM(ITOS(WQ%GCG%IPRGCG))
- WRITE(IU,'(A)') 'ACCL='//  TRIM(RTOS(WQ%GCG%ACCL,'G',7))
- WRITE(IU,'(A)') 'CCLOSE='//TRIM(RTOS(WQ%GCG%CCLOSE,'G',7))
+ WRITE(IU,'(1X,A)') 'MXITER='//TRIM(ITOS(WQ%GCG%MXITER))
+ WRITE(IU,'(1X,A)') 'ITER1= '//TRIM(ITOS(WQ%GCG%ITER1))
+ WRITE(IU,'(1X,A)') 'ISOLVE='//TRIM(ITOS(WQ%GCG%ISOLVE))
+ WRITE(IU,'(1X,A)') 'NCRS=  '//TRIM(ITOS(WQ%GCG%NCRS))
+ WRITE(IU,'(1X,A)') 'IPRGCG='//TRIM(ITOS(WQ%GCG%IPRGCG))
+ WRITE(IU,'(1X,A)') 'ACCL=  '//TRIM(RTOS(WQ%GCG%ACCL,'G',7))
+ WRITE(IU,'(1X,A)') 'CCLOSE='//TRIM(RTOS(WQ%GCG%CCLOSE,'G',7))
  
  END SUBROUTINE PMANAGER_SAVEGCG
  
@@ -1064,17 +1062,16 @@ CONTAINS
 
  END FUNCTION PMANAGER_LOADGCG
 
-  !###======================================================================
+ !###======================================================================
  SUBROUTINE PMANAGER_SAVERCT(IU)
  !###======================================================================
  IMPLICIT NONE
  INTEGER,INTENT(IN) :: IU
 
- WRITE(IU,'(A)') 'ISOTHM='//TRIM(ITOS(WQ%RCT%ISOTHM))
- WRITE(IU,'(A)') 'IREACT='//TRIM(ITOS(WQ%RCT%IREACT))
- WRITE(IU,'(A)') 'IGETSC='//TRIM(ITOS(WQ%RCT%IGETSC))
+ WRITE(IU,'(1X,A)') 'ISOTHM='//TRIM(ITOS(WQ%RCT%ISOTHM))
+ WRITE(IU,'(1X,A)') 'IREACT='//TRIM(ITOS(WQ%RCT%IREACT))
+ WRITE(IU,'(1X,A)') 'IGETSC='//TRIM(ITOS(WQ%RCT%IGETSC))
 
- 
  END SUBROUTINE PMANAGER_SAVERCT
  
  !###======================================================================

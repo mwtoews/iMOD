@@ -5167,42 +5167,6 @@ IRLOOP: DO IROW=1,PRJIDF%NROW; DO ICOL=1,PRJIDF%NCOL
  
  END FUNCTION PMANAGER_SAVEMF2005_IMS
 
- !!###======================================================================
- !SUBROUTINE PMANAGER_SAVEGCG(IU)
- !!###======================================================================
- !IMPLICIT NONE
- !INTEGER,INTENT(IN) :: IU
- !
- !WRITE(IU,'(A)') 'MXITER='//TRIM(ITOS(WQ%GCG%MXITER))
- !WRITE(IU,'(A)') 'ITER1='// TRIM(ITOS(WQ%GCG%ITER1))
- !WRITE(IU,'(A)') 'ISOLVE='//TRIM(ITOS(WQ%GCG%ISOLVE))
- !WRITE(IU,'(A)') 'NCRS='//  TRIM(ITOS(WQ%GCG%NCRS))
- !WRITE(IU,'(A)') 'IPRGCG='//TRIM(ITOS(WQ%GCG%IPRGCG))
- !WRITE(IU,'(A)') 'ACCL='//  TRIM(RTOS(WQ%GCG%ACCL,'G',7))
- !WRITE(IU,'(A)') 'CCLOSE='//TRIM(RTOS(WQ%GCG%CCLOSE,'G',7))
- !
- !END SUBROUTINE PMANAGER_SAVEGCG
- !
- !!###======================================================================
- !LOGICAL FUNCTION PMANAGER_LOADGCG(IU)
- !!###======================================================================
- !IMPLICIT NONE
- !INTEGER,INTENT(IN) :: IU
- !
- !PMANAGER_LOADGCG=.FALSE.
- !
- !IF(.NOT.UTL_READINITFILE('MXITER',LINE,IU,0))RETURN; READ(LINE,*) WQ%GCG%MXITER
- !IF(.NOT.UTL_READINITFILE('ITER1',LINE,IU,0))RETURN;  READ(LINE,*) WQ%GCG%ITER1
- !IF(.NOT.UTL_READINITFILE('ISOLVE',LINE,IU,0))RETURN; READ(LINE,*) WQ%GCG%ISOLVE
- !IF(.NOT.UTL_READINITFILE('NCRS',LINE,IU,0))RETURN;   READ(LINE,*) WQ%GCG%NCRS
- !IF(.NOT.UTL_READINITFILE('IPRGCG',LINE,IU,0))RETURN; READ(LINE,*) WQ%GCG%IPRGCG
- !IF(.NOT.UTL_READINITFILE('ACCL',LINE,IU,0))RETURN;   READ(LINE,*) WQ%GCG%ACCL
- !IF(.NOT.UTL_READINITFILE('CCLOSE',LINE,IU,0))RETURN; READ(LINE,*) WQ%GCG%CCLOSE
- !
- !PMANAGER_LOADGCG=.TRUE. 
- !
- !END FUNCTION PMANAGER_LOADGCG
-
  !###======================================================================
  SUBROUTINE PMANAGER_SAVEPCG(IU,IOPTION)
  !###======================================================================

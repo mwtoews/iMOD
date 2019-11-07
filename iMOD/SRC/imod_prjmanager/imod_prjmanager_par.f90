@@ -25,7 +25,7 @@ MODULE MOD_PMANAGER_PAR
  USE MOD_IDF_PAR, ONLY : IDFOBJ
  USE IMODVAR, ONLY : DP_KIND,SP_KIND
  
- INTEGER,PARAMETER :: MAXTOPICS=51
+ INTEGER,PARAMETER :: MAXTOPICS=52
  INTEGER,PARAMETER :: TBND= 1
  INTEGER,PARAMETER :: TTOP= 2
  INTEGER,PARAMETER :: TBOT= 3
@@ -77,6 +77,7 @@ MODULE MOD_PMANAGER_PAR
  INTEGER,PARAMETER :: TSSC=49 !## mt3d/seawat - second sorption constant
  INTEGER,PARAMETER :: TFOD=50 !## mt3d/seawat - first order rate reaction for the dissolved phase
  INTEGER,PARAMETER :: TFOS=51 !## mt3d/seawat - second order rate reaction for the sorbed phase
+ INTEGER,PARAMETER :: TRCT=52 !## mt3d/seawat - rct
 
  TYPE MTOBJ
   INTEGER,POINTER,DIMENSION(:) :: T     !## fixed: packages available for selected Model
@@ -84,11 +85,6 @@ MODULE MOD_PMANAGER_PAR
   CHARACTER(LEN=24) :: MCNAME           !## model configuration name
  END TYPE MTOBJ
  TYPE(MTOBJ),DIMENSION(6) :: MC     ! Model Configuration - list of topics for each Model (modflow2005, modflow6,seawat,mt3d,modpath)
- 
-! INTEGER,PARAMETER :: TBDE=38 !## mt3d/seawat - bulk density
-! INTEGER,PARAMETER :: TPID=39 !## mt3d/seawat - porosity imobile domain
-! INTEGER,PARAMETER :: TRCT=44 !## mt3d/seawat + parameter per laag (5)
-! INTEGER,PARAMETER :: TUDR=47 !## mt3d/seawat
  
  INTEGER,PARAMETER :: MAXLENPRJ   =52
  INTEGER,PARAMETER :: MAXSUBTOPICS=24
