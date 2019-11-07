@@ -242,7 +242,7 @@ CONTAINS
  WRITE(IU,'(A)') 'MIXELM =  '//TRIM(ITOS(WQ%ADV%MIXELM))
  WRITE(IU,'(A)') 'PERCEL =  '//TRIM(UTL_REALTOSTRING(WQ%ADV%PERCEL))
  WRITE(IU,'(A)') '#MXPART = '//TRIM(ITOS(WQ%ADV%MXPART))
- WRITE(IU,'(A)') 'NADVFD =  '//TRIM(ITOS(WQ%ADV%NADVFD))  ! frans: juiste variabel(type) volgt
+ WRITE(IU,'(A)') 'NADVFD =  '//TRIM(ITOS(WQ%ADV%NADVFD))  
  WRITE(IU,'(A)') '#ITRACK = '
  WRITE(IU,'(A)') '#WD = '
  WRITE(IU,'(A)') '#DCEPS = '
@@ -428,6 +428,16 @@ CONTAINS
 
  WRITE(IU,'(/A)') '#-------------------------------------------'
  WRITE(IU,'(A)') '[FTL] # Flow Transport Link'
+ DO ILAY=1,PRJNLAY
+  IF(.NOT.PMANAGER_SAVERUNWQ_U2DREL(IU,'IBOUND_L?',TBND,0,1,0,ILAY,0))RETURN
+ ENDDO
+ 
+ WRITE(IU,'(A)') 'FLOW_RESULT_DIR = '//TRIM(PBMAN%FLOW_RESULT_DIR)
+ WRITE(IU,'(A)') 'FLOWTYPE = '
+ WRITE(IU,'(A)') 'TYPELABEL = steady-state # default'
+ WRITE(IU,'(A)') 'BDG = '
+ WRITE(IU,'(A)') 'FTLSOURCE = 1 # default'
+ 
 
  PMANAGER_SAVERUNWQ_WRTFTL=.TRUE.
 
@@ -445,6 +455,13 @@ CONTAINS
 
  WRITE(IU,'(/A)') '#-------------------------------------------'
  WRITE(IU,'(A)') '[PCG] # MODFLOW Preconditioned Conjugate-Gradient Package'
+ WRITE(IU,'(A)') 'MXITER = '//TRIM(ITOS(WQ%GCG%MXITER))
+ WRITE(IU,'(A)') 'ITER1 = '//TRIM(ITOS(WQ%GCG%ITER1))
+ WRITE(IU,'(A)') 'ISOLVE = '//TRIM(ITOS(WQ%GCG%ISOLVE))
+ WRITE(IU,'(A)') 'NCRS = '//TRIM(ITOS(WQ%GCG%NCRS))
+ WRITE(IU,'(A)') 'ACCL = '//TRIM(UTL_REALTOSTRING(WQ%GCG%ACCL))
+ WRITE(IU,'(A)') 'CCLOSE = '//TRIM(UTL_REALTOSTRING(WQ%GCG%CCLOSE))
+ WRITE(IU,'(A)') 'IPRGCG = '//TRIM(ITOS(WQ%GCG%IPRGCG))
 
  PMANAGER_SAVERUNWQ_WRTPCG=.TRUE.
 
@@ -645,6 +662,28 @@ CONTAINS
 
  WRITE(IU,'(/A)') '#-------------------------------------------'
  WRITE(IU,'(A)') '[OC] # Output Control option'
+ WRITE(IU,'(A)') 'SAVEHEAD_P?_L? = '
+ WRITE(IU,'(A)') 'SAVEBUDGET_P?_L? = '
+ WRITE(IU,'(A)') 'SAVECONCLAYER_L? = '
+ WRITE(IU,'(A)') 'SAVEHEADTEC_P?_L? = '
+ WRITE(IU,'(A)') 'SAVECONCTEC_P?_L? = F # default'
+ WRITE(IU,'(A)') 'SAVEVXTEC_P?_L? =  F # default'
+ WRITE(IU,'(A)') 'SAVEVYTEC_P?_L? =  F # default'
+ WRITE(IU,'(A)') 'SAVEVZTEC_P?_L? =  F # default'
+ WRITE(IU,'(A)') 'TECFILE =  concvelo.tec # default'
+ WRITE(IU,'(A)') 'TECITMUN =  Y # default'
+ WRITE(IU,'(A)') 'SAVEHEADOUT_P?_L? =  F # default'
+ WRITE(IU,'(A)') 'SAVECONCOUT_P?_L? =  F # default'
+ WRITE(IU,'(A)') 'OUTFILE = concvelo.out # default'
+ WRITE(IU,'(A)') '#HEADCOLID = '
+ WRITE(IU,'(A)') '#CONCCOLID = '
+ WRITE(IU,'(A)') '#HEADCOLVAL = '
+ WRITE(IU,'(A)') '#CONCCOLVAL = '
+ WRITE(IU,'(A)') 'SAVEHEADVTK_P? =  F # default'
+ WRITE(IU,'(A)') 'SAVECONCVTK_P? =  F # default'
+ WRITE(IU,'(A)') 'SAVEVELOVTK_P? =  F # default'
+ WRITE(IU,'(A)') 'PVDFILE =  results.pvd # default'
+ 
 
  PMANAGER_SAVERUNWQ_WRTOC=.TRUE.
 
@@ -988,5 +1027,70 @@ CONTAINS
  PMANAGER_SAVERUNWQ_U2DREL=.TRUE.
 
  END FUNCTION PMANAGER_SAVERUNWQ_U2DREL
+
+  !###======================================================================
+ SUBROUTINE PMANAGER_SAVEGCG(IU)
+ !###======================================================================
+ IMPLICIT NONE
+ INTEGER,INTENT(IN) :: IU
+
+ WRITE(IU,'(A)') 'MXITER='//TRIM(ITOS(WQ%GCG%MXITER))
+ WRITE(IU,'(A)') 'ITER1='// TRIM(ITOS(WQ%GCG%ITER1))
+ WRITE(IU,'(A)') 'ISOLVE='//TRIM(ITOS(WQ%GCG%ISOLVE))
+ WRITE(IU,'(A)') 'NCRS='//  TRIM(ITOS(WQ%GCG%NCRS))
+ WRITE(IU,'(A)') 'IPRGCG='//TRIM(ITOS(WQ%GCG%IPRGCG))
+ WRITE(IU,'(A)') 'ACCL='//  TRIM(RTOS(WQ%GCG%ACCL,'G',7))
+ WRITE(IU,'(A)') 'CCLOSE='//TRIM(RTOS(WQ%GCG%CCLOSE,'G',7))
+ 
+ END SUBROUTINE PMANAGER_SAVEGCG
+ 
+ !###======================================================================
+ LOGICAL FUNCTION PMANAGER_LOADGCG(IU)
+ !###======================================================================
+ IMPLICIT NONE
+ INTEGER,INTENT(IN) :: IU
+
+ PMANAGER_LOADGCG=.FALSE.
+ 
+ IF(.NOT.UTL_READINITFILE('MXITER',LINE,IU,0))RETURN; READ(LINE,*) WQ%GCG%MXITER
+ IF(.NOT.UTL_READINITFILE('ITER1',LINE,IU,0))RETURN;  READ(LINE,*) WQ%GCG%ITER1
+ IF(.NOT.UTL_READINITFILE('ISOLVE',LINE,IU,0))RETURN; READ(LINE,*) WQ%GCG%ISOLVE
+ IF(.NOT.UTL_READINITFILE('NCRS',LINE,IU,0))RETURN;   READ(LINE,*) WQ%GCG%NCRS
+ IF(.NOT.UTL_READINITFILE('IPRGCG',LINE,IU,0))RETURN; READ(LINE,*) WQ%GCG%IPRGCG
+ IF(.NOT.UTL_READINITFILE('ACCL',LINE,IU,0))RETURN;   READ(LINE,*) WQ%GCG%ACCL
+ IF(.NOT.UTL_READINITFILE('CCLOSE',LINE,IU,0))RETURN; READ(LINE,*) WQ%GCG%CCLOSE
+
+ PMANAGER_LOADGCG=.TRUE. 
+
+ END FUNCTION PMANAGER_LOADGCG
+
+  !###======================================================================
+ SUBROUTINE PMANAGER_SAVERCT(IU)
+ !###======================================================================
+ IMPLICIT NONE
+ INTEGER,INTENT(IN) :: IU
+
+ WRITE(IU,'(A)') 'ISOTHM='//TRIM(ITOS(WQ%RCT%ISOTHM))
+ WRITE(IU,'(A)') 'IREACT='//TRIM(ITOS(WQ%RCT%IREACT))
+ WRITE(IU,'(A)') 'IGETSC='//TRIM(ITOS(WQ%RCT%IGETSC))
+
+ 
+ END SUBROUTINE PMANAGER_SAVERCT
+ 
+ !###======================================================================
+ LOGICAL FUNCTION PMANAGER_LOADRCT(IU)
+ !###======================================================================
+ IMPLICIT NONE
+ INTEGER,INTENT(IN) :: IU
+
+ PMANAGER_LOADRCT=.FALSE.
+ 
+ IF(.NOT.UTL_READINITFILE('ISOTHM',LINE,IU,0))RETURN; READ(LINE,*) WQ%RCT%ISOTHM
+ IF(.NOT.UTL_READINITFILE('IREACT',LINE,IU,0))RETURN; READ(LINE,*) WQ%RCT%IREACT
+ IF(.NOT.UTL_READINITFILE('IGETSC',LINE,IU,0))RETURN; READ(LINE,*) WQ%RCT%IGETSC
+
+ PMANAGER_LOADRCT=.TRUE. 
+
+ END FUNCTION PMANAGER_LOADRCT
 
 END MODULE MOD_PMANAGER_WQ

@@ -2900,10 +2900,11 @@ TOPICLOOP: DO ITOPIC=1,MAXTOPICS
     WRITE(IU,'(/I4.4,A,I1,A)') 1,','//TOPICS(I)%TNAME(1:5)//',',TOPICS(I)%IACT_MODEL,','//TRIM(TOPICS(I)%TNAME(6:)) !//' []'
     CALL PMANAGER_SAVEGCG(IU)
     CYCLE
-!   !## rct module another exception
-!   CASE (TRCT)
-!    WRITE(IU,'(/I4.4,A,I1,A)') 1,','//TOPICS(I)%TNAME(1:5)//',',TOPICS(I)%IACT_MODEL,','//TRIM(TOPICS(I)%TNAME(6:)) !//' []'
-!    CYCLE
+   !## rct module another exception
+   !CASE (TRCT)
+   ! WRITE(IU,'(/I4.4,A,I1,A)') 1,','//TOPICS(I)%TNAME(1:5)//',',TOPICS(I)%IACT_MODEL,','//TRIM(TOPICS(I)%TNAME(6:)) !//' []'
+   ! CALL PMANAGER_SAVERCT(IU)
+   ! CYCLE
 !   !## adv module another exception
    CASE (TADV)
     WRITE(IU,'(/I4.4,A,I1,A)') 1,','//TOPICS(I)%TNAME(1:5)//',',TOPICS(I)%IACT_MODEL,','//TRIM(TOPICS(I)%TNAME(6:)) !//' []'
