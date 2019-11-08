@@ -67,7 +67,6 @@ MODULE MOD_PMANAGER_PAR
  INTEGER,PARAMETER :: TFDE=39 !## mt3d/seawat - fluid density
  INTEGER,PARAMETER :: TCBI=40 !## mt3d/seawat - concentration boundary indicator
  INTEGER,PARAMETER :: TSCO=41 !## mt3d/seawat - start concentration per layer and species
-! INTEGER,PARAMETER :: TADV=42 !## mt3d/seawat - advection parameters
  INTEGER,PARAMETER :: TDSP=42 !## mt3d/seawat - dispersiviteit
  INTEGER,PARAMETER :: TTVC=43 !## mt3d/seawat - time varying concentration
  INTEGER,PARAMETER :: THOB=44 !## mt3d/seawat - bulk density of the porous medium
@@ -110,13 +109,11 @@ MODULE MOD_PMANAGER_PAR
   INTEGER :: IFMTRF=0   !## fixed
   INTEGER :: IFMTDP=0   !## fixed
   INTEGER :: NPRMAS=1   !## fixed
-!  INTEGER :: NPRS=0   
   INTEGER :: NPROBS=1
   LOGICAL :: SAVUCN=.TRUE. !## fixed
   LOGICAL :: CHKMAS=.TRUE. !## fixed
   REAL(KIND=DP_KIND) :: CINACT=-9999.0D0  !## fixed
   REAL(KIND=DP_KIND) :: THKMIN=1.0D-02    !## fixed
-!  CHARACTER(LEN=256) :: TIMPRS
  END TYPE BTNOBJ
  
  !## parameter for adv
@@ -392,7 +389,7 @@ MODULE MOD_PMANAGER_PAR
  INTEGER,DIMENSION(:),ALLOCATABLE :: ULAKES,DULAKES,NP_IPER
  INTEGER :: NLAKES
 
- CHARACTER(LEN=52),SAVE :: MODELNAME='Model'
+! CHARACTER(LEN=52),SAVE :: MODELNAME='Model'
  REAL(KIND=DP_KIND),DIMENSION(7) :: SUBMODEL ! xmin, ymin, xmax, ymax, cell size, buffer, max buffer celsize. Result from Tab2 
  
  CHARACTER(LEN=8),DIMENSION(9) :: TMENU1
@@ -451,11 +448,5 @@ MODULE MOD_PMANAGER_PAR
  LOGICAL,PARAMETER :: LFREEFORMAT=.TRUE.  !## use true free-format
  CHARACTER(LEN=1024) :: LINE
  LOGICAL :: LYESNO
-
-! TYPE RUNFILEWQ_OBJ  ! For re-use of parameter information in iMOD WQ input files 
-!  CHARACTER(LEN=256) :: DELR_C, DELR_R, LAYCON_L
-!  INTEGER :: NLAY
-! END TYPE RUNFILEWQ_OBJ
-! TYPE(RUNFILEWQ_OBJ) :: WQFILE         
 
 END MODULE MOD_PMANAGER_PAR
