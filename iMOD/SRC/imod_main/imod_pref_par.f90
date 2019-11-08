@@ -34,10 +34,10 @@ DATA PREF/'USER', &          ! 1
           'IRDBASE',&        ! 6
           'TAGS',&           ! 7
           'MODFLOW',&        ! 8
-          'IMODWQ', &        ! 9
+          'IMOD-WQ', &       ! 9
           'PUMPINGTOOL',&    !10
           'NORTHARROW',&     !11
-          '---empty---', &   !12
+          'MODFLOW6', &      !12
           'ACROBATREADER', & !13
           'LANDUSE', &       !14
           'HLPSOIL', &       !15
@@ -57,7 +57,6 @@ DATA PREF/'USER', &          ! 1
           'FFMPEG', &        !29 used to create the movie (and to play if not other available)
           'FFPLAY', &        !30 used to play the movie
           'VLCPLAYER'/       !31
-
 
 END MODULE MOD_PREF_PAR
 

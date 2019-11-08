@@ -640,8 +640,10 @@ JLOOP: DO K=1,SIZE(TOPICS)
  !## in case iMOD batch
  ELSE  
   
-  !## set modflow executable
-  PREFVAL(8)=PBMAN%MODFLOW
+  !## set modflow2005,modflow6,imod-wq executable
+  PREFVAL(8) =PBMAN%MODFLOW
+  PREFVAL(9) =PBMAN%IMOD_WQ
+  PREFVAL(12)=PBMAN%MODFLOW6
   
   !## save only, or start model as well
   MESSAGE%VALUE1=IDOK; IF(PBMAN%ISOLVE.EQ.1)MESSAGE%VALUE1=IDSIMULATE1
@@ -2372,8 +2374,14 @@ JLOOP: DO K=1,SIZE(TOPICS)
  LOGICAL :: LEX
 
  IMODE=0
- IPREVAL=8
- IF(PBMAN%IFORMAT.EQ.5.OR.PBMAN%IFORMAT.EQ.6) IPREVAL=9
+ SELECT CASE (PBMAN%IFORMAT)
+  !## mf2005-run,mf2005-nam
+  CASE (1,2); IPREVAL=8
+  !## seawat,mt3d
+  CASE (4,5); IPREVAL=9
+  !## modflow6
+  CASE (3); IPREVAL=12
+ END SELECT
  
  IF(LEN_TRIM(PREFVAL(IPREVAL)).GT.0)THEN
   INQUIRE(FILE=PREFVAL(IPREVAL),EXIST=LEX)
@@ -2463,12 +2471,12 @@ JLOOP: DO K=1,SIZE(TOPICS)
  ENDIF
 
  !## remove previous version of imodflow
- I=INDEXNOCASE(PREFVAL(8),'\',.TRUE.)+1
- INQUIRE(FILE=TRIM(DIR)//'\'//TRIM(PREFVAL(8)(I:)),EXIST=LEX)
- IF(LEX)CALL IOSDELETEFILE(TRIM(DIR)//'\'//TRIM(PREFVAL(8)(I:)))
+ I=INDEXNOCASE(PREFVAL(IPREVAL),'\',.TRUE.)+1
+ INQUIRE(FILE=TRIM(DIR)//'\'//TRIM(PREFVAL(IPREVAL)(I:)),EXIST=LEX)
+ IF(LEX)CALL IOSDELETEFILE(TRIM(DIR)//'\'//TRIM(PREFVAL(IPREVAL)(I:)))
 
  !## copy imodflow executable
- CALL IOSCOPYFILE(TRIM(PREFVAL(8)),TRIM(DIR)//'\'//TRIM(PREFVAL(8)(I:)))
+ CALL IOSCOPYFILE(TRIM(PREFVAL(IPREVAL)),TRIM(DIR)//'\'//TRIM(PREFVAL(IPREVAL)(I:)))
  
  INQUIRE(FILE=TRIM(EXEPATH)//'\'//TRIM(LICFILE),EXIST=LEX)
  IF(.NOT.LEX)THEN
@@ -2534,28 +2542,28 @@ JLOOP: DO K=1,SIZE(TOPICS)
 
    IF(TOPICS(TCAP)%DEFINED)THEN
     IF(PBMAN%IPESTP.EQ.0)THEN
-     WRITE(IU,'(/A/)') '"'//TRIM(PREFVAL(8))//'" -components components.inp' 
+     WRITE(IU,'(/A/)') '"'//TRIM(PREFVAL(IPREVAL))//'" -components components.inp' 
     ELSE
      IF(I.GT.0)THEN
-      WRITE(IU,'(/A/)') '"'//TRIM(PREFVAL(8))//'" -components components_P#'//TRIM(ITOS(I))//'.inp -ipest ".\modelinput\'//TRIM(MNAME)//'.pst1"' 
+      WRITE(IU,'(/A/)') '"'//TRIM(PREFVAL(IPREVAL))//'" -components components_P#'//TRIM(ITOS(I))//'.inp -ipest ".\modelinput\'//TRIM(MNAME)//'.pst1"' 
      ELSE
-      WRITE(IU,'(/A/)') '"'//TRIM(PREFVAL(8))//'" -components components_L#'//TRIM(ITOS(ABS(I)))//'.inp -ipest ".\modelinput\'//TRIM(MNAME)//'.pst1"' 
+      WRITE(IU,'(/A/)') '"'//TRIM(PREFVAL(IPREVAL))//'" -components components_L#'//TRIM(ITOS(ABS(I)))//'.inp -ipest ".\modelinput\'//TRIM(MNAME)//'.pst1"' 
      ENDIF
     ENDIF
    ELSE
     IF(PBMAN%IPEST+PBMAN%IPESTP.EQ.0)THEN
-     IF(PBMAN%IFORMAT.EQ.2)WRITE(IU,'(/A/)') '"'//TRIM(PREFVAL(8))//'" "'//TRIM(MNAME)//'.nam"' 
-     IF(PBMAN%IFORMAT.EQ.3)WRITE(IU,'(/A/)') '"'//TRIM(PREFVAL(8))//'"' 
+     IF(PBMAN%IFORMAT.EQ.2)WRITE(IU,'(/A/)') '"'//TRIM(PREFVAL(IPREVAL))//'" "'//TRIM(MNAME)//'.nam"' 
+     IF(PBMAN%IFORMAT.EQ.3)WRITE(IU,'(/A/)') '"'//TRIM(PREFVAL(IPREVAL))//'"' 
     !## ipest
     ELSEIF(PBMAN%IPEST.EQ.1)THEN
-     WRITE(IU,'(/A/)') '"'//TRIM(PREFVAL(8))//'" "'//TRIM(MNAME)//'.nam" -ipest ".\modelinput\'//TRIM(MNAME)//'.pst1"'
+     WRITE(IU,'(/A/)') '"'//TRIM(PREFVAL(IPREVAL))//'" "'//TRIM(MNAME)//'.nam" -ipest ".\modelinput\'//TRIM(MNAME)//'.pst1"'
     !## parrallel ipest
     ELSEIF(PBMAN%IPESTP.EQ.1)THEN
      IF(I.GT.0)THEN
-      WRITE(IU,'(/A/)') '"'//TRIM(PREFVAL(8))//'" "'//TRIM(MNAME)//'_P#'//TRIM(ITOS(I))//'.nam" -ipest ".\modelinput\'// &
+      WRITE(IU,'(/A/)') '"'//TRIM(PREFVAL(IPREVAL))//'" "'//TRIM(MNAME)//'_P#'//TRIM(ITOS(I))//'.nam" -ipest ".\modelinput\'// &
                              TRIM(MNAME)//'_P#'//TRIM(ITOS(I))//'.pst1"'
      ELSE
-      WRITE(IU,'(/A/)') '"'//TRIM(PREFVAL(8))//'" "'//TRIM(MNAME)//'_L#'//TRIM(ITOS(ABS(I)))//'.nam" -ipest ".\modelinput\'// &
+      WRITE(IU,'(/A/)') '"'//TRIM(PREFVAL(IPREVAL))//'" "'//TRIM(MNAME)//'_L#'//TRIM(ITOS(ABS(I)))//'.nam" -ipest ".\modelinput\'// &
                              TRIM(MNAME)//'_L#'//TRIM(ITOS(ABS(I)))//'.pst1"'
      ENDIF
     ENDIF
@@ -2584,12 +2592,12 @@ JLOOP: DO K=1,SIZE(TOPICS)
      WRITE(IU,'(A)') 'set np='//ITOS(NICORES)
      WRITE(IU,'(A)') ''
      WRITE(IU,'(A)') ':: Run model'
-     WRITE(IU,'(A)') '"C:\Program Files\MPICH2\bin\mpiexec.exe" -localonly %np% "'//TRIM(PREFVAL(8))//'" '//TRIM(MNAME)//'.run"'
+     WRITE(IU,'(A)') '"C:\Program Files\MPICH2\bin\mpiexec.exe" -localonly %np% "'//TRIM(PREFVAL(IPREVAL))//'" '//TRIM(MNAME)//'.run"'
     ELSE
-     WRITE(IU,'(A)') '"'//TRIM(PREFVAL(8))//'" '//'IMODFLOW.RUN'
+     WRITE(IU,'(A)') '"'//TRIM(PREFVAL(IPREVAL))//'" '//'IMODFLOW.RUN'
     ENDIF
    ELSE
-    WRITE(IU,'(A)') '"'//TRIM(PREFVAL(8))//'" '//TRIM(MNAME)//'.run' 
+    WRITE(IU,'(A)') '"'//TRIM(PREFVAL(IPREVAL))//'" '//TRIM(MNAME)//'.run' 
    ENDIF
   
   ENDIF
@@ -2622,11 +2630,11 @@ JLOOP: DO K=1,SIZE(TOPICS)
    IF(IEXCOD.EQ.0)THEN
     IF(IBATCH.EQ.0)THEN 
      CALL WMESSAGEBOX(OKONLY,INFORMATIONICON,COMMONOK,'Successful simulation using: '//CHAR(13)// &
-                    'MODFLOW:         '//TRIM(PREFVAL(8))//CHAR(13)// &
+                    'MODFLOW:         '//TRIM(PREFVAL(IPREVAL))//CHAR(13)// &
                     'RUNFILE/NAMFILE: '//TRIM(RUNFNAME),'Information')
     ELSE
      WRITE(*,'(A)') 'Successfully STARTED the Modflow simulation using:'
-     WRITE(*,'(A)') 'MODFLOW:         '//TRIM(PREFVAL(8))
+     WRITE(*,'(A)') 'MODFLOW:         '//TRIM(PREFVAL(IPREVAL))
      WRITE(*,'(A)') 'RUNFILE/NAMFILE: '//TRIM(RUNFNAME)
     ENDIF
    ELSE
@@ -2652,11 +2660,11 @@ JLOOP: DO K=1,SIZE(TOPICS)
   
    IF(IBATCH.EQ.0)THEN
     CALL WMESSAGEBOX(OKONLY,INFORMATIONICON,COMMONOK,'Successfully STARTED the Modflow simulation using:'//CHAR(13)// &
-                   'MODFLOW:         '//TRIM(PREFVAL(8))//CHAR(13)// &
+                   'MODFLOW:         '//TRIM(PREFVAL(IPREVAL))//CHAR(13)// &
                    'RUNFILE/NAMFILE: '//TRIM(RUNFNAME),'Information')
    ELSE
     WRITE(*,'(A)') 'Successful simulation using:'
-    WRITE(*,'(A)') 'MODFLOW:         '//TRIM(PREFVAL(8))
+    WRITE(*,'(A)') 'MODFLOW:         '//TRIM(PREFVAL(IPREVAL))
     WRITE(*,'(A)') 'RUNFILE/NAMFILE: '//TRIM(RUNFNAME)
    ENDIF
 
