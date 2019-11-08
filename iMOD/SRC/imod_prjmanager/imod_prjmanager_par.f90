@@ -162,7 +162,7 @@ MODULE MOD_PMANAGER_PAR
   INTEGER :: MXITER=1000
   INTEGER :: ITER1=30
   INTEGER :: ISOLVE=3    !## from a menu, start 1
-  INTEGER :: NCRS=1      !## from a menu, start 0
+  INTEGER :: NCRS=0      !## from a menu, start 0
   INTEGER :: IPRGCG=0
   REAL(KIND=DP_KIND) :: ACCL=1.0D0
   REAL(KIND=DP_KIND) :: CCLOSE=1.0D-06
