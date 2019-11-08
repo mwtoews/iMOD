@@ -1163,7 +1163,7 @@ CONTAINS
 
  END FUNCTION PMANAGER_SAVERUNWQ_U2DREL
 
-  !###======================================================================
+ !###======================================================================
  SUBROUTINE PMANAGER_SAVEGCG(IU)
  !###======================================================================
  IMPLICIT NONE
@@ -1226,5 +1226,36 @@ CONTAINS
  PMANAGER_LOADRCT=.TRUE. 
 
  END FUNCTION PMANAGER_LOADRCT
+
+ !###======================================================================
+ SUBROUTINE PMANAGER_SAVEVDF(IU)
+ !###======================================================================
+ IMPLICIT NONE
+ INTEGER,INTENT(IN) :: IU
+
+ WRITE(IU,'(1X,A)') 'DENSEMIN='//TRIM(UTL_REALTOSTRING(WQ%VDF%DENSEMIN))
+ WRITE(IU,'(1X,A)') 'DENSEMAX='//TRIM(UTL_REALTOSTRING(WQ%VDF%DENSEMAX))
+ WRITE(IU,'(1X,A)') 'DENSEREF='//TRIM(UTL_REALTOSTRING(WQ%VDF%DENSEREF))
+ WRITE(IU,'(1X,A)') 'DENSESLP='//TRIM(UTL_REALTOSTRING(WQ%VDF%DENSESLP))
+
+ 
+ END SUBROUTINE PMANAGER_SAVEVDF
+ 
+ !###======================================================================
+ LOGICAL FUNCTION PMANAGER_LOADVDF(IU)
+ !###======================================================================
+ IMPLICIT NONE
+ INTEGER,INTENT(IN) :: IU
+
+ PMANAGER_LOADVDF=.FALSE.
+ 
+ IF(.NOT.UTL_READINITFILE('DENSEMIN',LINE,IU,0))RETURN; READ(LINE,*) WQ%VDF%DENSEMIN    
+ IF(.NOT.UTL_READINITFILE('DENSEMAX',LINE,IU,0))RETURN; READ(LINE,*) WQ%VDF%DENSEMAX    
+ IF(.NOT.UTL_READINITFILE('DENSEREF',LINE,IU,0))RETURN; READ(LINE,*) WQ%VDF%DENSEREF    
+ IF(.NOT.UTL_READINITFILE('DENSESLP',LINE,IU,0))RETURN; READ(LINE,*) WQ%VDF%DENSESLP    
+
+ PMANAGER_LOADVDF=.TRUE. 
+
+ END FUNCTION PMANAGER_LOADVDF
 
 END MODULE MOD_PMANAGER_WQ

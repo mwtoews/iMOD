@@ -25,7 +25,7 @@ MODULE MOD_PMANAGER_PAR
  USE MOD_IDF_PAR, ONLY : IDFOBJ
  USE IMODVAR, ONLY : DP_KIND,SP_KIND
  
- INTEGER,PARAMETER :: MAXTOPICS=52
+ INTEGER,PARAMETER :: MAXTOPICS=51
  INTEGER,PARAMETER :: TBND= 1
  INTEGER,PARAMETER :: TTOP= 2
  INTEGER,PARAMETER :: TBOT= 3
@@ -67,17 +67,17 @@ MODULE MOD_PMANAGER_PAR
  INTEGER,PARAMETER :: TFDE=39 !## mt3d/seawat - fluid density
  INTEGER,PARAMETER :: TCBI=40 !## mt3d/seawat - concentration boundary indicator
  INTEGER,PARAMETER :: TSCO=41 !## mt3d/seawat - start concentration per layer and species
- INTEGER,PARAMETER :: TADV=42 !## mt3d/seawat - advection parameters
- INTEGER,PARAMETER :: TDSP=43 !## mt3d/seawat - dispersiviteit
- INTEGER,PARAMETER :: TTVC=44 !## mt3d/seawat - time varying concentration
- INTEGER,PARAMETER :: THOB=45 !## mt3d/seawat - bulk density of the porous medium
- INTEGER,PARAMETER :: TPID=46 !## mt3d/seawat - porosity of the immobile domain
- INTEGER,PARAMETER :: TICS=47 !## mt3d/seawat - initial concentration of the sorbed or immobile liquid phase
- INTEGER,PARAMETER :: TFSC=48 !## mt3d/seawat - first sorption constant
- INTEGER,PARAMETER :: TSSC=49 !## mt3d/seawat - second sorption constant
- INTEGER,PARAMETER :: TFOD=50 !## mt3d/seawat - first order rate reaction for the dissolved phase
- INTEGER,PARAMETER :: TFOS=51 !## mt3d/seawat - second order rate reaction for the sorbed phase
- INTEGER,PARAMETER :: TRCT=52 !## mt3d/seawat - rct
+! INTEGER,PARAMETER :: TADV=42 !## mt3d/seawat - advection parameters
+ INTEGER,PARAMETER :: TDSP=42 !## mt3d/seawat - dispersiviteit
+ INTEGER,PARAMETER :: TTVC=43 !## mt3d/seawat - time varying concentration
+ INTEGER,PARAMETER :: THOB=44 !## mt3d/seawat - bulk density of the porous medium
+ INTEGER,PARAMETER :: TPID=45 !## mt3d/seawat - porosity of the immobile domain
+ INTEGER,PARAMETER :: TICS=46 !## mt3d/seawat - initial concentration of the sorbed or immobile liquid phase
+ INTEGER,PARAMETER :: TFSC=47 !## mt3d/seawat - first sorption constant
+ INTEGER,PARAMETER :: TSSC=48 !## mt3d/seawat - second sorption constant
+ INTEGER,PARAMETER :: TFOD=49 !## mt3d/seawat - first order rate reaction for the dissolved phase
+ INTEGER,PARAMETER :: TFOS=50 !## mt3d/seawat - second order rate reaction for the sorbed phase
+ INTEGER,PARAMETER :: TRCT=51 !## mt3d/seawat - rct
 
  TYPE MTOBJ
   INTEGER,POINTER,DIMENSION(:) :: T     !## fixed: packages available for selected Model
@@ -121,9 +121,9 @@ MODULE MOD_PMANAGER_PAR
  
  !## parameter for adv
  TYPE ADVOBJ
-  INTEGER :: MIXELM=-1
+  INTEGER :: MIXELM=-1  !## from a menu, start -1
   INTEGER :: MXPART=0   !## fixed
-  INTEGER :: NADVFD=0   !## fixed
+  INTEGER :: NADVFD=0   !## from a menu, start 0
   !## hmoc/moc/mmoc options
   INTEGER :: ITRACK   !## fixed
   INTEGER :: NPLANE   !## fixed
@@ -164,8 +164,8 @@ MODULE MOD_PMANAGER_PAR
  TYPE GCGOBJ
   INTEGER :: MXITER=1000
   INTEGER :: ITER1=30
-  INTEGER :: ISOLVE=3
-  INTEGER :: NCRS=1
+  INTEGER :: ISOLVE=3    !## from a menu, start 1
+  INTEGER :: NCRS=1      !## from a menu, start 0
   INTEGER :: IPRGCG=0
   REAL(KIND=DP_KIND) :: ACCL=1.0D0
   REAL(KIND=DP_KIND) :: CCLOSE=1.0D-06
@@ -173,8 +173,8 @@ MODULE MOD_PMANAGER_PAR
 
  !## parameter for rct
  TYPE RCTOBJ
-  INTEGER :: ISOTHM=1
-  INTEGER :: IREACT=1
+  INTEGER :: ISOTHM=1   !## from a menu, start 1
+  INTEGER :: IREACT=1   !## from a menu, start 0
   INTEGER :: IGETSC=0    
   INTEGER :: IRCTOP=2 !# fixed
  END TYPE RCTOBJ
