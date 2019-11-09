@@ -3543,14 +3543,14 @@ CONTAINS
      READ(JU) (((X(I1,I2,I3),I1=1,NDIM1),I2=1,NDIM2),I3=1,ABS(NDIM3))
      IF(TRIM(ADJUSTL(TEXT)).EQ.'FLOW-JA-FACE')THEN
       DO N=1,NCELLS
-       WRITE(*,'(A,I10)') 'THIS IS CELL: ', N
+!       WRITE(*,'(A,I10)') 'THIS IS CELL: ', N
        NCON=IA(N+1)-IA(N)-1
        IF(NCON.LE.0) NCON=0
-       WRITE(*,'(A,I10)') 'NUMBER OF CONNECTED CELLS IS ', NCON
+!       WRITE(*,'(A,I10)') 'NUMBER OF CONNECTED CELLS IS ', NCON
        DO IPOS=IA(N)+1,IA(N+1)-1
         M=JA(IPOS)
         Q=X(IPOS,1,1) !IPOS,1,1)
-        WRITE(*,'(A,2I10,F10.3)') ' N M Q: ', N,M,Q
+!        WRITE(*,'(A,2I10,F10.3)') ' N M Q: ', N,M,Q
        ENDDO
       ENDDO
      ELSE

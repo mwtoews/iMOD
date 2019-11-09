@@ -244,8 +244,8 @@ CONTAINS
  !###======================================================================
  IMPLICIT NONE
  INTEGER,INTENT(IN) :: IOPTION
- INTEGER :: I,ITOPIC,IMODEL
- LOGICAL :: LBAS,LEX !## is true if all BAS topcis are true
+ INTEGER :: I,ITOPIC
+ LOGICAL :: LEX !## is true if all BAS topcis are true
  
  PMANAGER_GETPACKAGES=.FALSE.
 
@@ -470,28 +470,26 @@ JLOOP: DO K=1,SIZE(TOPICS)
          !## fill timesteps - if not yet done
          LEX=.TRUE.; IF(.NOT.ASSOCIATED(SIM))LEX=PMANAGER_FILLTIMESTEPS()
          IF(LEX)THEN
-          CALL WMESSAGEBOX(YESNO,COMMONNO,QUESTIONICON,'Are you sure to continue. iMOD will create:'//CHAR(13)// &
-           TRIM(FNAME),'Question')
-          IF(WINFODIALOG(4).EQ.1)THEN
-           !## output folder for a runfile
-           CALL WDIALOGSELECT(ID_DSIMMANAGER_TAB1)
-           CALL WDIALOGGETMENU(IDF_MENU2,I,MODELNAME)
-           I=INDEX(MODELNAME,'.',.TRUE.); IF(I.GT.0)MODELNAME=MODELNAME(:I-1)
-           SELECT CASE (PBMAN%IFORMAT)
-            !## mf2005-run,seawat-run
-            CASE (1,4)
-             FNAME=TRIM(PREFVAL(1))//'\RUNFILES\'//TRIM(MODELNAME)//'.RUN'
-            !## mt3d
-            CASE (5)
-             FNAME=TRIM(PREFVAL(1))//'\MODELS\'//TRIM(MODELNAME)//'\MT3D\'//TRIM(MODELNAME)//'.RUN'
-            !## mf2005-nam,mf6-nam
-            CASE (2,3)
-             CALL UTL_CREATEDIR(TRIM(PREFVAL(1))//'\MODELS')
-             FNAME=TRIM(PREFVAL(1))//'\MODELS\'//TRIM(MODELNAME)//'\'//TRIM(MODELNAME)//'.NAM'
-           END SELECT
-           PBMAN%RUNFILE=FNAME
-           EXIT
-          ENDIF
+          !## output folder for a runfile
+          CALL WDIALOGSELECT(ID_DSIMMANAGER_TAB1); CALL WDIALOGGETMENU(IDF_MENU2,I,MODELNAME)
+          CALL WDIALOGGETRADIOBUTTON(IDF_RADIO1,PBMAN%IFORMAT)
+          I=INDEX(MODELNAME,'.',.TRUE.); IF(I.GT.0)MODELNAME=MODELNAME(:I-1)
+          SELECT CASE (PBMAN%IFORMAT)
+           !## mf2005-run,seawat-run
+           CASE (1,4)
+            FNAME=TRIM(PREFVAL(1))//'\RUNFILES\'//TRIM(MODELNAME)//'.RUN'
+           !## mt3d
+           CASE (5)
+            FNAME=TRIM(PREFVAL(1))//'\MODELS\'//TRIM(MODELNAME)//'\MT3D\'//TRIM(MODELNAME)//'.RUN'
+           !## mf2005-nam,mf6-nam
+           CASE (2,3)
+            FNAME=TRIM(PREFVAL(1))//'\MODELS\'//TRIM(MODELNAME)//'\'//TRIM(MODELNAME)//'.NAM'
+          END SELECT
+          CALL WMESSAGEBOX(YESNO,COMMONNO,QUESTIONICON,'iMOD will create:'//CHAR(13)// &
+           TRIM(FNAME)//CHAR(13)//CHAR(13)//'Are you sure to continue?','Question')
+          IF(WINFODIALOG(4).EQ.1)EXIT
+          !## create folder
+          PBMAN%RUNFILE=FNAME; CALL UTL_CREATEDIR(FNAME(:INDEX(FNAME,'\',.TRUE.)-1))
          ENDIF
        END SELECT
      END SELECT
@@ -777,7 +775,7 @@ JLOOP: DO K=1,SIZE(TOPICS)
  CALL WDIALOGGETDOUBLE(IDF_DOUBLE1,PBMAN%ADV%PERCEL)
  CALL WDIALOGGETINTEGER(IDF_DOUBLE2,PBMAN%SSM%MXSS)
  
- !#remove polygons from mf6
+ !## remove polygons from mf6
  CALL POLYGON1CLOSE()
  !## remove dialog
  CALL WDIALOGSELECT(ID_DSIMMANAGER); CALL WDIALOGUNLOAD()
@@ -2420,7 +2418,7 @@ JLOOP: DO K=1,SIZE(TOPICS)
  INTEGER,INTENT(IN) :: IRUNMODE,IBATCH,NICORES,ILOGFILE
  CHARACTER(LEN=256) :: DIR,DIRNAME
  CHARACTER(LEN=52) :: MNAME
- INTEGER :: IU,IOS,I,N1,N2,IFLAGS,IEXCOD,IERROR,IMODE,IPREVAL
+ INTEGER :: IU,IOS,I,J,N1,N2,IFLAGS,IEXCOD,IERROR,IMODE,IPREVAL
  LOGICAL :: LEX
 
  IMODE=0
@@ -2616,18 +2614,34 @@ JLOOP: DO K=1,SIZE(TOPICS)
     ENDIF
    ENDIF
  
+   !## include conversion from mf6 to idf files
+   IF(PBMAN%IFORMAT.EQ.3)THEN
+    WRITE(IU,'(/A)') 'REM ============================================='
+    WRITE(IU,'( A)') 'REM iMOD Batch Script iMOD '//TRIM(RVERSION)
+    WRITE(IU,'( A)') 'REM ============================================='
+    DO J=1,PBMAN%NSUBMODEL
+     WRITE(IU,'(/A)') 'ECHO FUNCTION=MF6TOIDF > MF6TOIDF.INI'
+     WRITE(IU,'( A)') 'ECHO GRB="'//TRIM(DIR)//'\GWF_'//TRIM(ITOS(J))//'\MODELINPUT\'//TRIM(MNAME)//'.DIS6.GRB" >> MF6TOIDF.INI'
+     WRITE(IU,'( A)') 'ECHO HED="'//TRIM(DIR)//'\GWF_'//TRIM(ITOS(J))//'\MODELOUTPUT\HEAD\HEAD.HED" >> MF6TOIDF.INI'
+     WRITE(IU,'( A)') 'ECHO BDG="'//TRIM(DIR)//'\GWF_'//TRIM(ITOS(J))//'\MODELOUTPUT\BUDGET\BUDGET.CBC" >> MF6TOIDF.INI'
+     WRITE(IU,'( A)') 
+     WRITE(IU,'( A)') '"'//TRIM(EXENAME)//'" MF6TOIDF.INI'
+     WRITE(IU,'( A)') 
+    ENDDO
+   ENDIF
+   
    !## include conversion of sfr package into isg-file
    IF(TOPICS(TSFR)%DEFINED)THEN
     WRITE(IU,'(/A)') 'REM ============================================='
     WRITE(IU,'( A)') 'REM iMOD Batch Script iMOD '//TRIM(RVERSION)
     WRITE(IU,'( A)') 'REM ============================================='
-    WRITE(IU,'( A)')  'ECHO FUNCTION=SFRTOISG > SFRTOISG.INI'
-    WRITE(IU,'( A)')  'ECHO ISGFILE_IN= "'//TRIM(DIR)//'\MODELINPUT\SFR7\SFR.ISG" >> SFRTOISG.INI'
-    WRITE(IU,'( A)')  'ECHO ISGFILE_OUT="'//TRIM(DIR)//'\BDGSFR\ISG\SFR.ISG" >> SFRTOISG.INI'
-    WRITE(IU,'(A/)')  'ECHO SFRFILE_IN= "'//TRIM(DIR)//'\'//TRIM(MNAME)//'_FSFR.TXT" >> SFRTOISG.INI'
-    WRITE(IU,'(A)') 
-    WRITE(IU,'(A)') '"'//TRIM(EXENAME)//'" SFRTOISG.INI'
-    WRITE(IU,'(A)') 
+    WRITE(IU,'(/A)') 'ECHO FUNCTION=SFRTOISG > SFRTOISG.INI'
+    WRITE(IU,'( A)') 'ECHO ISGFILE_IN= "'//TRIM(DIR)//'\MODELINPUT\SFR7\SFR.ISG" >> SFRTOISG.INI'
+    WRITE(IU,'( A)') 'ECHO ISGFILE_OUT="'//TRIM(DIR)//'\BDGSFR\ISG\SFR.ISG" >> SFRTOISG.INI'
+    WRITE(IU,'( A)') 'ECHO SFRFILE_IN= "'//TRIM(DIR)//'\'//TRIM(MNAME)//'_FSFR.TXT" >> SFRTOISG.INI'
+    WRITE(IU,'( A)') 
+    WRITE(IU,'( A)') '"'//TRIM(EXENAME)//'" SFRTOISG.INI'
+    WRITE(IU,'( A)') 
    ENDIF
   
   !## runfile
@@ -2677,12 +2691,12 @@ JLOOP: DO K=1,SIZE(TOPICS)
    IF(IEXCOD.EQ.0)THEN
     IF(IBATCH.EQ.0)THEN 
      CALL WMESSAGEBOX(OKONLY,INFORMATIONICON,COMMONOK,'Successful simulation using: '//CHAR(13)// &
-                    'MODFLOW:         '//TRIM(PREFVAL(IPREVAL))//CHAR(13)// &
-                    'RUNFILE/NAMFILE: '//TRIM(RUNFNAME),'Information')
+                    TRIM(CSOLVER(PBMAN%IFORMAT))//CHAR(13)//TRIM(PREFVAL(IPREVAL))//CHAR(13)// &
+                    'OUTPUTFILE:'//CHAR(13)//TRIM(RUNFNAME),'Information')
     ELSE
      WRITE(*,'(A)') 'Successfully STARTED the Modflow simulation using:'
-     WRITE(*,'(A)') 'MODFLOW:         '//TRIM(PREFVAL(IPREVAL))
-     WRITE(*,'(A)') 'RUNFILE/NAMFILE: '//TRIM(RUNFNAME)
+     WRITE(*,'(A)') TRIM(CSOLVER(PBMAN%IFORMAT))//': '//TRIM(PREFVAL(IPREVAL))
+     WRITE(*,'(A)') 'OUTPUTFILE: '//TRIM(RUNFNAME)
     ENDIF
    ELSE
     IF(IBATCH.EQ.0)THEN
