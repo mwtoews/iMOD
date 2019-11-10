@@ -121,7 +121,7 @@ CONTAINS
    CALL PMANAGER_GENERATEMFNETWORKS_PUZZLE(XC,YC,IS,JS,N)
    WRITE(JU,'(I10)') J
    JJ=0; DO II=1,N
-    IF(JS(II).LT.0)CYCLE
+ !   IF(JS(II).LT.0)CYCLE
     WRITE(JU,'(2(F15.3,A1))') XC(IS(II),1),',',YC(IS(II),1)
     JJ=II
    ENDDO
@@ -190,29 +190,36 @@ CONTAINS
  SUBROUTINE PMANAGER_GENERATEMFNETWORKS_PUZZLE(XC,YC,IS,JS,N)
  !###======================================================================
  IMPLICIT NONE
- INTEGER,INTENT(IN) :: N
+ INTEGER,INTENT(INOUT) :: N
  INTEGER,DIMENSION(:),INTENT(OUT) :: IS,JS
  REAL(KIND=DP_KIND),DIMENSION(:,:),INTENT(INOUT) :: XC,YC
- INTEGER :: NS,M,I,J,IPOS
+ INTEGER :: NS,M,I,J,IPOS,ND
  
  DO I=1,N; JS(I)=I; ENDDO
  
  !## find dangles
- DO I=1,N
-  DO IPOS=1,2
-   M=0; DO J=1,N
-    IF(I.EQ.J)CYCLE
-    IF(PMANAGER_GENERATEMFNETWORKS_PUZZLEFIT(XC,YC,IPOS,I,J))M=M+1
+ DO
+  ND=0
+  DO I=1,N
+   !## already identified as dangle
+   IF(JS(I).EQ.-1)CYCLE
+   DO IPOS=1,2
+    M=0; DO J=1,N
+     IF(I.EQ.J)CYCLE
+     IF(PMANAGER_GENERATEMFNETWORKS_PUZZLEFIT(XC,YC,IPOS,I,J))M=M+1
+    ENDDO
+    IF(M.EQ.0)THEN
+     !## skip this one
+     JS(I)=-1; ND=1
+    ENDIF
    ENDDO
-   IF(M.EQ.0)THEN
-    !## skip this one
-    JS(I)=-1
-   ENDIF
   ENDDO
+  !# dangles found anymore
+  IF(ND.EQ.0)EXIT
  ENDDO
  
  !## start at first non-dangle
- DO I=1,N; IF(JS(I).NE.-1)THEN; IS(1)=I; EXIT; ENDIF; ENDDO
+ IS=0; DO I=1,N; IF(JS(I).NE.-1)THEN; IS(1)=I; EXIT; ENDIF; ENDDO
  NS=1; JS(I)=0
  
  DO
@@ -225,8 +232,10 @@ CONTAINS
   ENDDO
   DO I=1,N; IF(JS(I).GT.0)EXIT; ENDDO
   IF(I.GT.N)EXIT 
-  !SUM(JS).EQ.0)EXIT
  ENDDO
+ 
+ !## reduce number
+ DO I=1,N; IF(IS(I).EQ.0)EXIT; ENDDO; N=I-1
  
  END SUBROUTINE PMANAGER_GENERATEMFNETWORKS_PUZZLE
  
