@@ -387,6 +387,8 @@ ENDDO
 
  PMANAGER_SAVERUNWQ_WRTRCT=.FALSE.
 
+ IF(.NOT.TOPICS(TRCT)%DEFINED)RETURN
+ 
  WRITE(IU,'(/A)') '#-------------------------------------------'
  WRITE(IU,'(A)') '[RCT] # Chemical Reaction package'
 
