@@ -324,8 +324,7 @@ CONTAINS
   WRITE(IU,'(A)') '"'//TRIM(PCG%MRGFNAME)//'"'
  ENDIF
 
- !## Data set 6
- !## non-equistantial network
+ !## Data set 6; non-equistantial network
  IF(PBMAN%IWINDOW.EQ.3)THEN
 
   BNDFNAME=PBMAN%BNDFILE
@@ -374,7 +373,7 @@ CONTAINS
  !## write modules not timedependent
  DO I=1,MAXTOPICS
   IF(TOPICS(I)%IACT_MODEL.EQ.0)CYCLE   !## only active
-  IF(TOPICS(I)%TIMDEP)CYCLE         !## only time independent   
+  IF(TOPICS(I)%TIMDEP)CYCLE            !## only time independent   
 
   !## skip pcg
   IF(I.EQ.TPCG)CYCLE

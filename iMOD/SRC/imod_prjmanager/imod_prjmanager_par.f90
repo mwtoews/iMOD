@@ -174,7 +174,7 @@ MODULE MOD_PMANAGER_PAR
  TYPE RCTOBJ
   INTEGER :: ISOTHM=1   !## from a menu, start 1
   INTEGER :: IREACT=1   !## from a menu, start 0
-  INTEGER :: IGETSC=0    
+  INTEGER :: IGETSC=1    
   INTEGER :: IRCTOP=2 !# fixed
  END TYPE RCTOBJ
 
