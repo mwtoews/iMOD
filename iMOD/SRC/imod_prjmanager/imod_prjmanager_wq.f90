@@ -237,7 +237,6 @@ CONTAINS
 
  WRITE(IU,'(/A)') '#-------------------------------------------'
  WRITE(IU,'(A)') '[ADV] # MT3DMS ADVection package'
- !PBMAN%ADV%MIXELM=PBMAN%ADV%MIXELM-1 ; IF(PBMAN%ADV%MIXELM.EQ.4) PBMAN%ADV%MIXELM=-1
  WRITE(IU,'(1X,A)') 'MIXELM =  '//TRIM(ITOS(PBMAN%ADV%MIXELM))
  WRITE(IU,'(1X,A)') 'PERCEL =  '//TRIM(RTOS(PBMAN%ADV%PERCEL,'G',7))
 ! WRITE(IU,'(1X,A)') '#MXPART = '//TRIM(ITOS(PBMAN%ADV%MXPART))
@@ -1077,7 +1076,7 @@ CONTAINS
  !## look for first
  DO KPER=1,PRJNPER; IF(SIM(KPER)%DELT.GT.0.0D0)EXIT; ENDDO
      
- IF(KPER.GT.PRJNPER)THEN  ! Steady State?   Frans: check of dit de juiste aanpak is, beter verwijzen naar PBMAN parameter?? 
+ IF(KPER.GT.PRJNPER)THEN  
   WRITE(IU,'(1X,A)') '# No timesteps defined'
   WRITE(IU,'(1X,A)') 'START_YEAR    =   2000 # default'
   WRITE(IU,'(1X,A)') 'START_MONTH   =      1 # default'
@@ -1175,6 +1174,7 @@ CONTAINS
  !###======================================================================
  IMPLICIT NONE
  INTEGER,INTENT(IN) :: IU
+ INTEGER :: TMP
 
  PMANAGER_LOADGCG=.FALSE.
  
