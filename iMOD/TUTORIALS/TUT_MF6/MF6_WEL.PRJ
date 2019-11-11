@@ -1,7 +1,7 @@
 
 0001,(BND),1, Boundary Condition
 001,001
- 1,2, 001,   1.000000    ,   0.000000    ,  -999.9900    , 'd:\COMPILE\ossdeltares\iMOD\TUTORIALS\TUT_MF6\DBASE\BND\BND.IDF' >>> (BND) Boundary Settings (IDF) <<<
+ 1,2, 001,   1.000000    ,   0.000000    ,  -999.9900    , $DBASE$\TUTORIALS\TUT_MF6\DBASE\BND\BND.IDF' >>> (BND) Boundary Settings (IDF) <<<
 
 0001,(TOP),1, Top Elevation
 001,001
@@ -31,15 +31,15 @@ STEADY-STATE
 0001,(RIV),1, Rivers
 STEADY-STATE
 004,001
- 1,2, 001,   1.000000    ,   0.000000    ,  -999.9900    ,'d:\COMPILE\ossdeltares\iMOD\TUTORIALS\TUT_MF6\DBASE\RIV\RIVC.IDF' >>> (CON) Conductance (IDF) <<<
- 1,2, 001,   1.000000    ,   0.000000    ,  -999.9900    ,'d:\COMPILE\ossdeltares\iMOD\TUTORIALS\TUT_MF6\DBASE\RIV\RIVS.IDF' >>> (RST) River Stage (IDF) <<<
- 1,2, 001,   1.000000    ,   0.000000    ,  -999.9900    ,'d:\COMPILE\ossdeltares\iMOD\TUTORIALS\TUT_MF6\DBASE\RIV\RIVB.IDF' >>> (RBT) River Bottom (IDF) <<<
+ 1,2, 001,   1.000000    ,   0.000000    ,  -999.9900    ,'$DBASE$\TUTORIALS\TUT_MF6\DBASE\RIV\RIVC.IDF' >>> (CON) Conductance (IDF) <<<
+ 1,2, 001,   1.000000    ,   0.000000    ,  -999.9900    ,'$DBASE$\TUTORIALS\TUT_MF6\DBASE\RIV\RIVS.IDF' >>> (RST) River Stage (IDF) <<<
+ 1,2, 001,   1.000000    ,   0.000000    ,  -999.9900    ,'$DBASE$\TUTORIALS\TUT_MF6\DBASE\RIV\RIVB.IDF' >>> (RBT) River Bottom (IDF) <<<
  1,1, 001,   1.000000    ,   0.000000    ,   1.000000    ,                                                                '' >>> (RIF) Infiltration Factor (IDF) <<<
 
 0001,(WEL),1, Wells
 STEADY-STATE
 001,001
- 1,2, 001,   1.000000    ,   0.000000    ,  -999.9900    , 'D:\COMPILE\ossdeltares\iMOD\TUTORIALS\TUT_MF6\DBASE\WEL\WEL.IPF' >>> (WRA) Well Rate (IPF) <<<
+ 1,2, 001,   1.000000    ,   0.000000    ,  -999.9900    , '$DBASE$\TUTORIALS\TUT_MF6\DBASE\WEL\WEL.IPF' >>> (WRA) Well Rate (IPF) <<<
 
 0001,(PCG),1, Precondition Conjugate-Gradient
  MXITER=  150
