@@ -97,7 +97,7 @@ CONTAINS
  INTEGER :: IOS,I,J,N,II,JJ,IU,JU,KU,IROW,ICOL,JROW,JCOL
  REAL(KIND=DP_KIND) :: X1,Y1,X2,Y2
  REAL(KIND=DP_KIND),DIMENSION(:,:),POINTER :: XC,YC,XC_TMP,YC_TMP
- INTEGER,ALLOCATABLE,DIMENSION(:) :: IS,JS
+ INTEGER,ALLOCATABLE,DIMENSION(:) :: IS,JS,ID
 
  !## open file with "faults" per submodel - need to be "puzzled" to a single feature
  IU=UTL_GETUNIT(); CALL OSD_OPEN(IU,FILE=TRIM(OUTFOLDER)//'\BND.XY'             ,ACTION='READ' ,STATUS='OLD'    ,FORM='FORMATTED')
@@ -116,16 +116,17 @@ CONTAINS
  J=1; N=0; DO
   READ(IU,*,IOSTAT=IOS) I,X1,Y1,X2,Y2
   IF(IOS.NE.0)I=I+1
+  !## start tracking the connected lines on this polygon
   IF(I.NE.J)THEN
-   ALLOCATE(IS(N),JS(N))
-   CALL PMANAGER_GENERATEMFNETWORKS_PUZZLE(XC,YC,IS,JS,N)
+   ALLOCATE(IS(N),JS(N),ID(N))
+   CALL PMANAGER_GENERATEMFNETWORKS_PUZZLE(XC,YC,IS,JS,ID,N)
    WRITE(JU,'(I10)') J
    JJ=0; DO II=1,N
     WRITE(JU,'(2(F15.3,A1))') XC(IS(II),1),',',YC(IS(II),1)
     JJ=II
    ENDDO
    WRITE(JU,'(2(F15.3,A1))') XC(IS(JJ),2),',',YC(IS(JJ),2)
-   WRITE(JU,'(A3)') 'END'; DEALLOCATE(IS,JS)
+   WRITE(JU,'(A3)') 'END'; DEALLOCATE(IS,JS,ID)
    IF(IOS.NE.0)EXIT; J=I; N=0
   ENDIF
   IF(N+1.GT.SIZE(XC,1))THEN
@@ -186,17 +187,17 @@ CONTAINS
  END SUBROUTINE PMANAGER_GENERATEMFNETWORKS_CREATEPOLYGONS
  
  !###======================================================================
- SUBROUTINE PMANAGER_GENERATEMFNETWORKS_PUZZLE(XC,YC,IS,JS,N)
+ SUBROUTINE PMANAGER_GENERATEMFNETWORKS_PUZZLE(XC,YC,IS,JS,ID,N)
  !###======================================================================
  IMPLICIT NONE
  INTEGER,INTENT(INOUT) :: N
- INTEGER,DIMENSION(:),INTENT(OUT) :: IS,JS
+ INTEGER,DIMENSION(:),INTENT(OUT) :: IS,JS,ID
  REAL(KIND=DP_KIND),DIMENSION(:,:),INTENT(INOUT) :: XC,YC
- INTEGER :: NS,M,I,J,IPOS,ND
+ INTEGER :: NS,M,I,J,IPOS,ND,IDIR
  
  DO I=1,N; JS(I)=I; ENDDO
  
- !## find dangles
+ !## identify dangles - they need to be removed first
  DO
   ND=0
   DO I=1,N
@@ -205,7 +206,7 @@ CONTAINS
    DO IPOS=1,2
     M=0; DO J=1,N
      IF(I.EQ.J)CYCLE
-     IF(PMANAGER_GENERATEMFNETWORKS_PUZZLEFIT(XC,YC,IPOS,I,J))M=M+1
+     IF(PMANAGER_GENERATEMFNETWORKS_PUZZLEFIT(XC,YC,IPOS,I,J,IDIR))M=M+1
     ENDDO
     IF(M.EQ.0)THEN
      !## skip this one
@@ -217,33 +218,65 @@ CONTAINS
   IF(ND.EQ.0)EXIT
  ENDDO
  
- !## start at first non-dangle
- IS=0; DO I=1,N; IF(JS(I).NE.-1)THEN; IS(1)=I; EXIT; ENDIF; ENDDO
- NS=1; JS(I)=0
- 
- DO
-  DO I=1,N
-   !## already used   
-   IF(JS(I).LE.0)CYCLE
-   IF(PMANAGER_GENERATEMFNETWORKS_PUZZLEFIT(XC,YC,2,IS(NS),JS(I)))THEN
-    NS=NS+1; IS(NS)=JS(I); JS(I)=0; EXIT
-   ENDIF
-  ENDDO
-  DO I=1,N; IF(JS(I).GT.0)EXIT; ENDDO
-  IF(I.GT.N)EXIT 
+ !## reshuffle list of point without the dangles
+ J=0; DO I=1,N
+  IF(JS(I).NE.-1)THEN
+   J=J+1; IS(J)=JS(I)
+  ENDIF
  ENDDO
  
- !## reduce number
- DO I=1,N; IF(IS(I).EQ.0)EXIT; ENDDO; N=I-1
+ !## new number of point - excluding the dangles
+ N=J; DO I=1,N; JS(I)=IS(I); ENDDO
+ 
+ !## all are no passed by yet
+ ID=0
+ !## start a first location
+ NS=1; JS(NS)=1; NS=NS+1
+ 
+ !## "walk" along the line, keep track of the direction
+ DO
+  !## find next point to move towards
+  DO I=2,N
+!   !## already passed by in two directions
+!   IF(JS(I).EQ.2)CYCLE
+   !## find appropriate segment connected
+   IF(PMANAGER_GENERATEMFNETWORKS_PUZZLEFIT(XC,YC,2,IS(NS),JS(I),IDIR))THEN
+    !## already moved in this direction, try another point
+    IF(ID(I).EQ.IDIR)CYCLE
+    NS=NS+1; IS(NS)=JS(I); ID(I)=IDIR; EXIT
+   ENDIF
+  ENDDO
+ 
+ ENDDO
+ 
+! !## start at first non-dangle
+! IS=0; DO I=1,N; IF(JS(I).NE.-1)THEN; IS(1)=I; EXIT; ENDIF; ENDDO
+! NS=1; JS(I)=0
+
+! DO
+!  DO I=1,N
+!   !## already used   
+!   IF(JS(I).LE.0)CYCLE
+!   IF(PMANAGER_GENERATEMFNETWORKS_PUZZLEFIT(XC,YC,2,IS(NS),JS(I)))THEN
+!    NS=NS+1; IS(NS)=JS(I); JS(I)=0; EXIT
+!   ENDIF
+!  ENDDO
+!  DO I=1,N; IF(JS(I).GT.0)EXIT; ENDDO
+!  IF(I.GT.N)EXIT 
+! ENDDO
+ 
+! !## reduce number
+! DO I=1,N; IF(IS(I).EQ.0)EXIT; ENDDO; N=I-1
  
  END SUBROUTINE PMANAGER_GENERATEMFNETWORKS_PUZZLE
  
  !###======================================================================
- LOGICAL FUNCTION PMANAGER_GENERATEMFNETWORKS_PUZZLEFIT(XC,YC,IPOS,IS,JS)
+ LOGICAL FUNCTION PMANAGER_GENERATEMFNETWORKS_PUZZLEFIT(XC,YC,IPOS,IS,JS,IDIR)
  !###======================================================================
  IMPLICIT NONE
  REAL(KIND=DP_KIND),DIMENSION(:,:),INTENT(INOUT) :: XC,YC
  INTEGER,INTENT(IN) :: IS,JS,IPOS
+ INTEGER,INTENT(OUT) :: IDIR
  REAL(KIND=DP_KIND) :: X0,Y0,X1,Y1,X2,Y2
  
  PMANAGER_GENERATEMFNETWORKS_PUZZLEFIT=.FALSE.
@@ -253,11 +286,11 @@ CONTAINS
  X2=XC(JS,2);    Y2=YC(JS,2)
 
  IF(UTL_DIST(X0,Y0,X1,Y1).LE.1.0D-3)THEN
-  PMANAGER_GENERATEMFNETWORKS_PUZZLEFIT=.TRUE.; RETURN
+  IDIR= 1; PMANAGER_GENERATEMFNETWORKS_PUZZLEFIT=.TRUE.; RETURN
  !## connected inversely - switch coordinates
  ELSEIF(UTL_DIST(X0,Y0,X2,Y2).LE.1.0D-3)THEN
   XC(JS,1)=X2; YC(JS,1)=Y2; XC(JS,2)=X1; YC(JS,2)=Y1
-  PMANAGER_GENERATEMFNETWORKS_PUZZLEFIT=.TRUE.; RETURN
+  IDIR=-1; PMANAGER_GENERATEMFNETWORKS_PUZZLEFIT=.TRUE.; RETURN
  ENDIF
  
  END FUNCTION PMANAGER_GENERATEMFNETWORKS_PUZZLEFIT
