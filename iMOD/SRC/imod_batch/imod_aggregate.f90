@@ -186,7 +186,8 @@ MODULE MOD_AGGREGATE
     !## due to aggregation layers can become zero thickness
     IF(T-B.GT.0.0D0)THEN
      NS=NS+1
-     IDF(1)%X(ICOL,IROW)=FM(I)%SF(J)%AT(L)%TP
+     !## take minimal value as the first layer can have correction for "empty" spaces
+     IDF(1)%X(ICOL,IROW)=MIN(FM(I)%SF(J)%AT(L)%TP,IDF(1)%X(ICOL,IROW))
      IDF(2)%X(ICOL,IROW)=FM(I)%SF(J)%AT(L)%BT  
      IDF(3)%X(ICOL,IROW)=FM(I)%SF(J)%AT(L)%KH
      IDF(4)%X(ICOL,IROW)=FM(I)%SF(J)%AT(L)%KV
@@ -244,7 +245,7 @@ MODULE MOD_AGGREGATE
  IMPLICIT NONE
  INTEGER,INTENT(IN) :: IFM
  TYPE(IDFOBJ),INTENT(INOUT),DIMENSION(5) :: IDF
- INTEGER :: I,II,J,JJ,K,N,IROW,ICOL,IORDER
+ INTEGER :: I,II,J,JJ,K,N,IROW,ICOL,IORDER,M
  REAL(KIND=DP_KIND) :: T,B,VC,TR,DZ,TF,BF
  LOGICAL :: LTOP,LBOT
  REAL(KIND=DP_KIND),ALLOCATABLE,DIMENSION(:,:) :: DZT,DZB
@@ -338,16 +339,40 @@ MODULE MOD_AGGREGATE
  ENDDO
 
  !## correct single formation above and below
- DO IROW=1,IDF(1)%NROW; DO ICOL=1,IDF(1)%NCOL
-  !## check upper face
-  IF(BFM(ICOL,IROW,1).NE.0)THEN
-   II=BFM(ICOL,IROW,1); JJ=IFP(ICOL,IROW,1); FM(II)%SF(1)%AT(JJ)%BT=IDF(1)%X(ICOL,IROW)
+ N=0; DO I=1,2
+  DO IROW=1,IDF(1)%NROW; DO ICOL=1,IDF(1)%NCOL
+   !## check upper face
+   IF(BFM(ICOL,IROW,1).NE.0)THEN
+    II=BFM(ICOL,IROW,1); JJ=IFP(ICOL,IROW,1); FM(II)%SF(1)%AT(JJ)%BT=IDF(1)%X(ICOL,IROW)
+   ELSE
+    T=IDF(1)%X(ICOL,IROW); B=IDF(2)%X(ICOL,IROW)
+    IF(T-B.GT.0.0D0)THEN
+     N=N+1
+     IF(I.EQ.2)THEN
+      FM(1)%SF(1)%AT(N)%IROW=INT(IROW,2)
+      FM(1)%SF(1)%AT(N)%ICOL=INT(ICOL,2)
+      !## this value will be trimmed
+      FM(1)%SF(1)%AT(N)%TP=HUGE(1.0)
+      !## bot is used - top is used from the previous layer
+      FM(1)%SF(1)%AT(N)%BT=T
+      FM(1)%SF(1)%AT(N)%KH=1.0D0
+      FM(1)%SF(1)%AT(N)%KV=1.0D0
+      FM(1)%SF(1)%AT(N)%VA=1.0D0
+     ENDIF
+    ENDIF
+   ENDIF
+   !## check lower face
+   IF(BFM(ICOL,IROW,2).NE.0)THEN
+    II=BFM(ICOL,IROW,2); JJ=IFP(ICOL,IROW,2); FM(II)%SF(1)%AT(JJ)%TP=IDF(2)%X(ICOL,IROW)
+   ENDIF
+  ENDDO; ENDDO
+  !## add artificial thickness to layer - nothing found on top
+  IF(N.GT.0)THEN
+   M=SIZE(FM(1)%SF(1)%AT); ALLOCATE(FM(1)%SF(1)%AT_DUMMY(N+M))
+   DO J=1,M; FM(1)%SF(1)%AT_DUMMY(J)=FM(1)%SF(1)%AT(J); ENDDO
+   DEALLOCATE(FM(1)%SF(1)%AT); FM(1)%SF(1)%AT=>FM(1)%SF(1)%AT_DUMMY; N=M-1
   ENDIF
-  !## check lower face
-  IF(BFM(ICOL,IROW,2).NE.0)THEN
-   II=BFM(ICOL,IROW,2); JJ=IFP(ICOL,IROW,2); FM(II)%SF(1)%AT(JJ)%TP=IDF(2)%X(ICOL,IROW)
-  ENDIF
- ENDDO; ENDDO
+ ENDDO
  
  DEALLOCATE(DZT,DZB,IFP,BFM)
  
@@ -588,10 +613,6 @@ LOGICAL :: LEX
    CALL WMESSAGEBOX(OKONLY,EXCLAMATIONICON,COMMONOK,'Cannot ALLOCATE memory for a constant value KH.','Error'); RETURN
   ENDIF; LEX=.TRUE.
  ENDIF
-! IF(LEX)THEN
-!  J= INDEX(LIST(1),'_',.TRUE.); JJ=INDEX(LIST(1)(J+1:),'-'); JJ=JJ+J
-!  FTXT=LIST(1)(:JJ-1); LIST(3)=TRIM(FTXT)//'-KH-S.IDF' 
-! ENDIF
  
  !## make sure with constant values not to add dir
  LEX=.FALSE.; IF(TRIM(LIST(4)).NE.'')THEN
@@ -606,10 +627,6 @@ LOGICAL :: LEX
    CALL WMESSAGEBOX(OKONLY,EXCLAMATIONICON,COMMONOK,'Cannot ALLOCATE memory for a constant value KV.','Error'); RETURN
   ENDIF; LEX=.TRUE.
  ENDIF
-! IF(LEX)THEN
-!  J= INDEX(LIST(1),'_',.TRUE.); JJ=INDEX(LIST(1)(J+1:),'-'); JJ=JJ+J
-!  FTXT=LIST(1)(:JJ-1); LIST(4)=TRIM(FTXT)//'-KV-S.IDF' 
-! ENDIF
 
  !## if kh and kv are not both read, use va
  LEX=.TRUE.; IF(TRIM(LIST(3)).EQ.''.OR.TRIM(LIST(4)).EQ.'')THEN
@@ -637,10 +654,6 @@ LOGICAL :: LEX
    ENDDO; ENDDO
   ENDIF
  ENDIF
-! IF(LEX)THEN
-!  J= INDEX(LIST(1),'_',.TRUE.); JJ=INDEX(LIST(1)(J+1:),'-'); JJ=JJ+J
-!  FTXT=LIST(1)(:JJ-1); LIST(5)=TRIM(FTXT)//'-VA-S.IDF' 
-! ENDIF
  
  LHM_ADDIWHB_READFLIST=.TRUE.
  
@@ -651,7 +664,7 @@ LOGICAL :: LEX
  !###===========================
  IMPLICIT NONE
  INTEGER :: I,J,II,N,ICOL,IROW,IU
- REAL(KIND=DP_KIND) :: T,B,K1,K2,X,Y
+ REAL(KIND=DP_KIND) :: T,B,K1,K2,X,Y,VA
  TYPE(IDFOBJ),DIMENSION(:,:),ALLOCATABLE :: TPK
  TYPE(IDFOBJ) :: TPIDF,BTIDF,KHIDF,KVIDF,VAIDF,IBIDF
   
@@ -716,8 +729,16 @@ LOGICAL :: LEX
     ENDIF
     K1=TPK(I,3)%NODATA; K2=TPK(I,4)%NODATA
    ELSE
+    !## absent is -1, 0 is idf, 1=constant value
     IF(FLIST(I)%ITYPE(3).EQ.1)THEN; K1=FLIST(I)%XVAL(3); ELSE; K1=IDFGETXYVAL(TPK(I,3),X,Y); ENDIF
     IF(FLIST(I)%ITYPE(4).EQ.1)THEN; K2=FLIST(I)%XVAL(4); ELSE; K2=IDFGETXYVAL(TPK(I,4),X,Y); ENDIF
+    IF(FLIST(I)%ITYPE(5).EQ.1)THEN; VA=FLIST(I)%XVAL(5); ELSE; VA=IDFGETXYVAL(TPK(I,5),X,Y); ENDIF
+    !## kh not defined, compute from kv and va
+    IF(FLIST(I)%ITYPE(3).EQ.-1)THEN
+     K1=K2/VA
+    ELSEIF(FLIST(I)%ITYPE(4).EQ.-1)THEN
+     K2=K1*VA
+    ENDIF
     IF(K1.EQ.TPK(I,3)%NODATA)K1=EPS; IF(K2.EQ.TPK(I,4)%NODATA)K2=EPS
     IF(K1.EQ.0.0D0)K1=K2; IF(K2.EQ.0.0D0)K2=K1
     IF(K1.EQ.0.0D0.AND.K2.EQ.0.0D0)THEN
