@@ -882,6 +882,9 @@ ILOOP: DO I=1,2
     ENDDO
 
     WRITE(IU,'(I10)') I
+    !## header DAT file
+    IF(JU.GT.0.AND.I.EQ.1) WRITE(JU,'(99A)') ('"'//TRIM(SHP%COLNAMES(J))//'",',J=1,MAXCOL)
+    !## records DAT file
     IF(JU.GT.0)WRITE(JU,'(99A)') ('"'//TRIM(STR(J)%STRING)//'",',J=1,MAXCOL-1),'"'//TRIM(STR(MAXCOL)%STRING)//'"'
 
     IF(SHP%POL(I)%ITYPE.EQ.ID_LINE.OR.SHP%POL(I)%ITYPE.EQ.ID_POLYGON)THEN
