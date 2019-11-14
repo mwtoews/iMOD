@@ -527,7 +527,7 @@ ILOOP: DO I=1,2
         K=K+1
         CALL WGRIDGETCELLSTRING(IDF_GRID1,J,K,STRING)
         IF(LEN_TRIM(STRING).GT.SHP%LWIDTH(J).AND.LEX)THEN
-         CALL WMESSAGEBOX(YESNO,QUESTIONICON,COMMONNO,'The entry '//TRIM(STRING)//CHAR(13)//'Exceeds the current field width ('//TRIM(ITOS(SHP%LWIDTH(J)))//')'//CHAR(13)// &
+         CALL WMESSAGEBOX(YESNO,QUESTIONICON,COMMONNO,'The entry '//TRIM(STRING)//CHAR(13)//' exceeds the current field width ('//TRIM(ITOS(SHP%LWIDTH(J)))//')'//CHAR(13)// &
           'Do you want to continue or return to the previous window?','Question')
          IF(WINFODIALOG(4).EQ.1)THEN; LEX=.FALSE.; ELSE; EXIT; ENDIF
         ENDIF

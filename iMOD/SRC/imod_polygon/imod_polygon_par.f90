@@ -47,7 +47,7 @@ TYPE POLOBJ
  TYPE(POLINDOBJ),ALLOCATABLE,DIMENSION(:) :: POL
  !## number of active polygons
  INTEGER :: NPOL
- !## selected attribute for gridding (0/1)
+ !## flag/checkbox if ILBL must be used for gridding (0/1)
  INTEGER :: NLBL
  !## selected attribute for gridding (number of label)
  INTEGER :: ILBL
