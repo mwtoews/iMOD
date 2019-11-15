@@ -1544,7 +1544,7 @@ ILLOOP: DO
  !###======================================================================
  IMPLICIT NONE
  INTEGER,INTENT(IN) :: IHYPO
- INTEGER :: I,J,K,ILAY,JLAY,IROW,ICOL,IKH,IKV,IU,IOS,NLAY,N
+ INTEGER :: I,J,K,ILAY,JLAY,IROW,ICOL,IU,IOS,NLAY,N  !,IKH,IKV
  REAL(KIND=DP_KIND) :: TR,BR,Z1,Z2,F,KVAL,XTOP,XBOT,X
  CHARACTER(LEN=256) :: ROOT,FNAME,LINE
  CHARACTER(LEN=52) :: WC,CTYPE
@@ -1599,25 +1599,24 @@ ILLOOP: DO
    !## try top
    WRITE(* ,'(A)') '-'//TRIM(REGISFILES(I)); WRITE(IU,'(A)') '-'//TRIM(REGISFILES(I))
    IF(.NOT.IDFREADSCALE(REGISFILES(I),TB(1),2,0,0.0D0,0))RETURN !## scale mean
-!   IF(.NOT.IDFREADSCALE(REGISFILES(I),TB(1),10,0,0.0D0,0))RETURN !## scale mean
    TB(1)%FNAME=TRIM(OUTPUTFOLDER)//'\REGIS\'//TRIM(REGISFILES(I)(INDEX(REGISFILES(I),'\',.TRUE.):))
+
    !## try bot
    FNAME=UTL_SUBST(REGISBOT,'*',TRIM(CTYPE))
    WRITE(* ,'(A)') '-'//TRIM(FNAME); WRITE(IU,'(A)') '-'//TRIM(FNAME)
    IF(.NOT.IDFREADSCALE(FNAME,TB(2),2,0,0.0D0,0))RETURN !## scale mean
-!   IF(.NOT.IDFREADSCALE(FNAME,TB(2),10,0,0.0D0,0))RETURN !## scale mean
    TB(2)%FNAME=TRIM(OUTPUTFOLDER)//'\REGIS\'//TRIM(FNAME(INDEX(FNAME,'\',.TRUE.):))
+
    !## try kh
    FNAME=UTL_SUBST(REGISKHV,'*',TRIM(CTYPE))
-   IKH=1; IF(.NOT.IDFREADSCALE(FNAME,KH(1),3,0,0.0D0,1))IKH=0 !## scale geometric
-!   IKH=1; IF(.NOT.IDFREADSCALE(FNAME,KH(1),10,0,0.0D0,1))IKH=0
-   IF(IKH.EQ.1)THEN; WRITE(*,'(A)') '-'//TRIM(FNAME); WRITE(IU,'(A)') '-'//TRIM(FNAME); ENDIF
+   WRITE(* ,'(A)') '-'//TRIM(FNAME); WRITE(IU,'(A)') '-'//TRIM(FNAME)
+   IF(.NOT.IDFREADSCALE(FNAME,KH(1),3,0,0.0D0,1))RETURN !## scale geometric
    KH(1)%FNAME=TRIM(OUTPUTFOLDER)//'\REGIS\'//TRIM(FNAME(INDEX(FNAME,'\',.TRUE.):))
+
    !## try kv
    FNAME=UTL_SUBST(REGISKVV,'*',TRIM(CTYPE))
-   IKV=1; IF(.NOT.IDFREADSCALE(FNAME,KV(1),3,0,0.0D0,1))IKV=0 !## scale geometric
-!   IKV=1; IF(.NOT.IDFREADSCALE(FNAME,KV(1),10,0,0.0D0,1))IKV=0
-   IF(IKV.EQ.1)THEN; WRITE(*,'(A)') '-'//TRIM(FNAME); WRITE(IU,'(A)') '-'//TRIM(FNAME); ENDIF
+   WRITE(*,'(A)') '-'//TRIM(FNAME); WRITE(IU,'(A)') '-'//TRIM(FNAME)
+   IF(.NOT.IDFREADSCALE(FNAME,KV(1),3,0,0.0D0,1))RETURN !## scale geometric
    KV(1)%FNAME=TRIM(OUTPUTFOLDER)//'\REGIS\'//TRIM(FNAME(INDEX(FNAME,'\',.TRUE.):))
   
   ELSE
@@ -1625,44 +1624,23 @@ ILLOOP: DO
    !## try top
    WRITE(* ,'(A)') '- TOP: '//TRIM(REGISFILES_TOP(I)); WRITE(IU,'(A)') '-'//TRIM(REGISFILES_TOP(I))
    IF(.NOT.IDFREADSCALE(REGISFILES_TOP(I),TB(1),2,0,0.0D0,0))RETURN !## scale mean
-!   IF(.NOT.IDFREADSCALE(REGISFILES_TOP(I),TB(1),10,0,0.0D0,0))RETURN !## scale mean
    TB(1)%FNAME=TRIM(OUTPUTFOLDER)//'\REGIS\'//TRIM(REGISFILES_TOP(I)(INDEX(REGISFILES_TOP(I),'\',.TRUE.):))
 
    !## try bot
    WRITE(* ,'(A)') '- BOT: '//TRIM(REGISFILES_BOT(I)); WRITE(IU,'(A)') '-'//TRIM(REGISFILES_BOT(I))
    IF(.NOT.IDFREADSCALE(REGISFILES_BOT(I),TB(2),2,0,0.0D0,0))RETURN !## scale mean
-!   IF(.NOT.IDFREADSCALE(REGISFILES_BOT(I),TB(2),10,0,0.0D0,0))RETURN !## scale mean
    TB(2)%FNAME=TRIM(OUTPUTFOLDER)//'\REGIS\'//TRIM(REGISFILES_BOT(I)(INDEX(REGISFILES_BOT(I),'\',.TRUE.):))
 
    !## try kh
-   READ(REGISFILES_KHV(I),*,IOSTAT=IOS) X
-   IF(IOS.EQ.0)THEN
-    IKH=1; KH(1)%X=X
-   ELSE
-    IKH=1; IF(.NOT.IDFREADSCALE(REGISFILES_KHV(I),KH(1),3,0,0.0D0,1))IKH=0 !## scale geometric
-!    IKH=1; IF(.NOT.IDFREADSCALE(REGISFILES_KHV(I),KH(1),10,0,0.0D0,1))IKH=0 !## scale mean
-    KH(1)%FNAME=TRIM(OUTPUTFOLDER)//'\REGIS\'//TRIM(REGISFILES_KHV(I)(INDEX(REGISFILES_KHV(I),'\',.TRUE.):))
-   ENDIF
-   IF(IKH.EQ.1)WRITE(* ,'(A)') '- KHV: '//TRIM(REGISFILES_KHV(I)); WRITE(IU,'(A)') '-'//TRIM(REGISFILES_KHV(I))
+   WRITE(* ,'(A)') '- KHV: '//TRIM(REGISFILES_KHV(I)); WRITE(IU,'(A)') '-'//TRIM(REGISFILES_KHV(I))
+   IF(.NOT.IDFREADSCALE(REGISFILES_KHV(I),KH(1),3,0,0.0D0,1))RETURN !## scale geometric
+   KH(1)%FNAME=TRIM(OUTPUTFOLDER)//'\REGIS\'//TRIM(REGISFILES_KHV(I)(INDEX(REGISFILES_KHV(I),'\',.TRUE.):))
 
    !## try kv
-   READ(REGISFILES_KVV(I),*,IOSTAT=IOS) X
-   IF(IOS.EQ.0)THEN
-    IKV=1; KV(1)%X=X
-   ELSE
-    !## try kv
-    IKV=1; IF(.NOT.IDFREADSCALE(REGISFILES_KVV(I),KV(1),3,0,0.0D0,1))IKV=0 !## scale geometric
-!    IKV=1; IF(.NOT.IDFREADSCALE(REGISFILES_KVV(I),KV(1),10,0,0.0D0,1))IKV=0 !## scale mean
-    KV(1)%FNAME=TRIM(OUTPUTFOLDER)//'\REGIS\'//TRIM(REGISFILES_KVV(I)(INDEX(REGISFILES_KVV(I),'\',.TRUE.):))
-   ENDIF
-   IF(IKV.EQ.1)WRITE(* ,'(A)') '- KVV: '//TRIM(REGISFILES_KVV(I)); WRITE(IU,'(A)') '-'//TRIM(REGISFILES_KVV(I))
+   WRITE(* ,'(A)') '- KVV: '//TRIM(REGISFILES_KVV(I)); WRITE(IU,'(A)') '-'//TRIM(REGISFILES_KVV(I))
+   IF(.NOT.IDFREADSCALE(REGISFILES_KVV(I),KV(1),3,0,0.0D0,1))RETURN !## scale geometric
+   KV(1)%FNAME=TRIM(OUTPUTFOLDER)//'\REGIS\'//TRIM(REGISFILES_KVV(I)(INDEX(REGISFILES_KVV(I),'\',.TRUE.):))
 
-  ENDIF
-  
-  IF(IKH.EQ.0.AND.IKV.EQ.0)THEN
-   WRITE(*,'(/A/)')  'No horizontal/vertical permeabilities found, formation will be skipped!'
-   WRITE(IU,'(/A/)') 'No horizontal/vertical permeabilities found, formation will be skipped!'
-   CYCLE
   ENDIF
 
   DO ILAY=1,SIZE(FFRAC)
@@ -1675,10 +1653,6 @@ ILLOOP: DO
   !## process data
   WRITE(*,'(A)') 'Process data ...'
   DO IROW=1,TOPIDF(1)%NROW; DO ICOL=1,TOPIDF(1)%NCOL
-   
-!   IF(IROW.EQ.1271.AND.ICOL.EQ.764)THEN
-!    WRITE(*,*) 'DSDSDS'
-!   ENDIF
    
    TR=TB(1)%X(ICOL,IROW); BR=TB(2)%X(ICOL,IROW)   
    IF(TR.EQ.TB(1)%NODATA.OR.BR.EQ.TB(2)%NODATA)CYCLE
@@ -1693,28 +1667,13 @@ ILLOOP: DO
      !## sum up the total fractions
      KDFRACIDF(ILAY)%X(ICOL,IROW)=KDFRACIDF(ILAY)%X(ICOL,IROW)+F
      
-     !## assign maximum k values for aquifers
-     KVAL=0.0D0
-     !## found horizontal permeability
-     IF(IKH.EQ.1)THEN
-      KVAL=MAX(KVAL,KH(1)%X(ICOL,IROW))
-     !## if not, try vertical permeability
-     ELSE
-      IF(IKV.EQ.1)KVAL=MAX(KVAL,(KV(1)%X(ICOL,IROW)))
-     ENDIF
      !## sum horizontal transmissivity for each model layer
+     KVAL=MAX(0.0D0,KH(1)%X(ICOL,IROW))
      KDHIDF(ILAY)%X(ICOL,IROW)=KDHIDF(ILAY)%X(ICOL,IROW)+(Z1-Z2)*KVAL
      
-     KVAL=0.0D0
-     !## found vertical permeability
-     IF(IKV.EQ.1)THEN
-      KVAL=MAX(KVAL,KV(1)%X(ICOL,IROW))
-     !## if not, try the horizontal permeability
-     ELSE
-      IF(IKH.EQ.1)KVAL=MAX(KVAL,(KH(1)%X(ICOL,IROW)))
-     ENDIF
-     !## sum vertical transmissivity for each model layer
-     KDVIDF(ILAY)%X(ICOL,IROW)=KDVIDF(ILAY)%X(ICOL,IROW)+(Z1-Z2)*KVAL
+     !## sum vertical resistance for each model layer
+     KVAL=MAX(0.0D0,KV(1)%X(ICOL,IROW))
+     IF(KVAL.GT.0.0D0)KDVIDF(ILAY)%X(ICOL,IROW)=KDVIDF(ILAY)%X(ICOL,IROW)+(Z1-Z2)/KVAL
 
      !## sum up the total fractions
      FFRAC(ILAY)%X(ICOL,IROW)=F 
@@ -1731,19 +1690,11 @@ ILLOOP: DO
     IF(Z1.GT.Z2)THEN
      F=(Z1-Z2)/(XTOP-XBOT)
      CFRACIDF(ILAY)%X(ICOL,IROW)=CFRACIDF(ILAY)%X(ICOL,IROW)+F
-     !## assign minimum values for aquitards
-     KVAL=10.0D10
+
      !## found vertical permeability
-     IF(IKV.EQ.1)THEN
-      KVAL=MIN(KVAL,KV(1)%X(ICOL,IROW))
-     !## if not, try the horizontal permeability
-     ELSE
-      IF(IKH.EQ.1)KVAL=MIN(KVAL,(KH(1)%X(ICOL,IROW)))
-     ENDIF
+     KVAL=MIN(0.0D0,KV(1)%X(ICOL,IROW))
      !## sum up the total resistance
-     IF(KVAL.GT.0.0D0)THEN
-      CIDF(ILAY)%X(ICOL,IROW)=CIDF(ILAY)%X(ICOL,IROW)+((Z1-Z2)/KVAL)
-     ENDIF
+     IF(KVAL.GT.0.0D0)CIDF(ILAY)%X(ICOL,IROW)=CIDF(ILAY)%X(ICOL,IROW)+(Z1-Z2)/KVAL
      
      !## sum up the total fractions
      CFRAC(ILAY)%X(ICOL,IROW)=F 
@@ -1803,12 +1754,15 @@ ILLOOP: DO
  DO IROW=1,TOPIDF(1)%NROW; DO ICOL=1,TOPIDF(1)%NCOL; DO ILAY=1,NLAY
   TR=TOPIDF(ILAY)%X(ICOL,IROW); BR=BOTIDF(ILAY)%X(ICOL,IROW)   
   IF(TR.EQ.TOPIDF(ILAY)%NODATA.OR.BR.EQ.BOTIDF(ILAY)%NODATA)CYCLE
+  !## compute vertical anisotropy
   IF(TR-BR.LE.0.0D0)THEN
    KDHIDF(ILAY)%X(ICOL,IROW)=0.0D0
    KDVIDF(ILAY)%X(ICOL,IROW)=1.0D0
   ELSE
+   !## compute horizontal permeability
    KDHIDF(ILAY)%X(ICOL,IROW)=KDHIDF(ILAY)%X(ICOL,IROW)/(TR-BR)
-   KDVIDF(ILAY)%X(ICOL,IROW)=KDVIDF(ILAY)%X(ICOL,IROW)/(TR-BR)
+   !## compute vertical permeability
+   IF(KDVIDF(ILAY)%X(ICOL,IROW).GT.0.0D0)KDVIDF(ILAY)%X(ICOL,IROW)=(TR-BR)/KDVIDF(ILAY)%X(ICOL,IROW)
    IF(KDHIDF(ILAY)%X(ICOL,IROW).EQ.0.0D0)THEN
     KDVIDF(ILAY)%X(ICOL,IROW)=1.0D0
    ELSE

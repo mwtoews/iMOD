@@ -32,7 +32,7 @@ MODULE MOD_AGGREGATE
  TYPE(FOBJ),INTENT(INOUT),POINTER,DIMENSION(:) :: SLIST
  CHARACTER(LEN=*),INTENT(IN) :: OFILE,DIR
  INTEGER,INTENT(IN) :: IMETHOD
- INTEGER :: I,J,N,M,IU,IOS
+ INTEGER :: I,II,J,JJ,N,M,IU,IOS
  LOGICAL :: LEX
  CHARACTER(LEN=512) :: LINE
  
@@ -83,6 +83,18 @@ MODULE MOD_AGGREGATE
  ENDDO
  CLOSE(IU)
  
+ !## check duplicate files - no allowed
+ DO I=1,SIZE(SLIST); DO J=3,SIZE(SLIST(I)%FILE)
+  IF(SLIST(I)%ITYPE(J).NE.0)CYCLE; N=0
+  DO II=I,SIZE(SLIST); DO JJ=3,SIZE(SLIST(II)%FILE)
+   IF(SLIST(II)%ITYPE(JJ).NE.0)CYCLE
+   IF(TRIM(SLIST(I)%FILE(J)).EQ.TRIM(SLIST(II)%FILE(JJ)))N=N+1
+  ENDDO; ENDDO
+  IF(N.GT.1)THEN
+   WRITE(*,*) 'DUPLICATE FOUND '//TRIM(SLIST(I)%FILE(J)); STOP
+  ENDIF
+ ENDDO; ENDDO
+
  END SUBROUTINE LHM_CONVERTREGIS_SORTFILES
 
  !###===========================
@@ -282,7 +294,7 @@ MODULE MOD_AGGREGATE
     ICOL=INT(FM(I)%SF(J)%AT(K)%ICOL,4)
 
     T=IDF(1)%X(ICOL,IROW); B=IDF(2)%X(ICOL,IROW)
-    !## new iwhb has a thickness here - correct if needed
+    !## iwhb has a thickness here - correct if needed
     IF(T-B.GT.0.0D0)THEN
      
      DZ=FM(I)%SF(J)%AT(K)%TP-FM(I)%SF(J)%AT(K)%BT
@@ -325,9 +337,10 @@ MODULE MOD_AGGREGATE
     TF=FM(II)%SF(J)%AT(K)%TP; BF=FM(II)%SF(J)%AT(K)%BT; IF(TF-BF.LE.0.0D0)CYCLE
     IROW=INT(FM(II)%SF(J)%AT(K)%IROW,4); ICOL=INT(FM(II)%SF(J)%AT(K)%ICOL,4)
     T=IDF(1)%X(ICOL,IROW); B=IDF(2)%X(ICOL,IROW)
+    !## skip nodata location - continue with location that need to be removed and/or are new
     IF(T.EQ.IDF(1)%NODATA.OR.B.EQ.IDF(2)%NODATA)CYCLE
-    !## skip if not a new location for a potential "leak"
-    IF(T-B.LE.0.0D0)CYCLE
+!    !## skip if not a new location for a potential "leak"
+!    IF(T-B.LE.0.0D0)CYCLE
     !## compute distance above
     DZ=BF-T
     IF(DZ.GE.0.0D0.AND.DZ.LE.DZT(ICOL,IROW))THEN
@@ -352,8 +365,8 @@ MODULE MOD_AGGREGATE
     ENDIF
    ELSE
     T=IDF(1)%X(ICOL,IROW); B=IDF(2)%X(ICOL,IROW)
-    IF(T.NE.IDF(1)%NODATA.AND.B.NE.IDF(2)%NODATA.AND. &
-       T-B.GT.0.0D0)THEN
+    !## process location ne nodata
+    IF(T.NE.IDF(1)%NODATA.AND.B.NE.IDF(2)%NODATA)THEN
      N=N+1
      IF(I.EQ.2)THEN
       FM(1)%SF(1)%AT(N)%IROW=INT(IROW,2)
@@ -418,6 +431,7 @@ MODULE MOD_AGGREGATE
     KH  =REAL(FM(IORDER)%SF(I)%AT(J)%KH,8)
     KV  =REAL(FM(IORDER)%SF(I)%AT(J)%KV,8)
 
+    !## top and bottom of iwhb layer
     T=IDF(1)%X(ICOL,IROW); B=IDF(2)%X(ICOL,IROW)
 
     !## new data available here
@@ -463,8 +477,15 @@ MODULE MOD_AGGREGATE
    
     !## no update here needed, copy existing data
     ELSE
-   
-     IDF(1)%X(ICOL,IROW)=TP; IDF(2)%X(ICOL,IROW)=BT
+
+     !## only if imethod is 4
+     IF(IMETH.EQ.4)THEN
+      !## give a zero thickness - needed to shift all layers here
+      IDF(1)%X(ICOL,IROW)=TP; IDF(2)%X(ICOL,IROW)=TP
+     ELSE
+      !## keep existing layer
+      IDF(1)%X(ICOL,IROW)=TP; IDF(2)%X(ICOL,IROW)=BT
+     ENDIF
      IDF(3)%X(ICOL,IROW)=KH; IDF(4)%X(ICOL,IROW)=KV
      
     ENDIF
@@ -473,11 +494,12 @@ MODULE MOD_AGGREGATE
   ENDDO
  ENDIF
  
- !## get size of to be total combined inserted layer
+ !## get size of the total combined inserted layer
  N=0; DO IROW=1,IDF(1)%NROW; DO ICOL=1,IDF(1)%NCOL
   T=IDF(1)%X(ICOL,IROW); B=IDF(2)%X(ICOL,IROW)
+  !## skip nodata locations
   IF(T.EQ.IDF(1)%NODATA.OR.B.EQ.IDF(2)%NODATA)CYCLE
-  IF(T-B.GT.0.0D0)N=N+1
+  N=N+1
  ENDDO; ENDDO
  
  !## remove current layer
@@ -488,19 +510,18 @@ MODULE MOD_AGGREGATE
  !## fill in new object of this layer
  ALLOCATE(FM(IORDER)%SF(1)%AT(N))
  
- !## add new layer to it - correct top/bot en k-values
+ !## add new layer to it (include zero thickness of layer removed) - correct top/bot en k-values
  N=0; DO IROW=1,IDF(1)%NROW; DO ICOL=1,IDF(1)%NCOL
   T=IDF(1)%X(ICOL,IROW); B=IDF(2)%X(ICOL,IROW)
+  !## skip nodata locations
   IF(T.EQ.IDF(1)%NODATA.OR.B.EQ.IDF(2)%NODATA)CYCLE
-  IF(T-B.GT.0.0D0)THEN
-   N=N+1
-   FM(IORDER)%SF(1)%AT(N)%IROW=INT(IROW,2)
-   FM(IORDER)%SF(1)%AT(N)%ICOL=INT(ICOL,2)
-   FM(IORDER)%SF(1)%AT(N)%TP  =REAL(IDF(1)%X(ICOL,IROW),4)
-   FM(IORDER)%SF(1)%AT(N)%BT  =REAL(IDF(2)%X(ICOL,IROW),4)
-   FM(IORDER)%SF(1)%AT(N)%KH  =REAL(IDF(3)%X(ICOL,IROW),4)
-   FM(IORDER)%SF(1)%AT(N)%KV  =REAL(IDF(4)%X(ICOL,IROW),4)
-  ENDIF   
+  N=N+1
+  FM(IORDER)%SF(1)%AT(N)%IROW=INT(IROW,2)
+  FM(IORDER)%SF(1)%AT(N)%ICOL=INT(ICOL,2)
+  FM(IORDER)%SF(1)%AT(N)%TP  =REAL(IDF(1)%X(ICOL,IROW),4)
+  FM(IORDER)%SF(1)%AT(N)%BT  =REAL(IDF(2)%X(ICOL,IROW),4)
+  FM(IORDER)%SF(1)%AT(N)%KH  =REAL(IDF(3)%X(ICOL,IROW),4)
+  FM(IORDER)%SF(1)%AT(N)%KV  =REAL(IDF(4)%X(ICOL,IROW),4)
  ENDDO; ENDDO
  
  END SUBROUTINE LHM_ADDIWHB_REPLACE_IWHB
