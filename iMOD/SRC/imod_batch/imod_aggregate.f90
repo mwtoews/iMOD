@@ -149,7 +149,7 @@ MODULE MOD_AGGREGATE
     !## shift all others
     DO II=1,I-1; IF(FM(II)%IORDER.GE.L)FM(II)%IORDER=FM(II)%IORDER+1; ENDDO
    !## fixed location
-   CASE (2,3)
+   CASE (2,3,4)
     DO L=1,SIZE(NL); IF(FM(L)%IORDER.EQ.ALIST(J)%ILAYER)EXIT; ENDDO; FM(I)%IORDER=L
   END SELECT
   
@@ -157,7 +157,7 @@ MODULE MOD_AGGREGATE
    CASE (1)
     !## correct all others for this inserted layer
     CALL LHM_ADDIWHB_INSERT_IWHB(I,IDF)
-   CASE (2,3)
+   CASE (2,3,4)
     !## fixed location
     CALL LHM_ADDIWHB_REPLACE_IWHB(I,ALIST(J)%METH,IDF)
     !## correct all others for this inserted layer
@@ -195,8 +195,14 @@ MODULE MOD_AGGREGATE
     IROW=INT(FM(I)%SF(J)%AT(L)%IROW,4)
     ICOL=INT(FM(I)%SF(J)%AT(L)%ICOL,4)
     T=FM(I)%SF(J)%AT(L)%TP; B=FM(I)%SF(J)%AT(L)%BT
+!    if(irow.eq.107.and.icol.eq.902)then
+!     pause
+!    endif
     !## take minimal value of current level (idf) - inserted level can above surfacelevel
     T=MIN(T,IDF(1)%X(ICOL,IROW)); B=MIN(B,IDF(1)%X(ICOL,IROW))
+!    if(t.eq.idf(1)%nodata.or.b.eq.idf(2)%nodata)then
+!     write(*,*) t,idf(1)%nodata,b,idf(2)%nodata,irow,icol,i,iii
+!    endif
     !## correct them
     FM(I)%SF(J)%AT(L)%TP=T; FM(I)%SF(J)%AT(L)%BT=B
     !## due to aggregation layers can become zero thickness
@@ -204,6 +210,10 @@ MODULE MOD_AGGREGATE
      NS=NS+1
      !## take minimal value as the first layer can have correction for "empty" spaces
      IDF(1)%X(ICOL,IROW)=FM(I)%SF(J)%AT(L)%TP
+!     IF(FM(I)%SF(J)%AT(L)%BT.LT.-9000.0D0)THEN
+!     WRITE(*,*) FM(I)%SF(J)%AT(L)%BT,i,icol,irow
+!     PAUSE
+!     endif
      IDF(2)%X(ICOL,IROW)=FM(I)%SF(J)%AT(L)%BT  
      IDF(3)%X(ICOL,IROW)=FM(I)%SF(J)%AT(L)%KH
      IDF(4)%X(ICOL,IROW)=FM(I)%SF(J)%AT(L)%KV
@@ -321,6 +331,8 @@ MODULE MOD_AGGREGATE
   ENDDO
  ENDDO
  
+! return
+ 
  !## find formation(s) nearest from top and bottom
  ALLOCATE(DZT(IDF(1)%NCOL,IDF(1)%NROW)); DZT=HUGE(1.0)
  ALLOCATE(DZB(IDF(1)%NCOL,IDF(1)%NROW)); DZB=HUGE(1.0)
@@ -362,6 +374,10 @@ MODULE MOD_AGGREGATE
    IF(BFM(ICOL,IROW,1).NE.0)THEN
     IF(I.EQ.1)THEN
      II=BFM(ICOL,IROW,1); JJ=IFP(ICOL,IROW,1); FM(II)%SF(1)%AT(JJ)%BT=IDF(1)%X(ICOL,IROW)
+     if(IDF(1)%X(ICOL,IROW).lt.-9000.0d0)then
+      write(*,*) icol,irow,IDF(1)%X(ICOL,IROW),idf(1)%nodata,ii,jj
+      pause
+     endif
     ENDIF
    ELSE
     T=IDF(1)%X(ICOL,IROW); B=IDF(2)%X(ICOL,IROW)
@@ -389,7 +405,7 @@ MODULE MOD_AGGREGATE
    ENDIF
   ENDDO; ENDDO
   
-  !if(i.eq.1)exit
+!  if(i.eq.1)exit
   
   !## add artificial thickness to layer - nothing found on top
   IF(I.EQ.1.AND.N.GT.0)THEN
@@ -615,7 +631,7 @@ ILOOP: DO I=1,IFM-1
  INTEGER,INTENT(IN) :: N
  CHARACTER(LEN=256) :: FN
  INTEGER :: ICOL,IROW,IOS,J,JJ
- REAL(KIND=DP_KIND) :: X
+ REAL(KIND=DP_KIND) :: X,T,B
  CHARACTER(LEN=*),DIMENSION(N) :: LIST
  CHARACTER(LEN=256) :: FTXT
 LOGICAL :: LEX
@@ -690,6 +706,21 @@ LOGICAL :: LEX
    ENDDO; ENDDO
   ENDIF
  ENDIF
+ 
+ !## make sure data is nodata for zero thickness - set all eqaul to equal nodata
+ DO IROW=1,TP%NROW; DO ICOL=1,TP%NCOL
+  T=TP%X(ICOL,IROW)
+  B=BT%X(ICOL,IROW)
+  IF(T.NE.TP%NODATA.AND.B.NE.BT%NODATA)THEN
+   IF(T-B.LE.0.0D0)THEN
+    TP%X(ICOL,IROW)=TP%NODATA
+    BT%X(ICOL,IROW)=BT%NODATA
+    KH%X(ICOL,IROW)=KH%NODATA
+    KV%X(ICOL,IROW)=KV%NODATA
+!    VA%X(ICOL,IROW)=VA%NODATA
+   ENDIF
+  ENDIF
+ ENDDO; ENDDO
  
  LHM_ADDIWHB_READFLIST=.TRUE.
  
