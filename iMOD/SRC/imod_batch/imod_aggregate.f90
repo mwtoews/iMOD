@@ -210,10 +210,10 @@ MODULE MOD_AGGREGATE
      NS=NS+1
      !## take minimal value as the first layer can have correction for "empty" spaces
      IDF(1)%X(ICOL,IROW)=FM(I)%SF(J)%AT(L)%TP
-!     IF(FM(I)%SF(J)%AT(L)%BT.LT.-9000.0D0)THEN
-!     WRITE(*,*) FM(I)%SF(J)%AT(L)%BT,i,icol,irow
-!     PAUSE
-!     endif
+     IF(FM(I)%SF(J)%AT(L)%TP.LT.-9000.0D0)THEN
+     WRITE(*,*) FM(I)%SF(J)%AT(L)%TP,i,icol,irow
+     PAUSE
+     endif
      IDF(2)%X(ICOL,IROW)=FM(I)%SF(J)%AT(L)%BT  
      IDF(3)%X(ICOL,IROW)=FM(I)%SF(J)%AT(L)%KH
      IDF(4)%X(ICOL,IROW)=FM(I)%SF(J)%AT(L)%KV
@@ -346,6 +346,7 @@ MODULE MOD_AGGREGATE
    IF(.NOT.ASSOCIATED(FM(II)%SF(J)%AT))CYCLE
    N=SIZE(FM(II)%SF(J)%AT); IF(N.EQ.0)EXIT
    DO K=1,N
+    !## skip location of current formation without thickness
     TF=FM(II)%SF(J)%AT(K)%TP; BF=FM(II)%SF(J)%AT(K)%BT; IF(TF-BF.LE.0.0D0)CYCLE
     IROW=INT(FM(II)%SF(J)%AT(K)%IROW,4); ICOL=INT(FM(II)%SF(J)%AT(K)%ICOL,4)
     T=IDF(1)%X(ICOL,IROW); B=IDF(2)%X(ICOL,IROW)
@@ -367,23 +368,44 @@ MODULE MOD_AGGREGATE
   ENDDO
  ENDDO
 
+ !## get pointer where first layer is defined
+ CALL IDFCOPY(IDF(1),IDF(5)); IF(.NOT.IDFALLOCATEX(IDF(5)))RETURN
+ IDF(5)%X=0.0D0; N=SIZE(FM(1)%SF(1)%AT)
+ DO I=1,N
+  IROW=FM(1)%SF(1)%AT(I)%IROW 
+  ICOL=FM(1)%SF(1)%AT(I)%ICOL
+  T   =FM(1)%SF(1)%AT(I)%TP
+  B   =FM(1)%SF(1)%AT(I)%BT
+  IF(T-B.GT.0.0D0)IDF(5)%X(ICOL,IROW)=1.0D0
+ ENDDO
+ 
  !## correct single formation above and below
  N=0; DO I=1,2
   DO IROW=1,IDF(1)%NROW; DO ICOL=1,IDF(1)%NCOL
+
+   !## skip nodata location - continue with location that need to be removed and/or are new
+   T=IDF(1)%X(ICOL,IROW); B=IDF(2)%X(ICOL,IROW)
+   IF(T.EQ.IDF(1)%NODATA.OR.B.EQ.IDF(2)%NODATA)CYCLE
+
    !## check upper face
    IF(BFM(ICOL,IROW,1).NE.0)THEN
     IF(I.EQ.1)THEN
      II=BFM(ICOL,IROW,1); JJ=IFP(ICOL,IROW,1); FM(II)%SF(1)%AT(JJ)%BT=IDF(1)%X(ICOL,IROW)
-     if(IDF(1)%X(ICOL,IROW).lt.-9000.0d0)then
-      write(*,*) icol,irow,IDF(1)%X(ICOL,IROW),idf(1)%nodata,ii,jj
-      pause
-     endif
+       if(IDF(1)%X(ICOL,IROW).lt.-9000.0d0)then
+        write(*,*) icol,irow,IDF(1)%X(ICOL,IROW),idf(1)%nodata,ii,jj
+        pause
+       endif
     ENDIF
    ELSE
+
+    !## cannot enter twice a value - original is added to it
+    IF(IDF(5)%X(ICOL,IROW).GT.0.0D0)CYCLE
+    
     T=IDF(1)%X(ICOL,IROW); B=IDF(2)%X(ICOL,IROW)
     !## process location ne nodata
     IF(T.NE.IDF(1)%NODATA.AND.B.NE.IDF(2)%NODATA)THEN
      N=N+1
+!     write(*,*) n,t,b,idf(1)%nodata,idf(2)%nodata
      IF(I.EQ.2)THEN
       FM(1)%SF(1)%AT(N)%IROW=INT(IROW,2)
       FM(1)%SF(1)%AT(N)%ICOL=INT(ICOL,2)
@@ -401,6 +423,10 @@ MODULE MOD_AGGREGATE
    IF(BFM(ICOL,IROW,2).NE.0)THEN
     IF(I.EQ.1)THEN
      II=BFM(ICOL,IROW,2); JJ=IFP(ICOL,IROW,2); FM(II)%SF(1)%AT(JJ)%TP=IDF(2)%X(ICOL,IROW)
+       if(IDF(2)%X(ICOL,IROW).lt.-9000.0d0)then
+        write(*,*) icol,irow,IDF(2)%X(ICOL,IROW),idf(2)%nodata,ii,jj
+        pause
+       endif     
     ENDIF
    ENDIF
   ENDDO; ENDDO
@@ -551,6 +577,20 @@ MODULE MOD_AGGREGATE
  TYPE(IDFOBJ),INTENT(INOUT),DIMENSION(5) :: IDF
  INTEGER :: I,M,IROW,ICOL
  REAL(KIND=DP_KIND) :: T,B
+ 
+ !## make sure data is nodata for zero thickness - set all equal to equal nodata
+ DO IROW=1,IDF(1)%NROW; DO ICOL=1,IDF(1)%NCOL
+  T=IDF(1)%X(ICOL,IROW)
+  B=IDF(2)%X(ICOL,IROW)
+  IF(T.EQ.IDF(1)%NODATA.OR.B.EQ.IDF(2)%NODATA.OR.T-B.LE.0.0D0)THEN
+   IDF(1)%X(ICOL,IROW)=IDF(1)%NODATA
+   IDF(2)%X(ICOL,IROW)=IDF(2)%NODATA
+   IDF(3)%X(ICOL,IROW)=IDF(3)%NODATA
+   IDF(4)%X(ICOL,IROW)=IDF(4)%NODATA
+!    VA%X(ICOL,IROW)=VA%NODATA
+  ENDIF
+!  ENDIF
+ ENDDO; ENDDO
  
  DO I=1,2
   M=0; DO IROW=1,IDF(1)%NROW; DO ICOL=1,IDF(1)%NCOL
@@ -706,21 +746,6 @@ LOGICAL :: LEX
    ENDDO; ENDDO
   ENDIF
  ENDIF
- 
- !## make sure data is nodata for zero thickness - set all eqaul to equal nodata
- DO IROW=1,TP%NROW; DO ICOL=1,TP%NCOL
-  T=TP%X(ICOL,IROW)
-  B=BT%X(ICOL,IROW)
-  IF(T.NE.TP%NODATA.AND.B.NE.BT%NODATA)THEN
-   IF(T-B.LE.0.0D0)THEN
-    TP%X(ICOL,IROW)=TP%NODATA
-    BT%X(ICOL,IROW)=BT%NODATA
-    KH%X(ICOL,IROW)=KH%NODATA
-    KV%X(ICOL,IROW)=KV%NODATA
-!    VA%X(ICOL,IROW)=VA%NODATA
-   ENDIF
-  ENDIF
- ENDDO; ENDDO
  
  LHM_ADDIWHB_READFLIST=.TRUE.
  
