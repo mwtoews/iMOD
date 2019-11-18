@@ -195,14 +195,12 @@ MODULE MOD_AGGREGATE
     IROW=INT(FM(I)%SF(J)%AT(L)%IROW,4)
     ICOL=INT(FM(I)%SF(J)%AT(L)%ICOL,4)
     T=FM(I)%SF(J)%AT(L)%TP; B=FM(I)%SF(J)%AT(L)%BT
-!    if(irow.eq.107.and.icol.eq.902)then
-!     pause
-!    endif
+
     !## take minimal value of current level (idf) - inserted level can above surfacelevel
     T=MIN(T,IDF(1)%X(ICOL,IROW)); B=MIN(B,IDF(1)%X(ICOL,IROW))
-!    if(t.eq.idf(1)%nodata.or.b.eq.idf(2)%nodata)then
-!     write(*,*) t,idf(1)%nodata,b,idf(2)%nodata,irow,icol,i,iii
-!    endif
+!      if(t.eq.idf(1)%nodata.or.b.eq.idf(2)%nodata)then
+!        write(*,*) t,idf(1)%nodata,b,idf(2)%nodata,irow,icol,i,iii
+!      endif
     !## correct them
     FM(I)%SF(J)%AT(L)%TP=T; FM(I)%SF(J)%AT(L)%BT=B
     !## due to aggregation layers can become zero thickness
@@ -210,10 +208,10 @@ MODULE MOD_AGGREGATE
      NS=NS+1
      !## take minimal value as the first layer can have correction for "empty" spaces
      IDF(1)%X(ICOL,IROW)=FM(I)%SF(J)%AT(L)%TP
-     IF(FM(I)%SF(J)%AT(L)%TP.LT.-9000.0D0)THEN
-     WRITE(*,*) FM(I)%SF(J)%AT(L)%TP,i,icol,irow
-     PAUSE
-     endif
+       IF(FM(I)%SF(J)%AT(L)%TP.LT.-9000.0D0)THEN
+        WRITE(*,*) FM(I)%SF(J)%AT(L)%TP,i,icol,irow
+        PAUSE
+       endif
      IDF(2)%X(ICOL,IROW)=FM(I)%SF(J)%AT(L)%BT  
      IDF(3)%X(ICOL,IROW)=FM(I)%SF(J)%AT(L)%KH
      IDF(4)%X(ICOL,IROW)=FM(I)%SF(J)%AT(L)%KV
@@ -464,6 +462,9 @@ MODULE MOD_AGGREGATE
  IF(ASSOCIATED(FM(IORDER)%SF))THEN
   DO I=1,SIZE(FM(IORDER)%SF)
    IF(.NOT.ASSOCIATED(FM(IORDER)%SF(I)%AT))CYCLE
+   
+   WRITE(*,*) 'A ',IORDER,SIZE(FM(IORDER)%SF(I)%AT)
+   
    DO J=1,SIZE(FM(IORDER)%SF(I)%AT)
   
     IROW=INT(FM(IORDER)%SF(I)%AT(J)%IROW,4)
@@ -517,16 +518,17 @@ MODULE MOD_AGGREGATE
      IDF(3)%X(ICOL,IROW)=KH
      IDF(4)%X(ICOL,IROW)=KV
    
-    !## no update here needed, copy existing data
+    !## no update here needed, copy (imethod=2/3) or remove (imethod=4) existing data
     ELSE
-
+     
+     IDF(1)%X(ICOL,IROW)=TP
      !## only if imethod is 4
      IF(IMETH.EQ.4)THEN
       !## give a zero thickness - needed to shift all layers here
-      IDF(1)%X(ICOL,IROW)=TP; IDF(2)%X(ICOL,IROW)=TP
+      IDF(2)%X(ICOL,IROW)=TP
      ELSE
       !## keep existing layer
-      IDF(1)%X(ICOL,IROW)=TP; IDF(2)%X(ICOL,IROW)=BT
+      IDF(2)%X(ICOL,IROW)=BT
      ENDIF
      IDF(3)%X(ICOL,IROW)=KH; IDF(4)%X(ICOL,IROW)=KV
      
@@ -543,6 +545,7 @@ MODULE MOD_AGGREGATE
   IF(T.EQ.IDF(1)%NODATA.OR.B.EQ.IDF(2)%NODATA)CYCLE
   N=N+1
  ENDDO; ENDDO
+ WRITE(*,*) 'B ',IORDER,N
  
  !## remove current layer
  IF(ASSOCIATED(FM(IORDER)%SF))THEN
@@ -587,9 +590,7 @@ MODULE MOD_AGGREGATE
    IDF(2)%X(ICOL,IROW)=IDF(2)%NODATA
    IDF(3)%X(ICOL,IROW)=IDF(3)%NODATA
    IDF(4)%X(ICOL,IROW)=IDF(4)%NODATA
-!    VA%X(ICOL,IROW)=VA%NODATA
   ENDIF
-!  ENDIF
  ENDDO; ENDDO
  
  DO I=1,2
@@ -733,14 +734,16 @@ LOGICAL :: LEX
   ENDIF
   !## fill in values for kh or kv
   IF(TRIM(LIST(3)).EQ.'')THEN
+   !## missing kh, create it from kv
    DO IROW=1,VA%NROW; DO ICOL=1,VA%NCOL
-    IF(VA%X(ICOL,IROW).NE.VA%NODATA.AND.KH%X(ICOL,IROW).NE.KH%NODATA)THEN
+    IF(VA%X(ICOL,IROW).NE.VA%NODATA.AND.KV%X(ICOL,IROW).NE.KV%NODATA)THEN
      KH%X(ICOL,IROW)=KV%X(ICOL,IROW)/VA%X(ICOL,IROW)
     ENDIF
    ENDDO; ENDDO
   ELSE
+   !## missing kv, create it from kh
    DO IROW=1,VA%NROW; DO ICOL=1,VA%NCOL
-    IF(VA%X(ICOL,IROW).NE.VA%NODATA.AND.KV%X(ICOL,IROW).NE.KH%NODATA)THEN
+    IF(VA%X(ICOL,IROW).NE.VA%NODATA.AND.KH%X(ICOL,IROW).NE.KH%NODATA)THEN
      KV%X(ICOL,IROW)=KH%X(ICOL,IROW)*VA%X(ICOL,IROW)
     ENDIF
    ENDDO; ENDDO

@@ -233,7 +233,7 @@ CONTAINS
  !## start a first location
  NS=1; JS(NS)=1; NS=NS+1
  
- !## "walk" along the line, keep track of the direction
+ !## "walk" along the line, keep track of the direction; don't walk a line in the same direction
  DO
   !## find next point to move towards
   DO I=2,N

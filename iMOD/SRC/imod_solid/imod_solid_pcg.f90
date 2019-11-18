@@ -340,10 +340,10 @@ CONTAINS
       WRITE(LINE,'(2E15.7,2(A,I4),A,I3,A,F5.3,A)') HCHG,RCHG,' m/m3 (inner: ',ITER1,'; outer: ',ITER2,'; nconv: ',NICNVG,'; relax: ',RELAX,')'
       CALL WINDOWOUTSTATUSBAR(4,'Solving Residual Change: '//TRIM(LINE))
      ENDIF
-     
+
      !## store closure error
      ARRAY_HCHG(ILAY)=HCHG
-      
+
      !## convergence achieved
      IF(ICNVG(ILAY).EQ.1)EXIT
      IF(MICNVG.GT.0.AND.NICNVG.GT.MICNVG)EXIT 
