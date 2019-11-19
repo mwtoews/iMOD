@@ -231,7 +231,7 @@ CONTAINS
  !## all are no passed by yet
  ID=0
  !## start a first location
- NS=1; JS(NS)=1; NS=NS+1
+ NS=1; JS(NS)=1 !; NS=NS+1
  
  !## "walk" along the line, keep track of the direction; don't walk a line in the same direction
  DO
