@@ -2362,6 +2362,9 @@ IRLOOP: DO IROW=1,PRJIDF%NROW; DO ICOL=1,PRJIDF%NCOL
    
    !## bottom aquifer
    T =0.5D0*(TOP(ILAY+1)%X(ICOL,IROW)-BOT(ILAY+1)%X(ICOL,IROW))
+   IF(T.GT.0.0D0.AND.KHV(ILAY+1)%X(ICOL,IROW).LE.0.0D0)THEN
+    WRITE(*,*) T,KHV(ILAY+1)%X(ICOL,IROW),KVA(ILAY+1)%X(ICOL,IROW),ICOL,IROW
+   ENDIF
    T3=0.0D0; IF(T.GT.0.0D0)T3=T/(KHV(ILAY+1)%X(ICOL,IROW)/KVA(ILAY+1)%X(ICOL,IROW))
 
    !## total resistance
@@ -6705,7 +6708,7 @@ IRLOOP: DO IROW=1,PRJIDF%NROW; DO ICOL=1,PRJIDF%NCOL
   
   READ(JU,*)
   DO
-   !## z=fraction (-1=confined system), c=resistance
+   !## z=fraction (-1=confined system; used as conductance), c=resistance
    READ(JU,'(5I10,2G15.7,I10,4G15.7)',IOSTAT=IOS) JLAY,IR1,IC1,IR2,IC2,C,Z,ISYS,TPV,BTV,TFV,BFV
 
    IF(IOS.NE.0)EXIT

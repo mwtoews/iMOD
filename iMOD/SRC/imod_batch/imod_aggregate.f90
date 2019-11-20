@@ -18,7 +18,7 @@ MODULE MOD_AGGREGATE
   !## make dataset consistent
   CASE (1); CALL LHM_CONVERTREGIS()
   !## include additional data
-  CASE (2); CALL LHM_CONVERTREGIS_SORTFILES(ALIST,IWHBFILE,IWHBDIR,1); CALL LHM_ADDIWHB()
+  CASE (2); CALL LHM_CONVERTREGIS_SORTFILES(ALIST,IWHBFILE,IWHBDIR,1); CALL LHM_ADDIWHB_RASTER() !CALL LHM_ADDIWHB()
   !## aggregate dataset
   CASE (3); CALL LHM_CONVERTREGIS_AGGREGATE(); IF(IPRJ.EQ.1)CALL LHM_CONVERTREGIS_WRITEPRJ()
  END SELECT
@@ -100,14 +100,278 @@ MODULE MOD_AGGREGATE
 
  END SUBROUTINE LHM_CONVERTREGIS_SORTFILES
 
- !###===========================
+ !###=====================================================
+ SUBROUTINE LHM_ADDIWHB_RASTER()
+ !###=====================================================
+ IMPLICIT NONE
+ INTEGER :: I,J,K,N,BSIZE,NODES,INODE,ICOL,IROW
+ REAL(KIND=DP_KIND) :: TP,BT,KH,KV,VA
+ REAL(KIND=SP_KIND),DIMENSION(:),ALLOCATABLE :: TMP
+ TYPE(IDFOBJ),DIMENSION(:,:),ALLOCATABLE :: IDF,ODF
+ TYPE(IDFOBJ) :: MDL
+ INTEGER(KIND=1),ALLOCATABLE,DIMENSION(:) :: IACTIVE
+  
+ !## specify window
+ IF(IWINDOW.EQ.1)THEN
+  MDL%XMIN=XMIN; MDL%XMAX=XMAX; MDL%YMIN=YMIN; MDL%YMAX=YMAX; MDL%DX=CELLSIZE; MDL%DY=MDL%DX; MDL%ITYPE=4
+  CALL UTL_IDFSNAPTOGRID_LLC(MDL%XMIN,MDL%XMAX,MDL%YMIN,MDL%YMAX,MDL%DX,MDL%DY,MDL%NCOL,MDL%NROW,.TRUE.)
+ !## read entire model
+ ELSE
+  IF(.NOT.IDFREAD(MDL,FLIST(1)%FILE(1),0))STOP; CLOSE(MDL%IU)
+ ENDIF
+ 
+ !## allocate inout/output
+ N=SIZE(FLIST)+SIZE(ALIST); ALLOCATE(IDF(5,N),ODF(5,N))
+ DO I=1,N; DO J=1,5; CALL IDFNULLIFY(IDF(J,I)); ENDDO; ENDDO
+ DO I=1,N; DO J=1,5; CALL IDFNULLIFY(ODF(J,I)); ENDDO; ENDDO
+
+ !## open all base files for reading
+ DO I=1,SIZE(FLIST); CALL LHM_ADDIWHB_RASTER_OPENFILES_READ(FLIST(I)%FILE,INDIR,IDF(:,I)); ENDDO; I=I-1
+ !## open all iwhb files for reading
+ DO J=1,SIZE(ALIST); I=I+1; CALL LHM_ADDIWHB_RASTER_OPENFILES_READ(ALIST(J)%FILE,INDIR,IDF(:,I)); ENDDO
+ !## copy dimensions from input idf to output idf
+ DO I=1,SIZE(IDF,1); DO J=1,SIZE(IDF,2); CALL IDFCOPY(MDL,ODF(I,J)); ENDDO; ENDDO
+ 
+ !## open all base files for writing
+ DO I=1,SIZE(FLIST); CALL LHM_ADDIWHB_RASTER_OPENFILES_WRITE(I,OUTDIR,ODF(:,I)); ENDDO; I=I-1
+ 
+ NODES=MDL%NROW*MDL%NCOL; BLOCKSIZE=MIN(NODES,BLOCKSIZE)
+ ALLOCATE(TMP(BLOCKSIZE)) !TOP(N,BLOCKSIZE),BOT(N,BLOCKSIZE),KHV(N,BLOCKSIZE),KVV(N,BLOCKSIZE),KVA(N,BLOCKSIZE))
+ 
+ !## allocate memory to store in blocksize
+ DO I=1,SIZE(IDF,1); DO J=1,SIZE(IDF,2); IF(.NOT.ASSOCIATED(IDF(I,J)%V))ALLOCATE(IDF(I,J)%V(BLOCKSIZE)); ENDDO; ENDDO
+ DO I=1,SIZE(ODF,1); DO J=1,SIZE(ODF,2); IF(.NOT.ASSOCIATED(ODF(I,J)%V))ALLOCATE(ODF(I,J)%V(BLOCKSIZE)); ENDDO; ENDDO
+ 
+ !## store locations to be processed/saved eventually
+ ALLOCATE(IACTIVE(NODES)); IACTIVE=0
+ 
+ INODE=0; ICOL=0; IROW=1
+ DO 
+  
+  BSIZE=MIN(BLOCKSIZE,NODES-INODE)
+ 
+  !## finished
+  IF(BSIZE.LE.0)EXIT
+
+  !## read all data for current block
+  DO I=1,SIZE(FLIST); CALL LHM_ADDIWHB_RASTER_READ_DATA(IDF(:,I),BSIZE,FLIST(I)%FILE,TMP); ENDDO; I=I-1
+  DO J=1,SIZE(ALIST); I=I+1; CALL LHM_ADDIWHB_RASTER_READ_DATA(IDF(:,I),BSIZE,ALIST(J)%FILE,TMP); ENDDO
+
+  DO I=1,SIZE(IDF,1); DO J=1,SIZE(IDF,2); ODF(I,J)%V=IDF(I,J)%V; ENDDO; ENDDO
+
+  DO K=1,BSIZE
+   
+   ICOL=ICOL+1; IF(ICOL.GT.MDL%NCOL)THEN; ICOL=1; IROW=1; ENDIF
+   
+   !## check base data
+   DO I=1,SIZE(FLIST); CALL LHM_ADDIWHB_RASTER_CHECK(IDF(:,I),K,ICOL,IROW); ENDDO; I=I-1
+   
+   !## check insert data
+   DO J=1,SIZE(ALIST); I=I+1; CALL LHM_ADDIWHB_RASTER_CHECK(IDF(:,I),K,ICOL,IROW); ENDDO
+   
+   !## check whether data is sequentially
+   DO I=1,SIZE(FLIST)-1
+    BT=IDF(2,I)%V(K); TP=IDF(1,I+1)%V(K)
+    IF(BT.NE.TP)THEN; WRITE(*,'(/A,2I5,2F10.3)') 'BOT(ILAY).NE.TOP(ILAY+1):',ICOL,IROW,BT,TP; STOP; ENDIF
+   ENDDO
+
+   !## insert data
+  
+   !## correct data
+  
+  !
+ !  !## compute c- and t-values
+ !  DO I=1,N
+ !   VCV(I)=(TOP(I,J)-TOP(I+1,J))/KVV(I,J)
+ !   KDW(I)=(TOP(I,J)-TOP(I+1,J))*KHV(I,J)
+ !  ENDDO
+ !  TKDW(1)=SUM(KDW); TVCW(1)=SUM(VCV)
+ ! 
+ !  !## skip this as it is all nodata
+ !  IF(TKDW(1).LE.0.0)CYCLE
+ ! 
+ !  !## aggregate from layer 1 onwards
+ !  I=0; DO
+ !   I=I+1
+ !   DO II=I+1,N
+ !    IF(VCV(II).GT.CMIN.OR.II.EQ.N)THEN
+ !     !## shift bottoms down
+ !     JJ=1; IF(II.EQ.N)JJ=0
+ !     DO III=I+1,II-JJ !1
+ !      TOP(III,J)=TOP(II,J)
+ !      VCV(I)    =VCV(I)+VCV(III); VCV(III)=0.0
+ !      KDW(I)    =KDW(I)+KDW(III); KDW(III)=0.0
+ !     ENDDO
+ !     EXIT
+ !    ENDIF
+ !   ENDDO
+ !   I=II
+ !   IF(I.GE.N)EXIT
+ !  ENDDO
+ !  
+ !  TKDW(2)=SUM(KDW); TVCW(2)=SUM(VCV)
+ ! 
+ !  KE=100.0*(TKDW(1)-TKDW(2))/TKDW(1)
+ !  CE=100.0*(TVCW(1)-TVCW(2))/TVCW(1)
+ !  IF(KE.GT.KERROR.OR.CE.GT.CERROR)THEN
+ !   WRITE(*,'(/A)') 'Something went wrong'
+ !   WRITE(*,*) TKDW(1),TKDW(2),TKDW(1)-TKDW(2),KE
+ !   WRITE(*,*) TVCW(1),TVCW(2),TVCW(1)-TVCW(2),CE
+ !  ENDIF
+ ! 
+ !  !## compute khv and kvv-values
+ !  DO I=1,N
+ !   IF((TOP(I,J)-TOP(I+1,J)).GT.0.0)THEN
+ !    KHV(I,J)=KDW(I)/(TOP(I,J)-TOP(I+1,J))
+ !    KVV(I,J)=(TOP(I,J)-TOP(I+1,J))*VCV(I)
+ !   ELSE
+ !    KHV(I,J)=EPS
+ !    KVV(I,J)=EPS
+ !   ENDIF
+ !  ENDDO  
+  ENDDO
+  
+  !## write all data for current block
+  DO I=1,SIZE(FLIST); CALL LHM_ADDIWHB_RASTER_WRITE_DATA(ODF(:,I),BSIZE); ENDDO
+
+  INODE=INODE+BSIZE
+ 
+  WRITE(6,'(A,F10.3,A)') '+Progress Aggregation ',REAL(100*INODE)/REAL(NODES),'%     '
+ 
+ ENDDO
+ 
+ DEALLOCATE(TMP,IACTIVE)
+ 
+ END SUBROUTINE LHM_ADDIWHB_RASTER
+
+ !###=====================================================
+ SUBROUTINE LHM_ADDIWHB_RASTER_CHECK(IDF,K,ICOL,IROW)
+ !###=====================================================
+ IMPLICIT NONE
+ INTEGER,INTENT(IN) :: ICOL,IROW,K
+ TYPE(IDFOBJ),INTENT(INOUT),DIMENSION(:) :: IDF
+ 
+ !## thickness - need k-values
+ IF(IDF(1)%V(K)-IDF(2)%V(K).GT.0.0D0)THEN
+  IF(IDF(3)%V(K).LE.0.0D0.OR. &
+     IDF(4)%V(K).LE.0.0D0.OR. &
+     IDF(5)%V(K).LE.0.0D0)THEN
+   WRITE(*,'(A,2I5,5F10.3)') 'KH,KV,VA LE 0.0:',ICOL,IROW,IDF(1)%V(K),IDF(2)%V(K),IDF(3)%V(K),IDF(4)%V(K),IDF(5)%V(K)
+   STOP
+  ENDIF
+ ENDIF
+ 
+ END SUBROUTINE LHM_ADDIWHB_RASTER_CHECK
+ 
+ !###=====================================================
+ SUBROUTINE LHM_ADDIWHB_RASTER_OPENFILES_READ(LIST,DIR,IDF)
+ !###=====================================================
+ IMPLICIT NONE
+ CHARACTER(LEN=*),DIMENSION(:),INTENT(IN) :: LIST
+ CHARACTER(LEN=*),INTENT(IN) :: DIR
+ TYPE(IDFOBJ),INTENT(INOUT),DIMENSION(:) :: IDF
+ INTEGER :: I,IOS
+ REAL(KIND=DP_KIND) :: X
+ 
+ DO I=1,SIZE(IDF)
+  READ(LIST(I),*,IOSTAT=IOS) X
+  IF(IOS.NE.0)THEN
+   IF(TRIM(LIST(I)).NE.'')THEN
+    IF(.NOT.IDFREAD(IDF(I),TRIM(IDF(I)%FNAME),-1))THEN; WRITE(*,'(/A/)') 'ERROR READING '//TRIM(IDF(I)%FNAME); STOP; ENDIF 
+   ENDIF
+  ELSE
+   ALLOCATE(IDF(I)%X(1,1)); IDF(I)%X(1,1)=X
+  ENDIF
+ ENDDO
+ 
+ !## if idf(i)%iu.gt.0) --- read from idf
+ !## if allocated(idf(i)%x) --- read constant value from idf(i)%x(1,1)
+ !## else nothing read --- apply conversion from other
+ 
+ END SUBROUTINE LHM_ADDIWHB_RASTER_OPENFILES_READ
+
+ !###=====================================================
+ SUBROUTINE LHM_ADDIWHB_RASTER_OPENFILES_WRITE(IFL,DIR,IDF)
+ !###=====================================================
+ IMPLICIT NONE
+ INTEGER,INTENT(IN) :: IFL
+ CHARACTER(LEN=*),INTENT(IN) :: DIR
+ TYPE(IDFOBJ),INTENT(INOUT),DIMENSION(:) :: IDF
+ INTEGER :: I
+ CHARACTER(LEN=3),DIMENSION(5) :: TXT=['-T','-B','-KH','-KV','-VA'] 
+ 
+ DO I=1,SIZE(IDF)
+  IF(INDEX(IDF(I)%FNAME,'.IDF').LE.0)THEN
+   IDF(I)%FNAME=TRIM(ITOS(IFL))//'_FORMATION'//TRIM(TXT(I))//'.IDF' 
+  ENDIF
+  IF(.NOT.IDFWRITE(IDF(I),TRIM(DIR)//'\'//TRIM(IDF(I)%FNAME),1,-1))THEN; WRITE(*,'(/A/)') 'ERROR READING '//TRIM(IDF(I)%FNAME); STOP; ENDIF
+ ENDDO
+ 
+ END SUBROUTINE LHM_ADDIWHB_RASTER_OPENFILES_WRITE
+
+ !###=====================================================
+ SUBROUTINE LHM_ADDIWHB_RASTER_READ_DATA(IDF,BSIZE,LIST,TMP)
+ !###=====================================================
+ IMPLICIT NONE
+ TYPE(IDFOBJ),DIMENSION(:),INTENT(INOUT) :: IDF
+ REAL(KIND=SP_KIND),DIMENSION(:) :: TMP
+ CHARACTER(LEN=*),DIMENSION(:),INTENT(IN) :: LIST
+ INTEGER,INTENT(IN) :: BSIZE
+ INTEGER :: I,J
+ 
+ DO I=1,SIZE(IDF)
+  !## read block
+  IF(IDF(I)%IU.GT.0)THEN
+   IF(IDF(I)%ITYPE.EQ.4)THEN
+    READ(IDF(I)%IU) (TMP(J),J=1,BSIZE)
+    IDF(I)%V=TMP
+   ELSE
+    READ(IDF(I)%IU) (IDF(I)%V(J),J=1,BSIZE)
+   ENDIF
+  ELSE
+   IF(ASSOCIATED(IDF(I)%X))IDF(I)%V=IDF(I)%X(1,1)
+  ENDIF
+ ENDDO
+ 
+ !## fill in missing data for kh,kv and/or va
+ IF(TRIM(LIST(5)).EQ.'')THEN
+  !## va missing compute from kh and kv
+  IDF(5)%V=IDF(4)%V/IDF(3)%V
+ ELSEIF(TRIM(LIST(4)).EQ.'')THEN
+  IDF(4)%V=IDF(3)%V*IDF(5)%V
+ ELSEIF(TRIM(LIST(3)).EQ.'')THEN
+  IDF(3)%V=IDF(4)%V/IDF(5)%V
+ ENDIF
+ 
+ END SUBROUTINE LHM_ADDIWHB_RASTER_READ_DATA
+
+ !###=====================================================
+ SUBROUTINE LHM_ADDIWHB_RASTER_WRITE_DATA(IDF,BSIZE)
+ !###=====================================================
+ IMPLICIT NONE
+ TYPE(IDFOBJ),DIMENSION(:),INTENT(INOUT) :: IDF
+ INTEGER,INTENT(IN) :: BSIZE
+ INTEGER :: I,J
+ 
+ DO I=1,SIZE(IDF)
+  !## write block
+  IF(IDF(I)%ITYPE.EQ.4)THEN
+   WRITE(IDF(I)%IU) (REAL(IDF(I)%V(J),4),J=1,BSIZE)
+  ELSE
+   WRITE(IDF(I)%IU) (IDF(I)%V(J),J=1,BSIZE)
+  ENDIF
+ ENDDO
+ 
+ END SUBROUTINE LHM_ADDIWHB_RASTER_WRITE_DATA
+
+ !###=====================================================
  SUBROUTINE LHM_ADDIWHB()
- !###===========================
+!###=====================================================
  IMPLICIT NONE
  INTEGER :: I,II,III,J,K,L,N,M,O,IROW,ICOL,IU,NS
  REAL(KIND=DP_KIND) :: F,T,B
  INTEGER,DIMENSION(:),ALLOCATABLE :: NL
- TYPE(IDFOBJ) :: MDL
+ TYPE(IDFOBJ) :: MDL,SURFL
  TYPE(IDFOBJ),ALLOCATABLE,DIMENSION(:) :: IDF
  
  CALL IDFNULLIFY(MDL); ALLOCATE(IDF(5)); DO I=1,SIZE(IDF); CALL IDFNULLIFY(IDF(I)); ENDDO
@@ -122,11 +386,15 @@ MODULE MOD_AGGREGATE
  
  N=SIZE(FLIST)+SIZE(ALIST); ALLOCATE(FM(N),NL(N))
 
+ !## allocate surface level
+ IF(.NOT.LHM_ADDIWHB_READFLIST(MDL,IDF(1),IDF(2),IDF(3),IDF(4),IDF(5),SIZE(FLIST(1)%FILE),FLIST(1)%FILE,INDIR))STOP
+ CALL IDFCOPY(IDF(1),SURFL)
+
  N=SIZE(FLIST); DO I=1,N
 
   !## read data
   IF(.NOT.LHM_ADDIWHB_READFLIST(MDL,IDF(1),IDF(2),IDF(3),IDF(4),IDF(5),SIZE(FLIST(I)%FILE),FLIST(I)%FILE,INDIR))STOP
-  CALL LHM_ADDIWHB_ADDDATA(I,FLIST(I)%FILE,IDF); FM(I)%IORDER=I
+  CALL LHM_ADDIWHB_ADDDATA(I,FLIST(I)%FILE,IDF,SURFL); FM(I)%IORDER=I
   
   F=100.0D0*DBLE(I)/DBLE(N); WRITE(6,'(A)') '+READING '//TRIM(FLIST(I)%FILE(1))//'('//TRIM(RTOS(F,'F',2))//'%)         '
   WRITE(*,'(99A)') (TRIM(FLIST(I)%FILE(J))//',',J=1,4),TRIM(FLIST(I)%FILE(5))
@@ -141,7 +409,7 @@ MODULE MOD_AGGREGATE
    F=100.0D0*DBLE(J)/DBLE(SIZE(ALIST)); WRITE(6,'(A)') '+READING '//TRIM(ALIST(J)%FILE(1))//'('//TRIM(RTOS(F,'F',2))//'%)          '
 
    !## read in data
-   CALL LHM_ADDIWHB_ADDDATA(I,ALIST(J)%FILE,IDF)
+   CALL LHM_ADDIWHB_ADDDATA(I,ALIST(J)%FILE,IDF,SURFL)
 
    SELECT CASE (ALIST(J)%METH)
     !## find location
@@ -160,12 +428,12 @@ MODULE MOD_AGGREGATE
    SELECT CASE (ALIST(J)%METH)
     CASE (1)
      !## correct all others for this inserted layer
-     CALL LHM_ADDIWHB_INSERT_IWHB(I,IDF)
+     CALL LHM_ADDIWHB_INSERT_IWHB(I,IDF) !,SURFL)
     CASE (2:4)
      !## fixed location
      CALL LHM_ADDIWHB_REPLACE_IWHB(I,ALIST(J)%METH,IDF)
      !## correct all others for this inserted layer
-     CALL LHM_ADDIWHB_INSERT_IWHB(I,IDF) !,ALIST(J)%METH)
+     CALL LHM_ADDIWHB_INSERT_IWHB(I,IDF) !,SURFL) !,ALIST(J)%METH)
    END SELECT
   
   ENDDO
@@ -269,10 +537,11 @@ MODULE MOD_AGGREGATE
  END SUBROUTINE LHM_ADDIWHB
  
  !###===========================
- SUBROUTINE LHM_ADDIWHB_INSERT_IWHB(IFM,IDF) !,IMETH)
+ SUBROUTINE LHM_ADDIWHB_INSERT_IWHB(IFM,IDF) !,SURFL) !,IMETH)
  !###===========================
  IMPLICIT NONE
  INTEGER,INTENT(IN) :: IFM !,IMETH
+! TYPE(IDFOBJ),INTENT(IN) :: SURFL
  TYPE(IDFOBJ),INTENT(INOUT),DIMENSION(5) :: IDF
  INTEGER :: I,II,J,JJ,K,N,IROW,ICOL,IORDER,M
  REAL(KIND=DP_KIND) :: T,B,VC,TR,DZ,TF,BF
@@ -361,9 +630,9 @@ MODULE MOD_AGGREGATE
     TF=FM(II)%SF(J)%AT(K)%TP; BF=FM(II)%SF(J)%AT(K)%BT; IF(TF-BF.LE.0.0D0)CYCLE
     IROW=INT(FM(II)%SF(J)%AT(K)%IROW,4); ICOL=INT(FM(II)%SF(J)%AT(K)%ICOL,4)
     
-!    IF(IROW.EQ.21.AND.ICOL.EQ.13)THEN
-!     WRITE(*,*) 
-!    ENDIF
+    IF(IROW.EQ.5.AND.ICOL.EQ.6)THEN
+     WRITE(*,*) 
+    ENDIF
     
     T=IDF(1)%X(ICOL,IROW); B=IDF(2)%X(ICOL,IROW)
     !## skip nodata location - continue with location that need to be removed and/or are new
@@ -429,9 +698,9 @@ MODULE MOD_AGGREGATE
       FM(1)%SF(1)%AT(N)%IROW=INT(IROW,2)
       FM(1)%SF(1)%AT(N)%ICOL=INT(ICOL,2)
       !## this value will be trimmed
-      FM(1)%SF(1)%AT(N)%TP=10000.0 !HUGE(1.0)
+      FM(1)%SF(1)%AT(N)%TP=1000.0 !SURFL%X(ICOL,IROW) !10000.0 !HUGE(1.0)
       !## bot is used - top is used from the previous layer
-      FM(1)%SF(1)%AT(N)%BT=T
+      FM(1)%SF(1)%AT(N)%BT=T !MIN(T,SURFL%X(ICOL,IROW))  !T
       FM(1)%SF(1)%AT(N)%KH=1.0
       FM(1)%SF(1)%AT(N)%KV=1.0
       FM(1)%SF(1)%AT(N)%VA=1.0
@@ -604,10 +873,11 @@ MODULE MOD_AGGREGATE
  END SUBROUTINE LHM_ADDIWHB_REPLACE_IWHB
 
  !###===========================
- SUBROUTINE LHM_ADDIWHB_ADDDATA(IFM,FNAME,IDF)
+ SUBROUTINE LHM_ADDIWHB_ADDDATA(IFM,FNAME,IDF,SURFL)
  !###===========================
  IMPLICIT NONE
  INTEGER,INTENT(IN) :: IFM
+ TYPE(IDFOBJ),INTENT(IN) :: SURFL
  CHARACTER(LEN=*),INTENT(IN),DIMENSION(:) :: FNAME
  TYPE(IDFOBJ),INTENT(INOUT),DIMENSION(5) :: IDF
  INTEGER :: I,M,IROW,ICOL
@@ -616,8 +886,8 @@ MODULE MOD_AGGREGATE
  !## make sure data is nodata for zero thickness - set all equal to equal nodata
  M=0
  DO IROW=1,IDF(1)%NROW; DO ICOL=1,IDF(1)%NCOL
-  T=IDF(1)%X(ICOL,IROW)
-  B=IDF(2)%X(ICOL,IROW)
+  T=MIN(SURFL%X(ICOL,IROW),IDF(1)%X(ICOL,IROW))
+  B=MIN(SURFL%X(ICOL,IROW),IDF(2)%X(ICOL,IROW))
 !  if(icol.eq.13.and.irow.eq.21)then
 !  write(*,*)
 !  endif
@@ -711,11 +981,10 @@ ILOOP: DO I=1,IFM-1
  CHARACTER(LEN=*),INTENT(IN) :: DIR
  INTEGER,INTENT(IN) :: N
  CHARACTER(LEN=256) :: FN
- INTEGER :: ICOL,IROW,IOS,J,JJ
- REAL(KIND=DP_KIND) :: X,T,B
+ INTEGER :: ICOL,IROW,IOS
+ REAL(KIND=DP_KIND) :: X
  CHARACTER(LEN=*),DIMENSION(N) :: LIST
- CHARACTER(LEN=256) :: FTXT
-LOGICAL :: LEX
+ LOGICAL :: LEX
  
  LHM_ADDIWHB_READFLIST=.FALSE.
  
