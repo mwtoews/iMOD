@@ -18,7 +18,7 @@ MODULE MOD_AGGREGATE
   !## make dataset consistent
   CASE (1); CALL LHM_CONVERTREGIS()
   !## include additional data
-  CASE (2); CALL LHM_CONVERTREGIS_SORTFILES(ALIST,IWHBFILE,IWHBDIR,1); CALL LHM_ADDIWHB_RASTER() !CALL LHM_ADDIWHB()
+  CASE (2); CALL LHM_CONVERTREGIS_SORTFILES(ALIST,IWHBFILE,IWHBDIR,SIZE(FLIST)); CALL LHM_ADDIWHB_RASTER() !CALL LHM_ADDIWHB()
   !## aggregate dataset
   CASE (3); CALL LHM_CONVERTREGIS_AGGREGATE(); IF(IPRJ.EQ.1)CALL LHM_CONVERTREGIS_WRITEPRJ()
  END SELECT
@@ -40,7 +40,8 @@ MODULE MOD_AGGREGATE
  OPEN(UNIT=6,CARRIAGECONTROL='FORTRAN') 
 
  IU=UTL_GETUNIT(); OPEN(IU,FILE=OFILE,STATUS='OLD',ACTION='READ'); ALLOCATE(SLIST(1)); READ(IU,*)
- DO I=1,2; M=1; N=1; DO
+ DO I=1,2; M=1; N=1
+  DO
    IF(I.EQ.2.AND.M.GT.SIZE(SLIST))EXIT
    SLIST(M)%FILE=''; READ(IU,'(A512)',IOSTAT=IOS) LINE
    IF(IOS.NE.0)EXIT
@@ -69,7 +70,7 @@ MODULE MOD_AGGREGATE
       SLIST(I)%ITYPE(J)=0; SLIST(I)%XVAL(J)=HUGE(1.0D0)
       INQUIRE(FILE=TRIM(DIR)//'\'//TRIM(SLIST(I)%FILE(J)),EXIST=LEX)
       IF(.NOT.LEX)THEN
-       WRITE(*,'(/A/)') 'Cannot find file '//TRIM(DIR)//'\'//TRIM(SLIST(I)%FILE(J))
+       WRITE(*,'(/A/)') 'CANNOT FIND FILE '//TRIM(DIR)//'\'//TRIM(SLIST(I)%FILE(J))
        STOP
       ENDIF
       SLIST(I)%FILE(J)=UTL_CAP(SLIST(I)%FILE(J),'U')
@@ -83,18 +84,24 @@ MODULE MOD_AGGREGATE
    ENDDO
   ENDDO
  
-  !## check duplicate files - no allowed
-  DO I=1,SIZE(SLIST); DO J=3,SIZE(SLIST(I)%FILE)
-   IF(SLIST(I)%ITYPE(J).NE.0)CYCLE; N=0
-   DO II=I,SIZE(SLIST); DO JJ=3,SIZE(SLIST(II)%FILE)
+  !## mark duplicate files
+  DO I=1,SIZE(SLIST); DO J=1,SIZE(SLIST(I)%FILE)
+   SLIST(I)%DUPL_F(J)=0; SLIST(I)%DUPL_T(J)=0
+   !## skip constant values
+   IF(SLIST(I)%ITYPE(J).NE.0)CYCLE
+   DO II=1,SIZE(SLIST); DO JJ=1,SIZE(SLIST(II)%FILE)
+    !## skip constant values
     IF(SLIST(II)%ITYPE(JJ).NE.0)CYCLE
-    IF(TRIM(SLIST(I)%FILE(J)).EQ.TRIM(SLIST(II)%FILE(JJ)))N=N+1
-   ENDDO; ENDDO
-   IF(N.GT.1)THEN
-    WRITE(*,*) 'DUPLICATE FOUND '//TRIM(SLIST(I)%FILE(J)); STOP
-   ENDIF
+    IF(TRIM(SLIST(I)%FILE(J)).EQ.TRIM(SLIST(II)%FILE(JJ)))THEN
+     IF(II.NE.I.AND.JJ.NE.J)THEN; SLIST(I)%DUPL_F(J)=II+IMETHOD; SLIST(I)%DUPL_T(J)=JJ; ENDIF
+    ENDIF
+   ENDDO; IF(SLIST(I)%DUPL_F(J).NE.0)EXIT; ENDDO
   ENDDO; ENDDO
 
+  DO I=1,SIZE(SLIST)
+   WRITE(*,'(99I4)') I,(SLIST(I)%DUPL_F(J),SLIST(I)%DUPL_T(J),J=1,SIZE(SLIST(I)%FILE))
+  ENDDO
+ 
  ENDIF
  CLOSE(IU)
 
@@ -105,7 +112,6 @@ MODULE MOD_AGGREGATE
  !###=====================================================
  IMPLICIT NONE
  INTEGER :: I,J,K,N,BSIZE,NODES,INODE,ICOL,IROW
- REAL(KIND=DP_KIND) :: TP,BT,KH,KV,VA
  REAL(KIND=SP_KIND),DIMENSION(:),ALLOCATABLE :: TMP
  TYPE(IDFOBJ),DIMENSION(:,:),ALLOCATABLE :: IDF,ODF
  TYPE(IDFOBJ) :: MDL
@@ -126,17 +132,23 @@ MODULE MOD_AGGREGATE
  DO I=1,N; DO J=1,5; CALL IDFNULLIFY(ODF(J,I)); ENDDO; ENDDO
 
  !## open all base files for reading
- DO I=1,SIZE(FLIST); CALL LHM_ADDIWHB_RASTER_OPENFILES_READ(FLIST(I)%FILE,INDIR,IDF(:,I)); ENDDO; I=I-1
+ DO I=1,SIZE(FLIST)
+  CALL LHM_ADDIWHB_RASTER_OPENFILES_READ(FLIST(I)%FILE,FLIST(I)%DUPL_F,FLIST(I)%DUPL_T,INDIR,IDF(:,I))
+ ENDDO; I=I-1
  !## open all iwhb files for reading
- DO J=1,SIZE(ALIST); I=I+1; CALL LHM_ADDIWHB_RASTER_OPENFILES_READ(ALIST(J)%FILE,INDIR,IDF(:,I)); ENDDO
+ DO J=1,SIZE(ALIST); I=I+1
+  CALL LHM_ADDIWHB_RASTER_OPENFILES_READ(ALIST(J)%FILE,ALIST(J)%DUPL_F,ALIST(J)%DUPL_T,IWHBDIR,IDF(:,I))
+ ENDDO
  !## copy dimensions from input idf to output idf
- DO I=1,SIZE(IDF,1); DO J=1,SIZE(IDF,2); CALL IDFCOPY(MDL,ODF(I,J)); ENDDO; ENDDO
+ DO I=1,SIZE(IDF,1); DO J=1,SIZE(IDF,2); CALL IDFCOPY(MDL,ODF(I,J)); ODF(I,J)%FNAME=IDF(I,J)%FNAME; ENDDO; ENDDO
  
  !## open all base files for writing
- DO I=1,SIZE(FLIST); CALL LHM_ADDIWHB_RASTER_OPENFILES_WRITE(I,OUTDIR,ODF(:,I)); ENDDO; I=I-1
+ DO I=1,SIZE(FLIST)
+  CALL LHM_ADDIWHB_RASTER_OPENFILES_WRITE(FLIST(I)%FILE,FLIST(I)%DUPL_F,FLIST(I)%DUPL_T,I,OUTDIR,ODF(:,I))
+ ENDDO; I=I-1
  
- NODES=MDL%NROW*MDL%NCOL; BLOCKSIZE=MIN(NODES,BLOCKSIZE)
- ALLOCATE(TMP(BLOCKSIZE)) !TOP(N,BLOCKSIZE),BOT(N,BLOCKSIZE),KHV(N,BLOCKSIZE),KVV(N,BLOCKSIZE),KVA(N,BLOCKSIZE))
+ NODES=MDL%NROW*MDL%NCOL; BLOCKSIZE=1000; BLOCKSIZE=MIN(NODES,BLOCKSIZE)
+ ALLOCATE(TMP(BLOCKSIZE))
  
  !## allocate memory to store in blocksize
  DO I=1,SIZE(IDF,1); DO J=1,SIZE(IDF,2); IF(.NOT.ASSOCIATED(IDF(I,J)%V))ALLOCATE(IDF(I,J)%V(BLOCKSIZE)); ENDDO; ENDDO
@@ -154,81 +166,53 @@ MODULE MOD_AGGREGATE
   IF(BSIZE.LE.0)EXIT
 
   !## read all data for current block
-  DO I=1,SIZE(FLIST); CALL LHM_ADDIWHB_RASTER_READ_DATA(IDF(:,I),BSIZE,FLIST(I)%FILE,TMP); ENDDO; I=I-1
-  DO J=1,SIZE(ALIST); I=I+1; CALL LHM_ADDIWHB_RASTER_READ_DATA(IDF(:,I),BSIZE,ALIST(J)%FILE,TMP); ENDDO
+  DO I=1,SIZE(FLIST)
+   CALL LHM_ADDIWHB_RASTER_READ_DATA(I,IDF,FLIST(I)%DUPL_F,FLIST(I)%DUPL_T,BSIZE,FLIST(I)%FILE,TMP)
+  ENDDO; I=I-1
+  DO J=1,SIZE(ALIST); I=I+1
+   CALL LHM_ADDIWHB_RASTER_READ_DATA(I,IDF,ALIST(J)%DUPL_F,ALIST(J)%DUPL_T,BSIZE,ALIST(J)%FILE,TMP)
+  ENDDO
 
-  DO I=1,SIZE(IDF,1); DO J=1,SIZE(IDF,2); ODF(I,J)%V=IDF(I,J)%V; ENDDO; ENDDO
+  !## copy original data from input idf objects (idf) to output idf objects (odf)
+  DO I=1,SIZE(IDF,1); DO J=1,SIZE(IDF,2); ODF(I,J)%V=IDF(I,J)%V; ODF(I,J)%NODATA=IDF(I,J)%NODATA; ENDDO; ENDDO
 
   DO K=1,BSIZE
    
-   ICOL=ICOL+1; IF(ICOL.GT.MDL%NCOL)THEN; ICOL=1; IROW=1; ENDIF
+   ICOL=ICOL+1; IF(ICOL.GT.MDL%NCOL)THEN; ICOL=1; IROW=IROW+1; ENDIF
    
+!   if(icol.ne.896.or.irow.ne.26)cycle
+!   !## check whether base data is nodata and make it sequentially
+!   CALL LHM_ADDIWHB_RASTER_CHECK_CONSISTENCY(ODF,K,IROW,ICOL)
+
    !## check base data
-   DO I=1,SIZE(FLIST); CALL LHM_ADDIWHB_RASTER_CHECK(IDF(:,I),K,ICOL,IROW); ENDDO; I=I-1
+   N=0; DO I=1,SIZE(FLIST); CALL LHM_ADDIWHB_RASTER_CHECK(ODF(:,I),K,ICOL,IROW,N); ENDDO; I=I-1
    
    !## check insert data
-   DO J=1,SIZE(ALIST); I=I+1; CALL LHM_ADDIWHB_RASTER_CHECK(IDF(:,I),K,ICOL,IROW); ENDDO
+   DO J=1,SIZE(ALIST); I=I+1; CALL LHM_ADDIWHB_RASTER_CHECK(ODF(:,I),K,ICOL,IROW,N); ENDDO
    
-   !## check whether data is sequentially
-   DO I=1,SIZE(FLIST)-1
-    BT=IDF(2,I)%V(K); TP=IDF(1,I+1)%V(K)
-    IF(BT.NE.TP)THEN; WRITE(*,'(/A,2I5,2F10.3)') 'BOT(ILAY).NE.TOP(ILAY+1):',ICOL,IROW,BT,TP; STOP; ENDIF
-   ENDDO
+   !## all nodata - nothing to do
+   IF(N.EQ.SIZE(FLIST)+SIZE(ALIST))CYCLE
+   
+   !## check whether base data is nodata and make it sequentially
+   CALL LHM_ADDIWHB_RASTER_CHECK_CONSISTENCY(ODF,K,IROW,ICOL)
 
-   !## insert data
+   I=SIZE(FLIST); DO J=1,SIZE(ALIST)
+    I=I+1
+    SELECT CASE (ALIST(J)%METH)
+     !## determining layer automatically
+     CASE (1)
+!      ALIST(J)%ILAYER=
+     CASE (2:4)
+      !## replace data from the ith iwhb layer
+      CALL  LHM_ADDIWHB_RASTER_REPLACE(ODF,I,J,K)
+    END SELECT
+    !## correct data
+    CALL LHM_ADDIWHB_RASTER_CORRECT(ODF,J,K)
+   ENDDO
   
-   !## correct data
-  
-  !
- !  !## compute c- and t-values
- !  DO I=1,N
- !   VCV(I)=(TOP(I,J)-TOP(I+1,J))/KVV(I,J)
- !   KDW(I)=(TOP(I,J)-TOP(I+1,J))*KHV(I,J)
- !  ENDDO
- !  TKDW(1)=SUM(KDW); TVCW(1)=SUM(VCV)
- ! 
- !  !## skip this as it is all nodata
- !  IF(TKDW(1).LE.0.0)CYCLE
- ! 
- !  !## aggregate from layer 1 onwards
- !  I=0; DO
- !   I=I+1
- !   DO II=I+1,N
- !    IF(VCV(II).GT.CMIN.OR.II.EQ.N)THEN
- !     !## shift bottoms down
- !     JJ=1; IF(II.EQ.N)JJ=0
- !     DO III=I+1,II-JJ !1
- !      TOP(III,J)=TOP(II,J)
- !      VCV(I)    =VCV(I)+VCV(III); VCV(III)=0.0
- !      KDW(I)    =KDW(I)+KDW(III); KDW(III)=0.0
- !     ENDDO
- !     EXIT
- !    ENDIF
- !   ENDDO
- !   I=II
- !   IF(I.GE.N)EXIT
- !  ENDDO
- !  
- !  TKDW(2)=SUM(KDW); TVCW(2)=SUM(VCV)
- ! 
- !  KE=100.0*(TKDW(1)-TKDW(2))/TKDW(1)
- !  CE=100.0*(TVCW(1)-TVCW(2))/TVCW(1)
- !  IF(KE.GT.KERROR.OR.CE.GT.CERROR)THEN
- !   WRITE(*,'(/A)') 'Something went wrong'
- !   WRITE(*,*) TKDW(1),TKDW(2),TKDW(1)-TKDW(2),KE
- !   WRITE(*,*) TVCW(1),TVCW(2),TVCW(1)-TVCW(2),CE
- !  ENDIF
- ! 
- !  !## compute khv and kvv-values
- !  DO I=1,N
- !   IF((TOP(I,J)-TOP(I+1,J)).GT.0.0)THEN
- !    KHV(I,J)=KDW(I)/(TOP(I,J)-TOP(I+1,J))
- !    KVV(I,J)=(TOP(I,J)-TOP(I+1,J))*VCV(I)
- !   ELSE
- !    KHV(I,J)=EPS
- !    KVV(I,J)=EPS
- !   ENDIF
- !  ENDDO  
+   !## check whether base data is nodata and make it sequentially
+   CALL LHM_ADDIWHB_RASTER_CHECK_CONSISTENCY(ODF,K,IROW,ICOL)
+
   ENDDO
   
   !## write all data for current block
@@ -244,30 +228,231 @@ MODULE MOD_AGGREGATE
  
  END SUBROUTINE LHM_ADDIWHB_RASTER
 
+ !###===========================
+ SUBROUTINE LHM_ADDIWHB_RASTER_CORRECT(ODF,IWHB,K)
+ !###===========================
+ IMPLICIT NONE
+ INTEGER,INTENT(IN) :: IWHB,K
+ TYPE(IDFOBJ),INTENT(INOUT),DIMENSION(:,:) :: ODF 
+ INTEGER :: I,ILAY
+ REAL(KIND=DP_KIND) :: T,B,TP,BT
+ 
+ !## layer of insertion
+ ILAY =ALIST(IWHB)%ILAYER
+ 
+ T=ODF(1,ILAY)%V(K)
+ B=ODF(2,ILAY)%V(K)
+ 
+ !## correct above inserted layer
+ DO I=ILAY-1,1,-1
+  IF(ODF(2,I)%V(K).GT.T)EXIT
+  ODF(1,I)%V(K)=MAX(ODF(1,I)%V(K),T)
+  ODF(2,I)%V(K)=MAX(ODF(2,I)%V(K),T)
+ ENDDO
+ !## correct below inserted layer
+ DO I=ILAY+1,SIZE(ODF,2)
+  IF(ODF(1,I)%V(K).LT.B)EXIT
+  ODF(1,I)%V(K)=MIN(ODF(1,I)%V(K),B)
+  ODF(2,I)%V(K)=MIN(ODF(2,I)%V(K),B)
+ ENDDO
+ 
+ !## downlift bottom of first layer
+ DO I=ILAY-1,1,-1
+  TP=ODF(1,I)%V(K)
+  BT=ODF(2,I)%V(K)
+  IF(TP-BT.LE.0.0D0)THEN
+   ODF(1,I)%V(K)=T
+   ODF(2,I)%V(K)=T
+  ELSE
+   ODF(2,I)%V(K)=T; EXIT
+  ENDIF
+ ENDDO
+ !## uplift top of first layer
+ DO I=ILAY+1,SIZE(ODF,2)
+  TP=ODF(1,I)%V(K)
+  BT=ODF(2,I)%V(K)
+  IF(TP-BT.LE.0.0D0)THEN
+   ODF(1,I)%V(K)=B
+   ODF(2,I)%V(K)=B
+  ELSE
+   ODF(1,I)%V(K)=B; EXIT
+  ENDIF
+ ENDDO
+ 
+ END SUBROUTINE LHM_ADDIWHB_RASTER_CORRECT
+ 
+ !###===========================
+ SUBROUTINE LHM_ADDIWHB_RASTER_REPLACE(ODF,I,IWHB,K)
+ !###===========================
+ IMPLICIT NONE
+ INTEGER,INTENT(IN) :: IWHB,I,K
+ TYPE(IDFOBJ),INTENT(INOUT),DIMENSION(:,:) :: ODF 
+ INTEGER :: IMETH,ILAY
+ REAL(KIND=DP_KIND) :: T,B,TP,BT,D,TR,VC,KH,KV
+ 
+ !## layer of insertion
+ ILAY =ALIST(IWHB)%ILAYER
+ IMETH=ALIST(IWHB)%METH
+
+ !## new dimensions
+ TP=ODF(1,I)%V(K)
+ BT=ODF(2,I)%V(K)
+
+ !## dimensions of current layer
+ T=ODF(1,ILAY)%V(K)
+ B=ODF(2,ILAY)%V(K)
+
+ !## new data not available here
+ IF(TP.EQ.ODF(1,I)%NODATA.OR.BT.EQ.ODF(2,I)%NODATA.OR.TP-BT.LE.0.0D0)THEN
+  !## remove if imethod=4
+  IF(IMETH.EQ.4)THEN
+   T=(T+B)/2.0D0
+   ODF(1,ILAY)%V(K)=T
+   ODF(2,ILAY)%V(K)=T
+  ENDIF
+  RETURN
+ ENDIF
+
+ TR=0.0D0; VC=0.0D0; D=0.0
+    
+ !## add to an existing layer
+ IF(IMETH.EQ.3)THEN
+  KH=ODF(3,ILAY)%V(K)
+  KV=ODF(4,ILAY)%V(K)
+  !## remaining original thickness
+  D=MAX(0.0D0,(TP-BT)-(T-B))
+  !## remaining transmissivity
+  TR=D*KH
+  !## remaining vertical resistance
+  VC=D/KV
+  !## update top- and bottom values
+  T=MAX(TP,T)
+  B=MIN(BT,B)
+ ELSE
+  !## added thickness
+  T=TP; B=BT
+ ENDIF
+
+ !## added nett thickness
+ D=(T-B)-D
+
+ !## new parameters
+ KH=ODF(3,I)%V(K)
+ KV=ODF(4,I)%V(K)
+
+ !## compute total transmissivity
+ TR=TR+D*KH
+ !## compute total vertical resistance
+ VC=VC+D/KV
+
+ !## recompute representative k-values
+ D =T-B
+ KH=TR/D
+ KV=D/VC
+
+ !## save updated values
+ ODF(1,ILAY)%V(K)=T
+ ODF(2,ILAY)%V(K)=B
+ ODF(3,ILAY)%V(K)=KH
+ ODF(4,ILAY)%V(K)=KV
+ ODF(5,ILAY)%V(K)=KV/KH
+ 
+ END SUBROUTINE LHM_ADDIWHB_RASTER_REPLACE
+
  !###=====================================================
- SUBROUTINE LHM_ADDIWHB_RASTER_CHECK(IDF,K,ICOL,IROW)
+ SUBROUTINE LHM_ADDIWHB_RASTER_CHECK_CONSISTENCY(IDF,K,IROW,ICOL)
  !###=====================================================
  IMPLICIT NONE
  INTEGER,INTENT(IN) :: ICOL,IROW,K
- TYPE(IDFOBJ),INTENT(INOUT),DIMENSION(:) :: IDF
+ TYPE(IDFOBJ),INTENT(INOUT),DIMENSION(:,:) :: IDF
+ INTEGER :: I,J
+ REAL(KIND=DP_KIND) :: TP,BT
  
- !## thickness - need k-values
- IF(IDF(1)%V(K)-IDF(2)%V(K).GT.0.0D0)THEN
+!   DO J=1,SIZE(FLIST)
+!    WRITE(*,'(2I5,5F10.2)') K,J,IDF(1,J)%V(K),IDF(2,J)%V(K),IDF(3,J)%V(K),IDF(4,J)%V(K),IDF(5,J)%V(K)
+!   ENDDO
+
+ !## top to bottom
+ DO I=1,SIZE(FLIST)
+  IF(I.GT.1)THEN
+   !## top equal to bottom previous layer
+   IF(IDF(1,I)%V(K).EQ.IDF(1,I)%NODATA)IDF(1,I)%V(K)=IDF(2,I-1)%V(K)
+  ENDIF
+  !## bottom equal to top of current layer
+  IF(IDF(2,I)%V(K).EQ.IDF(2,I)%NODATA)IDF(2,I)%V(K)=IDF(1,I)%V(K)
+ ENDDO
+ !## bottom to top
+ DO I=SIZE(FLIST),1,-1
+  IF(I.LT.SIZE(FLIST))THEN
+   !## bottom equal to top previous layer
+   IF(IDF(2,I)%V(K).EQ.IDF(2,I)%NODATA)IDF(2,I)%V(K)=IDF(1,I+1)%V(K)
+  ENDIF
+  !## top equal to bottom of current layer
+  IF(IDF(1,I)%V(K).EQ.IDF(1,I)%NODATA)IDF(1,I)%V(K)=IDF(2,I)%V(K)
+ ENDDO
+  
+ DO I=1,SIZE(FLIST)-1
+  BT=IDF(2,I)%V(K); TP=IDF(1,I+1)%V(K)
+  IF(BT.NE.TP)THEN
+   WRITE(*,'(/A,2I5)') 'ERROR ON IROW,ICOL: ',IROW,ICOL
+   DO J=1,SIZE(FLIST)
+    WRITE(*,'(2I5,5F10.2)') K,J,IDF(1,J)%V(K),IDF(2,J)%V(K),IDF(3,J)%V(K),IDF(4,J)%V(K),IDF(5,J)%V(K)
+   ENDDO
+   STOP
+  ENDIF
+ ENDDO
+ 
+!   DO J=1,SIZE(FLIST)
+!    WRITE(*,'(2I5,5F10.2)') K,J,IDF(1,J)%V(K),IDF(2,J)%V(K),IDF(3,J)%V(K),IDF(4,J)%V(K),IDF(5,J)%V(K)
+!   ENDDO
+
+ END SUBROUTINE LHM_ADDIWHB_RASTER_CHECK_CONSISTENCY
+ 
+ !###=====================================================
+ SUBROUTINE LHM_ADDIWHB_RASTER_CHECK(IDF,K,ICOL,IROW,N)
+ !###=====================================================
+ IMPLICIT NONE
+ INTEGER,INTENT(IN) :: ICOL,IROW,K
+ INTEGER,INTENT(INOUT) :: N
+ TYPE(IDFOBJ),INTENT(INOUT),DIMENSION(:) :: IDF
+ INTEGER :: I,J
+ LOGICAL :: LEX
+ 
+ LEX=IDF(1)%V(K).EQ.IDF(1)%NODATA.OR.IDF(2)%V(K).EQ.IDF(2)%NODATA
+ 
+ !## thickness available - need k-values
+ IF(.NOT.LEX.AND.IDF(1)%V(K)-IDF(2)%V(K).GT.0.0D0)THEN
   IF(IDF(3)%V(K).LE.0.0D0.OR. &
      IDF(4)%V(K).LE.0.0D0.OR. &
      IDF(5)%V(K).LE.0.0D0)THEN
-   WRITE(*,'(A,2I5,5F10.3)') 'KH,KV,VA LE 0.0:',ICOL,IROW,IDF(1)%V(K),IDF(2)%V(K),IDF(3)%V(K),IDF(4)%V(K),IDF(5)%V(K)
-   STOP
+   !## try to fix it
+   IF(IDF(3)%V(K).LE.0.0D0.AND.(IDF(4)%V(K).GT.0.0D0.AND.IDF(5)%V(K).GT.0.0D0))THEN
+    IDF(3)%V(K)=IDF(4)%V(K)/IDF(5)%V(K)
+   ELSEIF(IDF(4)%V(K).LE.0.0D0.AND.(IDF(3)%V(K).GT.0.0D0.AND.IDF(5)%V(K).GT.0.0D0))THEN
+    IDF(4)%V(K)=IDF(3)%V(K)*IDF(5)%V(K)
+   ELSE
+    WRITE(*,'(/A,2I5)') 'ERROR ICOL,IROW:',ICOL,IROW
+    WRITE(*,'(/A,2I5,5F10.3/)') 'TP,BT,(KH,KV,VA LE 0.0):',IDF(1)%V(K),IDF(2)%V(K),IDF(3)%V(K),IDF(4)%V(K),IDF(5)%V(K)
+    DO J=1,SIZE(FLIST)
+     WRITE(*,'(2I5,5F10.2)') K,J,IDF(1)%V(K),IDF(2)%V(K),IDF(3)%V(K),IDF(4)%V(K),IDF(5)%V(K)
+    ENDDO
+    STOP
+   ENDIF
   ENDIF
+ ELSE
+  N=N+1
+  !## set all to nodata - except for first layer
+  DO I=1,5; IDF(I)%V(K)=IDF(I)%NODATA; ENDDO
  ENDIF
  
  END SUBROUTINE LHM_ADDIWHB_RASTER_CHECK
  
  !###=====================================================
- SUBROUTINE LHM_ADDIWHB_RASTER_OPENFILES_READ(LIST,DIR,IDF)
+ SUBROUTINE LHM_ADDIWHB_RASTER_OPENFILES_READ(LIST,DUPL_F,DUPL_T,DIR,IDF)
  !###=====================================================
  IMPLICIT NONE
  CHARACTER(LEN=*),DIMENSION(:),INTENT(IN) :: LIST
+ INTEGER,INTENT(IN),DIMENSION(:) :: DUPL_F,DUPL_T
  CHARACTER(LEN=*),INTENT(IN) :: DIR
  TYPE(IDFOBJ),INTENT(INOUT),DIMENSION(:) :: IDF
  INTEGER :: I,IOS
@@ -277,7 +462,11 @@ MODULE MOD_AGGREGATE
   READ(LIST(I),*,IOSTAT=IOS) X
   IF(IOS.NE.0)THEN
    IF(TRIM(LIST(I)).NE.'')THEN
-    IF(.NOT.IDFREAD(IDF(I),TRIM(IDF(I)%FNAME),-1))THEN; WRITE(*,'(/A/)') 'ERROR READING '//TRIM(IDF(I)%FNAME); STOP; ENDIF 
+    IDF(I)%FNAME=TRIM(DIR)//'\'//TRIM(LIST(I))
+    !## open, otherwise already opened
+    IF(DUPL_F(I).EQ.0.AND.DUPL_T(I).EQ.0)THEN
+     IF(.NOT.IDFREAD(IDF(I),TRIM(IDF(I)%FNAME),-1))THEN; WRITE(*,'(/A/)') 'ERROR READING '//TRIM(IDF(I)%FNAME); STOP; ENDIF 
+    ENDIF
    ENDIF
   ELSE
    ALLOCATE(IDF(I)%X(1,1)); IDF(I)%X(1,1)=X
@@ -291,9 +480,11 @@ MODULE MOD_AGGREGATE
  END SUBROUTINE LHM_ADDIWHB_RASTER_OPENFILES_READ
 
  !###=====================================================
- SUBROUTINE LHM_ADDIWHB_RASTER_OPENFILES_WRITE(IFL,DIR,IDF)
+ SUBROUTINE LHM_ADDIWHB_RASTER_OPENFILES_WRITE(LIST,DUPL_F,DUPL_T,IFL,DIR,IDF)
  !###=====================================================
  IMPLICIT NONE
+ CHARACTER(LEN=*),DIMENSION(:),INTENT(IN) :: LIST
+ INTEGER,INTENT(IN),DIMENSION(:) :: DUPL_F,DUPL_T
  INTEGER,INTENT(IN) :: IFL
  CHARACTER(LEN=*),INTENT(IN) :: DIR
  TYPE(IDFOBJ),INTENT(INOUT),DIMENSION(:) :: IDF
@@ -303,44 +494,57 @@ MODULE MOD_AGGREGATE
  DO I=1,SIZE(IDF)
   IF(INDEX(IDF(I)%FNAME,'.IDF').LE.0)THEN
    IDF(I)%FNAME=TRIM(ITOS(IFL))//'_FORMATION'//TRIM(TXT(I))//'.IDF' 
+  ELSE
+   IDF(I)%FNAME=TRIM(LIST(I))
   ENDIF
-  IF(.NOT.IDFWRITE(IDF(I),TRIM(DIR)//'\'//TRIM(IDF(I)%FNAME),1,-1))THEN; WRITE(*,'(/A/)') 'ERROR READING '//TRIM(IDF(I)%FNAME); STOP; ENDIF
+  IF(DUPL_F(I).EQ.0.AND.DUPL_T(I).EQ.0)THEN
+   IF(.NOT.IDFWRITE(IDF(I),TRIM(DIR)//'\'//TRIM(IDF(I)%FNAME),1,-1))THEN
+    WRITE(*,'(/A/)') 'ERROR READING '//TRIM(IDF(I)%FNAME); STOP
+   ENDIF
+  ENDIF
  ENDDO
  
  END SUBROUTINE LHM_ADDIWHB_RASTER_OPENFILES_WRITE
 
  !###=====================================================
- SUBROUTINE LHM_ADDIWHB_RASTER_READ_DATA(IDF,BSIZE,LIST,TMP)
+ SUBROUTINE LHM_ADDIWHB_RASTER_READ_DATA(IM,IDF,DUPL_F,DUPL_T,BSIZE,LIST,TMP)
  !###=====================================================
  IMPLICIT NONE
- TYPE(IDFOBJ),DIMENSION(:),INTENT(INOUT) :: IDF
+ INTEGER,INTENT(IN) :: IM
+ TYPE(IDFOBJ),DIMENSION(:,:),INTENT(INOUT) :: IDF
+ INTEGER,INTENT(IN),DIMENSION(:) :: DUPL_F,DUPL_T
  REAL(KIND=SP_KIND),DIMENSION(:) :: TMP
  CHARACTER(LEN=*),DIMENSION(:),INTENT(IN) :: LIST
  INTEGER,INTENT(IN) :: BSIZE
  INTEGER :: I,J
  
- DO I=1,SIZE(IDF)
-  !## read block
-  IF(IDF(I)%IU.GT.0)THEN
-   IF(IDF(I)%ITYPE.EQ.4)THEN
-    READ(IDF(I)%IU) (TMP(J),J=1,BSIZE)
-    IDF(I)%V=TMP
+ DO I=1,SIZE(IDF,1)
+  IF(DUPL_F(I).EQ.0.AND.DUPL_T(I).EQ.0)THEN
+   !## read block
+   IF(IDF(I,IM)%IU.GT.0)THEN
+    IF(IDF(I,IM)%ITYPE.EQ.4)THEN
+     READ(IDF(I,IM)%IU) (TMP(J),J=1,BSIZE)
+     DO J=1,BSIZE; IDF(I,IM)%V(J)=TMP(J); ENDDO
+    ELSE
+     READ(IDF(I,IM)%IU) (IDF(I,IM)%V(J),J=1,BSIZE)
+    ENDIF
    ELSE
-    READ(IDF(I)%IU) (IDF(I)%V(J),J=1,BSIZE)
+    IF(ASSOCIATED(IDF(I,IM)%X))IDF(I,IM)%V=IDF(I,IM)%X(1,1); IDF(I,IM)%NODATA=HUGE(1.0)
    ENDIF
   ELSE
-   IF(ASSOCIATED(IDF(I)%X))IDF(I)%V=IDF(I)%X(1,1)
+   !## copy data
+   IDF(I,IM)%V=IDF(DUPL_T(I),DUPL_F(I))%V
   ENDIF
  ENDDO
  
  !## fill in missing data for kh,kv and/or va
  IF(TRIM(LIST(5)).EQ.'')THEN
   !## va missing compute from kh and kv
-  IDF(5)%V=IDF(4)%V/IDF(3)%V
+  IDF(5,IM)%V=IDF(4,IM)%V/IDF(3,IM)%V
  ELSEIF(TRIM(LIST(4)).EQ.'')THEN
-  IDF(4)%V=IDF(3)%V*IDF(5)%V
+  IDF(4,IM)%V=IDF(3,IM)%V*IDF(5,IM)%V
  ELSEIF(TRIM(LIST(3)).EQ.'')THEN
-  IDF(3)%V=IDF(4)%V/IDF(5)%V
+  IDF(3,IM)%V=IDF(4,IM)%V/IDF(5,IM)%V
  ENDIF
  
  END SUBROUTINE LHM_ADDIWHB_RASTER_READ_DATA
