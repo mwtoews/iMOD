@@ -177,6 +177,8 @@ MODULE MOD_PMANAGER_PAR
   INTEGER :: IGETSC=0
   INTEGER :: IRCTOP=2 !# fixed
  END TYPE RCTOBJ
+ CHARACTER(LEN=47),DIMENSION(7) :: ISOTHM_STR
+ DATA ISOTHM_STR/'0 (non)','1 (linear)','2 (Freundlich)','3 (Langmuir)','4 (onequilibrium)','5 (dual-domain mass transfer, without sorption)','6 (dual-domain mass transfer, with sorption)'/
 
  !## parameters for iMOD WQ from projectfile
  TYPE WQOBJ

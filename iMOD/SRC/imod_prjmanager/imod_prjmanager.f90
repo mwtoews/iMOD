@@ -3971,6 +3971,7 @@ TOPICLOOP: DO ITOPIC=1,MAXTOPICS
       
     DO J=1,NF   !## number of periods (types)
      DO K=1,MF  !## number of files (systems)
+      !## add tooltips    
       IDSUBTC=IDSUBTC+1
       IFILES=IFILES+1
       TOPICS(I)%STRESS(IPER)%FILES(J,K)%ID=IDSUBTC
@@ -3978,8 +3979,9 @@ TOPICLOOP: DO ITOPIC=1,MAXTOPICS
       IF(TOPICS(I)%STRESS(IPER)%FILES(J,K)%IACT.EQ.0)THEN
        STRING='* inactive *;'
       ENDIF
-      !## pst is a special case
+      !## pst, gcg, rct and VDF are special cases
       SELECT CASE (I)
+       !## pst-settings
        CASE (TPST)
         IF(ASSOCIATED(PEST%MEASURES))THEN; STRING=TRIM(STRING)//'nmeasures='//TRIM(ITOS(SIZE(PEST%MEASURES)))
         ELSE; STRING=TRIM(STRING)//'nmeasures=0'; ENDIF
@@ -3996,12 +3998,21 @@ TOPICLOOP: DO ITOPIC=1,MAXTOPICS
         STRING=TRIM(STRING)//'outer='//TRIM(ITOS(PCG%NOUTER))//';inner='// &
                TRIM(ITOS(PCG%NINNER))//';hclose='//TRIM(RTOS(PCG%HCLOSE,'G',5))// &
                ';rclose='//TRIM(RTOS(PCG%RCLOSE,'G',5))
+       !## gcg-settings
        CASE (TGCG)
-        STRING=TRIM(STRING)//TRIM(RTOS(WQ%GCG%CCLOSE,'G',5))//';'//TRIM(ITOS(WQ%GCG%MXITER))   ! Frans , tooltips toevoegen
+        STRING=TRIM(STRING)//'mxiter='//TRIM(ITOS(WQ%GCG%MXITER))//';iter1='//TRIM(ITOS(WQ%GCG%ITER1))// &
+                            ';cclose='//TRIM(RTOS(WQ%GCG%CCLOSE,'G',5))//';isolve='//TRIM(ITOS(WQ%GCG%ISOLVE))
+       !## rct-settings
        CASE (TRCT)
-        STRING=TRIM(STRING)//TRIM(ITOS(WQ%RCT%ISOTHM))
+        STRING=TRIM(STRING)//'isothm='//TRIM(ISOTHM_STR(WQ%RCT%ISOTHM))//';igetsc='//TRIM(ITOS(WQ%RCT%IGETSC))
+        IF(WQ%RCT%IREACT.EQ.1)THEN ; STRING=TRIM(STRING)//';ireact= no kinetic rate reaction is simulated' ; ELSE
+                                     STRING=TRIM(STRING)//';ireact= first-order irreversible reaction' ; ENDIF
+       !## vdf-settings
        CASE (TVDF)
-        STRING=TRIM(STRING)//TRIM(RTOS(WQ%VDF%DENSEMAX,'G',5))//';'//TRIM(ITOS(WQ%VDF%MTDNCONC))
+        STRING=TRIM(STRING)//'densemin='//TRIM(RTOS(WQ%VDF%DENSEMIN,'G',5))
+        STRING=TRIM(STRING)//'densemax='//TRIM(RTOS(WQ%VDF%DENSEMAX,'G',5))
+        STRING=TRIM(STRING)//'denseref='//TRIM(RTOS(WQ%VDF%DENSEREF,'G',5))
+        STRING=TRIM(STRING)//'denseslp='//TRIM(RTOS(WQ%VDF%DENSESLP,'G',5))
        CASE DEFAULT
         STRING=TRIM(STRING)//'ilay='//TRIM(ITOS(TOPICS(I)%STRESS(IPER)%FILES(J,K)%ILAY))
         IF(TOPICS(I)%STRESS(IPER)%FILES(J,K)%ICNST.EQ.1)THEN
