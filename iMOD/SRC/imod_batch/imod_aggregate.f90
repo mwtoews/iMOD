@@ -1716,12 +1716,12 @@ ILOOP: DO I=1,IFM-1
    TKDW(1)=SUM(KDW); TVCW(1)=SUM(VCV)
   
    !## skip this as it is all nodata
-   IF(TKDW(1).LE.0.0)THEN !CYCLE
+   IF(TKDW(1).LE.0.0)THEN
     DO I=1,SIZE(IDF,2)
      ODF(1,I)%V(J)=ODF(1,I)%NODATA
      ODF(2,I)%V(J)=ODF(2,I)%NODATA
      ODF(3,I)%V(J)=ODF(3,I)%NODATA
-     ODF(4,I)%V(J)=0.0 !ODF(4,I)%NODATA
+     ODF(4,I)%V(J)=0.0
      ODF(5,I)%V(J)=ODF(5,I)%NODATA
     ENDDO
     CYCLE  
