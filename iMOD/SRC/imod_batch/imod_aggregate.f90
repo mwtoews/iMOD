@@ -206,7 +206,7 @@ MODULE MOD_AGGREGATE
  
  !## open all base files for writing
  DO I=1,NF
-  CALL LHM_ADDIWHB_RASTER_OPENFILES_WRITE(FLIST(I)%FILE,FLIST(I)%DUPL_F,FLIST(I)%DUPL_T,I,OUTDIR,ODF(:,I))
+  CALL LHM_ADDIWHB_RASTER_OPENFILES_WRITE(FLIST(I)%FILE,FLIST(I)%DUPL_F,FLIST(I)%DUPL_T,I,OUTDIR,ODF(:,I),0)
  ENDDO
  
  NODES=MDL%NROW*MDL%NCOL; BLOCKSIZE=1000; BLOCKSIZE=MIN(NODES,BLOCKSIZE)
@@ -619,17 +619,19 @@ MODULE MOD_AGGREGATE
  END SUBROUTINE LHM_ADDIWHB_RASTER_OPENFILES_READ
 
  !###=====================================================
- SUBROUTINE LHM_ADDIWHB_RASTER_OPENFILES_WRITE(LIST,DUPL_F,DUPL_T,IFL,DIR,IDF)
+ SUBROUTINE LHM_ADDIWHB_RASTER_OPENFILES_WRITE(LIST,DUPL_F,DUPL_T,IFL,DIR,IDF,IMODE)
  !###=====================================================
  IMPLICIT NONE
  CHARACTER(LEN=*),DIMENSION(:),INTENT(IN) :: LIST
  INTEGER,INTENT(IN),DIMENSION(:) :: DUPL_F,DUPL_T
- INTEGER,INTENT(IN) :: IFL
+ INTEGER,INTENT(IN) :: IFL,IMODE
  CHARACTER(LEN=*),INTENT(IN) :: DIR
  CHARACTER(LEN=52) :: FTXT
  TYPE(IDFOBJ),INTENT(INOUT),DIMENSION(:) :: IDF
  INTEGER :: I,II,J,JJ
  CHARACTER(LEN=5),DIMENSION(5) :: TXT=['-T-C','-B-C','-KH-S','-KV-S','-VA-S'] 
+ 
+ IF(IMODE.EQ.1)THEN; TXT(4)='-BD-C'; ENDIF
  
  DO I=1,SIZE(IDF)
   IF(INDEX(LIST(I),'.IDF').LE.0)THEN
@@ -644,7 +646,15 @@ MODULE MOD_AGGREGATE
    ENDDO
    IF(II.GT.SIZE(IDF))IDF(I)%FNAME=TRIM(DIR)//'\'//TRIM(ITOS(IFL))//'_FORMATION'//TRIM(TXT(I))//'.IDF' 
   ELSE
-   IDF(I)%FNAME=TRIM(DIR)//'\'//TRIM(LIST(I))
+   !## change to bn in case imode.eq.1
+   IF(IMODE.EQ.1.AND.I.EQ.4)THEN
+    J= INDEX(LIST(I),'_',.TRUE.)
+    JJ=INDEX(LIST(I)(J+1:),'-'); JJ=JJ+J
+    FTXT=LIST(I)(:JJ-1)
+    IDF(I)%FNAME=TRIM(DIR)//'\'//TRIM(FTXT)//TRIM(TXT(I))//'.IDF' 
+   ELSE
+    IDF(I)%FNAME=TRIM(DIR)//'\'//TRIM(LIST(I))
+   ENDIF
   ENDIF
   IF(DUPL_F(I).EQ.0.AND.DUPL_T(I).EQ.0)THEN
    IF(.NOT.IDFWRITE(IDF(I),TRIM(IDF(I)%FNAME),1,-1))THEN
@@ -1619,8 +1629,8 @@ ILOOP: DO I=1,IFM-1
  SUBROUTINE LHM_CONVERTREGIS_AGGREGATE()
  !###======================================================
  IMPLICIT NONE
- INTEGER :: I,II,III,J,JJ,N,BSIZE,NODES,INODE
- REAL(KIND=DP_KIND) :: KE,CE
+ INTEGER :: I,II,III,J,JJ,N,BSIZE,NODES,INODE,ICOL,IROW
+ REAL(KIND=DP_KIND) :: KE,CE,TC
  REAL(KIND=DP_KIND),DIMENSION(2) :: TKDW,TVCW
  REAL(KIND=DP_KIND),DIMENSION(:),ALLOCATABLE :: VCV,KDW,TOP,BOT,KHV,KVV,BND
  REAL(KIND=SP_KIND),DIMENSION(:),ALLOCATABLE :: TMP
@@ -1661,7 +1671,7 @@ ILOOP: DO I=1,IFM-1
 
  !## open all base files for writing
  DO I=1,SIZE(IDF,2)
-  CALL LHM_ADDIWHB_RASTER_OPENFILES_WRITE(FLIST(I)%FILE,FLIST(I)%DUPL_F,FLIST(I)%DUPL_T,I,OUTDIR,ODF(:,I))
+  CALL LHM_ADDIWHB_RASTER_OPENFILES_WRITE(FLIST(I)%FILE,FLIST(I)%DUPL_F,FLIST(I)%DUPL_T,I,OUTDIR,ODF(:,I),1)
  ENDDO
 
  DO I=1,SIZE(IDF,1); DO J=1,SIZE(IDF,2); IF(.NOT.ASSOCIATED(IDF(I,J)%V))ALLOCATE(IDF(I,J)%V(BLOCKSIZE)); ENDDO; ENDDO
@@ -1670,7 +1680,8 @@ ILOOP: DO I=1,IFM-1
  ALLOCATE(VCV(N),KDW(N),TOP(N),BOT(N),KHV(N),KVV(N),BND(N),X(BLOCKSIZE))
  
  NODES=MDL%NROW*MDL%NCOL
- INODE=0
+ INODE=0; ICOL=0; IROW=1
+
  DO 
   
   BSIZE=MIN(BLOCKSIZE,NODES-INODE)
@@ -1688,6 +1699,12 @@ ILOOP: DO I=1,IFM-1
 
   DO J=1,BSIZE
 
+   ICOL=ICOL+1; IF(ICOL.GT.MDL%NCOL)THEN; ICOL=1; IROW=IROW+1; ENDIF
+
+   if(icol.eq.660.and.irow.eq.1099)then
+    write(*,*) 
+   endif
+   
    !## get values and compute c- and t-values
    DO I=1,SIZE(IDF,2)
     TOP(I)=ODF(1,I)%V(J); BOT(I)=ODF(2,I)%V(J)
@@ -1699,25 +1716,52 @@ ILOOP: DO I=1,IFM-1
    TKDW(1)=SUM(KDW); TVCW(1)=SUM(VCV)
   
    !## skip this as it is all nodata
-   IF(TKDW(1).LE.0.0)CYCLE
+   IF(TKDW(1).LE.0.0)THEN !CYCLE
+    DO I=1,SIZE(IDF,2)
+     ODF(1,I)%V(J)=ODF(1,I)%NODATA
+     ODF(2,I)%V(J)=ODF(2,I)%NODATA
+     ODF(3,I)%V(J)=ODF(3,I)%NODATA
+     ODF(4,I)%V(J)=0.0 !ODF(4,I)%NODATA
+     ODF(5,I)%V(J)=ODF(5,I)%NODATA
+    ENDDO
+    CYCLE  
+   ENDIF
+   
+   !CMIN=0 = NOTHING TO AGGREGATE
+   !CMIN>> = ALMOST ALL TO AGGREGATE
   
    !## aggregate from layer 1 onwards
    I=0; DO
-    I=I+1
-    DO II=I+1,N
-     IF(VCV(II).GT.CMIN.OR.II.EQ.N)THEN
-      !## shift bottoms down
+    
+    I=I+1; IF(I.GE.N)EXIT    
+    
+    !## current layer is more than given resistance - don't aggregate
+    IF(VCV(I).GE.CMIN)CYCLE
+    
+    !## look for layer to stop aggregation (apply summed resistances)
+    TC=0.0D0; DO II=I+1,N
+     TC=TC+VCV(II)
+     IF(TC.GE.CMIN.OR.II.EQ.N)THEN
+
+      !## nothing to do - next layer stops aggregation
+      IF(II.EQ.I+1)EXIT
+      
+      !## correct if base reached
       JJ=1; IF(II.EQ.N)JJ=0
-      DO III=I+1,II-JJ 
-       TOP(III)=TOP(II)
-       VCV(I)  =VCV(I)+VCV(III); VCV(III)=0.0
-       KDW(I)  =KDW(I)+KDW(III); KDW(III)=0.0
+      !## shift bottoms down
+      DO III=I,II-JJ
+       BOT(III)=BOT(II)
+       IF(III.NE.I)TOP(III-1)=BOT(II)
+       VCV(I)=VCV(I)+VCV(III); VCV(III)=0.0
+       KDW(I)=KDW(I)+KDW(III); KDW(III)=0.0
       ENDDO
       EXIT
+
      ENDIF
     ENDDO
+    
     I=II
-    IF(I.GE.N)EXIT
+    
    ENDDO
    
    TKDW(2)=SUM(KDW); TVCW(2)=SUM(VCV)
@@ -1732,28 +1776,34 @@ ILOOP: DO I=1,IFM-1
   
    !## compute khv and kvv-values
    DO I=1,N
-    IF((TOP(I)-BOT(I)).GT.0.0)THEN
+    IF((TOP(I)-BOT(I)).GT.0.0D0)THEN
      KHV(I)=KDW(I)/(TOP(I)-BOT(I))
-     KVV(I)=(TOP(I)-BOT(I))*VCV(I)
+     KVV(I)=(TOP(I)-BOT(I))/VCV(I)
     ELSE
      KHV(I)=EPS; KVV(I)=EPS
     ENDIF
    ENDDO  
 
-   !## asdjust boundary from the bottom to the top
+   !## adjust boundary from the bottom to the top
    DO I=SIZE(IDF,2),1,-1
-    IF(TOP(I)-BOT(I).GT.0.0D0)EXIT
-    BND(I)=0.0
+    IF(TOP(I)-BOT(I).GT.0.0D0)EXIT; BND(I)=0.0
    ENDDO
    
    !## store adjusted values
    DO I=1,SIZE(IDF,2)
-    ODF(1,I)%V(J)=TOP(I)
-    ODF(2,I)%V(J)=BOT(I)
-    ODF(3,I)%V(J)=KHV(I)
     !# kvv is used for boundary
-    ODF(4,I)%V(J)=BND(I) !KVV(I)
-    ODF(5,I)%V(J)=KVV(I)/KHV(I)
+    ODF(4,I)%V(J)=BND(I)
+    IF(BND(I).NE.0.0)THEN
+     ODF(1,I)%V(J)=TOP(I)
+     ODF(2,I)%V(J)=BOT(I)
+     ODF(3,I)%V(J)=KHV(I)
+     ODF(5,I)%V(J)=KVV(I)/KHV(I)
+    ELSE
+     ODF(1,I)%V(J)=ODF(1,I)%NODATA
+     ODF(2,I)%V(J)=ODF(2,I)%NODATA
+     ODF(3,I)%V(J)=ODF(3,I)%NODATA
+     ODF(5,I)%V(J)=ODF(5,I)%NODATA
+    ENDIF
    ENDDO
 
   ENDDO
