@@ -99,8 +99,8 @@ CONTAINS
 
  NPART=0; TPART=0
 
- IF(IBATCH.EQ.0)CALL WINDOWOUTSTATUSBAR(4,'Creating startpoints ...')
- IF(IBATCH.EQ.1)WRITE(*,'(A)') 'Creating startpoints ...'
+ IF(IBATCH.EQ.0)CALL WINDOWOUTSTATUSBAR(4,'Creating startpoints based on content ISD file...')
+ IF(IBATCH.EQ.1)WRITE(*,'(/A)') 'Creating startpoints based on content ISD file ...'
 
  IU=UTL_GETUNIT()
  CALL OSD_OPEN(IU,FILE=SPFNAME(ISPFNAME),STATUS='OLD',ACTION='READ,DENYWRITE',FORM='FORMATTED',IOSTAT=IOS)
