@@ -1729,7 +1729,12 @@ ILOOP: DO I=1,IFM-1
    
    !CMIN=0 = NOTHING TO AGGREGATE
    !CMIN>> = ALMOST ALL TO AGGREGATE
-  
+!   if(irow.eq.507.and.icol.eq.88)then
+!    do i=1,size(idf,2)
+!     write(*,'(i5,5f10.2)') i,top(i),bot(i),top(i)-bot(i),kdw(i),vcv(i)
+!    enddo
+!   endif
+   
    !## aggregate from layer 1 onwards
    I=0; DO
     
@@ -1739,10 +1744,13 @@ ILOOP: DO I=1,IFM-1
     IF(VCV(I).GE.CMIN)CYCLE
     
     !## look for layer to stop aggregation (apply summed resistances)
-    TC=0.0D0; DO II=I+1,N
+    TC=VCV(I); DO II=I+1,N
      TC=TC+VCV(II)
      IF(TC.GE.CMIN.OR.II.EQ.N)THEN
-
+     
+     !## reset for next cycle 
+     TC=VCV(II)
+      
       !## nothing to do - next layer stops aggregation
       IF(II.EQ.I+1)EXIT
       
@@ -1750,10 +1758,12 @@ ILOOP: DO I=1,IFM-1
       JJ=1; IF(II.EQ.N)JJ=0
       !## shift bottoms down
       DO III=I,II-JJ
-       BOT(III)=BOT(II)
-       IF(III.NE.I)TOP(III-1)=BOT(II)
-       VCV(I)=VCV(I)+VCV(III); VCV(III)=0.0
-       KDW(I)=KDW(I)+KDW(III); KDW(III)=0.0
+       BOT(III)=TOP(II)
+       IF(III.NE.I)TOP(III)=TOP(II)
+       IF(III.NE.I)THEN
+        VCV(I)=VCV(I)+VCV(III); VCV(III)=0.0
+        KDW(I)=KDW(I)+KDW(III); KDW(III)=0.0
+       ENDIF
       ENDDO
       EXIT
 
@@ -1772,8 +1782,17 @@ ILOOP: DO I=1,IFM-1
     WRITE(*,'(/A)') 'Something went wrong'
     WRITE(*,*) TKDW(1),TKDW(2),TKDW(1)-TKDW(2),KE
     WRITE(*,*) TVCW(1),TVCW(2),TVCW(1)-TVCW(2),CE
+    do i=1,SIZE(IDF,2)
+     write(*,'(i5,5f10.2)') i,top(i),bot(i),top(i)-bot(i),kdw(i),vcv(i)
+    enddo
    ENDIF
   
+!   if(irow.eq.507.and.icol.eq.88)then
+!    do i=1,size(idf,2)
+!     write(*,'(i5,5f10.2)') i,top(i),bot(i),top(i)-bot(i),kdw(i),vcv(i)
+!    enddo
+!   endif
+
    !## compute khv and kvv-values
    DO I=1,N
     IF((TOP(I)-BOT(I)).GT.0.0D0)THEN
