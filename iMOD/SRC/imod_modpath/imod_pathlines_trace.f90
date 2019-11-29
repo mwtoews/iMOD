@@ -1551,20 +1551,33 @@ CONTAINS
  MAXVELOCITY=0.0D0
  IPATHLINE_3D=0
   
- !## transient simulation
+ !## transient simulation - get start timestep
  IF(ISS.EQ.1)THEN
+  
+  !## get start of window
+  DO IPER=1,NPER
+   IF(PLIPER(IPER,1).GT.JD1)EXIT
+  ENDDO
+  SPER=MAX(IPER-1,1)
+  !## get end of window
+  DO IPER=1,NPER
+   IF(PLIPER(IPER,1).GT.JD2)EXIT
+  ENDDO
+  MPER=IPER-1
+  
   !## forwards
   IF(IREV.EQ.0)THEN
+   MPER=IPER-1
    DO IPER=1,NPER
     IF(PLIPER(IPER,1).LE.JD0.AND.PLIPER(IPER+1,1).GT.JD0)EXIT
    ENDDO
-   IPER=IPER-1; DPER=1; MPER=NPER; SPER=1
+   IPER=IPER-1; DPER=1 !; SPER=1 !; MPER=NPER
   !## backwards
   ELSEIF(IREV.EQ.1)THEN
    DO IPER=NPER,1,-1
     IF(PLIPER(IPER,1).LE.JD0.AND.PLIPER(IPER+1,1).GE.JD0)EXIT
    ENDDO   
-   IPER=IPER+1; DPER=-1; MPER=1; SPER=NPER
+   IPER=IPER+1; DPER=-1; I=MPER; MPER=SPER; SPER=I
   ENDIF
    
  ENDIF
@@ -1632,7 +1645,7 @@ CONTAINS
    IF(IBATCH.EQ.0)CALL WINDOWSELECT(0)
 
    IF(ISS.EQ.1)THEN
-    CPERIOD=' [Duration '//TRIM(ITOS(INT(DT)))//' day; Period '//TRIM(ITOS(IPERIOD))//', max. '//TRIM(ITOS(INT(TTMAX)))//' days]'
+    CPERIOD=' [Duration '//TRIM(ITOS(INT(DT)))//' day; Cycle '//TRIM(ITOS(IPERIOD))//', max. '//TRIM(ITOS(INT(TTMAX)))//' days]'
     I=0
     DO ISPFNAME=1,NSPFNAME
      DO IPART=1,SP(ISPFNAME)%NPART
@@ -1640,7 +1653,7 @@ CONTAINS
      ENDDO
     ENDDO
     STRING='Still tracing '//TRIM(ITOS(I))//' out of '//TRIM(ITOS(SUM(SP%NPART)))//' particles for Stress '// &
-                             TRIM(ITOS(IPER))//' out of '//TRIM(ITOS(NPER))//TRIM(CPERIOD)
+                             TRIM(ITOS(IPER))//' out of '//TRIM(ITOS(MPER))//TRIM(CPERIOD)
     IF(IBATCH.EQ.1)WRITE(*,'(A)') TRIM(STRING)
     IF(IBATCH.EQ.0)CALL WINDOWOUTSTATUSBAR(4,STRING)
    ELSE
@@ -1652,8 +1665,8 @@ CONTAINS
    !## loop over startpunt groups
    DO ISPFNAME=1,NSPFNAME
 
-    IF(IBATCH.EQ.1)WRITE(*,'(A)') 'Busy tracking particles ('//TRIM(ITOS(SP(ISPFNAME)%NPART))// &
-      ') startpoints from '//TRIM(SPFNAME(ISPFNAME))//' ...'
+!    IF(IBATCH.EQ.1)WRITE(*,'(A)') 'Busy tracking particles ('//TRIM(ITOS(SP(ISPFNAME)%NPART))// &
+!      ') startpoints from '//TRIM(SPFNAME(ISPFNAME))//' ...'
 
     NIDSCH=0
     DO IPART=1,SP(ISPFNAME)%NPART 
@@ -2815,7 +2828,7 @@ IPFLOOP: DO I=1,SIZE(IPF)
  DO ILAY=1,NLAY
   CALL WMESSAGEPEEK(ITYPE,MESSAGE)
   STRING='Reading BDGFRF L'//TRIM(ITOS(ILAY))//' '//TRIM(HFFNAME(1,ILAY,IPER))//'...'
-  IF(IBATCH.EQ.1)WRITE(*,'(A)') TRIM(STRING)
+!  IF(IBATCH.EQ.1)WRITE(*,'(A)') TRIM(STRING)
   IF(IBATCH.EQ.0)CALL WINDOWOUTSTATUSBAR(4,STRING)
 
   !## set this to an equidistantial grid otherwise sx/sy will not be recomputed
@@ -2841,7 +2854,7 @@ IPFLOOP: DO I=1,SIZE(IPF)
  DO ILAY=1,NLAY
   CALL WMESSAGEPEEK(ITYPE,MESSAGE)
   STRING='Reading BDGFFF L'//TRIM(ITOS(ILAY))//' '//TRIM(HFFNAME(2,ILAY,IPER))//'...'
-  IF(IBATCH.EQ.1)WRITE(*,'(A)') TRIM(STRING)
+!  IF(IBATCH.EQ.1)WRITE(*,'(A)') TRIM(STRING)
   IF(IBATCH.EQ.0)CALL WINDOWOUTSTATUSBAR(4,STRING)
 
   !## set this to an equidistantial grid otherwise sx/sy will not be recomputed
@@ -2863,7 +2876,7 @@ IPFLOOP: DO I=1,SIZE(IPF)
   DO ILAY=1,NLAY-1
    CALL WMESSAGEPEEK(ITYPE,MESSAGE)
    STRING='Reading BDGFLF L'//TRIM(ITOS(ILAY))//' '//TRIM(HFFNAME(3,ILAY,IPER))//'...'
-   IF(IBATCH.EQ.1)WRITE(*,'(A)') TRIM(STRING)
+!   IF(IBATCH.EQ.1)WRITE(*,'(A)') TRIM(STRING)
    IF(IBATCH.EQ.0)CALL WINDOWOUTSTATUSBAR(4,STRING)
 
    !## set this to an equidistantial grid otherwise sx/sy will not be recomputed
@@ -2886,7 +2899,7 @@ IPFLOOP: DO I=1,SIZE(IPF)
   DO ILAY=1,NLAY
    CALL WMESSAGEPEEK(ITYPE,MESSAGE)
    STRING='Reading BDGSTO L'//TRIM(ITOS(ILAY))//' '//TRIM(HFFNAME(4,ILAY,IPER))//'...'
-   IF(IBATCH.EQ.1)WRITE(*,'(A)') TRIM(STRING)
+!   IF(IBATCH.EQ.1)WRITE(*,'(A)') TRIM(STRING)
    IF(IBATCH.EQ.0)CALL WINDOWOUTSTATUSBAR(4,STRING)
    IF(.NOT.IDFREADSCALE(HFFNAME(4,ILAY,IPER),IDF,10,1,0.0D0,0))RETURN !## block-value
    DO IROW=1,IDF%NROW; DO ICOL=1,IDF%NCOL
