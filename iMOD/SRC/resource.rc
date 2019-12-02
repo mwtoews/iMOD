@@ -8,7 +8,7 @@
 //
 // Winteracter resource script. 
 //
-// Modified : 29/Nov/2019 11:18:42
+// Modified : 29/Nov/2019 14:54:26
 //
 ///////////////////////////////////////////////////
 //
@@ -13049,7 +13049,7 @@ BEGIN
 END
 
 ID_DPMANAGER_MT3D_SPECIES DIALOG 0, 0,  243,  207
-STYLE WS_POPUP | WS_BORDER | WS_DLGFRAME | WS_SYSMENU | DS_3DLOOK | DS_MODALFRAME
+STYLE WS_POPUP | WS_BORDER | WS_DLGFRAME | WS_SYSMENU | WS_THICKFRAME | DS_3DLOOK
 FONT    8, "Arial"
 CAPTION "Define Species"
 BEGIN
@@ -13065,6 +13065,8 @@ END
 
 ID_DPMANAGER_MT3D_SPECIES RCDATA
 BEGIN
+"[Dialog] \n"
+" 0  1004 0 0 \n"
 "[Ranges] \n"
 " 1194               0             100 \n"
 "[Fonts] \n"
@@ -14695,4 +14697,4 @@ END
 //*WI* FILENAME    resource.f90
 //*WI* FMODNAME    RESOURCE
 //*WI* LASTTYPE        2
-//*WI* LASTRES       326
+//*WI* LASTRES       338

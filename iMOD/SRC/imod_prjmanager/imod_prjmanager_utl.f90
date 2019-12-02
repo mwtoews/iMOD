@@ -461,6 +461,7 @@ JLOOP: DO K=1,SIZE(TOPICS)
          EXIT
         !## start help functionality
         CASE (IDHELP)
+           CALL UTL_GETHELP('*','VMO.iSM.SimManMain')
 
        END SELECT
      END SELECT
