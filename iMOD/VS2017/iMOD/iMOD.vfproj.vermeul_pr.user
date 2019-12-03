@@ -3,5 +3,5 @@
 	<Configurations>
 		<Configuration Name="Debug|Win32" CommandArguments="d:\IMOD-MODELS\LHM\AGGREGATE.INI" WorkingDirectory="d:\IMOD\"/>
 		<Configuration Name="Release|Win32"/>
-		<Configuration Name="Debug|x64" CommandArguments="d:\IMOD-MODELS\PLASSEN\MODPATH\MODPATH.INI" WorkingDirectory="D:\IMOD"/>
-		<Configuration Name="Release|x64" CommandArguments="d:\TESTBANK\IMODFLOW\STEST\PST\T3\RUNFILE.INI" WorkingDirectory="d:\IMOD"/></Configurations></VisualStudioUserFile>
+		<Configuration Name="Debug|x64" CommandArguments="&quot;n:\Deltabox\Postbox\Vermeulen, Peter\vanVince\prj2nam_run.ini&quot;" WorkingDirectory="D:\IMOD"/>
+		<Configuration Name="Release|x64" CommandArguments="d:\IMOD-MODELS\MF6\ZIEKE_GENS\MF_SUBMODELS.INI" WorkingDirectory="d:\IMOD"/></Configurations></VisualStudioUserFile>

@@ -118,7 +118,7 @@ CONTAINS
   IF(IOS.NE.0)I=I+1
   !## start tracking the connected lines on this polygon
   IF(I.NE.J)THEN
-   ALLOCATE(IS(N),JS(N),ID(N))
+   ALLOCATE(IS(N*2),JS(N*2),ID(N*2))
    CALL PMANAGER_GENERATEMFNETWORKS_PUZZLE(XC,YC,IS,JS,ID,N)
    WRITE(JU,'(I10)') J
    JJ=0; DO II=1,N
@@ -228,22 +228,27 @@ CONTAINS
  !## new number of point - excluding the dangles
  N=J; DO I=1,N; JS(I)=IS(I); ENDDO
  
- !## all are no passed by yet
- ID=0
+ !## all are no passed by yet, except first
+ ID=0; ID(1)=1
  !## start a first location
- NS=1; JS(NS)=1 !; NS=NS+1
+ NS=1; JS(NS)=1
+ 
+ !## svae start position and stop when you're back at start - otherwise it goed back !!!
  
  !## "walk" along the line, keep track of the direction; don't walk a line in the same direction
- DO
+ I=1; DO
   !## find next point to move towards
-  DO I=2,N
-!   !## already passed by in two directions
-!   IF(JS(I).EQ.2)CYCLE
-   !## find appropriate segment connected
+  DO
+   I=I+1
+   !## start from beginning
+   IF(I.GT.N)I=1
+   !## find appropriate segment connected (swaps the coordinates as well)
    IF(PMANAGER_GENERATEMFNETWORKS_PUZZLEFIT(XC,YC,2,IS(NS),JS(I),IDIR))THEN
     !## already moved in this direction, try another point
-    IF(ID(I).EQ.IDIR)CYCLE
-    NS=NS+1; IS(NS)=JS(I); ID(I)=IDIR; EXIT
+    IF(ID(I).NE.IDIR)THEN
+     !## as coordinates are swapped, apply idir=1
+     NS=NS+1; IS(NS)=JS(I); ID(I)=1; EXIT
+    ENDIF
    ENDIF
   ENDDO
  
@@ -286,7 +291,7 @@ CONTAINS
  X2=XC(JS,2);    Y2=YC(JS,2)
 
  IF(UTL_DIST(X0,Y0,X1,Y1).LE.1.0D-3)THEN
-  IDIR= 1; PMANAGER_GENERATEMFNETWORKS_PUZZLEFIT=.TRUE.; RETURN
+  IDIR=1; PMANAGER_GENERATEMFNETWORKS_PUZZLEFIT=.TRUE.; RETURN
  !## connected inversely - switch coordinates
  ELSEIF(UTL_DIST(X0,Y0,X2,Y2).LE.1.0D-3)THEN
   XC(JS,1)=X2; YC(JS,1)=Y2; XC(JS,2)=X1; YC(JS,2)=Y1
