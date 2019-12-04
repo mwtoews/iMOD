@@ -244,8 +244,7 @@ CONTAINS
  !###======================================================================
  IMPLICIT NONE
  INTEGER,INTENT(IN) :: IOPTION
- INTEGER :: I,ITOPIC
- LOGICAL :: LEX !## is true if all BAS topcis are true
+ INTEGER :: I
  
  PMANAGER_GETPACKAGES=.FALSE.
 
@@ -990,7 +989,6 @@ JLOOP: DO K=1,SIZE(TOPICS)
  INTEGER,INTENT(IN) :: ID1,ID2
  INTEGER :: I,J,N,ID,IFORMAT,IDTAB
  CHARACTER(LEN=256) :: DIR
- LOGICAL :: LEX
  
  ID=WINFODIALOG(CURRENTDIALOG)
 

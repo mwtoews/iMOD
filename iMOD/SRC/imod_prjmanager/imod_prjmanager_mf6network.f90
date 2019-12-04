@@ -119,15 +119,8 @@ CONTAINS
   !## start tracking the connected lines on this polygon
   IF(I.NE.J)THEN
    ALLOCATE(IS(N*2),JS(N*2),ID(N*2))
-   CALL PMANAGER_GENERATEMFNETWORKS_PUZZLE(XC,YC,IS,JS,ID,N)
-   WRITE(JU,'(I10)') J
-   JJ=0; DO II=1,N
-    WRITE(JU,'(2(F15.3,A1))') XC(IS(II),1),',',YC(IS(II),1)
-    JJ=II
-   ENDDO
-   WRITE(JU,'(2(F15.3,A1))') XC(IS(JJ),2),',',YC(IS(JJ),2)
-   WRITE(JU,'(A3)') 'END'; DEALLOCATE(IS,JS,ID)
-   IF(IOS.NE.0)EXIT; J=I; N=0
+   CALL PMANAGER_GENERATEMFNETWORKS_PUZZLE(XC,YC,IS,JS,ID,N,JU)
+   DEALLOCATE(IS,JS,ID); IF(IOS.NE.0)EXIT; J=I; N=0
   ENDIF
   IF(N+1.GT.SIZE(XC,1))THEN
    ALLOCATE(XC_TMP(N+100,2),YC_TMP(N+100,2))
@@ -168,12 +161,12 @@ CONTAINS
    !## skip blanked out areas
    IF(MF6IDF(J)%X(ICOL,IROW).EQ.MF6IDF(J)%NODATA)CYCLE 
    CALL IDFGETLOC(MF6IDF(J),IROW,ICOL,X1,Y1)
-   IF(DBL_IGRINSIDESHAPE(X1,Y1,SHP%POL(I)).EQ.1)THEN
+   IF(DBL_IGRINSIDESHAPE(X1,Y1,SHP%POL(I),IOFFSET=1).EQ.1)THEN
     MF6IDF(J)%X(ICOL,IROW)=1.0D0
     !## deactivate others on this location
     DO II=I-1,1,-1 
      JJ=ISORT(II)
-     IF(DBL_IGRINSIDESHAPE(X1,Y1,SHP%POL(II)).EQ.1)THEN
+     IF(DBL_IGRINSIDESHAPE(X1,Y1,SHP%POL(II),IOFFSET=1).EQ.1)THEN
       CALL IDFIROWICOL(MF6IDF(JJ),JROW,JCOL,X1,Y1)
       MF6IDF(JJ)%X(JCOL,JROW)=MF6IDF(JJ)%NODATA 
      ENDIF
@@ -187,13 +180,14 @@ CONTAINS
  END SUBROUTINE PMANAGER_GENERATEMFNETWORKS_CREATEPOLYGONS
  
  !###======================================================================
- SUBROUTINE PMANAGER_GENERATEMFNETWORKS_PUZZLE(XC,YC,IS,JS,ID,N)
+ SUBROUTINE PMANAGER_GENERATEMFNETWORKS_PUZZLE(XC,YC,IS,JS,ID,N,IU)
  !###======================================================================
  IMPLICIT NONE
  INTEGER,INTENT(INOUT) :: N
+ INTEGER,INTENT(IN) :: IU
  INTEGER,DIMENSION(:),INTENT(OUT) :: IS,JS,ID
  REAL(KIND=DP_KIND),DIMENSION(:,:),INTENT(INOUT) :: XC,YC
- INTEGER :: NS,M,I,J,IPOS,ND,IDIR
+ INTEGER :: NS,M,I,II,J,IPOS,ND,IDIR,IPOL
  
  DO I=1,N; JS(I)=I; ENDDO
  
@@ -228,50 +222,64 @@ CONTAINS
  !## new number of point - excluding the dangles
  N=J; DO I=1,N; JS(I)=IS(I); ENDDO
  
- !## all are no passed by yet, except first
- ID=0; ID(1)=1
- !## start a first location
- NS=1; JS(NS)=1
+ !## all are no passed by yet, except first, set as minus 1
+ ID=0; ID(1)=-1
+ !## start at first location
+ NS=1; JS(NS)=IS(1)
  
- !## svae start position and stop when you're back at start - otherwise it goed back !!!
- 
- !## "walk" along the line, keep track of the direction; don't walk a line in the same direction
- I=1; DO
-  !## find next point to move towards
+ !## puzzle pieces into multiple polygons
+ DO 
+  !## "walk" along the line, keep track of the direction; don't walk a line in the same direction
+  IPOL=0; I=1
   DO
-   I=I+1
-   !## start from beginning
-   IF(I.GT.N)I=1
+   !## find next point to move towards
+   I=I+1; IF(I.GT.N)I=1
+   
+   !## skip points that are already processed
+   IF(ID(I).EQ.-999)CYCLE
+   
    !## find appropriate segment connected (swaps the coordinates as well)
    IF(PMANAGER_GENERATEMFNETWORKS_PUZZLEFIT(XC,YC,2,IS(NS),JS(I),IDIR))THEN
+    !## back to the beginning (of number of polygons)
+    IF(ID(I).EQ.-1)EXIT
     !## already moved in this direction, try another point
     IF(ID(I).NE.IDIR)THEN
-     !## as coordinates are swapped, apply idir=1
-     NS=NS+1; IS(NS)=JS(I); ID(I)=1; EXIT
+     !## correct location to proceed, set id()=1
+     NS=NS+1; IS(NS)=JS(I); ID(I)=1
     ENDIF
    ENDIF
   ENDDO
- 
- ENDDO
- 
-! !## start at first non-dangle
-! IS=0; DO I=1,N; IF(JS(I).NE.-1)THEN; IS(1)=I; EXIT; ENDIF; ENDDO
-! NS=1; JS(I)=0
 
-! DO
-!  DO I=1,N
-!   !## already used   
-!   IF(JS(I).LE.0)CYCLE
-!   IF(PMANAGER_GENERATEMFNETWORKS_PUZZLEFIT(XC,YC,2,IS(NS),JS(I)))THEN
-!    NS=NS+1; IS(NS)=JS(I); JS(I)=0; EXIT
-!   ENDIF
-!  ENDDO
-!  DO I=1,N; IF(JS(I).GT.0)EXIT; ENDDO
-!  IF(I.GT.N)EXIT 
-! ENDDO
+  !## write polygon
+  IPOL=IPOL+1; WRITE(IU,'(I10)') IPOL
+  !## start with first point
+  WRITE(IU,'(2(F15.3,A1))') XC(IS(1),1),',',YC(IS(1),1)
+  DO II=2,NS
+   !## see the correct connection - can be sapped as line is twice passed
+   IF(PMANAGER_GENERATEMFNETWORKS_PUZZLEFIT(XC,YC,2,IS(II-1),IS(II),IDIR))THEN
+    WRITE(IU,'(2(F15.3,A1))') XC(IS(II),1),',',YC(IS(II),1)
+   ENDIF
+  ENDDO
+  WRITE(IU,'(2(F15.3,A1))') XC(IS(1),1),',',YC(IS(1),1)
+  WRITE(IU,'(A3)') 'END'
  
-! !## reduce number
-! DO I=1,N; IF(IS(I).EQ.0)EXIT; ENDDO; N=I-1
+  !## see if there are "polygons" left
+  NS=0; DO I=1,N
+   IF(ID(I).NE.0)THEN
+    ID(I)=-999
+   ELSE
+    !## set new start position of potential next polygon
+    NS=NS+1; IF(NS.EQ.1)THEN; ID(I)=-1; II=I; ENDIF
+   ENDIF
+  ENDDO
+  
+  !## nothing to do anymore
+  IF(NS.LE.2)EXIT
+  
+  !## start again
+  NS=1; I=II; JS(NS)=IS(I)
+  
+ ENDDO
  
  END SUBROUTINE PMANAGER_GENERATEMFNETWORKS_PUZZLE
  
@@ -482,7 +490,7 @@ CONTAINS
   IPOL(J)=J; AREA=HUGE(1.0D0); X=SHP%POL(J)%X(1); Y=SHP%POL(J)%Y(1)
   DO I=1,SHP%NPOL
    IF(I.EQ.J)CYCLE
-   IF(DBL_IGRINSIDESHAPE(X,Y,SHP%POL(I)).EQ.1)THEN
+   IF(DBL_IGRINSIDESHAPE(X,Y,SHP%POL(I),IOFFSET=1).EQ.1)THEN
     IF(POLAREA(I).LE.AREA)THEN
      AREA=POLAREA(I)
      IPOL(J)=I
