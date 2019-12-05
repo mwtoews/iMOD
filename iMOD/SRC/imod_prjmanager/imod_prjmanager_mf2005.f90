@@ -3040,7 +3040,7 @@ IRLOOP: DO IROW=1,PRJIDF%NROW; DO ICOL=1,PRJIDF%NCOL
      READ(STRING(3),*,IOSTAT=IOS) Q; IF(IOS.NE.0)EXIT
     ELSE
      !## get id number - can be any column
-     READ(STRING(IEXT),*,IOSTAT=IOS) ID; IF(IOS.NE.0)EXIT
+     READ(STRING(IEXT),'(A)',IOSTAT=IOS) ID; IF(IOS.NE.0)EXIT
     ENDIF
 
     !## assign to several layer
