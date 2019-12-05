@@ -12,9 +12,10 @@ USE MOD_IDF
 CONTAINS
 
  !###======================================================================
- SUBROUTINE PMANAGER_GENERATEMFNETWORKS(GENFNAME,OUTFOLDER,NSUBMODEL)
+ SUBROUTINE PMANAGER_GENERATEMFNETWORKS(GENFNAME,OUTFOLDER,NSUBMODEL,IBATCH)
  !###======================================================================
  IMPLICIT NONE
+ INTEGER,INTENT(IN) :: IBATCH
  CHARACTER(LEN=*),INTENT(IN) :: GENFNAME,OUTFOLDER
  INTEGER,INTENT(OUT) :: NSUBMODEL
  INTEGER,ALLOCATABLE,DIMENSION(:) :: ISORT,IPOL
@@ -38,7 +39,7 @@ CONTAINS
  
  !## get dimensions of the idf files - read them from large cellsizes up to small cell sizes
  !## MF6IDF(1) is biggest; MF6IDF(n) is smallest
- CALL PMANAGER_GENERATEMFNETWORKS_DIMIDF(MF6IDF,ISORT,IPOL)
+ CALL PMANAGER_GENERATEMFNETWORKS_DIMIDF(MF6IDF,ISORT,IPOL,IBATCH)
  
  !## process from big to small ... determine in what polygon the selected polygon is and take that cellsize to generate the boundary polygon
  DO I=1,SIZE(MF6IDF)
@@ -309,13 +310,14 @@ CONTAINS
  END FUNCTION PMANAGER_GENERATEMFNETWORKS_PUZZLEFIT
 
  !###======================================================================
- SUBROUTINE PMANAGER_GENERATEMFNETWORKS_DIMIDF(MF6IDF,ISORT,IPOL)
+ SUBROUTINE PMANAGER_GENERATEMFNETWORKS_DIMIDF(MF6IDF,ISORT,IPOL,IBATCH)
  !###======================================================================
  IMPLICIT NONE
  TYPE(IDFOBJ),INTENT(INOUT),DIMENSION(:) :: MF6IDF
  INTEGER,INTENT(IN),DIMENSION(:) :: ISORT,IPOL
- INTEGER :: I,II,JJ,MAXCOL,IOS
- REAL(KIND=DP_KIND) :: CS
+ INTEGER,INTENT(IN) :: IBATCH
+ INTEGER :: I,J,II,JJ,MAXCOL,IOS
+ REAL(KIND=DP_KIND) :: CS,F
  TYPE STROBJ
   CHARACTER(LEN=52) :: STRING
  END TYPE
@@ -362,6 +364,26 @@ CONTAINS
 
  DEALLOCATE(STR)
 
+ !## check correct multiplications - they all need to do that
+ DO II=2,SIZE(MF6IDF)
+  I=ISORT(II-1)
+  J=ISORT(II)
+  F=MF6IDF(I)%DX/MF6IDF(J)%DX
+  IF(MOD(MF6IDF(I)%DX,F).NE.0.0D0)THEN
+   IF(IBATCH.EQ.1)THEN
+    WRITE(*,'(/A/)') 'It is adviced to keep cellsizes as integer multiplications.'// &
+    'Submodel '//TRIM(ITOS(I))//' has a cellsize of '//TRIM(RTOS(MF6IDF(I)%DX,'F',3))//' which is not an '// &
+    'integer multiplication of submodel '//TRIM(ITOS(J))//' which has a cellsize of '//TRIM(RTOS(MF6IDF(J)%DX,'F',3))//'. '// &
+    'Proceeding with this may yield inaccurate results.'
+   ELSE
+    CALL WMESSAGEBOX(OKONLY,EXCLAMATIONICON,COMMONOK,'It is adviced to keep cellsizes as integer multiplications.'//CHAR(13)// &
+    'Submodel '//TRIM(ITOS(I))//' has a cellsize of '//TRIM(RTOS(MF6IDF(I)%DX,'F',3))//' which is not an'//CHAR(13)// &
+    'integer multiplication of submodel '//TRIM(ITOS(J))//' which has a cellsize of '//TRIM(RTOS(MF6IDF(J)%DX,'F',3))//'.'//CHAR(13)// &
+    'Proceeding with this may yield inaccurate results.','Warning')
+   ENDIF
+  ENDIF
+ ENDDO
+ 
  END SUBROUTINE PMANAGER_GENERATEMFNETWORKS_DIMIDF
  
  !###======================================================================
@@ -485,7 +507,7 @@ CONTAINS
  
  CALL WSORT(POLAREA,1,SHP%NPOL,IFLAGS=SORTDESCEND,IORDER=ISORT)
 
- !## define for each what shape will be the that captures them - smallest area
+ !## define for each what shape will be the one that captures them - smallest area
  DO J=1,SHP%NPOL
   IPOL(J)=J; AREA=HUGE(1.0D0); X=SHP%POL(J)%X(1); Y=SHP%POL(J)%Y(1)
   DO I=1,SHP%NPOL
