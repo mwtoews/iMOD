@@ -376,7 +376,7 @@ CONTAINS
   END SELECT
  ENDIF 
 
- write(*,*) '3'
+! write(*,*) '3'
  
  IMODBATCH_RUNFILE_READ=.TRUE.
 

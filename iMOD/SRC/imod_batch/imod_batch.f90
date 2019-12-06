@@ -1256,7 +1256,7 @@ CONTAINS
  SUBROUTINE IMODBATCH_RUNFILE()
  !###======================================================================
  IMPLICIT NONE
- 
+
  CALL PMANAGER_UTL_INIT()
 
  IF(UTL_READINITFILE('RUNFILE_IN',LINE,IU,1))THEN

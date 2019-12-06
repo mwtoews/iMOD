@@ -361,7 +361,7 @@ CONTAINS
   N=SPF(ISPF)%PROF(IELEV)%NPOS
   SPF(ISPF)%PROF(IELEV)%NPOS=2
   SPF(ISPF)%PROF(IELEV)%PX(1)=0.0D0    
-  SPF(ISPF)%PROF(IELEV)%PX(2)=SPF(ISPF)%TX !PROF(IELEV)%PX(2)
+  SPF(ISPF)%PROF(IELEV)%PX(2)=SPF(ISPF)%TX
  ENDDO
 
  LENPROF=SPF(ISPF)%PROF(1)%PX(2)
@@ -383,7 +383,9 @@ CONTAINS
      !## equal to drills --- activate current locations...     
      IF(ASSF(1)%ITOPIC.EQ.2)THEN
       DO IELEV=1,MIN(NTBSOL,ASSF(1)%NRASS)
-       Z=ASSF(1)%Z(IELEV)      
+       Z=ASSF(1)%Z(IELEV)
+       !## skip if z.eq.nodata       
+       IF(Z.EQ.ASSF(1)%NODATA(1))CYCLE
        !## put connection of current dril to 
        CALL SOLID_PROFILEPUTINTERSECTION(X,Z,IELEV)
       ENDDO
