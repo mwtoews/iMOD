@@ -347,21 +347,24 @@ CONTAINS
  !###======================================================================
  IMPLICIT NONE
  REAL(KIND=DP_KIND),PARAMETER :: MINDIST=1.0D0 !## minimum distance 1.0 meter
- INTEGER :: IIPF,I,NFOUND,IELEV,N
+ INTEGER :: IIPF,I,IELEV,N
+ INTEGER,ALLOCATABLE,DIMENSION(:) :: NFOUND
  REAL(KIND=DP_KIND) :: X,Y,Z,LENPROF
  CHARACTER(LEN=256) :: FNAME,DIR
  
- NFOUND=0
+ !## save number of points found
+ ALLOCATE(NFOUND(SIZE(SPF(ISPF)%PROF))); NFOUND=0
  
  !## allocate and nullify pointers
  CALL IPFASSFILEALLOCATE(1)
 
  !## reset entire cross-sectional lines
  DO IELEV=1,SIZE(SPF(ISPF)%PROF)
-  N=SPF(ISPF)%PROF(IELEV)%NPOS
-  SPF(ISPF)%PROF(IELEV)%NPOS=2
-  SPF(ISPF)%PROF(IELEV)%PX(1)=0.0D0    
-  SPF(ISPF)%PROF(IELEV)%PX(2)=SPF(ISPF)%TX
+  SPF(ISPF)%PROF(IELEV)%NPOS=0
+!  N=SPF(ISPF)%PROF(IELEV)%NPOS
+!  SPF(ISPF)%PROF(IELEV)%NPOS=2
+!  SPF(ISPF)%PROF(IELEV)%PX(1)=0.0D0    
+!  SPF(ISPF)%PROF(IELEV)%PX(2)=SPF(ISPF)%TX
  ENDDO
 
  LENPROF=SPF(ISPF)%PROF(1)%PX(2)
@@ -371,6 +374,7 @@ CONTAINS
    I  =INDEXNOCASE(IPF(IIPF)%FNAME,'\',.TRUE.)
    DIR=IPF(IIPF)%FNAME(1:I-1)
    DO I=1,IPF(IIPF)%NROW
+    !## borehole in cross-section
     IF(IPF(IIPF)%IPOS(I).EQ.INT(1,1))THEN
      X=IPF(IIPF)%XYPOS(1,I) !## x in profile
      IF(X-LENPROF.LE.MINDIST)X=MIN(LENPROF,X)
@@ -386,13 +390,19 @@ CONTAINS
        Z=ASSF(1)%Z(IELEV)
        !## skip if z.eq.nodata       
        IF(Z.EQ.ASSF(1)%NODATA(1))CYCLE
-       !## put connection of current dril to 
+       NFOUND(IELEV)=NFOUND(IELEV)+1
+       !## put connection of current drill to 
        CALL SOLID_PROFILEPUTINTERSECTION(X,Z,IELEV)
       ENDDO
      ENDIF
     ENDIF
    ENDDO
   ENDIF
+ ENDDO
+
+ !## reset entire cross-sectional lines(s) if nothing found here
+ DO IELEV=1,SIZE(SPF(ISPF)%PROF)
+  IF(NFOUND(IELEV).EQ.0)SPF(ISPF)%PROF(IELEV)%NPOS=0
  ENDDO
 
  CALL IPFCLOSEASSFILE()
