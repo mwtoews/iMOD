@@ -81,8 +81,8 @@ MODULE MOD_PMANAGER_PAR
  INTEGER,PARAMETER :: TRCT=51 !## mt3d/seawat - rct
 
  TYPE MTOBJ
-  INTEGER,POINTER,DIMENSION(:) :: T     !## fixed: packages available for selected Model
-  INTEGER,POINTER,DIMENSION(:) :: IACT  !## variable: packages (de)activated by the user 
+  INTEGER,POINTER,DIMENSION(:) :: T => NULL()     !## fixed: packages available for selected Model
+  INTEGER,POINTER,DIMENSION(:) :: IACT => NULL()  !## variable: packages (de)activated by the user 
   CHARACTER(LEN=24) :: MCNAME           !## model configuration name
  END TYPE MTOBJ
  TYPE(MTOBJ),DIMENSION(6) :: MC     ! Model Configuration - list of topics for each Model (modflow2005, modflow6,seawat,mt3d,modpath)
@@ -98,7 +98,7 @@ MODULE MOD_PMANAGER_PAR
  REAL(KIND=DP_KIND),PARAMETER :: MINKH=0.0D0    !## minimal k-value to assign wells to modellayers
 
  TYPE LAYOBJ
-  INTEGER,DIMENSION(:),POINTER :: ILAY
+  INTEGER,DIMENSION(:),POINTER :: ILAY => NULL()
  END TYPE LAYOBJ
 
  !## parameter for BTN
@@ -177,8 +177,13 @@ MODULE MOD_PMANAGER_PAR
   INTEGER :: IGETSC=0
   INTEGER :: IRCTOP=2 !# fixed
  END TYPE RCTOBJ
- CHARACTER(LEN=47),DIMENSION(7) :: ISOTHM_STR
- DATA ISOTHM_STR/'0 (non)','1 (linear)','2 (Freundlich)','3 (Langmuir)','4 (onequilibrium)','5 (dual-domain mass transfer, without sorption)','6 (dual-domain mass transfer, with sorption)'/
+ CHARACTER(LEN=47),DIMENSION(7) :: ISOTHM_STR=['0 (non)', &
+       '1 (linear)', &
+       '2 (Freundlich)', &
+       '3 (Langmuir)', &
+       '4 (onequilibrium)', &
+       '5 (dual-domain mass transfer, without sorption)', &
+       '6 (dual-domain mass transfer, with sorption)']
 
  !## parameters for iMOD WQ from projectfile
  TYPE WQOBJ
@@ -204,8 +209,8 @@ MODULE MOD_PMANAGER_PAR
   TYPE(LAYOBJ),DIMENSION(MAXTOPICS) :: ISAVE 
   !## interpolation options
   INTEGER,DIMENSION(MAXTOPICS) :: INT
-  INTEGER,POINTER,DIMENSION(:) :: UNCONFINED
-  INTEGER,POINTER,DIMENSION(:) :: ILAY
+  INTEGER,POINTER,DIMENSION(:) :: UNCONFINED=>NULL()
+  INTEGER,POINTER,DIMENSION(:) :: ILAY=>NULL()
   CHARACTER(LEN=256) :: TIMFNAME,MODFLOW,MODFLOW6,IMOD_WQ,BNDFILE,OUTPUT,GENFNAME,RUNFILE,PRJFILE,FLOW_RESULT_DIR,RESULT_DIR
  END TYPE PMANBATCH
  TYPE(PMANBATCH) :: PBMAN  ! Object contains all input/keyword from the batch function RUNFILE. Data is used for writing different type of RUN files
@@ -242,25 +247,26 @@ MODULE MOD_PMANAGER_PAR
   INTEGER :: IDY,IMH,IYR             !## day,month,year
   INTEGER :: IHR,IMT,ISC             !## hour,minute,second
  END TYPE SIMOBJ
- TYPE(SIMOBJ),POINTER,DIMENSION(:) :: SIM,SIM_C,SIM_C2
+ TYPE(SIMOBJ),POINTER,DIMENSION(:) :: SIM => NULL(),SIM_C => NULL(),SIM_C2 => NULL()
   
  TYPE FILESOBJ
   INTEGER :: IACT                                  !## active in runfile
   CHARACTER(LEN=256) :: FNAME                      !## name of current file, could be a constant too!
   CHARACTER(LEN=MAXLENPRJ) :: ALIAS                !## alias name of current file, could be a constant too!
   INTEGER :: ID                                    !## id in treeview field
-  INTEGER :: ILAY                                  !## layer of current file
-  INTEGER :: ICNST                                 !## to be constant (1) or an idf file (2), or inherent (0)
-  REAL(KIND=DP_KIND) :: FCT                        !## factor
-  REAL(KIND=DP_KIND) :: IMP                        !## impulse
-  REAL(KIND=DP_KIND) :: CNST                       !## constant value
+  INTEGER :: ILAY=0                                !## layer of current file
+  INTEGER :: ICNST=1                               !## to be constant (1) or an idf file (2), or inherent (0)
+  REAL(KIND=DP_KIND) :: FCT=1.0D0                  !## factor
+  REAL(KIND=DP_KIND) :: IMP=0.0D0                  !## impulse
+  REAL(KIND=DP_KIND) :: CNST=1.0D0                 !## constant value
  END TYPE FILESOBJ
 
  TYPE STRESSOBJ
   CHARACTER(LEN=MAXLENPRJ) :: CDATE                             !date string of each time step
   INTEGER :: IYR,IMH,IDY                                        !years,months ,days
   INTEGER :: IHR,IMT,ISC                                        !hours,minutes,seconds
-  TYPE(FILESOBJ),POINTER,DIMENSION(:,:) :: FILES,FILES_TMP => NULL()     !stress information for current defined timestep
+  TYPE(FILESOBJ),POINTER,DIMENSION(:,:) :: FILES => NULL(),&
+                                       FILES_TMP => NULL()      !stress information for current defined timestep
                                                                 !(I,:) = subtopic i
                                                                 !(:,I) = system i
   CHARACTER(LEN=256),POINTER,DIMENSION(:) :: INPFILES => NULL()  !stores the inp files for metaswap
@@ -307,10 +313,10 @@ MODULE MOD_PMANAGER_PAR
   REAL(KIND=DP_KIND) :: PINI=1.0D0
   REAL(KIND=DP_KIND) :: PPRIOR=1.0D0
   REAL(KIND=DP_KIND),DIMENSION(2) :: ALPHA=1.0D0
-  REAL(KIND=DP_KIND),POINTER,DIMENSION(:) :: ALPHA_HISTORY
-  REAL(KIND=DP_KIND),POINTER,DIMENSION(:) :: ALPHA_ERROR_VARIANCE
-  REAL(KIND=DP_KIND),POINTER,DIMENSION(:) :: GALPHA     !## collection of alphas per gradient simulation
-  REAL(KIND=DP_KIND),POINTER,DIMENSION(:) :: LALPHA     !## collection of alphas per linesearch simulation
+  REAL(KIND=DP_KIND),POINTER,DIMENSION(:) :: ALPHA_HISTORY => NULL()
+  REAL(KIND=DP_KIND),POINTER,DIMENSION(:) :: ALPHA_ERROR_VARIANCE => NULL()
+  REAL(KIND=DP_KIND),POINTER,DIMENSION(:) :: GALPHA => NULL()     !## collection of alphas per gradient simulation
+  REAL(KIND=DP_KIND),POINTER,DIMENSION(:) :: LALPHA => NULL()     !## collection of alphas per linesearch simulation
   REAL(KIND=DP_KIND) :: PDELTA=1.1D0
   REAL(KIND=DP_KIND) :: PMIN=0.01D0
   REAL(KIND=DP_KIND) :: PMAX=100.0D0
@@ -329,14 +335,16 @@ MODULE MOD_PMANAGER_PAR
   REAL(KIND=DP_KIND) :: PE_DRES=0.0D0
   REAL(KIND=DP_KIND) :: PE_KRANGE=0.0D0
   REAL(KIND=DP_KIND) :: PE_REGFACTOR=1.0D0
-  TYPE(PSTMEASURE),POINTER,DIMENSION(:) :: MEASURES,MEASURES_BU
+  TYPE(PSTMEASURE),POINTER,DIMENSION(:) :: MEASURES => NULL(),MEASURES_BU => NULL()
   INTEGER :: IIPF
-  CHARACTER(LEN=14),DIMENSION(:),POINTER :: S_PERIOD,S_PERIOD_BU,E_PERIOD,E_PERIOD_BU => NULL()
-  REAL(KIND=DP_KIND),DIMENSION(:),POINTER :: B_FRACTION,B_FRACTION_BU => NULL()
+  CHARACTER(LEN=14),DIMENSION(:),POINTER :: S_PERIOD => NULL(),S_PERIOD_BU => NULL(), &
+                                            E_PERIOD => NULL(),E_PERIOD_BU => NULL()
+  REAL(KIND=DP_KIND),DIMENSION(:),POINTER :: B_FRACTION => NULL(),B_FRACTION_BU => NULL()
   CHARACTER(LEN=256) :: PPBNDIDF
-  CHARACTER(LEN=256),DIMENSION(:),POINTER :: B_BATCHFILE,B_BATCHFILE_BU,B_OUTFILE,B_OUTFILE_BU => NULL()
-  TYPE(PSTPARAMOBJ),POINTER,DIMENSION(:) :: PARAM,PARAM_BU => NULL()
-  CHARACTER(LEN=256),POINTER,DIMENSION(:) :: IDFFILES,IDFFILES_BU => NULL()  !## stores the idf files for zones
+  CHARACTER(LEN=256),DIMENSION(:),POINTER :: B_BATCHFILE => NULL(),B_BATCHFILE_BU => NULL(), &
+                                             B_OUTFILE => NULL(),B_OUTFILE_BU => NULL()
+  TYPE(PSTPARAMOBJ),POINTER,DIMENSION(:) :: PARAM => NULL(),PARAM_BU => NULL()
+  CHARACTER(LEN=256),POINTER,DIMENSION(:) :: IDFFILES => NULL(),IDFFILES_BU => NULL()  !## stores the idf files for zones
  END TYPE PSTOBJ
 
  TYPE(PSTOBJ) :: PEST
@@ -346,8 +354,8 @@ MODULE MOD_PMANAGER_PAR
   LOGICAL :: DEFINED                                            !logical whether it is defined
   INTEGER :: NLAY                                               !maximum # continuous layers from 1 downwards
   INTEGER :: ID                                                 !id of main topics
-  INTEGER,POINTER,DIMENSION(:) :: IDT                           !id of each time step for current topic
-  INTEGER,POINTER,DIMENSION(:,:) :: ISD                         !id of main subtopics for each timestep
+  INTEGER,POINTER,DIMENSION(:) :: IDT => NULL()                 !id of each time step for current topic
+  INTEGER,POINTER,DIMENSION(:,:) :: ISD => NULL()               !id of main subtopics for each timestep
   INTEGER :: IACT                                               !active in projectmanager (only 1 at the same time)
   INTEGER :: IACT_MODEL                                         !active in runfile/model 
   CHARACTER(LEN=MAXLENPRJ) :: TNAME                             !name of topic
@@ -356,7 +364,7 @@ MODULE MOD_PMANAGER_PAR
   LOGICAL :: TIMDEP                                             !timedependent module/package
   LOGICAL :: LSPECIES                                           !whether species can be defined
   CHARACTER(LEN=3) :: CMOD                                      !short name (3 characters) of the topic
-  TYPE(STRESSOBJ),POINTER,DIMENSION(:) :: STRESS,STRESS_TMP => NULL()     !files 
+  TYPE(STRESSOBJ),POINTER,DIMENSION(:) :: STRESS => NULL(),STRESS_TMP => NULL()     !files 
  END TYPE TOPICSOBJ
  TYPE(TOPICSOBJ),DIMENSION(MAXTOPICS) :: TOPICS
 
@@ -372,7 +380,7 @@ MODULE MOD_PMANAGER_PAR
   REAL(KIND=DP_KIND) :: FCT,IMP,CNST
   CHARACTER(LEN=256) :: FNAME
  END TYPE PRJOBJ
- TYPE(PRJOBJ),POINTER,DIMENSION(:) :: PRJ,PRJ_TMP
+ TYPE(PRJOBJ),POINTER,DIMENSION(:) :: PRJ => NULL(),PRJ_TMP => NULL()
 
  INTEGER :: PRJNLAY,PRJMXNLAY,ISUBMODEL,PRJNPER 
  INTEGER,DIMENSION(4) :: IFULL
@@ -402,8 +410,8 @@ MODULE MOD_PMANAGER_PAR
  DATA TMENU2/'Minutes ','Hourly  ','Daily   ','Weekly  ','Decade  ', &
              '14/28   ','Monthly ','Yearly  ','Packages','All     '/
  
-   INTEGER,ALLOCATABLE,DIMENSION(:) :: PRJILIST
- TYPE(PRJOBJ),POINTER,DIMENSION(:) :: FNAMES,FNAMES_BU
+ INTEGER,ALLOCATABLE,DIMENSION(:) :: PRJILIST
+ TYPE(PRJOBJ),POINTER,DIMENSION(:) :: FNAMES => NULL(),FNAMES_BU => NULL()
  
  INTEGER :: NMAXCORES
  

@@ -12,12 +12,13 @@ CONTAINS
  SUBROUTINE IMODBATCH_RUNFILE_INITPBMAN()
  !###======================================================================
  IMPLICIT NONE
-
+ INTEGER :: I
+ 
  PBMAN%MODFLOW=''
  PBMAN%IMOD_WQ=''
  PBMAN%MODFLOW6=''
  
- !!## initialize all pbman-variables
+ !## initialize all pbman-variables
  PBMAN%BNDFILE=''
  PBMAN%OUTPUT=''
  PBMAN%TIMFNAME=''
@@ -41,8 +42,9 @@ CONTAINS
  PBMAN%NSWAIT=0
  PBMAN%CMDHIDE=1
  !## set all to interpolate
- PBMAN%INT=1 !PBMAN%TCOMPLEX='SIMPLE'
- !PBMAN%PDEBUG=0; PBMAN%MC=0;
+! PBMAN%INT=1 !PBMAN%TCOMPLEX='SIMPLE'
+ DO I=1,SIZE(PBMAN%INT); PBMAN%INT(I)=1; ENDDO
+!PBMAN%PDEBUG=0; PBMAN%MC=0;
  PBMAN%EIGV=99.0D0
  PBMAN%IGENMF6=0
 
@@ -85,13 +87,13 @@ CONTAINS
  
  IMODBATCH_RUNFILE_READ=.FALSE.
 
- write(*,*) '1'
+! write(*,*) '1'
  CALL IMODBATCH_RUNFILE_INITPBMAN()
  
  !## model dimensions from first IDF from PRJ file
  PBMAN%IWINDOW=1
 
- write(*,*) '2'
+! write(*,*) '2'
  
  PBMAN%IGENMF6=0; PBMAN%IFORMAT=2
  IF(UTL_READINITFILE('SIM_TYPE',LINE,IU,1))READ(LINE,*) PBMAN%IFORMAT
