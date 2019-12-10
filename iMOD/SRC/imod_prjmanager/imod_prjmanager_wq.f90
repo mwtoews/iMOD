@@ -443,7 +443,7 @@ ENDDO
  N=0
  
  WRITE(IU,'(/A)') '#-------------------------------------------'
- WRITE(IU,'(A)') '[UDF] # User Defined Reaction'
+ WRITE(IU,'(A)') '[UDR] # User Defined Reaction'
 
  PMANAGER_SAVERUNWQ_WRTUDR=.TRUE.
 
