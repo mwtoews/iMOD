@@ -419,21 +419,17 @@ CONTAINS
  END SUBROUTINE DBL_IGRRECTANGLE
 
  !###====================================================================
- INTEGER FUNCTION DBL_IGRINSIDESHAPE(X,Y,POL,IOFFSET)
+ INTEGER FUNCTION DBL_IGRINSIDESHAPE(X,Y,POL) !,IOFFSET)
  !###====================================================================
  IMPLICIT NONE
  REAL(KIND=DP_KIND),INTENT(IN) :: X,Y
  TYPE(POLINDOBJ),INTENT(INOUT) :: POL
- INTEGER,INTENT(IN),OPTIONAL :: IOFFSET
+! INTEGER,INTENT(IN),OPTIONAL :: IOFFSET
  
  DBL_IGRINSIDESHAPE=0
  SELECT CASE (POL%ITYPE)
   CASE (ID_POLYGON)
-   IF(PRESENT(IOFFSET))THEN
-    IF(DBL_IGRINSIDEPOLYGON(X,Y,POL%X,POL%Y,POL%N,IOFFSET=IOFFSET).EQ.1)DBL_IGRINSIDESHAPE=1
-   ELSE
-    IF(DBL_IGRINSIDEPOLYGON(X,Y,POL%X,POL%Y,POL%N).EQ.1)DBL_IGRINSIDESHAPE=1
-   ENDIF
+   IF(DBL_IGRINSIDEPOLYGON(X,Y,POL%X,POL%Y,POL%N).EQ.1)DBL_IGRINSIDESHAPE=1
   CASE (ID_RECTANGLE)
    POL%XMIN=MIN(POL%X(1),POL%X(2)); POL%XMAX=MAX(POL%X(1),POL%X(2))
    POL%YMIN=MIN(POL%Y(1),POL%Y(2)); POL%YMAX=MAX(POL%Y(1),POL%Y(2))
@@ -445,27 +441,42 @@ CONTAINS
  END FUNCTION DBL_IGRINSIDESHAPE
  
  !###====================================================================
- INTEGER FUNCTION DBL_IGRINSIDEPOLYGON(PX,PY,XD,YD,ND,IOFFSET)
+ INTEGER FUNCTION DBL_IGRINSIDEPOLYGON(PX,PY,XD,YD,ND) !,IOFFSET)
  !###====================================================================
  IMPLICIT NONE
  INTEGER,INTENT(IN) :: ND
  REAL(KIND=DP_KIND),DIMENSION(ND),INTENT(IN) :: XD,YD
- INTEGER,INTENT(IN),OPTIONAL :: IOFFSET
+! INTEGER,INTENT(IN),OPTIONAL :: IOFFSET
+ INTEGER :: I
  REAL(KIND=DP_KIND),INTENT(IN) :: PX,PY
+ REAL :: PSX,PSY
+ REAL,DIMENSION(:),ALLOCATABLE :: XS,YS
  
  DBL_IGRINSIDEPOLYGON=0
- IF(PRESENT(IOFFSET))THEN
-  IF(IOFFSET.EQ.0)THEN
-   !## this one does not perform well for multiply overlapping line definitions
-   IF(UTL_INSIDEPOLYGON2(PX,PY,XD,YD,ND).EQ.1)DBL_IGRINSIDEPOLYGON=1
-  ELSE
-   !## if present if performs better with lines that overlap multiply times
-   IF(IGRINSIDEPOLYGON(REAL(XD-OFFSETX,4),REAL(YD-OFFSETY,4),ND,REAL(PX-OFFSETX,4),REAL(PY-OFFSETY,4)))DBL_IGRINSIDEPOLYGON=1
-  ENDIF
- ELSE
-  !## this one does not perform well for multiply overlapping line definitions
-  IF(UTL_INSIDEPOLYGON2(PX,PY,XD,YD,ND).EQ.1)DBL_IGRINSIDEPOLYGON=1
- ENDIF
+! IF(PRESENT(IOFFSET))THEN
+!  IF(IOFFSET.EQ.0)THEN
+!   !## this one does not perform well for multiply overlapping line definitions
+!   IF(UTL_INSIDEPOLYGON2(PX,PY,XD,YD,ND).EQ.1)DBL_IGRINSIDEPOLYGON=1
+!  ELSE
+!   IF(UTL_INSIDEPOLYGON2(PX,PY,XD,YD,ND).EQ.1)DBL_IGRINSIDEPOLYGON=1
+!   !## if present if performs better with lines that overlap multiply times
+!   ALLOCATE(XS(ND-1),YS(ND-1))
+!   DO I=1,ND-1
+!    XS(I)=REAL(XD(I)-OFFSETX,4)
+!    YS(I)=REAL(YD(I)-OFFSETY,4)
+!    WRITE(*,*) I,XS(I),YS(I)
+!   ENDDO
+!   PSX=REAL(PX-OFFSETX,4); PSY=REAL(PY-OFFSETY,4)
+!   WRITE(*,*) PSX,PSY
+!   PAUSE
+!   IF(UTL_INSIDEPOLYGON2(PX,PY,XD,YD,ND).EQ.1)DBL_IGRINSIDEPOLYGON=1
+!   IF(IGRINSIDEPOLYGON(XS,YS,ND-1,PSX,PSY))DBL_IGRINSIDEPOLYGON=1
+!   DEALLOCATE(XS,YS)
+!  ENDIF
+! ELSE
+ !## this one does not perform well for multiply overlapping line definitions
+ IF(UTL_INSIDEPOLYGON2(PX,PY,XD,YD,ND).EQ.1)DBL_IGRINSIDEPOLYGON=1
+! ENDIF
  
  END FUNCTION DBL_IGRINSIDEPOLYGON
 
@@ -489,6 +500,52 @@ CONTAINS
  IF(R2.LE.R1)DBL_IGRINSIDECIRCLE=.TRUE.
 
  END FUNCTION DBL_IGRINSIDECIRCLE
+
+!double sum_theta = 0`
+!for( int i = 0 ; i < n_vtx ; i++ )
+!{
+!    int    j         = (i + 1) % n_vtx;
+!    XYPT   p_i       = ngon[i];
+!    XYPT   p_j       = ngon[j];
+!    XYPT   vector_i  = p_i - p_o;                 // vector from point o to vertex i
+!    XYPT   vector_j  = p_j - p_o;                 // vector from point o to vertex j
+!    double cp        = vector_i.cross( vector_j ) // cross product
+!    double dp        = vector_i.dot  ( vector_j ) // dot   product
+!           sum_theta+= Atan2( cp, dp );
+!
+!}
+!if( sum > pi ) return INSIDE;
+!else           return OUTSIDE;
+
+ !###======================================================================
+ LOGICAL function UTL_INSIDEPOLYGON3 ( n, x, y, x0, y0 )
+ !###======================================================================
+ IMPLICIT NONE
+ INTEGER ( KIND = 4 ) N
+ LOGICAL B
+ INTEGER ( KIND = 4 ) I
+ INTEGER ( KIND = 4 ) IP1
+ REAL ( KIND = 8 ) T
+ REAL ( KIND = 8 ) X(N)
+ REAL ( KIND = 8 ) X0
+ REAL ( KIND = 8 ) Y(N)
+ REAL ( KIND = 8 ) Y0
+  
+ B = .FALSE.
+
+ DO I = 1, N
+   IP1 = MOD ( I, N ) + 1
+   IF ( Y(IP1) < Y0 .EQV. Y0 <= Y(I) ) THEN
+     T = X0 - X(I) - ( Y0 - Y(I) ) * ( X(IP1) - X(I) ) / ( Y(IP1) - Y(I) )
+     IF ( T < 0.0D+00 ) THEN
+       B = .NOT. B
+     END IF
+   END IF
+ END DO
+
+ UTL_INSIDEPOLYGON3 = B
+
+ END FUNCTION UTL_INSIDEPOLYGON3
 
  !###======================================================================
  INTEGER FUNCTION UTL_INSIDEPOLYGON2(PX,PY,XX,YY,N)
@@ -545,26 +602,24 @@ CONTAINS
  UTL_INSIDEPOLYGON2=-1
  DO I=1,N
   J =1+MOD(I,N)
-  MX=X(I).GE.0.0
-  NX=X(J).GE.0.0
-  MY=Y(I).GE.0.0
-  NY=Y(J).GE.0.0
+  MX=X(I).GE.0.0D0
+  NX=X(J).GE.0.0D0
+  MY=Y(I).GE.0.0D0
+  NY=Y(J).GE.0.0D0
   IF(.NOT.((MY.OR.NY).AND.(MX.OR.NX)).OR.(MX.AND.NX))THEN
- !  GO TO 2
   ELSE
    IF(.NOT.(MY.AND.NY.AND.(MX.OR.NX).AND..NOT.(MX.AND.NX)))THEN
- !    GO TO 3
-    IF((Y(I)*X(J)-X(I)*Y(J))/(X(J)-X(I)).LT.0.0)THEN
-    ! GOTO2
-    ELSEIF((Y(I)*X(J)-X(I)*Y(J))/(X(J)-X(I)).EQ.0.0)THEN
-     UTL_INSIDEPOLYGON2=0
-     EXIT 
-    ELSEIF((Y(I)*X(J)-X(I)*Y(J))/(X(J)-X(I)).GT.0.0)THEN
-     UTL_INSIDEPOLYGON2=-UTL_INSIDEPOLYGON2
+    IF(X(J)-X(I).NE.0.0D0)THEN
+     IF((Y(I)*X(J)-X(I)*Y(J))/(X(J)-X(I)).LT.0.0D0)THEN
+     ELSEIF((Y(I)*X(J)-X(I)*Y(J))/(X(J)-X(I)).EQ.0.0D0)THEN
+      UTL_INSIDEPOLYGON2=0
+      EXIT 
+     ELSEIF((Y(I)*X(J)-X(I)*Y(J))/(X(J)-X(I)).GT.0.0D0)THEN
+      UTL_INSIDEPOLYGON2=-UTL_INSIDEPOLYGON2
+     ENDIF
     ENDIF
    ELSE
     UTL_INSIDEPOLYGON2=-UTL_INSIDEPOLYGON2
- !   GO TO 2
    ENDIF
   ENDIF
  ENDDO
