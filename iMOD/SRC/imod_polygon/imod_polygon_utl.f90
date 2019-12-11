@@ -136,7 +136,7 @@ CONTAINS
  INTEGER :: IOS,IU,JU,N,M,I,J,K,MAXCOL,MAXPOL,IFORMAT,IERROR,IPOL
  CHARACTER(LEN=256) :: GENFNAME,DATFNAME
  CHARACTER(LEN=52) :: CID
- REAL(KIND=DP_KIND) :: X,Y,X1,Y1,X2,Y2
+ REAL(KIND=DP_KIND) :: X,Y,X1,Y1,X2,Y2,RC1,RC2
  INTEGER,DIMENSION(:),ALLOCATABLE :: ICOLWIDTH
  REAL(KIND=DP_KIND),DIMENSION(:),ALLOCATABLE :: XC,YC
  CHARACTER(LEN=11),DIMENSION(:),ALLOCATABLE :: LABELS
@@ -220,6 +220,27 @@ ILOOP: DO I=1,2
     N=N+1
     IF(I.EQ.2)THEN; XC(N)=X; YC(N)=Y; ENDIF
    ENDDO
+   
+   !!## remove redundant points
+   !IF(I.EQ.2)THEN
+   ! K=1; RC1=(XC(2)-XC(1))/(YC(2)-YC(1))
+   ! DO J=2,N
+   !  IF(J.LE.N)THEN
+   !   RC2=(XC(J+1)-XC(J))/(YC(J+1)-YC(J))
+   !  ELSE
+   !   RC2=RC1+1.0D0
+   !  ENDIF
+   !  !## add current point as the line turns from here
+   !  IF(RC2.NE.RC1)THEN
+   !   K=K+1
+   !   XC(K)=XC(J)
+   !   YC(K)=YC(J)
+   !  ENDIF
+   ! ENDDO
+   ! !## final number of points
+   ! N=K
+   !ENDIF
+   
    M=MAX(M,N)
    IF(I.EQ.1.AND.N.GT.0)MAXPOL=MAXPOL+1
    IPOL=IPOL+1
