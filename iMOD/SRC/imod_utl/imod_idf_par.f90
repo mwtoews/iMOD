@@ -40,13 +40,13 @@ TYPE IDFOBJ
  REAL(KIND=DP_KIND) :: DX,DY        !## equi.distance if ieq=0
  REAL(KIND=DP_KIND) :: TOP,BOT      !## top and bot information
  REAL(KIND=DP_KIND) :: NODATA,DMIN,DMAX
- REAL(KIND=DP_KIND),DIMENSION(:),POINTER :: SX => NULL()                  !## x.coord. network
- REAL(KIND=DP_KIND),DIMENSION(:),POINTER :: SY => NULL()                  !## y.coord. network
- REAL(KIND=DP_KIND),DIMENSION(:,:),POINTER :: X => NULL()                 !## idfvalues in matrix
- REAL(KIND=DP_KIND),DIMENSION(:),POINTER :: V => NULL()                   !## idfvalues in vector
- REAL(KIND=DP_KIND),DIMENSION(:,:,:),POINTER :: XV  => NULL()             !## vector field, top,bot,vx,vy,vz1,vz2
- INTEGER(KIND=2),DIMENSION(:,:),POINTER :: YSEL => NULL()   !## idfvalues in vector, irow/icol
- CHARACTER(LEN=4),DIMENSION(:),POINTER :: COMMENT => NULL() !## comments
+ REAL(KIND=DP_KIND),DIMENSION(:),POINTER :: SX=>NULL()                  !## x.coord. network
+ REAL(KIND=DP_KIND),DIMENSION(:),POINTER :: SY=>NULL()                  !## y.coord. network
+ REAL(KIND=DP_KIND),DIMENSION(:,:),POINTER :: X=>NULL()                 !## idfvalues in matrix
+ REAL(KIND=DP_KIND),DIMENSION(:),POINTER :: V=>NULL()                   !## idfvalues in vector
+ REAL(KIND=DP_KIND),DIMENSION(:,:,:),POINTER :: XV =>NULL()             !## vector field, top,bot,vx,vy,vz1,vz2
+ INTEGER(KIND=2),DIMENSION(:,:),POINTER :: YSEL=>NULL()   !## idfvalues in vector, irow/icol
+ CHARACTER(LEN=4),DIMENSION(:),POINTER :: COMMENT=>NULL() !## comments
  INTEGER :: NTHREAD
  CHARACTER(LEN=256) :: FNAME  ! name of the idf
 END TYPE IDFOBJ

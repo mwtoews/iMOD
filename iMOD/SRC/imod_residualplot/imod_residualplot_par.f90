@@ -24,13 +24,13 @@ MODULE MOD_RESIDUALPLOT_PAR
 
 USE IMODVAR, ONLY : DP_KIND,SP_KIND
 TYPE IPFRESOBJ
- REAL(KIND=DP_KIND),POINTER,DIMENSION(:) :: X => NULL()              !## x-coordinate
- REAL(KIND=DP_KIND),POINTER,DIMENSION(:) :: Y => NULL()              !## y-coordinate
- REAL(KIND=DP_KIND),POINTER,DIMENSION(:) :: M => NULL()              !## computed values
- REAL(KIND=DP_KIND),POINTER,DIMENSION(:) :: O => NULL()              !## observation
- REAL(KIND=DP_KIND),POINTER,DIMENSION(:) :: W => NULL()              !## weight value
- INTEGER,POINTER,DIMENSION(:) :: L => NULL()           !## layer
- INTEGER(KIND=DP_KIND),POINTER,DIMENSION(:) :: D => NULL()           !## date
+ REAL(KIND=DP_KIND),POINTER,DIMENSION(:) :: X=>NULL()              !## x-coordinate
+ REAL(KIND=DP_KIND),POINTER,DIMENSION(:) :: Y=>NULL()              !## y-coordinate
+ REAL(KIND=DP_KIND),POINTER,DIMENSION(:) :: M=>NULL()              !## computed values
+ REAL(KIND=DP_KIND),POINTER,DIMENSION(:) :: O=>NULL()              !## observation
+ REAL(KIND=DP_KIND),POINTER,DIMENSION(:) :: W=>NULL()              !## weight value
+ INTEGER,POINTER,DIMENSION(:) :: L=>NULL()           !## layer
+ INTEGER(KIND=DP_KIND),POINTER,DIMENSION(:) :: D=>NULL()           !## date
  INTEGER :: NPOINTS                                    !## number of points in ipf
 END TYPE IPFRESOBJ
 TYPE(IPFRESOBJ),DIMENSION(:),ALLOCATABLE :: IPFR       !## stores original values from txtfile per ipf
