@@ -112,13 +112,15 @@
       REAL*8    dt
       LOGICAL*4 cvg   ! output
       LOGICAL*4 ready
+      INTEGER*4 error
 !
       call timing_tic('TRANSOL','prepareIter') 
 !     Restore the SIMGRO state if this is the second iteration of TRANSOL
 #if(defined(INCLUDE_METASWAP)) 
       IF (iter_transol .GE. 2) THEN
         iact = -1
-        CALL SIMGRO(iact,iter,time,dt,cvg,ready)        
+        CALL SIMGRO(iact,iter,time,dt,cvg,ready,error)        
+        if (error .ne. 0) call kill_process(error)
       ENDIF
 #else
       write(*,*) 'Error: TRANSOL_prepareIter'; stop 1
@@ -153,6 +155,7 @@
       REAL*8    dt
       LOGICAL*4 cvg   ! output
       LOGICAL*4 ready
+      INTEGER*4 error
 !
 !     Downscaled moisture profiles
 !     TRANSOL concentrations
@@ -160,7 +163,8 @@
 
       iact = 41
 #if(defined(INCLUDE_METASWAP)) 
-      CALL SIMGRO(iact,iter,time,dt,cvg,ready)
+      CALL SIMGRO(iact,iter,time,dt,cvg,ready,error)
+      if (error .ne. 0) call kill_process(error)
 #else
       write(*,*) 'Error: TRANSOL_performIter'; stop 1
 #endif
@@ -207,13 +211,15 @@
       REAL*8    dt
       LOGICAL*4 cvg   ! output
       LOGICAL*4 ready
+      INTEGER*4 error
 !
       call timing_tic('TRANSOL','finishTimestep') 
 
 !     Write data to file
       iact = 42
 #if(defined(INCLUDE_METASWAP)) 
-      CALL SIMGRO(iact,iter,time,dt,cvg,ready)        
+      CALL SIMGRO(iact,iter,time,dt,cvg,ready,error)
+      if (error .ne. 0) call kill_process(error)
 #else      
       write(*,*) 'Error: TRANSOL_finishTimestep'; stop 1
 #endif    

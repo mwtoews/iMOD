@@ -46,6 +46,7 @@
       REAL*8    dt
       LOGICAL*4 cvg   ! output
       LOGICAL*4 ready ! output
+      INTEGER*4 error
 !
       call timing_tic('METASWAP','initSimulation')
       
@@ -53,7 +54,8 @@
       iact = 0
       iter = 0
 #if(defined(INCLUDE_METASWAP))   
-      CALL SIMGRO(iact,iter,time,dt,cvg,ready)
+      CALL SIMGRO(iact,iter,time,dt,cvg,ready,error)
+      if (error .ne. 0) call kill_process(error)
 #else
       write(*,*) 'Error: MetaSWAP_initSimulation'; stop 1
 #endif
@@ -95,12 +97,14 @@
       REAL*8    dt 
       LOGICAL*4 cvg   ! output
       LOGICAL*4 ready
+      INTEGER*4 error
 !
 !     Determine the end-time of meteo data
       iact = 10
       iter = 0
 #if(defined(INCLUDE_METASWAP))   
-      CALL SIMGRO(iact,iter,time,dt,cvg,ready)        
+      CALL SIMGRO(iact,iter,time,dt,cvg,ready,error)        
+      if (error .ne. 0) call kill_process(error)
 #else
       write(*,*) 'Error: MetaSWAP_getEndofCurrentTimestep'; stop 1
 #endif
@@ -120,6 +124,7 @@
       REAL*8    dt     ! input
       LOGICAL*4 cvg   ! output
       LOGICAL*4 ready
+      INTEGER*4 error
 !
 !     If this is the first time step:
 !     - process initial heads from MODFLOW, do the MetaSWAP inits
@@ -132,7 +137,8 @@
       iact = 1
       iter = 0      
 #ifdef INCLUDE_METASWAP
-      CALL SIMGRO(iact,iter,time,dt,cvg,ready)        
+      CALL SIMGRO(iact,iter,time,dt,cvg,ready,error)        
+      if (error .ne. 0) call kill_process(error)
 #else
       write(*,*) 'Error: MetaSWAP_initTimestep'; stop 1
 #endif      
@@ -173,6 +179,7 @@
       REAL*8    dt
       LOGICAL*4 cvg   ! output
       LOGICAL*4 ready
+      INTEGER*4 error
 !
 !     Update the unsaturated zone
 !     Compute recharges and storage coefficients for MODFLOW
@@ -180,7 +187,8 @@
 
       iact = 2
 #if(defined(INCLUDE_METASWAP))
-      CALL SIMGRO(iact,iter,time,dt,cvg,ready)   
+      CALL SIMGRO(iact,iter,time,dt,cvg,ready,error)   
+      if (error .ne. 0) call kill_process(error)
 #else
       write(*,*) 'Error: MetaSWAP_performIter'; stop 1
 #endif
@@ -214,7 +222,8 @@
       REAL*8    time
       REAL*8    dt
       LOGICAL*4 cvg   ! output
-      LOGICAL*4 ready  
+      LOGICAL*4 ready
+      INTEGER*4 error
 !
 !     Process MODFLOW heads for update of:
 !     - MODFLOW net flux as seen by MetaSWAP
@@ -223,7 +232,8 @@
 
       iact = 3
 #if(defined(INCLUDE_METASWAP))
-      CALL SIMGRO(iact,iter,time,dt,cvg,ready)        
+      CALL SIMGRO(iact,iter,time,dt,cvg,ready,error)        
+      if (error .ne. 0) call kill_process(error)
 #else
       write(*,*) 'Error: MetaSWAP_finishIter'; stop 1
 #endif
@@ -243,6 +253,7 @@
       REAL*8    dt
       LOGICAL*4 cvg   ! output
       LOGICAL*4 ready
+      INTEGER*4 error
 !
 !     Finalize unsaturated zone
 !     Budget calculations
@@ -250,7 +261,8 @@
       call timing_tic('METASWAP','finishTimestep')
       iact = 4
 #if(defined(INCLUDE_METASWAP))
-      CALL SIMGRO(iact,iter,time,dt,cvg,ready)
+      CALL SIMGRO(iact,iter,time,dt,cvg,ready,error)
+      if (error .ne. 0) call kill_process(error)
 #else
       write(*,*) 'Error: MetaSWAP_finishTimestep'; stop 1
 #endif
@@ -270,12 +282,14 @@
       REAL*8    dt
       LOGICAL*4 cvg   ! output
       LOGICAL*4 ready
+      INTEGER*4 error
 !
 !     Finalize simulation
       call timing_tic('METASWAP','finishSimulation')
       iact = 5
 #if(defined(INCLUDE_METASWAP))
-      CALL SIMGRO(iact,iter,time,dt,cvg,ready)
+      CALL SIMGRO(iact,iter,time,dt,cvg,ready,error)
+      if (error .ne. 0) call kill_process(error)
 #else
       write(*,*) 'Error: MetaSWAP_finishSimulation'; stop 1
 #endif
@@ -288,9 +302,12 @@
       SUBROUTINE MetaSWAP_saveState()
 !
       IMPLICIT     NONE
+!
+      INTEGER*4    error
        
 #if(defined(INCLUDE_METASWAP))
-      CALL SIMGRO_save
+      CALL SIMGRO_save(error)
+      if (error .ne. 0) call kill_process(error)
 #else
       write(*,*) 'Error: MetaSWAP_saveState'; stop 1
 #endif
@@ -309,11 +326,13 @@
       REAL*8    dt
       LOGICAL*4 cvg   ! output
       LOGICAL*4 ready
+      INTEGER*4 error
 !
       iact = -1
 
 #if(defined(INCLUDE_METASWAP))
-      CALL SIMGRO(iact,iter,time,dt,cvg,ready)
+      CALL SIMGRO(iact,iter,time,dt,cvg,ready,error)
+      if (error .ne. 0) call kill_process(error)
 #else
       write(*,*) 'Error: MetaSWAP_restoreState'; stop 1
 #endif
