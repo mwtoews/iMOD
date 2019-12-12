@@ -64,8 +64,17 @@ CONTAINS
  UTL_PMANAGER_REFRESH=.FALSE.
  
  IF(ICODE.EQ.1)THEN
-  CALL WMESSAGEBOX(YESNO,QUESTIONICON,COMMONNO,'Are you sure to refresh the Project Manager?','Question')
-  IF(WINFODIALOG(4).EQ.2)RETURN
+  !## check if something there yet
+  DO I=1,MAXTOPICS
+   IF(ASSOCIATED(TOPICS(I)%STRESS))THEN
+    CALL PMANAGER_GETNFILES((/I/),TOPICS(I)%NLAY,DEFINED=TOPICS(I)%DEFINED)
+    IF(TOPICS(I)%DEFINED)EXIT
+   ENDIF
+  ENDDO
+  IF(I.LE.MAXTOPICS)THEN
+   CALL WMESSAGEBOX(YESNO,QUESTIONICON,COMMONNO,'Are you sure to refresh the Project Manager?','Question')
+   IF(WINFODIALOG(4).NE.1)RETURN
+  ENDIF
  ENDIF
  DO I=1,SIZE(TOPICS); CALL PMANAGER_DEALLOCATE(I); ENDDO; CALL PMANAGER_DEALLOCATE_PEST(); NPERIOD=0; NSPECIES=0
  CALL PMANAGER_UTL_INIT()
@@ -1469,7 +1478,7 @@ JLOOP: DO K=1,SIZE(TOPICS)
 
   ENDDO
  ENDDO
-
+  
  !## timestepping setting
  CALL WDIALOGSELECT(ID_DSIMMANAGER_TAB4)
 
@@ -1515,6 +1524,7 @@ JLOOP: DO K=1,SIZE(TOPICS)
   CALL WDIALOGPUTINTEGER(IDF_INTEGER6,IHR)
   CALL WDIALOGPUTINTEGER(IDF_INTEGER7,IMT)
   CALL WDIALOGPUTINTEGER(IDF_INTEGER8,ISC)
+  IF(PBMAN%SDATE.LE.0)PBMAN%SDATE=YMDHMSTOITIME(IYR,IMH,IDY,IHR,IMT,ISC)
 
   CALL UTL_GDATE(MAXJD,IYR,IMH,IDY)
   CALL WDIALOGPUTMENU(IDF_MENU3,CDATE,12,IMH)
@@ -1524,6 +1534,8 @@ JLOOP: DO K=1,SIZE(TOPICS)
   CALL WDIALOGPUTINTEGER(IDF_INTEGER9,IHR)
   CALL WDIALOGPUTINTEGER(IDF_INTEGER10,IMT)
   CALL WDIALOGPUTINTEGER(IDF_INTEGER11,ISC)
+  IF(PBMAN%EDATE.LE.0)PBMAN%EDATE=YMDHMSTOITIME(IYR,IMH,IDY,IHR,IMT,ISC)
+
  ENDIF
 
  !## get user defined time settings
@@ -1835,6 +1847,9 @@ JLOOP: DO K=1,SIZE(TOPICS)
   SELECT CASE (ITOPIC)
    !## skip these
    CASE (TCAP,TPST,TOBS,TPCG,TGCG,TVDF,TDSP,TRCT)
+    IF(TOPICS(ITOPIC)%IACT_MODEL.EQ.1)THEN
+     IF(PRESENT(DEFINED))DEFINED=.TRUE.
+    ENDIF
     CYCLE
   END SELECT
   !## overrule iact_model - if activated
@@ -2593,7 +2608,7 @@ JLOOP: DO K=1,SIZE(TOPICS)
 
  !## copy imodflow executable
  CALL IOSCOPYFILE(TRIM(PREFVAL(IPREVAL)),TRIM(DIR)//'\'//TRIM(PREFVAL(IPREVAL)(I:)))
- 
+  
  INQUIRE(FILE=TRIM(EXEPATH)//'\'//TRIM(LICFILE),EXIST=LEX)
  IF(.NOT.LEX)THEN
   IERROR=0; CALL IMOD_AGREEMENT(IERROR)
@@ -2646,6 +2661,9 @@ JLOOP: DO K=1,SIZE(TOPICS)
    RETURN
   ENDIF
 
+  J=INDEXNOCASE(PREFVAL(IPREVAL),'\',.TRUE.)+1
+  SEXENAME=PREFVAL(IPREVAL)(J:)
+
   !## write start script in batch file
   WRITE(IU,'(A)') 'REM =========================='
   WRITE(IU,'(A)') 'REM Run Script iMOD '//TRIM(RVERSION)
@@ -2655,15 +2673,15 @@ JLOOP: DO K=1,SIZE(TOPICS)
   IF(IMODE.EQ.1)THEN
 
    IF(PBMAN%IFORMAT.EQ.1)WRITE(IU,'(A)') 'TITLE "NAMFILE: '//TRIM(MNAME)//'.nam"' 
-
+   
    IF(TOPICS(TCAP)%DEFINED)THEN
     IF(PBMAN%IPESTP.EQ.0)THEN
-     WRITE(IU,'(/A/)') '"'//TRIM(PREFVAL(IPREVAL))//'" -components components.inp' 
+     WRITE(IU,'(/A/)') '"'//TRIM(SEXENAME)//'" -components components.inp' 
     ELSE
      IF(I.GT.0)THEN
-      WRITE(IU,'(/A/)') '"'//TRIM(PREFVAL(IPREVAL))//'" -components components_P#'//TRIM(ITOS(I))//'.inp -ipest ".\modelinput\'//TRIM(MNAME)//'.pst1"' 
+      WRITE(IU,'(/A/)') '"'//TRIM(SEXENAME)//'" -components components_P#'//TRIM(ITOS(I))//'.inp -ipest ".\modelinput\'//TRIM(MNAME)//'.pst1"' 
      ELSE
-      WRITE(IU,'(/A/)') '"'//TRIM(PREFVAL(IPREVAL))//'" -components components_L#'//TRIM(ITOS(ABS(I)))//'.inp -ipest ".\modelinput\'//TRIM(MNAME)//'.pst1"' 
+      WRITE(IU,'(/A/)') '"'//TRIM(SEXENAME)//'" -components components_L#'//TRIM(ITOS(ABS(I)))//'.inp -ipest ".\modelinput\'//TRIM(MNAME)//'.pst1"' 
      ENDIF
     ENDIF
    ELSE
@@ -2672,14 +2690,14 @@ JLOOP: DO K=1,SIZE(TOPICS)
      IF(PBMAN%IFORMAT.EQ.3)WRITE(IU,'(/A/)') '"'//TRIM(PREFVAL(IPREVAL))//'"' 
     !## ipest
     ELSEIF(PBMAN%IPEST.EQ.1)THEN
-     WRITE(IU,'(/A/)') '"'//TRIM(PREFVAL(IPREVAL))//'" "'//TRIM(MNAME)//'.nam" -ipest ".\modelinput\'//TRIM(MNAME)//'.pst1"'
+     WRITE(IU,'(/A/)') '"'//TRIM(SEXENAME)//'" "'//TRIM(MNAME)//'.nam" -ipest ".\modelinput\'//TRIM(MNAME)//'.pst1"'
     !## parrallel ipest
     ELSEIF(PBMAN%IPESTP.EQ.1)THEN
      IF(I.GT.0)THEN
-      WRITE(IU,'(/A/)') '"'//TRIM(PREFVAL(IPREVAL))//'" "'//TRIM(MNAME)//'_P#'//TRIM(ITOS(I))//'.nam" -ipest ".\modelinput\'// &
+      WRITE(IU,'(/A/)') '"'//TRIM(SEXENAME)//'" "'//TRIM(MNAME)//'_P#'//TRIM(ITOS(I))//'.nam" -ipest ".\modelinput\'// &
                              TRIM(MNAME)//'_P#'//TRIM(ITOS(I))//'.pst1"'
      ELSE
-      WRITE(IU,'(/A/)') '"'//TRIM(PREFVAL(IPREVAL))//'" "'//TRIM(MNAME)//'_L#'//TRIM(ITOS(ABS(I)))//'.nam" -ipest ".\modelinput\'// &
+      WRITE(IU,'(/A/)') '"'//TRIM(SEXENAME)//'" "'//TRIM(MNAME)//'_L#'//TRIM(ITOS(ABS(I)))//'.nam" -ipest ".\modelinput\'// &
                              TRIM(MNAME)//'_L#'//TRIM(ITOS(ABS(I)))//'.pst1"'
      ENDIF
     ENDIF
@@ -2726,13 +2744,9 @@ JLOOP: DO K=1,SIZE(TOPICS)
      WRITE(IU,'(A)') ':: Run model'
      WRITE(IU,'(A)') '"C:\Program Files\MPICH2\bin\mpiexec.exe" -localonly %np% "'//TRIM(PREFVAL(IPREVAL))//'" '//TRIM(MNAME)//'.run"'
     ELSE
-     SEXENAME=PREFVAL(IPREVAL) !(INDEX(PREFVAL(IPREVAL),'\',.TRUE.)+1:)
-!     SEXENAME=PREFVAL(IPREVAL)(INDEX(PREFVAL(IPREVAL),'\',.TRUE.)+1:)
      WRITE(IU,'(A)') '"'//TRIM(SEXENAME)//'" '//TRIM(MNAME)//'.RUN' 
     ENDIF
    ELSE
-    SEXENAME=PREFVAL(IPREVAL) !(INDEX(PREFVAL(IPREVAL),'\',.TRUE.)+1:)
-!    SEXENAME=PREFVAL(IPREVAL)(INDEX(PREFVAL(IPREVAL),'\',.TRUE.)+1:)
     WRITE(IU,'(A)') '"'//TRIM(SEXENAME)//'" '//TRIM(MNAME)//'.RUN' 
    ENDIF
   
