@@ -211,7 +211,12 @@ MODULE MOD_PMANAGER_PAR
   INTEGER,DIMENSION(MAXTOPICS) :: INT
   INTEGER,POINTER,DIMENSION(:) :: UNCONFINED=>NULL()
   INTEGER,POINTER,DIMENSION(:) :: ILAY=>NULL()
-  CHARACTER(LEN=256) :: TIMFNAME,MODFLOW,MODFLOW6,IMOD_WQ,BNDFILE,OUTPUT,GENFNAME,RUNFILE,PRJFILE,FLOW_RESULT_DIR,RESULT_DIR
+  CHARACTER(LEN=256) :: TIMFNAME,MODFLOW,MODFLOW6,IMOD_WQ,BNDFILE,GENFNAME,RUNFILE,PRJFILE
+  CHARACTER(LEN=256) :: MODELNAME     ! name of model without root
+  CHARACTER(LEN=256) :: OUTPUT        ! Resultdir full name, e.g. ...\IMOD_USER\MODELS\MODELNAME 
+  CHARACTER(LEN=256) :: RESULT_DIR    ! Resultdir full name for MT3D, by default subdirectory of the FLOW_RESULT_DIR
+  CHARACTER(LEN=256) :: FLOW_RESULT_DIR ! for MT3D, location of the resultfolder containing a FLOW field
+  
  END TYPE PMANBATCH
  TYPE(PMANBATCH) :: PBMAN  ! Object contains all input/keyword from the batch function RUNFILE. Data is used for writing different type of RUN files
                            ! in GUI modus: PBMAN is filled from the Simulation Manager (sub)windows. 
