@@ -1364,7 +1364,6 @@ C1------MULTIPLY VERTICAL LEAKANCE BY AREA TO MAKE CONDUCTANCE.
       DO 10 J=1,NCOL
          IF (IMINC.EQ.1) THEN                                           ! DLT
             C = 1.0/(CV(J,I,K)+TINY)                                    ! DLT
-!            C = MIN(C,MAXC)                                             ! DLT
             C = MAX(C,MINC)                                             ! DLT
             CV(J,I,K)=DELR(J)*DELC(I)/C                                 ! DLT
          ELSE
