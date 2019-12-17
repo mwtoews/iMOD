@@ -210,11 +210,11 @@ CONTAINS
  
  PMANAGER_SAVERUN=.FALSE.
  
- !## overrule ipst if not as keyword given
- IF(IBATCH.EQ.1.AND.PBMAN%IPEST.EQ.0)TOPICS(TPST)%IACT_MODEL=0
- 
  !## get active packages, set default values
  IF(.NOT.PMANAGER_GETPACKAGES(1))RETURN
+
+ !## overrule ipst if not as keyword given
+ IF(IBATCH.EQ.1.AND.PBMAN%IPEST.EQ.0)TOPICS(TPST)%IACT_MODEL=0
 
  DO I=1,MAXTOPICS  
   SELECT CASE (I)
@@ -573,6 +573,12 @@ CONTAINS
  
  !## get active packages
  IF(.NOT.PMANAGER_GETPACKAGES(1))RETURN
+
+ !## overrule ipst if not as keyword given
+ IF(IBATCH.EQ.1.AND.(PBMAN%IPEST+PBMAN%IPESTP).EQ.0)THEN
+  TOPICS(TPST)%IACT_MODEL=0
+ ENDIF
+ 
  !## organise groups
  CALL IPEST_GLM_SETGROUPS()
  !## write nam file
@@ -1661,6 +1667,7 @@ IF(TOPICS(TSFT)%DEFINED)THEN
  PMANAGER_SAVEMF2005_PST_READWRITE=.TRUE.
  
  IF(.NOT.TOPICS(TPST)%DEFINED)RETURN
+
  !## overrule is by imod batch
  IF(IBATCH.EQ.1.AND.PBMAN%IPEST+PBMAN%IPESTP.EQ.0)RETURN
 
