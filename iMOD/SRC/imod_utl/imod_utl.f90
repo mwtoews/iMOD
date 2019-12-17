@@ -949,23 +949,16 @@ DOLOOP: DO
  
  !## make sure no negative-thicknesses in original set
  DO ILAY=1,NLAY
+  IF(BND(ILAY).EQ.0)CYCLE
   IF(ILAY.GT.1)TOP(ILAY)=MIN(TOP(ILAY),BOT(ILAY-1))
   BOT(ILAY)=MIN(TOP(ILAY),BOT(ILAY))
  ENDDO
-! !## clean boundary for zero-thickness layers from the bottom
-! DO ILAY=NLAY,1,-1
-!  IF(TOP(ILAY)-BOT(ILAY).EQ.0.0D0)THEN
-!   BND(ILAY)=0
-!  ELSE
-!   EXIT
-!  ENDIF
-! ENDDO
  
  TH=0.0D0
  !## get thickness of aquifers
- DO ILAY=1,NLAY;   TH(ILAY,1)=TOP(ILAY)-BOT(ILAY); ENDDO
+ DO ILAY=1,NLAY;   IF(BND(ILAY).EQ.0)CYCLE; TH(ILAY,1)=TOP(ILAY)-BOT(ILAY); ENDDO
  !## get thickness of aquitards
- DO ILAY=1,NLAY-1; TH(ILAY,2)=BOT(ILAY)-TOP(ILAY+1); ENDDO
+ DO ILAY=1,NLAY-1; IF(BND(ILAY).EQ.0)CYCLE; TH(ILAY,2)=BOT(ILAY)-TOP(ILAY+1); ENDDO
  
  !## need to have data 
  DO ILAY=1,NLAY
@@ -1069,6 +1062,7 @@ DOLOOP: DO
 
  !## recompute new top/bottoms
  DO ILAY=1,NLAY
+  IF(BND(ILAY).EQ.0)CYCLE
   IF(ILAY.GT.1)TOP(ILAY)=BOT(ILAY-1)-TH(ILAY-1,2)
   BOT(ILAY)=TOP(ILAY)-TH(ILAY,1) 
  ENDDO
@@ -1094,9 +1088,9 @@ DOLOOP: DO
 
  TH=0.0D0
  !## get thickness of aquifers
- DO ILAY=1,NLAY;   TH(ILAY,1)=TOP(ILAY)-BOT(ILAY); ENDDO
+ DO ILAY=1,NLAY;   IF(BND(ILAY).EQ.0)CYCLE; TH(ILAY,1)=TOP(ILAY)-BOT(ILAY); ENDDO
  !## get thickness of aquitards
- DO ILAY=1,NLAY-1; TH(ILAY,2)=BOT(ILAY)-TOP(ILAY+1); ENDDO
+ DO ILAY=1,NLAY-1; IF(BND(ILAY).EQ.0)CYCLE; TH(ILAY,2)=BOT(ILAY)-TOP(ILAY+1); ENDDO
 
  !## correct permeabilities for aquifers - leave k-aquitard intact
  DO ILAY=1,NLAY
@@ -1142,34 +1136,40 @@ DOLOOP: DO
  ENDDO
  
  !## get thickness of aquifers
- TH=0.0D0; DO ILAY=1,NLAY; TH(ILAY,1)=TOP(ILAY)-BOT(ILAY); ENDDO
+ TH=0.0D0
+ DO ILAY=1,NLAY;   IF(BND(ILAY).EQ.0)CYCLE; TH(ILAY,1)=TOP(ILAY)-BOT(ILAY); ENDDO
  !## get thickness of aquitards
- DO ILAY=1,NLAY-1; TH(ILAY,2)=BOT(ILAY)-TOP(ILAY+1); ENDDO
+ DO ILAY=1,NLAY-1; IF(BND(ILAY).EQ.0)CYCLE; TH(ILAY,2)=BOT(ILAY)-TOP(ILAY+1); ENDDO
 
  !## get total sum of transmissivity
  TT=0.0D0; DO ILAY=1,NLAY
+  IF(BND(ILAY).EQ.0)CYCLE
   TT=TT+TH(ILAY,1)*HK(ILAY)
   IF(ILAY.LT.NLAY)TT=TT+TH(ILAY,2)*VK(ILAY)
  ENDDO
  !## get total vertical resistance
  TC=0.0D0; DO ILAY=1,NLAY
+  IF(BND(ILAY).EQ.0)CYCLE
   TC=TC+TH(ILAY,1)/(HK(ILAY)/VA(ILAY))
   IF(ILAY.LT.NLAY.AND.VK(ILAY).NE.0.0D0)TC=TC+TH(ILAY,2)/VK(ILAY)
  ENDDO
  TT1=TT; TT2=TC
  
  !## get thickness of aquifers
- TH=0.0D0; DO ILAY=1,NLAY; TH(ILAY,1)=TOP_BU(ILAY)-BOT_BU(ILAY); ENDDO
+ TH=0.0D0
+ DO ILAY=1,NLAY;   IF(BND(ILAY).EQ.0)CYCLE; TH(ILAY,1)=TOP_BU(ILAY)-BOT_BU(ILAY); ENDDO
  !## get thickness of aquitards
- DO ILAY=1,NLAY-1; TH(ILAY,2)=BOT_BU(ILAY)-TOP_BU(ILAY+1); ENDDO
+ DO ILAY=1,NLAY-1; IF(BND(ILAY).EQ.0)CYCLE; TH(ILAY,2)=BOT_BU(ILAY)-TOP_BU(ILAY+1); ENDDO
 
  !## get total sum of transmissivity
  TT=0.0D0; DO ILAY=1,NLAY
+  IF(BND(ILAY).EQ.0)CYCLE
   TT=TT+TH(ILAY,1)*HK_BU(ILAY)
   IF(ILAY.LT.NLAY)TT=TT+TH(ILAY,2)*VK_BU(ILAY)
  ENDDO
  !## get total vertical resistance
  TC=0.0D0; DO ILAY=1,NLAY
+  IF(BND(ILAY).EQ.0)CYCLE
   IF((HK_BU(ILAY)/VA_BU(ILAY)).GT.0.0D0)TC=TC+TH(ILAY,1)/(HK_BU(ILAY)/VA_BU(ILAY))
   IF(ILAY.LT.NLAY)TC=TC+TH(ILAY,2)/VK_BU(ILAY)
  ENDDO

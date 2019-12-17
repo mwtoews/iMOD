@@ -1221,9 +1221,9 @@ CONTAINS
     DO ILAY=1,PRJNLAY  ; VA(ILAY)=KVA(ILAY)%X(ICOL,IROW); ENDDO
     VK=0.0D0; DO ILAY=1,PRJNLAY-1; VK(ILAY)=KVV(ILAY)%X(ICOL,IROW); ENDDO
     
-!    if(icol.eq.114.and.irow.eq.1)then
-!write(*,*) 
-!    endif
+    if(icol.eq.81.and.irow.eq.913)then
+write(*,*) 
+    endif
     
     CALL UTL_MINTHICKNESS(TP,BT,HK,VK,VA,TP_BU,BT_BU,HK_BU,VK_BU,VA_BU,IB,TH,PBMAN%MINTHICKNESS,PRJNLAY,ICOL,IROW)
     DO ILAY=1,PRJNLAY  ; IB(ILAY)=BND(ILAY)%X(ICOL,IROW); ENDDO
