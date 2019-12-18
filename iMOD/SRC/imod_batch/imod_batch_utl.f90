@@ -65,16 +65,21 @@ CONTAINS
  PBMAN%DSFR=0
  PBMAN%ISAVEENDDATE=0
   
+ !## default packages
+ PBMAN%ITT=9
+ !## default number of selected interval
  PBMAN%IDT=1
- PBMAN%ITT=1
+ 
+ PBMAN%SDATE=0
+ PBMAN%EDATE=0
  
  !## iMOD-WQ    
- PBMAN%BTN%NPROBS=1     ! btn
- PBMAN%BTN%NPRMAS=1     ! btn 
- PBMAN%ADV%MIXELM=-1    ! adv
- PBMAN%ADV%NADVFD=0     ! adv
- PBMAN%ADV%PERCEL=1     ! adv
- PBMAN%SSM%MXSS= 100000 ! ssm
+ PBMAN%BTN%NPROBS=1     !## btn
+ PBMAN%BTN%NPRMAS=1     !## btn 
+ PBMAN%ADV%MIXELM=-1    !## adv
+ PBMAN%ADV%NADVFD=0     !## adv
+ PBMAN%ADV%PERCEL=1     !## adv
+ PBMAN%SSM%MXSS= 100000 !## ssm
 
  END SUBROUTINE IMODBATCH_RUNFILE_INITPBMAN
  
