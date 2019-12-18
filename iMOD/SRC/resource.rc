@@ -8,7 +8,7 @@
 //
 // Winteracter resource script. 
 //
-// Modified : 09/Dec/2019 16:37:14
+// Modified : 17/Dec/2019 14:09:58
 //
 ///////////////////////////////////////////////////
 //
@@ -1299,7 +1299,6 @@
 #define IDD_TEMPLATE073                   426
 #define IDF_INTEGER15                    1227
 #define IDD_TEMPLATE074                   428
-#define ID_MODELMANAGER                 40339
 #define ID_APPLY2                        1156
 #define IDD_TEMPLATE075                   437
 #define ID_DPMANAGER_MT3D_ADV             276
@@ -13564,7 +13563,7 @@ BEGIN
         END
         MENUITEM SEPARATOR
         MENUITEM "&iMOD Manager ...\aCtrl+M",                ID_MANAGER
-        MENUITEM "&Project Manager ...",                     ID_PMANAGER
+        MENUITEM "&Project Manager ...\aCtrl+P",             ID_PMANAGER
         MENUITEM "Subsurface &Explorer ...",                 ID_SUBSURFEX
         MENUITEM SEPARATOR
         POPUP "&Zoom Map"
@@ -13807,7 +13806,6 @@ BEGIN
         END
         MENUITEM SEPARATOR
         MENUITEM "Start &Model Simulation ...",              ID_RUNMODEL
-        MENUITEM "Start Simulation Manager...",              ID_MODELMANAGER
         MENUITEM "&Quick Scan Tool ...",                     ID_IRDATABASE
         MENUITEM "&Pumping Tool ...",                        ID_SCENTOOL
         MENUITEM SEPARATOR
@@ -13896,9 +13894,9 @@ ID_MOVIE,5,5,0,
 ID_PLUGIN,5,8,0,
 ID_PLUGIN_TIMECHECK,5,8,1,0,
 ID_MODELIMPORT,5,10,0,
-ID_PARTICLETRACKING,5,17,0,
-ID_IPS,5,17,3,0,
-ID_WBAL_ALL,5,22,0,
+ID_PARTICLETRACKING,5,16,0,
+ID_IPS,5,16,3,0,
+ID_WBAL_ALL,5,21,0,
 ID_HELPMAIN,6,0,
 ID_ACTIVEDEBUG,6,6,0,
 0
@@ -14371,6 +14369,7 @@ BEGIN
   83        , ID_SAVE                        ,NOINVERT,VIRTKEY,CONTROL
   67        , ID_COPY                        ,NOINVERT,VIRTKEY,CONTROL
   77        , ID_MANAGER                     ,NOINVERT,VIRTKEY,CONTROL
+  80        , ID_PMANAGER                    ,NOINVERT,VIRTKEY,CONTROL
  VK_F2      , ID_OPENIDF                     ,NOINVERT,VIRTKEY
  VK_F3      , ID_IDFVALUE                    ,NOINVERT,VIRTKEY
   84        , ID_TIMESERIES                  ,NOINVERT,VIRTKEY,SHIFT
@@ -14693,5 +14692,5 @@ END
 //*WI* FORTSAVE    1
 //*WI* FILENAME    resource.f90
 //*WI* FMODNAME    RESOURCE
-//*WI* LASTTYPE        2
-//*WI* LASTRES       323
+//*WI* LASTTYPE        1
+//*WI* LASTRES         7

@@ -214,7 +214,7 @@ MODULE MOD_PMANAGER_PAR
   CHARACTER(LEN=256) :: TIMFNAME,MODFLOW,MODFLOW6,IMOD_WQ,BNDFILE,GENFNAME,RUNFILE,PRJFILE
   CHARACTER(LEN=256) :: MODELNAME     ! name of model without root
   CHARACTER(LEN=256) :: OUTPUT        ! Resultdir full name, e.g. ...\IMOD_USER\MODELS\MODELNAME 
-  CHARACTER(LEN=256) :: RESULT_DIR    ! Resultdir full name for MT3D, by default subdirectory of the FLOW_RESULT_DIR
+  !CHARACTER(LEN=256) :: RESULT_DIR    ! Resultdir full name for MT3D, by default subdirectory of the FLOW_RESULT_DIR
   CHARACTER(LEN=256) :: FLOW_RESULT_DIR ! for MT3D, location of the resultfolder containing a FLOW field
   
  END TYPE PMANBATCH
