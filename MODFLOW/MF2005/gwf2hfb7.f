@@ -302,15 +302,10 @@ C10-----MODIFY CR(J1,I1,K) TO ACCOUNT FOR BARRIER.
                   THKAVG = MAX(0.0,THKAVG)                              ! DLT
                   !## current resistance
                   C=THKAVG*(DELC(I1)/CR(J1,I1,K))
-!                  !## check whether fault is unconfined - reduce otherwise
-!                  THKFRAC=THKAQF/THKAVG
-!                  IF(THKFRAC.LT.1.0)HCDW=1.0/(1.0/HCDW*THKFRAC**4.0)
                   !## add fault resistance to current resistance
                   C=C+HCDW
                   !## compute new conductance
                   CR(J1,I1,K)=DELC(I1)*THKAVG/C
-!                  !## not to become more than original                  ! DLT
-!                  CR(J1,I1,K)=MIN(CR(J1,I1,K),DELC(I1)*THKAVG/HCDW)     ! DLT
                 ENDIF                                                   ! DLT
               END IF                                                    ! DLT
             ENDIF

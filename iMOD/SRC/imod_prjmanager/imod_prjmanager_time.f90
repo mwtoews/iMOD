@@ -82,7 +82,6 @@ CONTAINS
  !###======================================================================
  IMPLICIT NONE
  INTEGER :: JD1,JD2,IPERIOD,I,ISS,IHR,IMT,ISC,IHMS1,IHMS2,ISTEADY,ISTEP,ID,DD
- LOGICAL :: LEX
  
  PMANAGER_FILLTIMESTEPS=.FALSE.
  

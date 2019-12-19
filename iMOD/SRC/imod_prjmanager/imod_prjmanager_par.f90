@@ -193,7 +193,11 @@ MODULE MOD_PMANAGER_PAR
  END TYPE WQOBJ
  TYPE(WQOBJ) :: WQ     !## parameters for iMOD WQ. Given with the Projectmanager or read from the PRJ file 
 
- !## from imodbatch ini file
+ TYPE SM_OBJ
+  INTEGER,POINTER,DIMENSION(:) :: ILAY=>NULL()  !## number of layers per submodel
+ END TYPE SM_OBJ
+ 
+  !## from imodbatch ini file
  TYPE PMANBATCH
   INTEGER(KIND=8) :: SDATE,EDATE
   INTEGER :: ITT,IDT,ISS,IFORMAT,IWINDOW,ISOLVE,NSTEP,SSYSTEM,IPEST,IPESTP,ISTEADY,ICONCHK,ISAVEENDDATE,IFVDL, &
@@ -210,16 +214,16 @@ MODULE MOD_PMANAGER_PAR
   !## interpolation options
   INTEGER,DIMENSION(MAXTOPICS) :: INT
   INTEGER,POINTER,DIMENSION(:) :: UNCONFINED=>NULL()
-  INTEGER,POINTER,DIMENSION(:) :: ILAY=>NULL()
+  INTEGER,POINTER,DIMENSION(:) :: ILAY=>NULL()       !## number of layer for current submodel in the pre-processing
+  TYPE(SM_OBJ),POINTER,DIMENSION(:) :: SM=>NULL()
   CHARACTER(LEN=256) :: TIMFNAME,MODFLOW,MODFLOW6,IMOD_WQ,BNDFILE,GENFNAME,RUNFILE,PRJFILE
   CHARACTER(LEN=256) :: MODELNAME     ! name of model without root
   CHARACTER(LEN=256) :: OUTPUT        ! Resultdir full name, e.g. ...\IMOD_USER\MODELS\MODELNAME 
-  !CHARACTER(LEN=256) :: RESULT_DIR    ! Resultdir full name for MT3D, by default subdirectory of the FLOW_RESULT_DIR
   CHARACTER(LEN=256) :: FLOW_RESULT_DIR ! for MT3D, location of the resultfolder containing a FLOW field
-  
+
  END TYPE PMANBATCH
- TYPE(PMANBATCH) :: PBMAN  ! Object contains all input/keyword from the batch function RUNFILE. Data is used for writing different type of RUN files
-                           ! in GUI modus: PBMAN is filled from the Simulation Manager (sub)windows. 
+ TYPE(PMANBATCH) :: PBMAN  !## Object contains all input/keyword from the batch function RUNFILE. Data is used for writing different type of RUN files
+                           !## in GUI modus: PBMAN is filled from the Simulation Manager (sub)windows. 
 
  TYPE PERIODOBJ
   CHARACTER(LEN=MAXLENPRJ) :: NAME
