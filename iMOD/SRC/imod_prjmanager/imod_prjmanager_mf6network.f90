@@ -35,11 +35,17 @@ CONTAINS
  IF(JU.EQ.0)THEN; WRITE(*,'(A)') 'Error opening '//TRIM(OUTFOLDER)//'\BND.XY'; RETURN; ENDIF
 
  !## initially activate polygons
- SHP%POL%IACT=1; DO I=1,SHP%NPOL; IF(SHP%POL(I)%N.LE.0)SHP%POL(I)%IACT=0; ENDDO
+ SHP%POL%IACT=0; DO I=1,SHP%NPOL; IF(SHP%POL(I)%N.GT.0)SHP%POL(I)%IACT=1; ENDDO
 
- !## only a selected set of polygon active in this layer
+ !## only a selected set of polygons might be active in this layer
  IF(ILAY.NE.0)THEN
-  DO I=1,SHP%NPOL; DO J=1,SIZE(PBMAN%SM(I)%ILAY); IF(PBMAN%SM(I)%ILAY(J).EQ.ILAY)SHP%POL(I)%IACT=1; ENDDO; ENDDO
+  DO I=1,SHP%NPOL
+   !## deactivate initially
+   SHP%POL(I)%IACT=0
+   DO J=1,SIZE(PBMAN%SM(I)%ILAY)
+    IF(PBMAN%SM(I)%ILAY(J).EQ.ILAY.AND.SHP%POL(I)%N.GT.0)THEN; SHP%POL(I)%IACT=1; EXIT; ENDIF
+   ENDDO
+  ENDDO
  ENDIF
  
  N=0; DO I=1,SHP%NPOL; IF(SHP%POL(I)%IACT.EQ.1)N=N+1; ENDDO; ALLOCATE(IPOL(N),IPIN(N))
@@ -47,7 +53,7 @@ CONTAINS
  N=0; DO I=1,SHP%NPOL; IF(SHP%POL(I)%IACT.EQ.1)THEN; N=N+1; IPOL(N)=I; ENDIF; ENDDO
  !## determine order of polygons
  CALL PMANAGER_GENERATEMFNETWORKS_SORT(N,IPOL,IPIN)
- N=SHP%NPOL; ALLOCATE(MF6IDF(N)); DO I=1,SIZE(MF6IDF); CALL IDFNULLIFY(MF6IDF(I)); ENDDO 
+ ALLOCATE(MF6IDF(N)); DO I=1,SIZE(MF6IDF); CALL IDFNULLIFY(MF6IDF(I)); ENDDO 
  
  !## get dimensions of the idf files - read them from large cellsizes up to small cell sizes
  !## MF6IDF(1) is biggest; MF6IDF(n) is smallest
@@ -60,7 +66,7 @@ CONTAINS
   J =IPOL(I)
   
   !## use cellsize of idf which overlays the current idf
-  II=IPIN(J)
+  II=IPIN(I)
   
   CALL ASC2IDF_INT_NULLIFY(); ALLOCATE(XP(100),YP(100),ZP(100),WP(100),FP(100))
   ALLOCATE(IPC(MF6IDF(II)%NCOL,MF6IDF(II)%NROW,2)); IPC=INT(0,1)
@@ -74,7 +80,7 @@ CONTAINS
  WRITE(IU,'(A)') 'END'; CLOSE(IU); CLOSE(JU)
 
  !## sortgen files to be a polygon, blank out regions in the idf files
- CALL PMANAGER_GENERATEMFNETWORKS_CREATEPOLYGONS(OUTFOLDER,MF6IDF) !,IPOL,IPIN)
+ CALL PMANAGER_GENERATEMFNETWORKS_CREATEPOLYGONS(OUTFOLDER,MF6IDF)
  
  !## write idf files
  DO I=1,SIZE(MF6IDF)
@@ -89,9 +95,9 @@ CONTAINS
    ENDDO; ENDDO
   ENDIF
   IF(ILAY.NE.0)THEN
-   MF6IDF(I)%FNAME=TRIM(OUTFOLDER)//'\SUBMODEL'//TRIM(ITOS(I))//'_L'//TRIM(ITOS(ILAY))//'.IDF'
+   MF6IDF(I)%FNAME=TRIM(OUTFOLDER)//'\SUBMODEL'//TRIM(ITOS(IPOL(I)))//'_L'//TRIM(ITOS(ILAY))//'.IDF'
   ELSE
-   MF6IDF(I)%FNAME=TRIM(OUTFOLDER)//'\SUBMODEL'//TRIM(ITOS(I))//'.IDF'
+   MF6IDF(I)%FNAME=TRIM(OUTFOLDER)//'\SUBMODEL'//TRIM(ITOS(IPOL(I)))//'.IDF'
   ENDIF
   IF(.NOT.IDFWRITE(MF6IDF(I),MF6IDF(I)%FNAME,1))STOP
  ENDDO
@@ -130,8 +136,11 @@ CONTAINS
  CLOSE(KU)
 
  ALLOCATE(XC(100,2),YC(100,2))
+
+ !## read initial polygon number
+ READ(IU,*,IOSTAT=IOS) J; BACKSPACE(IU)
  
- J=1; N=0; DO
+ N=0; DO
   READ(IU,*,IOSTAT=IOS) I,X1,Y1,X2,Y2
   IF(IOS.NE.0)I=I+1
   !## start tracking the connected lines on this polygon
@@ -365,18 +374,15 @@ CONTAINS
  !## set cell sizes to rasterize along
  DO I=1,SIZE(MF6IDF)
 
-  !## get submodel in which this one is embedded
-  J=IPIN(I) 
-
   !## cell size of submodel which embeds this submodel
-  CS=MF6IDF(J)%DX
+  CS=MF6IDF(IPIN(I))%DX
   !## find nice coordinates
   CALL UTL_IDFSNAPTOGRID(MF6IDF(I)%XMIN,MF6IDF(I)%XMAX,MF6IDF(I)%YMIN,MF6IDF(I)%YMAX,CS,MF6IDF(I)%NCOL,MF6IDF(I)%NROW)
 
   !## increase biggest model as "faults" won't capture the area
-  IF(I.EQ.IPOL(1))THEN
-   MF6IDF(I)%XMIN=MF6IDF(I)%XMIN-MF6IDF(I)%DX; MF6IDF(I)%XMAX=MF6IDF(I)%XMAX+MF6IDF(I)%DX
-   MF6IDF(I)%YMIN=MF6IDF(I)%YMIN-MF6IDF(I)%DY; MF6IDF(I)%YMAX=MF6IDF(I)%YMAX+MF6IDF(I)%DY
+  IF(I.EQ.1)THEN
+   MF6IDF(I)%XMIN=MF6IDF(I)%XMIN-2.0d0*MF6IDF(I)%DX; MF6IDF(I)%XMAX=MF6IDF(I)%XMAX+2.0d0*MF6IDF(I)%DX
+   MF6IDF(I)%YMIN=MF6IDF(I)%YMIN-2.0d0*MF6IDF(I)%DY; MF6IDF(I)%YMAX=MF6IDF(I)%YMAX+2.0d0*MF6IDF(I)%DY
   ENDIF
 
   !## get the right dimensions
@@ -509,9 +515,10 @@ CONTAINS
  IMPLICIT NONE
  INTEGER,INTENT(IN) :: N
  INTEGER,INTENT(OUT),DIMENSION(N) :: IPOL,IPIN
- INTEGER :: I,II,J,JJ,AREA
- REAL(KIND=DP_KIND) :: X,Y
- INTEGER,ALLOCATABLE,DIMENSION(:) :: POLAREA
+ INTEGER :: I,J
+ REAL(KIND=DP_KIND) :: X,Y,A
+ REAL(KIND=DP_KIND),DIMENSION(N) :: RPOL
+ REAL(KIND=DP_KIND),ALLOCATABLE,DIMENSION(:) :: POLAREA
  
  ALLOCATE(POLAREA(N)); POLAREA=0.0D0
  
@@ -520,36 +527,58 @@ CONTAINS
    J=J+1
    SELECT CASE (SHP%POL(I)%ITYPE)
     CASE (ID_RECTANGLE)
-     POLAREA(J)=ABS(SHP%POL(I)%X(1)-SHP%POL(I)%X(2))*ABS(SHP%POL(I)%Y(1)-SHP%POL(I)%Y(2))
+     A=ABS(SHP%POL(I)%X(1)-SHP%POL(I)%X(2))*ABS(SHP%POL(I)%Y(1)-SHP%POL(I)%Y(2))
+     POLAREA(J)=A
     CASE (ID_POLYGON)
-     POLAREA(J)=ABS(UTL_POLYGON1AREA(SHP%POL(I)%X,SHP%POL(I)%Y,SHP%POL(I)%N))
+     A=ABS(UTL_POLYGON1AREA(SHP%POL(I)%X,SHP%POL(I)%Y,SHP%POL(I)%N))
+     POLAREA(J)=A
     CASE (ID_CIRCLE)
-     POLAREA(J)=2.0D0*UTL_DIST(SHP%POL(I)%X(1),SHP%POL(I)%Y(1),SHP%POL(I)%X(2),SHP%POL(I)%Y(2))
-     POLAREA(J)=PI*POLAREA(I)**2.0D0
+     A=2.0D0*UTL_DIST(SHP%POL(I)%X(1),SHP%POL(I)%Y(1),SHP%POL(I)%X(2),SHP%POL(I)%Y(2))
+     A=PI*A**2.0D0
+     POLAREA(J)=A
     CASE DEFAULT
      POLAREA(J)=0.0D0
    END SELECT
   ENDIF
  END DO
 
- !## define for each what shape will be the one that holds them directly - smallest area of all that hold first point of polygon
- IPIN=0; JJ=0; DO J=1,SHP%NPOL
-  !## skip inactive polygon for this layer - if needed
-  IF(SHP%POL(J)%IACT.EQ.0)CYCLE; JJ=JJ+1
-  IPIN(JJ)=J; AREA=HUGE(1); X=SHP%POL(J)%X(1); Y=SHP%POL(J)%Y(1)
-  II=0; DO I=1,SHP%NPOL
-   IF(SHP%POL(I)%IACT.EQ.0)CYCLE; IF(I.EQ.J)CYCLE; II=II+1
-   IF(DBL_IGRINSIDESHAPE(X,Y,SHP%POL(I)).EQ.1)THEN
-    IF(POLAREA(I).LE.AREA)THEN
-     AREA=POLAREA(I); IPIN(JJ)=II
+ !## sort from large to small
+! CALL WSORT(POLAREA,1,N,IFLAGS=SORTDESCEND,IORDER=IPOL)
+ RPOL=REAL(IPOL,8)
+ POLAREA=-POLAREA; CALL QKSORT(N,POLAREA,V2=RPOL); POLAREA=-POLAREA
+ IPOL=INT(RPOL)
+ 
+ IPIN=0
+ DO I=1,N
+  !## initial equal to itself
+  IPIN(I)=I
+  !## see in what smallest polygon it lies
+  A=HUGE(1.0); X=SHP%POL(IPOL(I))%X(1); Y=SHP%POL(IPOL(I))%Y(1)
+  DO J=1,N
+   IF(J.EQ.I)CYCLE   
+   IF(DBL_IGRINSIDESHAPE(X,Y,SHP%POL(IPOL(J))).EQ.1)THEN
+    IF(POLAREA(I).LE.A)THEN
+     A=POLAREA(I); IPIN(I)=J
     ENDIF
    ENDIF
   ENDDO
  ENDDO
  
- !## sort from large to small
- POLAREA=-POLAREA; CALL QKSORT_INT(N,POLAREA,V2=IPOL,V3=IPIN)
-
+ !!## define for each what shape will be the one that holds them directly - smallest area of all that hold first point of polygon
+ !IPIN=0; JJ=0; DO J=1,SHP%NPOL
+ ! !## skip inactive polygon for this layer - if needed
+ ! IF(SHP%POL(J)%IACT.EQ.0)CYCLE; JJ=JJ+1
+ ! IPIN(JJ)=JJ; A=HUGE(1.0); X=SHP%POL(J)%X(1); Y=SHP%POL(J)%Y(1)
+ ! II=0; DO I=1,SHP%NPOL
+ !  IF(SHP%POL(I)%IACT.EQ.0)CYCLE; IF(I.EQ.J)CYCLE; II=II+1
+ !  IF(DBL_IGRINSIDESHAPE(X,Y,SHP%POL(I)).EQ.1)THEN
+ !   IF(POLAREA(I).LE.A)THEN
+ !    A=POLAREA(I); IPIN(JJ)=II
+ !   ENDIF
+ !  ENDIF
+ ! ENDDO
+ !ENDDO
+ 
  DEALLOCATE(POLAREA)
 
  END SUBROUTINE PMANAGER_GENERATEMFNETWORKS_SORT
