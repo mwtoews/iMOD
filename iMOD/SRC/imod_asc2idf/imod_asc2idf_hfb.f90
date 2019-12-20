@@ -118,9 +118,9 @@ CONTAINS
       CALL INTERSECT_EQUI(IDF%XMIN,IDF%XMAX,IDF%YMIN,IDF%YMAX,IDF%DX,IDF%DY,X1,X2,Y1,Y2,N,.TRUE.)
      !## non-equidistantial
      ELSE
-      if(j.eq.3.and.i.eq.3)then
-      write(*,*)
-      endif
+!      if(j.eq.3.and.i.eq.3)then
+!      write(*,*)
+!      endif
       CALL INTERSECT_NONEQUI(IDF%SX,IDF%SY,IDF%NROW,IDF%NCOL,X1,X2,Y1,Y2,N,.TRUE.)
      ENDIF
      
