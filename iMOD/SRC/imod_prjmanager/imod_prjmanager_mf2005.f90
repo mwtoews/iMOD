@@ -891,28 +891,16 @@ CONTAINS
   IF(BND(K,ILAY)%X(ICOL,IROW).LT.0.0D0)BND(K,ILAY)%X(ICOL,IROW)=BND(K,ILAY)%NODATA
  ENDDO; ENDDO; ENDDO; ENDDO
  
+
  !## who is smallest in cellsize and/or dimension
  IMDL1=1; IMDL2=2; LSUBMODEL=.FALSE.; TLAYMODEL=''; IMDL(IMDL1)=M1; IMDL(IMDL2)=M2
- !## check size first
- IF(BND(2,1)%XMIN.GT.BND(1,1)%XMIN.AND.BND(2,1)%XMAX.LT.BND(1,1)%XMAX.AND. &
-    BND(2,1)%YMIN.GT.BND(1,1)%YMIN.AND.BND(2,1)%YMAX.LT.BND(1,1)%YMAX)THEN
-  !## throw an error in the case a submodel, is coarser - not supported
-  IF(BND(2,1)%DX.GT.BND(1,1)%DX)THEN
-   WRITE(*,'(/A/)') 'A submodel need to have at least a cellsize which is equal or smaller than the overlapping model'; STOP 
-  ENDIF
-  IMDL1=2; IMDL2=1; IMDL(IMDL1)=M2; IMDL(IMDL2)=M1; LSUBMODEL=.TRUE.
- !## check size second
- ELSEIF(BND(1,1)%XMIN.GT.BND(2,1)%XMIN.AND.BND(1,1)%XMAX.LT.BND(2,1)%XMAX.AND. &
-        BND(1,1)%YMIN.GT.BND(2,1)%YMIN.AND.BND(1,1)%YMAX.LT.BND(2,1)%YMAX)THEN
-  !## throw an error in the case a submodel, is coarser - not supported
-  IF(BND(1,1)%DX.GT.BND(2,1)%DX)THEN
-   WRITE(*,'(/A/)') 'A submodel need to have at least a cellsize which is equal or smaller than the overlapping model'; STOP 
-  ENDIF
-  LSUBMODEL=.TRUE.
- !## if not, equal model size but different layers
- ELSEIF(BND(2,1)%XMIN.EQ.BND(1,1)%XMIN.AND.BND(2,1)%XMAX.EQ.BND(1,1)%XMAX.AND. &
-        BND(2,1)%YMIN.EQ.BND(1,1)%YMIN.AND.BND(2,1)%YMAX.EQ.BND(1,1)%YMAX)THEN
-  IF(BND(2,1)%DX.LT.BND(1,1)%DX)THEN
+ 
+! !## if not, equal model size but different layers
+! ELSEIF(BND(2,1)%XMIN.EQ.BND(1,1)%XMIN.AND.BND(2,1)%XMAX.EQ.BND(1,1)%XMAX.AND. &
+!        BND(2,1)%YMIN.EQ.BND(1,1)%YMIN.AND.BND(2,1)%YMAX.EQ.BND(1,1)%YMAX)THEN
+
+ !## check top/bottom first
+ IF(BND(2,1)%DX.LT.BND(1,1)%DX)THEN
    IMDL1=2; IMDL2=1; IMDL(IMDL1)=M2; IMDL(IMDL2)=M1
   ENDIF
   !## determine whether submodel is on top or bottom
@@ -944,10 +932,36 @@ CONTAINS
     ENDIF
    ENDIF
   ENDDO; ENDDO
-  IF(TLAYMODEL.EQ.'')THEN
-   WRITE(*,'(/1X,A/)') 'Cannot position model horizontally or vertically'; STOP
+
+ !## not on top of eachother, probably next to eachother 
+ if(tlaymodel.eq.'')then
+ 
+ !## check size first
+ IF(BND(2,1)%XMIN.GT.BND(1,1)%XMIN.AND.BND(2,1)%XMAX.LT.BND(1,1)%XMAX.AND. &
+    BND(2,1)%YMIN.GT.BND(1,1)%YMIN.AND.BND(2,1)%YMAX.LT.BND(1,1)%YMAX)THEN
+  !## throw an error in the case a submodel, is coarser - not supported
+  IF(BND(2,1)%DX.GT.BND(1,1)%DX)THEN
+   WRITE(*,'(/A/)') 'A submodel need to have at least a cellsize which is equal or smaller than the overlapping model'; STOP 
   ENDIF
+  IMDL1=2; IMDL2=1; IMDL(IMDL1)=M2; IMDL(IMDL2)=M1; LSUBMODEL=.TRUE.
+ !## check size second
+ ELSEIF(BND(1,1)%XMIN.GT.BND(2,1)%XMIN.AND.BND(1,1)%XMAX.LT.BND(2,1)%XMAX.AND. &
+        BND(1,1)%YMIN.GT.BND(2,1)%YMIN.AND.BND(1,1)%YMAX.LT.BND(2,1)%YMAX)THEN
+  !## throw an error in the case a submodel, is coarser - not supported
+  IF(BND(1,1)%DX.GT.BND(2,1)%DX)THEN
+   WRITE(*,'(/A/)') 'A submodel need to have at least a cellsize which is equal or smaller than the overlapping model'; STOP 
+  ENDIF
+  LSUBMODEL=.TRUE.
  ENDIF
+ 
+ endif
+ 
+  IF(TLAYMODEL.EQ.''.and..not.lsubmodel)THEN
+   WRITE(*,'(/1X,A/)') 'Cannot position model horizontally, vertically or laterally.'; STOP
+  ENDIF
+! ENDIF
+ 
+ WRITE(*,*) 'TLAYMODEL,LSUBMODEL', TLAYMODEL,LSUBMODEL
  
  DO I=1,2
   N=0
