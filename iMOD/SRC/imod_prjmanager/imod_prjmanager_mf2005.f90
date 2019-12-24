@@ -815,13 +815,14 @@ CONTAINS
  SUBROUTINE PMANAGER_SAVEMF6_EXG(DIR,MNAME,M1,M2,NEX)
  !###======================================================================
  IMPLICIT NONE
+ REAL(KIND=DP_KIND),PARAMETER :: CDISTANCE=0.1D0
  CHARACTER(LEN=*),INTENT(IN) :: DIR,MNAME
  INTEGER,INTENT(IN) :: M1,M2
  INTEGER,INTENT(INOUT) :: NEX
  REAL(KIND=DP_KIND) :: XP,YP,T,B,Z1,Z2
  INTEGER :: IU,JU,I,J,K,IM,N,IOS,II,ILAY,JLAY,MAXNLAY,IROW,ICOL,JROW,JCOL,ID
  TYPE(IDFOBJ),ALLOCATABLE,DIMENSION(:,:) :: BND,TOP,BOT
- TYPE(IDFOBJ) :: DUMMY
+ TYPE(IDFOBJ) :: ICONNECTION
  INTEGER,DIMENSION(2) :: MNLAY 
  REAL(KIND=DP_KIND),DIMENSION(2) :: MT,MB
  CHARACTER(LEN=256) :: FNAME,LINE
@@ -905,6 +906,7 @@ CONTAINS
  
  !## initial idf dimension to all
  DO I=1,2; DO J=1,SIZE(BND,2); CALL IDFCOPY(BND(2,1),TOP(I,J)); CALL IDFCOPY(BND(2,1),BOT(I,J)); ENDDO; ENDDO
+ CALL IDFCOPY(BND(1,1),ICONNECTION)
  
  !## read top/bottom in coarse-resolution
  DO IM=1,2
@@ -924,81 +926,104 @@ CONTAINS
  DO I=1,2
   N=0
 
-  DO ILAY=1,MNLAY(1)
- 
-   !## connections
-   DO IROW=1,BND(1,ILAY)%NROW; DO ICOL=1,BND(1,ILAY)%NCOL
+  !## keep track of type of connections
+  ICONNECTION%X=0.0D0
+
+  !## vertical connections
+  DO IROW=1,BND(1,1)%NROW; DO ICOL=1,BND(1,1)%NCOL
+
+   !## find first top-layer to be potential connected to an upper layer
+   DO ILAY=1,MNLAY(1)
     !## skip inactive cells
     IF(BND(1,ILAY)%X(ICOL,IROW).EQ.BND(1,ILAY)%NODATA)CYCLE
 
     !## if active in other model - probably vertical connection to the top/bottom
-    CALL IDFGETLOC  (BND(1,ILAY),IROW,ICOL,XP,YP)
-    CALL IDFIROWICOL(BND(2,ILAY),JROW,JCOL,XP,YP)
+    CALL IDFGETLOC(BND(1,1),IROW,ICOL,XP,YP); CALL IDFIROWICOL(BND(2,1),JROW,JCOL,XP,YP)
     
-    LEX=JROW.NE.0.AND.JCOL.NE.0
-    IF(LEX)THEN; LEX=TOP(2,ILAY)%X(JCOL,JROW).NE.TOP(2,ILAY)%NODATA; ENDIF
-    
+    Z1=TOP(1,ILAY)%X(JCOL,JROW); Z2=BOT(1,ILAY)%X(JCOL,JROW)
+    !## try top connection
+    LEX=.FALSE.; DO JLAY=MNLAY(2),1,-1
+     !## only try active layer on top
+     T=TOP(2,JLAY)%X(JCOL,JROW); B=BOT(2,JLAY)%X(JCOL,JROW)
+     IF(T-B.GT.0.0D0)THEN
+      IF(ABS(B-Z1).LE.CDISTANCE)THEN; LEX=.TRUE.; EXIT; ENDIF
+     ENDIF
+    ENDDO
     IF(LEX)THEN
-     Z1=TOP(1,ILAY)%X(JCOL,JROW); Z2=BOT(1,ILAY)%X(JCOL,JROW)
-     DO ID=5,6
-      LEX=.FALSE.
-      SELECT CASE (CID(ID))
-       !## try top connection
-       CASE ('T')
-        DO JLAY=MNLAY(2),1,-1
-         !## only try active layer on top
-         T=TOP(2,JLAY)%X(JCOL,JROW); B=BOT(2,JLAY)%X(JCOL,JROW)
-         IF(T-B.GT.0.0D0)THEN
-          IF(B.EQ.Z1)THEN; LEX=.TRUE.; EXIT; ENDIF
-         ENDIF
-        ENDDO
-       !## try bot connection
-       CASE ('B')
-        DO JLAY=1,MNLAY(2)
-         !## only try active layer on top
-         T=TOP(2,JLAY)%X(JCOL,JROW); B=BOT(2,JLAY)%X(JCOL,JROW)
-         IF(T-B.GT.0.0D0)THEN
-          IF(T.EQ.Z2)THEN; LEX=.TRUE.; EXIT; ENDIF
-         ENDIF
-        ENDDO
-      END SELECT
-      IF(.NOT.LEX)CYCLE
-      IF(PMANAGER_SAVEMF6_EXG_CONNECTIONS(CID(ID),IU,ILAY,IROW,ICOL,JLAY,BND,TOP,BOT,I))THEN
-       N=N+1
-      ENDIF
-      EXIT
-     ENDDO
-
-    !## lateral connection
-    ELSE
-    
-     !## found boundary cell
-     DO ID=1,4
-      LEX=.FALSE.
-      SELECT CASE (CID(I))
-       !## north
-       CASE ('N')
-        IF(IROW.EQ.1)LEX=.TRUE.
-        IF(IROW.GT.1)THEN; LEX=BND(1,ILAY)%X(ICOL,IROW-1).EQ.BND(1,ILAY)%NODATA; ENDIF
-       !## south
-       CASE ('S')
-        IF(IROW.EQ.BND(1,ILAY)%NROW)LEX=.TRUE.
-        IF(IROW.LT.BND(1,ILAY)%NROW)THEN; LEX=BND(1,ILAY)%X(ICOL,IROW+1).EQ.BND(1,ILAY)%NODATA; ENDIF
-       !## west
-       CASE ('W')
-        IF(ICOL.EQ.1)LEX=.TRUE.
-        IF(ICOL.GT.1)THEN; LEX=BND(1,ILAY)%X(ICOL-1,IROW).EQ.BND(1,ILAY)%NODATA; ENDIF
-       !## east 
-       CASE ('E')
-        IF(ICOL.EQ.BND(1,ILAY)%NCOL)LEX=.TRUE.
-        IF(ICOL.LT.BND(1,ILAY)%NCOL)THEN; LEX=BND(1,ILAY)%X(ICOL+1,IROW).EQ.BND(1,ILAY)%NODATA; ENDIF
-      END SELECT
-
-      IF(.NOT.LEX)CYCLE
-      IF(PMANAGER_SAVEMF6_EXG_CONNECTIONS(CID(I),IU,ILAY,IROW,ICOL,0,BND,TOP,BOT,I))N=N+1
-     ENDDO
-
+     IF(PMANAGER_SAVEMF6_EXG_CONNECTIONS('T',IU,ILAY,IROW,ICOL,JLAY,BND,TOP,BOT,I))THEN
+      ICONNECTION%X(ICOL,IROW)=1.0D0
+      N=N+1
+     ENDIF
     ENDIF
+    !## stop looking
+    EXIT
+   ENDDO
+  
+   !## find first bottom-layer to be potential connected to a lower layer
+   DO ILAY=MNLAY(1),1,-1
+    !## skip inactive cells
+    IF(BND(1,ILAY)%X(ICOL,IROW).EQ.BND(1,ILAY)%NODATA)CYCLE
+
+    !## if active in other model - probably vertical connection to the top/bottom
+    CALL IDFGETLOC(BND(1,1),IROW,ICOL,XP,YP); CALL IDFIROWICOL(BND(2,1),JROW,JCOL,XP,YP)
+    
+    Z1=TOP(1,ILAY)%X(JCOL,JROW); Z2=BOT(1,ILAY)%X(JCOL,JROW)
+    !## try bot connection
+    LEX=.FALSE.; DO JLAY=1,MNLAY(2)
+     !## only try active layer on top
+     T=TOP(2,JLAY)%X(JCOL,JROW); B=BOT(2,JLAY)%X(JCOL,JROW)
+     IF(T-B.GT.0.0D0)THEN
+      IF(ABS(T-Z2).LE.CDISTANCE)THEN; LEX=.TRUE.; EXIT; ENDIF
+     ENDIF
+    ENDDO
+    IF(LEX)THEN
+     IF(PMANAGER_SAVEMF6_EXG_CONNECTIONS('B',IU,ILAY,IROW,ICOL,JLAY,BND,TOP,BOT,I))THEN
+      ICONNECTION%X(ICOL,IROW)=2.0D0
+      N=N+1
+     ENDIF
+    ENDIF
+    !## stop looking
+    EXIT
+   ENDDO
+  ENDDO; ENDDO
+  
+  DO ILAY=1,MNLAY(1)
+ 
+   !## connections
+   DO IROW=1,BND(1,ILAY)%NROW; DO ICOL=1,BND(1,ILAY)%NCOL
+
+    !## skip inactive cells
+    IF(BND(1,ILAY)%X(ICOL,IROW).EQ.BND(1,ILAY)%NODATA)CYCLE
+    
+    !## skip active cells from other submodel (vertically)
+    IF(ICONNECTION%X(ICOL,IROW).NE.0.0D0)CYCLE
+    
+    !## found boundary cell
+    DO ID=1,4
+     LEX=.FALSE.
+     SELECT CASE (CID(ID))
+      !## north
+      CASE ('N')
+       IF(IROW.EQ.1)LEX=.TRUE.
+       IF(IROW.GT.1)THEN; LEX=BND(1,ILAY)%X(ICOL,IROW-1).EQ.BND(1,ILAY)%NODATA; ENDIF
+      !## south
+      CASE ('S')
+       IF(IROW.EQ.BND(1,ILAY)%NROW)LEX=.TRUE.
+       IF(IROW.LT.BND(1,ILAY)%NROW)THEN; LEX=BND(1,ILAY)%X(ICOL,IROW+1).EQ.BND(1,ILAY)%NODATA; ENDIF
+      !## west
+      CASE ('W')
+       IF(ICOL.EQ.1)LEX=.TRUE.
+       IF(ICOL.GT.1)THEN; LEX=BND(1,ILAY)%X(ICOL-1,IROW).EQ.BND(1,ILAY)%NODATA; ENDIF
+      !## east 
+      CASE ('E')
+       IF(ICOL.EQ.BND(1,ILAY)%NCOL)LEX=.TRUE.
+       IF(ICOL.LT.BND(1,ILAY)%NCOL)THEN; LEX=BND(1,ILAY)%X(ICOL+1,IROW).EQ.BND(1,ILAY)%NODATA; ENDIF
+     END SELECT
+
+     IF(.NOT.LEX)CYCLE
+     IF(PMANAGER_SAVEMF6_EXG_CONNECTIONS(CID(ID),IU,ILAY,IROW,ICOL,0,BND,TOP,BOT,I))N=N+1
+    ENDDO
+
    ENDDO; ENDDO
   ENDDO 
 
@@ -1020,7 +1045,7 @@ CONTAINS
  DO I=1,SIZE(BND,1); DO J=1,SIZE(BND,2); CALL IDFDEALLOCATEX(BND(I,J)); ENDDO; ENDDO
  DO I=1,SIZE(TOP,1); DO J=1,SIZE(TOP,2); CALL IDFDEALLOCATEX(TOP(I,J)); ENDDO; ENDDO
  DO I=1,SIZE(BOT,1); DO J=1,SIZE(BOT,2); CALL IDFDEALLOCATEX(BOT(I,J)); ENDDO; ENDDO
- DEALLOCATE(BND,TOP,BOT) 
+ DEALLOCATE(BND,TOP,BOT); CALL IDFDEALLOCATEX(ICONNECTION)
  
  END SUBROUTINE PMANAGER_SAVEMF6_EXG
  
@@ -1065,7 +1090,10 @@ CONTAINS
  END SELECT
  
  !## outside parent model
- CALL IDFIROWICOL(BND(2,JLAY),JROW,JCOL,XP,YP) !; IF(JROW.LE.0.OR.JCOL.LE.0)RETURN
+ CALL IDFIROWICOL(BND(2,JLAY),JROW,JCOL,XP,YP); IF(JROW.LE.0.OR.JCOL.LE.0)RETURN
+
+ !## check if location is active
+ IF(BND(2,JLAY)%X(JCOL,JROW).EQ.BND(2,JLAY)%NODATA)RETURN
  
  !## get location of cell outside submodel
  CALL IDFGETLOC(BND(2,JLAY),JROW,JCOL,XP2,YP2)
@@ -1125,7 +1153,7 @@ CONTAINS
 
  ENDIF
 
- IF(IIU.EQ.2)WRITE(IU,'(7I10,5G15.7)') (CELLID(1,I),I=1,3),(CELLID(2,I),I=1,3),IHC,CL(1),CL(2),HWVA,0.0D0
+ IF(IIU.EQ.2)WRITE(IU,'(7I10,5G15.7,1X,A3)') (CELLID(1,I),I=1,3),(CELLID(2,I),I=1,3),IHC,CL(1),CL(2),HWVA,0.0D0,CDIR
      
  PMANAGER_SAVEMF6_EXG_CONNECTIONS=.TRUE.
 
