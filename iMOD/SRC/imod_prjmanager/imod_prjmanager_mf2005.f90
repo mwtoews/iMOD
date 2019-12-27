@@ -823,7 +823,7 @@ CONTAINS
  INTEGER :: IU,JU,I,J,K,IM,N,IOS,II,ILAY,JLAY,MAXNLAY,IROW,ICOL,JROW,JCOL,ID
  TYPE(IDFOBJ),ALLOCATABLE,DIMENSION(:,:) :: BND,TOP,BOT
  TYPE(IDFOBJ),ALLOCATABLE,DIMENSION(:) :: ICON1,ICON2
- TYPE(IDFOBJ) :: ICONNECTION
+! TYPE(IDFOBJ) :: ICONNECTION
  INTEGER,DIMENSION(2) :: MNLAY 
  REAL(KIND=DP_KIND),DIMENSION(2) :: MT,MB
  CHARACTER(LEN=256) :: FNAME,LINE
@@ -906,18 +906,18 @@ CONTAINS
  ENDDO; ENDDO; ENDDO; ENDDO
  
  !## save connections
- CALL IDFCOPY(BND(1,1),ICONNECTION) 
+! CALL IDFCOPY(BND(1,1),ICONNECTION) 
  DO ILAY=1,MNLAY(1); CALL IDFCOPY(BND(1,1),ICON1(ILAY)); ENDDO
  DO ILAY=1,MNLAY(2); CALL IDFCOPY(BND(2,1),ICON2(ILAY)); ENDDO
 
  LTOP=.FALSE.; LBOT=.FALSE.; LLAT=.FALSE.
  
  !## determine whether layers are onm top,bottom or next to eachother
- ILAY=PBMAN%SM(I)%ILAY(1)
- JLAY=PBMAN%SM(I)%ILAY(2)
- IF(ILAY.GT.JLAY)THEN
+ ILAY=PBMAN%SM(M1)%ILAY(1)
+ JLAY=PBMAN%SM(M2)%ILAY(1)
+ IF(ILAY.LT.JLAY)THEN
   LBOT=.TRUE.
- ELSEIF(ILAY.LT.JLAY)THEN
+ ELSEIF(ILAY.GT.JLAY)THEN
   LTOP=.TRUE.
  ELSE
   LLAT=.TRUE.
@@ -946,7 +946,7 @@ CONTAINS
   N=0
 
   !## keep track of type of connections
-  ICONNECTION%X=0.0D0
+!  ICONNECTION%X=0.0D0
   DO ILAY=1,MNLAY(1); ICON1(ILAY)%X=0.0D0; ENDDO
   DO ILAY=1,MNLAY(2); ICON2(ILAY)%X=0.0D0; ENDDO
 
@@ -955,7 +955,7 @@ CONTAINS
    DO IROW=1,BND(1,1)%NROW; DO ICOL=1,BND(1,1)%NCOL
 
     !## find first top-layer to be potential connected to an upper layer
-    DO ILAY=1,MNLAY(1)
+ILAYLOOP1: DO ILAY=1,MNLAY(1)
      !## skip inactive cells
      IF(BND(1,ILAY)%X(ICOL,IROW).EQ.BND(1,ILAY)%NODATA)CYCLE
      !## if active in other model - probably vertical connection to the top/bottom
@@ -966,21 +966,18 @@ CONTAINS
       !## only try active layer on top
       T=TOP(2,JLAY)%X(JCOL,JROW); B=BOT(2,JLAY)%X(JCOL,JROW)
       IF(T-B.GT.0.0D0)THEN
-       LEX=.TRUE.
+       IF(PMANAGER_SAVEMF6_EXG_CONNECTIONS('T',IU,ILAY,IROW,ICOL,JLAY,BND,TOP,BOT,I))THEN
+!       ICONNECTION%X(ICOL,IROW)=1.0D0
+        N=N+1
+        !## id number of cell to be connected to
+        ICON1(ILAY)%X(ICOL,IROW)=N
+        ICON2(JLAY)%X(JCOL,JROW)=N
+        !## stop looking
+        EXIT ILAYLOOP1
+       ENDIF
       ENDIF
      ENDDO
-     IF(LEX)THEN
-      IF(PMANAGER_SAVEMF6_EXG_CONNECTIONS('T',IU,ILAY,IROW,ICOL,JLAY,BND,TOP,BOT,I))THEN
-       ICONNECTION%X(ICOL,IROW)=1.0D0
-       N=N+1
-       !## id number of cell to be connected to
-       ICON1(ILAY)%X(ICOL,IROW)=N
-       ICON2(JLAY)%X(JCOL,JROW)=N
-      ENDIF
-     ENDIF
-     !## stop looking
-     EXIT
-    ENDDO
+    ENDDO ILAYLOOP1
    ENDDO; ENDDO
   ENDIF
   
@@ -989,7 +986,7 @@ CONTAINS
    DO IROW=1,BND(1,1)%NROW; DO ICOL=1,BND(1,1)%NCOL
 
     !## find first bottom-layer to be potential connected to a lower layer
-    DO ILAY=MNLAY(1),1,-1
+ILAYLOOP2: DO ILAY=1,MNLAY(1)
      !## skip inactive cells
      IF(BND(1,ILAY)%X(ICOL,IROW).EQ.BND(1,ILAY)%NODATA)CYCLE
      !## if active in other model - probably vertical connection to the top/bottom
@@ -1000,21 +997,18 @@ CONTAINS
       !## only try active layer on top
       T=TOP(2,JLAY)%X(JCOL,JROW); B=BOT(2,JLAY)%X(JCOL,JROW)
       IF(T-B.GT.0.0D0)THEN
-       LEX=.TRUE.
+       IF(PMANAGER_SAVEMF6_EXG_CONNECTIONS('B',IU,ILAY,IROW,ICOL,JLAY,BND,TOP,BOT,I))THEN
+!       ICONNECTION%X(ICOL,IROW)=2.0D0
+        N=N+1
+        !## id number of cell to be connected to
+        ICON1(ILAY)%X(ICOL,IROW)=N
+        ICON2(JLAY)%X(JCOL,JROW)=N
+        !## stop looking
+        EXIT ILAYLOOP2
+       ENDIF
       ENDIF
      ENDDO
-     IF(LEX)THEN
-      IF(PMANAGER_SAVEMF6_EXG_CONNECTIONS('B',IU,ILAY,IROW,ICOL,JLAY,BND,TOP,BOT,I))THEN
-       ICONNECTION%X(ICOL,IROW)=2.0D0
-       N=N+1
-       !## id number of cell to be connected to
-       ICON1(ILAY)%X(ICOL,IROW)=N
-       ICON2(JLAY)%X(JCOL,JROW)=N
-      ENDIF
-     ENDIF
-     !## stop looking
-     EXIT
-    ENDDO
+    ENDDO ILAYLOOP2
    ENDDO; ENDDO
   ENDIF
   
@@ -1024,8 +1018,8 @@ CONTAINS
     DO IROW=1,BND(1,ILAY)%NROW; DO ICOL=1,BND(1,ILAY)%NCOL
      !## skip inactive cells
      IF(BND(1,ILAY)%X(ICOL,IROW).EQ.BND(1,ILAY)%NODATA)CYCLE
-     !## skip active cells from other submodel (vertically)
-     IF(ICONNECTION%X(ICOL,IROW).NE.0.0D0)CYCLE
+!     !## skip active cells from other submodel (vertically)
+!     IF(ICONNECTION%X(ICOL,IROW).NE.0.0D0)CYCLE
  
      !## found boundary cell
      DO ID=1,4
@@ -1091,7 +1085,7 @@ CONTAINS
  DO I=1,SIZE(BND,1); DO J=1,SIZE(BND,2); CALL IDFDEALLOCATEX(BND(I,J)); ENDDO; ENDDO
  DO I=1,SIZE(TOP,1); DO J=1,SIZE(TOP,2); CALL IDFDEALLOCATEX(TOP(I,J)); ENDDO; ENDDO
  DO I=1,SIZE(BOT,1); DO J=1,SIZE(BOT,2); CALL IDFDEALLOCATEX(BOT(I,J)); ENDDO; ENDDO
- DEALLOCATE(BND,TOP,BOT); CALL IDFDEALLOCATEX(ICONNECTION)
+ DEALLOCATE(BND,TOP,BOT) !; CALL IDFDEALLOCATEX(ICONNECTION)
  DO I=1,SIZE(ICON1); CALL IDFDEALLOCATEX(ICON1(I)); ENDDO 
  DO I=1,SIZE(ICON2); CALL IDFDEALLOCATEX(ICON2(I)); ENDDO 
  DEALLOCATE(ICON1,ICON2)
