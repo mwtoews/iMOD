@@ -196,6 +196,7 @@ MODULE MOD_PMANAGER_PAR
  TYPE SM_OBJ
   INTEGER,POINTER,DIMENSION(:) :: ILAY=>NULL()  !## number of layers per submodel
   TYPE(IDFOBJ),POINTER,DIMENSION(:) :: IDF=>NULL()
+  TYPE(IDFOBJ),POINTER,DIMENSION(:) :: CON=>NULL()
  END TYPE SM_OBJ
  
   !## from imodbatch ini file
