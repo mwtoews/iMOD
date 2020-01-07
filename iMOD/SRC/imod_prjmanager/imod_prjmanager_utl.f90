@@ -269,13 +269,16 @@ CONTAINS
  END SUBROUTINE PMAMAGER_INCREASEFNAMES
 
  !###======================================================================
- LOGICAL FUNCTION PMANAGER_GETPACKAGES(IOPTION)
+ LOGICAL FUNCTION PMANAGER_GETPACKAGES(IOPTION,IBATCH)
  !###======================================================================
  IMPLICIT NONE
- INTEGER,INTENT(IN) :: IOPTION
+ INTEGER,INTENT(IN) :: IOPTION,IBATCH
  INTEGER :: I
  
  PMANAGER_GETPACKAGES=.FALSE.
+
+ !## overrule ipst if not as keyword given
+ IF(IBATCH.EQ.1.AND.PBMAN%IPEST.EQ.0)TOPICS(TPST)%IACT_MODEL=0
 
  !## check if topic is active and complete
  DO I=1,MAXTOPICS
@@ -1370,7 +1373,7 @@ JLOOP: DO K=1,SIZE(TOPICS)
  PMANAGER_INITSIM_INITFIELDS=.FALSE.
  
  !## initiate existence of packages
- IF(.NOT.PMANAGER_GETPACKAGES(0))RETURN
+ IF(.NOT.PMANAGER_GETPACKAGES(0,IBATCH))RETURN
 
  ID=WINFODIALOG(CURRENTDIALOG)
  
