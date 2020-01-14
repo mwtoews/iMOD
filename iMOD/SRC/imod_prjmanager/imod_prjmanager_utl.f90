@@ -2634,14 +2634,6 @@ JLOOP: DO K=1,SIZE(TOPICS)
   ENDDO
  ENDIF
 
- !!## remove previous version of imodflow
- !I=INDEXNOCASE(PREFVAL(IPREVAL),'\',.TRUE.)+1
- !INQUIRE(FILE=TRIM(DIR)//'\'//TRIM(PREFVAL(IPREVAL)(I:)),EXIST=LEX)
- !IF(LEX)CALL IOSDELETEFILE(TRIM(DIR)//'\'//TRIM(PREFVAL(IPREVAL)(I:)))
- !
- !!## copy imodflow executable
- !CALL IOSCOPYFILE(TRIM(PREFVAL(IPREVAL)),TRIM(DIR)//'\'//TRIM(PREFVAL(IPREVAL)(I:)))
-  
  INQUIRE(FILE=TRIM(EXEPATH)//'\'//TRIM(LICFILE),EXIST=LEX)
  IF(.NOT.LEX)THEN
   IERROR=0; CALL IMOD_AGREEMENT(IERROR)
@@ -2735,36 +2727,41 @@ JLOOP: DO K=1,SIZE(TOPICS)
     ENDIF
    ENDIF
  
-   !## include conversion from mf6 to idf files
-   IF(PBMAN%IFORMAT.EQ.3)THEN
-    WRITE(IU,'(/A)') 'REM ============================================='
-    WRITE(IU,'( A)') 'REM iMOD Batch Script iMOD '//TRIM(RVERSION)
-    WRITE(IU,'( A)') 'REM ============================================='
-    DO J=1,PBMAN%NSUBMODEL
-     WRITE(IU,'(/A)') 'ECHO FUNCTION=MF6TOIDF > MF6TOIDF.INI'
-     WRITE(IU,'( A)') 'ECHO GRB="'//TRIM(DIR)//'\GWF_'//TRIM(ITOS(J))//'\MODELINPUT\'//TRIM(MNAME)//'.DIS6.GRB" >> MF6TOIDF.INI'
-     WRITE(IU,'( A)') 'ECHO HED="'//TRIM(DIR)//'\GWF_'//TRIM(ITOS(J))//'\MODELOUTPUT\HEAD\HEAD.HED" >> MF6TOIDF.INI'
-     WRITE(IU,'( A)') 'ECHO BDG="'//TRIM(DIR)//'\GWF_'//TRIM(ITOS(J))//'\MODELOUTPUT\BUDGET\BUDGET.CBC" >> MF6TOIDF.INI'
+   !## incluse postprocessing only in case not parameter optimization is carried out
+   IF(PBMAN%IPEST+PBMAN%IPESTP.EQ.0)THEN
+
+    !## include conversion from mf6 to idf files
+    IF(PBMAN%IFORMAT.EQ.3)THEN
+     WRITE(IU,'(/A)') 'REM ============================================='
+     WRITE(IU,'( A)') 'REM iMOD Batch Script iMOD '//TRIM(RVERSION)
+     WRITE(IU,'( A)') 'REM ============================================='
+     DO J=1,PBMAN%NSUBMODEL
+      WRITE(IU,'(/A)') 'ECHO FUNCTION=MF6TOIDF > MF6TOIDF.INI'
+      WRITE(IU,'( A)') 'ECHO GRB="'//TRIM(DIR)//'\GWF_'//TRIM(ITOS(J))//'\MODELINPUT\'//TRIM(MNAME)//'.DIS6.GRB" >> MF6TOIDF.INI'
+      WRITE(IU,'( A)') 'ECHO HED="'//TRIM(DIR)//'\GWF_'//TRIM(ITOS(J))//'\MODELOUTPUT\HEAD\HEAD.HED" >> MF6TOIDF.INI'
+      WRITE(IU,'( A)') 'ECHO BDG="'//TRIM(DIR)//'\GWF_'//TRIM(ITOS(J))//'\MODELOUTPUT\BUDGET\BUDGET.CBC" >> MF6TOIDF.INI'
+      WRITE(IU,'( A)') 
+      WRITE(IU,'( A)') '"'//TRIM(EXENAME)//'" MF6TOIDF.INI'
+      WRITE(IU,'( A)') 
+     ENDDO
+    ENDIF
+   
+    !## include conversion of sfr package into isg-file
+    IF(TOPICS(TSFR)%DEFINED)THEN
+     WRITE(IU,'(/A)') 'REM ============================================='
+     WRITE(IU,'( A)') 'REM iMOD Batch Script iMOD '//TRIM(RVERSION)
+     WRITE(IU,'( A)') 'REM ============================================='
+     WRITE(IU,'(/A)') 'ECHO FUNCTION=SFRTOISG > SFRTOISG.INI'
+     WRITE(IU,'( A)') 'ECHO ISGFILE_IN= "'//TRIM(DIR)//'\MODELINPUT\SFR7\SFR.ISG" >> SFRTOISG.INI'
+     WRITE(IU,'( A)') 'ECHO ISGFILE_OUT="'//TRIM(DIR)//'\BDGSFR\ISG\SFR.ISG" >> SFRTOISG.INI'
+     WRITE(IU,'( A)') 'ECHO SFRFILE_IN= "'//TRIM(DIR)//'\'//TRIM(MNAME)//'_FSFR.TXT" >> SFRTOISG.INI'
      WRITE(IU,'( A)') 
-     WRITE(IU,'( A)') '"'//TRIM(EXENAME)//'" MF6TOIDF.INI'
+     WRITE(IU,'( A)') '"'//TRIM(EXENAME)//'" SFRTOISG.INI'
      WRITE(IU,'( A)') 
-    ENDDO
+    ENDIF
+   
    ENDIF
    
-   !## include conversion of sfr package into isg-file
-   IF(TOPICS(TSFR)%DEFINED)THEN
-    WRITE(IU,'(/A)') 'REM ============================================='
-    WRITE(IU,'( A)') 'REM iMOD Batch Script iMOD '//TRIM(RVERSION)
-    WRITE(IU,'( A)') 'REM ============================================='
-    WRITE(IU,'(/A)') 'ECHO FUNCTION=SFRTOISG > SFRTOISG.INI'
-    WRITE(IU,'( A)') 'ECHO ISGFILE_IN= "'//TRIM(DIR)//'\MODELINPUT\SFR7\SFR.ISG" >> SFRTOISG.INI'
-    WRITE(IU,'( A)') 'ECHO ISGFILE_OUT="'//TRIM(DIR)//'\BDGSFR\ISG\SFR.ISG" >> SFRTOISG.INI'
-    WRITE(IU,'( A)') 'ECHO SFRFILE_IN= "'//TRIM(DIR)//'\'//TRIM(MNAME)//'_FSFR.TXT" >> SFRTOISG.INI'
-    WRITE(IU,'( A)') 
-    WRITE(IU,'( A)') '"'//TRIM(EXENAME)//'" SFRTOISG.INI'
-    WRITE(IU,'( A)') 
-   ENDIF
-  
   !## runfile
   ELSEIF(IMODE.EQ.2)THEN
  
