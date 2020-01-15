@@ -1156,7 +1156,7 @@ MAINLOOP: DO
            FNAME2=TRIM(FNAME2)//'\'//TRIM(IPF(1)%INFO(IPF(1)%ACOL,II))//'.'//TRIM(ADJUSTL(IPF(1)%FEXT))
            CALL UTL_CREATEDIR(FNAME2(:INDEX(FNAME2,'\',.TRUE.)-1))
            !## copy batch
-           STRING='copy '//TRIM(FNAME1)//' '//TRIM(FNAME2)
+           STRING='copy "'//TRIM(FNAME1)//'" "'//TRIM(FNAME2)//'"'
            IF(STRING(LEN(STRING):LEN(STRING)).NE.' ')THEN
             IF(IBATCH.EQ.0)CALL WINDOWOUTSTATUSBAR(4,'Copy string to short - organise folder differenly with shorter names, max. = '//TRIM(ITOS(LEN(STRING)))//' characters')
             IF(IBATCH.EQ.1)WRITE(*,'(A)') 'Copy string to short - organise folder differenly with shorter names, max. = '//TRIM(ITOS(LEN(STRING)))//' characters'
