@@ -1321,9 +1321,9 @@ ILAYLOOP2: DO ILAY=MNLAY(1),1,-1 !1,MNLAY(1)
     DO ILAY=1,PRJNLAY  ; VA(ILAY)=KVA(ILAY)%X(ICOL,IROW); ENDDO
     VK=0.0D0; DO ILAY=1,PRJNLAY-1; VK(ILAY)=KVV(ILAY)%X(ICOL,IROW); ENDDO
     
-    if(icol.eq.404.and.irow.eq.610)then
-write(*,*) 
-    endif
+!    if(icol.eq.404.and.irow.eq.610)then
+!write(*,*) 
+!    endif
     
     CALL UTL_MINTHICKNESS(TP,BT,HK,VK,VA,TP_BU,BT_BU,HK_BU,VK_BU,VA_BU,IB,TH,PBMAN%MINTHICKNESS,PRJNLAY,ICOL,IROW)
     
@@ -1355,6 +1355,13 @@ write(*,*)
    DEALLOCATE(TP,BT,HK,VK,VA,IB,TH,TP_BU,BT_BU,HK_BU,VK_BU,VA_BU)
   ENDIF
  ENDIF
+ 
+ !## constant head is not allowed in cell with thickness of 0.0
+ DO IROW=1,PRJIDF%NROW; DO ICOL=1,PRJIDF%NCOL; DO ILAY=1,PRJNLAY
+  IF(BND(ILAY)%X(ICOL,IROW).LT.0)THEN
+   IF(TOP(ILAY)%X(ICOL,IROW)-BOT(ILAY)%X(ICOL,IROW).LE.0.0)BND(ILAY)%X(ICOL,IROW)=ABS(BND(ILAY)%X(ICOL,IROW))
+  ENDIF
+ ENDDO; ENDDO; ENDDO
  
  !## apply consistency check constant head and top/bot - only whenever CHD is not active
  IF(PBMAN%ICHKCHD.EQ.1)THEN

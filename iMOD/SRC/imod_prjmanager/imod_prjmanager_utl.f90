@@ -2753,7 +2753,7 @@ JLOOP: DO K=1,SIZE(TOPICS)
     ENDIF
    
     !## include conversion of sfr package into isg-file
-    IF(TOPICS(TSFR)%DEFINED)THEN
+    IF(TOPICS(TSFR)%IACT_MODEL.EQ.1)THEN !DEFINED)THEN
      WRITE(IU,'(/A)') 'REM ============================================='
      WRITE(IU,'( A)') 'REM iMOD Batch Script iMOD '//TRIM(RVERSION)
      WRITE(IU,'( A)') 'REM ============================================='
