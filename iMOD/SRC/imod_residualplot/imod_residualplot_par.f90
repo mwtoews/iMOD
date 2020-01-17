@@ -29,14 +29,15 @@ TYPE IPFRESOBJ
  REAL(KIND=DP_KIND),POINTER,DIMENSION(:) :: M=>NULL()              !## computed values
  REAL(KIND=DP_KIND),POINTER,DIMENSION(:) :: O=>NULL()              !## observation
  REAL(KIND=DP_KIND),POINTER,DIMENSION(:) :: W=>NULL()              !## weight value
- INTEGER,POINTER,DIMENSION(:) :: L=>NULL()           !## layer
+ CHARACTER(LEN=32),POINTER,DIMENSION(:) :: C=>NULL()               !## name
+ INTEGER,POINTER,DIMENSION(:) ::            L=>NULL()              !## layer
  INTEGER(KIND=DP_KIND),POINTER,DIMENSION(:) :: D=>NULL()           !## date
  INTEGER :: NPOINTS                                    !## number of points in ipf
 END TYPE IPFRESOBJ
 TYPE(IPFRESOBJ),DIMENSION(:),ALLOCATABLE :: IPFR       !## stores original values from txtfile per ipf
 REAL(KIND=DP_KIND),DIMENSION(:),POINTER :: X,Y,Z                     !## values to be plotted
 REAL(KIND=DP_KIND),DIMENSION(:),POINTER :: X_TMP,Y_TMP,Z_TMP         !## values to be plotted
-REAL(KIND=DP_KIND) :: XMAX,XMIN,YMAX,YMIN               !## scatterplot range x and y axis
+REAL(KIND=DP_KIND) :: XMAX,XMIN,YMAX,YMIN              !## scatterplot range x and y axis
 CHARACTER(LEN=256) :: INPUTFILE,BMPNAME,IPFNAME        !## name of txtfile
 INTEGER :: IPLOT,IWEIGHT                               !## plot type
 INTEGER :: ITRANSIENT,IAVERAGE,IXY                     !## transient/steadystate (lacking date)
