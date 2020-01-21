@@ -42,7 +42,7 @@ MODULE IMOD_UTL
   
  logical :: luse_runfile !## this parameter is needed to tackle the issue of scaling vertical anisotropy artihmetical and apply it inverse fo mf2005
  
-character(len=1024), parameter :: licfile = 'I_accepted_v4_4.txt' 
+character(len=1024), parameter :: licfile = 'I_accepted_v5_0.txt' 
 integer, parameter :: nlic = 33
 character(len=79), dimension(nlic) :: lic
 integer, parameter :: nhdr = 40
@@ -50,7 +50,7 @@ character(len=79), dimension(nhdr) :: hdr
 
 !         1234567890123456789012345678901234567890123456789012345678901234567890123456789
 data hdr/'===============================================================================',&!01
-         'iMODFLOW Version 4_4, July 2019                                                ',&!02
+         'iMODFLOW Version 5_0, December 2019                                            ',&!02
          '                                                                               ',&!03
          'Copyright (C) Stichting Deltares, 2005-2019.                                   ',&!04
          '                                                                               ',&!05
@@ -65,7 +65,7 @@ data hdr/'======================================================================
          'Please go to the PDF-file of the iMOD License, read it and decide whether you  ',&!04 
          'want or do not want to accept the iMOD License.                                ',&!05 
          '                                                                               ',&!06
-         'According to the file "I_accepted_v4_4.txt" on your computer you accepted the  ',&!07
+         'According to the file "I_accepted_v5_0.txt" on your computer you accepted the  ',&!07
          'terms and conditions of the iMOD license; WARNING: IF IT WAS NOT YOU OR THE    ',&!08
          'LEGAL ENTITY ON WHOSE BEHALF YOU INTENT TO USE THE IMOD-EXECUTABLE, THAT       ',&!09 
          'ACCEPTED THE TERMS AND CONDITIONS OF THE iMOD LICENSE YOU ARE NOT ENTITLED TO  ',&!10
@@ -77,7 +77,7 @@ data hdr/'======================================================================
          'accepted by the legal entity on whose behalf you intent to use the             ',&!06 
          'iMOD-executable byre-invoking the "I accept"-procedure; to re-invoke the       ',&!07
          '"I accept"-procedure abort the use of this Deltares-executable of iMOD, delete ',&!08
-         'the file "I_accepted_v4_4.txt", and invoke this Deltares-executable of iMOD    ',&!09
+         'the file "I_accepted_v5_0.txt", and invoke this Deltares-executable of iMOD    ',&!09
          'again.                                                                         ',&!10
          '                                                                               ',&!01
          'The iMOD software is distributed in the hope that it will be useful, but       ',&!02

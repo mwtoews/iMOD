@@ -29,6 +29,7 @@ TYPE IPFRESOBJ
  REAL(KIND=DP_KIND),POINTER,DIMENSION(:) :: M=>NULL()              !## computed values
  REAL(KIND=DP_KIND),POINTER,DIMENSION(:) :: O=>NULL()              !## observation
  REAL(KIND=DP_KIND),POINTER,DIMENSION(:) :: W=>NULL()              !## weight value
+ REAL(KIND=DP_KIND),POINTER,DIMENSION(:) :: NS=>NULL()              !## weight value
  CHARACTER(LEN=32),POINTER,DIMENSION(:) :: C=>NULL()               !## name
  INTEGER,POINTER,DIMENSION(:) ::            L=>NULL()              !## layer
  INTEGER(KIND=DP_KIND),POINTER,DIMENSION(:) :: D=>NULL()           !## date
