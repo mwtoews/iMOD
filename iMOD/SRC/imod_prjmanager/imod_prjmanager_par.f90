@@ -27,7 +27,7 @@ MODULE MOD_PMANAGER_PAR
 
  CHARACTER(LEN=24),DIMENSION(5) :: CSOLVER=['MODFLOW2005-RUN',',MODFLOW2005-NAM','MODFLOW6','IMOD-WQ-SEAWAT','IMOD-WQ-MT3D']
 
- INTEGER,PARAMETER :: MAXTOPICS=51
+ INTEGER,PARAMETER :: MAXTOPICS=52
  INTEGER,PARAMETER :: TBND= 1
  INTEGER,PARAMETER :: TTOP= 2
  INTEGER,PARAMETER :: TBOT= 3
@@ -79,6 +79,7 @@ MODULE MOD_PMANAGER_PAR
  INTEGER,PARAMETER :: TFOD=49 !## mt3d/seawat - first order rate reaction for the dissolved phase
  INTEGER,PARAMETER :: TFOS=50 !## mt3d/seawat - second order rate reaction for the sorbed phase
  INTEGER,PARAMETER :: TRCT=51 !## mt3d/seawat - rct
+ INTEGER,PARAMETER :: TCON=52 !## modflow2005 - concentration
 
  TYPE MTOBJ
   INTEGER,POINTER,DIMENSION(:) :: T=>NULL()     !## fixed: packages available for selected Model
