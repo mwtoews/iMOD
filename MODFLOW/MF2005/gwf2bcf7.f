@@ -36,10 +36,8 @@ c   If not, see <http://water.usgs.gov/software/help/notice/>.
        REAL, SAVE, POINTER    ::WETFCT
        INTEGER, SAVE,  POINTER ::IMINKD,IMINC                          ! DLT
        REAL,    SAVE,  POINTER ::MINKD,MINC                            ! DLT
-       INTEGER, SAVE,  POINTER ::ICHLORIDE
        INTEGER, SAVE,  POINTER,   DIMENSION(:)     ::LAYCON
        INTEGER, SAVE,  POINTER,   DIMENSION(:)     ::LAYAVG
-       REAL, SAVE,     POINTER,   DIMENSION(:,:,:) ::CON
        REAL, SAVE,     POINTER,   DIMENSION(:,:,:) ::HY
        REAL, SAVE,     POINTER,   DIMENSION(:,:,:) ::SC1
        REAL, SAVE,     POINTER,   DIMENSION(:,:,:) ::SC2
@@ -53,11 +51,9 @@ c   If not, see <http://water.usgs.gov/software/help/notice/>.
        REAL, POINTER     ::WETFCT
        INTEGER, POINTER ::IMINKD,IMINC                                  ! DLT
        REAL,    POINTER ::MINKD,MINC                                    ! DLT
-       INTEGER, POINTER ::ICHLORIDE
        INTEGER,  POINTER,   DIMENSION(:)     ::LAYCON
        INTEGER,  POINTER,   DIMENSION(:)     ::LAYAVG
        REAL,     POINTER,   DIMENSION(:,:,:) ::HY
-       REAL,     POINTER,   DIMENSION(:,:,:) ::CON
        REAL,     POINTER,   DIMENSION(:,:,:) ::SC1
        REAL,     POINTER,   DIMENSION(:,:,:) ::SC2
        REAL,     POINTER,   DIMENSION(:,:,:) ::WETDRY
@@ -78,16 +74,16 @@ C
 C        SPECIFICATIONS:
 C     ------------------------------------------------------------------
       USE GLOBAL,      ONLY:IOUT,NCOL,NROW,NLAY,ITRSS,LAYHDT,LAYHDS,
-     1                      CC,CV,IFREFM,
+     1                      CC,CV,IFREFM,CON,
      1                      iunit,                                      ! ILAY_ZERO
      1                      kdsv,                                       ! ILAY_ZERO
-     1                      IACTCELL                                    ! PKS
+     1                      IACTCELL,                                   ! PKS
+     1                      ichloride
       USE GWFBASMODULE,ONLY:HDRY
-      USE GWFBCFMODULE,ONLY:IBCFCB,IWDFLG,IWETIT,IHDWET,WETFCT,CON,
+      USE GWFBCFMODULE,ONLY:IBCFCB,IWDFLG,IWETIT,IHDWET,WETFCT,
      1                      LAYCON,LAYAVG,HY,SC1,SC2,WETDRY,CVWD,TRPY,
      1                      seepage, seepagemv,                         ! DLT
-     1                      iminkd, iminc, minkd, minc,                 ! DLT
-     1                      ichloride
+     1                      iminkd, iminc, minkd, minc
 
       USE M_MF2005_IU, only: iuani, iupwt
 C
@@ -1752,8 +1748,6 @@ C
       DEALLOCATE(GWFBCFDAT(IGRID)%IMINC)                                ! DLT
       DEALLOCATE(GWFBCFDAT(IGRID)%MINKD)                                ! DLT
       DEALLOCATE(GWFBCFDAT(IGRID)%MINC)                                 ! DLT
-      DEALLOCATE(GWFBCFDAT(IGRID)%ICHLORIDE) 
-      DEALLOCATE(GWFBCFDAT(IGRID)%CON)
 C
       RETURN
       END
@@ -1778,8 +1772,6 @@ C
       IMINC=>GWFBCFDAT(IGRID)%IMINC                                     ! DLT
       MINKD=>GWFBCFDAT(IGRID)%MINKD                                     ! DLT
       MINC=>GWFBCFDAT(IGRID)%MINC                                       ! DLT
-      ICHLORIDE=>GWFBCFDAT(IGRID)%ICHLORIDE
-      CON=>GWFBCFDAT(IGRID)%CON
 C
       RETURN
       END
@@ -1804,8 +1796,6 @@ C
       GWFBCFDAT(IGRID)%IMINC=>IMINC                                     ! DLT
       GWFBCFDAT(IGRID)%MINKD=>MINKD                                     ! DLT
       GWFBCFDAT(IGRID)%MINC=>MINC                                       ! DLT
-      GWFBCFDAT(IGRID)%ICHLORIDE=>ICHLORIDE  
-      GWFBCFDAT(IGRID)%CON=>CON
 C
       RETURN
       END

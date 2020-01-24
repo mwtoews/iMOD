@@ -34,7 +34,6 @@ c   If not, see <http://water.usgs.gov/software/help/notice/>.
         INTEGER, SAVE,   POINTER ::ISFAC,ICONCV,ITHFLG,NOCVCO,NOVFC
         INTEGER, SAVE,   POINTER ::IMINKD,IMINC                         ! DLT
         REAL,    SAVE,   POINTER ::MINKD,MINC                           ! DLT
-        INTEGER, SAVE,   POINTER ::ICHLORIDE
         REAL,    SAVE,   POINTER ::WETFCT
         INTEGER, SAVE,   POINTER, DIMENSION(:)     ::LAYTYP
         INTEGER, SAVE,   POINTER, DIMENSION(:)     ::LAYAVG
@@ -50,13 +49,11 @@ c   If not, see <http://water.usgs.gov/software/help/notice/>.
         REAL,    SAVE,   POINTER, DIMENSION(:,:,:) ::HANI
         REAL,    SAVE,   POINTER, DIMENSION(:,:,:) ::WETDRY
         REAL,    SAVE,   POINTER, DIMENSION(:,:,:) ::HK
-        REAL,    SAVE,   POINTER, DIMENSION(:,:,:) ::CON
       TYPE GWFLPFTYPE
         INTEGER, POINTER ::ILPFCB,IWDFLG,IWETIT,IHDWET
         INTEGER, POINTER ::ISFAC,ICONCV,ITHFLG,NOCVCO,NOVFC
         INTEGER, POINTER ::IMINKD,IMINC                                 ! DLT
         REAL,    POINTER ::MINKD,MINC                                   ! DLT
-        INTEGER, POINTER ::ICHLORIDE
         REAL, POINTER    ::WETFCT
         INTEGER,   POINTER, DIMENSION(:)     ::LAYTYP
         INTEGER,   POINTER, DIMENSION(:)     ::LAYAVG
@@ -72,7 +69,6 @@ c   If not, see <http://water.usgs.gov/software/help/notice/>.
         REAL,      POINTER, DIMENSION(:,:,:) ::HANI
         REAL,      POINTER, DIMENSION(:,:,:) ::WETDRY
         REAL,      POINTER, DIMENSION(:,:,:) ::HK
-        REAL,      POINTER, DIMENSION(:,:,:) ::CON
       END TYPE
       TYPE(GWFLPFTYPE) GWFLPFDAT(10)
       END MODULE GWFLPFMODULE
@@ -87,7 +83,7 @@ C        SPECIFICATIONS:
 C     ------------------------------------------------------------------
       USE GLOBAL,      ONLY:NCOL,NROW,NLAY,ITRSS,LAYHDT,LAYHDS,LAYCBD,
      1                      NCNFBD,IBOUND,BUFF,BOTM,NBOTM,DELR,DELC,IOUT
-     2                      ,cc,cv,iunit,                               ! ILAY_ZERO
+     2                      ,cc,cv,iunit,CON,ICHLORIDE,
      3                      lbotm,                                      ! DLT
      4                      kdsv,                                       ! ILAY_ZERO
      5                      IACTCELL                                    ! PKS
@@ -95,8 +91,8 @@ C     ------------------------------------------------------------------
       USE GWFLPFMODULE,ONLY:ILPFCB,IWDFLG,IWETIT,IHDWET,
      1                      ISFAC,ICONCV,ITHFLG,NOCVCO,NOVFC,WETFCT,
      2                      LAYTYP,LAYAVG,CHANI,LAYVKA,LAYWET,LAYSTRT,
-     3                      LAYFLG,VKA,VKCB,SC1,SC2,HANI,WETDRY,HK,CON,
-     4                      IMINKD,IMINC,MINKD,MINC,ICHLORIDE           ! DLT
+     3                      LAYFLG,VKA,VKCB,SC1,SC2,HANI,WETDRY,HK,
+     4                      IMINKD,IMINC,MINKD,MINC           ! DLT
       use m_mf2005_iu, only: iuani,iupwt
       use IMOD_UTL, only : imod_utl_capf,luse_runfile
       
@@ -2230,8 +2226,6 @@ C
         DEALLOCATE(GWFLPFDAT(IGRID)%IMINC)                              ! DLT
         DEALLOCATE(GWFLPFDAT(IGRID)%MINKD)                              ! DLT
         DEALLOCATE(GWFLPFDAT(IGRID)%MINC)                               ! DLT
-        DEALLOCATE(GWFLPFDAT(IGRID)%ICHLORIDE)                          ! DLT
-        DEALLOCATE(GWFLPFDAT(IGRID)%CON)                                ! DLT
 C
       RETURN
       END
@@ -2267,8 +2261,6 @@ C
         IMINC=>GWFLPFDAT(IGRID)%IMINC                                   ! DLT
         MINKD=>GWFLPFDAT(IGRID)%MINKD                                   ! DLT
         MINC=>GWFLPFDAT(IGRID)%MINC                                     ! DLT
-        ICHLORIDE=>GWFLPFDAT(IGRID)%ICHLORIDE                           ! DLT
-        CON=>GWFLPFDAT(IGRID)%CON
 C
       RETURN
       END
@@ -2304,8 +2296,6 @@ C
         GWFLPFDAT(IGRID)%IMINC=>IMINC                                   ! DLT
         GWFLPFDAT(IGRID)%MINKD=>MINKD                                   ! DLT
         GWFLPFDAT(IGRID)%MINC=>MINC                                     ! DLT
-        GWFLPFDAT(IGRID)%ICHLORIDE=>ICHLORIDE   
-        GWFLPFDAT(IGRID)%CON=>CON
 C
       RETURN
       END

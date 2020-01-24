@@ -928,7 +928,8 @@ c 2011/06/16 renamed from mf2005_solve.
 
       use m_mf2005_main
       use m_mf2005_iu
-
+      USE global, only : ichloride,con
+      
       implicit none
 
 c arguments
@@ -970,7 +971,6 @@ c
       call SGWF2BAS7PNT(IGRID)                                                  ! DLT: instances
 
       kkiter=kiter                                                              ! DLT: instances
-!      write(*,*) kiter
 C7C2B---MAKE ONE CUT AT AN APPROXIMATE SOLUTION.
             IERR=0
             IF (IUNIT(IUSIP).GT.0) THEN
@@ -998,13 +998,6 @@ C7C2B---MAKE ONE CUT AT AN APPROXIMATE SOLUTION.
      4               NLAY,NODES,RELAXPCG,IOUT,MUTPCG,IT1,DAMPPCG,BUFF,
      5               HCSV,IERR,HPCG,DAMPPCGT,ISSFLG(KKPER),HDRY)
             END IF
-c            IF (IUNIT(IULMG).GT.0) THEN
-c              CALL LMG7PNT(IGRID)
-c              CALL LMG7AP(HNEW,IBOUND,CR,CC,CV,HCOF,RHS,A,IA,JA,U1,
-c     1           FRHS,IG,ISIZ1,ISIZ2,ISIZ3,ISIZ4,KKITER,BCLOSE,DAMPLMG,
-c     2           ICNVG,KKSTP,KKPER,MXITER,MXCYC,NCOL,NROW,NLAY,NODES,
-c     3           HNOFLO,IOUT,IOUTAMG,ICG,IADAMPLMG,DUPLMG,DLOWLMG)
-c            END IF
             IF (IUNIT(42).GT.0) THEN
                    CALL GMG7PNT(IGRID)
                    CALL GMG7AP(HNEW,RHS,CR,CC,CV,HCOF,HNOFLO,IBOUND,
@@ -1049,16 +1042,15 @@ c            END IF
             END IF          
             IF(IERR.EQ.1) CALL USTOP(' ')
 
-C
+!            !## call the appropriate subroutine with the concentration
+!            IF (ichloride.eq.1)CALL CORRECT_HEAD(HNEW,CON)
+
 C7C2C---IF CONVERGENCE CRITERION HAS BEEN MET STOP ITERATING.
-c            IF (ICNVG.EQ.1) GOTO 33
             if (icnvg.ne.1) then
                solverConverged=.false.
             else
                solverConverged=.true.
             endif
-c  30      CONTINUE
-c          KITER = MXITER
 
            !## could be solved based upon waterbalance error, maximum number of iterations finished
            psolved=.false.
