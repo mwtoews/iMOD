@@ -34,10 +34,12 @@ c   If not, see <http://water.usgs.gov/software/help/notice/>.
 
        INTEGER, SAVE, POINTER ::IBCFCB,IWDFLG,IWETIT,IHDWET
        REAL, SAVE, POINTER    ::WETFCT
-       INTEGER, SAVE,   POINTER ::IMINKD,IMINC                          ! DLT
-       REAL,    SAVE,   POINTER ::MINKD,MINC                            ! DLT
+       INTEGER, SAVE,  POINTER ::IMINKD,IMINC                          ! DLT
+       REAL,    SAVE,  POINTER ::MINKD,MINC                            ! DLT
+       INTEGER, SAVE,  POINTER ::ICHLORIDE
        INTEGER, SAVE,  POINTER,   DIMENSION(:)     ::LAYCON
        INTEGER, SAVE,  POINTER,   DIMENSION(:)     ::LAYAVG
+       REAL, SAVE,     POINTER,   DIMENSION(:,:,:) ::CON
        REAL, SAVE,     POINTER,   DIMENSION(:,:,:) ::HY
        REAL, SAVE,     POINTER,   DIMENSION(:,:,:) ::SC1
        REAL, SAVE,     POINTER,   DIMENSION(:,:,:) ::SC2
@@ -51,9 +53,11 @@ c   If not, see <http://water.usgs.gov/software/help/notice/>.
        REAL, POINTER     ::WETFCT
        INTEGER, POINTER ::IMINKD,IMINC                                  ! DLT
        REAL,    POINTER ::MINKD,MINC                                    ! DLT
+       INTEGER, POINTER ::ICHLORIDE
        INTEGER,  POINTER,   DIMENSION(:)     ::LAYCON
        INTEGER,  POINTER,   DIMENSION(:)     ::LAYAVG
        REAL,     POINTER,   DIMENSION(:,:,:) ::HY
+       REAL,     POINTER,   DIMENSION(:,:,:) ::CON
        REAL,     POINTER,   DIMENSION(:,:,:) ::SC1
        REAL,     POINTER,   DIMENSION(:,:,:) ::SC2
        REAL,     POINTER,   DIMENSION(:,:,:) ::WETDRY
@@ -79,14 +83,16 @@ C     ------------------------------------------------------------------
      1                      kdsv,                                       ! ILAY_ZERO
      1                      IACTCELL                                    ! PKS
       USE GWFBASMODULE,ONLY:HDRY
-      USE GWFBCFMODULE,ONLY:IBCFCB,IWDFLG,IWETIT,IHDWET,WETFCT,
+      USE GWFBCFMODULE,ONLY:IBCFCB,IWDFLG,IWETIT,IHDWET,WETFCT,CON,
      1                      LAYCON,LAYAVG,HY,SC1,SC2,WETDRY,CVWD,TRPY,
      1                      seepage, seepagemv,                         ! DLT
-     1                      iminkd, iminc, minkd, minc                  ! DLT
+     1                      iminkd, iminc, minkd, minc,                 ! DLT
+     1                      ichloride
+
       USE M_MF2005_IU, only: iuani, iupwt
 C
       integer icol, irow, ncor                                          ! DLT
-      CHARACTER*24 ANAME(7)
+      CHARACTER*24 ANAME(8)
       CHARACTER*12 AVGNAM(4)
       CHARACTER*200 LINE                                                ! DLT
       DATA AVGNAM/'HARMONIC    ','ARITHMETIC  ',
@@ -99,10 +105,11 @@ C
       DATA ANAME(5) /'  SECONDARY STORAGE COEF'/
       DATA ANAME(6) /'COLUMN TO ROW ANISOTROPY'/
       DATA ANAME(7) /'        WETDRY PARAMETER'/
+      DATA ANAME(8) /'  CHLORIDE CONCENTATIONS'/
 C     ------------------------------------------------------------------
 C1------ALLOCATE SCALAR VARIABLES IN FORTRAN MODULE.
       ALLOCATE(IBCFCB,IWDFLG,IWETIT,IHDWET)
-      ALLOCATE(IMINKD,IMINC,MINKD,MINC)                                 ! DLT
+      ALLOCATE(IMINKD,IMINC,MINKD,MINC,ICHLORIDE)                       ! DLT
       ALLOCATE(WETFCT)
       ALLOCATE(LAYCON(NLAY),LAYAVG(NLAY))
 C
@@ -128,6 +135,7 @@ C read options
       IMINC=0                                                           ! DLT
       MINKD=0.                                                          ! DLT
       MINC=0.                                                           ! DLT
+      ICHLORIDE=0
    20 CALL URWORD(LINE,LLOC,ISTART,ISTOP,1,I,R,IOUT,IN)                 ! DLT
       IF(LINE(ISTART:ISTOP).EQ.'MINKD') THEN                            ! DLT
          IMINKD=1                                                       ! DLT
@@ -139,6 +147,9 @@ C read options
          CALL URWORD(LINE,LLOC,ISTART,ISTOP,1,I,R,IOUT,IN)              ! DLT
          READ(LINE(ISTART:ISTOP),*) MINC                                ! DLT
          WRITE(IOUT,*) 'MINC ACTIVE, VALUE ',MINC
+      ELSE IF(LINE(ISTART:ISTOP).EQ.'CHLORIDE') THEN                    ! DLT
+         ICHLORIDE=1                                                    ! DLT
+         WRITE(IOUT,*) 'CHLORIDE CORRECTION ACTIVE'
       ENDIF
       IF(LLOC.LT.200) GO TO 20
 
@@ -265,6 +276,11 @@ C6------ALLOCATE SPACE FOR ARRAYS.
       ELSE
          ALLOCATE(CVWD(1,1,1))
       END IF
+      IF(ICHLORIDE.EQ.1) THEN
+         ALLOCATE(CON(NCOL,NROW,NLAY))
+      ELSE
+         ALLOCATE(CON(1,1,1))
+      END IF
       allocate(seepage(ncol,nrow))                                      ! DLT
       seepage = seepagemv                                               ! DLT
 C
@@ -331,6 +347,12 @@ C8H-----CAPABILITY HAS BEEN INVOKED (IWDFLG NOT 0).
           END IF                                                        ! PKS
         END DO                                                          ! PKS
       END DO                                                            ! PKS
+
+      !## READ CONCENTRATIONS
+      IF(ICHLORIDE.EQ.1)THEN
+       CALL U2DREL(CON(:,:,KB),ANAME(8),NROW,NCOL,KK,IN,IOUT)
+      ENDIF
+      
   200 CONTINUE      
       call pest1alpha_grid('KD',cc,nrow,ncol,nlay,iout)                 ! IPEST
       call pest1alpha_grid('VC',cv,nrow,ncol,nlay-1,iout)               ! IPEST
@@ -1730,6 +1752,8 @@ C
       DEALLOCATE(GWFBCFDAT(IGRID)%IMINC)                                ! DLT
       DEALLOCATE(GWFBCFDAT(IGRID)%MINKD)                                ! DLT
       DEALLOCATE(GWFBCFDAT(IGRID)%MINC)                                 ! DLT
+      DEALLOCATE(GWFBCFDAT(IGRID)%ICHLORIDE) 
+      DEALLOCATE(GWFBCFDAT(IGRID)%CON)
 C
       RETURN
       END
@@ -1754,6 +1778,8 @@ C
       IMINC=>GWFBCFDAT(IGRID)%IMINC                                     ! DLT
       MINKD=>GWFBCFDAT(IGRID)%MINKD                                     ! DLT
       MINC=>GWFBCFDAT(IGRID)%MINC                                       ! DLT
+      ICHLORIDE=>GWFBCFDAT(IGRID)%ICHLORIDE
+      CON=>GWFBCFDAT(IGRID)%CON
 C
       RETURN
       END
@@ -1778,6 +1804,8 @@ C
       GWFBCFDAT(IGRID)%IMINC=>IMINC                                     ! DLT
       GWFBCFDAT(IGRID)%MINKD=>MINKD                                     ! DLT
       GWFBCFDAT(IGRID)%MINC=>MINC                                       ! DLT
+      GWFBCFDAT(IGRID)%ICHLORIDE=>ICHLORIDE  
+      GWFBCFDAT(IGRID)%CON=>CON
 C
       RETURN
       END
