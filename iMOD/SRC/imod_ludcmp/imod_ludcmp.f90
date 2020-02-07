@@ -26,6 +26,55 @@ USE IMODVAR, ONLY : DP_KIND,SP_KIND
 CONTAINS
 
  !###====================================================================
+ SUBROUTINE CHOLESKYDECOMPOSITION(A,N) 
+ !###====================================================================
+ IMPLICIT NONE
+ INTEGER,INTENT(IN)   :: N
+ REAL(KIND=DP_KIND),DIMENSION(N,N),INTENT(INOUT)  :: A
+ INTEGER :: I,J,K
+ REAL(KIND=DP_KIND) :: S
+ 
+ DO K=1,N
+  !## Evaluate off-diagonal terms
+  DO I=1,K-1
+   S=0.0D0
+   DO J=1,I-1
+    S=S+A(I,J)*A(K,J)
+   ENDDO
+   A(K,I)=(A(K,I)-S)/A(I,I)
+  ENDDO
+! for k = 1 : n
+!% evaluate off-diagonal terms
+!for i = 1 : k-1
+!s=0
+! for j = 1 : i -1
+!s = s + aij * akj
+!end
+!aki = (aki - s) / aii
+!end
+!## Evaluate diagonal term
+  S=0.0D0
+  DO J=1,K-1
+   S=S+(A(K,J)**2.0D0)
+  ENDDO
+  A(K,K)=SQRT(A(K,K)-S)
+ ENDDO
+!s=0
+!for j = 1 : k-1
+!s = s + (akj)^2
+!end
+!akk = (akk - s)^(0.5)
+!end]
+ !# clean matrix
+ DO I=1,N
+  DO J=1,I-1
+   A(J,I)=0.0D0
+  ENDDO
+ ENDDO
+ 
+ END SUBROUTINE CHOLESKYDECOMPOSITION
+
+ !###====================================================================
  SUBROUTINE LUDCMP(A,B,N) 
  !###====================================================================
  IMPLICIT NONE
@@ -33,41 +82,13 @@ CONTAINS
  REAL(KIND=DP_KIND),DIMENSION(N,N),INTENT(INOUT)  :: A
  REAL(KIND=DP_KIND),DIMENSION(N),INTENT(INOUT)  :: B
  REAL(KIND=DP_KIND),DIMENSION(:,:),ALLOCATABLE :: L,U
- INTEGER :: I,J,K
+ INTEGER :: I,J
  REAL(KIND=DP_KIND) :: X
 
- ALLOCATE(L(N,N),U(N,N)); L=0.0D0; U=0.0D0
+ ALLOCATE(L(N,N),U(N,N)) !; L=0.0D0; U=0.0D0
 
- !## transform first column
- DO I=1,N; L(I,1)=A(I,1); ENDDO
- !## transform first row
- DO I=1,N; U(1,I)=A(1,I)/A(1,1); ENDDO
- DO I=1,N; U(I,I)=1.0D0; ENDDO
- 
- DO J=2,N-1
-
-  DO I=J,N
-   X=0.0D0
-   DO K=1,J-1
-    X=X+L(I,K)*U(K,J)
-   ENDDO
-   L(I,J)=A(I,J)-X
-  ENDDO
-  DO K=J+1,N
-   X=0.0D0
-   DO I=1,J-1
-    X=X+L(J,I)*U(I,K)
-   ENDDO
-   U(J,K)=(A(J,K)-X)/L(J,J)
-  ENDDO
-
- ENDDO
- 
- X=0.0D0
- DO K=1,N-1
-  X=X+L(N,K)*U(K,N)
- ENDDO
- L(N,N)=A(N,N)-X
+ !## perform lu-decomposition
+ CALL LUDCMP_GETLU(A,L,U,N)
  
  !## forward substitution
  B(1)=B(1)/L(1,1)
@@ -92,6 +113,54 @@ CONTAINS
  
  END SUBROUTINE LUDCMP
 
+ !###====================================================================
+ SUBROUTINE LUDCMP_GETLU(A,L,U,N) 
+ !###====================================================================
+ IMPLICIT NONE
+ INTEGER,INTENT(IN) :: N
+ REAL(KIND=DP_KIND),DIMENSION(N,N),INTENT(IN)  :: A
+ REAL(KIND=DP_KIND),DIMENSION(N,N),INTENT(OUT) :: L,U
+ INTEGER :: I,J,K
+ REAL(KIND=DP_KIND) :: X
+ 
+ L=0.0D0; U=0.0D0
+ 
+ !## transform first column
+ DO I=1,N; L(I,1)=A(I,1); ENDDO
+ !## transform first row
+ DO I=1,N; U(1,I)=A(1,I)/A(1,1); ENDDO
+ DO I=1,N; U(I,I)=1.0D0; ENDDO
+ 
+ DO J=2,N-1
+
+  DO I=J,N
+   X=0.0D0
+   DO K=1,J-1
+    X=X+L(I,K)*U(K,J)
+   ENDDO
+   L(I,J)=A(I,J)-X
+  ENDDO
+  DO K=J+1,N
+   X=0.0D0
+   DO I=1,J-1
+    X=X+L(J,I)*U(I,K)
+   ENDDO
+   IF(L(J,J).EQ.0.0D0)THEN
+    L(J,J)=1.0D-10 !WRITE(*,*) 'DSDS'
+   ENDIF
+   U(J,K)=(A(J,K)-X)/L(J,J)
+  ENDDO
+
+ ENDDO
+ 
+ X=0.0D0
+ DO K=1,N-1
+  X=X+L(N,K)*U(K,N)
+ ENDDO
+ L(N,N)=A(N,N)-X
+ 
+ END SUBROUTINE LUDCMP_GETLU
+ 
 ! !###====================================================================
 ! SUBROUTINE LUDCMP_INDX(AA,INDX,N)
 ! !###====================================================================

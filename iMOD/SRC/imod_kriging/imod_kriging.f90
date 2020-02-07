@@ -38,6 +38,7 @@ USE MOD_INTERSECT_PAR
 USE MOD_INTERSECT
 USE MOD_KRIGING_PAR
 USE MOD_POLYGON_UTL
+USE MOD_LUDCMP, ONLY : LUDCMP_GETLU
 
 CONTAINS
 
@@ -729,7 +730,7 @@ CONTAINS
  END FUNCTION KRIGING_DIST
 
  !###======================================================================
- REAL(KIND=DP_KIND) FUNCTION KRIGING_GETGAMMA(X1,Y1,X2,Y2,RANGE,C1,C0,KTYPE)
+ REAL(KIND=DP_KIND) FUNCTION KRIGING_GETGAMMA(X1,Y1,X2,Y2,RANGE,C1,C0,KTYPE)  !c1=sill-nugget c0=nugget
  !###======================================================================
  IMPLICIT NONE
  INTEGER,INTENT(IN) :: KTYPE
@@ -1061,8 +1062,9 @@ CONTAINS
  INTEGER :: I,II,J,K
  REAL(KIND=DP_KIND) :: X
 
+! CALL LUDCMP_GETLU(A,L,U,N) 
  L=0.0D0; U=0.0D0
-
+ 
  !## transform first column
  DO I=1,N; L(I,1)=A(I,1); ENDDO
  !## transform first row
@@ -1082,9 +1084,12 @@ CONTAINS
    DO I=1,J-1
     X=X+L(J,I)*U(I,K)
    ENDDO
+   IF(L(J,J).EQ.0.0D0)THEN
+    WRITE(*,*) 'STOP CANNOT HAPPEN KRIGING MATRIX SINGULIER'
+   ENDIF
    U(J,K)=(A(J,K)-X)/L(J,J)
   ENDDO
-
+ 
  ENDDO
  
  X=0.0D0
