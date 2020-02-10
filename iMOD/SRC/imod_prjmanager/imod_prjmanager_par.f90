@@ -27,7 +27,7 @@ MODULE MOD_PMANAGER_PAR
 
  CHARACTER(LEN=24),DIMENSION(5) :: CSOLVER=['MODFLOW2005-RUN',',MODFLOW2005-NAM','MODFLOW6','IMOD-WQ-SEAWAT','IMOD-WQ-MT3D']
 
- INTEGER,PARAMETER :: MAXTOPICS=52
+ INTEGER,PARAMETER :: MAXTOPICS=53
  INTEGER,PARAMETER :: TBND= 1
  INTEGER,PARAMETER :: TTOP= 2
  INTEGER,PARAMETER :: TBOT= 3
@@ -62,25 +62,26 @@ MODULE MOD_PMANAGER_PAR
  INTEGER,PARAMETER :: TCHD=32
  INTEGER,PARAMETER :: TFHB=33
  INTEGER,PARAMETER :: TPST=34
- INTEGER,PARAMETER :: TOBS=35
- INTEGER,PARAMETER :: TPCG=36
- INTEGER,PARAMETER :: TGCG=37 !## mt3d/seawat
- INTEGER,PARAMETER :: TVDF=38 !## mt3d/seawat - parameters vdf
- INTEGER,PARAMETER :: TFDE=39 !## mt3d/seawat - fluid density
- INTEGER,PARAMETER :: TCBI=40 !## mt3d/seawat - concentration boundary indicator
- INTEGER,PARAMETER :: TSCO=41 !## mt3d/seawat - start concentration per layer and species
- INTEGER,PARAMETER :: TDSP=42 !## mt3d/seawat - dispersiviteit
- INTEGER,PARAMETER :: TTVC=43 !## mt3d/seawat - time varying concentration
- INTEGER,PARAMETER :: THOB=44 !## mt3d/seawat - bulk density of the porous medium
- INTEGER,PARAMETER :: TPID=45 !## mt3d/seawat - porosity of the immobile domain
- INTEGER,PARAMETER :: TICS=46 !## mt3d/seawat - initial concentration of the sorbed or immobile liquid phase
- INTEGER,PARAMETER :: TFSC=47 !## mt3d/seawat - first sorption constant
- INTEGER,PARAMETER :: TSSC=48 !## mt3d/seawat - second sorption constant
- INTEGER,PARAMETER :: TFOD=49 !## mt3d/seawat - first order rate reaction for the dissolved phase
- INTEGER,PARAMETER :: TFOS=50 !## mt3d/seawat - second order rate reaction for the sorbed phase
- INTEGER,PARAMETER :: TRCT=51 !## mt3d/seawat - rct
- INTEGER,PARAMETER :: TCON=52 !## modflow2005 - concentration
-
+ INTEGER,PARAMETER :: TIES=35 !## iterative ensemble smoother
+ INTEGER,PARAMETER :: TOBS=36
+ INTEGER,PARAMETER :: TPCG=37
+ INTEGER,PARAMETER :: TGCG=38 !## mt3d/seawat
+ INTEGER,PARAMETER :: TVDF=39 !## mt3d/seawat - parameters vdf
+ INTEGER,PARAMETER :: TFDE=40 !## mt3d/seawat - fluid density
+ INTEGER,PARAMETER :: TCBI=41 !## mt3d/seawat - concentration boundary indicator
+ INTEGER,PARAMETER :: TSCO=42 !## mt3d/seawat - start concentration per layer and species
+ INTEGER,PARAMETER :: TDSP=43 !## mt3d/seawat - dispersiviteit
+ INTEGER,PARAMETER :: TTVC=44 !## mt3d/seawat - time varying concentration
+ INTEGER,PARAMETER :: THOB=45 !## mt3d/seawat - bulk density of the porous medium
+ INTEGER,PARAMETER :: TPID=46 !## mt3d/seawat - porosity of the immobile domain
+ INTEGER,PARAMETER :: TICS=47 !## mt3d/seawat - initial concentration of the sorbed or immobile liquid phase
+ INTEGER,PARAMETER :: TFSC=48 !## mt3d/seawat - first sorption constant
+ INTEGER,PARAMETER :: TSSC=49 !## mt3d/seawat - second sorption constant
+ INTEGER,PARAMETER :: TFOD=50 !## mt3d/seawat - first order rate reaction for the dissolved phase
+ INTEGER,PARAMETER :: TFOS=51 !## mt3d/seawat - second order rate reaction for the sorbed phase
+ INTEGER,PARAMETER :: TRCT=52 !## mt3d/seawat - rct
+ INTEGER,PARAMETER :: TCON=53 !## modflow2005 - concentration
+ 
  TYPE MTOBJ
   INTEGER,POINTER,DIMENSION(:) :: T=>NULL()     !## fixed: packages available for selected Model
   INTEGER,POINTER,DIMENSION(:) :: IACT=>NULL()  !## variable: packages (de)activated by the user 
@@ -204,7 +205,7 @@ MODULE MOD_PMANAGER_PAR
  TYPE PMANBATCH
   INTEGER(KIND=8) :: SDATE,EDATE
   INTEGER :: ITT,IDT,ISS,IFORMAT,IWINDOW,ISOLVE,NSTEP,SSYSTEM,IPEST,IPESTP,ISTEADY,ICONCHK,ISAVEENDDATE,IFVDL, &
-             IPKS,ICHKCHD,IDOUBLE,ICONSISTENCY, &
+             IPKS,ICHKCHD,IDOUBLE,ICONSISTENCY,IIES, &
              DWEL,DISG,DSFR,DMMFILE,NSUBMODEL,ISUBMODEL,NLINESEARCH,NCPU,CMDHIDE,PTEST,NSWAIT,PDEBUG,MC,IGENMF6
   REAL(KIND=DP_KIND) :: XMIN,YMIN,XMAX,YMAX,CELLSIZE,BUFFER,NMULT,MINKD,MINC,BUFFERCS,MINTHICKNESS,EIGV
   INTEGER :: SMTYPE
