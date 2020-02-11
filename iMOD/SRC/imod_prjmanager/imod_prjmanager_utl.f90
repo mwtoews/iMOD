@@ -41,8 +41,8 @@ USE MOD_PREF_PAR
 USE DATEVAR
 USE MODPLOT
 USE MOD_ABOUT
-USE MOD_IPEST_GLM, ONLY : IPEST_GLM_MAIN,IPEST_GLM_RESET_PARAMETER
-USE MOD_IPEST_IES, ONLY : IPEST_IES_MAIN
+!USE MOD_IPEST_GLM, ONLY : IPEST_GLM_MAIN,IPEST_GLM_RESET_PARAMETER
+!USE MOD_IPEST_IES, ONLY : IPEST_IES_MAIN
 
 !## needed for active packages
 TYPE TOBJ
@@ -55,6 +55,172 @@ TYPE(TOBJ),ALLOCATABLE,DIMENSION(:),PRIVATE :: PCKLIST
 
 CONTAINS
 
+ !###======================================================================
+ LOGICAL FUNCTION PMANAGER_SAVEMF2005_MOD_READ(IDF,ITOPIC,IFILE,SCL_D,SCL_U,IINV,IPRT) 
+ !###======================================================================
+ IMPLICIT NONE
+ INTEGER,INTENT(IN) :: ITOPIC,IFILE,SCL_D,SCL_U,IINV,IPRT
+ CHARACTER(LEN=256) :: FNAME
+ TYPE(IDFOBJ),INTENT(INOUT) :: IDF
+ INTEGER :: ICNST,ILAY 
+ REAL(KIND=DP_KIND) :: FCT,IMP,CNST
+ 
+ PMANAGER_SAVEMF2005_MOD_READ=.TRUE.
+
+ FCT  =FNAMES(IFILE)%FCT   
+ IMP  =FNAMES(IFILE)%IMP   
+ ILAY =FNAMES(IFILE)%ILAY  
+ ICNST=FNAMES(IFILE)%ICNST 
+ CNST =FNAMES(IFILE)%CNST  
+ FNAME=FNAMES(IFILE)%FNAME 
+ 
+ IF(IPRT.GT.0)THEN
+  WRITE(IPRT,'(1X,A,I3,A1,I1,A1,I4.3,3(A1,G15.7),A1,A)') TOPICS(ITOPIC)%TNAME(1:5)//',', &
+       IFILE,',',ICNST,',',ILAY,',',FCT,',',IMP,',',CNST,',',CHAR(39)//TRIM(FNAME)//CHAR(39)
+ ENDIF
+ 
+ IF(ICNST.EQ.1)THEN
+  IDF%X=CNST
+ ELSEIF(ICNST.EQ.2.OR.ICNST.EQ.3)THEN
+  IDF%FNAME=FNAME
+  !## read/clip/scale idf file
+  PMANAGER_SAVEMF2005_MOD_READ=IDFREADSCALE(IDF%FNAME,IDF,SCL_U,SCL_D,1.0D0,0)
+ ENDIF
+ !## apply factors if no errors occured
+ IF(PMANAGER_SAVEMF2005_MOD_READ)CALL PMANAGER_SAVEMF2005_FCTIMP(IINV,ICNST,IDF,FCT,IMP,SCL_U)
+
+ END FUNCTION PMANAGER_SAVEMF2005_MOD_READ
+ 
+ !###======================================================================
+ LOGICAL FUNCTION PMANAGER_SAVEMF2005_MOD_U2DREL(EXFNAME,IDF,IINT,IU,ILAY,IFBND)
+ !###======================================================================
+ IMPLICIT NONE
+ CHARACTER(LEN=*),INTENT(IN) :: EXFNAME
+ TYPE(IDFOBJ),INTENT(INOUT) :: IDF
+ CHARACTER(LEN=256) :: SFNAME
+ INTEGER,INTENT(IN) :: IINT,IU,ILAY,IFBND
+ INTEGER :: JU,IROW,ICOL,I,N
+ REAL(KIND=DP_KIND) :: MINV,MAXV
+ 
+ PMANAGER_SAVEMF2005_MOD_U2DREL=.FALSE.
+
+ !## correct for boundary conditions
+ IF(.NOT.PMANAGER_SAVEMF2005_PCK_GETMINMAX(IDF%X,IDF%NCOL,IDF%NROW,BND(ILAY)%X,MINV,MAXV,IFBND))RETURN
+ 
+ !## constant value
+ IF(MAXV.EQ.MINV)THEN
+
+  IF(IINT.EQ.0)THEN
+   IF(MAXV.EQ.IDF%NODATA)THEN
+    LINE='CONSTANT '//TRIM(RTOS(HNOFLOW,'E',7))
+   ELSE
+    LINE='CONSTANT '//TRIM(RTOS(MAXV,'E',7))
+   ENDIF
+  ELSEIF(IINT.EQ.1)THEN
+   IF(MAXV.EQ.IDF%NODATA)THEN
+    LINE='CONSTANT '//TRIM(ITOS(0))
+   ELSE
+    LINE='CONSTANT '//TRIM(ITOS(INT(MAXV)))
+   ENDIF
+  ENDIF
+  IF(PBMAN%IFORMAT.EQ.2)WRITE(IU,'(A)') TRIM(LINE)
+  IF(PBMAN%IFORMAT.EQ.3)WRITE(IU,'(A)') '  '//TRIM(LINE)
+  
+ ELSE
+ 
+  CALL UTL_CREATEDIR(EXFNAME(:INDEX(EXFNAME,'\',.TRUE.)-1))
+  IF(PBMAN%IFORMAT.EQ.3)THEN; N=4; ELSE; N=3; ENDIF
+  SFNAME=EXFNAME; DO I=1,N; SFNAME=SFNAME(:INDEX(SFNAME,'\',.TRUE.)-1); ENDDO
+  I=LEN_TRIM(SFNAME); SFNAME='.'//EXFNAME(I+1:)
+
+  IF(IU.NE.0)THEN
+   IF(PBMAN%IFORMAT.EQ.2)THEN
+    IF(IINT.EQ.0)WRITE(IU,'(A)') 'OPEN/CLOSE '//TRIM(SFNAME)//' 1.0D0 (FREE) -1'
+    IF(IINT.EQ.1)WRITE(IU,'(A)') 'OPEN/CLOSE '//TRIM(SFNAME)//' 1 (FREE) -1'
+   ELSE
+    IF(IINT.EQ.0)WRITE(IU,'(A)') '  OPEN/CLOSE '//TRIM(SFNAME)//' FACTOR 1.0D0 IPRN -1'
+    IF(IINT.EQ.1)WRITE(IU,'(A)') '  OPEN/CLOSE '//TRIM(SFNAME)//' FACTOR 1 IPRN -1'
+   ENDIF
+  ENDIF
+  
+  IF(TRIM(EXFNAME(INDEX(EXFNAME,'.',.TRUE.)+1:)).EQ.'ASC')THEN
+
+   JU=UTL_GETUNIT(); CALL OSD_OPEN(JU,FILE=EXFNAME,STATUS='UNKNOWN',ACTION='WRITE',FORM='FORMATTED'); IF(JU.EQ.0)RETURN
+
+   WRITE(JU,'(A14,I10)')   'NCOLS'        ,IDF%NCOL
+   WRITE(JU,'(A14,I10)')   'NROWS'        ,IDF%NROW
+   WRITE(JU,'(A14,G15.7)') 'XLLCORNER'    ,IDF%XMIN
+   WRITE(JU,'(A14,G15.7)') 'YLLCORNER'    ,IDF%YMIN
+   WRITE(JU,'(A14,G15.7)') 'CELLSIZE'     ,IDF%DX
+   WRITE(JU,'(A14,G15.7)') 'NODATA_VALUE ',IDF%NODATA
+
+   IF(IINT.EQ.1)THEN
+    DO IROW=1,IDF%NROW; WRITE(JU,*) (INT(IDF%X(ICOL,IROW)),ICOL=1,IDF%NCOL); ENDDO
+   ELSE
+    DO IROW=1,IDF%NROW; WRITE(JU,*)     (IDF%X(ICOL,IROW) ,ICOL=1,IDF%NCOL); ENDDO
+   ENDIF
+   CLOSE(JU)
+ 
+  ELSEIF(TRIM(EXFNAME(INDEX(EXFNAME,'.',.TRUE.)+1:)).EQ.'IDF')THEN
+
+   IF(.NOT.IDFWRITE(IDF,EXFNAME,1))RETURN 
+   
+  ELSE
+
+   JU=UTL_GETUNIT(); CALL OSD_OPEN(JU,FILE=EXFNAME,STATUS='UNKNOWN',ACTION='WRITE',FORM='FORMATTED'); IF(JU.EQ.0)RETURN
+
+   IF(LFREEFORMAT)THEN
+    CALL IDFWRITEFREE(JU,IDF,IINT,'B','*') 
+   ELSE
+    IF(IINT.EQ.1)THEN
+     DO IROW=1,IDF%NROW; WRITE(JU,*) (INT(IDF%X(ICOL,IROW)),ICOL=1,IDF%NCOL); ENDDO
+    ELSE
+     DO IROW=1,IDF%NROW; WRITE(JU,*)     (IDF%X(ICOL,IROW) ,ICOL=1,IDF%NCOL); ENDDO
+    ENDIF
+   ENDIF
+   CLOSE(JU)
+
+  ENDIF
+ 
+ ENDIF
+ 
+ PMANAGER_SAVEMF2005_MOD_U2DREL=.TRUE.
+   
+ END FUNCTION PMANAGER_SAVEMF2005_MOD_U2DREL
+ 
+ !###======================================================================
+ SUBROUTINE PMANAGER_SAVEMF2005_FCTIMP(IINV,ICNST,IDF,FCT,IMP,SCL_U)
+ !###======================================================================
+ IMPLICIT NONE
+ INTEGER,INTENT(IN) :: IINV,ICNST,SCL_U
+ REAL(KIND=DP_KIND),INTENT(IN) :: FCT,IMP
+ TYPE(IDFOBJ),INTENT(INOUT) :: IDF
+ INTEGER :: IROW,ICOL
+
+ !## replace nodata for hnoflow-value
+ DO IROW=1,IDF%NROW; DO ICOL=1,IDF%NCOL
+  !## not constant value and equal to nodata - skip it
+  IF(ICNST.EQ.2.AND.IDF%X(ICOL,IROW).EQ.IDF%NODATA)THEN
+   !## geometric will otherwise ignore zero as entry which is allowed
+   IF(SCL_U.EQ.3)THEN
+    IDF%X(ICOL,IROW)=0.0D0
+   ELSE
+    IDF%X(ICOL,IROW)=HNOFLOW
+   ENDIF
+  ELSE
+   IDF%X(ICOL,IROW)=IDF%X(ICOL,IROW)*FCT+IMP
+  ENDIF
+  !## translate from resistance into reciprocal conductance
+  !## translate from vka into reciprocal vka
+  IF(IINV.EQ.1)THEN
+   IF(IDF%X(ICOL,IROW).NE.0.0D0.AND.IDF%X(ICOL,IROW).NE.HNOFLOW)IDF%X(ICOL,IROW)=1.0D0/IDF%X(ICOL,IROW) 
+  ENDIF
+ ENDDO; ENDDO
+ 
+ IDF%NODATA=HNOFLOW
+
+ END SUBROUTINE PMANAGER_SAVEMF2005_FCTIMP
+ 
  !###======================================================================
  LOGICAL FUNCTION UTL_PMANAGER_REFRESH(ICODE)
  !###======================================================================
@@ -2565,6 +2731,7 @@ JLOOP: DO K=1,SIZE(TOPICS)
 
  IF(.NOT.UTL_READINITFILE('MXITER',LINE,IU,0))RETURN; READ(LINE,*) PEST%PE_MXITER
  IF(.NOT.UTL_READINITFILE('NREALS',LINE,IU,0))RETURN; READ(LINE,*) PEST%NREALS
+ IF(.NOT.UTL_READPOINTER_REAL(IU,N,PBMAN%LAMBDA,'LAMBDA',0))RETURN
  
  !## all parameters need to be ran per simulation
  ALLOCATE(PEST%PARAM(NPARAM))
@@ -2580,8 +2747,6 @@ JLOOP: DO K=1,SIZE(TOPICS)
  
  PEST%PE_TARGET(1)=1.0D0; PEST%PE_TARGET(2)=0.0D0
  PEST%PE_DRES=0.0D0
- !## lambda testing
- PBMAN%NLAMBDA=3
  
 !   READ(LINE,*,IOSTAT=IOS) PEST%PARAM(I)%PACT,PEST%PARAM(I)%PPARAM,PEST%PARAM(I)%PILS,PEST%PARAM(I)%PIZONE,PEST%PARAM(I)%PINI,PEST%PARAM(I)%PDELTA, &
 !                           PEST%PARAM(I)%PMIN,PEST%PARAM(I)%PMAX,PEST%PARAM(I)%PINCREASE,PEST%PARAM(I)%PIGROUP,PEST%PARAM(I)%PLOG,PEST%PARAM(I)%ACRONYM,PEST%PARAM(I)%PPRIOR
@@ -2680,363 +2845,6 @@ JLOOP: DO K=1,SIZE(TOPICS)
  ENDIF
  
  END SUBROUTINE PMANAGER_SYSTEMS
- 
- !###======================================================================
- SUBROUTINE PMANAGERSTART(RUNFNAME,IRUNMODE,IBATCH,NICORES,ILOGFILE)
- !###======================================================================
- IMPLICIT NONE
- CHARACTER(LEN=*),INTENT(IN) :: RUNFNAME
- INTEGER,INTENT(IN) :: IRUNMODE,IBATCH,NICORES,ILOGFILE
- CHARACTER(LEN=256) :: DIR,DIRNAME,SEXENAME
- CHARACTER(LEN=52) :: MNAME
- INTEGER :: IU,IOS,I,J,K,N1,N2,IFLAGS,IEXCOD,IERROR,IMODE
- INTEGER :: IPREVAL ! location of executable
- LOGICAL :: LEX
-
- IMODE=0
- SELECT CASE (PBMAN%IFORMAT)
-  !## mf2005-run,mf2005-nam
-  CASE (1,2); IPREVAL=8
-  !## seawat,mt3d
-  CASE (4,5); IPREVAL=9
-  !## modflow6
-  CASE (3); IPREVAL=12
- END SELECT
- 
- IF(LEN_TRIM(PREFVAL(IPREVAL)).GT.0)THEN
-  INQUIRE(FILE=PREFVAL(IPREVAL),EXIST=LEX)
- ELSE
-  LEX=.FALSE.
- ENDIF
- IF(.NOT.LEX)THEN
-  IF(IBATCH.EQ.0)THEN
-   CALL WMESSAGEBOX(OKONLY,EXCLAMATIONICON,COMMONOK,TRIM(PREF(IPREVAL))//' cannot be started, iMOD cannot find the executable:'//CHAR(13)// &
-    '['//TRIM(PREFVAL(IPREVAL))//']','Error')
-  ELSE
-   WRITE(*,'(A)') TRIM(PREF(IPREVAL))//' cannot be started, iMOD cannot find the exectuable given'
-   WRITE(*,'(A)') '['//TRIM(PREFVAL(IPREVAL))//']'
-  ENDIF
-  RETURN
- ENDIF
- 
- IMODE=0
-
- !## runfile or namfile
- IF(INDEX(UTL_CAP(RUNFNAME,'U'),'.NAM',.TRUE.).GT.0)THEN
-  IMODE=1
- ELSEIF(INDEX(UTL_CAP(RUNFNAME,'U'),'.RUN',.TRUE.).GT.0)THEN
-  IMODE=2
- ELSE
-  IF(IBATCH.EQ.0)THEN
-   CALL WMESSAGEBOX(OKONLY,EXCLAMATIONICON,COMMONOK,'iMODFLOW cannot be started with given file:'//CHAR(13)// &
-    TRIM(RUNFNAME),'Error')
-  ELSE
-   WRITE(*,'(A)') 'iMODFLOW cannot be started with given file: '//TRIM(RUNFNAME)
-  ENDIF
-  RETURN
- ENDIF
-
- !## simulation directory 
- DIR=RUNFNAME(:INDEX(RUNFNAME,'\',.TRUE.)-1)
- CALL UTL_CREATEDIR(DIR)
- !## modelname
- MNAME=RUNFNAME(INDEX(RUNFNAME,'\',.TRUE.)+1:INDEX(RUNFNAME,'.',.TRUE.)-1)
- 
- !## create component file(s)
- IF(TOPICS(TCAP)%DEFINED)THEN
-  N1=1; N2=1; IF(PBMAN%IPESTP.EQ.1)THEN; N1=-PBMAN%NLINESEARCH; N2=SIZE(PEST%PARAM); ENDIF
-  DO I=N1,N2
-   !## skip zero
-   IF(I.EQ.0)CYCLE
-   !## simulate batch-file
-   IU=UTL_GETUNIT()
-   IF(PBMAN%IPESTP.EQ.0)THEN
-    CALL OSD_OPEN(IU,FILE=TRIM(DIR)//'\COMPONENTS.INP',STATUS='REPLACE',ACTION='WRITE,DENYREAD',IOSTAT=IOS)
-   ELSE
-    IF(I.GT.0)THEN
-     IF(PEST%PARAM(I)%PACT.EQ.0.OR.PEST%PARAM(I)%PIGROUP.LT.0)CYCLE
-      CALL OSD_OPEN(IU,FILE=TRIM(DIR)//'\COMPONENTS_P#'//TRIM(ITOS(I))//'.INP',STATUS='REPLACE',ACTION='WRITE,DENYREAD',IOSTAT=IOS)
-    ELSE
-     CALL OSD_OPEN(IU,FILE=TRIM(DIR)//'\COMPONENTS_L#'//TRIM(ITOS(ABS(I)))//'.INP',STATUS='REPLACE',ACTION='WRITE,DENYREAD',IOSTAT=IOS)
-    ENDIF
-   ENDIF
-
-   IF(IOS.NE.0)THEN
-    IF(IBATCH.EQ.0)THEN
-     CALL WMESSAGEBOX(OKONLY,EXCLAMATIONICON,COMMONOK,'iMODFLOW is already running, you cannot start '//CHAR(13)// &
-      'new run while previous run is still running'//CHAR(13)//'or'//CHAR(13)//'Run-script cannot be created'//CHAR(13)// &
-      TRIM(DIR)//'\COMPONENTS.INP','Error')
-    ELSE
-     WRITE(*,'(A)') 'iMODFLOW is already running, you cannot start new run while previous run is still running'// &
-         'or Run-script cannot be created '//TRIM(DIR)//'\COMPONENTS.INP'
-    ENDIF
-    RETURN
-   ENDIF
-   IF(PBMAN%IPESTP.EQ.0)THEN
-    WRITE(IU,'(A)') 'MODFLOW -wd \MODELINPUT -namfile '//TRIM(DIR)//'\'//TRIM(MNAME)//'.NAM -DXC .\MODELINPUT\'//TRIM(MNAME)//'.DXC'
-   ELSE
-    IF(I.GT.0)THEN
-     IF(PEST%PARAM(I)%PACT.EQ.0.OR.PEST%PARAM(I)%PIGROUP.LT.0)CYCLE
-     WRITE(IU,'(A)') 'MODFLOW -wd \MODELINPUT -namfile '//TRIM(DIR)//'\'//TRIM(MNAME)//'_P#'//TRIM(ITOS(I))//'.NAM -DXC .\MODELINPUT\'//TRIM(MNAME)//'.DXC'
-    ELSE
-     WRITE(IU,'(A)') 'MODFLOW -wd \MODELINPUT -namfile '//TRIM(DIR)//'\'//TRIM(MNAME)//'_L#'//TRIM(ITOS(ABS(I)))//'.NAM -DXC .\MODELINPUT\'//TRIM(MNAME)//'.DXC'
-    ENDIF
-   ENDIF
-   WRITE(IU,'(A)') 'METASWAP -wd \MSWAPINPUT'
-   CLOSE(IU)  
-  ENDDO
- ENDIF
-
- INQUIRE(FILE=TRIM(EXEPATH)//'\'//TRIM(LICFILE),EXIST=LEX)
- IF(.NOT.LEX)THEN
-  IERROR=0; CALL IMOD_AGREEMENT(IERROR)
-  IF(IERROR.NE.1)THEN
-   IF(LBETA)THEN
-    IF(IBATCH.EQ.0)THEN
-     CALL WMESSAGEBOX(OKONLY,COMMONOK,EXCLAMATIONICON,'Cannot start Beta-iMOD because you are not authorized in writing for Beta-iMOD','Error')
-    ELSE
-     WRITE(*,'(A)') 'Cannot start Beta-iMOD because you are not authorized in writing for Beta-iMOD'
-    ENDIF
-   ELSE
-    IF(IBATCH.EQ.0)THEN
-     CALL WMESSAGEBOX(OKONLY,COMMONOK,EXCLAMATIONICON,'Cannot start iMODFLOW unless you accept the iMOD Software License Agreement','Error')
-    ELSE
-     WRITE(*,'(A)') 'Cannot start iMODFLOW unless you accept the iMOD Software License Agreement'
-    ENDIF
-   ENDIF
-   RETURN
-  ENDIF
- ENDIF
-
- !## copy imod license text file
- CALL IOSCOPYFILE(TRIM(EXEPATH)//'\'//TRIM(LICFILE),TRIM(DIR)//'\'//TRIM(LICFILE))
-
- N1=1; N2=1
- IF(PBMAN%IPESTP.EQ.1)THEN
-  N1=-PBMAN%NLINESEARCH; N2=SIZE(PEST%PARAM)
- ELSEIF(PBMAN%IIES.EQ.1)THEN
-  N1=-PBMAN%NLAMBDA; N2=PEST%NREALS
- ENDIF
- DO I=N1,N2
-  !## skip zero
-  IF(I.EQ.0)CYCLE
-  !## simulate batch-file
-  IU=UTL_GETUNIT()
-  IF(PBMAN%IPESTP+PBMAN%IIES.EQ.0)THEN
-   CALL OSD_OPEN(IU,FILE=TRIM(DIR)//'\RUN.BAT',STATUS='REPLACE',ACTION='WRITE,DENYREAD',IOSTAT=IOS)
-  ELSEIF(PBMAN%IPESTP.EQ.1)THEN
-   IF(I.GT.0)THEN
-    IF(PEST%PARAM(I)%PACT.EQ.0.OR.PEST%PARAM(I)%PIGROUP.LT.0)CYCLE
-    CALL OSD_OPEN(IU,FILE=TRIM(DIR)//'\RUN_P#'//TRIM(ITOS(I))//'.BAT',STATUS='REPLACE',ACTION='WRITE,DENYREAD',IOSTAT=IOS)
-   ELSE
-    CALL OSD_OPEN(IU,FILE=TRIM(DIR)//'\RUN_L#'//TRIM(ITOS(ABS(I)))//'.BAT',STATUS='REPLACE',ACTION='WRITE,DENYREAD',IOSTAT=IOS)
-   ENDIF
-  ELSEIF(PBMAN%IIES.EQ.1)THEN
-   IF(I.GT.0)THEN
-    CALL OSD_OPEN(IU,FILE=TRIM(DIR)//'\RUN_R#'//TRIM(ITOS(I))//'.BAT',STATUS='REPLACE',ACTION='WRITE,DENYREAD',IOSTAT=IOS)
-   ELSE
-    CALL OSD_OPEN(IU,FILE=TRIM(DIR)//'\RUN_L#'//TRIM(ITOS(ABS(I)))//'.BAT',STATUS='REPLACE',ACTION='WRITE,DENYREAD',IOSTAT=IOS)
-   ENDIF
-  ENDIF
-
-  IF(IOS.NE.0)THEN
-   IF(IBATCH.EQ.0)THEN
-    CALL WMESSAGEBOX(OKONLY,EXCLAMATIONICON,COMMONOK,'iMODFLOW is already running, you cannot start '//CHAR(13)// &
-     'new run while previous run is still running'//CHAR(13)//'or'//CHAR(13)//'Run-script cannot be created','Error')
-   ELSE
-    WRITE(*,'(A)') 'iMODFLOW is already running, you cannot start new run while previous run is still running'// &
-        'or Run-script cannot be created'
-   ENDIF
-   RETURN
-  ENDIF
-
-  SEXENAME=PREFVAL(IPREVAL)
-
-  !## write start script in batch file
-  WRITE(IU,'(A)') 'REM =========================='
-  WRITE(IU,'(A)') 'REM Run Script iMOD '//TRIM(RVERSION)
-  WRITE(IU,'(A)') 'REM =========================='
-
-  !## namfile
-  IF(IMODE.EQ.1)THEN
-
-   IF(PBMAN%IFORMAT.EQ.1)WRITE(IU,'(A)') 'TITLE "NAMFILE: '//TRIM(MNAME)//'.nam"' 
-   
-   IF(TOPICS(TCAP)%DEFINED)THEN
-    IF(PBMAN%IPESTP.EQ.0)THEN
-     WRITE(IU,'(/A/)') '"'//TRIM(SEXENAME)//'" -components components.inp' 
-    ELSE
-     IF(I.GT.0)THEN
-      WRITE(IU,'(/A/)') '"'//TRIM(SEXENAME)//'" -components components_P#'//TRIM(ITOS(I))//'.inp -ipest ".\modelinput\'//TRIM(MNAME)//'.pst1"' 
-     ELSE
-      WRITE(IU,'(/A/)') '"'//TRIM(SEXENAME)//'" -components components_L#'//TRIM(ITOS(ABS(I)))//'.inp -ipest ".\modelinput\'//TRIM(MNAME)//'.pst1"' 
-     ENDIF
-    ENDIF
-   ELSE
-    IF(PBMAN%IPEST+PBMAN%IPESTP+PBMAN%IIES.EQ.0)THEN
-     IF(PBMAN%IFORMAT.EQ.2)WRITE(IU,'(/A/)') '"'//TRIM(PREFVAL(IPREVAL))//'" "'//TRIM(MNAME)//'.nam"' 
-     IF(PBMAN%IFORMAT.EQ.3)WRITE(IU,'(/A/)') '"'//TRIM(PREFVAL(IPREVAL))//'"' 
-    !## ipest
-    ELSEIF(PBMAN%IPEST.EQ.1)THEN
-     WRITE(IU,'(/A/)') '"'//TRIM(SEXENAME)//'" "'//TRIM(MNAME)//'.nam" -ipest ".\modelinput\'//TRIM(MNAME)//'.pst1"'
-    !## parrallel ipest
-    ELSEIF(PBMAN%IPESTP.EQ.1)THEN
-     IF(I.GT.0)THEN
-      WRITE(IU,'(/A/)') '"'//TRIM(SEXENAME)//'" "'//TRIM(MNAME)//'_P#'//TRIM(ITOS(I))//'.nam" -ipest ".\modelinput\'// &
-                             TRIM(MNAME)//'_P#'//TRIM(ITOS(I))//'.pst1"'
-     ELSE
-      WRITE(IU,'(/A/)') '"'//TRIM(SEXENAME)//'" "'//TRIM(MNAME)//'_L#'//TRIM(ITOS(ABS(I)))//'.nam" -ipest ".\modelinput\'// &
-                             TRIM(MNAME)//'_L#'//TRIM(ITOS(ABS(I)))//'.pst1"'
-     ENDIF
-    !## ies
-    ELSEIF(PBMAN%IIES.EQ.1)THEN
-     IF(I.GT.0)THEN
-      WRITE(IU,'(/A/)') '"'//TRIM(SEXENAME)//'" "'//TRIM(MNAME)//'_R#'//TRIM(ITOS(I))//'.nam"'
-     ELSE
-      WRITE(IU,'(/A/)') '"'//TRIM(SEXENAME)//'" "'//TRIM(MNAME)//'_L#'//TRIM(ITOS(ABS(I)))//'.nam"'
-     ENDIF
-    ENDIF
-   ENDIF
- 
-   !## incluse postprocessing only in case not parameter optimization is carried out
-   IF(PBMAN%IPEST+PBMAN%IPESTP.EQ.0)THEN
-
-    !## include conversion from mf6 to idf files
-    IF(PBMAN%IFORMAT.EQ.3)THEN
-     WRITE(IU,'(/A)') 'REM ============================================='
-     WRITE(IU,'( A)') 'REM iMOD Batch Script iMOD '//TRIM(RVERSION)
-     WRITE(IU,'( A)') 'REM ============================================='
-     DO J=1,PBMAN%NSUBMODEL
-      WRITE(IU,'(/A)') 'ECHO FUNCTION=MF6TOIDF > MF6TOIDF.INI'
-      WRITE(IU,'( A)') 'ECHO GRB="'//TRIM(DIR)//'\GWF_'//TRIM(ITOS(J))//'\MODELINPUT\'//TRIM(MNAME)//'.DIS6.GRB" >> MF6TOIDF.INI'
-      WRITE(IU,'( A)') 'ECHO HED="'//TRIM(DIR)//'\GWF_'//TRIM(ITOS(J))//'\MODELOUTPUT\HEAD\HEAD.HED" >> MF6TOIDF.INI'
-      WRITE(IU,'( A)') 'ECHO BDG="'//TRIM(DIR)//'\GWF_'//TRIM(ITOS(J))//'\MODELOUTPUT\BUDGET\BUDGET.CBC" >> MF6TOIDF.INI'
-      IF(PRJNPER.GT.1)THEN
-       DO K=1,PRJNPER
-        IF(SIM(K)%DELT.GT.0.0)THEN
-         WRITE(IU,'(A,I4.4,2I2.2,A)') 'ECHO SDATE=',SIM(K)%IYR,SIM(K)%IMH,SIM(K)%IDY,' >> MF6TOIDF.INI'
-         EXIT
-        ENDIF
-       ENDDO
-      ENDIF
-      WRITE(IU,'(/A/)') '"'//TRIM(EXENAME)//'" MF6TOIDF.INI'
-     ENDDO
-    ENDIF
-   
-    !## include conversion of sfr package into isg-file
-    IF(TOPICS(TSFR)%IACT_MODEL.EQ.1)THEN !DEFINED)THEN
-     WRITE(IU,'(/A)') 'REM ============================================='
-     WRITE(IU,'( A)') 'REM iMOD Batch Script iMOD '//TRIM(RVERSION)
-     WRITE(IU,'( A)') 'REM ============================================='
-     WRITE(IU,'(/A)') 'ECHO FUNCTION=SFRTOISG > SFRTOISG.INI'
-     WRITE(IU,'( A)') 'ECHO ISGFILE_IN= "'//TRIM(DIR)//'\MODELINPUT\SFR7\SFR.ISG" >> SFRTOISG.INI'
-     WRITE(IU,'( A)') 'ECHO ISGFILE_OUT="'//TRIM(DIR)//'\BDGSFR\ISG\SFR.ISG" >> SFRTOISG.INI'
-     WRITE(IU,'( A)') 'ECHO SFRFILE_IN= "'//TRIM(DIR)//'\'//TRIM(MNAME)//'_FSFR.TXT" >> SFRTOISG.INI'
-     WRITE(IU,'( A)') 
-     WRITE(IU,'( A)') '"'//TRIM(EXENAME)//'" SFRTOISG.INI'
-     WRITE(IU,'( A)') 
-    ENDIF
-   
-   ENDIF
-   
-  !## runfile
-  ELSEIF(IMODE.EQ.2)THEN
- 
-   IF(IBATCH.EQ.0)THEN
-    IF(NICORES.GT.1)THEN
-     WRITE(IU,'(A)') ':: Set number of MPI processes'
-     WRITE(IU,'(A)') 'set np='//ITOS(NICORES)
-     WRITE(IU,'(A)') ''
-     WRITE(IU,'(A)') ':: Run model'
-     WRITE(IU,'(A)') '"C:\Program Files\MPICH2\bin\mpiexec.exe" -localonly %np% "'//TRIM(PREFVAL(IPREVAL))//'" '//TRIM(MNAME)//'.run"'
-    ELSE
-     WRITE(IU,'(A)') '"'//TRIM(SEXENAME)//'" '//TRIM(MNAME)//'.RUN' 
-    ENDIF
-   ELSE
-    WRITE(IU,'(A)') '"'//TRIM(SEXENAME)//'" '//TRIM(MNAME)//'.RUN' 
-   ENDIF
-  
-  ENDIF
-  CLOSE(IU)
-
- ENDDO
- 
- !## get and remember actual iMOD run location + switch to tempral simulation directory
- CALL IOSDIRNAME(DIRNAME); CALL IOSDIRCHANGE(TRIM(DIR)//'\')
- 
- !## parralel pest
- IF(PBMAN%IPESTP.EQ.1)THEN
-
-  CALL IPEST_GLM_MAIN(TRIM(DIR),MNAME,IBATCH)
-  CALL IPEST_GLM_RESET_PARAMETER()
-  
- !## iterative ensemble smoother 
- ELSEIF(PBMAN%IIES.EQ.1)THEN
-  
-  CALL IPEST_IES_MAIN(TRIM(DIR),MNAME,IBATCH)
-  
- ELSE
-  !## start the batch file - run in the foreground
-  IF(IRUNMODE.GT.0)THEN
-
-   IFLAGS=PROCBLOCKED 
-   !## executes on commandtool such that commands alike 'dir' etc. works
-   IFLAGS=IFLAGS+PROCCMDPROC
- 
-   IF(ILOGFILE.EQ.0)THEN
-    CALL IOSCOMMAND('RUN.BAT',IFLAGS,IEXCOD=IEXCOD)
-   ELSE
-    CALL IOSCOMMAND('RUN.BAT > RUN_LOG.TXT',IFLAGS,IEXCOD=IEXCOD)
-   ENDIF
-  
-   IF(IEXCOD.EQ.0)THEN
-    IF(IBATCH.EQ.0)THEN 
-     CALL WMESSAGEBOX(OKONLY,INFORMATIONICON,COMMONOK,'Successful simulation using: '//CHAR(13)// &
-                    TRIM(CSOLVER(PBMAN%IFORMAT))//CHAR(13)//TRIM(PREFVAL(IPREVAL))//CHAR(13)// &
-                    'OUTPUTFILE:'//CHAR(13)//TRIM(RUNFNAME),'Information')
-    ELSE
-     WRITE(*,'(A)') 'Successfully STARTED the Modflow simulation using:'
-     WRITE(*,'(A)') TRIM(CSOLVER(PBMAN%IFORMAT))//': '//TRIM(PREFVAL(IPREVAL))
-     WRITE(*,'(A)') 'OUTPUTFILE: '//TRIM(RUNFNAME)
-    ENDIF
-   ELSE
-    IF(IBATCH.EQ.0)THEN
-     CALL WMESSAGEBOX(OKONLY,EXCLAMATIONICON,COMMONOK,'An error occured in starting your simulation','Error')
-    ELSE
-     WRITE(*,'(A)') 'An error occured in starting your simulation'
-    ENDIF
-   ENDIF
-   
-  !## start the batch file - run in the background
-  ELSEIF(IRUNMODE.LT.0)THEN
-
-   IFLAGS=0 
-   !## executes on commandtool such that commands alike 'dir' etc. works
-   IFLAGS=IFLAGS+PROCCMDPROC
-  
-   IF(ILOGFILE.EQ.0)THEN
-    CALL IOSCOMMAND('RUN.BAT',IFLAGS,IEXCOD=IEXCOD)
-   ELSE
-    CALL IOSCOMMAND('RUN.BAT > RUN_LOG.TXT',IFLAGS,IEXCOD=IEXCOD)
-   ENDIF
-  
-   IF(IBATCH.EQ.0)THEN
-    CALL WMESSAGEBOX(OKONLY,INFORMATIONICON,COMMONOK,'Successfully STARTED the Modflow simulation using:'//CHAR(13)// &
-                   'MODFLOW:         '//TRIM(PREFVAL(IPREVAL))//CHAR(13)// &
-                   'RUNFILE/NAMFILE: '//TRIM(RUNFNAME),'Information')
-   ELSE
-    WRITE(*,'(A)') 'Successful simulation using:'
-    WRITE(*,'(A)') 'MODFLOW:         '//TRIM(PREFVAL(IPREVAL))
-    WRITE(*,'(A)') 'RUNFILE/NAMFILE: '//TRIM(RUNFNAME)
-   ENDIF
-
-  ENDIF
- ENDIF
-
- !## bring the iMOD run location back to he origional directory
- CALL IOSDIRCHANGE(DIRNAME)
-
- END SUBROUTINE PMANAGERSTART
 
  !###====================================================================
  LOGICAL FUNCTION PMANAGER_SAVEMF2005_COARSEGRID(IDF,X1,Y1,X2,Y2,BUFFERCS)
@@ -3657,6 +3465,90 @@ JLOOP: DO K=1,SIZE(TOPICS)
  
  END SUBROUTINE PMANAGER_UTL_INIT
 
+ !####====================================================================
+ SUBROUTINE PMANAGER_SAVEMF2005_DEALLOCATE()
+ !####====================================================================
+ IMPLICIT NONE
+ 
+ IF(ALLOCATED(NP_IPER))DEALLOCATE(NP_IPER)
+
+ IF(PBMAN%IIES.EQ.0)THEN
+  CALL IDFDEALLOCATEX(PRJIDF)
+  IF(ALLOCATED(BND))THEN
+   CALL IDFDEALLOCATE(BND,SIZE(BND)); DEALLOCATE(BND)
+  ENDIF
+ ENDIF
+ 
+ IF(ALLOCATED(SHD))THEN
+  CALL IDFDEALLOCATE(SHD,SIZE(SHD)); DEALLOCATE(SHD)
+ ENDIF
+ IF(ALLOCATED(KDW))THEN
+  CALL IDFDEALLOCATE(KDW,SIZE(KDW)); DEALLOCATE(KDW)
+ ENDIF
+ IF(ALLOCATED(VCW))THEN
+  CALL IDFDEALLOCATE(VCW,SIZE(VCW)); DEALLOCATE(VCW)
+ ENDIF
+ IF(ALLOCATED(TOP))THEN
+  CALL IDFDEALLOCATE(TOP,SIZE(TOP)); DEALLOCATE(TOP)
+ ENDIF
+ IF(ALLOCATED(BOT))THEN
+  CALL IDFDEALLOCATE(BOT,SIZE(BOT)); DEALLOCATE(BOT)
+ ENDIF
+ IF(ALLOCATED(ANA))THEN
+  CALL IDFDEALLOCATE(ANA,SIZE(ANA)); DEALLOCATE(ANA)
+ ENDIF
+ IF(ALLOCATED(ANF))THEN
+  CALL IDFDEALLOCATE(ANF,SIZE(ANF)); DEALLOCATE(ANF)
+ ENDIF
+ IF(ALLOCATED(CON))THEN
+  CALL IDFDEALLOCATE(CON,SIZE(CON)); DEALLOCATE(CON)
+ ENDIF
+ IF(ALLOCATED(KHV))THEN
+  CALL IDFDEALLOCATE(KHV,SIZE(KHV)); DEALLOCATE(KHV)
+ ENDIF
+ IF(ALLOCATED(KVV))THEN
+  CALL IDFDEALLOCATE(KVV,SIZE(KVV)); DEALLOCATE(KVV)
+ ENDIF
+ IF(ALLOCATED(KVA))THEN
+  CALL IDFDEALLOCATE(KVA,SIZE(KVA)); DEALLOCATE(KVA)
+ ENDIF
+ IF(ALLOCATED(STO))THEN
+  CALL IDFDEALLOCATE(STO,SIZE(STO)); DEALLOCATE(STO)
+ ENDIF
+ IF(ALLOCATED(SPY))THEN
+  CALL IDFDEALLOCATE(SPY,SIZE(SPY)); DEALLOCATE(SPY)
+ ENDIF
+ IF(ALLOCATED(LAK))THEN
+  CALL IDFDEALLOCATE(LAK,SIZE(LAK)); DEALLOCATE(LAK)
+ ENDIF
+ IF(ALLOCATED(LBD))THEN
+  CALL IDFDEALLOCATE(LBD,SIZE(LBD)); DEALLOCATE(LBD)
+ ENDIF
+ IF(ALLOCATED(LCD))THEN
+  CALL IDFDEALLOCATE(LCD,SIZE(LCD)); DEALLOCATE(LCD)
+ ENDIF
+ IF(ALLOCATED(SFT))THEN
+  CALL IDFDEALLOCATE(SFT,SIZE(SFT)); DEALLOCATE(SFT)
+ ENDIF
+
+ IF(ALLOCATED(ULAKES))   DEALLOCATE(ULAKES)
+ IF(ALLOCATED(FHBHED))   DEALLOCATE(FHBHED)
+ IF(ALLOCATED(FHBFLW))   DEALLOCATE(FHBFLW)
+ IF(ALLOCATED(FHBNBDTIM))DEALLOCATE(FHBNBDTIM)
+ IF(ASSOCIATED(FNAMES))  DEALLOCATE(FNAMES)
+ IF(ALLOCATED(PRJILIST)) DEALLOCATE(PRJILIST)
+ 
+ !## set active layers for current submodel
+ IF(PBMAN%SMTYPE.EQ.1)THEN
+  IF(ASSOCIATED(PBMAN%SM))THEN
+   IF(ASSOCIATED(PBMAN%SM(PBMAN%ISUBMODEL)%IDF))THEN
+    CALL IDFDEALLOCATE(PBMAN%SM(PBMAN%ISUBMODEL)%IDF,SIZE(PBMAN%SM(PBMAN%ISUBMODEL)%IDF))
+   ENDIF
+  ENDIF
+ ENDIF
+ 
+ END SUBROUTINE PMANAGER_SAVEMF2005_DEALLOCATE
+ 
  !#####=================================================================
  SUBROUTINE PMANAGER_UTL_CLOSE()
  !#####=================================================================
