@@ -1,14 +1,39 @@
+!!  Copyright (C) Stichting Deltares, 2005-2019.
+!!
+!!  This file is part of iMOD.
+!!
+!!  This program is free software: you can redistribute it and/or modify
+!!  it under the terms of the GNU General Public License as published by
+!!  the Free Software Foundation, either version 3 of the License, or
+!!  (at your option) any later version.
+!!
+!!  This program is distributed in the hope that it will be useful,
+!!  but WITHOUT ANY WARRANTY; without even the implied warranty of
+!!  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+!!  GNU General Public License for more details.
+!!
+!!  You should have received a copy of the GNU General Public License
+!!  along with this program.  If not, see <http://www.gnu.org/licenses/>.
+!!
+!!  Contact: imod.support@deltares.nl
+!!  Stichting Deltares
+!!  P.O. Box 177
+!!  2600 MH Delft, The Netherlands.
+!!
 MODULE MOD_IPEST_IES
 
 USE WINTERACTER
 USE MOD_IDF_PAR
-USE MOD_IDF, ONLY : IDFREADSCALE !IDFNULLIFY,IDFALLOCATEX,IDFWRITE
+USE MOD_IDF, ONLY : IDFREADSCALE,IDFALLOCATEX,IDFNULLIFY,IDFWRITE
 USE IMODVAR, ONLY : DP_KIND,IDPROC
 USE MOD_PMANAGER_PAR, ONLY : PEST,PBMAN,PRJIDF,PRJNLAY !SIM,PARAM,PRJNPER
 USE MOD_UTL, ONLY  : UTL_GETUNIT,UTL_CAP,ITOS,RTOS,UTL_GETMED,UTL_CREATEDIR,UTL_GOODNESS_OF_FIT,UTL_NASH_SUTCLIFFE
 USE MOD_IPEST_GLM_PAR
 USE MOD_IPEST_GLM, ONLY : IPEST_GLM_GETJ,IPEST_GLM_ALLOCATEMSR
 USE MOD_PMANAGER_UTL, ONLY : PMANAGER_SAVEMF2005_MOD_U2DREL,PMANAGER_SAVEMF2005_DEALLOCATE
+USE MOD_OSD
+USE MOD_IPEST_IES_PAR
+USE MOD_LUDCMP
 
 CONTAINS
 
@@ -19,7 +44,7 @@ CONTAINS
  INTEGER,INTENT(IN) :: IBATCH
  CHARACTER(LEN=*),INTENT(IN) :: DIR,MNAME
  TYPE(WIN_MESSAGE) :: MESSAGE
- INTEGER :: ITER,IFLAGS,IGRAD,NCPU,I,ITYPE,JGRAD,IEXCOD,NDONE,N,IU
+ INTEGER :: ITER,IFLAGS,IGRAD,NCPU,I,ITYPE,JGRAD,IEXCOD,NDONE,N
  REAL(KIND=DP_KIND) :: F,DBLE,TNSC
   
  IF(.NOT.IPEST_IES_ALLOCATE(DIR))RETURN 
@@ -95,9 +120,8 @@ CONTAINS
         IUPESTRESIDUAL=UTL_GETUNIT()
         OPEN(IUPESTRESIDUAL,FILE=TRIM(DIR)//'\IIES\LOG_PEST_RESIDUAL_'//TRIM(ITOS(ITER))//'_R#'//TRIM(ITOS(JGRAD))//'.TXT',STATUS='UNKNOWN',ACTION='WRITE')
         IF(.NOT.IPEST_GLM_GETJ(DIR,JGRAD,GPARAM(JGRAD),'R',IBATCH,TNSC))RETURN
-!        !## write echo
-!        CALL IPEST_GLM_PROGRESS(ITER,JGRAD,0,'P')
-!        FLUSH(IUPESTPROGRESS)
+        !## write echo
+        CALL IPEST_IES_PROGRESS(ITER,JGRAD); FLUSH(IUPESTPROGRESS)
        ENDIF
        !## reset running handle proces
        IPROC(:,JGRAD)=0
@@ -136,15 +160,26 @@ CONTAINS
  !#####=================================================================
  IMPLICIT NONE
  INTEGER :: I,J,K,IU,N
-
+ TYPE(IDFOBJ) :: IDF
+ 
  !## processing the inverse of the prior parameter covariance matrix
  DO I=1,SIZE(PEST%PARAM)
-  IU=UTL_GETUNIT(); OPEN(IU,FILE=PEST%PARAM(I)%ICOVFNAME,STATUS='OLD',ACTION='READ')
+  IU=UTL_GETUNIT(); CALL OSD_OPEN(IU,FILE=PEST%PARAM(I)%ICOVFNAME,STATUS='OLD',ACTION='READ')
   READ(IU,*); READ(IU,*) N; ALLOCATE(PEST%PARAM(I)%COV(N,N))  
   DO J=1,N; READ(IU,*) (PEST%PARAM(I)%COV(J,K),K=1,N); ENDDO
+  !## save as IDF (for fun)
+  CALL IDFNULLIFY(IDF)
+  IDF%DX=1.0D0; IDF%DY=1.0D0; IDF%NCOL=N; IDF%NROW=N
+  IDF%XMIN=0.0D0; IDF%XMAX=IDF%XMIN+IDF%NCOL*IDF%DX
+  IDF%YMIN=0.0D0; IDF%YMAX=IDF%YMIN+IDF%NROW*IDF%DY
+  IF(.NOT.IDFALLOCATEX(IDF))RETURN
+  DO J=1,N; DO K=1,N; IDF%X(J,K)=PEST%PARAM(I)%COV(J,K); ENDDO; ENDDO
+  IDF%FNAME='d:\IMOD-MODELS\IES\CREATEENSEMBLES\COV.IDF'; IF(.NOT.IDFWRITE(IDF,IDF%FNAME,0))STOP
   CLOSE(IU)
+  !## compute inverse of covariance and store for later use
+  CALL LUDCMP_CALC(N,N,PEST%PARAM(I)%COV,AI=ICOV)
  ENDDO
- 
+
  END SUBROUTINE IPEST_IES_UPDATE_ENSEMBLES
  
  !#####=================================================================
@@ -179,6 +214,16 @@ CONTAINS
  END SUBROUTINE IPEST_IES_SAVEREALS
  
  !#####=================================================================
+ SUBROUTINE IPEST_IES_PROGRESS(ITER,IGRAD)
+ !#####=================================================================
+ IMPLICIT NONE
+ INTEGER,INTENT(IN) :: ITER,IGRAD
+ 
+ WRITE(IUPESTPROGRESS,'(2(I5,1X),2(F15.7,1X))') ITER,IGRAD,MSR%TJ !,MSR%TJ-MSR%PJ
+
+ END SUBROUTINE IPEST_IES_PROGRESS
+ 
+ !#####=================================================================
  LOGICAL FUNCTION IPEST_IES_ALLOCATE(DIR)
  !#####=================================================================
  IMPLICIT NONE
@@ -186,6 +231,8 @@ CONTAINS
  INTEGER :: I,N,M,IU
  
  IPEST_IES_ALLOCATE=.FALSE.
+ 
+ PEST%PE_REGULARISATION=0
  
  CALL IPEST_IES_DEALLOCATE()
  N=PEST%NREALS; ALLOCATE(RNG(N),IPROC(2,N),GPARAM(N),ISTATUS(N))

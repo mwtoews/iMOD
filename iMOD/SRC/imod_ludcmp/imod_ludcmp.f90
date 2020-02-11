@@ -29,7 +29,7 @@ CONTAINS
  SUBROUTINE CHOLESKYDECOMPOSITION(A,N) 
  !###====================================================================
  IMPLICIT NONE
- INTEGER,INTENT(IN)   :: N
+ INTEGER,INTENT(IN) :: N
  REAL(KIND=DP_KIND),DIMENSION(N,N),INTENT(INOUT)  :: A
  INTEGER :: I,J,K
  REAL(KIND=DP_KIND) :: S
@@ -41,6 +41,9 @@ CONTAINS
    DO J=1,I-1
     S=S+A(I,J)*A(K,J)
    ENDDO
+   if(a(i,i).eq.0.0)then
+    write(*,*) a(i,i),i
+   endif
    A(K,I)=(A(K,I)-S)/A(I,I)
   ENDDO
 ! for k = 1 : n
@@ -57,6 +60,9 @@ CONTAINS
   DO J=1,K-1
    S=S+(A(K,J)**2.0D0)
   ENDDO
+  if(A(K,K)-S.lt.0.0d0)then
+   write(*,*) K,A(K,K)-S,A(K,K),S
+  endif
   A(K,K)=SQRT(A(K,K)-S)
  ENDDO
 !s=0
@@ -75,6 +81,109 @@ CONTAINS
  END SUBROUTINE CHOLESKYDECOMPOSITION
 
  !###====================================================================
+ SUBROUTINE LUDCMP_CALC(N,M,A,AI,B) !,IINV)
+ !###====================================================================
+ IMPLICIT NONE
+ INTEGER,INTENT(IN) :: N,M
+ REAL(KIND=DP_KIND),DIMENSION(M,M),INTENT(IN) :: A
+ REAL(KIND=DP_KIND),DIMENSION(M,M),INTENT(OUT),OPTIONAL :: AI
+ REAL(KIND=DP_KIND),DIMENSION(M),INTENT(INOUT),OPTIONAL :: B
+ REAL(KIND=DP_KIND),ALLOCATABLE,DIMENSION(:,:) :: L,U
+ INTEGER :: I,II,J,K,IINV
+ REAL(KIND=DP_KIND) :: X
+
+ IINV=0; IF(PRESENT(AI))IINV=1
+
+ ALLOCATE(L(N,N),U(N,N)); L=0.0D0; U=0.0D0
+ 
+ !## transform first column
+ DO I=1,N; L(I,1)=A(I,1); ENDDO
+ !## transform first row
+ DO I=1,N; U(1,I)=A(1,I)/A(1,1); ENDDO
+ DO I=1,N; U(I,I)=1.0D0; ENDDO
+ 
+ DO J=2,N-1
+  DO I=J,N
+   X=0.0D0
+   DO K=1,J-1
+    X=X+L(I,K)*U(K,J)
+   ENDDO
+   L(I,J)=A(I,J)-X
+  ENDDO
+  DO K=J+1,N
+   X=0.0D0
+   DO I=1,J-1
+    X=X+L(J,I)*U(I,K)
+   ENDDO
+   IF(L(J,J).EQ.0.0D0)THEN
+    WRITE(*,*) 'STOP CANNOT HAPPEN MATRIX SINGULIER'
+   ENDIF
+   U(J,K)=(A(J,K)-X)/L(J,J)
+  ENDDO
+ 
+ ENDDO
+ 
+ X=0.0D0
+ DO K=1,N-1
+  X=X+L(N,K)*U(K,N)
+ ENDDO
+ L(N,N)=A(N,N)-X
+ 
+ !## compute inverse matrix of A called AI
+ IF(IINV.EQ.1)THEN
+
+  AI=0.0D0; DO II=1,N; AI(II,II)=1.0D0; ENDDO
+  DO II=1,N
+
+   !## forward substitution
+   AI(II,1)=AI(II,1)/L(1,1)
+   DO I=2,N
+    X=0.0D0
+    DO J=1,I-1
+     X=X+L(I,J)*AI(II,J)
+    ENDDO
+    AI(II,I)=(AI(II,I)-X)/L(I,I)
+   ENDDO
+
+   !## backward substitution
+   DO I=N-1,1,-1
+    X=0.0D0
+    DO J=I+1,N
+     X=X+U(I,J)*AI(II,J)
+    ENDDO
+    AI(II,I)=AI(II,I)-X
+   ENDDO
+  
+  ENDDO
+  
+ ELSE
+
+  !## forward substitution
+  B(1)=B(1)/L(1,1)
+  DO I=2,N
+   X=0.0D0
+   DO J=1,I-1
+    X=X+L(I,J)*B(J)
+   ENDDO
+   B(I)=(B(I)-X)/L(I,I)
+  ENDDO
+
+  !## backward substitution
+  DO I=N-1,1,-1
+   X=0.0D0
+   DO J=I+1,N
+    X=X+U(I,J)*B(J)
+   ENDDO
+   B(I)=B(I)-X
+  ENDDO
+
+ ENDIF
+ 
+ DEALLOCATE(L,U)
+ 
+ END SUBROUTINE LUDCMP_CALC
+ 
+ !###====================================================================
  SUBROUTINE LUDCMP(A,B,N) 
  !###====================================================================
  IMPLICIT NONE
@@ -85,7 +194,7 @@ CONTAINS
  INTEGER :: I,J
  REAL(KIND=DP_KIND) :: X
 
- ALLOCATE(L(N,N),U(N,N)) !; L=0.0D0; U=0.0D0
+ ALLOCATE(L(N,N),U(N,N))
 
  !## perform lu-decomposition
  CALL LUDCMP_GETLU(A,L,U,N)

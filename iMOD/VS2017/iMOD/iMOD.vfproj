@@ -224,6 +224,7 @@
 		<File RelativePath="..\..\SRC\imod_ipest\imod_ipest_glm.f90"/>
 		<File RelativePath="..\..\SRC\imod_ipest\imod_ipest_glm_par.f90"/>
 		<File RelativePath="..\..\SRC\imod_ipest\imod_ipest_ies.f90"/>
+		<File RelativePath="..\..\SRC\imod_ipest\imod_ipest_ies_par.f90"/>
 		<File RelativePath="..\..\SRC\imod_ipest\imod_ipest_main.f90"/>
 		<File RelativePath="..\..\SRC\imod_ipest\imod_ipest_par.f90"/></Filter>
 		<Filter Name="imod_ipf">
