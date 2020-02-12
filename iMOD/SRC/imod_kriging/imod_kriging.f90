@@ -492,7 +492,7 @@ CONTAINS
  IF(ICMPINV.EQ.0)THEN
 
   IF(N.GT.SIZE(B))THEN
-   DEALLOCATE(A,B); ALLOCATE(A(N,N),B(N))  !,L,U,L(N,N),U(N,N)
+   DEALLOCATE(A,B); ALLOCATE(A(N,N),B(N)) 
   ENDIF
  
   !## fill in A()
@@ -735,7 +735,7 @@ CONTAINS
  END FUNCTION KRIGING_DIST
 
  !###======================================================================
- REAL(KIND=DP_KIND) FUNCTION KRIGING_GETGAMMA(X1,Y1,X2,Y2,RANGE,C1,C0,KTYPE)  !c1=sill-nugget c0=nugget
+ REAL(KIND=DP_KIND) FUNCTION KRIGING_GETGAMMA(X1,Y1,X2,Y2,RANGE,C1,C0,KTYPE)  !c1=sill c0=nugget
  !###======================================================================
  IMPLICIT NONE
  INTEGER,INTENT(IN) :: KTYPE
@@ -745,7 +745,7 @@ CONTAINS
  DXY=UTL_DIST(X1,Y1,X2,Y2)
  
  IF(DXY.GE.RANGE)THEN
-  H=0.999D0 
+  H=1.0d0 !0.999D0 !1.0D0 !0.999D0 
  ELSE
 
   !## no part of kriging, beyond given range, equal to sill
@@ -753,13 +753,13 @@ CONTAINS
    CASE (1) !## linear
     H=DXY/RANGE
    CASE (2) !## spherical
-!    H=(3.0D0*DXY)/(2.0D0*RANGE)-(DXY**3.0D0/(2.0D0*RANGE**3.0D0)
     H=(3.0D0*DXY)/(2.0D0*RANGE)-(0.5D0*(DXY/RANGE)**3.0D0)
    CASE (3) !## exponential
-!    H=1.0D0-EXP((-3.0D0*DXY)/RANGE)
-    H=1.0D0-EXP(-3.0D0*(DXY/RANGE))
+    H=1.0D0-10.0D0**(-3.0D0*(DXY/RANGE))
+!    H=1.0D0-EXP(-3.0D0*(DXY/RANGE))
    CASE (4) !## gaussian
-    H=1.0D0-EXP(-3.0D0*(DXY**2.0D0)/(RANGE**2.0D0))
+    H=1.0D0-10.0D0**(-3.0D0*(DXY**2.0D0)/(RANGE**2.0D0))
+!    H=1.0D0-EXP(-3.0D0*(DXY**2.0D0)/(RANGE**2.0D0))
    CASE (5) !## power
     H=DXY**0.5D0
    CASE DEFAULT

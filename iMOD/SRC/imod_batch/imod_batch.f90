@@ -3710,8 +3710,8 @@ CONTAINS
  SUBROUTINE IMODBATCH_CREATEENSEMBLES
  !###======================================================================
  IMPLICIT NONE
- REAL(KIND=DP_KIND) :: XMIN,YMIN,XMAX,YMAX,SMALL,X1,Y1,X2,Y2,XCOR,GAMMA,VAR,XT
- INTEGER :: IN_TYPE,ICOL,IROW,ICOL2,IROW2,N,I,J,ISIM,NSIM,NPOP
+ REAL(KIND=DP_KIND) :: XMIN,YMIN,XMAX,YMAX,SMALL,X1,Y1,X2,Y2,XCOR,GAMMA,VAR,XT,G(5)
+ INTEGER :: IN_TYPE,ICOL,IROW,ICOL2,IROW2,N,I,J,ISIM,NSIM,NPOP,K
  REAL(KIND=DP_KIND),DIMENSION(:,:),ALLOCATABLE :: COV,COR
  REAL(KIND=DP_KIND),DIMENSION(:),ALLOCATABLE :: V,M,X
  TYPE(IDFOBJ) :: MEAN,STDEV,IDF
@@ -3803,7 +3803,12 @@ CONTAINS
  ENDDO; ENDDO
 
  !## fill in variance (kriging)
- SILL=1.0D0; KTYPE=3
+ SILL=1.0D0; NUGGET=0.0D0
+ 
+! KTYPE=2 !OKAY - SPHERICAL STOPS @ 1
+ KTYPE=3 !OKAY - exponential STOPS @ 1
+! KTYPE=4 !niet OKAY - gaussian STOPS @ 1
+! KTYPE=1 NIET OKAY OOKAL STOPS HIJ @1 
  
  !# scale variances to 1.0 (normalise)
 ! S=0.0D0; DO I=1,N; S=S+V(I)**2.0; ENDDO; S=SQRT(S)
@@ -3812,7 +3817,7 @@ CONTAINS
 ! S=1.0D0
 
  !## overal variance =1
- V=1.0D0
+! V=1.0D0
  
  COV=0.0D0
  DO I=1,N
@@ -3827,12 +3832,23 @@ CONTAINS
    CALL IDFGETLOC(STDEV,IROW2,ICOL2,X2,Y2)
    !## get the variogram values
    GAMMA=IMODBATCH_CREATEENSEMBLES_GETGAMMA(X1,Y1,X2,Y2,RANGE,SILL,NUGGET,KTYPE)
+   
+!   x1=0.0d0; y1=0.0d0; y2=0.0d0; x2=x1-1.0d0
+!   iu=utl_getunit(); open(iu,file='d:\IMOD-MODELS\IES\CREATEENSEMBLES\semivariogram.txt',status='unknown',action='write')
+!   do 
+!    x2=x2+1.0d0
+!    do k=1,5
+!     g(k)=IMODBATCH_CREATEENSEMBLES_GETGAMMA(X1,Y1,X2,Y2,RANGE,SILL,NUGGET,k)
+!    enddo
+!    write(iu,'(6(F15.7,1X))') x2-x1,(g(k),k=1,5)
+!    if(x2.gt.range)exit
+!   enddo
+!   close(iu)
 !   XCOR=(GAMMA-NUGGET)/(SILL-NUGGET)
-   XCOR=GAMMA
    
 !   xcor=UTL_DIST(X1,Y1,X2,Y2)/range
 !   call random_number(xcor)
-   XCOR=1.0D0-XCOR
+   XCOR=1.0D0-GAMMA
    
 !   IF(XCOR.LT.0.1D0)XCOR=0.001D0 !1D0
 !   XCOR=0.0D0
@@ -3967,14 +3983,16 @@ CONTAINS
   SELECT CASE (ABS(KTYPE))
    CASE (1) !## linear
     H=DXY/RANGE
-   CASE (2) !## spherical
+   CASE (2) !## spherical = OKAY
     H=(3.0D0*DXY)/(2.0D0*RANGE)-((DXY**3.0D0)/(2.0D0*RANGE**3.0D0))
 !    H=(3.0D0*DXY)/(2.0D0*RANGE)-(0.5D0*(DXY/RANGE)**3.0D0)
    CASE (3) !## exponential
-    H=1.0D0-EXP((-3.0D0*DXY)/RANGE)
+    H=1.0D0-10.0D0**(-3.0D0*DXY/RANGE)
+!    H=1.0D0-EXP((-3.0D0*DXY)/RANGE)
 !    H=1.0D0-EXP(-3.0D0*(DXY/RANGE))
    CASE (4) !## gaussian
-    H=1.0D0-EXP(-3.0D0*(DXY**2.0D0)/(RANGE**2.0D0))
+    H=1.0D0-10.0D0**(-3.0D0*(DXY**2.0D0)/(RANGE**2.0D0))
+!    H=1.0D0-EXP(-3.0D0*(DXY**2.0D0)/(RANGE**2.0D0))
    CASE (5) !## power
     H=DXY**0.5D0
    CASE DEFAULT
