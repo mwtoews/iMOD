@@ -26,15 +26,15 @@ USE IMODVAR, ONLY : DP_KIND,SP_KIND
 CONTAINS
 
  !###====================================================================
- SUBROUTINE LUDCMP_CALC_SQRTROOTINVERSE(N,COV,ISQRTCOV)
+ SUBROUTINE LUDCMP_CALC_SQRTROOTINVERSE(N,COV,ISQRTCOV,SQRTCOV)
  !###====================================================================
  IMPLICIT NONE
  INTEGER,INTENT(IN) :: N
  REAL(KIND=DP_KIND),DIMENSION(N,N),INTENT(IN) :: COV
- REAL(KIND=DP_KIND),DIMENSION(N,N),INTENT(OUT) :: ISQRTCOV
+ REAL(KIND=DP_KIND),DIMENSION(N,N),INTENT(OUT) :: ISQRTCOV,SQRTCOV
  REAL(KIND=DP_KIND),DIMENSION(:,:),ALLOCATABLE :: A,IE
  REAL(KIND=DP_KIND),DIMENSION(:),ALLOCATABLE :: V,E
- INTEGER :: I,J
+ INTEGER :: I,J,II
  REAL(KIND=DP_KIND) :: ET
  
  ALLOCATE(A(N,N),IE(N,N),E(N),V(N))
@@ -45,22 +45,31 @@ CONTAINS
  CALL LUDCMP_TRED2(A,N,N,V,E)
  !## a are the eigenvectors
  CALL LUDCMP_TQLI(V,E,N,N,A)
+
  DO I=1,N
   V(I)=(V(I)+ABS(V(I)))/2.0D0
-  IF(V(I).GT.0.0D0)THEN
-   V(I)=1.0D0/SQRT(V(I))
-  ELSE
-   V(I)=0.0D0
-  ENDIF
  ENDDO
- DO I=1,N
-  DO J=1,N
-   IE(I,J)=A(J,I)*V(I)
+
+ DO II=1,2
+
+  DO I=1,N
+   IF(V(I).GT.0.0D0)THEN
+    IF(II.EQ.1)V(I)=SQRT(V(I))
+    IF(II.EQ.2)V(I)=1.0D0/V(I)
+   ELSE
+    V(I)=0.0D0
+   ENDIF
   ENDDO
- ENDDO
- !## transpose E
- DO I=1,N; DO J=1,N; ET=A(I,J); A(I,J)=A(J,I); A(J,I)=ET; ENDDO; ENDDO
- ISQRTCOV=MATMUL(A,IE)
+  DO I=1,N
+   DO J=1,N
+    IE(I,J)=A(J,I)*V(I)
+   ENDDO
+  ENDDO
+  !## transpose E
+  DO I=1,N; DO J=1,N; ET=A(I,J); A(I,J)=A(J,I); A(J,I)=ET; ENDDO; ENDDO
+  IF(II.EQ.1)SQRTCOV =MATMUL(A,IE)
+  IF(II.EQ.2)ISQRTCOV=MATMUL(A,IE)
+ ENDDO 
  
  DEALLOCATE(A,E,IE,V)
  
@@ -515,19 +524,17 @@ CONTAINS
  END SUBROUTINE LUDCMP_GETLU
  
  !###====================================================================
- SUBROUTINE LUDCMP_SVD_MAIN(SPACEDIM,TIMEDIM,A,W,V) !,U)
+ SUBROUTINE LUDCMP_SVD_MAIN(SPACEDIM,TIMEDIM,MAXDIM,A,W,V) !,U)
  !###====================================================================
  IMPLICIT NONE
- INTEGER :: SPACEDIM,TIMEDIM
- REAL(KIND=DP_KIND),DIMENSION(SPACEDIM,SPACEDIM) :: V
-! REAL(KIND=DP_KIND),DIMENSION(TIMEDIM,TIMEDIM) :: U
- REAL(KIND=DP_KIND),DIMENSION(TIMEDIM,SPACEDIM) :: A
- REAL(KIND=DP_KIND),DIMENSION(MAX(TIMEDIM,SPACEDIM)) :: W
- INTEGER :: MINDIM,MAXDIM,M,N,Q,I,J,PASS
+ INTEGER :: SPACEDIM,TIMEDIM,MAXDIM
+ REAL(KIND=DP_KIND),DIMENSION(TIMEDIM,SPACEDIM) :: A  !<=V
+ REAL(KIND=DP_KIND),DIMENSION(MAXDIM) :: W
+ REAL(KIND=DP_KIND),DIMENSION(SPACEDIM,SPACEDIM) :: V  !<=U
+ INTEGER :: MINDIM,M,N,Q,I,J,PASS
  REAL(KIND=DP_KIND) :: TEMP1
  REAL(KIND=DP_KIND),DIMENSION(TIMEDIM) :: TEMP2 
  REAL(KIND=DP_KIND),DIMENSION(SPACEDIM) :: TEMP3
-! REAL(KIND=DP_KIND),DIMENSION(:),ALLOCATABLE :: W
 
 ! real at(spacedim,timedim)
 ! real a(timedim,spacedim),v(spacedim,spacedim)
@@ -551,8 +558,8 @@ CONTAINS
 
  !###  mindim is the smaller of timedim or spacedim
  MINDIM=MIN(TIMEDIM,SPACEDIM)
- !###  maxdim is the larger of timedim or spacedim
- MAXDIM=MAX(TIMEDIM,SPACEDIM)
+! !###  maxdim is the larger of timedim or spacedim
+! MAXDIM=MAX(TIMEDIM,SPACEDIM)
 
 ! ALLOCATE(W(MAXDIM))
 
@@ -610,7 +617,7 @@ CONTAINS
 
 ! print*, 'To svdcmp'
 
- call LUDCMP_svdcmp(a,timedim,spacedim,w,v)
+ call LUDCMP_svdcmp(a,timedim,spacedim,maxdim,w,v)
   
 ! print*, 'Exit svdcmp'
 
@@ -671,14 +678,14 @@ CONTAINS
  !    A = U W VT.  The matrix U replaces a on output.  The diagonal
  !    matrix of singular values W is output as a vector w(1:n)
  !    The matrix V (not the transpose VT) is the output as v(1:n,1:n) 
- SUBROUTINE LUDCMP_svdcmp(a,mp,np,w,v)
+ SUBROUTINE LUDCMP_svdcmp(a,mp,np,maxdim,w,v)
  !###====================================================================
  IMPLICIT NONE
  INTEGER,PARAMETER :: NMAX=10000
- INTEGER,INTENT(IN) :: MP,NP
+ INTEGER,INTENT(IN) :: MP,NP,MAXDIM
  REAL(KIND=DP_KIND),DIMENSION(MP,NP),INTENT(INOUT) :: A
  REAL(KIND=DP_KIND),DIMENSION(NP,NP),INTENT(OUT) :: V
- REAL(KIND=DP_KIND),DIMENSION(NP),INTENT(OUT) :: W
+ REAL(KIND=DP_KIND),DIMENSION(MAXDIM),INTENT(OUT) :: W
  INTEGER :: I,ITS,J,JJ,K,L,NM,N,M
  REAL(KIND=DP_KIND) :: ANORM,C,F,G,H,S,SCALE,X,Y,Z !,RV1(NMAX)
  REAL(KIND=DP_KIND),DIMENSION(NMAX) :: RV1

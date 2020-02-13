@@ -2134,8 +2134,8 @@ MAINLOOP: DO
  CHARACTER(LEN=*),INTENT(IN) :: DIR,CTYPE
  REAL(KIND=DP_KIND),INTENT(OUT) :: TNSC
  INTEGER,INTENT(IN) :: IGRAD,IPARAM,IBATCH
- INTEGER :: I,J,II,NC,NP,NPERIOD,III,K,KK,ILAY,NROWIPFTXT,IUIPFTXT,NCOLIPFTXT,IOS,NAJ,NNSC
- REAL(KIND=DP_KIND) :: X,Y,Z,H,WW,MC,MM,DHH,XCOR,YCOR,ZCOR,DHW,DP,F,DTH,DTD,NSC
+ INTEGER :: I,J,II,NC,NP,NPERIOD,III,K,KK,ILAY,NROWIPFTXT,IUIPFTXT,NCOLIPFTXT,IOS,NAJ,NNSC,SEED,IERROR
+ REAL(KIND=DP_KIND) :: X,Y,Z,H,WW,MC,MM,DHH,XCOR,YCOR,ZCOR,DHW,DP,F,DTH,DTD,NSC,SIGMA
  CHARACTER(LEN=256) :: DIRNAME,FNAME
  CHARACTER(LEN=52) :: CID,TXT
  CHARACTER(LEN=12) :: CEXT
@@ -2145,6 +2145,8 @@ MAINLOOP: DO
  INTEGER :: IU,NR,IEXT
 
  IPEST_GLM_GETJ=.FALSE.
+ 
+ SEED=12345
  
  IF(.NOT.ASSOCIATED(PEST%MEASURES))RETURN
  
@@ -2189,7 +2191,7 @@ MAINLOOP: DO
   READ(IU,*) NC
   DO J=1,NC; READ(IU,*); ENDDO; READ(IU,*) IEXT,CEXT
   
-  IF(TRIM(CTYPE).EQ.'L'.AND.I.EQ.1)THEN
+  IF(TRIM(CTYPE).EQ.'L'.OR.TRIM(CTYPE).EQ.'R'.AND.I.EQ.1)THEN
    IF(IUPESTRESIDUAL.GT.0)THEN
     !## steady-state
     IF(IEXT.EQ.0)THEN
@@ -2215,6 +2217,32 @@ MAINLOOP: DO
      IF(WW.LT.0.0D0)THEN; WW=0.0D0; ELSE; MSR%W(II)=1.0D0/WW; ENDIF
     ENDIF
     
+    !## random error not yet set
+    IF(PBMAN%IIES.EQ.1)THEN
+     IERROR=IGRAD
+     IF(MSR%E(IERROR,II).LT.0.0D0)THEN
+      IF(WW.NE.0.0D0)THEN
+       !## variance
+       SIGMA=1.0D0/WW; CALL IPEST_NORMAL_MS_SAMPLE(0.0D0,SIGMA,SEED,MSR%E(IERROR,II))
+      ELSE
+       MSR%E(IERROR,II)=0.0D0
+      ENDIF
+     ENDIF
+    ELSE
+     IERROR=1; MSR%E(IERROR,II)=0.0D0
+    ENDIF
+    
+!    IU=UTL_GETUNIT(); OPEN(IU,FILE='d:\IMOD-MODELS\IES\CREATEENSEMBLES\NORMALPDF.TXT',STATUS='UNKNOWN',ACTION='WRITE')
+!    DO K=1,1000
+!     CALL IPEST_NORMAL_MS_SAMPLE(0.0D0,SIGMA,SEED,MSR%E(II,IERROR))
+!     WRITE(IU,*) K,MSR%E(II,IERROR)
+!    ENDDO
+!    CLOSE(IU)
+!    STOP
+    
+    !## add random error
+    Z=Z+MSR%E(IERROR,II)
+    
     !## calculated - measured
     DHH=H-Z
     IF(ABS(DHH).LT.PEST%PE_DRES)THEN
@@ -2238,7 +2266,7 @@ MAINLOOP: DO
 
     !## add to total objective function
     DHW=MSR%W(II)*(DHH**2.0D0); MSR%TJ=MSR%TJ+DHW
-    IF(IUPESTRESIDUAL.GT.0.AND.TRIM(CTYPE).EQ.'L')THEN
+    IF(IUPESTRESIDUAL.GT.0.AND.TRIM(CTYPE).EQ.'L'.OR.TRIM(CTYPE).EQ.'R')THEN
      WRITE(IUPESTRESIDUAL,'(2(F15.2,A1),I10,A1,6(F15.3,A1),I10,A1,A32)') &
         X,',',Y,',',ILAY,',',Z,',',H,',',DHW,',',MSR%W(II)*H,',',MSR%W(II)*DHH,',',MSR%W(II),',',I,',',MSR%CLABEL(II)
     ENDIF
@@ -2328,6 +2356,24 @@ MAINLOOP: DO
      DO K=1,KK
       II =II+1
 
+      !## random error not yet set
+      IF(PBMAN%IIES.EQ.1)THEN
+       IERROR=IGRAD
+       IF(MSR%E(IERROR,II).LT.0.0D0)THEN
+        IF(WW.NE.0.0D0)THEN
+         !## variance
+         SIGMA=SQRT(1.0D0/WW); CALL IPEST_NORMAL_MS_SAMPLE(0.0D0,SIGMA,SEED,MSR%E(IERROR,II))
+        ELSE
+         MSR%E(IERROR,II)=0.0D0
+        ENDIF
+       ENDIF
+      ELSE
+       IERROR=1; MSR%E(IERROR,II)=0.0D0
+      ENDIF
+      
+      !## add measurement noise
+      C(K)=C(K)+MSR%E(IERROR,II)
+      
       DTH=0.0D0
       !## target is residual (calculated minus measured)
       IF(PEST%PE_TARGET(1).GT.0.0D0)THEN
@@ -2377,7 +2423,7 @@ MAINLOOP: DO
 
       GF_H(II)=MSR%W(II)*C(K); GF_O(II)=MSR%W(II)*M(K)
 
-      IF(IUPESTRESIDUAL.GT.0.AND.TRIM(CTYPE).EQ.'L')THEN
+      IF(IUPESTRESIDUAL.GT.0.AND.TRIM(CTYPE).EQ.'L'.OR.TRIM(CTYPE).EQ.'R')THEN
        WRITE(IUPESTRESIDUAL,'(2(F15.2,A1),I10,A1,8(F15.2,A1),I10,A1,A32,A1,I15)') &
          X,',',Y,',',ILAY,',',WW,',',M(K),',',C(K),',',DTH,',',DYN(1),',',DYN(2),',',DTD,',',XCOR,',',I,',',MSR%CLABEL(II),',',IDATE(K)
       ENDIF
@@ -2526,6 +2572,15 @@ MAINLOOP: DO
  ALLOCATE(MSR%CLABEL(M),STAT=IOS);   IF(IOS.NE.0)THEN; WRITE(*,'(/A/)') 'CANNOT ALLOCATE MEMORY FOR MSR%CLABEL'; RETURN; ENDIF
  ALLOCATE(GF_H(M),STAT=IOS);         IF(IOS.NE.0)THEN; WRITE(*,'(/A/)') 'CANNOT ALLOCATE MEMORY FOR GF_H';       RETURN; ENDIF
  ALLOCATE(GF_O(M),STAT=IOS);         IF(IOS.NE.0)THEN; WRITE(*,'(/A/)') 'CANNOT ALLOCATE MEMORY FOR GF_O';       RETURN; ENDIF
+ 
+ !## allocate stochastic error per measurement/ensemble
+ IF(PBMAN%IIES.EQ.1)THEN
+  ALLOCATE(MSR%E(PEST%NREALS,M))
+ ELSE
+  ALLOCATE(MSR%E(1,M)) 
+ ENDIF
+ !# initialise error
+ MSR%E=-999.99D0
 
  IPEST_GLM_ALLOCATEMSR=.TRUE.
 
@@ -2742,5 +2797,198 @@ PLOOP: DO
  DEALLOCATE(A,B)
  
  END SUBROUTINE IPEST_ECHELON_DBL
+
+ !###====================================================================
+ SUBROUTINE IPEST_NORMAL_MS_SAMPLE(MU,SIGMA,SEED,X)
+ !###====================================================================
+!NORMAL_MS_SAMPLE samples the Normal PDF.
+! Discussion:
+!   The Box-Muller method is used.
+! Licensing:
+!   This code is distributed under the GNU LGPL license.
+! Author:
+!   John Burkardt
+! Parameters:
+!   Input, real ( kind = 8 ) MU, SIGMA, the parameters.
+!   0.0D+00 < SIGMA.
+!   Input/output, integer ( kind = 4 ) SEED, a seed for the random number
+!   generator.
+!   Output, real ( kind = 8 ) X, a sample of the PDF.
+ IMPLICIT NONE
+ REAL(KIND=DP_KIND),INTENT(IN) :: MU,SIGMA
+ REAL(KIND=DP_KIND),INTENT(OUT) :: X
+ REAL(KIND=DP_KIND) :: X01
+ INTEGER,INTENT(INOUT) :: SEED
+
+ CALL IPEST_NORMAL_01_SAMPLE(SEED,X01)
+
+ X=MU+SIGMA*X01
+
+ END SUBROUTINE IPEST_NORMAL_MS_SAMPLE
+
+ !###====================================================================
+ SUBROUTINE IPEST_NORMAL_01_SAMPLE(SEED,X)
+ !###====================================================================
+ IMPLICIT NONE
+!*****************************************************************************80
+!! NORMAL_01_SAMPLE samples the standard normal probability distribution.
+!  Discussion:
+!    The standard normal probability distribution function (PDF) has
+!    mean 0 and standard deviation 1.
+!    The Box-Muller method is used, which is efficient, but
+!    generates two values at a time.
+!  Licensing:
+!    This code is distributed under the GNU LGPL license.
+!  Author:
+!    John Burkardt
+!  Parameters:
+!    Input/output, integer ( kind = 4 ) SEED, a seed for the random number
+!    generator.
+!    Output, real ( kind = 8 ) X, a sample of the standard normal PDF.
+  REAL(KIND=DP_KIND) :: R1,R2 !,IPEST_R8_UNIFORM_01
+  REAL(KIND=DP_KIND), PARAMETER :: R8_PI = 3.141592653589793D+00
+  INTEGER,INTENT(INOUT) :: SEED
+  INTEGER,SAVE :: USED = -1
+  REAL(KIND=DP_KIND),INTENT(OUT) :: X
+  REAL(KIND=DP_KIND), SAVE :: Y = 0.0D+00
+
+  IF ( USED == -1 ) THEN
+    USED = 0
+  END IF
+!
+!  If we've used an even number of values so far, generate two more,
+!  return one and save one.
+!
+  IF ( MOD ( USED, 2 ) == 0 ) THEN
+
+    DO
+
+      R1 = IPEST_R8_UNIFORM_01 ( SEED )
+
+      IF ( R1 /= 0.0D+00 ) THEN
+        EXIT
+      END IF
+
+    END DO
+
+    R2 = IPEST_R8_UNIFORM_01 ( SEED )
+
+    X = SQRT ( - 2.0D+00 * LOG ( R1 ) ) * COS ( 2.0D+00 * R8_PI * R2 )
+    Y = SQRT ( - 2.0D+00 * LOG ( R1 ) ) * SIN ( 2.0D+00 * R8_PI * R2 )
+!
+!  Otherwise, return the second, saved, value.
+!
+  ELSE
+
+    X = Y
+
+  END IF
+
+  USED = USED + 1
+
+ end SUBROUTINE IPEST_NORMAL_01_SAMPLE
  
- END MODULE MOD_IPEST_GLM
+ !###====================================================================
+ DOUBLE PRECISION FUNCTION IPEST_R8_UNIFORM_01 ( SEED )
+ !###====================================================================
+
+!*****************************************************************************80
+!
+!! R8_UNIFORM_01 returns a unit pseudorandom R8.
+!
+!  Discussion:
+!
+!    An R8 is a real ( kind = 8 ) value.
+!
+!    For now, the input quantity SEED is an integer variable.
+!
+!    This routine implements the recursion
+!
+!      seed = 16807 * seed mod ( 2^31 - 1 )
+!      r8_uniform_01 = seed / ( 2^31 - 1 )
+!
+!    The integer arithmetic never requires more than 32 bits,
+!    including a sign bit.
+!
+!    If the initial seed is 12345, then the first three computations are
+!
+!      Input     Output      R8_UNIFORM_01
+!      SEED      SEED
+!
+!         12345   207482415  0.096616
+!     207482415  1790989824  0.833995
+!    1790989824  2035175616  0.947702
+!
+!  Licensing:
+!
+!    This code is distributed under the GNU LGPL license.
+!
+!  Modified:
+!
+!    05 July 2006
+!
+!  Author:
+!
+!    John Burkardt
+!
+!  Reference:
+!
+!    Paul Bratley, Bennett Fox, Linus Schrage,
+!    A Guide to Simulation,
+!    Springer Verlag, pages 201-202, 1983.
+!
+!    Pierre L'Ecuyer,
+!    Random Number Generation,
+!    in Handbook of Simulation,
+!    edited by Jerry Banks,
+!    Wiley Interscience, page 95, 1998.
+!
+!    Bennett Fox,
+!    Algorithm 647:
+!    Implementation and Relative Efficiency of Quasirandom
+!    Sequence Generators,
+!    ACM Transactions on Mathematical Software,
+!    Volume 12, Number 4, pages 362-376, 1986.
+!
+!    Peter Lewis, Allen Goodman, James Miller
+!    A Pseudo-Random Number Generator for the System/360,
+!    IBM Systems Journal,
+!    Volume 8, pages 136-143, 1969.
+!
+!  Parameters:
+!
+!    Input/output, integer ( kind = 4 ) SEED, the "seed" value, which should
+!    NOT be 0. On output, SEED has been updated.
+!
+!    Output, real ( kind = 8 ) R8_UNIFORM_01, a new pseudorandom variate,
+!    strictly between 0 and 1.
+!
+  implicit none
+
+  integer, parameter :: i4_huge = 2147483647
+  integer,intent(inout) :: seed 
+  integer :: k
+!  real ( kind = 8 ) r8_uniform_01
+!  integer ( kind = 4 ) seed
+
+  if ( seed == 0 ) then
+    write ( *, '(a)' ) ' '
+    write ( *, '(a)' ) 'R8_UNIFORM_01 - Fatal error!'
+    write ( *, '(a)' ) '  Input value of SEED = 0.'
+    stop 1
+  end if
+
+  k = seed / 127773
+
+  seed = 16807 * ( seed - k * 127773 ) - k * 2836
+
+  if ( seed < 0 ) then
+    seed = seed + i4_huge
+  end if
+
+  IPEST_R8_UNIFORM_01 = real ( seed, kind = 8 ) * 4.656612875D-10
+
+end function IPEST_R8_UNIFORM_01
+
+ 
+END MODULE MOD_IPEST_GLM
