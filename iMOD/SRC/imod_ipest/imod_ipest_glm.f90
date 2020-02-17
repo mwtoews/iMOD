@@ -2211,18 +2211,22 @@ MAINLOOP: DO
    
     II=II+1
     READ(IU,*) X,Y,ILAY,Z,WW,H
-    !## weigh=1/variance
-    MSR%W(II)=WW
+!    !## weight
+!    MSR%W(II)=WW
+    !## entries in variances - weight is 1/var
     IF(PEST%MEASURES(I)%IVCOL.GT.0)THEN
-     IF(WW.LT.0.0D0)THEN; WW=0.0D0; ELSE; MSR%W(II)=1.0D0/WW; ENDIF
+     IF(WW.LT.0.0D0)THEN; WW=0.0D0; ELSE; WW=1.0D0/WW; ENDIF
     ENDIF
+
+    !## weight as ... weigth    
+    MSR%W(II)=WW
     
     !## random error not yet set
     IF(PBMAN%IIES.EQ.1)THEN
      IERROR=IGRAD
      IF(MSR%E(IERROR,II).LT.0.0D0)THEN
       IF(WW.NE.0.0D0)THEN
-       !## variance
+       !## compute variance from weights again
        SIGMA=1.0D0/WW; CALL IPEST_NORMAL_MS_SAMPLE(0.0D0,SIGMA,SEED,MSR%E(IERROR,II))
       ELSE
        MSR%E(IERROR,II)=0.0D0
@@ -2280,7 +2284,7 @@ MAINLOOP: DO
    DO J=1,NR
 
     READ(IU,*) X,Y,ILAY,CID,WW   
-    !## weigh=1/stdev=1/sqrt(variance)
+    !## input is a variance - convert it to a weight as w=1/stdev=1/sqrt(variance)
     IF(PEST%MEASURES(I)%IVCOL.GT.0)THEN
      IF(WW.LE.0.0D0)THEN; WW=0.0D0; ELSE; WW=1.0D0/WW; ENDIF
     ENDIF
@@ -2362,7 +2366,7 @@ MAINLOOP: DO
        IF(MSR%E(IERROR,II).LT.0.0D0)THEN
         IF(WW.NE.0.0D0)THEN
          !## variance
-         SIGMA=SQRT(1.0D0/WW); CALL IPEST_NORMAL_MS_SAMPLE(0.0D0,SIGMA,SEED,MSR%E(IERROR,II))
+         SIGMA=1.0D0/WW; CALL IPEST_NORMAL_MS_SAMPLE(0.0D0,SIGMA,SEED,MSR%E(IERROR,II))
         ELSE
          MSR%E(IERROR,II)=0.0D0
         ENDIF
