@@ -340,6 +340,7 @@ MODULE MOD_PMANAGER_PAR
   CHARACTER(LEN=256) :: ICOVFNAME
   REAL(KIND=DP_KIND),POINTER,DIMENSION(:,:) :: COV,SQRTCOV,ISQRTCOV
   CHARACTER(LEN=256),POINTER,DIMENSION(:) :: REALSFNAME
+  REAL(KIND=DP_KIND),POINTER,DIMENSION(:) :: MEAN,VAR
  END TYPE PSTPARAMOBJ
 
  TYPE PSTOBJ
@@ -374,8 +375,8 @@ MODULE MOD_PMANAGER_PAR
   LOGICAL :: DEFINED                                            !logical whether it is defined
   INTEGER :: NLAY                                               !maximum # continuous layers from 1 downwards
   INTEGER :: ID                                                 !id of main topics
-  INTEGER,POINTER,DIMENSION(:) :: IDT=>NULL()                 !id of each time step for current topic
-  INTEGER,POINTER,DIMENSION(:,:) :: ISD=>NULL()               !id of main subtopics for each timestep
+  INTEGER,POINTER,DIMENSION(:) :: IDT=>NULL()                   !id of each time step for current topic
+  INTEGER,POINTER,DIMENSION(:,:) :: ISD=>NULL()                 !id of main subtopics for each timestep
   INTEGER :: IACT                                               !active in projectmanager (only 1 at the same time)
   INTEGER :: IACT_MODEL                                         !active in runfile/model 
   CHARACTER(LEN=MAXLENPRJ) :: TNAME                             !name of topic
