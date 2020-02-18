@@ -3548,18 +3548,59 @@ DOLOOP: DO
 ! END FUNCTION UTL_POLYGON1AREA
 
  !###======================================================================
- SUBROUTINE UTL_STDEF(X,N,NODATA,VAR,XT,NPOP)
+ REAL(KIND=DP_KIND) FUNCTION UTL_GETGAMMA(X1,Y1,X2,Y2,RANGE,C1,C0,KTYPE)  !c1=sill-nugget c0=nugget
+ !###======================================================================
+ IMPLICIT NONE
+ INTEGER,INTENT(IN) :: KTYPE
+ REAL(KIND=DP_KIND),INTENT(IN) :: X1,Y1,X2,Y2,RANGE,C1,C0
+ REAL(KIND=DP_KIND) :: DXY,H
+ 
+ DXY=UTL_DIST(X1,Y1,X2,Y2)
+ 
+ IF(DXY.GE.RANGE)THEN
+  UTL_GETGAMMA=C1; RETURN
+!  H=0.999D0 
+ ELSE
+
+  !## no part of kriging, beyond given range, equal to sill
+  SELECT CASE (ABS(KTYPE))
+   CASE (1) !## linear
+    H=DXY/RANGE
+   CASE (2) !## spherical = OKAY
+    H=(3.0D0*DXY)/(2.0D0*RANGE)-((DXY**3.0D0)/(2.0D0*RANGE**3.0D0))
+!    H=(3.0D0*DXY)/(2.0D0*RANGE)-(0.5D0*(DXY/RANGE)**3.0D0)
+   CASE (3) !## exponential
+    H=1.0D0-10.0D0**(-3.0D0*DXY/RANGE)
+!    H=1.0D0-EXP((-3.0D0*DXY)/RANGE)
+!    H=1.0D0-EXP(-3.0D0*(DXY/RANGE))
+   CASE (4) !## gaussian
+    H=1.0D0-10.0D0**(-3.0D0*(DXY**2.0D0)/(RANGE**2.0D0))
+!    H=1.0D0-EXP(-3.0D0*(DXY**2.0D0)/(RANGE**2.0D0))
+   CASE (5) !## power
+    H=DXY**0.5D0
+   CASE DEFAULT
+    WRITE(*,*) 'UNKNOWN KTYPE',KTYPE; PAUSE; STOP
+  END SELECT
+ ENDIF
+ 
+ UTL_GETGAMMA=(C1-C0)*H+C0
+! KRIGING_GETGAMMA=C0+C1*H
+ 
+ END FUNCTION UTL_GETGAMMA
+ 
+ !###======================================================================
+ SUBROUTINE UTL_STDEF(X,N,NODATA,STDEV,XT,NPOP)
  !###======================================================================
  IMPLICIT NONE
  INTEGER,INTENT(IN) :: N
  INTEGER,INTENT(OUT) :: NPOP
  REAL(KIND=DP_KIND),DIMENSION(N),INTENT(IN) :: X
  REAL(KIND=DP_KIND),INTENT(IN) :: NODATA
- REAL(KIND=DP_KIND),INTENT(OUT) :: XT,VAR
+ REAL(KIND=DP_KIND),INTENT(OUT) :: XT,STDEV
  INTEGER :: I
  REAL(KIND=DP_KIND) :: XV
 
- VAR=0.0D0
+ STDEV=0.0D0
 
  NPOP=0
  XT=0.0D0
@@ -3570,9 +3611,9 @@ DOLOOP: DO
   ENDIF
  ENDDO
 
- IF(NPOP.LE.0)RETURN
+ IF(NPOP.LT.2)RETURN
 
- XT=XT/REAL(NPOP)
+ XT=XT/DBLE(NPOP)
 
  NPOP=0
  XV=0.0D0
@@ -3584,7 +3625,10 @@ DOLOOP: DO
  END DO
 
  IF(XV.LE.0.0D0)RETURN
- VAR=SQRT(XV/REAL(NPOP))
+ !## sample standard deviation
+ STDEV=SQRT(XV/DBLE(NPOP-1))
+ !## population standard deviation
+ ! VAR=SQRT(XV/REAL(NPOP))
 
  END SUBROUTINE UTL_STDEF
 
