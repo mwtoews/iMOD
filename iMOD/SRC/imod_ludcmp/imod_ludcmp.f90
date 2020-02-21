@@ -524,13 +524,14 @@ CONTAINS
  END SUBROUTINE LUDCMP_GETLU
  
  !###====================================================================
- SUBROUTINE LUDCMP_SVD_MAIN(SPACEDIM,TIMEDIM,MAXDIM,A,W,V) 
+ SUBROUTINE LUDCMP_SVD_MAIN(SPACEDIM,TIMEDIM,MAXDIM,A,U,W,V) 
  !###====================================================================
  IMPLICIT NONE
  INTEGER :: SPACEDIM,TIMEDIM,MAXDIM
- REAL(KIND=DP_KIND),DIMENSION(TIMEDIM,SPACEDIM) :: A   !v
- REAL(KIND=DP_KIND),DIMENSION(MAXDIM) :: W
- REAL(KIND=DP_KIND),DIMENSION(SPACEDIM,SPACEDIM) :: V  !u
+ REAL(KIND=DP_KIND),INTENT(IN),DIMENSION(TIMEDIM,SPACEDIM) :: A
+ REAL(KIND=DP_KIND),INTENT(OUT),DIMENSION(TIMEDIM,SPACEDIM) :: V
+ REAL(KIND=DP_KIND),INTENT(OUT),DIMENSION(MAXDIM) :: W
+ REAL(KIND=DP_KIND),INTENT(OUT),DIMENSION(SPACEDIM,SPACEDIM) :: U
  INTEGER :: MINDIM,M,N,Q,I,J,PASS
  REAL(KIND=DP_KIND) :: TEMP1
  REAL(KIND=DP_KIND),DIMENSION(TIMEDIM) :: TEMP2 
@@ -556,8 +557,6 @@ CONTAINS
 !c
 !c
 
- !###  mindim is the smaller of timedim or spacedim
- MINDIM=MIN(TIMEDIM,SPACEDIM)
 ! !###  maxdim is the larger of timedim or spacedim
 ! MAXDIM=MAX(TIMEDIM,SPACEDIM)
 
@@ -573,101 +572,43 @@ CONTAINS
 !c 
 !c  temp arrays used for data sorting
 
-
-! integer m,n,q,i,j,pass
-
-
-!c Input and output files
-
-
- !open (10,file='Aarray.bin',
- !    + form='unformatted', access='direct', 
- !    + recl=4*spacedim*timedim)
-
-! open (11,file='Uarray.bin',
-!     + form='unformatted', access='direct', 
-!     + recl=4*timedim*timedim)
-
-! open (12,file='Varray.bin',
-!     + form='unformatted', access='direct', 
-!     + recl=4*spacedim*spacedim)
-
-! open (13, file='Sigmavalues.asci',
-!     + form='formatted')
-
-
-
-! Read in data (AT array)
-
-! read(10,rec=1) ((at(j,i),j=1,spacedim),i=1,timedim)
-
- n=spacedim
- m=timedim
-
-
-!c Transpose data so it is in the form time-space
-
-! do j=1,n
-!   do i=1,m
-!      a(i,j)=at(j,i)
-!   end do
-! end do
-
-! Call SVDcmp subroutine
-
-! print*, 'To svdcmp'
-
- call LUDCMP_svdcmp(a,timedim,spacedim,maxdim,w,v)
-  
-! print*, 'Exit svdcmp'
-
+ !## call svdcmp subroutine
+ V=A
+ CALL LUDCMP_SVDCMP(V,TIMEDIM,SPACEDIM,MAXDIM,W,U)
 
 !###  Sort the data from highest to lowest eigenvalue
 !###  Null space excluded
 
- q=mindim
+ !###  mindim is the smaller of timedim or spacedim
+ MINDIM=MIN(TIMEDIM,SPACEDIM)
 
- do pass=1,q
-   do j=1,(q-pass)
-     if(w(j).le.w(j+1)) then
-  temp1=w(j)
-  do i=1,m
-    temp2(i)=a(i,j)
-  end do
-  do i=1,n
-    temp3(i)=v(i,j)
-  end do
-  w(j)=w(j+1)
-  do i=1,m
-    a(i,j)=a(i,j+1)
-  end do
-  do i=1,n
-    v(i,j)=v(i,j+1)
-  end do
-  w(j+1)=temp1
-  do i=1,m
-    a(i,j+1)=temp2(i)
-  end do
-  do i=1,n
-    v(i,j+1)=temp3(i)
-  end do
-     end if
-   end do
- end do
-
-     
-
-
-!## Output U and V arrays, Singular values
-
-! write(11,rec=1) ((a(i,j),i=1,timedim),j=1,timedim)
-! write(12,rec=1) ((v(i,j),i=1,spacedim),j=1,spacedim)
- 
-! do i=1,q
-!   write(13,*) w(i)
-! end do     
-
-! print*, 'SVD Analysis complete'
+ DO PASS=1,MINDIM
+  DO J=1,(MINDIM-PASS)
+   IF(W(J).LE.W(J+1))THEN
+    TEMP1=W(J)
+    DO I=1,TIMEDIM
+     TEMP2(I)=V(I,J)
+    ENDDO
+    DO I=1,SPACEDIM
+     TEMP3(I)=U(I,J)
+    ENDDO
+    W(J)=W(J+1)
+    DO I=1,TIMEDIM
+     V(I,J)=V(I,J+1)
+    ENDDO
+    DO I=1,SPACEDIM
+     U(I,J)=U(I,J+1)
+    ENDDO
+    W(J+1)=TEMP1
+    DO I=1,TIMEDIM
+     V(I,J+1)=TEMP2(I)
+    ENDDO
+    DO I=1,SPACEDIM
+     U(I,J+1)=TEMP3(I)
+    ENDDO
+   ENDIF
+  ENDDO
+ ENDDO
 
  END SUBROUTINE LUDCMP_SVD_MAIN
 

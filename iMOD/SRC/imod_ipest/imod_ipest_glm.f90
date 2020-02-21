@@ -2564,7 +2564,7 @@ MAINLOOP: DO
  M=N*PRJNPER 
  
  CALL IPEST_GLM_DEALLOCATEMSR()
- !## number of line-searches (-) and number of gradiens-simulations (+)
+ !## number of line-searches (-) and number of gradients-simulations (+)
  N1=SIZE(RNL); N2=SIZE(RNG)
  ALLOCATE(MSR%DHL(0:N1,M),STAT=IOS); IF(IOS.NE.0)THEN; WRITE(*,'(/A/)') 'CANNOT ALLOCATE MEMORY FOR MSR%DHL';    RETURN; ENDIF
  ALLOCATE(MSR%DHG(N2,M),STAT=IOS);   IF(IOS.NE.0)THEN; WRITE(*,'(/A/)') 'CANNOT ALLOCATE MEMORY FOR MSR%DHG';    RETURN; ENDIF
