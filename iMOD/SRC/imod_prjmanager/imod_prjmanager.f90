@@ -1541,7 +1541,7 @@ CONTAINS
  !## iterative ensemble smoother 
  ELSEIF(PBMAN%IIES.EQ.1)THEN
   
-  CALL IPEST_IES_MAIN(TRIM(DIR),MNAME,IBATCH)
+  CALL IPEST_IES_MAIN(TRIM(DIR),IBATCH)
   
  ELSE
   !## start the batch file - run in the foreground
