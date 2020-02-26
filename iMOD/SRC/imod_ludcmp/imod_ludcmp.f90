@@ -324,7 +324,7 @@ CONTAINS
 !end
 !akk = (akk - s)^(0.5)
 !end]
- !# clean matrix
+ !# clean matrix - delivering upper-triangle
  DO I=1,N
   DO J=1,I-1
    A(J,I)=0.0D0
