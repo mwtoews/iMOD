@@ -33,23 +33,24 @@ if("${CMAKE_BUILD_TYPE}" STREQUAL "Debug")
         # -fpe0
       )
     endif()
-
-    # Common compiler warning flags
-	set(_ifort_diag_disable "8291")
-	# remark #8291: Recommended relationship between field width 'W' and ...
-    if(MSVC)  # Windows
-      set(Fortran_WARN_FLAGS
-        /warn:general
-        /Qdiag-disable:${_ifort_diag_disable}
-      )
-    else()  # Linux / macOS
-      set(Fortran_WARN_FLAGS
-        # -warn general
-        -diag-disable ${_ifort_diag_disable}
-      )
-    endif()
+  endif()
 endif()
 
+# Common compiler warning flags
+if("${CMAKE_Fortran_COMPILER_ID}" STREQUAL "Intel")
+  set(_ifort_diag_disable "8291")
+  # remark #8291: Recommended relationship between field width 'W' and ...
+  if(MSVC)  # Windows
+    set(Fortran_WARN_FLAGS
+      /warn:general
+      /Qdiag-disable:${_ifort_diag_disable}
+    )
+  else()  # Linux / macOS
+    set(Fortran_WARN_FLAGS
+      # -warn general
+      -diag-disable ${_ifort_diag_disable}
+    )
+  endif()
 endif()
 
 add_subdirectory(UTL)
