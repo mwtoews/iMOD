@@ -63,6 +63,33 @@ INTEGER :: NSX,NSY
 
 CONTAINS
 
+ !#####=================================================================
+ SUBROUTINE UTL_MATMUL(A,B,C)
+ !#####=================================================================
+ IMPLICIT NONE
+ REAL(KIND=DP_KIND),DIMENSION(:,:) :: A
+ REAL(KIND=DP_KIND),DIMENSION(:,:) :: B
+ REAL(KIND=DP_KIND),DIMENSION(:,:) :: C
+ INTEGER :: NCA,NRA,NCB,NRB,NCC,NRC,I,J,K
+ 
+ NCA=SIZE(A,1); NRA=SIZE(A,2)
+ NCB=SIZE(B,1); NRB=SIZE(B,2)
+ NCC=SIZE(C,1); NRC=SIZE(C,2)
+ 
+ !## check
+ IF(NCA.NE.NRB)THEN; WRITE(*,*) 'COLUMN DIMENSIONS ARRAY A NEED TO BE EQUAL TO ROWS   ARRAY B'; PAUSE; STOP; ENDIF
+ IF(NRA.NE.NRC)THEN; WRITE(*,*) 'ROWS   DIMENSIONS ARRAY A NEED TO BE EQUAL TO ROWS   ARRAY C'; PAUSE; STOP; ENDIF
+ IF(NCB.NE.NCC)THEN; WRITE(*,*) 'COLUMN DIMENSIONS ARRAY B NEED TO BE EQUAL TO COLUMN ARRAY C'; PAUSE; STOP; ENDIF
+
+ C=0.0D0
+ DO I=1,NCB; DO J=1,NRC
+  DO K=1,NCA
+   C(I,J)=C(I,J)+A(K,J)*B(I,K)
+  ENDDO
+ ENDDO; ENDDO
+ 
+ END SUBROUTINE UTL_MATMUL
+ 
  !###======================================================================
  SUBROUTINE UTL_MF2005_MAXNO(FNAME,NP)
  !###======================================================================

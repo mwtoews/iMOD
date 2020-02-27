@@ -45,6 +45,8 @@ CONTAINS
  CALL LUDCMP_TRED2(A,N,N,V,E)
  !## a are the eigenvectors
  CALL LUDCMP_TQLI(V,E,N,N,A)
+ !## sort eigenvalues
+ CALL LUDCMP_EIGSRT(V,A,N,N) 
 
  DO I=1,N
   V(I)=(V(I)+ABS(V(I)))/2.0D0
