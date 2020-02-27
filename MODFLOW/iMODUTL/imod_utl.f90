@@ -30,7 +30,13 @@ MODULE IMOD_UTL
  REAL(KIND=8) :: A,B
  INTEGER :: IHOR,IVER
  INTEGER,PARAMETER :: NOS=3
- INTEGER, SAVE :: OS = 1                     !## operating system 1=dos,2=linux,3=unix
+#ifdef _WIN32
+ INTEGER, SAVE :: OS = 1                     !## operating system 1=dos
+#elif __linux__
+ INTEGER, SAVE :: OS = 2                     !## operating system 2=linux
+#else
+ INTEGER, SAVE :: OS = 3                     !## operating system 3=unix
+#endif
  CHARACTER(LEN=20),DIMENSION(NOS),SAVE :: OSN
 
  LOGICAL,PARAMETER :: LPWT=.TRUE.    !##   FALSE=USE OLD PWT PACKAGE, TRUE=USE NEW ONE
@@ -2167,7 +2173,6 @@ END SUBROUTINE IMOD_UTL_QKSORT
 ! IF(VOS.EQ.3)OS=1
 ! IF(VOS.EQ.2)OS=2
 ! IF(VOS.EQ.4)OS=2
- OS=1
 
  SELECT CASE (OS)
   !## dos
