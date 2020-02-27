@@ -36,3 +36,8 @@ add_library(iMODUTL ${SOURCE})
 set_property(TARGET iMODUTL
   PROPERTY Fortran_MODULE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
 )
+
+target_compile_options(iMODUTL
+  PRIVATE ${Fortran_WARN_FLAGS}
+  PRIVATE ${Fortran_BUILD_FLAGS}
+)

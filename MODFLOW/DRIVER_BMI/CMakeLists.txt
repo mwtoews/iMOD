@@ -5,16 +5,21 @@ set(SOURCE
   driver_module.f90
 )
 
-add_library(DRIVER_BMI ${SOURCE})
+add_library(driver_bmi ${SOURCE})
 
-target_link_libraries(DRIVER_BMI
-  PUBLIC
+target_link_libraries(driver_bmi
+  PRIVATE
     iMODUTL
-	UTL
+	utl
 )
 
-target_include_directories(DRIVER_BMI
-  PUBLIC
+target_include_directories(driver_bmi
+  PRIVATE
     $<TARGET_PROPERTY:iMODUTL,Fortran_MODULE_DIRECTORY>
-    $<TARGET_PROPERTY:UTL,Fortran_MODULE_DIRECTORY>
+    $<TARGET_PROPERTY:utl,Fortran_MODULE_DIRECTORY>
+)
+
+target_compile_options(driver_bmi
+  PRIVATE ${Fortran_WARN_FLAGS}
+  PRIVATE ${Fortran_BUILD_FLAGS}
 )

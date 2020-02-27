@@ -95,9 +95,14 @@ endif()
 add_library(mf2005 ${SOURCE})
 
 target_link_libraries(mf2005
-  PUBLIC iMODUTL
+  PRIVATE iMODUTL
 )
 
 target_include_directories(mf2005
-  PUBLIC $<TARGET_PROPERTY:iMODUTL,Fortran_MODULE_DIRECTORY>
+  PRIVATE $<TARGET_PROPERTY:iMODUTL,Fortran_MODULE_DIRECTORY>
+)
+
+target_compile_options(mf2005
+  PRIVATE $<$<COMPILE_LANGUAGE:Fortran>:${Fortran_WARN_FLAGS}>
+  PRIVATE $<$<COMPILE_LANGUAGE:Fortran>:${Fortran_BUILD_FLAGS}>
 )

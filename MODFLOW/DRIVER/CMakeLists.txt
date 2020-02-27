@@ -9,14 +9,19 @@ set(SOURCE
 add_executable(driver ${SOURCE})
 
 target_link_libraries(driver
-  PUBLIC
+  PRIVATE
     iMODUTL
 	mf2005
-	UTL
+	utl
 )
 
 target_include_directories(driver
-  PUBLIC
+  PRIVATE
     $<TARGET_PROPERTY:iMODUTL,Fortran_MODULE_DIRECTORY>
-    $<TARGET_PROPERTY:UTL,Fortran_MODULE_DIRECTORY>
+    $<TARGET_PROPERTY:utl,Fortran_MODULE_DIRECTORY>
+)
+
+target_compile_options(driver
+  PRIVATE ${Fortran_WARN_FLAGS}
+  PRIVATE ${Fortran_BUILD_FLAGS}
 )
