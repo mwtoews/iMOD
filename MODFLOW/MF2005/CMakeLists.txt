@@ -1,0 +1,103 @@
+set(SOURCE
+  de47.f
+  gmg7.f.txt
+  gwf2ani3.f
+  gwf2bas7.f
+  gwf2bas7mod.f
+  gwf2bcf7.f
+  gwf2chd7.f
+  gwf2drn7.f
+  gwf2drt7.f
+  gwf2dxc1.f90
+  gwf2dxc1mod.f90
+  gwf2ets7.f
+  gwf2evt7.f
+  gwf2fhb7.f
+  gwf2gag7.f
+  gwf2ghb7.f
+  gwf2hfb7.f
+  gwf2huf7.f
+  gwf2hydmod7.f
+  gwf2ibs7.f
+  gwf2ins1.f
+  gwf2lak7.f
+  gwf2lpf7.f
+  gwf2met1.f
+  gwf2met1mod.f
+  gwf2mnw17.f
+  gwf2mnw27.f
+  gwf2mnw2i7.f
+  gwf2pwt3.f
+  gwf2rch7.f
+  gwf2res7.f
+  gwf2riv7.f
+  gwf2scr7.f
+  gwf2sfr7.f
+  gwf2str7.f
+  gwf2sub7.f
+  gwf2swt7.f
+  gwf2uzf1.f
+  gwf2wel7.f
+  gwfsfrmodule.f
+  gwfuzfmodule.f
+  hufutl7.f
+  imod_isg.f90
+  imod_isg_ifvdl.f90
+  imod_isg_par.f90
+  imod_pest.F90
+  # imod_tseries.f90
+  imod_tseries_mf.f90
+  lmt7.f
+  mf2005_args.f90
+  mf2005_comp.f
+  mf2005_get.f90
+  mf2005_sts.for
+  mhc7.f
+  nogmg.f
+  obs2bas7.f
+  obs2chd7.f
+  obs2drn7.f
+  obs2ghb7.f
+  obs2riv7.f
+  obs2str7.f
+  parutl7.f
+  pcg7.f
+  pcgupksutl7.f
+  pks7.f
+  pks7mod.f
+  pksutl7.f
+  rdrs_fsplit.for
+  rdrs_gcd.for
+  rdrs_lcd.for
+  rdrs_main.for
+  rdrs_mod.for
+  sip7.f
+  sts2.for
+  utl7.f
+  xmdlib_2.f
+  ccfd.h
+  mf2kgmg.h
+  r_vector.h
+  solvers.h
+  r_vector.c
+)
+if(${CMAKE_SYSTEM_NAME} STREQUAL "Linux")
+  set_source_files_properties(
+    gwf2bas7.f
+    gwf2met1.f
+    mf2005_comp.f
+    pks7.f
+    pks7mod.f
+    PROPERTIES COMPILE_FLAGS -cpp
+  )
+endif()
+
+add_library(mf2005 ${SOURCE})
+
+target_link_libraries(mf2005
+  PUBLIC iMODUTL
+)
+
+target_include_directories(mf2005
+  PUBLIC $<TARGET_PROPERTY:iMODUTL,Fortran_MODULE_DIRECTORY>
+)

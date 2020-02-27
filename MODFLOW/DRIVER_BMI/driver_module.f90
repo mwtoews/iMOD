@@ -45,7 +45,7 @@ use pks_imod_utl, only: pks_imod_utl_idfmerge_init, pks_imod_utl_write_idfmergef
 use mod_pest, only: pest1_meteo_metaswap, pest1alpha_metaswap, pest1appendlogfile, pestnext, pestdumpfct, PEST1INIT, PEST1CLOSELOGFILES
 use PESTVAR, only : IUPESTOUT
 use pks_imod_utl, only: pks_imod_utl_iarmwp_xch_read
-use rf2mf_module, only: tDis
+use rf2mf_module, only: dis
 
 implicit none
 
