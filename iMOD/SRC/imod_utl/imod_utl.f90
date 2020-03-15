@@ -6352,6 +6352,7 @@ DOLOOP: DO
  REAL(KIND=DP_KIND) FUNCTION UTL_NASH_SUTCLIFFE(X,Y,N)
  !###====================================================================
  IMPLICIT NONE
+ REAL(KIND=DP_KIND),PARAMETER :: TINYYN=0.01D0
  INTEGER,INTENT(IN) :: N
  REAL(KIND=DP_KIND),INTENT(IN),DIMENSION(N) :: X,Y !## x=head; y=obs
  REAL(KIND=DP_KIND) :: XN,YN,YA
@@ -6365,6 +6366,8 @@ DOLOOP: DO
  XN=0.0D0; DO I=1,N; XN=XN+(Y(I)-X(I))**2.0D0 ; ENDDO
  YN=0.0D0; DO I=1,N; YN=YN+(Y(I)-YA)**2.0D0   ; ENDDO
  
+ !## whenever the computed head is constant in time - assume a small yn
+ IF(YN.EQ.0.0D0)YN=TINYYN
  UTL_NASH_SUTCLIFFE=1.0D0-XN/YN
 
  END FUNCTION UTL_NASH_SUTCLIFFE 

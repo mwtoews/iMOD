@@ -725,7 +725,7 @@ CONTAINS
  !###======================================================================
  IMPLICIT NONE
  INTEGER :: I,IPLOT,IOPT
- CHARACTER(LEN=256),DIMENSION(MXMPLOT) :: ACTIDF   !##which idf is active in manager
+ CHARACTER(LEN=256),DIMENSION(MXMPLOT) :: ACTIDF   !## which idf is active in manager
 
  CALL WDIALOGSELECT(ID_DMANAGERPROPERTIES)
  CALL WDIALOGGETRADIOBUTTON(IDF_RADIO1,IOPT)
