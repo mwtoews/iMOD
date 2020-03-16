@@ -39,9 +39,8 @@ CONTAINS
  IMPLICIT NONE
  INTEGER,INTENT(IN) :: IBATCH
  CHARACTER(LEN=*),INTENT(IN) :: DIR,MNAME
- REAL(KIND=DP_KIND) :: RFIT,F,TNSC
- INTEGER :: I,J,ITER,N,M,IFLAGS,IEXCOD,ITYPE,IGRAD,ILIN,JGRAD,NCPU,IU,NDONE
- TYPE(WIN_MESSAGE) :: MESSAGE
+ REAL(KIND=DP_KIND) :: RFIT,TNSC,LAMBDA
+ INTEGER :: I,J,ITER,N,M,IFLAGS,IEXCOD,IGRAD,ILIN,NCPU,IU,NDONE,IX
  INTEGER,DIMENSION(2) :: IDPROC
  
  PEST%PE_SCALING=PEST%PE_SCALING-1
@@ -65,12 +64,6 @@ CONTAINS
   IUPESTEFFICIENCY=UTL_GETUNIT();  OPEN(IUPESTEFFICIENCY, FILE=TRIM(DIR)//'\IPEST\LOG_PEST_EFFICIENCY.TXT' ,STATUS='UNKNOWN',ACTION='WRITE')
   IUPESTSENSITIVITY=UTL_GETUNIT(); OPEN(IUPESTSENSITIVITY,FILE=TRIM(DIR)//'\IPEST\LOG_PEST_SENSITIVITY.TXT',STATUS='UNKNOWN',ACTION='WRITE')
   IUPESTRUNFILE=UTL_GETUNIT();     OPEN(IUPESTRUNFILE,    FILE=TRIM(DIR)//'\IPEST\LOG_PEST_RUNFILE.TXT'    ,STATUS='UNKNOWN',ACTION='WRITE')
-  IF(LSENS)THEN
-   IUJACOBIAN=UTL_GETUNIT(); OPEN(IUJACOBIAN,FILE=TRIM(DIR)//'\IPEST\LOG_PEST_JACOBIAN.TXT',STATUS='UNKNOWN',ACTION='WRITE')
-  ENDIF
-  IF(PBMAN%PDEBUG.EQ.1)THEN
-   IUPDEBUG=UTL_GETUNIT(); OPEN(IUPDEBUG,FILE=TRIM(DIR)//'\IPEST\log_pest_debug.m',STATUS='UNKNOWN',ACTION='WRITE')
-  ENDIF
   
   WRITE(IUPESTOUT,'(A)') 'Parameters'
   WRITE(IUPESTOUT,'(A2,1X,A5,2(1X,A5),5(1X,A15),3A10,2A15)') 'AC','PTYPE','ILS','IZN','INITIAL','DELTA','MINIMUM','MAXIMUM','FADJ','IGROUP','LTRANS','NODES','ACRONYM','PPRIOR'
@@ -115,11 +108,11 @@ CONTAINS
  !## start optimization cycle
  DO 
 
-!   !## executes on commandtool such that commands alike 'dir' etc. works
-!   IFLAGS=PROCBLOCKED; IF(PBMAN%CMDHIDE.EQ.1)IFLAGS=IFLAGS+PROCSILENT
+   !## executes on commandtool such that commands alike 'dir' etc. works
+   IFLAGS=PROCBLOCKED; IF(PBMAN%CMDHIDE.EQ.1)IFLAGS=IFLAGS+PROCSILENT
 
-  !## executes lamdba-testing on commandtool such that commands alike 'dir' etc. works
-  IFLAGS=0; IF(PBMAN%CMDHIDE.EQ.1)IFLAGS=IFLAGS+PROCSILENT+PROCCMDPROC
+!  !## executes lamdba-testing on commandtool such that commands alike 'dir' etc. works
+!  IFLAGS=0; IF(PBMAN%CMDHIDE.EQ.1)IFLAGS=IFLAGS+PROCSILENT+PROCCMDPROC
 
   !## compute the initial simulation first (number of lamda-tests - initially this is one)
    
@@ -135,12 +128,8 @@ CONTAINS
    ENDIF
    !## run model
    I=WINFOERROR(1); CALL IOSCOMMAND(TRIM(RNL(ILIN)),IFLAGS=IFLAGS,IEXCOD=IEXCOD)
-   IF(WINFOERROR(1).EQ.ERROSCOMMAND)THEN
-    CALL IPEST_GLM_ERROR(IBATCH,'FAILED TO START MODEL L#'//TRIM(ITOS(LPARAM(ILIN)))); RETURN
-   ENDIF
-   IF(IEXCOD.NE.0)THEN
-    CALL IPEST_GLM_ERROR(IBATCH,'ERROR OCCURED RUNNING MODEL L#'//TRIM(ITOS(LPARAM(ILIN)))); RETURN
-   ENDIF
+   IF(WINFOERROR(1).EQ.ERROSCOMMAND)THEN; CALL IPEST_GLM_ERROR(IBATCH,'FAILED TO START MODEL L#'//TRIM(ITOS(LPARAM(ILIN)))); RETURN; ENDIF
+   IF(IEXCOD.NE.0)THEN; CALL IPEST_GLM_ERROR(IBATCH,'ERROR OCCURED RUNNING MODEL L#'//TRIM(ITOS(LPARAM(ILIN)))); RETURN; ENDIF
 
    !## get objective function value
    IF(.NOT.IPEST_GLM_GETJ(DIR,ILIN,LPARAM(ILIN),'L',IBATCH,TNSC))RETURN
@@ -148,11 +137,29 @@ CONTAINS
    FLUSH(IUPESTPROGRESS)
    !## evaluate whether in line-search objective function value is reduced compared to previous objective function value
    IF(MSR%TJ.LE.MSR%PJ)EXIT
-   !## meerdere line-searches tegelijkertijd ---
-   IF(.NOT.IPEST_GLM_UPGRADEVECTOR(0.5D0,.FALSE.,ITER))THEN
-    CALL IPEST_GLM_ERROR(IBATCH,'STOP ERROR IN LINE-SEARCH'); RETURN
-   ENDIF
+!   !## meerdere line-searches tegelijkertijd ---
+!   IF(.NOT.IPEST_GLM_UPGRADEVECTOR(0.5D0,.FALSE.,ITER))THEN
+!    CALL IPEST_GLM_ERROR(IBATCH,'STOP ERROR IN LINE-SEARCH'); RETURN
+!   ENDIF
   ENDDO
+  
+! !## save alphas for history-logging
+! J=0; DO IP1=1,SIZE(PEST%PARAM)
+!  IF(PEST%PARAM(IP1)%PACT.EQ.0)CYCLE
+
+!  IF(PEST%PARAM(IP1)%PLOG.EQ.1)THEN
+!   PEST%PARAM(IP1)%ALPHA_HISTORY(ITER)=EXP(PEST%PARAM(IP1)%ALPHA(1))
+!  ELSE
+!   PEST%PARAM(IP1)%ALPHA_HISTORY(ITER)=PEST%PARAM(IP1)%ALPHA(1)
+!  ENDIF
+  
+!  !## active parameter
+!  IF(PEST%PARAM(IP1)%PACT.EQ.1)THEN
+!   !## store final gradient
+!   J=J+1; U(J)=PEST%PARAM(IP1)%ALPHA(1)-PEST%PARAM(IP1)%ALPHA(2)
+!  ENDIF
+  
+! ENDDO
   
   WRITE(IUPESTOUT,'(/A)') 'Best Residual Value      : '//TRIM(RTOS(MSR%TJ-MSR%RJ,'G',7))
   WRITE(IUPESTOUT,'(A)')  'Best Plausibility Value  : '//TRIM(RTOS(MSR%RJ,'G',7))
@@ -164,6 +171,11 @@ CONTAINS
   WRITE(IUPESTOUT,'( A)') 'Nash Sutcliffe (total)   : '//TRIM(RTOS(RFIT,'G',7))
   WRITE(IUPESTOUT,'( A)') 'Nash Sutcliffe (measures): '//TRIM(RTOS(RFIT,'G',7))
   WRITE(IUPESTOUT,'( A)') 'Number of Observations   : '//TRIM(ITOS(MSR%NOBS))
+
+  !## initial lambda
+  IF(ITER.EQ.0)THEN
+   LAMBDA=MSR%TJ/DBLE(2.0D0*MSR%NOBS); LAMBDA=LOG10(LAMBDA); IX=FLOOR(LAMBDA); LAMBDA=10.0D0**IX
+  ENDIF
 
   WRITE(IUPESTOUT,'(/A/)') '*** Next Outer Iteration ***'
   
@@ -228,7 +240,7 @@ CONTAINS
   ENDDO
   
   !## determine new gradient
-  IF(.NOT.IPEST_GLM_GRADIENT(ITER,IBATCH))EXIT
+  IF(.NOT.IPEST_GLM_GRADIENT(IBATCH,ITER,LAMBDA))EXIT
 
  ENDDO
  CALL WMESSAGETIMER(0); CALL WMESSAGEENABLE(TIMEREXPIRED,0)
@@ -311,6 +323,7 @@ CONTAINS
  
  IF(IBATCH.EQ.1)WRITE(*,'(/A/)') TRIM(TXT)
  IF(IBATCH.EQ.0)CALL WMESSAGEBOX(OKONLY,EXCLAMATIONICON,COMMONOK,TRIM(TXT),'Error')
+ WRITE(IUPESTOUT,'(/A/)') TRIM(TXT)
  
  END SUBROUTINE IPEST_GLM_ERROR
  
@@ -507,7 +520,7 @@ MAINLOOP: DO
  PEST%PARAM(IP)%ALPHA(1)=PEST%PARAM(IP)%PINI !## current  alpha
  PEST%PARAM(IP)%ALPHA(2)=PEST%PARAM(IP)%PINI !## previous alpha
  ALLOCATE(PEST%PARAM(IP)%ALPHA_HISTORY(0:PEST%PE_MXITER)); PEST%PARAM(IP)%ALPHA_HISTORY=0.0D0
- ALLOCATE(PEST%PARAM(IP)%ALPHA_ERROR_VARIANCE(0:PEST%PE_MXITER)); PEST%PARAM(IP)%ALPHA_ERROR_VARIANCE=0.0D0
+! ALLOCATE(PEST%PARAM(IP)%ALPHA_ERROR_VARIANCE(0:PEST%PE_MXITER)); PEST%PARAM(IP)%ALPHA_ERROR_VARIANCE=0.0D0
  N=SIZE(RNG); ALLOCATE(PEST%PARAM(IP)%GALPHA(N)); PEST%PARAM(IP)%GALPHA=0.0D0
  N=SIZE(RNL); ALLOCATE(PEST%PARAM(IP)%LALPHA(N)); PEST%PARAM(IP)%LALPHA=0.0D0
 
@@ -587,7 +600,6 @@ MAINLOOP: DO
  IF(IUPESTSENSITIVITY.GT.0)CLOSE(IUPESTSENSITIVITY); IUPESTSENSITIVITY=0
  IF(IUPESTRUNFILE.GT.0)    CLOSE(IUPESTRUNFILE); IUPESTRUNFILE=0
  IF(IUPESTRESIDUAL.GT.0)   CLOSE(IUPESTRESIDUAL); IUPESTRESIDUAL=0
- IF(IUPDEBUG.GT.0)         CLOSE(IUPDEBUG); IUPDEBUG=0
 
  END SUBROUTINE IPEST_GLM_RESET_PARAMETER
  
@@ -1023,29 +1035,28 @@ MAINLOOP: DO
  !END FUNCTION IPEST_GLM_MONTECARLO
  
  !###====================================================================
- LOGICAL FUNCTION IPEST_GLM_GRADIENT(ITER,IBATCH)
+ LOGICAL FUNCTION IPEST_GLM_GRADIENT(IBATCH,ITER,LAMBDA)
  !###====================================================================
  IMPLICIT NONE
  INTEGER,INTENT(IN) :: ITER,IBATCH
- REAL(KIND=DP_KIND) :: DJ1,DJ2,X,LAMBDA
- REAL(KIND=DP_KIND) :: TS,DF1,EIGWTHRESHOLD,W,DH1,DH2,DP
- INTEGER :: I,II,J,K,NP,MP,IP1,NE,ISING,ITRIES,IBND,IPARAM,IX
+ REAL(KIND=DP_KIND),INTENT(IN) :: LAMBDA
+ REAL(KIND=DP_KIND) :: DJ1,DJ2
+ REAL(KIND=DP_KIND) :: TS,DF1,EIGWTHRESHOLD,W,DH1,DH2,MARQUARDT
+ INTEGER :: I,J,K,NP,IP1,NE,ISING,ILAMBDA,IBND,IPARAM
  INTEGER,ALLOCATABLE,DIMENSION(:) :: INDX,IJAC
  REAL(KIND=DP_KIND) :: P1,P2,PMIN,PMAX
- REAL(KIND=DP_KIND),ALLOCATABLE,DIMENSION(:,:) :: C,JS,P,PT
+ REAL(KIND=DP_KIND),ALLOCATABLE,DIMENSION(:,:) :: JS,P,PT
  REAL(KIND=DP_KIND),ALLOCATABLE,DIMENSION(:) :: N,RU 
- REAL(KIND=DP_KIND),ALLOCATABLE,DIMENSION(:) :: S,DIAG
- REAL(KIND=DP_KIND),ALLOCATABLE,DIMENSION(:,:) :: EIGV,COV,B,M,JAC
+ REAL(KIND=DP_KIND),ALLOCATABLE,DIMENSION(:) :: S
+ REAL(KIND=DP_KIND),ALLOCATABLE,DIMENSION(:,:) :: EIGV,B,M,JAC
  REAL(KIND=DP_KIND),ALLOCATABLE,DIMENSION(:) :: EIGW,JQR
- LOGICAL :: LSCALING,LSVD,LAMBDARESET
+ LOGICAL :: LSVD
 
  IPEST_GLM_GRADIENT=.FALSE.
  
  SELECT CASE (PEST%PE_SCALING)
-  CASE (0); LSCALING=.FALSE.; LSVD=.FALSE.
-  CASE (1); LSCALING=.TRUE.;  LSVD=.FALSE.
-  CASE (2); LSCALING=.TRUE.;  LSVD=.TRUE.
-  CASE (3); LSCALING=.FALSE.; LSVD=.TRUE.
+  CASE (0,1); LSVD=.FALSE.
+  CASE (2,3); LSVD=.TRUE.
  END SELECT
 
  !## sensitivity
@@ -1062,10 +1073,8 @@ MAINLOOP: DO
   ENDDO
  ENDDO
  DO I=1,NP; S(I)=S(I)/DBLE(MSR%NOBS); ENDDO
-
- X=MSR%TJ/DBLE(2.0D0*MSR%NOBS); X=LOG10(X); IX=FLOOR(X); LAMBDA=10.0D0**IX
-
-  !## check linear dependency of dhg()
+ 
+ !## check linear dependency of dhg()
  CALL IPEST_ECHELON_DBL(JAC,IJAC,MSR%NOBS,NP)
  !## remove columns (parameters) that are linear combinations of others
  I=0; DO IPARAM=1,NP; IF(IJAC(IPARAM).EQ.0)I=I+1; S(IPARAM)=DBLE(IJAC(IPARAM))*S(IPARAM); ENDDO
@@ -1074,25 +1083,19 @@ MAINLOOP: DO
  
  TS=SUM(ABS(S)); IPARAM=0; DO I=1,SIZE(PEST%PARAM)
   IF(PEST%PARAM(I)%PACT.NE.1)CYCLE; IPARAM=IPARAM+1; IF(TS.NE.0.0D0)S(IPARAM)=S(IPARAM)/TS
- ENDDO
- S=ABS(S)*100.0D0
+ ENDDO; S=ABS(S)*100.0D0
 
  WRITE(IUPESTSENSITIVITY,'(I10,99999F15.7)') ITER,(S(I),I=1,NP)
 
  !##===================
- !## write down statistics of all parameters prior to the update
+ !## write down statistics of ALL parameters prior to the update
  !##===================
  NP=0; DO I=1,SIZE(PEST%PARAM); IF(PEST%PARAM(I)%PACT.EQ.1)NP=NP+1; ENDDO
  IF(ALLOCATED(JQJ))DEALLOCATE(JQJ);   ALLOCATE(JQJ (NP,NP))
  IF(ALLOCATED(EIGW))DEALLOCATE(EIGW); ALLOCATE(EIGW(NP))
  IF(ALLOCATED(EIGV))DEALLOCATE(EIGV); ALLOCATE(EIGV(NP,NP))
- IF(ALLOCATED(COV ))DEALLOCATE(COV);  ALLOCATE(COV (NP,NP))
- !## write statistics
- CALL IPEST_GLM_JQJ(JQJ,EIGW,EIGV,COV,NP,.TRUE.,0,ISING) !ITRIES)
- !## multiply lateral sensitivities with sensitivities in case pest_niter=0
- IF(ISING.EQ.0)THEN
-  IF(.NOT.IPEST_GLM_WRITESTAT_PERROR(NP,COV,.TRUE.,ITER,IBATCH))THEN; ENDIF
- ENDIF
+ !## write statistics (covariance/correlation)
+ CALL IPEST_GLM_JQJ(IBATCH,MARQUARDT,JQJ,NP,.TRUE.)
  
  !##===================
  
@@ -1118,151 +1121,63 @@ MAINLOOP: DO
 
  !## initiate number of parameters
  NP=0; DO I=1,SIZE(PEST%PARAM); IF(PEST%PARAM(I)%PACT.EQ.1)NP=NP+1; ENDDO
- IF(NP.EQ.0)THEN
-  IF(IBATCH.EQ.1)WRITE(*,'(/A/)') 'ALL PARAMETERS ARE INSENSITIVE, PROCESS STOPPED!'
-  IF(IBATCH.EQ.0)CALL WMESSAGEBOX(OKONLY,EXCLAMATIONICON,COMMONOK,'ALL PARAMETERS ARE INSENSITIVE, PROCESS STOPPED!','Error')
-  RETURN
- ENDIF
+ IF(NP.EQ.0)THEN; CALL IPEST_GLM_ERROR(IBATCH,'ALL PARAMETERS ARE INSENSITIVE, PROCESS STOPPED!'); RETURN; ENDIF
 
- !## find until parameter update within hypersphere of parameters
- !## initiate marquardt as small as possible
- MARQUARDT=0.001D0; ITRIES=0
-! MARQUARDT=LAMBDA/2.0D0
+ !## allocate arrays for current selection
+ NP=0; DO I=1,SIZE(PEST%PARAM); IF(PEST%PARAM(I)%PACT.EQ.1)NP=NP+1; ENDDO
+ IF(NP.EQ.0)THEN; CALL IPEST_GLM_ERROR(IBATCH,'NO PARAMETERS LEFT THAT ARE SENSITIVE, PROCESS STOPPED!'); RETURN; ENDIF
+  
+ IF(ALLOCATED(JQJ))DEALLOCATE(JQJ);   ALLOCATE(JQJ (NP,NP))
+ IF(ALLOCATED(JQR))DEALLOCATE(JQR);   ALLOCATE(JQR (NP))
+ IF(ALLOCATED(U  ))DEALLOCATE(U);     ALLOCATE(U   (NP))
+ IF(ALLOCATED(EIGW))DEALLOCATE(EIGW); ALLOCATE(EIGW(NP))
+ IF(ALLOCATED(EIGV))DEALLOCATE(EIGV); ALLOCATE(EIGV(NP,NP))
+! IF(ALLOCATED(COV ))DEALLOCATE(COV);  ALLOCATE(COV (NP,NP))
+
+ !## construct jTqr (<--- r is residual for current parameter set)
+ JQR=0.0; I=0; IPARAM=0
+ DO IP1=1,SIZE(PEST%PARAM)  !## row
+  
+  IF(ABS(PEST%PARAM(IP1)%PACT).NE.1)CYCLE
+  IPARAM=IPARAM+1; IF(PEST%PARAM(IP1)%PACT.NE.1)CYCLE
+   
+  DF1=PEST%PARAM(IP1)%PDELTA
+  
+  I=I+1
+  DO J=1,MSR%NOBS
+   DH1=MSR%DHG(IPARAM,J); DH2=MSR%DHL(0,J)
+   DJ1=(DH1-DH2)/DF1    ; DJ2=MSR%DHL(0,J)
+   W  =MSR%W(J)
+   JQR(I)=JQR(I)+(DJ1*W*DJ2)
+  ENDDO
+
+ ENDDO
+  
+ !!## add parameter regularisation
+ !IF(PEST%PE_REGULARISATION.EQ.1)THEN
+ ! I=0
+ ! DO IP1=1,SIZE(PEST%PARAM)  !## row
+ !  IF(PEST%PARAM(IP1)%PACT.NE.1)CYCLE
+ !
+ !  I=I+1
+ !  DP=PEST%PARAM(IP1)%ALPHA(2)-PEST%PARAM(IP1)%PPRIOR
+ !  DP=DP*PEST%PE_REGFACTOR
+ !  JQR(I)=JQR(I)+DP
+ !    
+ ! ENDDO
+ !ENDIF
+
  !## compute update vector for lambdas
- DO ITRIES=1,PBMAN%NLINESEARCH
+ DO ILAMBDA=1,PBMAN%NLINESEARCH
   
   !## set marquardt-lambda
-  MARQUARDT=LAMBDA*PBMAN%LAMBDA_TEST(ITRIES)
-  
-!  ITRIES=ITRIES+1
-
-  !## allocate arrays for current selection
-  NP=0; DO I=1,SIZE(PEST%PARAM); IF(PEST%PARAM(I)%PACT.EQ.1)NP=NP+1; ENDDO
-  IF(NP.EQ.0)THEN
-   IF(IBATCH.EQ.1)WRITE(*,'(/A/)') 'NO PARAMETERS LEFT THAT ARE SENSITIVE, PROCESS STOPPED!'
-   IF(IBATCH.EQ.0)CALL WMESSAGEBOX(OKONLY,EXCLAMATIONICON,COMMONOK,'NO PARAMETERS LEFT THAT ARE SENSITIVE, PROCESS STOPPED!','ERROR')
-   RETURN
-  ENDIF
-  
-  IF(ALLOCATED(JQJ))DEALLOCATE(JQJ);   ALLOCATE(JQJ (NP,NP))
-  IF(ALLOCATED(JQR))DEALLOCATE(JQR);   ALLOCATE(JQR (NP))
-  IF(ALLOCATED(U  ))DEALLOCATE(U);     ALLOCATE(U   (NP))
-  IF(ALLOCATED(EIGW))DEALLOCATE(EIGW); ALLOCATE(EIGW(NP))
-  IF(ALLOCATED(EIGV))DEALLOCATE(EIGV); ALLOCATE(EIGV(NP,NP))
-  IF(ALLOCATED(COV ))DEALLOCATE(COV);  ALLOCATE(COV (NP,NP))
-  IF(LSCALING)THEN
-   IF(ALLOCATED(C  ))DEALLOCATE(C);    ALLOCATE(C (NP,NP))
-   IF(ALLOCATED(JS ))DEALLOCATE(JS);   ALLOCATE(JS(NP,MSR%NOBS))
-  ENDIF
+  MARQUARDT=LAMBDA*PBMAN%LAMBDA_TEST(ILAMBDA)
 
   !## construct jqj - normal matrix/hessian
-  CALL IPEST_GLM_JQJ(JQJ,EIGW,EIGV,COV,NP,.FALSE.,ITRIES,ISING) 
-  IF(ISING.EQ.0)THEN
-   !## multiply lateral sensitivities with sensitivities in case pest_niter=0
-   IF(PEST%PE_MXITER.EQ.0)THEN
-    !## print all first time
-    IF(.NOT.IPEST_GLM_WRITESTAT_PERROR(NP,COV,.TRUE. ,ITER,IBATCH))CYCLE
-   ELSE
-    IF(.NOT.IPEST_GLM_WRITESTAT_PERROR(NP,COV,.FALSE.,ITER,IBATCH))CYCLE  
-   ENDIF
-  ENDIF
+  CALL IPEST_GLM_JQJ(IBATCH,MARQUARDT,JQJ,NP,.FALSE.) 
+  !## add eigenvalue decomposition
+  CALL IPEST_GLM_EIGDECOM(IBATCH,JQJ,EIGW,EIGV,NP,.TRUE.) 
   
-  !## construct jTqr (<--- r is residual for current parameter set)
-  JQR=0.0; I=0; IPARAM=0
-  DO IP1=1,SIZE(PEST%PARAM)  !## row
-  
-   IF(ABS(PEST%PARAM(IP1)%PACT).NE.1)CYCLE
-   IPARAM=IPARAM+1; IF(PEST%PARAM(IP1)%PACT.NE.1)CYCLE
-   
-   DF1=PEST%PARAM(IP1)%PDELTA
-  
-   I=I+1
-   DO J=1,MSR%NOBS
-    DH1=MSR%DHG(IPARAM,J); DH2=MSR%DHL(0,J)
-    DJ1=(DH1-DH2)/DF1    ; DJ2=MSR%DHL(0,J)
-    W  =MSR%W(J)
-    JQR(I)=JQR(I)+(DJ1*W*DJ2)
-   ENDDO
-
-  ENDDO
-  
-  !## add parameter regularisation
-  IF(PEST%PE_REGULARISATION.EQ.1)THEN
-   I=0
-   DO IP1=1,SIZE(PEST%PARAM)  !## row
-    IF(PEST%PARAM(IP1)%PACT.NE.1)CYCLE
-
-    I=I+1
-    DP=PEST%PARAM(IP1)%ALPHA(2)-PEST%PARAM(IP1)%PPRIOR
-    DP=DP*PEST%PE_REGFACTOR
-    JQR(I)=JQR(I)+DP
-     
-   ENDDO
-  ENDIF
-
-  IF(.NOT.LSCALING)THEN
-
-   !## levenberg-marquardt
-!   DO I=1,NP; JQJ(I,I)=JQJ(I,I)+MARQUARDT*JQJ(I,I); ENDDO
-!   DO I=1,NP; JQJ(I,I)=JQJ(I,I)+MARQUARDT*COV(I,I); ENDDO
-
-  !## apply scaling
-  ELSE
-
-   !## compute scaling matrix
-   C=0.0D0; DO I=1,NP; C(I,I)=1.0/SQRT(JQJ(I,I)); ENDDO
-
-   !## construct JS matrix, scaled
-   JS=0.0D0
-   DO I=1,MSR%NOBS    !## row
-    J=0; IPARAM=0
-    DO IP1=1,SIZE(PEST%PARAM)
-
-     IF(ABS(PEST%PARAM(IP1)%PACT).NE.1)CYCLE
-     IPARAM=IPARAM+1; IF(PEST%PARAM(IP1)%PACT.NE.1)CYCLE
-
-     DF1=PEST%PARAM(IP1)%PDELTA
-     J=J+1
-     DH1=MSR%DHG(IPARAM,I); DH2=MSR%DHL(0,I)
-     DJ1=(DH1-DH2)/DF1
-     JS(J,I)=JS(J,I)+DJ1*C(J,J)
-    ENDDO
-   ENDDO
-
-   !## construct JS-Q-JS - scaled normal matrix
-   JQJ=0.0
-   DO I=1,NP     !## row
-    DO J=1,NP    !## column
-     DO II=1,MSR%NOBS
-      DJ1=JS(I,II); DJ2=JS(J,II); W=MSR%W(II)
-      JQJ(J,I)=JQJ(J,I)+(DJ1*W*DJ2)
-     ENDDO
-    ENDDO
-   ENDDO
-
-   !## construct jTqr (<--- r is residual for current parameter set)
-   JQR=0.0; I=0
-   DO IP1=1,SIZE(PEST%PARAM)  !## row
-    IF(PEST%PARAM(IP1)%PACT.NE.1)CYCLE
-    I=I+1
-    DO J=1,MSR%NOBS
-     DJ1=JS(I,J); DJ2=MSR%DHL(0,J); W=MSR%W(J)
-     JQR(I)=JQR(I)+(DJ1*W*DJ2)
-    ENDDO
-   ENDDO
-
-   !## add levenberg-marquardt
-!   DO I=1,NP; JQJ(I,I)=JQJ(I,I)+MARQUARDT*C(I,I)**2.0D0; ENDDO
-   ALLOCATE(DIAG(NP)); DO I=1,NP; DIAG(I)=C(I,I)**2.0D0; ENDDO
-   DO I=1,NP
-    DO J=1,NP
-     JQJ(J,I)=JQJ(J,I)+MARQUARDT*DIAG(I)
-    ENDDO
-   ENDDO
-   DEALLOCATE(DIAG)
-
-  ENDIF
-
   !## project on important singular values
   IF(LSVD)THEN
 
@@ -1294,10 +1209,7 @@ MAINLOOP: DO
    IF(ALLOCATED(INDX))DEALLOCATE(INDX); ALLOCATE(INDX(NE))
    IF(ALLOCATED(B   ))DEALLOCATE(B);    ALLOCATE(B   (NE,NE))
    CALL IPEST_LUDECOMP_DBL(M,INDX,NE,ISING)
-   IF(ISING.EQ.1)THEN
-    WRITE(*,'(/A/)') 'Singular matrix after projection on eigenvectors which is rather odd, stopped.'
-    STOP
-   ENDIF
+   IF(ISING.EQ.1)THEN; CALL IPEST_GLM_ERROR(IBATCH,'Singular matrix after projection on eigenvectors which is rather odd, stopped.'); RETURN; ENDIF
    B=0.0D0; DO I=1,NE; B(I,I)=1.0D0; ENDDO
    DO I=1,NE; CALL IPEST_LUBACKSUB_DBL(M,INDX,B(1,I),NE); ENDDO
 
@@ -1323,10 +1235,7 @@ MAINLOOP: DO
     B(1,1)=1.0D0/JQJ(1,1)
    ELSE
     CALL IPEST_LUDECOMP_DBL(JQJ,INDX,NP,ISING)
-    IF(ISING.EQ.1)THEN
-     WRITE(*,'(/A/)') 'Singular matrix,try activating the SVD option to avoid this, stopped.'
-     STOP
-    ENDIF
+    IF(ISING.EQ.1)THEN; CALL IPEST_GLM_ERROR(IBATCH,'Singular matrix,try activating the SVD option to avoid this, stopped.'); RETURN; ENDIF
     B=0.0D0; DO I=1,NP; B(I,I)=1.0D0; ENDDO
     DO I=1,NP; CALL IPEST_LUBACKSUB_DBL(JQJ,INDX,B(1,I),NP); ENDDO
    ENDIF
@@ -1341,67 +1250,34 @@ MAINLOOP: DO
 
   ENDIF
 
-  !## apply scaling
-  IF(LSCALING)THEN
-   DO I=1,NP
-    U(I)=U(I)*C(I,I)
-   ENDDO
-  ENDIF
-
   !## pointing downhill
   U=-1.0D0*U 
 
-  !## within parameter adjust-limits
-  IF(IPEST_GLM_UPGRADEVECTOR(1.0D0,.TRUE.,ITER,LAMBDARESET=LAMBDARESET))THEN 
-   !## check whether number of parameters is equal to the number started this loop with
-   MP=0; DO I=1,SIZE(PEST%PARAM); IF(PEST%PARAM(I)%PACT.EQ.1.AND.PEST%PARAM(I)%PIGROUP.GT.0)MP=MP+1; ENDDO
-   !## nothing changed in number of active parameters
-   IF(MP.EQ.NP)EXIT
-  ENDIF
-  !## reset marquardt lambda
-  IF(LAMBDARESET)THEN
-   MARQUARDT=0.001D0
-  ELSE
-   !## increase marquardt
-   MARQUARDT=MARQUARDT*DAMPINGFACTOR
-  ENDIF
+  !## store gradient update vector in list
+  IF(IPEST_GLM_UPGRADEVECTOR_LAMBDA(ILAMBDA))THEN 
+  ENDIF 
+!  !## within parameter adjust-limits
+!  IF(IPEST_GLM_UPGRADEVECTOR(1.0D0,.TRUE.,ITER,LAMBDARESET=LAMBDARESET))THEN 
+!   !## check whether number of parameters is equal to the number started this loop with
+!   MP=0; DO I=1,SIZE(PEST%PARAM); IF(PEST%PARAM(I)%PACT.EQ.1.AND.PEST%PARAM(I)%PIGROUP.GT.0)MP=MP+1; ENDDO
+!   !## nothing changed in number of active parameters
+!   IF(MP.EQ.NP)EXIT
+!  ENDIF
+!  !## reset marquardt lambda
+!  IF(LAMBDARESET)THEN
+!   MARQUARDT=0.001D0
+!  ELSE
+!   !## increase marquardt
+!   MARQUARDT=MARQUARDT*DAMPINGFACTOR
+!  ENDIF
 
- ENDDO !## marquardt-loop
-
-! !## write statistics
-! CALL IPEST_GLM_JQJ(JQJ,EIGW,EIGV,COV,NP,.FALSE.0.ISING) !.TRUE.,0,ISING) !ITRIES)
-! IF(ISING.EQ.0)THEN
-!  !## multiply lateral sensitivities with sensitivities in case pest_niter=0
-!  IF(.NOT.IPEST_GLM_WRITESTAT_PERROR(NP,COV,.TRUE.,ITER,IBATCH))THEN; ENDIF
-! ENDIF
-! IF(LSENS)CALL PESTWRITESTATISTICS_FOSM(NP,COV)
-
- EIGWTHRESHOLD=0.0 !% explained variance
- WRITE(IUPESTOUT,'(/A10,2A15)') 'NE','EIGW(NE)','EIGWTHRESHOLD'
- DO NE=1,NP
-  EIGWTHRESHOLD=EIGWTHRESHOLD+EIGW(NE); WRITE(IUPESTOUT,'(I10,2F15.7)') NE,EIGW(NE),EIGWTHRESHOLD
-  IF(LSVD.AND.EIGWTHRESHOLD.GT.PBMAN%EIGV)EXIT
- ENDDO
- IF(LSVD)THEN
-  WRITE(IUPESTOUT,'(/A,I5,A/)') 'Used ',NE,' Eigenvalues (<99%) to project on limited number of basisfunctions'
- ELSE
-  WRITE(IUPESTOUT,'(/A)') 'Consider using the SVD-option to ignore tiny eigenvalues to'
-  WRITE(IUPESTOUT,'(A/)') 'make the optimization more robuust, numerically.'
- ENDIF
- 
- WRITE(IUPESTPROGRESS,*)
- WRITE(IUPESTPROGRESS,*) 'Lambda/Damping Marquardt Factor = ',MARQUARDT
- WRITE(IUPESTPROGRESS,*) 'Marquardt Factor large: Gradient-Descent (slow-improvement)'
- WRITE(IUPESTPROGRESS,*) 'Marquardt Factor small: Gauss-Newton (rapid-improvement)'
- 
- IF(LSCALING)WRITE(IUPESTPROGRESS,*) 'Scaling Value = ',MAXVAL(C)
- IF(LSVD)WRITE(IUPESTPROGRESS,*) 'Number of eigenvalues used: ',NE
+ ENDDO !## lambda-test-loop
 
  IF(ALLOCATED(EIGW))DEALLOCATE(EIGW)
  IF(ALLOCATED(EIGV))DEALLOCATE(EIGV)
  IF(ALLOCATED(JQR ))DEALLOCATE(JQR )
  IF(ALLOCATED(S   ))DEALLOCATE(S   )
- IF(ALLOCATED(C   ))DEALLOCATE(C   )
+! IF(ALLOCATED(C   ))DEALLOCATE(C   )
  IF(ALLOCATED(JS  ))DEALLOCATE(JS  )
 
  IPEST_GLM_GRADIENT=.TRUE.
@@ -1429,6 +1305,138 @@ MAINLOOP: DO
  IF(ABS(P1-PMIN).LE.XPBND)IBND=-1; IF(ABS(PMAX-P1).LE.XPBND)IBND= 1
  
  END SUBROUTINE IPEST_GLM_GETBOUNDARY
+ 
+ !###====================================================================
+ LOGICAL FUNCTION IPEST_GLM_UPGRADEVECTOR_LAMBDA(ILAMBDA)
+ !###====================================================================
+ IMPLICIT NONE
+ INTEGER,INTENT(IN) :: ILAMBDA
+ INTEGER :: I,IP1,IP2
+
+ !## exit code
+ IPEST_GLM_UPGRADEVECTOR_LAMBDA=.FALSE.
+
+ !## fill in by default 
+ DO IP1=1,SIZE(PEST%PARAM); PEST%PARAM(IP1)%ALPHA(1)=PEST%PARAM(IP1)%ALPHA(2); ENDDO
+ 
+ I=0; DO IP1=1,SIZE(PEST%PARAM)
+  IF(PEST%PARAM(IP1)%PACT.NE.1)CYCLE
+  I=I+1; DO IP2=1,SIZE(PEST%PARAM)
+   IF(PEST%PARAM(IP1)%PIGROUP.EQ.ABS(PEST%PARAM(IP2)%PIGROUP))THEN
+    PEST%PARAM(IP2)%ALPHA(1)=PEST%PARAM(IP2)%ALPHA(2)+U(I)
+   ENDIF
+  ENDDO
+ ENDDO  
+
+! !## check for size of adjustment
+! DO IP1=1,SIZE(PEST%PARAM)
+!   
+!  !## inactive parameter
+!  IF(PEST%PARAM(IP1)%PACT.NE.1)CYCLE
+!   
+!  !## check size of adjustment
+!  IF(PEST%PARAM(IP1)%PLOG.EQ.1)THEN
+!   F=EXP(PEST%PARAM(IP1)%ALPHA(1))/EXP(PEST%PARAM(IP1)%ALPHA(2))
+!  ELSE
+!   F=    PEST%PARAM(IP1)%ALPHA(1) /    PEST%PARAM(IP1)%ALPHA(2)
+!  ENDIF 
+!
+!!  !## adjustment too large decrease stepsize
+!!  IF(F.LT.1.0D0/PEST%PARAM(IP1)%PINCREASE)THEN
+!!  ELSEIF(F.GT.PEST%PARAM(IP1)%PINCREASE)THEN
+!!  ENDIF
+!
+!  CALL IPEST_GLM_GETBOUNDARY(IP1,IBND,P1,P2,PMIN,PMAX)
+!
+!  !## parameter hits the boundary
+!  IF(IBND.NE.0)THEN
+!   !## hits the same boundary as before - skip it
+!   IF(IBND.EQ.PEST%PARAM(IP1)%IBND)THEN 
+!    !## ignore this parameter (group) for now - reset lambda and search another update vector
+!    PEST%PARAM(IP1)%PACT=-1
+!    LAMBDARESET=.TRUE.; RETURN
+!
+!   ELSE
+!
+!    AF=1.0D0
+!    IF(P1.LT.PMIN)AF=(P2-PMIN)/(P2-P1)
+!    IF(P1.GT.PMAX)AF=(PMAX-P2)/(P1-P2)
+!    !## keep track of minimal adjustment of vector
+!    F=MIN(AF,F)
+!    !## recompute gradient and set this parameter on boundary
+!    IF(F.LT.0.1D0)THEN
+!     G=PEST%PARAM(IP1)%ALPHA(1)-PEST%PARAM(IP1)%ALPHA(2)
+!     G=G*F
+!     PEST%PARAM(IP1)%ALPHA(1)=PEST%PARAM(IP1)%ALPHA(2)+G
+!     PEST%PARAM(IP1)%PACT=-1
+!     LAMBDARESET=.TRUE.; RETURN
+!    ENDIF
+!   ENDIF
+!  ENDIF  
+! ENDDO
+! 
+! !## corrects all gradients with this factor
+! IF(F.LT.1.0D0)THEN
+!   
+!  !## adjust all parameters
+!  DO IP2=1,SIZE(PEST%PARAM) 
+!   IF(PEST%PARAM(IP2)%PACT.NE.1)CYCLE
+!  
+!   G=PEST%PARAM(IP2)%ALPHA(1)-PEST%PARAM(IP2)%ALPHA(2)
+!   G=G*F
+!
+!   !## update parameters
+!   PEST%PARAM(IP2)%ALPHA(1)=PEST%PARAM(IP2)%ALPHA(2)+G
+!  ENDDO
+!
+! ENDIF
+  
+ !## copy gradients to all groups
+ DO IP1=1,SIZE(PEST%PARAM)
+  IF(PEST%PARAM(IP1)%PACT.NE.1)CYCLE
+  DO IP2=1,SIZE(PEST%PARAM)
+   IF(ABS(PEST%PARAM(IP2)%PIGROUP).EQ.PEST%PARAM(IP1)%PIGROUP)PEST%PARAM(IP2)%ALPHA(1)=PEST%PARAM(IP1)%ALPHA(1)
+  ENDDO
+ ENDDO
+ 
+! !## save alphas for history-logging
+! J=0; DO IP1=1,SIZE(PEST%PARAM)
+!  IF(PEST%PARAM(IP1)%PACT.EQ.0)CYCLE
+
+!  IF(PEST%PARAM(IP1)%PLOG.EQ.1)THEN
+!   PEST%PARAM(IP1)%ALPHA_HISTORY(ITER)=EXP(PEST%PARAM(IP1)%ALPHA(1))
+!  ELSE
+!   PEST%PARAM(IP1)%ALPHA_HISTORY(ITER)=PEST%PARAM(IP1)%ALPHA(1)
+!  ENDIF
+  
+!  !## active parameter
+!  IF(PEST%PARAM(IP1)%PACT.EQ.1)THEN
+!   !## store final gradient
+!   J=J+1; U(J)=PEST%PARAM(IP1)%ALPHA(1)-PEST%PARAM(IP1)%ALPHA(2)
+!  ENDIF
+  
+! ENDDO
+
+! WRITE(IUPESTOUT,*) 'final ones'
+! DO I=1,SIZE(PEST%PARAM)
+!  WRITE(IUPESTOUT,'(3I5,1x,2G15.8)') I,PEST%PARAM(I)%PACT,PEST%PARAM(I)%PIGROUP,PEST%PARAM(I)%ALPHA(1),PEST%PARAM(I)%ALPHA(2)
+! ENDDO
+! WRITE(IUPESTOUT,*) 
+! FLUSH(IUPESTOUT)
+ 
+ !## copy alphas to correct vector with updates per lambda
+ DO IP1=1,SIZE(PEST%PARAM)
+  IF(PEST%PARAM(IP1)%PLOG.EQ.1)THEN
+   PEST%PARAM(IP1)%LALPHA(ILAMBDA)=EXP(PEST%PARAM(IP1)%ALPHA(1))
+  ELSE
+   PEST%PARAM(IP1)%LALPHA(ILAMBDA)=PEST%PARAM(IP1)%ALPHA(1)
+  ENDIF
+ ENDDO
+ 
+ !## correct update gradient found
+ IPEST_GLM_UPGRADEVECTOR_LAMBDA=.TRUE.
+
+ END FUNCTION IPEST_GLM_UPGRADEVECTOR_LAMBDA
  
  !###====================================================================
  LOGICAL FUNCTION IPEST_GLM_UPGRADEVECTOR(FCT,LCHECK,ITER,LAMBDARESET)
@@ -1602,120 +1610,117 @@ MAINLOOP: DO
  
  END FUNCTION IPEST_GLM_UPGRADEVECTOR
  
- !#####=================================================================
- LOGICAL FUNCTION IPEST_GLM_WRITESTAT_PERROR(NP,COV,LPRINT,ITER,IBATCH)
- !#####=================================================================
- IMPLICIT NONE
- REAL(KIND=DP_KIND),PARAMETER :: XBANDW=5.0D0
- INTEGER,INTENT(IN) :: NP,ITER,IBATCH
- REAL(KIND=DP_KIND),INTENT(IN),DIMENSION(NP,NP) :: COV
- LOGICAL,INTENT(IN) :: LPRINT
- INTEGER :: I,J,IP1,IERROR
- REAL(KIND=DP_KIND) :: Z1,Z2,Z,ZW
-! LOGICAL :: LLOG
- 
- IPEST_GLM_WRITESTAT_PERROR=.FALSE.
- 
- !## The asymptotic standard parameter error is a measure of how unexplained variability in the
- !## data propagates to variability in the parameters, and is essentially an error measure for the
- !## parameters. The variance indicates the range over which a parameter value could extend without affecting model fit too adversely.
-
- IF(LPRINT)THEN 
-  WRITE(IUPESTOUT,'(/A)') 'Parameter Variance - Standard Parameter Error (standard deviation)'
-  WRITE(IUPESTOUT,'(A/)')  'Indicates the range over which a parameter value could extend without affecting model fit too much'
- ENDIF
- 
- J=0; IERROR=0
- DO I=1,SIZE(PEST%PARAM)
-  IF(PEST%PARAM(I)%PACT.EQ.1)THEN
-   J=J+1
-   IF(COV(J,J).GT.0.0)THEN 
-    PEST%PARAM(I)%ALPHA_ERROR_VARIANCE(ITER)=SQRT(COV(J,J))
-   ELSE
-    !## error value - should not happen
-    PEST%PARAM(I)%ALPHA_ERROR_VARIANCE(ITER)=-999.99D0 
-    WRITE(IUPESTOUT,*) 'Active Parameter#,',J,' Variance ',COV(J,J)
-    IERROR=IERROR+1
-   ENDIF
-   !## check whether current other parameters belong to this group
-   DO IP1=1,SIZE(PEST%PARAM)
-    !## active and follower of group
-    IF(PEST%PARAM(IP1)%PACT.EQ.2)THEN
-     IF(ABS(PEST%PARAM(IP1)%PIGROUP).EQ.PEST%PARAM(I)%PIGROUP)THEN
-      PEST%PARAM(IP1)%ALPHA_ERROR_VARIANCE(ITER)=PEST%PARAM(I)%ALPHA_ERROR_VARIANCE(ITER)
-     ENDIF
-    ENDIF
-   ENDDO
-  ENDIF
- ENDDO
- 
- IF(IERROR.GT.0)THEN
-  WRITE(IUPESTOUT,*); WRITE(IUPESTOUT,*) 'Errors (#'//TRIM(ITOS(IERROR))//') found in the Covariance Matrix, check your matrix, might by singular'; WRITE(IUPESTOUT,*)
-  IF(IBATCH.EQ.1)WRITE(*,'(/A/)') 'Errors found in the computation of the Covariance Matrix, check your matrix, might by singular'
-  IF(IBATCH.EQ.0)CALL WMESSAGEBOX(OKONLY,EXCLAMATIONICON,COMMONOK,'Errors found in the computation of the Covariance Matrix, check your matrix, might by singular','Error')
-  RETURN
- ENDIF
- 
- IF(LPRINT)THEN
-  WRITE(IUPESTOUT,*) 'Confidence Limits (96%):'; WRITE(IUPESTOUT,*)
-
-  DO I=1,SIZE(PEST%PARAM)
-   IF(PEST%PARAM(I)%PACT.EQ.1)THEN
-    ZW=PEST%PARAM(I)%ALPHA_ERROR_VARIANCE(ITER)*1.96D0
-    IF(PEST%PARAM(I)%PLOG)THEN
-     Z =EXP(PEST%PARAM(I)%ALPHA(1)) 
-     Z1=TINY(1.0)
-     IF(PEST%PARAM(I)%ALPHA(1)-ZW.LT.LOG(HUGE(1.0)))THEN
-      Z1=EXP(PEST%PARAM(I)%ALPHA(1)-ZW) 
-     ENDIF
-     Z2=HUGE(1.0)
-     IF(PEST%PARAM(I)%ALPHA(1)+ZW.LT.LOG(HUGE(1.0)))THEN
-      Z2=EXP(PEST%PARAM(I)%ALPHA(1)+ZW) 
-     ENDIF
-    ELSE
-     Z= PEST%PARAM(I)%ALPHA(1) 
-     Z1=PEST%PARAM(I)%ALPHA(1)-ZW 
-     Z2=PEST%PARAM(I)%ALPHA(1)+ZW 
-    ENDIF 
-
-    WRITE(BLINE,'(3G15.7)') Z1,Z,Z2
-    IF(PEST%PARAM(I)%ACRONYM.EQ.'')THEN
-     WRITE(IUPESTOUT,'(A2,2I5.5,I3.3,A)') PEST%PARAM(I)%PPARAM,PEST%PARAM(I)%PILS,PEST%PARAM(I)%PIZONE,ABS(PEST%PARAM(I)%PIGROUP),TRIM(BLINE)
-    ELSE
-     WRITE(IUPESTOUT,'(A15,A)') PEST%PARAM(I)%ACRONYM,TRIM(BLINE)
-    ENDIF
-
-!    LLOG=.FALSE.
-!   IF(Z1.NE.0.0.AND.Z2.NE.0.0)THEN
-!    !## ignore parameter with too high of a band for unreliability, turn if off
-!    LLOG=LOG10(Z2)-LOG10(Z1).GT.XBANDW
+! !#####=================================================================
+! LOGICAL FUNCTION IPEST_GLM_WRITESTAT_PERROR(NP,COV,LPRINT,ITER,IBATCH)
+! !#####=================================================================
+! IMPLICIT NONE
+! REAL(KIND=DP_KIND),PARAMETER :: XBANDW=5.0D0
+! INTEGER,INTENT(IN) :: NP,ITER,IBATCH
+! REAL(KIND=DP_KIND),INTENT(IN),DIMENSION(NP,NP) :: COV
+! LOGICAL,INTENT(IN) :: LPRINT
+! INTEGER :: I,J,IP1,IERROR
+! REAL(KIND=DP_KIND) :: Z1,Z2,Z,ZW
+!! LOGICAL :: LLOG
+! 
+! IPEST_GLM_WRITESTAT_PERROR=.FALSE.
+! 
+! !## The asymptotic standard parameter error is a measure of how unexplained variability in the
+! !## data propagates to variability in the parameters, and is essentially an error measure for the
+! !## parameters. The variance indicates the range over which a parameter value could extend without affecting model fit too adversely.
+!
+! IF(LPRINT)THEN 
+!  WRITE(IUPESTOUT,'(/A)') 'Parameter Variance - Standard Parameter Error (standard deviation)'
+!  WRITE(IUPESTOUT,'(A/)')  'Indicates the range over which a parameter value could extend without affecting model fit too much'
+! ENDIF
+! 
+! J=0; IERROR=0
+! DO I=1,SIZE(PEST%PARAM)
+!  IF(PEST%PARAM(I)%PACT.EQ.1)THEN
+!   J=J+1
+!   IF(COV(J,J).GT.0.0)THEN 
+!    PEST%PARAM(I)%ALPHA_ERROR_VARIANCE(ITER)=SQRT(COV(J,J))
 !   ELSE
-!    LLOG=.TRUE.
+!    !## error value - should not happen
+!    PEST%PARAM(I)%ALPHA_ERROR_VARIANCE(ITER)=-999.99D0 
+!    WRITE(IUPESTOUT,*) 'Active Parameter#,',J,' Variance ',COV(J,J)
+!    IERROR=IERROR+1
 !   ENDIF
-!   IF(LLOG)THEN
-!   WRITE(IUPESTOUT,'(/3X,A2,2I5.5,A1,I3.3)') PEST%PARAM(I)%PPARAM,PEST%PARAM(I)%PILS,PEST%PARAM(I)%PIZONE,'-',ABS(PEST%PARAM(I)%PIGROUP)
-!    WRITE(IUPESTOUT,'(A,2G15.7)') 'This parameter too unreliable to estimate: ',Z1,Z2
-!    WRITE(IUPESTOUT,'(A/)') 'Parameter will be turned off for this cycle'
-!    PEST%PARAM(I)%PACT=-1; RETURN
+!   !## check whether current other parameters belong to this group
+!   DO IP1=1,SIZE(PEST%PARAM)
+!    !## active and follower of group
+!    IF(PEST%PARAM(IP1)%PACT.EQ.2)THEN
+!     IF(ABS(PEST%PARAM(IP1)%PIGROUP).EQ.PEST%PARAM(I)%PIGROUP)THEN
+!      PEST%PARAM(IP1)%ALPHA_ERROR_VARIANCE(ITER)=PEST%PARAM(I)%ALPHA_ERROR_VARIANCE(ITER)
+!     ENDIF
+!    ENDIF
+!   ENDDO
+!  ENDIF
+! ENDDO
+! 
+! IF(IERROR.GT.0)THEN
+!  CALL IPEST_GLM_ERROR(IBATCH,'Errors (#'//TRIM(ITOS(IERROR))//') found in the Covariance Matrix, check your matrix, might by singular'); RETURN
+! ENDIF
+! 
+! IF(LPRINT)THEN
+!  WRITE(IUPESTOUT,*) 'Confidence Limits (96%):'; WRITE(IUPESTOUT,*)
+!
+!  DO I=1,SIZE(PEST%PARAM)
+!   IF(PEST%PARAM(I)%PACT.EQ.1)THEN
+!    ZW=PEST%PARAM(I)%ALPHA_ERROR_VARIANCE(ITER)*1.96D0
+!    IF(PEST%PARAM(I)%PLOG)THEN
+!     Z =EXP(PEST%PARAM(I)%ALPHA(1)) 
+!     Z1=TINY(1.0)
+!     IF(PEST%PARAM(I)%ALPHA(1)-ZW.LT.LOG(HUGE(1.0)))THEN
+!      Z1=EXP(PEST%PARAM(I)%ALPHA(1)-ZW) 
+!     ENDIF
+!     Z2=HUGE(1.0)
+!     IF(PEST%PARAM(I)%ALPHA(1)+ZW.LT.LOG(HUGE(1.0)))THEN
+!      Z2=EXP(PEST%PARAM(I)%ALPHA(1)+ZW) 
+!     ENDIF
+!    ELSE
+!     Z= PEST%PARAM(I)%ALPHA(1) 
+!     Z1=PEST%PARAM(I)%ALPHA(1)-ZW 
+!     Z2=PEST%PARAM(I)%ALPHA(1)+ZW 
+!    ENDIF 
+!
+!    WRITE(BLINE,'(3G15.7)') Z1,Z,Z2
+!    IF(PEST%PARAM(I)%ACRONYM.EQ.'')THEN
+!     WRITE(IUPESTOUT,'(A2,2I5.5,I3.3,A)') PEST%PARAM(I)%PPARAM,PEST%PARAM(I)%PILS,PEST%PARAM(I)%PIZONE,ABS(PEST%PARAM(I)%PIGROUP),TRIM(BLINE)
+!    ELSE
+!     WRITE(IUPESTOUT,'(A15,A)') PEST%PARAM(I)%ACRONYM,TRIM(BLINE)
+!    ENDIF
+!
+!!    LLOG=.FALSE.
+!!   IF(Z1.NE.0.0.AND.Z2.NE.0.0)THEN
+!!    !## ignore parameter with too high of a band for unreliability, turn if off
+!!    LLOG=LOG10(Z2)-LOG10(Z1).GT.XBANDW
+!!   ELSE
+!!    LLOG=.TRUE.
+!!   ENDIF
+!!   IF(LLOG)THEN
+!!   WRITE(IUPESTOUT,'(/3X,A2,2I5.5,A1,I3.3)') PEST%PARAM(I)%PPARAM,PEST%PARAM(I)%PILS,PEST%PARAM(I)%PIZONE,'-',ABS(PEST%PARAM(I)%PIGROUP)
+!!    WRITE(IUPESTOUT,'(A,2G15.7)') 'This parameter too unreliable to estimate: ',Z1,Z2
+!!    WRITE(IUPESTOUT,'(A/)') 'Parameter will be turned off for this cycle'
+!!    PEST%PARAM(I)%PACT=-1; RETURN
+!!   ENDIF
+!   
+!!  ELSE
+!!   IF(LPRINT.AND.PEST%PARAM(I)%PACT.EQ.-1)THEN
+!    IF(PEST%PARAM(I)%PACT.EQ.-1)THEN
+!     WRITE(BLINE,'(3A15)') 'Insens.','Insens.','Insens.'
+!     IF(PEST%PARAM(I)%ACRONYM.EQ.'')THEN
+!      WRITE(IUPESTOUT,'(A2,2I5.5,I3.3,A)') PEST%PARAM(I)%PPARAM,PEST%PARAM(I)%PILS,PEST%PARAM(I)%PIZONE,ABS(PEST%PARAM(I)%PIGROUP),TRIM(BLINE)
+!     ELSE
+!      WRITE(IUPESTOUT,'(A15,A)') PEST%PARAM(I)%ACRONYM,TRIM(BLINE)
+!     ENDIF
+!    ENDIF
 !   ENDIF
-   
-!  ELSE
-!   IF(LPRINT.AND.PEST%PARAM(I)%PACT.EQ.-1)THEN
-    IF(PEST%PARAM(I)%PACT.EQ.-1)THEN
-     WRITE(BLINE,'(3A15)') 'Insens.','Insens.','Insens.'
-     IF(PEST%PARAM(I)%ACRONYM.EQ.'')THEN
-      WRITE(IUPESTOUT,'(A2,2I5.5,I3.3,A)') PEST%PARAM(I)%PPARAM,PEST%PARAM(I)%PILS,PEST%PARAM(I)%PIZONE,ABS(PEST%PARAM(I)%PIGROUP),TRIM(BLINE)
-     ELSE
-      WRITE(IUPESTOUT,'(A15,A)') PEST%PARAM(I)%ACRONYM,TRIM(BLINE)
-     ENDIF
-    ENDIF
-   ENDIF
-  ENDDO
- ENDIF
- 
- IPEST_GLM_WRITESTAT_PERROR=.TRUE.
- 
- END FUNCTION IPEST_GLM_WRITESTAT_PERROR
+!  ENDDO
+! ENDIF
+! 
+! IPEST_GLM_WRITESTAT_PERROR=.TRUE.
+! 
+! END FUNCTION IPEST_GLM_WRITESTAT_PERROR
  
  !###====================================================================
  SUBROUTINE IPEST_GLM_ECHOPARAMETERS(GUPDATE,ITER)
@@ -1762,85 +1767,23 @@ MAINLOOP: DO
  END SUBROUTINE IPEST_GLM_ECHOPARAMETERS
  
  !###====================================================================
- SUBROUTINE IPEST_GLM_JQJ(JQJ,EIGW,EIGV,COV,NP,LPRINT,ITRIES,ISING) 
+ SUBROUTINE IPEST_GLM_JQJ(IBATCH,MARQUARDT,JQJ,NP,LCOV) 
  !###====================================================================
  IMPLICIT NONE
  INTEGER,PARAMETER :: PRINTLIMIT=50
- INTEGER,INTENT(IN) :: NP,ITRIES
- INTEGER,INTENT(OUT) :: ISING
- LOGICAL,INTENT(IN) :: LPRINT
- REAL(KIND=DP_KIND),DIMENSION(NP,NP),INTENT(OUT) :: JQJ,EIGV,COV
- REAL(KIND=DP_KIND),DIMENSION(NP),INTENT(OUT) :: EIGW
- REAL(KIND=DP_KIND) :: DET
- INTEGER :: I,J,K,IP1,IP2,II,N,M,IIU,IPARAM,JPARAM,JUPESTOUT
- REAL(KIND=DP_KIND) :: DF1,DF2,DJ1,DJ2,B1,TV,TEV,CB,KAPPA,W,DH1,DH2
+ REAL(KIND=DP_KIND),INTENT(IN) :: MARQUARDT
+ REAL(KIND=DP_KIND),INTENT(OUT),DIMENSION(NP,NP) :: JQJ
+ INTEGER,INTENT(IN) :: NP,IBATCH
+ LOGICAL,INTENT(IN) :: LCOV
+ INTEGER :: I,J,IP1,IP2,II,N,IPARAM,JPARAM,ISING,IERROR
+ REAL(KIND=DP_KIND) :: DF1,DF2,DJ1,DJ2,B1,CB,W,DH1,DH2,ZW,Z,Z1,Z2
  REAL(KIND=DP_KIND),ALLOCATABLE,DIMENSION(:,:) :: B,JQJB
- REAL(KIND=DP_KIND),ALLOCATABLE,DIMENSION(:,:) :: COR
- REAL(KIND=DP_KIND),ALLOCATABLE,DIMENSION(:) :: E,DIAG
+ REAL(KIND=DP_KIND),ALLOCATABLE,DIMENSION(:,:) :: COR,COV
+ REAL(KIND=DP_KIND),ALLOCATABLE,DIMENSION(:) :: DIAG
  INTEGER,ALLOCATABLE,DIMENSION(:) :: INDX
  
- !## if sensisivities need to be computed generate csv file and stop
- IF(LSENS.OR.PBMAN%PDEBUG.EQ.1)THEN
- 
-  IF(LSENS)THEN
-   WRITE(IUJACOBIAN,*) 'POSITIVE numbers means that an INcreasement of the parameter raises the head'
-   WRITE(IUJACOBIAN,*) 'NEGATIVE numbers means that an DEcreasement of the parameter raises the head'
-  ENDIF
-
-  BLINE=''; M=0
-  DO IP1=1,SIZE(PEST%PARAM)
-   IF(PEST%PARAM(IP1)%PACT.NE.1.OR.PEST%PARAM(IP1)%PIGROUP.LE.0)CYCLE
-   IF(LSENS)WRITE(SLINE,'(3X,A2,2I3.3,A1,I3.3,A1)') PEST%PARAM(IP1)%PPARAM,PEST%PARAM(IP1)%PILS, &
-                                                    PEST%PARAM(IP1)%PIZONE,'-',PEST%PARAM(IP1)%PIGROUP,','
-   BLINE=TRIM(BLINE)//TRIM(SLINE); M=M+1
-  ENDDO
-  IF(LSENS)WRITE(IUJACOBIAN,'(4A11,A32,A)') 'X,','Y,','ILAY,','WEIGTH,','LABEL,',TRIM(BLINE)
-  BLINE=''
-  DO IP1=1,SIZE(PEST%PARAM)
-   IF(PEST%PARAM(IP1)%PACT.NE.1.OR.PEST%PARAM(IP1)%PIGROUP.LE.0)CYCLE
-   IF(LSENS)WRITE(SLINE,'(A15,A1)') PEST%PARAM(IP1)%ACRONYM
-   BLINE=TRIM(BLINE)//TRIM(SLINE)
-  ENDDO
-  
-  IF(LSENS)WRITE(IUJACOBIAN,'(76X,A)') TRIM(BLINE)
-  IF(PBMAN%PDEBUG.EQ.1)WRITE(IUPDEBUG,'(/A)') 'JACOBIAN=['
-
-  JQJ=0.0D0
-  DO I=1,MSR%NOBS
-   N=0; IPARAM=0
-   DO IP1=1,SIZE(PEST%PARAM)               
-    
-    IF(ABS(PEST%PARAM(IP1)%PACT).NE.1)CYCLE
-    IPARAM=IPARAM+1; IF(PEST%PARAM(IP1)%PACT.NE.1)CYCLE
-
-    DF1=PEST%PARAM(IP1)%PDELTA
-    DH1=MSR%DHG(IPARAM,I)
-    DH2=MSR%DHL(0,I)
-    DJ1=(DH1-DH2)/DF1
-    N=N+1
-    JQJ(N,1)=DJ1
-    IF(M.GT.1)JQJ(N,2)=JQJ(N,2)+ABS(JQJ(N,1))
-   ENDDO
-   IF(LSENS)WRITE(IUJACOBIAN,'(2(F10.2,A1),I10,A1,F10.2,A,A32,99999(G15.7,A1))') MSR%X(I),',',MSR%Y(I),',',MSR%L(I),',', &
-           MSR%W(I),',',TRIM(MSR%CLABEL(I))//',',(JQJ(J,1),',',J=1,N)
-   IF(PBMAN%PDEBUG.EQ.1)WRITE(IUPDEBUG,'(99999E15.7)') (JQJ(J,1),J=1,N)
-  ENDDO
-
-  IF(LSENS)THEN
-   IF(M.EQ.1)THEN; WRITE(IUJACOBIAN,'(/44X,A32,99999(G15.7,A1))') 'TOTAL,',(ABS(JQJ(J,1)),',',J=1,N)
-   ELSE; WRITE(IUJACOBIAN,'(/44X,A32,99999(G15.7,A1))') 'TOTAL,',(JQJ(J,2),',',J=1,N); ENDIF
-   CLOSE(IUJACOBIAN)
-   STOP
-  ENDIF
-  
-  IF(PBMAN%PDEBUG.EQ.1)WRITE(IUPDEBUG,'(A/)') ']'
-
- ENDIF
- 
- !## save msr%dh() vector per parameter as csv ... to be read in again
- 
  !## construct jqj - NORMAL MATRIX/HESSIAN
- JQJ=0.0; I=0; IPARAM=0
+ JQJ=0.0D0; I=0; IPARAM=0
  DO IP1=1,SIZE(PEST%PARAM)                !## row
 
   IF(ABS(PEST%PARAM(IP1)%PACT).NE.1)CYCLE
@@ -1863,41 +1806,13 @@ MAINLOOP: DO
    ENDDO
   ENDDO
  ENDDO
-
- !## save jacobian
- IF(PBMAN%PDEBUG.EQ.1)THEN
-  WRITE(IUPDEBUG,'(/A,I10/)') 'ITRIES=',ITRIES
-  WRITE(IUPDEBUG,'(A)') 'JQJ=['
-  DO I=1,NP; WRITE(IUPDEBUG,'(99999E15.7)') (JQJ(I,J),J=1,NP); ENDDO
-  WRITE(IUPDEBUG,'(A/)') ']'
-  FLUSH(IUPDEBUG)
-  WRITE(*,'(/A,I10/)') 'WROTE JQJ FOR ITRIES=',ITRIES
-  PAUSE
+ 
+ !## copy jqj to jqjb for covariance - further
+ IF(LCOV)THEN
+  IF(ALLOCATED(JQJB))DEALLOCATE(JQJB); ALLOCATE(JQJB(NP,NP))
+  JQJB=JQJ
  ENDIF
  
-! !## construct covariance on the pilotpoints
-! IF(PEST%PE_REGULARISATION.EQ.1)THEN
-!  CALL PEST_GETQPP(NP,.FALSE.,idf)
-!  JQJ=JQJ+QPP
-! ENDIF
-  
- IF(ALLOCATED(E   ))DEALLOCATE(E);    ALLOCATE(E   (NP))
- IF(ALLOCATED(COR ))DEALLOCATE(COR);  ALLOCATE(COR(NP,NP))
- IF(ALLOCATED(INDX))DEALLOCATE(INDX); ALLOCATE(INDX(NP))
- IF(ALLOCATED(B   ))DEALLOCATE(B);    ALLOCATE(B(NP,NP))
- IF(ALLOCATED(JQJB))DEALLOCATE(JQJB); ALLOCATE(JQJB(NP,NP))
- 
- !## copy jqj to jqjb for covariance
- JQJB=JQJ
-
- !## compute determinant of JQJ
- DET=IPEST_GLM_DET(JQJB,NP)
-
- IF(LPRINT)THEN
-  WRITE(IUPESTOUT,'(/A18,E15.7)') 'Determinant JQJ = ',DET
-  WRITE(IUPESTOUT,'(A/)') 'A small value for the Determinant indicates Singularity of the Matrix'
- ENDIF
-
  !## levenberg-marquardt
  ALLOCATE(DIAG(NP)); DO I=1,NP; DIAG(I)=JQJ(I,I); ENDDO !; DIAG=1.0D0
  DO I=1,NP
@@ -1906,56 +1821,13 @@ MAINLOOP: DO
   ENDDO
  ENDDO
  DEALLOCATE(DIAG)
-! DO I=1,NP; JQJ(I,I)=JQJ(I,I)+MARQUARDT*JQJ(I,I); ENDDO
  
- !## copy jqj to b for eigenvalue decomposition
- B=JQJ
-  
- !## eigenvalue of covariance matrix 
- CALL LUDCMP_TRED2(B,NP,NP,EIGW,E)
- CALL LUDCMP_TQLI(EIGW,E,NP,NP,B)
- CALL LUDCMP_EIGSRT(EIGW,B,NP,NP)
+ IF(.NOT.LCOV)RETURN
 
- IF(LPRINT)WRITE(IUPESTOUT,'(/10X,4A15)') 'Eigenvalues','Sing.Values','Variance','Explained Var.'
- DO I=1,NP; IF(EIGW(I).LE.0.0)EIGW(I)=0.0; ENDDO; TEV=SUM(EIGW)
- TV=0.0D0
- DO I=1,NP
-  TV=TV+(EIGW(I)*100.0D0/TEV)
-  IF(EIGW(I).GT.0.0D0)THEN
-   IF(LPRINT)WRITE(IUPESTOUT,'(I10,4F15.7)') I,EIGW(I),SQRT(EIGW(I)),EIGW(I)*100.0/TEV,TV
-  ELSE
-   IF(LPRINT)WRITE(IUPESTOUT,'(I10,4F15.7)') I,EIGW(I),     EIGW(I) ,EIGW(I)*100.0/TEV,TV
-  ENDIF
- ENDDO
- EIGV= B  
-
- IF(PBMAN%PDEBUG.EQ.1)THEN
-  WRITE(IUPDEBUG,'(/A,I10/)') 'ITRIES=',ITRIES
-  WRITE(IUPDEBUG,'(A)') 'EIGVALUE=['
-  DO I=1,NP; WRITE(IUPDEBUG,'(E15.7)') EIGW(I); ENDDO
-  WRITE(IUPDEBUG,'(A/)') ']'
-  WRITE(IUPDEBUG,'(A)') 'EIGVECTOR=['
-  DO I=1,NP; WRITE(IUPDEBUG,'(99999E15.7)') (EIGV(I,J),J=1,NP); ENDDO
-  WRITE(IUPDEBUG,'(A/)') ']'
-  FLUSH(IUPDEBUG)
-  WRITE(*,'(/A,I10/)') 'WROTE EIGVALUES/EIGVECTOR FOR ITRIES=',ITRIES
-  PAUSE
- ENDIF
-
- IF(SUM(EIGW).LT.0.0D0)THEN
-  WRITE(*,'(/A/)') 'Warning, there is NO information (no eigenvalues) in parameter perturbation'; STOP
- ENDIF
- EIGW=(EIGW*100.0D0)/SUM(EIGW)  
-
- !## condition number
- !## get lowest non-zero
- DO I=NP,1,-1; IF(EIGW(I).GT.0.0D0)EXIT; ENDDO
- KAPPA=SQRT(EIGW(1))/SQRT(EIGW(I))
- IF(LPRINT)THEN
-  WRITE(IUPESTOUT,'(/A,F15.7/)') 'Condition Number (kappa):',LOG(KAPPA)
-  WRITE(IUPESTOUT,'(/A)') '>>> If Kappa > 15, inversion is a concern due to parameters that are highly correlated <<<'
-  WRITE(IUPESTOUT,'(A/)') '>>> If Kappa > 30, inversion is highly questionable due to parameters that are highly correlated <<<'
- ENDIF 
+ IF(ALLOCATED(COR ))DEALLOCATE(COR);  ALLOCATE(COR(NP,NP))
+ IF(ALLOCATED(COV ))DEALLOCATE(COV);  ALLOCATE(COV(NP,NP))
+ IF(ALLOCATED(INDX))DEALLOCATE(INDX); ALLOCATE(INDX(NP))
+ IF(ALLOCATED(B   ))DEALLOCATE(B);    ALLOCATE(B(NP,NP))
 
  !## compute inverse of (JQJB)-1 -> B = covariance matrix
  CALL IPEST_LUDECOMP_DBL(JQJB,INDX,NP,ISING)
@@ -1963,65 +1835,30 @@ MAINLOOP: DO
  IF(ISING.EQ.0)THEN
   B=0.0D0; DO I=1,NP; B(I,I)=1.0D0; ENDDO
   DO I=1,NP; CALL IPEST_LUBACKSUB_DBL(JQJB,INDX,B(1,I),NP); ENDDO
- ELSE
-  !## fake covariance as identity matrix
-  B=0.0D0; DO I=1,NP; B(I,I)=1.0D0; ENDDO
- ENDIF
  
- !## parameter covariance matrix
-  
- N=MAX(1,MSR%NOBS-NP); B1=MSR%TJ/REAL(N,8)
+  !## parameter covariance matrix
+  N=MAX(1,MSR%NOBS-NP); B1=MSR%TJ/REAL(N,8)
+  DO I=1,NP; DO J=1,NP; B(I,J)=B1*B(I,J); ENDDO; ENDDO
 
- DO I=1,NP; DO J=1,NP; B(I,J)=B1*B(I,J); ENDDO; ENDDO
+  WRITE(IUPESTOUT,'(/A/)') 'Parameter Covariance Matrix (m2):'
+  CALL IPEST_GLM_WRITEHEADER('               ',NP,IUPESTOUT)
+  WRITE(IUPESTOUT,'(A)')
 
- IF(LPRINT)THEN
-  DO K=1,2
-   IF(K.EQ.1)IIU=IUPESTOUT 
-   IF(K.EQ.2)THEN
-    !## write covariance 
-    IF(.NOT.LSENS)EXIT
-!    JUPESTOUT=UTL_GETUNIT()
-!    OPEN(JUPESTOUT,FILE=TRIM(ROOT)//CHAR(92)//'PEST'//CHAR(92)//'COVARIANCE_'//TRIM(ITOS(ITER))//'.TXT',STATUS='UNKNOWN',ACTION='WRITE')
-!    IIU=JUPESTOUT 
-!    WRITE(IIU,*) NP
-!    DO J=1,SIZE(PEST%PARAM)
-!     IF(PEST%PARAM(J)%PACT.EQ.1)THEN
-!      WRITE(IIU,'(A2,3I3,A16)') PEST%PARAM(J)%PPARAM,PEST%PARAM(J)%PILS,PEST%PARAM(J)%PIZONE,PEST%PARAM(J)%PIGROUP,PEST%PARAM(J)%ACRONYM
-!     ENDIF
-!    ENDDO
-   ENDIF
-
-   WRITE(IIU,'(/A/)') 'Parameter Covariance Matrix (m2):'
-   CALL IPEST_GLM_WRITEHEADER('               ',NP,IIU)
-   WRITE(IIU,'(A)')
-
-   EXIT
-
-  ENDDO
- ENDIF
-
- I=0
- DO IP1=1,SIZE(PEST%PARAM)
-  IF(PEST%PARAM(IP1)%PACT.EQ.1)THEN
-   I=I+1
-   IF(LPRINT.AND.NP.LT.PRINTLIMIT)THEN
-    IF(PEST%PARAM(IP1)%ACRONYM.EQ.'')THEN
-     WRITE(SLINE,'(A2,2I5.5,I3.3)') PEST%PARAM(IP1)%PPARAM,PEST%PARAM(IP1)%PILS,PEST%PARAM(IP1)%PIZONE,PEST%PARAM(IP1)%PIGROUP
-    ELSE
-     WRITE(SLINE,'(A15)') PEST%PARAM(IP1)%ACRONYM
+  I=0
+  DO IP1=1,SIZE(PEST%PARAM)
+   IF(PEST%PARAM(IP1)%PACT.EQ.1)THEN
+    I=I+1
+    IF(NP.LT.PRINTLIMIT)THEN
+     IF(PEST%PARAM(IP1)%ACRONYM.EQ.'')THEN
+      WRITE(SLINE,'(A2,2I5.5,I3.3)') PEST%PARAM(IP1)%PPARAM,PEST%PARAM(IP1)%PILS,PEST%PARAM(IP1)%PIZONE,PEST%PARAM(IP1)%PIGROUP
+     ELSE
+      WRITE(SLINE,'(A15)') PEST%PARAM(IP1)%ACRONYM
+     ENDIF
+     WRITE(IUPESTOUT,'(A15,99999E15.7)') TRIM(SLINE),(B(I,J),J=1,NP)
     ENDIF
-    DO K=1,2
-     IF(K.EQ.1)IIU=IUPESTOUT 
-     IF(K.EQ.2)IIU=JUPESTOUT 
-     WRITE(IIU,'(A15,99999E15.7)') TRIM(SLINE),(B(I,J),J=1,NP)
-     IF(.NOT.LSENS)EXIT
-    ENDDO
+    DO J=1,NP; COV(I,J)=B(I,J); ENDDO
    ENDIF
-   DO J=1,NP; COV(I,J)=B(I,J); ENDDO
-  ENDIF
- ENDDO
-  
- IF(LPRINT)THEN
+  ENDDO
  
   !## parameter correlation matrix
   IF(NP.LT.PRINTLIMIT)THEN
@@ -2087,15 +1924,154 @@ MAINLOOP: DO
     IF(II.GT.0)WRITE(IUPESTOUT,'(A)') TRIM(BLINE)
    ENDIF  
   ENDDO
- ENDIF 
+  
+  WRITE(IUPESTOUT,'(/A)') 'Parameter Variance - Standard Parameter Error (standard deviation)'
+  WRITE(IUPESTOUT,'(A/)')  'Indicates the range over which a parameter value could extend without affecting model fit too much'
  
- IF(ALLOCATED(E   ))DEALLOCATE(E)
+  J=0; IERROR=0
+  DO I=1,SIZE(PEST%PARAM)
+   IF(PEST%PARAM(I)%PACT.EQ.1)THEN
+    J=J+1
+    IF(COV(J,J).GT.0.0)THEN 
+     PEST%PARAM(I)%ALPHA_ERROR_VARIANCE=SQRT(COV(J,J))
+    ELSE
+     !## error value - should not happen
+     PEST%PARAM(I)%ALPHA_ERROR_VARIANCE=-999.99D0 
+     WRITE(IUPESTOUT,*) 'Active Parameter#,',J,' Variance ',COV(J,J)
+     IERROR=IERROR+1
+    ENDIF
+    !## check whether current other parameters belong to this group
+    DO IP1=1,SIZE(PEST%PARAM)
+     !## active and follower of group
+     IF(PEST%PARAM(IP1)%PACT.EQ.2)THEN
+      IF(ABS(PEST%PARAM(IP1)%PIGROUP).EQ.PEST%PARAM(I)%PIGROUP)THEN
+       PEST%PARAM(IP1)%ALPHA_ERROR_VARIANCE=PEST%PARAM(I)%ALPHA_ERROR_VARIANCE
+      ENDIF
+     ENDIF
+    ENDDO
+   ENDIF
+  ENDDO
+ 
+  IF(IERROR.GT.0)THEN
+   CALL IPEST_GLM_ERROR(IBATCH,'Errors (#'//TRIM(ITOS(IERROR))//') found in the Covariance Matrix, check your matrix, might by singular'); RETURN
+  ENDIF
+ 
+  WRITE(IUPESTOUT,*) 'Confidence Limits (96%):'; WRITE(IUPESTOUT,*)
+
+  DO I=1,SIZE(PEST%PARAM)
+   IF(PEST%PARAM(I)%PACT.EQ.1)THEN
+    ZW=PEST%PARAM(I)%ALPHA_ERROR_VARIANCE*1.96D0
+    IF(PEST%PARAM(I)%PLOG)THEN
+     Z =EXP(PEST%PARAM(I)%ALPHA(1)) 
+     Z1=TINY(1.0)
+     IF(PEST%PARAM(I)%ALPHA(1)-ZW.LT.LOG(HUGE(1.0)))THEN
+      Z1=EXP(PEST%PARAM(I)%ALPHA(1)-ZW) 
+     ENDIF
+     Z2=HUGE(1.0)
+     IF(PEST%PARAM(I)%ALPHA(1)+ZW.LT.LOG(HUGE(1.0)))THEN
+      Z2=EXP(PEST%PARAM(I)%ALPHA(1)+ZW) 
+     ENDIF
+    ELSE
+     Z= PEST%PARAM(I)%ALPHA(1) 
+     Z1=PEST%PARAM(I)%ALPHA(1)-ZW 
+     Z2=PEST%PARAM(I)%ALPHA(1)+ZW 
+    ENDIF 
+
+    WRITE(BLINE,'(3G15.7)') Z1,Z,Z2
+    IF(PEST%PARAM(I)%ACRONYM.EQ.'')THEN
+     WRITE(IUPESTOUT,'(A2,2I5.5,I3.3,A)') PEST%PARAM(I)%PPARAM,PEST%PARAM(I)%PILS,PEST%PARAM(I)%PIZONE,ABS(PEST%PARAM(I)%PIGROUP),TRIM(BLINE)
+    ELSE
+     WRITE(IUPESTOUT,'(A15,A)') PEST%PARAM(I)%ACRONYM,TRIM(BLINE)
+    ENDIF
+
+    IF(PEST%PARAM(I)%PACT.EQ.-1)THEN
+     WRITE(BLINE,'(3A15)') 'Insens.','Insens.','Insens.'
+     IF(PEST%PARAM(I)%ACRONYM.EQ.'')THEN
+      WRITE(IUPESTOUT,'(A2,2I5.5,I3.3,A)') PEST%PARAM(I)%PPARAM,PEST%PARAM(I)%PILS,PEST%PARAM(I)%PIZONE,ABS(PEST%PARAM(I)%PIGROUP),TRIM(BLINE)
+     ELSE
+      WRITE(IUPESTOUT,'(A15,A)') PEST%PARAM(I)%ACRONYM,TRIM(BLINE)
+     ENDIF
+    ENDIF
+   ENDIF
+  ENDDO
+ ELSE
+  CALL IPEST_GLM_ERROR(IBATCH,'Singular matrix, cannot compute covariance matrix: skipped.')
+ ENDIF
+
+ IF(ALLOCATED(COV ))DEALLOCATE(COV)
  IF(ALLOCATED(COR ))DEALLOCATE(COR)
  IF(ALLOCATED(INDX))DEALLOCATE(INDX)
- IF(ALLOCATED(B   ))DEALLOCATE(B)
  IF(ALLOCATED(JQJB))DEALLOCATE(JQJB)
+ IF(ALLOCATED(B))   DEALLOCATE(B)
  
  END SUBROUTINE IPEST_GLM_JQJ
+ 
+ !###====================================================================
+ SUBROUTINE IPEST_GLM_EIGDECOM(IBATCH,JQJ,EIGW,EIGV,NP,LPRINT) 
+ !###====================================================================
+ IMPLICIT NONE
+ INTEGER,INTENT(IN) :: NP,IBATCH
+ LOGICAL,INTENT(IN) :: LPRINT
+ REAL(KIND=DP_KIND),DIMENSION(NP,NP),INTENT(IN) :: JQJ
+ REAL(KIND=DP_KIND),DIMENSION(NP,NP),INTENT(OUT) :: EIGV
+ REAL(KIND=DP_KIND),DIMENSION(NP),INTENT(OUT) :: EIGW
+ REAL(KIND=DP_KIND) :: DET
+ INTEGER :: I
+ REAL(KIND=DP_KIND) :: TV,TEV,KAPPA
+ REAL(KIND=DP_KIND),ALLOCATABLE,DIMENSION(:,:) :: B
+ REAL(KIND=DP_KIND),ALLOCATABLE,DIMENSION(:) :: E
+ 
+ IF(ALLOCATED(E))DEALLOCATE(E); ALLOCATE(E(NP))
+ IF(ALLOCATED(B))DEALLOCATE(B); ALLOCATE(B(NP,NP))
+
+ !## compute determinant of JQJ
+ DET=IPEST_GLM_DET(JQJ,NP)
+
+ IF(LPRINT)THEN
+  WRITE(IUPESTOUT,'(/A18,E15.7)') 'Determinant JQJ+LAMBDA*DIAG(JQJ) = ',DET
+  WRITE(IUPESTOUT,'(A/)') 'A small value for the Determinant indicates Singularity of the Matrix'
+ ENDIF
+
+ !## copy jqj to b for eigenvalue decomposition
+ B=JQJ
+  
+ !## eigenvalue of covariance matrix 
+ CALL LUDCMP_TRED2(B,NP,NP,EIGW,E)
+ CALL LUDCMP_TQLI(EIGW,E,NP,NP,B)
+ CALL LUDCMP_EIGSRT(EIGW,B,NP,NP)
+
+ IF(LPRINT)WRITE(IUPESTOUT,'(/10X,4A15)') 'Eigenvalues','Sing.Values','Variance','Explained Var.'
+ DO I=1,NP; IF(EIGW(I).LE.0.0)EIGW(I)=0.0; ENDDO; TEV=SUM(EIGW)
+ TV=0.0D0
+ DO I=1,NP
+  TV=TV+(EIGW(I)*100.0D0/TEV)
+  IF(EIGW(I).GT.0.0D0)THEN
+   IF(LPRINT)WRITE(IUPESTOUT,'(I10,4F15.7)') I,EIGW(I),SQRT(EIGW(I)),EIGW(I)*100.0/TEV,TV
+  ELSE
+   IF(LPRINT)WRITE(IUPESTOUT,'(I10,4F15.7)') I,EIGW(I),     EIGW(I) ,EIGW(I)*100.0/TEV,TV
+  ENDIF
+ ENDDO
+ EIGV= B  
+
+ IF(SUM(EIGW).LT.0.0D0)THEN
+  CALL IPEST_GLM_ERROR(IBATCH,'Warning, there is NO information (no eigenvalues) in parameter perturbation'); STOP
+ ENDIF
+ EIGW=(EIGW*100.0D0)/SUM(EIGW)  
+
+ !## condition number
+ !## get lowest non-zero
+ DO I=NP,1,-1; IF(EIGW(I).GT.0.0D0)EXIT; ENDDO
+ KAPPA=SQRT(EIGW(1))/SQRT(EIGW(I))
+ IF(LPRINT)THEN
+  WRITE(IUPESTOUT,'(/A,F15.7/)') 'Condition Number (kappa):',LOG(KAPPA)
+  WRITE(IUPESTOUT,'(/A)') '>>> If Kappa > 15, inversion is a concern due to parameters that are highly correlated <<<'
+  WRITE(IUPESTOUT,'(A/)') '>>> If Kappa > 30, inversion is highly questionable due to parameters that are highly correlated <<<'
+ ENDIF 
+ 
+ IF(ALLOCATED(E))DEALLOCATE(E)
+ IF(ALLOCATED(B))DEALLOCATE(B)
+ 
+ END SUBROUTINE IPEST_GLM_EIGDECOM
  
  !###========================================================================
  SUBROUTINE IPEST_GLM_WRITEHEADER(TXT,NP,IU)
