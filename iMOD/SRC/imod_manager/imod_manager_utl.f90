@@ -60,7 +60,7 @@ CONTAINS
  INTEGER,DIMENSION(MAXFILES) :: IU
  REAL(KIND=DP_KIND) :: DR
  CHARACTER(LEN=10000) :: IDFNAME,IDFLIST
- CHARACTER(LEN=256),ALLOCATABLE,DIMENSION(:) :: FNAMES
+ CHARACTER(LEN=256),ALLOCATABLE,DIMENSION(:) :: FNAMES  ! list of file in case multi-file selection mode
  LOGICAL :: LLEG,LGEF
 
  CALL WINDOWSELECT(0)
@@ -79,8 +79,8 @@ CONTAINS
  IF(.NOT.PRESENT(IDFNAMEGIVEN))THEN
   IDFNAME=''
   IF(INETCDF.EQ.0)THEN
-   IF(.NOT.UTL_WSELECTFILE('All Known Files (*.idf;*.mdf;*.ipf;*.isg;*.iff;*.asc;*.gen;*.gef;*.map)'//&
-                    '|*.idf;*.mdf;*.ipf;*.isg;*.iff;*.arr;*.asc;*.gen;*.gef;*.map|'// &
+   IF(.NOT.UTL_WSELECTFILE('All Known Files (*.idf;*.mdf;*.ipf;*.isg;*.iff;*.asc;*.gen;*.gef;*.map;*.csv)'//&
+                    '|*.idf;*.mdf;*.ipf;*.isg;*.iff;*.arr;*.asc;*.gen;*.gef;*.map;*.csv|'// &
                     'iMOD Map (*.idf)|*.idf|'               //&
                     'iMOD Multi Data File (*.mdf)|*.mdf|'   //&
                     'iMOD Pointers (*.ipf)|*.ipf|'          //&
@@ -90,12 +90,13 @@ CONTAINS
                     'ESRI Raster file (*.asc)|*.asc|'       //&
                     'ESRI/iMOD GEN file (*.gen)|*.gen|'   //&
                     'GEF file (*.gef)|*.gef|'               //&
-                    'PC Raster Map file (*.map)|*.map|',      &
+                    'PC Raster Map file (*.map)|*.map|'     //&
+                    'Comma Seperated File (*.csv)|*.csv|',      &
                     LOADDIALOG+MUSTEXIST+PROMPTON+DIRCHANGE+MULTIFILE,IDFNAME,&
-                    'Load iMOD Map (*.idf,*.mdf,*.ipf,*.isg,*.iff,*.asc,*.gen,*.gef,*.map)'))RETURN
+                    'Load iMOD Map (*.idf,*.mdf,*.ipf,*.isg,*.iff,*.asc,*.gen,*.gef,*.map,*.csv)'))RETURN
   ELSEIF(INETCDF.EQ.1)THEN
-   IF(.NOT.UTL_WSELECTFILE('All Known Files (*.idf;*.mdf;*.ipf;*.isg;*.iff;*.nc;*.asc;*.gen;;*.gef;*.map)'//&
-                    '|*.idf;*.mdf;*.ipf;*.isg;*.iff,*.arr;*.nc;*.asc;*.gen;*.gef;*.map|'// &
+   IF(.NOT.UTL_WSELECTFILE('All Known Files (*.idf;*.mdf;*.ipf;*.isg;*.iff;*.nc;*.asc;*.gen;*.gef;*.map;*.csv)'//&
+                    '|*.idf;*.mdf;*.ipf;*.isg;*.iff,*.arr;*.nc;*.asc;*.gen;*.gef;*.map;*.csv|'// &
                     'iMOD Map (*.idf)|*.idf|'               //&
                     'iMOD Multi Data File (*.mdf)|*.mdf|'   //&
                     'iMOD Pointers (*.ipf)|*.ipf|'          //&
@@ -106,9 +107,10 @@ CONTAINS
                     'ESRI Raster file (*.asc)|*.asc|'       //&
                     'ESRI/iMOD GEN file (*.gen)|*.gen|'   //&
                     'GEF file (*.gef)|*.gef|'               //&
-                    'PC Raster Map file (*.map)|*.map|',      &
+                    'PC Raster Map file (*.map)|*.map|'    //&
+                    'Comma Seperated File (*.csv)|*.csv|',      &
                     LOADDIALOG+MUSTEXIST+PROMPTON+DIRCHANGE+MULTIFILE,IDFNAME,&
-                    'Load iMOD Map (*.idf,*.mdf,*.ipf,*.isg,*.iff,*.nc,*.asc,*.gen,*.gef,*.map)'))RETURN
+                    'Load iMOD Map (*.idf,*.mdf,*.ipf,*.isg,*.iff,*.nc,*.asc,*.gen,*.gef,*.map,*.csv)'))RETURN
   ENDIF
  ELSE
   IDFNAME=IDFNAMEGIVEN
@@ -117,6 +119,7 @@ CONTAINS
  CALL UTL_MESSAGEHANDLE(0)
 
  K=INDEX(IDFNAME,CHAR(0))
+ !## count number of iMOD files selected from the window (multi-file selection mode)
  IF(K.GT.0)THEN
   IDFLIST=IDFNAME
   NIDF=0
@@ -138,9 +141,9 @@ CONTAINS
   MP%ISEL=.FALSE.
  ENDIF
 
+ !## convert single variable after multi file selection to file list construction
  ALLOCATE(FNAMES(NIDF))
  DO IDF=1,NIDF
-  !## construct new name in multi-file selection mode
   IF(NIDF.GT.1)THEN
    I=INDEX(IDFLIST,CHAR(0))+1
    DO K=1,IDF-1
@@ -163,7 +166,12 @@ CONTAINS
   FNAMES(IDF)=UTL_CAP(FNAMES(IDF),'U')
  ENDDO
 
+ !## Open iMOD files from CSV file, fill list "FNAMES" from given csv-file
+ I=INDEXNOCASE(IDFNAME,'.',.TRUE.)+1
+ IF(UTL_CAP(IDFNAME(I:I+2),'U').EQ.'CSV') CALL READCSV(IDFNAME,FNAMES,NIDF)
+  
  LGEF=.FALSE.
+ !## Process list of files to be loaded to the iMOD Manager
  DO IDF=1,NIDF
 
   IDFNAME=FNAMES(IDF)

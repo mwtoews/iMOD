@@ -366,6 +366,42 @@ CONTAINS
  END FUNCTION WRITEMDF
 
  !###======================================================================
+ SUBROUTINE READCSV(FNAME,FLIST,NFILES)
+ !###======================================================================
+ IMPLICIT NONE
+ INTEGER,INTENT(OUT) :: NFILES
+ CHARACTER(LEN=*),INTENT(IN) :: FNAME
+ INTEGER :: IOS,I,IU
+ CHARACTER(LEN=256) :: LINE
+ CHARACTER(LEN=256),ALLOCATABLE,DIMENSION(:),INTENT(OUT) :: FLIST  ! list of file in case multi-file selection mode
+ LOGICAL :: LEX
+
+ IU=UTL_GETUNIT(); OPEN(IU,FILE=FNAME,STATUS='OLD',ACTION='READ',IOSTAT=IOS)
+ !## error opening file
+ IF(IOS.NE.0)RETURN
+ 
+ ! get file size
+ DO I=1,2
+  NFILES=0
+  DO
+   READ(IU,'(A)',IOSTAT=IOS) LINE; IF(IOS.NE.0)EXIT
+   ! check each line for iMOD files
+   INQUIRE(FILE=LINE,EXIST=LEX)
+   IF(LEX)THEN
+    NFILES=NFILES+1
+    IF(I.EQ.2) FLIST(NFILES)=UTL_CAP(LINE,'U')
+   ENDIF 
+  ENDDO
+  IF(I.EQ.1)THEN
+    REWIND(IU) ;  ALLOCATE(FLIST(NFILES))
+  ENDIF  
+ ENDDO 
+
+ CLOSE(IU)
+
+ END SUBROUTINE READCSV
+
+ !###======================================================================
  INTEGER FUNCTION UTL_GETUNITMDF(MDFNAME,TSTAT)
  !###======================================================================
  IMPLICIT NONE

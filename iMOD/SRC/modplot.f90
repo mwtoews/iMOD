@@ -117,11 +117,11 @@ INTEGER,DIMENSION(9),SAVE :: IMOVEAX,IMOVESC,IMOVELG
   INTEGER :: DXP,DYP                   !## size of paper (cm)
   REAL(KIND=DP_KIND) :: XMIN,XMAX,YMIN,YMAX       !## coordinates current bitmap (m)
  END TYPE MPWINOBJ
- TYPE(MPLOTOBJ),DIMENSION(MXMPLOT) :: MP
+ TYPE(MPLOTOBJ),DIMENSION(MXMPLOT) :: MP  !## Content iMOD Manager MAP list
  TYPE(MPWINOBJ) :: MPW
  
- INTEGER,DIMENSION(MXMPLOT) :: ACTLIST  !##which idf is selected
- INTEGER,DIMENSION(MXMPLOT) :: DRWLIST  !##which idf is drawn truly
+ INTEGER,DIMENSION(MXMPLOT) :: ACTLIST  !## which idf is selected
+ INTEGER,DIMENSION(MXMPLOT) :: DRWLIST  !## which idf is drawn truly
  INTEGER :: CNCLR    !## COPY purposes
  INTEGER,DIMENSION(MXCLR) :: CRGB     !## COPY purposes
  REAL(KIND=DP_KIND),DIMENSION(0:MXCLR) :: CCLASS   !## COPY purposes
