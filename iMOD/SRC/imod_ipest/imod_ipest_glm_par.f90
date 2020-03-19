@@ -51,7 +51,9 @@ MODULE MOD_IPEST_GLM_PAR
   REAL(KIND=DP_KIND),POINTER,DIMENSION(:,:) :: DHG,DHL   !## head differences
   REAL(KIND=DP_KIND),POINTER,DIMENSION(:) :: DHG_J,DHL_J !## objective function values
   REAL(KIND=DP_KIND),POINTER,DIMENSION(:) :: GOF,NSC     !## goodness-of-fit,nash-sutcliffe
-  REAL(KIND=DP_KIND) :: J,TJ,PJ,RJ,IJ
+  REAL(KIND=DP_KIND),POINTER,DIMENSION(:) :: GOF_H,NSC_H !## history of goodness-of-fit,nash-sutcliffe
+  REAL(KIND=DP_KIND),POINTER,DIMENSION(:) :: TJ_H,RJ_H   !## history of objective function values
+  REAL(KIND=DP_KIND) :: J,TJ,PJ,RJ
   REAL(KIND=DP_KIND),POINTER,DIMENSION(:,:) :: E
   INTEGER :: NOBS
  END TYPE MSROBJ

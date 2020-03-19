@@ -62,7 +62,7 @@ CONTAINS
  WRITE(IUPESTOUT,'(A)') 'Parameters'
  WRITE(IUPESTOUT,'(A2,1X,A5,2(1X,A5),5(1X,A15),3A10,2A15)') 'AC','PTYPE','ILS','IZN','INITIAL','DELTA','MINIMUM','MAXIMUM','FADJ','IGROUP','LTRANS','NODES','ACRONYM','PPRIOR'
   
- DO I=1,SIZE(PEST%PARAM); CALL IPEST_GLM_ECHO_PARAMETERS(I); ENDDO
+ DO I=1,SIZE(PEST%PARAM); CALL IPEST_GLM_ECHO_PARAMETERS(I); ENDDO;  WRITE(IUPESTOUT,*)
   
  WRITE(IUPESTEFFICIENCY,'(5A15)') 'TJ','RMSE','ADJUSTMENTS','CUR_IMPROVEMENT','TOT_IMPROVEMENT'
  WRITE(IUPESTEFFICIENCY,'(5A15)') '(L2)','(L)','(-)','(%)','(%)'
@@ -95,11 +95,14 @@ CONTAINS
    ENDIF
   ELSE
    !## set current dh on correct position
-   DO I=1,MSR%NOBS; MSR%DHL(0,I)=MSR%DHL(1,I); ENDDO; MSR%IJ=MSR%TJ
+   DO I=1,MSR%NOBS; MSR%DHL(0,I)=MSR%DHL(1,I); ENDDO
    WRITE(IUPESTEFFICIENCY,'(2F15.7)') MSR%TJ,REAL(SQRT(MSR%TJ))/REAL(MSR%NOBS,8)
    LAMBDA=MSR%TJ/DBLE(2.0D0*MSR%NOBS); LAMBDA=LOG10(LAMBDA); IX=FLOOR(LAMBDA); LAMBDA=10.0D0**IX
+   MSR%TJ_H(ITER)=MSR%TJ; MSR%RJ_H(ITER)=MSR%RJ; MSR%GOF_H(ITER)=MSR%GOF(1); MSR%NSC_H(ITER)=MSR%NSC(1)
   ENDIF
   
+  CALL IPEST_GLM_ECHOPARAMETERS(IBATCH,ITER)
+
   !## next cycle
   ITER=ITER+1
   
@@ -121,6 +124,21 @@ CONTAINS
  
  END SUBROUTINE IPEST_GLM_MAIN
 
+ !!#####=================================================================
+ !SUBROUTINE IPEST_GLM_WRITE_STATSCYCLE()
+ !!#####=================================================================
+ !IMPLICIT NONE
+ !
+ !WRITE(IUPESTOUT,'(/A)') 'Best Residual Value      : '//TRIM(RTOS(MSR%TJ-MSR%RJ,'G',7))
+ !WRITE(IUPESTOUT,'(A)')  'Best Plausibility Value  : '//TRIM(RTOS(MSR%RJ,'G',7))
+ !WRITE(IUPESTOUT,'(A)')  'Total Objective Value    : '//TRIM(RTOS(MSR%TJ,'G',7))
+ !WRITE(IUPESTOUT,'(A)')  'Mean Objective Value     : '//TRIM(RTOS(MSR%TJ/REAL(MSR%NOBS,8),'G',7))
+ !WRITE(IUPESTOUT,'( A)') 'Goodness of Fit          : '//TRIM(RTOS(MSR%GOF(1),'G',7))
+ !WRITE(IUPESTOUT,'( A)') 'Nash Sutcliffe           : '//TRIM(RTOS(MSR%NSC(1),'G',7))
+ !WRITE(IUPESTOUT,'( A)') 'Number of Observations   : '//TRIM(ITOS(MSR%NOBS))
+ !
+ !END SUBROUTINE IPEST_GLM_WRITE_STATSCYCLE
+ 
  !#####=================================================================
  SUBROUTINE IPEST_GLM_RUNMODELS(IBATCH,RN,RPARAM,RT,DIR,MNAME,ITER,LAMBDA)
  !#####=================================================================
@@ -594,8 +612,8 @@ CONTAINS
  INTEGER,INTENT(IN) :: ITER,IBATCH
  CHARACTER(LEN=*),INTENT(IN) :: DIR
  REAL(KIND=DP_KIND),INTENT(INOUT) :: LAMBDA
- REAL(KIND=DP_KIND) :: F,GUPDATE,MJ,C1,C2,C3
- INTEGER :: I,J,ILOG,IJ
+ REAL(KIND=DP_KIND) :: MJ
+ INTEGER :: I,J,IJ
 
  IPEST_GLM_NEXT=.FALSE.
  
@@ -619,14 +637,6 @@ CONTAINS
  !## update new objective function value to be minimized
  MSR%TJ=MJ
  
- WRITE(IUPESTOUT,'(/A)') 'Best Residual Value      : '//TRIM(RTOS(MSR%TJ-MSR%RJ,'G',7))
- WRITE(IUPESTOUT,'(A)')  'Best Plausibility Value  : '//TRIM(RTOS(MSR%RJ,'G',7))
- WRITE(IUPESTOUT,'(A)')  'Total Objective Value    : '//TRIM(RTOS(MSR%TJ,'G',7))
- WRITE(IUPESTOUT,'(A)')  'Mean Objective Value     : '//TRIM(RTOS(MSR%TJ/REAL(MSR%NOBS,8),'G',7))
- WRITE(IUPESTOUT,'( A)') 'Goodness of Fit          : '//TRIM(RTOS(MSR%GOF(IJ),'G',7))
- WRITE(IUPESTOUT,'( A)') 'Nash Sutcliffe           : '//TRIM(RTOS(MSR%NSC(IJ),'G',7))
- WRITE(IUPESTOUT,'( A)') 'Number of Observations   : '//TRIM(ITOS(MSR%NOBS))
- 
  !## save residuals
  IF(IUPESTRESIDUAL.GT.0)CLOSE(IUPESTRESIDUAL)
  IUPESTRESIDUAL=UTL_GETUNIT(); OPEN(IUPESTRESIDUAL,FILE=TRIM(DIR)//'\IPEST\LOG_PEST_RESIDUAL_'// &
@@ -636,9 +646,11 @@ CONTAINS
  
  !## set current dh on correct position
  DO I=1,MSR%NOBS; MSR%DHL(0,I)=MSR%DHL(IJ,I); ENDDO
+ MSR%GOF(1)=MSR%GOF(IJ); MSR%NSC(1)=MSR%NSC(IJ)
 
- CALL IPEST_GLM_ECHOPARAMETERS(GUPDATE,ITER)
-
+ MSR%GOF_H(ITER)=MSR%GOF(1); MSR%NSC_H(ITER)=MSR%NSC(1)
+ MSR%TJ_H(ITER)=MSR%TJ;      MSR%RJ_H(ITER)=MSR%RJ
+  
  !## update alpha for parameters in same group
  DO I=1,SIZE(PEST%PARAM)
   !## skip inactive parameters
@@ -648,76 +660,6 @@ CONTAINS
   ENDDO
  ENDDO
    
- !## absolute adjustment of parameters
- C1=0.0D0; DO I=1,SIZE(PEST%PARAM)
-  IF(PEST%PARAM(I)%PACT.LT.0)CYCLE
-  IF(PEST%PARAM(I)%PLOG.EQ.1)THEN
-   F=EXP(PEST%PARAM(I)%ALPHA(1))/EXP(PEST%PARAM(I)%ALPHA(2))
-  ELSE
-   F=PEST%PARAM(I)%ALPHA(1)/PEST%PARAM(I)%ALPHA(2)
-  ENDIF 
-  IF(F.LT.1.0)F=1.0D0/F; C1=C1+F
- ENDDO
-
- C2=(1.0D0-MSR%TJ/MSR%PJ)*100.0D0
- C3=(1.0D0-MSR%TJ/MSR%IJ)*100.0D0
- WRITE(IUPESTEFFICIENCY,'(5F15.7)') MSR%TJ,REAL(SQRT(MSR%TJ))/REAL(MSR%NOBS,8),C1,C2,C3
- 
- WRITE(IUPESTRUNFILE,'(/A,I10/)') 'Copy in the runfile, iteration ',ITER
- DO I=1,SIZE(PEST%PARAM)
-  ILOG=PEST%PARAM(I)%PLOG
-  IF(PEST%PARAM(I)%PLOG.EQ.1)THEN
-   WRITE(IUPESTRUNFILE,'(I2,1X,A,1X,2(I5,1X),5(F10.3,1X),I5,1X,I2,1X,A,F10.3)') MIN(1,ABS(PEST%PARAM(I)%PACT)), &  !## iact
-       PEST%PARAM(I)%PPARAM, &         !## ptype
-       PEST%PARAM(I)%PILS, &           !## ilayer/system
-       PEST%PARAM(I)%PIZONE, &         !## zone number
-       EXP(PEST%PARAM(I)%ALPHA(1)), & !## initial value
-       EXP(PEST%PARAM(I)%PDELTA), &    !## finite difference step
-       EXP(PEST%PARAM(I)%PMIN), &      !## minimal value
-       EXP(PEST%PARAM(I)%PMAX),&       !## maximal value
-       PEST%PARAM(I)%PINCREASE,&           !## maximal adjust factor
-       ABS(PEST%PARAM(I)%PIGROUP),&    !## group number
-       ILOG,&                    !## log transformed
-       TRIM(PEST%PARAM(I)%ACRONYM), &
-       EXP(PEST%PARAM(I)%PPRIOR)
-  ELSE
-   WRITE(IUPESTRUNFILE,'(I2,1X,A,1X,2(I5,1X),5(F10.3,1X),I5,1X,I2,1X,A,F10.3)') MIN(1,ABS(PEST%PARAM(I)%PACT)), &  !## iact
-       PEST%PARAM(I)%PPARAM, & !## ptype
-       PEST%PARAM(I)%PILS, &   !## ilayer/system
-       PEST%PARAM(I)%PIZONE, & !## zone number
-       PEST%PARAM(I)%ALPHA(1), &   !## initial value
-       PEST%PARAM(I)%PDELTA, & !## finite difference step
-       PEST%PARAM(I)%PMIN, &   !## minimal value
-       PEST%PARAM(I)%PMAX,&    !## maximal value
-       PEST%PARAM(I)%PINCREASE,&   !## maximal adjust factor
-       ABS(PEST%PARAM(I)%PIGROUP),& !## group number
-       ILOG, &            !## log transformed
-       TRIM(PEST%PARAM(I)%ACRONYM), &
-       PEST%PARAM(I)%PPRIOR
-  ENDIF 
- ENDDO
-
- !## continue ?
- IF(ITER+1.GT.PEST%PE_MXITER)THEN
-  CALL IPEST_GLM_ERROR(IBATCH,'Pest iteration terminated: PEST_ITER (='//TRIM(ITOS(PEST%PE_MXITER))//') = PEST_NITER (='// &
-    TRIM(ITOS(PEST%PE_MXITER))//')'); STOP
- ENDIF
- IF(MSR%TJ.LE.0.0D0)THEN
-  CALL IPEST_GLM_ERROR(IBATCH,'Objective Function <= 0.0 ('//TRIM(RTOS(MSR%TJ,'G',7))//')'); STOP
- ENDIF
- IF(C2.LT.PEST%PE_STOP)THEN
-  CALL IPEST_GLM_ERROR(IBATCH,'Pest iteration terminated decrease objective function ('//TRIM(RTOS(C2,'G',7))// &
-       '%) > PEST_JSTOP ('//TRIM(RTOS(PEST%PE_STOP,'G',7))//'%)'); STOP
- ENDIF
- 
- !## replace old by new parameter values
- PEST%PARAM%ALPHA(2)=PEST%PARAM%ALPHA(1)
- 
- !## next iteration
- WRITE(IUPESTOUT,'(/A/)') ' *** Next Outer Iteration ***'; WRITE(*,'(/A/)') ' *** Next Outer Iteration ***'
- 
- FLUSH(IUPESTOUT); FLUSH(IUPESTPROGRESS); FLUSH(IUPESTEFFICIENCY); FLUSH(IUPESTSENSITIVITY); FLUSH(IUPESTRUNFILE)
-
  IPEST_GLM_NEXT=.TRUE.
  
  END FUNCTION IPEST_GLM_NEXT
@@ -994,7 +936,7 @@ CONTAINS
   U=-1.0D0*U 
 
   !## store gradient update vector in list
-  IF(IPEST_GLM_UPGRADEVECTOR_LAMBDA(ILAMBDA,ITER))THEN 
+  IF(IPEST_GLM_UPGRADEVECTOR_LAMBDA(ILAMBDA))THEN 
   ENDIF 
 !  !## within parameter adjust-limits
 !  IF(IPEST_GLM_UPGRADEVECTOR(1.0D0,.TRUE.,ITER,LAMBDARESET=LAMBDARESET))THEN 
@@ -1013,9 +955,8 @@ CONTAINS
 
  ENDDO !## lambda-test-loop
  
- WRITE(IUPESTOUT,'(70A1)') ('=',I=1,70); WRITE(IUPESTOUT,'(A)') 'End Lambda Testing'; WRITE(IUPESTOUT,'(70A1/)') ('=',I=1,70)
-
  !## print parameters for lambda testing
+ WRITE(IUPESTOUT,'(15X,99A15)') ('LAMBDA'//TRIM(ITOS(J)),J=1,PBMAN%NLINESEARCH)
  WRITE(IUPESTOUT,'(A15,99F15.7)') 'Parameters',(LAMBDA*PBMAN%LAMBDA_TEST(J),J=1,PBMAN%NLINESEARCH)
  WRITE(IUPESTOUT,'(999A1)') ('-',I=1,15*(PBMAN%NLINESEARCH+1))
  DO I=1,SIZE(PEST%PARAM)
@@ -1026,6 +967,9 @@ CONTAINS
    WRITE(IUPESTOUT,'(A15,99F15.7)') PEST%PARAM(I)%ACRONYM,(EXP(PEST%PARAM(I)%LALPHA(J)),J=1,PBMAN%NLINESEARCH)
   ENDIF
  ENDDO
+
+ WRITE(IUPESTOUT,'(/70A1)') ('=',I=1,70); WRITE(IUPESTOUT,'(A)') 'End Lambda Testing'; WRITE(IUPESTOUT,'(70A1/)') ('=',I=1,70)
+
  FLUSH(IUPESTOUT)
  
  IF(ALLOCATED(EIGW))DEALLOCATE(EIGW)
@@ -1061,10 +1005,10 @@ CONTAINS
  END SUBROUTINE IPEST_GLM_GETBOUNDARY
  
  !###====================================================================
- LOGICAL FUNCTION IPEST_GLM_UPGRADEVECTOR_LAMBDA(ILAMBDA,ITER)
+ LOGICAL FUNCTION IPEST_GLM_UPGRADEVECTOR_LAMBDA(ILAMBDA)
  !###====================================================================
  IMPLICIT NONE
- INTEGER,INTENT(IN) :: ILAMBDA,ITER
+ INTEGER,INTENT(IN) :: ILAMBDA
  INTEGER :: I,IP1,IP2
 
  !## exit code
@@ -1151,18 +1095,6 @@ CONTAINS
   DO IP2=1,SIZE(PEST%PARAM)
    IF(ABS(PEST%PARAM(IP2)%PIGROUP).EQ.PEST%PARAM(IP1)%PIGROUP)PEST%PARAM(IP2)%ALPHA(1)=PEST%PARAM(IP1)%ALPHA(1)
   ENDDO
- ENDDO
- 
- !## save alphas for history-logging
- DO IP1=1,SIZE(PEST%PARAM)
-  IF(PEST%PARAM(IP1)%PACT.EQ.0)CYCLE
-
-  IF(PEST%PARAM(IP1)%PLOG.EQ.1)THEN
-   PEST%PARAM(IP1)%ALPHA_HISTORY(ITER)=EXP(PEST%PARAM(IP1)%ALPHA(1))
-  ELSE
-   PEST%PARAM(IP1)%ALPHA_HISTORY(ITER)=PEST%PARAM(IP1)%ALPHA(1)
-  ENDIF
-  
  ENDDO
  
  !## copy alphas to correct vector with updates per lambda
@@ -1348,26 +1280,64 @@ CONTAINS
  END FUNCTION IPEST_GLM_UPGRADEVECTOR
 
  !###====================================================================
- SUBROUTINE IPEST_GLM_ECHOPARAMETERS(GUPDATE,ITER)
+ SUBROUTINE IPEST_GLM_ECHOPARAMETERS(IBATCH,ITER)
  !###====================================================================
  IMPLICIT NONE
- INTEGER,INTENT(IN) :: ITER
- REAL(KIND=DP_KIND),INTENT(OUT) :: GUPDATE
- INTEGER :: IP1,N,I
+ INTEGER,INTENT(IN) :: ITER,IBATCH
+ INTEGER :: IP1,N,I,ILOG
+ REAL(KIND=DP_KIND) :: C1,C2,C3,F
  REAL(KIND=DP_KIND),ALLOCATABLE,DIMENSION(:) :: GRADUPDATE
  
- WRITE(IUPESTOUT,'(/A/)') 'Upgrade Vector Parameter History:'
- WRITE(IUPESTOUT,'(A19,999(A7,I3.3))') 'Parameter',('   ITER',I,I=ITER,0,-1)
- WRITE(IUPESTOUT,'(999A1)') ('-',I=1,19+ITER*10)
+ !## absolute adjustment of parameters
+ C1=0.0D0; DO I=1,SIZE(PEST%PARAM)
+  IF(PEST%PARAM(I)%PACT.LT.0)CYCLE
+  IF(PEST%PARAM(I)%PLOG.EQ.1)THEN
+   F=EXP(PEST%PARAM(I)%ALPHA(1))/EXP(PEST%PARAM(I)%ALPHA(2))
+  ELSE
+   F=PEST%PARAM(I)%ALPHA(1)/PEST%PARAM(I)%ALPHA(2)
+  ENDIF 
+  IF(F.LT.1.0D0)F=1.0D0/F; C1=C1+F
+ ENDDO
+
+ C2=(1.0D0-MSR%TJ/MSR%PJ)*100.0D0
+ C3=(1.0D0-MSR%TJ/MSR%TJ_H(0))*100.0D0
+ WRITE(IUPESTEFFICIENCY,'(5F15.7)') MSR%TJ,REAL(SQRT(MSR%TJ))/REAL(MSR%NOBS,8),C1,C2,C3
+ 
+ !## save alphas for history-logging
+ DO I=1,SIZE(PEST%PARAM)
+  IF(PEST%PARAM(I)%PACT.EQ.0)CYCLE
+
+  IF(PEST%PARAM(I)%PLOG.EQ.1)THEN
+   PEST%PARAM(I)%ALPHA_HISTORY(ITER)=EXP(PEST%PARAM(I)%ALPHA(1))
+  ELSE
+   PEST%PARAM(I)%ALPHA_HISTORY(ITER)=PEST%PARAM(I)%ALPHA(1)
+  ENDIF
   
+ ENDDO
+ 
+ !## replace old by new parameter values
+ PEST%PARAM%ALPHA(2)=PEST%PARAM%ALPHA(1)
+ 
+ WRITE(IUPESTOUT,'(A/)') 'Optimization History:'
+ WRITE(IUPESTOUT,'(A19,999(A7,I3.3))') 'Stastics',('   ITER',I,I=ITER,0,-1)
+ WRITE(IUPESTOUT,'(999A1)') ('-',I=1,19+(ITER+1)*15)
+  
+ WRITE(IUPESTOUT,'(A15,99F15.7)') 'Obj. Func. Val.',(MSR%TJ_H(I),I=ITER,0,-1)
+ WRITE(IUPESTOUT,'(A15,99F15.7)') 'Bst Plaus. Val.',(MSR%RJ_H(I),I=ITER,0,-1)
+ WRITE(IUPESTOUT,'(A15,99F15.7)') 'Goodness of Fit',(MSR%GOF_H(I),I=ITER,0,-1)
+ WRITE(IUPESTOUT,'(A15,99F15.7)') 'Nash Sutcliffe ',(MSR%NSC_H(I),I=ITER,0,-1)
+ 
+ WRITE(IUPESTOUT,'(/A19,999(A7,I3.3))') 'Parameter',('   ITER',I,I=ITER,0,-1)
+ WRITE(IUPESTOUT,'(999A1)') ('-',I=1,19+(ITER+1)*15)
+
  ALLOCATE(GRADUPDATE(ITER)); GRADUPDATE=0.0D0
  N=0
  DO IP1=1,SIZE(PEST%PARAM)
 
-  WRITE(BLINE,'(99(F10.3))') (PEST%PARAM(IP1)%ALPHA_HISTORY(I),I=ITER,0,-1)
+  WRITE(BLINE,'(99(F15.7))') (PEST%PARAM(IP1)%ALPHA_HISTORY(I),I=ITER,0,-1)
   
   IF(ABS(PEST%PARAM(IP1)%PACT).EQ.1.AND.PEST%PARAM(IP1)%PIGROUP.GT.0)THEN
-   WRITE(IUPESTOUT,'(4X,A15,A)') PEST%PARAM(IP1)%ACRONYM,TRIM(BLINE)
+   WRITE(IUPESTOUT,'(A15,A)') PEST%PARAM(IP1)%ACRONYM,TRIM(BLINE)
    N=N+1
    DO I=1,ITER
     GRADUPDATE(I)=GRADUPDATE(I)+(PEST%PARAM(IP1)%ALPHA_HISTORY(I)-PEST%PARAM(IP1)%ALPHA_HISTORY(I-1))**2.0D0
@@ -1377,12 +1347,62 @@ CONTAINS
  ENDDO
  
  GRADUPDATE=SQRT(GRADUPDATE)
- WRITE(BLINE,'(19X,99F10.3)') (GRADUPDATE(I),I=ITER,1,-1)
- WRITE(IUPESTOUT,'(A/)') TRIM(BLINE)
-
- GUPDATE=GRADUPDATE(ITER)
+ WRITE(IUPESTOUT,'(999A1)') ('-',I=1,19+(ITER+1)*15)
+ WRITE(IUPESTOUT,'(A15,99F15.7/)') 'Adjustment',(GRADUPDATE(I),I=ITER,1,-1)
 
  DEALLOCATE(GRADUPDATE)
+
+ WRITE(IUPESTRUNFILE,'(/A,I10/)') 'Copy in the runfile, iteration ',ITER
+ DO I=1,SIZE(PEST%PARAM)
+  ILOG=PEST%PARAM(I)%PLOG
+  IF(PEST%PARAM(I)%PLOG.EQ.1)THEN
+   WRITE(IUPESTRUNFILE,'(I2,1X,A,1X,2(I5,1X),5(F10.3,1X),I5,1X,I2,1X,A,F10.3)') MIN(1,ABS(PEST%PARAM(I)%PACT)), &  !## iact
+       PEST%PARAM(I)%PPARAM, &         !## ptype
+       PEST%PARAM(I)%PILS, &           !## ilayer/system
+       PEST%PARAM(I)%PIZONE, &         !## zone number
+       EXP(PEST%PARAM(I)%ALPHA(1)), & !## initial value
+       EXP(PEST%PARAM(I)%PDELTA), &    !## finite difference step
+       EXP(PEST%PARAM(I)%PMIN), &      !## minimal value
+       EXP(PEST%PARAM(I)%PMAX),&       !## maximal value
+       PEST%PARAM(I)%PINCREASE,&           !## maximal adjust factor
+       ABS(PEST%PARAM(I)%PIGROUP),&    !## group number
+       ILOG,&                    !## log transformed
+       TRIM(PEST%PARAM(I)%ACRONYM), &
+       EXP(PEST%PARAM(I)%PPRIOR)
+  ELSE
+   WRITE(IUPESTRUNFILE,'(I2,1X,A,1X,2(I5,1X),5(F10.3,1X),I5,1X,I2,1X,A,F10.3)') MIN(1,ABS(PEST%PARAM(I)%PACT)), &  !## iact
+       PEST%PARAM(I)%PPARAM, & !## ptype
+       PEST%PARAM(I)%PILS, &   !## ilayer/system
+       PEST%PARAM(I)%PIZONE, & !## zone number
+       PEST%PARAM(I)%ALPHA(1), &   !## initial value
+       PEST%PARAM(I)%PDELTA, & !## finite difference step
+       PEST%PARAM(I)%PMIN, &   !## minimal value
+       PEST%PARAM(I)%PMAX,&    !## maximal value
+       PEST%PARAM(I)%PINCREASE,&   !## maximal adjust factor
+       ABS(PEST%PARAM(I)%PIGROUP),& !## group number
+       ILOG, &            !## log transformed
+       TRIM(PEST%PARAM(I)%ACRONYM), &
+       PEST%PARAM(I)%PPRIOR
+  ENDIF 
+ ENDDO
+
+ FLUSH(IUPESTOUT); FLUSH(IUPESTPROGRESS); FLUSH(IUPESTEFFICIENCY); FLUSH(IUPESTSENSITIVITY); FLUSH(IUPESTRUNFILE)
+
+ !## continue ?
+ IF(ITER+1.GT.PEST%PE_MXITER)THEN
+  CALL IPEST_GLM_ERROR(IBATCH,'Pest iteration terminated: PEST_ITER (='//TRIM(ITOS(PEST%PE_MXITER))//') = PEST_NITER (='// &
+    TRIM(ITOS(PEST%PE_MXITER))//')'); STOP
+ ENDIF
+ IF(MSR%TJ.LE.0.0D0)THEN
+  CALL IPEST_GLM_ERROR(IBATCH,'Objective Function <= 0.0 ('//TRIM(RTOS(MSR%TJ,'G',7))//')'); STOP
+ ENDIF
+ IF(C2.LT.PEST%PE_STOP)THEN
+  CALL IPEST_GLM_ERROR(IBATCH,'Pest iteration terminated decrease objective function ('//TRIM(RTOS(C2,'G',7))// &
+       '%) > PEST_JSTOP ('//TRIM(RTOS(PEST%PE_STOP,'G',7))//'%)'); STOP
+ ENDIF
+
+ !## next iteration
+ WRITE(IUPESTOUT,'(/A/)') ' *** Next Optimization Cycle ***'; WRITE(*,'(/A/)') ' *** Next Optimization Cycle ***'
 
  END SUBROUTINE IPEST_GLM_ECHOPARAMETERS
  
@@ -1497,7 +1517,7 @@ CONTAINS
 
   !## write per parameter highly correlated other parameter
   DO JJ=1,2
-   IF(JJ.EQ.2)WRITE(IUPESTOUT,'(/A/)') 'List of Parameter Highly Correlated (correlation > 0.95)'
+   IF(JJ.EQ.2)WRITE(IUPESTOUT,'(/A/)') 'List of Parameter Highly Correlated (correlation > 95%)'
    IP1=0; N=0
    DO I=1,SIZE(PEST%PARAM)
     IF(PEST%PARAM(I)%PACT.EQ.1)THEN
@@ -1512,7 +1532,7 @@ CONTAINS
         WRITE(SLINE,'(A15)') PEST%PARAM(J)%ACRONYM
         IF(ABS(COR(IP1,IP2)).GE.0.95D0)THEN
          II=II+1
-         BLINE=TRIM(BLINE)//','//TRIM(SLINE)
+         BLINE=TRIM(BLINE)//','//TRIM(SLINE)//'('//TRIM(RTOS(COR(IP1,IP2)*100.0D0,'F',0))//'%)'
         ENDIF
        ENDIF
       ENDIF
@@ -1749,14 +1769,13 @@ CONTAINS
  END FUNCTION IPEST_GLM_DET
  
  !###====================================================================
- LOGICAL FUNCTION IPEST_GLM_GETJ(DIR,IGRAD,IPARAM,CTYPE,IBATCH) !,TNSC)
+ LOGICAL FUNCTION IPEST_GLM_GETJ(DIR,IGRAD,IPARAM,CTYPE,IBATCH) 
  !###====================================================================
  IMPLICIT NONE
  CHARACTER(LEN=*),INTENT(IN) :: DIR,CTYPE
-! REAL(KIND=DP_KIND),INTENT(OUT) :: TNSC
  INTEGER,INTENT(IN) :: IGRAD,IPARAM,IBATCH
  INTEGER :: I,J,II,NC,NP,NPERIOD,III,K,KK,ILAY,NROWIPFTXT,IUIPFTXT,NCOLIPFTXT,IOS,NAJ,NNSC,IERROR,SEED
- REAL(KIND=DP_KIND) :: X,Y,Z,H,WW,MC,MM,DHH,XCOR,YCOR,ZCOR,DHW,DP,F,DTH,DTD,NSC,SIGMA
+ REAL(KIND=DP_KIND) :: X,Y,Z,H,WW,MC,MM,DHH,XCOR,YCOR,ZCOR,DHW,DTH,DTD,NSC,SIGMA
  CHARACTER(LEN=256) :: DIRNAME,FNAME
  CHARACTER(LEN=52) :: CID,TXT
  CHARACTER(LEN=12) :: CEXT
@@ -1801,7 +1820,6 @@ CONTAINS
  ENDIF
  
  !## process files
- !TNSC=0.0D0; 
  NNSC=0
  
  DO I=1,SIZE(PEST%MEASURES)
@@ -1973,7 +1991,6 @@ CONTAINS
       ENDDO
       IF(YCOR.NE.0.0.AND.ZCOR.NE.0.0)XCOR=XCOR/(SQRT(YCOR)*SQRT(ZCOR))
       NSC =UTL_NASH_SUTCLIFFE(M,C,KK)
-!      TNSC=TNSC+NSC
       NNSC=NNSC+1
      ENDIF
      
@@ -2080,23 +2097,23 @@ CONTAINS
  !## insert regularisation to objective function
  NP=0; DO I=1,SIZE(PEST%PARAM); IF(PEST%PARAM(I)%PACT.EQ.0.OR.PEST%PARAM(I)%PIGROUP.LE.0)CYCLE; NP=NP+1; ENDDO
  
- !## add parameter regularisation
- IF(PEST%PE_REGULARISATION.EQ.1)THEN
-  DO I=1,SIZE(PEST%PARAM)  !## row
-   !## skip inactive
-   IF(PEST%PARAM(I)%PACT.EQ.0)CYCLE
-   !## skip others parts of parameter
-   IF(PEST%PARAM(I)%PIGROUP.LE.0)CYCLE
-   IF(PEST%PARAM(I)%PLOG.EQ.1)THEN
-    F=EXP(PEST%PARAM(I)%ALPHA(1))-EXP(PEST%PARAM(I)%PPRIOR)
-   ELSE
-    F=    PEST%PARAM(I)%ALPHA(1) -    PEST%PARAM(I)%PPRIOR
-   ENDIF
-   DP=F**2.0D0
-   DP=DP*PEST%PE_REGFACTOR
-   MSR%RJ=MSR%RJ+DP
-  ENDDO
- ENDIF
+ !!## add parameter regularisation
+ !IF(PEST%PE_REGULARISATION.EQ.1)THEN
+ ! DO I=1,SIZE(PEST%PARAM)  !## row
+ !  !## skip inactive
+ !  IF(PEST%PARAM(I)%PACT.EQ.0)CYCLE
+ !  !## skip others parts of parameter
+ !  IF(PEST%PARAM(I)%PIGROUP.LE.0)CYCLE
+ !  IF(PEST%PARAM(I)%PLOG.EQ.1)THEN
+ !   F=EXP(PEST%PARAM(I)%ALPHA(1))-EXP(PEST%PARAM(I)%PPRIOR)
+ !  ELSE
+ !   F=    PEST%PARAM(I)%ALPHA(1) -    PEST%PARAM(I)%PPRIOR
+ !  ENDIF
+ !  DP=F**2.0D0
+ !  DP=DP*PEST%PE_REGFACTOR
+ !  MSR%RJ=MSR%RJ+DP
+ ! ENDDO
+ !ENDIF
 
  MSR%TJ=MSR%TJ+MSR%RJ
  
@@ -2138,7 +2155,7 @@ CONTAINS
  LOGICAL FUNCTION IPEST_GLM_ALLOCATEMSR() 
  !###====================================================================
  IMPLICIT NONE
- INTEGER :: I,N1,N2,N,M,IOS,IU
+ INTEGER :: I,N1,N2,N,M,O,IOS,IU
  
  IPEST_GLM_ALLOCATEMSR=.FALSE.
  
@@ -2154,6 +2171,12 @@ CONTAINS
  CALL IPEST_GLM_DEALLOCATEMSR()
  !## number of line-searches (-) and number of gradients-simulations (+)
  N1=SIZE(RNL); N2=SIZE(RNG)
+
+ O=PEST%PE_MXITER
+ ALLOCATE(MSR%GOF_H(0:O),STAT=IOS);  IF(IOS.NE.0)THEN; WRITE(*,'(/A/)') 'CANNOT ALLOCATE MEMORY FOR MSR%GOF_H';  RETURN; ENDIF
+ ALLOCATE(MSR%NSC_H(0:O),STAT=IOS);  IF(IOS.NE.0)THEN; WRITE(*,'(/A/)') 'CANNOT ALLOCATE MEMORY FOR MSR%NSC_H';  RETURN; ENDIF
+ ALLOCATE(MSR%TJ_H(0:O),STAT=IOS);   IF(IOS.NE.0)THEN; WRITE(*,'(/A/)') 'CANNOT ALLOCATE MEMORY FOR MSR%TJ_H';   RETURN; ENDIF
+ ALLOCATE(MSR%RJ_H(0:O),STAT=IOS);   IF(IOS.NE.0)THEN; WRITE(*,'(/A/)') 'CANNOT ALLOCATE MEMORY FOR MSR%RJ_H';   RETURN; ENDIF
 
  ALLOCATE(MSR%GOF(N1),STAT=IOS);     IF(IOS.NE.0)THEN; WRITE(*,'(/A/)') 'CANNOT ALLOCATE MEMORY FOR MSR%GOF';    RETURN; ENDIF
  ALLOCATE(MSR%NSC(N1),STAT=IOS);     IF(IOS.NE.0)THEN; WRITE(*,'(/A/)') 'CANNOT ALLOCATE MEMORY FOR MSR%NSC';    RETURN; ENDIF
@@ -2187,6 +2210,10 @@ CONTAINS
  !###====================================================================
  IMPLICIT NONE
 
+ IF(ASSOCIATED(MSR%TJ_H))  DEALLOCATE(MSR%TJ_H)
+ IF(ASSOCIATED(MSR%RJ_H))  DEALLOCATE(MSR%RJ_H)
+ IF(ASSOCIATED(MSR%GOF_H)) DEALLOCATE(MSR%GOF_H)
+ IF(ASSOCIATED(MSR%NSC_H)) DEALLOCATE(MSR%NSC_H)
  IF(ASSOCIATED(MSR%GOF))   DEALLOCATE(MSR%GOF)
  IF(ASSOCIATED(MSR%NSC))   DEALLOCATE(MSR%NSC)
  IF(ASSOCIATED(MSR%DHL_J)) DEALLOCATE(MSR%DHL_J)
@@ -2202,27 +2229,6 @@ CONTAINS
  IF(ALLOCATED(GF_O))       DEALLOCATE(GF_O)
  
  END SUBROUTINE IPEST_GLM_DEALLOCATEMSR
- 
-! !###====================================================================
-! REAL FUNCTION IPEST_GOODNESS_OF_FIT(X,Y,N)
-! !###====================================================================
-! IMPLICIT NONE
-! INTEGER,INTENT(IN) :: N
-! REAL(KIND=DP_KIND),INTENT(IN),DIMENSION(N) :: X,Y !## x=head; y=obs
-! REAL(KIND=DP_KIND) :: XN,YN,YA
-! INTEGER :: I
- 
-! !## compute nash-sutcliff
-! IPEST_GOODNESS_OF_FIT=0.0D0
- 
-! !## average observation
-! YA=0.0D0; DO I=1,N; YA=YA+Y(I)          ; ENDDO; YA=YA/REAL(N)
-! XN=0.0D0; DO I=1,N; XN=XN+ABS(Y(I)-X(I)); ENDDO; XN=XN**2.0D0
-! YN=0.0D0; DO I=1,N; YN=YN+ABS(Y(I)-YA)  ; ENDDO; YN=YN**2.0D0
- 
-! IPEST_GOODNESS_OF_FIT=1.0D0-XN/YN
-
-! END FUNCTION IPEST_GOODNESS_OF_FIT 
  
  !###====================================================================
  SUBROUTINE IPEST_LUDECOMP_DBL(AA,IDX,N,ISING)
