@@ -55,13 +55,13 @@ CONTAINS
  INTEGER,INTENT(IN),OPTIONAL,DIMENSION(:) :: IPFASSFILES
  INTEGER,INTENT(IN),DIMENSION(:),OPTIONAL :: ILABELS
  INTEGER,DIMENSION(5),INTENT(IN),OPTIONAL :: IPFICOL
- INTEGER :: IDF,NIDF,I,J,K,IOS,IPLOT,N,IACT,M
+ INTEGER :: IDF,NIDF,I,J,K,IOS,IPLOT,N,IACT,M,JU
  INTEGER,ALLOCATABLE,DIMENSION(:) :: ILIST
  INTEGER,DIMENSION(MAXFILES) :: IU
  REAL(KIND=DP_KIND) :: DR
  CHARACTER(LEN=10000) :: IDFNAME,IDFLIST
  CHARACTER(LEN=256),ALLOCATABLE,DIMENSION(:) :: FNAMES  ! list of file in case multi-file selection mode
- LOGICAL :: LLEG,LGEF
+ LOGICAL :: LLEG,LGEF,LEX
 
  CALL WINDOWSELECT(0)
  IF(WMENUGETSTATE(ID_3DTOOL,2).EQ.1)THEN
@@ -79,8 +79,8 @@ CONTAINS
  IF(.NOT.PRESENT(IDFNAMEGIVEN))THEN
   IDFNAME=''
   IF(INETCDF.EQ.0)THEN
-   IF(.NOT.UTL_WSELECTFILE('All Known Files (*.idf;*.mdf;*.ipf;*.isg;*.iff;*.asc;*.gen;*.gef;*.map;*.csv)'//&
-                    '|*.idf;*.mdf;*.ipf;*.isg;*.iff;*.arr;*.asc;*.gen;*.gef;*.map;*.csv|'// &
+   IF(.NOT.UTL_WSELECTFILE('All Known Files (*.idf;*.mdf;*.ipf;*.isg;*.iff;*.asc;*.gen;*.gef;*.map;*.txt)'//&
+                    '|*.idf;*.mdf;*.ipf;*.isg;*.iff;*.arr;*.asc;*.gen;*.gef;*.map;*.txt|'// &
                     'iMOD Map (*.idf)|*.idf|'               //&
                     'iMOD Multi Data File (*.mdf)|*.mdf|'   //&
                     'iMOD Pointers (*.ipf)|*.ipf|'          //&
@@ -91,12 +91,12 @@ CONTAINS
                     'ESRI/iMOD GEN file (*.gen)|*.gen|'   //&
                     'GEF file (*.gef)|*.gef|'               //&
                     'PC Raster Map file (*.map)|*.map|'     //&
-                    'Comma Seperated File (*.csv)|*.csv|',      &
+                    'List of iMOD files (*.txt)|*.txt|',      &
                     LOADDIALOG+MUSTEXIST+PROMPTON+DIRCHANGE+MULTIFILE,IDFNAME,&
-                    'Load iMOD Map (*.idf,*.mdf,*.ipf,*.isg,*.iff,*.asc,*.gen,*.gef,*.map,*.csv)'))RETURN
+                    'Load iMOD Map (*.idf,*.mdf,*.ipf,*.isg,*.iff,*.asc,*.gen,*.gef,*.map,*.txt)'))RETURN
   ELSEIF(INETCDF.EQ.1)THEN
-   IF(.NOT.UTL_WSELECTFILE('All Known Files (*.idf;*.mdf;*.ipf;*.isg;*.iff;*.nc;*.asc;*.gen;*.gef;*.map;*.csv)'//&
-                    '|*.idf;*.mdf;*.ipf;*.isg;*.iff,*.arr;*.nc;*.asc;*.gen;*.gef;*.map;*.csv|'// &
+   IF(.NOT.UTL_WSELECTFILE('All Known Files (*.idf;*.mdf;*.ipf;*.isg;*.iff;*.nc;*.asc;*.gen;*.gef;*.map;*.txt)'//&
+                    '|*.idf;*.mdf;*.ipf;*.isg;*.iff,*.arr;*.nc;*.asc;*.gen;*.gef;*.map;*.txt|'// &
                     'iMOD Map (*.idf)|*.idf|'               //&
                     'iMOD Multi Data File (*.mdf)|*.mdf|'   //&
                     'iMOD Pointers (*.ipf)|*.ipf|'          //&
@@ -108,9 +108,9 @@ CONTAINS
                     'ESRI/iMOD GEN file (*.gen)|*.gen|'   //&
                     'GEF file (*.gef)|*.gef|'               //&
                     'PC Raster Map file (*.map)|*.map|'    //&
-                    'Comma Seperated File (*.csv)|*.csv|',      &
+                    'List of iMOD files (*.txt)|*.txt|',      &
                     LOADDIALOG+MUSTEXIST+PROMPTON+DIRCHANGE+MULTIFILE,IDFNAME,&
-                    'Load iMOD Map (*.idf,*.mdf,*.ipf,*.isg,*.iff,*.nc,*.asc,*.gen,*.gef,*.map,*.csv)'))RETURN
+                    'Load iMOD Map (*.idf,*.mdf,*.ipf,*.isg,*.iff,*.nc,*.asc,*.gen,*.gef,*.map,*.txt)'))RETURN
   ENDIF
  ELSE
   IDFNAME=IDFNAMEGIVEN
@@ -166,9 +166,36 @@ CONTAINS
   FNAMES(IDF)=UTL_CAP(FNAMES(IDF),'U')
  ENDDO
 
- !## Open iMOD files from CSV file, fill list "FNAMES" from given csv-file
+ !## Open iMOD files from TXT file, overwrite list "FNAMES" with txt-file content
  I=INDEXNOCASE(IDFNAME,'.',.TRUE.)+1
- IF(UTL_CAP(IDFNAME(I:I+2),'U').EQ.'CSV') CALL READCSV(IDFNAME,FNAMES,NIDF)
+ ! IF(UTL_CAP(IDFNAME(I:I+2),'U').EQ.'TXT') CALL READFILELIST(IDFNAME,FNAMES,NIDF)
+ IF(UTL_CAP(IDFNAME(I:I+2),'U').EQ.'TXT') THEN
+   DEALLOCATE(FNAMES)
+
+   ! Open TXT file
+   JU=UTL_GETUNIT(); OPEN(JU,FILE=IDFNAME,STATUS='OLD',ACTION='READ',IOSTAT=IOS)
+   IF(IOS.NE.0)RETURN
+ 
+   ! Get nr of files and read files.
+   DO I=1,2
+    NIDF=0
+    DO
+     READ(JU,'(A)',IOSTAT=IOS) IDFNAME; IF(IOS.NE.0)EXIT
+     ! check each line for existing file
+     INQUIRE(FILE=IDFNAME,EXIST=LEX)
+     IF(LEX)THEN
+      NIDF=NIDF+1
+      IF(I.EQ.2) FNAMES(NIDF)=UTL_CAP(IDFNAME,'U')
+      CALL WINDOWOUTSTATUSBAR(4,'Found '//TRIM(IDFNAME)//'...')
+     ENDIF 
+    ENDDO
+    IF(I.EQ.1)THEN
+      REWIND(JU) ;  ALLOCATE(FNAMES(NIDF))
+    ENDIF  
+   ENDDO 
+   CALL WINDOWOUTSTATUSBAR(4,'')
+   CLOSE(JU)
+ ENDIF
   
  LGEF=.FALSE.
  !## Process list of files to be loaded to the iMOD Manager
@@ -454,8 +481,8 @@ CONTAINS
   IF(MPW%NACT.GE.MXMPLOT)EXIT
   !## terminate in case GEF is read in
   IF(LGEF)EXIT
- 
- ENDDO
+
+ ENDDO  ! Loop over all files to be read: 1 or multi selection mode
 
  DEALLOCATE(FNAMES)
 
@@ -999,5 +1026,44 @@ CONTAINS
  ENDIF
 
  END SUBROUTINE MANAGER_UTL_MENUFIELDS
+
+ !!###======================================================================
+ !SUBROUTINE READFILELIST(FNAME,FLIST,NFILES)
+ !!###======================================================================
+ !IMPLICIT NONE
+ !INTEGER,INTENT(OUT) :: NFILES
+ !CHARACTER(LEN=*),INTENT(IN) :: FNAME
+ !INTEGER :: IOS,I,IU
+ !CHARACTER(LEN=256) :: LINE
+ !CHARACTER(LEN=256),ALLOCATABLE,DIMENSION(:),INTENT(OUT) :: FLIST  ! list of file in case multi-file selection mode
+ !LOGICAL :: LEX
+ !
+ !IU=UTL_GETUNIT(); OPEN(IU,FILE=FNAME,STATUS='OLD',ACTION='READ',IOSTAT=IOS)
+ !!## error opening file
+ !IF(IOS.NE.0)RETURN
+ !
+ !! get file size
+ !DO I=1,2
+ ! NFILES=0
+ ! DO
+ !  READ(IU,'(A)',IOSTAT=IOS) LINE; IF(IOS.NE.0)EXIT
+ !  ! check each line for iMOD files
+ !  INQUIRE(FILE=LINE,EXIST=LEX)
+ !  IF(LEX)THEN
+ !   NFILES=NFILES+1
+ !   IF(I.EQ.2) FLIST(NFILES)=UTL_CAP(LINE,'U')
+ !   CALL WINDOWOUTSTATUSBAR(4,'Found '//TRIM(LINE)//'...')
+ !  ENDIF 
+ ! ENDDO
+ ! IF(I.EQ.1)THEN
+ !   REWIND(IU) ;  ALLOCATE(FLIST(NFILES))
+ ! ENDIF  
+ !ENDDO 
+ !CALL WINDOWOUTSTATUSBAR(4,'')
+ !
+ !CLOSE(IU)
+ !
+ !END SUBROUTINE READFILELIST
+ 
  
 END MODULE MOD_MANAGER_UTL
