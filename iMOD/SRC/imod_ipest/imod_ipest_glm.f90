@@ -64,8 +64,8 @@ CONTAINS
   
  DO I=1,SIZE(PEST%PARAM); CALL IPEST_GLM_ECHO_PARAMETERS(I); ENDDO;  WRITE(IUPESTOUT,*)
   
- WRITE(IUPESTEFFICIENCY,'(5A15)') 'TJ','RMSE','ADJUSTMENTS','CUR_IMPROVEMENT','TOT_IMPROVEMENT'
- WRITE(IUPESTEFFICIENCY,'(5A15)') '(L2)','(L)','(-)','(%)','(%)'
+ WRITE(IUPESTEFFICIENCY,'(5(A15,1X))') 'TJ','RMSE','ADJUSTMENTS','CUR_IMPROVEMENT','TOT_IMPROVEMENT'
+ WRITE(IUPESTEFFICIENCY,'(5(A15,1X))') '(L2)','(L)','(-)','(%)','(%)'
  WRITE(IUPESTSENSITIVITY,'(A)')   'Sensitivity (%):'
 
  N=0; DO J=1,SIZE(PEST%PARAM); IF(ABS(PEST%PARAM(J)%PACT).EQ.1.AND.PEST%PARAM(J)%PIGROUP.GT.0)N=N+1; ENDDO
@@ -81,7 +81,7 @@ CONTAINS
  ITER=0; DO 
 
   !## run and process all lambda-testing
-  WRITE(IUPESTPROGRESS,'(/A5,4A15)') 'LS','PARAMETER','LAMBDA','TOT_J','RED_J' !,'CUR_PARAMETER'
+  WRITE(IUPESTPROGRESS,'(/A5,4A15)') 'LS','PARAMETER','LAMBDA','TOT_J','RED_J' 
   IUPESTRESIDUAL=0; CALL IPEST_GLM_RUNMODELS(IBATCH,RNL,LPARAM,'L',DIR,MNAME,ITER,LAMBDA)
   
   !## initial lambda
@@ -90,7 +90,7 @@ CONTAINS
    IF(.NOT.IPEST_GLM_NEXT(IBATCH,ITER,DIR,LAMBDA))THEN
     LAMBDA=LAMBDA*GAMMA
     !## determine new gradient
-    IF(.NOT.IPEST_GLM_GRADIENT(IBATCH,ITER,LAMBDA))EXIT
+    IF(.NOT.IPEST_GLM_GRADIENT(IBATCH,ITER,LAMBDA,GAMMA))EXIT
     CYCLE
    ENDIF
   ELSE
@@ -116,7 +116,7 @@ CONTAINS
   IUPESTRESIDUAL=0; CALL IPEST_GLM_RUNMODELS(IBATCH,RNG,GPARAM,'P',DIR,MNAME,ITER,LAMBDA)
   
   !## determine new gradient
-  IF(.NOT.IPEST_GLM_GRADIENT(IBATCH,ITER,LAMBDA))EXIT
+  IF(.NOT.IPEST_GLM_GRADIENT(IBATCH,ITER,LAMBDA,GAMMA))EXIT
 
  ENDDO
  CALL WMESSAGETIMER(0); CALL WMESSAGEENABLE(TIMEREXPIRED,0)
@@ -135,6 +135,12 @@ CONTAINS
  CHARACTER(LEN=*),INTENT(IN) :: DIR,MNAME
  INTEGER :: IGRAD,NDONE,NCPU,IFLAGS,I
  INTEGER,DIMENSION(2) :: IDPROC
+ 
+ IF(RT.EQ.'L')THEN
+  WRITE(IUPESTOUT,'(/A/)') ' *** Lambda Cycle ***'; WRITE(*,'(/A/)') ' *** Lambda Cycle ***'
+ ELSEIF(RT.EQ.'P')THEN
+  WRITE(IUPESTOUT,'(/A/)') ' *** Sensitivity Cycle ***'; WRITE(*,'(/A/)') ' *** Sensitivity Cycle ***'
+ ENDIF
  
  CALL WMESSAGETIMER(NCSECS,IREPEAT=1); IGRAD=0; NCPU=0; IPROC=0; ISTATUS=-1
  !## executes lamdba-testing on commandtool such that commands alike 'dir' etc. works
@@ -234,7 +240,7 @@ CONTAINS
        MSR%DHG_J(JGRAD)=MSR%TJ
       ENDIF
       !## write echo
-      CALL IPEST_GLM_PROGRESS(ITER,RPARAM(JGRAD),RT,LAMBDA); FLUSH(IUPESTPROGRESS)
+      CALL IPEST_GLM_PROGRESS(ITER,JGRAD,RPARAM(JGRAD),RT,LAMBDA); FLUSH(IUPESTPROGRESS)
      ENDIF
      !## reset running handle proces
      IPROC(:,JGRAD)=0
@@ -597,7 +603,7 @@ CONTAINS
  CHARACTER(LEN=*),INTENT(IN) :: DIR
  REAL(KIND=DP_KIND),INTENT(INOUT) :: LAMBDA
  REAL(KIND=DP_KIND) :: MJ
- INTEGER :: I,J,IJ
+ INTEGER :: I,IJ
 
  IPEST_GLM_NEXT=.FALSE.
  
@@ -640,15 +646,6 @@ CONTAINS
   PEST%PARAM(I)%ALPHA(1)=PEST%PARAM(I)%LALPHA(IJ)
  ENDDO
 
-! !## update alpha for parameters in same group
-! DO I=1,SIZE(PEST%PARAM)
-!  !## skip inactive parameters
-!  IF(PEST%PARAM(I)%PACT.LE.0)CYCLE
-!  DO J=1,SIZE(PEST%PARAM)
-!   IF(PEST%PARAM(I)%PIGROUP.EQ.ABS(PEST%PARAM(J)%PIGROUP))PEST%PARAM(J)%ALPHA(1)=PEST%PARAM(I)%ALPHA(1)
-!  ENDDO
-! ENDDO
-   
  IPEST_GLM_NEXT=.TRUE.
  
  END FUNCTION IPEST_GLM_NEXT
@@ -684,18 +681,19 @@ CONTAINS
      FCT=PEST%PARAM(I)%ALPHA(1)
     ENDIF
     IF(PEST%PARAM(I)%PIGROUP.GT.0)THEN
-     WRITE(*,'(A)') 'Adjusting Parameter '//TRIM(PEST%PARAM(I)%PPARAM)// &
+!     WRITE(*,'(A)') 'Adjusting Parameter '//TRIM(PEST%PARAM(I)%PPARAM)// &
+!                  ';ils='//TRIM(ITOS(PEST%PARAM(I)%PILS))// &
+!                  ';izone='//TRIM(ITOS(PEST%PARAM(I)%PIZONE))// &
+!                  ';igroup='//TRIM(ITOS(PEST%PARAM(I)%PIGROUP))// &
+!                  ';factor='//TRIM(RTOS(FCT,'*',1))
+!    ENDIF
+     WRITE(IUPESTOUT,'(A)') 'Adjusting Parameter '//TRIM(PEST%PARAM(I)%PPARAM)// &
+                  '['//TRIM(PEST%PARAM(I)%ACRONYM)//']'// &
                   ';ils='//TRIM(ITOS(PEST%PARAM(I)%PILS))// &
                   ';izone='//TRIM(ITOS(PEST%PARAM(I)%PIZONE))// &
                   ';igroup='//TRIM(ITOS(PEST%PARAM(I)%PIGROUP))// &
                   ';factor='//TRIM(RTOS(FCT,'*',1))
     ENDIF
-    WRITE(IUPESTOUT,'(A)') 'Adjusting Parameter '//TRIM(PEST%PARAM(I)%PPARAM)// &
-                 '['//TRIM(PEST%PARAM(I)%ACRONYM)//']'// &
-                 ';ils='//TRIM(ITOS(PEST%PARAM(I)%PILS))// &
-                 ';izone='//TRIM(ITOS(PEST%PARAM(I)%PIZONE))// &
-                 ';igroup='//TRIM(ITOS(PEST%PARAM(I)%PIGROUP))// &
-                 ';factor='//TRIM(RTOS(FCT,'*',1))
    ENDIF
   ENDDO
  ENDIF
@@ -703,11 +701,12 @@ CONTAINS
  END SUBROUTINE IPEST_GLM_NEXTGRAD
  
  !###====================================================================
- LOGICAL FUNCTION IPEST_GLM_GRADIENT(IBATCH,ITER,LAMBDA)
+ LOGICAL FUNCTION IPEST_GLM_GRADIENT(IBATCH,ITER,LAMBDA,GAMMA)
  !###====================================================================
  IMPLICIT NONE
  INTEGER,INTENT(IN) :: ITER,IBATCH
- REAL(KIND=DP_KIND),INTENT(IN) :: LAMBDA
+ REAL(KIND=DP_KIND),INTENT(INOUT) :: LAMBDA
+ REAL(KIND=DP_KIND),INTENT(IN) :: GAMMA
  REAL(KIND=DP_KIND) :: DJ1,DJ2
  REAL(KIND=DP_KIND) :: TS,DF1,EIGWTHRESHOLD,W,DH1,DH2,MARQUARDT
  INTEGER :: I,J,K,NP,IP1,NE,ISING,ILAMBDA,IBND,IPARAM
@@ -736,7 +735,6 @@ CONTAINS
  IPARAM=0
  DO I=1,SIZE(PEST%PARAM)
   IF(PEST%PARAM(I)%PACT.NE.1)CYCLE
-!  DF1=(PEST%PARAM(I)%ALPHA(2)*PEST%PARAM(I)%PDELTA)-PEST%PARAM(I)%ALPHA(2)
   DF1=PEST%PARAM(I)%PDELTA
   IPARAM=IPARAM+1
   DO J=1,MSR%NOBS
@@ -761,7 +759,7 @@ CONTAINS
  WRITE(IUPESTSENSITIVITY,'(I10,99999F15.7)') ITER,(S(I),I=1,NP)
 
  !##===================
- !## write down statistics of ALL parameters prior to the update
+ !## write statistics of ALL parameters prior to the update
  !##===================
  NP=0; DO I=1,SIZE(PEST%PARAM); IF(PEST%PARAM(I)%PACT.EQ.1)NP=NP+1; ENDDO
  IF(ALLOCATED(JQJ))DEALLOCATE(JQJ);   ALLOCATE(JQJ (NP,NP))
@@ -775,9 +773,6 @@ CONTAINS
  !## reset parameters - alpha(2)=previous alpha
  DO I=1,SIZE(PEST%PARAM); PEST%PARAM(I)%ALPHA(1)=PEST%PARAM(I)%ALPHA(2); ENDDO
 
- !## set boundaries for parameters
- DO I=1,SIZE(PEST%PARAM); CALL IPEST_GLM_GETBOUNDARY(I,IBND,P1,P2,PMIN,PMAX); PEST%PARAM(I)%IBND=IBND; ENDDO
-
  !## "freeze"-insensitive parameters
  K=0; DO J=1,2
   IF(J.EQ.2)WRITE(IUPESTOUT,'(/A/)') 'List of Insensitive Parameter (Sensitivity <= '//TRIM(RTOS(PEST%PE_SENS,'F',7))//' %)'
@@ -789,39 +784,6 @@ CONTAINS
    ENDIF
   ENDDO
   IF(K.EQ.0)EXIT
- ENDDO
- 
- !## initiate number of parameters
- NP=0; DO I=1,SIZE(PEST%PARAM); IF(PEST%PARAM(I)%PACT.EQ.1)NP=NP+1; ENDDO
- IF(NP.EQ.0)THEN; CALL IPEST_GLM_ERROR(IBATCH,'ALL PARAMETERS ARE INSENSITIVE, PROCESS STOPPED!'); RETURN; ENDIF
-
- !## allocate arrays for current selection
- NP=0; DO I=1,SIZE(PEST%PARAM); IF(PEST%PARAM(I)%PACT.EQ.1)NP=NP+1; ENDDO
- IF(NP.EQ.0)THEN; CALL IPEST_GLM_ERROR(IBATCH,'NO PARAMETERS LEFT THAT ARE SENSITIVE, PROCESS STOPPED!'); RETURN; ENDIF
-  
- IF(ALLOCATED(JQJ))DEALLOCATE(JQJ);   ALLOCATE(JQJ (NP,NP))
- IF(ALLOCATED(JQR))DEALLOCATE(JQR);   ALLOCATE(JQR (NP))
- IF(ALLOCATED(U  ))DEALLOCATE(U);     ALLOCATE(U   (NP))
- IF(ALLOCATED(EIGW))DEALLOCATE(EIGW); ALLOCATE(EIGW(NP))
- IF(ALLOCATED(EIGV))DEALLOCATE(EIGV); ALLOCATE(EIGV(NP,NP))
-
- !## construct jTqr (<--- r is residual for current parameter set)
- JQR=0.0; I=0; IPARAM=0
- DO IP1=1,SIZE(PEST%PARAM)  !## row
-  
-  IF(ABS(PEST%PARAM(IP1)%PACT).NE.1)CYCLE
-  IPARAM=IPARAM+1; IF(PEST%PARAM(IP1)%PACT.NE.1)CYCLE
-   
-  DF1=PEST%PARAM(IP1)%PDELTA
-  
-  I=I+1
-  DO J=1,MSR%NOBS
-   DH1=MSR%DHG(IPARAM,J); DH2=MSR%DHL(0,J)
-   DJ1=(DH1-DH2)/DF1    ; DJ2=MSR%DHL(0,J)
-   W  =MSR%W(J)
-   JQR(I)=JQR(I)+(DJ1*W*DJ2)
-  ENDDO
-
  ENDDO
   
  !!## add parameter regularisation
@@ -840,103 +802,151 @@ CONTAINS
  
  WRITE(IUPESTOUT,'(/70A1)') ('=',I=1,70); WRITE(IUPESTOUT,'(A)') 'Start Lambda Testing'; WRITE(IUPESTOUT,'(70A1/)') ('=',I=1,70)
  
+ !## set boundaries for parameters
+ DO I=1,SIZE(PEST%PARAM); CALL IPEST_GLM_GETBOUNDARY(I,IBND,P1,P2,PMIN,PMAX); PEST%PARAM(I)%IBND=IBND; ENDDO
+
  !## compute update vector for lambdas
- DO ILAMBDA=1,PBMAN%NLINESEARCH
+ ILAMBDA=0
+ DO 
   
-  !## set marquardt-lambda
-  MARQUARDT=LAMBDA*PBMAN%LAMBDA_TEST(ILAMBDA)
-
-  !## construct jqj - normal matrix/hessian
-  CALL IPEST_GLM_JQJ(IBATCH,MARQUARDT,JQJ,NP,.FALSE.) 
-  !## add eigenvalue decomposition
-  CALL IPEST_GLM_EIGDECOM(IBATCH,JQJ,EIGW,EIGV,NP,.TRUE.,MARQUARDT) 
+  ILAMBDA=ILAMBDA+1
+  !## finished
+  IF(ILAMBDA.GT.PBMAN%NLINESEARCH)EXIT
   
-  !## project on important singular values
-  IF(LSVD)THEN
+  !## initiate number of parameters
+  NP=0; DO I=1,SIZE(PEST%PARAM); IF(PEST%PARAM(I)%PACT.EQ.1)NP=NP+1; ENDDO
+  IF(NP.EQ.0)THEN; CALL IPEST_GLM_ERROR(IBATCH,'ALL (REMAINING) PARAMETERS ARE INSENSITIVE, PROCESS STOPPED!'); RETURN; ENDIF
+  
+  IF(ALLOCATED(JQJ))DEALLOCATE(JQJ);   ALLOCATE(JQJ (NP,NP))
+  IF(ALLOCATED(JQR))DEALLOCATE(JQR);   ALLOCATE(JQR (NP))
+  IF(ALLOCATED(U  ))DEALLOCATE(U);     ALLOCATE(U   (NP))
+  IF(ALLOCATED(EIGW))DEALLOCATE(EIGW); ALLOCATE(EIGW(NP))
+  IF(ALLOCATED(EIGV))DEALLOCATE(EIGV); ALLOCATE(EIGV(NP,NP))
 
-   EIGWTHRESHOLD=0.0 !% explained variance
-   DO NE=1,NP; EIGWTHRESHOLD=EIGWTHRESHOLD+EIGW(NE); IF(EIGWTHRESHOLD.GT.PBMAN%EIGV)EXIT; ENDDO
-
-   ALLOCATE(P(NP,NE)); P(:,1:NE)=EIGV(:,1:NE); ALLOCATE(M(NE,NE),N(NE),RU(NE),PT(NE,NP))
-
-   !## compute pp=pt(jqj) on eigen-space
-   PT=0.0; DO I=1,NE; DO J=1,NP
-    DO K=1,NP
-     PT(I,J)=PT(I,J)+P(K,I)*JQJ(K,J)
-    ENDDO
-   ENDDO; ENDDO
-   !## project jqj on eigen-space
-   M=0.0; DO I=1,NE; DO J=1,NE
-    DO K=1,NP
-     M(I,J)=M(I,J)+PT(I,K)*P(K,J)
-    ENDDO
-   ENDDO; ENDDO
-   !## project right hand side on eigenspace
-   N=0.0; DO I=1,NE
-    DO K=1,NP
-     N(I)=N(I)+P(K,I)*JQR(K)
-    END DO
+  !## construct jTqr (<--- r is residual for current parameter set)
+  JQR=0.0; I=0; IPARAM=0
+  DO IP1=1,SIZE(PEST%PARAM)  !## row
+  
+   IF(ABS(PEST%PARAM(IP1)%PACT).NE.1)CYCLE
+   IPARAM=IPARAM+1; IF(PEST%PARAM(IP1)%PACT.NE.1)CYCLE
+   
+   DF1=PEST%PARAM(IP1)%PDELTA
+  
+   I=I+1
+   DO J=1,MSR%NOBS
+    DH1=MSR%DHG(IPARAM,J); DH2=MSR%DHL(0,J)
+    DJ1=(DH1-DH2)/DF1    ; DJ2=MSR%DHL(0,J)
+    W  =MSR%W(J)
+    JQR(I)=JQR(I)+(DJ1*W*DJ2)
    ENDDO
 
-   !## compute inverse of (Pt(JQJ)P)-1 -> B
-   IF(ALLOCATED(INDX))DEALLOCATE(INDX); ALLOCATE(INDX(NE))
-   IF(ALLOCATED(B   ))DEALLOCATE(B);    ALLOCATE(B   (NE,NE))
-   CALL IPEST_LUDECOMP_DBL(M,INDX,NE,ISING)
-   IF(ISING.EQ.1)THEN; CALL IPEST_GLM_ERROR(IBATCH,'Singular matrix after projection on eigenvectors which is rather odd, stopped.'); RETURN; ENDIF
-   B=0.0D0; DO I=1,NE; B(I,I)=1.0D0; ENDDO
-   DO I=1,NE; CALL IPEST_LUBACKSUB_DBL(M,INDX,B(1,I),NE); ENDDO
+  ENDDO
 
-   !## compute U=(M)-1*N
-   RU=0.0D0; DO I=1,NE; DO J=1,NE
-    RU(I)=RU(I)+(B(J,I)*N(J))
-   ENDDO; ENDDO
+  !## try to come with some suitable lambdas
+  DO
 
-   !## reproject reduced gradient on original space
-   !## compute U=(M)-1*N
-   U=0.0D0; DO I=1,NP; DO J=1,NE
-    U(I)=U(I)+(P(I,J)*RU(J))
-   ENDDO; ENDDO
+   !## set marquardt-lambda
+   MARQUARDT=LAMBDA*PBMAN%LAMBDA_TEST(ILAMBDA)
 
-   DEALLOCATE(P,PT,M,N,RU,INDX,B)
-  
-  ELSE
-
-   !## compute inverse of (JQJ)-1 -> B
-   IF(ALLOCATED(INDX))DEALLOCATE(INDX); ALLOCATE(INDX(NP))
-   IF(ALLOCATED(B))DEALLOCATE(B); ALLOCATE(B(NP,NP))
-   IF(NP.EQ.1)THEN
-    B(1,1)=1.0D0/JQJ(1,1)
-   ELSE
-    CALL IPEST_LUDECOMP_DBL(JQJ,INDX,NP,ISING)
-    IF(ISING.EQ.1)THEN; CALL IPEST_GLM_ERROR(IBATCH,'Singular matrix,try activating the SVD option to avoid this, stopped.'); RETURN; ENDIF
-    B=0.0D0; DO I=1,NP; B(I,I)=1.0D0; ENDDO
-    DO I=1,NP; CALL IPEST_LUBACKSUB_DBL(JQJ,INDX,B(1,I),NP); ENDDO
-   ENDIF
+   !## construct jqj - normal matrix/hessian
+   CALL IPEST_GLM_JQJ(IBATCH,MARQUARDT,JQJ,NP,.FALSE.) 
+   !## add eigenvalue decomposition
+   CALL IPEST_GLM_EIGDECOM(IBATCH,JQJ,EIGW,EIGV,NP,.TRUE.,MARQUARDT) 
    
-   !## compute (JQJ)-1*JQR
-   U=0.0D0
-   DO I=1,NP; DO J=1,NP
-    U(I)=U(I)+(B(J,I)*JQR(J))
-   ENDDO; ENDDO
+   !## project on important singular values
+   IF(LSVD)THEN
 
-   DEALLOCATE(INDX,B)
+    EIGWTHRESHOLD=0.0 !% explained variance
+    DO NE=1,NP; EIGWTHRESHOLD=EIGWTHRESHOLD+EIGW(NE); IF(EIGWTHRESHOLD.GT.PBMAN%EIGV)EXIT; ENDDO
 
-  ENDIF
+    ALLOCATE(P(NP,NE)); P(:,1:NE)=EIGV(:,1:NE); ALLOCATE(M(NE,NE),N(NE),RU(NE),PT(NE,NP))
 
-  !## pointing downhill
-  U=-1.0D0*U 
+    !## compute pp=pt(jqj) on eigen-space
+    PT=0.0; DO I=1,NE; DO J=1,NP
+     DO K=1,NP
+      PT(I,J)=PT(I,J)+P(K,I)*JQJ(K,J)
+     ENDDO
+    ENDDO; ENDDO
+    !## project jqj on eigen-space
+    M=0.0; DO I=1,NE; DO J=1,NE
+     DO K=1,NP
+      M(I,J)=M(I,J)+PT(I,K)*P(K,J)
+     ENDDO
+    ENDDO; ENDDO
+    !## project right hand side on eigenspace
+    N=0.0; DO I=1,NE
+     DO K=1,NP
+      N(I)=N(I)+P(K,I)*JQR(K)
+     END DO
+    ENDDO
 
-  !## store gradient update vector in list
-  IF(IPEST_GLM_UPGRADEVECTOR_LAMBDA(ILAMBDA))THEN 
-  ENDIF 
-!  !## within parameter adjust-limits
-!  IF(IPEST_GLM_UPGRADEVECTOR(1.0D0,.TRUE.,ITER,LAMBDARESET=LAMBDARESET))THEN 
-!   !## check whether number of parameters is equal to the number started this loop with
-!   MP=0; DO I=1,SIZE(PEST%PARAM); IF(PEST%PARAM(I)%PACT.EQ.1.AND.PEST%PARAM(I)%PIGROUP.GT.0)MP=MP+1; ENDDO
-!   !## nothing changed in number of active parameters
-!   IF(MP.EQ.NP)EXIT
-!  ENDIF
+    !## compute inverse of (Pt(JQJ)P)-1 -> B
+    IF(ALLOCATED(INDX))DEALLOCATE(INDX); ALLOCATE(INDX(NE))
+    IF(ALLOCATED(B   ))DEALLOCATE(B);    ALLOCATE(B   (NE,NE))
+    CALL IPEST_LUDECOMP_DBL(M,INDX,NE,ISING)
+    IF(ISING.EQ.1)THEN; CALL IPEST_GLM_ERROR(IBATCH,'Singular matrix after projection on eigenvectors which is rather odd, stopped.'); RETURN; ENDIF
+    B=0.0D0; DO I=1,NE; B(I,I)=1.0D0; ENDDO
+    DO I=1,NE; CALL IPEST_LUBACKSUB_DBL(M,INDX,B(1,I),NE); ENDDO
 
+    !## compute U=(M)-1*N
+    RU=0.0D0; DO I=1,NE; DO J=1,NE
+     RU(I)=RU(I)+(B(J,I)*N(J))
+    ENDDO; ENDDO
+
+    !## reproject reduced gradient on original space
+    !## compute U=(M)-1*N
+    U=0.0D0; DO I=1,NP; DO J=1,NE
+     U(I)=U(I)+(P(I,J)*RU(J))
+    ENDDO; ENDDO
+
+    DEALLOCATE(P,PT,M,N,RU,INDX,B)
+  
+   ELSE
+
+    !## compute inverse of (JQJ)-1 -> B
+    IF(ALLOCATED(INDX))DEALLOCATE(INDX); ALLOCATE(INDX(NP))
+    IF(ALLOCATED(B))DEALLOCATE(B); ALLOCATE(B(NP,NP))
+    IF(NP.EQ.1)THEN
+     B(1,1)=1.0D0/JQJ(1,1)
+    ELSE
+     CALL IPEST_LUDECOMP_DBL(JQJ,INDX,NP,ISING)
+     IF(ISING.EQ.1)THEN; CALL IPEST_GLM_ERROR(IBATCH,'Singular matrix,try activating the SVD option to avoid this, stopped.'); RETURN; ENDIF
+     B=0.0D0; DO I=1,NP; B(I,I)=1.0D0; ENDDO
+     DO I=1,NP; CALL IPEST_LUBACKSUB_DBL(JQJ,INDX,B(1,I),NP); ENDDO
+    ENDIF
+    
+    !## compute (JQJ)-1*JQR
+    U=0.0D0
+    DO I=1,NP; DO J=1,NP
+     U(I)=U(I)+(B(J,I)*JQR(J))
+    ENDDO; ENDDO
+
+    DEALLOCATE(INDX,B)
+
+   ENDIF
+
+   !## pointing downhill
+   U=-1.0D0*U 
+
+   !## store gradient update vector in list
+   I=IPEST_GLM_UPGRADEVECTOR_LAMBDA(ILAMBDA)
+   SELECT CASE (I)
+    CASE (0)
+     !## step inappropriate (too large) try another lambda   
+     LAMBDA=LAMBDA*GAMMA
+    CASE (1)
+     EXIT
+    CASE (2)
+     ILAMBDA=ILAMBDA-1 !DEFAULT
+     EXIT
+!     !## check whether number of parameters is equal to the number started this loop with
+!     MP=0; DO I=1,SIZE(PEST%PARAM); IF(PEST%PARAM(I)%PACT.EQ.1.AND.PEST%PARAM(I)%PIGROUP.GT.0)MP=MP+1; ENDDO
+!     IF(
+!     !## nothing changed in number of active parameters
+!     IF(MP.EQ.NP)EXIT
+   END SELECT
+ 
+  ENDDO
  ENDDO !## lambda-test-loop
  
  !## print parameters for lambda testing
@@ -972,7 +982,7 @@ CONTAINS
  IMPLICIT NONE
  INTEGER,INTENT(IN) :: IP1
  INTEGER,INTENT(OUT) :: IBND
- REAL(KIND=8),INTENT(OUT) :: P1,P2,PMIN,PMAX
+ REAL(KIND=DP_KIND),INTENT(OUT) :: P1,P2,PMIN,PMAX
  
  !## parameter adjustment hit the parameter boundary
  P1  =PEST%PARAM(IP1)%ALPHA(1)
@@ -982,21 +992,24 @@ CONTAINS
    
  IBND=0
  !## shoot over
- IF(P1.LE.PMIN)           IBND=-1; IF(P1.GE.PMAX)           IBND= 1
- !## too close
- IF(ABS(P1-PMIN).LE.XPBND)IBND=-1; IF(ABS(PMAX-P1).LE.XPBND)IBND= 1
+ IF(P1.LE.PMIN)IBND=-1
+ IF(P1.GE.PMAX)IBND= 1
+
+! !## too close
+! IF(ABS(P1-PMIN).LE.XPBND)IBND=-1; IF(ABS(PMAX-P1).LE.XPBND)IBND= 1
  
  END SUBROUTINE IPEST_GLM_GETBOUNDARY
  
  !###====================================================================
- LOGICAL FUNCTION IPEST_GLM_UPGRADEVECTOR_LAMBDA(ILAMBDA)
+ INTEGER FUNCTION IPEST_GLM_UPGRADEVECTOR_LAMBDA(ILAMBDA)
  !###====================================================================
  IMPLICIT NONE
  INTEGER,INTENT(IN) :: ILAMBDA
- INTEGER :: I,IP1,IP2
-
+ INTEGER :: I,IP1,IP2,IBND
+ REAL(KIND=DP_KIND) :: F,PMAX,PMIN,P1,P2,AF,G
+ 
  !## exit code
- IPEST_GLM_UPGRADEVECTOR_LAMBDA=.FALSE.
+ IPEST_GLM_UPGRADEVECTOR_LAMBDA=0
 
  !## fill in by default 
  DO IP1=1,SIZE(PEST%PARAM); PEST%PARAM(IP1)%ALPHA(1)=PEST%PARAM(IP1)%ALPHA(2); ENDDO
@@ -1010,69 +1023,54 @@ CONTAINS
   ENDDO
  ENDDO  
 
-! !## check for size of adjustment
-! DO IP1=1,SIZE(PEST%PARAM)
-!   
-!  !## inactive parameter
-!  IF(PEST%PARAM(IP1)%PACT.NE.1)CYCLE
-!   
-!  !## check size of adjustment
-!  IF(PEST%PARAM(IP1)%PLOG.EQ.1)THEN
-!   F=10.0D0**(PEST%PARAM(IP1)%ALPHA(1))/10.0D0**(PEST%PARAM(IP1)%ALPHA(2))
-!  ELSE
-!   F=    PEST%PARAM(IP1)%ALPHA(1) /    PEST%PARAM(IP1)%ALPHA(2)
-!  ENDIF 
-!
-!!  !## adjustment too large decrease stepsize
-!!  IF(F.LT.1.0D0/PEST%PARAM(IP1)%PINCREASE)THEN
-!!  ELSEIF(F.GT.PEST%PARAM(IP1)%PINCREASE)THEN
-!!  ENDIF
-!
-!  CALL IPEST_GLM_GETBOUNDARY(IP1,IBND,P1,P2,PMIN,PMAX)
-!
-!  !## parameter hits the boundary
-!  IF(IBND.NE.0)THEN
-!   !## hits the same boundary as before - skip it
-!   IF(IBND.EQ.PEST%PARAM(IP1)%IBND)THEN 
-!    !## ignore this parameter (group) for now - reset lambda and search another update vector
-!    PEST%PARAM(IP1)%PACT=-1
-!    LAMBDARESET=.TRUE.; RETURN
-!
-!   ELSE
-!
-!    AF=1.0D0
-!    IF(P1.LT.PMIN)AF=(P2-PMIN)/(P2-P1)
-!    IF(P1.GT.PMAX)AF=(PMAX-P2)/(P1-P2)
-!    !## keep track of minimal adjustment of vector
-!    F=MIN(AF,F)
-!    !## recompute gradient and set this parameter on boundary
-!    IF(F.LT.0.1D0)THEN
-!     G=PEST%PARAM(IP1)%ALPHA(1)-PEST%PARAM(IP1)%ALPHA(2)
-!     G=G*F
-!     PEST%PARAM(IP1)%ALPHA(1)=PEST%PARAM(IP1)%ALPHA(2)+G
-!     PEST%PARAM(IP1)%PACT=-1
-!     LAMBDARESET=.TRUE.; RETURN
-!    ENDIF
-!   ENDIF
-!  ENDIF  
-! ENDDO
-! 
-! !## corrects all gradients with this factor
-! IF(F.LT.1.0D0)THEN
-!   
-!  !## adjust all parameters
-!  DO IP2=1,SIZE(PEST%PARAM) 
-!   IF(PEST%PARAM(IP2)%PACT.NE.1)CYCLE
-!  
-!   G=PEST%PARAM(IP2)%ALPHA(1)-PEST%PARAM(IP2)%ALPHA(2)
-!   G=G*F
-!
-!   !## update parameters
-!   PEST%PARAM(IP2)%ALPHA(1)=PEST%PARAM(IP2)%ALPHA(2)+G
-!  ENDDO
-!
-! ENDIF
+ AF=1.0D0
+ 
+ !## check for size of adjustment
+ DO IP1=1,SIZE(PEST%PARAM)
+  !## inactive parameter
+  IF(PEST%PARAM(IP1)%PACT.NE.1)CYCLE
+  !## check size of adjustment
+  IF(PEST%PARAM(IP1)%PLOG.EQ.1)THEN
+   F=10.0D0**(PEST%PARAM(IP1)%ALPHA(1))/10.0D0**(PEST%PARAM(IP1)%ALPHA(2))
+  ELSE
+   F=PEST%PARAM(IP1)%ALPHA(1)/PEST%PARAM(IP1)%ALPHA(2)
+  ENDIF 
+  !## adjustment too large try another lambda
+  IF(F.LT.1.0D0/PEST%PARAM(IP1)%PINCREASE.OR. &
+     F.GT.      PEST%PARAM(IP1)%PINCREASE)RETURN
+
+  CALL IPEST_GLM_GETBOUNDARY(IP1,IBND,P1,P2,PMIN,PMAX)
+
+  !## parameter hits the boundary
+  IF(IBND.NE.0)THEN
+   !## hits the same boundary as before - skip it
+   IF(IBND.EQ.PEST%PARAM(IP1)%IBND)THEN 
+    !## ignore this parameter (group) for now - reuse current lambda and search another update vector ignoring this parameters again
+    PEST%PARAM(IP1)%PACT=-1; IPEST_GLM_UPGRADEVECTOR_LAMBDA=2; RETURN
+   ELSE
+    !## reduce size of update vector to hit boundary
+    IF(P1.LT.PMIN)F=(P2-PMIN)/(P2-P1)
+    IF(P1.GT.PMAX)F=(PMAX-P2)/(P1-P2)
+    !## keep track of minimal adjustment of vector
+    AF=MIN(AF,F)
+   ENDIF
+  ENDIF  
+ ENDDO
   
+ !## corrects all gradients with this factor
+ IF(AF.LT.1.0D0)THEN
+  !## adjust all parameters
+  DO IP2=1,SIZE(PEST%PARAM) 
+   IF(PEST%PARAM(IP2)%PACT.NE.1)CYCLE
+  
+   G=PEST%PARAM(IP2)%ALPHA(1)-PEST%PARAM(IP2)%ALPHA(2)
+   G=G*AF
+
+   !## update parameters
+   PEST%PARAM(IP2)%ALPHA(1)=PEST%PARAM(IP2)%ALPHA(2)+G
+  ENDDO
+ ENDIF
+ 
  !## copy gradients to all groups
  DO IP1=1,SIZE(PEST%PARAM)
   IF(PEST%PARAM(IP1)%PACT.NE.1)CYCLE
@@ -1087,181 +1085,181 @@ CONTAINS
  ENDDO
  
  !## correct update gradient found
- IPEST_GLM_UPGRADEVECTOR_LAMBDA=.TRUE.
+ IPEST_GLM_UPGRADEVECTOR_LAMBDA=1
 
  END FUNCTION IPEST_GLM_UPGRADEVECTOR_LAMBDA
  
- !###====================================================================
- LOGICAL FUNCTION IPEST_GLM_UPGRADEVECTOR(FCT,LCHECK,ITER,LAMBDARESET)
- !###====================================================================
- IMPLICIT NONE
- INTEGER,INTENT(IN) :: ITER
- LOGICAL,INTENT(IN) :: LCHECK
- LOGICAL,INTENT(OUT),OPTIONAL :: LAMBDARESET
- REAL(KIND=8),INTENT(IN) :: FCT
- REAL(KIND=8) :: AF,F,G,P1,P2,PMIN,PMAX
- INTEGER :: I,J,IP1,IP2,IBND
-
- !## exit code
- IPEST_GLM_UPGRADEVECTOR=.FALSE.
- 
- IF(PRESENT(LAMBDARESET))LAMBDARESET=.FALSE.
- 
- !## adjust vector for fct (line-search)
- I=0; DO IP1=1,SIZE(PEST%PARAM)
-  IF(PEST%PARAM(IP1)%PACT.NE.1)CYCLE
-  I=I+1; U(I)=U(I)*FCT
- ENDDO
-
- !## fill in by default 
- DO IP1=1,SIZE(PEST%PARAM); PEST%PARAM(IP1)%ALPHA(1)=PEST%PARAM(IP1)%ALPHA(2); ENDDO
- 
- I=0; DO IP1=1,SIZE(PEST%PARAM)
-  IF(PEST%PARAM(IP1)%PACT.NE.1)CYCLE
-  I=I+1; DO IP2=1,SIZE(PEST%PARAM)
-   IF(PEST%PARAM(IP1)%PIGROUP.EQ.ABS(PEST%PARAM(IP2)%PIGROUP))THEN
-    PEST%PARAM(IP2)%ALPHA(1)=PEST%PARAM(IP2)%ALPHA(2)+U(I)
-   ENDIF
-  ENDDO
- ENDDO  
-
- !## check whether boundary has been hit or maximum adjustment exceeds
- IF(LCHECK)THEN
-
-  !## check for size of adjustment
-  DO IP1=1,SIZE(PEST%PARAM)
-   
-   !## inactive parameter
-   IF(PEST%PARAM(IP1)%PACT.NE.1)CYCLE
-   
-   !## check size of adjustment
-   IF(PEST%PARAM(IP1)%PLOG.EQ.1)THEN
-    F=10.0D0**(PEST%PARAM(IP1)%ALPHA(1))/10.0D0**(PEST%PARAM(IP1)%ALPHA(2))
-   ELSE
-    F=    PEST%PARAM(IP1)%ALPHA(1) /    PEST%PARAM(IP1)%ALPHA(2)
-   ENDIF 
-
-   !## adjustment too large -causes to get another lambda
-   IF(F.LT.1.0D0/PEST%PARAM(IP1)%PINCREASE.OR.F.GT.PEST%PARAM(IP1)%PINCREASE)THEN
-!    IF(TRIM(PEST%PARAM(IP1)%ACRONYM).EQ.'')THEN
-!     WRITE(IUPESTOUT,'(A,G15.8)') 'Increase Lambda - adjustment for parameter '//TRIM(ITOS(IP1))//' to small/large ',F
-!    ELSE
-!     WRITE(IUPESTOUT,'(A,G15.8)') 'Increase Lambda - adjustment for parameter '//TRIM(PEST%PARAM(IP1)%ACRONYM)//' to small/large ',F
-!    ENDIF
-!    FLUSH(IUPESTOUT)
-    RETURN
-   ENDIF
-  ENDDO
-  
-  F=1.0D0
-
-  !## check for boundary of parameter
-  DO IP1=1,SIZE(PEST%PARAM)
-   
-   !## inactive parameter
-   IF(PEST%PARAM(IP1)%PACT.NE.1)CYCLE
-
-   CALL IPEST_GLM_GETBOUNDARY(IP1,IBND,P1,P2,PMIN,PMAX)
-
-   !## parameter hits the boundary
-   IF(IBND.NE.0)THEN
-    !## hits the same boundary as before - skip it
-    IF(IBND.EQ.PEST%PARAM(IP1)%IBND)THEN 
-     !## ignore this parameter (group) for now - reset lambda and search another update vector
-     PEST%PARAM(IP1)%PACT=-1
-!     IF(TRIM(PEST%PARAM(IP1)%ACRONYM).EQ.'')THEN
-!      WRITE(IUPESTOUT,'(A)') 'Reset lambda - parameter '//TRIM(ITOS(IP1))//' hits boundary.'
-!     ELSE
-!      WRITE(IUPESTOUT,'(A)') 'Reset lambda - parameter '//TRIM(PEST%PARAM(IP1)%ACRONYM)//' hits boundary.'
-!     ENDIF
-!     FLUSH(IUPESTOUT)
-     LAMBDARESET=.TRUE.; RETURN
-
-    ELSE
-
-     AF=1.0D0
-     IF(P1.LT.PMIN)AF=(P2-PMIN)/(P2-P1)
-     IF(P1.GT.PMAX)AF=(PMAX-P2)/(P1-P2)
-!     WRITE(IUPESTOUT,'(A,I10,4F10.3)') 'PARAMETER,P1,P2,PMIN,PMAX',IP1,P1,P2,PMIN,PMAX
-     !## keep track of minimal adjustment of vector
-     F=MIN(AF,F)
-!     WRITE(IUPESTOUT,'(A,2F10.3)') 'AF,F',AF,F
-     !## recompute gradient and set this parameter on boundary
-     IF(F.LT.0.1D0)THEN
-      G=PEST%PARAM(IP1)%ALPHA(1)-PEST%PARAM(IP1)%ALPHA(2)
-      G=G*F
-      PEST%PARAM(IP1)%ALPHA(1)=PEST%PARAM(IP1)%ALPHA(2)+G
-      PEST%PARAM(IP1)%PACT=-1
-      !## ignore this parameter
-!      IF(TRIM(PEST%PARAM(IP1)%ACRONYM).EQ.'')THEN
-!       WRITE(IUPESTOUT,'(A,F10.2,A)') 'Reset lambda - parameter '//TRIM(ITOS(IP1))//' close by boundary f=',F,' snapped to it'
-!      ELSE
-!       WRITE(IUPESTOUT,'(A,F10.2,A)') 'Reset lambda - parameter '//TRIM(PEST%PARAM(IP1)%ACRONYM)//' close by boundary f=',F,' snapped to it'
-!      ENDIF
-!      FLUSH(IUPESTOUT)
-      LAMBDARESET=.TRUE.; RETURN
-     ENDIF
-    ENDIF
-   ENDIF  
-  ENDDO
- 
-  !## corrects all gradients with this factor
-  IF(F.LT.1.0D0)THEN
-   
-!   WRITE(*,*) 'Correct update vector=',F
-   
-   !## adjust all parameters
-   DO IP2=1,SIZE(PEST%PARAM) 
-    IF(PEST%PARAM(IP2)%PACT.NE.1)CYCLE
-   
-    G=PEST%PARAM(IP2)%ALPHA(1)-PEST%PARAM(IP2)%ALPHA(2)
-    G=G*F
-
-    !## update parameters
-    PEST%PARAM(IP2)%ALPHA(1)=PEST%PARAM(IP2)%ALPHA(2)+G
-   ENDDO
-
-  ENDIF
- 
- ENDIF
-  
- !## correct update gradient found
- IPEST_GLM_UPGRADEVECTOR=.TRUE.
-
- !## copy gradients to all groups
- DO IP1=1,SIZE(PEST%PARAM)
-  IF(PEST%PARAM(IP1)%PACT.NE.1)CYCLE
-  DO IP2=1,SIZE(PEST%PARAM)
-   IF(ABS(PEST%PARAM(IP2)%PIGROUP).EQ.PEST%PARAM(IP1)%PIGROUP)PEST%PARAM(IP2)%ALPHA(1)=PEST%PARAM(IP1)%ALPHA(1)
-  ENDDO
- ENDDO
- 
- !## save alphas for history-logging
- J=0; DO IP1=1,SIZE(PEST%PARAM)
-  IF(PEST%PARAM(IP1)%PACT.EQ.0)CYCLE
-
-  IF(PEST%PARAM(IP1)%PLOG.EQ.1)THEN
-   PEST%PARAM(IP1)%ALPHA_HISTORY(ITER)=10.0D0**(PEST%PARAM(IP1)%ALPHA(1))
-  ELSE
-   PEST%PARAM(IP1)%ALPHA_HISTORY(ITER)=PEST%PARAM(IP1)%ALPHA(1)
-  ENDIF
-  
-  !## active parameter
-  IF(PEST%PARAM(IP1)%PACT.EQ.1)THEN
-   !## store final gradient
-   J=J+1; U(J)=PEST%PARAM(IP1)%ALPHA(1)-PEST%PARAM(IP1)%ALPHA(2)
-  ENDIF
-  
- ENDDO
-
-! WRITE(IUPESTOUT,*) 'final ones'
-! DO I=1,SIZE(PEST%PARAM)
-!  WRITE(IUPESTOUT,'(3I5,1x,2G15.8)') I,PEST%PARAM(I)%PACT,PEST%PARAM(I)%PIGROUP,PEST%PARAM(I)%ALPHA(1),PEST%PARAM(I)%ALPHA(2)
+! !###====================================================================
+! LOGICAL FUNCTION IPEST_GLM_UPGRADEVECTOR(FCT,LCHECK,ITER,LAMBDARESET)
+! !###====================================================================
+! IMPLICIT NONE
+! INTEGER,INTENT(IN) :: ITER
+! LOGICAL,INTENT(IN) :: LCHECK
+! LOGICAL,INTENT(OUT),OPTIONAL :: LAMBDARESET
+! REAL(KIND=DP_KIND),INTENT(IN) :: FCT
+! REAL(KIND=DP_KIND) :: AF,F,G,P1,P2,PMIN,PMAX
+! INTEGER :: I,J,IP1,IP2,IBND
+!
+! !## exit code
+! IPEST_GLM_UPGRADEVECTOR=.FALSE.
+! 
+! IF(PRESENT(LAMBDARESET))LAMBDARESET=.FALSE.
+! 
+! !## adjust vector for fct (line-search)
+! I=0; DO IP1=1,SIZE(PEST%PARAM)
+!  IF(PEST%PARAM(IP1)%PACT.NE.1)CYCLE
+!  I=I+1; U(I)=U(I)*FCT
 ! ENDDO
-! WRITE(IUPESTOUT,*) 
-! FLUSH(IUPESTOUT)
- 
- END FUNCTION IPEST_GLM_UPGRADEVECTOR
+!
+! !## fill in by default 
+! DO IP1=1,SIZE(PEST%PARAM); PEST%PARAM(IP1)%ALPHA(1)=PEST%PARAM(IP1)%ALPHA(2); ENDDO
+! 
+! I=0; DO IP1=1,SIZE(PEST%PARAM)
+!  IF(PEST%PARAM(IP1)%PACT.NE.1)CYCLE
+!  I=I+1; DO IP2=1,SIZE(PEST%PARAM)
+!   IF(PEST%PARAM(IP1)%PIGROUP.EQ.ABS(PEST%PARAM(IP2)%PIGROUP))THEN
+!    PEST%PARAM(IP2)%ALPHA(1)=PEST%PARAM(IP2)%ALPHA(2)+U(I)
+!   ENDIF
+!  ENDDO
+! ENDDO  
+!
+! !## check whether boundary has been hit or maximum adjustment exceeds
+! IF(LCHECK)THEN
+!
+!  !## check for size of adjustment
+!  DO IP1=1,SIZE(PEST%PARAM)
+!   
+!   !## inactive parameter
+!   IF(PEST%PARAM(IP1)%PACT.NE.1)CYCLE
+!   
+!   !## check size of adjustment
+!   IF(PEST%PARAM(IP1)%PLOG.EQ.1)THEN
+!    F=10.0D0**(PEST%PARAM(IP1)%ALPHA(1))/10.0D0**(PEST%PARAM(IP1)%ALPHA(2))
+!   ELSE
+!    F=    PEST%PARAM(IP1)%ALPHA(1) /    PEST%PARAM(IP1)%ALPHA(2)
+!   ENDIF 
+!
+!   !## adjustment too large -causes to get another lambda
+!   IF(F.LT.1.0D0/PEST%PARAM(IP1)%PINCREASE.OR.F.GT.PEST%PARAM(IP1)%PINCREASE)THEN
+!!    IF(TRIM(PEST%PARAM(IP1)%ACRONYM).EQ.'')THEN
+!!     WRITE(IUPESTOUT,'(A,G15.8)') 'Increase Lambda - adjustment for parameter '//TRIM(ITOS(IP1))//' to small/large ',F
+!!    ELSE
+!!     WRITE(IUPESTOUT,'(A,G15.8)') 'Increase Lambda - adjustment for parameter '//TRIM(PEST%PARAM(IP1)%ACRONYM)//' to small/large ',F
+!!    ENDIF
+!!    FLUSH(IUPESTOUT)
+!    RETURN
+!   ENDIF
+!  ENDDO
+!  
+!  F=1.0D0
+!
+!  !## check for boundary of parameter
+!  DO IP1=1,SIZE(PEST%PARAM)
+!   
+!   !## inactive parameter
+!   IF(PEST%PARAM(IP1)%PACT.NE.1)CYCLE
+!
+!   CALL IPEST_GLM_GETBOUNDARY(IP1,IBND,P1,P2,PMIN,PMAX)
+!
+!   !## parameter hits the boundary
+!   IF(IBND.NE.0)THEN
+!    !## hits the same boundary as before - skip it
+!    IF(IBND.EQ.PEST%PARAM(IP1)%IBND)THEN 
+!     !## ignore this parameter (group) for now - reset lambda and search another update vector
+!     PEST%PARAM(IP1)%PACT=-1
+!!     IF(TRIM(PEST%PARAM(IP1)%ACRONYM).EQ.'')THEN
+!!      WRITE(IUPESTOUT,'(A)') 'Reset lambda - parameter '//TRIM(ITOS(IP1))//' hits boundary.'
+!!     ELSE
+!!      WRITE(IUPESTOUT,'(A)') 'Reset lambda - parameter '//TRIM(PEST%PARAM(IP1)%ACRONYM)//' hits boundary.'
+!!     ENDIF
+!!     FLUSH(IUPESTOUT)
+!     LAMBDARESET=.TRUE.; RETURN
+!
+!    ELSE
+!
+!     AF=1.0D0
+!     IF(P1.LT.PMIN)AF=(P2-PMIN)/(P2-P1)
+!     IF(P1.GT.PMAX)AF=(PMAX-P2)/(P1-P2)
+!!     WRITE(IUPESTOUT,'(A,I10,4F10.3)') 'PARAMETER,P1,P2,PMIN,PMAX',IP1,P1,P2,PMIN,PMAX
+!     !## keep track of minimal adjustment of vector
+!     F=MIN(AF,F)
+!!     WRITE(IUPESTOUT,'(A,2F10.3)') 'AF,F',AF,F
+!     !## recompute gradient and set this parameter on boundary
+!     IF(F.LT.0.1D0)THEN
+!      G=PEST%PARAM(IP1)%ALPHA(1)-PEST%PARAM(IP1)%ALPHA(2)
+!      G=G*F
+!      PEST%PARAM(IP1)%ALPHA(1)=PEST%PARAM(IP1)%ALPHA(2)+G
+!      PEST%PARAM(IP1)%PACT=-1
+!      !## ignore this parameter
+!!      IF(TRIM(PEST%PARAM(IP1)%ACRONYM).EQ.'')THEN
+!!       WRITE(IUPESTOUT,'(A,F10.2,A)') 'Reset lambda - parameter '//TRIM(ITOS(IP1))//' close by boundary f=',F,' snapped to it'
+!!      ELSE
+!!       WRITE(IUPESTOUT,'(A,F10.2,A)') 'Reset lambda - parameter '//TRIM(PEST%PARAM(IP1)%ACRONYM)//' close by boundary f=',F,' snapped to it'
+!!      ENDIF
+!!      FLUSH(IUPESTOUT)
+!      LAMBDARESET=.TRUE.; RETURN
+!     ENDIF
+!    ENDIF
+!   ENDIF  
+!  ENDDO
+! 
+!  !## corrects all gradients with this factor
+!  IF(F.LT.1.0D0)THEN
+!   
+!!   WRITE(*,*) 'Correct update vector=',F
+!   
+!   !## adjust all parameters
+!   DO IP2=1,SIZE(PEST%PARAM) 
+!    IF(PEST%PARAM(IP2)%PACT.NE.1)CYCLE
+!   
+!    G=PEST%PARAM(IP2)%ALPHA(1)-PEST%PARAM(IP2)%ALPHA(2)
+!    G=G*F
+!
+!    !## update parameters
+!    PEST%PARAM(IP2)%ALPHA(1)=PEST%PARAM(IP2)%ALPHA(2)+G
+!   ENDDO
+!
+!  ENDIF
+! 
+! ENDIF
+!  
+! !## correct update gradient found
+! IPEST_GLM_UPGRADEVECTOR=.TRUE.
+!
+! !## copy gradients to all groups
+! DO IP1=1,SIZE(PEST%PARAM)
+!  IF(PEST%PARAM(IP1)%PACT.NE.1)CYCLE
+!  DO IP2=1,SIZE(PEST%PARAM)
+!   IF(ABS(PEST%PARAM(IP2)%PIGROUP).EQ.PEST%PARAM(IP1)%PIGROUP)PEST%PARAM(IP2)%ALPHA(1)=PEST%PARAM(IP1)%ALPHA(1)
+!  ENDDO
+! ENDDO
+! 
+! !## save alphas for history-logging
+! J=0; DO IP1=1,SIZE(PEST%PARAM)
+!  IF(PEST%PARAM(IP1)%PACT.EQ.0)CYCLE
+!
+!  IF(PEST%PARAM(IP1)%PLOG.EQ.1)THEN
+!   PEST%PARAM(IP1)%ALPHA_HISTORY(ITER)=10.0D0**(PEST%PARAM(IP1)%ALPHA(1))
+!  ELSE
+!   PEST%PARAM(IP1)%ALPHA_HISTORY(ITER)=PEST%PARAM(IP1)%ALPHA(1)
+!  ENDIF
+!  
+!  !## active parameter
+!  IF(PEST%PARAM(IP1)%PACT.EQ.1)THEN
+!   !## store final gradient
+!   J=J+1; U(J)=PEST%PARAM(IP1)%ALPHA(1)-PEST%PARAM(IP1)%ALPHA(2)
+!  ENDIF
+!  
+! ENDDO
+!
+!! WRITE(IUPESTOUT,*) 'final ones'
+!! DO I=1,SIZE(PEST%PARAM)
+!!  WRITE(IUPESTOUT,'(3I5,1x,2G15.8)') I,PEST%PARAM(I)%PACT,PEST%PARAM(I)%PIGROUP,PEST%PARAM(I)%ALPHA(1),PEST%PARAM(I)%ALPHA(2)
+!! ENDDO
+!! WRITE(IUPESTOUT,*) 
+!! FLUSH(IUPESTOUT)
+! 
+! END FUNCTION IPEST_GLM_UPGRADEVECTOR
 
  !###====================================================================
  SUBROUTINE IPEST_GLM_ECHOPARAMETERS(IBATCH,ITER)
@@ -1286,9 +1284,9 @@ CONTAINS
  C2=(1.0D0-MSR%TJ/MSR%PJ)*100.0D0
  C3=(1.0D0-MSR%TJ/MSR%TJ_H(0))*100.0D0
  IF(ITER.EQ.0)THEN
-  WRITE(IUPESTEFFICIENCY,'(2F15.7)') MSR%TJ,REAL(SQRT(MSR%TJ))/REAL(MSR%NOBS,8)
+  WRITE(IUPESTEFFICIENCY,'(2(F15.7,1X))') MSR%TJ,REAL(SQRT(MSR%TJ))/REAL(MSR%NOBS,8)
  ELSE
-  WRITE(IUPESTEFFICIENCY,'(5F15.7)') MSR%TJ,REAL(SQRT(MSR%TJ))/REAL(MSR%NOBS,8),C1,C2,C3
+  WRITE(IUPESTEFFICIENCY,'(5(F15.7,1X))') MSR%TJ,REAL(SQRT(MSR%TJ))/REAL(MSR%NOBS,8),C1,C2,C3
  ENDIF
  
  !## save alphas for history-logging
@@ -1389,8 +1387,10 @@ CONTAINS
        '%) > PEST_JSTOP ('//TRIM(RTOS(PEST%PE_STOP,'G',7))//'%)'); STOP
  ENDIF
 
+ WRITE(*,'(/A/)') 'Current Obj.Func. '//TRIM(RTOS(MSR%TJ,'F',7))//'; current/total improvement '//TRIM(RTOS(C2,'F',7))//';'//TRIM(RTOS(C3,'F',7))//'%'
  !## next iteration
- WRITE(IUPESTOUT,'(/A/)') ' *** Next Optimization Cycle ***'; WRITE(*,'(/A/)') ' *** Next Optimization Cycle ***'
+ WRITE(IUPESTOUT,'(/A/)') ' *** Next Optimization Cycle '//TRIM(ITOS(ITER+1))//' ***'
+ WRITE(*,'(/A/)')         ' *** Next Optimization Cycle '//TRIM(ITOS(ITER+1))//' ***'
 
  END SUBROUTINE IPEST_GLM_ECHOPARAMETERS
  
@@ -1407,7 +1407,7 @@ CONTAINS
  REAL(KIND=DP_KIND) :: DF1,DF2,DJ1,DJ2,B1,CB,W,DH1,DH2,ZW,Z,Z1,Z2
  REAL(KIND=DP_KIND),ALLOCATABLE,DIMENSION(:,:) :: B 
  REAL(KIND=DP_KIND),ALLOCATABLE,DIMENSION(:,:) :: COR,COV
- REAL(KIND=DP_KIND),ALLOCATABLE,DIMENSION(:) :: DIAG
+! REAL(KIND=DP_KIND),ALLOCATABLE,DIMENSION(:) :: DIAG
  INTEGER,ALLOCATABLE,DIMENSION(:) :: INDX
  
  !## construct jqj - NORMAL MATRIX/HESSIAN
@@ -1439,14 +1439,17 @@ CONTAINS
  
  IF(.NOT.LCOV)THEN
   !## levenberg-marquardt
-  ALLOCATE(DIAG(NP)); DIAG=1.0D0 !DO I=1,NP; DIAG(I)=JQJ(I,I); ENDDO; DIAG=1.0D0
-  !## levenberg-marquardt (do not use diag(JQJ) as this empashises on less sensitivities
   DO I=1,NP
-   DO J=1,NP
-    JQJ(J,I)=JQJ(J,I)+MARQUARDT*DIAG(I)
-   ENDDO
+   JQJ(I,I)=JQJ(I,I)+MARQUARDT
   ENDDO
-  DEALLOCATE(DIAG)
+!  ALLOCATE(DIAG(NP)); DIAG=1.0D0 !DO I=1,NP; DIAG(I)=JQJ(I,I); ENDDO; DIAG=1.0D0
+!  !## levenberg-marquardt (do not use diag(JQJ) as this empashises on less sensitivities
+!  DO I=1,NP
+!   DO J=1,NP
+!    JQJ(J,I)=JQJ(J,I)+MARQUARDT*DIAG(I)
+!   ENDDO
+!  ENDDO
+!  DEALLOCATE(DIAG)
   RETURN
  ENDIF 
 
@@ -1786,7 +1789,7 @@ CONTAINS
   DIRNAME=TRIM(DIR)//'\IPEST_'//TRIM(CTYPE)//'#'//TRIM(ITOS(IPARAM))//'\TIMESERIES'
  ENDIF
  
- WRITE(*,'(A)') 'Getting residual for '//TRIM(CTYPE)//'#'//TRIM(ITOS(IPARAM))//' ...'
+! WRITE(*,'(A)') 'Getting residual for '//TRIM(CTYPE)//'#'//TRIM(ITOS(IPARAM))//' ...'
 
  !## initialise variables
  II=0; MSR%TJ=0.0D0; MSR%RJ=0.0D0
@@ -2112,32 +2115,32 @@ CONTAINS
  END FUNCTION IPEST_GLM_GETJ
 
  !#####=================================================================
- SUBROUTINE IPEST_GLM_PROGRESS(ITER,IGRAD,CTYPE,LAMBDA)
+ SUBROUTINE IPEST_GLM_PROGRESS(ITER,JGRAD,IGRAD,CTYPE,LAMBDA)
  !#####=================================================================
  IMPLICIT NONE
  CHARACTER(LEN=1),INTENT(IN) :: CTYPE
- INTEGER,INTENT(IN) :: IGRAD,ITER
+ INTEGER,INTENT(IN) :: JGRAD,IGRAD,ITER
  REAL(KIND=DP_KIND),INTENT(IN) :: LAMBDA
  REAL(KIND=DP_KIND) :: X1,X2
  
  IF(CTYPE.EQ.'P')THEN
   !## present parameter value
-  X1=PEST%PARAM(IGRAD)%GALPHA(IGRAD)
+  X1=PEST%PARAM(IGRAD)%GALPHA(JGRAD)
   IF(PEST%PARAM(IGRAD)%PLOG)X1=10.0D0**X1
   X2=PEST%PARAM(IGRAD)%ALPHA(2)
   IF(PEST%PARAM(IGRAD)%PLOG)X2=10.0D0**X2
  ELSEIF(CTYPE.EQ.'L')THEN
   !## present lambda
-  X1=LAMBDA*PBMAN%LAMBDA_TEST(IGRAD) 
+  X1=LAMBDA*PBMAN%LAMBDA_TEST(JGRAD) 
  ENDIF
 
  IF(CTYPE.EQ.'P')THEN
-  WRITE(IUPESTPROGRESS,'(I5,A15,4F15.7)') IGRAD,PEST%PARAM(IGRAD)%ACRONYM  ,X1,MSR%TJ,MSR%TJ-MSR%PJ,X2
+  WRITE(IUPESTPROGRESS,'(I5,A15,F15.7,2F15.3,F15.7)') IGRAD,PEST%PARAM(IGRAD)%ACRONYM  ,X1,MSR%TJ,MSR%TJ-MSR%PJ,X2
  ELSEIF(CTYPE.EQ.'L')THEN
   IF(ITER.EQ.0)THEN
-   WRITE(IUPESTPROGRESS,'(I5,30X,F15.7)') 0,MSR%TJ
+   WRITE(IUPESTPROGRESS,'(I5,30X,F15.3)') 0,MSR%TJ
   ELSE
-   WRITE(IUPESTPROGRESS,'(I5,A15,3F15.7)') IGRAD,'LAMBDA'//TRIM(ITOS(IGRAD)),X1,MSR%TJ,MSR%TJ-MSR%PJ
+   WRITE(IUPESTPROGRESS,'(I5,A15,F15.7,2F15.7)') IGRAD,'LAMBDA'//TRIM(ITOS(JGRAD)),X1,MSR%TJ,MSR%TJ-MSR%PJ
   ENDIF
  ENDIF
  
