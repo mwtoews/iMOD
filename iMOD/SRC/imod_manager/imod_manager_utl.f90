@@ -79,8 +79,8 @@ CONTAINS
  IF(.NOT.PRESENT(IDFNAMEGIVEN))THEN
   IDFNAME=''
   IF(INETCDF.EQ.0)THEN
-   IF(.NOT.UTL_WSELECTFILE('All Known Files (*.idf;*.mdf;*.ipf;*.isg;*.iff;*.asc;*.gen;*.gef;*.map;*.txt)'//&
-                    '|*.idf;*.mdf;*.ipf;*.isg;*.iff;*.arr;*.asc;*.gen;*.gef;*.map;*.txt|'// &
+   IF(.NOT.UTL_WSELECTFILE('All Known Files (*.idf;*.mdf;*.ipf;*.isg;*.iff;*.asc;*.arr;*.gen;*.gef;*.map;*.txt)'//&
+                    '|*.idf;*.mdf;*.ipf;*.isg;*.iff;*.arr;*.asc;*.arr;*.gen;*.gef;*.map;*.txt|'// &
                     'iMOD Map (*.idf)|*.idf|'               //&
                     'iMOD Multi Data File (*.mdf)|*.mdf|'   //&
                     'iMOD Pointers (*.ipf)|*.ipf|'          //&
@@ -93,10 +93,10 @@ CONTAINS
                     'PC Raster Map file (*.map)|*.map|'     //&
                     'List of iMOD files (*.txt)|*.txt|',      &
                     LOADDIALOG+MUSTEXIST+PROMPTON+DIRCHANGE+MULTIFILE,IDFNAME,&
-                    'Load iMOD Map (*.idf,*.mdf,*.ipf,*.isg,*.iff,*.asc,*.gen,*.gef,*.map,*.txt)'))RETURN
+                    'Load iMOD Map (*.idf,*.mdf,*.ipf,*.isg,*.iff,*.arr,*.asc,*.gen,*.gef,*.map,*.txt)'))RETURN
   ELSEIF(INETCDF.EQ.1)THEN
-   IF(.NOT.UTL_WSELECTFILE('All Known Files (*.idf;*.mdf;*.ipf;*.isg;*.iff;*.nc;*.asc;*.gen;*.gef;*.map;*.txt)'//&
-                    '|*.idf;*.mdf;*.ipf;*.isg;*.iff,*.arr;*.nc;*.asc;*.gen;*.gef;*.map;*.txt|'// &
+   IF(.NOT.UTL_WSELECTFILE('All Known Files (*.idf;*.mdf;*.ipf;*.isg;*.iff;*.nc;*.asc;*.arr;*.gen;*.gef;*.map;*.txt)'//&
+                    '|*.idf;*.mdf;*.ipf;*.isg;*.iff,*.arr;*.nc;*.asc;*.arr;*.gen;*.gef;*.map;*.txt|'// &
                     'iMOD Map (*.idf)|*.idf|'               //&
                     'iMOD Multi Data File (*.mdf)|*.mdf|'   //&
                     'iMOD Pointers (*.ipf)|*.ipf|'          //&
@@ -110,7 +110,7 @@ CONTAINS
                     'PC Raster Map file (*.map)|*.map|'    //&
                     'List of iMOD files (*.txt)|*.txt|',      &
                     LOADDIALOG+MUSTEXIST+PROMPTON+DIRCHANGE+MULTIFILE,IDFNAME,&
-                    'Load iMOD Map (*.idf,*.mdf,*.ipf,*.isg,*.iff,*.nc,*.asc,*.gen,*.gef,*.map,*.txt)'))RETURN
+                    'Load iMOD Map (*.idf,*.mdf,*.ipf,*.isg,*.iff,*.nc,*.asc,*.arr,*.gen,*.gef,*.map,*.txt)'))RETURN
   ENDIF
  ELSE
   IDFNAME=IDFNAMEGIVEN
