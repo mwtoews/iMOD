@@ -3,5 +3,5 @@
 	<Configurations>
 		<Configuration Name="Debug|Win32" CommandArguments="d:\IMOD-MODELS\LHM\AGGREGATE.INI" WorkingDirectory="d:\IMOD\"/>
 		<Configuration Name="Release|Win32"/>
-		<Configuration Name="Debug|x64" CommandArguments="d:\TESTBANK\IMODFLOW\STEST\PST\T2\RUNFILE.INI" WorkingDirectory="D:\IMOD"/>
+		<Configuration Name="Debug|x64" CommandArguments="d:\TESTBANK\IMODFLOW\STEST\PST\T1\RUNFILE.INI" WorkingDirectory="D:\IMOD"/>
 		<Configuration Name="Release|x64" CommandArguments="d:\IMOD-MODELS\SWISS\DBASE_HYDRHA\IMOD_USER\IMODBATCH\PLOTRESIDUAL.INI" WorkingDirectory="d:\IMOD"/></Configurations></VisualStudioUserFile>
