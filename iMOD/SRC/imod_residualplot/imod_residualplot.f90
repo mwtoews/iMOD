@@ -206,8 +206,9 @@ CONTAINS
  SUBROUTINE RESIDUAL_DATA()
  !###===================================
  IMPLICIT NONE
- INTEGER :: I,IU,NIPF,IOS,N,NN,MM,L
- REAL(KIND=DP_KIND) :: J,WMDL,WRES,O,M,X,Y,W
+ INTEGER :: I,J,IU,NIPF,IOS,N,NN,MM,L
+ INTEGER(KIND=DP_KIND) :: DD
+ REAL(KIND=DP_KIND) :: WMDL,WRES,O,M,X,Y,W,JOBJ
  CHARACTER(LEN=256) :: LINE
  CHARACTER(LEN=32) :: C
  REAL(KIND=DP_KIND),DIMENSION(:),ALLOCATABLE :: GF_H,GF_O
@@ -217,7 +218,7 @@ CONTAINS
  
  DO I=1,2
 
-  !## three loops, first to get number of ipf files, second to get number of points per ipf, third to read all in memory
+  !## first to get number of ipf files and get number of points per ipf, third to read all in memory
   NIPF=0
   DO 
    READ(IU,'(A256)',IOSTAT=IOS) LINE; IF(IOS.NE.0)EXIT
@@ -234,27 +235,33 @@ CONTAINS
    DO J=1,NIPF
     ALLOCATE(IPFR(J)%X(N),IPFR(J)%Y(N),IPFR(J)%L(N),IPFR(J)%O(N),IPFR(J)%M(N),IPFR(J)%W(N),IPFR(J)%C(N))
     IF(ITRANSIENT.EQ.1)ALLOCATE(IPFR(J)%D(N))
-    IF(IAVERAGE.EQ.1)ALLOCATE(IPFR(J)%NS(N))
+    IF(IAVERAGE.EQ.1)  ALLOCATE(IPFR(J)%NS(N))
    ENDDO
   ENDIF
   
-  IPFR%NPOINTS=0; IPFR(NIPF)%O=0.0; IPFR(NIPF)%M=0.0
+  DO J=1,NIPF
+   IPFR(J)%NPOINTS=0; IPFR(J)%O=0.0D0; IPFR(J)%M=0.0D0
+  ENDDO
 
-  NN=0; MM=0; DO
+  NN=0; MM=0
+  DO
 
    READ(IU,'(A256)',IOSTAT=IOS) LINE; IF(IOS.NE.0)EXIT
    !## steadystate
    IF(ITRANSIENT.EQ.0)READ(LINE,'(139X,I10)',IOSTAT=IOS) NIPF
    IF(ITRANSIENT.EQ.1)READ(LINE,'(171X,I10)',IOSTAT=IOS) NIPF
    IF(IOS.NE.0)THEN
-    WRITE(*,'(A)') 'Error reading TXT file, are you sure to select the correct ITRANSIENT keyword ?'; STOP
+    WRITE(*,'(A)') 'Error reading TXT file, are you sure to select the correct ITRANSIENT keyword ?'
+    WRITE(*,'(A)') 'Skipping:'//TRIM(LINE)
+    CYCLE
    ENDIF
    
    N=IPFR(NIPF)%NPOINTS; IF(I.EQ.1)N=MIN(N,1)
 
    IF(ITRANSIENT.EQ.1)THEN
-    READ(LINE,'(2(G15.7,1X),I10,1X,3(G15.7,1X),5(15X,1X),10X,1X,32A,1X,I15)') X,Y,L,W,O,M,C
-    C=UTL_CAP(C,'U'); IF(C(1:3).EQ.'IPF')C=C(INDEX(C,'_')+1:)
+    READ(LINE,'(2(F15.0,1X),I10,1X,3(F15.0,1X),91X,A32,1X,I15)') X,Y,L,W,O,M,C,DD
+    C=UTL_CAP(C,'U')
+    IF(C(1:3).EQ.'IPF')C=C(INDEX(C,'_')+1:)
     IF(N.GT.0.AND.IAVERAGE.EQ.1)THEN
      IF(X.NE.IPFR(NIPF)%X(N).OR.Y.NE.IPFR(NIPF)%Y(N).OR.IPFR(NIPF)%L(N).NE.L)THEN
       IPFR(NIPF)%O(N)=IPFR(NIPF)%O(N)/DBLE(NN)
@@ -269,20 +276,27 @@ CONTAINS
     ELSE
      IPFR(NIPF)%NPOINTS=IPFR(NIPF)%NPOINTS+1
      IF(I.EQ.2)THEN
-      N=IPFR(NIPF)%NPOINTS; IPFR(NIPF)%O(N)=0.0; IPFR(NIPF)%M(N)=0.0
+      N=IPFR(NIPF)%NPOINTS; IPFR(NIPF)%O(N)=0.0D0; IPFR(NIPF)%M(N)=0.0D0
      ENDIF
     ENDIF
     IF(I.EQ.1)N=1    
     !## store data
-    IPFR(NIPF)%X(N)=X; IPFR(NIPF)%Y(N)=Y; IPFR(NIPF)%L(N)=L; IPFR(NIPF)%W(N)=W; IPFR(NIPF)%C(N)=C
+    IPFR(NIPF)%X(N)=X
+    IPFR(NIPF)%Y(N)=Y
+    IPFR(NIPF)%L(N)=L
+    IPFR(NIPF)%W(N)=W
+    IPFR(NIPF)%C(N)=C
     IPFR(NIPF)%O(N)=IPFR(NIPF)%O(N)+O
     IPFR(NIPF)%M(N)=IPFR(NIPF)%M(N)+M
-    NN=NN+1; IF(I.EQ.2)THEN; GF_H(NN)=M; GF_O(NN)=O; ENDIF
-    READ(LINE,'(171X,10X,1X,32X,1X,I15)',IOSTAT=IOS) IPFR(NIPF)%D(N)
+    IPFR(NIPF)%D(N)=DD
+    NN=NN+1
+    IF(I.EQ.2.AND.IAVERAGE.EQ.1)THEN
+     GF_H(NN)=M; GF_O(NN)=O
+    ENDIF
    ELSE
-    READ(LINE,'(2(G15.7,1X),I10,1X,6(G15.7,1X))') IPFR(NIPF)%X(N),IPFR(NIPF)%Y(N), &
+    READ(LINE,'(2(F15.0,1X),I10,1X,6(F15.0,1X))') IPFR(NIPF)%X(N),IPFR(NIPF)%Y(N), &
                                      IPFR(NIPF)%L(N),IPFR(NIPF)%O(N),IPFR(NIPF)%M(N), &
-                                     J,WMDL,WRES,IPFR(NIPF)%W(N)
+                                     JOBJ,WMDL,WRES,IPFR(NIPF)%W(N)
    ENDIF
 
   ENDDO
@@ -290,13 +304,17 @@ CONTAINS
   IF(I.EQ.1)THEN
    DO J=1,SIZE(IPFR)
     N=IPFR(J)%NPOINTS
-    DEALLOCATE(IPFR(J)%X,IPFR(J)%Y,IPFR(J)%L,IPFR(J)%O,IPFR(J)%M,IPFR(J)%W)
+    DEALLOCATE(IPFR(J)%X,IPFR(J)%Y,IPFR(J)%L,IPFR(J)%O,IPFR(J)%M,IPFR(J)%W,IPFR(J)%C)
+    IF(ITRANSIENT.EQ.1)DEALLOCATE(IPFR(J)%D)
+    IF(IAVERAGE.EQ.1)DEALLOCATE(IPFR(J)%NS)
     ALLOCATE(IPFR(J)%X(N),IPFR(J)%Y(N),IPFR(J)%L(N),IPFR(J)%O(N), &
              IPFR(J)%M(N),IPFR(J)%W(N),IPFR(J)%C(N))
     IF(ITRANSIENT.EQ.1)ALLOCATE(IPFR(J)%D(N))
     IF(IAVERAGE.EQ.1)ALLOCATE(IPFR(J)%NS(N))
    ENDDO
-   ALLOCATE(GF_H(MM),GF_O(MM))
+   IF(IAVERAGE.EQ.1)THEN
+    ALLOCATE(GF_H(MM),GF_O(MM))
+   ENDIF
   ELSE
    IF(IAVERAGE.EQ.1)THEN
     IPFR(NIPF)%O(N)=IPFR(NIPF)%O(N)/DBLE(NN)
@@ -348,9 +366,8 @@ CONTAINS
    IF(.NOT.((RESIDUAL_PROC_SELLAY(I,J)).AND. &
             (RESIDUAL_PROC_SELDATE(I,J)).AND. &
             (RESIDUAL_PROC_SELWEIGHT(I,J))))CYCLE
-   
    !## skip weigth is zero anyhow
-   IF(IPFR(I)%W(J).LE.0)CYCLE
+   IF(IPFR(I)%W(J).LE.0.0D0)CYCLE
    
    N=N+1
    SELECT CASE (IPLOT)

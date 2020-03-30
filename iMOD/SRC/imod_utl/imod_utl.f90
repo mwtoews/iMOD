@@ -5523,7 +5523,7 @@ DOLOOP: DO
  !###======================================================================
  IMPLICIT NONE
  CHARACTER(LEN=*),INTENT(IN) :: TXT,STR
- INTEGER :: I,J,K,B1,B2
+ INTEGER :: I,J,K,B1,B2,N
  CHARACTER(LEN=256) :: UTL_CAP
 
  IF(TXT.EQ.'l'.OR.TXT.EQ.'L')THEN
@@ -5537,7 +5537,9 @@ DOLOOP: DO
  ENDIF
 
  UTL_CAP=''
- DO I=1,LEN_TRIM(STR)
+ N=MIN(LEN(STR),LEN(UTL_CAP))
+
+ DO I=1,N !LEN_TRIM(STR)
   J=IACHAR(STR(I:I))
   IF(J.GE.B1.AND.J.LE.B2)J=J+K
   UTL_CAP(I:I)=ACHAR(J)

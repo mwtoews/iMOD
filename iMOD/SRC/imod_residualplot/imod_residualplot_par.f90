@@ -29,10 +29,10 @@ TYPE IPFRESOBJ
  REAL(KIND=DP_KIND),POINTER,DIMENSION(:) :: M=>NULL()              !## computed values
  REAL(KIND=DP_KIND),POINTER,DIMENSION(:) :: O=>NULL()              !## observation
  REAL(KIND=DP_KIND),POINTER,DIMENSION(:) :: W=>NULL()              !## weight value
- REAL(KIND=DP_KIND),POINTER,DIMENSION(:) :: NS=>NULL()              !## weight value
- CHARACTER(LEN=32),POINTER,DIMENSION(:) :: C=>NULL()               !## name
- INTEGER,POINTER,DIMENSION(:) ::            L=>NULL()              !## layer
- INTEGER(KIND=DP_KIND),POINTER,DIMENSION(:) :: D=>NULL()           !## date
+ REAL(KIND=DP_KIND),POINTER,DIMENSION(:) :: NS=>NULL()             !## weight value
+ CHARACTER(LEN=32),POINTER,DIMENSION(:) ::  C=>NULL()              !## name
+ INTEGER,POINTER,DIMENSION(:) :: L=>NULL()                         !## layer
+ INTEGER(KIND=8),POINTER,DIMENSION(:) :: D=>NULL()                 !## date
  INTEGER :: NPOINTS                                    !## number of points in ipf
 END TYPE IPFRESOBJ
 TYPE(IPFRESOBJ),DIMENSION(:),ALLOCATABLE :: IPFR       !## stores original values from txtfile per ipf
