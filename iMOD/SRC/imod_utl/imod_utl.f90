@@ -67,9 +67,9 @@ CONTAINS
  SUBROUTINE UTL_MATMUL(A,B,C)
  !#####=================================================================
  IMPLICIT NONE
- REAL(KIND=DP_KIND),DIMENSION(:,:) :: A
- REAL(KIND=DP_KIND),DIMENSION(:,:) :: B
- REAL(KIND=DP_KIND),DIMENSION(:,:) :: C
+ REAL(KIND=DP_KIND),DIMENSION(:,:),INTENT(IN) :: A
+ REAL(KIND=DP_KIND),DIMENSION(:,:),INTENT(IN) :: B
+ REAL(KIND=DP_KIND),DIMENSION(:,:),INTENT(OUT) :: C
  INTEGER :: NCA,NRA,NCB,NRB,NCC,NRC,I,J,K
  
  NCA=SIZE(A,1); NRA=SIZE(A,2)
@@ -87,8 +87,34 @@ CONTAINS
    C(I,J)=C(I,J)+A(K,J)*B(I,K)
   ENDDO
  ENDDO; ENDDO
- 
- END SUBROUTINE UTL_MATMUL
+
+! C=MATMUL(A,B)
+! C=0.0D0
+! DO J=1,NRC
+!  DO K=1,NRA !SIZE(A,DIM=2)
+!   DO I=1,NCC
+!    C(I,J)=C(I,J)+A(I,K)*B(K,J)
+!   END DO      
+!  END DO
+! END DO
+        
+! L=SIZE(C,DIM=2)
+! ICHUNK=512 ! I HAVE A 3MB CACHE SIZE (REAL*4)
+! DO JJ=1,N,ICHUNK
+!  DO KK=1,L,ICHUNK
+!
+!  DO J=JJ,MIN(JJ+ICHUNK-1,N)
+!   DO K=KK,MIN(KK+ICHUNK-1,L)
+!    DO I=1,M
+!     C(I,J)=C(I,J)+A(I,K)*B(K,J)
+!    END DO      
+!   END DO
+!  END DO
+!
+! END DO
+!END DO
+
+END SUBROUTINE UTL_MATMUL
  
  !###======================================================================
  SUBROUTINE UTL_MF2005_MAXNO(FNAME,NP)

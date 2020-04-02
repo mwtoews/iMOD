@@ -14,7 +14,7 @@
 //
 // Include files
 //
-#include "winparam.h"
+#include "..\LIB\WINTERACTER\OS_X64_V12\include\winparam.h"
 #ifdef XLIB
 #include "..\LIB\WINTERACTER\OS_X64_V12\include\filesel.rc"
 #include "..\LIB\WINTERACTER\OS_X64_V12\include\colour.rc"

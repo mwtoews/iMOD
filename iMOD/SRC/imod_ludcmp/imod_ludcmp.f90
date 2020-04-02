@@ -23,6 +23,7 @@
 MODULE MOD_LUDCMP
 
 USE IMODVAR, ONLY : DP_KIND,SP_KIND
+USE MOD_UTL, ONLY : UTL_MATMUL
 CONTAINS
 
  !###====================================================================
@@ -56,8 +57,8 @@ CONTAINS
 
   DO I=1,N
    IF(V(I).GT.0.0D0)THEN
-    IF(II.EQ.1)V(I)=SQRT(V(I))
-    IF(II.EQ.2)V(I)=1.0D0/V(I)
+    IF(II.EQ.1)V(I)=SQRT(V(I))  !## squareroot()
+    IF(II.EQ.2)V(I)=1.0D0/V(I)  !## inverse()
    ELSE
     V(I)=0.0D0
    ENDIF
@@ -69,8 +70,10 @@ CONTAINS
   ENDDO
   !## transpose E
   DO I=1,N; DO J=1,N; ET=A(I,J); A(I,J)=A(J,I); A(J,I)=ET; ENDDO; ENDDO
-  IF(II.EQ.1)SQRTCOV =MATMUL(A,IE)
-  IF(II.EQ.2)ISQRTCOV=MATMUL(A,IE)
+  !IF(II.EQ.1)SQRTCOV =MATMUL(A,IE)
+  IF(II.EQ.1)CALL UTL_MATMUL(A,IE,SQRTCOV)
+  !IF(II.EQ.2)ISQRTCOV=MATMUL(A,IE)
+  IF(II.EQ.2)CALL UTL_MATMUL(A,IE,ISQRTCOV)
  ENDDO 
  
  DEALLOCATE(A,E,IE,V)
@@ -293,11 +296,12 @@ CONTAINS
    DO J=1,I-1
     S=S+A(I,J)*A(K,J)
    ENDDO
-   IF(A(I,I).EQ.0.0D0)THEN
-    WRITE(*,*) A(I,I),I
-   ENDIF
+!   IF(A(I,I).EQ.0.0D0)THEN
+!    WRITE(*,*) A(I,I),I
+!   ENDIF
    A(K,I)=(A(K,I)-S)/A(I,I)
   ENDDO
+
 ! for k = 1 : n
 !% evaluate off-diagonal terms
 !for i = 1 : k-1
@@ -307,24 +311,28 @@ CONTAINS
 !end
 !aki = (aki - s) / aii
 !end
-!## Evaluate diagonal term
+
+  !## Evaluate diagonal term
   S=0.0D0
   DO J=1,K-1
    S=S+(A(K,J)**2.0D0)
   ENDDO
-  IF(A(K,K)-S.LT.0.0D0)THEN
-   WRITE(*,*) K,A(K,K)-S,A(K,K),S
-   A(K,K)=0.0D0
-  ELSE
+
+!  IF(A(K,K)-S.LT.0.0D0)THEN
+!   WRITE(*,*) K,A(K,K)-S,A(K,K),S
+!   A(K,K)=0.0D0
+!  ELSE
    A(K,K)=SQRT(A(K,K)-S)
-  ENDIF
+!  ENDIF
  ENDDO
+
 !s=0
 !for j = 1 : k-1
 !s = s + (akj)^2
 !end
 !akk = (akk - s)^(0.5)
 !end]
+ 
  !# clean matrix - delivering upper-triangle
  DO I=1,N
   DO J=1,I-1

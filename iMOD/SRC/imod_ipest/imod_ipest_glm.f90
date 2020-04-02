@@ -2049,7 +2049,7 @@ CONTAINS
   READ(IU,*) M; N=N+M; CLOSE(IU)
  ENDDO
 
- !## get dimension of possible number of observations
+ !## get dimension of possible maximal number of observations
  M=N*PRJNPER 
  
  CALL IPEST_GLM_DEALLOCATEMSR()
