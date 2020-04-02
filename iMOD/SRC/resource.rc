@@ -8,13 +8,13 @@
 //
 // Winteracter resource script. 
 //
-// Modified : 26/Feb/2020 15:39:34
+// Modified : 02/Apr/2020 13:41:53
 //
 ///////////////////////////////////////////////////
 //
 // Include files
 //
-#include "..\LIB\WINTERACTER\OS_X64_V12\include\winparam.h"
+#include "winparam.h"
 #ifdef XLIB
 #include "..\LIB\WINTERACTER\OS_X64_V12\include\filesel.rc"
 #include "..\LIB\WINTERACTER\OS_X64_V12\include\colour.rc"
@@ -1851,6 +1851,8 @@ END
 
 ID_DPREFTAB1 RCDATA
 BEGIN
+"[Dialog] \n"
+" 0  1129 0 0 \n"
 "[Menus] \n"
 ,0
 END
@@ -2052,7 +2054,7 @@ BEGIN
 END
 
 ID_DPREF DIALOG 0, 0,  336,  225
-STYLE WS_POPUP | WS_BORDER | WS_DLGFRAME | WS_SYSMENU | DS_3DLOOK | DS_MODALFRAME
+STYLE WS_POPUP | WS_BORDER | WS_DLGFRAME | WS_SYSMENU | WS_THICKFRAME | DS_3DLOOK
 FONT    8, "Arial"
 CAPTION "Preferences"
 BEGIN
@@ -2063,6 +2065,8 @@ END
 
 ID_DPREF RCDATA
 BEGIN
+"[Dialog] \n"
+" 0  1089 0 0 \n"
 "[Tabs] \n"
 " 1089     3   144 \n"
 "  144  Files/Paths \n"
@@ -14693,4 +14697,4 @@ END
 //*WI* FILENAME    resource.f90
 //*WI* FMODNAME    RESOURCE
 //*WI* LASTTYPE        2
-//*WI* LASTRES        91
+//*WI* LASTRES        18
