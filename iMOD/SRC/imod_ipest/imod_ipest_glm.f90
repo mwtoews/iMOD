@@ -1777,7 +1777,9 @@ CONTAINS
     MSR%X(II)=X; MSR%Y(II)=Y; MSR%L(II)=ILAY
     MSR%CLABEL(II)='MEASURE'//TRIM(ITOS(J))//'_IPF'//TRIM(ITOS(I))
 
-    GF_H(II)=MSR%W(II)*H; GF_O(II)=MSR%W(II)*Z
+    GF_H(II)=H
+    GF_O(II)=Z
+!    GF_H(II)=MSR%W(II)*H; GF_O(II)=MSR%W(II)*Z
 
     !## add to total objective function
     DHW=MSR%W(II)*(DHH**2.0D0); MSR%TJ=MSR%TJ+DHW
@@ -1941,7 +1943,9 @@ CONTAINS
       !## add to total objective function
       DHW=MSR%W(II)*(DHH**2.0D0); MSR%TJ=MSR%TJ+DHW
 
-      GF_H(II)=MSR%W(II)*C(K); GF_O(II)=MSR%W(II)*M(K)
+      GF_H(II)=C(K)
+      GF_O(II)=M(K)
+!      GF_H(II)=MSR%W(II)*C(K); GF_O(II)=MSR%W(II)*M(K)
 
       IF(IUPESTRESIDUAL.GT.0.AND.TRIM(CTYPE).EQ.'L'.OR.TRIM(CTYPE).EQ.'R')THEN
        WRITE(IUPESTRESIDUAL,'(2(F15.2,A1),I10,A1,8(F15.2,A1),I10,A1,A32,A1,I15)') &
