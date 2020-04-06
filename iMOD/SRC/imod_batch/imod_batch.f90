@@ -9007,7 +9007,6 @@ CONTAINS
  !###======================================================================
  IMPLICIT NONE
  CHARACTER(LEN=256) :: INIPF,OUTIPF
- CHARACTER(LEN=256) :: FNAMEHEADS
  INTEGER :: NLAY
  INTEGER,DIMENSION(5) :: ICOLS
  
