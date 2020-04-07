@@ -482,5 +482,6 @@ MODULE MOD_PMANAGER_PAR
  LOGICAL,PARAMETER :: LFREEFORMAT=.TRUE.  !## use true free-format
  CHARACTER(LEN=1024) :: LINE
  LOGICAL :: LYESNO
-
+ LOGICAL :: LSHD,LBDG !## if true is saves fluxes for modflow2005 (replaces bdgflx as keyword - khv,kva,kvv,sto,kdw,vcw all tricker this logical)
+ 
 END MODULE MOD_PMANAGER_PAR
