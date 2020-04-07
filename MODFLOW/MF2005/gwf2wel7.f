@@ -258,7 +258,7 @@ C1B-----IF THERE ARE NEW NON-PARAMETER WELLS, READ THEM.
      2             WELAUX,20,NAUX,IFREFM,NCOL,NROW,NLAY,4,4,IPRWEL)
   
          call pest1alpha_list('QR',NNPWEL,WELL,NWELVL,MXWELL,           ! IPEST
-     1                        iwelsubsys)                               ! IPEST
+     1                        iwelsubsys,0)                               ! IPEST
 
       END IF
       NWELLS=NNPWEL

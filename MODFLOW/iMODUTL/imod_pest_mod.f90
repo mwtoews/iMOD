@@ -24,7 +24,7 @@
 MODULE PESTVAR  
 !###====================================================================
 USE IMOD_IDF_PAR
-INTEGER,PARAMETER :: MXPTYPE=27
+INTEGER,PARAMETER :: MXPTYPE=28
 REAL,PARAMETER :: XPBND=0.01 !## boundary percentage
 CHARACTER(LEN=2),DIMENSION(MXPTYPE) :: PTYPE
 CHARACTER(LEN=256) :: PPBLANKOUT
@@ -94,26 +94,27 @@ DATA PTYPE/'KD',& ! 1 transmissivity
            'SC',& ! 5 storage    coefficient
            'RC',& ! 6 river      conductance
            'RI',& ! 7 river      infiltration
-           'RL',& !   river stage level
-           'RB',& !   river bottom level
-           'DC',& ! 8 drainage   conductance
-           'DL',& !   drainage   level
-           'IC',& ! 9 isg        conductance
-           'II',& !10 isg        infiltration
-           'IL',& !   isg stage level
-           'IB',& !   isg bottom level
-           'AF',& !11 ani        factor
-           'AA',& !12 ani        angle
-           'VA',& !13 kva        vertical anisotropy
-           'HF',& !14 hfb        horizontal barrier resistance
-           'MS',& !15 metaswap theta (soil moisture)
-           'MC',& !16 metaswap conductivity
-           'RE',& !17 recharge
-           'EX',& !18 external distribution
-           'EP',& !19 corey-epsilon
-           'QR',& !20 extraction well
-           'GC',& !21 general head conductance
-           'SY'/  !22 specific yield
+           'RL',& ! 8 river stage level
+           'RB',& ! 9 river bottom level
+           'DC',& !10 drainage   conductance
+           'DL',& !11 drainage   level
+           'IC',& !12 isg        conductance
+           'II',& !13 isg        infiltration
+           'IL',& !14 isg stage level
+           'IB',& !15 isg bottom level
+           'AF',& !16 ani        factor
+           'AA',& !17 ani        angle
+           'VA',& !18 kva        vertical anisotropy
+           'HF',& !19 hfb        horizontal barrier resistance
+           'MS',& !20 metaswap theta (soil moisture)
+           'MC',& !21 metaswap conductivity
+           'RE',& !22 recharge
+           'EX',& !23 external distribution
+           'EP',& !24 corey-epsilon
+           'QR',& !25 extraction well
+           'GC',& !26 general head conductance
+           'SY',& !27 specific yield
+           'MQ'/  !28 multinode well rate
 
 END MODULE PESTVAR
 

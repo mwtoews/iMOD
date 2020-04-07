@@ -401,7 +401,7 @@ CONTAINS
    ELSE
     !## overrule default settings for log normal
     SELECT CASE (PARAM(I)%PTYPE)
-     CASE ('KD','KH','KV','VC','SC','RC','RI','IC','II','DC','AF','MS','MC','VA','HF','EX','EP','QR','GC','SY')
+     CASE ('KD','KH','KV','VC','SC','RC','RI','IC','II','DC','AF','MS','MC','VA','HF','EX','EP','QR','MQ','GC','SY')
       PARAM(I)%LOG=.TRUE.
      CASE DEFAULT
       PARAM(I)%LOG=.FALSE.    
@@ -1126,10 +1126,11 @@ CONTAINS
  END SUBROUTINE PESTOPENFILE
 
  !#####=================================================================
- SUBROUTINE PESTDUMPFCT(root,iout)
+ SUBROUTINE PESTDUMPFCT(root,iout,idf)
  !#####=================================================================
  use rf2mf_module, only: ncol, nrow, nlay, nper
  IMPLICIT NONE
+ type(idfobj),intent(in) :: idf
  CHARACTER(LEN=256),intent(in) :: root
  INTEGER,INTENT(IN) :: IOUT
  CHARACTER(LEN=1024) :: FNAME,DIR
@@ -1159,24 +1160,36 @@ CONTAINS
    IF(PARAM(I)%LOG)THEN
     DO J=1,PARAM(I)%NODES
      IROW=PARAM(I)%IROW(J); ICOL=PARAM(I)%ICOL(J)
-     X(ICOL,IROW)=EXP(PARAM(I)%ALPHA(1)) !2))
+     X(ICOL,IROW)=EXP(PARAM(I)%ALPHA(1))
     ENDDO
    ELSE
     DO J=1,PARAM(I)%NODES
      IROW=PARAM(I)%IROW(J); ICOL=PARAM(I)%ICOL(J)
-     X(ICOL,IROW)=PARAM(I)%ALPHA(1) !2)
+     X(ICOL,IROW)=PARAM(I)%ALPHA(1) 
     ENDDO
    ENDIF 
-
+   !## divide parameter for area
+   SELECT CASE (PARAM(I)%PTYPE)
+    CASE ('SC','SY')
+     DO J=1,PARAM(I)%NODES
+      IROW=PARAM(I)%IROW(J); ICOL=PARAM(I)%ICOL(J)
+      X(ICOL,IROW)=X(ICOL,IROW)/IDFGETAREA(IDF,IROW,ICOL)
+     ENDDO   
+    CASE ('RE')
+     DO J=1,PARAM(I)%NODES
+      IROW=PARAM(I)%IROW(J); ICOL=PARAM(I)%ICOL(J)
+      X(ICOL,IROW)=X(ICOL,IROW)/IDFGETAREA(IDF,IROW,ICOL)*1000.0D0
+     ENDDO   
+   END SELECT
    CALL met1wrtidf(fname,X,ncol,nrow,-999.0D0,iout)
 
   ELSE
 
    XVAR=PARAM(I)%ALPHA_ERROR_VARIANCE(PEST_ITER)
    IF(PARAM(I)%LOG)THEN
-    XF  =EXP(PARAM(I)%ALPHA(1)) !2))
+    XF  =EXP(PARAM(I)%ALPHA(1)) 
    ELSE
-    XF  =PARAM(I)%ALPHA(1) !2)
+    XF  =PARAM(I)%ALPHA(1) 
    ENDIF
    !## no output of IPF-file- takes too long
 !   WRITE(FNAME,'(A,2I5.5,A)') TRIM(DIR)//CHAR(92)//PARAM(I)%PTYPE,PARAM(I)%ILS,PARAM(I)%IZONE,'.IPF'

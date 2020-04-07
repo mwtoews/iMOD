@@ -128,7 +128,7 @@ C
 C     SPECIFICATIONS:
 C     ------------------------------------------------------------------
       USE GLOBAL,       ONLY:IOUT,NCOL,NROW,NLAY,NBOTM,LBOTM,BOTM,
-     1                       IBOUND,LAYCBD
+     1                       IBOUND,LAYCBD,lipest
       USE GWFMNW2MODULE, ONLY:NMNW2,MNWMAX,NMNWVL,IWL2CB,MNWPRNT,
      1                       NODTOT,INTTOT,MNWAUX,MNW2,MNWNOD,MNWINT,
      2                       CapTable,SMALL,WELLID,NTOTNOD
@@ -145,6 +145,8 @@ C     ------------------------------------------------------------------
      & Zpump,Hlim,Qfrcmn,Qfrcmx,Qdes,Cprime,PP,
      & Qtemp,Hlift,LIFTq0,LIFTqdes,LIFTn,Qn,HWtol
       CHARACTER*20 WELLNAME,LOSSTYPE
+      real,allocatable,dimension(:,:) :: qtmp
+
 C
       CALL SGWF2MNW2PNT(IGRID)
 C
@@ -1718,6 +1720,28 @@ c  now that we have Qdes, write Capacity table
 	   end if
    	  end do
       end if
+      
+      if(lipest)then
+       allocate(qtmp(3,SIZE(MNWNOD,2)))
+       do i=1,SIZE(MNWNOD,2)
+        qtmp(1,i)=mnwnod(2,i)
+        qtmp(2,i)=mnwnod(3,i)
+        qtmp(3,i)=mnwnod(4,i)
+       enddo
+       call pest1alpha_list('MQ',SIZE(qtmp,2),qtmp,SIZE(qtmp,1),
+     1                                             SIZE(qtmp,2),1,0)    ! IPEST
+       do i=1,SIZE(MNWNOD,2)
+        mnwnod(2,i)=qtmp(1,i)
+        mnwnod(3,i)=qtmp(2,i)
+        mnwnod(4,i)=qtmp(3,i)
+       enddo
+       do i=1,size(mnw2,1)
+        firstnode=MNW2(4,i)
+        qdes=MNWNOD(4,firstnode)
+        MNW2(5,i)=qdes
+       enddo
+       deallocate(qtmp)
+      endif
       return
 c
       end

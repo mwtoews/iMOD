@@ -332,7 +332,6 @@ call pks7mpibarrier() ! PKS
   call cfn_vcl_fndc(ivcl,iarg,'-ipest',.true.,pfile,1)
   if (iarg.gt.0) then
    lipest=.true.  
- !  CALL PEST1INIT(1,pfile,IUPESTOUT,modwd1,idf,0) !'CODE OF HET UIT RUN- OF NAMFILE KOMT')
   endif
  endif
  
@@ -468,7 +467,7 @@ call pks7mpibarrier() ! PKS
  ! append the PEST log-file
  if (lipest) then
     call mf2005_returnIOUT(iout)
-    CALL PESTDUMPFCT(tssavepath,iout)
+    CALL PESTDUMPFCT(tssavepath,iout,idf)
  endif
 
  !#### TIMESERIES ####

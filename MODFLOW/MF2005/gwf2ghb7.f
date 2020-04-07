@@ -250,7 +250,7 @@ C3------IF THERE ARE NEW NON-PARAMETER GHB'S, READ THEM.
      1      'BOUND. NO. LAYER   ROW   COL     STAGE      CONDUCTANCE',
      2      GHBAUX,20,NAUX,IFREFM,NCOL,NROW,NLAY,5,5,IPRGHB)
          call pest1alpha_list('GC',NNPGHB,BNDS,NGHBVL,MXBND,            ! IPEST
-     1                        ighbsubsys)                               ! IPEST
+     1                        ighbsubsys,0)                               ! IPEST
 
       END IF
       NBOUND=NNPGHB

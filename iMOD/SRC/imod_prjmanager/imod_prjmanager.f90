@@ -1466,7 +1466,7 @@ CONTAINS
     ENDIF
    ENDIF
  
-   !## incluse postprocessing only in case not parameter optimization is carried out
+   !## include postprocessing only in case not parameter optimization is carried out
    IF(PBMAN%IPEST+PBMAN%IPESTP.EQ.0)THEN
 
     !## include conversion from mf6 to idf files
@@ -1475,6 +1475,8 @@ CONTAINS
      WRITE(IU,'( A)') 'REM iMOD Batch Script iMOD '//TRIM(RVERSION)
      WRITE(IU,'( A)') 'REM ============================================='
      DO J=1,PBMAN%NSUBMODEL
+!      CALL UTL_CREATEDIR(TRIM(DIR)//'\GWF_'//TRIM(ITOS(J))//'\MODELOUTPUT\HEAD')
+!      CALL UTL_CREATEDIR(TRIM(DIR)//'\GWF_'//TRIM(ITOS(J))//'\MODELOUTPUT\BUDGET')
       WRITE(IU,'(/A)') 'ECHO FUNCTION=MF6TOIDF > MF6TOIDF.INI'
       WRITE(IU,'( A)') 'ECHO GRB="'//TRIM(DIR)//'\GWF_'//TRIM(ITOS(J))//'\MODELINPUT\'//TRIM(MNAME)//'.DIS6.GRB" >> MF6TOIDF.INI'
       WRITE(IU,'( A)') 'ECHO HED="'//TRIM(DIR)//'\GWF_'//TRIM(ITOS(J))//'\MODELOUTPUT\HEAD\HEAD.HED" >> MF6TOIDF.INI'

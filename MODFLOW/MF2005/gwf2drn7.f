@@ -267,9 +267,9 @@ C3------IF THERE ARE NEW NON-PARAMETER DRAINS, READ THEM.
      1     'DRAIN NO.  LAYER   ROW   COL     DRAIN EL.  CONDUCTANCE',
      2     DRNAUX,20,NAUX,IFREFM,NCOL,NROW,NLAY,5,5,IPRDRN)
          call pest1alpha_list('DC',nnpdrn,drai,ndrnvl,mxdrn,            ! IPEST
-     1                        idrnsubsys)                               ! IPEST
+     1                        idrnsubsys,0)                             ! IPEST
          call pest1alpha_list('DL',nnpdrn,drai,ndrnvl,mxdrn,            ! IPEST
-     1                        idrnsubsys)                               ! IPEST
+     1                        idrnsubsys,0)                             ! IPEST
       END IF
       NDRAIN=NNPDRN
 C

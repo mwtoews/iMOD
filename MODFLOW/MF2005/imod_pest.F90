@@ -311,7 +311,7 @@ subroutine pest1alpha_list(ptype,nlist,rlist,ldim,mxlist,iopt1,iopt2)
 !###====================================================================
 
 ! modules
-use global, only: lipest,buff
+use global, only: lipest,buff,ncol,nrow
 use imod_utl, only: imod_utl_printtext, imod_utl_itos, imod_utl_dtos
 use m_mf2005_main, only: kper
 use pestvar, only: param, pest_iter, iupestout
@@ -322,13 +322,13 @@ implicit none
 character(len=2), intent(in) :: ptype
 integer, intent(in) :: nlist, ldim, mxlist
 real, dimension(ldim,mxlist), intent(inout) :: rlist
-integer, intent(in), optional :: iopt1, iopt2
+integer, intent(in) :: iopt1, iopt2
 
 ! locals
 character(len=256) :: line
 character(len=1024) :: errmsg
-integer :: i, j, k, ils, irow, icol, idat, irivsubsys, irivrfact,&
-           idrnsubsys, iwelsubsys, ihfbfact, ighbsubsys, nadj
+integer :: i, j, k, ils, irow, icol, idat, irivsubsys, irivrfact,ilay, &
+           idrnsubsys, iwelsubsys, ihfbfact, ighbsubsys, nadj,inode
 real(kind=8) :: ppart, fct
 
 !###======================================================================
@@ -361,7 +361,7 @@ do i=1,size(param)
   select case (trim(ptype))
    case('RC','IC') ! river/isg conductances
      errmsg = 'Cannot apply PEST scaling factor for river/isg conductance'
-     if (.not.present(iopt1)) call imod_utl_printtext(trim(errmsg),2)
+!     if (.not.present(iopt1)) call imod_utl_printtext(trim(errmsg),2)
      irivsubsys = iopt1
      if (irivsubsys.eq.0) call imod_utl_printtext(trim(errmsg),2)
 
@@ -380,7 +380,7 @@ do i=1,size(param)
 
    case('RL','IL') ! river/isg river levels
      errmsg = 'Cannot apply PEST scaling factor for river/isg levels'
-     if (.not.present(iopt1)) call imod_utl_printtext(trim(errmsg),2)
+!     if (.not.present(iopt1)) call imod_utl_printtext(trim(errmsg),2)
      irivsubsys = iopt1
      if (irivsubsys.eq.0) call imod_utl_printtext(trim(errmsg),2)
 
@@ -399,7 +399,7 @@ do i=1,size(param)
 
    case('RB','IB') ! river/isg bottom levels
      errmsg = 'Cannot apply PEST scaling factor for river/isg bottom levels'
-     if (.not.present(iopt1)) call imod_utl_printtext(trim(errmsg),2)
+!     if (.not.present(iopt1)) call imod_utl_printtext(trim(errmsg),2)
      irivsubsys = iopt1
      if (irivsubsys.eq.0) call imod_utl_printtext(trim(errmsg),2)
 
@@ -418,8 +418,8 @@ do i=1,size(param)
 
    case('RI','II') ! river/isg infiltration factors
      errmsg = 'Cannot apply PEST scaling factor for river/isg infiltration factor'
-     if (.not.present(iopt1)) call imod_utl_printtext(trim(errmsg),2)
-     if (.not.present(iopt2)) call imod_utl_printtext(trim(errmsg),2)
+!     if (.not.present(iopt1)) call imod_utl_printtext(trim(errmsg),2)
+!     if (.not.present(iopt2)) call imod_utl_printtext(trim(errmsg),2)
      irivsubsys = iopt1; irivrfact = iopt2
      if (irivrfact.eq.0.or.irivsubsys.eq.0) call imod_utl_printtext(trim(errmsg),2)
 
@@ -438,7 +438,7 @@ do i=1,size(param)
 
    case('DC') ! drain conductances
      errmsg = 'Cannot apply PEST scaling factor for drain conductance'
-     if (.not.present(iopt1)) call imod_utl_printtext(trim(errmsg),2)
+!     if (.not.present(iopt1)) call imod_utl_printtext(trim(errmsg),2)
      idrnsubsys = iopt1
      if (idrnsubsys.eq.0) call imod_utl_printtext(trim(errmsg),2)
      idat = 5
@@ -455,7 +455,7 @@ do i=1,size(param)
 
    case('DL') ! drain level
      errmsg = 'Cannot apply PEST scaling factor for drain level'
-     if (.not.present(iopt1)) call imod_utl_printtext(trim(errmsg),2)
+!     if (.not.present(iopt1)) call imod_utl_printtext(trim(errmsg),2)
      idrnsubsys = iopt1
      if (idrnsubsys.eq.0) call imod_utl_printtext(trim(errmsg),2)
      idat = 4
@@ -472,7 +472,7 @@ do i=1,size(param)
 
    case('GC') ! general head conductances
      errmsg = 'Cannot apply PEST scaling factor for general conductance'
-     if (.not.present(iopt1)) call imod_utl_printtext(trim(errmsg),2)
+!     if (.not.present(iopt1)) call imod_utl_printtext(trim(errmsg),2)
      ighbsubsys = iopt1
      if (ighbsubsys.eq.0) call imod_utl_printtext(trim(errmsg),2)
      idat = 5
@@ -489,7 +489,7 @@ do i=1,size(param)
 
    case('QR') ! well rates
      errmsg = 'Cannot apply PEST scaling factor for well rates'
-     if (.not.present(iopt1)) call imod_utl_printtext(trim(errmsg),2)
+!     if (.not.present(iopt1)) call imod_utl_printtext(trim(errmsg),2)
      iwelsubsys = iopt1
      if (iwelsubsys.eq.0) call imod_utl_printtext(trim(errmsg),2)
      idat = 4
@@ -504,9 +504,28 @@ do i=1,size(param)
         endif
      end do
 
+   case('MQ') ! multinode well rates
+     errmsg = 'Cannot apply PEST scaling factor for multinode-well rates'
+!     if (.not.present(iopt1)) call imod_utl_printtext(trim(errmsg),2)
+!     iwelsubsys = iopt1
+!     if (iwelsubsys.eq.0) call imod_utl_printtext(trim(errmsg),2)
+     idat = 3
+     do j = 1, nlist ! match sybsystem number
+        irow=rlist(1,j); icol=rlist(2,j)
+        !## skip as list can be longer than neccessary
+        if(irow.le.0.or.icol.le.0)cycle
+        !## not in current zone
+        if(buff(icol,irow,1).eq.0.0d0)cycle
+!        !## adjust for selected system
+!        if (ils.eq.int(rlist(iwelsubsys,j)))then
+        nadj=nadj+1
+        rlist(idat,j)=rlist(idat,j)*fct
+!        endif
+     end do
+
     case('HF')
       errmsg = 'Cannot apply PEST scaling factor for horizontal flow barrier'
-      if (.not.present(iopt1)) call imod_utl_printtext(trim(errmsg),2)
+!      if (.not.present(iopt1)) call imod_utl_printtext(trim(errmsg),2)
       ihfbfact = iopt1
       if (ihfbfact.ne.1) call imod_utl_printtext(trim(errmsg),2)
       do j = 1, nlist

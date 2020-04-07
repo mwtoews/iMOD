@@ -351,21 +351,21 @@ C3------IF THERE ARE NEW NON-PARAMETER REACHES, READ THEM.
      2          '     STAGE      CONDUCTANCE     BOTTOM EL.',
      3          RIVAUX,20,NAUX,IFREFM,NCOL,NROW,NLAY,5,5,IPRRIV)
          call pest1alpha_list('RC',nnpriv,rivr,nrivvl,mxrivr,           ! IPEST
-     1                        irivsubsys)                               ! IPEST
+     1                        irivsubsys,0)                             ! IPEST
          call pest1alpha_list('RI',nnpriv,rivr,nrivvl,mxrivr,           ! IPEST
      1                        irivsubsys,irivrfact)                     ! IPEST
          call pest1alpha_list('IC',nnpriv,rivr,nrivvl,mxrivr,           ! IPEST
-     1                        irivsubsys)                               ! IPEST
+     1                        irivsubsys,0)                             ! IPEST
          call pest1alpha_list('II',nnpriv,rivr,nrivvl,mxrivr,           ! IPEST
      1                        irivsubsys,irivrfact)                     ! IPEST
          call pest1alpha_list('IL',nnpriv,rivr,nrivvl,mxrivr,           ! IPEST
-     1                        irivsubsys,irivrfact)                     ! IPEST
+     1                        irivsubsys,0)                             ! IPEST
          call pest1alpha_list('IB',nnpriv,rivr,nrivvl,mxrivr,           ! IPEST
-     1                        irivsubsys,irivrfact)                     ! IPEST
+     1                        irivsubsys,0)                             ! IPEST
          call pest1alpha_list('RL',nnpriv,rivr,nrivvl,mxrivr,           ! IPEST
-     1                        irivsubsys,irivrfact)                     ! IPEST
+     1                        irivsubsys,0)                             ! IPEST
          call pest1alpha_list('RB',nnpriv,rivr,nrivvl,mxrivr,           ! IPEST
-     1                        irivsubsys,irivrfact)                     ! IPEST
+     1                        irivsubsys,0)                             ! IPEST
       END IF
       NRIVER=NNPRIV
 C

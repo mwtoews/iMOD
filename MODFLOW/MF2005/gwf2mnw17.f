@@ -579,6 +579,9 @@ c   Sum details on rejected wells
             nqreject = nqreject + 1
           ENDIF   !   IBOUND test statement
         ENDDO     !   end of well entry loop
+
+!        call pest1alpha_list('MQ',ITMP,WELL2,SIZE(WELL2,1),
+!     1                                       SIZE(WELL2,2),1)       ! IPEST
 c
 c   Process wells that are screened across multiple nodes
 c

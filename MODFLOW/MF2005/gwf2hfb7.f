@@ -209,7 +209,7 @@ C11-----READ AND ACTIVATE AN HFB PARAMETER (ITEM 6)
         ENDIF
       ENDIF
         ihfbfact=1  
-        call pest1alpha_list('HF',MXHFB,hfb,7,mxhfb,ihfbfact)            ! IPEST
+        call pest1alpha_list('HF',MXHFB,hfb,7,mxhfb,ihfbfact,0)            ! IPEST
 C
 C12-----MODIFY HORIZONTAL BRANCH CONDUCTANCES FOR CONSTANT T LAYERS.
       CALL SGWF2HFB7MC()
