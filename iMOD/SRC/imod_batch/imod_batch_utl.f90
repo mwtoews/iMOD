@@ -618,7 +618,7 @@ CONTAINS
    
   IF(ILOG)THEN
    DO I=1,N
-    V(I)=10.0**V(I)
+    V(I)=10.0D0**V(I)
    ENDDO
   ENDIF
 
