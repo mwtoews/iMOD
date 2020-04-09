@@ -46,7 +46,7 @@ CONTAINS
  !###====================================================================
  USE RF2MF_MODULE, ONLY: NCOL, NROW, NLAY, NPER
  IMPLICIT NONE
- type(idfobj),intent(in) :: idf
+ type(idfobj),intent(inout) :: idf
  CHARACTER(LEN=*),INTENT(IN) :: INFILE,ROOT
  CHARACTER(LEN=52),DIMENSION(2) :: IPFFNAME
  INTEGER,INTENT(IN) :: IOPTION,IOUT
@@ -755,6 +755,8 @@ CONTAINS
  WRITE(IUPESTSENSITIVITY,'(A10,A)') 'Iteration',TRIM(BLINE(31:)) 
  WRITE(IUPESTPROGRESS,'(A)') 
 
+ if(ioption.eq.1)call idfcopy(idfm,idf)
+ 
  !## close all files ...
  CALL PEST1CLOSELOGFILES()
 
@@ -1173,12 +1175,12 @@ CONTAINS
     CASE ('SC','SY')
      DO J=1,PARAM(I)%NODES
       IROW=PARAM(I)%IROW(J); ICOL=PARAM(I)%ICOL(J)
-      X(ICOL,IROW)=X(ICOL,IROW)/IDFGETAREA(IDF,IROW,ICOL)
+      X(ICOL,IROW)=X(ICOL,IROW)/IDFGETAREA(IDF,ICOL,IROW)
      ENDDO   
     CASE ('RE')
      DO J=1,PARAM(I)%NODES
       IROW=PARAM(I)%IROW(J); ICOL=PARAM(I)%ICOL(J)
-      X(ICOL,IROW)=X(ICOL,IROW)/IDFGETAREA(IDF,IROW,ICOL)*1000.0D0
+      X(ICOL,IROW)=X(ICOL,IROW)/IDFGETAREA(IDF,ICOL,IROW)*1000.0D0
      ENDDO   
    END SELECT
    CALL met1wrtidf(fname,X,ncol,nrow,-999.0D0,iout)
