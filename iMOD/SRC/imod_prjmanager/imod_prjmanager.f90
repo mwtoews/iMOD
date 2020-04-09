@@ -1561,9 +1561,9 @@ CONTAINS
   
    IF(IEXCOD.EQ.0)THEN
     IF(IBATCH.EQ.0)THEN 
-     CALL WMESSAGEBOX(OKONLY,INFORMATIONICON,COMMONOK,'Successful simulation using: '//CHAR(13)// &
-                    TRIM(CSOLVER(PBMAN%IFORMAT))//CHAR(13)//TRIM(PREFVAL(IPREVAL))//CHAR(13)// &
-                    'OUTPUTFILE:'//CHAR(13)//TRIM(RUNFNAME),'Information')
+     CALL WMESSAGEBOX(OKONLY,INFORMATIONICON,COMMONOK,'Successful simulation using '//TRIM(CSOLVER(PBMAN%IFORMAT))//CHAR(13)// &
+                    '- Executable: '//CHAR(13)//TRIM(PREFVAL(IPREVAL))//CHAR(13)// &
+                    '- Outputfile: '//CHAR(13)//TRIM(RUNFNAME),'Information')
     ELSE
      WRITE(*,'(A)') 'Successfully STARTED the Modflow simulation using:'
      WRITE(*,'(A)') TRIM(CSOLVER(PBMAN%IFORMAT))//': '//TRIM(PREFVAL(IPREVAL))

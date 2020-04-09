@@ -656,8 +656,10 @@ JLOOP: DO K=1,SIZE(TOPICS)
           END SELECT
           !## create folder
           CALL UTL_CREATEDIR(PBMAN%OUTPUT)
-          CALL WMESSAGEBOX(YESNO,COMMONNO,QUESTIONICON,'iMOD will create:'//CHAR(13)// &
-               TRIM(PBMAN%RUNFILE)//CHAR(13)//CHAR(13)//'Are you sure to continue?','Question')
+          !CALL WMESSAGEBOX(YESNO,COMMONNO,QUESTIONICON,'iMOD will create:'//CHAR(13)// &
+          !     TRIM(PBMAN%RUNFILE)//CHAR(13)//CHAR(13)//'Are you sure to continue?','Question')
+          CALL WMESSAGEBOX(YESNO,COMMONNO,QUESTIONICON,'iMOD will create result folder:'//CHAR(13)// &
+               '{imod folder}\MODELS\'//TRIM(PBMAN%MODELNAME)//CHAR(13)//CHAR(13)//'Are you sure to continue?','Question')
           IF(WINFODIALOG(4) .EQ.1)EXIT
          ENDIF       
         CASE (IDCANCEL)
