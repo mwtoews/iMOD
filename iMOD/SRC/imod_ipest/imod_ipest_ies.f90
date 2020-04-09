@@ -62,33 +62,33 @@ CONTAINS
   
   !## no residual output
   IUPESTRESIDUAL=0
-  !## initial run - no lambda testing
-  IF(ITER.EQ.0)THEN
+!  !## initial run - no lambda testing
+!  IF(ITER.EQ.0)THEN
    !## read from idf file and save the realisations in lpf package - apply the correct IDF files and export them in for the realizations
    ILAMBDA=1; CALL IPEST_IES_SAVEREALS(DIR,ITER,ILAMBDA)
    !## run and process all realizations-testing
    WRITE(IUPESTPROGRESS,'(/A5,4A15,15X,A15)') 'RS','REALIZATION','LAMBDA','TOT_J','RED_J','SIM_TIME(SEC)' 
    CALL IPEST_GLM_RUNMODELS(IBATCH,RNG,GPARAM,'R',DIR,MNAME,ITER,LAMBDA)
    !## carry out the lambda tests
-  ELSE
-   !## simulate different lambdas
-   MINJ=10.0D20; DO ILAMBDA=1,PBMAN%NLINESEARCH
-    !## read from idf file and save the realisations in lpf package - apply the correct IDF files and export them in for the realizations
-    CALL IPEST_IES_SAVEREALS(DIR,ITER,ILAMBDA)
-    L=LAMBDA*PBMAN%LAMBDA_TEST(ILAMBDA)
-    !## run and process all realizations-testing
-    WRITE(IUPESTPROGRESS,'(/A5,4A15,15X,A15)') 'RS','REALIZATION','LAMBDA','TOT_J','RED_J','SIM_TIME(SEC)' 
-    CALL IPEST_GLM_RUNMODELS(IBATCH,RNG,GPARAM,'R',DIR,MNAME,ITER,L)
-    !## evaluate which lambda is best
-    IF(SUM(JE(:,1:PEST%NREALS)).LT.MINJ)THEN
-     MINJ=SUM(JE(:,1:PEST%NREALS)); JLAMBDA=ILAMBDA
-    ENDIF
-    CALL IPEST_IES_PROGRESS_OUT(ITER)
-   ENDDO
-   !## set lambda that performs best
-   ILAMBDA=JLAMBDA
-   !## get appropriate msr%dhg() results
-  ENDIF
+!  ELSE
+!   !## simulate different lambdas
+!   MINJ=10.0D20; DO ILAMBDA=1,PBMAN%NLINESEARCH
+!    !## read from idf file and save the realisations in lpf package - apply the correct IDF files and export them in for the realizations
+!    CALL IPEST_IES_SAVEREALS(DIR,ITER,ILAMBDA)
+!    L=LAMBDA*PBMAN%LAMBDA_TEST(ILAMBDA)
+!    !## run and process all realizations-testing
+!    WRITE(IUPESTPROGRESS,'(/A5,4A15,15X,A15)') 'RS','REALIZATION','LAMBDA','TOT_J','RED_J','SIM_TIME(SEC)' 
+!    CALL IPEST_GLM_RUNMODELS(IBATCH,RNG,GPARAM,'R',DIR,MNAME,ITER,L)
+!    !## evaluate which lambda is best
+!    IF(SUM(JE(:,1:PEST%NREALS)).LT.MINJ)THEN
+!     MINJ=SUM(JE(:,1:PEST%NREALS)); JLAMBDA=ILAMBDA
+!    ENDIF
+!    CALL IPEST_IES_PROGRESS_OUT(ITER)
+!   ENDDO
+!   !## set lambda that performs best
+!   ILAMBDA=JLAMBDA
+!   !## get appropriate msr%dhg() results
+!  ENDIF
   
   !## get update of realisations
   IF(.NOT.IPEST_IES_UPDATE_ENSEMBLES(DIR,ITER,ILAMBDA))EXIT

@@ -1884,7 +1884,7 @@ CONTAINS
       !## random error not yet set
       IF(PBMAN%IIES.EQ.1)THEN
        IERROR=IGRAD
-       IF(MSR%E(IERROR,II).LT.0.0D0)THEN
+       IF(MSR%E(IERROR,II).LT.-999.0D0)THEN
         IF(WW.NE.0.0D0)THEN
          !## variance
          SIGMA=1.0D0/SQRT(WW); CALL IPEST_NORMAL_MS_SAMPLE(0.0D0,SIGMA,SEED,MSR%E(IERROR,II))
