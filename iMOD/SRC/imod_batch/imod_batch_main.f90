@@ -167,7 +167,10 @@ CONTAINS
     K=0; II=6
    CASE ('(OPT)')
     II=6
-    IF(K.EQ.0)WRITE(IU,'(A)') 'rem OPTIONAL ARGUMENTS'; K=1
+    IF(K.EQ.0)THEN 
+      WRITE(IU,'(A)') 'rem ------------------'; K=1
+      WRITE(IU,'(A)') 'rem OPTIONAL ARGUMENTS'; K=1
+    ENDIF  
    CASE ('(DEP)')
     II=8
    CASE ('(DEP2)')
@@ -191,7 +194,7 @@ CONTAINS
   ENDIF
  ENDDO 
  WRITE(IU,'(A)') 
- WRITE(IU,'(A)') TRIM(EXENAME)//' '//TRIM(INIFNAME)
+ WRITE(IU,'(A)') '"'//TRIM(EXENAME)//'" '//TRIM(INIFNAME)
  WRITE(IU,'(A)') 
 
  CLOSE(IU)
