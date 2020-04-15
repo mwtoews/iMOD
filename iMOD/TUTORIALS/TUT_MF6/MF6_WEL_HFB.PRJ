@@ -1,0 +1,65 @@
+
+0001,(BND),1, Boundary Condition
+001,001
+ 1,2, 001,   1.000000    ,   0.000000    ,  -999.9900    , '$DBASE$\TUTORIALS\TUT_MF6\DBASE\BND\BND.IDF' >>> (BND) Boundary Settings (IDF) <<<
+
+0001,(TOP),1, Top Elevation
+001,001
+ 1,1, 001,   1.000000    ,   0.000000    ,   10.00000    ,                                                                '' >>> (TOP) Top of Modellayer (IDF) <<<
+
+0001,(BOT),1, Bottom Elevation
+001,001
+ 1,1, 001,   1.000000    ,   0.000000    ,  -10.00000    ,                                                                '' >>> (BOT) Bottom of Modellayer (IDF) <<<
+
+0001,(KHV),1, Horizontal Permeability
+001,001
+ 1,1, 001,   1.000000    ,   0.000000    ,   10.00000    ,                                                                '' >>> (KHV) Horizontal Permeability (IDF) <<<
+
+0001,(KVA),1, Vertical Anisotropy
+001,001
+ 1,1, 001,   1.000000    ,   0.000000    ,   1.000000    ,                                                                '' >>> (KVA) Vertical Anisotropy (IDF) <<<
+
+0001,(SHD),1, Starting Heads
+001,001
+ 1,1, 001,   1.000000    ,   0.000000    ,   10.00000    ,                                                                '' >>> (SHD) Starting Heads (IDF) <<<
+
+0001,(HFB),1, Horizontal Barrier
+001,002
+ 1,2, 001,   1.000000    ,   0.000000    , -999.99000    ,'$DBASE$\TUTORIALS\TUT_MF6\DBASE\HFB\FAULTLINE.GEN'                >>> (HFB) Horizontal Barrier (GEN) <<<
+ 1,2, 002,   1.000000    ,   0.000000    , -999.99000    ,'$DBASE$\TUTORIALS\TUT_MF6\DBASE\HFB\FAULTLINE.GEN'                >>> (HFB) Horizontal Barrier (GEN) <<<
+
+0001,(RCH),1, Recharge
+STEADY-STATE
+001,001
+ 1,1, 001,   1.000000    ,   1.000000    ,   1.000000    ,                                                                '' >>> (RCH) Recharge Rate (IDF) <<<
+
+0001,(RIV),1, Rivers
+STEADY-STATE
+004,001
+ 1,2, 001,   1.000000    ,   0.000000    ,  -999.9900    ,'$DBASE$\TUTORIALS\TUT_MF6\DBASE\RIV\RIVC.IDF' >>> (CON) Conductance (IDF) <<<
+ 1,2, 001,   1.000000    ,   0.000000    ,  -999.9900    ,'$DBASE$\TUTORIALS\TUT_MF6\DBASE\RIV\RIVS.IDF' >>> (RST) River Stage (IDF) <<<
+ 1,2, 001,   1.000000    ,   0.000000    ,  -999.9900    ,'$DBASE$\TUTORIALS\TUT_MF6\DBASE\RIV\RIVB.IDF' >>> (RBT) River Bottom (IDF) <<<
+ 1,1, 001,   1.000000    ,   0.000000    ,   1.000000    ,                                                                '' >>> (RIF) Infiltration Factor (IDF) <<<
+
+0001,(WEL),1, Wells
+STEADY-STATE
+001,001
+ 1,2, 001,   1.000000    ,   0.000000    ,  -999.9900    , '$DBASE$\TUTORIALS\TUT_MF6\DBASE\WEL\WEL.IPF' >>> (WRA) Well Rate (IPF) <<<
+
+0001,(PCG),1, Precondition Conjugate-Gradient
+ MXITER=  150
+ ITER1=   30
+ HCLOSE=  0.1000000E-03
+ RCLOSE=  0.1000000E-02
+ RELAX=   0.9800000
+ NPCOND=  1
+ IPRPCG=  1
+ MUTPCG=  1
+ DAMPPCG= 1.000000
+ DAMPPCGT=1.000000
+ IQERROR= 0
+ QERROR=  0.1000000
+
+Periods
+
+Species

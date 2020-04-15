@@ -64,6 +64,20 @@ INTEGER :: NSX,NSY
 CONTAINS
 
  !#####=================================================================
+ SUBROUTINE UTL_GETIROWICOL(NODE,NLAY,NROW,NCOL,ILAY,IROW,ICOL)
+ !#####=================================================================
+ IMPLICIT NONE
+ INTEGER,INTENT(INOUT) :: NODE
+ INTEGER,INTENT(IN) :: NLAY,NROW,NCOL
+ INTEGER,INTENT(OUT) :: ILAY,IROW,ICOL
+ 
+ ILAY=1+INT(NODE/(NLAY*NROW*NCOL)); NODE=NODE-((ILAY-1)*NROW*NCOL)
+ IROW=1+INT(NODE/NCOL); NODE=NODE-((IROW-1)*NCOL)
+ ICOL=NODE
+
+ END SUBROUTINE UTL_GETIROWICOL
+ 
+ !#####=================================================================
  SUBROUTINE UTL_MATMUL(A,B,C)
  !#####=================================================================
  IMPLICIT NONE

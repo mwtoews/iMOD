@@ -876,6 +876,7 @@ CONTAINS
  WRITE(IU,'(/A/)') '#General Options'
  WRITE(IU,'(A)') 'BEGIN OPTIONS'
  IF(TOPICS(TANI)%IACT_MODEL.EQ.1)WRITE(IU,'(A)') 'AUXILIARY ANGLDEGX'
+ IF(LBDG)WRITE(IU,'(1X,A)') 'SAVE_FLOWS'
 ! WRITE(IU,'(1X,A)') 'PRINT_INPUT' - no geprint in file
 ! WRITE(IU,'(1X,A)') 'PRINT_FLOWS' - no geprint in file
 ! WRITE(IU,'(1X,A)') 'HARMONIC' 
