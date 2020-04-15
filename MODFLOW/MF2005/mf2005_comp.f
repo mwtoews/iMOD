@@ -3353,13 +3353,19 @@ c     if (nxch.le.0) ok = .false.
               return
            end if
            ilay = ts(jj)%stvalue(i)%ilay
+           !## probably replaced in previous iteration - do it again
+           if(ilay.lt.0)ilay=0
            if(iipf.gt.0)then
               !## assign appropriate model layer
               if(ilay.eq.0)then
                do jlay=1,nlay
                 if(real(hnew(icol,irow,jlay)).ne.hnoflo)exit
                enddo
-               h=hnoflo; if(jlay.le.nlay)h=real(hnew(icol,irow,jlay))
+               h=hnoflo
+               if(jlay.le.nlay)then
+                h=real(hnew(icol,irow,jlay))
+                ilay=jlay
+               endif
               else
                h=real(hnew(icol,irow,ilay))
               endif
@@ -3368,6 +3374,10 @@ c     if (nxch.le.0) ok = .false.
               y = ts(jj)%stvalue(i)%y
               !## interpolate heads
               h=mf2005_tserie1hmean(x,y,icol,irow,ilay)
+           endif
+           !## convert to a negative layer number (if replaced)
+           if(ilay.ne.ts(jj)%stvalue(i)%ilay)then
+            ts(jj)%stvalue(i)%ilay=-ilay
            endif
            ts(jj)%stvalue(i)%c = h ! set computed value
         end do

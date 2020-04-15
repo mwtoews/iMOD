@@ -234,8 +234,10 @@ c init the PWT data
          call getlpfmincminkd(iminkd,iminc,minkd,minc)
          call getlpfsc1(sc1)
       end if
-
-      pwt_kd = kdsv
+      
+      do ilay=1,nlay; do irow=1,nrow; do icol=1,ncol
+       pwt_kd(icol,irow,ilay) = kdsv(icol,irow,ilay)
+      enddo; enddo; enddo
       do ip = 1, npwt
          ilay = pwt(ipilay,ip)
          irow = pwt(ipirow,ip)

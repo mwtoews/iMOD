@@ -439,7 +439,7 @@ ELSE
     ENDIF
     W=MAX(0.0,W)
     H = TS(JJ)%STVALUE(I)%C ! get computed value
-    WRITE(IUIPFTXT,*) JJ,I,H,W
+    WRITE(IUIPFTXT,'(2(I10,1X),2(F15.7,1X),I10)') JJ,I,H,W,TS(JJ)%STVALUE(I)%ILAY
    ENDDO
   ENDDO
   RETURN
@@ -518,9 +518,9 @@ ELSE
     !## write header and labels of txt file
     WRITE(IUTXT(II),'(I10)') MPER
     IF(TS(J)%IEXT.EQ.0)THEN
-     WRITE(IUTXT(II),'(I1)') 2 
+     WRITE(IUTXT(II),'(I1)') 3 !2 
     ELSE
-     WRITE(IUTXT(II),'(I1)') 3 
+     WRITE(IUTXT(II),'(I1)') 4 !3 
     ENDIF
     WRITE(IUTXT(II),'(A)') 'Date,-999'
 
@@ -547,6 +547,7 @@ ELSE
      WRITE(IUTXT(II),*) 'Measure,',TSNODATA(II) 
     ENDIF
     WRITE(IUTXT(II),*) 'Computed_Head,',MV 
+    WRITE(IUTXT(II),*) 'Assigned_Layer,',MV
    ENDDO
   ENDDO
 
@@ -570,9 +571,9 @@ ELSE
      II=II+1
 
      !## without impulse/default
-     READ(IU,*,IOSTAT=JOS) KK,J,H,W
+     READ(IU,*,IOSTAT=JOS) KK,J,H,W,ILAY
      
-     if(h.eq.TSNODATA(II))h=mv
+     iF(H.EQ.TSNODATA(II))H=MV
      
      IF(JOS.NE.0)CYCLE
      IF(KK.NE.JJ)CALL IMOD_UTL_PRINTTEXT(' Something goes wrong in reading summary timeseries on line 532 in imodflow_tseries.f90',2)
@@ -597,9 +598,9 @@ ELSE
      ENDIF
 
      IF(TS(JJ)%IEXT.GT.0)THEN
-      WRITE(IUTXT(II),*) DBLDATE,M,H 
+      WRITE(IUTXT(II),'(I15,1X,2(F15.7,1X),I10)') DBLDATE,M,H,ILAY 
      ELSE
-      WRITE(IUTXT(II),*) DBLDATE,H   
+      WRITE(IUTXT(II),'(I15,1X,F15.7,1X,I10)') DBLDATE,H,ILAY
      ENDIF   
 
     ENDDO
