@@ -1,4 +1,4 @@
-!!  Copyright (C) Stichting Deltares, 2005-2019.
+!!  Copyright (C) Stichting Deltares, 2005-2020.
 !!
 !!  This file is part of iMOD.
 !!
@@ -358,7 +358,7 @@ CONTAINS
  
  IF(IOPTION.EQ.1)CALL WDIALOGTITLE('Available Dates for Time Series')
  IF(IOPTION.EQ.2)CALL WDIALOGTITLE('Available Dates for Movies')
- CALL WDIALOGSHOW(-1,-1,0,3)
+ CALL UTL_DIALOGSHOW(-1,-1,0,3)
 
  DO
   CALL WMESSAGE(ITYPE,MESSAGE)

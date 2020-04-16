@@ -1,4 +1,4 @@
-!!  Copyright (C) Stichting Deltares, 2005-2019.
+!!  Copyright (C) Stichting Deltares, 2005-2020.
 !!
 !!  This file is part of iMOD.
 !!
@@ -91,7 +91,7 @@ CONTAINS
  
  IF(.NOT.LEXPORTIT)THEN
 
-  CALL WDIALOGSHOW(-1,-1,0,WMODE)
+  CALL UTL_DIALOGSHOW(-1,-1,0,WMODE)
 
  ELSE
 

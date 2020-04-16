@@ -1,4 +1,4 @@
-!!  Copyright (C) Stichting Deltares, 2005-2019.
+!!  Copyright (C) Stichting Deltares, 2005-2020.
 !!
 !!  This file is part of iMOD.
 !!
@@ -133,7 +133,7 @@ CONTAINS
   CALL WGRIDPUTCELLSTRING(IDF_GRID1,1,I,SNAMES(I))
  END DO
 
- CALL WDIALOGSHOW(-0,65,0,2)
+ CALL UTL_DIALOGSHOW(-0,65,0,2)
 
  IF(KSHAPE.NE.ID_POINT)THEN
   CALL IGRPLOTMODE(MODEXOR)

@@ -1,4 +1,4 @@
-!!  Copyright (C) Stichting Deltares, 2005-2019.
+!!  Copyright (C) Stichting Deltares, 2005-2020.
 !!
 !!  This file is part of iMOD.
 !!
@@ -158,7 +158,7 @@ CONTAINS
  CALL WDIALOGPUTSTRING(IDCANCEL,'Close')
 
  CALL WDIALOGPUTSTRING(IDF_GROUP1,'Select a StartPoint Definition, or Enter a new name')
- CALL WDIALOGSHOW(-1,-1,0,3)
+ CALL UTL_DIALOGSHOW(-1,-1,0,3)
 
  DO
   CALL WMESSAGE(ITYPE,MESSAGE)
@@ -384,7 +384,7 @@ CONTAINS
    CALL IDFPLOTFAST(0)
    CALL WDIALOGSELECT(ID_DSPOINTS)
    CALL WDIALOGPUTSTRING(IDF_LABEL1,'StartPoint Definition: '//TRIM(SDFFNAME(INDEX(SDFFNAME,'\',.TRUE.)+1:)))
-   CALL WDIALOGSHOW(-1,-1,0,2)
+   CALL UTL_DIALOGSHOW(-1,-1,0,2)
    RETURN
   ENDIF
  ENDIF

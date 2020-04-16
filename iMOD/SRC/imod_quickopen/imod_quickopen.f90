@@ -1,4 +1,4 @@
-!!  Copyright (C) Stichting Deltares, 2005-2019.
+!!  Copyright (C) Stichting Deltares, 2005-2020.
 !!
 !!  This file is part of iMOD.
 !!
@@ -60,7 +60,7 @@ CONTAINS
  CALL IDFQUICKOPEN_UPDATE(IDF_MENU1)
  CALL WDIALOGFIELDSTATE(IDOK,2)
 
- CALL WDIALOGSHOW(-1,-1,0,2)
+ CALL UTL_DIALOGSHOW(-1,-1,0,2)
 
  END SUBROUTINE IDFQUICKOPEN_INIT
 

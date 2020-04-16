@@ -1,4 +1,4 @@
-!!  Copyright (C) Stichting Deltares, 2005-2019.
+!!  Copyright (C) Stichting Deltares, 2005-2020.
 !!
 !!  This file is part of iMOD.
 !!
@@ -659,7 +659,7 @@ CONTAINS
  CALL WDIALOGFIELDOPTIONS(IDF_INTEGER1,EDITFIELDCHANGED,1)
 
  CALL WGRIDSTATE(IDF_GRID1,4,2)
- CALL WDIALOGSHOW(-1,-1,0,3)
+ CALL UTL_DIALOGSHOW(-1,-1,0,3)
  
  DO
   CALL WMESSAGE(ITYPE,MESSAGE)

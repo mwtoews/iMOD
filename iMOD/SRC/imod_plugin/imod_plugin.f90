@@ -1,4 +1,4 @@
-!!  Copyright (C) Stichting Deltares, 2005-2019.
+!!  Copyright (C) Stichting Deltares, 2005-2020.
 !!
 !!  This file is part of iMOD.
 !!
@@ -56,7 +56,7 @@ CONTAINS
  CALL PLUGIN_READ(IPI)
  CALL WGRIDSETCELL(IDF_GRID1,1,1)
  CALL PLUGIN_FIELDCHANGE(IPI,1)
- CALL WDIALOGSHOW(-1,-1,0,2)
+ CALL UTL_DIALOGSHOW(-1,-1,0,2)
   
  DO
   CALL WMESSAGE(ITYPE,MESSAGE)

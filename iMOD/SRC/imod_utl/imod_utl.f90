@@ -1,4 +1,4 @@
-!!  Copyright (C) Stichting Deltares, 2005-2019.
+!!  Copyright (C) Stichting Deltares, 2005-2020.
 !!
 !!  This file is part of iMOD.
 !!
@@ -2527,7 +2527,7 @@ DOLOOP: DO
  ELSE
   CALL UTL_LISTOFFILES_MANIPULATE(FNAME,STRLEN,0,EFNAME)
  ENDIF
- CALL WDIALOGSHOW(-1,-1,0,3)
+ CALL UTL_DIALOGSHOW(-1,-1,0,3)
 
  BACTION=0
  DO
@@ -3376,7 +3376,7 @@ DOLOOP: DO
  CCNST=''
  CALL WGRIDPUTSTRING(IDF_GRID1,4,CCNST,NP)
 
- CALL WDIALOGSHOW(-1,-1,0,3)
+ CALL UTL_DIALOGSHOW(-1,-1,0,3)
 
  DO
   CALL WMESSAGE(ITYPE,MESSAGE)
@@ -4418,11 +4418,31 @@ DOLOOP: DO
  ELSE
   IX=WINFODIALOG(DIALOGXPOS)
   IY=WINFODIALOG(DIALOGYPOS)
-  CALL WDIALOGSHOW(IX,IY,0,ISHOW)
+  CALL UTL_DIALOGSHOW(IX,IY,0,ISHOW)
  ENDIF
 
  END SUBROUTINE UTL_HIDESHOWDIALOG
 
+ !###======================================================================
+ SUBROUTINE UTL_DIALOGSHOW(IXPOS,IYPOS,IFIELD,ITYPE)
+ !###======================================================================
+ INTEGER,INTENT(IN),OPTIONAL :: IFIELD,ITYPE,IXPOS,IYPOS
+ INTEGER :: JFIELD,JTYPE
+ 
+ !Default values
+ JFIELD=0  ; IF(PRESENT(IFIELD)) JFIELD=IFIELD
+ JTYPE=2   ; IF(PRESENT(ITYPE))  JTYPE=ITYPE
+ 
+ !In Winteracter versions up to and including v12.0, a value of -1 could also be specified for either coordinate, to centre the dialog
+ !From Winteracter 13.0, to centre a dialog, either horizontally or vertically, omit the corresponding IXPOS/IYPOS argument
+ IF(IXPOS.EQ.-1.AND.IYPOS.EQ.-1) THEN
+     CALL WDIALOGSHOW(IFIELD=JFIELD,ITYPE=JTYPE)
+ ELSE  
+   CALL WDIALOGSHOW(IXPOS,IYPOS,JFIELD,JTYPE)
+ ENDIF  
+
+ END SUBROUTINE UTL_DIALOGSHOW
+ 
  !###======================================================================
  SUBROUTINE UTL_IDFGETLAYERS(IDFNAME,N,ILAY)
  !###======================================================================
@@ -4717,7 +4737,7 @@ DOLOOP: DO
  CALL WGRIDPUTINTEGER(IDF_GRID1,2,UNITS,NOPEN)
  CALL WGRIDPUTSTRING(IDF_GRID1,3,FNAME,NOPEN)
 
- CALL WDIALOGSHOW(-1,-1,0,3)
+ CALL UTL_DIALOGSHOW(-1,-1,0,3)
 
  DO
   CALL WMESSAGE(ITYPE,MESSAGE)

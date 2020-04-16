@@ -1,4 +1,4 @@
-!!  Copyright (C) Stichting Deltares, 2005-2019.
+!!  Copyright (C) Stichting Deltares, 2005-2020.
 !!
 !!  This file is part of iMOD.
 !!
@@ -309,7 +309,7 @@ CONTAINS
  CALL POLYGON1FIELDS(ID_DEXTRACT)
 
  CALL WDIALOGSELECT(ID_DEXTRACT)
- CALL WDIALOGSHOW(-0,100,0,2)
+ CALL UTL_DIALOGSHOW(-0,100,0,2)
 
  END SUBROUTINE EXTRACTIPF1INIT
 

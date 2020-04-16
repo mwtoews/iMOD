@@ -1,4 +1,4 @@
-!!  Copyright (C) Stichting Deltares, 2005-2019.
+!!  Copyright (C) Stichting Deltares, 2005-2020.
 !!
 !!  This file is part of iMOD.
 !!
@@ -106,7 +106,7 @@ CONTAINS
  CALL WDIALOGSELECT(ID_DSCENTOOL_PROP)
  CALL WDIALOGSETTAB(IDF_TAB,ID_DSCENTOOL_PROPTAB1)
  CALL WDIALOGTITLE('Observation Wells')
- CALL WDIALOGSHOW(-1,-1,0,2)
+ CALL UTL_DIALOGSHOW(-1,-1,0,2)
 
  END SUBROUTINE STOBS1INIT
 

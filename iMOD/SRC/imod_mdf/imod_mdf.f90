@@ -1,4 +1,4 @@
-!!  Copyright (C) Stichting Deltares, 2005-2019.
+!!  Copyright (C) Stichting Deltares, 2005-2020.
 !!
 !!  This file is part of iMOD.
 !!
@@ -62,7 +62,7 @@ CONTAINS
  CALL MDF_UPDATE(N)
 
  CALL MDF_FIELDS(N)
- CALL WDIALOGSHOW(-1,-1,0,3)
+ CALL UTL_DIALOGSHOW(-1,-1,0,3)
 
  DO
   CALL WMESSAGE(ITYPE,MESSAGE)

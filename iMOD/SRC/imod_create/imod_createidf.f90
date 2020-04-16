@@ -1,4 +1,4 @@
-!!  Copyright (C) Stichting Deltares, 2005-2019.
+!!  Copyright (C) Stichting Deltares, 2005-2020.
 !!
 !!  This file is part of iMOD.
 !!
@@ -1261,7 +1261,7 @@ CONTAINS
  CALL WDIALOGFIELDSTATE(IDF_INTEGER1,2)
  CALL WDIALOGFIELDSTATE(IDF_INTEGER2,2)
  
- CALL WDIALOGSHOW(-1,-1,0,2)
+ CALL UTL_DIALOGSHOW(-1,-1,0,2)
 
  END SUBROUTINE CREATEIDF1INIT
 

@@ -1,4 +1,4 @@
-!!  Copyright (C) Stichting Deltares, 2005-2019.
+!!  Copyright (C) Stichting Deltares, 2005-2020.
 !!
 !!  This file is part of iMOD.
 !!
@@ -343,7 +343,7 @@ CONTAINS
  DEALLOCATE(COPTS)
  
  CALL WDIALOGSELECT(ID_DMODEL)
- CALL WDIALOGSHOW(-1,-1,0,2)
+ CALL UTL_DIALOGSHOW(-1,-1,0,2)
 
  !## read selected runfile and adjust and fill in tab-fields/settings
  CALL MODEL1TABSTATES(MODEL1RUNFILE(),.TRUE.)

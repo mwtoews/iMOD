@@ -1,4 +1,4 @@
-!!  Copyright (C) Stichting Deltares, 2005-2019.
+!!  Copyright (C) Stichting Deltares, 2005-2020.
 !!
 !!  This file is part of iMOD.
 !!
@@ -139,7 +139,7 @@ CONTAINS
  CALL WDIALOGPUTSTRING(IDF_GROUP1,'Progress Movie Creation - creating '//TRIM(ITOS(NPER))//' images')
  CALL WDIALOGRANGEPROGRESSBAR(IDF_PROGRESS1,0,NPER)
  CALL WDIALOGPUTPROGRESSBAR(IDF_PROGRESS1,0,ABSOLUTE)
- CALL WDIALOGSHOW(-1,-1,0,3)
+ CALL UTL_DIALOGSHOW(-1,-1,0,3)
 
  !## create drawing per timestep
  DO K=1,NPER
@@ -395,7 +395,7 @@ CONTAINS
  CALL MOVIE_PLAY_ITEMS()
  
  !## display dialog
- CALL WDIALOGSHOW(-1,-1,0,2)
+ CALL UTL_DIALOGSHOW(-1,-1,0,2)
 
  CALL WMENUSETSTATE(ID_MOVIE_PLAY,2,1)
 

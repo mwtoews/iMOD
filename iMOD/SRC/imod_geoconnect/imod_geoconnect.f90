@@ -1,4 +1,4 @@
-!!  Copyright (C) Stichting Deltares, 2005-2019.
+!!  Copyright (C) Stichting Deltares, 2005-2020.
 !!
 !!  This file is part of iMOD.
 !!
@@ -462,7 +462,7 @@ CONTAINS
  
  CALL WDIALOGSETTAB(ID_GCTAB,ID_DGEOCONNECT_TAB4)
  CALL WDIALOGFIELDSTATE(IDOK,0)
- CALL WDIALOGSHOW(-1,-1,0,2)
+ CALL UTL_DIALOGSHOW(-1,-1,0,2)
 
  END SUBROUTINE GC_MAIN_INIT
 

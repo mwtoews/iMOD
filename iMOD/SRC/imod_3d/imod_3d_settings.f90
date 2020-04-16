@@ -1,4 +1,4 @@
-!!  Copyright (C) Stichting Deltares, 2005-2019.
+!!  Copyright (C) Stichting Deltares, 2005-2020.
 !!
 !!  This file is part of iMOD.
 !!
@@ -860,7 +860,7 @@ CONTAINS
        
        DID=WINFODIALOG(CURRENTDIALOG)
        
-       CALL WDIALOGSHOW(-1,-1,0,3)
+       CALL UTL_DIALOGSHOW(-1,-1,0,3)
        DO
         CALL WMESSAGE(PL_ITYPE,PL_MESSAGE)
         SELECT CASE (PL_ITYPE)
