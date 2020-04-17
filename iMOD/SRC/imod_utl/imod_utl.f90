@@ -4426,21 +4426,22 @@ DOLOOP: DO
  !###======================================================================
  SUBROUTINE UTL_DIALOGSHOW(IXPOS,IYPOS,IFIELD,ITYPE)
  !###======================================================================
- INTEGER,INTENT(IN),OPTIONAL :: IFIELD,ITYPE,IXPOS,IYPOS
- INTEGER :: JFIELD,JTYPE
+ INTEGER,INTENT(IN) :: IFIELD,ITYPE,IXPOS,IYPOS
+ !INTEGER :: JFIELD,JTYPE
  
  !Default values
- JFIELD=0  ; IF(PRESENT(IFIELD)) JFIELD=IFIELD
- JTYPE=2   ; IF(PRESENT(ITYPE))  JTYPE=ITYPE
+ !JFIELD=0  ; IF(PRESENT(IFIELD)) JFIELD=IFIELD
+ !JTYPE=2   ; IF(PRESENT(ITYPE))  JTYPE=ITYPE
  
  !In Winteracter versions up to and including v12.0, a value of -1 could also be specified for either coordinate, to centre the dialog
  !From Winteracter 13.0, to centre a dialog, either horizontally or vertically, omit the corresponding IXPOS/IYPOS argument
  IF(IXPOS.EQ.-1.AND.IYPOS.EQ.-1) THEN
-     CALL WDIALOGSHOW(IFIELD=JFIELD,ITYPE=JTYPE)
+     CALL WDIALOGSHOW(IFIELD=IFIELD,ITYPE=ITYPE)
  ELSE  
-   CALL WDIALOGSHOW(IXPOS,IYPOS,JFIELD,JTYPE)
+   CALL WDIALOGSHOW(IXPOS,IYPOS,IFIELD,ITYPE)
  ENDIF  
-
+ 
+ 
  END SUBROUTINE UTL_DIALOGSHOW
  
  !###======================================================================
