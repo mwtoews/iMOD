@@ -1169,12 +1169,12 @@ ILAYLOOP2: DO ILAY=MNLAY(1),1,-1
  CHARACTER(LEN=256) :: FNAME,STRING,MDLNAME
  CHARACTER(LEN=52) :: TXT
  CHARACTER(LEN=1) :: CDIR,CHV
- INTEGER :: IU,JU,KU,IOS,ILAY,IROW,ICOL,N,IHC,M,M2,IHFB,NEXG,MM,II
+ INTEGER :: IU,JU,KU,IOS,ILAY,IROW,ICOL,N,IHC,M,M2,IHFB,NEXG,MM,II,JJ
  REAL(KIND=DP_KIND) :: HWVA,AREA,F
  REAL(KIND=DP_KIND),DIMENSION(2) :: CL
  TYPE HFBOBJ
   INTEGER,DIMENSION(2) :: ICOL,IROW
-  INTEGER :: ILAY
+  INTEGER :: ILAY,IBND
   CHARACTER(LEN=1) :: CHV
   REAL(KIND=DP_KIND) :: C,F
  END TYPE HFBOBJ
@@ -1208,12 +1208,12 @@ ILAYLOOP2: DO ILAY=MNLAY(1),1,-1
     !## exchange existing
     IF(NEXG.GT.0)THEN
     
-     !## load all hfbs for both sub models
+     !## load all hfbs on boundaries for both sub models
      ALLOCATE(HFB(2,1)); NHFB=0
      DO I=1,2
       M=0; DO IHFB=1,2
-       IF(IHFB.EQ.1)MM=M1; IF(IHFB.EQ.1)MM=M2
-       N=0; DO ILAY=1,SUBNLAY(MM) !NLAY
+       IF(IHFB.EQ.1)MM=M1; IF(IHFB.EQ.2)MM=M2
+       N=0; DO ILAY=1,SUBNLAY(MM)
         FNAME=TRIM(MAINDIR)//'\GWF_'//TRIM(ITOS(MM))//'\MODELINPUT\'//TRIM(MDLNAME)//'_HFB_L'//TRIM(ITOS(ILAY))//'.DAT'
         JU=UTL_GETUNIT(); CALL OSD_OPEN(JU,FILE=FNAME,STATUS='OLD',ACTION='READ',FORM='FORMATTED'); IF(JU.EQ.0)RETURN
         READ(JU,*)
@@ -1224,8 +1224,9 @@ ILAYLOOP2: DO ILAY=MNLAY(1),1,-1
          ELSE
           IF(N.GT.NHFB(IHFB))EXIT
          ENDIF
-         READ(JU,'(11X,F15.0,17X,F15.0,10X,4I10)',IOSTAT=IOS) HFB(IHFB,N)%C,      HFB(IHFB,N)%F,      HFB(IHFB,N)%ICOL(1), &
-                                                              HFB(IHFB,N)%IROW(1),HFB(IHFB,N)%ICOL(2),HFB(IHFB,N)%IROW(2)
+         READ(JU,'(11X,F15.0,17X,F15.0,10X,5I10)',IOSTAT=IOS) HFB(IHFB,N)%C,      HFB(IHFB,N)%F,      HFB(IHFB,N)%ICOL(1), &
+                                                              HFB(IHFB,N)%IROW(1),HFB(IHFB,N)%ICOL(2),HFB(IHFB,N)%IROW(2), &
+                                                              HFB(IHFB,N)%IBND
          IF(IOS.NE.0)EXIT
          HFB(IHFB,N)%ILAY=ILAY
          !## horizontal
@@ -1250,33 +1251,22 @@ ILAYLOOP2: DO ILAY=MNLAY(1),1,-1
      IF(TRIM(STRING).EQ.'END EXCHANGEDATA')EXIT
      READ(STRING,'(7I10,5G15.7,3X,A1)') (CELLID(1,I),I=1,3),(CELLID(2,I),I=1,3),IHC,CL(1),CL(2),HWVA,AREA,CDIR
      SELECT CASE (CDIR); CASE ('E','W'); CHV='H'; CASE DEFAULT; CHV='V'; END SELECT
-!     IF(CDIR.EQ.'W')CDIR='E'
-!     IF(CDIR.EQ.'S')CDIR='N'
      DO IHFB=1,2
       !## look for fault
       ILAY=CELLID(IHFB,1)
       IROW=CELLID(IHFB,2)
       ICOL=CELLID(IHFB,3)
-      F=1.0D0; 
 IILOOP: DO I=1,NHFB(IHFB)
+       !## skip if not on a potential boundary
+       IF(HFB(IHFB,I)%IBND.EQ.0)CYCLE
        DO II=1,2
         IF(HFB(IHFB,I)%ILAY .EQ.ILAY.AND. &
            HFB(IHFB,I)%IROW(II).EQ.IROW.AND. &
            HFB(IHFB,I)%ICOL(II).EQ.ICOL.AND. &
            HFB(IHFB,I)%CHV .EQ.CHV)THEN
-         !## if this is the same than other point need to be coincide with direction
-         IF(CHV.EQ.'H')THEN
-          IF(CDIR.EQ.'W')THEN
-          ELSEIF(CDIR.EQ.'E')THEN
-          ENDIF
-         ELSE
-          IF(CDIR.EQ.'N')THEN
-          ELSEIF(CDIR.EQ.'S')THEN
-          ENDIF
-         ENDIF
          !## no flow at all - remove exchange
          IF(HFB(IHFB,I)%C.EQ.0.0D0)THEN
-          F=HUGE(1.0) !-1.0D0
+          F=HUGE(1.0)
          !## resistance for distance is c - estimate by factor, apply that to distance
          ELSE
           F=HFB(IHFB,I)%F
@@ -5365,9 +5355,9 @@ IRLOOP: DO IROW=1,PRJIDF%NROW; DO ICOL=1,PRJIDF%NCOL
     STATUS='UNKNOWN',ACTION='WRITE',FORM='FORMATTED')
   IF(IUDAT(ILAY).EQ.0)RETURN
   IF(LTB)THEN
-   WRITE(IUDAT(ILAY),'(A10,3(1X,A15),5A10)') 'NO','CONF_RESIS','UNCONF_RESIS','FRACTION','SYSTEM','ICOL1','IROW1','ICOL2','IROW2'
+   WRITE(IUDAT(ILAY),'(A10,3(1X,A15),6A10)') 'NO','CONF_RESIS','UNCONF_RESIS','FRACTION','SYSTEM','ICOL1','IROW1','ICOL2','IROW2','IBND'
   ELSE
-   WRITE(IUDAT(ILAY),'(A10,1X,A15,5A10)') 'NO','FRACTION','SYSTEM','ICOL1','IROW1','ICOL2','IROW2'
+   WRITE(IUDAT(ILAY),'(A10,1X,A15,6A10)') 'NO','FRACTION','SYSTEM','ICOL1','IROW1','ICOL2','IROW2','IBND'
   ENDIF
  ENDDO
 
@@ -7180,7 +7170,7 @@ IRLOOP: DO IROW=1,PRJIDF%NROW; DO ICOL=1,PRJIDF%NCOL
    IF(IPC(ICOL,IROW,1).EQ.INT(1,1))THEN
     IF(ICOL.LT.IDF%NCOL)THEN
 
-!     !## skip faults from and/or towards inactive cell
+     !## skip faults from and to inactive cell
      IF(BND(ILAY)%X(ICOL,IROW).EQ.0.0D0.AND. &
         BND(ILAY)%X(ICOL+1,IROW).EQ.0.0D0)CYCLE
     
@@ -7220,7 +7210,7 @@ IRLOOP: DO IROW=1,PRJIDF%NROW; DO ICOL=1,PRJIDF%NCOL
      !## modflow6
      ELSE
 
-      IF(BND(ILAY)%X(ICOL,IROW).NE.0.0D0.AND. &
+      IF(BND(ILAY)%X(ICOL  ,IROW).NE.0.0D0.AND. &
          BND(ILAY)%X(ICOL+1,IROW).NE.0.0D0)THEN
  
        CALL IDFGETDXDY(BND(ILAY),ICOL,IROW,DX,DY)
@@ -7239,9 +7229,15 @@ IRLOOP: DO IROW=1,PRJIDF%NROW; DO ICOL=1,PRJIDF%NCOL
         CALL IDFGETDXDY(BND(ILAY),ICOL+1,IROW,DX,DY)
         T2=(0.5D0*DX*DY)/(T*KHV(ILAY)%X(ICOL+1,IROW))
        ENDIF
-       !## fraction 
-       F=(T1+T2)/(C2+T1+T2)
-       WRITE(IU,'(6(I10,1X),G15.7,1X,I10)') JLAY,IROW,ICOL,JLAY,IROW,ICOL+1,     -F ,ISYS !## y-direction
+       !## fraction
+       IF(C2.EQ.0.0D0)THEN
+        !## conductance
+        F=0.0D0
+       ELSE
+        !## factor
+        F=-(T1+T2)/(C2+T1+T2)
+       ENDIF
+       WRITE(IU,'(6(I10,1X),G15.7,1X,I10)') JLAY,IROW,ICOL,JLAY,IROW,ICOL+1,F,ISYS !## y-direction
       
       ENDIF
       
@@ -7249,7 +7245,7 @@ IRLOOP: DO IROW=1,PRJIDF%NROW; DO ICOL=1,PRJIDF%NCOL
      
      !## write line in genfile
      CALL PMANAGER_SAVEMF2005_HFB_GENFILES(IUGEN(ILAY),IUDAT(ILAY),IPC,IDF,IDF%NROW,IDF%NCOL,IROW,ICOL, &
-               NHFBNP(ILAY),C1,C2,FDZ(ICOL,IROW),ISYS,1,LTB,TFV,BFV) 
+               NHFBNP(ILAY),C1,C2,FDZ(ICOL,IROW),ISYS,1,LTB,TFV,BFV,BND(ILAY)) 
 
     ENDIF 
    ENDIF
@@ -7299,8 +7295,9 @@ IRLOOP: DO IROW=1,PRJIDF%NROW; DO ICOL=1,PRJIDF%NCOL
      !## modflow6
      ELSE
 
-      IF(BND(ILAY)%X(ICOL,IROW).NE.0.0D0.AND. &
+      IF(BND(ILAY)%X(ICOL,IROW)  .NE.0.0D0.AND. &
          BND(ILAY)%X(ICOL,IROW+1).NE.0.0D0)THEN
+         
        CALL IDFGETDXDY(BND(ILAY),ICOL,IROW,DX,DY)
        !## get average thickness in between cells
        T1=0.0D0; IF(BND(ILAY)%X(ICOL,IROW).NE.0.0D0)THEN
@@ -7316,15 +7313,25 @@ IRLOOP: DO IROW=1,PRJIDF%NROW; DO ICOL=1,PRJIDF%NCOL
         CALL IDFGETDXDY(BND(ILAY),ICOL,IROW+1,DX,DY)
         T2=(0.5D0*DX*DY)/(T*KHV(ILAY)%X(ICOL,IROW+1))
        ENDIF
-       !## fraction 
-       F=(T1+T2)/(C2+T1+T2)
-       WRITE(IU,'(6(I10,1X),G15.7,1X,I10)') JLAY,IROW,ICOL,JLAY,IROW+1,ICOL,      -F,ISYS !## x-direction
+       
+       !## fraction
+       IF(C2.EQ.0.0D0)THEN
+        !## conductance
+        F=0.0D0
+       ELSE
+        !## factor
+        F=-(T1+T2)/(C2+T1+T2)
+       ENDIF
+       
+!       !## fraction 
+!       F=(T1+T2)/(C2+T1+T2)
+       WRITE(IU,'(6(I10,1X),G15.7,1X,I10)') JLAY,IROW,ICOL,JLAY,IROW+1,ICOL,F,ISYS !## x-direction
       ENDIF
      ENDIF
      
      !## write line in genfile
      CALL PMANAGER_SAVEMF2005_HFB_GENFILES(IUGEN(ILAY),IUDAT(ILAY),IPC,IDF,IDF%NROW,IDF%NCOL,IROW,ICOL, &
-               NHFBNP(ILAY),C1,C2,FDZ(ICOL,IROW),ISYS,2,LTB,TFV,BFV) 
+               NHFBNP(ILAY),C1,C2,FDZ(ICOL,IROW),ISYS,2,LTB,TFV,BFV,BND(ILAY)) 
 
     ENDIF
    ENDIF
@@ -7408,26 +7415,28 @@ IRLOOP: DO IROW=1,PRJIDF%NROW; DO ICOL=1,PRJIDF%NCOL
  
  !###====================================================================
  SUBROUTINE PMANAGER_SAVEMF2005_HFB_GENFILES(IU,JU,IPC,IDF,NROW,NCOL,IROW,ICOL,N, &
-                  C,RES,FDZ,ISYS,IT,LTB,TFV,BFV)
+                  C,RES,FDZ,ISYS,IT,LTB,TFV,BFV,BND)
  !###====================================================================
  IMPLICIT NONE
- TYPE(IDFOBJ),INTENT(IN) :: IDF
+ TYPE(IDFOBJ),INTENT(IN) :: IDF,BND
  REAL(KIND=DP_KIND),INTENT(IN) :: C,RES,FDZ,TFV,BFV
  LOGICAL,INTENT(IN) :: LTB
  INTEGER,INTENT(IN) :: NROW,NCOL,IROW,ICOL,IU,JU,N,ISYS,IT
  INTEGER(KIND=1),INTENT(IN),DIMENSION(NCOL,NROW,2) :: IPC 
+ INTEGER :: IBND
  REAL(KIND=DP_KIND) :: T1,B1
 
  !## place vertical wall
  IF(IT.EQ.1)THEN
   IF(IPC(ICOL,IROW,1).EQ.INT(1,1).AND.ICOL.LT.NCOL)THEN
    IF(JU.GT.0)THEN
+    IBND=0; IF(BND%X(ICOL,IROW).EQ.0.OR.BND%X(ICOL+1,IROW).EQ.0)IBND=1
     IF(LTB)THEN
      !## write location of fault for m6f and submodel
-     IF(TFV.GE.BFV)WRITE(JU,'(I10,3(1X,E15.7),5I10)') N,C,RES,FDZ,ISYS,ICOL,IROW,ICOL+1,IROW
+     IF(TFV.GE.BFV)WRITE(JU,'(I10,3(1X,E15.7),6I10)') N,C,RES,FDZ,ISYS,ICOL,IROW,ICOL+1,IROW,IBND
     ELSE
      !## write location of fault for m6f and submodel
-     WRITE(JU,'(I10,1X  ,E15.7 ,5I10)') N,C,ISYS,ICOL,IROW,ICOL+1,IROW
+     WRITE(JU,'(I10,1X  ,E15.7 ,6I10)') N,C,ISYS,ICOL,IROW,ICOL+1,IROW,IBND
     ENDIF
    ENDIF
    IF(ICOL.LT.PRJIDF%NCOL)THEN
@@ -7456,12 +7465,13 @@ IRLOOP: DO IROW=1,PRJIDF%NROW; DO ICOL=1,PRJIDF%NCOL
  IF(IT.EQ.2)THEN
   IF(IPC(ICOL,IROW,2).EQ.INT(1,1).AND.IROW.LT.NROW)THEN
    IF(JU.GT.0)THEN
+    IBND=0; IF(BND%X(ICOL,IROW).EQ.0.OR.BND%X(ICOL,IROW+1).EQ.0)IBND=1
     IF(LTB)THEN
      !## write location of fault for m6f and submodel
-     IF(TFV.GE.BFV)WRITE(JU,'(I10,3(1X,E15.7),5I10)') N,C,RES,FDZ,ISYS,ICOL,IROW,ICOL,IROW+1
+     IF(TFV.GE.BFV)WRITE(JU,'(I10,3(1X,E15.7),6I10)') N,C,RES,FDZ,ISYS,ICOL,IROW,ICOL,IROW+1,IBND
     ELSE
      !## write location of fault for m6f and submodel
-     WRITE(JU,'(I10,1X  ,E15.7 ,5I10)') N,C,ISYS,ICOL,IROW,ICOL,IROW+1
+     WRITE(JU,'(I10,1X  ,E15.7 ,6I10)') N,C,ISYS,ICOL,IROW,ICOL,IROW+1,IBND
     ENDIF
    ENDIF
    IF(IROW.LT.PRJIDF%NROW)THEN
