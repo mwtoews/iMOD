@@ -3635,11 +3635,8 @@ DOLOOP: DO
     H=DXY/RANGE
    CASE (2) !## spherical = OKAY
     H=(3.0D0*DXY)/(2.0D0*RANGE)-((DXY**3.0D0)/(2.0D0*RANGE**3.0D0))
-!    H=(3.0D0*DXY)/(2.0D0*RANGE)-(0.5D0*(DXY/RANGE)**3.0D0)
    CASE (3) !## exponential
     H=1.0D0-10.0D0**(-3.0D0*DXY/RANGE)
-!    H=1.0D0-EXP((-3.0D0*DXY)/RANGE)
-!    H=1.0D0-EXP(-3.0D0*(DXY/RANGE))
    CASE (4) !## gaussian
     H=1.0D0-10.0D0**(-3.0D0*(DXY**2.0D0)/(RANGE**2.0D0))
 !    H=1.0D0-EXP(-3.0D0*(DXY**2.0D0)/(RANGE**2.0D0))

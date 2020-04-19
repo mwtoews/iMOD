@@ -56,7 +56,7 @@ use imod_utl, only: imod_utl_printtext,imod_utl_itos,imod_utl_dtos,imod_utl_crea
    utl_kriging_range,utl_kriging_main
 use gwfmetmodule, only: cdelr, cdelc, resultdir
 use global, only: lipest, ibound 
-use pestvar, only: param, pest_iter,lgrad,llnsrch,pest_igrad,iupestout,pest_ktype,pest_krange,blnkout
+use pestvar, only: param, pest_iter,lgrad,llnsrch,pest_igrad,iupestout,pest_ktype,pest_krange,blnkout,pest_maxpnt
 
 implicit none
 
@@ -257,10 +257,10 @@ do i=1,size(param)
   ENDIF
 
   CALL imod_utl_printtext('Kriging applied Range:'//TRIM(IMOD_UTL_dTOS(RANGE,'F',2))//' meter',1)
-
+  
   !## apply kriging interpolation
   CALL UTL_KRIGING_MAIN(NXYZ,XYZ(:,1),XYZ(:,2),XYZ(:,3),CDELR,CDELC,NROW,NCOL,XPP,NODATA,RANGE,PEST_KTYPE, &
-     BLNKOUT)
+     BLNKOUT,PEST_MAXPNT)
   DO IROW=1,NROW; DO ICOL=1,NCOL
    IF(IBOUND(ICOL,IROW,ILS).EQ.0)THEN
     XPP(ICOL,IROW)=NODATA

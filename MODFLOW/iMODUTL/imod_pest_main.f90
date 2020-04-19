@@ -198,8 +198,9 @@ CONTAINS
  PEST_IREGULARISATION=0
 
  READ(IURUN,'(A256)',IOSTAT=IOS) LINE
- IF(IOS.EQ.0)READ(LINE,*,IOSTAT=IOS) PEST_NITER,PEST_JSTOP,PEST_SENSITIVITY, &
-   PEST_NPERIOD,PEST_NBATCH,(PEST_ITARGET(I),I=1,SIZE(PEST_ITARGET)),PEST_ISCALING,PEST_PADJ,PEST_DRES,PEST_KTYPE,PEST_KRANGE
+
+ READ(LINE,*,IOSTAT=IOS) PEST_NITER,PEST_JSTOP,PEST_SENSITIVITY, &
+  PEST_NPERIOD,PEST_NBATCH,(PEST_ITARGET(I),I=1,SIZE(PEST_ITARGET)),PEST_ISCALING,PEST_PADJ,PEST_DRES,PEST_KTYPE,PEST_KRANGE
  IF(IOS.NE.0)THEN
   PEST_KRANGE=0.0 !# apply default as 0.9 times the diagonal of the model
   IF(IOS.EQ.0)READ(LINE,*,IOSTAT=IOS) PEST_NITER,PEST_JSTOP,PEST_SENSITIVITY, &
@@ -231,7 +232,12 @@ CONTAINS
   CALL IMOD_UTL_PRINTTEXT(TRIM(LINE),0)
   CALL IMOD_UTL_PRINTTEXT('Busy processing module: '//TRIM(CMOD(PPST)),2)
  ENDIF
- 
+
+ !## number of pilotpoint to be used in interpolation
+ PEST_MAXPNT=10
+ !## use nearest-neighbour, set maxpnt=1
+ IF(ABS(PEST_KTYPE).EQ.3)PEST_MAXPNT=1
+
  !## include blank out array icm pilotpoitns
  PPBLANKOUT=''; NULLIFY(BLNKOUT%X)
  if(ioption.eq.0)then
@@ -272,10 +278,10 @@ CONTAINS
  ENDIF
 
  PEST_KTYPE=ABS(PEST_KTYPE)
- !## ordinary kriging
- IF(PEST_KTYPE.EQ.2)PEST_KTYPE=-2
+ !## ordinary kriging - exponential instead of spherical
+ IF(PEST_KTYPE.EQ.2)PEST_KTYPE=-3 !2
  !## simple kriging
- IF(PEST_KTYPE.EQ.1)PEST_KTYPE= 2
+ IF(PEST_KTYPE.EQ.1)PEST_KTYPE= 3 !2
  !## terminate after a single run
  PEST_SINGLE=0; IF(PEST_NITER.LT.0)THEN; PEST_NITER=1; PEST_SINGLE=1; ENDIF
  
@@ -299,10 +305,10 @@ CONTAINS
    CALL IMOD_UTL_PRINTTEXT(' - No  Scaling, Yes SVD',-1,IUPESTOUT)
  END SELECT
  SELECT CASE (PEST_KTYPE)
-  CASE ( 2)
-   CALL IMOD_UTL_PRINTTEXT(' - Simple Kriging is used (if neccessary)',-1,IUPESTOUT)
-  CASE (-2)
-   CALL IMOD_UTL_PRINTTEXT(' - Ordinary Kriging is used (if neccessary)',-1,IUPESTOUT)
+  CASE ( 3) !2)
+   CALL IMOD_UTL_PRINTTEXT(' - Simple Kriging using Exponential Semivariogram is used (if neccessary)',-1,IUPESTOUT)
+  CASE (-3) !2)
+   CALL IMOD_UTL_PRINTTEXT(' - Ordinary Kriging using Exponential Semivariogram is used (if neccessary)',-1,IUPESTOUT)
   CASE DEFAULT
    CALL IMOD_UTL_PRINTTEXT(' Select 1 or 2 for Kriging Type',2)
  END SELECT

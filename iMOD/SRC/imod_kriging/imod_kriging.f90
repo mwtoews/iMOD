@@ -751,7 +751,7 @@ CONTAINS
  DXY=UTL_DIST(X1,Y1,X2,Y2)
  
  IF(DXY.GE.RANGE)THEN
-  H=1.0d0 !0.999D0 !1.0D0 !0.999D0 
+  H=1.0D0 !0.999D0 !1.0D0 !0.999D0 
  ELSE
 
   !## no part of kriging, beyond given range, equal to sill
