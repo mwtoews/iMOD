@@ -1,7 +1,7 @@
 
 0001,(BND),1, Boundary Condition
 001,001
- 1,2, 001,   1.000000    ,   0.000000    ,  -999.9900    , '$DBASE$\TUTORIALS\TUT_MF6\DBASE\BND\BND.IDF' >>> (BND) Boundary Settings (IDF) <<<
+ 1,2, 001,   1.000000    ,   0.000000    ,  -999.9900    , '$DBASE$\TUTORIALS\TUT_MF6\DBASE\BND\BND_CHD.IDF' >>> (BND) Boundary Settings (IDF) <<<
 
 0001,(TOP),1, Top Elevation
 001,001
@@ -33,7 +33,12 @@ STEADY-STATE
 001,001
  1,1, 001,   1.000000    ,   1.000000    ,   1.000000    ,                                                                '' >>> (RCH) Recharge Rate (IDF) <<<
 
-0001,(RIV),1, Rivers
+0001,(CHD),1, Constant Head
+STEADY-STATE
+001,001
+ 1,1, 001,   1.000000    ,   0.000000    ,  10.000000    ,                                                                '' >>> (RCH) Recharge Rate (IDF) <<<
+
+0000,(RIV),1, Rivers
 STEADY-STATE
 004,001
  1,2, 001,   1.000000    ,   0.000000    ,  -999.9900    ,'$DBASE$\TUTORIALS\TUT_MF6\DBASE\RIV\RIVC.IDF' >>> (CON) Conductance (IDF) <<<
