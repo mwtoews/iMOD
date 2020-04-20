@@ -6,9 +6,9 @@
 //
 ///////////////////////////////////////////////////
 //
-// Winteracter resource script. 
+// Winteracter resource script
 //
-// Modified : 02/Apr/2020 13:41:53
+// Modified : 17/Apr/2020 15:31:05
 //
 ///////////////////////////////////////////////////
 //
@@ -23,7 +23,7 @@
 #include "..\LIB\WINTERACTER\OS_X64_V13\include\editor.rc"
 #include "..\LIB\WINTERACTER\OS_X64_V13\include\pagesetup.rc"
 #include "..\LIB\WINTERACTER\OS_X64_V13\include\hardcopy.rc"
- 
+
 ///////////////////////////////////////////////////
 //
 // Parameter Definitions
@@ -11827,8 +11827,6 @@ END
 
 IDD_DIALOG027 RCDATA
 BEGIN
-"[Dialog] \n"
-" 0     0 0 1 \n"
 "[Checks] \n"
 " 1247 0 \n"
 "[Ranges] \n"
@@ -13036,8 +13034,8 @@ END
 ID_DPMANAGER_MT3D_VDF RCDATA
 BEGIN
 "[Ranges] \n"
-" 1130      0.0000           1000.0      \n"
-" 1132      0.0000           1000.0      \n"
+" 1130      0.0000          0.17900E+309 \n"
+" 1132      0.0000          0.17900E+309 \n"
 " 1133      0.0000           10000.      \n"
 " 1134      0.0000           1000.0      \n"
 "[Fonts] \n"
@@ -14697,4 +14695,4 @@ END
 //*WI* FILENAME    resource.f90
 //*WI* FMODNAME    RESOURCE
 //*WI* LASTTYPE        2
-//*WI* LASTRES        18
+//*WI* LASTRES       337
