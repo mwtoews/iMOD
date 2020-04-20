@@ -19,13 +19,14 @@
 001,001
  1,1, 001,   1.000000    ,   0.000000    ,   1.000000    ,                                                                '' >>> (KVA) Vertical Anisotropy (IDF) <<<
 
+0001,(ANI),1, Horizontal Anisotropy
+002,001
+ 1,1, 001,   1.000000    ,   0.000000    ,   0.010000    ,                                                                '' >>> (ANI) Factor (IDF) <<<
+ 1,1, 001,   1.000000    ,   0.000000    ,  45.000000    ,                                                                '' >>> (ANI) Angle (IDF) <<<
+
 0001,(SHD),1, Starting Heads
 001,001
  1,1, 001,   1.000000    ,   0.000000    ,   10.00000    ,                                                                '' >>> (SHD) Starting Heads (IDF) <<<
-
-0001,(HFB),1, Horizontal Barrier
-001,001
- 1,2, 001,   1.000000    ,   0.000000    , -999.99000    ,'$DBASE$\TUTORIALS\TUT_MF6\DBASE\HFB\FAULTLINE.GEN'                >>> (HFB) Horizontal Barrier (GEN) <<<
 
 0001,(RCH),1, Recharge
 STEADY-STATE
