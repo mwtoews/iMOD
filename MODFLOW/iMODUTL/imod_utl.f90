@@ -42,7 +42,7 @@ MODULE IMOD_UTL
   
  logical :: luse_runfile !## this parameter is needed to tackle the issue of scaling vertical anisotropy artihmetical and apply it inverse fo mf2005
  
-character(len=1024), parameter :: licfile = 'I_accepted_v5_0.txt' 
+character(len=1024), parameter :: licfile = 'I_accepted_v5_1.txt' 
 integer, parameter :: nlic = 33
 character(len=79), dimension(nlic) :: lic
 integer, parameter :: nhdr = 40
@@ -50,7 +50,7 @@ character(len=79), dimension(nhdr) :: hdr
 
 !         1234567890123456789012345678901234567890123456789012345678901234567890123456789
 data hdr/'===============================================================================',&!01
-         'iMODFLOW Version 5_0, December 2019                                            ',&!02
+         'iMODFLOW Version 5_1, December 2019                                            ',&!02
          '                                                                               ',&!03
          'Copyright (C) Stichting Deltares, 2005-2019.                                   ',&!04
          '                                                                               ',&!05
@@ -65,7 +65,7 @@ data hdr/'======================================================================
          'Please go to the PDF-file of the iMOD License, read it and decide whether you  ',&!04 
          'want or do not want to accept the iMOD License.                                ',&!05 
          '                                                                               ',&!06
-         'According to the file "I_accepted_v5_0.txt" on your computer you accepted the  ',&!07
+         'According to the file "I_accepted_v5_1.txt" on your computer you accepted the  ',&!07
          'terms and conditions of the iMOD license; WARNING: IF IT WAS NOT YOU OR THE    ',&!08
          'LEGAL ENTITY ON WHOSE BEHALF YOU INTENT TO USE THE IMOD-EXECUTABLE, THAT       ',&!09 
          'ACCEPTED THE TERMS AND CONDITIONS OF THE iMOD LICENSE YOU ARE NOT ENTITLED TO  ',&!10
@@ -77,7 +77,7 @@ data hdr/'======================================================================
          'accepted by the legal entity on whose behalf you intent to use the             ',&!06 
          'iMOD-executable byre-invoking the "I accept"-procedure; to re-invoke the       ',&!07
          '"I accept"-procedure abort the use of this Deltares-executable of iMOD, delete ',&!08
-         'the file "I_accepted_v5_0.txt", and invoke this Deltares-executable of iMOD    ',&!09
+         'the file "I_accepted_v5_1.txt", and invoke this Deltares-executable of iMOD    ',&!09
          'again.                                                                         ',&!10
          '                                                                               ',&!01
          'The iMOD software is distributed in the hope that it will be useful, but       ',&!02
@@ -356,78 +356,84 @@ CONTAINS
   ENDDO 
  ENDDO 
   
- IF(RANGE.EQ.0.0D0)RANGE=2.0D0*R
- 
- !## no points left, interpolated value equals nodata
- IF(NP.LE.0)THEN
-  DEALLOCATE(SELID,SELQID,SELD); KEST=NODATA; KVAR=0.0; RETURN
- ENDIF
- 
- !## simple kriging (ktype.gt.0) and ordinary kriging (ktype.lt.0)
- N=NP; IF(KTYPE.LT.0)N=NP+1
- ALLOCATE(A(N,N),B(N))
-
- A=0.0; B=0.0
- DO I=1,NP 
-  ID=SELID(I)
-  !## semivariance
-  GAMMA=UTL_KRIGING_GETGAMMA(XD(ID),YD(ID),XD(ID),YD(ID),RANGE,SILL,NUGGET,KTYPE)
-  !## variance
-  A(I,I)=SILL-GAMMA
-  DO J=I+1,NP 
-   JD=SELID(J)
-   GAMMA=UTL_KRIGING_GETGAMMA(XD(ID),YD(ID),XD(JD),YD(JD),RANGE,SILL,NUGGET,KTYPE)
-   A(I,J)=SILL-GAMMA; A(J,I)=A(I,J)
-  ENDDO
-
-  ID=SELID(I)
-  GAMMA=UTL_KRIGING_GETGAMMA(XD(ID),YD(ID),X,Y,RANGE,SILL,NUGGET,KTYPE)
-  B(I)=SILL-GAMMA
-  
- ENDDO
- 
- !## ordinary kriging
- IF(KTYPE.LT.0)THEN
-  !## fill for lambda
-  J=N 
-  DO I=1,J; A(I,J)=1.0; A(J,I)=1.0; ENDDO; A(J,J)=0.0; B(J)=1.0
- ENDIF
- 
- !## current point outside range of all others points
- IF(SUM(B(1:NP)).EQ.0.0)THEN
-  KEST=NODATA
+ IF(NP.EQ.1)THEN
+  KEST=ZD(SELID(1))
   KVAR=0.0
+  RETURN
  ELSE
-  CALL UTL_LUDCMP(A,B,N) 
-
-  !## ordinary kriging compute the local mean mzz instead of the global mean mz
-  IF(KTYPE.LT.0)THEN
-   MZZ=0.0; DO I=1,NP; ID=SELID(I); MZZ=MZZ+ZD(ID); ENDDO; MZZ=MZZ/REAL(NP)
+  RANGE=UTL_KRIGING_RANGE(INIRANGE,ND,NP,XD,YD,SELID)
+ 
+  !## no points left, interpolated value equals nodata
+  IF(NP.LE.0)THEN
+   DEALLOCATE(SELID,SELQID,SELD); KEST=NODATA; KVAR=0.0; RETURN
   ENDIF
+ 
+  !## simple kriging (ktype.gt.0) and ordinary kriging (ktype.lt.0)
+  N=NP; IF(KTYPE.LT.0)N=NP+1
+  ALLOCATE(A(N,N),B(N))
 
-  KEST=0.0
+  A=0.0; B=0.0
   DO I=1,NP 
    ID=SELID(I)
-   IF(KTYPE.GT.0)THEN
-    KEST=KEST+B(I)*ZD(ID)
-   ELSE
-    KEST=KEST+B(I)*(ZD(ID)-MZZ)
-   ENDIF
-  ENDDO
-  !## global mean (simple kriging)
-  IF(KTYPE.GT.0)KEST=KEST+MZ
-  !## local mean (ordinary kriging)
-  IF(KTYPE.LT.0)KEST=KEST+MZZ
-  
-  !## estimation variance
-  KVAR=0.0
-  DO I=1,NP 
+   !## semivariance
+   GAMMA=UTL_KRIGING_GETGAMMA(XD(ID),YD(ID),XD(ID),YD(ID),RANGE,SILL,NUGGET,KTYPE)
+   !## variance
+   A(I,I)=SILL-GAMMA
+   DO J=I+1,NP 
+    JD=SELID(J)
+    GAMMA=UTL_KRIGING_GETGAMMA(XD(ID),YD(ID),XD(JD),YD(JD),RANGE,SILL,NUGGET,KTYPE)
+    A(I,J)=SILL-GAMMA; A(J,I)=A(I,J)
+   ENDDO
+
    ID=SELID(I)
    GAMMA=UTL_KRIGING_GETGAMMA(XD(ID),YD(ID),X,Y,RANGE,SILL,NUGGET,KTYPE)
-   KVAR=KVAR+B(I)*(SILL-GAMMA) 
+   B(I)=SILL-GAMMA
+  
+  ENDDO
+ 
+  !## ordinary kriging
+  IF(KTYPE.LT.0)THEN
+   !## fill for lambda
+   J=N 
+   DO I=1,J; A(I,J)=1.0; A(J,I)=1.0; ENDDO; A(J,J)=0.0; B(J)=1.0
+  ENDIF
+  
+  !## current point outside range of all others points
+  IF(SUM(B(1:NP)).EQ.0.0)THEN
+   KEST=NODATA
+   KVAR=0.0
+  ELSE
+   CALL UTL_LUDCMP(A,B,N) 
+ 
+   !## ordinary kriging compute the local mean mzz instead of the global mean mz
+   IF(KTYPE.LT.0)THEN
+    MZZ=0.0; DO I=1,NP; ID=SELID(I); MZZ=MZZ+ZD(ID); ENDDO; MZZ=MZZ/REAL(NP)
+   ENDIF
+
+   KEST=0.0
+   DO I=1,NP 
+    ID=SELID(I)
+    IF(KTYPE.GT.0)THEN
+     KEST=KEST+B(I)*ZD(ID)
+    ELSE
+     KEST=KEST+B(I)*(ZD(ID)-MZZ)
+    ENDIF
    ENDDO
-  IF(KTYPE.LT.0)KVAR=KVAR+B(N)
+   !## global mean (simple kriging)
+   IF(KTYPE.GT.0)KEST=KEST+MZ
+   !## local mean (ordinary kriging)
+   IF(KTYPE.LT.0)KEST=KEST+MZZ
    
+   !## estimation variance
+   KVAR=0.0
+   DO I=1,NP 
+    ID=SELID(I)
+    GAMMA=UTL_KRIGING_GETGAMMA(XD(ID),YD(ID),X,Y,RANGE,SILL,NUGGET,KTYPE)
+    KVAR=KVAR+B(I)*(SILL-GAMMA) 
+   ENDDO
+   KVAR=SILL-KVAR
+    
+  ENDIF
  ENDIF
  
  DEALLOCATE(SELID,SELD,SELQID,A,B)
@@ -489,12 +495,35 @@ CONTAINS
  END FUNCTION UTL_KRIGING_GETGAMMA
 
  !###====================================================================
- REAL FUNCTION UTL_KRIGING_RANGE(X1,X2,Y1,Y2)
+ REAL FUNCTION UTL_KRIGING_RANGE(RANGE,ND,NP,XD,YD,SELID) !X1,X2,Y1,Y2)
  !###====================================================================
  IMPLICIT NONE
- real(KIND=8),INTENT(IN) :: X1,Y1,X2,Y2
+ INTEGER,INTENT(IN) :: NP,ND
+ REAL(KIND=8),INTENT(IN) :: RANGE
+ INTEGER,INTENT(IN),DIMENSION(NP) :: SELID
+ REAL(KIND=8),INTENT(IN),DIMENSION(ND) :: XD,YD
+ !REAL(KIND=8),INTENT(IN) :: X1,Y1,X2,Y2
+ REAL(KIND=8) :: DXY,MDXY
+ INTEGER :: ID,JD
  
- UTL_KRIGING_RANGE=0.9D0*SQRT((X2-X1)**2.0D0+(Y2-Y1)**2.0D0)
+ IF(RANGE.GT.0.0D0)THEN
+  UTL_KRIGING_RANGE=RANGE
+  RETURN
+ ENDIF
+ 
+ !## get largest inter-pilot point distance
+ MDXY=0.0D0; DO ID=1,NP
+  DO JD=1,NP
+   IF(ID.EQ.JD)CYCLE
+   DXY=UTL_DIST(XD(SELID(ID)),YD(SELID(ID)),XD(SELID(JD)),YD(SELID(JD)))
+   MDXY=MAX(DXY,MDXY)
+  ENDDO
+ ENDDO
+ UTL_KRIGING_RANGE=MDXY
+ 
+! CALL IMOD_UTL_PRINTTEXT('Kriging Determined Range:'//TRIM(IMOD_UTL_DTOS(MDXY,'F',2))//' meter',1)
+
+! UTL_KRIGING_RANGE=0.9D0*SQRT((X2-X1)**2.0D0+(Y2-Y1)**2.0D0)
  
  END FUNCTION UTL_KRIGING_RANGE
 

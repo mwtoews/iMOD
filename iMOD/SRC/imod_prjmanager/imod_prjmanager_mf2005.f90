@@ -3615,8 +3615,8 @@ IRLOOP: DO IROW=1,PRJIDF%NROW; DO ICOL=1,PRJIDF%NCOL
  CALL OSD_OPEN(IU,FILE=TRIM(DIRMNAME)//'.'//CPCK//'7_',STATUS='UNKNOWN',ACTION='WRITE',FORM='FORMATTED')
  IF(IU.EQ.0)RETURN
 
- !## maximal output information
- MNWPRINT=2
+ !## no output information, use 2 for maximal output
+ MNWPRINT=0 !2
  
  !## header
  LINE='NaN1#,'//TRIM(ITOS(ICB))//','//TRIM(ITOS(MNWPRINT))//' NOPRINT'; WRITE(IU,'(A)') TRIM(LINE)

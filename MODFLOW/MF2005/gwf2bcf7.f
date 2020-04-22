@@ -1111,7 +1111,7 @@ C5C-----RECORD CONTENTS OF BUFFER AND RETURN.
 
       RETURN
       END
-      SUBROUTINE SGWF2BCF7C(K) !,cc,cr)
+      SUBROUTINE SGWF2BCF7C(K,iminkd,minkd,trpy) !,cc,cr)
 C     ******************************************************************
 C     COMPUTE BRANCH CONDUCTANCE USING HARMONIC MEAN OF BLOCK
 C     CONDUCTANCES -- BLOCK TRANSMISSIVITY IS IN CC UPON ENTRY
@@ -1121,19 +1121,22 @@ C      SPECIFICATIONS:
 C     ------------------------------------------------------------------
       USE GLOBAL,      ONLY:NCOL,NROW,CR,CC,DELR,DELC
 !      USE GLOBAL,      ONLY:NCOL,NROW,NLAY,DELR,DELC
-      USE GWFBCFMODULE,ONLY:TRPY,
-     1                      IMINKD,MINKD                                ! DLT
+!      USE GWFBCFMODULE,ONLY:TRPY !,
+!     1                      IMINKD,MINKD                                ! DLT
 
 c arguments
-      integer, intent(in) :: k                                          ! DLT
+      integer, intent(in) :: k,iminkd                                          ! DLT
+      real,intent(in) :: minkd,trpy
 !      real, dimension(ncol,nrow,nlay), intent(inout) :: cc              ! DLT
 !      real, dimension(ncol,nrow,nlay), intent(inout) :: cr              ! DLT
 C     ------------------------------------------------------------------
 C
       ZERO=0.
       TWO=2.
-      WRITE(*,*) K,TRPY(K)
-      YX=TRPY(K)*TWO
+!      write(*,*) associated(trpy)
+!      WRITE(*,*) K,TRPY(K)
+      YX=TRPY*TWO
+!      YX=TRPY(K)*TWO
 C
 C1------FOR EACH CELL CALCULATE BRANCH CONDUCTANCES FROM THAT CELL
 C1------TO THE ONE ON THE RIGHT AND THE ONE IN FRONT.
@@ -1184,7 +1187,7 @@ C     ------------------------------------------------------------------
       USE GWFBASMODULE,ONLY:HDRY
       USE GWFBCFMODULE,ONLY:IWDFLG,WETFCT,IHDWET,IWETIT,LAYCON,
      1                      HY,CVWD,WETDRY,LAYAVG,
-     1                      IMINKD,MINKD                                ! DLT
+     1                      IMINKD,MINKD,TRPY                               ! DLT
 C
       DOUBLE PRECISION HD,BBOT,TTOP
       CHARACTER*3 ACNVRT
@@ -1342,7 +1345,7 @@ C8------ITERATION FROM 30000 to 1.
 C
 C9------COMPUTE HORIZONTAL BRANCH CONDUCTANCES FROM TRANSMISSIVITY.
   210 IF(LAYAVG(K).EQ.0) THEN
-         CALL SGWF2BCF7C(K) !,cc,cr)
+         CALL SGWF2BCF7C(K,iminkd,minkd,trpy(k)) !,cc,cr)
       ELSE IF(LAYAVG(K).EQ.10) THEN
          CALL SGWF2BCF7A(K)
       ELSE IF(LAYAVG(K).EQ.20) THEN
@@ -1366,7 +1369,7 @@ C     ------------------------------------------------------------------
      2                      IACTCELL                                    ! PKS
       USE GWFBASMODULE,ONLY:HNOFLO
       USE GWFBCFMODULE,ONLY:IWDFLG,WETDRY,HY,CVWD,LAYCON,LAYAVG,SC1,SC2,
-     1                      IMINC,MINC                                  ! DLT
+     1                      IMINC,MINC,MINKD,MINKD,TRPY                 ! DLT
 C
       DOUBLE PRECISION HCNV
       REAL :: C, TINY, MAXVCOND                                   ! DLT
@@ -1471,7 +1474,7 @@ C5------CALCULATE HOR. CONDUCTANCE(CR AND CC) FOR CONSTANT T LAYERS.
       KK=K
       IF(LAYCON(K).EQ.3 .OR. LAYCON(K).EQ.1) GO TO 70
       IF(LAYAVG(K).EQ.0) THEN
-         CALL SGWF2BCF7C(KK) !,cc,cr)
+         CALL SGWF2BCF7C(KK,iminkd,minkd,trpy(kk)) !,cc,cr)
       ELSE IF(LAYAVG(K).EQ.10) THEN
          CALL SGWF2BCF7A(KK)
       ELSE

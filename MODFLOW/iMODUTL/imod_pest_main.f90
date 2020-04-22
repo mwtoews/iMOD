@@ -232,7 +232,15 @@ CONTAINS
   CALL IMOD_UTL_PRINTTEXT(TRIM(LINE),0)
   CALL IMOD_UTL_PRINTTEXT('Busy processing module: '//TRIM(CMOD(PPST)),2)
  ENDIF
-
+ IF(PEST_MAXPNT.GT.1.AND.PEST_KRANGE.GT.0.0)THEN
+  CALL IMOD_UTL_PRINTTEXT('',0)
+  CALL IMOD_UTL_PRINTTEXT('=======================================================================',0)
+  CALL IMOD_UTL_PRINTTEXT('NOTE: It is adviced to have the RANGE for the KRIGING to be 0.0 and let',0)
+  CALL IMOD_UTL_PRINTTEXT('      iMODFLOW determing it automatically',0)
+  CALL IMOD_UTL_PRINTTEXT('=======================================================================',0)
+  CALL IMOD_UTL_PRINTTEXT('',0)
+ ENDIF
+ 
  !## number of pilotpoint to be used in interpolation
  PEST_MAXPNT=10
  !## use nearest-neighbour, set maxpnt=1
@@ -2930,7 +2938,8 @@ END SUBROUTINE WRITEIPF
   !## pilotpoints
   ELSEIF(PARAM(I)%ZTYPE.EQ.1)THEN
  
-   RANGE=UTL_KRIGING_RANGE(idf%xmin,idf%ymin,idf%xmax,idf%ymax) !CDELR(0),CDELR(NCOL),CDELC(NROW),CDELC(0))
+   RANGE=0.9D0*UTL_DIST(IDF%XMIN,IDF%YMIN,IDF%XMAX,IDF%YMAX) !SQRT((X2-X1)**2.0D0+(Y2-Y1)**2.0D0)   
+!   UTL_KRIGING_RANGE(IDF%XMIN,IDF%YMIN,IDF%XMAX,IDF%YMAX) !CDELR(0),CDELR(NCOL),CDELC(NROW),CDELC(0))
    !## fill in covariance matrix based upon semivariogram
    X1=PARAM(I)%XY(1,1); Y1=PARAM(I)%XY(1,2)
    JJ=0; DO J=1,SIZE(PARAM)

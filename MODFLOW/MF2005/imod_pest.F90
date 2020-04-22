@@ -211,7 +211,6 @@ do i=1,size(param)
        ',f='//trim(imod_utl_dtos(fct,'f',7))//',ils='//trim(imod_utl_itos(ils))//']'
    endif
    write(*,'(a)') trim(line)
-!      WRITE(*,*) TRIM(LINE)
  end do
 
  !## process any pilotpoints per modellayer/ adjustable parameter
@@ -250,13 +249,16 @@ do i=1,size(param)
   IF(NXYZ.EQ.0)CYCLE
 
   NODATA=-999.99D0; ALLOCATE(XPP(NCOL,NROW)); XPP=NODATA
-!  IF(PEST_KRANGE.GT.0.0)THEN
   RANGE=PEST_KRANGE
-!  ELSE
-!   RANGE=UTL_KRIGING_RANGE(CDELR(0),CDELR(NCOL),CDELC(NROW),CDELC(0))
-!  ENDIF
-
-  CALL imod_utl_printtext('Kriging applied Range:'//TRIM(IMOD_UTL_dTOS(RANGE,'F',2))//' meter',1)
+  IF(PEST_MAXPNT.GT.1)THEN
+   IF(RANGE.GT.0.0)THEN
+    CALL imod_utl_printtext('Kriging applied Range:'//TRIM(IMOD_UTL_DTOS(RANGE,'F',2))//' meter',1)
+   ELSE
+    CALL imod_utl_printtext('Kriging applied Range Automatically',1)
+   ENDIF
+  ELSE
+   CALL imod_utl_printtext('Nearest Neighbour is applied',1)
+  ENDIF
   
   !## apply kriging interpolation
   CALL UTL_KRIGING_MAIN(NXYZ,XYZ(:,1),XYZ(:,2),XYZ(:,3),CDELR,CDELC,NROW,NCOL,XPP,NODATA,RANGE,PEST_KTYPE, &

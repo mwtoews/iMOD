@@ -292,7 +292,7 @@ c locals
      1    0,-1,-2/        !## row/col/cr (west)
 
 c ------------------------------------------------------------------------------
-
+      
 c check if PWT can be used in combination with BCF and LPF
       if (inbcf.gt.0) then
          call sgwf2bcf7pnt(igrid)
@@ -343,8 +343,10 @@ c init the PWT data
             cv(icol,irow,ilay)   = pwt(ipvcont,ip)
          end if   
       end do
-      cc = pwt_kd
-
+      do icol=1,ncol; do irow=1,nrow; do ilay=1,nlay
+       cc(icol,irow,ilay) = pwt_kd(icol,irow,ilay)
+      enddo; enddo; enddo
+      
       !## store top of pwt
       rhs=-9999.0
   
@@ -386,10 +388,11 @@ c init the PWT data
             endif
          end if
       end do
-
+      
       ! compute transmissivities using harmonic mean
       do ilay = 1, nlay
-         call sgwf2bcf7c(ilay) !,cc,cr)
+         !## no usage of minkd for pwt - isotropic
+         call sgwf2bcf7c(ilay,0,0.0,1.0) !iminkd,minkd) !,cc,cr)
       end do
 
       !## correct harmonic conductances whenever next cells are dry (below top pwt)
