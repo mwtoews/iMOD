@@ -282,7 +282,8 @@ CONTAINS
 
  !## draw vertical line for last point
  DO J=1,SIZE(NXYZCROSS)
-  IF(NXYZCROSS(J).LE.0)CYCLE
+  IF(NXYZCROSS(J).LE.1)CYCLE
+!  IF(NXYZCROSS(J).LE.0)CYCLE
   CALL GLBEGIN(GL_LINES)
    I=NXYZCROSS(J)
    !## bottom

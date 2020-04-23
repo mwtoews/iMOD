@@ -5317,6 +5317,7 @@ SOLLOOP: DO I=1,NSOLLIST
  REAL(KIND=GLDOUBLE),DIMENSION(4) :: X,Y,XCOR,YCOR,Z
  REAL(KIND=GLDOUBLE),DIMENSION(2) :: TX
  REAL(KIND=DP_KIND),DIMENSION(:),ALLOCATABLE :: XT
+ INTEGER,DIMENSION(:),ALLOCATABLE :: IT
  REAL(KIND=DP_KIND),DIMENSION(:,:),ALLOCATABLE :: ZT
  REAL(KIND=DP_KIND),PARAMETER :: NODATA_Z=-999.99D0
 
@@ -5356,8 +5357,9 @@ SOLLOOP: DO I=1,NSOLLIST
   !## make sure xt has a small offset (except for xt=0.0D0)
   TX(1)=0.0D0
   DO J=2,SPF(I)%NXY
-   DXX=SPF(I)%X(J)-SPF(I)%X(J-1); DYY=SPF(I)%Y(J)-SPF(I)%Y(J-1); DXY=DXX**2.0D0+DYY**2.0D0
-   IF(DXY.GT.0.0D0)DXY=SQRT(DXY)
+!   DXX=SPF(I)%X(J)-SPF(I)%X(J-1); DYY=SPF(I)%Y(J)-SPF(I)%Y(J-1); DXY=DXX**2.0D0+DYY**2.0D0
+!   IF(DXY.GT.0.0D0)DXY=SQRT(DXY)
+   DXY=UTL_DIST(SPF(I)%X(J),SPF(I)%Y(J),SPF(I)%X(J-1),SPF(I)%Y(J-1))
    TX(1)=TX(1)+DXY
   ENDDO
   !## minimal offset = fraction of total distance
@@ -5372,9 +5374,10 @@ SOLLOOP: DO I=1,NSOLLIST
   !## allocate enough memory to add intermediate places
   N=N*2
   
-  ALLOCATE(XT(N),ZT(N,3))
+  ALLOCATE(XT(N),ZT(N,3),IT(N))
   
   XT=0.0D0
+  IT=0
   ZT=NODATA_Z
   IPOS=0
   II  =0
@@ -5390,14 +5393,16 @@ SOLLOOP: DO I=1,NSOLLIST
      XT(IPOS)=MAX(XT(IPOS-1)+DXX,SPF(I)%PROF(K)%PX(J))
     ENDIF
     ZT(IPOS,II)=SPF(I)%PROF(K)%PZ(J)
+!    IF(SPF(I)%PROF(K)%PX(J)
    ENDDO
   END DO
 
   !## include knickpoints
   TX(1)=0.0D0
   DO J=2,SPF(I)%NXY-1
-   DXX=SPF(I)%X(J)-SPF(I)%X(J-1); DYY=SPF(I)%Y(J)-SPF(I)%Y(J-1); DXY=0.0D0
-   IF(DXX.NE.0.0D0.OR.DYY.NE.0.0D0)DXY=SQRT(DXX**2.0D0+DYY**2.0D0)
+!   DXX=SPF(I)%X(J)-SPF(I)%X(J-1); DYY=SPF(I)%Y(J)-SPF(I)%Y(J-1); DXY=0.0D0
+   DXY=UTL_DIST(SPF(I)%X(J),SPF(I)%Y(J),SPF(I)%X(J-1),SPF(I)%Y(J-1))
+!   IF(DXX.NE.0.0D0.OR.DYY.NE.0.0D0)DXY=SQRT(DXX**2.0D0+DYY**2.0D0)
    TX(1)     =TX(1)+DXY
    IPOS      =IPOS+1
    XT(IPOS)  =TX(1)
@@ -5528,11 +5533,7 @@ SOLLOOP: DO I=1,NSOLLIST
 
       !## colour by voxel value
       IF(IPROF(3).GT.0)THEN
-!       IF(ZT(IPOS,3).EQ.)THEN
-!        IICLR=WRGB(255,255,255)
-!       ELSE
-        IICLR=UTL_IDFGETCLASS(IDFPLOT(IPROF(3))%LEG,ZT(IPOS,3))
-!       ENDIF
+       IICLR=UTL_IDFGETCLASS(IDFPLOT(IPROF(3))%LEG,ZT(IPOS,3))
       ELSE
        !## get color for z-mean between two segments
        IF(ALLOCATED(SLD))THEN

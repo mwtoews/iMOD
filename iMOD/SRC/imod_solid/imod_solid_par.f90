@@ -49,6 +49,7 @@ INTEGER,PARAMETER :: MXPX=500    !## max. 500 point in graph
 TYPE SPFOBJ_PROF
  REAL(KIND=DP_KIND),POINTER,DIMENSION(:) :: PX !## cross-section position
  REAL(KIND=DP_KIND),POINTER,DIMENSION(:) :: PZ !## cross-section value
+ INTEGER,POINTER,DIMENSION(:) :: IT            !## type (-1=start, 1=end, 0=in between) 
  INTEGER :: NPOS                 !## number of points on cross-section
  INTEGER :: ICLR                 !## colour of the cross-section
  INTEGER :: IWIDTH               !## width of the cross-section

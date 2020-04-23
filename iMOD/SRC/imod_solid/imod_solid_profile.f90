@@ -229,6 +229,7 @@ CONTAINS
    SPF(ISPF)%PROF(I)%NPOS=0
    SPF(ISPF)%PROF(I)%PX=0.0D0
    SPF(ISPF)%PROF(I)%PZ=0.0D0
+   SPF(ISPF)%PROF(I)%IT=0
    CYCLE
   ENDIF
     
@@ -237,6 +238,7 @@ CONTAINS
    SPF(ISPF)%PROF(I)%NPOS=0
    SPF(ISPF)%PROF(I)%PX=0.0D0
    SPF(ISPF)%PROF(I)%PZ=0.0D0
+   SPF(ISPF)%PROF(I)%IT=0
   ENDIF
 
   !## perform fitting
@@ -248,14 +250,13 @@ CONTAINS
    DO 
     IS=IS+1
     !## found start of connected piece of the line without nodata
-    IF(SERIE(IIDF)%Y(IS).NE.XEXCLUDE(I+1))THEN !.AND.SERIE(IIDF)%Y(IS).NE.PROFIDF(IIDF)%IDF%NODATA)THEN
+    IF(SERIE(IIDF)%Y(IS).NE.XEXCLUDE(I+1))THEN
      IE=IS
      DO 
       IE=IE+1
       !## found start of connected piece of the line without nodata         
       IF(IE.GE.SERIE(IIDF)%N.OR. &   !## final reached for line
-         SERIE(IIDF)%Y(IE).EQ.XEXCLUDE(I+1))THEN !.OR. &
-!         SERIE(IIDF)%Y(IE).EQ.PROFIDF(IIDF)%IDF%NODATA)THEN 
+         SERIE(IIDF)%Y(IE).EQ.XEXCLUDE(I+1))THEN
        !## not final of line --- do not use nodata point in that case
        IF(IE.LT.SERIE(IIDF)%N)IE=IE-1
        
@@ -270,6 +271,8 @@ CONTAINS
        
        IF(ICLEAN(I+1).EQ.1)THEN
        
+        !## start of line
+        SPF(ISPF)%PROF(I)%IT(II+1)=-1
         !## add intermediate point, take into account maximum array-size
         DO J=1,N 
          !## use point from Urs-Douglas-Peucker algorithm (greater then given tolerance)
@@ -286,6 +289,8 @@ CONTAINS
          ENDIF
          IS=IS+1
         ENDDO
+        !## end of line
+        SPF(ISPF)%PROF(I)%IT(II)= 1
 
        ELSE
        
@@ -293,9 +298,11 @@ CONTAINS
          !## reformulate begin
          SPF(ISPF)%PROF(I)%PX(1)=SERIE(IIDF)%X(IS)
          SPF(ISPF)%PROF(I)%PZ(1)=SERIE(IIDF)%Y(IS)
+         SPF(ISPF)%PROF(I)%IT(1)=-1
          !## reformulate end point
          SPF(ISPF)%PROF(I)%PX(2)=SERIE(IIDF)%X(IE)
          SPF(ISPF)%PROF(I)%PZ(2)=SERIE(IIDF)%Y(IE)
+         SPF(ISPF)%PROF(I)%IT(2)= 1
          SPF(ISPF)%PROF(I)%NPOS=2
         ELSE
          CALL SOLID_PROFILEPUTINTERSECTION(SERIE(IIDF)%X(IS),SERIE(IIDF)%Y(IS),I)
@@ -333,8 +340,10 @@ CONTAINS
     SPF(ISPF)%PROF(I)%NPOS=2
     SPF(ISPF)%PROF(I)%PX(1)=0.0D0
     SPF(ISPF)%PROF(I)%PX(2)=SPF(ISPF)%TX
-    SPF(ISPF)%PROF(I)%PZ(1)=GRAPHUNITS(4,1)-DZ*REAL(I-1)
+    SPF(ISPF)%PROF(I)%IT(1)=-1
+    SPF(ISPF)%PROF(I)%PZ(1)=GRAPHUNITS(4,1)-DZ*REAL(I-1,8)
     SPF(ISPF)%PROF(I)%PZ(2)=SPF(ISPF)%PROF(I)%PZ(1)
+    SPF(ISPF)%PROF(I)%IT(2)= 1
    ENDIF
 
   ENDIF
@@ -694,13 +703,16 @@ CONTAINS
     IF(SPF(I)%PROF(K)%NPOS.GT.0)THEN
      IF(ASSOCIATED(SPF(I)%PROF(K)%PX))DEALLOCATE(SPF(I)%PROF(K)%PX)
      IF(ASSOCIATED(SPF(I)%PROF(K)%PZ))DEALLOCATE(SPF(I)%PROF(K)%PZ)
+     IF(ASSOCIATED(SPF(I)%PROF(K)%IT))DEALLOCATE(SPF(I)%PROF(K)%IT)
     ENDIF
     SPF(I)%PROF(K)%NPOS  =SPF(I+1)%PROF(K)%NPOS
     ALLOCATE(SPF(I)%PROF(K)%PX(MXPX)) 
     ALLOCATE(SPF(I)%PROF(K)%PZ(MXPX)) 
+    ALLOCATE(SPF(I)%PROF(K)%IT(MXPX)) 
     DO JJ=1,MXPX
      SPF(I)%PROF(K)%PX(JJ)=SPF(I+1)%PROF(K)%PX(JJ)
      SPF(I)%PROF(K)%PZ(JJ)=SPF(I+1)%PROF(K)%PZ(JJ)
+     SPF(I)%PROF(K)%IT(JJ)=SPF(I+1)%PROF(K)%IT(JJ)
     ENDDO
     SPF(I)%PROF(K)%ICLR  =SPF(I+1)%PROF(K)%ICLR
     SPF(I)%PROF(K)%IWIDTH=SPF(I+1)%PROF(K)%IWIDTH
@@ -716,6 +728,7 @@ CONTAINS
    IF(SPF(I)%PROF(J)%NPOS.GT.0)THEN
     IF(ASSOCIATED(SPF(I)%PROF(J)%PX))DEALLOCATE(SPF(I)%PROF(J)%PX)
     IF(ASSOCIATED(SPF(I)%PROF(J)%PZ))DEALLOCATE(SPF(I)%PROF(J)%PZ)
+    IF(ASSOCIATED(SPF(I)%PROF(J)%IT))DEALLOCATE(SPF(I)%PROF(J)%IT)
    ENDIF
   ENDDO
   IF(ASSOCIATED(SPF(I)%PROF))DEALLOCATE(SPF(I)%PROF)
@@ -726,7 +739,7 @@ CONTAINS
   
   J=NSPF
   J=J-1
-  NSPF=J !NSPF-1
+  NSPF=J 
   
   II=II-1
   
@@ -842,17 +855,22 @@ CONTAINS
  !## allocate number of elevation (max. NTBSOL)
  ALLOCATE(SPF(NSPF)%PROF(NTBSOL))
 
- DZ=(Z2-Z1)/REAL(NTBSOL)
+ DZ=(Z2-Z1)/REAL(NTBSOL,8)
  DO I=1,SIZE(SPF(NSPF)%PROF) 
   SPF(NSPF)%PROF(I)%NPOS=0
   ALLOCATE(SPF(NSPF)%PROF(I)%PX(MXPX))
   ALLOCATE(SPF(NSPF)%PROF(I)%PZ(MXPX))
+  ALLOCATE(SPF(NSPF)%PROF(I)%IT(MXPX))
   IF(IEXIST(I+1).EQ.1)THEN
    SPF(NSPF)%PROF(I)%NPOS=2
+   !## start of cross-section
+   SPF(NSPF)%PROF(I)%IT(1)=-1
    SPF(NSPF)%PROF(I)%PX(1)=0.0D0    
+   !## end of cross-section
+   SPF(NSPF)%PROF(I)%IT(2)= 1
    SPF(NSPF)%PROF(I)%PX(2)=TX
    !## mean vertical depth as first guess!
-   SPF(NSPF)%PROF(I)%PZ(1)=Z2-DZ*REAL(I-1) 
+   SPF(NSPF)%PROF(I)%PZ(1)=Z2-DZ*REAL(I-1,8) 
    SPF(NSPF)%PROF(I)%PZ(2)=SPF(NSPF)%PROF(I)%PZ(1)
   ENDIF
   IF(MOD(I,2).NE.0)SPF(NSPF)%PROF(I)%ICLR  =WRGB(255,0,0)
