@@ -5316,11 +5316,11 @@ SOLLOOP: DO I=1,NSOLLIST
  INTEGER,DIMENSION(3) :: IPROF
  REAL(KIND=GLDOUBLE),DIMENSION(4) :: X,Y,XCOR,YCOR,Z
  REAL(KIND=GLDOUBLE),DIMENSION(2) :: TX
- REAL(KIND=DP_KIND),DIMENSION(:),ALLOCATABLE :: XT
- INTEGER,DIMENSION(:),ALLOCATABLE :: IT
+ REAL(KIND=DP_KIND),DIMENSION(:),ALLOCATABLE :: XT,IT
  REAL(KIND=DP_KIND),DIMENSION(:,:),ALLOCATABLE :: ZT
  REAL(KIND=DP_KIND),PARAMETER :: NODATA_Z=-999.99D0
-
+ LOGICAL :: GOFORIT
+ 
  !## list index for
  SOLLISTINDEX(ISOL,1)=GLGENLISTS(1)
  !## start new drawing list
@@ -5377,7 +5377,7 @@ SOLLOOP: DO I=1,NSOLLIST
   ALLOCATE(XT(N),ZT(N,3),IT(N))
   
   XT=0.0D0
-  IT=0
+  IT=0.0D0
   ZT=NODATA_Z
   IPOS=0
   II  =0
@@ -5393,7 +5393,9 @@ SOLLOOP: DO I=1,NSOLLIST
      XT(IPOS)=MAX(XT(IPOS-1)+DXX,SPF(I)%PROF(K)%PX(J))
     ENDIF
     ZT(IPOS,II)=SPF(I)%PROF(K)%PZ(J)
-!    IF(SPF(I)%PROF(K)%PX(J)
+    IF(ABS(SPF(I)%PROF(K)%IT(J)).EQ.1)THEN
+     IT(IPOS)=REAL(SPF(I)%PROF(K)%IT(J),8)
+    ENDIF
    ENDDO
   END DO
 
@@ -5406,13 +5408,14 @@ SOLLOOP: DO I=1,NSOLLIST
    TX(1)     =TX(1)+DXY
    IPOS      =IPOS+1
    XT(IPOS)  =TX(1)
+   IT(IPOS)  =0.0D0
    IF(IPROF(1).GT.0)ZT(IPOS,1)=NODATA_Z !## to be filled in later
    IF(IPROF(2).GT.0)ZT(IPOS,2)=NODATA_Z !## to be filled in later
    IF(IPROF(3).GT.0)ZT(IPOS,3)=NODATA_Z !## to be filled in later
   ENDDO
   N=IPOS
  
-  CALL QKSORT(N,XT,V2=ZT(:,1),V3=ZT(:,2),V4=ZT(:,3))
+  CALL QKSORT(N,XT,V2=ZT(:,1),V3=ZT(:,2),V4=ZT(:,3),V5=IT)
     
   !## fill first and last
   DO K=1,3 
@@ -5422,6 +5425,7 @@ SOLLOOP: DO I=1,NSOLLIST
     DO J=2,N
      IF(ZT(J,K).NE.NODATA_Z)THEN
       ZT(1,K)=ZT(J,K)
+      IT(1)=IT(J)
       EXIT
      ENDIF
     ENDDO
@@ -5430,6 +5434,7 @@ SOLLOOP: DO I=1,NSOLLIST
     DO J=N-1,1,-1
      IF(ZT(J,K).NE.NODATA_Z)THEN
       ZT(N,K)=ZT(J,K)
+      IT(N)=IT(J)
       EXIT
      ENDIF
     ENDDO
@@ -5460,6 +5465,7 @@ SOLLOOP: DO I=1,NSOLLIST
     K=K+1
     IF(K.NE.J)THEN
      XT(K)  =XT(J)
+     IT(K)  =IT(J)
      IF(IPROF(1).GT.0)ZT(K,1)=ZT(J,1)
      IF(IPROF(2).GT.0)ZT(K,2)=ZT(J,2)
      IF(IPROF(3).GT.0)ZT(K,3)=ZT(J,3)
@@ -5472,26 +5478,36 @@ SOLLOOP: DO I=1,NSOLLIST
   !## make sure last point is equal to %tx   
   XT(N)=SPF(I)%TX
 
-  !## llc
-  X(1)=SPF(I)%X(1)
-  Y(1)=SPF(I)%Y(1)
-  IF(IPROF(1).NE.0)THEN
-   Z(2)=ZT(1,1) 
-  ELSE
-   Z(2)=IDFPLOT(IPROF(3))%ZMAX
-  ENDIF
-  !## ulc
-  X(2)=X(1)
-  Y(2)=Y(1)
-  IF(IPROF(2).NE.0)THEN
-   Z(1)=ZT(1,2)
-  ELSE
-   Z(1)=IDFPLOT(IPROF(3))%ZMIN
-  ENDIF
+  !!## llc
+  !X(1)=SPF(I)%X(1)
+  !Y(1)=SPF(I)%Y(1)
+  !IF(IPROF(1).NE.0)THEN
+  ! Z(2)=ZT(1,1) 
+  !ELSE
+  ! Z(2)=IDFPLOT(IPROF(3))%ZMAX
+  !ENDIF
+  !!## ulc
+  !X(2)=X(1)
+  !Y(2)=Y(1)
+  !IF(IPROF(2).NE.0)THEN
+  ! Z(1)=ZT(1,2)
+  !ELSE
+  ! Z(1)=IDFPLOT(IPROF(3))%ZMIN
+  !ENDIF
 
   !## for each (interpolated) coordinate
+  GOFORIT=.FALSE.; IF(IT(1).LT.0.0D0)GOFORIT=.TRUE.
   DO IPOS=2,N
 
+   !## determine whether to display current segment
+   IF(.NOT.GOFORIT)THEN
+    IF(IT(IPOS).LT.0.0D0)GOFORIT=.TRUE.
+    CYCLE
+   ENDIF
+   
+   !## next segment is inactive   
+   IF(IT(IPOS).EQ.1)GOFORIT=.FALSE.
+   
    !## assign coordinate and z-values to knickpoints
    TX=0.0D0
    DO J=2,SPF(I)%NXY 
@@ -5504,6 +5520,23 @@ SOLLOOP: DO I=1,NSOLLIST
     !## between interval or in last interval
     IF(XT(IPOS).GE.TX(1).AND.XT(IPOS).LT.TX(2).OR. &
        J.EQ.SPF(I)%NXY)THEN
+
+     !## llc
+     X(1)=SPF(I)%X(J-1)+GX*(XT(IPOS-1)-TX(1))
+     Y(1)=SPF(I)%Y(J-1)+GY*(XT(IPOS-1)-TX(1))
+     IF(IPROF(1).NE.0)THEN
+      Z(2)=ZT(IPOS-1,1) 
+     ELSE
+      Z(2)=IDFPLOT(IPROF(3))%ZMAX
+     ENDIF
+     !## ulc
+     X(2)=X(1)
+     Y(2)=Y(1)
+     IF(IPROF(2).NE.0)THEN
+      Z(1)=ZT(IPOS-1,2)
+     ELSE
+      Z(1)=IDFPLOT(IPROF(3))%ZMIN
+     ENDIF
 
      !## urc
      X(3)=SPF(I)%X(J-1)+GX*(XT(IPOS)-TX(1))
@@ -5521,10 +5554,11 @@ SOLLOOP: DO I=1,NSOLLIST
      ELSE
       Z(4)=IDFPLOT(IPROF(3))%ZMIN
      ENDIF
-
+     
      !## if inside current viewable domain, add to OpenGL-statement
      IF((X(1).GT.BOT%X.OR.X(3).GT.BOT%X).AND.(X(1).LT.TOP%X.OR.X(3).LT.TOP%X).AND. &
         (Y(1).GT.BOT%Y.OR.Y(3).GT.BOT%Y).AND.(Y(1).LT.TOP%Y.OR.Y(3).LT.TOP%Y))THEN
+
       !## correct x/y for current viewable ratios
       XCOR(1)=X(1);    YCOR(1)=Y(1)
       XCOR(2)=XCOR(1); YCOR(2)=YCOR(1)
@@ -5595,16 +5629,18 @@ SOLLOOP: DO I=1,NSOLLIST
       ENDIF
                     
      ENDIF
-     !## copy current position to previous position
-     X(1)=X(4); Y(1)=Y(4); Z(1)=Z(4)
-     X(2)=X(3); Y(2)=Y(3); Z(2)=Z(3)
+     
+!     !## copy current position to previous position
+!     X(1)=X(4); Y(1)=Y(4); Z(1)=Z(4)
+!     X(2)=X(3); Y(2)=Y(3); Z(2)=Z(3)
+
      EXIT
     ENDIF
     TX(1)=TX(2)
    ENDDO
   ENDDO     
 
-  DEALLOCATE(XT,ZT)
+  DEALLOCATE(XT,ZT,IT)
   NULLIFY(PX,PZ)
 
  ENDDO
