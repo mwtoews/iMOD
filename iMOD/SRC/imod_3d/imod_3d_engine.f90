@@ -4992,14 +4992,20 @@ SOLLOOP: DO I=1,NSOLLIST
 
   IF(NXYZCROSS(II).LE.0)CYCLE
 
+!  NXYZCROSS(II)=2
+!  XYZCROSS(1,II)%X=359018.099D0
+!  XYZCROSS(1,II)%Y=228940.956D0
+!  XYZCROSS(2,II)%X=358518.583D0
+!  XYZCROSS(2,II)%Y=231515.026D0
+
+!  XYZCROSS(1,II)%X=381841.193
+!  XYZCROSS(1,II)%Y=209568.449
+!  XYZCROSS(2,II)%X=376076.241
+!  XYZCROSS(2,II)%Y=247680.860  
+
   !## number of coordinates
   NXY=NXYZCROSS(II)
   IF(ASSOCIATED(XY))DEALLOCATE(XY); ALLOCATE(XY(2,NXY)); XY=0.0D0
-
-  XYZCROSS(1,II)%X=359018.099D0
-  XYZCROSS(1,II)%Y=228940.956D0
-  XYZCROSS(2,II)%X=358518.583D0
-  XYZCROSS(2,II)%Y=231515.026D0
 
   !## set coordinates of cross-section
   DO I=1,NXYZCROSS(II)
@@ -5401,6 +5407,7 @@ SOLLOOP: DO I=1,NSOLLIST
     ZT(IPOS,II)=SPF(I)%PROF(K)%PZ(J)
     !## save pointer whether the cross-sections start of stop after or before nodata
     IT(IPOS,II)=REAL(SPF(I)%PROF(K)%IT(J),8)
+    WRITE(*,'(2I10,F10.1,I10,2F10.3)') KK,II,IT(IPOS,II),SPF(I)%PROF(K)%IT(J),XT(IPOS),SPF(I)%PROF(K)%PZ(J)
    ENDDO
   END DO
 
@@ -5420,6 +5427,11 @@ SOLLOOP: DO I=1,NSOLLIST
   !## sort distances and z- and pointer values
   CALL QKSORT(N,XT,V2=ZT(:,1),V3=ZT(:,2),V4=ZT(:,3),V5=IT(:,1),V6=IT(:,2),V7=IT(:,3))
     
+  WRITE(*,*) 
+  DO J=1,N
+   WRITE(*,'(I10,F10.3,3F10.1,3F10.2)') J,XT(J),(IT(J,K),K=1,3),(ZT(J,K),K=1,3)
+  ENDDO
+
   !## fill first and last
   DO K=1,3 
    !## skip missing interfaces
@@ -5428,7 +5440,7 @@ SOLLOOP: DO I=1,NSOLLIST
     DO J=2,N
      IF(ZT(J,K).NE.NODATA_Z)THEN
       ZT(1,K)=ZT(J,K)
-      IT(1,K)=IT(J,K)
+!      IT(1,K)=IT(J,K)
       EXIT
      ENDIF
     ENDDO
@@ -5437,7 +5449,7 @@ SOLLOOP: DO I=1,NSOLLIST
     DO J=N-1,1,-1
      IF(ZT(J,K).NE.NODATA_Z)THEN
       ZT(N,K)=ZT(J,K)
-      IT(N,K)=IT(J,K)
+!      IT(N,K)=IT(J,K)
       EXIT
      ENDIF
     ENDDO
@@ -5453,6 +5465,7 @@ SOLLOOP: DO I=1,NSOLLIST
     IF(ZT(J,K).EQ.NODATA_Z)THEN
      DO I1=J-1,1,-1; IF(ZT(I1,K).NE.NODATA_Z)EXIT; ENDDO
      DO I2=J+1,N;    IF(ZT(I2,K).NE.NODATA_Z)EXIT; ENDDO
+!     IF(I1.LE.0.OR.I2.GT.N)CYCLE
      GZ=0.0D0
      IF(XT(I2)-XT(I1).NE.0.0D0)GZ=(ZT(I2,K)-ZT(I1,K))/(XT(I2)-XT(I1))
      ZT(J,K)=ZT(I1,K)+GZ*(XT(J)-XT(I1))
@@ -5516,6 +5529,8 @@ SOLLOOP: DO I=1,NSOLLIST
     IF(IT(J,K).EQ.-1.0D0)IA=1
     IF(IA.EQ.1)THEN
      IF(IT(J,K).EQ.-999.0D0)IT(J,K)=0.0D0
+    ELSE
+     IT(J,K)=-999.0D0
     ENDIF
     !## turn off
     IF(IT(J,K).EQ.1.0D0)IA=0
