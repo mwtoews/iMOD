@@ -4996,6 +4996,11 @@ SOLLOOP: DO I=1,NSOLLIST
   NXY=NXYZCROSS(II)
   IF(ASSOCIATED(XY))DEALLOCATE(XY); ALLOCATE(XY(2,NXY)); XY=0.0D0
 
+  XYZCROSS(1,II)%X=359018.099D0
+  XYZCROSS(1,II)%Y=228940.956D0
+  XYZCROSS(2,II)%X=358518.583D0
+  XYZCROSS(2,II)%Y=231515.026D0
+
   !## set coordinates of cross-section
   DO I=1,NXYZCROSS(II)
    XY(1,I)=XYZCROSS(I,II)%X
@@ -5312,14 +5317,15 @@ SOLLOOP: DO I=1,NSOLLIST
  INTEGER,INTENT(IN) :: ISOL,I
  INTEGER,INTENT(IN),DIMENSION(:,:) :: ICOMBINE
  REAL(KIND=GLDOUBLE) :: DXX,DYY,GX,GY,GZ,DXY 
- INTEGER :: J,K,II,JJ,KK,JPROF,IPOS,N,I1,I2,IICLR
+ INTEGER :: J,K,II,JJ,KK,JPROF,IPOS,N,I1,I2,IICLR,M,IA
  INTEGER,DIMENSION(3) :: IPROF
  REAL(KIND=GLDOUBLE),DIMENSION(4) :: X,Y,XCOR,YCOR,Z
  REAL(KIND=GLDOUBLE),DIMENSION(2) :: TX
- REAL(KIND=DP_KIND),DIMENSION(:),ALLOCATABLE :: XT,IT
- REAL(KIND=DP_KIND),DIMENSION(:,:),ALLOCATABLE :: ZT
+ REAL(KIND=DP_KIND),DIMENSION(:),ALLOCATABLE :: XT
+ REAL(KIND=DP_KIND),DIMENSION(:,:),ALLOCATABLE :: ZT,IT
+ INTEGER,DIMENSION(:),ALLOCATABLE :: TT
  REAL(KIND=DP_KIND),PARAMETER :: NODATA_Z=-999.99D0
- LOGICAL :: GOFORIT
+ LOGICAL :: GOFORIT,LSOLID
  
  !## list index for
  SOLLISTINDEX(ISOL,1)=GLGENLISTS(1)
@@ -5337,6 +5343,8 @@ SOLLOOP: DO I=1,NSOLLIST
   
   !## second interval
   IPROF(2)=ICOMBINE(JPROF,2)
+!  !## same file
+!  LSOLID=.FALSE.; IF(IPROF(2).EQ.IPROF(1))LSOLID=.TRUE.
   IF(IPROF(2).NE.0)THEN
    IF(SPF(I)%PROF(IPROF(2))%NPOS.LE.0)IPROF(2)=0
   ENDIF
@@ -5357,8 +5365,6 @@ SOLLOOP: DO I=1,NSOLLIST
   !## make sure xt has a small offset (except for xt=0.0D0)
   TX(1)=0.0D0
   DO J=2,SPF(I)%NXY
-!   DXX=SPF(I)%X(J)-SPF(I)%X(J-1); DYY=SPF(I)%Y(J)-SPF(I)%Y(J-1); DXY=DXX**2.0D0+DYY**2.0D0
-!   IF(DXY.GT.0.0D0)DXY=SQRT(DXY)
    DXY=UTL_DIST(SPF(I)%X(J),SPF(I)%Y(J),SPF(I)%X(J-1),SPF(I)%Y(J-1))
    TX(1)=TX(1)+DXY
   ENDDO
@@ -5374,10 +5380,10 @@ SOLLOOP: DO I=1,NSOLLIST
   !## allocate enough memory to add intermediate places
   N=N*2
   
-  ALLOCATE(XT(N),ZT(N,3),IT(N))
+  ALLOCATE(XT(N),ZT(N,3),IT(N,3),TT(N))
   
   XT=0.0D0
-  IT=0.0D0
+  IT=-999.0D0
   ZT=NODATA_Z
   IPOS=0
   II  =0
@@ -5393,29 +5399,26 @@ SOLLOOP: DO I=1,NSOLLIST
      XT(IPOS)=MAX(XT(IPOS-1)+DXX,SPF(I)%PROF(K)%PX(J))
     ENDIF
     ZT(IPOS,II)=SPF(I)%PROF(K)%PZ(J)
-    IF(ABS(SPF(I)%PROF(K)%IT(J)).EQ.1)THEN
-     IT(IPOS)=REAL(SPF(I)%PROF(K)%IT(J),8)
-    ENDIF
+    !## save pointer whether the cross-sections start of stop after or before nodata
+    IT(IPOS,II)=REAL(SPF(I)%PROF(K)%IT(J),8)
    ENDDO
   END DO
 
   !## include knickpoints
   TX(1)=0.0D0
   DO J=2,SPF(I)%NXY-1
-!   DXX=SPF(I)%X(J)-SPF(I)%X(J-1); DYY=SPF(I)%Y(J)-SPF(I)%Y(J-1); DXY=0.0D0
    DXY=UTL_DIST(SPF(I)%X(J),SPF(I)%Y(J),SPF(I)%X(J-1),SPF(I)%Y(J-1))
-!   IF(DXX.NE.0.0D0.OR.DYY.NE.0.0D0)DXY=SQRT(DXX**2.0D0+DYY**2.0D0)
    TX(1)     =TX(1)+DXY
    IPOS      =IPOS+1
    XT(IPOS)  =TX(1)
-   IT(IPOS)  =0.0D0
    IF(IPROF(1).GT.0)ZT(IPOS,1)=NODATA_Z !## to be filled in later
    IF(IPROF(2).GT.0)ZT(IPOS,2)=NODATA_Z !## to be filled in later
    IF(IPROF(3).GT.0)ZT(IPOS,3)=NODATA_Z !## to be filled in later
   ENDDO
   N=IPOS
  
-  CALL QKSORT(N,XT,V2=ZT(:,1),V3=ZT(:,2),V4=ZT(:,3),V5=IT)
+  !## sort distances and z- and pointer values
+  CALL QKSORT(N,XT,V2=ZT(:,1),V3=ZT(:,2),V4=ZT(:,3),V5=IT(:,1),V6=IT(:,2),V7=IT(:,3))
     
   !## fill first and last
   DO K=1,3 
@@ -5425,7 +5428,7 @@ SOLLOOP: DO I=1,NSOLLIST
     DO J=2,N
      IF(ZT(J,K).NE.NODATA_Z)THEN
       ZT(1,K)=ZT(J,K)
-      IT(1)=IT(J)
+      IT(1,K)=IT(J,K)
       EXIT
      ENDIF
     ENDDO
@@ -5434,7 +5437,7 @@ SOLLOOP: DO I=1,NSOLLIST
     DO J=N-1,1,-1
      IF(ZT(J,K).NE.NODATA_Z)THEN
       ZT(N,K)=ZT(J,K)
-      IT(N)=IT(J)
+      IT(N,K)=IT(J,K)
       EXIT
      ENDIF
     ENDDO
@@ -5453,9 +5456,35 @@ SOLLOOP: DO I=1,NSOLLIST
      GZ=0.0D0
      IF(XT(I2)-XT(I1).NE.0.0D0)GZ=(ZT(I2,K)-ZT(I1,K))/(XT(I2)-XT(I1))
      ZT(J,K)=ZT(I1,K)+GZ*(XT(J)-XT(I1))
+     !## initiate a nodata value for the pointer
+     IT(J,K)=-999.0D0
     ENDIF
 
    END DO
+  ENDDO
+  
+  WRITE(*,*) 
+  DO J=1,N
+   WRITE(*,'(I10,F10.3,3F10.1,3F10.2)') J,XT(J),(IT(J,K),K=1,3),(ZT(J,K),K=1,3)
+  ENDDO
+
+  !## copy for duplicate points the correct pointer value
+  DO II=1,3
+   IF(IPROF(II).EQ.0)CYCLE
+   DO K=1,N
+    IF(IT(K,II).NE.-999.0D0)CYCLE
+    DO J=1,N
+     IF(K.EQ.J)CYCLE
+     IF(XT(K).EQ.XT(J))THEN
+      IF(IT(J,II).NE.-999.0D0)IT(K,II)=IT(J,II)
+     ENDIF
+    ENDDO
+   ENDDO
+  ENDDO
+  
+  WRITE(*,*) 
+  DO J=1,N
+   WRITE(*,'(I10,F10.3,3F10.1,3F10.2)') J,XT(J),(IT(J,K),K=1,3),(ZT(J,K),K=1,3)
   ENDDO
 
   !## remove doubles
@@ -5464,49 +5493,80 @@ SOLLOOP: DO I=1,NSOLLIST
    IF(XT(K).NE.XT(J))THEN
     K=K+1
     IF(K.NE.J)THEN
-     XT(K)  =XT(J)
-     IT(K)  =IT(J)
-     IF(IPROF(1).GT.0)ZT(K,1)=ZT(J,1)
-     IF(IPROF(2).GT.0)ZT(K,2)=ZT(J,2)
-     IF(IPROF(3).GT.0)ZT(K,3)=ZT(J,3)
+     XT(K)=XT(J)
+     DO II=1,3
+      IF(IPROF(II).GT.0)THEN; ZT(K,II)=ZT(J,II); IT(K,II)=IT(J,II); ENDIF
+     ENDDO
     ENDIF
    ENDIF
   END DO
   !## number of unique points in table
   N=K
 
-  !## make sure last point is equal to %tx   
-  XT(N)=SPF(I)%TX
+  WRITE(*,*) 
+  DO J=1,N
+   WRITE(*,'(I10,F10.3,3F10.1,3F10.2)') J,XT(J),(IT(J,K),K=1,3),(ZT(J,K),K=1,3)
+  ENDDO
 
-  !!## llc
-  !X(1)=SPF(I)%X(1)
-  !Y(1)=SPF(I)%Y(1)
-  !IF(IPROF(1).NE.0)THEN
-  ! Z(2)=ZT(1,1) 
-  !ELSE
-  ! Z(2)=IDFPLOT(IPROF(3))%ZMAX
-  !ENDIF
-  !!## ulc
-  !X(2)=X(1)
-  !Y(2)=Y(1)
-  !IF(IPROF(2).NE.0)THEN
-  ! Z(1)=ZT(1,2)
-  !ELSE
-  ! Z(1)=IDFPLOT(IPROF(3))%ZMIN
-  !ENDIF
+  !## fill in appropriate after interpolation
+  DO K=1,3
+   IA=0
+   DO J=1,N
+    !## turn on
+    IF(IT(J,K).EQ.-1.0D0)IA=1
+    IF(IA.EQ.1)THEN
+     IF(IT(J,K).EQ.-999.0D0)IT(J,K)=0.0D0
+    ENDIF
+    !## turn off
+    IF(IT(J,K).EQ.1.0D0)IA=0
+   ENDDO
+  ENDDO
+  
+  WRITE(*,*) 
+  DO J=1,N
+   WRITE(*,'(I10,F10.3,3F10.1)') J,XT(J),(IT(J,K),K=1,3)
+  ENDDO
+
+  !## define tt as a function of it
+  TT=-999
+  DO J=1,N
+   LSOLID=.FALSE.; IF(IT(J,1).GT.-900.0D0.AND.IT(J,2).GT.-900.0D0)LSOLID=.TRUE.
+   IF(IPROF(3).NE.0.AND.LSOLID)LSOLID=IT(J,3).GT.-900.0D0
+   IF(LSOLID)TT(J)=1
+  ENDDO
+  DO J=1,N
+   !## set start
+   IF(J.EQ.1)THEN
+    IF(TT(J).EQ.1)TT(J)=-1 
+   ELSE
+    IF(TT(J-1).EQ.-999.AND.TT(J).EQ.1)TT(J)=-1 !## start
+   ENDIF
+   !## set end
+   IF(J.EQ.N)THEN
+    IF(TT(J).EQ.1)TT(J)= 2
+   ELSE
+    IF(TT(J+1).EQ.-999.AND.TT(J).EQ.1)TT(J)= 2 
+   ENDIF
+  ENDDO
+  WRITE(*,*)
+  DO J=1,N
+   WRITE(*,'(I10,F10.3,I10,3F10.1)') J,XT(J),TT(J),IT(J,1),IT(J,2),IT(J,3)
+  ENDDO
+!  !## make sure last point is equal to %tx   
+!  XT(N)=SPF(I)%TX
 
   !## for each (interpolated) coordinate
-  GOFORIT=.FALSE.; IF(IT(1).LT.0.0D0)GOFORIT=.TRUE.
+  GOFORIT=.FALSE.; IF(TT(1).EQ.-1)GOFORIT=.TRUE.
   DO IPOS=2,N
 
    !## determine whether to display current segment
    IF(.NOT.GOFORIT)THEN
-    IF(IT(IPOS).LT.0.0D0)GOFORIT=.TRUE.
+    IF(TT(IPOS).EQ.-1)GOFORIT=.TRUE. !LT.0.0D0)GOFORIT=.TRUE.
     CYCLE
    ENDIF
    
    !## next segment is inactive   
-   IF(IT(IPOS).EQ.1)GOFORIT=.FALSE.
+   IF(TT(IPOS).EQ.2)GOFORIT=.FALSE.
    
    !## assign coordinate and z-values to knickpoints
    TX=0.0D0
@@ -5640,8 +5700,8 @@ SOLLOOP: DO I=1,NSOLLIST
    ENDDO
   ENDDO     
 
-  DEALLOCATE(XT,ZT,IT)
-  NULLIFY(PX,PZ)
+  DEALLOCATE(XT,ZT,IT,TT)
+!  NULLIFY(PX,PZ)
 
  ENDDO
   

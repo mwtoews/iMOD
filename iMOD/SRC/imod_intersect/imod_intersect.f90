@@ -159,15 +159,15 @@ CONTAINS
    CALL INTERSECT_NCORNER(ID,TD,XMIN+ ICOL   *CSX,YMAX- IROW   *CSY,X,Y,3)
    CALL INTERSECT_NCORNER(ID,TD,XMIN+(ICOL-1)*CSX,YMAX- IROW   *CSY,X,Y,4)
   ENDIF
-  FA(I-1)=REAL(ID) 
+  FA(I-1)=REAL(ID,8) 
   
   DX  =XA(I)-XA(I-1)
   DY  =YA(I)-YA(I-1)
   LENG=DX**2.0D0+DY**2.0D0; IF(LENG.GT.0.0D0)LENG=SQRT(LENG)
 
   !## store results in row/column indices
-  CA(I-1)=REAL(ICOL)
-  RA(I-1)=REAL(IROW)
+  CA(I-1)=REAL(ICOL,8)
+  RA(I-1)=REAL(IROW,8)
 
   LN(I-1)=LENG
  END DO
@@ -244,7 +244,7 @@ CONTAINS
   IF(IHOR.EQ.0)THEN
 
    CS=DELC(IMN-1)-DELC(IMN)
-   IF(LHFB)CS=CS/2.0
+   IF(LHFB)CS=CS/2.0D0
    Y =YMN-CS
    DO
 
@@ -275,7 +275,7 @@ CONTAINS
     !## model is not bigger than line-segment
     IF(IMN.LE.0)EXIT
     CS=DELC(IMN)-DELC(IMN+1)
-    IF(LHFB)CS=CS/2.0
+    IF(LHFB)CS=CS/2.0D0
    ENDDO
 
   ENDIF
@@ -295,7 +295,7 @@ CONTAINS
   IF(IVER.EQ.0)THEN
 
    CS=DELR(IMN-1)-DELR(IMN)
-   IF(LHFB)CS=CS/2.0
+   IF(LHFB)CS=CS/2.0D0
    X =XMN-CS
    DO
    
@@ -326,7 +326,7 @@ CONTAINS
     !## model is not bigger than line-segment
     IF(IMN.GT.NCOL)EXIT
     CS=DELR(IMN)-DELR(IMN-1)
-    IF(LHFB)CS=CS/2.0
+    IF(LHFB)CS=CS/2.0D0
    ENDDO
 
   ENDIF
@@ -361,15 +361,15 @@ CONTAINS
    ICOL=0; IROW=0
   ENDIF
   
-  FA(I-1)=REAL(ID) 
+  FA(I-1)=REAL(ID,8) 
 
   DX  =XA(I)-XA(I-1)
   DY  =YA(I)-YA(I-1)
   LENG=DX**2.0D0+DY**2.0D0; IF(LENG.GT.0.0D0)LENG=SQRT(LENG)
 
   !## store results in row/column indices
-  CA(I-1)=REAL(ICOL)
-  RA(I-1)=REAL(IROW)
+  CA(I-1)=REAL(ICOL,8)
+  RA(I-1)=REAL(IROW,8)
 
   LN(I-1)=LENG
  END DO

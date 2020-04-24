@@ -310,7 +310,8 @@ CONTAINS
     !## skip nodata in geology model
     IF(T.EQ.TBIDF(1)%NODATA.OR.B.EQ.TBIDF(2)%NODATA)CYCLE
 
-    T=MIN(TM,T); B=MAX(BM,B); X=MAX(0.0D0,(T-B)/(TM-BM))
+    T=MIN(TM,T); B=MAX(BM,B)
+    X=0.0D0; IF(TM-BM.GT.0.0D0)X=MAX(0.0D0,(T-B)/(TM-BM))
 
     IF(X.GT.0.0D0)THEN
      FMDL(ILAY)%X(ICOL,IROW)=X; NTYPE(ILAY)=NTYPE(ILAY)+1
