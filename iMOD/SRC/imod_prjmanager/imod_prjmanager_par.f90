@@ -484,4 +484,7 @@ MODULE MOD_PMANAGER_PAR
  LOGICAL :: LYESNO
  LOGICAL :: LSHD,LBDG !## if true is saves fluxes for modflow2005 (replaces bdgflx as keyword - khv,kva,kvv,sto,kdw,vcw all tricker this logical)
  
+ !## items to tricker output of flow-fluxes
+ INTEGER,DIMENSION(8) :: TFLX=[TBND,TKHV,TKVA,TKVV,TKDW,TVCW,TSTO,TSPY]
+
 END MODULE MOD_PMANAGER_PAR

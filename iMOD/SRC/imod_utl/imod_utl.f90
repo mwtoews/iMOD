@@ -3691,11 +3691,135 @@ DOLOOP: DO
  IF(XV.LE.0.0D0)RETURN
  !## sample standard deviation
  STDEV=SQRT(XV/DBLE(NPOP-1))
- !## population standard deviation
- ! VAR=SQRT(XV/REAL(NPOP))
 
  END SUBROUTINE UTL_STDEF
 
+ !###======================================================================
+ SUBROUTINE UTL_TRIANGULATION(XP,YP,NT)
+ !###======================================================================
+ IMPLICIT NONE
+ INTEGER,INTENT(OUT) :: NT
+ REAL(KIND=DP_KIND),INTENT(IN),DIMENSION(:) :: XP,YP
+ TYPE TRIOBJ
+  INTEGER,DIMENSION(3) :: IP=0 !## reference to point for triangles
+ END TYPE TRIOBJ
+ TYPE(TRIOBJ),DIMENSION(:),ALLOCATABLE :: TRI
+ INTEGER :: I,NP,IP,JP,JT,IT,P1,P2,P3,ID
+ REAL(KIND=DP_KIND) :: D,MAXD
+ INTEGER,DIMENSION(3) :: PP
+ INTEGER,DIMENSION(3) :: SP
+ 
+ NP=SIZE(XP)
+ NT=SIZE(TRI)
+
+ ALLOCATE(TRI(2*NP)) !; TRI%IP=0
+
+ !## apply clusters
+ !DO IP=5,NP
+ ! !## discard point that are too near
+ ! D=UTL_DIST(XP(1),YP(1),XP(IP),YP(IP))
+ ! IF(D.GT.MD)EXIT
+ !ENDDO
+ 
+ !## construct first four triangles, with first point 
+ TRI(1)%IP(1)=1; TRI(1)%IP(2)=2; TRI(1)%IP(3)=5
+ TRI(2)%IP(1)=2; TRI(2)%IP(2)=3; TRI(2)%IP(3)=5
+ TRI(3)%IP(1)=3; TRI(3)%IP(2)=4; TRI(3)%IP(3)=5
+ TRI(4)%IP(1)=4; TRI(4)%IP(2)=1; TRI(4)%IP(3)=5
+ !## start with four triangle
+ NT=4
+ 
+ !## add all other points
+ DO IP=6,NP
+ 
+  DO IT=1,NT
+   !## find out in what triangle
+   P1=TRI(IT)%IP(1); P2=TRI(IT)%IP(2); P3=TRI(IT)%IP(3)
+   IF(UTL_POINT_IN_TRIANGLE((/XP(P1),YP(P1)/),(/XP(P2),YP(P2)/),(/XP(P3),YP(P3)/),(/XP(IP),YP(IP)/)).NE.0)EXIT
+  ENDDO
+
+  !## not in any triangle - error
+  IF(IT.GT.NT)THEN; WRITE(*,'(/A/)') 'CURRENT POINT NOT IN ANY TRIANGLE'; STOP; ENDIF
+
+  !## determine most far point
+  PP(1)=TRI(IT)%IP(1); PP(2)=TRI(IT)%IP(2); PP(3)=TRI(IT)%IP(3)
+  ID=0; MAXD=0.0D0; DO JP=1,3
+   D=UTL_DIST(XP(PP(JP)),YP(PP(JP)),XP(IP),YP(IP))
+   IF(D.GT.MAXD)THEN; D=MAXD; ID=PP(JP); ENDIF
+  ENDDO
+  
+  !## not in any triangle - error
+  IF(ID.EQ.0)THEN; WRITE(*,'(/A/)') 'NO FAR POINT FOUND FOR SELECTED TRIANGLE'; STOP; ENDIF
+
+  !## select the two others to define the segment to be adjusted
+  I=1; DO JP=1,3; IF(ID.NE.PP(JP))THEN; SP(I)=PP(JP); I=I+1; ENDIF; ENDDO
+
+  !## process (split) each triangle that shares those two points (need to be max. 2)
+  IT=0; DO
+   IT=IT+1
+   !## found triangle to be splitted
+   IF(TRI(IT)%IP(1).EQ.SP(1).OR.TRI(IT)%IP(1).EQ.SP(2).AND. &
+      TRI(IT)%IP(2).EQ.SP(1).OR.TRI(IT)%IP(2).EQ.SP(2).AND. &
+      TRI(IT)%IP(3).EQ.SP(1).OR.TRI(IT)%IP(3).EQ.SP(2))THEN
+    !## modify current triangle with sp(1)
+    DO I=1,3
+     !## find thrid point
+     IF(TRI(IT)%IP(I).NE.SP(1).AND.TRI(IT)%IP(I).NE.SP(2))THEN
+      TRI(IT)%IP(2)=SP(1)
+      TRI(IT)%IP(3)=IP
+      EXIT
+     ENDIF
+    ENDDO
+    !## add another triangle
+    NT=NT+1
+    TRI(NT)%IP(1)=TRI(IT)%IP(I)
+    TRI(NT)%IP(2)=SP(2)
+    TRI(NT)%IP(3)=IP
+   ENDIF
+  ENDDO
+  
+ ENDDO
+ 
+ DEALLOCATE(TRI)
+ 
+ END SUBROUTINE UTL_TRIANGULATION
+
+ !###======================================================================
+ INTEGER FUNCTION UTL_POINT_IN_TRIANGLE(A,B,C,P)
+ !###======================================================================
+ IMPLICIT NONE
+ REAL(KIND=DP_KIND),DIMENSION(2) :: A,B,C,P
+ REAL(KIND=DP_KIND) :: X,Y,Z
+ 
+ UTL_POINT_IN_TRIANGLE=-1
+ 
+ !## check whether points of triangle equal to point p
+ IF(SUM(P-A).EQ.0.0D0)RETURN
+ IF(SUM(P-B).EQ.0.0D0)RETURN
+ IF(SUM(P-C).EQ.0.0D0)RETURN
+ 
+ UTL_POINT_IN_TRIANGLE=0
+
+ Z= UTL_DETERMINANT(A,B) +UTL_DETERMINANT(B,C)+UTL_DETERMINANT(C,A)
+ X=(UTL_DETERMINANT(A,B)+UTL_DETERMINANT(B,P)+UTL_DETERMINANT(P,A))/Z
+ Y=(UTL_DETERMINANT(C,A)+UTL_DETERMINANT(A,P)+UTL_DETERMINANT(P,C))/Z
+ IF(X+Y.LT.1.0D0)THEN
+  IF(X.GT.0.0D0.AND.X.LT.1.0D0.AND. &
+     Y.GT.0.0D0.AND.Y.LT.1.0D0)UTL_POINT_IN_TRIANGLE=1
+ ENDIF
+ 
+ END FUNCTION UTL_POINT_IN_TRIANGLE
+
+ !###======================================================================
+ REAL(KIND=DP_KIND) FUNCTION UTL_DETERMINANT(A,B)
+ !###======================================================================
+ IMPLICIT NONE
+ REAL(KIND=DP_KIND),INTENT(IN),DIMENSION(2) :: A,B
+ 
+ UTL_DETERMINANT=A(1)*B(2)-A(2)*B(1)
+
+ END FUNCTION UTL_DETERMINANT
+ 
  !###======================================================================
  REAL(KIND=DP_KIND) FUNCTION UTL_DIST(X1,Y1,X2,Y2)
  !###======================================================================
