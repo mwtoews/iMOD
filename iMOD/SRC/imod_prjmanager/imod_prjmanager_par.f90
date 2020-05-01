@@ -80,7 +80,7 @@ MODULE MOD_PMANAGER_PAR
  INTEGER,PARAMETER :: TFOD=50 !## mt3d/seawat - first order rate reaction for the dissolved phase
  INTEGER,PARAMETER :: TFOS=51 !## mt3d/seawat - second order rate reaction for the sorbed phase
  INTEGER,PARAMETER :: TRCT=52 !## mt3d/seawat - rct
- INTEGER,PARAMETER :: TCON=53 !## modflow2005 - concentration
+ INTEGER,PARAMETER :: TCON=53 !## modflow2005 - saltwater concentration
  
  TYPE MTOBJ
   INTEGER,POINTER,DIMENSION(:) :: T=>NULL()     !## fixed: packages available for selected Model

@@ -8554,8 +8554,8 @@ CONTAINS
  IMPLICIT NONE
  CHARACTER(LEN=256) :: IPFOBS,IPFMES,IPFPPS
  REAL(KIND=DP_KIND),ALLOCATABLE,DIMENSION(:) :: XP,YP !## list of points
- INTEGER :: I,J,JU,NT
- REAL(KIND=DP_KIND) :: X,Y
+ INTEGER :: I
+! REAL(KIND=DP_KIND) :: BUFFER
  
  NIPF=3; CALL IPFALLOCATE()
  
@@ -8577,24 +8577,28 @@ CONTAINS
  XP(2)=MINVAL(XP(5:N)); YP(2)=MAXVAL(YP(5:N))
  XP(3)=MAXVAL(XP(5:N)); YP(3)=MAXVAL(YP(5:N))
  XP(4)=MAXVAL(XP(5:N)); YP(4)=MINVAL(YP(5:N))
+! BUFFER=SQRT((XP(3)-XP(1))**2.0D0+(YP(2)-YP(1))**2.0D0)
+! XP(1)=XP(1)-BUFFER; XP(2)=XP(2)-BUFFER
+! XP(3)=XP(3)+BUFFER; XP(4)=XP(4)+BUFFER
+! YP(1)=YP(1)-BUFFER; YP(2)=YP(2)+BUFFER
+! YP(3)=YP(3)+BUFFER; YP(4)=YP(4)-BUFFER
  
- CALL UTL_TRIANGULATION(XP,YP,NT,IPFPPS)
+ CALL UTL_TRIANGULATION(XP,YP,IPFPPS)
  
  END SUBROUTINE IMODBATH_CREATEPILOTPOINTS_IPF
  
  !###======================================================================
- SUBROUTINE UTL_TRIANGULATION(XP,YP,NT,IPFPPS)
+ SUBROUTINE UTL_TRIANGULATION(XP,YP,IPFPPS)
  !###======================================================================
  IMPLICIT NONE
- INTEGER,INTENT(OUT) :: NT
  CHARACTER(LEN=*),INTENT(IN) :: IPFPPS
  REAL(KIND=DP_KIND),INTENT(IN),DIMENSION(:) :: XP,YP
  TYPE TRIOBJ
   INTEGER,DIMENSION(3) :: IP=0 !## reference to point for triangles
  END TYPE TRIOBJ
  TYPE(TRIOBJ),DIMENSION(:),ALLOCATABLE :: TRI
- INTEGER :: I,J,K,NP,IP,JP,JT,IT,P1,P2,P3,ID,IPT,JU
- REAL(KIND=DP_KIND) :: D,MAXD,X,Y
+ INTEGER :: I,J,K,NP,IP,JP,IT,JT,P1,P2,P3,ID,IPT,JU,NT
+ REAL(KIND=DP_KIND) :: D,MAXD,X,Y,A
  INTEGER,DIMENSION(3) :: PP
  INTEGER,DIMENSION(2) :: SP
  
@@ -8610,18 +8614,28 @@ CONTAINS
  ! IF(D.GT.MD)EXIT
  !ENDDO
  
- !## construct first four triangles, with first point 
- TRI(1)%IP(1)=1; TRI(1)%IP(2)=2; TRI(1)%IP(3)=5
- TRI(2)%IP(1)=2; TRI(2)%IP(2)=3; TRI(2)%IP(3)=5
- TRI(3)%IP(1)=3; TRI(3)%IP(2)=4; TRI(3)%IP(3)=5
- TRI(4)%IP(1)=4; TRI(4)%IP(2)=1; TRI(4)%IP(3)=5
+ !## construct first four triangles, with first point not equal to all sides
+ DO IP=5,NP
+  IF(XP(IP).NE.XP(1).AND.XP(IP).NE.XP(3).AND. &
+     YP(IP).NE.YP(1).AND.YP(IP).NE.YP(3))EXIT
+ ENDDO
+ IF(IP.GT.NP)STOP 'CANNOT FIND A GOOD STARTING POINT NOT ON THE BOUNDARY'
+ TRI(1)%IP(1)=1; TRI(1)%IP(2)=2; TRI(1)%IP(3)=IP !5
+ TRI(2)%IP(1)=2; TRI(2)%IP(2)=3; TRI(2)%IP(3)=IP !5
+ TRI(3)%IP(1)=3; TRI(3)%IP(2)=4; TRI(3)%IP(3)=IP !5
+ TRI(4)%IP(1)=4; TRI(4)%IP(2)=1; TRI(4)%IP(3)=IP !5
  
  !## start with these four triangles
  NT=4
- 
+
  !## add all remaining points
- DO IP=6,NP
- 
+ DO IP=5,NP
+
+  WRITE(*,*)
+  DO IT=1,NT
+   WRITE(*,'(4I10)') IT,(TRI(IT)%IP(J),J=1,3)
+  ENDDO
+  
   !## find out in what triangle current point is
   DO IT=1,NT
    P1=TRI(IT)%IP(1); P2=TRI(IT)%IP(2); P3=TRI(IT)%IP(3)
@@ -8633,7 +8647,7 @@ CONTAINS
   IF(IPT.EQ.-1)CYCLE
   
   !## not in any triangle - error
-  IF(IT.GT.NT)THEN; WRITE(*,'(/A/)') 'CURRENT POINT NOT IN ANY TRIANGLE'; STOP; ENDIF
+  IF(IT.GT.NT)THEN; WRITE(*,'(/A/)') 'CURRENT POINT NOT IN ANY TRIANGLE'; PAUSE; STOP; ENDIF
 
   !## determine most far point of selected triangle
   PP(1)=TRI(IT)%IP(1); PP(2)=TRI(IT)%IP(2); PP(3)=TRI(IT)%IP(3)
@@ -8643,7 +8657,7 @@ CONTAINS
   ENDDO
   
   !## not in any triangle - error
-  IF(ID.EQ.0)THEN; WRITE(*,'(/A/)') 'NO FAR POINT FOUND FOR SELECTED TRIANGLE'; STOP; ENDIF
+  IF(ID.EQ.0)THEN; WRITE(*,'(/A/)') 'NO FAR POINT FOUND FOR SELECTED TRIANGLE'; PAUSE; STOP; ENDIF
 
   !## select the two others to define the segment to be adjusted
   I=1; DO JP=1,3; IF(ID.NE.PP(JP))THEN; SP(I)=PP(JP); I=I+1; ENDIF; ENDDO
@@ -8658,21 +8672,40 @@ CONTAINS
    IF(K.EQ.2)THEN
     !## modify current triangle with sp(1)
     DO I=1,3
-     !## find third point
+     !## find third point that remains in both triangles
      IF(TRI(IT)%IP(I).NE.SP(1).AND.TRI(IT)%IP(I).NE.SP(2))THEN
       J=I+1; IF(J.GT.3)J=1; TRI(IT)%IP(J)=SP(1)
       J=J+1; IF(J.GT.3)J=1; TRI(IT)%IP(J)=IP
       EXIT
      ENDIF
     ENDDO
-    !## add another triangle
+    
+    !## add other triangle due to splitting
     NT=NT+1
     TRI(NT)%IP(1)=TRI(IT)%IP(I)
     TRI(NT)%IP(2)=SP(2)
     TRI(NT)%IP(3)=IP
+    !## check whether triangles have areas
    ENDIF
   ENDDO
-  
+
+  !## clean all triangle that are zero
+  IT=0; DO
+   IT=IT+1
+   IF(IT.GT.NT)EXIT
+   A=TRIANGLE_AREA((/XP(TRI(IT)%IP(1)),YP(TRI(IT)%IP(1)), &
+                     XP(TRI(IT)%IP(2)),YP(TRI(IT)%IP(2)), &
+                     XP(TRI(IT)%IP(3)),YP(TRI(IT)%IP(3))/))
+   !## move another triangle if this triangle has a volume
+   IF(A.EQ.0.0D0)THEN
+    DO I=IT,NT-1
+     DO J=1,3; TRI(I)%IP(J)=TRI(I+1)%IP(J); ENDDO
+    ENDDO
+    NT=NT-1
+    IT=IT-1
+   ENDIF
+  ENDDO
+
  ENDDO
  
  !## plot triangles
@@ -8698,15 +8731,34 @@ CONTAINS
  ENDDO
  CLOSE(JU)
  
- !## plot points of triangles
+ !## plot delauney points (circumcenter)
  JU=UTL_GETUNIT(); OPEN(JU,FILE=IPFPPS(:INDEX(IPFPPS,'.',.TRUE.)-1)//'_DELAUNEY.IPF',STATUS='UNKNOWN',ACTION='WRITE')
  WRITE(JU,*) NT; WRITE(JU,'(A)') '2'; WRITE(JU,'(A)') 'X'; WRITE(JU,'(A)') 'Y'; WRITE(JU,'(A)') '0,TXT'
  DO I=1,NT
   CALL TRIANGLE_CIRCUMCIRCLE((/XP(TRI(I)%IP(1)),YP(TRI(I)%IP(1)), &
                                XP(TRI(I)%IP(2)),YP(TRI(I)%IP(2)), &
                                XP(TRI(I)%IP(3)),YP(TRI(I)%IP(3))/),X,Y)
-!  X=XP(TRI(I)%IP(1))+XP(TRI(I)%IP(2))+XP(TRI(I)%IP(3)); X=X/3.0D0
-!  Y=YP(TRI(I)%IP(1))+YP(TRI(I)%IP(2))+YP(TRI(I)%IP(3)); Y=Y/3.0D0
+  WRITE(JU,*) X,Y
+ ENDDO
+ CLOSE(JU)
+
+ !## plot incenter points
+ JU=UTL_GETUNIT(); OPEN(JU,FILE=IPFPPS(:INDEX(IPFPPS,'.',.TRUE.)-1)//'_INCENTER.IPF',STATUS='UNKNOWN',ACTION='WRITE')
+ WRITE(JU,*) NT; WRITE(JU,'(A)') '2'; WRITE(JU,'(A)') 'X'; WRITE(JU,'(A)') 'Y'; WRITE(JU,'(A)') '0,TXT'
+ DO I=1,NT
+  CALL TRIANGLE_INCIRCLE((/XP(TRI(I)%IP(1)),YP(TRI(I)%IP(1)), &
+                           XP(TRI(I)%IP(2)),YP(TRI(I)%IP(2)), &
+                           XP(TRI(I)%IP(3)),YP(TRI(I)%IP(3))/),X,Y)
+  WRITE(JU,*) X,Y
+ ENDDO
+ CLOSE(JU)
+
+ !## plot points of triangles
+ JU=UTL_GETUNIT(); OPEN(JU,FILE=IPFPPS(:INDEX(IPFPPS,'.',.TRUE.)-1)//'_CENTROID.IPF',STATUS='UNKNOWN',ACTION='WRITE')
+ WRITE(JU,*) NT; WRITE(JU,'(A)') '2'; WRITE(JU,'(A)') 'X'; WRITE(JU,'(A)') 'Y'; WRITE(JU,'(A)') '0,TXT'
+ DO I=1,NT
+  X=XP(TRI(I)%IP(1))+XP(TRI(I)%IP(2))+XP(TRI(I)%IP(3)); X=X/3.0D0
+  Y=YP(TRI(I)%IP(1))+YP(TRI(I)%IP(2))+YP(TRI(I)%IP(3)); Y=Y/3.0D0
   WRITE(JU,*) X,Y
  ENDDO
  CLOSE(JU)
@@ -8716,46 +8768,83 @@ CONTAINS
  END SUBROUTINE UTL_TRIANGULATION
 
  !###======================================================================
+ REAL(KIND=DP_KIND) FUNCTION TRIANGLE_AREA(T)
+ !###======================================================================
+ IMPLICIT NONE
+ REAL(KIND=DP_KIND),INTENT(IN),DIMENSION(2,3) :: T
+
+ TRIANGLE_AREA=0.5D0*(T(1,1)*(T(2,2)-T(2,3))+ &
+                      T(1,2)*(T(2,3)-T(2,1))+ &
+                      T(1,3)*(T(2,1)-T(2,2)))
+
+ END FUNCTION TRIANGLE_AREA
+      
+ !###======================================================================
  SUBROUTINE TRIANGLE_CIRCUMCIRCLE(T,XC,YC)
  !###======================================================================
  IMPLICIT NONE
-  REAL(KIND=DP_KIND),INTENT(IN),DIMENSION(2,3) :: T
-  REAL(KIND=DP_KIND),INTENT(OUT) :: XC,YC
-  REAL(KIND=DP_KIND) :: A,B,BOT,C,DET,R
-  REAL(KIND=DP_KIND),DIMENSION(2) :: F,TOP
+ REAL(KIND=DP_KIND),INTENT(IN),DIMENSION(2,3) :: T
+ REAL(KIND=DP_KIND),INTENT(OUT) :: XC,YC
+ REAL(KIND=DP_KIND) :: A,B,BOT,C,DET,R
+ REAL(KIND=DP_KIND),DIMENSION(2) :: F,TOP
 
-  !## circumradius
-  A=SQRT((T(1,2)-T(1,1))**2.0D0+(T(2,2)-T(2,1))**2.0D0)
-  B=SQRT((T(1,3)-T(1,2))**2.0D0+(T(2,3)-T(2,2))**2.0D0)
-  C=SQRT((T(1,1)-T(1,3))**2.0D0+(T(2,1)-T(2,3))**2.0D0)
+ !## circumradius
+ A=SQRT((T(1,2)-T(1,1))**2.0D0+(T(2,2)-T(2,1))**2.0D0)
+ B=SQRT((T(1,3)-T(1,2))**2.0D0+(T(2,3)-T(2,2))**2.0D0)
+ C=SQRT((T(1,1)-T(1,3))**2.0D0+(T(2,1)-T(2,3))**2.0D0)
 
-  BOT=(A+B+C)*(-A+B+C)*(A-B+C)*(A+B-C)
+ BOT=(A+B+C)*(-A+B+C)*(A-B+C)*(A+B-C)
 
-  IF(BOT.LE.0.0D0)THEN
-   R=-1.0D0
-   XC=0.0D0
-   YC=0.0D0
-   RETURN
-  ENDIF
+ IF(BOT.LE.0.0D0)THEN
+  R=-1.0D0
+  XC=0.0D0
+  YC=0.0D0
+  RETURN
+ ENDIF
 
-  R=A*B*C/SQRT(BOT)
+ R=A*B*C/SQRT(BOT)
 
-  !## circumcenter.
-  F(1)=(T(1,2)-T(1,1))**2+(T(2,2)-T(2,1))**2.0D0
-  F(2)=(T(1,3)-T(1,1))**2+(T(2,3)-T(2,1))**2.0D0
+ !## circumcenter.
+ F(1)=(T(1,2)-T(1,1))**2+(T(2,2)-T(2,1))**2.0D0
+ F(2)=(T(1,3)-T(1,1))**2+(T(2,3)-T(2,1))**2.0D0
 
-  TOP(1)= (T(2,3)-T(2,1))*F(1)-(T(2,2)-T(2,1))*F(2)
-  TOP(2)=-(T(1,3)-T(1,1))*F(1)+(T(1,2)-T(1,1))*F(2)
+ TOP(1)= (T(2,3)-T(2,1))*F(1)-(T(2,2)-T(2,1))*F(2)
+ TOP(2)=-(T(1,3)-T(1,1))*F(1)+(T(1,2)-T(1,1))*F(2)
 
-  DET=(T(2,3)-T(2,1))*(T(1,2)-T(1,1)) &
-     -(T(2,2)-T(2,1))*(T(1,3)-T(1,1))
+ DET=(T(2,3)-T(2,1))*(T(1,2)-T(1,1)) &
+    -(T(2,2)-T(2,1))*(T(1,3)-T(1,1))
 
-  XC=T(1,1)+0.5D+00*TOP(1)/DET
-  YC=T(2,1)+0.5D+00*TOP(2)/DET
-!  PC(1:2)=T(1:2,1)+0.5D+00*TOP(1:2)/DET
+ XC=T(1,1)+0.5D+00*TOP(1)/DET
+ YC=T(2,1)+0.5D+00*TOP(2)/DET
 
  END SUBROUTINE TRIANGLE_CIRCUMCIRCLE
  
+ !###======================================================================
+ SUBROUTINE TRIANGLE_INCIRCLE(T,X,Y)
+ !###======================================================================
+ IMPLICIT NONE
+ REAL(KIND=DP_KIND),DIMENSION(2,3),INTENT(IN) :: T
+ REAL(KIND=DP_KIND) :: A,B,C,PERIMETER,R
+ REAL(KIND=DP_KIND),INTENT(OUT) :: X,Y
+
+ !## compute the length of each side.
+ A=SQRT((T(1,2)-T(1,1))**2.0D0+(T(2,2)-T(2,1))**2.0D0)
+ B=SQRT((T(1,3)-T(1,2))**2.0D0+(T(2,3)-T(2,2))**2.0D0)
+ C=SQRT((T(1,1)-T(1,3))**2.0D0+(T(2,1)-T(2,3))**2.0D0)
+ 
+ PERIMETER=A+B+C
+
+ IF(PERIMETER.EQ.0.0D0)THEN
+  X=T(1,1); Y=T(2,1); R=0.0D0; RETURN
+ ENDIF
+
+ X=(B*T(1,1)+C*T(1,2)+A*T(1,3))/PERIMETER
+ Y=(B*T(2,1)+C*T(2,2)+A*T(2,3))/PERIMETER
+
+ R=0.5D0*SQRT((-A+B+C)*(+A-B+C)*(+A+B-C)/PERIMETER)
+
+ END SUBROUTINE TRIANGLE_INCIRCLE
+      
  !###======================================================================
  INTEGER FUNCTION UTL_POINT_IN_TRIANGLE(A,B,C,P)
  !###======================================================================
@@ -8766,9 +8855,14 @@ CONTAINS
  UTL_POINT_IN_TRIANGLE=-1
  
  !## check whether points of triangle equal to point p
- IF(SUM(P-A).EQ.0.0D0)RETURN
- IF(SUM(P-B).EQ.0.0D0)RETURN
- IF(SUM(P-C).EQ.0.0D0)RETURN
+ WRITE(*,*) SUM(P-A)
+ WRITE(*,*) SUM(P-B)
+ WRITE(*,*) SUM(P-C)
+ IF(P(1)-A(1).EQ.0.0D0.AND.P(2)-A(2).EQ.0.0D0)RETURN
+ IF(P(1)-B(1).EQ.0.0D0.AND.P(2)-B(2).EQ.0.0D0)RETURN
+ IF(P(1)-C(1).EQ.0.0D0.AND.P(2)-C(2).EQ.0.0D0)RETURN
+ !IF(SUM(P-B).EQ.0.0D0)RETURN
+ !IF(SUM(P-C).EQ.0.0D0)RETURN
  
  UTL_POINT_IN_TRIANGLE=0
 
@@ -8776,9 +8870,11 @@ CONTAINS
  IF(Z.EQ.0.0D0)STOP 'THIS IS NOT A TRIANGLE'
  X=(UTL_DETERMINANT(A,B)+UTL_DETERMINANT(B,P)+UTL_DETERMINANT(P,A))/Z
  Y=(UTL_DETERMINANT(C,A)+UTL_DETERMINANT(A,P)+UTL_DETERMINANT(P,C))/Z
- IF(X+Y.LT.1.0D0)THEN
-  IF(X.GT.0.0D0.AND.X.LT.1.0D0.AND. &
-     Y.GT.0.0D0.AND.Y.LT.1.0D0)UTL_POINT_IN_TRIANGLE=1
+ IF(X+Y.LE.1.0D0)THEN
+  IF(X.GE.0.0D0.AND.X.LE.1.0D0.AND. &
+     Y.GE.0.0D0.AND.Y.LE.1.0D0)UTL_POINT_IN_TRIANGLE=1
+!  IF(X.GT.0.0D0.AND.X.LT.1.0D0.AND. &
+!     Y.GT.0.0D0.AND.Y.LT.1.0D0)UTL_POINT_IN_TRIANGLE=1
  ENDIF
  
  END FUNCTION UTL_POINT_IN_TRIANGLE
