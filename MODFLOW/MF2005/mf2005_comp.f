@@ -63,7 +63,7 @@ C
       CHARACTER*80 HEADNG(2)
       CHARACTER*200 FNAME
       INTEGER IBDT(8)
-      integer :: inunit
+      integer :: inunit,IU
 C
       CHARACTER*4 CUNIT(NIUNIT)
       DATA CUNIT/'BCF6', 'WEL ', 'DRN ', 'RIV ', 'EVT ', '    ', 'GHB ',  !  7
@@ -74,8 +74,8 @@ C
      &           'STOB', 'HUF2', 'CHOB', 'ETS ', 'DRT ', '    ', 'GMG ',  ! 42
      &           'HYD ', 'SFR ', '    ', 'GAGE', 'LVDA', '    ', 'LMT6',  ! 49
      &           'MNW2', 'MNWI', 'MNW1', 'KDEP', 'SUB ', 'UZF ', 'gwm ',  ! 56
-     &           'SWT ', 'cfp ', 'PWT ', '    ', '    ', 'SCR ', 'nrs ',  ! 63  ! DLT: SUB-Creep (62) added
-     &           'DXC ', 'ANI ', 'PKS  ', '    ', 'MET ',                  ! 70
+     &           'SWT ', 'cfp ', 'PWT ', 'VDF ', '    ', 'SCR ', 'nrs ',  ! 63  ! DLT: SUB-Creep (62) added, Variable-Density Flow (60) added
+     &           'DXC ', 'ANI ', 'PKS  ', '    ', 'MET ',                 ! 70
      &           32*'    '/        ! 64: Data eXChange
 
 
@@ -84,6 +84,7 @@ C
       integer, save, pointer :: kper,kkper,kstp,kkstp,kiter,kkiter
       integer, save, pointer :: icnvg
       integer, save, pointer :: ilmtfmt,issmt3d,iumt3d
+      
       double precision, save, pointer :: timesteptime     ! absolute time value of the
                                                           ! start of the current time step
       logical, save, pointer :: initTimeStep              ! .true.  read timestep data
@@ -194,12 +195,30 @@ cDLT      IGRID=1
      1  'MNW1 and MNW2 cannot both be active in the same simulation'
         CALL USTOP(' ')
       END IF
+                                                 
+       IF(IUNIT(IUVDF).GT.0)THEN                                        !VDF
+        IF(IUNIT(IUPWT).GT.0.OR.IUNIT(IUHUF2).GT.0.OR.                  !VDF
+     &  IUNIT(IULAK).GT.0.OR.IUNIT(IUFHB).GT.0.OR.                      !VDF
+     &  IUNIT(IURES).GT.0.OR.IUNIT(IUSTR).GT.0.OR.                      !VDF
+     &  IUNIT(IUIBS).GT.0.OR.IUNIT(IUETS).GT.0.OR.                      !VDF
+     &  IUNIT(IUDRT).GT.0.OR.IUNIT(IUUZF).GT.0.OR.                      !VDF
+     &  IUNIT(IUSFR).GT.0.OR.IUNIT(IUMNW2).GT.0.OR.                     !VDF
+     &  IUNIT(IUMNW1).GT.0.OR.IUNIT(IUSUB).GT.0.OR.                     !VDF
+     &  IUNIT(IUSWT).GT.0.OR.IUNIT(IUSCR).GT.0.OR.                      !VDF
+     &  IUNIT(IUANI).GT.0)THEN                                          !VDF
+         WRITE(IOUT,*) 'VDF package is not supported for packages: '    !VDF
+         WRITE(IOUT,*) 'PWT,HUF2,LAK,FHB,RES,STR,IBS,ETS,DRT,UZF,SFR'   !VDF
+         WRITE(IOUT,*) 'MNW1,MNW2,SUB,SWT,SCR,ANI. Program terminated'  !VDF
+         CALL USTOP(' ')                                                !VDF
+        END IF                                                          !VDF
+       ENDIF                                                            !VDF
+     
 
 c-------process argument record for setting time                        ! DLT
       call mf2005_args_time(record,igrid)                               ! DLT
 
 C  -----SAVE POINTERS TO DATA AND RETURN.
-c      CALL SGWF2INS1PSV(IGRID)                                           ! DLT: instances
+c      CALL SGWF2INS1PSV(IGRID)                                         ! DLT: instances
       call timing_toc('MODFLOW','INIT')                                 ! DLT
       return
       end
@@ -245,7 +264,7 @@ c init
 c program
 
       do igrid=1,ninstance                                              ! DLT: instances
-      call sgwf2ins1pnt(igrid)                                           DLT: instances
+      call sgwf2ins1pnt(igrid)                                          ! DLT: instances
       call SGWF2BAS7PNT(IGRID)                                          ! DLT: instances
 
          ! check current time value                                     ! DLT: components
@@ -318,6 +337,10 @@ c SUB-Creep
           CALL GWF2SCR1TM(IGRID)
        END IF
 C SUB-Creep end
+      IF(IUNIT(IUVDF).GT.0) THEN
+          CALL VDF2AR(IUNIT(IUVDF),IGRID)
+          CALL VDF2IZ(IGRID)
+      ENDIF
 
       IF(IUNIT(IUHYD).GT.0) CALL GWF2HYD7BAS7AR(IUNIT(IUHYD),IGRID)
       IF(IUNIT(IUHYD).GT.0 .AND. IUNIT(IUIBS).GT.0)
@@ -626,6 +649,7 @@ c SUB-Creep
         IF(IUNIT(IUSCR).GT.0) CALL GWF2SCR7ST(KKPER,IGRID)
 c SUB-Creep end
 
+        IF(IUNIT(IUVDF).GT.0) CALL VDF2RPSS(KKPER,IUNIT(IUVDF),IGRID)   !VDF
 
 C7B-----READ AND PREPARE INFORMATION FOR STRESS PERIOD.
 C----------READ USING PACKAGE READ AND PREPARE MODULES.
@@ -688,7 +712,11 @@ c        DO 90 KSTP = 1, NSTP(KPER)
 C
 C7C1----CALCULATE TIME STEP LENGTH. SET HOLD=HNEW.
           CALL GWF2BAS7AD(KKPER,KKSTP,IGRID)
-          IF(IUNIT(IUCHD).GT.0) CALL GWF2CHD7AD(KKPER,IGRID)
+C--SEAWAT: UPDATE CONSTANT HEADS FROM CHD PACKAGE                       !VDF
+          IF(IUNIT(IUCHD).GT.0.AND.IUNIT(IUVDF).GT.0)                   !VDF
+     &    CALL VDF2CHD7AD(KKPER,IGRID)                                  !VDF
+          IF(IUNIT(IUCHD).GT.0.AND.IUNIT(IUVDF).EQ.0)                   !VDF
+     &    CALL GWF2CHD7AD(KKPER,IGRID)
           IF(IUNIT(IUBCF6).GT.0) CALL GWF2BCF7AD(KKPER,IGRID)
           IF(IUNIT(IURES).GT.0) CALL GWF2RES7AD(KKSTP,KKPER,IGRID)
           IF(IUNIT(IULPF).GT.0) CALL GWF2LPF7AD(KKPER,IGRID)
@@ -814,6 +842,8 @@ c =====
 
       use m_mf2005_main
       use m_mf2005_iu
+      USE VDFMODULE,   ONLY: NSWTCPL,PS,HSALT,
+     1                       RHOCR,RHOCC,RHOCV
 
       implicit none
 
@@ -847,8 +877,27 @@ C7C2----ITERATIVELY FORMULATE AND SOLVE THE FLOW EQUATIONS.
 c          DO 30 KITER = 1, MXITER
             KKITER = KITER
 C
-C7C2A---FORMULATE THE FINITE DIFFERENCE EQUATIONS.
+C7C2A---
             CALL GWF2BAS7FM(IGRID)
+C--SEAWAT: VARIABLE-DENSITY FM SUBROUTINES (IF VDF ACTIVE).
+             IF(IUNIT(IUVDF).GT.0) THEN                                 !VDF
+C--SEAWAT: UPDATE THE SALTHEAD ARRAY                                    !VDF
+             CALL VDF2HSALT()                                           !VDF
+             IF (IUNIT(IUBCF6).GT.0) CALL VDF2BCF7FM(KKITER,KKSTP,      !VDF
+     1                               KKPER,IGRID)                       !VDF
+             IF (IUNIT(IULPF).GT.0) CALL VDF2LPF7FM(KKITER,             !VDF
+     1                             KKSTP,KKPER,IGRID)                   !VDF
+             IF (IUNIT(IUHFB6).GT.0) CALL GWF2HFB7FM(IGRID) !no modifications for VDF
+             IF (IUNIT(IUWEL).GT.0) CALL VDF2WEL7FM(IGRID)              !VDF
+             IF (IUNIT(IUDRN).GT.0) CALL VDF2DRN7FM(IGRID)              !VDF
+             IF (IUNIT(IURIV).GT.0) CALL VDF2RIV7FM(IGRID)              !VDF
+             IF (IUNIT(IUEVT).GT.0) CALL VDF2EVT7FM(IGRID)              !VDF
+             IF (IUNIT(IUGHB).GT.0) CALL VDF2GHB7FM(IGRID)              !VDF
+             if(IUNIT(IUDXC).gt.0) call vdf2dxc1fm(igrid)               ! DLT: DXC added
+             IF (IUNIT(IURCH).GT.0) CALL VDF2RCH7FM(IGRID)              !VDF
+             CALL VDF2FM(IUNIT(IUBCF6),IUNIT(IULPF),IUNIT(IUHUF2))      !VDF
+C--SEAWAT: THE CONSTANT-DENSITY FM SUBROUTINES (FOR GWF PROCESS)
+      ELSE                                                              !VDF
             if(iunit(iupwt).gt.0) call gwf2pwt3fm(kkiter,kkper,igrid,
      1                                           iunit(iubcf6))         ! PWT3
             IF(IUNIT(IUBCF6).GT.0) CALL GWF2BCF7FM(KKITER,KKSTP,
@@ -915,6 +964,7 @@ c SUB-Creep
 c SUB-Creep
 
             if(IUNIT(IUANI).gt.0) call gwf2ani3fm(igrid)                ! ANI
+      ENDIF                                                             ! VDF         
 
       enddo                                                             ! DLT: instances
 C
@@ -928,8 +978,10 @@ c 2011/06/16 renamed from mf2005_solve.
 
       use m_mf2005_main
       use m_mf2005_iu
-      USE global, only : ichloride,con
-      
+      USE GLOBAL,      ONLY:HNEW
+      USE VDFMODULE,   ONLY: NSWTCPL,PS,HSALT,
+     1                       RHOCR,RHOCC,RHOCV
+
       implicit none
 
 c arguments
@@ -971,8 +1023,89 @@ c
       call SGWF2BAS7PNT(IGRID)                                                  ! DLT: instances
 
       kkiter=kiter                                                              ! DLT: instances
+!      write(*,*) kiter
 C7C2B---MAKE ONE CUT AT AN APPROXIMATE SOLUTION.
             IERR=0
+C--SEAWAT:IF(IUNIT(57).GT.0) PASS RHOCR, RHOCC, AND RHOCV
+             IF(IUNIT(IUVDF).GT.0) THEN                                 !VDF
+             IF (IUNIT(IUSIP).GT.0) THEN                                !VDF
+                   CALL SIP7PNT(IGRID)                                  !VDF
+                   CALL SIP7AP(HNEW,IBOUND,RHOCR,RHOCC,RHOCV,HCOF,RHS,  !VDF
+     1                   EL,FL,GL,                                      !VDF
+     2               V,W,HDCG,LRCH,NPARM,KKITER,HCLOSE,ACCL,ICNVG,      !VDF
+     3               KKSTP,KKPER,IPCALC,IPRSIP,MXITER,NSTP(KKPER),      !VDF
+     4               NCOL,NROW,NLAY,NODES,IOUT,0,IERR)                  !VDF
+            END IF                                                      !VDF
+            IF (IUNIT(IUDE4).GT.0) THEN                                 !VDF
+                   CALL DE47PNT(IGRID)                                  !VDF
+                   CALL DE47AP(HNEW,IBOUND,AU,AL,IUPPNT,IEQPNT,D4B,MXUP,!VDF
+     1               MXLOW,MXEQ,MXBW,RHOCR,RHOCC,RHOCV,HCOF,RHS,        !VDF
+     2               ACCLDE4,KITER,                                     !VDF
+     3               ITMX,MXITER,NITERDE4,HCLOSEDE4,IPRD4,ICNVG,NCOL,   !VDF
+     4               NROW,NLAY,IOUT,LRCHDE4,HDCGDE4,IFREQ,KKSTP,KKPER,  !VDF
+     5               DELT,NSTP(KKPER),ID4DIR,ID4DIM,MUTD4,              !VDF
+     6               DELTL,NBWL,NUPL,NLOWL,NLOW,NEQ,NUP,NBW,IERR)       !VDF
+            END IF                                                      !VDF
+            IF (IUNIT(IUPCG).GT.0) THEN                                 !VDF
+                   CALL PCG7PNT(IGRID)                                  !VDF
+                   CALL PCG7AP(HNEW,IBOUND,RHOCR,RHOCC,RHOCV,HCOF,RHS,  !VDF
+     1               VPCG,SS,P,CD,HCHG,LHCH,RCHG,LRCHPCG,KKITER,NITER,  !VDF
+     2               HCLOSEPCG,RCLOSEPCG,ICNVG,KKSTP,KKPER,IPRPCG,      !VDF
+     3               MXITER,ITER1,NPCOND,NBPOL,NSTP(KKPER),NCOL,NROW,   !VDF
+     4               NLAY,NODES,RELAXPCG,IOUT,MUTPCG,IT1,DAMPPCG,BUFF,  !VDF
+     5               HCSV,IERR,HPCG,DAMPPCGT,ISSFLG(KKPER),HDRY)        !VDF
+            END IF
+c            IF (IUNIT(IULMG).GT.0) THEN
+c              CALL LMG7PNT(IGRID)
+c              CALL LMG7AP(HNEW,IBOUND,CR,CC,CV,HCOF,RHS,A,IA,JA,U1,
+c     1           FRHS,IG,ISIZ1,ISIZ2,ISIZ3,ISIZ4,KKITER,BCLOSE,DAMPLMG,
+c     2           ICNVG,KKSTP,KKPER,MXITER,MXCYC,NCOL,NROW,NLAY,NODES,
+c     3           HNOFLO,IOUT,IOUTAMG,ICG,IADAMPLMG,DUPLMG,DLOWLMG)
+c            END IF
+            IF (IUNIT(42).GT.0) THEN                                    !VDF
+                   CALL GMG7PNT(IGRID)                                  !VDF
+                   CALL GMG7AP(HNEW,RHS,RHOCR,RHOCC,RHOCV,HCOF,HNOFLO,  !VDF
+     1                         IBOUND,IITER,MXITER,RCLOSEGMG,HCLOSEGMG, !VDF
+     2                         KKITER,KKSTP,KKPER,NCOL,NROW,NLAY,ICNVG, !VDF
+     3                         SITER,TSITER,DAMPGMG,IADAMPGMG,IOUTGMG,  !VDF
+     4                         IOUT,GMGID,                              !VDF
+     5                         IUNITMHC,DUP,DLOW,CHGLIMIT,              !VDF
+     6                         BIGHEADCHG,HNEWLAST)                     !VDF
+            ENDIF                                                       !VDF
+           IF (IUNIT(IUPKS).GT.0) THEN                                  !VDF
+                   CALL PKS7PNT(IGRID)                                  !VDF
+                   CALL PKS7AP(                                         !VDF
+     &                 HNEW,      IBOUND,      IACTCELL,  RHOCR,        !004 !VDF
+     &                 RHOCC,     RHOCV,       HCOF,      RHS,          !008 !VDF
+     &                 ICNVG,     NSTP(KKPER), KKSTP,     KKPER,        !012 !VDF
+     &                 MXITER,    KKITER,      NCOL,      NROW,         !016 !VDF
+     &                 NLAY,      NODES,       HNOFLO,    IOUT,         !020 !VDF
+     &                 ISOLVER,   NPC,         NCORESM,   NCORESV,      !024 !VDF
+     &                 ICNVGOPT,  IEPFACT,     NRPROC,    INNERIT,      !028 !VDF
+     &                 NITERC,    NNZC,        NIAC,      NIABCGS,      !032 !VDF
+     &                 NGMRES,    NREST,       NIAPC,     NJAPC,        !036 !VDF
+     &                 NNZAPC,    NIAPCM,      NJAPCM,    NIWC,         !040 !VDF
+     &                 NWC,       HCLOSEPKS,   RCLOSEPKS, ISSFLG(KKPER),!044 !VDF
+     &                 NDAMPPKS,  DAMPPKS,     DAMPTPKS,  HPKS,         !048 !VDF
+     &                 NRESUP,    RELAXPKS,    IFILL,     NLEVELS,      !052 !VDF
+     &                 DROPTOL,   IPKSO,       IPKSI,     PKST,         !056 !VDF
+     &                 PKSPCU,    PKSPCA,      IPRPKS,    MUTPKS,       !060 !VDF
+     &                 IUNITPKS,  PKSCLEN,     PKSIT,     PKSHMXLOC,    !064 !VDF
+     &                 PKSHMX,    PKSRMXLOC,   PKSRMX,    PKSL2NORM,    !068 !VDF
+     &                 PKSRL2NORM,NODEC,       BC,        XC,           !072 !VDF
+     &                 AC,        IAC,         JAC,       IXMAP,        !076 !VDF
+     &                 IORD,      NIARO,       NNZRO,     LORDER,       !080 !VDF
+     &                 IORDER,    IARO,        JARO,      ARO,          !084 !VDF
+     &                 APC,       IAPC,        JAPC,      IAPCM,        !088 !VDF
+     &                 JAPCM,     IWC,         WC,        DC,           !092 !VDF
+     &                 ZC,        PC,          QC,        VC,           !096 !VDF
+     &                 DTILC,     PHATC,       DHATC,     CSG,          !100 !VDF
+     &                 SNG,       SG,          YG,        HG,           !104 !VDF
+     &                 VG,        ISCL,        SCL,       SCLI,         !108 !VDF
+     &                 A0,        IA0,         JA0,       EXPLINSYS)    !112 !VDF
+            END IF
+C--SEAWAT:CONSTANT DENSITY, PASS CR, CC,AND CV            
+      ELSE                                                              !VDF
             IF (IUNIT(IUSIP).GT.0) THEN
                    CALL SIP7PNT(IGRID)
                    CALL SIP7AP(HNEW,IBOUND,CR,CC,CV,HCOF,RHS,EL,FL,GL,
@@ -998,6 +1131,13 @@ C7C2B---MAKE ONE CUT AT AN APPROXIMATE SOLUTION.
      4               NLAY,NODES,RELAXPCG,IOUT,MUTPCG,IT1,DAMPPCG,BUFF,
      5               HCSV,IERR,HPCG,DAMPPCGT,ISSFLG(KKPER),HDRY)
             END IF
+c            IF (IUNIT(IULMG).GT.0) THEN
+c              CALL LMG7PNT(IGRID)
+c              CALL LMG7AP(HNEW,IBOUND,CR,CC,CV,HCOF,RHS,A,IA,JA,U1,
+c     1           FRHS,IG,ISIZ1,ISIZ2,ISIZ3,ISIZ4,KKITER,BCLOSE,DAMPLMG,
+c     2           ICNVG,KKSTP,KKPER,MXITER,MXCYC,NCOL,NROW,NLAY,NODES,
+c     3           HNOFLO,IOUT,IOUTAMG,ICG,IADAMPLMG,DUPLMG,DLOWLMG)
+c            END IF
             IF (IUNIT(42).GT.0) THEN
                    CALL GMG7PNT(IGRID)
                    CALL GMG7AP(HNEW,RHS,CR,CC,CV,HCOF,HNOFLO,IBOUND,
@@ -1039,18 +1179,26 @@ C7C2B---MAKE ONE CUT AT AN APPROXIMATE SOLUTION.
      &                 SNG,       SG,          YG,        HG,           !104
      &                 VG,        ISCL,        SCL,       SCLI,         !108
      &                 A0,        IA0,         JA0,       EXPLINSYS)    !112
-            END IF          
+            END IF
+C--SEAWAT: ENDIF                                                        !VDF
+      ENDIF                                                             !VDF
+
+C--SEAWAT: UPDATE THE SALTHEAD ARRAY WITH THE NEW HEADS
+            IF(IUNIT(IUVDF).GT.0)                                       !VDF
+     +           CALL VDF2HSALT()                                       !VDF
+     
             IF(IERR.EQ.1) CALL USTOP(' ')
 
-!            !## call the appropriate subroutine with the concentration
-!            IF (ichloride.eq.1)CALL CORRECT_HEAD(HNEW,CON)
-
+C
 C7C2C---IF CONVERGENCE CRITERION HAS BEEN MET STOP ITERATING.
+c            IF (ICNVG.EQ.1) GOTO 33
             if (icnvg.ne.1) then
                solverConverged=.false.
             else
                solverConverged=.true.
             endif
+c  30      CONTINUE
+c          KITER = MXITER
 
            !## could be solved based upon waterbalance error, maximum number of iterations finished
            psolved=.false.
@@ -1141,8 +1289,13 @@ C
 C7C4----CALCULATE BUDGET TERMS. SAVE CELL-BY-CELL FLOW TERMS.
           MSUM = 1
           IF (IUNIT(IUBCF6).GT.0) THEN
-            CALL GWF2BCF7BDS(KKSTP,KKPER,IGRID)
-            CALL GWF2BCF7BDCH(KKSTP,KKPER,IGRID)
+            IF(IUNIT(IUVDF).GT.0) THEN
+              CALL VDF2BCF7BDS(KKSTP,KKPER,IGRID)
+              CALL VDF2BCF7BDCH(KKSTP,KKPER,IGRID)
+            ELSE
+             CALL GWF2BCF7BDS(KKSTP,KKPER,IGRID)
+             CALL GWF2BCF7BDCH(KKSTP,KKPER,IGRID)
+            ENDIF
             IBDRET=0
             IC1=1
             IC2=NCOL
@@ -1151,13 +1304,23 @@ C7C4----CALCULATE BUDGET TERMS. SAVE CELL-BY-CELL FLOW TERMS.
             IL1=1
             IL2=NLAY
             DO 37 IDIR = 1, 3
+             IF(IUNIT(IUVDF).GT.0) THEN              
+              CALL VDF2BCF7BDADJ(KKSTP,KKPER,IDIR,IBDRET,
+     1                          IC1,IC2,IR1,IR2,IL1,IL2,IGRID)
+             ELSE
               CALL GWF2BCF7BDADJ(KKSTP,KKPER,IDIR,IBDRET,
      1                          IC1,IC2,IR1,IR2,IL1,IL2,IGRID)
+             ENDIF
    37       CONTINUE
           ENDIF
-          IF(IUNIT(IULPF).GT.0) THEN
+          IF(IUNIT(IUVDF).GT.0) THEN
+           IF(IUNIT(IUVDF).GT.0) THEN            
+            CALL VDF2LPF7BDS(KKSTP,KKPER,IGRID)
+            CALL VDF2LPF7BDCH(KKSTP,KKPER,IGRID)
+           ELSE
             CALL GWF2LPF7BDS(KKSTP,KKPER,IGRID)
             CALL GWF2LPF7BDCH(KKSTP,KKPER,IGRID)
+           ENDIF
             IBDRET=0
             IC1=1
             IC2=NCOL
@@ -1166,8 +1329,13 @@ C7C4----CALCULATE BUDGET TERMS. SAVE CELL-BY-CELL FLOW TERMS.
             IL1=1
             IL2=NLAY
             DO 157 IDIR=1,3
+             IF(IUNIT(IUVDF).GT.0) THEN    
               CALL GWF2LPF7BDADJ(KKSTP,KKPER,IDIR,IBDRET,
      &                        IC1,IC2,IR1,IR2,IL1,IL2,IGRID)
+             ELSE
+              CALL VDF2LPF7BDADJ(KKSTP,KKPER,IDIR,IBDRET,
+     &                        IC1,IC2,IR1,IR2,IL1,IL2,IGRID)
+             ENDIF
 157         CONTINUE
           ENDIF
           IF(IUNIT(IUHUF2).GT.0) THEN
@@ -1185,24 +1353,47 @@ C7C4----CALCULATE BUDGET TERMS. SAVE CELL-BY-CELL FLOW TERMS.
      &                      IC1,IC2,IR1,IR2,IL1,IL2,IUNIT(IULVDA),IGRID)
 159         CONTINUE
           ENDIF
-          IF(IUNIT(IUWEL).GT.0) CALL GWF2WEL7BD(KKSTP,KKPER,IGRID)
-          IF(IUNIT(IUDRN).GT.0) CALL GWF2DRN7BD(KKSTP,KKPER,IGRID)
-          IF(IUNIT(IURIV).GT.0) CALL GWF2RIV7BD(KKSTP,KKPER,IGRID)
+          IF(IUNIT(IUWEL).GT.0) THEN
+              IF(IUNIT(IUVDF).GT.0)CALL VDF2WEL7BD(KKSTP,KKPER,IGRID)
+              IF(IUNIT(IUVDF).EQ.0)CALL GWF2WEL7BD(KKSTP,KKPER,IGRID)
+          ENDIF
+          IF(IUNIT(IUDRN).GT.0) THEN
+             IF(IUNIT(IUVDF).GT.0)CALL VDF2DRN7BD(KKSTP,KKPER,IGRID)
+             IF(IUNIT(IUVDF).EQ.0)CALL GWF2DRN7BD(KKSTP,KKPER,IGRID)
+          ENDIF
+          IF(IUNIT(IURIV).GT.0) THEN
+             IF(IUNIT(IUVDF).GT.0)CALL VDF2RIV7BD(KKSTP,KKPER,IGRID)
+             IF(IUNIT(IUVDF).EQ.0)CALL GWF2RIV7BD(KKSTP,KKPER,IGRID)
+          ENDIF            
           IF(IUNIT(IUEVT).GT.0) THEN
-             IF(IUNIT(IULAK).GT.0.AND.NEVTOP.EQ.3) CALL GWF2LAK7ST(
+             IF(IUNIT(IUVDF).GT.0)THEN
+                 CALL VDF2EVT7BD(KKSTP,KKPER,IGRID)
+             ELSE
+              IF(IUNIT(IULAK).GT.0.AND.NEVTOP.EQ.3) CALL GWF2LAK7ST(
      1                                                     0,IGRID)
-             CALL GWF2EVT7BD(KKSTP,KKPER,IGRID)
-             IF(IUNIT(IULAK).GT.0.AND.NEVTOP.EQ.3) CALL GWF2LAK7ST(
-     1                                                     1,IGRID)
+              CALL GWF2EVT7BD(KKSTP,KKPER,IGRID)
+              IF(IUNIT(IULAK).GT.0.AND.NEVTOP.EQ.3) CALL GWF2LAK7ST(
+     1                                                      1,IGRID)
+           ENDIF
           END IF
-          IF(IUNIT(IUGHB).GT.0) CALL GWF2GHB7BD(KKSTP,KKPER,IGRID)
-          if(IUNIT(IUDXC).gt.0) call gwf2dxc1bd(kkstp,kkper,igrid)
+          IF(IUNIT(IUGHB).GT.0) THEN
+              IF(IUNIT(IUVDF).GT.0)CALL VDF2GHB7BD(KKSTP,KKPER,IGRID)
+              IF(IUNIT(IUVDF).EQ.0)CALL GWF2GHB7BD(KKSTP,KKPER,IGRID)
+          ENDIF   
+          if(IUNIT(IUDXC).gt.0) THEN
+              IF(IUNIT(IUVDF).GT.0)call vdf2dxc1bd(kkstp,kkper,igrid)
+              IF(IUNIT(IUVDF).EQ.0)call gwf2dxc1bd(kkstp,kkper,igrid)
+          ENDIF
           IF(IUNIT(IURCH).GT.0) THEN
-             IF(IUNIT(IULAK).GT.0.AND.NRCHOP.EQ.3) CALL GWF2LAK7ST(
-     1                                                     0,IGRID)
-             CALL GWF2RCH7BD(KKSTP,KKPER,IGRID)
-             IF(IUNIT(IULAK).GT.0.AND.NRCHOP.EQ.3) CALL GWF2LAK7ST(
-     1                                                     1,IGRID)
+             IF(IUNIT(IUVDF).GT.0)THEN
+                 CALL VDF2RCH7BD(KKSTP,KKPER,IGRID)
+             ELSE
+              IF(IUNIT(IULAK).GT.0.AND.NRCHOP.EQ.3) CALL GWF2LAK7ST(
+     1                                                      0,IGRID)
+              CALL GWF2RCH7BD(KKSTP,KKPER,IGRID)
+              IF(IUNIT(IULAK).GT.0.AND.NRCHOP.EQ.3) CALL GWF2LAK7ST(
+     1                                                      1,IGRID)
+             ENDIF
           END IF
           IF(IUNIT(IUFHB).GT.0) CALL GWF2FHB7BD(KKSTP,KKPER,IGRID)
           IF(IUNIT(IURES).GT.0) CALL GWF2RES7BD(KKSTP,KKPER,IGRID)
@@ -1254,7 +1445,11 @@ C  Observation and hydrograph simulated equivalents
      1                              CALL GWF2HYD7SFR7SE(1,IGRID)
 C
 C7C5---PRINT AND/OR SAVE DATA.
-          CALL GWF2BAS7OT(KKSTP,KKPER,ICNVG,1,IGRID,BUDPERC)
+          IF(IUNIT(IUVDF).EQ.0)THEN
+              CALL GWF2BAS7OT(KKSTP,KKPER,ICNVG,1,IGRID,BUDPERC)
+          ELSE
+              CALL VDF2BAS7OT(KKSTP,KKPER,ICNVG,1,IGRID,BUDPERC)
+          ENDIF
           IF(IUNIT(IUIBS).GT.0) CALL GWF2IBS7OT(KKSTP,KKPER,
      1                            IUNIT(IUIBS),IGRID)
           IF(IUNIT(IUHUF2).GT.0)THEN
@@ -3353,19 +3548,13 @@ c     if (nxch.le.0) ok = .false.
               return
            end if
            ilay = ts(jj)%stvalue(i)%ilay
-           !## probably replaced in previous iteration - do it again
-           if(ilay.lt.0)ilay=0
            if(iipf.gt.0)then
               !## assign appropriate model layer
               if(ilay.eq.0)then
                do jlay=1,nlay
                 if(real(hnew(icol,irow,jlay)).ne.hnoflo)exit
                enddo
-               h=hnoflo
-               if(jlay.le.nlay)then
-                h=real(hnew(icol,irow,jlay))
-                ilay=jlay
-               endif
+               h=hnoflo; if(jlay.le.nlay)h=real(hnew(icol,irow,jlay))
               else
                h=real(hnew(icol,irow,ilay))
               endif
@@ -3374,10 +3563,6 @@ c     if (nxch.le.0) ok = .false.
               y = ts(jj)%stvalue(i)%y
               !## interpolate heads
               h=mf2005_tserie1hmean(x,y,icol,irow,ilay)
-           endif
-           !## convert to a negative layer number (if replaced)
-           if(ilay.ne.ts(jj)%stvalue(i)%ilay)then
-            ts(jj)%stvalue(i)%ilay=-ilay
            endif
            ts(jj)%stvalue(i)%c = h ! set computed value
         end do

@@ -5272,6 +5272,9 @@ SOLLOOP: DO I=1,NSOLLIST
  NSPF=I-1
  NSOLLIST=NSPF
 
+ !## read, process and stick bitmaps to cross-sections
+ IF(IMOD3D_SOL_BMP())THEN; ENDIF
+
 ! !## deallocate memory needed to compute profile
 ! CALL PROFILE_DEALLOCATE(); DEALLOCATE(ISEL_IDF,IACT,DTOL,ICLEAN,XEXCLUDE,IEXIST)
 ! CALL SOLIDDEALLOCATESLD()

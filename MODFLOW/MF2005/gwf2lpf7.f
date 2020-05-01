@@ -83,7 +83,7 @@ C        SPECIFICATIONS:
 C     ------------------------------------------------------------------
       USE GLOBAL,      ONLY:NCOL,NROW,NLAY,ITRSS,LAYHDT,LAYHDS,LAYCBD,
      1                      NCNFBD,IBOUND,BUFF,BOTM,NBOTM,DELR,DELC,IOUT
-     2                      ,cc,cv,iunit,CON,ICHLORIDE,
+     2                      ,cc,cv,iunit,
      3                      lbotm,                                      ! DLT
      4                      kdsv,                                       ! ILAY_ZERO
      5                      IACTCELL                                    ! PKS
@@ -125,7 +125,7 @@ C
 C     ------------------------------------------------------------------
 C1------Allocate scalar data.
       ALLOCATE(ILPFCB,IWDFLG,IWETIT,IHDWET)
-      ALLOCATE(IMINKD,IMINC,MINKD,MINC,ICHLORIDE)                       ! DLT
+      ALLOCATE(IMINKD,IMINC,MINKD,MINC)                       ! DLT
       ALLOCATE(ISFAC,ICONCV,ITHFLG,NOCVCO,NOVFC)
       ALLOCATE(WETFCT)
       ZERO=0.
@@ -363,11 +363,6 @@ C5------ALLOCATE MEMORY FOR ARRAYS.
       ELSE
          ALLOCATE(WETDRY(1,1,1))
       END IF
-      IF(ICHLORIDE.EQ.1) THEN
-         ALLOCATE(CON(NCOL,NROW,NLAY))
-      ELSE
-         ALLOCATE(CON(1,1,1))
-      END IF
 C
 C6------READ PARAMETER DEFINITIONS
       NPHK=0
@@ -539,10 +534,6 @@ C7G-----(LAYWET NOT 0).
            END DO                                                       ! PKS
          END DO                                                         ! PKS
       END IF
-
-      IF(ICHLORIDE.EQ.1) THEN
-         CALL U2DREL(CON(:,:,KK),ANAME(10),NROW,NCOL,KK,IN,IOUT)
-      ENDIF
 
   200 CONTINUE
 C

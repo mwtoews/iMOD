@@ -52,7 +52,7 @@ c   If not, see <http://water.usgs.gov/software/help/notice/>.
       INTEGER, PARAMETER :: IULMT6 = 49, IUMNW2 = 50, IUMNWI = 51
       INTEGER, PARAMETER :: IUMNW1 = 52, IUKDEP = 53, IUSUB  = 54
       INTEGER, PARAMETER :: IUUZF  = 55, IUGWM  = 56, IUSWT  = 57
-      INTEGER, PARAMETER :: IUCFP  = 58, IUPWT  = 59
+      INTEGER, PARAMETER :: IUCFP  = 58, IUPWT  = 59, IUVDF  = 60
       INTEGER, PARAMETER ::              IUSCR  = 62, IUNRS  = 63
       INTEGER, PARAMETER :: IUDXC  = 64, IUANI  = 65, IUPKS  = 66
       INTEGER, PARAMETER ::              IUMET  = 68
@@ -64,7 +64,7 @@ c   If not, see <http://water.usgs.gov/software/help/notice/>.
         PARAMETER(NIUNIT=100)
         INTEGER, SAVE, POINTER    ::NCOL,NROW,NLAY,NPER,NBOTM,NCNFBD
         INTEGER, SAVE, POINTER    ::ITMUNI,LENUNI,IXSEC,ITRSS,INBAS
-        INTEGER, SAVE, POINTER    ::IFREFM,NODES,IOUT,MXITER,ICHLORIDE
+        INTEGER, SAVE, POINTER    ::IFREFM,NODES,IOUT,MXITER
         INTEGER, SAVE,    DIMENSION(:),     POINTER ::IUNIT(:)
         DOUBLE PRECISION, SAVE, DIMENSION(:,:,:), POINTER ::HNEW
         INTEGER, SAVE,    DIMENSION(:),     POINTER ::LBOTM
@@ -79,7 +79,6 @@ c   If not, see <http://water.usgs.gov/software/help/notice/>.
         REAL(KIND=8),SAVE,    DIMENSION(:), POINTER ::DELR
         REAL(KIND=8),SAVE,    DIMENSION(:), POINTER ::DELC
         REAL,    SAVE,    DIMENSION(:,:,:), POINTER ::BOTM
-        REAL,    SAVE,    DIMENSION(:,:,:), POINTER ::CON
         REAL,    SAVE,    DIMENSION(:,:,:), POINTER ::HOLD
         INTEGER, SAVE,    DIMENSION(:,:,:), POINTER ::IBOUND
         REAL,    SAVE,    DIMENSION(:,:,:), POINTER ::CR
@@ -95,7 +94,7 @@ c   If not, see <http://water.usgs.gov/software/help/notice/>.
       TYPE GLOBALTYPE
         INTEGER,POINTER    :: NCOL,NROW,NLAY,NPER,NBOTM,NCNFBD
         INTEGER,POINTER    :: ITMUNI,LENUNI,IXSEC,ITRSS,INBAS
-        INTEGER,POINTER    :: IFREFM,NODES,IOUT,MXITER,ICHLORIDE
+        INTEGER,POINTER    :: IFREFM,NODES,IOUT,MXITER
         INTEGER,    DIMENSION(:),     POINTER ::IUNIT
         REAL(KIND=8),DIMENSION(:,:,:), POINTER ::HNEW
         INTEGER,    DIMENSION(:),     POINTER ::LBOTM
@@ -103,19 +102,18 @@ c   If not, see <http://water.usgs.gov/software/help/notice/>.
         INTEGER,    DIMENSION(:),     POINTER ::LAYHDT
         INTEGER,    DIMENSION(:),     POINTER ::LAYHDS
         REAL,       DIMENSION(:),     POINTER ::PERLEN
-        character(len=14),dimension(:),pointer ::npertxt
+        CHARACTER(LEN=14),DIMENSION(:),POINTER :: NPERTXT
         INTEGER,    DIMENSION(:),     POINTER ::NSTP
         REAL,       DIMENSION(:),     POINTER ::TSMULT
         INTEGER,    DIMENSION(:),     POINTER ::ISSFLG
         REAL(KIND=8),DIMENSION(:),    POINTER ::DELR
         REAL(KIND=8),DIMENSION(:),    POINTER ::DELC
         REAL,       DIMENSION(:,:,:), POINTER ::BOTM
-        REAL,       DIMENSION(:,:,:), POINTER ::CON
         REAL,       DIMENSION(:,:,:), POINTER ::HOLD
         INTEGER,    DIMENSION(:,:,:), POINTER ::IBOUND
         REAL,       DIMENSION(:,:,:), POINTER ::CR
         REAL,       DIMENSION(:,:,:), POINTER ::CC
-        real,       dimension(:,:,:), pointer ::kdsv                    ! PWT
+        REAL,       DIMENSION(:,:,:), POINTER ::KDSV                    ! PWT
         REAL,       DIMENSION(:,:,:), POINTER ::CV
         REAL,       DIMENSION(:,:,:), POINTER ::HCOF
         REAL,       DIMENSION(:,:,:), POINTER ::RHS

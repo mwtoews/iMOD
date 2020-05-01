@@ -631,6 +631,7 @@ C     ------------------------------------------------------------------
       USE GLOBAL,      ONLY:ITMUNI,IOUT,NCOL,NROW,NLAY,HNEW,STRT,DDREF
       USE GWFBASMODULE,ONLY:DELT,PERTIM,TOTIM,IHDDFL,IBUDFL,
      1                      MSUM,VBVL,VBNM,IDDREF
+      USE VDFMODULE,   ONLY: HSALT
 C     ------------------------------------------------------------------
 C
       CALL SGWF2BAS7PNT(IGRID)
@@ -654,6 +655,7 @@ C2------IF ITERATIVE PROCEDURE FAILED TO CONVERGE PRINT MESSAGE
      1 '****FAILED TO MEET SOLVER CONVERGENCE CRITERIA IN TIME STEP',
      2   I3,' OF STRESS PERIOD ',I4,'****')
          IPFLG=1
+         IHDDFL=1                                              !JV
       END IF
 C
 C3------IF HEAD AND DRAWDOWN FLAG (IHDDFL) IS SET WRITE HEAD,
@@ -2506,10 +2508,6 @@ C
      1           DEALLOCATE(GLOBALDAT(IGRID)%DDREF)
         IF(.NOT.ASSOCIATED(IACTCELL))                                   ! PKS
      1           DEALLOCATE(GLOBALDAT(IGRID)%IACTCELL)                  ! PKS
-        IF(ASSOCIATED(GLOBALDAT(IGRID)%ichloride))
-     1           DEALLOCATE(GLOBALDAT(IGRID)%ichloride)
-        IF(ASSOCIATED(GLOBALDAT(IGRID)%con))
-     1           DEALLOCATE(GLOBALDAT(IGRID)%con)
 C
         DEALLOCATE(ICLSUM,IPSUM,INAMLOC,NMLTAR,NZONAR,NPVAL)
         DEALLOCATE (PARAMDAT(IGRID)%B)
@@ -2608,8 +2606,6 @@ C
         STRT=>GLOBALDAT(IGRID)%STRT
         DDREF=>GLOBALDAT(IGRID)%DDREF
         IACTCELL=>GLOBALDAT(IGRID)%IACTCELL
-        ichloride=>GLOBALDAT(IGRID)%ichloride
-        con=>GLOBALDAT(IGRID)%con
 C
         ICLSUM=>PARAMDAT(IGRID)%ICLSUM
         IPSUM=>PARAMDAT(IGRID)%IPSUM
@@ -2714,8 +2710,6 @@ C
         GLOBALDAT(IGRID)%STRT=>STRT
         GLOBALDAT(IGRID)%DDREF=>DDREF
         GLOBALDAT(IGRID)%IACTCELL=>IACTCELL
-        GLOBALDAT(IGRID)%ichloride=>ichloride
-        GLOBALDAT(IGRID)%con=>con
 C
         PARAMDAT(IGRID)%ICLSUM=>ICLSUM
         PARAMDAT(IGRID)%IPSUM=>IPSUM

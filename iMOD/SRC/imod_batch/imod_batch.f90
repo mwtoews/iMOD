@@ -8578,33 +8578,220 @@ CONTAINS
  XP(3)=MAXVAL(XP(5:N)); YP(3)=MAXVAL(YP(5:N))
  XP(4)=MAXVAL(XP(5:N)); YP(4)=MINVAL(YP(5:N))
  
- CALL UTL_TRIANGULATION(XP,YP,NT)
-
- !IPF(3)%NROW=NT; IPF(3)%NCOL=2; IPF(3)%FNAME=IPFPPS
- !ALLOCATE(IPF(3)%ATTRIB(2),IPF(3)%INFO(IPF(3)%NCOL,IPF(3)%NROW))
- !IPF(3)%ATTRIB(1)='X_PILOTPOINT'; IPF(3)%ATTRIB(2)='Y_PILOTPOINT'
- !DO I=1,NT
- ! X=XP(TRI(I)%P1)+XP(TRI(I)%P2)+XP(TRI(I)%P3)
- ! Y=YP(TRI(I)%P1)+YP(TRI(I)%P2)+YP(TRI(I)%P3)
- ! WRITE(IPF(3)%INFO(1,I),'(F15.3)') X/3.0D0
- ! WRITE(IPF(3)%INFO(2,I),'(F15.3)') Y/3.0D0
- !ENDDO
- !IF(.NOT.IPFWRITE(3))STOP
- !
- !!## plot triangles
- !JU=UTL_GETUNIT(); OPEN(JU,FILE=IPFPPS(:INDEX(IPFPPS,'.',.TRUE.)-1)//'.GEN',STATUS='UNKNOWN',ACTION='WRITE')
- !DO I=1,NT
- ! WRITE(JU,'(I10)') I
- ! WRITE(JU,'(2F15.3)') XP(TRI(I)%P1),YP(TRI(I)%P1)
- ! WRITE(JU,'(2F15.3)') XP(TRI(I)%P2),YP(TRI(I)%P2)
- ! WRITE(JU,'(2F15.3)') XP(TRI(I)%P3),YP(TRI(I)%P3)
- ! WRITE(JU,'(2F15.3)') XP(TRI(I)%P1),YP(TRI(I)%P1)
- ! WRITE(JU,'(A)') 'END'
- !ENDDO
- !WRITE(JU,'(A)') 'END'
- !CLOSE(JU)
+ CALL UTL_TRIANGULATION(XP,YP,NT,IPFPPS)
  
  END SUBROUTINE IMODBATH_CREATEPILOTPOINTS_IPF
+ 
+ !###======================================================================
+ SUBROUTINE UTL_TRIANGULATION(XP,YP,NT,IPFPPS)
+ !###======================================================================
+ IMPLICIT NONE
+ INTEGER,INTENT(OUT) :: NT
+ CHARACTER(LEN=*),INTENT(IN) :: IPFPPS
+ REAL(KIND=DP_KIND),INTENT(IN),DIMENSION(:) :: XP,YP
+ TYPE TRIOBJ
+  INTEGER,DIMENSION(3) :: IP=0 !## reference to point for triangles
+ END TYPE TRIOBJ
+ TYPE(TRIOBJ),DIMENSION(:),ALLOCATABLE :: TRI
+ INTEGER :: I,J,K,NP,IP,JP,JT,IT,P1,P2,P3,ID,IPT,JU
+ REAL(KIND=DP_KIND) :: D,MAXD,X,Y
+ INTEGER,DIMENSION(3) :: PP
+ INTEGER,DIMENSION(2) :: SP
+ 
+ NP=SIZE(XP)
+ NT=SIZE(TRI)
+
+ ALLOCATE(TRI(2*NP))
+
+ !## apply clusters
+ !DO IP=5,NP
+ ! !## discard point that are too near
+ ! D=UTL_DIST(XP(1),YP(1),XP(IP),YP(IP))
+ ! IF(D.GT.MD)EXIT
+ !ENDDO
+ 
+ !## construct first four triangles, with first point 
+ TRI(1)%IP(1)=1; TRI(1)%IP(2)=2; TRI(1)%IP(3)=5
+ TRI(2)%IP(1)=2; TRI(2)%IP(2)=3; TRI(2)%IP(3)=5
+ TRI(3)%IP(1)=3; TRI(3)%IP(2)=4; TRI(3)%IP(3)=5
+ TRI(4)%IP(1)=4; TRI(4)%IP(2)=1; TRI(4)%IP(3)=5
+ 
+ !## start with these four triangles
+ NT=4
+ 
+ !## add all remaining points
+ DO IP=6,NP
+ 
+  !## find out in what triangle current point is
+  DO IT=1,NT
+   P1=TRI(IT)%IP(1); P2=TRI(IT)%IP(2); P3=TRI(IT)%IP(3)
+   IPT=UTL_POINT_IN_TRIANGLE((/XP(P1),YP(P1)/),(/XP(P2),YP(P2)/),(/XP(P3),YP(P3)/),(/XP(IP),YP(IP)/))
+   IF(IPT.NE.0)EXIT
+  ENDDO
+
+  !## skip this point as it is on a point of an existing triangle
+  IF(IPT.EQ.-1)CYCLE
+  
+  !## not in any triangle - error
+  IF(IT.GT.NT)THEN; WRITE(*,'(/A/)') 'CURRENT POINT NOT IN ANY TRIANGLE'; STOP; ENDIF
+
+  !## determine most far point of selected triangle
+  PP(1)=TRI(IT)%IP(1); PP(2)=TRI(IT)%IP(2); PP(3)=TRI(IT)%IP(3)
+  ID=0; MAXD=0.0D0; DO JP=1,3
+   D=UTL_DIST(XP(PP(JP)),YP(PP(JP)),XP(IP),YP(IP))
+   IF(D.GT.MAXD)THEN; MAXD=D; ID=PP(JP); ENDIF
+  ENDDO
+  
+  !## not in any triangle - error
+  IF(ID.EQ.0)THEN; WRITE(*,'(/A/)') 'NO FAR POINT FOUND FOR SELECTED TRIANGLE'; STOP; ENDIF
+
+  !## select the two others to define the segment to be adjusted
+  I=1; DO JP=1,3; IF(ID.NE.PP(JP))THEN; SP(I)=PP(JP); I=I+1; ENDIF; ENDDO
+
+  !## process (split) each triangle that shares those two points (need to be max. 2)
+  IT=0; DO
+   IT=IT+1; IF(IT.GE.NT)EXIT
+   !## found triangle to be splitted
+   K=0; DO J=1,3
+    IF(TRI(IT)%IP(J).EQ.SP(1).OR.TRI(IT)%IP(J).EQ.SP(2))K=K+1
+   ENDDO
+   IF(K.EQ.2)THEN
+    !## modify current triangle with sp(1)
+    DO I=1,3
+     !## find third point
+     IF(TRI(IT)%IP(I).NE.SP(1).AND.TRI(IT)%IP(I).NE.SP(2))THEN
+      J=I+1; IF(J.GT.3)J=1; TRI(IT)%IP(J)=SP(1)
+      J=J+1; IF(J.GT.3)J=1; TRI(IT)%IP(J)=IP
+      EXIT
+     ENDIF
+    ENDDO
+    !## add another triangle
+    NT=NT+1
+    TRI(NT)%IP(1)=TRI(IT)%IP(I)
+    TRI(NT)%IP(2)=SP(2)
+    TRI(NT)%IP(3)=IP
+   ENDIF
+  ENDDO
+  
+ ENDDO
+ 
+ !## plot triangles
+ JU=UTL_GETUNIT(); OPEN(JU,FILE=IPFPPS(:INDEX(IPFPPS,'.',.TRUE.)-1)//'.GEN',STATUS='UNKNOWN',ACTION='WRITE')
+ DO I=1,NT
+  WRITE(JU,'(I10)') I
+  WRITE(JU,'(2F15.3)') XP(TRI(I)%IP(1)),YP(TRI(I)%IP(1))
+  WRITE(JU,'(2F15.3)') XP(TRI(I)%IP(2)),YP(TRI(I)%IP(2))
+  WRITE(JU,'(2F15.3)') XP(TRI(I)%IP(3)),YP(TRI(I)%IP(3))
+  WRITE(JU,'(2F15.3)') XP(TRI(I)%IP(1)),YP(TRI(I)%IP(1))
+  WRITE(JU,'(A)') 'END'
+ ENDDO
+ WRITE(JU,'(A)') 'END'
+ CLOSE(JU)
+
+ !## plot points of triangles
+ JU=UTL_GETUNIT(); OPEN(JU,FILE=IPFPPS(:INDEX(IPFPPS,'.',.TRUE.)-1)//'_TRIANGLES.IPF',STATUS='UNKNOWN',ACTION='WRITE')
+ WRITE(JU,*) NT*3; WRITE(JU,'(A)') '2'; WRITE(JU,'(A)') 'X'; WRITE(JU,'(A)') 'Y'; WRITE(JU,'(A)') '0,TXT'
+ DO I=1,NT
+  DO J=1,3
+   WRITE(JU,*) XP(TRI(I)%IP(J)),YP(TRI(I)%IP(J))
+  ENDDO
+ ENDDO
+ CLOSE(JU)
+ 
+ !## plot points of triangles
+ JU=UTL_GETUNIT(); OPEN(JU,FILE=IPFPPS(:INDEX(IPFPPS,'.',.TRUE.)-1)//'_DELAUNEY.IPF',STATUS='UNKNOWN',ACTION='WRITE')
+ WRITE(JU,*) NT; WRITE(JU,'(A)') '2'; WRITE(JU,'(A)') 'X'; WRITE(JU,'(A)') 'Y'; WRITE(JU,'(A)') '0,TXT'
+ DO I=1,NT
+  CALL TRIANGLE_CIRCUMCIRCLE((/XP(TRI(I)%IP(1)),YP(TRI(I)%IP(1)), &
+                               XP(TRI(I)%IP(2)),YP(TRI(I)%IP(2)), &
+                               XP(TRI(I)%IP(3)),YP(TRI(I)%IP(3))/),X,Y)
+!  X=XP(TRI(I)%IP(1))+XP(TRI(I)%IP(2))+XP(TRI(I)%IP(3)); X=X/3.0D0
+!  Y=YP(TRI(I)%IP(1))+YP(TRI(I)%IP(2))+YP(TRI(I)%IP(3)); Y=Y/3.0D0
+  WRITE(JU,*) X,Y
+ ENDDO
+ CLOSE(JU)
+
+ DEALLOCATE(TRI)
+ 
+ END SUBROUTINE UTL_TRIANGULATION
+
+ !###======================================================================
+ SUBROUTINE TRIANGLE_CIRCUMCIRCLE(T,XC,YC)
+ !###======================================================================
+ IMPLICIT NONE
+  REAL(KIND=DP_KIND),INTENT(IN),DIMENSION(2,3) :: T
+  REAL(KIND=DP_KIND),INTENT(OUT) :: XC,YC
+  REAL(KIND=DP_KIND) :: A,B,BOT,C,DET,R
+  REAL(KIND=DP_KIND),DIMENSION(2) :: F,TOP
+
+  !## circumradius
+  A=SQRT((T(1,2)-T(1,1))**2.0D0+(T(2,2)-T(2,1))**2.0D0)
+  B=SQRT((T(1,3)-T(1,2))**2.0D0+(T(2,3)-T(2,2))**2.0D0)
+  C=SQRT((T(1,1)-T(1,3))**2.0D0+(T(2,1)-T(2,3))**2.0D0)
+
+  BOT=(A+B+C)*(-A+B+C)*(A-B+C)*(A+B-C)
+
+  IF(BOT.LE.0.0D0)THEN
+   R=-1.0D0
+   XC=0.0D0
+   YC=0.0D0
+   RETURN
+  ENDIF
+
+  R=A*B*C/SQRT(BOT)
+
+  !## circumcenter.
+  F(1)=(T(1,2)-T(1,1))**2+(T(2,2)-T(2,1))**2.0D0
+  F(2)=(T(1,3)-T(1,1))**2+(T(2,3)-T(2,1))**2.0D0
+
+  TOP(1)= (T(2,3)-T(2,1))*F(1)-(T(2,2)-T(2,1))*F(2)
+  TOP(2)=-(T(1,3)-T(1,1))*F(1)+(T(1,2)-T(1,1))*F(2)
+
+  DET=(T(2,3)-T(2,1))*(T(1,2)-T(1,1)) &
+     -(T(2,2)-T(2,1))*(T(1,3)-T(1,1))
+
+  XC=T(1,1)+0.5D+00*TOP(1)/DET
+  YC=T(2,1)+0.5D+00*TOP(2)/DET
+!  PC(1:2)=T(1:2,1)+0.5D+00*TOP(1:2)/DET
+
+ END SUBROUTINE TRIANGLE_CIRCUMCIRCLE
+ 
+ !###======================================================================
+ INTEGER FUNCTION UTL_POINT_IN_TRIANGLE(A,B,C,P)
+ !###======================================================================
+ IMPLICIT NONE
+ REAL(KIND=DP_KIND),DIMENSION(2) :: A,B,C,P
+ REAL(KIND=DP_KIND) :: X,Y,Z
+ 
+ UTL_POINT_IN_TRIANGLE=-1
+ 
+ !## check whether points of triangle equal to point p
+ IF(SUM(P-A).EQ.0.0D0)RETURN
+ IF(SUM(P-B).EQ.0.0D0)RETURN
+ IF(SUM(P-C).EQ.0.0D0)RETURN
+ 
+ UTL_POINT_IN_TRIANGLE=0
+
+ Z= UTL_DETERMINANT(A,B)+UTL_DETERMINANT(B,C)+UTL_DETERMINANT(C,A)
+ IF(Z.EQ.0.0D0)STOP 'THIS IS NOT A TRIANGLE'
+ X=(UTL_DETERMINANT(A,B)+UTL_DETERMINANT(B,P)+UTL_DETERMINANT(P,A))/Z
+ Y=(UTL_DETERMINANT(C,A)+UTL_DETERMINANT(A,P)+UTL_DETERMINANT(P,C))/Z
+ IF(X+Y.LT.1.0D0)THEN
+  IF(X.GT.0.0D0.AND.X.LT.1.0D0.AND. &
+     Y.GT.0.0D0.AND.Y.LT.1.0D0)UTL_POINT_IN_TRIANGLE=1
+ ENDIF
+ 
+ END FUNCTION UTL_POINT_IN_TRIANGLE
+
+ !###======================================================================
+ REAL(KIND=DP_KIND) FUNCTION UTL_DETERMINANT(A,B)
+ !###======================================================================
+ IMPLICIT NONE
+ REAL(KIND=DP_KIND),INTENT(IN),DIMENSION(2) :: A,B
+ 
+ UTL_DETERMINANT=A(1)*B(2)-A(2)*B(1)
+
+ END FUNCTION UTL_DETERMINANT
  
  !###======================================================================
  SUBROUTINE IMODBATH_CREATEPILOTPOINTS()

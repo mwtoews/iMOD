@@ -74,11 +74,10 @@ C
 C        SPECIFICATIONS:
 C     ------------------------------------------------------------------
       USE GLOBAL,      ONLY:IOUT,NCOL,NROW,NLAY,ITRSS,LAYHDT,LAYHDS,
-     1                      CC,CV,IFREFM,CON,
+     1                      CC,CV,IFREFM,
      1                      iunit,                                      ! ILAY_ZERO
      1                      kdsv,                                       ! ILAY_ZERO
-     1                      IACTCELL,                                   ! PKS
-     1                      ichloride
+     1                      IACTCELL                                    ! PKS
       USE GWFBASMODULE,ONLY:HDRY
       USE GWFBCFMODULE,ONLY:IBCFCB,IWDFLG,IWETIT,IHDWET,WETFCT,
      1                      LAYCON,LAYAVG,HY,SC1,SC2,WETDRY,CVWD,TRPY,
@@ -105,7 +104,7 @@ C
 C     ------------------------------------------------------------------
 C1------ALLOCATE SCALAR VARIABLES IN FORTRAN MODULE.
       ALLOCATE(IBCFCB,IWDFLG,IWETIT,IHDWET)
-      ALLOCATE(IMINKD,IMINC,MINKD,MINC,ICHLORIDE)                       ! DLT
+      ALLOCATE(IMINKD,IMINC,MINKD,MINC)                       ! DLT
       ALLOCATE(WETFCT)
       ALLOCATE(LAYCON(NLAY),LAYAVG(NLAY))
 C
@@ -272,13 +271,8 @@ C6------ALLOCATE SPACE FOR ARRAYS.
       ELSE
          ALLOCATE(CVWD(1,1,1))
       END IF
-      IF(ICHLORIDE.EQ.1) THEN
-         ALLOCATE(CON(NCOL,NROW,NLAY))
-      ELSE
-         ALLOCATE(CON(1,1,1))
-      END IF
-      allocate(seepage(ncol,nrow))                                      ! DLT
-      seepage = seepagemv                                               ! DLT
+      ALLOCATE(SEEPAGE(NCOL,NROW))                                      ! DLT
+      SEEPAGE = SEEPAGEMV                                               ! DLT
 C
 C
 C7------READ TRPY
@@ -343,11 +337,6 @@ C8H-----CAPABILITY HAS BEEN INVOKED (IWDFLG NOT 0).
           END IF                                                        ! PKS
         END DO                                                          ! PKS
       END DO                                                            ! PKS
-
-      !## READ CONCENTRATIONS
-      IF(ICHLORIDE.EQ.1)THEN
-       CALL U2DREL(CON(:,:,KB),ANAME(8),NROW,NCOL,KK,IN,IOUT)
-      ENDIF
       
   200 CONTINUE      
       call pest1alpha_grid('KD',cc,nrow,ncol,nlay,iout)                 ! IPEST
