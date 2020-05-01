@@ -1,3 +1,4 @@
+!!  Copyright (C) Stichting Deltares, 2005-2020.
 !!
 !!  This file is part of iMOD.
 !!
@@ -27,9 +28,9 @@ USE WINTERACTER
 INTEGER,PARAMETER :: TFONT=FFHELVETICA
 
 !## specify kind for double-precision real with 15 digits and a point ranging up to exponent 307
-INTEGER,PARAMETER :: DP_KIND=SELECTED_REAL_KIND(15,307) 
+INTEGER,PARAMETER :: DP_KIND=SELECTED_REAL_KIND(15,307)
 !## specify kind for single-precision real with 6  digits and a point ranging up to exponent 37
-INTEGER,PARAMETER :: SP_KIND=SELECTED_REAL_KIND(6 ,37 ) 
+INTEGER,PARAMETER :: SP_KIND=SELECTED_REAL_KIND(6 ,37 )
 
 INTEGER,DIMENSION(2) :: IDPROC
 
@@ -38,7 +39,7 @@ REAL(KIND=DP_KIND),PARAMETER :: PI=ATAN(1.0D0)*4.0D0  !## value pi
 LOGICAL :: LBETA=.TRUE.          !## if TRUE: Show question whether it is allowed to use Beta-version or not
 LOGICAL :: LBETA_QUESTION=.FALSE. !## overrule the question at startup
 LOGICAL :: LEXPDATE=.TRUE.       !## if TRUE: activate expire date
-INTEGER :: EXPDATE=20200430       !## expire data, after this date the iMOD-beta version cannot be used.
+INTEGER :: EXPDATE=20200530       !## expire data, after this date the iMOD-beta version cannot be used.
 INTEGER,SAVE :: ICDEBUGLEVEL      !## applied current debuglevel
 
 INTEGER,SAVE :: GKEYPRESSED       !## keypressed (cntr/shift)

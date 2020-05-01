@@ -82,7 +82,7 @@ CONTAINS
        IF(UTL_PMANAGER_REFRESH(1))CALL PMANAGER_UTL_UPDATE_TREEVIEW(0,0,0)
       CASE (ID_DELETE)
        CALL PMANAGER_DELETE()
-      !## open/save PRJ file
+      !## open PRJ file
       CASE (ID_OPEN)  
        IF(UTL_PMANAGER_REFRESH(1))THEN
         !## not loaded in correctly, clean it
@@ -1384,6 +1384,9 @@ CONTAINS
   ENDIF
  ENDIF
 
+ !## Save Keywords from Model Simulation window to INI file. For reuse in window or run iMODBATCH Function= RUNFILE  
+ IF(PMANAGERINI(1,"")) THEN; ENDIF
+
  !## copy imod license text file
  CALL IOSCOPYFILE(TRIM(EXEPATH)//'\'//TRIM(LICFILE),TRIM(DIR)//'\'//TRIM(LICFILE))
 
@@ -1607,6 +1610,87 @@ CONTAINS
  CALL IOSDIRCHANGE(DIRNAME)
 
  END SUBROUTINE PMANAGERSTART
+
+ !###======================================================================
+ LOGICAL FUNCTION PMANAGERINI(ICODE,INIFNAME)
+ !###======================================================================
+ IMPLICIT NONE
+ INTEGER,INTENT(IN) :: ICODE  ! Read INI file: ICODE=0, Save INI file: ICODE=1
+ CHARACTER(LEN=*),INTENT(IN) :: INIFNAME
+ CHARACTER(LEN=256) :: FNAME
+
+ PMANAGERINI=.FALSE.
+ 
+ IF(ICODE.EQ.0)THEN
+
+  IF(INIFNAME.EQ.'')THEN
+   FNAME='' 
+   IF(.NOT.UTL_WSELECTFILE('iMOD INI File (*.ini)|*.ini|',     &
+        LOADDIALOG+MUSTEXIST+PROMPTON+DIRCHANGE+APPENDEXT,FNAME,&
+        'Load iMOD INI File'))RETURN
+  ELSE
+   FNAME=INIFNAME
+  ENDIF
+
+  !## reading content INI file
+  IF(.NOT.PMANAGER_LOADINI(FNAME))CALL WMESSAGEBOX(OKONLY,EXCLAMATIONICON,COMMONOK,'iMOD cannot read in the Project File','Error')
+  
+ ELSEIF(ICODE.EQ.1)THEN
+  FNAME=TRIM(PBMAN%OUTPUT)//'\'//TRIM(PBMAN%MODELNAME)//'.INI' 
+  CALL PMANAGER_SAVEINI(FNAME)
+ ENDIF
+ 
+ END FUNCTION PMANAGERINI
+
+ !###======================================================================
+ SUBROUTINE PMANAGER_SAVEINI(INIFNAME)
+ !###======================================================================
+ IMPLICIT NONE
+ CHARACTER(LEN=*),INTENT(IN) :: INIFNAME
+ INTEGER :: IU,INI_INT,ILAY
+
+ IU=UTL_GETUNIT()
+ CALL OSD_OPEN(IU,FILE=INIFNAME,STATUS='REPLACE',ACTION='WRITE,DENYREAD',FORM='FORMATTED')
+
+ WRITE(IU,*) '# INI file writen by iMOD version ...'
+ WRITE(IU,*) 'FUNCTION= RUNFILE'
+ WRITE(IU,*) 'PRJFILE_IN='//TRIM(PBMAN%OUTPUT)//'\'//TRIM(PBMAN%MODELNAME)//'.PRJ'
+
+ !## get values from tab1
+ !CALL WDIALOGSELECT(ID_DSIMMANAGER_TAB1)
+ WRITE(IU,*) 'SIM_TYPE= ',PBMAN%IFORMAT
+ WRITE(IU,*) 'OUTPUT_FOLDER= ',TRIM(PBMAN%MODELNAME)
+ WRITE(IU,*) 'FLOW_RESULT_DIR= ',TRIM(PBMAN%FLOW_RESULT_DIR) 
+ 
+ !## get values from tab2
+ !CALL WDIALOGSELECT(ID_DSIMMANAGER_TAB2)
+ WRITE(IU,*) 'UNCONFINED= ',(LAYCON(ILAY),ILAY=1,PRJNLAY)
+
+ !## get values from tab3
+ !CALL WDIALOGSELECT(ID_DSIMMANAGER_TAB3)
+ !WRITE(IU,*) 'UNCONFINED= ',(LAYCON(ILAY),ILAY=1,PRJNLAY)
+ 
+ CLOSE(IU)
+ 
+ END SUBROUTINE PMANAGER_SAVEINI
+ 
+ !###======================================================================
+ LOGICAL FUNCTION PMANAGER_LOADINI(INIFNAME)
+ !###======================================================================
+ IMPLICIT NONE
+ CHARACTER(LEN=*),INTENT(IN) :: INIFNAME
+ INTEGER :: IU
+
+ PMANAGER_LOADINI=.FALSE.
+
+ IU=UTL_GETUNIT()
+ CALL OSD_OPEN(IU,FILE=INIFNAME,STATUS='OLD',ACTION='READ,DENYWRITE',FORM='FORMATTED')
+
+ CLOSE(IU)
+ PMANAGER_LOADINI=.TRUE. 
+
+ END FUNCTION PMANAGER_LOADINI
+
  
  !###======================================================================
  SUBROUTINE PMANAGEROPEN_PCG()
@@ -3254,7 +3338,7 @@ TOPICLOOP: DO ITOPIC=1,MAXTOPICS
  
  END FUNCTION PMANAGERPRJ
  
-  !###======================================================================
+ !###======================================================================
  LOGICAL FUNCTION PMANAGER_SAVEPRJ(FNAME)
  !###======================================================================
  IMPLICIT NONE
