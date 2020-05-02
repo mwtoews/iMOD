@@ -8590,6 +8590,8 @@ CONTAINS
  !###======================================================================
  SUBROUTINE UTL_TRIANGULATION(XP,YP,IPFPPS)
  !###======================================================================
+!https://people.sc.fsu.edu/~jburkardt/f_src/triangulation/triangulation_test.f90
+
  IMPLICIT NONE
  CHARACTER(LEN=*),INTENT(IN) :: IPFPPS
  REAL(KIND=DP_KIND),INTENT(IN),DIMENSION(:) :: XP,YP
@@ -8597,10 +8599,12 @@ CONTAINS
   INTEGER,DIMENSION(3) :: IP=0 !## reference to point for triangles
  END TYPE TRIOBJ
  TYPE(TRIOBJ),DIMENSION(:),ALLOCATABLE :: TRI
- INTEGER :: I,J,K,NP,IP,JP,IT,JT,P1,P2,P3,ID,IPT,JU,NT
+ INTEGER :: I,J,JJ,K,NP,IP,JP,IT,JT,P1,P2,P3,ID,IPT,JU,NT,JD
  REAL(KIND=DP_KIND) :: D,MAXD,X,Y,A
- INTEGER,DIMENSION(3) :: PP
- INTEGER,DIMENSION(2) :: SP
+ REAL(KIND=DP_KIND),DIMENSION(3) :: ANGLE
+ INTEGER,DIMENSION(3) :: PP !## point fo triangle
+ INTEGER,DIMENSION(2) :: SP !## points of triangles of segment to be adjusted
+ INTEGER,DIMENSION(2,3) :: BP !## backup point prior to lawson flip
  
  NP=SIZE(XP)
  NT=SIZE(TRI)
@@ -8660,8 +8664,9 @@ CONTAINS
   IF(ID.EQ.0)THEN; WRITE(*,'(/A/)') 'NO FAR POINT FOUND FOR SELECTED TRIANGLE'; PAUSE; STOP; ENDIF
 
   !## select the two others to define the segment to be adjusted
-  I=1; DO JP=1,3; IF(ID.NE.PP(JP))THEN; SP(I)=PP(JP); I=I+1; ENDIF; ENDDO
-
+  I=0; DO JP=1,3; IF(ID.NE.PP(JP))THEN; I=I+1; SP(I)=PP(JP); ENDIF; ENDDO  
+  IF(I.NE.2)THEN; WRITE(*,'(/A/)') 'CANNOT FIND TWO POINTS OF SELECTED TRIANGLE'; PAUSE; STOP; ENDIF
+  
   !## process (split) each triangle that shares those two points (need to be max. 2)
   IT=0; DO
    IT=IT+1; IF(IT.GE.NT)EXIT
@@ -8670,6 +8675,7 @@ CONTAINS
     IF(TRI(IT)%IP(J).EQ.SP(1).OR.TRI(IT)%IP(J).EQ.SP(2))K=K+1
    ENDDO
    IF(K.EQ.2)THEN
+
     !## modify current triangle with sp(1)
     DO I=1,3
      !## find third point that remains in both triangles
@@ -8679,13 +8685,13 @@ CONTAINS
       EXIT
      ENDIF
     ENDDO
-    
+
     !## add other triangle due to splitting
     NT=NT+1
     TRI(NT)%IP(1)=TRI(IT)%IP(I)
     TRI(NT)%IP(2)=SP(2)
     TRI(NT)%IP(3)=IP
-    !## check whether triangles have areas
+
    ENDIF
   ENDDO
 
@@ -8704,6 +8710,70 @@ CONTAINS
     NT=NT-1
     IT=IT-1
    ENDIF
+  ENDDO
+
+  !## apply a lawson flip
+  DO IT=1,NT
+   !## determine angles 
+   CALL TRIANGLE_ANGLES((/XP(TRI(IT)%IP(1)),YP(TRI(IT)%IP(1)), &
+                          XP(TRI(IT)%IP(2)),YP(TRI(IT)%IP(2)), &
+                          XP(TRI(IT)%IP(3)),YP(TRI(IT)%IP(3))/),ANGLE)
+   write(*,'(I10,3F10.3)') it,angle
+   
+   !## try to apply for a lawson flip
+   DO K=1,3
+    IF(ANGLE(K).GT.90.0D0)THEN
+     ID=TRI(IT)%IP(K)
+     !## select the two others points to look for another triangle
+     I=0; DO JP=1,3; IF(ID.NE.TRI(IT)%IP(JP))THEN; I=I+1; SP(I)=TRI(IT)%IP(JP); ENDIF; ENDDO  
+     IF(I.NE.2)THEN; WRITE(*,'(/A/)') 'CANNOT FIND TWO POINTS OF SELECTED TRIANGLE'; PAUSE; STOP; ENDIF
+     !## find triangle thas shares these coordinates
+     !## found triangle to be splitted
+     DO JT=1,NT; IF(JT.EQ.IT)CYCLE; I=0; DO J=1,3
+      IF(TRI(JT)%IP(J).EQ.SP(1).OR.TRI(JT)%IP(J).EQ.SP(2))I=I+1
+     ENDDO; IF(I.EQ.2)EXIT; ENDDO
+     !## find triangle that shares coordinates
+     IF(I.EQ.2)THEN
+      write(*,*) IT,JT
+      !## backup
+      DO JJ=1,3; BP(1,JJ)=TRI(IT)%IP(JJ); ENDDO
+      DO JJ=1,3; BP(2,JJ)=TRI(JT)%IP(JJ); ENDDO
+
+      !## find third point that remains in both triangles
+      JD=0; DO J=1,3
+       IF(TRI(JT)%IP(J).NE.SP(1).AND.TRI(JT)%IP(J).NE.SP(2))THEN; JD=TRI(JT)%IP(J); EXIT; ENDIF
+      ENDDO
+      !## not in any triangle - error
+      IF(JD.EQ.0)THEN; WRITE(*,'(/A/)') 'NO FAR POINT FOUND FOR SELECTED TRIANGLE FOR LAWSON FLIP'; PAUSE; STOP; ENDIF
+      
+      TRI(IT)%IP(1)=SP(1)
+      TRI(IT)%IP(2)=ID
+      TRI(IT)%IP(3)=JD
+      
+      TRI(JT)%IP(1)=SP(2)
+      TRI(JT)%IP(2)=ID
+      TRI(JT)%IP(3)=JD
+
+      J=0
+      CALL TRIANGLE_ANGLES((/XP(TRI(IT)%IP(1)),YP(TRI(IT)%IP(1)), &
+                             XP(TRI(IT)%IP(2)),YP(TRI(IT)%IP(2)), &
+                             XP(TRI(IT)%IP(3)),YP(TRI(IT)%IP(3))/),ANGLE)
+      IF(MAXVAL(ANGLE).LE.90.0D0)J=J+1
+      CALL TRIANGLE_ANGLES((/XP(TRI(JT)%IP(1)),YP(TRI(JT)%IP(1)), &
+                             XP(TRI(JT)%IP(2)),YP(TRI(JT)%IP(2)), &
+                             XP(TRI(JT)%IP(3)),YP(TRI(JT)%IP(3))/),ANGLE)
+      IF(MAXVAL(ANGLE).LE.90.0D0)J=J+1
+      
+      !## reset as it is no improvement
+      IF(J.EQ.2)THEN
+       DO JJ=1,3; TRI(IT)%IP(JJ)=BP(1,JJ); ENDDO
+       DO JJ=1,3; TRI(JT)%IP(JJ)=BP(2,JJ); ENDDO
+      ENDIF
+     
+     ENDIF
+     EXIT 
+    ENDIF
+   ENDDO
   ENDDO
 
  ENDDO
@@ -8767,6 +8837,59 @@ CONTAINS
  
  END SUBROUTINE UTL_TRIANGULATION
 
+ !###======================================================================
+ SUBROUTINE TRIANGLE_ANGLES(T,ANGLE)
+ !###======================================================================
+ IMPLICIT NONE
+ REAL(KIND=DP_KIND) :: A,B,C
+ REAL(KIND=DP_KIND),DIMENSION(3),INTENT(OUT) :: ANGLE(3)
+ REAL(KIND=DP_KIND),DIMENSION(2,3),INTENT(IN) :: T(2,3)
+
+ !## compute the length of each side.
+ A=SQRT((T(1,2)-T(1,1))**2.0D0+(T(2,2)-T(2,1))**2.0D0)
+ B=SQRT((T(1,3)-T(1,2))**2.0D0+(T(2,3)-T(2,2))**2.0D0)
+ C=SQRT((T(1,1)-T(1,3))**2.0D0+(T(2,1)-T(2,3))**2.0D0)
+
+ !## take care of ridiculous special cases
+ IF(A.EQ.0.0D+00.AND.B.EQ.0.0D0.AND.C.EQ.0.0D0)THEN
+  ANGLE(1:3)=2.0D0*PI/3.0D0; RETURN
+ END IF
+
+ IF(C.EQ.0.0D0.OR.A.EQ.0.0D0)THEN
+  ANGLE(1)=PI
+ ELSE
+  ANGLE(1)=ARC_COSINE((C*C+A*A-B*B)/(2.0D0*C*A))
+ END IF
+
+ IF(A.EQ.0.0D0.OR.B.EQ.0.0D0)THEN
+  ANGLE(2)=PI
+ ELSE
+  ANGLE(2)=ARC_COSINE((A*A+B*B-C*C)/(2.0D0*A*B))
+ END IF
+
+ IF(B.EQ.0.0D0.OR.C.EQ.0.0D0)THEN
+  ANGLE(3)=PI
+ ELSE
+  ANGLE(3)=ARC_COSINE((B*B+C*C-A*A)/(2.0D0*B*C))
+ END IF
+
+ ANGLE=ANGLE*360.0D0/(2.0D0*PI)
+ 
+ END SUBROUTINE TRIANGLE_ANGLES
+
+ !###======================================================================
+ REAL(KIND=DP_KIND) FUNCTION ARC_COSINE(C)
+ !###======================================================================
+ IMPLICIT NONE
+ REAL(KIND=DP_KIND), INTENT(IN) :: C
+ REAL(KIND=DP_KIND) :: C2
+
+ C2=C; C2=MAX(C2,-1.0D0); C2=MIN(C2,1.0D0)
+
+ ARC_COSINE=ACOS(C2)
+
+ END FUNCTION ARC_COSINE
+      
  !###======================================================================
  REAL(KIND=DP_KIND) FUNCTION TRIANGLE_AREA(T)
  !###======================================================================
@@ -8855,9 +8978,9 @@ CONTAINS
  UTL_POINT_IN_TRIANGLE=-1
  
  !## check whether points of triangle equal to point p
- WRITE(*,*) SUM(P-A)
- WRITE(*,*) SUM(P-B)
- WRITE(*,*) SUM(P-C)
+! WRITE(*,*) SUM(P-A)
+! WRITE(*,*) SUM(P-B)
+! WRITE(*,*) SUM(P-C)
  IF(P(1)-A(1).EQ.0.0D0.AND.P(2)-A(2).EQ.0.0D0)RETURN
  IF(P(1)-B(1).EQ.0.0D0.AND.P(2)-B(2).EQ.0.0D0)RETURN
  IF(P(1)-C(1).EQ.0.0D0.AND.P(2)-C(2).EQ.0.0D0)RETURN
@@ -8873,8 +8996,6 @@ CONTAINS
  IF(X+Y.LE.1.0D0)THEN
   IF(X.GE.0.0D0.AND.X.LE.1.0D0.AND. &
      Y.GE.0.0D0.AND.Y.LE.1.0D0)UTL_POINT_IN_TRIANGLE=1
-!  IF(X.GT.0.0D0.AND.X.LT.1.0D0.AND. &
-!     Y.GT.0.0D0.AND.Y.LT.1.0D0)UTL_POINT_IN_TRIANGLE=1
  ENDIF
  
  END FUNCTION UTL_POINT_IN_TRIANGLE
