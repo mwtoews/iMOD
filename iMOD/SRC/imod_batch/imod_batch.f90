@@ -8600,7 +8600,7 @@ CONTAINS
  END TYPE TRIOBJ
  TYPE(TRIOBJ),DIMENSION(:),ALLOCATABLE :: TRI
  INTEGER :: I,J,JJ,K,NP,IP,JP,IT,JT,P1,P2,P3,ID,IPT,JU,NT,JD
- REAL(KIND=DP_KIND) :: D,MAXD,X,Y,A
+ REAL(KIND=DP_KIND) :: D,MAXD,X,Y,A,A1,A2,A3,A4
  REAL(KIND=DP_KIND),DIMENSION(3) :: ANGLE
  INTEGER,DIMENSION(3) :: PP !## point fo triangle
  INTEGER,DIMENSION(2) :: SP !## points of triangles of segment to be adjusted
@@ -8695,7 +8695,7 @@ CONTAINS
    ENDIF
   ENDDO
 
-  !## clean all triangle that are zero
+  !## clean all triangle that are zero area
   IT=0; DO
    IT=IT+1
    IF(IT.GT.NT)EXIT
@@ -8722,6 +8722,7 @@ CONTAINS
    
    !## try to apply for a lawson flip
    DO K=1,3
+    !## get maximum angle
     IF(ANGLE(K).GT.90.0D0)THEN
      ID=TRI(IT)%IP(K)
      !## select the two others points to look for another triangle
@@ -8746,6 +8747,18 @@ CONTAINS
       !## not in any triangle - error
       IF(JD.EQ.0)THEN; WRITE(*,'(/A/)') 'NO FAR POINT FOUND FOR SELECTED TRIANGLE FOR LAWSON FLIP'; PAUSE; STOP; ENDIF
       
+      CALL TRIANGLE_ANGLES((/XP(TRI(IT)%IP(1)),YP(TRI(IT)%IP(1)), &
+                             XP(TRI(IT)%IP(2)),YP(TRI(IT)%IP(2)), &
+                             XP(TRI(IT)%IP(3)),YP(TRI(IT)%IP(3))/),ANGLE)
+      A1=ANGLE(1)*ANGLE(2)*ANGLE(3)
+      WRITE(*,'(A15,5F10.2)') 'OLD TRIANGLE_1',ANGLE,SUM(ANGLE),A1
+      CALL TRIANGLE_ANGLES((/XP(TRI(JT)%IP(1)),YP(TRI(JT)%IP(1)), &
+                             XP(TRI(JT)%IP(2)),YP(TRI(JT)%IP(2)), &
+                             XP(TRI(JT)%IP(3)),YP(TRI(JT)%IP(3))/),ANGLE)
+      A2=ANGLE(1)*ANGLE(2)*ANGLE(3)
+      WRITE(*,'(A15,5F10.2)') 'OLD TRIANGLE_2',ANGLE,SUM(ANGLE),A2
+      WRITE(*,'(55X,F10.2)') A1+A2
+      
       TRI(IT)%IP(1)=SP(1)
       TRI(IT)%IP(2)=ID
       TRI(IT)%IP(3)=JD
@@ -8758,14 +8771,23 @@ CONTAINS
       CALL TRIANGLE_ANGLES((/XP(TRI(IT)%IP(1)),YP(TRI(IT)%IP(1)), &
                              XP(TRI(IT)%IP(2)),YP(TRI(IT)%IP(2)), &
                              XP(TRI(IT)%IP(3)),YP(TRI(IT)%IP(3))/),ANGLE)
-      IF(MAXVAL(ANGLE).LE.90.0D0)J=J+1
+      A3=MAXVAL(ANGLE); IF(A3.LE.90.0D0)J=J+1
+      A3=ANGLE(1)*ANGLE(2)*ANGLE(3)
+      WRITE(*,'(A15,5F10.2)') 'NEW TRIANGLE_1',ANGLE,SUM(ANGLE),A3
+      
       CALL TRIANGLE_ANGLES((/XP(TRI(JT)%IP(1)),YP(TRI(JT)%IP(1)), &
                              XP(TRI(JT)%IP(2)),YP(TRI(JT)%IP(2)), &
                              XP(TRI(JT)%IP(3)),YP(TRI(JT)%IP(3))/),ANGLE)
-      IF(MAXVAL(ANGLE).LE.90.0D0)J=J+1
+      A4=MAXVAL(ANGLE); IF(A4.LE.90.0D0)J=J+1
+      A4=ANGLE(1)*ANGLE(2)*ANGLE(3)
+      WRITE(*,'(A15,5F10.2)') 'NEW TRIANGLE_2',ANGLE,SUM(ANGLE),A4
+      WRITE(*,'(55X,F10.2)') A3+A4
       
       !## reset as it is no improvement
-      IF(J.EQ.2)THEN
+      IF(A3+A4.LE.A1+A2)THEN
+!      WRITE(*,'(A,3F10.2,1X,I1)') 'A1,A2,A3',A1,A2,A3,J
+      
+!      IF(J.EQ.2)THEN
        DO JJ=1,3; TRI(IT)%IP(JJ)=BP(1,JJ); ENDDO
        DO JJ=1,3; TRI(JT)%IP(JJ)=BP(2,JJ); ENDDO
       ENDIF
@@ -8776,6 +8798,17 @@ CONTAINS
    ENDDO
   ENDDO
 
+ ENDDO
+ 
+ DO IT=1,NT
+  !## determine angles 
+  CALL TRIANGLE_ANGLES((/XP(TRI(IT)%IP(1)),YP(TRI(IT)%IP(1)), &
+                         XP(TRI(IT)%IP(2)),YP(TRI(IT)%IP(2)), &
+                         XP(TRI(IT)%IP(3)),YP(TRI(IT)%IP(3))/),ANGLE)
+  A=TRIANGLE_AREA((/XP(TRI(IT)%IP(1)),YP(TRI(IT)%IP(1)), &
+                    XP(TRI(IT)%IP(2)),YP(TRI(IT)%IP(2)), &
+                    XP(TRI(IT)%IP(3)),YP(TRI(IT)%IP(3))/))
+  WRITE(*,'(I10,4F10.3)') IT,ABS(A),ANGLE
  ENDDO
  
  !## plot triangles
@@ -8825,11 +8858,11 @@ CONTAINS
 
  !## plot points of triangles
  JU=UTL_GETUNIT(); OPEN(JU,FILE=IPFPPS(:INDEX(IPFPPS,'.',.TRUE.)-1)//'_CENTROID.IPF',STATUS='UNKNOWN',ACTION='WRITE')
- WRITE(JU,*) NT; WRITE(JU,'(A)') '2'; WRITE(JU,'(A)') 'X'; WRITE(JU,'(A)') 'Y'; WRITE(JU,'(A)') '0,TXT'
+ WRITE(JU,*) NT; WRITE(JU,'(A)') '3'; WRITE(JU,'(A)') 'X'; WRITE(JU,'(A)') 'Y'; WRITE(JU,'(A)') 'NO._TRIANGLE'; WRITE(JU,'(A)') '0,TXT'
  DO I=1,NT
   X=XP(TRI(I)%IP(1))+XP(TRI(I)%IP(2))+XP(TRI(I)%IP(3)); X=X/3.0D0
   Y=YP(TRI(I)%IP(1))+YP(TRI(I)%IP(2))+YP(TRI(I)%IP(3)); Y=Y/3.0D0
-  WRITE(JU,*) X,Y
+  WRITE(JU,'(2F15.3,I10)') X,Y,I
  ENDDO
  CLOSE(JU)
 
