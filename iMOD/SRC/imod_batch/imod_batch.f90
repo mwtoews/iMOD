@@ -8554,8 +8554,8 @@ CONTAINS
  IMPLICIT NONE
  CHARACTER(LEN=256) :: IPFOBS,IPFMES,IPFPPS
  REAL(KIND=DP_KIND),ALLOCATABLE,DIMENSION(:) :: XP,YP !## list of points
+ REAL(KIND=DP_KIND) :: DCLUSTER
  INTEGER :: I
-! REAL(KIND=DP_KIND) :: BUFFER
  
  NIPF=3; CALL IPFALLOCATE()
  
@@ -8569,54 +8569,91 @@ CONTAINS
  IF(IPFMES.NE.'')THEN; IPF(2)%FNAME=IPFMES; IF(.NOT.IPFREAD2(2,1,1))RETURN; ENDIF
  IF(.NOT.UTL_READINITFILE('IPFPPS',LINE,IU,0))RETURN
  READ(LINE,*) IPFPPS; WRITE(*,'(A)') 'IPFPPS='//TRIM(IPFPPS)
+ IF(.NOT.UTL_READINITFILE('DCLUSTER',LINE,IU,0))RETURN
+ READ(LINE,*) DCLUSTER; WRITE(*,'(A)') 'DCLUSTER='//TRIM(RTOS(DCLUSTER,'F',3))
 
- ALLOCATE(XP(IPF(1)%NROW+4),YP(IPF(1)%NROW+4))
+ N=IPF(1)%NROW+4; ALLOCATE(XP(N),YP(N))
  DO I=1,IPF(1)%NROW; XP(4+I)=IPF(1)%XYZ(1,I); YP(4+I)=IPF(1)%XYZ(2,I); ENDDO
- N=IPF(1)%NROW+4
- XP(1)=MINVAL(XP(5:N)); YP(1)=MINVAL(YP(5:N))
- XP(2)=MINVAL(XP(5:N)); YP(2)=MAXVAL(YP(5:N))
- XP(3)=MAXVAL(XP(5:N)); YP(3)=MAXVAL(YP(5:N))
- XP(4)=MAXVAL(XP(5:N)); YP(4)=MINVAL(YP(5:N))
-! BUFFER=SQRT((XP(3)-XP(1))**2.0D0+(YP(2)-YP(1))**2.0D0)
-! XP(1)=XP(1)-BUFFER; XP(2)=XP(2)-BUFFER
-! XP(3)=XP(3)+BUFFER; XP(4)=XP(4)+BUFFER
-! YP(1)=YP(1)-BUFFER; YP(2)=YP(2)+BUFFER
-! YP(3)=YP(3)+BUFFER; YP(4)=YP(4)-BUFFER
- 
- CALL UTL_TRIANGULATION(XP,YP,IPFPPS)
+
+ IF(UTL_READINITFILE('WINDOW',LINE,IU,1))THEN
+  READ(LINE,*) XP(1),YP(1),XP(3),YP(3)
+  WRITE(*,'(A,4F10.2)') 'WINDOW=',XP(1),YP(1),XP(3),YP(3)
+  XP(2)=XP(1); XP(4)=XP(3)
+  YP(2)=YP(3); YP(4)=YP(1)
+ ELSE
+  XP(1)=MINVAL(XP(5:N)); YP(1)=MINVAL(YP(5:N))
+  XP(2)=MINVAL(XP(5:N)); YP(2)=MAXVAL(YP(5:N))
+  XP(3)=MAXVAL(XP(5:N)); YP(3)=MAXVAL(YP(5:N))
+  XP(4)=MAXVAL(XP(5:N)); YP(4)=MINVAL(YP(5:N))
+ ENDIF
+! xp(3)=354750.0d0
+! xp(4)=354750.0d0
+ CALL UTL_TRIANGULATION(XP,YP,IPFPPS,DCLUSTER)
  
  END SUBROUTINE IMODBATH_CREATEPILOTPOINTS_IPF
  
  !###======================================================================
- SUBROUTINE UTL_TRIANGULATION(XP,YP,IPFPPS)
+ SUBROUTINE UTL_TRIANGULATION(XP,YP,IPFPPS,DCLUSTER)
  !###======================================================================
 !https://people.sc.fsu.edu/~jburkardt/f_src/triangulation/triangulation_test.f90
 
  IMPLICIT NONE
  CHARACTER(LEN=*),INTENT(IN) :: IPFPPS
- REAL(KIND=DP_KIND),INTENT(IN),DIMENSION(:) :: XP,YP
+ REAL(KIND=DP_KIND),INTENT(IN) :: DCLUSTER
+ REAL(KIND=DP_KIND),INTENT(INOUT),DIMENSION(:) :: XP,YP
  TYPE TRIOBJ
   INTEGER,DIMENSION(3) :: IP=0 !## reference to point for triangles
  END TYPE TRIOBJ
  TYPE(TRIOBJ),DIMENSION(:),ALLOCATABLE :: TRI
- INTEGER :: I,J,JJ,K,NP,IP,JP,IT,JT,P1,P2,P3,ID,IPT,JU,NT,JD
- REAL(KIND=DP_KIND) :: D,MAXD,X,Y,A,A1,A2,A3,A4
- REAL(KIND=DP_KIND),DIMENSION(3) :: ANGLE
+ INTEGER :: I,J,JJ,K,NP,IP,JP,IT,JT,P1,P2,P3,ID,IPT,JU,NT,JD,ND
+ REAL(KIND=DP_KIND) :: D,MAXD,X,Y,A,A1,A2,A3,A4,XD,YD
+ REAL(KIND=DP_KIND),DIMENSION(3,4) :: ANGLE
  INTEGER,DIMENSION(3) :: PP !## point fo triangle
  INTEGER,DIMENSION(2) :: SP !## points of triangles of segment to be adjusted
  INTEGER,DIMENSION(2,3) :: BP !## backup point prior to lawson flip
+ INTEGER,ALLOCATABLE,DIMENSION(:) :: DD
+ LOGICAL :: LEX
  
  NP=SIZE(XP)
  NT=SIZE(TRI)
 
- ALLOCATE(TRI(2*NP))
+ ALLOCATE(TRI(2*NP)); ALLOCATE(DD(NP))
 
  !## apply clusters
- !DO IP=5,NP
- ! !## discard point that are too near
- ! D=UTL_DIST(XP(1),YP(1),XP(IP),YP(IP))
- ! IF(D.GT.MD)EXIT
- !ENDDO
+ DD=0; DO IP=1,NP
+  !## aready done
+  IF(DD(IP).EQ.1)CYCLE
+  XD=XP(IP); YD=YP(IP); ND=1
+  DO JP=1,NP
+   IF(IP.EQ.JP)CYCLE
+   !## discard point that are too near
+   D=UTL_DIST(XP(IP),YP(IP),XP(JP),YP(JP))
+   IF(D.LE.DCLUSTER)THEN
+    !## mark double to be removed
+    XD=XD+XP(JP); YD=YD+YP(JP); DD(JP)=1; ND=ND+1
+   ENDIF
+  ENDDO
+  !## set new pointm exclude corner point
+  IF(IP.GT.4)THEN
+   XD=XD/REAL(ND,8)
+   YD=YD/REAL(ND,8)
+   !## set new point
+   XP(IP)=XD
+   YP(IP)=YD
+  ENDIF
+ ENDDO
+ 
+ !## remove all nodata
+ JP=0
+ DO IP=1,NP
+  IF(DD(IP).EQ.0)THEN
+   JP=JP+1
+   IF(JP.NE.IP)THEN
+    XP(JP)=XP(IP); YP(JP)=YP(IP)
+   ENDIF
+  ENDIF
+ END DO
+ NP=JP
  
  !## construct first four triangles, with first point not equal to all sides
  DO IP=5,NP
@@ -8635,10 +8672,12 @@ CONTAINS
  !## add all remaining points
  DO IP=5,NP
 
-  WRITE(*,*)
-  DO IT=1,NT
-   WRITE(*,'(4I10)') IT,(TRI(IT)%IP(J),J=1,3)
-  ENDDO
+  if(ip.eq.np)then
+   WRITE(*,*)
+   DO IT=1,NT
+    WRITE(*,'(4I10)') IT,(TRI(IT)%IP(J),J=1,3)
+   ENDDO
+  endif
   
   !## find out in what triangle current point is
   DO IT=1,NT
@@ -8669,7 +8708,7 @@ CONTAINS
   
   !## process (split) each triangle that shares those two points (need to be max. 2)
   IT=0; DO
-   IT=IT+1; IF(IT.GE.NT)EXIT
+   IT=IT+1; IF(IT.GT.NT)EXIT
    !## found triangle to be splitted
    K=0; DO J=1,3
     IF(TRI(IT)%IP(J).EQ.SP(1).OR.TRI(IT)%IP(J).EQ.SP(2))K=K+1
@@ -8712,18 +8751,22 @@ CONTAINS
    ENDIF
   ENDDO
 
-  !## apply a lawson flip
+  !## apply a lawson flip to all triangles
   DO IT=1,NT
+   if(it.eq.24)then
+    write(*,*)
+   endif
+   
    !## determine angles 
    CALL TRIANGLE_ANGLES((/XP(TRI(IT)%IP(1)),YP(TRI(IT)%IP(1)), &
                           XP(TRI(IT)%IP(2)),YP(TRI(IT)%IP(2)), &
-                          XP(TRI(IT)%IP(3)),YP(TRI(IT)%IP(3))/),ANGLE)
-   write(*,'(I10,3F10.3)') it,angle
+                          XP(TRI(IT)%IP(3)),YP(TRI(IT)%IP(3))/),ANGLE(:,1))
+   write(*,'(I10,3F10.3)') it,angle(:,1)
    
    !## try to apply for a lawson flip
    DO K=1,3
     !## get maximum angle
-    IF(ANGLE(K).GT.90.0D0)THEN
+    IF(ANGLE(K,1).GT.90.0D0)THEN
      ID=TRI(IT)%IP(K)
      !## select the two others points to look for another triangle
      I=0; DO JP=1,3; IF(ID.NE.TRI(IT)%IP(JP))THEN; I=I+1; SP(I)=TRI(IT)%IP(JP); ENDIF; ENDDO  
@@ -8747,18 +8790,33 @@ CONTAINS
       !## not in any triangle - error
       IF(JD.EQ.0)THEN; WRITE(*,'(/A/)') 'NO FAR POINT FOUND FOR SELECTED TRIANGLE FOR LAWSON FLIP'; PAUSE; STOP; ENDIF
       
+!      TRI(IT)%IP(1)=SP(2)
+!      TRI(IT)%IP(2)=ID
+!      TRI(IT)%IP(3)=JD
+      
+!      TRI(JT)%IP(1)=SP(1)
+!      TRI(JT)%IP(2)=ID
+!      TRI(JT)%IP(3)=JD
+
       CALL TRIANGLE_ANGLES((/XP(TRI(IT)%IP(1)),YP(TRI(IT)%IP(1)), &
                              XP(TRI(IT)%IP(2)),YP(TRI(IT)%IP(2)), &
-                             XP(TRI(IT)%IP(3)),YP(TRI(IT)%IP(3))/),ANGLE)
-      A1=ANGLE(1)*ANGLE(2)*ANGLE(3)
-      WRITE(*,'(A15,5F10.2)') 'OLD TRIANGLE_1',ANGLE,SUM(ANGLE),A1
+                             XP(TRI(IT)%IP(3)),YP(TRI(IT)%IP(3))/),ANGLE(:,1))
+      A1=ANGLE(1,1)*ANGLE(2,1)*ANGLE(3,1)
+      WRITE(*,'(A15,5F10.2)') 'OLD TRIANGLE_1',ANGLE(:,1),SUM(ANGLE(:,1)),A1
       CALL TRIANGLE_ANGLES((/XP(TRI(JT)%IP(1)),YP(TRI(JT)%IP(1)), &
                              XP(TRI(JT)%IP(2)),YP(TRI(JT)%IP(2)), &
-                             XP(TRI(JT)%IP(3)),YP(TRI(JT)%IP(3))/),ANGLE)
-      A2=ANGLE(1)*ANGLE(2)*ANGLE(3)
-      WRITE(*,'(A15,5F10.2)') 'OLD TRIANGLE_2',ANGLE,SUM(ANGLE),A2
+                             XP(TRI(JT)%IP(3)),YP(TRI(JT)%IP(3))/),ANGLE(:,2))
+      A2=ANGLE(1,2)*ANGLE(2,2)*ANGLE(3,2)
+      WRITE(*,'(A15,5F10.2)') 'OLD TRIANGLE_2',ANGLE(:,2),SUM(ANGLE(:,2)),A2
       WRITE(*,'(55X,F10.2)') A1+A2
       
+      !## only apply if new polygon is still convex
+      LEX=.FALSE.
+      IF(ANGLE(1,1).GT.180.0D0.OR. &
+         ANGLE(1,2).GT.180.0D0.OR. &
+         ANGLE(2,1)+ANGLE(2,2).GT.180.0D0.OR. &
+         ANGLE(3,1)+ANGLE(3,2).GT.180.0D0)LEX=.TRUE.
+
       TRI(IT)%IP(1)=SP(1)
       TRI(IT)%IP(2)=ID
       TRI(IT)%IP(3)=JD
@@ -8767,27 +8825,21 @@ CONTAINS
       TRI(JT)%IP(2)=ID
       TRI(JT)%IP(3)=JD
 
-      J=0
       CALL TRIANGLE_ANGLES((/XP(TRI(IT)%IP(1)),YP(TRI(IT)%IP(1)), &
                              XP(TRI(IT)%IP(2)),YP(TRI(IT)%IP(2)), &
-                             XP(TRI(IT)%IP(3)),YP(TRI(IT)%IP(3))/),ANGLE)
-      A3=MAXVAL(ANGLE); IF(A3.LE.90.0D0)J=J+1
-      A3=ANGLE(1)*ANGLE(2)*ANGLE(3)
-      WRITE(*,'(A15,5F10.2)') 'NEW TRIANGLE_1',ANGLE,SUM(ANGLE),A3
+                             XP(TRI(IT)%IP(3)),YP(TRI(IT)%IP(3))/),ANGLE(:,3))
+      A3=ANGLE(1,3)*ANGLE(2,3)*ANGLE(3,3)
+      WRITE(*,'(A15,5F10.2)') 'NEW TRIANGLE_1',ANGLE(:,3),SUM(ANGLE(:,3)),A3
       
       CALL TRIANGLE_ANGLES((/XP(TRI(JT)%IP(1)),YP(TRI(JT)%IP(1)), &
                              XP(TRI(JT)%IP(2)),YP(TRI(JT)%IP(2)), &
-                             XP(TRI(JT)%IP(3)),YP(TRI(JT)%IP(3))/),ANGLE)
-      A4=MAXVAL(ANGLE); IF(A4.LE.90.0D0)J=J+1
-      A4=ANGLE(1)*ANGLE(2)*ANGLE(3)
-      WRITE(*,'(A15,5F10.2)') 'NEW TRIANGLE_2',ANGLE,SUM(ANGLE),A4
+                             XP(TRI(JT)%IP(3)),YP(TRI(JT)%IP(3))/),ANGLE(:,4))
+      A4=ANGLE(1,4)*ANGLE(2,4)*ANGLE(3,4)
+      WRITE(*,'(A15,5F10.2)') 'NEW TRIANGLE_2',ANGLE(:,4),SUM(ANGLE(:,4)),A4
       WRITE(*,'(55X,F10.2)') A3+A4
       
-      !## reset as it is no improvement
-      IF(A3+A4.LE.A1+A2)THEN
-!      WRITE(*,'(A,3F10.2,1X,I1)') 'A1,A2,A3',A1,A2,A3,J
-      
-!      IF(J.EQ.2)THEN
+      !## reset as it is no improvement and new polygon is not convex
+      IF(A3+A4.LE.A1+A2)THEN !.OR.LEX)THEN
        DO JJ=1,3; TRI(IT)%IP(JJ)=BP(1,JJ); ENDDO
        DO JJ=1,3; TRI(JT)%IP(JJ)=BP(2,JJ); ENDDO
       ENDIF
@@ -8804,11 +8856,11 @@ CONTAINS
   !## determine angles 
   CALL TRIANGLE_ANGLES((/XP(TRI(IT)%IP(1)),YP(TRI(IT)%IP(1)), &
                          XP(TRI(IT)%IP(2)),YP(TRI(IT)%IP(2)), &
-                         XP(TRI(IT)%IP(3)),YP(TRI(IT)%IP(3))/),ANGLE)
+                         XP(TRI(IT)%IP(3)),YP(TRI(IT)%IP(3))/),ANGLE(:,1))
   A=TRIANGLE_AREA((/XP(TRI(IT)%IP(1)),YP(TRI(IT)%IP(1)), &
                     XP(TRI(IT)%IP(2)),YP(TRI(IT)%IP(2)), &
                     XP(TRI(IT)%IP(3)),YP(TRI(IT)%IP(3))/))
-  WRITE(*,'(I10,4F10.3)') IT,ABS(A),ANGLE
+  WRITE(*,'(I10,F10.1,3F10.3)') IT,ABS(A),ANGLE(:,1)
  ENDDO
  
  !## plot triangles
@@ -8825,15 +8877,24 @@ CONTAINS
  CLOSE(JU)
 
  !## plot points of triangles
- JU=UTL_GETUNIT(); OPEN(JU,FILE=IPFPPS(:INDEX(IPFPPS,'.',.TRUE.)-1)//'_TRIANGLES.IPF',STATUS='UNKNOWN',ACTION='WRITE')
- WRITE(JU,*) NT*3; WRITE(JU,'(A)') '2'; WRITE(JU,'(A)') 'X'; WRITE(JU,'(A)') 'Y'; WRITE(JU,'(A)') '0,TXT'
- DO I=1,NT
-  DO J=1,3
-   WRITE(JU,*) XP(TRI(I)%IP(J)),YP(TRI(I)%IP(J))
-  ENDDO
+ JU=UTL_GETUNIT(); OPEN(JU,FILE=IPFPPS(:INDEX(IPFPPS,'.',.TRUE.)-1)//'_POINTS.IPF',STATUS='UNKNOWN',ACTION='WRITE')
+ WRITE(JU,*) NP; WRITE(JU,'(A)') '3'; WRITE(JU,'(A)') 'X'; WRITE(JU,'(A)') 'Y'; WRITE(JU,*) 'ID'; WRITE(JU,'(A)') '0,TXT'
+ DO I=1,NP
+  WRITE(JU,*) XP(I),YP(I),I
  ENDDO
  CLOSE(JU)
  
+ !## plot points of triangles
+ JU=UTL_GETUNIT(); OPEN(JU,FILE=IPFPPS(:INDEX(IPFPPS,'.',.TRUE.)-1)//'_TRIANGLES.IPF',STATUS='UNKNOWN',ACTION='WRITE')
+ WRITE(JU,*) NT*3; WRITE(JU,'(A)') '4'; WRITE(JU,'(A)') 'X'; WRITE(JU,'(A)') 'Y'
+ WRITE(JU,*) 'ID_TRIANGLE'; WRITE(JU,*) 'ID_POITNS'; WRITE(JU,'(A)') '0,TXT'
+ DO I=1,NT
+  DO J=1,3
+   WRITE(JU,*) XP(TRI(I)%IP(J)),YP(TRI(I)%IP(J)),I,J
+  ENDDO
+ ENDDO
+ CLOSE(JU)
+
  !## plot delauney points (circumcenter)
  JU=UTL_GETUNIT(); OPEN(JU,FILE=IPFPPS(:INDEX(IPFPPS,'.',.TRUE.)-1)//'_DELAUNEY.IPF',STATUS='UNKNOWN',ACTION='WRITE')
  WRITE(JU,*) NT; WRITE(JU,'(A)') '2'; WRITE(JU,'(A)') 'X'; WRITE(JU,'(A)') 'Y'; WRITE(JU,'(A)') '0,TXT'
