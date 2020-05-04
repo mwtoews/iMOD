@@ -1384,8 +1384,8 @@ CONTAINS
   ENDIF
  ENDIF
 
- !## Save Keywords from Model Simulation window to INI file. For reuse in window or run iMODBATCH Function= RUNFILE  
- IF(PMANAGERINI(1,"")) THEN; ENDIF
+! !## Save Keywords from Model Simulation window to INI file. For reuse in window or run iMODBATCH Function= RUNFILE  
+! IF(PMANAGERINI(1,"")) THEN; ENDIF
 
  !## copy imod license text file
  CALL IOSCOPYFILE(TRIM(EXEPATH)//'\'//TRIM(LICFILE),TRIM(DIR)//'\'//TRIM(LICFILE))
