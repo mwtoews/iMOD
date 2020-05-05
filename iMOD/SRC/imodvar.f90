@@ -35,6 +35,7 @@ INTEGER,PARAMETER :: SP_KIND=SELECTED_REAL_KIND(6 ,37 )
 INTEGER,DIMENSION(2) :: IDPROC
 
 REAL(KIND=DP_KIND),PARAMETER :: PI=ATAN(1.0D0)*4.0D0  !## value pi
+REAL(KIND=DP_KIND),PARAMETER :: IMODDATA=HUGE(1.0)    !## iMOD default nodata value
 
 LOGICAL :: LBETA=.TRUE.          !## if TRUE: Show question whether it is allowed to use Beta-version or not
 LOGICAL :: LBETA_QUESTION=.FALSE. !## overrule the question at startup

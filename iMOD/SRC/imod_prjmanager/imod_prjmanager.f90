@@ -1016,11 +1016,6 @@ CONTAINS
  ENDDO
  
  IF(SUM(NF).GT.0)THEN
-
-!  !## sort files - get them nicely lined up 
-!  DO I=1,N
-!   IF(NF(I).GT.1)CALL WSORT(FILES(:,I),1,NF(I))
-!  ENDDO
  
   !## organize them properly
   ALLOCATE(FILES_BU(SUM(NF),N+1)) 

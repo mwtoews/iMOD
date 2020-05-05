@@ -513,11 +513,6 @@ CONTAINS
   CALL WMESSAGEBOX(OKONLY,EXCLAMATIONICON,COMMONOK,'No extra files found for the selected idf"s.','Error')
   RETURN
  ENDIF
-
-! !## sort files for their date - probably not neccessary but to be sure ...
-! DO I=1,N
-!  CALL WSORT(LISTFILES(:,I),1,NFILES(I),IFLAGS=SORTNOCASE)
-! ENDDO
  
  IDFTIMESERIE_DATES=.TRUE.
 

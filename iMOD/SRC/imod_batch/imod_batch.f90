@@ -465,7 +465,7 @@ CONTAINS
   XTOP(I)=IDF%TOP
   CLOSE(IDF%IU)
  ENDDO
- CALL WSORT(XTOP,1,SIZE(LISTNAME),1,IORDER=ITOP) 
+ CALL UTL_WSORT(XTOP,1,SIZE(LISTNAME),1,IORDER=ITOP) 
 
  ALLOCATE(IBND(IDF%NCOL,IDF%NROW,SIZE(LISTNAME)))
 
@@ -686,7 +686,7 @@ CONTAINS
   IF(.NOT.IDFREAD(IDF(4),LISTNAME(I),0))THEN; WRITE(*,'(A)') 'Cannot read file '//TRIM(LISTNAME(I)); STOP; ENDIF
   ZT(I)=IDF(4)%TOP; ZB(I)=IDF(4)%BOT
  ENDDO
- CALL WSORT(ZT,1,SIZE(ZT),IFLAGS=SORTDESCEND,IORDER=IORDER)
+ CALL UTL_WSORT(ZT,1,SIZE(ZT),IFLAGS=SORTDESCEND,IORDER=IORDER)
  
  !## get minimal/maximal value
  MINZ=MINVAL(ZB); MAXZ=MAXVAL(ZT)
@@ -4037,6 +4037,12 @@ CONTAINS
      ALLOCATE(ASSF_THRESHOLD(1)); ASSF_THRESHOLD=''
      ALLOCATE(ASSF_KH_THRESHOLD(1)); ASSF_KH_THRESHOLD=0.0D0
      ALLOCATE(ASSF_KV_THRESHOLD(1)); ASSF_KV_THRESHOLD=0.0D0
+
+    !## interface(3)/thickness(4) from boreholes interpolated
+    ELSEIF(ASSF_IDEPTH.EQ.3.OR.ASSF_IDEPTH.EQ.4)THEN
+    
+     IF(.NOT.UTL_READINITFILE('NLAY',LINE,IU,0))RETURN
+     READ(LINE,*) NLAYVAL; WRITE(*,'(A,I3)') 'NLAY=',NLAYVAL
 
     ENDIF
 
@@ -8790,13 +8796,13 @@ CONTAINS
       !## not in any triangle - error
       IF(JD.EQ.0)THEN; WRITE(*,'(/A/)') 'NO FAR POINT FOUND FOR SELECTED TRIANGLE FOR LAWSON FLIP'; PAUSE; STOP; ENDIF
       
-!      TRI(IT)%IP(1)=SP(2)
-!      TRI(IT)%IP(2)=ID
-!      TRI(IT)%IP(3)=JD
+      TRI(IT)%IP(1)=ID
+      TRI(IT)%IP(2)=SP(1)
+      TRI(IT)%IP(3)=SP(2)
       
-!      TRI(JT)%IP(1)=SP(1)
-!      TRI(JT)%IP(2)=ID
-!      TRI(JT)%IP(3)=JD
+      TRI(JT)%IP(1)=JD
+      TRI(JT)%IP(2)=SP(1)
+      TRI(JT)%IP(3)=SP(2)
 
       CALL TRIANGLE_ANGLES((/XP(TRI(IT)%IP(1)),YP(TRI(IT)%IP(1)), &
                              XP(TRI(IT)%IP(2)),YP(TRI(IT)%IP(2)), &
@@ -8815,8 +8821,10 @@ CONTAINS
       IF(ANGLE(1,1).GT.180.0D0.OR. &
          ANGLE(1,2).GT.180.0D0.OR. &
          ANGLE(2,1)+ANGLE(2,2).GT.180.0D0.OR. &
-         ANGLE(3,1)+ANGLE(3,2).GT.180.0D0)LEX=.TRUE.
-
+         ANGLE(3,1)+ANGLE(3,2).GT.180.0D0)THEN
+       LEX=.TRUE.
+      ENDIF
+      
       TRI(IT)%IP(1)=SP(1)
       TRI(IT)%IP(2)=ID
       TRI(IT)%IP(3)=JD
@@ -8839,7 +8847,7 @@ CONTAINS
       WRITE(*,'(55X,F10.2)') A3+A4
       
       !## reset as it is no improvement and new polygon is not convex
-      IF(A3+A4.LE.A1+A2)THEN !.OR.LEX)THEN
+      IF(A3+A4.LE.A1+A2.OR.LEX)THEN
        DO JJ=1,3; TRI(IT)%IP(JJ)=BP(1,JJ); ENDDO
        DO JJ=1,3; TRI(JT)%IP(JJ)=BP(2,JJ); ENDDO
       ENDIF

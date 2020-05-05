@@ -1382,7 +1382,7 @@ CONTAINS
   ENDDO 
  ENDIF
 
- CALL WSORT(RTIME,1,K)
+ CALL UTL_WSORT(RTIME,1,K)
  
  !## Check RTIME on doubles and count number of unique values
  DO II=1,2

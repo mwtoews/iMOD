@@ -7256,15 +7256,14 @@ IRLOOP: DO IROW=1,PRJIDF%NROW; DO ICOL=1,PRJIDF%NCOL
      TFV=TF(ICOL,IROW)
      !## bottom fault for display purposes
      BFV=BF(ICOL,IROW)
-     
-     !## add fault
-     NHFBNP(ILAY)=NHFBNP(ILAY)+1
-     
+          
      !## modflow2005
      IF(PBMAN%IFORMAT.EQ.2)THEN
 
       IF(BND(ILAY)%X(ICOL,IROW).NE.0.0D0.AND. &
          BND(ILAY)%X(ICOL+1,IROW).NE.0.0D0)THEN
+       !## add fault
+       NHFBNP(ILAY)=NHFBNP(ILAY)+1
        WRITE(IU,'(5(I10,1X),G15.7,1X,I10)') JLAY,IROW,ICOL,     IROW,ICOL+1,      C2,ISYS !## y-direction
       ENDIF
       
@@ -7274,6 +7273,9 @@ IRLOOP: DO IROW=1,PRJIDF%NROW; DO ICOL=1,PRJIDF%NCOL
       IF(BND(ILAY)%X(ICOL  ,IROW).NE.0.0D0.AND. &
          BND(ILAY)%X(ICOL+1,IROW).NE.0.0D0)THEN
  
+       !## add fault
+       NHFBNP(ILAY)=NHFBNP(ILAY)+1
+
        CALL IDFGETDXDY(BND(ILAY),ICOL,IROW,DX,DY)
       
        !## get average thickness in between cells
@@ -7341,15 +7343,14 @@ IRLOOP: DO IROW=1,PRJIDF%NROW; DO ICOL=1,PRJIDF%NCOL
      TFV=TF(ICOL,IROW)
      !## bottom fault for display purposes
      BFV=BF(ICOL,IROW)
-
-     !## add fault
-     NHFBNP(ILAY)=NHFBNP(ILAY)+1
      
      !## modflow2005
      IF(PBMAN%IFORMAT.EQ.2)THEN
 
       IF(BND(ILAY)%X(ICOL,IROW).NE.0.0D0.AND. &
          BND(ILAY)%X(ICOL,IROW+1).NE.0.0D0)THEN
+       !## add fault
+       NHFBNP(ILAY)=NHFBNP(ILAY)+1
        WRITE(IU,'(5(I10,1X),G15.7,1X,I10)') JLAY,IROW,ICOL,     IROW+1,ICOL,      C2,ISYS !## x-direction
       ENDIF
       
@@ -7359,6 +7360,9 @@ IRLOOP: DO IROW=1,PRJIDF%NROW; DO ICOL=1,PRJIDF%NCOL
       IF(BND(ILAY)%X(ICOL,IROW)  .NE.0.0D0.AND. &
          BND(ILAY)%X(ICOL,IROW+1).NE.0.0D0)THEN
          
+       !## add fault
+       NHFBNP(ILAY)=NHFBNP(ILAY)+1
+
        CALL IDFGETDXDY(BND(ILAY),ICOL,IROW,DX,DY)
        !## get average thickness in between cells
        T1=0.0D0; IF(BND(ILAY)%X(ICOL,IROW).NE.0.0D0)THEN
@@ -7384,8 +7388,6 @@ IRLOOP: DO IROW=1,PRJIDF%NROW; DO ICOL=1,PRJIDF%NCOL
         F=-(T1+T2)/(C2+T1+T2)
        ENDIF
        
-!       !## fraction 
-!       F=(T1+T2)/(C2+T1+T2)
        WRITE(IU,'(6(I10,1X),G15.7,1X,I10)') JLAY,IROW,ICOL,JLAY,IROW+1,ICOL,F,ISYS !## x-direction
       ENDIF
      ENDIF
