@@ -8696,49 +8696,64 @@ CONTAINS
   IF(IPT.EQ.-1)CYCLE
   
   !## not in any triangle - error
-  IF(IT.GT.NT)THEN; WRITE(*,'(/A/)') 'CURRENT POINT NOT IN ANY TRIANGLE'; PAUSE; STOP; ENDIF
+  IF(IT.GT.NT)THEN; WRITE(*,'(/A/)') 'CURRENT POINT NOT IN ANY TRIANGLE, WILL BE SKIPPED'; PAUSE; CYCLE; ENDIF
 
-  !## determine most far point of selected triangle
-  PP(1)=TRI(IT)%IP(1); PP(2)=TRI(IT)%IP(2); PP(3)=TRI(IT)%IP(3)
-  ID=0; MAXD=0.0D0; DO JP=1,3
-   D=UTL_DIST(XP(PP(JP)),YP(PP(JP)),XP(IP),YP(IP))
-   IF(D.GT.MAXD)THEN; MAXD=D; ID=PP(JP); ENDIF
-  ENDDO
+  !## splits current triangle in three
+  TRI(IT)%IP(1)=P1
+  TRI(IT)%IP(2)=P2
+  TRI(IT)%IP(3)=IP
   
-  !## not in any triangle - error
-  IF(ID.EQ.0)THEN; WRITE(*,'(/A/)') 'NO FAR POINT FOUND FOR SELECTED TRIANGLE'; PAUSE; STOP; ENDIF
+  NT=NT+1
+  TRI(NT)%IP(1)=P2
+  TRI(NT)%IP(2)=P3
+  TRI(NT)%IP(3)=IP
 
-  !## select the two others to define the segment to be adjusted
-  I=0; DO JP=1,3; IF(ID.NE.PP(JP))THEN; I=I+1; SP(I)=PP(JP); ENDIF; ENDDO  
-  IF(I.NE.2)THEN; WRITE(*,'(/A/)') 'CANNOT FIND TWO POINTS OF SELECTED TRIANGLE'; PAUSE; STOP; ENDIF
+  NT=NT+1
+  TRI(NT)%IP(1)=P3
+  TRI(NT)%IP(2)=IP
+  TRI(NT)%IP(3)=P1
+
+!  !## determine most far point of selected triangle
+!  PP(1)=TRI(IT)%IP(1); PP(2)=TRI(IT)%IP(2); PP(3)=TRI(IT)%IP(3)
+!  ID=0; MAXD=0.0D0; DO JP=1,3
+!   D=UTL_DIST(XP(PP(JP)),YP(PP(JP)),XP(IP),YP(IP))
+!   IF(D.GT.MAXD)THEN; MAXD=D; ID=PP(JP); ENDIF
+!  ENDDO
   
-  !## process (split) each triangle that shares those two points (need to be max. 2)
-  IT=0; DO
-   IT=IT+1; IF(IT.GT.NT)EXIT
-   !## found triangle to be splitted
-   K=0; DO J=1,3
-    IF(TRI(IT)%IP(J).EQ.SP(1).OR.TRI(IT)%IP(J).EQ.SP(2))K=K+1
-   ENDDO
-   IF(K.EQ.2)THEN
+!  !## not in any triangle - error
+!  IF(ID.EQ.0)THEN; WRITE(*,'(/A/)') 'NO FAR POINT FOUND FOR SELECTED TRIANGLE'; PAUSE; STOP; ENDIF
 
-    !## modify current triangle with sp(1)
-    DO I=1,3
-     !## find third point that remains in both triangles
-     IF(TRI(IT)%IP(I).NE.SP(1).AND.TRI(IT)%IP(I).NE.SP(2))THEN
-      J=I+1; IF(J.GT.3)J=1; TRI(IT)%IP(J)=SP(1)
-      J=J+1; IF(J.GT.3)J=1; TRI(IT)%IP(J)=IP
-      EXIT
-     ENDIF
-    ENDDO
+!  !## select the two others to define the segment to be adjusted
+!  I=0; DO JP=1,3; IF(ID.NE.PP(JP))THEN; I=I+1; SP(I)=PP(JP); ENDIF; ENDDO  
+!  IF(I.NE.2)THEN; WRITE(*,'(/A/)') 'CANNOT FIND TWO POINTS OF SELECTED TRIANGLE'; PAUSE; STOP; ENDIF
+  
+!  !## process (split) each triangle that shares those two points (need to be max. 2)
+!  IT=0; DO
+!   IT=IT+1; IF(IT.GT.NT)EXIT
+!   !## found triangle to be splitted
+!   K=0; DO J=1,3
+!    IF(TRI(IT)%IP(J).EQ.SP(1).OR.TRI(IT)%IP(J).EQ.SP(2))K=K+1
+!   ENDDO
+!   IF(K.EQ.2)THEN
 
-    !## add other triangle due to splitting
-    NT=NT+1
-    TRI(NT)%IP(1)=TRI(IT)%IP(I)
-    TRI(NT)%IP(2)=SP(2)
-    TRI(NT)%IP(3)=IP
+!    !## modify current triangle with sp(1)
+!    DO I=1,3
+!     !## find third point that remains in both triangles
+!     IF(TRI(IT)%IP(I).NE.SP(1).AND.TRI(IT)%IP(I).NE.SP(2))THEN
+!      J=I+1; IF(J.GT.3)J=1; TRI(IT)%IP(J)=SP(1)
+!      J=J+1; IF(J.GT.3)J=1; TRI(IT)%IP(J)=IP
+!      EXIT
+!     ENDIF
+!    ENDDO
 
-   ENDIF
-  ENDDO
+!    !## add other triangle due to splitting
+!    NT=NT+1
+!    TRI(NT)%IP(1)=TRI(IT)%IP(I)
+!    TRI(NT)%IP(2)=SP(2)
+!    TRI(NT)%IP(3)=IP
+
+!   ENDIF
+!  ENDDO
 
   !## clean all triangle that are zero area
   IT=0; DO
