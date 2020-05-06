@@ -102,6 +102,7 @@ INTEGER,DIMENSION(9),SAVE :: IMOVEAX,IMOVESC,IMOVELG
   CHARACTER(LEN=256) :: IDFNAME        !## name of idf/ipf-file
   CHARACTER(LEN=52) :: ALIAS
   INTEGER :: TSIZE                     !## text size (1 t/m 10 * 0.0D02)
+  CHARACTER(LEN=12) :: TFORMAT         !## text format
   INTEGER,DIMENSION(2) :: ICPERC       !## Associated file attributes: column numbers
   INTEGER :: GPERC1,GPERC2             !## checkbox value for plotting values (e.g. percentages) 
  END TYPE MPLOTOBJ

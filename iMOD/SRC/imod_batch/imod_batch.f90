@@ -133,14 +133,18 @@ CONTAINS
  !###======================================================================
  IMPLICIT NONE
  INTEGER :: IERROR
- 
+ INTEGER,DIMENSION(:),ALLOCATABLE :: ITMP1,ITMP2
+
  IMODBATCH=.FALSE.
 
  IF(.NOT.IMODBATCH_FUNC())RETURN
  
  !## get username and status and initialise window
  CALL WINDOWOPEN(FLAGS=SYSMENUON+HIDEWINDOW+STATUSBAR)
- CALL WINDOWSTATUSBARPARTS(4,(/2000,2000,750,-1/),(/1,1,1,1/))
+ ALLOCATE(ITMP1(4),ITMP2(4)); ITMP1=[2000,2000,750,-1]; ITMP2=[1,1,1,1]
+ CALL WINDOWSTATUSBARPARTS(4,ITMP1,ITMP2) !(/2000,2000,750,-1/),(/1,1,1,1/))
+ DEALLOCATE(ITMP1,ITMP2)
+! CALL WINDOWSTATUSBARPARTS(4,(/2000,2000,750,-1/),(/1,1,1,1/))
 
  !## initialize preferences user FOR IMOD Batch only
  PREFVAL='' !(1)='.\'
@@ -3932,9 +3936,6 @@ CONTAINS
  NODATA=-999.99D0
  IF(UTL_READINITFILE('NODATA',LINE,IU,1))READ(LINE,*) NODATA
  WRITE(*,'(A,F10.2)') 'NODATA=',NODATA
- ILOG=0
- IF(UTL_READINITFILE('ILOG',LINE,IU,1))READ(LINE,*) ILOG
- WRITE(*,'(A,I10)') 'ILOG=',ILOG
  
  IXCOL=1; IYCOL=2; IZCOL=3; ASSF_COLUMN=0; ASSF_STARTDATE=0; ASSF_ENDDATE=0; ASSF_DDATE=0; ASSF_CDDATE=''; TRIMDEPTH_IDF%FNAME=''
  ASSF_IDEPTH=0; ASSF_TOP=0.0D0; ASSF_BOT=0.0D0; ASSF_DZ=0.0D0; ASSF_NTHRESHOLD=1; ASSF_INDICATOR=0; ELLIPS_IDF%FNAME=''; ASSF_ZPLUS=0.0D0; ZONE_IDF%FNAME=''
@@ -3965,11 +3966,18 @@ CONTAINS
   ENDIF
   READ(JU,*) M; READ(JU,*) M; DO I=1,M; READ(JU,*); ENDDO; READ(JU,*) M; CLOSE(JU)
   IF(M.GT.0.AND.M.EQ.IZCOL)THEN
-   IF(.NOT.UTL_READINITFILE('ASSF_COLUMN',LINE,IU,0))RETURN
-   READ(LINE,*) ASSF_COLUMN; WRITE(*,'(A,I3)') 'ASSF_COLUMN=',ASSF_COLUMN
 
    IF(.NOT.UTL_READINITFILE('ASSF_IDEPTH',LINE,IU,0))RETURN
    READ(LINE,*) ASSF_IDEPTH; WRITE(*,'(A,I10)') 'ASSF_IDEPTH=',ASSF_IDEPTH
+
+   SELECT CASE (ASSF_IDEPTH)
+    CASE (1,2,3)
+     IF(.NOT.UTL_READINITFILE('ASSF_COLUMN',LINE,IU,0))RETURN
+     READ(LINE,*) ASSF_COLUMN; WRITE(*,'(A,I3)') 'ASSF_COLUMN=',ASSF_COLUMN
+    !## always use column=1 for these types
+    CASE DEFAULT 
+     ASSF_COLUMN=1
+   END SELECT
 
    IF(ASSF_IDEPTH.EQ.0)THEN
     WRITE(*,'(/A/)') '>>> Dates are processed <<<'
@@ -4001,6 +4009,8 @@ CONTAINS
 
     IF(ASSF_IDEPTH.EQ.1)THEN
 
+     WRITE(*,'(/A/)') '>>> VOXEL model is created with constant elevations <<<'
+
      IF(.NOT.UTL_READINITFILE('ASSF_TOP',LINE,IU,0))RETURN
      READ(LINE,*) ASSF_TOP; WRITE(*,'(A,F10.2)') 'ASSF_TOP=',ASSF_TOP
      IF(.NOT.UTL_READINITFILE('ASSF_BOT',LINE,IU,0))RETURN
@@ -4027,6 +4037,8 @@ CONTAINS
 
     ELSEIF(ASSF_IDEPTH.EQ.2)THEN
 
+     WRITE(*,'(/A/)') '>>> VOXEL model is created with spatial elevations <<<'
+
      IF(.NOT.UTL_READINITFILE('NLAY',LINE,IU,0))RETURN
      READ(LINE,*) NLAYVAL; WRITE(*,'(A,I3)') 'NLAY=',NLAYVAL
      ALLOCATE(INT_IDF(NLAYVAL))
@@ -4041,9 +4053,19 @@ CONTAINS
     !## interface(3)/thickness(4) from boreholes interpolated
     ELSEIF(ASSF_IDEPTH.EQ.3.OR.ASSF_IDEPTH.EQ.4)THEN
     
-     IF(.NOT.UTL_READINITFILE('NLAY',LINE,IU,0))RETURN
-     READ(LINE,*) NLAYVAL; WRITE(*,'(A,I3)') 'NLAY=',NLAYVAL
+     IF(ASSF_IDEPTH.EQ.3)WRITE(*,'(/A/)') '>>> 3D model is created per interface ELEVATION <<<'
+     IF(ASSF_IDEPTH.EQ.4)WRITE(*,'(/A/)') '>>> 3D model is created per interface THICKNESS <<<'
 
+     IF(.NOT.UTL_READINITFILE('NLAY',LINE,IU,0))RETURN
+     READ(LINE,*) NLAYVAL
+     IF(NLAYVAL.GT.0)THEN
+      WRITE(*,'(A,I3)') 'NLAY IS 1 UP TO ',NLAYVAL
+     ELSEIF(NLAYVAL.LT.0)THEN
+      WRITE(*,'(A,I3)') 'NLAY IS ',ABS(NLAYVAL)
+     ELSE
+      STOP 'NLAY NEED TO BE <>0'
+     ENDIF
+     
     ENDIF
 
     !## indicator
@@ -4088,6 +4110,14 @@ CONTAINS
   CALL UTL_GENLABELSREAD(XYZFNAMES(1)(:INDEX(XYZFNAMES(1),'.',.TRUE.)-1)//'.dat',VAR,NL,NV)
   IF(IZCOL.GT.NV)THEN; WRITE(*,'(A)') 'Error, entered label number exceeds available label'; STOP; ENDIF
  ENDIF
+
+ ILOG=0
+ IF(ASSF_IDEPTH.NE.4)THEN
+  IF(UTL_READINITFILE('ILOG',LINE,IU,1))READ(LINE,*) ILOG
+ ELSE
+  ILOG=1
+ ENDIF
+ WRITE(*,'(A,I10)') 'ILOG=',ILOG
 
  IF(.NOT.UTL_READINITFILE('GRIDFUNC',LINE,IU,0))RETURN
  READ(LINE,*) GRIDFUNC; GRIDFUNC=UTL_CAP(GRIDFUNC,'U'); WRITE(*,'(A)') 'GRIDFUNC='//TRIM(GRIDFUNC)
@@ -4241,6 +4271,10 @@ CONTAINS
     ENDIF
 
     ASSF_TOP=Z1; IINT_IDF=0
+
+    IF(ASSF_IDEPTH.EQ.3.OR.ASSF_IDEPTH.EQ.4)THEN
+     IF(NLAYVAL.LT.0)IINT_IDF=ABS(NLAYVAL)-1
+    ENDIF
    
     IF(ASSF_IDEPTH.EQ.0)IDATE=SDATE; ID=0
     DO   
@@ -4256,7 +4290,7 @@ CONTAINS
        ASSF_DZ=DZVAL(SIZE(DZVAL))
       ENDIF
       ASSF_BOT=MAX(Z2,ASSF_TOP-ASSF_DZ)
-     ELSEIF(ASSF_IDEPTH.EQ.2)THEN
+     ELSE !IF(ASSF_IDEPTH.EQ.2)THEN
       IINT_IDF=IINT_IDF+1
      ENDIF
      
@@ -4271,41 +4305,51 @@ CONTAINS
           
      !## startdate
      IF(ASSF_COLUMN.NE.0)THEN
-      IF(ASSF_IDEPTH.EQ.0)THEN
-       IDFFILE =TRIM(FNAMEVAL)//'_'//TRIM(ITOS(UTL_JDATETOIDATE(IDATE)))//'.IDF'
-       STDEVIDF=TRIM(SNAME)//'_'//TRIM(ITOS(UTL_JDATETOIDATE(IDATE)))//'.IDF'
-      ELSEIF(ASSF_IDEPTH.EQ.1)THEN
-       IF(ASSF_INDICATOR.GT.0)THEN
-        IDFFILE =TRIM(FNAMEVAL)//'_'//TRIM(ASSF_THRESHOLD(I))//'_T'//TRIM(RTOS(ASSF_TOP,'F',2))//'.IDF'
-        STDEVIDF=TRIM(SNAME)//'_'//TRIM(ASSF_THRESHOLD(I))//'_T'//TRIM(RTOS(ASSF_TOP,'F',2))//'.IDF'
-       ELSE
-        IDFFILE =TRIM(FNAMEVAL)//'_T'//TRIM(RTOS(ASSF_TOP,'F',2))//'.IDF'
-        STDEVIDF=TRIM(SNAME)//'_T'//TRIM(RTOS(ASSF_TOP,'F',2))//'.IDF'
-       ENDIF
-      ELSEIF(ASSF_IDEPTH.EQ.2)THEN
-       IF(ASSF_INDICATOR.GT.0)THEN
-        IDFFILE =TRIM(FNAMEVAL)//'_'//TRIM(ASSF_THRESHOLD(I))//'_INT'//TRIM(ITOS(IINT_IDF))//'.IDF'
-        STDEVIDF=TRIM(SNAME)//'_'//TRIM(ASSF_THRESHOLD(I))//'_INT'//TRIM(ITOS(IINT_IDF))//'.IDF'
-       ELSE
+      SELECT CASE (ASSF_IDEPTH)
+       CASE (0)
+        IDFFILE =TRIM(FNAMEVAL)//'_'//TRIM(ITOS(UTL_JDATETOIDATE(IDATE)))//'.IDF'
+        STDEVIDF=TRIM(SNAME)//'_'//TRIM(ITOS(UTL_JDATETOIDATE(IDATE)))//'.IDF'
+       CASE (1)
+        IF(ASSF_INDICATOR.GT.0)THEN
+         IDFFILE =TRIM(FNAMEVAL)//'_'//TRIM(ASSF_THRESHOLD(I))//'_T'//TRIM(RTOS(ASSF_TOP,'F',2))//'.IDF'
+         STDEVIDF=TRIM(SNAME)//'_'//TRIM(ASSF_THRESHOLD(I))//'_T'//TRIM(RTOS(ASSF_TOP,'F',2))//'.IDF'
+        ELSE
+         IDFFILE =TRIM(FNAMEVAL)//'_T'//TRIM(RTOS(ASSF_TOP,'F',2))//'.IDF'
+         STDEVIDF=TRIM(SNAME)//'_T'//TRIM(RTOS(ASSF_TOP,'F',2))//'.IDF'
+        ENDIF
+       CASE (2)
+        IF(ASSF_INDICATOR.GT.0)THEN
+         IDFFILE =TRIM(FNAMEVAL)//'_'//TRIM(ASSF_THRESHOLD(I))//'_INT'//TRIM(ITOS(IINT_IDF))//'.IDF'
+         STDEVIDF=TRIM(SNAME)//'_'//TRIM(ASSF_THRESHOLD(I))//'_INT'//TRIM(ITOS(IINT_IDF))//'.IDF'
+        ELSE
+         IDFFILE =TRIM(FNAMEVAL)//'_INT'//TRIM(ITOS(IINT_IDF))//'.IDF'
+         STDEVIDF=TRIM(SNAME)//'_INT'//TRIM(ITOS(IINT_IDF))//'.IDF'
+        ENDIF
+       CASE (3)
         IDFFILE =TRIM(FNAMEVAL)//'_INT'//TRIM(ITOS(IINT_IDF))//'.IDF'
         STDEVIDF=TRIM(SNAME)//'_INT'//TRIM(ITOS(IINT_IDF))//'.IDF'
-       ENDIF
-      ENDIF
+       CASE (4)
+        IDFFILE =TRIM(FNAMEVAL)//'_THK'//TRIM(ITOS(IINT_IDF))//'.IDF'
+        STDEVIDF=TRIM(SNAME)//'_THK'//TRIM(ITOS(IINT_IDF))//'.IDF'
+      END SELECT
      ENDIF
      
      !## reset max.point per cycle
      MAXPNT=MAXPOINT
      IF(.NOT.ASC2IDF_INT_MAIN(1,XMIN,YMIN,XMAX,YMAX,IN_TYPE))THEN; ENDIF
 
-     IF(ASSF_IDEPTH.EQ.0)THEN
-      IDATE=IDATE+DDATE
-      IF(IDATE.GT.EDATE)EXIT
-     ELSEIF(ASSF_IDEPTH.EQ.1)THEN
-      IF(ASSF_BOT.LE.Z2)EXIT
-      ASSF_TOP=ASSF_TOP-ASSF_DZ
-     ELSEIF(ASSF_IDEPTH.EQ.2)THEN
-      IF(IINT_IDF.EQ.NLAYVAL-1)EXIT
-     ENDIF
+     SELECT CASE (ASSF_IDEPTH)
+      CASE (0)
+       IDATE=IDATE+DDATE
+       IF(IDATE.GT.EDATE)EXIT
+      CASE (1)
+       IF(ASSF_BOT.LE.Z2)EXIT
+       ASSF_TOP=ASSF_TOP-ASSF_DZ
+      CASE (2)
+       IF(IINT_IDF.EQ.NLAYVAL-1)EXIT
+      CASE (3,4)
+       IF(IINT_IDF.EQ.ABS(NLAYVAL))EXIT
+     END SELECT
     ENDDO
 
     ASSF_INDICATOR=ASSF_INDICATOR+1
@@ -8559,27 +8603,70 @@ CONTAINS
  !###======================================================================
  IMPLICIT NONE
  CHARACTER(LEN=256) :: IPFOBS,IPFMES,IPFPPS
+ CHARACTER(LEN=2) :: PTYPE
  REAL(KIND=DP_KIND),ALLOCATABLE,DIMENSION(:) :: XP,YP !## list of points
- REAL(KIND=DP_KIND) :: DCLUSTER
- INTEGER :: I
+ REAL(KIND=DP_KIND) :: DCLUSTER,DX,DY
+ INTEGER :: I,J,NBORDER,PPTYPE,IG,IL
+ TYPE(IDFOBJ) :: IDF
  
- NIPF=3; CALL IPFALLOCATE()
+ NIPF=2; CALL IPFALLOCATE()
  
  IF(.NOT.UTL_READINITFILE('IPFOBS',LINE,IU,0))RETURN
  READ(LINE,*) IPFOBS; WRITE(*,'(A)') 'IPFOBS='//TRIM(IPFOBS)
- IPFMES=''; IF(UTL_READINITFILE('IPFMES',LINE,IU,1))THEN
+ IPF(2)%NROW=0; IPFMES=''; IF(UTL_READINITFILE('IPFMES',LINE,IU,1))THEN
   READ(LINE,*) IPFMES; WRITE(*,'(A)') 'IPFMES='//TRIM(IPFMES)
  ENDIF
- DO I=1,3; IPF(I)%XCOL=1; IPF(I)%YCOL=2; IPF(I)%QCOL=1; IPF(I)%ZCOL=1; IPF(I)%Z2COL=1; ENDDO
+ DO I=1,2; IPF(I)%XCOL=1; IPF(I)%YCOL=2; IPF(I)%QCOL=1; IPF(I)%ZCOL=1; IPF(I)%Z2COL=1; ENDDO
  IPF(1)%FNAME=IPFOBS; IF(.NOT.IPFREAD2(1,1,1))RETURN
  IF(IPFMES.NE.'')THEN; IPF(2)%FNAME=IPFMES; IF(.NOT.IPFREAD2(2,1,1))RETURN; ENDIF
+
  IF(.NOT.UTL_READINITFILE('IPFPPS',LINE,IU,0))RETURN
  READ(LINE,*) IPFPPS; WRITE(*,'(A)') 'IPFPPS='//TRIM(IPFPPS)
- IF(.NOT.UTL_READINITFILE('DCLUSTER',LINE,IU,0))RETURN
- READ(LINE,*) DCLUSTER; WRITE(*,'(A)') 'DCLUSTER='//TRIM(RTOS(DCLUSTER,'F',3))
+ 
+ IF(UTL_READINITFILE('IDF',LINE,IU,1))THEN
+  READ(LINE,*) IDF%FNAME; WRITE(*,'(A)') 'IDF='//TRIM(IDF%FNAME)
+  IF(.NOT.IDFREAD(IDF,IDF%FNAME,1))STOP
+ ENDIF
+ 
+ !## cluster points
+ DCLUSTER=0.0D0
+ IF(UTL_READINITFILE('DCLUSTER',LINE,IU,1))READ(LINE,*) DCLUSTER
+ WRITE(*,'(A)') 'DCLUSTER='//TRIM(RTOS(DCLUSTER,'F',3))
 
- N=IPF(1)%NROW+4; ALLOCATE(XP(N),YP(N))
- DO I=1,IPF(1)%NROW; XP(4+I)=IPF(1)%XYZ(1,I); YP(4+I)=IPF(1)%XYZ(2,I); ENDDO
+ !## number of points along the border
+ NBORDER=1
+ IF(UTL_READINITFILE('NBORDER',LINE,IU,1))READ(LINE,*) NBORDER
+ WRITE(*,'(A)') 'NBORDER='//TRIM(ITOS(NBORDER))
+ !## layer number 
+ IL=1
+ IF(UTL_READINITFILE('ILAYER',LINE,IU,1))READ(LINE,*) IL
+ WRITE(*,'(A)') 'ILAYER='//TRIM(ITOS(IL))
+ !## group number
+ IG=1
+ IF(UTL_READINITFILE('IGROUP',LINE,IU,1))READ(LINE,*) IG
+ WRITE(*,'(A)') 'IGROUP='//TRIM(ITOS(IG))
+  
+ PPTYPE=1
+ IF(UTL_READINITFILE('PPTYPE',LINE,IU,1))READ(LINE,*) PPTYPE
+ WRITE(*,'(A)') 'PPTYPE='//TRIM(ITOS(PPTYPE))
+ SELECT CASE (PPTYPE)
+  CASE (0); WRITE(*,'(A)') 'ORIGINAL (CLUSTERED) POINTS USED FOR PILOTPOINTS'
+  CASE (1); WRITE(*,'(A)') 'DELAUNEY (CIRCUMCENTER) POINTS USED FOR PILOTPOINTS'
+  CASE (2); WRITE(*,'(A)') 'INCENTER POINTS USED FOR PILOTPOINTS'
+  CASE (3); WRITE(*,'(A)') 'MIDPOINTS POITNS USED FOR PILOTPOINTS'
+ END SELECT
+ 
+ PTYPE='KH'
+ IF(UTL_READINITFILE('PTYPE',LINE,IU,1))READ(LINE,*) PTYPE
+ WRITE(*,'(A)') 'PTYPE='//TRIM(PTYPE)
+
+ N=IPF(2)%NROW+IPF(1)%NROW+(4*NBORDER)
+ 
+ ALLOCATE(XP(N),YP(N))
+ N=4*NBORDER
+ DO I=1,IPF(2)%NROW; XP(N+I)=IPF(2)%XYZ(1,I); YP(N+I)=IPF(2)%XYZ(2,I); ENDDO
+ N=4*NBORDER+IPF(2)%NROW
+ DO I=1,IPF(1)%NROW; XP(N+I)=IPF(1)%XYZ(1,I); YP(N+I)=IPF(1)%XYZ(2,I); ENDDO
 
  IF(UTL_READINITFILE('WINDOW',LINE,IU,1))THEN
   READ(LINE,*) XP(1),YP(1),XP(3),YP(3)
@@ -8587,42 +8674,53 @@ CONTAINS
   XP(2)=XP(1); XP(4)=XP(3)
   YP(2)=YP(3); YP(4)=YP(1)
  ELSE
-  XP(1)=MINVAL(XP(5:N)); YP(1)=MINVAL(YP(5:N))
-  XP(2)=MINVAL(XP(5:N)); YP(2)=MAXVAL(YP(5:N))
-  XP(3)=MAXVAL(XP(5:N)); YP(3)=MAXVAL(YP(5:N))
-  XP(4)=MAXVAL(XP(5:N)); YP(4)=MINVAL(YP(5:N))
+  J=4*NBORDER+1
+  XP(1)=MINVAL(XP(J:N)); YP(1)=MINVAL(YP(J:N))
+  XP(2)=MINVAL(XP(J:N)); YP(2)=MAXVAL(YP(J:N))
+  XP(3)=MAXVAL(XP(J:N)); YP(3)=MAXVAL(YP(J:N))
+  XP(4)=MAXVAL(XP(J:N)); YP(4)=MINVAL(YP(J:N))
  ENDIF
-! xp(3)=354750.0d0
-! xp(4)=354750.0d0
- CALL UTL_TRIANGULATION(XP,YP,IPFPPS,DCLUSTER)
+ DX=(XP(3)-XP(1))/REAL(NBORDER,8)
+ DY=(YP(2)-YP(1))/REAL(NBORDER,8)
+ J=4; DO I=1,NBORDER-1
+  J=J+1; XP(J)=XP(1)+DX*I; YP(J)=YP(2)
+  J=J+1; XP(J)=XP(1)+DX*I; YP(J)=YP(1)
+  J=J+1; XP(J)=XP(1);      YP(J)=YP(1)+DY*I
+  J=J+1; XP(J)=XP(3);      YP(J)=YP(1)+DY*I
+ ENDDO
+ 
+ IG=IG-1
+ CALL UTL_TRIANGULATION(XP,YP,IPFPPS,DCLUSTER,NBORDER,PTYPE,PPTYPE,IL,IG,IDF)
  
  END SUBROUTINE IMODBATH_CREATEPILOTPOINTS_IPF
  
  !###======================================================================
- SUBROUTINE UTL_TRIANGULATION(XP,YP,IPFPPS,DCLUSTER)
+ SUBROUTINE UTL_TRIANGULATION(XP,YP,IPFPPS,DCLUSTER,NINT,PTYPE,PPTYPE,IL,IG,IDF)
  !###======================================================================
-!https://people.sc.fsu.edu/~jburkardt/f_src/triangulation/triangulation_test.f90
-
  IMPLICIT NONE
- CHARACTER(LEN=*),INTENT(IN) :: IPFPPS
+ CHARACTER(LEN=*),INTENT(IN) :: IPFPPS,PTYPE
+ INTEGER,INTENT(IN) :: NINT,PPTYPE,IL
+ INTEGER,INTENT(INOUT) :: IG
+ TYPE(IDFOBJ),INTENT(INOUT) :: IDF
  REAL(KIND=DP_KIND),INTENT(IN) :: DCLUSTER
  REAL(KIND=DP_KIND),INTENT(INOUT),DIMENSION(:) :: XP,YP
  TYPE TRIOBJ
   INTEGER,DIMENSION(3) :: IP=0 !## reference to point for triangles
  END TYPE TRIOBJ
  TYPE(TRIOBJ),DIMENSION(:),ALLOCATABLE :: TRI
- INTEGER :: I,J,JJ,K,NP,IP,JP,IT,JT,P1,P2,P3,ID,IPT,JU,NT,JD,ND
- REAL(KIND=DP_KIND) :: D,MAXD,X,Y,A,A1,A2,A3,A4,XD,YD
+ INTEGER :: I,J,JJ,K,NP,IP,JP,IT,JT,P1,P2,P3,ID,IPT,JU,NT,JD,ND,KU,NPF
+ REAL(KIND=DP_KIND) :: D,X,Y,A,A1,A2,A3,A4,XD,YD,F
  REAL(KIND=DP_KIND),DIMENSION(3,4) :: ANGLE
- INTEGER,DIMENSION(3) :: PP !## point fo triangle
  INTEGER,DIMENSION(2) :: SP !## points of triangles of segment to be adjusted
  INTEGER,DIMENSION(2,3) :: BP !## backup point prior to lawson flip
  INTEGER,ALLOCATABLE,DIMENSION(:) :: DD
  LOGICAL :: LEX
+ REAL(KIND=DP_KIND),DIMENSION(2,3) :: T
  
- NP=SIZE(XP)
- NT=SIZE(TRI)
-
+ NP =SIZE(XP)
+ NT =SIZE(TRI)
+ NPF=IPF(2)%NROW
+ 
  ALLOCATE(TRI(2*NP)); ALLOCATE(DD(NP))
 
  !## apply clusters
@@ -8639,8 +8737,8 @@ CONTAINS
     XD=XD+XP(JP); YD=YD+YP(JP); DD(JP)=1; ND=ND+1
    ENDIF
   ENDDO
-  !## set new pointm exclude corner point
-  IF(IP.GT.4)THEN
+  !## set new point exclude corner points and fixed-points
+  IF(IP.GT.NPF+4*NINT)THEN
    XD=XD/REAL(ND,8)
    YD=YD/REAL(ND,8)
    !## set new point
@@ -8662,7 +8760,7 @@ CONTAINS
  NP=JP
  
  !## construct first four triangles, with first point not equal to all sides
- DO IP=5,NP
+ DO IP=NPF+(4*NINT)+1,NP
   IF(XP(IP).NE.XP(1).AND.XP(IP).NE.XP(3).AND. &
      YP(IP).NE.YP(1).AND.YP(IP).NE.YP(3))EXIT
  ENDDO
@@ -8677,7 +8775,12 @@ CONTAINS
 
  !## add all remaining points
  DO IP=5,NP
-
+  
+  !## skip fixed points
+  IF(NPF.GT.0)THEN
+   IF(IP.GT.4*NINT.AND.IP.LE.NPF+(4*NINT))CYCLE
+  ENDIF
+  
   if(ip.eq.np)then
    WRITE(*,*)
    DO IT=1,NT
@@ -8713,55 +8816,15 @@ CONTAINS
   TRI(NT)%IP(2)=IP
   TRI(NT)%IP(3)=P1
 
-!  !## determine most far point of selected triangle
-!  PP(1)=TRI(IT)%IP(1); PP(2)=TRI(IT)%IP(2); PP(3)=TRI(IT)%IP(3)
-!  ID=0; MAXD=0.0D0; DO JP=1,3
-!   D=UTL_DIST(XP(PP(JP)),YP(PP(JP)),XP(IP),YP(IP))
-!   IF(D.GT.MAXD)THEN; MAXD=D; ID=PP(JP); ENDIF
-!  ENDDO
-  
-!  !## not in any triangle - error
-!  IF(ID.EQ.0)THEN; WRITE(*,'(/A/)') 'NO FAR POINT FOUND FOR SELECTED TRIANGLE'; PAUSE; STOP; ENDIF
-
-!  !## select the two others to define the segment to be adjusted
-!  I=0; DO JP=1,3; IF(ID.NE.PP(JP))THEN; I=I+1; SP(I)=PP(JP); ENDIF; ENDDO  
-!  IF(I.NE.2)THEN; WRITE(*,'(/A/)') 'CANNOT FIND TWO POINTS OF SELECTED TRIANGLE'; PAUSE; STOP; ENDIF
-  
-!  !## process (split) each triangle that shares those two points (need to be max. 2)
-!  IT=0; DO
-!   IT=IT+1; IF(IT.GT.NT)EXIT
-!   !## found triangle to be splitted
-!   K=0; DO J=1,3
-!    IF(TRI(IT)%IP(J).EQ.SP(1).OR.TRI(IT)%IP(J).EQ.SP(2))K=K+1
-!   ENDDO
-!   IF(K.EQ.2)THEN
-
-!    !## modify current triangle with sp(1)
-!    DO I=1,3
-!     !## find third point that remains in both triangles
-!     IF(TRI(IT)%IP(I).NE.SP(1).AND.TRI(IT)%IP(I).NE.SP(2))THEN
-!      J=I+1; IF(J.GT.3)J=1; TRI(IT)%IP(J)=SP(1)
-!      J=J+1; IF(J.GT.3)J=1; TRI(IT)%IP(J)=IP
-!      EXIT
-!     ENDIF
-!    ENDDO
-
-!    !## add other triangle due to splitting
-!    NT=NT+1
-!    TRI(NT)%IP(1)=TRI(IT)%IP(I)
-!    TRI(NT)%IP(2)=SP(2)
-!    TRI(NT)%IP(3)=IP
-
-!   ENDIF
-!  ENDDO
-
   !## clean all triangle that are zero area
   IT=0; DO
    IT=IT+1
    IF(IT.GT.NT)EXIT
-   A=TRIANGLE_AREA((/XP(TRI(IT)%IP(1)),YP(TRI(IT)%IP(1)), &
-                     XP(TRI(IT)%IP(2)),YP(TRI(IT)%IP(2)), &
-                     XP(TRI(IT)%IP(3)),YP(TRI(IT)%IP(3))/))
+   DO J=1,3
+    T(1,J)=XP(TRI(IT)%IP(J))
+    T(2,J)=YP(TRI(IT)%IP(J))
+   ENDDO
+   A=TRIANGLE_AREA(T)
    !## move another triangle if this triangle has a volume
    IF(A.EQ.0.0D0)THEN
     DO I=IT,NT-1
@@ -8779,9 +8842,11 @@ CONTAINS
    endif
    
    !## determine angles 
-   CALL TRIANGLE_ANGLES((/XP(TRI(IT)%IP(1)),YP(TRI(IT)%IP(1)), &
-                          XP(TRI(IT)%IP(2)),YP(TRI(IT)%IP(2)), &
-                          XP(TRI(IT)%IP(3)),YP(TRI(IT)%IP(3))/),ANGLE(:,1))
+   DO J=1,3
+    T(1,J)=XP(TRI(IT)%IP(J))
+    T(2,J)=YP(TRI(IT)%IP(J))
+   ENDDO
+   CALL TRIANGLE_ANGLES(T,ANGLE(:,1))
    write(*,'(I10,3F10.3)') it,angle(:,1)
    
    !## try to apply for a lawson flip
@@ -8819,14 +8884,18 @@ CONTAINS
       TRI(JT)%IP(2)=SP(1)
       TRI(JT)%IP(3)=SP(2)
 
-      CALL TRIANGLE_ANGLES((/XP(TRI(IT)%IP(1)),YP(TRI(IT)%IP(1)), &
-                             XP(TRI(IT)%IP(2)),YP(TRI(IT)%IP(2)), &
-                             XP(TRI(IT)%IP(3)),YP(TRI(IT)%IP(3))/),ANGLE(:,1))
+      DO J=1,3
+       T(1,J)=XP(TRI(IT)%IP(J))
+       T(2,J)=YP(TRI(IT)%IP(J))
+      ENDDO
+      CALL TRIANGLE_ANGLES(T,ANGLE(:,1))
       A1=ANGLE(1,1)*ANGLE(2,1)*ANGLE(3,1)
       WRITE(*,'(A15,5F10.2)') 'OLD TRIANGLE_1',ANGLE(:,1),SUM(ANGLE(:,1)),A1
-      CALL TRIANGLE_ANGLES((/XP(TRI(JT)%IP(1)),YP(TRI(JT)%IP(1)), &
-                             XP(TRI(JT)%IP(2)),YP(TRI(JT)%IP(2)), &
-                             XP(TRI(JT)%IP(3)),YP(TRI(JT)%IP(3))/),ANGLE(:,2))
+      DO J=1,3
+       T(1,J)=XP(TRI(JT)%IP(J))
+       T(2,J)=YP(TRI(JT)%IP(J))
+      ENDDO
+      CALL TRIANGLE_ANGLES(T,ANGLE(:,2))
       A2=ANGLE(1,2)*ANGLE(2,2)*ANGLE(3,2)
       WRITE(*,'(A15,5F10.2)') 'OLD TRIANGLE_2',ANGLE(:,2),SUM(ANGLE(:,2)),A2
       WRITE(*,'(55X,F10.2)') A1+A2
@@ -8848,15 +8917,19 @@ CONTAINS
       TRI(JT)%IP(2)=ID
       TRI(JT)%IP(3)=JD
 
-      CALL TRIANGLE_ANGLES((/XP(TRI(IT)%IP(1)),YP(TRI(IT)%IP(1)), &
-                             XP(TRI(IT)%IP(2)),YP(TRI(IT)%IP(2)), &
-                             XP(TRI(IT)%IP(3)),YP(TRI(IT)%IP(3))/),ANGLE(:,3))
+      DO J=1,3
+       T(1,J)=XP(TRI(IT)%IP(J))
+       T(2,J)=YP(TRI(IT)%IP(J))
+      ENDDO
+      CALL TRIANGLE_ANGLES(T,ANGLE(:,3))
       A3=ANGLE(1,3)*ANGLE(2,3)*ANGLE(3,3)
       WRITE(*,'(A15,5F10.2)') 'NEW TRIANGLE_1',ANGLE(:,3),SUM(ANGLE(:,3)),A3
       
-      CALL TRIANGLE_ANGLES((/XP(TRI(JT)%IP(1)),YP(TRI(JT)%IP(1)), &
-                             XP(TRI(JT)%IP(2)),YP(TRI(JT)%IP(2)), &
-                             XP(TRI(JT)%IP(3)),YP(TRI(JT)%IP(3))/),ANGLE(:,4))
+      DO J=1,3
+       T(1,J)=XP(TRI(JT)%IP(J))
+       T(2,J)=YP(TRI(JT)%IP(J))
+      ENDDO
+      CALL TRIANGLE_ANGLES(T,ANGLE(:,4))
       A4=ANGLE(1,4)*ANGLE(2,4)*ANGLE(3,4)
       WRITE(*,'(A15,5F10.2)') 'NEW TRIANGLE_2',ANGLE(:,4),SUM(ANGLE(:,4)),A4
       WRITE(*,'(55X,F10.2)') A3+A4
@@ -8876,14 +8949,14 @@ CONTAINS
  ENDDO
  
  DO IT=1,NT
+  DO J=1,3
+   T(1,J)=XP(TRI(IT)%IP(J))
+   T(2,J)=YP(TRI(IT)%IP(J))
+  ENDDO
   !## determine angles 
-  CALL TRIANGLE_ANGLES((/XP(TRI(IT)%IP(1)),YP(TRI(IT)%IP(1)), &
-                         XP(TRI(IT)%IP(2)),YP(TRI(IT)%IP(2)), &
-                         XP(TRI(IT)%IP(3)),YP(TRI(IT)%IP(3))/),ANGLE(:,1))
-  A=TRIANGLE_AREA((/XP(TRI(IT)%IP(1)),YP(TRI(IT)%IP(1)), &
-                    XP(TRI(IT)%IP(2)),YP(TRI(IT)%IP(2)), &
-                    XP(TRI(IT)%IP(3)),YP(TRI(IT)%IP(3))/))
-  WRITE(*,'(I10,F10.1,3F10.3)') IT,ABS(A),ANGLE(:,1)
+  CALL TRIANGLE_ANGLES(T,ANGLE(:,1))
+  A=TRIANGLE_AREA(T)
+  WRITE(*,'(I10,G10.1,3F10.3)') IT,ABS(A),ANGLE(:,1)
  ENDDO
  
  !## plot triangles
@@ -8899,68 +8972,113 @@ CONTAINS
  WRITE(JU,'(A)') 'END'
  CLOSE(JU)
 
- !## plot points of triangles
- JU=UTL_GETUNIT(); OPEN(JU,FILE=IPFPPS(:INDEX(IPFPPS,'.',.TRUE.)-1)//'_POINTS.IPF',STATUS='UNKNOWN',ACTION='WRITE')
- WRITE(JU,*) NP; WRITE(JU,'(A)') '3'; WRITE(JU,'(A)') 'X'; WRITE(JU,'(A)') 'Y'; WRITE(JU,*) 'ID'; WRITE(JU,'(A)') '0,TXT'
- DO I=1,NP
-  WRITE(JU,*) XP(I),YP(I),I
- ENDDO
- CLOSE(JU)
+ KU=UTL_GETUNIT(); OPEN(JU,FILE=IPFPPS(:INDEX(IPFPPS,'.',.TRUE.)-1)//'.PRJ',STATUS='UNKNOWN',ACTION='WRITE')
+
+ SELECT CASE (PPTYPE)
+
+  !## use points
+  CASE (0)
+   !## plot used points of triangles
+   JU=UTL_GETUNIT(); OPEN(JU,FILE=IPFPPS(:INDEX(IPFPPS,'.',.TRUE.)-1)//'_POINTS.IPF',STATUS='UNKNOWN',ACTION='WRITE')
+   WRITE(JU,*) NP; WRITE(JU,'(A)') '4'; WRITE(JU,'(A)') 'X'; WRITE(JU,'(A)') 'Y'; WRITE(JU,'(A)') 'NO_PPOINT'; WRITE(JU,'(A)') 'IACT'; WRITE(JU,'(A)') '0,TXT'
+   DO I=1+(4+NINT),NP
+    X=XP(I); Y=YP(I)
+    CALL  UTL_TRIANGULATION_OUTPUT(JU,KU,XP,YP,NINT,DCLUSTER,X,Y,IL,IG,PTYPE,NPF,IDF)
+   ENDDO
+   CLOSE(JU)
  
- !## plot points of triangles
- JU=UTL_GETUNIT(); OPEN(JU,FILE=IPFPPS(:INDEX(IPFPPS,'.',.TRUE.)-1)//'_TRIANGLES.IPF',STATUS='UNKNOWN',ACTION='WRITE')
- WRITE(JU,*) NT*3; WRITE(JU,'(A)') '4'; WRITE(JU,'(A)') 'X'; WRITE(JU,'(A)') 'Y'
- WRITE(JU,*) 'ID_TRIANGLE'; WRITE(JU,*) 'ID_POITNS'; WRITE(JU,'(A)') '0,TXT'
- DO I=1,NT
-  DO J=1,3
-   WRITE(JU,*) XP(TRI(I)%IP(J)),YP(TRI(I)%IP(J)),I,J
-  ENDDO
- ENDDO
- CLOSE(JU)
+  !## plot delauney points (circumcenter)
+  CASE (1)
+   JU=UTL_GETUNIT(); OPEN(JU,FILE=IPFPPS(:INDEX(IPFPPS,'.',.TRUE.)-1)//'_DELAUNEY.IPF',STATUS='UNKNOWN',ACTION='WRITE')
+   WRITE(JU,*) NT; WRITE(JU,'(A)') '4'; WRITE(JU,'(A)') 'X'; WRITE(JU,'(A)') 'Y'; WRITE(JU,'(A)') 'NO_PPOINT'; WRITE(JU,'(A)') 'IACT'; WRITE(JU,'(A)') '0,TXT'
+   DO I=1,NT
+    DO J=1,3
+     T(1,J)=XP(TRI(I)%IP(J))
+     T(2,J)=YP(TRI(I)%IP(J))
+    ENDDO
+    CALL TRIANGLE_CIRCUMCIRCLE(T,X,Y)
+    CALL  UTL_TRIANGULATION_OUTPUT(JU,KU,XP,YP,NINT,DCLUSTER,X,Y,IL,IG,PTYPE,NPF,IDF)
+   ENDDO
+   CLOSE(JU)
 
- !## plot delauney points (circumcenter)
- JU=UTL_GETUNIT(); OPEN(JU,FILE=IPFPPS(:INDEX(IPFPPS,'.',.TRUE.)-1)//'_DELAUNEY.IPF',STATUS='UNKNOWN',ACTION='WRITE')
- WRITE(JU,*) NT; WRITE(JU,'(A)') '2'; WRITE(JU,'(A)') 'X'; WRITE(JU,'(A)') 'Y'; WRITE(JU,'(A)') '0,TXT'
- DO I=1,NT
-  CALL TRIANGLE_CIRCUMCIRCLE((/XP(TRI(I)%IP(1)),YP(TRI(I)%IP(1)), &
-                               XP(TRI(I)%IP(2)),YP(TRI(I)%IP(2)), &
-                               XP(TRI(I)%IP(3)),YP(TRI(I)%IP(3))/),X,Y)
-  WRITE(JU,*) X,Y
- ENDDO
- CLOSE(JU)
+  !## plot incenter points
+  CASE (2)
+   JU=UTL_GETUNIT(); OPEN(JU,FILE=IPFPPS(:INDEX(IPFPPS,'.',.TRUE.)-1)//'_INCENTER.IPF',STATUS='UNKNOWN',ACTION='WRITE')
+   WRITE(JU,*) NT; WRITE(JU,'(A)') '4'; WRITE(JU,'(A)') 'X'; WRITE(JU,'(A)') 'Y'; WRITE(JU,'(A)') 'NO_PPOINT'; WRITE(JU,'(A)') 'IACT'; WRITE(JU,'(A)') '0,TXT'
+   DO I=1,NT
+    DO J=1,3
+     T(1,J)=XP(TRI(I)%IP(J))
+     T(2,J)=YP(TRI(I)%IP(J))
+    ENDDO
+    CALL TRIANGLE_INCIRCLE(T,X,Y)
+    CALL  UTL_TRIANGULATION_OUTPUT(JU,KU,XP,YP,NINT,DCLUSTER,X,Y,IL,IG,PTYPE,NPF,IDF)
+   ENDDO
+   CLOSE(JU)
 
- !## plot incenter points
- JU=UTL_GETUNIT(); OPEN(JU,FILE=IPFPPS(:INDEX(IPFPPS,'.',.TRUE.)-1)//'_INCENTER.IPF',STATUS='UNKNOWN',ACTION='WRITE')
- WRITE(JU,*) NT; WRITE(JU,'(A)') '2'; WRITE(JU,'(A)') 'X'; WRITE(JU,'(A)') 'Y'; WRITE(JU,'(A)') '0,TXT'
- DO I=1,NT
-  CALL TRIANGLE_INCIRCLE((/XP(TRI(I)%IP(1)),YP(TRI(I)%IP(1)), &
-                           XP(TRI(I)%IP(2)),YP(TRI(I)%IP(2)), &
-                           XP(TRI(I)%IP(3)),YP(TRI(I)%IP(3))/),X,Y)
-  WRITE(JU,*) X,Y
- ENDDO
- CLOSE(JU)
-
- !## plot points of triangles
- JU=UTL_GETUNIT(); OPEN(JU,FILE=IPFPPS(:INDEX(IPFPPS,'.',.TRUE.)-1)//'_CENTROID.IPF',STATUS='UNKNOWN',ACTION='WRITE')
- WRITE(JU,*) NT; WRITE(JU,'(A)') '3'; WRITE(JU,'(A)') 'X'; WRITE(JU,'(A)') 'Y'; WRITE(JU,'(A)') 'NO._TRIANGLE'; WRITE(JU,'(A)') '0,TXT'
- DO I=1,NT
-  X=XP(TRI(I)%IP(1))+XP(TRI(I)%IP(2))+XP(TRI(I)%IP(3)); X=X/3.0D0
-  Y=YP(TRI(I)%IP(1))+YP(TRI(I)%IP(2))+YP(TRI(I)%IP(3)); Y=Y/3.0D0
-  WRITE(JU,'(2F15.3,I10)') X,Y,I
- ENDDO
- CLOSE(JU)
-
+  !## plot points of mid of triangles
+  CASE (3)
+   JU=UTL_GETUNIT(); OPEN(JU,FILE=IPFPPS(:INDEX(IPFPPS,'.',.TRUE.)-1)//'_CENTROID.IPF',STATUS='UNKNOWN',ACTION='WRITE')
+   WRITE(JU,*) NT+NPF; WRITE(JU,'(A)') '4'; WRITE(JU,'(A)') 'X'; WRITE(JU,'(A)') 'Y'; WRITE(JU,'(A)') 'NO_PPOINT'; WRITE(JU,'(A)') 'IACT'; WRITE(JU,'(A)') '0,TXT'
+   J=0; DO I=1,NT
+    !## save known measures
+    IF(I.GT.4*NINT.AND.I.LT.4*NINT+NPF)THEN
+     IG=IG+1; J=J+1
+     WRITE(JU,'(2F15.3,2I10)') X,Y,IG,1
+     !## apply factor from ipf(2)
+     READ(IPF(2)%INFO(3,J),*) F !F=1.0D0 !IP
+     WRITE(KU,'(A)') TRIM(ITOS(1))//','//TRIM(PTYPE)//','// TRIM(ITOS(IL))//','// TRIM(ITOS(IG))//','//TRIM(RTOS(F,'F',1))//',1.1,0.01,100.0,10.0,'// TRIM(ITOS(IG))//',1,'// &
+                     TRIM(PTYPE)//'_G'//TRIM(ITOS(IG))//'_L'//TRIM(ITOS(IL))//'1.0'
+    ENDIF
+    X=XP(TRI(I)%IP(1))+XP(TRI(I)%IP(2))+XP(TRI(I)%IP(3)); X=X/3.0D0
+    Y=YP(TRI(I)%IP(1))+YP(TRI(I)%IP(2))+YP(TRI(I)%IP(3)); Y=Y/3.0D0
+    CALL  UTL_TRIANGULATION_OUTPUT(JU,KU,XP,YP,NINT,DCLUSTER,X,Y,IL,IG,PTYPE,NPF,IDF)
+   ENDDO
+  CLOSE(JU)
+ END SELECT
+ 
  DEALLOCATE(TRI)
  
  END SUBROUTINE UTL_TRIANGULATION
 
  !###======================================================================
+ SUBROUTINE UTL_TRIANGULATION_OUTPUT(JU,KU,XP,YP,NINT,DCLUSTER,X,Y,IL,IG,PTYPE,NPF,IDF)
+ !###======================================================================
+ IMPLICIT NONE
+ REAL(KIND=DP_KIND),INTENT(IN),DIMENSION(:) :: XP,YP
+ INTEGER,INTENT(IN) :: NINT,JU,IL,NPF,KU
+ TYPE(IDFOBJ),INTENT(INOUT) :: IDF
+ INTEGER,INTENT(INOUT) :: IG
+ CHARACTER(LEN=*),INTENT(IN) :: PTYPE
+ REAL(KIND=DP_KIND),INTENT(IN) :: DCLUSTER,X,Y
+ INTEGER :: IACT,J,IROW,ICOL
+ 
+ IACT=1
+ DO J=1+(4*NINT),NPF+4*NINT-1
+  IF(UTL_DIST(XP(J),YP(J),X,Y).LE.DCLUSTER)IACT=0
+ ENDDO
+ !## check idf if available
+ IF(ASSOCIATED(IDF%X))THEN
+  CALL IDFIROWICOL(IDF,IROW,ICOL,X,Y)
+  IF(ICOL.EQ.0.OR.IROW.EQ.0)THEN
+   IACT=0
+  ELSE
+   IF(IDF%X(ICOL,IROW).EQ.IDF%NODATA)IACT=0
+  ENDIF
+ ENDIF
+ IG=IG+1
+ WRITE(JU,'(2F15.3,2I10)') X,Y,IG,IACT
+ WRITE(KU,'(A)') TRIM(ITOS(IACT))//','//TRIM(PTYPE)//','// TRIM(ITOS(IL))//','// TRIM(ITOS(IG))//',1.0,1.1,0.01,100.0,10.0,'// TRIM(ITOS(IG))//',1,'// &
+                 TRIM(PTYPE)//'_G'//TRIM(ITOS(IG))//'_L'//TRIM(ITOS(IL))//'1.0'
+ 
+ END SUBROUTINE UTL_TRIANGULATION_OUTPUT
+ 
+ !###======================================================================
  SUBROUTINE TRIANGLE_ANGLES(T,ANGLE)
  !###======================================================================
  IMPLICIT NONE
  REAL(KIND=DP_KIND) :: A,B,C
- REAL(KIND=DP_KIND),DIMENSION(3),INTENT(OUT) :: ANGLE(3)
- REAL(KIND=DP_KIND),DIMENSION(2,3),INTENT(IN) :: T(2,3)
+ REAL(KIND=DP_KIND),DIMENSION(3),INTENT(OUT) :: ANGLE(:)
+ REAL(KIND=DP_KIND),DIMENSION(2,3),INTENT(IN) :: T
 
  !## compute the length of each side.
  A=SQRT((T(1,2)-T(1,1))**2.0D0+(T(2,2)-T(2,1))**2.0D0)
@@ -9011,7 +9129,7 @@ CONTAINS
  REAL(KIND=DP_KIND) FUNCTION TRIANGLE_AREA(T)
  !###======================================================================
  IMPLICIT NONE
- REAL(KIND=DP_KIND),INTENT(IN),DIMENSION(2,3) :: T
+ REAL(KIND=DP_KIND),DIMENSION(2,3) :: T
 
  TRIANGLE_AREA=0.5D0*(T(1,1)*(T(2,2)-T(2,3))+ &
                       T(1,2)*(T(2,3)-T(2,1))+ &
@@ -9089,7 +9207,7 @@ CONTAINS
  INTEGER FUNCTION UTL_POINT_IN_TRIANGLE(A,B,C,P)
  !###======================================================================
  IMPLICIT NONE
- REAL(KIND=DP_KIND),DIMENSION(2) :: A,B,C,P
+ REAL(KIND=DP_KIND),DIMENSION(:) :: A,B,C,P
  REAL(KIND=DP_KIND) :: X,Y,Z
  
  UTL_POINT_IN_TRIANGLE=-1

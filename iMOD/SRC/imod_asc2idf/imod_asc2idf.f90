@@ -1313,28 +1313,45 @@ CONTAINS
     IF(ASSF_COLUMN.EQ.0)THEN
      READ(STRING(IZCOL),*) Z
     ELSE
-     IF(ASSF_IDEPTH.EQ.0)THEN
-      STIME=INT(UTL_JDATETOIDATE(ASSF_STARTDATE),8)*INT(1000000,8)
-      ETIME=INT(UTL_JDATETOIDATE(ASSF_ENDDATE),8)  *INT(1000000,8)     
-      LT=.TRUE.; LB=.TRUE.; ISS=2
-     !## uniform thickness
-     ELSEIF(ASSF_IDEPTH.EQ.1)THEN
-      !## depth in centimeters
-      STIME=(ASSF_TOP+ASSF_ZPLUS)*100
-      ETIME=(ASSF_BOT-ASSF_ZPLUS)*100 
-      LT=.TRUE.; LB=.TRUE.
-     !## spatial thickness
-     ELSEIF(ASSF_IDEPTH.EQ.2)THEN
-      !## depth in centimeters
-      Z=IDFGETXYVAL(INT_IDF(IINT_IDF),X,Y)
-      LT=.FALSE.; IF(Z.NE.INT_IDF(IINT_IDF)%NODATA)THEN; STIME=Z*100; LT=.TRUE.; ENDIF
-      Z=IDFGETXYVAL(INT_IDF(IINT_IDF+1),X,Y)
-      LB=.FALSE.; IF(Z.NE.INT_IDF(IINT_IDF+1)%NODATA)THEN; ETIME=Z*100; LB=.TRUE.; ENDIF
-     ENDIF
-     IF(LT.AND.LB.AND.(STIME.NE.ETIME))THEN
+     SELECT CASE (ASSF_IDEPTH)
+      CASE (0)
+       STIME=INT(UTL_JDATETOIDATE(ASSF_STARTDATE),8)*INT(1000000,8)
+       ETIME=INT(UTL_JDATETOIDATE(ASSF_ENDDATE),8)  *INT(1000000,8)     
+       LT=.TRUE.; LB=.TRUE.; ISS=2
+      !## uniform thickness
+      CASE (1)
+       !## depth in centimeters
+       STIME=(ASSF_TOP+ASSF_ZPLUS)*100
+       ETIME=(ASSF_BOT-ASSF_ZPLUS)*100 
+       LT=.TRUE.; LB=.TRUE.
+      !## spatial thickness
+      CASE (2)
+       !## depth in centimeters
+       Z=IDFGETXYVAL(INT_IDF(IINT_IDF),X,Y)
+       LT=.FALSE.; IF(Z.NE.INT_IDF(IINT_IDF)%NODATA)THEN;   STIME=Z*100; LT=.TRUE.; ENDIF
+       Z=IDFGETXYVAL(INT_IDF(IINT_IDF+1),X,Y)
+       LB=.FALSE.; IF(Z.NE.INT_IDF(IINT_IDF+1)%NODATA)THEN; ETIME=Z*100; LB=.TRUE.; ENDIF
+      !## absolute depth of interface
+      CASE (3)
+       STIME=INT(IINT_IDF,8)
+       ETIME=INT(IINT_IDF,8)
+       LT=.TRUE.; LB=.TRUE.
+      !## thickness of interface
+      CASE (4)
+       STIME=-INT(IINT_IDF,8)
+       ETIME=-INT(IINT_IDF,8)
+       LT=.TRUE.; LB=.TRUE.
+     END SELECT
+     IF(LT.AND.LB)THEN !.AND.(STIME.NE.ETIME))THEN
       TXTFNAME=FNAME(:INDEX(FNAME,'\',.TRUE.))//TRIM(STRING(IEXT))//'.'//TRIM(EXT)
       LEX=UTL_PCK_READTXT(ASSF_COLUMN,STIME,ETIME,Z,TXTFNAME,ASSF_INDICATOR,ASSF_THRESHOLD(MAX(1,ASSF_INDICATOR)),ISS,NCOUNT)
       IF(NCOUNT.LE.0.0D0)LEX=.FALSE.
+      !## for depth interpolation, use ilog=1 and nodata as zero
+      IF(ASSF_IDEPTH.EQ.4)THEN
+       IF(.NOT.LEX)THEN
+        LEX=.TRUE.; Z=0.0D0
+       ENDIF
+      ENDIF
      ELSE
       LEX=.FALSE.; Z=0.0D0
      ENDIF

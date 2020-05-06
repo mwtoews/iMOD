@@ -321,7 +321,10 @@ CONTAINS
  
  IPEST_GLM_CHK=.FALSE.
  
- DO I=1,SIZE(PARAM); IF(TRIM(PEST%PARAM(IP)%PPARAM).EQ.TRIM(PARAM(I)))EXIT; ENDDO
+ DO I=1,SIZE(PARAM)
+  PEST%PARAM(IP)%PPARAM=UTL_CAP(PEST%PARAM(IP)%PPARAM,'U')
+  IF(TRIM(PEST%PARAM(IP)%PPARAM).EQ.TRIM(PARAM(I)))EXIT
+ ENDDO
  IF(I.GT.SIZE(PARAM))THEN
   IF(IBATCH.EQ.1)THEN
    WRITE(*,'(/A)') 'Error can not recognize parameter type:'//TRIM(PEST%PARAM(IP)%PPARAM)
@@ -1219,7 +1222,7 @@ CONTAINS
        PEST%PARAM(I)%PILS, &           !## ilayer/system
        PEST%PARAM(I)%PIZONE, &         !## zone number
        10.0D0**(PEST%PARAM(I)%ALPHA(1)), &  !## initial value
-       PEST%PARAM(I)%PDELTA, &         !## finite difference step
+       10.0D0**(PEST%PARAM(I)%PDELTA), &         !## finite difference step
        10.0D0**(PEST%PARAM(I)%PMIN), &      !## minimal value
        10.0D0**(PEST%PARAM(I)%PMAX),&       !## maximal value
        PEST%PARAM(I)%PINCREASE,&       !## maximal adjust factor

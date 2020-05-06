@@ -608,16 +608,18 @@ DOLOOP: DO
  !###===============================================================================
  SUBROUTINE UTL_PLOTLABEL_REAL(CLABEL,CFORMAT)
  !###===============================================================================
+ IMPLICIT NONE
  CHARACTER(LEN=*),INTENT(INOUT) :: CLABEL
  CHARACTER(LEN=*),INTENT(IN) :: CFORMAT
  INTEGER :: IOS
  REAL(DP_KIND) :: X
 
  IF(TRIM(CFORMAT).EQ.'')RETURN
- 
+
  READ(CLABEL,*,IOSTAT=IOS) X
  IF(IOS.NE.0)RETURN
- WRITE(CLABEL,CFORMAT) X  
+ WRITE(CLABEL,CFORMAT,IOSTAT=IOS) X
+ IF(IOS.NE.0)RETURN
  
  END SUBROUTINE UTL_PLOTLABEL_REAL
 
@@ -2313,10 +2315,26 @@ DOLOOP: DO
 
   !## get elevation in chronologic order
   IF(ICOL.EQ.1)THEN
-   IZMAX=STIME !SDATE
+   IZMAX=ABS(STIME)
+   !## get absolute value
    DO IR=1,MIN(IZMAX,NR)
     READ(IU,*) Z
    ENDDO
+   !## get thickness of layer (stime) until first nodata value
+   IF(STIME.LT.INT(0,8))THEN
+    IF(Z.NE.NODATA(1))THEN
+     DO 
+      IR=IR+1; IF(IR.EQ.NR)EXIT
+      READ(IU,*) Z1; IF(Z1.NE.NODATA(1))EXIT
+     ENDDO
+     !## get thickness
+     IF(Z1.NE.NODATA(1))THEN
+      Z=Z-Z1; IR=IZMAX+1
+     ELSE
+      Z=NODATA(1)
+     ENDIF
+    ENDIF
+   ENDIF
    QT=Z
    IF(Z.NE.NODATA(1).AND.IR.EQ.IZMAX+1)THEN
     NCOUNT=1.0D0; UTL_PCK_READTXT=.TRUE.
@@ -2350,7 +2368,7 @@ DOLOOP: DO
     ELSE
      READ(QD(ICOL),*,IOSTAT=IOS) Q1
      IF(IOS.NE.0)THEN
-      WRITE(*,'(/A/)') 'iMOD cannot read '//QD(ICOL)//' into a number'; STOP
+      WRITE(*,'(/A/)') 'iMOD cannot read ['//TRIM(QD(ICOL))//'] into a number'; PAUSE; STOP
      ENDIF
     ENDIF
 
