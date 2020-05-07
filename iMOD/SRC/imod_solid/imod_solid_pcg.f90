@@ -931,12 +931,13 @@ CONTAINS
  LEX=.TRUE.
  IF(ICNVG.NE.1)THEN
   IF(IBATCH.EQ.0)THEN   
-    CALL WMESSAGEBOX(YESNO,QUESTIONICON,COMMONNO,'Interpolation did not converge.'//CHAR(13)// &
-      'Hclosure ='//TRIM(RTOS(HCHG,'E',7))//CHAR(13)//'Do you want to save the results so far in:'//CHAR(13)// &
-       '['//TRIM(FNAME)//']','Question')
-    IF(WINFODIALOG(4).EQ.1)LEX=.TRUE.
+   CALL WMESSAGEBOX(YESNO,QUESTIONICON,COMMONNO,'Interpolation did not converge.'//CHAR(13)// &
+     'Hclosure ='//TRIM(RTOS(HCHG,'E',7))//CHAR(13)//'Do you want to save the results so far in:'//CHAR(13)// &
+      '['//TRIM(FNAME)//']','Question')
+   IF(WINFODIALOG(4).NE.1)LEX=.FALSE.
   ELSE
-    WRITE(*,'(/A/)') 'Interpolation did not converge. Hclosure ='//TRIM(RTOS(HCHG,'E',7))
+   WRITE(*,'(/A)') 'Interpolation did not converge. Hclosure ='//TRIM(RTOS(HCHG,'E',7))
+   WRITE(*,'(A/)') 'Results so far will be saved'
   ENDIF    
  ENDIF
 
