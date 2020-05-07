@@ -2323,6 +2323,7 @@ DOLOOP: DO
    !## get thickness of layer (stime) until first nodata value
    IF(STIME.LT.INT(0,8))THEN
     IF(Z.NE.NODATA(1))THEN
+     Z1=NODATA(1)
      DO 
       IR=IR+1; IF(IR.EQ.NR)EXIT
       READ(IU,*) Z1; IF(Z1.NE.NODATA(1))EXIT
