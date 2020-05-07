@@ -770,12 +770,12 @@ CONTAINS
  END FUNCTION SOLID_CALC_INIT
  
  !###======================================================================
- SUBROUTINE SOLID_PCGINT(XD,YD,ZD,ND,IERROR,IDF,IECHO,IDUPLICATE,HNOFLOW,CD,IPC,CC_GIVEN) 
+ SUBROUTINE SOLID_PCGINT(XD,YD,ZD,ND,IERROR,IDF,IECHO,IDUPLICATE,HNOFLOW,CD,IPC,CC_GIVEN,IBATCH) 
  !###======================================================================
  IMPLICIT NONE
  REAL(KIND=DP_KIND),PARAMETER :: FCT_CC_GIVEN=0.01D0
  INTEGER,INTENT(IN) :: ND,IECHO !## 1=WINDOWS -1=DOSBOX
- INTEGER,INTENT(IN),OPTIONAL :: IDUPLICATE
+ INTEGER,INTENT(IN),OPTIONAL :: IDUPLICATE,IBATCH
  REAL(KIND=DP_KIND),OPTIONAL,INTENT(IN) :: HNOFLOW !## make areas inactive values in idf%x() equal to hoflow
  REAL(KIND=DP_KIND),DIMENSION(:),POINTER :: XD,YD,ZD
  REAL(KIND=DP_KIND),DIMENSION(:),POINTER,INTENT(IN),OPTIONAL :: CD
@@ -789,7 +789,7 @@ CONTAINS
  REAL(KIND=DP_KIND) :: Z1,Z2,INIHEAD,C,HCHG,HCHGOLD,S,RCHG
 
  IERROR=1
- 
+     
  !## pcg cannot solve perfect flat area, so idf%x=zd
  Z1=MINVAL(ZD(1:ND)); Z2=MAXVAL(ZD(1:ND))
  IF(Z1.EQ.Z2)THEN; IDF%X(:,:)=Z1; CALL UTL_MESSAGEHANDLE(1); IERROR=0; RETURN; ENDIF
@@ -930,10 +930,14 @@ CONTAINS
 
  LEX=.TRUE.
  IF(ICNVG.NE.1)THEN
-  CALL WMESSAGEBOX(YESNO,QUESTIONICON,COMMONNO,'Interpolation did not converge.'//CHAR(13)// &
-    'Hclosure ='//TRIM(RTOS(HCHG,'E',7))//CHAR(13)//'Do you want to save the results so far in:'//CHAR(13)// &
-     '['//TRIM(FNAME)//']','Question')
-  IF(WINFODIALOG(4).EQ.1)LEX=.TRUE.
+  IF(IBATCH.EQ.0)THEN   
+    CALL WMESSAGEBOX(YESNO,QUESTIONICON,COMMONNO,'Interpolation did not converge.'//CHAR(13)// &
+      'Hclosure ='//TRIM(RTOS(HCHG,'E',7))//CHAR(13)//'Do you want to save the results so far in:'//CHAR(13)// &
+       '['//TRIM(FNAME)//']','Question')
+    IF(WINFODIALOG(4).EQ.1)LEX=.TRUE.
+  ELSE
+    WRITE(*,'(/A/)') 'Interpolation did not converge. Hclosure ='//TRIM(RTOS(HCHG,'E',7))
+  ENDIF    
  ENDIF
 
  IF(LEX)IDF%X(:,:)=PCG(1)%HOLD
