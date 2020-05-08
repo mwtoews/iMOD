@@ -64,9 +64,7 @@ CALL WDIALOGPUTIMAGE(ID_OPEN4,ID_ICONOPENIDF,1)
 CALL WDIALOGFIELDOPTIONS(ID_FUNC,EDITFIELDCHANGED,ENABLED)
 
 CALL WDIALOGSELECT(ID_DMATHTAB2)
-CALL WDIALOGPUTMENU(IDF_MENU1,(/'Boundary       ','Arithmetic Mean','Geometric Mean ','Sum            ', &
-                                'Sum Conductance','Inverse        ','Most.Freq.Occur','Sum Inverse    ', &
-                                'Percentile     ','Block Value    '/),10,2) !,'Darcian Simul. ','Periodic Bound.', &
+CALL WDIALOGPUTMENU(IDF_MENU1,SCLNAMES_UP,SIZE(SCLNAMES_UP),2) !,'Darcian Simul. ','Periodic Bound.', &
                                 !'Local-Global   '/),11,2)
 
  ! 1 = SPECIAAL (IBOUNDARY)
@@ -81,7 +79,7 @@ CALL WDIALOGPUTMENU(IDF_MENU1,(/'Boundary       ','Arithmetic Mean','Geometric M
  !10 = BLOCKVALUE
  !16 = rekenkundig gemiddelde excl. nodata
                                 
-CALL WDIALOGPUTMENU(IDF_MENU2,(/'Arithm. average','Block Value    '/),2,1)
+CALL WDIALOGPUTMENU(IDF_MENU2,SCLNAMES_DOWN,2,1)
 CALL WDIALOGFIELDOPTIONS(IDF_REAL2,EDITFIELDCHANGED,1)
 
 !## get empty iplot-location

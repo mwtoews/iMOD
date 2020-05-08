@@ -33,6 +33,7 @@ TYPE GENOBJ
  INTEGER :: ILABELS                   !## selected label for plotting
  INTEGER :: IFILL                     !## fill polygons
  INTEGER :: TSIZE                     !## text size labels
+ CHARACTER(LEN=12) :: TFORMAT         !## name of idf/ipf-file
  REAL(KIND=DP_KIND) :: XMIN,YMIN,XMAX,YMAX       !## coordinates of gen
  INTEGER :: RGB                       !## color
  CHARACTER(LEN=256) :: GENFNAME       !## name of idf/ipf-file

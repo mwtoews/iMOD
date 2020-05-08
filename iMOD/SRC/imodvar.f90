@@ -83,6 +83,11 @@ TYPE TPOBJ
 END TYPE TPOBJ
 TYPE(TPOBJ),DIMENSION(MXTP)   :: TP
 
+CHARACTER(LEN=15),DIMENSION(10) :: SCLNAMES_UP=['Boundary       ','Arithmetic mean','Geometric mean ', &
+                                  'Sum            ','Sum time ratio ','Inverse        ','Most.freq.occur',&
+                                  'Sum inverse    ','Percentile     ','Block value    ']
+CHARACTER(LEN=15),DIMENSION(2) :: SCLNAMES_DOWN=['Arithm. average','Block Value    ']
+
 DATA TP%UNIT/ '    m',' m3/d',' m3/d',' m3/d',' m3/d',' m3/d',&
               ' m3/d',' m3/d',' m3/d',' m3/d',' m3/d',&
               ' m3/d',' m3/d',' m3/d',' m3/d',' m3/d',&

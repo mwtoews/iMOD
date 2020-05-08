@@ -4,4 +4,4 @@
 		<Configuration Name="Debug|Win32" CommandArguments="d:\IMOD-MODELS\LHM\AGGREGATE.INI" WorkingDirectory="d:\IMOD\"/>
 		<Configuration Name="Release|Win32"/>
 		<Configuration Name="Debug|x64" WorkingDirectory="D:\IMOD"/>
-		<Configuration Name="Release|x64" CommandArguments="d:\IMOD-TEST\IPFEVALUATE\IPFEVALUATE.INI" WorkingDirectory="d:\IMOD"/></Configurations></VisualStudioUserFile>
+		<Configuration Name="Release|x64" CommandArguments="d:\IMOD-MODELS\SINGAPORE\SOLIDMODELLING\XYZ2IDF_1.INI" WorkingDirectory="d:\IMOD"/></Configurations></VisualStudioUserFile>
