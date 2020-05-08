@@ -86,8 +86,13 @@ CONTAINS
    IF(INDEX(IDFFILE,'*',.TRUE.).GT.J)IDFFILE=IDFFILE(:INDEX(IDFFILE,'*',.TRUE.)-1)
    DO; IF(INDEX(IDFFILE,'*').EQ.0)EXIT; IDFFILE=UTL_SUBST(IDFFILE,'*','_'); ENDDO
    IF(INDEX(IDFFILE,'.',.TRUE.).GT.J)IDFFILE=IDFFILE(:INDEX(IDFFILE,'.',.TRUE.)-1)
-   MEAN_FMEAN(II) =TRIM(MEAN_RESDIR)//'\'//TRIM(CFUNC)//'_'//TRIM(IDFFILE)//'.IDF'
-   MEAN_FTOTAL(II)=TRIM(MEAN_RESDIR)//'\TOTAL_'//TRIM(CFUNC)//'_'//TRIM(IDFFILE)//'.IDF'
+   IF(LEN_TRIM(MEAN_OUTFILE).EQ.0)THEN
+     MEAN_FMEAN(II) =TRIM(MEAN_RESDIR)//'\'//TRIM(CFUNC)//'_'//TRIM(IDFFILE)//'.IDF'
+     MEAN_FTOTAL(II)=TRIM(MEAN_RESDIR)//'\TOTAL_'//TRIM(CFUNC)//'_'//TRIM(IDFFILE)//'.IDF'
+   ELSE  
+     MEAN_FMEAN(II) =TRIM(MEAN_OUTFILE)//'.IDF'
+     MEAN_FTOTAL(II)=TRIM(MEAN_OUTFILE)//'_count.IDF'
+   ENDIF        
    ILAY=0
   ELSE
    ILAY=MEAN_ILAYER(II)
@@ -100,14 +105,18 @@ CONTAINS
    MEAN_FMEAN(II) =TRIM(MEAN_RESDIR)//'\'//TRIM(IDFFILE)//'_'//TRIM(CFUNC)//'_'// &                                 
                    TRIM(ITOS(FYR))//'-'//TRIM(ITOS(FMN))//'-'//TRIM(ITOS(FDY))//'_to_'// &
                    TRIM(ITOS(TYR))//'-'//TRIM(ITOS(TMN))//'-'//TRIM(ITOS(TDY))//'_L'//TRIM(ITOS(ILAY))//'.IDF'
-   IF(TRIM(CFUNC).EQ.'MEAN')THEN
+   IF(LEN_TRIM(MEAN_OUTFILE).GT.0) MEAN_FMEAN(II) =TRIM(MEAN_OUTFILE)//'.IDF'
+
+   IF(TRIM(CFUNC).EQ.'MEAN'.OR.TRIM(CFUNC).EQ.'SUM')THEN
     MEAN_FTOTAL(II)=TRIM(MEAN_RESDIR)//'\'//TRIM(IDFFILE)//'_count_'// &                                           
                     TRIM(ITOS(FYR))//'-'//TRIM(ITOS(FMN))//'-'//TRIM(ITOS(FDY))//'_to_'// &
                     TRIM(ITOS(TYR))//'-'//TRIM(ITOS(TMN))//'-'//TRIM(ITOS(TDY))//'_L'//TRIM(ITOS(ILAY))//'.IDF'
+    IF(LEN_TRIM(MEAN_OUTFILE).GT.0) MEAN_FTOTAL(II) =TRIM(MEAN_OUTFILE)//'_count.IDF'
    ELSE
     MEAN_FTOTAL(II)=TRIM(MEAN_RESDIR)//'\'//TRIM(IDFFILE)//'_date_'//TRIM(CFUNC)//'_'// &                            
                     TRIM(ITOS(FYR))//'-'//TRIM(ITOS(FMN))//'-'//TRIM(ITOS(FDY))//'_to_'// &
                     TRIM(ITOS(TYR))//'-'//TRIM(ITOS(TMN))//'-'//TRIM(ITOS(TDY))//'_L'//TRIM(ITOS(ILAY))//'.IDF'
+    IF(LEN_TRIM(MEAN_OUTFILE).GT.0) MEAN_FTOTAL(II) =TRIM(MEAN_OUTFILE)//'_date.IDF'
    ENDIF
   ENDIF
   
@@ -319,20 +328,20 @@ CONTAINS
          XPERC(I)            =XVAL
         END SELECT          
        ENDIF
-      END DO
+      END DO !## loop over NFILES
       IF((TRIM(CFUNC)).EQ.'PERC')THEN
        CALL UTL_GETMED(XPERC,INT(IDF(-1)%X(ICOL,IROW)),-999999.9D0,(/PERCVALUE/),1,I,XMED)
        IDF(0)%X(ICOL,IROW)=XMED(1)
       ENDIF
      ENDIF
-    ENDDO
+    ENDDO !## loop over NCOL
     IF(IBATCH.EQ.0)THEN
      CALL WINDOWSELECT(0)
      CALL UTL_WAITMESSAGE(IRAT,IRAT1,IROW,IDF(0)%NROW,'Progress Equal IDFs: ')
     ELSE
      WRITE(6,'(A,F10.2,A)') '+Progress Equal IDFs: ',REAL(IROW*100)/REAL(IDF(0)%NROW),'%'    
     ENDIF
-   ENDDO
+   ENDDO !## loop over NROW
   ELSE
    DO IROW=1,IDF(0)%NROW
     CALL WMESSAGEPEEK(ITYPE,MESSAGE)
@@ -396,6 +405,7 @@ CONTAINS
    CLOSE(IDF(IIDF)%IU)
   END DO
 
+  !## Replace zero for NODATA
   SELECT CASE (TRIM(CFUNC))
    CASE ('MEAN')
     DO IROW=1,IDF(0)%NROW
@@ -407,23 +417,27 @@ CONTAINS
       ENDIF
      END DO
     END DO
-   CASE ('MIN','MAX')
-    DO IROW=1,IDF(0)%NROW
-     DO ICOL=1,IDF(0)%NCOL
-      IF(IDF(-1)%X(ICOL,IROW).EQ.0.0D0)THEN
-       IDF(0)%X(ICOL,IROW)=IDF(0)%NODATA
-      ELSE
-       I=INT(IDF(-1)%X(ICOL,IROW))
-       IDF(-1)%X(ICOL,IROW)=REAL(UTL_JDATETOIDATE(I))
-      ENDIF
-     END DO
-    END DO
    CASE ('SUM')
     DO IROW=1,IDF(0)%NROW
      DO ICOL=1,IDF(0)%NCOL
       IF(IDF(-1)%X(ICOL,IROW).EQ.0.0D0)THEN
        IDF(0)%X(ICOL,IROW)=IDF(0)%NODATA
       ENDIF
+     END DO
+    END DO
+   CASE ('MIN','MAX')
+    DO IROW=1,IDF(0)%NROW
+     DO ICOL=1,IDF(0)%NCOL
+      IF(MEAN_NLAYER.EQ.0)THEN  !## if no iMOD output file type, no DATE was available
+        IDF(-1)%X(ICOL,IROW)=IDF(0)%NODATA 
+      ELSE  
+       IF(IDF(-1)%X(ICOL,IROW).EQ.0.0D0)THEN
+        IDF(0)%X(ICOL,IROW)=IDF(0)%NODATA
+       ELSE
+        I=INT(IDF(-1)%X(ICOL,IROW))
+        IDF(-1)%X(ICOL,IROW)=REAL(UTL_JDATETOIDATE(I))
+       ENDIF 
+      ENDIF  
      END DO
     END DO
   END SELECT
