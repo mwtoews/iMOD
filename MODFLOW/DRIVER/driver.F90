@@ -465,10 +465,10 @@ call pks7mpibarrier() ! PKS
  ok = mf2005_PutHeadNoFlo(mf_igrid, hnoflo);  call driverChk(ok,'mf2005_PutHeadNoFlo')  ! get hnoflo
 
  ! append the PEST log-file
- if (lipest) then
-    call mf2005_returnIOUT(iout)
-    CALL PESTDUMPFCT(tssavepath,iout,idf)
- endif
+ IF (LIPEST) THEN
+    CALL MF2005_RETURNIOUT(IOUT)
+    CALL PESTDUMPFCT(TSSAVEPATH,IOUT,IDF)
+ ENDIF
 
  !#### TIMESERIES ####
  call osd_chdir(root)

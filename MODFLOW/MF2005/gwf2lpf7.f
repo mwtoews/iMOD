@@ -483,9 +483,9 @@ C7D-----DEFINE SPECIFIC STORAGE OR STORAGE COEFFICIENT IN ARRAY SC1 IF TRANSIENT
             CALL UPARARRCK(BUFF,IBOUND,IOUT,K,NCOL,NLAY,NROW,'SS  ')
          END IF
          IF(ISFAC.EQ.0) THEN
-            CALL SGWF2LPF7SC(SC1(:,:,KK),KK,1)
+            CALL SGWF2LPF7SC(SC1(:,:,KK),IBOUND,KK,1)
          ELSE
-            CALL SGWF2LPF7SC(SC1(:,:,KK),KK,0)
+            CALL SGWF2LPF7SC(SC1(:,:,KK),IBOUND,KK,0)
          END IF
       END IF
 C
@@ -503,7 +503,7 @@ C7E-----IS CONVERTIBLE.
      1         NROW,KK,'SY',IOUT,ANAME(7),LAYFLG(4,KK))
                CALL UPARARRCK(BUFF,IBOUND,IOUT,K,NCOL,NLAY,NROW,'SY  ')
             END IF
-            CALL SGWF2LPF7SC(SC2(:,:,LAYTYP(K)),KK,0)
+            CALL SGWF2LPF7SC(SC2(:,:,LAYTYP(K)),IBOUND,LAYTYP(K),0) !KK,0)
          END IF
       END IF
 C
@@ -586,19 +586,26 @@ C
       do ilay=1,nlay                                           ! DLT
        do irow=1,nrow                                          ! DLT
         do icol=1,ncol                                         ! DLT
-         t = botm(icol,irow,lbotm(ilay)-1)                     ! DLT
-         b = botm(icol,irow,lbotm(ilay))                       ! DLT
-         !## minimal thickness is zero                         ! DLT
-         d=max(0.0,t-b)                                        ! DLT
-         !## adjust kh such that minkd will be satisfied       ! DLT
-         if (iminkd.eq.1)then                                  ! DLT
-          if(d*hk(icol,irow,ilay).lt.minkd)then
-           kd=minkd 
-           if(d.gt.0.0)hk(icol,irow,ilay)=kd/d                 ! DLT
-           ncor=ncor+1
+         if(ibound(icol,irow,ilay).ne.0)then
+          t = botm(icol,irow,lbotm(ilay)-1)                     ! DLT
+          b = botm(icol,irow,lbotm(ilay))                       ! DLT
+          !## minimal thickness is zero                         ! DLT
+          d=max(0.0,t-b)                                        ! DLT
+          !## adjust kh such that minkd will be satisfied       ! DLT
+          if (iminkd.eq.1)then                                  ! DLT
+           if(d*hk(icol,irow,ilay).lt.minkd)then
+            kd=minkd 
+            if(d.gt.0.0)hk(icol,irow,ilay)=kd/d                 ! DLT
+            ncor=ncor+1
+           endif
           endif
+!          write(*,*) 'ilay,irow,icol ',ilay,irow,icol
+!          write(*,*) 'minkd,kh ',minkd,hk(icol,irow,ilay)
+!          write(*,*) 'top,bot,thickness ',t,b,d
+          kdsv(icol,irow,ilay) = max(minkd,hk(icol,irow,ilay)*d)
+         else
+          kdsv(icol,irow,ilay) = 0.0
          endif
-         kdsv(icol,irow,ilay) = max(minkd,hk(icol,irow,ilay)*d)
         end do                                                 ! DLT
        end do                                                  ! DLT
       end do                                                   ! DLT
@@ -1465,35 +1472,47 @@ C
 C18-----RETURN.
       RETURN
       END
-      SUBROUTINE SGWF2LPF7SC(SC,K,ISPST)
+      SUBROUTINE SGWF2LPF7SC(SC,IB,K,ISPST)
 C     ******************************************************************
 C     COMPUTE STORAGE CAPACITY
 C     ******************************************************************
 C
 C     SPECIFICATIONS:
 C     ------------------------------------------------------------------
-      USE GLOBAL,        ONLY:NCOL,NROW,DELR,DELC,BOTM,LBOTM,LAYCBD
+      USE GLOBAL,        ONLY:NCOL,NROW,NLAY,DELR,DELC,BOTM,LBOTM,LAYCBD
 C
       DIMENSION SC(NCOL,NROW)
+      INTEGER IB(NCOL,NROW,NLAY)
+      INTEGER K,IPST
 C     ------------------------------------------------------------------
 C
 C1------MULTIPLY SPECIFIC STORAGE BY THICKNESS, DELR, AND DELC TO GET
 C1------CONFINED STORAGE CAPACITY.
       IF(ISPST.NE.0) THEN
-         DO 80 I=1,NROW
-         DO 80 J=1,NCOL
-         THICK=BOTM(J,I,LBOTM(K)-1)-BOTM(J,I,LBOTM(K))
-         SC(J,I)=SC(J,I)*THICK*DELR(J)*DELC(I)
-   80    CONTINUE
+       DO I=1,NROW
+        DO J=1,NCOL
+         IF(IB(J,I,K).NE.0)THEN
+          THICK=BOTM(J,I,LBOTM(K)-1)-BOTM(J,I,LBOTM(K))
+          SC(J,I)=SC(J,I)*THICK*DELR(J)*DELC(I)
+         ELSE
+          SC(J,I)=0.0
+         ENDIF
+        ENDDO
+       ENDDO
       ELSE
 C
 C2------MULTIPLY SPECIFIC YIELD BY DELR AND DELC TO GET UNCONFINED
 C2------STORAGEE CAPACITY(SC2).
-         DO 85 I=1,NROW
-         DO 85 J=1,NCOL
-         SC(J,I)=SC(J,I)*DELR(J)*DELC(I)
-   85    CONTINUE
-      END IF
+       DO I=1,NROW
+        DO J=1,NCOL
+         IF(IB(J,I,K).NE.0)THEN
+          SC(J,I)=SC(J,I)*DELR(J)*DELC(I)
+         ELSE
+          SC(I,J)=0.0
+         ENDIF
+        ENDDO
+       ENDDO
+      ENDIF
 C
       RETURN
       END

@@ -682,12 +682,13 @@ CONTAINS
       ENDIF
      ENDDO; ENDDO
     
-     IF(N.NE.PARAM(I)%NODES)THEN
-      WRITE(*,'(/A,I10,A,I10)') 'SOMETHING GOES WRONG N=',N,'PARAM(I)%NODES=',PARAM(I)%NODES
-      WRITE(*,'(A/)') 'SIMILAR ZONE APPEARS FOR DIFFERENT PARAMETERS'; STOP
-     ENDIF
-
     ENDDO
+
+    IF(N.NE.PARAM(I)%NODES)THEN
+     WRITE(*,'(/A,I10,A,I10)') 'SOMETHING GOES WRONG NUMBER OF PARAMETER INITIAL =',N
+     WRITE(*,'(A)') 'PARAMETERS ACTUALLY FOUND ARE ',PARAM(I)%NODES
+!     WRITE(*,'(A/)') 'SIMILAR ZONE APPEARS FOR DIFFERENT PARAMETERS'; STOP
+    ENDIF
 
    ELSEIF(PARAM(I)%ZTYPE.EQ.1)THEN
    
@@ -1142,24 +1143,27 @@ CONTAINS
  END SUBROUTINE PESTOPENFILE
 
  !#####=================================================================
- SUBROUTINE PESTDUMPFCT(root,iout,idf)
+ SUBROUTINE PESTDUMPFCT(ROOT,IOUT,IDF)
  !#####=================================================================
- use rf2mf_module, only: ncol, nrow, nlay, nper
+ USE RF2MF_MODULE, ONLY: NCOL, NROW, NLAY, NPER
  IMPLICIT NONE
- type(idfobj),intent(in) :: idf
- CHARACTER(LEN=256),intent(in) :: root
+ TYPE(IDFOBJ),INTENT(IN) :: IDF
+ CHARACTER(LEN=256),INTENT(IN) :: ROOT
  INTEGER,INTENT(IN) :: IOUT
  CHARACTER(LEN=1024) :: FNAME,DIR
  INTEGER :: I,J,IROW,ICOL
  REAL(KIND=8) :: XVAR,XF
  REAL(KIND=8),ALLOCATABLE,DIMENSION(:,:) :: X
- logical :: lok
+ LOGICAL :: LOK
 
  !## dump only at the beginning of each iteration cycle
  IF(PEST_IGRAD.GT.1)RETURN
  
+ !## if too many parameters, skip the output
+ IF(SIZE(PARAM).GT.100)RETURN
+ 
  !## open pest factor files
- DIR=TRIM(root)//CHAR(92)//'pest'//CHAR(92)//'factors'//TRIM(ITOS(PEST_ITER))
+ DIR=TRIM(ROOT)//CHAR(92)//'PEST'//CHAR(92)//'FACTORS'//TRIM(ITOS(PEST_ITER))
  CALL IMOD_UTL_CREATEDIR(DIR)
 
  ALLOCATE(X(NCOL,NROW))
@@ -1197,7 +1201,7 @@ CONTAINS
       X(ICOL,IROW)=X(ICOL,IROW)/IDFGETAREA(IDF,ICOL,IROW)*1000.0D0
      ENDDO   
    END SELECT
-   CALL met1wrtidf(fname,X,ncol,nrow,-999.0D0,iout)
+   CALL MET1WRTIDF(FNAME,X,NCOL,NROW,-999.0D0,IOUT)
 
   ELSE
 

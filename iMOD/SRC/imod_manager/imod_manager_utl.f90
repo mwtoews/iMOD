@@ -396,6 +396,7 @@ CONTAINS
     MP(IPLOT)%SYMBOL =14   !symbol
     MP(IPLOT)%THICKNESS=1  !thickness
     MP(IPLOT)%TSIZE    =7  !textsize
+    MP(IPLOT)%TFORMAT  ='F10.2'  !textformat
     MP(IPLOT)%ASSCOL1=2 !## borehole plotting
     MP(IPLOT)%ASSCOL2=0 !## borehole plotting
     MP(IPLOT)%PCOL   =0    !column for plotting
@@ -442,6 +443,7 @@ CONTAINS
     MP(IPLOT)%IATTRIB=1    !initial first label for colouring
     MP(IPLOT)%SCOLOR =WRGB(100,100,100)! single - colour    !no colouring, attribute colouring
     MP(IPLOT)%TSIZE  =7    !textsize
+    MP(IPLOT)%TFORMAT='F10.2'    !textformat
     MP(IPLOT)%PRFTYPE=0    !filled in (0=no,1=yes)
     MP(IPLOT)%THICKNESS=1  !line thickness
 

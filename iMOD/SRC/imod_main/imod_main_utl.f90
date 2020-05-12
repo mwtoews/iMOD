@@ -799,6 +799,7 @@ DO JPLOT=1,MXMPLOT
      MP(IPLOT)%IDFI=MAX(0,MP(IPLOT)%IDFI)      !sight (m)
      MP(IPLOT)%SCOLOR=MAX(0,MP(IPLOT)%SCOLOR)  !no colouring, attribute colouring
      MP(IPLOT)%TSIZE =MAX(1,MP(IPLOT)%TSIZE) !## size of legend in nbetween 1 and 10
+     IF(TRIM(MP(IPLOT)%TFORMAT).EQ.'')MP(IPLOT)%TFORMAT='F10.2' !## size of legend in nbetween 1 and 10
      MP(IPLOT)%ILEGDLF=MAX(1,MIN(10,MP(IPLOT)%ILEGDLF)) !## number of legend in between 1 and 10
      IF(MP(IPLOT)%ASSCOL1.LE.0)MP(IPLOT)%ASSCOL1=2 !## borehole plotting
      MP(IPLOT)%ASSCOL2=0 !## borehole plotting
@@ -820,6 +821,7 @@ DO JPLOT=1,MXMPLOT
     !## gen
     CASE (6)
      MP(IPLOT)%TSIZE=MIN(MAX(MP(IPLOT)%TSIZE,1),25)
+     IF(TRIM(MP(IPLOT)%TFORMAT).EQ.'')MP(IPLOT)%TFORMAT='F10.2' !## size of legend in nbetween 1 and 10
    END SELECT
   ELSE
    J=J+1
@@ -938,6 +940,7 @@ DO I=1,MXMPLOT
   !## gen-settings
   IF(MP(I)%IPLOT.EQ.6)THEN
    WRITE(IU,'(A8,I10)')  'TSIZE=  ',MP(I)%TSIZE
+   WRITE(IU,'(A8,A12)')  'TFORMAT=',MP(I)%TFORMAT
   ENDIF
   !## iff arrows
   IF(MP(I)%IPLOT.EQ.6)THEN
