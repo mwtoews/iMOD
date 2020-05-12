@@ -3130,7 +3130,7 @@ JLOOP: DO K=1,SIZE(TOPICS)
  !###======================================================================
  IMPLICIT NONE
  INTEGER :: I
- CHARACTER(LEN=51),DIMENSION(:),ALLOCATABLE :: TMPNAME
+ CHARACTER(LEN=70),DIMENSION(:),ALLOCATABLE :: TMPNAME
  
  TOPICS%TNAME=''
  
