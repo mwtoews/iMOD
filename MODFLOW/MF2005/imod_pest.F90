@@ -64,7 +64,7 @@ implicit none
 integer, intent(in) :: nrow, ncol, nlay, iout
 real, dimension(ncol,nrow,nlay), intent(inout) :: a
 !real(kind=8),dimension(:,:,:),allocatable :: a_dbl
-real, dimension(ncol,nrow,nlay), intent(in), optional :: a2
+real, dimension(ncol,nrow,nlay), intent(in), optional :: a2 !ncol,nrow,nlay
 character(len=2), intent(in) :: ptype
 real(kind=8),dimension(:,:),allocatable :: xyz,xpp
 integer :: nxyz,ipp,ilay
@@ -84,6 +84,11 @@ DATA PPPARAM/'KD','KH','KV','VC','SC','VA','SY'/ !## variable for pilotpoints
 !###======================================================================
 
 if(.not.lipest)return
+
+if(size(a,1).ne.ncol.or.size(a,2).ne.nrow.or.size(a,3).ne.nlay)then
+ write(*,'(6i10)') size(a,1),ncol,size(a,2),nrow,size(a,3),nlay
+ write(*,*) 'array a dimensions incorrect'; pause; stop
+endif
 
 call sgwf2met1pnt(1) !igrid)
 
@@ -295,15 +300,22 @@ do i=1,size(param)
 
  !## export only initially
  if(PEST_IGRAD.eq.0)then
+  allocate(xpp(ncol,nrow))
   do i=1,size(param)
    if (trim(param(i)%ptype).ne.trim(ptype)) cycle
 
    do ils=1,nlay
     fname=trim(dir)//'\'//trim(ptype)//'_l'//trim(imod_utl_itos(ils))//'.idf'
-    CALL met1wrtidf(fname,real(a(:,:,ils),8),ncol,nrow,-999.0D0,iout)
+    if(ils.eq.nlay)then
+     if(trim(ptype).eq.'VC')cycle
+     if(trim(ptype).eq.'KV')cycle
+    endif
+    xpp=a(:,:,ils)
+    call met1wrtidf(fname,xpp,ncol,nrow,-999.0d0,iout)
    enddo
    exit
   enddo
+  deallocate(xpp)
  endif
 
  end subroutine

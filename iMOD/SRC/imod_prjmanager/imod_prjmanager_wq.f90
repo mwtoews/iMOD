@@ -225,17 +225,17 @@ CONTAINS
  DO ILAY=1,PRJNLAY
   !## quasi-3d scheme add top aquifer modellayer
   IF(ILAY.EQ.1)THEN
-   IF(.NOT.PMANAGER_SAVERUNWQ_U2DREL(IU,'HTOP',TTOP,0,1,0,ILAY,0))RETURN
+   IF(.NOT.PMANAGER_SAVERUNWQ_U2DREL(IU,'HTOP',TTOP,1,1,0,ILAY,0))RETURN
   ENDIF
-  IF(.NOT.PMANAGER_SAVERUNWQ_U2DREL(IU,'DZ_L?',TTHK,0,1,0,ILAY,0))RETURN
+  IF(.NOT.PMANAGER_SAVERUNWQ_U2DREL(IU,'DZ_L?',TTHK,1,1,0,ILAY,0))RETURN
  ENDDO
 
  DO ILAY=1,PRJNLAY
-  IF(.NOT.PMANAGER_SAVERUNWQ_U2DREL(IU,'PRSITY_L?',TPOR,0,1,0,ILAY,0))RETURN
+  IF(.NOT.PMANAGER_SAVERUNWQ_U2DREL(IU,'PRSITY_L?',TPOR,1,1,0,ILAY,0))RETURN
  ENDDO
 
  DO ILAY=1,PRJNLAY
-  IF(.NOT.PMANAGER_SAVERUNWQ_U2DREL(IU,'ICBUND_L?',TCBI,0,1,0,ILAY,0))RETURN
+  IF(.NOT.PMANAGER_SAVERUNWQ_U2DREL(IU,'ICBUND_L?',TCBI,1,1,0,ILAY,0))RETURN
  ENDDO
 
  DO ISPECIES=1,NSPECIES
@@ -811,7 +811,6 @@ CONTAINS
  INTEGER,INTENT(IN) :: IU
  INTEGER :: IPER
 
-
  PMANAGER_SAVERUNWQ_WRTRCH=.FALSE.
 
  !## skip this optional package
@@ -827,7 +826,7 @@ CONTAINS
 ! WRITE(IU,'(1X,A)') 'IRCH_P$ = '
 
  DO IPER=1,PRJNPER 
-   IF(.NOT.PMANAGER_SAVERUNWQ_U2DREL(IU,'RECH_P?',TRCH,IPER,1,1,1,0))RETURN
+  IF(.NOT.PMANAGER_SAVERUNWQ_U2DREL(IU,'RECH_P?',TRCH,IPER,1,1,1,0))RETURN
  ENDDO
  
  PMANAGER_SAVERUNWQ_WRTRCH=.TRUE.
@@ -1364,9 +1363,12 @@ CONTAINS
  !## Skip this topic in case it is not active
  IF(TOPICS(ITOPIC)%IACT_MODEL.EQ.0)RETURN
  
- !## find proper record for current iper in files array of actual topic. Cper=1 for steady state and not-time dependent parameter
+ !## find proper record for current iper in files array of actual topic. cper=1 for steady state and not-time dependent parameter
  CPER=0; IF(IPER.GT.0) CPER=PMANAGER_GETCURRENTIPER(IPER,ITOPIC,ITIME,JTIME)
- CPER=MAX(1,CPER)
+ !## nothing found
+ IF(CPER.EQ.0)RETURN
+ !## always write reference to files
+ CPER=ABS(CPER)
  
  !## Correction in case ISUBT is incorrect. Species are defined as additional/extra Subtopics in the object list
  JSUBT=ISUBT; IF(ISPEC.GT.0) JSUBT=TOPICS(ITOPIC)%NSUBTOPICS-NSPECIES
@@ -1394,7 +1396,7 @@ CONTAINS
  !## no layer found 
  IF(ILAY.NE.JLAY)THEN; PMANAGER_SAVERUNWQ_U2DREL=.TRUE.; RETURN; ENDIF
  
- ! Macro’s can be used for ranges layers (_L), stress periods (_P), species (_T), sub-systems (_S), rows (_R) and columns (_C)
+ !## macro’s can be used for ranges layers (_L), stress periods (_P), species (_T), sub-systems (_S), rows (_R) and columns (_C)
  LINE=UTL_CAP(KEYNAME,'U')
  IF(JLAY.GT.0) LINE=TRIM(UTL_SUBST(LINE,'_L?','_L'//TRIM(ITOS(JLAY))))
  IF(IPER.GT.0) LINE=TRIM(UTL_SUBST(LINE,'_P?','_P'//TRIM(ITOS(IPER))))

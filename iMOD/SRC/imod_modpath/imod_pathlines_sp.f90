@@ -59,9 +59,6 @@ CONTAINS
  READ(JU,*)
  
  DO I=1,NPART
-!  READ(JU,'(3I10,4(F15.3,1X))') SP(IG)%KLC(I),SP(IG)%ILC(I),SP(IG)%JLC(I), &
-!                                SP(IG)%XLC(I),SP(IG)%YLC(I),SP(IG)%ZLC(I), &
-!                                SP(IG)%ZLL(I)
   READ(JU,*) SP(IG)%KLC(I),SP(IG)%ILC(I),SP(IG)%JLC(I), &
              SP(IG)%XLC(I),SP(IG)%YLC(I),SP(IG)%ZLC(I), &
              SP(IG)%ZLL(I)
@@ -73,22 +70,14 @@ CONTAINS
  SP(IG)%NPART=NPART
 
  CLOSE(JU)
-
-! !## store startlocations!
-! XLC(:,1)=XLC(:,2)
-! YLC(:,1)=YLC(:,2)
-! ZLC(:,1)=ZLC(:,2)
-
-! SP%SLAY=SP%KLC
-! SP%MXL =SP%SLAY
  
  END SUBROUTINE TRACEREADSP
 
  !###======================================================================
- LOGICAL FUNCTION TRACEPREPARESP(NPART,IBATCH)
+ LOGICAL FUNCTION TRACEPREPARESP(NPART,IBATCH,IMP6)
  !###======================================================================
  IMPLICIT NONE
- INTEGER,INTENT(IN) :: IBATCH
+ INTEGER,INTENT(IN) :: IBATCH,IMP6
  INTEGER,INTENT(OUT) :: NPART
  CHARACTER(LEN=50) :: ERRORMESSAGE
  CHARACTER(LEN=256) :: LINE

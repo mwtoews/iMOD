@@ -2845,12 +2845,12 @@ END SUBROUTINE WRITEIPF
  ENDIF
  
  TJ=TJ+PJ
-  
+
  IF(LGRAD.AND.PEST_IGRAD.EQ.0)THEN
   CALL IMOD_UTL_PRINTTEXT('TOTAL Objective Function Value : '//TRIM(IMOD_UTL_DTOS(TJ,'G',7)),-1,IUPESTOUT)
   CALL IMOD_UTL_PRINTTEXT('MEAN Objective Function Value  : '//TRIM(IMOD_UTL_DTOS(TJ/REAL(PEST_NOBS,8),'G',7))// &
           ' (n='//TRIM(IMOD_UTL_ITOS(PEST_NOBS))//')',-1,IUPESTOUT)
-          
+
   RFIT=PEST_GOODNESS_OF_FIT(GF_H,GF_O,PEST_NOBS)
   CALL IMOD_UTL_PRINTTEXT('Goodness of Fit:                 '// &
       TRIM(IMOD_UTL_DTOS(RFIT,'G',7))//' (n='//TRIM(IMOD_UTL_ITOS(PEST_NOBS))//')',-1,IUPESTOUT)
@@ -2887,29 +2887,22 @@ END SUBROUTINE WRITEIPF
  REAL(KIND=8),INTENT(IN),DIMENSION(N) :: X,Y !## x=head; y=obs
  REAL(KIND=8) :: XN,YN,X1,X2,X3,YA
  INTEGER :: I
- 
- !## compute nash-sutcliff
- PEST_GOODNESS_OF_FIT=0.0D0
- 
- !## average observation
- YA=0.0D0; DO I=1,N; YA=YA+Y(I)          ; ENDDO; YA=YA/REAL(N)
- XN=0.0D0; DO I=1,N; XN=XN+ABS(Y(I)-X(I)); ENDDO; XN=XN**2.0D0
- YN=0.0D0; DO I=1,N; YN=YN+ABS(Y(I)-YA)  ; ENDDO; YN=YN**2.0D0
- 
- PEST_GOODNESS_OF_FIT=1.0D0-XN/YN
- 
-! XN=SUM(X)/REAL(N)
-! YN=SUM(Y)/REAL(N)
- 
-! X1=0.0; X2=0.0; X3=0.0
-! DO I=1,N
-!  X1=X1+(X(I)-XN)*(Y(I)-YN)
-!  X2=X2+(X(I)-XN)**2.0
-!  X3=X3+(Y(I)-YN)**2.0
-! ENDDO
-
-! IF(X2.NE.0.0.AND.X3.NE.0.0)PEST_GOODNESS_OF_FIT=X1/SQRT(X2*X3)
   
+ PEST_GOODNESS_OF_FIT=0.0D0
+
+ XN=SUM(X)/DBLE(N)
+ YN=SUM(Y)/DBLE(N)
+
+ X1=0.0D0; X2=0.0D0; X3=0.0D0
+ DO I=1,N
+  X1=X1+(X(I)-XN)*(Y(I)-YN)
+  X2=X2+(X(I)-XN)**2.0D0
+  X3=X3+(Y(I)-YN)**2.0D0
+ ENDDO
+
+ !## sample correlation coefficient
+ IF(X2.NE.0.0D0.AND.X3.NE.0.0D0)PEST_GOODNESS_OF_FIT=X1/SQRT(X2*X3)
+
  END FUNCTION PEST_GOODNESS_OF_FIT
  
  !###====================================================================
