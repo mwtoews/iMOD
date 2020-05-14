@@ -52,6 +52,7 @@ C     ------------------------------------------------------------------
 C--SEAWAT: ADD HTMP,HN,HNFE TO DOUBLE PRECISION 
       DOUBLE PRECISION HTMP,HN,HNFE
 C     ------------------------------------------------------------------
+      ISS=ISSFLG(KPER)
       KB=0
       KT=0
       ONE=1.

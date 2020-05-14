@@ -3313,7 +3313,7 @@ JLOOP: DO K=1,SIZE(TOPICS)
  DO I=1,MAXTOPICS
   SELECT CASE (I)
    !## no species for drn,tolf
-   CASE (TDRN,TOLF,TISG,TSFT,TUZF)
+   CASE (TDRN,TOLF,TISG,TSFT,TUZF,TEVT) !,TRCH)
     TOPICS(I)%LSPECIES=.FALSE.
    !## species for tsco,tics,tfsc,tssc,tfod,tfos
    CASE (TSCO,TICS,TFSC,TSSC,TFOD,TFOS)

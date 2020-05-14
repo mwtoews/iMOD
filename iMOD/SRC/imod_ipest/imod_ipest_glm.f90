@@ -103,6 +103,8 @@ CONTAINS
    !## set current dh on correct position
    DO I=1,MSR%NOBS; MSR%DHL(0,I)=MSR%DHL(1,I); ENDDO
    LAMBDA=MSR%TJ/DBLE(2.0D0*MSR%NOBS); LAMBDA=LOG10(LAMBDA); IX=FLOOR(LAMBDA); LAMBDA=10.0D0**IX
+   !## write initial lambda
+   WRITE(IUPESTOUT,'(/A/)') 'Initial Lambda_0 computed as '//TRIM(RTOS(LAMBDA,'G',3))
    MSR%TJ_H(ITER)=MSR%TJ; MSR%RJ_H(ITER)=MSR%RJ; MSR%GOF_H(ITER)=MSR%GOF(1); MSR%NSC_H(ITER)=MSR%NSC(1)
   ENDIF
   
@@ -669,7 +671,7 @@ CONTAINS
 
  !## update lambda
  LAMBDA=LAMBDA*PBMAN%LAMBDA_TEST(IJ)
- WRITE(IUPESTPROGRESS,'(/A)') 'New Lambda '//TRIM(RTOS(LAMBDA,'F',7))//'; Objective Function Value '//TRIM(RTOS(MJ,'F',7))
+ WRITE(IUPESTPROGRESS,'(/A)') 'New Lambda_0 '//TRIM(RTOS(LAMBDA,'F',7))//'; Objective Function Value '//TRIM(RTOS(MJ,'F',7))
  
  !## update new objective function value to be minimized
  MSR%TJ=MJ
@@ -890,6 +892,8 @@ CONTAINS
      
    ENDDO
   ENDIF
+  
+  WRITE(IUPESTOUT,'(A)') 'LAMBDA_0 PRIOR TO THE UPDATE VECTOR '//TRIM(RTOS(LAMBDA,'G',3))
 
   !## try to come with some suitable lambdas
   DO
@@ -986,21 +990,19 @@ CONTAINS
     CASE (1)
      EXIT
     CASE (2)
+     !## try the same lambda without the excluded parameter due to a bondary hit
      ILAMBDA=ILAMBDA-1 !DEFAULT
      EXIT
-!     !## check whether number of parameters is equal to the number started this loop with
-!     MP=0; DO I=1,SIZE(PEST%PARAM); IF(PEST%PARAM(I)%PACT.EQ.1.AND.PEST%PARAM(I)%PIGROUP.GT.0)MP=MP+1; ENDDO
-!     IF(
-!     !## nothing changed in number of active parameters
-!     IF(MP.EQ.NP)EXIT
    END SELECT
  
   ENDDO
  ENDDO !## lambda-test-loop
+
+ WRITE(IUPESTOUT,'(A)') 'LAMBDA_0 POSTERIOR TO THE UPDATE VECTOR '//TRIM(RTOS(LAMBDA,'G',3))
  
  !## print parameters for lambda testing
  WRITE(IUPESTOUT,'(15X,99A15)') ('LAMBDA'//TRIM(ITOS(J)),J=1,PBMAN%NLINESEARCH)
- WRITE(IUPESTOUT,'(A15,99F15.7)') 'Parameters',(LAMBDA*PBMAN%LAMBDA_TEST(J),J=1,PBMAN%NLINESEARCH)
+ WRITE(IUPESTOUT,'(A15,99G15.7)') 'Parameters',(LAMBDA*PBMAN%LAMBDA_TEST(J),J=1,PBMAN%NLINESEARCH)
  WRITE(IUPESTOUT,'(999A1)') ('-',I=1,15*(PBMAN%NLINESEARCH+1))
  DO I=1,SIZE(PEST%PARAM)
   IF(PEST%PARAM(I)%PACT.EQ.0.OR.PEST%PARAM(I)%PIGROUP.LT.0)CYCLE
@@ -1183,11 +1185,12 @@ CONTAINS
  WRITE(IUPESTOUT,'(A15,999(5X,A7,I3.3))') 'Statistics',('ITER',I,I=ITER,0,-1)
  WRITE(IUPESTOUT,'(999A1)') ('-',I=1,19+(ITER+1)*15)
   
- WRITE(IUPESTOUT,'(A15,99F15.7)') 'Total Obj. Val.',(MSR%TJ_H(I),I=ITER,0,-1)
- WRITE(IUPESTOUT,'(A15,99F15.7)') 'Meas. Obj. Val.',(MSR%TJ_H(I)-MSR%RJ_H(I),I=ITER,0,-1)
- WRITE(IUPESTOUT,'(A15,99F15.7)') 'Param Obj. Val.',(MSR%RJ_H(I),I=ITER,0,-1)
- WRITE(IUPESTOUT,'(A15,99F15.7)') 'Goodness of Fit',(MSR%GOF_H(I),I=ITER,0,-1)
- WRITE(IUPESTOUT,'(A15,99F15.7)') 'Nash Sutcliffe ',(MSR%NSC_H(I),I=ITER,0,-1)
+ WRITE(IUPESTOUT,'(A15,99F15.3)') 'Total Obj. Val.',(MSR%TJ_H(I),I=ITER,0,-1)
+ WRITE(IUPESTOUT,'(A15,99F15.3)') 'Meas. Obj. Val.',(MSR%TJ_H(I)-MSR%RJ_H(I),I=ITER,0,-1)
+ WRITE(IUPESTOUT,'(A15,99F15.3)') 'Param Obj. Val.',(MSR%RJ_H(I),I=ITER,0,-1)
+ WRITE(IUPESTOUT,'(A15,99I15)')   'Number of Obs. ',(MSR%NOBS,I=ITER,0,-1)
+ WRITE(IUPESTOUT,'(A15,99F15.3)') 'Goodness of Fit',(MSR%GOF_H(I),I=ITER,0,-1)
+ WRITE(IUPESTOUT,'(A15,99F15.3)') 'Nash Sutcliffe ',(MSR%NSC_H(I),I=ITER,0,-1)
  
  WRITE(IUPESTOUT,'(/A15,999(5X,A7,I3.3))') 'Parameter',('ITER',I,I=ITER,0,-1)
  WRITE(IUPESTOUT,'(999A1)') ('-',I=1,15+(ITER+1)*15)
@@ -1539,9 +1542,9 @@ CONTAINS
  DO I=1,NP
   TV=TV+(EIGW(I)*100.0D0/TEV)
   IF(EIGW(I).GT.0.0D0)THEN
-   IF(LPRINT)WRITE(IUPESTOUT,'(I10,4F15.7)') I,EIGW(I),SQRT(EIGW(I)),EIGW(I)*100.0/TEV,TV
+   IF(LPRINT)WRITE(IUPESTOUT,'(I10,G15.7,3F15.7)') I,EIGW(I),SQRT(EIGW(I)),EIGW(I)*100.0/TEV,TV
   ELSE
-   IF(LPRINT)WRITE(IUPESTOUT,'(I10,4F15.7)') I,EIGW(I),     EIGW(I) ,EIGW(I)*100.0/TEV,TV
+   IF(LPRINT)WRITE(IUPESTOUT,'(I10,G15.7,3F15.7)') I,EIGW(I),     EIGW(I) ,EIGW(I)*100.0/TEV,TV
   ENDIF
  ENDDO
  EIGV= B  
@@ -2063,7 +2066,7 @@ CONTAINS
   IF(ITER.EQ.0)THEN
    WRITE(IUPESTPROGRESS,'(I5,30X,F15.3,30X,3F15.3)') 0,MSR%TJ,MSR%GOF(JGRAD),MSR%NSC(JGRAD),ET
   ELSE
-   WRITE(IUPESTPROGRESS,'(I5,A15,F15.3,2F15.3,15X,3F15.3)') IGRAD,'LAMBDA'//TRIM(ITOS(JGRAD)),X1,MSR%TJ,MSR%TJ-MSR%PJ, &
+   WRITE(IUPESTPROGRESS,'(I5,A15,G15.7,2F15.3,15X,3F15.3)') IGRAD,'LAMBDA'//TRIM(ITOS(JGRAD)),X1,MSR%TJ,MSR%TJ-MSR%PJ, &
                                         MSR%GOF(JGRAD),MSR%NSC(JGRAD),ET
   ENDIF
  !## realization

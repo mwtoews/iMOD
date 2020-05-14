@@ -69,7 +69,7 @@ C     ------------------------------------------------------------------
      1                       iiconchk                                   ! iconchk
       CHARACTER*200 LINE
       character     drnsubsys*16                                        ! dsubsys
-      character     drniconchk*16                                       ! iconchk
+!      character     drniconchk*16                                       ! iconchk
 C     ------------------------------------------------------------------
       ALLOCATE(NDRAIN,MXDRN,NDRNVL,IDRNCB,IPRDRN)
       ALLOCATE(NPDRN,IDRNPB,NNPDRN)
@@ -130,8 +130,8 @@ C3------READ AUXILIARY VARIABLES AND CBC ALLOCATION OPTION.
          idrnsubsys=999                                                 ! dsubsys
          go to 10                                                       ! dsubsys
       else if(line(istart:istop).eq.'ICONCHK') then                     ! iconchk
-         call urword(line,lloc,istart,istop,1,n,r,iout,in)              ! iconchk
-         drniconchk=line(istart:istop)                                  ! iconchk
+!         call urword(line,lloc,istart,istop,1,n,r,iout,in)              ! iconchk
+!         drniconchk=line(istart:istop)                                  ! iconchk
          iiconchk=1                                                     ! iconchk
          WRITE(IOUT,*) 'ICONCHK ACTIVE'
          go to 10                                                       ! iconchk

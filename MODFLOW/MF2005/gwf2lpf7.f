@@ -552,18 +552,20 @@ C
       !## clean from bottom to top inactive layers with zero conductance
       do irow=1,nrow; do icol=1,ncol
        do ilay=nlay,1,-1
-        t =botm(icol,irow,lbotm(ilay)-1)                     ! DLT
-        b =botm(icol,irow,lbotm(ilay))                       ! DLT
-        kd=hk(icol,irow,ilay)*(t-b) 
-        if(kd.le.0.0)then 
-         IF(LAYCBD(ilay).NE.0) THEN
-          if(ilay.gt.1)vkcb(icol,irow,ilay-1)=0.0
+        if(ibound(icol,irow,ilay).ne.0)then
+         t =botm(icol,irow,lbotm(ilay)-1)                     ! dlt
+         b =botm(icol,irow,lbotm(ilay))                       ! dlt
+         kd=hk(icol,irow,ilay)*(t-b) 
+         if(kd.le.0.0)then 
+          if(laycbd(ilay).ne.0) then
+           if(ilay.gt.1)vkcb(icol,irow,ilay-1)=0.0
+          endif
+          hk(icol,irow,ilay)=0.0   
+          ibound(icol,irow,ilay)=0 
+         else
+          !## stop search for this location
+          exit
          endif
-         hk(icol,irow,ilay)=0.0   
-         IBOUND(icol,irow,ilay)=0 
-        else
-         !## stop search for this location
-         exit
         endif
        enddo
       enddo; enddo
@@ -1508,7 +1510,7 @@ C2------STORAGEE CAPACITY(SC2).
          IF(IB(J,I,K).NE.0)THEN
           SC(J,I)=SC(J,I)*DELR(J)*DELC(I)
          ELSE
-          SC(I,J)=0.0
+          SC(J,I)=0.0
          ENDIF
         ENDDO
        ENDDO

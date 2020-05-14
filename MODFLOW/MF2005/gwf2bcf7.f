@@ -294,22 +294,6 @@ C
 C8C-----READ TRANSMISSIVITY INTO ARRAY CC IF LAYER TYPE IS 0 OR 2.
       IF(LAYCON(K).EQ.3 .OR. LAYCON(K).EQ.1) GO TO 105
       CALL U2DREL(CC(:,:,K),ANAME(2),NROW,NCOL,KK,IN,IOUT)
-      ncor=0
-      do irow = 1, nrow                                               ! ILAY_ZERO
-          do icol = 1, ncol                                           ! ILAY_ZERO
-             kdsv(icol,irow,k) = cc(icol,irow,k)                      ! ILAY_ZERO
-             if (iminkd.eq.1)then
-              if(kdsv(icol,irow,k).lt.minkd)then                      ! ILAY_ZERO
-               kdsv(icol,irow,k) = minkd
-               ncor=ncor+1
-              endif
-             endif
-          end do                                                      ! ILAY_ZERO
-      end do                                                          ! ILAY_ZERO
-      if(ncor.gt.0)then
-       write(IOUT,'(a)') 'Corrections caused by minimal Transmissivity'
-       write(IOUT,'(a,i8)') 'No. of corrections ',ncor
-      endif
       GO TO 110
 C
 C8D-----READ HYDRAULIC CONDUCTIVITY(HY) IF LAYER TYPE IS 1 OR 3.
@@ -347,6 +331,25 @@ C8H-----CAPABILITY HAS BEEN INVOKED (IWDFLG NOT 0).
         if(NTOP.ne.nlay)stop 'NTOP need to be equal to nlay'
         call pest1alpha_grid('SY',sc2,nrow,ncol,nlay,iout)  ! IPEST
        endif
+      endif
+
+      ncor=0
+      do k=1,nlay   
+       do irow = 1, nrow                                               ! ILAY_ZERO
+          do icol = 1, ncol                                           ! ILAY_ZERO
+             kdsv(icol,irow,k) = cc(icol,irow,k)                      ! ILAY_ZERO
+             if (iminkd.eq.1)then
+              if(kdsv(icol,irow,k).lt.minkd)then                      ! ILAY_ZERO
+               kdsv(icol,irow,k) = minkd
+               ncor=ncor+1
+              endif
+             endif
+          end do                                                      ! ILAY_ZERO
+       end do                                                          ! ILAY_ZERO
+      enddo
+      if(ncor.gt.0)then
+       write(IOUT,'(a)') 'Corrections caused by minimal Transmissivity'
+       write(IOUT,'(a,i8)') 'No. of corrections ',ncor
       endif
 C
 C9------PREPARE AND CHECK BCF DATA.
