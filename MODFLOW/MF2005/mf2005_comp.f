@@ -1268,7 +1268,7 @@ c arguments
       
 c local variables
       integer  IBDRET,ic1,ic2,ir1,ir2,il1,il2,idir
-      integer    :: igrid
+      integer    :: igrid,iuvdf_bu,ibal
       real :: budperc
 c init
       call timing_tic('MODFLOW','OTBD')                                 ! DLT
@@ -1285,7 +1285,17 @@ c  33      CONTINUE
 C
 C7C3----DETERMINE WHICH OUTPUT IS NEEDED.
           CALL GWF2BAS7OC(KKSTP,KKPER,ICNVG,IUNIT(IUOC),IGRID)
-C
+      
+      iuvdf_bu=iunit(iuvdf)!; iunit(iuvdf)=0
+      !## save regular water balans first
+      do ibal=1,2
+
+       if(ibal.eq.2)then
+        iunit(iuvdf)=iuvdf_bu
+        if(iunit(iuvdf).eq.0)exit
+        exit
+       endif
+
 C7C4----CALCULATE BUDGET TERMS. SAVE CELL-BY-CELL FLOW TERMS.
           MSUM = 1
           IF (IUNIT(IUBCF6).GT.0) THEN
@@ -1489,7 +1499,8 @@ c          IF(ICNVG.EQ.0) GO TO 110
 C-----END OF TIME STEP (KSTP) AND STRESS PERIOD (KPER) LOOPS
 c   90   CONTINUE
 c  100 CONTINUE
-      enddo                                                                     ! DLT: instances
+      enddo
+      enddo                                                             ! DLT: instances
       call timing_toc('MODFLOW','OTBD')                                 ! DLT
       
       return

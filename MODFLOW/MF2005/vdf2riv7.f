@@ -78,14 +78,24 @@ C5------SINCE THE CELL IS INTERNAL GET THE RIVER DATA.
         IF(LOCRIVDEN.GT.0) RIVDENS=RIVR(LOCRIVDEN,L)
         HRIV=FEHEAD(HRIV,RIVDENS,RBOT+RBDTHK)
         HHNEW=HNEW(IC,IR,IL)
+        HTEMP=SALTHEAD(HNEW(IC,IR,IL),PS(IC,IR,IL),ELEV(IC,IR,IL))
+
+c ------APPLY INFILTRATION FACTOR                                        ! RFACT
+      if (IRIVRFACT.gt.0) then                                           ! RFACT
+         if (HTEMP.LE.HRIV) then                                         ! RFACT
+            ! situation with infiltration, apply infiltration factor     ! RFACT
+            CRIV=CRIV*RIVR(IRIVRFACT,L)                                  ! RFACT
+         endif                                                           ! RFACT
+      endif                                                              ! RFACT
+        
 C--SEAWAT: CALCULATE FRESHWATER HEAD AT RBOT USING HEAD IN MODEL CELL
         HFRBOT=HHNEW+(PS(IC,IR,IL)-DENSEREF)/DENSEREF*
      &      (ELEV(IC,IR,IL)-RBOT)
 C
 C6------COMPARE AQUIFER HEAD TO BOTTOM OF STREAM BED.
 C--SEAWAT: USE SALTHEAD FOR THIS COMPARISON
-        IF(SALTHEAD(HNEW(IC,IR,IL),PS(IC,IR,IL),ELEV(IC,IR,IL))
-     +           .LE.RRBOT) GO TO 96
+        IF(HTEMP.LE.RRBOT)GO TO 96 !SALTHEAD(HNEW(IC,IR,IL),PS(IC,IR,IL),ELEV(IC,IR,IL))
+!     +           .LE.RRBOT) GO TO 96
         RHOAVG=(RIVDENS+PS(IC,IR,IL))/2
         DIRECT=-((HRIV-HFRBOT)+(PS(IC,IR,IL)-DENSEREF)/
      +            DENSEREF*RBDTHK)

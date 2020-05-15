@@ -3297,7 +3297,8 @@ DOLOOP: DO
    IF(ISTATUS.EQ.0)THEN
     !## non-blocked process not stopped correctly
     IF(PROC(I)%IFLAGS(2).EQ.0.AND.IEXCOD.NE.0)THEN
-     CALL WMESSAGEBOX(OKONLY,EXCLAMATIONICON,COMMONOK,TRIM(STRING)//CHAR(13)//'in program:'//TRIM(PROC(I)%CID),'Program Terminated')
+     CALL WMESSAGEBOX(OKONLY,EXCLAMATIONICON,COMMONOK,'Error occured in previous start of program:'//CHAR(13)//TRIM(PROC(I)%CID)//CHAR(13)// &
+      'Program has stopped now, but you  might check the batch file before starting again?','Information')
     ENDIF
     PROC(I)%ID=0; PROC(I)%CID=''; PROC(I)%IFLAGS=0
    !## process is still running

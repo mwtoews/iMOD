@@ -1737,6 +1737,11 @@ CONTAINS
            IDFVAL=X/IDFVAL
          END SELECT
         ENDIF
+       ELSE
+        !## if new value equal to its nodata, set it to the nodata of the new idf
+        IF(IDFVAL.EQ.MP(JPLOT)%IDF%NODATA)THEN
+         IDFVAL=MP_CALC%NODATA
+        ENDIF
        ENDIF
 
        !## write result in idf
