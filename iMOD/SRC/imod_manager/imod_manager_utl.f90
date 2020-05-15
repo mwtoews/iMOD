@@ -177,11 +177,15 @@ CONTAINS
    JU=UTL_GETUNIT(); OPEN(JU,FILE=IDFNAME,STATUS='OLD',ACTION='READ',IOSTAT=IOS)
    IF(IOS.NE.0)RETURN
  
-   ! Get nr of files and read files.
+   ! First get nr of files and second read filenames.
    DO I=1,2
     NIDF=0
     DO
      READ(JU,'(A)',IOSTAT=IOS) IDFNAME; IF(IOS.NE.0)EXIT
+     !## remove quotes
+     DO ; J=INDEX(IDFNAME,CHAR(34)); IF(J.EQ.0)EXIT; IF(J.GT.0)IDFNAME(J:J)=' ' ; ENDDO
+     !## remove quotes
+     DO ; J=INDEX(IDFNAME,CHAR(39)); IF(J.EQ.0)EXIT; IF(J.GT.0)IDFNAME(J:J)=' ' ; ENDDO
      ! check each line for existing file
      INQUIRE(FILE=IDFNAME,EXIST=LEX)
      IF(LEX)THEN
