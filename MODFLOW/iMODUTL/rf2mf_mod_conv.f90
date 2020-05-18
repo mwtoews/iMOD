@@ -51,7 +51,8 @@
       integer, parameter :: ievt = 17
       integer, parameter :: iscr = 18
       integer, parameter :: ipwt = 19
-      integer, parameter :: idxc = 20
+      integer, parameter :: icon = 20
+      integer, parameter :: idxc = 21
 
       integer, parameter :: npck = idxc
 
@@ -76,6 +77,7 @@
       'evt ',&
       'scr ',&
       'pwt ',&
+      'con ',&
       'dxc '/
 
       integer, parameter :: ihead    = 1
@@ -287,6 +289,14 @@
          real :: minc
       end type tBcf
       type(tBcf), public, save :: bcf
+
+!.......................................................................
+      type tCon
+         character(len=maxlen) :: text = 'Concentration file'
+         character(len=maxlen) :: options = 'free'
+         type(tArrayRead), dimension(:), pointer :: conc => null()
+      end type tCon
+      type(tCon), public, save :: con
 
 !.......................................................................
       type tPwt
@@ -584,9 +594,9 @@
       character(len=8), public, save :: starttime
       integer, public, save :: debugflag = 0
 
-      public :: AllocNam,AllocDis,AllocBas,AllocBcf,AllocMet,AllocOc, &
+      public :: AllocNam,AllocDis,AllocBas,AllocBcf,AllocMet,AllocOc,AllocCon, &
                 AllocRiv,AllocDrn,AllocGhb,AllocWel,AllocAni,AllocHfb,AllocRch,AllocEvt,AllocChd,AllocPcg,AllocPks,AllocDxc,InitPks,PartPks,AllocScr,AllocPwt
-      public :: WriteDis,WriteBas,WriteBcf,WriteMet,WriteOc,WriteRiv,&
+      public :: WriteDis,WriteBas,WriteBcf,WriteMet,WriteOc,WriteRiv,WriteCon, &
                 WriteDrn,WriteGhb,WriteWel,WriteAni,WriteHfb,WriteRch,WriteEvt,WriteChd,WritePcg,WritePks,WriteNam,WriteScr,WritePwt
 
       contains
@@ -745,6 +755,27 @@
 
       return
       end subroutine AllocBas
+
+      !> Allocate concentration package.
+      subroutine AllocCon(iact)
+
+      implicit none
+
+!...     arguments
+      integer, intent(in) :: iact
+!.......................................................................
+
+      if (iact == ialloc) then
+
+         nam%package(icon)%active = .true.
+
+         allocate(con%conc(nlay))
+      else
+         if (associated(con%conc)) deallocate(con%conc)
+      end if
+
+      return
+      end subroutine AllocCon
 
       !> Allocate Block-Centered Flow package.
       subroutine AllocBcf(iact)
@@ -1613,6 +1644,40 @@
 
       return
       end subroutine WriteBas
+
+      !> Write basic package file.
+      subroutine WriteCon()
+
+      implicit none
+
+!...     locals
+      integer :: cfn_getlun, lun, i, ilay
+      character(len=maxlen) :: str
+!.......................................................................
+
+!...     return in case package is not active
+      if (.not.nam%package(icon)%active) return
+
+!...     set slashes
+      call osd_s_filename(nam%package(icon)%fname)
+
+!...     open bas-file
+      call CreateDir(nam%package(icon)%fname)
+      lun = cfn_getlun(10,99)
+      open(unit=lun,file=nam%package(icon)%fname,action='write')
+
+!...     write bas file
+!      write(lun,'(a,1x,a)') '#', trim(con%text)
+!      write(lun,'(a)') trim(bas%options)
+      do ilay = 1, nlay
+         call WriteArrayRead(con%conc(ilay),lun) ! concentration
+      end do
+
+!...     close bas file
+      close(lun)
+
+      return
+      end subroutine WriteCon
 
       !> Write Block-Centered Flow package.
       subroutine WriteBcf()

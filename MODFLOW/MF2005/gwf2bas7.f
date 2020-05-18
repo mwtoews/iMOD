@@ -117,7 +117,8 @@ C     ------------------------------------------------------------------
      1                      LBHDSV,LBDDSV,LBBOSV,IBUDFL,ICBCFL,IHDDFL,
      2                      IAUXSV,IBDOPT,IPRTIM,IPEROC,ITSOC,ICHFLG,
      3                      IDDREF,IDDREFNEW,DELT,PERTIM,TOTIM,HNOFLO,
-     4                      HDRY,STOPER,CHEDFM,CDDNFM,CBOUFM,VBVL,VBNM
+     4                      HDRY,STOPER,CHEDFM,CDDNFM,CBOUFM,VBVL,
+     5                      VBNM
       use m_mf2005_iu, only: iuani, iumet, iupwt, iusfr, iulak, iulpf,
      1                      IUMNW1, IUMNW2, IUMNWI, IUCHD, IUUZF, IUFHB ! PKS
 C

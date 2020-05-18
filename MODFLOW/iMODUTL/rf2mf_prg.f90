@@ -234,6 +234,7 @@ if (myrank.eq.0) then ! master only
  call WriteEvt()
  call WriteOc()
  call WriteChd()
+ call WriteCon()
  call WriteNam(dxcfile)
 end if
 call pks7mpibarrier() ! PKS
@@ -255,7 +256,7 @@ if (mpck(pevt).eq.1) call AllocEvt(idealloc)
 if (mpck(pchd).eq.1) call AllocChd(idealloc)
 if (mmod(pscr).eq.1) call AllocScr(idealloc)
 if (mmod(ppwt).eq.1) call AllocPwt(idealloc)
-
+if (mmod(pcon).eq.1) call AllocCon(idealloc)
 if (mmod(pcap).eq.1.or.len_trim(dxcfile).gt.0) call AllocDxc(idealloc)
 
 !## close all units
@@ -1046,6 +1047,7 @@ if (mpck(pevt).eq.1) call AllocEvt(ialloc)
 if (mpck(pchd).eq.1) call AllocChd(ialloc)
 if (mmod(pscr).eq.1) call AllocScr(ialloc)
 if (mmod(ppwt).eq.1) call AllocPwt(ialloc)
+if (mmod(pcon).eq.1) call AllocCon(ialloc)
 if (mmod(pcap).eq.1.or.len_trim(dxcfile).gt.0) call AllocDxc(ialloc)
 
 ! set buget output with modsave

@@ -23,7 +23,7 @@
 MODULE MOD_RF2MF_READ
 
 USE IMOD_UTL
-USE rf2mf_module, ONLY : nlay,bas,bcf,pwt,dis,wel,drn,riv,ghb,hfb,ani,rch,dxc,mxrech,evt,chd,iarr,iari,nper,&
+USE rf2mf_module, ONLY : nlay,bas,bcf,pwt,dis,wel,drn,riv,ghb,hfb,ani,rch,dxc,con,mxrech,evt,chd,iarr,iari,nper,&
                          oc,maxsubsys,maxgen,maxcol,scr,ialloc,allocscr,&
                          iusclnodata,iusclspec,iusclarith,iusclgeom,iusclsumq,iusclsumcdr,iusclinvc,iusclmostfr,iusclsuminvcvr,iusclperc,&
                          idsclnodata,idsclnointp,idsclintp,iusclarithnd
@@ -204,6 +204,8 @@ CONTAINS
        if(it.eq.4)call RF2MF_READ1MAIN_system(pwt%top2,ios,ilay,fct,imp,constante,iarr,fname,iusclarith,idsclintp)
        if(it.eq.5)call RF2MF_READ1MAIN_system(pwt%thkaf,ios,ilay,fct,imp,constante,iarr,fname,iusclarith,idsclintp)
        if(it.eq.6)call RF2MF_READ1MAIN_system(pwt%vcont,ios,ilay,fct,imp,constante,iarr,fname,iusclinvc,idsclintp)
+      CASE (PCON)     !## (PCON) concentration
+       call RF2MF_READ1MAIN_system(con%conc(ilay),ios,ilay,fct,imp,constante,iarr,fname,iusclarith,idsclintp)
       CASE (PANI)     !## (PANI) anisotropy
        if(it.eq.1)call RF2MF_READ1MAIN_system(ani%factor(ilay),ios,ilay,fct,imp,constante,iarr,fname,iusclarith,idsclintp)
        if(it.eq.2)call RF2MF_READ1MAIN_system(ani%angle(ilay),ios,ilay,fct,imp,constante,iarr,fname,iusclmostfr,idsclnointp)
@@ -223,7 +225,6 @@ CONTAINS
       CASE (PBOT)     !## (PBOT) bot
        dis%setbot = .true.
        call RF2MF_READ1MAIN_system(dis%aquiferbot(ilay),ios,ilay,fct,imp,constante,iarr,fname,iusclarith,idsclintp)
-      CASE (PCON)     !## (PCON) con
       CASE (PKHV)     !## (PKHV) horizontal.k.value
        bcf%llpf = .true. ! lpf needed
        call RF2MF_READ1MAIN_system(bcf%hhy(ilay),ios,ilay,fct,imp,constante,iarr,fname,iusclgeom,idsclintp)

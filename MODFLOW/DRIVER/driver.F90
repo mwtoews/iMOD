@@ -115,9 +115,9 @@ implicit none
 ! program section
 ! ------------------------------------------------------------------------------
 
- CALL IEEE_SET_HALTING_MODE (IEEE_DIVIDE_BY_ZERO, .TRUE.)
+CALL IEEE_SET_HALTING_MODE (IEEE_DIVIDE_BY_ZERO, .TRUE.)
+CALL IEEE_SET_HALTING_MODE (IEEE_OVERFLOW,       .TRUE.)
 
- 
 call pks7mpiini1(lwstdo) ! PKS
 call pks7mpiactive(lpks) ! PKS
 

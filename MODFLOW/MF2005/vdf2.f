@@ -506,6 +506,9 @@ C-----------------------------------------------------------------------------
       DO K=1,NLAY
       DO I=1,NROW
       DO J=1,NCOL
+       if(k.eq.3.and.i.eq.24.and.j.eq.45)then
+        write(*,*) 
+       endif
          D1=0.
          D2=0.
          D3=0.
@@ -720,7 +723,9 @@ C--SEAWAT: CALCULATE DENSITY TERM UP (J,I,K-1): D5
             IF(IBOUND(J,I,K-1).EQ.0) GOTO 50
             DIS1=ELEV(J,I,K-1)-BOTM(J,I,K-1)
             DIS2=BOTM(J,I,K-1)-ELEV(J,I,K)
-            AVGDENS=(DIS1*PS(J,I,K-1)+DIS2*PS(J,I,K))/(DIS1+DIS2)
+            AVGDENS=1000.0; IF(DIS1+DIS2.GT.0.0)THEN
+             AVGDENS=(DIS1*PS(J,I,K-1)+DIS2*PS(J,I,K))/(DIS1+DIS2)
+            ENDIF
             D5=CV(J,I,K-1)*(AVGDENS-DENSEREF)/DENSEREF*
      &       (ELEV(J,I,K-1)-ELEV(J,I,K))
 C--SEAWAT: CONSERVE MASS WITH CENTRAL IN SPACE
@@ -758,7 +763,9 @@ C--SEAWAT: CALCULATE DENSITY TERM DOWN (J,I,K+1): D6
             IF(IBOUND(J,I,K+1).EQ.0) GOTO 60
             DIS1=BOTM(J,I,K)-ELEV(J,I,K+1)
             DIS2=ELEV(J,I,K)-BOTM(J,I,K)
-            AVGDENS=(DIS1*PS(J,I,K+1)+DIS2*PS(J,I,K))/(DIS1+DIS2)
+            AVGDENS=1000.0; IF(DIS1+DIS2.GT.0.0)THEN
+             AVGDENS=(DIS1*PS(J,I,K+1)+DIS2*PS(J,I,K))/(DIS1+DIS2)
+            ENDIF
             D6=CV(J,I,K)*(AVGDENS-DENSEREF)/DENSEREF*
      &       (ELEV(J,I,K+1)-ELEV(J,I,K))
 C--SEAWAT: CONSERVE MASS WITH CENTRAL IN SPACE
@@ -793,6 +800,9 @@ C--SEAWAT: END DEWATERED CORRECTION
    60      CONTINUE
 C--SEAWAT: SUBTRACT DENSITY TERMS AND DCDT FROM RHS ACCUMULATOR
            RHS(J,I,K)=RHS(J,I,K)-D1-D2-D3-D4-D5-D6
+           if(j.eq.45.and.i.eq.24.and.k.eq.3)then
+            write(*,*) rhs(45,24,3)           
+           endif
 CVDF           IF(MT3DRHOFLG.NE.0) RHS(J,I,K)=RHS(J,I,K)+DCDT(J,I,K)       
    70 CONTINUE
       ENDDO
@@ -1116,7 +1126,7 @@ C       IMPLICIT DOUBLE PRECISION (A-H,O-Z)
 C
       CHARACTER*4 VBNM
       CHARACTER*16 TEXT
-      DIMENSION IBOUND(NCOL,NROW,NLAY),VBNM(4,20),VBVL(4,20),
+      DIMENSION IBOUND(NCOL,NROW,NLAY),VBNM(4,MSUM),VBVL(4,MSUM), !VBNM(4,20),VBVL(4,20),
      +  BUFF(NCOL,NROW,NLAY)
       DATA TEXT /'            DCDT'/
 C     ------------------------------------------------------------------
@@ -1221,6 +1231,11 @@ C************************************************************************
 C
       DOUBLE PRECISION HF
 C-----------------------------------------------------------------------
+
+!      if(dense.le.0.0)then
+!       write(*,*) 'dense',dense; pause
+!      endif
+      
       SALTHEAD=HF*DENSEREF/DENSE+(DENSE-DENSEREF)/DENSE*ELEV
       END
 

@@ -236,7 +236,6 @@ C     ------------------------------------------------------------------
       BIGGESTPOS = HUGE(BIGH)
       BIGGESTNEG = -BIGGESTPOS
 C
-
 !      IF(NITER.EQ.0) THEN
 !        WRITE(IOUT,895)
 !        WRITE(IOUT,900) (I,CC(I),CR(I),CV(I),HCOF(I),
@@ -501,7 +500,7 @@ C
 C-------POLYNOMIAL PRECONDITIONING
         DO 140 N = 1, NODES
           V(N) = RES(N)
-  140   CONTINUE
+  140   CONTINUE  
         CALL SPCG7E(IBOUND,RES,HCOF,CR,CC,CV,V,SS,C2,NORM,NCOL,NROW,
      &              NLAY,NODES)
         CALL SPCG7E(IBOUND,RES,HCOF,CR,CC,CV,SS,V,C1,NORM,NCOL,NROW,
@@ -606,7 +605,7 @@ C--------CHANGED 500 FORMAT 01SEPT1991 AND 20MAR1992
 C--------CHANGED 500 FORMAT AND WRITE STATEMENT AND ADDED DEL 01MAY1993
                   DEL = 1.5D0*DEL + .001D0
                   IF (DEL.GT..5D0) THEN
-                    WRITE (IOUT,500)
+                    WRITE (IOUT,500) 
                     IERR = 1
                     RETURN
                   ENDIF
@@ -636,17 +635,19 @@ C
               SSCR = DZERO
               SSCC = DZERO
               SSCV = DZERO
+              
               IF (JJ.NE.NCOL) SSCR = CR(N)*SS(NC)/CD(N)
               IF (II.NE.NROW) SSCC = CC(N)*SS(NR)/CD(N)
               IF (KK.NE.NLAY) SSCV = CV(N)*SS(NL)/CD(N)
               VN = V(N)/CD(N)
               SS(N) = VN - SSCR - SSCC - SSCV
-  190       CONTINUE
+
+  190       CONTINUE 
   200     CONTINUE
 C-------SKIP OVER OTHER PRECONDITIONING TYPES
-  210   CONTINUE
-      ENDIF
-C
+  210   CONTINUE 
+      ENDIF 
+C 
 C-------CALCULATE P OF THE CONJUGATE GRADIENT ALGORITHM
       SROLD = SRNEW
       SRNEW = DZERO
