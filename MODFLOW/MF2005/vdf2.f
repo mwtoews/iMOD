@@ -924,7 +924,9 @@ C       CALCULATE RHOCV
         IF(IBOUND(J,I,K).NE.0.AND.IBOUND(J,I,K+1).NE.0) THEN
           DIS1=BOTM(J,I,K)-ELEV(J,I,K+1)
           DIS2=ELEV(J,I,K)-BOTM(J,I,K)
-          AVGDENS=(DIS1*PS(J,I,K+1)+DIS2*PS(J,I,K))/(DIS1+DIS2)
+          AVGDENS=1000.0; IF(DIS1+DIS2.GT.0.0)THEN
+           AVGDENS=(DIS1*PS(J,I,K+1)+DIS2*PS(J,I,K))/(DIS1+DIS2)
+          ENDIF
           D6=CV(J,I,K)*(AVGDENS-DENSEREF)/DENSEREF*
      &       (ELEV(J,I,K+1)-ELEV(J,I,K))
           HDIFF=HNEW(J,I,K+1)-HNEW(J,I,K)

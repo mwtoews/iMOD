@@ -4972,7 +4972,7 @@ SOLLOOP: DO I=1,NSOLLIST
  INTEGER :: I,J,II
  REAL(KIND=DP_KIND) :: XTOL
  CHARACTER(LEN=52) :: CDATE
- INTEGER,DIMENSION(:,:),ALLOCATABLE :: ICOMBINE
+ INTEGER,DIMENSION(:,:),POINTER :: ICOMBINE
  INTEGER,DIMENSION(:),ALLOCATABLE :: TMPINT
  CHARACTER(LEN=52),ALLOCATABLE,DIMENSION(:) :: TMPNAME
  
@@ -5025,7 +5025,7 @@ SOLLOOP: DO I=1,NSOLLIST
  ENDDO; ENDDO
  
  !## create drawing list
- NTBSOL=MXNIDF; ALLOCATE(ICOMBINE(NTBSOL,3)); ICOMBINE=0
+ NTBSOL=NIDFLIST; ALLOCATE(ICOMBINE(NTBSOL,3)); ICOMBINE=0
  DO J=1,NTBSOL
   !## not to be processed
   IF(IDFPLOT(J)%ICUBE.EQ.5)CYCLE
@@ -5217,14 +5217,30 @@ SOLLOOP: DO I=1,NSOLLIST
  SUBROUTINE IMOD3D_SOL_SAVE()
  !###======================================================================
  IMPLICIT NONE
- INTEGER :: I
+ INTEGER :: I,J,N
  CHARACTER(LEN=256) :: DIR
+ INTEGER,DIMENSION(:,:),POINTER :: ICOMBINE
  
  DIR=TRIM(PREFVAL(1))//'\TMP\'
 
  DO I=1,SIZE(SOLPLOT)
   IF(SOLPLOT(I)%ISEL.EQ.1)THEN
-   IF(.NOT.SOLIDOPENSPF(I,'W',DIR))RETURN
+   !## create drawing list
+   N=SIZE(SPF(I)%PROF); ALLOCATE(ICOMBINE(N,3)); ICOMBINE=0
+   DO J=1,N
+    !## not to be processed
+    IF(IDFPLOT(J)%ICUBE.EQ.5)CYCLE
+    !## voxel, use colouring only
+    IF(IDFPLOT(J)%ICUBE.EQ.3.OR.IDFPLOT(J)%ICUBE.EQ.8)THEN
+     ICOMBINE(J,3)=J
+    ELSE
+     ICOMBINE(J,1)=J
+     ICOMBINE(J,2)=IDFPLOT(J)%ICOMBINE
+     IF(IDFPLOT(J)%IDFLEGEND.NE.J)ICOMBINE(J,3)=IDFPLOT(J)%IDFLEGEND
+    ENDIF
+   ENDDO
+   IF(.NOT.SOLIDOPENSPF(I,'W',DIR,ICOMBINE=ICOMBINE))RETURN
+   DEALLOCATE(ICOMBINE)
   ENDIF
  ENDDO
  
@@ -5240,7 +5256,7 @@ SOLLOOP: DO I=1,NSOLLIST
  INTEGER :: I,J,K,NF,II,N,M
  CHARACTER(LEN=10000) :: FNAME,FLIST
  CHARACTER(LEN=256),ALLOCATABLE,DIMENSION(:) :: FNAMES
- INTEGER,DIMENSION(:,:),ALLOCATABLE :: ICOMBINE
+ INTEGER,DIMENSION(:,:),POINTER :: ICOMBINE=>NULL()
 
  IF(.NOT.UTL_WSELECTFILE('Load iMOD Solid Profile File (*.spf)|*.spf|Load iMOD GEN file (*.gen)|*.gen|',      &
                    LOADDIALOG+MUSTEXIST+PROMPTON+DIRCHANGE+MULTIFILE,FNAME,&
@@ -5286,45 +5302,48 @@ SOLLOOP: DO I=1,NSOLLIST
   FNAMES(II)=UTL_CAP(FNAMES(II),'U')
  ENDDO
 
+! !## create drawing list
+! N=NIDFLIST; ALLOCATE(ICOMBINE(N,3)); ICOMBINE=0
+! DO J=1,N
+!  !## not to be processed
+!  IF(IDFPLOT(J)%ICUBE.EQ.5)CYCLE
+!  !## voxel, use colouring only
+!  IF(IDFPLOT(J)%ICUBE.EQ.3.OR.IDFPLOT(J)%ICUBE.EQ.8)THEN
+!   ICOMBINE(J,3)=J
+!  ELSE
+!   ICOMBINE(J,1)=J
+!   ICOMBINE(J,2)=IDFPLOT(J)%ICOMBINE
+!   IF(IDFPLOT(J)%IDFLEGEND.NE.J)ICOMBINE(J,3)=IDFPLOT(J)%IDFLEGEND
+!  ENDIF
+! ENDDO
+
  N=SIZE(SPF)
  M=MIN(N,NSPF+NF)
  !## read maximal cross-section which is possible
  J=0
  DO I=NSPF+1,M
-
   !## read cross-section information
   J=J+1
   SPF(I)%FNAME=FNAMES(J)(:INDEX(FNAMES(J),'.',.TRUE.)-1)
   !## spf-file?
   IF(INDEX(FNAMES(J),'.SPF').GT.0)THEN
-   IF(.NOT.SOLIDOPENSPF(I,'R',''))EXIT
+   IF(.NOT.SOLIDOPENSPF(I,'R','',ICOMBINE=ICOMBINE))EXIT
   ELSE
-   IF(.NOT.IMOD3D_FENCEADDFROMFILE(FNAMES(J)))EXIT !SPF(I)%FNAME))EXIT
+   IF(.NOT.IMOD3D_FENCEADDFROMFILE(FNAMES(J)))EXIT 
   ENDIF
+  SPF(I)%FNAME=SPF(I)%FNAME(INDEX(SPF(I)%FNAME,'\',.TRUE.)+1:)
   SOLPLOT(I)%ISEL=1
   SOLPLOT(I)%ICLIP=1
-
-  !## create drawing list
-  N=SIZE(SPF(I)%PROF); ALLOCATE(ICOMBINE(N,3)); ICOMBINE=0
-  DO K=1,N
-   ICOMBINE(K,1)=K
-   ICOMBINE(K,2)=MIN(K+1,N)
-   !## colour
-!   ICOMBINE(J,3)=... 
-  ENDDO
-
+  
   !## create drawing list
   IF(INDEX(FNAMES(J),'.SPF').GT.0)CALL IMOD3D_SOL_DRAWINGLIST(I,I,ICOMBINE)
   
-  DEALLOCATE(ICOMBINE)
-
  END DO
 
- DEALLOCATE(FNAMES)
+ DEALLOCATE(ICOMBINE,FNAMES)
 
  !## new number of cross-sections
- NSPF=I-1
- NSOLLIST=NSPF
+ NSPF=I-1; NSOLLIST=NSPF
 
  !## read, process and stick bitmaps to cross-sections
  IF(IMOD3D_SOL_BMP())THEN; ENDIF
@@ -5359,7 +5378,7 @@ SOLLOOP: DO I=1,NSOLLIST
  IMOD3D_FENCEADDFROMFILE=.FALSE.
  
  CALL POLYGON1INIT()
- CALL POLYGON1SAVELOADSHAPE(ID_LOADSHAPE,FNAME,'GEN') !,ISAVESEL)
+ CALL POLYGON1SAVELOADSHAPE(ID_LOADSHAPE,FNAME,'GEN') 
 
  IF(SIZE(XYZCROSS,1).LE.SHP%NPOL.OR. &
     SIZE(XYZCROSS,2).LE.MAXVAL(SHP%POL%N))THEN
@@ -5414,7 +5433,7 @@ SOLLOOP: DO I=1,NSOLLIST
  !###======================================================================
  IMPLICIT NONE
  INTEGER :: I,J,N
- INTEGER,DIMENSION(:,:),ALLOCATABLE :: ICOMBINE
+ INTEGER,DIMENSION(:,:),POINTER :: ICOMBINE
  
  IMOD3D_SOL=.TRUE.
 
@@ -5458,7 +5477,7 @@ SOLLOOP: DO I=1,NSOLLIST
  !###======================================================================
  IMPLICIT NONE
  INTEGER,INTENT(IN) :: ISOL,I
- INTEGER,INTENT(IN),DIMENSION(:,:) :: ICOMBINE
+ INTEGER,INTENT(IN),DIMENSION(:,:),POINTER :: ICOMBINE
  REAL(KIND=GLDOUBLE) :: DXX,DYY,GX,GY,GZ,DXY 
  INTEGER :: J,K,II,JJ,KK,JPROF,IPOS,N,I1,I2,IICLR,IA
  INTEGER,DIMENSION(3) :: IPROF
@@ -5542,7 +5561,6 @@ SOLLOOP: DO I=1,NSOLLIST
     ZT(IPOS,II)=SPF(I)%PROF(K)%PZ(J)
     !## save pointer whether the cross-sections start of stop after or before nodata
     IT(IPOS,II)=REAL(SPF(I)%PROF(K)%IT(J),8)
-!    WRITE(*,'(2I10,F10.1,I10,2F10.3)') KK,II,IT(IPOS,II),SPF(I)%PROF(K)%IT(J),XT(IPOS),SPF(I)%PROF(K)%PZ(J)
    ENDDO
   END DO
 
@@ -5562,11 +5580,6 @@ SOLLOOP: DO I=1,NSOLLIST
   !## sort distances and z- and pointer values
   CALL QKSORT(N,XT,V2=ZT(:,1),V3=ZT(:,2),V4=ZT(:,3),V5=IT(:,1),V6=IT(:,2),V7=IT(:,3))
     
-!  WRITE(*,*) 
-!  DO J=1,N
-!   WRITE(*,'(I10,F10.3,3F10.1,3F10.2)') J,XT(J),(IT(J,K),K=1,3),(ZT(J,K),K=1,3)
-!  ENDDO
-
   !## fill first and last
   DO K=1,3 
    !## skip missing interfaces
@@ -5575,7 +5588,6 @@ SOLLOOP: DO I=1,NSOLLIST
     DO J=2,N
      IF(ZT(J,K).NE.NODATA_Z)THEN
       ZT(1,K)=ZT(J,K)
-!      IT(1,K)=IT(J,K)
       EXIT
      ENDIF
     ENDDO
@@ -5584,7 +5596,6 @@ SOLLOOP: DO I=1,NSOLLIST
     DO J=N-1,1,-1
      IF(ZT(J,K).NE.NODATA_Z)THEN
       ZT(N,K)=ZT(J,K)
-!      IT(N,K)=IT(J,K)
       EXIT
      ENDIF
     ENDDO
@@ -5600,7 +5611,6 @@ SOLLOOP: DO I=1,NSOLLIST
     IF(ZT(J,K).EQ.NODATA_Z)THEN
      DO I1=J-1,1,-1; IF(ZT(I1,K).NE.NODATA_Z)EXIT; ENDDO
      DO I2=J+1,N;    IF(ZT(I2,K).NE.NODATA_Z)EXIT; ENDDO
-!     IF(I1.LE.0.OR.I2.GT.N)CYCLE
      GZ=0.0D0
      IF(XT(I2)-XT(I1).NE.0.0D0)GZ=(ZT(I2,K)-ZT(I1,K))/(XT(I2)-XT(I1))
      ZT(J,K)=ZT(I1,K)+GZ*(XT(J)-XT(I1))
@@ -5611,11 +5621,6 @@ SOLLOOP: DO I=1,NSOLLIST
    END DO
   ENDDO
   
-!  WRITE(*,*) 
-!  DO J=1,N
-!   WRITE(*,'(I10,F10.3,3F10.1,3F10.2)') J,XT(J),(IT(J,K),K=1,3),(ZT(J,K),K=1,3)
-!  ENDDO
-
   !## copy for duplicate points the correct pointer value
   DO II=1,3
    IF(IPROF(II).EQ.0)CYCLE
@@ -5630,11 +5635,6 @@ SOLLOOP: DO I=1,NSOLLIST
    ENDDO
   ENDDO
   
-!  WRITE(*,*) 
-!  DO J=1,N
-!   WRITE(*,'(I10,F10.3,3F10.1,3F10.2)') J,XT(J),(IT(J,K),K=1,3),(ZT(J,K),K=1,3)
-!  ENDDO
-
   !## remove doubles
   K=1
   DO J=2,N
@@ -5650,11 +5650,6 @@ SOLLOOP: DO I=1,NSOLLIST
   END DO
   !## number of unique points in table
   N=K
-
-!  WRITE(*,*) 
-!  DO J=1,N
-!   WRITE(*,'(I10,F10.3,3F10.1,3F10.2)') J,XT(J),(IT(J,K),K=1,3),(ZT(J,K),K=1,3)
-!  ENDDO
 
   !## fill in appropriate after interpolation
   DO K=1,3
@@ -5672,29 +5667,19 @@ SOLLOOP: DO I=1,NSOLLIST
    ENDDO
   ENDDO
   
-!  WRITE(*,*) 
-!  DO J=1,N
-!   WRITE(*,'(I10,F10.3,3F10.1)') J,XT(J),(IT(J,K),K=1,3)
-!  ENDDO
-
   !## define tt as a function of it
   TT=-999
   DO J=1,N
    LSOLID=.FALSE.; IF(IT(J,1).GT.-900.0D0.AND.IT(J,2).GT.-900.0D0)LSOLID=.TRUE.
    IF(IPROF(3).NE.0.AND.LSOLID)LSOLID=IT(J,3).GT.-900.0D0
    IF(LSOLID)THEN
-    TT(J)=1 !THEN
+    TT(J)=1 
     IF(IT(J,1).EQ.IT(J,2))TT(J)=IT(J,1)
     IF(IPROF(3).NE.0)THEN
-     IF(TT(J).EQ.0)TT(J)=IT(J,3) !.AND.IT(J,3).NE.TT(J))TT(J)=-999
+     IF(TT(J).EQ.0)TT(J)=IT(J,3) 
     ENDIF
    ENDIF
   ENDDO
-
-!  WRITE(*,*)
-!  DO J=1,N
-!   WRITE(*,'(I10,F10.3,I10,3F10.1)') J,XT(J),TT(J),IT(J,1),IT(J,2),IT(J,3)
-!  ENDDO
   
   DO J=1,N
    !## set start
@@ -5702,7 +5687,6 @@ SOLLOOP: DO I=1,NSOLLIST
     IF(TT(J).EQ.1)TT(J)=-1 
    ELSE
     IF(TT(J-1).EQ.-999.AND.TT(J).EQ.1)TT(J)=-1 !## start
-!    IF(TT(J-1).EQ.-999.AND.TT(J).EQ.1)TT(J)=-1 !## start
    ENDIF
    !## set end
    IF(J.EQ.N)THEN
@@ -5712,12 +5696,6 @@ SOLLOOP: DO I=1,NSOLLIST
     IF(TT(J).EQ.1)                    TT(J)= 2 
    ENDIF
   ENDDO
-!  WRITE(*,*)
-!  DO J=1,N
-!   WRITE(*,'(I10,F10.3,I10,3F10.1)') J,XT(J),TT(J),IT(J,1),IT(J,2),IT(J,3)
-!  ENDDO
-!  !## make sure last point is equal to %tx   
-!  XT(N)=SPF(I)%TX
 
   !## for each (interpolated) coordinate
   GOFORIT=.FALSE.; IF(TT(1).EQ.-1)GOFORIT=.TRUE.
@@ -5725,7 +5703,7 @@ SOLLOOP: DO I=1,NSOLLIST
 
    !## determine whether to display current segment
    IF(.NOT.GOFORIT)THEN
-    IF(TT(IPOS).EQ.-1)GOFORIT=.TRUE. !LT.0.0D0)GOFORIT=.TRUE.
+    IF(TT(IPOS).EQ.-1)GOFORIT=.TRUE. 
     CYCLE
    ENDIF
    
@@ -5854,10 +5832,6 @@ SOLLOOP: DO I=1,NSOLLIST
                     
      ENDIF
      
-!     !## copy current position to previous position
-!     X(1)=X(4); Y(1)=Y(4); Z(1)=Z(4)
-!     X(2)=X(3); Y(2)=Y(3); Z(2)=Z(3)
-
      EXIT
     ENDIF
     TX(1)=TX(2)
@@ -5865,7 +5839,6 @@ SOLLOOP: DO I=1,NSOLLIST
   ENDDO     
 
   DEALLOCATE(XT,ZT,IT,TT)
-!  NULLIFY(PX,PZ)
 
  ENDDO
   
