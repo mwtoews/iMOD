@@ -1595,7 +1595,9 @@ DOLOOP: DO
    IF(LINE(I:I).EQ.CSEP(K).AND.IOUT.EQ.1)THEN
     IF(PRESENT(EPV))EPV(J)=I-1
     J=J+1
-    IF(PRESENT(BPV))BPV(J)=I+1
+    IF(PRESENT(BPV))THEN
+     IF(J.LE.SIZE(BPV))BPV(J)=I+1
+    ENDIF
     EXIT
    ENDIF
   ENDDO
@@ -1612,8 +1614,10 @@ DOLOOP: DO
 !  IF(LINE(I:I).EQ.',')EXIT
   
  ENDDO
- IF(PRESENT(EPV))EPV(J)=LEN_TRIM(LINE)
-
+ IF(PRESENT(EPV))THEN
+  IF(J.LE.SIZE(EPV))EPV(J)=LEN_TRIM(LINE)
+ ENDIF
+ 
  !## number of columns is number of comma-delimiters + 1
  IF(LINE(I:I).EQ.',')J=J-1
  UTL_COUNT_COLUMNS=J
@@ -3570,6 +3574,11 @@ DOLOOP: DO
   NVV=0; NVL=0
  ENDIF
 
+ !## remove quotes
+ DO I=1,SIZE(VARIABLE,1); DO J=INL+1,NVL
+  READ(VARIABLE(I,J),*) VARIABLE(I,J)
+ ENDDO; ENDDO
+ 
  END SUBROUTINE UTL_GENLABELSREAD
 
  !###======================================================================

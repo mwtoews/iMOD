@@ -376,6 +376,38 @@ c ------------------------------------------------------------------------------
       return
       end
 
+      subroutine vdf2ani3fm(igrid)
+c description:
+c ------------------------------------------------------------------------------
+c Wrapper routine around scl1fmt.
+c
+
+c declaration section
+c ------------------------------------------------------------------------------
+c modules
+      use global, only: rhs, ibound, hnew, ncol, nrow, nlay, hcof
+      use gwfanimodule
+
+      implicit none
+
+c arguments
+      integer, intent(in) :: igrid
+
+c program section
+c ------------------------------------------------------------------------------
+
+      ! set pointers for this igrid
+      call sgwf2ani3pnt(igrid)
+      call sgwf2bas7pnt(igrid)
+
+      call vdf1fmt(dcu,dcd,dcc,dcr,diag,rhs,ibound,hnew,ncol,nrow,
+     1             nlay,hcof,anifactor)
+      
+      call sgwf2bas7psv(igrid)
+
+      return
+      end
+
       subroutine gwf2ani7bd(igrid,idir)
 c description:
 c ------------------------------------------------------------------------------
@@ -864,6 +896,8 @@ c ------------------------------------------------------------------------------
       return
       end
       
+
+      
 !###====================================================================
       subroutine scl1fmt(dcu,dcd,dcc,dcr,diag,rhs,ibound,hnew,ncol,nrow,
      1                   nlay,hcof,anifactor)
@@ -945,10 +979,92 @@ c ------------------------------------------------------------------------------
       return
       end
 
-      !###====================================================================
+!###====================================================================
+      subroutine vdf1fmt(dcu,dcd,dcc,dcr,diag,rhs,ibound,hnew,ncol,nrow,
+     1                   nlay,hcof,anifactor)
+!###====================================================================
+      USE VDFMODULE,    ONLY:DENSEREF,PS
+      implicit none
+      integer ncol,nrow,nlay
+      integer ibound(ncol,nrow,nlay)
+      real dcu(ncol,nrow,nlay),dcd(ncol,nrow,nlay),
+     1     dcc(ncol,nrow,nlay),dcr(ncol,nrow,nlay),
+     1     diag(ncol,nrow,nlay)
+      real(kind=8) hnew(ncol,nrow,nlay)
+      real             rhs(ncol,nrow,nlay)
+      real hcof(ncol,nrow,nlay)
+      real anifactor(ncol,nrow,nlay)
+      integer    ilay, irow,icol,ic1,ic2,ir1,ir2
+      real     q,fod
+
+      do ilay=1,nlay
+
+!######compute diagonal right-down-flow
+       do irow=1,nrow
+        do icol=1,ncol
+
+         ic2=min(icol+1,ncol); ir2=min(irow+1,nrow)
+         ic1=max(icol-1,1);    ir1=max(irow-1,1)       
+         if ((anifactor(icol,irow,ilay).lt.1.).or. !P
+     1       (anifactor(icol,ir1,ilay).lt.1.).or. !N
+     2       (anifactor(icol,ir2,ilay).lt.1.).or. !S
+     3       (anifactor(ic2,irow,ilay).lt.1.).or. !E
+     4       (anifactor(ic1,irow,ilay).lt.1.)) then !W
+         
+         if(ibound(icol,irow,ilay).ne.0)then
+
+          ic2=icol+1; ir2=irow+1; ic1=icol-1; ir1=irow-1
+
+          !## connection towards x-direction
+          fod=0.0
+          if(icol.lt.ncol)then
+           if(ibound(ic2,irow,ilay).ne.0)then
+            fod=fod-dcr(icol,irow,ilay)*hnew(ic2,irow,ilay)
+            rhs(ic2,irow,ilay)=rhs(ic2,irow,ilay)-
+     1       dcr(icol,irow,ilay)*hnew(icol,irow,ilay)*denseref
+           endif
+           if(irow.lt.nrow)then
+            if(ibound(ic2,ir2,ilay).ne.0)then
+             fod=fod-dcd(icol,irow,ilay)*hnew(ic2,ir2,ilay)
+             rhs(ic2,ir2,ilay)=rhs(ic2,ir2,ilay)-
+     1        dcd(icol,irow,ilay)*hnew(icol,irow,ilay)*denseref
+            endif
+           endif
+           if(irow.gt.1)then
+            if(ibound(ic2,ir1,ilay).ne.0)then
+             fod=fod-dcu(icol,irow,ilay)*hnew(ic2,ir1,ilay)
+             rhs(ic2,ir1,ilay)=rhs(ic2,ir1,ilay)-
+     1        dcu(icol,irow,ilay)*hnew(icol,irow,ilay)*denseref
+            endif
+           endif
+          endif
+          !## connection towards y-direction
+          if(irow.lt.nrow)then
+           if(ibound(icol,ir2,ilay).ne.0)then
+            fod=fod-dcc(icol,irow,ilay)*hnew(icol,ir2,ilay)
+            rhs(icol,ir2,ilay)=rhs(icol,ir2,ilay)-
+     1       dcc(icol,irow,ilay)*hnew(icol,irow,ilay)*denseref
+           endif
+          endif
+!
+!!#########get final flux for tensor-computation purposes
+          q=fod-diag(icol,irow,ilay)*hnew(icol,irow,ilay)
+          rhs(icol,irow,ilay)=rhs(icol,irow,ilay)+q*denseref
+         endif
+         
+         end if
+         
+        enddo
+       enddo
+      enddo
+
+      return
+      end
+
+!###====================================================================
       subroutine ani5fm(x,ncol,nrow,nlay,dcu,dcd,dcc,dcr,diag,
      1                 ibound,hnew,i)
-      !###====================================================================
+!###====================================================================
       implicit none
 
       integer, intent(in) :: ncol,nrow,nlay

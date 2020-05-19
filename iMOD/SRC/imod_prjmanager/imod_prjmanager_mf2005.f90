@@ -4399,14 +4399,24 @@ IRLOOP: DO IROW=1,PRJIDF%NROW; DO ICOL=1,PRJIDF%NCOL
 
   !## allocate memory for packages
   NTOP=SIZE(TOPICS(ITOPIC)%STRESS(KPER)%FILES,1); NSYS=SIZE(TOPICS(ITOPIC)%STRESS(KPER)%FILES,2)
+  
+  IF(NTOP.NE.SIZE(JTOP))THEN
+   IF(IBATCH.EQ.0)CALL WMESSAGEBOX(OKONLY,INFORMATIONICON,COMMONOK,'The number of entries '//TRIM(ITOS(NTOP))//' is not equal to the number of entries allowed ('//TRIM(ITOS(SIZE(JTOP)))//').'//CHAR(13)// &
+    'You might remove these additional entries from the current package '//TRIM(TOPICS(ITOPIC)%TNAME),'Information')
+   IF(IBATCH.EQ.1)WRITE(*,'(/A/)') 'The number of entries '//TRIM(ITOS(NTOP))//' is not equal to the number of entries allowed ('//TRIM(ITOS(SIZE(JTOP)))//'). '// &
+      'You might remove these additional entries from the current package '//TRIM(TOPICS(ITOPIC)%TNAME)
+   RETURN
+  ENDIF
+  
   !## used for writing and including the tlp-vector
   IF(ALLOCATED(XTMP))DEALLOCATE(XTMP); ALLOCATE(XTMP(NTOP)); XTMP=0.0D0
   
   SELECT CASE (ITOPIC)
    CASE (TEVT,TRCH)
     IF(NSYS.GT.1)THEN
-     CALL WMESSAGEBOX(OKONLY,INFORMATIONICON,COMMONOK,'You cannot apply more than a single layer to the package '// &
+     IF(IBATCH.EQ.0)CALL WMESSAGEBOX(OKONLY,INFORMATIONICON,COMMONOK,'You cannot apply more than a single layer to the package '// &
        TRIM(TOPICS(ITOPIC)%TNAME)//'.','Information')
+     IF(IBATCH.EQ.1)WRITE(*,'(/A/)') 'You cannot apply more than a single layer to the package '//TRIM(TOPICS(ITOPIC)%TNAME)//'.'
      RETURN
     ENDIF
   END SELECT
@@ -4523,7 +4533,8 @@ IRLOOP: DO IROW=1,PRJIDF%NROW; DO ICOL=1,PRJIDF%NCOL
     !## ilay equal zero not possible for rch and evt
     IF(ITOPIC.EQ.TEVT.OR.ITOPIC.EQ.TRCH)THEN
      IF(ILAY.EQ.0)THEN
-      CALL WMESSAGEBOX(OKONLY,INFORMATIONICON,COMMONOK,'You cannot apply a layer code of zero for RCH or EVT','Error')
+      IF(IBATCH.EQ.0)CALL WMESSAGEBOX(OKONLY,INFORMATIONICON,COMMONOK,'You cannot apply a layer code of zero for RCH or EVT','Error')
+      IF(IBATCH.EQ.1)WRITE(*,'(/A/)') 'You cannot apply a layer code of zero for RCH or EVT'
       RETURN
      ENDIF
     ENDIF

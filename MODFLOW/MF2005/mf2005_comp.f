@@ -204,11 +204,10 @@ cDLT      IGRID=1
      &  IUNIT(IUDRT).GT.0.OR.IUNIT(IUUZF).GT.0.OR.                      !VDF
      &  IUNIT(IUSFR).GT.0.OR.IUNIT(IUMNW2).GT.0.OR.                     !VDF
      &  IUNIT(IUMNW1).GT.0.OR.IUNIT(IUSUB).GT.0.OR.                     !VDF
-     &  IUNIT(IUSWT).GT.0.OR.IUNIT(IUSCR).GT.0.OR.                      !VDF
-     &  IUNIT(IUANI).GT.0)THEN                                          !VDF
+     &  IUNIT(IUSWT).GT.0.OR.IUNIT(IUSCR).GT.0)THEN                     !VDF
          WRITE(IOUT,*) 'VDF package is not supported for packages: '    !VDF
          WRITE(IOUT,*) 'PWT,HUF2,LAK,FHB,RES,STR,IBS,ETS,DRT,UZF,SFR'   !VDF
-         WRITE(IOUT,*) 'MNW1,MNW2,SUB,SWT,SCR,ANI. Program terminated'  !VDF
+         WRITE(IOUT,*) 'MNW1,MNW2,SUB,SWT,SCR. Program terminated'      !VDF
          CALL USTOP(' ')                                                !VDF
         END IF                                                          !VDF
        ENDIF                                                            !VDF
@@ -895,6 +894,7 @@ C--SEAWAT: UPDATE THE SALTHEAD ARRAY                                    !VDF
              IF (IUNIT(IUGHB).GT.0) CALL VDF2GHB7FM(IGRID)              !VDF
              if(IUNIT(IUDXC).gt.0) call vdf2dxc1fm(igrid)               ! DLT: DXC added
              IF (IUNIT(IURCH).GT.0) CALL VDF2RCH7FM(IGRID)              !VDF
+             if(IUNIT(IUANI).gt.0) call vdf2ani3fm(igrid)                ! ANI             
              CALL VDF2FM(IUNIT(IUBCF6),IUNIT(IULPF),IUNIT(IUHUF2))      !VDF
 C--SEAWAT: THE CONSTANT-DENSITY FM SUBROUTINES (FOR GWF PROCESS)
       ELSE                                                              !VDF

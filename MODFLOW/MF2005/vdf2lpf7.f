@@ -363,9 +363,9 @@ C3------CLEAR BUFFER.
         DO I=1,NROW
          DO J=1,NCOL
           IF(buff(j,i,k).LT.ZERO) THEN
-           CHOUT=CHOUT-buff(j,i,k)
+           CHOUT=CHOUT-denseref*buff(j,i,k)
           ELSE
-           CHIN=CHIN+buff(j,i,k)
+           CHIN=CHIN+denseref*buff(j,i,k)
           END IF
          ENDDO
         ENDDO
@@ -688,7 +688,12 @@ C
 C13-----SUM THE FLOWS THROUGH SIX FACES OF CONSTANT HEAD CELL, AND
 C13-----STORE SUM IN BUFFER.
  180  RATE=CHCH1+CHCH2+CHCH3+CHCH4+CHCH5+CHCH6
-      BUFF(J,I,K)=RATE
+ 
+      if(iunit(iuani).gt.0)then
+       BUFF(J,I,K)=denseref*buff(j,i,k)+RATE
+      else     
+       BUFF(J,I,K)=RATE
+      endif
 C
 C14-----PRINT THE FLOW FOR THE CELL IF REQUESTED.
       IF(IBD.LT.0) THEN

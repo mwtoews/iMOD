@@ -5769,7 +5769,12 @@ SOLLOOP: DO I=1,NSOLLIST
 
       !## colour by voxel value
       IF(IPROF(3).GT.0)THEN
-       IICLR=UTL_IDFGETCLASS(IDFPLOT(IPROF(3))%LEG,ZT(IPOS,3))
+       !## this can happen if spf files are read with different icombine that currenlty in 3D Tool
+       IF(SIZE(IDFPLOT).LT.IPROF(3))THEN
+        IICLR=WRGB(255,0,0)
+       ELSE
+        IICLR=UTL_IDFGETCLASS(IDFPLOT(IPROF(3))%LEG,ZT(IPOS,3))
+       ENDIF
       ELSE
        !## get color for z-mean between two segments
        IF(ALLOCATED(SLD))THEN
