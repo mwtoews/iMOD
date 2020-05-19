@@ -1526,6 +1526,8 @@ CONTAINS
    IF(IDF%ITYPE.EQ.4)THEN
     ALLOCATE(V(IDF%NCOL*IDF%NROW))
     READ(IDF%IU,IOSTAT=IOS) (V(I),I=1,IDF%NCOL*IDF%NROW)
+    !## convert to temp-file and read it in again
+    OPEN(NEWUNIT=BINUNIT,STATUS='SCRATCH',FORM='FORMATTED',ACTION='READWRITE')
     !## dump data
     WRITE(BINUNIT,*) V
     !## rewind
