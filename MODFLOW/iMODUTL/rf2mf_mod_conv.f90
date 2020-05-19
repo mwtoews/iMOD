@@ -384,7 +384,7 @@
          character(len=maxlen) :: keyword
          integer :: type = imetu
          integer :: ival
-         real    :: rval
+         real(KIND=8) :: rval
          character(len=maxlen) :: cval = ''
          type(tTime) :: time
       end type tKw
