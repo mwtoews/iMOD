@@ -1531,7 +1531,7 @@ IILOOP: DO I=1,NHFB(IHFB)
       KVA(ILAY)%X(ICOL,IROW)=KVA(ILAY)%NODATA
       IF(ILAY.LT.PRJNLAY)KVV(ILAY)%X(ICOL,IROW)=KVV(ILAY)%NODATA
       !## skip bottom as well as layer below is nodata
-      IF(ILAY.LE.PRJNLAY)THEN
+      IF(ILAY.LT.PRJNLAY)THEN
        IF(IB(ILAY+1).EQ.0)BOT(ILAY)%X(ICOL,IROW)=BOT(ILAY)%NODATA
       ENDIF
      ENDIF
@@ -7320,30 +7320,10 @@ IRLOOP: DO IROW=1,PRJIDF%NROW; DO ICOL=1,PRJIDF%NCOL
        !## add fault
        NHFBNP(ILAY)=NHFBNP(ILAY)+1
 
-       CALL IDFGETDXDY(BND(ILAY),ICOL,IROW,DX,DY)
-      
-       !## get average thickness in between cells
-       T1=0.0D0; IF(BND(ILAY)%X(ICOL,IROW).NE.0.0D0)THEN
-        T1=TOP(ILAY)%X(ICOL,       IROW   )-BOT(ILAY)%X(ICOL,       IROW)
-       ENDIF
-       T2=0.0D0; IF(BND(ILAY)%X(ICOL+1,IROW).NE.0.0D0)THEN
-        T2=TOP(ILAY)%X(MIN(NC,ICOL+1),IROW)-BOT(ILAY)%X(MIN(NC,ICOL+1),IROW)
-       ENDIF
-       T=T1+T2;IF(T1.GT.0.0D0.AND.T2.GT.0.0D0)T=T/2.0D0
-
-       T1=(0.5D0*DX*DY)/(T*KHV(ILAY)%X(ICOL,IROW)); T2=0.0D0
-       IF(ICOL.LT.NC)THEN
-        CALL IDFGETDXDY(BND(ILAY),ICOL+1,IROW,DX,DY)
-        T2=(0.5D0*DX*DY)/(T*KHV(ILAY)%X(ICOL+1,IROW))
-       ENDIF
-       !## fraction
-       IF(C2.EQ.0.0D0)THEN
-        !## conductance
-        F=0.0D0
-       ELSE
-        !## factor
-        F=-(T1+T2)/(C2+T1+T2)
-       ENDIF
+       !## get hydrch as 1/d
+       IF(C2.NE.0.0D0)C2=1.0D0/C2
+       F=MAX(0.0D0,C2)
+       
        WRITE(IU,'(6(I10,1X),G15.7,1X,I10)') JLAY,IROW,ICOL,JLAY,IROW,ICOL+1,F,ISYS !## y-direction
       
       ENDIF
@@ -7407,32 +7387,10 @@ IRLOOP: DO IROW=1,PRJIDF%NROW; DO ICOL=1,PRJIDF%NCOL
        !## add fault
        NHFBNP(ILAY)=NHFBNP(ILAY)+1
 
-       CALL IDFGETDXDY(BND(ILAY),ICOL,IROW,DX,DY)
-       !## get average thickness in between cells
-       T1=0.0D0; IF(BND(ILAY)%X(ICOL,IROW).NE.0.0D0)THEN
-        T1=TOP(ILAY)%X(ICOL,       IROW   )-BOT(ILAY)%X(ICOL,       IROW)
-       ENDIF
-       T2=0.0D0; IF(BND(ILAY)%X(ICOL,IROW+1).NE.0.0D0)THEN
-        T2=TOP(ILAY)%X(ICOL,MIN(NR,IROW+1))-BOT(ILAY)%X(ICOL,MIN(NR,IROW+1))
-       ENDIF
-       T=T1+T2;IF(T1.GT.0.0D0.AND.T2.GT.0.0D0)T=T/2.0D0
-
-       T1=(0.5D0*DX*DY)/(T*KHV(ILAY)%X(ICOL,IROW)); T2=0.0D0
-       IF(IROW.LT.NR)THEN
-        CALL IDFGETDXDY(BND(ILAY),ICOL,IROW+1,DX,DY)
-        T2=(0.5D0*DX*DY)/(T*KHV(ILAY)%X(ICOL,IROW+1))
-       ENDIF
-       
-       !## fraction
-       IF(C2.EQ.0.0D0)THEN
-        !## conductance
-        F=0.0D0
-       ELSE
-        !## factor
-        F=-(T1+T2)/(C2+T1+T2)
-       ENDIF
-       
+       IF(C2.NE.0.0D0)C2=1.0D0/C2
+       F=MAX(0.0D0,C2)
        WRITE(IU,'(6(I10,1X),G15.7,1X,I10)') JLAY,IROW,ICOL,JLAY,IROW+1,ICOL,F,ISYS !## x-direction
+
       ENDIF
      ENDIF
      
