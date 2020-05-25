@@ -103,7 +103,7 @@ implicit none
  type(idfobj) :: idf
 
  character(len=1024) :: str
- character(len=256) :: tssavepath 
+ character(len=256) :: tssavepath ,savepdir
  
  real, dimension(4) :: imodusebox
  
@@ -398,9 +398,9 @@ call pks7mpibarrier() ! PKS
     if (usestsmodflow) call sts2init(usestsmodflow,lunsts)
     call mf2005_initComponent(modrecord,retValMF2005)
     !## get pest variables
-    call mf2005_GetSavePath_TS(tssavepath)
+    call mf2005_GetSavePath_TS(tssavepath,savepdir)
     IF(lipest)THEN
-     if(lnamfile)CALL PEST1INIT(1,pfile,IUPESTOUT,tssavepath,idf,0) !'CODE OF HET UIT RUN- OF NAMFILE KOMT')
+     if(lnamfile)CALL PEST1INIT(1,pfile,IUPESTOUT,tssavepath,savepdir,idf,0) !'CODE OF HET UIT RUN- OF NAMFILE KOMT')
     ENDIF
     ! get number of grids
     ok = mf2005_PutNumberOfGrids(mf_ngrid); call driverChk(ok,'mf2005_PutNumberOfGrids')

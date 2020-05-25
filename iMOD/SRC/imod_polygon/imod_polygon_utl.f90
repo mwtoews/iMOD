@@ -301,7 +301,7 @@ ILOOP: DO I=1,2
  !###======================================================================
  IMPLICIT NONE
  INTEGER,INTENT(OUT) :: ISHAPE
- INTEGER,INTENT(IN),DIMENSION(6) :: IACT
+ INTEGER,INTENT(IN),DIMENSION(:) :: IACT
  INTEGER :: ITYPE,I,N
  TYPE(WIN_MESSAGE) :: MESSAGE
  INTEGER,DIMENSION(6) :: ID,JD

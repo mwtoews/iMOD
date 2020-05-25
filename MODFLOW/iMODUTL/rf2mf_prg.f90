@@ -319,7 +319,7 @@ DO
    IF(MMOD(PPST).GT.0)THEN
     lipest = .true.
     call pks7mpinotsupported('iPEST') ! PKS
-    CALL PEST1INIT(0,'',0,rootres,idf=idf,nparam=NLINES)
+    CALL PEST1INIT(0,'',0,rootres,rootres,idf,NLINES)
    END IF
   CASE (PCAP)
 !   !## read/prepare simgro-files (capsim/metaswap)

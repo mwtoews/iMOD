@@ -334,8 +334,8 @@
       integer, public, parameter :: imet_ibound_fixed_south = 12
       integer, public, parameter :: imet_save_no_buf        = 13
       integer, public, parameter :: imet_write_debug_idf    = 14
-!      integer, public, parameter :: imet_idate_save         = 15
       integer, public, parameter :: imet_savedouble         = 15
+!      integer, public, parameter :: imet_ipestpdir          = 16
 
       integer, parameter :: nmetkws = imet_savedouble
 
@@ -356,8 +356,8 @@
       'ibound_fixed_south',&
       'save_no_buf       ',&
       'write_debug_idf   ',&     
-!      'idate_save        ',&
       'savedouble        '/
+!      'ipestpdir         '/
 
       integer, public, parameter :: imetu = 1
       integer, public, parameter :: imeti = 2

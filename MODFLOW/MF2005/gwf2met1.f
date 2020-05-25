@@ -58,6 +58,7 @@ c deallocate MET memory
       if (associated(ieq))                deallocate(ieq)
       if (associated(resultdir))          deallocate(resultdir)
       if (associated(debugdir))           deallocate(debugdir)
+      if (associated(ipestpdir))          deallocate(ipestpdir)
       if (associated(ibound_fixed_west))  deallocate(ibound_fixed_west)
       if (associated(ibound_fixed_east))  deallocate(ibound_fixed_east)
       if (associated(ibound_fixed_north)) deallocate(ibound_fixed_north)
@@ -66,7 +67,6 @@ c deallocate MET memory
       if (associated(cdelc))              deallocate(cdelc)
       if (associated(save_no_buf))        deallocate(save_no_buf)
       if (associated(write_debug_idf))    deallocate(write_debug_idf)
-!      if (associated(idate_save))         deallocate(idate_save)
       if (associated(savedouble))         deallocate(savedouble)
 
       if (igrid.eq.1) then
@@ -162,6 +162,7 @@ C save meta data for a grid.
       gwfmetdat(igrid)%iss          => iss
       gwfmetdat(igrid)%ieq          => ieq
       gwfmetdat(igrid)%resultdir    => resultdir
+      gwfmetdat(igrid)%ipestpdir    => ipestpdir
       gwfmetdat(igrid)%debugdir     => debugdir
       gwfmetdat(igrid)%ibound_fixed_west  => ibound_fixed_west
       gwfmetdat(igrid)%ibound_fixed_east  => ibound_fixed_east
@@ -190,13 +191,8 @@ C save meta data for a grid.
 c body
       call sgwf2met1pnt(igrid)
 
-      if (issflg(kkper).eq.0)then ! .and. associated(time_ostring)) then ! TR
+      if (issflg(kkper).eq.0)then 
        cdate=npertxt(kkper)
-!       if(idate_save.eq.0)then
-!        cdate=time_ostring
-!       elseif(idate_save.eq.1)then
-!        cdate=time_cstring
-!       endif
        cdate=adjustl(cdate)
    
        read(cdate,'(i8)',iostat=ios) idate
@@ -209,7 +205,6 @@ c body
        
       else ! SS
        cdate=npertxt(kkper)
-!       cdate='steady-state'
   
       end if
 
@@ -277,6 +272,7 @@ c nullify
       coord_xur_nb => null()
       coord_yur_nb => null()
       resultdir    => null()
+      ipestpdir    => null()
       debugdir     => null()
       iss          => null()
       allocate(ieq)
@@ -348,6 +344,10 @@ C2------READ A LINE; IGNORE BLANK LINES AND PRINT COMMENT LINES.
                if (.not.associated(resultdir)) allocate(resultdir)
                read(line(lloc:),*) resultdir
             end if
+            if (line(istart:istop).eq.'IPESTPDIR') then
+               if (.not.associated(ipestpdir)) allocate(ipestpdir)
+               read(line(lloc:),*) ipestpdir
+            end if
             if (line(istart:istop).eq.'IBOUND_FIXED_WEST') then
                if (.not.associated(ibound_fixed_west))
      1            allocate(ibound_fixed_west)
@@ -379,13 +379,6 @@ C2------READ A LINE; IGNORE BLANK LINES AND PRINT COMMENT LINES.
      1            allocate(savedouble)
                read(line(lloc:),*) savedouble
             end if
-
-!            if (line(istart:istop).eq.'IDATE_SAVE') then
-!               if (.not.associated(idate_save))
-!     1            allocate(idate_save)
-!               read(line(lloc:),*) idate_save
-!            end if
-
             if (line(istart:istop).eq.'WRITE_DEBUG_IDF') then
                if (.not.associated(write_debug_idf))
      1            allocate(write_debug_idf)
@@ -433,11 +426,6 @@ C2------READ A LINE; IGNORE BLANK LINES AND PRINT COMMENT LINES.
          end if
       end do
 
-c set default for idate_save     
-!      if (.not.associated(idate_save)) then     
-!          allocate(idate_save)
-!          idate_save = 0
-!      end if    
 c set default for savedouble     
       if (.not.associated(savedouble)) then     
           allocate(savedouble)

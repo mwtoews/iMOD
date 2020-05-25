@@ -100,9 +100,9 @@ if(pest_iter.eq.0)then
       if (trim(param(i)%ptype).ne.trim(ptype)) cycle
 
       ils=param(i)%ils !## layer
-
+      
       IF(PARAM(I)%ZTYPE.EQ.0)THEN
-
+       
        if(.not.associated(param(i)%x))allocate(param(i)%x(param(i)%nodes))
        select case (trim(ptype))
        case('KD','KH','KV','VA','SC','AF','EP','SY')

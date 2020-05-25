@@ -44,7 +44,10 @@ CONTAINS
  INTEGER :: I,J,ITER,N,IX
  
  PEST%PE_SCALING=PEST%PE_SCALING-1
- 
+
+ !## organise groups
+ CALL IPEST_GLM_SETGROUPS()
+
  !## allocate memory for simulations
  CALL IPEST_GLM_ALLOCATE(DIR)
 

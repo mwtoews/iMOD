@@ -3493,14 +3493,15 @@ c     if (nxch.le.0) ok = .false.
       mf2005_TimeserieInit = ok
       end function
 
-      subroutine mf2005_GetSavePath_TS(savepath)
+      subroutine mf2005_GetSavePath_TS(savepath,savepdir)
 !...     modules
       use gwfmetmodule
 !...     arguments
-      character(len=*),intent(out) :: savepath
+      character(len=*),intent(out) :: savepath,savepdir
 
-      call sgwf2met1pnt(1) !igrid)
+      call sgwf2met1pnt(1) 
       if (associated(resultdir))savepath=resultdir
+      if (associated(ipestpdir))savepdir=ipestpdir
       
       end subroutine mf2005_GetSavePath_TS
 

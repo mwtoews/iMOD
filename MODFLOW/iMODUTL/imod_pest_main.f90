@@ -42,24 +42,25 @@ REAL(KIND=8),PRIVATE :: DAMPINGFACTOR=1.5D0
 CONTAINS
 
  !###====================================================================
- SUBROUTINE PEST1INIT(ioption,infile,IOUT,root,idf,nparam)
+ SUBROUTINE PEST1INIT(ioption,infile,IOUT,root,pdir,idf,nparam)
  !###====================================================================
  USE RF2MF_MODULE, ONLY: NCOL, NROW, NLAY, NPER
  IMPLICIT NONE
  type(idfobj),intent(inout) :: idf
- CHARACTER(LEN=*),INTENT(IN) :: INFILE,ROOT
- CHARACTER(LEN=52),DIMENSION(2) :: IPFFNAME
- INTEGER,INTENT(IN) :: IOPTION,IOUT
- INTEGER,INTENT(IN) :: NPARAM
- INTEGER,DIMENSION(:),ALLOCATABLE :: IDIPF
- INTEGER :: IOS,I,J,JJ,N,IZ,IROW,ICOL,JU,NIPF,MIPF,K,JS,NLINES,NUZONE,IP,ND
+ character(len=*),intent(in) :: infile,root,pdir
+ character(len=52),dimension(2) :: ipffname
+ integer,intent(in) :: ioption,iout
+ integer,intent(in) :: nparam
+ integer,dimension(:),allocatable :: idipf
+ INTEGER :: IOS,I,J,JJ,N,IZ,IROW,ICOL,JU,NIPF,MIPF,K,JS,NLINES,NUZONE,IP,ND,IUDUMP
  REAL(KIND=DP_KIND) :: NODATA,TF,F
  REAL(KIND=SP_KIND),ALLOCATABLE,DIMENSION(:,:) :: X
  LOGICAL :: LOP,LEX
  CHARACTER(LEN=52) :: CL
  INTEGER,ALLOCATABLE,DIMENSION(:,:) :: NLOCS
  INTEGER,ALLOCATABLE,DIMENSION(:) :: NUZ,ILOCS
-
+ LOGICAL :: LCOMPUTE
+ 
 ! if(present(nparam))then
 !  nlines=nparam
 ! endif
@@ -551,178 +552,265 @@ CONTAINS
   
  endif
   
+ !## compute zone distribution
+ INQUIRE(FILE=TRIM(pdir)//'\PARAM_DUMP_IPEST.DAT',EXIST=LCOMPUTE)
+ IF(LCOMPUTE)THEN
+  WRITE(*,'(/A)') 'Read zones allocated to parameters from the found file:'
+  WRITE(*,'(A/)') TRIM(pdir)//'\PARAM_DUMP_IPEST.DAT'
+ ENDIF
+ 
  CALL IMOD_UTL_PRINTTEXT('Parameters',-1,iu=IUPESTOUT)
  WRITE(LINE,'(A2,1X,A5,2(1X,A5),5(1X,A15),3A10,A15)') 'AC','PTYPE','ILS','IZN','INITIAL','DELTA','MINIMUM','MAXIMUM','FADJ','IGROUP','LTRANS','NODES','ACRONYM'
  CALL IMOD_UTL_PRINTTEXT(TRIM(LINE),-1,iu=IUPESTOUT)
 
- !## get number of unique zones
- ALLOCATE(NUZ(SIZE(PARAM))); NUZ=0
- DO I=1,SIZE(PARAM); NUZ(I)=PARAM(I)%IZONE; ENDDO
- CALL UTL_GETUNIQUE_INT(NUZ,SIZE(PARAM),NUZONE,0)
+ IF(.NOT.LCOMPUTE)THEN
  
- WRITE(*,'(A)') 'Found '//TRIM(IMOD_UTL_ITOS(NUZONE))//' unique zones, getting number of location per zone ...'
+  !## get number of unique zones
+  ALLOCATE(NUZ(SIZE(PARAM))); NUZ=0
+  DO I=1,SIZE(PARAM); NUZ(I)=PARAM(I)%IZONE; ENDDO
+  CALL UTL_GETUNIQUE_INT(NUZ,SIZE(PARAM),NUZONE,0)
  
- ALLOCATE(ILOCS(NUZ(NUZONE))); ILOCS=0
- ALLOCATE(NLOCS(NUZONE,SIZE(ZONE))); NLOCS=0
- !## set reference to zones
- DO I=1,NUZONE; ILOCS(NUZ(I))=I; ENDDO
+  WRITE(*,'(A)') 'Found '//TRIM(IMOD_UTL_ITOS(NUZONE))//' unique zones, getting number of location per zone ...'
+ 
+  ALLOCATE(ILOCS(NUZ(NUZONE))); ILOCS=0
+  ALLOCATE(NLOCS(NUZONE,SIZE(ZONE))); NLOCS=0
+  !## set reference to zones
+  DO I=1,NUZONE; ILOCS(NUZ(I))=I; ENDDO
 
- !## see how many locations per unique zone
- DO IROW=1,NROW; DO ICOL=1,NCOL; DO J=1,SIZE(ZONE) 
-  !## zones 
-  IF(ASSOCIATED(ZONE(J)%X))THEN
-   IZ=INT(ZONE(J)%X(ICOL,IROW))
-   IF(IZ.LE.0)CYCLE
-   !## zone in files but not used by current set of parameters
-   IF(IZ.GT.SIZE(ILOCS))CYCLE
-   IP=ILOCS(IZ)
-   IF(IP.GT.0)THEN
-    NLOCS(IP,J)=NLOCS(IP,J)+1
+  !## see how many locations per unique zone
+  DO IROW=1,NROW; DO ICOL=1,NCOL; DO J=1,SIZE(ZONE) 
+   !## zones 
+   IF(ASSOCIATED(ZONE(J)%X))THEN
+    IZ=INT(ZONE(J)%X(ICOL,IROW))
+    IF(IZ.LE.0)CYCLE
+    !## zone in files but not used by current set of parameters
+    IF(IZ.GT.SIZE(ILOCS))CYCLE
+    IP=ILOCS(IZ)
+    IF(IP.GT.0)THEN
+     NLOCS(IP,J)=NLOCS(IP,J)+1
+    ENDIF
+   !## pilot points
+   ELSE
+    DO K=1,SIZE(ZONE(J)%IZ)
+     IZ=ZONE(J)%IZ(K)
+     IP=0; IF(IZ.GT.0.AND.IZ.LE.SIZE(ILOCS))IP=ILOCS(IZ) 
+     IF(IP.GT.0)NLOCS(IP,J)=1
+    ENDDO
    ENDIF
-  !## pilot points
-  ELSE
-   DO K=1,SIZE(ZONE(J)%IZ)
-    IZ=ZONE(J)%IZ(K)
-    IP=0; IF(IZ.GT.0.AND.IZ.LE.SIZE(ILOCS))IP=ILOCS(IZ) 
-    IF(IP.GT.0)NLOCS(IP,J)=1
-   ENDDO
-  ENDIF
- ENDDO; ENDDO; ENDDO
+  ENDDO; ENDDO; ENDDO
   
- !## check number of zones and missing zone (if any)
- DO I=1,SIZE(PARAM)
+  !## check number of zones and missing zone (if any)
+  DO I=1,SIZE(PARAM)
  
-  !## parameter active and main of group
-  IZ=PARAM(I)%IZONE
-  IP=ILOCS(IZ)
-  ND=0; DO J=1,SIZE(ZONE)
-   ND=ND+NLOCS(IP,J)
-   IF(NLOCS(IP,J).GT.0)PARAM(I)%ZTYPE=ZONE(J)%ZTYPE
-  ENDDO
-
-  PARAM(I)%NODES=ND 
-
-  !## not applicable for pilotpoints
-  IF(PARAM(I)%ZTYPE.EQ.1)THEN
-   SELECT CASE (TRIM(PARAM(I)%PTYPE))
-    CASE ('KD','KH','KV','VC','SC','VA','RE','SY')
-    CASE DEFAULT
-     CALL IMOD_UTL_PRINTTEXT('Cannot use PilotPoints for other than KD,KH,KV,VC,SC,SY and VA',2)
-    END SELECT
-  ENDIF
-
-  IF(PARAM(I)%PTYPE.EQ.'HF')THEN
-   PARAM(I)%NODES=0 !## one single cell used as zone for horizontal barrier module
-   WRITE(LINE,'(I2,1X,A5,2(1X,I5),5(1X,F15.7),I10,L10,A10,A15)') PARAM(I)%IACT,PARAM(I)%PTYPE,PARAM(I)%ILS, &
-     PARAM(I)%IZONE,PARAM(I)%INI,PARAM(I)%DELTA,PARAM(I)%MIN,PARAM(I)%MAX,PARAM(I)%FADJ,PARAM(I)%IGROUP,PARAM(I)%LOG,'EntireLine',PARAM(I)%ACRONYM
-  ELSE
-   IF(PARAM(I)%NODES.EQ.0)THEN
-    CALL IMOD_UTL_PRINTTEXT('No area/zone assigned to parameter no. '//TRIM(ITOS(I))//' ptype= '//TRIM(PARAM(I)%PTYPE),0)
-    PARAM(I)%IACT=0
-   ENDIF
-   WRITE(LINE,'(I2,1X,A5,2(1X,I5),5(1X,F15.7),I10,L10,I10,A15)') PARAM(I)%IACT,PARAM(I)%PTYPE,PARAM(I)%ILS, &
-     PARAM(I)%IZONE,PARAM(I)%INI,PARAM(I)%DELTA,PARAM(I)%MIN,PARAM(I)%MAX,PARAM(I)%FADJ,PARAM(I)%IGROUP,PARAM(I)%LOG,PARAM(I)%NODES,PARAM(I)%ACRONYM
-  ENDIF
-
-  CALL IMOD_UTL_PRINTTEXT(TRIM(LINE),-1,IU=IUPESTOUT)
-  IF(PARAM(I)%PTYPE.EQ.'EX')CALL IMOD_UTL_PRINTTEXT(TRIM(PARAM(I)%EXBATFILE),-1)
-  CALL PEST1CHK(I)
-  PARAM(I)%ALPHA(1)=PARAM(I)%INI !## current  alpha
-  PARAM(I)%ALPHA(2)=PARAM(I)%INI !## previous alpha
-
- ENDDO
- 
- N=0; DO I=1,SIZE(PARAM)
-  IF(PARAM(I)%IACT.EQ.0)CYCLE 
-  SELECT CASE (PARAM(I)%PTYPE)
-   CASE ('HF')
-    N=N+1
-   CASE DEFAULT
-    N=N+PARAM(I)%NODES
-  END SELECT
- ENDDO 
-
- !## only in active-optimization mode
- IF(PEST_SINGLE.EQ.0)THEN
-  IF(N.EQ.0)CALL IMOD_UTL_PRINTTEXT('Nothing to do',2)
- ENDIF
- 
- !## fill array zone and set appropriate pointers in type 
- DO I=1,SIZE(PARAM)
-  IF(PARAM(I)%NODES.GT.0)THEN
-   CALL IMOD_UTL_PRINTTEXT('Parameter '//TRIM(ITOS(I))//' number of locations '//TRIM(ITOS(PARAM(I)%NODES))//' assigned to ptype= '//TRIM(PARAM(I)%PTYPE),0)
-
-   !## get number of zone in list of unique zone numbers
+   !## parameter active and main of group
    IZ=PARAM(I)%IZONE
    IP=ILOCS(IZ)
+   ND=0; DO J=1,SIZE(ZONE)
+    ND=ND+NLOCS(IP,J)
+    IF(NLOCS(IP,J).GT.0)PARAM(I)%ZTYPE=ZONE(J)%ZTYPE
+   ENDDO
 
-   IF(PARAM(I)%ZTYPE.EQ.0)THEN
-    
-    ALLOCATE(PARAM(I)%IROW(PARAM(I)%NODES),PARAM(I)%ICOL(PARAM(I)%NODES))
-    ALLOCATE(PARAM(I)%F(PARAM(I)%NODES))
+   PARAM(I)%NODES=ND 
 
-    !## loop to see zones
-    N=0; DO J=1,SIZE(ZONE)
-
-     !## particular zone not in this file
-     IF(NLOCS(IP,J).EQ.0)CYCLE
-
-     DO IROW=1,NROW; DO ICOL=1,NCOL
-      IF(ZONE(J)%ZTYPE.EQ.0)THEN
-       IF(PARAM(I)%IZONE.EQ.INT(ZONE(J)%X(ICOL,IROW)))THEN
-
-        SELECT CASE (TRIM(PARAM(I)%PTYPE))
-         CASE ('KD','KH','KV','VC','SC','AF','AA','MS','MC','VA','HF','EX','SY')
-          F=MOD(ZONE(J)%X(ICOL,IROW),1.0); IF(F.EQ.0.0)F=1.0
-         CASE DEFAULT
-          F=1.0
-        END SELECT
- 
-        N=N+1; PARAM(I)%IROW(N)=INT(IROW,2); PARAM(I)%ICOL(N)=INT(ICOL,2); PARAM(I)%F(N)=F
-       ENDIF
-      ENDIF
-     ENDDO; ENDDO
-    
-     IF(N.NE.PARAM(I)%NODES)THEN
-      WRITE(*,'(/A,I10,A,I10)') 'SOMETHING GOES WRONG NUMBER OF PARAMETER INITIAL =',N
-      WRITE(*,'(A)') 'PARAMETERS ACTUALLY FOUND ARE ',PARAM(I)%NODES
- !     WRITE(*,'(A/)') 'SIMILAR ZONE APPEARS FOR DIFFERENT PARAMETERS'; STOP
-     ENDIF
-
-    ENDDO
-
-   ELSEIF(PARAM(I)%ZTYPE.EQ.1)THEN
-   
-    ALLOCATE(PARAM(I)%XY(PARAM(I)%NODES,2))
-
-    !## check pilotpoints
-    N=0; DO J=1,SIZE(ZONE)
-
-     !## particular zone not in this file
-     IF(NLOCS(IP,J).EQ.0)CYCLE
-
-     IF(ZONE(J)%ZTYPE.EQ.1)THEN
-      DO K=1,SIZE(ZONE(J)%IZ)
-       !## check whether it's integer value is equal to param(i)%izone
-       IF(PARAM(I)%IZONE.EQ.INT(ZONE(J)%IZ(K)))THEN
-        N=N+1; PARAM(I)%XY(N,1)=ZONE(J)%XY(K,1); PARAM(I)%XY(N,2)=ZONE(J)%XY(K,2) 
-       ENDIF
-      ENDDO
-     ENDIF
-
-    ENDDO
-   
+   !## not applicable for pilotpoints
+   IF(PARAM(I)%ZTYPE.EQ.1)THEN
+    SELECT CASE (TRIM(PARAM(I)%PTYPE))
+     CASE ('KD','KH','KV','VC','SC','VA','RE','SY')
+     CASE DEFAULT
+      CALL IMOD_UTL_PRINTTEXT('Cannot use PilotPoints for other than KD,KH,KV,VC,SC,SY and VA',2)
+     END SELECT
    ENDIF
-   
-  ELSE
-   IF(PARAM(I)%PTYPE.NE.'HF')PARAM(I)%IACT=0
-  ENDIF 
- ENDDO
+ 
+   IF(PARAM(I)%PTYPE.EQ.'HF')THEN
+    PARAM(I)%NODES=0 !## one single cell used as zone for horizontal barrier module
+    WRITE(LINE,'(I2,1X,A5,2(1X,I5),5(1X,F15.7),I10,L10,A10,A15)') PARAM(I)%IACT,PARAM(I)%PTYPE,PARAM(I)%ILS, &
+      PARAM(I)%IZONE,PARAM(I)%INI,PARAM(I)%DELTA,PARAM(I)%MIN,PARAM(I)%MAX,PARAM(I)%FADJ,PARAM(I)%IGROUP,PARAM(I)%LOG,'EntireLine',PARAM(I)%ACRONYM
+   ELSE
+    IF(PARAM(I)%NODES.EQ.0)THEN
+     CALL IMOD_UTL_PRINTTEXT('No area/zone assigned to parameter no. '//TRIM(ITOS(I))//' ptype= '//TRIM(PARAM(I)%PTYPE),0)
+     PARAM(I)%IACT=0
+    ENDIF
+    WRITE(LINE,'(I2,1X,A5,2(1X,I5),5(1X,F15.7),I10,L10,I10,A15)') PARAM(I)%IACT,PARAM(I)%PTYPE,PARAM(I)%ILS, &
+      PARAM(I)%IZONE,PARAM(I)%INI,PARAM(I)%DELTA,PARAM(I)%MIN,PARAM(I)%MAX,PARAM(I)%FADJ,PARAM(I)%IGROUP,PARAM(I)%LOG,PARAM(I)%NODES,PARAM(I)%ACRONYM
+   ENDIF
 
+   CALL IMOD_UTL_PRINTTEXT(TRIM(LINE),-1,IU=IUPESTOUT)
+   IF(PARAM(I)%PTYPE.EQ.'EX')CALL IMOD_UTL_PRINTTEXT(TRIM(PARAM(I)%EXBATFILE),-1)
+   CALL PEST1CHK(I)
+   PARAM(I)%ALPHA(1)=PARAM(I)%INI !## current  alpha
+   PARAM(I)%ALPHA(2)=PARAM(I)%INI !## previous alpha
+
+  ENDDO
+ 
+  N=0; DO I=1,SIZE(PARAM)
+   IF(PARAM(I)%IACT.EQ.0)CYCLE 
+   SELECT CASE (PARAM(I)%PTYPE)
+    CASE ('HF')
+     N=N+1
+    CASE DEFAULT
+     N=N+PARAM(I)%NODES
+   END SELECT
+  ENDDO 
+
+  !## only in active-optimization mode
+  IF(PEST_SINGLE.EQ.0)THEN
+   IF(N.EQ.0)CALL IMOD_UTL_PRINTTEXT('Nothing to do',2)
+  ENDIF
+ 
+  !## fill array zone and set appropriate pointers in type 
+  DO I=1,SIZE(PARAM)
+   IF(PARAM(I)%NODES.GT.0)THEN
+    CALL IMOD_UTL_PRINTTEXT('Parameter '//TRIM(ITOS(I))//' number of locations '//TRIM(ITOS(PARAM(I)%NODES))//' assigned to ptype= '//TRIM(PARAM(I)%PTYPE),0)
+
+    !## get number of zone in list of unique zone numbers
+    IZ=PARAM(I)%IZONE
+    IP=ILOCS(IZ)
+
+    IF(PARAM(I)%ZTYPE.EQ.0)THEN
+    
+     ALLOCATE(PARAM(I)%IROW(PARAM(I)%NODES),PARAM(I)%ICOL(PARAM(I)%NODES))
+     ALLOCATE(PARAM(I)%F(PARAM(I)%NODES))
+
+     !## loop to see zones
+     N=0; DO J=1,SIZE(ZONE)
+
+      !## particular zone not in this file
+      IF(NLOCS(IP,J).EQ.0)CYCLE
+
+      DO IROW=1,NROW; DO ICOL=1,NCOL
+       IF(ZONE(J)%ZTYPE.EQ.0)THEN
+        IF(PARAM(I)%IZONE.EQ.INT(ZONE(J)%X(ICOL,IROW)))THEN
+
+         SELECT CASE (TRIM(PARAM(I)%PTYPE))
+          CASE ('KD','KH','KV','VC','SC','AF','AA','MS','MC','VA','HF','EX','SY')
+           F=MOD(ZONE(J)%X(ICOL,IROW),1.0); IF(F.EQ.0.0)F=1.0
+          CASE DEFAULT
+           F=1.0
+         END SELECT
+ 
+         N=N+1; PARAM(I)%IROW(N)=INT(IROW,2); PARAM(I)%ICOL(N)=INT(ICOL,2); PARAM(I)%F(N)=F
+        ENDIF
+       ENDIF
+      ENDDO; ENDDO
+    
+      IF(N.NE.PARAM(I)%NODES)THEN
+       WRITE(*,'(/A,I10,A,I10)') 'SOMETHING GOES WRONG NUMBER OF PARAMETER INITIAL ARE ',PARAM(I)%NODES
+       WRITE(*,'(A,I10/)') 'PARAMETERS ACTUALLY FOUND ARE ',N
+      ENDIF
+
+     ENDDO
+
+    ELSEIF(PARAM(I)%ZTYPE.EQ.1)THEN
+   
+     ALLOCATE(PARAM(I)%XY(PARAM(I)%NODES,2))
+
+     !## check pilotpoints
+     N=0; DO J=1,SIZE(ZONE)
+
+      !## particular zone not in this file
+      IF(NLOCS(IP,J).EQ.0)CYCLE
+
+      IF(ZONE(J)%ZTYPE.EQ.1)THEN
+       DO K=1,SIZE(ZONE(J)%IZ)
+        !## check whether it's integer value is equal to param(i)%izone
+        IF(PARAM(I)%IZONE.EQ.INT(ZONE(J)%IZ(K)))THEN
+         N=N+1; PARAM(I)%XY(N,1)=ZONE(J)%XY(K,1); PARAM(I)%XY(N,2)=ZONE(J)%XY(K,2) 
+        ENDIF
+       ENDDO
+      ENDIF
+
+     ENDDO
+   
+    ENDIF
+   
+   ELSE
+    IF(PARAM(I)%PTYPE.NE.'HF')PARAM(I)%IACT=0
+   ENDIF 
+  ENDDO
+
+  !!## set igroup lt 0 for followers in group - check whether factors within group are equal --- need to be
+  !!## make sure group with active nodes is positive rest is negative
+  !DO I=1,SIZE(PARAM)
+  ! IF(PARAM(I)%IACT.EQ.0)THEN
+  !  CYCLE
+  ! ENDIF
+  ! DO J=1,I-1 
+  !  IF(PARAM(J)%IACT.EQ.0)CYCLE
+  !  IF(PARAM(J)%IGROUP.EQ.PARAM(I)%IGROUP)THEN
+  !   !## check factor
+  !   IF(PARAM(J)%INI.NE.PARAM(I)%INI)THEN
+  !    CALL IMOD_UTL_PRINTTEXT('Initial factor in an group need to be identicial',0)
+  !    CALL IMOD_UTL_PRINTTEXT('Check initial factors for group '//TRIM(IMOD_UTL_ITOS(PARAM(J)%IGROUP)),2)
+  !   ENDIF
+  !   PARAM(I)%IGROUP=-1*PARAM(I)%IGROUP; EXIT
+  !  ENDIF
+  ! ENDDO
+  !ENDDO
+
+  DO I=1,SIZE(ZONE)
+   IF(ZONE(I)%ZTYPE.EQ.0)THEN
+    DEALLOCATE(ZONE(I)%X)
+   ELSEIF(ZONE(I)%ZTYPE.EQ.1)THEN
+    DEALLOCATE(ZONE(I)%XY,ZONE(I)%IZ)
+   ENDIF
+  ENDDO
+
+  DEALLOCATE(ZONE,NLOCS,NUZ,ILOCS)
+  !## dump everything
+  IUDUMP=IMOD_UTL_GETUNIT()
+  OPEN(IUDUMP,FILE=TRIM(pdir)//'\PARAM_DUMP_IPEST.DAT',STATUS='UNKNOWN',ACTION='WRITE',FORM='FORMATTED',IOSTAT=IOS)
+  IF(IOS.NE.0)THEN
+   WRITE(*,'(/A)') 'Cannot save the dumpfile for iPESTP in the following folder:'
+   WRITE(*,'(A/)') '['//TRIM(pdir)//'\PARAM_DUMP_IPEST.DAT]'
+   STOP
+  ENDIF
+  DO I=1,SIZE(PARAM)
+   WRITE(IUDUMP,*) PARAM(I)%NODES,PARAM(I)%ZTYPE
+   DO J=1,PARAM(I)%NODES
+    WRITE(IUDUMP,*) PARAM(I)%IROW(J),PARAM(I)%ICOL(J),PARAM(I)%F(J)
+   ENDDO
+  ENDDO
+  CLOSE(IUDUMP)  
+ !## read from dumpfile
+ ELSE
+ 
+  IUDUMP=IMOD_UTL_GETUNIT()
+  OPEN(IUDUMP,FILE=TRIM(pdir)//'\PARAM_DUMP_IPEST.DAT',STATUS='OLD',ACTION='READ',FORM='FORMATTED')
+  DO I=1,SIZE(PARAM)
+   READ(IUDUMP,*) PARAM(I)%NODES,PARAM(I)%ZTYPE
+   ALLOCATE(PARAM(I)%IROW(PARAM(I)%NODES),PARAM(I)%ICOL(PARAM(I)%NODES),PARAM(I)%F(PARAM(I)%NODES))
+   DO J=1,PARAM(I)%NODES
+    READ(IUDUMP,*) PARAM(I)%IROW(J),PARAM(I)%ICOL(J),PARAM(I)%F(J)
+   ENDDO
+   IF(PARAM(I)%PTYPE.EQ.'HF')THEN
+    PARAM(I)%NODES=0 !## one single cell used as zone for horizontal barrier module
+    WRITE(LINE,'(I2,1X,A5,2(1X,I5),5(1X,F15.7),I10,L10,A10,A15)') PARAM(I)%IACT,PARAM(I)%PTYPE,PARAM(I)%ILS, &
+      PARAM(I)%IZONE,PARAM(I)%INI,PARAM(I)%DELTA,PARAM(I)%MIN,PARAM(I)%MAX,PARAM(I)%FADJ,PARAM(I)%IGROUP,PARAM(I)%LOG,'EntireLine',PARAM(I)%ACRONYM
+   ELSE
+    IF(PARAM(I)%NODES.EQ.0)THEN
+     CALL IMOD_UTL_PRINTTEXT('No area/zone assigned to parameter no. '//TRIM(ITOS(I))//' ptype= '//TRIM(PARAM(I)%PTYPE),0)
+     PARAM(I)%IACT=0
+    ENDIF
+    WRITE(LINE,'(I2,1X,A5,2(1X,I5),5(1X,F15.7),I10,L10,I10,A15)') PARAM(I)%IACT,PARAM(I)%PTYPE,PARAM(I)%ILS, &
+      PARAM(I)%IZONE,PARAM(I)%INI,PARAM(I)%DELTA,PARAM(I)%MIN,PARAM(I)%MAX,PARAM(I)%FADJ,PARAM(I)%IGROUP,PARAM(I)%LOG,PARAM(I)%NODES,PARAM(I)%ACRONYM
+   ENDIF
+
+   CALL IMOD_UTL_PRINTTEXT(TRIM(LINE),-1,IU=IUPESTOUT)
+   IF(PARAM(I)%PTYPE.EQ.'EX')CALL IMOD_UTL_PRINTTEXT(TRIM(PARAM(I)%EXBATFILE),-1)
+   CALL PEST1CHK(I)
+   PARAM(I)%ALPHA(1)=PARAM(I)%INI !## current  alpha
+   PARAM(I)%ALPHA(2)=PARAM(I)%INI !## previous alpha
+
+  ENDDO
+  CLOSE(IUDUMP)  
+  
+ ENDIF
+ 
  !## set igroup lt 0 for followers in group - check whether factors within group are equal --- need to be
  !## make sure group with active nodes is positive rest is negative
  DO I=1,SIZE(PARAM)
   IF(PARAM(I)%IACT.EQ.0)THEN
+!   WRITE(*,*) I,PARAM(I)%IACT,PARAM(I)%IGROUP
    CYCLE
   ENDIF
   DO J=1,I-1 
@@ -733,20 +821,12 @@ CONTAINS
      CALL IMOD_UTL_PRINTTEXT('Initial factor in an group need to be identicial',0)
      CALL IMOD_UTL_PRINTTEXT('Check initial factors for group '//TRIM(IMOD_UTL_ITOS(PARAM(J)%IGROUP)),2)
     ENDIF
-    PARAM(I)%IGROUP=-1*PARAM(I)%IGROUP; EXIT
+    PARAM(I)%IGROUP=-1*ABS(PARAM(I)%IGROUP); EXIT
    ENDIF
   ENDDO
+!  WRITE(*,*) I,PARAM(I)%IACT,PARAM(I)%IGROUP
+!  PAUSE
  ENDDO
-
- DO I=1,SIZE(ZONE)
-  IF(ZONE(I)%ZTYPE.EQ.0)THEN
-   DEALLOCATE(ZONE(I)%X)
-  ELSEIF(ZONE(I)%ZTYPE.EQ.1)THEN
-   DEALLOCATE(ZONE(I)%XY,ZONE(I)%IZ)
-  ENDIF
- ENDDO
-
- DEALLOCATE(ZONE,NLOCS,NUZ,ILOCS)
  
  !## initialize process-flags
  LGRAD       =.TRUE.  !## gradient computation
