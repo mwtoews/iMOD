@@ -472,6 +472,7 @@ CONTAINS
   IF(.NOT.IDFREAD(IDF,LISTNAME(I),0))THEN; WRITE(*,'(A)') 'Cannot read '//TRIM(LISTNAME(I)); STOP; ENDIF
   IF(IDF%ITB.EQ.0)THEN; WRITE(*,'(A)') TRIM(LISTNAME(I))//' is not a voxel IDF'; STOP; ENDIF
   XTOP(I)=IDF%TOP
+  ITOP(I)=I  ! initialize
   CLOSE(IDF%IU)
  ENDDO
  CALL UTL_WSORT(XTOP,1,SIZE(LISTNAME),1,IORDER=ITOP) 
@@ -692,6 +693,7 @@ CONTAINS
 
  !## determine what we have ...
  DO I=1,SIZE(LISTNAME)
+  IORDER(I)=I  ! initialize
   IF(.NOT.IDFREAD(IDF(4),LISTNAME(I),0))THEN; WRITE(*,'(A)') 'Cannot read file '//TRIM(LISTNAME(I)); STOP; ENDIF
   ZT(I)=IDF(4)%TOP; ZB(I)=IDF(4)%BOT
  ENDDO
