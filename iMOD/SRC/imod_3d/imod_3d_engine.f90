@@ -5565,6 +5565,11 @@ SOLLOOP: DO I=1,NSOLLIST
    ENDDO
   END DO
 
+!  DO J=1,N
+!   WRITE(*,'(I10,3F10.1,4F10.2)') J,(IT(J,K),K=1,3),XT(J),(ZT(J,K),K=1,3)
+!  ENDDO
+!  WRITE(*,*)
+  
   !## include knickpoints
   TX(1)=0.0D0
   DO J=2,SPF(I)%NXY-1
@@ -5572,15 +5577,25 @@ SOLLOOP: DO I=1,NSOLLIST
    TX(1)     =TX(1)+DXY
    IPOS      =IPOS+1
    XT(IPOS)  =TX(1)
-   IF(IPROF(1).GT.0)ZT(IPOS,1)=NODATA_Z !## to be filled in later
-   IF(IPROF(2).GT.0)ZT(IPOS,2)=NODATA_Z !## to be filled in later
-   IF(IPROF(3).GT.0)ZT(IPOS,3)=NODATA_Z !## to be filled in later
+   DO K=1,3
+    IF(IPROF(K).GT.0)THEN
+     ZT(IPOS,K)=NODATA_Z !## to be filled in later
+    ENDIF
+   ENDDO
+!   IF(IPROF(1).GT.0)ZT(IPOS,1)=NODATA_Z !## to be filled in later
+!   IF(IPROF(2).GT.0)ZT(IPOS,2)=NODATA_Z !## to be filled in later
+!   IF(IPROF(3).GT.0)ZT(IPOS,3)=NODATA_Z !## to be filled in later
   ENDDO
   N=IPOS
  
   !## sort distances and z- and pointer values
   CALL QKSORT(N,XT,V2=ZT(:,1),V3=ZT(:,2),V4=ZT(:,3),V5=IT(:,1),V6=IT(:,2),V7=IT(:,3))
     
+!  DO J=1,N
+!   WRITE(*,'(I10,3F10.1,4F10.2)') J,(IT(J,K),K=1,3),XT(J),(ZT(J,K),K=1,3)
+!  ENDDO
+!  WRITE(*,*)
+
   !## fill first and last
   DO K=1,3 
    !## skip missing interfaces
@@ -5668,6 +5683,29 @@ SOLLOOP: DO I=1,NSOLLIST
    ENDDO
   ENDDO
   
+!  DO J=1,N
+!   WRITE(*,'(I10,3F10.1)') J,(IT(J,K),K=1,3)
+!  ENDDO
+!  WRITE(*,*) 
+  
+  !## correct for knickpoints - continue cross-section
+  DO J=1,N-2
+   DO K=1,3
+    IF(IT(J,K).EQ.1.0D0.AND.IT(J+1,K).EQ.-999.0D0.AND.IT(J+2,K).EQ.-1.0D0)THEN
+     IT(J,K)=0.0D0
+     IT(J+1,K)=0.0D0
+     IT(J+2,K)=0.0D0
+    ENDIF
+   ENDDO
+  ENDDO
+
+!  !## remove subsequent entries of 1 and -1
+!  DO I=1,3
+!   DO J=1,N-1
+!    IF(IT(J,I).
+!   ENDDO
+!  ENDDO
+  
   !## define tt as a function of it
   TT=-999
   DO J=1,N
@@ -5697,7 +5735,12 @@ SOLLOOP: DO I=1,NSOLLIST
     IF(TT(J).EQ.1)                    TT(J)= 2 
    ENDIF
   ENDDO
-
+  
+!  DO J=1,N
+!   WRITE(*,'(2I10,3F10.1,4F10.2)') J,TT(J),(IT(J,K),K=1,3),XT(J),(ZT(J,K),K=1,3)
+!  ENDDO
+!  WRITE(*,*)
+  
   !## for each (interpolated) coordinate
   GOFORIT=.FALSE.; IF(TT(1).EQ.-1)GOFORIT=.TRUE.
   DO IPOS=2,N
