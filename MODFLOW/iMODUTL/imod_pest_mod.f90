@@ -60,8 +60,8 @@ TYPE PARAOBJ
  LOGICAL :: LOG             !## logical to determine whether parameter is lognormal
  INTEGER(KIND=2),POINTER,DIMENSION(:) :: IROW,ICOL  !## node number of zone for parameter param(i) --- pointer to IZONE
  REAL(KIND=8),POINTER,DIMENSION(:,:) :: XY  !## xy location for pilot-points
- REAL(KIND=8),POINTER,DIMENSION(:) :: X  !## copy of variable to be adjusted
- REAL(KIND=8),POINTER,DIMENSION(:) :: F  !## fraction of variable to be adjusted
+ REAL(KIND=4),POINTER,DIMENSION(:) :: X  !## copy of variable to be adjusted
+ REAL(KIND=4),POINTER,DIMENSION(:) :: F  !## fraction of variable to be adjusted
 END TYPE PARAOBJ
 TYPE(PARAOBJ),ALLOCATABLE,DIMENSION(:) :: PARAM
 TYPE ZONEOBJ

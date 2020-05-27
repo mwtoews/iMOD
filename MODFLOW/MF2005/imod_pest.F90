@@ -50,6 +50,28 @@ endif
 end subroutine pest1log
 
 !###====================================================================
+subroutine pest1_deallocate()
+!###====================================================================
+use pestvar, only: param, pest_single
+use global, only: lipest 
+implicit none
+integer :: i
+
+if(.not.lipest)return
+if(pest_single.eq.0)return
+
+write(*,*) 'release memory'
+do i=1,size(param)
+ if(associated(param(i)%irow))deallocate(param(i)%irow)
+ if(associated(param(i)%icol))deallocate(param(i)%icol)
+ if(associated(param(i)%f))   deallocate(param(i)%f)
+ if(associated(param(i)%x))   deallocate(param(i)%x)
+ if(associated(param(i)%xy))  deallocate(param(i)%xy)
+enddo
+
+end subroutine pest1_deallocate
+
+!###====================================================================
 subroutine pest1alpha_grid(ptype,a,nrow,ncol,nlay,iout,a2)
 !###====================================================================
 use imod_utl, only: imod_utl_printtext,imod_utl_itos,imod_utl_dtos,imod_utl_createdir, &

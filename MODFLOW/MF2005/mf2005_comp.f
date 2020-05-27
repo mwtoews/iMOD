@@ -364,7 +364,7 @@ C  Observation allocate and read
      1                                       IUNIT(IUSTR),IGRID)
       IF(IUNIT(IUCHOB).GT.0) CALL OBS2CHD7AR(IUNIT(IUCHOB),IGRID)
 
-      write(*,*) 'End MF Allocation'
+      !write(*,*) 'End MF Allocation'
       ! init timestep
       kper=0
 
@@ -699,6 +699,8 @@ C----------READ USING PACKAGE READ AND PREPARE MODULES.
      1                           IUNIT(IULPF),IUNIT(IUHUF2),KKPER,IGRID)
         IF(IUNIT(IUDXC).GT.0) CALL gwf2dxc1rp(igrid)                       ! DLT: Data eXChance package
 
+        call pest1_deallocate()
+        
       endif  ! next stress period
       
 c next time step

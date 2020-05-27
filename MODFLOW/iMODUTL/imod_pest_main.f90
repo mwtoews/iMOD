@@ -59,7 +59,7 @@ CONTAINS
  CHARACTER(LEN=52) :: CL
  INTEGER,ALLOCATABLE,DIMENSION(:,:) :: NLOCS
  INTEGER,ALLOCATABLE,DIMENSION(:) :: NUZ,ILOCS
- LOGICAL :: LCOMPUTE
+ LOGICAL :: LREUSEDAT
  
 ! if(present(nparam))then
 !  nlines=nparam
@@ -193,7 +193,7 @@ CONTAINS
  ALLOCATE(PARAM(NLINES))
  DO I=1,SIZE(PARAM); PARAM(I)%NODES=0; ENDDO
  DO I=1,SIZE(PARAM)
-  NULLIFY(PARAM(I)%X,PARAM(I)%IROW,PARAM(I)%ICOL,PARAM(I)%ALPHA_HISTORY,PARAM(I)%ALPHA_ERROR_VARIANCE)
+  NULLIFY(PARAM(I)%X,PARAM(I)%IROW,PARAM(I)%ICOL,PARAM(I)%F,PARAM(I)%XY,PARAM(I)%ALPHA_HISTORY,PARAM(I)%ALPHA_ERROR_VARIANCE)
  ENDDO
 
  PEST_IREGULARISATION=0
@@ -448,58 +448,99 @@ CONTAINS
   PARAM(I)%PTYPE=IMOD_UTL_CAPF(PARAM(I)%PTYPE,'U')
  ENDDO
 
- READ(IURUN,'(A256)',IOSTAT=IOS) LINE
- IF(IOS.EQ.0)READ(LINE,*,IOSTAT=IOS) N
- IF(IOS.NE.0)THEN
-  CALL IMOD_UTL_PRINTTEXT('Error reading NZONE'//TRIM(LINE),0)
-  CALL IMOD_UTL_PRINTTEXT('Busy processing module: '//TRIM(CMOD(PPST)),2)
+ !## compute zone distribution
+ INQUIRE(FILE=TRIM(pdir)//'\PARAM_DUMP_IPEST.DAT',EXIST=LREUSEDAT)
+ IF(LREUSEDAT)THEN
+  WRITE(*,'(/A)') 'Read zones assigned to parameters from the file:'
+  WRITE(*,'(A/)') TRIM(pdir)//'\PARAM_DUMP_IPEST.DAT'
  ENDIF
+
+ IF(.NOT.LREUSEDAT)THEN
  
- ALLOCATE(ZONE(N))
+  READ(IURUN,'(A256)',IOSTAT=IOS) LINE
+  IF(IOS.EQ.0)READ(LINE,*,IOSTAT=IOS) N
+  IF(IOS.NE.0)THEN
+   CALL IMOD_UTL_PRINTTEXT('Error reading NZONE'//TRIM(LINE),0)
+   CALL IMOD_UTL_PRINTTEXT('Busy processing module: '//TRIM(CMOD(PPST)),2)
+  ENDIF
+ 
+  ALLOCATE(ZONE(N))
 
- IF(IOPTION.EQ.0)THEN
+  IF(IOPTION.EQ.0)THEN
   
-  NCOL=IDF%NCOL
-  NROW=IDF%NROW
+   NCOL=IDF%NCOL
+   NROW=IDF%NROW
   
-  DO I=1,SIZE(ZONE)
+   DO I=1,SIZE(ZONE)
 
-   NULLIFY(ZONE(I)%X,ZONE(I)%XY,ZONE(I)%IZ) 
-   READ(IURUN,'(A)',IOSTAT=IOS) LINE
-   IF(IOS.NE.0)THEN
-    CALL IMOD_UTL_PRINTTEXT('Error reading '//TRIM(LINE),0)
-    CALL IMOD_UTL_PRINTTEXT('Busy processing module: '//TRIM(CMOD(I)),2)
-   ENDIF
-
-   IZ=INT(IMOD_UTL_GETREAL(LINE,IOS))
-   IF(IOS.EQ.0)THEN
-    CALL IMOD_UTL_PRINTTEXT('Read Constant Value '//TRIM(IMOD_UTL_ITOS(IZ)),0)
-    ALLOCATE(ZONE(I)%X(NCOL,NROW))
-    ZONE(I)%ZTYPE=0
-    ZONE(I)%X=REAL(IZ,8) 
-   ELSE
-    CALL IMOD_UTL_FILENAME(LINE)
-    CALL IMOD_UTL_PRINTTEXT('Assigned '//TRIM(LINE),0)
-    IF(INDEX(IMOD_UTL_CAPF(LINE,'U'),'.IDF').GT.0)THEN
-     IF (.NOT.IDFREAD(IDFC,LINE,0)) CALL IMOD_UTL_PRINTTEXT('IDFREAD',2)
-     CALL IDFNULLIFY(IDFM)
-     CALL IDFCOPY(IDF,IDFM)
-     IF(ASSOCIATED(IDFM%X))DEALLOCATE(IDFM%X)
-     NODATA = IDFC%NODATA
-     IDFM%NODATA = NODATA
-     !## special zone scaling
-     IF (.NOT.IDFREADSCALE(IDFC,IDFM,10,0)) CALL IMOD_UTL_PRINTTEXT('IDFREADSCALE',2)
-         
+    write(6,'(1x,a)') '+Processing zone ',i
+    
+    NULLIFY(ZONE(I)%X,ZONE(I)%XY,ZONE(I)%IZ) 
+    READ(IURUN,'(A)',IOSTAT=IOS) LINE
+    IF(IOS.NE.0)THEN
+     CALL IMOD_UTL_PRINTTEXT('Error reading '//TRIM(LINE),0)
+     CALL IMOD_UTL_PRINTTEXT('Busy processing module: '//TRIM(CMOD(I)),2)
+    ENDIF
+ 
+    IZ=INT(IMOD_UTL_GETREAL(LINE,IOS))
+    IF(IOS.EQ.0)THEN
+     CALL IMOD_UTL_PRINTTEXT('Read Constant Value '//TRIM(IMOD_UTL_ITOS(IZ)),0)
      ALLOCATE(ZONE(I)%X(NCOL,NROW))
      ZONE(I)%ZTYPE=0
-     ZONE(I)%X=IDFM%X
-     CALL IDFDEALLOCATEX(IDFC)
-     IF (IDFC%IU.GT.0) THEN
-      INQUIRE(UNIT=IDFC%IU,OPENED=LOP); IF(LOP)CLOSE(IDFC%IU)
+     ZONE(I)%X=REAL(IZ,8) 
+    ELSE
+     CALL IMOD_UTL_FILENAME(LINE)
+     CALL IMOD_UTL_PRINTTEXT('Assigned '//TRIM(LINE),0)
+     IF(INDEX(IMOD_UTL_CAPF(LINE,'U'),'.IDF').GT.0)THEN
+      IF (.NOT.IDFREAD(IDFC,LINE,0)) CALL IMOD_UTL_PRINTTEXT('IDFREAD',2)
+      CALL IDFNULLIFY(IDFM)
+      CALL IDFCOPY(IDF,IDFM)
+      IF(ASSOCIATED(IDFM%X))DEALLOCATE(IDFM%X)
+      NODATA = IDFC%NODATA
+      IDFM%NODATA = NODATA
+      !## special zone scaling
+      IF (.NOT.IDFREADSCALE(IDFC,IDFM,10,0)) CALL IMOD_UTL_PRINTTEXT('IDFREADSCALE',2)
+          
+      ALLOCATE(ZONE(I)%X(NCOL,NROW))
+      ZONE(I)%ZTYPE=0
+      ZONE(I)%X=IDFM%X
+      CALL IDFDEALLOCATEX(IDFC)
+      IF(IDFC%IU.GT.0)THEN
+       INQUIRE(UNIT=IDFC%IU,OPENED=LOP); IF(LOP)CLOSE(IDFC%IU)
+      ENDIF
+ 
+     ELSEIF(INDEX(IMOD_UTL_CAPF(LINE,'U'),'.IPF').GT.0)THEN
+ 
+      ZONE(I)%ZTYPE=1
+      !## read in ipf
+      JU=GETUNIT(); CALL IMOD_UTL_OPENASC(JU,LINE,'R')
+      READ(JU,*) NIPF; READ(JU,*) MIPF; DO K=1,MIPF+1; READ(JU,*); ENDDO
+      ALLOCATE(ZONE(I)%XY(NIPF,2),ZONE(I)%IZ(NIPF))  
+      DO K=1,NIPF; READ(JU,*) ZONE(I)%XY(K,1),ZONE(I)%XY(K,2),ZONE(I)%IZ(K); ENDDO  
+      CLOSE(JU)
+ 
+     ELSE 
+ 
+      CALL IMOD_UTL_PRINTTEXT('No supported file format found',2)
+ 
      ENDIF
+    ENDIF
+   ENDDO
+ 
+  else
+  
+   NCOL=IDFM%NCOL
+   NROW=IDFM%NROW
+  
+   DO I=1,SIZE(ZONE)
 
-    ELSEIF(INDEX(IMOD_UTL_CAPF(LINE,'U'),'.IPF').GT.0)THEN
-
+    NULLIFY(ZONE(I)%X,ZONE(I)%XY,ZONE(I)%IZ) 
+ 
+    !## check whether IPF or IDF (arr-file)
+    READ(IURUN,'(A256)') LINE
+    
+    IF(INDEX(IMOD_UTL_CAPF(LINE,'U'),'.IPF',.TRUE.).GT.0)THEN
+    
      ZONE(I)%ZTYPE=1
      !## read in ipf
      JU=GETUNIT(); CALL IMOD_UTL_OPENASC(JU,LINE,'R')
@@ -507,63 +548,27 @@ CONTAINS
      ALLOCATE(ZONE(I)%XY(NIPF,2),ZONE(I)%IZ(NIPF))  
      DO K=1,NIPF; READ(JU,*) ZONE(I)%XY(K,1),ZONE(I)%XY(K,2),ZONE(I)%IZ(K); ENDDO  
      CLOSE(JU)
-
-    ELSE 
-
-     CALL IMOD_UTL_PRINTTEXT('No supported file format found',2)
-
-    ENDIF
-   ENDIF
-  ENDDO
  
- else
+    ELSE
+    
+     !## use u2drel
+     ALLOCATE(ZONE(I)%X(NCOL,NROW)); ZONE(I)%ZTYPE=0  
+     BACKSPACE(IURUN)
+     CALL U2DREL(ZONE(I)%X, 'zone', NROW, NCOL, 0, IURUN, IOUT)
+ 
+    ENDIF
+   ENDDO
+ 
+   CLOSE(IURUN)
   
-  NCOL=IDFM%NCOL
-  NROW=IDFM%NROW
-  
-  DO I=1,SIZE(ZONE)
-
-   NULLIFY(ZONE(I)%X,ZONE(I)%XY,ZONE(I)%IZ) 
-
-   !## check whether IPF or IDF (arr-file)
-   READ(IURUN,'(A256)') LINE
-   
-   IF(INDEX(IMOD_UTL_CAPF(LINE,'U'),'.IPF',.TRUE.).GT.0)THEN
-   
-    ZONE(I)%ZTYPE=1
-    !## read in ipf
-    JU=GETUNIT(); CALL IMOD_UTL_OPENASC(JU,LINE,'R')
-    READ(JU,*) NIPF; READ(JU,*) MIPF; DO K=1,MIPF+1; READ(JU,*); ENDDO
-    ALLOCATE(ZONE(I)%XY(NIPF,2),ZONE(I)%IZ(NIPF))  
-    DO K=1,NIPF; READ(JU,*) ZONE(I)%XY(K,1),ZONE(I)%XY(K,2),ZONE(I)%IZ(K); ENDDO  
-    CLOSE(JU)
-
-   ELSE
-   
-    !## use u2drel
-    ALLOCATE(ZONE(I)%X(NCOL,NROW)); ZONE(I)%ZTYPE=0  
-    BACKSPACE(IURUN)
-    CALL U2DREL(ZONE(I)%X, 'zone', NROW, NCOL, 0, IURUN, IOUT)
-
-   ENDIF
-  ENDDO
-
-  CLOSE(IURUN)
-  
+  endif
  endif
-  
- !## compute zone distribution
- INQUIRE(FILE=TRIM(pdir)//'\PARAM_DUMP_IPEST.DAT',EXIST=LCOMPUTE)
- IF(LCOMPUTE)THEN
-  WRITE(*,'(/A)') 'Read zones allocated to parameters from the found file:'
-  WRITE(*,'(A/)') TRIM(pdir)//'\PARAM_DUMP_IPEST.DAT'
- ENDIF
  
  CALL IMOD_UTL_PRINTTEXT('Parameters',-1,iu=IUPESTOUT)
  WRITE(LINE,'(A2,1X,A5,2(1X,A5),5(1X,A15),3A10,A15)') 'AC','PTYPE','ILS','IZN','INITIAL','DELTA','MINIMUM','MAXIMUM','FADJ','IGROUP','LTRANS','NODES','ACRONYM'
  CALL IMOD_UTL_PRINTTEXT(TRIM(LINE),-1,iu=IUPESTOUT)
 
- IF(.NOT.LCOMPUTE)THEN
+ IF(.NOT.LREUSEDAT)THEN
  
   !## get number of unique zones
   ALLOCATE(NUZ(SIZE(PARAM))); NUZ=0
@@ -728,25 +733,6 @@ CONTAINS
    ENDIF 
   ENDDO
 
-  !!## set igroup lt 0 for followers in group - check whether factors within group are equal --- need to be
-  !!## make sure group with active nodes is positive rest is negative
-  !DO I=1,SIZE(PARAM)
-  ! IF(PARAM(I)%IACT.EQ.0)THEN
-  !  CYCLE
-  ! ENDIF
-  ! DO J=1,I-1 
-  !  IF(PARAM(J)%IACT.EQ.0)CYCLE
-  !  IF(PARAM(J)%IGROUP.EQ.PARAM(I)%IGROUP)THEN
-  !   !## check factor
-  !   IF(PARAM(J)%INI.NE.PARAM(I)%INI)THEN
-  !    CALL IMOD_UTL_PRINTTEXT('Initial factor in an group need to be identicial',0)
-  !    CALL IMOD_UTL_PRINTTEXT('Check initial factors for group '//TRIM(IMOD_UTL_ITOS(PARAM(J)%IGROUP)),2)
-  !   ENDIF
-  !   PARAM(I)%IGROUP=-1*PARAM(I)%IGROUP; EXIT
-  !  ENDIF
-  ! ENDDO
-  !ENDDO
-
   DO I=1,SIZE(ZONE)
    IF(ZONE(I)%ZTYPE.EQ.0)THEN
     DEALLOCATE(ZONE(I)%X)
@@ -809,10 +795,7 @@ CONTAINS
  !## set igroup lt 0 for followers in group - check whether factors within group are equal --- need to be
  !## make sure group with active nodes is positive rest is negative
  DO I=1,SIZE(PARAM)
-  IF(PARAM(I)%IACT.EQ.0)THEN
-!   WRITE(*,*) I,PARAM(I)%IACT,PARAM(I)%IGROUP
-   CYCLE
-  ENDIF
+  IF(PARAM(I)%IACT.EQ.0)CYCLE
   DO J=1,I-1 
    IF(PARAM(J)%IACT.EQ.0)CYCLE
    IF(PARAM(J)%IGROUP.EQ.PARAM(I)%IGROUP)THEN
@@ -824,8 +807,6 @@ CONTAINS
     PARAM(I)%IGROUP=-1*ABS(PARAM(I)%IGROUP); EXIT
    ENDIF
   ENDDO
-!  WRITE(*,*) I,PARAM(I)%IACT,PARAM(I)%IGROUP
-!  PAUSE
  ENDDO
  
  !## initialize process-flags
