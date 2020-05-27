@@ -1,0 +1,513 @@
+
+0001,(BND),1, Boundary Condition
+001,030
+ 1,2, 001,   1.000000    ,   0.000000    ,  -999.9900    ,                 '$DBASE$\TUTORIALS\TUT_iMOD-WQ_SEAWAT\DBASE\bas\ibound_l1.idf' >>> (BND) Boundary Settings (IDF) <<<
+ 1,2, 002,   1.000000    ,   0.000000    ,  -999.9900    ,                 '$DBASE$\TUTORIALS\TUT_iMOD-WQ_SEAWAT\DBASE\bas\ibound_l2.idf' >>> (BND) Boundary Settings (IDF) <<<
+ 1,2, 003,   1.000000    ,   0.000000    ,  -999.9900    ,                 '$DBASE$\TUTORIALS\TUT_iMOD-WQ_SEAWAT\DBASE\bas\ibound_l3.idf' >>> (BND) Boundary Settings (IDF) <<<
+ 1,2, 004,   1.000000    ,   0.000000    ,  -999.9900    ,                 '$DBASE$\TUTORIALS\TUT_iMOD-WQ_SEAWAT\DBASE\bas\ibound_l4.idf' >>> (BND) Boundary Settings (IDF) <<<
+ 1,2, 005,   1.000000    ,   0.000000    ,  -999.9900    ,                 '$DBASE$\TUTORIALS\TUT_iMOD-WQ_SEAWAT\DBASE\bas\ibound_l5.idf' >>> (BND) Boundary Settings (IDF) <<<
+ 1,2, 006,   1.000000    ,   0.000000    ,  -999.9900    ,                 '$DBASE$\TUTORIALS\TUT_iMOD-WQ_SEAWAT\DBASE\bas\ibound_l6.idf' >>> (BND) Boundary Settings (IDF) <<<
+ 1,2, 007,   1.000000    ,   0.000000    ,  -999.9900    ,                 '$DBASE$\TUTORIALS\TUT_iMOD-WQ_SEAWAT\DBASE\bas\ibound_l7.idf' >>> (BND) Boundary Settings (IDF) <<<
+ 1,2, 008,   1.000000    ,   0.000000    ,  -999.9900    ,                 '$DBASE$\TUTORIALS\TUT_iMOD-WQ_SEAWAT\DBASE\bas\ibound_l8.idf' >>> (BND) Boundary Settings (IDF) <<<
+ 1,2, 009,   1.000000    ,   0.000000    ,  -999.9900    ,                 '$DBASE$\TUTORIALS\TUT_iMOD-WQ_SEAWAT\DBASE\bas\ibound_l9.idf' >>> (BND) Boundary Settings (IDF) <<<
+ 1,2, 010,   1.000000    ,   0.000000    ,  -999.9900    ,                '$DBASE$\TUTORIALS\TUT_iMOD-WQ_SEAWAT\DBASE\bas\ibound_l10.idf' >>> (BND) Boundary Settings (IDF) <<<
+ 1,2, 011,   1.000000    ,   0.000000    ,  -999.9900    ,                '$DBASE$\TUTORIALS\TUT_iMOD-WQ_SEAWAT\DBASE\bas\ibound_l11.idf' >>> (BND) Boundary Settings (IDF) <<<
+ 1,2, 012,   1.000000    ,   0.000000    ,  -999.9900    ,                '$DBASE$\TUTORIALS\TUT_iMOD-WQ_SEAWAT\DBASE\bas\ibound_l12.idf' >>> (BND) Boundary Settings (IDF) <<<
+ 1,2, 013,   1.000000    ,   0.000000    ,  -999.9900    ,                '$DBASE$\TUTORIALS\TUT_iMOD-WQ_SEAWAT\DBASE\bas\ibound_l13.idf' >>> (BND) Boundary Settings (IDF) <<<
+ 1,2, 014,   1.000000    ,   0.000000    ,  -999.9900    ,                '$DBASE$\TUTORIALS\TUT_iMOD-WQ_SEAWAT\DBASE\bas\ibound_l14.idf' >>> (BND) Boundary Settings (IDF) <<<
+ 1,2, 015,   1.000000    ,   0.000000    ,  -999.9900    ,                '$DBASE$\TUTORIALS\TUT_iMOD-WQ_SEAWAT\DBASE\bas\ibound_l15.idf' >>> (BND) Boundary Settings (IDF) <<<
+ 1,2, 016,   1.000000    ,   0.000000    ,  -999.9900    ,                '$DBASE$\TUTORIALS\TUT_iMOD-WQ_SEAWAT\DBASE\bas\ibound_l16.idf' >>> (BND) Boundary Settings (IDF) <<<
+ 1,2, 017,   1.000000    ,   0.000000    ,  -999.9900    ,                '$DBASE$\TUTORIALS\TUT_iMOD-WQ_SEAWAT\DBASE\bas\ibound_l17.idf' >>> (BND) Boundary Settings (IDF) <<<
+ 1,2, 018,   1.000000    ,   0.000000    ,  -999.9900    ,                '$DBASE$\TUTORIALS\TUT_iMOD-WQ_SEAWAT\DBASE\bas\ibound_l18.idf' >>> (BND) Boundary Settings (IDF) <<<
+ 1,2, 019,   1.000000    ,   0.000000    ,  -999.9900    ,                '$DBASE$\TUTORIALS\TUT_iMOD-WQ_SEAWAT\DBASE\bas\ibound_l19.idf' >>> (BND) Boundary Settings (IDF) <<<
+ 1,2, 020,   1.000000    ,   0.000000    ,  -999.9900    ,                '$DBASE$\TUTORIALS\TUT_iMOD-WQ_SEAWAT\DBASE\bas\ibound_l20.idf' >>> (BND) Boundary Settings (IDF) <<<
+ 1,2, 021,   1.000000    ,   0.000000    ,  -999.9900    ,                '$DBASE$\TUTORIALS\TUT_iMOD-WQ_SEAWAT\DBASE\bas\ibound_l21.idf' >>> (BND) Boundary Settings (IDF) <<<
+ 1,2, 022,   1.000000    ,   0.000000    ,  -999.9900    ,                '$DBASE$\TUTORIALS\TUT_iMOD-WQ_SEAWAT\DBASE\bas\ibound_l22.idf' >>> (BND) Boundary Settings (IDF) <<<
+ 1,2, 023,   1.000000    ,   0.000000    ,  -999.9900    ,                '$DBASE$\TUTORIALS\TUT_iMOD-WQ_SEAWAT\DBASE\bas\ibound_l23.idf' >>> (BND) Boundary Settings (IDF) <<<
+ 1,2, 024,   1.000000    ,   0.000000    ,  -999.9900    ,                '$DBASE$\TUTORIALS\TUT_iMOD-WQ_SEAWAT\DBASE\bas\ibound_l24.idf' >>> (BND) Boundary Settings (IDF) <<<
+ 1,2, 025,   1.000000    ,   0.000000    ,  -999.9900    ,                '$DBASE$\TUTORIALS\TUT_iMOD-WQ_SEAWAT\DBASE\bas\ibound_l25.idf' >>> (BND) Boundary Settings (IDF) <<<
+ 1,2, 026,   1.000000    ,   0.000000    ,  -999.9900    ,                '$DBASE$\TUTORIALS\TUT_iMOD-WQ_SEAWAT\DBASE\bas\ibound_l26.idf' >>> (BND) Boundary Settings (IDF) <<<
+ 1,2, 027,   1.000000    ,   0.000000    ,  -999.9900    ,                '$DBASE$\TUTORIALS\TUT_iMOD-WQ_SEAWAT\DBASE\bas\ibound_l27.idf' >>> (BND) Boundary Settings (IDF) <<<
+ 1,2, 028,   1.000000    ,   0.000000    ,  -999.9900    ,                '$DBASE$\TUTORIALS\TUT_iMOD-WQ_SEAWAT\DBASE\bas\ibound_l28.idf' >>> (BND) Boundary Settings (IDF) <<<
+ 1,2, 029,   1.000000    ,   0.000000    ,  -999.9900    ,                '$DBASE$\TUTORIALS\TUT_iMOD-WQ_SEAWAT\DBASE\bas\ibound_l29.idf' >>> (BND) Boundary Settings (IDF) <<<
+ 1,2, 030,   1.000000    ,   0.000000    ,  -999.9900    ,                '$DBASE$\TUTORIALS\TUT_iMOD-WQ_SEAWAT\DBASE\bas\ibound_l30.idf' >>> (BND) Boundary Settings (IDF) <<<
+
+0001,(TOP),1, Top Elevation
+001,030
+ 1,2, 001,   1.000000    ,   0.000000    ,  -999.9900    ,                    '$DBASE$\TUTORIALS\TUT_iMOD-WQ_SEAWAT\DBASE\top\top_l1.idf' >>> (TOP) Top of Modellayer (IDF) <<<
+ 1,2, 002,   1.000000    ,   0.000000    ,  -999.9900    ,                    '$DBASE$\TUTORIALS\TUT_iMOD-WQ_SEAWAT\DBASE\top\top_l2.idf' >>> (TOP) Top of Modellayer (IDF) <<<
+ 1,2, 003,   1.000000    ,   0.000000    ,  -999.9900    ,                    '$DBASE$\TUTORIALS\TUT_iMOD-WQ_SEAWAT\DBASE\top\top_l3.idf' >>> (TOP) Top of Modellayer (IDF) <<<
+ 1,2, 004,   1.000000    ,   0.000000    ,  -999.9900    ,                    '$DBASE$\TUTORIALS\TUT_iMOD-WQ_SEAWAT\DBASE\top\top_l4.idf' >>> (TOP) Top of Modellayer (IDF) <<<
+ 1,2, 005,   1.000000    ,   0.000000    ,  -999.9900    ,                    '$DBASE$\TUTORIALS\TUT_iMOD-WQ_SEAWAT\DBASE\top\top_l5.idf' >>> (TOP) Top of Modellayer (IDF) <<<
+ 1,2, 006,   1.000000    ,   0.000000    ,  -999.9900    ,                    '$DBASE$\TUTORIALS\TUT_iMOD-WQ_SEAWAT\DBASE\top\top_l6.idf' >>> (TOP) Top of Modellayer (IDF) <<<
+ 1,2, 007,   1.000000    ,   0.000000    ,  -999.9900    ,                    '$DBASE$\TUTORIALS\TUT_iMOD-WQ_SEAWAT\DBASE\top\top_l7.idf' >>> (TOP) Top of Modellayer (IDF) <<<
+ 1,2, 008,   1.000000    ,   0.000000    ,  -999.9900    ,                    '$DBASE$\TUTORIALS\TUT_iMOD-WQ_SEAWAT\DBASE\top\top_l8.idf' >>> (TOP) Top of Modellayer (IDF) <<<
+ 1,2, 009,   1.000000    ,   0.000000    ,  -999.9900    ,                    '$DBASE$\TUTORIALS\TUT_iMOD-WQ_SEAWAT\DBASE\top\top_l9.idf' >>> (TOP) Top of Modellayer (IDF) <<<
+ 1,2, 010,   1.000000    ,   0.000000    ,  -999.9900    ,                   '$DBASE$\TUTORIALS\TUT_iMOD-WQ_SEAWAT\DBASE\top\top_l10.idf' >>> (TOP) Top of Modellayer (IDF) <<<
+ 1,2, 011,   1.000000    ,   0.000000    ,  -999.9900    ,                   '$DBASE$\TUTORIALS\TUT_iMOD-WQ_SEAWAT\DBASE\top\top_l11.idf' >>> (TOP) Top of Modellayer (IDF) <<<
+ 1,2, 012,   1.000000    ,   0.000000    ,  -999.9900    ,                   '$DBASE$\TUTORIALS\TUT_iMOD-WQ_SEAWAT\DBASE\top\top_l12.idf' >>> (TOP) Top of Modellayer (IDF) <<<
+ 1,2, 013,   1.000000    ,   0.000000    ,  -999.9900    ,                   '$DBASE$\TUTORIALS\TUT_iMOD-WQ_SEAWAT\DBASE\top\top_l13.idf' >>> (TOP) Top of Modellayer (IDF) <<<
+ 1,2, 014,   1.000000    ,   0.000000    ,  -999.9900    ,                   '$DBASE$\TUTORIALS\TUT_iMOD-WQ_SEAWAT\DBASE\top\top_l14.idf' >>> (TOP) Top of Modellayer (IDF) <<<
+ 1,2, 015,   1.000000    ,   0.000000    ,  -999.9900    ,                   '$DBASE$\TUTORIALS\TUT_iMOD-WQ_SEAWAT\DBASE\top\top_l15.idf' >>> (TOP) Top of Modellayer (IDF) <<<
+ 1,2, 016,   1.000000    ,   0.000000    ,  -999.9900    ,                   '$DBASE$\TUTORIALS\TUT_iMOD-WQ_SEAWAT\DBASE\top\top_l16.idf' >>> (TOP) Top of Modellayer (IDF) <<<
+ 1,2, 017,   1.000000    ,   0.000000    ,  -999.9900    ,                   '$DBASE$\TUTORIALS\TUT_iMOD-WQ_SEAWAT\DBASE\top\top_l17.idf' >>> (TOP) Top of Modellayer (IDF) <<<
+ 1,2, 018,   1.000000    ,   0.000000    ,  -999.9900    ,                   '$DBASE$\TUTORIALS\TUT_iMOD-WQ_SEAWAT\DBASE\top\top_l18.idf' >>> (TOP) Top of Modellayer (IDF) <<<
+ 1,2, 019,   1.000000    ,   0.000000    ,  -999.9900    ,                   '$DBASE$\TUTORIALS\TUT_iMOD-WQ_SEAWAT\DBASE\top\top_l19.idf' >>> (TOP) Top of Modellayer (IDF) <<<
+ 1,2, 020,   1.000000    ,   0.000000    ,  -999.9900    ,                   '$DBASE$\TUTORIALS\TUT_iMOD-WQ_SEAWAT\DBASE\top\top_l20.idf' >>> (TOP) Top of Modellayer (IDF) <<<
+ 1,2, 021,   1.000000    ,   0.000000    ,  -999.9900    ,                   '$DBASE$\TUTORIALS\TUT_iMOD-WQ_SEAWAT\DBASE\top\top_l21.idf' >>> (TOP) Top of Modellayer (IDF) <<<
+ 1,2, 022,   1.000000    ,   0.000000    ,  -999.9900    ,                   '$DBASE$\TUTORIALS\TUT_iMOD-WQ_SEAWAT\DBASE\top\top_l22.idf' >>> (TOP) Top of Modellayer (IDF) <<<
+ 1,2, 023,   1.000000    ,   0.000000    ,  -999.9900    ,                   '$DBASE$\TUTORIALS\TUT_iMOD-WQ_SEAWAT\DBASE\top\top_l23.idf' >>> (TOP) Top of Modellayer (IDF) <<<
+ 1,2, 024,   1.000000    ,   0.000000    ,  -999.9900    ,                   '$DBASE$\TUTORIALS\TUT_iMOD-WQ_SEAWAT\DBASE\top\top_l24.idf' >>> (TOP) Top of Modellayer (IDF) <<<
+ 1,2, 025,   1.000000    ,   0.000000    ,  -999.9900    ,                   '$DBASE$\TUTORIALS\TUT_iMOD-WQ_SEAWAT\DBASE\top\top_l25.idf' >>> (TOP) Top of Modellayer (IDF) <<<
+ 1,2, 026,   1.000000    ,   0.000000    ,  -999.9900    ,                   '$DBASE$\TUTORIALS\TUT_iMOD-WQ_SEAWAT\DBASE\top\top_l26.idf' >>> (TOP) Top of Modellayer (IDF) <<<
+ 1,2, 027,   1.000000    ,   0.000000    ,  -999.9900    ,                   '$DBASE$\TUTORIALS\TUT_iMOD-WQ_SEAWAT\DBASE\top\top_l27.idf' >>> (TOP) Top of Modellayer (IDF) <<<
+ 1,2, 028,   1.000000    ,   0.000000    ,  -999.9900    ,                   '$DBASE$\TUTORIALS\TUT_iMOD-WQ_SEAWAT\DBASE\top\top_l28.idf' >>> (TOP) Top of Modellayer (IDF) <<<
+ 1,2, 029,   1.000000    ,   0.000000    ,  -999.9900    ,                   '$DBASE$\TUTORIALS\TUT_iMOD-WQ_SEAWAT\DBASE\top\top_l29.idf' >>> (TOP) Top of Modellayer (IDF) <<<
+ 1,2, 030,   1.000000    ,   0.000000    ,  -999.9900    ,                   '$DBASE$\TUTORIALS\TUT_iMOD-WQ_SEAWAT\DBASE\top\top_l30.idf' >>> (TOP) Top of Modellayer (IDF) <<<
+
+0001,(BOT),1, Bottom Elevation
+001,030
+ 1,2, 001,   1.000000    ,   0.000000    ,  -999.9900    ,                    '$DBASE$\TUTORIALS\TUT_iMOD-WQ_SEAWAT\DBASE\bot\bot_l1.idf' >>> (BOT) Bottom of Modellayer (IDF) <<<
+ 1,2, 002,   1.000000    ,   0.000000    ,  -999.9900    ,                    '$DBASE$\TUTORIALS\TUT_iMOD-WQ_SEAWAT\DBASE\bot\bot_l2.idf' >>> (BOT) Bottom of Modellayer (IDF) <<<
+ 1,2, 003,   1.000000    ,   0.000000    ,  -999.9900    ,                    '$DBASE$\TUTORIALS\TUT_iMOD-WQ_SEAWAT\DBASE\bot\bot_l3.idf' >>> (BOT) Bottom of Modellayer (IDF) <<<
+ 1,2, 004,   1.000000    ,   0.000000    ,  -999.9900    ,                    '$DBASE$\TUTORIALS\TUT_iMOD-WQ_SEAWAT\DBASE\bot\bot_l4.idf' >>> (BOT) Bottom of Modellayer (IDF) <<<
+ 1,2, 005,   1.000000    ,   0.000000    ,  -999.9900    ,                    '$DBASE$\TUTORIALS\TUT_iMOD-WQ_SEAWAT\DBASE\bot\bot_l5.idf' >>> (BOT) Bottom of Modellayer (IDF) <<<
+ 1,2, 006,   1.000000    ,   0.000000    ,  -999.9900    ,                    '$DBASE$\TUTORIALS\TUT_iMOD-WQ_SEAWAT\DBASE\bot\bot_l6.idf' >>> (BOT) Bottom of Modellayer (IDF) <<<
+ 1,2, 007,   1.000000    ,   0.000000    ,  -999.9900    ,                    '$DBASE$\TUTORIALS\TUT_iMOD-WQ_SEAWAT\DBASE\bot\bot_l7.idf' >>> (BOT) Bottom of Modellayer (IDF) <<<
+ 1,2, 008,   1.000000    ,   0.000000    ,  -999.9900    ,                    '$DBASE$\TUTORIALS\TUT_iMOD-WQ_SEAWAT\DBASE\bot\bot_l8.idf' >>> (BOT) Bottom of Modellayer (IDF) <<<
+ 1,2, 009,   1.000000    ,   0.000000    ,  -999.9900    ,                    '$DBASE$\TUTORIALS\TUT_iMOD-WQ_SEAWAT\DBASE\bot\bot_l9.idf' >>> (BOT) Bottom of Modellayer (IDF) <<<
+ 1,2, 010,   1.000000    ,   0.000000    ,  -999.9900    ,                   '$DBASE$\TUTORIALS\TUT_iMOD-WQ_SEAWAT\DBASE\bot\bot_l10.idf' >>> (BOT) Bottom of Modellayer (IDF) <<<
+ 1,2, 011,   1.000000    ,   0.000000    ,  -999.9900    ,                   '$DBASE$\TUTORIALS\TUT_iMOD-WQ_SEAWAT\DBASE\bot\bot_l11.idf' >>> (BOT) Bottom of Modellayer (IDF) <<<
+ 1,2, 012,   1.000000    ,   0.000000    ,  -999.9900    ,                   '$DBASE$\TUTORIALS\TUT_iMOD-WQ_SEAWAT\DBASE\bot\bot_l12.idf' >>> (BOT) Bottom of Modellayer (IDF) <<<
+ 1,2, 013,   1.000000    ,   0.000000    ,  -999.9900    ,                   '$DBASE$\TUTORIALS\TUT_iMOD-WQ_SEAWAT\DBASE\bot\bot_l13.idf' >>> (BOT) Bottom of Modellayer (IDF) <<<
+ 1,2, 014,   1.000000    ,   0.000000    ,  -999.9900    ,                   '$DBASE$\TUTORIALS\TUT_iMOD-WQ_SEAWAT\DBASE\bot\bot_l14.idf' >>> (BOT) Bottom of Modellayer (IDF) <<<
+ 1,2, 015,   1.000000    ,   0.000000    ,  -999.9900    ,                   '$DBASE$\TUTORIALS\TUT_iMOD-WQ_SEAWAT\DBASE\bot\bot_l15.idf' >>> (BOT) Bottom of Modellayer (IDF) <<<
+ 1,2, 016,   1.000000    ,   0.000000    ,  -999.9900    ,                   '$DBASE$\TUTORIALS\TUT_iMOD-WQ_SEAWAT\DBASE\bot\bot_l16.idf' >>> (BOT) Bottom of Modellayer (IDF) <<<
+ 1,2, 017,   1.000000    ,   0.000000    ,  -999.9900    ,                   '$DBASE$\TUTORIALS\TUT_iMOD-WQ_SEAWAT\DBASE\bot\bot_l17.idf' >>> (BOT) Bottom of Modellayer (IDF) <<<
+ 1,2, 018,   1.000000    ,   0.000000    ,  -999.9900    ,                   '$DBASE$\TUTORIALS\TUT_iMOD-WQ_SEAWAT\DBASE\bot\bot_l18.idf' >>> (BOT) Bottom of Modellayer (IDF) <<<
+ 1,2, 019,   1.000000    ,   0.000000    ,  -999.9900    ,                   '$DBASE$\TUTORIALS\TUT_iMOD-WQ_SEAWAT\DBASE\bot\bot_l19.idf' >>> (BOT) Bottom of Modellayer (IDF) <<<
+ 1,2, 020,   1.000000    ,   0.000000    ,  -999.9900    ,                   '$DBASE$\TUTORIALS\TUT_iMOD-WQ_SEAWAT\DBASE\bot\bot_l20.idf' >>> (BOT) Bottom of Modellayer (IDF) <<<
+ 1,2, 021,   1.000000    ,   0.000000    ,  -999.9900    ,                   '$DBASE$\TUTORIALS\TUT_iMOD-WQ_SEAWAT\DBASE\bot\bot_l21.idf' >>> (BOT) Bottom of Modellayer (IDF) <<<
+ 1,2, 022,   1.000000    ,   0.000000    ,  -999.9900    ,                   '$DBASE$\TUTORIALS\TUT_iMOD-WQ_SEAWAT\DBASE\bot\bot_l22.idf' >>> (BOT) Bottom of Modellayer (IDF) <<<
+ 1,2, 023,   1.000000    ,   0.000000    ,  -999.9900    ,                   '$DBASE$\TUTORIALS\TUT_iMOD-WQ_SEAWAT\DBASE\bot\bot_l23.idf' >>> (BOT) Bottom of Modellayer (IDF) <<<
+ 1,2, 024,   1.000000    ,   0.000000    ,  -999.9900    ,                   '$DBASE$\TUTORIALS\TUT_iMOD-WQ_SEAWAT\DBASE\bot\bot_l24.idf' >>> (BOT) Bottom of Modellayer (IDF) <<<
+ 1,2, 025,   1.000000    ,   0.000000    ,  -999.9900    ,                   '$DBASE$\TUTORIALS\TUT_iMOD-WQ_SEAWAT\DBASE\bot\bot_l25.idf' >>> (BOT) Bottom of Modellayer (IDF) <<<
+ 1,2, 026,   1.000000    ,   0.000000    ,  -999.9900    ,                   '$DBASE$\TUTORIALS\TUT_iMOD-WQ_SEAWAT\DBASE\bot\bot_l26.idf' >>> (BOT) Bottom of Modellayer (IDF) <<<
+ 1,2, 027,   1.000000    ,   0.000000    ,  -999.9900    ,                   '$DBASE$\TUTORIALS\TUT_iMOD-WQ_SEAWAT\DBASE\bot\bot_l27.idf' >>> (BOT) Bottom of Modellayer (IDF) <<<
+ 1,2, 028,   1.000000    ,   0.000000    ,  -999.9900    ,                   '$DBASE$\TUTORIALS\TUT_iMOD-WQ_SEAWAT\DBASE\bot\bot_l28.idf' >>> (BOT) Bottom of Modellayer (IDF) <<<
+ 1,2, 029,   1.000000    ,   0.000000    ,  -999.9900    ,                   '$DBASE$\TUTORIALS\TUT_iMOD-WQ_SEAWAT\DBASE\bot\bot_l29.idf' >>> (BOT) Bottom of Modellayer (IDF) <<<
+ 1,2, 030,   1.000000    ,   0.000000    ,  -999.9900    ,                   '$DBASE$\TUTORIALS\TUT_iMOD-WQ_SEAWAT\DBASE\bot\bot_l30.idf' >>> (BOT) Bottom of Modellayer (IDF) <<<
+
+0001,(THK),1, Thickness
+001,030
+ 1,2, 001,   1.000000    ,   0.000000    ,  -999.9900    ,              '$DBASE$\TUTORIALS\TUT_iMOD-WQ_SEAWAT\DBASE\btn\thickness_l1.idf' >>> (THK) Thickness (IDF) <<<
+ 1,2, 002,   1.000000    ,   0.000000    ,  -999.9900    ,              '$DBASE$\TUTORIALS\TUT_iMOD-WQ_SEAWAT\DBASE\btn\thickness_l2.idf' >>> (THK) Thickness (IDF) <<<
+ 1,2, 003,   1.000000    ,   0.000000    ,  -999.9900    ,              '$DBASE$\TUTORIALS\TUT_iMOD-WQ_SEAWAT\DBASE\btn\thickness_l3.idf' >>> (THK) Thickness (IDF) <<<
+ 1,2, 004,   1.000000    ,   0.000000    ,  -999.9900    ,              '$DBASE$\TUTORIALS\TUT_iMOD-WQ_SEAWAT\DBASE\btn\thickness_l4.idf' >>> (THK) Thickness (IDF) <<<
+ 1,2, 005,   1.000000    ,   0.000000    ,  -999.9900    ,              '$DBASE$\TUTORIALS\TUT_iMOD-WQ_SEAWAT\DBASE\btn\thickness_l5.idf' >>> (THK) Thickness (IDF) <<<
+ 1,2, 006,   1.000000    ,   0.000000    ,  -999.9900    ,              '$DBASE$\TUTORIALS\TUT_iMOD-WQ_SEAWAT\DBASE\btn\thickness_l6.idf' >>> (THK) Thickness (IDF) <<<
+ 1,2, 007,   1.000000    ,   0.000000    ,  -999.9900    ,              '$DBASE$\TUTORIALS\TUT_iMOD-WQ_SEAWAT\DBASE\btn\thickness_l7.idf' >>> (THK) Thickness (IDF) <<<
+ 1,2, 008,   1.000000    ,   0.000000    ,  -999.9900    ,              '$DBASE$\TUTORIALS\TUT_iMOD-WQ_SEAWAT\DBASE\btn\thickness_l8.idf' >>> (THK) Thickness (IDF) <<<
+ 1,2, 009,   1.000000    ,   0.000000    ,  -999.9900    ,              '$DBASE$\TUTORIALS\TUT_iMOD-WQ_SEAWAT\DBASE\btn\thickness_l9.idf' >>> (THK) Thickness (IDF) <<<
+ 1,2, 010,   1.000000    ,   0.000000    ,  -999.9900    ,             '$DBASE$\TUTORIALS\TUT_iMOD-WQ_SEAWAT\DBASE\btn\thickness_l10.idf' >>> (THK) Thickness (IDF) <<<
+ 1,2, 011,   1.000000    ,   0.000000    ,  -999.9900    ,             '$DBASE$\TUTORIALS\TUT_iMOD-WQ_SEAWAT\DBASE\btn\thickness_l11.idf' >>> (THK) Thickness (IDF) <<<
+ 1,2, 012,   1.000000    ,   0.000000    ,  -999.9900    ,             '$DBASE$\TUTORIALS\TUT_iMOD-WQ_SEAWAT\DBASE\btn\thickness_l12.idf' >>> (THK) Thickness (IDF) <<<
+ 1,2, 013,   1.000000    ,   0.000000    ,  -999.9900    ,             '$DBASE$\TUTORIALS\TUT_iMOD-WQ_SEAWAT\DBASE\btn\thickness_l13.idf' >>> (THK) Thickness (IDF) <<<
+ 1,2, 014,   1.000000    ,   0.000000    ,  -999.9900    ,             '$DBASE$\TUTORIALS\TUT_iMOD-WQ_SEAWAT\DBASE\btn\thickness_l14.idf' >>> (THK) Thickness (IDF) <<<
+ 1,2, 015,   1.000000    ,   0.000000    ,  -999.9900    ,             '$DBASE$\TUTORIALS\TUT_iMOD-WQ_SEAWAT\DBASE\btn\thickness_l15.idf' >>> (THK) Thickness (IDF) <<<
+ 1,2, 016,   1.000000    ,   0.000000    ,  -999.9900    ,             '$DBASE$\TUTORIALS\TUT_iMOD-WQ_SEAWAT\DBASE\btn\thickness_l16.idf' >>> (THK) Thickness (IDF) <<<
+ 1,2, 017,   1.000000    ,   0.000000    ,  -999.9900    ,             '$DBASE$\TUTORIALS\TUT_iMOD-WQ_SEAWAT\DBASE\btn\thickness_l17.idf' >>> (THK) Thickness (IDF) <<<
+ 1,2, 018,   1.000000    ,   0.000000    ,  -999.9900    ,             '$DBASE$\TUTORIALS\TUT_iMOD-WQ_SEAWAT\DBASE\btn\thickness_l18.idf' >>> (THK) Thickness (IDF) <<<
+ 1,2, 019,   1.000000    ,   0.000000    ,  -999.9900    ,             '$DBASE$\TUTORIALS\TUT_iMOD-WQ_SEAWAT\DBASE\btn\thickness_l19.idf' >>> (THK) Thickness (IDF) <<<
+ 1,2, 020,   1.000000    ,   0.000000    ,  -999.9900    ,             '$DBASE$\TUTORIALS\TUT_iMOD-WQ_SEAWAT\DBASE\btn\thickness_l20.idf' >>> (THK) Thickness (IDF) <<<
+ 1,2, 021,   1.000000    ,   0.000000    ,  -999.9900    ,             '$DBASE$\TUTORIALS\TUT_iMOD-WQ_SEAWAT\DBASE\btn\thickness_l21.idf' >>> (THK) Thickness (IDF) <<<
+ 1,2, 022,   1.000000    ,   0.000000    ,  -999.9900    ,             '$DBASE$\TUTORIALS\TUT_iMOD-WQ_SEAWAT\DBASE\btn\thickness_l22.idf' >>> (THK) Thickness (IDF) <<<
+ 1,2, 023,   1.000000    ,   0.000000    ,  -999.9900    ,             '$DBASE$\TUTORIALS\TUT_iMOD-WQ_SEAWAT\DBASE\btn\thickness_l23.idf' >>> (THK) Thickness (IDF) <<<
+ 1,2, 024,   1.000000    ,   0.000000    ,  -999.9900    ,             '$DBASE$\TUTORIALS\TUT_iMOD-WQ_SEAWAT\DBASE\btn\thickness_l24.idf' >>> (THK) Thickness (IDF) <<<
+ 1,2, 025,   1.000000    ,   0.000000    ,  -999.9900    ,             '$DBASE$\TUTORIALS\TUT_iMOD-WQ_SEAWAT\DBASE\btn\thickness_l25.idf' >>> (THK) Thickness (IDF) <<<
+ 1,2, 026,   1.000000    ,   0.000000    ,  -999.9900    ,             '$DBASE$\TUTORIALS\TUT_iMOD-WQ_SEAWAT\DBASE\btn\thickness_l26.idf' >>> (THK) Thickness (IDF) <<<
+ 1,2, 027,   1.000000    ,   0.000000    ,  -999.9900    ,             '$DBASE$\TUTORIALS\TUT_iMOD-WQ_SEAWAT\DBASE\btn\thickness_l27.idf' >>> (THK) Thickness (IDF) <<<
+ 1,2, 028,   1.000000    ,   0.000000    ,  -999.9900    ,             '$DBASE$\TUTORIALS\TUT_iMOD-WQ_SEAWAT\DBASE\btn\thickness_l28.idf' >>> (THK) Thickness (IDF) <<<
+ 1,2, 029,   1.000000    ,   0.000000    ,  -999.9900    ,             '$DBASE$\TUTORIALS\TUT_iMOD-WQ_SEAWAT\DBASE\btn\thickness_l29.idf' >>> (THK) Thickness (IDF) <<<
+ 1,2, 030,   1.000000    ,   0.000000    ,  -999.9900    ,             '$DBASE$\TUTORIALS\TUT_iMOD-WQ_SEAWAT\DBASE\btn\thickness_l30.idf' >>> (THK) Thickness (IDF) <<<
+
+0001,(KHV),1, Horizontal Permeability
+001,030
+ 1,2, 001,   1.000000    ,   0.000000    ,  -999.9900    ,           '$DBASE$\TUTORIALS\TUT_iMOD-WQ_SEAWAT\DBASE\lpf\k_horizontal_l1.idf' >>> (KHV) Horizontal Permeability (IDF) <<<
+ 1,2, 002,   1.000000    ,   0.000000    ,  -999.9900    ,           '$DBASE$\TUTORIALS\TUT_iMOD-WQ_SEAWAT\DBASE\lpf\k_horizontal_l2.idf' >>> (KHV) Horizontal Permeability (IDF) <<<
+ 1,2, 003,   1.000000    ,   0.000000    ,  -999.9900    ,           '$DBASE$\TUTORIALS\TUT_iMOD-WQ_SEAWAT\DBASE\lpf\k_horizontal_l3.idf' >>> (KHV) Horizontal Permeability (IDF) <<<
+ 1,2, 004,   1.000000    ,   0.000000    ,  -999.9900    ,           '$DBASE$\TUTORIALS\TUT_iMOD-WQ_SEAWAT\DBASE\lpf\k_horizontal_l4.idf' >>> (KHV) Horizontal Permeability (IDF) <<<
+ 1,2, 005,   1.000000    ,   0.000000    ,  -999.9900    ,           '$DBASE$\TUTORIALS\TUT_iMOD-WQ_SEAWAT\DBASE\lpf\k_horizontal_l5.idf' >>> (KHV) Horizontal Permeability (IDF) <<<
+ 1,2, 006,   1.000000    ,   0.000000    ,  -999.9900    ,           '$DBASE$\TUTORIALS\TUT_iMOD-WQ_SEAWAT\DBASE\lpf\k_horizontal_l6.idf' >>> (KHV) Horizontal Permeability (IDF) <<<
+ 1,2, 007,   1.000000    ,   0.000000    ,  -999.9900    ,           '$DBASE$\TUTORIALS\TUT_iMOD-WQ_SEAWAT\DBASE\lpf\k_horizontal_l7.idf' >>> (KHV) Horizontal Permeability (IDF) <<<
+ 1,2, 008,   1.000000    ,   0.000000    ,  -999.9900    ,           '$DBASE$\TUTORIALS\TUT_iMOD-WQ_SEAWAT\DBASE\lpf\k_horizontal_l8.idf' >>> (KHV) Horizontal Permeability (IDF) <<<
+ 1,2, 009,   1.000000    ,   0.000000    ,  -999.9900    ,           '$DBASE$\TUTORIALS\TUT_iMOD-WQ_SEAWAT\DBASE\lpf\k_horizontal_l9.idf' >>> (KHV) Horizontal Permeability (IDF) <<<
+ 1,2, 010,   1.000000    ,   0.000000    ,  -999.9900    ,          '$DBASE$\TUTORIALS\TUT_iMOD-WQ_SEAWAT\DBASE\lpf\k_horizontal_l10.idf' >>> (KHV) Horizontal Permeability (IDF) <<<
+ 1,2, 011,   1.000000    ,   0.000000    ,  -999.9900    ,          '$DBASE$\TUTORIALS\TUT_iMOD-WQ_SEAWAT\DBASE\lpf\k_horizontal_l11.idf' >>> (KHV) Horizontal Permeability (IDF) <<<
+ 1,2, 012,   1.000000    ,   0.000000    ,  -999.9900    ,          '$DBASE$\TUTORIALS\TUT_iMOD-WQ_SEAWAT\DBASE\lpf\k_horizontal_l12.idf' >>> (KHV) Horizontal Permeability (IDF) <<<
+ 1,2, 013,   1.000000    ,   0.000000    ,  -999.9900    ,          '$DBASE$\TUTORIALS\TUT_iMOD-WQ_SEAWAT\DBASE\lpf\k_horizontal_l13.idf' >>> (KHV) Horizontal Permeability (IDF) <<<
+ 1,2, 014,   1.000000    ,   0.000000    ,  -999.9900    ,          '$DBASE$\TUTORIALS\TUT_iMOD-WQ_SEAWAT\DBASE\lpf\k_horizontal_l14.idf' >>> (KHV) Horizontal Permeability (IDF) <<<
+ 1,2, 015,   1.000000    ,   0.000000    ,  -999.9900    ,          '$DBASE$\TUTORIALS\TUT_iMOD-WQ_SEAWAT\DBASE\lpf\k_horizontal_l15.idf' >>> (KHV) Horizontal Permeability (IDF) <<<
+ 1,2, 016,   1.000000    ,   0.000000    ,  -999.9900    ,          '$DBASE$\TUTORIALS\TUT_iMOD-WQ_SEAWAT\DBASE\lpf\k_horizontal_l16.idf' >>> (KHV) Horizontal Permeability (IDF) <<<
+ 1,2, 017,   1.000000    ,   0.000000    ,  -999.9900    ,          '$DBASE$\TUTORIALS\TUT_iMOD-WQ_SEAWAT\DBASE\lpf\k_horizontal_l17.idf' >>> (KHV) Horizontal Permeability (IDF) <<<
+ 1,2, 018,   1.000000    ,   0.000000    ,  -999.9900    ,          '$DBASE$\TUTORIALS\TUT_iMOD-WQ_SEAWAT\DBASE\lpf\k_horizontal_l18.idf' >>> (KHV) Horizontal Permeability (IDF) <<<
+ 1,2, 019,   1.000000    ,   0.000000    ,  -999.9900    ,          '$DBASE$\TUTORIALS\TUT_iMOD-WQ_SEAWAT\DBASE\lpf\k_horizontal_l19.idf' >>> (KHV) Horizontal Permeability (IDF) <<<
+ 1,2, 020,   1.000000    ,   0.000000    ,  -999.9900    ,          '$DBASE$\TUTORIALS\TUT_iMOD-WQ_SEAWAT\DBASE\lpf\k_horizontal_l20.idf' >>> (KHV) Horizontal Permeability (IDF) <<<
+ 1,2, 021,   1.000000    ,   0.000000    ,  -999.9900    ,          '$DBASE$\TUTORIALS\TUT_iMOD-WQ_SEAWAT\DBASE\lpf\k_horizontal_l21.idf' >>> (KHV) Horizontal Permeability (IDF) <<<
+ 1,2, 022,   1.000000    ,   0.000000    ,  -999.9900    ,          '$DBASE$\TUTORIALS\TUT_iMOD-WQ_SEAWAT\DBASE\lpf\k_horizontal_l22.idf' >>> (KHV) Horizontal Permeability (IDF) <<<
+ 1,2, 023,   1.000000    ,   0.000000    ,  -999.9900    ,          '$DBASE$\TUTORIALS\TUT_iMOD-WQ_SEAWAT\DBASE\lpf\k_horizontal_l23.idf' >>> (KHV) Horizontal Permeability (IDF) <<<
+ 1,2, 024,   1.000000    ,   0.000000    ,  -999.9900    ,          '$DBASE$\TUTORIALS\TUT_iMOD-WQ_SEAWAT\DBASE\lpf\k_horizontal_l24.idf' >>> (KHV) Horizontal Permeability (IDF) <<<
+ 1,2, 025,   1.000000    ,   0.000000    ,  -999.9900    ,          '$DBASE$\TUTORIALS\TUT_iMOD-WQ_SEAWAT\DBASE\lpf\k_horizontal_l25.idf' >>> (KHV) Horizontal Permeability (IDF) <<<
+ 1,2, 026,   1.000000    ,   0.000000    ,  -999.9900    ,          '$DBASE$\TUTORIALS\TUT_iMOD-WQ_SEAWAT\DBASE\lpf\k_horizontal_l26.idf' >>> (KHV) Horizontal Permeability (IDF) <<<
+ 1,2, 027,   1.000000    ,   0.000000    ,  -999.9900    ,          '$DBASE$\TUTORIALS\TUT_iMOD-WQ_SEAWAT\DBASE\lpf\k_horizontal_l27.idf' >>> (KHV) Horizontal Permeability (IDF) <<<
+ 1,2, 028,   1.000000    ,   0.000000    ,  -999.9900    ,          '$DBASE$\TUTORIALS\TUT_iMOD-WQ_SEAWAT\DBASE\lpf\k_horizontal_l28.idf' >>> (KHV) Horizontal Permeability (IDF) <<<
+ 1,2, 029,   1.000000    ,   0.000000    ,  -999.9900    ,          '$DBASE$\TUTORIALS\TUT_iMOD-WQ_SEAWAT\DBASE\lpf\k_horizontal_l29.idf' >>> (KHV) Horizontal Permeability (IDF) <<<
+ 1,2, 030,   1.000000    ,   0.000000    ,  -999.9900    ,          '$DBASE$\TUTORIALS\TUT_iMOD-WQ_SEAWAT\DBASE\lpf\k_horizontal_l30.idf' >>> (KHV) Horizontal Permeability (IDF) <<<
+0001,(KVA),1, Vertical Anisotropy
+001,030
+ 1,2, 001,   1.000000    ,   0.000000    ,  -999.9900    ,        '$DBASE$\TUTORIALS\TUT_iMOD-WQ_SEAWAT\DBASE\lpf\vert_anisotropy_l1.idf' >>> (KVA) Vertical Anisotropy (IDF) <<<
+ 1,2, 002,   1.000000    ,   0.000000    ,  -999.9900    ,        '$DBASE$\TUTORIALS\TUT_iMOD-WQ_SEAWAT\DBASE\lpf\vert_anisotropy_l2.idf' >>> (KVA) Vertical Anisotropy (IDF) <<<
+ 1,2, 003,   1.000000    ,   0.000000    ,  -999.9900    ,        '$DBASE$\TUTORIALS\TUT_iMOD-WQ_SEAWAT\DBASE\lpf\vert_anisotropy_l3.idf' >>> (KVA) Vertical Anisotropy (IDF) <<<
+ 1,2, 004,   1.000000    ,   0.000000    ,  -999.9900    ,        '$DBASE$\TUTORIALS\TUT_iMOD-WQ_SEAWAT\DBASE\lpf\vert_anisotropy_l4.idf' >>> (KVA) Vertical Anisotropy (IDF) <<<
+ 1,2, 005,   1.000000    ,   0.000000    ,  -999.9900    ,        '$DBASE$\TUTORIALS\TUT_iMOD-WQ_SEAWAT\DBASE\lpf\vert_anisotropy_l5.idf' >>> (KVA) Vertical Anisotropy (IDF) <<<
+ 1,2, 006,   1.000000    ,   0.000000    ,  -999.9900    ,        '$DBASE$\TUTORIALS\TUT_iMOD-WQ_SEAWAT\DBASE\lpf\vert_anisotropy_l6.idf' >>> (KVA) Vertical Anisotropy (IDF) <<<
+ 1,2, 007,   1.000000    ,   0.000000    ,  -999.9900    ,        '$DBASE$\TUTORIALS\TUT_iMOD-WQ_SEAWAT\DBASE\lpf\vert_anisotropy_l7.idf' >>> (KVA) Vertical Anisotropy (IDF) <<<
+ 1,2, 008,   1.000000    ,   0.000000    ,  -999.9900    ,        '$DBASE$\TUTORIALS\TUT_iMOD-WQ_SEAWAT\DBASE\lpf\vert_anisotropy_l8.idf' >>> (KVA) Vertical Anisotropy (IDF) <<<
+ 1,2, 009,   1.000000    ,   0.000000    ,  -999.9900    ,        '$DBASE$\TUTORIALS\TUT_iMOD-WQ_SEAWAT\DBASE\lpf\vert_anisotropy_l9.idf' >>> (KVA) Vertical Anisotropy (IDF) <<<
+ 1,2, 010,   1.000000    ,   0.000000    ,  -999.9900    ,       '$DBASE$\TUTORIALS\TUT_iMOD-WQ_SEAWAT\DBASE\lpf\vert_anisotropy_l10.idf' >>> (KVA) Vertical Anisotropy (IDF) <<<
+ 1,2, 011,   1.000000    ,   0.000000    ,  -999.9900    ,       '$DBASE$\TUTORIALS\TUT_iMOD-WQ_SEAWAT\DBASE\lpf\vert_anisotropy_l11.idf' >>> (KVA) Vertical Anisotropy (IDF) <<<
+ 1,2, 012,   1.000000    ,   0.000000    ,  -999.9900    ,       '$DBASE$\TUTORIALS\TUT_iMOD-WQ_SEAWAT\DBASE\lpf\vert_anisotropy_l12.idf' >>> (KVA) Vertical Anisotropy (IDF) <<<
+ 1,2, 013,   1.000000    ,   0.000000    ,  -999.9900    ,       '$DBASE$\TUTORIALS\TUT_iMOD-WQ_SEAWAT\DBASE\lpf\vert_anisotropy_l13.idf' >>> (KVA) Vertical Anisotropy (IDF) <<<
+ 1,2, 014,   1.000000    ,   0.000000    ,  -999.9900    ,       '$DBASE$\TUTORIALS\TUT_iMOD-WQ_SEAWAT\DBASE\lpf\vert_anisotropy_l14.idf' >>> (KVA) Vertical Anisotropy (IDF) <<<
+ 1,2, 015,   1.000000    ,   0.000000    ,  -999.9900    ,       '$DBASE$\TUTORIALS\TUT_iMOD-WQ_SEAWAT\DBASE\lpf\vert_anisotropy_l15.idf' >>> (KVA) Vertical Anisotropy (IDF) <<<
+ 1,2, 016,   1.000000    ,   0.000000    ,  -999.9900    ,       '$DBASE$\TUTORIALS\TUT_iMOD-WQ_SEAWAT\DBASE\lpf\vert_anisotropy_l16.idf' >>> (KVA) Vertical Anisotropy (IDF) <<<
+ 1,2, 017,   1.000000    ,   0.000000    ,  -999.9900    ,       '$DBASE$\TUTORIALS\TUT_iMOD-WQ_SEAWAT\DBASE\lpf\vert_anisotropy_l17.idf' >>> (KVA) Vertical Anisotropy (IDF) <<<
+ 1,2, 018,   1.000000    ,   0.000000    ,  -999.9900    ,       '$DBASE$\TUTORIALS\TUT_iMOD-WQ_SEAWAT\DBASE\lpf\vert_anisotropy_l18.idf' >>> (KVA) Vertical Anisotropy (IDF) <<<
+ 1,2, 019,   1.000000    ,   0.000000    ,  -999.9900    ,       '$DBASE$\TUTORIALS\TUT_iMOD-WQ_SEAWAT\DBASE\lpf\vert_anisotropy_l19.idf' >>> (KVA) Vertical Anisotropy (IDF) <<<
+ 1,2, 020,   1.000000    ,   0.000000    ,  -999.9900    ,       '$DBASE$\TUTORIALS\TUT_iMOD-WQ_SEAWAT\DBASE\lpf\vert_anisotropy_l20.idf' >>> (KVA) Vertical Anisotropy (IDF) <<<
+ 1,2, 021,   1.000000    ,   0.000000    ,  -999.9900    ,       '$DBASE$\TUTORIALS\TUT_iMOD-WQ_SEAWAT\DBASE\lpf\vert_anisotropy_l21.idf' >>> (KVA) Vertical Anisotropy (IDF) <<<
+ 1,2, 022,   1.000000    ,   0.000000    ,  -999.9900    ,       '$DBASE$\TUTORIALS\TUT_iMOD-WQ_SEAWAT\DBASE\lpf\vert_anisotropy_l22.idf' >>> (KVA) Vertical Anisotropy (IDF) <<<
+ 1,2, 023,   1.000000    ,   0.000000    ,  -999.9900    ,       '$DBASE$\TUTORIALS\TUT_iMOD-WQ_SEAWAT\DBASE\lpf\vert_anisotropy_l23.idf' >>> (KVA) Vertical Anisotropy (IDF) <<<
+ 1,2, 024,   1.000000    ,   0.000000    ,  -999.9900    ,       '$DBASE$\TUTORIALS\TUT_iMOD-WQ_SEAWAT\DBASE\lpf\vert_anisotropy_l24.idf' >>> (KVA) Vertical Anisotropy (IDF) <<<
+ 1,2, 025,   1.000000    ,   0.000000    ,  -999.9900    ,       '$DBASE$\TUTORIALS\TUT_iMOD-WQ_SEAWAT\DBASE\lpf\vert_anisotropy_l25.idf' >>> (KVA) Vertical Anisotropy (IDF) <<<
+ 1,2, 026,   1.000000    ,   0.000000    ,  -999.9900    ,       '$DBASE$\TUTORIALS\TUT_iMOD-WQ_SEAWAT\DBASE\lpf\vert_anisotropy_l26.idf' >>> (KVA) Vertical Anisotropy (IDF) <<<
+ 1,2, 027,   1.000000    ,   0.000000    ,  -999.9900    ,       '$DBASE$\TUTORIALS\TUT_iMOD-WQ_SEAWAT\DBASE\lpf\vert_anisotropy_l27.idf' >>> (KVA) Vertical Anisotropy (IDF) <<<
+ 1,2, 028,   1.000000    ,   0.000000    ,  -999.9900    ,       '$DBASE$\TUTORIALS\TUT_iMOD-WQ_SEAWAT\DBASE\lpf\vert_anisotropy_l28.idf' >>> (KVA) Vertical Anisotropy (IDF) <<<
+ 1,2, 029,   1.000000    ,   0.000000    ,  -999.9900    ,       '$DBASE$\TUTORIALS\TUT_iMOD-WQ_SEAWAT\DBASE\lpf\vert_anisotropy_l29.idf' >>> (KVA) Vertical Anisotropy (IDF) <<<
+ 1,2, 030,   1.000000    ,   0.000000    ,  -999.9900    ,       '$DBASE$\TUTORIALS\TUT_iMOD-WQ_SEAWAT\DBASE\lpf\vert_anisotropy_l30.idf' >>> (KVA) Vertical Anisotropy (IDF) <<<
+
+0001,(SHD),1, Starting Heads
+001,030
+ 1,2, 001,   1.000000    ,   0.000000    ,  -999.9900    ,          '$DBASE$\TUTORIALS\TUT_iMOD-WQ_SEAWAT\DBASE\bas\starting_head_l1.idf' >>> (SHD) Starting Heads (IDF) <<<
+ 1,2, 002,   1.000000    ,   0.000000    ,  -999.9900    ,          '$DBASE$\TUTORIALS\TUT_iMOD-WQ_SEAWAT\DBASE\bas\starting_head_l2.idf' >>> (SHD) Starting Heads (IDF) <<<
+ 1,2, 003,   1.000000    ,   0.000000    ,  -999.9900    ,          '$DBASE$\TUTORIALS\TUT_iMOD-WQ_SEAWAT\DBASE\bas\starting_head_l3.idf' >>> (SHD) Starting Heads (IDF) <<<
+ 1,2, 004,   1.000000    ,   0.000000    ,  -999.9900    ,          '$DBASE$\TUTORIALS\TUT_iMOD-WQ_SEAWAT\DBASE\bas\starting_head_l4.idf' >>> (SHD) Starting Heads (IDF) <<<
+ 1,2, 005,   1.000000    ,   0.000000    ,  -999.9900    ,          '$DBASE$\TUTORIALS\TUT_iMOD-WQ_SEAWAT\DBASE\bas\starting_head_l5.idf' >>> (SHD) Starting Heads (IDF) <<<
+ 1,2, 006,   1.000000    ,   0.000000    ,  -999.9900    ,          '$DBASE$\TUTORIALS\TUT_iMOD-WQ_SEAWAT\DBASE\bas\starting_head_l6.idf' >>> (SHD) Starting Heads (IDF) <<<
+ 1,2, 007,   1.000000    ,   0.000000    ,  -999.9900    ,          '$DBASE$\TUTORIALS\TUT_iMOD-WQ_SEAWAT\DBASE\bas\starting_head_l7.idf' >>> (SHD) Starting Heads (IDF) <<<
+ 1,2, 008,   1.000000    ,   0.000000    ,  -999.9900    ,          '$DBASE$\TUTORIALS\TUT_iMOD-WQ_SEAWAT\DBASE\bas\starting_head_l8.idf' >>> (SHD) Starting Heads (IDF) <<<
+ 1,2, 009,   1.000000    ,   0.000000    ,  -999.9900    ,          '$DBASE$\TUTORIALS\TUT_iMOD-WQ_SEAWAT\DBASE\bas\starting_head_l9.idf' >>> (SHD) Starting Heads (IDF) <<<
+ 1,2, 010,   1.000000    ,   0.000000    ,  -999.9900    ,         '$DBASE$\TUTORIALS\TUT_iMOD-WQ_SEAWAT\DBASE\bas\starting_head_l10.idf' >>> (SHD) Starting Heads (IDF) <<<
+ 1,2, 011,   1.000000    ,   0.000000    ,  -999.9900    ,         '$DBASE$\TUTORIALS\TUT_iMOD-WQ_SEAWAT\DBASE\bas\starting_head_l11.idf' >>> (SHD) Starting Heads (IDF) <<<
+ 1,2, 012,   1.000000    ,   0.000000    ,  -999.9900    ,         '$DBASE$\TUTORIALS\TUT_iMOD-WQ_SEAWAT\DBASE\bas\starting_head_l12.idf' >>> (SHD) Starting Heads (IDF) <<<
+ 1,2, 013,   1.000000    ,   0.000000    ,  -999.9900    ,         '$DBASE$\TUTORIALS\TUT_iMOD-WQ_SEAWAT\DBASE\bas\starting_head_l13.idf' >>> (SHD) Starting Heads (IDF) <<<
+ 1,2, 014,   1.000000    ,   0.000000    ,  -999.9900    ,         '$DBASE$\TUTORIALS\TUT_iMOD-WQ_SEAWAT\DBASE\bas\starting_head_l14.idf' >>> (SHD) Starting Heads (IDF) <<<
+ 1,2, 015,   1.000000    ,   0.000000    ,  -999.9900    ,         '$DBASE$\TUTORIALS\TUT_iMOD-WQ_SEAWAT\DBASE\bas\starting_head_l15.idf' >>> (SHD) Starting Heads (IDF) <<<
+ 1,2, 016,   1.000000    ,   0.000000    ,  -999.9900    ,         '$DBASE$\TUTORIALS\TUT_iMOD-WQ_SEAWAT\DBASE\bas\starting_head_l16.idf' >>> (SHD) Starting Heads (IDF) <<<
+ 1,2, 017,   1.000000    ,   0.000000    ,  -999.9900    ,         '$DBASE$\TUTORIALS\TUT_iMOD-WQ_SEAWAT\DBASE\bas\starting_head_l17.idf' >>> (SHD) Starting Heads (IDF) <<<
+ 1,2, 018,   1.000000    ,   0.000000    ,  -999.9900    ,         '$DBASE$\TUTORIALS\TUT_iMOD-WQ_SEAWAT\DBASE\bas\starting_head_l18.idf' >>> (SHD) Starting Heads (IDF) <<<
+ 1,2, 019,   1.000000    ,   0.000000    ,  -999.9900    ,         '$DBASE$\TUTORIALS\TUT_iMOD-WQ_SEAWAT\DBASE\bas\starting_head_l19.idf' >>> (SHD) Starting Heads (IDF) <<<
+ 1,2, 020,   1.000000    ,   0.000000    ,  -999.9900    ,         '$DBASE$\TUTORIALS\TUT_iMOD-WQ_SEAWAT\DBASE\bas\starting_head_l20.idf' >>> (SHD) Starting Heads (IDF) <<<
+ 1,2, 021,   1.000000    ,   0.000000    ,  -999.9900    ,         '$DBASE$\TUTORIALS\TUT_iMOD-WQ_SEAWAT\DBASE\bas\starting_head_l21.idf' >>> (SHD) Starting Heads (IDF) <<<
+ 1,2, 022,   1.000000    ,   0.000000    ,  -999.9900    ,         '$DBASE$\TUTORIALS\TUT_iMOD-WQ_SEAWAT\DBASE\bas\starting_head_l22.idf' >>> (SHD) Starting Heads (IDF) <<<
+ 1,2, 023,   1.000000    ,   0.000000    ,  -999.9900    ,         '$DBASE$\TUTORIALS\TUT_iMOD-WQ_SEAWAT\DBASE\bas\starting_head_l23.idf' >>> (SHD) Starting Heads (IDF) <<<
+ 1,2, 024,   1.000000    ,   0.000000    ,  -999.9900    ,         '$DBASE$\TUTORIALS\TUT_iMOD-WQ_SEAWAT\DBASE\bas\starting_head_l24.idf' >>> (SHD) Starting Heads (IDF) <<<
+ 1,2, 025,   1.000000    ,   0.000000    ,  -999.9900    ,         '$DBASE$\TUTORIALS\TUT_iMOD-WQ_SEAWAT\DBASE\bas\starting_head_l25.idf' >>> (SHD) Starting Heads (IDF) <<<
+ 1,2, 026,   1.000000    ,   0.000000    ,  -999.9900    ,         '$DBASE$\TUTORIALS\TUT_iMOD-WQ_SEAWAT\DBASE\bas\starting_head_l26.idf' >>> (SHD) Starting Heads (IDF) <<<
+ 1,2, 027,   1.000000    ,   0.000000    ,  -999.9900    ,         '$DBASE$\TUTORIALS\TUT_iMOD-WQ_SEAWAT\DBASE\bas\starting_head_l27.idf' >>> (SHD) Starting Heads (IDF) <<<
+ 1,2, 028,   1.000000    ,   0.000000    ,  -999.9900    ,         '$DBASE$\TUTORIALS\TUT_iMOD-WQ_SEAWAT\DBASE\bas\starting_head_l28.idf' >>> (SHD) Starting Heads (IDF) <<<
+ 1,2, 029,   1.000000    ,   0.000000    ,  -999.9900    ,         '$DBASE$\TUTORIALS\TUT_iMOD-WQ_SEAWAT\DBASE\bas\starting_head_l29.idf' >>> (SHD) Starting Heads (IDF) <<<
+ 1,2, 030,   1.000000    ,   0.000000    ,  -999.9900    ,         '$DBASE$\TUTORIALS\TUT_iMOD-WQ_SEAWAT\DBASE\bas\starting_head_l30.idf' >>> (SHD) Starting Heads (IDF) <<<
+ 
+0001,(STO),1, Confined Storage Coefficient
+001,030
+ 1,2, 001,   1.000000    ,   0.000000    ,  -999.9900    ,       '$DBASE$\TUTORIALS\TUT_iMOD-WQ_SEAWAT\DBASE\lpf\specific_storage_l1.idf' >>> (STO) Storage Coefficient (IDF) <<<
+ 1,2, 002,   1.000000    ,   0.000000    ,  -999.9900    ,       '$DBASE$\TUTORIALS\TUT_iMOD-WQ_SEAWAT\DBASE\lpf\specific_storage_l2.idf' >>> (STO) Storage Coefficient (IDF) <<<
+ 1,2, 003,   1.000000    ,   0.000000    ,  -999.9900    ,       '$DBASE$\TUTORIALS\TUT_iMOD-WQ_SEAWAT\DBASE\lpf\specific_storage_l3.idf' >>> (STO) Storage Coefficient (IDF) <<<
+ 1,2, 004,   1.000000    ,   0.000000    ,  -999.9900    ,       '$DBASE$\TUTORIALS\TUT_iMOD-WQ_SEAWAT\DBASE\lpf\specific_storage_l4.idf' >>> (STO) Storage Coefficient (IDF) <<<
+ 1,2, 005,   1.000000    ,   0.000000    ,  -999.9900    ,       '$DBASE$\TUTORIALS\TUT_iMOD-WQ_SEAWAT\DBASE\lpf\specific_storage_l5.idf' >>> (STO) Storage Coefficient (IDF) <<<
+ 1,2, 006,   1.000000    ,   0.000000    ,  -999.9900    ,       '$DBASE$\TUTORIALS\TUT_iMOD-WQ_SEAWAT\DBASE\lpf\specific_storage_l6.idf' >>> (STO) Storage Coefficient (IDF) <<<
+ 1,2, 007,   1.000000    ,   0.000000    ,  -999.9900    ,       '$DBASE$\TUTORIALS\TUT_iMOD-WQ_SEAWAT\DBASE\lpf\specific_storage_l7.idf' >>> (STO) Storage Coefficient (IDF) <<<
+ 1,2, 008,   1.000000    ,   0.000000    ,  -999.9900    ,       '$DBASE$\TUTORIALS\TUT_iMOD-WQ_SEAWAT\DBASE\lpf\specific_storage_l8.idf' >>> (STO) Storage Coefficient (IDF) <<<
+ 1,2, 009,   1.000000    ,   0.000000    ,  -999.9900    ,       '$DBASE$\TUTORIALS\TUT_iMOD-WQ_SEAWAT\DBASE\lpf\specific_storage_l9.idf' >>> (STO) Storage Coefficient (IDF) <<<
+ 1,2, 010,   1.000000    ,   0.000000    ,  -999.9900    ,      '$DBASE$\TUTORIALS\TUT_iMOD-WQ_SEAWAT\DBASE\lpf\specific_storage_l10.idf' >>> (STO) Storage Coefficient (IDF) <<<
+ 1,2, 011,   1.000000    ,   0.000000    ,  -999.9900    ,      '$DBASE$\TUTORIALS\TUT_iMOD-WQ_SEAWAT\DBASE\lpf\specific_storage_l11.idf' >>> (STO) Storage Coefficient (IDF) <<<
+ 1,2, 012,   1.000000    ,   0.000000    ,  -999.9900    ,      '$DBASE$\TUTORIALS\TUT_iMOD-WQ_SEAWAT\DBASE\lpf\specific_storage_l12.idf' >>> (STO) Storage Coefficient (IDF) <<<
+ 1,2, 013,   1.000000    ,   0.000000    ,  -999.9900    ,      '$DBASE$\TUTORIALS\TUT_iMOD-WQ_SEAWAT\DBASE\lpf\specific_storage_l13.idf' >>> (STO) Storage Coefficient (IDF) <<<
+ 1,2, 014,   1.000000    ,   0.000000    ,  -999.9900    ,      '$DBASE$\TUTORIALS\TUT_iMOD-WQ_SEAWAT\DBASE\lpf\specific_storage_l14.idf' >>> (STO) Storage Coefficient (IDF) <<<
+ 1,2, 015,   1.000000    ,   0.000000    ,  -999.9900    ,      '$DBASE$\TUTORIALS\TUT_iMOD-WQ_SEAWAT\DBASE\lpf\specific_storage_l15.idf' >>> (STO) Storage Coefficient (IDF) <<<
+ 1,2, 016,   1.000000    ,   0.000000    ,  -999.9900    ,      '$DBASE$\TUTORIALS\TUT_iMOD-WQ_SEAWAT\DBASE\lpf\specific_storage_l16.idf' >>> (STO) Storage Coefficient (IDF) <<<
+ 1,2, 017,   1.000000    ,   0.000000    ,  -999.9900    ,      '$DBASE$\TUTORIALS\TUT_iMOD-WQ_SEAWAT\DBASE\lpf\specific_storage_l17.idf' >>> (STO) Storage Coefficient (IDF) <<<
+ 1,2, 018,   1.000000    ,   0.000000    ,  -999.9900    ,      '$DBASE$\TUTORIALS\TUT_iMOD-WQ_SEAWAT\DBASE\lpf\specific_storage_l18.idf' >>> (STO) Storage Coefficient (IDF) <<<
+ 1,2, 019,   1.000000    ,   0.000000    ,  -999.9900    ,      '$DBASE$\TUTORIALS\TUT_iMOD-WQ_SEAWAT\DBASE\lpf\specific_storage_l19.idf' >>> (STO) Storage Coefficient (IDF) <<<
+ 1,2, 020,   1.000000    ,   0.000000    ,  -999.9900    ,      '$DBASE$\TUTORIALS\TUT_iMOD-WQ_SEAWAT\DBASE\lpf\specific_storage_l20.idf' >>> (STO) Storage Coefficient (IDF) <<<
+ 1,2, 021,   1.000000    ,   0.000000    ,  -999.9900    ,      '$DBASE$\TUTORIALS\TUT_iMOD-WQ_SEAWAT\DBASE\lpf\specific_storage_l21.idf' >>> (STO) Storage Coefficient (IDF) <<<
+ 1,2, 022,   1.000000    ,   0.000000    ,  -999.9900    ,      '$DBASE$\TUTORIALS\TUT_iMOD-WQ_SEAWAT\DBASE\lpf\specific_storage_l22.idf' >>> (STO) Storage Coefficient (IDF) <<<
+ 1,2, 023,   1.000000    ,   0.000000    ,  -999.9900    ,      '$DBASE$\TUTORIALS\TUT_iMOD-WQ_SEAWAT\DBASE\lpf\specific_storage_l23.idf' >>> (STO) Storage Coefficient (IDF) <<<
+ 1,2, 024,   1.000000    ,   0.000000    ,  -999.9900    ,      '$DBASE$\TUTORIALS\TUT_iMOD-WQ_SEAWAT\DBASE\lpf\specific_storage_l24.idf' >>> (STO) Storage Coefficient (IDF) <<<
+ 1,2, 025,   1.000000    ,   0.000000    ,  -999.9900    ,      '$DBASE$\TUTORIALS\TUT_iMOD-WQ_SEAWAT\DBASE\lpf\specific_storage_l25.idf' >>> (STO) Storage Coefficient (IDF) <<<
+ 1,2, 026,   1.000000    ,   0.000000    ,  -999.9900    ,      '$DBASE$\TUTORIALS\TUT_iMOD-WQ_SEAWAT\DBASE\lpf\specific_storage_l26.idf' >>> (STO) Storage Coefficient (IDF) <<<
+ 1,2, 027,   1.000000    ,   0.000000    ,  -999.9900    ,      '$DBASE$\TUTORIALS\TUT_iMOD-WQ_SEAWAT\DBASE\lpf\specific_storage_l27.idf' >>> (STO) Storage Coefficient (IDF) <<<
+ 1,2, 028,   1.000000    ,   0.000000    ,  -999.9900    ,      '$DBASE$\TUTORIALS\TUT_iMOD-WQ_SEAWAT\DBASE\lpf\specific_storage_l28.idf' >>> (STO) Storage Coefficient (IDF) <<<
+ 1,2, 029,   1.000000    ,   0.000000    ,  -999.9900    ,      '$DBASE$\TUTORIALS\TUT_iMOD-WQ_SEAWAT\DBASE\lpf\specific_storage_l29.idf' >>> (STO) Storage Coefficient (IDF) <<<
+ 1,2, 030,   1.000000    ,   0.000000    ,  -999.9900    ,      '$DBASE$\TUTORIALS\TUT_iMOD-WQ_SEAWAT\DBASE\lpf\specific_storage_l30.idf' >>> (STO) Storage Coefficient (IDF) <<<
+
+0001,(SPY),1, Specific Yield
+001,030
+ 1,1, 001,   1.000000    ,   0.000000    ,  0.1500000    ,                                                                            '' >>> (SSY) Specific Yield / Confined Storage Coef. (IDF) <<<
+ 1,1, 002,   1.000000    ,   0.000000    ,  0.1500000    ,                                                                            '' >>> (SSY) Specific Yield / Confined Storage Coef. (IDF) <<<
+ 1,1, 003,   1.000000    ,   0.000000    ,  0.1500000    ,                                                                            '' >>> (SSY) Specific Yield / Confined Storage Coef. (IDF) <<<
+ 1,1, 004,   1.000000    ,   0.000000    ,  0.1500000    ,                                                                            '' >>> (SSY) Specific Yield / Confined Storage Coef. (IDF) <<<
+ 1,1, 005,   1.000000    ,   0.000000    ,  0.1500000    ,                                                                            '' >>> (SSY) Specific Yield / Confined Storage Coef. (IDF) <<<
+ 1,1, 006,   1.000000    ,   0.000000    ,  0.1500000    ,                                                                            '' >>> (SSY) Specific Yield / Confined Storage Coef. (IDF) <<<
+ 1,1, 007,   1.000000    ,   0.000000    ,  0.1500000    ,                                                                            '' >>> (SSY) Specific Yield / Confined Storage Coef. (IDF) <<<
+ 1,1, 008,   1.000000    ,   0.000000    ,  0.1500000    ,                                                                            '' >>> (SSY) Specific Yield / Confined Storage Coef. (IDF) <<<
+ 1,1, 009,   1.000000    ,   0.000000    ,  0.1500000    ,                                                                            '' >>> (SSY) Specific Yield / Confined Storage Coef. (IDF) <<<
+ 1,1, 010,   1.000000    ,   0.000000    ,  0.1500000    ,                                                                            '' >>> (SSY) Specific Yield / Confined Storage Coef. (IDF) <<<
+ 1,1, 011,   1.000000    ,   0.000000    ,  0.1500000    ,                                                                            '' >>> (SSY) Specific Yield / Confined Storage Coef. (IDF) <<<
+ 1,1, 012,   1.000000    ,   0.000000    ,  0.1500000    ,                                                                            '' >>> (SSY) Specific Yield / Confined Storage Coef. (IDF) <<<
+ 1,1, 013,   1.000000    ,   0.000000    ,  0.1500000    ,                                                                            '' >>> (SSY) Specific Yield / Confined Storage Coef. (IDF) <<<
+ 1,1, 014,   1.000000    ,   0.000000    ,  0.1500000    ,                                                                            '' >>> (SSY) Specific Yield / Confined Storage Coef. (IDF) <<<
+ 1,1, 015,   1.000000    ,   0.000000    ,  0.1500000    ,                                                                            '' >>> (SSY) Specific Yield / Confined Storage Coef. (IDF) <<<
+ 1,1, 016,   1.000000    ,   0.000000    ,  0.1500000    ,                                                                            '' >>> (SSY) Specific Yield / Confined Storage Coef. (IDF) <<<
+ 1,1, 017,   1.000000    ,   0.000000    ,  0.1500000    ,                                                                            '' >>> (SSY) Specific Yield / Confined Storage Coef. (IDF) <<<
+ 1,1, 018,   1.000000    ,   0.000000    ,  0.1500000    ,                                                                            '' >>> (SSY) Specific Yield / Confined Storage Coef. (IDF) <<<
+ 1,1, 019,   1.000000    ,   0.000000    ,  0.1500000    ,                                                                            '' >>> (SSY) Specific Yield / Confined Storage Coef. (IDF) <<<
+ 1,1, 020,   1.000000    ,   0.000000    ,  0.1500000    ,                                                                            '' >>> (SSY) Specific Yield / Confined Storage Coef. (IDF) <<<
+ 1,1, 021,   1.000000    ,   0.000000    ,  0.1500000    ,                                                                            '' >>> (SSY) Specific Yield / Confined Storage Coef. (IDF) <<<
+ 1,1, 022,   1.000000    ,   0.000000    ,  0.1500000    ,                                                                            '' >>> (SSY) Specific Yield / Confined Storage Coef. (IDF) <<<
+ 1,1, 023,   1.000000    ,   0.000000    ,  0.1500000    ,                                                                            '' >>> (SSY) Specific Yield / Confined Storage Coef. (IDF) <<<
+ 1,1, 024,   1.000000    ,   0.000000    ,  0.1500000    ,                                                                            '' >>> (SSY) Specific Yield / Confined Storage Coef. (IDF) <<<
+ 1,1, 025,   1.000000    ,   0.000000    ,  0.1500000    ,                                                                            '' >>> (SSY) Specific Yield / Confined Storage Coef. (IDF) <<<
+ 1,1, 026,   1.000000    ,   0.000000    ,  0.1500000    ,                                                                            '' >>> (SSY) Specific Yield / Confined Storage Coef. (IDF) <<<
+ 1,1, 027,   1.000000    ,   0.000000    ,  0.1500000    ,                                                                            '' >>> (SSY) Specific Yield / Confined Storage Coef. (IDF) <<<
+ 1,1, 028,   1.000000    ,   0.000000    ,  0.1500000    ,                                                                            '' >>> (SSY) Specific Yield / Confined Storage Coef. (IDF) <<<
+ 1,1, 029,   1.000000    ,   0.000000    ,  0.1500000    ,                                                                            '' >>> (SSY) Specific Yield / Confined Storage Coef. (IDF) <<<
+ 1,1, 030,   1.000000    ,   0.000000    ,  0.1500000    ,                                                                            '' >>> (SSY) Specific Yield / Confined Storage Coef. (IDF) <<<
+
+0001,(POR),1, Porosity
+001,030
+ 1,2, 001,   1.000000    ,   0.000000    ,  -999.9900    ,               '$DBASE$\TUTORIALS\TUT_iMOD-WQ_SEAWAT\DBASE\btn\porosity_l1.idf' >>> (POR) Porosity POR (IDF) <<<
+ 1,2, 002,   1.000000    ,   0.000000    ,  -999.9900    ,               '$DBASE$\TUTORIALS\TUT_iMOD-WQ_SEAWAT\DBASE\btn\porosity_l2.idf' >>> (POR) Porosity POR (IDF) <<<
+ 1,2, 003,   1.000000    ,   0.000000    ,  -999.9900    ,               '$DBASE$\TUTORIALS\TUT_iMOD-WQ_SEAWAT\DBASE\btn\porosity_l3.idf' >>> (POR) Porosity POR (IDF) <<<
+ 1,2, 004,   1.000000    ,   0.000000    ,  -999.9900    ,               '$DBASE$\TUTORIALS\TUT_iMOD-WQ_SEAWAT\DBASE\btn\porosity_l4.idf' >>> (POR) Porosity POR (IDF) <<<
+ 1,2, 005,   1.000000    ,   0.000000    ,  -999.9900    ,               '$DBASE$\TUTORIALS\TUT_iMOD-WQ_SEAWAT\DBASE\btn\porosity_l5.idf' >>> (POR) Porosity POR (IDF) <<<
+ 1,2, 006,   1.000000    ,   0.000000    ,  -999.9900    ,               '$DBASE$\TUTORIALS\TUT_iMOD-WQ_SEAWAT\DBASE\btn\porosity_l6.idf' >>> (POR) Porosity POR (IDF) <<<
+ 1,2, 007,   1.000000    ,   0.000000    ,  -999.9900    ,               '$DBASE$\TUTORIALS\TUT_iMOD-WQ_SEAWAT\DBASE\btn\porosity_l7.idf' >>> (POR) Porosity POR (IDF) <<<
+ 1,2, 008,   1.000000    ,   0.000000    ,  -999.9900    ,               '$DBASE$\TUTORIALS\TUT_iMOD-WQ_SEAWAT\DBASE\btn\porosity_l8.idf' >>> (POR) Porosity POR (IDF) <<<
+ 1,2, 009,   1.000000    ,   0.000000    ,  -999.9900    ,               '$DBASE$\TUTORIALS\TUT_iMOD-WQ_SEAWAT\DBASE\btn\porosity_l9.idf' >>> (POR) Porosity POR (IDF) <<<
+ 1,2, 010,   1.000000    ,   0.000000    ,  -999.9900    ,              '$DBASE$\TUTORIALS\TUT_iMOD-WQ_SEAWAT\DBASE\btn\porosity_l10.idf' >>> (POR) Porosity POR (IDF) <<<
+ 1,2, 011,   1.000000    ,   0.000000    ,  -999.9900    ,              '$DBASE$\TUTORIALS\TUT_iMOD-WQ_SEAWAT\DBASE\btn\porosity_l11.idf' >>> (POR) Porosity POR (IDF) <<<
+ 1,2, 012,   1.000000    ,   0.000000    ,  -999.9900    ,              '$DBASE$\TUTORIALS\TUT_iMOD-WQ_SEAWAT\DBASE\btn\porosity_l12.idf' >>> (POR) Porosity POR (IDF) <<<
+ 1,2, 013,   1.000000    ,   0.000000    ,  -999.9900    ,              '$DBASE$\TUTORIALS\TUT_iMOD-WQ_SEAWAT\DBASE\btn\porosity_l13.idf' >>> (POR) Porosity POR (IDF) <<<
+ 1,2, 014,   1.000000    ,   0.000000    ,  -999.9900    ,              '$DBASE$\TUTORIALS\TUT_iMOD-WQ_SEAWAT\DBASE\btn\porosity_l14.idf' >>> (POR) Porosity POR (IDF) <<<
+ 1,2, 015,   1.000000    ,   0.000000    ,  -999.9900    ,              '$DBASE$\TUTORIALS\TUT_iMOD-WQ_SEAWAT\DBASE\btn\porosity_l15.idf' >>> (POR) Porosity POR (IDF) <<<
+ 1,2, 016,   1.000000    ,   0.000000    ,  -999.9900    ,              '$DBASE$\TUTORIALS\TUT_iMOD-WQ_SEAWAT\DBASE\btn\porosity_l16.idf' >>> (POR) Porosity POR (IDF) <<<
+ 1,2, 017,   1.000000    ,   0.000000    ,  -999.9900    ,              '$DBASE$\TUTORIALS\TUT_iMOD-WQ_SEAWAT\DBASE\btn\porosity_l17.idf' >>> (POR) Porosity POR (IDF) <<<
+ 1,2, 018,   1.000000    ,   0.000000    ,  -999.9900    ,              '$DBASE$\TUTORIALS\TUT_iMOD-WQ_SEAWAT\DBASE\btn\porosity_l18.idf' >>> (POR) Porosity POR (IDF) <<<
+ 1,2, 019,   1.000000    ,   0.000000    ,  -999.9900    ,              '$DBASE$\TUTORIALS\TUT_iMOD-WQ_SEAWAT\DBASE\btn\porosity_l19.idf' >>> (POR) Porosity POR (IDF) <<<
+ 1,2, 020,   1.000000    ,   0.000000    ,  -999.9900    ,              '$DBASE$\TUTORIALS\TUT_iMOD-WQ_SEAWAT\DBASE\btn\porosity_l20.idf' >>> (POR) Porosity POR (IDF) <<<
+ 1,2, 021,   1.000000    ,   0.000000    ,  -999.9900    ,              '$DBASE$\TUTORIALS\TUT_iMOD-WQ_SEAWAT\DBASE\btn\porosity_l21.idf' >>> (POR) Porosity POR (IDF) <<<
+ 1,2, 022,   1.000000    ,   0.000000    ,  -999.9900    ,              '$DBASE$\TUTORIALS\TUT_iMOD-WQ_SEAWAT\DBASE\btn\porosity_l22.idf' >>> (POR) Porosity POR (IDF) <<<
+ 1,2, 023,   1.000000    ,   0.000000    ,  -999.9900    ,              '$DBASE$\TUTORIALS\TUT_iMOD-WQ_SEAWAT\DBASE\btn\porosity_l23.idf' >>> (POR) Porosity POR (IDF) <<<
+ 1,2, 024,   1.000000    ,   0.000000    ,  -999.9900    ,              '$DBASE$\TUTORIALS\TUT_iMOD-WQ_SEAWAT\DBASE\btn\porosity_l24.idf' >>> (POR) Porosity POR (IDF) <<<
+ 1,2, 025,   1.000000    ,   0.000000    ,  -999.9900    ,              '$DBASE$\TUTORIALS\TUT_iMOD-WQ_SEAWAT\DBASE\btn\porosity_l25.idf' >>> (POR) Porosity POR (IDF) <<<
+ 1,2, 026,   1.000000    ,   0.000000    ,  -999.9900    ,              '$DBASE$\TUTORIALS\TUT_iMOD-WQ_SEAWAT\DBASE\btn\porosity_l26.idf' >>> (POR) Porosity POR (IDF) <<<
+ 1,2, 027,   1.000000    ,   0.000000    ,  -999.9900    ,              '$DBASE$\TUTORIALS\TUT_iMOD-WQ_SEAWAT\DBASE\btn\porosity_l27.idf' >>> (POR) Porosity POR (IDF) <<<
+ 1,2, 028,   1.000000    ,   0.000000    ,  -999.9900    ,              '$DBASE$\TUTORIALS\TUT_iMOD-WQ_SEAWAT\DBASE\btn\porosity_l28.idf' >>> (POR) Porosity POR (IDF) <<<
+ 1,2, 029,   1.000000    ,   0.000000    ,  -999.9900    ,              '$DBASE$\TUTORIALS\TUT_iMOD-WQ_SEAWAT\DBASE\btn\porosity_l29.idf' >>> (POR) Porosity POR (IDF) <<<
+ 1,2, 030,   1.000000    ,   0.000000    ,  -999.9900    ,              '$DBASE$\TUTORIALS\TUT_iMOD-WQ_SEAWAT\DBASE\btn\porosity_l30.idf' >>> (POR) Porosity POR (IDF) <<<
+
+0005,(RCH),1, Recharge
+1900-01-01 00:00:00
+002,001
+ 1,2, 001,   1.000000    ,   0.000000    ,  -999.9900    ,                      '$DBASE$\TUTORIALS\TUT_iMOD-WQ_SEAWAT\DBASE\rch\rate.idf' >>> (RCH) Recharge Rate (IDF) <<<
+ 1,1, 001,   1.000000    ,   0.000000    ,   0.000000    ,                                                                            '' >>> SPECIES 1 <<<
+1920-01-01 00:00:00
+002,001
+ 1,2, 001,   1.000000    ,   0.000000    ,  -999.9900    ,                      '$DBASE$\TUTORIALS\TUT_iMOD-WQ_SEAWAT\DBASE\rch\rate.idf' >>> (RCH) Recharge Rate (IDF) <<<
+ 1,1, 001,   1.000000    ,   0.000000    ,   0.000000    ,                                                                            '' >>> SPECIES 1 <<<
+1940-01-01 00:00:00
+002,001
+ 1,2, 001,   1.000000    ,   0.000000    ,  -999.9900    ,                      '$DBASE$\TUTORIALS\TUT_iMOD-WQ_SEAWAT\DBASE\rch\rate.idf' >>> (RCH) Recharge Rate (IDF) <<<
+ 1,1, 001,   1.000000    ,   0.000000    ,   0.000000    ,                                                                            '' >>> SPECIES 1 <<<
+1960-01-01 00:00:00
+002,001
+ 1,2, 001,   1.000000    ,   0.000000    ,  -999.9900    ,                      '$DBASE$\TUTORIALS\TUT_iMOD-WQ_SEAWAT\DBASE\rch\rate.idf' >>> (RCH) Recharge Rate (IDF) <<<
+ 1,1, 001,   1.000000    ,   0.000000    ,   0.000000    ,                                                                            '' >>> SPECIES 1 <<<
+1980-01-01 00:00:00
+002,001
+ 1,2, 001,   1.000000    ,   0.000000    ,  -999.9900    ,                      '$DBASE$\TUTORIALS\TUT_iMOD-WQ_SEAWAT\DBASE\rch\rate.idf' >>> (RCH) Recharge Rate (IDF) <<<
+ 1,1, 001,   1.000000    ,   0.000000    ,   0.000000    ,                                                                            '' >>> SPECIES 1 <<<
+
+0001,(PCG),1, Precondition Conjugate-Gradient
+ MXITER=  150
+ ITER1=   30
+ HCLOSE=  0.1000000E-03
+ RCLOSE=  0.1000000
+ RELAX=   0.9800000
+ NPCOND=  1
+ IPRPCG=  1
+ MUTPCG=  1
+ DAMPPCG= 1.000000
+ DAMPPCGT=1.000000
+ IQERROR= 0
+ QERROR=  0.1000000
+
+0001,(GCG),1, Generalized Conjugate-Gradient
+ MXITER=1000
+ ITER1= 30
+ ISOLVE=3
+ NCRS=  0
+ IPRGCG=0
+ ACCL=  1.000000
+ CCLOSE=0.1000000E-05
+
+0001,(DSP),1, Dispersivity
+004,030
+ 1,1, 001,   1.000000    ,   0.000000    ,   20.00000    ,                                                                            '' >>> (DSP) Longitudinal Dispesivity (IDF) <<<
+ 1,1, 002,   1.000000    ,   0.000000    ,   20.00000    ,                                                                            '' >>> (DSP) Longitudinal Dispesivity (IDF) <<<
+ 1,1, 003,   1.000000    ,   0.000000    ,   20.00000    ,                                                                            '' >>> (DSP) Longitudinal Dispesivity (IDF) <<<
+ 1,1, 004,   1.000000    ,   0.000000    ,   20.00000    ,                                                                            '' >>> (DSP) Longitudinal Dispesivity (IDF) <<<
+ 1,1, 005,   1.000000    ,   0.000000    ,   20.00000    ,                                                                            '' >>> (DSP) Longitudinal Dispesivity (IDF) <<<
+ 1,1, 006,   1.000000    ,   0.000000    ,   20.00000    ,                                                                            '' >>> (DSP) Longitudinal Dispesivity (IDF) <<<
+ 1,1, 007,   1.000000    ,   0.000000    ,   20.00000    ,                                                                            '' >>> (DSP) Longitudinal Dispesivity (IDF) <<<
+ 1,1, 008,   1.000000    ,   0.000000    ,   20.00000    ,                                                                            '' >>> (DSP) Longitudinal Dispesivity (IDF) <<<
+ 1,1, 009,   1.000000    ,   0.000000    ,   20.00000    ,                                                                            '' >>> (DSP) Longitudinal Dispesivity (IDF) <<<
+ 1,1, 010,   1.000000    ,   0.000000    ,   20.00000    ,                                                                            '' >>> (DSP) Longitudinal Dispesivity (IDF) <<<
+ 1,1, 011,   1.000000    ,   0.000000    ,   20.00000    ,                                                                            '' >>> (DSP) Longitudinal Dispesivity (IDF) <<<
+ 1,1, 012,   1.000000    ,   0.000000    ,   20.00000    ,                                                                            '' >>> (DSP) Longitudinal Dispesivity (IDF) <<<
+ 1,1, 013,   1.000000    ,   0.000000    ,   20.00000    ,                                                                            '' >>> (DSP) Longitudinal Dispesivity (IDF) <<<
+ 1,1, 014,   1.000000    ,   0.000000    ,   20.00000    ,                                                                            '' >>> (DSP) Longitudinal Dispesivity (IDF) <<<
+ 1,1, 015,   1.000000    ,   0.000000    ,   20.00000    ,                                                                            '' >>> (DSP) Longitudinal Dispesivity (IDF) <<<
+ 1,1, 016,   1.000000    ,   0.000000    ,   20.00000    ,                                                                            '' >>> (DSP) Longitudinal Dispesivity (IDF) <<<
+ 1,1, 017,   1.000000    ,   0.000000    ,   20.00000    ,                                                                            '' >>> (DSP) Longitudinal Dispesivity (IDF) <<<
+ 1,1, 018,   1.000000    ,   0.000000    ,   20.00000    ,                                                                            '' >>> (DSP) Longitudinal Dispesivity (IDF) <<<
+ 1,1, 019,   1.000000    ,   0.000000    ,   20.00000    ,                                                                            '' >>> (DSP) Longitudinal Dispesivity (IDF) <<<
+ 1,1, 020,   1.000000    ,   0.000000    ,   20.00000    ,                                                                            '' >>> (DSP) Longitudinal Dispesivity (IDF) <<<
+ 1,1, 021,   1.000000    ,   0.000000    ,   20.00000    ,                                                                            '' >>> (DSP) Longitudinal Dispesivity (IDF) <<<
+ 1,1, 022,   1.000000    ,   0.000000    ,   20.00000    ,                                                                            '' >>> (DSP) Longitudinal Dispesivity (IDF) <<<
+ 1,1, 023,   1.000000    ,   0.000000    ,   20.00000    ,                                                                            '' >>> (DSP) Longitudinal Dispesivity (IDF) <<<
+ 1,1, 024,   1.000000    ,   0.000000    ,   20.00000    ,                                                                            '' >>> (DSP) Longitudinal Dispesivity (IDF) <<<
+ 1,1, 025,   1.000000    ,   0.000000    ,   20.00000    ,                                                                            '' >>> (DSP) Longitudinal Dispesivity (IDF) <<<
+ 1,1, 026,   1.000000    ,   0.000000    ,   20.00000    ,                                                                            '' >>> (DSP) Longitudinal Dispesivity (IDF) <<<
+ 1,1, 027,   1.000000    ,   0.000000    ,   20.00000    ,                                                                            '' >>> (DSP) Longitudinal Dispesivity (IDF) <<<
+ 1,1, 028,   1.000000    ,   0.000000    ,   20.00000    ,                                                                            '' >>> (DSP) Longitudinal Dispesivity (IDF) <<<
+ 1,1, 029,   1.000000    ,   0.000000    ,   20.00000    ,                                                                            '' >>> (DSP) Longitudinal Dispesivity (IDF) <<<
+ 1,1, 030,   1.000000    ,   0.000000    ,   20.00000    ,                                                                            '' >>> (DSP) Longitudinal Dispesivity (IDF) <<<
+ 1,1, 001,   1.000000    ,   0.000000    ,  0.1000000    ,                                                                            '' >>> (DSP) Ratio of Horizontal Transverse Dispersivity (IDF) <<<
+ 1,1, 002,   1.000000    ,   0.000000    ,  0.1000000    ,                                                                            '' >>> (DSP) Ratio of Horizontal Transverse Dispersivity (IDF) <<<
+ 1,1, 003,   1.000000    ,   0.000000    ,  0.1000000    ,                                                                            '' >>> (DSP) Ratio of Horizontal Transverse Dispersivity (IDF) <<<
+ 1,1, 004,   1.000000    ,   0.000000    ,  0.1000000    ,                                                                            '' >>> (DSP) Ratio of Horizontal Transverse Dispersivity (IDF) <<<
+ 1,1, 005,   1.000000    ,   0.000000    ,  0.1000000    ,                                                                            '' >>> (DSP) Ratio of Horizontal Transverse Dispersivity (IDF) <<<
+ 1,1, 006,   1.000000    ,   0.000000    ,  0.1000000    ,                                                                            '' >>> (DSP) Ratio of Horizontal Transverse Dispersivity (IDF) <<<
+ 1,1, 007,   1.000000    ,   0.000000    ,  0.1000000    ,                                                                            '' >>> (DSP) Ratio of Horizontal Transverse Dispersivity (IDF) <<<
+ 1,1, 008,   1.000000    ,   0.000000    ,  0.1000000    ,                                                                            '' >>> (DSP) Ratio of Horizontal Transverse Dispersivity (IDF) <<<
+ 1,1, 009,   1.000000    ,   0.000000    ,  0.1000000    ,                                                                            '' >>> (DSP) Ratio of Horizontal Transverse Dispersivity (IDF) <<<
+ 1,1, 010,   1.000000    ,   0.000000    ,  0.1000000    ,                                                                            '' >>> (DSP) Ratio of Horizontal Transverse Dispersivity (IDF) <<<
+ 1,1, 011,   1.000000    ,   0.000000    ,  0.1000000    ,                                                                            '' >>> (DSP) Ratio of Horizontal Transverse Dispersivity (IDF) <<<
+ 1,1, 012,   1.000000    ,   0.000000    ,  0.1000000    ,                                                                            '' >>> (DSP) Ratio of Horizontal Transverse Dispersivity (IDF) <<<
+ 1,1, 013,   1.000000    ,   0.000000    ,  0.1000000    ,                                                                            '' >>> (DSP) Ratio of Horizontal Transverse Dispersivity (IDF) <<<
+ 1,1, 014,   1.000000    ,   0.000000    ,  0.1000000    ,                                                                            '' >>> (DSP) Ratio of Horizontal Transverse Dispersivity (IDF) <<<
+ 1,1, 015,   1.000000    ,   0.000000    ,  0.1000000    ,                                                                            '' >>> (DSP) Ratio of Horizontal Transverse Dispersivity (IDF) <<<
+ 1,1, 016,   1.000000    ,   0.000000    ,  0.1000000    ,                                                                            '' >>> (DSP) Ratio of Horizontal Transverse Dispersivity (IDF) <<<
+ 1,1, 017,   1.000000    ,   0.000000    ,  0.1000000    ,                                                                            '' >>> (DSP) Ratio of Horizontal Transverse Dispersivity (IDF) <<<
+ 1,1, 018,   1.000000    ,   0.000000    ,  0.1000000    ,                                                                            '' >>> (DSP) Ratio of Horizontal Transverse Dispersivity (IDF) <<<
+ 1,1, 019,   1.000000    ,   0.000000    ,  0.1000000    ,                                                                            '' >>> (DSP) Ratio of Horizontal Transverse Dispersivity (IDF) <<<
+ 1,1, 020,   1.000000    ,   0.000000    ,  0.1000000    ,                                                                            '' >>> (DSP) Ratio of Horizontal Transverse Dispersivity (IDF) <<<
+ 1,1, 021,   1.000000    ,   0.000000    ,  0.1000000    ,                                                                            '' >>> (DSP) Ratio of Horizontal Transverse Dispersivity (IDF) <<<
+ 1,1, 022,   1.000000    ,   0.000000    ,  0.1000000    ,                                                                            '' >>> (DSP) Ratio of Horizontal Transverse Dispersivity (IDF) <<<
+ 1,1, 023,   1.000000    ,   0.000000    ,  0.1000000    ,                                                                            '' >>> (DSP) Ratio of Horizontal Transverse Dispersivity (IDF) <<<
+ 1,1, 024,   1.000000    ,   0.000000    ,  0.1000000    ,                                                                            '' >>> (DSP) Ratio of Horizontal Transverse Dispersivity (IDF) <<<
+ 1,1, 025,   1.000000    ,   0.000000    ,  0.1000000    ,                                                                            '' >>> (DSP) Ratio of Horizontal Transverse Dispersivity (IDF) <<<
+ 1,1, 026,   1.000000    ,   0.000000    ,  0.1000000    ,                                                                            '' >>> (DSP) Ratio of Horizontal Transverse Dispersivity (IDF) <<<
+ 1,1, 027,   1.000000    ,   0.000000    ,  0.1000000    ,                                                                            '' >>> (DSP) Ratio of Horizontal Transverse Dispersivity (IDF) <<<
+ 1,1, 028,   1.000000    ,   0.000000    ,  0.1000000    ,                                                                            '' >>> (DSP) Ratio of Horizontal Transverse Dispersivity (IDF) <<<
+ 1,1, 029,   1.000000    ,   0.000000    ,  0.1000000    ,                                                                            '' >>> (DSP) Ratio of Horizontal Transverse Dispersivity (IDF) <<<
+ 1,1, 030,   1.000000    ,   0.000000    ,  0.1000000    ,                                                                            '' >>> (DSP) Ratio of Horizontal Transverse Dispersivity (IDF) <<<
+ 1,1, 001,   1.000000    ,   0.000000    ,  0.1000000    ,                                                                            '' >>> (DSP) Ratio of Vertical Transverse Dispersivity (IDF) <<<
+ 1,1, 002,   1.000000    ,   0.000000    ,  0.1000000    ,                                                                            '' >>> (DSP) Ratio of Vertical Transverse Dispersivity (IDF) <<<
+ 1,1, 003,   1.000000    ,   0.000000    ,  0.1000000    ,                                                                            '' >>> (DSP) Ratio of Vertical Transverse Dispersivity (IDF) <<<
+ 1,1, 004,   1.000000    ,   0.000000    ,  0.1000000    ,                                                                            '' >>> (DSP) Ratio of Vertical Transverse Dispersivity (IDF) <<<
+ 1,1, 005,   1.000000    ,   0.000000    ,  0.1000000    ,                                                                            '' >>> (DSP) Ratio of Vertical Transverse Dispersivity (IDF) <<<
+ 1,1, 006,   1.000000    ,   0.000000    ,  0.1000000    ,                                                                            '' >>> (DSP) Ratio of Vertical Transverse Dispersivity (IDF) <<<
+ 1,1, 007,   1.000000    ,   0.000000    ,  0.1000000    ,                                                                            '' >>> (DSP) Ratio of Vertical Transverse Dispersivity (IDF) <<<
+ 1,1, 008,   1.000000    ,   0.000000    ,  0.1000000    ,                                                                            '' >>> (DSP) Ratio of Vertical Transverse Dispersivity (IDF) <<<
+ 1,1, 009,   1.000000    ,   0.000000    ,  0.1000000    ,                                                                            '' >>> (DSP) Ratio of Vertical Transverse Dispersivity (IDF) <<<
+ 1,1, 010,   1.000000    ,   0.000000    ,  0.1000000    ,                                                                            '' >>> (DSP) Ratio of Vertical Transverse Dispersivity (IDF) <<<
+ 1,1, 011,   1.000000    ,   0.000000    ,  0.1000000    ,                                                                            '' >>> (DSP) Ratio of Vertical Transverse Dispersivity (IDF) <<<
+ 1,1, 012,   1.000000    ,   0.000000    ,  0.1000000    ,                                                                            '' >>> (DSP) Ratio of Vertical Transverse Dispersivity (IDF) <<<
+ 1,1, 013,   1.000000    ,   0.000000    ,  0.1000000    ,                                                                            '' >>> (DSP) Ratio of Vertical Transverse Dispersivity (IDF) <<<
+ 1,1, 014,   1.000000    ,   0.000000    ,  0.1000000    ,                                                                            '' >>> (DSP) Ratio of Vertical Transverse Dispersivity (IDF) <<<
+ 1,1, 015,   1.000000    ,   0.000000    ,  0.1000000    ,                                                                            '' >>> (DSP) Ratio of Vertical Transverse Dispersivity (IDF) <<<
+ 1,1, 016,   1.000000    ,   0.000000    ,  0.1000000    ,                                                                            '' >>> (DSP) Ratio of Vertical Transverse Dispersivity (IDF) <<<
+ 1,1, 017,   1.000000    ,   0.000000    ,  0.1000000    ,                                                                            '' >>> (DSP) Ratio of Vertical Transverse Dispersivity (IDF) <<<
+ 1,1, 018,   1.000000    ,   0.000000    ,  0.1000000    ,                                                                            '' >>> (DSP) Ratio of Vertical Transverse Dispersivity (IDF) <<<
+ 1,1, 019,   1.000000    ,   0.000000    ,  0.1000000    ,                                                                            '' >>> (DSP) Ratio of Vertical Transverse Dispersivity (IDF) <<<
+ 1,1, 020,   1.000000    ,   0.000000    ,  0.1000000    ,                                                                            '' >>> (DSP) Ratio of Vertical Transverse Dispersivity (IDF) <<<
+ 1,1, 021,   1.000000    ,   0.000000    ,  0.1000000    ,                                                                            '' >>> (DSP) Ratio of Vertical Transverse Dispersivity (IDF) <<<
+ 1,1, 022,   1.000000    ,   0.000000    ,  0.1000000    ,                                                                            '' >>> (DSP) Ratio of Vertical Transverse Dispersivity (IDF) <<<
+ 1,1, 023,   1.000000    ,   0.000000    ,  0.1000000    ,                                                                            '' >>> (DSP) Ratio of Vertical Transverse Dispersivity (IDF) <<<
+ 1,1, 024,   1.000000    ,   0.000000    ,  0.1000000    ,                                                                            '' >>> (DSP) Ratio of Vertical Transverse Dispersivity (IDF) <<<
+ 1,1, 025,   1.000000    ,   0.000000    ,  0.1000000    ,                                                                            '' >>> (DSP) Ratio of Vertical Transverse Dispersivity (IDF) <<<
+ 1,1, 026,   1.000000    ,   0.000000    ,  0.1000000    ,                                                                            '' >>> (DSP) Ratio of Vertical Transverse Dispersivity (IDF) <<<
+ 1,1, 027,   1.000000    ,   0.000000    ,  0.1000000    ,                                                                            '' >>> (DSP) Ratio of Vertical Transverse Dispersivity (IDF) <<<
+ 1,1, 028,   1.000000    ,   0.000000    ,  0.1000000    ,                                                                            '' >>> (DSP) Ratio of Vertical Transverse Dispersivity (IDF) <<<
+ 1,1, 029,   1.000000    ,   0.000000    ,  0.1000000    ,                                                                            '' >>> (DSP) Ratio of Vertical Transverse Dispersivity (IDF) <<<
+ 1,1, 030,   1.000000    ,   0.000000    ,  0.1000000    ,                                                                            '' >>> (DSP) Ratio of Vertical Transverse Dispersivity (IDF) <<<
+ 1,1, 001,   1.000000    ,   0.000000    ,   0.000000    ,                                                                            '' >>> (DSP) Effective Molecular Diffusion Coefficient (IDF) <<<
+ 1,1, 002,   1.000000    ,   0.000000    ,   0.000000    ,                                                                            '' >>> (DSP) Effective Molecular Diffusion Coefficient (IDF) <<<
+ 1,1, 003,   1.000000    ,   0.000000    ,   0.000000    ,                                                                            '' >>> (DSP) Effective Molecular Diffusion Coefficient (IDF) <<<
+ 1,1, 004,   1.000000    ,   0.000000    ,   0.000000    ,                                                                            '' >>> (DSP) Effective Molecular Diffusion Coefficient (IDF) <<<
+ 1,1, 005,   1.000000    ,   0.000000    ,   0.000000    ,                                                                            '' >>> (DSP) Effective Molecular Diffusion Coefficient (IDF) <<<
+ 1,1, 006,   1.000000    ,   0.000000    ,   0.000000    ,                                                                            '' >>> (DSP) Effective Molecular Diffusion Coefficient (IDF) <<<
+ 1,1, 007,   1.000000    ,   0.000000    ,   0.000000    ,                                                                            '' >>> (DSP) Effective Molecular Diffusion Coefficient (IDF) <<<
+ 1,1, 008,   1.000000    ,   0.000000    ,   0.000000    ,                                                                            '' >>> (DSP) Effective Molecular Diffusion Coefficient (IDF) <<<
+ 1,1, 009,   1.000000    ,   0.000000    ,   0.000000    ,                                                                            '' >>> (DSP) Effective Molecular Diffusion Coefficient (IDF) <<<
+ 1,1, 010,   1.000000    ,   0.000000    ,   0.000000    ,                                                                            '' >>> (DSP) Effective Molecular Diffusion Coefficient (IDF) <<<
+ 1,1, 011,   1.000000    ,   0.000000    ,   0.000000    ,                                                                            '' >>> (DSP) Effective Molecular Diffusion Coefficient (IDF) <<<
+ 1,1, 012,   1.000000    ,   0.000000    ,   0.000000    ,                                                                            '' >>> (DSP) Effective Molecular Diffusion Coefficient (IDF) <<<
+ 1,1, 013,   1.000000    ,   0.000000    ,   0.000000    ,                                                                            '' >>> (DSP) Effective Molecular Diffusion Coefficient (IDF) <<<
+ 1,1, 014,   1.000000    ,   0.000000    ,   0.000000    ,                                                                            '' >>> (DSP) Effective Molecular Diffusion Coefficient (IDF) <<<
+ 1,1, 015,   1.000000    ,   0.000000    ,   0.000000    ,                                                                            '' >>> (DSP) Effective Molecular Diffusion Coefficient (IDF) <<<
+ 1,1, 016,   1.000000    ,   0.000000    ,   0.000000    ,                                                                            '' >>> (DSP) Effective Molecular Diffusion Coefficient (IDF) <<<
+ 1,1, 017,   1.000000    ,   0.000000    ,   0.000000    ,                                                                            '' >>> (DSP) Effective Molecular Diffusion Coefficient (IDF) <<<
+ 1,1, 018,   1.000000    ,   0.000000    ,   0.000000    ,                                                                            '' >>> (DSP) Effective Molecular Diffusion Coefficient (IDF) <<<
+ 1,1, 019,   1.000000    ,   0.000000    ,   0.000000    ,                                                                            '' >>> (DSP) Effective Molecular Diffusion Coefficient (IDF) <<<
+ 1,1, 020,   1.000000    ,   0.000000    ,   0.000000    ,                                                                            '' >>> (DSP) Effective Molecular Diffusion Coefficient (IDF) <<<
+ 1,1, 021,   1.000000    ,   0.000000    ,   0.000000    ,                                                                            '' >>> (DSP) Effective Molecular Diffusion Coefficient (IDF) <<<
+ 1,1, 022,   1.000000    ,   0.000000    ,   0.000000    ,                                                                            '' >>> (DSP) Effective Molecular Diffusion Coefficient (IDF) <<<
+ 1,1, 023,   1.000000    ,   0.000000    ,   0.000000    ,                                                                            '' >>> (DSP) Effective Molecular Diffusion Coefficient (IDF) <<<
+ 1,1, 024,   1.000000    ,   0.000000    ,   0.000000    ,                                                                            '' >>> (DSP) Effective Molecular Diffusion Coefficient (IDF) <<<
+ 1,1, 025,   1.000000    ,   0.000000    ,   0.000000    ,                                                                            '' >>> (DSP) Effective Molecular Diffusion Coefficient (IDF) <<<
+ 1,1, 026,   1.000000    ,   0.000000    ,   0.000000    ,                                                                            '' >>> (DSP) Effective Molecular Diffusion Coefficient (IDF) <<<
+ 1,1, 027,   1.000000    ,   0.000000    ,   0.000000    ,                                                                            '' >>> (DSP) Effective Molecular Diffusion Coefficient (IDF) <<<
+ 1,1, 028,   1.000000    ,   0.000000    ,   0.000000    ,                                                                            '' >>> (DSP) Effective Molecular Diffusion Coefficient (IDF) <<<
+ 1,1, 029,   1.000000    ,   0.000000    ,   0.000000    ,                                                                            '' >>> (DSP) Effective Molecular Diffusion Coefficient (IDF) <<<
+ 1,1, 030,   1.000000    ,   0.000000    ,   0.000000    ,                                                                            '' >>> (DSP) Effective Molecular Diffusion Coefficient (IDF) <<<
+
+Periods
+"1"
+01-01-1900 00:00:00
+"2"
+01-01-1920 00:00:00
+"3"
+01-01-1940 00:00:00
+"4"
+01-01-1960 00:00:00
+"5"
+01-01-1980 00:00:00
+
+
+Species
+"Chloride",1

@@ -1,0 +1,145 @@
+written by imod v5_1
+
+        30        60        60         4         1         0
+   d   m   k
+ T T T F T F F F F F
+ 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1
+internal 1. (free) 0
+100. 100. 100. 100. 100. 100. 100. 100. 100. 100. 100. 100. 100. 100. 100. 100. 100. 100. 100. 100. 100. 100. 100. 100. 100. 100. 100. 100. 100. 100. 100. 100. 100. 100. 100. 100. 100. 100. 100. 100. 100. 100. 100. 100. 100. 100. 100. 100. 100. 100. 100. 100. 100. 100. 100. 100. 100. 100. 100. 100.
+internal 1. (free) 0
+100. 100. 100. 100. 100. 100. 100. 100. 100. 100. 100. 100. 100. 100. 100. 100. 100. 100. 100. 100. 100. 100. 100. 100. 100. 100. 100. 100. 100. 100. 100. 100. 100. 100. 100. 100. 100. 100. 100. 100. 100. 100. 100. 100. 100. 100. 100. 100. 100. 100. 100. 100. 100. 100. 100. 100. 100. 100. 100. 100.
+external 42 1. (idf) -1
+external 43 1. (idf) -1
+external 44 1. (idf) -1
+external 45 1. (idf) -1
+external 46 1. (idf) -1
+external 47 1. (idf) -1
+external 48 1. (idf) -1
+external 49 1. (idf) -1
+external 50 1. (idf) -1
+external 51 1. (idf) -1
+external 52 1. (idf) -1
+external 53 1. (idf) -1
+external 54 1. (idf) -1
+external 55 1. (idf) -1
+external 56 1. (idf) -1
+external 57 1. (idf) -1
+external 58 1. (idf) -1
+external 59 1. (idf) -1
+external 60 1. (idf) -1
+external 61 1. (idf) -1
+external 62 1. (idf) -1
+external 63 1. (idf) -1
+external 64 1. (idf) -1
+external 65 1. (idf) -1
+external 66 1. (idf) -1
+external 67 1. (idf) -1
+external 68 1. (idf) -1
+external 69 1. (idf) -1
+external 70 1. (idf) -1
+external 71 1. (idf) -1
+external 72 1. (idf) -1
+external 73 1. (idf) -1
+external 74 1. (idf) -1
+external 75 1. (idf) -1
+external 76 1. (idf) -1
+external 77 1. (idf) -1
+external 78 1. (idf) -1
+external 79 1. (idf) -1
+external 80 1. (idf) -1
+external 81 1. (idf) -1
+external 82 1. (idf) -1
+external 83 1. (idf) -1
+external 84 1. (idf) -1
+external 85 1. (idf) -1
+external 86 1. (idf) -1
+external 87 1. (idf) -1
+external 88 1. (idf) -1
+external 89 1. (idf) -1
+external 90 1. (idf) -1
+external 91 1. (idf) -1
+external 92 1. (idf) -1
+external 93 1. (idf) -1
+external 94 1. (idf) -1
+external 95 1. (idf) -1
+external 96 1. (idf) -1
+external 97 1. (idf) -1
+external 98 1. (idf) -1
+external 104 1. (idf) -1
+external 105 1. (idf) -1
+external 106 1. (idf) -1
+external 107 1. (idf) -1
+external 108 1 (idf) -1
+external 109 1 (idf) -1
+external 110 1 (idf) -1
+external 111 1 (idf) -1
+external 112 1 (idf) -1
+external 113 1 (idf) -1
+external 114 1 (idf) -1
+external 115 1 (idf) -1
+external 116 1 (idf) -1
+external 117 1 (idf) -1
+external 118 1 (idf) -1
+external 119 1 (idf) -1
+external 120 1 (idf) -1
+external 121 1 (idf) -1
+external 122 1 (idf) -1
+external 123 1 (idf) -1
+external 124 1 (idf) -1
+external 125 1 (idf) -1
+external 126 1 (idf) -1
+external 127 1 (idf) -1
+external 128 1 (idf) -1
+external 129 1 (idf) -1
+external 130 1 (idf) -1
+external 131 1 (idf) -1
+external 132 1 (idf) -1
+external 133 1 (idf) -1
+external 134 1 (idf) -1
+external 135 1 (idf) -1
+external 136 1 (idf) -1
+external 137 1 (idf) -1
+external 138 1. (idf) -1
+external 139 1. (idf) -1
+external 140 1. (idf) -1
+external 141 1. (idf) -1
+external 142 1. (idf) -1
+external 143 1. (idf) -1
+external 144 1. (idf) -1
+external 145 1. (idf) -1
+external 146 1. (idf) -1
+external 147 1. (idf) -1
+external 148 1. (idf) -1
+external 149 1. (idf) -1
+external 150 1. (idf) -1
+external 151 1. (idf) -1
+external 152 1. (idf) -1
+external 153 1. (idf) -1
+external 154 1. (idf) -1
+external 155 1. (idf) -1
+external 156 1. (idf) -1
+external 157 1. (idf) -1
+external 158 1. (idf) -1
+external 159 1. (idf) -1
+external 160 1. (idf) -1
+external 161 1. (idf) -1
+external 162 1. (idf) -1
+external 163 1. (idf) -1
+external 164 1. (idf) -1
+external 165 1. (idf) -1
+external 166 1. (idf) -1
+external 167 1. (idf) -1
+    -9999.      0.01
+         0         0         0         0         T
+         1
+      100.
+         0         1
+         T         1
+7304.         1        1.
+   0.0E+00      3000        1.   0.0E+00
+7305.         1        1.
+   0.0E+00      3000        1.   0.0E+00
+7305.         1        1.
+   0.0E+00      3000        1.   0.0E+00
+7305.         1        1.
+   0.0E+00      3000        1.   0.0E+00
