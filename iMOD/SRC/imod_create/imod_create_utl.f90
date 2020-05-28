@@ -71,7 +71,7 @@ USE MOD_CREATEIDF_PAR
  IDIAGERROR=1
 
  IF(SHP%NPOL.GT.0)THEN
-  CALL WMESSAGEBOX(YESNO,QUESTIONICON,COMMONNO,'No saved work/adjustments will be lost if you continue.'//CHAR(13)// &
+  CALL WMESSAGEBOX(YESNO,QUESTIONICON,COMMONNO,'Unsaved work/adjustments will be lost if you continue.'//CHAR(13)// &
    'Are you sure to quit the CREATEGEN-window ?','Question')
   IF(WINFODIALOG(4).NE.1)RETURN
  ENDIF

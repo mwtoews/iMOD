@@ -1197,7 +1197,7 @@ CONTAINS
      IF(LEN_TRIM(PBMAN%OUTPUT).EQ.0)THEN; DIR=PBMAN%RUNFILE(:INDEX(PBMAN%RUNFILE,'\',.TRUE.)-1)
      ELSE; DIR=TRIM(PBMAN%OUTPUT); ENDIF; DIR=TRIM(DIR)//'\GEN'
      !## generate them per submodel and per layer
-     IF(PBMAN%SMTYPE.EQ.1)THEN 
+     IF(PBMAN%SMTYPE.EQ.1)THEN !ASSOCIATED(PBMAN%SM))THEN
       DO I=1,PRJNLAY; CALL PMANAGER_GENERATEMFNETWORKS(PBMAN%GENFNAME,DIR,N,IBATCH,I); ENDDO
      !## generate them for all layers
      ELSE
@@ -1478,10 +1478,13 @@ CONTAINS
 
     !## include conversion from mf6 to idf files
     IF(PBMAN%IFORMAT.EQ.3)THEN
-     WRITE(IU,'(/A)') 'REM ============================================='
-     WRITE(IU,'( A)') 'REM iMOD Batch Script iMOD '//TRIM(RVERSION)
-     WRITE(IU,'( A)') 'REM ============================================='
+     WRITE(IU,'(/A)') 'ECHO OFF'
+     WRITE(IU,'(/A)') 'ECHO MODFLOW finished, postprocessing started '
+     WRITE(IU,'(/A)') 'ECHO ============================================='
+     WRITE(IU,'( A)') 'ECHO iMOD Batch Script iMOD '//TRIM(RVERSION)
+     WRITE(IU,'( A)') 'ECHO ============================================='
      DO J=1,PBMAN%NSUBMODEL
+      WRITE(IU,'(/A)') 'ECHO FUNCTION=MF6TOIDF'
       WRITE(IU,'(/A)') 'ECHO FUNCTION=MF6TOIDF > MF6TOIDF.INI'
       WRITE(IU,'( A)') 'ECHO GRB="'//TRIM(DIR)//'\GWF_'//TRIM(ITOS(J))//'\MODELINPUT\'//TRIM(MNAME)//'.DIS6.GRB" >> MF6TOIDF.INI'
       IF(LSHD)WRITE(IU,'( A)') 'ECHO HED="'//TRIM(DIR)//'\GWF_'//TRIM(ITOS(J))//'\MODELOUTPUT\HEAD\HEAD.HED" >> MF6TOIDF.INI'
@@ -1502,9 +1505,10 @@ CONTAINS
    
     !## include conversion of sfr package into isg-file
     IF(TOPICS(TSFR)%IACT_MODEL.EQ.1)THEN !DEFINED)THEN
-     WRITE(IU,'(/A)') 'REM ============================================='
-     WRITE(IU,'( A)') 'REM iMOD Batch Script iMOD '//TRIM(RVERSION)
-     WRITE(IU,'( A)') 'REM ============================================='
+     WRITE(IU,'(/A)') 'ECHO ============================================='
+     WRITE(IU,'( A)') 'ECHO iMOD Batch Script iMOD '//TRIM(RVERSION)
+     WRITE(IU,'( A)') 'ECHO ============================================='
+     WRITE(IU,'(/A)') 'ECHO FUNCTION=SFRTOISG '
      WRITE(IU,'(/A)') 'ECHO FUNCTION=SFRTOISG > SFRTOISG.INI'
      WRITE(IU,'( A)') 'ECHO ISGFILE_IN= "'//TRIM(DIR)//'\MODELINPUT\SFR7\SFR.ISG" >> SFRTOISG.INI'
      WRITE(IU,'( A)') 'ECHO ISGFILE_OUT="'//TRIM(DIR)//'\BDGSFR\ISG\SFR.ISG" >> SFRTOISG.INI'
