@@ -231,6 +231,7 @@ CONTAINS
   ENDDO
  
   IF(I.EQ.1)THEN
+   IF(NIPF.EQ.0)THEN; WRITE(*,'(/A/)') 'None of the IPF file(s) found:'; STOP; ENDIF
    ALLOCATE(IPFR(NIPF)); N=1
    DO J=1,NIPF
     ALLOCATE(IPFR(J)%X(N),IPFR(J)%Y(N),IPFR(J)%L(N),IPFR(J)%O(N),IPFR(J)%M(N),IPFR(J)%W(N),IPFR(J)%C(N))
