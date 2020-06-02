@@ -4969,11 +4969,10 @@ SOLLOOP: DO I=1,NSOLLIST
  END SUBROUTINE IMOD3D_DRAWGEN
 
  !###======================================================================
- LOGICAL FUNCTION IMOD3D_SOL_ADD() !I_IN,I_OUT)
+ LOGICAL FUNCTION IMOD3D_SOL_ADD() 
  !###======================================================================
  IMPLICIT NONE
  INTEGER :: I,J,II
-! INTEGER,INTENT(OUT),OPTIONAL :: I_IN,I_OUT
  REAL(KIND=DP_KIND) :: XTOL
  CHARACTER(LEN=52) :: CDATE
  INTEGER,DIMENSION(:,:),POINTER :: ICOMBINE
@@ -5128,6 +5127,8 @@ SOLLOOP: DO I=1,NSOLLIST
  !###======================================================================
  IMPLICIT NONE
  INTEGER :: I,J,N
+ CHARACTER(LEN=52),ALLOCATABLE,DIMENSION(:) :: TMPNAME
+ INTEGER,ALLOCATABLE,DIMENSION(:) :: TMPINT
  
  IMOD3D_SOL_DELETE=.FALSE.
 
@@ -5163,7 +5164,11 @@ SOLLOOP: DO I=1,NSOLLIST
   CALL WDIALOGFIELDSTATE(ID_LOAD,1)
  ENDIF
  IF(NSPF.GT.0)THEN
-  CALL WDIALOGPUTMENU(IDF_MENU1,SPF%FNAME,NSPF,SOLPLOT%ISEL)
+  ALLOCATE(TMPNAME(NSPF),TMPINT(NSPF))
+  TMPNAME=SPF%FNAME
+  TMPINT=SOLPLOT%ISEL
+  CALL WDIALOGPUTMENU(IDF_MENU1,TMPNAME,NSPF,TMPINT)
+  DEALLOCATE(TMPNAME,TMPINT)
  ELSE
   CALL WDIALOGCLEARFIELD(IDF_MENU1)
  ENDIF
@@ -5280,18 +5285,12 @@ SOLLOOP: DO I=1,NSOLLIST
    SPF(I)%FNAME=SPF(I)%FNAME(INDEX(SPF(I)%FNAME,'\',.TRUE.)+1:)
    SOLPLOT(I)%ISEL=1
    SOLPLOT(I)%ICLIP=1
-!  !## create drawing list
-!  IF(INDEX(FNAMES(J),'.SPF').GT.0)
+   !## create drawing list
    CALL IMOD3D_SOL_DRAWINGLIST(I,I,ICOMBINE)
+   NSPF=NSPF+1
   ELSE
    IF(.NOT.IMOD3D_FENCEADDFROMFILE(FNAMES(J)))EXIT 
   ENDIF
-!  SPF(I)%FNAME=SPF(I)%FNAME(INDEX(SPF(I)%FNAME,'\',.TRUE.)+1:)
-!  SOLPLOT(I)%ISEL=1
-!  SOLPLOT(I)%ICLIP=1
-  
-!  !## create drawing list
-!  IF(INDEX(FNAMES(J),'.SPF').GT.0)CALL IMOD3D_SOL_DRAWINGLIST(I,I,ICOMBINE)
   
  END DO
 
@@ -5299,14 +5298,10 @@ SOLLOOP: DO I=1,NSOLLIST
  IF(ASSOCIATED(ICOMBINE))DEALLOCATE(ICOMBINE)
 
  !## new number of cross-sections
- NSPF=I-1; NSOLLIST=NSPF
+ NSOLLIST=NSPF
 
  !## read, process and stick bitmaps to cross-sections
  IF(IMOD3D_SOL_BMP())THEN; ENDIF
-
-! !## deallocate memory needed to compute profile
-! CALL PROFILE_DEALLOCATE(); DEALLOCATE(ISEL_IDF,IACT,DTOL,ICLEAN,XEXCLUDE,IEXIST)
-! CALL SOLIDDEALLOCATESLD()
 
  !## add to the existing menu
  CALL WDIALOGSELECT(ID_D3DSETTINGS_TAB6)
@@ -5703,6 +5698,14 @@ SOLLOOP: DO I=1,NSOLLIST
 !   WRITE(*,'(2I10,3F10.1,4F10.2)') J,TT(J),(IT(J,K),K=1,3),XT(J),(ZT(J,K),K=1,3)
 !  ENDDO
 !  WRITE(*,*)
+
+!  !## overrule start
+!  XT(1)=0.0D0
+!  !## overrule end
+!  DXY=0.0D0; DO J=2,SPF(I)%NXY 
+!   DXY=DXY+UTL_DIST(SPF(I)%X(J),SPF(I)%Y(J),SPF(I)%X(J-1),SPF(I)%Y(J-1))
+!  ENDDO
+!  XT(N)=DXY
   
   !## for each (interpolated) coordinate
   GOFORIT=.FALSE.; IF(TT(1).EQ.-1)GOFORIT=.TRUE.
@@ -5715,19 +5718,21 @@ SOLLOOP: DO I=1,NSOLLIST
    ENDIF
    
    !## next segment is inactive   
-   IF(TT(IPOS).EQ.2)GOFORIT=.FALSE.
+!   IF(TT(IPOS).EQ.2)GOFORIT=.FALSE.
+   IF(TT(IPOS).EQ.2.AND.TT(IPOS+1).NE.-1)GOFORIT=.FALSE.
    
    !## assign coordinate and z-values to knickpoints
    TX=0.0D0
    DO J=2,SPF(I)%NXY 
-    DXX=SPF(I)%X(J)-SPF(I)%X(J-1); DYY=SPF(I)%Y(J)-SPF(I)%Y(J-1); DXY=0.0D0
-    IF(DXX.NE.0.0D0.OR.DYY.NE.0.0D0)DXY=SQRT(DXX**2.0D0+DYY**2.0D0)
-    GX=0.0D0; GY=0.0D0
-    IF(DXY.GT.0.0D0)THEN; GX=DXX/DXY; GY=DYY/DXY; ENDIF
-    TX(2)=TX(1)+DXY
+    DXY=UTL_DIST(SPF(I)%X(J),SPF(I)%Y(J),SPF(I)%X(J-1),SPF(I)%Y(J-1))
+    !## segment length is zero, skip it
+    IF(DXY.LE.0.0D0)CYCLE
+
+    DXX=SPF(I)%X(J)-SPF(I)%X(J-1); DYY=SPF(I)%Y(J)-SPF(I)%Y(J-1) 
+    GX=DXX/DXY; GY=DYY/DXY; TX(2)=TX(1)+DXY
 
     !## between interval or in last interval
-    IF(XT(IPOS).GE.TX(1).AND.XT(IPOS).LT.TX(2).OR. &
+    IF(XT(IPOS).GE.TX(1).AND.XT(IPOS).LE.TX(2).OR. &
        J.EQ.SPF(I)%NXY)THEN
 
      !## llc
