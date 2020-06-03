@@ -4974,7 +4974,7 @@ SOLLOOP: DO I=1,NSOLLIST
  IMPLICIT NONE
  INTEGER :: I,J,II
  REAL(KIND=DP_KIND) :: XTOL
- CHARACTER(LEN=52) :: CDATE
+ CHARACTER(LEN=52) :: CDATE,FN
  INTEGER,DIMENSION(:,:),POINTER :: ICOMBINE
  INTEGER,DIMENSION(:),ALLOCATABLE :: TMPINT
  CHARACTER(LEN=52),ALLOCATABLE,DIMENSION(:) :: TMPNAME
@@ -5073,17 +5073,20 @@ SOLLOOP: DO I=1,NSOLLIST
 
   NSOLLIST=ISPF; CALL IMOD3D_SOL_DRAWINGLIST(ISPF,NSOLLIST,ICOMBINE)
 
-  !## add cross-section name
+  !## add cross-section name - check for duplicates
   WRITE(CDATE,'(I8,A)') UTL_GETCURRENTDATE(),'_'//TRIM(UTL_GETCURRENTTIME())
-  SPF(ISPF)%FNAME='Cross-Section_'//TRIM(CDATE)
   !## replace ":"-signs
-  DO
-   IF(INDEX(SPF(ISPF)%FNAME,':').GT.0)THEN
-    SPF(ISPF)%FNAME=UTL_SUBST(SPF(ISPF)%FNAME,':','_')
-   ELSE
-    EXIT
-   ENDIF
+  DO; IF(INDEX(CDATE,':').GT.0)THEN
+    CDATE=UTL_SUBST(CDATE,':','_')
+   ELSE; EXIT; ENDIF
   ENDDO
+  FN='CS_'//TRIM(CDATE); J=0; DO
+   DO I=1,ISPF-1; IF(TRIM(SPF(I)%FNAME).EQ.TRIM(FN))EXIT; ENDDO   
+   !## found correct name
+   IF(I.GT.ISPF-1)EXIT
+   J=J+1; FN='CS_'//TRIM(CDATE)//'['//TRIM(ITOS(J))//']'
+  ENDDO
+  SPF(ISPF)%FNAME=FN
 
   !## activate last created
   SOLPLOT(NSPF)%ISEL=1
@@ -5212,7 +5215,7 @@ SOLLOOP: DO I=1,NSOLLIST
  ENDDO
  
  CALL WMESSAGEBOX(OKONLY,INFORMATIONICON,COMMONOK,'The selected fence diagrams are saved in the folder:'//CHAR(13)// &
-  TRIM(DIR)//'\CROSS-SECTION_[YYMMDD]_[HR]_[MN]_[SC].SPF','Information')
+  TRIM(DIR)//'\CS_[yymmdd]_[hr]_[mn]_[sc].SPF','Information')
  
  END SUBROUTINE IMOD3D_SOL_SAVE
 
@@ -5435,6 +5438,7 @@ SOLLOOP: DO I=1,NSOLLIST
  SUBROUTINE IMOD3D_SOL_DRAWINGLIST(I,ISOL,ICOMBINE)
  !###======================================================================
  IMPLICIT NONE
+ REAL(KIND=SP_KIND),PARAMETER :: MINT=TINY(1.0)
  INTEGER,INTENT(IN) :: ISOL,I
  INTEGER,INTENT(IN),DIMENSION(:,:),POINTER :: ICOMBINE
  REAL(KIND=GLDOUBLE) :: DXX,DYY,GX,GY,GZ,DXY 
@@ -5718,8 +5722,8 @@ SOLLOOP: DO I=1,NSOLLIST
    ENDIF
    
    !## next segment is inactive   
-!   IF(TT(IPOS).EQ.2)GOFORIT=.FALSE.
-   IF(TT(IPOS).EQ.2.AND.TT(IPOS+1).NE.-1)GOFORIT=.FALSE.
+   IF(TT(IPOS).EQ.2)GOFORIT=.FALSE.
+!   IF(TT(IPOS).EQ.2.AND.TT(IPOS+1).NE.-1)GOFORIT=.FALSE.
    
    !## assign coordinate and z-values to knickpoints
    TX=0.0D0
@@ -5732,7 +5736,9 @@ SOLLOOP: DO I=1,NSOLLIST
     GX=DXX/DXY; GY=DYY/DXY; TX(2)=TX(1)+DXY
 
     !## between interval or in last interval
-    IF(XT(IPOS).GE.TX(1).AND.XT(IPOS).LE.TX(2).OR. &
+!    IF(XT(IPOS).GE.TX(1).AND.XT(IPOS).LE.TX(2).OR. &
+!       J.EQ.SPF(I)%NXY)THEN
+    IF(XT(IPOS).GE.TX(1)-MINT.AND.XT(IPOS).LE.TX(2)+MINT.OR. &
        J.EQ.SPF(I)%NXY)THEN
 
      !## llc

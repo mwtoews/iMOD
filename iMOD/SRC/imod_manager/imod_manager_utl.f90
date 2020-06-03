@@ -1010,16 +1010,17 @@ CONTAINS
  SUBROUTINE MANAGER_UTL_MENUFIELDS(ID,K,J)
  !###======================================================================
  IMPLICIT NONE
- INTEGER,PARAMETER :: MAXID=23
+ INTEGER,PARAMETER :: MAXID=24
  INTEGER,INTENT(IN) :: ID,J,K
  INTEGER :: I
  INTEGER,DIMENSION(MAXID) :: ID1
- DATA (ID1(I),I=1,MAXID) /ID_NEW,ID_OPEN,ID_SAVE,ID_SAVEAS,ID_COPY,         &
+ DATA (ID1(I),I=1,MAXID) /ID_NEW,ID_OPEN,ID_SAVE,ID_SAVEAS,ID_COPY,      &
                        ID_MANAGER,ID_OPENIDF,ID_ZOOMINMAP,ID_ZOOMOUTMAP, &
                        ID_ZOOMRECTANGLEMAP,ID_ZOOMFULLMAP,ID_MOVEMAP,    &
                        ID_IRDATABASE,ID_IMODINFO,ID_DISTANCE,ID_PROFILE, &
-                       ID_TIMESERIES,ID_3DTOOL,ID_TOPOGRAPHY, &
-                       ID_ZOOMPREVIOUS,ID_ZOOMNEXT,ID_REDRAW,ID_MOVIE/
+                       ID_TIMESERIES,ID_3DTOOL,ID_TOPOGRAPHY,            &
+                       ID_ZOOMPREVIOUS,ID_ZOOMNEXT,ID_REDRAW,ID_MOVIE,   &
+                       ID_MOVIE_CREATE/
 
  CALL WINDOWSELECT(0)
 
@@ -1034,44 +1035,5 @@ CONTAINS
  ENDIF
 
  END SUBROUTINE MANAGER_UTL_MENUFIELDS
-
- !!###======================================================================
- !SUBROUTINE READFILELIST(FNAME,FLIST,NFILES)
- !!###======================================================================
- !IMPLICIT NONE
- !INTEGER,INTENT(OUT) :: NFILES
- !CHARACTER(LEN=*),INTENT(IN) :: FNAME
- !INTEGER :: IOS,I,IU
- !CHARACTER(LEN=256) :: LINE
- !CHARACTER(LEN=256),ALLOCATABLE,DIMENSION(:),INTENT(OUT) :: FLIST  ! list of file in case multi-file selection mode
- !LOGICAL :: LEX
- !
- !IU=UTL_GETUNIT(); OPEN(IU,FILE=FNAME,STATUS='OLD',ACTION='READ',IOSTAT=IOS)
- !!## error opening file
- !IF(IOS.NE.0)RETURN
- !
- !! get file size
- !DO I=1,2
- ! NFILES=0
- ! DO
- !  READ(IU,'(A)',IOSTAT=IOS) LINE; IF(IOS.NE.0)EXIT
- !  ! check each line for iMOD files
- !  INQUIRE(FILE=LINE,EXIST=LEX)
- !  IF(LEX)THEN
- !   NFILES=NFILES+1
- !   IF(I.EQ.2) FLIST(NFILES)=UTL_CAP(LINE,'U')
- !   CALL WINDOWOUTSTATUSBAR(4,'Found '//TRIM(LINE)//'...')
- !  ENDIF 
- ! ENDDO
- ! IF(I.EQ.1)THEN
- !   REWIND(IU) ;  ALLOCATE(FLIST(NFILES))
- ! ENDIF  
- !ENDDO 
- !CALL WINDOWOUTSTATUSBAR(4,'')
- !
- !CLOSE(IU)
- !
- !END SUBROUTINE READFILELIST
- 
  
 END MODULE MOD_MANAGER_UTL

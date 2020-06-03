@@ -115,6 +115,7 @@ CONTAINS
   
   !## get intersections with xy 
   DO K=1,SIZE(NXYZCROSS)
+   IF(NXYZCROSS(K).EQ.0)CYCLE
    X1=XYZCROSS(1,K)%X; Y1=XYZCROSS(1,K)%Y
    X2=XYZCROSS(2,K)%X; Y2=XYZCROSS(2,K)%Y
 
@@ -142,6 +143,7 @@ CONTAINS
     ENDIF
    ENDIF
 
+   
    !## compute intersection with north boundary
    XX1=BOT%X; XX2=TOP%X; YY1=TOP%Y; YY2=TOP%Y
    CALL DBL_IGRINTERSECTLINE(X1,Y1,X2,Y2,XX1,YY1,XX2,YY2,XINTER,YINTER,ISTATUS)
