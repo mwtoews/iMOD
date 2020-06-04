@@ -196,13 +196,13 @@ CALL sing(lindep, ifault)
 
     DO i = 1, 2
       CALL regcf(beta, 2, ifault)
-      WRITE(*, 920) vorder
-920   FORMAT(1x, 'Variable order:'/ 1x, i10, 4i15)
-      WRITE(*, 900) beta
-900   FORMAT(' Regn. coeffs.:'/ 4x, 5g15.7)
-      WRITE(*, 910) d, r, rhs, rss
-910   FORMAT(' d: ', 5g15.7/ ' r: ', 4g15.7/19x,3g15.7/34x,2g15.7/ &
-          49x,g15.7/ ' rhs: '/4x, 5g15.7/ ' rss: '/4x, 5g15.7//)
+!      WRITE(*, 920) vorder
+!920   FORMAT(1x, 'Variable order:'/ 1x, i10, 4i15)
+!      WRITE(*, 900) beta
+!900   FORMAT(' Regn. coeffs.:'/ 4x, 5g15.7)
+!      WRITE(*, 910) d, r, rhs, rss
+!910   FORMAT(' d: ', 5g15.7/ ' r: ', 4g15.7/19x,3g15.7/34x,2g15.7/ &
+!          49x,g15.7/ ' rhs: '/4x, 5g15.7/ ' rss: '/4x, 5g15.7//)
 
 !WRITE(*, *)'Press ENTER to continue'
 !READ(*, '(a)') key
