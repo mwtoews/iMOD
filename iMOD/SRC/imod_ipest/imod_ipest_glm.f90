@@ -1275,6 +1275,8 @@ CONTAINS
 
  FLUSH(IUPESTOUT); FLUSH(IUPESTPROGRESS); FLUSH(IUPESTEFFICIENCY); FLUSH(IUPESTSENSITIVITY); FLUSH(IUPESTRUNFILE)
 
+ WRITE(*,'(/A/)') 'Current Obj.Func. '//TRIM(RTOS(MSR%TJ,'F',7))//'; current/total improvement '//TRIM(RTOS(C2,'F',7))//';'//TRIM(RTOS(C3,'F',7))//'%'
+
  !## continue ?
  IF(ITER+1.GT.PEST%PE_MXITER)THEN
   CALL IPEST_GLM_ERROR(IBATCH,'Pest iteration terminated: PEST_ITER (='//TRIM(ITOS(PEST%PE_MXITER))//') = PEST_NITER (='// &
@@ -1288,7 +1290,6 @@ CONTAINS
        '%) > PEST_JSTOP ('//TRIM(RTOS(PEST%PE_STOP,'G',7))//'%)'); STOP
  ENDIF
 
- WRITE(*,'(/A/)') 'Current Obj.Func. '//TRIM(RTOS(MSR%TJ,'F',7))//'; current/total improvement '//TRIM(RTOS(C2,'F',7))//';'//TRIM(RTOS(C3,'F',7))//'%'
  !## next iteration
  WRITE(IUPESTOUT,'(/A/)') ' *** Next Optimization Cycle '//TRIM(ITOS(ITER+1))//' ***'
  WRITE(*,'(/A/)')         ' *** Next Optimization Cycle '//TRIM(ITOS(ITER+1))//' ***'
@@ -1505,7 +1506,7 @@ CONTAINS
      Z2=PEST%PARAM(I)%ALPHA(2)+ZW 
     ENDIF 
 
-    WRITE(BLINE,'(3F15.7)') Z1,Z,Z2
+    WRITE(BLINE,'(3G15.7)') Z1,Z,Z2
     WRITE(IUPESTOUT,'(A15,A)') PEST%PARAM(I)%ACRONYM,TRIM(BLINE)
 
     IF(PEST%PARAM(I)%PACT.EQ.-1)THEN
