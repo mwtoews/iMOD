@@ -6038,7 +6038,7 @@ DOLOOP: DO
  IMPLICIT NONE
  INTEGER,INTENT(IN) :: NX,NPERC        !## size array,number of percentiles to be comp.
  INTEGER,INTENT(OUT) :: MX             !## number of values ne nodata
- REAL(KIND=DP_KIND),INTENT(IN),DIMENSION(NPERC) :: PERC  !## percentile 0-100%
+ REAL(KIND=DP_KIND),INTENT(IN),DIMENSION(:) :: PERC  !## percentile 0-100%
  REAL(KIND=DP_KIND),INTENT(OUT),DIMENSION(NPERC) :: XMED !## yielding percentile(s)
  REAL(KIND=DP_KIND),INTENT(IN) :: NODATA             !## nodata value !,PERC
  REAL(KIND=DP_KIND),DIMENSION(NX),INTENT(INOUT) :: X !## array
