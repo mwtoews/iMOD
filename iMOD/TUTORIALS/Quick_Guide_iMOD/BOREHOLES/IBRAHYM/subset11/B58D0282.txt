@@ -1,0 +1,46 @@
+          39
+5,2
+"Grensvlak, m+NAP",-999.99
+"Lithologie",-999.99
+"LithoKlassificatie",-999.99
+"Zandmediaanklasse NEN5104",-999.99
+"Bijmenging",-999.99
+24.90,GM,0,NONE,"None"
+24.50,Z,6,ZMFO,"None"
+23.30,Z,6,ZMFO,"None"
+21.50,Z,3,ZZFO,"None"
+20.70,Z,3,ZZFO,"None"
+17.20,G,8,ZUGO,"Zandig"
+15.90,G,8,ZUGO,"Zandig"
+12.90,G,8,ZUGO,"Zandig"
+10.40,G,8,ZUGO,"Zandig"
+7.90,G,8,ZUGO,"Zandig"
+5.90,G,8,ZUGO,"Zandig"
+2.90,G,8,ZUGO,"Zandig"
+0.90,G,8,ZUGO,"Zandig"
+-1.10,G,8,ZUGO,"Zandig"
+-2.80,G,8,NONE,"Grindig"
+-5.10,G,8,NONE,"Grindig"
+-7.60,G,8,NONE,"Grindig"
+-9.60,Z,7,ZUGO,"Sterk Grindig"
+-10.10,G,8,NONE,"Grindig"
+-12.10,Z,7,ZUGO,"Zwak Grindig"
+-12.60,Z,7,ZUGO,"Zwak Grindig"
+-13.85,Z,7,ZUGO,"Zwak Grindig"
+-15.10,Z,7,ZUGO,"None"
+-16.35,Z,7,ZUGO,"Zwak Grindig"
+-17.60,Z,7,ZUGO,"Zwak Grindig"
+-18.85,Z,7,ZUGO,"Zwak Grindig"
+-20.10,Z,7,ZZGO,"Zwak Grindig"
+-22.60,Z,7,ZZGO,"None"
+-25.10,Z,6,ZMGO,"None"
+-27.10,Z,7,ZUGO,"Zwak Grindig"
+-28.85,Z,7,ZUGO,"Zwak Grindig"
+-30.10,Z,6,ZMGO,"Grindig"
+-30.85,Z,7,ZZGO,"None"
+-32.60,Z,7,ZZGO,"None"
+-35.10,Z,7,ZZGO,"None"
+-37.60,Z,7,ZZGO,"None"
+-40.10,Z,7,ZZGO,"None"
+-41.35,Z,7,ZZGO,"None"
+-42.60,-,-,-,-

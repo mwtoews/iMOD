@@ -1,0 +1,32 @@
+          25
+5,2
+"Grensvlak, m+NAP",-999.99
+"Lithologie",-999.99
+"LithoKlassificatie",-999.99
+"Zandmediaanklasse NEN5104",-999.99
+"Bijmenging",-999.99
+25.79,Z,5,ZZFO,"None"
+23.79,Z,5,ZZFO,"Zwak Siltig"
+21.79,Z,5,ZUFO,"Sterk Siltig"
+20.79,Z,5,ZUFO,"Matig Siltig"
+19.79,Z,5,ZUFO,"Matig Siltig"
+18.79,Z,5,ZZFO,"Matig Siltig"
+17.39,Z,6,ZMFO,"Sterk Grindig"
+16.79,G,8,ZMFO,"Uiterst Zandig"
+15.29,G,8,NONE,"Matig Zandig"
+13.79,G,8,ZMGO,"Zwak Zandig"
+12.79,G,8,ZZGO,"Matig Zandig"
+11.79,G,8,ZZGO,"Sterk Zandig"
+10.79,G,8,ZUGO,"Matig Zandig"
+8.79,G,8,ZUGO,"Zwak Zandig"
+2.79,G,8,ZUGO,"Sterk Zandig"
+1.79,G,8,ZUGO,"Zwak Zandig"
+0.79,G,8,ZUGO,"Matig Zandig"
+-3.21,G,8,ZUGO,"Sterk Zandig"
+-4.21,G,8,ZUGO,"Zwak Zandig"
+-5.21,G,8,ZUGO,"Sterk Zandig"
+-6.21,Z,7,ZUGO,"Sterk Grindig"
+-7.21,Z,7,ZUGO,"Zwak Grindig"
+-8.21,G,8,ZUGO,"Sterk Zandig"
+-9.21,Z,7,ZUGO,"Zwak Grindig"
+-12.21,-,-,-,-

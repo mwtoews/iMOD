@@ -1,0 +1,36 @@
+          29
+5,2
+"Grensvlak, m+NAP",-999.99
+"Lithologie",-999.99
+"LithoKlassificatie",-999.99
+"Zandmediaanklasse NEN5104",-999.99
+"Bijmenging",-999.99
+25.11,Z,0,NONE,"None"
+25.01,Z,6,ZMFO,"None"
+24.11,Z,6,ZMFO,"None"
+22.81,Z,6,ZMGO,"None"
+21.81,Z,6,ZMGO,"None"
+20.81,Z,6,ZMGO,"None"
+20.31,Z,7,ZUGO,"None"
+20.01,Z,7,ZUGO,"None"
+19.01,Z,7,ZUGO,"None"
+17.51,L,3,NONE,"Zwak Zandig"
+16.21,L,3,NONE,"Grindig"
+15.71,G,8,NONE,"None"
+14.71,G,8,ZUGO,"Zwak Zandig"
+13.71,G,8,ZUGO,"Zwak Zandig"
+12.71,G,8,NONE,"None"
+12.11,G,8,NONE,"None"
+11.11,G,8,NONE,"Zandig"
+10.11,G,8,NONE,"Zandig"
+9.51,Z,7,ZUGO,"Grindig"
+8.31,Z,7,ZZGO,"None"
+7.31,Z,7,ZZGO,"None"
+6.91,Z,7,ZUGO,"Zwak Grindig"
+5.91,Z,7,ZUGO,"Grindig"
+4.91,Z,7,ZZGO,"None"
+3.81,Z,7,ZZGO,"Zwak Grindig"
+2.81,Z,7,ZZGO,"None"
+1.61,Z,7,ZZGO,"None"
+1.11,Z,7,ZUGO,"Zwak Grindig"
+0.11,-,-,-,-

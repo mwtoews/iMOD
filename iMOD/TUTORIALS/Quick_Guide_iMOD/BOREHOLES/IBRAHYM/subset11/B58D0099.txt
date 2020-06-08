@@ -1,0 +1,20 @@
+          13
+5,2
+"Grensvlak, m+NAP",-999.99
+"Lithologie",-999.99
+"LithoKlassificatie",-999.99
+"Zandmediaanklasse NEN5104",-999.99
+"Bijmenging",-999.99
+20.90,K,2,NONE,"None"
+18.10,G,8,NONE,"Zwak Zandig"
+16.10,G,8,NONE,"Zwak Zandig"
+15.30,Z,7,ZGC,"Zwak Grindig"
+15.10,G,8,NONE,"Zwak Zandig"
+13.50,Z,7,ZGC,"None"
+12.90,G,8,NONE,"Zwak Zandig"
+10.70,G,8,NONE,"Zwak Zandig"
+4.20,Z,7,ZGC,"Zwak Grindig"
+2.30,G,8,NONE,"Zandig"
+0.90,G,8,NONE,"Zandig"
+0.20,K,2,NONE,"None"
+-0.10,-,-,-,-

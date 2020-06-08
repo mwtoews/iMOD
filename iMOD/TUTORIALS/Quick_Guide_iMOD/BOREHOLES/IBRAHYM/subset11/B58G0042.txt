@@ -1,0 +1,34 @@
+          27
+5,2
+"Grensvlak, m+NAP",-999.99
+"Lithologie",-999.99
+"LithoKlassificatie",-999.99
+"Zandmediaanklasse NEN5104",-999.99
+"Bijmenging",-999.99
+26.27,L,3,NONE,"Matig Humeus"
+26.02,Z,6,ZMGO,"Matig Humeus"
+25.27,L,3,NONE,"Matig Humeus"
+25.12,Z,6,ZMGO,"Zwak Humeus"
+24.87,Z,7,ZZGO,"Zwak Grindig"
+21.87,Z,7,ZZGO,"Zwak Grindig"
+20.57,Z,7,ZGC,"Sterk Grindig"
+17.57,Z,7,ZGC,"Sterk Grindig"
+14.47,Z,7,ZZGO,"Sterk Grindig"
+12.52,Z,7,ZZGO,"Sterk Grindig"
+11.27,L,3,NONE,"Sterk Humeus"
+10.67,L,3,NONE,"Zandig"
+9.97,K,2,NONE,"None"
+6.97,K,2,NONE,"None"
+5.57,L,3,NONE,"Sterk Zandig"
+3.77,L,3,NONE,"Grindig"
+0.42,Z,7,ZZGO,"Sterk Grindig"
+-1.28,Z,7,ZGC,"Zwak Grindig"
+-2.23,Z,7,ZGC,"Sterk Grindig"
+-3.48,Z,7,ZZGO,"Zwak Grindig"
+-6.13,Z,7,ZGC,"Zwak Grindig"
+-9.73,Z,7,ZGC,"Sterk Grindig"
+-11.48,Z,7,ZZGO,"Sterk Grindig"
+-13.23,Z,7,ZGC,"Humeus"
+-13.73,Z,6,ZMGO,"Zwak Grindig"
+-15.43,L,3,NONE,"Matig Humeus"
+-16.23,-,-,-,-

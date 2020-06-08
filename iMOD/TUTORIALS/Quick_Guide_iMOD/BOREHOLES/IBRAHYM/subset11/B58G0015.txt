@@ -1,0 +1,47 @@
+          40
+5,2
+"Grensvlak, m+NAP",-999.99
+"Lithologie",-999.99
+"LithoKlassificatie",-999.99
+"Zandmediaanklasse NEN5104",-999.99
+"Bijmenging",-999.99
+27.00,Z,0,NONE,"None"
+26.70,Z,5,ZFC,"None"
+24.85,Z,0,NONE,"Siltig"
+24.15,Z,0,NONE,"None"
+23.00,Z,0,NONE,"None"
+21.44,G,8,NONE,"Zandig"
+18.74,Z,7,ZGC,"Sterk Grindig"
+14.00,L,3,NONE,"Zandig"
+12.35,L,3,NONE,"Grindig"
+12.00,Z,7,ZGC,"Grindig"
+7.10,Z,0,NONE,"None"
+4.75,Z,7,ZGC,"Grindig"
+1.70,Z,7,ZGC,"Grindig"
+-8.56,LEI,0,NONE,"None"
+-8.61,Z,7,ZGC,"Grindig"
+-19.30,Z,7,ZGC,"Siltig"
+-22.10,BRK,0,NONE,"Zandig"
+-22.40,Z,7,ZGC,"Siltig"
+-29.90,L,3,NONE,"Zandig"
+-30.30,BRK,0,NONE,"Zandig"
+-31.00,Z,7,ZGC,"None"
+-45.00,Z,5,ZFC,"None"
+-51.37,Z,5,ZFC,"Siltig"
+-75.95,Z,0,NONE,"None"
+-82.72,Z,5,ZFC,"Siltig"
+-115.70,Z,7,ZGC,"Siltig"
+-195.00,L,3,NONE,"Sterk Zandig"
+-221.38,Z,5,ZFC,"Siltig"
+-341.38,Z,7,ZGC,"Sterk Siltig"
+-345.00,Z,5,ZFC,"Uiterst Siltig"
+-351.50,Z,7,ZGC,"Zwak Siltig"
+-396.50,Z,7,ZGC,"Siltig"
+-430.00,L,3,NONE,"Zandig"
+-447.00,Z,0,NONE,"Siltig"
+-462.00,L,3,NONE,"Zandig"
+-487.00,Z,0,NONE,"Siltig"
+-538.00,Z,0,NONE,"Grindig"
+-608.00,L,3,NONE,"Zandig"
+-617.35,Z,5,ZFC,"Siltig"
+-652.00,-,-,-,-

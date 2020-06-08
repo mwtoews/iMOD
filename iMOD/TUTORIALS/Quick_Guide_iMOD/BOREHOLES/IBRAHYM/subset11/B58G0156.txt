@@ -1,0 +1,20 @@
+          13
+5,2
+"Grensvlak, m+NAP",-999.99
+"Lithologie",-999.99
+"LithoKlassificatie",-999.99
+"Zandmediaanklasse NEN5104",-999.99
+"Bijmenging",-999.99
+27.00,L,3,ZFC,"Matig Humeus"
+26.40,K,2,NONE,"Matig Humeus"
+25.50,Z,7,ZZGO,"Matig Humeus"
+24.75,G,8,NONE,"Zandig"
+21.00,Z,7,ZZGO,"Sterk Grindig"
+20.00,G,8,NONE,"None"
+19.25,G,8,NONE,"Zandig"
+15.75,G,8,NONE,"None"
+14.00,L,3,NONE,"Siltig"
+13.50,G,8,NONE,"Zandig"
+11.00,Z,6,ZMGO,"Sterk Grindig"
+8.00,Z,6,ZMGO,"Zwak Grindig"
+6.00,-,-,-,-

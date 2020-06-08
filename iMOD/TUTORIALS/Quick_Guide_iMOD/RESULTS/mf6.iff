@@ -1,0 +1,8 @@
+@echo off
+
+:: Please refer here to the installed MPICH program.
+set mpi="C:\Program Files\MPICH2\bin\mpiexec.exe"
+
+:: This executes the test for two cores.
+%mpi% -localonly 2 test_mpi_installation.exe
+pause

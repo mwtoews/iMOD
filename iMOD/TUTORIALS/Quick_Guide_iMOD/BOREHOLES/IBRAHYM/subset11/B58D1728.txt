@@ -1,0 +1,13 @@
+           6
+5,2
+"Grensvlak, m+NAP",-999.99
+"Lithologie",-999.99
+"LithoKlassificatie",-999.99
+"Zandmediaanklasse NEN5104",-999.99
+"Bijmenging",-999.99
+4.88,Z,7,ZZGO,"Sterk Grindig"
+2.88,L,3,ZUFO,"Zwak Zandig"
+2.68,G,8,ZZGO,"Sterk Zandig"
+1.88,G,8,ZUGO,"Sterk Zandig"
+0.88,Z,7,ZUGO,"Sterk Grindig"
+0.37,-,-,-,-

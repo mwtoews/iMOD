@@ -1,0 +1,41 @@
+          34
+5,2
+"Grensvlak, m+NAP",-999.99
+"Lithologie",-999.99
+"LithoKlassificatie",-999.99
+"Zandmediaanklasse NEN5104",-999.99
+"Bijmenging",-999.99
+22.10,K,2,NONE,"None"
+20.60,Z,6,ZMFO,"None"
+20.10,Z,7,ZZGO,"None"
+19.60,Z,7,ZUGO,"None"
+19.10,G,8,NONE,"None"
+15.60,G,8,NONE,"None"
+15.10,G,8,NONE,"None"
+11.60,G,8,NONE,"None"
+11.10,G,8,NONE,"None"
+10.10,Z,7,ZZGO,"None"
+9.60,G,8,NONE,"None"
+8.60,G,8,NONE,"None"
+7.10,Z,7,ZZGO,"None"
+6.60,G,8,NONE,"None"
+5.10,Z,7,ZZGO,"None"
+3.60,Z,7,ZZGO,"None"
+3.10,Z,7,ZZGO,"None"
+2.60,Z,7,ZZGO,"None"
+1.60,K,2,NONE,"None"
+1.10,Z,7,ZZGO,"None"
+0.10,Z,7,ZUGO,"None"
+-0.40,Z,7,ZUGO,"None"
+-0.90,Z,7,ZZGO,"None"
+-1.40,Z,7,ZZGO,"None"
+-4.90,Z,7,ZZGO,"None"
+-5.40,Z,7,ZZGO,"None"
+-5.90,Z,7,ZZGO,"None"
+-6.40,Z,7,ZZGO,"None"
+-7.40,Z,7,ZZGO,"None"
+-8.40,Z,7,ZZGO,"None"
+-9.40,Z,7,ZZGO,"None"
+-10.90,Z,7,ZZGO,"None"
+-11.90,Z,7,ZZGO,"None"
+-13.90,-,-,-,-

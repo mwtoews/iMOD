@@ -1,0 +1,48 @@
+          41
+5,2
+"Grensvlak, m+NAP",-999.99
+"Lithologie",-999.99
+"LithoKlassificatie",-999.99
+"Zandmediaanklasse NEN5104",-999.99
+"Bijmenging",-999.99
+49.30,Z,0,NONE,"None"
+49.05,Z,0,NONE,"None"
+48.65,Z,0,NONE,"Grindig"
+44.80,Z,0,NONE,"Grindig"
+37.60,Z,0,NONE,"Grindig"
+35.00,Z,7,ZGC,"Grindig"
+32.30,Z,5,ZFC,"None"
+27.70,K,3,NONE,"Zandig"
+27.30,Z,5,ZFC,"None"
+23.30,K,3,NONE,"Zandig"
+21.70,Z,5,ZFC,"None"
+16.40,K,3,NONE,"Zandig"
+15.10,K,3,NONE,"Zandig"
+14.80,K,3,NONE,"Zandig"
+13.30,Z,5,ZFC,"None"
+8.30,Z,0,NONE,"Zwak Grindig"
+4.70,Z,0,NONE,"None"
+4.60,K,2,NONE,"Matig Humeus"
+4.20,K,2,NONE,"None"
+3.65,K,2,NONE,"None"
+2.90,BRK,0,NONE,"None"
+2.45,K,2,NONE,"Matig Humeus"
+1.55,K,2,NONE,"None"
+1.15,K,2,NONE,"None"
+0.60,K,2,NONE,"None"
+-0.70,K,3,NONE,"Zwak Zandig"
+-1.80,Z,0,NONE,"Grindig"
+-3.95,K,3,NONE,"Zandig"
+-5.40,Z,0,NONE,"Zwak Grindig"
+-8.20,Z,0,NONE,"None"
+-11.70,Z,0,NONE,"Zwak Grindig"
+-17.70,Z,0,NONE,"Grindig"
+-20.50,K,3,NONE,"Matig Humeus"
+-22.20,Z,3,ZFC,"None"
+-24.70,K,3,NONE,"Zwak Zandig"
+-28.20,Z,0,NONE,"Grindig"
+-30.00,Z,0,NONE,"None"
+-35.20,Z,0,NONE,"Grindig"
+-39.40,Z,0,NONE,"None"
+-46.20,Z,0,NONE,"Grindig"
+-50.70,-,-,-,-
