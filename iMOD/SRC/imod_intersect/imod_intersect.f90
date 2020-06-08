@@ -144,13 +144,29 @@ CONTAINS
  
  !## sample each of the point to determine irow/icol, overwrite point with this
  !## skip first and last, they represented already by the second and one-last point
+ XMN=MIN(X1,X2); XMX=MAX(X1,X2)
+ YMN=MIN(Y1,Y2); YMX=MAX(Y1,Y2)
  DO I=N_IN+2,N 
 
   !## mid point
   X   =(XA(I-1)+XA(I))/2.0D0
   Y   =(YA(I-1)+YA(I))/2.0D0
-  ICOL=0; IF((X.GT.MIN(X1,X2).AND.X.LT.MAX(X1,X2)).OR.X1.EQ.X2)ICOL=INT((X-XMIN)/CSX)+1
-  IROW=0; IF((Y.GT.MIN(Y1,Y2).AND.Y.LT.MAX(Y1,Y2)).OR.Y1.EQ.Y2)IROW=INT((YMAX-Y)/CSY)+1
+  
+  ICOL=0
+  IF(X.EQ.XMN.OR.X.EQ.XMX)THEN
+   ICOL=INT((X-XMIN)/CSX)
+  ELSEIF(X.GT.XMN.AND.X.LT.XMX)THEN
+   ICOL=INT((X-XMIN)/CSX)+1
+  ENDIF
+  IROW=0
+  IF(Y.EQ.YMN.OR.Y.EQ.YMX)THEN
+   IROW=INT((YMAX-Y)/CSY)
+  ELSEIF(Y.GT.YMN.AND.Y.LT.YMX)THEN
+   IROW=INT((YMAX-Y)/CSY)+1
+  ENDIF
+
+!  ICOL=0; IF((X.GT.MIN(X1,X2).AND.X.LT.MAX(X1,X2)).OR.X1.EQ.X2)ICOL=INT((X-XMIN)/CSX)+1
+!  IROW=0; IF((Y.GT.MIN(Y1,Y2).AND.Y.LT.MAX(Y1,Y2)).OR.Y1.EQ.Y2)IROW=INT((YMAX-Y)/CSY)+1
 
   TD=CSX*CSY; ID=0 !## fraction
   IF(ICOL.GT.0.AND.IROW.GT.0)THEN
@@ -159,6 +175,7 @@ CONTAINS
    CALL INTERSECT_NCORNER(ID,TD,XMIN+ ICOL   *CSX,YMAX- IROW   *CSY,X,Y,3)
    CALL INTERSECT_NCORNER(ID,TD,XMIN+(ICOL-1)*CSX,YMAX- IROW   *CSY,X,Y,4)
   ENDIF
+  
   FA(I-1)=REAL(ID,8) 
   
   DX  =XA(I)-XA(I-1)
@@ -168,8 +185,8 @@ CONTAINS
   !## store results in row/column indices
   CA(I-1)=REAL(ICOL,8)
   RA(I-1)=REAL(IROW,8)
-
   LN(I-1)=LENG
+  
  END DO
  N=N-1
 
@@ -338,13 +355,32 @@ CONTAINS
 
  !## sample each of the point to determine irow/icol, overwrite point with this
  !## skip first and last, they represented already by the second and one-last point
+ XMN=MIN(X1,X2); XMX=MAX(X1,X2)
+ YMN=MIN(Y1,Y2); YMX=MAX(Y1,Y2)
  DO I=N_IN+2,N
   !## mid point
   X   =(XA(I-1)+XA(I))/2.0D0
   Y   =(YA(I-1)+YA(I))/2.0D0
   
-  ICOL=0; IF((X.GT.MIN(X1,X2).AND.X.LT.MAX(X1,X2)).OR.X1.EQ.X2)CALL POL1LOCATE(DELR,NCOL+1,DBLE(X),ICOL)
-  IROW=0; IF((Y.GT.MIN(Y1,Y2).AND.Y.LT.MAX(Y1,Y2)).OR.Y1.EQ.Y2)CALL POL1LOCATE(DELC,NROW+1,DBLE(Y),IROW)
+  ICOL=0
+  IF(X.EQ.XMN)THEN
+   ICOL=1
+  ELSEIF(X.EQ.XMX)THEN
+   ICOL=NCOL
+  ELSEIF(X.GT.XMN.AND.X.LT.XMX)THEN
+   CALL POL1LOCATE(DELR,NCOL+1,X,ICOL)
+  ENDIF
+  IROW=0
+  IF(Y.EQ.YMN)THEN
+   IROW=NROW
+  ELSEIF(Y.EQ.YMX)THEN
+   IROW=1
+  ELSEIF(Y.GT.YMN.AND.Y.LT.YMX)THEN
+   CALL POL1LOCATE(DELC,NROW+1,Y,IROW)
+  ENDIF
+
+ ! ICOL=0; IF((X.GT.MIN(X1,X2).AND.X.LT.MAX(X1,X2)).OR.X1.EQ.X2)CALL POL1LOCATE(DELR,NCOL+1,DBLE(X),ICOL)
+ ! IROW=0; IF((Y.GT.MIN(Y1,Y2).AND.Y.LT.MAX(Y1,Y2)).OR.Y1.EQ.Y2)CALL POL1LOCATE(DELC,NROW+1,DBLE(Y),IROW)
 
   ID=0 !## fraction
 
@@ -497,21 +533,21 @@ CONTAINS
 
  !## sort intersections, determined by the one with the largest difference
  IF(ABS(DX).GE.ABS(DY))THEN
-  DX1=XA(N_IN)-XA(N_IN+(N-N_IN)) !+1)
+  DX1=XA(N_IN)-XA(N_IN+(N-N_IN)) 
   CALL QKSORT((N-N_IN)+1,XA(N_IN:),V2=YA(N_IN:))
-  DX2=XA(N_IN)-XA(N_IN+(N-N_IN)) !+1)
+  DX2=XA(N_IN)-XA(N_IN+(N-N_IN)) 
   IF(DX1.LT.0.0D0.AND.DX2.GT.0.0D0)LFLIP=.NOT.LFLIP
   IF(DX1.GT.0.0D0.AND.DX2.LT.0.0D0)LFLIP=.NOT.LFLIP
  ELSE
-  DY1=YA(N_IN)-YA(N_IN+(N-N_IN)) !+1)
+  DY1=YA(N_IN)-YA(N_IN+(N-N_IN)) 
   CALL QKSORT((N-N_IN)+1,YA(N_IN:),V2=XA(N_IN:))
-  DY2=YA(N_IN)-YA(N_IN+(N-N_IN)) !+1)
+  DY2=YA(N_IN)-YA(N_IN+(N-N_IN)) 
   IF(DY1.LT.0.0D0.AND.DY2.GT.0.0D0)LFLIP=.NOT.LFLIP
   IF(DY1.GT.0.0D0.AND.DY2.LT.0.0D0)LFLIP=.NOT.LFLIP
  ENDIF
 
  !## resort - if neccessary
- IF(LFLIP)THEN !XA(N_IN).NE.XBEGIN.OR.YA(N_IN).NE.YBEGIN)THEN
+ IF(LFLIP)THEN 
   DO I=N_IN,N_IN+((N-N_IN)/2)
    X           =XA(I)
    XA(I)       =XA(N-I+N_IN) 
