@@ -1222,47 +1222,55 @@ ILAYLOOP2: DO ILAY=MNLAY(1),1,-1
    IF(TRIM(STRING).EQ.'BEGIN DIMENSIONS')THEN
     WRITE(KU,'(A)') TRIM(STRING)
     READ(IU,'(A256)',IOSTAT=IOS) STRING
-!    WRITE(KU,'(A)') TRIM(STRING)
     READ(STRING,*)  TXT,NEXG
    ENDIF
    IF(TRIM(STRING).EQ.'BEGIN EXCHANGEDATA')THEN
     WRITE(KU,'(A)') TRIM(STRING)
+    
+    !## load all hfbs on boundaries for both sub models
+    ALLOCATE(HFB(2,1)); NHFB=0
+
     !## exchange existing
     IF(NEXG.GT.0)THEN
     
-     !## load all hfbs on boundaries for both sub models
-     ALLOCATE(HFB(2,1)); NHFB=0
      DO I=1,2
       M=0; DO IHFB=1,2
        IF(IHFB.EQ.1)MM=M1; IF(IHFB.EQ.2)MM=M2
        N=0; DO ILAY=1,SUBNLAY(MM)
         FNAME=TRIM(MAINDIR)//'\GWF_'//TRIM(ITOS(MM))//'\MODELINPUT\'//TRIM(MDLNAME)//'_HFB_L'//TRIM(ITOS(ILAY))//'.DAT'
-        JU=UTL_GETUNIT(); CALL OSD_OPEN(JU,FILE=FNAME,STATUS='OLD',ACTION='READ',FORM='FORMATTED'); IF(JU.EQ.0)RETURN
-        READ(JU,*)
-        DO
-         N=N+1
-         IF(I.EQ.1)THEN
-          M=M+1; IF(I.EQ.1)N=1
-         ELSE
-          IF(N.GT.NHFB(IHFB))EXIT
-         ENDIF
-         READ(JU,'(11X,F15.0,17X,F15.0,10X,5I10)',IOSTAT=IOS) HFB(IHFB,N)%C,      HFB(IHFB,N)%F,      HFB(IHFB,N)%ICOL(1), &
-                                                              HFB(IHFB,N)%IROW(1),HFB(IHFB,N)%ICOL(2),HFB(IHFB,N)%IROW(2), &
-                                                              HFB(IHFB,N)%IBND
-         IF(IOS.NE.0)EXIT
-         HFB(IHFB,N)%ILAY=ILAY
-         !## horizontal
-         IF(HFB(IHFB,N)%ICOL(1).LT.HFB(IHFB,N)%ICOL(2))HFB(IHFB,N)%CHV='H'
-         IF(HFB(IHFB,N)%ICOL(1).GT.HFB(IHFB,N)%ICOL(2))HFB(IHFB,N)%CHV='H'
-         !## vertical
-         IF(HFB(IHFB,N)%IROW(1).LT.HFB(IHFB,N)%IROW(2))HFB(IHFB,N)%CHV='V'
-         IF(HFB(IHFB,N)%IROW(1).GT.HFB(IHFB,N)%IROW(2))HFB(IHFB,N)%CHV='V'
-        ENDDO
-        M=M-1; IF(I.EQ.1)NHFB(IHFB)=M; CLOSE(JU)
+        JU=UTL_GETUNIT(); CALL OSD_OPEN(JU,FILE=FNAME,STATUS='OLD',ACTION='READ',FORM='FORMATTED',IQUESTION=0)
+        IF(JU.GT.0)THEN
+         READ(JU,*)
+         DO
+          N=N+1
+          IF(I.EQ.1)THEN
+           M=M+1; IF(I.EQ.1)N=1
+          ELSE
+           IF(N.GT.NHFB(IHFB))EXIT
+          ENDIF
+          READ(JU,'(11X,F15.0,17X,F15.0,10X,5I10)',IOSTAT=IOS) HFB(IHFB,N)%C,      HFB(IHFB,N)%F,      HFB(IHFB,N)%ICOL(1), &
+                                                               HFB(IHFB,N)%IROW(1),HFB(IHFB,N)%ICOL(2),HFB(IHFB,N)%IROW(2), &
+                                                               HFB(IHFB,N)%IBND
+          IF(IOS.NE.0)EXIT
+          HFB(IHFB,N)%ILAY=ILAY
+          !## horizontal
+          IF(HFB(IHFB,N)%ICOL(1).LT.HFB(IHFB,N)%ICOL(2))HFB(IHFB,N)%CHV='H'
+          IF(HFB(IHFB,N)%ICOL(1).GT.HFB(IHFB,N)%ICOL(2))HFB(IHFB,N)%CHV='H'
+          !## vertical
+          IF(HFB(IHFB,N)%IROW(1).LT.HFB(IHFB,N)%IROW(2))HFB(IHFB,N)%CHV='V'
+          IF(HFB(IHFB,N)%IROW(1).GT.HFB(IHFB,N)%IROW(2))HFB(IHFB,N)%CHV='V'
+         ENDDO
+         M=M-1; IF(I.EQ.1)NHFB(IHFB)=M; CLOSE(JU)
+        ENDIF
        ENDDO
       ENDDO
-      IF(I.EQ.1)THEN
-       DEALLOCATE(HFB); ALLOCATE(HFB(2,MAXVAL(NHFB)))
+      IF(MAXVAL(NHFB).GT.0)THEN
+       IF(I.EQ.1)THEN
+        DEALLOCATE(HFB); ALLOCATE(HFB(2,MAXVAL(NHFB)))
+       ENDIF
+      ELSE
+       !## nothing found - continue
+       EXIT
       ENDIF
      ENDDO
     ENDIF
@@ -1286,13 +1294,8 @@ IILOOP: DO I=1,NHFB(IHFB)
            HFB(IHFB,I)%IROW(II).EQ.IROW.AND. &
            HFB(IHFB,I)%ICOL(II).EQ.ICOL.AND. &
            HFB(IHFB,I)%CHV .EQ.CHV)THEN
-!         !## no flow at all - remove exchange --- this need to be solved by the USGS
-!         IF(HFB(IHFB,I)%C.EQ.0.0D0)THEN
-          F=HUGE(1.0)
-!         !## resistance for distance is c - estimate by factor, apply that to distance
-!         ELSE
-!          F=HFB(IHFB,I)%F
-!         ENDIF
+         !## no flow at all - remove exchange --- this need to be solved by the USGS
+         F=HUGE(1.0)
          !## found hfb location in between current sub model - apply factor
          CL=CL*F; EXIT IILOOP
         ENDIF
@@ -1304,12 +1307,13 @@ IILOOP: DO I=1,NHFB(IHFB)
       ENDIF
      ENDDO
     ENDDO
+    DEALLOCATE(HFB)
     WRITE(KU,'(A)') TRIM(STRING)
    ELSE
     WRITE(KU,'(A)') TRIM(STRING)
    ENDIF
   ENDDO
-
+  
   CLOSE(IU,STATUS='DELETE'); CLOSE(KU)
   CALL IOSRENAMEFILE(TRIM(MAINDIR)//'\MFSIM_M'//TRIM(ITOS(M1))//'_M'//TRIM(ITOS(M2))//'.EXG_', &
                      TRIM(MAINDIR)//'\MFSIM_M'//TRIM(ITOS(M1))//'_M'//TRIM(ITOS(M2))//'.EXG')

@@ -271,26 +271,28 @@ CONTAINS
        IF(ICLEAN(I+1).EQ.1)THEN
        
         !## start of line
-        SPF(ISPF)%PROF(I)%IT(II+1)=-1
-        !## add intermediate point, take into account maximum array-size
-        DO J=1,N 
-         !## use point from Urs-Douglas-Peucker algorithm (greater then given tolerance)
-         IF(GCODE(J).GT.DTOL(I+1))THEN
+        IF(II+1.LT.SIZE(SPF(ISPF)%PROF(I)%PX))THEN
+         SPF(ISPF)%PROF(I)%IT(II+1)=-1
+         !## add intermediate point, take into account maximum array-size
+         DO J=1,N 
+          !## use point from Urs-Douglas-Peucker algorithm (greater then given tolerance)
+          IF(GCODE(J).GT.DTOL(I+1))THEN
 
-          !## put connection of current drill to 
-          II=II+1
-          !## maximize the size of the vector - overwrite values
-          II=MIN(II,SIZE(SPF(ISPF)%PROF(I)%PX))
-          SPF(ISPF)%PROF(I)%PX(II)=SERIE(IIDF)%X(IS) 
-          SPF(ISPF)%PROF(I)%PZ(II)=SERIE(IIDF)%Y(IS) 
-          SPF(ISPF)%PROF(I)%NPOS=II !SPF(ISPF)%PROF(I)%NPOS+1
+           !## put connection of current drill to 
+           II=II+1
+           !## maximize the size of the vector - overwrite values
+           II=MIN(II,SIZE(SPF(ISPF)%PROF(I)%PX))
+           SPF(ISPF)%PROF(I)%PX(II)=SERIE(IIDF)%X(IS) 
+           SPF(ISPF)%PROF(I)%PZ(II)=SERIE(IIDF)%Y(IS) 
+           SPF(ISPF)%PROF(I)%NPOS  =II 
 
-         ENDIF
-         IS=IS+1
-        ENDDO
-        !## end of line
-        SPF(ISPF)%PROF(I)%IT(II)= 1
-
+          ENDIF
+          IS=IS+1
+         ENDDO
+         !## end of line
+         SPF(ISPF)%PROF(I)%IT(II)= 1
+        ENDIF
+        
        ELSE
        
         IF(SPF(ISPF)%PROF(I)%NPOS.EQ.0)THEN
