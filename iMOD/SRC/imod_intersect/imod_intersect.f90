@@ -401,15 +401,15 @@ CONTAINS
    ICOL=0; IROW=0
   ENDIF
   
-  FA(I-1)=REAL(ID,8) 
+  FA(I-1)=DBLE(ID) 
 
   DX  =XA(I)-XA(I-1)
   DY  =YA(I)-YA(I-1)
   LENG=DX**2.0D0+DY**2.0D0; IF(LENG.GT.0.0D0)LENG=SQRT(LENG)
 
   !## store results in row/column indices
-  CA(I-1)=REAL(ICOL,8)
-  RA(I-1)=REAL(IROW,8)
+  CA(I-1)=DBLE(ICOL)
+  RA(I-1)=DBLE(IROW)
 
   LN(I-1)=LENG
  END DO

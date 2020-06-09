@@ -2019,8 +2019,8 @@ CONTAINS
  IF(PROFILE_GETLOCATION(XC,YC,GX))THEN; ENDIF
 
  CALL WDIALOGSELECT(ID_DIDFINFO)
- CALL WDIALOGPUTSTRING(IDF_GROUP1,'Current Loc. X='//TRIM(ITOS(INT(XC)))// &
-                                  ' m; Y='//TRIM(ITOS(INT(YC)))//' m; Z='//TRIM(RTOS(GY,'F',2)))
+ CALL WDIALOGPUTSTRING(IDF_GROUP1,'Current Loc. X='//TRIM(RTOS(XC,'F',3))// &
+                                  ' m; Y='//TRIM(RTOS(YC,'F',3))//' m; Z='//TRIM(RTOS(GY,'F',3)))
 
  !## get number of 
  NND=0
