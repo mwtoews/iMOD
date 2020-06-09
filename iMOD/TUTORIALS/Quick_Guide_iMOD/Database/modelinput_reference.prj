@@ -414,8 +414,10 @@ STEADY-STATE
 
 0001,(WEL),1, Wells,[WRA]
 STEADY-STATE
-001,001
- 1,2, 018,   1.000000    ,   0.000000    ,  -999.9900    ,'$DBASE$\TUTORIALS\Quick_Guide_iMOD\Database\WEL\wells_PLG_l18.ipf'
+001,003
+ 1,2, 013,   1.000000    ,   0.000000    ,  -999.9900    ,'$DBASE$\TUTORIALS\Quick_Guide_iMOD\Database\WEL\wells_PLG_l13.ipf'
+ 1,2, 025,   1.000000    ,   0.000000    ,  -999.9900    ,'$DBASE$\TUTORIALS\Quick_Guide_iMOD\Database\WEL\wells_PLG_l25.ipf'
+ 1,2, 033,   1.000000    ,   0.000000    ,  -999.9900    ,'$DBASE$\TUTORIALS\Quick_Guide_iMOD\Database\WEL\wells_PLG_l33.ipf'
 
 0001,(DRN),1, Drainage,[CON,DEL]
 STEADY-STATE
