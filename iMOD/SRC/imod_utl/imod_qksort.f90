@@ -443,7 +443,7 @@ CONTAINS
  !###====================================================
  IMPLICIT NONE
  INTEGER,INTENT(IN) :: N
- INTEGER,DIMENSION(N) :: A
+ INTEGER,DIMENSION(:) :: A
  INTEGER :: I,J,INC
  INTEGER :: V
 
