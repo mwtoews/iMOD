@@ -3,5 +3,5 @@
 	<Configurations>
 		<Configuration Name="Debug|Win32" CommandArguments="d:\IMOD-MODELS\LHM\AGGREGATE.INI" WorkingDirectory="d:\IMOD\"/>
 		<Configuration Name="Release|Win32"/>
-		<Configuration Name="Debug|x64" CommandArguments="d:\COMPILE\ossdeltares\iMOD\TUTORIALS\TUT_MF6\runfile.ini" WorkingDirectory="D:\IMOD"/>
+		<Configuration Name="Debug|x64" WorkingDirectory="D:\IMOD"/>
 		<Configuration Name="Release|x64" CommandArguments="d:\IMOD-MODELS\INT_PATHLINES\ARNHEM\IMOD_USER\MODELS\MF6\MF6TOIDF.INI" WorkingDirectory="d:\IMOD"/></Configurations></VisualStudioUserFile>
