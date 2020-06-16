@@ -5682,17 +5682,24 @@ SOLLOOP: DO I=1,NSOLLIST
   
   !## define tt as a function of it
   TT=-999
-  DO J=1,N
-   LSOLID=.FALSE.; IF(IT(J,1).GT.-900.0D0.AND.IT(J,2).GT.-900.0D0)LSOLID=.TRUE.
-   IF(IPROF(3).NE.0.AND.LSOLID)LSOLID=IT(J,3).GT.-900.0D0
-   IF(LSOLID)THEN
-    TT(J)=1 
-    IF(IT(J,1).EQ.IT(J,2))TT(J)=IT(J,1)
-    IF(IPROF(3).NE.0)THEN
-     IF(TT(J).EQ.0)TT(J)=IT(J,3) 
+  !## voxel model
+  IF(IPROF(1).EQ.0.AND.IPROF(2).EQ.0)THEN
+   DO J=1,N
+    IF(IPROF(3).NE.0)TT(J)=IT(J,3) !LSOLID=IT(J,3).GT.-900.0D0
+   ENDDO
+  ELSE
+   DO J=1,N
+    LSOLID=.FALSE.; IF(IT(J,1).GT.-900.0D0.AND.IT(J,2).GT.-900.0D0)LSOLID=.TRUE.
+    IF(IPROF(3).NE.0.AND.LSOLID)LSOLID=IT(J,3).GT.-900.0D0
+    IF(LSOLID)THEN
+     TT(J)=1 
+     IF(IT(J,1).EQ.IT(J,2))TT(J)=IT(J,1)
+     IF(IPROF(3).NE.0)THEN
+      IF(TT(J).EQ.0)TT(J)=IT(J,3) 
+     ENDIF
     ENDIF
-   ENDIF
-  ENDDO
+   ENDDO
+  ENDIF
   
   DO J=1,N
    !## set start
@@ -5735,7 +5742,6 @@ SOLLOOP: DO I=1,NSOLLIST
    
    !## next segment is inactive   
    IF(TT(IPOS).EQ.2)GOFORIT=.FALSE.
-!   IF(TT(IPOS).EQ.2.AND.TT(IPOS+1).NE.-1)GOFORIT=.FALSE.
    
    !## assign coordinate and z-values to knickpoints
    TX=0.0D0
@@ -5750,8 +5756,6 @@ SOLLOOP: DO I=1,NSOLLIST
     !## between interval or in last interval
     IF(XT(IPOS).GE.TX(1).AND.XT(IPOS).LE.TX(2).OR. &
        J.EQ.SPF(I)%NXY)THEN
-!    IF(XT(IPOS).GE.TX(1)-MINT.AND.XT(IPOS).LE.TX(2)+MINT.OR. &
-!       J.EQ.SPF(I)%NXY)THEN
 
      !## llc
      X(1)=SPF(I)%X(J-1)+GX*(XT(IPOS-1)-TX(1))
@@ -5803,7 +5807,8 @@ SOLLOOP: DO I=1,NSOLLIST
        IF(SIZE(IDFPLOT).LT.IPROF(3))THEN
         IICLR=WRGB(255,0,0)
        ELSE
-        IICLR=UTL_IDFGETCLASS(IDFPLOT(IPROF(3))%LEG,ZT(IPOS,3))
+        IICLR=UTL_IDFGETCLASS(IDFPLOT(IPROF(3))%LEG,ZT(IPOS-1,3))
+!        IICLR=UTL_IDFGETCLASS(IDFPLOT(IPROF(3))%LEG,ZT(IPOS,3))
        ENDIF
       ELSE
        !## get color for z-mean between two segments
@@ -5813,7 +5818,6 @@ SOLLOOP: DO I=1,NSOLLIST
         ELSE
          IICLR=SPF(I)%PROF(JPROF)%ICLR
         ENDIF
-!        SPF(I)%PROF(JPROF)%ICLR=IICLR
        ELSE
         IICLR=SPF(I)%PROF(JPROF)%ICLR
        ENDIF
@@ -5851,7 +5855,8 @@ SOLLOOP: DO I=1,NSOLLIST
 
        !## show interfaces
        IF(IPROF(3).GT.0)THEN
-        IICLR=UTL_IDFGETCLASS(IDFPLOT(IPROF(3))%LEG,ZT(IPOS,3))
+        IICLR=UTL_IDFGETCLASS(IDFPLOT(IPROF(3))%LEG,ZT(IPOS-1,3))
+!        IICLR=UTL_IDFGETCLASS(IDFPLOT(IPROF(3))%LEG,ZT(IPOS,3))
         SPF(I)%PROF(IPROF(3))%ICLR=IICLR
        ELSE
         IICLR=SPF(I)%PROF(IPROF(2))%ICLR

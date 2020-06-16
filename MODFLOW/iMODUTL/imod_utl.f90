@@ -302,6 +302,7 @@ CONTAINS
  INTEGER,ALLOCATABLE,DIMENSION(:,:) :: SELQID
  REAL(KIND=8),ALLOCATABLE,DIMENSION(:) :: B
  REAL(KIND=8),ALLOCATABLE,DIMENSION(:,:) :: A
+ LOGICAL :: LEX
  
  !## set range of kriging to initial range - if zero determine based upon pilot point distance
  RANGE=INIRANGE
@@ -323,10 +324,18 @@ CONTAINS
  DO ID=1,NP
   
   CALL UTL_IDFIROWICOL(BLNKOUT,IROW,ICOL,XD(ID),YD(ID))
-  !## same zone as original point
-  IF(BLNKOUT%X(ICOL,IROW).EQ.IZONE)THEN
 
-   DXY=UTL_DIST(XD(ID),YD(ID),X,Y) !.LE.RANGE)THEN
+  !## include them from outside the model
+  IF(IROW.NE.0.AND.ICOL.NE.0)THEN
+   !## same zone as original point
+   LEX=BLNKOUT%X(ICOL,IROW).EQ.IZONE
+  ELSE
+   LEX=.TRUE.
+  ENDIF
+  
+  IF(LEX)THEN
+  
+   DXY=UTL_DIST(XD(ID),YD(ID),X,Y)
 
    !## determine quadrant
    IF(IQUADRANT.EQ.0)THEN
@@ -549,10 +558,11 @@ CONTAINS
  IDF%IEQ=1
  ALLOCATE(IDF%SX(0:NCOL),IDF%SY(0:NROW))
  IDF%SX=DELR; IDF%SY=DELC
- !## snap coordinates to model network
+ !## snap coordinates
  DO I=1,MD
   CALL UTL_IDFIROWICOL(IDF,IROW,ICOL,XD(I),YD(I))
-  CALL UTL_IDFGETLOC(IDF,IROW,ICOL,XD(I),YD(I))
+  !## snap them inside model domain, leave them intact outside model domain
+  IF(IROW.GT.0.AND.ICOL.GT.0)CALL UTL_IDFGETLOC(IDF,IROW,ICOL,XD(I),YD(I))
  ENDDO
  DEALLOCATE(IDF%SX,IDF%SY)
  !## mark doubles with nodata and compute mean for those double points
