@@ -868,7 +868,10 @@ call pks7mpibarrier() ! PKS
     end do ! Mozart loop
  end do
 
-! ... end
+ !## deallocate memory
+ call pest1_deallocate()
+
+ ! ... end
  call osd_chdir(modwd2)
  if (exitcode.eq.0)  call mf2005_finishSimulation(retValMF2005)
  if (retValMF2005.ne.0 ) exitcode = -61

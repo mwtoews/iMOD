@@ -698,8 +698,6 @@ C----------READ USING PACKAGE READ AND PREPARE MODULES.
      1                           IUNIT(IUBCF6),
      1                           IUNIT(IULPF),IUNIT(IUHUF2),KKPER,IGRID)
         IF(IUNIT(IUDXC).GT.0) CALL gwf2dxc1rp(igrid)                       ! DLT: Data eXChance package
-
-        call pest1_deallocate()
         
       endif  ! next stress period
       
