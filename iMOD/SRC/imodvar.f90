@@ -39,8 +39,8 @@ REAL(KIND=DP_KIND),PARAMETER :: IMODDATA=HUGE(1.0)    !## iMOD default nodata va
 
 LOGICAL :: LBETA=.TRUE.           !## if TRUE: Show question whether it is allowed to use Beta-version or not
 LOGICAL :: LBETA_QUESTION=.FALSE. !## overrule the question at startup
-LOGICAL :: LEXPDATE=.TRUE.        !## if TRUE: activate expire date
-INTEGER :: EXPDATE=20200801       !## expire data, after this date the iMOD-beta version cannot be used.
+LOGICAL :: LEXPDATE=.TRUE.       !## if TRUE: activate expire date
+INTEGER :: EXPDATE=20201030       !## expire data, after this date the iMOD-beta version cannot be used.
 INTEGER,SAVE :: ICDEBUGLEVEL      !## applied current debuglevel
 
 INTEGER,SAVE :: GKEYPRESSED       !## keypressed (cntr/shift)
