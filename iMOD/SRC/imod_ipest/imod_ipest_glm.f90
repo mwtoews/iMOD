@@ -425,6 +425,40 @@ MAINLOOP: DO
  END FUNCTION IPEST_GLM_CHK
  
  !###====================================================================
+ SUBROUTINE IPEST_GLM_READ_ZONES(DIR)
+ !###====================================================================
+ IMPLICIT NONE
+ CHARACTER(LEN=*),INTENT(IN) :: DIR
+ INTEGER :: JU,I,J
+ 
+ JU=UTL_GETUNIT(); OPEN(JU,FILE=TRIM(DIR)//'\PARAM_DUMP_IPEST.DAT',STATUS='OLD',ACTION='READ',FORM='FORMATTED')
+ DO I=1,SIZE(PEST%PARAM)
+  READ(JU,*) PEST%PARAM(I)%NODES,PEST%PARAM(I)%ZTYPE
+  IF(PEST%PARAM(I)%ZTYPE.EQ.0)THEN
+   ALLOCATE(PEST%PARAM(I)%IROW(PEST%PARAM(I)%NODES), &
+            PEST%PARAM(I)%ICOL(PEST%PARAM(I)%NODES), &
+            PEST%PARAM(I)%F(   PEST%PARAM(I)%NODES))
+   DO J=1,PEST%PARAM(I)%NODES
+    READ(JU,*) PEST%PARAM(I)%IROW(J),PEST%PARAM(I)%ICOL(J),PEST%PARAM(I)%F(J)
+   ENDDO
+  ELSE
+   ALLOCATE(PEST%PARAM(I)%XY(PEST%PARAM(I)%NODES,2))
+   DO J=1,PEST%PARAM(I)%NODES
+    READ(JU,*) PEST%PARAM(I)%XY(J,1),PEST%PARAM(I)%XY(J,2)
+   ENDDO
+  ENDIF
+  IF(PEST%PARAM(I)%PPARAM.EQ.'HF')THEN
+   PEST%PARAM(I)%NODES=0 !## one single cell used as zone for horizontal barrier module
+  ELSE
+   IF(PEST%PARAM(I)%NODES.EQ.0)PEST%PARAM(I)%PACT=0
+  ENDIF
+ 
+ ENDDO
+ CLOSE(JU)  
+  
+ END SUBROUTINE IPEST_GLM_READ_ZONES
+ 
+ !###====================================================================
  SUBROUTINE IPEST_GLM_RESET_PARAMETER()
  !###====================================================================
  IMPLICIT NONE

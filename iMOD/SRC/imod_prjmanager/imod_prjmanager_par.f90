@@ -335,7 +335,12 @@ MODULE MOD_PMANAGER_PAR
   REAL(KIND=DP_KIND) :: PMIN=0.01D0
   REAL(KIND=DP_KIND) :: PMAX=100.0D0
   REAL(KIND=DP_KIND) :: PINCREASE=2.0D0
-  INTEGER,POINTER,DIMENSION(:) :: ILS 
+  INTEGER,POINTER,DIMENSION(:) :: ILS=>NULL()
+  INTEGER,POINTER,DIMENSION(:) :: ICOL=>NULL()
+  INTEGER,POINTER,DIMENSION(:) :: IROW=>NULL()
+  REAL(KIND=DP_KIND),POINTER,DIMENSION(:) :: F=>NULL()     !## fraction
+  REAL(KIND=DP_KIND),POINTER,DIMENSION(:,:) :: XY=>NULL()     !## fraction
+  INTEGER :: NODES,ZTYPE
   CHARACTER(LEN=256) :: ICOVFNAME
   REAL(KIND=DP_KIND),POINTER,DIMENSION(:,:) :: COV,ICOV,SQRTCOV,ISQRTCOV,AM,MPR
   CHARACTER(LEN=256),POINTER,DIMENSION(:) :: REALSFNAME
@@ -426,13 +431,12 @@ MODULE MOD_PMANAGER_PAR
  INTEGER,DIMENSION(:),ALLOCATABLE :: ULAKES,DULAKES,NP_IPER
  INTEGER :: NLAKES
 
-! CHARACTER(LEN=52),SAVE :: MODELNAME='Model'
  REAL(KIND=DP_KIND),DIMENSION(7) :: SUBMODEL ! xmin, ymin, xmax, ymax, cell size, buffer, max buffer celsize. Result from Tab2 
  
  CHARACTER(LEN=8),DIMENSION(9) :: TMENU1
  CHARACTER(LEN=8),DIMENSION(10) :: TMENU2
  DATA TMENU1/'Minutes ','Hourly  ','Daily   ','Weekly  ','Decade  ', &
-             '14/28   ','Monthly ','Yearly  ','Packages'/ !,'Custom  '/
+             '14/28   ','Monthly ','Yearly  ','Packages'/ 
  DATA TMENU2/'Minutes ','Hourly  ','Daily   ','Weekly  ','Decade  ', &
              '14/28   ','Monthly ','Yearly  ','Packages','All     '/
  
