@@ -580,6 +580,9 @@ CONTAINS
 !   WRITE(10,*) I,X(I)
   ENDDO
 !  CLOSE(10)
+   write(*,*) minval(x),maxval(x)
+!   X=X*2.0D0/3.0D0
+!   write(*,*) minval(x),maxval(x)
 
 !### NOTE
 ! het is de bedoeling om wel de normal-sampling te gebruiken maar de variance moet dan juist geschaal worden
