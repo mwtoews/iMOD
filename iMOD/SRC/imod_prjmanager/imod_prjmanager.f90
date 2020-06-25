@@ -1413,12 +1413,25 @@ CONTAINS
   ELSEIF(PBMAN%IPESTP.EQ.1)THEN
    IF(I.GT.0)THEN
     IF(PEST%PARAM(I)%PACT.EQ.0.OR.PEST%PARAM(I)%PIGROUP.LT.0)CYCLE
-    CALL OSD_OPEN(IU,FILE=TRIM(DIR)//'\RUN_P#'//TRIM(ITOS(I))//'.BAT',STATUS='REPLACE',ACTION='WRITE,DENYREAD',IOSTAT=IOS)
+    !## mf6
+    IF(PBMAN%IFORMAT.EQ.3)THEN
+     CALL OSD_OPEN(IU,FILE=TRIM(DIR)//'\P#'//TRIM(ITOS(I))//'\RUN_P#'//TRIM(ITOS(I))//'.BAT',STATUS='REPLACE',ACTION='WRITE,DENYREAD',IOSTAT=IOS)
+    ELSE
+     CALL OSD_OPEN(IU,FILE=TRIM(DIR)//'\RUN_P#'//TRIM(ITOS(I))//'.BAT',STATUS='REPLACE',ACTION='WRITE,DENYREAD',IOSTAT=IOS)
+    ENDIF
    ELSE
-    CALL OSD_OPEN(IU,FILE=TRIM(DIR)//'\RUN_L#'//TRIM(ITOS(ABS(I)))//'.BAT',STATUS='REPLACE',ACTION='WRITE,DENYREAD',IOSTAT=IOS)
+    IF(PBMAN%IFORMAT.EQ.3)THEN
+     CALL OSD_OPEN(IU,FILE=TRIM(DIR)//'\L#'//TRIM(ITOS(ABS(I)))//'\RUN_L#'//TRIM(ITOS(ABS(I)))//'.BAT',STATUS='REPLACE',ACTION='WRITE,DENYREAD',IOSTAT=IOS)
+    ELSE
+     CALL OSD_OPEN(IU,FILE=TRIM(DIR)//'\RUN_L#'//TRIM(ITOS(ABS(I)))//'.BAT',STATUS='REPLACE',ACTION='WRITE,DENYREAD',IOSTAT=IOS)
+    ENDIF
    ENDIF
   ELSEIF(PBMAN%IIES.EQ.1)THEN
-   CALL OSD_OPEN(IU,FILE=TRIM(DIR)//'\RUN_R#'//TRIM(ITOS(I))//'.BAT',STATUS='REPLACE',ACTION='WRITE,DENYREAD',IOSTAT=IOS)
+   IF(PBMAN%IFORMAT.EQ.3)THEN
+    CALL OSD_OPEN(IU,FILE=TRIM(DIR)//'\R#'//TRIM(ITOS(I))//'\RUN_R#'//TRIM(ITOS(I))//'.BAT',STATUS='REPLACE',ACTION='WRITE,DENYREAD',IOSTAT=IOS)
+   ELSE
+    CALL OSD_OPEN(IU,FILE=TRIM(DIR)//'\RUN_R#'//TRIM(ITOS(I))//'.BAT',STATUS='REPLACE',ACTION='WRITE,DENYREAD',IOSTAT=IOS)
+   ENDIF
   ENDIF
 
   IF(IOS.NE.0)THEN
@@ -1463,16 +1476,24 @@ CONTAINS
      WRITE(IU,'(/A/)') '"'//TRIM(SEXENAME)//'" "'//TRIM(MNAME)//'.nam" -ipest ".\modelinput\'//TRIM(MNAME)//'.pst1"'
     !## parrallel ipest
     ELSEIF(PBMAN%IPESTP.EQ.1)THEN
-     IF(I.GT.0)THEN
-      WRITE(IU,'(/A/)') '"'//TRIM(SEXENAME)//'" "'//TRIM(MNAME)//'_P#'//TRIM(ITOS(I))//'.nam" -ipest ".\modelinput\'// &
-                             TRIM(MNAME)//'_P#'//TRIM(ITOS(I))//'.pst1"'
+     IF(PBMAN%IFORMAT.EQ.3)THEN
+      WRITE(IU,'(/A/)') '"'//TRIM(SEXENAME)
      ELSE
-      WRITE(IU,'(/A/)') '"'//TRIM(SEXENAME)//'" "'//TRIM(MNAME)//'_L#'//TRIM(ITOS(ABS(I)))//'.nam" -ipest ".\modelinput\'// &
-                             TRIM(MNAME)//'_L#'//TRIM(ITOS(ABS(I)))//'.pst1"'
+      IF(I.GT.0)THEN
+       WRITE(IU,'(/A/)') '"'//TRIM(SEXENAME)//'" "'//TRIM(MNAME)//'_P#'//TRIM(ITOS(I))//'.nam" -ipest ".\modelinput\'// &
+                              TRIM(MNAME)//'_P#'//TRIM(ITOS(I))//'.pst1"'
+      ELSE
+       WRITE(IU,'(/A/)') '"'//TRIM(SEXENAME)//'" "'//TRIM(MNAME)//'_L#'//TRIM(ITOS(ABS(I)))//'.nam" -ipest ".\modelinput\'// &
+                              TRIM(MNAME)//'_L#'//TRIM(ITOS(ABS(I)))//'.pst1"'
+      ENDIF
      ENDIF
     !## ies
     ELSEIF(PBMAN%IIES.EQ.1)THEN
-     WRITE(IU,'(/A/)') '"'//TRIM(SEXENAME)//'" "'//TRIM(MNAME)//'_R#'//TRIM(ITOS(I))//'.nam" -ipest ".\modelinput\'//TRIM(MNAME)//'.pst1"'
+     IF(PBMAN%IFORMAT.EQ.3)THEN
+      WRITE(IU,'(/A/)') '"'//TRIM(SEXENAME)
+     ELSE
+      WRITE(IU,'(/A/)') '"'//TRIM(SEXENAME)//'" "'//TRIM(MNAME)//'_R#'//TRIM(ITOS(I))//'.nam" -ipest ".\modelinput\'//TRIM(MNAME)//'.pst1"'
+     ENDIF
     ENDIF
    ENDIF
  
