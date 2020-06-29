@@ -71,7 +71,7 @@ CONTAINS
    !## read from idf file and save the realisations in lpf package - apply the correct IDF files and export them in for the realizations
    JLAMBDA=1; CALL IPEST_IES_SAVEREALS(DIR,ITER,JLAMBDA,MNAME)
    !## run and process all realizations-testing
-   CALL IPEST_GLM_RUNMODELS(IBATCH,RNG,GPARAM,'R',DIR,MNAME,ITER,LAMBDA,JLAMBDA)
+   IF(.NOT.IPEST_GLM_RUNMODELS(IBATCH,RNG,GPARAM,'R',DIR,MNAME,ITER,LAMBDA,JLAMBDA))EXIT
   !## carry out the lambda tests
   ELSE
    !## simulate ensembles of different lambdas
@@ -81,7 +81,7 @@ CONTAINS
     L=LAMBDA*PBMAN%LAMBDA_TEST(ILAMBDA)
     !## run and process all realizations-testing
     WRITE(IUPESTPROGRESS,'(/A)') 'Lambda Testing '//TRIM(ITOS(ILAMBDA))//' ('//TRIM(RTOS(L,'G',7))//')'
-    CALL IPEST_GLM_RUNMODELS(IBATCH,RNG,GPARAM,'R',DIR,MNAME,ITER,L,ILAMBDA)
+    IF(.NOT.IPEST_GLM_RUNMODELS(IBATCH,RNG,GPARAM,'R',DIR,MNAME,ITER,L,ILAMBDA))EXIT
     !## evaluate which lambda is best
     IF(SUM(JE(:,ITER)).LT.MINJ)THEN
      MINJ=SUM(JE(:,ITER)); JLAMBDA=ILAMBDA
@@ -97,7 +97,7 @@ CONTAINS
    LAMBDA=L
    !## read residuals of all ensembles for selected jlambda
    DO IGRAD=1,SIZE(RNG)
-    IF(.NOT.IPEST_GLM_GETJ(DIR,IGRAD,GPARAM(IGRAD),'R',IBATCH,JLAMBDA))RETURN 
+    IF(.NOT.IPEST_GLM_GETJ(DIR,IGRAD,GPARAM(IGRAD),'R',IBATCH,JLAMBDA,MNAME))RETURN 
     JE(IGRAD,ITER)=MSR%TJ
    ENDDO
 
