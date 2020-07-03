@@ -338,7 +338,6 @@ CONTAINS
  
  !## get current sum of weighted objective function values
  MSR%TJ=SUM(SO)+SUM(MO); MSR%J=SUM(O)/DBLE(TIMEDIM)/DBLE(OBSDIM)
-! MSR%TJ=SUM(SO); MSR%J=SUM(O)/DBLE(TIMEDIM)/DBLE(OBSDIM)
 
  !## write total objective function value
  WRITE(IUPESTOUT,'(27A1)') ('-',I=1,27)

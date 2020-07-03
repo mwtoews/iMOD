@@ -288,6 +288,8 @@ MAINLOOP: DO
      !## error occured 
      IF(IEXCOD.NE.0)THEN
       CALL IPEST_GLM_ERROR(IBATCH,'ERROR OCCURED RUNNING MODEL '//RT//'#'//TRIM(ITOS(RPARAM(JGRAD))))
+      !## question to continue?
+      WRITE(*,'(/A/$)') 'Inspect this model and click return to restart the simulation'; PAUSE
       !## try again - need to run again
       ISTATUS(JGRAD)=-1
      ENDIF
@@ -885,12 +887,15 @@ MAINLOOP: DO
  INTEGER :: I,J,K,ILAY,ISUB,IROW,ICOL
  REAL(KIND=DP_KIND) :: F,FCT
  REAL(KIND=DP_KIND),POINTER,DIMENSION(:,:) :: XORG,XADJ
- CHARACTER(LEN=2),DIMENSION(2) :: IPTYPE
- CHARACTER(LEN=3),DIMENSION(2) :: FPTYPE
+ CHARACTER(LEN=2),DIMENSION(4) :: IPTYPE
+ CHARACTER(LEN=3),DIMENSION(4) :: FPTYPE
+ CHARACTER(LEN=4),DIMENSION(4) :: SVFILE
  CHARACTER(LEN=256) :: FNAME
-
- IPTYPE=['KH','VA']
- FPTYPE=['K','K33']
+ LOGICAL :: LEX
+ 
+ IPTYPE=['KH ' ,'VA'  ,'SC'  ,'SY' ]
+ FPTYPE=['K'   ,'K33' ,'SS'  ,'SY' ]
+ SVFILE=['NPF6','NPF6','STO6','STO6']
  
  !## modify parameters per submodel
  DO ISUB=1,PBMAN%NSUBMODEL
@@ -901,11 +906,58 @@ MAINLOOP: DO
   DO I=1,SIZE(IPTYPE)
    SELECT CASE (IPTYPE(I))
 
-    CASE ('KH','VA')
+    CASE ('DC','RC','GC')
+    
+     !## see whether this parameter is optimized
+     DO J=1,SIZE(PEST%PARAM); IF(PEST%PARAM(J)%PPARAM.EQ.IPTYPE(I))EXIT; ENDDO; IF(J.GT.SIZE(PEST%PARAM))CYCLE
+     
+     !## read original permeability-values
+     FNAME=TRIM(DIR)//'\GWF_'//TRIM(ITOS(ISUB))//'\MODELINPUT\'//SVFILE(I)//'\'//TRIM(FPTYPE(I))//'_L'//TRIM(ITOS(ILAY))//'.ARR'
+     INQUIRE(FILE=FNAME,EXIST=LEX)
+     IF(.NOT.LEX)THEN
+      WRITE(*,'(/A)') 'Cannot find '//TRIM(FNAME)
+      WRITE(*,'(A/)') 'Probably you are trying to calibrate a parameter not-existing in the current model'
+      STOP
+     ENDIF
+     IF(.NOT.IPEST_GLM_READ_ARRFILE(FNAME,XORG))RETURN
+     IF(.NOT.ASSOCIATED(XADJ))ALLOCATE(XADJ(SIZE(XORG,1),SIZE(XORG,2)))
+     XADJ=0.0D0
+     !## process permeability-values
+     DO J=1,SIZE(PEST%PARAM); IF(PEST%PARAM(J)%PPARAM.NE.IPTYPE(I))CYCLE; IF(PEST%PARAM(J)%PILS.NE.ILAY)CYCLE
+      !## found correct parameter - apply factor
+      FCT=PEST%PARAM(J)%ALPHA(1); IF(PEST%PARAM(J)%PLOG.EQ.1)FCT=10.0D0**FCT
+      IF(PEST%PARAM(J)%ZTYPE.EQ.0)THEN
+       DO K=1,PEST%PARAM(J)%NODES
+        IROW=PEST%PARAM(J)%IROW(K)
+        ICOL=PEST%PARAM(J)%ICOL(K)
+        F   =PEST%PARAM(J)%F(K)
+        XADJ(ICOL,IROW)=XADJ(ICOL,IROW)+XORG(ICOL,IROW)*F*FCT
+       ENDDO      
+      ENDIF
+     ENDDO
+     
+     !## save adjusted permeability-values
+     FNAME=TRIM(DIR)//'\GWF_'//TRIM(ITOS(ISUB))//'\MODELINPUT\'//SVFILE(I)//'\'//TRIM(FPTYPE(I))//'_L'//TRIM(ITOS(ILAY))//'_'//RT//'#'//TRIM(ITOS(IPARAM))//'.ARR'
+     IF(.NOT.IPEST_GLM_WRITE_ARRFILE(FNAME,XADJ))RETURN
+      
+     !## deallocate memory
+     DEALLOCATE(XORG,XADJ)
+
+    CASE ('KH','VA','SC','SY')
+    
+     !## see whether this parameter is optimized
+     DO J=1,SIZE(PEST%PARAM); IF(PEST%PARAM(J)%PPARAM.EQ.IPTYPE(I))EXIT; ENDDO; IF(J.GT.SIZE(PEST%PARAM))CYCLE
+
      DO ILAY=1,PRJNLAY
       
       !## read original permeability-values
-      FNAME=TRIM(DIR)//'\GWF_'//TRIM(ITOS(ISUB))//'\MODELINPUT\NPF\'//TRIM(FPTYPE(I))//'_L'//TRIM(ITOS(ILAY))//'.ARR'
+      FNAME=TRIM(DIR)//'\GWF_'//TRIM(ITOS(ISUB))//'\MODELINPUT\'//SVFILE(I)//'\'//TRIM(FPTYPE(I))//'_L'//TRIM(ITOS(ILAY))//'.ARR'
+      INQUIRE(FILE=FNAME,EXIST=LEX)
+      IF(.NOT.LEX)THEN
+       WRITE(*,'(/A)') 'Cannot find '//TRIM(FNAME)
+       WRITE(*,'(A/)') 'Probably you are trying to calibrate a parameter not-existing in the current model'
+       STOP
+      ENDIF
       IF(.NOT.IPEST_GLM_READ_ARRFILE(FNAME,XORG))RETURN
       IF(.NOT.ASSOCIATED(XADJ))ALLOCATE(XADJ(SIZE(XORG,1),SIZE(XORG,2)))
       XADJ=0.0D0
@@ -924,7 +976,7 @@ MAINLOOP: DO
       ENDDO
       
       !## save adjusted permeability-values
-      FNAME=TRIM(DIR)//'\GWF_'//TRIM(ITOS(ISUB))//'\MODELINPUT\NPF\'//TRIM(FPTYPE(I))//'_L'//TRIM(ITOS(ILAY))//'_'//RT//'#'//TRIM(ITOS(IPARAM))//'.ARR'
+      FNAME=TRIM(DIR)//'\GWF_'//TRIM(ITOS(ISUB))//'\MODELINPUT\'//SVFILE(I)//'\'//TRIM(FPTYPE(I))//'_L'//TRIM(ITOS(ILAY))//'_'//RT//'#'//TRIM(ITOS(IPARAM))//'.ARR'
       IF(.NOT.IPEST_GLM_WRITE_ARRFILE(FNAME,XADJ))RETURN
       
       !## deallocate memory
@@ -1077,10 +1129,16 @@ MAINLOOP: DO
  DO I=1,NP; S(I)=S(I)/DBLE(MSR%NOBS); ENDDO
 
  TS=SUM(ABS(S)); IPARAM=0; DO I=1,SIZE(PEST%PARAM)
+  !## skip inactive parameters
   IF(PEST%PARAM(I)%PACT.NE.1)CYCLE; IPARAM=IPARAM+1; IF(TS.NE.0.0D0)S(IPARAM)=S(IPARAM)/TS
  ENDDO; S=ABS(S)*100.0D0
-
  WRITE(IUPESTSENSITIVITY,'(I10,99999F15.7)') ITER,(S(I),I=1,NP)
+
+ IPARAM=0; DO I=1,SIZE(PEST%PARAM)
+  IF(PEST%PARAM(I)%PACT.NE.1)CYCLE; IPARAM=IPARAM+1
+  !## remove sensitivities of zero
+  IF(S(IPARAM).LE.0.0D0)PEST%PARAM(I)%PACT=-1
+ ENDDO
 
  !##===================
  !## write statistics of ALL parameters prior to the update
@@ -1092,12 +1150,17 @@ MAINLOOP: DO
  !## write statistics (covariance/correlation)
  CALL IPEST_GLM_JQJ(IBATCH,MARQUARDT,JQJ,NP,.TRUE.)
  
- !##===================
+ !## reset insensitive parameters to log them in a list
+ IPARAM=0; DO I=1,SIZE(PEST%PARAM)
+  IF(PEST%PARAM(I)%PACT.NE.1)CYCLE; IPARAM=IPARAM+1
+  !## remove sensitivities of zero
+  IF(S(IPARAM).LE.0.0D0)PEST%PARAM(I)%PACT=1
+ ENDDO
  
  !## reset parameters - alpha(2)=previous alpha
  DO I=1,SIZE(PEST%PARAM); PEST%PARAM(I)%ALPHA(1)=PEST%PARAM(I)%ALPHA(2); ENDDO
 
- !## "freeze"-insensitive parameters
+ !## "freeze"-insensitive parameters according to a specified sens-criterion
  K=0; DO J=1,2
   IF(J.EQ.2)WRITE(IUPESTOUT,'(/A/)') 'List of Insensitive Parameter (Sensitivity <= '//TRIM(RTOS(PEST%PE_SENS,'F',7))//' %)'
   IPARAM=0; DO I=1,SIZE(PEST%PARAM)
