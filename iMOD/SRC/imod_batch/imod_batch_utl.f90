@@ -559,7 +559,7 @@ CONTAINS
 !  FLUSH(10)
 ! ENDIF
 
- WRITE(*,'(A10,3A15)') 'NPOP','MEAN','STDV','VARIANCE'
+ WRITE(*,'(A10,4A15)') 'NPOP','LOG10(MEAN)','LOG10(STDV)','MEAN','STDV'
 
  ALLOCATE(X(N)); X=0.0D0
  
@@ -626,7 +626,7 @@ CONTAINS
   !## all of the ensembles go to stdv - statistics is for log10 distribution
   CALL UTL_STDEF(V,N,-999.99D0,STDV,XT,NPOP)
   
-  WRITE(*,'(I10,3F15.7)') NPOP,XT,STDV,STDV**2.0D0
+  WRITE(*,'(I10,4F15.7)') NPOP,XT,STDV,10.0**XT,10.0D0**STDV !STDV**2.0D0
    
   IF(ILOG)THEN
    DO I=1,N
