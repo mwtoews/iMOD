@@ -1,7 +1,7 @@
 MODULE MOD_BATCH_UTL
 
 USE WINTERACTER
-USE MOD_PMANAGER_PAR, ONLY : PBMAN,TOP,BOT,TOPICS,TKHV
+USE MOD_PMANAGER_PAR, ONLY : PBMAN,TOP,BOT,TOPICS,TKHV,PEST
 USE MOD_IDF, ONLY : IDFNULLIFY,IDFALLOCATEX,IDFWRITE,IDFGETLOC
 USE MOD_UTL, ONLY : UTL_READPOINTER,UTL_READINITFILE,ITOS,UTL_REALTOSTRING,UTL_GETGAMMA,UTL_STDEF, &
   UTL_CREATEDIR,UTL_MATMUL,UTL_READPOINTER_REAL
@@ -432,11 +432,11 @@ CONTAINS
  INTEGER :: N,I,J,IROW,ICOL,IROW2,ICOL2,ISIM,KTYPE,NPOP,SEED
  REAL(KIND=DP_KIND),DIMENSION(:,:),ALLOCATABLE :: COV,COR,EV,EVAL
  REAL(KIND=DP_KIND),DIMENSION(:),ALLOCATABLE :: V,M,X,E,EW
- REAL(KIND=DP_KIND) :: GAMMA,XCOR,X1,Y1,X2,Y2,STDV,XT,SMALL,NUGGET,SILL !,HV,LV
+ REAL(KIND=DP_KIND) :: GAMMA,XCOR,X1,Y1,X2,Y2,STDV,XT,SMALL,NUGGET,SILL
  TYPE(IDFOBJ) :: IDF
  LOGICAL :: LCHOL
  
- LCHOL=.TRUE.
+ LCHOL=.FALSE.; IF(PEST%PE_CHOLESKY.EQ.1)LCHOL=.TRUE.
  
  CALL UTL_CREATEDIR(DIR)
  
@@ -491,11 +491,6 @@ CONTAINS
   ENDDO
  ENDDO
 
-! OPEN(10,FILE=TRIM(DIR)//'\COV.TXT',STATUS='UNKNOWN',ACTION='WRITE')
-! WRITE(10,*) 'COVARIANCE MATRIX'; WRITE(10,*) N
-! DO I=1,N; DO J=1,N; WRITE(10,*) COV(I,J); ENDDO; ENDDO
-! CLOSE(10)
-
  !## save as IDF (for fun)
  CALL IDFNULLIFY(IDF)
  IDF%DX=1.0D0; IDF%DY=1.0D0; IDF%NCOL=N; IDF%NROW=N
@@ -504,21 +499,10 @@ CONTAINS
  IF(.NOT.IDFALLOCATEX(IDF))RETURN
  DO I=1,N; DO J=1,N; IDF%X(I,J)=COV(I,J); ENDDO; ENDDO
  IDF%FNAME=TRIM(DIR)//'\COV.IDF'; IF(.NOT.IDFWRITE(IDF,IDF%FNAME,1))STOP
-  
-! IF(N.LT.200)THEN
-!  OPEN(10,FILE=TRIM(DIR)//'\COV.M',STATUS='UNKNOWN',ACTION='WRITE')
-!  WRITE(10,*) 'COR=['
-!  DO J=1,N; WRITE(10,'(999G17.5)') (COR(J,I),I=1,N); ENDDO
-!  WRITE(10,*) ']'
-!  WRITE(10,*) 'C=['
-!  DO J=1,N; WRITE(10,'(999G17.5)') (COV(J,I),I=1,N); ENDDO
-!  WRITE(10,*) ']'
-!  FLUSH(10)
-! ENDIF
- 
+
  IF(LCHOL)THEN
  
-  !## perform choleski-decomposition A=LTL - delivers upper triangle is LT
+  !## perform cholesky-decomposition A=LTL - delivers upper triangle is LT
   CALL CHOLESKYDECOMPOSITION(COV,N) 
  
   DO I=1,N; DO J=1,N; IDF%X(I,J)=COV(I,J); ENDDO; ENDDO
@@ -535,14 +519,8 @@ CONTAINS
   CALL LUDCMP_TQLI(EW,E,N,N,EV)
   !## sort
   CALL LUDCMP_EIGSRT(EW,EV,N,N) 
+  EV=TRANSPOSE(EV)
 
-!  !## vector lengte - klopt zijn allemaal 1.0
-!  DO I=1,N
-!   X1=0.0D0; DO J=1,N
-!    X1=X1+EV(I,J)**2.0D0
-!   ENDDO
-!   WRITE(*,*) I,X1
-!  ENDDO
   EVAL=0.0D0; DO I=1,N
    IF(EW(I).LE.1.0D-10)EW(I)=0.0D0
    EVAL(I,I)=SQRT(EW(I))
@@ -551,13 +529,6 @@ CONTAINS
   DEALLOCATE(EV,EVAL,EW,E)
  
  ENDIF
- 
-! IF(N.LT.200)THEN
-!  WRITE(10,*) 'CHOL=['
-!  DO J=1,N; WRITE(10,'(999G17.5)') (COV(J,I),I=1,N); ENDDO
-!  WRITE(10,*) ']'
-!  FLUSH(10)
-! ENDIF
 
  WRITE(*,'(A10,4A15)') 'NPOP','LOG10(MEAN)','LOG10(STDV)','MEAN','STDV'
 
@@ -566,42 +537,14 @@ CONTAINS
  !## generate ensembles
  SEED=12345
  DO ISIM=1,NSIM
-!  OPEN(10,FILE=TRIM(DIR)//'\COV.M',STATUS='UNKNOWN',ACTION='WRITE')
+
   DO I=1,N
-!## PEST-IES IS DOING RANDOM-NORMAL SAMPLING AND THEN USE EIGENVECTORS
-!   IF(KLOG)THEN
-!    CALL LOG_NORMAL_SAMPLE (0.0D0, 1.0D0, SEED, X(I) )
-!    !## ln(samples) geeft normale verdeling
-!    X(I)=LOG(X(I))
-!   ELSE
    !## generates number -3 to +3 - in log-space permeability is normal-distributed
    CALL IPEST_NORMAL_MS_SAMPLE(0.0D0,1.0D0,SEED,X(I))
-!   ENDIF
-!   WRITE(10,*) I,X(I)
   ENDDO
-!  CLOSE(10)
-   write(*,*) minval(x),maxval(x)
-!   X=X*2.0D0/3.0D0
-!   write(*,*) minval(x),maxval(x)
 
-!### NOTE
-! het is de bedoeling om wel de normal-sampling te gebruiken maar de variance moet dan juist geschaal worden
-! dus ingeven minimale- en maximale waarde, dat levert kleine variance op geschaald met log10()
- 
-!  !## this creates similar ensembles as last succesfull run
-  !## creates values from 0 to 1
-!  CALL RANDOM_NUMBER(X); X=X-0.5D0
   V=0.0D0
 
-!  IF(N.LT.200)THEN
-!   WRITE(10,*) 'X=['
-!   DO J=1,N; WRITE(10,'(999G17.5)') X(J); ENDDO
-!   WRITE(10,*) ']'
-!   WRITE(10,*) 'M=['
-!   DO J=1,N; WRITE(10,'(999G17.5)') M(J); ENDDO
-!   WRITE(10,*) ']'
-!  ENDIF
- 
   !## z=m*Lx
   DO I=1,N
    V(I)=0.0D0
@@ -626,7 +569,7 @@ CONTAINS
   !## all of the ensembles go to stdv - statistics is for log10 distribution
   CALL UTL_STDEF(V,N,-999.99D0,STDV,XT,NPOP)
   
-  WRITE(*,'(I10,4F15.7)') NPOP,XT,STDV,10.0**XT,10.0D0**STDV !STDV**2.0D0
+  WRITE(*,'(I10,4F15.7)') NPOP,XT,STDV,10.0**XT,10.0D0**STDV
    
   IF(ILOG)THEN
    DO I=1,N
@@ -641,7 +584,6 @@ CONTAINS
   MEAN%FNAME=TRIM(DIR)//'\'//TRIM(FNAME)//'_R'//TRIM(ITOS(ISIM))//'.IDF'
   IF(.NOT.IDFWRITE(MEAN,MEAN%FNAME,1))STOP
  ENDDO
-! IF(N.LT.200)CLOSE(10)
 
  DEALLOCATE(COV,COR,X,V)
 
