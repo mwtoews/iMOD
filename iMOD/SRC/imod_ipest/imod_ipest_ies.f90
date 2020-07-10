@@ -63,6 +63,10 @@ CONTAINS
  CALL WMESSAGEENABLE(TIMEREXPIRED,1); MSR%PJ=HUGE(1.0D0); ITER=0
  DO WHILE (ITER.LE.PEST%PE_MXITER)
   
+  !## next iteration
+  WRITE(IUPESTOUT,'(/A/)') ' *** Next Optimization Cycle '//TRIM(ITOS(ITER+1))//' ***'
+  WRITE(*,'(/A/)')         ' *** Next Optimization Cycle '//TRIM(ITOS(ITER+1))//' ***'
+
   !## no residual output
   IUPESTRESIDUAL=0
   !## initial run - no lambda testing

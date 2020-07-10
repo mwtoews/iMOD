@@ -175,8 +175,8 @@ MAINLOOP: DO
   WRITE(IUPESTOUT,'(/A/)') ' *** Sensitivity Cycle ***'; WRITE(*,'(/A/)') ' *** Sensitivity Cycle ***'
  ELSEIF(RT.EQ.'R')THEN
   WRITE(IUPESTPROGRESS,'(/A5,4A15,15X,3A15)') 'RS','REALIZATION','LAMBDA','TOT_J','RED_J','GOODNESS FIT','NASH SUTCLIFFE','SIM_TIME(SEC)' 
-  WRITE(IUPESTOUT,'(/A/)') ' *** Realization Lambda Cycle '//TRIM(ITOS(ILAMBDA))//' ***'
-  WRITE(*,        '(/A/)') ' *** Realization Lambda Cycle '//TRIM(ITOS(ILAMBDA))//' ***'
+  WRITE(IUPESTOUT,'(/A/)') ' *** Realization Cycle '//TRIM(ITOS(ILAMBDA))//' ***'
+  WRITE(*,        '(/A/)') ' *** Realization Cycle '//TRIM(ITOS(ILAMBDA))//' ***'
  ENDIF
  
  CALL WMESSAGETIMER(NCSECS,IREPEAT=1); IGRAD=0; NCPU=0; IPROC=0; ISTATUS=-1
@@ -1931,11 +1931,10 @@ MAINLOOP: DO
   DO I=1,SIZE(PEST%PARAM)
    IF(PEST%PARAM(I)%PACT.EQ.1)THEN
     ZW=PEST%PARAM(I)%ALPHA_ERROR_STDEV*1.96D0
-
-    !## maximize uncertainty
-    ZW=MIN(10.0D0,ZW)
     
     IF(PEST%PARAM(I)%PLOG)THEN
+     !## maximize uncertainty
+     ZW=MIN(10.0D0,ZW)
      Z =10.0D0**(PEST%PARAM(I)%ALPHA(2)) 
      Z1=10.0D0**(PEST%PARAM(I)%ALPHA(2)-ZW)
      Z2=10.0D0**(PEST%PARAM(I)%ALPHA(2)+ZW) 

@@ -900,7 +900,7 @@ CONTAINS
  DO I=1,SIZE(PARAM)
   SELECT CASE (TRIM(PARAM(I)%PTYPE))
    CASE ('MS','MC')
-    FCT=EXP(PARAM(I)%ALPHA(1)) !; ILAY=PARAM(I)%ILS !## <-- not to be used
+    FCT=10.0**PARAM(I)%ALPHA(1) !; ILAY=PARAM(I)%ILS !## <-- not to be used
 
     !## allocate memory to make copy of data
     IF(.NOT.ASSOCIATED(PARAM(I)%X))ALLOCATE(PARAM(I)%X(PARAM(I)%NODES))
@@ -1019,7 +1019,7 @@ CONTAINS
      CALL IMOD_UTL_PRINTTEXT(LINE,2)
     ENDIF
     FCT=PARAM(I)%ALPHA(1)
-    IF(PARAM(I)%LOG)FCT=EXP(FCT)
+    IF(PARAM(I)%LOG)FCT=10.0**FCT
     LINE=TRIM(PARAM(I)%EXBATFILE)//','//TRIM(IMOD_UTL_DTOS(FCT,'F',5))
     CALL SYSTEM(TRIM(LINE),2)
   END SELECT
@@ -1098,7 +1098,8 @@ CONTAINS
     IF(PARAM(I)%IACT.EQ.0)CYCLE
     IF(PARAM(I)%IGROUP.LT.0)CYCLE
     IF(PARAM(I)%LOG)THEN
-     F=(EXP(PARAM(I)%ALPHA(1))/EXP(PARAM(I)%ALPHA(2)))*100.0D0
+     F=(10.0**PARAM(I)%ALPHA(1)/10.0**PARAM(I)%ALPHA(2))*100.0D0
+!     F=(EXP(PARAM(I)%ALPHA(1))/EXP(PARAM(I)%ALPHA(2)))*100.0D0
      F=ABS(F-100.0D0)
      IMPROVEMENT=IMPROVEMENT+F
     ELSE
@@ -1118,10 +1119,10 @@ CONTAINS
          PARAM(I)%PTYPE, &         !## ptype
          PARAM(I)%ILS, &           !## ilayer/system
          PARAM(I)%IZONE, &         !## zone number
-         EXP(PARAM(I)%ALPHA(1)), & !## initial value
-         EXP(PARAM(I)%DELTA), &    !## finite difference step
-         EXP(PARAM(I)%MIN), &      !## minimal value
-         EXP(PARAM(I)%MAX),&       !## maximal value
+         10.0**(PARAM(I)%ALPHA(1)), & !## initial value
+         10.0**(PARAM(I)%DELTA), &    !## finite difference step
+         10.0**(PARAM(I)%MIN), &      !## minimal value
+         10.0**(PARAM(I)%MAX),&       !## maximal value
          PARAM(I)%FADJ,&           !## maximal adjust factor
          ABS(PARAM(I)%IGROUP),&    !## group number
          ILOG,&                    !## log transformed
@@ -1255,7 +1256,7 @@ CONTAINS
    IF(PARAM(I)%LOG)THEN
     DO J=1,PARAM(I)%NODES
      IROW=PARAM(I)%IROW(J); ICOL=PARAM(I)%ICOL(J)
-     X(ICOL,IROW)=EXP(PARAM(I)%ALPHA(1))
+     X(ICOL,IROW)=10.0**PARAM(I)%ALPHA(1)
     ENDDO
    ELSE
     DO J=1,PARAM(I)%NODES
@@ -1282,7 +1283,7 @@ CONTAINS
 
    XVAR=PARAM(I)%ALPHA_ERROR_VARIANCE(PEST_ITER)
    IF(PARAM(I)%LOG)THEN
-    XF  =EXP(PARAM(I)%ALPHA(1)) 
+    XF  =10.0**PARAM(I)%ALPHA(1)
    ELSE
     XF  =PARAM(I)%ALPHA(1) 
    ENDIF
@@ -1335,7 +1336,7 @@ END SUBROUTINE WRITEIPF
 
  DO I=1,SIZE(PARAM)
   IF(PARAM(I)%LOG)THEN
-   X(I)=EXP(PARAM(I)%ALPHA(1))
+   X(I)=10.0**PARAM(I)%ALPHA(1)
   ELSE
    X(I)=PARAM(I)%ALPHA(1)
   ENDIF
@@ -1448,15 +1449,17 @@ END SUBROUTINE WRITEIPF
   IF(PARAM(I)%IACT.EQ.1.AND.PARAM(I)%IGROUP.GT.0)THEN
    ZW=PARAM(I)%ALPHA_ERROR_VARIANCE(PEST_ITER)*1.96D0
    IF(PARAM(I)%LOG)THEN
-    Z =EXP(PARAM(I)%ALPHA(1)) 
-    Z1=TINY(1.0)
-    IF(PARAM(I)%ALPHA(1)-ZW.LT.LOG(HUGE(1.0)))THEN
-     Z1=EXP(PARAM(I)%ALPHA(1)-ZW) 
-    ENDIF
-    Z2=HUGE(1.0)
-    IF(PARAM(I)%ALPHA(1)+ZW.LT.LOG(HUGE(1.0)))THEN
-     Z2=EXP(PARAM(I)%ALPHA(1)+ZW) 
-    ENDIF
+    Z =10.0**PARAM(I)%ALPHA(1)
+    !## maximize uncertainty
+    ZW=MIN(10.0D0,ZW)
+!    Z1=TINY(1.0)
+!    IF(PARAM(I)%ALPHA(1)-ZW.LT.LOG(HUGE(1.0)))THEN
+    Z1=10.0**(PARAM(I)%ALPHA(1)-ZW) 
+!    ENDIF
+!    Z2=HUGE(1.0)
+!    IF(PARAM(I)%ALPHA(1)+ZW.LT.LOG(HUGE(1.0)))THEN
+    Z2=10.0**(PARAM(I)%ALPHA(1)+ZW) 
+!    ENDIF
    ELSE
     Z= PARAM(I)%ALPHA(1) 
     Z1=PARAM(I)%ALPHA(1)-ZW 
@@ -1663,7 +1666,7 @@ END SUBROUTINE WRITEIPF
    IF(ABS(PARAM(I)%IGROUP).EQ.ABS(PARAM(PEST_IGRAD)%IGROUP))THEN
     IF(PARAM(I)%LOG)THEN
      PARAM(I)%ALPHA(1)=PARAM(I)%ALPHA(2)+PARAM(I)%DELTA
-     FCT=EXP(PARAM(I)%ALPHA(1))
+     FCT=10.0**PARAM(I)%ALPHA(1)
     ELSE
      PARAM(I)%ALPHA(1)=PARAM(I)%ALPHA(2)*PARAM(I)%DELTA
      FCT=PARAM(I)%ALPHA(1)
@@ -2392,7 +2395,7 @@ END SUBROUTINE WRITEIPF
    
    !## check size of adjustment
    IF(PARAM(IP1)%LOG)THEN
-    F=EXP(PARAM(IP1)%ALPHA(1))/EXP(PARAM(IP1)%ALPHA(2))
+    F=10.0**PARAM(IP1)%ALPHA(1)/10.0**PARAM(IP1)%ALPHA(2)
    ELSE
     F=PARAM(IP1)%ALPHA(1)/PARAM(IP1)%ALPHA(2)
    ENDIF 
@@ -2496,7 +2499,7 @@ END SUBROUTINE WRITEIPF
   IF(PARAM(IP1)%IACT.EQ.0)CYCLE
 
   IF(PARAM(IP1)%LOG)THEN
-   PARAM(IP1)%ALPHA_HISTORY(PEST_ITER)=EXP(PARAM(IP1)%ALPHA(1))
+   PARAM(IP1)%ALPHA_HISTORY(PEST_ITER)=10.0**PARAM(IP1)%ALPHA(1)
   ELSE
    PARAM(IP1)%ALPHA_HISTORY(PEST_ITER)=PARAM(IP1)%ALPHA(1)
   ENDIF
@@ -2688,7 +2691,7 @@ END SUBROUTINE WRITEIPF
     ELSE
      READ(TS(I)%IUIPF,*) X,Y,ILAY,Z,MSR%W(II),H,D  !## w(i)=variance
     ENDIF
-    !## weigh=1/variance
+    !## weigh=1/stdev
     IF(TS(I)%IVCOL.GT.0)THEN
      IF(MSR%W(II).LE.0.0D0)THEN
       !## insert measurement only whenever h.gt.z
@@ -2698,7 +2701,7 @@ END SUBROUTINE WRITEIPF
        MSR%W(II)=0.0D0
       ENDIF
      ELSE
-      MSR%W(II)=1.0D0/MSR%W(II)
+      MSR%W(II)=1.0D0/MSR%W(II)**2.0
      ENDIF
     ENDIF
     
@@ -2750,7 +2753,7 @@ END SUBROUTINE WRITEIPF
      IF(WW.LE.0.0D0)THEN
       WW=0.0D0
      ELSE
-      WW=1.0/WW
+      WW=1.0/WW**2.0
      ENDIF
     ENDIF
     
@@ -3176,10 +3179,10 @@ END SUBROUTINE WRITEIPF
  IF(PARAM(IP)%LOG)THEN
   IF(PARAM(IP)%DELTA.EQ.1.0)CALL IMOD_UTL_PRINTTEXT('You can not specify delta alpha eq 1.0 for log-transformed parameters',2)
   IF(PARAM(IP)%MIN  .EQ.0.0)CALL IMOD_UTL_PRINTTEXT('You can not specify minimal value eq 0.0 for log-transformed parameters',2)
-  PARAM(IP)%INI  =LOG(PARAM(IP)%INI)
-  PARAM(IP)%MIN  =LOG(PARAM(IP)%MIN)
-  PARAM(IP)%MAX  =LOG(PARAM(IP)%MAX)
-  PARAM(IP)%DELTA=LOG(PARAM(IP)%DELTA)
+  PARAM(IP)%INI  =LOG10(PARAM(IP)%INI)
+  PARAM(IP)%MIN  =LOG10(PARAM(IP)%MIN)
+  PARAM(IP)%MAX  =LOG10(PARAM(IP)%MAX)
+  PARAM(IP)%DELTA=LOG10(PARAM(IP)%DELTA)
  ENDIF
 
  END SUBROUTINE PEST1CHK

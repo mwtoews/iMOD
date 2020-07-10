@@ -183,7 +183,7 @@ do i=1,size(param)
    IF(PARAM(I)%ZTYPE.EQ.1)CYCLE
 
    fct=param(i)%alpha(1); ils=param(i)%ils !## layer
-   IF(PARAM(I)%LOG)FCT=EXP(FCT)
+   IF(PARAM(I)%LOG)FCT=10.0**FCT
 
    select case (trim(ptype))
    case('KD','KH','KV','VA','SC','AF','EP','SY')
@@ -255,16 +255,19 @@ do i=1,size(param)
     !## not correct modellayer
     IF(PARAM(I)%ILS.NE.ILS)CYCLE
 
-    FCT=PARAM(I)%ALPHA(1)
+    !## always krige in log10-space
+    FCT=PARAM(I)%ALPHA(1); IF(.NOT.PARAM(I)%LOG)FCT=LOG10(FCT)
+    
     IF(K.EQ.2)THEN
      LINE=' * Module '//PARAM(I)%PTYPE//' adjusted ('//TRIM(IMOD_UTL_ITOS(SIZE(PARAM(I)%XY,1)))// &
-         ') location(s) as PILOTPOINT with alpha='//TRIM(IMOD_UTL_dTOS(EXP(FCT),'F',7))
+         ') location(s) as PILOTPOINT with (log10) alpha='//TRIM(IMOD_UTL_dTOS(10.0**FCT,'F',7))
      CALL imod_utl_printtext(TRIM(LINE),1) 
     ENDIF
     
     DO J=1,SIZE(PARAM(I)%XY,1)
      NXYZ=NXYZ+1
      IF(K.EQ.2)THEN
+      !## kriging on log-values
       XYZ(NXYZ,1)=PARAM(I)%XY(J,1); XYZ(NXYZ,2)=PARAM(I)%XY(J,2); XYZ(NXYZ,3)=FCT 
      ENDIF
     ENDDO
@@ -294,10 +297,8 @@ do i=1,size(param)
    IF(IBOUND(ICOL,IROW,ILS).EQ.0)THEN
     XPP(ICOL,IROW)=NODATA
    ELSE
-!    IF(ASSOCIATED(BLNKOUT%X))THEN
     IF(BLNKOUT%X(ICOL,IROW).LE.0.0)XPP(ICOL,IROW)=0.0
-!    ENDIF
-    XPP(ICOL,IROW)=EXP(XPP(ICOL,IROW))
+    XPP(ICOL,IROW)=10.0**XPP(ICOL,IROW)
     !## areas outside range do get a value of 0.0, convert to 1.0
     IF(XPP(ICOL,IROW).EQ.0.0)XPP(ICOL,IROW)=1.0
    ENDIF
@@ -388,7 +389,7 @@ do i=1,size(param)
   !## system/layer
   ils=param(i)%ils 
   !## factor
-  fct=param(i)%alpha(1); if(param(i)%log)fct=exp(fct)
+  fct=param(i)%alpha(1); if(param(i)%log)fct=10.0**fct
   
   !## adjust
   nadj = 0
