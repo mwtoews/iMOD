@@ -3,5 +3,5 @@
 	<Configurations>
 		<Configuration Name="Debug|Win32" CommandArguments="d:\IMOD-MODELS\LHM\AGGREGATE.INI" WorkingDirectory="d:\IMOD\"/>
 		<Configuration Name="Release|Win32"/>
-		<Configuration Name="Debug|x64" CommandArguments="d:\IMOD-MODELS\SINGAPORE\RUNFILES\runfile.ini" WorkingDirectory="d:\IMOD-MODELS\IES\MODELS"/>
+		<Configuration Name="Debug|x64" CommandArguments="d:\IMOD-MODELS\IES\MODELS\RUNFILE.INI" WorkingDirectory="d:\IMOD-MODELS\IES\MODELS"/>
 		<Configuration Name="Release|x64" CommandArguments="d:\IMOD-MODELS\MF6\RUNFILES\runfile.ini" WorkingDirectory="d:\IMOD"/></Configurations></VisualStudioUserFile>
