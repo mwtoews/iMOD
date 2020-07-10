@@ -2475,8 +2475,7 @@ MAINLOOP: DO
  NP=0; DO I=1,SIZE(PEST%PARAM); IF(PEST%PARAM(I)%PACT.EQ.0.OR.PEST%PARAM(I)%PIGROUP.LE.0)CYCLE; NP=NP+1; ENDDO
  
  !## add parameter regularisation
- IF(PEST%PE_REGULARISATION.EQ.1)THEN
- 
+ IF(PEST%PE_REGULARISATION.EQ.1.AND.CTYPE.NE.'R')THEN
   !## add weight to balance number of observations and parameters
   NC=0; DO I=1,SIZE(PEST%PARAM)  !## row
    !## skip inactive; skip others parts of parameter
