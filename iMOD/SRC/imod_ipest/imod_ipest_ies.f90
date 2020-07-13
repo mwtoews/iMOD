@@ -111,7 +111,7 @@ CONTAINS
   ENDIF
 
   !## get update of realisations
-  IF(.NOT.IPEST_IES_UPDATE_ENSEMBLES(DIR,ITER,JLAMBDA))EXIT
+  IF(.NOT.IPEST_IES_UPDATE_ENSEMBLES(DIR,ITER,JLAMBDA,IBATCH,MNAME))EXIT
   !## save mean/stdev heads
   CALL IPEST_IES_SAVE_HEAD_STATS(DIR,ITER,JLAMBDA)
   !## save mean/stdev parameters
@@ -267,12 +267,13 @@ CONTAINS
  END SUBROUTINE IPEST_IES_SAVE_PARAMETERS_STATS
  
  !#####=================================================================
- LOGICAL FUNCTION IPEST_IES_UPDATE_ENSEMBLES(DIR,ITER,JLAMBDA) 
+ LOGICAL FUNCTION IPEST_IES_UPDATE_ENSEMBLES(DIR,ITER,JLAMBDA,IBATCH,MNAME) 
  !#####=================================================================
  IMPLICIT NONE
- CHARACTER(LEN=*),INTENT(IN) :: DIR
+ CHARACTER(LEN=*),INTENT(IN) :: DIR,MNAME
+ INTEGER,INTENT(IN) :: IBATCH
  INTEGER,INTENT(INOUT) :: ITER
- INTEGER,INTENT(IN) :: JLAMBDA
+ INTEGER,INTENT(INOUT) :: JLAMBDA
  INTEGER :: I,II,JJ,J,K,N,SPACEDIM,TIMEDIM,OBSDIM,IROW,ICOL,IX,ILOG,ILAMBDA,IPARAM,NPOP
  REAL(KIND=DP_KIND) :: X,VAR,A,L,TL,MAXTL,GAMMA,F1,F2,F3,J0,MLT
  REAL(KIND=DP_KIND),ALLOCATABLE,DIMENSION(:,:) :: DM,X1,X2,X3
@@ -281,6 +282,7 @@ CONTAINS
  INTEGER,ALLOCATABLE,DIMENSION(:,:) :: PDF 
  CHARACTER(LEN=256) :: FNAME
  LOGICAL :: LMODELERROR
+ INTEGER,SAVE :: KLAMBDA
  
  WRITE(*,'(/A/)') 'Update ensembles ...'
  
@@ -398,10 +400,15 @@ CONTAINS
   IF(MSR%TJ.LE.F3)THEN 
    !## too less improvement
    IF(1.0D0-MSR%TJ/F3.LT.PEST%PE_STOP)THEN
-    IPEST_IES_UPDATE_ENSEMBLES=.FALSE.; RETURN
+    !## stop optimization, no progression anymore
+    IPEST_IES_UPDATE_ENSEMBLES=.FALSE.
+!    !## reset to previous lambda that "won-the-prize"
+!    IF(ITER.GT.0)KLAMBDA=JLAMBDA; RETURN
    ELSE
     !## YES!!! continue to next iteration
     LAMBDA=LAMBDA/GAMMA
+    !## store lambda that "won-the-prize" for back-stepping possibility within the next iteration
+    KLAMBDA=JLAMBDA
     WRITE(IUPESTOUT,'(/A/)') 'Awesome, significant reduction of the objective function reduction: proceed'
     !## save previous objective function value
     MSR%PJ=MSR%TJ
@@ -414,10 +421,22 @@ CONTAINS
    ENDIF
    !## reset ensembles to previous iteration
    ITER=ITER-1
+   !## store lambda that "won-the-prize" for back-stepping possibility within the next iteration
+   JLAMBDA=KLAMBDA
    WRITE(IUPESTOUT,'(/A/)') 'No objective function reduction: reset to previous iteration'
    WRITE(IUPESTEFFICIENCY,*) ITER,LAMBDA
+   
+!### HIER MOET JE MSR%DHG RESTOREN VAN DE LAATSTE GOEIE CYCLE
+   !## read residuals of all ensembles for selected jlambda
+   DO I=1,SIZE(RNG)
+    IF(.NOT.IPEST_GLM_GETJ(DIR,I,GPARAM(I),'R',IBATCH,JLAMBDA,MNAME))RETURN 
+    JE(I,ITER)=MSR%TJ
+   ENDDO
+   
   ENDIF
  ENDIF
+ 
+ WRITE(IUPESTEFFICIENCY,*) 'SUM DHG ',ITER,JLAMBDA,SUM(MSR%DHG)
  
  !## try to find acceptable ensemble updates for all lambda to be tested
  WRITE(IUPESTOUT,'(/A)') 'Process Lambdas ('//TRIM(ITOS(PBMAN%NLINESEARCH))//')'
@@ -427,7 +446,9 @@ CONTAINS
    WRITE(IUPESTOUT,'(/A)') 'Process Lambda '//TRIM(ITOS(ILAMBDA))//' ('//TRIM(RTOS(MLT*LAMBDA,'G',7))//')' 
  
    TL=0.0D0; A=MLT*LAMBDA+1.0D0
-
+   
+   WRITE(IUPESTEFFICIENCY,'(4I5,3F15.7)') ITER,ILAMBDA,JLAMBDA,KLAMBDA,LAMBDA,MLT,A
+   
    !## processing the inverse of the prior parameter covariance matrix
    DO I=1,SIZE(PEST%PARAM)
 
@@ -456,6 +477,8 @@ CONTAINS
      WRITE(IUPESTOUT,'(/A)') 'Get parameters from previous cycle'
      CALL IPEST_IES_COMPUTE_GETREALS(DIR,I,TIMEDIM,SPACEDIM,REALS,ITER,ILOG,JLAMBDA) 
     ENDIF
+    
+    write(iupestefficiency,*) 'sum(reals) ',sum(reals)
     
     !## processing the inverse of the prior parameter covariance matrix
     CALL IPEST_IES_COMPUTE_PARTIAL_M(ITER,I,TIMEDIM,SPACEDIM,OBSDIM,DM,A,REALS,L,LMODELERROR); TL=TL+L
@@ -492,6 +515,8 @@ CONTAINS
     DEALLOCATE(TMP1); CALL IDFDEALLOCATEX(PRJIDF)  
 
    ENDDO
+   
+   write(iupestefficiency,*) tl
    
    !## do not allow enormous updates
    IF(TL.LT.MAXTL)EXIT
