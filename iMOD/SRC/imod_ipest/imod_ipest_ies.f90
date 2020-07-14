@@ -77,7 +77,7 @@ CONTAINS
    !## run and process all realizations-testing
    IF(.NOT.IPEST_GLM_RUNMODELS(IBATCH,RNG,GPARAM,'R',DIR,MNAME,ITER,LAMBDA,JLAMBDA))EXIT
    CALL IPEST_IES_PROGRESS_OUT(ITER)
-   WRITE(IUPESTEFFICIENCY,'(I5,A5,1X,F15.3,6(16X),1X,G15.7)') ITER,'-',SUM(JE(:,ITER)),LAMBDA
+   WRITE(IUPESTEFFICIENCY,'(I5,A5,1X,F15.3,6(16X),1X,F15.3)') ITER,'-',SUM(JE(:,ITER)),LAMBDA
   !## carry out the lambda tests
   ELSE
    !## simulate ensembles of different lambdas
@@ -93,25 +93,28 @@ CONTAINS
      MINJ=SUM(JE(:,ITER)); JLAMBDA=ILAMBDA
     ENDIF
     CALL IPEST_IES_PROGRESS_OUT(ITER)
-    WRITE(IUPESTEFFICIENCY,'(2I5,1X,F15.3,6(16X),1X,G15.7)') ITER,ILAMBDA,SUM(JE(:,ITER)),L
+    WRITE(IUPESTEFFICIENCY,'(2I5,1X,F15.3,6(16X),1X,F15.3)') ITER,ILAMBDA,SUM(JE(:,ITER)),L
+    !## dump dhg as backstepping might be possible
+    CALL IPEST_IES_WRITE_DHG(DIR,ITER,ILAMBDA)    
    ENDDO
    IF(JLAMBDA.EQ.0)THEN; STOP 'SOMETHING WENT WRONG: JLAMBDA=0'; ENDIF
    !## echo selected lambda
    L=LAMBDA*PBMAN%LAMBDA_TEST(JLAMBDA)
    WRITE(IUPESTPROGRESS,'(/A)') 'Selected lambda = '//TRIM(ITOS(JLAMBDA))//' ('//TRIM(RTOS(L,'G',7))// &
            ') has minimal Objective Function Value ('//TRIM(RTOS(MINJ,'G',7))//')'
-   !## update lambda with this one
-   LAMBDA=L
+!   !## update lambda with this one
+!   LAMBDA=L
    !## read residuals of all ensembles for selected jlambda
    DO IGRAD=1,SIZE(RNG)
     IF(.NOT.IPEST_GLM_GETJ(DIR,IGRAD,GPARAM(IGRAD),'R',IBATCH,JLAMBDA,MNAME))RETURN 
     JE(IGRAD,ITER)=MSR%TJ
    ENDDO
-
+!   CALL IPEST_IES_READ_DHG(DIR,ITER,JLAMBDA)    
+   
   ENDIF
 
   !## get update of realisations
-  IF(.NOT.IPEST_IES_UPDATE_ENSEMBLES(DIR,ITER,JLAMBDA,IBATCH,MNAME))EXIT
+  IF(.NOT.IPEST_IES_UPDATE_ENSEMBLES(DIR,ITER,JLAMBDA,IBATCH,MNAME))EXIT  
   !## save mean/stdev heads
   CALL IPEST_IES_SAVE_HEAD_STATS(DIR,ITER,JLAMBDA)
   !## save mean/stdev parameters
@@ -401,19 +404,27 @@ CONTAINS
    !## too less improvement
    IF(1.0D0-MSR%TJ/F3.LT.PEST%PE_STOP)THEN
     !## stop optimization, no progression anymore
-    IPEST_IES_UPDATE_ENSEMBLES=.FALSE.
-!    !## reset to previous lambda that "won-the-prize"
-!    IF(ITER.GT.0)KLAMBDA=JLAMBDA; RETURN
+    IPEST_IES_UPDATE_ENSEMBLES=.FALSE.; RETURN
    ELSE
-    !## YES!!! continue to next iteration
-    LAMBDA=LAMBDA/GAMMA
+
+    !## YES!!! continue to next iteration - modify lambda - look for appropriate value via a parabolic search
+    
+    !## get total error per lambda
+    CALL IPEST_IES_UPDATE_LAMBDA(DIR,ITER,GAMMA)
+
     !## store lambda that "won-the-prize" for back-stepping possibility within the next iteration
     KLAMBDA=JLAMBDA
     WRITE(IUPESTOUT,'(/A/)') 'Awesome, significant reduction of the objective function reduction: proceed'
     !## save previous objective function value
     MSR%PJ=MSR%TJ
+!    !## dump dhg as backstepping might be possible
+!    CALL IPEST_IES_WRITE_DHG(DIR,ITER,KLAMBDA)
    ENDIF
   ELSE
+
+!   CALL IPEST_IES_UPDATE_LAMBDA(DIR,ITER,GAMMA)
+!   CALL UTL_FIT_PARABOLA(CPARABOL,XLAMBDA,YLAMBDA)
+  
    IF(PBMAN%LAMBDA_TEST(PBMAN%NLINESEARCH).NE.1.0D0)THEN
     LAMBDA=LAMBDA*PBMAN%LAMBDA_TEST(PBMAN%NLINESEARCH)
    ELSE
@@ -424,19 +435,16 @@ CONTAINS
    !## store lambda that "won-the-prize" for back-stepping possibility within the next iteration
    JLAMBDA=KLAMBDA
    WRITE(IUPESTOUT,'(/A/)') 'No objective function reduction: reset to previous iteration'
-   WRITE(IUPESTEFFICIENCY,*) ITER,LAMBDA
+!   WRITE(IUPESTOUT,'(/A/)') 'No objective function reduction: keep on going - hope for the better'
+!   WRITE(IUPESTEFFICIENCY,*) ITER,LAMBDA
    
-!### HIER MOET JE MSR%DHG RESTOREN VAN DE LAATSTE GOEIE CYCLE
    !## read residuals of all ensembles for selected jlambda
-   DO I=1,SIZE(RNG)
-    IF(.NOT.IPEST_GLM_GETJ(DIR,I,GPARAM(I),'R',IBATCH,JLAMBDA,MNAME))RETURN 
-    JE(I,ITER)=MSR%TJ
-   ENDDO
+   CALL IPEST_IES_READ_DHG(DIR,ITER,JLAMBDA)
    
   ENDIF
  ENDIF
  
- WRITE(IUPESTEFFICIENCY,*) 'SUM DHG ',ITER,JLAMBDA,SUM(MSR%DHG)
+! WRITE(IUPESTEFFICIENCY,*) 'SUM DHG ',ITER,JLAMBDA,SUM(MSR%DHG),sum(je(:,iter))
  
  !## try to find acceptable ensemble updates for all lambda to be tested
  WRITE(IUPESTOUT,'(/A)') 'Process Lambdas ('//TRIM(ITOS(PBMAN%NLINESEARCH))//')'
@@ -447,7 +455,7 @@ CONTAINS
  
    TL=0.0D0; A=MLT*LAMBDA+1.0D0
    
-   WRITE(IUPESTEFFICIENCY,'(4I5,3F15.7)') ITER,ILAMBDA,JLAMBDA,KLAMBDA,LAMBDA,MLT,A
+!   WRITE(IUPESTEFFICIENCY,'(4I5,3G15.7)') ITER,ILAMBDA,JLAMBDA,KLAMBDA,LAMBDA,MLT,A
    
    !## processing the inverse of the prior parameter covariance matrix
    DO I=1,SIZE(PEST%PARAM)
@@ -478,7 +486,7 @@ CONTAINS
      CALL IPEST_IES_COMPUTE_GETREALS(DIR,I,TIMEDIM,SPACEDIM,REALS,ITER,ILOG,JLAMBDA) 
     ENDIF
     
-    write(iupestefficiency,*) 'sum(reals) ',sum(reals)
+!    write(iupestefficiency,*) 'sum(reals) ',sum(reals)
     
     !## processing the inverse of the prior parameter covariance matrix
     CALL IPEST_IES_COMPUTE_PARTIAL_M(ITER,I,TIMEDIM,SPACEDIM,OBSDIM,DM,A,REALS,L,LMODELERROR); TL=TL+L
@@ -516,7 +524,7 @@ CONTAINS
 
    ENDDO
    
-   write(iupestefficiency,*) tl
+!   write(iupestefficiency,*) tl
    
    !## do not allow enormous updates
    IF(TL.LT.MAXTL)EXIT
@@ -537,6 +545,84 @@ CONTAINS
  
  END FUNCTION IPEST_IES_UPDATE_ENSEMBLES
  
+ !#####=================================================================
+ SUBROUTINE IPEST_IES_UPDATE_LAMBDA(DIR,ITER,GAMMA)
+ !#####=================================================================
+ IMPLICIT NONE
+ CHARACTER(LEN=*),INTENT(IN) :: DIR
+ INTEGER,INTENT(IN) :: ITER
+ REAL(KIND=DP_KIND),INTENT(IN) :: GAMMA
+ INTEGER :: I 
+ REAL(KIND=DP_KIND),DIMENSION(3) :: XLAMBDA,YLAMBDA,CPARABOL
+ REAL(KIND=DP_KIND) :: X
+ 
+ DO I=1,PBMAN%NLINESEARCH
+  CALL IPEST_IES_READ_DHG(DIR,ITER,I)
+  YLAMBDA(I)=SUM(JE(:,ITER))
+  XLAMBDA(I)=PBMAN%LAMBDA_TEST(I)*LAMBDA
+ ENDDO
+  
+! WRITE(IUPESTEFFICIENCY,'(A10,2A15)') 'ILAMBDA','LAMBDA','J'
+ DO I=1,PBMAN%NLINESEARCH
+  WRITE(IUPESTEFFICIENCY,'(2I5,1X,F15.3,6(16X),1X,F15.3)') ITER,I,YLAMBDA(I),XLAMBDA(I)
+ ENDDO
+ 
+ CALL UTL_FIT_PARABOLA(CPARABOL,XLAMBDA,YLAMBDA)
+ !## valley at this lambda value
+ X=-CPARABOL(2)/(2.0D0*CPARABOL(3))
+
+ !## bot-parabol
+ IF(CPARABOL(3).GT.0.0D0)THEN
+  LAMBDA=MAX(LAMBDA/GAMMA,X)
+  WRITE(IUPESTEFFICIENCY,'(2(A,G15.7))') 'BOT @ LAMBDA ', X,' NEW LAMBDA ',LAMBDA
+ ELSE
+  LAMBDA=LAMBDA/GAMMA
+  WRITE(IUPESTEFFICIENCY,'(2(A,G15.7))') 'TOP @ LAMBDA ', X,' NEW LAMBDA ',LAMBDA
+ ENDIF
+
+ END SUBROUTINE IPEST_IES_UPDATE_LAMBDA
+
+ !#####=================================================================
+ SUBROUTINE IPEST_IES_WRITE_DHG(DIR,ITER,ILAMBDA)
+ !#####=================================================================
+ IMPLICIT NONE
+ CHARACTER(LEN=*),INTENT(IN) :: DIR
+ INTEGER,INTENT(IN) :: ITER,ILAMBDA
+ INTEGER :: IU,I,J
+ REAL(KIND=DP_KIND) :: W
+ 
+ IU=UTL_GETUNIT(); OPEN(IU,FILE=TRIM(DIR)//'\IIES\DHG_ITER'//TRIM(ITOS(ITER))//'_ILAMBDA'//TRIM(ITOS(ILAMBDA))//'.TXT',STATUS='UNKNOWN',ACTION='WRITE')
+ WRITE(IU,'(2A10,99A15)') 'MEASURE','STDEV',('DELTA_H_'//TRIM(ITOS(I)),I=1,SIZE(MSR%DHG,1))
+ DO J=1,SIZE(MSR%DHG,2)
+  W=SQRT(1.0D0/MSR%W(J)); WRITE(IU,'(I10,99F15.7)') J,W,(MSR%DHG(I,J),I=1,SIZE(MSR%DHG,1))
+ ENDDO
+ CLOSE(IU)
+ 
+ END SUBROUTINE IPEST_IES_WRITE_DHG
+ 
+ !#####=================================================================
+ SUBROUTINE IPEST_IES_READ_DHG(DIR,ITER,ILAMBDA)
+ !#####=================================================================
+ IMPLICIT NONE
+ CHARACTER(LEN=*),INTENT(IN) :: DIR
+ INTEGER,INTENT(IN) :: ITER,ILAMBDA
+ INTEGER :: IU,I,J
+ REAL(KIND=DP_KIND) :: W
+ 
+ IU=UTL_GETUNIT(); OPEN(IU,FILE=TRIM(DIR)//'\IIES\DHG_ITER'//TRIM(ITOS(ITER))//'_ILAMBDA'//TRIM(ITOS(ILAMBDA))//'.TXT',STATUS='OLD',ACTION='READ')
+ JE(:,ITER)=0.0D0
+ READ(IU,*)
+ DO J=1,SIZE(MSR%DHG,2)
+  READ(IU,'(10X,99F15.7)') W,(MSR%DHG(I,J),I=1,SIZE(MSR%DHG,1))
+  MSR%W(J)=1.0D0/W**2.0D0
+  DO I=1,SIZE(MSR%DHG,1)
+   JE(I,ITER)=JE(I,ITER)+MSR%W(J)*MSR%DHG(I,J)**2.0D0  
+  ENDDO
+ ENDDO
+ CLOSE(IU)
+ 
+ END SUBROUTINE IPEST_IES_READ_DHG
+
  !#####=================================================================
  SUBROUTINE IPEST_IES_PROGRESS_OUT(ITER)
  !#####=================================================================

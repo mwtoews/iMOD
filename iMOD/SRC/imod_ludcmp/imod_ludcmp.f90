@@ -1,4 +1,4 @@
-!!  Copyright (C) Stichting Deltares, 2005-2020.
+﻿!!  Copyright (C) Stichting Deltares, 2005-2020.
 !!
 !!  This file is part of iMOD.
 !!
@@ -24,8 +24,66 @@ MODULE MOD_LUDCMP
 
 USE IMODVAR, ONLY : DP_KIND,SP_KIND
 USE MOD_UTL, ONLY : UTL_MATMUL
+
 CONTAINS
 
+ !#####=================================================================
+ SUBROUTINE UTL_FIT_PARABOLA_main()
+ !#####=================================================================
+ IMPLICIT NONE
+ REAL(KIND=DP_KIND),DIMENSION(5) :: X,Y
+ REAL(KIND=DP_KIND),DIMENSION(3) :: C
+ 
+ Y=[ 5.0D0,2.0D0,1.0D0,2.0D0,5.0D0]
+ X=[-1.0D0,0.0D0,1.0D0,2.0D0,3.0D0]
+
+ CALL UTL_FIT_PARABOLA(C,X,Y)
+ 
+ end SUBROUTINE UTL_FIT_PARABOLA_main
+ 
+ !#####=================================================================
+ SUBROUTINE UTL_FIT_PARABOLA(C,X,Y)
+ !#####=================================================================
+ IMPLICIT NONE
+ REAL(KIND=DP_KIND),INTENT(OUT),DIMENSION(3) :: C
+ REAL(KIND=DP_KIND),DIMENSION(:),INTENT(IN) :: X,Y
+ INTEGER :: I,N
+ REAL(KIND=DP_KIND) :: T
+ REAL(KIND=DP_KIND),ALLOCATABLE,DIMENSION(:,:) :: A
+ REAL(KIND=DP_KIND),ALLOCATABLE,DIMENSION(:) :: B
+ 
+ N=SIZE(X)
+ ALLOCATE(A(3,3),B(3)); A=0.0D0; B=0.0D0
+ 
+ A(1,1)=REAL(N,8)
+ DO I=1,N; B(1)=B(1)+Y(I); ENDDO
+ T=0.0D0; DO I=1,N; T=T+X(I);        B(2)=B(2)+X(I)*Y(I);        ENDDO; A(1,2)=T; A(2,1)=T
+ T=0.0D0; DO I=1,N; T=T+X(I)**2.0D0; B(3)=B(3)+X(I)**2.0D0*Y(I); ENDDO; A(1,3)=T; A(3,1)=T; A(2,2)=T
+ T=0.0D0; DO I=1,N; T=T+X(I)**3.0D0;                             ENDDO; A(2,3)=T; A(3,2)=T
+ T=0.0D0; DO I=1,N; T=T+X(I)**4.0D0;                             ENDDO; A(3,3)=T
+ 
+ !a(1,1)=5
+ !a(1,2)=5
+ !a(1,3)=15
+ !a(2,1)=5
+ !a(2,2)=15
+ !a(2,3)=35
+ !a(3,1)=15
+ !a(3,2)=35
+ !a(3,3)=99
+ !b(1)=15
+ !b(2)=15
+ !b(3)=59
+ 
+ CALL LUDCMP_CALC(3,SIZE(A,1),A,B=B)  
+
+ !## coefficients of the parabolic equation y=c(1)+c(2)*x+c(3)^2*x
+ C=B
+ 
+ DEALLOCATE(A,B)
+ 
+ END SUBROUTINE UTL_FIT_PARABOLA
+ 
  !###====================================================================
  SUBROUTINE LUDCMP_CALC_SQRTROOTINVERSE(N,COV,ICOV,SQRTCOV,ISQRTCOV)
  !###====================================================================
