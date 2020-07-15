@@ -2701,6 +2701,8 @@ JLOOP: DO K=1,SIZE(TOPICS)
     ENDIF
    ENDIF
 
+   !## truncate plog usage to be between 0 en 1
+   PEST%PARAM(I)%PLOG=MIN(MAX(PEST%PARAM(I)%PLOG,0),1)
 
    !## fill in iparam
    DO J=1,SIZE(PARAM); IF(PEST%PARAM(I)%PPARAM.EQ.PARAM(J))EXIT; ENDDO
