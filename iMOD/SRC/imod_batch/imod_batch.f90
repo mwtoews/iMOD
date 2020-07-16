@@ -5164,9 +5164,10 @@ CONTAINS
                                  XINTER,YINTER,ISTATUS) 
        IF(ISTATUS.EQ.5)THEN
         NCPOINTS=NCPOINTS+1  
-        ZINTER=IFF(1)%Z+(IFF(2)%Z-IFF(1)%Z)*(XINTER-IFF(1)%X)/(IFF(2)%X-IFF(1)%X)
+        ZINTER=IFF(1)%Z
+        IF(IFF(2)%X-IFF(1)%X.GT.0) ZINTER=IFF(1)%Z+(IFF(2)%Z-IFF(1)%Z)*(XINTER-IFF(1)%X)/(IFF(2)%X-IFF(1)%X)
         !## write IPF content
-        IF(I.EQ.2) WRITE(JU,'(3F12.2,I4,2I6,2F13.3)') XINTER,YINTER,ZINTER,IFF(1)%IPART, &
+        IF(I.EQ.2) WRITE(JU,'(3F12.2,I10,2I5,2F13.3)') XINTER,YINTER,ZINTER,IFF(1)%IPART, &
                                                       IFF(2)%IL,IFF(1)%IL,IFF(2)%XVAL(1),IFF(1)%XVAL(1) !## TO=IFF(1), FROM=IFF(2)
        ENDIF    
       ENDDO
