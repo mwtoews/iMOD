@@ -1413,6 +1413,8 @@ CONTAINS
  INTEGER,DIMENSION(5) :: IX,IY
  REAL(KIND=DP_KIND),DIMENSION(5) :: X
  
+ !## NB reserved IU number for IPF file is saved in the IPF object: IPF(IIPF)%IU
+ 
  IPFREADDATA=.FALSE.
 
  IOS=0
