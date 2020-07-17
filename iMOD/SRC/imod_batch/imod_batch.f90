@@ -5097,7 +5097,7 @@ CONTAINS
  IMPLICIT NONE
  CHARACTER(LEN=256) :: IFFNAME,GENNAME,IPFNAME
  CHARACTER(LEN=256) :: LINE 
- INTEGER :: IOS,NC,I,J,N,IPOL,ISEG,ISTATUS,JU,NCPOINTS
+ INTEGER :: IOS,NC,I,J,K,N,IPOL,ISEG,ISTATUS,JU,NCPOINTS
  REAL(KIND=DP_KIND) :: XINTER,YINTER,ZINTER
  
  !## read function keywords
@@ -5147,11 +5147,16 @@ CONTAINS
   ENDIF
 
   !## loop over all IFF points/segments
-  IFF(2)%IPART=0; NCPOINTS=0
+  IFF(2)%IPART=0; NCPOINTS=0 ; K=0
   DO
    !## read IFF line    
    READ(IU,*,IOSTAT=IOS) IFF(1)%IPART,IFF(1)%IL,IFF(1)%X,IFF(1)%Y,IFF(1)%Z,(IFF(1)%XVAL(J),J=1,N)
    IF(IOS.NE.0)EXIT
+   K=K+1
+   IF(K.EQ.25)THEN
+      WRITE(6,'(A,I)') '+Progress. Reading Particle Number: ',IFF(1)%IPART
+      K=0
+   ENDIF
    !## same particle
    IF(IFF(1)%IPART.EQ.IFF(2)%IPART)THEN
      !## loop over all GEN segments
@@ -5168,8 +5173,13 @@ CONTAINS
         ZINTER=IFF(1)%Z
         IF(IFF(2)%X-IFF(1)%X.GT.0) ZINTER=IFF(1)%Z+(IFF(2)%Z-IFF(1)%Z)*(XINTER-IFF(1)%X)/(IFF(2)%X-IFF(1)%X)
         !## write IPF content
-        IF(I.EQ.2) WRITE(JU,'(3F12.2,I10,2I5,2F13.3)') XINTER,YINTER,ZINTER,IFF(1)%IPART, &
-                                                      IFF(2)%IL,IFF(1)%IL,IFF(2)%XVAL(1),IFF(1)%XVAL(1) !## TO=IFF(1), FROM=IFF(2)
+      ! IF(I.EQ.2) WRITE(JU,'(3F12.2,I10,2I5,2F13.3)') XINTER,YINTER,ZINTER,IFF(1)%IPART, &
+      !                                                IFF(2)%IL,IFF(1)%IL,IFF(2)%XVAL(1),IFF(1)%XVAL(1) !## TO=IFF(1), FROM=IFF(2)
+        IF(I.EQ.2) WRITE(JU,'(A)') TRIM(RTOS(XINTER,'F',3))//','//TRIM(RTOS(YINTER,'F',3))//','//TRIM(RTOS(ZINTER,'F',3))//','// &
+                                   TRIM(ITOS(IFF(1)%IPART))//','// & 
+                                   TRIM(ITOS(IFF(2)%IL))//','//TRIM(ITOS(IFF(1)%IL))//','// &   !## TO=IFF(1), FROM=IFF(2)
+                                   TRIM(RTOS(IFF(2)%XVAL(1),'F',3))//','//TRIM(RTOS(IFF(1)%XVAL(1),'F',3))
+ 
        ENDIF    
       ENDDO
     ENDDO
@@ -5182,7 +5192,7 @@ CONTAINS
   DO J=1,N; IFF(2)%XVAL(J)=IFF(1)%XVAL(J); ENDDO
  ENDDO !## loop over IFF
 ENDDO 
-WRITE(*,*) "Number of intersections found: ", NCPOINTS
+WRITE(*,'(A)') 'Number of intersections found: '//TRIM(ITOS(NCPOINTS))
   
 !## deallocate
 DO I=1,SIZE(IFF); DEALLOCATE(IFF(I)%XVAL); ENDDO; 
