@@ -100,6 +100,8 @@ CONTAINS
  !## copy covariance matrix
  A=COV
  
+! call UTL_JACOBI(a,ie,n)
+
  !## perform eigenvalue decomposition
  CALL LUDCMP_TRED2(A,N,N,V,E)
  !## a are the eigenvectors
@@ -146,6 +148,128 @@ CONTAINS
  
  END SUBROUTINE LUDCMP_CALC_SQRTROOTINVERSE
  
+ !###====================================================================
+ SUBROUTINE UTL_JACOBI_MAIN()
+ !###====================================================================
+ !====================================================================
+ !  eigenvalues and eigenvectors of a real symmetric matrix
+ !  Method: calls Jacobi
+ ! accurate but slow
+ !====================================================================
+ implicit none
+ integer, parameter :: n=3
+ double precision :: a(n,n), x(n,n)
+ integer i, j
+
+ ! matrix A
+ data (a(1,i), i=1,3) /   1.0,  2.0,  3.0 /
+ data (a(2,i), i=1,3) /   2.0,  2.0, -2.0 /
+ data (a(3,i), i=1,3) /   3.0, -2.0,  4.0 /
+
+! print a header and the original matrix
+ write (*,200)
+ do i=1,n
+    write (*,201) (a(i,j),j=1,n)
+ end do
+
+ call UTL_JACOBI(a,x,n)
+
+! print solutions
+ write (*,202)
+ write (*,201) (a(i,i),i=1,n)
+ write (*,203)
+ do i = 1,n
+    write (*,201)  (x(i,j),j=1,n)
+ end do
+
+200 format (' Eigenvalues and eigenvectors (Jacobi method) ',/, &
+            ' Matrix A')
+201 format (6f12.6)
+202 format (/,' Eigenvalues')
+203 format (/,' Eigenvectors')
+
+end subroutine utl_Jacobi_main
+
+ !###====================================================================
+ SUBROUTINE UTL_JACOBI(A,X,N)
+ !###====================================================================
+!===========================================================
+! Evaluate eigenvalues and eigenvectors
+! of a real symmetric matrix a(n,n): a*x = lambda*x 
+! method: Jacoby method for symmetric matrices 
+! Alex G. (December 2009)
+!-----------------------------------------------------------
+! input ...
+! a(n,n) - array of coefficients for matrix A
+! n      - number of equations
+! abserr - abs tolerance [sum of (off-diagonal elements)^2]
+! output ...
+! a(i,i) - eigenvalues
+! x(i,j) - eigenvectors
+! comments ...
+!===========================================================
+ IMPLICIT NONE
+ REAL(KIND=DP_KIND),PARAMETER :: ABSERR=1.0D-09
+ INTEGER I, J, K, N
+ DOUBLE PRECISION A(N,N),X(N,N)
+ DOUBLE PRECISION B2, BAR
+ DOUBLE PRECISION BETA, COEFF, C, S, CS, SC
+
+ !## initialize x(i,j)=0, x(i,i)=1
+ !## the array operation x=0.0 is specific for Fortran 90/95
+ X=0.0D0
+ DO I=1,N
+  X(I,I)=1.0D0
+ ENDDO
+
+ !## find the sum of all off-diagonal elements (squared)
+ B2=0.0D0
+ DO I=1,N
+   DO J=1,N
+     IF (I.NE.J) B2 = B2 + A(I,J)**2.0D0
+   END DO
+ END DO
+
+ IF(B2.LE.ABSERR)RETURN
+
+ ! AVERAGE FOR OFF-DIAGONAL ELEMENTS /2
+ BAR = 0.5D0*B2/FLOAT(N*N)
+
+ DO WHILE (B2.GT.ABSERR)
+  DO I=1,N-1
+    DO J=I+1,N
+      IF (A(J,I)**2.0D0.LE.BAR) CYCLE  ! DO NOT TOUCH SMALL ELEMENTS
+      B2 = B2 - 2.0D0*A(J,I)**2.0D0
+      BAR = 0.5D0*B2/FLOAT(N*N)
+! CALCULATE COEFFICIENT C AND S FOR GIVENS MATRIX
+      BETA = (A(J,J)-A(I,I))/(2.0D0*A(J,I))
+      COEFF = 0.5D0*BETA/SQRT(1.0+BETA**2)
+      S = SQRT(MAX(0.5D0+COEFF,0.0D0))
+      C = SQRT(MAX(0.5D0-COEFF,0.0D0))
+      !## recalculate rows i and j
+      DO K=1,N
+        CS =  C*A(I,K)+S*A(J,K)
+        SC = -S*A(I,K)+C*A(J,K)
+        A(I,K) = CS
+        A(J,K) = SC
+      END DO
+      !## new matrix a_{k+1} from a_{k}, and eigenvectors 
+      DO K=1,N
+        CS =  C*A(K,I)+S*A(K,J)
+        SC = -S*A(K,I)+C*A(K,J)
+        A(K,I) = CS
+        A(K,J) = SC
+        CS =  C*X(K,I)+S*X(K,J)
+        SC = -S*X(K,I)+C*X(K,J)
+        X(K,I) = CS
+        X(K,J) = SC
+      END DO
+    END DO
+  END DO
+ END DO
+ 
+ END SUBROUTINE UTL_JACOBI
+
  !###========================================================================
  SUBROUTINE LUDCMP_EIGSRT(D,A,N,NP)
  !###========================================================================
@@ -213,10 +337,10 @@ CONTAINS
      A(J,I)=A(I,J)/H
      G=0.
      DO K=1,J
- G=G+A(J,K)*A(I,K)
+      G=G+A(J,K)*A(I,K)
      ENDDO
      DO K=J+1,L
- G=G+A(K,J)*A(I,K)
+      G=G+A(K,J)*A(I,K)
      ENDDO
      E(J)=G/H
      F=F+E(J)*A(I,J)
@@ -227,7 +351,7 @@ CONTAINS
      G=E(J)-HH*F
      E(J)=G
      DO K=1,J
- A(J,K)=A(J,K)-F*E(K)-G*A(I,K)
+      A(J,K)=A(J,K)-F*E(K)-G*A(I,K)
      ENDDO
     ENDDO
    ENDIF

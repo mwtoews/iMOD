@@ -806,9 +806,6 @@ MAINLOOP: DO
  !## valley at this lambda value
  X=-CPARABOL(2)/(2.0D0*CPARABOL(3))
 
- !## is there no reduction achieved - return and try another set of lambdas
- IF(MJ.GE.MSR%PJ)THEN; LAMBDA=LAMBDA*GAMMA; RETURN; ENDIF
-
  !## bot-parabola
  IF(CPARABOL(3).GT.0.0D0)THEN
   !## update lambda
@@ -829,6 +826,9 @@ MAINLOOP: DO
 
  WRITE(IUPESTPROGRESS,'(/A)') 'New Lambda_0 '//TRIM(RTOS(LAMBDA,'F',7))//' (for upper boundary of lambda-tests); Objective Function Value '//TRIM(RTOS(MJ,'F',7))
  
+ !## is there no reduction achieved - return and try another set of lambdas
+ IF(MJ.GE.MSR%PJ)THEN; LAMBDA=LAMBDA*GAMMA; RETURN; ENDIF
+
  !## update new objective function value to be minimized
  MSR%TJ=MJ
  
@@ -1496,7 +1496,7 @@ MAINLOOP: DO
      EXIT
     CASE (2)
      !## try the same lambda without the excluded parameter due to a bondary hit
-     ILAMBDA=ILAMBDA-1 !DEFAULT
+     ILAMBDA=ILAMBDA-1
      EXIT
    END SELECT
  
@@ -2489,7 +2489,7 @@ MAINLOOP: DO
       GF_H(II)=C(K)
       GF_O(II)=M(K)
 
-      IF(IUPESTRESIDUAL.GT.0.AND.TRIM(CTYPE).EQ.'L'.OR.TRIM(CTYPE).EQ.'R')THEN
+      IF(IUPESTRESIDUAL.GT.0.AND.(TRIM(CTYPE).EQ.'L'.OR.TRIM(CTYPE).EQ.'R'))THEN
        WRITE(IUPESTRESIDUAL,'(2(F15.2,A1),I10,A1,8(F15.2,A1),I10,A1,A32,A1,I15)') &
          X,',',Y,',',ILAY,',',WW,',',M(K),',',C(K),',',DTH,',',DYN(1),',',DYN(2),',',DTD,',',NSC,',',I,',',MSR%CLABEL(II),',',IDATE(K)
       ENDIF
