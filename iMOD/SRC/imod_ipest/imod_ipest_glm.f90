@@ -821,7 +821,6 @@ MAINLOOP: DO
   ELSEIF(IJ.GT.N)THEN
    LAMBDA=1.0D0/PBMAN%LAMBDA_TEST(1)*LAMBDA
   ENDIF
-! LAMBDA=1.0D0/PBMAN%LAMBDA_TEST(PBMAN%NLAMBDASEARCH)*LAMBDA
  ENDIF
 
  WRITE(IUPESTPROGRESS,'(/A)') 'New Lambda_0 '//TRIM(RTOS(LAMBDA,'F',7))//' (for upper boundary of lambda-tests); Objective Function Value '//TRIM(RTOS(MJ,'F',7))
@@ -962,8 +961,8 @@ MAINLOOP: DO
     
      !## see whether this parameter is optimized
      DO J=1,SIZE(PEST%PARAM)
-      !## check whether the parameter is active
-      IF(PEST%PARAM(J)%PPARAM.EQ.IPTYPE(I).AND.PEST%PARAM(J)%PACT.NE.0)EXIT
+      !## check whether the parameter is available
+      IF(PEST%PARAM(J)%PPARAM.EQ.IPTYPE(I))EXIT !.AND.PEST%PARAM(J)%PACT.NE.0)EXIT
      ENDDO; IF(J.GT.SIZE(PEST%PARAM))CYCLE
      
      FNAME=TRIM(DIR)//'\GWF_'//TRIM(ITOS(ISUB))//'\MODELINPUT\'//SVFILE(I)//'\'//RT//'#'//TRIM(ITOS(IPARAM))
@@ -1021,8 +1020,8 @@ MAINLOOP: DO
     
      !## see whether this parameter is optimized
      DO J=1,SIZE(PEST%PARAM)
-      !## check whether the parameter is active
-      IF(PEST%PARAM(J)%PPARAM.EQ.IPTYPE(I).AND.PEST%PARAM(J)%PACT.NE.0)EXIT
+      !## check whether the parameter is available
+      IF(PEST%PARAM(J)%PPARAM.EQ.IPTYPE(I))EXIT !.AND.PEST%PARAM(J)%PACT.NE.0)EXIT
      ENDDO; IF(J.GT.SIZE(PEST%PARAM))CYCLE
 
      FNAME=TRIM(DIR)//'\GWF_'//TRIM(ITOS(ISUB))//'\MODELINPUT\'//SVFILE(I)//'\'//RT//'#'//TRIM(ITOS(IPARAM))

@@ -434,8 +434,10 @@ CONTAINS
    
    WRITE(IUPESTEFFICIENCY,'(/A,2I10)') 'Read ensembles for lambda/linesearch',JLAMBDA,JLINE
    WRITE(IUPESTEFFICIENCY,'(/A,F15.3)') 'NEW LAMBDA',LAMBDA
+   
    !## read residuals of all ensembles for selected jlambda
    CALL IPEST_IES_READ_DHG(DIR,ITER,JLAMBDA,JLINE,MO)
+   WRITE(IUPESTEFFICIENCY,'(/A,F15.3)') 'SUM J',JE(:,ITER)
    
   ENDIF
  ELSE
