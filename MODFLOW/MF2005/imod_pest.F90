@@ -348,7 +348,7 @@ subroutine pest1alpha_list(ptype,nlist,rlist,ldim,mxlist,iopt1,iopt2)
 !###====================================================================
 
 ! modules
-use global, only: lipest,buff,ncol,nrow
+use global, only: lipest,buff,ncol,nrow,npertxt
 use imod_utl, only: imod_utl_printtext, imod_utl_itos, imod_utl_dtos
 use m_mf2005_main, only: kper
 use pestvar, only: param, pest_iter, iupestout
@@ -366,6 +366,8 @@ character(len=256) :: line
 character(len=1024) :: errmsg
 integer :: i, j, k, ils, irow, icol, idat, irivsubsys, irivrfact,ilay, &
            idrnsubsys, iwelsubsys, ihfbfact, ighbsubsys, nadj,inode
+integer,dimension(4) :: ios
+integer(kind=8) :: sdate_par,edate_par,sdate_mod,edate_mod
 real(kind=8) :: ppart, fct
 
 !###======================================================================
@@ -378,6 +380,34 @@ do i=1,size(param)
   !## not this package - skip it
   if (trim(param(i)%ptype).ne.trim(ptype)) cycle
 
+  !## check date if needed
+  if(param(i)%sdate.ne.''.and.param(i)%edate.ne.'')then
+   if(trim(param(i)%sdate).eq.'STEADY-STATE'.and.trim(param(i)%edate).eq.'STEADY-STATE')then
+    if(npertxt(kper).ne.'STEADY-STATE')cycle
+   else
+    read(npertxt(kper)  ,*,iostat=ios(1)) sdate_mod
+    if(kper.lt.size(npertxt))then
+     read(npertxt(kper+1),*,iostat=ios(2)) edate_mod
+    else
+     ios(2)=ios(1); edate_mod=sdate_mod
+    endif
+    read(param(i)%sdate ,*,iostat=ios(3)) sdate_par
+    read(param(i)%edate ,*,iostat=ios(4)) edate_par
+    !## ready to evaluate
+    if(sum(ios).eq.0)then
+     !## make sure all are in same dimensions
+     if(sdate_mod.lt.99999999)sdate_mod=sdate_mod*1e6
+     if(edate_mod.lt.99999999)edate_mod=edate_mod*1e6
+     if(sdate_par.lt.99999999)sdate_par=sdate_par*1e6
+     if(edate_par.lt.99999999)edate_par=edate_par*1e6
+     if(edate_par.le.sdate_mod)cycle
+     if(sdate_par.gt.edate_mod)cycle
+    else
+     cycle
+    endif
+   endif
+  endif
+  
   !## fill buff with location of zone
   buff=0.0d0
   do j=1,param(i)%nodes
@@ -522,6 +552,23 @@ do i=1,size(param)
          nadj=nadj+1
          rlist(idat,j)=rlist(idat,j)*fct
         endif
+     end do
+
+   case('SF') ! sfr conductance
+     errmsg = 'Cannot apply PEST scaling factor for sfr conductance'
+!     if (.not.present(iopt1)) call imod_utl_printtext(trim(errmsg),2)
+!     isfrsubsys = iopt1
+!     if (isfrsubsys.eq.0) call imod_utl_printtext(trim(errmsg),2)
+     idat = 4
+     do j = 1, nlist ! match sybsystem number
+        irow=rlist(2,j); icol=rlist(3,j)
+        !## not in current zone
+        if(buff(icol,irow,1).eq.0.0d0)cycle
+!        !## adjust for selected system
+!        if (ils.eq.int(rlist(isfrsubsys,j)))then
+        nadj=nadj+1
+        rlist(idat,j)=rlist(idat,j)*fct
+!        endif
      end do
 
    case('QR') ! well rates

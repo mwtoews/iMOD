@@ -942,7 +942,7 @@ CONTAINS
    ENDIF
   ENDIF
   ! CALCULATING IDF
-  ISG2GRIDMAIN=ISG2GRID(PPOSTFIX,NROW,NCOL,NLAY,MLAY,TOP,BOT,KHV,BND,VCW,IBATCH,MP,0,GRIDISG,SFT,.FALSE.,1) 
+  ISG2GRIDMAIN=ISG2GRID(PPOSTFIX,NROW,NCOL,NLAY,MLAY,TOP,BOT,KHV,BND,VCW,IBATCH,MP,0,GRIDISG,SFT,.FALSE.,1,1.0D0,0.0D0) 
   IF(.NOT.ISG2GRIDMAIN)RETURN
   IF(GRIDISG%ISIMGRO.EQ.1)CALL ISG2GRIDMAIN_SVAT(GRIDISG)
 
@@ -1102,11 +1102,12 @@ CONTAINS
 
  !###====================================================================
  LOGICAL FUNCTION ISG2GRID(PPOSTFIX,NROW,NCOL,NLAY,MLAY,TOP,BOT,KHV,BND,VCW,IBATCH, &
-                           MP,JU,GRIDISG,SFT,LSFT,ISYS) 
+                           MP,JU,GRIDISG,SFT,LSFT,ISYS,FCT,IMP) 
  !###====================================================================
  IMPLICIT NONE
  INTEGER,INTENT(IN) :: NROW,NCOL,NLAY,MLAY,IBATCH,JU,ISYS
  INTEGER,INTENT(INOUT),DIMENSION(:) :: MP
+ REAL(KIND=DP_KIND),INTENT(IN) :: FCT,IMP
  TYPE(IDFOBJ),DIMENSION(NLAY),INTENT(INOUT) :: TOP,BOT,KHV,BND
  TYPE(IDFOBJ),DIMENSION(NLAY-1),INTENT(INOUT) :: VCW
  TYPE(IDFOBJ),DIMENSION(:),INTENT(INOUT) :: SFT
@@ -1453,6 +1454,9 @@ CONTAINS
           C            =BEDT/BEDK                      !## c-value
           ISGVALUE(1,4)=1.0D0                          !## inf.factors
          ENDIF
+
+         !## factor effects conductance, therefore apply it here as reciproke
+         IF(FCT.EQ.0.0D0)THEN; C=IMP; ELSE; C=C/FCT+IMP; ENDIF
          
          IF(C.GT.0.0D0)THEN
 
@@ -1490,9 +1494,9 @@ CONTAINS
            W=DD/D
            
            !## ignore small parts
-           IF(W.GT.0.99)THEN
+           IF(W.GT.0.99D0)THEN
             WRITE(IUDMM(2),'(I10,3F15.3)') MP(1),X(I2),Y(I2),1.0D0  ; NDMM=NDMM+1
-           ELSEIF(W.LT.0.01)THEN
+           ELSEIF(W.LT.0.01D0)THEN
             WRITE(IUDMM(2),'(I10,3F15.3)') MP(1),X(I1),Y(I1),1.0D0  ; NDMM=NDMM+1
            ELSE
             WRITE(IUDMM(2),'(I10,3F15.3)') MP(1),X(I1),Y(I1),1.0D0-W; NDMM=NDMM+1
@@ -1520,7 +1524,8 @@ CONTAINS
             IF(NETWD.LE.0.0D0)EXIT
             !## compute wetted perimeter,bottomwidth,cotanges
             CALL ISG2GRIDPERIMETERTRAPEZIUM(XTRAP(:,ITRAP),YTRAP(:,ITRAP),WETPER,CT,BW,NETWD)
-            TC=TC+(LN(J)*WETPER)/C    !conductance(m2/dag)
+            !## conductance(m2/dag)
+            TC=TC+(LN(J)*WETPER)/C    
            ENDDO
            NETTRAP=ITRAP-1; WRITE(IUSIMGRO,'(I10)') NETTRAP
 
@@ -1770,11 +1775,12 @@ IRLOOP: DO IR=MAX(1,IROW-1),MIN(NROW,IROW+1)
  END FUNCTION ISG2GRID
 
  !###====================================================================
- LOGICAL FUNCTION ISG2SFR(NROW,NCOL,NLAY,ILAY,IPER,NPER,MP,JU,GRIDISG,EXFNAME,TOP,BOT)
+ LOGICAL FUNCTION ISG2SFR(NROW,NCOL,NLAY,ILAY,IPER,NPER,MP,JU,GRIDISG,EXFNAME,TOP,BOT,FCT,IMP)
  !###====================================================================
  IMPLICIT NONE
  REAL(KIND=DP_KIND),PARAMETER :: MAXQFLOW=1.0D5 !## error perhaps in entering discharge
  REAL(KIND=DP_KIND),PARAMETER :: FAREA=0.50D0     !## error in area of cross-section
+ REAL(KIND=DP_KIND),INTENT(IN) :: FCT,IMP
  CHARACTER(LEN=*),INTENT(IN) :: EXFNAME
  INTEGER,INTENT(IN) :: NROW,NCOL,NLAY,ILAY,JU,IPER,NPER
  TYPE(GRIDISGOBJ),INTENT(INOUT) :: GRIDISG
@@ -2077,6 +2083,11 @@ IRLOOP: DO IR=MAX(1,IROW-1),MIN(NROW,IROW+1)
   WIDTH1 =RVAL(3,1); WIDTH2 =RVAL(3,2)
   THICKM1=RVAL(4,1); THICKM2=RVAL(4,2)
   HC1FCT =RVAL(5,1); HC2FCT =RVAL(5,2)
+  
+  !## factor effects conductance, therefore apply it here as reciproke
+  HC1FCT=HC1FCT*FCT+IMP
+  HC2FCT=HC2FCT*FCT+IMP
+
   ICALC =INT(RVAL(8,1)) !## calculation option streamdepth
   IUPSEG=INT(RVAL(6,1)) !## upstream segment
   OUTSEG=INT(RVAL(7,2)) !## downstream segment

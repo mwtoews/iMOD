@@ -707,6 +707,7 @@ C     ------------------------------------------------------------------
      3                     PERLEN,NSTP,TSMULT,ISSFLG,DELR,DELC,BOTM,
      4                     NPERTXT
       use m_mf2005_iu, only: iumet, iupks
+      use imod_utl, only: imod_utl_cap
 C
       CHARACTER*200 LINE
       CHARACTER*24 ANAME(5)
@@ -890,6 +891,7 @@ C14-----TIME STEP MULTIPLIER, AND STEADY-STATE FLAG..
       ENDIF
       !## save iper text without "[" and "]"
       NPERTXT(N)=LINE(ISTART+1:ISTOP-1)
+      call imod_utl_cap(npertxt(n),'u')
 
   163 FORMAT(1X,I8,1PG21.7,I7,0PF25.3,2A11)
 C

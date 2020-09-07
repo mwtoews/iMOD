@@ -335,9 +335,9 @@
       integer, public, parameter :: imet_save_no_buf        = 13
       integer, public, parameter :: imet_write_debug_idf    = 14
       integer, public, parameter :: imet_savedouble         = 15
-!      integer, public, parameter :: imet_ipestpdir          = 16
+      integer, public, parameter :: imet_savedate           = 16
 
-      integer, parameter :: nmetkws = imet_savedouble
+      integer, parameter :: nmetkws = imet_savedate
 
       character(len=18), dimension(nmetkws) :: metkws
 !...   12345678901234567890123
@@ -356,7 +356,8 @@
       'ibound_fixed_south',&
       'save_no_buf       ',&
       'write_debug_idf   ',&     
-      'savedouble        '/
+      'savedouble        ',&
+      'savedate          '/
 !      'ipestpdir         '/
 
       integer, public, parameter :: imetu = 1
@@ -1435,6 +1436,10 @@
 !...     write nam-file
       write(lun,'(a,1x,a)') '#', trim(nam%text) ! text
       write(lun,'(a)') '# packages:'
+
+      !## turn off con package as this is used in riv-package
+      nam%package(icon)%active=.false.
+
       do ipck = 1, npck
          if (nam%package(ipck)%active == .true.) then
              write(str(1),*) trim(nam%package(ipck)%ftype)

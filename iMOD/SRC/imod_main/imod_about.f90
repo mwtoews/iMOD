@@ -333,7 +333,7 @@ NEWLINE// &
 'd by Deltares, including documentation, as described below under DESCRIP'// &
 'TION OF iMOD, hereinafter referred to as “iMOD”;'//NEWLINE// &
 'Licensee wishes to acquire a non-exclusive and non-transferable license,'// &
-' without the right of sub-licensing, to USE MODPLOT within Licensee‘s organ'// &
+' without the right of sub-licensing, to use iMOD within Licensee‘s organ'// &
 'isation;'//NEWLINE// &
 'Deltares grants Licensee an iMOD-license on the following conditions.'//NEWLINE// &
 NEWLINE// &
@@ -342,14 +342,14 @@ NEWLINE// &
 'Article 1 License'//NEWLINE// &
 NEWLINE// &
 'Deltares grants Licensee a conditional, non-exclusive, non-transferable '// &
-'license without the right to sublicense or modify, to USE MODPLOT within th'// &
+'license without the right to sublicense or modify, to use iMOD within th'// &
 'e organisation of Licensee. This License Agreement is provided solely un'// &
 'der the condition that Licensee complies with the provisions of this Lic'// &
 'ense Agreement. '//NEWLINE// &
 NEWLINE// &
 'Article 2 Use of iMOD (including the documentation) '//NEWLINE// &
 NEWLINE// &
-'1. Licensee shall only be authorised to USE MODPLOT within its own organisa'// &
+'1. Licensee shall only be authorised to use iMOD within its own organisa'// &
 'tion and for its own use. Licensee shall not be permitted to make any ot'// &
 'her use of iMOD or to make available or grant access to iMOD to any thir'// &
 'd party.'//NEWLINE// &

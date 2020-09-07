@@ -1096,7 +1096,7 @@ C     Compute three new tables for lake outflow
 C     ******************************************************************
       USE GWFSFRMODULE
       USE GLOBAL,       ONLY: IOUT, ISSFLG, IBOUND, BOTM, HNEW, NLAY, 
-     +                        LAYHDT, IUNIT
+     +                        LAYHDT, IUNIT,lipest
       USE PARAMMODULE,  ONLY: MXPAR, PARTYP, IACTIVE, IPLOC
       USE ICHKSTRBOT_MODULE
       IMPLICIT NONE
@@ -1122,6 +1122,7 @@ C     ------------------------------------------------------------------
      +        jj, jk, k5, k6, k7, kk, ksfropt, kss, ktot, l, lstbeg,
      +        nseg, nstrpts,krck,irck,jrck,ireachck, j, numval,iunitnum,
      +        ierr,IFLG
+      real,allocatable,dimension(:,:) :: sfrr
 C     ------------------------------------------------------------------
 C
 C-------SET POINTERS FOR CURRENT GRID.
@@ -1912,6 +1913,22 @@ CC45-----READ TABLES FOR SPECIFIED INFLOWS
           END DO
         END IF
       END IF
+      
+      if(lipest)then
+       allocate(sfrr(4,nstrm))
+       do i=1,nstrm
+        sfrr(1,i)=real(istrm(1,i))
+        sfrr(2,i)=real(istrm(2,i))
+        sfrr(3,i)=real(istrm(3,i))
+        sfrr(4,i)=strm(6,i)
+       enddo
+       call pest1alpha_list('SF',nstrm,sfrr,4,nstrm,1,0)                ! IPEST
+       do i=1,nstrm
+        strm(6,i)=sfrr(4,i)
+       enddo
+       deallocate(sfrr)
+      endif
+      
  9029 FORMAT('A NEGATIVE VALUE FOR FLOW WAS SPECIFIED IN A ',
      +        'SFR TABULAR INFLOW FILE. VALUE WILL BE RESET TO ZERO')
  9033 FORMAT('TABULAR INFLOWS WERE READ FOR SEGMENT ',I6,/

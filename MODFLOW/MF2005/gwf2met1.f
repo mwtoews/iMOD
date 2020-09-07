@@ -68,6 +68,7 @@ c deallocate MET memory
       if (associated(save_no_buf))        deallocate(save_no_buf)
       if (associated(write_debug_idf))    deallocate(write_debug_idf)
       if (associated(savedouble))         deallocate(savedouble)
+      if (associated(savedate))           deallocate(savedate)
 
       if (igrid.eq.1) then
          if (allocated(xmask)) deallocate(xmask)
@@ -85,7 +86,7 @@ C change meta data to a different grid.
       runcomment   => gwfmetdat(igrid)%runcomment
       coord_descr  => gwfmetdat(igrid)%coord_descr
 
-!      idate_save   => gwfmetdat(igrid)%idate_save
+      savedate   => gwfmetdat(igrid)%savedate
 
       time_syear   => gwfmetdat(igrid)%time_syear
       time_smonth  => gwfmetdat(igrid)%time_smonth
@@ -135,7 +136,7 @@ C save meta data for a grid.
       gwfmetdat(igrid)%runcomment   => runcomment
       gwfmetdat(igrid)%coord_descr  => coord_descr
 
-!      gwfmetdat(igrid)%idate_save   => idate_save
+      gwfmetdat(igrid)%savedate   => savedate
 
       gwfmetdat(igrid)%time_syear   => time_syear
       gwfmetdat(igrid)%time_smonth  => time_smonth
@@ -192,8 +193,13 @@ c body
       call sgwf2met1pnt(igrid)
 
       if (issflg(kkper).eq.0)then 
-       cdate=npertxt(kkper)
-       cdate=adjustl(cdate)
+
+       if(savedate.eq.0)then
+        cdate=time_ostring
+       else 
+        cdate=npertxt(kkper)
+        cdate=adjustl(cdate)
+       endif
    
        read(cdate,'(i8)',iostat=ios) idate
        IF(IOS.EQ.0)then
@@ -251,7 +257,7 @@ c nullify
       runcomment   => null()
       coord_descr  => null()
 
-!      idate_save   => null()
+      savedate   => null()
 
       time_syear   => null()
       time_smonth  => null()
@@ -372,6 +378,13 @@ C2------READ A LINE; IGNORE BLANK LINES AND PRINT COMMENT LINES.
                if (.not.associated(save_no_buf))
      1            allocate(save_no_buf)
                save_no_buf = .true.
+            end if
+            
+            if (.not.associated(savedate))allocate(savedate)
+            !## default use dates from dis-file
+            savedate=1
+            if (line(istart:istop).eq.'SAVEDATE') then
+               read(line(lloc:),*) savedate
             end if
 
             if (line(istart:istop).eq.'SAVEDOUBLE') then
@@ -1354,22 +1367,23 @@ c create output file name
     
       call pks7mpipartstr(partstr) 
 
-!      if (issflg(kper).eq.0 .and. associated(time_ostring)) then ! TR
+      if (issflg(kper).eq.0 .and. associated(time_ostring)) then ! TR
          fmt = '(5a,'//fmt
-!         if(idate_save.eq.0)then
-          cdate_string=npertxt(kper) !time_ostring
-!          cdate_string=time_ostring
-!          !## trim last zero is all zero
-!          read(time_ostring(9:14),*,iostat=ios) ihms
-!          if(ios.eq.0)then
-!           if(ihms.eq.0)cdate_string=time_ostring(1:8)
-!          endif
+         if(savedate.eq.0)then
+!          cdate_string=npertxt(kper) !time_ostring
+          cdate_string=time_ostring
+          !## trim last zero is all zero
+          read(time_ostring(9:14),*,iostat=ios) ihms
+          if(ios.eq.0)then
+           if(ihms.eq.0)cdate_string=time_ostring(1:8)
+          endif
           write(fname,fmt) root(1:cfn_length(root)),
      1                       prefix(1:cfn_length(prefix)),'_',
      1                       cdate_string(1:cfn_length(cdate_string)),
      1                       '_l', ilay, partstr(1:cfn_length(partstr)),
      1                       '.',ext(1:cfn_length(ext))
-!         elseif(idate_save.eq.1)then
+         elseif(savedate.eq.1)then
+          cdate_string=npertxt(kper) !time_ostring
 !          cdate_string=time_cstring
 !          !## trim last zero is all zero
 !          read(time_cstring(9:14),*,iostat=ios) ihms
@@ -1381,15 +1395,15 @@ c create output file name
 !     1                       cdate_string(1:cfn_length(cdate_string)),
 !     1                      '_l', ilay, partstr(1:cfn_length(partstr)),
 !     1                      '.',ext(1:cfn_length(ext))
-!         endif
-!      else ! SS
-!         fmt = '(5a,'//fmt
-!         write(fname,fmt) root(1:cfn_length(root)),
-!     1                    prefix(1:cfn_length(prefix)),'_',
-!     1                    'steady-state',
-!     1                    '_l', ilay, partstr(1:cfn_length(partstr)),
-!     1                    '.',ext(1:cfn_length(ext))
-!      end if
+         endif
+      else ! SS
+         fmt = '(5a,'//fmt
+         write(fname,fmt) root(1:cfn_length(root)),
+     1                    prefix(1:cfn_length(prefix)),'_',
+     1                    'steady-state',
+     1                    '_l', ilay, partstr(1:cfn_length(partstr)),
+     1                    '.',ext(1:cfn_length(ext))
+      end if
 
 c assign result
       met1fname = fname

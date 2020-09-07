@@ -1599,6 +1599,8 @@ c find index number for timevalue
       timestep=0
       do i=1,nts
          d=cfn_mjd_delta(timevalue,tsinfo(i)%ptsinfo%timevalue)
+         write(*,'(a,4(1x,f15.7))') 'd,timevalue,timevalue(),i',d,
+     1timevalue,tsinfo(i)%ptsinfo%timevalue,i
          if (d.eq.0.d0) then
             timestep=i
             exit

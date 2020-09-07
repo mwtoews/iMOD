@@ -234,7 +234,8 @@ if (myrank.eq.0) then ! master only
  call WriteEvt()
  call WriteOc()
  call WriteChd()
- call WriteCon()
+ !## do not write con as this is used for riv-package entries for now
+! call WriteCon()
  call WriteNam(dxcfile)
 end if
 call pks7mpibarrier() ! PKS
@@ -391,8 +392,9 @@ if (.not.savebuf.and.savenobuf) then
    met%kws(imet_save_no_buf)%type = imetc
 end if
 
-!met%kws(imet_idate_save)%type = imeti
-!met%kws(imet_idate_save)%ival = 0
+!## default do not use the dates from the dif-file, for comp. with mozart-dm
+met%kws(imet_savedate)%type = imeti
+met%kws(imet_savedate)%ival = 0
 
 CALL IMOD_UTL_PRINTTEXT('  ',3)
 CALL IMOD_UTL_PRINTTEXT('---------------------------------------------',3)
@@ -576,8 +578,8 @@ if (ifvdl.ne.0) then
 end if
 
 !if(sdate.ne.1)sdate=0
-!met%kws(imet_idate_save)%type = imeti
-!met%kws(imet_idate_save)%ival = sdate
+!met%kws(imet_save_date)%type = imeti
+!met%kws(imet_save_date)%ival = sdate
 
 !if (sdate.gt.0) then
 !   write(date,'(i8)') sdate

@@ -24,7 +24,7 @@
 MODULE PESTVAR  
 !###====================================================================
 USE IMOD_IDF_PAR
-INTEGER,PARAMETER :: MXPTYPE=28
+INTEGER,PARAMETER :: MXPTYPE=29
 REAL,PARAMETER :: XPBND=0.01 !## boundary percentage
 CHARACTER(LEN=2),DIMENSION(MXPTYPE) :: PTYPE
 CHARACTER(LEN=256) :: PPBLANKOUT
@@ -45,7 +45,7 @@ TYPE PARAOBJ
  CHARACTER(LEN=2) :: PTYPE  !## parameter type
  CHARACTER(LEN=15) :: ACRONYM  !## acronym for parameter
  CHARACTER(LEN=256) :: EXBATFILE  !## external batch file
- REAL(KIND=8) :: MIN,MAX,INI,FADJ   !## min,max,initial value of parameter
+ REAL(KIND=8) :: MIN,MAX,INI,FADJ,PRIOR,STDEV   !## min,max,initial value of parameter
  DOUBLE PRECISION :: TJOBJ  !## objective function value
  REAL(KIND=8),DIMENSION(2) :: ALPHA !## alpha value
  REAL(KIND=8),POINTER,DIMENSION(:) :: ALPHA_HISTORY
@@ -58,6 +58,7 @@ TYPE PARAOBJ
  INTEGER :: IBND            !## whether a parameter hits its boundary
  INTEGER :: IGROUP          !## group to which parameters belongs
  LOGICAL :: LOG             !## logical to determine whether parameter is lognormal
+ CHARACTER(LEN=14) :: SDATE,EDATE  !## determines the start- and end date for the parameter modification
  INTEGER(KIND=2),POINTER,DIMENSION(:) :: IROW,ICOL  !## node number of zone for parameter param(i) --- pointer to IZONE
  REAL(KIND=8),POINTER,DIMENSION(:,:) :: XY  !## xy location for pilot-points
  REAL(KIND=4),POINTER,DIMENSION(:) :: X  !## copy of variable to be adjusted
@@ -114,7 +115,8 @@ DATA PTYPE/'KD',& ! 1 transmissivity
            'QR',& !25 extraction well
            'GC',& !26 general head conductance
            'SY',& !27 specific yield
-           'MQ'/  !28 multinode well rate
+           'MQ',& !28 multinode well rate
+           'SF'/  !29 sfr conductance
 
 END MODULE PESTVAR
 

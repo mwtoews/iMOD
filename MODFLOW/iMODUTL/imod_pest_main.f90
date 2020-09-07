@@ -194,6 +194,7 @@ CONTAINS
  DO I=1,SIZE(PARAM); PARAM(I)%NODES=0; ENDDO
  DO I=1,SIZE(PARAM)
   NULLIFY(PARAM(I)%X,PARAM(I)%IROW,PARAM(I)%ICOL,PARAM(I)%F,PARAM(I)%XY,PARAM(I)%ALPHA_HISTORY,PARAM(I)%ALPHA_ERROR_VARIANCE)
+  PARAM(I)%SDATE=''; PARAM(I)%EDATE=''
  ENDDO
 
  PEST_IREGULARISATION=0
@@ -391,36 +392,64 @@ CONTAINS
         PARAM(I)%FADJ,&    !## maximal adjust factor
         PARAM(I)%IGROUP, & !## group number
         J, &
-        PARAM(I)%ACRONYM   !## acronym
-   IF(IOS.EQ.0)THEN
-    PARAM(I)%ACRONYM=ADJUSTR(PARAM(I)%ACRONYM)
-    IF(J.EQ.0)PARAM(I)%LOG=.FALSE.
-    IF(J.EQ.1)PARAM(I)%LOG=.TRUE.
+        PARAM(I)%ACRONYM,& !## acronym
+        PARAM(I)%PRIOR,&   !## prior
+        PARAM(I)%STDEV,&   !## stdev
+        PARAM(I)%SDATE,&   !## start date
+        PARAM(I)%EDATE     !## end date
+    IF(IOS.NE.0)THEN
+     READ(LINE,*,IOSTAT=IOS) PARAM(I)%IACT, &  !## iact
+         PARAM(I)%PTYPE, &  !## ptype
+         PARAM(I)%ILS, &    !## ilayer/system
+         PARAM(I)%IZONE, &  !## zone number
+         PARAM(I)%INI, &    !## initial value
+         PARAM(I)%DELTA, &  !## finite difference step
+         PARAM(I)%MIN, &    !## minimal value
+         PARAM(I)%MAX,&     !## maximal value
+         PARAM(I)%FADJ,&    !## maximal adjust factor
+         PARAM(I)%IGROUP, & !## group number
+         J, &
+         PARAM(I)%ACRONYM   !## acronym
+    PARAM(I)%SDATE=''
+    PARAM(I)%EDATE=''
+    PARAM(I)%PRIOR=PARAM(I)%INI
+    PARAM(I)%STDEV=0.0
+    IF(IOS.EQ.0)THEN
+     PARAM(I)%ACRONYM=ADJUSTR(PARAM(I)%ACRONYM)
+     IF(J.EQ.0)PARAM(I)%LOG=.FALSE.
+     IF(J.EQ.1)PARAM(I)%LOG=.TRUE.
+    ENDIF
    ENDIF
-  ENDIF
-  IF(IOS.NE.0)THEN
-   READ(LINE,*,IOSTAT=IOS) PARAM(I)%IACT, &  !## iact
-        PARAM(I)%PTYPE, & !## ptype
-        PARAM(I)%ILS, &   !## ilayer/system
-        PARAM(I)%IZONE, & !## zone number
-        PARAM(I)%INI, &   !## initial value
-        PARAM(I)%DELTA, & !## finite difference step
-        PARAM(I)%MIN, &   !## minimal value
-        PARAM(I)%MAX,&    !## maximal value
-        PARAM(I)%FADJ,&   !## maximal adjust factor
-        PARAM(I)%IGROUP,& !## group number
-        J
-   IF(IOS.EQ.0)THEN
-    IF(J.EQ.0)PARAM(I)%LOG=.FALSE.
-    IF(J.EQ.1)PARAM(I)%LOG=.TRUE.
-   ELSE
-    !## overrule default settings for log normal
-    SELECT CASE (PARAM(I)%PTYPE)
-     CASE ('KD','KH','KV','VC','SC','RC','RI','IC','II','DC','AF','MS','MC','VA','HF','EX','EP','QR','MQ','GC','SY')
-      PARAM(I)%LOG=.TRUE.
-     CASE DEFAULT
-      PARAM(I)%LOG=.FALSE.    
-    END SELECT
+   IF(IOS.NE.0)THEN
+    READ(LINE,*,IOSTAT=IOS) PARAM(I)%IACT, &  !## iact
+         PARAM(I)%PTYPE, & !## ptype
+         PARAM(I)%ILS, &   !## ilayer/system
+         PARAM(I)%IZONE, & !## zone number
+         PARAM(I)%INI, &   !## initial value
+         PARAM(I)%DELTA, & !## finite difference step
+         PARAM(I)%MIN, &   !## minimal value
+         PARAM(I)%MAX,&    !## maximal value
+         PARAM(I)%FADJ,&   !## maximal adjust factor
+         PARAM(I)%IGROUP,& !## group number
+         J
+    PARAM(I)%SDATE=''
+    PARAM(I)%EDATE='' 
+    PARAM(I)%PRIOR=PARAM(I)%INI
+    PARAM(I)%STDEV=0.0
+    !## fill in default acronym
+    WRITE(PARAM(I)%ACRONYM,'(A2,2I5.5,I3.3)') PARAM(I)%PTYPE,PARAM(I)%ILS,PARAM(I)%IZONE,ABS(PARAM(I)%IGROUP)
+    IF(IOS.EQ.0)THEN
+     IF(J.EQ.0)PARAM(I)%LOG=.FALSE.
+     IF(J.EQ.1)PARAM(I)%LOG=.TRUE.
+    ELSE
+     !## overrule default settings for log normal
+     SELECT CASE (PARAM(I)%PTYPE)
+      CASE ('KD','KH','KV','VC','SC','RC','RI','IC','II','DC','AF','MS','MC','VA','HF','EX','EP','QR','MQ','GC','SY')
+       PARAM(I)%LOG=.TRUE.
+      CASE DEFAULT
+       PARAM(I)%LOG=.FALSE.    
+     END SELECT
+    ENDIF
    ENDIF
   ENDIF
   
@@ -431,7 +460,7 @@ CONTAINS
   ENDIF
  
   !## read external filename for external parameters
-  IF(PARAM(I)%PTYPE.EQ.'EX')THEN
+  PARAM(I)%EXBATFILE=''; IF(PARAM(I)%PTYPE.EQ.'EX')THEN
    READ(IURUN,'(A256)',IOSTAT=IOS) LINE
    READ(LINE,'(A256)',IOSTAT=IOS) PARAM(I)%EXBATFILE
   ENDIF
@@ -788,6 +817,7 @@ CONTAINS
    READ(IUDUMP,*)
    READ(IUDUMP,*) PARAM(I)%NODES,PARAM(I)%ZTYPE
    IF(PARAM(I)%ZTYPE.EQ.0)THEN
+    READ(IUDUMP,*)
     ALLOCATE(PARAM(I)%IROW(PARAM(I)%NODES),PARAM(I)%ICOL(PARAM(I)%NODES),PARAM(I)%F(PARAM(I)%NODES))
     DO J=1,PARAM(I)%NODES
      READ(IUDUMP,*) PARAM(I)%IROW(J),PARAM(I)%ICOL(J),PARAM(I)%F(J)
@@ -874,7 +904,8 @@ CONTAINS
  !###====================================================================
  IMPLICIT NONE
  CHARACTER(LEN=*),INTENT(IN) :: DIR
- INTEGER,INTENT(OUT) :: JU,NROW,NCOL
+ INTEGER,INTENT(IN) :: NROW,NCOL
+ INTEGER,INTENT(OUT) :: JU
  INTEGER :: N,IOS,NR,NC
 
  PEST1INIT_READ_ZONES_OPENFILE=.FALSE.
@@ -882,6 +913,7 @@ CONTAINS
  INQUIRE(FILE=TRIM(DIR)//'\PARAM_DUMP_IPEST.DAT',EXIST=PEST1INIT_READ_ZONES_OPENFILE)
  IF(.NOT.PEST1INIT_READ_ZONES_OPENFILE)RETURN
 
+ PEST1INIT_READ_ZONES_OPENFILE=.FALSE.
  JU=IMOD_UTL_GETUNIT(); OPEN(JU,FILE=TRIM(DIR)//'\PARAM_DUMP_IPEST.DAT',STATUS='OLD',ACTION='READ',FORM='FORMATTED')
  READ(JU,*)
  READ(JU,*)
