@@ -21,6 +21,8 @@
 !!  2600 MH Delft, The Netherlands.
 MODULE MOD_NC2IDF
 
+USE IO_NETCDF
+
 INTEGER :: INETCDF=0  !## no support of netcdf
 
 CONTAINS
@@ -31,13 +33,17 @@ CONTAINS
  IMPLICIT NONE
  CHARACTER(LEN=*),INTENT(IN) :: IDFNAME
  INTEGER,INTENT(INOUT) :: IERROR
-
+ CHARACTER(LEN=13) :: DUMMY
+ INTEGER :: IERR
+ IERR = ionc_getfullversionstring_io_netcdf(DUMMY)
+ 
  END SUBROUTINE NC2IDF_IMPORTNC
 
  !###======================================================================
  SUBROUTINE NC2IDF_EXPORTNC_CLOSE()
  !###======================================================================
  IMPLICIT NONE
+ 
  END SUBROUTINE NC2IDF_EXPORTNC_CLOSE
 
  !###======================================================================
