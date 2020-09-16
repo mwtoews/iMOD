@@ -1541,8 +1541,10 @@ DOLOOP: DO
  REAL(KIND=DP_KIND),INTENT(OUT) :: XP,YP
  REAL(KIND=DP_KIND) :: XR,YR
 
+ !## ellipse
  XP=    DX*COS(THETA); XR=XP
  YP=-FY*DX*SIN(THETA); YR=YP
+ !## rotation matrix
  IF(AR.NE.0.0D0)THEN
   XR= COS(AR)*XP+SIN(AR)*YP
   YR=-SIN(AR)*XP+COS(AR)*YP
@@ -1563,6 +1565,7 @@ DOLOOP: DO
  UTL_INSIDEELLIPSE=.FALSE.
 
  AR=A/(360.0D0/(2.0D0*PI))
+ !## perform backwards rotation
  AR=-1.0D0*AR
 
  X1=( (XP-X0)*COS(AR)+(YP-Y0)*SIN(AR) ) **2.0D0
@@ -1575,6 +1578,36 @@ DOLOOP: DO
  UTL_INSIDEELLIPSE=X3.LE.1.0D0
 
  END FUNCTION UTL_INSIDEELLIPSE
+
+ !###======================================================================
+ LOGICAL FUNCTION UTL_INSIDEELLIPSOID(X0,Y0,Z0,XP,YP,ZP,ROT,RAN)
+ !###======================================================================
+ IMPLICIT NONE
+ REAL(KIND=DP_KIND),INTENT(IN) :: XP,YP,ZP,X0,Y0,Z0
+ REAL(KIND=DP_KIND),INTENT(IN),DIMENSION(3,3) :: ROT
+ REAL(KIND=DP_KIND),INTENT(IN),DIMENSION(3) :: RAN
+ REAL(KIND=DP_KIND) :: X1,X2,X3
+ REAL(KIND=DP_KIND),DIMENSION(3) :: X
+ INTEGER :: I
+ 
+ UTL_INSIDEELLIPSOID=.FALSE.
+
+ !## correct for point of origin
+ X(1)=XP-X0
+ X(2)=YP-Y0
+ X(3)=ZP-Z0
+ 
+ !## back-rotation for ellipsoid
+ X=MATMUL(X,-1.0D0*ROT)
+ 
+ !## check whether point is insize ellipsoid
+ DO I=1,3
+  X(I)=X(I)**2.0D0/RAN(I)**2.0D0
+ ENDDO
+ 
+ UTL_INSIDEELLIPSOID=SUM(X).LE.1.0D0
+
+ END FUNCTION UTL_INSIDEELLIPSOID
 
  !###======================================================================
  INTEGER FUNCTION UTL_COUNT_COLUMNS(LINE,SEP,BPV,EPV)
