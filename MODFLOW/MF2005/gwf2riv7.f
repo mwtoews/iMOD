@@ -63,6 +63,7 @@ C     ******************************************************************
 C
 C     SPECIFICATIONS:
 C     ------------------------------------------------------------------
+      USE IFPORT
       use ulstrd_inferface                                              ! GCD
       USE GLOBAL,       ONLY:IOUT,NCOL,NROW,NLAY,IFREFM
       USE GWFRIVMODULE, ONLY:NRIVER,MXRIVR,NRIVVL,IRIVCB,IPRRIV,NPRIV,
@@ -103,6 +104,9 @@ C
 C3------READ MAXIMUM NUMBER OF RIVER REACHES AND UNIT OR FLAG FOR
 C3------CELL-BY-CELL FLOW TERMS.
       CALL URDCOM(IN,IOUT,LINE)
+      
+!      WRITE(*,*) FTELL(IN)
+      
       CALL UPARLSTAL(IN,IOUT,LINE,NPRIV,MXPR)
       IF(IFREFM.EQ.0) THEN
          READ(LINE,'(2I10)') MXACTR,IRIVCB

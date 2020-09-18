@@ -10260,7 +10260,9 @@ end
 ! the next line is included to let the compiler crash when no symbol matched
       ERROR, unknown compiler
 #endif
-
+      
+      !## added additional offset to account for carriage control and linefeed
+      offset=offset+2
 
 ! end of program
       return

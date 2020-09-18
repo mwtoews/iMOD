@@ -67,6 +67,7 @@ CONTAINS
 ! write(*,*) omp_get_num_threads()
  
  !## clean points for duplicates and get mean for simple kriging
+ ROT=0.0D0; RAN=0.0D0
  CALL KRIGING_INIT(MD,XD,YD,ZD,PD,WD,ND,IDF,COINCIDENT,COINCIDENTDIST,IBLANKOUT,BO_VALUE,IBLNTYPE,ROT,RAN) 
 
  IF(IBLANKOUT.EQ.1.OR.ASSOCIATED(IXY))THEN
@@ -114,7 +115,7 @@ CONTAINS
     ENDDO; ENDDO
     CALL UTL_SETUP_ROTATIONMATRIX(AGL,ROT); R=MAXVAL(RAN)
    ELSE
-    R=RANGE
+    R=RANGE; ROT=0.0D0; RAN=0.0D0
    ENDIF
 !   IF(ELLIPS_IDF(1)%IU.NE.0)ANI=IDFGETXYVAL(ELLIPS_IDF(1),X,Y) 
 !   IF(ELLIPS_IDF(2)%IU.NE.0)RAT=IDFGETXYVAL(ELLIPS_IDF(2),X,Y)
@@ -123,7 +124,7 @@ CONTAINS
         IQUADRANT,IDF,IBLANKOUT,BO_VALUE,ROT,RAN,IBLNTYPE,NACTP)
    IDF%X(ICOL,IROW) =KEST
    !## standard deviation (L)
-   IDFV%X(ICOL,IROW)=IDFV%NODATA; IF(KVAR.GT.0.0D0)IDFV%X(ICOL,IROW)=SQRT(KVAR)
+   IDFV%X(ICOL,IROW)=IDFV%NODATA; IF(KVAR.GE.0.0D0)IDFV%X(ICOL,IROW)=SQRT(KVAR)
    MNACTP=MAX(MNACTP,NACTP)
   ENDDO
   
@@ -467,6 +468,15 @@ CONTAINS
  
  NODATA=IDF%NODATA
  
+ !## check if location coincides perfectly with point than take that value and return
+ DO ID=1,ND
+  IF(UTL_DIST_3D(XCD(ID),YCD(ID),ZCD(ID),X,Y,Z).EQ.0.0D0)THEN
+   KEST=PD(ID)
+   KVAR=0.0D0
+   RETURN
+  ENDIF
+ ENDDO
+ 
  USERANGE=RANGE
  C0      =NUGGET
  C1      =SILL-NUGGET
@@ -616,6 +626,7 @@ CONTAINS
  KVAR=0.0D0
  DO I=1,NP
   ID=SELID(I)
+  !## use range aanpassen ???? 
   GAMMA=KRIGING_GETGAMMA(XCD(ID),YCD(ID),X,Y,USERANGE,C1,C0,KTYPE)
   KVAR=KVAR+B(I)*(SILL-GAMMA) 
  ENDDO
@@ -770,62 +781,62 @@ CONTAINS
   IF(X3.EQ.ZONE_IDF%NODATA.OR.X4.EQ.ZONE_IDF%NODATA)KRIGING_DIST=MAXDIST+1.0D0
   
  ENDIF
- 
- !## in case of an ellips(oid) see if it is inside the current ellips
- IF(UTL_CHECK_UNITY(ROT))THEN
+
+ !## in case of an ellips(oid) see if it is inside the current ellipsoid
+ IF(SUM(ROT).NE.0.0D0)THEN
   Z1=0.0D0
   IF(.NOT.UTL_INSIDEELLIPSOID(X0,Y0,Z0,X1,Y1,Z1,ROT,RAN))THEN
 !  IF(.NOT.UTL_INSIDEELLIPSE(X0,Y0,MAXDIST/2.0D0,RAT*MAXDIST/2.0D0,ANI-90.0D0,X1,Y1))THEN
    KRIGING_DIST=MAXDIST+1.0D0
   ELSE
-   !## compute coordinates on sphere with max. range
-   R=MAXVAL(RAN)
+!   !## compute coordinates on sphere with max. range
+!   R=MAXVAL(RAN)
    
-   !## backwards rotate points first
-   XYZE(1)=X1
-   XYZE(2)=Y1
-   XYZE(3)=Z1
-   XYZE=MATMUL(XYZE,-1.0D0*ROT)
-   X1=XYZE(1)
-   Y1=XYZE(2)
-   Z1=XYZE(3)
-   
-   !## find angle for point
-   DY=(Y0-Y1); DX=(X0-X1); DZ=(Z0-Z1)
-   DXY=UTL_DIST(X0,Y0,X1,Y1)
-   AXY=ATAN2(DY,DX)
-   AZX=ATAN2(DZ,DXY)
-
-   !## find point on sphere for those angles
-   XYZC(1)=R*SIN(AZX)*COS(AXY)
-   XYZC(2)=R*SIN(AZX)*SIN(AXY)
-   XYZC(3)=R*COS(AZX)
-   
-   !## find point on ellipsoid
-   XYZE(1)=RAN(1)*SIN(AZX)*COS(AXY)
-   XYZE(2)=RAN(2)*SIN(AZX)*SIN(AXY)
-   XYZE(3)=RAN(3)*COS(AZX)
-   
-   !## ratio is
-   D1=UTL_DIST_3D(XYZC(1),XYZC(2),XYZC(3),X0,Y0,Z0)
-   D2=UTL_DIST_3D(XYZE(1),XYZE(2),XYZE(3),X0,Y0,Z0)
-   
-   !## ratio is
-   F=D1/D2
-   
-   !## distance of original point to centre, increase distance with f
-   R=F*UTL_DIST_3D(X0,Y0,Z0,X1,Y1,Z1)
-   
-   !## compute new point in sphere at correct distance
-   XYZC(1)=R*SIN(AZX)*COS(AXY)
-   XYZC(2)=R*SIN(AZX)*SIN(AXY)
-   XYZC(3)=R*COS(AZX)
-   
-   !## rotate them appropriately
-   XYZE=MATMUL(XYZC,ROT)
-   X1=X0+XYZE(1)
-   Y1=Y0+XYZE(2)
-   Z1=Z0+XYZE(3)
+   !!## backwards rotate points first
+   !XYZE(1)=X1
+   !XYZE(2)=Y1
+   !XYZE(3)=Z1
+   !XYZE=MATMUL(XYZE,-1.0D0*ROT)
+   !X1=XYZE(1)
+   !Y1=XYZE(2)
+   !Z1=XYZE(3)
+   !
+   !!## find angle for point
+   !DY=(Y0-Y1); DX=(X0-X1); DZ=(Z0-Z1)
+   !DXY=UTL_DIST(X0,Y0,X1,Y1)
+   !AXY=ATAN2(DY,DX)
+   !AZX=ATAN2(DZ,DXY)
+   !
+   !!## find point on sphere for those angles
+   !XYZC(1)=R*SIN(AZX)*COS(AXY)
+   !XYZC(2)=R*SIN(AZX)*SIN(AXY)
+   !XYZC(3)=R*COS(AZX)
+   !
+   !!## find point on ellipsoid
+   !XYZE(1)=RAN(1)*SIN(AZX)*COS(AXY)
+   !XYZE(2)=RAN(2)*SIN(AZX)*SIN(AXY)
+   !XYZE(3)=RAN(3)*COS(AZX)
+   !
+   !!## ratio is
+   !D1=UTL_DIST_3D(XYZC(1),XYZC(2),XYZC(3),X0,Y0,Z0)
+   !D2=UTL_DIST_3D(XYZE(1),XYZE(2),XYZE(3),X0,Y0,Z0)
+   !
+   !!## ratio is
+   !F=D1/D2
+   !
+   !!## distance of original point to centre, increase distance with f
+   !R=F*UTL_DIST_3D(X0,Y0,Z0,X1,Y1,Z1)
+   !
+   !!## compute new point in sphere at correct distance
+   !XYZC(1)=R*SIN(AZX)*COS(AXY)
+   !XYZC(2)=R*SIN(AZX)*SIN(AXY)
+   !XYZC(3)=R*COS(AZX)
+   !
+   !!## rotate them appropriately
+   !XYZE=MATMUL(XYZC,ROT)
+!   X1=X0+XYZE(1)
+!   Y1=Y0+XYZE(2)
+!   Z1=Z0+XYZE(3)
    
  !  A=-(ANI+90.0D0)/(360.0D0/(2.0D0*PI))
  !  X1=           COS(A)*DX+          SIN(A)*DY
@@ -926,7 +937,7 @@ CONTAINS
  !## mark doubles with nodata and compute mean for those double points
  DO I=1,MD
   !## done allready
-  IF(ZD(I).EQ.IDF%NODATA)CYCLE
+  IF(PD(I).EQ.IDF%NODATA)CYCLE
   N=1; XP=XD(I); YP=YD(I); ZP=ZD(I); PP=PD(I); WP=WD(I)
   DO J=I+1,MD
    !## done allready

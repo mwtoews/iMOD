@@ -209,6 +209,12 @@ call pks7mpibarrier() ! PKS
 
  usests        = .false.
  usestsmodflow = .false.
+  
+! !## peter remove this
+! usests        = .true.
+! usestsmodflow = .true.
+! !## peter remove this
+
  usetransol    = .false.
  usemozart     = .false.
  ! get explicit arguments
@@ -395,6 +401,7 @@ call pks7mpibarrier() ! PKS
  ! init all components TODO!!!!!!!
  if (usemodflow) then
     call osd_chdir(modwd2)
+
     if (usestsmodflow) call sts2init(usestsmodflow,lunsts)
     call mf2005_initComponent(modrecord,retValMF2005)
     !## get pest variables
