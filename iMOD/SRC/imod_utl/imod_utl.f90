@@ -1546,8 +1546,10 @@ DOLOOP: DO
  YP=-FY*DX*SIN(THETA); YR=YP
  !## rotation matrix
  IF(AR.NE.0.0D0)THEN
-  XR= COS(AR)*XP+SIN(AR)*YP
-  YR=-SIN(AR)*XP+COS(AR)*YP
+  XR= COS(AR)*XP-SIN(AR)*YP
+  YR= SIN(AR)*XP+COS(AR)*YP
+!  XR= COS(AR)*XP+SIN(AR)*YP
+!  YR=-SIN(AR)*XP+COS(AR)*YP
  ENDIF
  XP=X+XR
  YP=Y+YR
@@ -1598,9 +1600,9 @@ DOLOOP: DO
  X(3)=ZP-Z0
  
  !## back-rotation for ellipsoid
- X=MATMUL(X,-1.0D0*ROT)
+ X=MATMUL(X,ROT) !-1.0D0*ROT)
  
- !## check whether point is insize ellipsoid
+ !## check whether point is inside ellipsoid
  DO I=1,3
   IF(RAN(I).EQ.0.0D0)CYCLE
   X(I)=X(I)**2.0D0/RAN(I)**2.0D0

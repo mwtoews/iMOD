@@ -33,11 +33,178 @@ USE IMODVAR, ONLY : DP_KIND,SP_KIND,PI
 USE MOD_QKSORT, ONLY : QKSORT
 USE MOD_ISG_UTL, ONLY : UTL_GETUNITSISG
 USE MOD_ISG_PAR, ONLY : ISGDOUBLE
+USE IO_NETCDF
+USE NETCDF
+USE IO_UGRID
 
 INTEGER,PARAMETER :: ISOBEK=1
+TYPE(T_UG_MESHGEOM) :: MESHGEOM
 
 CONTAINS
 
+ !###======================================================================
+ LOGICAL FUNCTION DFLOWFM1CALC()
+ !###======================================================================
+ IMPLICIT NONE
+ CHARACTER(LEN=13) :: DUMMY
+ INTEGER :: IERR,IONCID,NMESH,IM,NETWORKINDEX
+ TYPE(T_UG_NETWORK) :: NETID 
+ LOGICAL :: INCLUDEARRAYS !< (OPTIONAL) WHETHER OR NOT TO INCLUDE COORDINATE ARRAYS AND CONNECTIVITY TABLES. DEFAULT: .FALSE., I.E., DIMENSION COUNTS ONLY.
+ INTEGER :: START_INDEX   !< (OPTIONAL) THE START INDEX   
+ CHARACTER(LEN=UG_IDSLEN), ALLOCATABLE :: NBRANCHIDS(:), NNODEIDS(:), NODEIDS(:)       
+ CHARACTER(LEN=UG_IDSLONGNAMESLEN), ALLOCATABLE :: NBRANCHLONGNAMES(:), NNODELONGNAMES(:), NODELONGNAMES(:) 
+ CHARACTER(LEN=256) :: NETWORK1DNAME, MESH1DNAME
+
+ DFLOWFM1CALC=.FALSE.
+ 
+ IERR=IONC_GETFULLVERSIONSTRING_IO_NETCDF(DUMMY); IF(IERR.NE.0)RETURN
+ 
+ IERR=IONC_OPEN(TRIM(DFLOWFMDIR)//'\FLOWFM_NET.NC',NF90_NOWRITE,IONCID); IF(IERR.NE.0)RETURN
+ 
+ IERR=IONC_GET_MESH_COUNT(IONCID,NMESH); IF(IERR.NE.0)RETURN
+ 
+ INCLUDEARRAYS=.TRUE.
+ DO IM=1,NMESH
+  !## gathers mesh-info (dims, nodes, edges)
+  IERR=IONC_GET_MESHGEOM(IONCID,IM,NETWORKINDEX,MESHGEOM); IF(IERR.NE.0)RETURN
+  IF(MESHGEOM%DIM.EQ.1)THEN
+         !Save meshgeom for later writing of the 1d network names
+   !## retrieve the 1d geometry twice one time in meshgeom to process in this subroutine, one time in meshgeom1d, that can be used later during initialisation.
+   IERR=IONC_GET_MESHGEOM(IONCID,IM,NETWORKINDEX,MESHGEOM,START_INDEX,INCLUDEARRAYS,NBRANCHIDS,NBRANCHLONGNAMES, &
+             NNODEIDS,NNODELONGNAMES,NODEIDS,NODELONGNAMES,NETWORK1DNAME,MESH1DNAME); IF(IERR.NE.0)RETURN
+! [..]
+ 
+  NNODE=MESHGEOM%NNODES
+  NBRCH=MESHGEOM%NBRANCHES
+
+  WRITE(IU(IOUT),'(8X,I10,A)') NNODE,' nodes'! from '//TRIM(FNAME(ITP))
+  WRITE(IU(IOUT),'(8X,I10,A)') NBRCH,' branches'! from '//TRIM(FNAME(ITP))
+  
+  ! [..]
+!      
+!      if (meshgeom%dim.ne.1) then
+! [..]
+!      else
+! deze call berekent de x,y coordinaten van alle meshpunten op basis van hun branchid en nodeoffset (en de onderliggende network geometry polylines)
+!         ! 1d part
+!         ierr = odu_get_xy_coordinates(meshgeom%nodebranchidx, meshgeom%nodeoffsets, meshgeom%ngeopointx, meshgeom%ngeopointy, meshgeom%nbranchgeometrynodes, meshgeom%nbranchlengths, jsferic, meshgeom%nodeX, meshgeom%nodeY)
+   CALL OPEN_ISGFILES(1)
+   CALL DFLOWFM_IMPORT1_MAIN() 
+   CALL SOBEK1CLOSE(1)
+
+  ENDIF
+ ENDDO
+ 
+ DFLOWFM1CALC=.TRUE.
+ 
+ END FUNCTION DFLOWFM1CALC
+
+ !###======================================================================
+ SUBROUTINE DFLOWFM_IMPORT1_MAIN()
+ !###======================================================================
+ IMPLICIT NONE
+ INTEGER :: I
+ 
+! !## allocate memory for SOBEK-system
+! IF(IBATCH.EQ.0)THEN
+!  CALL WINDOWOUTSTATUSBAR(4,'Allocated ...')
+! ELSE
+!  WRITE(*,'(1X,A)') 'Allocated ...'
+! ENDIF
+
+! CALL MAIN1ALNETWORKTP()
+! CALL MAIN1ALNETWORKCP()
+! CALL MAIN1ALNETWORKCR()
+! CALL MAIN1ALNETWORKGR()
+! CALL MAIN1ALNETWORKST()
+! CALL MAIN1ALPROFILEDAT()
+! CALL MAIN1ALPROFILEDEF()
+! CALL MAIN1ALFRICTIONDAT()
+
+ ALLOCATE(TP1(NNODE),TP2(NBRCH)) !,TP3(NNDLK),CP(NCPNT),CR(NCROS),GR(NCALCP), &
+!          PDAT(NDAT),PDEF(NDEF),BDFR(NBDFR),ST(NSTUW),QH(NCALCP))
+! DO I=1,SIZE(PDEF); NULLIFY(PDEF(I)%XPROF,PDEF(I)%YPROF); ENDDO
+ 
+! IF(IBATCH.EQ.0)THEN
+!  CALL WINDOWOUTSTATUSBAR(4,'Allocated ...')
+! ELSE
+!  WRITE(*,'(1X,A)') 'Read ...'
+! ENDIF
+ 
+ CALL DFLOWFM_RDNETWORKTP()
+! CALL MAIN1RDNETWORKCP()
+! CALL MAIN1RDNETWORKCR()
+! CALL MAIN1RDNETWORKGR()
+! CALL MAIN1RDNETWORKST()
+! CALL MAIN1RDPROFILEDAT()
+! CALL MAIN1RDPROFILEDEF()
+! CALL MAIN1RDFRICTIONDAT()
+
+! CALL SOBEK_CREATEISG()
+
+! DO I=1,SIZE(PDEF)
+!  IF(ASSOCIATED(PDEF(I)%XPROF))DEALLOCATE(PDEF(I)%XPROF)
+!  IF(ASSOCIATED(PDEF(I)%YPROF))DEALLOCATE(PDEF(I)%YPROF)
+! ENDDO
+ 
+ DEALLOCATE(TP1,TP2) !,CP,CR,GR,PDAT,PDEF,BDFR,ST,QH)
+
+ END SUBROUTINE DFLOWFM_IMPORT1_MAIN
+ 
+ !###======================================================================
+ SUBROUTINE DFLOWFM_RDNETWORKTP()
+ !###======================================================================
+ IMPLICIT NONE
+ INTEGER :: NN,NB,NL,I
+
+! NN=0
+! NB=0
+! NL=0
+ DO I=1,NNODE
+!  TP1(I)%ID=MESHGEOM%NNODEX(I)
+  TP1(I)%PX=MESHGEOM%NNODEX(I)
+  TP1(I)%PY=MESHGEOM%NNODEY(I)
+ ENDDO
+
+ !READ(IU(ITP),*)
+ !DO
+ ! READ(IU(ITP),'(A256)',IOSTAT=IOS) LINE
+ ! IF(IOS.NE.0)EXIT
+ ! LINE=ADJUSTL(LINE)
+ ! IF(LINE(1:4).EQ.'NODE')THEN
+ !
+ !  NN=NN+1
+ !  I=INDEX(LINE,' id '); IF(I.LE.0)CALL MAINRDERROR('id',LINE); READ(LINE(I+4:),*) TP1(NN)%ID
+ !  I=INDEX(LINE,' px '); IF(I.LE.0)CALL MAINRDERROR('px',LINE); READ(LINE(I+4:),*) TP1(NN)%PX
+ !  I=INDEX(LINE,' py '); IF(I.LE.0)CALL MAINRDERROR('py',LINE); READ(LINE(I+4:),*) TP1(NN)%PY
+ !
+ ! ELSEIF(LINE(1:4).EQ.'NDLK')THEN
+ !
+ !  NL=NL+1
+ !  I=INDEX(LINE,' id '); IF(I.LE.0)CALL MAINRDERROR('id',LINE); READ(LINE(I+4:),*) TP3(NL)%ID
+ !  I=INDEX(LINE,' px '); IF(I.LE.0)CALL MAINRDERROR('px',LINE); READ(LINE(I+4:),*) TP3(NL)%PX
+ !  I=INDEX(LINE,' py '); IF(I.LE.0)CALL MAINRDERROR('py',LINE); READ(LINE(I+4:),*) TP3(NL)%PY
+ !  I=INDEX(LINE,' ci '); IF(I.LE.0)CALL MAINRDERROR('ci',LINE); READ(LINE(I+4:),*) TP3(NL)%CI
+ !  I=INDEX(LINE,' lc '); IF(I.LE.0)CALL MAINRDERROR('lc',LINE); READ(LINE(I+4:),*) TP3(NL)%LC
+ !
+ ! ELSEIF(LINE(1:4).EQ.'BRCH')THEN
+ !
+ !  NB=NB+1
+ !
+ !  I=INDEX(LINE,' id '); IF(I.LE.0)CALL MAINRDERROR('id',LINE); READ(LINE(I+4:),*) TP2(NB)%ID
+ !  I=INDEX(LINE,' bn '); IF(I.LE.0)CALL MAINRDERROR('bn',LINE); READ(LINE(I+4:),*) TP2(NB)%CBN
+ !  I=INDEX(LINE,' en '); IF(I.LE.0)CALL MAINRDERROR('en',LINE); READ(LINE(I+4:),*) TP2(NB)%CEN
+ !  I=INDEX(LINE,' al '); IF(I.LE.0)CALL MAINRDERROR('al',LINE); READ(LINE(I+4:),*) TP2(NB)%AL
+ !
+ ! ENDIF
+ !ENDDO
+
+! WRITE(IU(IOUT),'(8X,I10,A)') NN,' nodes from '//TRIM(FNAME(ITP))
+! WRITE(IU(IOUT),'(8X,I10,A)') NB,' branches from '//TRIM(FNAME(ITP))
+! WRITE(IU(IOUT),'(8X,I10,A)') NL,' flow connection nodes from '//TRIM(FNAME(ITP))
+
+ END SUBROUTINE DFLOWFM_RDNETWORKTP
+ 
  !###======================================================================
  SUBROUTINE SOBEK1MAIN()
  !###======================================================================
@@ -133,14 +300,8 @@ CONTAINS
  LOGICAL FUNCTION SOBEK1CALC()
  !###======================================================================
  IMPLICIT NONE
- INTEGER :: I,J
- LOGICAL :: LEX
- INTEGER,ALLOCATABLE,DIMENSION(:) :: JU
  
  SOBEK1CALC=.FALSE.
-
- FNAME(IOUT)=TRIM(PREFVAL(1))//'\tmp\imod2sobek.log'  
- IU(IOUT)=UTL_GETUNIT(); CALL OSD_OPEN(IU(IOUT),FILE=FNAME(IOUT),STATUS='UNKNOWN',FORM='FORMATTED',IOSTAT=IOS(IOUT))
  
  !## input
  FNAME(ITP)= TRIM(SOBEKDIR)//'\NETWORK.TP'
@@ -154,61 +315,7 @@ CONTAINS
  FNAME(IHIS)=CALCPNTHISNAME 
  FNAME(SHIS)=STRUCHISNAME   
  
- !## create folder
- I=INDEX(ISGNAME,'\',.TRUE.)-1
- CALL UTL_CREATEDIR(ISGNAME(:I))
-
- I=INDEX(ISGNAME,'.',.TRUE.)-1
- IF(I.EQ.-1)I=LEN_TRIM(ISGNAME) !## no extention found
-  
- FNAME(ISG) =ISGNAME(:I)//'.ISG'
- FNAME(ISP) =ISGNAME(:I)//'.ISP'
- FNAME(ISD1)=ISGNAME(:I)//'.ISD1'
- FNAME(ISD2)=ISGNAME(:I)//'.ISD2'
- FNAME(ISC1)=ISGNAME(:I)//'.ISC1'
- FNAME(ISC2)=ISGNAME(:I)//'.ISC2'
- FNAME(IST1)=ISGNAME(:I)//'.IST1'
- FNAME(IST2)=ISGNAME(:I)//'.IST2'
- FNAME(ISQ1)=ISGNAME(:I)//'.ISQ1'
- FNAME(ISQ2)=ISGNAME(:I)//'.ISQ2'
-  
- IOS=0
-
- DO J=1,8
-  I=IL(J)
-  IU(I)=UTL_GETUNIT()
-  CALL OSD_OPEN(IU(I),FILE=FNAME(I),STATUS='OLD',ACTION='READ',IOSTAT=IOS(I))
-  !## error opening file
-  IF(IOS(I).NE.0)THEN
-   IF(IBATCH.EQ.0)THEN
-    CALL WMESSAGEBOX(OKONLY,EXCLAMATIONICON,COMMONOK,'Cannot find:'//CHAR(13)//TRIM(FNAME(I)),'Error')
-   ELSE
-    WRITE(*,'(A)') 'Cannot find:'//CHAR(13)//TRIM(FNAME(I))
-   ENDIF
-   DO I=1,NIU
-    IF(IU(I).GT.0)THEN; INQUIRE(UNIT=IU(I),OPENED=LEX); IF(LEX)CLOSE(IU(I)); ENDIF
-   ENDDO
-   RETURN
-  ENDIF
- END DO
-
- !## always create a double precision ISG
- ISGDOUBLE=8
- IF(ALLOCATED(JU))DEALLOCATE(JU); ALLOCATE(JU(10)); JU=0
- CALL UTL_GETUNITSISG(JU,FNAME(ISG),'REPLACE')
- !## something went wrong
- IF(SUM(JU).EQ.0)RETURN
- IU(ISG) =JU(1)
- IU(ISP) =JU(2)
- IU(ISD1)=JU(3)
- IU(ISD2)=JU(4)
- IU(ISC1)=JU(5)
- IU(ISC2)=JU(6)
- IU(IST1)=JU(7)
- IU(IST2)=JU(8)
- IU(ISQ1)=JU(9)
- IU(ISQ2)=JU(10)
- DEALLOCATE(JU)
+ CALL OPEN_ISGFILES(0)
 
  !## get his in data set
  IOS(IHIS)=0
@@ -250,21 +357,23 @@ CONTAINS
   WRITE(IU(IOUT),'(A)') '          '//TRIM(FNAME(IHIS))!CLCPNT.HIS'
   WRITE(IU(IOUT),'(A)') '          '//TRIM(FNAME(SHIS))!STRUC.HIS'
 
-  WRITE(IU(IOUT),'(A)') ' Creates: '//TRIM(FNAME(ISG)) !IMOD.ISG'
-  WRITE(IU(IOUT),'(A)') '          '//TRIM(FNAME(ISP)) !IMOD.ISP'
-  WRITE(IU(IOUT),'(A)') '          '//TRIM(FNAME(ISD1))!IMOD.ISD1'
-  WRITE(IU(IOUT),'(A)') '          '//TRIM(FNAME(ISD2))!IMOD.ISD2'
-  WRITE(IU(IOUT),'(A)') '          '//TRIM(FNAME(ISC1))!IMOD.ISC1'
-  WRITE(IU(IOUT),'(A)') '          '//TRIM(FNAME(ISC2))!IMOD.ISC2'
-  WRITE(IU(IOUT),'(A)') '          '//TRIM(FNAME(IST1))!IMOD.IST1'
-  WRITE(IU(IOUT),'(A)') '          '//TRIM(FNAME(IST2))!IMOD.IST2'
-  WRITE(IU(IOUT),'(A)') '          '//TRIM(FNAME(ISQ1))!IMOD.ISQ1'
-  WRITE(IU(IOUT),'(A)') '          '//TRIM(FNAME(ISQ2))!IMOD.ISQ2'
-  WRITE(IU(IOUT),'(A/)') '          '//TRIM(FNAME(IOUT))!LOG-FILE'
-
-  CALL MAIN()
+  CALL SOBEK1IMPORT_MAIN()
  
  ENDIF
+ 
+ CALL SOBEK1CLOSE(0)
+  
+ SOBEK1CALC=.TRUE.
+
+ END FUNCTION SOBEK1CALC
+
+ !###======================================================================
+ SUBROUTINE SOBEK1CLOSE(IOPTION)
+ !###======================================================================
+ IMPLICIT NONE
+ INTEGER,INTENT(IN) :: IOPTION
+ INTEGER :: I
+ LOGICAL :: LEX
  
  IF(IBATCH.NE.0)WRITE(*,*)
  DO I=1,NIU
@@ -294,12 +403,95 @@ CONTAINS
   ENDIF
  ENDIF
  
- SOBEK1CALC=.TRUE.
-
- END FUNCTION SOBEK1CALC
+ END SUBROUTINE SOBEK1CLOSE
 
  !###======================================================================
- SUBROUTINE MAIN()
+ SUBROUTINE OPEN_ISGFILES(IOPTION)
+ !###======================================================================
+ IMPLICIT NONE
+ INTEGER,INTENT(IN) :: IOPTION
+ INTEGER :: I,J
+ INTEGER,ALLOCATABLE,DIMENSION(:) :: JU
+ LOGICAL :: LEX
+ 
+ !## create folder
+ I=INDEX(ISGNAME,'\',.TRUE.)-1
+ CALL UTL_CREATEDIR(ISGNAME(:I))
+
+ FNAME(IOUT)=ISGNAME(:I)//'\imod2sobek.log'  
+ IU(IOUT)=UTL_GETUNIT(); CALL OSD_OPEN(IU(IOUT),FILE=FNAME(IOUT),STATUS='UNKNOWN',FORM='FORMATTED',IOSTAT=IOS(IOUT))
+
+ I=INDEX(ISGNAME,'.',.TRUE.)-1
+ IF(I.EQ.-1)I=LEN_TRIM(ISGNAME) !## no extention found
+  
+ FNAME(ISG) =ISGNAME(:I)//'.ISG'
+ FNAME(ISP) =ISGNAME(:I)//'.ISP'
+ FNAME(ISD1)=ISGNAME(:I)//'.ISD1'
+ FNAME(ISD2)=ISGNAME(:I)//'.ISD2'
+ FNAME(ISC1)=ISGNAME(:I)//'.ISC1'
+ FNAME(ISC2)=ISGNAME(:I)//'.ISC2'
+ FNAME(IST1)=ISGNAME(:I)//'.IST1'
+ FNAME(IST2)=ISGNAME(:I)//'.IST2'
+ FNAME(ISQ1)=ISGNAME(:I)//'.ISQ1'
+ FNAME(ISQ2)=ISGNAME(:I)//'.ISQ2'
+  
+ IOS=0
+
+ !## read sobek-files
+ IF(IOPTION.EQ.0)THEN
+  DO J=1,8
+   I=IL(J)
+   IU(I)=UTL_GETUNIT()
+   CALL OSD_OPEN(IU(I),FILE=FNAME(I),STATUS='OLD',ACTION='READ',IOSTAT=IOS(I))
+   !## error opening file
+   IF(IOS(I).NE.0)THEN
+    IF(IBATCH.EQ.0)THEN
+     CALL WMESSAGEBOX(OKONLY,EXCLAMATIONICON,COMMONOK,'Cannot find:'//CHAR(13)//TRIM(FNAME(I)),'Error')
+    ELSE
+     WRITE(*,'(A)') 'Cannot find:'//CHAR(13)//TRIM(FNAME(I))
+    ENDIF
+    DO I=1,NIU
+     IF(IU(I).GT.0)THEN; INQUIRE(UNIT=IU(I),OPENED=LEX); IF(LEX)CLOSE(IU(I)); ENDIF
+    ENDDO
+    RETURN
+   ENDIF
+  END DO
+ ENDIF
+
+ !## always create a double precision ISG
+ ISGDOUBLE=8
+ IF(ALLOCATED(JU))DEALLOCATE(JU); ALLOCATE(JU(10)); JU=0
+ CALL UTL_GETUNITSISG(JU,FNAME(ISG),'REPLACE')
+ !## something went wrong
+ IF(SUM(JU).EQ.0)RETURN
+ IU(ISG) =JU(1)
+ IU(ISP) =JU(2)
+ IU(ISD1)=JU(3)
+ IU(ISD2)=JU(4)
+ IU(ISC1)=JU(5)
+ IU(ISC2)=JU(6)
+ IU(IST1)=JU(7)
+ IU(IST2)=JU(8)
+ IU(ISQ1)=JU(9)
+ IU(ISQ2)=JU(10)
+ DEALLOCATE(JU)
+
+ WRITE(IU(IOUT),'(A)') ' Creates: '//TRIM(FNAME(ISG)) !IMOD.ISG'
+ WRITE(IU(IOUT),'(A)') '          '//TRIM(FNAME(ISP)) !IMOD.ISP'
+ WRITE(IU(IOUT),'(A)') '          '//TRIM(FNAME(ISD1))!IMOD.ISD1'
+ WRITE(IU(IOUT),'(A)') '          '//TRIM(FNAME(ISD2))!IMOD.ISD2'
+ WRITE(IU(IOUT),'(A)') '          '//TRIM(FNAME(ISC1))!IMOD.ISC1'
+ WRITE(IU(IOUT),'(A)') '          '//TRIM(FNAME(ISC2))!IMOD.ISC2'
+ WRITE(IU(IOUT),'(A)') '          '//TRIM(FNAME(IST1))!IMOD.IST1'
+ WRITE(IU(IOUT),'(A)') '          '//TRIM(FNAME(IST2))!IMOD.IST2'
+ WRITE(IU(IOUT),'(A)') '          '//TRIM(FNAME(ISQ1))!IMOD.ISQ1'
+ WRITE(IU(IOUT),'(A)') '          '//TRIM(FNAME(ISQ2))!IMOD.ISQ2'
+ WRITE(IU(IOUT),'(A/)') '          '//TRIM(FNAME(IOUT))!LOG-FILE'
+
+ END SUBROUTINE OPEN_ISGFILES
+
+ !###======================================================================
+ SUBROUTINE SOBEK1IMPORT_MAIN()
  !###======================================================================
  IMPLICIT NONE
  INTEGER :: I
@@ -348,7 +540,7 @@ CONTAINS
  
  DEALLOCATE(TP1,TP2,CP,CR,GR,PDAT,PDEF,BDFR,ST,QH)
 
- END SUBROUTINE MAIN
+ END SUBROUTINE SOBEK1IMPORT_MAIN
 
  !##=====================================================================
  SUBROUTINE SOBEK_CREATEISG()
@@ -1427,10 +1619,10 @@ CONTAINS
 
      ALLOCATE(PDEF(ND)%XPROF(PDEF(ND)%NNXY),PDEF(ND)%YPROF(PDEF(ND)%NNXY))
 
-     PDEF(ND)%XPROF(2)=-BW/2.0     
-     PDEF(ND)%XPROF(1)= PDEF(ND)%XPROF(2)-5.0
+     PDEF(ND)%XPROF(2)=-BW/2.0D0   
+     PDEF(ND)%XPROF(1)= PDEF(ND)%XPROF(2)-5.0D0   
      PDEF(ND)%XPROF(3)= BW/2.0
-     PDEF(ND)%XPROF(4)= PDEF(ND)%XPROF(3)+5.0
+     PDEF(ND)%XPROF(4)= PDEF(ND)%XPROF(3)+5.0D0   
      PDEF(ND)%YPROF(1)= BL+ABS(PDEF(ND)%XPROF(1))*BS
      PDEF(ND)%YPROF(2)= BL
      PDEF(ND)%YPROF(3)= BL
@@ -1470,9 +1662,6 @@ CONTAINS
 
       !## devide by 2
       PDEF(ND)%XPROF=PDEF(ND)%XPROF/2.0
-!      DO I=2,PDEF(ND)%NNXY
-!       PDEF(ND)%XPROF(I)=PDEF(ND)%XPROF(I-1)+PDEF(ND)%XPROF(I)
-!      END DO
 
       J=PDEF(ND)%NNXY
       DO I=1,PDEF(ND)%NNXY
@@ -1482,7 +1671,6 @@ CONTAINS
       END DO
       PDEF(ND)%NNXY=J
       CALL QKSORT(PDEF(ND)%NNXY,PDEF(ND)%XPROF,V2=PDEF(ND)%YPROF)
-!      CALL UTL_QKSORT2(PDEF(ND)%XPROF,PDEF(ND)%YPROF,PDEF(ND)%NNXY,PDEF(ND)%NNXY)
      
      ENDIF
      
@@ -1504,8 +1692,8 @@ CONTAINS
      N=11; PDEF(ND)%NNXY=N
 
      ALLOCATE(PDEF(ND)%XPROF(PDEF(ND)%NNXY),PDEF(ND)%YPROF(PDEF(ND)%NNXY))
-     OR =0.5*(2.0*PI)
-     DOR=0.05D0*(2.0*PI)
+     OR =0.5D0*(2.0D0*PI)
+     DOR=0.05D0*(2.0D0*PI)
      OR=OR+DOR
      DO I=1,N
       OR=OR-DOR
