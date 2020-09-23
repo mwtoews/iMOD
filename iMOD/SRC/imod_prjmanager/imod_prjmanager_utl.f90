@@ -2094,6 +2094,24 @@ JLOOP: DO K=1,SIZE(TOPICS)
  END SUBROUTINE PMANAGER_INITSIM_PUTISAVE
 
  !###======================================================================
+ INTEGER FUNCTION PMANAGER_GETNSYS(ITOPIC)
+ !###======================================================================
+ IMPLICIT NONE
+ INTEGER,INTENT(IN) :: ITOPIC
+ INTEGER :: IPER
+ 
+ PMANAGER_GETNSYS=0
+
+ IF(.NOT.ASSOCIATED(TOPICS(ITOPIC)%STRESS))         RETURN
+ IF(.NOT.ASSOCIATED(TOPICS(ITOPIC)%STRESS(1)%FILES))RETURN
+ !## get max. number of systems
+ DO IPER=1,SIZE(TOPICS(ITOPIC)%STRESS)
+  PMANAGER_GETNSYS=MAX(PMANAGER_GETNSYS,SIZE(TOPICS(ITOPIC)%STRESS(IPER)%FILES,1))
+ ENDDO
+  
+ END FUNCTION PMANAGER_GETNSYS
+ 
+ !###======================================================================
  SUBROUTINE PMANAGER_GETNFILES(ITOPICS,MLAY,DEFINED)
  !###======================================================================
  IMPLICIT NONE
@@ -2145,7 +2163,7 @@ JLOOP: DO K=1,SIZE(TOPICS)
  IF(ASSOCIATED(ALAY))DEALLOCATE(ALAY)
  
  END SUBROUTINE PMANAGER_GETNFILES
- 
+
  !###======================================================================
  SUBROUTINE PMANAGERLAYERTYPES_PRJNLAY_CONFIGALL()
  !###======================================================================

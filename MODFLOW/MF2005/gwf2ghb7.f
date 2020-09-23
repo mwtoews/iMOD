@@ -202,6 +202,8 @@ C     ------------------------------------------------------------------
      1                       IGHBPB,NNPGHB,GHBAUX,BNDS
      1                       ,ighbsubsys,nghbsubsys,ghbsubsidx          ! dsubsys
 C     ------------------------------------------------------------------
+      CHARACTER(LEN=52) :: LINE
+
       CALL SGWF2GHB7PNT(IGRID)
 C
 C1------READ ITMP (NUMBER OF GHB'S OR FLAG TO REUSE DATA) AND
@@ -217,7 +219,10 @@ C1------NUMBER OF PARAMETERS.
          IF(IFREFM.EQ.0) THEN
             READ(IN,'(I10)') ITMP
          ELSE
-            READ(IN,*) ITMP
+            !## needed for the state-state
+            READ(IN,'(A)') LINE
+            READ(LINE,*) ITMP
+!            READ(IN,*) ITMP
          END IF
       END IF
 C

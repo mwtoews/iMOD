@@ -1462,7 +1462,11 @@ CONTAINS
    
    IF(TOPICS(TCAP)%DEFINED)THEN
     IF(PBMAN%IPESTP.EQ.0)THEN
-     WRITE(IU,'(/A/)') '"'//TRIM(SEXENAME)//'" -components components.inp' 
+     IF(PBMAN%IFORMAT.EQ.3)THEN
+      WRITE(IU,'(/A/)') '"'//TRIM(SEXENAME)//'"'
+     ELSE
+      WRITE(IU,'(/A/)') '"'//TRIM(SEXENAME)//'" -components components.inp'
+     ENDIF
     ELSE
      IF(I.GT.0)THEN
       WRITE(IU,'(/A/)') '"'//TRIM(SEXENAME)//'" -components components_P#'//TRIM(ITOS(I))//'.inp -ipest ".\modelinput\'//TRIM(MNAME)//'.pst1"' 

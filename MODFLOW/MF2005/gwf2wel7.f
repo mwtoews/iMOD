@@ -207,6 +207,8 @@ C     ------------------------------------------------------------------
      1                       iwelsubsys
 C
       CHARACTER*6 CWELL
+      CHARACTER(LEN=52) :: LINE
+
 C     ------------------------------------------------------------------
       CALL SGWF2WEL7PNT(IGRID)
 C
@@ -223,7 +225,10 @@ C1----AND NUMBER OF PARAMETERS
          IF(IFREFM.EQ.0) THEN
             READ(IN,'(I10)') ITMP
          ELSE
-            READ(IN,*) ITMP
+            !## needed for the state-state
+            READ(IN,'(A)') LINE
+            READ(LINE,*) ITMP
+!            READ(IN,*) ITMP
          END IF
       END IF
 C

@@ -1489,7 +1489,7 @@ CONTAINS
       IF(J.GT.1)THEN
        NQ       = NQ+1
        QH(NQ)%CI= TRIM(CI)
-       QH(NQ)%LC= GR(NC-1)%LC+((GR(NC)%LC-GR(NC-1)%LC)/2.0)
+       QH(NQ)%LC= GR(NC-1)%LC+((GR(NC)%LC-GR(NC-1)%LC)/2.0D0)
        QH(NQ)%ID= DUMMY4
       ENDIF
       DUMMY4=DUMMY3
@@ -1501,7 +1501,7 @@ CONTAINS
      !## adjust maximum length to actual length
      IF(TRIM(TP2(IB)%ID).EQ.TRIM(GR(NC)%CI))THEN
       GR(NC)%LC=TP2(IB)%AL
-      QH(NQ)%LC=GR(NC-1)%LC+((GR(NC)%LC-GR(NC-1)%LC)/2.0)
+      QH(NQ)%LC=GR(NC-1)%LC+((GR(NC)%LC-GR(NC-1)%LC)/2.0d0)
      ENDIF
     ENDDO
 

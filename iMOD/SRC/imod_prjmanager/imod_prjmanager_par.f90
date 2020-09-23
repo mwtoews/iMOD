@@ -485,10 +485,11 @@ MODULE MOD_PMANAGER_PAR
  INTEGER :: IDXC      !unit number for modflow.dxc
  INTEGER :: IINFI     !unit number for infi_svat.inp
  INTEGER :: IIDF      !unit number for idf_svat.inp
- INTEGER :: IUSCL   
- INTEGER :: IDFM_MSWP
- INTEGER :: IMSWP_DFM
- INTEGER :: IARMWP
+ INTEGER :: IUSCL     !unit number for uscl_svat.inp
+ INTEGER :: IUNOD     !unit number for nodenr2svat.dxc (only with mf6)
+ INTEGER :: IDFM_MSWP !unit number for coupling with dflow-fm (only with pbman%dmmfile=1)
+ INTEGER :: IMSWP_DFM !unit number for coupling with dflow-fm (only with pbman%dmmfile=1)
+ INTEGER :: IARMWP    !usage of artificial recharge from ipf-files
 
  LOGICAL,PARAMETER :: LFREEFORMAT=.TRUE.  !## use true free-format
  CHARACTER(LEN=1024) :: LINE
