@@ -47,14 +47,16 @@ CONTAINS
  !###======================================================================
  IMPLICIT NONE
  CHARACTER(LEN=13) :: DUMMY
- INTEGER :: IERR,IONCID,NMESH,IM,NETWORKINDEX
+ INTEGER :: IERR,IONCID,NMESH,IM,NETWORKINDEX,NCID
  TYPE(T_UG_NETWORK) :: NETID 
  LOGICAL :: INCLUDEARRAYS !< (OPTIONAL) WHETHER OR NOT TO INCLUDE COORDINATE ARRAYS AND CONNECTIVITY TABLES. DEFAULT: .FALSE., I.E., DIMENSION COUNTS ONLY.
  INTEGER :: START_INDEX   !< (OPTIONAL) THE START INDEX   
  CHARACTER(LEN=UG_IDSLEN), ALLOCATABLE :: NBRANCHIDS(:), NNODEIDS(:), NODEIDS(:)       
  CHARACTER(LEN=UG_IDSLONGNAMESLEN), ALLOCATABLE :: NBRANCHLONGNAMES(:), NNODELONGNAMES(:), NODELONGNAMES(:) 
  CHARACTER(LEN=256) :: NETWORK1DNAME, MESH1DNAME
-
+ INTEGER :: ID_NETNODEZ
+ REAL(KIND=DP_KIND),ALLOCATABLE,DIMENSION(:) :: ZK
+ 
  DFLOWFM1CALC=.FALSE.
  
  IERR=IONC_GETFULLVERSIONSTRING_IO_NETCDF(DUMMY); IF(IERR.NE.0)RETURN
@@ -63,7 +65,10 @@ CONTAINS
  
  IERR=IONC_GET_MESH_COUNT(IONCID,NMESH); IF(IERR.NE.0)RETURN
  
+ IERR = IONC_GET_NCID(IONCID, NCID)
+ 
  INCLUDEARRAYS=.TRUE.
+ START_INDEX=1
  DO IM=1,NMESH
   !## gathers mesh-info (dims, nodes, edges)
   IERR=IONC_GET_MESHGEOM(IONCID,IM,NETWORKINDEX,MESHGEOM); IF(IERR.NE.0)RETURN
@@ -74,9 +79,35 @@ CONTAINS
              NNODEIDS,NNODELONGNAMES,NODEIDS,NODELONGNAMES,NETWORK1DNAME,MESH1DNAME); IF(IERR.NE.0)RETURN
 ! [..]
  
+!      ! zk values on nodes
+!      ierr = ionc_inq_varid_by_standard_name(ioncid, im, UG_LOC_NODE, 'sea_floor_depth_below_geoid', id_netnodez)
+!      if (ierr == ionc_noerr) then
+!         altsign = -1d0 ! altitude as depths
+!      else
+         ierr = ionc_inq_varid_by_standard_name(ioncid, im, UG_LOC_NODE, 'altitude', id_netnodez)
+!         if (ierr == ionc_noerr) then
+!            altsign = 1d0 ! altitude as altitudes
+!         else
+!            ! NOTE: AvD: As long as there's no proper standard_name, try some possible variable names for reading in net node z values:
+!            altsign = 1d0 ! altitude as altitudes
+!            ierr = ionc_inq_varid(ioncid, im, 'NetNode_z', id_netnodez)
+!            if (ierr /= ionc_noerr) then
+!               ierr = ionc_inq_varid(ioncid, im, 'node_z', id_netnodez)
+!            end if
+!         end if
+!      end if
+         ierr = nf90_get_var(ncid, id_netnodez, zk) !ZK(numk_last+1:numk_last+meshgeom%numnode))
+!         call check_error(ierr, 'z values')
+!         if (ierr == nf90_noerr) then
+!            ZK(numk_last+1:numk_last+meshgeom%numnode) = altsign*ZK(numk_last+1:numk_last+meshgeom%numnode)
+!         end if
+
   NNODE=MESHGEOM%NNODES
   NBRCH=MESHGEOM%NBRANCHES
-
+  
+  !MESHGEOM%NBRANCHGEOMETRYNODES = (1:79) - # waar de coordinaten, consequetief
+!  MESHGEOM%NGEOPOINTX = (1:4416) - xpunten
+  
   WRITE(IU(IOUT),'(8X,I10,A)') NNODE,' nodes'! from '//TRIM(FNAME(ITP))
   WRITE(IU(IOUT),'(8X,I10,A)') NBRCH,' branches'! from '//TRIM(FNAME(ITP))
   

@@ -489,8 +489,12 @@ MODULE MOD_PMANAGER_PAR
  INTEGER :: IUNOD     !unit number for nodenr2svat.dxc (only with mf6)
  INTEGER :: IDFM_MSWP !unit number for coupling with dflow-fm (only with pbman%dmmfile=1)
  INTEGER :: IMSWP_DFM !unit number for coupling with dflow-fm (only with pbman%dmmfile=1)
- INTEGER :: IARMWP    !usage of artificial recharge from ipf-files
-
+ INTEGER :: WINDEX_MSWP !unit number for coupling with metaswap (extraction wells)
+ INTEGER :: RINDEX_MSWP !unit number for coupling with metaswap (recharge)
+ INTEGER :: WMF6_MSWP   !unit number for mf6 wel package
+ INTEGER :: RMF6_MSWP   !unit number for mf6 rch package
+ INTEGER :: IARMWP      !usage of artificial recharge from ipf-files
+ 
  LOGICAL,PARAMETER :: LFREEFORMAT=.TRUE.  !## use true free-format
  CHARACTER(LEN=1024) :: LINE
  LOGICAL :: LYESNO
