@@ -159,13 +159,19 @@ C2------READ FLAGS SHOWING WHETHER DATA IS TO BE REUSED.
          IF(IFREFM.EQ.0) THEN
             READ(IN,'(4I10)') INSURF,INEVTR,INEXDP,INIEVT
          ELSE
-            READ(IN,*) INSURF,INEVTR,INEXDP,INIEVT
+            !## needed for the state-state
+            READ(IN,'(A)') LINE
+            READ(LINE,*) INSURF,INEVTR,INEXDP,INIEVT     
+!            READ(IN,*) INSURF,INEVTR,INEXDP,INIEVT
          END IF
       ELSE
          IF(IFREFM.EQ.0) THEN
             READ(IN,'(3I10)') INSURF,INEVTR,INEXDP
          ELSE
-            READ(IN,*) INSURF,INEVTR,INEXDP
+            !## needed for the state-state
+            READ(IN,'(A)') LINE
+            READ(LINE,*) INSURF,INEVTR,INEXDP         
+!            READ(IN,*) INSURF,INEVTR,INEXDP
          END IF
       END IF
 C

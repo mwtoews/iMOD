@@ -153,6 +153,7 @@ C     ------------------------------------------------------------------
       use rdrsmodule, only: nodata                                      ! DLT
 C
       CHARACTER*24 ANAME(2)
+      CHARACTER(LEN=52) :: LINE      
       real,allocatable,dimension(:,:) :: tmp
 C
       DATA ANAME(1) /'    RECHARGE LAYER INDEX'/
@@ -169,13 +170,19 @@ C2------READ FLAGS SHOWING WHETHER DATA IS TO BE REUSED.
          IF(IFREFM.EQ.0) THEN
             READ(IN,'(2I10)') INRECH,INIRCH
          ELSE
-            READ(IN,*) INRECH,INIRCH
+            !## needed for the state-state
+            READ(IN,'(A)') LINE
+            READ(LINE,*) INRECH,INIRCH
+!            READ(IN,*) INRECH,INIRCH
          END IF
       ELSE
          IF(IFREFM.EQ.0) THEN
             READ(IN,'(I10)') INRECH
          ELSE
-            READ(IN,*) INRECH
+            !## needed for the state-state
+            READ(IN,'(A)') LINE
+            READ(LINE,*) INRECH
+!            READ(IN,*) INRECH
          END IF
       END IF
 C

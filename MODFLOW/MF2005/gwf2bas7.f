@@ -522,6 +522,8 @@ C     ------------------------------------------------------------------
      1                      IOFLG
 C
 C     ------------------------------------------------------------------
+      CHARACTER(LEN=52) :: LINE
+      
       CALL SGWF2BAS7PNT(IGRID)
 C
 C1------TEST UNIT NUMBER (INOC (INOC=IUNIT(IUOC))) TO SEE IF
@@ -547,7 +549,10 @@ C3------THE ORIGINAL NUMERIC INPUT STRUCTURE.
       IF(IFREFM.EQ.0) THEN
          READ(INOC,'(4I10)') INCODE,IHDDFL,IBUDFL,ICBCFL
       ELSE
-         READ(INOC,*) INCODE,IHDDFL,IBUDFL,ICBCFL
+         !## needed for the state-state
+         READ(INOC,'(A)') LINE
+         READ(LINE,*) INCODE,IHDDFL,IBUDFL,ICBCFL
+!         READ(INOC,*) INCODE,IHDDFL,IBUDFL,ICBCFL
       END IF
       WRITE(IOUT,3) IHDDFL,IBUDFL,ICBCFL
     3 FORMAT(1X,/1X,'HEAD/DRAWDOWN PRINTOUT FLAG =',I2,
@@ -567,7 +572,10 @@ C6------INCODE=0, READ IOFLG FOR LAYER 1 AND ASSIGN SAME TO ALL LAYERS
         IF(IFREFM.EQ.0) THEN
            READ(INOC,'(4I10)') (IOFLG(1,M),M=1,4)
         ELSE
-           READ(INOC,*) (IOFLG(1,M),M=1,4)
+            !## needed for the state-state
+            READ(INOC,'(A)') LINE
+            READ(LINE,*) (IOFLG(1,M),M=1,4)
+!           READ(INOC,*) (IOFLG(1,M),M=1,4)
         END IF
         IOFLG(1,5)=0
         DO 210 K=1,NLAY
@@ -591,7 +599,10 @@ C7------ONE VALUE.
            IF(IFREFM.EQ.0) THEN
               READ(INOC,'(4I10)') (IOFLG(K,M),M=1,4)
            ELSE
-              READ(INOC,*) (IOFLG(K,M),M=1,4)
+              !## needed for the state-state
+              READ(INOC,'(A)') LINE
+              READ(LINE,*) (IOFLG(K,M),M=1,4)
+!              READ(INOC,*) (IOFLG(K,M),M=1,4)
            END IF
            IOFLG(K,5)=0
   301      CONTINUE
@@ -606,7 +617,10 @@ C7------ONE VALUE.
            IF(IFREFM.EQ.0) THEN
               READ(INOC,'(4I10)') (IOFLG(1,M),M=1,4)
            ELSE
-              READ(INOC,*) (IOFLG(1,M),M=1,4)
+              !## needed for the state-state
+              READ(INOC,'(A)') LINE
+              READ(LINE,*) (IOFLG(1,M),M=1,4)
+!              READ(INOC,*) (IOFLG(1,M),M=1,4)
            END IF
            WRITE(IOUT,302) 'OUTPUT FLAGS FOR CROSS SECTION:','     '
            WRITE(IOUT,304) (IOFLG(1,M),M=1,4)

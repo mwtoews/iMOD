@@ -28,7 +28,7 @@ USE MOD_SOBEK_PAR
 USE MOD_UTL, ONLY : UTL_WSELECTFILE,UTL_GETHELP,UTL_PUTRECORDLENGTH
 USE MOD_PREF_PAR, ONLY : PREFVAL
 USE MOD_OSD, ONLY : OSD_OPEN
-USE MOD_UTL, ONLY : ITOS,RTOS,UTL_GETUNIT,UTL_CAP,UTL_JDATETOIDATE,UTL_CREATEDIR,UTL_DIALOGSHOW
+USE MOD_UTL, ONLY : ITOS,RTOS,UTL_GETUNIT,UTL_CAP,UTL_JDATETOIDATE,UTL_CREATEDIR,UTL_DIALOGSHOW,UTL_DIST
 USE IMODVAR, ONLY : DP_KIND,SP_KIND,PI
 USE MOD_QKSORT, ONLY : QKSORT
 USE MOD_ISG_UTL, ONLY : UTL_GETUNITSISG
@@ -39,6 +39,8 @@ USE IO_UGRID
 
 INTEGER,PARAMETER :: ISOBEK=1
 TYPE(T_UG_MESHGEOM) :: MESHGEOM
+CHARACTER(LEN=UG_IDSLEN), ALLOCATABLE :: NBRANCHIDS(:), NNODEIDS(:), NODEIDS(:)       
+CHARACTER(LEN=UG_IDSLONGNAMESLEN), ALLOCATABLE :: NBRANCHLONGNAMES(:), NNODELONGNAMES(:), NODELONGNAMES(:) 
 
 CONTAINS
 
@@ -48,14 +50,12 @@ CONTAINS
  IMPLICIT NONE
  CHARACTER(LEN=13) :: DUMMY
  INTEGER :: IERR,IONCID,NMESH,IM,NETWORKINDEX,NCID
- TYPE(T_UG_NETWORK) :: NETID 
+! TYPE(T_UG_NETWORK) :: NETID 
  LOGICAL :: INCLUDEARRAYS !< (OPTIONAL) WHETHER OR NOT TO INCLUDE COORDINATE ARRAYS AND CONNECTIVITY TABLES. DEFAULT: .FALSE., I.E., DIMENSION COUNTS ONLY.
  INTEGER :: START_INDEX   !< (OPTIONAL) THE START INDEX   
- CHARACTER(LEN=UG_IDSLEN), ALLOCATABLE :: NBRANCHIDS(:), NNODEIDS(:), NODEIDS(:)       
- CHARACTER(LEN=UG_IDSLONGNAMESLEN), ALLOCATABLE :: NBRANCHLONGNAMES(:), NNODELONGNAMES(:), NODELONGNAMES(:) 
  CHARACTER(LEN=256) :: NETWORK1DNAME, MESH1DNAME
- INTEGER :: ID_NETNODEZ
- REAL(KIND=DP_KIND),ALLOCATABLE,DIMENSION(:) :: ZK
+! INTEGER :: ID_NETNODEZ
+! REAL(KIND=DP_KIND),ALLOCATABLE,DIMENSION(:) :: ZK
  
  DFLOWFM1CALC=.FALSE.
  
@@ -77,45 +77,10 @@ CONTAINS
    !## retrieve the 1d geometry twice one time in meshgeom to process in this subroutine, one time in meshgeom1d, that can be used later during initialisation.
    IERR=IONC_GET_MESHGEOM(IONCID,IM,NETWORKINDEX,MESHGEOM,START_INDEX,INCLUDEARRAYS,NBRANCHIDS,NBRANCHLONGNAMES, &
              NNODEIDS,NNODELONGNAMES,NODEIDS,NODELONGNAMES,NETWORK1DNAME,MESH1DNAME); IF(IERR.NE.0)RETURN
-! [..]
  
-!      ! zk values on nodes
-!      ierr = ionc_inq_varid_by_standard_name(ioncid, im, UG_LOC_NODE, 'sea_floor_depth_below_geoid', id_netnodez)
-!      if (ierr == ionc_noerr) then
-!         altsign = -1d0 ! altitude as depths
-!      else
-         ierr = ionc_inq_varid_by_standard_name(ioncid, im, UG_LOC_NODE, 'altitude', id_netnodez)
-!         if (ierr == ionc_noerr) then
-!            altsign = 1d0 ! altitude as altitudes
-!         else
-!            ! NOTE: AvD: As long as there's no proper standard_name, try some possible variable names for reading in net node z values:
-!            altsign = 1d0 ! altitude as altitudes
-!            ierr = ionc_inq_varid(ioncid, im, 'NetNode_z', id_netnodez)
-!            if (ierr /= ionc_noerr) then
-!               ierr = ionc_inq_varid(ioncid, im, 'node_z', id_netnodez)
-!            end if
-!         end if
-!      end if
-         ierr = nf90_get_var(ncid, id_netnodez, zk) !ZK(numk_last+1:numk_last+meshgeom%numnode))
-!         call check_error(ierr, 'z values')
-!         if (ierr == nf90_noerr) then
-!            ZK(numk_last+1:numk_last+meshgeom%numnode) = altsign*ZK(numk_last+1:numk_last+meshgeom%numnode)
-!         end if
+!!         ierr = ionc_inq_varid_by_standard_name(ioncid, im, UG_LOC_NODE, 'altitude', id_netnodez)
+!!         ierr = nf90_get_var(ncid, id_netnodez, zk) !ZK(numk_last+1:numk_last+meshgeom%numnode))
 
-  NNODE=MESHGEOM%NNODES
-  NBRCH=MESHGEOM%NBRANCHES
-  
-  !MESHGEOM%NBRANCHGEOMETRYNODES = (1:79) - # waar de coordinaten, consequetief
-!  MESHGEOM%NGEOPOINTX = (1:4416) - xpunten
-  
-  WRITE(IU(IOUT),'(8X,I10,A)') NNODE,' nodes'! from '//TRIM(FNAME(ITP))
-  WRITE(IU(IOUT),'(8X,I10,A)') NBRCH,' branches'! from '//TRIM(FNAME(ITP))
-  
-  ! [..]
-!      
-!      if (meshgeom%dim.ne.1) then
-! [..]
-!      else
 ! deze call berekent de x,y coordinaten van alle meshpunten op basis van hun branchid en nodeoffset (en de onderliggende network geometry polylines)
 !         ! 1d part
 !         ierr = odu_get_xy_coordinates(meshgeom%nodebranchidx, meshgeom%nodeoffsets, meshgeom%ngeopointx, meshgeom%ngeopointy, meshgeom%nbranchgeometrynodes, meshgeom%nbranchlengths, jsferic, meshgeom%nodeX, meshgeom%nodeY)
@@ -134,68 +99,124 @@ CONTAINS
  SUBROUTINE DFLOWFM_IMPORT1_MAIN()
  !###======================================================================
  IMPLICIT NONE
- INTEGER :: I
+ INTEGER :: ISEG,ICRS,IB,NNP,ICLC,NSEG,NCLC,NCRS,IREFSD,IREFSC,IREFST, &
+            NSTW,ISTW,NQHR,IQHR,IREFSQ
+
+ NNODE=MESHGEOM%NNODES
+ NBRCH=MESHGEOM%NBRANCHES
+
+ WRITE(IU(ISG),*) NBRCH,0
+
+ IF(IBATCH.EQ.0)THEN; CALL WINDOWOUTSTATUSBAR(4,''); ELSE; WRITE(*,'(/A/)'); ENDIF
  
-! !## allocate memory for SOBEK-system
-! IF(IBATCH.EQ.0)THEN
-!  CALL WINDOWOUTSTATUSBAR(4,'Allocated ...')
-! ELSE
-!  WRITE(*,'(1X,A)') 'Allocated ...'
-! ENDIF
+ ISEG  =0  !## segment-points
+ ICRS  =0  !## cross-sections
+ ICLC  =0  !## data
+ ISTW  =0
+ IQHR  =0
+ IREFSD=0
+ IREFSC=0
+ IREFST=0
+ IREFSQ=0
+ NNP   =0
 
-! CALL MAIN1ALNETWORKTP()
-! CALL MAIN1ALNETWORKCP()
-! CALL MAIN1ALNETWORKCR()
-! CALL MAIN1ALNETWORKGR()
-! CALL MAIN1ALNETWORKST()
-! CALL MAIN1ALPROFILEDAT()
-! CALL MAIN1ALPROFILEDEF()
-! CALL MAIN1ALFRICTIONDAT()
+ DO IB=1,NBRCH
+  CALL DFLOWFM_CREATEIPS(IB,ISEG,NSEG)
+  NCLC=0
+  NCRS=0
+  NSTW=0
+  NQHR=0
 
- ALLOCATE(TP1(NNODE),TP2(NBRCH)) !,TP3(NNDLK),CP(NCPNT),CR(NCROS),GR(NCALCP), &
-!          PDAT(NDAT),PDEF(NDEF),BDFR(NBDFR),ST(NSTUW),QH(NCALCP))
-! DO I=1,SIZE(PDEF); NULLIFY(PDEF(I)%XPROF,PDEF(I)%YPROF); ENDDO
+  LINE='"'//TRIM(NBRANCHIDS(IB))//'",'// &
+       TRIM(ITOS(ISEG-NSEG+1))//','//TRIM(ITOS(NSEG))//','// &
+       TRIM(ITOS(ICLC-NCLC+1))//','//TRIM(ITOS(NCLC))//','// &
+       TRIM(ITOS(ICRS-NCRS+1))//','//TRIM(ITOS(NCRS))//','// &
+       TRIM(ITOS(ISTW-NSTW+1))//','//TRIM(ITOS(NSTW))//','// &
+       TRIM(ITOS(IQHR-NQHR+1))//','//TRIM(ITOS(NQHR))
+  WRITE(IU(ISG),*) TRIM(LINE)
+
+  IF(IBATCH.EQ.0)THEN
+   CALL WINDOWOUTSTATUSBAR(4,'Progress '//TRIM(RTOS(REAL(IB*100,8)/REAL(NBRCH,8),'F',2))//' %')
+  ELSE
+   WRITE(6,'(A,F10.4,A)') '+Progress ',REAL(IB*100)/REAL(NBRCH),'%         '
+  ENDIF
+  
+ END DO
+
+ WRITE(IU(ISP) ,REC=1) UTL_PUTRECORDLENGTH(16) !8*256+247
+ WRITE(IU(ISD1),REC=1) UTL_PUTRECORDLENGTH(48) !44*256+247 
+ WRITE(IU(ISD2),REC=1) UTL_PUTRECORDLENGTH(44) !20*256+247
+ WRITE(IU(ISC1),REC=1) UTL_PUTRECORDLENGTH(48) !44*256+247 
+ WRITE(IU(ISC2),REC=1) UTL_PUTRECORDLENGTH(24) !12*256+247
+ WRITE(IU(IST1),REC=1) UTL_PUTRECORDLENGTH(48) !44*256+247 
+ WRITE(IU(IST2),REC=1) UTL_PUTRECORDLENGTH(28) !12*256+247
+ WRITE(IU(ISQ1),REC=1) UTL_PUTRECORDLENGTH(48) !44*256+247 
+ WRITE(IU(ISQ2),REC=1) UTL_PUTRECORDLENGTH(32) !16*256+247
+
+ IF(IBATCH.NE.0)THEN
+  WRITE(*,'(A)') 'Number of records in:'
+  WRITE(*,'(A,I10)') TRIM(FNAME(ISG))  //' ',NBRCH
+  WRITE(*,'(A,I10)') TRIM(FNAME(ISP))  //' ',NNP
+  WRITE(*,'(A,2I10)') TRIM(FNAME(ISD1))//' ',ICLC,IREFSD
+  WRITE(*,'(A,2I10)') TRIM(FNAME(ISC1))//' ',ICRS,IREFSC
+  WRITE(*,'(A,2I10)') TRIM(FNAME(IST1))//' ',ISTW,IREFST
+  WRITE(*,'(A,2I10)') TRIM(FNAME(ISQ1))//' ',IQHR,IREFSQ
+ ENDIF
  
-! IF(IBATCH.EQ.0)THEN
-!  CALL WINDOWOUTSTATUSBAR(4,'Allocated ...')
-! ELSE
-!  WRITE(*,'(1X,A)') 'Read ...'
-! ENDIF
- 
- CALL DFLOWFM_RDNETWORKTP()
-! CALL MAIN1RDNETWORKCP()
-! CALL MAIN1RDNETWORKCR()
-! CALL MAIN1RDNETWORKGR()
-! CALL MAIN1RDNETWORKST()
-! CALL MAIN1RDPROFILEDAT()
-! CALL MAIN1RDPROFILEDEF()
-! CALL MAIN1RDFRICTIONDAT()
-
-! CALL SOBEK_CREATEISG()
-
-! DO I=1,SIZE(PDEF)
-!  IF(ASSOCIATED(PDEF(I)%XPROF))DEALLOCATE(PDEF(I)%XPROF)
-!  IF(ASSOCIATED(PDEF(I)%YPROF))DEALLOCATE(PDEF(I)%YPROF)
-! ENDDO
- 
- DEALLOCATE(TP1,TP2) !,CP,CR,GR,PDAT,PDEF,BDFR,ST,QH)
-
  END SUBROUTINE DFLOWFM_IMPORT1_MAIN
  
  !###======================================================================
- SUBROUTINE DFLOWFM_RDNETWORKTP()
+ SUBROUTINE DFLOWFM_CREATEIPS(IB,ISEG,NSEG)
  !###======================================================================
  IMPLICIT NONE
- INTEGER :: NN,NB,NL,I
+ INTEGER,INTENT(IN) :: IB
+ INTEGER,INTENT(INOUT) :: ISEG
+ INTEGER,INTENT(OUT) :: NSEG
+ INTEGER :: I,N,IS
+ REAL(KIND=DP_KIND) :: DIST
+ 
+ IS=0; IF(IB.GT.1)IS=SUM(MESHGEOM%NBRANCHGEOMETRYNODES(1:IB-1))
+ IS=IS+1
+ N=MESHGEOM%NBRANCHGEOMETRYNODES(IB)
+
+! OFFSET VAN DE NODES
+! MESHGEOM%NODEOFFSETS(1) = 0.000000000000000D+000 _ CALC. POINTS
+
+ NSEG=0; DIST=0.0D0
+ DO I=IS,IS+N-1
+  IF(I.GT.IS)THEN
+   IF(MESHGEOM%NGEOPOINTX(I).NE.MESHGEOM%NGEOPOINTX(I-1).OR. &
+      MESHGEOM%NGEOPOINTY(I).NE.MESHGEOM%NGEOPOINTX(I-1))THEN
+    DIST=DIST+UTL_DIST(MESHGEOM%NGEOPOINTX(I),MESHGEOM%NGEOPOINTY(I),MESHGEOM%NGEOPOINTX(I-1),MESHGEOM%NGEOPOINTY(I-1))
+    ISEG=ISEG+1; NSEG=NSEG+1
+    WRITE(IU(ISP),REC=ISEG+1) MESHGEOM%NGEOPOINTX(I),MESHGEOM%NGEOPOINTY(I)
+   ENDIF
+  ELSE
+   ISEG=ISEG+1; NSEG=NSEG+1
+   WRITE(IU(ISP),REC=ISEG+1) MESHGEOM%NGEOPOINTX(I),MESHGEOM%NGEOPOINTY(I)
+  ENDIF
+ END DO
+
+ IF(ABS(MESHGEOM%NBRANCHLENGTHS(IB)-DIST).GT.1.0D0)THEN
+  WRITE(IU(IOUT),'(2(A,F15.7))') 'Actual length ',MESHGEOM%NBRANCHLENGTHS(IB),' not equal to computed length',DIST
+ ENDIF
+ 
+ END SUBROUTINE DFLOWFM_CREATEIPS
+
+! !###======================================================================
+! SUBROUTINE DFLOWFM_RDNETWORKTP()
+! !###======================================================================
+! IMPLICIT NONE
+! INTEGER :: NN,NB,NL,I
 
 ! NN=0
 ! NB=0
 ! NL=0
- DO I=1,NNODE
+! DO I=1,NNODE
 !  TP1(I)%ID=MESHGEOM%NNODEX(I)
-  TP1(I)%PX=MESHGEOM%NNODEX(I)
-  TP1(I)%PY=MESHGEOM%NNODEY(I)
- ENDDO
+!  TP1(I)%PX=MESHGEOM%NNODEX(I)
+!  TP1(I)%PY=MESHGEOM%NNODEY(I)
+! ENDDO
 
  !READ(IU(ITP),*)
  !DO
@@ -234,7 +255,7 @@ CONTAINS
 ! WRITE(IU(IOUT),'(8X,I10,A)') NB,' branches from '//TRIM(FNAME(ITP))
 ! WRITE(IU(IOUT),'(8X,I10,A)') NL,' flow connection nodes from '//TRIM(FNAME(ITP))
 
- END SUBROUTINE DFLOWFM_RDNETWORKTP
+! END SUBROUTINE DFLOWFM_RDNETWORKTP
  
  !###======================================================================
  SUBROUTINE SOBEK1MAIN()
