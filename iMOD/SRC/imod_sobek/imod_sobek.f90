@@ -122,7 +122,7 @@ CONTAINS
 
  DO IB=1,NBRCH
   CALL DFLOWFM_CREATEIPS(IB,ISEG,NSEG)
-  NCLC=0
+  CALL DFLOWFM_CREATEISD(IB,ICLC,NCLC,IREFSD)
   NCRS=0
   NSTW=0
   NQHR=0
@@ -203,60 +203,40 @@ CONTAINS
  
  END SUBROUTINE DFLOWFM_CREATEIPS
 
-! !###======================================================================
-! SUBROUTINE DFLOWFM_RDNETWORKTP()
-! !###======================================================================
-! IMPLICIT NONE
-! INTEGER :: NN,NB,NL,I
+ !###======================================================================
+ SUBROUTINE DFLOWFM_CREATEISD(IB,ICLC,NCLC,IREFSD)
+ !###======================================================================
+ IMPLICIT NONE
+ INTEGER,INTENT(IN) :: IB
+ INTEGER,INTENT(INOUT) :: ICLC,IREFSD
+ INTEGER,INTENT(OUT) :: NCLC
+ INTEGER :: I,N,ID
+ REAL(KIND=DP_KIND) :: DIST,WP,BH
+ CHARACTER(LEN=MAXLEN) :: CROSNAME
 
-! NN=0
-! NB=0
-! NL=0
-! DO I=1,NNODE
-!  TP1(I)%ID=MESHGEOM%NNODEX(I)
-!  TP1(I)%PX=MESHGEOM%NNODEX(I)
-!  TP1(I)%PY=MESHGEOM%NNODEY(I)
-! ENDDO
-
- !READ(IU(ITP),*)
- !DO
- ! READ(IU(ITP),'(A256)',IOSTAT=IOS) LINE
- ! IF(IOS.NE.0)EXIT
- ! LINE=ADJUSTL(LINE)
- ! IF(LINE(1:4).EQ.'NODE')THEN
- !
- !  NN=NN+1
- !  I=INDEX(LINE,' id '); IF(I.LE.0)CALL MAINRDERROR('id',LINE); READ(LINE(I+4:),*) TP1(NN)%ID
- !  I=INDEX(LINE,' px '); IF(I.LE.0)CALL MAINRDERROR('px',LINE); READ(LINE(I+4:),*) TP1(NN)%PX
- !  I=INDEX(LINE,' py '); IF(I.LE.0)CALL MAINRDERROR('py',LINE); READ(LINE(I+4:),*) TP1(NN)%PY
- !
- ! ELSEIF(LINE(1:4).EQ.'NDLK')THEN
- !
- !  NL=NL+1
- !  I=INDEX(LINE,' id '); IF(I.LE.0)CALL MAINRDERROR('id',LINE); READ(LINE(I+4:),*) TP3(NL)%ID
- !  I=INDEX(LINE,' px '); IF(I.LE.0)CALL MAINRDERROR('px',LINE); READ(LINE(I+4:),*) TP3(NL)%PX
- !  I=INDEX(LINE,' py '); IF(I.LE.0)CALL MAINRDERROR('py',LINE); READ(LINE(I+4:),*) TP3(NL)%PY
- !  I=INDEX(LINE,' ci '); IF(I.LE.0)CALL MAINRDERROR('ci',LINE); READ(LINE(I+4:),*) TP3(NL)%CI
- !  I=INDEX(LINE,' lc '); IF(I.LE.0)CALL MAINRDERROR('lc',LINE); READ(LINE(I+4:),*) TP3(NL)%LC
- !
- ! ELSEIF(LINE(1:4).EQ.'BRCH')THEN
- !
- !  NB=NB+1
- !
- !  I=INDEX(LINE,' id '); IF(I.LE.0)CALL MAINRDERROR('id',LINE); READ(LINE(I+4:),*) TP2(NB)%ID
- !  I=INDEX(LINE,' bn '); IF(I.LE.0)CALL MAINRDERROR('bn',LINE); READ(LINE(I+4:),*) TP2(NB)%CBN
- !  I=INDEX(LINE,' en '); IF(I.LE.0)CALL MAINRDERROR('en',LINE); READ(LINE(I+4:),*) TP2(NB)%CEN
- !  I=INDEX(LINE,' al '); IF(I.LE.0)CALL MAINRDERROR('al',LINE); READ(LINE(I+4:),*) TP2(NB)%AL
- !
- ! ENDIF
- !ENDDO
-
-! WRITE(IU(IOUT),'(8X,I10,A)') NN,' nodes from '//TRIM(FNAME(ITP))
-! WRITE(IU(IOUT),'(8X,I10,A)') NB,' branches from '//TRIM(FNAME(ITP))
-! WRITE(IU(IOUT),'(8X,I10,A)') NL,' flow connection nodes from '//TRIM(FNAME(ITP))
-
-! END SUBROUTINE DFLOWFM_RDNETWORKTP
+ WP=0.0D0
+ BH=0.0D0
  
+ !## add calculation nodes for current branch
+ NCLC=0; DO I=1,MESHGEOM%NUMNODE
+  !## not on current branch
+  IF(MESHGEOM%NODEBRANCHIDX(I).NE.IB)CYCLE
+  DIST=MESHGEOM%NODEOFFSETS(I)
+
+  NCLC    =NCLC+1
+  ICLC    =ICLC+1
+  N       =1
+  CROSNAME=NODEIDS(I) !GR(I)%ID
+
+  WRITE(IU(ISD1),REC=ICLC+1) N,IREFSD+1,DIST,CROSNAME
+  IREFSD=IREFSD+1
+  ID    =20200101 !UTL_JDATETOIDATE(INT(JULIANTIMES(J)))
+  WRITE(IU(ISD2),REC=IREFSD+1) ID,'00:00:00',WP,BH,1.0D0,0.3D0
+ 
+ ENDDO
+ 
+ END SUBROUTINE DFLOWFM_CREATEISD
+  
  !###======================================================================
  SUBROUTINE SOBEK1MAIN()
  !###======================================================================
