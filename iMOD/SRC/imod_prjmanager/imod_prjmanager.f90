@@ -1604,7 +1604,7 @@ CONTAINS
    ENDIF
   
    !## create output files in case modflow6 is used (aggregate results from different modflow6- models)
-   IF(PBMAN%IFORMAT.EQ.3.AND.PBMAN%IPESTP.EQ.0)THEN
+   IF(PBMAN%IFORMAT.EQ.3.AND.PBMAN%IPESTP.EQ.0.AND.TOPICS(TOBS)%IACT_MODEL.EQ.1)THEN
     CALL IPEST_GLM_CREATE_RESIDUALSFILES(DIR,0,'',IBATCH,MNAME) 
    ENDIF
    

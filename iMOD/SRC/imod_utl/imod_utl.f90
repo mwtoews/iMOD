@@ -2439,7 +2439,12 @@ DOLOOP: DO
     ELSE
      READ(QD(ICOL),*,IOSTAT=IOS) Q1
      IF(IOS.NE.0)THEN
-      WRITE(*,'(/A/)') 'iMOD cannot read ['//TRIM(QD(ICOL))//'] into a number'; PAUSE; STOP
+      IF(IR.LT.NR)THEN
+       WRITE(*,'(/A/)') 'iMOD cannot read ['//TRIM(QD(ICOL))//'] into a number'; PAUSE; STOP
+      !## ignore last entry
+      ELSE
+       Q1=NODATA(ICOL)
+      ENDIF
      ENDIF
     ENDIF
 

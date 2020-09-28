@@ -242,23 +242,21 @@ CONTAINS
   !## draw gens from overlay tab
   CALL IGRPLOTMODE(MODECOPY); CALL UTL_PLOT1BITMAP(); CALL GEN_DRAW(0) 
 
- if(.not.idfread(e(1),'d:\IMOD-TEST\IMODBATCH_XYZ2IDF\SYNTESTS\SWISS\ANI\ELLIPS_RAT.IDF',1))then; endif
- if(.not.idfread(e(2),'d:\IMOD-TEST\IMODBATCH_XYZ2IDF\SYNTESTS\SWISS\ANI\ELLIPS_ROT1.IDF',1))then; endif
- if(.not.idfread(e(3),'d:\IMOD-TEST\IMODBATCH_XYZ2IDF\SYNTESTS\SWISS\ANI\ELLIPS_LENX.IDF',1))then; endif
- call igrlinewidth(1)
- call igrlinetype(0)
- CALL IGRPLOTMODE(MODECOPY); CALL UTL_PLOT1BITMAP(); 
- do irow=1,e(1)%nrow,40; do icol=1,e(1)%ncol,40
-  call idfgetloc(e(1),irow,icol,x,y)
-! X=2634500.0D0; Y=1128000.0D0
-!call idfirowicol(e(1),irow,icol,x,y)
-  if(e(1)%x(icol,irow).eq.e(1)%nodata)cycle
-  dxe=e(3)%x(icol,irow) !/2.0
-  dye=dxe*e(1)%x(icol,irow)
-  rat=e(2)%x(icol,irow)
-  !## 90 for ellips drawing
-  CALL UTL_DRAWELLIPSE(x,y,dxe,dye,rat) !-90.0D0) !e(2)%x(icol,irow)-90.0D0)
- enddo; enddo
+! if(.not.idfread(e(1),'d:\IMOD-TEST\IMODBATCH_XYZ2IDF\SYNTESTS\SWISS\ANI\ELLIPS_RAT.IDF',1))then; endif
+! if(.not.idfread(e(2),'d:\IMOD-TEST\IMODBATCH_XYZ2IDF\SYNTESTS\SWISS\ANI\ELLIPS_ROT1.IDF',1))then; endif
+! if(.not.idfread(e(3),'d:\IMOD-TEST\IMODBATCH_XYZ2IDF\SYNTESTS\SWISS\ANI\ELLIPS_LENX.IDF',1))then; endif
+! call igrlinewidth(1)
+! call igrlinetype(0)
+! CALL IGRPLOTMODE(MODECOPY); CALL UTL_PLOT1BITMAP(); 
+! do irow=1,e(1)%nrow,40; do icol=1,e(1)%ncol,40
+!  call idfgetloc(e(1),irow,icol,x,y)
+!  if(e(1)%x(icol,irow).eq.e(1)%nodata)cycle
+!  dxe=e(3)%x(icol,irow) !/2.0
+!  dye=dxe*e(1)%x(icol,irow)
+!  rat=e(2)%x(icol,irow)
+!  !## 90 for ellips drawing
+!  CALL UTL_DRAWELLIPSE(x,y,dxe,dye,rat) !-90.0D0) !e(2)%x(icol,irow)-90.0D0)
+! enddo; enddo
 
 ! if(.not.idfread(e(1),'d:\iMOD-TEST\IMODBATCH_KRIGING\rat.IDF',0))then; endif
 ! if(.not.idfread(e(2),'d:\iMOD-TEST\IMODBATCH_KRIGING\ANI.IDF',0))then; endif
