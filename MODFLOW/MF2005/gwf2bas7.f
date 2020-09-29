@@ -510,6 +510,25 @@ C
 C2------RETURN
       RETURN
       END
+
+      SUBROUTINE GWF2BAS7_GETOC(INOC)
+C     ******************************************************************
+C     OUTPUT CONTROLLER FOR HEAD, DRAWDOWN, AND BUDGET
+C     ******************************************************************
+C
+C        SPECIFICATIONS:
+C     ------------------------------------------------------------------
+      USE GLOBAL,ONLY:IUNIT
+      USE M_MF2005_IU,ONLY:IUOC
+      INTEGER :: IGRID
+      
+      IGRID=1
+      CALL SGWF2BAS7PNT(IGRID)
+      INOC=IUNIT(IUOC)
+      
+      END SUBROUTINE
+      
+      
       SUBROUTINE GWF2BAS7OC(KSTP,KPER,ICNVG,INOC,IGRID)
 C     ******************************************************************
 C     OUTPUT CONTROLLER FOR HEAD, DRAWDOWN, AND BUDGET

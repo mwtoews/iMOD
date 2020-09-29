@@ -89,7 +89,7 @@ implicit none
  character tekens(1)*1
 
  integer tsc ! debug variable
- integer :: date, hour, minute, second
+ integer :: date, hour, minute, second, inoc
 
  logical :: lrunfile, lnamfile, llpf, lipest, lpwt, lss, lrf, psolved
  
@@ -600,7 +600,8 @@ call pks7mpibarrier() ! PKS
           if (usests) then
              if (mozstsave) stsave = .true.
              call osd_chdir(modwd2)
-             if (usestsmodflow) call sts2saverestore(currentTime,stsave,strestore,1)
+             call GWF2BAS7_GETOC(inoc)
+             if (usestsmodflow) call sts2saverestore(currentTime,stsave,strestore,1,inoc)
              if (rt.eq.rtmodsim .or. rt.eq.rtmodsimtranmoz) then
                 call osd_chdir(simwd2)
                 call MetaSWAP_saveRestore(stsave,strestore)
@@ -775,8 +776,9 @@ call pks7mpibarrier() ! PKS
           endif
 
           if (exitcode.eq.0) then
+             call GWF2BAS7_GETOC(inoc)
              ! perform state save, phase 2 (after reading and writing data)
-             if (usestsmodflow) call sts2saverestore(currentTime,stsave,strestore,2)
+             if (usestsmodflow) call sts2saverestore(currentTime,stsave,strestore,2,inoc)
              if (mozstsave) then
                 stsave    = .false.
                 strestore = .false.

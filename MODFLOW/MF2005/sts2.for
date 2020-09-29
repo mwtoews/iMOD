@@ -687,7 +687,7 @@ c end of program
 
 c ******************************************************************************
 
-      subroutine ssts2save(timevalue,phase)
+      subroutine ssts2save(timevalue,phase,inoc)
 
 c description:
 c ------------------------------------------------------------------------------
@@ -699,7 +699,6 @@ c Only save when no restore has to be done
 c declaration section
 c ------------------------------------------------------------------------------
       use m_sts2
-
       implicit none
 
 
@@ -708,6 +707,7 @@ c      integer, intent(in)  ::    ts         ! time step number
       double precision, intent(in)  :: timevalue     ! start date/time of current time step
       integer         , intent(in)  :: phase         ! 1: at begin of timestep loop
                                                      ! 2: at end   of timestep loop
+      integer,intent(in) :: inoc
 
 c local variables
       integer   ilun
@@ -757,7 +757,13 @@ c save file pointers
 
             ! save file position
             call osd_ftell(pluninfo%lun,filepos(ts))
-
+            
+            !## do not increase byte-pos with 2 for oc-package
+            if(pluninfo%lun.eq.inoc)then
+             write(*,*) 'correct ocd with -2'
+             filepos(ts)=filepos(ts)-2
+            endif
+            
             ! set filedat to unknown
             !filedat(ts)=p_dataunk
             write(*,*) '       lun: ',pluninfo%lun,filepos(ts)
@@ -974,7 +980,7 @@ c end of program
 
 c ******************************************************************************
 
-      subroutine sts2saverestore(timevalue,stsave,strestore,phase)
+      subroutine sts2saverestore(timevalue,stsave,strestore,phase,inoc)
 
 c description:
 c ------------------------------------------------------------------------------
@@ -997,7 +1003,8 @@ c arguments
       logical, intent(out)    :: strestore     ! .true.  restore state
       integer, intent(in)     :: phase         ! 1: at begin of timestep loop
                                                ! 2: at end   of timestep loop
-
+      integer,intent(in) :: inoc
+      
 c local variables
 c      integer :: timestep
       logical  restore
@@ -1021,7 +1028,7 @@ c save if wanted
       write(*,*) ' ===== phase    : ',phase
       if (stsave .and. .not.restorets) then
          if (phase.eq.1) currenttime = timevalue
-         call ssts2save(timevalue,phase)
+         call ssts2save(timevalue,phase,inoc)
       end if
 
 c restore
