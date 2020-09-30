@@ -6881,6 +6881,22 @@ IRLOOP: DO IROW=1,PRJIDF%NROW; DO ICOL=1,PRJIDF%NCOL
  END SUBROUTINE PMANAGER_SAVEMF2005_RUN_ISAVE
 
  !####====================================================================
+ SUBROUTINE PMANAGER_SAVEMF2005_MF6TOIDF_ISAVE(ISAVE,CID,IU)
+ !####====================================================================
+ IMPLICIT NONE
+ INTEGER,INTENT(IN),POINTER,DIMENSION(:) :: ISAVE
+ CHARACTER(LEN=*),INTENT(IN) :: CID
+ INTEGER,INTENT(IN) :: IU
+  
+ IF(ASSOCIATED(ISAVE))THEN
+  LINE=ITOS(ISAVE(1)); DO I=2,SIZE(ISAVE); LINE=TRIM(LINE)//','//TRIM(ITOS(ISAVE(I))); ENDDO
+  LINE=TRIM(CID)//'='//TRIM(LINE)
+  WRITE(IU,'(A)') 'ECHO '//TRIM(LINE)//' >> MF6TOIDF.INI'
+ ENDIF
+ 
+ END SUBROUTINE PMANAGER_SAVEMF2005_MF6TOIDF_ISAVE
+
+ !####====================================================================
  LOGICAL FUNCTION PMANAGER_SAVEMF2005_PCG(DIRMNAME)
  !####====================================================================
  IMPLICIT NONE
