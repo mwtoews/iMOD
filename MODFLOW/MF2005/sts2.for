@@ -760,7 +760,6 @@ c save file pointers
             
             !## do not increase byte-pos with 2 for oc-package
             if(pluninfo%lun.eq.inoc)then
-             write(*,*) 'correct ocd with -2'
              filepos(ts)=filepos(ts)-2
             endif
             
