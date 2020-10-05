@@ -1280,7 +1280,7 @@ end subroutine imod_license
  'This is a license for the iMOD-executables, distributed from the Stichti'// &
  'ng Deltares website. If you require a printed version of this iMOD Softw'// &
  'are License Agreement, e.g. prior to accepting these terms and condition'// &
- 's, please print the pdf-file ‘iMOD_Software_License_Agreement_V5_1.pdf’. You '// &
+ 's, please print the pdf-file ‘iMOD_Software_License_Agreement_V5_2.pdf’. You '// &
  'should have received a copy of this pdf-file; if not, see '//NEWLINE// &
  'http://oss.deltares.nl/web/iMOD/iMOD_software_license_agreement.'//NEWLINE// &
  NEWLINE// &
@@ -1462,8 +1462,8 @@ end subroutine imod_license
  'This iMOD Software License Agreement contains the following executables (<xx>: bugfix-versionnumber):'// &
  NEWLINE// &
  NEWLINE// &
- '- The iMOD Graphical User Interface (iMOD-GUI): iMOD_V5_1_X32R.exe and i'// &
- 'MOD_V5_1_X64R.exe:'//NEWLINE// &
+ '- The iMOD Graphical User Interface (iMOD-GUI): iMOD_V5_2_X32R.exe and i'// &
+ 'MOD_V5_2_X64R.exe:'//NEWLINE// &
  'A computer program to perform a variety of graphical visualizations of M'// &
  'odel Configurations and/or (in)directly related geographical information'// &
  '. The iMOD GUI itself if fully written in Fortran9x and compiled by the '// &
@@ -1471,8 +1471,8 @@ end subroutine imod_license
  ' Winteracter 10 (Interactive Software Services Ltd (ISS)).'//NEWLINE// &
  NEWLINE// &
  '- The MODFLOW computational core (iMODFLOW):'//NEWLINE// &
- 'iMODFLOW_V5_1_X32R.exe and'//NEWLINE// &
- 'iMODFLOW_V5_1_METASWAP_SVN1233_X64R.exe:'//NEWLINE// &
+ 'iMODFLOW_V5_2_X32R.exe and'//NEWLINE// &
+ 'iMODFLOW_V5_2_METASWAP_SVN1614_X64R.exe:'//NEWLINE// &
  NEWLINE// &
  'iMODFLOW is partly based on the USGS MODFLOW2005 s'// &
  'ource code; for iMOD the USGS MODFLOW2005 source code has been expanded '// &
@@ -1485,7 +1485,7 @@ end subroutine imod_license
  'this program. If not, see http://water.usgs.gov/software/help/notice.'//NEWLINE// &
  NEWLINE// &
  'The X64-bit iMODFLOW-executable includes the MetaSWAP-module '// &
- 'SVN version number 1047, part of SIMGRO V7_2_27 as described '// &
+ 'SVN version number 1614, part of SIMGRO V7_2_27 as described '// &
  'in the SIMGRO-release notes ftp://ftp.wur.nl/simgro/doc/Change_log/ Release_Notes_'// &
  'SIMGRO_V7_2_27.pdf. '// &
  'MetaSWAP has been developed by Alterra - Wageningen UR. For more '// &

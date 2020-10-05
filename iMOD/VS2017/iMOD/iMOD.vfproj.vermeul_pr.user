@@ -3,5 +3,5 @@
 	<Configurations>
 		<Configuration Name="Debug|Win32" CommandArguments="d:\IMOD-MODELS\LHM\AGGREGATE.INI" WorkingDirectory="d:\IMOD\"/>
 		<Configuration Name="Release|Win32"/>
-		<Configuration Name="Debug|x64" CommandArguments="d:\IMOD-MODELS\MF6\MSW\RESULTS\MF6TOIDF.INI" WorkingDirectory="d:\IMOD"/>
+		<Configuration Name="Debug|x64" CommandArguments="&quot;d:\IMOD-MODELS\TMODEL\DFLOWFM\c002_hoogeraam\fm\FM model\IMPORTSOBEK.INI&quot;" WorkingDirectory="d:\IMOD"/>
 		<Configuration Name="Release|x64" CommandArguments="d:\IMOD-TEST\IMODBATCH_XYZ2IDF\SYNTESTS\XYZ2IDF_LITHOFloD.INI" WorkingDirectory="d:\IMOD"/></Configurations></VisualStudioUserFile>

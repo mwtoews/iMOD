@@ -110,8 +110,6 @@
       INTEGER*4 iter_transol  ! input
       REAL*8    time
       REAL*8    dt
-      LOGICAL*4 cvg   ! output
-      LOGICAL*4 ready
       INTEGER*4 error
 !
       call timing_tic('TRANSOL','prepareIter') 
@@ -119,7 +117,7 @@
 #if(defined(INCLUDE_METASWAP)) 
       IF (iter_transol .GE. 2) THEN
         iact = -1
-        CALL SIMGRO(iact,iter,time,dt,cvg,ready,error)        
+        CALL SIMGRO(iact,iter,time,dt,error)        
         if (error .ne. 0) call kill_process(error)
       ENDIF
 #else
@@ -153,8 +151,6 @@
       INTEGER*4 iter
       REAL*8    time
       REAL*8    dt
-      LOGICAL*4 cvg   ! output
-      LOGICAL*4 ready
       INTEGER*4 error
 !
 !     Downscaled moisture profiles
@@ -163,7 +159,7 @@
 
       iact = 41
 #if(defined(INCLUDE_METASWAP)) 
-      CALL SIMGRO(iact,iter,time,dt,cvg,ready,error)
+      CALL SIMGRO(iact,iter,time,dt,error)
       if (error .ne. 0) call kill_process(error)
 #else
       write(*,*) 'Error: TRANSOL_performIter'; stop 1
@@ -209,8 +205,6 @@
       INTEGER*4 iter
       REAL*8    time  ! input, used for synchro check
       REAL*8    dt
-      LOGICAL*4 cvg   ! output
-      LOGICAL*4 ready
       INTEGER*4 error
 !
       call timing_tic('TRANSOL','finishTimestep') 
@@ -218,7 +212,7 @@
 !     Write data to file
       iact = 42
 #if(defined(INCLUDE_METASWAP)) 
-      CALL SIMGRO(iact,iter,time,dt,cvg,ready,error)
+      CALL SIMGRO(iact,iter,time,dt,error)
       if (error .ne. 0) call kill_process(error)
 #else      
       write(*,*) 'Error: TRANSOL_finishTimestep'; stop 1
