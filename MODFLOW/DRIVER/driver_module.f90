@@ -1487,11 +1487,11 @@ end subroutine imod_license
  'The X64-bit iMODFLOW-executable includes the MetaSWAP-module '// &
  'SVN version number 1614, part of SIMGRO V7_2_27 as described '// &
  'in the SIMGRO-release notes ftp://ftp.wur.nl/simgro/doc/Change_log/ Release_Notes_'// &
- 'SIMGRO_V7_2_27.pdf. '// &
- 'MetaSWAP has been developed by Alterra - Wageningen UR. For more '// &
- 'info on MetaSWAP, see the iMOD user manual, Annex 1. For more info on Al'// &
- 'terra – Wageningen UR, see http://www.wageningenur.nl/en/Expertise-Servi'// &
- 'ces/Research-Institutes/alterra.htm.'//NEWLINE// &
+ 'MetaSWAP_V8_0_1_0.pdf. '// &
+ 'MetaSWAP has been developed by WENR - Wageningen UR. For more '// &
+ 'info on MetaSWAP, see the iMOD user manual, Annex 1. For more info on WENR'// &
+ ' – Wageningen UR, see https://www.wur.nl/nl/Onderzoek-Resultaten/Onderzoeks'// &
+ 'instituten/Environmental-Research.htm.'//NEWLINE// &
  NEWLINE// &
  'iMOD user manual'//NEWLINE// &
  NEWLINE// &

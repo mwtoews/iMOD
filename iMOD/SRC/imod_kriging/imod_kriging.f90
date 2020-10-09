@@ -195,30 +195,6 @@ CONTAINS
  END SUBROUTINE KRIGING_MAIN
 
  !###======================================================================
- SUBROUTINE UTL_SETUP_ROTATIONMATRIX(R,ROT)
- !###======================================================================
- IMPLICIT NONE
- REAL(KIND=DP_KIND),INTENT(IN),DIMENSION(3) :: R
- REAL(KIND=DP_KIND),DIMENSION(3,3),INTENT(OUT) :: ROT
- REAL(KIND=DP_KIND) :: A,B,C
- 
- A=R(1); B=R(2); C=R(3)
-
- ROT(1,1)= COS(A)*COS(B)
- ROT(2,1)=(COS(A)*SIN(B)*SIN(C))-(SIN(A)*COS(C))
- ROT(3,1)=(COS(A)*SIN(B)*COS(C))+(SIN(A)*SIN(C))
- 
- ROT(1,2)= SIN(A)*COS(B)
- ROT(2,2)=(SIN(A)*SIN(B)*SIN(C))+(COS(A)*COS(C))
- ROT(3,2)=(SIN(A)*SIN(B)*COS(C))-(COS(A)*SIN(C))
- 
- ROT(1,3)=-SIN(B)
- ROT(2,3)=(COS(B)*SIN(C))
- ROT(3,3)=(COS(B)*COS(C))
- 
- END SUBROUTINE UTL_SETUP_ROTATIONMATRIX
-
- !###======================================================================
  SUBROUTINE KRIGING_READGEN(ILAY,NGEN,GENFNAME,FGEN,GENILAY)
  !###======================================================================
  IMPLICIT NONE
@@ -833,7 +809,7 @@ CONTAINS
 
   ELSE
 
-  !## http://spatial-analyst.net/ILWIS/htm/ilwisapp/anisotropic_kriging_algorithm.htm  
+   !## http://spatial-analyst.net/ILWIS/htm/ilwisapp/anisotropic_kriging_algorithm.htm  
    !## compute coordinates on sphere with max. range
    R=MAXVAL(RAN)
    
@@ -842,56 +818,13 @@ CONTAINS
    XYZE(2)=Y1-Y0
    XYZE(3)=Z1-Z0
    XYZE=MATMUL(XYZE,ROT)
-!   X1=XYZE(1)
-!   Y1=XYZE(2)
-!   Z1=XYZE(3)
-
-   !!## find angle for point
-   !DY=(Y0-Y1); DX=(X0-X1); DZ=(Z0-Z1)
-   !DXY=UTL_DIST(X0,Y0,X1,Y1)
-   !AXY=ATAN2(DY,DX)
-   !AZX=ATAN2(DZ,DXY)
-   !
-   !!## find point on sphere for those angles
-   !XYZC(1)=R*SIN(AZX)*COS(AXY)
-   !XYZC(2)=R*SIN(AZX)*SIN(AXY)
-   !XYZC(3)=R*COS(AZX)
-   !
-   !!## find point on ellipsoid
-   !XYZE(1)=RAN(1)*SIN(AZX)*COS(AXY)
-   !XYZE(2)=RAN(2)*SIN(AZX)*SIN(AXY)
-   !XYZE(3)=RAN(3)*COS(AZX)
-   !
-   !!## ratio is
-   !D1=UTL_DIST_3D(XYZC(1),XYZC(2),XYZC(3),X0,Y0,Z0)
-   !D2=UTL_DIST_3D(XYZE(1),XYZE(2),XYZE(3),X0,Y0,Z0)
-   !
-   !!## ratio is
-   !F=D1/D2
-   !
-   !!## distance of original point to centre, increase distance with f
-   !R=F*UTL_DIST_3D(X0,Y0,Z0,X1,Y1,Z1)
-   !
-   !!## compute new point in sphere at correct distance
-   !XYZC(1)=R*SIN(AZX)*COS(AXY)
-   !XYZC(2)=R*SIN(AZX)*SIN(AXY)
-   !XYZC(3)=R*COS(AZX)
-   !
-   !!## rotate them appropriately
-   !XYZE=MATMUL(XYZC,ROT)
 
    X1=X0+XYZE(1)
    R=1.0D0; IF(RAN(2).NE.0.0D0)R=RAN(1)/RAN(2); Y1=Y0+XYZE(2)*R
    R=1.0D0; IF(RAN(3).NE.0.0D0)R=RAN(1)/RAN(3); Z1=Z0+XYZE(3)*R
-   
-!  A=-(ANI+90.0D0)/(360.0D0/(2.0D0*PI))
-!  X1=           COS(A)*DX+          SIN(A)*DY
-!  Y1=-1.0D0/RAT*SIN(A)*DX+1.0D0/RAT*COS(A)*DY
-!  X1=X0+X1
-!  Y1=Y0+Y1
-   
+
    KRIGING_DIST=UTL_DIST_3D(X1,Y1,Z1,X0,Y0,Z0)
- ! 
+
   ENDIF
  ENDIF
   

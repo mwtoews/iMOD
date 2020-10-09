@@ -63,6 +63,30 @@ INTEGER :: NSX,NSY
 
 CONTAINS
  
+ !###======================================================================
+ SUBROUTINE UTL_SETUP_ROTATIONMATRIX(R,ROT)
+ !###======================================================================
+ IMPLICIT NONE
+ REAL(KIND=DP_KIND),INTENT(IN),DIMENSION(3) :: R
+ REAL(KIND=DP_KIND),DIMENSION(3,3),INTENT(OUT) :: ROT
+ REAL(KIND=DP_KIND) :: A,B,C
+ 
+ A=R(1); B=R(2); C=R(3)
+
+ ROT(1,1)= COS(A)*COS(B)
+ ROT(2,1)=(COS(A)*SIN(B)*SIN(C))-(SIN(A)*COS(C))
+ ROT(3,1)=(COS(A)*SIN(B)*COS(C))+(SIN(A)*SIN(C))
+ 
+ ROT(1,2)= SIN(A)*COS(B)
+ ROT(2,2)=(SIN(A)*SIN(B)*SIN(C))+(COS(A)*COS(C))
+ ROT(3,2)=(SIN(A)*SIN(B)*COS(C))-(COS(A)*SIN(C))
+ 
+ ROT(1,3)=-SIN(B)
+ ROT(2,3)=(COS(B)*SIN(C))
+ ROT(3,3)=(COS(B)*COS(C))
+ 
+ END SUBROUTINE UTL_SETUP_ROTATIONMATRIX
+
  !#####=================================================================
  SUBROUTINE UTL_GETIROWICOL(NODE,NROW,NCOL,ILAY,IROW,ICOL)
  !#####=================================================================
