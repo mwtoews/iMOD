@@ -3286,6 +3286,7 @@ JLOOP: DO K=1,SIZE(TOPICS)
  TOPICS(TRCT)%TNAME='(RCT) Chemical Reaction Package'
  TOPICS(TCON)%TNAME='(CON) Chloride Concentration'
  TOPICS(TIES)%TNAME='(IES) Iterative Ensemble Smoother'
+ TOPICS(TSCR)%TNAME='(SCR) Sub-Creep Subsidence'
  
  TOPICS(TCAP)%NSUBTOPICS=22 !CAP
  TOPICS(TTOP)%NSUBTOPICS=1  !TOP
@@ -3341,6 +3342,7 @@ JLOOP: DO K=1,SIZE(TOPICS)
  TOPICS(TRCT)%NSUBTOPICS=1  !RCT 
  TOPICS(TCON)%NSUBTOPICS=1  !CON
  TOPICS(TIES)%NSUBTOPICS=1  !IES
+ TOPICS(TSCR)%NSUBTOPICS=6  !SCR
 
  TOPICS(TCAP)%TIMDEP=.FALSE. !CAP
  TOPICS(TTOP)%TIMDEP=.FALSE. !TOP
@@ -3396,13 +3398,14 @@ JLOOP: DO K=1,SIZE(TOPICS)
  TOPICS(TRCT)%TIMDEP=.FALSE. !RCT
  TOPICS(TCON)%TIMDEP=.FALSE. !CON
  TOPICS(TIES)%TIMDEP=.FALSE. !IES
+ TOPICS(TSCR)%TIMDEP=.FALSE. !SCR
   
  !## option to add species
  TOPICS%LSPECIES=.FALSE.
  DO I=1,MAXTOPICS
   SELECT CASE (I)
    !## no species for drn,tolf
-   CASE (TDRN,TOLF,TISG,TSFT,TUZF,TEVT) !,TRCH)
+   CASE (TDRN,TOLF,TISG,TSFT,TUZF,TEVT) 
     TOPICS(I)%LSPECIES=.FALSE.
    !## species for tsco,tics,tfsc,tssc,tfod,tfos
    CASE (TSCO,TICS,TFSC,TSSC,TFOD,TFOS)
@@ -3526,7 +3529,33 @@ JLOOP: DO K=1,SIZE(TOPICS)
  TOPICS(TRCT)%SNAME(1) ='(RCT) Chemical Reaction Package'
  TOPICS(TCON)%SNAME(1) ='(CON) Chloride Concentration Package'
  TOPICS(TIES)%SNAME(1) ='(IES) Iterative Ensemble Smoother'
+ TOPICS(TSCR)%SNAME(1) ='(SCR) Interbed Thickness'      !( 1)
+ TOPICS(TSCR)%SNAME(2) ='(SCR) Iso/Bjerrum Recompression Index' !(12/15)
+ TOPICS(TSCR)%SNAME(3) ='(SCR) Iso/Bjerrum Compression Index'   !(13/16)
+ TOPICS(TSCR)%SNAME(4) ='(SCR) Iso/Bjerrum Sec. Compr. Index'   !(14/17)
+ TOPICS(TSCR)%SNAME(5) ='(SCR) Void Ratio'                      !( 4)
+ TOPICS(TSCR)%SNAME(6) ='(SCR) Layer Compaction'                !( 5)
 
+     !1 /'      interbed thickness',1
+     !1    'elastic specific storage',2
+     !1    'inelas. specific storage',3
+     !1    '              void ratio',4
+     !1    '       preconsol. stress',5
+     !1    '        geostatic stress',6
+     !1    '   elev. of layer center',7
+     !1    '        layer compaction',8
+     !1    '   elev. of land surface',9
+     !1    '  moist specific gravity',10
+     !1    '   sat. specific gravity',11
+     !1    ' iso recompression index',12
+     !1    '   iso compression index',13
+     !1    '   iso sec. compr. index',14
+     !1    '  bjerrum recompr. index',15
+     !1    '    bjerrum compr. index',16
+     !1    'bjerrum sec. compr.index',17
+     !1    '                  obssub',18
+     !1    'init. interbed thickness',19
+     
  DO I=1,MAXTOPICS; TOPICS(I)%CMOD=TOPICS(I)%TNAME(2:4); ENDDO
 
  CALL WDIALOGLOAD(ID_DPMANAGER)
