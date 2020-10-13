@@ -358,7 +358,7 @@ c init the PWT data
          if (ibound(icol,irow,ilay)  .gt.0 .and.
      1       ibound(icol,irow,ilay+1).gt.0) then
          
-         !## store top of pwt layer
+            !## store top of pwt layer
             rhs(icol,irow,ilay)=pwt(ipbot,ip) !xpwt(i,ipbot)
    
             !## storage below pwt layer
@@ -384,6 +384,7 @@ c init the PWT data
                q2=(h-h1)*cv(icol,irow,ilay)
                !## correction to vertical conductance (smaller)
                fct=0.0; if(q2.gt.0.0) fct=q1/q2 !(q2+tiny)
+               fct=max(tiny,fct)
                cv(icol,irow,ilay)=fct*cv(icol,irow,ilay)
             endif
          end if
