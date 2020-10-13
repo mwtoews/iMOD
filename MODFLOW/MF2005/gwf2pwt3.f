@@ -285,6 +285,9 @@ c locals
       real :: h, h1, t, fct, q1, q2
       real, dimension(:,:,:), pointer :: sc1 => null()
       
+      integer, pointer :: iminkd => null(), iminc => null()
+      real, pointer :: minkd => null(), minc => null()
+
       integer,dimension(3,4) :: rci
       data rci/-1, 0,-1,  !## row/col/cc (north)
      1    0, 1, 2,        !## row/col/cr (east)
@@ -326,9 +329,11 @@ c return if steady-state
 c init the PWT data
       if (inbcf.gt.0) then
          call sgwf2bcf7pnt(igrid)
+         call getbcfmincminkd(iminkd,iminc,minkd,minc)         
          call getbcfsc1(sc1)
       else
          call sgwf2lpf7pnt(igrid)
+         call getlpfmincminkd(iminkd,iminc,minkd,minc)
          call getlpfsc1(sc1)
       end if
 
@@ -393,7 +398,8 @@ c init the PWT data
       ! compute transmissivities using harmonic mean
       do ilay = 1, nlay
          !## no usage of minkd for pwt - isotropic
-         call sgwf2bcf7c(ilay,0,0.0,1.0) !iminkd,minkd) !,cc,cr)
+         call sgwf2bcf7c(ilay,IMINKD,MINKD,1.0) !iminkd,minkd) !,cc,cr)
+!         call sgwf2bcf7c(ilay,0,0.0,1.0) !iminkd,minkd) !,cc,cr)
       end do
 
       !## correct harmonic conductances whenever next cells are dry (below top pwt)
