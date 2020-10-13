@@ -100,7 +100,7 @@ CONTAINS
  !## scr method (1)=iso 2=bjerrum
  PBMAN%SCR_IMETHOD=1
  !## pre-consolidation (0,1,2)
- PBMAN%SCR_ISTPCS=0
+ PBMAN%SCR_ICTPCS=0
 
  END SUBROUTINE IMODBATCH_RUNFILE_INITPBMAN
  
