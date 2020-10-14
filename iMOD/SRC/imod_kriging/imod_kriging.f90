@@ -152,14 +152,8 @@ CONTAINS
    ELSE
     R=RANGE; AGL=0.0D0; RAN=0.0D0
    ENDIF
-!   IF(ELLIPS_IDF(1)%IU.NE.0)ANI=IDFGETXYVAL(ELLIPS_IDF(1),X,Y) 
-!   IF(ELLIPS_IDF(2)%IU.NE.0)RAT=IDFGETXYVAL(ELLIPS_IDF(2),X,Y)
-!   IF(ELLIPS_IDF(3)%IU.NE.0)R  =IDFGETXYVAL(ELLIPS_IDF(3),X,Y)
    CALL KRIGING_FILLSYSTEM(XD,XCD,YD,YCD,ZD,ZCD,PD,WD,ND,MAXPNT,X,Y,Z,R,SILL,NUGGET,KTYPE,MP,KEST,KVAR,PNTSEARCH, &
         IQUADRANT,IDF,IBLANKOUT,BO_VALUE,AGL,RAN,IBLNTYPE,NACTP)
-!   if(icol.eq.126.and.irow.eq.55)then
-!    write(*,*) 
-!   endif        
    IDF%X(ICOL,IROW) =KEST
    !## standard deviation (L)
    IDFV%X(ICOL,IROW)=IDFV%NODATA; IF(KVAR.GE.0.0D0)IDFV%X(ICOL,IROW)=SQRT(KVAR)
@@ -500,7 +494,8 @@ CONTAINS
  !## set up rotation matrice
  CALL UTL_SETUP_ROTATIONMATRIX(AGL,ROT)
  
- USERANGE=RANGE
+ USERANGE=RANGE; IF(USERANGE.EQ.0.0D0)USERANGE=HUGE(1.0)
+ 
  C0      =NUGGET
  C1      =SILL-NUGGET
  
@@ -552,23 +547,25 @@ CONTAINS
  !## no points left, interpolated value equals nodata
  IF(NP.LE.0)THEN; KEST=NODATA; KVAR=0.0D0; NACTP=NP; RETURN; ENDIF
   
- !## save points
- IU=UTL_GETUNIT()
- CALL OSD_OPEN(IU,FILE='d:\IMOD-MODELS\TKI_SLR\results\pospunt.ipf',STATUS='UNKNOWN',ACTION='WRITE')
- WRITE(IU,'(A)') 'X,Y,Z,PD,ID'; WRITE(IU,'(4f15.3,i10)') X,Y,0.0D0,0.0D0,0
- DO I=1,NP
-  ID=SELID(I)
-  WRITE(IU,'(4F15.3,I10)') XCD(ID),YCD(ID),ZCD(ID),PD(ID),ID
- ENDDO
- CLOSE(IU)
- CALL OSD_OPEN(IU,FILE='d:\IMOD-MODELS\TKI_SLR\results\orgpunt.ipf',STATUS='UNKNOWN',ACTION='WRITE')
- WRITE(IU,'(A)') 'X,Y,Z,P,ID'; WRITE(IU,'(4f15.3,i10)') X,Y,0.0D0,0.0D0,0
- DO I=1,NP
-  ID=SELID(I)
-  WRITE(IU,'(4F15.3,I10)') XD(ID),YD(ID),ZD(ID),PD(ID),ID
- ENDDO
- CLOSE(IU)
-
+ !!## save points
+ !IU=UTL_GETUNIT()
+ !CALL OSD_OPEN(IU,FILE='d:\IMOD-MODELS\TKI_SLR\results\pospunt.ipf',STATUS='UNKNOWN',ACTION='WRITE')
+ !WRITE(IU,'(A)') 'X,Y,Z,PD,ID'; WRITE(IU,'(4f15.3,i10)') X,Y,0.0D0,0.0D0,0
+ !DO I=1,NP
+ ! ID=SELID(I)
+ ! WRITE(IU,'(4F15.3,I10)') XCD(ID),YCD(ID),ZCD(ID),PD(ID),ID
+ !ENDDO
+ !CLOSE(IU)
+ !CALL OSD_OPEN(IU,FILE='d:\IMOD-MODELS\TKI_SLR\results\orgpunt.ipf',STATUS='UNKNOWN',ACTION='WRITE')
+ !WRITE(IU,'(A)') 'X,Y,Z,P,ID'; WRITE(IU,'(4f15.3,i10)') X,Y,0.0D0,0.0D0,0
+ !DO I=1,NP
+ ! ID=SELID(I)
+ ! WRITE(IU,'(4F15.3,I10)') XD(ID),YD(ID),ZD(ID),PD(ID),ID
+ !ENDDO
+ !CLOSE(IU)
+ 
+ USERANGE=UTL_KRIGING_RANGE(RANGE,ND,NP,XD,YD,SELID)
+   
  !## simple kriging (ktype.gt.0) and ordinary kriging (ktype.lt.0)
  N=NP; IF(KTYPE.LT.0)N=NP+1
  
@@ -655,6 +652,39 @@ CONTAINS
  
  END SUBROUTINE KRIGING_FILLSYSTEM
 
+ !###====================================================================
+ REAL FUNCTION UTL_KRIGING_RANGE(RANGE,ND,NP,XD,YD,SELID) !X1,X2,Y1,Y2)
+ !###====================================================================
+ IMPLICIT NONE
+ INTEGER,INTENT(IN) :: NP,ND
+ REAL(KIND=8),INTENT(IN) :: RANGE
+ INTEGER,INTENT(IN),DIMENSION(NP) :: SELID
+ REAL(KIND=8),INTENT(IN),DIMENSION(ND) :: XD,YD
+ !REAL(KIND=8),INTENT(IN) :: X1,Y1,X2,Y2
+ REAL(KIND=8) :: DXY,MDXY
+ INTEGER :: ID,JD
+ 
+ IF(RANGE.GT.0.0D0)THEN
+  UTL_KRIGING_RANGE=RANGE
+  RETURN
+ ENDIF
+ 
+ !## get largest inter-pilot point distance
+ MDXY=0.0D0; DO ID=1,NP
+  DO JD=1,NP
+   IF(ID.EQ.JD)CYCLE
+   DXY=UTL_DIST(XD(SELID(ID)),YD(SELID(ID)),XD(SELID(JD)),YD(SELID(JD)))
+   MDXY=MAX(DXY,MDXY)
+  ENDDO
+ ENDDO
+ UTL_KRIGING_RANGE=MDXY
+ 
+! CALL IMOD_UTL_PRINTTEXT('Kriging Determined Range:'//TRIM(IMOD_UTL_DTOS(MDXY,'F',2))//' meter',1)
+
+! UTL_KRIGING_RANGE=0.9D0*SQRT((X2-X1)**2.0D0+(Y2-Y1)**2.0D0)
+ 
+ END FUNCTION UTL_KRIGING_RANGE
+ 
  !###======================================================================
  INTEGER FUNCTION KRIGING_QUADRANT(XD,YD,X,Y)
  !###======================================================================
