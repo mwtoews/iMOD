@@ -524,6 +524,14 @@ CONTAINS
 
  PMANAGER_INIT_SIMAREA=.FALSE.
  
+ !## window specified
+ IF(PBMAN%IWINDOW.EQ.2)THEN
+  IDF%XMIN=PBMAN%XMIN; IDF%XMAX=PBMAN%XMAX
+  IDF%YMIN=PBMAN%YMIN; IDF%YMAX=PBMAN%YMAX
+  IDF%DX  =PBMAN%CELLSIZE; IDF%DY=IDF%DX
+  PMANAGER_INIT_SIMAREA=.TRUE.; RETURN
+ ENDIF
+ 
  IF(PBMAN%IWINDOW.EQ.3)THEN
   !## read other layers as well if needed
   IF(PBMAN%SMTYPE.EQ.1)THEN 
@@ -544,8 +552,7 @@ CONTAINS
 JLOOP: DO K=1,SIZE(TOPICS)
   !## skip wel,mnw,hfb,isg,sfr
   SELECT CASE (K)
-   CASE (TWEL,TMNW,THFB,TISG,TSFR,TPST,TIES,TOBS); CYCLE !15,19:21,29,30,33); CYCLE
-!   CASE (15,19:21,29,30,33); CYCLE
+   CASE (TWEL,TMNW,THFB,TISG,TSFR,TPST,TIES,TOBS); CYCLE
   END SELECT
   IF(.NOT.ASSOCIATED(TOPICS(K)%STRESS))CYCLE
   DO J=1,SIZE(TOPICS(K)%STRESS)
@@ -3531,7 +3538,7 @@ JLOOP: DO K=1,SIZE(TOPICS)
  TOPICS(TRCT)%SNAME(1) ='(RCT) Chemical Reaction Package'
  TOPICS(TCON)%SNAME(1) ='(CON) Chloride Concentration Package'
  TOPICS(TIES)%SNAME(1) ='(IES) Iterative Ensemble Smoother'
- TOPICS(TSCR)%SNAME(1) ='(SCR) Interbed Thickness'      !( 1)
+ TOPICS(TSCR)%SNAME(1) ='(SCR) Interbed Thickness'              !( 1)
  TOPICS(TSCR)%SNAME(2) ='(SCR) Iso/Bjerrum Recompression Index' !(12/15)
  TOPICS(TSCR)%SNAME(3) ='(SCR) Iso/Bjerrum Compression Index'   !(13/16)
  TOPICS(TSCR)%SNAME(4) ='(SCR) Iso/Bjerrum Sec. Compr. Index'   !(14/17)

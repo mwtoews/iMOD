@@ -1472,7 +1472,7 @@ end subroutine imod_license
  NEWLINE// &
  '- The MODFLOW computational core (iMODFLOW):'//NEWLINE// &
  'iMODFLOW_V5_2_X32R.exe and'//NEWLINE// &
- 'iMODFLOW_V5_2_METASWAP_SVN1614_X64R.exe:'//NEWLINE// &
+ 'iMODFLOW_V5_2_METASWAP_SVN1644_X64R.exe:'//NEWLINE// &
  NEWLINE// &
  'iMODFLOW is partly based on the USGS MODFLOW2005 s'// &
  'ource code; for iMOD the USGS MODFLOW2005 source code has been expanded '// &
@@ -1485,7 +1485,7 @@ end subroutine imod_license
  'this program. If not, see http://water.usgs.gov/software/help/notice.'//NEWLINE// &
  NEWLINE// &
  'The X64-bit iMODFLOW-executable includes the MetaSWAP-module '// &
- 'SVN version number 1614, part of SIMGRO V7_2_27 as described '// &
+ 'SVN version number 1644, part of SIMGRO V8_0_1_0 as described '// &
  'in the SIMGRO-release notes ftp://ftp.wur.nl/simgro/doc/Change_log/ Release_Notes_'// &
  'MetaSWAP_V8_0_1_0.pdf. '// &
  'MetaSWAP has been developed by WENR - Wageningen UR. For more '// &
