@@ -31,7 +31,7 @@ CONTAINS
  !###======================================================================
  IMPLICIT NONE
  
- NULLIFY(XP,YP,ZP,WP,FP)
+ NULLIFY(XP,YP,ZP,WP,FP,PP)
   
  END SUBROUTINE ASC2IDF_INT_NULLIFY
 
