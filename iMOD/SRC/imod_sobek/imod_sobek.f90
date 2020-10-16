@@ -44,6 +44,7 @@ TYPE(T_UG_MESHGEOM) :: MESHGEOM
 CHARACTER(LEN=UG_IDSLEN), ALLOCATABLE :: NBRANCHIDS(:), NNODEIDS(:), NODEIDS(:)       
 CHARACTER(LEN=UG_IDSLONGNAMESLEN), ALLOCATABLE :: NBRANCHLONGNAMES(:), NNODELONGNAMES(:), NODELONGNAMES(:) 
 TYPE(T_NETWORK) :: NETWORK
+REAL(KIND=DP_KIND),ALLOCATABLE,DIMENSION(:,:) :: S1
 
 CONTAINS
 
@@ -52,13 +53,12 @@ CONTAINS
  !###======================================================================
  IMPLICIT NONE
  CHARACTER(LEN=13) :: DUMMY
- INTEGER :: IERR,IONCID,NMESH,IM,NETWORKINDEX,NCID
+ INTEGER :: IERR,IONCID,NMESH,IM,NETWORKINDEX,NCID,ID_S1,NT,ID_TIMEDIM,I
 ! TYPE(T_UG_NETWORK) :: NETID 
  LOGICAL :: INCLUDEARRAYS !< (OPTIONAL) WHETHER OR NOT TO INCLUDE COORDINATE ARRAYS AND CONNECTIVITY TABLES. DEFAULT: .FALSE., I.E., DIMENSION COUNTS ONLY.
  INTEGER :: START_INDEX   !< (OPTIONAL) THE START INDEX   
  CHARACTER(LEN=256) :: NETWORK1DNAME, MESH1DNAME
 ! INTEGER :: ID_NETNODEZ
-! REAL(KIND=DP_KIND),ALLOCATABLE,DIMENSION(:) :: ZK
  
  DFLOWFM1CALC=.FALSE.
  
@@ -80,7 +80,17 @@ CONTAINS
    !## retrieve the 1d geometry twice one time in meshgeom to process in this subroutine, one time in meshgeom1d, that can be used later during initialisation.
    IERR=IONC_GET_MESHGEOM(IONCID,IM,NETWORKINDEX,MESHGEOM,START_INDEX,INCLUDEARRAYS,NBRANCHIDS,NBRANCHLONGNAMES, &
              NNODEIDS,NNODELONGNAMES,NODEIDS,NODELONGNAMES,NETWORK1DNAME,MESH1DNAME); IF(IERR.NE.0)RETURN
- 
+   IERR=IONC_INQ_VARID_BY_STANDARD_NAME(IONCID,IM,UG_LOC_NODE,'SEA_SURFACE_HEIGHT',ID_S1)
+   
+   IERR = NF90_INQ_DIMID        (NCID, 'time'    , ID_TIMEDIM )
+   IERR = NF90_INQUIRE_DIMENSION(NCID, ID_TIMEDIM, LEN=NT)
+   
+   ALLOCATE(S1(MESHGEOM%NUMNODE,NT))
+   IF(IERR.EQ.NF90_NOERR)THEN
+    DO I=1,NT
+     IERR=NF90_GET_VAR(NCID,ID_S1,S1(:,I),START=(/1,I/))
+    ENDDO
+   ENDIF
 !!         ierr = ionc_inq_varid_by_standard_name(ioncid, im, UG_LOC_NODE, 'altitude', id_netnodez)
 !!         ierr = nf90_get_var(ncid, id_netnodez, zk) !ZK(numk_last+1:numk_last+meshgeom%numnode))
 
@@ -101,6 +111,15 @@ CONTAINS
   ENDIF
  ENDDO
  
+!Deze file is zeer vergelijkbaar met de netwerk-file. Sterker nog, het is hetzelfde, maar dan uitgebreid met resultaatwaarden op het
+!D- en het 2D-grid. Het grid staat er dus helemaal in. Dit zogenaamde output grid hoeft overigens niet altijd helemaal gelijk te zijn
+!aan het input grid uit de _net.nd file, maar doorgaans wijkt het maar weinig af.
+!In feite kun je dus beter de ISG’s genereren uit deze _map.nc file i.p.v. uit de _net.nc file, omdat er niet alleen het rooster in
+ !staat, maar ook de waterstand.
+!De variable mesh1d_s1 bevat de waterstanden op de 1D-gridpunten, in dezelfde volgorde als mesh1d_node_x / mesh1d_node_y /
+ !mesh1d_node_id, die je waarschijnlijk al gebruikt in je huidige reader. De mesh1d_s1 variable heeft een extra dimensie (de
+ !eerste dimensie), n.l. de tijd. Uit deze 2D-array kun je dus met één call de tijdreeks op een punt opvragen.
+
  DFLOWFM1CALC=.TRUE.
  
  END FUNCTION DFLOWFM1CALC
@@ -165,8 +184,8 @@ CONTAINS
 
  IF(IBATCH.NE.0)THEN
   WRITE(*,'(A)') 'Number of records in:'
-  WRITE(*,'(A,I10)') TRIM(FNAME(ISG))  //' ',NBRCH
-  WRITE(*,'(A,I10)') TRIM(FNAME(ISP))  //' ',NNP
+  WRITE(*,'(A,I10)')  TRIM(FNAME(ISG))  //' ',NBRCH
+  WRITE(*,'(A,I10)')  TRIM(FNAME(ISP))  //' ',NNP
   WRITE(*,'(A,2I10)') TRIM(FNAME(ISD1))//' ',ICLC,IREFSD
   WRITE(*,'(A,2I10)') TRIM(FNAME(ISC1))//' ',ICRS,IREFSC
   WRITE(*,'(A,2I10)') TRIM(FNAME(IST1))//' ',ISTW,IREFST
@@ -220,7 +239,7 @@ CONTAINS
  INTEGER,INTENT(IN) :: IB
  INTEGER,INTENT(INOUT) :: ICLC,IREFSD
  INTEGER,INTENT(OUT) :: NCLC
- INTEGER :: I,II,N,ID,ID1,ID2
+ INTEGER :: I,J,II,N,ID,ID1,ID2
  REAL(KIND=DP_KIND) :: DIST,WP,BH,MIND1,MIND2,D,F1,F2
  CHARACTER(LEN=MAXLEN) :: CROSNAME
 
@@ -236,7 +255,7 @@ CONTAINS
 
   NCLC    =NCLC+1
   ICLC    =ICLC+1
-  N       =1
+  N       =SIZE(S1,2) !1
   CROSNAME=NODEIDS(I)
 
   WRITE(IU(ISD1),REC=ICLC+1) N,IREFSD+1,DIST,CROSNAME
@@ -267,11 +286,15 @@ CONTAINS
    BH=F1*NETWORK%CRS%CROSS(ID1)%BEDLEVEL+ &
       F2*NETWORK%CRS%CROSS(ID2)%BEDLEVEL
   ENDIF
-  WP=BH+1.0D0 
+
+  DO J=1,SIZE(S1,2)
+   WP=S1(I,J)
+   WP=MAX(WP,BH)
+!  WP=BH+1.0D0 
+   IREFSD=IREFSD+1
+   WRITE(IU(ISD2),REC=IREFSD+1) ID,'00:00:00',WP,BH,1.0D0,0.3D0
+  ENDDO
   
-  IREFSD=IREFSD+1
-  WRITE(IU(ISD2),REC=IREFSD+1) ID,'00:00:00',WP,BH,1.0D0,0.3D0
- 
  ENDDO
  
  END SUBROUTINE DFLOWFM_CREATEISD
@@ -283,8 +306,8 @@ CONTAINS
  INTEGER,INTENT(IN) :: IB
  INTEGER,INTENT(INOUT) :: ICRS,IREFSC
  INTEGER,INTENT(OUT) :: NCRS
- INTEGER :: I,J,II,N,ID
- REAL(KIND=DP_KIND) :: DIST,X,Y,MRC,OR,DOR,RD,MY,XMID
+ INTEGER :: I,J,II,N
+ REAL(KIND=DP_KIND) :: DIST,MRC,OR,DOR,RD,MY,XMID
  CHARACTER(LEN=MAXLEN) :: CROSNAME
  TYPE(T_CSTYPE),POINTER :: PCSDEF
  REAL(KIND=DP_KIND),ALLOCATABLE,DIMENSION(:) :: XPROF,YPROF,XP,YP

@@ -68,7 +68,7 @@ CONTAINS
   !## use cellsize of idf which overlays the current idf
   II=IPIN(I)
   
-  CALL ASC2IDF_INT_NULLIFY(); ALLOCATE(XP(100),YP(100),ZP(100),WP(100),FP(100))
+  CALL ASC2IDF_INT_NULLIFY(); ALLOCATE(XP(100),YP(100),ZP(100),PP(100),WP(100),FP(100))
   ALLOCATE(IPC(MF6IDF(II)%NCOL,MF6IDF(II)%NROW,2)); IPC=INT(0,1)
   
   !## intersect line and determine ipc()
