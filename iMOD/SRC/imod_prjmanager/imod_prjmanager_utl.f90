@@ -3546,11 +3546,11 @@ JLOOP: DO K=1,SIZE(TOPICS)
  TOPICS(TSCR)%SNAME(6) ='(SCR) Layer Compaction'                !(  )
  TOPICS(TSCR)%SNAME(7) ='(SCR) Preconsol. Stress'               !( 5)
  TOPICS(TSCR)%SNAME(8) ='(SCR) Preconsol. Stress Offset'        !(  )
- TOPICS(TSCR)%SNAME(9) ='(SCR) Overconsolidation Ratio'         !(  )
+ TOPICS(TSCR)%SNAME(9) ='(SCR) Overconsolidation Ratio OCR'     !(  )
  TOPICS(TSCR)%SNAME(10)='(SCR) Init. Interbed Thickness'        !(  )
- TOPICS(TSCR)%SNAME(11)='(SCR) Overburden Geostatic Stress'     !(  )
- TOPICS(TSCR)%SNAME(12)='(SCR) Saturated Specific Gravity'      !(  )
- TOPICS(TSCR)%SNAME(13)='(SCR) Unsaturated Specific Gravity'    !(  )
+ TOPICS(TSCR)%SNAME(11)='(SCR) Overburden Geostatic Stress GL0' !(  )
+ TOPICS(TSCR)%SNAME(12)='(SCR) Saturated Specific Gravity SGS'  !(  )
+ TOPICS(TSCR)%SNAME(13)='(SCR) Unsaturated Specific Gravity SGM'!(  )
 
      !1 /'      interbed thickness',1
      !1    'elastic specific storage',2

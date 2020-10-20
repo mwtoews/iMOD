@@ -343,7 +343,8 @@ C8H-----CAPABILITY HAS BEEN INVOKED (IWDFLG NOT 0).
                kdsv(icol,irow,k) = minkd
                ncor=ncor+1
               endif
-             endif
+             endif 
+             cc(icol,irow,k)=kdsv(icol,irow,k)
           end do                                                      ! ILAY_ZERO
        end do                                                          ! ILAY_ZERO
       enddo
@@ -1118,7 +1119,7 @@ C     ------------------------------------------------------------------
 
 c arguments
       integer, intent(in) :: k,iminkd                                          ! DLT
-      real(kind=8),intent(in) :: minkd,trpy
+      real,intent(in) :: minkd,trpy
 !      real, dimension(ncol,nrow,nlay), intent(inout) :: cc              ! DLT
 !      real, dimension(ncol,nrow,nlay), intent(inout) :: cr              ! DLT
 C     ------------------------------------------------------------------

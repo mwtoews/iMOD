@@ -267,8 +267,9 @@ c save data
      1                  ibound,hnew,hold,issflg,rhs
       use gwfbcfmodule, only: laycon
       use gwflpfmodule, only: laytyp
-
+      
       implicit none
+!      character(len=52) :: fname
 
 c arguments
       integer, intent(in) :: kiter
@@ -348,6 +349,7 @@ c init the PWT data
             cv(icol,irow,ilay)   = pwt(ipvcont,ip)
          end if   
       end do
+      
       do icol=1,ncol; do irow=1,nrow; do ilay=1,nlay
        cc(icol,irow,ilay) = pwt_kd(icol,irow,ilay)
       enddo; enddo; enddo
@@ -379,7 +381,7 @@ c init the PWT data
    
             !## adjust transmissivity
             fct=(h-pwt(ipbot,ip))/pwt(ipthkaf,ip)
-            cc(icol,irow,ilay)=max(0.01,cc(icol,irow,ilay)*fct)
+            cc(icol,irow,ilay)=max(minkd,cc(icol,irow,ilay)*fct)
    
             !## head below pwt is lower than pwt layer
             if(h1.lt.pwt(ipbot,ip))then
@@ -397,10 +399,16 @@ c init the PWT data
       
       ! compute transmissivities using harmonic mean
       do ilay = 1, nlay
-         !## no usage of minkd for pwt - isotropic
-         call sgwf2bcf7c(ilay,IMINKD,MINKD,1.0) !iminkd,minkd) !,cc,cr)
+         !## no usage of minkd for pwt - allready processec in pwt_kd
+         call sgwf2bcf7c(ilay,iminkd,minkd,1.0) !iminkd,minkd) !,cc,cr)
 !         call sgwf2bcf7c(ilay,0,0.0,1.0) !iminkd,minkd) !,cc,cr)
       end do
+  
+!      open(99,file='d:\tmp.txt',status='unknown',action='write')
+!      write(99,*) cc
+!      write(99,*) cr
+!      write(99,*) cv
+!      close(99)
 
       !## correct harmonic conductances whenever next cells are dry (below top pwt)
       do ilay=1,nlay
@@ -460,6 +468,18 @@ c init the PWT data
       enddo
 c      cr(ncol,1:nrow,1:nlay)=0.0
 c      cc(1:ncol,nrow,1:nlay)=0.0
+
+!      write(fname,'(a,i2.2,a)') 'd:\tmp_error',kiter,'.txt'
+!      open(99,file=fname,status='unknown',action='write')
+!      do ilay=1,nlay; write(99,*) 'pwt_kd',ilay; write(99,*) 
+!     1pwt_kd(:,:,ilay); enddo
+!      do ilay=1,nlay; write(99,*) 'cc',ilay; write(99,*) cc(:,:,ilay); 
+!     1enddo
+!      do ilay=1,nlay; write(99,*) 'cr',ilay; write(99,*) cr(:,:,ilay); 
+!     1enddo
+!      do ilay=1,nlay; write(99,*) 'cv',ilay; write(99,*) cv(:,:,ilay); 
+!     1enddo
+!      close(99)
 
       ! save pointers
       call sgwf2bas7psv(igrid)

@@ -251,14 +251,16 @@ C4------READ ANISOTROPY-FACTOR EN -HOEK
                end do
             end do
          end do
-
+         
          n = 0
          do k = 1, nlay
             do j=1,nrow
                do i=1,ncol
                   if (buff(i,j,k).gt.0.0D0) then
-                     anifactor(i,j,k) = 1.0D0
-                     n = n + 1
+                     if(anifactor(i,j,k).ne.1.0)then
+                      anifactor(i,j,k) = 1.0D0
+                      n = n + 1
+                     endif
                   end if
                end do
             end do
@@ -357,7 +359,8 @@ c modules
       use gwfanimodule
 
       implicit none
-
+      character(len=52) :: fname
+      
 c arguments
       integer, intent(in) :: igrid
 
@@ -367,6 +370,15 @@ c ------------------------------------------------------------------------------
       ! set pointers for this igrid
       call sgwf2ani3pnt(igrid)
       call sgwf2bas7pnt(igrid)
+
+!      write(fname,'(a,i2.2,a)') 'd:\tmp',1,'.txt'
+!      open(99,file=fname,status='unknown',action='write')
+!      write(99,*) dcu
+!      write(99,*) dcd
+!      write(99,*) dcc
+!      write(99,*) dcr
+!      write(99,*) diag
+!      close(99)
 
       call scl1fmt(dcu,dcd,dcc,dcr,diag,rhs,ibound,hnew,ncol,nrow,
      1             nlay,hcof,anifactor)
@@ -1200,7 +1212,8 @@ c ------------------------------------------------------------------------------
       implicit none
       integer ncol,nrow,nlay,ilay,irow,icol
       integer ibound(ncol,nrow,nlay)
-      real kd(ncol,nrow,nlay),fct(ncol,nrow,nlay), angle(ncol,nrow,nlay)
+      real,intent(in) :: kd(ncol,nrow,nlay),fct(ncol,nrow,nlay), 
+     & angle(ncol,nrow,nlay)
       real  k1,k2,kxx(ncol,nrow,nlay),kyy(ncol,nrow,nlay),
      %      kxy(ncol,nrow,nlay),phi
 

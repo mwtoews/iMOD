@@ -1324,9 +1324,9 @@ DOLOOP: DO
   IF(ABS(TT2-T2).GT.0.01D0*T2)WRITE(*,'(/1X,A,2F15.7/)') 'Error in consistency check VC ',TT2,T2
  ENDIF
  
- !## minimal horizontal k first layer is 0.5m2/d
- ILAY=1; KD=(TOP(ILAY)-BOT(ILAY))*HK(ILAY)
- F=KD/0.5D0; IF(F.GT.0.0D0.AND.F.LT.1.0D0)HK(ILAY)=HK(ILAY)/F
+! !## minimal horizontal k first layer is 0.5m2/d
+! ILAY=1; KD=(TOP(ILAY)-BOT(ILAY))*HK(ILAY)
+! F=KD/0.5D0; IF(F.GT.0.0D0.AND.F.LT.1.0D0)HK(ILAY)=HK(ILAY)/F
 
  END SUBROUTINE UTL_MINTHICKNESS
 

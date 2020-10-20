@@ -924,7 +924,7 @@ C14-----TIME STEP MULTIPLIER, AND STEADY-STATE FLAG..
       ENDIF
       !## save iper text without "[" and "]"
       NPERTXT(N)=LINE(ISTART+1:ISTOP-1)
-      call imod_utl_cap(npertxt(n),'u')
+      CALL IMOD_UTL_CAP(NPERTXT(N),'U')
 
   163 FORMAT(1X,I8,1PG21.7,I7,0PF25.3,2A11)
 C

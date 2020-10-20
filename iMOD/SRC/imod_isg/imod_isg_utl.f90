@@ -277,7 +277,7 @@ CONTAINS
   ENDIF
 
   !## don't bother for steady-state, take the mean!
-  IF(ISS.EQ.1)THEN
+  IF(ISS.EQ.1.OR.IAVERAGE.EQ.1)THEN
    DO I=1,NITEMS; IF(RVAL(I).NE.NDATA(I))THEN; QSORT(1,I)=QSORT(1,I)+RVAL(I); XNR(I)=XNR(I)+1.0D0; ENDIF; ENDDO
   !## transient simulation
   ELSEIF(ISS.EQ.2)THEN
