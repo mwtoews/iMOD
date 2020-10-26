@@ -2355,7 +2355,15 @@ IRLOOP: DO IR=MAX(1,IROW-1),MIN(NROW,IROW+1)
    !## no element on this location
    IF(IDF(1)%X(ICOL,IROW).LE.0.0D0)CYCLE
 
-   WL=IDF(2)%X(ICOL,IROW); BL=IDF(3)%X(ICOL,IROW); CD=IDF(1)%X(ICOL,IROW); F=IDF(4)%X(ICOL,IROW)
+   !## assign layers in between waterlevel and bottom elevation
+   IF(PBMAN%IDEFLAYER.EQ.0)THEN
+    WL=IDF(2)%X(ICOL,IROW)
+   ELSE
+    !## assign layers in between top modellayer 1 and bottom elevation
+    WL=TOP(1)%X(ICOL,IROW)
+   ENDIF
+
+   BL=IDF(3)%X(ICOL,IROW); CD=IDF(1)%X(ICOL,IROW); F =IDF(4)%X(ICOL,IROW)
    TL=IDF(5)%X(ICOL,IROW); WP=IDF(6)%X(ICOL,IROW); C0=IDF(8)%X(ICOL,IROW)
 
    TLP=0.0D0

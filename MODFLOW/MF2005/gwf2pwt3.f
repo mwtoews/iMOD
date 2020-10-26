@@ -400,7 +400,7 @@ c init the PWT data
       ! compute transmissivities using harmonic mean
       do ilay = 1, nlay
          !## no usage of minkd for pwt - allready processec in pwt_kd
-         call sgwf2bcf7c(ilay,iminkd,minkd,1.0) !iminkd,minkd) !,cc,cr)
+         call sgwf2bcf7c(ilay,iminkd,minkd,1.0d0) !iminkd,minkd) !,cc,cr)
 !         call sgwf2bcf7c(ilay,0,0.0,1.0) !iminkd,minkd) !,cc,cr)
       end do
   

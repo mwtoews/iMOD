@@ -144,6 +144,7 @@ C     ------------------------------------------------------------------
       USE GWFEVTMODULE,ONLY:NEVTOP,NPEVT,IEVTPF,EVTR,EXDP,SURF,IEVT
 C
       CHARACTER*24 ANAME(4)
+      CHARACTER(LEN=52) :: LINE      
 C
       DATA ANAME(1) /'          ET LAYER INDEX'/
       DATA ANAME(2) /'              ET SURFACE'/

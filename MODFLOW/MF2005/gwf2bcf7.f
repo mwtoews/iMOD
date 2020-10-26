@@ -1119,7 +1119,8 @@ C     ------------------------------------------------------------------
 
 c arguments
       integer, intent(in) :: k,iminkd                                          ! DLT
-      real,intent(in) :: minkd,trpy
+      real,intent(in) :: minkd
+      real(kind=8),intent(in) :: trpy
 !      real, dimension(ncol,nrow,nlay), intent(inout) :: cc              ! DLT
 !      real, dimension(ncol,nrow,nlay), intent(inout) :: cr              ! DLT
 C     ------------------------------------------------------------------
@@ -1129,6 +1130,7 @@ C
 !      write(*,*) associated(trpy)
 !      WRITE(*,*) K,TRPY(K)
       YX=TRPY*TWO
+      IF(TRPY.LE.0.0D0)STOP 'TRPY.EQ.0'
 !      YX=TRPY(K)*TWO
 C
 C1------FOR EACH CELL CALCULATE BRANCH CONDUCTANCES FROM THAT CELL
