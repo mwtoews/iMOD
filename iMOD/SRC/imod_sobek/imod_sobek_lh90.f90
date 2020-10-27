@@ -21,8 +21,8 @@
 !!  2600 MH Delft, The Netherlands.
 !!
 MODULE MOD_SOBEK_PAR
- CHARACTER(LEN=256) :: SOBEKDIR,CALCPNTHISNAME,STRUCHISNAME,ISGNAME
- INTEGER :: IBATCH
+ CHARACTER(LEN=256) :: SOBEKDIR,CALCPNTHISNAME,STRUCHISNAME,ISGNAME,DFLOWFMDIR
+ INTEGER :: IBATCH,ISFINAL
 END MODULE MOD_SOBEK_PAR
 
 MODULE MOD_SOBEK
@@ -30,6 +30,17 @@ MODULE MOD_SOBEK
 INTEGER,PARAMETER :: ISOBEK=0
 
  CONTAINS
+ 
+ !###======================================================================
+ LOGICAL FUNCTION DFLOWFM1CALC()
+ !###======================================================================
+ IMPLICIT NONE
+ 
+ DFLOWFM1CALC=.FALSE.
+
+ WRITE(*,'(//A//)') 'Cannot use this function in this version of iMOD'
+ 
+ END FUNCTION DFLOWFM1CALC
  
  !###======================================================================
  SUBROUTINE SOBEK1MAIN()
