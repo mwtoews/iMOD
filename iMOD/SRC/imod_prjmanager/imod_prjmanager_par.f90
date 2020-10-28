@@ -492,8 +492,10 @@ MODULE MOD_PMANAGER_PAR
  INTEGER :: IIDF      !unit number for idf_svat.inp
  INTEGER :: IUSCL     !unit number for uscl_svat.inp
  INTEGER :: IUNOD     !unit number for nodenr2svat.dxc (only with mf6)
- INTEGER :: IDFM_MSWP !unit number for coupling with dflow-fm (only with pbman%dmmfile=1)
- INTEGER :: IMSWP_DFM !unit number for coupling with dflow-fm (only with pbman%dmmfile=1)
+ INTEGER :: IDFM_MSWP   !unit number for coupling ponding with dflow-fm (only with pbman%dmmfile=1)
+ INTEGER :: IMSWP_SDFM  !unit number for coupling sprinkling with dflow-fm (only with pbman%dmmfile=1)
+ INTEGER :: IMSWP_RDFM  !unit number for coupling runoff with dflow-fm (only with pbman%dmmfile=1)
+ INTEGER :: IMSWP_PDFM   !unit number for coupling with dflow-fm (only with pbman%dmmfile=1)
  INTEGER :: WINDEX_MSWP !unit number for coupling with metaswap (extraction wells)
  INTEGER :: RINDEX_MSWP !unit number for coupling with metaswap (recharge)
  INTEGER :: WMF6_MSWP   !unit number for mf6 wel package
