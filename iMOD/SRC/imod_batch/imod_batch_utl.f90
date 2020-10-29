@@ -633,7 +633,11 @@ CONTAINS
  
  ENDIF
 
- WRITE(*,'(A10,4A15)') 'NPOP','LOG10(MEAN)','LOG10(STDV)','MEAN','STDV'
+ IF(ILOG.EQ.0)THEN
+  WRITE(*,'(A10,A15)') 'NPOP','MEAN','STDV'
+ ELSE
+  WRITE(*,'(A10,4A15)') 'NPOP','LOG10(MEAN)','LOG10(STDV)','MEAN','STDV'
+ ENDIF
 
  ALLOCATE(X(N)); X=0.0D0
  
@@ -671,9 +675,12 @@ CONTAINS
 
   !## all of the ensembles go to stdv - statistics is for log10 distribution
   CALL UTL_STDEF(V,N,-999.99D0,STDV,XT,NPOP)
+  IF(ILOG.EQ.0)THEN
+   WRITE(*,'(I10,2F15.7)') NPOP,XT,STDV
+  ELSE
+   WRITE(*,'(I10,4F15.7)') NPOP,XT,STDV,10.0**XT,10.0D0**STDV
+  ENDIF
   
-  WRITE(*,'(I10,4F15.7)') NPOP,XT,STDV,10.0**XT,10.0D0**STDV
-   
   IF(ILOG)THEN
    DO I=1,N
     V(I)=10.0D0**V(I)
