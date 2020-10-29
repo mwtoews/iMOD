@@ -4926,7 +4926,7 @@ DOLOOP: DO
  CHARACTER(LEN=*),INTENT(IN) :: DIRNAME
  INTEGER :: I,J
 
- !## create/check entire directory-structure
+ !## create/check entire directory
  I=INDEX(DIRNAME,'\')+1
  DO
   J=INDEX(DIRNAME(I:),'\')
