@@ -2439,43 +2439,45 @@ DOLOOP: DO
   ELSE
 
    NQ=0.0D0; TZ=STIME/100.0D0; BZ=ETIME/100.0D0; DZ=TZ-BZ
-   DO IR=1,NR
+   IF(DZ.GT.0.0D0)THEN
+    DO IR=1,NR
 
-    READ(IU,*) Z,(QD(I),I=2,NC)
+     READ(IU,*) Z,(QD(I),I=2,NC)
 
-    !## get first
-    IF(IR.GT.1)THEN
-     !## skip if equal to nodata
-     IF(Q1.NE.NODATA(ICOL))THEN
-      !## get fraction
-      IF(Z1.GE.BZ.AND.Z.LT.TZ)THEN
-       F=(MIN(TZ,Z1)-MAX(BZ,Z))/DZ
-       QT=QT+F*Q1
-       NQ=NQ+F
+     !## get first
+     IF(IR.GT.1)THEN
+      !## skip if equal to nodata
+      IF(Q1.NE.NODATA(ICOL))THEN
+       !## get fraction
+       IF(Z1.GE.BZ.AND.Z.LT.TZ)THEN
+        F=(MIN(TZ,Z1)-MAX(BZ,Z))/DZ
+        QT=QT+F*Q1
+        NQ=NQ+F
+       ENDIF
       ENDIF
      ENDIF
-    ENDIF
 
-    Z1=Z
-    !## apply indicator
-    IF(INDICATOR.GT.0)THEN
-     Q1=0.0D0; IF(TRIM(UTL_CAP(QD(ICOL),'U')).EQ.TRIM(UTL_CAP(THRESHOLD,'U')))Q1=1.0D0
-    ELSE
-     READ(QD(ICOL),*,IOSTAT=IOS) Q1
-     IF(IOS.NE.0)THEN
-      IF(IR.LT.NR)THEN
-       WRITE(*,'(/A/)') 'iMOD cannot read ['//TRIM(QD(ICOL))//'] into a number'; PAUSE; STOP
-      !## ignore last entry
-      ELSE
-       Q1=NODATA(ICOL)
+     Z1=Z
+     !## apply indicator
+     IF(INDICATOR.GT.0)THEN
+      Q1=0.0D0; IF(TRIM(UTL_CAP(QD(ICOL),'U')).EQ.TRIM(UTL_CAP(THRESHOLD,'U')))Q1=1.0D0
+     ELSE
+      READ(QD(ICOL),*,IOSTAT=IOS) Q1
+      IF(IOS.NE.0)THEN
+       IF(IR.LT.NR)THEN
+        WRITE(*,'(/A/)') 'iMOD cannot read ['//TRIM(QD(ICOL))//'] into a number'; PAUSE; STOP
+       !## ignore last entry
+       ELSE
+        Q1=NODATA(ICOL)
+       ENDIF
       ENDIF
      ENDIF
-    ENDIF
 
-    IF(Z.LT.BZ)EXIT
+     IF(Z.LT.BZ)EXIT
 
-   ENDDO
-
+    ENDDO
+   ENDIF
+   
    IF(NQ.GT.0.0D0)THEN
     NCOUNT=NQ
     QT=QT/NQ

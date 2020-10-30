@@ -7740,7 +7740,7 @@ IRLOOP: DO IROW=1,PRJIDF%NROW; DO ICOL=1,PRJIDF%NCOL
        WRITE(IDFM_MSWP,'(I15,3F15.3)') NUND,XC,YC,1.0D0
        !## coupling for ponding
        WRITE(IMSWP_PDFM,'(2F15.3,I15)') XC,YC,NUND
-       !## coupling for runoff - nearest DFMFM-point in same afwat-unit
+       !## coupling for rural runoff - nearest DFMFM-point in same afwat-unit
        INEAREST=PMANAGER_SAVEMF2005_DMM_GETXY(XC,YC,.TRUE.)
        IF(INEAREST.GT.0)WRITE(IMSWP_RDFM,'(2F15.3,I15)') DFFM(INEAREST)%X,DFFM(INEAREST)%Y,NUND
       ENDIF
@@ -7812,6 +7812,13 @@ IRLOOP: DO IROW=1,PRJIDF%NROW; DO ICOL=1,PRJIDF%NCOL
        ENDIF
       ENDIF
     
+      IF(IACT.EQ.2.AND.PBMAN%DMMFILE.EQ.1.AND.TYBE.EQ.1)THEN
+       !## coupling for sprinklink - nearest DFMFM-point no matter what afwat-unit
+       CALL IDFGETLOC(PRJIDF,JROW,JCOL,XC,YC)
+       INEAREST=PMANAGER_SAVEMF2005_DMM_GETXY(XC,YC,.TRUE.)
+       IF(INEAREST.GT.0)WRITE(IMSWP_SDFM,'(2F15.3,I15)') DFFM(INEAREST)%X,DFFM(INEAREST)%Y,NUND
+      ENDIF
+      
       !## sprinkling from other than modellayer 1 or other location
       IF(TYBE.EQ.1.AND.LYBE.GT.1)THEN
  
@@ -7821,6 +7828,7 @@ IRLOOP: DO IROW=1,PRJIDF%NROW; DO ICOL=1,PRJIDF%NCOL
        IF(IACT.EQ.2)THEN
         WRITE(IGWMP,'(I10,2X,I10,I5)')   UNID,NUND,LYBE
         WRITE(IMODSIM,'(I10,2X,I10,I5)') UNID,NUND,LYBE
+        
         IF(PBMAN%IFORMAT.EQ.3)THEN
          NWEL=NWEL+1
          WRITE(WMF6_MSWP,'(3I10,F10.2)')  LYBE,JROW,JCOL,0.0D0
@@ -7879,7 +7887,7 @@ IRLOOP: DO IROW=1,PRJIDF%NROW; DO ICOL=1,PRJIDF%NCOL
       IF(PBMAN%DMMFILE.EQ.1)THEN
        WRITE(IDFM_MSWP,'(I15,3F15.3)') NUND,XC,YC,1.0D0
        WRITE(IMSWP_PDFM,'(2F15.3,I15)') XC,YC,NUND
-       !## coupling for runoff - nearest DFMFM-point discarding afwatunit
+       !## coupling for urban runoff - nearest DFMFM-point discarding afwatunit
        INEAREST=PMANAGER_SAVEMF2005_DMM_GETXY(XC,YC,.FALSE.)
        IF(INEAREST.GT.0)WRITE(IMSWP_SDFM,'(2F15.3,I15)') DFFM(INEAREST)%X,DFFM(INEAREST)%Y,NUND       
       ENDIF

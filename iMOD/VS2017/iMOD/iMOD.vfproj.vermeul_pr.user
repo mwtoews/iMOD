@@ -3,5 +3,5 @@
 	<Configurations>
 		<Configuration Name="Debug|Win32" CommandArguments="d:\IMOD-MODELS\TMODEL\Gekoppeld_V29\RUNFILE.INI" WorkingDirectory="d:\IMOD\"/>
 		<Configuration Name="Release|Win32"/>
-		<Configuration Name="Debug|x64" CommandArguments="d:\IMOD-LUMBRICUS\lumbricustests\t-model\exp1\RUNFILE.INI" WorkingDirectory="d:\IMOD"/>
+		<Configuration Name="Debug|x64" CommandArguments="d:\IMOD-MODELS\VIETNAM\SUBSOIL\RESAMPLELAYERS.INI" WorkingDirectory="d:\IMOD"/>
 		<Configuration Name="Release|x64" CommandArguments="d:\IMOD-LUMBRICUS\lumbricustests\t-model\exp1\RUNFILE.INI" WorkingDirectory="d:\IMOD"/></Configurations></VisualStudioUserFile>
