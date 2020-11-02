@@ -484,14 +484,13 @@
 		<File RelativePath="..\..\..\iMOD\SRC\imod_smplx\imod_smplx_par.f90"/></Filter>
 		<Filter Name="imod_sobek">
 		<File RelativePath="..\..\..\iMOD\SRC\imod_sobek\imod_sobek.f90">
-			<FileConfiguration Name="Release|x64" ExcludedFromBuild="true"/>
-			<FileConfiguration Name="Debug|x64" ExcludedFromBuild="true"/></File>
+			<FileConfiguration Name="Release|x64" ExcludedFromBuild="true"/></File>
 		<File RelativePath="..\..\..\iMOD\SRC\imod_sobek\imod_sobek_lh90.f90">
 			<FileConfiguration Name="Debug|Win32" ExcludedFromBuild="true"/>
+			<FileConfiguration Name="Debug|x64" ExcludedFromBuild="true"/>
 			<FileConfiguration Name="Release|Win32" ExcludedFromBuild="true"/></File>
 		<File RelativePath="..\..\..\iMOD\SRC\imod_sobek\imod_sobek_par.f90">
-			<FileConfiguration Name="Release|x64" ExcludedFromBuild="true"/>
-			<FileConfiguration Name="Debug|x64" ExcludedFromBuild="true"/></File></Filter>
+			<FileConfiguration Name="Release|x64" ExcludedFromBuild="true"/></File></Filter>
 		<Filter Name="imod_sof">
 		<File RelativePath="..\..\..\iMOD\SRC\imod_sof\imod_sof.f90"/></Filter>
 		<Filter Name="imod_solid">

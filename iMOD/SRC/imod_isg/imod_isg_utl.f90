@@ -669,7 +669,7 @@ CONTAINS
  TD=0.0D0; DO I=2,N
   D=(X(I)-X(I-1))**2.0D0+(Y(I)-Y(I-1))**2.0D0
   IF(D.GT.0.0D0)D=SQRT(D); TD=TD+D
-  IF(TD.GT.TDIST)THEN
+  IF(TD.GE.TDIST)THEN
    F=(D-(TD-TDIST))/D
    XCRD=X(I-1)+F*(X(I)-X(I-1))
    YCRD=Y(I-1)+F*(Y(I)-Y(I-1))
